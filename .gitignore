@@ -6,3 +6,8 @@ node_modules/
 .env.*
 !.env.example
 .DS_Store
+
+# 에이전트 작업용 로컬 문서 (레포에 올리지 않음)
+/plan.md
+/checklist.md
+/context-notes.md
