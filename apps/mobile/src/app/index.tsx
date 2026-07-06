@@ -1,5 +1,5 @@
-import * as Device from 'expo-device';
 import { Platform, StyleSheet } from 'react-native';
+import * as Device from 'expo-device';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AnimatedIcon } from '@/components/animated-icon';
