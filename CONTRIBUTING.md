@@ -18,6 +18,19 @@ landit-fe 개발 그라운드 룰. 아키텍처 레벨 결정(ADR)은 [GitHub Wi
 - 하나의 메서드는 하나의 책임과 기능만 갖는다. (최대 20줄, 파라미터 최대 3~4개)
 - 메서드 설명은 `/**` (JSDoc), 메서드 내부 주석은 `//`
 
+### 포맷팅과 import 순서
+
+Prettier가 저장/커밋 시 자동으로 맞춰주므로 수동으로 신경 쓸 필요 없다. 규칙은 `.prettierrc`에 정의되어 있다.
+
+- 따옴표는 single quote, 후행 콤마 사용
+- import 순서 (그룹 사이 빈 줄)
+  1. `react` / `react-native`
+  2. 외부 패키지
+  3. `@/*` (내부 alias)
+  4. 상대 경로 (`./`, `../`)
+- Tailwind 클래스는 공식 권장 순서로 자동 정렬 (`prettier-plugin-tailwindcss`)
+- 전체 포맷은 루트에서 `pnpm format`
+
 ## 브랜치 전략
 
 | 브랜치            | 용도                                         |
