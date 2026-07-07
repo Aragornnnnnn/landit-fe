@@ -2,10 +2,10 @@
 name: CI
 
 on:
+  # 대상 브랜치를 열거하면 release/hotfix 케이스를 빠뜨리므로 모든 PR에서 실행
   pull_request:
-    branches: [develop, main]
   push:
-    branches: [develop, main]
+    branches: [develop, main, release]
 
 jobs:
   ci:
