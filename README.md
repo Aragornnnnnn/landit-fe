@@ -16,7 +16,7 @@ landit-fe/
 
 ## 요구사항
 
-- Node.js 20 이상
+- Node.js 20.9 이상, 권장 22 LTS (하한은 Next.js 16 요구사항. 미만 버전이면 `pnpm install`이 실패한다)
 - pnpm 10 (`npm install -g pnpm`)
 
 ## 시작하기
