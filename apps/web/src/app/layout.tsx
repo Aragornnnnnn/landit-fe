@@ -1,4 +1,4 @@
-// 앱 전체 공통 레이아웃 (루트) — Pretendard(본문)·Tossface(이모지) 폰트 로딩
+// 앱 전체 공통 레이아웃 (루트) — Tossface(이모지) CDN 로딩. Pretendard는 globals.css에서 자체 호스팅
 import type { Metadata } from 'next';
 
 import './globals.css';
@@ -20,10 +20,6 @@ export default function RootLayout({
           rel="preconnect"
           href="https://cdn.jsdelivr.net"
           crossOrigin="anonymous"
-        />
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
         />
         <link
           rel="stylesheet"

@@ -1,4 +1,4 @@
-/* landit 디자인 토큰 — saynow-fe에서 이식 (DESIGN.md 참고)
+/* landit 디자인 토큰 (DESIGN.md 참고)
  *
  * 3레이어 구조.
  *   Layer 1  Primitive — 원시 팔레트. 컴포넌트에서 직접 쓰지 않는다.
@@ -6,6 +6,8 @@
  *   Layer 3  컴포넌트  — 오직 시맨틱 토큰(bg-primary 등)만 참조한다.
  */
 @import 'tailwindcss';
+/* Pretendard 자체 호스팅 (다이나믹 서브셋) — 화면에 나온 글자가 포함된 조각만 다운로드된다 */
+@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 
 /* Tailwind 유틸리티 클래스(bg-primary 등)와 시맨틱 토큰 연결 */
 @theme inline {
@@ -29,7 +31,9 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans:
+    'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont,
+    sans-serif;
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -44,7 +48,7 @@
   /* ── Layer 1: Primitive — 고정 팔레트. 다크모드에서도 값이 바뀌지 않는다 ──
    * 실사용 색만 정의한다. 새 색이 필요하면 여기 추가 후 시맨틱으로 노출할 것. */
   --white: #ffffff;
-  /* 웜 그레이 램프 (뉴트럴 기준 램프 — iOS 쿨 그레이 계열은 컴포넌트 이전 시 여기로 통일) */
+  /* 웜 그레이 램프 (뉴트럴 기준 램프 — iOS 쿨 그레이 계열은 컴포넌트 추가 시 여기로 통일) */
   --gray-50: #fbfbfa;
   --gray-100: #f5f5f3;
   --gray-200: #e5e5e0;
@@ -113,7 +117,7 @@
   .tossface {
     font-family:
       Tossface,
-      'Pretendard',
+      'Pretendard Variable',
       -apple-system,
       BlinkMacSystemFont,
       'Apple Color Emoji',
