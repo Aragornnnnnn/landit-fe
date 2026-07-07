@@ -1,0 +1,47 @@
+# PR마다 포맷·린트·타입체크·빌드를 검증하는 CI. 배포(CD)는 Vercel이 담당한다.
+name: CI
+
+on:
+  # 대상 브랜치를 열거하면 release/hotfix 케이스를 빠뜨리므로 모든 PR에서 실행
+  pull_request:
+  push:
+    branches: [develop, main, release]
+
+# 같은 브랜치에 새 푸시가 오면 진행 중이던 이전 실행을 취소 (Actions 분량 절약)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      # pnpm 버전은 package.json의 packageManager 필드를 그대로 읽는다
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: 의존성 설치
+        run: pnpm install --frozen-lockfile
+
+      - name: 포맷 검사 (Prettier)
+        run: pnpm format:check
+
+      - name: 린트
+        run: pnpm lint
+
+      - name: 타입체크
+        run: pnpm typecheck
+
+      - name: 빌드
+        run: pnpm build
+
+      # 테스트 도입 시 여기에 추가 (checklist: Vitest는 핵심 로직 생길 때)
+      # - name: 테스트
+      #   run: pnpm test
