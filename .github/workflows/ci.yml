@@ -7,9 +7,15 @@ on:
   push:
     branches: [develop, main, release]
 
+# 같은 브랜치에 새 푸시가 오면 진행 중이던 이전 실행을 취소 (Actions 분량 절약)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ci:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
