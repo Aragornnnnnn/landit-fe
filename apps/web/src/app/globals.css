@@ -1,1 +1,128 @@
+/* landit 디자인 토큰 (DESIGN.md 참고)
+ *
+ * 3레이어 구조.
+ *   Layer 1  Primitive — 원시 팔레트. 컴포넌트에서 직접 쓰지 않는다.
+ *   Layer 2  Semantic  — 역할 토큰. 다크모드 도입 시 이 레이어만 재정의한다.
+ *   Layer 3  컴포넌트  — 오직 시맨틱 토큰(bg-primary 등)만 참조한다.
+ */
 @import 'tailwindcss';
+/* Pretendard 자체 호스팅 (다이나믹 서브셋) — 화면에 나온 글자가 포함된 조각만 다운로드된다 */
+@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
+
+/* Tailwind 유틸리티 클래스(bg-primary 등)와 시맨틱 토큰 연결 */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-light: var(--primary-light);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans:
+    'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont,
+    sans-serif;
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  /* ── Layer 1: Primitive — 고정 팔레트. 다크모드에서도 값이 바뀌지 않는다 ──
+   * 실사용 색만 정의한다. 새 색이 필요하면 여기 추가 후 시맨틱으로 노출할 것. */
+  --white: #ffffff;
+  /* 웜 그레이 램프 (뉴트럴 기준 램프 — iOS 쿨 그레이 계열은 컴포넌트 추가 시 여기로 통일) */
+  --gray-50: #fbfbfa;
+  --gray-100: #f5f5f3;
+  --gray-200: #e5e5e0;
+  --gray-500: #6b7280;
+  --gray-950: #111111;
+  /* 브랜드 테라코타 램프 */
+  --orange-300: #e8935a;
+  --orange-500: #e07a3a;
+  --orange-600: #c4601f;
+  /* 시맨틱 액센트 원색 */
+  --red-500: #ff3b30;
+
+  /* ── Layer 2: Semantic — 역할 토큰. 다크모드 도입 시 이 블록만 재정의한다 ── */
+  --background: var(--gray-50);
+  --foreground: var(--gray-950);
+  --card: var(--white);
+  --card-foreground: var(--gray-950);
+  --popover: var(--white);
+  --popover-foreground: var(--gray-950);
+  --primary: var(--orange-500);
+  --primary-foreground: var(--white);
+  --primary-light: var(--orange-300);
+  --secondary: var(--gray-100);
+  --secondary-foreground: var(--gray-950);
+  --muted: var(--gray-100);
+  --muted-foreground: var(--gray-500);
+  --accent: var(--orange-600);
+  --accent-foreground: var(--white);
+  --destructive: var(--red-500);
+  --border: var(--gray-200);
+  --input: var(--gray-200);
+  --ring: var(--orange-500);
+  --radius: 0.75rem;
+}
+
+/* 다크모드는 현재 미지원 (라이트 단일 테마). 도입 시 아래처럼 시맨틱만 재정의한다 — 값을 지어내지 말 것.
+ * .dark {
+ *   --background: var(--gray-950);
+ *   --foreground: var(--gray-50);
+ *   ...
+ * }
+ */
+
+@layer base {
+  /* 네이티브 앱 느낌 유지 — 스크롤바 전역 숨김 */
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer utilities {
+  /* 이모지는 Tossface로 렌더해 플랫폼 간 일관성 유지 */
+  .tossface {
+    font-family:
+      Tossface,
+      'Pretendard Variable',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Apple Color Emoji',
+      'Segoe UI Emoji',
+      'Noto Color Emoji',
+      sans-serif;
+  }
+}
