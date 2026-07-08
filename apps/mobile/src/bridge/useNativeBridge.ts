@@ -23,18 +23,18 @@ export type WebMessageHandlers = {
 };
 
 // 개발 모드에서만 로그를 남긴다
-function log(...args: unknown[]) {
+const log = (...args: unknown[]) => {
   if (__DEV__) console.log('[bridge:native]', ...args);
-}
-function warn(...args: unknown[]) {
+};
+const warn = (...args: unknown[]) => {
   if (__DEV__) console.warn('[bridge:native]', ...args);
-}
+};
 
 // WebView와 브릿지를 연결한다. 반환값의 onMessage를 WebView에 연결하고, postToWeb으로 웹에 발신한다
-export function useNativeBridge(
+export const useNativeBridge = (
   webviewRef: RefObject<WebView | null>,
   handlers: WebMessageHandlers,
-) {
+) => {
   // 웹으로 메시지를 보낸다. WebView가 아직 없으면(마운트 전) 조용히 스킵한다
   const postToWeb = (message: NativeToWebMessage) => {
     if (!webviewRef.current) {
@@ -72,4 +72,4 @@ export function useNativeBridge(
   };
 
   return { onMessage, postToWeb };
-}
+};

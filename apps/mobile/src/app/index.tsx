@@ -13,7 +13,7 @@ import WebView from 'react-native-webview';
 import { useNativeBridge } from '@/bridge/useNativeBridge';
 import { WEB_URL } from '@/config/webUrl';
 
-export default function ShellScreen() {
+const ShellScreen = () => {
   const webviewRef = useRef<WebView>(null);
   const [isWebReady, setIsWebReady] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -74,6 +74,8 @@ export default function ShellScreen() {
       onMessage={onMessage}
       onLoad={() => setIsWebReady(true)}
       onError={() => setLoadFailed(true)}
+      // onError는 네트워크 자체가 안 될 때만 잡는다. 서버가 4xx/5xx로 응답한 경우는
+      // onHttpError가 따로 잡아야 한다 — 없으면 에러 화면 대신 날것의 에러 페이지가 보인다
       onHttpError={() => setLoadFailed(true)}
       startInLoadingState
       renderLoading={() => (
@@ -81,11 +83,14 @@ export default function ShellScreen() {
           <ActivityIndicator />
         </View>
       )}
+      // iOS는 시스템 뒤로가기 버튼이 없다 — 화면 끝 스와이프로 WebView 히스토리를 직접 탐색하게 한다
       allowsBackForwardNavigationGestures
       style={styles.webview}
     />
   );
-}
+};
+
+export default ShellScreen;
 
 const styles = StyleSheet.create({
   webview: {
