@@ -8,10 +8,14 @@ import {
   Text,
   View,
 } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
 import WebView from 'react-native-webview';
 
 import { useNativeBridge } from '@/bridge/useNativeBridge';
 import { WEB_URL } from '@/config/webUrl';
+
+// 네이티브 스플래시를 웹 첫 페인트까지 붙잡아 둔다 — 자동 숨김을 막고 WebView onLoad에서 수동으로 감춘다
+void SplashScreen.preventAutoHideAsync();
 
 const ShellScreen = () => {
   const webviewRef = useRef<WebView>(null);
@@ -23,6 +27,13 @@ const ShellScreen = () => {
   const { onMessage, postToWeb } = useNativeBridge(webviewRef, {
     EXIT_APP: () => BackHandler.exitApp(),
   });
+
+  // 웹 첫 페인트(onLoad)나 로드 실패로 화면이 바뀌면 스플래시를 감춘다 — 그 전까지 네이티브 스플래시가 흰 로딩 화면을 가려 준다
+  useEffect(() => {
+    if (isWebReady || loadFailed) {
+      void SplashScreen.hideAsync();
+    }
+  }, [isWebReady, loadFailed]);
 
   // 웹이 로드 완료됐을 때만 Android 뒤로가기를 위임한다 — 그 전엔 위임해도 웹이 응답 못 해 영구 먹통이 된다
   useEffect(() => {
@@ -41,6 +52,8 @@ const ShellScreen = () => {
   }, [isWebReady, loadFailed]);
 
   if (!WEB_URL) {
+    // WebView가 아예 마운트되지 않는 경로라 isWebReady/loadFailed가 바뀔 일이 없다
+    void SplashScreen.hideAsync();
     return (
       <View style={styles.center}>
         <Text>EXPO_PUBLIC_WEB_URL이 설정되지 않았어요.</Text>
@@ -70,7 +83,8 @@ const ShellScreen = () => {
     <WebView
       key={loadAttempt}
       ref={webviewRef}
-      source={{ uri: WEB_URL }}
+      // 앱 진입점은 로그인 화면 — 인증 붙기 전까지 루트 대신 /login을 바로 로드한다
+      source={{ uri: `${WEB_URL}/login` }}
       onMessage={onMessage}
       onLoad={() => setIsWebReady(true)}
       onError={() => setLoadFailed(true)}
