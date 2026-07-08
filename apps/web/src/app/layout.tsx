@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className="antialiased">
+    <html lang="ko" className="antialiased" suppressHydrationWarning>
       <head>
         <link
           rel="preconnect"
