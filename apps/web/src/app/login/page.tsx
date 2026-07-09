@@ -1,9 +1,8 @@
-// 로그인 화면 — 소셜 로그인 진입점 + 네이티브 스플래시에서 이어지는 진입 모션. 버튼은 목업이며 실제 인증은 OAuth 이슈에서 연결한다
-import { LanditLogo } from '@/components/landit-logo';
+// 로그인 화면 — 소셜 로그인 진입점 + 네이티브 스플래시에서 이어지는 진입 모션
+import { LanditLogo } from '@/components/LanditLogo';
 
-import { LoginButton } from './login-button';
+import { SocialLoginButtons } from './_components/SocialLoginButtons';
 import styles from './login-motion.module.css';
-import { AppleIcon, GoogleIcon, KakaoIcon } from './social-icons';
 
 // 세션 내 재방문이면 모션을 스킵하도록 첫 페인트 전에 html에 클래스 부여 (FOUC 방지 위해 인라인 블로킹 스크립트 — useEffect는 이미 한 프레임 그려진 뒤라 늦음)
 const splashSkip = `
@@ -37,23 +36,7 @@ const LoginPage = () => (
 
       <div className="flex-1" />
 
-      <div className={`${styles.buttons} flex flex-col gap-3`}>
-        <LoginButton
-          label="카카오로 로그인하기"
-          icon={<KakaoIcon />}
-          className="bg-[#FEE500] text-[#191919]"
-        />
-        <LoginButton
-          label="구글로 로그인하기"
-          icon={<GoogleIcon />}
-          className="bg-white text-foreground ring-1 ring-border"
-        />
-        <LoginButton
-          label="애플로 로그인하기"
-          icon={<AppleIcon />}
-          className="bg-black text-white"
-        />
-      </div>
+      <SocialLoginButtons />
     </div>
   </main>
 );
