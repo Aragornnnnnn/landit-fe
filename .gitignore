@@ -11,3 +11,10 @@ node_modules/
 /plan.md
 /checklist.md
 /context-notes.md
+
+# 브라우저 테스트 도구(Playwright MCP) 산출물
+.playwright-mcp/
+
+# Expo 네이티브 프로젝트 생성물 — prebuild/run으로 재생성되므로 커밋하지 않음 (네이티브 설정은 app.json으로 관리)
+apps/mobile/android/
+apps/mobile/ios/
