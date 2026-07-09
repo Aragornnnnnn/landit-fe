@@ -1,6 +1,7 @@
 // 로그인 화면 — 소셜 로그인 진입점 + 네이티브 스플래시에서 이어지는 진입 모션
 import { LanditLogo } from '@/components/LanditLogo';
 
+import { AuthedRedirect } from './_components/AuthedRedirect';
 import { SocialLoginButtons } from './_components/SocialLoginButtons';
 import styles from './login-motion.module.css';
 
@@ -18,6 +19,7 @@ const splashSkip = `
 const LoginPage = () => (
   <main className="relative mx-auto h-dvh max-w-[430px] overflow-x-hidden overflow-y-auto bg-background">
     <script dangerouslySetInnerHTML={{ __html: splashSkip }} />
+    <AuthedRedirect />
 
     <div className={styles.logoWrap}>
       <LanditLogo className={`${styles.logo} h-12 text-foreground`} />

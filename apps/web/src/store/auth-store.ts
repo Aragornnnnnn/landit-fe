@@ -18,9 +18,8 @@ interface AuthState {
   clearAuth: () => void;
 }
 
-// TODO: "로그인 안 됐으면 /login으로" 라우팅 가드를 만들 때, persist 하이드레이션이 끝나기
-// 전엔 refreshToken이 실제로는 있는데 없는 것처럼 보이는 순간이 있다. 그때 _hasHydrated
-// 플래그 + onRehydrateStorage 콜백을 다시 추가할 것 (지금은 쓰는 곳이 없어서 뺐음).
+// localStorage는 동기라 클라이언트에서 컴포넌트가 마운트된 시점엔 복원이 끝나 있다.
+// 라우팅 가드는 SSR 불일치를 피하려고 마운트 이후에만 로그인 여부를 판단한다 ((protected)/layout 참고).
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
