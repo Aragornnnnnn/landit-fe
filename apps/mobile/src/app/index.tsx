@@ -11,6 +11,8 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import WebView from 'react-native-webview';
 
+import { generateNonce } from '@/auth/nonce';
+import { requestSocialIdToken, SocialLoginError } from '@/auth/socialLogin';
 import { useNativeBridge } from '@/bridge/useNativeBridge';
 import { WEB_URL } from '@/config/webUrl';
 
@@ -26,6 +28,20 @@ const ShellScreen = () => {
 
   const { onMessage, postToWeb } = useNativeBridge(webviewRef, {
     EXIT_APP: () => BackHandler.exitApp(),
+    // 웹의 로그인 요청을 받아 provider SDK로 idToken을 발급받고, nonce와 함께 웹으로 돌려준다
+    SOCIAL_LOGIN_REQUEST: async ({ provider }) => {
+      const nonce = generateNonce();
+      try {
+        const idToken = await requestSocialIdToken(provider, nonce);
+        postToWeb({ type: 'SOCIAL_LOGIN_SUCCESS', provider, idToken, nonce });
+      } catch (error) {
+        const message =
+          error instanceof SocialLoginError
+            ? error.message
+            : '로그인 중 문제가 생겼어요.';
+        postToWeb({ type: 'SOCIAL_LOGIN_ERROR', message });
+      }
+    },
   });
 
   // 웹 첫 페인트(onLoad)나 로드 실패로 화면이 바뀌면 스플래시를 감춘다 — 그 전까지 네이티브 스플래시가 흰 로딩 화면을 가려 준다
