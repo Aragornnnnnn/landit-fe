@@ -33,13 +33,9 @@ export function useSocialLogin() {
             message.idToken,
             message.nonce,
           );
-          // newUser는 저장하지 않는다(온보딩 분기용). 온보딩 화면이 생기면 여기서 분기한다.
-          setAuth(accessToken, refreshToken, {
-            userId: user.userId,
-            nickname: user.nickname,
-            email: user.email,
-            provider: user.provider,
-          });
+          // newUser는 로그인 시점 분기용이라 전역 상태에는 빼고 저장한다. 온보딩 화면이 생기면 여기서 분기한다.
+          const { newUser, ...member } = user;
+          setAuth(accessToken, refreshToken, member);
           router.replace('/');
         } catch {
           setError('로그인에 실패했어요. 다시 시도해 주세요.');

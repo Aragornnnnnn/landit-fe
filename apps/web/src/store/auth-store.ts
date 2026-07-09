@@ -4,13 +4,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// 로그인 응답에서 저장할 사용자 신원 정보
-export interface AuthMember {
-  userId: number;
-  nickname: string | null;
-  email: string | null;
-  provider: string;
-}
+import type { AuthMember } from '@/api/auth/social-login';
 
 interface AuthState {
   accessToken: string | null;

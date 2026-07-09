@@ -13,6 +13,15 @@ const eslintConfig = defineConfig([
     'build/**',
     'next-env.d.ts',
   ]),
+  {
+    rules: {
+      // rest로 나머지 프로퍼티만 취하려고 떼어낸 키(예: { newUser, ...member })는 미사용 경고에서 제외한다
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { ignoreRestSiblings: true },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;
