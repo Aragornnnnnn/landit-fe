@@ -1,7 +1,7 @@
 // API 호출 진입점 — api.get/post/... 로 부르면 토큰 부착·401 재발급을 request가 알아서 처리한다
 import { REFRESH_PATH, refreshAccessToken } from '@/api/auth/refresh';
 import { parseApiResponse } from '@/api/parse';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/store/auth-store';
 
 export const api = {
   get: <T>(path: string) => request<T>('GET', path),
