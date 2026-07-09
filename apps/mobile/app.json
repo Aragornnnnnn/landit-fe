@@ -7,6 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "mobile",
     "userInterfaceStyle": "automatic",
+    "backgroundColor": "#e07a3a",
     "ios": {
       "icon": "./assets/expo.icon"
     },
@@ -28,9 +29,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#e07a3a",
+          "image": "./assets/images/splash-blank.png",
+          "imageWidth": 1
         }
       ]
     ],
