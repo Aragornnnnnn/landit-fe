@@ -32,7 +32,7 @@ export const LegalDocumentPage = ({
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-muted">
-      <header className="relative flex shrink-0 items-center px-4 pt-[max(env(safe-area-inset-top),16px)] pb-2">
+      <header className="relative flex shrink-0 items-center border-b border-border bg-background px-4 pt-[max(env(safe-area-inset-top),16px)] pb-2">
         <button
           type="button"
           onClick={() => router.replace(backHref)}

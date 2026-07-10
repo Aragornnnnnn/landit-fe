@@ -71,11 +71,10 @@ export default function MyPage() {
     <main className="flex h-dvh flex-col bg-background">
       {/* 헤더 */}
       <header
-        className="relative flex items-center px-4 transition-shadow duration-200"
+        className="relative flex items-center border-b border-border px-4 transition-shadow duration-200"
         style={{
           paddingTop: 'max(env(safe-area-inset-top), 16px)',
           paddingBottom: 8,
-          borderBottom: '1px solid #ebebeb',
           boxShadow: hasShadow ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
         }}
       >
