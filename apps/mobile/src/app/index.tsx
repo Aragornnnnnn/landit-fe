@@ -30,8 +30,8 @@ const ShellScreen = () => {
     EXIT_APP: () => BackHandler.exitApp(),
     // 웹의 로그인 요청을 받아 provider SDK로 idToken을 발급받고, nonce와 함께 웹으로 돌려준다
     SOCIAL_LOGIN_REQUEST: async ({ provider }) => {
-      const nonce = generateNonce();
       try {
+        const nonce = generateNonce();
         const idToken = await requestSocialIdToken(provider, nonce);
         postToWeb({ type: 'SOCIAL_LOGIN_SUCCESS', provider, idToken, nonce });
       } catch (error) {
@@ -39,7 +39,8 @@ const ShellScreen = () => {
           error instanceof SocialLoginError
             ? error.message
             : '로그인 중 문제가 생겼어요.';
-        postToWeb({ type: 'SOCIAL_LOGIN_ERROR', message });
+        const cancelled = error instanceof SocialLoginError && error.cancelled;
+        postToWeb({ type: 'SOCIAL_LOGIN_ERROR', message, cancelled });
       }
     },
   });
