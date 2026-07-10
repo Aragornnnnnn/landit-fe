@@ -33,6 +33,7 @@ export function useSocialLogin() {
             message.provider,
             message.idToken,
             message.nonce,
+            message.name,
           );
           // newUser는 로그인 시점 분기용이라 전역 상태에는 빼고 저장한다. 온보딩 화면이 생기면 여기서 분기한다.
           const { newUser, ...member } = user;

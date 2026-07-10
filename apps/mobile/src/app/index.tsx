@@ -32,8 +32,14 @@ const ShellScreen = () => {
     SOCIAL_LOGIN_REQUEST: async ({ provider }) => {
       try {
         const nonce = generateNonce();
-        const idToken = await requestSocialIdToken(provider, nonce);
-        postToWeb({ type: 'SOCIAL_LOGIN_SUCCESS', provider, idToken, nonce });
+        const { idToken, name } = await requestSocialIdToken(provider, nonce);
+        postToWeb({
+          type: 'SOCIAL_LOGIN_SUCCESS',
+          provider,
+          idToken,
+          nonce,
+          name,
+        });
       } catch (error) {
         const message =
           error instanceof SocialLoginError
