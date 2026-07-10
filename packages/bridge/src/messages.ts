@@ -25,10 +25,12 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     idToken: z.string().min(1),
     nonce: z.string().min(1),
   }),
-  // 네이티브 소셜 로그인 SDK 실행이 실패했거나 사용자가 취소했다
+  // 네이티브 소셜 로그인 SDK 실행이 실패했거나 사용자가 취소했다.
+  // cancelled면 웹은 에러 문구를 보여주지 않는다 (필드가 없는 구버전 셸 메시지도 허용해야 해서 optional)
   z.object({
     type: z.literal('SOCIAL_LOGIN_ERROR'),
     message: z.string(),
+    cancelled: z.boolean().optional(),
   }),
 ]);
 
