@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# .env.example은 실제 값이 아니라 필요한 변수 목록이라 커밋한다
+!.env.example
 
 # vercel
 .vercel
