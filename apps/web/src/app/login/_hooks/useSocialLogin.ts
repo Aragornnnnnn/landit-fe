@@ -21,7 +21,8 @@ export function useSocialLogin() {
     () =>
       subscribeFromNative(async (message) => {
         if (message.type === 'SOCIAL_LOGIN_ERROR') {
-          setError(message.message);
+          // 사용자가 로그인 중 취소한 거면 에러로 보여주지 않고 조용히 로그인 화면으로 돌아간다
+          if (!message.cancelled) setError(message.message);
           setPending(null);
           return;
         }
@@ -37,8 +38,13 @@ export function useSocialLogin() {
           const { newUser, ...member } = user;
           setAuth(accessToken, refreshToken, member);
           router.replace('/');
-        } catch {
-          setError('로그인에 실패했어요. 다시 시도해 주세요.');
+        } catch (error) {
+          // 개발 모드에선 서버가 준 실패 사유를 화면·콘솔에 그대로 노출한다 (프로덕션은 일반 문구만)
+          const isDev = process.env.NODE_ENV === 'development';
+          if (isDev) console.error('[auth] social-login 실패:', error);
+          const detail =
+            isDev && error instanceof Error ? ` (${error.message})` : '';
+          setError(`로그인에 실패했어요. 다시 시도해 주세요.${detail}`);
           setPending(null);
         }
       }),
