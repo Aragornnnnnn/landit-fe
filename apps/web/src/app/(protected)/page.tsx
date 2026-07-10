@@ -1,6 +1,7 @@
 'use client';
 
 // 홈 — 로그인 성공 확인용: 로그인한 사용자 정보를 보여주고 로그아웃할 수 있다
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { useAuthStore } from '@/store/auth-store';
@@ -42,10 +43,17 @@ export default function HomePage() {
         </div>
       </dl>
 
+      <Link
+        href="/me"
+        className="mt-2 rounded-xl px-4 py-2 text-sm font-semibold text-muted-foreground ring-1 ring-border transition-all active:brightness-95"
+      >
+        마이페이지
+      </Link>
+
       <button
         type="button"
         onClick={logout}
-        className="mt-2 rounded-xl px-4 py-2 text-sm font-semibold text-muted-foreground ring-1 ring-border transition-all active:brightness-95"
+        className="rounded-xl px-4 py-2 text-sm font-semibold text-muted-foreground ring-1 ring-border transition-all active:brightness-95"
       >
         로그아웃
       </button>
