@@ -5,8 +5,8 @@ import { privacyDocument } from '@/lib/privacy-document';
 const PrivacyPage = () => (
   <LegalDocumentPage
     document={privacyDocument}
-    backHref="/"
-    backLabel="홈으로 돌아가기"
+    backHref="/me"
+    backLabel="내 정보로 돌아가기"
   />
 );
 
