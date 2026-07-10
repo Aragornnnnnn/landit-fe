@@ -20,7 +20,14 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.saynow.app"
+      "package": "com.saynow.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "category": ["DEFAULT", "BROWSABLE"],
+          "data": [{ "scheme": "com.saynow.app" }]
+        }
+      ]
     },
     "web": {
       "output": "static",
@@ -36,11 +43,33 @@
       "expo-router",
       "expo-apple-authentication",
       [
+        "@react-native-kakao/core",
+        {
+          "nativeAppKey": "09462cccdbd1a0723c5f87929a94a528",
+          "android": {
+            "authCodeHandlerActivity": true
+          },
+          "ios": {
+            "handleKakaoOpenUrl": true
+          }
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#e07a3a",
           "image": "./assets/images/splash-blank.png",
           "imageWidth": 1
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraMavenRepos": [
+              "https://devrepo.kakao.com/nexus/content/groups/public/"
+            ]
+          }
         }
       ]
     ],

@@ -24,6 +24,8 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     provider: socialProviderSchema,
     idToken: z.string().min(1),
     nonce: z.string().min(1),
+    // 애플 최초 로그인 1회에만 온다 — 애플은 이름을 id_token에 넣지 않고 이때만 준다
+    nickname: z.string().min(1).optional(),
   }),
   // 네이티브 소셜 로그인 SDK 실행이 실패했거나 사용자가 취소했다.
   // cancelled면 웹은 에러 문구를 보여주지 않는다 (필드가 없는 구버전 셸 메시지도 허용해야 해서 optional)

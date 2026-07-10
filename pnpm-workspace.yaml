@@ -5,3 +5,7 @@ packages:
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+
+patchedDependencies:
+  '@react-native-kakao/core@2.4.5': patches/@react-native-kakao__core@2.4.5.patch
+  '@react-native-kakao/user@2.4.5': patches/@react-native-kakao__user@2.4.5.patch

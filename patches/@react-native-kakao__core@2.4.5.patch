@@ -1,0 +1,13 @@
+diff --git a/android/build.gradle b/android/build.gradle
+index d471e564132375f2dec5e30492d3b2b637efa16a..c3169acf79e66ddc83370c83d5c42a4df29d4531 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -11,7 +11,7 @@ buildscript {
+     }
+ 
+     dependencies {
+-        classpath "com.android.tools.build:gradle:7.2.1"
++        classpath "com.android.tools.build:gradle:8.3.2"
+         // noinspection DifferentKotlinGradleVersion
+         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+     }
