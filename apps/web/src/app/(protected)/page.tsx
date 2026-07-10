@@ -1,19 +1,10 @@
 'use client';
 
-// 홈 — 로그인 성공 확인용: 로그인한 사용자 정보를 보여주고 로그아웃할 수 있다
-import { useRouter } from 'next/navigation';
-
+// 홈 — 로그인 성공 확인용: 로그인한 사용자 정보를 보여준다 (시나리오 페이지로 대체 예정)
 import { useAuthStore } from '@/store/auth-store';
 
 export default function HomePage() {
-  const router = useRouter();
   const member = useAuthStore((state) => state.member);
-  const clearAuth = useAuthStore((state) => state.clearAuth);
-
-  const logout = () => {
-    clearAuth();
-    router.replace('/login');
-  };
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col items-center justify-center gap-3 bg-background px-6">
@@ -41,14 +32,6 @@ export default function HomePage() {
           <dd className="font-semibold text-foreground">{member?.provider}</dd>
         </div>
       </dl>
-
-      <button
-        type="button"
-        onClick={logout}
-        className="mt-2 rounded-xl px-4 py-2 text-sm font-semibold text-muted-foreground ring-1 ring-border transition-all active:brightness-95"
-      >
-        로그아웃
-      </button>
     </main>
   );
 }
