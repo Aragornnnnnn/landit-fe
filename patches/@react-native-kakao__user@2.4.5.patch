@@ -1,0 +1,202 @@
+diff --git a/android/src/main/java/net/mjstudio/rnkakao/user/RNCKakaoUserModule.kt b/android/src/main/java/net/mjstudio/rnkakao/user/RNCKakaoUserModule.kt
+index 4483203ab289abe31c5b372db71b7c8b32af0203..fb3cc4c2795ff1518d86cbb4b13768ccc310044b 100644
+--- a/android/src/main/java/net/mjstudio/rnkakao/user/RNCKakaoUserModule.kt
++++ b/android/src/main/java/net/mjstudio/rnkakao/user/RNCKakaoUserModule.kt
+@@ -40,6 +40,7 @@ class RNCKakaoUserModule internal constructor(
+     prompts: ReadableArray?,
+     useKakaoAccountLogin: Boolean,
+     scopes: ReadableArray?,
++    nonce: String?,
+     promise: Promise,
+   ) = onMain {
+     val context =
+@@ -90,6 +91,7 @@ class RNCKakaoUserModule internal constructor(
+       UserApiClient.instance.loginWithNewScopes(
+         context,
+         scopes = scopes.filterIsInstance<String>(),
++        nonce = nonce,
+         callback = callback,
+       )
+     } else if (UserApiClient.instance.isKakaoTalkLoginAvailable(context) &&
+@@ -100,6 +102,7 @@ class RNCKakaoUserModule internal constructor(
+     ) {
+       UserApiClient.instance.loginWithKakaoTalk(
+         context,
++        nonce = nonce,
+         serviceTerms = serviceTerms?.filterIsInstance<String>()?.ifEmpty { null },
+         callback = callback,
+       )
+@@ -119,6 +122,7 @@ class RNCKakaoUserModule internal constructor(
+                 else -> null
+               }
+             }?.ifEmpty { null },
++        nonce = nonce,
+         serviceTerms = serviceTerms?.filterIsInstance<String>()?.ifEmpty { null },
+         callback = callback,
+       )
+diff --git a/android/src/oldarch/KakaoUserSpec.kt b/android/src/oldarch/KakaoUserSpec.kt
+index 669a5f126d7c1e4edd74077b51aa2f86225c0617..40363fa541f32da0e58202d082b752843d52b483 100644
+--- a/android/src/oldarch/KakaoUserSpec.kt
++++ b/android/src/oldarch/KakaoUserSpec.kt
+@@ -13,6 +13,7 @@ abstract class KakaoUserSpec internal constructor(
+     prompts: ReadableArray?,
+     useKakaoAccountLogin: Boolean,
+     scopes: ReadableArray?,
++    nonce: String?,
+     promise: Promise,
+   )
+ 
+diff --git a/ios/RNCKakaoUser.mm b/ios/RNCKakaoUser.mm
+index 46e33d2ebd581ae9effb0391cf9787fc2dcd378e..524c9cf16cb915ab26079223a0c84aaaefdbd46a 100644
+--- a/ios/RNCKakaoUser.mm
++++ b/ios/RNCKakaoUser.mm
+@@ -19,12 +19,13 @@ - (RNCKakaoUserManager*)manager {
+ }
+ RCT_EXPORT_METHOD(login : (NSArray*)serviceTerms prompts : (NSArray*)
+                       prompts useKakaoAccountLogin : (BOOL)useKakaoAccountLogin scopes : (NSArray*)
+-                          scopes resolve : (RCTPromiseResolveBlock)
++                          scopes nonce : (NSString*)nonce resolve : (RCTPromiseResolveBlock)
+                               resolve reject : (RCTPromiseRejectBlock)reject) {
+   [[self manager] login:serviceTerms
+                    prompts:prompts
+       useKakaoAccountLogin:useKakaoAccountLogin
+                     scopes:scopes
++                     nonce:nonce
+                    resolve:resolve
+                     reject:reject];
+ }
+diff --git a/ios/RNCKakaoUserManager.swift b/ios/RNCKakaoUserManager.swift
+index a41676504666247407535f190114e2399211d65e..c1e612172507180e76155bda534a2275d479db1c 100644
+--- a/ios/RNCKakaoUserManager.swift
++++ b/ios/RNCKakaoUserManager.swift
+@@ -32,6 +32,7 @@ import RNCKakaoCore
+     prompts: [String],
+     useKakaoAccountLogin: Bool,
+     scopes: [String],
++    nonce: String?,
+     resolve: @escaping RCTPromiseResolveBlock,
+     reject: @escaping RCTPromiseRejectBlock
+   ) {
+@@ -61,10 +62,14 @@ import RNCKakaoCore
+       }
+ 
+       if !scopes.isEmpty {
+-        UserApi.shared.loginWithKakaoAccount(scopes: scopes, completion: callback)
++        UserApi.shared.loginWithKakaoAccount(scopes: scopes, nonce: nonce, completion: callback)
+       } else if UserApi.isKakaoTalkLoginAvailable(), !useKakaoAccountLogin {
+         UserApi.shared
+-          .loginWithKakaoTalk(serviceTerms: emptyArrayToNil(serviceTerms), completion: callback)
++          .loginWithKakaoTalk(
++            serviceTerms: emptyArrayToNil(serviceTerms),
++            nonce: nonce,
++            completion: callback
++          )
+       } else {
+         var _prompts: [Prompt] = []
+         for p in prompts {
+@@ -77,6 +82,7 @@ import RNCKakaoCore
+           .loginWithKakaoAccount(
+             prompts: emptyArrayToNil(_prompts),
+             serviceTerms: emptyArrayToNil(serviceTerms),
++            nonce: nonce,
+             completion: callback
+           )
+       }
+diff --git a/lib/commonjs/index.js b/lib/commonjs/index.js
+index 4ba28e14f60f87a1ee0b44eb00ce1b198a5c881a..adccead2d14dad95921342efe7f3ace229db32b5 100644
+--- a/lib/commonjs/index.js
++++ b/lib/commonjs/index.js
+@@ -35,11 +35,12 @@ function login({
+   serviceTerms,
+   prompts,
+   useKakaoAccountLogin,
+-  scopes
++  scopes,
++  web
+ } = {}) {
+   (0, _core.kAssert)(!useKakaoAccountLogin ? !_jsUtil.is.notEmptyArray(prompts) && !_jsUtil.is.notEmptyArray(scopes) : true, '[login] `prompts` and `scopes` cannot be passed if useKakaoAccountLogin is false.');
+   (0, _core.kAssert)(_jsUtil.is.notEmptyArray(scopes) ? !_jsUtil.is.notEmptyArray(prompts) && !_jsUtil.is.notEmptyArray(serviceTerms) : true, '[login] `scopes` cannot be passed with `prompts` or `serviceTerms`');
+-  return Native.login(serviceTerms ?? [], prompts ?? [], useKakaoAccountLogin ?? false, scopes ?? []);
++  return Native.login(serviceTerms ?? [], prompts ?? [], useKakaoAccountLogin ?? false, scopes ?? [], web?.nonce);
+ }
+ function logout() {
+   return Native.logout();
+diff --git a/lib/module/index.js b/lib/module/index.js
+index 459e200f75e398e982201fdc96040f251223954a..520c79d57c0c4cb3b348f091d9eb7c0dd744125a 100644
+--- a/lib/module/index.js
++++ b/lib/module/index.js
+@@ -16,11 +16,12 @@ export function login({
+   serviceTerms,
+   prompts,
+   useKakaoAccountLogin,
+-  scopes
++  scopes,
++  web
+ } = {}) {
+   kAssert(!useKakaoAccountLogin ? !is.notEmptyArray(prompts) && !is.notEmptyArray(scopes) : true, '[login] `prompts` and `scopes` cannot be passed if useKakaoAccountLogin is false.');
+   kAssert(is.notEmptyArray(scopes) ? !is.notEmptyArray(prompts) && !is.notEmptyArray(serviceTerms) : true, '[login] `scopes` cannot be passed with `prompts` or `serviceTerms`');
+-  return Native.login(serviceTerms ?? [], prompts ?? [], useKakaoAccountLogin ?? false, scopes ?? []);
++  return Native.login(serviceTerms ?? [], prompts ?? [], useKakaoAccountLogin ?? false, scopes ?? [], web?.nonce);
+ }
+ export function logout() {
+   return Native.logout();
+diff --git a/lib/typescript/src/index.d.ts b/lib/typescript/src/index.d.ts
+index d425fb6fb45491a52b0211a5ab4f4cab1e4da111..53cfebd51cd7d3d03f6767edfb2f19943498468c 100644
+--- a/lib/typescript/src/index.d.ts
++++ b/lib/typescript/src/index.d.ts
+@@ -86,13 +86,13 @@ export interface KakaoAccessTokenInfo {
+     appId: number;
+     expiresIn: number;
+ }
+-export declare function login({ serviceTerms, prompts, useKakaoAccountLogin, scopes, }?: {
++export declare function login({ serviceTerms, prompts, useKakaoAccountLogin, scopes, web, }?: {
+     serviceTerms?: string[];
+     prompts?: ('Login' | 'Create' | 'Cert' | 'UnifyDaum' | 'SelectAccount')[];
+     scopes?: string[];
+     useKakaoAccountLogin?: boolean;
+     web?: {
+-        redirectUri: string;
++        redirectUri?: string;
+         scope?: string[];
+         throughTalk?: boolean;
+         prompt?: ('login' | 'none' | 'create' | 'select_account')[];
+diff --git a/src/index.ts b/src/index.ts
+index 13f52ec2e8e4b0148288e323f839191038ab181d..b6fce4b623a177286bd32ab7e607df38f30dde13 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -120,13 +120,14 @@ export function login({
+   prompts,
+   useKakaoAccountLogin,
+   scopes,
++  web,
+ }: {
+   serviceTerms?: string[];
+   prompts?: ('Login' | 'Create' | 'Cert' | 'UnifyDaum' | 'SelectAccount')[];
+   scopes?: string[];
+   useKakaoAccountLogin?: boolean;
+   web?: {
+-    redirectUri: string;
++    redirectUri?: string;
+     scope?: string[];
+     throughTalk?: boolean;
+     prompt?: ('login' | 'none' | 'create' | 'select_account')[];
+@@ -151,6 +152,7 @@ export function login({
+     prompts ?? [],
+     useKakaoAccountLogin ?? false,
+     scopes ?? [],
++    web?.nonce,
+   );
+ }
+ 
+diff --git a/src/spec/NativeKakaoUser.ts b/src/spec/NativeKakaoUser.ts
+index 9cd9367afd128977c6a85019b385370c6832851b..5c486a33d859e657494b912ea945a8c7d2ac5501 100644
+--- a/src/spec/NativeKakaoUser.ts
++++ b/src/spec/NativeKakaoUser.ts
+@@ -17,6 +17,7 @@ export interface Spec extends TurboModule {
+     prompts: string[],
+     useKakaoAccountLogin: boolean,
+     scopes?: string[],
++    nonce?: string,
+   ): Promise<KakaoLoginToken>;
+   logout(): Promise<void>;
+   unlink(): Promise<void>;
