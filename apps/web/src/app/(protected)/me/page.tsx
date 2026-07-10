@@ -99,8 +99,7 @@ export default function MyPage() {
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="flex-1 overflow-y-auto"
-        style={{ background: '#F2F2F7' }}
+        className="flex-1 overflow-y-auto bg-muted"
       >
         {/* 프로필 섹션 */}
         <div className="px-5 pt-6 pb-5">
