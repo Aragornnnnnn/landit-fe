@@ -32,13 +32,16 @@ const ShellScreen = () => {
     SOCIAL_LOGIN_REQUEST: async ({ provider }) => {
       try {
         const nonce = generateNonce();
-        const { idToken, name } = await requestSocialIdToken(provider, nonce);
+        const { idToken, nickname } = await requestSocialIdToken(
+          provider,
+          nonce,
+        );
         postToWeb({
           type: 'SOCIAL_LOGIN_SUCCESS',
           provider,
           idToken,
           nonce,
-          name,
+          nickname,
         });
       } catch (error) {
         const message =

@@ -11,7 +11,7 @@ import {
 export interface AppleLoginResult {
   idToken: string;
   // 애플은 이름을 최초 로그인 1회만 credential로 주고 id_token에는 넣지 않는다 — 이후 로그인은 undefined
-  name?: string;
+  nickname?: string;
 }
 
 // 이름 조각(성·이름 등)을 iOS 로케일 규칙으로 한 문자열로 합친다 ("김준서" / "John Appleseed")
@@ -40,7 +40,7 @@ export async function requestAppleLogin(
     });
     return {
       idToken: assertIdToken(credential.identityToken ?? undefined),
-      name: formatFullName(credential.fullName),
+      nickname: formatFullName(credential.fullName),
     };
   } catch (error) {
     if (hasErrorCode(error, 'ERR_REQUEST_CANCELED')) {

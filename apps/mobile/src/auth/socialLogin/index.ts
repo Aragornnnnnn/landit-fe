@@ -10,7 +10,7 @@ export type SocialProvider = 'kakao' | 'google' | 'apple';
 export interface SocialLoginResult {
   idToken: string;
   // 애플 최초 로그인에서만 존재 — 구글·카카오는 이름이 id_token 클레임에 들어 있어 따로 안 보낸다
-  name?: string;
+  nickname?: string;
 }
 
 export async function requestSocialIdToken(

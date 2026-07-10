@@ -27,12 +27,12 @@ export async function socialLogin(
   idToken: string,
   nonce: string,
   // 애플 최초 로그인 1회에만 전달된다 — 애플은 이름을 id_token에 넣지 않아 이 경로가 유일하다
-  name?: string,
+  nickname?: string,
 ): Promise<SocialLoginResponse> {
   const response = await fetch(SOCIAL_LOGIN_PATH, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ provider, idToken, nonce, name }),
+    body: JSON.stringify({ provider, idToken, nonce, nickname }),
   });
   return parseApiResponse<SocialLoginResponse>(response);
 }
