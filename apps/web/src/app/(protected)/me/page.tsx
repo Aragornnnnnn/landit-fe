@@ -10,6 +10,7 @@ import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { ChevronLeftIcon } from '@/components/ui/Icons';
 import { useScrollShadow } from '@/hooks/useScrollShadow';
+import { clearSession } from '@/lib/clear-session';
 import { useAuthStore } from '@/store/auth-store';
 
 import { MenuButton, MenuGroup, MenuLink } from './_components/Menu';
@@ -19,7 +20,6 @@ export default function MyPage() {
   const router = useRouter();
   const member = useAuthStore((state) => state.member);
   const refreshToken = useAuthStore((state) => state.refreshToken);
-  const clearAuth = useAuthStore((state) => state.clearAuth);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
@@ -31,8 +31,9 @@ export default function MyPage() {
   const displayName = member?.nickname?.trim() || '게스트';
   const emailText = member?.email ?? '';
 
+  // 인증 상태와 쿼리 캐시를 함께 비운다 — 캐시가 남으면 다음 계정에 이전 계정 데이터가 노출된다
   function finishSignedOut() {
-    clearAuth();
+    clearSession();
     router.replace('/login');
   }
 
