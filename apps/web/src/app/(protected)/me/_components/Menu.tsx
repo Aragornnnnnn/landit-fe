@@ -1,7 +1,7 @@
 // iOS 설정풍 메뉴 — 흰 카드 그룹 안에 링크·버튼 행이 쌓인다
 import Link from 'next/link';
 
-import { ChevronRightIcon } from '@/components/ui/Icons';
+import { ChevronRightIcon } from '@/shared/ui/Icons';
 
 export function MenuGroup({ children }: { children: React.ReactNode }) {
   return (

@@ -3,9 +3,9 @@
 // 시나리오 카드 리스트 — 풀스크린 카드를 스냅으로 한 장씩 넘기고, 위아래로 이웃 카드가 살짝 보인다
 import { motion } from 'motion/react';
 
-import type { Scenario } from '@/api/scenarios/list';
-import { LockIcon } from '@/components/ui/Icons';
+import { LockIcon } from '@/shared/ui/Icons';
 
+import type { Scenario } from '../api/list';
 import { useSnapIndex } from '../model/useSnapIndex';
 import { ScenarioCard } from './ScenarioCard';
 

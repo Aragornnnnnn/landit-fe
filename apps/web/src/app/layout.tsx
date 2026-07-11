@@ -1,7 +1,7 @@
 // 앱 전체 공통 레이아웃 (루트) — Tossface(이모지) CDN 로딩. Pretendard는 globals.css에서 자체 호스팅
 import type { Metadata, Viewport } from 'next';
 
-import { BridgeListener } from '@/components/BridgeListener';
+import { BridgeListener } from '@/shared/bridge/BridgeListener';
 
 import { Providers } from './providers';
 

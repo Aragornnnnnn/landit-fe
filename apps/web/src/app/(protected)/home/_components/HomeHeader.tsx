@@ -1,8 +1,8 @@
 // 홈 헤더 — 로고와 내 정보 진입
 import Link from 'next/link';
 
-import { LanditLogo } from '@/components/LanditLogo';
-import { UserIcon } from '@/components/ui/Icons';
+import { UserIcon } from '@/shared/ui/Icons';
+import { LanditLogo } from '@/shared/ui/LanditLogo';
 
 export const HomeHeader = () => (
   <header className="flex shrink-0 items-center justify-between bg-background px-5 pt-[max(env(safe-area-inset-top),16px)] pb-2">

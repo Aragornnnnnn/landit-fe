@@ -1,8 +1,9 @@
 'use client';
 
 // 시나리오 카테고리 선택 바 — 가로 스크롤 칩, 잠긴 카테고리는 자물쇠 표시
-import type { ScenarioCategory } from '@/api/scenarios/list';
-import { LockIcon } from '@/components/ui/Icons';
+import { LockIcon } from '@/shared/ui/Icons';
+
+import type { ScenarioCategory } from '../api/list';
 
 interface CategoryBarProps {
   categories: ScenarioCategory[];

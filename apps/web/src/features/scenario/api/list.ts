@@ -1,5 +1,5 @@
 // 시나리오 전체 조회 — 카테고리별 시나리오 목록과 잠금·완료·별점·시작 미리보기 (백엔드 ScenarioListResponse 미러)
-import { api } from '@/api/client';
+import { api } from '@/shared/api/client';
 
 export interface ScenarioListResponse {
   categories: ScenarioCategory[];

@@ -4,9 +4,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { socialLogin } from '@/api/auth/social-login';
-import { postToNative, subscribeFromNative } from '@/bridge/web-bridge';
-import { useAuthStore } from '@/store/auth-store';
+import { socialLogin } from '@/shared/api/auth/social-login';
+import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
+import { useAuthStore } from '@/shared/store/auth-store';
 
 type SocialProvider = 'kakao' | 'google' | 'apple';
 

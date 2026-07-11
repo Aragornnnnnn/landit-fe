@@ -1,10 +1,11 @@
 'use client';
 
 // 시나리오 카드 — 썸네일·제목·브리핑과 상태(난이도·완료·잠금), 시작 CTA
-import type { Scenario } from '@/api/scenarios/list';
-import { Button } from '@/components/ui/Button';
-import { ArrowRightIcon, LockIcon } from '@/components/ui/Icons';
-import { StarRating } from '@/components/ui/StarRating';
+import { Button } from '@/shared/ui/Button';
+import { ArrowRightIcon, LockIcon } from '@/shared/ui/Icons';
+import { StarRating } from '@/shared/ui/StarRating';
+
+import type { Scenario } from '../api/list';
 
 interface ScenarioCardProps {
   scenario: Scenario;

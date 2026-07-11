@@ -4,14 +4,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { logout as requestLogout } from '@/api/auth/logout';
-import { withdraw } from '@/api/auth/withdraw';
-import { BottomSheet } from '@/components/ui/BottomSheet';
-import { Button } from '@/components/ui/Button';
-import { ChevronLeftIcon } from '@/components/ui/Icons';
-import { useScrollShadow } from '@/hooks/useScrollShadow';
-import { clearSession } from '@/lib/clear-session';
-import { useAuthStore } from '@/store/auth-store';
+import { logout as requestLogout } from '@/shared/api/auth/logout';
+import { withdraw } from '@/shared/api/auth/withdraw';
+import { clearSession } from '@/shared/lib/clear-session';
+import { useScrollShadow } from '@/shared/lib/useScrollShadow';
+import { useAuthStore } from '@/shared/store/auth-store';
+import { BottomSheet } from '@/shared/ui/BottomSheet';
+import { Button } from '@/shared/ui/Button';
+import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import { MenuButton, MenuGroup, MenuLink } from './_components/Menu';
 import { StatChip } from './_components/StatChip';

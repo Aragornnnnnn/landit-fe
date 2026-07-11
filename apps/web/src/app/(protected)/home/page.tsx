@@ -1,11 +1,11 @@
 'use client';
 
 // 홈 — 카테고리별 시나리오 목록에서 연습할 시나리오를 고른다
-import { Button } from '@/components/ui/Button';
 import { useScenarios } from '@/features/scenario/model/useScenarios';
 import { CategoryBar } from '@/features/scenario/ui/CategoryBar';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
 import { ScenarioList } from '@/features/scenario/ui/ScenarioList';
+import { Button } from '@/shared/ui/Button';
 
 import { HomeHeader } from './_components/HomeHeader';
 

@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { useAuthStore } from '@/store/auth-store';
+import { useAuthStore } from '@/shared/store/auth-store';
 
 export const AuthedRedirect = () => {
   const router = useRouter();
