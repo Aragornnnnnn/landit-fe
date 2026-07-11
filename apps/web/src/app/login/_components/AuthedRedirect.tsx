@@ -12,7 +12,7 @@ export const AuthedRedirect = () => {
 
   // 마운트 이후에만 판단 — 그 시점엔 persist 복원(동기)이 끝나 있다
   useEffect(() => {
-    if (isAuthed) router.replace('/');
+    if (isAuthed) router.replace('/home');
   }, [isAuthed, router]);
 
   return null;
