@@ -3,7 +3,7 @@
 // 개인정보 처리방침·서비스 이용약관 공통 레이아웃 — 문서 데이터를 받아 카드형으로 렌더한다
 import { useRouter } from 'next/navigation';
 
-import type { LegalDocument } from '@/lib/legal-document';
+import type { LegalDocument } from '@/shared/lib/legal-document';
 
 interface LegalDocumentPageProps {
   document: LegalDocument;

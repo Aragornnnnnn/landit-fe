@@ -4,8 +4,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { useClientOnlyValue } from '@/hooks/useClientOnlyValue';
-import { useAuthStore } from '@/store/auth-store';
+import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
+import { useAuthStore } from '@/shared/store/auth-store';
 
 export default function ProtectedLayout({
   children,

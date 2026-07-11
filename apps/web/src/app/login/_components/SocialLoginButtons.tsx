@@ -1,7 +1,7 @@
 'use client';
 
 // 로그인 화면의 소셜 버튼 3종 — 클릭을 useSocialLogin에 연결하고 에러를 노출한다
-import { useClientOnlyValue } from '@/hooks/useClientOnlyValue';
+import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
 import { useSocialLogin } from '../_hooks/useSocialLogin';
 import styles from '../login-motion.module.css';

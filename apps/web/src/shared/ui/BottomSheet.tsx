@@ -4,7 +4,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { createPortal } from 'react-dom';
 
-import { useClientOnlyValue } from '@/hooks/useClientOnlyValue';
+import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
 interface BottomSheetProps {
   open: boolean;
