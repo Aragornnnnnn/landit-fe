@@ -1,6 +1,8 @@
 'use client';
 
 // 홈 — 로그인 성공 확인용: 로그인한 사용자 정보를 보여준다 (시나리오 페이지로 대체 예정)
+import Link from 'next/link';
+
 import { useAuthStore } from '@/store/auth-store';
 
 export default function HomePage() {
@@ -32,6 +34,13 @@ export default function HomePage() {
           <dd className="font-semibold text-foreground">{member?.provider}</dd>
         </div>
       </dl>
+
+      <Link
+        href="/me"
+        className="mt-2 rounded-xl px-4 py-2 text-sm font-semibold text-muted-foreground ring-1 ring-border transition-all active:brightness-95"
+      >
+        마이페이지
+      </Link>
     </main>
   );
 }

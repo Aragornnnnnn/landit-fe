@@ -5,8 +5,8 @@ import { termsDocument } from '@/lib/terms-document';
 const TermsPage = () => (
   <LegalDocumentPage
     document={termsDocument}
-    backHref="/"
-    backLabel="홈으로 돌아가기"
+    backHref="/me"
+    backLabel="내 정보로 돌아가기"
   />
 );
 
