@@ -3,7 +3,7 @@
 // 홈 — 로그인 성공 확인용: 로그인한 사용자 정보를 보여준다 (시나리오 페이지로 대체 예정)
 import Link from 'next/link';
 
-import { useAuthStore } from '@/store/auth-store';
+import { useAuthStore } from '@/shared/store/auth-store';
 
 export default function HomePage() {
   const member = useAuthStore((state) => state.member);

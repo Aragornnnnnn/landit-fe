@@ -1,5 +1,5 @@
 // 로그인 화면 — 소셜 로그인 진입점 + 네이티브 스플래시에서 이어지는 진입 모션
-import { LanditLogo } from '@/components/LanditLogo';
+import { LanditLogo } from '@/shared/ui/LanditLogo';
 
 import { AuthedRedirect } from './_components/AuthedRedirect';
 import { SocialLoginButtons } from './_components/SocialLoginButtons';

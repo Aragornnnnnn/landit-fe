@@ -1,5 +1,5 @@
 // 소셜 로그인 idToken을 백엔드에 넘겨 자체 access/refresh 토큰을 발급받는다
-import { parseApiResponse } from '@/api/parse';
+import { parseApiResponse } from '@/shared/api/parse';
 
 export const SOCIAL_LOGIN_PATH = '/api/v1/auth/social-login';
 
