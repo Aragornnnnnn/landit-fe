@@ -3,6 +3,8 @@ import type { Metadata, Viewport } from 'next';
 
 import { BridgeListener } from '@/shared/bridge/BridgeListener';
 
+import { Providers } from './providers';
+
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -35,7 +37,7 @@ export default function RootLayout({
       </head>
       <body>
         <BridgeListener />
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

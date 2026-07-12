@@ -109,8 +109,8 @@ const ShellScreen = () => {
     <WebView
       key={loadAttempt}
       ref={webviewRef}
-      // 앱 진입점은 로그인 화면 — 인증 붙기 전까지 루트 대신 /login을 바로 로드한다
-      source={{ uri: `${WEB_URL}/login` }}
+      // 앱 진입점은 루트 — 로그인 여부는 웹의 인증 가드가 판단해 로그인/홈으로 보낸다
+      source={{ uri: `${WEB_URL}/` }}
       onMessage={onMessage}
       onLoad={() => setIsWebReady(true)}
       onError={() => setLoadFailed(true)}

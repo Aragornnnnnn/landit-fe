@@ -61,6 +61,9 @@
   --orange-600: #c4601f;
   /* 시맨틱 액센트 원색 */
   --red-500: #ff3b30;
+  /* 별점 팔레트 (피그마 피드백 화면 스펙) */
+  --amber-400: #fbbf24;
+  --gray-300: #d4d8df;
 
   /* ── Layer 2: Semantic — 역할 토큰. 다크모드 도입 시 이 블록만 재정의한다 ── */
   --background: var(--gray-50);
@@ -83,6 +86,8 @@
   --border: var(--gray-200);
   --input: var(--gray-200);
   --ring: var(--orange-500);
+  --star-filled: var(--amber-400);
+  --star-empty: var(--gray-300);
   --radius: 0.75rem;
 }
 

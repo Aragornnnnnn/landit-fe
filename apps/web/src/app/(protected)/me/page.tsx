@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { logout as requestLogout } from '@/shared/api/auth/logout';
 import { withdraw } from '@/shared/api/auth/withdraw';
+import { clearSession } from '@/shared/lib/clear-session';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { useAuthStore } from '@/shared/store/auth-store';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
@@ -19,7 +20,6 @@ export default function MyPage() {
   const router = useRouter();
   const member = useAuthStore((state) => state.member);
   const refreshToken = useAuthStore((state) => state.refreshToken);
-  const clearAuth = useAuthStore((state) => state.clearAuth);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
@@ -31,8 +31,9 @@ export default function MyPage() {
   const displayName = member?.nickname?.trim() || '게스트';
   const emailText = member?.email ?? '';
 
+  // 인증 상태와 쿼리 캐시를 함께 비운다 — 캐시가 남으면 다음 계정에 이전 계정 데이터가 노출된다
   function finishSignedOut() {
-    clearAuth();
+    clearSession();
     router.replace('/login');
   }
 
@@ -80,7 +81,7 @@ export default function MyPage() {
       >
         <button
           type="button"
-          onClick={() => router.replace('/')}
+          onClick={() => router.replace('/home')}
           className="flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90 active:bg-zinc-200"
           style={{ color: '#444', marginLeft: -4 }}
           aria-label="뒤로 가기"

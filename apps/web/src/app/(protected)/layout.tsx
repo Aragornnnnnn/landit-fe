@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { useAuthStore } from '@/shared/store/auth-store';
 
+import { AuthSplash } from './_components/AuthSplash';
+
 export default function ProtectedLayout({
   children,
 }: {
@@ -21,7 +23,7 @@ export default function ProtectedLayout({
     if (hydrated && !isAuthed) router.replace('/login');
   }, [hydrated, isAuthed, router]);
 
-  // 판단 전이거나 리다이렉트 대기 중엔 보호 콘텐츠를 그리지 않는다
-  if (!hydrated || !isAuthed) return null;
+  // 판단 전이거나 리다이렉트 대기 중엔 스플래시를 유지한다 — 흰 화면 깜빡임 없이 로그인/홈 어느 쪽으로든 이어진다
+  if (!hydrated || !isAuthed) return <AuthSplash />;
   return children;
 }
