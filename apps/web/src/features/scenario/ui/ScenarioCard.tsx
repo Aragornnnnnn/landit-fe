@@ -72,7 +72,7 @@ export const ScenarioCard = ({ scenario, onStart }: ScenarioCardProps) => {
             )}
           </div>
           {scenario.briefing && (
-            <p className="mt-2 line-clamp-2 text-sm leading-relaxed font-medium text-muted-foreground">
+            <p className="mt-2 text-sm leading-relaxed font-medium text-muted-foreground">
               {scenario.briefing}
             </p>
           )}
