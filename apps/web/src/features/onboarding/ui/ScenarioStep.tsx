@@ -4,25 +4,24 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
+import type { Scenario } from '@/features/scenario/api/list';
+import { resolveScenarioImage } from '@/features/scenario/lib/scenario-image';
+import { useScenarios } from '@/features/scenario/model/useScenarios';
 import { Button } from '@/shared/ui/Button';
 
-// TODO: 시나리오 API 연동 시 응답 첫 시나리오로 교체
-const PLACEHOLDER_SCENARIO = {
-  scenarioId: 1,
-  scenarioTitle: '음식 취향 이야기하기',
-  briefing: '좋아하는 음식과 최근 먹었던 음식에 대해 이야기합니다.',
-};
-
-type Scenario = typeof PLACEHOLDER_SCENARIO;
-
 export const ScenarioStep = ({ onStart }: { onStart: () => void }) => {
-  const scenario = PLACEHOLDER_SCENARIO;
+  // 첫 대화 = 첫(미잠금) 카테고리의 첫 시나리오 — 홈 리스트가 보여주는 것과 같은 순서
+  const { selected } = useScenarios();
+  const scenario = selected?.scenarios[0] ?? null;
 
   const [isUnlocked, setIsUnlocked] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => setIsUnlocked(true), 650);
     return () => clearTimeout(timer);
   }, []);
+
+  // 텍스트는 잠금 해제 애니메이션과 시나리오 로딩이 모두 끝난 뒤 보여준다
+  const showText = isUnlocked && scenario !== null;
 
   return (
     <>
@@ -32,7 +31,7 @@ export const ScenarioStep = ({ onStart }: { onStart: () => void }) => {
           <br />첫 번째 대화가 기다리고 있어요
         </h1>
 
-        <ScenarioCard scenario={scenario} isUnlocked={isUnlocked} />
+        <ScenarioCard scenario={scenario} showText={showText} />
       </div>
 
       <Button onClick={onStart} disabled={!isUnlocked}>
@@ -45,27 +44,28 @@ export const ScenarioStep = ({ onStart }: { onStart: () => void }) => {
 // 시나리오 이미지와 제목·브리핑 카드 — 텍스트는 잠금 해제 후 페이드 인
 const ScenarioCard = ({
   scenario,
-  isUnlocked,
+  showText,
 }: {
-  scenario: Scenario;
-  isUnlocked: boolean;
+  scenario: Scenario | null;
+  showText: boolean;
 }) => {
+  // 홈 카드와 같은 규칙으로 이미지를 고른다(백엔드 썸네일 → scenarioId 번들). 로딩 중엔 중립 배경만.
+  const imageUrl = scenario ? resolveScenarioImage(scenario) : null;
+
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div
-        className="relative w-full overflow-hidden rounded-3xl"
+        className="relative w-full overflow-hidden rounded-3xl bg-secondary"
         style={{ aspectRatio: '4/3' }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={`/images/scenarios/scenario-${scenario.scenarioId}.webp`}
-          alt=""
-          className="h-full w-full object-cover"
-        />
+        {imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+        )}
       </div>
 
       <AnimatePresence>
-        {isUnlocked && (
+        {showText && scenario && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
