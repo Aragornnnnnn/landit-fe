@@ -35,12 +35,21 @@ export default function HomePage() {
         </div>
       </dl>
 
-      <Link
-        href="/me"
-        className="mt-2 rounded-xl px-4 py-2 text-sm font-semibold text-muted-foreground ring-1 ring-border transition-all active:brightness-95"
-      >
-        마이페이지
-      </Link>
+      <div className="mt-2 flex gap-2">
+        <Link
+          href="/me"
+          className="rounded-xl px-4 py-2 text-sm font-semibold text-muted-foreground ring-1 ring-border transition-all active:brightness-95"
+        >
+          마이페이지
+        </Link>
+        {/* STT 훅 동작 확인용 임시 링크 — 대화/프리톡 기능이 생기면 제거 */}
+        <Link
+          href="/stt-demo"
+          className="rounded-xl px-4 py-2 text-sm font-semibold text-muted-foreground ring-1 ring-border transition-all active:brightness-95"
+        >
+          STT 데모
+        </Link>
+      </div>
     </main>
   );
 }
