@@ -6,6 +6,7 @@ import { ArrowRightIcon, LockIcon } from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
 
 import type { Scenario } from '../api/list';
+import { resolveScenarioImage } from '../lib/scenario-image';
 
 interface ScenarioCardProps {
   scenario: Scenario;
@@ -18,14 +19,17 @@ export const ScenarioCard = ({ scenario, onStart }: ScenarioCardProps) => {
   // completed → 제목 옆 별점 + "다시 해볼게요"
   const { locked, completed } = scenario;
 
+  // 백엔드 썸네일이 없으면 scenarioId로 번들 이미지를 매칭한다(S3 미구현 임시)
+  const imageUrl = resolveScenarioImage(scenario);
+
   return (
     <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl bg-card shadow-md">
       {/* 썸네일 — 텍스트 영역을 제외한 카드 전체를 채운다. 카드가 화면을 꽉 채우는 건 뒷면(표현학습 뒤집기, 후속 이슈)을 담기 위함 */}
       <div className="relative min-h-0 w-full flex-1 overflow-hidden bg-foreground">
-        {scenario.thumbnailUrl ? (
+        {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- 백엔드 썸네일 도메인이 미정이라 next/image 원격 허용 목록을 아직 못 만든다
           <img
-            src={scenario.thumbnailUrl}
+            src={imageUrl}
             alt={scenario.scenarioTitle}
             className={`h-full w-full object-cover transition-[filter] duration-500 ${
               locked ? 'brightness-70 grayscale' : ''
