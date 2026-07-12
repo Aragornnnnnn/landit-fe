@@ -125,6 +125,8 @@ const ShellScreen = () => {
       )}
       // iOS는 시스템 뒤로가기 버튼이 없다 — 화면 끝 스와이프로 WebView 히스토리를 직접 탐색하게 한다
       allowsBackForwardNavigationGestures
+      // 웹 getUserMedia(STT 마이크) 요청을 OS 권한만으로 허용 — iOS에서 앱·웹뷰 이중 권한 팝업 방지
+      mediaCapturePermissionGrantType="grant"
       style={styles.webview}
     />
   );
