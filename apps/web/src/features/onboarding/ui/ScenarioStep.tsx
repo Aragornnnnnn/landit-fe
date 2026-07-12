@@ -3,9 +3,10 @@
 
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import Image from 'next/image';
 
 import type { Scenario } from '@/features/scenario/api/list';
-import { resolveScenarioImage } from '@/features/scenario/lib/scenario-image';
+import { getScenarioImage } from '@/features/scenario/lib/scenario-image';
 import { useScenarios } from '@/features/scenario/model/useScenarios';
 import { Button } from '@/shared/ui/Button';
 
@@ -49,8 +50,8 @@ const ScenarioCard = ({
   scenario: Scenario | null;
   showText: boolean;
 }) => {
-  // 홈 카드와 같은 규칙으로 이미지를 고른다(백엔드 썸네일 → scenarioId 번들). 로딩 중엔 중립 배경만.
-  const imageUrl = scenario ? resolveScenarioImage(scenario) : null;
+  // 홈 리스트와 같은 규칙으로 첫 시나리오 이미지를 고른다. 로딩 중엔 중립 배경만.
+  const bundledImage = scenario ? getScenarioImage(scenario.scenarioId) : null;
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -58,9 +59,16 @@ const ScenarioCard = ({
         className="relative w-full overflow-hidden rounded-3xl bg-secondary"
         style={{ aspectRatio: '4/3' }}
       >
-        {imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+        {bundledImage && (
+          // 정적 import라 blurDataURL 자동 — 흐린 썸네일이 즉시 깔리고 본 이미지가 페이드인
+          <Image
+            src={bundledImage}
+            alt=""
+            fill
+            sizes="(max-width: 430px) 100vw, 430px"
+            placeholder="blur"
+            className="object-cover"
+          />
         )}
       </div>
 
