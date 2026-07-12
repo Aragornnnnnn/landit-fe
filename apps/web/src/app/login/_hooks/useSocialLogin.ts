@@ -38,7 +38,7 @@ export function useSocialLogin() {
           // newUser는 로그인 시점 분기용이라 전역 상태에는 빼고 저장한다. 온보딩 화면이 생기면 여기서 분기한다.
           const { newUser, ...member } = user;
           setAuth(accessToken, refreshToken, member);
-          router.replace('/');
+          router.replace('/home');
         } catch (error) {
           // 개발 모드에선 서버가 준 실패 사유를 화면·콘솔에 그대로 노출한다 (프로덕션은 일반 문구만)
           const isDev = process.env.NODE_ENV === 'development';
