@@ -35,10 +35,11 @@ export function useSocialLogin() {
             message.nonce,
             message.nickname,
           );
-          // newUser는 로그인 시점 분기용이라 전역 상태에는 빼고 저장한다. 온보딩 화면이 생기면 여기서 분기한다.
+          // newUser는 로그인 시점 분기용이라 전역 상태에는 빼고 저장한다
           const { newUser, ...member } = user;
           setAuth(accessToken, refreshToken, member);
-          router.replace('/home');
+          // TODO: 온보딩 중도 이탈 유저는 재로그인 시 newUser=false라 다시 못 본다 — 서버 완료 플래그가 생기면 그걸로 분기
+          router.replace(newUser ? '/onboarding' : '/home');
         } catch (error) {
           // 개발 모드에선 서버가 준 실패 사유를 화면·콘솔에 그대로 노출한다 (프로덕션은 일반 문구만)
           const isDev = process.env.NODE_ENV === 'development';
