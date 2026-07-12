@@ -108,6 +108,19 @@
   *::-webkit-scrollbar {
     display: none;
   }
+  /* 웹뷰 셸 — 웹페이지스러운 제스처 차단 (텍스트 선택·오버스크롤) */
+  html {
+    -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
+  }
+  /* 입력·편집 영역은 선택 허용 (위 차단의 예외) */
+  input,
+  textarea,
+  [contenteditable='true'] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
   body {
     @apply bg-background text-foreground;
   }
