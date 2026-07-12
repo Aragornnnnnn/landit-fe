@@ -39,9 +39,8 @@ jobs:
       - name: 타입체크
         run: pnpm typecheck
 
+      - name: 테스트
+        run: pnpm test
+
       - name: 빌드
         run: pnpm build
-
-      # 테스트 도입 시 여기에 추가 (checklist: Vitest는 핵심 로직 생길 때)
-      # - name: 테스트
-      #   run: pnpm test
