@@ -125,6 +125,12 @@ const ShellScreen = () => {
       )}
       // iOS는 시스템 뒤로가기 버튼이 없다 — 화면 끝 스와이프로 WebView 히스토리를 직접 탐색하게 한다
       allowsBackForwardNavigationGestures
+      // 오버스크롤(iOS 바운스·Android 글로우)과 줌 차단 — 앱스러운 동작
+      bounces={false}
+      overScrollMode="never"
+      setBuiltInZoomControls={false}
+      // dev 빌드에서만 원격 디버깅 (Safari/Chrome 인스펙터)
+      webviewDebuggingEnabled={__DEV__}
       style={styles.webview}
     />
   );
