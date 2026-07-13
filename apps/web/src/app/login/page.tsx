@@ -2,6 +2,7 @@
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
 import { AuthedRedirect } from './_components/AuthedRedirect';
+import { DevLoginButton } from './_components/DevLoginButton';
 import { SocialLoginButtons } from './_components/SocialLoginButtons';
 import styles from './login-motion.module.css';
 
@@ -39,6 +40,8 @@ const LoginPage = () => (
       <div className="flex-1" />
 
       <SocialLoginButtons />
+      {/* 개발용 로그인 우회 — 플래그 켜졌을 때만 노출 (LAN-83 worktree 웹 확인용) */}
+      <DevLoginButton />
     </div>
   </main>
 );
