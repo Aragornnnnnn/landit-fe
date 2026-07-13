@@ -1,6 +1,7 @@
 // 앱 전체에서 사용하는 3D 버튼
 
-type Variant = 'primary' | 'white' | 'secondary' | 'ghost' | 'danger';
+type Variant =
+  'primary' | 'white' | 'secondary' | 'ghost' | 'danger' | 'success';
 type Size = 'lg' | 'md' | 'sm';
 
 interface ButtonProps extends React.ComponentProps<'button'> {
@@ -23,6 +24,8 @@ const variantClasses: Record<Variant, string> = {
   ghost: 'border border-border bg-card text-foreground [--edge:var(--border)]',
   danger:
     'bg-destructive text-destructive-foreground [--edge:color-mix(in_srgb,var(--destructive)_70%,black)]',
+  success:
+    'bg-success text-success-foreground [--edge:color-mix(in_srgb,var(--success)_72%,black)]',
 };
 
 const sizeClasses: Record<Size, string> = {
