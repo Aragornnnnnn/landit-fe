@@ -28,6 +28,8 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -61,6 +63,8 @@
   --orange-600: #c4601f;
   /* 시맨틱 액센트 원색 */
   --red-500: #ff3b30;
+  /* 테라코타 오렌지와 어울리는 어시 포레스트 그린 (에메랄드 #22a45e에서 채도↓·명도↓) */
+  --green-500: #2f7d54;
   /* 별점 팔레트 (피그마 피드백 화면 스펙) */
   --amber-400: #fbbf24;
   --gray-300: #d4d8df;
@@ -83,6 +87,8 @@
   --accent-foreground: var(--white);
   --destructive: var(--red-500);
   --destructive-foreground: var(--white);
+  --success: var(--green-500);
+  --success-foreground: var(--white);
   --border: var(--gray-200);
   --input: var(--gray-200);
   --ring: var(--orange-500);
@@ -132,7 +138,48 @@
   }
 }
 
+/* 오답 단어 흔들림 — 복습 영작에서 틀린 단어에 적용 */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-5px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+/* 정답 글자 튀어오름 — 복습 영작 성공 시 글자칸에 순차 적용 */
+@keyframes pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.35) translateY(-2px);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 @layer utilities {
+  .animate-shake {
+    animation: shake 0.4s ease-in-out;
+  }
+
+  .animate-pop {
+    animation: pop 0.45s ease;
+  }
+
   /* 이모지는 Tossface로 렌더해 플랫폼 간 일관성 유지 */
   .tossface {
     font-family:
