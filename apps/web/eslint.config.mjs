@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
+    // MSW가 생성한 서비스워커 원본 — 수정하지 않으므로 린트 제외
+    'public/mockServiceWorker.js',
   ]),
   {
     rules: {
