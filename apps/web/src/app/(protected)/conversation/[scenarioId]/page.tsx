@@ -5,6 +5,7 @@ import { use } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { ConversationFlow } from '@/features/conversation/ui/ConversationFlow';
+import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSkeleton';
 import { useScenarios } from '@/features/scenario/model/useScenarios';
 import { Button } from '@/shared/ui/Button';
 
@@ -23,11 +24,7 @@ export default function ConversationPage({
     .find((item) => item.scenarioId === id);
 
   if (isLoading) {
-    return (
-      <main className="mx-auto flex h-dvh max-w-[430px] items-center justify-center bg-background">
-        <span className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-primary" />
-      </main>
-    );
+    return <ConversationSkeleton />;
   }
 
   if (error || !scenario) {
