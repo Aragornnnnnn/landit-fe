@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import type { Scenario } from '@/features/scenario/api/list';
-import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
 import { useConversationFlow } from '../model/useConversationFlow';
@@ -17,20 +16,13 @@ import { QuestionCard } from './QuestionCard';
 import { ThoughtOverlay } from './ThoughtOverlay';
 import { UserTranscript } from './UserTranscript';
 
-export const ConversationFlow = ({
-  scenario,
-  // 상대 캐릭터 성별 — 세션 API 연동 시 ttsVoice.gender로 결정한다. 연동 전까지 남자 고정.
-  partner = 'male',
-}: {
-  scenario: Scenario;
-  partner?: 'male' | 'female';
-}) => {
+export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   const router = useRouter();
   const [showExitModal, setShowExitModal] = useState(false);
   const {
-    status,
     phase,
     turn,
+    partner,
     transcript,
     setTranscript,
     pressMic,
@@ -38,26 +30,6 @@ export const ConversationFlow = ({
     finishListening,
     leave,
   } = useConversationFlow(scenario);
-
-  // 세션 시작 대기·실패 처리 — 시작돼야 대화 UI가 의미를 가진다
-  if (status !== 'ready') {
-    return (
-      <main className="mx-auto flex h-dvh max-w-[430px] flex-col items-center justify-center gap-4 bg-background px-6 text-center">
-        {status === 'starting' ? (
-          <span className="size-6 animate-spin rounded-full border-2 border-muted border-t-primary" />
-        ) : (
-          <>
-            <p className="text-sm text-muted-foreground">
-              대화를 시작하지 못했어요.
-            </p>
-            <Button variant="secondary" onClick={() => router.push('/home')}>
-              홈으로
-            </Button>
-          </>
-        )}
-      </main>
-    );
-  }
 
   // 모든 턴이 끝나면 표현 준비 화면으로 전환한다 (표현학습·피드백 연동은 후속 이슈)
   if (phase === 'DONE') {

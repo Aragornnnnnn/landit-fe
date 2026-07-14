@@ -15,10 +15,15 @@ const harper: TtsVoice = {
 // 경계 목 — 네트워크(fetch)와 브라우저 오디오(Audio, objectURL)만 가짜로 둔다
 class FakeAudio {
   static instances: FakeAudio[] = [];
+  static playRejection: unknown = null; // 설정 시 play()가 이 값으로 거부된다
   src: string;
   onended: (() => void) | null = null;
   onerror: (() => void) | null = null;
-  play = vi.fn(() => Promise.resolve());
+  play = vi.fn(() =>
+    FakeAudio.playRejection
+      ? Promise.reject(FakeAudio.playRejection)
+      : Promise.resolve(),
+  );
   pause = vi.fn();
 
   constructor(src: string) {
@@ -36,6 +41,7 @@ function fakeAudioResponse(): Response {
 
 beforeEach(() => {
   FakeAudio.instances = [];
+  FakeAudio.playRejection = null;
   vi.stubGlobal('Audio', FakeAudio);
   URL.createObjectURL = vi.fn(() => 'blob:fake-url');
   URL.revokeObjectURL = vi.fn();
@@ -145,7 +151,7 @@ describe('useTts', () => {
     expect(result.current.status).toBe('idle');
   });
 
-  it('재생 중 stop을 부르면 오디오를 멈추고 onEnd를 부른다', async () => {
+  it('재생 중 stop을 부르면 오디오를 멈추되 onEnd는 부르지 않는다 (대화 진행에 개입 방지)', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => fakeAudioResponse()),
@@ -157,7 +163,7 @@ describe('useTts', () => {
     act(() => result.current.stop());
 
     expect(FakeAudio.instances[0]!.pause).toHaveBeenCalled();
-    expect(onEnd).toHaveBeenCalledTimes(1);
+    expect(onEnd).not.toHaveBeenCalled();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:fake-url');
     expect(result.current.status).toBe('idle');
   });
@@ -201,5 +207,72 @@ describe('useTts', () => {
     });
 
     expect(result.current.status).toBe('loading');
+  });
+
+  it('미리 합성(prefetch)해두면 speak가 다시 요청하지 않고 캐시로 재생한다', async () => {
+    const fetchMock = vi.fn(async () => fakeAudioResponse());
+    vi.stubGlobal('fetch', fetchMock);
+    const { result } = renderHook(() => useTts());
+
+    await act(() => result.current.prefetch('Hello', harper));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await act(() => result.current.speak('Hello', harper));
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(FakeAudio.instances[0]!.play).toHaveBeenCalled();
+    expect(result.current.status).toBe('active');
+  });
+
+  it('speakSrc는 합성 없이 정적 URL을 바로 재생하고, 끝나면 onEnd를 부른다', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const onEnd = vi.fn();
+    const { result } = renderHook(() => useTts());
+
+    await act(async () => {
+      result.current.speakSrc('/audio/opening-1.mp3', { onEnd });
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(FakeAudio.instances[0]!.src).toBe('/audio/opening-1.mp3');
+    expect(FakeAudio.instances[0]!.play).toHaveBeenCalled();
+    expect(result.current.status).toBe('active');
+
+    act(() => FakeAudio.instances[0]!.onended?.());
+
+    expect(onEnd).toHaveBeenCalledTimes(1);
+    expect(result.current.status).toBe('idle');
+  });
+
+  it('speakSrc 재생이 실패하면 onError를 부른다 (정적 파일 없음 등)', async () => {
+    vi.stubGlobal('fetch', vi.fn());
+    const onError = vi.fn();
+    const { result } = renderHook(() => useTts());
+
+    await act(async () => {
+      result.current.speakSrc('/audio/missing.mp3', { onError });
+    });
+    act(() => FakeAudio.instances[0]!.onerror?.());
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(result.current.status).toBe('error');
+  });
+
+  it('speakSrc의 play가 stop(pause)으로 중단(AbortError)되면 onError를 부르지 않는다', async () => {
+    vi.stubGlobal('fetch', vi.fn());
+    FakeAudio.playRejection = new DOMException(
+      'interrupted by pause',
+      'AbortError',
+    );
+    const onError = vi.fn();
+    const { result } = renderHook(() => useTts());
+
+    await act(async () => {
+      result.current.speakSrc('/audio/opening-1.mp3', { onError });
+    });
+
+    // AbortError는 합성 폴백을 부르지 않는다 (정적 재생이 그대로 유지되도록)
+    expect(onError).not.toHaveBeenCalled();
   });
 });

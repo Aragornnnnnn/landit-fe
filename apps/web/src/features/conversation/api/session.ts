@@ -1,15 +1,10 @@
 // 대화 세션 API — 시작·발화 제출·종료 (백엔드 세션 엔드포인트 미러)
 // FE는 BE만 호출하고, BE가 내부에서 AI 서버를 오케스트레이션한다.
 import { api } from '@/shared/api/client';
+// ttsVoice는 재생(useTts)과 같은 타입을 공유한다
+import type { TtsVoice } from '@/shared/lib/tts/tts.types';
 
 export type InputType = 'VOICE' | 'TEXT' | 'GENERATED';
-
-export interface TtsVoice {
-  provider: string;
-  model: string;
-  providerVoiceId: string;
-  gender: string;
-}
 
 // 시작 응답의 currentMessage — AI 선발화 시 첫 질문(속마음까지 포함)
 export interface CurrentMessage {
