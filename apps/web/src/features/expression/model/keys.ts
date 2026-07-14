@@ -4,8 +4,6 @@ export const expressionKeys = {
   all: ['expressions'] as const,
   list: (userId: number | null, scenarioId: number) =>
     [...expressionKeys.all, 'list', userId, scenarioId] as const,
-  learning: (expressionId: number) =>
-    [...expressionKeys.all, 'learning', expressionId] as const,
   practice: (expressionId: number) =>
     [...expressionKeys.all, 'practice', expressionId] as const,
 };
