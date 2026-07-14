@@ -145,7 +145,7 @@ describe('useTts', () => {
     expect(result.current.status).toBe('idle');
   });
 
-  it('재생 중 stop을 부르면 오디오를 멈추고 onEnd를 부른다', async () => {
+  it('재생 중 stop을 부르면 오디오를 멈추되 onEnd는 부르지 않는다 (대화 진행에 개입 방지)', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => fakeAudioResponse()),
@@ -157,7 +157,7 @@ describe('useTts', () => {
     act(() => result.current.stop());
 
     expect(FakeAudio.instances[0]!.pause).toHaveBeenCalled();
-    expect(onEnd).toHaveBeenCalledTimes(1);
+    expect(onEnd).not.toHaveBeenCalled();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:fake-url');
     expect(result.current.status).toBe('idle');
   });

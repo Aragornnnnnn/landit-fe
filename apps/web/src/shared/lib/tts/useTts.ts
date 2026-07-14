@@ -187,16 +187,13 @@ export function useTts() {
     }
   };
 
+  // 중단은 '재생 완료'가 아니다 — onEnd는 오디오가 실제로 끝났을 때(onended)만 부른다.
+  // (effect 정리·언마운트·StrictMode 재실행에서 stop이 불려도 대화가 advance되면 안 된다)
   const stop = () => {
     abortRef.current?.abort();
     abortRef.current = null;
-    const wasPlaying = audioRef.current !== null;
-    const onEnd = onEndRef.current;
-    cleanup();
-    if (wasPlaying) {
-      setStatus('idle');
-      onEnd?.();
-    }
+    cleanup(); // onEndRef도 지워 다시 불리지 않게 한다
+    setStatus('idle');
   };
 
   return { speak, speakSrc, prefetch, stop, status };
