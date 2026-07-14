@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 
-import { speechTypingMs } from '../model/sim-fixture';
+import { speechTypingMs } from '../model/pacing';
 import { TypingCursor } from './TypingCursor';
 
 interface QuestionCardProps {
@@ -48,6 +48,14 @@ export const QuestionCard = ({
   const typing = speaking && visibleCount < question.length;
   const done = visibleCount >= question.length;
 
+  // 질문이 길수록 글자를 줄여 줄 수를 낮춘다 — 답변·마이크 공간 압박을 덜고, 스크롤과 함께 가독성을 지킨다
+  const questionSize =
+    question.length > 180
+      ? 'text-[17px]'
+      : question.length > 100
+        ? 'text-[19px]'
+        : 'text-[21px]';
+
   return (
     <motion.div
       key={question}
@@ -56,7 +64,9 @@ export const QuestionCard = ({
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className="w-full rounded-[28px] rounded-tl-md bg-card px-6 py-6 shadow-lg shadow-black/5"
     >
-      <p className="min-h-14 text-[21px] leading-snug font-bold text-foreground">
+      <p
+        className={`min-h-14 ${questionSize} leading-snug font-bold text-foreground`}
+      >
         {question.slice(0, visibleCount)}
         {typing && <TypingCursor />}
       </p>
