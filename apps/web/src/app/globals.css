@@ -31,6 +31,12 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-good: var(--good);
+  --color-good-bg: var(--good-bg);
+  --color-good-border: var(--good-border);
+  --color-need: var(--need);
+  --color-need-bg: var(--need-bg);
+  --color-need-border: var(--need-border);
 
   --font-sans:
     'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont,
@@ -64,6 +70,13 @@
   /* 별점 팔레트 (피그마 피드백 화면 스펙) */
   --amber-400: #fbbf24;
   --gray-300: #d4d8df;
+  /* 의미색 — GOOD 상태=파랑, NEED IMPROVEMENT 상태=초록. 브랜드색(주황)과 분리 (피그마 피드백 상세 스펙) */
+  --blue-100: #eef2fb;
+  --blue-200: #bcd0ee;
+  --blue-700: #3a5a8a;
+  --green-50: #f0fdf4;
+  --green-200: #bbf7d0;
+  --green-600: #16a34a;
 
   /* ── Layer 2: Semantic — 역할 토큰. 다크모드 도입 시 이 블록만 재정의한다 ── */
   --background: var(--gray-50);
@@ -88,6 +101,12 @@
   --ring: var(--orange-500);
   --star-filled: var(--amber-400);
   --star-empty: var(--gray-300);
+  --good: var(--blue-700);
+  --good-bg: var(--blue-100);
+  --good-border: var(--blue-200);
+  --need: var(--green-600);
+  --need-bg: var(--green-50);
+  --need-border: var(--green-200);
   --radius: 0.75rem;
 }
 
