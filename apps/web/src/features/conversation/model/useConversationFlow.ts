@@ -1,11 +1,12 @@
-// 대화 플로우 훅 — 상태 기계를 세션 API에 배선한다 (시작·발화 제출·종료)
-// STT/TTS 연동 지점: AI 발화 타이머 → useTts onEnd(LAN-140), 유저 입력 → useStt transcript(LAN-141)
+// 대화 플로우 훅 — 상태 기계를 세션 API·TTS에 배선한다 (시작·발화 제출·종료·재생)
+// 남은 연동 지점: 유저 입력 → useStt transcript(LAN-141), 지금은 dev 타이핑 stub
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
 
 import type { ThoughtType } from '@/features/onboarding/ui/ThoughtCard';
 import type { Scenario } from '@/features/scenario/api/list';
+import { useTts } from '@/shared/lib/tts/useTts';
 
 import {
   endSession,
@@ -55,6 +56,8 @@ export const useConversationFlow = (scenario: Scenario) => {
   const startedRef = useRef(false);
   const submittingRef = useRef(false); // 중복 제출 방지 (연출은 WAITING phase가 맡는다)
 
+  const tts = useTts();
+
   const send = (event: ConversationEvent) =>
     setState((prev) =>
       prev ? nextConversationState(prev, event, hasNextRef.current) : prev,
@@ -85,9 +88,20 @@ export const useConversationFlow = (scenario: Scenario) => {
       });
   }, [scenario.scenarioId]);
 
-  // AI 발화 — 텍스트 길이만큼 말하는 시간을 흉내 내고 끝낸다 (LAN-140에서 TTS onEnd로 교체)
+  // AI 발화 — TTS로 실제 재생하고, 재생이 끝나면 마이크 대기로 넘어간다
+  // 음성 미설정(ttsVoice null)·합성 실패 시엔 글자 수 기반 타이머로 진행해 대화가 멈추지 않게 한다
   useEffect(() => {
     if (state?.phase !== 'AI_SPEAKING' || !aiMessage) return;
+
+    const voice = session?.ttsVoice ?? null;
+    if (voice) {
+      void tts.speak(aiMessage.content, voice, {
+        onEnd: () => send('AI_SPEECH_END'),
+        onError: () => send('AI_SPEECH_END'),
+      });
+      return () => tts.stop();
+    }
+
     const id = setTimeout(
       () => send('AI_SPEECH_END'),
       speechTypingMs(aiMessage.content) + 600,
@@ -165,10 +179,15 @@ export const useConversationFlow = (scenario: Scenario) => {
     innerThoughtType: thought?.type ?? 'NORMAL',
   };
 
+  // 상대 캐릭터 성별은 세션 TTS 음성을 따른다 (미설정 시 남성)
+  const partner: 'male' | 'female' =
+    session?.ttsVoice?.gender === 'FEMALE' ? 'female' : 'male';
+
   return {
     status,
     phase: state?.phase ?? 'AI_SPEAKING',
     turn,
+    partner,
     transcript,
     setTranscript,
     pressMic,

@@ -17,20 +17,14 @@ import { QuestionCard } from './QuestionCard';
 import { ThoughtOverlay } from './ThoughtOverlay';
 import { UserTranscript } from './UserTranscript';
 
-export const ConversationFlow = ({
-  scenario,
-  // 상대 캐릭터 성별 — 세션 API 연동 시 ttsVoice.gender로 결정한다. 연동 전까지 남자 고정.
-  partner = 'male',
-}: {
-  scenario: Scenario;
-  partner?: 'male' | 'female';
-}) => {
+export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   const router = useRouter();
   const [showExitModal, setShowExitModal] = useState(false);
   const {
     status,
     phase,
     turn,
+    partner,
     transcript,
     setTranscript,
     pressMic,

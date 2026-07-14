@@ -18,8 +18,33 @@ vi.mock('../api/session', () => ({
   endSession: vi.fn(),
 }));
 
+// TTS는 경계(재생)라 목으로 둔다 — speak의 onEnd를 붙잡아 재생 종료를 흉내 낸다
+const ttsMock = vi.hoisted(() => {
+  const state = { onEnd: undefined as (() => void) | undefined };
+  return {
+    state,
+    speak: vi.fn(
+      (_text: string, _voice: unknown, opts?: { onEnd?: () => void }) => {
+        state.onEnd = opts?.onEnd;
+        return Promise.resolve();
+      },
+    ),
+    stop: vi.fn(),
+  };
+});
+vi.mock('@/shared/lib/tts/useTts', () => ({
+  useTts: () => ({ speak: ttsMock.speak, stop: ttsMock.stop, status: 'idle' }),
+}));
+
 const startSession = vi.mocked(sessionApi.startSession);
 const submitMessage = vi.mocked(sessionApi.submitMessage);
+
+const voice = {
+  provider: 'OPENROUTER',
+  model: 'mai-voice',
+  providerVoiceId: 'en-US-Harper',
+  gender: 'MALE' as const,
+};
 
 const scenario = { scenarioId: 10 } as unknown as Scenario;
 
@@ -109,6 +134,7 @@ const speakAndSubmit = async (
 
 beforeEach(() => {
   vi.useFakeTimers();
+  ttsMock.state.onEnd = undefined;
 });
 
 afterEach(() => {
@@ -225,5 +251,48 @@ describe('useConversationFlow', () => {
     });
 
     expect(result.current.phase).toBe('DONE');
+  });
+
+  it('ttsVoice가 있으면 AI 발화를 TTS로 재생하고, 재생이 끝나면 마이크 대기로 넘어간다', async () => {
+    startSession.mockResolvedValue(startResponse({ ttsVoice: voice }));
+
+    const { result } = renderHook(() => useConversationFlow(scenario));
+    await act(async () => {});
+
+    expect(result.current.phase).toBe('AI_SPEAKING');
+    expect(ttsMock.speak).toHaveBeenCalledWith(
+      'Hello, welcome in.',
+      voice,
+      expect.anything(),
+    );
+
+    act(() => ttsMock.state.onEnd?.());
+
+    expect(result.current.phase).toBe('USER_IDLE');
+  });
+
+  it('ttsVoice가 없으면 재생 없이 타이머로 발화를 마친다', async () => {
+    startSession.mockResolvedValue(startResponse({ ttsVoice: null }));
+
+    const { result } = renderHook(() => useConversationFlow(scenario));
+    await act(async () => {});
+
+    expect(ttsMock.speak).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(2600);
+    });
+
+    expect(result.current.phase).toBe('USER_IDLE');
+  });
+
+  it('ttsVoice 성별이 FEMALE이면 partner가 female이다', async () => {
+    startSession.mockResolvedValue(
+      startResponse({ ttsVoice: { ...voice, gender: 'FEMALE' } }),
+    );
+
+    const { result } = renderHook(() => useConversationFlow(scenario));
+    await act(async () => {});
+
+    expect(result.current.partner).toBe('female');
   });
 });
