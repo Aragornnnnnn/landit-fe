@@ -15,7 +15,8 @@ export const UserTranscript = ({ text, phase }: UserTranscriptProps) => {
   return (
     <div className="mt-4 min-h-28 w-full rounded-2xl border border-border/60 bg-muted/50 px-5 py-4">
       <p className="text-xs font-semibold text-muted-foreground">내 답변</p>
-      <p className="mt-1.5 min-h-7 text-lg leading-relaxed font-semibold text-foreground">
+      {/* 답변이 길어도 레이아웃을 밀지 않도록 박스 안에서 스크롤 */}
+      <p className="mt-1.5 max-h-[14dvh] min-h-7 overflow-y-auto text-lg leading-relaxed font-semibold text-foreground">
         {text}
         {listening && <TypingCursor />}
       </p>

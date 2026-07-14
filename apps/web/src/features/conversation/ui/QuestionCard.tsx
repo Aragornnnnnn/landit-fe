@@ -54,7 +54,7 @@ export const QuestionCard = ({
       initial={{ opacity: 0, y: 16, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="w-full rounded-[28px] rounded-tl-md bg-card px-6 py-6 shadow-lg shadow-black/5"
+      className="max-h-[36dvh] w-full overflow-y-auto rounded-[28px] rounded-tl-md bg-card px-6 py-6 shadow-lg shadow-black/5"
     >
       <p className="min-h-14 text-[21px] leading-snug font-bold text-foreground">
         {question.slice(0, visibleCount)}
