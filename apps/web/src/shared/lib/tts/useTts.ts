@@ -46,7 +46,8 @@ export function useTts() {
 
   // 미리 합성해둔 오디오 캐시(text→Blob) — 재생 시 네트워크 왕복 없이 바로 튼다
   const cacheRef = useRef<Map<string, Blob>>(new Map());
-  const inflightRef = useRef<Set<string>>(new Set()); // prefetch 진행 중인 text
+  // prefetch 진행 중인 합성(text→Promise) — speak가 겹치면 새로 합성하지 말고 이 Promise를 기다린다
+  const inflightRef = useRef<Map<string, Promise<Blob>>>(new Map());
   const mountedRef = useRef(true);
 
   // 재생 리소스(오디오·objectURL·콜백)를 정리한다. stop과 onended가 공유하는 뒷정리
@@ -88,12 +89,24 @@ export function useTts() {
     setStatus('loading');
 
     try {
-      // 미리 합성해둔 게 있으면 네트워크 없이 바로 쓴다 (소유권을 캐시에서 가져온다)
+      // 재생할 오디오를 확보한다. 우선순위:
+      //   1) prefetch가 이미 끝나 캐시에 있으면 그대로 (네트워크 없음)
+      //   2) prefetch가 아직 합성 중이면 그 Promise를 재사용 — 새로 합성하면 이미 진행한
+      //      시간을 버려 2번째+ 발화가 매번 느려진다 (디바이스는 합성이 길어 특히 심함)
+      //   3) 둘 다 없으면 새로 합성
       let blob = cacheRef.current.get(text);
       if (blob) {
         cacheRef.current.delete(text);
       } else {
-        blob = await synthesizeSpeech(text, voice, controller.signal);
+        // 진행 중인 prefetch가 있으면 재사용하고, 그 합성이 실패했을 때만 새로 합성한다.
+        // (prefetch가 없으면 곧장 새로 합성 — 이 경우 stop() abort가 그대로 전파돼야 한다)
+        const pending = inflightRef.current.get(text);
+        blob = pending
+          ? await pending.catch(() =>
+              synthesizeSpeech(text, voice, controller.signal),
+            )
+          : await synthesizeSpeech(text, voice, controller.signal);
+        cacheRef.current.delete(text); // prefetch가 캐시에 넣어뒀을 수 있으니 정리
       }
       // 합성 도중 다른 speak/stop으로 밀려났으면 조용히 빠진다 (아직 URL을 안 만들었다)
       if (abortRef.current !== controller) return;
@@ -183,17 +196,19 @@ export function useTts() {
   const prefetch = async (text: string, voice: TtsVoice | null) => {
     if (!voice || !text) return;
     if (cacheRef.current.has(text) || inflightRef.current.has(text)) return;
-    inflightRef.current.add(text);
-    try {
-      const blob = await synthesizeSpeech(text, voice);
-      // 언마운트된 뒤 도착한 응답은 캐시에 담지 않는다 (Blob이라 정리할 것 없음)
-      if (!mountedRef.current) return;
-      cacheRef.current.set(text, blob);
-    } catch {
-      // 프리페치 실패는 무시(speak가 다시 시도한다)
-    } finally {
-      inflightRef.current.delete(text);
-    }
+    // 합성 Promise를 inflight에 등록해 둔다 — 완료 전에 speak가 겹치면 이 Promise를 그대로 재사용한다
+    const pending = synthesizeSpeech(text, voice)
+      .then((blob) => {
+        // 언마운트된 뒤 도착한 응답은 캐시에 담지 않는다 (Blob이라 정리할 것 없음)
+        if (mountedRef.current) cacheRef.current.set(text, blob);
+        return blob;
+      })
+      .finally(() => {
+        inflightRef.current.delete(text);
+      });
+    inflightRef.current.set(text, pending);
+    // 프리페치 자체 실패는 조용히 무시한다(speak가 다시 합성한다)
+    await pending.catch(() => {});
   };
 
   // 중단은 '재생 완료'가 아니다 — onEnd는 오디오가 실제로 끝났을 때(onended)만 부른다.
