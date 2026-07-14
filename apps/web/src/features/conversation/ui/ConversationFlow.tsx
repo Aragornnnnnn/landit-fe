@@ -82,13 +82,15 @@ export const ConversationFlow = ({
 
       <CharacterStage thumbnailUrl={scenario.thumbnailUrl} partner={partner} />
 
-      {/* flex-none: 무대(flex-1)가 슬랙을 흡수하고, 이 영역은 내용만큼만 차지한다 */}
-      <section className="flex min-h-0 flex-none flex-col px-5 pt-5">
-        <QuestionCard
-          question={turn.aiMessage}
-          translation={turn.aiTranslation}
-          speaking={phase === 'AI_SPEAKING'}
-        />
+      {/* 무대·답변·마이크는 고정. 질문만 남는 공간을 채우는 스크롤 영역에 담아, 길어져도 겹치지 않고 카드 안에서 스크롤된다 */}
+      <section className="flex min-h-0 flex-1 flex-col px-5 pt-5">
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <QuestionCard
+            question={turn.aiMessage}
+            translation={turn.aiTranslation}
+            speaking={phase === 'AI_SPEAKING'}
+          />
+        </div>
         <UserTranscript text={transcript} phase={phase} />
 
         {/* [dev stub] STT(LAN-141) 전까지 답변을 직접 입력해 세션 API 루프를 검증한다 */}
