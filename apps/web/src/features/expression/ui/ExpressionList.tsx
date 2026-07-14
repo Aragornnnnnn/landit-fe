@@ -21,7 +21,7 @@ export const ExpressionList = ({
     <div className="px-5 pt-2">
       <div className="mb-5">
         <div className="flex items-baseline justify-between">
-          <p className="text-lg font-extrabold text-foreground">오늘의 표현</p>
+          <p className="text-lg font-extrabold text-foreground">배울 표현</p>
           <p className="text-sm font-bold text-primary">
             {done}/{total} 완료
           </p>
