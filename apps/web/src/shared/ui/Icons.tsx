@@ -23,6 +23,23 @@ export const BackspaceIcon = ({ size = 22, ...props }: IconProps) => (
   </svg>
 );
 
+export const CheckIcon = ({ size = 22, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+
 export const ChevronLeftIcon = ({ size = 22, ...props }: IconProps) => (
   <svg
     width={size}
@@ -110,7 +127,8 @@ export const LockIcon = ({ size = 22, ...props }: IconProps) => (
   </svg>
 );
 
-export const CheckIcon = ({ size = 22, ...props }: IconProps) => (
+// 마이크 몸통은 면으로 채운다 — 버튼 위에서 속이 빈 스트로크보다 또렷하게 보인다
+export const MicIcon = ({ size = 22, ...props }: IconProps) => (
   <svg
     width={size}
     height={size}
@@ -123,7 +141,28 @@ export const CheckIcon = ({ size = 22, ...props }: IconProps) => (
     aria-hidden="true"
     {...props}
   >
-    <path d="M20 6 9 17l-5-5" />
+    <path
+      d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"
+      fill="currentColor"
+      stroke="none"
+    />
+    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+    <line x1="12" x2="12" y1="19" y2="22" />
+  </svg>
+);
+
+// 녹음 완료 버튼용 채워진 정지 사각형 — 스트로크 아이콘들과 달리 면으로 그린다
+export const StopIcon = ({ size = 22, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    stroke="none"
+    aria-hidden="true"
+    {...props}
+  >
+    <rect x="5" y="5" width="14" height="14" rx="3" />
   </svg>
 );
 

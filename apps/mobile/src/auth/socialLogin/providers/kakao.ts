@@ -21,13 +21,13 @@ export async function requestKakaoIdToken(nonce: string): Promise<string> {
 async function loginWithKakaoTalkOrAccount(nonce: string) {
   try {
     // 플랜 A: 카카오톡 앱으로 전환해서 로그인
-    return await kakaoLogin({ web: { nonce } });
+    return await kakaoLogin({ nonce });
   } catch (error) {
     throwIfCancelled(error);
   }
   try {
     // 플랜 B: 카톡이 없거나 실패하면 웹뷰에서 카카오 계정으로 로그인
-    return await kakaoLogin({ useKakaoAccountLogin: true, web: { nonce } });
+    return await kakaoLogin({ useKakaoAccountLogin: true, nonce });
   } catch (error) {
     throwIfCancelled(error);
     throw error;

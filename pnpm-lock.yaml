@@ -4,14 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  '@react-native-kakao/core@2.4.5':
-    hash: 9660e896d3f0d80912fa7e51de4dc44b9036151a8acd42df715ef2f9f3eaa8a7
-    path: patches/@react-native-kakao__core@2.4.5.patch
-  '@react-native-kakao/user@2.4.5':
-    hash: ae0bdff82fe899ae65d3962c4d342c05b2f4fef50e6cd88a5b284903c16633af
-    path: patches/@react-native-kakao__user@2.4.5.patch
-
 importers:
 
   .:
@@ -44,11 +36,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/bridge
       '@react-native-kakao/core':
-        specifier: 2.4.5
-        version: 2.4.5(patch_hash=9660e896d3f0d80912fa7e51de4dc44b9036151a8acd42df715ef2f9f3eaa8a7)(expo@57.0.2)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
+        specifier: 2.4.6
+        version: 2.4.6(expo@57.0.2)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
       '@react-native-kakao/user':
-        specifier: 2.4.5
-        version: 2.4.5(patch_hash=ae0bdff82fe899ae65d3962c4d342c05b2f4fef50e6cd88a5b284903c16633af)(@react-native-kakao/core@2.4.5(patch_hash=9660e896d3f0d80912fa7e51de4dc44b9036151a8acd42df715ef2f9f3eaa8a7)(expo@57.0.2)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
+        specifier: 2.4.6
+        version: 2.4.6(@react-native-kakao/core@2.4.6(expo@57.0.2)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
       expo:
         specifier: ~57.0.2
         version: 57.0.2(@babel/core@7.29.7)(@expo/dom-webview@57.0.0)(@expo/metro-runtime@57.0.3)(expo-router@57.0.3)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native-webview@13.16.1(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native-worklets@0.10.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
@@ -1591,8 +1583,8 @@ packages:
       '@types/react':
         optional: true
 
-  '@react-native-kakao/core@2.4.5':
-    resolution: {integrity: sha512-5X60QvsQxgPZOKFe6YB6SYMZZ7ysmMHNwqW4s30JXqO2tOBT4eB/PSltStTRdUoUr8kCLRiwW1kfpe63M1HsdQ==}
+  '@react-native-kakao/core@2.4.6':
+    resolution: {integrity: sha512-Q72qXFGuh2Zott9vJ+fr9mv+DqYVhe+WdrW4//X9tZBO3FzZIDrVf96klPNB2RO9+redHSJHyAGO3XBa/qIZbQ==}
     peerDependencies:
       expo: '>=47.0.0'
       react: '*'
@@ -1601,10 +1593,10 @@ packages:
       expo:
         optional: true
 
-  '@react-native-kakao/user@2.4.5':
-    resolution: {integrity: sha512-Mj+ppwg/ARBwgcyZz2H2u6fHfxr1H40Q/YSLAOKapn7C0GTXYynFOLH35psJwggTq4qbfIOMbcszOZSLcqwY8A==}
+  '@react-native-kakao/user@2.4.6':
+    resolution: {integrity: sha512-M50MpHk7uJkwYubSfyBtHURx8wOKpN1d7IRMHkPHKQ66Z5LL/uYBcQsIzbSbHW7za5pY8TNzQEaT3gPxE91BOg==}
     peerDependencies:
-      '@react-native-kakao/core': 2.4.5
+      '@react-native-kakao/core': 2.4.6
       react: '*'
       react-native: '*'
 
@@ -7732,7 +7724,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.17
 
-  '@react-native-kakao/core@2.4.5(patch_hash=9660e896d3f0d80912fa7e51de4dc44b9036151a8acd42df715ef2f9f3eaa8a7)(expo@57.0.2)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)':
+  '@react-native-kakao/core@2.4.6(expo@57.0.2)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)':
     dependencies:
       crypto-js: 4.2.0
       query-string: 9.4.1
@@ -7742,10 +7734,10 @@ snapshots:
     optionalDependencies:
       expo: 57.0.2(@babel/core@7.29.7)(@expo/dom-webview@57.0.0)(@expo/metro-runtime@57.0.3)(expo-router@57.0.3)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native-webview@13.16.1(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native-worklets@0.10.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
 
-  '@react-native-kakao/user@2.4.5(patch_hash=ae0bdff82fe899ae65d3962c4d342c05b2f4fef50e6cd88a5b284903c16633af)(@react-native-kakao/core@2.4.5(patch_hash=9660e896d3f0d80912fa7e51de4dc44b9036151a8acd42df715ef2f9f3eaa8a7)(expo@57.0.2)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)':
+  '@react-native-kakao/user@2.4.6(@react-native-kakao/core@2.4.6(expo@57.0.2)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)':
     dependencies:
       '@mj-studio/js-util': 1.1.3
-      '@react-native-kakao/core': 2.4.5(patch_hash=9660e896d3f0d80912fa7e51de4dc44b9036151a8acd42df715ef2f9f3eaa8a7)(expo@57.0.2)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
+      '@react-native-kakao/core': 2.4.6(expo@57.0.2)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
       react: 19.2.3
       react-native: 0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3)
 
