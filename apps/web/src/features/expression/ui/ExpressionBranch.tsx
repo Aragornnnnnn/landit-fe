@@ -6,13 +6,13 @@ import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
 import { useScenarios } from '@/features/scenario/model/useScenarios';
+import { useTypewriter } from '@/shared/lib/useTypewriter';
 import { useAuthStore } from '@/shared/store/auth-store';
 import { Button } from '@/shared/ui/Button';
 import { CharacterSlot } from '@/shared/ui/CharacterSlot';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
 import { useExpressions } from '../model/useExpressions';
-import { useTypewriter } from '../model/useTypewriter';
 
 export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
   const router = useRouter();
