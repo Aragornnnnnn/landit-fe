@@ -4,13 +4,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { SessionFeedbackScreen } from '@/features/feedback/ui/SessionFeedbackScreen';
 import type { Scenario } from '@/features/scenario/api/list';
 import { CloseIcon } from '@/shared/ui/Icons';
 
 import { useConversationFlow } from '../model/useConversationFlow';
 import { CharacterStage } from './CharacterStage';
 import { ExitConfirmSheet } from './ExitConfirmSheet';
-import { ExpressionPrepScreen } from './ExpressionPrepScreen';
 import { MicControl } from './MicControl';
 import { QuestionCard } from './QuestionCard';
 import { ThoughtOverlay } from './ThoughtOverlay';
@@ -32,11 +32,18 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
     finishListening,
     submitText,
     leave,
+    sessionId,
   } = useConversationFlow(scenario);
 
-  // 모든 턴이 끝나면 표현 준비 화면으로 전환한다 (표현학습·피드백 연동은 후속 이슈)
+  // 모든 턴이 끝나면 세션 피드백(총평·상세)으로 넘어가고, 마치면 표현 학습 분기로 보낸다
   if (phase === 'DONE') {
-    return <ExpressionPrepScreen scenario={scenario} />;
+    return (
+      <SessionFeedbackScreen
+        sessionId={sessionId}
+        title={scenario.scenarioTitle}
+        onExit={() => router.push(`/expressions/${scenario.scenarioId}/branch`)}
+      />
+    );
   }
 
   return (

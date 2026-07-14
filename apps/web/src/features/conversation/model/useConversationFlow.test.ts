@@ -521,6 +521,12 @@ describe('useConversationFlow', () => {
   });
 
   // STT(LAN-141) 배선 — 기본은 마이크(음성), 키보드 아이콘을 누르면 타이핑
+  it('세션이 시작되면 sessionId를 노출한다 (피드백 생성에 쓴다)', async () => {
+    const { result } = await renderUserFirst();
+
+    expect(result.current.sessionId).toBe(1);
+  });
+
   it('말하기를 누르면 듣기로 넘어가며 마이크(STT)를 켠다', async () => {
     const { result } = await renderUserFirst();
 

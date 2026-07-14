@@ -59,6 +59,8 @@ export const useConversationFlow = (scenario: Scenario) => {
   const [transcript, setTranscript] = useState('');
   // 입력 수단 — 기본은 마이크(음성), 키보드 아이콘을 누르면 타이핑 모드로 바꾼다
   const [keyboardMode, setKeyboardMode] = useState(false);
+  // 확보된 세션 — 종료 후 피드백 생성에 쓴다. ref는 send 클로저용, state는 화면 노출용
+  const [sessionId, setSessionId] = useState<number | null>(null);
 
   // send 클로저가 최신 값을 읽도록 ref로 들고 있는다
   const sessionIdRef = useRef<number | null>(null);
@@ -98,6 +100,7 @@ export const useConversationFlow = (scenario: Scenario) => {
     sessionPromiseRef.current = startSession(scenario.scenarioId)
       .then((res) => {
         sessionIdRef.current = res.sessionId;
+        setSessionId(res.sessionId);
         hasNextRef.current = !res.progress.completed;
         // openingPreview로 오프닝을 못 시드했을 때(예외적)만 세션 응답으로 채운다
         if (res.currentMessage) {
@@ -292,5 +295,7 @@ export const useConversationFlow = (scenario: Scenario) => {
     finishListening,
     submitText,
     leave,
+    // DONE 시점엔 세션이 확보돼 있다 — 피드백 생성에 쓴다 (없으면 세션 시작이 실패한 경우)
+    sessionId,
   };
 };
