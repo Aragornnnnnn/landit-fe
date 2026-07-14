@@ -135,6 +135,40 @@ export function useTts() {
     }
   };
 
+  // 미리 만들어둔 정적 오디오(예: /audio/opening-{id}.mp3)를 URL로 바로 재생한다 — 합성 없음.
+  // 파일이 없으면(404 등) onError로 알려, 호출부가 런타임 합성으로 폴백할 수 있게 한다.
+  const speakSrc = (src: string, options?: SpeakOptions) => {
+    stop();
+    setStatus('loading');
+    onEndRef.current = options?.onEnd;
+
+    const audio = new Audio(src);
+    audioRef.current = audio;
+    let handled = false; // onended·onerror·play().catch 중복 처리 방지
+
+    audio.onended = () => {
+      if (handled) return;
+      handled = true;
+      cleanup();
+      setStatus('idle');
+      options?.onEnd?.();
+    };
+    const fail = () => {
+      if (handled) return;
+      handled = true;
+      cleanup();
+      setStatus('error');
+      options?.onError?.(new Error('오디오 재생에 실패했어요.'));
+    };
+    audio.onerror = fail;
+    audio.play().then(() => {
+      if (!handled) {
+        setStatus('active');
+        options?.onStart?.();
+      }
+    }, fail);
+  };
+
   // 미리 합성해 캐시에 담아둔다 — 다음 speak를 즉시 재생시켜 재생 지연을 없앤다.
   // 재생 중인 요청과 독립적으로 동작하고, 실패는 조용히 무시한다(speak가 다시 시도한다).
   const prefetch = async (text: string, voice: TtsVoice | null) => {
@@ -165,5 +199,5 @@ export function useTts() {
     }
   };
 
-  return { speak, prefetch, stop, status };
+  return { speak, speakSrc, prefetch, stop, status };
 }

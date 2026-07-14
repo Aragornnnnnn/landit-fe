@@ -55,6 +55,7 @@ export const useConversationFlow = (scenario: Scenario) => {
   const nextMessageRef = useRef<NextMessage | null>(null);
   const startedRef = useRef(false);
   const submittingRef = useRef(false); // 중복 제출 방지 (연출은 WAITING phase가 맡는다)
+  const isOpeningRef = useRef(true); // 첫 AI 발화(오프닝)인지 — 미리 만든 정적 mp3 재생 대상
 
   const tts = useTts();
 
@@ -94,19 +95,29 @@ export const useConversationFlow = (scenario: Scenario) => {
     if (state?.phase !== 'AI_SPEAKING' || !aiMessage) return;
 
     const voice = session?.ttsVoice ?? null;
-    if (voice) {
-      void tts.speak(aiMessage.content, voice, {
-        onEnd: () => send('AI_SPEECH_END'),
-        onError: () => send('AI_SPEECH_END'),
+    const content = aiMessage.content;
+    const advance = () => send('AI_SPEECH_END');
+    // 음성이 있으면 런타임 합성으로 재생, 없으면 글자 수 기반 타이머로 진행
+    const speakOrTimer = () => {
+      if (voice) {
+        void tts.speak(content, voice, { onEnd: advance, onError: advance });
+      } else {
+        const id = setTimeout(advance, speechTypingMs(content) + 600);
+        return () => clearTimeout(id);
+      }
+    };
+
+    // 오프닝(첫 AI 발화)은 미리 만들어둔 정적 mp3가 있으면 즉시 재생, 없으면 위 경로로 폴백
+    if (isOpeningRef.current) {
+      tts.speakSrc(`/audio/opening-${scenario.scenarioId}.mp3`, {
+        onEnd: advance,
+        onError: speakOrTimer,
       });
       return () => tts.stop();
     }
 
-    const id = setTimeout(
-      () => send('AI_SPEECH_END'),
-      speechTypingMs(aiMessage.content) + 600,
-    );
-    return () => clearTimeout(id);
+    const cleanupTimer = speakOrTimer();
+    return cleanupTimer ?? (() => tts.stop());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state?.phase, aiMessage?.content]);
 
@@ -122,6 +133,7 @@ export const useConversationFlow = (scenario: Scenario) => {
           translatedContent: nextMessageRef.current.translatedContent,
         });
         nextMessageRef.current = null;
+        isOpeningRef.current = false; // 이후 발화는 동적 생성 — 정적 mp3 대상 아님
       }
       send('THOUGHT_DONE');
     }, thoughtHoldMs(thought.text));

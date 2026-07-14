@@ -18,15 +18,24 @@ vi.mock('../api/session', () => ({
   endSession: vi.fn(),
 }));
 
-// TTS는 경계(재생)라 목으로 둔다 — speak의 onEnd를 붙잡아 재생 종료를 흉내 낸다
+// TTS는 경계(재생)라 목으로 둔다 — speak/speakSrc의 onEnd·onError를 붙잡아 종료·실패를 흉내 낸다
 const ttsMock = vi.hoisted(() => {
-  const state = { onEnd: undefined as (() => void) | undefined };
+  const state = {
+    onEnd: undefined as (() => void) | undefined,
+    onError: undefined as (() => void) | undefined,
+  };
   return {
     state,
     speak: vi.fn(
       (_text: string, _voice: unknown, opts?: { onEnd?: () => void }) => {
         state.onEnd = opts?.onEnd;
         return Promise.resolve();
+      },
+    ),
+    speakSrc: vi.fn(
+      (_src: string, opts?: { onEnd?: () => void; onError?: () => void }) => {
+        state.onEnd = opts?.onEnd;
+        state.onError = opts?.onError;
       },
     ),
     prefetch: vi.fn(() => Promise.resolve()),
@@ -36,6 +45,7 @@ const ttsMock = vi.hoisted(() => {
 vi.mock('@/shared/lib/tts/useTts', () => ({
   useTts: () => ({
     speak: ttsMock.speak,
+    speakSrc: ttsMock.speakSrc,
     prefetch: ttsMock.prefetch,
     stop: ttsMock.stop,
     status: 'idle',
@@ -141,6 +151,7 @@ const speakAndSubmit = async (
 beforeEach(() => {
   vi.useFakeTimers();
   ttsMock.state.onEnd = undefined;
+  ttsMock.state.onError = undefined;
 });
 
 afterEach(() => {
@@ -259,29 +270,48 @@ describe('useConversationFlow', () => {
     expect(result.current.phase).toBe('DONE');
   });
 
-  it('ttsVoice가 있으면 AI 발화를 TTS로 재생하고, 재생이 끝나면 마이크 대기로 넘어간다', async () => {
+  it('오프닝은 미리 만든 정적 mp3로 재생하고, 끝나면 마이크 대기로 넘어간다', async () => {
     startSession.mockResolvedValue(startResponse({ ttsVoice: voice }));
 
     const { result } = renderHook(() => useConversationFlow(scenario));
     await act(async () => {});
 
     expect(result.current.phase).toBe('AI_SPEAKING');
-    expect(ttsMock.speak).toHaveBeenCalledWith(
-      'Hello, welcome in.',
-      voice,
+    expect(ttsMock.speakSrc).toHaveBeenCalledWith(
+      '/audio/opening-10.mp3',
       expect.anything(),
     );
+    expect(ttsMock.speak).not.toHaveBeenCalled();
 
     act(() => ttsMock.state.onEnd?.());
 
     expect(result.current.phase).toBe('USER_IDLE');
   });
 
-  it('ttsVoice가 없으면 재생 없이 타이머로 발화를 마친다', async () => {
+  it('오프닝 정적 파일이 없으면 합성으로 폴백한다', async () => {
+    startSession.mockResolvedValue(startResponse({ ttsVoice: voice }));
+
+    const { result } = renderHook(() => useConversationFlow(scenario));
+    await act(async () => {});
+
+    act(() => ttsMock.state.onError?.()); // 정적 파일 없음(404)
+
+    expect(ttsMock.speak).toHaveBeenCalledWith(
+      'Hello, welcome in.',
+      voice,
+      expect.anything(),
+    );
+    act(() => ttsMock.state.onEnd?.());
+    expect(result.current.phase).toBe('USER_IDLE');
+  });
+
+  it('오프닝 파일도 음성도 없으면 타이머로 발화를 마친다', async () => {
     startSession.mockResolvedValue(startResponse({ ttsVoice: null }));
 
     const { result } = renderHook(() => useConversationFlow(scenario));
     await act(async () => {});
+
+    act(() => ttsMock.state.onError?.()); // 정적 파일 없음
 
     expect(ttsMock.speak).not.toHaveBeenCalled();
     act(() => {

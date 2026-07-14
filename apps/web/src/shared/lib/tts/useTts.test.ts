@@ -217,4 +217,39 @@ describe('useTts', () => {
     expect(FakeAudio.instances[0]!.play).toHaveBeenCalled();
     expect(result.current.status).toBe('active');
   });
+
+  it('speakSrc는 합성 없이 정적 URL을 바로 재생하고, 끝나면 onEnd를 부른다', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const onEnd = vi.fn();
+    const { result } = renderHook(() => useTts());
+
+    await act(async () => {
+      result.current.speakSrc('/audio/opening-1.mp3', { onEnd });
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(FakeAudio.instances[0]!.src).toBe('/audio/opening-1.mp3');
+    expect(FakeAudio.instances[0]!.play).toHaveBeenCalled();
+    expect(result.current.status).toBe('active');
+
+    act(() => FakeAudio.instances[0]!.onended?.());
+
+    expect(onEnd).toHaveBeenCalledTimes(1);
+    expect(result.current.status).toBe('idle');
+  });
+
+  it('speakSrc 재생이 실패하면 onError를 부른다 (정적 파일 없음 등)', async () => {
+    vi.stubGlobal('fetch', vi.fn());
+    const onError = vi.fn();
+    const { result } = renderHook(() => useTts());
+
+    await act(async () => {
+      result.current.speakSrc('/audio/missing.mp3', { onError });
+    });
+    act(() => FakeAudio.instances[0]!.onerror?.());
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(result.current.status).toBe('error');
+  });
 });
