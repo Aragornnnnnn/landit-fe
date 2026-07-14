@@ -1,6 +1,6 @@
 'use client';
 
-// 표현학습 플로우 — 단어 선택 퀴즈(D안 ①') → 표현 설명(D안 ④) → 완료 처리 후 리스트로. (복습 영작은 후속 PR)
+// 표현학습 플로우 — 단어 선택 퀴즈(D안 ①') → 표현 설명(D안 ④) → 복습 영작(D안 ⑤) → 완료 처리 후 리스트로.
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -8,6 +8,7 @@ import { useExpressionPractice } from '../model/useExpressionPractice';
 import { useFinishExpression } from '../model/useFinishExpression';
 import { ExplanationStep } from './ExplanationStep';
 import { QuizStep } from './QuizStep';
+import { ReviewInputStep } from './ReviewInputStep';
 
 interface ExpressionFlowProps {
   scenarioId: number;
@@ -19,7 +20,7 @@ export const ExpressionFlow = ({
   expressionId,
 }: ExpressionFlowProps) => {
   const router = useRouter();
-  const [step, setStep] = useState<'QUIZ' | 'EXPLAIN'>('QUIZ');
+  const [step, setStep] = useState<'QUIZ' | 'EXPLAIN' | 'REVIEW'>('QUIZ');
 
   // 퀴즈 문제(정답 단어·섞인 뱅크)와 표현 설명은 모두 practice에 담겨오므로 바로 로드한다
   const { practice, error, isLoading } = useExpressionPractice(
@@ -49,16 +50,26 @@ export const ExpressionFlow = ({
     );
   }
 
-  // 표현 설명 — 이 PR에선 마지막 스텝이라 설명을 보면 학습 완료 처리한다
+  if (step === 'EXPLAIN') {
+    return (
+      <ExplanationStep
+        practice={practice}
+        title={title}
+        progress={0.7}
+        nextLabel="복습 영작 할게요"
+        onBack={() => setStep('QUIZ')}
+        onNext={() => setStep('REVIEW')}
+      />
+    );
+  }
+
+  // 복습 영작 — 같은 문장을 이번엔 '입력'으로 (퀴즈=선택과 구분). 정답 시 학습 완료.
   return (
-    <ExplanationStep
+    <ReviewInputStep
       practice={practice}
-      title={title}
-      progress={1}
-      nextLabel="학습 완료"
+      onBack={() => setStep('EXPLAIN')}
       finishing={finish.isPending}
-      onBack={() => setStep('QUIZ')}
-      onNext={() => finish.mutate(undefined, { onSuccess: backToList })}
+      onFinish={() => finish.mutate(undefined, { onSuccess: backToList })}
     />
   );
 };
