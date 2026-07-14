@@ -25,9 +25,12 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
     partner,
     transcript,
     setTranscript,
+    keyboardMode,
     pressMic,
+    pressKeyboard,
     cancelListening,
     finishListening,
+    submitText,
     leave,
   } = useConversationFlow(scenario);
 
@@ -63,25 +66,19 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
             speaking={phase === 'AI_SPEAKING'}
           />
         </div>
-        <UserTranscript text={transcript} phase={phase} />
-
-        {/* [dev stub] STT(LAN-141) 전까지 답변을 직접 입력해 세션 API 루프를 검증한다 */}
-        {process.env.NODE_ENV !== 'production' &&
-          phase === 'USER_LISTENING' && (
-            <input
-              autoFocus
-              value={transcript}
-              onChange={(event) => setTranscript(event.target.value)}
-              placeholder="답변 입력 (dev · STT 대체)"
-              className="mt-3 w-full rounded-xl border border-dashed border-border bg-transparent px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary"
-            />
-          )}
+        {/* 키보드 입력 중엔 아래 입력창이 답변을 보여주므로 중복 표시를 피한다 */}
+        {!keyboardMode && <UserTranscript text={transcript} phase={phase} />}
       </section>
 
       <footer className="flex-none pb-[max(env(safe-area-inset-bottom),16px)]">
         <MicControl
           phase={phase}
+          keyboardMode={keyboardMode}
+          transcript={transcript}
           onPress={pressMic}
+          onKeyboard={pressKeyboard}
+          onTranscriptChange={setTranscript}
+          onSubmitText={submitText}
           onCancel={cancelListening}
           onDone={finishListening}
         />

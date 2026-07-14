@@ -53,6 +53,43 @@ vi.mock('@/shared/lib/tts/useTts', () => ({
   }),
 }));
 
+// STT도 경계(마이크)라 목으로 둔다 — start/stop 호출을 붙잡고, onInterim·onFinal 콜백을 흉내 낸다
+const sttMock = vi.hoisted(() => {
+  const callbacks = {
+    onInterim: undefined as ((t: string) => void) | undefined,
+    onFinal: undefined as ((t: string) => void) | undefined,
+    onError: undefined as ((e: Error) => void) | undefined,
+  };
+  return {
+    callbacks,
+    status: 'idle' as 'idle' | 'connecting' | 'listening' | 'error',
+    start: vi.fn(),
+    stop: vi.fn(),
+    reset: vi.fn(),
+  };
+});
+vi.mock('@/shared/lib/stt/useStt', () => ({
+  useStt: (opts: {
+    onInterim?: (t: string) => void;
+    onFinal?: (t: string) => void;
+    onError?: (e: Error) => void;
+  }) => {
+    sttMock.callbacks.onInterim = opts.onInterim;
+    sttMock.callbacks.onFinal = opts.onFinal;
+    sttMock.callbacks.onError = opts.onError;
+    return {
+      transcript: '',
+      interim: '',
+      status: sttMock.status,
+      error: null,
+      isListening: sttMock.status === 'listening',
+      start: sttMock.start,
+      stop: sttMock.stop,
+      reset: sttMock.reset,
+    };
+  },
+}));
+
 const startSession = vi.mocked(sessionApi.startSession);
 const submitMessage = vi.mocked(sessionApi.submitMessage);
 const getInnerThought = vi.mocked(sessionApi.getInnerThought);
@@ -153,15 +190,29 @@ const renderUserFirst = async () => {
   return hook;
 };
 
-// 마이크 대기 → 답변 입력 → 제출까지 한 번에 몰아준다
+// 마이크 대기 → 음성으로 말하기 → 완료(STT 최종) 제출까지 한 번에 몰아준다
 const speakAndSubmit = async (
   result: { current: ReturnType<typeof useConversationFlow> },
   text: string,
 ) => {
   act(() => result.current.pressMic());
+  await act(async () => {
+    await result.current.finishListening(); // → stt.stop()
+  });
+  await act(async () => {
+    sttMock.callbacks.onFinal?.(text); // 최종 텍스트 도착 → 음성 제출
+  });
+};
+
+// 키보드로 입력 → 전송까지 몰아준다
+const typeAndSubmit = async (
+  result: { current: ReturnType<typeof useConversationFlow> },
+  text: string,
+) => {
+  act(() => result.current.pressKeyboard());
   act(() => result.current.setTranscript(text));
   await act(async () => {
-    await result.current.finishListening();
+    await result.current.submitText();
   });
 };
 
@@ -184,6 +235,14 @@ beforeEach(() => {
   vi.useFakeTimers();
   ttsMock.state.onEnd = undefined;
   ttsMock.state.onError = undefined;
+  sttMock.status = 'idle';
+  sttMock.callbacks.onInterim = undefined;
+  sttMock.callbacks.onFinal = undefined;
+  sttMock.callbacks.onError = undefined;
+  sttMock.start.mockClear();
+  sttMock.stop.mockClear();
+  sttMock.reset.mockClear();
+  vi.unstubAllEnvs();
   startSession.mockResolvedValue(startResponse());
   getInnerThought.mockReset();
 });
@@ -233,9 +292,11 @@ describe('useConversationFlow', () => {
     );
 
     act(() => result.current.pressMic());
-    act(() => result.current.setTranscript('Hello!'));
+    await act(async () => {
+      await result.current.finishListening();
+    });
     act(() => {
-      void result.current.finishListening();
+      sttMock.callbacks.onFinal?.('Hello!'); // 최종 텍스트 → 음성 제출 시작
     });
 
     expect(result.current.phase).toBe('WAITING');
@@ -457,5 +518,90 @@ describe('useConversationFlow', () => {
     expect(result.current.phase).toBe('AI_SPEAKING');
     expect(result.current.turn.aiMessage).toBe('What size would you like?');
     expect(result.current.turn.innerThought).toBe('');
+  });
+
+  // STT(LAN-141) 배선 — 기본은 마이크(음성), 키보드 아이콘을 누르면 타이핑
+  it('말하기를 누르면 듣기로 넘어가며 마이크(STT)를 켠다', async () => {
+    const { result } = await renderUserFirst();
+
+    act(() => result.current.pressMic());
+
+    expect(result.current.phase).toBe('USER_LISTENING');
+    expect(result.current.keyboardMode).toBe(false);
+    expect(sttMock.start).toHaveBeenCalled();
+  });
+
+  it('음성으로 완료하면 STT 최종 텍스트를 VOICE로 제출한다', async () => {
+    const { result } = await renderUserFirst();
+    submitMessage.mockResolvedValue(submitResponse());
+
+    act(() => result.current.pressMic());
+    // 발화 중 실시간 미리보기
+    act(() => sttMock.callbacks.onInterim?.('Hel'));
+    expect(result.current.transcript).toBe('Hel');
+
+    // 완료(■) → stt.stop() 호출, 최종 텍스트는 onFinal로 도착해 제출을 잇는다
+    await act(async () => {
+      await result.current.finishListening();
+    });
+    expect(sttMock.stop).toHaveBeenCalled();
+    expect(submitMessage).not.toHaveBeenCalled();
+
+    await act(async () => {
+      sttMock.callbacks.onFinal?.('Hello there.');
+    });
+
+    expect(submitMessage).toHaveBeenCalledWith(1, 'Hello there.', 'VOICE');
+    // 제출이 이어져 속마음까지 진행된다 (submitResponse 기본은 COMPLETED)
+    expect(result.current.phase).toBe('THOUGHT');
+  });
+
+  it('키보드 아이콘을 누르면 마이크를 켜지 않고 타이핑 모드가 된다', async () => {
+    const { result } = await renderUserFirst();
+
+    act(() => result.current.pressKeyboard());
+
+    expect(result.current.phase).toBe('USER_LISTENING');
+    expect(result.current.keyboardMode).toBe(true);
+    expect(sttMock.start).not.toHaveBeenCalled();
+  });
+
+  it('키보드로 입력한 텍스트는 TEXT로 제출한다', async () => {
+    const { result } = await renderUserFirst();
+    submitMessage.mockResolvedValue(submitResponse());
+
+    await typeAndSubmit(result, 'Hello there.');
+
+    expect(submitMessage).toHaveBeenCalledWith(1, 'Hello there.', 'TEXT');
+    expect(sttMock.start).not.toHaveBeenCalled();
+  });
+
+  it('중단(X)하면 STT를 멈추고 마이크 대기로 되돌린다', async () => {
+    const { result } = await renderUserFirst();
+
+    act(() => result.current.pressMic());
+    act(() => sttMock.callbacks.onInterim?.('Hel'));
+
+    act(() => result.current.cancelListening());
+
+    expect(sttMock.stop).toHaveBeenCalled();
+    expect(result.current.phase).toBe('USER_IDLE');
+    expect(result.current.transcript).toBe('');
+    expect(result.current.keyboardMode).toBe(false);
+  });
+
+  it('STT가 오류나면 마이크 대기로 되돌린다', async () => {
+    const { result } = await renderUserFirst();
+
+    act(() => result.current.pressMic());
+    expect(result.current.phase).toBe('USER_LISTENING');
+
+    // 마이크 권한 거부 등으로 STT가 onError를 알리면 마이크 대기로 되돌린다
+    act(() =>
+      sttMock.callbacks.onError?.(new Error('마이크 권한이 거부되었습니다.')),
+    );
+
+    expect(result.current.phase).toBe('USER_IDLE');
+    expect(result.current.transcript).toBe('');
   });
 });

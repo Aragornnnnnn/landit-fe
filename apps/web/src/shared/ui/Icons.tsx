@@ -127,6 +127,24 @@ export const LockIcon = ({ size = 22, ...props }: IconProps) => (
   </svg>
 );
 
+export const KeyboardIcon = ({ size = 22, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    {...props}
+  >
+    <rect width="20" height="16" x="2" y="4" rx="2" />
+    <path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M7 16h10" />
+  </svg>
+);
+
 // 마이크 몸통은 면으로 채운다 — 버튼 위에서 속이 빈 스트로크보다 또렷하게 보인다
 export const MicIcon = ({ size = 22, ...props }: IconProps) => (
   <svg

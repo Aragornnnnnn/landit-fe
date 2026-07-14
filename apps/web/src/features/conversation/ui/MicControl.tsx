@@ -1,28 +1,77 @@
-// 마이크 컨트롤 — 대기(말하기) ↔ 듣는 중(왼쪽 중단 X · 오른쪽 완료 ■)을 전환한다
+// 마이크 컨트롤 — 대기(말하기·키보드) ↔ 듣는 중(음성: X·■ / 키보드: 입력창)을 전환한다
 'use client';
 
 import { motion } from 'motion/react';
 
-import { CloseIcon, MicIcon, StopIcon } from '@/shared/ui/Icons';
+import {
+  ArrowRightIcon,
+  CloseIcon,
+  KeyboardIcon,
+  MicIcon,
+  StopIcon,
+} from '@/shared/ui/Icons';
 
 import type { ConversationPhase } from '../model/conversationMachine';
 
 interface MicControlProps {
   phase: ConversationPhase;
+  keyboardMode: boolean;
+  transcript: string;
   onPress: () => void;
+  onKeyboard: () => void;
+  onTranscriptChange: (value: string) => void;
+  onSubmitText: () => void;
   onCancel: () => void;
   onDone: () => void;
 }
 
 export const MicControl = ({
   phase,
+  keyboardMode,
+  transcript,
   onPress,
+  onKeyboard,
+  onTranscriptChange,
+  onSubmitText,
   onCancel,
   onDone,
 }: MicControlProps) => {
   const listening = phase === 'USER_LISTENING';
   // 발화·속마음 중엔 누를 수 없게 잠근다 — 자리는 유지해 레이아웃이 튀지 않게
   const disabled = phase !== 'USER_IDLE' && !listening;
+
+  // 키보드로 입력 중 — 채팅창(텍스트 입력)을 띄운다
+  if (listening && keyboardMode) {
+    return (
+      <div className="flex h-36 flex-none items-center gap-2 px-5">
+        <button
+          onClick={onCancel}
+          aria-label="입력 취소"
+          className="flex size-11 flex-none items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-95"
+        >
+          <CloseIcon size={22} strokeWidth={2.5} />
+        </button>
+        <input
+          autoFocus
+          value={transcript}
+          onChange={(event) => onTranscriptChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && transcript.trim()) onSubmitText();
+          }}
+          placeholder="답변을 입력하세요"
+          className="min-w-0 flex-1 rounded-full border border-border bg-muted/50 px-5 py-3 text-base text-foreground outline-none focus:border-primary"
+        />
+        <button
+          onClick={onSubmitText}
+          disabled={!transcript.trim()}
+          aria-label="답변 전송"
+          className="flex size-12 flex-none items-center justify-center rounded-full bg-primary text-white transition-opacity active:scale-95 disabled:opacity-30"
+        >
+          <ArrowRightIcon size={24} />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-36 flex-none flex-col items-center justify-center gap-2">
@@ -67,8 +116,17 @@ export const MicControl = ({
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.18 }}
-          className="flex flex-col items-center gap-2"
+          className="relative flex flex-col items-center gap-2"
         >
+          {/* 마이크는 가운데 고정, 키보드 아이콘은 오른쪽에 작게 — 누르면 타이핑 입력으로 전환 */}
+          <button
+            onClick={onKeyboard}
+            disabled={disabled}
+            aria-label="키보드로 입력"
+            className="absolute top-1.5 left-[calc(50%+3rem)] flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground transition-opacity active:scale-95 disabled:opacity-30"
+          >
+            <KeyboardIcon size={22} />
+          </button>
           <button
             onClick={onPress}
             disabled={disabled}
