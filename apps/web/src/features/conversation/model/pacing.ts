@@ -9,6 +9,11 @@ export const speechTypingMs = (text: string) =>
 export const thoughtHoldMs = (text: string) =>
   Math.min(2600 + text.length * 40, 5200);
 
+// 속마음은 비동기 생성이라, 준비될 때까지 이 간격으로 폴링한다
+export const innerThoughtPollMs = 500;
+// 폴링 상한 — 넘으면 제출 응답 값으로라도 진행해 대화가 멈추지 않게 한다 (약 20초)
+export const innerThoughtMaxPolls = 40;
+
 // 백엔드 innerThoughtType이 미열거 문자열이라 안전하게 좁힌다
 export const toThoughtType = (value: string | null): ThoughtType =>
   value === 'GOOD' || value === 'NORMAL' || value === 'BAD' ? value : 'NORMAL';

@@ -36,15 +36,26 @@ export interface SessionStartResponse {
   progress: SessionProgress;
 }
 
-// 제출한 내 발화에 대한 상대 반응 — 속마음은 여기서 온다(다음 질문엔 없다)
+export type ProcessingStatus = 'PREPARING' | 'COMPLETED' | 'FAILED';
+
+// 제출한 내 발화에 대한 상대 반응 — 속마음은 비동기 생성이라 제출 시점엔 아직 준비 중(PREPARING)일 수 있다.
+// PREPARING이면 inner-thought 폴링으로 채운다.
 export interface SubmittedMessage {
   messageId: number;
   turnNumber: number;
   messageSequence: number;
   role: string;
-  feedbackProcessingStatus: 'PREPARING' | 'COMPLETED' | 'FAILED';
+  feedbackProcessingStatus: ProcessingStatus;
+  innerThoughtProcessingStatus: ProcessingStatus;
   innerThought: string;
   innerThoughtType: string;
+}
+
+// 속마음 폴링 응답 — 준비되면(COMPLETED) 속마음이 채워진다
+export interface SessionInnerThoughtResponse {
+  processingStatus: ProcessingStatus;
+  innerThought: string | null;
+  innerThoughtType: string | null;
 }
 
 // 다음 AI 질문 — 속마음 없이 발화 내용만
@@ -78,6 +89,12 @@ export const submitMessage = (
   api.post<SessionMessageSubmitResponse>(
     `/api/v1/sessions/${sessionId}/messages`,
     { content, inputType },
+  );
+
+// 속마음 폴링 — 제출 시 PREPARING이면 준비될 때까지 이 엔드포인트로 조회한다
+export const getInnerThought = (sessionId: number, messageId: number) =>
+  api.get<SessionInnerThoughtResponse>(
+    `/api/v1/sessions/${sessionId}/messages/${messageId}/inner-thought`,
   );
 
 // 세션 중도 종료

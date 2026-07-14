@@ -12,16 +12,28 @@ import { useTts } from '@/shared/lib/tts/useTts';
 
 import {
   endSession,
+  getInnerThought,
   startSession,
   submitMessage,
   type NextMessage,
+  type SubmittedMessage,
 } from '../api/session';
 import {
   initialConversationState,
   nextConversationState,
   type ConversationEvent,
 } from './conversationMachine';
-import { speechTypingMs, thoughtHoldMs, toThoughtType } from './pacing';
+import {
+  innerThoughtMaxPolls,
+  innerThoughtPollMs,
+  speechTypingMs,
+  thoughtHoldMs,
+  toThoughtType,
+} from './pacing';
+
+// 폴링 간격만큼 기다린다 — 백그라운드 속마음 폴링에서 쓴다
+const delay = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 // 화면이 그리는 현재 턴 — 오프닝은 openingPreview, 이후는 서버 응답에서 조립한다
 interface ConversationTurn {
@@ -64,8 +76,17 @@ export const useConversationFlow = (scenario: Scenario) => {
   const startedRef = useRef(false);
   const submittingRef = useRef(false); // 중복 제출 방지 (연출은 WAITING phase가 맡는다)
   const isOpeningRef = useRef(true); // 첫 AI 발화(오프닝)인지 — 미리 만든 정적 mp3 재생 대상
+  const leftRef = useRef(false); // 이탈/언마운트 — 백그라운드 폴링이 죽은 화면에 반영하지 않게 한다
 
   const tts = useTts();
+
+  // 이탈·언마운트 후 도착한 폴링 결과가 상태를 건드리지 않게 막는다
+  useEffect(
+    () => () => {
+      leftRef.current = true;
+    },
+    [],
+  );
 
   const send = (event: ConversationEvent) =>
     setState((prev) => nextConversationState(prev, event, hasNextRef.current));
@@ -154,6 +175,38 @@ export const useConversationFlow = (scenario: Scenario) => {
     send('LISTENING_CANCELLED');
   };
 
+  // 속마음을 노출하고 THOUGHT로 넘긴다 (즉시 준비된 경우와 폴링 완료가 공유한다)
+  const revealThought = (text: string, type: string | null) => {
+    setThought({ text, type: toThoughtType(type) });
+    send('RESPONSE_READY'); // → THOUGHT
+  };
+
+  // 속마음이 아직 생성 중(PREPARING)이면 0.5s 간격으로 폴링하다 완료되면 노출한다.
+  // 그동안 WAITING(생각 중) 연출이 화면을 가리고, 다음 질문 합성은 이미 시작된 상태다.
+  const pollThenReveal = async (
+    sessionId: number,
+    submitted: SubmittedMessage,
+  ) => {
+    for (let i = 0; i < innerThoughtMaxPolls; i++) {
+      await delay(innerThoughtPollMs);
+      if (leftRef.current) return;
+      try {
+        const res = await getInnerThought(sessionId, submitted.messageId);
+        if (res.processingStatus === 'COMPLETED') {
+          if (leftRef.current) return;
+          revealThought(res.innerThought ?? '', res.innerThoughtType);
+          return;
+        }
+        if (res.processingStatus === 'FAILED') break;
+      } catch {
+        // 일시적 오류는 다음 폴에서 다시 시도한다
+      }
+    }
+    if (leftRef.current) return;
+    // 실패/시간초과 — 제출 응답에 담긴 값(있으면)으로라도 진행해 대화가 멈추지 않게 한다
+    revealThought(submitted.innerThought, submitted.innerThoughtType);
+  };
+
   // 발화 제출 — 대기(생각 중)로 넘긴 뒤, 응답이 오면 속마음으로 이어간다.
   // 세션이 백그라운드로 아직 안 끝났으면 sessionId 확보를 기다린다.
   const finishListening = async () => {
@@ -176,15 +229,19 @@ export const useConversationFlow = (scenario: Scenario) => {
       const res = await submitMessage(sessionId, content, 'TEXT');
       nextMessageRef.current = res.nextMessage;
       hasNextRef.current = !res.progress.completed && res.nextMessage != null;
-      // 다음 AI 발화를 속마음 노출 동안 미리 합성해 재생 지연을 없앤다
+      // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 합성한다 — 다음 발화 재생 지연을 없앤다
       if (res.nextMessage && voice) {
         void tts.prefetch(res.nextMessage.content, voice);
       }
-      setThought({
-        text: res.submittedMessage.innerThought,
-        type: toThoughtType(res.submittedMessage.innerThoughtType),
-      });
-      send('RESPONSE_READY'); // → THOUGHT
+      // 속마음이 이미 준비됐으면 바로 노출하고, 아직 생성 중이면 백그라운드로 폴링해 완료되면 노출한다
+      if (res.submittedMessage.innerThoughtProcessingStatus === 'COMPLETED') {
+        revealThought(
+          res.submittedMessage.innerThought,
+          res.submittedMessage.innerThoughtType,
+        );
+      } else {
+        void pollThenReveal(sessionId, res.submittedMessage);
+      }
     } catch (error) {
       // TODO(전역 토스트): 콘솔 대신 "전송에 실패했어요. 다시 시도해 주세요" 토스트로 실패를 알린다
       console.error('발화 제출 실패', error);
@@ -196,6 +253,7 @@ export const useConversationFlow = (scenario: Scenario) => {
 
   // 중도 이탈 시 세션 종료 (정상 완료는 서버가 판정하므로 호출하지 않는다)
   const leave = () => {
+    leftRef.current = true; // 진행 중인 속마음 폴링을 멈춘다
     if (sessionIdRef.current != null) {
       endSession(sessionIdRef.current).catch((error) =>
         console.error('세션 종료 실패', error),

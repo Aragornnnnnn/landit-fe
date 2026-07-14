@@ -14,6 +14,7 @@ import { useConversationFlow } from './useConversationFlow';
 vi.mock('../api/session', () => ({
   startSession: vi.fn(),
   submitMessage: vi.fn(),
+  getInnerThought: vi.fn(),
   endSession: vi.fn(),
 }));
 
@@ -53,6 +54,7 @@ vi.mock('@/shared/lib/tts/useTts', () => ({
 
 const startSession = vi.mocked(sessionApi.startSession);
 const submitMessage = vi.mocked(sessionApi.submitMessage);
+const getInnerThought = vi.mocked(sessionApi.getInnerThought);
 
 const voice: TtsVoice = {
   provider: 'OPENROUTER',
@@ -121,6 +123,7 @@ const submitResponse = (
     messageSequence: 2,
     role: 'USER',
     feedbackProcessingStatus: 'PREPARING',
+    innerThoughtProcessingStatus: 'COMPLETED',
     innerThought: '또렷하게 잘 말했어.',
     innerThoughtType: 'GOOD',
   },
@@ -161,11 +164,27 @@ const speakAndSubmit = async (
   });
 };
 
+// 속마음이 아직 준비 중인(PREPARING) 제출 응답 — 다음 질문은 즉시, 속마음은 폴링으로 채운다
+const preparingSubmitResponse = () =>
+  submitResponse({
+    submittedMessage: {
+      messageId: 2,
+      turnNumber: 1,
+      messageSequence: 2,
+      role: 'USER',
+      feedbackProcessingStatus: 'PREPARING',
+      innerThoughtProcessingStatus: 'PREPARING',
+      innerThought: '',
+      innerThoughtType: '',
+    },
+  });
+
 beforeEach(() => {
   vi.useFakeTimers();
   ttsMock.state.onEnd = undefined;
   ttsMock.state.onError = undefined;
   startSession.mockResolvedValue(startResponse());
+  getInnerThought.mockReset();
 });
 
 afterEach(() => {
@@ -352,5 +371,63 @@ describe('useConversationFlow', () => {
       'What size would you like?',
       voice,
     );
+  });
+
+  it('속마음이 아직 준비 중이면 다음 질문은 바로 합성하고, 속마음은 폴링으로 완료를 기다렸다 노출한다', async () => {
+    const { result } = await renderUserFirst();
+    submitMessage.mockResolvedValue(preparingSubmitResponse());
+    getInnerThought
+      .mockResolvedValueOnce({
+        processingStatus: 'PREPARING',
+        innerThought: null,
+        innerThoughtType: null,
+      })
+      .mockResolvedValueOnce({
+        processingStatus: 'COMPLETED',
+        innerThought: '자연스럽게 잘 말했어.',
+        innerThoughtType: 'GOOD',
+      });
+
+    await speakAndSubmit(result, 'Hello!');
+
+    // 속마음은 준비 중이라 대기 유지 — 하지만 다음 질문 합성은 이미 시작됐다
+    expect(result.current.phase).toBe('WAITING');
+    expect(ttsMock.prefetch).toHaveBeenCalledWith(
+      'What size would you like?',
+      voice,
+    );
+
+    // 0.5s 폴링 1회 — 아직 PREPARING
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    expect(result.current.phase).toBe('WAITING');
+
+    // 0.5s 폴링 2회 — COMPLETED → 속마음 노출
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    expect(result.current.phase).toBe('THOUGHT');
+    expect(result.current.turn.innerThought).toBe('자연스럽게 잘 말했어.');
+    expect(result.current.turn.innerThoughtType).toBe('GOOD');
+  });
+
+  it('속마음 생성이 실패(FAILED)해도 폴링을 멈추고 다음으로 진행한다', async () => {
+    const { result } = await renderUserFirst();
+    submitMessage.mockResolvedValue(preparingSubmitResponse());
+    getInnerThought.mockResolvedValue({
+      processingStatus: 'FAILED',
+      innerThought: null,
+      innerThoughtType: null,
+    });
+
+    await speakAndSubmit(result, 'Hello!');
+    expect(result.current.phase).toBe('WAITING');
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+
+    expect(result.current.phase).toBe('THOUGHT');
   });
 });
