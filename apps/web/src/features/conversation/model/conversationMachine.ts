@@ -15,6 +15,7 @@ export type ConversationEvent =
   | 'LISTENING_CANCELLED'
   | 'LISTENING_DONE'
   | 'RESPONSE_READY'
+  | 'RESPONSE_SKIPPED'
   | 'RESPONSE_FAILED'
   | 'THOUGHT_DONE';
 
@@ -29,6 +30,16 @@ export const initialConversationState = (
   phase: firstSpeaker === 'AI' ? 'AI_SPEAKING' : 'USER_IDLE',
   turnIndex: 0,
 });
+
+// 한 턴을 마치고 다음 턴으로 — 남은 턴이 있으면 다음 AI 발화, 없으면 종료.
+// 속마음을 보여준 뒤(THOUGHT_DONE)와 속마음을 건너뛴 뒤(RESPONSE_SKIPPED)가 공유한다.
+const advanceTurn = (
+  state: ConversationState,
+  hasNext: boolean,
+): ConversationState =>
+  hasNext
+    ? { phase: 'AI_SPEAKING', turnIndex: state.turnIndex + 1 }
+    : { ...state, phase: 'DONE' };
 
 // 단계에 맞지 않는 이벤트는 상태를 그대로 돌려준다 — 타이머와 버튼이 겹쳐 들어와도 안전하다
 // hasNext = 다음 턴이 남아있는가(서버 progress.completed의 반대). 종료 판정에만 쓴다.
@@ -52,15 +63,15 @@ export const nextConversationState = (
       if (event === 'LISTENING_DONE') return { ...state, phase: 'WAITING' };
       return state;
     case 'WAITING':
-      // 응답이 오면 속마음으로, 제출이 실패하면 다시 마이크 대기로 되돌린다
+      // 응답이 오면 속마음으로, 속마음이 없으면(실패·빈값) 건너뛰고 바로 다음 턴,
+      // 제출이 실패하면 다시 마이크 대기로 되돌린다
       if (event === 'RESPONSE_READY') return { ...state, phase: 'THOUGHT' };
+      if (event === 'RESPONSE_SKIPPED') return advanceTurn(state, hasNext);
       if (event === 'RESPONSE_FAILED') return { ...state, phase: 'USER_IDLE' };
       return state;
     case 'THOUGHT':
       if (event !== 'THOUGHT_DONE') return state;
-      return hasNext
-        ? { phase: 'AI_SPEAKING', turnIndex: state.turnIndex + 1 }
-        : { ...state, phase: 'DONE' };
+      return advanceTurn(state, hasNext);
     case 'DONE':
       return state;
   }

@@ -130,23 +130,30 @@ export const useConversationFlow = (scenario: Scenario) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, aiMessage?.content]);
 
+  // 다음 질문을 화면에 올리고 턴을 넘긴다 — 속마음 노출을 마쳤을 때와 건너뛸 때가 공유한다
+  const advanceToNextTurn = (event: 'THOUGHT_DONE' | 'RESPONSE_SKIPPED') => {
+    setTranscript('');
+    setThought(null);
+    if (nextMessageRef.current) {
+      setAiMessage({
+        content: nextMessageRef.current.content,
+        translatedContent: nextMessageRef.current.translatedContent,
+      });
+      nextMessageRef.current = null;
+      isOpeningRef.current = false; // 이후 발화는 동적 생성 — 정적 mp3 대상 아님
+    }
+    send(event);
+  };
+
   // 속마음 — 잠시 보여준 뒤 다음 질문으로 갈아끼우고 다음 턴으로 넘어간다
   useEffect(() => {
     if (state.phase !== 'THOUGHT' || !thought) return;
-    const id = setTimeout(() => {
-      setTranscript('');
-      setThought(null);
-      if (nextMessageRef.current) {
-        setAiMessage({
-          content: nextMessageRef.current.content,
-          translatedContent: nextMessageRef.current.translatedContent,
-        });
-        nextMessageRef.current = null;
-        isOpeningRef.current = false; // 이후 발화는 동적 생성 — 정적 mp3 대상 아님
-      }
-      send('THOUGHT_DONE');
-    }, thoughtHoldMs(thought.text));
+    const id = setTimeout(
+      () => advanceToNextTurn('THOUGHT_DONE'),
+      thoughtHoldMs(thought.text),
+    );
     return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, thought]);
 
   const pressMic = () => send('MIC_PRESSED');
@@ -188,6 +195,11 @@ export const useConversationFlow = (scenario: Scenario) => {
         .resolve(sessionId, res.submittedMessage)
         .then((resolved) => {
           if (!resolved) return; // 이탈 중이면 화면을 건드리지 않는다
+          // 속마음이 비면(생성 실패·타임아웃) 빈 말풍선 대신 건너뛰고 바로 다음 턴으로 넘긴다
+          if (!resolved.text) {
+            advanceToNextTurn('RESPONSE_SKIPPED');
+            return;
+          }
           setThought({
             text: resolved.text,
             type: toThoughtType(resolved.type),

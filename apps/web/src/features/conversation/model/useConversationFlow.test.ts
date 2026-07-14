@@ -437,7 +437,7 @@ describe('useConversationFlow', () => {
     expect(result.current.turn.innerThought).toBe('좋아, 자연스러웠어.');
   });
 
-  it('속마음 생성이 실패(FAILED)해도 폴링을 멈추고 다음으로 진행한다', async () => {
+  it('속마음 생성이 실패(FAILED)하면 빈 말풍선 대신 건너뛰고 다음 질문으로 넘어간다', async () => {
     const { result } = await renderUserFirst();
     submitMessage.mockResolvedValue(preparingSubmitResponse());
     getInnerThought.mockResolvedValue({
@@ -453,6 +453,9 @@ describe('useConversationFlow', () => {
       await vi.advanceTimersByTimeAsync(500);
     });
 
-    expect(result.current.phase).toBe('THOUGHT');
+    // 속마음 노출(THOUGHT) 없이 바로 다음 AI 발화로
+    expect(result.current.phase).toBe('AI_SPEAKING');
+    expect(result.current.turn.aiMessage).toBe('What size would you like?');
+    expect(result.current.turn.innerThought).toBe('');
   });
 });

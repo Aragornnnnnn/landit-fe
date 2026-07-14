@@ -57,6 +57,18 @@ describe('nextConversationState', () => {
     ).toEqual(state('THOUGHT'));
   });
 
+  it('대기 중 속마음을 건너뛰면(빈값) 바로 다음 AI 발화로 넘어간다', () => {
+    expect(
+      nextConversationState(state('WAITING', 0), 'RESPONSE_SKIPPED', true),
+    ).toEqual(state('AI_SPEAKING', 1));
+  });
+
+  it('대기 중 속마음을 건너뛰는데 다음 턴이 없으면 대화가 종료된다', () => {
+    expect(
+      nextConversationState(state('WAITING', 2), 'RESPONSE_SKIPPED', false),
+    ).toEqual(state('DONE', 2));
+  });
+
   it('대기 중 제출이 실패하면 마이크 대기로 되돌아간다', () => {
     expect(
       nextConversationState(state('WAITING'), 'RESPONSE_FAILED', true),
