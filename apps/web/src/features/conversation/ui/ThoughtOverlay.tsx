@@ -9,15 +9,22 @@ import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
 export const ThoughtOverlay = ({
   thought,
+  // 대기 중(응답 전) — Sona가 먼저 날아들어 '생각 중'으로 떠 있다가, 속마음이 도착하면 같은 말풍선이 채워진다
+  loading = false,
 }: {
   thought: FloatingThought | null;
+  loading?: boolean;
 }) => {
   const mounted = useClientOnlyValue(() => true, false);
   if (!mounted) return null;
 
+  // 대기부터 속마음까지 Sona는 한 번만 등장한다 — 도착 전엔 중립 표정으로 떠 있는다
+  const visible = loading || Boolean(thought);
+  const sonaType = (thought?.type ?? 'NORMAL').toLowerCase();
+
   return createPortal(
     <AnimatePresence>
-      {thought && (
+      {visible && (
         <motion.div
           role="dialog"
           aria-modal="true"
@@ -48,15 +55,16 @@ export const ThoughtOverlay = ({
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`/images/character/sona-${thought.type.toLowerCase()}.webp`}
+                  src={`/images/character/sona-${sonaType}.webp`}
                   alt="Sona"
                   className="object-contain"
                   style={{ width: 148, height: 148 }}
                 />
               </motion.div>
 
-              {/* 말풍선 — 착지 직후 통통 튀며 열리고, 글자가 촤르륵 이어진다 */}
+              {/* 말풍선 — 착지 직후 통통 튀며 열리고, 대기 땐 점, 도착하면 글자가 촤르륵 이어진다 */}
               <motion.div
+                layout
                 initial={{ scale: 0.7, y: 12, opacity: 0 }}
                 animate={{ scale: 1, y: 0, opacity: 1 }}
                 transition={{
@@ -70,22 +78,48 @@ export const ThoughtOverlay = ({
               >
                 {/* 위쪽 꼬리 */}
                 <span className="absolute -top-1.5 left-1/2 size-3 -translate-x-1/2 rotate-45 rounded-[3px] bg-card" />
-                {/* Sona가 대신 전해주는 프레임 — 속마음 본문은 상대의 목소리라 따옴표로 감싼다 */}
-                <p className="mb-1.5 text-center text-xs font-bold text-primary">
-                  대신 알려주는 속마음
-                </p>
-                <p className="text-center text-base leading-relaxed font-medium text-foreground">
-                  {`“${thought.text}”`.split('').map((char, i) => (
-                    <motion.span
-                      key={i}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.32 + i * 0.014, duration: 0.12 }}
-                    >
-                      {char}
-                    </motion.span>
-                  ))}
-                </p>
+                {thought ? (
+                  <>
+                    {/* Sona가 대신 전해주는 프레임 — 속마음 본문은 상대의 목소리라 따옴표로 감싼다 */}
+                    <p className="mb-1.5 text-center text-xs font-bold text-primary">
+                      대신 알려주는 속마음
+                    </p>
+                    <p className="text-center text-base leading-relaxed font-medium text-foreground">
+                      {`“${thought.text}”`.split('').map((char, i) => (
+                        <motion.span
+                          key={i}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{
+                            delay: 0.32 + i * 0.014,
+                            duration: 0.12,
+                          }}
+                        >
+                          {char}
+                        </motion.span>
+                      ))}
+                    </p>
+                  </>
+                ) : (
+                  // 대기 — 상대가 마음을 정리하는 중
+                  <div
+                    className="flex items-center gap-2 px-2 py-1.5"
+                    aria-label="상대가 생각하고 있어요"
+                  >
+                    {[0, 1, 2].map((i) => (
+                      <motion.span
+                        key={i}
+                        className="size-2.5 rounded-full bg-muted-foreground/60"
+                        animate={{ y: [0, -5, 0], opacity: [0.4, 1, 0.4] }}
+                        transition={{
+                          duration: 0.9,
+                          repeat: Infinity,
+                          delay: i * 0.15,
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
               </motion.div>
             </motion.div>
           </div>

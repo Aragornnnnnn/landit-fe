@@ -9,7 +9,6 @@ import type { ConversationPhase } from '../model/conversationMachine';
 
 interface MicControlProps {
   phase: ConversationPhase;
-  submitting?: boolean;
   onPress: () => void;
   onCancel: () => void;
   onDone: () => void;
@@ -17,7 +16,6 @@ interface MicControlProps {
 
 export const MicControl = ({
   phase,
-  submitting = false,
   onPress,
   onCancel,
   onDone,
@@ -38,36 +36,28 @@ export const MicControl = ({
           className="flex flex-col items-center gap-3"
         >
           <p className="text-sm font-medium text-muted-foreground">
-            {submitting ? '답변을 전하고 있어요..' : '말을 듣고 있어요..'}
+            말을 듣고 있어요..
           </p>
           <div className="flex items-center gap-8">
             <button
               onClick={onCancel}
-              disabled={submitting}
               aria-label="답변 중단"
-              className="flex size-16 items-center justify-center rounded-full bg-destructive/10 text-destructive transition-opacity active:scale-95 disabled:opacity-30"
+              className="flex size-16 items-center justify-center rounded-full bg-destructive/10 text-destructive active:scale-95"
             >
               <CloseIcon size={26} strokeWidth={2.5} />
             </button>
             <button
               onClick={onDone}
-              disabled={submitting}
               aria-label="답변 완료"
-              className="relative flex size-20 items-center justify-center rounded-full bg-primary text-white active:scale-95 disabled:opacity-70"
+              className="relative flex size-20 items-center justify-center rounded-full bg-primary text-white active:scale-95"
             >
-              {submitting ? (
-                <span className="size-7 animate-spin rounded-full border-[3px] border-white/40 border-t-white" />
-              ) : (
-                <>
-                  {/* 듣는 중임을 알리는 바깥 링 펄스 */}
-                  <motion.span
-                    className="absolute inset-0 rounded-full bg-primary/30"
-                    animate={{ scale: [1, 1.35], opacity: [0.7, 0] }}
-                    transition={{ duration: 1.2, repeat: Infinity }}
-                  />
-                  <StopIcon size={28} />
-                </>
-              )}
+              {/* 듣는 중임을 알리는 바깥 링 펄스 */}
+              <motion.span
+                className="absolute inset-0 rounded-full bg-primary/30"
+                animate={{ scale: [1, 1.35], opacity: [0.7, 0] }}
+                transition={{ duration: 1.2, repeat: Infinity }}
+              />
+              <StopIcon size={28} />
             </button>
           </div>
         </motion.div>

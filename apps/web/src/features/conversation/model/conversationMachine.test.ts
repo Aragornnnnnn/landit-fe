@@ -45,10 +45,22 @@ describe('nextConversationState', () => {
     ).toEqual(state('USER_IDLE'));
   });
 
-  it('듣기를 완료(■)하면 속마음으로 넘어간다', () => {
+  it('듣기를 완료(■)하면 응답 대기로 넘어간다', () => {
     expect(
       nextConversationState(state('USER_LISTENING'), 'LISTENING_DONE', true),
+    ).toEqual(state('WAITING'));
+  });
+
+  it('대기 중 응답이 오면 속마음으로 넘어간다', () => {
+    expect(
+      nextConversationState(state('WAITING'), 'RESPONSE_READY', true),
     ).toEqual(state('THOUGHT'));
+  });
+
+  it('대기 중 제출이 실패하면 마이크 대기로 되돌아간다', () => {
+    expect(
+      nextConversationState(state('WAITING'), 'RESPONSE_FAILED', true),
+    ).toEqual(state('USER_IDLE'));
   });
 
   it('다음 턴이 남아있으면 속마음이 끝난 뒤 다음 AI 발화로 넘어간다', () => {

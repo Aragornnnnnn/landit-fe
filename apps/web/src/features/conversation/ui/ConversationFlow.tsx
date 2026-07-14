@@ -33,7 +33,6 @@ export const ConversationFlow = ({
     turn,
     transcript,
     setTranscript,
-    submitting,
     pressMic,
     cancelListening,
     finishListening,
@@ -83,7 +82,8 @@ export const ConversationFlow = ({
 
       <CharacterStage thumbnailUrl={scenario.thumbnailUrl} partner={partner} />
 
-      <section className="flex min-h-0 flex-1 flex-col px-5 pt-5">
+      {/* flex-none: 무대(flex-1)가 슬랙을 흡수하고, 이 영역은 내용만큼만 차지한다 */}
+      <section className="flex min-h-0 flex-none flex-col px-5 pt-5">
         <QuestionCard
           question={turn.aiMessage}
           translation={turn.aiTranslation}
@@ -107,15 +107,15 @@ export const ConversationFlow = ({
       <footer className="flex-none pb-[max(env(safe-area-inset-bottom),16px)]">
         <MicControl
           phase={phase}
-          submitting={submitting}
           onPress={pressMic}
           onCancel={cancelListening}
           onDone={finishListening}
         />
       </footer>
 
-      {/* 속마음 — 화면 전체를 덮는 전면 연출로 이목을 모은다 */}
+      {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(WAITING)부터 Sona가 떠 있다가 속마음을 전한다 */}
       <ThoughtOverlay
+        loading={phase === 'WAITING'}
         thought={
           phase === 'THOUGHT'
             ? { text: turn.innerThought, type: turn.innerThoughtType }

@@ -143,6 +143,26 @@ describe('useConversationFlow', () => {
     expect(result.current.status).toBe('error');
   });
 
+  it('제출하면 응답이 오기 전까지 대기(생각 중) 상태가 된다', async () => {
+    const { result } = await renderUserFirst();
+    let resolve: (value: SessionMessageSubmitResponse) => void = () => {};
+    submitMessage.mockReturnValue(
+      new Promise((r) => {
+        resolve = r;
+      }),
+    );
+
+    act(() => result.current.pressMic());
+    act(() => result.current.setTranscript('Hello!'));
+    act(() => {
+      void result.current.finishListening();
+    });
+
+    expect(result.current.phase).toBe('WAITING');
+
+    await act(async () => resolve(submitResponse()));
+  });
+
   it('발화를 제출하면 상대 속마음을 노출한다', async () => {
     const { result } = await renderUserFirst();
     submitMessage.mockResolvedValue(submitResponse());
@@ -152,6 +172,15 @@ describe('useConversationFlow', () => {
     expect(result.current.phase).toBe('THOUGHT');
     expect(result.current.turn.innerThought).toBe('또렷하게 잘 말했어.');
     expect(result.current.turn.innerThoughtType).toBe('GOOD');
+  });
+
+  it('제출이 실패하면 마이크 대기로 되돌아간다', async () => {
+    const { result } = await renderUserFirst();
+    submitMessage.mockRejectedValue(new Error('network'));
+
+    await speakAndSubmit(result, 'Hello!');
+
+    expect(result.current.phase).toBe('USER_IDLE');
   });
 
   it('빈 답변은 제출하지 않는다', async () => {

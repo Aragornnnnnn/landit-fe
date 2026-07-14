@@ -47,13 +47,13 @@ export const useConversationFlow = (scenario: Scenario) => {
     type: ThoughtType;
   } | null>(null);
   const [transcript, setTranscript] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
   // send 클로저가 최신 값을 읽도록 ref로 들고 있는다
   const sessionIdRef = useRef<number | null>(null);
   const hasNextRef = useRef(true);
   const nextMessageRef = useRef<NextMessage | null>(null);
   const startedRef = useRef(false);
+  const submittingRef = useRef(false); // 중복 제출 방지 (연출은 WAITING phase가 맡는다)
 
   const send = (event: ConversationEvent) =>
     setState((prev) =>
@@ -121,12 +121,14 @@ export const useConversationFlow = (scenario: Scenario) => {
     send('LISTENING_CANCELLED');
   };
 
-  // 발화 제출 — 응답(속마음·다음 질문)이 준비된 뒤에야 속마음 단계로 넘어간다
+  // 발화 제출 — 대기(생각 중) 단계로 넘긴 뒤, 응답이 오면 속마음으로 이어간다
   const finishListening = async () => {
     const content = transcript.trim();
-    if (!content || submitting || sessionIdRef.current == null) return;
+    if (!content || submittingRef.current || sessionIdRef.current == null)
+      return;
 
-    setSubmitting(true);
+    submittingRef.current = true;
+    send('LISTENING_DONE'); // → WAITING (상대가 생각 중)
     try {
       const res = await submitMessage(sessionIdRef.current, content, 'TEXT');
       nextMessageRef.current = res.nextMessage;
@@ -135,11 +137,12 @@ export const useConversationFlow = (scenario: Scenario) => {
         text: res.submittedMessage.innerThought,
         type: toThoughtType(res.submittedMessage.innerThoughtType),
       });
-      send('LISTENING_DONE');
+      send('RESPONSE_READY'); // → THOUGHT
     } catch (error) {
       console.error('발화 제출 실패', error);
+      send('RESPONSE_FAILED'); // → USER_IDLE (다시 시도)
     } finally {
-      setSubmitting(false);
+      submittingRef.current = false;
     }
   };
 
@@ -166,7 +169,6 @@ export const useConversationFlow = (scenario: Scenario) => {
     turn,
     transcript,
     setTranscript,
-    submitting,
     pressMic,
     cancelListening,
     finishListening,
