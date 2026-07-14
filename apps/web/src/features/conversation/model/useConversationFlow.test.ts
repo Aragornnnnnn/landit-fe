@@ -90,6 +90,16 @@ vi.mock('@/shared/lib/stt/useStt', () => ({
   },
 }));
 
+// QueryClient는 경계 — 완료 시 피드백 prefetch·시나리오 무효화 호출만 확인한다
+const queryClientMock = vi.hoisted(() => ({
+  prefetchQuery: vi.fn(),
+  invalidateQueries: vi.fn(),
+}));
+vi.mock('@tanstack/react-query', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-query')>()),
+  useQueryClient: () => queryClientMock,
+}));
+
 const startSession = vi.mocked(sessionApi.startSession);
 const submitMessage = vi.mocked(sessionApi.submitMessage);
 const getInnerThought = vi.mocked(sessionApi.getInnerThought);
@@ -242,6 +252,8 @@ beforeEach(() => {
   sttMock.start.mockClear();
   sttMock.stop.mockClear();
   sttMock.reset.mockClear();
+  queryClientMock.prefetchQuery.mockClear();
+  queryClientMock.invalidateQueries.mockClear();
   vi.unstubAllEnvs();
   startSession.mockResolvedValue(startResponse());
   getInnerThought.mockReset();
@@ -366,6 +378,41 @@ describe('useConversationFlow', () => {
     });
 
     expect(result.current.phase).toBe('DONE');
+  });
+
+  it('대화가 완료되면 피드백을 미리 생성하고 시나리오 캐시를 무효화한다', async () => {
+    const { result } = await renderUserFirst();
+    submitMessage.mockResolvedValue(
+      submitResponse({
+        nextMessage: null,
+        progress: {
+          currentTurnNumber: 3,
+          currentMessageSequenceNumber: 1,
+          totalQuestionCount: 3,
+          completed: true,
+        },
+      }),
+    );
+
+    await speakAndSubmit(result, 'Yes, here you go.');
+
+    // 피드백은 완료 시점에 미리 만든다 (화면 진입 시 즉시 뜨도록)
+    expect(queryClientMock.prefetchQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: ['session-feedback', 1] }),
+    );
+    // 다음 대화 해금이 홈에 반영되도록 시나리오 캐시를 무효화한다
+    expect(queryClientMock.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['scenarios'],
+    });
+  });
+
+  it('대화가 안 끝났으면 피드백을 미리 만들지 않는다', async () => {
+    const { result } = await renderUserFirst();
+    submitMessage.mockResolvedValue(submitResponse()); // completed: false
+
+    await speakAndSubmit(result, 'Hello!');
+
+    expect(queryClientMock.prefetchQuery).not.toHaveBeenCalled();
   });
 
   it('오프닝은 미리 만든 정적 mp3로 재생하고, 끝나면 마이크 대기로 넘어간다', async () => {

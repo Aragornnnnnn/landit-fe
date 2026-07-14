@@ -5,9 +5,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
+import { createSessionFeedback } from '@/features/feedback/api/session-feedback';
+import { sessionFeedbackKey } from '@/features/feedback/model/useSessionFeedback';
 import type { ThoughtType } from '@/features/onboarding/ui/ThoughtCard';
 import type { Scenario } from '@/features/scenario/api/list';
+import { scenarioKeys } from '@/features/scenario/model/keys';
 import { useStt } from '@/shared/lib/stt/useStt';
 import { useTts } from '@/shared/lib/tts/useTts';
 
@@ -73,6 +77,18 @@ export const useConversationFlow = (scenario: Scenario) => {
 
   const tts = useTts();
   const innerThought = useInnerThought();
+  const queryClient = useQueryClient();
+
+  // 대화가 완료되면: 피드백을 미리 생성 요청(prefetch)해 화면 진입 시 즉시 뜨게 하고,
+  // 해금된 다음 시나리오(다음 대화)가 홈에 반영되도록 시나리오 캐시를 무효화한다.
+  const handleConversationComplete = (finishedSessionId: number) => {
+    void queryClient.prefetchQuery({
+      queryKey: sessionFeedbackKey(finishedSessionId),
+      queryFn: () => createSessionFeedback(finishedSessionId),
+      staleTime: Infinity,
+    });
+    void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
+  };
 
   const send = (event: ConversationEvent) =>
     setState((prev) => nextConversationState(prev, event, hasNextRef.current));
@@ -230,6 +246,8 @@ export const useConversationFlow = (scenario: Scenario) => {
       const res = await submitMessage(sessionId, content, inputType);
       nextMessageRef.current = res.nextMessage;
       hasNextRef.current = !res.progress.completed && res.nextMessage != null;
+      // 마지막 발화였다면 피드백을 미리 만들고 다음 대화 해금을 홈에 반영한다
+      if (res.progress.completed) handleConversationComplete(sessionId);
       // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 합성한다 — 다음 발화 재생 지연을 없앤다
       if (res.nextMessage && voice) {
         void tts.prefetch(res.nextMessage.content, voice);
