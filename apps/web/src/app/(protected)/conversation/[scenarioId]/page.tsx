@@ -48,5 +48,6 @@ export default function ConversationPage({
     );
   }
 
-  return <ConversationFlow scenario={scenario} />;
+  // key: 시나리오가 바뀌면 세션·상태를 새로 시작하도록 인스턴스를 다시 마운트한다
+  return <ConversationFlow key={scenario.scenarioId} scenario={scenario} />;
 }
