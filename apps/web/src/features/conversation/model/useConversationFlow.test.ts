@@ -1,5 +1,6 @@
 // useConversationFlow — 오프닝은 openingPreview로 즉시 시드, 세션은 백그라운드.
 // 발화 제출 뒤 대기·속마음·다음질문·종료 전이와 오프닝 정적/폴백 재생을 검증한다.
+import { StrictMode } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -410,6 +411,30 @@ describe('useConversationFlow', () => {
     expect(result.current.phase).toBe('THOUGHT');
     expect(result.current.turn.innerThought).toBe('자연스럽게 잘 말했어.');
     expect(result.current.turn.innerThoughtType).toBe('GOOD');
+  });
+
+  it('StrictMode 재마운트 뒤에도 속마음 폴링이 죽지 않고 완료를 노출한다', async () => {
+    startSession.mockResolvedValue(startResponse());
+    const { result } = renderHook(() => useConversationFlow(userScenario), {
+      wrapper: StrictMode,
+    });
+    await act(async () => {});
+    submitMessage.mockResolvedValue(preparingSubmitResponse());
+    getInnerThought.mockResolvedValue({
+      processingStatus: 'COMPLETED',
+      innerThought: '좋아, 자연스러웠어.',
+      innerThoughtType: 'GOOD',
+    });
+
+    await speakAndSubmit(result, 'Hello!');
+    expect(result.current.phase).toBe('WAITING');
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+
+    expect(result.current.phase).toBe('THOUGHT');
+    expect(result.current.turn.innerThought).toBe('좋아, 자연스러웠어.');
   });
 
   it('속마음 생성이 실패(FAILED)해도 폴링을 멈추고 다음으로 진행한다', async () => {
