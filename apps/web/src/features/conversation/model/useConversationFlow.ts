@@ -124,6 +124,7 @@ export const useConversationFlow = (scenario: Scenario) => {
   // 발화 제출 — 대기(생각 중) 단계로 넘긴 뒤, 응답이 오면 속마음으로 이어간다
   const finishListening = async () => {
     const content = transcript.trim();
+    // TODO(전역 토스트): 음성이 하나도 인식되지 않은 채 완료하면 조용히 무시하지 말고 "말이 인식되지 않았어요" 토스트 노출
     if (!content || submittingRef.current || sessionIdRef.current == null)
       return;
 
@@ -139,6 +140,7 @@ export const useConversationFlow = (scenario: Scenario) => {
       });
       send('RESPONSE_READY'); // → THOUGHT
     } catch (error) {
+      // TODO(전역 토스트): 콘솔 대신 "전송에 실패했어요. 다시 시도해 주세요" 토스트로 실패를 알린다
       console.error('발화 제출 실패', error);
       send('RESPONSE_FAILED'); // → USER_IDLE (다시 시도)
     } finally {
