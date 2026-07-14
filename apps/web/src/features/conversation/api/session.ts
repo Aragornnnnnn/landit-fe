@@ -51,7 +51,8 @@ export interface SubmittedMessage {
   innerThoughtType: string;
 }
 
-// 속마음 폴링 응답 — 준비되면(COMPLETED) 속마음이 채워진다
+// 속마음 폴링 응답 — 준비되면(COMPLETED) 속마음이 채워진다.
+// 아직 준비 중(PREPARING)이면 두 필드가 null이라 여기만 nullable이다.
 export interface SessionInnerThoughtResponse {
   processingStatus: ProcessingStatus;
   innerThought: string | null;
