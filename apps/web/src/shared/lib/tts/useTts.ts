@@ -161,12 +161,21 @@ export function useTts() {
       options?.onError?.(new Error('오디오 재생에 실패했어요.'));
     };
     audio.onerror = fail;
-    audio.play().then(() => {
-      if (!handled) {
-        setStatus('active');
-        options?.onStart?.();
-      }
-    }, fail);
+    audio.play().then(
+      () => {
+        if (!handled) {
+          setStatus('active');
+          options?.onStart?.();
+        }
+      },
+      (error) => {
+        // stop()으로 pause되어 play가 거부된 경우(AbortError)는 실패가 아니다 —
+        // 합성 폴백을 부르지 않는다. (StrictMode 재실행·전환에서 발생)
+        if (error instanceof DOMException && error.name === 'AbortError')
+          return;
+        fail();
+      },
+    );
   };
 
   // 미리 합성해 캐시에 담아둔다 — 다음 speak를 즉시 재생시켜 재생 지연을 없앤다.

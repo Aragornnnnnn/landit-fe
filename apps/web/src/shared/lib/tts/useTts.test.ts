@@ -15,10 +15,15 @@ const harper: TtsVoice = {
 // 경계 목 — 네트워크(fetch)와 브라우저 오디오(Audio, objectURL)만 가짜로 둔다
 class FakeAudio {
   static instances: FakeAudio[] = [];
+  static playRejection: unknown = null; // 설정 시 play()가 이 값으로 거부된다
   src: string;
   onended: (() => void) | null = null;
   onerror: (() => void) | null = null;
-  play = vi.fn(() => Promise.resolve());
+  play = vi.fn(() =>
+    FakeAudio.playRejection
+      ? Promise.reject(FakeAudio.playRejection)
+      : Promise.resolve(),
+  );
   pause = vi.fn();
 
   constructor(src: string) {
@@ -36,6 +41,7 @@ function fakeAudioResponse(): Response {
 
 beforeEach(() => {
   FakeAudio.instances = [];
+  FakeAudio.playRejection = null;
   vi.stubGlobal('Audio', FakeAudio);
   URL.createObjectURL = vi.fn(() => 'blob:fake-url');
   URL.revokeObjectURL = vi.fn();
@@ -251,5 +257,22 @@ describe('useTts', () => {
 
     expect(onError).toHaveBeenCalledTimes(1);
     expect(result.current.status).toBe('error');
+  });
+
+  it('speakSrc의 play가 stop(pause)으로 중단(AbortError)되면 onError를 부르지 않는다', async () => {
+    vi.stubGlobal('fetch', vi.fn());
+    FakeAudio.playRejection = new DOMException(
+      'interrupted by pause',
+      'AbortError',
+    );
+    const onError = vi.fn();
+    const { result } = renderHook(() => useTts());
+
+    await act(async () => {
+      result.current.speakSrc('/audio/opening-1.mp3', { onError });
+    });
+
+    // AbortError는 합성 폴백을 부르지 않는다 (정적 재생이 그대로 유지되도록)
+    expect(onError).not.toHaveBeenCalled();
   });
 });
