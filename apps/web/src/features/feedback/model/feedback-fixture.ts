@@ -6,7 +6,8 @@ export const FEEDBACK_FIXTURE: SessionFeedbackResponse = {
   nativeScore: 87,
   starRating: 2.5,
   highlightMessage: '한국인의 23%가 놓치는 복수+s를 챙긴 사람.',
-  summaryMessage: '거의 원어민처럼 착지했어요',
+  summaryMessage:
+    '원어민이 되묻지 않고 한 번에 알아들었어요. 사소한 실수 정도는 인간미라 괜찮아요.',
   messageFeedbacks: [
     {
       messageFeedbackId: 1,

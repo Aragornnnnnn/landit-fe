@@ -6,7 +6,7 @@ import { ChevronLeftIcon } from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
 
 import type { SessionFeedbackResponse } from '../api/session-feedback';
-import { deliveryInterpretation, detailCtaLabel } from '../model/feedback-view';
+import { detailCtaLabel, scoreHeadline } from '../model/feedback-view';
 import { ScoreTrack } from './ScoreTrack';
 
 export const FeedbackSummary = ({
@@ -50,7 +50,7 @@ export const FeedbackSummary = ({
         <div className="flex flex-col gap-[7px]">
           <StarRating rating={feedback.starRating} size={32} animate />
           <p className="text-[23px] leading-[1.28] font-bold text-foreground">
-            {feedback.summaryMessage}
+            {scoreHeadline(feedback.nativeScore)}
           </p>
         </div>
 
@@ -62,9 +62,7 @@ export const FeedbackSummary = ({
           이번 대화에서
         </p>
         <div className="divide-y divide-primary/10 rounded-2xl bg-primary/[0.06]">
-          <CardRow label="전달력">
-            {deliveryInterpretation(feedback.nativeScore)}
-          </CardRow>
+          <CardRow label="전달력">{feedback.summaryMessage}</CardRow>
           <CardRow label="대화 성공률">
             {total}번 중 <span className="text-primary">{goodCount}번</span>{' '}
             원어민처럼 말했어요

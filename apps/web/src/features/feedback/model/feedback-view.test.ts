@@ -1,10 +1,10 @@
-// 피드백 표시용 순수 함수 검증 — 평가 맥락 라벨, 전달력 문구, CTA 문구
+// 피드백 표시용 순수 함수 검증 — 평가 맥락 라벨, 총평 헤드라인, CTA 문구
 import { describe, expect, it } from 'vitest';
 
 import {
-  deliveryInterpretation,
   detailCtaLabel,
   evaluationContextLabel,
+  scoreHeadline,
 } from './feedback-view';
 
 describe('evaluationContextLabel', () => {
@@ -17,16 +17,16 @@ describe('evaluationContextLabel', () => {
   });
 });
 
-describe('deliveryInterpretation', () => {
-  it('점수 구간마다 다른 전달력 문구를 돌려준다', () => {
-    expect(deliveryInterpretation(96)).toContain('완벽히');
-    expect(deliveryInterpretation(87)).toContain('한 번에 알아들었어요');
-    expect(deliveryInterpretation(20)).toContain('말만으로는');
+describe('scoreHeadline', () => {
+  it('점수 구간마다 다른 헤드라인을 돌려준다', () => {
+    expect(scoreHeadline(95)).not.toBe(scoreHeadline(85));
+    expect(scoreHeadline(85)).toBe('거의 원어민처럼 착지했어요');
+    expect(scoreHeadline(20)).toBe('아직 착지까지 연습이 필요해요');
   });
 
   it('구간 경계값은 위쪽 구간에 포함된다', () => {
-    expect(deliveryInterpretation(80)).toBe(deliveryInterpretation(89));
-    expect(deliveryInterpretation(79)).not.toBe(deliveryInterpretation(80));
+    expect(scoreHeadline(80)).toBe(scoreHeadline(89));
+    expect(scoreHeadline(79)).not.toBe(scoreHeadline(80));
   });
 });
 
