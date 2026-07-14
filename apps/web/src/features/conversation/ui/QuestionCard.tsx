@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 
-import { speechTypingMs } from '../model/sim-fixture';
+import { speechTypingMs } from '../model/pacing';
 import { TypingCursor } from './TypingCursor';
 
 interface QuestionCardProps {

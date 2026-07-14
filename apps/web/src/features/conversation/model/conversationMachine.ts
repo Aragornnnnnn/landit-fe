@@ -28,10 +28,11 @@ export const initialConversationState = (
 });
 
 // 단계에 맞지 않는 이벤트는 상태를 그대로 돌려준다 — 타이머와 버튼이 겹쳐 들어와도 안전하다
+// hasNext = 다음 턴이 남아있는가(서버 progress.completed의 반대). 종료 판정에만 쓴다.
 export const nextConversationState = (
   state: ConversationState,
   event: ConversationEvent,
-  totalTurns: number,
+  hasNext: boolean,
 ): ConversationState => {
   switch (state.phase) {
     case 'AI_SPEAKING':
@@ -49,7 +50,7 @@ export const nextConversationState = (
       return state;
     case 'THOUGHT':
       if (event !== 'THOUGHT_DONE') return state;
-      return state.turnIndex + 1 < totalTurns
+      return hasNext
         ? { phase: 'AI_SPEAKING', turnIndex: state.turnIndex + 1 }
         : { ...state, phase: 'DONE' };
     case 'DONE':
