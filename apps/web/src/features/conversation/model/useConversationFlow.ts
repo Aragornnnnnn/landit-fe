@@ -1,7 +1,7 @@
 // 대화 플로우 훅 — 상태 기계를 세션 API·TTS에 배선한다 (시작·발화 제출·종료·재생)
 // 오프닝은 시나리오(리스트 캐시)의 openingPreview로 즉시 시드하고, 세션 시작은 백그라운드로 돌려
 // 진입을 막지 않는다. 세션은 발화 제출 때 필요한 sessionId 확보용.
-// 남은 연동 지점: 유저 입력 → useStt transcript(LAN-141), 지금은 dev 타이핑 stub
+// 남은 연동 지점은 유저 입력 → useStt transcript(LAN-141)이고, 지금은 dev 타이핑 임시 입력이다
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -22,6 +22,7 @@ import {
   type ConversationEvent,
 } from './conversationMachine';
 import { speechTypingMs, thoughtHoldMs, toThoughtType } from './pacing';
+import { useInnerThought } from './useInnerThought';
 
 // 화면이 그리는 현재 턴 — 오프닝은 openingPreview, 이후는 서버 응답에서 조립한다
 interface ConversationTurn {
@@ -66,6 +67,7 @@ export const useConversationFlow = (scenario: Scenario) => {
   const isOpeningRef = useRef(true); // 첫 AI 발화(오프닝)인지 — 미리 만든 정적 mp3 재생 대상
 
   const tts = useTts();
+  const innerThought = useInnerThought();
 
   const send = (event: ConversationEvent) =>
     setState((prev) => nextConversationState(prev, event, hasNextRef.current));
@@ -128,23 +130,30 @@ export const useConversationFlow = (scenario: Scenario) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, aiMessage?.content]);
 
+  // 다음 질문을 화면에 올리고 턴을 넘긴다 — 속마음 노출을 마쳤을 때와 건너뛸 때가 공유한다
+  const advanceToNextTurn = (event: 'THOUGHT_DONE' | 'RESPONSE_SKIPPED') => {
+    setTranscript('');
+    setThought(null);
+    if (nextMessageRef.current) {
+      setAiMessage({
+        content: nextMessageRef.current.content,
+        translatedContent: nextMessageRef.current.translatedContent,
+      });
+      nextMessageRef.current = null;
+      isOpeningRef.current = false; // 이후 발화는 동적 생성 — 정적 mp3 대상 아님
+    }
+    send(event);
+  };
+
   // 속마음 — 잠시 보여준 뒤 다음 질문으로 갈아끼우고 다음 턴으로 넘어간다
   useEffect(() => {
     if (state.phase !== 'THOUGHT' || !thought) return;
-    const id = setTimeout(() => {
-      setTranscript('');
-      setThought(null);
-      if (nextMessageRef.current) {
-        setAiMessage({
-          content: nextMessageRef.current.content,
-          translatedContent: nextMessageRef.current.translatedContent,
-        });
-        nextMessageRef.current = null;
-        isOpeningRef.current = false; // 이후 발화는 동적 생성 — 정적 mp3 대상 아님
-      }
-      send('THOUGHT_DONE');
-    }, thoughtHoldMs(thought.text));
+    const id = setTimeout(
+      () => advanceToNextTurn('THOUGHT_DONE'),
+      thoughtHoldMs(thought.text),
+    );
     return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, thought]);
 
   const pressMic = () => send('MIC_PRESSED');
@@ -176,15 +185,27 @@ export const useConversationFlow = (scenario: Scenario) => {
       const res = await submitMessage(sessionId, content, 'TEXT');
       nextMessageRef.current = res.nextMessage;
       hasNextRef.current = !res.progress.completed && res.nextMessage != null;
-      // 다음 AI 발화를 속마음 노출 동안 미리 합성해 재생 지연을 없앤다
+      // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 합성한다 — 다음 발화 재생 지연을 없앤다
       if (res.nextMessage && voice) {
         void tts.prefetch(res.nextMessage.content, voice);
       }
-      setThought({
-        text: res.submittedMessage.innerThought,
-        type: toThoughtType(res.submittedMessage.innerThoughtType),
-      });
-      send('RESPONSE_READY'); // → THOUGHT
+      // 속마음은 준비됐으면 즉시, 아직이면 폴링으로 완료된 뒤 노출한다.
+      // 그 사이 WAITING(생각 중) 연출이 화면을 가리고, 다음 질문 합성은 이미 시작됐다.
+      void innerThought
+        .resolve(sessionId, res.submittedMessage)
+        .then((resolved) => {
+          if (!resolved) return; // 이탈 중이면 화면을 건드리지 않는다
+          // 속마음이 비면(생성 실패·타임아웃) 빈 말풍선 대신 건너뛰고 바로 다음 턴으로 넘긴다
+          if (!resolved.text) {
+            advanceToNextTurn('RESPONSE_SKIPPED');
+            return;
+          }
+          setThought({
+            text: resolved.text,
+            type: toThoughtType(resolved.type),
+          });
+          send('RESPONSE_READY'); // → THOUGHT
+        });
     } catch (error) {
       // TODO(전역 토스트): 콘솔 대신 "전송에 실패했어요. 다시 시도해 주세요" 토스트로 실패를 알린다
       console.error('발화 제출 실패', error);
@@ -196,6 +217,7 @@ export const useConversationFlow = (scenario: Scenario) => {
 
   // 중도 이탈 시 세션 종료 (정상 완료는 서버가 판정하므로 호출하지 않는다)
   const leave = () => {
+    innerThought.cancel(); // 진행 중인 속마음 폴링을 멈춘다
     if (sessionIdRef.current != null) {
       endSession(sessionIdRef.current).catch((error) =>
         console.error('세션 종료 실패', error),
