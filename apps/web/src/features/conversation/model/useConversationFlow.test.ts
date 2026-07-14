@@ -29,11 +29,17 @@ const ttsMock = vi.hoisted(() => {
         return Promise.resolve();
       },
     ),
+    prefetch: vi.fn(() => Promise.resolve()),
     stop: vi.fn(),
   };
 });
 vi.mock('@/shared/lib/tts/useTts', () => ({
-  useTts: () => ({ speak: ttsMock.speak, stop: ttsMock.stop, status: 'idle' }),
+  useTts: () => ({
+    speak: ttsMock.speak,
+    prefetch: ttsMock.prefetch,
+    stop: ttsMock.stop,
+    status: 'idle',
+  }),
 }));
 
 const startSession = vi.mocked(sessionApi.startSession);
@@ -294,5 +300,26 @@ describe('useConversationFlow', () => {
     await act(async () => {});
 
     expect(result.current.partner).toBe('female');
+  });
+
+  it('제출 응답의 다음 질문을 미리 합성(prefetch)한다', async () => {
+    startSession.mockResolvedValue(
+      startResponse({
+        firstSpeaker: 'USER',
+        currentMessage: null,
+        userOpeningInstruction: '먼저 인사를 건네보세요.',
+        ttsVoice: voice,
+      }),
+    );
+    const { result } = renderHook(() => useConversationFlow(scenario));
+    await act(async () => {});
+    submitMessage.mockResolvedValue(submitResponse());
+
+    await speakAndSubmit(result, 'Hello!');
+
+    expect(ttsMock.prefetch).toHaveBeenCalledWith(
+      'What size would you like?',
+      voice,
+    );
   });
 });

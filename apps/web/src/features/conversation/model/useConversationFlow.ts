@@ -148,6 +148,10 @@ export const useConversationFlow = (scenario: Scenario) => {
       const res = await submitMessage(sessionIdRef.current, content, 'TEXT');
       nextMessageRef.current = res.nextMessage;
       hasNextRef.current = !res.progress.completed && res.nextMessage != null;
+      // 다음 AI 발화를 속마음 노출 동안 미리 합성해 재생 지연을 없앤다
+      if (res.nextMessage && session?.ttsVoice) {
+        void tts.prefetch(res.nextMessage.content, session.ttsVoice);
+      }
       setThought({
         text: res.submittedMessage.innerThought,
         type: toThoughtType(res.submittedMessage.innerThoughtType),

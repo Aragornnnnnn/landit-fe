@@ -202,4 +202,19 @@ describe('useTts', () => {
 
     expect(result.current.status).toBe('loading');
   });
+
+  it('미리 합성(prefetch)해두면 speak가 다시 요청하지 않고 캐시로 재생한다', async () => {
+    const fetchMock = vi.fn(async () => fakeAudioResponse());
+    vi.stubGlobal('fetch', fetchMock);
+    const { result } = renderHook(() => useTts());
+
+    await act(() => result.current.prefetch('Hello', harper));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await act(() => result.current.speak('Hello', harper));
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(FakeAudio.instances[0]!.play).toHaveBeenCalled();
+    expect(result.current.status).toBe('active');
+  });
 });
