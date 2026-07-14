@@ -127,6 +127,9 @@ const ShellScreen = () => {
       allowsBackForwardNavigationGestures
       // 웹 getUserMedia(STT 마이크) 요청을 OS 권한만으로 허용 — iOS에서 앱·웹뷰 이중 권한 팝업 방지
       mediaCapturePermissionGrantType="grant"
+      // AI 발화(TTS)를 사용자 제스처 없이도 재생 — iOS 기본은 자동재생을 막아 2번째 발화부터 무음이 된다
+      mediaPlaybackRequiresUserAction={false}
+      allowsInlineMediaPlayback
       // 오버스크롤(iOS 바운스·Android 글로우)과 줌 차단 — 앱스러운 동작
       bounces={false}
       overScrollMode="never"
