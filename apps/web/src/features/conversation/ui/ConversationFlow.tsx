@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import type { Scenario } from '@/features/scenario/api/list';
+import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
 import { useConversationFlow } from '../model/useConversationFlow';
@@ -27,15 +28,39 @@ export const ConversationFlow = ({
   const router = useRouter();
   const [showExitModal, setShowExitModal] = useState(false);
   const {
+    status,
     phase,
     turn,
     transcript,
+    setTranscript,
+    submitting,
     pressMic,
     cancelListening,
     finishListening,
+    leave,
   } = useConversationFlow(scenario);
 
-  // 모든 턴이 끝나면 표현 준비 화면으로 전환한다 (표현학습·피드백·세션 API 연동은 후속 이슈)
+  // 세션 시작 대기·실패 처리 — 시작돼야 대화 UI가 의미를 가진다
+  if (status !== 'ready') {
+    return (
+      <main className="mx-auto flex h-dvh max-w-[430px] flex-col items-center justify-center gap-4 bg-background px-6 text-center">
+        {status === 'starting' ? (
+          <span className="size-6 animate-spin rounded-full border-2 border-muted border-t-primary" />
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground">
+              대화를 시작하지 못했어요.
+            </p>
+            <Button variant="secondary" onClick={() => router.push('/home')}>
+              홈으로
+            </Button>
+          </>
+        )}
+      </main>
+    );
+  }
+
+  // 모든 턴이 끝나면 표현 준비 화면으로 전환한다 (표현학습·피드백 연동은 후속 이슈)
   if (phase === 'DONE') {
     return <ExpressionPrepScreen scenario={scenario} />;
   }
@@ -65,11 +90,24 @@ export const ConversationFlow = ({
           speaking={phase === 'AI_SPEAKING'}
         />
         <UserTranscript text={transcript} phase={phase} />
+
+        {/* [dev stub] STT(LAN-141) 전까지 답변을 직접 입력해 세션 API 루프를 검증한다 */}
+        {process.env.NODE_ENV !== 'production' &&
+          phase === 'USER_LISTENING' && (
+            <input
+              autoFocus
+              value={transcript}
+              onChange={(event) => setTranscript(event.target.value)}
+              placeholder="답변 입력 (dev · STT 대체)"
+              className="mt-3 w-full rounded-xl border border-dashed border-border bg-transparent px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+            />
+          )}
       </section>
 
       <footer className="flex-none pb-[max(env(safe-area-inset-bottom),16px)]">
         <MicControl
           phase={phase}
+          submitting={submitting}
           onPress={pressMic}
           onCancel={cancelListening}
           onDone={finishListening}
@@ -87,7 +125,10 @@ export const ConversationFlow = ({
 
       <ExitConfirmSheet
         open={showExitModal}
-        onConfirm={() => router.push('/home')}
+        onConfirm={() => {
+          leave();
+          router.push('/home');
+        }}
         onClose={() => setShowExitModal(false)}
       />
     </main>
