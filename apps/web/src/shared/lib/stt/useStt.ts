@@ -19,6 +19,7 @@ export interface UseSttOptions {
   stopOnSilence?: boolean;
   onFinal?: (transcript: string) => void;
   onInterim?: (transcript: string) => void;
+  onError?: (error: Error) => void;
 }
 
 // 영어 말하기 연습 제품이라 영어가 기본 — 한국어 받아쓰기가 필요한 기능은 lang: 'ko'로 덮어쓴다
@@ -33,6 +34,7 @@ export function useStt(options: UseSttOptions = {}) {
     stopOnSilence = true,
     onFinal,
     onInterim,
+    onError,
   } = options;
 
   const [transcript, setTranscript] = useState('');
@@ -44,10 +46,18 @@ export function useStt(options: UseSttOptions = {}) {
   const startingRef = useRef(false);
 
   // 세션 콜백은 훅 밖 수명이라 사용자 콜백 최신값을 ref로 잡아 stale closure 방지
-  const callbacksRef = useRef({ onFinal, onInterim });
+  const callbacksRef = useRef({ onFinal, onInterim, onError });
   useEffect(() => {
-    callbacksRef.current = { onFinal, onInterim };
+    callbacksRef.current = { onFinal, onInterim, onError };
   });
+
+  const failWith = (err: Error) => {
+    sessionRef.current = null;
+    setInterim('');
+    setError(err);
+    setStatus('error');
+    callbacksRef.current.onError?.(err);
+  };
 
   const start = async () => {
     if (sessionRef.current || startingRef.current) return;
@@ -69,12 +79,7 @@ export function useStt(options: UseSttOptions = {}) {
         setStatus('idle');
         callbacksRef.current.onFinal?.(text);
       },
-      onError: (err) => {
-        sessionRef.current = null;
-        setInterim('');
-        setError(err);
-        setStatus('error');
-      },
+      onError: (err) => failWith(err),
     };
 
     try {
@@ -91,8 +96,7 @@ export function useStt(options: UseSttOptions = {}) {
         deepgramErr instanceof DOMException &&
         deepgramErr.name === 'NotAllowedError'
       ) {
-        setError(new Error('마이크 권한이 거부되었습니다.'));
-        setStatus('error');
+        failWith(new Error('마이크 권한이 거부되었습니다.'));
         return;
       }
       // 미지원(iOS WKWebView 등)·토큰 실패 → 브라우저 SpeechRecognition 폴백
@@ -104,8 +108,7 @@ export function useStt(options: UseSttOptions = {}) {
         });
         setStatus('listening');
       } catch (fallbackErr) {
-        setError(fallbackErr as Error);
-        setStatus('error');
+        failWith(fallbackErr as Error);
       }
     } finally {
       startingRef.current = false;

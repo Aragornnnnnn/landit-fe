@@ -90,6 +90,18 @@ describe('useStt', () => {
     );
   });
 
+  it('에러가 나면 onError 콜백으로 알린다', async () => {
+    vi.stubGlobal('webkitSpeechRecognition', undefined);
+    const onError = vi.fn();
+    const { result } = renderHook(() => useStt({ onError }));
+
+    await act(() => result.current.start());
+
+    expect(result.current.status).toBe('error');
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError.mock.calls[0][0]).toBeInstanceOf(Error);
+  });
+
   it('발화가 끝나면 transcript가 확정되고 다시 idle로 돌아간다', async () => {
     const onFinal = vi.fn();
     const { result } = renderHook(() => useStt({ onFinal }));

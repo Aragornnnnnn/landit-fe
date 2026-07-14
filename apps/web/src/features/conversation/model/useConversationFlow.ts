@@ -1,13 +1,14 @@
 // 대화 플로우 훅 — 상태 기계를 세션 API·TTS에 배선한다 (시작·발화 제출·종료·재생)
 // 오프닝은 시나리오(리스트 캐시)의 openingPreview로 즉시 시드하고, 세션 시작은 백그라운드로 돌려
 // 진입을 막지 않는다. 세션은 발화 제출 때 필요한 sessionId 확보용.
-// 남은 연동 지점은 유저 입력 → useStt transcript(LAN-141)이고, 지금은 dev 타이핑 임시 입력이다
+// 유저 입력은 기본 마이크 STT(음성, VOICE), 키보드 아이콘을 누르면 타이핑(TEXT)으로 전환한다(LAN-141)
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
 
 import type { ThoughtType } from '@/features/onboarding/ui/ThoughtCard';
 import type { Scenario } from '@/features/scenario/api/list';
+import { useStt } from '@/shared/lib/stt/useStt';
 import { useTts } from '@/shared/lib/tts/useTts';
 
 import {
@@ -56,6 +57,8 @@ export const useConversationFlow = (scenario: Scenario) => {
     type: ThoughtType;
   } | null>(null);
   const [transcript, setTranscript] = useState('');
+  // 입력 수단 — 기본은 마이크(음성), 키보드 아이콘을 누르면 타이핑 모드로 바꾼다
+  const [keyboardMode, setKeyboardMode] = useState(false);
 
   // send 클로저가 최신 값을 읽도록 ref로 들고 있는다
   const sessionIdRef = useRef<number | null>(null);
@@ -71,6 +74,20 @@ export const useConversationFlow = (scenario: Scenario) => {
 
   const send = (event: ConversationEvent) =>
     setState((prev) => nextConversationState(prev, event, hasNextRef.current));
+
+  // 마이크 STT — 실시간 미리보기는 transcript로, 완료(stop) 시 최종 텍스트로 음성 제출을 잇는다.
+  // 침묵 자동 종료는 끄고 완료 버튼(■)만으로 끝낸다 — 긴 답변 중 침묵에도 안 끊긴다.
+  // 권한 거부·인식 오류는 조용히 멈추지 말고 마이크 대기로 되돌린다.
+  const stt = useStt({
+    stopOnSilence: false,
+    onInterim: (text) => setTranscript(text),
+    onFinal: (text) => void submitContent(text, 'VOICE'),
+    onError: () => {
+      // TODO(전역 토스트): "마이크를 사용할 수 없어요. 권한을 확인해 주세요" 노출
+      setTranscript('');
+      send('LISTENING_CANCELLED');
+    },
+  });
 
   // 세션은 백그라운드로 시작 — 화면은 이미 openingPreview로 떴고, 제출 때 쓸 sessionId만 확보한다.
   // StrictMode 이중 실행에도 한 번만 만든다.
@@ -133,6 +150,7 @@ export const useConversationFlow = (scenario: Scenario) => {
   // 다음 질문을 화면에 올리고 턴을 넘긴다 — 속마음 노출을 마쳤을 때와 건너뛸 때가 공유한다
   const advanceToNextTurn = (event: 'THOUGHT_DONE' | 'RESPONSE_SKIPPED') => {
     setTranscript('');
+    setKeyboardMode(false); // 다음 턴은 마이크(음성)부터 다시 시작
     setThought(null);
     if (nextMessageRef.current) {
       setAiMessage({
@@ -156,17 +174,41 @@ export const useConversationFlow = (scenario: Scenario) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, thought]);
 
-  const pressMic = () => send('MIC_PRESSED');
+  // 마이크로 말하기 — 듣기 상태로 넘기고 STT를 켠다
+  const pressMic = () => {
+    setKeyboardMode(false);
+    send('MIC_PRESSED');
+    void stt.start();
+  };
+
+  // 키보드로 입력 — 듣기 상태로 넘기되 마이크는 켜지 않고 타이핑 입력창을 연다
+  const pressKeyboard = () => {
+    setKeyboardMode(true);
+    setTranscript('');
+    send('MIC_PRESSED');
+  };
 
   const cancelListening = () => {
+    if (!keyboardMode) stt.stop();
+    setKeyboardMode(false);
     setTranscript('');
     send('LISTENING_CANCELLED');
   };
 
+  // 음성 완료(■) — STT를 멈추면 최종 텍스트가 onFinal로 도착해 음성 제출을 잇는다
+  const finishListening = () => {
+    stt.stop();
+  };
+
+  // 키보드 전송 — 타이핑한 텍스트를 바로 제출한다
+  const submitText = async () => {
+    await submitContent(transcript, 'TEXT');
+  };
+
   // 발화 제출 — 대기(생각 중)로 넘긴 뒤, 응답이 오면 속마음으로 이어간다.
   // 세션이 백그라운드로 아직 안 끝났으면 sessionId 확보를 기다린다.
-  const finishListening = async () => {
-    const content = transcript.trim();
+  const submitContent = async (raw: string, inputType: 'VOICE' | 'TEXT') => {
+    const content = raw.trim();
     // TODO(전역 토스트): 음성이 하나도 인식되지 않은 채 완료하면 조용히 무시하지 말고 "말이 인식되지 않았어요" 토스트 노출
     if (!content || submittingRef.current) return;
 
@@ -182,7 +224,7 @@ export const useConversationFlow = (scenario: Scenario) => {
         return;
       }
 
-      const res = await submitMessage(sessionId, content, 'TEXT');
+      const res = await submitMessage(sessionId, content, inputType);
       nextMessageRef.current = res.nextMessage;
       hasNextRef.current = !res.progress.completed && res.nextMessage != null;
       // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 합성한다 — 다음 발화 재생 지연을 없앤다
@@ -243,9 +285,12 @@ export const useConversationFlow = (scenario: Scenario) => {
     partner,
     transcript,
     setTranscript,
+    keyboardMode,
     pressMic,
+    pressKeyboard,
     cancelListening,
     finishListening,
+    submitText,
     leave,
   };
 };
