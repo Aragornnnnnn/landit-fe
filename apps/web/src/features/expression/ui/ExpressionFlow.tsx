@@ -37,10 +37,11 @@ export const ExpressionFlow = ({
   const { practice } = useExpressionPractice(expressionId, step !== 'QUIZ');
   const finish = useFinishExpression(expressionId);
 
-  const backToList = () => router.push(`/expressions/${scenarioId}`);
-  // 완료 후엔 방금 해금된 다음 표현으로 스크롤·강조되도록 신호를 붙여 리스트로 돌아간다
+  // 학습을 나가면 홈으로 돌아가 해당 카드를 뒤집어(뒷면=표현 리스트) 보여준다
+  const backToList = () => router.push(`/home?flip=${scenarioId}`);
+  // 완료 후엔 방금 해금된 다음 표현으로 스크롤·강조되도록 just 신호를 붙인다
   const backToListUnlocked = () =>
-    router.push(`/expressions/${scenarioId}?just=1`);
+    router.push(`/home?flip=${scenarioId}&just=1`);
 
   if (learningLoading) return <FlowStatus>불러오는 중…</FlowStatus>;
   if (learningError || !learning) {

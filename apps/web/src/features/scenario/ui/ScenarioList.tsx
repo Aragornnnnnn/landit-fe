@@ -15,30 +15,45 @@ interface ScenarioListProps {
   onStart: (scenario: Scenario) => void;
   // 방금 대화를 끝내 다음 시나리오가 해금됐을 때, 그 카드로 스크롤·강조한다
   focusActive?: boolean;
+  // 표현 마무리 후 홈 복귀 시, 이 시나리오 카드로 스크롤하고 자동으로 뒤집는다
+  flipScenarioId?: number | null;
 }
 
 export const ScenarioList = ({
   scenarios,
   onStart,
   focusActive = false,
+  flipScenarioId = null,
 }: ScenarioListProps) => {
   const { scrollRef, activeIndex, onScroll } = useSnapIndex();
 
   const allCompleted =
     scenarios.length > 0 && scenarios.every((scenario) => scenario.completed);
 
-  // 다음 도전할 시나리오 — 첫 미완료·미잠금 카드. 진입·카테고리 전환 시 늘 이 카드로 위치를 잡는다.
+  // 다음 도전할 시나리오 — 첫 미완료·미잠금 카드.
   const nextIndex = scenarios.findIndex(
     (scenario) => !scenario.completed && !scenario.locked,
   );
+  // 표현 마무리 후 복귀한 대상 카드(있으면). 이 카드는 자동으로 뒤집힌다.
+  const flipIndex =
+    flipScenarioId != null
+      ? scenarios.findIndex(
+          (scenario) => scenario.scenarioId === flipScenarioId,
+        )
+      : -1;
+  // 진입 시 위치를 잡을 카드 — flip 대상이 있으면 그 카드, 없으면 다음 도전 카드
+  const targetIndex = flipIndex >= 0 ? flipIndex : nextIndex;
 
-  const nextRef = useRef<HTMLDivElement>(null);
-  // 진입·카테고리 전환 시 다음 도전 카드로 부드럽게 스크롤한다.
+  const targetRef = useRef<HTMLDivElement>(null);
+  // 진입·카테고리 전환 시 대상 카드로 부드럽게 스크롤한다.
   useEffect(() => {
-    if (nextIndex >= 0) {
-      nextRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (targetIndex >= 0) {
+      targetRef.current?.scrollIntoView({
+        block: 'center',
+        behavior: 'smooth',
+      });
     }
-  }, [nextIndex]);
+  }, [targetIndex]);
 
   return (
     <div className="relative min-h-0 flex-1">
@@ -52,7 +67,7 @@ export const ScenarioList = ({
           // 슬라이드 높이 = 패딩 제외 영역(화면-44px) — snap-center로 중앙에 서면 이웃 카드가 위아래로 살짝 드러난다
           <div
             key={scenario.scenarioId}
-            ref={index === nextIndex ? nextRef : undefined}
+            ref={index === targetIndex ? targetRef : undefined}
             className="h-full snap-center px-5 py-2"
           >
             <motion.div
@@ -68,7 +83,9 @@ export const ScenarioList = ({
               <ScenarioCard
                 scenario={scenario}
                 onStart={onStart}
-                highlight={focusActive && index === nextIndex}
+                highlight={flipIndex < 0 && focusActive && index === nextIndex}
+                autoFlip={index === flipIndex}
+                focusActive={focusActive}
               />
             </motion.div>
           </div>

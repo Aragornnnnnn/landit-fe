@@ -1,7 +1,7 @@
 'use client';
 
 // 홈 — 카테고리별 시나리오 목록에서 연습할 시나리오를 고른다
-import { use } from 'react';
+import { use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useScenarios } from '@/features/scenario/model/useScenarios';
@@ -15,12 +15,24 @@ import { HomeHeader } from './_components/HomeHeader';
 export default function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ just?: string }>;
+  searchParams: Promise<{ just?: string; flip?: string }>;
 }) {
-  const { just } = use(searchParams);
+  const { just, flip } = use(searchParams);
+  const flipScenarioId = flip ? Number(flip) : null;
   const router = useRouter();
   const { categories, selected, selectCategory, error, isLoading, retry } =
     useScenarios();
+
+  // flip 대상 시나리오가 다른 카테고리에 있으면 그 카테고리를 자동으로 선택해 카드가 보이게 한다
+  useEffect(() => {
+    if (flipScenarioId == null || !categories) return;
+    const target = categories.find((category) =>
+      category.scenarios.some((s) => s.scenarioId === flipScenarioId),
+    );
+    if (target && target.categoryId !== selected?.categoryId) {
+      selectCategory(target);
+    }
+  }, [flipScenarioId, categories, selected?.categoryId, selectCategory]);
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-muted">
@@ -54,6 +66,7 @@ export default function HomePage({
             key={selected.categoryId}
             scenarios={selected.scenarios}
             focusActive={just === '1'}
+            flipScenarioId={flipScenarioId}
             onStart={(scenario) =>
               router.push(`/conversation/${scenario.scenarioId}`)
             }

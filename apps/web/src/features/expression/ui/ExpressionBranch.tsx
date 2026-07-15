@@ -53,7 +53,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
   const goLearn = () =>
     nextExpressionId
       ? goExpression(nextExpressionId)
-      : router.push(`/expressions/${scenarioId}`);
+      : router.push(`/home?flip=${scenarioId}`);
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">

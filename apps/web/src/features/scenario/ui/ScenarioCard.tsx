@@ -18,21 +18,28 @@ interface ScenarioCardProps {
   onStart: (scenario: Scenario) => void;
   // 방금 해금됐을 때 한 번 펄스로 강조한다
   highlight?: boolean;
+  // 홈이 flip 신호로 진입하면(표현 마무리 후 복귀) 마운트 시 자동으로 뒷면을 편다
+  autoFlip?: boolean;
+  // 뒷면 표현 리스트에서 방금 해금된 다음 표현으로 스크롤·강조할지
+  focusActive?: boolean;
 }
 
 export const ScenarioCard = ({
   scenario,
   onStart,
   highlight = false,
+  autoFlip = false,
+  focusActive = false,
 }: ScenarioCardProps) => {
   // 잠금·완료 판정은 전부 백엔드 몫(직전 시나리오를 깨야 다음이 열린다). 카드는 두 플래그를 그리기만 한다.
   // locked   → 흑백 썸네일 + 회색 제목 + "잠겨있어요"
   // completed → 썸네일 우상단 별점 배지 + 표현 학습(뒤집기) / 다시 해볼게요
   const { locked, completed } = scenario;
 
-  // 뒤집기 상태. hasFlipped는 뒷면(표현 API)을 첫 뒤집기 전까지 마운트하지 않기 위한 지연 플래그
-  const [flipped, setFlipped] = useState(false);
-  const [hasFlipped, setHasFlipped] = useState(false);
+  // 뒤집기 상태. hasFlipped는 뒷면(표현 API)을 첫 뒤집기 전까지 마운트하지 않기 위한 지연 플래그.
+  // autoFlip(표현 마무리 후 홈 복귀)이면 처음부터 뒤집힌 채로 마운트한다.
+  const [flipped, setFlipped] = useState(autoFlip && completed);
+  const [hasFlipped, setHasFlipped] = useState(autoFlip && completed);
 
   // 백엔드 썸네일이 없으면 scenarioId로 번들 이미지를 매칭한다(S3 미구현 임시)
   const bundledImage = getScenarioImage(scenario.scenarioId);
@@ -141,6 +148,7 @@ export const ScenarioCard = ({
             <ScenarioCardBack
               scenarioId={scenario.scenarioId}
               onBack={() => setFlipped(false)}
+              focusActive={autoFlip && focusActive}
             />
           </div>
         )}
