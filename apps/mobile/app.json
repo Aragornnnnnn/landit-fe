@@ -112,7 +112,7 @@
       [
         "expo-tracking-transparency",
         {
-          "userTrackingPermission": "더 잘 맞는 광고를 보여주기 위해 활동 정보를 활용해요."
+          "userTrackingPermission": "광고 성과를 측정하고 서비스를 개선하기 위해 기기의 활동 정보를 사용해요."
         }
       ]
     ],
