@@ -8,6 +8,7 @@ import {
   type SttHandlers,
   type SttSession,
 } from './deepgram-stt';
+import { MicPermissionDeniedError } from './errors';
 import { startWebSpeech } from './web-speech-fallback';
 
 export type SttStatus = 'idle' | 'connecting' | 'listening' | 'error';
@@ -96,7 +97,7 @@ export function useStt(options: UseSttOptions = {}) {
         deepgramErr instanceof DOMException &&
         deepgramErr.name === 'NotAllowedError'
       ) {
-        failWith(new Error('마이크 권한이 거부되었습니다.'));
+        failWith(new MicPermissionDeniedError());
         return;
       }
       // 미지원(iOS WKWebView 등)·토큰 실패 → 브라우저 SpeechRecognition 폴백

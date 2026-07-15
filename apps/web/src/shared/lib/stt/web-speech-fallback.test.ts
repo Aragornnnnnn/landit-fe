@@ -1,6 +1,7 @@
 // 브라우저 SpeechRecognition 폴백 — 미지원·에러 분류·턴 종료 갈림길 검증
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { MicPermissionDeniedError } from './errors';
 import { startWebSpeech } from './web-speech-fallback';
 
 class FakeRecognition {
@@ -110,6 +111,24 @@ describe('startWebSpeech', () => {
       new Error('음성 인식 오류: audio-capture'),
     );
     expect(onFinal).not.toHaveBeenCalled();
+  });
+
+  it('마이크 권한 거부(not-allowed)는 MicPermissionDeniedError로 통일한다', () => {
+    const { recognition, onError } = startWithFake();
+
+    recognition.onerror?.({ error: 'not-allowed' });
+
+    expect(onError).toHaveBeenCalledWith(new MicPermissionDeniedError());
+  });
+
+  it('service-not-allowed는 권한 오류가 아닌 일반 인식 오류로 둔다', () => {
+    const { recognition, onError } = startWithFake();
+
+    recognition.onerror?.({ error: 'service-not-allowed' });
+
+    expect(onError).toHaveBeenCalledWith(
+      new Error('음성 인식 오류: service-not-allowed'),
+    );
   });
 
   it('침묵으로 끝나면 누적 텍스트로 onFinal을 정확히 한 번 호출한다', () => {
