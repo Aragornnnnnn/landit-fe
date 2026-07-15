@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
 
+import { haptic } from '@/shared/haptics';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { CheckIcon } from '@/shared/ui/Icons';
 
@@ -118,9 +119,11 @@ export const ReviewInputStep = ({
   const check = () => {
     const ok = gradeWords(typed, answer);
     if (ok.every(Boolean)) {
+      haptic('success');
       setCorrect(true);
       return;
     }
+    haptic('error');
     setWrongNow(ok.map((isOk) => !isOk));
     setWrongCount((prev) => prev.map((c, i) => (ok[i] ? c : c + 1)));
     setShakeNonce((n) => n + 1);

@@ -3,6 +3,20 @@ import { z } from 'zod';
 // 백엔드 SocialProvider enum(GOOGLE/KAKAO/APPLE)과 대응 — 백엔드는 대소문자 무관하게 비교하지만, 프론트 코드 관례상 소문자로 통일
 const socialProviderSchema = z.enum(['kakao', 'google', 'apple']);
 
+// 햅틱 패턴 — 의도(성공/오답/선택 등) 기준의 flat enum. 네이티브가 expo-haptics 호출로 매핑한다
+//   selection            → selectionAsync (탭 전환·선택지 등 가벼운 틱)
+//   light/medium/heavy   → impactAsync(ImpactFeedbackStyle.*)
+//   success/warning/error→ notificationAsync(NotificationFeedbackType.*)
+export const hapticPatternSchema = z.enum([
+  'selection',
+  'light',
+  'medium',
+  'heavy',
+  'success',
+  'warning',
+  'error',
+]);
+
 // 웹 → 네이티브로 보낼 수 있는 메시지 목록. type 필드로 종류를 구분한다(discriminated union)
 export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   // "더 뒤로 갈 곳 없음"으로 웹이 판단했을 때 보낸다
@@ -11,6 +25,11 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('SOCIAL_LOGIN_REQUEST'),
     provider: socialProviderSchema,
+  }),
+  // 웹 인터랙션 시점에 네이티브 햅틱 진동을 요청한다 (단방향, 응답 없음)
+  z.object({
+    type: z.literal('HAPTIC'),
+    pattern: hapticPatternSchema,
   }),
 ]);
 
@@ -37,5 +56,6 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
 ]);
 
 // 위 스키마에서 자동으로 뽑아낸 타입 — 스키마를 고치면 타입도 같이 바뀐다
+export type HapticPattern = z.infer<typeof hapticPatternSchema>;
 export type WebToNativeMessage = z.infer<typeof webToNativeMessageSchema>;
 export type NativeToWebMessage = z.infer<typeof nativeToWebMessageSchema>;

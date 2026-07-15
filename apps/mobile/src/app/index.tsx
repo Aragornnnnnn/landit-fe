@@ -13,6 +13,7 @@ import WebView from 'react-native-webview';
 
 import { generateNonce } from '@/auth/nonce';
 import { requestSocialIdToken, SocialLoginError } from '@/auth/socialLogin';
+import { runHaptic } from '@/bridge/haptics';
 import { useNativeBridge } from '@/bridge/useNativeBridge';
 import { WEB_URL } from '@/config/webUrl';
 
@@ -28,6 +29,8 @@ const ShellScreen = () => {
 
   const { onMessage, postToWeb } = useNativeBridge(webviewRef, {
     EXIT_APP: () => BackHandler.exitApp(),
+    // 웹이 인터랙션 시점에 보낸 진동 요청을 expo-haptics로 실행한다
+    HAPTIC: ({ pattern }) => void runHaptic(pattern),
     // 웹의 로그인 요청을 받아 provider SDK로 idToken을 발급받고, nonce와 함께 웹으로 돌려준다
     SOCIAL_LOGIN_REQUEST: async ({ provider }) => {
       try {

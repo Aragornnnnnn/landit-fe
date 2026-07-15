@@ -2,6 +2,7 @@
 import type { Metadata, Viewport } from 'next';
 
 import { BridgeListener } from '@/shared/bridge/BridgeListener';
+import { GlobalHaptics } from '@/shared/haptics';
 
 import { Providers } from './providers';
 
@@ -40,6 +41,7 @@ export default function RootLayout({
       </head>
       <body>
         <BridgeListener />
+        <GlobalHaptics />
         <Providers>{children}</Providers>
       </body>
     </html>

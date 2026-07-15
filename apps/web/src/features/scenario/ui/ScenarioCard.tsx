@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import Image from 'next/image';
 
+import { haptic } from '@/shared/haptics';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, LockIcon, ReplayIcon } from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
@@ -51,6 +52,7 @@ export const ScenarioCard = ({
   const filterClass = locked ? 'brightness-70 grayscale' : '';
 
   const openExpressions = () => {
+    haptic('medium'); // 완료 카드를 뒤집는 성취 순간엔 좀 더 묵직한 진동
     setHasFlipped(true);
     setFlipped(true);
   };

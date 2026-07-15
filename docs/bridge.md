@@ -26,10 +26,11 @@ landit 앱은 네이티브 UI 없이 웹(Next.js)을 WebView로 감싸는 셸이
 
 ## 메시지 카탈로그
 
-| 메시지         | 방향  | 페이로드 | 역할                                                 | 처리 위치             |
-| -------------- | ----- | -------- | ---------------------------------------------------- | --------------------- |
-| `BACK_PRESSED` | 앱→웹 | 없음     | Android 뒤로가기가 눌렸음을 알림. 판단은 웹이 한다   | `bridge-listener.tsx` |
-| `EXIT_APP`     | 웹→앱 | 없음     | 웹이 "더 뒤로 갈 곳 없음"을 판단했을 때 앱 종료 요청 | `index.tsx`의 핸들러  |
+| 메시지         | 방향  | 페이로드  | 역할                                                               | 처리 위치             |
+| -------------- | ----- | --------- | ------------------------------------------------------------------ | --------------------- |
+| `BACK_PRESSED` | 앱→웹 | 없음      | Android 뒤로가기가 눌렸음을 알림. 판단은 웹이 한다                 | `bridge-listener.tsx` |
+| `EXIT_APP`     | 웹→앱 | 없음      | 웹이 "더 뒤로 갈 곳 없음"을 판단했을 때 앱 종료 요청               | `index.tsx`의 핸들러  |
+| `HAPTIC`       | 웹→앱 | `pattern` | 웹 인터랙션 시점의 진동 요청. 세기·종류는 앱이 expo-haptics로 결정 | `index.tsx`의 핸들러  |
 
 STT·TTS·인증 등 기능 메시지는 각 기능 이슈에서 추가한다.
 
@@ -63,17 +64,17 @@ const webToNativeMessageSchema = z.discriminatedUnion('type', [
   // ...기존...
   z.object({
     type: z.literal('HAPTIC'),
-    style: z.enum(['light', 'medium', 'heavy']),
+    pattern: hapticPatternSchema, // selection/light/medium/heavy/success/warning/error
   }),
 ]);
 
 // 2. apps/mobile — 핸들러 등록 (message 타입은 자동으로 좁혀져 있음)
 useNativeBridge(webviewRef, {
-  HAPTIC: (message) => Haptics.impactAsync(message.style),
+  HAPTIC: ({ pattern }) => void runHaptic(pattern),
 });
 
 // 3. apps/web — 보낸다
-postToNative({ type: 'HAPTIC', style: 'light' });
+postToNative({ type: 'HAPTIC', pattern: 'light' });
 ```
 
 타입·검증·핸들러 슬롯이 스키마 한 줄에서 전부 파생되므로, 세 단계 외의 수정은 없다.
