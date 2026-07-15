@@ -18,6 +18,7 @@ import { StepScaffold } from './StepScaffold';
 interface QuizStepProps {
   quiz: SentenceQuiz;
   onBack: () => void;
+  leftAction?: 'back' | 'close';
   // 정답·오답 모두 결과 시트의 CTA로 다음 스텝으로 이어진다 (퀴즈→설명, 복습→완료)
   onNext: () => void;
   nextLabel?: string;
@@ -36,6 +37,7 @@ const CHIP_STYLE =
 export const QuizStep = ({
   quiz,
   onBack,
+  leftAction,
   onNext,
   nextLabel = '표현 배우러 갈게요',
   finishing = false,
@@ -75,6 +77,7 @@ export const QuizStep = ({
     <StepScaffold
       progress={progress}
       onBack={onBack}
+      leftAction={leftAction}
       footer={
         checked === 'idle' ? (
           <Button disabled={!full} onClick={check}>

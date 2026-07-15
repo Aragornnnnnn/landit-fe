@@ -1,12 +1,14 @@
 'use client';
 
-// 표현학습 스텝 공통 뼈대 — 상단 진행바 + 뒤로가기 헤더 + 스크롤 본문 + 하단 CTA
-import { ChevronLeftIcon } from '@/shared/ui/Icons';
+// 표현학습 스텝 공통 뼈대 — 상단 진행바 + 좌상단(뒤로가기/나가기X) 헤더 + 스크롤 본문 + 하단 CTA
+import { ChevronLeftIcon, CloseIcon } from '@/shared/ui/Icons';
 
 interface StepScaffoldProps {
-  title?: string; // 없으면 헤더에 제목 없이 뒤로가기만
+  title?: string; // 없으면 헤더에 제목 없이 좌상단 버튼만
   progress: number; // 0..1
   onBack: () => void;
+  // back(‹)=이전 스텝, close(X)=플로우 나가기. 기본 back
+  leftAction?: 'back' | 'close';
   children: React.ReactNode;
   footer?: React.ReactNode;
   footerBleed?: boolean; // 키보드처럼 하단을 좌우 끝까지 채울 때
@@ -16,6 +18,7 @@ export const StepScaffold = ({
   title,
   progress,
   onBack,
+  leftAction = 'back',
   children,
   footer,
   footerBleed,
@@ -32,9 +35,13 @@ export const StepScaffold = ({
       <button
         onClick={onBack}
         className="absolute left-2 flex size-10 items-center justify-center text-foreground"
-        aria-label="뒤로"
+        aria-label={leftAction === 'close' ? '나가기' : '뒤로'}
       >
-        <ChevronLeftIcon size={24} />
+        {leftAction === 'close' ? (
+          <CloseIcon size={24} />
+        ) : (
+          <ChevronLeftIcon size={24} />
+        )}
       </button>
       {title && (
         <h1 className="text-base font-bold text-foreground">{title}</h1>
