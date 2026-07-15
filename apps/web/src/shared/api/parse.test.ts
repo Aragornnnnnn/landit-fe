@@ -35,4 +35,28 @@ describe('parseApiResponse', () => {
       '서버 오류가 발생했어요.',
     );
   });
+
+  it('래퍼 없는 에러(스프링 기본 500 등)면 상태코드를 붙여 던진다', async () => {
+    const response = {
+      status: 500,
+      json: async () => ({ status: 500, error: 'Internal Server Error' }),
+    } as Response;
+
+    await expect(parseApiResponse(response)).rejects.toThrow(
+      '서버 오류가 발생했어요. (500)',
+    );
+  });
+
+  it('본문이 JSON이 아니어도 상태코드로 에러를 던진다', async () => {
+    const response = {
+      status: 502,
+      json: async () => {
+        throw new SyntaxError('Unexpected token');
+      },
+    } as unknown as Response;
+
+    await expect(parseApiResponse(response)).rejects.toThrow(
+      '서버 오류가 발생했어요. (502)',
+    );
+  });
 });

@@ -3,9 +3,10 @@
 // 듀오링고식 단어 선택 퀴즈 — 뱅크에서 단어를 순서대로 골라 문장을 완성하고 판정, 결과는 하단 슬라이드업 시트로 띄운다
 import { useState } from 'react';
 
+import { haptic } from '@/shared/haptics';
 import { Button } from '@/shared/ui/Button';
 
-import type { ExpressionPractice } from '../api/practice';
+import type { SentenceQuiz } from '../model/sentenceQuiz';
 import {
   chipsFromWords,
   isWordsCorrect,
@@ -16,8 +17,9 @@ import { ResultSheet } from './ResultSheet';
 import { StepScaffold } from './StepScaffold';
 
 interface QuizStepProps {
-  practice: ExpressionPractice;
+  quiz: SentenceQuiz;
   onBack: () => void;
+  leftAction?: 'back' | 'close';
   // 정답·오답 모두 결과 시트의 CTA로 다음 스텝으로 이어진다 (퀴즈→설명, 복습→완료)
   onNext: () => void;
   nextLabel?: string;
@@ -34,19 +36,17 @@ const CHIP_STYLE =
   'active:translate-y-[3px] active:shadow-none';
 
 export const QuizStep = ({
-  practice,
+  quiz,
   onBack,
+  leftAction,
   onNext,
   nextLabel = '표현 배우러 갈게요',
   finishing = false,
 }: QuizStepProps) => {
-  const { writingSentence } = practice;
-  const answer = writingSentence.answerWords;
+  const answer = quiz.answerWords;
 
   // 뱅크는 BE가 섞어준 shuffledWords 그대로. 선택은 칩 id의 순서 배열로 관리한다(중복 단어 안전).
-  const [bank] = useState<WordChip[]>(() =>
-    chipsFromWords(writingSentence.shuffledWords),
-  );
+  const [bank] = useState<WordChip[]>(() => chipsFromWords(quiz.shuffledWords));
   const [selected, setSelected] = useState<number[]>([]);
   const [checked, setChecked] = useState<Checked>('idle');
 
@@ -65,10 +65,13 @@ export const QuizStep = ({
     setSelected((current) => current.filter((_, i) => i !== index));
   };
 
-  const check = () =>
-    setChecked(
-      isWordsCorrect(selected.map(wordOf), answer) ? 'correct' : 'wrong',
-    );
+  const check = () => {
+    const tone = isWordsCorrect(selected.map(wordOf), answer)
+      ? 'correct'
+      : 'wrong';
+    haptic(tone === 'correct' ? 'success' : 'error');
+    setChecked(tone);
+  };
 
   // 판정 전엔 채운 만큼(전체의 절반까지) 진행. 판정되면 절반 고정(나머지 절반은 이후 스텝 몫).
   const progress =
@@ -78,6 +81,7 @@ export const QuizStep = ({
     <StepScaffold
       progress={progress}
       onBack={onBack}
+      leftAction={leftAction}
       footer={
         checked === 'idle' ? (
           <Button disabled={!full} onClick={check}>
@@ -86,7 +90,7 @@ export const QuizStep = ({
         ) : undefined
       }
     >
-      <QuizPrompt writingSentence={writingSentence} />
+      <QuizPrompt writingSentence={quiz} />
 
       {/* 내 답변 — 중앙 밑줄 2줄, 고른 칩이 줄 위에 올라간다 */}
       <div
@@ -129,7 +133,7 @@ export const QuizStep = ({
       {checked !== 'idle' && (
         <ResultSheet
           tone={checked}
-          answer={writingSentence.writingSentenceText}
+          answer={quiz.writingSentenceText}
           onNext={onNext}
           nextLabel={nextLabel}
           finishing={finishing}

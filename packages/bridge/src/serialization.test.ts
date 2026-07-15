@@ -72,4 +72,18 @@ describe('parseWebToNativeMessage', () => {
       ),
     ).toBeNull();
   });
+
+  it('정의된 패턴의 햅틱 요청만 허용한다', () => {
+    const message = { type: 'HAPTIC', pattern: 'success' } as const;
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+
+    // 규격 밖 패턴은 버린다
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({ type: 'HAPTIC', pattern: 'explode' }),
+      ),
+    ).toBeNull();
+  });
 });

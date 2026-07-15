@@ -224,6 +224,44 @@ describe('useTts', () => {
     expect(result.current.status).toBe('active');
   });
 
+  it('prefetch가 아직 합성 중이면 speak가 중복 요청 없이 그 결과를 재사용한다', async () => {
+    // fetch를 수동으로 완료시켜, prefetch 합성이 끝나기 전에 speak가 겹치는 상황을 만든다
+    let resolveFetch: (r: Response) => void = () => {};
+    const fetchMock = vi.fn(
+      () =>
+        new Promise<Response>((res) => {
+          resolveFetch = res;
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const { result } = renderHook(() => useTts());
+
+    // prefetch 시작 — 아직 합성 중(미해결)
+    let prefetching: Promise<void>;
+    act(() => {
+      prefetching = result.current.prefetch('Hello', harper);
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // 합성이 끝나기 전에 speak가 겹쳐도 새 요청을 만들지 않고 진행 중인 합성을 재사용한다
+    let speaking: Promise<void>;
+    act(() => {
+      speaking = result.current.speak('Hello', harper);
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // 합성 완료 → speak가 그 결과로 재생
+    await act(async () => {
+      resolveFetch(fakeAudioResponse());
+      await prefetching;
+      await speaking;
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(FakeAudio.instances[0]!.play).toHaveBeenCalled();
+    expect(result.current.status).toBe('active');
+  });
+
   it('speakSrc는 합성 없이 정적 URL을 바로 재생하고, 끝나면 onEnd를 부른다', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);

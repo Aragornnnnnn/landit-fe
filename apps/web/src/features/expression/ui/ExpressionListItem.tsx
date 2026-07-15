@@ -1,18 +1,21 @@
 'use client';
 
-// 표현 리스트 항목 — 완료(초록 체크) / 학습중(강조 카드) / 잠금(회색) 상태를 그린다
-import { CheckIcon, LockIcon } from '@/shared/ui/Icons';
+// 표현 리스트 항목 — 완료(연녹색 체크) / 시작할 표현(강조 카드) / 잠금(회색) 상태를 그린다
+import { CheckIcon, ChevronRightIcon, LockIcon } from '@/shared/ui/Icons';
 
 import type { Expression } from '../api/list';
 
 interface ExpressionListItemProps {
   expression: Expression;
   onSelect: (expressionId: number) => void;
+  // 활성 항목의 '시작할게요' 알약을 숨긴다
+  hideStartAction?: boolean;
 }
 
 export const ExpressionListItem = ({
   expression,
   onSelect,
+  hideStartAction = false,
 }: ExpressionListItemProps) => {
   const {
     expressionId,
@@ -25,7 +28,7 @@ export const ExpressionListItem = ({
 
   if (locked) {
     return (
-      <div className="flex items-center gap-3 px-2 py-3.5 opacity-60">
+      <div className="flex items-center gap-3 rounded-2xl bg-secondary/40 px-3.5 py-3.5 opacity-60">
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
           <LockIcon size={15} />
         </span>
@@ -40,9 +43,9 @@ export const ExpressionListItem = ({
     return (
       <button
         onClick={() => onSelect(expressionId)}
-        className="flex w-full items-center gap-3 px-2 py-3.5 text-left"
+        className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-3.5 py-3.5 text-left shadow-sm transition-colors active:bg-secondary"
       >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-success text-success-foreground">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
           <CheckIcon size={16} />
         </span>
         <div className="min-w-0 flex-1">
@@ -53,14 +56,17 @@ export const ExpressionListItem = ({
             {targetExpressionText}
           </p>
         </div>
-        <span className="shrink-0 text-sm font-medium text-muted-foreground">
-          완료
-        </span>
+        <div className="flex shrink-0 items-center gap-1">
+          <span className="text-sm font-medium text-muted-foreground">
+            완료
+          </span>
+          <ChevronRightIcon size={18} className="text-muted-foreground/40" />
+        </div>
       </button>
     );
   }
 
-  // 학습 중 — 다음에 배울 표현
+  // 다음에 배울 표현 — 시작 지점으로 강조한다.
   return (
     <button
       onClick={() => onSelect(expressionId)}
@@ -73,11 +79,12 @@ export const ExpressionListItem = ({
         <p className="text-base font-bold text-foreground">
           {baseExpressionMeaningText}
         </p>
-        <p className="text-sm font-medium text-primary">오늘 배울 표현</p>
       </div>
-      <span className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
-        학습 중
-      </span>
+      {!hideStartAction && (
+        <span className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
+          시작할게요
+        </span>
+      )}
     </button>
   );
 };
