@@ -9,6 +9,7 @@ import { useExpressionLearning } from '../model/useExpressionLearning';
 import { useExpressionPractice } from '../model/useExpressionPractice';
 import { useFinishExpression } from '../model/useFinishExpression';
 import { ExplanationStep } from './ExplanationStep';
+import { ExpressionExitSheet } from './ExpressionExitSheet';
 import { QuizStep } from './QuizStep';
 import { ReviewInputStep } from './ReviewInputStep';
 
@@ -23,6 +24,8 @@ export const ExpressionFlow = ({
 }: ExpressionFlowProps) => {
   const router = useRouter();
   const [step, setStep] = useState<'QUIZ' | 'EXPLAIN' | 'REVIEW'>('QUIZ');
+  // 예문까지(QUIZ·EXPLAIN)는 뒤로가기 대신 X로 나가며, 중단 확인 시트를 먼저 띄운다
+  const [exitOpen, setExitOpen] = useState(false);
 
   // 플로우 전체(퀴즈·설명·복습)는 대표 예문(learning-start)만으로 굴러간다.
   // 추가 예문(practice)은 설명 스텝의 "이렇게도 써요"에만 쓰는 보강 데이터라, 없거나 실패해도 플로우를 막지 않는다.
@@ -50,29 +53,46 @@ export const ExpressionFlow = ({
 
   const quiz = fromLearning(learning);
 
+  // 중단 확인 시트 — QUIZ·EXPLAIN에서 X를 누르면 뜬다. 확인 시 완료 처리 없이 리스트로.
+  const exitSheet = (
+    <ExpressionExitSheet
+      open={exitOpen}
+      onConfirm={backToList}
+      onClose={() => setExitOpen(false)}
+    />
+  );
+
   if (step === 'QUIZ') {
     return (
-      <QuizStep
-        quiz={quiz}
-        onBack={backToList}
-        onNext={() => setStep('EXPLAIN')}
-      />
+      <>
+        <QuizStep
+          quiz={quiz}
+          leftAction="close"
+          onBack={() => setExitOpen(true)}
+          onNext={() => setStep('EXPLAIN')}
+        />
+        {exitSheet}
+      </>
     );
   }
 
   if (step === 'EXPLAIN') {
     return (
-      <ExplanationStep
-        targetExpressionText={learning.targetExpressionText}
-        baseExpressionMeaningText={learning.baseExpressionMeaningText}
-        usageDescription={learning.usageDescription}
-        examples={practice?.practiceSentence ?? []}
-        title={learning.baseExpressionMeaningText}
-        progress={0.7}
-        nextLabel="복습 영작 할게요"
-        onBack={() => setStep('QUIZ')}
-        onNext={() => setStep('REVIEW')}
-      />
+      <>
+        <ExplanationStep
+          targetExpressionText={learning.targetExpressionText}
+          baseExpressionMeaningText={learning.baseExpressionMeaningText}
+          usageDescription={learning.usageDescription}
+          examples={practice?.practiceSentence ?? []}
+          title={learning.baseExpressionMeaningText}
+          progress={0.7}
+          nextLabel="복습 영작 할게요"
+          leftAction="close"
+          onBack={() => setExitOpen(true)}
+          onNext={() => setStep('REVIEW')}
+        />
+        {exitSheet}
+      </>
     );
   }
 
