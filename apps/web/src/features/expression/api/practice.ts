@@ -15,9 +15,6 @@ export interface WritingSentence {
   writingSentenceTranslation: string;
   writingQuestion: string;
   writingQuestionTranslation: string;
-  // 듀오링고식 단어조립 퀴즈용 — answerWords는 정답 순서, shuffledWords는 정답+허위매물이 BE에서 이미 섞인 뱅크
-  answerWords: string[];
-  shuffledWords: string[];
 }
 
 export interface ExpressionPractice {

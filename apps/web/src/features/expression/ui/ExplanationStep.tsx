@@ -5,11 +5,16 @@ import { useState } from 'react';
 
 import { Button } from '@/shared/ui/Button';
 
-import type { ExpressionPractice, PracticeSentence } from '../api/practice';
+import type { PracticeSentence } from '../api/practice';
 import { StepScaffold } from './StepScaffold';
 
 interface ExplanationStepProps {
-  practice: ExpressionPractice;
+  // 표현 뜻·설명은 learning-start에서 온다(항상 있음)
+  targetExpressionText: string;
+  baseExpressionMeaningText: string;
+  usageDescription: string;
+  // "이렇게도 써요" 추가 예문 — practice에서 오며, 없으면(미시딩·404) 섹션을 생략한다
+  examples: PracticeSentence[];
   title: string;
   progress: number;
   nextLabel: string; // 다음 스텝(복습 영작) 유무에 따라 "복습 영작 할게요" / "학습 완료"
@@ -19,7 +24,10 @@ interface ExplanationStepProps {
 }
 
 export const ExplanationStep = ({
-  practice,
+  targetExpressionText,
+  baseExpressionMeaningText,
+  usageDescription,
+  examples,
   title,
   progress,
   nextLabel,
@@ -48,47 +56,51 @@ export const ExplanationStep = ({
       <div className="pt-2 pb-6">
         <div className="rounded-2xl bg-primary/10 px-5 py-4">
           <p className="text-2xl font-extrabold text-primary">
-            {practice.targetExpressionText}
+            {targetExpressionText}
           </p>
           <p className="mt-1 text-sm font-medium text-muted-foreground">
-            {practice.baseExpressionMeaningText}
+            {baseExpressionMeaningText}
           </p>
           <p className="mt-3 text-base leading-relaxed font-medium text-foreground">
-            {practice.usageDescription}
+            {usageDescription}
           </p>
         </div>
 
-        <div className="mt-6 mb-3 flex items-baseline justify-between">
-          <p className="text-lg font-extrabold text-foreground">
-            이렇게도 써요
-          </p>
-          {practice.practiceSentence.length > 1 && (
-            <p className="text-sm font-medium text-muted-foreground">
-              옆으로 넘겨봐요
-            </p>
-          )}
-        </div>
+        {examples.length > 0 && (
+          <>
+            <div className="mt-6 mb-3 flex items-baseline justify-between">
+              <p className="text-lg font-extrabold text-foreground">
+                이렇게도 써요
+              </p>
+              {examples.length > 1 && (
+                <p className="text-sm font-medium text-muted-foreground">
+                  옆으로 넘겨봐요
+                </p>
+              )}
+            </div>
 
-        <div
-          onScroll={onScroll}
-          className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5"
-        >
-          {practice.practiceSentence.map((sentence, index) => (
-            <ExampleCard key={index} sentence={sentence} />
-          ))}
-        </div>
+            <div
+              onScroll={onScroll}
+              className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5"
+            >
+              {examples.map((sentence, index) => (
+                <ExampleCard key={index} sentence={sentence} />
+              ))}
+            </div>
 
-        {practice.practiceSentence.length > 1 && (
-          <div className="mt-4 flex justify-center gap-1.5">
-            {practice.practiceSentence.map((_, index) => (
-              <span
-                key={index}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  index === active ? 'w-4 bg-primary' : 'w-1.5 bg-border'
-                }`}
-              />
-            ))}
-          </div>
+            {examples.length > 1 && (
+              <div className="mt-4 flex justify-center gap-1.5">
+                {examples.map((_, index) => (
+                  <span
+                    key={index}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      index === active ? 'w-4 bg-primary' : 'w-1.5 bg-border'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </StepScaffold>
