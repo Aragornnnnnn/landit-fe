@@ -12,6 +12,7 @@ interface StepScaffoldProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   footerBleed?: boolean; // 키보드처럼 하단을 좌우 끝까지 채울 때
+  bottomInset?: number; // 네이티브 키보드가 가린 높이(px) — 하단 footer를 그만큼 위로 올린다
 }
 
 export const StepScaffold = ({
@@ -22,8 +23,12 @@ export const StepScaffold = ({
   children,
   footer,
   footerBleed,
+  bottomInset = 0,
 }: StepScaffoldProps) => (
-  <div className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
+  <div
+    className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
+    style={bottomInset ? { paddingBottom: bottomInset } : undefined}
+  >
     <div className="h-1 w-full bg-secondary">
       <div
         className="h-full bg-primary transition-[width] duration-300"
