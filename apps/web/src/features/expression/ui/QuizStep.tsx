@@ -3,6 +3,7 @@
 // 듀오링고식 단어 선택 퀴즈 — 뱅크에서 단어를 순서대로 골라 문장을 완성하고 판정, 결과는 하단 슬라이드업 시트로 띄운다
 import { useState } from 'react';
 
+import { haptic } from '@/shared/haptics';
 import { Button } from '@/shared/ui/Button';
 
 import type { SentenceQuiz } from '../model/sentenceQuiz';
@@ -64,10 +65,13 @@ export const QuizStep = ({
     setSelected((current) => current.filter((_, i) => i !== index));
   };
 
-  const check = () =>
-    setChecked(
-      isWordsCorrect(selected.map(wordOf), answer) ? 'correct' : 'wrong',
-    );
+  const check = () => {
+    const tone = isWordsCorrect(selected.map(wordOf), answer)
+      ? 'correct'
+      : 'wrong';
+    haptic(tone === 'correct' ? 'success' : 'error');
+    setChecked(tone);
+  };
 
   // 판정 전엔 채운 만큼(전체의 절반까지) 진행. 판정되면 절반 고정(나머지 절반은 이후 스텝 몫).
   const progress =

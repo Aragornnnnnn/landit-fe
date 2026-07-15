@@ -12,6 +12,7 @@ import { sessionFeedbackKey } from '@/features/feedback/model/useSessionFeedback
 import type { ThoughtType } from '@/features/onboarding/ui/ThoughtCard';
 import type { Scenario } from '@/features/scenario/api/list';
 import { scenarioKeys } from '@/features/scenario/model/keys';
+import { haptic } from '@/shared/haptics';
 import { useStt } from '@/shared/lib/stt/useStt';
 import { useTts } from '@/shared/lib/tts/useTts';
 
@@ -110,6 +111,7 @@ export const useConversationFlow = (scenario: Scenario) => {
     onFinal: (text) => void submitContent(text, 'VOICE'),
     onError: () => {
       // TODO(전역 토스트): "마이크를 사용할 수 없어요. 권한을 확인해 주세요" 노출
+      haptic('error');
       setTranscript('');
       send('LISTENING_CANCELLED');
     },
@@ -247,6 +249,7 @@ export const useConversationFlow = (scenario: Scenario) => {
       if (sessionId == null) {
         // TODO(전역 토스트): 세션 시작 실패 — "잠시 후 다시 시도해 주세요" 노출
         console.error('세션이 없어 제출할 수 없어요');
+        haptic('error');
         send('RESPONSE_FAILED');
         return;
       }
@@ -278,11 +281,13 @@ export const useConversationFlow = (scenario: Scenario) => {
             text: resolved.text,
             type: toThoughtType(resolved.type),
           });
+          haptic('light'); // 상대가 응답을 시작하는 순간 가벼운 틱
           send('RESPONSE_READY'); // → THOUGHT
         });
     } catch (error) {
       // TODO(전역 토스트): 콘솔 대신 "전송에 실패했어요. 다시 시도해 주세요" 토스트로 실패를 알린다
       console.error('발화 제출 실패', error);
+      haptic('error');
       send('RESPONSE_FAILED'); // → USER_IDLE (다시 시도)
     } finally {
       submittingRef.current = false;
