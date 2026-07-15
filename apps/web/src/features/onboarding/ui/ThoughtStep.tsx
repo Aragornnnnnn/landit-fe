@@ -1,4 +1,4 @@
-// 온보딩 4단계 — Sona가 상대 속마음을 대신 알려주는 걸 표정별로 시연
+// 온보딩 4단계 — 랜디가 상대 속마음을 대신 알려주는 걸 표정별로 시연
 'use client';
 
 import { useEffect, useState } from 'react';

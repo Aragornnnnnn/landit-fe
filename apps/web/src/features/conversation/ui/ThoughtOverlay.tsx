@@ -1,4 +1,4 @@
-// 속마음 오버레이 — 화면 전체를 어둡게 덮고 Sona가 날아들어 속마음을 전한 뒤 사라진다 (섹션 밖 전면 연출)
+// 속마음 오버레이 — 화면 전체를 어둡게 덮고 랜디가 날아들어 속마음을 전한 뒤 사라진다 (섹션 밖 전면 연출)
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
@@ -9,7 +9,7 @@ import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
 export const ThoughtOverlay = ({
   thought,
-  // 대기 중(응답 전) — Sona가 먼저 날아들어 '생각 중'으로 떠 있다가, 속마음이 도착하면 같은 말풍선이 채워진다
+  // 대기 중(응답 전) — 랜디가 먼저 날아들어 '생각 중'으로 떠 있다가, 속마음이 도착하면 같은 말풍선이 채워진다
   loading = false,
 }: {
   thought: FloatingThought | null;
@@ -18,9 +18,9 @@ export const ThoughtOverlay = ({
   const mounted = useClientOnlyValue(() => true, false);
   if (!mounted) return null;
 
-  // 대기부터 속마음까지 Sona는 한 번만 등장한다 — 도착 전엔 중립 표정으로 떠 있는다
+  // 대기부터 속마음까지 랜디는 한 번만 등장한다 — 도착 전엔 중립 표정으로 떠 있는다
   const visible = loading || Boolean(thought);
-  const sonaType = (thought?.type ?? 'NORMAL').toLowerCase();
+  const landyType = (thought?.type ?? 'NORMAL').toLowerCase();
 
   return createPortal(
     <AnimatePresence>
@@ -36,7 +36,7 @@ export const ThoughtOverlay = ({
           transition={{ duration: 0.25 }}
         >
           <div className="mx-auto flex h-full w-full max-w-[430px] flex-col items-center px-8 pt-24">
-            {/* Sona — 오른쪽 아래에서 호를 그리며 화면 상단으로 날아든다 */}
+            {/* 랜디 — 오른쪽 아래에서 호를 그리며 화면 상단으로 날아든다 */}
             <motion.div
               initial={{ x: 240, y: 150, rotate: 16, opacity: 0 }}
               animate={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
@@ -55,8 +55,8 @@ export const ThoughtOverlay = ({
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`/images/character/sona-${sonaType}.webp`}
-                  alt="Sona"
+                  src={`/images/character/landy-${landyType}.webp`}
+                  alt="랜디"
                   className="object-contain"
                   style={{ width: 148, height: 148 }}
                 />
@@ -80,7 +80,7 @@ export const ThoughtOverlay = ({
                 <span className="absolute -top-1.5 left-1/2 size-3 -translate-x-1/2 rotate-45 rounded-[3px] bg-card" />
                 {thought ? (
                   <>
-                    {/* Sona가 대신 전해주는 프레임 — 속마음 본문은 상대의 목소리라 따옴표로 감싼다 */}
+                    {/* 랜디가 대신 전해주는 프레임 — 속마음 본문은 상대의 목소리라 따옴표로 감싼다 */}
                     <p className="mb-1.5 text-center text-xs font-bold text-primary">
                       대신 알려주는 속마음
                     </p>

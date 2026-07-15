@@ -109,7 +109,7 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
         )}
       </footer>
 
-      {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(WAITING)부터 Sona가 떠 있다가 속마음을 전한다 */}
+      {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(WAITING)부터 랜디가 떠 있다가 속마음을 전한다 */}
       <ThoughtOverlay
         loading={phase === 'WAITING'}
         thought={
