@@ -20,8 +20,6 @@ interface ScenarioCardProps {
   highlight?: boolean;
   // 홈이 flip 신호로 진입하면(표현 마무리 후 복귀) 마운트 시 자동으로 뒷면을 편다
   autoFlip?: boolean;
-  // 뒷면 표현 리스트에서 방금 해금된 다음 표현으로 스크롤·강조할지
-  focusActive?: boolean;
 }
 
 export const ScenarioCard = ({
@@ -29,7 +27,6 @@ export const ScenarioCard = ({
   onStart,
   highlight = false,
   autoFlip = false,
-  focusActive = false,
 }: ScenarioCardProps) => {
   // 잠금·완료 판정은 전부 백엔드 몫(직전 시나리오를 깨야 다음이 열린다). 카드는 두 플래그를 그리기만 한다.
   // locked   → 흑백 썸네일 + 회색 제목 + "잠겨있어요"
@@ -40,6 +37,14 @@ export const ScenarioCard = ({
   // autoFlip(표현 마무리 후 홈 복귀)이면 처음부터 뒤집힌 채로 마운트한다.
   const [flipped, setFlipped] = useState(autoFlip && completed);
   const [hasFlipped, setHasFlipped] = useState(autoFlip && completed);
+  // completed가 마운트 후 뒤늦게 true가 돼도(캐시가 stale이었던 경우) autoFlip이면 한 번은 자동으로 편다.
+  // 렌더 중 state 조정 패턴(effect 아님) — 사용자가 이후 앞면으로 되돌리는 건 막지 않는다.
+  const [autoApplied, setAutoApplied] = useState(autoFlip && completed);
+  if (autoFlip && completed && !autoApplied) {
+    setAutoApplied(true);
+    setFlipped(true);
+    setHasFlipped(true);
+  }
 
   // 백엔드 썸네일이 없으면 scenarioId로 번들 이미지를 매칭한다(S3 미구현 임시)
   const bundledImage = getScenarioImage(scenario.scenarioId);
@@ -148,7 +153,6 @@ export const ScenarioCard = ({
             <ScenarioCardBack
               scenarioId={scenario.scenarioId}
               onBack={() => setFlipped(false)}
-              focusActive={autoFlip && focusActive}
             />
           </div>
         )}

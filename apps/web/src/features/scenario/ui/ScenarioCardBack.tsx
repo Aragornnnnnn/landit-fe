@@ -13,14 +13,11 @@ interface ScenarioCardBackProps {
   scenarioId: number;
   // 앞면으로 되돌린다(뒤집기 복귀)
   onBack: () => void;
-  // 방금 표현을 마무리하고 돌아온 경우 다음 표현으로 스크롤·강조
-  focusActive?: boolean;
 }
 
 export const ScenarioCardBack = ({
   scenarioId,
   onBack,
-  focusActive = false,
 }: ScenarioCardBackProps) => {
   const router = useRouter();
   const { expressions, error, isLoading, retry } = useExpressions(scenarioId);
@@ -60,7 +57,6 @@ export const ScenarioCardBack = ({
         {expressions && (
           <ExpressionList
             expressions={expressions}
-            focusActive={focusActive}
             onSelect={(expressionId) =>
               router.push(`/expressions/${scenarioId}/${expressionId}`)
             }

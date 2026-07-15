@@ -1,9 +1,6 @@
 'use client';
 
 // 표현 리스트 항목 — 완료(연녹색 체크) / 시작할 표현(강조 카드) / 잠금(회색) 상태를 그린다
-import { useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
-
 import { CheckIcon, ChevronRightIcon, LockIcon } from '@/shared/ui/Icons';
 
 import type { Expression } from '../api/list';
@@ -11,8 +8,6 @@ import type { Expression } from '../api/list';
 interface ExpressionListItemProps {
   expression: Expression;
   onSelect: (expressionId: number) => void;
-  // 방금 해금돼 강조·스크롤 대상인지 (활성 항목에만 켜진다)
-  highlight?: boolean;
   // 활성 항목의 '시작할게요' 알약을 숨긴다
   hideStartAction?: boolean;
 }
@@ -20,7 +15,6 @@ interface ExpressionListItemProps {
 export const ExpressionListItem = ({
   expression,
   onSelect,
-  highlight = false,
   hideStartAction = false,
 }: ExpressionListItemProps) => {
   const {
@@ -31,14 +25,6 @@ export const ExpressionListItem = ({
     targetExpressionText,
     baseExpressionMeaningText,
   } = expression;
-
-  // 해금 직후엔 이 항목으로 부드럽게 스크롤한다 (활성 카드에만 ref가 붙는다)
-  const ref = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (highlight) {
-      ref.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    }
-  }, [highlight]);
 
   if (locked) {
     return (
@@ -80,14 +66,11 @@ export const ExpressionListItem = ({
     );
   }
 
-  // 다음에 배울 표현 — 시작 지점으로 강조한다. 해금 직후엔 한 번 펄스한다.
+  // 다음에 배울 표현 — 시작 지점으로 강조한다.
   return (
-    <motion.button
-      ref={ref}
+    <button
       onClick={() => onSelect(expressionId)}
       className="flex w-full items-center gap-3 rounded-2xl border-2 border-primary bg-primary/5 px-3 py-4 text-left"
-      animate={highlight ? { scale: [1, 1.04, 1] } : undefined}
-      transition={{ duration: 0.5, delay: 0.25, ease: 'easeInOut' }}
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
         {displayOrder}
@@ -102,6 +85,6 @@ export const ExpressionListItem = ({
           시작할게요
         </span>
       )}
-    </motion.button>
+    </button>
   );
 };

@@ -96,7 +96,6 @@ export const ScenarioList = ({
                 onStart={onStart}
                 highlight={flipIndex < 0 && focusActive && index === nextIndex}
                 autoFlip={index === flipIndex}
-                focusActive={focusActive}
               />
             </motion.div>
           </div>
@@ -130,6 +129,7 @@ export const ScenarioList = ({
         scenarios={scenarios}
         activeIndex={activeIndex}
         allCompleted={allCompleted}
+        nextIndex={nextIndex}
       />
     </div>
   );
@@ -141,14 +141,14 @@ const ProgressDots = ({
   scenarios,
   activeIndex,
   allCompleted,
+  nextIndex,
 }: {
   scenarios: Scenario[];
   activeIndex: number;
   allCompleted: boolean;
+  // 다음 깨야 할 것 — 첫 미완료·미잠금 카드 인덱스(부모가 이미 계산해 넘긴다)
+  nextIndex: number;
 }) => {
-  // 다음 깨야 할 것 — 첫 미완료·미잠금 시나리오 하나만 주황으로 강조한다
-  const nextIndex = scenarios.findIndex((s) => !s.completed && !s.locked);
-
   return (
     <div className="absolute top-1/2 right-1 flex w-3 -translate-y-1/2 flex-col items-center gap-1.5">
       {Array.from({ length: scenarios.length + 1 }).map((_, index) => {
