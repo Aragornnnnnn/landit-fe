@@ -13,12 +13,15 @@ interface ExpressionListItemProps {
   onSelect: (expressionId: number) => void;
   // 방금 해금돼 강조·스크롤 대상인지 (활성 항목에만 켜진다)
   highlight?: boolean;
+  // 활성 항목의 '시작할게요' 알약을 숨긴다
+  hideStartAction?: boolean;
 }
 
 export const ExpressionListItem = ({
   expression,
   onSelect,
   highlight = false,
+  hideStartAction = false,
 }: ExpressionListItemProps) => {
   const {
     expressionId,
@@ -94,9 +97,11 @@ export const ExpressionListItem = ({
           {baseExpressionMeaningText}
         </p>
       </div>
-      <span className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
-        시작할게요
-      </span>
+      {!hideStartAction && (
+        <span className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
+          시작할게요
+        </span>
+      )}
     </motion.button>
   );
 };
