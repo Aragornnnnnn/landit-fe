@@ -27,7 +27,10 @@ export const StepScaffold = ({
 }: StepScaffoldProps) => (
   <div
     className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
-    style={bottomInset ? { paddingBottom: bottomInset } : undefined}
+    style={{
+      paddingTop: 'env(safe-area-inset-top)',
+      ...(bottomInset ? { paddingBottom: bottomInset } : {}),
+    }}
   >
     <div className="h-1 w-full bg-secondary">
       <div
@@ -56,7 +59,13 @@ export const StepScaffold = ({
     <div className="min-h-0 flex-1 overflow-y-auto px-5">{children}</div>
 
     {footer && (
-      <div className={footerBleed ? 'flex-none' : 'flex-none px-5 pt-3 pb-6'}>
+      <div
+        className={
+          footerBleed
+            ? 'flex-none'
+            : 'flex-none px-5 pt-3 pb-[max(env(safe-area-inset-bottom),24px)]'
+        }
+      >
         {footer}
       </div>
     )}
