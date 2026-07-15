@@ -17,6 +17,8 @@ interface ScenarioListProps {
   focusActive?: boolean;
   // 표현 마무리 후 홈 복귀 시, 이 시나리오 카드로 스크롤하고 자동으로 뒤집는다
   flipScenarioId?: number | null;
+  // 대화에서 홈 복귀 시, 이 시나리오 카드로 스크롤한다(뒤집진 않음)
+  cardScenarioId?: number | null;
 }
 
 export const ScenarioList = ({
@@ -24,6 +26,7 @@ export const ScenarioList = ({
   onStart,
   focusActive = false,
   flipScenarioId = null,
+  cardScenarioId = null,
 }: ScenarioListProps) => {
   const { scrollRef, activeIndex, onScroll } = useSnapIndex();
 
@@ -41,8 +44,16 @@ export const ScenarioList = ({
           (scenario) => scenario.scenarioId === flipScenarioId,
         )
       : -1;
-  // 진입 시 위치를 잡을 카드 — flip 대상이 있으면 그 카드, 없으면 다음 도전 카드
-  const targetIndex = flipIndex >= 0 ? flipIndex : nextIndex;
+  // 대화에서 복귀한 대상 카드(있으면). 스크롤만 하고 뒤집진 않는다.
+  const cardIndex =
+    cardScenarioId != null
+      ? scenarios.findIndex(
+          (scenario) => scenario.scenarioId === cardScenarioId,
+        )
+      : -1;
+  // 진입 시 위치를 잡을 카드 — 복귀 대상(flip>card)이 있으면 그 카드, 없으면 다음 도전 카드
+  const targetIndex =
+    flipIndex >= 0 ? flipIndex : cardIndex >= 0 ? cardIndex : nextIndex;
 
   const targetRef = useRef<HTMLDivElement>(null);
   // 진입·카테고리 전환 시 대상 카드로 부드럽게 스크롤한다.

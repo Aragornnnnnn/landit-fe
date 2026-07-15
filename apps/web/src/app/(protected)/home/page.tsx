@@ -15,24 +15,27 @@ import { HomeHeader } from './_components/HomeHeader';
 export default function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ just?: string; flip?: string }>;
+  searchParams: Promise<{ just?: string; flip?: string; card?: string }>;
 }) {
-  const { just, flip } = use(searchParams);
+  const { just, flip, card } = use(searchParams);
+  // flip=뒤집어 복귀(표현), card=앞면으로 복귀(대화). 둘 다 "온 카드로 돌아가는" 신호다.
   const flipScenarioId = flip ? Number(flip) : null;
+  const cardScenarioId = card ? Number(card) : null;
+  const returnScenarioId = flipScenarioId ?? cardScenarioId;
   const router = useRouter();
   const { categories, selected, selectCategory, error, isLoading, retry } =
     useScenarios();
 
-  // flip 대상 시나리오가 다른 카테고리에 있으면 그 카테고리를 자동으로 선택해 카드가 보이게 한다
+  // 복귀 대상 시나리오가 다른 카테고리에 있으면 그 카테고리를 자동으로 선택해 카드가 보이게 한다
   useEffect(() => {
-    if (flipScenarioId == null || !categories) return;
+    if (returnScenarioId == null || !categories) return;
     const target = categories.find((category) =>
-      category.scenarios.some((s) => s.scenarioId === flipScenarioId),
+      category.scenarios.some((s) => s.scenarioId === returnScenarioId),
     );
     if (target && target.categoryId !== selected?.categoryId) {
       selectCategory(target);
     }
-  }, [flipScenarioId, categories, selected?.categoryId, selectCategory]);
+  }, [returnScenarioId, categories, selected?.categoryId, selectCategory]);
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-muted">
@@ -67,6 +70,7 @@ export default function HomePage({
             scenarios={selected.scenarios}
             focusActive={just === '1'}
             flipScenarioId={flipScenarioId}
+            cardScenarioId={cardScenarioId}
             onStart={(scenario) =>
               router.push(`/conversation/${scenario.scenarioId}`)
             }

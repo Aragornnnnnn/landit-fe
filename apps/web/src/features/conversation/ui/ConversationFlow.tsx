@@ -123,7 +123,8 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
         open={showExitModal}
         onConfirm={() => {
           leave();
-          router.push('/home');
+          // 대화를 도중에 나가면 강제로 다음 카드로 보내지 말고, 온 카드로 복귀시킨다
+          router.push(`/home?card=${scenario.scenarioId}`);
         }}
         onClose={() => setShowExitModal(false)}
       />

@@ -59,7 +59,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
       <header className="relative flex h-14 flex-none items-center px-3">
         <button
-          onClick={() => router.push('/home')}
+          onClick={() => router.push(`/home?card=${scenarioId}`)}
           className="flex size-10 items-center justify-center text-muted-foreground"
           aria-label="닫기"
         >
