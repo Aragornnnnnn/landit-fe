@@ -5,7 +5,6 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
-import { useScenarios } from '@/features/scenario/model/useScenarios';
 import { useTypewriter } from '@/shared/lib/useTypewriter';
 import { useAuthStore } from '@/shared/store/auth-store';
 import { Button } from '@/shared/ui/Button';
@@ -17,24 +16,20 @@ import { ExpressionList } from './ExpressionList';
 export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
   const router = useRouter();
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
-  const { categories } = useScenarios();
   const { expressions, error, retry } = useExpressions(scenarioId);
-
-  const scenario = categories
-    ?.flatMap((category) => category.scenarios)
-    .find((item) => item.scenarioId === scenarioId);
 
   // 학습 진입 대상 — 아직 안 배운 첫 표현. 없으면 리스트로 보낸다.
   const nextExpressionId = expressions?.find(
     (expression) => !expression.completed && !expression.locked,
   )?.expressionId;
 
-  const ready = Boolean(scenario && expressions);
+  // 이 화면은 표현 데이터만 있으면 된다 — 시나리오 목록 fetch에 묶지 않아야 그게 느리거나 실패해도 안 멈춘다
+  const ready = Boolean(expressions);
   const name = nickname ?? '회원';
   const count = expressions?.length ?? 0;
 
   // 좌측 위 고정 타이틀 (온보딩 스타일 h1) — "위해"에서 줄바꿈
-  const title = `${name}님을 위해\n배워가면 영어 표현을 찾고 있어요`;
+  const title = `${name}님을 위해\n딱 맞는 영어 표현을 찾고 있어요`;
   // 캐릭터 밑 타자기 — 데이터에 안 묶인 정적 문구라 마운트 즉시 타이핑이 시작된다(개수 N은 리빌 서브타이틀에서).
   const phrases = [
     '대화를 꼼꼼히 분석하고 있어요',
