@@ -27,21 +27,22 @@ export const ScenarioList = ({
   const allCompleted =
     scenarios.length > 0 && scenarios.every((scenario) => scenario.completed);
 
-  // 방금 해금된(다음 도전할) 시나리오 — 첫 미완료·미잠금 카드
-  const focusIndex = focusActive
-    ? scenarios.findIndex((scenario) => !scenario.completed && !scenario.locked)
-    : -1;
+  // 다음 도전할 시나리오 — 첫 미완료·미잠금 카드. 진입·카테고리 전환 시 늘 이 카드로 위치를 잡는다.
+  const nextIndex = scenarios.findIndex(
+    (scenario) => !scenario.completed && !scenario.locked,
+  );
 
-  const focusRef = useRef<HTMLDivElement>(null);
+  const nextRef = useRef<HTMLDivElement>(null);
+  // 진입·카테고리 전환 시 다음 도전 카드로 부드럽게 스크롤한다.
   useEffect(() => {
-    if (focusIndex >= 0) {
-      focusRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (nextIndex >= 0) {
+      nextRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
-  }, [focusIndex]);
+  }, [nextIndex]);
 
   return (
     <div className="relative min-h-0 flex-1">
-      {/* 상하 패딩 22px = 슬라이드 부족분(44px)의 절반 — 첫/마지막 카드도 정확히 중앙에 선다 */}
+      {/* 상하 패딩 = 이웃 카드 peek 겸 첫/마지막 카드 위아래 여백 — 이 둘은 같은 값이라 키우면 peek↑·첫 카드 위 여백↑ */}
       <div
         ref={scrollRef}
         onScroll={onScroll}
@@ -51,7 +52,7 @@ export const ScenarioList = ({
           // 슬라이드 높이 = 패딩 제외 영역(화면-44px) — snap-center로 중앙에 서면 이웃 카드가 위아래로 살짝 드러난다
           <div
             key={scenario.scenarioId}
-            ref={index === focusIndex ? focusRef : undefined}
+            ref={index === nextIndex ? nextRef : undefined}
             className="h-full snap-center px-5 py-2"
           >
             <motion.div
@@ -67,7 +68,7 @@ export const ScenarioList = ({
               <ScenarioCard
                 scenario={scenario}
                 onStart={onStart}
-                highlight={index === focusIndex}
+                highlight={focusActive && index === nextIndex}
               />
             </motion.div>
           </div>
