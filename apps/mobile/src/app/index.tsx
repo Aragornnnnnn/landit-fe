@@ -11,6 +11,7 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import WebView from 'react-native-webview';
 
+import { initMetaSdk } from '@/analytics/meta';
 import { generateNonce } from '@/auth/nonce';
 import { requestSocialIdToken, SocialLoginError } from '@/auth/socialLogin';
 import { runHaptic } from '@/bridge/haptics';
@@ -57,6 +58,11 @@ const ShellScreen = () => {
       }
     },
   });
+
+  // Meta SDK 초기화와 iOS ATT 동의 요청 — 앱 첫 진입에 1회 (광고 설치 어트리뷰션)
+  useEffect(() => {
+    void initMetaSdk();
+  }, []);
 
   // 웹 첫 페인트(onLoad)나 로드 실패로 화면이 바뀌면 스플래시를 감춘다 — 그 전까지 네이티브 스플래시가 흰 로딩 화면을 가려 준다
   useEffect(() => {
