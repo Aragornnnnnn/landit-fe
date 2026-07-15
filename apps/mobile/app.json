@@ -1,18 +1,23 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Landit",
+    "slug": "saynow",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "landit",
+    "scheme": [
+      "landit",
+      "com.saynow.app",
+      "com.googleusercontent.apps.1062331189445-7tb3d2u3fkmqn2o1n53sqfhi7ljopqn1"
+    ],
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#e07a3a",
     "ios": {
-      "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.saynow.app",
+      "usesAppleSignIn": true,
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "음성 인식(말하기) 기능에 마이크를 사용합니다."
+        "NSMicrophoneUsageDescription": "음성 인식(말하기) 기능에 마이크를 사용합니다.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -21,10 +26,8 @@
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#e66827",
+        "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.saynow.app",
@@ -65,8 +68,8 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#e07a3a",
-          "image": "./assets/images/splash-blank.png",
-          "imageWidth": 1
+          "image": "./assets/images/splash-wordmark.png",
+          "imageWidth": 240
         }
       ],
       [
