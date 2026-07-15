@@ -29,6 +29,17 @@ describe('nextConversationState', () => {
     ).toEqual(state('USER_IDLE'));
   });
 
+  it('종료 메시지 발화가 끝나면(completed) 대화가 종료된다', () => {
+    expect(
+      nextConversationState(
+        state('AI_SPEAKING', 2),
+        'AI_SPEECH_END',
+        true,
+        true,
+      ),
+    ).toEqual(state('DONE', 2));
+  });
+
   it('마이크를 누르면 듣기가 시작된다', () => {
     expect(
       nextConversationState(state('USER_IDLE'), 'MIC_PRESSED', true),

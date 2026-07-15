@@ -380,6 +380,40 @@ describe('useConversationFlow', () => {
     expect(result.current.phase).toBe('DONE');
   });
 
+  it('완료 턴에 종료 메시지가 오면 그걸 발화한 뒤 대화가 종료된다', async () => {
+    const { result } = await renderUserFirst();
+    submitMessage.mockResolvedValue(
+      submitResponse({
+        nextMessage: {
+          messageId: 9,
+          turnNumber: 3,
+          messageSequence: 1,
+          role: 'AI',
+          content: 'Thanks for chatting!',
+          translatedContent: '대화 고마워요!',
+        },
+        progress: {
+          currentTurnNumber: 3,
+          currentMessageSequenceNumber: 1,
+          totalQuestionCount: 3,
+          completed: true,
+        },
+      }),
+    );
+    await speakAndSubmit(result, 'Yes, here you go.');
+
+    // 속마음이 끝나면 바로 종료하지 않고 종료 메시지를 발화(AI_SPEAKING)한다
+    act(() => {
+      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+    });
+    expect(result.current.phase).toBe('AI_SPEAKING');
+    expect(result.current.turn.aiMessage).toBe('Thanks for chatting!');
+
+    // 그 발화가 끝나야 종료(→ CTA)로 간다
+    act(() => ttsMock.state.onEnd?.());
+    expect(result.current.phase).toBe('DONE');
+  });
+
   it('대화가 완료되면 피드백을 미리 생성하고 시나리오 캐시를 무효화한다', async () => {
     const { result } = await renderUserFirst();
     submitMessage.mockResolvedValue(

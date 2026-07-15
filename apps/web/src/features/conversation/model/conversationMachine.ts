@@ -41,17 +41,20 @@ const advanceTurn = (
     ? { phase: 'AI_SPEAKING', turnIndex: state.turnIndex + 1 }
     : { ...state, phase: 'DONE' };
 
-// 단계에 맞지 않는 이벤트는 상태를 그대로 돌려준다 — 타이머와 버튼이 겹쳐 들어와도 안전하다
-// hasNext = 다음 턴이 남아있는가(서버 progress.completed의 반대). 종료 판정에만 쓴다.
+// 단계에 맞지 않는 이벤트는 상태를 그대로 돌려준다 — 타이머와 버튼이 겹쳐 들어와도 안전하다.
+// hasNext = 이어서 재생할 AI 발화가 있는가(nextMessage != null). 종료 메시지도 발화이므로 여기 포함된다.
+// completed = 그 발화를 끝으로 대화가 종료되는가(서버 progress.completed). 발화 후 종료/대기를 가른다.
 export const nextConversationState = (
   state: ConversationState,
   event: ConversationEvent,
   hasNext: boolean,
+  completed = false,
 ): ConversationState => {
   switch (state.phase) {
     case 'AI_SPEAKING':
+      // 발화가 끝나면 — 종료 메시지였다면 DONE(→CTA), 아니면 유저 차례로
       return event === 'AI_SPEECH_END'
-        ? { ...state, phase: 'USER_IDLE' }
+        ? { ...state, phase: completed ? 'DONE' : 'USER_IDLE' }
         : state;
     case 'USER_IDLE':
       return event === 'MIC_PRESSED'

@@ -70,8 +70,9 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
       <CharacterStage thumbnailUrl={scenario.thumbnailUrl} partner={partner} />
 
       {/* 무대·답변·마이크는 고정. 질문만 남는 공간을 채우는 스크롤 영역에 담아, 길어져도 겹치지 않고 카드 안에서 스크롤된다 */}
-      <section className="flex min-h-0 flex-1 flex-col px-5 pt-5">
-        <div className="min-h-0 flex-1 overflow-y-auto">
+      <section className="flex min-h-0 flex-1 flex-col px-5">
+        {/* pt-5는 무대와의 간격이자 페이드 구간 — 위로 스크롤될 때 무대 밑에서 그림자·글자가 직각으로 잘리지 않고 서서히 사라진다 */}
+        <div className="min-h-0 flex-1 overflow-y-auto [mask-image:linear-gradient(to_bottom,transparent,#000_1.25rem)] pt-5 [-webkit-mask-image:linear-gradient(to_bottom,transparent,#000_1.25rem)]">
           <QuestionCard
             question={turn.aiMessage}
             translation={turn.aiTranslation}
@@ -86,8 +87,8 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
 
       <footer className="flex-none pb-[max(env(safe-area-inset-bottom),16px)]">
         {ended ? (
-          // 대화 종료 — 마지막 AI 발화만 남기고 마이크 대신 분석으로 가는 CTA를 보여준다
-          <div className="flex h-36 items-center px-5">
+          // 대화 종료 — 마지막 AI 발화만 남기고 마이크 대신 분석으로 가는 CTA를 아래쪽에 보여준다
+          <div className="flex h-36 items-end px-5 pb-3">
             <Button onClick={() => setShowFeedback(true)}>
               상세 분석 보러갈래요
               <ArrowRightIcon size={16} />

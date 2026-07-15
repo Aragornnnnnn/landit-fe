@@ -72,7 +72,8 @@ export interface NextMessage {
 export interface SessionMessageSubmitResponse {
   sessionId: number;
   submittedMessage: SubmittedMessage;
-  // 스웨거상 nullable 미선언이나, 대화가 끝난(progress.completed) 턴에선 다음 질문이 없다.
+  // 다음 AI 발화. 대화가 끝나는(progress.completed) 턴에는 다음 질문 대신 종료 메시지가 담겨 온다.
+  // (둘 다 재생 대상이라 FE는 nextMessage 유무로 발화 여부를, completed로 종료 여부를 판단한다)
   nextMessage: NextMessage | null;
   progress: SessionProgress;
 }

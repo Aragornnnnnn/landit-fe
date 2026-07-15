@@ -69,7 +69,8 @@ export const useConversationFlow = (scenario: Scenario) => {
   // send 클로저가 최신 값을 읽도록 ref로 들고 있는다
   const sessionIdRef = useRef<number | null>(null);
   const sessionPromiseRef = useRef<Promise<number | null> | null>(null);
-  const hasNextRef = useRef(true);
+  const hasNextRef = useRef(true); // 이어서 재생할 AI 발화가 있는가 (종료 메시지 포함)
+  const completedRef = useRef(false); // 그 발화를 끝으로 대화가 종료되는가
   const nextMessageRef = useRef<NextMessage | null>(null);
   const startedRef = useRef(false);
   const submittingRef = useRef(false); // 중복 제출 방지 (연출은 WAITING phase가 맡는다)
@@ -91,7 +92,14 @@ export const useConversationFlow = (scenario: Scenario) => {
   };
 
   const send = (event: ConversationEvent) =>
-    setState((prev) => nextConversationState(prev, event, hasNextRef.current));
+    setState((prev) =>
+      nextConversationState(
+        prev,
+        event,
+        hasNextRef.current,
+        completedRef.current,
+      ),
+    );
 
   // 마이크 STT — 실시간 미리보기는 transcript로, 완료(stop) 시 최종 텍스트로 음성 제출을 잇는다.
   // 침묵 자동 종료는 끄고 완료 버튼(■)만으로 끝낸다 — 긴 답변 중 침묵에도 안 끊긴다.
@@ -245,7 +253,10 @@ export const useConversationFlow = (scenario: Scenario) => {
 
       const res = await submitMessage(sessionId, content, inputType);
       nextMessageRef.current = res.nextMessage;
-      hasNextRef.current = !res.progress.completed && res.nextMessage != null;
+      // 종료 메시지도 nextMessage로 오므로, 발화 유무는 nextMessage로 판단하고
+      // 그 발화를 끝으로 종료인지는 completed로 따로 들고 간다 (완료 발화도 재생 후 CTA로)
+      hasNextRef.current = res.nextMessage != null;
+      completedRef.current = res.progress.completed;
       // 마지막 발화였다면 피드백을 미리 만들고 다음 대화 해금을 홈에 반영한다
       if (res.progress.completed) handleConversationComplete(sessionId);
       // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 합성한다 — 다음 발화 재생 지연을 없앤다
