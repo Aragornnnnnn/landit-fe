@@ -11,10 +11,13 @@ import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 export default function ExpressionListPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ scenarioId: string }>;
+  searchParams: Promise<{ just?: string }>;
 }) {
   const { scenarioId } = use(params);
+  const { just } = use(searchParams);
   const id = Number(scenarioId);
   const router = useRouter();
   const { expressions, error, isLoading, retry } = useExpressions(id);
@@ -58,6 +61,7 @@ export default function ExpressionListPage({
         {expressions && (
           <ExpressionList
             expressions={expressions}
+            focusActive={just === '1'}
             onSelect={(expressionId) =>
               router.push(`/expressions/${id}/${expressionId}`)
             }

@@ -114,7 +114,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
             <Button
               variant="ghost"
               size="md"
-              onClick={() => router.push('/home')}
+              onClick={() => router.push('/home?just=1')}
             >
               다음 대화하러 갈게요
             </Button>

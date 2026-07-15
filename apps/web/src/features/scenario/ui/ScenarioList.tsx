@@ -1,6 +1,7 @@
 'use client';
 
 // 시나리오 카드 리스트 — 풀스크린 카드를 스냅으로 한 장씩 넘기고, 위아래로 이웃 카드가 살짝 보인다
+import { useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 
 import { LockIcon } from '@/shared/ui/Icons';
@@ -12,13 +13,31 @@ import { ScenarioCard } from './ScenarioCard';
 interface ScenarioListProps {
   scenarios: Scenario[];
   onStart: (scenario: Scenario) => void;
+  // 방금 대화를 끝내 다음 시나리오가 해금됐을 때, 그 카드로 스크롤·강조한다
+  focusActive?: boolean;
 }
 
-export const ScenarioList = ({ scenarios, onStart }: ScenarioListProps) => {
+export const ScenarioList = ({
+  scenarios,
+  onStart,
+  focusActive = false,
+}: ScenarioListProps) => {
   const { scrollRef, activeIndex, onScroll } = useSnapIndex();
 
   const allCompleted =
     scenarios.length > 0 && scenarios.every((scenario) => scenario.completed);
+
+  // 방금 해금된(다음 도전할) 시나리오 — 첫 미완료·미잠금 카드
+  const focusIndex = focusActive
+    ? scenarios.findIndex((scenario) => !scenario.completed && !scenario.locked)
+    : -1;
+
+  const focusRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (focusIndex >= 0) {
+      focusRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  }, [focusIndex]);
 
   return (
     <div className="relative min-h-0 flex-1">
@@ -32,6 +51,7 @@ export const ScenarioList = ({ scenarios, onStart }: ScenarioListProps) => {
           // 슬라이드 높이 = 패딩 제외 영역(화면-44px) — snap-center로 중앙에 서면 이웃 카드가 위아래로 살짝 드러난다
           <div
             key={scenario.scenarioId}
+            ref={index === focusIndex ? focusRef : undefined}
             className="h-full snap-center px-5 py-2"
           >
             <motion.div
@@ -44,7 +64,11 @@ export const ScenarioList = ({ scenarios, onStart }: ScenarioListProps) => {
                 ease: [0.22, 1, 0.36, 1],
               }}
             >
-              <ScenarioCard scenario={scenario} onStart={onStart} />
+              <ScenarioCard
+                scenario={scenario}
+                onStart={onStart}
+                highlight={index === focusIndex}
+              />
             </motion.div>
           </div>
         ))}

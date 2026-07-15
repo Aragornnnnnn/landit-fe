@@ -30,6 +30,9 @@ export const ExpressionFlow = ({
   const finish = useFinishExpression(expressionId);
 
   const backToList = () => router.push(`/expressions/${scenarioId}`);
+  // 완료 후엔 방금 해금된 다음 표현으로 스크롤·강조되도록 신호를 붙여 리스트로 돌아간다
+  const backToListUnlocked = () =>
+    router.push(`/expressions/${scenarioId}?just=1`);
 
   if (isLoading) return <FlowStatus>불러오는 중…</FlowStatus>;
   if (error || !practice) {
@@ -69,7 +72,9 @@ export const ExpressionFlow = ({
       practice={practice}
       onBack={() => setStep('EXPLAIN')}
       finishing={finish.isPending}
-      onFinish={() => finish.mutate(undefined, { onSuccess: backToList })}
+      onFinish={() =>
+        finish.mutate(undefined, { onSuccess: backToListUnlocked })
+      }
     />
   );
 };
