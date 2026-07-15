@@ -5,13 +5,19 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "landit",
+    "scheme": [
+      "landit",
+      "com.saynow.app",
+      "com.googleusercontent.apps.1062331189445-7tb3d2u3fkmqn2o1n53sqfhi7ljopqn1"
+    ],
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#e07a3a",
     "ios": {
       "bundleIdentifier": "com.saynow.app",
+      "usesAppleSignIn": true,
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "음성 인식(말하기) 기능에 마이크를 사용합니다."
+        "NSMicrophoneUsageDescription": "음성 인식(말하기) 기능에 마이크를 사용합니다.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
