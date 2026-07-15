@@ -33,21 +33,22 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
   const name = nickname ?? '회원';
   const count = expressions?.length ?? 0;
 
-  // 좌측 위 고정 타이틀 (온보딩 스타일 h1)
-  const title = `${name}님이 배워가면 좋을 표현을 찾고 있어요`;
-  // 캐릭터 밑 타자기 — 과정(지워짐) → 결과(마지막 고정)
-  const phrases = ready
-    ? [
-        '대화를 꼼꼼히 분석하고 있어요',
-        count > 0
-          ? `원어민이 될 수 있는 표현 ${count}개를 찾았어요`
-          : `${name}님을 위한 표현을 준비했어요`,
-      ]
-    : [];
+  // 좌측 위 고정 타이틀 (온보딩 스타일 h1) — "위해"에서 줄바꿈
+  const title = `${name}님을 위해\n배워가면 영어 표현을 찾고 있어요`;
+  // 캐릭터 밑 타자기 — 데이터에 안 묶인 정적 문구라 마운트 즉시 타이핑이 시작된다(개수 N은 리빌 서브타이틀에서).
+  const phrases = [
+    '대화를 꼼꼼히 분석하고 있어요',
+    '원어민이 될 수 있는 표현을 찾았어요',
+  ];
 
   const { text, done } = useTypewriter(phrases);
-  // ready 전엔 phrases가 비어 done이 즉시 true가 된다 — ready까지 함께 봐야 리빌이 먼저 깜빡이지 않는다
+  // 타이핑이 끝나고 데이터도 준비돼야 리빌 — ready를 함께 봐야 결과가 먼저 깜빡이지 않는다
   const listed = ready && done;
+  // 리빌 서브타이틀 — 개수를 담아 결과를 확정한다
+  const resultText =
+    count > 0
+      ? `원어민이 될 수 있는 표현 ${count}개를 찾았어요`
+      : `${name}님을 위한 표현을 준비했어요`;
 
   // 구슬 든 랜디 — 톡 튀어 나타나 둥실둥실 떠 있다가, listed 되면 사라진다
   const orb = (
@@ -108,7 +109,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
       ) : (
         // 좌측 위 타이틀 고정 + (가운데 구슬 랜디 + 밑 타이핑) → 캐릭터 사라지고 인라인 리스트
         <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(env(safe-area-inset-bottom),24px)]">
-          <h1 className="pt-1 text-3xl leading-[1.22] font-black tracking-normal text-foreground">
+          <h1 className="pt-1 text-3xl leading-[1.22] font-black tracking-normal whitespace-pre-line text-foreground">
             {title}
           </h1>
 
@@ -122,16 +123,15 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
                 transition={{ duration: 0.28 }}
               >
                 {orb}
-                {ready && (
-                  <p className="min-h-[3.5rem] text-center text-xl leading-relaxed font-extrabold whitespace-pre-line text-foreground">
-                    {text}
-                    {!done && (
-                      <span className="ml-0.5 inline-block animate-pulse text-primary">
-                        |
-                      </span>
-                    )}
-                  </p>
-                )}
+                {/* 텍스트 영역은 항상 자리(min-h)를 잡아, 타이핑이 생겨도 캐릭터가 안 밀린다 */}
+                <p className="min-h-[4.5rem] text-center text-xl leading-relaxed font-extrabold whitespace-pre-line text-foreground">
+                  {text}
+                  {!done && (
+                    <span className="ml-0.5 inline-block animate-pulse text-primary">
+                      |
+                    </span>
+                  )}
+                </p>
               </motion.div>
             ) : (
               // 캐릭터 사라지고, 결과 문구가 서브타이틀로 오르며 리스트가 타타탁 붙는다
@@ -143,7 +143,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
                 transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               >
                 <p className="mt-2 text-lg leading-snug font-extrabold text-primary">
-                  {text}
+                  {resultText}
                 </p>
                 <div className="-mx-6 mt-4 min-h-0 flex-1 overflow-y-auto">
                   {expressions && (
