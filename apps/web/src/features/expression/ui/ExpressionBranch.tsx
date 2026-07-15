@@ -19,7 +19,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
   const router = useRouter();
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
   const { categories } = useScenarios();
-  const { expressions } = useExpressions(scenarioId);
+  const { expressions, error, retry } = useExpressions(scenarioId);
 
   const scenario = categories
     ?.flatMap((category) => category.scenarios)
@@ -67,9 +67,33 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
         </button>
       </header>
 
-      {!ready ? (
-        <div className="flex flex-1 items-center justify-center">
-          <span className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-primary" />
+      {error && !expressions ? (
+        // 표현을 못 불러오면 무한 로딩 대신 원인을 보이고 다시 시도하게 한다
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            {error.message || '표현을 불러오지 못했어요.'}
+          </p>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="w-auto px-6"
+            onClick={retry}
+          >
+            다시 시도
+          </Button>
+        </div>
+      ) : !ready ? (
+        // 표현을 불러오는 중 — 빈 스피너 대신 캐릭터가 준비하는 연출로 보여준다
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-8 px-6">
+          <div className="relative">
+            <CharacterSlot size={104} />
+            <span className="absolute -right-1 -bottom-1 flex size-7 items-center justify-center rounded-full bg-primary text-sm">
+              <span className="tossface">✨</span>
+            </span>
+          </div>
+          <p className="text-center text-xl leading-relaxed font-extrabold text-foreground">
+            대화를 바탕으로 표현을 준비하고 있어요
+          </p>
         </div>
       ) : !done ? (
         // 분석 연출 — 준비가 끝나기 전까지 캐릭터가 표현을 준비하는 듯 보여준다
