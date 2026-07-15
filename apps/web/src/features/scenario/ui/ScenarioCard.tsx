@@ -25,7 +25,7 @@ export const ScenarioCard = ({
 }: ScenarioCardProps) => {
   // 잠금·완료 판정은 전부 백엔드 몫(직전 시나리오를 깨야 다음이 열린다). 카드는 두 플래그를 그리기만 한다.
   // locked   → 흑백 썸네일 + 회색 제목 + "잠겨있어요"
-  // completed → 제목 옆 별점 + "다시 해볼게요"
+  // completed → 썸네일 우상단 별점 배지 + "다시 해볼게요"
   const { locked, completed } = scenario;
 
   // 백엔드 썸네일이 없으면 scenarioId로 번들 이미지를 매칭한다(S3 미구현 임시)
@@ -62,26 +62,25 @@ export const ScenarioCard = ({
             <span className="tossface text-6xl">💬</span>
           </div>
         )}
+
+        {/* 완료 시 별점을 썸네일 우상단에 배지로 띄운다 — 어두운 스크림으로 밝은/어두운 이미지 모두에서 대비 확보 */}
+        {completed && (
+          <div className="absolute top-3 right-3 rounded-full bg-black/45 px-2.5 py-1.5 shadow-sm backdrop-blur-sm">
+            <StarRating rating={scenario.starRating ?? 0} size={16} />
+          </div>
+        )}
       </div>
 
       {/* 텍스트 + CTA */}
       <div className="flex flex-none flex-col gap-3 px-5 pt-4 pb-5">
         <div>
-          <div className="flex items-start justify-between gap-2">
-            <p
-              className={`text-xl leading-snug font-extrabold ${
-                locked ? 'text-muted-foreground' : 'text-foreground'
-              }`}
-            >
-              {scenario.scenarioTitle}
-            </p>
-            {completed && (
-              <StarRating
-                rating={scenario.starRating ?? 0}
-                className="mt-1.5 shrink-0"
-              />
-            )}
-          </div>
+          <p
+            className={`text-xl leading-snug font-extrabold ${
+              locked ? 'text-muted-foreground' : 'text-foreground'
+            }`}
+          >
+            {scenario.scenarioTitle}
+          </p>
           {scenario.briefing && (
             <p className="mt-2 text-sm leading-relaxed font-medium text-muted-foreground">
               {scenario.briefing}
