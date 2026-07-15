@@ -11,6 +11,7 @@ import {
   gradeWords,
   isComplete,
   normalizeQuotes,
+  parseInputEvent,
 } from './reviewInput';
 
 // 정답: "I got a good deal" → 단어 길이 [1, 3, 1, 4, 4]
@@ -115,6 +116,11 @@ describe('gradeWords / firstWrong', () => {
   it('모두 맞으면 첫 오답은 -1이다', () => {
     expect(firstWrong([true, true, true])).toBe(-1);
   });
+
+  it('정답 쪽에 스마트 아포스트로피가 있어도 곧은 입력과 맞는다', () => {
+    // BE가 "don’t"(스마트)를 내려줘도, 사용자가 "don't"(곧은)로 치면 정답이어야 한다
+    expect(gradeWords(["don't"], ['don’t'])).toEqual([true]);
+  });
 });
 
 describe('normalizeQuotes', () => {
@@ -128,5 +134,38 @@ describe('normalizeQuotes', () => {
 
   it('일반 글자는 그대로 둔다', () => {
     expect(normalizeQuotes('a')).toBe('a');
+  });
+});
+
+describe('parseInputEvent', () => {
+  it('지우기 계열 inputType은 backspace 액션 하나로 바꾼다', () => {
+    expect(parseInputEvent('deleteContentBackward', '')).toEqual([
+      { kind: 'backspace' },
+    ]);
+  });
+
+  it('글자 삽입은 letter 액션으로, 스마트따옴표는 곧은 따옴표로 정규화한다', () => {
+    expect(parseInputEvent('insertText', '’')).toEqual([
+      { kind: 'letter', letter: "'" },
+    ]);
+  });
+
+  it('스페이스는 space 액션으로 바꾼다', () => {
+    expect(parseInputEvent('insertText', ' ')).toEqual([{ kind: 'space' }]);
+  });
+
+  it('여러 글자(붙여넣기·자동완성)를 순서대로 액션으로 편다', () => {
+    expect(parseInputEvent('insertFromPaste', 'ab')).toEqual([
+      { kind: 'letter', letter: 'a' },
+      { kind: 'letter', letter: 'b' },
+    ]);
+  });
+
+  it('줄바꿈 문자는 액션에서 걸러낸다', () => {
+    expect(parseInputEvent('insertText', '\n')).toEqual([]);
+  });
+
+  it('inputType이 비었어도 데이터가 있으면 삽입으로 본다(일부 안드로이드 키보드)', () => {
+    expect(parseInputEvent('', 'x')).toEqual([{ kind: 'letter', letter: 'x' }]);
   });
 });

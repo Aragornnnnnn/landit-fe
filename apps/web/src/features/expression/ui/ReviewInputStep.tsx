@@ -17,7 +17,8 @@ import {
   focusWord,
   gradeWords,
   isComplete,
-  normalizeQuotes,
+  parseInputEvent,
+  type ReviewInputAction,
 } from '../model/reviewInput';
 import type { SentenceQuiz } from '../model/sentenceQuiz';
 import { QuizPrompt } from './QuizPrompt';
@@ -64,6 +65,8 @@ export const ReviewInputStep = ({
   // 네이티브 키보드용 숨은 입력 — 여길 focus시켜 OS 키보드를 띄우고, 키 입력을 기존 모델로 흘려보낸다
   const hiddenRef = useRef<HTMLInputElement>(null);
   const answerRef = useRef<HTMLDivElement>(null);
+  // 조합입력(IME) 중엔 input 이벤트를 무시하고 compositionend에서 완성 문자열만 반영한다(중복 방지)
+  const composingRef = useRef(false);
   const keyboardInset = useKeyboardInset();
 
   // 정답 순간 콘페티 — 브랜드 색으로 양쪽에서 터뜨린다
@@ -142,19 +145,21 @@ export const ReviewInputStep = ({
     focusHidden();
   };
 
-  // 네이티브 키 입력을 기존 모델로 라우팅 — 글자는 appendLetter, 스페이스는 advance, 지우기는 backspace
+  // 파싱된 액션을 기존 모델로 적용 — 글자는 appendLetter, 스페이스는 advance, 지우기는 backspace
+  const applyActions = (actions: ReviewInputAction[]) => {
+    for (const action of actions) {
+      if (action.kind === 'backspace') onBackspace();
+      else if (action.kind === 'space') onSpace();
+      else onKey(action.letter);
+    }
+  };
+
+  // 네이티브 키 입력 라우팅 — 조합입력(IME) 이벤트는 건너뛰고(중복 방지) compositionend에서 한 번만 반영한다
   const handleInput = (event: React.FormEvent<HTMLInputElement>) => {
     const native = event.nativeEvent as InputEvent;
-    const type = native.inputType ?? '';
-    if (type.startsWith('delete')) {
-      onBackspace();
-    } else if (type.startsWith('insert')) {
-      const data = native.data ?? '';
-      for (const ch of data) {
-        if (ch === ' ') onSpace();
-        else if (ch !== '\n' && ch !== '\r') onKey(normalizeQuotes(ch));
-      }
-    }
+    if (composingRef.current || native.inputType === 'insertCompositionText')
+      return;
+    applyActions(parseInputEvent(native.inputType ?? '', native.data ?? ''));
     resetHidden();
   };
 
@@ -198,6 +203,15 @@ export const ReviewInputStep = ({
         ref={hiddenRef}
         defaultValue={SENTINEL}
         onInput={handleInput}
+        onCompositionStart={() => {
+          composingRef.current = true;
+        }}
+        onCompositionEnd={(event) => {
+          composingRef.current = false;
+          // 완성된 조합 문자열을 삽입으로 처리한다(중복 없이 한 번만)
+          applyActions(parseInputEvent('insertText', event.data ?? ''));
+          resetHidden();
+        }}
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
             event.preventDefault();
@@ -206,7 +220,7 @@ export const ReviewInputStep = ({
         }}
         onFocus={() =>
           answerRef.current?.scrollIntoView({
-            block: 'center',
+            block: 'nearest',
             behavior: 'smooth',
           })
         }
@@ -216,7 +230,7 @@ export const ReviewInputStep = ({
         autoCorrect="off"
         autoComplete="off"
         spellCheck={false}
-        aria-hidden
+        aria-label="영어 답변 입력"
         tabIndex={-1}
         className="pointer-events-none absolute h-px w-px opacity-0"
       />
