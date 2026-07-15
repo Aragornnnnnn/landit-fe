@@ -1,13 +1,11 @@
 'use client';
 
-// 세션 피드백 화면 — 피드백을 생성(POST)하는 동안 분석 연출을 보여주고, 완료되면 총평/상세로 넘긴다
-import { motion } from 'motion/react';
-
+// 세션 피드백 화면 — 생성 중엔 총평 스켈레톤을 보이고(대개 미리 만들어 잠깐), 완료되면 총평/상세로 넘긴다
 import { Button } from '@/shared/ui/Button';
-import { CharacterSlot } from '@/shared/ui/CharacterSlot';
 
 import { useSessionFeedback } from '../model/useSessionFeedback';
 import { Feedback } from './Feedback';
+import { FeedbackSkeleton } from './FeedbackSkeleton';
 
 interface SessionFeedbackScreenProps {
   sessionId: number | null;
@@ -20,7 +18,7 @@ export const SessionFeedbackScreen = ({
   title,
   onExit,
 }: SessionFeedbackScreenProps) => {
-  const { feedback, error, isLoading } = useSessionFeedback(sessionId);
+  const { feedback, error } = useSessionFeedback(sessionId);
 
   if (feedback) {
     return <Feedback feedback={feedback} title={title} onExit={onExit} />;
@@ -40,21 +38,6 @@ export const SessionFeedbackScreen = ({
     );
   }
 
-  // 생성 중 — 캐릭터가 대화를 분석하는 연출
-  return (
-    <main className="mx-auto flex h-dvh max-w-[430px] flex-col items-center justify-center gap-8 bg-background px-6">
-      <motion.div
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <CharacterSlot size={104} />
-      </motion.div>
-      <p className="text-center text-xl leading-relaxed font-extrabold text-foreground">
-        대화를 분석하고 있어요
-      </p>
-      {isLoading && (
-        <span className="size-6 animate-spin rounded-full border-2 border-muted border-t-primary" />
-      )}
-    </main>
-  );
+  // 생성 중 — 총평 골격 스켈레톤
+  return <FeedbackSkeleton />;
 };
