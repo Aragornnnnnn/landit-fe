@@ -4,7 +4,7 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 
-import { CheckIcon, LockIcon } from '@/shared/ui/Icons';
+import { CheckIcon, ChevronRightIcon, LockIcon } from '@/shared/ui/Icons';
 
 import type { Expression } from '../api/list';
 
@@ -39,7 +39,7 @@ export const ExpressionListItem = ({
 
   if (locked) {
     return (
-      <div className="flex items-center gap-3 px-2 py-3.5 opacity-60">
+      <div className="flex items-center gap-3 rounded-2xl bg-secondary/40 px-3.5 py-3.5 opacity-60">
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
           <LockIcon size={15} />
         </span>
@@ -54,7 +54,7 @@ export const ExpressionListItem = ({
     return (
       <button
         onClick={() => onSelect(expressionId)}
-        className="flex w-full items-center gap-3 px-2 py-3.5 text-left"
+        className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-3.5 py-3.5 text-left shadow-sm transition-colors active:bg-secondary"
       >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
           <CheckIcon size={16} />
@@ -67,9 +67,12 @@ export const ExpressionListItem = ({
             {targetExpressionText}
           </p>
         </div>
-        <span className="shrink-0 text-sm font-medium text-muted-foreground">
-          완료
-        </span>
+        <div className="flex shrink-0 items-center gap-1">
+          <span className="text-sm font-medium text-muted-foreground">
+            완료
+          </span>
+          <ChevronRightIcon size={18} className="text-muted-foreground/40" />
+        </div>
       </button>
     );
   }
@@ -92,7 +95,7 @@ export const ExpressionListItem = ({
         </p>
       </div>
       <span className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
-        시작하기
+        시작할게요
       </span>
     </motion.button>
   );
