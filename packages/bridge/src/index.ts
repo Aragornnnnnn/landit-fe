@@ -1,4 +1,9 @@
-export { type WebToNativeMessage, type NativeToWebMessage } from './messages';
+export {
+  hapticPatternSchema,
+  type WebToNativeMessage,
+  type NativeToWebMessage,
+  type HapticPattern,
+} from './messages';
 
 export {
   parseWebToNativeMessage,
