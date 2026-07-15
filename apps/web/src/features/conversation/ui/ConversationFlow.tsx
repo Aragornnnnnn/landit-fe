@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { SessionFeedbackScreen } from '@/features/feedback/ui/SessionFeedbackScreen';
 import type { Scenario } from '@/features/scenario/api/list';
+import { Transition } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
@@ -38,18 +39,23 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
     sessionId,
   } = useConversationFlow(scenario);
 
-  // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로, 마치면 표현 학습 분기로 보낸다
-  if (phase === 'DONE' && showFeedback) {
+  const ended = phase === 'DONE';
+  // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로 크로스페이드한다. 마치면 표현 학습 분기로 보낸다.
+  const view = ended && showFeedback ? 'feedback' : 'conversation';
+
+  if (view === 'feedback') {
     return (
-      <SessionFeedbackScreen
-        sessionId={sessionId}
-        title={scenario.scenarioTitle}
-        onExit={() => router.push(`/expressions/${scenario.scenarioId}/branch`)}
-      />
+      <Transition transitionKey="feedback" fade>
+        <SessionFeedbackScreen
+          sessionId={sessionId}
+          title={scenario.scenarioTitle}
+          onExit={() =>
+            router.push(`/expressions/${scenario.scenarioId}/branch`)
+          }
+        />
+      </Transition>
     );
   }
-
-  const ended = phase === 'DONE';
 
   return (
     <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
