@@ -40,7 +40,7 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   } = useConversationFlow(scenario);
 
   const ended = phase === 'DONE';
-  // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로 크로스페이드한다. 마치면 표현 학습 분기로 보낸다.
+  // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로 페이드 인해 넘어간다. 마치면 표현 학습 분기로 보낸다.
   const view = ended && showFeedback ? 'feedback' : 'conversation';
 
   if (view === 'feedback') {

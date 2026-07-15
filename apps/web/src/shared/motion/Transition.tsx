@@ -29,7 +29,7 @@ export const Transition = ({
   const variants = fade ? fadeVariants : slideVariants(reduced);
 
   return (
-    <AnimatePresence mode="wait" custom={direction} initial={false}>
+    <AnimatePresence mode="wait" custom={direction}>
       <motion.div
         key={transitionKey}
         custom={direction}

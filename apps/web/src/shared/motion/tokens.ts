@@ -2,20 +2,11 @@
 import type { Variants } from 'motion/react';
 
 export const DURATION = {
-  fast: 0.18,
   base: 0.25,
-  slow: 0.38,
 } as const;
 
 // 코드 전반에서 이미 사실상 표준이던 ease. 부드럽게 감속하는 out 곡선.
 export const EASE_STANDARD = [0.22, 1, 0.36, 1] as const;
-
-// 바텀시트 슬라이드업 전용 spring (DESIGN.md §9)
-export const SPRING_SHEET = {
-  type: 'spring',
-  damping: 28,
-  stiffness: 300,
-} as const;
 
 // 라우트 전환·전면 화면 교체 — 이동 없이 페이드만. transform을 쓰지 않으므로
 // fixed 오버레이(바텀시트·오버레이)의 기준이 뷰포트로 유지된다.
