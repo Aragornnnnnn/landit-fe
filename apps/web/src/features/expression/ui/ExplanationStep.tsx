@@ -20,6 +20,7 @@ interface ExplanationStepProps {
   nextLabel: string; // 다음 스텝(복습 영작) 유무에 따라 "복습 영작 할게요" / "학습 완료"
   finishing?: boolean; // 마지막 스텝일 때 완료 처리 중이면 버튼 비활성
   onBack: () => void;
+  leftAction?: 'back' | 'close';
   onNext: () => void;
 }
 
@@ -33,6 +34,7 @@ export const ExplanationStep = ({
   nextLabel,
   finishing,
   onBack,
+  leftAction,
   onNext,
 }: ExplanationStepProps) => {
   const [active, setActive] = useState(0);
@@ -47,6 +49,7 @@ export const ExplanationStep = ({
       title={title}
       progress={progress}
       onBack={onBack}
+      leftAction={leftAction}
       footer={
         <Button onClick={onNext} disabled={finishing}>
           {nextLabel}

@@ -1,4 +1,4 @@
-// 속마음 오버레이 — 화면 전체를 어둡게 덮고 Sona가 날아들어 속마음을 전한 뒤 사라진다 (섹션 밖 전면 연출)
+// 속마음 오버레이 — 화면 전체를 어둡게 덮고 랜디가 날아들어 속마음을 전한 뒤 사라진다 (섹션 밖 전면 연출)
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
@@ -9,7 +9,7 @@ import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
 export const ThoughtOverlay = ({
   thought,
-  // 대기 중(응답 전) — Sona가 먼저 날아들어 '생각 중'으로 떠 있다가, 속마음이 도착하면 같은 말풍선이 채워진다
+  // 대기 중(응답 전) — 랜디가 먼저 날아들어 '생각 중'으로 떠 있다가, 속마음이 도착하면 같은 말풍선이 채워진다
   loading = false,
 }: {
   thought: FloatingThought | null;
@@ -18,9 +18,14 @@ export const ThoughtOverlay = ({
   const mounted = useClientOnlyValue(() => true, false);
   if (!mounted) return null;
 
-  // 대기부터 속마음까지 Sona는 한 번만 등장한다 — 도착 전엔 중립 표정으로 떠 있는다
+  // 대기부터 속마음까지 랜디는 한 번만 등장한다 — 생성 중엔 구슬을 들고 있다가, 도착하면 표정으로 짜자잔 바뀐다
   const visible = loading || Boolean(thought);
-  const sonaType = (thought?.type ?? 'NORMAL').toLowerCase();
+  const hasThought = Boolean(thought);
+  const landyType = (thought?.type ?? 'NORMAL').toLowerCase();
+  // 생성 중 = 구슬 든 랜디, 도착 = 감정 표정 랜디
+  const characterSrc = hasThought
+    ? `/images/character/landy-${landyType}.webp`
+    : '/images/character/landy-orb.webp';
 
   return createPortal(
     <AnimatePresence>
@@ -36,7 +41,7 @@ export const ThoughtOverlay = ({
           transition={{ duration: 0.25 }}
         >
           <div className="mx-auto flex h-full w-full max-w-[430px] flex-col items-center px-8 pt-24">
-            {/* Sona — 오른쪽 아래에서 호를 그리며 화면 상단으로 날아든다 */}
+            {/* 랜디 — 오른쪽 아래에서 호를 그리며 화면 상단으로 날아든다 */}
             <motion.div
               initial={{ x: 240, y: 150, rotate: 16, opacity: 0 }}
               animate={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
@@ -53,13 +58,21 @@ export const ThoughtOverlay = ({
                   ease: 'easeInOut',
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/images/character/sona-${sonaType}.webp`}
-                  alt="Sona"
-                  className="object-contain"
-                  style={{ width: 148, height: 148 }}
-                />
+                {/* 구슬↔표정 전환 시 통 튀며 짜자잔 */}
+                <motion.div
+                  key={hasThought ? 'thought' : 'orb'}
+                  initial={{ scale: 0.6, rotate: -8 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: 'spring', stiffness: 480, damping: 15 }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={characterSrc}
+                    alt="랜디"
+                    className="object-contain"
+                    style={{ width: 148, height: 148 }}
+                  />
+                </motion.div>
               </motion.div>
 
               {/* 말풍선 — 착지 직후 통통 튀며 열리고, 대기 땐 점, 도착하면 글자가 촤르륵 이어진다 */}
@@ -80,7 +93,7 @@ export const ThoughtOverlay = ({
                 <span className="absolute -top-1.5 left-1/2 size-3 -translate-x-1/2 rotate-45 rounded-[3px] bg-card" />
                 {thought ? (
                   <>
-                    {/* Sona가 대신 전해주는 프레임 — 속마음 본문은 상대의 목소리라 따옴표로 감싼다 */}
+                    {/* 랜디가 대신 전해주는 프레임 — 속마음 본문은 상대의 목소리라 따옴표로 감싼다 */}
                     <p className="mb-1.5 text-center text-xs font-bold text-primary">
                       대신 알려주는 속마음
                     </p>

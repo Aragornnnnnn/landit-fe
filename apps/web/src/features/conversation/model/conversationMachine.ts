@@ -6,7 +6,7 @@ export type ConversationPhase =
   | 'USER_IDLE' // 마이크 대기 (말하기 버튼)
   | 'USER_LISTENING' // 듣는 중 (답변이 실시간으로 채워진다)
   | 'WAITING' // 답변 제출 후 상대 응답 대기 (생각 중 연출)
-  | 'THOUGHT' // 상대 속마음 노출 (Sona 슬라이드 인)
+  | 'THOUGHT' // 상대 속마음 노출 (랜디 슬라이드 인)
   | 'DONE'; // 모든 턴 종료
 
 export type ConversationEvent =

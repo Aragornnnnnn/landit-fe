@@ -109,7 +109,7 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
         )}
       </footer>
 
-      {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(WAITING)부터 Sona가 떠 있다가 속마음을 전한다 */}
+      {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(WAITING)부터 랜디가 떠 있다가 속마음을 전한다 */}
       <ThoughtOverlay
         loading={phase === 'WAITING'}
         thought={
@@ -123,7 +123,8 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
         open={showExitModal}
         onConfirm={() => {
           leave();
-          router.push('/home');
+          // 대화를 도중에 나가면 강제로 다음 카드로 보내지 말고, 온 카드로 복귀시킨다
+          router.push(`/home?card=${scenario.scenarioId}`);
         }}
         onClose={() => setShowExitModal(false)}
       />

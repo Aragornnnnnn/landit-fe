@@ -8,7 +8,7 @@ export interface FloatingThought {
   type: ThoughtType;
 }
 
-// 타입별 톤 후광 색 — Sona 표정과 함께 톤(GOOD/NORMAL/BAD)을 은은하게 전달하는 컴포넌트 전용 파스텔
+// 타입별 톤 후광 색 — 랜디 표정과 함께 톤(GOOD/NORMAL/BAD)을 은은하게 전달하는 컴포넌트 전용 파스텔
 const TYPE_HALO: Record<ThoughtType, string> = {
   GOOD: '#E1F5EE',
   NORMAL: '#F1EFE8',
@@ -28,8 +28,8 @@ export const ThoughtCard = ({ thought }: { thought: FloatingThought }) => {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`/images/character/sona-${thought.type.toLowerCase()}.webp`}
-          alt="Sona"
+          src={`/images/character/landy-${thought.type.toLowerCase()}.webp`}
+          alt="랜디"
           className="object-contain"
           style={{ width: 104, height: 104 }}
         />

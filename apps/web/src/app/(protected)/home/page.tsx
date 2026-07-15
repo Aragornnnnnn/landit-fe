@@ -15,12 +15,17 @@ import { HomeHeader } from './_components/HomeHeader';
 export default function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ just?: string }>;
+  searchParams: Promise<{ just?: string; flip?: string; card?: string }>;
 }) {
-  const { just } = use(searchParams);
+  const { just, flip, card } = use(searchParams);
+  // flip=뒤집어 복귀(표현), card=앞면으로 복귀(대화). 둘 다 "온 카드로 돌아가는" 신호다.
+  const flipScenarioId = flip ? Number(flip) : null;
+  const cardScenarioId = card ? Number(card) : null;
+  const returnScenarioId = flipScenarioId ?? cardScenarioId;
   const router = useRouter();
+  // 복귀 대상이 있으면 그 카테고리를 기본으로 연다(사용자가 칩을 누르면 그게 우선 — 강제 X)
   const { categories, selected, selectCategory, error, isLoading, retry } =
-    useScenarios();
+    useScenarios(returnScenarioId);
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-muted">
@@ -54,6 +59,8 @@ export default function HomePage({
             key={selected.categoryId}
             scenarios={selected.scenarios}
             focusActive={just === '1'}
+            flipScenarioId={flipScenarioId}
+            cardScenarioId={cardScenarioId}
             onStart={(scenario) =>
               router.push(`/conversation/${scenario.scenarioId}`)
             }
