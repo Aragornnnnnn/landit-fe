@@ -73,3 +73,8 @@ export const gradeWords = (typed: string[], answer: string[]): boolean[] =>
 
 // 첫 오답 단어 인덱스 — 오답 시 그 단어로 커서를 보내 바로 고치게 한다(없으면 -1)
 export const firstWrong = (ok: boolean[]): number => ok.indexOf(false);
+
+// 스마트 따옴표(' ' ‚ ‛ ′ / " " „ ‟ ″)를 ASCII 따옴표로 접는다.
+// 정답에 아포스트로피·따옴표가 들어있을 때, 네이티브 키보드의 자동 치환에도 채점이 흔들리지 않게 한다.
+export const normalizeQuotes = (letter: string): string =>
+  letter.replace(/[‘’‚‛′]/g, "'").replace(/[“”„‟″]/g, '"');

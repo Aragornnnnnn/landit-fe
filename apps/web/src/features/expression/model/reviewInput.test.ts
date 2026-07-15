@@ -10,6 +10,7 @@ import {
   focusWord,
   gradeWords,
   isComplete,
+  normalizeQuotes,
 } from './reviewInput';
 
 // 정답: "I got a good deal" → 단어 길이 [1, 3, 1, 4, 4]
@@ -113,5 +114,19 @@ describe('gradeWords / firstWrong', () => {
 
   it('모두 맞으면 첫 오답은 -1이다', () => {
     expect(firstWrong([true, true, true])).toBe(-1);
+  });
+});
+
+describe('normalizeQuotes', () => {
+  it('스마트 아포스트로피를 곧은 아포스트로피로 바꾼다', () => {
+    expect(normalizeQuotes('’')).toBe("'");
+  });
+
+  it('스마트 큰따옴표를 곧은 큰따옴표로 바꾼다', () => {
+    expect(normalizeQuotes('”')).toBe('"');
+  });
+
+  it('일반 글자는 그대로 둔다', () => {
+    expect(normalizeQuotes('a')).toBe('a');
   });
 });

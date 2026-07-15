@@ -1,9 +1,12 @@
 'use client';
 
-// 복습 영작(D안 ⑤) — OS 키보드 대신 커스텀 영어 자판으로 입력. 답변은 단어별 박스로 그리고, 활성 칸은 깜빡이며 유도한다.
-// 단어가 정답 글자 수만큼 차면 자동으로 다음 박스로. 오답은 단어 단위 흔들림+빨강이며, 그 단어로 커서가 가서 바로 고칠 수 있다. 정답이면 화려한 획득 연출.
-import { useEffect, useState } from 'react';
+// 복습 영작(D안 ⑤) — 답변 박스를 누르면 네이티브 키보드가 뜨고, 그 입력이 기존 단어별 모델로 흘러간다.
+// 답변은 단어별 박스로 그리고(자동 넘김·조기 이동·박스 클릭 수정 그대로), 오답은 흔들림+빨강, 정답이면 화려한 획득 연출.
+import { useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
+
+import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
+import { CheckIcon } from '@/shared/ui/Icons';
 
 import {
   advance,
@@ -14,9 +17,9 @@ import {
   focusWord,
   gradeWords,
   isComplete,
+  normalizeQuotes,
 } from '../model/reviewInput';
 import type { SentenceQuiz } from '../model/sentenceQuiz';
-import { Keyboard } from './Keyboard';
 import { QuizPrompt } from './QuizPrompt';
 import { ReviewSuccess } from './ReviewSuccess';
 import { StepScaffold } from './StepScaffold';
@@ -30,6 +33,9 @@ interface ReviewInputStepProps {
   onFinish: () => void;
   finishing: boolean;
 }
+
+// 숨은 입력에 항상 하나 남겨두는 문자 — 값이 비면 네이티브 키보드의 backspace가 input 이벤트를 안 쏘기 때문.
+const SENTINEL = ' ';
 
 export const ReviewInputStep = ({
   quiz,
@@ -54,6 +60,11 @@ export const ReviewInputStep = ({
 
   const { typed, focus } = state;
   const canConfirm = isComplete(state);
+
+  // 네이티브 키보드용 숨은 입력 — 여길 focus시켜 OS 키보드를 띄우고, 키 입력을 기존 모델로 흘려보낸다
+  const hiddenRef = useRef<HTMLInputElement>(null);
+  const answerRef = useRef<HTMLDivElement>(null);
+  const keyboardInset = useKeyboardInset();
 
   // 정답 순간 콘페티 — 브랜드 색으로 양쪽에서 터뜨린다
   useEffect(() => {
@@ -114,20 +125,66 @@ export const ReviewInputStep = ({
     setState((current) => focusWord(current, firstWrong(ok)));
   };
 
+  // 숨은 입력은 항상 SENTINEL 하나만 담아 이벤트 소스로만 쓴다 — 처리 후 값·커서를 되돌린다
+  const resetHidden = () => {
+    const el = hiddenRef.current;
+    if (!el) return;
+    el.value = SENTINEL;
+    el.setSelectionRange(SENTINEL.length, SENTINEL.length);
+  };
+
+  const focusHidden = () => hiddenRef.current?.focus();
+
+  // 특정 단어 박스로 커서를 옮기고 키보드를 유지한다
+  const focusBox = (w: number) => {
+    if (correct) return;
+    setState((s) => focusWord(s, w));
+    focusHidden();
+  };
+
+  // 네이티브 키 입력을 기존 모델로 라우팅 — 글자는 appendLetter, 스페이스는 advance, 지우기는 backspace
+  const handleInput = (event: React.FormEvent<HTMLInputElement>) => {
+    const native = event.nativeEvent as InputEvent;
+    const type = native.inputType ?? '';
+    if (type.startsWith('delete')) {
+      onBackspace();
+    } else if (type.startsWith('insert')) {
+      const data = native.data ?? '';
+      for (const ch of data) {
+        if (ch === ' ') onSpace();
+        else if (ch !== '\n' && ch !== '\r') onKey(normalizeQuotes(ch));
+      }
+    }
+    resetHidden();
+  };
+
   return (
     <StepScaffold
       progress={1}
       onBack={onBack}
       footerBleed
+      bottomInset={keyboardInset}
       footer={
         correct ? undefined : (
-          <Keyboard
-            onKey={onKey}
-            onSpace={onSpace}
-            onBackspace={onBackspace}
-            onConfirm={check}
-            canConfirm={canConfirm}
-          />
+          <div
+            className="bg-secondary px-5 pt-3"
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+          >
+            <button
+              type="button"
+              // 버튼을 눌러도 입력창 포커스를 뺏지 않아 오답 수정 시 키보드가 유지된다
+              onPointerDown={(event) => event.preventDefault()}
+              onClick={check}
+              disabled={!canConfirm}
+              className={`flex h-12 w-full items-center justify-center gap-1.5 rounded-xl text-base font-bold transition-colors ${
+                canConfirm
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground/50'
+              }`}
+            >
+              <CheckIcon size={20} /> 확인
+            </button>
+          </div>
         )
       }
     >
@@ -136,8 +193,39 @@ export const ReviewInputStep = ({
         instruction="질문에 대한 대답을 입력해보세요"
       />
 
+      {/* 숨은 네이티브 입력 — 박스를 누르면 여기 focus되어 OS 키보드가 뜬다. 화면엔 안 보이지만 focus 가능해야 하므로 display:none은 금물. */}
+      <input
+        ref={hiddenRef}
+        defaultValue={SENTINEL}
+        onInput={handleInput}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            if (canConfirm) check();
+          }
+        }}
+        onFocus={() =>
+          answerRef.current?.scrollIntoView({
+            block: 'center',
+            behavior: 'smooth',
+          })
+        }
+        inputMode="text"
+        enterKeyHint="done"
+        autoCapitalize="none"
+        autoCorrect="off"
+        autoComplete="off"
+        spellCheck={false}
+        aria-hidden
+        tabIndex={-1}
+        className="pointer-events-none absolute h-px w-px opacity-0"
+      />
+
       {/* 내 답변 — 단어별 박스. 활성 박스는 주황 테두리+깜빡이, 오답은 흔들림+빨강(커서가 그 단어로), 힌트는 흐리게. 정답이면 초록 물결. */}
-      <div className="mt-7 flex flex-wrap justify-center gap-2 pb-2">
+      <div
+        ref={answerRef}
+        className="mt-7 flex flex-wrap justify-center gap-2 pb-2"
+      >
         {answer.map((word, w) => {
           const value = typed[w] ?? '';
           const isWrong = wrongNow[w];
@@ -151,7 +239,9 @@ export const ReviewInputStep = ({
             <button
               key={`${w}-${isWrong ? shakeNonce : 'ok'}`}
               type="button"
-              onClick={() => !correct && setState((s) => focusWord(s, w))}
+              // 버튼 탭이 숨은 입력 포커스를 뺏지 않게 — 대신 우리가 직접 focusBox로 키보드를 띄운다
+              onPointerDown={(event) => event.preventDefault()}
+              onClick={() => focusBox(w)}
               disabled={correct}
               className={`inline-flex items-center gap-0.5 rounded-xl border-2 px-2.5 py-1.5 transition-colors duration-200 ${
                 isWrong ? 'animate-shake' : ''
