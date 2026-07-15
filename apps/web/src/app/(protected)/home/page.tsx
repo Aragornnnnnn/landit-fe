@@ -1,7 +1,7 @@
 'use client';
 
 // 홈 — 카테고리별 시나리오 목록에서 연습할 시나리오를 고른다
-import { use, useEffect } from 'react';
+import { use } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useScenarios } from '@/features/scenario/model/useScenarios';
@@ -23,19 +23,9 @@ export default function HomePage({
   const cardScenarioId = card ? Number(card) : null;
   const returnScenarioId = flipScenarioId ?? cardScenarioId;
   const router = useRouter();
+  // 복귀 대상이 있으면 그 카테고리를 기본으로 연다(사용자가 칩을 누르면 그게 우선 — 강제 X)
   const { categories, selected, selectCategory, error, isLoading, retry } =
-    useScenarios();
-
-  // 복귀 대상 시나리오가 다른 카테고리에 있으면 그 카테고리를 자동으로 선택해 카드가 보이게 한다
-  useEffect(() => {
-    if (returnScenarioId == null || !categories) return;
-    const target = categories.find((category) =>
-      category.scenarios.some((s) => s.scenarioId === returnScenarioId),
-    );
-    if (target && target.categoryId !== selected?.categoryId) {
-      selectCategory(target);
-    }
-  }, [returnScenarioId, categories, selected?.categoryId, selectCategory]);
+    useScenarios(returnScenarioId);
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-muted">
