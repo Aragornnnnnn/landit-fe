@@ -75,7 +75,10 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
       : router.push(`/home?flip=${scenarioId}`);
 
   return (
-    <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
+    <main
+      className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       <header className="relative flex h-14 flex-none items-center px-3">
         <button
           onClick={() => router.push(`/home?card=${scenarioId}`)}
