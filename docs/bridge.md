@@ -64,17 +64,17 @@ const webToNativeMessageSchema = z.discriminatedUnion('type', [
   // ...기존...
   z.object({
     type: z.literal('HAPTIC'),
-    style: z.enum(['light', 'medium', 'heavy']),
+    pattern: hapticPatternSchema, // selection/light/medium/heavy/success/warning/error
   }),
 ]);
 
 // 2. apps/mobile — 핸들러 등록 (message 타입은 자동으로 좁혀져 있음)
 useNativeBridge(webviewRef, {
-  HAPTIC: (message) => Haptics.impactAsync(message.style),
+  HAPTIC: ({ pattern }) => void runHaptic(pattern),
 });
 
 // 3. apps/web — 보낸다
-postToNative({ type: 'HAPTIC', style: 'light' });
+postToNative({ type: 'HAPTIC', pattern: 'light' });
 ```
 
 타입·검증·핸들러 슬롯이 스키마 한 줄에서 전부 파생되므로, 세 단계 외의 수정은 없다.
