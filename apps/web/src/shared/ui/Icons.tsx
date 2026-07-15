@@ -202,6 +202,23 @@ export const UserIcon = ({ size = 22, ...props }: IconProps) => (
   </svg>
 );
 
+export const MessageCircleIcon = ({ size = 22, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a8.38 8.38 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z" />
+  </svg>
+);
+
 // 다시하기 — 대화 재도전 버튼용 (반시계 회전 화살표)
 export const ReplayIcon = ({ size = 22, ...props }: IconProps) => (
   <svg

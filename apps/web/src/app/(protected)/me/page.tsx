@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { FeedbackSurvey } from '@/features/nps/ui/FeedbackSurvey';
 import { logout as requestLogout } from '@/shared/api/auth/logout';
 import { withdraw } from '@/shared/api/auth/withdraw';
 import { clearSession } from '@/shared/lib/clear-session';
@@ -23,6 +24,7 @@ export default function MyPage() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
+  const [isFeedbackSheetOpen, setIsFeedbackSheetOpen] = useState(false);
   const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(
     null,
   );
@@ -139,6 +141,13 @@ export default function MyPage() {
         {/* 메뉴 그룹 */}
         <div className="space-y-3 px-4 pb-8">
           <MenuGroup>
+            <MenuButton
+              title="Landit에게 의견 보내기"
+              onClick={() => setIsFeedbackSheetOpen(true)}
+            />
+          </MenuGroup>
+
+          <MenuGroup>
             <MenuLink href="/privacy" title="개인정보 처리방침" />
             <MenuLink href="/terms" title="서비스 이용약관" />
           </MenuGroup>
@@ -160,6 +169,14 @@ export default function MyPage() {
           </MenuGroup>
         </div>
       </div>
+
+      {/* 의견 보내기 바텀시트 — 헤더의 의견 보내기와 동일한 서베이 */}
+      <BottomSheet
+        open={isFeedbackSheetOpen}
+        onClose={() => setIsFeedbackSheetOpen(false)}
+      >
+        <FeedbackSurvey onDone={() => setIsFeedbackSheetOpen(false)} />
+      </BottomSheet>
 
       {/* 회원탈퇴 확인 바텀시트 */}
       <BottomSheet
