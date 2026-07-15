@@ -1,6 +1,7 @@
 'use client';
 
 // 홈 — 카테고리별 시나리오 목록에서 연습할 시나리오를 고른다
+import { use } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useScenarios } from '@/features/scenario/model/useScenarios';
@@ -11,7 +12,12 @@ import { Button } from '@/shared/ui/Button';
 
 import { HomeHeader } from './_components/HomeHeader';
 
-export default function HomePage() {
+export default function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ just?: string }>;
+}) {
+  const { just } = use(searchParams);
   const router = useRouter();
   const { categories, selected, selectCategory, error, isLoading, retry } =
     useScenarios();
@@ -47,6 +53,7 @@ export default function HomePage() {
           <ScenarioList
             key={selected.categoryId}
             scenarios={selected.scenarios}
+            focusActive={just === '1'}
             onStart={(scenario) =>
               router.push(`/conversation/${scenario.scenarioId}`)
             }

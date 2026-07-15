@@ -4,13 +4,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { SessionFeedbackScreen } from '@/features/feedback/ui/SessionFeedbackScreen';
 import type { Scenario } from '@/features/scenario/api/list';
-import { CloseIcon } from '@/shared/ui/Icons';
+import { Button } from '@/shared/ui/Button';
+import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
 import { useConversationFlow } from '../model/useConversationFlow';
 import { CharacterStage } from './CharacterStage';
 import { ExitConfirmSheet } from './ExitConfirmSheet';
-import { ExpressionPrepScreen } from './ExpressionPrepScreen';
 import { MicControl } from './MicControl';
 import { QuestionCard } from './QuestionCard';
 import { ThoughtOverlay } from './ThoughtOverlay';
@@ -19,6 +20,8 @@ import { UserTranscript } from './UserTranscript';
 export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   const router = useRouter();
   const [showExitModal, setShowExitModal] = useState(false);
+  // 대화 종료 후 CTA를 누르면 피드백으로 넘어간다 (그 전까진 마지막 화면 + CTA를 보여준다)
+  const [showFeedback, setShowFeedback] = useState(false);
   const {
     phase,
     turn,
@@ -32,12 +35,21 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
     finishListening,
     submitText,
     leave,
+    sessionId,
   } = useConversationFlow(scenario);
 
-  // 모든 턴이 끝나면 표현 준비 화면으로 전환한다 (표현학습·피드백 연동은 후속 이슈)
-  if (phase === 'DONE') {
-    return <ExpressionPrepScreen scenario={scenario} />;
+  // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로, 마치면 표현 학습 분기로 보낸다
+  if (phase === 'DONE' && showFeedback) {
+    return (
+      <SessionFeedbackScreen
+        sessionId={sessionId}
+        title={scenario.scenarioTitle}
+        onExit={() => router.push(`/expressions/${scenario.scenarioId}/branch`)}
+      />
+    );
   }
+
+  const ended = phase === 'DONE';
 
   return (
     <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
@@ -58,30 +70,43 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
       <CharacterStage thumbnailUrl={scenario.thumbnailUrl} partner={partner} />
 
       {/* 무대·답변·마이크는 고정. 질문만 남는 공간을 채우는 스크롤 영역에 담아, 길어져도 겹치지 않고 카드 안에서 스크롤된다 */}
-      <section className="flex min-h-0 flex-1 flex-col px-5 pt-5">
-        <div className="min-h-0 flex-1 overflow-y-auto">
+      <section className="flex min-h-0 flex-1 flex-col px-5">
+        {/* pt-5는 무대와의 간격이자 페이드 구간 — 위로 스크롤될 때 무대 밑에서 그림자·글자가 직각으로 잘리지 않고 서서히 사라진다 */}
+        <div className="min-h-0 flex-1 overflow-y-auto [mask-image:linear-gradient(to_bottom,transparent,#000_1.25rem)] pt-5 [-webkit-mask-image:linear-gradient(to_bottom,transparent,#000_1.25rem)]">
           <QuestionCard
             question={turn.aiMessage}
             translation={turn.aiTranslation}
             speaking={phase === 'AI_SPEAKING'}
           />
         </div>
-        {/* 키보드 입력 중엔 아래 입력창이 답변을 보여주므로 중복 표시를 피한다 */}
-        {!keyboardMode && <UserTranscript text={transcript} phase={phase} />}
+        {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 아래 입력창이 답변을 보여주므로 중복을 피한다 */}
+        {!ended && !keyboardMode && (
+          <UserTranscript text={transcript} phase={phase} />
+        )}
       </section>
 
       <footer className="flex-none pb-[max(env(safe-area-inset-bottom),16px)]">
-        <MicControl
-          phase={phase}
-          keyboardMode={keyboardMode}
-          transcript={transcript}
-          onPress={pressMic}
-          onKeyboard={pressKeyboard}
-          onTranscriptChange={setTranscript}
-          onSubmitText={submitText}
-          onCancel={cancelListening}
-          onDone={finishListening}
-        />
+        {ended ? (
+          // 대화 종료 — 마지막 AI 발화만 남기고 마이크 대신 분석으로 가는 CTA를 아래쪽에 보여준다
+          <div className="flex h-36 items-end px-5 pb-3">
+            <Button onClick={() => setShowFeedback(true)}>
+              상세 분석 보러갈래요
+              <ArrowRightIcon size={16} />
+            </Button>
+          </div>
+        ) : (
+          <MicControl
+            phase={phase}
+            keyboardMode={keyboardMode}
+            transcript={transcript}
+            onPress={pressMic}
+            onKeyboard={pressKeyboard}
+            onTranscriptChange={setTranscript}
+            onSubmitText={submitText}
+            onCancel={cancelListening}
+            onDone={finishListening}
+          />
+        )}
       </footer>
 
       {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(WAITING)부터 Sona가 떠 있다가 속마음을 전한다 */}

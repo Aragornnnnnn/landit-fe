@@ -4,6 +4,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { fromLearning } from '../model/sentenceQuiz';
+import { useExpressionLearning } from '../model/useExpressionLearning';
 import { useExpressionPractice } from '../model/useExpressionPractice';
 import { useFinishExpression } from '../model/useFinishExpression';
 import { ExplanationStep } from './ExplanationStep';
@@ -22,28 +24,36 @@ export const ExpressionFlow = ({
   const router = useRouter();
   const [step, setStep] = useState<'QUIZ' | 'EXPLAIN' | 'REVIEW'>('QUIZ');
 
-  // 퀴즈 문제(정답 단어·섞인 뱅크)와 표현 설명은 모두 practice에 담겨오므로 바로 로드한다
-  const { practice, error, isLoading } = useExpressionPractice(
-    expressionId,
-    true,
-  );
+  // 플로우 전체(퀴즈·설명·복습)는 대표 예문(learning-start)만으로 굴러간다.
+  // 추가 예문(practice)은 설명 스텝의 "이렇게도 써요"에만 쓰는 보강 데이터라, 없거나 실패해도 플로우를 막지 않는다.
+  const {
+    learning,
+    error: learningError,
+    isLoading: learningLoading,
+  } = useExpressionLearning(expressionId);
+  const { practice } = useExpressionPractice(expressionId, step !== 'QUIZ');
   const finish = useFinishExpression(expressionId);
 
   const backToList = () => router.push(`/expressions/${scenarioId}`);
+  // 완료 후엔 방금 해금된 다음 표현으로 스크롤·강조되도록 신호를 붙여 리스트로 돌아간다
+  const backToListUnlocked = () =>
+    router.push(`/expressions/${scenarioId}?just=1`);
 
-  if (isLoading) return <FlowStatus>불러오는 중…</FlowStatus>;
-  if (error || !practice) {
+  if (learningLoading) return <FlowStatus>불러오는 중…</FlowStatus>;
+  if (learningError || !learning) {
     return (
-      <FlowStatus>{error?.message ?? '표현을 불러오지 못했어요.'}</FlowStatus>
+      <FlowStatus>
+        {learningError?.message ?? '표현을 불러오지 못했어요.'}
+      </FlowStatus>
     );
   }
 
-  const title = practice.baseExpressionMeaningText;
+  const quiz = fromLearning(learning);
 
   if (step === 'QUIZ') {
     return (
       <QuizStep
-        practice={practice}
+        quiz={quiz}
         onBack={backToList}
         onNext={() => setStep('EXPLAIN')}
       />
@@ -53,8 +63,11 @@ export const ExpressionFlow = ({
   if (step === 'EXPLAIN') {
     return (
       <ExplanationStep
-        practice={practice}
-        title={title}
+        targetExpressionText={learning.targetExpressionText}
+        baseExpressionMeaningText={learning.baseExpressionMeaningText}
+        usageDescription={learning.usageDescription}
+        examples={practice?.practiceSentence ?? []}
+        title={learning.baseExpressionMeaningText}
         progress={0.7}
         nextLabel="복습 영작 할게요"
         onBack={() => setStep('QUIZ')}
@@ -63,13 +76,17 @@ export const ExpressionFlow = ({
     );
   }
 
-  // 복습 영작 — 같은 문장을 이번엔 '입력'으로 (퀴즈=선택과 구분). 정답 시 학습 완료.
+  // 복습 영작 — 퀴즈와 같은 대표 예문을 이번엔 '입력'으로 (퀴즈=선택과 구분). 정답 시 학습 완료.
   return (
     <ReviewInputStep
-      practice={practice}
+      quiz={quiz}
+      targetExpressionText={learning.targetExpressionText}
+      meaning={learning.baseExpressionMeaningText}
       onBack={() => setStep('EXPLAIN')}
       finishing={finish.isPending}
-      onFinish={() => finish.mutate(undefined, { onSuccess: backToList })}
+      onFinish={() =>
+        finish.mutate(undefined, { onSuccess: backToListUnlocked })
+      }
     />
   );
 };

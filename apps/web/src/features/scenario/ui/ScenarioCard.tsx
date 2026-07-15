@@ -1,6 +1,7 @@
 'use client';
 
 // 시나리오 카드 — 썸네일·제목·브리핑과 상태(난이도·완료·잠금), 시작 CTA
+import { motion } from 'motion/react';
 import Image from 'next/image';
 
 import { Button } from '@/shared/ui/Button';
@@ -13,9 +14,15 @@ import { getScenarioImage } from '../lib/scenario-image';
 interface ScenarioCardProps {
   scenario: Scenario;
   onStart: (scenario: Scenario) => void;
+  // 방금 해금됐을 때 한 번 펄스로 강조한다
+  highlight?: boolean;
 }
 
-export const ScenarioCard = ({ scenario, onStart }: ScenarioCardProps) => {
+export const ScenarioCard = ({
+  scenario,
+  onStart,
+  highlight = false,
+}: ScenarioCardProps) => {
   // 잠금·완료 판정은 전부 백엔드 몫(직전 시나리오를 깨야 다음이 열린다). 카드는 두 플래그를 그리기만 한다.
   // locked   → 흑백 썸네일 + 회색 제목 + "잠겨있어요"
   // completed → 제목 옆 별점 + "다시 해볼게요"
@@ -26,7 +33,11 @@ export const ScenarioCard = ({ scenario, onStart }: ScenarioCardProps) => {
   const filterClass = locked ? 'brightness-70 grayscale' : '';
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl bg-card shadow-md">
+    <motion.div
+      animate={highlight ? { scale: [1, 1.03, 1] } : undefined}
+      transition={{ duration: 0.6, delay: 0.3, ease: 'easeInOut' }}
+      className="flex h-full w-full flex-col overflow-hidden rounded-2xl bg-card shadow-md"
+    >
       {/* 썸네일 — 텍스트 영역을 제외한 카드 전체를 채운다. 카드가 화면을 꽉 채우는 건 뒷면(표현학습 뒤집기, 후속 이슈)을 담기 위함 */}
       <div className="relative min-h-0 w-full flex-1 overflow-hidden bg-foreground">
         {scenario.thumbnailUrl ? (
@@ -92,6 +103,6 @@ export const ScenarioCard = ({ scenario, onStart }: ScenarioCardProps) => {
           </Button>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };

@@ -5,7 +5,6 @@
 import { useEffect, useState } from 'react';
 import confetti from 'canvas-confetti';
 
-import type { ExpressionPractice } from '../api/practice';
 import {
   advance,
   appendLetter,
@@ -16,26 +15,31 @@ import {
   gradeWords,
   isComplete,
 } from '../model/reviewInput';
+import type { SentenceQuiz } from '../model/sentenceQuiz';
 import { Keyboard } from './Keyboard';
 import { QuizPrompt } from './QuizPrompt';
 import { ReviewSuccess } from './ReviewSuccess';
 import { StepScaffold } from './StepScaffold';
 
 interface ReviewInputStepProps {
-  practice: ExpressionPractice;
+  quiz: SentenceQuiz;
+  // 완료 연출 카드에 띄울 표현·뜻
+  targetExpressionText: string;
+  meaning: string;
   onBack: () => void;
   onFinish: () => void;
   finishing: boolean;
 }
 
 export const ReviewInputStep = ({
-  practice,
+  quiz,
+  targetExpressionText,
+  meaning,
   onBack,
   onFinish,
   finishing,
 }: ReviewInputStepProps) => {
-  const { writingSentence } = practice;
-  const answer = writingSentence.answerWords;
+  const answer = quiz.answerWords;
   const lengths = answer.map((word) => word.length);
 
   const [state, setState] = useState(() => emptyState(answer.length));
@@ -128,7 +132,7 @@ export const ReviewInputStep = ({
       }
     >
       <QuizPrompt
-        writingSentence={writingSentence}
+        writingSentence={quiz}
         instruction="질문에 대한 대답을 입력해보세요"
       />
 
@@ -209,8 +213,8 @@ export const ReviewInputStep = ({
 
       {correct && (
         <ReviewSuccess
-          expression={practice.targetExpressionText}
-          meaning={practice.baseExpressionMeaningText}
+          expression={targetExpressionText}
+          meaning={meaning}
           onFinish={onFinish}
           finishing={finishing}
         />

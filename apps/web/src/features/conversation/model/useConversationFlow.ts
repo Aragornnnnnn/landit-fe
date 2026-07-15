@@ -5,9 +5,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
+import { createSessionFeedback } from '@/features/feedback/api/session-feedback';
+import { sessionFeedbackKey } from '@/features/feedback/model/useSessionFeedback';
 import type { ThoughtType } from '@/features/onboarding/ui/ThoughtCard';
 import type { Scenario } from '@/features/scenario/api/list';
+import { scenarioKeys } from '@/features/scenario/model/keys';
 import { useStt } from '@/shared/lib/stt/useStt';
 import { useTts } from '@/shared/lib/tts/useTts';
 
@@ -59,11 +63,14 @@ export const useConversationFlow = (scenario: Scenario) => {
   const [transcript, setTranscript] = useState('');
   // 입력 수단 — 기본은 마이크(음성), 키보드 아이콘을 누르면 타이핑 모드로 바꾼다
   const [keyboardMode, setKeyboardMode] = useState(false);
+  // 확보된 세션 — 종료 후 피드백 생성에 쓴다. ref는 send 클로저용, state는 화면 노출용
+  const [sessionId, setSessionId] = useState<number | null>(null);
 
   // send 클로저가 최신 값을 읽도록 ref로 들고 있는다
   const sessionIdRef = useRef<number | null>(null);
   const sessionPromiseRef = useRef<Promise<number | null> | null>(null);
-  const hasNextRef = useRef(true);
+  const hasNextRef = useRef(true); // 이어서 재생할 AI 발화가 있는가 (종료 메시지 포함)
+  const completedRef = useRef(false); // 그 발화를 끝으로 대화가 종료되는가
   const nextMessageRef = useRef<NextMessage | null>(null);
   const startedRef = useRef(false);
   const submittingRef = useRef(false); // 중복 제출 방지 (연출은 WAITING phase가 맡는다)
@@ -71,9 +78,28 @@ export const useConversationFlow = (scenario: Scenario) => {
 
   const tts = useTts();
   const innerThought = useInnerThought();
+  const queryClient = useQueryClient();
+
+  // 대화가 완료되면: 피드백을 미리 생성 요청(prefetch)해 화면 진입 시 즉시 뜨게 하고,
+  // 해금된 다음 시나리오(다음 대화)가 홈에 반영되도록 시나리오 캐시를 무효화한다.
+  const handleConversationComplete = (finishedSessionId: number) => {
+    void queryClient.prefetchQuery({
+      queryKey: sessionFeedbackKey(finishedSessionId),
+      queryFn: () => createSessionFeedback(finishedSessionId),
+      staleTime: Infinity,
+    });
+    void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
+  };
 
   const send = (event: ConversationEvent) =>
-    setState((prev) => nextConversationState(prev, event, hasNextRef.current));
+    setState((prev) =>
+      nextConversationState(
+        prev,
+        event,
+        hasNextRef.current,
+        completedRef.current,
+      ),
+    );
 
   // 마이크 STT — 실시간 미리보기는 transcript로, 완료(stop) 시 최종 텍스트로 음성 제출을 잇는다.
   // 침묵 자동 종료는 끄고 완료 버튼(■)만으로 끝낸다 — 긴 답변 중 침묵에도 안 끊긴다.
@@ -98,6 +124,7 @@ export const useConversationFlow = (scenario: Scenario) => {
     sessionPromiseRef.current = startSession(scenario.scenarioId)
       .then((res) => {
         sessionIdRef.current = res.sessionId;
+        setSessionId(res.sessionId);
         hasNextRef.current = !res.progress.completed;
         // openingPreview로 오프닝을 못 시드했을 때(예외적)만 세션 응답으로 채운다
         if (res.currentMessage) {
@@ -226,7 +253,12 @@ export const useConversationFlow = (scenario: Scenario) => {
 
       const res = await submitMessage(sessionId, content, inputType);
       nextMessageRef.current = res.nextMessage;
-      hasNextRef.current = !res.progress.completed && res.nextMessage != null;
+      // 종료 메시지도 nextMessage로 오므로, 발화 유무는 nextMessage로 판단하고
+      // 그 발화를 끝으로 종료인지는 completed로 따로 들고 간다 (완료 발화도 재생 후 CTA로)
+      hasNextRef.current = res.nextMessage != null;
+      completedRef.current = res.progress.completed;
+      // 마지막 발화였다면 피드백을 미리 만들고 다음 대화 해금을 홈에 반영한다
+      if (res.progress.completed) handleConversationComplete(sessionId);
       // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 합성한다 — 다음 발화 재생 지연을 없앤다
       if (res.nextMessage && voice) {
         void tts.prefetch(res.nextMessage.content, voice);
@@ -292,5 +324,7 @@ export const useConversationFlow = (scenario: Scenario) => {
     finishListening,
     submitText,
     leave,
+    // DONE 시점엔 세션이 확보돼 있다 — 피드백 생성에 쓴다 (없으면 세션 시작이 실패한 경우)
+    sessionId,
   };
 };

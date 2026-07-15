@@ -7,21 +7,29 @@ import { ExpressionListItem } from './ExpressionListItem';
 interface ExpressionListProps {
   expressions: Expression[];
   onSelect: (expressionId: number) => void;
+  // 방금 해금됐을 때 다음 배울 표현으로 스크롤·강조한다
+  focusActive?: boolean;
 }
 
 export const ExpressionList = ({
   expressions,
   onSelect,
+  focusActive = false,
 }: ExpressionListProps) => {
   const total = expressions.length;
   const done = expressions.filter((expression) => expression.completed).length;
   const ratio = total === 0 ? 0 : (done / total) * 100;
 
+  // 다음에 배울(방금 해금된) 표현 — 강조·스크롤 대상
+  const activeId = expressions.find(
+    (expression) => !expression.completed && !expression.locked,
+  )?.expressionId;
+
   return (
     <div className="px-5 pt-2">
       <div className="mb-5">
         <div className="flex items-baseline justify-between">
-          <p className="text-lg font-extrabold text-foreground">오늘의 표현</p>
+          <p className="text-lg font-extrabold text-foreground">배울 표현</p>
           <p className="text-sm font-bold text-primary">
             {done}/{total} 완료
           </p>
@@ -37,7 +45,11 @@ export const ExpressionList = ({
       <ul className="flex flex-col gap-1">
         {expressions.map((expression) => (
           <li key={expression.expressionId}>
-            <ExpressionListItem expression={expression} onSelect={onSelect} />
+            <ExpressionListItem
+              expression={expression}
+              onSelect={onSelect}
+              highlight={focusActive && expression.expressionId === activeId}
+            />
           </li>
         ))}
       </ul>

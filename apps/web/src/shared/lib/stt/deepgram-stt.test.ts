@@ -39,10 +39,19 @@ class FakeWebSocket {
 
 class FakeMediaRecorder {
   static isTypeSupported = () => true;
+  static instances: FakeMediaRecorder[] = [];
 
+  state = 'recording';
   ondataavailable: ((event: { data: Blob }) => void) | null = null;
+
+  constructor() {
+    FakeMediaRecorder.instances.push(this);
+  }
+
   start() {}
-  stop() {}
+  stop() {
+    this.state = 'inactive';
+  }
 }
 
 const makeHandlers = () => ({
@@ -68,6 +77,7 @@ describe('startDeepgramStt', () => {
 
   beforeEach(() => {
     FakeWebSocket.instances = [];
+    FakeMediaRecorder.instances = [];
     trackStop = vi.fn();
     vi.stubGlobal('MediaRecorder', FakeMediaRecorder);
     vi.stubGlobal('WebSocket', FakeWebSocket);
@@ -122,6 +132,24 @@ describe('startDeepgramStt', () => {
     ).rejects.toThrow('토큰 발급 실패');
 
     expect(trackStop).toHaveBeenCalled();
+  });
+
+  it('WS가 열리기 전 녹음된 앞부분 오디오는 버퍼했다가 open 시 흘려보낸다', async () => {
+    const { ws } = await startWithFakes();
+    const recorder = FakeMediaRecorder.instances.at(-1)!;
+
+    // WS가 아직 안 열린 사이 도착한 앞부분 청크 — 유실 대신 버퍼된다
+    recorder.ondataavailable?.({ data: new Blob(['early-1']) });
+    recorder.ondataavailable?.({ data: new Blob(['early-2']) });
+    expect(ws.sent).toHaveLength(0);
+
+    // open 시 버퍼된 앞부분을 순서대로 흘려보낸다
+    ws.open();
+    expect(ws.sent).toHaveLength(2);
+
+    // 이후 청크는 곧바로 전송된다
+    recorder.ondataavailable?.({ data: new Blob(['live']) });
+    expect(ws.sent).toHaveLength(3);
   });
 
   it('interim 결과가 오면 확정된 텍스트 뒤에 이어붙여 onInterim으로 전달한다', async () => {

@@ -90,6 +90,16 @@ vi.mock('@/shared/lib/stt/useStt', () => ({
   },
 }));
 
+// QueryClient는 경계 — 완료 시 피드백 prefetch·시나리오 무효화 호출만 확인한다
+const queryClientMock = vi.hoisted(() => ({
+  prefetchQuery: vi.fn(),
+  invalidateQueries: vi.fn(),
+}));
+vi.mock('@tanstack/react-query', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-query')>()),
+  useQueryClient: () => queryClientMock,
+}));
+
 const startSession = vi.mocked(sessionApi.startSession);
 const submitMessage = vi.mocked(sessionApi.submitMessage);
 const getInnerThought = vi.mocked(sessionApi.getInnerThought);
@@ -242,6 +252,8 @@ beforeEach(() => {
   sttMock.start.mockClear();
   sttMock.stop.mockClear();
   sttMock.reset.mockClear();
+  queryClientMock.prefetchQuery.mockClear();
+  queryClientMock.invalidateQueries.mockClear();
   vi.unstubAllEnvs();
   startSession.mockResolvedValue(startResponse());
   getInnerThought.mockReset();
@@ -366,6 +378,75 @@ describe('useConversationFlow', () => {
     });
 
     expect(result.current.phase).toBe('DONE');
+  });
+
+  it('완료 턴에 종료 메시지가 오면 그걸 발화한 뒤 대화가 종료된다', async () => {
+    const { result } = await renderUserFirst();
+    submitMessage.mockResolvedValue(
+      submitResponse({
+        nextMessage: {
+          messageId: 9,
+          turnNumber: 3,
+          messageSequence: 1,
+          role: 'AI',
+          content: 'Thanks for chatting!',
+          translatedContent: '대화 고마워요!',
+        },
+        progress: {
+          currentTurnNumber: 3,
+          currentMessageSequenceNumber: 1,
+          totalQuestionCount: 3,
+          completed: true,
+        },
+      }),
+    );
+    await speakAndSubmit(result, 'Yes, here you go.');
+
+    // 속마음이 끝나면 바로 종료하지 않고 종료 메시지를 발화(AI_SPEAKING)한다
+    act(() => {
+      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+    });
+    expect(result.current.phase).toBe('AI_SPEAKING');
+    expect(result.current.turn.aiMessage).toBe('Thanks for chatting!');
+
+    // 그 발화가 끝나야 종료(→ CTA)로 간다
+    act(() => ttsMock.state.onEnd?.());
+    expect(result.current.phase).toBe('DONE');
+  });
+
+  it('대화가 완료되면 피드백을 미리 생성하고 시나리오 캐시를 무효화한다', async () => {
+    const { result } = await renderUserFirst();
+    submitMessage.mockResolvedValue(
+      submitResponse({
+        nextMessage: null,
+        progress: {
+          currentTurnNumber: 3,
+          currentMessageSequenceNumber: 1,
+          totalQuestionCount: 3,
+          completed: true,
+        },
+      }),
+    );
+
+    await speakAndSubmit(result, 'Yes, here you go.');
+
+    // 피드백은 완료 시점에 미리 만든다 (화면 진입 시 즉시 뜨도록)
+    expect(queryClientMock.prefetchQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: ['session-feedback', 1] }),
+    );
+    // 다음 대화 해금이 홈에 반영되도록 시나리오 캐시를 무효화한다
+    expect(queryClientMock.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['scenarios'],
+    });
+  });
+
+  it('대화가 안 끝났으면 피드백을 미리 만들지 않는다', async () => {
+    const { result } = await renderUserFirst();
+    submitMessage.mockResolvedValue(submitResponse()); // completed: false
+
+    await speakAndSubmit(result, 'Hello!');
+
+    expect(queryClientMock.prefetchQuery).not.toHaveBeenCalled();
   });
 
   it('오프닝은 미리 만든 정적 mp3로 재생하고, 끝나면 마이크 대기로 넘어간다', async () => {
@@ -521,6 +602,12 @@ describe('useConversationFlow', () => {
   });
 
   // STT(LAN-141) 배선 — 기본은 마이크(음성), 키보드 아이콘을 누르면 타이핑
+  it('세션이 시작되면 sessionId를 노출한다 (피드백 생성에 쓴다)', async () => {
+    const { result } = await renderUserFirst();
+
+    expect(result.current.sessionId).toBe(1);
+  });
+
   it('말하기를 누르면 듣기로 넘어가며 마이크(STT)를 켠다', async () => {
     const { result } = await renderUserFirst();
 
