@@ -2,7 +2,6 @@
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
 import { AuthedRedirect } from './_components/AuthedRedirect';
-import { DevLoginButton } from './_components/DevLoginButton';
 import { SocialLoginButtons } from './_components/SocialLoginButtons';
 import styles from './login-motion.module.css';
 
@@ -40,7 +39,6 @@ const LoginPage = () => (
       <div className="flex-1" />
 
       <SocialLoginButtons />
-      <DevLoginButton />
     </div>
   </main>
 );
