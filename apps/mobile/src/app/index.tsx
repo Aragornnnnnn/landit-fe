@@ -14,6 +14,7 @@ import WebView from 'react-native-webview';
 import { generateNonce } from '@/auth/nonce';
 import { requestSocialIdToken, SocialLoginError } from '@/auth/socialLogin';
 import { runHaptic } from '@/bridge/haptics';
+import { nativeContextScript } from '@/bridge/nativeContext';
 import { useNativeBridge } from '@/bridge/useNativeBridge';
 import { WEB_URL } from '@/config/webUrl';
 
@@ -114,6 +115,8 @@ const ShellScreen = () => {
       ref={webviewRef}
       // 앱 진입점은 루트 — 로그인 여부는 웹의 인증 가드가 판단해 로그인/홈으로 보낸다
       source={{ uri: `${WEB_URL}/` }}
+      // 콘텐츠 로드 전 네이티브 컨텍스트(플랫폼·앱 버전)를 window에 주입 — 웹 계측이 첫 렌더에서 바로 읽는다
+      injectedJavaScriptBeforeContentLoaded={nativeContextScript}
       onMessage={onMessage}
       onLoad={() => setIsWebReady(true)}
       onError={() => setLoadFailed(true)}
