@@ -53,8 +53,31 @@ export const startDeepgramStt = async (
 
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
+  // 앞부분 유실 방지 — getUserMedia 직후 바로 녹음을 시작하고, WS가 열리기 전 오디오는
+  // 버퍼에 담아 뒀다가 open 시 먼저 흘려보낸다. (토큰 발급·WS 핸드셰이크 지연 동안 말한
+  // 첫 단어가 잘리던 문제 — 네이티브의 사전연결에 대응하는 웹 보정)
+  const mimeType = pickMimeType();
+  const pendingChunks: Blob[] = [];
+  let ws: WebSocket | null = null;
+
+  const recorder = new MediaRecorder(
+    stream,
+    mimeType ? { mimeType } : undefined,
+  );
+  recorder.ondataavailable = (event) => {
+    if (event.data.size === 0) return;
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(event.data);
+    else pendingChunks.push(event.data);
+  };
+  recorder.start(250);
+
+  const stopRecorder = () => {
+    if (recorder.state !== 'inactive') recorder.stop();
+  };
+
   const tokenRes = await fetch(TOKEN_ENDPOINT, { method: 'POST' });
   if (!tokenRes.ok) {
+    stopRecorder();
     stream.getTracks().forEach((track) => track.stop());
     throw new Error(`토큰 발급 실패: ${tokenRes.status}`);
   }
@@ -74,10 +97,12 @@ export const startDeepgramStt = async (
         }
       : { endpointing: 'false' }),
   });
-  const ws = new WebSocket(`${DEEPGRAM_WS_URL}?${params}`, ['bearer', token]);
+  const socket = new WebSocket(`${DEEPGRAM_WS_URL}?${params}`, [
+    'bearer',
+    token,
+  ]);
+  ws = socket; // 이 시점부터 recorder.ondataavailable가 live 전송으로 전환된다
 
-  const mimeType = pickMimeType();
-  let recorder: MediaRecorder | null = null;
   let finalTranscript = '';
   let finished = false;
   let finalizeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -85,10 +110,9 @@ export const startDeepgramStt = async (
   const cleanup = () => {
     if (finalizeTimer) clearTimeout(finalizeTimer);
     finalizeTimer = null;
-    recorder?.stop();
-    recorder = null;
+    stopRecorder();
     stream.getTracks().forEach((track) => track.stop());
-    if (ws.readyState === WebSocket.OPEN) ws.close();
+    if (socket.readyState === WebSocket.OPEN) socket.close();
   };
 
   // 턴 종료를 정확히 한 번만 처리
@@ -99,16 +123,13 @@ export const startDeepgramStt = async (
     onFinal(finalTranscript.trim());
   };
 
-  ws.onopen = () => {
-    recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-    recorder.ondataavailable = (event) => {
-      if (event.data.size > 0 && ws.readyState === WebSocket.OPEN)
-        ws.send(event.data);
-    };
-    recorder.start(250);
+  socket.onopen = () => {
+    // WS 여는 동안 버퍼에 쌓인 앞부분 오디오를 먼저 흘려보낸다
+    for (const chunk of pendingChunks) socket.send(chunk);
+    pendingChunks.length = 0;
   };
 
-  ws.onmessage = (event) => {
+  socket.onmessage = (event) => {
     const msg = JSON.parse(event.data as string) as DeepgramMessage;
 
     if (msg.type === 'Results' && msg.channel) {
@@ -138,17 +159,17 @@ export const startDeepgramStt = async (
   };
 
   // 연결 성립 전 실패는 throw로 잡히므로, 여기 도달하면 세션 도중 에러
-  ws.onerror = () => fail('STT 연결 오류');
-  ws.onclose = () => fail('STT 연결이 끊겼습니다.');
+  socket.onerror = () => fail('STT 연결 오류');
+  socket.onclose = () => fail('STT 연결이 끊겼습니다.');
 
   return {
     stop: () => {
       if (finished) return;
       // Finalize 전송 → 남은 버퍼 처리 후 UtteranceEnd 수신 → finishTurn.
       // 응답 전 WS가 닫혀 있으면 즉시 종료.
-      if (ws.readyState === WebSocket.OPEN) {
-        recorder?.stop();
-        ws.send(JSON.stringify({ type: 'Finalize' }));
+      if (socket.readyState === WebSocket.OPEN) {
+        stopRecorder();
+        socket.send(JSON.stringify({ type: 'Finalize' }));
         // UtteranceEnd가 안 오는 경우 대비 — 일정 시간 후 강제 종료
         finalizeTimer = setTimeout(finishTurn, 2000);
       } else {
