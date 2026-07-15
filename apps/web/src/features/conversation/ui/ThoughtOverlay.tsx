@@ -18,9 +18,14 @@ export const ThoughtOverlay = ({
   const mounted = useClientOnlyValue(() => true, false);
   if (!mounted) return null;
 
-  // 대기부터 속마음까지 랜디는 한 번만 등장한다 — 도착 전엔 중립 표정으로 떠 있는다
+  // 대기부터 속마음까지 랜디는 한 번만 등장한다 — 생성 중엔 구슬을 들고 있다가, 도착하면 표정으로 짜자잔 바뀐다
   const visible = loading || Boolean(thought);
+  const hasThought = Boolean(thought);
   const landyType = (thought?.type ?? 'NORMAL').toLowerCase();
+  // 생성 중 = 구슬 든 랜디, 도착 = 감정 표정 랜디
+  const characterSrc = hasThought
+    ? `/images/character/landy-${landyType}.webp`
+    : '/images/character/landy-orb.webp';
 
   return createPortal(
     <AnimatePresence>
@@ -53,13 +58,21 @@ export const ThoughtOverlay = ({
                   ease: 'easeInOut',
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/images/character/landy-${landyType}.webp`}
-                  alt="랜디"
-                  className="object-contain"
-                  style={{ width: 148, height: 148 }}
-                />
+                {/* 구슬↔표정 전환 시 통 튀며 짜자잔 */}
+                <motion.div
+                  key={hasThought ? 'thought' : 'orb'}
+                  initial={{ scale: 0.6, rotate: -8 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: 'spring', stiffness: 480, damping: 15 }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={characterSrc}
+                    alt="랜디"
+                    className="object-contain"
+                    style={{ width: 148, height: 148 }}
+                  />
+                </motion.div>
               </motion.div>
 
               {/* 말풍선 — 착지 직후 통통 튀며 열리고, 대기 땐 점, 도착하면 글자가 촤르륵 이어진다 */}
