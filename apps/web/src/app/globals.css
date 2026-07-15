@@ -33,6 +33,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-backdrop: var(--backdrop);
   --color-good: var(--good);
   --color-good-bg: var(--good-bg);
   --color-good-border: var(--good-border);
@@ -105,6 +106,8 @@
   --border: var(--gray-200);
   --input: var(--gray-200);
   --ring: var(--orange-500);
+  /* 데스크톱 웹에서 430px 앱 컬럼 바깥에 까는 여백색 — 컬럼(밝은 background)이 살짝 떠 보이게 한 톤 더 진한 웜 그레이 */
+  --backdrop: var(--gray-200);
   --star-filled: var(--amber-400);
   --star-empty: var(--gray-300);
   --good: var(--blue-700);
@@ -148,6 +151,13 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* 브라우저 웹(넓은 화면)에서는 앱이 430px 컬럼이라, 바깥 여백을 한 톤 진하게 깔아 컬럼을 자연스럽게 구분한다.
+     모바일·웹뷰는 컬럼이 화면을 꽉 채워 이 배경이 드러나지 않는다 (min-width가 컬럼 폭보다 클 때만 적용). */
+  @media (min-width: 431px) {
+    body {
+      background: var(--backdrop);
+    }
   }
   html {
     @apply font-sans;
