@@ -1,11 +1,13 @@
 'use client';
 
-// 로그인 버튼 → 네이티브에 소셜 로그인 요청 → idToken 수신 → /social-login → 상태 저장 → 라우팅
+// 로그인 버튼 → (네이티브면) 브릿지로 idToken 수신 후 /social-login, (브라우저면) 웹 OAuth로 폴백
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { socialLogin } from '@/shared/api/auth/social-login';
+import { startWebSocialLogin } from '@/shared/auth/web-social-login';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
+import { generateRandomHex } from '@/shared/lib/crypto';
 import { useAuthStore } from '@/shared/store/auth-store';
 
 type SocialProvider = 'kakao' | 'google' | 'apple';
@@ -53,14 +55,30 @@ export function useSocialLogin() {
     [router, setAuth],
   );
 
-  const login = (provider: SocialProvider) => {
+  const login = async (provider: SocialProvider) => {
     setError(null);
-    // WebView 밖(일반 브라우저)이면 네이티브 SDK가 없어 로그인할 수 없다
-    if (!postToNative({ type: 'SOCIAL_LOGIN_REQUEST', provider })) {
-      setError('앱에서만 로그인할 수 있어요.');
+    // 네이티브 셸(WebView) 안이면 네이티브 SDK로, 밖(일반 브라우저)이면 웹 OAuth로 진행한다
+    if (postToNative({ type: 'SOCIAL_LOGIN_REQUEST', provider })) {
+      setPending(provider);
       return;
     }
+
+    // 애플 웹 로그인은 실도메인이 필요해 브라우저 단독에선 지원하지 않는다
+    if (provider === 'apple') {
+      setError('애플 로그인은 앱에서만 가능해요.');
+      return;
+    }
+
     setPending(provider);
+    try {
+      // 성공하면 제공자 인증 페이지로 이동하며 현재 페이지를 떠난다 (완료 처리는 콜백 페이지)
+      await startWebSocialLogin(provider, generateRandomHex(16));
+    } catch (err) {
+      setPending(null);
+      const isDev = process.env.NODE_ENV === 'development';
+      const detail = isDev && err instanceof Error ? ` (${err.message})` : '';
+      setError(`로그인을 시작하지 못했어요.${detail}`);
+    }
   };
 
   return { login, pending, error };
