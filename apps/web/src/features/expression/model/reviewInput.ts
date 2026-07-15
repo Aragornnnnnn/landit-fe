@@ -65,11 +65,44 @@ export const focusWord = (state: InputState, index: number): InputState => ({
 export const isComplete = (state: InputState): boolean =>
   state.typed.length > 0 && state.typed.every((word) => word.length > 0);
 
-// 단어별 정답 여부(대소문자 무시)
+// 스마트 따옴표(' ' ‚ ‛ ′ / " " „ ‟ ″)를 ASCII 따옴표로 접는다.
+// 정답에 아포스트로피·따옴표가 들어있을 때, 네이티브 키보드의 자동 치환에도 채점이 흔들리지 않게 한다.
+export const normalizeQuotes = (text: string): string =>
+  text.replace(/[‘’‚‛′]/g, "'").replace(/[“”„‟″]/g, '"');
+
+// 단어별 정답 여부(대소문자·스마트따옴표 무시) — 정답 쪽에 스마트따옴표가 저장돼 있어도 맞도록 양쪽을 정규화한다
 export const gradeWords = (typed: string[], answer: string[]): boolean[] =>
   answer.map(
-    (word, i) => (typed[i] ?? '').toLowerCase() === word.toLowerCase(),
+    (word, i) =>
+      normalizeQuotes(typed[i] ?? '').toLowerCase() ===
+      normalizeQuotes(word).toLowerCase(),
   );
 
 // 첫 오답 단어 인덱스 — 오답 시 그 단어로 커서를 보내 바로 고치게 한다(없으면 -1)
 export const firstWrong = (ok: boolean[]): number => ok.indexOf(false);
+
+// 네이티브 키보드 입력을 모델 액션으로 변환하기 위한 표현
+export type ReviewInputAction =
+  | { kind: 'letter'; letter: string }
+  | { kind: 'space' }
+  | { kind: 'backspace' };
+
+// InputEvent(inputType, data)를 모델에 적용할 액션들로 바꾼다. 조합입력(IME)은 여기서 다루지 않고
+// compositionend에서 완성된 문자열을 'insertText'로 넘겨 재사용한다. 순수 함수라 분기를 테스트로 고정한다.
+export const parseInputEvent = (
+  inputType: string,
+  data: string,
+): ReviewInputAction[] => {
+  if (inputType.startsWith('delete')) return [{ kind: 'backspace' }];
+  // insert* 또는 inputType 미보고(일부 안드로이드 키보드)인데 데이터가 있으면 삽입으로 본다
+  if (inputType.startsWith('insert') || (inputType === '' && data.length > 0)) {
+    const actions: ReviewInputAction[] = [];
+    for (const ch of data) {
+      if (ch === ' ') actions.push({ kind: 'space' });
+      else if (ch !== '\n' && ch !== '\r')
+        actions.push({ kind: 'letter', letter: normalizeQuotes(ch) });
+    }
+    return actions;
+  }
+  return [];
+};
