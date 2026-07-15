@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 
 import { SessionFeedbackScreen } from '@/features/feedback/ui/SessionFeedbackScreen';
 import type { Scenario } from '@/features/scenario/api/list';
-import { CloseIcon } from '@/shared/ui/Icons';
+import { Button } from '@/shared/ui/Button';
+import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
 import { useConversationFlow } from '../model/useConversationFlow';
 import { CharacterStage } from './CharacterStage';
@@ -19,6 +20,8 @@ import { UserTranscript } from './UserTranscript';
 export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   const router = useRouter();
   const [showExitModal, setShowExitModal] = useState(false);
+  // 대화 종료 후 CTA를 누르면 피드백으로 넘어간다 (그 전까진 마지막 화면 + CTA를 보여준다)
+  const [showFeedback, setShowFeedback] = useState(false);
   const {
     phase,
     turn,
@@ -35,8 +38,8 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
     sessionId,
   } = useConversationFlow(scenario);
 
-  // 모든 턴이 끝나면 세션 피드백(총평·상세)으로 넘어가고, 마치면 표현 학습 분기로 보낸다
-  if (phase === 'DONE') {
+  // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로, 마치면 표현 학습 분기로 보낸다
+  if (phase === 'DONE' && showFeedback) {
     return (
       <SessionFeedbackScreen
         sessionId={sessionId}
@@ -45,6 +48,8 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
       />
     );
   }
+
+  const ended = phase === 'DONE';
 
   return (
     <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
@@ -73,22 +78,34 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
             speaking={phase === 'AI_SPEAKING'}
           />
         </div>
-        {/* 키보드 입력 중엔 아래 입력창이 답변을 보여주므로 중복 표시를 피한다 */}
-        {!keyboardMode && <UserTranscript text={transcript} phase={phase} />}
+        {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 아래 입력창이 답변을 보여주므로 중복을 피한다 */}
+        {!ended && !keyboardMode && (
+          <UserTranscript text={transcript} phase={phase} />
+        )}
       </section>
 
       <footer className="flex-none pb-[max(env(safe-area-inset-bottom),16px)]">
-        <MicControl
-          phase={phase}
-          keyboardMode={keyboardMode}
-          transcript={transcript}
-          onPress={pressMic}
-          onKeyboard={pressKeyboard}
-          onTranscriptChange={setTranscript}
-          onSubmitText={submitText}
-          onCancel={cancelListening}
-          onDone={finishListening}
-        />
+        {ended ? (
+          // 대화 종료 — 마지막 AI 발화만 남기고 마이크 대신 분석으로 가는 CTA를 보여준다
+          <div className="flex h-36 items-center px-5">
+            <Button onClick={() => setShowFeedback(true)}>
+              상세 분석 보러갈래요
+              <ArrowRightIcon size={16} />
+            </Button>
+          </div>
+        ) : (
+          <MicControl
+            phase={phase}
+            keyboardMode={keyboardMode}
+            transcript={transcript}
+            onPress={pressMic}
+            onKeyboard={pressKeyboard}
+            onTranscriptChange={setTranscript}
+            onSubmitText={submitText}
+            onCancel={cancelListening}
+            onDone={finishListening}
+          />
+        )}
       </footer>
 
       {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(WAITING)부터 Sona가 떠 있다가 속마음을 전한다 */}
