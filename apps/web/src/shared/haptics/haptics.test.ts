@@ -46,7 +46,7 @@ describe('haptic', () => {
     vi.unstubAllGlobals();
   });
 
-  it('직전 발동 직후의 연타는 버린다 (스로틀)', () => {
+  it('같은 패턴 연타는 버린다 (스로틀)', () => {
     postToNativeMock.mockReturnValue(true);
     // 시간을 고정해 두 호출을 같은 순간으로 만든다
     vi.spyOn(performance, 'now').mockReturnValue(5_000_000);
@@ -55,5 +55,21 @@ describe('haptic', () => {
     haptic('light');
 
     expect(postToNativeMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('스로틀 창 안이라도 다른 패턴은 서로 막지 않는다', () => {
+    postToNativeMock.mockReturnValue(true);
+    // 버튼 누름: pointerdown의 selection 틱 직후 결과 판정의 error가 같은 순간에 온다
+    vi.spyOn(performance, 'now').mockReturnValue(6_000_000);
+
+    haptic('selection');
+    haptic('error');
+
+    // 결과 진동(error)이 직전 selection 틱에 눌려 사라지면 안 된다
+    expect(postToNativeMock).toHaveBeenCalledTimes(2);
+    expect(postToNativeMock).toHaveBeenLastCalledWith({
+      type: 'HAPTIC',
+      pattern: 'error',
+    });
   });
 });
