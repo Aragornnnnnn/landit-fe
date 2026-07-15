@@ -77,8 +77,8 @@ export const ScenarioList = ({
         <div className="flex h-full snap-center flex-col items-center justify-center gap-4 px-6 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- 구글이 호스팅하는 모션 이모지 GIF라 next/image 최적화 대상이 아니다 */}
           <img
-            src={`https://fonts.gstatic.com/s/e/notoemoji/latest/${allCompleted ? '1f389' : '2753'}/512.gif`}
-            alt={allCompleted ? '🎉' : '❓'}
+            src={`https://fonts.gstatic.com/s/e/notoemoji/latest/${allCompleted ? '1f389' : '1f512'}/512.gif`}
+            alt={allCompleted ? '🎉' : '🔒'}
             width={120}
             height={120}
           />
@@ -98,47 +98,65 @@ export const ScenarioList = ({
       </div>
 
       <ProgressDots
-        total={scenarios.length + 1}
+        scenarios={scenarios}
         activeIndex={activeIndex}
-        lastLocked={!allCompleted}
+        allCompleted={allCompleted}
       />
     </div>
   );
 };
 
-// 우측 진행 인디케이터 — 마지막 칸은 미완료 상태면 자물쇠로 그린다
+// 우측 진행 인디케이터 — 완료=검정, 다음 깨야 할 것=주황(딱 하나), 나머지=회색.
+// 자물쇠는 최종 목표인 맨 마지막 칸에만(전체 완료 전까지). 현재 보는 카드는 세로로 길쭉하게.
 const ProgressDots = ({
-  total,
+  scenarios,
   activeIndex,
-  lastLocked,
+  allCompleted,
 }: {
-  total: number;
+  scenarios: Scenario[];
   activeIndex: number;
-  lastLocked: boolean;
-}) => (
-  <div className="absolute top-1/2 right-1 flex w-3 -translate-y-1/2 flex-col items-center gap-1.5">
-    {Array.from({ length: total }).map((_, index) => {
-      const isActive = index === activeIndex;
+  allCompleted: boolean;
+}) => {
+  // 다음 깨야 할 것 — 첫 미완료·미잠금 시나리오 하나만 주황으로 강조한다
+  const nextIndex = scenarios.findIndex((s) => !s.completed && !s.locked);
 
-      if (index === total - 1 && lastLocked) {
+  return (
+    <div className="absolute top-1/2 right-1 flex w-3 -translate-y-1/2 flex-col items-center gap-1.5">
+      {Array.from({ length: scenarios.length + 1 }).map((_, index) => {
+        const isActive = index === activeIndex;
+        const isEnd = index === scenarios.length; // scenarios 뒤에 붙는 최종 목표 칸
+
+        // 최종 목표는 전체 완료 전엔 자물쇠로 그린다 (마지막 한 곳만 자물쇠)
+        if (isEnd && !allCompleted) {
+          return (
+            <LockIcon
+              key={index}
+              size={12}
+              className={
+                isActive ? 'text-foreground' : 'text-muted-foreground/40'
+              }
+            />
+          );
+        }
+
+        const completed = isEnd ? allCompleted : scenarios[index].completed;
+        const isNext = index === nextIndex;
+
         return (
-          <LockIcon
+          <div
             key={index}
-            size={12}
-            className={
-              isActive ? 'text-foreground' : 'text-muted-foreground/40'
-            }
+            className={`w-1.5 rounded-full transition-all duration-300 ${
+              isActive ? 'h-5' : 'h-1.5'
+            } ${
+              completed
+                ? 'bg-foreground'
+                : isNext
+                  ? 'bg-primary'
+                  : 'bg-muted-foreground/40'
+            }`}
           />
         );
-      }
-      return (
-        <div
-          key={index}
-          className={`w-1.5 rounded-full transition-all duration-300 ${
-            isActive ? 'h-5 bg-foreground' : 'h-1.5 bg-muted-foreground/40'
-          }`}
-        />
-      );
-    })}
-  </div>
-);
+      })}
+    </div>
+  );
+};
