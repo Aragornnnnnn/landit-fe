@@ -2,9 +2,11 @@
 
 // 시나리오 카드 리스트 — 풀스크린 카드를 스냅으로 한 장씩 넘기고, 위아래로 이웃 카드가 살짝 보인다
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { motion } from 'motion/react';
 
 import { FeedbackSurvey } from '@/features/nps/ui/FeedbackSurvey';
+import { track } from '@/shared/analytics';
 import { useSnapIndex } from '@/shared/lib/useSnapIndex';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
@@ -39,6 +41,14 @@ export const ScenarioList = ({
   // 전부 완료 페이지의 '하고 싶은 상황 의견 주세요' 바텀시트
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
+  // 복귀 신호는 마운트 시점 값으로 래치한다 — 부모가 신호를 소비(비움)해도
+  // 이 인스턴스의 첫 배치는 유지되고, 이후 prop 변화로 재스크롤·재뒤집기가 일어나지 않는다
+  const [initialSignals] = useState(() => ({
+    focusActive,
+    flipScenarioId,
+    cardScenarioId,
+  }));
+
   const allCompleted =
     scenarios.length > 0 && scenarios.every((scenario) => scenario.completed);
 
@@ -48,16 +58,16 @@ export const ScenarioList = ({
   );
   // 표현 마무리 후 복귀한 대상 카드(있으면). 이 카드는 자동으로 뒤집힌다.
   const flipIndex =
-    flipScenarioId != null
+    initialSignals.flipScenarioId != null
       ? scenarios.findIndex(
-          (scenario) => scenario.scenarioId === flipScenarioId,
+          (scenario) => scenario.scenarioId === initialSignals.flipScenarioId,
         )
       : -1;
   // 대화에서 복귀한 대상 카드(있으면). 스크롤만 하고 뒤집진 않는다.
   const cardIndex =
-    cardScenarioId != null
+    initialSignals.cardScenarioId != null
       ? scenarios.findIndex(
-          (scenario) => scenario.scenarioId === cardScenarioId,
+          (scenario) => scenario.scenarioId === initialSignals.cardScenarioId,
         )
       : -1;
   // 진입 시 위치를 잡을 카드 — 복귀 대상(flip>card)이 있으면 그 카드, 없으면 다음 도전 카드
@@ -70,12 +80,45 @@ export const ScenarioList = ({
   // 맨 위에서 아래로 훑고 내려가는 연출이 정신없다는 피드백.
   useEffect(() => {
     if (targetIndex < 0) return;
-    const isReturning = flipScenarioId != null || cardScenarioId != null;
+    const isReturning =
+      initialSignals.flipScenarioId != null ||
+      initialSignals.cardScenarioId != null;
     targetRef.current?.scrollIntoView({
       block: 'center',
       behavior: isReturning ? 'auto' : 'smooth',
     });
-  }, [targetIndex, flipScenarioId, cardScenarioId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initialSignals는 마운트 고정값
+  }, [targetIndex]);
+
+  // 스냅으로 카드가 화면 중앙에 설 때마다 노출로 기록한다 (마지막 페이지는 completion).
+  // scenarios는 리페치마다 참조가 바뀌므로, 같은 카드 재실행은 키로 걸러 중복 발화를 막는다
+  const lastViewedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const scenario = scenarios[activeIndex];
+    const viewKey = scenario
+      ? `scenario-${scenario.scenarioId}`
+      : activeIndex === scenarios.length
+        ? 'completion'
+        : null;
+    if (!viewKey || lastViewedRef.current === viewKey) return;
+    lastViewedRef.current = viewKey;
+
+    if (scenario) {
+      track(EVENTS.SCENARIO_CARD_VIEWED, {
+        card_type: 'scenario',
+        position: activeIndex,
+        scenario_id: scenario.scenarioId,
+        difficulty: scenario.difficulty,
+        is_completed: scenario.completed,
+        is_locked: scenario.locked,
+      });
+    } else {
+      track(EVENTS.SCENARIO_CARD_VIEWED, {
+        card_type: 'completion',
+        position: activeIndex,
+      });
+    }
+  }, [activeIndex, scenarios]);
 
   return (
     <div className="relative min-h-0 flex-1">
@@ -105,7 +148,11 @@ export const ScenarioList = ({
               <ScenarioCard
                 scenario={scenario}
                 onStart={onStart}
-                highlight={flipIndex < 0 && focusActive && index === nextIndex}
+                highlight={
+                  flipIndex < 0 &&
+                  initialSignals.focusActive &&
+                  index === nextIndex
+                }
                 autoFlip={index === flipIndex}
               />
             </motion.div>
@@ -145,7 +192,10 @@ export const ScenarioList = ({
               variant="primary"
               size="sm"
               className="mt-2 w-auto px-6"
-              onClick={() => setFeedbackOpen(true)}
+              onClick={() => {
+                track(EVENTS.NPS_SURVEY_OPENED, { source: 'all_completed' });
+                setFeedbackOpen(true);
+              }}
             >
               더 하고 싶은 상황이 있어요!
             </Button>

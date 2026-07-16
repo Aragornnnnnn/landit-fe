@@ -2,7 +2,9 @@
 
 // 듀오링고식 단어 선택 퀴즈 — 뱅크에서 단어를 순서대로 골라 문장을 완성하고 판정, 결과는 하단 슬라이드업 시트로 띄운다
 import { useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 
+import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { Button } from '@/shared/ui/Button';
 
@@ -12,13 +14,14 @@ import {
   isWordsCorrect,
   type WordChip,
 } from '../model/wordBank';
-import { HintButton } from './HintButton';
 import { QuizPrompt } from './QuizPrompt';
 import { ResultSheet } from './ResultSheet';
 import { StepScaffold } from './StepScaffold';
 
 interface QuizStepProps {
   quiz: SentenceQuiz;
+  // 계측 속성용 — 어떤 표현의 퀴즈인지
+  expressionId: number;
   onBack: () => void;
   leftAction?: 'back' | 'close';
   // 정답·오답 모두 결과 시트의 CTA로 다음 스텝으로 이어진다 (퀴즈→설명, 복습→완료)
@@ -38,6 +41,7 @@ const CHIP_STYLE =
 
 export const QuizStep = ({
   quiz,
+  expressionId,
   onBack,
   leftAction,
   onNext,
@@ -50,21 +54,39 @@ export const QuizStep = ({
   const [bank] = useState<WordChip[]>(() => chipsFromWords(quiz.shuffledWords));
   const [selected, setSelected] = useState<number[]>([]);
   const [checked, setChecked] = useState<Checked>('idle');
-  // 힌트 단계 — 0 없음, 1 다음에 고를 단어 칩 하이라이트, 2 정답 문장 공개
-  const [hintStep, setHintStep] = useState(0);
+  // 힌트는 일회성 — 누르면 지금 자리의 힌트가 켜지고, 단어를 올리거나 내리면 꺼진다. 버튼은 계속 남는다
+  const [hintActive, setHintActive] = useState(false);
+  // 제출 계측용 — 이 퀴즈에서 힌트를 한 번이라도 썼는가
+  const [hintUsed, setHintUsed] = useState(false);
 
   const usedIds = new Set(selected);
   const full = selected.length === answer.length;
   const wordOf = (id: number) =>
     bank.find((chip) => chip.id === id)?.word ?? '';
 
+  const showHint = () => {
+    track(EVENTS.HINT_USED, { source: 'quiz', level: 1 });
+    setHintActive(true);
+    setHintUsed(true);
+  };
+
   const pick = (chip: WordChip) => {
     if (checked !== 'idle' || usedIds.has(chip.id) || full) return;
+    track(EVENTS.QUIZ_WORD_PICKED, {
+      expression_id: expressionId,
+      picked_count: selected.length + 1,
+    });
+    setHintActive(false);
     setSelected((current) => [...current, chip.id]);
   };
 
   const removeAt = (index: number) => {
     if (checked !== 'idle') return;
+    track(EVENTS.QUIZ_WORD_REMOVED, {
+      expression_id: expressionId,
+      picked_count: selected.length - 1,
+    });
+    setHintActive(false);
     setSelected((current) => current.filter((_, i) => i !== index));
   };
 
@@ -72,6 +94,11 @@ export const QuizStep = ({
     const tone = isWordsCorrect(selected.map(wordOf), answer)
       ? 'correct'
       : 'wrong';
+    track(EVENTS.QUIZ_ANSWER_SUBMITTED, {
+      expression_id: expressionId,
+      is_correct: tone === 'correct',
+      hint_level: hintUsed ? 1 : 0,
+    });
     haptic(tone === 'correct' ? 'success' : 'error');
     setChecked(tone);
   };
@@ -81,16 +108,16 @@ export const QuizStep = ({
 
   // 힌트 활성 중엔 이미 올린 칩의 정오도 알려준다 — 자리와 다른 칩은 빨갛게 표시
   const misplacedAt = (index: number) =>
-    hintStep >= 1 &&
+    hintActive &&
     checked === 'idle' &&
     wordOf(selected[index]).toLowerCase() !== answer[index]?.toLowerCase();
-  // 힌트 1단계 — 다음에 고를(또는 첫 오배치 자리의) 정답 단어와 일치하는 미사용 칩을 하이라이트한다
+  // 다음에 고를(또는 첫 오배치 자리의) 정답 단어와 일치하는 미사용 칩을 하이라이트한다
   const firstMisplaced = selected.findIndex((_, index) => misplacedAt(index));
   const hintTargetIndex =
     firstMisplaced >= 0 ? firstMisplaced : selected.length;
   const nextWord = answer[hintTargetIndex];
   const hintChipId =
-    hintStep >= 1 && checked === 'idle' && nextWord
+    hintActive && checked === 'idle' && nextWord
       ? bank.find((chip) => !usedIds.has(chip.id) && chip.word === nextWord)?.id
       : undefined;
 
@@ -133,18 +160,18 @@ export const QuizStep = ({
         ))}
       </div>
 
-      {/* 힌트 — 한 번 누르면 다음 단어 힌트, 한 번 더 누르면 정답 문장 공개 */}
+      {/* 힌트 — 항상 떠 있고, 누를 때마다 지금 자리의 힌트(다음 단어·오배치)를 일회성으로 보여준다.
+          단어를 올리거나 내리면 꺼져서, 막힐 때마다 다시 눌러 쓴다. 정답 공개는 없다 */}
       {checked === 'idle' && (
         <div className="flex min-h-9 items-center justify-center pt-2">
-          <HintButton
-            step={hintStep}
-            onAdvance={() => setHintStep((step) => step + 1)}
-          />
-          {hintStep >= 2 && (
-            <p className="text-center text-sm font-bold text-primary">
-              {quiz.writingSentenceText}
-            </p>
-          )}
+          <button
+            type="button"
+            onClick={showHint}
+            disabled={hintActive}
+            className="text-sm font-semibold text-muted-foreground underline underline-offset-4 transition-colors active:text-foreground disabled:opacity-60"
+          >
+            <span className="tossface mr-1">💡</span>힌트 보기
+          </button>
         </div>
       )}
 
