@@ -2,8 +2,10 @@
 
 // 어느 화면에서든 항상 처리해야 하는 네이티브 메시지(뒤로가기 등)를 받는 전역 리스너 — 루트 레이아웃에 마운트
 import { useEffect, useRef } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { usePathname } from 'next/navigation';
 
+import { track } from '@/shared/analytics';
 import { decideBack } from '@/shared/bridge/backNavigation';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { closeTopSheet } from '@/shared/ui/bottom-sheet-back';
@@ -50,12 +52,14 @@ export const BridgeListener = () => {
         return;
       }
       if (decision === 'exit-app') {
+        track(EVENTS.APP_EXITED, { trigger: 'back_button' });
         postToNative({ type: 'EXIT_APP' });
         return;
       }
 
       // 홈 — 토스트를 띄우고, 노출 시간 안에 한 번 더 누르면 종료한다
       if (exitArmedRef.current) {
+        track(EVENTS.APP_EXITED, { trigger: 'back_button' });
         postToNative({ type: 'EXIT_APP' });
         return;
       }

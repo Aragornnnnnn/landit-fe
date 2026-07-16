@@ -267,6 +267,12 @@ export const useConversationFlow = (scenario: Scenario) => {
         session_id: sessionIdRef.current ?? undefined,
         turn_index: state.turnIndex,
       });
+    } else {
+      // 타이핑 취소 = 기본 입력 수단(마이크 대기)으로 복귀
+      track(EVENTS.INPUT_MODE_SWITCHED, {
+        session_id: sessionIdRef.current ?? undefined,
+        mode: 'voice',
+      });
     }
     setKeyboardMode(false);
     setTranscript('');
@@ -275,6 +281,10 @@ export const useConversationFlow = (scenario: Scenario) => {
 
   // 음성 완료(■) — STT를 멈추면 최종 텍스트가 onFinal로 도착해 음성 제출을 잇는다
   const finishListening = () => {
+    track(EVENTS.RECORDING_STOPPED, {
+      session_id: sessionIdRef.current ?? undefined,
+      turn_index: state.turnIndex,
+    });
     stt.stop();
   };
 

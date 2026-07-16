@@ -29,15 +29,19 @@
 - **화면 노출**: `PageViewTracker`가 라우트 변경마다 `Page Viewed` 발화. 동적 세그먼트는 `page_name`으로 정규화하고 id는 속성으로 뺀다. `/stt-demo`, `/dev`, `/`(즉시 redirect)는 제외.
 - **dev/prod 분리**: 프로젝트 키를 환경별로 나눈다. 로컬·프리뷰는 dev 키, 프로덕션 배포 환경변수에만 prod 키.
 
-## 이벤트 택소노미 (44개)
+## 이벤트 택소노미 (53개)
 
 ### 공통
 
-| 이벤트      | 속성                                                          | 시점        |
-| ----------- | ------------------------------------------------------------- | ----------- |
-| Page Viewed | page_name, path, return_reason?, scenario_id?, expression_id? | 라우트 변경 |
+| 이벤트                  | 속성                                                          | 시점                                   |
+| ----------------------- | ------------------------------------------------------------- | -------------------------------------- |
+| Page Viewed             | page_name, path, return_reason?, scenario_id?, expression_id? | 라우트 변경                            |
+| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete)     | 이탈·탈퇴 확인 시트 열림               |
+| Confirm Sheet Dismissed | sheet                                                         | 확인 시트에서 계속하기/닫기            |
+| Error Retried           | screen(home\|conversation\|card_back\|expression_list)        | 에러 화면 "다시 시도"                  |
+| App Exited              | trigger(back_button)                                          | 네이티브 뒤로가기로 앱 종료 (셸에서만) |
 
-`return_reason`은 홈 복귀 신호(`flip` 표현 완료 복귀 / `card` 대화 이탈 복귀 / `just` 해금 직후).
+`return_reason`은 홈 복귀 신호(`flip` 표현 완료 복귀 / `card` 대화 이탈 복귀 / `just` 해금 직후). 확인 시트의 확정은 각각 `Conversation Abandoned` / `Expression Abandoned` / `Account Deleted`로 찍힌다.
 
 ### 인증
 
@@ -50,7 +54,7 @@
 | Logout Completed | —                             | 로그아웃             |
 | Account Deleted  | —                             | 회원탈퇴 성공        |
 
-`reason`: provider_error, start_failed, missing_request, state_mismatch, token_exchange_failed, login_api_failed.
+`reason`: provider_error, start_failed, missing_request, state_mismatch, token_exchange_failed, login_api_failed, apple_web_unsupported.
 
 ### 온보딩
 
@@ -73,29 +77,32 @@
 
 ### 대화
 
-| 이벤트                    | 속성                                                                     | 시점                      |
-| ------------------------- | ------------------------------------------------------------------------ | ------------------------- |
-| Conversation Started      | scenario_id, session_id, first_speaker, is_retry                         | 세션 시작 성공            |
-| Recording Started         | session_id?, turn_index                                                  | 마이크 눌러 말하기        |
-| Recording Canceled        | session_id?, turn_index                                                  | 듣기 취소                 |
-| Input Mode Switched       | session_id?, mode(text\|voice)                                           | 키보드↔마이크 전환        |
-| Turn Completed            | session_id, scenario_id, turn_index, input_type(voice\|text), char_count | 발화 제출 성공            |
-| Turn Failed               | session_id?, turn_index, reason(empty\|api_error)                        | 빈 발화 / 제출 실패       |
-| Inner Thought Viewed      | session_id, turn_index, thought_type?                                    | 상대 속마음 노출          |
-| Speech Recognition Failed | engine?, reason?                                                         | STT 오류 (권한 거부 제외) |
-| Conversation Completed    | session_id, scenario_id, turn_count                                      | 서버가 완료 판정          |
-| Conversation Abandoned    | session_id?, scenario_id, turn_index                                     | 중도 이탈 확정            |
+| 이벤트                    | 속성                                                                     | 시점                                          |
+| ------------------------- | ------------------------------------------------------------------------ | --------------------------------------------- |
+| Conversation Started      | scenario_id, session_id, first_speaker, is_retry                         | 세션 시작 성공                                |
+| Recording Started         | session_id?, turn_index                                                  | 마이크 눌러 말하기                            |
+| Recording Stopped         | session_id?, turn_index                                                  | ■ 답변 완료 탭 (결과는 Turn Completed/Failed) |
+| Recording Canceled        | session_id?, turn_index                                                  | 듣기 취소 (음성)                              |
+| Mic Settings Opened       | —                                                                        | 권한 안내에서 "설정 열기"                     |
+| Input Mode Switched       | session_id?, mode(text\|voice)                                           | 키보드↔마이크 전환 (타이핑 취소 포함)         |
+| Turn Completed            | session_id, scenario_id, turn_index, input_type(voice\|text), char_count | 발화 제출 성공                                |
+| Turn Failed               | session_id?, turn_index, reason(empty\|api_error)                        | 빈 발화 / 제출 실패                           |
+| Inner Thought Viewed      | session_id, turn_index, thought_type?                                    | 상대 속마음 노출                              |
+| Speech Recognition Failed | engine?, reason?                                                         | STT 오류 (권한 거부 제외)                     |
+| Conversation Completed    | session_id, scenario_id, turn_count                                      | 서버가 완료 판정                              |
+| Conversation Abandoned    | session_id?, scenario_id, turn_index                                     | 중도 이탈 확정                                |
 
 `session_id`가 optional인 이벤트는 세션이 백그라운드로 시작돼 확보 전에도 발생할 수 있다.
 
 ### 분석 피드백
 
-| 이벤트                 | 속성                                                            | 시점           |
-| ---------------------- | --------------------------------------------------------------- | -------------- |
-| Feedback Viewed        | session_id, good_count, turn_count, native_score?, star_rating? | 총평 노출      |
-| Feedback Detail Opened | session_id                                                      | 상세 분석 진입 |
-| Feedback Turn Viewed   | session_id, turn_index, feedback_type                           | 턴별 분석 노출 |
-| Feedback Completed     | session_id                                                      | 분석 다 봤어요 |
+| 이벤트                 | 속성                                                            | 시점                                          |
+| ---------------------- | --------------------------------------------------------------- | --------------------------------------------- |
+| Feedback Viewed        | session_id, good_count, turn_count, native_score?, star_rating? | 총평 노출                                     |
+| Feedback Skipped       | session_id                                                      | 총평만 보고 상세 없이 나감 (Completed와 배타) |
+| Feedback Detail Opened | session_id                                                      | 상세 분석 진입                                |
+| Feedback Turn Viewed   | session_id, turn_index, feedback_type                           | 턴별 분석 노출                                |
+| Feedback Completed     | session_id                                                      | 분석 다 봤어요                                |
 
 ### 표현 학습
 
@@ -116,10 +123,12 @@
 
 ### NPS
 
-| 이벤트               | 속성                                   | 시점             |
-| -------------------- | -------------------------------------- | ---------------- |
-| NPS Survey Opened    | source(home_header\|all_completed\|me) | 의견 보내기 열기 |
-| NPS Survey Submitted | score(1–5), has_comment                | 의견 제출        |
+| 이벤트               | 속성                                   | 시점               |
+| -------------------- | -------------------------------------- | ------------------ |
+| NPS Survey Opened    | source(home_header\|all_completed\|me) | 의견 보내기 열기   |
+| NPS Score Selected   | score(1–5)                             | 만족도 이모지 탭   |
+| NPS Survey Submitted | score(1–5), has_comment                | 의견 제출          |
+| NPS Survey Dismissed | score?                                 | ✕로 제출 없이 닫음 |
 
 ### 유저 속성
 
@@ -128,10 +137,15 @@
 | provider                                        | kakao \| google \| apple | 로그인 식별 시 |
 | surface / platform / app_version / build_number | 네이티브 컨텍스트        | 초기화 시      |
 
-### 계측하지 않는 것
+### 계측하지 않는 것 (의도적 제외 — 전수 감사로 확정)
 
-- 키 입력·IME 글자 단위 (복습 영작 타이핑) — 노이즈 대비 분석 가치가 없다.
-- 단순 뒤로가기, TTS 재생 내부 상태 — 오토캡처와 `Page Viewed`로 충분하다.
+아래는 놓친 게 아니라 검토 후 뺀 것이다. 원클릭 수준 데이터는 오토캡처 elementInteractions(`[Amplitude] Element Clicked`)가 전부 받으므로, 필요해지면 배포 없이 사후 분석할 수 있다.
+
+- 키 입력·IME 글자 단위, NPS 코멘트 타이핑, 복습 영작 단어 박스 포커스 — 노이즈 대비 분석 가치가 없다.
+- 단순 화면 이동 버튼(내 정보·약관 링크, 뒤로가기, 콜백 "로그인으로 돌아가기") — `Page Viewed`가 목적지를 찍는다.
+- 바텀시트 오버레이 클릭 닫기 — ✕/닫기 버튼 이벤트와 중복. 시트별 닫기는 `Confirm Sheet Dismissed`·`NPS Survey Dismissed`가 담당.
+- 상세 분석 첫 장에서 ‹로 총평 복귀 — `Feedback Turn Viewed`/`Feedback Detail Opened` 재발화로 추적 가능.
+- 장식성 인터랙션(스크롤 그림자, 전역 햅틱 pointerdown), TTS 재생 내부 상태, `/stt-demo`·`/dev` 개발 화면.
 
 ## 신규 이벤트 추가 체크리스트
 

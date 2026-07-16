@@ -2,10 +2,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { SessionFeedbackScreen } from '@/features/feedback/ui/SessionFeedbackScreen';
 import type { Scenario } from '@/features/scenario/api/list';
+import { track } from '@/shared/analytics';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Transition } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
@@ -96,7 +98,10 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
         style={{ paddingTop: 'max(env(safe-area-inset-top), 8px)' }}
       >
         <button
-          onClick={() => setShowExitModal(true)}
+          onClick={() => {
+            track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'conversation_exit' });
+            setShowExitModal(true);
+          }}
           className="flex size-10 items-center justify-center text-foreground transition-transform active:scale-90"
           aria-label="대화 나가기"
         >
@@ -174,7 +179,10 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
           // replace로 대화를 히스토리에서 지워, 홈에서 뒤로가기 시 대화로 재진입하지 않게 한다.
           router.replace(`/home?card=${scenario.scenarioId}`);
         }}
-        onClose={() => setShowExitModal(false)}
+        onClose={() => {
+          track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'conversation_exit' });
+          setShowExitModal(false);
+        }}
       />
 
       {/* 마이크 권한이 거부된 채 말하기를 누르면 설정 유도 안내를 띄운다 */}

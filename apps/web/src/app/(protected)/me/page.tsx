@@ -170,6 +170,7 @@ export default function MyPage() {
               title="회원탈퇴"
               tone="danger"
               onClick={() => {
+                track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'account_delete' });
                 setDeleteErrorMessage(null);
                 setIsDeleteSheetOpen(true);
               }}
@@ -189,7 +190,11 @@ export default function MyPage() {
       {/* 회원탈퇴 확인 바텀시트 */}
       <BottomSheet
         open={isDeleteSheetOpen}
-        onClose={() => !isDeletingAccount && setIsDeleteSheetOpen(false)}
+        onClose={() => {
+          if (isDeletingAccount) return;
+          track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'account_delete' });
+          setIsDeleteSheetOpen(false);
+        }}
       >
         <h2 className="text-[17px] font-bold" style={{ color: '#111' }}>
           회원탈퇴
@@ -207,7 +212,12 @@ export default function MyPage() {
             type="button"
             variant="ghost"
             size="md"
-            onClick={() => setIsDeleteSheetOpen(false)}
+            onClick={() => {
+              track(EVENTS.CONFIRM_SHEET_DISMISSED, {
+                sheet: 'account_delete',
+              });
+              setIsDeleteSheetOpen(false);
+            }}
             disabled={isDeletingAccount}
           >
             닫기

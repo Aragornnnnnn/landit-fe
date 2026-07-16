@@ -2,6 +2,10 @@
 export const EVENTS = {
   // 공통
   PAGE_VIEWED: 'Page Viewed',
+  CONFIRM_SHEET_OPENED: 'Confirm Sheet Opened',
+  CONFIRM_SHEET_DISMISSED: 'Confirm Sheet Dismissed',
+  ERROR_RETRIED: 'Error Retried',
+  APP_EXITED: 'App Exited',
 
   // 인증
   LOGIN_STARTED: 'Login Started',
@@ -27,7 +31,9 @@ export const EVENTS = {
   // 대화
   CONVERSATION_STARTED: 'Conversation Started',
   RECORDING_STARTED: 'Recording Started',
+  RECORDING_STOPPED: 'Recording Stopped',
   RECORDING_CANCELED: 'Recording Canceled',
+  MIC_SETTINGS_OPENED: 'Mic Settings Opened',
   INPUT_MODE_SWITCHED: 'Input Mode Switched',
   TURN_COMPLETED: 'Turn Completed',
   TURN_FAILED: 'Turn Failed',
@@ -39,6 +45,7 @@ export const EVENTS = {
 
   // 분석 피드백
   FEEDBACK_VIEWED: 'Feedback Viewed',
+  FEEDBACK_SKIPPED: 'Feedback Skipped',
   FEEDBACK_DETAIL_OPENED: 'Feedback Detail Opened',
   FEEDBACK_TURN_VIEWED: 'Feedback Turn Viewed',
   FEEDBACK_COMPLETED: 'Feedback Completed',
@@ -58,7 +65,9 @@ export const EVENTS = {
 
   // NPS
   NPS_SURVEY_OPENED: 'NPS Survey Opened',
+  NPS_SCORE_SELECTED: 'NPS Score Selected',
   NPS_SURVEY_SUBMITTED: 'NPS Survey Submitted',
+  NPS_SURVEY_DISMISSED: 'NPS Survey Dismissed',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -71,6 +80,10 @@ export type ExpressionStep = 'quiz' | 'explain' | 'review';
 export type TurnInputType = 'voice' | 'text';
 export type HintSource = 'quiz' | 'review';
 export type HomeReturnReason = 'just' | 'flip' | 'card';
+export type ConfirmSheetKind =
+  'conversation_exit' | 'expression_exit' | 'account_delete';
+export type RetryScreen =
+  'home' | 'conversation' | 'card_back' | 'expression_list';
 
 // 이벤트별 속성 계약 — 키는 snake_case. 속성이 없는 이벤트는 undefined
 export type EventProps = {
@@ -81,6 +94,12 @@ export type EventProps = {
     scenario_id?: number;
     expression_id?: number;
   };
+  // 파괴적 행동(이탈·탈퇴) 전 확인 시트 — 열림/취소로 고민율을 본다. 확정은 각 Abandoned/Deleted 이벤트
+  'Confirm Sheet Opened': { sheet: ConfirmSheetKind };
+  'Confirm Sheet Dismissed': { sheet: ConfirmSheetKind };
+  'Error Retried': { screen: RetryScreen };
+  // 네이티브 뒤로가기로 앱 종료 (셸에서만)
+  'App Exited': { trigger: 'back_button' };
 
   'Login Started': { provider: AuthProvider; method: LoginMethod };
   'Login Completed': {
@@ -140,7 +159,10 @@ export type EventProps = {
   };
   // 세션은 백그라운드로 시작돼 확보 전에도 발화 준비가 가능하다 — session_id가 없을 수 있다
   'Recording Started': { session_id?: number; turn_index: number };
+  // ■(답변 완료) 탭 순간 — 이후 인식·제출 결과는 Turn Completed/Failed로 이어진다
+  'Recording Stopped': { session_id?: number; turn_index: number };
   'Recording Canceled': { session_id?: number; turn_index: number };
+  'Mic Settings Opened': undefined;
   'Input Mode Switched': { session_id?: number; mode: TurnInputType };
   'Turn Completed': {
     session_id: number;
@@ -183,6 +205,8 @@ export type EventProps = {
     native_score?: number;
     star_rating?: number;
   };
+  // 총평만 보고 상세 없이 나감 — Feedback Completed와 상호 배타
+  'Feedback Skipped': { session_id: number };
   'Feedback Detail Opened': { session_id: number };
   'Feedback Turn Viewed': {
     session_id: number;
@@ -217,7 +241,10 @@ export type EventProps = {
   'Expression Abandoned': { expression_id: number; step: ExpressionStep };
 
   'NPS Survey Opened': { source: 'home_header' | 'all_completed' | 'me' };
+  'NPS Score Selected': { score: number };
   'NPS Survey Submitted': { score: number; has_comment: boolean };
+  // ✕로 제출 없이 닫음 — 점수를 골라놓고 닫았으면 score가 담긴다
+  'NPS Survey Dismissed': { score?: number };
 };
 
 // 컴파일 타임 검증 ① EventProps가 모든 이벤트를 빠짐없이 커버한다

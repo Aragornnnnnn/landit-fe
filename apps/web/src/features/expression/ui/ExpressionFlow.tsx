@@ -103,6 +103,11 @@ export const ExpressionFlow = ({
 
   const quiz = fromLearning(learning);
 
+  const openExitSheet = () => {
+    track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'expression_exit' });
+    setExitOpen(true);
+  };
+
   // 중단 확인 시트 — QUIZ·EXPLAIN에서 X를 누르면 뜬다. 확인 시 완료 처리 없이 리스트로.
   const exitSheet = (
     <ExpressionExitSheet
@@ -114,7 +119,10 @@ export const ExpressionFlow = ({
         });
         backToList();
       }}
-      onClose={() => setExitOpen(false)}
+      onClose={() => {
+        track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'expression_exit' });
+        setExitOpen(false);
+      }}
     />
   );
 
@@ -125,7 +133,7 @@ export const ExpressionFlow = ({
           quiz={quiz}
           expressionId={expressionId}
           leftAction="close"
-          onBack={() => setExitOpen(true)}
+          onBack={openExitSheet}
           onNext={() => setStep('EXPLAIN')}
         />
         {exitSheet}
@@ -146,7 +154,7 @@ export const ExpressionFlow = ({
           progress={0.7}
           nextLabel="복습 영작 할게요"
           leftAction="close"
-          onBack={() => setExitOpen(true)}
+          onBack={openExitSheet}
           onNext={() => setStep('REVIEW')}
         />
         {exitSheet}

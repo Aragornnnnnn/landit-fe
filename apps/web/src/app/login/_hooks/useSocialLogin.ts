@@ -86,6 +86,11 @@ export function useSocialLogin() {
 
     // 애플 웹 로그인은 실도메인이 필요해 브라우저 단독에선 지원하지 않는다
     if (provider === 'apple') {
+      track(EVENTS.LOGIN_FAILED, {
+        provider,
+        method: 'web',
+        reason: 'apple_web_unsupported',
+      });
       setError('애플 로그인은 앱에서만 가능해요.');
       return;
     }

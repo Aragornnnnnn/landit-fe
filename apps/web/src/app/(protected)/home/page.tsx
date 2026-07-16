@@ -50,7 +50,10 @@ function HomeContent() {
             variant="secondary"
             size="sm"
             className="w-auto px-6"
-            onClick={retry}
+            onClick={() => {
+              track(EVENTS.ERROR_RETRIED, { screen: 'home' });
+              retry();
+            }}
           >
             다시 시도
           </Button>

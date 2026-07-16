@@ -9,6 +9,8 @@ import { MicPermissionSheet } from './MicPermissionSheet';
 
 vi.mock('@/shared/bridge/native-context', () => ({
   getSurface: vi.fn(),
+  // track()의 공통 속성 병합이 같은 모듈을 읽는다 — 브라우저(null)로 둔다
+  getNativeContext: vi.fn(() => null),
 }));
 vi.mock('@/shared/bridge/web-bridge', () => ({
   postToNative: vi.fn(),

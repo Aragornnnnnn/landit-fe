@@ -52,7 +52,11 @@ export const Feedback = ({
     <FeedbackSummary
       feedback={feedback}
       title={title}
-      onBack={onExit}
+      // 총평만 보고 상세 없이 나감 — Feedback Completed와 배타적인 이탈 신호
+      onBack={() => {
+        track(EVENTS.FEEDBACK_SKIPPED, { session_id: feedback.sessionId });
+        onExit();
+      }}
       onDetail={() => {
         track(EVENTS.FEEDBACK_DETAIL_OPENED, {
           session_id: feedback.sessionId,

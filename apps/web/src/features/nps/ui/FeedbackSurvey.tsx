@@ -57,7 +57,11 @@ export function FeedbackSurvey({ onDone }: FeedbackSurveyProps) {
       <div className="relative mb-6">
         <button
           type="button"
-          onClick={onDone}
+          onClick={() => {
+            // 제출 없이 닫음 — 점수를 골라놓고 이탈했으면 score가 담긴다
+            track(EVENTS.NPS_SURVEY_DISMISSED, { score: score ?? undefined });
+            onDone();
+          }}
           aria-label="닫기"
           className="absolute -top-1 right-0 text-xl leading-none text-muted-foreground"
         >
@@ -78,7 +82,10 @@ export function FeedbackSurvey({ onDone }: FeedbackSurveyProps) {
             <motion.button
               key={emoji}
               type="button"
-              onClick={() => setScore(value)}
+              onClick={() => {
+                track(EVENTS.NPS_SCORE_SELECTED, { score: value });
+                setScore(value);
+              }}
               aria-label={`만족도 ${value}점`}
               aria-pressed={selected}
               initial={{ scale: 0, opacity: 0 }}

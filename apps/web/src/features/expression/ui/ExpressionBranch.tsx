@@ -125,7 +125,10 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
             variant="secondary"
             size="sm"
             className="w-auto px-6"
-            onClick={retry}
+            onClick={() => {
+              track(EVENTS.ERROR_RETRIED, { screen: 'expression_list' });
+              retry();
+            }}
           >
             다시 시도
           </Button>
