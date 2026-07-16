@@ -1,10 +1,13 @@
 'use client';
 
 // 시나리오 카드 리스트 — 풀스크린 카드를 스냅으로 한 장씩 넘기고, 위아래로 이웃 카드가 살짝 보인다
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 
+import { FeedbackSurvey } from '@/features/nps/ui/FeedbackSurvey';
 import { useSnapIndex } from '@/shared/lib/useSnapIndex';
+import { BottomSheet } from '@/shared/ui/BottomSheet';
+import { Button } from '@/shared/ui/Button';
 import { LockIcon } from '@/shared/ui/Icons';
 
 import type { Scenario } from '../api/list';
@@ -29,6 +32,8 @@ export const ScenarioList = ({
   cardScenarioId = null,
 }: ScenarioListProps) => {
   const { scrollRef, activeIndex, onScroll } = useSnapIndex();
+  // 전부 완료 페이지의 '하고 싶은 상황 의견 주세요' 바텀시트
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const allCompleted =
     scenarios.length > 0 && scenarios.every((scenario) => scenario.completed);
@@ -103,27 +108,43 @@ export const ScenarioList = ({
           </div>
         ))}
 
-        {/* 마지막 페이지 — 전부 완료 축하 또는 다음 안내 */}
+        {/* 마지막 페이지 — 전부 완료 감사 인사 또는 다음 안내 */}
         <div className="flex h-full snap-center snap-always flex-col items-center justify-center gap-4 px-6 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- 구글이 호스팅하는 모션 이모지 GIF라 next/image 최적화 대상이 아니다 */}
           <img
-            src={`https://fonts.gstatic.com/s/e/notoemoji/latest/${allCompleted ? '1f389' : '1f512'}/512.gif`}
-            alt={allCompleted ? '🎉' : '🔒'}
+            src={`https://fonts.gstatic.com/s/e/notoemoji/latest/${allCompleted ? '1f647' : '1f512'}/512.gif`}
+            alt={allCompleted ? '🙇' : '🔒'}
             width={120}
             height={120}
           />
           <div>
             <p className="text-2xl leading-snug font-extrabold text-foreground">
               {allCompleted
-                ? '모든 상황을 해보셨네요!'
+                ? '모든 상황을 함께해 주셔서 감사해요!'
                 : '다음 상황이 기다리고 있어요'}
             </p>
             <p className="mt-3 text-base font-medium text-muted-foreground">
-              {allCompleted
-                ? '더 많은 상황으로 곧 찾아올게요!'
-                : '앞의 대화를 모두 끝내면 열려요'}
+              {allCompleted ? (
+                <>
+                  더 원어민답게 만들어 줄 상황들을
+                  <br />
+                  금방 가져올게요. 조금만 기다려 주세요!
+                </>
+              ) : (
+                '앞의 대화를 모두 끝내면 열려요'
+              )}
             </p>
           </div>
+          {allCompleted && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="mt-2 w-auto px-6"
+              onClick={() => setFeedbackOpen(true)}
+            >
+              하고 싶은 상황이 있다면 의견 주세요
+            </Button>
+          )}
         </div>
       </div>
 
@@ -133,6 +154,11 @@ export const ScenarioList = ({
         allCompleted={allCompleted}
         nextIndex={nextIndex}
       />
+
+      {/* 하고 싶은 상황 의견 — 내 정보의 의견 보내기와 동일한 서베이 */}
+      <BottomSheet open={feedbackOpen} onClose={() => setFeedbackOpen(false)}>
+        <FeedbackSurvey onDone={() => setFeedbackOpen(false)} />
+      </BottomSheet>
     </div>
   );
 };
@@ -163,9 +189,8 @@ const ProgressDots = ({
             <LockIcon
               key={index}
               size={12}
-              className={
-                isActive ? 'text-foreground' : 'text-muted-foreground/40'
-              }
+              // 현재 보는 카드만 찐한 주황 — dot과 같은 규칙
+              className={isActive ? 'text-primary' : 'text-muted-foreground/40'}
             />
           );
         }
