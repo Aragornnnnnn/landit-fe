@@ -2,9 +2,11 @@
 
 // 내 정보(/me) — 프로필 헤더 + 메뉴 목록. 페이지 전환 모션은 전역 라우트 트랜지션 도입 시 함께 다룬다
 import { useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { FeedbackSurvey } from '@/features/nps/ui/FeedbackSurvey';
+import { track } from '@/shared/analytics';
 import { logout as requestLogout } from '@/shared/api/auth/logout';
 import { withdraw } from '@/shared/api/auth/withdraw';
 import { clearSession } from '@/shared/lib/clear-session';
@@ -33,6 +35,13 @@ export default function MyPage() {
   const displayName = member?.nickname?.trim() || '게스트';
   const emailText = member?.email ?? '';
 
+  // 탈퇴 시트 닫기 — 버튼·오버레이 두 경로가 같은 취소 이벤트를 쓴다
+  function dismissDeleteSheet() {
+    if (isDeletingAccount) return;
+    track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'account_delete' });
+    setIsDeleteSheetOpen(false);
+  }
+
   // 인증 상태와 쿼리 캐시를 함께 비운다 — 캐시가 남으면 다음 계정에 이전 계정 데이터가 노출된다
   function finishSignedOut() {
     clearSession();
@@ -48,6 +57,8 @@ export default function MyPage() {
     } catch (error) {
       console.warn('[Auth] logout failed:', error);
     } finally {
+      // 세션 정리(resetUser)보다 먼저 찍어야 로그아웃한 유저에게 귀속된다
+      track(EVENTS.LOGOUT_COMPLETED);
       setIsLoggingOut(false);
       finishSignedOut();
     }
@@ -60,6 +71,7 @@ export default function MyPage() {
     setDeleteErrorMessage(null);
     try {
       await withdraw();
+      track(EVENTS.ACCOUNT_DELETED);
       finishSignedOut();
     } catch (error) {
       const message =
@@ -143,7 +155,10 @@ export default function MyPage() {
           <MenuGroup>
             <MenuButton
               title="Landit에게 의견 보내기"
-              onClick={() => setIsFeedbackSheetOpen(true)}
+              onClick={() => {
+                track(EVENTS.NPS_SURVEY_OPENED, { source: 'me' });
+                setIsFeedbackSheetOpen(true);
+              }}
             />
           </MenuGroup>
 
@@ -162,6 +177,7 @@ export default function MyPage() {
               title="회원탈퇴"
               tone="danger"
               onClick={() => {
+                track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'account_delete' });
                 setDeleteErrorMessage(null);
                 setIsDeleteSheetOpen(true);
               }}
@@ -179,10 +195,7 @@ export default function MyPage() {
       </BottomSheet>
 
       {/* 회원탈퇴 확인 바텀시트 */}
-      <BottomSheet
-        open={isDeleteSheetOpen}
-        onClose={() => !isDeletingAccount && setIsDeleteSheetOpen(false)}
-      >
+      <BottomSheet open={isDeleteSheetOpen} onClose={dismissDeleteSheet}>
         <h2 className="text-[17px] font-bold" style={{ color: '#111' }}>
           회원탈퇴
         </h2>
@@ -199,7 +212,7 @@ export default function MyPage() {
             type="button"
             variant="ghost"
             size="md"
-            onClick={() => setIsDeleteSheetOpen(false)}
+            onClick={dismissDeleteSheet}
             disabled={isDeletingAccount}
           >
             닫기

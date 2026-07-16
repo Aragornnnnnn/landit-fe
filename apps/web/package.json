@@ -11,6 +11,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@amplitude/unified": "^1.1.24",
+    "@landit/analytics": "workspace:*",
     "@landit/bridge": "workspace:*",
     "@tanstack/react-query": "^5.101.2",
     "@vercel/speed-insights": "^2.0.0",

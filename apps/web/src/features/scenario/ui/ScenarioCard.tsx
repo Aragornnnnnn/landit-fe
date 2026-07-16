@@ -1,10 +1,12 @@
 'use client';
 
 // 시나리오 카드 — 앞면(썸네일·제목·브리핑·CTA), 완료 시 뒤집으면 뒷면에 표현 학습 리스트
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { motion } from 'motion/react';
 import Image from 'next/image';
 
+import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, LockIcon, ReplayIcon } from '@/shared/ui/Icons';
@@ -51,10 +53,36 @@ export const ScenarioCard = ({
   const bundledImage = getScenarioImage(scenario.scenarioId);
   const filterClass = locked ? 'brightness-70 grayscale' : '';
 
+  // autoFlip으로 처음부터 뒤집힌 채 마운트된 경우도 노출로 기록한다
+  useEffect(() => {
+    if (autoFlip && completed) {
+      track(EVENTS.SCENARIO_CARD_FLIPPED, {
+        scenario_id: scenario.scenarioId,
+        direction: 'back',
+        trigger: 'auto',
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 마운트 시 1회만
+  }, []);
+
   const openExpressions = () => {
     haptic('medium'); // 완료 카드를 뒤집는 성취 순간엔 좀 더 묵직한 진동
+    track(EVENTS.SCENARIO_CARD_FLIPPED, {
+      scenario_id: scenario.scenarioId,
+      direction: 'back',
+      trigger: 'button',
+    });
     setHasFlipped(true);
     setFlipped(true);
+  };
+
+  const closeExpressions = () => {
+    track(EVENTS.SCENARIO_CARD_FLIPPED, {
+      scenario_id: scenario.scenarioId,
+      direction: 'front',
+      trigger: 'button',
+    });
+    setFlipped(false);
   };
 
   return (
@@ -155,7 +183,7 @@ export const ScenarioCard = ({
           <div className="absolute inset-0 flex [transform:rotateY(-180deg)] flex-col overflow-hidden rounded-2xl bg-card shadow-md [-webkit-backface-visibility:hidden] [backface-visibility:hidden]">
             <ScenarioCardBack
               scenarioId={scenario.scenarioId}
-              onBack={() => setFlipped(false)}
+              onBack={closeExpressions}
             />
           </div>
         )}

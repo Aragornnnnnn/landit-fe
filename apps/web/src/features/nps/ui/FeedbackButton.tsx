@@ -2,7 +2,9 @@
 'use client';
 
 import { useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 
+import { track } from '@/shared/analytics';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { MessageCircleIcon } from '@/shared/ui/Icons';
 
@@ -15,7 +17,10 @@ export function FeedbackButton() {
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          track(EVENTS.NPS_SURVEY_OPENED, { source: 'home_header' });
+          setOpen(true);
+        }}
         aria-label="의견 보내기"
         className="flex h-11 flex-col items-center justify-center gap-0.5 rounded-xl px-3 text-muted-foreground transition-all active:scale-90 active:bg-secondary"
       >

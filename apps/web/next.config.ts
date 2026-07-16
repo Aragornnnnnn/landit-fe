@@ -4,7 +4,7 @@ import type { NextConfig } from 'next';
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@landit/bridge'],
+  transpilePackages: ['@landit/analytics', '@landit/bridge'],
   reactCompiler: true,
   async rewrites() {
     if (!apiBaseUrl) return [];

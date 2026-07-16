@@ -1,11 +1,13 @@
 'use client';
 
 // 시나리오 카드 뒷면 — 완료 시나리오의 표현 학습 리스트. 표현을 고르면 학습 페이지로 이동
+import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { useExpressions } from '@/features/expression/model/useExpressions';
 import { ExpressionList } from '@/features/expression/ui/ExpressionList';
 import { ExpressionListSkeleton } from '@/features/expression/ui/ExpressionListSkeleton';
+import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
@@ -37,7 +39,9 @@ export const ScenarioCardBack = ({
         </button>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
+      {/* overscroll-contain을 두면 리스트가 짧아도 스와이프를 먹어 카드 전환(바깥 스냅 스크롤)이 막힌다 —
+          리스트 경계에 닿으면 제스처가 바깥으로 이어져 뒷면에서도 카드를 넘길 수 있게 한다 */}
+      <div className="min-h-0 flex-1 overflow-y-auto pb-6">
         {isLoading && <ExpressionListSkeleton />}
 
         {error && (
@@ -47,7 +51,10 @@ export const ScenarioCardBack = ({
               variant="secondary"
               size="sm"
               className="w-auto px-6"
-              onClick={retry}
+              onClick={() => {
+                track(EVENTS.ERROR_RETRIED, { screen: 'card_back' });
+                retry();
+              }}
             >
               다시 시도
             </Button>
@@ -57,9 +64,14 @@ export const ScenarioCardBack = ({
         {expressions && (
           <ExpressionList
             expressions={expressions}
-            onSelect={(expressionId) =>
-              router.push(`/expressions/${scenarioId}/${expressionId}`)
-            }
+            onSelect={(expressionId) => {
+              track(EVENTS.EXPRESSION_SELECTED, {
+                expression_id: expressionId,
+                scenario_id: scenarioId,
+                source: 'card_back',
+              });
+              router.push(`/expressions/${scenarioId}/${expressionId}`);
+            }}
           />
         )}
       </div>
