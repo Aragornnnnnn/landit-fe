@@ -11,9 +11,12 @@ import { Button } from '@/shared/ui/Button';
 import { LockIcon } from '@/shared/ui/Icons';
 
 import type { Scenario } from '../api/list';
+import { completionEmoji } from '../lib/completion-emoji';
 import { ScenarioCard } from './ScenarioCard';
 
 interface ScenarioListProps {
+  // 전부 완료 페이지 문구에 쓰는 현재 카테고리 이름
+  categoryName: string;
   scenarios: Scenario[];
   onStart: (scenario: Scenario) => void;
   // 방금 대화를 끝내 다음 시나리오가 해금됐을 때, 그 카드로 스크롤·강조한다
@@ -25,6 +28,7 @@ interface ScenarioListProps {
 }
 
 export const ScenarioList = ({
+  categoryName,
   scenarios,
   onStart,
   focusActive = false,
@@ -112,24 +116,24 @@ export const ScenarioList = ({
         <div className="flex h-full snap-center snap-always flex-col items-center justify-center gap-4 px-6 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- 구글이 호스팅하는 모션 이모지 GIF라 next/image 최적화 대상이 아니다 */}
           <img
-            // 감사 인사는 🥰(1f970) — 🙇는 애니메이션 GIF가 없어(404) 쓸 수 없다
-            src={`https://fonts.gstatic.com/s/e/notoemoji/latest/${allCompleted ? '1f970' : '1f512'}/512.gif`}
-            alt={allCompleted ? '🥰' : '🔒'}
+            // 완료 축하는 카테고리에 어울리는 이모지로 (매칭 없으면 🥰 폴백)
+            src={`https://fonts.gstatic.com/s/e/notoemoji/latest/${allCompleted ? completionEmoji(categoryName).code : '1f512'}/512.gif`}
+            alt={allCompleted ? completionEmoji(categoryName).emoji : '🔒'}
             width={120}
             height={120}
           />
           <div>
             <p className="text-2xl leading-snug font-extrabold text-foreground">
               {allCompleted
-                ? '모든 상황을 함께해 주셔서 감사해요!'
+                ? `${categoryName} 상황을 모두 완료했어요!`
                 : '다음 상황이 기다리고 있어요'}
             </p>
             <p className="mt-3 text-base font-medium text-muted-foreground">
               {allCompleted ? (
                 <>
-                  더 원어민답게 만들어 줄 상황들을
+                  함께해 주셔서 감사해요! 더 원어민답게
                   <br />
-                  금방 가져올게요. 조금만 기다려 주세요!
+                  만들어 줄 상황들을 금방 가져올게요
                 </>
               ) : (
                 '앞의 대화를 모두 끝내면 열려요'
@@ -143,7 +147,7 @@ export const ScenarioList = ({
               className="mt-2 w-auto px-6"
               onClick={() => setFeedbackOpen(true)}
             >
-              하고 싶은 상황이 있다면 의견 주세요
+              더 하고 싶은 상황이 있어요!!
             </Button>
           )}
         </div>
