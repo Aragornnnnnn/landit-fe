@@ -137,7 +137,7 @@ export const ScenarioList = ({
   );
 };
 
-// 우측 진행 인디케이터 — 완료=검정, 다음 깨야 할 것=주황(딱 하나), 나머지=회색.
+// 우측 진행 인디케이터 — 완료=연한 주황, 다음 깨야 할 것=주황(딱 하나), 나머지=회색.
 // 자물쇠는 최종 목표인 맨 마지막 칸에만(전체 완료 전까지). 현재 보는 카드는 세로로 길쭉하게.
 const ProgressDots = ({
   scenarios,
@@ -180,7 +180,7 @@ const ProgressDots = ({
               isActive ? 'h-5' : 'h-1.5'
             } ${
               completed
-                ? 'bg-foreground'
+                ? 'bg-primary-light'
                 : isNext
                   ? 'bg-primary'
                   : 'bg-muted-foreground/40'
