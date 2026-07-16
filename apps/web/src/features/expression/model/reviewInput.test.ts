@@ -5,6 +5,7 @@ import {
   advance,
   appendLetter,
   backspace,
+  diffComposition,
   emptyState,
   firstWrong,
   focusWord,
@@ -167,5 +168,39 @@ describe('parseInputEvent', () => {
 
   it('inputType이 비었어도 데이터가 있으면 삽입으로 본다(일부 안드로이드 키보드)', () => {
     expect(parseInputEvent('', 'x')).toEqual([{ kind: 'letter', letter: 'x' }]);
+  });
+});
+
+describe('diffComposition', () => {
+  it('조합 문자열이 한 글자 늘면 그 글자만 letter 액션으로 낸다(라이브 반영)', () => {
+    expect(diffComposition('go', 'goo')).toEqual([
+      { kind: 'letter', letter: 'o' },
+    ]);
+  });
+
+  it('처음 조합이면 빈 문자열에서 시작해 글자를 순서대로 편다', () => {
+    expect(diffComposition('', 'go')).toEqual([
+      { kind: 'letter', letter: 'g' },
+      { kind: 'letter', letter: 'o' },
+    ]);
+  });
+
+  it('제안 선택으로 단어가 바뀌면 공통 접두사 뒤만 지우고 다시 채운다', () => {
+    // "gud" → 자동완성 "good": 공통 접두사 "g" 유지, "ud" 지우고 "ood" 삽입
+    expect(diffComposition('gud', 'good')).toEqual([
+      { kind: 'backspace' },
+      { kind: 'backspace' },
+      { kind: 'letter', letter: 'o' },
+      { kind: 'letter', letter: 'o' },
+      { kind: 'letter', letter: 'd' },
+    ]);
+  });
+
+  it('조합이 그대로면 아무 액션도 내지 않는다(중복 반영 방지)', () => {
+    expect(diffComposition('good', 'good')).toEqual([]);
+  });
+
+  it('조합 문자열의 스페이스는 space 액션으로 편다', () => {
+    expect(diffComposition('good', 'good ')).toEqual([{ kind: 'space' }]);
   });
 });

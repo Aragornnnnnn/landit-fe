@@ -13,6 +13,7 @@ import {
   advance,
   appendLetter,
   backspace,
+  diffComposition,
   emptyState,
   firstWrong,
   focusWord,
@@ -66,8 +67,10 @@ export const ReviewInputStep = ({
   // 네이티브 키보드용 숨은 입력 — 여길 focus시켜 OS 키보드를 띄우고, 키 입력을 기존 모델로 흘려보낸다
   const hiddenRef = useRef<HTMLInputElement>(null);
   const answerRef = useRef<HTMLDivElement>(null);
-  // 조합입력(IME) 중엔 input 이벤트를 무시하고 compositionend에서 완성 문자열만 반영한다(중복 방지)
+  // 조합입력(IME) 중엔 input 이벤트를 무시하고, compositionupdate/end에서 조합 문자열을 흘려보낸다.
   const composingRef = useRef(false);
+  // 이미 반영한 조합 문자열 — 다음 조합 문자열과의 차이만 액션으로 내보내 라이브 반영한다.
+  const composedRef = useRef('');
   const keyboardInset = useKeyboardInset();
 
   // 정답 순간 콘페티 — 브랜드 색으로 양쪽에서 터뜨린다
@@ -95,6 +98,14 @@ export const ReviewInputStep = ({
       origin: { x: 0.5, y: 0.6 },
     });
   }, [correct]);
+
+  // 키보드가 올라와 뷰포트가 줄면(inset>0) 답변 박스를 다시 가운데로 맞춘다 —
+  // 포커스 시점엔 아직 키보드 전이라 스크롤이 어긋날 수 있어, 인셋이 확정된 뒤 한 번 더 정렬한다.
+  useEffect(() => {
+    if (keyboardInset > 0 && !correct) {
+      answerRef.current?.scrollIntoView({ block: 'center' });
+    }
+  }, [keyboardInset, correct]);
 
   const clearWrong = () => setWrongNow(answer.map(() => false));
 
@@ -208,11 +219,20 @@ export const ReviewInputStep = ({
         onInput={handleInput}
         onCompositionStart={() => {
           composingRef.current = true;
+          composedRef.current = '';
+        }}
+        onCompositionUpdate={(event) => {
+          // 조합 중에도 이전 조합 대비 늘어난 글자만 반영해, 타이핑하는 즉시 박스가 채워진다
+          const next = event.data ?? '';
+          applyActions(diffComposition(composedRef.current, next));
+          composedRef.current = next;
         }}
         onCompositionEnd={(event) => {
+          // 남은 차이만 마저 반영하고(중복 없이) 조합 상태를 닫는다
+          const next = event.data ?? '';
+          applyActions(diffComposition(composedRef.current, next));
           composingRef.current = false;
-          // 완성된 조합 문자열을 삽입으로 처리한다(중복 없이 한 번만)
-          applyActions(parseInputEvent('insertText', event.data ?? ''));
+          composedRef.current = '';
           resetHidden();
         }}
         onKeyDown={(event) => {
@@ -221,9 +241,10 @@ export const ReviewInputStep = ({
             if (canConfirm) check();
           }
         }}
+        // 키보드가 뜨면 답변 박스를 가운데로 올려, 위의 풀 문장(한글)과 입력 박스가 함께 보이게 한다
         onFocus={() =>
           answerRef.current?.scrollIntoView({
-            block: 'nearest',
+            block: 'center',
             behavior: 'smooth',
           })
         }

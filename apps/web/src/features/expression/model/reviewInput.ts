@@ -88,7 +88,7 @@ export type ReviewInputAction =
   | { kind: 'backspace' };
 
 // InputEvent(inputType, data)를 모델에 적용할 액션들로 바꾼다. 조합입력(IME)은 여기서 다루지 않고
-// compositionend에서 완성된 문자열을 'insertText'로 넘겨 재사용한다. 순수 함수라 분기를 테스트로 고정한다.
+// compositionupdate/end에서 조합 문자열을 diffComposition으로 흘려보낸다. 순수 함수라 분기를 테스트로 고정한다.
 export const parseInputEvent = (
   inputType: string,
   data: string,
@@ -96,13 +96,39 @@ export const parseInputEvent = (
   if (inputType.startsWith('delete')) return [{ kind: 'backspace' }];
   // insert* 또는 inputType 미보고(일부 안드로이드 키보드)인데 데이터가 있으면 삽입으로 본다
   if (inputType.startsWith('insert') || (inputType === '' && data.length > 0)) {
-    const actions: ReviewInputAction[] = [];
-    for (const ch of data) {
-      if (ch === ' ') actions.push({ kind: 'space' });
-      else if (ch !== '\n' && ch !== '\r')
-        actions.push({ kind: 'letter', letter: normalizeQuotes(ch) });
-    }
-    return actions;
+    return charsToActions(data);
   }
   return [];
+};
+
+// 문자열을 글자/스페이스 액션으로 편다(줄바꿈 제외). 삽입·조합 반영에서 공유한다.
+const charsToActions = (data: string): ReviewInputAction[] => {
+  const actions: ReviewInputAction[] = [];
+  for (const ch of data) {
+    if (ch === ' ') actions.push({ kind: 'space' });
+    else if (ch !== '\n' && ch !== '\r')
+      actions.push({ kind: 'letter', letter: normalizeQuotes(ch) });
+  }
+  return actions;
+};
+
+// 조합입력(IME) 라이브 반영 — 이전에 반영한 조합 문자열(prev)을 새 조합 문자열(next)로 바꾸는 액션을 만든다.
+// Android Gboard는 영어도 단어 단위로 조합해, compositionend까지 기다리면 타이핑 중 글자가 안 보인다.
+// 공통 접두사 이후만 지우고(backspace) 다시 채워, 조합 중에도 글자별로 박스가 채워지고 자동 넘김이 그대로 돈다.
+export const diffComposition = (
+  prev: string,
+  next: string,
+): ReviewInputAction[] => {
+  let common = 0;
+  while (
+    common < prev.length &&
+    common < next.length &&
+    prev[common] === next[common]
+  )
+    common++;
+
+  const actions: ReviewInputAction[] = [];
+  for (let i = common; i < prev.length; i++)
+    actions.push({ kind: 'backspace' });
+  return actions.concat(charsToActions(next.slice(common)));
 };
