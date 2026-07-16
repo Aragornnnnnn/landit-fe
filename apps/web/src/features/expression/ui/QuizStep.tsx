@@ -79,10 +79,18 @@ export const QuizStep = ({
   // 게이지는 단어를 고르는 동안엔 비워두고, 판정을 마쳐야 절반이 찬다(나머지 절반은 이후 스텝 몫).
   const progress = checked === 'idle' ? 0 : 0.5;
 
-  // 힌트 1단계 — 지금 골라야 할 정답 단어와 일치하는 미사용 칩 하나를 하이라이트한다(고를 때마다 따라온다)
-  const nextWord = answer[selected.length];
+  // 힌트 활성 중엔 이미 올린 칩의 정오도 알려준다 — 자리와 다른 칩은 빨갛게 표시
+  const misplacedAt = (index: number) =>
+    hintStep >= 1 &&
+    checked === 'idle' &&
+    wordOf(selected[index]).toLowerCase() !== answer[index]?.toLowerCase();
+  // 힌트 1단계 — 다음에 고를(또는 첫 오배치 자리의) 정답 단어와 일치하는 미사용 칩을 하이라이트한다
+  const firstMisplaced = selected.findIndex((_, index) => misplacedAt(index));
+  const hintTargetIndex =
+    firstMisplaced >= 0 ? firstMisplaced : selected.length;
+  const nextWord = answer[hintTargetIndex];
   const hintChipId =
-    hintStep >= 1 && checked === 'idle' && !full
+    hintStep >= 1 && checked === 'idle' && nextWord
       ? bank.find((chip) => !usedIds.has(chip.id) && chip.word === nextWord)?.id
       : undefined;
 
@@ -111,7 +119,14 @@ export const QuizStep = ({
       >
         {selected.map((id, index) => (
           <span key={index} className="flex h-[62px] items-center">
-            <button onClick={() => removeAt(index)} className={CHIP_STYLE}>
+            <button
+              onClick={() => removeAt(index)}
+              className={
+                misplacedAt(index)
+                  ? `${CHIP_STYLE} border-destructive! text-destructive`
+                  : CHIP_STYLE
+              }
+            >
               {wordOf(id)}
             </button>
           </span>

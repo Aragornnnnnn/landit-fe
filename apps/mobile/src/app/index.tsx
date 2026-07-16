@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   BackHandler,
+  Image,
   Linking,
   Pressable,
   StyleSheet,
@@ -101,9 +102,17 @@ const ShellScreen = () => {
   }
 
   if (loadFailed) {
+    // 로드 실패 — 우는 랜디와 원인 안내로 다독이고 재시도를 유도한다 (텅 빈 흰 화면 금지)
     return (
-      <View style={styles.center}>
-        <Text>화면을 불러오지 못했어요.</Text>
+      <View style={styles.errorScreen}>
+        <Image
+          source={require('../../assets/images/landy-crying.webp')}
+          style={styles.errorCharacter}
+        />
+        <Text style={styles.errorTitle}>화면을 불러오지 못했어요</Text>
+        <Text style={styles.errorDescription}>
+          네트워크 연결을 확인하고{'\n'}다시 시도해 주세요
+        </Text>
         <Pressable
           style={styles.retryButton}
           onPress={() => {
@@ -112,7 +121,7 @@ const ShellScreen = () => {
             setLoadAttempt((attempt) => attempt + 1);
           }}
         >
-          <Text style={styles.retryLabel}>다시 시도</Text>
+          <Text style={styles.retryLabel}>다시 시도할게요</Text>
         </Pressable>
       </View>
     );
@@ -177,14 +186,43 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#e07a3a',
   },
+  // 로드 실패 화면 — 웹 앱 배경(gray-50)·타이포 톤에 맞춘다
+  errorScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fbfbfa',
+    paddingHorizontal: 32,
+  },
+  errorCharacter: {
+    width: 132,
+    height: 132,
+    resizeMode: 'contain',
+  },
+  errorTitle: {
+    marginTop: 12,
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1a1a1a',
+  },
+  errorDescription: {
+    marginTop: 8,
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+    color: '#8a8a86',
+  },
   retryButton: {
-    borderRadius: 12,
+    marginTop: 24,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    borderRadius: 14,
     backgroundColor: '#e07a3a',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 15,
   },
   retryLabel: {
     color: '#ffffff',
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

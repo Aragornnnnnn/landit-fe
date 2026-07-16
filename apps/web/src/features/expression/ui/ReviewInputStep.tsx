@@ -17,6 +17,7 @@ import {
   emptyState,
   firstWrong,
   focusWord,
+  gradePartial,
   gradeWords,
   isComplete,
   parseInputEvent,
@@ -388,12 +389,20 @@ export const ReviewInputStep = ({
         })}
       </div>
 
-      {/* 힌트 — 한 번 누르면 모든 단어 첫 글자, 한 번 더 누르면 정답 전체를 흐리게 공개 */}
+      {/* 힌트 — 한 번 누르면 모든 단어 첫 글자, 한 번 더 누르면 정답 전체를 흐리게 공개.
+          누르는 순간 지금까지 친 입력의 정오도 함께 알려준다(틀린 단어 빨강+흔들림) */}
       {!correct && (
         <div className="flex justify-center pt-3">
           <HintButton
             step={hintStep}
-            onAdvance={() => setHintStep((step) => step + 1)}
+            onAdvance={() => {
+              const ok = gradePartial(typed, answer);
+              if (ok.some((isOk) => !isOk)) {
+                setWrongNow(ok.map((isOk) => !isOk));
+                setShakeNonce((n) => n + 1);
+              }
+              setHintStep((step) => step + 1);
+            }}
             keepFocus
           />
         </div>
