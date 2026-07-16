@@ -13,6 +13,7 @@
   "dependencies": {
     "@landit/bridge": "workspace:*",
     "@tanstack/react-query": "^5.101.2",
+    "@vercel/speed-insights": "^2.0.0",
     "canvas-confetti": "^1.9.4",
     "motion": "^12.42.2",
     "next": "16.2.10",
