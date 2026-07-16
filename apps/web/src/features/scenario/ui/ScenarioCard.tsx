@@ -129,20 +129,20 @@ export const ScenarioCard = ({
               // 완료 카드 — 메인은 표현 학습(뒤집기), 다시 해보기는 아래 고스트로
               <div className="flex flex-col gap-1">
                 <Button variant="primary" onClick={openExpressions}>
-                  대화로 만든 내 표현 배울게요
+                  원어민 표현 배우기
                 </Button>
                 <button
                   type="button"
                   onClick={() => onStart(scenario)}
                   className="flex h-14 w-full items-center justify-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors active:text-foreground"
                 >
-                  다시 대화 할게요
+                  다시 대화하기
                   <ReplayIcon size={15} />
                 </button>
               </div>
             ) : (
               <Button onClick={() => onStart(scenario)} variant="primary">
-                대화 시작할게요
+                대화 시작하기
                 <ArrowRightIcon size={16} />
               </Button>
             )}
