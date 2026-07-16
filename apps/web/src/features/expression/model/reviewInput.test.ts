@@ -85,20 +85,36 @@ describe('focusWord', () => {
 });
 
 describe('isComplete', () => {
-  it('모든 단어에 입력이 있으면 확인 가능하다', () => {
+  it('모든 단어가 정답 글자 수만큼 차야 확인 가능하다', () => {
     expect(
-      isComplete({ typed: ['I', 'got', 'a', 'good', 'deal'], focus: 4 }),
+      isComplete(
+        { typed: ['I', 'got', 'a', 'good', 'deal'], focus: 4 },
+        LENGTHS,
+      ),
     ).toBe(true);
+  });
+
+  it('글자가 덜 찬 단어가 있으면 확인 불가하다', () => {
+    // 마지막 단어 "deal"(4글자)에 3글자만 입력된 상태
+    expect(
+      isComplete(
+        { typed: ['I', 'got', 'a', 'good', 'dea'], focus: 4 },
+        LENGTHS,
+      ),
+    ).toBe(false);
   });
 
   it('빈 단어가 있으면 확인 불가하다', () => {
     expect(
-      isComplete({ typed: ['I', 'got', '', 'good', 'deal'], focus: 2 }),
+      isComplete(
+        { typed: ['I', 'got', '', 'good', 'deal'], focus: 2 },
+        LENGTHS,
+      ),
     ).toBe(false);
   });
 
   it('단어가 하나도 없으면 확인 불가하다(빈 정답 방어)', () => {
-    expect(isComplete({ typed: [], focus: 0 })).toBe(false);
+    expect(isComplete({ typed: [], focus: 0 }, [])).toBe(false);
   });
 });
 

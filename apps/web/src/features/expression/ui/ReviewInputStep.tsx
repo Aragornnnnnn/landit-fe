@@ -62,7 +62,7 @@ export const ReviewInputStep = ({
   const [shakeNonce, setShakeNonce] = useState(0);
 
   const { typed, focus } = state;
-  const canConfirm = isComplete(state);
+  const canConfirm = isComplete(state, lengths);
 
   // 네이티브 키보드용 숨은 입력 — 여길 focus시켜 OS 키보드를 띄우고, 키 입력을 기존 모델로 흘려보낸다
   const hiddenRef = useRef<HTMLInputElement>(null);

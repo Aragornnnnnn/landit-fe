@@ -61,9 +61,10 @@ export const focusWord = (state: InputState, index: number): InputState => ({
   focus: index,
 });
 
-// 확인 가능 — 단어가 하나 이상 있고 모두 한 글자 이상 입력됨(빈 정답 방어)
-export const isComplete = (state: InputState): boolean =>
-  state.typed.length > 0 && state.typed.every((word) => word.length > 0);
+// 확인 가능 — 단어가 하나 이상 있고 전부 정답 글자 수만큼 채워짐(덜 친 채 확인 방지, 빈 정답 방어)
+export const isComplete = (state: InputState, lengths: number[]): boolean =>
+  state.typed.length > 0 &&
+  state.typed.every((word, i) => word.length === lengths[i]);
 
 // 스마트 따옴표(' ' ‚ ‛ ′ / " " „ ‟ ″)를 ASCII 따옴표로 접는다.
 // 정답에 아포스트로피·따옴표가 들어있을 때, 네이티브 키보드의 자동 치환에도 채점이 흔들리지 않게 한다.
