@@ -73,9 +73,8 @@ export const QuizStep = ({
     setChecked(tone);
   };
 
-  // 판정 전엔 채운 만큼(전체의 절반까지) 진행. 판정되면 절반 고정(나머지 절반은 이후 스텝 몫).
-  const progress =
-    checked === 'idle' ? 0.5 * (selected.length / answer.length) : 0.5;
+  // 게이지는 단어를 고르는 동안엔 비워두고, 판정을 마쳐야 절반이 찬다(나머지 절반은 이후 스텝 몫).
+  const progress = checked === 'idle' ? 0 : 0.5;
 
   return (
     <StepScaffold
