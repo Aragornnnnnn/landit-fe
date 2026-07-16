@@ -26,7 +26,7 @@ export const ScenarioCardBack = ({
     <>
       <header className="relative flex h-14 flex-none items-center justify-center px-3">
         <h2 className="text-base font-bold text-foreground">
-          이 대화로 만든 내 표현들
+          원어민은 이렇게 말해요
         </h2>
         <button
           onClick={onBack}
