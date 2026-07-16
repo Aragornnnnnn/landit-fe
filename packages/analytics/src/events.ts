@@ -68,7 +68,7 @@ export type LoginMethod = 'native' | 'web';
 export type OnboardingStep = 'intro' | 'sound' | 'mic' | 'thought' | 'scenario';
 export type ExpressionStep = 'quiz' | 'explain' | 'review';
 export type TurnInputType = 'voice' | 'text';
-export type HintSource = 'conversation' | 'quiz' | 'review';
+export type HintSource = 'quiz' | 'review';
 export type HomeReturnReason = 'just' | 'flip' | 'card';
 
 // 이벤트별 속성 계약 — 키는 snake_case. 속성이 없는 이벤트는 undefined
@@ -136,9 +136,10 @@ export type EventProps = {
     first_speaker: string;
     is_retry: boolean;
   };
-  'Recording Started': { session_id: number; turn_index: number };
-  'Recording Canceled': { session_id: number; turn_index: number };
-  'Input Mode Switched': { session_id: number; mode: TurnInputType };
+  // 세션은 백그라운드로 시작돼 확보 전에도 발화 준비가 가능하다 — session_id가 없을 수 있다
+  'Recording Started': { session_id?: number; turn_index: number };
+  'Recording Canceled': { session_id?: number; turn_index: number };
+  'Input Mode Switched': { session_id?: number; mode: TurnInputType };
   'Turn Completed': {
     session_id: number;
     scenario_id: number;
@@ -147,7 +148,7 @@ export type EventProps = {
     char_count: number;
   };
   'Turn Failed': {
-    session_id: number;
+    session_id?: number;
     turn_index: number;
     reason: 'empty' | 'api_error';
   };
@@ -157,7 +158,7 @@ export type EventProps = {
     thought_type?: string;
   };
   'Speech Recognition Failed': {
-    engine: 'deepgram' | 'web_speech';
+    engine?: 'deepgram' | 'web_speech';
     reason?: string;
   };
   'Hint Used': { source: HintSource; level: number };
@@ -167,7 +168,7 @@ export type EventProps = {
     turn_count: number;
   };
   'Conversation Abandoned': {
-    session_id: number;
+    session_id?: number;
     scenario_id: number;
     turn_index: number;
   };

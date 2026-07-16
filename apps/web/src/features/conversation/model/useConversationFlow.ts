@@ -5,6 +5,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 
 import type { ThoughtType } from '@/features/conversation/ui/ThoughtReveal';
@@ -12,6 +13,7 @@ import { createSessionFeedback } from '@/features/feedback/api/session-feedback'
 import { sessionFeedbackKey } from '@/features/feedback/model/useSessionFeedback';
 import type { Scenario } from '@/features/scenario/api/list';
 import { scenarioKeys } from '@/features/scenario/model/keys';
+import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { isMicPermissionDeniedError } from '@/shared/lib/stt/errors';
 import { useStt } from '@/shared/lib/stt/useStt';
@@ -116,9 +118,19 @@ export const useConversationFlow = (scenario: Scenario) => {
     onInterim: (text) => setTranscript(text),
     onFinal: (text) => void submitContent(text, 'VOICE'),
     onError: (error) => {
+      // 좁히기(never) 전에 읽어둔다 — 계측 속성용 에러 이름
+      const errorName = error.name;
       // 권한 거부는 설정 유도 안내를, 그 외 인식 오류는 토스트로 알리고 마이크 대기로 되돌린다.
-      if (isMicPermissionDeniedError(error)) setMicPermissionDenied(true);
-      else showToast('음성 인식에 문제가 생겼어요. 다시 시도해 주세요');
+      if (isMicPermissionDeniedError(error)) {
+        setMicPermissionDenied(true);
+        track(EVENTS.MIC_PERMISSION_DECIDED, {
+          granted: false,
+          source: 'conversation',
+        });
+      } else {
+        showToast('음성 인식에 문제가 생겼어요. 다시 시도해 주세요');
+        track(EVENTS.SPEECH_RECOGNITION_FAILED, { reason: errorName });
+      }
       haptic('error');
       setTranscript('');
       send('LISTENING_CANCELLED');
@@ -138,6 +150,12 @@ export const useConversationFlow = (scenario: Scenario) => {
         sessionIdRef.current = res.sessionId;
         setSessionId(res.sessionId);
         hasNextRef.current = !res.progress.completed;
+        track(EVENTS.CONVERSATION_STARTED, {
+          scenario_id: scenario.scenarioId,
+          session_id: res.sessionId,
+          first_speaker: scenario.firstSpeaker,
+          is_retry: scenario.completed,
+        });
         // openingPreview로 오프닝을 못 시드했을 때(예외적)만 세션 응답으로 채운다
         if (res.currentMessage) {
           const message = res.currentMessage;
@@ -215,6 +233,16 @@ export const useConversationFlow = (scenario: Scenario) => {
 
   // 마이크로 말하기 — 듣기 상태로 넘기고 STT를 켠다
   const pressMic = () => {
+    if (keyboardMode) {
+      track(EVENTS.INPUT_MODE_SWITCHED, {
+        session_id: sessionIdRef.current ?? undefined,
+        mode: 'voice',
+      });
+    }
+    track(EVENTS.RECORDING_STARTED, {
+      session_id: sessionIdRef.current ?? undefined,
+      turn_index: state.turnIndex,
+    });
     setKeyboardMode(false);
     send('MIC_PRESSED');
     void stt.start();
@@ -222,13 +250,23 @@ export const useConversationFlow = (scenario: Scenario) => {
 
   // 키보드로 입력 — 듣기 상태로 넘기되 마이크는 켜지 않고 타이핑 입력창을 연다
   const pressKeyboard = () => {
+    track(EVENTS.INPUT_MODE_SWITCHED, {
+      session_id: sessionIdRef.current ?? undefined,
+      mode: 'text',
+    });
     setKeyboardMode(true);
     setTranscript('');
     send('MIC_PRESSED');
   };
 
   const cancelListening = () => {
-    if (!keyboardMode) stt.stop();
+    if (!keyboardMode) {
+      stt.stop();
+      track(EVENTS.RECORDING_CANCELED, {
+        session_id: sessionIdRef.current ?? undefined,
+        turn_index: state.turnIndex,
+      });
+    }
     setKeyboardMode(false);
     setTranscript('');
     send('LISTENING_CANCELLED');
@@ -257,6 +295,11 @@ export const useConversationFlow = (scenario: Scenario) => {
         setTranscript('');
         send('LISTENING_CANCELLED');
         showToast('말이 인식되지 않았어요. 다시 말해볼까요?');
+        track(EVENTS.TURN_FAILED, {
+          session_id: sessionIdRef.current ?? undefined,
+          turn_index: state.turnIndex,
+          reason: 'empty',
+        });
       }
       return;
     }
@@ -271,17 +314,35 @@ export const useConversationFlow = (scenario: Scenario) => {
         haptic('error');
         send('RESPONSE_FAILED');
         showToast('연결에 문제가 생겼어요. 잠시 후 다시 시도해 주세요');
+        track(EVENTS.TURN_FAILED, {
+          turn_index: state.turnIndex,
+          reason: 'api_error',
+        });
         return;
       }
 
       const res = await submitMessage(sessionId, content, inputType);
+      track(EVENTS.TURN_COMPLETED, {
+        session_id: sessionId,
+        scenario_id: scenario.scenarioId,
+        turn_index: state.turnIndex,
+        input_type: inputType === 'VOICE' ? 'voice' : 'text',
+        char_count: content.length,
+      });
       nextMessageRef.current = res.nextMessage;
       // 종료 메시지도 nextMessage로 오므로, 발화 유무는 nextMessage로 판단하고
       // 그 발화를 끝으로 종료인지는 completed로 따로 들고 간다 (완료 발화도 재생 후 CTA로)
       hasNextRef.current = res.nextMessage != null;
       completedRef.current = res.progress.completed;
       // 마지막 발화였다면 피드백을 미리 만들고 다음 대화 해금을 홈에 반영한다
-      if (res.progress.completed) handleConversationComplete(sessionId);
+      if (res.progress.completed) {
+        track(EVENTS.CONVERSATION_COMPLETED, {
+          session_id: sessionId,
+          scenario_id: scenario.scenarioId,
+          turn_count: res.progress.totalQuestionCount,
+        });
+        handleConversationComplete(sessionId);
+      }
       // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 합성한다 — 다음 발화 재생 지연을 없앤다
       if (res.nextMessage && voice) {
         void tts.prefetch(res.nextMessage.content, voice);
@@ -301,6 +362,11 @@ export const useConversationFlow = (scenario: Scenario) => {
             text: resolved.text,
             type: toThoughtType(resolved.type),
           });
+          track(EVENTS.INNER_THOUGHT_VIEWED, {
+            session_id: sessionId,
+            turn_index: state.turnIndex,
+            thought_type: resolved.type ?? undefined,
+          });
           haptic('light'); // 상대가 응답을 시작하는 순간 가벼운 틱
           send('RESPONSE_READY'); // → THOUGHT
         });
@@ -309,6 +375,11 @@ export const useConversationFlow = (scenario: Scenario) => {
       haptic('error');
       send('RESPONSE_FAILED'); // → USER_IDLE (다시 시도)
       showToast('전송에 실패했어요. 다시 시도해 주세요');
+      track(EVENTS.TURN_FAILED, {
+        session_id: sessionIdRef.current ?? undefined,
+        turn_index: state.turnIndex,
+        reason: 'api_error',
+      });
     } finally {
       submittingRef.current = false;
     }
@@ -316,6 +387,11 @@ export const useConversationFlow = (scenario: Scenario) => {
 
   // 중도 이탈 시 세션 종료 (정상 완료는 서버가 판정하므로 호출하지 않는다)
   const leave = () => {
+    track(EVENTS.CONVERSATION_ABANDONED, {
+      session_id: sessionIdRef.current ?? undefined,
+      scenario_id: scenario.scenarioId,
+      turn_index: state.turnIndex,
+    });
     innerThought.cancel(); // 진행 중인 속마음 폴링을 멈춘다
     if (sessionIdRef.current != null) {
       endSession(sessionIdRef.current).catch((error) =>
