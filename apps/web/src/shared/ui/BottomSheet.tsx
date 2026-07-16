@@ -1,10 +1,12 @@
 // 공통 바텀 시트 — 오버레이 + 슬라이드업 패널, 웹 너비 자동 대응
 'use client';
 
+import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { createPortal } from 'react-dom';
 
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
+import { registerOpenSheet } from '@/shared/ui/bottom-sheet-back';
 
 interface BottomSheetProps {
   open: boolean;
@@ -14,6 +16,13 @@ interface BottomSheetProps {
 
 export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
   const mounted = useClientOnlyValue(() => true, false);
+
+  // 열려 있는 동안 전역 스택에 등록 — 네이티브 뒤로가기가 화면 이동 대신 이 시트를 닫는다
+  useEffect(() => {
+    if (!open) return;
+    return registerOpenSheet(onClose);
+  }, [open, onClose]);
+
   if (!mounted) return null;
 
   return createPortal(
