@@ -2,9 +2,11 @@
 
 // 시나리오 카드 리스트 — 풀스크린 카드를 스냅으로 한 장씩 넘기고, 위아래로 이웃 카드가 살짝 보인다
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { motion } from 'motion/react';
 
 import { FeedbackSurvey } from '@/features/nps/ui/FeedbackSurvey';
+import { track } from '@/shared/analytics';
 import { useSnapIndex } from '@/shared/lib/useSnapIndex';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
@@ -76,6 +78,26 @@ export const ScenarioList = ({
       behavior: isReturning ? 'auto' : 'smooth',
     });
   }, [targetIndex, flipScenarioId, cardScenarioId]);
+
+  // 스냅으로 카드가 화면 중앙에 설 때마다 노출로 기록한다 (마지막 페이지는 completion)
+  useEffect(() => {
+    const scenario = scenarios[activeIndex];
+    if (scenario) {
+      track(EVENTS.SCENARIO_CARD_VIEWED, {
+        card_type: 'scenario',
+        position: activeIndex,
+        scenario_id: scenario.scenarioId,
+        difficulty: scenario.difficulty,
+        is_completed: scenario.completed,
+        is_locked: scenario.locked,
+      });
+    } else if (activeIndex === scenarios.length) {
+      track(EVENTS.SCENARIO_CARD_VIEWED, {
+        card_type: 'completion',
+        position: activeIndex,
+      });
+    }
+  }, [activeIndex, scenarios]);
 
   return (
     <div className="relative min-h-0 flex-1">

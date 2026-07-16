@@ -2,12 +2,14 @@
 
 // 홈 — 카테고리별 시나리오 목록에서 연습할 시나리오를 고른다
 import { Suspense } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useScenarios } from '@/features/scenario/model/useScenarios';
 import { CategoryBar } from '@/features/scenario/ui/CategoryBar';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
 import { ScenarioList } from '@/features/scenario/ui/ScenarioList';
+import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
 
 import { HomeHeader } from './_components/HomeHeader';
@@ -62,7 +64,14 @@ function HomeContent() {
           <CategoryBar
             categories={categories}
             selectedId={selected.categoryId}
-            onSelect={selectCategory}
+            onSelect={(category) => {
+              track(EVENTS.CATEGORY_SELECTED, {
+                category_id: category.categoryId,
+                category_name: category.categoryName,
+                is_locked: category.categoryLocked,
+              });
+              selectCategory(category);
+            }}
           />
           {/* key로 카테고리 전환 시 스크롤 위치·등장 모션을 초기화한다. */}
           <ScenarioList
