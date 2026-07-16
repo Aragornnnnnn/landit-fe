@@ -1,7 +1,7 @@
 // 공통 바텀 시트 — 오버레이 + 슬라이드업 패널, 웹 너비 자동 대응
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { createPortal } from 'react-dom';
 
@@ -17,11 +17,18 @@ interface BottomSheetProps {
 export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
   const mounted = useClientOnlyValue(() => true, false);
 
+  // onClose는 대개 인라인 함수라 렌더마다 참조가 바뀐다 — ref로 최신 것을 읽어,
+  // 리렌더 때 스택에서 빠졌다 다시 올라가며 시트 순서가 뒤집히지 않게 한다
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   // 열려 있는 동안 전역 스택에 등록 — 네이티브 뒤로가기가 화면 이동 대신 이 시트를 닫는다
   useEffect(() => {
     if (!open) return;
-    return registerOpenSheet(onClose);
-  }, [open, onClose]);
+    return registerOpenSheet(() => onCloseRef.current());
+  }, [open]);
 
   if (!mounted) return null;
 
