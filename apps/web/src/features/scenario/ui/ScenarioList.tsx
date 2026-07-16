@@ -4,10 +4,10 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 
+import { useSnapIndex } from '@/shared/lib/useSnapIndex';
 import { LockIcon } from '@/shared/ui/Icons';
 
 import type { Scenario } from '../api/list';
-import { useSnapIndex } from '../model/useSnapIndex';
 import { ScenarioCard } from './ScenarioCard';
 
 interface ScenarioListProps {

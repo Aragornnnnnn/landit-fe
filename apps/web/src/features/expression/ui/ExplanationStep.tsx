@@ -1,8 +1,7 @@
 'use client';
 
 // 표현 설명 스텝(540) — 표현 뜻·설명 + "이렇게도 써요" 예문 캐러셀
-import { useState } from 'react';
-
+import { useSnapIndex } from '@/shared/lib/useSnapIndex';
 import { Button } from '@/shared/ui/Button';
 
 import type { PracticeSentence } from '../api/practice';
@@ -37,27 +36,8 @@ export const ExplanationStep = ({
   leftAction,
   onNext,
 }: ExplanationStepProps) => {
-  const [active, setActive] = useState(0);
-
-  // 카드 stride(너비+gap)가 컨테이너 너비와 달라, clientWidth로 나누면 dot이 누적 어긋난다.
-  // 컨테이너 중앙에 가장 가까운 카드를 활성으로 잡는다 — snap-center와 정확히 일치한다.
-  const onScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    const track = event.currentTarget;
-    const center = track.scrollLeft + track.clientWidth / 2;
-    let closest = 0;
-    let closestDistance = Infinity;
-    [...track.children].forEach((child, index) => {
-      const item = child as HTMLElement;
-      const distance = Math.abs(
-        item.offsetLeft + item.offsetWidth / 2 - center,
-      );
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closest = index;
-      }
-    });
-    setActive(closest);
-  };
+  // 중앙에 가장 가까운 카드가 활성 dot — snap-center와 정확히 일치한다 (홈 리스트와 같은 공용 훅)
+  const { scrollRef, activeIndex: active, onScroll } = useSnapIndex('x');
 
   return (
     <StepScaffold
@@ -98,6 +78,7 @@ export const ExplanationStep = ({
             </div>
 
             <div
+              ref={scrollRef}
               onScroll={onScroll}
               className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5"
             >
