@@ -107,20 +107,20 @@
 
 ### 표현 학습
 
-| 이벤트                      | 속성                                               | 시점                            |
-| --------------------------- | -------------------------------------------------- | ------------------------------- |
-| Expression List Viewed      | scenario_id, expression_count                      | 분기 화면 리스트 리빌           |
-| Expression Learning Skipped | scenario_id, expression_count                      | 분기에서 "다음 대화하러 갈게요" |
-| Expression Learning Started | expression_id, scenario_id                         | 학습 데이터 로드 완료           |
-| Expression Step Viewed      | expression_id, step(quiz\|explain\|review)         | 스텝 노출                       |
-| Quiz Word Picked            | expression_id, picked_count                        | 단어 칩 선택                    |
-| Quiz Word Removed           | expression_id, picked_count                        | 단어 칩 제거                    |
-| Quiz Answer Submitted       | expression_id, is_correct, hint_level              | 퀴즈 확인                       |
-| Example Sentence Viewed     | expression_id, sentence_index                      | 예문 캐러셀 스냅                |
-| Review Answer Submitted     | expression_id, is_correct, wrong_count, hint_level | 복습 영작 확인                  |
-| Hint Used                   | source(quiz\|review), level                        | 힌트 보기/정답 보기             |
-| Expression Completed        | expression_id, scenario_id                         | 학습 완료 처리 성공             |
-| Expression Abandoned        | expression_id, step                                | 중단 확정                       |
+| 이벤트                      | 속성                                               | 시점                                           |
+| --------------------------- | -------------------------------------------------- | ---------------------------------------------- |
+| Expression List Viewed      | scenario_id, expression_count                      | 분기 화면 리스트 리빌                          |
+| Expression Learning Skipped | scenario_id, expression_count                      | 분기에서 "다음 대화하러 갈게요"                |
+| Expression Learning Started | expression_id, scenario_id                         | 학습 데이터 로드 완료                          |
+| Expression Step Viewed      | expression_id, step(quiz\|explain\|review)         | 스텝 노출                                      |
+| Quiz Word Picked            | expression_id, picked_count                        | 단어 칩 선택                                   |
+| Quiz Word Removed           | expression_id, picked_count                        | 단어 칩 제거                                   |
+| Quiz Answer Submitted       | expression_id, is_correct, hint_level              | 퀴즈 확인                                      |
+| Example Sentence Viewed     | expression_id, sentence_index                      | 예문 캐러셀 스냅                               |
+| Review Answer Submitted     | expression_id, is_correct, wrong_count, hint_level | 복습 영작 확인                                 |
+| Hint Used                   | source(quiz\|review), level                        | 힌트 보기 (퀴즈=1단계만, 복습=힌트→정답 2단계) |
+| Expression Completed        | expression_id, scenario_id                         | 학습 완료 처리 성공                            |
+| Expression Abandoned        | expression_id, step                                | 중단 확정                                      |
 
 ### NPS
 
