@@ -7,9 +7,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
+import type { ThoughtType } from '@/features/conversation/ui/ThoughtReveal';
 import { createSessionFeedback } from '@/features/feedback/api/session-feedback';
 import { sessionFeedbackKey } from '@/features/feedback/model/useSessionFeedback';
-import type { ThoughtType } from '@/features/onboarding/ui/ThoughtCard';
 import type { Scenario } from '@/features/scenario/api/list';
 import { scenarioKeys } from '@/features/scenario/model/keys';
 import { haptic } from '@/shared/haptics';
