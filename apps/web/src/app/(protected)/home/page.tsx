@@ -1,8 +1,8 @@
 'use client';
 
 // 홈 — 카테고리별 시나리오 목록에서 연습할 시나리오를 고른다
-import { use } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useScenarios } from '@/features/scenario/model/useScenarios';
 import { CategoryBar } from '@/features/scenario/ui/CategoryBar';
@@ -12,12 +12,22 @@ import { Button } from '@/shared/ui/Button';
 
 import { HomeHeader } from './_components/HomeHeader';
 
-export default function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ just?: string; flip?: string; card?: string }>;
-}) {
-  const { just, flip, card } = use(searchParams);
+// useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
+export default function HomePage() {
+  return (
+    <Suspense>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeContent() {
+  // page prop(Promise)이 아니라 훅으로 읽는다 — 클라이언트 replace 복귀 시 prop은
+  // 라우터 캐시의 이전 값을 줄 수 있어, flip/card 복귀 신호가 유실되던 문제의 원인
+  const searchParams = useSearchParams();
+  const just = searchParams.get('just');
+  const flip = searchParams.get('flip');
+  const card = searchParams.get('card');
   // flip=뒤집어 복귀(표현), card=앞면으로 복귀(대화). 둘 다 "온 카드로 돌아가는" 신호다.
   const flipScenarioId = flip ? Number(flip) : null;
   const cardScenarioId = card ? Number(card) : null;
