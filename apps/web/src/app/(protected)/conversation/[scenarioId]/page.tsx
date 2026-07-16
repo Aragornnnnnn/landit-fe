@@ -2,11 +2,13 @@
 
 // 대화 페이지 — 시나리오를 찾아 대화 플로우([시뮬])를 시작한다
 import { use } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { ConversationFlow } from '@/features/conversation/ui/ConversationFlow';
 import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSkeleton';
 import { useScenarios } from '@/features/scenario/model/useScenarios';
+import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
 
 export default function ConversationPage({
@@ -37,7 +39,14 @@ export default function ConversationPage({
           variant="secondary"
           size="sm"
           className="w-auto px-6"
-          onClick={error ? retry : () => router.push('/home')}
+          onClick={
+            error
+              ? () => {
+                  track(EVENTS.ERROR_RETRIED, { screen: 'conversation' });
+                  retry();
+                }
+              : () => router.push('/home')
+          }
         >
           {error ? '다시 시도' : '홈으로'}
         </Button>

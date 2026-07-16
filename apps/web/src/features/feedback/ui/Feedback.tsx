@@ -1,7 +1,10 @@
 'use client';
 
 // 피드백 화면 오케스트레이터 — 총평 ↔ 상세 두 단계를 전환한다
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
+
+import { track } from '@/shared/analytics';
 
 import type { SessionFeedbackResponse } from '../api/session-feedback';
 import { FeedbackDetail } from './FeedbackDetail';
@@ -18,12 +21,29 @@ export const Feedback = ({
 }) => {
   const [step, setStep] = useState<'summary' | 'detail'>('summary');
 
+  useEffect(() => {
+    track(EVENTS.FEEDBACK_VIEWED, {
+      session_id: feedback.sessionId,
+      good_count: feedback.messageFeedbacks.filter(
+        (turn) => turn.feedbackType === 'GOOD',
+      ).length,
+      turn_count: feedback.messageFeedbacks.length,
+      native_score: feedback.nativeScore,
+      star_rating: feedback.starRating,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 노출 1회 기록
+  }, []);
+
   if (step === 'detail') {
     return (
       <FeedbackDetail
+        sessionId={feedback.sessionId}
         turns={feedback.messageFeedbacks}
         onBack={() => setStep('summary')}
-        onDone={onExit}
+        onDone={() => {
+          track(EVENTS.FEEDBACK_COMPLETED, { session_id: feedback.sessionId });
+          onExit();
+        }}
       />
     );
   }
@@ -32,8 +52,17 @@ export const Feedback = ({
     <FeedbackSummary
       feedback={feedback}
       title={title}
-      onBack={onExit}
-      onDetail={() => setStep('detail')}
+      // 총평만 보고 상세 없이 나감 — Feedback Completed와 배타적인 이탈 신호
+      onBack={() => {
+        track(EVENTS.FEEDBACK_SKIPPED, { session_id: feedback.sessionId });
+        onExit();
+      }}
+      onDetail={() => {
+        track(EVENTS.FEEDBACK_DETAIL_OPENED, {
+          session_id: feedback.sessionId,
+        });
+        setStep('detail');
+      }}
     />
   );
 };

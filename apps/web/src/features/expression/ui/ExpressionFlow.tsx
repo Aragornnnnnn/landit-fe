@@ -1,9 +1,12 @@
 'use client';
 
 // 표현학습 플로우 — 단어 선택 퀴즈(D안 ①') → 표현 설명(D안 ④) → 복습 영작(D안 ⑤) → 완료 처리 후 리스트로.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { EVENTS, type ExpressionStep } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
+
+import { track } from '@/shared/analytics';
 
 import { collectPreloadImageUrls } from '../model/preloadImages';
 import type { InputState } from '../model/reviewInput';
@@ -21,6 +24,13 @@ interface ExpressionFlowProps {
   scenarioId: number;
   expressionId: number;
 }
+
+// 화면 스텝(QUIZ/EXPLAIN/REVIEW) → 이벤트 속성 값
+const STEP_PROP: Record<'QUIZ' | 'EXPLAIN' | 'REVIEW', ExpressionStep> = {
+  QUIZ: 'quiz',
+  EXPLAIN: 'explain',
+  REVIEW: 'review',
+};
 
 export const ExpressionFlow = ({
   scenarioId,
@@ -50,6 +60,25 @@ export const ExpressionFlow = ({
   );
   const finish = useFinishExpression(expressionId);
 
+  // 데이터가 준비돼 실제 학습이 뜬 시점을 시작으로 본다
+  const learningReady = Boolean(learning);
+  useEffect(() => {
+    if (!learningReady) return;
+    track(EVENTS.EXPRESSION_LEARNING_STARTED, {
+      expression_id: expressionId,
+      scenario_id: scenarioId,
+    });
+  }, [learningReady, expressionId, scenarioId]);
+
+  // 첫 스텝(QUIZ) 포함, 스텝 전환마다 노출로 기록한다
+  useEffect(() => {
+    if (!learningReady) return;
+    track(EVENTS.EXPRESSION_STEP_VIEWED, {
+      expression_id: expressionId,
+      step: STEP_PROP[step],
+    });
+  }, [learningReady, step, expressionId]);
+
   // 예문 이미지는 QUIZ→EXPLAIN에서 마운트되지만, URL을 아는 즉시 브라우저 캐시에 선로드해
   // EXPLAIN 도착 시 img가 곧바로 뜨게 한다. preload는 멱등이라 렌더 중 호출해도 안전하다.
   for (const url of collectPreloadImageUrls(practice)) {
@@ -74,12 +103,26 @@ export const ExpressionFlow = ({
 
   const quiz = fromLearning(learning);
 
+  const openExitSheet = () => {
+    track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'expression_exit' });
+    setExitOpen(true);
+  };
+
   // 중단 확인 시트 — QUIZ·EXPLAIN에서 X를 누르면 뜬다. 확인 시 완료 처리 없이 리스트로.
   const exitSheet = (
     <ExpressionExitSheet
       open={exitOpen}
-      onConfirm={backToList}
-      onClose={() => setExitOpen(false)}
+      onConfirm={() => {
+        track(EVENTS.EXPRESSION_ABANDONED, {
+          expression_id: expressionId,
+          step: STEP_PROP[step],
+        });
+        backToList();
+      }}
+      onClose={() => {
+        track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'expression_exit' });
+        setExitOpen(false);
+      }}
     />
   );
 
@@ -88,8 +131,9 @@ export const ExpressionFlow = ({
       <>
         <QuizStep
           quiz={quiz}
+          expressionId={expressionId}
           leftAction="close"
-          onBack={() => setExitOpen(true)}
+          onBack={openExitSheet}
           onNext={() => setStep('EXPLAIN')}
         />
         {exitSheet}
@@ -101,6 +145,7 @@ export const ExpressionFlow = ({
     return (
       <>
         <ExplanationStep
+          expressionId={expressionId}
           targetExpressionText={learning.targetExpressionText}
           baseExpressionMeaningText={learning.baseExpressionMeaningText}
           usageDescription={learning.usageDescription}
@@ -109,7 +154,7 @@ export const ExpressionFlow = ({
           progress={0.7}
           nextLabel="복습 영작 할게요"
           leftAction="close"
-          onBack={() => setExitOpen(true)}
+          onBack={openExitSheet}
           onNext={() => setStep('REVIEW')}
         />
         {exitSheet}
@@ -130,6 +175,7 @@ export const ExpressionFlow = ({
       // 문제가 바뀌면(이론상 폴백→practice 교체) 상태를 통째로 리셋한다
       key={reviewQuiz.writingSentenceText}
       quiz={reviewQuiz}
+      expressionId={expressionId}
       targetExpressionText={learning.targetExpressionText}
       meaning={learning.baseExpressionMeaningText}
       // 예문을 보러 나갔다 돌아와도 같은 문제면 draft를 이어서 쓴다
@@ -144,7 +190,15 @@ export const ExpressionFlow = ({
       onBack={() => setStep('EXPLAIN')}
       finishing={finish.isPending}
       onFinish={() =>
-        finish.mutate(undefined, { onSuccess: backToListUnlocked })
+        finish.mutate(undefined, {
+          onSuccess: () => {
+            track(EVENTS.EXPRESSION_COMPLETED, {
+              expression_id: expressionId,
+              scenario_id: scenarioId,
+            });
+            backToListUnlocked();
+          },
+        })
       }
     />
   );

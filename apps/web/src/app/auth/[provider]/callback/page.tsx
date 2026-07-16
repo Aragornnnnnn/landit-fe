@@ -2,8 +2,10 @@
 
 // 소셜 로그인 콜백 — 제공자가 돌려준 code를 id_token으로 교환하고 백엔드 로그인까지 마친 뒤 라우팅한다
 import { use, useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { track } from '@/shared/analytics';
 import { socialLogin } from '@/shared/api/auth/social-login';
 import {
   clearPendingSocialLogin,
@@ -44,21 +46,37 @@ export default function SocialLoginCallbackPage({
       if (error) {
         // 동의 화면에서 사용자가 취소한 경우엔 조용히 로그인 화면으로 되돌린다
         if (error === 'access_denied' || error === 'user_cancelled_authorize') {
+          track(EVENTS.LOGIN_CANCELED, { provider });
           clearPendingSocialLogin();
           router.replace('/login');
           return;
         }
+        track(EVENTS.LOGIN_FAILED, {
+          provider,
+          method: 'web',
+          reason: 'provider_error',
+        });
         setMessage('소셜 로그인이 취소됐어요.');
         return;
       }
 
       const pending = readPendingSocialLogin();
       if (!code || !state || !pending) {
+        track(EVENTS.LOGIN_FAILED, {
+          provider,
+          method: 'web',
+          reason: 'missing_request',
+        });
         setMessage('로그인 요청 정보를 찾지 못했어요. 다시 시도해 주세요.');
         return;
       }
       // CSRF 방어 — 시작할 때 저장한 provider·state와 일치해야 한다
       if (pending.provider !== provider || pending.state !== state) {
+        track(EVENTS.LOGIN_FAILED, {
+          provider,
+          method: 'web',
+          reason: 'state_mismatch',
+        });
         setMessage('로그인 검증 값이 일치하지 않아요. 다시 시도해 주세요.');
         return;
       }
@@ -79,6 +97,11 @@ export default function SocialLoginCallbackPage({
           error?: string;
         };
         if (!tokenRes.ok || !tokenJson.idToken) {
+          track(EVENTS.LOGIN_FAILED, {
+            provider,
+            method: 'web',
+            reason: 'token_exchange_failed',
+          });
           setMessage(tokenJson.error ?? '소셜 로그인 토큰 교환에 실패했어요.');
           return;
         }
@@ -92,8 +115,18 @@ export default function SocialLoginCallbackPage({
         // newUser는 로그인 시점 분기용이라 전역 상태에는 빼고 저장한다
         const { newUser, ...member } = user;
         setAuth(accessToken, refreshToken, member);
+        track(EVENTS.LOGIN_COMPLETED, {
+          provider,
+          method: 'web',
+          is_new_user: newUser,
+        });
         router.replace(newUser ? '/onboarding' : '/home');
       } catch (err) {
+        track(EVENTS.LOGIN_FAILED, {
+          provider,
+          method: 'web',
+          reason: 'login_api_failed',
+        });
         const isDev = process.env.NODE_ENV === 'development';
         if (isDev) console.error('[auth] 웹 소셜 로그인 실패:', err);
         const detail = isDev && err instanceof Error ? ` (${err.message})` : '';

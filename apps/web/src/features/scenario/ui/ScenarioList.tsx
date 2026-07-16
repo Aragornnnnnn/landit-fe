@@ -2,9 +2,11 @@
 
 // 시나리오 카드 리스트 — 풀스크린 카드를 스냅으로 한 장씩 넘기고, 위아래로 이웃 카드가 살짝 보인다
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { motion } from 'motion/react';
 
 import { FeedbackSurvey } from '@/features/nps/ui/FeedbackSurvey';
+import { track } from '@/shared/analytics';
 import { useSnapIndex } from '@/shared/lib/useSnapIndex';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
@@ -77,6 +79,36 @@ export const ScenarioList = ({
     });
   }, [targetIndex, flipScenarioId, cardScenarioId]);
 
+  // 스냅으로 카드가 화면 중앙에 설 때마다 노출로 기록한다 (마지막 페이지는 completion).
+  // scenarios는 리페치마다 참조가 바뀌므로, 같은 카드 재실행은 키로 걸러 중복 발화를 막는다
+  const lastViewedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const scenario = scenarios[activeIndex];
+    const viewKey = scenario
+      ? `scenario-${scenario.scenarioId}`
+      : activeIndex === scenarios.length
+        ? 'completion'
+        : null;
+    if (!viewKey || lastViewedRef.current === viewKey) return;
+    lastViewedRef.current = viewKey;
+
+    if (scenario) {
+      track(EVENTS.SCENARIO_CARD_VIEWED, {
+        card_type: 'scenario',
+        position: activeIndex,
+        scenario_id: scenario.scenarioId,
+        difficulty: scenario.difficulty,
+        is_completed: scenario.completed,
+        is_locked: scenario.locked,
+      });
+    } else {
+      track(EVENTS.SCENARIO_CARD_VIEWED, {
+        card_type: 'completion',
+        position: activeIndex,
+      });
+    }
+  }, [activeIndex, scenarios]);
+
   return (
     <div className="relative min-h-0 flex-1">
       {/* 상하 패딩 = 이웃 카드 peek 겸 첫/마지막 카드 위아래 여백 — 이 둘은 같은 값이라 키우면 peek↑·첫 카드 위 여백↑ */}
@@ -145,7 +177,10 @@ export const ScenarioList = ({
               variant="primary"
               size="sm"
               className="mt-2 w-auto px-6"
-              onClick={() => setFeedbackOpen(true)}
+              onClick={() => {
+                track(EVENTS.NPS_SURVEY_OPENED, { source: 'all_completed' });
+                setFeedbackOpen(true);
+              }}
             >
               더 하고 싶은 상황이 있어요!
             </Button>

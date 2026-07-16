@@ -2,7 +2,9 @@
 
 // 듀오링고식 단어 선택 퀴즈 — 뱅크에서 단어를 순서대로 골라 문장을 완성하고 판정, 결과는 하단 슬라이드업 시트로 띄운다
 import { useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 
+import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { Button } from '@/shared/ui/Button';
 
@@ -19,6 +21,8 @@ import { StepScaffold } from './StepScaffold';
 
 interface QuizStepProps {
   quiz: SentenceQuiz;
+  // 계측 속성용 — 어떤 표현의 퀴즈인지
+  expressionId: number;
   onBack: () => void;
   leftAction?: 'back' | 'close';
   // 정답·오답 모두 결과 시트의 CTA로 다음 스텝으로 이어진다 (퀴즈→설명, 복습→완료)
@@ -38,6 +42,7 @@ const CHIP_STYLE =
 
 export const QuizStep = ({
   quiz,
+  expressionId,
   onBack,
   leftAction,
   onNext,
@@ -60,11 +65,19 @@ export const QuizStep = ({
 
   const pick = (chip: WordChip) => {
     if (checked !== 'idle' || usedIds.has(chip.id) || full) return;
+    track(EVENTS.QUIZ_WORD_PICKED, {
+      expression_id: expressionId,
+      picked_count: selected.length + 1,
+    });
     setSelected((current) => [...current, chip.id]);
   };
 
   const removeAt = (index: number) => {
     if (checked !== 'idle') return;
+    track(EVENTS.QUIZ_WORD_REMOVED, {
+      expression_id: expressionId,
+      picked_count: selected.length - 1,
+    });
     setSelected((current) => current.filter((_, i) => i !== index));
   };
 
@@ -72,6 +85,11 @@ export const QuizStep = ({
     const tone = isWordsCorrect(selected.map(wordOf), answer)
       ? 'correct'
       : 'wrong';
+    track(EVENTS.QUIZ_ANSWER_SUBMITTED, {
+      expression_id: expressionId,
+      is_correct: tone === 'correct',
+      hint_level: hintStep,
+    });
     haptic(tone === 'correct' ? 'success' : 'error');
     setChecked(tone);
   };
@@ -138,7 +156,10 @@ export const QuizStep = ({
         <div className="flex min-h-9 items-center justify-center pt-2">
           <HintButton
             step={hintStep}
-            onAdvance={() => setHintStep((step) => step + 1)}
+            onAdvance={() => {
+              track(EVENTS.HINT_USED, { source: 'quiz', level: hintStep + 1 });
+              setHintStep((step) => step + 1);
+            }}
           />
           {hintStep >= 2 && (
             <p className="text-center text-sm font-bold text-primary">

@@ -1,6 +1,9 @@
 // 마이크 권한 거부 안내 바텀시트 — 앱이면 설정 앱을 열도록 유도하고, 브라우저면 안내 문구만 보여준다
 'use client';
 
+import { EVENTS } from '@landit/analytics';
+
+import { track } from '@/shared/analytics';
 import { getSurface } from '@/shared/bridge/native-context';
 import { postToNative } from '@/shared/bridge/web-bridge';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
@@ -26,6 +29,7 @@ export const MicPermissionSheet = ({
   const isApp = getSurface() === 'app';
 
   const openSettings = () => {
+    track(EVENTS.MIC_SETTINGS_OPENED);
     postToNative({ type: 'OPEN_SETTINGS' });
     onClose();
   };
