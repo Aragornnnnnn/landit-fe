@@ -1,8 +1,10 @@
 'use client';
 
 // 피드백 상세 — 턴별로 질문/상황·내 답변과 GOOD/개선 분석을 한 장씩 넘겨 본다
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 
+import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
@@ -10,10 +12,12 @@ import type { MessageFeedbackResponse } from '../api/session-feedback';
 import { evaluationContextLabel } from '../model/feedback-view';
 
 export const FeedbackDetail = ({
+  sessionId,
   turns,
   onBack,
   onDone,
 }: {
+  sessionId: number;
   turns: MessageFeedbackResponse[];
   onBack: () => void;
   onDone: () => void;
@@ -21,6 +25,17 @@ export const FeedbackDetail = ({
   const [index, setIndex] = useState(0);
   const turn = turns[index];
   const isLast = index === turns.length - 1;
+
+  // 첫 장 포함, 장을 넘길 때마다 노출로 기록한다
+  useEffect(() => {
+    if (!turn) return;
+    track(EVENTS.FEEDBACK_TURN_VIEWED, {
+      session_id: sessionId,
+      turn_index: index,
+      feedback_type: turn.feedbackType,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index]);
 
   const goBack = () => (index > 0 ? setIndex(index - 1) : onBack());
   const goNext = () => (isLast ? onDone() : setIndex(index + 1));

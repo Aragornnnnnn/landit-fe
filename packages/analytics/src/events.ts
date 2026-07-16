@@ -173,9 +173,9 @@ export type EventProps = {
     turn_index: number;
   };
 
+  // 피드백 응답에는 scenario_id가 없다 — session_id로 서버에서 조인한다
   'Feedback Viewed': {
     session_id: number;
-    scenario_id: number;
     good_count: number;
     turn_count: number;
     native_score?: number;
