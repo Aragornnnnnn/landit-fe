@@ -37,16 +37,17 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
     '원어민이 될 수 있는 표현을 찾았어요',
   ];
 
-  const { text, done } = useTypewriter(phrases);
-  // 타이핑이 끝나고 데이터도 준비돼야 리빌 — ready를 함께 봐야 결과가 먼저 깜빡이지 않는다
-  const listed = ready && done;
-
   // 진입 직후 대화 완료 축하 — 폭죽을 잠깐 보여준 뒤 분석 연출로 넘어간다 (잘 끝냈다는 보상 → 표현 학습)
   const [celebrating, setCelebrating] = useState(true);
   useEffect(() => {
     const timer = setTimeout(() => setCelebrating(false), 2000);
     return () => clearTimeout(timer);
   }, []);
+
+  // 타이핑은 축하가 끝난 뒤 시작한다 — 축하 중에 미리 돌면 분석 연출이 너무 짧게 지나간다
+  const { text, done } = useTypewriter(celebrating ? [''] : phrases);
+  // 타이핑이 끝나고 데이터도 준비돼야 리빌 — ready를 함께 봐야 결과가 먼저 깜빡이지 않는다
+  const listed = ready && done;
 
   // 구슬 든 랜디 — 톡 튀어 나타나 둥실둥실 떠 있다가, listed 되면 사라진다
   const orb = (
@@ -112,25 +113,35 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
         <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(env(safe-area-inset-bottom),24px)]">
           <AnimatePresence mode="wait">
             {celebrating ? (
-              // 대화 완료 축하 — 폭죽 이모지 GIF가 가운데 잠깐 떴다가 분석 연출로 이어진다
+              // 대화 완료 축하 — 분석 연출과 같은 골격(좌상단 타이틀 + 가운데 캐릭터)으로 그려 전환이 매끄럽다
               <motion.div
                 key="celebrate"
-                className="flex min-h-0 flex-1 flex-col items-center justify-center gap-5"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.94 }}
-                transition={{ duration: 0.28 }}
+                className="flex min-h-0 flex-1 flex-col"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.25 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- 구글이 호스팅하는 모션 이모지 GIF라 next/image 최적화 대상이 아니다 */}
-                <img
-                  src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.gif"
-                  alt="🎉"
-                  width={140}
-                  height={140}
-                />
-                <p className="text-center text-2xl leading-snug font-extrabold text-foreground">
-                  대화 하나를 잘 완료했어요!
-                </p>
+                <h1 className="pt-1 text-3xl leading-[1.22] font-black tracking-normal whitespace-pre-line text-foreground">
+                  {'대화 하나를\n잘 완료했어요!'}
+                </h1>
+                <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6">
+                  <motion.div
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 420, damping: 18 }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- 구글이 호스팅하는 모션 이모지 GIF라 next/image 최적화 대상이 아니다 */}
+                    <img
+                      src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.gif"
+                      alt="🎉"
+                      width={168}
+                      height={168}
+                    />
+                  </motion.div>
+                  {/* 분석 연출의 타이핑 텍스트와 같은 자리를 비워둬 캐릭터 위치가 안 튄다 */}
+                  <p className="min-h-[4.5rem]" aria-hidden />
+                </div>
               </motion.div>
             ) : !listed ? (
               // 가운데 구슬 랜디 + 밑 타이핑
