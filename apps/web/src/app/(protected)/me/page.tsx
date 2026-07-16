@@ -148,7 +148,10 @@ export default function MyPage() {
           <MenuGroup>
             <MenuButton
               title="Landit에게 의견 보내기"
-              onClick={() => setIsFeedbackSheetOpen(true)}
+              onClick={() => {
+                track(EVENTS.NPS_SURVEY_OPENED, { source: 'me' });
+                setIsFeedbackSheetOpen(true);
+              }}
             />
           </MenuGroup>
 

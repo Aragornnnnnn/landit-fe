@@ -2,8 +2,10 @@
 'use client';
 
 import { useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { AnimatePresence, motion } from 'motion/react';
 
+import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
 
 import { submitNps, type NpsScore } from '../api/nps';
@@ -21,6 +23,11 @@ export function FeedbackSurvey({ onDone }: FeedbackSurveyProps) {
 
   async function handleSubmit() {
     if (score === null) return;
+    // 의견 원문은 PII 위험이 있어 존재 여부만 남긴다
+    track(EVENTS.NPS_SURVEY_SUBMITTED, {
+      score,
+      has_comment: comment.trim().length > 0,
+    });
     try {
       await submitNps(score, comment);
     } catch {

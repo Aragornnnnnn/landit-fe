@@ -167,7 +167,10 @@ export const ScenarioList = ({
               variant="primary"
               size="sm"
               className="mt-2 w-auto px-6"
-              onClick={() => setFeedbackOpen(true)}
+              onClick={() => {
+                track(EVENTS.NPS_SURVEY_OPENED, { source: 'all_completed' });
+                setFeedbackOpen(true);
+              }}
             >
               더 하고 싶은 상황이 있어요!
             </Button>
