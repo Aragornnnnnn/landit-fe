@@ -154,18 +154,15 @@ export const QuizStep = ({
       {/* 힌트 — 한 번 누르면 다음 단어 힌트, 한 번 더 누르면 정답 문장 공개 */}
       {checked === 'idle' && (
         <div className="flex min-h-9 items-center justify-center pt-2">
+          {/* 퀴즈는 힌트 한 단계만 — 정답 공개는 학습 효과를 해쳐 뺐다 (누르면 다음 단어·오배치 표시) */}
           <HintButton
             step={hintStep}
+            maxStep={1}
             onAdvance={() => {
               track(EVENTS.HINT_USED, { source: 'quiz', level: hintStep + 1 });
               setHintStep((step) => step + 1);
             }}
           />
-          {hintStep >= 2 && (
-            <p className="text-center text-sm font-bold text-primary">
-              {quiz.writingSentenceText}
-            </p>
-          )}
         </div>
       )}
 
