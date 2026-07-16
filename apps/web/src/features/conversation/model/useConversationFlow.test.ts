@@ -337,13 +337,14 @@ describe('useConversationFlow', () => {
     expect(result.current.phase).toBe('USER_IDLE');
   });
 
-  it('빈 답변은 제출하지 않는다', async () => {
+  it('빈 음성 답변은 제출하지 않고 마이크 대기로 되돌린다', async () => {
+    // 듣는 중 상태에 남겨두면 마이크는 꺼졌는데 UI만 듣는 중으로 갇힌다
     const { result } = await renderUserFirst();
 
     await speakAndSubmit(result, '   ');
 
     expect(submitMessage).not.toHaveBeenCalled();
-    expect(result.current.phase).toBe('USER_LISTENING');
+    expect(result.current.phase).toBe('USER_IDLE');
   });
 
   it('다음 질문이 있으면 속마음이 끝난 뒤 다음 AI 질문으로 이어간다', async () => {

@@ -16,6 +16,7 @@ import { haptic } from '@/shared/haptics';
 import { isMicPermissionDeniedError } from '@/shared/lib/stt/errors';
 import { useStt } from '@/shared/lib/stt/useStt';
 import { useTts } from '@/shared/lib/tts/useTts';
+import { showToast } from '@/shared/ui/toast';
 
 import {
   endSession,
@@ -246,8 +247,18 @@ export const useConversationFlow = (scenario: Scenario) => {
   // 세션이 백그라운드로 아직 안 끝났으면 sessionId 확보를 기다린다.
   const submitContent = async (raw: string, inputType: 'VOICE' | 'TEXT') => {
     const content = raw.trim();
-    // TODO(전역 토스트): 음성이 하나도 인식되지 않은 채 완료하면 조용히 무시하지 말고 "말이 인식되지 않았어요" 토스트 노출
-    if (!content || submittingRef.current) return;
+    if (submittingRef.current) return;
+    if (!content) {
+      // 음성이 하나도 인식되지 않은 채 완료(■) — 조용히 무시하면 듣는 중 UI에 갇힌다.
+      // 마이크 대기로 되돌리고 왜 넘어가지 않는지 알려준다.
+      if (inputType === 'VOICE') {
+        haptic('error');
+        setTranscript('');
+        send('LISTENING_CANCELLED');
+        showToast('말이 인식되지 않았어요. 다시 말해볼까요?');
+      }
+      return;
+    }
 
     submittingRef.current = true;
     send('LISTENING_DONE'); // → WAITING (상대가 생각 중)
@@ -255,10 +266,10 @@ export const useConversationFlow = (scenario: Scenario) => {
       const sessionId =
         sessionIdRef.current ?? (await sessionPromiseRef.current);
       if (sessionId == null) {
-        // TODO(전역 토스트): 세션 시작 실패 — "잠시 후 다시 시도해 주세요" 노출
         console.error('세션이 없어 제출할 수 없어요');
         haptic('error');
         send('RESPONSE_FAILED');
+        showToast('연결에 문제가 생겼어요. 잠시 후 다시 시도해 주세요');
         return;
       }
 
@@ -293,10 +304,10 @@ export const useConversationFlow = (scenario: Scenario) => {
           send('RESPONSE_READY'); // → THOUGHT
         });
     } catch (error) {
-      // TODO(전역 토스트): 콘솔 대신 "전송에 실패했어요. 다시 시도해 주세요" 토스트로 실패를 알린다
       console.error('발화 제출 실패', error);
       haptic('error');
       send('RESPONSE_FAILED'); // → USER_IDLE (다시 시도)
+      showToast('전송에 실패했어요. 다시 시도해 주세요');
     } finally {
       submittingRef.current = false;
     }
