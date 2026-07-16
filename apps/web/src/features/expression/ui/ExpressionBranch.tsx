@@ -14,6 +14,10 @@ import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 import { useExpressions } from '../model/useExpressions';
 import { ExpressionList } from './ExpressionList';
 
+// 축하·분석 화면이 같은 타이틀 타이포를 공유해야 전환 순간 글자가 튀지 않는다
+const TITLE_CLASS =
+  'pt-1 text-3xl leading-[1.22] font-black tracking-normal whitespace-pre-line text-foreground';
+
 export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
   const router = useRouter();
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
@@ -44,7 +48,8 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // 타이핑은 축하가 끝난 뒤 시작한다 — 축하 중에 미리 돌면 분석 연출이 너무 짧게 지나간다
+  // 타이핑은 축하가 끝난 뒤 시작한다 — 축하 중에 미리 돌면 분석 연출이 너무 짧게 지나간다.
+  // ['']는 '꺼짐' 신호: 훅이 문구 내용을 key로 삼아, phrases로 바뀌는 순간 처음부터 다시 타이핑한다
   const { text, done } = useTypewriter(celebrating ? [''] : phrases);
   // 타이핑이 끝나고 데이터도 준비돼야 리빌 — ready를 함께 봐야 결과가 먼저 깜빡이지 않는다
   const listed = ready && done;
@@ -122,9 +127,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
                 exit={{ opacity: 0, scale: 0.96 }}
                 transition={{ duration: 0.25 }}
               >
-                <h1 className="pt-1 text-3xl leading-[1.22] font-black tracking-normal whitespace-pre-line text-foreground">
-                  {'대화 하나를\n잘 완료했어요!'}
-                </h1>
+                <h1 className={TITLE_CLASS}>{'대화 하나를\n잘 완료했어요!'}</h1>
                 <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6">
                   <motion.div
                     initial={{ scale: 0.6, opacity: 0 }}
@@ -151,9 +154,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
                 exit={{ opacity: 0, scale: 0.94 }}
                 transition={{ duration: 0.28 }}
               >
-                <h1 className="pt-1 text-3xl leading-[1.22] font-black tracking-normal whitespace-pre-line text-foreground">
-                  {title}
-                </h1>
+                <h1 className={TITLE_CLASS}>{title}</h1>
                 <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6">
                   {orb}
                   {/* 텍스트 영역은 항상 자리(min-h)를 잡아, 타이핑이 생겨도 캐릭터가 안 밀린다 */}

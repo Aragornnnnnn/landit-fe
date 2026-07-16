@@ -8,7 +8,7 @@ import type { Expression } from '../api/list';
 interface ExpressionListItemProps {
   expression: Expression;
   onSelect: (expressionId: number) => void;
-  // 활성 항목의 '시작할게요' 알약을 숨긴다
+  // 활성 항목의 다음 표현 표시(👈)를 숨긴다
   hideStartAction?: boolean;
 }
 
@@ -85,11 +85,14 @@ export const ExpressionListItem = ({
           {targetExpressionText}
         </p>
       </div>
-      {/* 글자 라벨 대신 왼쪽을 가리키는 손가락 — '다음은 이거'를 직관적으로 */}
+      {/* 글자 라벨 대신 왼쪽을 가리키는 손가락 — '다음은 이거'를 직관적으로 (스크린리더용 텍스트는 따로) */}
       {!hideStartAction && (
-        <span className="tossface shrink-0 text-2xl" aria-hidden>
-          👈
-        </span>
+        <>
+          <span className="tossface shrink-0 text-2xl" aria-hidden>
+            👈
+          </span>
+          <span className="sr-only">다음에 배울 표현</span>
+        </>
       )}
     </button>
   );

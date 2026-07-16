@@ -11,7 +11,7 @@ interface ExpressionListProps {
   onSelect: (expressionId: number) => void;
   // 항목을 하나씩 타타탁 순차 등장시킨다 (표현 생성 화면 리빌용)
   stagger?: boolean;
-  // 활성 항목의 '시작할게요' 알약을 숨긴다 (하단에 학습 CTA가 따로 있을 때)
+  // 활성 항목의 다음 표현 표시(👈)를 숨긴다 (하단에 학습 CTA가 따로 있을 때)
   hideStartAction?: boolean;
   // 상단 진행바(N/M 완료)를 숨긴다 (막 생성돼 전부 미완료일 때는 불필요)
   hideProgress?: boolean;
