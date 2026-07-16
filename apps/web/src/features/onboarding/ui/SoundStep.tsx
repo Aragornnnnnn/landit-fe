@@ -1,16 +1,14 @@
-// 온보딩 2단계 — TTS 소리 확인 (파형 비주얼라이저 + 글자 하이라이트)
+// 온보딩 2단계 — TTS 소리 확인 (미리 합성한 정적 mp3 재생 + 파형 비주얼라이저 + 글자 하이라이트)
 'use client';
 
-import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
 import { Button } from '@/shared/ui/Button';
 
-import { estimateSpeechMs } from '../model/onboarding.constants';
-import { useSpeechSimulation } from '../model/useSpeechSimulation';
+import { useSoundPlayback } from '../model/useSoundPlayback';
 
 export const SoundStep = ({ onNext }: { onNext: () => void }) => {
-  const { question, isSpeaking, bubbleVisible } = useSpeechSimulation();
+  const { question, isSpeaking, bubbleVisible, progress } = useSoundPlayback();
 
   return (
     <>
@@ -25,7 +23,7 @@ export const SoundStep = ({ onNext }: { onNext: () => void }) => {
           <Waveform isSpeaking={isSpeaking} />
           <QuestionBubble
             question={question}
-            isSpeaking={isSpeaking}
+            progress={progress}
             visible={bubbleVisible}
           />
         </div>
@@ -75,34 +73,17 @@ const Waveform = ({ isSpeaking }: { isSpeaking: boolean }) => {
   );
 };
 
-// 질문 말풍선 — 발화 진행에 맞춰 글자를 순서대로 하이라이트한다
+// 질문 말풍선 — 재생 진행률(progress)에 맞춰 글자를 순서대로 하이라이트한다
 const QuestionBubble = ({
   question,
-  isSpeaking,
+  progress,
   visible,
 }: {
   question: string;
-  isSpeaking: boolean;
+  progress: number;
   visible: boolean;
 }) => {
-  // 진행값이 어느 질문 것인지 함께 저장한다 — 질문이 바뀐 첫 프레임에 이전 값이 새어 나오지 않도록
-  const [lit, setLit] = useState({ question, index: -1 });
-  const litIndex = isSpeaking && lit.question === question ? lit.index : -1;
-
-  useEffect(() => {
-    if (!isSpeaking) return;
-    const chars = question.length;
-    const duration = estimateSpeechMs(question);
-    const start = Date.now();
-    let raf: number;
-    const tick = () => {
-      const t = Math.min((Date.now() - start) / duration, 1);
-      setLit({ question, index: Math.floor(t * chars) });
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [isSpeaking, question]);
+  const litIndex = Math.floor(progress * question.length);
 
   return (
     // min-h로 말풍선이 사라질 때도 레이아웃을 유지한다

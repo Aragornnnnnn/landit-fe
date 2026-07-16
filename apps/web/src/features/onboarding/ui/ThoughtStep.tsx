@@ -1,12 +1,14 @@
-// 온보딩 4단계 — 랜디가 상대 속마음을 대신 알려주는 걸 표정별로 시연
+// 온보딩 4단계 — 랜디가 상대 속마음을 대신 알려주는 걸 실제 오버레이 형태 그대로 박스 안에서 시연
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence } from 'motion/react';
 
+import {
+  ThoughtReveal,
+  type FloatingThought,
+} from '@/features/conversation/ui/ThoughtReveal';
 import { Button } from '@/shared/ui/Button';
-
-import { ThoughtCard, type FloatingThought } from './ThoughtCard';
 
 const DEMOS: FloatingThought[] = [
   { type: 'GOOD', text: '오, 이유까지 말해주네. 대화 잘 통한다!' },
@@ -35,19 +37,11 @@ export const ThoughtStep = ({ onNext }: { onNext: () => void }) => {
           상대 속마음을 대신 알려줄게요
         </h1>
 
-        <div className="flex flex-1 flex-col items-center justify-center">
-          <div className="flex min-h-30 w-full items-center justify-center">
+        <div className="flex flex-1 items-center justify-center py-6">
+          {/* 실제 속마음 오버레이(어두운 배경 + 날아드는 랜디)를 박스 안에 그대로 담는다 */}
+          <div className="flex min-h-[340px] w-full items-center justify-center overflow-hidden rounded-[32px] bg-black/55 px-6">
             <AnimatePresence mode="wait">
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.9, y: 12 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
-                className="flex w-full justify-center"
-              >
-                <ThoughtCard thought={DEMOS[index]} />
-              </motion.div>
+              <ThoughtReveal key={index} thought={DEMOS[index]} />
             </AnimatePresence>
           </div>
         </div>
