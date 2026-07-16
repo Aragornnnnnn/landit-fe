@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   advance,
   appendLetter,
+  applyComposition,
   backspace,
   diffComposition,
   emptyState,
@@ -218,5 +219,53 @@ describe('diffComposition', () => {
 
   it('조합 문자열의 스페이스는 space 액션으로 편다', () => {
     expect(diffComposition('good', 'good ')).toEqual([{ kind: 'space' }]);
+  });
+});
+
+describe('applyComposition', () => {
+  it('조합이 늘어난 만큼 글자를 채운다', () => {
+    const { state, dropped } = applyComposition(
+      emptyState(5),
+      '',
+      'go',
+      LENGTHS,
+      0,
+    );
+    // 'g'는 첫 단어 "I"(1글자)를 채워 다음으로 넘어가고 'o'는 둘째 단어에
+    expect(state.typed).toEqual(['g', 'o', '', '', '']);
+    expect(dropped).toBe(0);
+  });
+
+  it('마지막 박스가 꽉 차 버려진 글자는 dropped로 세고 모델은 그대로 둔다', () => {
+    const full = { typed: ['I', 'got', 'a', 'good', 'deal'], focus: 4 };
+    const { state, dropped } = applyComposition(
+      full,
+      'deal',
+      'deals',
+      LENGTHS,
+      0,
+    );
+    expect(state).toEqual(full);
+    expect(dropped).toBe(1);
+  });
+
+  it('조합 내 백스페이스는 버려진 글자부터 되돌려 실제 글자를 지우지 않는다', () => {
+    const full = { typed: ['I', 'got', 'a', 'good', 'deal'], focus: 4 };
+    // IME 버퍼는 'deals'였지만 모델은 'deal'(s는 버려짐) — 백스페이스 한 번은 s만 무효화해야 한다
+    const { state, dropped } = applyComposition(
+      full,
+      'deals',
+      'deal',
+      LENGTHS,
+      1,
+    );
+    expect(state).toEqual(full); // 'deal'의 l이 지워지면 안 된다
+    expect(dropped).toBe(0);
+  });
+
+  it('버려진 글자가 없으면 백스페이스가 모델 글자를 지운다', () => {
+    const full = { typed: ['I', 'got', 'a', 'good', 'deal'], focus: 4 };
+    const { state } = applyComposition(full, 'deal', 'dea', LENGTHS, 0);
+    expect(state.typed[4]).toBe('dea');
   });
 });

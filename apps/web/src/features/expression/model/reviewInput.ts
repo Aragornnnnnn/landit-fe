@@ -133,3 +133,32 @@ export const diffComposition = (
     actions.push({ kind: 'backspace' });
   return actions.concat(charsToActions(next.slice(common)));
 };
+
+// 조합 문자열 변화(prev→next)를 모델에 적용한다 — IME 버퍼와 모델의 어긋남 방지가 핵심.
+// 마지막 박스가 꽉 차면 appendLetter가 글자를 버리는데, IME 버퍼에는 그 글자가 남는다.
+// 버린 글자 수(dropped)를 세어 두고, 조합 내 백스페이스는 버린 글자부터 되돌려
+// 실제로 채워진 글자가 잘못 지워지지 않게 한다.
+export const applyComposition = (
+  state: InputState,
+  prev: string,
+  next: string,
+  lengths: number[],
+  dropped: number,
+): { state: InputState; dropped: number } => {
+  let current = state;
+  let currentDropped = dropped;
+  for (const action of diffComposition(prev, next)) {
+    if (action.kind === 'backspace') {
+      if (currentDropped > 0) currentDropped -= 1;
+      else current = backspace(current);
+    } else if (action.kind === 'space') {
+      current = advance(current, lengths.length);
+    } else {
+      const applied = appendLetter(current, action.letter, lengths);
+      if (applied === current)
+        currentDropped += 1; // 꽉 차서 버려진 글자
+      else current = applied;
+    }
+  }
+  return { state: current, dropped: currentDropped };
+};

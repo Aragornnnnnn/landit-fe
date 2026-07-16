@@ -12,17 +12,19 @@ import { CheckIcon } from '@/shared/ui/Icons';
 import {
   advance,
   appendLetter,
+  applyComposition,
   backspace,
-  diffComposition,
   emptyState,
   firstWrong,
   focusWord,
   gradeWords,
   isComplete,
   parseInputEvent,
+  type InputState,
   type ReviewInputAction,
 } from '../model/reviewInput';
 import type { SentenceQuiz } from '../model/sentenceQuiz';
+import { HintButton } from './HintButton';
 import { QuizPrompt } from './QuizPrompt';
 import { ReviewSuccess } from './ReviewSuccess';
 import { StepScaffold } from './StepScaffold';
@@ -32,6 +34,9 @@ interface ReviewInputStepProps {
   // 완료 연출 카드에 띄울 표현·뜻
   targetExpressionText: string;
   meaning: string;
+  // 예문(설명 스텝)을 보러 나갔다 돌아와도 쓰던 입력을 이어가도록, 부모가 draft를 보관한다
+  initialState?: InputState;
+  onStateChange?: (state: InputState) => void;
   onBack: () => void;
   onFinish: () => void;
   finishing: boolean;
@@ -44,6 +49,8 @@ export const ReviewInputStep = ({
   quiz,
   targetExpressionText,
   meaning,
+  initialState,
+  onStateChange,
   onBack,
   onFinish,
   finishing,
@@ -51,7 +58,12 @@ export const ReviewInputStep = ({
   const answer = quiz.answerWords;
   const lengths = answer.map((word) => word.length);
 
-  const [state, setState] = useState(() => emptyState(answer.length));
+  // draft가 있고 단어 수가 맞으면 이어서 시작한다 (문제가 바뀌었으면 새로)
+  const [state, setState] = useState(() =>
+    initialState && initialState.typed.length === answer.length
+      ? initialState
+      : emptyState(answer.length),
+  );
   const [correct, setCorrect] = useState(false);
   const [wrongCount, setWrongCount] = useState<number[]>(() =>
     answer.map(() => 0),
@@ -71,9 +83,23 @@ export const ReviewInputStep = ({
   const answerRef = useRef<HTMLDivElement>(null);
   // 조합입력(IME) 중엔 input 이벤트를 무시하고, compositionupdate/end에서 조합 문자열을 흘려보낸다.
   const composingRef = useRef(false);
-  // 이미 반영한 조합 문자열 — 다음 조합 문자열과의 차이만 액션으로 내보내 라이브 반영한다.
+  // 이미 반영한 조합 문자열 — 다음 조합 문자열과의 차이만 반영해 라이브로 채운다.
   const composedRef = useRef('');
+  // 박스가 꽉 차 버려진 조합 글자 수 — IME 버퍼와 모델의 어긋남 보정(applyComposition 참고)
+  const droppedRef = useRef(0);
+  // 조합 이벤트가 렌더 사이에 연달아 와도 최신 상태에서 계산하도록 미러를 든다
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
   const keyboardInset = useKeyboardInset();
+
+  // 부모에 draft를 보고한다 — 예문 보러 나갔다 와도 입력이 유지되게
+  useEffect(() => {
+    onStateChange?.(state);
+    // onStateChange는 인라인 함수라 매 렌더 바뀐다 — state 변화에만 보고하면 충분하다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
 
   // 정답 순간 콘페티 — 브랜드 색으로 양쪽에서 터뜨린다
   useEffect(() => {
@@ -101,10 +127,14 @@ export const ReviewInputStep = ({
     });
   }, [correct]);
 
-  // 키보드가 올라와 뷰포트가 줄면(inset>0) 답변 박스를 다시 가운데로 맞춘다 —
+  // 키보드가 올라와 뷰포트가 줄면 답변 박스를 다시 가운데로 맞춘다 —
   // 포커스 시점엔 아직 키보드 전이라 스크롤이 어긋날 수 있어, 인셋이 확정된 뒤 한 번 더 정렬한다.
+  // 스크롤이 인셋을 다시 바꿔 정렬이 반복되지 않도록, 인셋이 0→양수로 뜨는 순간에만 실행한다.
+  const prevInsetRef = useRef(0);
   useEffect(() => {
-    if (keyboardInset > 0 && !correct) {
+    const appeared = prevInsetRef.current === 0 && keyboardInset > 0;
+    prevInsetRef.current = keyboardInset;
+    if (appeared && !correct) {
       answerRef.current?.scrollIntoView({ block: 'center' });
     }
   }, [keyboardInset, correct]);
@@ -170,6 +200,23 @@ export const ReviewInputStep = ({
     }
   };
 
+  // 조합 문자열 변화를 모델에 반영한다 — 버려진 글자(dropped)까지 추적해 IME 버퍼와 어긋나지 않게
+  const applyCompositionChange = (next: string) => {
+    if (correct) return;
+    const result = applyComposition(
+      stateRef.current,
+      composedRef.current,
+      next,
+      lengths,
+      droppedRef.current,
+    );
+    stateRef.current = result.state;
+    droppedRef.current = result.dropped;
+    composedRef.current = next;
+    setState(result.state);
+    clearWrong();
+  };
+
   // 네이티브 키 입력 라우팅 — 조합입력(IME) 이벤트는 건너뛰고(중복 방지) compositionend에서 한 번만 반영한다
   const handleInput = (event: React.FormEvent<HTMLInputElement>) => {
     const native = event.nativeEvent as InputEvent;
@@ -222,19 +269,18 @@ export const ReviewInputStep = ({
         onCompositionStart={() => {
           composingRef.current = true;
           composedRef.current = '';
+          droppedRef.current = 0;
         }}
         onCompositionUpdate={(event) => {
-          // 조합 중에도 이전 조합 대비 늘어난 글자만 반영해, 타이핑하는 즉시 박스가 채워진다
-          const next = event.data ?? '';
-          applyActions(diffComposition(composedRef.current, next));
-          composedRef.current = next;
+          // 조합 중에도 이전 조합 대비 차이만 반영해, 타이핑하는 즉시 박스가 채워진다
+          applyCompositionChange(event.data ?? '');
         }}
         onCompositionEnd={(event) => {
           // 남은 차이만 마저 반영하고(중복 없이) 조합 상태를 닫는다
-          const next = event.data ?? '';
-          applyActions(diffComposition(composedRef.current, next));
+          applyCompositionChange(event.data ?? '');
           composingRef.current = false;
           composedRef.current = '';
+          droppedRef.current = 0;
           resetHidden();
         }}
         onKeyDown={(event) => {
@@ -343,17 +389,13 @@ export const ReviewInputStep = ({
       </div>
 
       {/* 힌트 — 한 번 누르면 모든 단어 첫 글자, 한 번 더 누르면 정답 전체를 흐리게 공개 */}
-      {!correct && hintStep < 2 && (
+      {!correct && (
         <div className="flex justify-center pt-3">
-          <button
-            type="button"
-            // 숨은 입력 포커스를 뺏지 않아 힌트를 봐도 키보드가 유지된다
-            onPointerDown={(event) => event.preventDefault()}
-            onClick={() => setHintStep((step) => step + 1)}
-            className="text-sm font-semibold text-muted-foreground underline underline-offset-4 transition-colors active:text-foreground"
-          >
-            {hintStep === 0 ? '힌트 보기' : '정답 보기'}
-          </button>
+          <HintButton
+            step={hintStep}
+            onAdvance={() => setHintStep((step) => step + 1)}
+            keepFocus
+          />
         </div>
       )}
 

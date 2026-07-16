@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
 
 import { collectPreloadImageUrls } from '../model/preloadImages';
+import type { InputState } from '../model/reviewInput';
 import { fromLearning, fromWritingSentence } from '../model/sentenceQuiz';
 import { useExpressionLearning } from '../model/useExpressionLearning';
 import { useExpressionPractice } from '../model/useExpressionPractice';
@@ -29,6 +30,11 @@ export const ExpressionFlow = ({
   const [step, setStep] = useState<'QUIZ' | 'EXPLAIN' | 'REVIEW'>('QUIZ');
   // 예문까지(QUIZ·EXPLAIN)는 뒤로가기 대신 X로 나가며, 중단 확인 시트를 먼저 띄운다
   const [exitOpen, setExitOpen] = useState(false);
+  // 복습 영작 draft — 예문(설명)을 보러 나갔다 돌아와도 입력이 유지되게 문제 문장과 함께 보관한다
+  const [reviewDraft, setReviewDraft] = useState<{
+    sentence: string;
+    state: InputState;
+  } | null>(null);
 
   // 플로우 전체(퀴즈·설명·복습)는 대표 예문(learning-start)만으로 굴러간다.
   // 추가 예문(practice)은 설명 스텝의 "이렇게도 써요"에만 쓰는 보강 데이터라, 없거나 실패해도 플로우를 막지 않는다.
@@ -38,7 +44,10 @@ export const ExpressionFlow = ({
     isLoading: learningLoading,
   } = useExpressionLearning(expressionId);
   // learning이 오면(=QUIZ 진입) 예문을 미리 받아, QUIZ 체류 중 EXPLAIN용 practice를 데워둔다.
-  const { practice } = useExpressionPractice(expressionId, !!learning);
+  const { practice, isLoading: practiceLoading } = useExpressionPractice(
+    expressionId,
+    !!learning,
+  );
   const finish = useFinishExpression(expressionId);
 
   // 예문 이미지는 QUIZ→EXPLAIN에서 마운트되지만, URL을 아는 즉시 브라우저 캐시에 선로드해
@@ -109,16 +118,29 @@ export const ExpressionFlow = ({
   }
 
   // 복습 영작 — practice가 주는 별도 영작 문제(writingSentence)를 입력으로 푼다.
-  // practice가 아직 안 왔거나 실패했으면(404 등) 퀴즈와 같은 대표 예문으로 폴백해 플로우를 막지 않는다.
+  // 아직 로딩 중이면 잠깐 스켈레톤을 유지한다 — 폴백 문제를 먼저 보여줬다가 도착 후 바꿔치기하면
+  // 입력 중이던 상태와 단어 수가 어긋난다. 실패(404 등) 시에만 대표 예문으로 폴백해 플로우를 막지 않는다.
+  if (practiceLoading && !practice) return <QuizStepSkeleton />;
   const reviewQuiz = practice?.writingSentence
     ? fromWritingSentence(practice.writingSentence)
     : quiz;
 
   return (
     <ReviewInputStep
+      // 문제가 바뀌면(이론상 폴백→practice 교체) 상태를 통째로 리셋한다
+      key={reviewQuiz.writingSentenceText}
       quiz={reviewQuiz}
       targetExpressionText={learning.targetExpressionText}
       meaning={learning.baseExpressionMeaningText}
+      // 예문을 보러 나갔다 돌아와도 같은 문제면 draft를 이어서 쓴다
+      initialState={
+        reviewDraft?.sentence === reviewQuiz.writingSentenceText
+          ? reviewDraft.state
+          : undefined
+      }
+      onStateChange={(state) =>
+        setReviewDraft({ sentence: reviewQuiz.writingSentenceText, state })
+      }
       onBack={() => setStep('EXPLAIN')}
       finishing={finish.isPending}
       onFinish={() =>
