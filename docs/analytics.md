@@ -23,7 +23,8 @@
 - **발화 래퍼**: [`apps/web/src/shared/analytics/amplitude.ts`](../apps/web/src/shared/analytics/amplitude.ts) — `track(EVENTS.X, props)` 단일 통로.
   - `NEXT_PUBLIC_AMPLITUDE_API_KEY`가 없으면 no-op으로 `console.debug`만 남긴다.
   - dev 환경(`NODE_ENV=development`)에선 키가 있어도 모든 이벤트를 콘솔에 같이 찍는다.
-  - 세션 리플레이는 초기 단계라 **100% 수집**(`@amplitude/unified` `initAll`). 오토캡처는 커스텀과 겹치지 않는 것만 — sessions·attribution·elementInteractions(계측 누락 안전망) on, pageViews(커스텀 `Page Viewed`와 중복)·formInteractions·fileDownloads off.
+  - 세션 리플레이는 초기 단계라 **100% 수집**(`@amplitude/unified` `initAll`). **오토캡처는 전부 off** — 커스텀 이벤트 53종으로 충분하고 노이즈·볼륨을 줄인다.
+  - `minIdLength: 1` — 백엔드 회원번호가 1~4자리라 앰플리튜드 기본 5자 제한(400 Invalid id length)에 걸리는 것을 푼다.
   - 전 이벤트 공통 속성: `surface`(app|browser), `platform`(ios|android|web), `app_version`, `build_number` — 셸이 주입한 `window.__LANDIT_NATIVE__`(LAN-156)에서 온다.
 - **유저 식별**: `AnalyticsBootstrap`이 auth 스토어를 구독해 로그인 시 `setUserId(member.userId)` + `provider` 유저 속성, 로그아웃 시 `reset()`. 앱/브라우저 어디서든 같은 유저로 묶인다.
 - **화면 노출**: `PageViewTracker`가 라우트 변경마다 `Page Viewed` 발화. 동적 세그먼트는 `page_name`으로 정규화하고 id는 속성으로 뺀다. `/stt-demo`, `/dev`, `/`(즉시 redirect)는 제외.
@@ -139,7 +140,7 @@
 
 ### 계측하지 않는 것 (의도적 제외 — 전수 감사로 확정)
 
-아래는 놓친 게 아니라 검토 후 뺀 것이다. 원클릭 수준 데이터는 오토캡처 elementInteractions(`[Amplitude] Element Clicked`)가 전부 받으므로, 필요해지면 배포 없이 사후 분석할 수 있다.
+아래는 놓친 게 아니라 검토 후 뺀 것이다. 원클릭 수준까지 필요해지면 오토캡처 elementInteractions를 다시 켜서 사후 수집할 수 있다.
 
 - 키 입력·IME 글자 단위, NPS 코멘트 타이핑, 복습 영작 단어 박스 포커스 — 노이즈 대비 분석 가치가 없다.
 - 단순 화면 이동 버튼(내 정보·약관 링크, 뒤로가기, 콜백 "로그인으로 돌아가기") — `Page Viewed`가 목적지를 찍는다.
