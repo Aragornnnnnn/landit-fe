@@ -2,8 +2,10 @@
 
 // 로그인 버튼 → (네이티브면) 브릿지로 idToken 수신 후 /social-login, (브라우저면) 웹 OAuth로 폴백
 import { useEffect, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { track } from '@/shared/analytics';
 import { socialLogin } from '@/shared/api/auth/social-login';
 import { startWebSocialLogin } from '@/shared/auth/web-social-login';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
@@ -24,7 +26,15 @@ export function useSocialLogin() {
       subscribeFromNative(async (message) => {
         if (message.type === 'SOCIAL_LOGIN_ERROR') {
           // 사용자가 로그인 중 취소한 거면 에러로 보여주지 않고 조용히 로그인 화면으로 돌아간다
-          if (!message.cancelled) setError(message.message);
+          if (message.cancelled) {
+            track(EVENTS.LOGIN_CANCELED, {});
+          } else {
+            setError(message.message);
+            track(EVENTS.LOGIN_FAILED, {
+              method: 'native',
+              reason: 'provider_error',
+            });
+          }
           setPending(null);
           return;
         }
@@ -40,9 +50,19 @@ export function useSocialLogin() {
           // newUser는 로그인 시점 분기용이라 전역 상태에는 빼고 저장한다
           const { newUser, ...member } = user;
           setAuth(accessToken, refreshToken, member);
+          track(EVENTS.LOGIN_COMPLETED, {
+            provider: message.provider,
+            method: 'native',
+            is_new_user: newUser,
+          });
           // TODO: 온보딩 중도 이탈 유저는 재로그인 시 newUser=false라 다시 못 본다 — 서버 완료 플래그가 생기면 그걸로 분기
           router.replace(newUser ? '/onboarding' : '/home');
         } catch (error) {
+          track(EVENTS.LOGIN_FAILED, {
+            provider: message.provider,
+            method: 'native',
+            reason: 'login_api_failed',
+          });
           // 개발 모드에선 서버가 준 실패 사유를 화면·콘솔에 그대로 노출한다 (프로덕션은 일반 문구만)
           const isDev = process.env.NODE_ENV === 'development';
           if (isDev) console.error('[auth] social-login 실패:', error);
@@ -59,6 +79,7 @@ export function useSocialLogin() {
     setError(null);
     // 네이티브 셸(WebView) 안이면 네이티브 SDK로, 밖(일반 브라우저)이면 웹 OAuth로 진행한다
     if (postToNative({ type: 'SOCIAL_LOGIN_REQUEST', provider })) {
+      track(EVENTS.LOGIN_STARTED, { provider, method: 'native' });
       setPending(provider);
       return;
     }
@@ -69,12 +90,18 @@ export function useSocialLogin() {
       return;
     }
 
+    track(EVENTS.LOGIN_STARTED, { provider, method: 'web' });
     setPending(provider);
     try {
       // 성공하면 제공자 인증 페이지로 이동하며 현재 페이지를 떠난다 (완료 처리는 콜백 페이지)
       await startWebSocialLogin(provider, generateRandomHex(16));
     } catch (err) {
       setPending(null);
+      track(EVENTS.LOGIN_FAILED, {
+        provider,
+        method: 'web',
+        reason: 'start_failed',
+      });
       const isDev = process.env.NODE_ENV === 'development';
       const detail = isDev && err instanceof Error ? ` (${err.message})` : '';
       setError(`로그인을 시작하지 못했어요.${detail}`);

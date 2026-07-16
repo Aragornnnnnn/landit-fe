@@ -2,9 +2,11 @@
 
 // 내 정보(/me) — 프로필 헤더 + 메뉴 목록. 페이지 전환 모션은 전역 라우트 트랜지션 도입 시 함께 다룬다
 import { useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { FeedbackSurvey } from '@/features/nps/ui/FeedbackSurvey';
+import { track } from '@/shared/analytics';
 import { logout as requestLogout } from '@/shared/api/auth/logout';
 import { withdraw } from '@/shared/api/auth/withdraw';
 import { clearSession } from '@/shared/lib/clear-session';
@@ -48,6 +50,8 @@ export default function MyPage() {
     } catch (error) {
       console.warn('[Auth] logout failed:', error);
     } finally {
+      // 세션 정리(resetUser)보다 먼저 찍어야 로그아웃한 유저에게 귀속된다
+      track(EVENTS.LOGOUT_COMPLETED);
       setIsLoggingOut(false);
       finishSignedOut();
     }
@@ -60,6 +64,7 @@ export default function MyPage() {
     setDeleteErrorMessage(null);
     try {
       await withdraw();
+      track(EVENTS.ACCOUNT_DELETED);
       finishSignedOut();
     } catch (error) {
       const message =
