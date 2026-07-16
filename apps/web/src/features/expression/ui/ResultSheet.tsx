@@ -29,9 +29,12 @@ export const ResultSheet = ({
       animate={{ y: 0 }}
       transition={{ type: 'spring', stiffness: 380, damping: 34 }}
     >
+      {/* 배경은 불투명해야 한다 — 반투명 틴트면 뒤의 퀴즈 내용이 비쳐 지저분하다. 같은 톤을 카드색과 섞어 쓴다 */}
       <div
         className={`mx-auto flex max-w-[430px] flex-col gap-3 rounded-t-3xl px-5 pt-5 pb-[max(env(safe-area-inset-bottom),24px)] ${
-          correct ? 'bg-success/12' : 'bg-destructive/12'
+          correct
+            ? 'bg-[color-mix(in_srgb,var(--success)_12%,var(--card))]'
+            : 'bg-[color-mix(in_srgb,var(--destructive)_12%,var(--card))]'
         }`}
       >
         <div className="flex items-center gap-2">
