@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { SessionFeedbackScreen } from '@/features/feedback/ui/SessionFeedbackScreen';
 import type { Scenario } from '@/features/scenario/api/list';
+import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Transition } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
@@ -27,15 +28,9 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   // 진입 시점의 완료 여부(재대화 판별) — 세션이 끝나면 시나리오 리스트가 invalidate돼
   // scenario.completed가 뒤늦게 true로 바뀌므로, 첫 완료와 구분하려면 진입 값으로 고정해야 한다
   const [wasCompleted] = useState(scenario.completed);
-  // USER 선발화 진입 안내 — 랜디가 먼저 날아들어 말을 걸어보라고 알려주고 잠시 후 사라진다
-  const [showUserFirstIntro, setShowUserFirstIntro] = useState(
-    scenario.firstSpeaker === 'USER',
-  );
-  useEffect(() => {
-    if (!showUserFirstIntro) return;
-    const timer = setTimeout(() => setShowUserFirstIntro(false), 2800);
-    return () => clearTimeout(timer);
-  }, [showUserFirstIntro]);
+  // USER 선발화 진입 안내 — 랜디가 먼저 날아들어 말을 걸어보라고 알려주고 잠시 후 사라진다.
+  // 판정은 turn.isUserOpening 한 곳에 위임하고(카드 안내 구조와 같은 소스), 여기선 노출 시간만 관리한다.
+  const [introDismissed, setIntroDismissed] = useState(false);
   const {
     phase,
     turn,
@@ -55,6 +50,17 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   } = useConversationFlow(scenario);
 
   const ended = phase === 'DONE';
+  // 키보드 입력 중 — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
+  const typing = keyboardMode && phase === 'USER_LISTENING';
+  const keyboardInset = useKeyboardInset();
+  // 선발화 안내는 대기(USER_IDLE) 동안만 — 사용자가 말하기 시작하거나 속마음이 오면 즉시 비켜준다
+  const showUserFirstIntro =
+    turn.isUserOpening && phase === 'USER_IDLE' && !introDismissed;
+  useEffect(() => {
+    if (!showUserFirstIntro) return;
+    const timer = setTimeout(() => setIntroDismissed(true), 2800);
+    return () => clearTimeout(timer);
+  }, [showUserFirstIntro]);
   // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로 페이드 인해 넘어간다. 마치면 표현 학습 분기로 보낸다.
   const view = ended && showFeedback ? 'feedback' : 'conversation';
 
@@ -77,7 +83,13 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   }
 
   return (
-    <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
+    <main
+      className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
+      // iOS WKWebView는 키보드가 떠도 레이아웃이 안 줄어든다 — 가려진 높이만큼 올려 입력 박스를 보이게 한다
+      style={
+        typing && keyboardInset ? { paddingBottom: keyboardInset } : undefined
+      }
+    >
       {/* 무대가 상태바 밑까지 이어지고, X만 safe area 아래에 뜬다 — 플레인 아이콘(마이페이지와 통일) */}
       <header
         className="absolute inset-x-0 top-0 z-20 flex items-center px-3"
@@ -105,9 +117,16 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
             instruction={turn.isUserOpening}
           />
         </div>
-        {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 아래 입력창이 답변을 보여주므로 중복을 피한다 */}
-        {!ended && !keyboardMode && (
-          <UserTranscript text={transcript} phase={phase} />
+        {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다 */}
+        {!ended && (
+          <UserTranscript
+            text={transcript}
+            phase={phase}
+            editing={typing}
+            onChange={setTranscript}
+            onSubmit={submitText}
+            onCancel={cancelListening}
+          />
         )}
       </section>
 
@@ -120,15 +139,11 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
               <ArrowRightIcon size={16} />
             </Button>
           </div>
-        ) : (
+        ) : typing ? null : (
           <MicControl
             phase={phase}
-            keyboardMode={keyboardMode}
-            transcript={transcript}
             onPress={pressMic}
             onKeyboard={pressKeyboard}
-            onTranscriptChange={setTranscript}
-            onSubmitText={submitText}
             onCancel={cancelListening}
             onDone={finishListening}
           />
