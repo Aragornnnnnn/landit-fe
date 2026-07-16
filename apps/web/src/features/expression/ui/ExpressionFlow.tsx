@@ -13,6 +13,7 @@ import { useFinishExpression } from '../model/useFinishExpression';
 import { ExplanationStep } from './ExplanationStep';
 import { ExpressionExitSheet } from './ExpressionExitSheet';
 import { QuizStep } from './QuizStep';
+import { QuizStepSkeleton } from './QuizStepSkeleton';
 import { ReviewInputStep } from './ReviewInputStep';
 
 interface ExpressionFlowProps {
@@ -53,7 +54,7 @@ export const ExpressionFlow = ({
   const backToListUnlocked = () =>
     router.replace(`/home?flip=${scenarioId}&just=1`);
 
-  if (learningLoading) return <FlowStatus>불러오는 중…</FlowStatus>;
+  if (learningLoading) return <QuizStepSkeleton />;
   if (learningError || !learning) {
     return (
       <FlowStatus>
