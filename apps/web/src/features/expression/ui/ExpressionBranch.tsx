@@ -72,7 +72,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
   const goLearn = () =>
     nextExpressionId
       ? goExpression(nextExpressionId)
-      : router.push(`/home?flip=${scenarioId}`);
+      : router.replace(`/home?flip=${scenarioId}`);
 
   return (
     <main
@@ -81,7 +81,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
     >
       <header className="relative flex h-14 flex-none items-center px-3">
         <button
-          onClick={() => router.push(`/home?card=${scenarioId}`)}
+          onClick={() => router.replace(`/home?card=${scenarioId}`)}
           className="flex size-10 items-center justify-center text-muted-foreground"
           aria-label="닫기"
         >
@@ -161,7 +161,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
                   </Button>
                   <button
                     type="button"
-                    onClick={() => router.push('/home?just=1')}
+                    onClick={() => router.replace('/home?just=1')}
                     className="flex h-11 w-full items-center justify-center text-sm font-semibold text-muted-foreground transition-colors active:text-foreground"
                   >
                     다음 대화하러 갈게요

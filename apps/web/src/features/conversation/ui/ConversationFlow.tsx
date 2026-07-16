@@ -53,7 +53,8 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
           sessionId={sessionId}
           title={scenario.scenarioTitle}
           onExit={() =>
-            router.push(`/expressions/${scenario.scenarioId}/branch`)
+            // 대화는 끝났으니 히스토리에서 지운다 — 뒤로가기로 종료된 대화에 다시 들어오지 않게
+            router.replace(`/expressions/${scenario.scenarioId}/branch`)
           }
         />
       </Transition>
@@ -132,8 +133,9 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
         open={showExitModal}
         onConfirm={() => {
           leave();
-          // 대화를 도중에 나가면 강제로 다음 카드로 보내지 말고, 온 카드로 복귀시킨다
-          router.push(`/home?card=${scenario.scenarioId}`);
+          // 대화를 도중에 나가면 강제로 다음 카드로 보내지 말고, 온 카드로 복귀시킨다.
+          // replace로 대화를 히스토리에서 지워, 홈에서 뒤로가기 시 대화로 재진입하지 않게 한다.
+          router.replace(`/home?card=${scenario.scenarioId}`);
         }}
         onClose={() => setShowExitModal(false)}
       />

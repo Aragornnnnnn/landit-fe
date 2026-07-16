@@ -46,11 +46,12 @@ export const ExpressionFlow = ({
     preload(url, { as: 'image' });
   }
 
-  // 학습을 나가면 홈으로 돌아가 해당 카드를 뒤집어(뒷면=표현 리스트) 보여준다
-  const backToList = () => router.push(`/home?flip=${scenarioId}`);
+  // 학습을 나가면 홈으로 돌아가 해당 카드를 뒤집어(뒷면=표현 리스트) 보여준다.
+  // replace로 표현학습을 히스토리에서 지워, 홈에서 뒤로가기 시 퀴즈로 재진입하지 않게 한다.
+  const backToList = () => router.replace(`/home?flip=${scenarioId}`);
   // 완료 후엔 방금 해금된 다음 표현으로 스크롤·강조되도록 just 신호를 붙인다
   const backToListUnlocked = () =>
-    router.push(`/home?flip=${scenarioId}&just=1`);
+    router.replace(`/home?flip=${scenarioId}&just=1`);
 
   if (learningLoading) return <FlowStatus>불러오는 중…</FlowStatus>;
   if (learningError || !learning) {
