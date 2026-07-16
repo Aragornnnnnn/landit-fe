@@ -116,8 +116,9 @@ export const useConversationFlow = (scenario: Scenario) => {
     onInterim: (text) => setTranscript(text),
     onFinal: (text) => void submitContent(text, 'VOICE'),
     onError: (error) => {
-      // 권한 거부는 설정 유도 안내를 띄운다. 그 외 인식 오류는 조용히 마이크 대기로 되돌린다.
+      // 권한 거부는 설정 유도 안내를, 그 외 인식 오류는 토스트로 알리고 마이크 대기로 되돌린다.
       if (isMicPermissionDeniedError(error)) setMicPermissionDenied(true);
+      else showToast('음성 인식에 문제가 생겼어요. 다시 시도해 주세요');
       haptic('error');
       setTranscript('');
       send('LISTENING_CANCELLED');
