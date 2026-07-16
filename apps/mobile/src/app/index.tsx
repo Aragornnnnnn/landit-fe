@@ -133,9 +133,10 @@ const ShellScreen = () => {
       // onHttpError가 따로 잡아야 한다 — 없으면 에러 화면 대신 날것의 에러 페이지가 보인다
       onHttpError={() => setLoadFailed(true)}
       startInLoadingState
+      // 로딩 화면 배경을 스플래시와 같은 색으로 — 흰 네이티브 로딩창이 번쩍이지 않고 스플래시에서 매끄럽게 이어진다
       renderLoading={() => (
-        <View style={[StyleSheet.absoluteFill, styles.center]}>
-          <ActivityIndicator />
+        <View style={[StyleSheet.absoluteFill, styles.loading]}>
+          <ActivityIndicator color="#ffffff" />
         </View>
       )}
       // iOS는 시스템 뒤로가기 버튼이 없다 — 화면 끝 스와이프로 WebView 히스토리를 직접 탐색하게 한다
@@ -161,12 +162,20 @@ export default ShellScreen;
 const styles = StyleSheet.create({
   webview: {
     flex: 1,
+    // 웹 첫 페인트 전 WebView 기본 흰 배경 대신 스플래시 색을 깔아, 로드 중 흰 번쩍임을 막는다
+    backgroundColor: '#e07a3a',
   },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
+  },
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#e07a3a',
   },
   retryButton: {
     borderRadius: 12,

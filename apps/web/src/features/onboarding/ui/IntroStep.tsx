@@ -36,17 +36,31 @@ export const IntroStep = ({
           </p>
         </div>
 
-        {/* 인사하는 랜디를 중앙에 세워 첫인상을 잡는다 */}
+        {/* 인사하는 랜디를 중앙에 세워 첫인상을 잡는다 — 등장 후엔 좌우로 살랑살랑 움직이며 인사를 잇는다 */}
         <div className="flex flex-1 items-center justify-center">
-          <motion.img
-            src="/images/character/landy-wave-smile.webp"
-            alt="랜디"
-            className="object-contain"
-            style={{ width: 220, height: 220 }}
+          <motion.div
             initial={{ scale: 0.85, opacity: 0, y: 12 }}
-            animate={{ scale: 1, opacity: 1, y: [12, -6, 0] }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
-          />
+          >
+            <motion.img
+              src="/images/character/landy-wave-smile.webp"
+              alt="랜디"
+              className="object-contain"
+              style={{ width: 220, height: 220 }}
+              animate={{
+                x: [0, -12, 0, 12, 0],
+                rotate: [0, -4, 0, 4, 0],
+                y: [0, -8, 0, -8, 0],
+              }}
+              transition={{
+                delay: 0.6,
+                duration: 3.6,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+          </motion.div>
         </div>
       </div>
 

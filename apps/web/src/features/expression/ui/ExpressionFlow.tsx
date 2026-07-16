@@ -6,13 +6,15 @@ import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
 
 import { collectPreloadImageUrls } from '../model/preloadImages';
-import { fromLearning } from '../model/sentenceQuiz';
+import type { InputState } from '../model/reviewInput';
+import { fromLearning, fromWritingSentence } from '../model/sentenceQuiz';
 import { useExpressionLearning } from '../model/useExpressionLearning';
 import { useExpressionPractice } from '../model/useExpressionPractice';
 import { useFinishExpression } from '../model/useFinishExpression';
 import { ExplanationStep } from './ExplanationStep';
 import { ExpressionExitSheet } from './ExpressionExitSheet';
 import { QuizStep } from './QuizStep';
+import { QuizStepSkeleton } from './QuizStepSkeleton';
 import { ReviewInputStep } from './ReviewInputStep';
 
 interface ExpressionFlowProps {
@@ -28,6 +30,11 @@ export const ExpressionFlow = ({
   const [step, setStep] = useState<'QUIZ' | 'EXPLAIN' | 'REVIEW'>('QUIZ');
   // 예문까지(QUIZ·EXPLAIN)는 뒤로가기 대신 X로 나가며, 중단 확인 시트를 먼저 띄운다
   const [exitOpen, setExitOpen] = useState(false);
+  // 복습 영작 draft — 예문(설명)을 보러 나갔다 돌아와도 입력이 유지되게 문제 문장과 함께 보관한다
+  const [reviewDraft, setReviewDraft] = useState<{
+    sentence: string;
+    state: InputState;
+  } | null>(null);
 
   // 플로우 전체(퀴즈·설명·복습)는 대표 예문(learning-start)만으로 굴러간다.
   // 추가 예문(practice)은 설명 스텝의 "이렇게도 써요"에만 쓰는 보강 데이터라, 없거나 실패해도 플로우를 막지 않는다.
@@ -37,7 +44,10 @@ export const ExpressionFlow = ({
     isLoading: learningLoading,
   } = useExpressionLearning(expressionId);
   // learning이 오면(=QUIZ 진입) 예문을 미리 받아, QUIZ 체류 중 EXPLAIN용 practice를 데워둔다.
-  const { practice } = useExpressionPractice(expressionId, !!learning);
+  const { practice, isLoading: practiceLoading } = useExpressionPractice(
+    expressionId,
+    !!learning,
+  );
   const finish = useFinishExpression(expressionId);
 
   // 예문 이미지는 QUIZ→EXPLAIN에서 마운트되지만, URL을 아는 즉시 브라우저 캐시에 선로드해
@@ -46,13 +56,14 @@ export const ExpressionFlow = ({
     preload(url, { as: 'image' });
   }
 
-  // 학습을 나가면 홈으로 돌아가 해당 카드를 뒤집어(뒷면=표현 리스트) 보여준다
-  const backToList = () => router.push(`/home?flip=${scenarioId}`);
+  // 학습을 나가면 홈으로 돌아가 해당 카드를 뒤집어(뒷면=표현 리스트) 보여준다.
+  // replace로 표현학습을 히스토리에서 지워, 홈에서 뒤로가기 시 퀴즈로 재진입하지 않게 한다.
+  const backToList = () => router.replace(`/home?flip=${scenarioId}`);
   // 완료 후엔 방금 해금된 다음 표현으로 스크롤·강조되도록 just 신호를 붙인다
   const backToListUnlocked = () =>
-    router.push(`/home?flip=${scenarioId}&just=1`);
+    router.replace(`/home?flip=${scenarioId}&just=1`);
 
-  if (learningLoading) return <FlowStatus>불러오는 중…</FlowStatus>;
+  if (learningLoading) return <QuizStepSkeleton />;
   if (learningError || !learning) {
     return (
       <FlowStatus>
@@ -106,12 +117,30 @@ export const ExpressionFlow = ({
     );
   }
 
-  // 복습 영작 — 퀴즈와 같은 대표 예문을 이번엔 '입력'으로 (퀴즈=선택과 구분). 정답 시 학습 완료.
+  // 복습 영작 — practice가 주는 별도 영작 문제(writingSentence)를 입력으로 푼다.
+  // 아직 로딩 중이면 잠깐 스켈레톤을 유지한다 — 폴백 문제를 먼저 보여줬다가 도착 후 바꿔치기하면
+  // 입력 중이던 상태와 단어 수가 어긋난다. 실패(404 등) 시에만 대표 예문으로 폴백해 플로우를 막지 않는다.
+  if (practiceLoading && !practice) return <QuizStepSkeleton />;
+  const reviewQuiz = practice?.writingSentence
+    ? fromWritingSentence(practice.writingSentence)
+    : quiz;
+
   return (
     <ReviewInputStep
-      quiz={quiz}
+      // 문제가 바뀌면(이론상 폴백→practice 교체) 상태를 통째로 리셋한다
+      key={reviewQuiz.writingSentenceText}
+      quiz={reviewQuiz}
       targetExpressionText={learning.targetExpressionText}
       meaning={learning.baseExpressionMeaningText}
+      // 예문을 보러 나갔다 돌아와도 같은 문제면 draft를 이어서 쓴다
+      initialState={
+        reviewDraft?.sentence === reviewQuiz.writingSentenceText
+          ? reviewDraft.state
+          : undefined
+      }
+      onStateChange={(state) =>
+        setReviewDraft({ sentence: reviewQuiz.writingSentenceText, state })
+      }
       onBack={() => setStep('EXPLAIN')}
       finishing={finish.isPending}
       onFinish={() =>

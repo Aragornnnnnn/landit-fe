@@ -4,7 +4,9 @@ import { describe, expect, it } from 'vitest';
 import {
   advance,
   appendLetter,
+  applyComposition,
   backspace,
+  diffComposition,
   emptyState,
   firstWrong,
   focusWord,
@@ -84,20 +86,36 @@ describe('focusWord', () => {
 });
 
 describe('isComplete', () => {
-  it('모든 단어에 입력이 있으면 확인 가능하다', () => {
+  it('모든 단어가 정답 글자 수만큼 차야 확인 가능하다', () => {
     expect(
-      isComplete({ typed: ['I', 'got', 'a', 'good', 'deal'], focus: 4 }),
+      isComplete(
+        { typed: ['I', 'got', 'a', 'good', 'deal'], focus: 4 },
+        LENGTHS,
+      ),
     ).toBe(true);
+  });
+
+  it('글자가 덜 찬 단어가 있으면 확인 불가하다', () => {
+    // 마지막 단어 "deal"(4글자)에 3글자만 입력된 상태
+    expect(
+      isComplete(
+        { typed: ['I', 'got', 'a', 'good', 'dea'], focus: 4 },
+        LENGTHS,
+      ),
+    ).toBe(false);
   });
 
   it('빈 단어가 있으면 확인 불가하다', () => {
     expect(
-      isComplete({ typed: ['I', 'got', '', 'good', 'deal'], focus: 2 }),
+      isComplete(
+        { typed: ['I', 'got', '', 'good', 'deal'], focus: 2 },
+        LENGTHS,
+      ),
     ).toBe(false);
   });
 
   it('단어가 하나도 없으면 확인 불가하다(빈 정답 방어)', () => {
-    expect(isComplete({ typed: [], focus: 0 })).toBe(false);
+    expect(isComplete({ typed: [], focus: 0 }, [])).toBe(false);
   });
 });
 
@@ -167,5 +185,87 @@ describe('parseInputEvent', () => {
 
   it('inputType이 비었어도 데이터가 있으면 삽입으로 본다(일부 안드로이드 키보드)', () => {
     expect(parseInputEvent('', 'x')).toEqual([{ kind: 'letter', letter: 'x' }]);
+  });
+});
+
+describe('diffComposition', () => {
+  it('조합 문자열이 한 글자 늘면 그 글자만 letter 액션으로 낸다(라이브 반영)', () => {
+    expect(diffComposition('go', 'goo')).toEqual([
+      { kind: 'letter', letter: 'o' },
+    ]);
+  });
+
+  it('처음 조합이면 빈 문자열에서 시작해 글자를 순서대로 편다', () => {
+    expect(diffComposition('', 'go')).toEqual([
+      { kind: 'letter', letter: 'g' },
+      { kind: 'letter', letter: 'o' },
+    ]);
+  });
+
+  it('제안 선택으로 단어가 바뀌면 공통 접두사 뒤만 지우고 다시 채운다', () => {
+    // "gud" → 자동완성 "good": 공통 접두사 "g" 유지, "ud" 지우고 "ood" 삽입
+    expect(diffComposition('gud', 'good')).toEqual([
+      { kind: 'backspace' },
+      { kind: 'backspace' },
+      { kind: 'letter', letter: 'o' },
+      { kind: 'letter', letter: 'o' },
+      { kind: 'letter', letter: 'd' },
+    ]);
+  });
+
+  it('조합이 그대로면 아무 액션도 내지 않는다(중복 반영 방지)', () => {
+    expect(diffComposition('good', 'good')).toEqual([]);
+  });
+
+  it('조합 문자열의 스페이스는 space 액션으로 편다', () => {
+    expect(diffComposition('good', 'good ')).toEqual([{ kind: 'space' }]);
+  });
+});
+
+describe('applyComposition', () => {
+  it('조합이 늘어난 만큼 글자를 채운다', () => {
+    const { state, dropped } = applyComposition(
+      emptyState(5),
+      '',
+      'go',
+      LENGTHS,
+      0,
+    );
+    // 'g'는 첫 단어 "I"(1글자)를 채워 다음으로 넘어가고 'o'는 둘째 단어에
+    expect(state.typed).toEqual(['g', 'o', '', '', '']);
+    expect(dropped).toBe(0);
+  });
+
+  it('마지막 박스가 꽉 차 버려진 글자는 dropped로 세고 모델은 그대로 둔다', () => {
+    const full = { typed: ['I', 'got', 'a', 'good', 'deal'], focus: 4 };
+    const { state, dropped } = applyComposition(
+      full,
+      'deal',
+      'deals',
+      LENGTHS,
+      0,
+    );
+    expect(state).toEqual(full);
+    expect(dropped).toBe(1);
+  });
+
+  it('조합 내 백스페이스는 버려진 글자부터 되돌려 실제 글자를 지우지 않는다', () => {
+    const full = { typed: ['I', 'got', 'a', 'good', 'deal'], focus: 4 };
+    // IME 버퍼는 'deals'였지만 모델은 'deal'(s는 버려짐) — 백스페이스 한 번은 s만 무효화해야 한다
+    const { state, dropped } = applyComposition(
+      full,
+      'deals',
+      'deal',
+      LENGTHS,
+      1,
+    );
+    expect(state).toEqual(full); // 'deal'의 l이 지워지면 안 된다
+    expect(dropped).toBe(0);
+  });
+
+  it('버려진 글자가 없으면 백스페이스가 모델 글자를 지운다', () => {
+    const full = { typed: ['I', 'got', 'a', 'good', 'deal'], focus: 4 };
+    const { state } = applyComposition(full, 'deal', 'dea', LENGTHS, 0);
+    expect(state.typed[4]).toBe('dea');
   });
 });

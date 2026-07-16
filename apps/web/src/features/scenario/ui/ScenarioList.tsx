@@ -4,10 +4,10 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 
+import { useSnapIndex } from '@/shared/lib/useSnapIndex';
 import { LockIcon } from '@/shared/ui/Icons';
 
 import type { Scenario } from '../api/list';
-import { useSnapIndex } from '../model/useSnapIndex';
 import { ScenarioCard } from './ScenarioCard';
 
 interface ScenarioListProps {
@@ -56,15 +56,17 @@ export const ScenarioList = ({
     flipIndex >= 0 ? flipIndex : cardIndex >= 0 ? cardIndex : nextIndex;
 
   const targetRef = useRef<HTMLDivElement>(null);
-  // 진입·카테고리 전환 시 대상 카드로 부드럽게 스크롤한다.
+  // 진입·카테고리 전환 시 대상 카드로 스크롤한다.
+  // 대화/표현에서 복귀(flip·card)한 경우엔 스무스 애니메이션 없이 즉시 그 위치에 있게 한다 —
+  // 맨 위에서 아래로 훑고 내려가는 연출이 정신없다는 피드백.
   useEffect(() => {
-    if (targetIndex >= 0) {
-      targetRef.current?.scrollIntoView({
-        block: 'center',
-        behavior: 'smooth',
-      });
-    }
-  }, [targetIndex]);
+    if (targetIndex < 0) return;
+    const isReturning = flipScenarioId != null || cardScenarioId != null;
+    targetRef.current?.scrollIntoView({
+      block: 'center',
+      behavior: isReturning ? 'auto' : 'smooth',
+    });
+  }, [targetIndex, flipScenarioId, cardScenarioId]);
 
   return (
     <div className="relative min-h-0 flex-1">
@@ -79,7 +81,7 @@ export const ScenarioList = ({
           <div
             key={scenario.scenarioId}
             ref={index === targetIndex ? targetRef : undefined}
-            className="h-full snap-center px-5 py-2"
+            className="h-full snap-center snap-always px-5 py-2"
           >
             <motion.div
               className="h-full"
@@ -102,7 +104,7 @@ export const ScenarioList = ({
         ))}
 
         {/* 마지막 페이지 — 전부 완료 축하 또는 다음 안내 */}
-        <div className="flex h-full snap-center flex-col items-center justify-center gap-4 px-6 text-center">
+        <div className="flex h-full snap-center snap-always flex-col items-center justify-center gap-4 px-6 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- 구글이 호스팅하는 모션 이모지 GIF라 next/image 최적화 대상이 아니다 */}
           <img
             src={`https://fonts.gstatic.com/s/e/notoemoji/latest/${allCompleted ? '1f389' : '1f512'}/512.gif`}
@@ -135,7 +137,7 @@ export const ScenarioList = ({
   );
 };
 
-// 우측 진행 인디케이터 — 완료=검정, 다음 깨야 할 것=주황(딱 하나), 나머지=회색.
+// 우측 진행 인디케이터 — 완료=연한 주황, 다음 깨야 할 것=주황(딱 하나), 나머지=회색.
 // 자물쇠는 최종 목표인 맨 마지막 칸에만(전체 완료 전까지). 현재 보는 카드는 세로로 길쭉하게.
 const ProgressDots = ({
   scenarios,
@@ -178,7 +180,7 @@ const ProgressDots = ({
               isActive ? 'h-5' : 'h-1.5'
             } ${
               completed
-                ? 'bg-foreground'
+                ? 'bg-primary-light'
                 : isNext
                   ? 'bg-primary'
                   : 'bg-muted-foreground/40'

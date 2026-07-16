@@ -1,11 +1,12 @@
 // 대화 플로우 화면 — 캐릭터 무대·질문 카드·내 답변·마이크를 상태 기계 단계에 맞춰 오케스트레이션한다
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { SessionFeedbackScreen } from '@/features/feedback/ui/SessionFeedbackScreen';
 import type { Scenario } from '@/features/scenario/api/list';
+import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Transition } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
@@ -24,6 +25,12 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   const [showExitModal, setShowExitModal] = useState(false);
   // 대화 종료 후 CTA를 누르면 피드백으로 넘어간다 (그 전까진 마지막 화면 + CTA를 보여준다)
   const [showFeedback, setShowFeedback] = useState(false);
+  // 진입 시점의 완료 여부(재대화 판별) — 세션이 끝나면 시나리오 리스트가 invalidate돼
+  // scenario.completed가 뒤늦게 true로 바뀌므로, 첫 완료와 구분하려면 진입 값으로 고정해야 한다
+  const [wasCompleted] = useState(scenario.completed);
+  // USER 선발화 진입 안내 — 랜디가 먼저 날아들어 말을 걸어보라고 알려주고 잠시 후 사라진다.
+  // 판정은 turn.isUserOpening 한 곳에 위임하고(카드 안내 구조와 같은 소스), 여기선 노출 시간만 관리한다.
+  const [introDismissed, setIntroDismissed] = useState(false);
   const {
     phase,
     turn,
@@ -43,6 +50,17 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   } = useConversationFlow(scenario);
 
   const ended = phase === 'DONE';
+  // 키보드 입력 중 — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
+  const typing = keyboardMode && phase === 'USER_LISTENING';
+  const keyboardInset = useKeyboardInset();
+  // 선발화 안내는 대기(USER_IDLE) 동안만 — 사용자가 말하기 시작하거나 속마음이 오면 즉시 비켜준다
+  const showUserFirstIntro =
+    turn.isUserOpening && phase === 'USER_IDLE' && !introDismissed;
+  useEffect(() => {
+    if (!showUserFirstIntro) return;
+    const timer = setTimeout(() => setIntroDismissed(true), 2800);
+    return () => clearTimeout(timer);
+  }, [showUserFirstIntro]);
   // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로 페이드 인해 넘어간다. 마치면 표현 학습 분기로 보낸다.
   const view = ended && showFeedback ? 'feedback' : 'conversation';
 
@@ -53,7 +71,11 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
           sessionId={sessionId}
           title={scenario.scenarioTitle}
           onExit={() =>
-            router.push(`/expressions/${scenario.scenarioId}/branch`)
+            // 대화는 끝났으니 히스토리에서 지운다 — 뒤로가기로 종료된 대화에 다시 들어오지 않게.
+            // 재대화(이미 완료한 시나리오)면 표현은 예전에 생성됐으니 분기 연출 없이 홈의 그 카드로 돌아간다
+            wasCompleted
+              ? router.replace(`/home?card=${scenario.scenarioId}`)
+              : router.replace(`/expressions/${scenario.scenarioId}/branch`)
           }
         />
       </Transition>
@@ -61,7 +83,13 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   }
 
   return (
-    <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
+    <main
+      className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
+      // iOS WKWebView는 키보드가 떠도 레이아웃이 안 줄어든다 — 가려진 높이만큼 올려 입력 박스를 보이게 한다
+      style={
+        typing && keyboardInset ? { paddingBottom: keyboardInset } : undefined
+      }
+    >
       {/* 무대가 상태바 밑까지 이어지고, X만 safe area 아래에 뜬다 — 플레인 아이콘(마이페이지와 통일) */}
       <header
         className="absolute inset-x-0 top-0 z-20 flex items-center px-3"
@@ -86,11 +114,19 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
             question={turn.aiMessage}
             translation={turn.aiTranslation}
             speaking={phase === 'AI_SPEAKING'}
+            instruction={turn.isUserOpening}
           />
         </div>
-        {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 아래 입력창이 답변을 보여주므로 중복을 피한다 */}
-        {!ended && !keyboardMode && (
-          <UserTranscript text={transcript} phase={phase} />
+        {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다 */}
+        {!ended && (
+          <UserTranscript
+            text={transcript}
+            phase={phase}
+            editing={typing}
+            onChange={setTranscript}
+            onSubmit={submitText}
+            onCancel={cancelListening}
+          />
         )}
       </section>
 
@@ -103,28 +139,30 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
               <ArrowRightIcon size={16} />
             </Button>
           </div>
-        ) : (
+        ) : typing ? null : (
           <MicControl
             phase={phase}
-            keyboardMode={keyboardMode}
-            transcript={transcript}
             onPress={pressMic}
             onKeyboard={pressKeyboard}
-            onTranscriptChange={setTranscript}
-            onSubmitText={submitText}
             onCancel={cancelListening}
             onDone={finishListening}
           />
         )}
       </footer>
 
-      {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(WAITING)부터 랜디가 떠 있다가 속마음을 전한다 */}
+      {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(WAITING)부터 랜디가 떠 있다가 속마음을 전한다.
+          USER 선발화 진입 시엔 같은 연출로 랜디가 먼저 안내하고 사라진다 */}
       <ThoughtOverlay
         loading={phase === 'WAITING'}
         thought={
-          phase === 'THOUGHT'
-            ? { text: turn.innerThought, type: turn.innerThoughtType }
-            : null
+          showUserFirstIntro
+            ? {
+                text: '상황을 잘 읽고 먼저 말을 걸어보세요!',
+                type: 'NORMAL',
+              }
+            : phase === 'THOUGHT'
+              ? { text: turn.innerThought, type: turn.innerThoughtType }
+              : null
         }
       />
 
@@ -132,8 +170,9 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
         open={showExitModal}
         onConfirm={() => {
           leave();
-          // 대화를 도중에 나가면 강제로 다음 카드로 보내지 말고, 온 카드로 복귀시킨다
-          router.push(`/home?card=${scenario.scenarioId}`);
+          // 대화를 도중에 나가면 강제로 다음 카드로 보내지 말고, 온 카드로 복귀시킨다.
+          // replace로 대화를 히스토리에서 지워, 홈에서 뒤로가기 시 대화로 재진입하지 않게 한다.
+          router.replace(`/home?card=${scenario.scenarioId}`);
         }}
         onClose={() => setShowExitModal(false)}
       />

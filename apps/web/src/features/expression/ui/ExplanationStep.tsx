@@ -1,8 +1,7 @@
 'use client';
 
 // 표현 설명 스텝(540) — 표현 뜻·설명 + "이렇게도 써요" 예문 캐러셀
-import { useState } from 'react';
-
+import { useSnapIndex } from '@/shared/lib/useSnapIndex';
 import { Button } from '@/shared/ui/Button';
 
 import type { PracticeSentence } from '../api/practice';
@@ -37,12 +36,8 @@ export const ExplanationStep = ({
   leftAction,
   onNext,
 }: ExplanationStepProps) => {
-  const [active, setActive] = useState(0);
-
-  const onScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    const track = event.currentTarget;
-    setActive(Math.round(track.scrollLeft / track.clientWidth));
-  };
+  // 중앙에 가장 가까운 카드가 활성 dot — snap-center와 정확히 일치한다 (홈 리스트와 같은 공용 훅)
+  const { scrollRef, activeIndex: active, onScroll } = useSnapIndex('x');
 
   return (
     <StepScaffold
@@ -83,6 +78,7 @@ export const ExplanationStep = ({
             </div>
 
             <div
+              ref={scrollRef}
               onScroll={onScroll}
               className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5"
             >
@@ -112,7 +108,7 @@ export const ExplanationStep = ({
 
 // 예문 카드 — 이미지 + Q(질문) / A(표현 활용 문장). A는 강조 구간만 굵게.
 const ExampleCard = ({ sentence }: { sentence: PracticeSentence }) => (
-  <div className="w-[280px] shrink-0 snap-center overflow-hidden rounded-2xl border border-border bg-card">
+  <div className="w-[280px] shrink-0 snap-center snap-always overflow-hidden rounded-2xl border border-border bg-card">
     <div className="flex aspect-square items-center justify-center bg-secondary">
       {sentence.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- 예문 이미지 도메인 미정이라 next/image 원격 허용 목록을 아직 못 만든다

@@ -37,6 +37,8 @@ interface ConversationTurn {
   aiTranslation: string | null;
   innerThought: string; // 내 발화 뒤 상대 속마음
   innerThoughtType: ThoughtType;
+  // USER 선발화 안내를 보여주는 중인가 — 카드가 발화가 아닌 '상황 안내' 구조로 그려야 한다
+  isUserOpening: boolean;
 }
 
 export const useConversationFlow = (scenario: Scenario) => {
@@ -316,6 +318,8 @@ export const useConversationFlow = (scenario: Scenario) => {
     aiTranslation: aiMessage?.translatedContent ?? null,
     innerThought: thought?.text ?? '',
     innerThoughtType: thought?.type ?? 'NORMAL',
+    // 첫 AI 발화가 오기 전까지가 선발화 안내 구간
+    isUserOpening: !aiMessage && Boolean(preview?.userOpeningInstruction),
   };
 
   // 상대 캐릭터 성별은 시나리오 TTS 음성을 따른다 (미설정 시 남성)

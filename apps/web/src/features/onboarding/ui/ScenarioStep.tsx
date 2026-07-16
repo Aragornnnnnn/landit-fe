@@ -6,9 +6,10 @@ import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 
 import type { Scenario } from '@/features/scenario/api/list';
-import { getScenarioImage } from '@/features/scenario/lib/scenario-image';
 import { useScenarios } from '@/features/scenario/model/useScenarios';
 import { Button } from '@/shared/ui/Button';
+
+import firstScenarioImage from '../assets/first-scenario.webp';
 
 export const ScenarioStep = ({ onStart }: { onStart: () => void }) => {
   // 첫 대화 = 첫(미잠금) 카테고리의 첫 시나리오 — 홈 리스트가 보여주는 것과 같은 순서
@@ -17,7 +18,8 @@ export const ScenarioStep = ({ onStart }: { onStart: () => void }) => {
 
   const [isUnlocked, setIsUnlocked] = useState(false);
   useEffect(() => {
-    const timer = setTimeout(() => setIsUnlocked(true), 650);
+    // 마지막 유도 스텝은 뜸 들이지 않는다 — 이미지·글자가 빨리 떠야 바로 시작으로 이어진다
+    const timer = setTimeout(() => setIsUnlocked(true), 250);
     return () => clearTimeout(timer);
   }, []);
 
@@ -49,45 +51,40 @@ const ScenarioCard = ({
 }: {
   scenario: Scenario | null;
   showText: boolean;
-}) => {
-  // 홈 리스트와 같은 규칙으로 첫 시나리오 이미지를 고른다. 로딩 중엔 중립 배경만.
-  const bundledImage = scenario ? getScenarioImage(scenario.scenarioId) : null;
-
-  return (
-    <div className="flex flex-1 flex-col gap-4">
-      <div
-        className="relative w-full overflow-hidden rounded-3xl bg-secondary"
-        style={{ aspectRatio: '4/3' }}
-      >
-        {bundledImage && (
-          // 정적 import라 blurDataURL 자동 — 흐린 썸네일이 즉시 깔리고 본 이미지가 페이드인
-          <Image
-            src={bundledImage}
-            alt=""
-            fill
-            sizes="(max-width: 430px) 100vw, 430px"
-            placeholder="blur"
-            className="object-cover"
-          />
-        )}
-      </div>
-
-      <AnimatePresence>
-        {showText && scenario && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.25 }}
-          >
-            <p className="text-lg font-extrabold text-foreground">
-              {scenario.scenarioTitle}
-            </p>
-            <p className="mt-1 line-clamp-2 text-sm font-medium text-muted-foreground">
-              {scenario.briefing}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+}) => (
+  <div className="flex flex-1 flex-col gap-4">
+    <div
+      className="relative w-full overflow-hidden rounded-3xl bg-secondary"
+      style={{ aspectRatio: '4/3' }}
+    >
+      {/* 첫 시나리오 전용 번들 이미지 — API를 기다리지 않고 즉시 뜬다(blur 자동).
+          세로 원본이라 얼굴·손인사가 있는 상단 35% 지점을 보여준다 */}
+      <Image
+        src={firstScenarioImage}
+        alt=""
+        fill
+        sizes="(max-width: 430px) 100vw, 430px"
+        placeholder="blur"
+        priority
+        className="object-cover object-[50%_35%]"
+      />
     </div>
-  );
-};
+
+    <AnimatePresence>
+      {showText && scenario && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.25, delay: 0.05 }}
+        >
+          <p className="text-lg font-extrabold text-foreground">
+            {scenario.scenarioTitle}
+          </p>
+          <p className="mt-1 line-clamp-2 text-sm font-medium text-muted-foreground">
+            {scenario.briefing}
+          </p>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+);
