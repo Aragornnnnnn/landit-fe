@@ -3,8 +3,10 @@
 // 복습 영작(D안 ⑤) — 답변 박스를 누르면 네이티브 키보드가 뜨고, 그 입력이 기존 단어별 모델로 흘러간다.
 // 답변은 단어별 박스로 그리고(자동 넘김·조기 이동·박스 클릭 수정 그대로), 오답은 흔들림+빨강, 정답이면 화려한 획득 연출.
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import confetti from 'canvas-confetti';
 
+import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { CheckIcon } from '@/shared/ui/Icons';
@@ -32,6 +34,8 @@ import { StepScaffold } from './StepScaffold';
 
 interface ReviewInputStepProps {
   quiz: SentenceQuiz;
+  // 계측 속성용 — 어떤 표현의 복습 영작인지
+  expressionId: number;
   // 완료 연출 카드에 띄울 표현·뜻
   targetExpressionText: string;
   meaning: string;
@@ -48,6 +52,7 @@ const SENTINEL = ' ';
 
 export const ReviewInputStep = ({
   quiz,
+  expressionId,
   targetExpressionText,
   meaning,
   initialState,
@@ -162,6 +167,15 @@ export const ReviewInputStep = ({
 
   const check = () => {
     const ok = gradeWords(typed, answer);
+    // 누적 오답 수 — 지금까지 단어별로 틀린 횟수 합에 이번 판정의 오답을 더한다
+    const missedBefore = wrongCount.reduce((sum, count) => sum + count, 0);
+    const missedNow = ok.filter((isOk) => !isOk).length;
+    track(EVENTS.REVIEW_ANSWER_SUBMITTED, {
+      expression_id: expressionId,
+      is_correct: missedNow === 0,
+      wrong_count: missedBefore + missedNow,
+      hint_level: hintStep,
+    });
     if (ok.every(Boolean)) {
       haptic('success');
       setCorrect(true);
@@ -396,6 +410,10 @@ export const ReviewInputStep = ({
           <HintButton
             step={hintStep}
             onAdvance={() => {
+              track(EVENTS.HINT_USED, {
+                source: 'review',
+                level: hintStep + 1,
+              });
               const ok = gradePartial(typed, answer);
               if (ok.some((isOk) => !isOk)) {
                 setWrongNow(ok.map((isOk) => !isOk));

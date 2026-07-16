@@ -3,9 +3,11 @@
 // 표현학습 분기 — 대화 완료 축하(폭죽)를 잠깐 보여준 뒤, 표현을 준비한 듯 분석 연출과 준비된
 // 표현 리스트를 노출한다. [학습하러 가기]는 첫 표현부터, [다음 대화하러 가기]는 홈으로 보낸다.
 import { useEffect, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { AnimatePresence, motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
+import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/store/auth-store';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
@@ -54,6 +56,15 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
   // 연출이 끝나고 데이터도 준비돼야 리빌 — ready를 함께 봐야 결과가 먼저 깜빡이지 않는다
   const listed = ready && step === 'done';
 
+  // 연출이 끝나고 표현 리스트가 실제로 드러난 순간을 노출로 기록한다
+  useEffect(() => {
+    if (!listed) return;
+    track(EVENTS.EXPRESSION_LIST_VIEWED, {
+      scenario_id: scenarioId,
+      expression_count: count,
+    });
+  }, [listed, scenarioId, count]);
+
   // 구슬 든 랜디 — 톡 튀어 나타나 둥실둥실 떠 있다가, listed 되면 사라진다
   const orb = (
     <motion.div
@@ -75,8 +86,14 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
     </motion.div>
   );
 
-  const goExpression = (expressionId: number) =>
+  const goExpression = (expressionId: number) => {
+    track(EVENTS.EXPRESSION_SELECTED, {
+      expression_id: expressionId,
+      scenario_id: scenarioId,
+      source: 'branch',
+    });
     router.push(`/expressions/${scenarioId}/${expressionId}`);
+  };
 
   const goLearn = () =>
     nextExpressionId

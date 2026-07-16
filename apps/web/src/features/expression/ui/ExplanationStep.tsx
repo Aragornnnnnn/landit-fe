@@ -1,6 +1,10 @@
 'use client';
 
 // 표현 설명 스텝(540) — 표현 뜻·설명 + "이렇게도 써요" 예문 캐러셀
+import { useEffect } from 'react';
+import { EVENTS } from '@landit/analytics';
+
+import { track } from '@/shared/analytics';
 import { useSnapIndex } from '@/shared/lib/useSnapIndex';
 import { Button } from '@/shared/ui/Button';
 
@@ -8,6 +12,8 @@ import type { PracticeSentence } from '../api/practice';
 import { StepScaffold } from './StepScaffold';
 
 interface ExplanationStepProps {
+  // 계측 속성용 — 어떤 표현의 설명인지
+  expressionId: number;
   // 표현 뜻·설명은 learning-start에서 온다(항상 있음)
   targetExpressionText: string;
   baseExpressionMeaningText: string;
@@ -24,6 +30,7 @@ interface ExplanationStepProps {
 }
 
 export const ExplanationStep = ({
+  expressionId,
   targetExpressionText,
   baseExpressionMeaningText,
   usageDescription,
@@ -38,6 +45,15 @@ export const ExplanationStep = ({
 }: ExplanationStepProps) => {
   // 중앙에 가장 가까운 카드가 활성 dot — snap-center와 정확히 일치한다 (홈 리스트와 같은 공용 훅)
   const { scrollRef, activeIndex: active, onScroll } = useSnapIndex('x');
+
+  // 첫 장 포함, 캐러셀 스냅으로 예문이 바뀔 때마다 노출로 기록한다
+  useEffect(() => {
+    if (examples.length === 0) return;
+    track(EVENTS.EXAMPLE_SENTENCE_VIEWED, {
+      expression_id: expressionId,
+      sentence_index: active,
+    });
+  }, [examples.length, expressionId, active]);
 
   return (
     <StepScaffold
