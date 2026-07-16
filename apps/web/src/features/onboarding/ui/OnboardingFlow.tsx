@@ -1,7 +1,7 @@
 // 온보딩 플로우 — 스텝 상태와 스텝 조립
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
@@ -25,6 +25,11 @@ export const OnboardingFlow = () => {
   const [step, setStep] = useState<OnboardingStep>('intro');
   // 스텝 이동 방향 — 슬라이드가 전진(1)이면 오른쪽에서, 후진(-1)이면 왼쪽에서 들어오게 한다
   const [direction, setDirection] = useState(1);
+  // 지연 콜백(마이크 권한 프롬프트)이 최신 스텝을 읽기 위한 ref — 스텝을 벗어났으면 완료로 치지 않는다
+  const stepRef = useRef(step);
+  useEffect(() => {
+    stepRef.current = step;
+  }, [step]);
 
   useEffect(() => {
     track(EVENTS.ONBOARDING_STARTED);
@@ -85,8 +90,9 @@ export const OnboardingFlow = () => {
         )}
         {step === 'mic' && (
           <MicStep
-            // 권한 프롬프트 대기 중 스텝을 벗어났으면 무시한다
+            // 권한 프롬프트 대기 중 스텝을 벗어났으면 무시한다 — 완료 이벤트도 함께 막는다
             onNext={() => {
+              if (stepRef.current !== 'mic') return;
               track(EVENTS.ONBOARDING_STEP_COMPLETED, { step: 'mic' });
               setDirection(1);
               setStep((prev) => (prev === 'mic' ? 'thought' : prev));

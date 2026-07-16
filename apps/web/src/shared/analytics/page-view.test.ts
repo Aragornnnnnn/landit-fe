@@ -80,10 +80,14 @@ describe('toPageView', () => {
     expect(pv('/dev')).toBeNull();
   });
 
-  it('알 수 없는 경로는 pathname을 그대로 page_name으로 쓴다', () => {
+  it('알 수 없는 경로는 pathname을 page_name으로 쓰되 숫자 세그먼트는 :id로 치환한다', () => {
     expect(pv('/whatever')).toEqual({
       page_name: '/whatever',
       path: '/whatever',
+    });
+    expect(pv('/coaching/123')).toEqual({
+      page_name: '/coaching/:id',
+      path: '/coaching/123',
     });
   });
 });

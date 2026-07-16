@@ -4,20 +4,28 @@
 import * as amplitude from '@amplitude/unified';
 import type { EventName, EventProps } from '@landit/analytics';
 
-import { getNativeContext, getSurface } from '@/shared/bridge/native-context';
+import { getNativeContext } from '@/shared/bridge/native-context';
 
 const getApiKey = () => process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
 
 // dev 환경에서는 키가 있어도 어떤 이벤트를 쏘는지 콘솔로 확인할 수 있게 전역 로깅한다
 const isDev = () => process.env.NODE_ENV === 'development';
 
+// no-op(키 없음)·dev 환경 콘솔 로깅을 한곳에서 — 반환값은 SDK로 실제 전송할지 여부
+const logAndShouldSend = (...args: unknown[]) => {
+  const enabled = Boolean(getApiKey());
+  if (!enabled || isDev()) console.debug('[analytics]', ...args);
+  return enabled;
+};
+
 let initialized = false;
 
-// 전 이벤트 공통 속성 — 셸이 주입한 네이티브 컨텍스트에서 온다 (LAN-156)
+// 전 이벤트 공통 속성 — 셸이 주입한 네이티브 컨텍스트에서 온다 (LAN-156).
+// 스크롤·탭마다 불리는 핫패스라 컨텍스트를 한 번만 읽고 surface도 여기서 파생한다
 const baseProps = () => {
   const native = getNativeContext();
   return {
-    surface: getSurface(),
+    surface: native ? 'app' : 'browser',
     platform: native?.platform ?? 'web',
     ...(native && { app_version: native.appVersion }),
     ...(native?.buildNumber && { build_number: native.buildNumber }),
@@ -65,11 +73,7 @@ export const track = <E extends EventName>(...args: TrackArgs<E>) => {
   const [event, props] = args;
   const payload = { ...baseProps(), ...props };
 
-  if (!getApiKey()) {
-    console.debug('[analytics]', event, payload);
-    return;
-  }
-  if (isDev()) console.debug('[analytics]', event, payload);
+  if (!logAndShouldSend(event, payload)) return;
   amplitude.track(event, payload);
 };
 
@@ -77,11 +81,7 @@ export const identifyUser = (
   userId: number,
   userProps: { provider: string },
 ) => {
-  if (!getApiKey()) {
-    console.debug('[analytics] identify', userId, userProps);
-    return;
-  }
-  if (isDev()) console.debug('[analytics] identify', userId, userProps);
+  if (!logAndShouldSend('identify', userId, userProps)) return;
   amplitude.setUserId(String(userId));
   const identify = new amplitude.Identify();
   identify.set('provider', userProps.provider);
@@ -90,10 +90,6 @@ export const identifyUser = (
 
 // 로그아웃 시 익명 사용자로 리셋한다 — 최초 방문(익명) 상태에서는 호출하지 않는다
 export const resetUser = () => {
-  if (!getApiKey()) {
-    console.debug('[analytics] reset');
-    return;
-  }
-  if (isDev()) console.debug('[analytics] reset');
+  if (!logAndShouldSend('reset')) return;
   amplitude.reset();
 };

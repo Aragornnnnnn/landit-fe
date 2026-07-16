@@ -35,6 +35,13 @@ export default function MyPage() {
   const displayName = member?.nickname?.trim() || '게스트';
   const emailText = member?.email ?? '';
 
+  // 탈퇴 시트 닫기 — 버튼·오버레이 두 경로가 같은 취소 이벤트를 쓴다
+  function dismissDeleteSheet() {
+    if (isDeletingAccount) return;
+    track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'account_delete' });
+    setIsDeleteSheetOpen(false);
+  }
+
   // 인증 상태와 쿼리 캐시를 함께 비운다 — 캐시가 남으면 다음 계정에 이전 계정 데이터가 노출된다
   function finishSignedOut() {
     clearSession();
@@ -188,14 +195,7 @@ export default function MyPage() {
       </BottomSheet>
 
       {/* 회원탈퇴 확인 바텀시트 */}
-      <BottomSheet
-        open={isDeleteSheetOpen}
-        onClose={() => {
-          if (isDeletingAccount) return;
-          track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'account_delete' });
-          setIsDeleteSheetOpen(false);
-        }}
-      >
+      <BottomSheet open={isDeleteSheetOpen} onClose={dismissDeleteSheet}>
         <h2 className="text-[17px] font-bold" style={{ color: '#111' }}>
           회원탈퇴
         </h2>
@@ -212,12 +212,7 @@ export default function MyPage() {
             type="button"
             variant="ghost"
             size="md"
-            onClick={() => {
-              track(EVENTS.CONFIRM_SHEET_DISMISSED, {
-                sheet: 'account_delete',
-              });
-              setIsDeleteSheetOpen(false);
-            }}
+            onClick={dismissDeleteSheet}
             disabled={isDeletingAccount}
           >
             닫기

@@ -79,9 +79,19 @@ export const ScenarioList = ({
     });
   }, [targetIndex, flipScenarioId, cardScenarioId]);
 
-  // 스냅으로 카드가 화면 중앙에 설 때마다 노출로 기록한다 (마지막 페이지는 completion)
+  // 스냅으로 카드가 화면 중앙에 설 때마다 노출로 기록한다 (마지막 페이지는 completion).
+  // scenarios는 리페치마다 참조가 바뀌므로, 같은 카드 재실행은 키로 걸러 중복 발화를 막는다
+  const lastViewedRef = useRef<string | null>(null);
   useEffect(() => {
     const scenario = scenarios[activeIndex];
+    const viewKey = scenario
+      ? `scenario-${scenario.scenarioId}`
+      : activeIndex === scenarios.length
+        ? 'completion'
+        : null;
+    if (!viewKey || lastViewedRef.current === viewKey) return;
+    lastViewedRef.current = viewKey;
+
     if (scenario) {
       track(EVENTS.SCENARIO_CARD_VIEWED, {
         card_type: 'scenario',
@@ -91,7 +101,7 @@ export const ScenarioList = ({
         is_completed: scenario.completed,
         is_locked: scenario.locked,
       });
-    } else if (activeIndex === scenarios.length) {
+    } else {
       track(EVENTS.SCENARIO_CARD_VIEWED, {
         card_type: 'completion',
         position: activeIndex,

@@ -72,5 +72,7 @@ export const toPageView = (
     return { page_name: seg[0], path: pathname };
   }
 
-  return { page_name: pathname, path: pathname };
+  // 미등록 경로 폴백 — 숫자 세그먼트를 :id로 치환해 page_name 카디널리티 폭발을 막는다
+  const normalized = `/${seg.map((s) => (/^\d+$/.test(s) ? ':id' : s)).join('/')}`;
+  return { page_name: normalized, path: pathname };
 };

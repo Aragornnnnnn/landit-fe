@@ -84,6 +84,8 @@ export const useConversationFlow = (scenario: Scenario) => {
   const startedRef = useRef(false);
   const submittingRef = useRef(false); // 중복 제출 방지 (연출은 WAITING phase가 맡는다)
   const isOpeningRef = useRef(true); // 첫 AI 발화(오프닝)인지 — 미리 만든 정적 mp3 재생 대상
+  // 권한 거부는 "결정" 이벤트라 대화당 1회만 — 차단 상태에서 반복 탭할 때마다 찍히지 않게
+  const micDeniedTrackedRef = useRef(false);
 
   const tts = useTts();
   const innerThought = useInnerThought();
@@ -123,10 +125,13 @@ export const useConversationFlow = (scenario: Scenario) => {
       // 권한 거부는 설정 유도 안내를, 그 외 인식 오류는 토스트로 알리고 마이크 대기로 되돌린다.
       if (isMicPermissionDeniedError(error)) {
         setMicPermissionDenied(true);
-        track(EVENTS.MIC_PERMISSION_DECIDED, {
-          granted: false,
-          source: 'conversation',
-        });
+        if (!micDeniedTrackedRef.current) {
+          micDeniedTrackedRef.current = true;
+          track(EVENTS.MIC_PERMISSION_DECIDED, {
+            granted: false,
+            source: 'conversation',
+          });
+        }
       } else {
         showToast('음성 인식에 문제가 생겼어요. 다시 시도해 주세요');
         track(EVENTS.SPEECH_RECOGNITION_FAILED, { reason: errorName });
@@ -232,8 +237,10 @@ export const useConversationFlow = (scenario: Scenario) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, thought]);
 
-  // 마이크로 말하기 — 듣기 상태로 넘기고 STT를 켠다
+  // 마이크로 말하기 — 듣기 상태로 넘기고 STT를 켠다.
+  // 대기(USER_IDLE)에서만 동작 — 빠른 연타·상태 전이 중 중복 탭이 녹음 시작을 이중 집계하지 않게
   const pressMic = () => {
+    if (state.phase !== 'USER_IDLE') return;
     if (keyboardMode) {
       track(EVENTS.INPUT_MODE_SWITCHED, {
         session_id: sessionIdRef.current ?? undefined,
