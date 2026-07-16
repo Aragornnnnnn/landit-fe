@@ -24,6 +24,9 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   const [showExitModal, setShowExitModal] = useState(false);
   // 대화 종료 후 CTA를 누르면 피드백으로 넘어간다 (그 전까진 마지막 화면 + CTA를 보여준다)
   const [showFeedback, setShowFeedback] = useState(false);
+  // 진입 시점의 완료 여부(재대화 판별) — 세션이 끝나면 시나리오 리스트가 invalidate돼
+  // scenario.completed가 뒤늦게 true로 바뀌므로, 첫 완료와 구분하려면 진입 값으로 고정해야 한다
+  const [wasCompleted] = useState(scenario.completed);
   const {
     phase,
     turn,
@@ -53,8 +56,11 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
           sessionId={sessionId}
           title={scenario.scenarioTitle}
           onExit={() =>
-            // 대화는 끝났으니 히스토리에서 지운다 — 뒤로가기로 종료된 대화에 다시 들어오지 않게
-            router.replace(`/expressions/${scenario.scenarioId}/branch`)
+            // 대화는 끝났으니 히스토리에서 지운다 — 뒤로가기로 종료된 대화에 다시 들어오지 않게.
+            // 재대화(이미 완료한 시나리오)면 표현은 예전에 생성됐으니 분기 연출 없이 홈의 그 카드로 돌아간다
+            wasCompleted
+              ? router.replace(`/home?card=${scenario.scenarioId}`)
+              : router.replace(`/expressions/${scenario.scenarioId}/branch`)
           }
         />
       </Transition>
