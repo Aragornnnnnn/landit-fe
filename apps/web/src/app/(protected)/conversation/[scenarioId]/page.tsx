@@ -45,7 +45,11 @@ export default function ConversationPage({
                   track(EVENTS.ERROR_RETRIED, { screen: 'conversation' });
                   retry();
                 }
-              : () => router.push('/home')
+              : // replace로 에러 화면을 히스토리에서 지우고, 온 카드로 복귀시킨다
+                () =>
+                  router.replace(
+                    Number.isFinite(id) ? `/home?card=${id}` : '/home',
+                  )
           }
         >
           {error ? '다시 시도' : '홈으로'}
