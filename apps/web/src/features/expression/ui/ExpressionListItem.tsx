@@ -41,9 +41,10 @@ export const ExpressionListItem = ({
 
   if (completed) {
     return (
+      // 이미 깬 표현 — 눌린(가라앉은) 상태로 그려 아직 안 깬 항목의 3D 돌출과 대비시킨다
       <button
         onClick={() => onSelect(expressionId)}
-        className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-3.5 py-3.5 text-left shadow-sm transition-colors active:bg-secondary"
+        className="flex w-full items-center gap-3 rounded-2xl border border-transparent bg-secondary/60 px-3.5 py-3.5 text-left transition-colors active:bg-secondary"
       >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
           <CheckIcon size={16} />
@@ -66,11 +67,11 @@ export const ExpressionListItem = ({
     );
   }
 
-  // 다음에 배울 표현 — 시작 지점으로 강조한다.
+  // 다음에 배울 표현 — 시작 지점으로 강조한다. 공용 Button과 같은 3D 눌림 효과로 누를 수 있음을 드러낸다
   return (
     <button
       onClick={() => onSelect(expressionId)}
-      className="flex w-full items-center gap-3 rounded-2xl border-2 border-primary bg-primary/5 px-3 py-4 text-left"
+      className="flex w-full items-center gap-3 rounded-2xl border-2 border-primary bg-primary/5 px-3 py-4 text-left shadow-[0_3px_0_var(--primary)] transition-[translate,box-shadow] duration-75 active:translate-y-[3px] active:shadow-none"
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
         {displayOrder}
@@ -82,7 +83,7 @@ export const ExpressionListItem = ({
       </div>
       {!hideStartAction && (
         <span className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
-          시작할게요
+          시작
         </span>
       )}
     </button>
