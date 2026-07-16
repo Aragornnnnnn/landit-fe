@@ -93,6 +93,16 @@ describe('fromWritingSentence', () => {
     expect(quiz.answerWords).toEqual(['Wow', 'I', "can't", 'wait']);
   });
 
+  it('괄호·대시·인용부호가 붙은 단어도 입력 가능한 형태로 만든다', () => {
+    // 특수문자가 박스에 남으면 타이핑으로 채울 수 없어 복습을 끝낼 수 없다
+    const quiz = fromWritingSentence({
+      ...writing,
+      writingSentenceText: "(Really?) 'Hello' — let's go…",
+    });
+    // 단독 대시 토큰은 전부 벗겨져 사라진다
+    expect(quiz.answerWords).toEqual(['Really', 'Hello', "let's", 'go']);
+  });
+
   it('연속 공백이 있어도 빈 단어를 만들지 않는다', () => {
     const quiz = fromWritingSentence({
       ...writing,

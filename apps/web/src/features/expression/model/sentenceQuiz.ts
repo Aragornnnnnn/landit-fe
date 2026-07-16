@@ -35,7 +35,9 @@ export const fromWritingSentence = (
   writingSentenceTranslation: writing.writingSentenceTranslation,
   answerWords: writing.writingSentenceText
     .split(/\s+/)
-    .map((word) => word.replace(/^[.,!?;:"“”]+|[.,!?;:"“”]+$/g, ''))
+    .map((word) =>
+      word.replace(/^[.,!?;:"“”'‘’()—–…]+|[.,!?;:"“”'‘’()—–…]+$/g, ''),
+    )
     .filter((word) => word.length > 0),
   shuffledWords: [],
 });
