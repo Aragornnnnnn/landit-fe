@@ -3,7 +3,9 @@
 // 표현학습 플로우 — 단어 선택 퀴즈(D안 ①') → 표현 설명(D안 ④) → 복습 영작(D안 ⑤) → 완료 처리 후 리스트로.
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { preload } from 'react-dom';
 
+import { collectPreloadImageUrls } from '../model/preloadImages';
 import { fromLearning } from '../model/sentenceQuiz';
 import { useExpressionLearning } from '../model/useExpressionLearning';
 import { useExpressionPractice } from '../model/useExpressionPractice';
@@ -34,8 +36,15 @@ export const ExpressionFlow = ({
     error: learningError,
     isLoading: learningLoading,
   } = useExpressionLearning(expressionId);
-  const { practice } = useExpressionPractice(expressionId, step !== 'QUIZ');
+  // learning이 오면(=QUIZ 진입) 예문을 미리 받아, QUIZ 체류 중 EXPLAIN용 practice를 데워둔다.
+  const { practice } = useExpressionPractice(expressionId, !!learning);
   const finish = useFinishExpression(expressionId);
+
+  // 예문 이미지는 QUIZ→EXPLAIN에서 마운트되지만, URL을 아는 즉시 브라우저 캐시에 선로드해
+  // EXPLAIN 도착 시 img가 곧바로 뜨게 한다. preload는 멱등이라 렌더 중 호출해도 안전하다.
+  for (const url of collectPreloadImageUrls(practice)) {
+    preload(url, { as: 'image' });
+  }
 
   // 학습을 나가면 홈으로 돌아가 해당 카드를 뒤집어(뒷면=표현 리스트) 보여준다
   const backToList = () => router.push(`/home?flip=${scenarioId}`);
