@@ -126,9 +126,10 @@ export const ScenarioCard = ({
                 잠겨있어요 <LockIcon size={16} />
               </div>
             ) : completed ? (
-              // 완료 카드 — 메인은 표현 학습(뒤집기), 다시 해보기는 아래 고스트로
+              // 완료 카드 — 메인은 표현 학습(뒤집기), 다시 해보기는 아래 고스트로.
+              // '대화 시작하기'(주황)와 역할이 달라 보이게 학습은 초록으로 구분한다
               <div className="flex flex-col gap-1">
-                <Button variant="primary" onClick={openExpressions}>
+                <Button variant="success" onClick={openExpressions}>
                   원어민 표현 배우기
                 </Button>
                 <button
