@@ -4,25 +4,26 @@ import { describe, expect, it } from 'vitest';
 import { pickNextIndex, SOUND_QUESTIONS } from './onboarding.constants';
 
 describe('pickNextIndex', () => {
-  it('현재 인덱스와 다른 값을 고른다', () => {
-    // Given 현재 인덱스가 0이고 rand가 우연히 0을 먼저 반환할 때
-    let call = 0;
-    const rand = () => [0, 0.5][call++] ?? 0;
-
-    // When 다음 인덱스를 고르면
-    const next = pickNextIndex(0, SOUND_QUESTIONS.length, rand);
-
-    // Then 현재와 겹치는 0은 건너뛰고 다른 인덱스를 준다
-    expect(next).not.toBe(0);
+  it('어떤 난수를 줘도 현재 인덱스는 다시 고르지 않는다', () => {
+    // 상수 난수(경곗값 포함)로도 항상 현재와 다른 유효 인덱스를 준다
+    for (const r of [0, 0.25, 0.5, 0.75, 0.999]) {
+      for (let current = 0; current < SOUND_QUESTIONS.length; current += 1) {
+        const next = pickNextIndex(current, SOUND_QUESTIONS.length, () => r);
+        expect(next).not.toBe(current);
+        expect(next).toBeGreaterThanOrEqual(0);
+        expect(next).toBeLessThan(SOUND_QUESTIONS.length);
+      }
+    }
   });
 
   it('문구가 하나뿐이면 현재 인덱스를 그대로 둔다', () => {
     expect(pickNextIndex(0, 1)).toBe(0);
   });
 
-  it('항상 0 이상 length 미만의 인덱스를 준다', () => {
-    for (let r = 0; r < 1; r += 0.1) {
-      const next = pickNextIndex(2, SOUND_QUESTIONS.length, () => r);
+  it('실제 난수로 반복해도 계약을 지킨다', () => {
+    for (let t = 0; t < 500; t += 1) {
+      const next = pickNextIndex(1, SOUND_QUESTIONS.length);
+      expect(next).not.toBe(1);
       expect(next).toBeGreaterThanOrEqual(0);
       expect(next).toBeLessThan(SOUND_QUESTIONS.length);
     }
