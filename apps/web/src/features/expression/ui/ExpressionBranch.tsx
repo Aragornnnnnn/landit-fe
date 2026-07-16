@@ -221,7 +221,8 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
                         scenario_id: scenarioId,
                         expression_count: count,
                       });
-                      router.replace('/home?just=1');
+                      // just에 시나리오 id를 실어 원래 카테고리로 복귀시킨다 — 없으면 첫 카테고리로 점프하던 버그
+                      router.replace(`/home?just=${scenarioId}`);
                     }}
                     className="flex h-11 w-full items-center justify-center text-sm font-semibold text-muted-foreground transition-colors active:text-foreground"
                   >

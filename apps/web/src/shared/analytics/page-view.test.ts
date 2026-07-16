@@ -35,6 +35,12 @@ describe('toPageView', () => {
       path: '/home',
       return_reason: 'just',
     });
+    expect(pv('/home', 'just=7')).toEqual({
+      page_name: 'home',
+      path: '/home',
+      return_reason: 'just',
+      scenario_id: 7,
+    });
   });
 
   it('복귀 쿼리 값이 비어 있으면 scenario_id 없이 return_reason만 남긴다', () => {

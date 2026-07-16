@@ -38,7 +38,15 @@ export const toPageView = (
         scenario_id: toId(searchParams.get('card')),
       };
     }
-    if (searchParams.has('just')) return { ...base, return_reason: 'just' };
+    if (searchParams.has('just')) {
+      // just는 시나리오 id를 담을 수 있다 (레거시 '1'은 강조 전용 플래그라 id 아님)
+      const just = searchParams.get('just');
+      return {
+        ...base,
+        return_reason: 'just',
+        scenario_id: just !== '1' ? toId(just) : undefined,
+      };
+    }
     return base;
   }
 
