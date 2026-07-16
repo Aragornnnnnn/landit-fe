@@ -24,11 +24,14 @@ let initialized = false;
 // 스크롤·탭마다 불리는 핫패스라 컨텍스트를 한 번만 읽고 surface도 여기서 파생한다
 const baseProps = () => {
   const native = getNativeContext();
+  // 웹 배포 버전 — Vercel이 빌드에 주입하는 커밋 SHA (로컬·미설정이면 생략)
+  const webVersion = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA?.slice(0, 7);
   return {
     surface: native ? 'app' : 'browser',
     platform: native?.platform ?? 'web',
     ...(native && { app_version: native.appVersion }),
     ...(native?.buildNumber && { build_number: native.buildNumber }),
+    ...(webVersion && { web_version: webVersion }),
   };
 };
 
@@ -39,18 +42,13 @@ export const initAnalytics = () => {
   const apiKey = getApiKey();
   if (!apiKey) return;
 
-  // 세션 리플레이는 초기 단계라 100% 수집. 오토캡처는 커스텀 이벤트와 겹치지 않는 것만 —
-  // pageViews는 커스텀 Page Viewed와 중복이라 끄고, elementInteractions는 계측 누락 안전망으로 켜둔다
+  // 세션 리플레이는 초기 단계라 100% 수집. 오토캡처는 전부 끈다 — 커스텀 이벤트 53종으로 충분.
+  // minIdLength: 백엔드 회원번호가 1~4자리라 앰플리튜드 기본 5자 제한에 걸려
+  // "Invalid id length for user_id"(400)로 이벤트가 통째로 거절되던 것을 푼다
   amplitude.initAll(apiKey, {
     analytics: {
-      autocapture: {
-        sessions: true,
-        attribution: true,
-        elementInteractions: true,
-        pageViews: false,
-        formInteractions: false,
-        fileDownloads: false,
-      },
+      minIdLength: 1,
+      autocapture: false,
     },
     sessionReplay: { sampleRate: 1 },
   });

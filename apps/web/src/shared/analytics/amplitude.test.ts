@@ -57,7 +57,7 @@ describe('initAnalytics', () => {
     expect(amplitudeMock.initAll).not.toHaveBeenCalled();
   });
 
-  it('키가 있으면 세션 리플레이 100%, 오토캡처는 커스텀과 겹치는 pageViews만 끄고 초기화한다', async () => {
+  it('키가 있으면 세션 리플레이 100%·오토캡처 off·짧은 회원번호 허용으로 초기화한다', async () => {
     vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
     const { initAnalytics } = await loadWrapper();
 
@@ -65,15 +65,25 @@ describe('initAnalytics', () => {
 
     expect(amplitudeMock.initAll).toHaveBeenCalledWith('test-key', {
       analytics: {
-        autocapture: expect.objectContaining({
-          sessions: true,
-          elementInteractions: true,
-          pageViews: false,
-          formInteractions: false,
-        }),
+        // 백엔드 회원번호(1~4자리)가 기본 5자 제한에 걸려 400으로 거절되던 것
+        minIdLength: 1,
+        autocapture: false,
       },
       sessionReplay: { sampleRate: 1 },
     });
+  });
+
+  it('웹 배포 버전(커밋 SHA)이 있으면 공통 속성 web_version으로 실린다', async () => {
+    vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA', 'abcdef1234567890');
+    const { track } = await loadWrapper();
+
+    track('Logout Completed');
+
+    expect(amplitudeMock.track).toHaveBeenCalledWith(
+      'Logout Completed',
+      expect.objectContaining({ web_version: 'abcdef1' }),
+    );
   });
 
   it('중복 호출해도 한 번만 초기화한다', async () => {
