@@ -1,0 +1,129 @@
+/* 로그인 진입 모션 — 네이티브 스플래시(주황+흰 로고)에서 이어지는 1회성 타임라인. 로그인 전용이라 전역 대신 스코프된 CSS Module에 둔다 */
+
+/* 로고 래퍼 — 화면 중앙에서 상단으로 상승. 기본(모션 없음) = 최종 상태(위로 올라가 축소) */
+.logoWrap {
+  --rise-end: calc(-50dvh + env(safe-area-inset-top) + 200px);
+  --rest-scale: 1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 5;
+  transform: translate(-50%, -50%) translateY(var(--rise-end))
+    scale(var(--rest-scale));
+}
+
+/* 확대된 점(scale 200)이 SVG 뷰박스 밖으로 커져도 잘리지 않게 — 화면(overflow-hidden)이 대신 클리핑 */
+.logo {
+  overflow: visible;
+}
+
+/* SVG 내부 패스는 컴포넌트 안에 있어 Tailwind 유틸로 못 닿음 → :global 선택자로 타겟 */
+.logoWrap :global(.logo-dot) {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* i 위에 얹힌 흰 점 — 스플래시 땐 완전한 흰 로고를 만들고, 주황이 i로 응축되는 타이밍(52~72%)에 페이드아웃돼 밑의 주황 점이 드러난다. 모션이 꺼지면(재방문·reduced-motion) 애니메이션 자체가 안 걸려 늘 투명 상태 — 그게 최종 상태(주황 점만 보임)와 일치한다 */
+.logoWrap :global(.logo-dot-splash) {
+  opacity: 0;
+}
+
+/* 태그라인·버튼 레이어 — 로고 위에 겹쳐 배치 */
+.content {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+/* 버튼 스태거 지연 — animation-name이 없는(모션 꺼진) 상태에선 delay만 있어도 무해 */
+.buttons > *:nth-child(1) {
+  animation-delay: 2.62s;
+}
+.buttons > *:nth-child(2) {
+  animation-delay: 2.72s;
+}
+.buttons > *:nth-child(3) {
+  animation-delay: 2.82s;
+}
+
+/* 모션 재생 조건 — 재방문(splash-played)도 아니고 reduced-motion도 아닐 때만.
+   대상 6개 선택자를 이 블록 안에 한 번만 나열해, "재방문 스킵"과 "reduced-motion"
+   두 조건에 각각 따로 목록을 중복하지 않는다 (하나만 갱신하고 잊는 드리프트 방지) */
+@media (prefers-reduced-motion: no-preference) {
+  html:not(:global(.splash-played)) {
+    .logoWrap {
+      animation: riseUp 0.65s cubic-bezier(0.3, 0.9, 0.3, 1) 2.15s both;
+    }
+    .logoWrap :global(.logo-dot) {
+      animation: dotShrink 1.4s cubic-bezier(0.7, 0, 0.3, 1) 0.5s both;
+    }
+    .logoWrap :global(.logo-letters) {
+      animation: lettersInk 1.4s linear 0.5s both;
+    }
+    .logoWrap :global(.logo-dot-splash) {
+      animation: dotSplashFade 1.4s linear 0.5s both;
+    }
+    .tagline {
+      animation: fadeUp 0.4s ease-out 2.45s both;
+    }
+    .buttons > * {
+      animation: fadeUp 0.4s ease-out both;
+    }
+  }
+}
+
+/* 주황 점이 화면을 덮었다가(=스플래시) i 점 크기로 응축. i 점이 라운드 스퀘어라 둥근 모서리가 화면 코너를 놓치지 않도록 넉넉히 200배로 덮는다 */
+@keyframes dotShrink {
+  0%,
+  18% {
+    transform: scale(200);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 응축이 배경을 드러내는 타이밍에 글자가 흰색(스플래시 반전형)에서 잉크로 전환 */
+@keyframes lettersInk {
+  0%,
+  52% {
+    fill: #ffffff;
+  }
+  72%,
+  100% {
+    fill: var(--color-foreground);
+  }
+}
+
+/* 흰 점: 글자 색전환과 같은 타이밍에 사라져 주황 점으로 넘어간다 */
+@keyframes dotSplashFade {
+  0%,
+  52% {
+    opacity: 1;
+  }
+  72%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes riseUp {
+  0% {
+    transform: translate(-50%, -50%) translateY(0) scale(1);
+  }
+  100% {
+    transform: translate(-50%, -50%) translateY(var(--rise-end))
+      scale(var(--rest-scale));
+  }
+}
+
+@keyframes fadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}

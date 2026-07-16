@@ -1,0 +1,2 @@
+# 모든 텍스트 파일을 LF로 통일 — Windows에서 CRLF로 체크아웃되면 Prettier(format:check)가 실패한다
+* text=auto eol=lf

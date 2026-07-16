@@ -1,0 +1,11 @@
+# 락파일은 pnpm이 관리하는 형식 그대로 둔다 (포맷 대상 아님)
+pnpm-lock.yaml
+
+# 빌드 산출물 (Prettier는 루트 .gitignore만 읽으므로 앱별 산출물을 여기 명시)
+.next/
+.expo/
+.turbo/
+
+# 툴이 자동 생성하는 파일 — 재생성 시 diff가 생기지 않도록 원본 그대로 유지
+next-env.d.ts
+expo-env.d.ts

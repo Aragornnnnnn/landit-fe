@@ -1,26 +1,224 @@
-@import "tailwindcss";
+/* landit 디자인 토큰 (DESIGN.md 참고)
+ *
+ * 3레이어 구조.
+ *   Layer 1  Primitive — 원시 팔레트. 컴포넌트에서 직접 쓰지 않는다.
+ *   Layer 2  Semantic  — 역할 토큰. 다크모드 도입 시 이 레이어만 재정의한다.
+ *   Layer 3  컴포넌트  — 오직 시맨틱 토큰(bg-primary 등)만 참조한다.
+ */
+@import 'tailwindcss';
+/* Pretendard 자체 호스팅 (다이나믹 서브셋) — 화면에 나온 글자가 포함된 조각만 다운로드된다 */
+@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* Tailwind 유틸리티 클래스(bg-primary 등)와 시맨틱 토큰 연결 */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-light: var(--primary-light);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-backdrop: var(--backdrop);
+  --color-good: var(--good);
+  --color-good-bg: var(--good-bg);
+  --color-good-border: var(--good-border);
+  --color-need: var(--need);
+  --color-need-bg: var(--need-bg);
+  --color-need-border: var(--need-border);
+
+  --font-sans:
+    'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont,
+    sans-serif;
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* ── Layer 1: Primitive — 고정 팔레트. 다크모드에서도 값이 바뀌지 않는다 ──
+   * 실사용 색만 정의한다. 새 색이 필요하면 여기 추가 후 시맨틱으로 노출할 것. */
+  --white: #ffffff;
+  /* 웜 그레이 램프 (뉴트럴 기준 램프 — iOS 쿨 그레이 계열은 컴포넌트 추가 시 여기로 통일) */
+  --gray-50: #fbfbfa;
+  --gray-100: #f5f5f3;
+  --gray-200: #e5e5e0;
+  --gray-500: #6b7280;
+  --gray-950: #111111;
+  /* 브랜드 테라코타 램프 */
+  --orange-300: #e8935a;
+  --orange-500: #e07a3a;
+  --orange-600: #c4601f;
+  /* 시맨틱 액센트 원색 */
+  --red-500: #ff3b30;
+  /* 테라코타 오렌지와 어울리는 어시 포레스트 그린 (에메랄드 #22a45e에서 채도↓·명도↓) */
+  --green-500: #2f7d54;
+  /* 별점 팔레트 (피그마 피드백 화면 스펙) */
+  --amber-400: #fbbf24;
+  --gray-300: #d4d8df;
+  /* 의미색 — GOOD 상태=파랑, NEED IMPROVEMENT 상태=초록. 브랜드색(주황)과 분리 (피그마 피드백 상세 스펙) */
+  --blue-100: #eef2fb;
+  --blue-200: #bcd0ee;
+  --blue-700: #3a5a8a;
+  --green-50: #f0fdf4;
+  --green-200: #bbf7d0;
+  --green-600: #16a34a;
+
+  /* ── Layer 2: Semantic — 역할 토큰. 다크모드 도입 시 이 블록만 재정의한다 ── */
+  --background: var(--gray-50);
+  --foreground: var(--gray-950);
+  --card: var(--white);
+  --card-foreground: var(--gray-950);
+  --popover: var(--white);
+  --popover-foreground: var(--gray-950);
+  --primary: var(--orange-500);
+  --primary-foreground: var(--white);
+  --primary-light: var(--orange-300);
+  --secondary: var(--gray-100);
+  --secondary-foreground: var(--gray-950);
+  --muted: var(--gray-100);
+  --muted-foreground: var(--gray-500);
+  --accent: var(--orange-600);
+  --accent-foreground: var(--white);
+  --destructive: var(--red-500);
+  --destructive-foreground: var(--white);
+  --success: var(--green-500);
+  --success-foreground: var(--white);
+  --border: var(--gray-200);
+  --input: var(--gray-200);
+  --ring: var(--orange-500);
+  /* 데스크톱 웹에서 430px 앱 컬럼 바깥에 까는 여백색 — 컬럼(밝은 background)이 살짝 떠 보이게 한 톤 더 진한 웜 그레이 */
+  --backdrop: var(--gray-200);
+  --star-filled: var(--amber-400);
+  --star-empty: var(--gray-300);
+  --good: var(--blue-700);
+  --good-bg: var(--blue-100);
+  --good-border: var(--blue-200);
+  --need: var(--green-600);
+  --need-bg: var(--green-50);
+  --need-border: var(--green-200);
+  --radius: 0.75rem;
+}
+
+/* 다크모드는 현재 미지원 (라이트 단일 테마). 도입 시 아래처럼 시맨틱만 재정의한다 — 값을 지어내지 말 것.
+ * .dark {
+ *   --background: var(--gray-950);
+ *   --foreground: var(--gray-50);
+ *   ...
+ * }
+ */
+
+@layer base {
+  /* 네이티브 앱 느낌 유지 — 스크롤바 전역 숨김 */
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+  /* 웹뷰 셸 — 웹페이지스러운 제스처 차단 (텍스트 선택·오버스크롤) */
+  html {
+    -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
+  }
+  /* 입력·편집 영역은 선택 허용 (위 차단의 예외) */
+  input,
+  textarea,
+  [contenteditable='true'] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  /* 브라우저 웹(넓은 화면)에서는 앱이 430px 컬럼이라, 바깥 여백을 한 톤 진하게 깔아 컬럼을 자연스럽게 구분한다.
+     모바일·웹뷰는 컬럼이 화면을 꽉 채워 이 배경이 드러나지 않는다 (min-width가 컬럼 폭보다 클 때만 적용). */
+  @media (min-width: 431px) {
+    body {
+      background: var(--backdrop);
+    }
+  }
+  html {
+    @apply font-sans;
+  }
+  button {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* 오답 단어 흔들림 — 복습 영작에서 틀린 단어에 적용 */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-5px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+/* 정답 글자 튀어오름 — 복습 영작 성공 시 글자칸에 순차 적용 */
+@keyframes pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.35) translateY(-2px);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@layer utilities {
+  .animate-shake {
+    animation: shake 0.4s ease-in-out;
+  }
+
+  .animate-pop {
+    animation: pop 0.45s ease;
+  }
+
+  /* 이모지는 Tossface로 렌더해 플랫폼 간 일관성 유지 */
+  .tossface {
+    font-family:
+      Tossface,
+      'Pretendard Variable',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Apple Color Emoji',
+      'Segoe UI Emoji',
+      'Noto Color Emoji',
+      sans-serif;
+  }
 }

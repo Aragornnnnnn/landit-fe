@@ -1,36 +1,121 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Landit",
+    "slug": "saynow",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "scheme": [
+      "landit",
+      "com.saynow.app",
+      "com.googleusercontent.apps.1062331189445-7tb3d2u3fkmqn2o1n53sqfhi7ljopqn1"
+    ],
     "userInterfaceStyle": "automatic",
+    "backgroundColor": "#e07a3a",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "bundleIdentifier": "com.saynow.app",
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "음성 인식(말하기) 기능에 마이크를 사용합니다.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "SKAdNetworkItems": [
+          { "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork" },
+          { "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork" }
+        ]
+      },
+      "privacyManifests": {
+        "NSPrivacyTracking": true,
+        "NSPrivacyTrackingDomains": [],
+        "NSPrivacyCollectedDataTypes": [
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeDeviceID",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": true,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeThirdPartyAdvertising"
+            ]
+          }
+        ]
+      }
     },
     "android": {
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#e66827",
+        "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.saynow.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "category": ["DEFAULT", "BROWSABLE"],
+          "data": [{ "scheme": "com.saynow.app" }]
+        }
+      ]
     },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+    "owner": "oesnuj",
+    "extra": {
+      "eas": {
+        "projectId": "97f2d216-f1c0-41d1-b912-fd31c5526f86"
+      }
+    },
     "plugins": [
       "expo-router",
+      "expo-apple-authentication",
+      [
+        "@react-native-kakao/core",
+        {
+          "nativeAppKey": "09462cccdbd1a0723c5f87929a94a528",
+          "android": {
+            "authCodeHandlerActivity": true
+          },
+          "ios": {
+            "handleKakaoOpenUrl": true
+          }
+        }
+      ],
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#e07a3a",
+          "image": "./assets/images/splash-wordmark.png",
+          "imageWidth": 156
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraMavenRepos": [
+              "https://devrepo.kakao.com/nexus/content/groups/public/"
+            ]
+          }
+        }
+      ],
+      [
+        "react-native-fbsdk-next",
+        {
+          "appID": "1311169574549165",
+          "clientToken": "b8d5f9f03d654d4f8577d9c767ee8cca",
+          "displayName": "Landit",
+          "isAutoInitEnabled": true,
+          "autoLogAppEventsEnabled": true,
+          "advertiserIDCollectionEnabled": true,
+          "iosUserTrackingPermission": false
+        }
+      ],
+      [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "광고 성과를 측정하고 서비스를 개선하기 위해 기기의 활동 정보를 사용해요."
         }
       ]
     ],
