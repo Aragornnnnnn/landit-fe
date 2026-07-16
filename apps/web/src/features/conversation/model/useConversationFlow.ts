@@ -173,7 +173,8 @@ export const useConversationFlow = (scenario: Scenario) => {
         console.error('세션 시작 실패', error);
         return null;
       });
-  }, [scenario.scenarioId]);
+    // startedRef 가드로 어차피 1회만 실행된다 — 계측 속성 참조로 늘어난 의존성
+  }, [scenario.scenarioId, scenario.completed, scenario.firstSpeaker]);
 
   // AI 발화 — TTS로 실제 재생하고, 재생이 끝나면 마이크 대기로 넘어간다.
   // 오프닝은 미리 만든 정적 mp3, 없으면 런타임 합성/타이머로 폴백해 대화가 멈추지 않게 한다.
