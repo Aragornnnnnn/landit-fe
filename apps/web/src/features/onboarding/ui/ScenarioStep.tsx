@@ -11,7 +11,12 @@ import { Button } from '@/shared/ui/Button';
 
 import firstScenarioImage from '../assets/first-scenario.webp';
 
-export const ScenarioStep = ({ onStart }: { onStart: () => void }) => {
+export const ScenarioStep = ({
+  onStart,
+}: {
+  // 소개한 첫 시나리오로 곧장 대화를 시작한다 — 못 받았으면 null(홈 폴백)
+  onStart: (scenarioId: number | null) => void;
+}) => {
   // 첫 대화 = 첫(미잠금) 카테고리의 첫 시나리오 — 홈 리스트가 보여주는 것과 같은 순서
   const { selected } = useScenarios();
   const scenario = selected?.scenarios[0] ?? null;
@@ -37,7 +42,10 @@ export const ScenarioStep = ({ onStart }: { onStart: () => void }) => {
         <ScenarioCard scenario={scenario} showText={showText} />
       </div>
 
-      <Button onClick={onStart} disabled={!isUnlocked}>
+      <Button
+        onClick={() => onStart(scenario?.scenarioId ?? null)}
+        disabled={!isUnlocked}
+      >
         시작할게요!
       </Button>
     </>

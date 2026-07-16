@@ -59,11 +59,13 @@ export const OnboardingFlow = () => {
     if (currentIndex > 0) goTo(STEP_ORDER[currentIndex - 1]);
   };
 
-  const startConversation = () => {
+  // 소개한 첫 시나리오 대화로 곧장 들어간다 — 리스트 경유 없이. 시나리오를 못 받았으면 홈으로 폴백
+  const startConversation = (scenarioId: number | null) => {
     track(EVENTS.ONBOARDING_STEP_COMPLETED, { step: 'scenario' });
     track(EVENTS.ONBOARDING_COMPLETED);
-    // TODO: 대화 화면 추가 시 첫 시나리오 대화로 진입하도록 교체
-    router.replace('/');
+    router.replace(
+      scenarioId != null ? `/conversation/${scenarioId}` : '/home',
+    );
   };
 
   return (
