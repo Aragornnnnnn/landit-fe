@@ -1,6 +1,8 @@
 'use client';
 
 // 표현 리스트 항목 — 완료(연녹색 체크) / 시작할 표현(강조 카드) / 잠금(회색) 상태를 그린다
+import { motion } from 'motion/react';
+
 import { CheckIcon, LockIcon } from '@/shared/ui/Icons';
 
 import type { Expression } from '../api/list';
@@ -85,12 +87,23 @@ export const ExpressionListItem = ({
           {targetExpressionText}
         </p>
       </div>
-      {/* 글자 라벨 대신 왼쪽을 가리키는 손가락 — '다음은 이거'를 직관적으로 (스크린리더용 텍스트는 따로) */}
+      {/* 글자 라벨 대신 왼쪽을 가리키는 손가락 — '다음은 이거'를 직관적으로 (스크린리더용 텍스트는 따로).
+          좌우로 콕콕 찌르듯 움직여 시선을 끈다 */}
       {!hideStartAction && (
         <>
-          <span className="tossface shrink-0 text-2xl" aria-hidden>
+          <motion.span
+            className="tossface shrink-0 text-2xl"
+            aria-hidden
+            animate={{ x: [0, -6, 0] }}
+            transition={{
+              duration: 0.9,
+              repeat: Infinity,
+              repeatDelay: 0.4,
+              ease: 'easeInOut',
+            }}
+          >
             👈
-          </span>
+          </motion.span>
           <span className="sr-only">다음에 배울 표현</span>
         </>
       )}
