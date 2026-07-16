@@ -17,7 +17,8 @@ export const ScenarioStep = ({ onStart }: { onStart: () => void }) => {
 
   const [isUnlocked, setIsUnlocked] = useState(false);
   useEffect(() => {
-    const timer = setTimeout(() => setIsUnlocked(true), 650);
+    // 마지막 유도 스텝은 뜸 들이지 않는다 — 이미지·글자가 빨리 떠야 바로 시작으로 이어진다
+    const timer = setTimeout(() => setIsUnlocked(true), 250);
     return () => clearTimeout(timer);
   }, []);
 
@@ -50,7 +51,7 @@ const ScenarioCard = ({
   scenario: Scenario | null;
   showText: boolean;
 }) => {
-  // 홈 리스트와 같은 규칙으로 첫 시나리오 이미지를 고른다. 로딩 중엔 중립 배경만.
+  // 홈 리스트 1번 카드와 같은 규칙 — BE 썸네일 우선, 없으면 번들 이미지 폴백. 로딩 중엔 중립 배경만.
   const bundledImage = scenario ? getScenarioImage(scenario.scenarioId) : null;
 
   return (
@@ -59,7 +60,14 @@ const ScenarioCard = ({
         className="relative w-full overflow-hidden rounded-3xl bg-secondary"
         style={{ aspectRatio: '4/3' }}
       >
-        {bundledImage && (
+        {scenario?.thumbnailUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- 백엔드 썸네일 도메인이 미정이라 next/image 원격 허용 목록을 아직 못 만든다
+          <img
+            src={scenario.thumbnailUrl}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+        ) : bundledImage ? (
           // 정적 import라 blurDataURL 자동 — 흐린 썸네일이 즉시 깔리고 본 이미지가 페이드인
           <Image
             src={bundledImage}
@@ -69,7 +77,7 @@ const ScenarioCard = ({
             placeholder="blur"
             className="object-cover"
           />
-        )}
+        ) : null}
       </div>
 
       <AnimatePresence>
@@ -77,7 +85,7 @@ const ScenarioCard = ({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.25 }}
+            transition={{ duration: 0.25, delay: 0.05 }}
           >
             <p className="text-lg font-extrabold text-foreground">
               {scenario.scenarioTitle}
