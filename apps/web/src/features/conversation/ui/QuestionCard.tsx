@@ -11,12 +11,15 @@ interface QuestionCardProps {
   question: string;
   translation: string | null;
   speaking: boolean;
+  // USER 선발화 안내 — 발화 카드가 아니라 '내가 먼저 말해보는 상황' 라벨 + 작은 설명 구조로 그린다
+  instruction?: boolean;
 }
 
 export const QuestionCard = ({
   question,
   translation,
   speaking,
+  instruction = false,
 }: QuestionCardProps) => {
   // 진행값이 어느 질문 것인지 함께 저장한다 — 질문이 바뀐 첫 프레임에 이전 값이 새어 나오지 않도록
   const [typed, setTyped] = useState({ question, count: 0 });
@@ -64,13 +67,25 @@ export const QuestionCard = ({
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className="w-full rounded-[28px] rounded-tl-md bg-card px-6 py-6 shadow-lg shadow-black/5"
     >
-      <p
-        className={`min-h-14 ${questionSize} leading-snug font-bold text-foreground`}
-      >
-        {question.slice(0, visibleCount)}
-        {typing && <TypingCursor />}
-      </p>
-      {translation && (
+      {instruction ? (
+        // 선발화 안내 — 상대 발화처럼 크게 꽂지 않고, 라벨 + 차분한 크기의 상황 설명으로 정리한다
+        <>
+          <p className="text-sm font-bold text-primary">
+            내가 먼저 말해보는 상황
+          </p>
+          <p className="mt-2 text-[17px] leading-relaxed font-semibold text-foreground">
+            {question}
+          </p>
+        </>
+      ) : (
+        <p
+          className={`min-h-14 ${questionSize} leading-snug font-bold text-foreground`}
+        >
+          {question.slice(0, visibleCount)}
+          {typing && <TypingCursor />}
+        </p>
+      )}
+      {!instruction && translation && (
         <motion.p
           initial={false}
           animate={{ opacity: done ? 1 : 0 }}

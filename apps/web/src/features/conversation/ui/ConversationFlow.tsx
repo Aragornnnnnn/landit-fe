@@ -1,7 +1,7 @@
 // 대화 플로우 화면 — 캐릭터 무대·질문 카드·내 답변·마이크를 상태 기계 단계에 맞춰 오케스트레이션한다
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { SessionFeedbackScreen } from '@/features/feedback/ui/SessionFeedbackScreen';
@@ -27,6 +27,15 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   // 진입 시점의 완료 여부(재대화 판별) — 세션이 끝나면 시나리오 리스트가 invalidate돼
   // scenario.completed가 뒤늦게 true로 바뀌므로, 첫 완료와 구분하려면 진입 값으로 고정해야 한다
   const [wasCompleted] = useState(scenario.completed);
+  // USER 선발화 진입 안내 — 랜디가 먼저 날아들어 말을 걸어보라고 알려주고 잠시 후 사라진다
+  const [showUserFirstIntro, setShowUserFirstIntro] = useState(
+    scenario.firstSpeaker === 'USER',
+  );
+  useEffect(() => {
+    if (!showUserFirstIntro) return;
+    const timer = setTimeout(() => setShowUserFirstIntro(false), 2800);
+    return () => clearTimeout(timer);
+  }, [showUserFirstIntro]);
   const {
     phase,
     turn,
@@ -93,6 +102,7 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
             question={turn.aiMessage}
             translation={turn.aiTranslation}
             speaking={phase === 'AI_SPEAKING'}
+            instruction={turn.isUserOpening}
           />
         </div>
         {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 아래 입력창이 답변을 보여주므로 중복을 피한다 */}
@@ -125,13 +135,19 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
         )}
       </footer>
 
-      {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(WAITING)부터 랜디가 떠 있다가 속마음을 전한다 */}
+      {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(WAITING)부터 랜디가 떠 있다가 속마음을 전한다.
+          USER 선발화 진입 시엔 같은 연출로 랜디가 먼저 안내하고 사라진다 */}
       <ThoughtOverlay
         loading={phase === 'WAITING'}
         thought={
-          phase === 'THOUGHT'
-            ? { text: turn.innerThought, type: turn.innerThoughtType }
-            : null
+          showUserFirstIntro
+            ? {
+                text: '상황을 잘 읽고 먼저 말을 걸어보세요!',
+                type: 'NORMAL',
+              }
+            : phase === 'THOUGHT'
+              ? { text: turn.innerThought, type: turn.innerThoughtType }
+              : null
         }
       />
 
