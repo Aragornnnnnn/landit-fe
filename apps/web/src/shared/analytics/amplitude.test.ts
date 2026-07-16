@@ -57,14 +57,21 @@ describe('initAnalytics', () => {
     expect(amplitudeMock.initAll).not.toHaveBeenCalled();
   });
 
-  it('키가 있으면 자동수집 전체와 세션 리플레이 100%로 초기화한다', async () => {
+  it('키가 있으면 세션 리플레이 100%, 오토캡처는 커스텀과 겹치는 pageViews만 끄고 초기화한다', async () => {
     vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
     const { initAnalytics } = await loadWrapper();
 
     initAnalytics();
 
     expect(amplitudeMock.initAll).toHaveBeenCalledWith('test-key', {
-      analytics: { autocapture: true },
+      analytics: {
+        autocapture: expect.objectContaining({
+          sessions: true,
+          elementInteractions: true,
+          pageViews: false,
+          formInteractions: false,
+        }),
+      },
       sessionReplay: { sampleRate: 1 },
     });
   });

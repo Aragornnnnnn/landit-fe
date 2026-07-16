@@ -23,13 +23,13 @@
 - **발화 래퍼**: [`apps/web/src/shared/analytics/amplitude.ts`](../apps/web/src/shared/analytics/amplitude.ts) — `track(EVENTS.X, props)` 단일 통로.
   - `NEXT_PUBLIC_AMPLITUDE_API_KEY`가 없으면 no-op으로 `console.debug`만 남긴다.
   - dev 환경(`NODE_ENV=development`)에선 키가 있어도 모든 이벤트를 콘솔에 같이 찍는다.
-  - 초기 단계라 전부 수집한다 — `@amplitude/unified`의 `initAll`로 **오토캡처 전체 + 세션 리플레이 100%**.
+  - 세션 리플레이는 초기 단계라 **100% 수집**(`@amplitude/unified` `initAll`). 오토캡처는 커스텀과 겹치지 않는 것만 — sessions·attribution·elementInteractions(계측 누락 안전망) on, pageViews(커스텀 `Page Viewed`와 중복)·formInteractions·fileDownloads off.
   - 전 이벤트 공통 속성: `surface`(app|browser), `platform`(ios|android|web), `app_version`, `build_number` — 셸이 주입한 `window.__LANDIT_NATIVE__`(LAN-156)에서 온다.
 - **유저 식별**: `AnalyticsBootstrap`이 auth 스토어를 구독해 로그인 시 `setUserId(member.userId)` + `provider` 유저 속성, 로그아웃 시 `reset()`. 앱/브라우저 어디서든 같은 유저로 묶인다.
 - **화면 노출**: `PageViewTracker`가 라우트 변경마다 `Page Viewed` 발화. 동적 세그먼트는 `page_name`으로 정규화하고 id는 속성으로 뺀다. `/stt-demo`, `/dev`, `/`(즉시 redirect)는 제외.
 - **dev/prod 분리**: 프로젝트 키를 환경별로 나눈다. 로컬·프리뷰는 dev 키, 프로덕션 배포 환경변수에만 prod 키.
 
-## 이벤트 택소노미 (43개)
+## 이벤트 택소노미 (44개)
 
 ### 공통
 
@@ -99,19 +99,20 @@
 
 ### 표현 학습
 
-| 이벤트                      | 속성                                               | 시점                  |
-| --------------------------- | -------------------------------------------------- | --------------------- |
-| Expression List Viewed      | scenario_id, expression_count                      | 분기 화면 리스트 리빌 |
-| Expression Learning Started | expression_id, scenario_id                         | 학습 데이터 로드 완료 |
-| Expression Step Viewed      | expression_id, step(quiz\|explain\|review)         | 스텝 노출             |
-| Quiz Word Picked            | expression_id, picked_count                        | 단어 칩 선택          |
-| Quiz Word Removed           | expression_id, picked_count                        | 단어 칩 제거          |
-| Quiz Answer Submitted       | expression_id, is_correct, hint_level              | 퀴즈 확인             |
-| Example Sentence Viewed     | expression_id, sentence_index                      | 예문 캐러셀 스냅      |
-| Review Answer Submitted     | expression_id, is_correct, wrong_count, hint_level | 복습 영작 확인        |
-| Hint Used                   | source(quiz\|review), level                        | 힌트 보기/정답 보기   |
-| Expression Completed        | expression_id, scenario_id                         | 학습 완료 처리 성공   |
-| Expression Abandoned        | expression_id, step                                | 중단 확정             |
+| 이벤트                      | 속성                                               | 시점                            |
+| --------------------------- | -------------------------------------------------- | ------------------------------- |
+| Expression List Viewed      | scenario_id, expression_count                      | 분기 화면 리스트 리빌           |
+| Expression Learning Skipped | scenario_id, expression_count                      | 분기에서 "다음 대화하러 갈게요" |
+| Expression Learning Started | expression_id, scenario_id                         | 학습 데이터 로드 완료           |
+| Expression Step Viewed      | expression_id, step(quiz\|explain\|review)         | 스텝 노출                       |
+| Quiz Word Picked            | expression_id, picked_count                        | 단어 칩 선택                    |
+| Quiz Word Removed           | expression_id, picked_count                        | 단어 칩 제거                    |
+| Quiz Answer Submitted       | expression_id, is_correct, hint_level              | 퀴즈 확인                       |
+| Example Sentence Viewed     | expression_id, sentence_index                      | 예문 캐러셀 스냅                |
+| Review Answer Submitted     | expression_id, is_correct, wrong_count, hint_level | 복습 영작 확인                  |
+| Hint Used                   | source(quiz\|review), level                        | 힌트 보기/정답 보기             |
+| Expression Completed        | expression_id, scenario_id                         | 학습 완료 처리 성공             |
+| Expression Abandoned        | expression_id, step                                | 중단 확정                       |
 
 ### NPS
 

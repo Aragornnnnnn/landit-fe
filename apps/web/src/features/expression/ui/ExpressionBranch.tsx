@@ -213,7 +213,13 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
                   </Button>
                   <button
                     type="button"
-                    onClick={() => router.replace('/home?just=1')}
+                    onClick={() => {
+                      track(EVENTS.EXPRESSION_LEARNING_SKIPPED, {
+                        scenario_id: scenarioId,
+                        expression_count: count,
+                      });
+                      router.replace('/home?just=1');
+                    }}
                     className="flex h-11 w-full items-center justify-center text-sm font-semibold text-muted-foreground transition-colors active:text-foreground"
                   >
                     다음 대화하러 갈게요

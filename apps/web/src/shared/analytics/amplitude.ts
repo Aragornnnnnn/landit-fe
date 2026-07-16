@@ -31,9 +31,19 @@ export const initAnalytics = () => {
   const apiKey = getApiKey();
   if (!apiKey) return;
 
-  // 초기 단계라 전부 수집한다 — 오토캡처 전체 + 세션 리플레이 100%
+  // 세션 리플레이는 초기 단계라 100% 수집. 오토캡처는 커스텀 이벤트와 겹치지 않는 것만 —
+  // pageViews는 커스텀 Page Viewed와 중복이라 끄고, elementInteractions는 계측 누락 안전망으로 켜둔다
   amplitude.initAll(apiKey, {
-    analytics: { autocapture: true },
+    analytics: {
+      autocapture: {
+        sessions: true,
+        attribution: true,
+        elementInteractions: true,
+        pageViews: false,
+        formInteractions: false,
+        fileDownloads: false,
+      },
+    },
     sessionReplay: { sampleRate: 1 },
   });
 
