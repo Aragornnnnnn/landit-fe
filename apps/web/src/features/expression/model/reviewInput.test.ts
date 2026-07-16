@@ -10,6 +10,7 @@ import {
   emptyState,
   firstWrong,
   focusWord,
+  gradePartial,
   gradeWords,
   isComplete,
   normalizeQuotes,
@@ -116,6 +117,32 @@ describe('isComplete', () => {
 
   it('단어가 하나도 없으면 확인 불가하다(빈 정답 방어)', () => {
     expect(isComplete({ typed: [], focus: 0 }, [])).toBe(false);
+  });
+});
+
+describe('gradePartial', () => {
+  it('입력이 정답의 접두사면 올바른 경로로 본다(빈 단어 포함)', () => {
+    expect(gradePartial(['I', 'go', '', '', ''], ANSWER)).toEqual([
+      true,
+      true,
+      true,
+      true,
+      true,
+    ]);
+  });
+
+  it('입력이 정답 경로를 벗어난 단어만 틀림으로 표시한다', () => {
+    expect(gradePartial(['I', 'ga', '', 'good', 'x'], ANSWER)).toEqual([
+      true,
+      false,
+      true,
+      true,
+      false,
+    ]);
+  });
+
+  it('대소문자·스마트따옴표는 무시한다', () => {
+    expect(gradePartial(['don’'], ["don't"])).toEqual([true]);
   });
 });
 

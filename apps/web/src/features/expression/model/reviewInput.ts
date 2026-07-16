@@ -82,6 +82,15 @@ export const gradeWords = (typed: string[], answer: string[]): boolean[] =>
 // 첫 오답 단어 인덱스 — 오답 시 그 단어로 커서를 보내 바로 고치게 한다(없으면 -1)
 export const firstWrong = (ok: boolean[]): number => ok.indexOf(false);
 
+// 입력 도중 정오 — 지금까지 친 글자가 정답의 접두사인지 단어별로 본다(빈 단어는 아직 판단 유보 = 올바름).
+// 힌트를 볼 때 이미 틀린 입력을 함께 알려주는 데 쓴다.
+export const gradePartial = (typed: string[], answer: string[]): boolean[] =>
+  answer.map((word, i) =>
+    normalizeQuotes(word)
+      .toLowerCase()
+      .startsWith(normalizeQuotes(typed[i] ?? '').toLowerCase()),
+  );
+
 // 네이티브 키보드 입력을 모델 액션으로 변환하기 위한 표현
 export type ReviewInputAction =
   | { kind: 'letter'; letter: string }
