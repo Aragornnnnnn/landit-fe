@@ -146,7 +146,7 @@ export const ScenarioList = ({
               className="mt-2 w-auto px-6"
               onClick={() => setFeedbackOpen(true)}
             >
-              하고 싶은 상황이 있다면 의견 주세요
+              더 하고 싶은 상황이 있어요!!
             </Button>
           )}
         </div>
