@@ -13,6 +13,7 @@
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#e07a3a",
     "ios": {
+      "buildNumber": "11",
       "bundleIdentifier": "com.saynow.app",
       "usesAppleSignIn": true,
       "infoPlist": {
@@ -25,7 +26,7 @@
       },
       "privacyManifests": {
         "NSPrivacyTracking": true,
-        "NSPrivacyTrackingDomains": [],
+        "NSPrivacyTrackingDomains": ["ep1.facebook.com"],
         "NSPrivacyCollectedDataTypes": [
           {
             "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeDeviceID",
