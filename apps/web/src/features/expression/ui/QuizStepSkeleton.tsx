@@ -1,5 +1,6 @@
-// 표현학습 퀴즈 로딩 스켈레톤 — learning 데이터를 받는 동안 스피너 대신 실제 퀴즈 레이아웃 자리를 잡는다
 'use client';
+
+// 표현학습 퀴즈 로딩 스켈레톤 — learning 데이터를 받는 동안 스피너 대신 실제 퀴즈 레이아웃 자리를 잡는다
 
 // StepScaffold + QuizPrompt + 답변/단어뱅크/CTA 자리를 회색 블록으로 재현한다
 export const QuizStepSkeleton = () => (
