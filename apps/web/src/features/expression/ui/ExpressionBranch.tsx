@@ -1,7 +1,8 @@
 'use client';
 
-// 표현학습 분기 — 대화 피드백 후 표현을 준비한 듯 분석 연출을 보여주고, 준비된 표현 리스트를
-// 그대로 노출한다. [학습하러 가기]는 첫 표현부터, [다음 대화하러 가기]는 홈으로 보낸다.
+// 표현학습 분기 — 대화 완료 축하(폭죽)를 잠깐 보여준 뒤, 표현을 준비한 듯 분석 연출과 준비된
+// 표현 리스트를 노출한다. [학습하러 가기]는 첫 표현부터, [다음 대화하러 가기]는 홈으로 보낸다.
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
@@ -39,6 +40,13 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
   const { text, done } = useTypewriter(phrases);
   // 타이핑이 끝나고 데이터도 준비돼야 리빌 — ready를 함께 봐야 결과가 먼저 깜빡이지 않는다
   const listed = ready && done;
+
+  // 진입 직후 대화 완료 축하 — 폭죽을 잠깐 보여준 뒤 분석 연출로 넘어간다 (잘 끝냈다는 보상 → 표현 학습)
+  const [celebrating, setCelebrating] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setCelebrating(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // 구슬 든 랜디 — 톡 튀어 나타나 둥실둥실 떠 있다가, listed 되면 사라진다
   const orb = (
@@ -103,7 +111,28 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
         // 찾는 중엔 좌측 위 타이틀 + (가운데 구슬 랜디 + 밑 타이핑) → 찾은 뒤엔 타이틀 대신 결과 문구 + 인라인 리스트
         <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(env(safe-area-inset-bottom),24px)]">
           <AnimatePresence mode="wait">
-            {!listed ? (
+            {celebrating ? (
+              // 대화 완료 축하 — 폭죽 이모지 GIF가 가운데 잠깐 떴다가 분석 연출로 이어진다
+              <motion.div
+                key="celebrate"
+                className="flex min-h-0 flex-1 flex-col items-center justify-center gap-5"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.94 }}
+                transition={{ duration: 0.28 }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element -- 구글이 호스팅하는 모션 이모지 GIF라 next/image 최적화 대상이 아니다 */}
+                <img
+                  src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.gif"
+                  alt="🎉"
+                  width={140}
+                  height={140}
+                />
+                <p className="text-center text-2xl leading-snug font-extrabold text-foreground">
+                  대화 하나를 잘 완료했어요!
+                </p>
+              </motion.div>
+            ) : !listed ? (
               // 가운데 구슬 랜디 + 밑 타이핑
               <motion.div
                 key="analyzing"
