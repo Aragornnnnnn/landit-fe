@@ -1,6 +1,6 @@
 'use client';
 
-// 앰플리튜드 래퍼 — 이벤트 발화의 단일 통로. 키가 없으면 no-op으로 콘솔에만 남긴다 (dev/prod 프로젝트는 env 키로 분리)
+// 앰플리튜드 래퍼 — 이벤트 발화의 단일 통로. 키가 없으면 no-op으로 console.debug만 남긴다 (dev/prod 프로젝트는 env 키로 분리)
 import * as amplitude from '@amplitude/unified';
 import type { EventName, EventProps } from '@landit/analytics';
 
@@ -14,8 +14,7 @@ const isDev = () => process.env.NODE_ENV === 'development';
 // no-op(키 없음)·dev 환경 콘솔 로깅을 한곳에서 — 반환값은 SDK로 실제 전송할지 여부
 const logAndShouldSend = (...args: unknown[]) => {
   const enabled = Boolean(getApiKey());
-  // console.info — debug는 크롬 기본 레벨(Verbose 꺼짐)에서 숨겨져 안 보인다
-  if (!enabled || isDev()) console.info('[analytics]', ...args);
+  if (!enabled || isDev()) console.debug('[analytics]', ...args);
   return enabled;
 };
 

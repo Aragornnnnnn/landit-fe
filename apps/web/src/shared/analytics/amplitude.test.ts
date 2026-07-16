@@ -144,7 +144,7 @@ describe('track', () => {
   it('개발 환경에서는 키가 있어도 어떤 이벤트를 쏘는지 콘솔에 같이 찍는다', async () => {
     vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
     vi.stubEnv('NODE_ENV', 'development');
-    const debugSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
     const { track } = await loadWrapper();
 
     track('Logout Completed');
