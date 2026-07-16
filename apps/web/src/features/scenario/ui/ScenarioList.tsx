@@ -142,12 +142,12 @@ export const ScenarioList = ({
           </div>
           {allCompleted && (
             <Button
-              variant="secondary"
+              variant="primary"
               size="sm"
               className="mt-2 w-auto px-6"
               onClick={() => setFeedbackOpen(true)}
             >
-              더 하고 싶은 상황이 있어요!!
+              더 하고 싶은 상황이 있어요!
             </Button>
           )}
         </div>
