@@ -80,6 +80,10 @@ export const ExpressionListItem = ({
         <p className="text-base font-bold text-foreground">
           {baseExpressionMeaningText}
         </p>
+        {/* 영어 표현을 완료 전에도 바로 보여준다 — 완료해야만 보이던 것을 학습 진입 전 미리보기로 */}
+        <p className="truncate text-sm font-medium text-muted-foreground">
+          {targetExpressionText}
+        </p>
       </div>
       {!hideStartAction && (
         <span className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
