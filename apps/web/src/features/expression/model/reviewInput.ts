@@ -1,0 +1,173 @@
+// 복습 영작 입력 모델 — 단어별 입력 배열(typed)과 활성 단어(focus)를 다룬다.
+// 단어가 정답 글자 수만큼 차면 자동으로 다음 단어로 넘어가고, 단어 박스를 눌러 특정 단어만 고칠 수 있다.
+
+export interface InputState {
+  typed: string[]; // 단어별로 입력한 글자
+  focus: number; // 현재 입력 중인 단어 인덱스
+}
+
+export const emptyState = (wordCount: number): InputState => ({
+  typed: Array.from({ length: wordCount }, () => ''),
+  focus: 0,
+});
+
+// 글자 추가 — 활성 단어가 정답 글자 수만큼 차면 다음 단어로 focus를 넘긴다.
+// 이미 꽉 찬 단어(마지막 칸 초과, 또는 클릭해서 고른 완성 단어)에는 넣지 않는다 — 백스페이스로 지운 뒤 다시 친다
+export const appendLetter = (
+  state: InputState,
+  letter: string,
+  lengths: number[],
+): InputState => {
+  const { focus } = state;
+  if (state.typed[focus].length >= lengths[focus]) return state;
+  const typed = state.typed.map((word, i) =>
+    i === focus ? word + letter : word,
+  );
+  const filled = typed[focus].length === lengths[focus];
+  const nextFocus = filled && focus < lengths.length - 1 ? focus + 1 : focus;
+  return { typed, focus: nextFocus };
+};
+
+// 지우기 — 활성 단어의 마지막 글자를 지우고, 비어 있으면 앞 단어로 넘어가 지운다
+export const backspace = (state: InputState): InputState => {
+  const { typed, focus } = state;
+  if (typed[focus].length > 0) {
+    return {
+      typed: typed.map((word, i) => (i === focus ? word.slice(0, -1) : word)),
+      focus,
+    };
+  }
+  if (focus > 0) {
+    const prev = focus - 1;
+    return {
+      typed: typed.map((word, i) => (i === prev ? word.slice(0, -1) : word)),
+      focus: prev,
+    };
+  }
+  return state;
+};
+
+// 스페이스/다음 — 현재 단어에 입력이 있으면 다음 단어로 조기 이동한다
+export const advance = (state: InputState, wordCount: number): InputState => {
+  if (state.typed[state.focus] === '') return state;
+  return state.focus < wordCount - 1
+    ? { ...state, focus: state.focus + 1 }
+    : state;
+};
+
+// 단어 박스 클릭 — 해당 단어로 focus 이동(특정 단어만 고치기)
+export const focusWord = (state: InputState, index: number): InputState => ({
+  ...state,
+  focus: index,
+});
+
+// 확인 가능 — 단어가 하나 이상 있고 전부 정답 글자 수만큼 채워짐(덜 친 채 확인 방지, 빈 정답 방어)
+export const isComplete = (state: InputState, lengths: number[]): boolean =>
+  state.typed.length > 0 &&
+  state.typed.every((word, i) => word.length === lengths[i]);
+
+// 스마트 따옴표(' ' ‚ ‛ ′ / " " „ ‟ ″)를 ASCII 따옴표로 접는다.
+// 정답에 아포스트로피·따옴표가 들어있을 때, 네이티브 키보드의 자동 치환에도 채점이 흔들리지 않게 한다.
+export const normalizeQuotes = (text: string): string =>
+  text.replace(/[‘’‚‛′]/g, "'").replace(/[“”„‟″]/g, '"');
+
+// 단어별 정답 여부(대소문자·스마트따옴표 무시) — 정답 쪽에 스마트따옴표가 저장돼 있어도 맞도록 양쪽을 정규화한다
+export const gradeWords = (typed: string[], answer: string[]): boolean[] =>
+  answer.map(
+    (word, i) =>
+      normalizeQuotes(typed[i] ?? '').toLowerCase() ===
+      normalizeQuotes(word).toLowerCase(),
+  );
+
+// 첫 오답 단어 인덱스 — 오답 시 그 단어로 커서를 보내 바로 고치게 한다(없으면 -1)
+export const firstWrong = (ok: boolean[]): number => ok.indexOf(false);
+
+// 입력 도중 정오 — 지금까지 친 글자가 정답의 접두사인지 단어별로 본다(빈 단어는 아직 판단 유보 = 올바름).
+// 힌트를 볼 때 이미 틀린 입력을 함께 알려주는 데 쓴다.
+export const gradePartial = (typed: string[], answer: string[]): boolean[] =>
+  answer.map((word, i) =>
+    normalizeQuotes(word)
+      .toLowerCase()
+      .startsWith(normalizeQuotes(typed[i] ?? '').toLowerCase()),
+  );
+
+// 네이티브 키보드 입력을 모델 액션으로 변환하기 위한 표현
+export type ReviewInputAction =
+  | { kind: 'letter'; letter: string }
+  | { kind: 'space' }
+  | { kind: 'backspace' };
+
+// InputEvent(inputType, data)를 모델에 적용할 액션들로 바꾼다. 조합입력(IME)은 여기서 다루지 않고
+// compositionupdate/end에서 조합 문자열을 diffComposition으로 흘려보낸다. 순수 함수라 분기를 테스트로 고정한다.
+export const parseInputEvent = (
+  inputType: string,
+  data: string,
+): ReviewInputAction[] => {
+  if (inputType.startsWith('delete')) return [{ kind: 'backspace' }];
+  // insert* 또는 inputType 미보고(일부 안드로이드 키보드)인데 데이터가 있으면 삽입으로 본다
+  if (inputType.startsWith('insert') || (inputType === '' && data.length > 0)) {
+    return charsToActions(data);
+  }
+  return [];
+};
+
+// 문자열을 글자/스페이스 액션으로 편다(줄바꿈 제외). 삽입·조합 반영에서 공유한다.
+const charsToActions = (data: string): ReviewInputAction[] => {
+  const actions: ReviewInputAction[] = [];
+  for (const ch of data) {
+    if (ch === ' ') actions.push({ kind: 'space' });
+    else if (ch !== '\n' && ch !== '\r')
+      actions.push({ kind: 'letter', letter: normalizeQuotes(ch) });
+  }
+  return actions;
+};
+
+// 조합입력(IME) 라이브 반영 — 이전에 반영한 조합 문자열(prev)을 새 조합 문자열(next)로 바꾸는 액션을 만든다.
+// Android Gboard는 영어도 단어 단위로 조합해, compositionend까지 기다리면 타이핑 중 글자가 안 보인다.
+// 공통 접두사 이후만 지우고(backspace) 다시 채워, 조합 중에도 글자별로 박스가 채워지고 자동 넘김이 그대로 돈다.
+export const diffComposition = (
+  prev: string,
+  next: string,
+): ReviewInputAction[] => {
+  let common = 0;
+  while (
+    common < prev.length &&
+    common < next.length &&
+    prev[common] === next[common]
+  )
+    common++;
+
+  const actions: ReviewInputAction[] = [];
+  for (let i = common; i < prev.length; i++)
+    actions.push({ kind: 'backspace' });
+  return actions.concat(charsToActions(next.slice(common)));
+};
+
+// 조합 문자열 변화(prev→next)를 모델에 적용한다 — IME 버퍼와 모델의 어긋남 방지가 핵심.
+// 마지막 박스가 꽉 차면 appendLetter가 글자를 버리는데, IME 버퍼에는 그 글자가 남는다.
+// 버린 글자 수(dropped)를 세어 두고, 조합 내 백스페이스는 버린 글자부터 되돌려
+// 실제로 채워진 글자가 잘못 지워지지 않게 한다.
+export const applyComposition = (
+  state: InputState,
+  prev: string,
+  next: string,
+  lengths: number[],
+  dropped: number,
+): { state: InputState; dropped: number } => {
+  let current = state;
+  let currentDropped = dropped;
+  for (const action of diffComposition(prev, next)) {
+    if (action.kind === 'backspace') {
+      if (currentDropped > 0) currentDropped -= 1;
+      else current = backspace(current);
+    } else if (action.kind === 'space') {
+      current = advance(current, lengths.length);
+    } else {
+      const applied = appendLetter(current, action.letter, lengths);
+      if (applied === current)
+        currentDropped += 1; // 꽉 차서 버려진 글자
+      else current = applied;
+    }
+  }
+  return { state: current, dropped: currentDropped };
+};

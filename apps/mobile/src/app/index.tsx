@@ -1,98 +1,228 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+// WebView 셸 — web 앱을 띄우고 postMessage 브릿지로 통신한다. 실제 제품 UI는 전부 web에 있다
+import { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  BackHandler,
+  Image,
+  Linking,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+import WebView from 'react-native-webview';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { initMetaSdk } from '@/analytics/meta';
+import { generateNonce } from '@/auth/nonce';
+import { requestSocialIdToken, SocialLoginError } from '@/auth/socialLogin';
+import { runHaptic } from '@/bridge/haptics';
+import { nativeContextScript } from '@/bridge/nativeContext';
+import { useNativeBridge } from '@/bridge/useNativeBridge';
+import { WEB_URL } from '@/config/webUrl';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
+// 네이티브 스플래시를 웹 첫 페인트까지 붙잡아 둔다 — 자동 숨김을 막고 WebView onLoad에서 수동으로 감춘다
+void SplashScreen.preventAutoHideAsync();
+
+const ShellScreen = () => {
+  const webviewRef = useRef<WebView>(null);
+  const [isWebReady, setIsWebReady] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  // 재시도 시 WebView를 새로 마운트하기 위한 key
+  const [loadAttempt, setLoadAttempt] = useState(0);
+
+  const { onMessage, postToWeb } = useNativeBridge(webviewRef, {
+    EXIT_APP: () => BackHandler.exitApp(),
+    // 웹이 인터랙션 시점에 보낸 진동 요청을 expo-haptics로 실행한다
+    HAPTIC: ({ pattern }) => void runHaptic(pattern),
+    // 마이크 권한이 차단된 상태 — OS 앱 설정 화면을 연다 (iOS·Android 공통)
+    OPEN_SETTINGS: () => void Linking.openSettings(),
+    // 웹의 로그인 요청을 받아 provider SDK로 idToken을 발급받고, nonce와 함께 웹으로 돌려준다
+    SOCIAL_LOGIN_REQUEST: async ({ provider }) => {
+      try {
+        const nonce = generateNonce();
+        const { idToken, nickname } = await requestSocialIdToken(
+          provider,
+          nonce,
+        );
+        postToWeb({
+          type: 'SOCIAL_LOGIN_SUCCESS',
+          provider,
+          idToken,
+          nonce,
+          nickname,
+        });
+      } catch (error) {
+        const message =
+          error instanceof SocialLoginError
+            ? error.message
+            : '로그인 중 문제가 생겼어요.';
+        const cancelled = error instanceof SocialLoginError && error.cancelled;
+        postToWeb({ type: 'SOCIAL_LOGIN_ERROR', message, cancelled });
+      }
+    },
+  });
+
+  // Meta SDK 초기화와 iOS ATT 동의 요청 — 앱 첫 진입에 1회 (광고 설치 어트리뷰션)
+  useEffect(() => {
+    void initMetaSdk();
+  }, []);
+
+  // 웹 첫 페인트(onLoad)나 로드 실패로 화면이 바뀌면 스플래시를 감춘다 — 그 전까지 네이티브 스플래시가 흰 로딩 화면을 가려 준다
+  useEffect(() => {
+    if (isWebReady || loadFailed) {
+      void SplashScreen.hideAsync();
+    }
+  }, [isWebReady, loadFailed]);
+
+  // 웹이 로드 완료됐을 때만 Android 뒤로가기를 위임한다 — 그 전엔 위임해도 웹이 응답 못 해 영구 먹통이 된다
+  useEffect(() => {
+    if (!isWebReady || loadFailed) return;
+
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        postToWeb({ type: 'BACK_PRESSED' });
+        return true;
+      },
+    );
+    return () => subscription.remove();
+    // postToWeb은 매 렌더 새로 만들어지지만, 재구독돼도 BackHandler 등록은 무해하다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isWebReady, loadFailed]);
+
+  if (!WEB_URL) {
+    // WebView가 아예 마운트되지 않는 경로라 isWebReady/loadFailed가 바뀔 일이 없다
+    void SplashScreen.hideAsync();
     return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
+      <View style={styles.center}>
+        <Text>EXPO_PUBLIC_WEB_URL이 설정되지 않았어요.</Text>
+      </View>
     );
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+
+  if (loadFailed) {
+    // 로드 실패 — 우는 랜디와 원인 안내로 다독이고 재시도를 유도한다 (텅 빈 흰 화면 금지)
+    return (
+      <View style={styles.errorScreen}>
+        <Image
+          source={require('../../assets/images/landy-crying.webp')}
+          style={styles.errorCharacter}
+        />
+        <Text style={styles.errorTitle}>화면을 불러오지 못했어요</Text>
+        <Text style={styles.errorDescription}>
+          네트워크 연결을 확인하고{'\n'}다시 시도해 주세요
+        </Text>
+        <Pressable
+          style={styles.retryButton}
+          onPress={() => {
+            setLoadFailed(false);
+            setIsWebReady(false);
+            setLoadAttempt((attempt) => attempt + 1);
+          }}
+        >
+          <Text style={styles.retryLabel}>다시 시도할게요</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+    <WebView
+      key={loadAttempt}
+      ref={webviewRef}
+      // 앱 진입점은 루트 — 로그인 여부는 웹의 인증 가드가 판단해 로그인/홈으로 보낸다
+      source={{ uri: `${WEB_URL}/` }}
+      // 콘텐츠 로드 전 네이티브 컨텍스트(플랫폼·앱 버전)를 window에 주입 — 웹 계측이 첫 렌더에서 바로 읽는다
+      injectedJavaScriptBeforeContentLoaded={nativeContextScript}
+      onMessage={onMessage}
+      onLoad={() => setIsWebReady(true)}
+      onError={() => setLoadFailed(true)}
+      // onError는 네트워크 자체가 안 될 때만 잡는다. 서버가 4xx/5xx로 응답한 경우는
+      // onHttpError가 따로 잡아야 한다 — 없으면 에러 화면 대신 날것의 에러 페이지가 보인다
+      onHttpError={() => setLoadFailed(true)}
+      startInLoadingState
+      // 로딩 화면 배경을 스플래시와 같은 색으로 — 흰 네이티브 로딩창이 번쩍이지 않고 스플래시에서 매끄럽게 이어진다
+      renderLoading={() => (
+        <View style={[StyleSheet.absoluteFill, styles.loading]}>
+          <ActivityIndicator color="#ffffff" />
+        </View>
+      )}
+      // iOS 엣지 스와이프의 WebView 히스토리 직접 탐색은 막는다 — 웹의 뒤로가기 정책(replace·이중탭 종료)을
+      // 우회해 지난 대화/퀴즈 화면이 그대로 다시 나오기 때문. 화면 이동은 앱 안의 버튼으로만 한다
+      // 웹 getUserMedia(STT 마이크) 요청을 OS 권한만으로 허용 — iOS에서 앱·웹뷰 이중 권한 팝업 방지
+      mediaCapturePermissionGrantType="grant"
+      // AI 발화(TTS)를 사용자 제스처 없이도 재생 — iOS 기본은 자동재생을 막아 2번째 발화부터 무음이 된다
+      mediaPlaybackRequiresUserAction={false}
+      allowsInlineMediaPlayback
+      // 오버스크롤(iOS 바운스·Android 글로우)과 줌 차단 — 앱스러운 동작
+      bounces={false}
+      overScrollMode="never"
+      setBuiltInZoomControls={false}
+      // dev 빌드에서만 원격 디버깅 (Safari/Chrome 인스펙터)
+      webviewDebuggingEnabled={__DEV__}
+      style={styles.webview}
+    />
   );
-}
+};
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
-  );
-}
+export default ShellScreen;
 
 const styles = StyleSheet.create({
-  container: {
+  webview: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    // 웹 첫 페인트 전 WebView 기본 흰 배경 대신 스플래시 색을 깔아, 로드 중 흰 번쩍임을 막는다
+    backgroundColor: '#e07a3a',
   },
-  safeArea: {
+  center: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    gap: 12,
   },
-  title: {
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#e07a3a',
+  },
+  // 로드 실패 화면 — 웹 앱 배경(gray-50)·타이포 톤에 맞춘다
+  errorScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fbfbfa',
+    paddingHorizontal: 32,
+  },
+  errorCharacter: {
+    width: 132,
+    height: 132,
+    resizeMode: 'contain',
+  },
+  errorTitle: {
+    marginTop: 12,
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1a1a1a',
+  },
+  errorDescription: {
+    marginTop: 8,
+    fontSize: 15,
+    lineHeight: 22,
     textAlign: 'center',
+    color: '#8a8a86',
   },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
+  retryButton: {
+    marginTop: 24,
     alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+    alignItems: 'center',
+    borderRadius: 14,
+    backgroundColor: '#e07a3a',
+    paddingVertical: 15,
+  },
+  retryLabel: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
