@@ -19,7 +19,7 @@ const TITLE_CLASS =
 
 // 축하 노출 시간과, 분석 문구를 다 읽을 정도의 시간
 const CELEBRATE_MS = 2000;
-const ANALYZE_MS = 2500;
+const ANALYZE_MS = 1800;
 
 export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
   const router = useRouter();
