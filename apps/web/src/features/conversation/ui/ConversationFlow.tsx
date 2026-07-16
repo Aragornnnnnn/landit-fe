@@ -14,6 +14,7 @@ import { useConversationFlow } from '../model/useConversationFlow';
 import { CharacterStage } from './CharacterStage';
 import { ExitConfirmSheet } from './ExitConfirmSheet';
 import { MicControl } from './MicControl';
+import { MicPermissionSheet } from './MicPermissionSheet';
 import { QuestionCard } from './QuestionCard';
 import { ThoughtOverlay } from './ThoughtOverlay';
 import { UserTranscript } from './UserTranscript';
@@ -36,6 +37,8 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
     finishListening,
     submitText,
     leave,
+    micPermissionDenied,
+    dismissMicPermissionNotice,
     sessionId,
   } = useConversationFlow(scenario);
 
@@ -133,6 +136,12 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
           router.push(`/home?card=${scenario.scenarioId}`);
         }}
         onClose={() => setShowExitModal(false)}
+      />
+
+      {/* 마이크 권한이 거부된 채 말하기를 누르면 설정 유도 안내를 띄운다 */}
+      <MicPermissionSheet
+        open={micPermissionDenied}
+        onClose={dismissMicPermissionNotice}
       />
     </main>
   );

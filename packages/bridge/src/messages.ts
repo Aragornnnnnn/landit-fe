@@ -31,6 +31,8 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
     type: z.literal('HAPTIC'),
     pattern: hapticPatternSchema,
   }),
+  // 마이크 등 OS 권한이 차단된 상태 — 네이티브가 앱 설정 화면을 연다 (iOS·Android 공통, 단방향)
+  z.object({ type: z.literal('OPEN_SETTINGS') }),
 ]);
 
 // 네이티브 → 웹으로 보낼 수 있는 메시지 목록

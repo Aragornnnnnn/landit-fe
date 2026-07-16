@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   BackHandler,
+  Linking,
   Pressable,
   StyleSheet,
   Text,
@@ -33,6 +34,8 @@ const ShellScreen = () => {
     EXIT_APP: () => BackHandler.exitApp(),
     // 웹이 인터랙션 시점에 보낸 진동 요청을 expo-haptics로 실행한다
     HAPTIC: ({ pattern }) => void runHaptic(pattern),
+    // 마이크 권한이 차단된 상태 — OS 앱 설정 화면을 연다 (iOS·Android 공통)
+    OPEN_SETTINGS: () => void Linking.openSettings(),
     // 웹의 로그인 요청을 받아 provider SDK로 idToken을 발급받고, nonce와 함께 웹으로 돌려준다
     SOCIAL_LOGIN_REQUEST: async ({ provider }) => {
       try {

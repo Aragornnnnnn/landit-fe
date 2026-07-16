@@ -1,5 +1,6 @@
 // 브라우저 SpeechRecognition 기반 STT 폴백 — Deepgram 실패/미지원(iOS WKWebView 등) 시 사용
 import type { SttHandlers, SttSession } from './deepgram-stt';
+import { MicPermissionDeniedError } from './errors';
 
 // 표준 lib.dom에 없는 벤더 API라 필요한 부분만 최소 타입으로 선언
 interface SpeechRecognitionResultLike {
@@ -77,6 +78,12 @@ export const startWebSpeech = (options: WebSpeechOptions): SttSession => {
     }
     if (finished) return;
     finished = true;
+    // 마이크 권한 거부는 Deepgram 경로와 같은 에러로 통일해, 소비 지점이 안내를 띄운다.
+    // service-not-allowed(음성 서비스 자체 비활성)는 권한 문제가 아니라 일반 오류로 둔다.
+    if (event.error === 'not-allowed') {
+      options.onError(new MicPermissionDeniedError());
+      return;
+    }
     options.onError(new Error(`음성 인식 오류: ${event.error}`));
   };
 

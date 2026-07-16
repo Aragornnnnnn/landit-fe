@@ -13,6 +13,7 @@ import type { ThoughtType } from '@/features/onboarding/ui/ThoughtCard';
 import type { Scenario } from '@/features/scenario/api/list';
 import { scenarioKeys } from '@/features/scenario/model/keys';
 import { haptic } from '@/shared/haptics';
+import { isMicPermissionDeniedError } from '@/shared/lib/stt/errors';
 import { useStt } from '@/shared/lib/stt/useStt';
 import { useTts } from '@/shared/lib/tts/useTts';
 
@@ -64,6 +65,8 @@ export const useConversationFlow = (scenario: Scenario) => {
   const [transcript, setTranscript] = useState('');
   // 입력 수단 — 기본은 마이크(음성), 키보드 아이콘을 누르면 타이핑 모드로 바꾼다
   const [keyboardMode, setKeyboardMode] = useState(false);
+  // 마이크 권한이 거부돼 STT를 못 켠 상태 — 설정 유도 안내를 띄운다
+  const [micPermissionDenied, setMicPermissionDenied] = useState(false);
   // 확보된 세션 — 종료 후 피드백 생성에 쓴다. ref는 send 클로저용, state는 화면 노출용
   const [sessionId, setSessionId] = useState<number | null>(null);
 
@@ -109,13 +112,16 @@ export const useConversationFlow = (scenario: Scenario) => {
     stopOnSilence: false,
     onInterim: (text) => setTranscript(text),
     onFinal: (text) => void submitContent(text, 'VOICE'),
-    onError: () => {
-      // TODO(전역 토스트): "마이크를 사용할 수 없어요. 권한을 확인해 주세요" 노출
+    onError: (error) => {
+      // 권한 거부는 설정 유도 안내를 띄운다. 그 외 인식 오류는 조용히 마이크 대기로 되돌린다.
+      if (isMicPermissionDeniedError(error)) setMicPermissionDenied(true);
       haptic('error');
       setTranscript('');
       send('LISTENING_CANCELLED');
     },
   });
+
+  const dismissMicPermissionNotice = () => setMicPermissionDenied(false);
 
   // 세션은 백그라운드로 시작 — 화면은 이미 openingPreview로 떴고, 제출 때 쓸 sessionId만 확보한다.
   // StrictMode 이중 실행에도 한 번만 만든다.
@@ -329,6 +335,8 @@ export const useConversationFlow = (scenario: Scenario) => {
     finishListening,
     submitText,
     leave,
+    micPermissionDenied,
+    dismissMicPermissionNotice,
     // DONE 시점엔 세션이 확보돼 있다 — 피드백 생성에 쓴다 (없으면 세션 시작이 실패한 경우)
     sessionId,
   };

@@ -86,4 +86,11 @@ describe('parseWebToNativeMessage', () => {
       ),
     ).toBeNull();
   });
+
+  it('설정 열기 요청을 그대로 되돌린다 (round-trip)', () => {
+    const message = { type: 'OPEN_SETTINGS' } as const;
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
 });

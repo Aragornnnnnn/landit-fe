@@ -5,6 +5,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Scenario } from '@/features/scenario/api/list';
+import { MicPermissionDeniedError } from '@/shared/lib/stt/errors';
 import type { TtsVoice } from '@/shared/lib/tts/tts.types';
 
 import * as sessionApi from '../api/session';
@@ -683,12 +684,44 @@ describe('useConversationFlow', () => {
     act(() => result.current.pressMic());
     expect(result.current.phase).toBe('USER_LISTENING');
 
-    // 마이크 권한 거부 등으로 STT가 onError를 알리면 마이크 대기로 되돌린다
+    // 일반 인식 오류로 STT가 onError를 알리면 마이크 대기로 되돌린다
     act(() =>
-      sttMock.callbacks.onError?.(new Error('마이크 권한이 거부되었습니다.')),
+      sttMock.callbacks.onError?.(new Error('음성 인식 오류: network')),
     );
 
     expect(result.current.phase).toBe('USER_IDLE');
     expect(result.current.transcript).toBe('');
+  });
+
+  it('마이크 권한 거부면 대기로 되돌리고 권한 안내를 띄운다', async () => {
+    const { result } = await renderUserFirst();
+
+    act(() => result.current.pressMic());
+    act(() => sttMock.callbacks.onError?.(new MicPermissionDeniedError()));
+
+    expect(result.current.phase).toBe('USER_IDLE');
+    expect(result.current.micPermissionDenied).toBe(true);
+  });
+
+  it('일반 인식 오류는 권한 안내를 띄우지 않는다', async () => {
+    const { result } = await renderUserFirst();
+
+    act(() => result.current.pressMic());
+    act(() =>
+      sttMock.callbacks.onError?.(new Error('음성 인식 오류: network')),
+    );
+
+    expect(result.current.micPermissionDenied).toBe(false);
+  });
+
+  it('권한 안내를 닫으면 상태가 내려간다', async () => {
+    const { result } = await renderUserFirst();
+
+    act(() => result.current.pressMic());
+    act(() => sttMock.callbacks.onError?.(new MicPermissionDeniedError()));
+    expect(result.current.micPermissionDenied).toBe(true);
+
+    act(() => result.current.dismissMicPermissionNotice());
+    expect(result.current.micPermissionDenied).toBe(false);
   });
 });
