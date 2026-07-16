@@ -11,6 +11,7 @@ import { Button } from '@/shared/ui/Button';
 import { LockIcon } from '@/shared/ui/Icons';
 
 import type { Scenario } from '../api/list';
+import { completionEmoji } from '../lib/completion-emoji';
 import { ScenarioCard } from './ScenarioCard';
 
 interface ScenarioListProps {
@@ -115,9 +116,9 @@ export const ScenarioList = ({
         <div className="flex h-full snap-center snap-always flex-col items-center justify-center gap-4 px-6 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- 구글이 호스팅하는 모션 이모지 GIF라 next/image 최적화 대상이 아니다 */}
           <img
-            // 감사 인사는 🥰(1f970) — 🙇는 애니메이션 GIF가 없어(404) 쓸 수 없다
-            src={`https://fonts.gstatic.com/s/e/notoemoji/latest/${allCompleted ? '1f970' : '1f512'}/512.gif`}
-            alt={allCompleted ? '🥰' : '🔒'}
+            // 완료 축하는 카테고리에 어울리는 이모지로 (매칭 없으면 🥰 폴백)
+            src={`https://fonts.gstatic.com/s/e/notoemoji/latest/${allCompleted ? completionEmoji(categoryName).code : '1f512'}/512.gif`}
+            alt={allCompleted ? completionEmoji(categoryName).emoji : '🔒'}
             width={120}
             height={120}
           />
