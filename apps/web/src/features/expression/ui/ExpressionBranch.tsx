@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
-import { useTypewriter } from '@/shared/lib/useTypewriter';
 import { useAuthStore } from '@/shared/store/auth-store';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
@@ -17,6 +16,10 @@ import { ExpressionList } from './ExpressionList';
 // 축하·분석 화면이 같은 타이틀 타이포를 공유해야 전환 순간 글자가 튀지 않는다
 const TITLE_CLASS =
   'pt-1 text-3xl leading-[1.22] font-black tracking-normal whitespace-pre-line text-foreground';
+
+// 축하 노출 시간과, 분석 문구를 다 읽을 정도의 시간
+const CELEBRATE_MS = 2000;
+const ANALYZE_MS = 2500;
 
 export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
   const router = useRouter();
@@ -33,26 +36,23 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
   const name = nickname ?? '회원';
   const count = expressions?.length ?? 0;
 
-  // 좌측 위 고정 타이틀 (온보딩 스타일 h1) — "위해"에서 줄바꿈
-  const title = `${name}님을 위해\n딱 맞는 영어 표현을 찾고 있어요`;
-  // 캐릭터 밑 타자기 — 데이터에 안 묶인 정적 문구라 마운트 즉시 타이핑이 시작된다(개수 N은 리빌 서브타이틀에서).
-  const phrases = [
-    '대화를 꼼꼼히 분석하고 있어요',
-    '원어민이 될 수 있는 표현을 찾았어요',
-  ];
-
-  // 진입 직후 대화 완료 축하 — 폭죽을 잠깐 보여준 뒤 분석 연출로 넘어간다 (잘 끝냈다는 보상 → 표현 학습)
-  const [celebrating, setCelebrating] = useState(true);
+  // 진입 연출 2단계 — 축하(폭죽) 2초 → 분석(랜디) 문구를 읽을 만큼만 → 리빌.
+  // 타자기 없이 고정 문구라, 분석은 글을 다 읽을 정도의 시간만 잡아둔다.
+  const [step, setStep] = useState<'celebrate' | 'analyze' | 'done'>(
+    'celebrate',
+  );
   useEffect(() => {
-    const timer = setTimeout(() => setCelebrating(false), 2000);
-    return () => clearTimeout(timer);
+    const toAnalyze = setTimeout(() => setStep('analyze'), CELEBRATE_MS);
+    const toDone = setTimeout(() => setStep('done'), CELEBRATE_MS + ANALYZE_MS);
+    return () => {
+      clearTimeout(toAnalyze);
+      clearTimeout(toDone);
+    };
   }, []);
 
-  // 타이핑은 축하가 끝난 뒤 시작한다 — 축하 중에 미리 돌면 분석 연출이 너무 짧게 지나간다.
-  // ['']는 '꺼짐' 신호: 훅이 문구 내용을 key로 삼아, phrases로 바뀌는 순간 처음부터 다시 타이핑한다
-  const { text, done } = useTypewriter(celebrating ? [''] : phrases);
-  // 타이핑이 끝나고 데이터도 준비돼야 리빌 — ready를 함께 봐야 결과가 먼저 깜빡이지 않는다
-  const listed = ready && done;
+  const celebrating = step === 'celebrate';
+  // 연출이 끝나고 데이터도 준비돼야 리빌 — ready를 함께 봐야 결과가 먼저 깜빡이지 않는다
+  const listed = ready && step === 'done';
 
   // 구슬 든 랜디 — 톡 튀어 나타나 둥실둥실 떠 있다가, listed 되면 사라진다
   const orb = (
@@ -114,7 +114,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
           </Button>
         </div>
       ) : (
-        // 찾는 중엔 좌측 위 타이틀 + (가운데 구슬 랜디 + 밑 타이핑) → 찾은 뒤엔 타이틀 대신 결과 문구 + 인라인 리스트
+        // 찾는 중엔 좌측 위 타이틀 + 가운데 구슬 랜디 → 찾은 뒤엔 타이틀 대신 결과 문구 + 인라인 리스트
         <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(env(safe-area-inset-bottom),24px)]">
           <AnimatePresence mode="wait">
             {celebrating ? (
@@ -142,30 +142,21 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
                       height={168}
                     />
                   </motion.div>
-                  {/* 분석 연출의 타이핑 텍스트와 같은 자리를 비워둬 캐릭터 위치가 안 튄다 */}
-                  <p className="min-h-[4.5rem]" aria-hidden />
                 </div>
               </motion.div>
             ) : !listed ? (
-              // 가운데 구슬 랜디 + 밑 타이핑
+              // 분석 — 고정 문구 + 가운데 구슬 랜디만 (타이핑 없이 읽을 시간만 준다)
               <motion.div
                 key="analyzing"
                 className="flex min-h-0 flex-1 flex-col"
                 exit={{ opacity: 0, scale: 0.94 }}
                 transition={{ duration: 0.28 }}
               >
-                <h1 className={TITLE_CLASS}>{title}</h1>
-                <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6">
+                <h1 className={TITLE_CLASS}>
+                  {'방금 대화를 바탕으로\n맞춤형 표현 학습을 만들고 있어요'}
+                </h1>
+                <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
                   {orb}
-                  {/* 텍스트 영역은 항상 자리(min-h)를 잡아, 타이핑이 생겨도 캐릭터가 안 밀린다 */}
-                  <p className="min-h-[4.5rem] text-center text-xl leading-relaxed font-extrabold whitespace-pre-line text-foreground">
-                    {text}
-                    {!done && (
-                      <span className="ml-0.5 inline-block animate-pulse text-primary">
-                        |
-                      </span>
-                    )}
-                  </p>
                 </div>
               </motion.div>
             ) : (
