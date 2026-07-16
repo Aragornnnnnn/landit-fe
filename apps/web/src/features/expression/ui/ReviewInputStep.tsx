@@ -60,6 +60,8 @@ export const ReviewInputStep = ({
     answer.map(() => false),
   );
   const [shakeNonce, setShakeNonce] = useState(0);
+  // 힌트 단계 — 0 없음, 1 모든 단어 첫 글자, 2 정답 전체 글자를 흐리게 공개
+  const [hintStep, setHintStep] = useState(0);
 
   const { typed, focus } = state;
   const canConfirm = isComplete(state, lengths);
@@ -268,7 +270,8 @@ export const ReviewInputStep = ({
           const value = typed[w] ?? '';
           const isWrong = wrongNow[w];
           const isFocus = !correct && w === focus;
-          const hintLevel = wrongCount[w];
+          // 오답 누적 힌트와 힌트 버튼 단계 중 더 강한 쪽을 쓴다
+          const hintLevel = Math.max(wrongCount[w], hintStep);
           const wordOffset = lengths
             .slice(0, w)
             .reduce((sum, len) => sum + len, 0);
@@ -338,6 +341,21 @@ export const ReviewInputStep = ({
           );
         })}
       </div>
+
+      {/* 힌트 — 한 번 누르면 모든 단어 첫 글자, 한 번 더 누르면 정답 전체를 흐리게 공개 */}
+      {!correct && hintStep < 2 && (
+        <div className="flex justify-center pt-3">
+          <button
+            type="button"
+            // 숨은 입력 포커스를 뺏지 않아 힌트를 봐도 키보드가 유지된다
+            onPointerDown={(event) => event.preventDefault()}
+            onClick={() => setHintStep((step) => step + 1)}
+            className="text-sm font-semibold text-muted-foreground underline underline-offset-4 transition-colors active:text-foreground"
+          >
+            {hintStep === 0 ? '힌트 보기' : '정답 보기'}
+          </button>
+        </div>
+      )}
 
       {correct && (
         <ReviewSuccess

@@ -49,6 +49,8 @@ export const QuizStep = ({
   const [bank] = useState<WordChip[]>(() => chipsFromWords(quiz.shuffledWords));
   const [selected, setSelected] = useState<number[]>([]);
   const [checked, setChecked] = useState<Checked>('idle');
+  // 힌트 단계 — 0 없음, 1 다음에 고를 단어 칩 하이라이트, 2 정답 문장 공개
+  const [hintStep, setHintStep] = useState(0);
 
   const usedIds = new Set(selected);
   const full = selected.length === answer.length;
@@ -75,6 +77,13 @@ export const QuizStep = ({
 
   // 게이지는 단어를 고르는 동안엔 비워두고, 판정을 마쳐야 절반이 찬다(나머지 절반은 이후 스텝 몫).
   const progress = checked === 'idle' ? 0 : 0.5;
+
+  // 힌트 1단계 — 지금 골라야 할 정답 단어와 일치하는 미사용 칩 하나를 하이라이트한다(고를 때마다 따라온다)
+  const nextWord = answer[selected.length];
+  const hintChipId =
+    hintStep >= 1 && checked === 'idle' && !full
+      ? bank.find((chip) => !usedIds.has(chip.id) && chip.word === nextWord)?.id
+      : undefined;
 
   return (
     <StepScaffold
@@ -108,6 +117,25 @@ export const QuizStep = ({
         ))}
       </div>
 
+      {/* 힌트 — 한 번 누르면 다음 단어 힌트, 한 번 더 누르면 정답 문장 공개 */}
+      {checked === 'idle' && (
+        <div className="flex min-h-9 items-center justify-center pt-2">
+          {hintStep < 2 ? (
+            <button
+              type="button"
+              onClick={() => setHintStep((step) => step + 1)}
+              className="text-sm font-semibold text-muted-foreground underline underline-offset-4 transition-colors active:text-foreground"
+            >
+              {hintStep === 0 ? '힌트 보기' : '정답 보기'}
+            </button>
+          ) : (
+            <p className="text-center text-sm font-bold text-primary">
+              {quiz.writingSentenceText}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* ── 아래: 단어뱅크 ── 가운데 정렬, 선택한 칩 자리는 글자 없는 회색 슬랩으로 남는다(듀오링고식) */}
       <div className="flex flex-wrap justify-center gap-2 pt-6 pb-4">
         {bank.map((chip) => {
@@ -120,7 +148,9 @@ export const QuizStep = ({
               className={
                 used
                   ? 'inline-flex min-w-[44px] items-center justify-center rounded-xl border border-transparent bg-secondary px-3.5 py-2.5 text-base font-semibold text-transparent'
-                  : CHIP_STYLE
+                  : chip.id === hintChipId
+                    ? `${CHIP_STYLE} border-primary! text-primary`
+                    : CHIP_STYLE
               }
             >
               {chip.word}
