@@ -10,17 +10,11 @@ import { withdraw } from '@/shared/api/auth/withdraw';
 import { clearSession } from '@/shared/lib/clear-session';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { useAuthStore } from '@/shared/store/auth-store';
-import { useLabsStore } from '@/shared/store/labs-store';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
-import {
-  MenuButton,
-  MenuGroup,
-  MenuLink,
-  MenuToggle,
-} from './_components/Menu';
+import { MenuButton, MenuGroup, MenuLink } from './_components/Menu';
 import { StatChip } from './_components/StatChip';
 
 export default function MyPage() {
@@ -35,10 +29,6 @@ export default function MyPage() {
     null,
   );
   const { ref: scrollRef, onScroll, hasShadow } = useScrollShadow();
-  const typingInputEnabled = useLabsStore((state) => state.typingInputEnabled);
-  const setTypingInputEnabled = useLabsStore(
-    (state) => state.setTypingInputEnabled,
-  );
 
   const displayName = member?.nickname?.trim() || '게스트';
   const emailText = member?.email ?? '';
@@ -161,20 +151,6 @@ export default function MyPage() {
             <MenuLink href="/privacy" title="개인정보 처리방침" />
             <MenuLink href="/terms" title="서비스 이용약관" />
           </MenuGroup>
-
-          {/* 실험실 — 기본 꺼짐인 실험 기능 토글 */}
-          <div>
-            <p className="px-2 pb-2 text-[13px]" style={{ color: '#888' }}>
-              실험실
-            </p>
-            <MenuGroup>
-              <MenuToggle
-                title="말하기 대신 타이핑도 가능하게 하기"
-                checked={typingInputEnabled}
-                onChange={setTypingInputEnabled}
-              />
-            </MenuGroup>
-          </div>
 
           <MenuGroup>
             <MenuButton

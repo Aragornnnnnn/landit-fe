@@ -3,7 +3,6 @@
 
 import { motion } from 'motion/react';
 
-import { useLabsStore } from '@/shared/store/labs-store';
 import {
   ArrowRightIcon,
   CloseIcon,
@@ -40,8 +39,6 @@ export const MicControl = ({
   const listening = phase === 'USER_LISTENING';
   // 발화·속마음 중엔 누를 수 없게 잠근다 — 자리는 유지해 레이아웃이 튀지 않게
   const disabled = phase !== 'USER_IDLE' && !listening;
-  // 타이핑 입력은 실험실 기능 — 켠 사용자에게만 키보드 전환 버튼을 보여준다 (기본은 말하기만)
-  const typingInputEnabled = useLabsStore((state) => state.typingInputEnabled);
 
   // 키보드로 입력 중 — 채팅창(텍스트 입력)을 띄운다
   if (listening && keyboardMode) {
@@ -122,16 +119,14 @@ export const MicControl = ({
           className="relative flex flex-col items-center gap-2"
         >
           {/* 마이크는 가운데 고정, 키보드 아이콘은 오른쪽에 작게 — 누르면 타이핑 입력으로 전환 */}
-          {typingInputEnabled && (
-            <button
-              onClick={onKeyboard}
-              disabled={disabled}
-              aria-label="키보드로 입력"
-              className="absolute top-1.5 left-[calc(50%+3rem)] flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground transition-opacity active:scale-95 disabled:opacity-30"
-            >
-              <KeyboardIcon size={22} />
-            </button>
-          )}
+          <button
+            onClick={onKeyboard}
+            disabled={disabled}
+            aria-label="키보드로 입력"
+            className="absolute top-1.5 left-[calc(50%+3rem)] flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground transition-opacity active:scale-95 disabled:opacity-30"
+          >
+            <KeyboardIcon size={22} />
+          </button>
           <button
             onClick={onPress}
             disabled={disabled}
