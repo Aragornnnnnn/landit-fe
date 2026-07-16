@@ -90,7 +90,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
     track(EVENTS.EXPRESSION_SELECTED, {
       expression_id: expressionId,
       scenario_id: scenarioId,
-      source: 'branch',
+      source: 'post_conversation',
     });
     router.push(`/expressions/${scenarioId}/${expressionId}`);
   };

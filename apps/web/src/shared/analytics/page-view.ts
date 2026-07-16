@@ -53,7 +53,7 @@ export const toPageView = (
   if (seg[0] === 'expressions' && seg[1] && seg[2]) {
     if (seg[2] === 'branch') {
       return {
-        page_name: 'expression_branch',
+        page_name: 'expression_list',
         path: pathname,
         scenario_id: toId(seg[1]),
       };

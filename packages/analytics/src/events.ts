@@ -128,7 +128,8 @@ export type EventProps = {
   'Expression Selected': {
     expression_id: number;
     scenario_id: number;
-    source: 'card_back' | 'branch';
+    // post_conversation = 대화 직후 표현 리스트 화면, card_back = 홈 카드 뒷면
+    source: 'card_back' | 'post_conversation';
   };
 
   'Conversation Started': {

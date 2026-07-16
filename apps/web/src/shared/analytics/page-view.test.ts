@@ -55,7 +55,7 @@ describe('toPageView', () => {
 
   it('표현 분기·학습 경로를 각각 정규화한다', () => {
     expect(pv('/expressions/3/branch')).toEqual({
-      page_name: 'expression_branch',
+      page_name: 'expression_list',
       path: '/expressions/3/branch',
       scenario_id: 3,
     });
