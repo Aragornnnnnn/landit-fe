@@ -144,16 +144,55 @@ describe('track', () => {
   it('개발 환경에서는 키가 있어도 어떤 이벤트를 쏘는지 콘솔에 같이 찍는다', async () => {
     vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
     vi.stubEnv('NODE_ENV', 'development');
-    const debugSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const { track } = await loadWrapper();
 
     track('Logout Completed');
 
-    expect(debugSpy).toHaveBeenCalledWith(
+    expect(logSpy).toHaveBeenCalledWith(
       '[analytics]',
       'Logout Completed',
       expect.objectContaining({ surface: 'browser' }),
     );
+    expect(amplitudeMock.track).toHaveBeenCalled();
+  });
+
+  it('프리뷰 배포(develop)에서도 전송과 병행해 콘솔에 찍는다', async () => {
+    vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview');
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { track } = await loadWrapper();
+
+    track('Logout Completed');
+
+    expect(logSpy).toHaveBeenCalled();
+    expect(amplitudeMock.track).toHaveBeenCalled();
+  });
+
+  it('실서비스(production 배포)에서는 콘솔에 남기지 않고 전송만 한다', async () => {
+    vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'production');
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { track } = await loadWrapper();
+
+    track('Logout Completed');
+
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(amplitudeMock.track).toHaveBeenCalled();
+  });
+
+  it('배포 환경을 알 수 없으면(변수 미노출) 프로덕션으로 간주해 콘솔에 남기지 않는다', async () => {
+    vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
+    vi.stubEnv('NODE_ENV', 'production');
+    // NEXT_PUBLIC_VERCEL_ENV 미설정 — fail-closed 확인
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { track } = await loadWrapper();
+
+    track('Logout Completed');
+
+    expect(logSpy).not.toHaveBeenCalled();
     expect(amplitudeMock.track).toHaveBeenCalled();
   });
 });

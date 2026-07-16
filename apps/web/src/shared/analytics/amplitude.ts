@@ -8,14 +8,18 @@ import { getNativeContext } from '@/shared/bridge/native-context';
 
 const getApiKey = () => process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
 
-// dev 환경에서는 키가 있어도 어떤 이벤트를 쏘는지 콘솔로 확인할 수 있게 전역 로깅한다
-const isDev = () => process.env.NODE_ENV === 'development';
+// 콘솔 로깅 조건 — 로컬 dev이거나 Vercel이 프리뷰/개발 배포라고 "명시"한 경우에만 찍는다.
+// fail-closed: 환경을 알 수 없으면(변수 미노출·타 호스팅) 프로덕션으로 간주하고 조용히 한다
+const shouldLog = () =>
+  process.env.NODE_ENV === 'development' ||
+  process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview' ||
+  process.env.NEXT_PUBLIC_VERCEL_ENV === 'development';
 
-// no-op(키 없음)·dev 환경 콘솔 로깅을 한곳에서 — 반환값은 SDK로 실제 전송할지 여부
+// no-op(키 없음)·개발/프리뷰 콘솔 로깅을 한곳에서 — 반환값은 SDK로 실제 전송할지 여부
 const logAndShouldSend = (...args: unknown[]) => {
   const enabled = Boolean(getApiKey());
-  // console.info — debug는 크롬 기본 레벨(Verbose 꺼짐)에서 숨겨져 안 보인다
-  if (!enabled || isDev()) console.info('[analytics]', ...args);
+  // console.log — debug는 크롬 기본 레벨(Verbose 꺼짐)에서 숨겨져 안 보인다
+  if (!enabled || shouldLog()) console.log('[analytics]', ...args);
   return enabled;
 };
 
