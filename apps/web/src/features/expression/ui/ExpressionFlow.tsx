@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
 
 import { collectPreloadImageUrls } from '../model/preloadImages';
-import { fromLearning } from '../model/sentenceQuiz';
+import { fromLearning, fromWritingSentence } from '../model/sentenceQuiz';
 import { useExpressionLearning } from '../model/useExpressionLearning';
 import { useExpressionPractice } from '../model/useExpressionPractice';
 import { useFinishExpression } from '../model/useFinishExpression';
@@ -108,10 +108,15 @@ export const ExpressionFlow = ({
     );
   }
 
-  // 복습 영작 — 퀴즈와 같은 대표 예문을 이번엔 '입력'으로 (퀴즈=선택과 구분). 정답 시 학습 완료.
+  // 복습 영작 — practice가 주는 별도 영작 문제(writingSentence)를 입력으로 푼다.
+  // practice가 아직 안 왔거나 실패했으면(404 등) 퀴즈와 같은 대표 예문으로 폴백해 플로우를 막지 않는다.
+  const reviewQuiz = practice?.writingSentence
+    ? fromWritingSentence(practice.writingSentence)
+    : quiz;
+
   return (
     <ReviewInputStep
-      quiz={quiz}
+      quiz={reviewQuiz}
       targetExpressionText={learning.targetExpressionText}
       meaning={learning.baseExpressionMeaningText}
       onBack={() => setStep('EXPLAIN')}
