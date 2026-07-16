@@ -39,9 +39,24 @@ export const ExplanationStep = ({
 }: ExplanationStepProps) => {
   const [active, setActive] = useState(0);
 
+  // 카드 stride(너비+gap)가 컨테이너 너비와 달라, clientWidth로 나누면 dot이 누적 어긋난다.
+  // 컨테이너 중앙에 가장 가까운 카드를 활성으로 잡는다 — snap-center와 정확히 일치한다.
   const onScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const track = event.currentTarget;
-    setActive(Math.round(track.scrollLeft / track.clientWidth));
+    const center = track.scrollLeft + track.clientWidth / 2;
+    let closest = 0;
+    let closestDistance = Infinity;
+    [...track.children].forEach((child, index) => {
+      const item = child as HTMLElement;
+      const distance = Math.abs(
+        item.offsetLeft + item.offsetWidth / 2 - center,
+      );
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closest = index;
+      }
+    });
+    setActive(closest);
   };
 
   return (
@@ -112,7 +127,7 @@ export const ExplanationStep = ({
 
 // 예문 카드 — 이미지 + Q(질문) / A(표현 활용 문장). A는 강조 구간만 굵게.
 const ExampleCard = ({ sentence }: { sentence: PracticeSentence }) => (
-  <div className="w-[280px] shrink-0 snap-center overflow-hidden rounded-2xl border border-border bg-card">
+  <div className="w-[280px] shrink-0 snap-center snap-always overflow-hidden rounded-2xl border border-border bg-card">
     <div className="flex aspect-square items-center justify-center bg-secondary">
       {sentence.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- 예문 이미지 도메인 미정이라 next/image 원격 허용 목록을 아직 못 만든다
