@@ -39,7 +39,9 @@ export const ScenarioCardBack = ({
         </button>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
+      {/* overscroll-contain을 두면 리스트가 짧아도 스와이프를 먹어 카드 전환(바깥 스냅 스크롤)이 막힌다 —
+          리스트 경계에 닿으면 제스처가 바깥으로 이어져 뒷면에서도 카드를 넘길 수 있게 한다 */}
+      <div className="min-h-0 flex-1 overflow-y-auto pb-6">
         {isLoading && <ExpressionListSkeleton />}
 
         {error && (
