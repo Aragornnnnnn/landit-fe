@@ -4,14 +4,10 @@
 import { motion } from 'motion/react';
 
 interface CharacterStageProps {
-  thumbnailUrl: string | null; // 시나리오 장면 이미지 (없으면 단색 패널)
   partner: 'male' | 'female'; // 상대 캐릭터 — 세션 TTS 음성 성별을 따른다
 }
 
-export const CharacterStage = ({
-  thumbnailUrl,
-  partner,
-}: CharacterStageProps) => (
+export const CharacterStage = ({ partner }: CharacterStageProps) => (
   // 무대는 명확한 한 섹션 — 상태바 밑까지 이어지되 safe area만큼 키워서 캐릭터는 항상 인셋 아래에 선다
   // 캐릭터 에셋이 흰 배경을 품고 있어 무대도 흰색 — 배경이 이음매 없이 이어진다
   // 높이 고정 — 텍스트가 길어져도 무대는 그대로 두고, 질문/답변이 각자 칸 안에서 스크롤된다
@@ -22,16 +18,6 @@ export const CharacterStage = ({
       height: 'calc(min(17rem, 34dvh) + max(env(safe-area-inset-top), 8px))',
     }}
   >
-    {/* 장면 이미지는 썸네일이 있을 때만 패널을 채운다 */}
-    {thumbnailUrl && (
-      // eslint-disable-next-line @next/next/no-img-element -- 백엔드 썸네일 도메인이 미정이라 next/image 원격 허용 목록을 아직 못 만든다
-      <img
-        src={thumbnailUrl}
-        alt=""
-        className="absolute inset-0 h-full w-full object-cover"
-      />
-    )}
-
     <motion.div
       initial={{ y: 24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
