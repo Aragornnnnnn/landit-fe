@@ -12,6 +12,7 @@ import {
   isWordsCorrect,
   type WordChip,
 } from '../model/wordBank';
+import { HintButton } from './HintButton';
 import { QuizPrompt } from './QuizPrompt';
 import { ResultSheet } from './ResultSheet';
 import { StepScaffold } from './StepScaffold';
@@ -120,15 +121,11 @@ export const QuizStep = ({
       {/* 힌트 — 한 번 누르면 다음 단어 힌트, 한 번 더 누르면 정답 문장 공개 */}
       {checked === 'idle' && (
         <div className="flex min-h-9 items-center justify-center pt-2">
-          {hintStep < 2 ? (
-            <button
-              type="button"
-              onClick={() => setHintStep((step) => step + 1)}
-              className="text-sm font-semibold text-muted-foreground underline underline-offset-4 transition-colors active:text-foreground"
-            >
-              {hintStep === 0 ? '힌트 보기' : '정답 보기'}
-            </button>
-          ) : (
+          <HintButton
+            step={hintStep}
+            onAdvance={() => setHintStep((step) => step + 1)}
+          />
+          {hintStep >= 2 && (
             <p className="text-center text-sm font-bold text-primary">
               {quiz.writingSentenceText}
             </p>
