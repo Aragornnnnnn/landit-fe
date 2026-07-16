@@ -32,9 +32,15 @@ export const ExpressionListItem = ({
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
           <LockIcon size={15} />
         </span>
-        <p className="text-base font-bold text-muted-foreground">
-          {baseExpressionMeaningText}
-        </p>
+        <div className="min-w-0 flex-1">
+          <p className="text-base font-bold text-muted-foreground">
+            {baseExpressionMeaningText}
+          </p>
+          {/* 영어 표현은 잠금 상태에서도 미리 보여준다 */}
+          <p className="truncate text-sm font-medium text-muted-foreground/70">
+            {targetExpressionText}
+          </p>
+        </div>
       </div>
     );
   }
