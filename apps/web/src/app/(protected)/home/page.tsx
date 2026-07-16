@@ -57,6 +57,7 @@ export default function HomePage({
           {/* key로 카테고리 전환 시 스크롤 위치·등장 모션을 초기화한다. */}
           <ScenarioList
             key={selected.categoryId}
+            categoryName={selected.categoryName}
             scenarios={selected.scenarios}
             focusActive={just === '1'}
             flipScenarioId={flipScenarioId}

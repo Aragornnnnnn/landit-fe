@@ -14,6 +14,8 @@ import type { Scenario } from '../api/list';
 import { ScenarioCard } from './ScenarioCard';
 
 interface ScenarioListProps {
+  // 전부 완료 페이지 문구에 쓰는 현재 카테고리 이름
+  categoryName: string;
   scenarios: Scenario[];
   onStart: (scenario: Scenario) => void;
   // 방금 대화를 끝내 다음 시나리오가 해금됐을 때, 그 카드로 스크롤·강조한다
@@ -25,6 +27,7 @@ interface ScenarioListProps {
 }
 
 export const ScenarioList = ({
+  categoryName,
   scenarios,
   onStart,
   focusActive = false,
@@ -121,15 +124,15 @@ export const ScenarioList = ({
           <div>
             <p className="text-2xl leading-snug font-extrabold text-foreground">
               {allCompleted
-                ? '모든 상황을 함께해 주셔서 감사해요!'
+                ? `${categoryName} 상황을 모두 완료했어요!`
                 : '다음 상황이 기다리고 있어요'}
             </p>
             <p className="mt-3 text-base font-medium text-muted-foreground">
               {allCompleted ? (
                 <>
-                  더 원어민답게 만들어 줄 상황들을
+                  함께해 주셔서 감사해요! 더 원어민답게
                   <br />
-                  금방 가져올게요. 조금만 기다려 주세요!
+                  만들어 줄 상황들을 금방 가져올게요
                 </>
               ) : (
                 '앞의 대화를 모두 끝내면 열려요'
