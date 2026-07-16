@@ -76,7 +76,7 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
         </button>
       </header>
 
-      <CharacterStage thumbnailUrl={scenario.thumbnailUrl} partner={partner} />
+      <CharacterStage partner={partner} />
 
       {/* 무대·답변·마이크는 고정. 질문만 남는 공간을 채우는 스크롤 영역에 담아, 길어져도 겹치지 않고 카드 안에서 스크롤된다 */}
       <section className="flex min-h-0 flex-1 flex-col px-5">
