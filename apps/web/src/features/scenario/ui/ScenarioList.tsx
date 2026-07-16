@@ -112,9 +112,9 @@ export const ScenarioList = ({
         <div className="flex h-full snap-center snap-always flex-col items-center justify-center gap-4 px-6 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- 구글이 호스팅하는 모션 이모지 GIF라 next/image 최적화 대상이 아니다 */}
           <img
-            // 🙇는 애니메이션 GIF가 없어(404) 감사 인사에 가장 가까운 🙏를 쓴다
-            src={`https://fonts.gstatic.com/s/e/notoemoji/latest/${allCompleted ? '1f64f' : '1f512'}/512.gif`}
-            alt={allCompleted ? '🙏' : '🔒'}
+            // 감사 인사는 🥰(1f970) — 🙇는 애니메이션 GIF가 없어(404) 쓸 수 없다
+            src={`https://fonts.gstatic.com/s/e/notoemoji/latest/${allCompleted ? '1f970' : '1f512'}/512.gif`}
+            alt={allCompleted ? '🥰' : '🔒'}
             width={120}
             height={120}
           />
