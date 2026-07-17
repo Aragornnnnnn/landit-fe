@@ -13,10 +13,7 @@
     },
     "production": {
       "autoIncrement": true,
-      "channel": "production",
-      "env": {
-        "EXPO_PUBLIC_WEB_URL": "https://www.landit.im"
-      }
+      "channel": "production"
     }
   },
   "submit": {
