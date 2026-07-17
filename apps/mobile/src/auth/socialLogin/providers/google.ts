@@ -5,11 +5,10 @@ import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 
 import { assertIdToken, SocialLoginError } from '../shared/errors';
+import { REDIRECT_PATH } from '../shared/redirect';
 
 // 브라우저가 닫힌 뒤 남은 리다이렉트 결과를 마무리한다 (auth-session 권장 초기화)
 WebBrowser.maybeCompleteAuthSession();
-
-const REDIRECT_PATH = 'oauthredirect';
 
 const GOOGLE_DISCOVERY: AuthSession.DiscoveryDocument = {
   authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
