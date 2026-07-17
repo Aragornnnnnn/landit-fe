@@ -8,5 +8,10 @@ export function redirectSystemPath({
   path: string;
   initial: boolean;
 }): string | null {
-  return isOAuthRedirectUrl(path) ? null : path;
+  // 이 함수에서 throw가 새어 나가면 앱이 죽을 수 있다 (expo-router 문서 권고로 방어)
+  try {
+    return isOAuthRedirectUrl(path) ? null : path;
+  } catch {
+    return path;
+  }
 }
