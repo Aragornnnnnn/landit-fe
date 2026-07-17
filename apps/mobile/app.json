@@ -79,6 +79,7 @@
       }
     },
     "plugins": [
+      "./plugins/withGradleJvmArgs.js",
       "expo-router",
       "expo-apple-authentication",
       [
