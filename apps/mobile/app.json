@@ -12,6 +12,15 @@
     ],
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#e07a3a",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/97f2d216-f1c0-41d1-b912-fd31c5526f86",
+      "requestHeaders": {
+        "expo-channel-name": "production"
+      }
+    },
     "ios": {
       "buildNumber": "11",
       "bundleIdentifier": "com.saynow.app",
@@ -69,6 +78,7 @@
       }
     },
     "plugins": [
+      "./plugins/withGradleJvmArgs.js",
       "expo-router",
       "expo-apple-authentication",
       [
