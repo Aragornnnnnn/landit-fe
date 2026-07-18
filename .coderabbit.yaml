@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: 'ko-KR'
+early_access: false
+tone_instructions: >-
+  한국어로 간결하고 직접적으로 작성한다. 실제 결함, 보안 문제, 계약 위반,
+  회귀 가능성처럼 조치가 필요한 내용만 지적한다. 각 지적에는 근거와 영향을
+  포함하고 취향 차이, CI가 검사하는 포맷, 요청 범위 밖 리팩터링은 제안하지 않는다.
+
+reviews:
+  profile: 'chill'
+  request_changes_workflow: false
+  high_level_summary: true
+  review_status: true
+  poem: false
+  in_progress_fortune: false
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+    base_branches:
+      - '^develop$'
+      - '^main$'
+      - '^release/.*'
+      - '^feat/.*'
+  path_instructions:
+    - path: 'apps/web/src/shared/api/**'
+      instructions: |
+        연결된 landit-be와 endpoint, method, 요청·응답 DTO, enum, nullability를 비교한다.
+        오류 응답 파싱, 인증 토큰 갱신, 401 재시도에서 무한 루프나 요청 유실을 확인한다.
+        서버 응답 형태를 근거 없이 단정하거나 오류를 성공처럼 처리하는 변경을 지적한다.
+    - path: 'apps/web/src/app/**'
+      instructions: |
+        Next.js 서버·클라이언트 경계와 데이터 노출 위험을 확인한다.
+        인증이 필요한 route의 우회, 누락된 loading·error 상태, 접근성 회귀를 확인한다.
+        현재 저장소의 버전별 Next.js 규칙과 AGENTS.md를 기준으로 판단한다.
+    - path: 'apps/web/src/features/**'
+      instructions: |
+        API 상태와 화면 상태의 불일치, 중복 제출, stale 응답, 낙관적 갱신 회귀를 확인한다.
+        사용자 입력과 오류 상태가 키보드와 스크린 리더에서도 조작·인지 가능한지 확인한다.
+    - path: 'apps/mobile/**'
+      instructions: |
+        WebView origin, 탐색, postMessage payload를 신뢰하기 전에 검증하는지 확인한다.
+        OAuth nonce와 provider·platform 분기, 토큰·사용자 데이터 로그 노출을 확인한다.
+        Android applicationId, iOS Bundle Identifier, runtimeVersion과 OTA 호환성 회귀를 지적한다.
+    - path: 'packages/bridge/**'
+      instructions: |
+        메시지 타입 변경 시 web과 mobile 소비자가 함께 호환되는지 확인한다.
+        unknown 또는 malformed payload의 런타임 검증과 직렬화 역호환성을 확인한다.
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  linked_repositories:
+    - repository: 'Aragornnnnnn/landit-be'
+      instructions: >-
+        공개 HTTP API와 인증을 소유하는 backend다. endpoint, DTO, enum, nullability,
+        오류 코드와 토큰 갱신 계약을 검증할 때 기준으로 참고한다.
