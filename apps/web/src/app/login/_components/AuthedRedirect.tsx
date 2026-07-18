@@ -8,12 +8,12 @@ import { useAuthStore } from '@/shared/store/auth-store';
 
 export const AuthedRedirect = () => {
   const router = useRouter();
-  const isAuthed = useAuthStore((state) => state.refreshToken !== null);
 
-  // 마운트 이후에만 판단 — 그 시점엔 persist 복원(동기)이 끝나 있다
+  // 마운트 시점 스냅샷으로 한 번만 판단한다 (persist 복원은 동기라 이 시점엔 끝나 있다).
+  // 상태 변화를 구독하면 이 화면에서 진행되는 브릿지 로그인의 온보딩 라우팅을 /home으로 덮어쓴다.
   useEffect(() => {
-    if (isAuthed) router.replace('/home');
-  }, [isAuthed, router]);
+    if (useAuthStore.getState().refreshToken !== null) router.replace('/home');
+  }, [router]);
 
   return null;
 };
