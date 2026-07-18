@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
 import { socialLogin } from '@/shared/api/auth/social-login';
+import { hasSeenOnboarding } from '@/shared/auth/onboarding-seen';
 import { startWebSocialLogin } from '@/shared/auth/web-social-login';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { generateRandomHex } from '@/shared/lib/crypto';
@@ -55,8 +56,10 @@ export function useSocialLogin() {
             method: 'native',
             is_new_user: newUser,
           });
-          // TODO: 온보딩 중도 이탈 유저는 재로그인 시 newUser=false라 다시 못 본다 — 서버 완료 플래그가 생기면 그걸로 분기
-          router.replace(newUser ? '/onboarding' : '/home');
+          // TODO: 기기 로컬 플래그는 기기 간 공유가 안 된다 — 서버 완료 플래그가 생기면 그걸로 분기
+          router.replace(
+            newUser || !hasSeenOnboarding() ? '/onboarding' : '/home',
+          );
         } catch (error) {
           track(EVENTS.LOGIN_FAILED, {
             provider: message.provider,
