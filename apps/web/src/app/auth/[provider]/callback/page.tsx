@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
 import { socialLogin } from '@/shared/api/auth/social-login';
+import { hasSeenOnboarding } from '@/shared/auth/onboarding-seen';
 import {
   clearPendingSocialLogin,
   readPendingSocialLogin,
@@ -120,7 +121,9 @@ export default function SocialLoginCallbackPage({
           method: 'web',
           is_new_user: newUser,
         });
-        router.replace(newUser ? '/onboarding' : '/home');
+        router.replace(
+          newUser || !hasSeenOnboarding() ? '/onboarding' : '/home',
+        );
       } catch (err) {
         track(EVENTS.LOGIN_FAILED, {
           provider,

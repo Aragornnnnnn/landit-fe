@@ -6,6 +6,7 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
+import { markOnboardingSeen } from '@/shared/auth/onboarding-seen';
 import { Transition } from '@/shared/motion';
 import { useAuthStore } from '@/shared/store/auth-store';
 
@@ -63,6 +64,8 @@ export const OnboardingFlow = () => {
   const startConversation = (scenarioId: number | null) => {
     track(EVENTS.ONBOARDING_STEP_COMPLETED, { step: 'scenario' });
     track(EVENTS.ONBOARDING_COMPLETED);
+    // 끝까지 본 기기로 기록해 재로그인 시 온보딩을 다시 보여주지 않는다
+    markOnboardingSeen();
     router.replace(
       scenarioId != null ? `/conversation/${scenarioId}` : '/home',
     );
