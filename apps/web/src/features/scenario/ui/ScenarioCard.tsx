@@ -4,7 +4,6 @@
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { motion } from 'motion/react';
-import Image from 'next/image';
 
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
@@ -13,7 +12,6 @@ import { ArrowRightIcon, LockIcon, ReplayIcon } from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
 
 import type { Scenario } from '../api/list';
-import { getScenarioImage } from '../lib/scenario-image';
 import { ScenarioCardBack } from './ScenarioCardBack';
 
 interface ScenarioCardProps {
@@ -49,8 +47,6 @@ export const ScenarioCard = ({
     setHasFlipped(true);
   }
 
-  // 백엔드 썸네일이 없으면 scenarioId로 번들 이미지를 매칭한다(S3 미구현 임시)
-  const bundledImage = getScenarioImage(scenario.scenarioId);
   const filterClass = locked ? 'brightness-70 grayscale' : '';
 
   // autoFlip으로 처음부터 뒤집힌 채 마운트된 경우도 노출로 기록한다
@@ -107,16 +103,6 @@ export const ScenarioCard = ({
                 src={scenario.thumbnailUrl}
                 alt={scenario.scenarioTitle}
                 className={`h-full w-full object-cover transition-[filter] duration-500 ${filterClass}`}
-              />
-            ) : bundledImage ? (
-              // 번들 이미지는 정적 import라 blurDataURL 자동 — 흐린 썸네일이 즉시 깔리고 본 이미지가 페이드인, 화면 밖 카드는 자동 lazy
-              <Image
-                src={bundledImage}
-                alt={scenario.scenarioTitle}
-                fill
-                sizes="(max-width: 430px) 100vw, 430px"
-                placeholder="blur"
-                className={`object-cover transition-[filter] duration-500 ${filterClass}`}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-secondary">
