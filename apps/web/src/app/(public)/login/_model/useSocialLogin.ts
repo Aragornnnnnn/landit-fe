@@ -6,12 +6,12 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
-import { socialLogin } from '@/shared/api/auth/social-login';
+import { socialLogin } from '@/shared/auth/api/social-login';
+import { useAuthStore } from '@/shared/auth/auth-store';
+import { generateRandomHex } from '@/shared/auth/crypto';
 import { hasSeenOnboarding } from '@/shared/auth/onboarding-seen';
 import { startWebSocialLogin } from '@/shared/auth/web-social-login';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
-import { generateRandomHex } from '@/shared/lib/crypto';
-import { useAuthStore } from '@/shared/store/auth-store';
 
 type SocialProvider = 'kakao' | 'google' | 'apple';
 
