@@ -21,6 +21,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
    - `lib/` 도메인을 거드는 보조 도구. model과 헷갈리면 "기획 회의에서 언급될 내용인가"로 가른다 (그렇다 → model)
 3. **여러 도메인이 쓰는 기술인가?** → `shared/`. 파일이 3개 이상 모이는 주제는 형제 폴더로 독립시키고(analytics, bridge, haptics, motion처럼), `shared/lib`엔 이름 붙일 주제가 없는 범용 유틸·훅만 남긴다.
 
+import 경로는 FSD 규칙을 따른다 — 같은 슬라이스(라우트 구역, `features/<도메인>`, shared 주제 폴더) 안은 상대 경로, 슬라이스·층을 넘으면 절대 경로(`@/`). 슬라이스를 통째로 옮겨도 내부 결선이 안 깨지게.
+
 금지 조항.
 
 - `utils.ts`, `helpers.ts` 금지 — 이름을 못 지으면 개념이 안 선 것이다.
