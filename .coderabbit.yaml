@@ -22,6 +22,10 @@ reviews:
       - '^main$'
       - '^release/.*'
       - '^feat/.*'
+  path_filters:
+    - '!pnpm-lock.yaml'
+    - '!**/expo-env.d.ts'
+    - '!**/next-env.d.ts'
   path_instructions:
     - path: 'apps/web/src/shared/api/**'
       instructions: |
