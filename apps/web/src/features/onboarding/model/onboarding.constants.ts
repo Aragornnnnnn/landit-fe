@@ -15,9 +15,6 @@ export const SOUND_QUESTIONS = [
   'Hi! Is my voice coming through okay?',
 ];
 
-// 첫 발화는 항상 목록의 0번 — 로테이션 중복 회피 로직이 이 결합을 전제한다
-export const FALLBACK_QUESTION = SOUND_QUESTIONS[0];
-
 // 발화 시간 추정치 — mp3 로드 실패 시 폴백 타이머가 이 식으로 발화 길이를 흉내 낸다
 export const estimateSpeechMs = (text: string) =>
   Math.max(2500, text.length * 75);
