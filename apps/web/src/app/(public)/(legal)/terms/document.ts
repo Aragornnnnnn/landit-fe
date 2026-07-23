@@ -1,5 +1,5 @@
 // 서비스 이용약관 v1.0 문서 데이터
-import type { LegalDocument } from './legal-document';
+import type { LegalDocument } from '../_ui/LegalDocumentPage';
 
 export const termsDocument: LegalDocument = {
   title: '서비스 이용약관',

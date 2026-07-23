@@ -1,6 +1,7 @@
 // 개인정보 처리방침 페이지 — 로그인 없이 접근 가능한 공개 라우트
-import { privacyDocument } from '@/app/(public)/(legal)/_content/privacy-document';
 import { LegalDocumentPage } from '@/app/(public)/(legal)/_ui/LegalDocumentPage';
+
+import { privacyDocument } from './document';
 
 const PrivacyPage = () => (
   <LegalDocumentPage
