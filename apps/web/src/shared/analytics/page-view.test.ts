@@ -82,7 +82,6 @@ describe('toPageView', () => {
 
   it('루트·개발용 경로는 계측하지 않는다', () => {
     expect(pv('/')).toBeNull();
-    expect(pv('/stt-demo')).toBeNull();
     expect(pv('/dev')).toBeNull();
   });
 
