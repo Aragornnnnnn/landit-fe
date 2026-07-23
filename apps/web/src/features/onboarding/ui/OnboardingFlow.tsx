@@ -6,9 +6,9 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
+import { useAuthStore } from '@/shared/auth/auth-store';
 import { markOnboardingSeen } from '@/shared/auth/onboarding-seen';
 import { Transition } from '@/shared/motion';
-import { useAuthStore } from '@/shared/store/auth-store';
 
 import { STEP_ORDER } from '../model/onboarding.constants';
 import { type OnboardingStep } from '../model/onboarding.types';

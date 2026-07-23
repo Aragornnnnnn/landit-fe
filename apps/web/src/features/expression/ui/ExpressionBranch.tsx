@@ -8,7 +8,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
-import { useAuthStore } from '@/shared/store/auth-store';
+import { useAuthStore } from '@/shared/auth/auth-store';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
