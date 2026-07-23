@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useStt, type SttStatus } from '@/shared/lib/stt/useStt';
 import { Button } from '@/shared/ui/Button';
 
-import { SttDebugPanel } from './_components/SttDebugPanel';
+import { SttDebugPanel } from './_ui/SttDebugPanel';
 
 const STATUS_LABEL: Record<SttStatus, string> = {
   idle: '대기',

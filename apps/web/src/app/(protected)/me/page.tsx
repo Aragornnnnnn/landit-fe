@@ -7,17 +7,17 @@ import { useRouter } from 'next/navigation';
 
 import { FeedbackSurvey } from '@/features/nps/ui/FeedbackSurvey';
 import { track } from '@/shared/analytics';
-import { logout as requestLogout } from '@/shared/api/auth/logout';
-import { withdraw } from '@/shared/api/auth/withdraw';
-import { clearSession } from '@/shared/lib/clear-session';
+import { logout as requestLogout } from '@/shared/auth/api/logout';
+import { withdraw } from '@/shared/auth/api/withdraw';
+import { useAuthStore } from '@/shared/auth/auth-store';
+import { clearSession } from '@/shared/auth/clear-session';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
-import { useAuthStore } from '@/shared/store/auth-store';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
-import { MenuButton, MenuGroup, MenuLink } from './_components/Menu';
-import { StatChip } from './_components/StatChip';
+import { MenuButton, MenuGroup, MenuLink } from './_ui/Menu';
+import { StatChip } from './_ui/StatChip';
 
 export default function MyPage() {
   const router = useRouter();
