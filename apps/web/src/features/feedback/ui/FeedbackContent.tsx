@@ -1,6 +1,6 @@
 'use client';
 
-// 피드백 화면 오케스트레이터 — 총평 ↔ 상세 두 단계를 전환한다
+// 피드백 본편 — 로딩 분기(Flow)가 끝난 뒤 총평 ↔ 상세 두 단계를 전환한다
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
@@ -10,7 +10,7 @@ import type { SessionFeedbackResponse } from '../api/session-feedback';
 import { FeedbackDetail } from './FeedbackDetail';
 import { FeedbackSummary } from './FeedbackSummary';
 
-export const Feedback = ({
+export const FeedbackContent = ({
   feedback,
   title,
   onExit,

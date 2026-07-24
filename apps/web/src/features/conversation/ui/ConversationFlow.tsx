@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
-import { SessionFeedbackScreen } from '@/features/feedback/ui/SessionFeedbackScreen';
+import { FeedbackFlow } from '@/features/feedback/ui/FeedbackFlow';
 import type { Scenario } from '@/features/scenario/api/list';
 import { track } from '@/shared/analytics';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
@@ -69,7 +69,7 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   if (view === 'feedback') {
     return (
       <Transition transitionKey="feedback" fade>
-        <SessionFeedbackScreen
+        <FeedbackFlow
           sessionId={sessionId}
           title={scenario.scenarioTitle}
           onExit={() =>
