@@ -1,7 +1,7 @@
 // 뒤로가기 결정 로직 검증 — 홈에서는 이중탭 종료 흐름, 그 외에는 히스토리/종료로 분기
 import { describe, expect, it } from 'vitest';
 
-import { decideBack } from './backNavigation';
+import { decideBack } from './back-navigation';
 
 describe('decideBack', () => {
   it('홈에서 뒤로가기를 누르면 히스토리가 남아 있어도 종료 흐름으로 보낸다', () => {

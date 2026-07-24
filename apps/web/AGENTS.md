@@ -25,7 +25,8 @@ import 경로는 FSD 규칙을 따른다 — 같은 슬라이스(라우트 구�
 
 금지 조항.
 
-- `utils.ts`, `helpers.ts` 금지 — 이름을 못 지으면 개념이 안 선 것이다.
+- `utils.ts`, `helpers.ts` 금지 — 이름을 못 지으면 개념이 안 선 것이다. `types.ts`, `constants.ts`도 같은 병 — 내용물 형태가 아니라 개념으로 파일을 가른다.
+- 파일명 — 컴포넌트 `Pascal.tsx`, 훅 `useCamel.ts`, 나머지 모듈은 `kebab-case.ts`.
 - `features` 간 가로 import는 지양한다. 불가피하면 이유를 한 줄 주석으로 남긴다 (나중에 entities로 뽑을 후보 목록이 된다).
 - 예외: `scenario`·`feedback`처럼 여러 feature가 참조하는 공용 슬라이스는 가로 import를 허용한다. 단 공용 슬라이스 자신은 다른 feature를 import하지 않는다 (방향 고정).
 - `page.tsx`는 파라미터 해석과 조립만 한다. 로직이 생기면 model로 뽑는다.

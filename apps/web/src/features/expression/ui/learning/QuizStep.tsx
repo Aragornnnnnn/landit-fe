@@ -8,12 +8,12 @@ import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { Button } from '@/shared/ui/Button';
 
-import type { SentenceQuiz } from '../../model/sentenceQuiz';
+import type { SentenceQuiz } from '../../model/sentence-quiz';
 import {
   chipsFromWords,
   isWordsCorrect,
   type WordChip,
-} from '../../model/wordBank';
+} from '../../model/word-bank';
 import { QuizPrompt } from '../QuizPrompt';
 import { StepScaffold } from '../StepScaffold';
 import { ResultSheet } from './ResultSheet';

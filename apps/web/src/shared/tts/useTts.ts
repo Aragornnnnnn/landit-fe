@@ -3,7 +3,7 @@
 // OpenRouter 프록시(/api/tts)로 텍스트를 합성해 재생하는 TTS 훅 — STT 훅과 콜백·상태 컨벤션을 공유한다
 import { useEffect, useRef, useState } from 'react';
 
-import type { TtsVoice } from '@/shared/tts/tts.types';
+import type { TtsVoice } from '@/shared/tts/voice';
 
 export type TtsStatus = 'idle' | 'loading' | 'active' | 'error';
 

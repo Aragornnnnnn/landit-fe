@@ -5,7 +5,7 @@ import {
   initialConversationState,
   nextConversationState,
   type ConversationState,
-} from './conversationMachine';
+} from './conversation-machine';
 
 const state = (
   phase: ConversationState['phase'],

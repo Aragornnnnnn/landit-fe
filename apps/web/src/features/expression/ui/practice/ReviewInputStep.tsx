@@ -25,8 +25,8 @@ import {
   parseInputEvent,
   type InputState,
   type ReviewInputAction,
-} from '../../model/reviewInput';
-import type { SentenceQuiz } from '../../model/sentenceQuiz';
+} from '../../model/review-input';
+import type { SentenceQuiz } from '../../model/sentence-quiz';
 import { QuizPrompt } from '../QuizPrompt';
 import { StepScaffold } from '../StepScaffold';
 import { HintButton } from './HintButton';

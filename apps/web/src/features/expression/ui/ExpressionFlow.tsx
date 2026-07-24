@@ -8,9 +8,9 @@ import { preload } from 'react-dom';
 
 import { track } from '@/shared/analytics';
 
-import { collectPreloadImageUrls } from '../lib/preloadImages';
-import type { InputState } from '../model/reviewInput';
-import { fromLearning, fromWritingSentence } from '../model/sentenceQuiz';
+import { collectPreloadImageUrls } from '../lib/preload-images';
+import type { InputState } from '../model/review-input';
+import { fromLearning, fromWritingSentence } from '../model/sentence-quiz';
 import { useExpressionLearning } from '../model/useExpressionLearning';
 import { useExpressionPractice } from '../model/useExpressionPractice';
 import { useFinishExpression } from '../model/useFinishExpression';

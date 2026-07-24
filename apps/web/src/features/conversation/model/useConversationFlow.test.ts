@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Scenario } from '@/features/scenario/api/list';
 import { MicPermissionDeniedError } from '@/shared/stt/errors';
-import type { TtsVoice } from '@/shared/tts/tts.types';
+import type { TtsVoice } from '@/shared/tts/voice';
 
 import * as sessionApi from '../api/session';
 import type { SessionMessageSubmitResponse } from '../api/session';

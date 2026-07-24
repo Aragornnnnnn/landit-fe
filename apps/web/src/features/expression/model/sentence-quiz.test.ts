@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ExpressionLearning } from '../api/learning';
 import type { WritingSentence } from '../api/practice';
-import { fromLearning, fromWritingSentence } from './sentenceQuiz';
+import { fromLearning, fromWritingSentence } from './sentence-quiz';
 
 const baseLearning: ExpressionLearning = {
   expressionId: 101,

@@ -1,7 +1,7 @@
 // 단어뱅크 순수 로직 검증 — 칩 생성·정답 판정
 import { describe, expect, it } from 'vitest';
 
-import { chipsFromWords, isWordsCorrect } from './wordBank';
+import { chipsFromWords, isWordsCorrect } from './word-bank';
 
 describe('chipsFromWords', () => {
   it('단어 배열을 순서 그대로 id 붙은 칩으로 만든다 (셔플 안 함)', () => {

@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 
 import { CloseIcon, KeyboardIcon, MicIcon, StopIcon } from '@/shared/ui/Icons';
 
-import type { ConversationPhase } from '../model/conversationMachine';
+import type { ConversationPhase } from '../model/conversation-machine';
 
 interface MicControlProps {
   phase: ConversationPhase;

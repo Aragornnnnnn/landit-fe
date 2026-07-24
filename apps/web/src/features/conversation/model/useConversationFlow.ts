@@ -29,7 +29,7 @@ import {
   initialConversationState,
   nextConversationState,
   type ConversationEvent,
-} from './conversationMachine';
+} from './conversation-machine';
 import { speechTypingMs, thoughtHoldMs, toThoughtType } from './pacing';
 import type { ThoughtType } from './thought';
 import { useInnerThought } from './useInnerThought';
