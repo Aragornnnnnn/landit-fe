@@ -12,7 +12,7 @@ import { useAuthStore } from '@/shared/auth/auth-store';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
-import { useExpressions } from '../model/useExpressions';
+import { useExpressions } from '../../model/useExpressions';
 import { ExpressionList } from './ExpressionList';
 
 // 축하·분석 화면이 같은 타이틀 타이포를 공유해야 전환 순간 글자가 튀지 않는다

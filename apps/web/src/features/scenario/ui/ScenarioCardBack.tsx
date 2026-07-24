@@ -5,8 +5,8 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { useExpressions } from '@/features/expression/model/useExpressions';
-import { ExpressionList } from '@/features/expression/ui/ExpressionList';
-import { ExpressionListSkeleton } from '@/features/expression/ui/ExpressionListSkeleton';
+import { ExpressionList } from '@/features/expression/ui/list/ExpressionList';
+import { ExpressionListSkeleton } from '@/features/expression/ui/list/ExpressionListSkeleton';
 import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';

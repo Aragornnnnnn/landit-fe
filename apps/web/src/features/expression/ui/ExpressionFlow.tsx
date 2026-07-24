@@ -14,11 +14,11 @@ import { fromLearning, fromWritingSentence } from '../model/sentenceQuiz';
 import { useExpressionLearning } from '../model/useExpressionLearning';
 import { useExpressionPractice } from '../model/useExpressionPractice';
 import { useFinishExpression } from '../model/useFinishExpression';
-import { ExplanationStep } from './ExplanationStep';
 import { ExpressionExitSheet } from './ExpressionExitSheet';
-import { QuizStep } from './QuizStep';
-import { QuizStepSkeleton } from './QuizStepSkeleton';
-import { ReviewInputStep } from './ReviewInputStep';
+import { ExplanationStep } from './learning/ExplanationStep';
+import { QuizStep } from './learning/QuizStep';
+import { QuizStepSkeleton } from './learning/QuizStepSkeleton';
+import { ReviewInputStep } from './practice/ReviewInputStep';
 
 interface ExpressionFlowProps {
   scenarioId: number;

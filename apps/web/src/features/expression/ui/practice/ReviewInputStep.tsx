@@ -25,12 +25,12 @@ import {
   parseInputEvent,
   type InputState,
   type ReviewInputAction,
-} from '../model/reviewInput';
-import type { SentenceQuiz } from '../model/sentenceQuiz';
+} from '../../model/reviewInput';
+import type { SentenceQuiz } from '../../model/sentenceQuiz';
+import { QuizPrompt } from '../QuizPrompt';
+import { StepScaffold } from '../StepScaffold';
 import { HintButton } from './HintButton';
-import { QuizPrompt } from './QuizPrompt';
 import { ReviewSuccess } from './ReviewSuccess';
-import { StepScaffold } from './StepScaffold';
 
 interface ReviewInputStepProps {
   quiz: SentenceQuiz;
