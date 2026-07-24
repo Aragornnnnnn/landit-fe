@@ -1,12 +1,10 @@
-'use client';
-
-// 이미 로그인된 상태로 /login에 오면 홈으로 돌려보낸다 (화면은 그리지 않는 가드 전용 컴포넌트)
+// 이미 로그인된 상태로 /login에 오면 홈으로 돌려보내는 가드 로직
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { useAuthStore } from '@/shared/store/auth-store';
+import { useAuthStore } from '@/shared/auth/auth-store';
 
-export const AuthedRedirect = () => {
+export const useAuthedRedirect = () => {
   const router = useRouter();
 
   // 마운트 시점 스냅샷으로 한 번만 판단한다 (persist 복원은 동기라 이 시점엔 끝나 있다).
@@ -14,6 +12,4 @@ export const AuthedRedirect = () => {
   useEffect(() => {
     if (useAuthStore.getState().refreshToken !== null) router.replace('/home');
   }, [router]);
-
-  return null;
 };

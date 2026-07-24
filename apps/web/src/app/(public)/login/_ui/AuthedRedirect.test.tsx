@@ -2,7 +2,7 @@
 import { act, render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useAuthStore } from '@/shared/store/auth-store';
+import { useAuthStore } from '@/shared/auth/auth-store';
 
 import { AuthedRedirect } from './AuthedRedirect';
 

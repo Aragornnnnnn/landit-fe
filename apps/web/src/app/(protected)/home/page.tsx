@@ -12,8 +12,8 @@ import { ScenarioList } from '@/features/scenario/ui/ScenarioList';
 import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
 
-import { HomeHeader } from './_components/HomeHeader';
-import { useReturnSignals } from './_hooks/useReturnSignals';
+import { useReturnSignals } from './_model/useReturnSignals';
+import { HomeHeader } from './_ui/HomeHeader';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
 export default function HomePage() {

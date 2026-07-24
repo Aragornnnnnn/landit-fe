@@ -3,8 +3,8 @@ import type { EventProps } from '@landit/analytics';
 
 type PageViewProps = EventProps['Page Viewed'];
 
-// 계측 제외 — 루트는 즉시 redirect, 나머지는 개발용 화면
-const EXCLUDED = new Set(['/', '/stt-demo', '/dev']);
+// 계측 제외 — 루트는 즉시 redirect라 페이지뷰로 의미가 없다
+const EXCLUDED = new Set(['/']);
 
 const STATIC_PAGES = new Set(['login', 'onboarding', 'me', 'privacy', 'terms']);
 

@@ -1,6 +1,6 @@
 // refreshToken으로 accessToken을 새로 발급받는다
 import { parseApiResponse } from '@/shared/api/parse';
-import { useAuthStore } from '@/shared/store/auth-store';
+import { useAuthStore } from '@/shared/auth/auth-store';
 
 export const REFRESH_PATH = '/api/v1/auth/token/refresh';
 

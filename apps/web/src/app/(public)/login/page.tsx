@@ -1,8 +1,8 @@
 // 로그인 화면 — 소셜 로그인 진입점 + 네이티브 스플래시에서 이어지는 진입 모션
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
-import { AuthedRedirect } from './_components/AuthedRedirect';
-import { SocialLoginButtons } from './_components/SocialLoginButtons';
+import { AuthedRedirect } from './_ui/AuthedRedirect';
+import { SocialLoginButtons } from './_ui/SocialLoginButtons';
 import styles from './login-motion.module.css';
 
 // 세션 내 재방문이면 모션을 스킵하도록 첫 페인트 전에 html에 클래스 부여 (FOUC 방지 위해 인라인 블로킹 스크립트 — useEffect는 이미 한 프레임 그려진 뒤라 늦음)

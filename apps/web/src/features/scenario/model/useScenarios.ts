@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/store/auth-store';
+import { useAuthStore } from '@/shared/auth/auth-store';
 
 import { getScenarios, type ScenarioCategory } from '../api/list';
 import { scenarioKeys } from './keys';

@@ -4,7 +4,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import type { AuthMember } from '@/shared/api/auth/social-login';
+import type { AuthMember } from '@/shared/auth/api/social-login';
 
 interface AuthState {
   accessToken: string | null;

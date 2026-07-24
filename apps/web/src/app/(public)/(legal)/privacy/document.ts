@@ -1,5 +1,5 @@
 // 개인정보 처리방침 v1.0 문서 데이터
-import type { LegalDocument } from './legal-document';
+import type { LegalDocument } from '../_ui/LegalDocumentPage';
 
 export const privacyDocument: LegalDocument = {
   title: '개인정보 처리방침',

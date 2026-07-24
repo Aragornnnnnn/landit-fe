@@ -4,10 +4,16 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { useAuthStore } from '@/shared/auth/auth-store';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
-import { useAuthStore } from '@/shared/store/auth-store';
+import { LanditLogo } from '@/shared/ui/LanditLogo';
 
-import { AuthSplash } from './_components/AuthSplash';
+// 인증 판단 동안 보여주는 화면 — 네이티브 스플래시(주황+흰 로고)와 같은 그림이라 어느 쪽으로 가든 이어져 보인다
+const AuthSplash = () => (
+  <div className="flex h-dvh items-center justify-center bg-primary">
+    <LanditLogo className="h-12 w-auto text-white" />
+  </div>
+);
 
 export default function ProtectedLayout({
   children,

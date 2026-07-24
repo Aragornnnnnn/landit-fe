@@ -1,7 +1,7 @@
 // 시나리오별 표현 목록 상태 — 표현 리스트 화면
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/store/auth-store';
+import { useAuthStore } from '@/shared/auth/auth-store';
 
 import { getExpressions } from '../api/list';
 import { expressionKeys } from './keys';

@@ -6,14 +6,14 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
-import { socialLogin } from '@/shared/api/auth/social-login';
+import { socialLogin } from '@/shared/auth/api/social-login';
+import { useAuthStore } from '@/shared/auth/auth-store';
 import { hasSeenOnboarding } from '@/shared/auth/onboarding-seen';
 import {
   clearPendingSocialLogin,
   readPendingSocialLogin,
   type WebSocialProvider,
 } from '@/shared/auth/web-social-login';
-import { useAuthStore } from '@/shared/store/auth-store';
 
 const WEB_PROVIDERS: WebSocialProvider[] = ['kakao', 'google'];
 const isWebProvider = (value: string): value is WebSocialProvider =>
