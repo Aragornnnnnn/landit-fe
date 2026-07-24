@@ -25,19 +25,25 @@ describe('GET /download', () => {
     const res = GET(downloadRequest(IPHONE_UA));
 
     expect(res.status).toBe(307);
-    expect(res.headers.get('location')).toContain('apps.apple.com');
+    expect(res.headers.get('location')).toBe(
+      'https://apps.apple.com/kr/app/id6787414201',
+    );
   });
 
   it('iPad에서 열면 App Store로 보낸다', () => {
     const res = GET(downloadRequest(IPAD_UA));
 
-    expect(res.headers.get('location')).toContain('apps.apple.com');
+    expect(res.headers.get('location')).toBe(
+      'https://apps.apple.com/kr/app/id6787414201',
+    );
   });
 
   it('인스타그램 인앱 브라우저(iOS)에서 열어도 App Store로 보낸다', () => {
     const res = GET(downloadRequest(INSTAGRAM_IOS_UA));
 
-    expect(res.headers.get('location')).toContain('apps.apple.com');
+    expect(res.headers.get('location')).toBe(
+      'https://apps.apple.com/kr/app/id6787414201',
+    );
   });
 
   it('Android에서 열면 Play 스토어로 보낸다', () => {
@@ -53,12 +59,16 @@ describe('GET /download', () => {
     const res = GET(downloadRequest(DESKTOP_UA));
 
     expect(res.status).toBe(307);
-    expect(res.headers.get('location')).toContain('apps.apple.com');
+    expect(res.headers.get('location')).toBe(
+      'https://apps.apple.com/kr/app/id6787414201',
+    );
   });
 
   it('User-Agent가 없으면 App Store로 보낸다', () => {
     const res = GET(downloadRequest());
 
-    expect(res.headers.get('location')).toContain('apps.apple.com');
+    expect(res.headers.get('location')).toBe(
+      'https://apps.apple.com/kr/app/id6787414201',
+    );
   });
 });
