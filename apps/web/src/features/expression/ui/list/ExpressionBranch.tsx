@@ -12,7 +12,7 @@ import { useAuthStore } from '@/shared/auth/auth-store';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
-import { useExpressions } from '../../model/useExpressions';
+import { useExpressionsQuery } from '../../model/useExpressionsQuery';
 import { ExpressionList } from './ExpressionList';
 
 // 축하·분석 화면이 같은 타이틀 타이포를 공유해야 전환 순간 글자가 튀지 않는다
@@ -26,7 +26,7 @@ const ANALYZE_MS = 2000;
 export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
   const router = useRouter();
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
-  const { expressions, error, retry } = useExpressions(scenarioId);
+  const { expressions, error, retry } = useExpressionsQuery(scenarioId);
 
   // 학습 진입 대상 — 아직 안 배운 첫 표현. 없으면 리스트로 보낸다.
   const nextExpressionId = expressions?.find(

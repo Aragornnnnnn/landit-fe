@@ -20,7 +20,7 @@ export const prefetchSessionFeedback = (
 
 // 피드백 생성은 POST라, 한 번 만들면 다시 만들지 않게 캐시를 고정한다.
 // StrictMode 이중 마운트는 react-query가 동일 키 in-flight 요청을 합쳐 중복 POST를 막는다.
-export const useSessionFeedback = (sessionId: number | null) => {
+export const useSessionFeedbackQuery = (sessionId: number | null) => {
   const { data, error, isPending } = useQuery({
     queryKey: sessionFeedbackKey(sessionId),
     queryFn: () => createSessionFeedback(sessionId as number),

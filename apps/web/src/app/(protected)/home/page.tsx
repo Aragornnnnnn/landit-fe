@@ -5,7 +5,7 @@ import { Suspense, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { useScenarios } from '@/features/scenario/model/useScenarios';
+import { useScenariosQuery } from '@/features/scenario/model/useScenariosQuery';
 import { CategoryBar } from '@/features/scenario/ui/CategoryBar';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
 import { ScenarioList } from '@/features/scenario/ui/ScenarioList';
@@ -37,7 +37,7 @@ function HomeContent() {
   );
   // 복귀 대상이 있으면 그 카테고리를 기본으로 연다(사용자가 칩을 누르면 그게 우선 — 강제 X)
   const { categories, selected, selectCategory, error, isLoading, retry } =
-    useScenarios(returnScenarioId);
+    useScenariosQuery(returnScenarioId);
 
   // 리스트가 실제로 마운트된 뒤에 신호를 소비한다 — 로딩 중 소비하면 배치가 유실된다
   const ready = Boolean(categories && selected);

@@ -5,8 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ExpressionLearning } from '../api/learning';
 import type { ExpressionPractice } from '../api/practice';
-import { useExpressionLearning } from '../model/useExpressionLearning';
-import { useExpressionPractice } from '../model/useExpressionPractice';
+import { useExpressionLearningQuery } from '../model/useExpressionLearningQuery';
+import { useExpressionPracticeQuery } from '../model/useExpressionPracticeQuery';
 import { ExpressionFlow } from './ExpressionFlow';
 
 // preload만 스파이로 바꾸고 나머지 react-dom(렌더러가 씀)은 원본 유지
@@ -15,21 +15,21 @@ vi.mock('react-dom', async (importOriginal) => ({
   preload: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-vi.mock('../model/useExpressionLearning', () => ({
-  useExpressionLearning: vi.fn(),
+vi.mock('../model/useExpressionLearningQuery', () => ({
+  useExpressionLearningQuery: vi.fn(),
 }));
-vi.mock('../model/useExpressionPractice', () => ({
-  useExpressionPractice: vi.fn(),
+vi.mock('../model/useExpressionPracticeQuery', () => ({
+  useExpressionPracticeQuery: vi.fn(),
 }));
-vi.mock('../model/useFinishExpression', () => ({
-  useFinishExpression: () => ({ mutate: vi.fn(), isPending: false }),
+vi.mock('../model/useFinishExpressionMutation', () => ({
+  useFinishExpressionMutation: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 // 스텝 UI는 이 테스트 관심사가 아니라 스텁으로 대체(무거운 하위 의존 회피)
 vi.mock('./QuizStep', () => ({ QuizStep: () => <div>quiz</div> }));
 vi.mock('./ExpressionExitSheet', () => ({ ExpressionExitSheet: () => null }));
 
-const learningMock = vi.mocked(useExpressionLearning);
-const practiceMock = vi.mocked(useExpressionPractice);
+const learningMock = vi.mocked(useExpressionLearningQuery);
+const practiceMock = vi.mocked(useExpressionPracticeQuery);
 const preloadMock = vi.mocked(preload);
 
 const learning: ExpressionLearning = {

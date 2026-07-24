@@ -3,7 +3,7 @@
 // 세션 피드백 흐름 진입점 — 생성 중엔 총평 스켈레톤을 보이고(대개 미리 만들어 잠깐), 완료되면 총평/상세로 넘긴다
 import { Button } from '@/shared/ui/Button';
 
-import { useSessionFeedback } from '../model/useSessionFeedback';
+import { useSessionFeedbackQuery } from '../model/useSessionFeedbackQuery';
 import { FeedbackContent } from './FeedbackContent';
 import { FeedbackSkeleton } from './FeedbackSkeleton';
 
@@ -30,7 +30,7 @@ export const FeedbackFlow = ({
   title,
   onExit,
 }: FeedbackFlowProps) => {
-  const { feedback, error } = useSessionFeedback(sessionId);
+  const { feedback, error } = useSessionFeedbackQuery(sessionId);
 
   if (sessionId === null || error)
     return <FeedbackUnavailable onExit={onExit} />;

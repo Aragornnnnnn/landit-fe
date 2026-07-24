@@ -6,7 +6,7 @@ import { scenarioKeys } from '@/features/scenario/model/keys';
 import { finishExpression } from '../api/finish';
 import { expressionKeys } from './keys';
 
-export const useFinishExpression = (expressionId: number) => {
+export const useFinishExpressionMutation = (expressionId: number) => {
   const queryClient = useQueryClient();
 
   return useMutation({

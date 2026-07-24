@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getExpressionLearning } from '../api/learning';
 import { expressionKeys } from './keys';
 
-export const useExpressionLearning = (expressionId: number) => {
+export const useExpressionLearningQuery = (expressionId: number) => {
   const { data, error, isPending } = useQuery({
     queryKey: expressionKeys.learning(expressionId),
     queryFn: () => getExpressionLearning(expressionId),
