@@ -14,9 +14,9 @@ import type { Scenario } from '@/features/scenario/api/list';
 import { scenarioKeys } from '@/features/scenario/model/keys';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
-import { isMicPermissionDeniedError } from '@/shared/lib/stt/errors';
-import { useStt } from '@/shared/lib/stt/useStt';
-import { useTts } from '@/shared/lib/tts/useTts';
+import { isMicPermissionDeniedError } from '@/shared/stt/errors';
+import { useStt } from '@/shared/stt/useStt';
+import { useTts } from '@/shared/tts/useTts';
 import { showToast } from '@/shared/ui/toast';
 
 import {

@@ -5,8 +5,8 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Scenario } from '@/features/scenario/api/list';
-import { MicPermissionDeniedError } from '@/shared/lib/stt/errors';
-import type { TtsVoice } from '@/shared/lib/tts/tts.types';
+import { MicPermissionDeniedError } from '@/shared/stt/errors';
+import type { TtsVoice } from '@/shared/tts/tts.types';
 
 import * as sessionApi from '../api/session';
 import type { SessionMessageSubmitResponse } from '../api/session';
@@ -44,7 +44,7 @@ const ttsMock = vi.hoisted(() => {
     stop: vi.fn(),
   };
 });
-vi.mock('@/shared/lib/tts/useTts', () => ({
+vi.mock('@/shared/tts/useTts', () => ({
   useTts: () => ({
     speak: ttsMock.speak,
     speakSrc: ttsMock.speakSrc,
@@ -69,7 +69,7 @@ const sttMock = vi.hoisted(() => {
     reset: vi.fn(),
   };
 });
-vi.mock('@/shared/lib/stt/useStt', () => ({
+vi.mock('@/shared/stt/useStt', () => ({
   useStt: (opts: {
     onInterim?: (t: string) => void;
     onFinal?: (t: string) => void;

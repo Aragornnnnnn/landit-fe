@@ -2,7 +2,7 @@
 // FE는 BE만 호출하고, BE가 내부에서 AI 서버를 오케스트레이션한다.
 import { api } from '@/shared/api/client';
 // ttsVoice는 재생(useTts)과 같은 타입을 공유한다
-import type { TtsVoice } from '@/shared/lib/tts/tts.types';
+import type { TtsVoice } from '@/shared/tts/tts.types';
 
 export type InputType = 'VOICE' | 'TEXT' | 'GENERATED';
 
