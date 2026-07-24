@@ -1,12 +1,4 @@
-// 온보딩 스텝 순서와 사운드 확인 질문 상수
-export const STEP_ORDER = [
-  'intro',
-  'sound',
-  'mic',
-  'thought',
-  'scenario',
-] as const;
-
+// 사운드 확인 스텝 — 확인 질문 문구와 재생·로테이션 규칙
 export const SOUND_QUESTIONS = [
   'Hey! Can you hear me alright?',
   "Hi there! How's it going?",

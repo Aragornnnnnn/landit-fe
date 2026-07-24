@@ -10,8 +10,7 @@ import { useAuthStore } from '@/shared/auth/auth-store';
 import { markOnboardingSeen } from '@/shared/auth/onboarding-seen';
 import { Transition } from '@/shared/motion';
 
-import { STEP_ORDER } from '../model/onboarding.constants';
-import { type OnboardingStep } from '../model/onboarding.types';
+import { STEP_ORDER, type OnboardingStep } from '../model/steps';
 import { IntroStep } from './IntroStep';
 import { MicStep } from './MicStep';
 import { OnboardingHeader } from './OnboardingHeader';

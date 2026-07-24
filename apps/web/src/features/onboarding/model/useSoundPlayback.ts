@@ -9,7 +9,7 @@ import {
   pickNextIndex,
   SOUND_QUESTIONS,
   soundAudioSrc,
-} from './onboarding.constants';
+} from './soundCheck';
 
 // 발화 후 다음 문구로 넘어가기 전 여백
 const HOLD_MS = 1400;
