@@ -66,15 +66,14 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
     return () => clearTimeout(timer);
   }, [showUserFirstIntro]);
   // 속마음 오버레이 내용 — 선발화 안내가 우선, 다음이 속마음, 그 외엔 안 띄운다
-  let overlayThought: FloatingThought | null = null;
-  if (showUserFirstIntro) {
-    overlayThought = {
-      text: '상황을 잘 읽고 먼저 말을 걸어보세요!',
-      type: 'NORMAL',
-    };
-  } else if (phase === 'THOUGHT') {
-    overlayThought = { text: turn.innerThought, type: turn.innerThoughtType };
-  }
+  const resolveOverlayThought = (): FloatingThought | null => {
+    if (showUserFirstIntro)
+      return { text: '상황을 잘 읽고 먼저 말을 걸어보세요!', type: 'NORMAL' };
+    if (phase === 'THOUGHT')
+      return { text: turn.innerThought, type: turn.innerThoughtType };
+    return null;
+  };
+  const overlayThought = resolveOverlayThought();
   // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로 페이드 인해 넘어간다. 마치면 표현 학습 분기로 보낸다.
   const view = ended && showFeedback ? 'feedback' : 'conversation';
 
