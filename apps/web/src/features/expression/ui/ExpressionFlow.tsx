@@ -8,7 +8,7 @@ import { preload } from 'react-dom';
 
 import { track } from '@/shared/analytics';
 
-import { collectPreloadImageUrls } from '../model/preloadImages';
+import { collectPreloadImageUrls } from '../lib/preloadImages';
 import type { InputState } from '../model/reviewInput';
 import { fromLearning, fromWritingSentence } from '../model/sentenceQuiz';
 import { useExpressionLearning } from '../model/useExpressionLearning';
