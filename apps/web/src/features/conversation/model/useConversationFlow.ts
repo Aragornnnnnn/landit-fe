@@ -8,7 +8,6 @@ import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 
-import type { ThoughtType } from '@/features/conversation/ui/ThoughtReveal';
 import { createSessionFeedback } from '@/features/feedback/api/session-feedback';
 import { sessionFeedbackKey } from '@/features/feedback/model/useSessionFeedback';
 import type { Scenario } from '@/features/scenario/api/list';
@@ -32,6 +31,7 @@ import {
   type ConversationEvent,
 } from './conversationMachine';
 import { speechTypingMs, thoughtHoldMs, toThoughtType } from './pacing';
+import type { ThoughtType } from './thought';
 import { useInnerThought } from './useInnerThought';
 
 // 화면이 그리는 현재 턴 — 오프닝은 openingPreview, 이후는 서버 응답에서 조립한다

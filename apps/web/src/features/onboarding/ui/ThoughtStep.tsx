@@ -4,10 +4,8 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 
-import {
-  ThoughtReveal,
-  type FloatingThought,
-} from '@/features/conversation/ui/ThoughtReveal';
+import type { FloatingThought } from '@/features/conversation/model/thought';
+import { ThoughtReveal } from '@/features/conversation/ui/ThoughtReveal';
 import { Button } from '@/shared/ui/Button';
 
 const DEMOS: FloatingThought[] = [
