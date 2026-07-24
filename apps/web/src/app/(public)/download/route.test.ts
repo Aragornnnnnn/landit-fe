@@ -33,6 +33,7 @@ describe('GET /download', () => {
   it('iPad에서 열면 App Store로 보낸다', () => {
     const res = GET(downloadRequest(IPAD_UA));
 
+    expect(res.status).toBe(307);
     expect(res.headers.get('location')).toBe(
       'https://apps.apple.com/kr/app/id6787414201',
     );
@@ -41,6 +42,7 @@ describe('GET /download', () => {
   it('인스타그램 인앱 브라우저(iOS)에서 열어도 App Store로 보낸다', () => {
     const res = GET(downloadRequest(INSTAGRAM_IOS_UA));
 
+    expect(res.status).toBe(307);
     expect(res.headers.get('location')).toBe(
       'https://apps.apple.com/kr/app/id6787414201',
     );
@@ -67,6 +69,7 @@ describe('GET /download', () => {
   it('User-Agent가 없으면 App Store로 보낸다', () => {
     const res = GET(downloadRequest());
 
+    expect(res.status).toBe(307);
     expect(res.headers.get('location')).toBe(
       'https://apps.apple.com/kr/app/id6787414201',
     );
