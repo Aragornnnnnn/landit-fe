@@ -4,7 +4,7 @@
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
-import { useExpressions } from '@/features/expression/model/useExpressions';
+import { useExpressions } from '@/features/expression/model/useExpressions'; // 완료 카드 뒷면이 표현 목록을 조합한다 — 교차 조립 블록(widgets 후보)
 import { ExpressionList } from '@/features/expression/ui/list/ExpressionList';
 import { ExpressionListSkeleton } from '@/features/expression/ui/list/ExpressionListSkeleton';
 import { track } from '@/shared/analytics';
