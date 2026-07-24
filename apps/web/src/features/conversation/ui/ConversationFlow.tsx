@@ -13,6 +13,8 @@ import { Transition } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
+import { userIntroHoldMs } from '../model/pacing';
+import type { FloatingThought } from '../model/thought';
 import { useConversationFlow } from '../model/useConversationFlow';
 import { CharacterStage } from './CharacterStage';
 import { ExitConfirmSheet } from './ExitConfirmSheet';
@@ -60,9 +62,19 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
     turn.isUserOpening && phase === 'USER_IDLE' && !introDismissed;
   useEffect(() => {
     if (!showUserFirstIntro) return;
-    const timer = setTimeout(() => setIntroDismissed(true), 2800);
+    const timer = setTimeout(() => setIntroDismissed(true), userIntroHoldMs);
     return () => clearTimeout(timer);
   }, [showUserFirstIntro]);
+  // 속마음 오버레이 내용 — 선발화 안내가 우선, 다음이 속마음, 그 외엔 안 띄운다
+  let overlayThought: FloatingThought | null = null;
+  if (showUserFirstIntro) {
+    overlayThought = {
+      text: '상황을 잘 읽고 먼저 말을 걸어보세요!',
+      type: 'NORMAL',
+    };
+  } else if (phase === 'THOUGHT') {
+    overlayThought = { text: turn.innerThought, type: turn.innerThoughtType };
+  }
   // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로 페이드 인해 넘어간다. 마치면 표현 학습 분기로 보낸다.
   const view = ended && showFeedback ? 'feedback' : 'conversation';
 
@@ -157,19 +169,7 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
 
       {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(WAITING)부터 랜디가 떠 있다가 속마음을 전한다.
           USER 선발화 진입 시엔 같은 연출로 랜디가 먼저 안내하고 사라진다 */}
-      <ThoughtOverlay
-        loading={phase === 'WAITING'}
-        thought={
-          showUserFirstIntro
-            ? {
-                text: '상황을 잘 읽고 먼저 말을 걸어보세요!',
-                type: 'NORMAL',
-              }
-            : phase === 'THOUGHT'
-              ? { text: turn.innerThought, type: turn.innerThoughtType }
-              : null
-        }
-      />
+      <ThoughtOverlay loading={phase === 'WAITING'} thought={overlayThought} />
 
       <ExitConfirmSheet
         open={showExitModal}

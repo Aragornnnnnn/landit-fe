@@ -145,7 +145,7 @@ export const QuizStep = ({
         }}
       >
         {selected.map((id, index) => (
-          <span key={index} className="flex h-[62px] items-center">
+          <span key={id} className="flex h-[62px] items-center">
             <button
               onClick={() => removeAt(index)}
               className={

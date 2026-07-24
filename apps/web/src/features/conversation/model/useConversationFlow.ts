@@ -8,8 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { createSessionFeedback } from '@/features/feedback/api/session-feedback';
-import { sessionFeedbackKey } from '@/features/feedback/model/useSessionFeedback';
+import { prefetchSessionFeedback } from '@/features/feedback/model/useSessionFeedback';
 import type { Scenario } from '@/features/scenario/api/list';
 import { scenarioKeys } from '@/features/scenario/model/keys';
 import { track } from '@/shared/analytics';
@@ -30,7 +29,12 @@ import {
   nextConversationState,
   type ConversationEvent,
 } from './conversation-machine';
-import { speechTypingMs, thoughtHoldMs, toThoughtType } from './pacing';
+import {
+  speechEndPauseMs,
+  speechTypingMs,
+  thoughtHoldMs,
+  toThoughtType,
+} from './pacing';
 import type { ThoughtType } from './thought';
 import { useInnerThought } from './useInnerThought';
 
@@ -94,11 +98,7 @@ export const useConversationFlow = (scenario: Scenario) => {
   // 대화가 완료되면: 피드백을 미리 생성 요청(prefetch)해 화면 진입 시 즉시 뜨게 하고,
   // 해금된 다음 시나리오(다음 대화)가 홈에 반영되도록 시나리오 캐시를 무효화한다.
   const handleConversationComplete = (finishedSessionId: number) => {
-    void queryClient.prefetchQuery({
-      queryKey: sessionFeedbackKey(finishedSessionId),
-      queryFn: () => createSessionFeedback(finishedSessionId),
-      staleTime: Infinity,
-    });
+    void prefetchSessionFeedback(queryClient, finishedSessionId);
     void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
   };
 
@@ -192,7 +192,10 @@ export const useConversationFlow = (scenario: Scenario) => {
       if (voice) {
         void tts.speak(content, voice, { onEnd: advance, onError: advance });
       } else {
-        const id = setTimeout(advance, speechTypingMs(content) + 600);
+        const id = setTimeout(
+          advance,
+          speechTypingMs(content) + speechEndPauseMs,
+        );
         return () => clearTimeout(id);
       }
     };
