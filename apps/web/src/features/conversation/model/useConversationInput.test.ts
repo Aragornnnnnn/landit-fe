@@ -114,6 +114,16 @@ describe('useConversationInput', () => {
     expect(result.current.transcript).toBe('');
   });
 
+  it('대기 상태가 아니면 키보드를 눌러도 무시한다', () => {
+    // 마이크와 같은 가드 — phase는 안 바뀌는데 keyboardMode만 켜지는 불일치를 막는다
+    const { result, onListenStart } = renderInput({ canStart: false });
+
+    act(() => result.current.pressKeyboard());
+
+    expect(onListenStart).not.toHaveBeenCalled();
+    expect(result.current.keyboardMode).toBe(false);
+  });
+
   it('키보드 아이콘을 누르면 마이크 없이 타이핑 모드로 듣기를 시작한다', () => {
     const { result, onListenStart } = renderInput();
 

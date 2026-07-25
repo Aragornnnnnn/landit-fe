@@ -107,6 +107,7 @@ export const useConversationInput = ({
 
   // 키보드로 입력 — 듣기를 시작하되 마이크는 켜지 않고 타이핑 입력창을 연다
   const pressKeyboard = () => {
+    if (!canStart) return;
     track(EVENTS.INPUT_MODE_SWITCHED, {
       session_id: trackContext().sessionId ?? undefined,
       mode: 'text',
