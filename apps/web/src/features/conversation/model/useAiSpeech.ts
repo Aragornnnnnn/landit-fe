@@ -52,18 +52,24 @@ export const useAiSpeech = ({
     // 오프닝은 미리 녹음된 mp3를 즉시 재생하고, 실패하면 일반 재생으로 폴백한다.
     // 폴백이 재생 수단을 바꾸면 중단 방법도 함께 바뀌어야 해서 재할당 슬롯(let)을 쓴다.
     let stop: () => void;
+    // 정리가 끝난 뒤 도착한 실패 콜백이 폴백 재생을 되살리지 않게 막는다 (멈출 주체가 없다)
+    let cancelled = false;
     if (isOpeningRef.current) {
       stop = () => tts.stop();
       tts.speakSrc(`/audio/opening-${scenarioId}.mp3`, {
         onEnd: onSpeechEnd,
         onError: () => {
+          if (cancelled) return;
           stop = startSpeaking();
         },
       });
     } else {
       stop = startSpeaking();
     }
-    return () => stop();
+    return () => {
+      cancelled = true;
+      stop();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, content]);
 
