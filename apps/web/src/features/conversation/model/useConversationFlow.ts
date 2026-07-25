@@ -73,7 +73,7 @@ export const useConversationFlow = (scenario: Scenario) => {
 
   // 대화가 완료되면: 피드백을 미리 생성 요청(prefetch)해 화면 진입 시 즉시 뜨게 하고,
   // 해금된 다음 시나리오(다음 대화)가 홈에 반영되도록 시나리오 캐시를 무효화한다.
-  const handleConversationComplete = (finishedSessionId: number) => {
+  const prepareFeedbackAndUnlock = (finishedSessionId: number) => {
     void prefetchSessionFeedback(queryClient, finishedSessionId);
     void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
   };
@@ -174,7 +174,7 @@ export const useConversationFlow = (scenario: Scenario) => {
           scenario_id: scenario.scenarioId,
           turn_count: res.progress.totalQuestionCount,
         });
-        handleConversationComplete(activeSessionId);
+        prepareFeedbackAndUnlock(activeSessionId);
       }
       // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 합성한다 — 다음 발화 재생 지연을 없앤다
       if (res.nextMessage) aiSpeech.prefetch(res.nextMessage.content);
