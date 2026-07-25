@@ -17,6 +17,7 @@ const sttMock = vi.hoisted(() => {
     callbacks,
     start: vi.fn(),
     stop: vi.fn(),
+    abort: vi.fn(),
   };
 });
 vi.mock('@/shared/stt/useStt', () => ({
@@ -28,7 +29,11 @@ vi.mock('@/shared/stt/useStt', () => ({
     sttMock.callbacks.onInterim = opts.onInterim;
     sttMock.callbacks.onFinal = opts.onFinal;
     sttMock.callbacks.onError = opts.onError;
-    return { start: sttMock.start, stop: sttMock.stop };
+    return {
+      start: sttMock.start,
+      stop: sttMock.stop,
+      abort: sttMock.abort,
+    };
   },
 }));
 
@@ -57,6 +62,7 @@ beforeEach(() => {
   sttMock.callbacks.onError = undefined;
   sttMock.start.mockClear();
   sttMock.stop.mockClear();
+  sttMock.abort.mockClear();
 });
 
 describe('useConversationInput', () => {
@@ -154,14 +160,15 @@ describe('useConversationInput', () => {
     expect(onListenCancel).not.toHaveBeenCalled(); // 조용히 무시 — 입력창은 그대로 열려 있다
   });
 
-  it('음성 중단(X)은 STT를 멈추고 듣기 취소를 알린다', () => {
+  it('음성 중단(X)은 세션을 완료가 아니라 파기한다', () => {
     const { result, onListenCancel } = renderInput();
 
     act(() => result.current.pressMic());
     act(() => sttMock.callbacks.onInterim?.('Hel'));
     act(() => result.current.cancelListening());
 
-    expect(sttMock.stop).toHaveBeenCalled();
+    expect(sttMock.abort).toHaveBeenCalled();
+    expect(sttMock.stop).not.toHaveBeenCalled(); // stop(확정)이면 결과가 제출로 이어진다
     expect(onListenCancel).toHaveBeenCalledTimes(1);
     expect(result.current.transcript).toBe('');
     expect(result.current.keyboardMode).toBe(false);
@@ -174,6 +181,7 @@ describe('useConversationInput', () => {
     act(() => result.current.cancelListening());
 
     expect(sttMock.stop).not.toHaveBeenCalled();
+    expect(sttMock.abort).not.toHaveBeenCalled();
     expect(onListenCancel).toHaveBeenCalledTimes(1);
     expect(result.current.keyboardMode).toBe(false);
   });

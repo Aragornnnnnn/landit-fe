@@ -62,6 +62,7 @@ const sttMock = vi.hoisted(() => {
     callbacks,
     start: vi.fn(),
     stop: vi.fn(),
+    abort: vi.fn(),
   };
 });
 vi.mock('@/shared/stt/useStt', () => ({
@@ -71,7 +72,11 @@ vi.mock('@/shared/stt/useStt', () => ({
   }) => {
     sttMock.callbacks.onInterim = opts.onInterim;
     sttMock.callbacks.onFinal = opts.onFinal;
-    return { start: sttMock.start, stop: sttMock.stop };
+    return {
+      start: sttMock.start,
+      stop: sttMock.stop,
+      abort: sttMock.abort,
+    };
   },
 }));
 
@@ -233,6 +238,7 @@ beforeEach(() => {
   sttMock.callbacks.onFinal = undefined;
   sttMock.start.mockClear();
   sttMock.stop.mockClear();
+  sttMock.abort.mockClear();
   queryClientMock.prefetchQuery.mockClear();
   queryClientMock.invalidateQueries.mockClear();
   vi.unstubAllEnvs();
@@ -579,7 +585,7 @@ describe('useConversationFlow', () => {
     expect(sttMock.start).not.toHaveBeenCalled();
   });
 
-  it('중단(X)하면 STT를 멈추고 마이크 대기로 되돌린다', async () => {
+  it('중단(X)하면 세션을 파기하고 마이크 대기로 되돌린다', async () => {
     const { result } = await renderUserFirst();
 
     act(() => result.current.pressMic());
@@ -587,7 +593,7 @@ describe('useConversationFlow', () => {
 
     act(() => result.current.cancelListening());
 
-    expect(sttMock.stop).toHaveBeenCalled();
+    expect(sttMock.abort).toHaveBeenCalled();
     expect(result.current.phase).toBe('USER_READY');
     expect(result.current.transcript).toBe('');
     expect(result.current.keyboardMode).toBe(false);
