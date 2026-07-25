@@ -108,15 +108,25 @@ describe('useStt', () => {
 
   it('abort하면 결과 없이 즉시 끝나고 바로 다시 시작할 수 있다', async () => {
     const onFinal = vi.fn();
-    const { result } = renderHook(() => useStt({ onFinal }));
+    const onInterim = vi.fn();
+    const { result } = renderHook(() => useStt({ onFinal, onInterim }));
     await act(() => result.current.start());
 
     act(() => result.current.abort());
 
-    // 파기된 세션이 (abort의 onend를 넘어) 뒤늦게 또 끝나도 결과가 나가지 않는다
+    // 파기된 세션이 뒤늦게 내는 중간 결과·종료가 전부 무시된다 — 지운 자막이 되살아나지 않는다
     act(() => {
-      FakeRecognition.instances.at(-1)!.onend?.();
+      const recognition = FakeRecognition.instances.at(-1)!;
+      recognition.onresult?.({
+        resultIndex: 0,
+        results: {
+          length: 1,
+          0: { 0: { transcript: '되살아날 뻔한 글자' }, isFinal: false },
+        },
+      });
+      recognition.onend?.();
     });
+    expect(onInterim).not.toHaveBeenCalled();
     expect(onFinal).not.toHaveBeenCalled();
 
     // 확정을 기다릴 필요가 없으니 곧바로 재시작된다 — 잠김 버그의 핵심 검증
