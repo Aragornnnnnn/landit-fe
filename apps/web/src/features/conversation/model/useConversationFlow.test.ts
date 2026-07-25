@@ -1,11 +1,11 @@
 // useConversationFlow — 오프닝은 openingPreview로 즉시 시드, 세션은 백그라운드.
-// 발화 제출 뒤 대기·속마음·다음질문·종료 전이와 오프닝 정적/폴백 재생을 검증한다.
+// 발화 제출 뒤 대기·속마음·다음질문·종료 전이와 입력·재생 훅 배선을 검증한다.
+// (재생 폴백·입력 전환 세부는 useAiSpeech·useConversationInput 테스트가 맡는다)
 import { StrictMode } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Scenario } from '@/features/scenario/api/list';
-import { MicPermissionDeniedError } from '@/shared/stt/errors';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 import * as sessionApi from '../api/session';
@@ -20,11 +20,11 @@ vi.mock('../api/session', () => ({
   endSession: vi.fn(),
 }));
 
-// TTS는 경계(재생)라 목으로 둔다 — speak/speakSrc의 onEnd·onError를 붙잡아 종료·실패를 흉내 낸다
+// TTS는 경계(재생)라 목으로 둔다 — speak/speakSrc의 onEnd를 붙잡아 재생 종료를 흉내 낸다.
+// 실패 폴백(onError)은 useAiSpeech 테스트가 맡는다.
 const ttsMock = vi.hoisted(() => {
   const state = {
     onEnd: undefined as (() => void) | undefined,
-    onError: undefined as (() => void) | undefined,
   };
   return {
     state,
@@ -34,12 +34,9 @@ const ttsMock = vi.hoisted(() => {
         return Promise.resolve();
       },
     ),
-    speakSrc: vi.fn(
-      (_src: string, opts?: { onEnd?: () => void; onError?: () => void }) => {
-        state.onEnd = opts?.onEnd;
-        state.onError = opts?.onError;
-      },
-    ),
+    speakSrc: vi.fn((_src: string, opts?: { onEnd?: () => void }) => {
+      state.onEnd = opts?.onEnd;
+    }),
     prefetch: vi.fn(() => Promise.resolve()),
     stop: vi.fn(),
   };
@@ -54,40 +51,27 @@ vi.mock('@/shared/tts/useTts', () => ({
   }),
 }));
 
-// STT도 경계(마이크)라 목으로 둔다 — start/stop 호출을 붙잡고, onInterim·onFinal 콜백을 흉내 낸다
+// STT도 경계(마이크)라 목으로 둔다 — start/stop 호출을 붙잡고, onInterim·onFinal로 인식 결과를 흉내 낸다.
+// 오류·권한 처리(onError)는 useConversationInput 테스트가 맡는다.
 const sttMock = vi.hoisted(() => {
   const callbacks = {
     onInterim: undefined as ((t: string) => void) | undefined,
     onFinal: undefined as ((t: string) => void) | undefined,
-    onError: undefined as ((e: Error) => void) | undefined,
   };
   return {
     callbacks,
-    status: 'idle' as 'idle' | 'connecting' | 'listening' | 'error',
     start: vi.fn(),
     stop: vi.fn(),
-    reset: vi.fn(),
   };
 });
 vi.mock('@/shared/stt/useStt', () => ({
   useStt: (opts: {
     onInterim?: (t: string) => void;
     onFinal?: (t: string) => void;
-    onError?: (e: Error) => void;
   }) => {
     sttMock.callbacks.onInterim = opts.onInterim;
     sttMock.callbacks.onFinal = opts.onFinal;
-    sttMock.callbacks.onError = opts.onError;
-    return {
-      transcript: '',
-      interim: '',
-      status: sttMock.status,
-      error: null,
-      isListening: sttMock.status === 'listening',
-      start: sttMock.start,
-      stop: sttMock.stop,
-      reset: sttMock.reset,
-    };
+    return { start: sttMock.start, stop: sttMock.stop };
   },
 }));
 
@@ -245,14 +229,10 @@ const preparingSubmitResponse = () =>
 beforeEach(() => {
   vi.useFakeTimers();
   ttsMock.state.onEnd = undefined;
-  ttsMock.state.onError = undefined;
-  sttMock.status = 'idle';
   sttMock.callbacks.onInterim = undefined;
   sttMock.callbacks.onFinal = undefined;
-  sttMock.callbacks.onError = undefined;
   sttMock.start.mockClear();
   sttMock.stop.mockClear();
-  sttMock.reset.mockClear();
   queryClientMock.prefetchQuery.mockClear();
   queryClientMock.invalidateQueries.mockClear();
   vi.unstubAllEnvs();
@@ -334,16 +314,6 @@ describe('useConversationFlow', () => {
 
     await speakAndSubmit(result, 'Hello!');
 
-    expect(result.current.phase).toBe('USER_READY');
-  });
-
-  it('빈 음성 답변은 제출하지 않고 마이크 대기로 되돌린다', async () => {
-    // 듣는 중 상태에 남겨두면 마이크는 꺼졌는데 UI만 듣는 중으로 갇힌다
-    const { result } = await renderUserFirst();
-
-    await speakAndSubmit(result, '   ');
-
-    expect(submitMessage).not.toHaveBeenCalled();
     expect(result.current.phase).toBe('USER_READY');
   });
 
@@ -447,37 +417,6 @@ describe('useConversationFlow', () => {
     expect(ttsMock.speak).not.toHaveBeenCalled();
 
     act(() => ttsMock.state.onEnd?.());
-
-    expect(result.current.phase).toBe('USER_READY');
-  });
-
-  it('오프닝 정적 파일이 없으면 합성으로 폴백한다', async () => {
-    const { result } = renderHook(() => useConversationFlow(scenario));
-    await act(async () => {});
-
-    act(() => ttsMock.state.onError?.()); // 정적 파일 없음(404)
-
-    expect(ttsMock.speak).toHaveBeenCalledWith(
-      'Hello, welcome in.',
-      voice,
-      expect.anything(),
-    );
-    act(() => ttsMock.state.onEnd?.());
-    expect(result.current.phase).toBe('USER_READY');
-  });
-
-  it('오프닝 파일도 음성도 없으면 타이머로 발화를 마친다', async () => {
-    const { result } = renderHook(() =>
-      useConversationFlow(withVoice(scenario, null)),
-    );
-    await act(async () => {});
-
-    act(() => ttsMock.state.onError?.()); // 정적 파일 없음
-
-    expect(ttsMock.speak).not.toHaveBeenCalled();
-    act(() => {
-      vi.advanceTimersByTime(2600);
-    });
 
     expect(result.current.phase).toBe('USER_READY');
   });
@@ -588,7 +527,7 @@ describe('useConversationFlow', () => {
     expect(result.current.turn.innerThought).toBe('');
   });
 
-  // STT(LAN-141) 배선 — 기본은 마이크(음성), 키보드 아이콘을 누르면 타이핑
+  // 입력 훅 배선 — 듣기 전이와 최종 발화 제출이 상태기계·세션 API로 이어지는지
   it('세션이 시작되면 sessionId를 노출한다 (피드백 생성에 쓴다)', async () => {
     const { result } = await renderUserFirst();
 
@@ -630,16 +569,6 @@ describe('useConversationFlow', () => {
     expect(result.current.phase).toBe('AI_INNER_THOUGHT');
   });
 
-  it('키보드 아이콘을 누르면 마이크를 켜지 않고 타이핑 모드가 된다', async () => {
-    const { result } = await renderUserFirst();
-
-    act(() => result.current.pressKeyboard());
-
-    expect(result.current.phase).toBe('USER_SPEAKING');
-    expect(result.current.keyboardMode).toBe(true);
-    expect(sttMock.start).not.toHaveBeenCalled();
-  });
-
   it('키보드로 입력한 텍스트는 TEXT로 제출한다', async () => {
     const { result } = await renderUserFirst();
     submitMessage.mockResolvedValue(submitResponse());
@@ -662,52 +591,5 @@ describe('useConversationFlow', () => {
     expect(result.current.phase).toBe('USER_READY');
     expect(result.current.transcript).toBe('');
     expect(result.current.keyboardMode).toBe(false);
-  });
-
-  it('STT가 오류나면 마이크 대기로 되돌린다', async () => {
-    const { result } = await renderUserFirst();
-
-    act(() => result.current.pressMic());
-    expect(result.current.phase).toBe('USER_SPEAKING');
-
-    // 일반 인식 오류로 STT가 onError를 알리면 마이크 대기로 되돌린다
-    act(() =>
-      sttMock.callbacks.onError?.(new Error('음성 인식 오류: network')),
-    );
-
-    expect(result.current.phase).toBe('USER_READY');
-    expect(result.current.transcript).toBe('');
-  });
-
-  it('마이크 권한 거부면 대기로 되돌리고 권한 안내를 띄운다', async () => {
-    const { result } = await renderUserFirst();
-
-    act(() => result.current.pressMic());
-    act(() => sttMock.callbacks.onError?.(new MicPermissionDeniedError()));
-
-    expect(result.current.phase).toBe('USER_READY');
-    expect(result.current.micPermissionDenied).toBe(true);
-  });
-
-  it('일반 인식 오류는 권한 안내를 띄우지 않는다', async () => {
-    const { result } = await renderUserFirst();
-
-    act(() => result.current.pressMic());
-    act(() =>
-      sttMock.callbacks.onError?.(new Error('음성 인식 오류: network')),
-    );
-
-    expect(result.current.micPermissionDenied).toBe(false);
-  });
-
-  it('권한 안내를 닫으면 상태가 내려간다', async () => {
-    const { result } = await renderUserFirst();
-
-    act(() => result.current.pressMic());
-    act(() => sttMock.callbacks.onError?.(new MicPermissionDeniedError()));
-    expect(result.current.micPermissionDenied).toBe(true);
-
-    act(() => result.current.dismissMicPermissionNotice());
-    expect(result.current.micPermissionDenied).toBe(false);
   });
 });
