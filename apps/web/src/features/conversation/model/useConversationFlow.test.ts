@@ -195,9 +195,9 @@ const speakAndSubmit = async (
   result: { current: ReturnType<typeof useConversationFlow> },
   text: string,
 ) => {
-  act(() => result.current.pressMic());
+  act(() => result.current.input.pressMic());
   await act(async () => {
-    await result.current.finishListening(); // → stt.stop()
+    await result.current.input.finishListening(); // → stt.stop()
   });
   await act(async () => {
     sttMock.callbacks.onFinal?.(text); // 최종 텍스트 도착 → 음성 제출
@@ -209,10 +209,10 @@ const typeAndSubmit = async (
   result: { current: ReturnType<typeof useConversationFlow> },
   text: string,
 ) => {
-  act(() => result.current.pressKeyboard());
-  act(() => result.current.setTranscript(text));
+  act(() => result.current.input.pressKeyboard());
+  act(() => result.current.input.setTranscript(text));
   await act(async () => {
-    await result.current.submitText();
+    await result.current.input.submitText();
   });
 };
 
@@ -290,9 +290,9 @@ describe('useConversationFlow', () => {
       }),
     );
 
-    act(() => result.current.pressMic());
+    act(() => result.current.input.pressMic());
     await act(async () => {
-      await result.current.finishListening();
+      await result.current.input.finishListening();
     });
     act(() => {
       sttMock.callbacks.onFinal?.('Hello!'); // 최종 텍스트 → 음성 제출 시작
@@ -543,10 +543,10 @@ describe('useConversationFlow', () => {
   it('말하기를 누르면 듣기로 넘어가며 마이크(STT)를 켠다', async () => {
     const { result } = await renderUserFirst();
 
-    act(() => result.current.pressMic());
+    act(() => result.current.input.pressMic());
 
     expect(result.current.phase).toBe('USER_SPEAKING');
-    expect(result.current.keyboardMode).toBe(false);
+    expect(result.current.input.keyboardMode).toBe(false);
     expect(sttMock.start).toHaveBeenCalled();
   });
 
@@ -554,14 +554,14 @@ describe('useConversationFlow', () => {
     const { result } = await renderUserFirst();
     submitMessage.mockResolvedValue(submitResponse());
 
-    act(() => result.current.pressMic());
+    act(() => result.current.input.pressMic());
     // 발화 중 실시간 미리보기
     act(() => sttMock.callbacks.onInterim?.('Hel'));
-    expect(result.current.transcript).toBe('Hel');
+    expect(result.current.input.transcript).toBe('Hel');
 
     // 완료(■) → stt.stop() 호출, 최종 텍스트는 onFinal로 도착해 제출을 잇는다
     await act(async () => {
-      await result.current.finishListening();
+      await result.current.input.finishListening();
     });
     expect(sttMock.stop).toHaveBeenCalled();
     expect(submitMessage).not.toHaveBeenCalled();
@@ -588,14 +588,14 @@ describe('useConversationFlow', () => {
   it('중단(X)하면 세션을 파기하고 마이크 대기로 되돌린다', async () => {
     const { result } = await renderUserFirst();
 
-    act(() => result.current.pressMic());
+    act(() => result.current.input.pressMic());
     act(() => sttMock.callbacks.onInterim?.('Hel'));
 
-    act(() => result.current.cancelInput());
+    act(() => result.current.input.cancelInput());
 
     expect(sttMock.abort).toHaveBeenCalled();
     expect(result.current.phase).toBe('USER_READY');
-    expect(result.current.transcript).toBe('');
-    expect(result.current.keyboardMode).toBe(false);
+    expect(result.current.input.transcript).toBe('');
+    expect(result.current.input.keyboardMode).toBe(false);
   });
 });

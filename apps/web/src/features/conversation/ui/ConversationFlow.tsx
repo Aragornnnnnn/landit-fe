@@ -35,10 +35,9 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   // USER 선발화 진입 안내 — 랜디가 먼저 날아들어 말을 걸어보라고 알려주고 잠시 후 사라진다.
   // 판정은 turn.isUserOpening 한 곳에 위임하고(카드 안내 구조와 같은 소스), 여기선 노출 시간만 관리한다.
   const [introDismissed, setIntroDismissed] = useState(false);
+  const { phase, turn, partner, input, leave, sessionId } =
+    useConversationFlow(scenario);
   const {
-    phase,
-    turn,
-    partner,
     transcript,
     setTranscript,
     keyboardMode,
@@ -47,11 +46,9 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
     cancelInput,
     finishListening,
     submitText,
-    leave,
     micPermissionDenied,
     dismissMicPermissionNotice,
-    sessionId,
-  } = useConversationFlow(scenario);
+  } = input;
 
   const ended = phase === 'DONE';
   // 키보드 입력 중 — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
