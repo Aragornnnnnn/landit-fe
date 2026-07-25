@@ -103,8 +103,8 @@ export const useConversationFlow = (scenario: Scenario) => {
       sessionId: sessionIdRef.current,
       turnIndex: state.turnIndex,
     }),
-    onListenStart: () => send('USER_SPEAKING_STARTED'),
-    onListenCancel: () => send('USER_SPEAKING_CANCELLED'),
+    onInputStart: () => send('USER_SPEAKING_STARTED'),
+    onInputCancel: () => send('USER_SPEAKING_CANCELLED'),
     onContent: (content, inputType) => void submitContent(content, inputType),
   });
 
@@ -295,7 +295,7 @@ export const useConversationFlow = (scenario: Scenario) => {
     keyboardMode: input.keyboardMode,
     pressMic: input.pressMic,
     pressKeyboard: input.pressKeyboard,
-    cancelListening: input.cancelListening,
+    cancelInput: input.cancelInput,
     finishListening: input.finishListening,
     submitText: input.submitText,
     leave,

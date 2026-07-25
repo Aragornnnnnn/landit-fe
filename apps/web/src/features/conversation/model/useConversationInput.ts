@@ -14,16 +14,16 @@ import { showToast } from '@/shared/ui/toast';
 interface ConversationInputOptions {
   canStart: boolean; // 대기(USER_READY)에서만 시작 — 연타 이중 집계 방지
   trackContext: () => { sessionId: number | null; turnIndex: number }; // 계측용 최신값 getter
-  onListenStart: () => void; // → USER_SPEAKING_STARTED
-  onListenCancel: () => void; // → USER_SPEAKING_CANCELLED
+  onInputStart: () => void; // → USER_SPEAKING_STARTED
+  onInputCancel: () => void; // → USER_SPEAKING_CANCELLED
   onContent: (content: string, inputType: 'VOICE' | 'TEXT') => void; // 다듬어진 최종 발화 (음성·타이핑 공통)
 }
 
 export const useConversationInput = ({
   canStart,
   trackContext,
-  onListenStart,
-  onListenCancel,
+  onInputStart,
+  onInputCancel,
   onContent,
 }: ConversationInputOptions) => {
   const [transcript, setTranscript] = useState('');
@@ -41,7 +41,7 @@ export const useConversationInput = ({
       const { sessionId, turnIndex } = trackContext();
       haptic('error');
       setTranscript('');
-      onListenCancel();
+      onInputCancel();
       showToast('말이 인식되지 않았어요. 다시 말해볼까요?');
       track(EVENTS.TURN_FAILED, {
         session_id: sessionId ?? undefined,
@@ -72,7 +72,7 @@ export const useConversationInput = ({
     }
     haptic('error');
     setTranscript('');
-    onListenCancel();
+    onInputCancel();
   };
 
   // 마이크 STT 배선 — 침묵 자동 종료는 끄고 완료 버튼(■)만으로 끝낸다 (긴 답변 중 침묵에도 안 끊기게)
@@ -98,7 +98,7 @@ export const useConversationInput = ({
       turn_index: turnIndex,
     });
     setKeyboardMode(false);
-    onListenStart();
+    onInputStart();
     void stt.start();
   };
 
@@ -111,10 +111,10 @@ export const useConversationInput = ({
     });
     setKeyboardMode(true);
     setTranscript('');
-    onListenStart();
+    onInputStart();
   };
 
-  const cancelListening = () => {
+  const cancelInput = () => {
     const { sessionId, turnIndex } = trackContext();
     if (!keyboardMode) {
       stt.abort();
@@ -131,7 +131,7 @@ export const useConversationInput = ({
     }
     setKeyboardMode(false);
     setTranscript('');
-    onListenCancel();
+    onInputCancel();
   };
 
   // 음성 완료(■) — STT를 멈추면 최종 텍스트가 onFinal로 도착해 음성 제출을 잇는다
@@ -163,7 +163,7 @@ export const useConversationInput = ({
     keyboardMode,
     pressMic,
     pressKeyboard,
-    cancelListening,
+    cancelInput,
     finishListening,
     submitText,
     resetForNextTurn,

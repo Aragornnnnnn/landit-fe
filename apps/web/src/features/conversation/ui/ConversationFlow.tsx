@@ -44,7 +44,7 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
     keyboardMode,
     pressMic,
     pressKeyboard,
-    cancelListening,
+    cancelInput,
     finishListening,
     submitText,
     leave,
@@ -141,7 +141,7 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
             editing={typing}
             onChange={setTranscript}
             onSubmit={submitText}
-            onCancel={cancelListening}
+            onCancel={cancelInput}
           />
         )}
       </section>
@@ -160,7 +160,7 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
             phase={phase}
             onPress={pressMic}
             onKeyboard={pressKeyboard}
-            onCancel={cancelListening}
+            onCancel={cancelInput}
             onDone={finishListening}
           />
         )}

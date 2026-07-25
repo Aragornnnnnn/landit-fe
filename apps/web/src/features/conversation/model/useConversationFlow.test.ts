@@ -591,7 +591,7 @@ describe('useConversationFlow', () => {
     act(() => result.current.pressMic());
     act(() => sttMock.callbacks.onInterim?.('Hel'));
 
-    act(() => result.current.cancelListening());
+    act(() => result.current.cancelInput());
 
     expect(sttMock.abort).toHaveBeenCalled();
     expect(result.current.phase).toBe('USER_READY');
