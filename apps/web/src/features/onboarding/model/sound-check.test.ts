@@ -1,7 +1,7 @@
-// 온보딩 상수 순수 로직 — 사운드 로테이션 인덱스 선택 계약 검증
+// 사운드 확인 스텝 순수 규칙 — 사운드 로테이션 인덱스 선택 계약 검증
 import { describe, expect, it } from 'vitest';
 
-import { pickNextIndex, SOUND_QUESTIONS } from './onboarding.constants';
+import { pickNextIndex, SOUND_QUESTIONS } from './sound-check';
 
 describe('pickNextIndex', () => {
   it('어떤 난수를 줘도 현재 인덱스는 다시 고르지 않는다', () => {

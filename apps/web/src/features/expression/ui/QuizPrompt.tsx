@@ -1,7 +1,7 @@
 'use client';
 
 // 표현 퀴즈/복습 공용 상단 — 지시문 + 캐릭터 + 질문 말풍선(받은 메시지) + 내 채팅(한글) 말풍선
-import type { SentenceQuiz } from '../model/sentenceQuiz';
+import type { SentenceQuiz } from '../model/sentence-quiz';
 
 export const QuizPrompt = ({
   writingSentence,

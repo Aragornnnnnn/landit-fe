@@ -6,7 +6,7 @@ import { useAuthStore } from '@/shared/auth/auth-store';
 import { getExpressions } from '../api/list';
 import { expressionKeys } from './keys';
 
-export const useExpressions = (scenarioId: number) => {
+export const useExpressionsQuery = (scenarioId: number) => {
   const userId = useAuthStore((state) => state.member?.userId ?? null);
 
   const { data, error, isPending, refetch } = useQuery({

@@ -1,9 +1,15 @@
 // 대화 페이싱 상수 — 음성 없을 때의 AI 발화 시간, 속마음 노출·폴링 간격
-import type { ThoughtType } from '@/features/conversation/ui/ThoughtReveal';
+import type { ThoughtType } from './thought';
 
 // AI 발화 시간 — 음성(ttsVoice)이 없을 때만 쓰는 폴백으로, 글자 수로 말하는 시간을 흉내 낸다
 export const speechTypingMs = (text: string) =>
   Math.max(1400, text.length * 45);
+
+// 폴백 발화가 끝난 뒤 잠깐의 숨 고르기 — 글이 끝나자마자 마이크로 넘어가면 급해 보인다
+export const speechEndPauseMs = 600;
+
+// USER 선발화 진입 안내(랜디)가 떠 있는 시간
+export const userIntroHoldMs = 2800;
 
 // 속마음 노출 유지 시간 — 긴 문장은 읽을 시간을 더 준다 (연동 후에도 유지되는 연출 페이싱)
 export const thoughtHoldMs = (text: string) =>

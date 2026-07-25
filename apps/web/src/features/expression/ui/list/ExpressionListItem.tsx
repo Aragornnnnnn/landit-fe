@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 
 import { CheckIcon, LockIcon } from '@/shared/ui/Icons';
 
-import type { Expression } from '../api/list';
+import type { Expression } from '../../api/list';
 
 interface ExpressionListItemProps {
   expression: Expression;

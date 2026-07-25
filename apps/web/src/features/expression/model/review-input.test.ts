@@ -15,7 +15,7 @@ import {
   isComplete,
   normalizeQuotes,
   parseInputEvent,
-} from './reviewInput';
+} from './review-input';
 
 // 정답: "I got a good deal" → 단어 길이 [1, 3, 1, 4, 4]
 const LENGTHS = [1, 3, 1, 4, 4];

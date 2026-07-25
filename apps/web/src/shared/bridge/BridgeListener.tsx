@@ -6,7 +6,7 @@ import { EVENTS } from '@landit/analytics';
 import { usePathname } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
-import { decideBack } from '@/shared/bridge/backNavigation';
+import { decideBack } from '@/shared/bridge/back-navigation';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { closeTopSheet } from '@/shared/ui/bottom-sheet-back';
 import { showToast, TOAST_MS } from '@/shared/ui/toast';

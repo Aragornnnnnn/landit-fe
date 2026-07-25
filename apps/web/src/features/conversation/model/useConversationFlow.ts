@@ -8,16 +8,14 @@ import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 
-import type { ThoughtType } from '@/features/conversation/ui/ThoughtReveal';
-import { createSessionFeedback } from '@/features/feedback/api/session-feedback';
-import { sessionFeedbackKey } from '@/features/feedback/model/useSessionFeedback';
+import { prefetchSessionFeedback } from '@/features/feedback/model/useSessionFeedbackQuery';
 import type { Scenario } from '@/features/scenario/api/list';
 import { scenarioKeys } from '@/features/scenario/model/keys';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
-import { isMicPermissionDeniedError } from '@/shared/lib/stt/errors';
-import { useStt } from '@/shared/lib/stt/useStt';
-import { useTts } from '@/shared/lib/tts/useTts';
+import { isMicPermissionDeniedError } from '@/shared/stt/errors';
+import { useStt } from '@/shared/stt/useStt';
+import { useTts } from '@/shared/tts/useTts';
 import { showToast } from '@/shared/ui/toast';
 
 import {
@@ -30,8 +28,14 @@ import {
   initialConversationState,
   nextConversationState,
   type ConversationEvent,
-} from './conversationMachine';
-import { speechTypingMs, thoughtHoldMs, toThoughtType } from './pacing';
+} from './conversation-machine';
+import {
+  speechEndPauseMs,
+  speechTypingMs,
+  thoughtHoldMs,
+  toThoughtType,
+} from './pacing';
+import type { ThoughtType } from './thought';
 import { useInnerThought } from './useInnerThought';
 
 // 화면이 그리는 현재 턴 — 오프닝은 openingPreview, 이후는 서버 응답에서 조립한다
@@ -94,11 +98,7 @@ export const useConversationFlow = (scenario: Scenario) => {
   // 대화가 완료되면: 피드백을 미리 생성 요청(prefetch)해 화면 진입 시 즉시 뜨게 하고,
   // 해금된 다음 시나리오(다음 대화)가 홈에 반영되도록 시나리오 캐시를 무효화한다.
   const handleConversationComplete = (finishedSessionId: number) => {
-    void queryClient.prefetchQuery({
-      queryKey: sessionFeedbackKey(finishedSessionId),
-      queryFn: () => createSessionFeedback(finishedSessionId),
-      staleTime: Infinity,
-    });
+    void prefetchSessionFeedback(queryClient, finishedSessionId);
     void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
   };
 
@@ -192,7 +192,10 @@ export const useConversationFlow = (scenario: Scenario) => {
       if (voice) {
         void tts.speak(content, voice, { onEnd: advance, onError: advance });
       } else {
-        const id = setTimeout(advance, speechTypingMs(content) + 600);
+        const id = setTimeout(
+          advance,
+          speechTypingMs(content) + speechEndPauseMs,
+        );
         return () => clearTimeout(id);
       }
     };

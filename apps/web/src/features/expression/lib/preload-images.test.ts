@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ExpressionPractice, PracticeSentence } from '../api/practice';
-import { collectPreloadImageUrls } from './preloadImages';
+import { collectPreloadImageUrls } from './preload-images';
 
 const sentence = (imageUrl: string | null): PracticeSentence => ({
   sentenceText: '',

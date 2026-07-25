@@ -8,8 +8,8 @@ import { track } from '@/shared/analytics';
 import { useSnapIndex } from '@/shared/lib/useSnapIndex';
 import { Button } from '@/shared/ui/Button';
 
-import type { PracticeSentence } from '../api/practice';
-import { StepScaffold } from './StepScaffold';
+import type { PracticeSentence } from '../../api/practice';
+import { StepScaffold } from '../StepScaffold';
 
 interface ExplanationStepProps {
   // 계측 속성용 — 어떤 표현의 설명인지

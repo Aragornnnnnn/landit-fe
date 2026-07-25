@@ -25,12 +25,12 @@ import {
   parseInputEvent,
   type InputState,
   type ReviewInputAction,
-} from '../model/reviewInput';
-import type { SentenceQuiz } from '../model/sentenceQuiz';
+} from '../../model/review-input';
+import type { SentenceQuiz } from '../../model/sentence-quiz';
+import { QuizPrompt } from '../QuizPrompt';
+import { StepScaffold } from '../StepScaffold';
 import { HintButton } from './HintButton';
-import { QuizPrompt } from './QuizPrompt';
 import { ReviewSuccess } from './ReviewSuccess';
-import { StepScaffold } from './StepScaffold';
 
 interface ReviewInputStepProps {
   quiz: SentenceQuiz;
@@ -49,6 +49,9 @@ interface ReviewInputStepProps {
 
 // 숨은 입력에 항상 하나 남겨두는 문자 — 값이 비면 네이티브 키보드의 backspace가 input 이벤트를 안 쏘기 때문.
 const SENTINEL = ' ';
+
+// 정답 연출에서 글자들이 차례로 튀는 간격
+const LETTER_STAGGER_MS = 45;
 
 export const ReviewInputStep = ({
   quiz,
@@ -362,7 +365,7 @@ export const ReviewInputStep = ({
                 const showHint =
                   !char && (hintLevel >= 2 || (hintLevel === 1 && i === 0));
                 const caretHere = isFocus && i === value.length;
-                const delay = `${(wordOffset + i) * 45}ms`;
+                const delay = `${(wordOffset + i) * LETTER_STAGGER_MS}ms`;
                 return (
                   <span
                     key={i}

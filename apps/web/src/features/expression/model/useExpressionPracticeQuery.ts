@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getExpressionPractice } from '../api/practice';
 import { expressionKeys } from './keys';
 
-export const useExpressionPractice = (
+export const useExpressionPracticeQuery = (
   expressionId: number,
   enabled: boolean,
 ) => {

@@ -1,6 +1,6 @@
 // 시나리오 전체 조회 — 카테고리별 시나리오 목록과 잠금·완료·별점·시작 미리보기 (백엔드 ScenarioListResponse 미러)
 import { api } from '@/shared/api/client';
-import type { TtsVoice } from '@/shared/lib/tts/tts.types';
+import type { TtsVoice } from '@/shared/tts/voice';
 
 export interface ScenarioListResponse {
   categories: ScenarioCategory[];

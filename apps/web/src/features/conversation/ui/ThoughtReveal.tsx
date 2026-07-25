@@ -3,12 +3,7 @@
 
 import { motion } from 'motion/react';
 
-export type ThoughtType = 'GOOD' | 'NORMAL' | 'BAD';
-
-export interface FloatingThought {
-  text: string;
-  type: ThoughtType;
-}
+import type { FloatingThought } from '../model/thought';
 
 // 오른쪽 아래에서 호를 그리며 날아들고, 밀려날 땐 왼쪽으로 빠진다.
 // AnimatePresence 자식(오버레이는 백드롭 경유, 온보딩은 직접)일 때 이 initial/exit가 재생된다.

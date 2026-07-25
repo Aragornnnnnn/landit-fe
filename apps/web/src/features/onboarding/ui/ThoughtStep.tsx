@@ -4,10 +4,8 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 
-import {
-  ThoughtReveal,
-  type FloatingThought,
-} from '@/features/conversation/ui/ThoughtReveal';
+import type { FloatingThought } from '@/features/conversation/model/thought'; // 온보딩 속마음 미리보기가 대화의 속마음 UI를 재사용한다 (entities 후보)
+import { ThoughtReveal } from '@/features/conversation/ui/ThoughtReveal';
 import { Button } from '@/shared/ui/Button';
 
 const DEMOS: FloatingThought[] = [

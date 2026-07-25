@@ -8,15 +8,15 @@ import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { Button } from '@/shared/ui/Button';
 
-import type { SentenceQuiz } from '../model/sentenceQuiz';
+import type { SentenceQuiz } from '../../model/sentence-quiz';
 import {
   chipsFromWords,
   isWordsCorrect,
   type WordChip,
-} from '../model/wordBank';
-import { QuizPrompt } from './QuizPrompt';
+} from '../../model/word-bank';
+import { QuizPrompt } from '../QuizPrompt';
+import { StepScaffold } from '../StepScaffold';
 import { ResultSheet } from './ResultSheet';
-import { StepScaffold } from './StepScaffold';
 
 interface QuizStepProps {
   quiz: SentenceQuiz;
@@ -145,7 +145,7 @@ export const QuizStep = ({
         }}
       >
         {selected.map((id, index) => (
-          <span key={index} className="flex h-[62px] items-center">
+          <span key={id} className="flex h-[62px] items-center">
             <button
               onClick={() => removeAt(index)}
               className={

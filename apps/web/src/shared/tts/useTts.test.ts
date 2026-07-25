@@ -2,8 +2,8 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { TtsVoice } from './tts.types';
 import { useTts } from './useTts';
+import type { TtsVoice } from './voice';
 
 const harper: TtsVoice = {
   provider: 'OPENROUTER',
