@@ -32,6 +32,13 @@ import 경로는 FSD 규칙을 따른다 — 같은 슬라이스(라우트 구�
 - 예외: `scenario`·`feedback`처럼 여러 feature가 참조하는 공용 슬라이스는 가로 import를 허용한다. 단 공용 슬라이스 자신은 다른 feature를 import하지 않는다 (방향 고정).
 - `page.tsx`는 파라미터 해석과 조립만 한다. 로직이 생기면 model로 뽑는다.
 
+이름 규칙.
+
+- 함수 이름은 행위 동사구 — 무엇을 하는지 말한다 (pressMic, submitVoice, recoverFromSttError). `handle~`·`process~`처럼 "다룬다"는 사실만 말하는 이름은 쓰지 않는다.
+- 콜백 자리(옵션·프롭)는 `on{사건}`으로 선언하고(onFinal, onListenStart), 거기 꽂는 구현 함수는 행위 이름을 쓴다 — 사건 선언과 행위 구현의 구분.
+- 저수준 계약은 웹 플랫폼 어휘를 따른다 — 예: 인식 세션의 `stop`(확정)/`abort`(파기)는 SpeechRecognition·AbortController와 동일. 제품 언어(취소·완료)는 도메인 층 함수명에서 쓴다 (cancelListening).
+- 한 개념 한 단어 — 같은 개념이 층을 관통하면 전 층에서 같은 단어를 쓴다 (파기=abort). 동의어(cancel/abort/discard) 혼용 금지.
+
 팀원이 늘어나면 그때 도입한다. slice별 `index.ts` 공개 API, import 경계 ESLint. 그 전엔 하지 않는다.
 
 `entities` 레이어는 공용 슬라이스가 3개가 되거나 방향 위반이 발견되는 시점에 도입한다. 그때 명사(데이터·표현용 UI)만 내리고 동사(유저 행동 흐름)는 features에 남긴다. 프리톡 도입으로 conversation을 명사(대화 엔진)/동사(시나리오 대화 흐름)로 가르는 때가 유력한 시점이다.
