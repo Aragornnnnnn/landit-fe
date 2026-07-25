@@ -1,23 +1,24 @@
-// 대화 상태 기계 — 한 턴(AI 발화→마이크 대기→듣기→속마음)의 전이를 순수 함수로 관리한다
+// 대화 상태 기계 — 한 턴(상대 발화→내 차례→내 발화→상대 생각→속마음)의 전이를 순수 함수로 관리한다
+// phase는 행위자 시선으로 읽는다: "누가(AI/USER) 무엇을 하는 중인가"
 // 타이머·STT·API는 여기 없다. 훅(useConversationFlow)이 이벤트만 흘려보낸다.
 
 export type ConversationPhase =
   | 'AI_SPEAKING' // AI 질문 발화 중 (글자 하이라이트)
-  | 'USER_IDLE' // 마이크 대기 (말하기 버튼)
-  | 'USER_LISTENING' // 듣는 중 (답변이 실시간으로 채워진다)
-  | 'WAITING' // 답변 제출 후 상대 응답 대기 (생각 중 연출)
-  | 'THOUGHT' // 상대 속마음 노출 (랜디 슬라이드 인)
+  | 'USER_READY' // 내가 말할 준비 — 마이크 대기 (말하기 버튼)
+  | 'USER_SPEAKING' // 내가 말하는 중 (답변이 실시간으로 채워진다)
+  | 'AI_THINKING' // 상대가 생각하는 중 (제출 후 응답·속마음 대기 연출)
+  | 'AI_INNER_THOUGHT' // 상대 속마음 노출 (랜디 슬라이드 인)
   | 'DONE'; // 모든 턴 종료
 
 export type ConversationEvent =
   | 'AI_SPEECH_END'
   | 'MIC_PRESSED'
-  | 'LISTENING_CANCELLED'
-  | 'LISTENING_DONE'
+  | 'SPEAKING_CANCELLED'
+  | 'SPEAKING_DONE'
   | 'RESPONSE_READY'
   | 'RESPONSE_SKIPPED'
   | 'RESPONSE_FAILED'
-  | 'THOUGHT_DONE';
+  | 'INNER_THOUGHT_DONE';
 
 export interface ConversationState {
   phase: ConversationPhase;
@@ -27,12 +28,12 @@ export interface ConversationState {
 export const initialConversationState = (
   firstSpeaker: 'AI' | 'USER',
 ): ConversationState => ({
-  phase: firstSpeaker === 'AI' ? 'AI_SPEAKING' : 'USER_IDLE',
+  phase: firstSpeaker === 'AI' ? 'AI_SPEAKING' : 'USER_READY',
   turnIndex: 0,
 });
 
 // 한 턴을 마치고 다음 턴으로 — 남은 턴이 있으면 다음 AI 발화, 없으면 종료.
-// 속마음을 보여준 뒤(THOUGHT_DONE)와 속마음을 건너뛴 뒤(RESPONSE_SKIPPED)가 공유한다.
+// 속마음을 보여준 뒤(INNER_THOUGHT_DONE)와 속마음을 건너뛴 뒤(RESPONSE_SKIPPED)가 공유한다.
 const advanceTurn = (
   state: ConversationState,
   hasNext: boolean,
@@ -54,26 +55,27 @@ export const nextConversationState = (
     case 'AI_SPEAKING':
       // 발화가 끝나면 — 종료 메시지였다면 DONE(→CTA), 아니면 유저 차례로
       return event === 'AI_SPEECH_END'
-        ? { ...state, phase: completed ? 'DONE' : 'USER_IDLE' }
+        ? { ...state, phase: completed ? 'DONE' : 'USER_READY' }
         : state;
-    case 'USER_IDLE':
+    case 'USER_READY':
       return event === 'MIC_PRESSED'
-        ? { ...state, phase: 'USER_LISTENING' }
+        ? { ...state, phase: 'USER_SPEAKING' }
         : state;
-    case 'USER_LISTENING':
-      if (event === 'LISTENING_CANCELLED')
-        return { ...state, phase: 'USER_IDLE' };
-      if (event === 'LISTENING_DONE') return { ...state, phase: 'WAITING' };
+    case 'USER_SPEAKING':
+      if (event === 'SPEAKING_CANCELLED')
+        return { ...state, phase: 'USER_READY' };
+      if (event === 'SPEAKING_DONE') return { ...state, phase: 'AI_THINKING' };
       return state;
-    case 'WAITING':
+    case 'AI_THINKING':
       // 응답이 오면 속마음으로, 속마음이 없으면(실패·빈값) 건너뛰고 바로 다음 턴,
       // 제출이 실패하면 다시 마이크 대기로 되돌린다
-      if (event === 'RESPONSE_READY') return { ...state, phase: 'THOUGHT' };
+      if (event === 'RESPONSE_READY')
+        return { ...state, phase: 'AI_INNER_THOUGHT' };
       if (event === 'RESPONSE_SKIPPED') return advanceTurn(state, hasNext);
-      if (event === 'RESPONSE_FAILED') return { ...state, phase: 'USER_IDLE' };
+      if (event === 'RESPONSE_FAILED') return { ...state, phase: 'USER_READY' };
       return state;
-    case 'THOUGHT':
-      if (event !== 'THOUGHT_DONE') return state;
+    case 'AI_INNER_THOUGHT':
+      if (event !== 'INNER_THOUGHT_DONE') return state;
       return advanceTurn(state, hasNext);
     case 'DONE':
       return state;

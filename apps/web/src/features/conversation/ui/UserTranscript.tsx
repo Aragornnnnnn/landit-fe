@@ -25,7 +25,7 @@ export const UserTranscript = ({
   onSubmit,
   onCancel,
 }: UserTranscriptProps) => {
-  const listening = phase === 'USER_LISTENING';
+  const listening = phase === 'USER_SPEAKING';
   // 길면 스크롤 대신 하단 정렬 + 상단 페이드 — 방금 한 말(끝)이 항상 보이고 앞은 …처럼 흐려진다
   const clamped = text.length > 100;
 

@@ -55,11 +55,11 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
 
   const ended = phase === 'DONE';
   // 키보드 입력 중 — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
-  const typing = keyboardMode && phase === 'USER_LISTENING';
+  const typing = keyboardMode && phase === 'USER_SPEAKING';
   const keyboardInset = useKeyboardInset();
-  // 선발화 안내는 대기(USER_IDLE) 동안만 — 사용자가 말하기 시작하거나 속마음이 오면 즉시 비켜준다
+  // 선발화 안내는 대기(USER_READY) 동안만 — 사용자가 말하기 시작하거나 속마음이 오면 즉시 비켜준다
   const showUserFirstIntro =
-    turn.isUserOpening && phase === 'USER_IDLE' && !introDismissed;
+    turn.isUserOpening && phase === 'USER_READY' && !introDismissed;
   useEffect(() => {
     if (!showUserFirstIntro) return;
     const timer = setTimeout(() => setIntroDismissed(true), userIntroHoldMs);
@@ -69,7 +69,7 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   const resolveOverlayThought = (): FloatingThought | null => {
     if (showUserFirstIntro)
       return { text: '상황을 잘 읽고 먼저 말을 걸어보세요!', type: 'NORMAL' };
-    if (phase === 'THOUGHT')
+    if (phase === 'AI_INNER_THOUGHT')
       return { text: turn.innerThought, type: turn.innerThoughtType };
     return null;
   };
@@ -166,9 +166,12 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
         )}
       </footer>
 
-      {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(WAITING)부터 랜디가 떠 있다가 속마음을 전한다.
+      {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(AI_THINKING)부터 랜디가 떠 있다가 속마음을 전한다.
           USER 선발화 진입 시엔 같은 연출로 랜디가 먼저 안내하고 사라진다 */}
-      <ThoughtOverlay loading={phase === 'WAITING'} thought={overlayThought} />
+      <ThoughtOverlay
+        loading={phase === 'AI_THINKING'}
+        thought={overlayThought}
+      />
 
       <ExitConfirmSheet
         open={showExitModal}

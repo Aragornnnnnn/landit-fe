@@ -86,7 +86,7 @@ export const useConversationFlow = (scenario: Scenario) => {
   const completedRef = useRef(false); // 그 발화를 끝으로 대화가 종료되는가
   const nextMessageRef = useRef<NextMessage | null>(null);
   const startedRef = useRef(false);
-  const submittingRef = useRef(false); // 중복 제출 방지 (연출은 WAITING phase가 맡는다)
+  const submittingRef = useRef(false); // 중복 제출 방지 (연출은 AI_THINKING phase가 맡는다)
   const isOpeningRef = useRef(true); // 첫 AI 발화(오프닝)인지 — 미리 만든 정적 mp3 재생 대상
   // 권한 거부는 "결정" 이벤트라 대화당 1회만 — 차단 상태에서 반복 탭할 때마다 찍히지 않게
   const micDeniedTrackedRef = useRef(false);
@@ -138,7 +138,7 @@ export const useConversationFlow = (scenario: Scenario) => {
       }
       haptic('error');
       setTranscript('');
-      send('LISTENING_CANCELLED');
+      send('SPEAKING_CANCELLED');
     },
   });
 
@@ -214,7 +214,9 @@ export const useConversationFlow = (scenario: Scenario) => {
   }, [state.phase, aiMessage?.content]);
 
   // 다음 질문을 화면에 올리고 턴을 넘긴다 — 속마음 노출을 마쳤을 때와 건너뛸 때가 공유한다
-  const advanceToNextTurn = (event: 'THOUGHT_DONE' | 'RESPONSE_SKIPPED') => {
+  const advanceToNextTurn = (
+    event: 'INNER_THOUGHT_DONE' | 'RESPONSE_SKIPPED',
+  ) => {
     setTranscript('');
     setKeyboardMode(false); // 다음 턴은 마이크(음성)부터 다시 시작
     setThought(null);
@@ -231,9 +233,9 @@ export const useConversationFlow = (scenario: Scenario) => {
 
   // 속마음 — 잠시 보여준 뒤 다음 질문으로 갈아끼우고 다음 턴으로 넘어간다
   useEffect(() => {
-    if (state.phase !== 'THOUGHT' || !thought) return;
+    if (state.phase !== 'AI_INNER_THOUGHT' || !thought) return;
     const id = setTimeout(
-      () => advanceToNextTurn('THOUGHT_DONE'),
+      () => advanceToNextTurn('INNER_THOUGHT_DONE'),
       thoughtHoldMs(thought.text),
     );
     return () => clearTimeout(id);
@@ -241,9 +243,9 @@ export const useConversationFlow = (scenario: Scenario) => {
   }, [state.phase, thought]);
 
   // 마이크로 말하기 — 듣기 상태로 넘기고 STT를 켠다.
-  // 대기(USER_IDLE)에서만 동작 — 빠른 연타·상태 전이 중 중복 탭이 녹음 시작을 이중 집계하지 않게
+  // 대기(USER_READY)에서만 동작 — 빠른 연타·상태 전이 중 중복 탭이 녹음 시작을 이중 집계하지 않게
   const pressMic = () => {
-    if (state.phase !== 'USER_IDLE') return;
+    if (state.phase !== 'USER_READY') return;
     if (keyboardMode) {
       track(EVENTS.INPUT_MODE_SWITCHED, {
         session_id: sessionIdRef.current ?? undefined,
@@ -286,7 +288,7 @@ export const useConversationFlow = (scenario: Scenario) => {
     }
     setKeyboardMode(false);
     setTranscript('');
-    send('LISTENING_CANCELLED');
+    send('SPEAKING_CANCELLED');
   };
 
   // 음성 완료(■) — STT를 멈추면 최종 텍스트가 onFinal로 도착해 음성 제출을 잇는다
@@ -314,7 +316,7 @@ export const useConversationFlow = (scenario: Scenario) => {
       if (inputType === 'VOICE') {
         haptic('error');
         setTranscript('');
-        send('LISTENING_CANCELLED');
+        send('SPEAKING_CANCELLED');
         showToast('말이 인식되지 않았어요. 다시 말해볼까요?');
         track(EVENTS.TURN_FAILED, {
           session_id: sessionIdRef.current ?? undefined,
@@ -326,7 +328,7 @@ export const useConversationFlow = (scenario: Scenario) => {
     }
 
     submittingRef.current = true;
-    send('LISTENING_DONE'); // → WAITING (상대가 생각 중)
+    send('SPEAKING_DONE'); // → AI_THINKING (상대가 생각 중)
     try {
       const sessionId =
         sessionIdRef.current ?? (await sessionPromiseRef.current);
@@ -369,7 +371,7 @@ export const useConversationFlow = (scenario: Scenario) => {
         void tts.prefetch(res.nextMessage.content, voice);
       }
       // 속마음은 준비됐으면 즉시, 아직이면 폴링으로 완료된 뒤 노출한다.
-      // 그 사이 WAITING(생각 중) 연출이 화면을 가리고, 다음 질문 합성은 이미 시작됐다.
+      // 그 사이 AI_THINKING(생각 중) 연출이 화면을 가리고, 다음 질문 합성은 이미 시작됐다.
       void innerThought
         .resolve(sessionId, res.submittedMessage)
         .then((resolved) => {
@@ -389,12 +391,12 @@ export const useConversationFlow = (scenario: Scenario) => {
             thought_type: resolved.type ?? undefined,
           });
           haptic('light'); // 상대가 응답을 시작하는 순간 가벼운 틱
-          send('RESPONSE_READY'); // → THOUGHT
+          send('RESPONSE_READY'); // → AI_INNER_THOUGHT
         });
     } catch (error) {
       console.error('발화 제출 실패', error);
       haptic('error');
-      send('RESPONSE_FAILED'); // → USER_IDLE (다시 시도)
+      send('RESPONSE_FAILED'); // → USER_READY (다시 시도)
       showToast('전송에 실패했어요. 다시 시도해 주세요');
       track(EVENTS.TURN_FAILED, {
         session_id: sessionIdRef.current ?? undefined,
