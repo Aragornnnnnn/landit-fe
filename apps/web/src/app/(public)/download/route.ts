@@ -7,8 +7,10 @@ const PLAY_STORE_URL =
 
 export function GET(request: Request): NextResponse {
   const userAgent = request.headers.get('user-agent') ?? '';
+  const isAndroid = /android/i.test(userAgent);
 
-  // Android만 Play 스토어, 나머지(iOS·데스크톱·UA 없음)는 전부 App Store
-  if (/Android/i.test(userAgent)) return NextResponse.redirect(PLAY_STORE_URL);
+  if (isAndroid) {
+    return NextResponse.redirect(PLAY_STORE_URL);
+  }
   return NextResponse.redirect(APP_STORE_URL);
 }
