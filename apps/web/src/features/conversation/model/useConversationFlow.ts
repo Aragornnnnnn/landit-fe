@@ -15,7 +15,6 @@ import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { isMicPermissionDeniedError } from '@/shared/stt/errors';
 import { useStt } from '@/shared/stt/useStt';
-import { useTts } from '@/shared/tts/useTts';
 import { showToast } from '@/shared/ui/toast';
 
 import {
@@ -29,13 +28,9 @@ import {
   nextConversationState,
   type ConversationEvent,
 } from './conversation-machine';
-import {
-  speechEndPauseMs,
-  speechTypingMs,
-  thoughtHoldMs,
-  toThoughtType,
-} from './pacing';
+import { thoughtHoldMs, toThoughtType } from './pacing';
 import type { ThoughtType } from './thought';
+import { useAiSpeech } from './useAiSpeech';
 import { useInnerThought } from './useInnerThought';
 
 // 화면이 그리는 현재 턴 — 오프닝은 openingPreview, 이후는 서버 응답에서 조립한다
@@ -87,11 +82,9 @@ export const useConversationFlow = (scenario: Scenario) => {
   const nextMessageRef = useRef<NextMessage | null>(null);
   const startedRef = useRef(false);
   const submittingRef = useRef(false); // 중복 제출 방지 (연출은 AI_THINKING phase가 맡는다)
-  const isOpeningRef = useRef(true); // 첫 AI 발화(오프닝)인지 — 미리 만든 정적 mp3 재생 대상
   // 권한 거부는 "결정" 이벤트라 대화당 1회만 — 차단 상태에서 반복 탭할 때마다 찍히지 않게
   const micDeniedTrackedRef = useRef(false);
 
-  const tts = useTts();
   const innerThought = useInnerThought();
   const queryClient = useQueryClient();
 
@@ -111,6 +104,15 @@ export const useConversationFlow = (scenario: Scenario) => {
         completedRef.current,
       ),
     );
+
+  // AI 발화 재생 — 끝나면 상태기계에 알린다 (오프닝 mp3·TTS 합성·타이머 폴백은 훅 안에)
+  const aiSpeech = useAiSpeech({
+    playing: state.phase === 'AI_SPEAKING' && aiMessage != null,
+    content: aiMessage?.content ?? null,
+    voice,
+    scenarioId: scenario.scenarioId,
+    onSpeechEnd: () => send('AI_SPEECH_END'),
+  });
 
   // 마이크 STT — 실시간 미리보기는 transcript로, 완료(stop) 시 최종 텍스트로 음성 제출을 잇는다.
   // 침묵 자동 종료는 끄고 완료 버튼(■)만으로 끝낸다 — 긴 답변 중 침묵에도 안 끊긴다.
@@ -181,38 +183,6 @@ export const useConversationFlow = (scenario: Scenario) => {
     // startedRef 가드로 어차피 1회만 실행된다 — 계측 속성 참조로 늘어난 의존성
   }, [scenario.scenarioId, scenario.completed, scenario.firstSpeaker]);
 
-  // AI 발화 — TTS로 실제 재생하고, 재생이 끝나면 마이크 대기로 넘어간다.
-  // 오프닝은 미리 만든 정적 mp3, 없으면 런타임 합성/타이머로 폴백해 대화가 멈추지 않게 한다.
-  useEffect(() => {
-    if (state.phase !== 'AI_SPEAKING' || !aiMessage) return;
-
-    const content = aiMessage.content;
-    const advance = () => send('AI_SPEECH_END');
-    const speakOrTimer = () => {
-      if (voice) {
-        void tts.speak(content, voice, { onEnd: advance, onError: advance });
-      } else {
-        const id = setTimeout(
-          advance,
-          speechTypingMs(content) + speechEndPauseMs,
-        );
-        return () => clearTimeout(id);
-      }
-    };
-
-    if (isOpeningRef.current) {
-      tts.speakSrc(`/audio/opening-${scenario.scenarioId}.mp3`, {
-        onEnd: advance,
-        onError: speakOrTimer,
-      });
-      return () => tts.stop();
-    }
-
-    const cleanupTimer = speakOrTimer();
-    return cleanupTimer ?? (() => tts.stop());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.phase, aiMessage?.content]);
-
   // 다음 질문을 화면에 올리고 턴을 넘긴다 — 속마음 노출을 마쳤을 때와 건너뛸 때가 공유한다
   const advanceToNextTurn = (
     event: 'INNER_THOUGHT_DONE' | 'RESPONSE_SKIPPED',
@@ -226,7 +196,7 @@ export const useConversationFlow = (scenario: Scenario) => {
         translatedContent: nextMessageRef.current.translatedContent,
       });
       nextMessageRef.current = null;
-      isOpeningRef.current = false; // 이후 발화는 동적 생성 — 정적 mp3 대상 아님
+      aiSpeech.markDynamic();
     }
     send(event);
   };
@@ -367,9 +337,7 @@ export const useConversationFlow = (scenario: Scenario) => {
         handleConversationComplete(sessionId);
       }
       // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 합성한다 — 다음 발화 재생 지연을 없앤다
-      if (res.nextMessage && voice) {
-        void tts.prefetch(res.nextMessage.content, voice);
-      }
+      if (res.nextMessage) aiSpeech.prefetch(res.nextMessage.content);
       // 속마음은 준비됐으면 즉시, 아직이면 폴링으로 완료된 뒤 노출한다.
       // 그 사이 AI_THINKING(생각 중) 연출이 화면을 가리고, 다음 질문 합성은 이미 시작됐다.
       void innerThought
