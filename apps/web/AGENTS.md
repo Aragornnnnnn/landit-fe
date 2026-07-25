@@ -35,8 +35,8 @@ import 경로는 FSD 규칙을 따른다 — 같은 슬라이스(라우트 구�
 이름 규칙.
 
 - 함수 이름은 행위 동사구 — 무엇을 하는지 말한다 (pressMic, submitVoice, recoverFromSttError). `handle~`·`process~`처럼 "다룬다"는 사실만 말하는 이름은 쓰지 않는다.
-- 콜백 자리(옵션·프롭)는 `on{사건}`으로 선언하고(onFinal, onListenStart), 거기 꽂는 구현 함수는 행위 이름을 쓴다 — 사건 선언과 행위 구현의 구분.
-- 저수준 계약은 웹 플랫폼 어휘를 따른다 — 예: 인식 세션의 `stop`(확정)/`abort`(파기)는 SpeechRecognition·AbortController와 동일. 제품 언어(취소·완료)는 도메인 층 함수명에서 쓴다 (cancelListening).
+- 콜백 자리(옵션·프롭)는 `on{사건}`으로 선언하고(onFinal, onInputStart), 거기 꽂는 구현 함수는 행위 이름을 쓴다 — 사건 선언과 행위 구현의 구분.
+- 저수준 계약은 웹 플랫폼 어휘를 따른다 — 예: 인식 세션의 `stop`(확정)/`abort`(파기)는 SpeechRecognition·AbortController와 동일. 제품 언어(취소·완료)는 도메인 층 함수명에서 쓴다 (cancelInput).
 - 한 개념 한 단어 — 같은 개념이 층을 관통하면 전 층에서 같은 단어를 쓴다 (파기=abort). 동의어(cancel/abort/discard) 혼용 금지.
 
 팀원이 늘어나면 그때 도입한다. slice별 `index.ts` 공개 API, import 경계 ESLint. 그 전엔 하지 않는다.
