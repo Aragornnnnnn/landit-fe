@@ -1,7 +1,6 @@
-// 대화 플로우 훅 — 상태 기계를 세션 API·TTS에 배선한다 (시작·발화 제출·종료·재생)
+// 대화 플로우 훅 — 상태 기계를 세션 API·입력(STT/키보드)·발화 재생에 배선한다 (시작·발화 제출·종료)
 // 오프닝은 시나리오(리스트 캐시)의 openingPreview로 즉시 시드하고, 세션 시작은 백그라운드로 돌려
 // 진입을 막지 않는다. 세션은 발화 제출 때 필요한 sessionId 확보용.
-// 유저 입력은 기본 마이크 STT(음성, VOICE), 키보드 아이콘을 누르면 타이핑(TEXT)으로 전환한다(LAN-141)
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -13,8 +12,6 @@ import type { Scenario } from '@/features/scenario/api/list';
 import { scenarioKeys } from '@/features/scenario/model/keys';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
-import { isMicPermissionDeniedError } from '@/shared/stt/errors';
-import { useStt } from '@/shared/stt/useStt';
 import { showToast } from '@/shared/ui/toast';
 
 import {
@@ -29,8 +26,9 @@ import {
   type ConversationEvent,
 } from './conversation-machine';
 import { thoughtHoldMs, toThoughtType } from './pacing';
-import type { ThoughtType } from './thought';
+import type { FloatingThought, ThoughtType } from './thought';
 import { useAiSpeech } from './useAiSpeech';
+import { useConversationInput } from './useConversationInput';
 import { useInnerThought } from './useInnerThought';
 
 // 화면이 그리는 현재 턴 — 오프닝은 openingPreview, 이후는 서버 응답에서 조립한다
@@ -62,15 +60,7 @@ export const useConversationFlow = (scenario: Scenario) => {
         }
       : null,
   );
-  const [thought, setThought] = useState<{
-    text: string;
-    type: ThoughtType;
-  } | null>(null);
-  const [transcript, setTranscript] = useState('');
-  // 입력 수단 — 기본은 마이크(음성), 키보드 아이콘을 누르면 타이핑 모드로 바꾼다
-  const [keyboardMode, setKeyboardMode] = useState(false);
-  // 마이크 권한이 거부돼 STT를 못 켠 상태 — 설정 유도 안내를 띄운다
-  const [micPermissionDenied, setMicPermissionDenied] = useState(false);
+  const [thought, setThought] = useState<FloatingThought | null>(null);
   // 확보된 세션 — 종료 후 피드백 생성에 쓴다. ref는 send 클로저용, state는 화면 노출용
   const [sessionId, setSessionId] = useState<number | null>(null);
 
@@ -81,8 +71,6 @@ export const useConversationFlow = (scenario: Scenario) => {
   const nextMessageRef = useRef<NextMessage | null>(null);
   const startedRef = useRef(false);
   const submittingRef = useRef(false); // 중복 제출 방지 (연출은 AI_THINKING phase가 맡는다)
-  // 권한 거부는 "결정" 이벤트라 대화당 1회만 — 차단 상태에서 반복 탭할 때마다 찍히지 않게
-  const micDeniedTrackedRef = useRef(false);
 
   const innerThought = useInnerThought();
   const queryClient = useQueryClient();
@@ -108,37 +96,17 @@ export const useConversationFlow = (scenario: Scenario) => {
     onSpeechEnd: () => send('AI_SPEAKING_DONE'),
   });
 
-  // 마이크 STT — 실시간 미리보기는 transcript로, 완료(stop) 시 최종 텍스트로 음성 제출을 잇는다.
-  // 침묵 자동 종료는 끄고 완료 버튼(■)만으로 끝낸다 — 긴 답변 중 침묵에도 안 끊긴다.
-  // 권한 거부·인식 오류는 조용히 멈추지 말고 마이크 대기로 되돌린다.
-  const stt = useStt({
-    stopOnSilence: false,
-    onInterim: (text) => setTranscript(text),
-    onFinal: (text) => void submitContent(text, 'VOICE'),
-    onError: (error) => {
-      // 좁히기(never) 전에 읽어둔다 — 계측 속성용 에러 이름
-      const errorName = error.name;
-      // 권한 거부는 설정 유도 안내를, 그 외 인식 오류는 토스트로 알리고 마이크 대기로 되돌린다.
-      if (isMicPermissionDeniedError(error)) {
-        setMicPermissionDenied(true);
-        if (!micDeniedTrackedRef.current) {
-          micDeniedTrackedRef.current = true;
-          track(EVENTS.MIC_PERMISSION_DECIDED, {
-            granted: false,
-            source: 'conversation',
-          });
-        }
-      } else {
-        showToast('음성 인식에 문제가 생겼어요. 다시 시도해 주세요');
-        track(EVENTS.SPEECH_RECOGNITION_FAILED, { reason: errorName });
-      }
-      haptic('error');
-      setTranscript('');
-      send('USER_SPEAKING_CANCELLED');
-    },
+  // 유저 입력 — 마이크/키보드 전환과 STT 배선은 훅 안에, 여기서는 상태 전이와 제출만 잇는다
+  const input = useConversationInput({
+    canStart: state.phase === 'USER_READY',
+    trackContext: () => ({
+      sessionId: sessionIdRef.current,
+      turnIndex: state.turnIndex,
+    }),
+    onListenStart: () => send('USER_SPEAKING_STARTED'),
+    onListenCancel: () => send('USER_SPEAKING_CANCELLED'),
+    onContent: (content, inputType) => void submitContent(content, inputType),
   });
-
-  const dismissMicPermissionNotice = () => setMicPermissionDenied(false);
 
   // 세션은 백그라운드로 시작 — 화면은 이미 openingPreview로 떴고, 제출 때 쓸 sessionId만 확보한다.
   // StrictMode 이중 실행에도 한 번만 만든다.
@@ -177,11 +145,10 @@ export const useConversationFlow = (scenario: Scenario) => {
   }, [scenario.scenarioId, scenario.completed, scenario.firstSpeaker]);
 
   // 다음 질문을 화면에 올리고 턴을 넘긴다 — 속마음 노출을 마쳤을 때와 건너뛸 때가 공유한다
-  const advanceToNextTurn = (
+  const startNextTurn = (
     event: 'INNER_THOUGHT_DONE' | 'AI_RESPONSE_SKIPPED',
   ) => {
-    setTranscript('');
-    setKeyboardMode(false); // 다음 턴은 마이크(음성)부터 다시 시작
+    input.resetForNextTurn();
     setThought(null);
     if (nextMessageRef.current) {
       setAiMessage({
@@ -198,104 +165,27 @@ export const useConversationFlow = (scenario: Scenario) => {
   useEffect(() => {
     if (state.phase !== 'AI_INNER_THOUGHT' || !thought) return;
     const id = setTimeout(
-      () => advanceToNextTurn('INNER_THOUGHT_DONE'),
+      () => startNextTurn('INNER_THOUGHT_DONE'),
       thoughtHoldMs(thought.text),
     );
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, thought]);
 
-  // 마이크로 말하기 — 듣기 상태로 넘기고 STT를 켠다.
-  // 대기(USER_READY)에서만 동작 — 빠른 연타·상태 전이 중 중복 탭이 녹음 시작을 이중 집계하지 않게
-  const pressMic = () => {
-    if (state.phase !== 'USER_READY') return;
-    if (keyboardMode) {
-      track(EVENTS.INPUT_MODE_SWITCHED, {
-        session_id: sessionIdRef.current ?? undefined,
-        mode: 'voice',
-      });
-    }
-    track(EVENTS.RECORDING_STARTED, {
-      session_id: sessionIdRef.current ?? undefined,
-      turn_index: state.turnIndex,
-    });
-    setKeyboardMode(false);
-    send('USER_SPEAKING_STARTED');
-    void stt.start();
-  };
-
-  // 키보드로 입력 — 듣기 상태로 넘기되 마이크는 켜지 않고 타이핑 입력창을 연다
-  const pressKeyboard = () => {
-    track(EVENTS.INPUT_MODE_SWITCHED, {
-      session_id: sessionIdRef.current ?? undefined,
-      mode: 'text',
-    });
-    setKeyboardMode(true);
-    setTranscript('');
-    send('USER_SPEAKING_STARTED');
-  };
-
-  const cancelListening = () => {
-    if (!keyboardMode) {
-      stt.stop();
-      track(EVENTS.RECORDING_CANCELED, {
-        session_id: sessionIdRef.current ?? undefined,
-        turn_index: state.turnIndex,
-      });
-    } else {
-      // 타이핑 취소 = 기본 입력 수단(마이크 대기)으로 복귀
-      track(EVENTS.INPUT_MODE_SWITCHED, {
-        session_id: sessionIdRef.current ?? undefined,
-        mode: 'voice',
-      });
-    }
-    setKeyboardMode(false);
-    setTranscript('');
-    send('USER_SPEAKING_CANCELLED');
-  };
-
-  // 음성 완료(■) — STT를 멈추면 최종 텍스트가 onFinal로 도착해 음성 제출을 잇는다
-  const finishListening = () => {
-    track(EVENTS.RECORDING_STOPPED, {
-      session_id: sessionIdRef.current ?? undefined,
-      turn_index: state.turnIndex,
-    });
-    stt.stop();
-  };
-
-  // 키보드 전송 — 타이핑한 텍스트를 바로 제출한다
-  const submitText = async () => {
-    await submitContent(transcript, 'TEXT');
-  };
-
   // 발화 제출 — 대기(생각 중)로 넘긴 뒤, 응답이 오면 속마음으로 이어간다.
   // 세션이 백그라운드로 아직 안 끝났으면 sessionId 확보를 기다린다.
-  const submitContent = async (raw: string, inputType: 'VOICE' | 'TEXT') => {
-    const content = raw.trim();
+  const submitContent = async (
+    content: string,
+    inputType: 'VOICE' | 'TEXT',
+  ) => {
     if (submittingRef.current) return;
-    if (!content) {
-      // 음성이 하나도 인식되지 않은 채 완료(■) — 조용히 무시하면 듣는 중 UI에 갇힌다.
-      // 마이크 대기로 되돌리고 왜 넘어가지 않는지 알려준다.
-      if (inputType === 'VOICE') {
-        haptic('error');
-        setTranscript('');
-        send('USER_SPEAKING_CANCELLED');
-        showToast('말이 인식되지 않았어요. 다시 말해볼까요?');
-        track(EVENTS.TURN_FAILED, {
-          session_id: sessionIdRef.current ?? undefined,
-          turn_index: state.turnIndex,
-          reason: 'empty',
-        });
-      }
-      return;
-    }
-
     submittingRef.current = true;
     send('USER_SPEAKING_DONE'); // → AI_THINKING (상대가 생각 중)
     try {
-      const sessionId =
+      // 바깥 sessionId state와 다른 값 — 백그라운드 시작이 아직이면 확보를 기다린 결과
+      const activeSessionId =
         sessionIdRef.current ?? (await sessionPromiseRef.current);
-      if (sessionId == null) {
+      if (activeSessionId == null) {
         console.error('세션이 없어 제출할 수 없어요');
         haptic('error');
         send('AI_RESPONSE_FAILED');
@@ -307,9 +197,9 @@ export const useConversationFlow = (scenario: Scenario) => {
         return;
       }
 
-      const res = await submitMessage(sessionId, content, inputType);
+      const res = await submitMessage(activeSessionId, content, inputType);
       track(EVENTS.TURN_COMPLETED, {
-        session_id: sessionId,
+        session_id: activeSessionId,
         scenario_id: scenario.scenarioId,
         turn_index: state.turnIndex,
         input_type: inputType === 'VOICE' ? 'voice' : 'text',
@@ -321,23 +211,23 @@ export const useConversationFlow = (scenario: Scenario) => {
       // 마지막 발화였다면 피드백을 미리 만들고 다음 대화 해금을 홈에 반영한다
       if (res.progress.completed) {
         track(EVENTS.CONVERSATION_COMPLETED, {
-          session_id: sessionId,
+          session_id: activeSessionId,
           scenario_id: scenario.scenarioId,
           turn_count: res.progress.totalQuestionCount,
         });
-        handleConversationComplete(sessionId);
+        handleConversationComplete(activeSessionId);
       }
       // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 합성한다 — 다음 발화 재생 지연을 없앤다
       if (res.nextMessage) aiSpeech.prefetch(res.nextMessage.content);
       // 속마음은 준비됐으면 즉시, 아직이면 폴링으로 완료된 뒤 노출한다.
       // 그 사이 AI_THINKING(생각 중) 연출이 화면을 가리고, 다음 질문 합성은 이미 시작됐다.
       void innerThought
-        .resolve(sessionId, res.submittedMessage)
+        .resolve(activeSessionId, res.submittedMessage)
         .then((resolved) => {
           if (!resolved) return; // 이탈 중이면 화면을 건드리지 않는다
           // 속마음이 비면(생성 실패·타임아웃) 빈 말풍선 대신 건너뛰고 바로 다음 턴으로 넘긴다
           if (!resolved.text) {
-            advanceToNextTurn('AI_RESPONSE_SKIPPED');
+            startNextTurn('AI_RESPONSE_SKIPPED');
             return;
           }
           setThought({
@@ -345,7 +235,7 @@ export const useConversationFlow = (scenario: Scenario) => {
             type: toThoughtType(resolved.type),
           });
           track(EVENTS.INNER_THOUGHT_VIEWED, {
-            session_id: sessionId,
+            session_id: activeSessionId,
             turn_index: state.turnIndex,
             thought_type: resolved.type ?? undefined,
           });
@@ -400,17 +290,17 @@ export const useConversationFlow = (scenario: Scenario) => {
     phase: state.phase,
     turn,
     partner,
-    transcript,
-    setTranscript,
-    keyboardMode,
-    pressMic,
-    pressKeyboard,
-    cancelListening,
-    finishListening,
-    submitText,
+    transcript: input.transcript,
+    setTranscript: input.setTranscript,
+    keyboardMode: input.keyboardMode,
+    pressMic: input.pressMic,
+    pressKeyboard: input.pressKeyboard,
+    cancelListening: input.cancelListening,
+    finishListening: input.finishListening,
+    submitText: input.submitText,
     leave,
-    micPermissionDenied,
-    dismissMicPermissionNotice,
+    micPermissionDenied: input.micPermissionDenied,
+    dismissMicPermissionNotice: input.dismissMicPermissionNotice,
     // DONE 시점엔 세션이 확보돼 있다 — 피드백 생성에 쓴다 (없으면 세션 시작이 실패한 경우)
     sessionId,
   };
