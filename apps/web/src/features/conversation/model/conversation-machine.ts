@@ -1,6 +1,4 @@
 // 대화 상태 기계 — 한 턴(상대 발화→내 차례→내 발화→상대 생각→속마음)의 전이를 순수 함수로 관리한다
-// phase는 행위자 시선으로 읽는다: "누가(AI/USER) 무엇을 하는 중인가"
-// 타이머·STT·API는 여기 없다. 훅(useConversationFlow)이 이벤트만 흘려보낸다.
 
 export type ConversationPhase =
   | 'AI_SPEAKING' // AI 질문 발화 중 (글자 하이라이트)
@@ -25,6 +23,7 @@ export interface ConversationState {
   turnIndex: number;
 }
 
+// ── 2. 첫 상태 — 첫 화자에 따라 AI 발화 또는 내 차례에서 시작한다 ──
 export const initialConversationState = (
   firstSpeaker: 'AI' | 'USER',
 ): ConversationState => ({
@@ -32,54 +31,81 @@ export const initialConversationState = (
   turnIndex: 0,
 });
 
-// 한 턴을 마치고 다음 턴으로 — 남은 턴이 있으면 다음 AI 발화, 없으면 종료.
-// 속마음을 보여준 뒤(INNER_THOUGHT_DONE)와 속마음을 건너뛴 뒤(AI_RESPONSE_SKIPPED)가 공유한다.
-const advanceTurn = (
-  state: ConversationState,
-  hasNext: boolean,
-): ConversationState =>
-  hasNext
-    ? { phase: 'AI_SPEAKING', turnIndex: state.turnIndex + 1 }
-    : { ...state, phase: 'DONE' };
+// ── 3. 상태가 바뀌는 규칙 — "어떤 단계에서 어떤 사건이 오면 어디로 가나" ──
+// hasNext: 이어서 재생할 AI 발화가 있는가(종료 메시지 포함).
+// completed: 그 발화를 끝으로 대화가 종료되는가(서버 progress.completed).
+interface TransitionContext {
+  hasNext: boolean;
+  completed: boolean;
+}
 
-// 단계에 맞지 않는 이벤트는 상태를 그대로 돌려준다 — 타이머와 버튼이 겹쳐 들어와도 안전하다.
-// hasNext = 이어서 재생할 AI 발화가 있는가(nextMessage != null). 종료 메시지도 발화이므로 여기 포함된다.
-// completed = 그 발화를 끝으로 대화가 종료되는가(서버 progress.completed). 발화 후 종료/대기를 가른다.
+type Transition = (
+  state: ConversationState,
+  context: TransitionContext,
+) => ConversationState;
+
+// 대화를 끝낸다 — 어느 경로로 끝나든 도착지는 하나다
+const endConversation = (state: ConversationState): ConversationState => ({
+  ...state,
+  phase: 'DONE',
+});
+
+// 그 phase로 이동하는 단순 전이
+const moveTo =
+  (phase: ConversationPhase): Transition =>
+  (state) => ({ ...state, phase });
+
+// AI 발화가 끝난 순간 — 방금 발화가 종료 인사였다면 대화를 끝내고, 아니면 유저에게 차례를 넘긴다
+const finishAiSpeaking: Transition = (state, { completed }) => {
+  if (completed) {
+    return endConversation(state);
+  }
+  return { ...state, phase: 'USER_READY' };
+};
+
+// 속마음까지 끝난 순간 — 틀어줄 다음 발화가 있으면 새 턴을 시작하고, 없으면 대화를 끝낸다.
+// 정상 종료는 서버가 종료 인사를 보내줘서 여기선 새 턴 → 재생 후 finishAiSpeaking에서 DONE이 되고,
+// 여기서 바로 끝나는 건 서버가 발화 없이 끝내는 경우다 (계약상 nextMessage: null 허용 — session.ts)
+const finishTurn: Transition = (state, { hasNext }) => {
+  if (hasNext) {
+    return { phase: 'AI_SPEAKING', turnIndex: state.turnIndex + 1 };
+  }
+  return endConversation(state);
+};
+
+// 전이 표 — 각 phase가 받아들이는 이벤트와 그 결과를 한눈에 적는다.
+// 표에 없는 (phase, 이벤트) 조합은 무시된다(연타·타이머 겹침 방어). DONE은 아무것도 받지 않는다.
+const TRANSITIONS: Record<
+  ConversationPhase,
+  Partial<Record<ConversationEvent, Transition>>
+> = {
+  AI_SPEAKING: {
+    AI_SPEAKING_DONE: finishAiSpeaking,
+  },
+  USER_READY: {
+    USER_SPEAKING_STARTED: moveTo('USER_SPEAKING'),
+  },
+  USER_SPEAKING: {
+    USER_SPEAKING_CANCELLED: moveTo('USER_READY'),
+    USER_SPEAKING_DONE: moveTo('AI_THINKING'),
+  },
+  AI_THINKING: {
+    AI_RESPONSE_READY: moveTo('AI_INNER_THOUGHT'),
+    AI_RESPONSE_SKIPPED: finishTurn,
+    AI_RESPONSE_FAILED: moveTo('USER_READY'),
+  },
+  AI_INNER_THOUGHT: {
+    INNER_THOUGHT_DONE: finishTurn,
+  },
+  DONE: {},
+};
+
+// ── 4. 입구 — 바깥(훅)이 부르는 유일한 함수. 표에서 규칙을 찾아 적용하고, 없으면 무시한다 ──
+
 export const nextConversationState = (
   state: ConversationState,
   event: ConversationEvent,
   hasNext: boolean,
   completed = false,
-): ConversationState => {
-  switch (state.phase) {
-    case 'AI_SPEAKING':
-      // 발화가 끝나면 — 종료 메시지였다면 DONE(→CTA), 아니면 유저 차례로
-      return event === 'AI_SPEAKING_DONE'
-        ? { ...state, phase: completed ? 'DONE' : 'USER_READY' }
-        : state;
-    case 'USER_READY':
-      return event === 'USER_SPEAKING_STARTED'
-        ? { ...state, phase: 'USER_SPEAKING' }
-        : state;
-    case 'USER_SPEAKING':
-      if (event === 'USER_SPEAKING_CANCELLED')
-        return { ...state, phase: 'USER_READY' };
-      if (event === 'USER_SPEAKING_DONE')
-        return { ...state, phase: 'AI_THINKING' };
-      return state;
-    case 'AI_THINKING':
-      // 응답이 오면 속마음으로, 속마음이 없으면(실패·빈값) 건너뛰고 바로 다음 턴,
-      // 제출이 실패하면 다시 마이크 대기로 되돌린다
-      if (event === 'AI_RESPONSE_READY')
-        return { ...state, phase: 'AI_INNER_THOUGHT' };
-      if (event === 'AI_RESPONSE_SKIPPED') return advanceTurn(state, hasNext);
-      if (event === 'AI_RESPONSE_FAILED')
-        return { ...state, phase: 'USER_READY' };
-      return state;
-    case 'AI_INNER_THOUGHT':
-      if (event !== 'INNER_THOUGHT_DONE') return state;
-      return advanceTurn(state, hasNext);
-    case 'DONE':
-      return state;
-  }
-};
+): ConversationState =>
+  TRANSITIONS[state.phase][event]?.(state, { hasNext, completed }) ?? state;
