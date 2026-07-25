@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { startDeepgramStt } from './deepgram-stt';
 
 class FakeWebSocket {
+  static CONNECTING = 0;
   static OPEN = 1;
   static instances: FakeWebSocket[] = [];
 
@@ -252,6 +253,67 @@ describe('startDeepgramStt', () => {
 
     expect(onFinal).toHaveBeenCalledTimes(1);
     expect(onFinal).toHaveBeenCalledWith('마지막 문장');
+  });
+
+  it('abort()는 onFinal 없이 즉시 자원을 정리한다', async () => {
+    const { session, ws, onFinal } = await startWithFakes();
+    ws.open();
+    ws.receive({
+      type: 'Results',
+      is_final: true,
+      channel: { alternatives: [{ transcript: '취소될 말' }] },
+    });
+
+    session.abort();
+
+    expect(onFinal).not.toHaveBeenCalled();
+    expect(trackStop).toHaveBeenCalled();
+    // 파기 후엔 어떤 서버 이벤트가 와도 결과가 나가지 않는다
+    ws.receive({ type: 'UtteranceEnd' });
+    expect(onFinal).not.toHaveBeenCalled();
+  });
+
+  it('stop()의 확정 대기 중 abort하면 타임아웃이 지나도 결과가 나가지 않는다', async () => {
+    // 완료(■) 직후 마음을 바꿔 X를 누른 경우 — 확정보다 파기가 이긴다
+    vi.useFakeTimers();
+    const { session, ws, onFinal } = await startWithFakes();
+    ws.open();
+
+    session.stop();
+    session.abort();
+    vi.advanceTimersByTime(2000);
+
+    expect(onFinal).not.toHaveBeenCalled();
+  });
+
+  it('연결이 열리기 전에 abort하면 CONNECTING 소켓도 닫는다', async () => {
+    const { session, ws, onFinal } = await startWithFakes(); // open() 안 함 — 연결 중
+
+    session.abort();
+
+    expect(ws.readyState).toBe(3); // closed
+    expect(trackStop).toHaveBeenCalled();
+    expect(onFinal).not.toHaveBeenCalled();
+  });
+
+  it('토큰 요청 자체가 실패(네트워크)해도 마이크 스트림을 정리한다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new Error('network down');
+      }),
+    );
+
+    await expect(
+      startDeepgramStt({
+        ...makeHandlers(),
+        lang: 'ko',
+        endpointingMs: 2000,
+        stopOnSilence: true,
+      }),
+    ).rejects.toThrow('network down');
+
+    expect(trackStop).toHaveBeenCalled();
   });
 
   it('세션 도중 연결이 끊기면 onError를 호출한다', async () => {

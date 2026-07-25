@@ -1,22 +1,22 @@
 // Deepgram 실시간 STT 전송 계층 — getUserMedia 오디오를 WebSocket으로 보내고 트랜스크립트를 콜백으로 전달 (React 무관)
 
 export interface SttHandlers {
-  // 발화 중 실시간 미리보기 (계속 갱신됨)
-  onInterim: (transcript: string) => void;
-  // 턴 종료 — 침묵 감지(endpointing) 또는 stop() 호출 시 한 번
-  onFinal: (transcript: string) => void;
+  onInterim: (transcript: string) => void; // 발화 중 실시간 미리보기
+  onFinal: (transcript: string) => void; // 턴 종료 시 한 번 — 침묵 또는 stop()
   onError: (error: Error) => void;
 }
 
 export interface SttSession {
+  /** 확정 (완료 ■) — 남은 인식까지 반영해 onFinal이 한 번 온다 */
   stop: () => void;
+  /** 파기 (취소 X) — onFinal 없이 즉시 정리된다 */
+  abort: () => void;
 }
 
 export interface DeepgramSttOptions extends SttHandlers {
   lang: string;
   endpointingMs: number;
-  // false면 침묵에도 턴을 끝내지 않는다 — stop() 호출만이 유일한 종료 경로
-  stopOnSilence: boolean;
+  stopOnSilence: boolean; // false면 침묵에도 안 끝난다 — 종료는 stop()뿐
 }
 
 const TOKEN_ENDPOINT = '/api/stt/token';
@@ -76,13 +76,21 @@ export const startDeepgramStt = async (
     if (recorder.state !== 'inactive') recorder.stop();
   };
 
-  const tokenRes = await fetch(TOKEN_ENDPOINT, { method: 'POST' });
-  if (!tokenRes.ok) {
+  const releaseMic = () => {
     stopRecorder();
     stream.getTracks().forEach((track) => track.stop());
-    throw new Error(`토큰 발급 실패: ${tokenRes.status}`);
+  };
+
+  // 토큰 확보 실패는 어떤 형태든(4xx·네트워크 예외) 마이크를 되돌려놓고 던진다
+  let token: string;
+  try {
+    const tokenRes = await fetch(TOKEN_ENDPOINT, { method: 'POST' });
+    if (!tokenRes.ok) throw new Error(`토큰 발급 실패: ${tokenRes.status}`);
+    ({ token } = (await tokenRes.json()) as { token: string });
+  } catch (error) {
+    releaseMic();
+    throw error;
   }
-  const { token } = (await tokenRes.json()) as { token: string };
 
   const params = new URLSearchParams({
     model: 'nova-3',
@@ -111,9 +119,14 @@ export const startDeepgramStt = async (
   const cleanup = () => {
     if (finalizeTimer) clearTimeout(finalizeTimer);
     finalizeTimer = null;
-    stopRecorder();
-    stream.getTracks().forEach((track) => track.stop());
-    if (socket.readyState === WebSocket.OPEN) socket.close();
+    releaseMic();
+    // 연결 중(CONNECTING)에 파기돼도 소켓이 백그라운드에 살아남지 않게 함께 닫는다
+    if (
+      socket.readyState === WebSocket.OPEN ||
+      socket.readyState === WebSocket.CONNECTING
+    ) {
+      socket.close();
+    }
   };
 
   // 턴 종료를 정확히 한 번만 처리
@@ -176,6 +189,11 @@ export const startDeepgramStt = async (
       } else {
         finishTurn();
       }
+    },
+    abort: () => {
+      if (finished) return;
+      finished = true; // 이후 도착하는 결과·타이머·종료 이벤트가 전부 무시된다
+      cleanup();
     },
   };
 };
