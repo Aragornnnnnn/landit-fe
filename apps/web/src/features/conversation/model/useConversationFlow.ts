@@ -77,7 +77,6 @@ export const useConversationFlow = (scenario: Scenario) => {
   // send 클로저가 최신 값을 읽도록 ref로 들고 있는다
   const sessionIdRef = useRef<number | null>(null);
   const sessionPromiseRef = useRef<Promise<number | null> | null>(null);
-  const hasNextRef = useRef(true); // 이어서 재생할 AI 발화가 있는가 (종료 메시지 포함)
   const completedRef = useRef(false); // 그 발화를 끝으로 대화가 종료되는가
   const nextMessageRef = useRef<NextMessage | null>(null);
   const startedRef = useRef(false);
@@ -97,12 +96,7 @@ export const useConversationFlow = (scenario: Scenario) => {
 
   const send = (event: ConversationEvent) =>
     setState((prev) =>
-      nextConversationState(
-        prev,
-        event,
-        hasNextRef.current,
-        completedRef.current,
-      ),
+      nextConversationState(prev, event, completedRef.current),
     );
 
   // AI 발화 재생 — 끝나면 상태기계에 알린다 (오프닝 mp3·TTS 합성·타이머 폴백은 훅 안에)
@@ -156,7 +150,6 @@ export const useConversationFlow = (scenario: Scenario) => {
       .then((res) => {
         sessionIdRef.current = res.sessionId;
         setSessionId(res.sessionId);
-        hasNextRef.current = !res.progress.completed;
         track(EVENTS.CONVERSATION_STARTED, {
           scenario_id: scenario.scenarioId,
           session_id: res.sessionId,
@@ -322,10 +315,8 @@ export const useConversationFlow = (scenario: Scenario) => {
         input_type: inputType === 'VOICE' ? 'voice' : 'text',
         char_count: content.length,
       });
+      // 종료 인사도 nextMessage로 오고, 그 인사를 끝으로 종료인지는 completed가 알려준다 (인사 재생 후 CTA)
       nextMessageRef.current = res.nextMessage;
-      // 종료 메시지도 nextMessage로 오므로, 발화 유무는 nextMessage로 판단하고
-      // 그 발화를 끝으로 종료인지는 completed로 따로 들고 간다 (완료 발화도 재생 후 CTA로)
-      hasNextRef.current = res.nextMessage != null;
       completedRef.current = res.progress.completed;
       // 마지막 발화였다면 피드백을 미리 만들고 다음 대화 해금을 홈에 반영한다
       if (res.progress.completed) {

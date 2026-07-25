@@ -360,28 +360,6 @@ describe('useConversationFlow', () => {
     expect(result.current.turn.aiMessage).toBe('What size would you like?');
   });
 
-  it('다음 질문이 없으면(completed) 속마음이 끝난 뒤 대화가 종료된다', async () => {
-    const { result } = await renderUserFirst();
-    submitMessage.mockResolvedValue(
-      submitResponse({
-        nextMessage: null,
-        progress: {
-          currentTurnNumber: 3,
-          currentMessageSequenceNumber: 1,
-          totalQuestionCount: 3,
-          completed: true,
-        },
-      }),
-    );
-    await speakAndSubmit(result, 'Yes, here you go.');
-
-    act(() => {
-      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
-    });
-
-    expect(result.current.phase).toBe('DONE');
-  });
-
   it('완료 턴에 종료 메시지가 오면 그걸 발화한 뒤 대화가 종료된다', async () => {
     const { result } = await renderUserFirst();
     submitMessage.mockResolvedValue(
@@ -420,7 +398,14 @@ describe('useConversationFlow', () => {
     const { result } = await renderUserFirst();
     submitMessage.mockResolvedValue(
       submitResponse({
-        nextMessage: null,
+        nextMessage: {
+          messageId: 4,
+          turnNumber: 3,
+          messageSequence: 1,
+          role: 'AI',
+          content: 'Great job today!',
+          translatedContent: '오늘 잘했어요!',
+        },
         progress: {
           currentTurnNumber: 3,
           currentMessageSequenceNumber: 1,

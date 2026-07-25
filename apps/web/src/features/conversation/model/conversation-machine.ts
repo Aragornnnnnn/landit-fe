@@ -32,10 +32,8 @@ export const initialConversationState = (
 });
 
 // ── 3. 상태가 바뀌는 규칙 — "어떤 단계에서 어떤 사건이 오면 어디로 가나" ──
-// hasNext: 이어서 재생할 AI 발화가 있는가(종료 메시지 포함).
-// completed: 그 발화를 끝으로 대화가 종료되는가(서버 progress.completed).
+// 전이의 재료 — completed: 방금 발화를 끝으로 대화가 종료되는가(서버 progress.completed)
 interface TransitionContext {
-  hasNext: boolean;
   completed: boolean;
 }
 
@@ -44,37 +42,29 @@ type Transition = (
   context: TransitionContext,
 ) => ConversationState;
 
-// 대화를 끝낸다 — 어느 경로로 끝나든 도착지는 하나다
-const endConversation = (state: ConversationState): ConversationState => ({
-  ...state,
-  phase: 'DONE',
-});
-
 // 그 phase로 이동하는 단순 전이
 const moveTo =
   (phase: ConversationPhase): Transition =>
   (state) => ({ ...state, phase });
 
-// AI 발화가 끝난 순간 — 방금 발화가 종료 인사였다면 대화를 끝내고, 아니면 유저에게 차례를 넘긴다
+// AI 발화가 끝난 순간 — 방금 발화가 종료 인사였다면 대화를 끝내고, 아니면 유저에게 차례를 넘긴다.
+// 매 발화 종료마다 실행되며, 마지막 인사 뒤에만 completed가 참이다
 const finishAiSpeaking: Transition = (state, { completed }) => {
   if (completed) {
-    return endConversation(state);
+    return { ...state, phase: 'DONE' };
   }
   return { ...state, phase: 'USER_READY' };
 };
 
-// 속마음까지 끝난 순간 — 틀어줄 다음 발화가 있으면 새 턴을 시작하고, 없으면 대화를 끝낸다.
-// 정상 종료는 서버가 종료 인사를 보내줘서 여기선 새 턴 → 재생 후 finishAiSpeaking에서 DONE이 되고,
-// 여기서 바로 끝나는 건 서버가 발화 없이 끝내는 경우다 (계약상 nextMessage: null 허용 — session.ts)
-const finishTurn: Transition = (state, { hasNext }) => {
-  if (hasNext) {
-    return { phase: 'AI_SPEAKING', turnIndex: state.turnIndex + 1 };
-  }
-  return endConversation(state);
-};
+// 속마음까지 끝난 순간 — 다음 발화를 재생하는 새 턴을 시작한다.
+// 서버가 종료 인사까지 발화로 항상 보내주므로, 이 시점에 틀 발화가 없는 경우는 없다 (landit-be SessionMessageAiGenerator)
+const startNextTurn: Transition = (state) => ({
+  phase: 'AI_SPEAKING',
+  turnIndex: state.turnIndex + 1,
+});
 
 // 전이 표 — 각 phase가 받아들이는 이벤트와 그 결과를 한눈에 적는다.
-// 표에 없는 (phase, 이벤트) 조합은 무시된다(연타·타이머 겹침 방어). DONE은 아무것도 받지 않는다.
+// 표에 없는 (phase, 이벤트) 조합은 무시된다(연타·타이머 겹침 방어).
 const TRANSITIONS: Record<
   ConversationPhase,
   Partial<Record<ConversationEvent, Transition>>
@@ -91,13 +81,13 @@ const TRANSITIONS: Record<
   },
   AI_THINKING: {
     AI_RESPONSE_READY: moveTo('AI_INNER_THOUGHT'),
-    AI_RESPONSE_SKIPPED: finishTurn,
+    AI_RESPONSE_SKIPPED: startNextTurn,
     AI_RESPONSE_FAILED: moveTo('USER_READY'),
   },
   AI_INNER_THOUGHT: {
-    INNER_THOUGHT_DONE: finishTurn,
+    INNER_THOUGHT_DONE: startNextTurn,
   },
-  DONE: {},
+  DONE: {}, // 종착역 — 도착할 수만 있고, 어떤 사건이 와도 더는 움직이지 않는다
 };
 
 // ── 4. 입구 — 바깥(훅)이 부르는 유일한 함수. 표에서 규칙을 찾아 적용하고, 없으면 무시한다 ──
@@ -105,7 +95,6 @@ const TRANSITIONS: Record<
 export const nextConversationState = (
   state: ConversationState,
   event: ConversationEvent,
-  hasNext: boolean,
   completed = false,
 ): ConversationState =>
-  TRANSITIONS[state.phase][event]?.(state, { hasNext, completed }) ?? state;
+  TRANSITIONS[state.phase][event]?.(state, { completed }) ?? state;
