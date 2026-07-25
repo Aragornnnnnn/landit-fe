@@ -1,5 +1,7 @@
-// 대화 상태 기계 — 한 턴(상대 발화→내 차례→내 발화→상대 생각→속마음)의 전이를 순수 함수로 관리한다
+// 대화 진행 규칙표 — 현재 단계에서 어떤 사건이 발생하면 다음 단계가 무엇인지 결정한다.
+// useConversationFlow(유일한 사용처)가 사건을 넣고, 결정된 단계에 맞춰 실제 동작(재생·녹음·API)을 진행한다.
 
+/** 대화가 밟는 단계 — "누가(AI/USER) 무엇을 하는 중인가"로 읽는다. */
 export type ConversationPhase =
   | 'AI_SPEAKING' // AI 질문 발화 중 (글자 하이라이트)
   | 'USER_READY' // 내가 말할 준비 — 마이크 대기 (말하기 버튼)
@@ -8,6 +10,11 @@ export type ConversationPhase =
   | 'AI_INNER_THOUGHT' // 상대 속마음 노출 (랜디 슬라이드 인)
   | 'DONE'; // 모든 턴 종료
 
+/**
+ * 단계를 바꾸는 사건 — `{단계·행위}_{결말}` 꼴로 단계와 짝을 이룬다.
+ * 발생원: 유저 버튼(USER_SPEAKING_*), 재생 종료(AI_SPEAKING_DONE),
+ * 서버 응답(AI_RESPONSE_*), 속마음 노출 타이머(INNER_THOUGHT_DONE).
+ */
 export type ConversationEvent =
   | 'AI_SPEAKING_DONE'
   | 'USER_SPEAKING_STARTED'
@@ -18,12 +25,13 @@ export type ConversationEvent =
   | 'AI_RESPONSE_FAILED'
   | 'INNER_THOUGHT_DONE';
 
+/** 규칙표가 기억하는 전부 — 현재 단계와 몇 번째 턴인지. 둘은 항상 함께 갱신된다. */
 export interface ConversationState {
   phase: ConversationPhase;
   turnIndex: number;
 }
 
-// ── 2. 첫 상태 — 첫 화자에 따라 AI 발화 또는 내 차례에서 시작한다 ──
+/** 첫 화자에 따른 시작 상태 — AI가 먼저면 발화부터, 유저가 먼저면 마이크 대기부터. */
 export const initialConversationState = (
   firstSpeaker: 'AI' | 'USER',
 ): ConversationState => ({
@@ -31,40 +39,41 @@ export const initialConversationState = (
   turnIndex: 0,
 });
 
-// ── 3. 상태가 바뀌는 규칙 — "어떤 단계에서 어떤 사건이 오면 어디로 가나" ──
-// 전이의 재료 — completed: 방금 발화를 끝으로 대화가 종료되는가(서버 progress.completed)
-interface TransitionContext {
-  completed: boolean;
-}
-
+/**
+ * 전이 — 현재 상태를 받아 다음 상태를 돌려준다.
+ * completed: 방금 발화를 끝으로 대화가 종료되는가(서버 progress.completed).
+ */
 type Transition = (
   state: ConversationState,
-  context: TransitionContext,
+  completed: boolean,
 ) => ConversationState;
 
-// 그 phase로 이동하는 단순 전이
+/** 지정한 단계로 이동하는 단순 전이를 만든다. */
 const moveTo =
   (phase: ConversationPhase): Transition =>
   (state) => ({ ...state, phase });
 
-// AI 발화가 끝난 순간 — 방금 발화가 종료 인사였다면 대화를 끝내고, 아니면 유저에게 차례를 넘긴다.
-// 매 발화 종료마다 실행되며, 마지막 인사 뒤에만 completed가 참이다
-const finishAiSpeaking: Transition = (state, { completed }) => {
+/**
+ * AI 발화가 끝난 순간의 전이 — 방금 발화가 종료 인사였다면(completed) 대화를 끝내고,
+ * 아니면 유저에게 차례를 넘긴다. 매 발화 종료마다 실행된다.
+ */
+const finishAiSpeaking: Transition = (state, completed) => {
   if (completed) {
     return { ...state, phase: 'DONE' };
   }
   return { ...state, phase: 'USER_READY' };
 };
 
-// 속마음까지 끝난 순간 — 다음 발화를 재생하는 새 턴을 시작한다.
-// 서버가 종료 인사까지 발화로 항상 보내주므로, 이 시점에 틀 발화가 없는 경우는 없다 (landit-be SessionMessageAiGenerator)
+/** 속마음까지 끝난 순간의 전이 — 다음 발화를 재생하는 새 턴을 시작한다. */
 const startNextTurn: Transition = (state) => ({
   phase: 'AI_SPEAKING',
   turnIndex: state.turnIndex + 1,
 });
 
-// 전이 표 — 각 phase가 받아들이는 이벤트와 그 결과를 한눈에 적는다.
-// 표에 없는 (phase, 이벤트) 조합은 무시된다(연타·타이머 겹침 방어).
+/**
+ * 전이 표 — 각 단계가 받아들이는 사건과 그 결과.
+ * 표에 없는 (단계, 사건) 조합은 무시된다 — 버튼 연타·타이머 겹침에 안전한 이유.
+ */
 const TRANSITIONS: Record<
   ConversationPhase,
   Partial<Record<ConversationEvent, Transition>>
@@ -87,14 +96,13 @@ const TRANSITIONS: Record<
   AI_INNER_THOUGHT: {
     INNER_THOUGHT_DONE: startNextTurn,
   },
-  DONE: {}, // 종착역 — 도착할 수만 있고, 어떤 사건이 와도 더는 움직이지 않는다
+  DONE: {},
 };
 
-// ── 4. 입구 — 바깥(훅)이 부르는 유일한 함수. 표에서 규칙을 찾아 적용하고, 없으면 무시한다 ──
-
+/** 사건을 적용해 다음 상태를 돌려준다. 해당 단계가 받지 않는 사건이면 상태를 그대로 유지한다. */
 export const nextConversationState = (
   state: ConversationState,
   event: ConversationEvent,
   completed = false,
 ): ConversationState =>
-  TRANSITIONS[state.phase][event]?.(state, { completed }) ?? state;
+  TRANSITIONS[state.phase][event]?.(state, completed) ?? state;
