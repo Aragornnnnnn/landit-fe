@@ -106,10 +106,14 @@ export const startDeepgramStt = async (
         }
       : { endpointing: 'false' }),
   });
-  const socket = new WebSocket(`${DEEPGRAM_WS_URL}?${params}`, [
-    'bearer',
-    token,
-  ]);
+  // 소켓 생성도 동기로 던질 수 있다(프로토콜 문자열로 쓰는 토큰이 비정상이거나 CSP 차단) — 마이크를 되돌려놓고 폴백을 유도한다
+  let socket: WebSocket;
+  try {
+    socket = new WebSocket(`${DEEPGRAM_WS_URL}?${params}`, ['bearer', token]);
+  } catch (error) {
+    releaseMic();
+    throw error;
+  }
   ws = socket; // 이 시점부터 recorder.ondataavailable가 live 전송으로 전환된다
 
   let finalTranscript = '';

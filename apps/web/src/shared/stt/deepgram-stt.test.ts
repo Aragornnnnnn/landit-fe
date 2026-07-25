@@ -135,6 +135,28 @@ describe('startDeepgramStt', () => {
     expect(trackStop).toHaveBeenCalled();
   });
 
+  it('소켓 생성이 실패해도 마이크 스트림을 정리하고 에러를 던진다', async () => {
+    vi.stubGlobal(
+      'WebSocket',
+      class {
+        constructor() {
+          throw new Error('mixed content');
+        }
+      },
+    );
+
+    await expect(
+      startDeepgramStt({
+        ...makeHandlers(),
+        lang: 'ko',
+        endpointingMs: 2000,
+        stopOnSilence: true,
+      }),
+    ).rejects.toThrow('mixed content');
+
+    expect(trackStop).toHaveBeenCalled();
+  });
+
   it('WS가 열리기 전 녹음된 앞부분 오디오는 버퍼했다가 open 시 흘려보낸다', async () => {
     const { ws } = await startWithFakes();
     const recorder = FakeMediaRecorder.instances.at(-1)!;
