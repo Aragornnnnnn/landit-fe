@@ -111,7 +111,7 @@ export const useConversationFlow = (scenario: Scenario) => {
     content: aiMessage?.content ?? null,
     voice,
     scenarioId: scenario.scenarioId,
-    onSpeechEnd: () => send('AI_SPEECH_END'),
+    onSpeechEnd: () => send('AI_SPEAKING_DONE'),
   });
 
   // 마이크 STT — 실시간 미리보기는 transcript로, 완료(stop) 시 최종 텍스트로 음성 제출을 잇는다.
@@ -140,7 +140,7 @@ export const useConversationFlow = (scenario: Scenario) => {
       }
       haptic('error');
       setTranscript('');
-      send('SPEAKING_CANCELLED');
+      send('USER_SPEAKING_CANCELLED');
     },
   });
 
@@ -185,7 +185,7 @@ export const useConversationFlow = (scenario: Scenario) => {
 
   // 다음 질문을 화면에 올리고 턴을 넘긴다 — 속마음 노출을 마쳤을 때와 건너뛸 때가 공유한다
   const advanceToNextTurn = (
-    event: 'INNER_THOUGHT_DONE' | 'RESPONSE_SKIPPED',
+    event: 'INNER_THOUGHT_DONE' | 'AI_RESPONSE_SKIPPED',
   ) => {
     setTranscript('');
     setKeyboardMode(false); // 다음 턴은 마이크(음성)부터 다시 시작
@@ -227,7 +227,7 @@ export const useConversationFlow = (scenario: Scenario) => {
       turn_index: state.turnIndex,
     });
     setKeyboardMode(false);
-    send('MIC_PRESSED');
+    send('USER_SPEAKING_STARTED');
     void stt.start();
   };
 
@@ -239,7 +239,7 @@ export const useConversationFlow = (scenario: Scenario) => {
     });
     setKeyboardMode(true);
     setTranscript('');
-    send('MIC_PRESSED');
+    send('USER_SPEAKING_STARTED');
   };
 
   const cancelListening = () => {
@@ -258,7 +258,7 @@ export const useConversationFlow = (scenario: Scenario) => {
     }
     setKeyboardMode(false);
     setTranscript('');
-    send('SPEAKING_CANCELLED');
+    send('USER_SPEAKING_CANCELLED');
   };
 
   // 음성 완료(■) — STT를 멈추면 최종 텍스트가 onFinal로 도착해 음성 제출을 잇는다
@@ -286,7 +286,7 @@ export const useConversationFlow = (scenario: Scenario) => {
       if (inputType === 'VOICE') {
         haptic('error');
         setTranscript('');
-        send('SPEAKING_CANCELLED');
+        send('USER_SPEAKING_CANCELLED');
         showToast('말이 인식되지 않았어요. 다시 말해볼까요?');
         track(EVENTS.TURN_FAILED, {
           session_id: sessionIdRef.current ?? undefined,
@@ -298,14 +298,14 @@ export const useConversationFlow = (scenario: Scenario) => {
     }
 
     submittingRef.current = true;
-    send('SPEAKING_DONE'); // → AI_THINKING (상대가 생각 중)
+    send('USER_SPEAKING_DONE'); // → AI_THINKING (상대가 생각 중)
     try {
       const sessionId =
         sessionIdRef.current ?? (await sessionPromiseRef.current);
       if (sessionId == null) {
         console.error('세션이 없어 제출할 수 없어요');
         haptic('error');
-        send('RESPONSE_FAILED');
+        send('AI_RESPONSE_FAILED');
         showToast('연결에 문제가 생겼어요. 잠시 후 다시 시도해 주세요');
         track(EVENTS.TURN_FAILED, {
           turn_index: state.turnIndex,
@@ -346,7 +346,7 @@ export const useConversationFlow = (scenario: Scenario) => {
           if (!resolved) return; // 이탈 중이면 화면을 건드리지 않는다
           // 속마음이 비면(생성 실패·타임아웃) 빈 말풍선 대신 건너뛰고 바로 다음 턴으로 넘긴다
           if (!resolved.text) {
-            advanceToNextTurn('RESPONSE_SKIPPED');
+            advanceToNextTurn('AI_RESPONSE_SKIPPED');
             return;
           }
           setThought({
@@ -359,12 +359,12 @@ export const useConversationFlow = (scenario: Scenario) => {
             thought_type: resolved.type ?? undefined,
           });
           haptic('light'); // 상대가 응답을 시작하는 순간 가벼운 틱
-          send('RESPONSE_READY'); // → AI_INNER_THOUGHT
+          send('AI_RESPONSE_READY'); // → AI_INNER_THOUGHT
         });
     } catch (error) {
       console.error('발화 제출 실패', error);
       haptic('error');
-      send('RESPONSE_FAILED'); // → USER_READY (다시 시도)
+      send('AI_RESPONSE_FAILED'); // → USER_READY (다시 시도)
       showToast('전송에 실패했어요. 다시 시도해 주세요');
       track(EVENTS.TURN_FAILED, {
         session_id: sessionIdRef.current ?? undefined,

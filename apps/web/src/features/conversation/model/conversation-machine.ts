@@ -11,13 +11,13 @@ export type ConversationPhase =
   | 'DONE'; // 모든 턴 종료
 
 export type ConversationEvent =
-  | 'AI_SPEECH_END'
-  | 'MIC_PRESSED'
-  | 'SPEAKING_CANCELLED'
-  | 'SPEAKING_DONE'
-  | 'RESPONSE_READY'
-  | 'RESPONSE_SKIPPED'
-  | 'RESPONSE_FAILED'
+  | 'AI_SPEAKING_DONE'
+  | 'USER_SPEAKING_STARTED'
+  | 'USER_SPEAKING_CANCELLED'
+  | 'USER_SPEAKING_DONE'
+  | 'AI_RESPONSE_READY'
+  | 'AI_RESPONSE_SKIPPED'
+  | 'AI_RESPONSE_FAILED'
   | 'INNER_THOUGHT_DONE';
 
 export interface ConversationState {
@@ -33,7 +33,7 @@ export const initialConversationState = (
 });
 
 // 한 턴을 마치고 다음 턴으로 — 남은 턴이 있으면 다음 AI 발화, 없으면 종료.
-// 속마음을 보여준 뒤(INNER_THOUGHT_DONE)와 속마음을 건너뛴 뒤(RESPONSE_SKIPPED)가 공유한다.
+// 속마음을 보여준 뒤(INNER_THOUGHT_DONE)와 속마음을 건너뛴 뒤(AI_RESPONSE_SKIPPED)가 공유한다.
 const advanceTurn = (
   state: ConversationState,
   hasNext: boolean,
@@ -54,25 +54,27 @@ export const nextConversationState = (
   switch (state.phase) {
     case 'AI_SPEAKING':
       // 발화가 끝나면 — 종료 메시지였다면 DONE(→CTA), 아니면 유저 차례로
-      return event === 'AI_SPEECH_END'
+      return event === 'AI_SPEAKING_DONE'
         ? { ...state, phase: completed ? 'DONE' : 'USER_READY' }
         : state;
     case 'USER_READY':
-      return event === 'MIC_PRESSED'
+      return event === 'USER_SPEAKING_STARTED'
         ? { ...state, phase: 'USER_SPEAKING' }
         : state;
     case 'USER_SPEAKING':
-      if (event === 'SPEAKING_CANCELLED')
+      if (event === 'USER_SPEAKING_CANCELLED')
         return { ...state, phase: 'USER_READY' };
-      if (event === 'SPEAKING_DONE') return { ...state, phase: 'AI_THINKING' };
+      if (event === 'USER_SPEAKING_DONE')
+        return { ...state, phase: 'AI_THINKING' };
       return state;
     case 'AI_THINKING':
       // 응답이 오면 속마음으로, 속마음이 없으면(실패·빈값) 건너뛰고 바로 다음 턴,
       // 제출이 실패하면 다시 마이크 대기로 되돌린다
-      if (event === 'RESPONSE_READY')
+      if (event === 'AI_RESPONSE_READY')
         return { ...state, phase: 'AI_INNER_THOUGHT' };
-      if (event === 'RESPONSE_SKIPPED') return advanceTurn(state, hasNext);
-      if (event === 'RESPONSE_FAILED') return { ...state, phase: 'USER_READY' };
+      if (event === 'AI_RESPONSE_SKIPPED') return advanceTurn(state, hasNext);
+      if (event === 'AI_RESPONSE_FAILED')
+        return { ...state, phase: 'USER_READY' };
       return state;
     case 'AI_INNER_THOUGHT':
       if (event !== 'INNER_THOUGHT_DONE') return state;

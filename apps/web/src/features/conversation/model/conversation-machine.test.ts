@@ -25,7 +25,7 @@ describe('initialConversationState', () => {
 describe('nextConversationState', () => {
   it('AI 발화가 끝나면 마이크 대기로 넘어간다', () => {
     expect(
-      nextConversationState(state('AI_SPEAKING'), 'AI_SPEECH_END', true),
+      nextConversationState(state('AI_SPEAKING'), 'AI_SPEAKING_DONE', true),
     ).toEqual(state('USER_READY'));
   });
 
@@ -33,7 +33,7 @@ describe('nextConversationState', () => {
     expect(
       nextConversationState(
         state('AI_SPEAKING', 2),
-        'AI_SPEECH_END',
+        'AI_SPEAKING_DONE',
         true,
         true,
       ),
@@ -42,43 +42,55 @@ describe('nextConversationState', () => {
 
   it('마이크를 누르면 듣기가 시작된다', () => {
     expect(
-      nextConversationState(state('USER_READY'), 'MIC_PRESSED', true),
+      nextConversationState(state('USER_READY'), 'USER_SPEAKING_STARTED', true),
     ).toEqual(state('USER_SPEAKING'));
   });
 
   it('듣는 중 중단(X)하면 마이크 대기로 되돌아간다', () => {
     expect(
-      nextConversationState(state('USER_SPEAKING'), 'SPEAKING_CANCELLED', true),
+      nextConversationState(
+        state('USER_SPEAKING'),
+        'USER_SPEAKING_CANCELLED',
+        true,
+      ),
     ).toEqual(state('USER_READY'));
   });
 
   it('듣기를 완료(■)하면 응답 대기로 넘어간다', () => {
     expect(
-      nextConversationState(state('USER_SPEAKING'), 'SPEAKING_DONE', true),
+      nextConversationState(state('USER_SPEAKING'), 'USER_SPEAKING_DONE', true),
     ).toEqual(state('AI_THINKING'));
   });
 
   it('대기 중 응답이 오면 속마음으로 넘어간다', () => {
     expect(
-      nextConversationState(state('AI_THINKING'), 'RESPONSE_READY', true),
+      nextConversationState(state('AI_THINKING'), 'AI_RESPONSE_READY', true),
     ).toEqual(state('AI_INNER_THOUGHT'));
   });
 
   it('대기 중 속마음을 건너뛰면(빈값) 바로 다음 AI 발화로 넘어간다', () => {
     expect(
-      nextConversationState(state('AI_THINKING', 0), 'RESPONSE_SKIPPED', true),
+      nextConversationState(
+        state('AI_THINKING', 0),
+        'AI_RESPONSE_SKIPPED',
+        true,
+      ),
     ).toEqual(state('AI_SPEAKING', 1));
   });
 
   it('대기 중 속마음을 건너뛰는데 다음 턴이 없으면 대화가 종료된다', () => {
     expect(
-      nextConversationState(state('AI_THINKING', 2), 'RESPONSE_SKIPPED', false),
+      nextConversationState(
+        state('AI_THINKING', 2),
+        'AI_RESPONSE_SKIPPED',
+        false,
+      ),
     ).toEqual(state('DONE', 2));
   });
 
   it('대기 중 제출이 실패하면 마이크 대기로 되돌아간다', () => {
     expect(
-      nextConversationState(state('AI_THINKING'), 'RESPONSE_FAILED', true),
+      nextConversationState(state('AI_THINKING'), 'AI_RESPONSE_FAILED', true),
     ).toEqual(state('USER_READY'));
   });
 
@@ -106,17 +118,17 @@ describe('nextConversationState', () => {
     {
       name: 'AI 발화 중 마이크 누름',
       from: state('AI_SPEAKING'),
-      event: 'MIC_PRESSED',
+      event: 'USER_SPEAKING_STARTED',
     },
     {
       name: '마이크 대기 중 발화 종료',
       from: state('USER_READY'),
-      event: 'AI_SPEECH_END',
+      event: 'AI_SPEAKING_DONE',
     },
     {
       name: '종료 후 마이크 누름',
       from: state('DONE', 2),
-      event: 'MIC_PRESSED',
+      event: 'USER_SPEAKING_STARTED',
     },
   ] as const)('$name — 단계와 무관한 이벤트는 무시한다', ({ from, event }) => {
     expect(nextConversationState(from, event, true)).toEqual(from);
