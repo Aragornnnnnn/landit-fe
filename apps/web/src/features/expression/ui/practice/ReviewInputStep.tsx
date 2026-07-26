@@ -236,7 +236,7 @@ export const ReviewInputStep = ({
   };
 
   // 네이티브 키 입력 라우팅 — 조합입력(IME) 이벤트는 건너뛰고(중복 방지) compositionend에서 한 번만 반영한다
-  const handleInput = (event: React.FormEvent<HTMLInputElement>) => {
+  const applyTyping = (event: React.FormEvent<HTMLInputElement>) => {
     const native = event.nativeEvent as InputEvent;
     if (composingRef.current || native.inputType === 'insertCompositionText')
       return;
@@ -283,7 +283,7 @@ export const ReviewInputStep = ({
       <input
         ref={hiddenRef}
         defaultValue={SENTINEL}
-        onInput={handleInput}
+        onInput={applyTyping}
         onCompositionStart={() => {
           composingRef.current = true;
           composedRef.current = '';

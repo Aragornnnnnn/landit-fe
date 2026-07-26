@@ -9,7 +9,7 @@ import { PermissionPreview } from './PermissionPreview';
 export const MicStep = ({ onNext }: { onNext: () => void }) => {
   const { requesting, request } = useMicPermission();
 
-  const handleAllow = async () => {
+  const requestMicPermission = async () => {
     await request();
     onNext();
   };
@@ -28,7 +28,7 @@ export const MicStep = ({ onNext }: { onNext: () => void }) => {
         </div>
       </div>
 
-      <Button onClick={handleAllow} loading={requesting}>
+      <Button onClick={requestMicPermission} loading={requesting}>
         마이크 켤게요!
       </Button>
     </>
