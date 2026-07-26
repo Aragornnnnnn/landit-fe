@@ -32,7 +32,7 @@ export const BridgeListener = () => {
       window.clearTimeout(timerRef.current);
     };
 
-    const handleBackPressed = () => {
+    const routeBackPress = () => {
       // 바텀시트가 열려 있으면 뒤로가기는 시트 닫기 — 안드로이드 관례. 종료 대기도 푼다
       if (closeTopSheet()) {
         disarm();
@@ -72,7 +72,7 @@ export const BridgeListener = () => {
     };
 
     return subscribeFromNative((message) => {
-      if (message.type === 'BACK_PRESSED') handleBackPressed();
+      if (message.type === 'BACK_PRESSED') routeBackPress();
     });
   }, []);
 

@@ -14,12 +14,7 @@ import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { showToast } from '@/shared/ui/toast';
 
-import {
-  endSession,
-  startSession,
-  submitMessage,
-  type NextMessage,
-} from '../api/session';
+import { submitMessage, type NextMessage } from '../api/session';
 import {
   initialConversationState,
   nextConversationState,
@@ -29,6 +24,7 @@ import { thoughtHoldMs, toThoughtType } from './pacing';
 import type { FloatingThought, ThoughtType } from './thought';
 import { useAiSpeech } from './useAiSpeech';
 import { useConversationInput } from './useConversationInput';
+import { useConversationSession } from './useConversationSession';
 import { useInnerThought } from './useInnerThought';
 
 // 화면이 그리는 현재 턴 — 오프닝은 openingPreview, 이후는 서버 응답에서 조립한다
@@ -61,23 +57,23 @@ export const useConversationFlow = (scenario: Scenario) => {
       : null,
   );
   const [thought, setThought] = useState<FloatingThought | null>(null);
-  // 확보된 세션 — 종료 후 피드백 생성에 쓴다. ref는 send 클로저용, state는 화면 노출용
-  const [sessionId, setSessionId] = useState<number | null>(null);
 
   // send 클로저가 최신 값을 읽도록 ref로 들고 있는다
-  const sessionIdRef = useRef<number | null>(null);
-  const sessionPromiseRef = useRef<Promise<number | null> | null>(null);
   const completedRef = useRef(false); // 그 발화를 끝으로 대화가 종료되는가
   const nextMessageRef = useRef<NextMessage | null>(null);
-  const startedRef = useRef(false);
   const submittingRef = useRef(false); // 중복 제출 방지 (연출은 AI_THINKING phase가 맡는다)
+
+  // 세션 수명(백그라운드 시작·확보 대기·중도 종료)은 훅 안에 — 여기서는 오프닝 폴백만 받는다
+  const session = useConversationSession(scenario, {
+    onOpeningMessage: (message) => setAiMessage((prev) => prev ?? message),
+  });
 
   const innerThought = useInnerThought();
   const queryClient = useQueryClient();
 
   // 대화가 완료되면: 피드백을 미리 생성 요청(prefetch)해 화면 진입 시 즉시 뜨게 하고,
   // 해금된 다음 시나리오(다음 대화)가 홈에 반영되도록 시나리오 캐시를 무효화한다.
-  const handleConversationComplete = (finishedSessionId: number) => {
+  const prepareFeedbackAndUnlock = (finishedSessionId: number) => {
     void prefetchSessionFeedback(queryClient, finishedSessionId);
     void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
   };
@@ -100,49 +96,13 @@ export const useConversationFlow = (scenario: Scenario) => {
   const input = useConversationInput({
     canStart: state.phase === 'USER_READY',
     trackContext: () => ({
-      sessionId: sessionIdRef.current,
+      sessionId: session.sessionId,
       turnIndex: state.turnIndex,
     }),
     onInputStart: () => send('USER_SPEAKING_STARTED'),
     onInputCancel: () => send('USER_SPEAKING_CANCELLED'),
     onContent: (content, inputType) => void submitContent(content, inputType),
   });
-
-  // 세션은 백그라운드로 시작 — 화면은 이미 openingPreview로 떴고, 제출 때 쓸 sessionId만 확보한다.
-  // StrictMode 이중 실행에도 한 번만 만든다.
-  useEffect(() => {
-    if (startedRef.current) return;
-    startedRef.current = true;
-
-    sessionPromiseRef.current = startSession(scenario.scenarioId)
-      .then((res) => {
-        sessionIdRef.current = res.sessionId;
-        setSessionId(res.sessionId);
-        track(EVENTS.CONVERSATION_STARTED, {
-          scenario_id: scenario.scenarioId,
-          session_id: res.sessionId,
-          first_speaker: scenario.firstSpeaker,
-          is_retry: scenario.completed,
-        });
-        // openingPreview로 오프닝을 못 시드했을 때(예외적)만 세션 응답으로 채운다
-        if (res.currentMessage) {
-          const message = res.currentMessage;
-          setAiMessage(
-            (prev) =>
-              prev ?? {
-                content: message.content,
-                translatedContent: message.translatedContent,
-              },
-          );
-        }
-        return res.sessionId;
-      })
-      .catch((error) => {
-        console.error('세션 시작 실패', error);
-        return null;
-      });
-    // startedRef 가드로 어차피 1회만 실행된다 — 계측 속성 참조로 늘어난 의존성
-  }, [scenario.scenarioId, scenario.completed, scenario.firstSpeaker]);
 
   // 다음 질문을 화면에 올리고 턴을 넘긴다 — 속마음 노출을 마쳤을 때와 건너뛸 때가 공유한다
   const startNextTurn = (
@@ -182,9 +142,8 @@ export const useConversationFlow = (scenario: Scenario) => {
     submittingRef.current = true;
     send('USER_SPEAKING_DONE'); // → AI_THINKING (상대가 생각 중)
     try {
-      // 바깥 sessionId state와 다른 값 — 백그라운드 시작이 아직이면 확보를 기다린 결과
-      const activeSessionId =
-        sessionIdRef.current ?? (await sessionPromiseRef.current);
+      // 반환하는 sessionId state와 다른 값 — 백그라운드 시작이 아직이면 확보를 기다린 결과
+      const activeSessionId = await session.ensure();
       if (activeSessionId == null) {
         console.error('세션이 없어 제출할 수 없어요');
         haptic('error');
@@ -215,7 +174,7 @@ export const useConversationFlow = (scenario: Scenario) => {
           scenario_id: scenario.scenarioId,
           turn_count: res.progress.totalQuestionCount,
         });
-        handleConversationComplete(activeSessionId);
+        prepareFeedbackAndUnlock(activeSessionId);
       }
       // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 합성한다 — 다음 발화 재생 지연을 없앤다
       if (res.nextMessage) aiSpeech.prefetch(res.nextMessage.content);
@@ -248,7 +207,7 @@ export const useConversationFlow = (scenario: Scenario) => {
       send('AI_RESPONSE_FAILED'); // → USER_READY (다시 시도)
       showToast('전송에 실패했어요. 다시 시도해 주세요');
       track(EVENTS.TURN_FAILED, {
-        session_id: sessionIdRef.current ?? undefined,
+        session_id: session.sessionId ?? undefined,
         turn_index: state.turnIndex,
         reason: 'api_error',
       });
@@ -257,19 +216,15 @@ export const useConversationFlow = (scenario: Scenario) => {
     }
   };
 
-  // 중도 이탈 시 세션 종료 (정상 완료는 서버가 판정하므로 호출하지 않는다)
+  // 중도 이탈 (정상 완료는 서버가 판정하므로 세션을 끝내지 않는다)
   const leave = () => {
     track(EVENTS.CONVERSATION_ABANDONED, {
-      session_id: sessionIdRef.current ?? undefined,
+      session_id: session.sessionId ?? undefined,
       scenario_id: scenario.scenarioId,
       turn_index: state.turnIndex,
     });
     innerThought.cancel(); // 진행 중인 속마음 폴링을 멈춘다
-    if (sessionIdRef.current != null) {
-      endSession(sessionIdRef.current).catch((error) =>
-        console.error('세션 종료 실패', error),
-      );
-    }
+    session.end();
   };
 
   // USER 선발화면 오프닝 안내를, AI 선발화면 현재 질문을 보여준다
@@ -294,6 +249,6 @@ export const useConversationFlow = (scenario: Scenario) => {
     input,
     leave,
     // DONE 시점엔 세션이 확보돼 있다 — 피드백 생성에 쓴다 (없으면 세션 시작이 실패한 경우)
-    sessionId,
+    sessionId: session.sessionId,
   };
 };
