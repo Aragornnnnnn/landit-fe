@@ -7,9 +7,10 @@ import { Modal } from './Modal';
 // createPortal로 document.body에 그려지는 내용이라, 테스트 사이에 명시적으로 걷어낸다
 afterEach(() => cleanup());
 
-// 중첩된 framer-motion 인스턴스가 렌더러 아이덴티티를 갈라놔서, 테스트에선 순수 DOM으로 치환한다
+// 중첩된 framer-motion 인스턴스가 렌더러 아이덴티티를 갈라놔서, 테스트에선 순수 DOM으로 치환한다.
+// forwardRef로 만들어야 Modal의 포커스 관리(panelRef)가 실제 DOM 노드를 잡는다
 vi.mock('motion/react', async () => {
-  const { createElement, Fragment } = await import('react');
+  const { createElement, forwardRef, Fragment } = await import('react');
   const MOTION_PROPS = new Set([
     'initial',
     'animate',
@@ -24,16 +25,25 @@ vi.mock('motion/react', async () => {
   const motion = new Proxy(
     {},
     {
-      get:
-        (_target, tag: string) =>
-        ({ children, ...props }: Record<string, unknown>) =>
-          createElement(
-            tag,
-            Object.fromEntries(
-              Object.entries(props).filter(([key]) => !MOTION_PROPS.has(key)),
+      get: (_target, tag: string) =>
+        forwardRef(
+          (
+            { children, ...props }: Record<string, unknown>,
+            ref: React.Ref<unknown>,
+          ) =>
+            createElement(
+              tag,
+              {
+                ref,
+                ...Object.fromEntries(
+                  Object.entries(props).filter(
+                    ([key]) => !MOTION_PROPS.has(key),
+                  ),
+                ),
+              },
+              children as React.ReactNode,
             ),
-            children as React.ReactNode,
-          ),
+        ),
     },
   );
   return {
@@ -132,5 +142,73 @@ describe('Modal', () => {
 
     expect(handled).toBe(false);
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('다이얼로그 role과 aria-modal을 갖는다', () => {
+    render(
+      <Modal open onClose={vi.fn()}>
+        내용
+      </Modal>,
+    );
+
+    expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true');
+  });
+
+  it('열리면 포커스가 다이얼로그 패널로 이동한다', () => {
+    render(
+      <Modal open onClose={vi.fn()}>
+        내용
+      </Modal>,
+    );
+
+    expect(document.activeElement).toBe(screen.getByRole('dialog'));
+  });
+
+  it('닫히면 이전에 포커스했던 요소로 되돌아간다', () => {
+    const outsideButton = document.createElement('button');
+    document.body.appendChild(outsideButton);
+    outsideButton.focus();
+
+    const { rerender } = render(
+      <Modal open onClose={vi.fn()}>
+        내용
+      </Modal>,
+    );
+    rerender(
+      <Modal open={false} onClose={vi.fn()}>
+        내용
+      </Modal>,
+    );
+
+    expect(document.activeElement).toBe(outsideButton);
+    outsideButton.remove();
+  });
+
+  it('열려있는 동안 Tab으로 마지막 요소 다음에서 처음 요소로 순환한다', () => {
+    render(
+      <Modal open onClose={vi.fn()}>
+        <button>첫번째</button>
+        <button>마지막</button>
+      </Modal>,
+    );
+    screen.getByText('마지막').focus();
+
+    fireEvent.keyDown(window, { key: 'Tab' });
+
+    expect(document.activeElement).toBe(screen.getByText('첫번째'));
+  });
+
+  it('열려있는 동안 Shift+Tab으로 첫 요소 이전에서 마지막 요소로 순환한다', () => {
+    render(
+      <Modal open onClose={vi.fn()}>
+        <button>첫번째</button>
+        <button>마지막</button>
+      </Modal>,
+    );
+    screen.getByText('첫번째').focus();
+
+    fireEvent.keyDown(window, { key: 'Tab', shiftKey: true });
+
+    expect(document.activeElement).toBe(screen.getByText('마지막'));
   });
 });
