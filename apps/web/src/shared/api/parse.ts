@@ -1,12 +1,18 @@
 // 백엔드 공통 응답 포맷 { success, data, error }
+import { ApiError } from './api-error';
+
 interface ApiBody {
   success: boolean;
   data?: unknown;
   error?: { code?: string; message?: string };
 }
 
-// 성공이면 data를 돌려주고, 실패면 서버가 준 메시지로 에러를 던진다.
-// 래퍼가 안 씌워진 에러(스프링 기본 404/500 등)는 메시지가 없으므로 상태코드를 붙여 원인을 드러낸다.
+// 호스트·쿼리를 떼고 경로만 — 같은 API 실패를 한 태그로 모은다
+function endpointOf(response: Response): string {
+  return new URL(response.url).pathname;
+}
+
+// 성공이면 data를 돌려주고, 실패면 상태·코드·엔드포인트를 보존한 ApiError를 던진다
 export async function parseApiResponse<T>(response: Response): Promise<T> {
   let body: ApiBody | null = null;
   try {
@@ -17,11 +23,11 @@ export async function parseApiResponse<T>(response: Response): Promise<T> {
 
   if (body?.success) return body.data as T;
 
-  if (body?.error?.message) throw new Error(body.error.message);
-
-  throw new Error(
-    response.status
-      ? `서버 오류가 발생했어요. (${response.status})`
-      : '서버 오류가 발생했어요.',
+  throw new ApiError(
+    // 공통 봉투 없이 온 실패(스프링 기본 에러 페이지 등)는 상태코드를 붙인 기본 문구로
+    body?.error?.message ?? `서버 오류가 발생했어요. (${response.status})`,
+    response.status,
+    endpointOf(response),
+    body?.error?.code,
   );
 }
