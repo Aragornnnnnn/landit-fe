@@ -35,7 +35,7 @@ export const FeedbackSurvey = ({ onDone }: FeedbackSurveyProps) => {
   const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const submitSurvey = async () => {
+  const handleSubmit = async () => {
     if (score === null) return;
     // 의견 원문은 PII 위험이 있어 존재 여부만 남긴다
     track(EVENTS.NPS_SURVEY_SUBMITTED, {
@@ -51,12 +51,12 @@ export const FeedbackSurvey = ({ onDone }: FeedbackSurveyProps) => {
     setTimeout(onDone, THANKS_DISMISS_MS);
   };
 
-  const selectScore = (value: NpsScore) => {
+  const handleSelect = (value: NpsScore) => {
     track(EVENTS.NPS_SCORE_SELECTED, { score: value });
     setScore(value);
   };
 
-  const dismissSurvey = () => {
+  const handleDismiss = () => {
     // 제출 없이 닫음 — 점수를 골라놓고 이탈했으면 score가 담긴다
     track(EVENTS.NPS_SURVEY_DISMISSED, { score: score ?? undefined });
     onDone();
@@ -70,7 +70,7 @@ export const FeedbackSurvey = ({ onDone }: FeedbackSurveyProps) => {
       <div className="relative mb-6">
         <button
           type="button"
-          onClick={dismissSurvey}
+          onClick={handleDismiss}
           aria-label="닫기"
           className="absolute -top-1 right-0 text-xl leading-none text-muted-foreground"
         >
@@ -88,7 +88,7 @@ export const FeedbackSurvey = ({ onDone }: FeedbackSurveyProps) => {
             key={value}
             value={value}
             score={score}
-            onSelect={selectScore}
+            onSelect={handleSelect}
           />
         ))}
       </div>
@@ -109,7 +109,7 @@ export const FeedbackSurvey = ({ onDone }: FeedbackSurveyProps) => {
         주신 의견은 한 글자도 빼놓지 않고 꼼꼼히 읽어볼게요.
       </p>
 
-      <Button size="md" onClick={submitSurvey} disabled={score === null}>
+      <Button size="md" onClick={handleSubmit} disabled={score === null}>
         {score === null ? '얼마나 만족하는지 알려줘요' : '제출할게요'}
       </Button>
     </>

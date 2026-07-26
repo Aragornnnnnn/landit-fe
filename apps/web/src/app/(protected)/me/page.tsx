@@ -49,7 +49,7 @@ export default function MyPage() {
   }
 
   // 서버 폐기가 실패해도 로컬 세션은 지우고 로그인으로 보낸다 — 사용자를 로그인 상태에 가둘 이유가 없다
-  async function logout() {
+  async function handleLogout() {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
     try {
@@ -65,7 +65,7 @@ export default function MyPage() {
   }
 
   // 탈퇴는 서버 성공이 먼저다 — 실패했는데 로컬만 지우면 계정이 남은 채 탈퇴된 것처럼 보인다
-  async function deleteAccount() {
+  async function handleDeleteAccount() {
     if (isDeletingAccount) return;
     setIsDeletingAccount(true);
     setDeleteErrorMessage(null);
@@ -170,7 +170,7 @@ export default function MyPage() {
           <MenuGroup>
             <MenuButton
               title={isLoggingOut ? '로그아웃 중...' : '로그아웃'}
-              onClick={logout}
+              onClick={handleLogout}
               disabled={isLoggingOut}
             />
             <MenuButton
@@ -221,7 +221,7 @@ export default function MyPage() {
             type="button"
             variant="danger"
             size="md"
-            onClick={deleteAccount}
+            onClick={handleDeleteAccount}
             loading={isDeletingAccount}
             disabled={isDeletingAccount}
           >

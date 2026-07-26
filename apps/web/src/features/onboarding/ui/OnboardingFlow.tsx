@@ -49,12 +49,12 @@ export const OnboardingFlow = () => {
   };
 
   // 전진 CTA에서만 부른다 — 뒤로가기는 완료가 아니다
-  const finishStep = (completed: OnboardingStep, next: OnboardingStep) => {
+  const completeStep = (completed: OnboardingStep, next: OnboardingStep) => {
     track(EVENTS.ONBOARDING_STEP_COMPLETED, { step: completed });
     goTo(next);
   };
 
-  const stepBack = () => {
+  const handleBack = () => {
     const currentIndex = STEP_ORDER.indexOf(step);
     if (currentIndex > 0) goTo(STEP_ORDER[currentIndex - 1]);
   };
@@ -72,7 +72,7 @@ export const OnboardingFlow = () => {
 
   return (
     <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background text-foreground">
-      <OnboardingHeader step={step} onBack={stepBack} />
+      <OnboardingHeader step={step} onBack={handleBack} />
 
       <Transition
         transitionKey={step}
@@ -86,11 +86,11 @@ export const OnboardingFlow = () => {
         {step === 'intro' && (
           <IntroStep
             nickname={member?.nickname ?? null}
-            onNext={() => finishStep('intro', 'sound')}
+            onNext={() => completeStep('intro', 'sound')}
           />
         )}
         {step === 'sound' && (
-          <SoundStep onNext={() => finishStep('sound', 'mic')} />
+          <SoundStep onNext={() => completeStep('sound', 'mic')} />
         )}
         {step === 'mic' && (
           <MicStep
@@ -104,7 +104,7 @@ export const OnboardingFlow = () => {
           />
         )}
         {step === 'thought' && (
-          <ThoughtStep onNext={() => finishStep('thought', 'scenario')} />
+          <ThoughtStep onNext={() => completeStep('thought', 'scenario')} />
         )}
         {step === 'scenario' && <ScenarioStep onStart={startConversation} />}
       </Transition>
