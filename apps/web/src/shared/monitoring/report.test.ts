@@ -41,6 +41,22 @@ describe('monitoring', () => {
     });
   });
 
+  it('경로의 ID는 :id로 묶는다 — 세션마다 태그가 갈리면 같은 API 실패가 집계되지 않는다', () => {
+    const error = new ApiError(
+      '서버 오류가 발생했어요. (500)',
+      500,
+      '/api/v1/sessions/145/messages/7/inner-thought',
+    );
+
+    reportError(error);
+
+    expect(sentryMock.captureException).toHaveBeenCalledWith(error, {
+      tags: expect.objectContaining({
+        api_endpoint: '/api/v1/sessions/:id/messages/:id/inner-thought',
+      }),
+    });
+  });
+
   it('reportWarning은 warning 레벨로 보고한다 (수집만, 알림 없음)', () => {
     const error = new Error('flaky');
 

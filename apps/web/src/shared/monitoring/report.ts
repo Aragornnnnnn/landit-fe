@@ -3,11 +3,15 @@ import * as Sentry from '@sentry/nextjs';
 
 import { ApiError } from '@/shared/api/api-error';
 
+// 경로의 ID를 :id로 묶는다 — 세션마다 태그가 갈리면 같은 API 실패가 집계되지 않는다
+const routeOf = (endpoint: string) =>
+  endpoint.replace(/\/\d+(?=\/|$)/g, '/:id');
+
 // API 실패면 endpoint·status·code를 태그로 승격한다
 const apiTags = (failure: unknown) =>
   failure instanceof ApiError
     ? {
-        api_endpoint: failure.endpoint,
+        api_endpoint: routeOf(failure.endpoint),
         api_status: String(failure.status),
         ...(failure.code && { api_code: failure.code }),
       }
