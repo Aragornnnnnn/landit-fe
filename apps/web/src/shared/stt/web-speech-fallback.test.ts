@@ -26,6 +26,15 @@ class FakeRecognition {
   stop() {
     this.onend?.();
   }
+
+  // 실제 abort()는 aborted 에러 후 onend가 이어진다
+  abort() {
+    this.aborted = true;
+    this.onerror?.({ error: 'aborted' });
+    this.onend?.();
+  }
+
+  aborted = false;
 }
 
 const makeHandlers = () => ({
@@ -46,13 +55,13 @@ const resultEvent = (items: [text: string, isFinal: boolean][]) => ({
 
 const startWithFake = (options: { stopOnSilence?: boolean } = {}) => {
   const handlers = makeHandlers();
-  startWebSpeech({
+  const session = startWebSpeech({
     ...handlers,
     lang: 'ko',
     stopOnSilence: options.stopOnSilence ?? true,
   });
   const recognition = FakeRecognition.instances.at(-1)!;
-  return { recognition, ...handlers };
+  return { session, recognition, ...handlers };
 };
 
 describe('startWebSpeech', () => {
@@ -129,6 +138,18 @@ describe('startWebSpeech', () => {
     expect(onError).toHaveBeenCalledWith(
       new Error('음성 인식 오류: service-not-allowed'),
     );
+  });
+
+  it('abort는 인식을 파기한다 — 이후 어떤 결과·종료가 와도 onFinal이 없다', () => {
+    const { session, recognition, onFinal, onError } = startWithFake();
+    recognition.onresult?.(resultEvent([['버려질 말', true]]));
+
+    session.abort();
+    recognition.onend?.();
+
+    expect(recognition.aborted).toBe(true);
+    expect(onFinal).not.toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalled();
   });
 
   it('침묵으로 끝나면 누적 텍스트로 onFinal을 정확히 한 번 호출한다', () => {

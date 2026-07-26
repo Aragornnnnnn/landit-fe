@@ -19,7 +19,9 @@ interface SpeechRecognitionLike {
   continuous: boolean;
   interimResults: boolean;
   start: () => void;
-  stop: () => void;
+  stop: () => void; // 확정 — 인식 마치고 결과를 낸다
+  abort: () => void; // 파기 — 결과 없이 중단
+
   onresult: ((event: SpeechRecognitionEventLike) => void) | null;
   onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
   onend: (() => void) | null;
@@ -36,8 +38,7 @@ const getRecognitionCtor = (): SpeechRecognitionCtor | undefined => {
 
 export interface WebSpeechOptions extends SttHandlers {
   lang: string;
-  // false면 침묵을 지나도 이어 듣는 연속 인식 모드로 동작한다
-  stopOnSilence: boolean;
+  stopOnSilence: boolean; // false면 침묵을 지나도 이어 듣는다
 }
 
 // 미지원 시 throw
@@ -94,5 +95,10 @@ export const startWebSpeech = (options: WebSpeechOptions): SttSession => {
 
   return {
     stop: () => recognition.stop(),
+    abort: () => {
+      if (finished) return;
+      finished = true; // 이후 onresult·onend가 와도 결과를 내보내지 않는다
+      recognition.abort();
+    },
   };
 };

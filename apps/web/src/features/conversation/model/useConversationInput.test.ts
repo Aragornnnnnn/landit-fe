@@ -17,6 +17,7 @@ const sttMock = vi.hoisted(() => {
     callbacks,
     start: vi.fn(),
     stop: vi.fn(),
+    abort: vi.fn(),
   };
 });
 vi.mock('@/shared/stt/useStt', () => ({
@@ -28,27 +29,31 @@ vi.mock('@/shared/stt/useStt', () => ({
     sttMock.callbacks.onInterim = opts.onInterim;
     sttMock.callbacks.onFinal = opts.onFinal;
     sttMock.callbacks.onError = opts.onError;
-    return { start: sttMock.start, stop: sttMock.stop };
+    return {
+      start: sttMock.start,
+      stop: sttMock.stop,
+      abort: sttMock.abort,
+    };
   },
 }));
 
 const renderInput = (
   over: Partial<Parameters<typeof useConversationInput>[0]> = {},
 ) => {
-  const onListenStart = vi.fn();
-  const onListenCancel = vi.fn();
+  const onInputStart = vi.fn();
+  const onInputCancel = vi.fn();
   const onContent = vi.fn();
   const hook = renderHook(() =>
     useConversationInput({
       canStart: true,
       trackContext: () => ({ sessionId: 1, turnIndex: 0 }),
-      onListenStart,
-      onListenCancel,
+      onInputStart,
+      onInputCancel,
       onContent,
       ...over,
     }),
   );
-  return { ...hook, onListenStart, onListenCancel, onContent };
+  return { ...hook, onInputStart, onInputCancel, onContent };
 };
 
 beforeEach(() => {
@@ -57,26 +62,27 @@ beforeEach(() => {
   sttMock.callbacks.onError = undefined;
   sttMock.start.mockClear();
   sttMock.stop.mockClear();
+  sttMock.abort.mockClear();
 });
 
 describe('useConversationInput', () => {
   it('말하기를 누르면 듣기 시작을 알리고 마이크(STT)를 켠다', () => {
-    const { result, onListenStart } = renderInput();
+    const { result, onInputStart } = renderInput();
 
     act(() => result.current.pressMic());
 
-    expect(onListenStart).toHaveBeenCalledTimes(1);
+    expect(onInputStart).toHaveBeenCalledTimes(1);
     expect(sttMock.start).toHaveBeenCalled();
     expect(result.current.keyboardMode).toBe(false);
   });
 
   it('대기 상태가 아니면 말하기를 눌러도 무시한다', () => {
     // 빠른 연타·상태 전이 중 중복 탭이 녹음 시작을 이중 집계하지 않게
-    const { result, onListenStart } = renderInput({ canStart: false });
+    const { result, onInputStart } = renderInput({ canStart: false });
 
     act(() => result.current.pressMic());
 
-    expect(onListenStart).not.toHaveBeenCalled();
+    expect(onInputStart).not.toHaveBeenCalled();
     expect(sttMock.start).not.toHaveBeenCalled();
   });
 
@@ -104,32 +110,32 @@ describe('useConversationInput', () => {
 
   it('최종 텍스트가 공백뿐이면 전달하지 않고 듣기 취소로 되돌린다', () => {
     // 조용히 무시하면 마이크는 꺼졌는데 UI만 듣는 중으로 갇힌다
-    const { result, onContent, onListenCancel } = renderInput();
+    const { result, onContent, onInputCancel } = renderInput();
 
     act(() => result.current.pressMic());
     act(() => sttMock.callbacks.onFinal?.('   '));
 
     expect(onContent).not.toHaveBeenCalled();
-    expect(onListenCancel).toHaveBeenCalledTimes(1);
+    expect(onInputCancel).toHaveBeenCalledTimes(1);
     expect(result.current.transcript).toBe('');
   });
 
   it('대기 상태가 아니면 키보드를 눌러도 무시한다', () => {
     // 마이크와 같은 가드 — phase는 안 바뀌는데 keyboardMode만 켜지는 불일치를 막는다
-    const { result, onListenStart } = renderInput({ canStart: false });
+    const { result, onInputStart } = renderInput({ canStart: false });
 
     act(() => result.current.pressKeyboard());
 
-    expect(onListenStart).not.toHaveBeenCalled();
+    expect(onInputStart).not.toHaveBeenCalled();
     expect(result.current.keyboardMode).toBe(false);
   });
 
   it('키보드 아이콘을 누르면 마이크 없이 타이핑 모드로 듣기를 시작한다', () => {
-    const { result, onListenStart } = renderInput();
+    const { result, onInputStart } = renderInput();
 
     act(() => result.current.pressKeyboard());
 
-    expect(onListenStart).toHaveBeenCalledTimes(1);
+    expect(onInputStart).toHaveBeenCalledTimes(1);
     expect(sttMock.start).not.toHaveBeenCalled();
     expect(result.current.keyboardMode).toBe(true);
   });
@@ -145,59 +151,61 @@ describe('useConversationInput', () => {
   });
 
   it('빈 타이핑은 전달하지 않는다', () => {
-    const { result, onContent, onListenCancel } = renderInput();
+    const { result, onContent, onInputCancel } = renderInput();
 
     act(() => result.current.pressKeyboard());
     act(() => result.current.submitText());
 
     expect(onContent).not.toHaveBeenCalled();
-    expect(onListenCancel).not.toHaveBeenCalled(); // 조용히 무시 — 입력창은 그대로 열려 있다
+    expect(onInputCancel).not.toHaveBeenCalled(); // 조용히 무시 — 입력창은 그대로 열려 있다
   });
 
-  it('음성 중단(X)은 STT를 멈추고 듣기 취소를 알린다', () => {
-    const { result, onListenCancel } = renderInput();
+  it('음성 중단(X)은 세션을 완료가 아니라 파기한다', () => {
+    const { result, onInputCancel } = renderInput();
 
     act(() => result.current.pressMic());
     act(() => sttMock.callbacks.onInterim?.('Hel'));
-    act(() => result.current.cancelListening());
+    act(() => result.current.cancelInput());
 
-    expect(sttMock.stop).toHaveBeenCalled();
-    expect(onListenCancel).toHaveBeenCalledTimes(1);
+    expect(sttMock.abort).toHaveBeenCalled();
+    expect(sttMock.stop).not.toHaveBeenCalled(); // stop(확정)이면 결과가 제출로 이어진다
+    expect(onInputCancel).toHaveBeenCalledTimes(1);
     expect(result.current.transcript).toBe('');
     expect(result.current.keyboardMode).toBe(false);
   });
 
   it('타이핑 취소는 STT를 건드리지 않고 마이크 모드로 복귀한다', () => {
-    const { result, onListenCancel } = renderInput();
+    const { result, onInputCancel } = renderInput();
 
     act(() => result.current.pressKeyboard());
-    act(() => result.current.cancelListening());
+    act(() => result.current.cancelInput());
 
     expect(sttMock.stop).not.toHaveBeenCalled();
-    expect(onListenCancel).toHaveBeenCalledTimes(1);
+    expect(sttMock.abort).not.toHaveBeenCalled();
+    expect(onInputCancel).toHaveBeenCalledTimes(1);
     expect(result.current.keyboardMode).toBe(false);
   });
 
   it('STT 일반 오류는 듣기 취소로 되돌리고 권한 안내는 띄우지 않는다', () => {
-    const { result, onListenCancel } = renderInput();
+    const { result, onInputCancel } = renderInput();
 
     act(() => result.current.pressMic());
     act(() =>
       sttMock.callbacks.onError?.(new Error('음성 인식 오류: network')),
     );
 
-    expect(onListenCancel).toHaveBeenCalledTimes(1);
+    expect(onInputCancel).toHaveBeenCalledTimes(1);
     expect(result.current.transcript).toBe('');
     expect(result.current.micPermissionDenied).toBe(false);
   });
 
   it('마이크 권한 거부면 듣기 취소와 함께 권한 안내를 띄우고, 닫으면 내려간다', () => {
-    const { result, onListenCancel } = renderInput();
+    const { result, onInputCancel } = renderInput();
 
     act(() => result.current.pressMic());
     act(() => sttMock.callbacks.onError?.(new MicPermissionDeniedError()));
 
-    expect(onListenCancel).toHaveBeenCalledTimes(1);
+    expect(onInputCancel).toHaveBeenCalledTimes(1);
     expect(result.current.micPermissionDenied).toBe(true);
 
     act(() => result.current.dismissMicPermissionNotice());

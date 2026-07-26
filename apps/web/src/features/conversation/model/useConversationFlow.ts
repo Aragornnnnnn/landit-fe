@@ -103,8 +103,8 @@ export const useConversationFlow = (scenario: Scenario) => {
       sessionId: sessionIdRef.current,
       turnIndex: state.turnIndex,
     }),
-    onListenStart: () => send('USER_SPEAKING_STARTED'),
-    onListenCancel: () => send('USER_SPEAKING_CANCELLED'),
+    onInputStart: () => send('USER_SPEAKING_STARTED'),
+    onInputCancel: () => send('USER_SPEAKING_CANCELLED'),
     onContent: (content, inputType) => void submitContent(content, inputType),
   });
 
@@ -290,17 +290,9 @@ export const useConversationFlow = (scenario: Scenario) => {
     phase: state.phase,
     turn,
     partner,
-    transcript: input.transcript,
-    setTranscript: input.setTranscript,
-    keyboardMode: input.keyboardMode,
-    pressMic: input.pressMic,
-    pressKeyboard: input.pressKeyboard,
-    cancelListening: input.cancelListening,
-    finishListening: input.finishListening,
-    submitText: input.submitText,
+    // 입력은 하위 훅 결과를 통째로 — 낱개 중계를 안 해야 input의 반환 형태에 flow가 결합하지 않는다
+    input,
     leave,
-    micPermissionDenied: input.micPermissionDenied,
-    dismissMicPermissionNotice: input.dismissMicPermissionNotice,
     // DONE 시점엔 세션이 확보돼 있다 — 피드백 생성에 쓴다 (없으면 세션 시작이 실패한 경우)
     sessionId,
   };
