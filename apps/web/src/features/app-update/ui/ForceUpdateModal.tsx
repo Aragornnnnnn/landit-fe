@@ -6,7 +6,7 @@ interface ForceUpdateModalProps {
   reason: string | null;
 }
 
-const DEFAULT_REASON = '새로운 기능을 사용하려면 업데이트가 필요해요';
+const DEFAULT_REASON = '새로운 기능을 사용하려면 업데이트가 꼭 필요해요';
 
 const goToStore = () => {
   window.location.href = '/download';
@@ -26,11 +26,11 @@ export const ForceUpdateModal = ({ reason }: ForceUpdateModalProps) => (
         Landit 새 버전 출시!
       </h2>
       <p className="mt-4 text-sm leading-6 text-muted-foreground">
-        {reason ?? DEFAULT_REASON}
+        {reason?.trim() || DEFAULT_REASON}
       </p>
     </div>
     <Button className="mt-5" onClick={goToStore}>
-      업데이트 하러가기
+      업데이트하러 가기
     </Button>
   </Modal>
 );

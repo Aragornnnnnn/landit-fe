@@ -1,8 +1,8 @@
 // 앱 버전 정책 조회 쿼리 — request가 null이면(브라우저·구버전 셸) 비활성
 import { useQuery } from '@tanstack/react-query';
 
-import { checkAppUpdate } from '@/features/app-update/api/app-update';
-import type { AppUpdateRequest } from '@/features/app-update/model/resolveAppUpdateRequest';
+import { checkAppUpdate } from '../api/app-update';
+import type { AppUpdateRequest } from './resolveAppUpdateRequest';
 
 export const appUpdateKey = (request: AppUpdateRequest | null) =>
   ['app-update', request?.platform, request?.buildNumber] as const;

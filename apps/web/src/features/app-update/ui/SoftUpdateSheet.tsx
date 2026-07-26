@@ -27,11 +27,11 @@ export const SoftUpdateSheet = ({ reason, onClose }: SoftUpdateSheetProps) => (
         Landit 새 버전 출시!
       </h2>
       <p className="mt-4 text-sm leading-6 text-muted-foreground">
-        {reason ?? DEFAULT_REASON}
+        {reason?.trim() || DEFAULT_REASON}
       </p>
     </div>
     <Button className="mt-5" onClick={goToStore}>
-      업데이트 하러가기
+      업데이트하러 가기
     </Button>
     <button
       type="button"

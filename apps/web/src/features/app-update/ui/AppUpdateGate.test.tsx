@@ -2,8 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { useAppUpdateCheck } from '@/features/app-update/model/useAppUpdateCheck';
-
+import { useAppUpdateCheck } from '../model/useAppUpdateCheck';
 import { AppUpdateGate } from './AppUpdateGate';
 
 // 중첩된 framer-motion 인스턴스가 렌더러 아이덴티티를 갈라놔서, 테스트에선 순수 DOM으로 치환한다
@@ -42,7 +41,7 @@ vi.mock('motion/react', async () => {
   };
 });
 
-vi.mock('@/features/app-update/model/useAppUpdateCheck');
+vi.mock('../model/useAppUpdateCheck');
 const useAppUpdateCheckMock = vi.mocked(useAppUpdateCheck);
 
 afterEach(() => cleanup());
@@ -70,7 +69,20 @@ describe('AppUpdateGate', () => {
     render(<AppUpdateGate />);
 
     expect(
-      screen.getByText('새로운 기능을 사용하려면 업데이트가 필요해요'),
+      screen.getByText('새로운 기능을 사용하려면 업데이트가 꼭 필요해요'),
+    ).toBeInTheDocument();
+  });
+
+  it('강제 업데이트인데 사유가 빈 문자열이면 기본 문구를 보여준다', () => {
+    useAppUpdateCheckMock.mockReturnValue({
+      updateType: 'FORCE',
+      reason: '   ',
+    });
+
+    render(<AppUpdateGate />);
+
+    expect(
+      screen.getByText('새로운 기능을 사용하려면 업데이트가 꼭 필요해요'),
     ).toBeInTheDocument();
   });
 
@@ -99,6 +111,14 @@ describe('AppUpdateGate', () => {
 
   it('소프트 업데이트인데 사유가 없으면 기본 문구를 보여준다', () => {
     useAppUpdateCheckMock.mockReturnValue({ updateType: 'SOFT', reason: null });
+
+    render(<AppUpdateGate />);
+
+    expect(screen.getByText('새로워진 기능을 만나보세요')).toBeInTheDocument();
+  });
+
+  it('소프트 업데이트인데 사유가 빈 문자열이면 기본 문구를 보여준다', () => {
+    useAppUpdateCheckMock.mockReturnValue({ updateType: 'SOFT', reason: '' });
 
     render(<AppUpdateGate />);
 
