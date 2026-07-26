@@ -3,6 +3,8 @@
 
 import { useEffect, useRef } from 'react';
 
+import { reportWarning } from '@/shared/monitoring/report';
+
 import { getInnerThought, type SubmittedMessage } from '../api/session';
 import { innerThoughtMaxPolls, innerThoughtPollMs } from './pacing';
 
@@ -36,6 +38,7 @@ export const useInnerThought = () => {
     if (submitted.innerThoughtProcessingStatus === 'COMPLETED') {
       return { text: submitted.innerThought, type: submitted.innerThoughtType };
     }
+    let fallbackReason: 'timeout' | 'failed' = 'timeout';
     for (let i = 0; i < innerThoughtMaxPolls; i++) {
       await delay(innerThoughtPollMs);
       if (!activeRef.current) return null;
@@ -44,12 +47,20 @@ export const useInnerThought = () => {
         if (res.processingStatus === 'COMPLETED') {
           return { text: res.innerThought ?? '', type: res.innerThoughtType };
         }
-        if (res.processingStatus === 'FAILED') break;
+        if (res.processingStatus === 'FAILED') {
+          fallbackReason = 'failed';
+          break;
+        }
       } catch {
         // 일시적 오류는 다음 폴에서 다시 시도한다
       }
     }
     if (!activeRef.current) return null;
+    // 여기 도달 = 속마음이 끝내 준비되지 못함 (생성 실패·시간초과)
+    reportWarning(`속마음 생성 폴백 (${fallbackReason})`, {
+      sessionId,
+      messageId: submitted.messageId,
+    });
     return { text: submitted.innerThought, type: submitted.innerThoughtType };
   };
 

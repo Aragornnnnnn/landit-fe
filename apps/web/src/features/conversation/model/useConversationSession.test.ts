@@ -13,6 +13,12 @@ vi.mock('../api/session', () => ({
   endSession: vi.fn(),
 }));
 
+const monitoringMock = vi.hoisted(() => ({
+  reportError: vi.fn(),
+  reportWarning: vi.fn(),
+}));
+vi.mock('@/shared/monitoring/report', () => monitoringMock);
+
 const startSession = vi.mocked(sessionApi.startSession);
 const endSession = vi.mocked(sessionApi.endSession);
 
@@ -94,6 +100,15 @@ describe('useConversationSession', () => {
     expect(result.current.sessionId).toBeNull();
   });
 
+  it('시작 실패를 Sentry로 보고한다 — 이후 모든 제출이 막히는 사고라 바로 알아야 한다', async () => {
+    const error = new Error('boom');
+    startSession.mockRejectedValue(error);
+    renderSession();
+    await act(async () => {});
+
+    expect(monitoringMock.reportError).toHaveBeenCalledWith(error);
+  });
+
   it('세션 응답에 첫 발화가 있으면 오프닝 폴백으로 알려준다', async () => {
     const onOpeningMessage = vi.fn();
     startSession.mockResolvedValue(
@@ -125,6 +140,18 @@ describe('useConversationSession', () => {
     act(() => result.current.end());
 
     expect(endSession).toHaveBeenCalledWith(7);
+  });
+
+  it('종료 실패를 Sentry에 warning으로 보고한다 — 유저는 이미 나갔으니 알림까진 필요 없다', async () => {
+    const error = new Error('boom');
+    endSession.mockRejectedValue(error);
+    const { result } = renderSession();
+    await act(async () => {});
+
+    act(() => result.current.end());
+    await act(async () => {});
+
+    expect(monitoringMock.reportWarning).toHaveBeenCalledWith(error);
   });
 
   it('세션이 확보되기 전의 end는 아무것도 부르지 않는다', async () => {
