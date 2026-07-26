@@ -5,6 +5,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useTts } from './useTts';
 import type { TtsVoice } from './voice';
 
+const monitoringMock = vi.hoisted(() => ({ reportWarning: vi.fn() }));
+vi.mock('@/shared/monitoring/report', () => monitoringMock);
+
 const harper: TtsVoice = {
   provider: 'OPENROUTER',
   model: 'microsoft/mai-voice-2',
@@ -95,6 +98,23 @@ describe('useTts', () => {
     expect(result.current.status).toBe('active');
   });
 
+  it('재생 자체가 실패하면(오디오 onerror) Sentry에 warning으로 보고한다 — 합성은 성공했지만 재생이 깨진 경우', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => fakeAudioResponse()),
+    );
+    const { result } = renderHook(() => useTts());
+    await act(() =>
+      result.current.speak('Hello', harper, { onError: vi.fn() }),
+    );
+
+    act(() => FakeAudio.instances[0]!.onerror?.());
+
+    expect(monitoringMock.reportWarning).toHaveBeenCalledWith(
+      expect.objectContaining({ message: '오디오 재생에 실패했어요.' }),
+    );
+  });
+
   it('재생이 끝나면 onEnd를 부르고 objectURL을 해제한다', async () => {
     vi.stubGlobal(
       'fetch',
@@ -123,6 +143,22 @@ describe('useTts', () => {
 
     expect(onError).toHaveBeenCalledTimes(1);
     expect(result.current.status).toBe('error');
+  });
+
+  it('합성 실패를 Sentry에 warning으로 보고한다 — 대화는 폴백으로 계속되지만 빈도는 봐야 한다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: false, status: 502 }) as Response),
+    );
+    const { result } = renderHook(() => useTts());
+
+    await act(() =>
+      result.current.speak('Hello', harper, { onError: vi.fn() }),
+    );
+
+    expect(monitoringMock.reportWarning).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('502') }),
+    );
   });
 
   it('stop을 부르면 진행 중인 요청을 중단하고 onError 없이 idle로 돌아간다', async () => {

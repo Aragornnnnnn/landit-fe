@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
+import { reportError } from '@/shared/monitoring/report';
 import { Button } from '@/shared/ui/Button';
 
 import { submitNps, type NpsScore } from '../api/nps';
@@ -44,8 +45,9 @@ export const FeedbackSurvey = ({ onDone }: FeedbackSurveyProps) => {
     });
     try {
       await submitNps(score, comment);
-    } catch {
-      // 제출 실패해도 UX는 막지 않는다 — 감사 화면으로 넘긴다
+    } catch (error) {
+      // 제출 실패해도 UX는 막지 않는다 — 감사 화면으로 넘긴다.
+      reportError(error);
     }
     setSubmitted(true);
     setTimeout(onDone, THANKS_DISMISS_MS);
