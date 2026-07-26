@@ -36,8 +36,11 @@ function HomeContent() {
     listReady,
   );
   // 복귀 대상이 있으면 그 카테고리를 기본으로 연다(사용자가 칩을 누르면 그게 우선 — 강제 X)
+  // focusActive(just) = 표현학습 스킵 복귀 — 서버 해금 반영이 늦을 수 있어 한 번 더 물어본다
   const { categories, selected, selectCategory, error, isLoading, retry } =
-    useScenariosQuery(returnScenarioId);
+    useScenariosQuery(returnScenarioId, {
+      justReturned: positioning.focusActive,
+    });
 
   // 리스트가 실제로 마운트된 뒤에 신호를 소비한다 — 로딩 중 소비하면 배치가 유실된다
   const ready = Boolean(categories && selected);
