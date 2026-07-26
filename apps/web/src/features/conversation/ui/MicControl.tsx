@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 
 import { CloseIcon, KeyboardIcon, MicIcon, StopIcon } from '@/shared/ui/Icons';
 
-import type { ConversationPhase } from '../model/conversationMachine';
+import type { ConversationPhase } from '../model/conversation-machine';
 
 interface MicControlProps {
   phase: ConversationPhase;
@@ -22,9 +22,9 @@ export const MicControl = ({
   onCancel,
   onDone,
 }: MicControlProps) => {
-  const listening = phase === 'USER_LISTENING';
+  const listening = phase === 'USER_SPEAKING';
   // 발화·속마음 중엔 누를 수 없게 잠근다 — 자리는 유지해 레이아웃이 튀지 않게
-  const disabled = phase !== 'USER_IDLE' && !listening;
+  const disabled = phase !== 'USER_READY' && !listening;
 
   return (
     <div className="flex h-36 flex-none flex-col items-center justify-center gap-2">

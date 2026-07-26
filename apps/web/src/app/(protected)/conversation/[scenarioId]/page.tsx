@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import { ConversationFlow } from '@/features/conversation/ui/ConversationFlow';
 import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSkeleton';
-import { useScenarios } from '@/features/scenario/model/useScenarios';
+import { useScenariosQuery } from '@/features/scenario/model/useScenariosQuery';
 import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
 
@@ -19,7 +19,7 @@ export default function ConversationPage({
   const { scenarioId } = use(params);
   const id = Number(scenarioId);
   const router = useRouter();
-  const { categories, error, isLoading, retry } = useScenarios();
+  const { categories, error, isLoading, retry } = useScenariosQuery();
 
   const scenario = categories
     ?.flatMap((category) => category.scenarios)

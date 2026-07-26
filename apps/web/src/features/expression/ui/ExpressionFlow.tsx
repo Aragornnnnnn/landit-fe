@@ -8,17 +8,17 @@ import { preload } from 'react-dom';
 
 import { track } from '@/shared/analytics';
 
-import { collectPreloadImageUrls } from '../model/preloadImages';
-import type { InputState } from '../model/reviewInput';
-import { fromLearning, fromWritingSentence } from '../model/sentenceQuiz';
-import { useExpressionLearning } from '../model/useExpressionLearning';
-import { useExpressionPractice } from '../model/useExpressionPractice';
-import { useFinishExpression } from '../model/useFinishExpression';
-import { ExplanationStep } from './ExplanationStep';
+import { collectPreloadImageUrls } from '../lib/preload-images';
+import type { InputState } from '../model/review-input';
+import { fromLearning, fromWritingSentence } from '../model/sentence-quiz';
+import { useExpressionLearningQuery } from '../model/useExpressionLearningQuery';
+import { useExpressionPracticeQuery } from '../model/useExpressionPracticeQuery';
+import { useFinishExpressionMutation } from '../model/useFinishExpressionMutation';
 import { ExpressionExitSheet } from './ExpressionExitSheet';
-import { QuizStep } from './QuizStep';
-import { QuizStepSkeleton } from './QuizStepSkeleton';
-import { ReviewInputStep } from './ReviewInputStep';
+import { ExplanationStep } from './learning/ExplanationStep';
+import { QuizStep } from './learning/QuizStep';
+import { QuizStepSkeleton } from './learning/QuizStepSkeleton';
+import { ReviewInputStep } from './practice/ReviewInputStep';
 
 interface ExpressionFlowProps {
   scenarioId: number;
@@ -52,13 +52,13 @@ export const ExpressionFlow = ({
     learning,
     error: learningError,
     isLoading: learningLoading,
-  } = useExpressionLearning(expressionId);
+  } = useExpressionLearningQuery(expressionId);
   // learning이 오면(=QUIZ 진입) 예문을 미리 받아, QUIZ 체류 중 EXPLAIN용 practice를 데워둔다.
-  const { practice, isLoading: practiceLoading } = useExpressionPractice(
+  const { practice, isLoading: practiceLoading } = useExpressionPracticeQuery(
     expressionId,
     !!learning,
   );
-  const finish = useFinishExpression(expressionId);
+  const finish = useFinishExpressionMutation(expressionId);
 
   // 데이터가 준비돼 실제 학습이 뜬 시점을 시작으로 본다
   const learningReady = Boolean(learning);

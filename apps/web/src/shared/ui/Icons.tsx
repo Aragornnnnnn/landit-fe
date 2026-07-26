@@ -4,25 +4,6 @@ interface IconProps extends React.ComponentProps<'svg'> {
   size?: number;
 }
 
-export const BackspaceIcon = ({ size = 22, ...props }: IconProps) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-    {...props}
-  >
-    <path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z" />
-    <path d="m18 9-6 6" />
-    <path d="m12 9 6 6" />
-  </svg>
-);
-
 export const CheckIcon = ({ size = 22, ...props }: IconProps) => (
   <svg
     width={size}

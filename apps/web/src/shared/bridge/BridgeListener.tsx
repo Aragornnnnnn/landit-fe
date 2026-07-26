@@ -6,7 +6,7 @@ import { EVENTS } from '@landit/analytics';
 import { usePathname } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
-import { decideBack } from '@/shared/bridge/backNavigation';
+import { decideBack } from '@/shared/bridge/back-navigation';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { closeTopSheet } from '@/shared/ui/bottom-sheet-back';
 import { showToast, TOAST_MS } from '@/shared/ui/toast';
@@ -32,7 +32,7 @@ export const BridgeListener = () => {
       window.clearTimeout(timerRef.current);
     };
 
-    const handleBackPressed = () => {
+    const routeBackPress = () => {
       // 바텀시트가 열려 있으면 뒤로가기는 시트 닫기 — 안드로이드 관례. 종료 대기도 푼다
       if (closeTopSheet()) {
         disarm();
@@ -72,7 +72,7 @@ export const BridgeListener = () => {
     };
 
     return subscribeFromNative((message) => {
-      if (message.type === 'BACK_PRESSED') handleBackPressed();
+      if (message.type === 'BACK_PRESSED') routeBackPress();
     });
   }, []);
 

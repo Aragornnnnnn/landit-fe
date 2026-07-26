@@ -3,8 +3,7 @@
 
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
-import { STEP_ORDER } from '../model/onboarding.constants';
-import { type OnboardingStep } from '../model/onboarding.types';
+import { STEP_ORDER, type OnboardingStep } from '../model/steps';
 
 export const OnboardingHeader = ({
   step,

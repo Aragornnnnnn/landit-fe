@@ -3,7 +3,7 @@ import {
   createCodeChallenge,
   generateCodeVerifier,
   generateRandomHex,
-} from '@/shared/lib/crypto';
+} from '@/shared/auth/crypto';
 
 // 애플은 실도메인이 필요해 웹 폴백에서 제외한다 — 웹은 카카오·구글만
 export type WebSocialProvider = 'kakao' | 'google';

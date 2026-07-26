@@ -3,8 +3,8 @@
 // 앰플리튜드 초기화 + 로그인 유저 식별 배선 — 루트 레이아웃에 마운트되는 무렌더 컴포넌트
 import { useEffect } from 'react';
 
-import type { AuthMember } from '@/shared/api/auth/social-login';
-import { useAuthStore } from '@/shared/store/auth-store';
+import type { AuthMember } from '@/shared/auth/api/social-login';
+import { useAuthStore } from '@/shared/auth/auth-store';
 
 import { identifyUser, initAnalytics, resetUser } from './amplitude';
 

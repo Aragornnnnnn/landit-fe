@@ -80,10 +80,8 @@ describe('toPageView', () => {
     });
   });
 
-  it('루트·개발용 경로는 계측하지 않는다', () => {
+  it('루트는 계측하지 않는다', () => {
     expect(pv('/')).toBeNull();
-    expect(pv('/stt-demo')).toBeNull();
-    expect(pv('/dev')).toBeNull();
   });
 
   it('알 수 없는 경로는 pathname을 page_name으로 쓰되 숫자 세그먼트는 :id로 치환한다', () => {

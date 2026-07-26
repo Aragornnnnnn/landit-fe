@@ -1,12 +1,12 @@
 // useConversationFlow — 오프닝은 openingPreview로 즉시 시드, 세션은 백그라운드.
-// 발화 제출 뒤 대기·속마음·다음질문·종료 전이와 오프닝 정적/폴백 재생을 검증한다.
+// 발화 제출 뒤 대기·속마음·다음질문·종료 전이와 입력·재생 훅 배선을 검증한다.
+// (재생 폴백·입력 전환 세부는 useAiSpeech·useConversationInput 테스트가 맡는다)
 import { StrictMode } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Scenario } from '@/features/scenario/api/list';
-import { MicPermissionDeniedError } from '@/shared/lib/stt/errors';
-import type { TtsVoice } from '@/shared/lib/tts/tts.types';
+import type { TtsVoice } from '@/shared/tts/voice';
 
 import * as sessionApi from '../api/session';
 import type { SessionMessageSubmitResponse } from '../api/session';
@@ -20,11 +20,11 @@ vi.mock('../api/session', () => ({
   endSession: vi.fn(),
 }));
 
-// TTS는 경계(재생)라 목으로 둔다 — speak/speakSrc의 onEnd·onError를 붙잡아 종료·실패를 흉내 낸다
+// TTS는 경계(재생)라 목으로 둔다 — speak/speakSrc의 onEnd를 붙잡아 재생 종료를 흉내 낸다.
+// 실패 폴백(onError)은 useAiSpeech 테스트가 맡는다.
 const ttsMock = vi.hoisted(() => {
   const state = {
     onEnd: undefined as (() => void) | undefined,
-    onError: undefined as (() => void) | undefined,
   };
   return {
     state,
@@ -34,17 +34,14 @@ const ttsMock = vi.hoisted(() => {
         return Promise.resolve();
       },
     ),
-    speakSrc: vi.fn(
-      (_src: string, opts?: { onEnd?: () => void; onError?: () => void }) => {
-        state.onEnd = opts?.onEnd;
-        state.onError = opts?.onError;
-      },
-    ),
+    speakSrc: vi.fn((_src: string, opts?: { onEnd?: () => void }) => {
+      state.onEnd = opts?.onEnd;
+    }),
     prefetch: vi.fn(() => Promise.resolve()),
     stop: vi.fn(),
   };
 });
-vi.mock('@/shared/lib/tts/useTts', () => ({
+vi.mock('@/shared/tts/useTts', () => ({
   useTts: () => ({
     speak: ttsMock.speak,
     speakSrc: ttsMock.speakSrc,
@@ -54,39 +51,31 @@ vi.mock('@/shared/lib/tts/useTts', () => ({
   }),
 }));
 
-// STT도 경계(마이크)라 목으로 둔다 — start/stop 호출을 붙잡고, onInterim·onFinal 콜백을 흉내 낸다
+// STT도 경계(마이크)라 목으로 둔다 — start/stop 호출을 붙잡고, onInterim·onFinal로 인식 결과를 흉내 낸다.
+// 오류·권한 처리(onError)는 useConversationInput 테스트가 맡는다.
 const sttMock = vi.hoisted(() => {
   const callbacks = {
     onInterim: undefined as ((t: string) => void) | undefined,
     onFinal: undefined as ((t: string) => void) | undefined,
-    onError: undefined as ((e: Error) => void) | undefined,
   };
   return {
     callbacks,
-    status: 'idle' as 'idle' | 'connecting' | 'listening' | 'error',
     start: vi.fn(),
     stop: vi.fn(),
-    reset: vi.fn(),
+    abort: vi.fn(),
   };
 });
-vi.mock('@/shared/lib/stt/useStt', () => ({
+vi.mock('@/shared/stt/useStt', () => ({
   useStt: (opts: {
     onInterim?: (t: string) => void;
     onFinal?: (t: string) => void;
-    onError?: (e: Error) => void;
   }) => {
     sttMock.callbacks.onInterim = opts.onInterim;
     sttMock.callbacks.onFinal = opts.onFinal;
-    sttMock.callbacks.onError = opts.onError;
     return {
-      transcript: '',
-      interim: '',
-      status: sttMock.status,
-      error: null,
-      isListening: sttMock.status === 'listening',
       start: sttMock.start,
       stop: sttMock.stop,
-      reset: sttMock.reset,
+      abort: sttMock.abort,
     };
   },
 }));
@@ -206,9 +195,9 @@ const speakAndSubmit = async (
   result: { current: ReturnType<typeof useConversationFlow> },
   text: string,
 ) => {
-  act(() => result.current.pressMic());
+  act(() => result.current.input.pressMic());
   await act(async () => {
-    await result.current.finishListening(); // → stt.stop()
+    await result.current.input.finishListening(); // → stt.stop()
   });
   await act(async () => {
     sttMock.callbacks.onFinal?.(text); // 최종 텍스트 도착 → 음성 제출
@@ -220,10 +209,10 @@ const typeAndSubmit = async (
   result: { current: ReturnType<typeof useConversationFlow> },
   text: string,
 ) => {
-  act(() => result.current.pressKeyboard());
-  act(() => result.current.setTranscript(text));
+  act(() => result.current.input.pressKeyboard());
+  act(() => result.current.input.setTranscript(text));
   await act(async () => {
-    await result.current.submitText();
+    await result.current.input.submitText();
   });
 };
 
@@ -245,14 +234,11 @@ const preparingSubmitResponse = () =>
 beforeEach(() => {
   vi.useFakeTimers();
   ttsMock.state.onEnd = undefined;
-  ttsMock.state.onError = undefined;
-  sttMock.status = 'idle';
   sttMock.callbacks.onInterim = undefined;
   sttMock.callbacks.onFinal = undefined;
-  sttMock.callbacks.onError = undefined;
   sttMock.start.mockClear();
   sttMock.stop.mockClear();
-  sttMock.reset.mockClear();
+  sttMock.abort.mockClear();
   queryClientMock.prefetchQuery.mockClear();
   queryClientMock.invalidateQueries.mockClear();
   vi.unstubAllEnvs();
@@ -278,7 +264,7 @@ describe('useConversationFlow', () => {
   it('유저가 먼저 말하면 마이크 대기로 시작하고 오프닝 안내를 보여준다', async () => {
     const { result } = await renderUserFirst();
 
-    expect(result.current.phase).toBe('USER_IDLE');
+    expect(result.current.phase).toBe('USER_READY');
     expect(result.current.turn.aiMessage).toBe('먼저 인사를 건네보세요.');
   });
 
@@ -287,12 +273,12 @@ describe('useConversationFlow', () => {
     const { result } = renderHook(() => useConversationFlow(userScenario));
     await act(async () => {});
 
-    expect(result.current.phase).toBe('USER_IDLE');
+    expect(result.current.phase).toBe('USER_READY');
 
     await speakAndSubmit(result, 'Hello!');
 
     expect(submitMessage).not.toHaveBeenCalled();
-    expect(result.current.phase).toBe('USER_IDLE');
+    expect(result.current.phase).toBe('USER_READY');
   });
 
   it('제출하면 응답이 오기 전까지 대기(생각 중) 상태가 된다', async () => {
@@ -304,15 +290,15 @@ describe('useConversationFlow', () => {
       }),
     );
 
-    act(() => result.current.pressMic());
+    act(() => result.current.input.pressMic());
     await act(async () => {
-      await result.current.finishListening();
+      await result.current.input.finishListening();
     });
     act(() => {
       sttMock.callbacks.onFinal?.('Hello!'); // 최종 텍스트 → 음성 제출 시작
     });
 
-    expect(result.current.phase).toBe('WAITING');
+    expect(result.current.phase).toBe('AI_THINKING');
 
     await act(async () => resolve(submitResponse()));
   });
@@ -323,7 +309,7 @@ describe('useConversationFlow', () => {
 
     await speakAndSubmit(result, 'Hello!');
 
-    expect(result.current.phase).toBe('THOUGHT');
+    expect(result.current.phase).toBe('AI_INNER_THOUGHT');
     expect(result.current.turn.innerThought).toBe('또렷하게 잘 말했어.');
     expect(result.current.turn.innerThoughtType).toBe('GOOD');
   });
@@ -334,17 +320,7 @@ describe('useConversationFlow', () => {
 
     await speakAndSubmit(result, 'Hello!');
 
-    expect(result.current.phase).toBe('USER_IDLE');
-  });
-
-  it('빈 음성 답변은 제출하지 않고 마이크 대기로 되돌린다', async () => {
-    // 듣는 중 상태에 남겨두면 마이크는 꺼졌는데 UI만 듣는 중으로 갇힌다
-    const { result } = await renderUserFirst();
-
-    await speakAndSubmit(result, '   ');
-
-    expect(submitMessage).not.toHaveBeenCalled();
-    expect(result.current.phase).toBe('USER_IDLE');
+    expect(result.current.phase).toBe('USER_READY');
   });
 
   it('다음 질문이 있으면 속마음이 끝난 뒤 다음 AI 질문으로 이어간다', async () => {
@@ -358,28 +334,6 @@ describe('useConversationFlow', () => {
 
     expect(result.current.phase).toBe('AI_SPEAKING');
     expect(result.current.turn.aiMessage).toBe('What size would you like?');
-  });
-
-  it('다음 질문이 없으면(completed) 속마음이 끝난 뒤 대화가 종료된다', async () => {
-    const { result } = await renderUserFirst();
-    submitMessage.mockResolvedValue(
-      submitResponse({
-        nextMessage: null,
-        progress: {
-          currentTurnNumber: 3,
-          currentMessageSequenceNumber: 1,
-          totalQuestionCount: 3,
-          completed: true,
-        },
-      }),
-    );
-    await speakAndSubmit(result, 'Yes, here you go.');
-
-    act(() => {
-      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
-    });
-
-    expect(result.current.phase).toBe('DONE');
   });
 
   it('완료 턴에 종료 메시지가 오면 그걸 발화한 뒤 대화가 종료된다', async () => {
@@ -420,7 +374,14 @@ describe('useConversationFlow', () => {
     const { result } = await renderUserFirst();
     submitMessage.mockResolvedValue(
       submitResponse({
-        nextMessage: null,
+        nextMessage: {
+          messageId: 4,
+          turnNumber: 3,
+          messageSequence: 1,
+          role: 'AI',
+          content: 'Great job today!',
+          translatedContent: '오늘 잘했어요!',
+        },
         progress: {
           currentTurnNumber: 3,
           currentMessageSequenceNumber: 1,
@@ -463,38 +424,7 @@ describe('useConversationFlow', () => {
 
     act(() => ttsMock.state.onEnd?.());
 
-    expect(result.current.phase).toBe('USER_IDLE');
-  });
-
-  it('오프닝 정적 파일이 없으면 합성으로 폴백한다', async () => {
-    const { result } = renderHook(() => useConversationFlow(scenario));
-    await act(async () => {});
-
-    act(() => ttsMock.state.onError?.()); // 정적 파일 없음(404)
-
-    expect(ttsMock.speak).toHaveBeenCalledWith(
-      'Hello, welcome in.',
-      voice,
-      expect.anything(),
-    );
-    act(() => ttsMock.state.onEnd?.());
-    expect(result.current.phase).toBe('USER_IDLE');
-  });
-
-  it('오프닝 파일도 음성도 없으면 타이머로 발화를 마친다', async () => {
-    const { result } = renderHook(() =>
-      useConversationFlow(withVoice(scenario, null)),
-    );
-    await act(async () => {});
-
-    act(() => ttsMock.state.onError?.()); // 정적 파일 없음
-
-    expect(ttsMock.speak).not.toHaveBeenCalled();
-    act(() => {
-      vi.advanceTimersByTime(2600);
-    });
-
-    expect(result.current.phase).toBe('USER_IDLE');
+    expect(result.current.phase).toBe('USER_READY');
   });
 
   it('ttsVoice 성별이 FEMALE이면 partner가 female이다', async () => {
@@ -536,7 +466,7 @@ describe('useConversationFlow', () => {
     await speakAndSubmit(result, 'Hello!');
 
     // 속마음은 준비 중이라 대기 유지 — 하지만 다음 질문 합성은 이미 시작됐다
-    expect(result.current.phase).toBe('WAITING');
+    expect(result.current.phase).toBe('AI_THINKING');
     expect(ttsMock.prefetch).toHaveBeenCalledWith(
       'What size would you like?',
       voice,
@@ -546,13 +476,13 @@ describe('useConversationFlow', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(500);
     });
-    expect(result.current.phase).toBe('WAITING');
+    expect(result.current.phase).toBe('AI_THINKING');
 
     // 0.5s 폴링 2회 — COMPLETED → 속마음 노출
     await act(async () => {
       await vi.advanceTimersByTimeAsync(500);
     });
-    expect(result.current.phase).toBe('THOUGHT');
+    expect(result.current.phase).toBe('AI_INNER_THOUGHT');
     expect(result.current.turn.innerThought).toBe('자연스럽게 잘 말했어.');
     expect(result.current.turn.innerThoughtType).toBe('GOOD');
   });
@@ -571,13 +501,13 @@ describe('useConversationFlow', () => {
     });
 
     await speakAndSubmit(result, 'Hello!');
-    expect(result.current.phase).toBe('WAITING');
+    expect(result.current.phase).toBe('AI_THINKING');
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(500);
     });
 
-    expect(result.current.phase).toBe('THOUGHT');
+    expect(result.current.phase).toBe('AI_INNER_THOUGHT');
     expect(result.current.turn.innerThought).toBe('좋아, 자연스러웠어.');
   });
 
@@ -591,19 +521,19 @@ describe('useConversationFlow', () => {
     });
 
     await speakAndSubmit(result, 'Hello!');
-    expect(result.current.phase).toBe('WAITING');
+    expect(result.current.phase).toBe('AI_THINKING');
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(500);
     });
 
-    // 속마음 노출(THOUGHT) 없이 바로 다음 AI 발화로
+    // 속마음 노출(AI_INNER_THOUGHT) 없이 바로 다음 AI 발화로
     expect(result.current.phase).toBe('AI_SPEAKING');
     expect(result.current.turn.aiMessage).toBe('What size would you like?');
     expect(result.current.turn.innerThought).toBe('');
   });
 
-  // STT(LAN-141) 배선 — 기본은 마이크(음성), 키보드 아이콘을 누르면 타이핑
+  // 입력 훅 배선 — 듣기 전이와 최종 발화 제출이 상태기계·세션 API로 이어지는지
   it('세션이 시작되면 sessionId를 노출한다 (피드백 생성에 쓴다)', async () => {
     const { result } = await renderUserFirst();
 
@@ -613,10 +543,10 @@ describe('useConversationFlow', () => {
   it('말하기를 누르면 듣기로 넘어가며 마이크(STT)를 켠다', async () => {
     const { result } = await renderUserFirst();
 
-    act(() => result.current.pressMic());
+    act(() => result.current.input.pressMic());
 
-    expect(result.current.phase).toBe('USER_LISTENING');
-    expect(result.current.keyboardMode).toBe(false);
+    expect(result.current.phase).toBe('USER_SPEAKING');
+    expect(result.current.input.keyboardMode).toBe(false);
     expect(sttMock.start).toHaveBeenCalled();
   });
 
@@ -624,14 +554,14 @@ describe('useConversationFlow', () => {
     const { result } = await renderUserFirst();
     submitMessage.mockResolvedValue(submitResponse());
 
-    act(() => result.current.pressMic());
+    act(() => result.current.input.pressMic());
     // 발화 중 실시간 미리보기
     act(() => sttMock.callbacks.onInterim?.('Hel'));
-    expect(result.current.transcript).toBe('Hel');
+    expect(result.current.input.transcript).toBe('Hel');
 
     // 완료(■) → stt.stop() 호출, 최종 텍스트는 onFinal로 도착해 제출을 잇는다
     await act(async () => {
-      await result.current.finishListening();
+      await result.current.input.finishListening();
     });
     expect(sttMock.stop).toHaveBeenCalled();
     expect(submitMessage).not.toHaveBeenCalled();
@@ -642,17 +572,7 @@ describe('useConversationFlow', () => {
 
     expect(submitMessage).toHaveBeenCalledWith(1, 'Hello there.', 'VOICE');
     // 제출이 이어져 속마음까지 진행된다 (submitResponse 기본은 COMPLETED)
-    expect(result.current.phase).toBe('THOUGHT');
-  });
-
-  it('키보드 아이콘을 누르면 마이크를 켜지 않고 타이핑 모드가 된다', async () => {
-    const { result } = await renderUserFirst();
-
-    act(() => result.current.pressKeyboard());
-
-    expect(result.current.phase).toBe('USER_LISTENING');
-    expect(result.current.keyboardMode).toBe(true);
-    expect(sttMock.start).not.toHaveBeenCalled();
+    expect(result.current.phase).toBe('AI_INNER_THOUGHT');
   });
 
   it('키보드로 입력한 텍스트는 TEXT로 제출한다', async () => {
@@ -665,64 +585,17 @@ describe('useConversationFlow', () => {
     expect(sttMock.start).not.toHaveBeenCalled();
   });
 
-  it('중단(X)하면 STT를 멈추고 마이크 대기로 되돌린다', async () => {
+  it('중단(X)하면 세션을 파기하고 마이크 대기로 되돌린다', async () => {
     const { result } = await renderUserFirst();
 
-    act(() => result.current.pressMic());
+    act(() => result.current.input.pressMic());
     act(() => sttMock.callbacks.onInterim?.('Hel'));
 
-    act(() => result.current.cancelListening());
+    act(() => result.current.input.cancelInput());
 
-    expect(sttMock.stop).toHaveBeenCalled();
-    expect(result.current.phase).toBe('USER_IDLE');
-    expect(result.current.transcript).toBe('');
-    expect(result.current.keyboardMode).toBe(false);
-  });
-
-  it('STT가 오류나면 마이크 대기로 되돌린다', async () => {
-    const { result } = await renderUserFirst();
-
-    act(() => result.current.pressMic());
-    expect(result.current.phase).toBe('USER_LISTENING');
-
-    // 일반 인식 오류로 STT가 onError를 알리면 마이크 대기로 되돌린다
-    act(() =>
-      sttMock.callbacks.onError?.(new Error('음성 인식 오류: network')),
-    );
-
-    expect(result.current.phase).toBe('USER_IDLE');
-    expect(result.current.transcript).toBe('');
-  });
-
-  it('마이크 권한 거부면 대기로 되돌리고 권한 안내를 띄운다', async () => {
-    const { result } = await renderUserFirst();
-
-    act(() => result.current.pressMic());
-    act(() => sttMock.callbacks.onError?.(new MicPermissionDeniedError()));
-
-    expect(result.current.phase).toBe('USER_IDLE');
-    expect(result.current.micPermissionDenied).toBe(true);
-  });
-
-  it('일반 인식 오류는 권한 안내를 띄우지 않는다', async () => {
-    const { result } = await renderUserFirst();
-
-    act(() => result.current.pressMic());
-    act(() =>
-      sttMock.callbacks.onError?.(new Error('음성 인식 오류: network')),
-    );
-
-    expect(result.current.micPermissionDenied).toBe(false);
-  });
-
-  it('권한 안내를 닫으면 상태가 내려간다', async () => {
-    const { result } = await renderUserFirst();
-
-    act(() => result.current.pressMic());
-    act(() => sttMock.callbacks.onError?.(new MicPermissionDeniedError()));
-    expect(result.current.micPermissionDenied).toBe(true);
-
-    act(() => result.current.dismissMicPermissionNotice());
-    expect(result.current.micPermissionDenied).toBe(false);
+    expect(sttMock.abort).toHaveBeenCalled();
+    expect(result.current.phase).toBe('USER_READY');
+    expect(result.current.input.transcript).toBe('');
+    expect(result.current.input.keyboardMode).toBe(false);
   });
 });

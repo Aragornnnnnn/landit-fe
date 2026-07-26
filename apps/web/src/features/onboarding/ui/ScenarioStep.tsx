@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 
 import type { Scenario } from '@/features/scenario/api/list';
-import { useScenarios } from '@/features/scenario/model/useScenarios';
+import { useScenariosQuery } from '@/features/scenario/model/useScenariosQuery';
 import { Button } from '@/shared/ui/Button';
 
 import firstScenarioImage from '../assets/first-scenario.webp';
@@ -18,7 +18,7 @@ export const ScenarioStep = ({
   onStart: (scenarioId: number | null) => void;
 }) => {
   // 첫 대화 = 첫(미잠금) 카테고리의 첫 시나리오 — 홈 리스트가 보여주는 것과 같은 순서
-  const { selected } = useScenarios();
+  const { selected } = useScenariosQuery();
   const scenario = selected?.scenarios[0] ?? null;
 
   const [isUnlocked, setIsUnlocked] = useState(false);

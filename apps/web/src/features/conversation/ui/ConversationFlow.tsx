@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
-import { SessionFeedbackScreen } from '@/features/feedback/ui/SessionFeedbackScreen';
+import { FeedbackFlow } from '@/features/feedback/ui/FeedbackFlow';
 import type { Scenario } from '@/features/scenario/api/list';
 import { track } from '@/shared/analytics';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
@@ -13,6 +13,8 @@ import { Transition } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
+import { userIntroHoldMs } from '../model/pacing';
+import type { FloatingThought } from '../model/thought';
 import { useConversationFlow } from '../model/useConversationFlow';
 import { CharacterStage } from './CharacterStage';
 import { ExitConfirmSheet } from './ExitConfirmSheet';
@@ -33,43 +35,49 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   // USER 선발화 진입 안내 — 랜디가 먼저 날아들어 말을 걸어보라고 알려주고 잠시 후 사라진다.
   // 판정은 turn.isUserOpening 한 곳에 위임하고(카드 안내 구조와 같은 소스), 여기선 노출 시간만 관리한다.
   const [introDismissed, setIntroDismissed] = useState(false);
+  const { phase, turn, partner, input, leave, sessionId } =
+    useConversationFlow(scenario);
   const {
-    phase,
-    turn,
-    partner,
     transcript,
     setTranscript,
     keyboardMode,
     pressMic,
     pressKeyboard,
-    cancelListening,
+    cancelInput,
     finishListening,
     submitText,
-    leave,
     micPermissionDenied,
     dismissMicPermissionNotice,
-    sessionId,
-  } = useConversationFlow(scenario);
+  } = input;
 
   const ended = phase === 'DONE';
   // 키보드 입력 중 — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
-  const typing = keyboardMode && phase === 'USER_LISTENING';
+  const typing = keyboardMode && phase === 'USER_SPEAKING';
   const keyboardInset = useKeyboardInset();
-  // 선발화 안내는 대기(USER_IDLE) 동안만 — 사용자가 말하기 시작하거나 속마음이 오면 즉시 비켜준다
+  // 선발화 안내는 대기(USER_READY) 동안만 — 사용자가 말하기 시작하거나 속마음이 오면 즉시 비켜준다
   const showUserFirstIntro =
-    turn.isUserOpening && phase === 'USER_IDLE' && !introDismissed;
+    turn.isUserOpening && phase === 'USER_READY' && !introDismissed;
   useEffect(() => {
     if (!showUserFirstIntro) return;
-    const timer = setTimeout(() => setIntroDismissed(true), 2800);
+    const timer = setTimeout(() => setIntroDismissed(true), userIntroHoldMs);
     return () => clearTimeout(timer);
   }, [showUserFirstIntro]);
+  // 속마음 오버레이 내용 — 선발화 안내가 우선, 다음이 속마음, 그 외엔 안 띄운다
+  const resolveOverlayThought = (): FloatingThought | null => {
+    if (showUserFirstIntro)
+      return { text: '상황을 잘 읽고 먼저 말을 걸어보세요!', type: 'NORMAL' };
+    if (phase === 'AI_INNER_THOUGHT')
+      return { text: turn.innerThought, type: turn.innerThoughtType };
+    return null;
+  };
+  const overlayThought = resolveOverlayThought();
   // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로 페이드 인해 넘어간다. 마치면 표현 학습 분기로 보낸다.
   const view = ended && showFeedback ? 'feedback' : 'conversation';
 
   if (view === 'feedback') {
     return (
       <Transition transitionKey="feedback" fade>
-        <SessionFeedbackScreen
+        <FeedbackFlow
           sessionId={sessionId}
           title={scenario.scenarioTitle}
           onExit={() =>
@@ -130,7 +138,7 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
             editing={typing}
             onChange={setTranscript}
             onSubmit={submitText}
-            onCancel={cancelListening}
+            onCancel={cancelInput}
           />
         )}
       </section>
@@ -149,26 +157,17 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
             phase={phase}
             onPress={pressMic}
             onKeyboard={pressKeyboard}
-            onCancel={cancelListening}
+            onCancel={cancelInput}
             onDone={finishListening}
           />
         )}
       </footer>
 
-      {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(WAITING)부터 랜디가 떠 있다가 속마음을 전한다.
+      {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(AI_THINKING)부터 랜디가 떠 있다가 속마음을 전한다.
           USER 선발화 진입 시엔 같은 연출로 랜디가 먼저 안내하고 사라진다 */}
       <ThoughtOverlay
-        loading={phase === 'WAITING'}
-        thought={
-          showUserFirstIntro
-            ? {
-                text: '상황을 잘 읽고 먼저 말을 걸어보세요!',
-                type: 'NORMAL',
-              }
-            : phase === 'THOUGHT'
-              ? { text: turn.innerThought, type: turn.innerThoughtType }
-              : null
-        }
+        loading={phase === 'AI_THINKING'}
+        thought={overlayThought}
       />
 
       <ExitConfirmSheet

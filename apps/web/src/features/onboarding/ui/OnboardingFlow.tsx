@@ -6,12 +6,11 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
+import { useAuthStore } from '@/shared/auth/auth-store';
 import { markOnboardingSeen } from '@/shared/auth/onboarding-seen';
 import { Transition } from '@/shared/motion';
-import { useAuthStore } from '@/shared/store/auth-store';
 
-import { STEP_ORDER } from '../model/onboarding.constants';
-import { type OnboardingStep } from '../model/onboarding.types';
+import { STEP_ORDER, type OnboardingStep } from '../model/steps';
 import { IntroStep } from './IntroStep';
 import { MicStep } from './MicStep';
 import { OnboardingHeader } from './OnboardingHeader';
@@ -50,12 +49,12 @@ export const OnboardingFlow = () => {
   };
 
   // 전진 CTA에서만 부른다 — 뒤로가기는 완료가 아니다
-  const completeStep = (completed: OnboardingStep, next: OnboardingStep) => {
+  const finishStep = (completed: OnboardingStep, next: OnboardingStep) => {
     track(EVENTS.ONBOARDING_STEP_COMPLETED, { step: completed });
     goTo(next);
   };
 
-  const handleBack = () => {
+  const stepBack = () => {
     const currentIndex = STEP_ORDER.indexOf(step);
     if (currentIndex > 0) goTo(STEP_ORDER[currentIndex - 1]);
   };
@@ -73,7 +72,7 @@ export const OnboardingFlow = () => {
 
   return (
     <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background text-foreground">
-      <OnboardingHeader step={step} onBack={handleBack} />
+      <OnboardingHeader step={step} onBack={stepBack} />
 
       <Transition
         transitionKey={step}
@@ -87,11 +86,11 @@ export const OnboardingFlow = () => {
         {step === 'intro' && (
           <IntroStep
             nickname={member?.nickname ?? null}
-            onNext={() => completeStep('intro', 'sound')}
+            onNext={() => finishStep('intro', 'sound')}
           />
         )}
         {step === 'sound' && (
-          <SoundStep onNext={() => completeStep('sound', 'mic')} />
+          <SoundStep onNext={() => finishStep('sound', 'mic')} />
         )}
         {step === 'mic' && (
           <MicStep
@@ -105,7 +104,7 @@ export const OnboardingFlow = () => {
           />
         )}
         {step === 'thought' && (
-          <ThoughtStep onNext={() => completeStep('thought', 'scenario')} />
+          <ThoughtStep onNext={() => finishStep('thought', 'scenario')} />
         )}
         {step === 'scenario' && <ScenarioStep onStart={startConversation} />}
       </Transition>

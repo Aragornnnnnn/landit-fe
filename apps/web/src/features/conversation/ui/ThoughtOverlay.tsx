@@ -6,7 +6,8 @@ import { createPortal } from 'react-dom';
 
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
-import { ThoughtReveal, type FloatingThought } from './ThoughtReveal';
+import type { FloatingThought } from '../model/thought';
+import { ThoughtReveal } from './ThoughtReveal';
 
 export const ThoughtOverlay = ({
   thought,
