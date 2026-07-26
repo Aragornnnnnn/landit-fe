@@ -211,4 +211,17 @@ describe('Modal', () => {
 
     expect(document.activeElement).toBe(screen.getByText('마지막'));
   });
+
+  it('막 열려 패널 자체에 포커스가 있을 때 Shift+Tab을 누르면 마지막 요소로 간다', () => {
+    render(
+      <Modal open onClose={vi.fn()}>
+        <button>첫번째</button>
+        <button>마지막</button>
+      </Modal>,
+    );
+
+    fireEvent.keyDown(window, { key: 'Tab', shiftKey: true });
+
+    expect(document.activeElement).toBe(screen.getByText('마지막'));
+  });
 });

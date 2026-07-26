@@ -72,7 +72,11 @@ export function Modal({
       }
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
+      // 열리자마자는 패널 자체가 포커스를 갖고 있어, first가 아니라 패널 기준으로도 검사해야 한다
+      const onFirstOrPanel =
+        document.activeElement === first ||
+        document.activeElement === panelRef.current;
+      if (event.shiftKey && onFirstOrPanel) {
         event.preventDefault();
         last.focus();
       } else if (!event.shiftKey && document.activeElement === last) {
