@@ -39,6 +39,8 @@ export const useInnerThought = () => {
       return { text: submitted.innerThought, type: submitted.innerThoughtType };
     }
     let fallbackReason: 'timeout' | 'failed' = 'timeout';
+    // 폴링 도중 마지막으로 받은 오류 — 끝내 실패하면 원인으로 보고한다
+    let lastError: unknown = null;
     for (let i = 0; i < innerThoughtMaxPolls; i++) {
       await delay(innerThoughtPollMs);
       if (!activeRef.current) return null;
@@ -51,15 +53,17 @@ export const useInnerThought = () => {
           fallbackReason = 'failed';
           break;
         }
-      } catch {
-        // 일시적 오류는 다음 폴에서 다시 시도한다
+      } catch (error) {
+        // 일시적 오류는 다음 폴에서 다시 시도하되, 원인은 남긴다
+        lastError = error;
       }
     }
     if (!activeRef.current) return null;
     // 여기 도달 = 속마음이 끝내 준비되지 못함 (생성 실패·시간초과)
-    reportWarning(`속마음 생성 폴백 (${fallbackReason})`, {
+    reportWarning(lastError ?? `속마음 생성 폴백 (${fallbackReason})`, {
       sessionId,
       messageId: submitted.messageId,
+      reason: fallbackReason,
     });
     return { text: submitted.innerThought, type: submitted.innerThoughtType };
   };

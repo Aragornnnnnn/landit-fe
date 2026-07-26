@@ -10,7 +10,11 @@ import type { TtsVoice } from '@/shared/tts/voice';
 
 import * as sessionApi from '../api/session';
 import type { SessionMessageSubmitResponse } from '../api/session';
-import { thoughtHoldMs } from './pacing';
+import {
+  innerThoughtMaxPolls,
+  innerThoughtPollMs,
+  thoughtHoldMs,
+} from './pacing';
 import { useConversationFlow } from './useConversationFlow';
 
 const monitoringMock = vi.hoisted(() => ({
@@ -565,6 +569,25 @@ describe('useConversationFlow', () => {
 
     expect(monitoringMock.reportWarning).toHaveBeenCalledWith(
       expect.stringContaining('failed'),
+      expect.objectContaining({ sessionId: 1 }),
+    );
+  });
+
+  it('폴링이 API 오류로 끝나면 그 오류를 보고한다 — 문자열만 남기면 원인을 잃는다', async () => {
+    const { result } = await renderUserFirst();
+    submitMessage.mockResolvedValue(preparingSubmitResponse());
+    const apiError = new Error('서버 오류가 발생했어요. (500)');
+    getInnerThought.mockRejectedValue(apiError);
+
+    await speakAndSubmit(result, 'Hello!');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(
+        innerThoughtPollMs * innerThoughtMaxPolls,
+      );
+    });
+
+    expect(monitoringMock.reportWarning).toHaveBeenCalledWith(
+      apiError,
       expect.objectContaining({ sessionId: 1 }),
     );
   });
