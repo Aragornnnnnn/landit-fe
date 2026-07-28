@@ -50,6 +50,9 @@ vi.mock('motion/react', async () => {
 
 vi.mock('../api/nps', () => ({ submitNps: vi.fn() }));
 
+const monitoringMock = vi.hoisted(() => ({ reportError: vi.fn() }));
+vi.mock('@/shared/monitoring/report', () => monitoringMock);
+
 const submitNpsMock = vi.mocked(submitNps);
 
 describe('FeedbackSurvey', () => {
@@ -88,6 +91,19 @@ describe('FeedbackSurvey', () => {
 
     await waitFor(() =>
       expect(screen.getByText(/소중한 의견 고마워요/)).toBeInTheDocument(),
+    );
+  });
+
+  it('제출 실패를 Sentry로 보고한다 — 감사 화면이 응답 유실을 숨기므로 보고가 유일한 신호다', async () => {
+    const error = new Error('network');
+    submitNpsMock.mockRejectedValue(error);
+    render(<FeedbackSurvey onDone={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: '만족도 2점' }));
+    fireEvent.click(screen.getByRole('button', { name: /제출할게요/ }));
+
+    await waitFor(() =>
+      expect(monitoringMock.reportError).toHaveBeenCalledWith(error),
     );
   });
 });

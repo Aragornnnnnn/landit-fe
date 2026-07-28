@@ -14,6 +14,7 @@
     "@amplitude/unified": "^1.1.24",
     "@landit/analytics": "workspace:*",
     "@landit/bridge": "workspace:*",
+    "@sentry/nextjs": "^10.68.0",
     "@tanstack/react-query": "^5.101.2",
     "@vercel/speed-insights": "^2.0.0",
     "canvas-confetti": "^1.9.4",

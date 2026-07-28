@@ -6,6 +6,12 @@ import { MicPermissionDeniedError } from '@/shared/stt/errors';
 
 import { useConversationInput } from './useConversationInput';
 
+const monitoringMock = vi.hoisted(() => ({
+  reportError: vi.fn(),
+  reportWarning: vi.fn(),
+}));
+vi.mock('@/shared/monitoring/report', () => monitoringMock);
+
 // STT는 경계(마이크)라 목으로 둔다 — start/stop 호출을 붙잡고, onInterim·onFinal 콜백을 흉내 낸다
 const sttMock = vi.hoisted(() => {
   const callbacks = {
@@ -197,6 +203,26 @@ describe('useConversationInput', () => {
     expect(onInputCancel).toHaveBeenCalledTimes(1);
     expect(result.current.transcript).toBe('');
     expect(result.current.micPermissionDenied).toBe(false);
+  });
+
+  it('인식 오류를 Sentry에 warning으로 보고한다 — 다시 말하면 되지만 빈도는 봐야 한다', () => {
+    const { result } = renderInput();
+    const error = new Error('음성 인식 오류: network');
+
+    act(() => result.current.pressMic());
+    act(() => sttMock.callbacks.onError?.(error));
+
+    expect(monitoringMock.reportWarning).toHaveBeenCalledWith(error);
+  });
+
+  it('마이크 권한 거부는 Sentry에 보고하지 않는다 — 유저의 선택이지 결함이 아니다', () => {
+    const { result } = renderInput();
+
+    act(() => result.current.pressMic());
+    act(() => sttMock.callbacks.onError?.(new MicPermissionDeniedError()));
+
+    expect(monitoringMock.reportError).not.toHaveBeenCalled();
+    expect(monitoringMock.reportWarning).not.toHaveBeenCalled();
   });
 
   it('마이크 권한 거부면 듣기 취소와 함께 권한 안내를 띄우고, 닫으면 내려간다', () => {

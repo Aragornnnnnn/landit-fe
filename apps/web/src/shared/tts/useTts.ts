@@ -3,6 +3,7 @@
 // OpenRouter 프록시(/api/tts)로 텍스트를 합성해 재생하는 TTS 훅 — STT 훅과 콜백·상태 컨벤션을 공유한다
 import { useEffect, useRef, useState } from 'react';
 
+import { reportWarning } from '@/shared/monitoring/report';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 export type TtsStatus = 'idle' | 'loading' | 'active' | 'error';
@@ -126,7 +127,9 @@ export function useTts() {
       audio.onerror = () => {
         cleanup();
         setStatus('error');
-        options?.onError?.(new Error('오디오 재생에 실패했어요.'));
+        const playbackError = new Error('오디오 재생에 실패했어요.');
+        reportWarning(playbackError);
+        options?.onError?.(playbackError);
       };
 
       await audio.play();
@@ -140,6 +143,7 @@ export function useTts() {
         return;
       }
       setStatus('error');
+      reportWarning(error);
       options?.onError?.(
         error instanceof Error ? error : new Error('TTS 합성에 실패했어요.'),
       );

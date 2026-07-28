@@ -12,6 +12,7 @@ import type { Scenario } from '@/features/scenario/api/list';
 import { scenarioKeys } from '@/features/scenario/model/keys';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
+import { reportError } from '@/shared/monitoring/report';
 import { showToast } from '@/shared/ui/toast';
 
 import { submitMessage, type NextMessage } from '../api/session';
@@ -203,6 +204,7 @@ export const useConversationFlow = (scenario: Scenario) => {
         });
     } catch (error) {
       console.error('발화 제출 실패', error);
+      reportError(error);
       haptic('error');
       send('AI_RESPONSE_FAILED'); // → USER_READY (다시 시도)
       showToast('전송에 실패했어요. 다시 시도해 주세요');
