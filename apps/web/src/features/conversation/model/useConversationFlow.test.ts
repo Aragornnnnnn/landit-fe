@@ -10,8 +10,18 @@ import type { TtsVoice } from '@/shared/tts/voice';
 
 import * as sessionApi from '../api/session';
 import type { SessionMessageSubmitResponse } from '../api/session';
-import { thoughtHoldMs } from './pacing';
+import {
+  innerThoughtMaxPolls,
+  innerThoughtPollMs,
+  thoughtHoldMs,
+} from './pacing';
 import { useConversationFlow } from './useConversationFlow';
+
+const monitoringMock = vi.hoisted(() => ({
+  reportError: vi.fn(),
+  reportWarning: vi.fn(),
+}));
+vi.mock('@/shared/monitoring/report', () => monitoringMock);
 
 vi.mock('../api/session', () => ({
   startSession: vi.fn(),
@@ -323,6 +333,16 @@ describe('useConversationFlow', () => {
     expect(result.current.phase).toBe('USER_READY');
   });
 
+  it('제출 실패를 Sentry로 보고한다 — 대화 턴이 유실되는 사고라 바로 알아야 한다', async () => {
+    const { result } = await renderUserFirst();
+    const error = new Error('network');
+    submitMessage.mockRejectedValue(error);
+
+    await speakAndSubmit(result, 'Hello!');
+
+    expect(monitoringMock.reportError).toHaveBeenCalledWith(error);
+  });
+
   it('다음 질문이 있으면 속마음이 끝난 뒤 다음 AI 질문으로 이어간다', async () => {
     const { result } = await renderUserFirst();
     submitMessage.mockResolvedValue(submitResponse());
@@ -531,6 +551,45 @@ describe('useConversationFlow', () => {
     expect(result.current.phase).toBe('AI_SPEAKING');
     expect(result.current.turn.aiMessage).toBe('What size would you like?');
     expect(result.current.turn.innerThought).toBe('');
+  });
+
+  it('속마음 생성 실패(FAILED)를 Sentry에 warning으로 보고한다 — 대화는 건너뛰고 계속된다', async () => {
+    const { result } = await renderUserFirst();
+    submitMessage.mockResolvedValue(preparingSubmitResponse());
+    getInnerThought.mockResolvedValue({
+      processingStatus: 'FAILED',
+      innerThought: null,
+      innerThoughtType: null,
+    });
+
+    await speakAndSubmit(result, 'Hello!');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+
+    expect(monitoringMock.reportWarning).toHaveBeenCalledWith(
+      expect.stringContaining('failed'),
+      expect.objectContaining({ sessionId: 1 }),
+    );
+  });
+
+  it('폴링이 API 오류로 끝나면 그 오류를 보고한다 — 문자열만 남기면 원인을 잃는다', async () => {
+    const { result } = await renderUserFirst();
+    submitMessage.mockResolvedValue(preparingSubmitResponse());
+    const apiError = new Error('서버 오류가 발생했어요. (500)');
+    getInnerThought.mockRejectedValue(apiError);
+
+    await speakAndSubmit(result, 'Hello!');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(
+        innerThoughtPollMs * innerThoughtMaxPolls,
+      );
+    });
+
+    expect(monitoringMock.reportWarning).toHaveBeenCalledWith(
+      apiError,
+      expect.objectContaining({ sessionId: 1 }),
+    );
   });
 
   // 입력 훅 배선 — 듣기 전이와 최종 발화 제출이 상태기계·세션 API로 이어지는지

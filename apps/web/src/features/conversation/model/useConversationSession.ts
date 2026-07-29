@@ -6,6 +6,7 @@ import { EVENTS } from '@landit/analytics';
 
 import type { Scenario } from '@/features/scenario/api/list';
 import { track } from '@/shared/analytics';
+import { reportError, reportWarning } from '@/shared/monitoring/report';
 
 import { endSession, startSession } from '../api/session';
 
@@ -59,6 +60,7 @@ export const useConversationSession = (
       })
       .catch((error) => {
         console.error('세션 시작 실패', error);
+        reportError(error);
         return null;
       });
     // startedRef 가드로 어차피 1회만 실행된다 — 계측 속성 참조로 늘어난 의존성
@@ -70,9 +72,10 @@ export const useConversationSession = (
   // 중도 종료 — 정상 완료는 서버가 판정하므로 부르지 않는다. 미확보 세션은 종료할 것도 없다
   const end = () => {
     if (sessionIdRef.current == null) return;
-    endSession(sessionIdRef.current).catch((error) =>
-      console.error('세션 종료 실패', error),
-    );
+    endSession(sessionIdRef.current).catch((error) => {
+      console.error('세션 종료 실패', error);
+      reportWarning(error);
+    });
   };
 
   return { sessionId, ensure, end };

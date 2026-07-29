@@ -7,6 +7,7 @@ import { EVENTS } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
+import { reportWarning } from '@/shared/monitoring/report';
 import { isMicPermissionDeniedError } from '@/shared/stt/errors';
 import { useStt } from '@/shared/stt/useStt';
 import { showToast } from '@/shared/ui/toast';
@@ -69,6 +70,7 @@ export const useConversationInput = ({
     } else {
       showToast('음성 인식에 문제가 생겼어요. 다시 시도해 주세요');
       track(EVENTS.SPEECH_RECOGNITION_FAILED, { reason: errorName });
+      reportWarning(error);
     }
     haptic('error');
     setTranscript('');
