@@ -36,6 +36,7 @@ landit 앱은 네이티브 UI 없이 웹(Next.js)을 WebView로 감싸는 셸이
 | `REQUEST_NOTIFICATION_PERMISSION` | 웹→앱 | 없음        | 알림 권한 능동 요청 — OS 권한창을 띄울 수 있다. 응답은 `NOTIFICATION_PERMISSION` | `index.tsx`의 핸들러   |
 | `NOTIFICATION_PERMISSION`         | 앱→웹 | `status`    | 권한 조회·요청에 대한 응답 (`granted`/`denied`/`undetermined`)                   | 알림 기능 훅 (LAN-189) |
 | `PUSH_TOKEN`                      | 앱→웹 | `token`     | 셸이 발급받은 푸시 토큰 전달. 웹이 백엔드에 등록한다                             | 알림 기능 훅 (LAN-189) |
+| `NAVIGATE`                        | 앱→웹 | `url`       | 앱이 떠 있는 상태에서 알림을 탭했을 때 웹에 화면 이동을 요청한다                 | `BridgeListener.tsx`   |
 
 STT·TTS·인증 등 기능 메시지는 각 기능 이슈에서 추가한다.
 
