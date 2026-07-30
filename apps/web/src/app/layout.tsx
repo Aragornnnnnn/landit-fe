@@ -2,6 +2,7 @@
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
 
+import { AppUpdateGate } from '@/features/app-update/ui/AppUpdateGate';
 import { AnalyticsBootstrap, PageViewTracker } from '@/shared/analytics';
 import { BridgeListener } from '@/shared/bridge/BridgeListener';
 import { GlobalHaptics } from '@/shared/haptics';
@@ -47,7 +48,10 @@ export default function RootLayout({
         <PageViewTracker />
         <BridgeListener />
         <GlobalHaptics />
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <AppUpdateGate />
+        </Providers>
         <Toaster />
         <SpeedInsights />
       </body>
