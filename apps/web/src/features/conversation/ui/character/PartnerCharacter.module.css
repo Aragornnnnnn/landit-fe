@@ -1,0 +1,220 @@
+/* 대화 상대 캐릭터 모션 — SVG 내부 파츠는 Tailwind 유틸이 닿지 않아 :global로 타겟한다
+   (login-motion.module.css와 같은 이유). 움직임은 세 겹이다.
+   1겹 상시 idle(호흡·체중이동) → 2겹 자세·표정 → 3겹 불규칙 액센트(컴포넌트가 WAAPI로 쏜다)
+
+   2겹은 자세(.idle·.listening·.speaking)와 표정(.happy·.frown) 두 축이 같은 엘리먼트에
+   겹쳐 붙는다. 중립 표정은 클래스를 붙이지 않는 것으로 나타내서 여기 규칙이 없다. */
+
+.root {
+  height: 100%;
+}
+
+.parts {
+  display: block;
+  height: 100%;
+  width: auto;
+  transform-origin: 50% 100%;
+  /* 대화 내내 도는 무한 애니메이션이라 레이어로 올려 둔다 — 안 그러면 매 프레임 캐릭터
+     전체(100여 개 path)를 메인 스레드에서 다시 그린다 */
+  will-change: transform;
+}
+
+/* 변형 기준을 조각 자기 영역으로 바꾼다 — 기본값이면 퍼센트가 SVG 전체 기준이라 회전축이 발밑에 잡힌다 */
+.parts :global(g),
+.parts :global(path) {
+  transform-box: fill-box;
+}
+
+/* 생성 단계에서 구운 좌표 지정 회전(클로이 입 수평 보정)은 고전 좌표계라야 기준점이 맞는다 */
+.parts :global(g.baked) {
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+
+.parts :global(#torso) {
+  transform-origin: 50% 100%;
+}
+
+.parts :global(#head) {
+  transform-origin: 50% 96%;
+}
+
+.parts :global(#arm-left),
+.parts :global(#arm-right) {
+  transform-origin: 50% 4%;
+}
+
+/* 1겹 — 상시 idle. 진폭은 작게, 들숨(55%)을 날숨보다 길게, 머리·팔은 지연으로 늦게 따라온다.
+   모션을 줄이는 설정에서는 이 겹만 통째로 빠진다 — 취소 목록을 따로 유지하면 새 애니메이션을
+   한쪽에만 넣고 잊는다 (login-motion.module.css와 같은 방식) */
+@media (prefers-reduced-motion: no-preference) {
+  .parts {
+    animation: weight-shift 7.6s ease-in-out infinite;
+  }
+
+  .parts :global(#torso) {
+    animation: breathe 4.2s cubic-bezier(0.45, 0, 0.4, 1) infinite;
+  }
+
+  .parts :global(#head) {
+    animation: head-float 4.2s cubic-bezier(0.45, 0, 0.4, 1) infinite;
+    animation-delay: 0.22s;
+  }
+
+  .parts :global(#arm-left),
+  .parts :global(#arm-right) {
+    animation: arm-breathe 4.2s cubic-bezier(0.45, 0, 0.4, 1) infinite;
+    animation-delay: 0.3s;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  55% {
+    transform: scaleY(1.014);
+  }
+}
+
+@keyframes head-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  55% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes arm-breathe {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  55% {
+    transform: rotate(0.7deg);
+  }
+}
+
+/* 호흡 4.2초와 주기가 어긋나 같은 자세가 반복되지 않는다 */
+@keyframes weight-shift {
+  0%,
+  100% {
+    transform: rotate(0.25deg) translateX(1px);
+  }
+  50% {
+    transform: rotate(-0.25deg) translateX(-1px);
+  }
+}
+
+/* 2겹 — 포즈.  살짝 지나쳤다 돌아오는 이징으로 뻣뻣함을 던다 */
+.parts :global(#head-inner),
+.parts :global(#mouth),
+.parts :global(#eye-left),
+.parts :global(#eye-right),
+.parts :global(#brow-left),
+.parts :global(#brow-right) {
+  transition: transform 0.4s cubic-bezier(0.3, 1.35, 0.5, 1);
+}
+
+.parts :global(#head-inner) {
+  transform-origin: 50% 96%;
+}
+
+.parts :global(#mouth) {
+  transform-origin: 50% 15%;
+}
+
+.parts :global(#eye-left),
+.parts :global(#eye-right),
+.parts :global(#brow-left),
+.parts :global(#brow-right) {
+  transform-origin: 50% 50%;
+}
+
+/* 표정 교체용 파츠는 기본 숨김 — 포즈 규칙과 특이도가 같아 반드시 위에 둔다 */
+.parts :global(#mouth-frown) {
+  display: none;
+}
+
+/* 눈웃음은 display 대신 opacity·scale로 둬서 눈이 감기며 아크로 이어진다 */
+.parts :global(#eye-left-happy),
+.parts :global(#eye-right-happy) {
+  opacity: 0;
+  transform: scaleY(0.25);
+  transition:
+    opacity 0.15s ease,
+    transform 0.25s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+/* 쉬는 입 — 원본 입을 눌러 만든 다문 미소. 원본 아트가 활짝 웃는 입이라 쉬는 자세엔 과하다.
+   기다릴 때나 들을 때나 같은 입이라 한 곳에서 정한다 (말할 땐 립싱크가 가져간다) */
+.idle .parts :global(#mouth),
+.listening .parts :global(#mouth) {
+  transform: scale(0.84, 0.4) translateY(3px);
+}
+
+/* 듣기 — 살짝 기울여 귀 기울이고 눈썹을 든다 */
+.listening .parts :global(#head-inner) {
+  transform: rotate(2deg);
+}
+
+.listening .parts :global(#brow-left),
+.listening .parts :global(#brow-right) {
+  transform: translateY(-2.5px);
+}
+
+/* 찡그림 — 눈썹을 미간으로 모아 내린다. 입 교체는 말하지 않을 때만 한다(아래) */
+.frown .parts :global(#head-inner) {
+  transform: rotate(-2deg) translateY(4px);
+}
+
+.frown .parts :global(#brow-left) {
+  transform: translate(4px, 10px) rotate(14deg);
+}
+
+.frown .parts :global(#brow-right) {
+  transform: translate(-4px, 10px) rotate(-14deg);
+}
+
+.frown .parts :global(#eye-left),
+.frown .parts :global(#eye-right) {
+  transform: scaleY(0.8) translateY(1px);
+}
+
+/* 말하는 중에는 입을 립싱크가 쥐고 있다 — 여기서 감추면 소리에 맞춰 움직이는 입이 사라진다 */
+.frown:not(.speaking) .parts :global(#mouth) {
+  display: none;
+}
+
+.frown:not(.speaking) .parts :global(#mouth-frown) {
+  display: block;
+}
+
+/* 기쁨 — 원래 눈이 감기고 그 자리에서 눈웃음 아크가 펴지는 릴레이 */
+.happy .parts :global(#eye-left),
+.happy .parts :global(#eye-right) {
+  opacity: 0;
+  transform: scaleY(0.08) translateY(2px);
+  transition:
+    transform 0.15s ease-in,
+    opacity 0.1s ease 0.08s;
+}
+
+.happy .parts :global(#eye-left-happy),
+.happy .parts :global(#eye-right-happy) {
+  opacity: 1;
+  transform: scaleY(1);
+  transition-delay: 0.08s;
+}
+
+.happy .parts :global(#mouth) {
+  transform: scaleY(1.12);
+}
+
+.happy .parts :global(#brow-left),
+.happy .parts :global(#brow-right) {
+  transform: translateY(-5px);
+}
