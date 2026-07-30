@@ -8,11 +8,27 @@ import type { TtsVoice } from '@/shared/tts/voice';
 
 export type TtsStatus = 'idle' | 'loading' | 'active' | 'error';
 
+/**
+ * 재생 중인 음성을 밖에서 따라 읽는 통로 — 립싱크가 쓴다.
+ * 오디오 엘리먼트를 그대로 내주면 밖에서 pause·src 교체가 가능해져, 이 훅이 쥔 재생 소유권이 깨진다.
+ * progress는 0~1이고 duration을 아직 모르면 0, source는 파형을 읽을 원본 주소다.
+ */
+export interface TtsPlayback {
+  progress: () => number;
+  source: string;
+}
+
+/** onStart는 재생이 실제로 시작된 뒤에만 부른다 — 그 전에는 읽을 시각이 없다 */
 interface SpeakOptions {
-  onStart?: () => void;
+  onStart?: (playback: TtsPlayback) => void;
   onEnd?: () => void;
   onError?: (error: Error) => void;
 }
+
+const toPlayback = (audio: HTMLAudioElement): TtsPlayback => ({
+  progress: () => (audio.duration ? audio.currentTime / audio.duration : 0),
+  source: audio.currentSrc,
+});
 
 // 합성 요청을 한 곳에서 만든다 — 재생(speak)과 미리 담기(prefetch)가 공유한다.
 // 성공 시 오디오 Blob을, 실패 시 예외를 던진다. objectURL은 재생 직전에 새로 만든다
@@ -134,7 +150,7 @@ export function useTts() {
 
       await audio.play();
       setStatus('active');
-      options?.onStart?.();
+      options?.onStart?.(toPlayback(audio));
     } catch (error) {
       // stop()으로 중단된 경우는 에러가 아니다.
       // 뒤이은 speak가 이미 새 요청을 걸었으면(abortRef가 다른 컨트롤러) 상태는 그 요청이 소유하므로 건드리지 않는다
@@ -182,7 +198,7 @@ export function useTts() {
       () => {
         if (!handled) {
           setStatus('active');
-          options?.onStart?.();
+          options?.onStart?.(toPlayback(audio));
         }
       },
       (error) => {
