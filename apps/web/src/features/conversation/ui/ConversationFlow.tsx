@@ -13,6 +13,7 @@ import { Transition } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
+import { toCharacterLook } from '../model/character-look';
 import { userIntroHoldMs } from '../model/pacing';
 import type { FloatingThought } from '../model/thought';
 import { useConversationFlow } from '../model/useConversationFlow';
@@ -35,8 +36,16 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
   // USER 선발화 진입 안내 — 랜디가 먼저 날아들어 말을 걸어보라고 알려주고 잠시 후 사라진다.
   // 판정은 turn.isUserOpening 한 곳에 위임하고(카드 안내 구조와 같은 소스), 여기선 노출 시간만 관리한다.
   const [introDismissed, setIntroDismissed] = useState(false);
-  const { phase, turn, partner, input, leave, sessionId } =
-    useConversationFlow(scenario);
+  const {
+    phase,
+    turn,
+    partner,
+    finishedThought,
+    speech,
+    input,
+    leave,
+    sessionId,
+  } = useConversationFlow(scenario);
   const {
     transcript,
     setTranscript,
@@ -71,6 +80,8 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
     return null;
   };
   const overlayThought = resolveOverlayThought();
+  // 캐릭터 자세 — 평소엔 단계를 따르고, 속마음이 끝난 직후에만 그 감정 표정이 잠깐 스친다
+  const characterLook = toCharacterLook(phase, finishedThought);
   // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로 페이드 인해 넘어간다. 마치면 표현 학습 분기로 보낸다.
   const view = ended && showFeedback ? 'feedback' : 'conversation';
 
@@ -117,7 +128,7 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
         </button>
       </header>
 
-      <CharacterStage partner={partner} />
+      <CharacterStage partner={partner} look={characterLook} speech={speech} />
 
       {/* 무대·답변·마이크는 고정. 질문만 남는 공간을 채우는 스크롤 영역에 담아, 길어져도 겹치지 않고 카드 안에서 스크롤된다 */}
       <section className="flex min-h-0 flex-1 flex-col px-5">

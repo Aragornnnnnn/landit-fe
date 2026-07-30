@@ -16,12 +16,13 @@ import { reportError } from '@/shared/monitoring/report';
 import { showToast } from '@/shared/ui/toast';
 
 import { submitMessage, type NextMessage } from '../api/session';
+import type { Partner } from './character-look';
 import {
   initialConversationState,
   nextConversationState,
   type ConversationEvent,
 } from './conversation-machine';
-import { thoughtHoldMs, toThoughtType } from './pacing';
+import { expressionHoldMs, thoughtHoldMs, toThoughtType } from './pacing';
 import type { FloatingThought, ThoughtType } from './thought';
 import { useAiSpeech } from './useAiSpeech';
 import { useConversationInput } from './useConversationInput';
@@ -58,6 +59,10 @@ export const useConversationFlow = (scenario: Scenario) => {
       : null,
   );
   const [thought, setThought] = useState<FloatingThought | null>(null);
+  // 노출을 끝낸 속마음 — 화면이 표정으로 반응할 수 있게 그 사실만 남긴다.
+  // 매번 새 객체라 같은 종류가 연달아 와도 서로 다른 반응으로 구분된다
+  const [finishedThought, setFinishedThought] =
+    useState<FloatingThought | null>(null);
 
   // send 클로저가 최신 값을 읽도록 ref로 들고 있는다
   const completedRef = useRef(false); // 그 발화를 끝으로 대화가 종료되는가
@@ -110,6 +115,7 @@ export const useConversationFlow = (scenario: Scenario) => {
     event: 'INNER_THOUGHT_DONE' | 'AI_RESPONSE_SKIPPED',
   ) => {
     input.resetForNextTurn();
+    if (event === 'INNER_THOUGHT_DONE' && thought) setFinishedThought(thought);
     setThought(null);
     if (nextMessageRef.current) {
       setAiMessage({
@@ -121,6 +127,13 @@ export const useConversationFlow = (scenario: Scenario) => {
     }
     send(event);
   };
+
+  // 표정 여운 — 노출을 끝낸 속마음을 잠깐 들고 있다가 지운다. 화면은 이걸 보고 표정을 짓는다
+  useEffect(() => {
+    if (!finishedThought) return;
+    const id = setTimeout(() => setFinishedThought(null), expressionHoldMs);
+    return () => clearTimeout(id);
+  }, [finishedThought]);
 
   // 속마음 — 잠시 보여준 뒤 다음 질문으로 갈아끼우고 다음 턴으로 넘어간다
   useEffect(() => {
@@ -240,13 +253,15 @@ export const useConversationFlow = (scenario: Scenario) => {
   };
 
   // 상대 캐릭터 성별은 시나리오 TTS 음성을 따른다 (미설정 시 남성)
-  const partner: 'male' | 'female' =
-    voice?.gender === 'FEMALE' ? 'female' : 'male';
+  const partner: Partner = voice?.gender === 'FEMALE' ? 'chloe' : 'marco';
 
   return {
     phase: state.phase,
     turn,
     partner,
+    finishedThought,
+    // 지금 소리 나는 발화 — 캐릭터가 입모양을 맞추는 데 쓴다 (음성이 없으면 null)
+    speech: aiSpeech.speech,
     // 입력은 하위 훅 결과를 통째로 — 낱개 중계를 안 해야 input의 반환 형태에 flow가 결합하지 않는다
     input,
     leave,
