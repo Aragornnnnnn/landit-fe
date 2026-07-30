@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "characters": "node scripts/split-character-parts.mjs"
   },
   "dependencies": {
     "@amplitude/unified": "^1.1.24",
