@@ -3,7 +3,7 @@
 // 어느 화면에서든 항상 처리해야 하는 네이티브 메시지(뒤로가기 등)를 받는 전역 리스너 — 루트 레이아웃에 마운트
 import { useEffect, useRef } from 'react';
 import { EVENTS } from '@landit/analytics';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
 import { decideBack } from '@/shared/bridge/back-navigation';
@@ -13,6 +13,7 @@ import { showToast, TOAST_MS } from '@/shared/ui/toast';
 
 export const BridgeListener = () => {
   const pathname = usePathname();
+  const router = useRouter();
 
   // 구독은 마운트에 한 번만 — 핸들러는 ref로 최신 경로·대기 상태를 읽는다 (라우트마다 재구독하지 않게)
   const pathnameRef = useRef(pathname);
@@ -73,8 +74,11 @@ export const BridgeListener = () => {
 
     return subscribeFromNative((message) => {
       if (message.type === 'BACK_PRESSED') routeBackPress();
+      // 셸이 전달한 알림 탭 딥링크 — 웜 스타트에선 라우터 이동으로 처리한다
+      if (message.type === 'NAVIGATE') router.push(message.url);
     });
-  }, []);
+    // router는 App Router에서 안정된 객체라 재구독이 일어나지 않는다
+  }, [router]);
 
   return null;
 };
