@@ -75,7 +75,8 @@ export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
 // 속성 값 유니언 — 변형은 이벤트명이 아니라 속성으로 관리한다 (정책 2-1)
 export type AuthProvider = 'kakao' | 'google' | 'apple';
 export type LoginMethod = 'native' | 'web';
-export type OnboardingStep = 'intro' | 'sound' | 'mic' | 'thought' | 'scenario';
+export type OnboardingStep =
+  'intro' | 'sound' | 'mic' | 'thought' | 'notification' | 'scenario';
 export type ExpressionStep = 'quiz' | 'explain' | 'review';
 export type TurnInputType = 'voice' | 'text';
 export type HintSource = 'quiz' | 'review';
