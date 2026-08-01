@@ -15,6 +15,10 @@ export const userIntroHoldMs = 2800;
 export const thoughtHoldMs = (text: string) =>
   Math.min(2600 + text.length * 40, 5200);
 
+// 속마음 노출이 끝난 뒤 캐릭터 표정이 남아 있는 여운. 곧바로 AI 발화가 시작되므로
+// 이 값이 곧 "표정이 발화 앞부분을 덮는 길이"가 된다
+export const expressionHoldMs = 1000;
+
 // 속마음은 비동기 생성이라, 준비될 때까지 이 간격으로 폴링한다
 export const innerThoughtPollMs = 500;
 // 폴링 상한 — 넘으면 제출 응답 값으로라도 진행해 대화가 멈추지 않게 한다 (약 20초)
