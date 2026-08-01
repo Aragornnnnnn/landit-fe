@@ -21,6 +21,15 @@ const DESKTOP_UA =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
 
 describe('GET /download', () => {
+  // 키를 비워 계측을 끈다 — 리다이렉트 테스트가 실제 앰플리튜드로 요청을 보내지 않게
+  beforeEach(() => {
+    vi.stubEnv('AMPLITUDE_API_KEY', '');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('iPhone에서 열면 App Store로 보낸다', async () => {
     const res = await GET(downloadRequest(IPHONE_UA));
 
