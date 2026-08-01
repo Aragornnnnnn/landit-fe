@@ -14,10 +14,7 @@ export const NotificationConsentSheet = ({
   onDismiss: () => void;
 }) => (
   <BottomSheet open onClose={onDismiss}>
-    <LockScreenMockup
-      title="오늘만 가능한 시나리오 도착 💌"
-      body="자기 전 5분으로 불꽃을 지키세요"
-    />
+    <LockScreenMockup />
     <h2 className="mt-5 text-center text-lg font-bold text-foreground">
       알림으로 도와드릴게요
     </h2>
