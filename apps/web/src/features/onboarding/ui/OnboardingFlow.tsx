@@ -9,6 +9,7 @@ import { useNotificationPermission } from '@/features/notification/model/useNoti
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { markOnboardingSeen } from '@/shared/auth/onboarding-seen';
+import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { Transition } from '@/shared/motion';
 
 import { STEP_ORDER, type OnboardingStep } from '../model/steps';
@@ -25,13 +26,15 @@ export const OnboardingFlow = () => {
   const member = useAuthStore((state) => state.member);
   // 물어볼 수 있는 상태(undetermined)에만 알림 스텝을 넣는다 — 이미 확정(granted·denied)이거나 요청 수단이 없으면(unavailable) 5스텝
   const canAskNotification = useNotificationPermission() === 'undetermined';
-  const stepOrder: readonly OnboardingStep[] = canAskNotification
-    ? STEP_ORDER
-    : STEP_ORDER.filter((step) => step !== 'notification');
 
   const [step, setStep] = useState<OnboardingStep>('intro');
   // 스텝 이동 방향 — 슬라이드가 전진(1)이면 오른쪽에서, 후진(-1)이면 왼쪽에서 들어오게 한다
   const [direction, setDirection] = useState(1);
+  // 알림 스텝에 머무는 동안엔 (OS 팝업 응답으로 권한이 확정돼도) 스텝을 목록에서 유지한다 — 현재 스텝 index가 사라지는 레이스 방지
+  const stepOrder: readonly OnboardingStep[] =
+    canAskNotification || step === 'notification'
+      ? STEP_ORDER
+      : STEP_ORDER.filter((item) => item !== 'notification');
   // 지연 콜백(마이크 권한 프롬프트)이 최신 스텝을 읽기 위한 ref — 스텝을 벗어났으면 완료로 치지 않는다
   const stepRef = useRef(step);
   useEffect(() => {
@@ -46,10 +49,9 @@ export const OnboardingFlow = () => {
   useEffect(() => {
     track(EVENTS.ONBOARDING_STEP_VIEWED, {
       step,
-      step_index: stepOrder.indexOf(step),
+      // index는 전체 스텝 기준 고정값 — 알림 스텝 포함 여부로 뒤 스텝 번호가 흔들리지 않게 한다
+      step_index: STEP_ORDER.indexOf(step),
     });
-    // stepOrder는 step이 바뀔 때만 기록하면 된다 — 같은 스텝에서 순서가 바뀌는 경우는 노출이 아니다
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
   const goTo = (next: OnboardingStep) => {
@@ -62,6 +64,20 @@ export const OnboardingFlow = () => {
     track(EVENTS.ONBOARDING_STEP_COMPLETED, { step: completed });
     goTo(next);
   };
+
+  // 알림 스텝 대기 — CTA가 띄운 OS 팝업의 회신이 오면 다음 스텝으로 (마이크 스텝과 같은 완료 방식).
+  // 부팅 시 조회 회신은 알림 스텝에 있지 않아 걸러진다
+  useEffect(
+    () =>
+      subscribeFromNative((message) => {
+        if (message.type !== 'NOTIFICATION_PERMISSION') return;
+        if (stepRef.current !== 'notification') return;
+        track(EVENTS.ONBOARDING_STEP_COMPLETED, { step: 'notification' });
+        setDirection(1);
+        setStep((prev) => (prev === 'notification' ? 'scenario' : prev));
+      }),
+    [],
+  );
 
   const stepBack = () => {
     const currentIndex = stepOrder.indexOf(step);
@@ -126,9 +142,11 @@ export const OnboardingFlow = () => {
         )}
         {step === 'notification' && (
           <NotificationStep
-            // 실제 권한 요청(REQUEST_NOTIFICATION_PERMISSION)은 브릿지 확장 후 배선한다.
-            // 여기서 답하면 OS 권한 상태가 확정되므로 홈의 동의 게이트는 저절로 조용해진다
-            onNext={() => finishStep('notification', 'scenario')}
+            // OS 권한창만 요청한다 — 회신은 useNotificationPermission이 받고, 아래 effect가 확정을 보고 다음 스텝으로 넘긴다.
+            // 여기서 답하면 권한 상태가 확정되므로 홈의 동의 게이트는 저절로 조용해진다
+            onNext={() =>
+              postToNative({ type: 'REQUEST_NOTIFICATION_PERMISSION' })
+            }
           />
         )}
         {step === 'scenario' && <ScenarioStep onStart={startConversation} />}
