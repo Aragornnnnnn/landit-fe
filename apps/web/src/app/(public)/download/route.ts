@@ -13,7 +13,8 @@ type VisitProps = EventProps['Download Link Visited'];
 // 서버 발화 — 클라이언트 SDK(@/shared/analytics)는 'use client'라 route 핸들러에서 못 쓴다.
 // 익명 방문이라 device_id는 랜덤 UUID — 방문 횟수 집계용이고 고유 사용자 수는 아니다
 const trackDownloadVisit = async (props: VisitProps) => {
-  const apiKey = process.env.AMPLITUDE_API_KEY;
+  // 브라우저에도 노출되는 공개 키라 서버 발화도 같은 키를 쓴다 — 별도 env 불필요
+  const apiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
   if (!apiKey) return;
 
   await fetch(AMPLITUDE_HTTP_API, {

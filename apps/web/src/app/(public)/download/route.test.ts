@@ -26,7 +26,7 @@ const DESKTOP_UA =
 describe('GET /download', () => {
   // 키를 비워 계측을 끈다 — 리다이렉트 테스트가 실제 앰플리튜드로 요청을 보내지 않게
   beforeEach(() => {
-    vi.stubEnv('AMPLITUDE_API_KEY', '');
+    vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', '');
   });
 
   afterEach(() => {
@@ -92,7 +92,7 @@ describe('GET /download 앰플리튜드 계측', () => {
   const fetchMock = vi.fn();
 
   beforeEach(() => {
-    vi.stubEnv('AMPLITUDE_API_KEY', 'test-key');
+    vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
     fetchMock.mockResolvedValue(new Response('ok'));
     vi.stubGlobal('fetch', fetchMock);
   });
@@ -154,7 +154,7 @@ describe('GET /download 앰플리튜드 계측', () => {
   });
 
   it('API 키가 없으면 이벤트를 보내지 않고 리다이렉트만 한다', async () => {
-    vi.stubEnv('AMPLITUDE_API_KEY', '');
+    vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', '');
 
     const res = await GET(downloadRequest(IPHONE_UA));
 
