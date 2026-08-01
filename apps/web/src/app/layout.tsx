@@ -4,6 +4,7 @@ import type { Metadata, Viewport } from 'next';
 
 import { AppUpdateGate } from '@/features/app-update/ui/AppUpdateGate';
 import { NotificationConsentGate } from '@/features/notification/ui/NotificationConsentGate';
+import { ReminderSync } from '@/features/notification/ui/ReminderSync';
 import { AnalyticsBootstrap, PageViewTracker } from '@/shared/analytics';
 import { BridgeListener } from '@/shared/bridge/BridgeListener';
 import { GlobalHaptics } from '@/shared/haptics';
@@ -53,6 +54,7 @@ export default function RootLayout({
           {children}
           <AppUpdateGate />
           <NotificationConsentGate />
+          <ReminderSync />
         </Providers>
         <Toaster />
         <SpeedInsights />
