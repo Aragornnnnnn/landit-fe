@@ -68,6 +68,9 @@ export const EVENTS = {
   NPS_SCORE_SELECTED: 'NPS Score Selected',
   NPS_SURVEY_SUBMITTED: 'NPS Survey Submitted',
   NPS_SURVEY_DISMISSED: 'NPS Survey Dismissed',
+
+  // 유입 — /download 스토어 리다이렉트가 서버에서 발화한다 (route 핸들러, LAN-237)
+  DOWNLOAD_LINK_VISITED: 'Download Link Visited',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -245,6 +248,9 @@ export type EventProps = {
   'NPS Survey Submitted': { score: number; has_comment: boolean };
   // ✕로 제출 없이 닫음 — 점수를 골라놓고 닫았으면 score가 담긴다
   'NPS Survey Dismissed': { score?: number };
+
+  // 서버 발화라 세션·리플레이·공통 속성 없음. device_id 랜덤 — 방문 횟수 집계용
+  'Download Link Visited': { store: 'play_store' | 'app_store' };
 };
 
 // 컴파일 타임 검증 ① EventProps가 모든 이벤트를 빠짐없이 커버한다
