@@ -149,4 +149,20 @@ describe('GET /download 앰플리튜드 계측', () => {
       'https://play.google.com/store/apps/details?id=com.saynow.app',
     );
   });
+
+  it('응답이 오지 않으면 타임아웃으로 끊고 리다이렉트한다', async () => {
+    // abort 전까지 영원히 pending인 fetch — 타임아웃 시그널이 끊어줘야 통과한다
+    fetchMock.mockImplementation(
+      (_url: unknown, init: RequestInit) =>
+        new Promise((_resolve, reject) => {
+          init.signal?.addEventListener('abort', () =>
+            reject(init.signal?.reason),
+          );
+        }),
+    );
+
+    const res = await GET(downloadRequest(ANDROID_UA));
+
+    expect(res.status).toBe(307);
+  });
 });

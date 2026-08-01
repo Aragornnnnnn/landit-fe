@@ -29,6 +29,8 @@ const trackDownloadVisit = async (store: Store) => {
         },
       ],
     }),
+    // 응답이 늦어도 리다이렉트를 1초 이상 붙잡지 않는다
+    signal: AbortSignal.timeout(1000),
     // 계측 실패가 리다이렉트를 막으면 안 된다
   }).catch(() => {});
 };
