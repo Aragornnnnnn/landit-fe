@@ -10,6 +10,8 @@ import { NotificationMenuEntry } from './NotificationMenuEntry';
 vi.mock('@/features/notification/model/useNotificationPermission');
 const useNotificationPermissionMock = vi.mocked(useNotificationPermission);
 
+vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
+
 vi.mock('@/shared/bridge/web-bridge', () => ({
   postToNative: vi.fn(() => true),
 }));
@@ -47,6 +49,7 @@ vi.mock('motion/react', async () => {
     motion,
     AnimatePresence: ({ children }: { children: React.ReactNode }) =>
       createElement(Fragment, null, children),
+    useReducedMotion: () => false,
   };
 });
 
@@ -56,13 +59,26 @@ afterEach(() => {
 });
 
 describe('NotificationMenuEntry', () => {
-  it('권한이 미결정이면 알림 켜기가 보이고, 누르면 동의 프롬프트가 열린다', () => {
+  it('권한이 미결정이면 알림 켜기가 보이고, 누르면 동의 시트가 열린다', () => {
     useNotificationPermissionMock.mockReturnValue('undetermined');
 
     render(<NotificationMenuEntry />);
     fireEvent.click(screen.getByText('알림 켜기'));
 
     expect(screen.getByText('알림 받을게요!')).toBeInTheDocument();
+  });
+
+  it('시트에서 수락하면 권한 요청을 보내고 닫힌다', () => {
+    useNotificationPermissionMock.mockReturnValue('undetermined');
+
+    render(<NotificationMenuEntry />);
+    fireEvent.click(screen.getByText('알림 켜기'));
+    fireEvent.click(screen.getByText('알림 받을게요!'));
+
+    expect(postToNativeMock).toHaveBeenCalledWith({
+      type: 'REQUEST_NOTIFICATION_PERMISSION',
+    });
+    expect(screen.queryByText('알림 받을게요!')).not.toBeInTheDocument();
   });
 
   it('이미 거부한 유저가 누르면 프롬프트 대신 OS 설정을 연다', () => {
