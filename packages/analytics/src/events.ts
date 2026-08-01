@@ -250,7 +250,11 @@ export type EventProps = {
   'NPS Survey Dismissed': { score?: number };
 
   // 서버 발화라 세션·리플레이·공통 속성 없음. device_id 랜덤 — 방문 횟수 집계용
-  'Download Link Visited': { store: 'play_store' | 'app_store' };
+  'Download Link Visited': {
+    store: 'play_store' | 'app_store';
+    // link = 외부 링크(인스타 등), app_update = 앱 업데이트 유도 모달·시트 (?source=app_update)
+    source: 'link' | 'app_update';
+  };
 };
 
 // 컴파일 타임 검증 ① EventProps가 모든 이벤트를 빠짐없이 커버한다

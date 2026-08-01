@@ -42,7 +42,7 @@
 | Confirm Sheet Dismissed | sheet                                                         | 확인 시트에서 계속하기/닫기                        |
 | Error Retried           | screen(home\|conversation\|card_back\|expression_list)        | 에러 화면 "다시 시도"                              |
 | App Exited              | trigger(back_button)                                          | 네이티브 뒤로가기로 앱 종료 (셸에서만)             |
-| Download Link Visited   | store(play_store\|app_store)                                  | /download 스토어 리다이렉트 진입 (서버 발화, 익명) |
+| Download Link Visited   | store(play_store\|app_store), source(link\|app_update)        | /download 스토어 리다이렉트 진입 (서버 발화, 익명) |
 
 `return_reason`은 홈 복귀 신호(`flip` 표현 완료 복귀 / `card` 대화 이탈 복귀 / `just` 해금 직후). 확인 시트의 확정은 각각 `Conversation Abandoned` / `Expression Abandoned` / `Account Deleted`로 찍힌다.
 

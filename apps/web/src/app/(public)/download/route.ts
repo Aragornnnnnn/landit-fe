@@ -8,11 +8,11 @@ const PLAY_STORE_URL =
 
 const AMPLITUDE_HTTP_API = 'https://api2.amplitude.com/2/httpapi';
 
-type Store = EventProps['Download Link Visited']['store'];
+type VisitProps = EventProps['Download Link Visited'];
 
 // 서버 발화 — 클라이언트 SDK(@/shared/analytics)는 'use client'라 route 핸들러에서 못 쓴다.
 // 익명 방문이라 device_id는 랜덤 UUID — 방문 횟수 집계용이고 고유 사용자 수는 아니다
-const trackDownloadVisit = async (store: Store) => {
+const trackDownloadVisit = async (props: VisitProps) => {
   const apiKey = process.env.AMPLITUDE_API_KEY;
   if (!apiKey) return;
 
@@ -25,7 +25,7 @@ const trackDownloadVisit = async (store: Store) => {
         {
           event_type: EVENTS.DOWNLOAD_LINK_VISITED,
           device_id: crypto.randomUUID(),
-          event_properties: { store },
+          event_properties: props,
         },
       ],
     }),
@@ -39,7 +39,16 @@ export async function GET(request: Request): Promise<NextResponse> {
   const userAgent = request.headers.get('user-agent') ?? '';
   const isAndroid = /android/i.test(userAgent);
 
-  await trackDownloadVisit(isAndroid ? 'play_store' : 'app_store');
+  // 출처는 자기 신고 — 앱 업데이트 UI만 ?source=app_update를 달고 온다. 그 외 값은 전부 link
+  const source: VisitProps['source'] =
+    new URL(request.url).searchParams.get('source') === 'app_update'
+      ? 'app_update'
+      : 'link';
+
+  await trackDownloadVisit({
+    store: isAndroid ? 'play_store' : 'app_store',
+    source,
+  });
 
   if (isAndroid) {
     return NextResponse.redirect(PLAY_STORE_URL);
