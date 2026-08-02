@@ -28,19 +28,21 @@
   - 전 이벤트 공통 속성: `surface`(app|browser), `platform`(ios|android|web), `app_version`, `build_number` — 셸이 주입한 `window.__LANDIT_NATIVE__`(LAN-156)에서 온다.
 - **유저 식별**: `AnalyticsBootstrap`이 auth 스토어를 구독해 로그인 시 `setUserId(member.userId)` + `provider` 유저 속성, 로그아웃 시 `reset()`. 앱/브라우저 어디서든 같은 유저로 묶인다.
 - **화면 노출**: `PageViewTracker`가 라우트 변경마다 `Page Viewed` 발화. 동적 세그먼트는 `page_name`으로 정규화하고 id는 속성으로 뺀다. `/stt-demo`, `/dev`, `/`(즉시 redirect)는 제외.
+- **서버 발화**: `/download`는 서버 302 리다이렉트라 클라이언트 SDK가 못 잡는다 — route 핸들러가 HTTP V2 API로 직접 발화한다(`Download Link Visited`). 키는 클라이언트와 같은 `NEXT_PUBLIC_AMPLITUDE_API_KEY`(공개 키라 서버 전용으로 나누지 않는다), device_id는 랜덤이라 방문 횟수 집계용.
 - **dev/prod 분리**: 프로젝트 키를 환경별로 나눈다. 로컬·프리뷰는 dev 키, 프로덕션 배포 환경변수에만 prod 키.
 
-## 이벤트 택소노미 (53개)
+## 이벤트 택소노미 (54개)
 
 ### 공통
 
-| 이벤트                  | 속성                                                          | 시점                                   |
-| ----------------------- | ------------------------------------------------------------- | -------------------------------------- |
-| Page Viewed             | page_name, path, return_reason?, scenario_id?, expression_id? | 라우트 변경                            |
-| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete)     | 이탈·탈퇴 확인 시트 열림               |
-| Confirm Sheet Dismissed | sheet                                                         | 확인 시트에서 계속하기/닫기            |
-| Error Retried           | screen(home\|conversation\|card_back\|expression_list)        | 에러 화면 "다시 시도"                  |
-| App Exited              | trigger(back_button)                                          | 네이티브 뒤로가기로 앱 종료 (셸에서만) |
+| 이벤트                  | 속성                                                          | 시점                                               |
+| ----------------------- | ------------------------------------------------------------- | -------------------------------------------------- |
+| Page Viewed             | page_name, path, return_reason?, scenario_id?, expression_id? | 라우트 변경                                        |
+| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete)     | 이탈·탈퇴 확인 시트 열림                           |
+| Confirm Sheet Dismissed | sheet                                                         | 확인 시트에서 계속하기/닫기                        |
+| Error Retried           | screen(home\|conversation\|card_back\|expression_list)        | 에러 화면 "다시 시도"                              |
+| App Exited              | trigger(back_button)                                          | 네이티브 뒤로가기로 앱 종료 (셸에서만)             |
+| Download Link Visited   | store(play_store\|app_store), source(link\|app_update)        | /download 스토어 리다이렉트 진입 (서버 발화, 익명) |
 
 `return_reason`은 홈 복귀 신호(`flip` 표현 완료 복귀 / `card` 대화 이탈 복귀 / `just` 해금 직후). 확인 시트의 확정은 각각 `Conversation Abandoned` / `Expression Abandoned` / `Account Deleted`로 찍힌다.
 
