@@ -14,6 +14,10 @@ describe('toPageView', () => {
       path: '/onboarding',
     });
     expect(pv('/me')).toEqual({ page_name: 'me', path: '/me' });
+    expect(pv('/smalltalk')).toEqual({
+      page_name: 'smalltalk',
+      path: '/smalltalk',
+    });
   });
 
   it('홈 복귀 쿼리(flip·card·just)를 return_reason으로 해석한다', () => {
