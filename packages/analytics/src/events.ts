@@ -86,7 +86,7 @@ export type HomeReturnReason = 'just' | 'flip' | 'card';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
-  'home' | 'conversation' | 'card_back' | 'expression_list';
+  'scenario' | 'conversation' | 'card_back' | 'expression_list';
 
 // 이벤트별 속성 계약 — 키는 snake_case. 속성이 없는 이벤트는 undefined
 export type EventProps = {

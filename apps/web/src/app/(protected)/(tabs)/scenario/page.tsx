@@ -1,6 +1,6 @@
 'use client';
 
-// 홈 — 카테고리별 시나리오 목록에서 연습할 시나리오를 고른다
+// 시나리오 탭 — 카테고리별 시나리오 목록에서 연습할 시나리오를 고른다
 import { Suspense, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -13,18 +13,17 @@ import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
 
 import { useReturnSignals } from './_model/useReturnSignals';
-import { HomeHeader } from './_ui/HomeHeader';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
-export default function HomePage() {
+export default function ScenarioPage() {
   return (
     <Suspense>
-      <HomeContent />
+      <ScenarioContent />
     </Suspense>
   );
 }
 
-function HomeContent() {
+function ScenarioContent() {
   // page prop(Promise)이 아니라 훅으로 읽는다 — 클라이언트 replace 복귀 시 prop은
   // 라우터 캐시의 이전 값을 줄 수 있어, flip/card 복귀 신호가 유실되던 문제의 원인
   const searchParams = useSearchParams();
@@ -44,9 +43,7 @@ function HomeContent() {
   if (ready && !listReady) setListReady(true);
 
   return (
-    <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-muted">
-      <HomeHeader />
-
+    <>
       {error && (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
           <p className="text-muted-foreground">{error.message}</p>
@@ -55,7 +52,7 @@ function HomeContent() {
             size="sm"
             className="w-auto px-6"
             onClick={() => {
-              track(EVENTS.ERROR_RETRIED, { screen: 'home' });
+              track(EVENTS.ERROR_RETRIED, { screen: 'scenario' });
               retry();
             }}
           >
@@ -94,6 +91,6 @@ function HomeContent() {
           />
         </>
       )}
-    </main>
+    </>
   );
 }

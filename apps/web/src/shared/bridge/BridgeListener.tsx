@@ -57,7 +57,7 @@ export const BridgeListener = () => {
         return;
       }
 
-      // 홈 — 토스트를 띄우고, 노출 시간 안에 한 번 더 누르면 종료한다
+      // 탭 화면 — 토스트를 띄우고, 노출 시간 안에 한 번 더 누르면 종료한다
       if (exitArmedRef.current) {
         track(EVENTS.APP_EXITED, { trigger: 'back_button' });
         postToNative({ type: 'EXIT_APP' });

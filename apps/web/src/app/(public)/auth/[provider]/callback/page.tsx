@@ -122,7 +122,7 @@ export default function SocialLoginCallbackPage({
           is_new_user: newUser,
         });
         router.replace(
-          newUser || !hasSeenOnboarding() ? '/onboarding' : '/home',
+          newUser || !hasSeenOnboarding() ? '/onboarding' : '/scenario',
         );
       } catch (err) {
         track(EVENTS.LOGIN_FAILED, {

@@ -17,36 +17,39 @@ describe('toPageView', () => {
   });
 
   it('홈 복귀 쿼리(flip·card·just)를 return_reason으로 해석한다', () => {
-    expect(pv('/home')).toEqual({ page_name: 'home', path: '/home' });
-    expect(pv('/home', 'flip=3&just=1')).toEqual({
-      page_name: 'home',
-      path: '/home',
+    expect(pv('/scenario')).toEqual({
+      page_name: 'scenario',
+      path: '/scenario',
+    });
+    expect(pv('/scenario', 'flip=3&just=1')).toEqual({
+      page_name: 'scenario',
+      path: '/scenario',
       return_reason: 'flip',
       scenario_id: 3,
     });
-    expect(pv('/home', 'card=7')).toEqual({
-      page_name: 'home',
-      path: '/home',
+    expect(pv('/scenario', 'card=7')).toEqual({
+      page_name: 'scenario',
+      path: '/scenario',
       return_reason: 'card',
       scenario_id: 7,
     });
-    expect(pv('/home', 'just=1')).toEqual({
-      page_name: 'home',
-      path: '/home',
+    expect(pv('/scenario', 'just=1')).toEqual({
+      page_name: 'scenario',
+      path: '/scenario',
       return_reason: 'just',
     });
-    expect(pv('/home', 'just=7')).toEqual({
-      page_name: 'home',
-      path: '/home',
+    expect(pv('/scenario', 'just=7')).toEqual({
+      page_name: 'scenario',
+      path: '/scenario',
       return_reason: 'just',
       scenario_id: 7,
     });
   });
 
   it('복귀 쿼리 값이 비어 있으면 scenario_id 없이 return_reason만 남긴다', () => {
-    expect(pv('/home', 'card=')).toEqual({
-      page_name: 'home',
-      path: '/home',
+    expect(pv('/scenario', 'card=')).toEqual({
+      page_name: 'scenario',
+      path: '/scenario',
       return_reason: 'card',
     });
   });
