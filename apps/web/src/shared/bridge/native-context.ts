@@ -22,3 +22,10 @@ export function getNativeContext(): NativeContext | null {
 export function getSurface(): Surface {
   return getNativeContext() ? 'app' : 'browser';
 }
+
+// 백엔드 enum 표기 — 셸은 소문자 'ios'/'android'를 주는데 API는 대문자를 받는다
+export type AppPlatform = 'IOS' | 'ANDROID';
+
+export const toApiPlatform = (
+  platform: NativeContext['platform'],
+): AppPlatform => (platform === 'ios' ? 'IOS' : 'ANDROID');
