@@ -21,3 +21,10 @@ export const scenarioReturnPath = ({ date, flip }: ScenarioReturn = {}) => {
   const search = query.toString();
   return search ? `${SCENARIO_PATH}?${search}` : SCENARIO_PATH;
 };
+
+// 대화 화면. 지난 날 카드에서 들어가면 그 날짜를 달고 가야 어느 날 카드인지 알 수 있고,
+// 나올 때도 그 날로 돌아간다. 오늘이면 붙이지 않는다
+export const conversationPath = (scenarioId: number, date?: string | null) =>
+  date
+    ? `/conversation/${scenarioId}?date=${date}`
+    : `/conversation/${scenarioId}`;

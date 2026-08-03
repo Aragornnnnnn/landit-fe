@@ -1,7 +1,7 @@
 // 시나리오 복귀 주소 조립 검증 — 앰플리튜드가 읽는 신호와 날짜가 함께 실려야 한다
 import { describe, expect, it } from 'vitest';
 
-import { scenarioReturnPath } from './routes';
+import { conversationPath, scenarioReturnPath } from './routes';
 
 describe('scenarioReturnPath', () => {
   it('아무것도 안 주면 시나리오 탭 그대로다', () => {
@@ -25,6 +25,21 @@ describe('scenarioReturnPath', () => {
     // 보고 있는 날이 아직 안 정해진 경우 null이 그대로 넘어온다
     expect(scenarioReturnPath({ flip: 12, date: null })).toBe(
       '/scenario?flip=12',
+    );
+  });
+});
+
+describe('conversationPath', () => {
+  it('오늘 카드에서 들어가면 날짜를 달지 않는다', () => {
+    expect(conversationPath(12)).toBe('/conversation/12');
+  });
+
+  it('지난 날 카드에서 들어가면 그 날짜를 달고 간다', () => {
+    // Given 지난 날 카드에서 다시 대화하기를 눌렀을 때
+    // When 대화 주소를 만들면
+    // Then 날짜가 실린다 — 그래야 어느 날 카드인지 대화 화면이 알 수 있다
+    expect(conversationPath(12, '2026-07-29')).toBe(
+      '/conversation/12?date=2026-07-29',
     );
   });
 });

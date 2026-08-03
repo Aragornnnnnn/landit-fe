@@ -10,6 +10,7 @@ import { CalendarStrip } from '@/features/scenario/ui/CalendarStrip';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
 import { TodayCard } from '@/features/scenario/ui/TodayCard';
 import { track } from '@/shared/analytics';
+import { conversationPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
@@ -73,7 +74,7 @@ function ScenarioContent() {
           playable={daily.playable}
           autoFlip={autoFlip}
           onStart={(scenario) =>
-            router.push(`/conversation/${scenario.scenarioId}`)
+            router.push(conversationPath(scenario.scenarioId, date))
           }
         />
       )}

@@ -14,10 +14,14 @@ import { Button } from '@/shared/ui/Button';
 
 export default function ConversationPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ scenarioId: string }>;
+  // 지난 날 카드에서 들어오면 그 날짜가 실려 온다. 없으면 오늘이다
+  searchParams: Promise<{ date?: string }>;
 }) {
   const { scenarioId } = use(params);
+  const { date } = use(searchParams);
   const id = Number(scenarioId);
   const router = useRouter();
   const { categories, error, isLoading, retry } = useScenariosQuery();
@@ -47,7 +51,7 @@ export default function ConversationPage({
                   retry();
                 }
               : // replace로 에러 화면을 히스토리에서 지우고 시나리오 탭으로 돌려보낸다
-                () => router.replace(scenarioReturnPath())
+                () => router.replace(scenarioReturnPath({ date }))
           }
         >
           {error ? '다시 시도' : '홈으로'}
@@ -57,5 +61,11 @@ export default function ConversationPage({
   }
 
   // key: 시나리오가 바뀌면 세션·상태를 새로 시작하도록 인스턴스를 다시 마운트한다
-  return <ConversationFlow key={scenario.scenarioId} scenario={scenario} />;
+  return (
+    <ConversationFlow
+      key={scenario.scenarioId}
+      scenario={scenario}
+      date={date}
+    />
+  );
 }
