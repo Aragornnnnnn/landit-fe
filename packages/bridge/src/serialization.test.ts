@@ -216,4 +216,21 @@ describe('parseNativeToWebMessage — 알림', () => {
       ),
     ).toBeNull();
   });
+
+  it('이동 요청 메시지를 그대로 되돌린다 (round-trip)', () => {
+    const message = {
+      type: 'NAVIGATE',
+      url: '/expressions?from=push',
+    } as const;
+
+    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('이동 경로가 빈 문자열이면 버린다', () => {
+    expect(
+      parseNativeToWebMessage(JSON.stringify({ type: 'NAVIGATE', url: '' })),
+    ).toBeNull();
+  });
 });

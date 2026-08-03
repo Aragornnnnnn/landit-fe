@@ -91,6 +91,11 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     type: z.literal('PUSH_TOKEN'),
     token: z.string().min(1),
   }),
+  // 앱이 떠 있는 상태에서 알림을 탭했을 때 — 웹 라우터가 이 경로로 이동한다
+  z.object({
+    type: z.literal('NAVIGATE'),
+    url: z.string().min(1),
+  }),
 ]);
 
 // 위 스키마에서 자동으로 뽑아낸 타입 — 스키마를 고치면 타입도 같이 바뀐다
