@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
-import { scenarioReturnPath } from '@/shared/lib/routes';
+import { expressionPath, scenarioReturnPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
@@ -24,7 +24,14 @@ const TITLE_CLASS =
 const CELEBRATE_MS = 2000;
 const ANALYZE_MS = 2000;
 
-export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
+export const ExpressionBranch = ({
+  scenarioId,
+  date,
+}: {
+  scenarioId: number;
+  // 어느 날 카드에서 온 대화였는지. 학습으로 들어갈 때도 나올 때도 이어 나른다
+  date?: string;
+}) => {
   const router = useRouter();
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
   const { expressions, error, retry } = useExpressionsQuery(scenarioId);
@@ -72,13 +79,13 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
       scenario_id: scenarioId,
       source: 'post_conversation',
     });
-    router.push(`/expressions/${scenarioId}/${expressionId}`);
+    router.push(expressionPath(scenarioId, expressionId, date));
   };
 
   const goLearn = () =>
     nextExpressionId
       ? goExpression(nextExpressionId)
-      : router.replace(scenarioReturnPath({ flip: scenarioId }));
+      : router.replace(scenarioReturnPath({ flip: scenarioId, date }));
 
   return (
     <main
@@ -87,7 +94,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
     >
       <header className="relative flex h-14 flex-none items-center px-3">
         <button
-          onClick={() => router.replace(scenarioReturnPath())}
+          onClick={() => router.replace(scenarioReturnPath({ date }))}
           className="flex size-10 items-center justify-center text-muted-foreground"
           aria-label="닫기"
         >
@@ -134,7 +141,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
                     scenario_id: scenarioId,
                     expression_count: count,
                   });
-                  router.replace(scenarioReturnPath());
+                  router.replace(scenarioReturnPath({ date }));
                 }}
               />
             )}

@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { FeedbackFlow } from '@/features/feedback/ui/FeedbackFlow';
 import type { Scenario } from '@/features/scenario/api/list';
 import { track } from '@/shared/analytics';
-import { scenarioReturnPath } from '@/shared/lib/routes';
+import { expressionBranchPath, scenarioReturnPath } from '@/shared/lib/routes';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Transition } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
@@ -104,7 +104,7 @@ export const ConversationFlow = ({
             // 재대화(이미 완료한 시나리오)면 표현은 예전에 생성됐으니 분기 연출 없이 홈의 그 카드로 돌아간다
             wasCompleted
               ? router.replace(scenarioReturnPath({ date }))
-              : router.replace(`/expressions/${scenario.scenarioId}/branch`)
+              : router.replace(expressionBranchPath(scenario.scenarioId, date))
           }
         />
       </Transition>

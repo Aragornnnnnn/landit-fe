@@ -28,3 +28,22 @@ export const conversationPath = (scenarioId: number, date?: string | null) =>
   date
     ? `/conversation/${scenarioId}?date=${date}`
     : `/conversation/${scenarioId}`;
+
+// 대화 직후 표현 분기 화면. 어느 날 카드에서 온 대화였는지를 이어 나른다
+export const expressionBranchPath = (
+  scenarioId: number,
+  date?: string | null,
+) =>
+  date
+    ? `/expressions/${scenarioId}/branch?date=${date}`
+    : `/expressions/${scenarioId}/branch`;
+
+// 표현 하나를 배우는 화면
+export const expressionPath = (
+  scenarioId: number,
+  expressionId: number,
+  date?: string | null,
+) =>
+  date
+    ? `/expressions/${scenarioId}/${expressionId}?date=${date}`
+    : `/expressions/${scenarioId}/${expressionId}`;

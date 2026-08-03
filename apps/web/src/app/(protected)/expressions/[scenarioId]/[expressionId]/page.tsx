@@ -7,10 +7,14 @@ import { ExpressionFlow } from '@/features/expression/ui/ExpressionFlow';
 
 export default function ExpressionFlowPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ scenarioId: string; expressionId: string }>;
+  // 지난 날 카드에서 들어왔으면 그 날짜가 실려 온다
+  searchParams: Promise<{ date?: string }>;
 }) {
   const { scenarioId, expressionId } = use(params);
+  const { date } = use(searchParams);
 
   // key로 표현이 바뀌면 플로우를 새로 마운트한다 — step·입력 상태가 이전 표현에서 새어나오지 않게
   return (
@@ -18,6 +22,7 @@ export default function ExpressionFlowPage({
       key={expressionId}
       scenarioId={Number(scenarioId)}
       expressionId={Number(expressionId)}
+      date={date}
     />
   );
 }
