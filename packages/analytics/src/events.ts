@@ -73,6 +73,9 @@ export const EVENTS = {
   NOTIFICATION_CONSENT_VIEWED: 'Notification Consent Viewed',
   NOTIFICATION_CONSENT_ACCEPTED: 'Notification Consent Accepted',
   NOTIFICATION_CONSENT_DISMISSED: 'Notification Consent Dismissed',
+
+  // 유입 — /download 스토어 리다이렉트가 서버에서 발화한다 (route 핸들러, LAN-237)
+  DOWNLOAD_LINK_VISITED: 'Download Link Visited',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -261,6 +264,13 @@ export type EventProps = {
   // 수락 = OS 권한창 요청까지 이어짐. 실제 허용/거부는 OS 팝업 결과라 별도 (권한 상태로 세그먼트)
   'Notification Consent Accepted': { source: NotificationConsentSource };
   'Notification Consent Dismissed': { source: NotificationConsentSource };
+
+  // 서버 발화라 세션·리플레이·공통 속성 없음. device_id 랜덤 — 방문 횟수 집계용
+  'Download Link Visited': {
+    store: 'play_store' | 'app_store';
+    // link = 외부 링크(인스타 등), app_update = 앱 업데이트 유도 모달·시트 (?source=app_update)
+    source: 'link' | 'app_update';
+  };
 };
 
 // 컴파일 타임 검증 ① EventProps가 모든 이벤트를 빠짐없이 커버한다
