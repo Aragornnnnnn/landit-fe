@@ -1,7 +1,7 @@
 // 앱 버전 업데이트 정책 조회 — 백엔드 AppVersionCheckResponse 미러
 import { api } from '@/shared/api/client';
+import type { AppPlatform } from '@/shared/bridge/native-context';
 
-export type AppPlatform = 'IOS' | 'ANDROID';
 export type AppUpdateType = 'FORCE' | 'SOFT' | 'NONE';
 
 export interface AppUpdateCheckResponse {
