@@ -3,6 +3,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
 
 import { AppUpdateGate } from '@/features/app-update/ui/AppUpdateGate';
+import { NotificationConsentGate } from '@/features/notification/ui/NotificationConsentGate';
 import { AnalyticsBootstrap, PageViewTracker } from '@/shared/analytics';
 import { BridgeListener } from '@/shared/bridge/BridgeListener';
 import { GlobalHaptics } from '@/shared/haptics';
@@ -51,6 +52,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <AppUpdateGate />
+          <NotificationConsentGate />
         </Providers>
         <Toaster />
         <SpeedInsights />
