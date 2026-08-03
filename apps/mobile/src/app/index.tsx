@@ -24,6 +24,7 @@ import {
   getNotificationPermission,
   requestNotificationPermission,
 } from '@/notifications/permission';
+import { getExpoPushToken } from '@/notifications/push-token';
 import { syncReminders } from '@/notifications/reminders';
 import { initializeNotifications } from '@/notifications/setup';
 import { useNotificationDeepLink } from '@/notifications/useNotificationDeepLink';
@@ -38,6 +39,12 @@ const ShellScreen = () => {
   // 재시도 시 WebView를 새로 마운트하기 위한 key
   const [loadAttempt, setLoadAttempt] = useState(0);
 
+  // 푸시 토큰은 권한이 허용된 뒤에만 발급된다 — 실패하면 건너뛰고 다음 실행에서 다시 시도한다
+  const sendPushToken = async () => {
+    const token = await getExpoPushToken();
+    if (token) postToWeb({ type: 'PUSH_TOKEN', token });
+  };
+
   const { onMessage, postToWeb } = useNativeBridge(webviewRef, {
     EXIT_APP: () => BackHandler.exitApp(),
     // 웹이 인터랙션 시점에 보낸 진동 요청을 expo-haptics로 실행한다
@@ -48,17 +55,15 @@ const ShellScreen = () => {
     SYNC_REMINDERS: ({ reminders }) => void syncReminders(reminders),
     // 알림 권한 상태 조회 — 다이얼로그 없이 현재 상태만 회신한다
     GET_NOTIFICATION_PERMISSION: async () => {
-      postToWeb({
-        type: 'NOTIFICATION_PERMISSION',
-        status: await getNotificationPermission(),
-      });
+      const status = await getNotificationPermission();
+      postToWeb({ type: 'NOTIFICATION_PERMISSION', status });
+      if (status === 'granted') await sendPushToken();
     },
     // 알림 권한 능동 요청 — OS 권한창을 띄울 수 있고, 결과를 회신한다
     REQUEST_NOTIFICATION_PERMISSION: async () => {
-      postToWeb({
-        type: 'NOTIFICATION_PERMISSION',
-        status: await requestNotificationPermission(),
-      });
+      const status = await requestNotificationPermission();
+      postToWeb({ type: 'NOTIFICATION_PERMISSION', status });
+      if (status === 'granted') await sendPushToken();
     },
     // 웹의 로그인 요청을 받아 provider SDK로 idToken을 발급받고, nonce와 함께 웹으로 돌려준다
     SOCIAL_LOGIN_REQUEST: async ({ provider }) => {

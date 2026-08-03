@@ -53,6 +53,7 @@
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#e66827",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
