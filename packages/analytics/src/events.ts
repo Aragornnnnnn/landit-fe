@@ -68,6 +68,11 @@ export const EVENTS = {
   NPS_SCORE_SELECTED: 'NPS Score Selected',
   NPS_SURVEY_SUBMITTED: 'NPS Survey Submitted',
   NPS_SURVEY_DISMISSED: 'NPS Survey Dismissed',
+
+  // 알림 동의
+  NOTIFICATION_CONSENT_VIEWED: 'Notification Consent Viewed',
+  NOTIFICATION_CONSENT_ACCEPTED: 'Notification Consent Accepted',
+  NOTIFICATION_CONSENT_DISMISSED: 'Notification Consent Dismissed',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -80,11 +85,14 @@ export type OnboardingStep =
 export type ExpressionStep = 'quiz' | 'explain' | 'review';
 export type TurnInputType = 'voice' | 'text';
 export type HintSource = 'quiz' | 'review';
-export type HomeReturnReason = 'just' | 'flip' | 'card';
+export type HomeReturnReason = 'just' | 'flip' | 'card' | 'reminder';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
   'home' | 'conversation' | 'card_back' | 'expression_list';
+// 알림 동의를 청한 지면 — 온보딩 스텝은 기존 온보딩 계측이 커버해서 없다.
+// 키는 source — surface는 baseProps의 전역 속성(app·browser)이라 겹치면 덮어쓴다
+export type NotificationConsentSource = 'home_fullscreen' | 'home_sheet' | 'me';
 
 // 이벤트별 속성 계약 — 키는 snake_case. 속성이 없는 이벤트는 undefined
 export type EventProps = {
@@ -94,6 +102,8 @@ export type EventProps = {
     return_reason?: HomeReturnReason;
     scenario_id?: number;
     expression_id?: number;
+    // 알림 유입(reminder)일 때만 — 탭한 알림의 문구 슬러그 (utm_content에서 파생, 어휘는 reminder-copies.ts)
+    notification_copy?: string;
   };
   // 파괴적 행동(이탈·탈퇴) 전 확인 시트 — 열림/취소로 고민율을 본다. 확정은 각 Abandoned/Deleted 이벤트
   'Confirm Sheet Opened': { sheet: ConfirmSheetKind };
@@ -246,6 +256,11 @@ export type EventProps = {
   'NPS Survey Submitted': { score: number; has_comment: boolean };
   // ✕로 제출 없이 닫음 — 점수를 골라놓고 닫았으면 score가 담긴다
   'NPS Survey Dismissed': { score?: number };
+
+  'Notification Consent Viewed': { source: NotificationConsentSource };
+  // 수락 = OS 권한창 요청까지 이어짐. 실제 허용/거부는 OS 팝업 결과라 별도 (권한 상태로 세그먼트)
+  'Notification Consent Accepted': { source: NotificationConsentSource };
+  'Notification Consent Dismissed': { source: NotificationConsentSource };
 };
 
 // 컴파일 타임 검증 ① EventProps가 모든 이벤트를 빠짐없이 커버한다

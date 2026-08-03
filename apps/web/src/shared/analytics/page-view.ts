@@ -47,6 +47,16 @@ export const toPageView = (
         scenario_id: just !== '1' ? toId(just) : undefined,
       };
     }
+    // 데일리 리마인드 알림 탭 유입 — 셸 딥링크 url의 UTM에서 파생한다 (utm_* 자체는 앰플리튜드 어트리뷰션이 수집).
+    // 웜 딥링크는 SPA 내부 이동이라 어트리뷰션이 못 보므로, 문구 슬러그도 이벤트 속성으로 실어야 유실이 없다
+    if (searchParams.get('utm_campaign') === 'daily_reminder') {
+      const copySlug = searchParams.get('utm_content');
+      return {
+        ...base,
+        return_reason: 'reminder',
+        ...(copySlug && { notification_copy: copySlug }),
+      };
+    }
     return base;
   }
 
