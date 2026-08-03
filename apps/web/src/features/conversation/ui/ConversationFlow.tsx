@@ -6,7 +6,7 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { FeedbackFlow } from '@/features/feedback/ui/FeedbackFlow';
-import type { Scenario } from '@/features/scenario/api/list';
+import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
 import { expressionBranchPath, scenarioReturnPath } from '@/shared/lib/routes';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';

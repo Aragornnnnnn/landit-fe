@@ -7,8 +7,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import { EASE_STANDARD } from '@/shared/motion';
 
 import type { DailyScenario } from '../api/daily';
-import type { Scenario } from '../api/list';
-import { toScenario } from '../lib/to-scenario';
+import { toScenario, type Scenario } from '../lib/to-scenario';
 import { ScenarioCard } from './ScenarioCard';
 import { SealedFace } from './SealedFace';
 

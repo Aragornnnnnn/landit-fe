@@ -1,34 +1,50 @@
 'use client';
 
 // 대화 페이지 — 시나리오를 찾아 대화 플로우([시뮬])를 시작한다
-import { use } from 'react';
+import { Suspense, use } from 'react';
 import { EVENTS } from '@landit/analytics';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { ConversationFlow } from '@/features/conversation/ui/ConversationFlow';
 import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSkeleton';
-import { useScenariosQuery } from '@/features/scenario/model/useScenariosQuery';
+import { toScenario } from '@/features/scenario/lib/to-scenario';
+import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { track } from '@/shared/analytics';
 import { scenarioReturnPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 
+// useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
 export default function ConversationPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ scenarioId: string }>;
-  // 지난 날 카드에서 들어오면 그 날짜가 실려 온다. 없으면 오늘이다
-  searchParams: Promise<{ date?: string }>;
+}) {
+  return (
+    <Suspense fallback={<ConversationSkeleton />}>
+      <ConversationContent params={params} />
+    </Suspense>
+  );
+}
+
+function ConversationContent({
+  params,
+}: {
+  params: Promise<{ scenarioId: string }>;
 }) {
   const { scenarioId } = use(params);
-  const { date } = use(searchParams);
+  // 지난 날 카드에서 들어오면 그 날짜가 실려 온다. 없으면 오늘이다.
+  // searchParams prop은 앱 안에서 이동할 때 갱신되지 않아 훅으로 읽는다
+  const date = useSearchParams().get('date') ?? undefined;
   const id = Number(scenarioId);
   const router = useRouter();
-  const { categories, error, isLoading, retry } = useScenariosQuery();
+  const { daily, error, isLoading, retry } = useDailyScenarioQuery(date);
 
-  const scenario = categories
-    ?.flatMap((category) => category.scenarios)
-    .find((item) => item.scenarioId === id);
+  // 그 날 카드가 이 시나리오일 때만 연다 — 주소만 갈아끼운 진입을 막는다
+  const source = daily?.scenario;
+  const scenario =
+    source && source.scenarioId === id
+      ? toScenario(source, daily.playable)
+      : undefined;
 
   if (isLoading) {
     return <ConversationSkeleton />;
