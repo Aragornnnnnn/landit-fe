@@ -35,10 +35,7 @@ export const NotificationConsentPrompt = ({
       </p>
 
       <div className="flex flex-1 items-center justify-center py-6">
-        <LockScreenMockup
-          title="오늘만 가능한 시나리오 도착 💌"
-          body="자기 전 5분으로 불꽃을 지키세요"
-        />
+        <LockScreenMockup />
       </div>
 
       <Button onClick={onAccept}>알림 받을게요!</Button>

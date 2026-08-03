@@ -1,6 +1,7 @@
 // 브릿지 메시지 파싱·직렬화 검증 — 특히 optional 필드는 구버전 앱 셸과의 하위호환 약속이다
 import { describe, expect, it } from 'vitest';
 
+import type { WebToNativeMessage } from './messages';
 import {
   parseNativeToWebMessage,
   parseWebToNativeMessage,
@@ -92,5 +93,144 @@ describe('parseWebToNativeMessage', () => {
     expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
       message,
     );
+  });
+
+  it('리마인더 동기화 요청을 그대로 되돌린다 (round-trip)', () => {
+    const message: WebToNativeMessage = {
+      type: 'SYNC_REMINDERS',
+      reminders: [
+        {
+          notifyAt: '2026-07-29T20:00:00+09:00',
+          title: '오늘의 시나리오',
+          body: '카페에서 주문하기가 기다리고 있어요',
+          url: '/home',
+        },
+      ],
+    };
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('리마인더가 하나도 없으면 빈 배열로 동기화한다 (전체 해제)', () => {
+    const message: WebToNativeMessage = {
+      type: 'SYNC_REMINDERS',
+      reminders: [],
+    };
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('notifyAt에 시간대 오프셋이 없으면 버린다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({
+          type: 'SYNC_REMINDERS',
+          reminders: [
+            {
+              notifyAt: '2026-07-29T20:00:00',
+              title: '오늘의 시나리오',
+              body: '본문',
+              url: '/home',
+            },
+          ],
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it.each([['title'], ['body'], ['url']])(
+    '리마인더의 %s가 빈 문자열이면 버린다',
+    (field) => {
+      const reminder = {
+        notifyAt: '2026-07-29T20:00:00+09:00',
+        title: '제목',
+        body: '본문',
+        url: '/home',
+        [field]: '',
+      };
+
+      expect(
+        parseWebToNativeMessage(
+          JSON.stringify({ type: 'SYNC_REMINDERS', reminders: [reminder] }),
+        ),
+      ).toBeNull();
+    },
+  );
+
+  it('알림 권한 조회 요청을 그대로 되돌린다 (round-trip)', () => {
+    const message = { type: 'GET_NOTIFICATION_PERMISSION' } as const;
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('알림 권한 능동 요청을 그대로 되돌린다 (round-trip)', () => {
+    const message = { type: 'REQUEST_NOTIFICATION_PERMISSION' } as const;
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+});
+
+describe('parseNativeToWebMessage — 알림', () => {
+  it('알림 권한 상태 메시지를 그대로 되돌린다 (round-trip)', () => {
+    const message = {
+      type: 'NOTIFICATION_PERMISSION',
+      status: 'granted',
+    } as const;
+
+    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('규격 밖 권한 상태 값이면 버린다', () => {
+    expect(
+      parseNativeToWebMessage(
+        JSON.stringify({ type: 'NOTIFICATION_PERMISSION', status: 'blocked' }),
+      ),
+    ).toBeNull();
+  });
+
+  it('푸시 토큰 메시지를 그대로 되돌린다 (round-trip)', () => {
+    const message = {
+      type: 'PUSH_TOKEN',
+      token: 'ExponentPushToken[abc]',
+    } as const;
+
+    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('빈 토큰이면 버린다', () => {
+    expect(
+      parseNativeToWebMessage(
+        JSON.stringify({ type: 'PUSH_TOKEN', token: '' }),
+      ),
+    ).toBeNull();
+  });
+
+  it('이동 요청 메시지를 그대로 되돌린다 (round-trip)', () => {
+    const message = {
+      type: 'NAVIGATE',
+      url: '/expressions?from=push',
+    } as const;
+
+    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('이동 경로가 빈 문자열이면 버린다', () => {
+    expect(
+      parseNativeToWebMessage(JSON.stringify({ type: 'NAVIGATE', url: '' })),
+    ).toBeNull();
   });
 });

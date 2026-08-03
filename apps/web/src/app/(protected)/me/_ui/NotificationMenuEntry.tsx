@@ -2,9 +2,11 @@
 'use client';
 
 import { useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 
 import { useNotificationPermission } from '@/features/notification/model/useNotificationPermission';
 import { NotificationConsentSheet } from '@/features/notification/ui/NotificationConsentSheet';
+import { track } from '@/shared/analytics';
 import { postToNative } from '@/shared/bridge/web-bridge';
 
 import { MenuButton, MenuGroup } from './Menu';
@@ -26,7 +28,20 @@ export const NotificationMenuEntry = () => {
       postToNative({ type: 'OPEN_SETTINGS' });
       return;
     }
+    track(EVENTS.NOTIFICATION_CONSENT_VIEWED, { source: 'me' });
     setIsPromptOpen(true);
+  };
+
+  // 수락 = OS 권한창 요청 — 회신은 훅이 받아 상태를 갱신하고, 허용되면 행이 사라지고 예약까지 이어진다
+  const accept = () => {
+    track(EVENTS.NOTIFICATION_CONSENT_ACCEPTED, { source: 'me' });
+    postToNative({ type: 'REQUEST_NOTIFICATION_PERMISSION' });
+    setIsPromptOpen(false);
+  };
+
+  const dismiss = () => {
+    track(EVENTS.NOTIFICATION_CONSENT_DISMISSED, { source: 'me' });
+    setIsPromptOpen(false);
   };
 
   return (
@@ -35,13 +50,9 @@ export const NotificationMenuEntry = () => {
         <MenuButton title="알림 켜기" onClick={openNotificationSetup} />
       </MenuGroup>
 
+      {/* 유저가 직접 연 시트라 닫아도 홈 게이트의 노출 기록에는 영향을 주지 않는다 */}
       {isPromptOpen && (
-        <NotificationConsentSheet
-          // 유저가 직접 연 시트라 닫아도 홈 게이트의 재노출 간격에는 영향을 주지 않는다.
-          // 수락 시 실제 권한 요청(REQUEST_NOTIFICATION_PERMISSION)은 브릿지 확장 후 배선한다
-          onAccept={() => setIsPromptOpen(false)}
-          onDismiss={() => setIsPromptOpen(false)}
-        />
+        <NotificationConsentSheet onAccept={accept} onDismiss={dismiss} />
       )}
     </>
   );
