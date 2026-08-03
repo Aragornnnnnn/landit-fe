@@ -2,6 +2,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { postToNative } from '@/shared/bridge/web-bridge';
+
 import { CONSENT_PROMPT_SEEN_KEY } from '../model/consent-prompt';
 import { useNotificationPermission } from '../model/useNotificationPermission';
 import { NotificationConsentGate } from './NotificationConsentGate';
@@ -14,6 +16,13 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('../model/useNotificationPermission');
 const useNotificationPermissionMock = vi.mocked(useNotificationPermission);
+
+vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
+
+vi.mock('@/shared/bridge/web-bridge', () => ({
+  postToNative: vi.fn(() => true),
+}));
+const postToNativeMock = vi.mocked(postToNative);
 
 // motion 애니메이션(BottomSheet)을 순수 DOM으로 치환 — 렌더러 아이덴티티 문제 회피
 vi.mock('motion/react', async () => {
@@ -47,6 +56,7 @@ vi.mock('motion/react', async () => {
     motion,
     AnimatePresence: ({ children }: { children: React.ReactNode }) =>
       createElement(Fragment, null, children),
+    useReducedMotion: () => false,
   };
 });
 
@@ -55,7 +65,10 @@ beforeEach(() => {
   mocks.pathname = '/home';
 });
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe('NotificationConsentGate', () => {
   it('본 적이 없으면 풀스크린 프롬프트를 띄운다', () => {
@@ -96,7 +109,7 @@ describe('NotificationConsentGate', () => {
     expect(screen.queryByText('알림 받을게요!')).not.toBeInTheDocument();
   });
 
-  it('나중에 할게요를 누르면 닫히고, 풀스크린 소진이 기록된다', () => {
+  it('나중에 할게요를 누르면 권한 요청 없이 닫히고, 풀스크린 소진이 기록된다', () => {
     useNotificationPermissionMock.mockReturnValue('undetermined');
 
     render(<NotificationConsentGate />);
@@ -104,14 +117,18 @@ describe('NotificationConsentGate', () => {
 
     expect(screen.queryByText('알림 받을게요!')).not.toBeInTheDocument();
     expect(localStorage.getItem(CONSENT_PROMPT_SEEN_KEY)).not.toBeNull();
+    expect(postToNativeMock).not.toHaveBeenCalled();
   });
 
-  it('알림 받을게요를 눌러도 닫히고, 풀스크린 소진이 기록된다', () => {
+  it('알림 받을게요를 누르면 권한 요청을 보내고 닫힌다', () => {
     useNotificationPermissionMock.mockReturnValue('undetermined');
 
     render(<NotificationConsentGate />);
     fireEvent.click(screen.getByText('알림 받을게요!'));
 
+    expect(postToNativeMock).toHaveBeenCalledWith({
+      type: 'REQUEST_NOTIFICATION_PERMISSION',
+    });
     expect(screen.queryByText('알림 받을게요!')).not.toBeInTheDocument();
     expect(localStorage.getItem(CONSENT_PROMPT_SEEN_KEY)).not.toBeNull();
   });
