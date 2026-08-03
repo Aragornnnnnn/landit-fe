@@ -1,18 +1,15 @@
 'use client';
 
-// 시나리오 탭 — 카테고리별 시나리오 목록에서 연습할 시나리오를 고른다
-import { Suspense, useState } from 'react';
+// 시나리오 탭 — 그날 배정된 카드 한 장을 받는다
+import { Suspense } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { useScenariosQuery } from '@/features/scenario/model/useScenariosQuery';
-import { CategoryBar } from '@/features/scenario/ui/CategoryBar';
+import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
-import { ScenarioList } from '@/features/scenario/ui/ScenarioList';
+import { TodayCard } from '@/features/scenario/ui/TodayCard';
 import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
-
-import { useReturnSignals } from './_model/useReturnSignals';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
 export default function ScenarioPage() {
@@ -24,73 +21,58 @@ export default function ScenarioPage() {
 }
 
 function ScenarioContent() {
-  // page prop(Promise)이 아니라 훅으로 읽는다 — 클라이언트 replace 복귀 시 prop은
-  // 라우터 캐시의 이전 값을 줄 수 있어, flip/card 복귀 신호가 유실되던 문제의 원인
   const searchParams = useSearchParams();
   const router = useRouter();
-  // 훅 순환을 피하려고 두 단계로 — 신호로 카테고리를 고르고, 리스트가 준비되면(ready) 신호를 소비한다
-  const [listReady, setListReady] = useState(false);
-  const { returnScenarioId, positioning } = useReturnSignals(
-    searchParams,
-    listReady,
-  );
-  // 복귀 대상이 있으면 그 카테고리를 기본으로 연다(사용자가 칩을 누르면 그게 우선 — 강제 X)
-  const { categories, selected, selectCategory, error, isLoading, retry } =
-    useScenariosQuery(returnScenarioId);
 
-  // 리스트가 실제로 마운트된 뒤에 신호를 소비한다 — 로딩 중 소비하면 배치가 유실된다
-  const ready = Boolean(categories && selected);
-  if (ready && !listReady) setListReady(true);
+  // 표현 마무리 후 복귀 — 그 카드를 뒷면(표현 리스트)으로 펴 둔다
+  const autoFlip = searchParams.get('flip') !== null;
+
+  const { daily, error, isLoading, retry } = useDailyScenarioQuery();
+
+  if (error) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+        <p className="text-muted-foreground">{error.message}</p>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="w-auto px-6"
+          onClick={() => {
+            track(EVENTS.ERROR_RETRIED, { screen: 'scenario' });
+            retry();
+          }}
+        >
+          다시 시도
+        </Button>
+      </div>
+    );
+  }
+
+  if (isLoading || !daily) return <ScenarioCardSkeleton />;
+
+  // 오늘 배정이 아직 없다 — 누를 것이 없는 화면이다
+  if (!daily.scenario) return <EmptyToday />;
 
   return (
-    <>
-      {error && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-          <p className="text-muted-foreground">{error.message}</p>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="w-auto px-6"
-            onClick={() => {
-              track(EVENTS.ERROR_RETRIED, { screen: 'scenario' });
-              retry();
-            }}
-          >
-            다시 시도
-          </Button>
-        </div>
-      )}
-
-      {!error && isLoading && <ScenarioCardSkeleton />}
-
-      {categories && selected && (
-        <>
-          <CategoryBar
-            categories={categories}
-            selectedId={selected.categoryId}
-            onSelect={(category) => {
-              track(EVENTS.CATEGORY_SELECTED, {
-                category_id: category.categoryId,
-                category_name: category.categoryName,
-                is_locked: category.categoryLocked,
-              });
-              selectCategory(category);
-            }}
-          />
-          {/* key로 카테고리 전환 시 스크롤 위치·등장 모션을 초기화한다. */}
-          <ScenarioList
-            key={selected.categoryId}
-            categoryName={selected.categoryName}
-            scenarios={selected.scenarios}
-            focusActive={positioning.focusActive}
-            flipScenarioId={positioning.flipScenarioId}
-            cardScenarioId={positioning.cardScenarioId}
-            onStart={(scenario) =>
-              router.push(`/conversation/${scenario.scenarioId}`)
-            }
-          />
-        </>
-      )}
-    </>
+    <TodayCard
+      daily={daily.scenario}
+      playable={daily.playable}
+      autoFlip={autoFlip}
+      onStart={(scenario) =>
+        router.push(`/conversation/${scenario.scenarioId}`)
+      }
+    />
   );
 }
+
+const EmptyToday = () => (
+  <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+    <p className="text-2xl leading-snug font-extrabold text-foreground">
+      오늘 카드는 준비 중이에요
+    </p>
+    <p className="text-base font-medium text-muted-foreground">
+      조금 뒤에 다시 들러주세요
+      <br />곧 새 카드를 가져올게요
+    </p>
+  </div>
+);
