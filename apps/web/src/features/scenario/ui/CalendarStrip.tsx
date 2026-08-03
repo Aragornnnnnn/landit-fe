@@ -28,11 +28,11 @@ interface CalendarStripProps {
 export const CalendarStrip = ({ date, onSelect }: CalendarStripProps) => {
   const reduced = useReducedMotion() ?? false;
   const [expanded, setExpanded] = useState(false);
-  // 창은 보고 있는 날과 따로 움직인다 — 지난 주를 훑어보다 아무 날도 안 고를 수 있다.
-  // 생략하면 서버가 오늘이 든 창을 준다
-  const [windowDate, setWindowDate] = useState<string | undefined>(
-    date ?? undefined,
-  );
+  // 창은 보고 있는 날과 따로 움직인다 — 지난 주를 훑어보다 아무 날도 안 고를 수 있다
+  const [movedTo, setMovedTo] = useState<string | undefined>(undefined);
+  // 옮기기 전에는 보고 있는 날을 따라간다 — 지난 날 주소로 바로 들어와도 그 주가 열린다.
+  // 둘 다 없으면(첫 렌더) 서버가 오늘이 든 창을 준다
+  const windowDate = movedTo ?? date ?? undefined;
   // 펼치기 직전 상태 — 접을 때 어디로 돌아갈지 판단한다
   const collapsedFrom = useRef<{ windowDate?: string; date: string | null }>({
     date: null,
@@ -56,7 +56,7 @@ export const CalendarStrip = ({ date, onSelect }: CalendarStripProps) => {
   const anchor = windowDate ?? today;
 
   const move = (direction: -1 | 1) =>
-    setWindowDate(shiftWindow(anchor, type, direction));
+    setMovedTo(shiftWindow(anchor, type, direction));
 
   const toggle = (next: ScenarioCalendarType) => {
     if (next === 'MONTH') {
@@ -64,7 +64,7 @@ export const CalendarStrip = ({ date, onSelect }: CalendarStripProps) => {
     } else {
       // 달에서 날을 골랐으면 그 날이 든 주로, 아무것도 안 골랐으면 펼치기 전 주로
       const picked = date !== collapsedFrom.current.date;
-      setWindowDate(
+      setMovedTo(
         picked ? (date ?? undefined) : collapsedFrom.current.windowDate,
       );
     }
