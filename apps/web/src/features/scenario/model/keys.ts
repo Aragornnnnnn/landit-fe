@@ -4,4 +4,7 @@ export const scenarioKeys = {
   all: ['scenarios'] as const,
   list: (userId: number | null) =>
     [...scenarioKeys.all, userId, 'list'] as const,
+  // 오늘의 시나리오 한 장
+  daily: (userId: number | null) =>
+    [...scenarioKeys.all, userId, 'daily'] as const,
 };
