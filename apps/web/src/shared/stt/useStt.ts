@@ -40,6 +40,8 @@ export function useStt(options: UseSttOptions = {}) {
   // 세대 번호 — 시작마다 뽑고 취소가 올린다. 시작(권한→토큰→연결)이 비동기라 "연결 중 취소"가
   // 가능해서, 번호가 달라진 채 뒤늦게 완성된 세션은 스스로 파기된다.
   const generationRef = useRef(0);
+  // 연결 중에 완료(stop)가 불렸는가 — 세션이 없어 그 자리에서 씹히지 않도록, 설치되는 순간 확정 처리를 예약해둔다
+  const pendingStopRef = useRef(false);
 
   // 세션 콜백은 훅 밖 수명이라 사용자 콜백 최신값을 ref로 잡아 stale closure 방지
   const callbacksRef = useRef({ onFinal, onInterim, onError });
@@ -55,6 +57,7 @@ export function useStt(options: UseSttOptions = {}) {
   const start = async () => {
     if (sessionRef.current) return;
     const gen = ++generationRef.current;
+    pendingStopRef.current = false;
 
     // 파기된(구세대) 세션이 뒤늦게 내는 소리는 전부 무시한다
     const handlers: SttHandlers = {
@@ -76,6 +79,11 @@ export function useStt(options: UseSttOptions = {}) {
     const installIfCurrent = (session: SttSession) => {
       if (generationRef.current !== gen) {
         session.abort();
+        return;
+      }
+      // 연결 중에 완료가 불렸으면 설치 없이 바로 확정 — sessionRef를 안 잡아야 다음 시작이 안 막힌다
+      if (pendingStopRef.current) {
+        session.stop();
         return;
       }
       sessionRef.current = session;
@@ -111,6 +119,7 @@ export function useStt(options: UseSttOptions = {}) {
 
   /** 확정 (완료 ■) — 남은 인식까지 반영해 onFinal이 한 번 온다 */
   const stop = () => {
+    pendingStopRef.current = true;
     sessionRef.current?.stop();
   };
 
