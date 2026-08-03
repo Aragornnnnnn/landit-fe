@@ -30,28 +30,13 @@ export const toPageView = (
 
   if (pathname === '/scenario') {
     const base: PageViewProps = { page_name: 'scenario', path: pathname };
-    // 복귀 신호 우선순위 — flip(표현 완료 복귀) > card(중도 이탈 복귀) > just(해금 직후)
+    // 하루 한 장이 된 뒤로 복귀 신호는 flip(표현 완료 복귀) 하나다.
+    // card·just는 목록을 스크롤·강조하던 신호라 가리킬 대상이 없어졌다
     if (searchParams.has('flip')) {
       return {
         ...base,
         return_reason: 'flip',
         scenario_id: toId(searchParams.get('flip')),
-      };
-    }
-    if (searchParams.has('card')) {
-      return {
-        ...base,
-        return_reason: 'card',
-        scenario_id: toId(searchParams.get('card')),
-      };
-    }
-    if (searchParams.has('just')) {
-      // just는 시나리오 id를 담을 수 있다 (레거시 '1'은 강조 전용 플래그라 id 아님)
-      const just = searchParams.get('just');
-      return {
-        ...base,
-        return_reason: 'just',
-        scenario_id: just !== '1' ? toId(just) : undefined,
       };
     }
     return base;

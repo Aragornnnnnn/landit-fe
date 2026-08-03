@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
-import { SCENARIO_PATH } from '@/shared/lib/routes';
+import { scenarioReturnPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
@@ -78,7 +78,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
   const goLearn = () =>
     nextExpressionId
       ? goExpression(nextExpressionId)
-      : router.replace(`${SCENARIO_PATH}?flip=${scenarioId}`);
+      : router.replace(scenarioReturnPath({ flip: scenarioId }));
 
   return (
     <main
@@ -87,7 +87,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
     >
       <header className="relative flex h-14 flex-none items-center px-3">
         <button
-          onClick={() => router.replace(`${SCENARIO_PATH}?card=${scenarioId}`)}
+          onClick={() => router.replace(scenarioReturnPath())}
           className="flex size-10 items-center justify-center text-muted-foreground"
           aria-label="닫기"
         >
@@ -134,8 +134,7 @@ export const ExpressionBranch = ({ scenarioId }: { scenarioId: number }) => {
                     scenario_id: scenarioId,
                     expression_count: count,
                   });
-                  // just에 시나리오 id를 실어 원래 카테고리로 복귀시킨다 — 없으면 첫 카테고리로 점프하던 버그
-                  router.replace(`${SCENARIO_PATH}?just=${scenarioId}`);
+                  router.replace(scenarioReturnPath());
                 }}
               />
             )}

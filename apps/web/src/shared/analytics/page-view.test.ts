@@ -20,41 +20,31 @@ describe('toPageView', () => {
     });
   });
 
-  it('홈 복귀 쿼리(flip·card·just)를 return_reason으로 해석한다', () => {
+  it('표현 완료 복귀(flip)를 return_reason으로 해석한다', () => {
     expect(pv('/scenario')).toEqual({
       page_name: 'scenario',
       path: '/scenario',
     });
-    expect(pv('/scenario', 'flip=3&just=1')).toEqual({
+    expect(pv('/scenario', 'flip=3')).toEqual({
       page_name: 'scenario',
       path: '/scenario',
       return_reason: 'flip',
       scenario_id: 3,
     });
-    expect(pv('/scenario', 'card=7')).toEqual({
+  });
+
+  it('날짜만 붙은 복귀는 지난 날 보기라 복귀 사유가 아니다', () => {
+    expect(pv('/scenario', 'date=2026-07-29')).toEqual({
       page_name: 'scenario',
       path: '/scenario',
-      return_reason: 'card',
-      scenario_id: 7,
-    });
-    expect(pv('/scenario', 'just=1')).toEqual({
-      page_name: 'scenario',
-      path: '/scenario',
-      return_reason: 'just',
-    });
-    expect(pv('/scenario', 'just=7')).toEqual({
-      page_name: 'scenario',
-      path: '/scenario',
-      return_reason: 'just',
-      scenario_id: 7,
     });
   });
 
   it('복귀 쿼리 값이 비어 있으면 scenario_id 없이 return_reason만 남긴다', () => {
-    expect(pv('/scenario', 'card=')).toEqual({
+    expect(pv('/scenario', 'flip=')).toEqual({
       page_name: 'scenario',
       path: '/scenario',
-      return_reason: 'card',
+      return_reason: 'flip',
     });
   });
 

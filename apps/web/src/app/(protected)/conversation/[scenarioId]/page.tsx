@@ -9,7 +9,7 @@ import { ConversationFlow } from '@/features/conversation/ui/ConversationFlow';
 import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSkeleton';
 import { useScenariosQuery } from '@/features/scenario/model/useScenariosQuery';
 import { track } from '@/shared/analytics';
-import { SCENARIO_PATH } from '@/shared/lib/routes';
+import { scenarioReturnPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 
 export default function ConversationPage({
@@ -46,13 +46,8 @@ export default function ConversationPage({
                   track(EVENTS.ERROR_RETRIED, { screen: 'conversation' });
                   retry();
                 }
-              : // replace로 에러 화면을 히스토리에서 지우고, 온 카드로 복귀시킨다
-                () =>
-                  router.replace(
-                    Number.isFinite(id)
-                      ? `${SCENARIO_PATH}?card=${id}`
-                      : SCENARIO_PATH,
-                  )
+              : // replace로 에러 화면을 히스토리에서 지우고 시나리오 탭으로 돌려보낸다
+                () => router.replace(scenarioReturnPath())
           }
         >
           {error ? '다시 시도' : '홈으로'}

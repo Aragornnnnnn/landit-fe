@@ -2,3 +2,22 @@
 // 스몰톡 탭이 생기면 복귀 목적지가 둘로 갈리는데, 그 분기도 여기서 시작한다
 export const SCENARIO_PATH = '/scenario';
 export const SMALLTALK_PATH = '/smalltalk';
+
+interface ScenarioReturn {
+  // 어느 날 카드로 돌아갈지. 오늘이면 붙이지 않는다 — 날짜 없는 주소가 오늘의 정본이다
+  date?: string | null;
+  // 표현 마무리 후 복귀 — 그 카드를 뒷면(표현 리스트)으로 펴 둔다.
+  // 값은 시나리오 id다. 화면은 있는지만 보지만 계측이 이 id를 읽는다
+  flip?: number;
+}
+
+// 대화·표현 화면에서 시나리오 탭으로 돌아가는 주소.
+// 하루 한 장이 된 뒤로 "어느 날"과 "뒷면을 펼지"가 복귀에 필요한 전부다
+export const scenarioReturnPath = ({ date, flip }: ScenarioReturn = {}) => {
+  const query = new URLSearchParams();
+  if (flip !== undefined) query.set('flip', String(flip));
+  if (date) query.set('date', date);
+
+  const search = query.toString();
+  return search ? `${SCENARIO_PATH}?${search}` : SCENARIO_PATH;
+};
