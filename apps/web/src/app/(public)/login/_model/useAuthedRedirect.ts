@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
+import { SCENARIO_PATH } from '@/shared/lib/routes';
 
 export const useAuthedRedirect = () => {
   const router = useRouter();
@@ -11,6 +12,6 @@ export const useAuthedRedirect = () => {
   // 상태 변화를 구독하면 이 화면에서 진행되는 브릿지 로그인의 온보딩 라우팅을 /scenario로 덮어쓴다.
   useEffect(() => {
     if (useAuthStore.getState().refreshToken !== null)
-      router.replace('/scenario');
+      router.replace(SCENARIO_PATH);
   }, [router]);
 };

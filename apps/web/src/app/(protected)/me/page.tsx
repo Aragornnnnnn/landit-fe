@@ -12,6 +12,7 @@ import { logout as requestLogout } from '@/shared/auth/api/logout';
 import { withdraw } from '@/shared/auth/api/withdraw';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { clearSession } from '@/shared/auth/clear-session';
+import { SCENARIO_PATH } from '@/shared/lib/routes';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
@@ -104,7 +105,7 @@ export default function MyPage() {
       >
         <button
           type="button"
-          onClick={() => router.replace('/scenario')}
+          onClick={() => router.replace(SCENARIO_PATH)}
           className="flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90 active:bg-zinc-200"
           style={{ color: '#444', marginLeft: -4 }}
           aria-label="뒤로 가기"
