@@ -169,7 +169,7 @@ export type EventProps = {
     source: 'card_back' | 'post_conversation';
   };
 
-  // 헤더 불꽃으로 연속 기록 페이지 진입 — 불꽃이 얼마나 눌리는지, 어떤 상태에서 눌리는지 본다
+  // 헤더 열매로 연속 기록 페이지 진입 — 얼마나 눌리는지, 어떤 상태에서 눌리는지 본다
   'Streak Opened': {
     source: 'home_header';
     streak_days: number;

@@ -10,10 +10,8 @@ import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
-import type { StreakCalendarResponse } from '../api/streak';
-import type { YearMonth } from '../lib/seoul-date';
 import { useStreakCalendar } from '../model/useStreakCalendar';
-import { StreakCalendar } from './StreakCalendar';
+import { StreakCalendar, type StreakCalendarProps } from './StreakCalendar';
 import { StreakHero } from './StreakHero';
 import { StreakStats } from './StreakStats';
 
@@ -59,7 +57,7 @@ export const StreakFlow = () => {
       >
         {/* 달력이 있으면 달력이 이긴다 — 달을 넘기다 실패해도 보고 있던 달은 그대로 둔다 */}
         {calendar ? (
-          <Record
+          <LoadedRecord
             view={view}
             today={today}
             calendar={calendar}
@@ -102,33 +100,19 @@ const TopBar = ({
   </header>
 );
 
-interface RecordProps {
-  view: YearMonth;
-  today: string;
-  calendar: StreakCalendarResponse;
-  canGoBack: boolean;
-  canGoForward: boolean;
-  onGoMonth: (direction: -1 | 1) => void;
-}
-
-const Record = ({ view, today, calendar, ...navigation }: RecordProps) => (
+const LoadedRecord = (props: StreakCalendarProps) => (
   <div className="pb-8">
     <StreakHero
-      currentStreakDays={calendar.currentStreakDays}
-      activeToday={calendar.activeToday}
-      totalActiveDays={calendar.totalActiveDays}
+      currentStreakDays={props.calendar.currentStreakDays}
+      activeToday={props.calendar.activeToday}
+      totalActiveDays={props.calendar.totalActiveDays}
     />
-    <StreakCalendar
-      view={view}
-      today={today}
-      calendar={calendar}
-      {...navigation}
-    />
+    <StreakCalendar {...props} />
     {/* 이 화면의 주인공은 달력 — 누적 기록은 그 아래 한 줄로 조용히 둔다 */}
     <div className="mt-5">
       <StreakStats
-        longestStreakDays={calendar.longestStreakDays}
-        totalActiveDays={calendar.totalActiveDays}
+        longestStreakDays={props.calendar.longestStreakDays}
+        totalActiveDays={props.calendar.totalActiveDays}
       />
     </div>
   </div>

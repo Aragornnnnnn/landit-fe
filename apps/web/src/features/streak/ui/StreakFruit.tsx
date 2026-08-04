@@ -12,37 +12,33 @@ const OPACITY: Record<FruitState, number> = {
   empty: 0.4,
 };
 
-// 이 크기부터는 화면에 바로 보이는 히어로다 — 지연 로딩하면 첫 화면이 비어 보인다
-const HERO_SIZE = 64;
-
 interface StreakFruitProps {
   state: FruitState;
   size?: number;
   // 익은 열매가 말랑거리는 연출. 히어로에서만 켠다 — 달력 열매 서른 개가 같이 움직이면 어지럽다
   animated?: boolean;
+  // 첫 화면에 바로 보이는 자리인지. 크기로 짐작하면 시각적 조정이 로딩 동작을 몰래 바꾼다
+  priority?: boolean;
 }
 
 export const StreakFruit = ({
   state,
   size = 26,
   animated = false,
-}: StreakFruitProps) => {
-  // 오늘치를 채운 열매만 움직인다 — 아직 못 받은 열매가 통통 튀면 상태가 거짓말이 된다
-  const isRipe = state === 'fresh';
-
-  return (
-    <Image
-      src={fruitImage}
-      alt=""
-      width={size}
-      height={size}
-      style={{ opacity: OPACITY[state] }}
-      className={
-        animated && isRipe
-          ? 'animate-fruit-squish motion-reduce:animate-none'
-          : undefined
-      }
-      priority={size >= HERO_SIZE}
-    />
-  );
-};
+  priority = false,
+}: StreakFruitProps) => (
+  <Image
+    src={fruitImage}
+    alt=""
+    width={size}
+    height={size}
+    style={{ opacity: OPACITY[state] }}
+    className={
+      // 오늘치를 채운 열매만 움직인다 — 아직 못 받은 열매가 통통 튀면 상태가 거짓말이 된다
+      animated && state === 'fresh'
+        ? 'animate-fruit-squish motion-reduce:animate-none'
+        : undefined
+    }
+    priority={priority}
+  />
+);
