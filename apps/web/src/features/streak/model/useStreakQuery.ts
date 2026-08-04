@@ -13,8 +13,6 @@ export const useStreakQuery = () => {
     queryKey: streakKeys.current(userId),
     queryFn: getCurrentStreak,
     enabled: userId !== null,
-    // 대화를 끝내고 홈으로 돌아오면 탭 레이아웃째 리마운트된다 — 그때 다시 조회해 방금 채운 오늘이 바로 보이게 한다
-    refetchOnMount: 'always',
     // 조회가 실패해도 홈은 그대로 돌아야 하므로 에러는 밖으로 내보내지 않는다
     retry: 1,
   });
