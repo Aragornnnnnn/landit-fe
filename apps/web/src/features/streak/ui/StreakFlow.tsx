@@ -25,6 +25,7 @@ export const StreakFlow = () => {
     error,
     canGoBack,
     canGoForward,
+    isSwitching,
     goMonth,
     retry,
   } = useStreakCalendar();
@@ -58,12 +59,12 @@ export const StreakFlow = () => {
         {/* 달력이 있으면 달력이 이긴다 — 달을 넘기다 실패해도 보고 있던 달은 그대로 둔다 */}
         {calendar ? (
           <LoadedRecord
-            view={view}
             today={today}
             calendar={calendar}
             canGoBack={canGoBack}
             canGoForward={canGoForward}
             onGoMonth={changeMonth}
+            isSwitching={isSwitching}
           />
         ) : error ? (
           <ErrorNotice message={error.message} onRetry={retryAfterError} />
@@ -125,7 +126,11 @@ const ErrorNotice = ({
   message: string;
   onRetry: () => void;
 }) => (
-  <div className="flex flex-col items-center gap-4 px-6 pt-24 text-center">
+  // 스켈레톤이 조용히 교체되면 보조 기술은 실패를 모른다 — 뜨는 즉시 읽히게 한다
+  <div
+    role="alert"
+    className="flex flex-col items-center gap-4 px-6 pt-24 text-center"
+  >
     <p className="text-muted-foreground">{message}</p>
     <Button
       variant="secondary"

@@ -13,6 +13,14 @@ const LABEL_STYLE: Record<DayMark, string> = {
   blank: 'font-medium text-muted-foreground-faint',
 };
 
+// 화면은 열매·테두리로 상태를 말하지만 스크린 리더에는 숫자만 읽힌다 — 상태를 말로도 준다
+const MARK_LABEL: Record<DayMark, string> = {
+  done: '학습 완료',
+  today: '오늘, 아직 학습 전',
+  missed: '학습 안 함',
+  blank: '',
+};
+
 const DayMarkShape = ({ mark }: { mark: DayMark }) => {
   if (mark === 'done') return <StreakFruit state="fresh" size={14} />;
   // 오늘은 아직 못 받은 자리 — 열매가 들어올 테두리만 그려 둔다
@@ -31,18 +39,32 @@ interface StreakDayProps {
   mark: DayMark;
 }
 
-export const StreakDay = ({ date, mark }: StreakDayProps) => (
-  // relative를 줘야 뒤에 깔린 띠(absolute) 위로 올라온다 — 안 주면 띠가 열매를 덮는다
-  <div className="relative flex flex-col items-center pb-1.5">
-    <span
-      className="flex items-center justify-center"
-      style={{ height: MARK_ROW_HEIGHT }}
-    >
-      <DayMarkShape mark={mark} />
-    </span>
+export const StreakDay = ({ date, mark }: StreakDayProps) => {
+  const day = Number(date.slice(8));
+  const status = MARK_LABEL[mark];
 
-    <span className={`mt-1 text-[12px] leading-none ${LABEL_STYLE[mark]}`}>
-      {Number(date.slice(8))}
-    </span>
-  </div>
-);
+  return (
+    // relative를 줘야 뒤에 깔린 띠(absolute) 위로 올라온다 — 안 주면 띠가 열매를 덮는다
+    <div className="relative flex flex-col items-center pb-1.5">
+      {/* 눈으로는 열매·테두리가, 소리로는 이 문장이 같은 것을 말한다 */}
+      <span className="sr-only">
+        {Number(date.slice(5, 7))}월 {day}일{status && `, ${status}`}
+      </span>
+
+      <span
+        aria-hidden
+        className="flex items-center justify-center"
+        style={{ height: MARK_ROW_HEIGHT }}
+      >
+        <DayMarkShape mark={mark} />
+      </span>
+
+      <span
+        aria-hidden
+        className={`mt-1 text-[12px] leading-none ${LABEL_STYLE[mark]}`}
+      >
+        {day}
+      </span>
+    </div>
+  );
+};

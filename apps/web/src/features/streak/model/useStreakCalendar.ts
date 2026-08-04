@@ -16,7 +16,7 @@ export const useStreakCalendar = () => {
   const [today] = useState(todayInSeoul);
   const [view, setView] = useState(() => monthOf(today));
 
-  const { data, error, refetch } = useQuery({
+  const { data, error, refetch, isPlaceholderData } = useQuery({
     queryKey: streakKeys.calendar(userId, view.year, view.month),
     queryFn: async () => {
       const calendar = await getStreakCalendar(view.year, view.month);
@@ -40,8 +40,11 @@ export const useStreakCalendar = () => {
 
   return {
     today,
+    // 사용자가 요청한 달. 계측에 쓰고, 그리는 달은 응답이 정한다
     view,
     calendar: data ?? null,
+    // 요청한 달과 그리고 있는 달이 다르다 = 다음 달을 받아오는 중
+    isSwitching: isPlaceholderData,
     error,
     // 앞은 이번 달까지, 뒤는 첫 완료일이 있는 달까지
     canGoForward: canGoForward(view, today),

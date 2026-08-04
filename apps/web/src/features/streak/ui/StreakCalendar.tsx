@@ -3,29 +3,33 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 
 import type { StreakCalendarResponse } from '../api/streak';
 import { buildMonthGrid } from '../lib/month-grid';
-import { formatMonthLabel, type YearMonth } from '../lib/seoul-date';
+import { formatMonthLabel } from '../lib/seoul-date';
 import { markOf } from '../model/calendar-day';
 import { StreakWeek } from './StreakWeek';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
 export interface StreakCalendarProps {
-  view: YearMonth;
   today: string;
   calendar: StreakCalendarResponse;
   canGoBack: boolean;
   canGoForward: boolean;
   onGoMonth: (direction: -1 | 1) => void;
+  // 다음 달을 받아오는 중. 아직은 이전 달을 그리고 있다는 표시
+  isSwitching: boolean;
 }
 
 export const StreakCalendar = ({
-  view,
   today,
   calendar,
   canGoBack,
   canGoForward,
   onGoMonth,
+  isSwitching,
 }: StreakCalendarProps) => {
+  // 그리는 달은 받은 데이터가 정한다. 요청한 달로 격자를 그리면 응답이 오기 전까지
+  // 새 달 격자에 이전 달 활동일을 맞춰 보게 돼 달력이 통째로 비어 보인다
+  const view = { year: calendar.year, month: calendar.month };
   const activeDates = new Set(calendar.activeDates);
   // 칸 상태를 여기서 한 번만 정한다 — 띠와 칸이 서로 다른 기준으로 "깬 날"을 판단하지 않게
   const markOfDate = (date: string) =>
@@ -37,7 +41,11 @@ export const StreakCalendar = ({
 
   return (
     // 통계 카드와 같은 옷을 입혀 둘이 형제로 읽히게 한다 — 달력만 배경에 놓으면 혼자 떠 보인다
-    <section className="mx-5 mt-7 rounded-[20px] border border-border bg-card pt-4 pb-3">
+    <section
+      className={`mx-5 mt-7 rounded-[20px] border border-border bg-card pt-4 pb-3 transition-opacity ${
+        isSwitching ? 'opacity-50' : ''
+      }`}
+    >
       {/* 화살표는 양 끝에 붙이고 달 이름은 폭 전체의 가운데에 둔다 */}
       <header className="relative flex items-center justify-center pb-4">
         <MonthArrow
