@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "847044362981",
+    "project_id": "landit-prod",
+    "storage_bucket": "landit-prod.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:847044362981:android:5c518ea519ecf84d16ca0c",
+        "android_client_info": {
+          "package_name": "com.saynow.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBP6VPjHJUwu_GD3-BABmZjiDPa_QxTg00"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

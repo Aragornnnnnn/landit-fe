@@ -57,7 +57,7 @@ describe('initAnalytics', () => {
     expect(amplitudeMock.initAll).not.toHaveBeenCalled();
   });
 
-  it('키가 있으면 세션 리플레이 100%·오토캡처 off·짧은 회원번호 허용으로 초기화한다', async () => {
+  it('키가 있으면 세션 리플레이 100%·어트리뷰션만 오토캡처·짧은 회원번호 허용으로 초기화한다', async () => {
     vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
     const { initAnalytics } = await loadWrapper();
 
@@ -67,7 +67,15 @@ describe('initAnalytics', () => {
       analytics: {
         // 백엔드 회원번호(1~4자리)가 기본 5자 제한에 걸려 400으로 거절되던 것
         minIdLength: 1,
-        autocapture: false,
+        // utm_* 자동 수집(알림 딥링크 유입)만 켜고 오토캡처 이벤트는 전부 끈다
+        autocapture: {
+          attribution: true,
+          pageViews: false,
+          sessions: false,
+          formInteractions: false,
+          fileDownloads: false,
+          elementInteractions: false,
+        },
       },
       sessionReplay: { sampleRate: 1 },
     });
