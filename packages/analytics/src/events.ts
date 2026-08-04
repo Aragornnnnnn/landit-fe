@@ -28,6 +28,10 @@ export const EVENTS = {
   SCENARIO_CARD_FLIPPED: 'Scenario Card Flipped',
   EXPRESSION_SELECTED: 'Expression Selected',
 
+  // 스트릭
+  STREAK_OPENED: 'Streak Opened',
+  STREAK_MONTH_CHANGED: 'Streak Month Changed',
+
   // 대화
   CONVERSATION_STARTED: 'Conversation Started',
   RECORDING_STARTED: 'Recording Started',
@@ -92,7 +96,7 @@ export type HomeReturnReason = 'just' | 'flip' | 'card' | 'reminder';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
-  'scenario' | 'conversation' | 'card_back' | 'expression_list';
+  'scenario' | 'conversation' | 'card_back' | 'expression_list' | 'streak';
 // 알림 동의를 청한 지면 — 온보딩 스텝은 기존 온보딩 계측이 커버해서 없다.
 // 키는 source — surface는 baseProps의 전역 속성(app·browser)이라 겹치면 덮어쓴다
 export type NotificationConsentSource = 'home_fullscreen' | 'home_sheet' | 'me';
@@ -163,6 +167,18 @@ export type EventProps = {
     scenario_id: number;
     // post_conversation = 대화 직후 표현 리스트 화면, card_back = 홈 카드 뒷면
     source: 'card_back' | 'post_conversation';
+  };
+
+  // 헤더 불꽃으로 연속 기록 페이지 진입 — 불꽃이 얼마나 눌리는지, 어떤 상태에서 눌리는지 본다
+  'Streak Opened': {
+    source: 'home_header';
+    streak_days: number;
+    is_active_today: boolean;
+  };
+  'Streak Month Changed': {
+    direction: 'prev' | 'next';
+    year: number;
+    month: number;
   };
 
   'Conversation Started': {
