@@ -5,12 +5,14 @@ import { StreakFruit } from './StreakFruit';
 // 마크가 앉는 줄의 높이. 이어진 구간 띠도 같은 높이를 써야 마크가 띠 한가운데 놓인다 (StreakWeek 참고)
 export const MARK_ROW_HEIGHT = 34;
 
-// 마크와 숫자는 늘 같은 자리다 — 상태에 따라 자리가 움직이면 격자가 흔들려 읽힌다
+// 마크와 숫자는 늘 같은 자리다 — 상태에 따라 자리가 움직이면 격자가 흔들려 읽힌다.
+// 기록 밖·미래 날짜도 놓친 날과 같은 색을 쓴다. 더 옅게 하면 읽을 수 있는 대비가 안 나오고,
+// 둘을 가르는 건 색이 아니라 동그라미다
 const LABEL_STYLE: Record<DayMark, string> = {
   done: 'font-medium text-accent',
   today: 'font-black text-primary',
   missed: 'font-medium text-muted-foreground',
-  blank: 'font-medium text-muted-foreground-faint',
+  blank: 'font-medium text-muted-foreground',
 };
 
 // 화면은 열매·테두리로 상태를 말하지만 스크린 리더에는 숫자만 읽힌다 — 상태를 말로도 준다

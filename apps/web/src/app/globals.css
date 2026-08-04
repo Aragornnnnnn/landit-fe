@@ -24,7 +24,6 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-muted-foreground-faint: var(--muted-foreground-faint);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
@@ -100,8 +99,6 @@
   --secondary-foreground: var(--gray-950);
   --muted: var(--gray-100);
   --muted-foreground: var(--gray-500);
-  /* 읽되 세지 않아야 하는 글자 — 달력에서 기록 밖·미래 날짜 (피그마 #d4d8df) */
-  --muted-foreground-faint: var(--gray-300);
   --accent: var(--orange-600);
   --accent-foreground: var(--white);
   --destructive: var(--red-500);
