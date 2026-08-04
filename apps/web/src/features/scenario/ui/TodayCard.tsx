@@ -39,6 +39,10 @@ export const TodayCard = ({
           scenario={scenario}
           onStart={onStart}
           autoFlip={autoFlip}
+          expressions={{
+            completed: daily.completedExpressionCount,
+            total: daily.expressionCount,
+          }}
         />
       ) : (
         <SealedFace

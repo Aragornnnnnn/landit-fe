@@ -12,6 +12,7 @@ import { ArrowRightIcon, LockIcon, ReplayIcon } from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
 
 import type { Scenario } from '../api/list';
+import { ExpressionProgress } from './ExpressionProgress';
 import { ScenarioCardBack } from './ScenarioCardBack';
 
 interface ScenarioCardProps {
@@ -21,6 +22,8 @@ interface ScenarioCardProps {
   highlight?: boolean;
   // 홈이 flip 신호로 진입하면(표현 마무리 후 복귀) 마운트 시 자동으로 뒷면을 편다
   autoFlip?: boolean;
+  // 완료 카드에 표현 학습 진행도를 띄운다. 목록 API에는 없는 값이라 주는 쪽에서만 넘긴다
+  expressions?: { completed: number; total: number };
 }
 
 export const ScenarioCard = ({
@@ -28,6 +31,7 @@ export const ScenarioCard = ({
   onStart,
   highlight = false,
   autoFlip = false,
+  expressions,
 }: ScenarioCardProps) => {
   // 잠금·완료 판정은 전부 백엔드 몫(직전 시나리오를 깨야 다음이 열린다). 카드는 두 플래그를 그리기만 한다.
   // locked   → 흑백 썸네일 + 회색 제목 + "잠겨있어요"
@@ -141,11 +145,20 @@ export const ScenarioCard = ({
               </div>
             ) : completed ? (
               // 완료 카드 — 메인은 표현 학습(뒤집기), 다시 해보기는 아래 고스트로.
-              // '대화 시작하기'(주황)와 역할이 달라 보이게 학습은 초록으로 구분한다
+              // 할 일이 남았으면 주황, 다 했으면 초록이다 — 남은 일이 눈에 띄어야 한다
               <div className="flex flex-col gap-1">
-                <Button variant="success" onClick={openExpressions}>
-                  원어민 표현 배우기
-                </Button>
+                {expressions && (
+                  <ExpressionProgress
+                    completed={expressions.completed}
+                    total={expressions.total}
+                    onLearn={openExpressions}
+                  />
+                )}
+                {!expressions && (
+                  <Button variant="success" onClick={openExpressions}>
+                    원어민 표현 배우기
+                  </Button>
+                )}
                 <button
                   type="button"
                   onClick={() => onStart(scenario)}
