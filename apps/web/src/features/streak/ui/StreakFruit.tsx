@@ -1,5 +1,6 @@
 // 스트릭 열매 — 하루 1개 완료가 열매 1개다. 헤더·히어로·달력이 같은 그림을 쓴다
-// 에셋은 피그마에서 내보낸 원본 그대로. 시안이 여백째 프레임에 담아 쓰므로 잘라내지 않는다
+// 에셋은 피그마 원본에서 투명 여백만 잘라낸 것 — 그림 자체는 그대로다.
+// 여백이 절반이라(320px 중 열매 163px) size와 눈에 보이는 크기가 두 배로 어긋났다. 이제 size가 곧 지름이다
 import Image from 'next/image';
 
 import fruitImage from '../assets/fruit.png';
@@ -14,6 +15,7 @@ const OPACITY: Record<FruitState, number> = {
 
 interface StreakFruitProps {
   state: FruitState;
+  // 눈에 보이는 열매의 지름
   size?: number;
   // 익은 열매가 말랑거리는 연출. 히어로에서만 켠다 — 달력 열매 서른 개가 같이 움직이면 어지럽다
   animated?: boolean;
@@ -23,7 +25,7 @@ interface StreakFruitProps {
 
 export const StreakFruit = ({
   state,
-  size = 26,
+  size = 14,
   animated = false,
   priority = false,
 }: StreakFruitProps) => (

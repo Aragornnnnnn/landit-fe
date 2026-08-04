@@ -14,7 +14,7 @@ const LABEL_STYLE: Record<DayMark, string> = {
 };
 
 const DayMarkShape = ({ mark }: { mark: DayMark }) => {
-  if (mark === 'done') return <StreakFruit state="fresh" />;
+  if (mark === 'done') return <StreakFruit state="fresh" size={14} />;
   // 오늘은 아직 못 받은 자리 — 열매가 들어올 테두리만 그려 둔다
   if (mark === 'today')
     return <span className="size-7 rounded-full border-2 border-primary" />;

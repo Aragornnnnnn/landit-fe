@@ -22,7 +22,7 @@ export const StreakHero = ({
 
   return (
     <section className="flex flex-col items-center px-5 pt-4">
-      <StreakFruit state={state} size={100} animated priority />
+      <StreakFruit state={state} size={54} animated priority />
       <h2 className="mt-2 text-[32px] leading-tight font-black text-foreground">
         {title}
       </h2>
