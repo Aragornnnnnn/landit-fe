@@ -24,6 +24,7 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-muted-foreground-faint: var(--muted-foreground-faint);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
@@ -37,6 +38,7 @@
   --color-good: var(--good);
   --color-good-bg: var(--good-bg);
   --color-good-border: var(--good-border);
+  --color-streak-band: var(--streak-band);
   --color-need: var(--need);
   --color-need-bg: var(--need-bg);
   --color-need-border: var(--need-border);
@@ -65,6 +67,7 @@
   --gray-500: #6b7280;
   --gray-950: #111111;
   /* 브랜드 테라코타 램프 */
+  --orange-50: #fdf1e8;
   --orange-300: #e8935a;
   --orange-500: #e07a3a;
   --orange-600: #c4601f;
@@ -97,6 +100,8 @@
   --secondary-foreground: var(--gray-950);
   --muted: var(--gray-100);
   --muted-foreground: var(--gray-500);
+  /* 읽되 세지 않아야 하는 글자 — 달력에서 기록 밖·미래 날짜 (피그마 #d4d8df) */
+  --muted-foreground-faint: var(--gray-300);
   --accent: var(--orange-600);
   --accent-foreground: var(--white);
   --destructive: var(--red-500);
@@ -110,6 +115,8 @@
   --backdrop: var(--gray-200);
   --star-filled: var(--amber-400);
   --star-empty: var(--gray-300);
+  /* 스트릭 — 달력의 이어진 구간 띠 (피그마 스트릭 Flow 스펙) */
+  --streak-band: var(--orange-50);
   --good: var(--blue-700);
   --good-bg: var(--blue-100);
   --good-border: var(--blue-200);
@@ -200,7 +207,31 @@
   }
 }
 
+/* 히어로 열매 — 익어서 탱글한 과육이 숨 쉬듯 눌렸다 부푼다.
+ * 가로·세로를 반대로 움직여야(가로로 눌리면 세로로 부풀고) 부피가 유지돼 말랑하게 읽힌다 */
+@keyframes fruit-squish {
+  0%,
+  100% {
+    transform: scale(1, 1) translateY(0);
+  }
+  30% {
+    transform: scale(1.06, 0.94) translateY(2%);
+  }
+  55% {
+    transform: scale(0.96, 1.05) translateY(-2%);
+  }
+  80% {
+    transform: scale(1.02, 0.98) translateY(0);
+  }
+}
+
 @layer utilities {
+  .animate-fruit-squish {
+    /* 바닥을 축으로 — 위에서 누르는 것처럼 보여야 무게가 느껴진다 */
+    transform-origin: 50% 85%;
+    animation: fruit-squish 2.4s ease-in-out infinite;
+  }
+
   .animate-shake {
     animation: shake 0.4s ease-in-out;
   }
