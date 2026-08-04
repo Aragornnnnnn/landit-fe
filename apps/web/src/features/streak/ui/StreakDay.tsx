@@ -27,26 +27,22 @@ const DayMarkShape = ({ mark }: { mark: DayMark }) => {
 };
 
 interface StreakDayProps {
-  date: string | null;
+  date: string;
   mark: DayMark;
 }
 
-export const StreakDay = ({ date, mark }: StreakDayProps) => {
-  if (date === null) return <div aria-hidden />;
+export const StreakDay = ({ date, mark }: StreakDayProps) => (
+  // relative를 줘야 뒤에 깔린 띠(absolute) 위로 올라온다 — 안 주면 띠가 열매를 덮는다
+  <div className="relative flex flex-col items-center pb-1.5">
+    <span
+      className="flex items-center justify-center"
+      style={{ height: MARK_ROW_HEIGHT }}
+    >
+      <DayMarkShape mark={mark} />
+    </span>
 
-  return (
-    // relative를 줘야 뒤에 깔린 띠(absolute) 위로 올라온다 — 안 주면 띠가 열매를 덮는다
-    <div className="relative flex flex-col items-center pb-1.5">
-      <span
-        className="flex items-center justify-center"
-        style={{ height: MARK_ROW_HEIGHT }}
-      >
-        <DayMarkShape mark={mark} />
-      </span>
-
-      <span className={`mt-1 text-[11px] leading-none ${LABEL_STYLE[mark]}`}>
-        {Number(date.slice(8))}
-      </span>
-    </div>
-  );
-};
+    <span className={`mt-1 text-[11px] leading-none ${LABEL_STYLE[mark]}`}>
+      {Number(date.slice(8))}
+    </span>
+  </div>
+);

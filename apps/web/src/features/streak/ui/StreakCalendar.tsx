@@ -1,4 +1,6 @@
 // 월 달력 — 월 이동 머리와 7열 격자. 무엇을 그릴지는 calendar-day 규칙이 정한다
+import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
+
 import type { StreakCalendarResponse } from '../api/streak';
 import { buildMonthGrid } from '../lib/month-grid';
 import { formatMonthLabel, type YearMonth } from '../lib/seoul-date';
@@ -7,7 +9,7 @@ import { StreakWeek } from './StreakWeek';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
-interface StreakCalendarProps {
+export interface StreakCalendarProps {
   view: YearMonth;
   today: string;
   calendar: StreakCalendarResponse;
@@ -25,6 +27,13 @@ export const StreakCalendar = ({
   onGoMonth,
 }: StreakCalendarProps) => {
   const activeDates = new Set(calendar.activeDates);
+  // 칸 상태를 여기서 한 번만 정한다 — 띠와 칸이 서로 다른 기준으로 "깬 날"을 판단하지 않게
+  const markOfDate = (date: string) =>
+    markOf(date, {
+      today,
+      activeDates,
+      firstRecordDate: calendar.streakStartedDate,
+    });
 
   return (
     // 통계 카드와 같은 옷을 입혀 둘이 형제로 읽히게 한다 — 달력만 배경에 놓으면 혼자 떠 보인다
@@ -64,14 +73,9 @@ export const StreakCalendar = ({
         <StreakWeek
           key={week.find(Boolean)}
           week={week}
-          activeDates={activeDates}
-          markOfDate={(date) =>
-            markOf(date, {
-              today,
-              activeDates,
-              firstRecordDate: calendar.streakStartedDate,
-            })
-          }
+          marks={week.map((date) =>
+            date === null ? 'blank' : markOfDate(date),
+          )}
         />
       ))}
     </section>
@@ -94,10 +98,14 @@ const MonthArrow = ({
     aria-label={label}
     disabled={disabled}
     onClick={() => onPress(direction)}
-    className={`absolute flex size-9 items-center justify-center text-[18px] leading-none font-bold text-muted-foreground transition-all active:scale-90 disabled:opacity-25 ${
+    className={`absolute flex size-9 items-center justify-center text-muted-foreground transition-all active:scale-90 disabled:opacity-25 ${
       direction === -1 ? 'left-0' : 'right-0'
     }`}
   >
-    {direction === -1 ? '‹' : '›'}
+    {direction === -1 ? (
+      <ChevronLeftIcon size={20} />
+    ) : (
+      <ChevronRightIcon size={20} />
+    )}
   </button>
 );

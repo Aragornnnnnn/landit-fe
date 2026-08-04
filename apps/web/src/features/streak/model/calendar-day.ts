@@ -1,6 +1,4 @@
 // 달력 칸 하나가 무엇을 뜻하는지 정하는 규칙 — 도장을 찍을지, 놓친 날인지, 띠를 어디로 뻗을지
-import type { MonthWeek } from '../lib/month-grid';
-
 export type DayMark =
   // 그날 학습을 끝냈다 — 열매를 채운 날
   | 'done'
@@ -36,14 +34,14 @@ export interface DayRun {
   length: number;
 }
 
-// 이어진 구간의 띠 — 같은 주 행에서 붙어 있는 완료일을 한 덩어리로 묶는다.
-// 응답이 요청한 월의 날짜만 주므로 월 경계 너머는 알 수 없고, 7열 격자에서 띠는 어차피 행을 넘지 못한다.
-// 하루짜리도 구간이다 — 완료한 날마다 알약을 깔고, 붙어 있으면 하나로 합쳐 보이게 한다
-export const runsOf = (week: MonthWeek, activeDates: Set<string>): DayRun[] => {
+// 이어진 구간의 띠 — 한 주 행에서 붙어 있는 'done' 칸을 한 덩어리로 묶는다.
+// 칸 상태를 그대로 받는다. 날짜와 활동 목록을 다시 받으면 "깬 날"의 정의가 markOf와 갈라질 수 있다.
+// 7열 격자에서 띠는 행을 넘지 못하고, 하루짜리도 구간이다 — 붙어 있으면 하나로 합쳐 보이게 한다
+export const runsOf = (marks: DayMark[]): DayRun[] => {
   const runs: DayRun[] = [];
 
-  week.forEach((date, index) => {
-    if (date === null || !activeDates.has(date)) return;
+  marks.forEach((mark, index) => {
+    if (mark !== 'done') return;
 
     const previous = runs[runs.length - 1];
     if (previous && previous.start + previous.length === index) {

@@ -8,15 +8,11 @@ const BAND_INSET = 5;
 
 interface StreakWeekProps {
   week: MonthWeek;
-  activeDates: Set<string>;
-  markOfDate: (date: string) => DayMark;
+  // week와 같은 길이. 달 바깥 칸은 'blank'
+  marks: DayMark[];
 }
 
-export const StreakWeek = ({
-  week,
-  activeDates,
-  markOfDate,
-}: StreakWeekProps) => (
+export const StreakWeek = ({ week, marks }: StreakWeekProps) => (
   <div className="relative grid grid-cols-7">
     {/* 띠 레이어 — 칸과 같은 격자에 얹어 열 경계를 그대로 따라간다.
         하루짜리는 동그라미가 되고, 붙어 있으면 알약 하나로 이어 보인다 */}
@@ -25,7 +21,7 @@ export const StreakWeek = ({
       className="pointer-events-none absolute inset-x-0 top-0 grid grid-cols-7"
       style={{ height: MARK_ROW_HEIGHT }}
     >
-      {runsOf(week, activeDates).map((run) => (
+      {runsOf(marks).map((run) => (
         <span
           key={run.start}
           className="rounded-full bg-streak-band"
@@ -37,12 +33,12 @@ export const StreakWeek = ({
       ))}
     </div>
 
-    {week.map((date, index) => (
-      <StreakDay
-        key={date ?? `blank-${index}`}
-        date={date}
-        mark={date === null ? 'blank' : markOfDate(date)}
-      />
-    ))}
+    {week.map((date, index) =>
+      date === null ? (
+        <div key={`blank-${index}`} aria-hidden />
+      ) : (
+        <StreakDay key={date} date={date} mark={marks[index]} />
+      ),
+    )}
   </div>
 );
