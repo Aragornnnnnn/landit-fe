@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { FeedbackFlow } from '@/features/feedback/ui/FeedbackFlow';
 import type { Scenario } from '@/features/scenario/api/list';
 import { track } from '@/shared/analytics';
-import { SCENARIO_PATH } from '@/shared/lib/routes';
+import { expressionBranchPath, scenarioReturnPath } from '@/shared/lib/routes';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Transition } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
@@ -26,7 +26,14 @@ import { QuestionCard } from './QuestionCard';
 import { ThoughtOverlay } from './ThoughtOverlay';
 import { UserTranscript } from './UserTranscript';
 
-export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
+export const ConversationFlow = ({
+  scenario,
+  date,
+}: {
+  scenario: Scenario;
+  // 어느 날 카드에서 들어왔는지. 나갈 때 그 날로 돌려보낸다
+  date?: string;
+}) => {
   const router = useRouter();
   const [showExitModal, setShowExitModal] = useState(false);
   // 대화 종료 후 CTA를 누르면 피드백으로 넘어간다 (그 전까진 마지막 화면 + CTA를 보여준다)
@@ -96,8 +103,8 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
             // 대화는 끝났으니 히스토리에서 지운다 — 뒤로가기로 종료된 대화에 다시 들어오지 않게.
             // 재대화(이미 완료한 시나리오)면 표현은 예전에 생성됐으니 분기 연출 없이 홈의 그 카드로 돌아간다
             wasCompleted
-              ? router.replace(`${SCENARIO_PATH}?card=${scenario.scenarioId}`)
-              : router.replace(`/expressions/${scenario.scenarioId}/branch`)
+              ? router.replace(scenarioReturnPath({ date }))
+              : router.replace(expressionBranchPath(scenario.scenarioId, date))
           }
         />
       </Transition>
@@ -188,7 +195,7 @@ export const ConversationFlow = ({ scenario }: { scenario: Scenario }) => {
           leave();
           // 대화를 도중에 나가면 강제로 다음 카드로 보내지 말고, 온 카드로 복귀시킨다.
           // replace로 대화를 히스토리에서 지워, 홈에서 뒤로가기 시 대화로 재진입하지 않게 한다.
-          router.replace(`${SCENARIO_PATH}?card=${scenario.scenarioId}`);
+          router.replace(scenarioReturnPath({ date }));
         }}
         onClose={() => {
           track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'conversation_exit' });

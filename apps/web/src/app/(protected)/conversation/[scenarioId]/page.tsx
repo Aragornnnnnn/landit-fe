@@ -1,23 +1,39 @@
 'use client';
 
 // 대화 페이지 — 시나리오를 찾아 대화 플로우([시뮬])를 시작한다
-import { use } from 'react';
+import { Suspense, use } from 'react';
 import { EVENTS } from '@landit/analytics';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { ConversationFlow } from '@/features/conversation/ui/ConversationFlow';
 import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSkeleton';
 import { useScenariosQuery } from '@/features/scenario/model/useScenariosQuery';
 import { track } from '@/shared/analytics';
-import { SCENARIO_PATH } from '@/shared/lib/routes';
+import { readDateParam, scenarioReturnPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 
+// useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
 export default function ConversationPage({
   params,
 }: {
   params: Promise<{ scenarioId: string }>;
 }) {
+  return (
+    <Suspense fallback={<ConversationSkeleton />}>
+      <ConversationContent params={params} />
+    </Suspense>
+  );
+}
+
+function ConversationContent({
+  params,
+}: {
+  params: Promise<{ scenarioId: string }>;
+}) {
   const { scenarioId } = use(params);
+  // 지난 날 카드에서 들어오면 그 날짜가 실려 온다. 없으면 오늘이다.
+  // searchParams prop은 앱 안에서 이동할 때 갱신되지 않아 훅으로 읽는다
+  const date = readDateParam(useSearchParams());
   const id = Number(scenarioId);
   const router = useRouter();
   const { categories, error, isLoading, retry } = useScenariosQuery();
@@ -46,13 +62,8 @@ export default function ConversationPage({
                   track(EVENTS.ERROR_RETRIED, { screen: 'conversation' });
                   retry();
                 }
-              : // replace로 에러 화면을 히스토리에서 지우고, 온 카드로 복귀시킨다
-                () =>
-                  router.replace(
-                    Number.isFinite(id)
-                      ? `${SCENARIO_PATH}?card=${id}`
-                      : SCENARIO_PATH,
-                  )
+              : // replace로 에러 화면을 히스토리에서 지우고 시나리오 탭으로 돌려보낸다
+                () => router.replace(scenarioReturnPath({ date }))
           }
         >
           {error ? '다시 시도' : '홈으로'}
@@ -62,5 +73,11 @@ export default function ConversationPage({
   }
 
   // key: 시나리오가 바뀌면 세션·상태를 새로 시작하도록 인스턴스를 다시 마운트한다
-  return <ConversationFlow key={scenario.scenarioId} scenario={scenario} />;
+  return (
+    <ConversationFlow
+      key={scenario.scenarioId}
+      scenario={scenario}
+      date={date}
+    />
+  );
 }
