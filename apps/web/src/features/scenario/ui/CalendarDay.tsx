@@ -4,6 +4,7 @@
 import { motion, useReducedMotion } from 'motion/react';
 
 import type { ScenarioCalendarDay } from '../api/calendar';
+import { WEEKDAY_LABELS, weekdayIndexOf } from '../lib/calendar-window';
 import { dayStateOf, isOpenable, type DayState } from '../lib/day-state';
 import { SHIMMER } from '../lib/shimmer';
 
@@ -35,6 +36,8 @@ interface CalendarDayProps {
   onSelect: (date: string) => void;
   // 월 패널에 덮여 안 보이는 칸은 빛 쓸기를 돌리지 않는다
   animated?: boolean;
+  // 아래 이름표에 무엇을 쓸지. 주 스트립은 요일, 월 격자는 날짜다
+  label?: 'weekday' | 'day';
 }
 
 export const CalendarDay = ({
@@ -44,6 +47,7 @@ export const CalendarDay = ({
   selected,
   onSelect,
   animated = true,
+  label = 'day',
 }: CalendarDayProps) => {
   const reduced = useReducedMotion() ?? false;
   const state = dayStateOf(day, { today, startedAt });
@@ -94,13 +98,14 @@ export const CalendarDay = ({
         )}
       </span>
 
-      {/* 오늘은 숫자 대신 이름표를 쓴다 — 원 위에 배지를 얹으면 사진을 가린다 */}
       <span
         className={`text-[13px] leading-[1.15] ${
           selected ? 'font-black text-primary' : LABEL_STYLE[state]
         }`}
       >
-        {state === 'today' ? '오늘' : dayNumber}
+        {label === 'weekday'
+          ? WEEKDAY_LABELS[weekdayIndexOf(day.date)]
+          : dayNumber}
       </span>
     </button>
   );

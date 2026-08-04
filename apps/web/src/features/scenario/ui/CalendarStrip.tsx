@@ -8,16 +8,18 @@ import { DURATION, EASE_STANDARD } from '@/shared/motion';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 
 import type { ScenarioCalendarType } from '../api/calendar';
-import { canGoBack, canGoForward, shiftWindow } from '../lib/calendar-window';
+import {
+  canGoBack,
+  canGoForward,
+  shiftWindow,
+  WEEKDAY_LABELS,
+  weekdayIndexOf,
+} from '../lib/calendar-window';
 import { useScenarioCalendarQuery } from '../model/useScenarioCalendarQuery';
 import { CalendarDay } from './CalendarDay';
 
-// 일요일 시작 — 서버가 주 창을 일요일부터 내려주는 것과 맞춘다
-const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
-
 // 그 달 1일이 몇 번째 칸에서 시작하는지
-const leadingBlanks = (firstDate: string) =>
-  new Date(`${firstDate}T00:00:00Z`).getUTCDay();
+const leadingBlanks = (firstDate: string) => weekdayIndexOf(firstDate);
 
 interface CalendarStripProps {
   // 주소가 정한 창. 없으면 서버가 오늘이 든 창을 준다
@@ -123,6 +125,7 @@ export const CalendarStrip = ({
               selected={day.date === selected}
               onSelect={selectDay}
               animated={!expanded}
+              label="weekday"
             />
           ))}
         </div>
@@ -153,7 +156,7 @@ export const CalendarStrip = ({
               >
                 <div className="px-4 pt-3 pb-4">
                   <div className="grid grid-cols-7 justify-items-center pb-1.5">
-                    {WEEKDAYS.map((weekday) => (
+                    {WEEKDAY_LABELS.map((weekday) => (
                       <span
                         key={weekday}
                         className="text-xs font-bold text-muted-foreground/60"
@@ -235,7 +238,8 @@ const TypeToggle = ({
         type="button"
         onClick={() => onChange(option.id)}
         aria-pressed={value === option.id}
-        className={`rounded-full px-3.5 py-1 text-xs font-bold transition-colors ${
+        // 보이는 크기는 그대로 두고 눌리는 자리만 넓힌다 — 손끝으로 겨누기엔 24px이 좁다
+        className={`relative rounded-full px-3.5 py-1 text-xs font-bold transition-colors after:absolute after:-inset-x-1 after:-inset-y-3 after:content-[''] ${
           value === option.id
             ? 'bg-background text-foreground shadow-sm'
             : 'text-muted-foreground'
