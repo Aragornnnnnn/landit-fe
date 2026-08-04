@@ -42,13 +42,13 @@ describe('buildReminders', () => {
     expect(reminders[0].notifyAt).toBe('2026-08-02T20:00:00+09:00');
   });
 
-  it('모든 항목이 홈 딥링크에 UTM 유입 표식을 달고, content는 문구 슬러그를 따라 순환한다', () => {
+  it('모든 항목이 시나리오 탭 딥링크에 UTM 유입 표식을 달고, content는 문구 슬러그를 따라 순환한다', () => {
     const reminders = buildReminders(TODAY);
     const count = REMINDER_COPIES.length;
 
     for (const reminder of reminders) {
       expect(reminder.url).toMatch(
-        /^\/home\?utm_source=landit&utm_medium=push&utm_campaign=daily_reminder&utm_content=\w+$/,
+        /^\/scenario\?utm_source=landit&utm_medium=push&utm_campaign=daily_reminder&utm_content=\w+$/,
       );
     }
     expect(reminders[0].url).toContain(

@@ -53,24 +53,24 @@ describe('toPageView', () => {
   it('알림 딥링크 유입(utm_campaign=daily_reminder)을 return_reason reminder와 문구 슬러그로 해석한다', () => {
     expect(
       pv(
-        '/home',
+        '/scenario',
         'utm_source=landit&utm_medium=push&utm_campaign=daily_reminder&utm_content=marco_dm',
       ),
     ).toEqual({
-      page_name: 'home',
-      path: '/home',
+      page_name: 'scenario',
+      path: '/scenario',
       return_reason: 'reminder',
       notification_copy: 'marco_dm',
     });
     // content가 없으면 문구 슬러그 없이 유입만 남긴다
-    expect(pv('/home', 'utm_campaign=daily_reminder')).toEqual({
-      page_name: 'home',
-      path: '/home',
+    expect(pv('/scenario', 'utm_campaign=daily_reminder')).toEqual({
+      page_name: 'scenario',
+      path: '/scenario',
       return_reason: 'reminder',
     });
-    expect(pv('/home', 'utm_campaign=other_campaign')).toEqual({
-      page_name: 'home',
-      path: '/home',
+    expect(pv('/scenario', 'utm_campaign=other_campaign')).toEqual({
+      page_name: 'scenario',
+      path: '/scenario',
     });
   });
 

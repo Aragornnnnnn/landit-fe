@@ -8,7 +8,7 @@ import { CONSENT_PROMPT_SEEN_KEY } from '../model/consent-prompt';
 import { useNotificationPermission } from '../model/useNotificationPermission';
 import { NotificationConsentGate } from './NotificationConsentGate';
 
-const mocks = vi.hoisted(() => ({ pathname: '/home' }));
+const mocks = vi.hoisted(() => ({ pathname: '/scenario' }));
 
 vi.mock('next/navigation', () => ({
   usePathname: () => mocks.pathname,
@@ -62,7 +62,7 @@ vi.mock('motion/react', async () => {
 
 beforeEach(() => {
   localStorage.clear();
-  mocks.pathname = '/home';
+  mocks.pathname = '/scenario';
 });
 
 afterEach(() => {
