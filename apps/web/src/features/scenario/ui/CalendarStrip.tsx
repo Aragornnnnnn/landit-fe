@@ -5,6 +5,7 @@ import { useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
 import { DURATION, EASE_STANDARD } from '@/shared/motion';
+import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 
 import type { ScenarioCalendarType } from '../api/calendar';
 import { canGoBack, canGoForward, shiftWindow } from '../lib/calendar-window';
@@ -19,28 +20,39 @@ const leadingBlanks = (firstDate: string) =>
   new Date(`${firstDate}T00:00:00Z`).getUTCDay();
 
 interface CalendarStripProps {
-  // 지금 카드로 보고 있는 날. 아직 정해지기 전이면 null
-  date: string | null;
+  // 주소가 정한 창. 없으면 서버가 오늘이 든 창을 준다
+  windowDate?: string;
+  // 지금 카드로 보고 있는 날. 응답 전이면 null
+  selected: string | null;
   // 오늘을 고르면 null을 준다 — 오늘은 날짜로 지목하는 날이 아니라 기본값이다
   onSelect: (date: string | null) => void;
 }
 
-export const CalendarStrip = ({ date, onSelect }: CalendarStripProps) => {
+export const CalendarStrip = ({
+  windowDate: routeDate,
+  selected,
+  onSelect,
+}: CalendarStripProps) => {
   const reduced = useReducedMotion() ?? false;
   const [expanded, setExpanded] = useState(false);
   // 창은 보고 있는 날과 따로 움직인다 — 지난 주를 훑어보다 아무 날도 안 고를 수 있다
   const [movedTo, setMovedTo] = useState<string | undefined>(undefined);
-  // 옮기기 전에는 보고 있는 날을 따라간다 — 지난 날 주소로 바로 들어와도 그 주가 열린다.
-  // 둘 다 없으면(첫 렌더) 서버가 오늘이 든 창을 준다
-  const windowDate = movedTo ?? date ?? undefined;
-  // 펼치기 직전 상태 — 접을 때 어디로 돌아갈지 판단한다
-  const collapsedFrom = useRef<{ windowDate?: string; date: string | null }>({
-    date: null,
-  });
+  const windowDate = movedTo ?? routeDate;
+  // 펼치는 동안 날을 골랐는지. 접을 때 어디로 돌아갈지 판단한다
+  const picked = useRef(false);
+  // 펼치기 직전 창 — 펼친 동안 주 조회를 여기에 묶어 두고, 안 고르고 접으면 여기로 돌아간다.
+  // 조회 키가 되므로 ref가 아니라 상태여야 한다
+  const [collapsedFrom, setCollapsedFrom] = useState<string | undefined>(
+    undefined,
+  );
 
   // 스트립과 패널은 서로 다른 창을 본다. 조회 하나를 돌려 쓰면 펼치는 순간
-  // 주 스트립이 그릴 것을 잃어 번쩍인다
-  const { calendar: week } = useScenarioCalendarQuery('WEEK', windowDate);
+  // 주 스트립이 그릴 것을 잃어 번쩍인다.
+  // 펼친 동안 주 조회는 그 자리에 묶어 둔다 — 달을 넘길 때마다 가려진 주를 새로 받게 된다
+  const { calendar: week } = useScenarioCalendarQuery(
+    'WEEK',
+    expanded ? collapsedFrom : windowDate,
+  );
   const { calendar: month } = useScenarioCalendarQuery(
     'MONTH',
     windowDate,
@@ -60,19 +72,20 @@ export const CalendarStrip = ({ date, onSelect }: CalendarStripProps) => {
 
   const toggle = (next: ScenarioCalendarType) => {
     if (next === 'MONTH') {
-      collapsedFrom.current = { windowDate, date };
+      setCollapsedFrom(windowDate);
+      picked.current = false;
     } else {
-      // 달에서 날을 골랐으면 그 날이 든 주로, 아무것도 안 골랐으면 펼치기 전 주로
-      const picked = date !== collapsedFrom.current.date;
-      setMovedTo(
-        picked ? (date ?? undefined) : collapsedFrom.current.windowDate,
-      );
+      // 달에서 날을 골랐으면 주소가 이미 그 날이라 창을 비워 따라가게 두고,
+      // 아무것도 안 골랐으면 펼치기 전 주로 되돌린다
+      setMovedTo(picked.current ? undefined : collapsedFrom);
     }
     setExpanded(next === 'MONTH');
   };
 
-  const selectDay = (picked: string) =>
-    onSelect(picked === today ? null : picked);
+  const selectDay = (day: string) => {
+    picked.current = true;
+    onSelect(day === today ? null : day);
+  };
 
   return (
     // 달 보기는 카드를 밀어내지 않고 그 위에 겹쳐 뜬다 — 카드가 눌리면 오늘 할 일이 작아 보인다
@@ -107,8 +120,9 @@ export const CalendarStrip = ({ date, onSelect }: CalendarStripProps) => {
               day={day}
               today={today}
               startedAt={startedAt}
-              selected={day.date === date}
+              selected={day.date === selected}
               onSelect={selectDay}
+              animated={!expanded}
             />
           ))}
         </div>
@@ -163,7 +177,7 @@ export const CalendarStrip = ({ date, onSelect }: CalendarStripProps) => {
                         day={day}
                         today={today}
                         startedAt={startedAt}
-                        selected={day.date === date}
+                        selected={day.date === selected}
                         onSelect={selectDay}
                       />
                     ))}
@@ -194,15 +208,11 @@ const ArrowButton = ({
     aria-label={direction === -1 ? '이전' : '다음'}
     className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-secondary disabled:opacity-25"
   >
-    <svg width="8" height="14" viewBox="0 0 8 14" fill="none" aria-hidden>
-      <path
-        d={direction === -1 ? 'M7 1 1 7l6 6' : 'M1 1l6 6-6 6'}
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    {direction === -1 ? (
+      <ChevronLeftIcon size={16} />
+    ) : (
+      <ChevronRightIcon size={16} />
+    )}
   </button>
 );
 

@@ -1,7 +1,15 @@
 // 날짜별 시나리오 조회 — 오늘 배정분 또는 그 날 최초 완료한 시나리오 하나 (백엔드 DailyScenarioResponse 미러)
 import { api } from '@/shared/api/client';
+import type { TtsVoice } from '@/shared/tts/voice';
 
-import type { ScenarioOpeningPreview } from './list';
+export interface ScenarioOpeningPreview {
+  aiOpeningMessage: string | null;
+  aiOpeningMessageTranslation: string | null;
+  userOpeningInstruction: string | null;
+  innerThought: string | null;
+  innerThoughtType: string | null;
+  ttsVoice: TtsVoice | null; // 활성 시나리오 TTS 음성 (세션 시작 ttsVoice와 동일 구조)
+}
 
 // NEW = 처음 받는 시나리오, RETRY = 전날 시작했다 못 끝내 다시 받는 것, CLEARED = 그 날 최초 완료한 것
 export type DailyScenarioType = 'NEW' | 'RETRY' | 'CLEARED';

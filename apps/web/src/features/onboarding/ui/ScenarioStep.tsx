@@ -5,8 +5,8 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 
-import type { Scenario } from '@/features/scenario/api/list';
-import { useScenariosQuery } from '@/features/scenario/model/useScenariosQuery';
+import type { DailyScenario } from '@/features/scenario/api/daily';
+import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { Button } from '@/shared/ui/Button';
 
 import firstScenarioImage from '../assets/first-scenario.webp';
@@ -17,9 +17,9 @@ export const ScenarioStep = ({
   // 소개한 첫 시나리오로 곧장 대화를 시작한다 — 못 받았으면 null(홈 폴백)
   onStart: (scenarioId: number | null) => void;
 }) => {
-  // 첫 대화 = 첫(미잠금) 카테고리의 첫 시나리오 — 홈 리스트가 보여주는 것과 같은 순서
-  const { selected } = useScenariosQuery();
-  const scenario = selected?.scenarios[0] ?? null;
+  // 첫 대화 = 오늘 배정된 카드 — 온보딩을 끝내고 바로 그 대화로 들어간다
+  const { daily } = useDailyScenarioQuery();
+  const scenario = daily?.scenario ?? null;
 
   const [isUnlocked, setIsUnlocked] = useState(false);
   useEffect(() => {
@@ -57,7 +57,7 @@ const ScenarioCard = ({
   scenario,
   showText,
 }: {
-  scenario: Scenario | null;
+  scenario: DailyScenario | null;
   showText: boolean;
 }) => (
   <div className="flex flex-1 flex-col gap-4">

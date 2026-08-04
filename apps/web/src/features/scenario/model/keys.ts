@@ -4,8 +4,6 @@ import type { ScenarioCalendarType } from '../api/calendar';
 
 export const scenarioKeys = {
   all: ['scenarios'] as const,
-  list: (userId: number | null) =>
-    [...scenarioKeys.all, userId, 'list'] as const,
   // 날짜별 시나리오 — 날짜를 키에 넣어 달력에서 날짜를 옮길 때마다 각자 캐시된다.
   // 날짜 생략(오늘)은 'today'로 구분한다
   daily: (userId: number | null, date: string | null) =>

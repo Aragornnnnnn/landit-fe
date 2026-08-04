@@ -8,7 +8,7 @@ import { EVENTS } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { prefetchSessionFeedback } from '@/features/feedback/model/useSessionFeedbackQuery';
-import type { Scenario } from '@/features/scenario/api/list';
+import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { scenarioKeys } from '@/features/scenario/model/keys';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';

@@ -7,7 +7,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import { ConversationFlow } from '@/features/conversation/ui/ConversationFlow';
 import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSkeleton';
-import { useScenariosQuery } from '@/features/scenario/model/useScenariosQuery';
+import { toScenario } from '@/features/scenario/lib/to-scenario';
+import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { track } from '@/shared/analytics';
 import { readDateParam, scenarioReturnPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
@@ -36,11 +37,14 @@ function ConversationContent({
   const date = readDateParam(useSearchParams());
   const id = Number(scenarioId);
   const router = useRouter();
-  const { categories, error, isLoading, retry } = useScenariosQuery();
+  const { daily, error, isLoading, retry } = useDailyScenarioQuery(date);
 
-  const scenario = categories
-    ?.flatMap((category) => category.scenarios)
-    .find((item) => item.scenarioId === id);
+  // 그 날 카드가 이 시나리오일 때만 연다 — 주소만 갈아끼운 진입을 막는다
+  const source = daily?.scenario;
+  const scenario =
+    source && source.scenarioId === id
+      ? toScenario(source, daily.playable)
+      : undefined;
 
   if (isLoading) {
     return <ConversationSkeleton />;

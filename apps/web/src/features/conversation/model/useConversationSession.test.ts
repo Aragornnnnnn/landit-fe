@@ -3,7 +3,7 @@ import { StrictMode } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Scenario } from '@/features/scenario/api/list';
+import type { Scenario } from '@/features/scenario/lib/to-scenario';
 
 import * as sessionApi from '../api/session';
 import { useConversationSession } from './useConversationSession';

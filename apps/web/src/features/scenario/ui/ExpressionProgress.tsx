@@ -9,28 +9,29 @@ import {
 } from '../lib/expression-progress';
 
 // 남은 게 있으면 주황, 다 했으면 초록 — 색이 곧 "할 일이 남았는지"다
+type Tone = 'primary' | 'success';
+
+// 막대는 버튼과 늘 같은 색이다 — 따로 적어 두면 한쪽만 바뀌어 어긋난다
+const BAR: Record<Tone, string> = {
+  primary: 'bg-primary',
+  success: 'bg-success',
+};
+
 const STAGE_STYLE: Record<
   Exclude<ExpressionStage, 'unavailable'>,
-  { label: string; variant: 'primary' | 'success'; bar: string; count: string }
+  { label: string; tone: Tone; count: string }
 > = {
   none: {
     label: '표현 배우기',
-    variant: 'primary',
-    bar: 'bg-primary',
+    tone: 'primary',
     count: 'text-muted-foreground',
   },
   partial: {
     label: '이어서 표현 배우기',
-    variant: 'primary',
-    bar: 'bg-primary',
+    tone: 'primary',
     count: 'text-primary',
   },
-  done: {
-    label: '표현 복습하기',
-    variant: 'success',
-    bar: 'bg-success',
-    count: 'text-success',
-  },
+  done: { label: '표현 복습하기', tone: 'success', count: 'text-success' },
 };
 
 interface ExpressionProgressProps {
@@ -73,12 +74,12 @@ export const ExpressionProgress = ({
       >
         {/* 하나도 안 했으면 채운 자리가 없다 — 트랙만 남는다 */}
         <div
-          className={`h-full rounded-full transition-[width] duration-500 ease-out ${style.bar}`}
+          className={`h-full rounded-full transition-[width] duration-500 ease-out ${BAR[style.tone]}`}
           style={{ width: `${(done / total) * 100}%` }}
         />
       </div>
 
-      <Button variant={style.variant} onClick={onLearn}>
+      <Button variant={style.tone} onClick={onLearn}>
         {style.label}
       </Button>
     </div>
