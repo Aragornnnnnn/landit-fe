@@ -31,7 +31,11 @@ export interface DailyScenario {
   completedExpressionCount: number;
 }
 
-// date를 생략하면 서버가 Asia/Seoul 기준 오늘 것을 돌려준다 —
-// 기기에서 오늘을 계산하면 자정 경계가 서버와 어긋난다
-export const getDailyScenario = () =>
-  api.get<DailyScenarioResponse>('/api/v1/scenarios/daily');
+// date를 생략하면 서버가 오늘 것을 돌려준다 — 기기에서 오늘을 계산하지 않아야 자정 경계가 어긋나지 않는다.
+// 날짜를 줄 때는 Asia/Seoul 기준 yyyy-MM-dd. 미래 날짜는 서버가 400으로 막는다
+export const getDailyScenario = (date?: string) =>
+  api.get<DailyScenarioResponse>(
+    date
+      ? `/api/v1/scenarios/daily?date=${encodeURIComponent(date)}`
+      : '/api/v1/scenarios/daily',
+  );
