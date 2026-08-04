@@ -238,7 +238,8 @@ const TypeToggle = ({
         type="button"
         onClick={() => onChange(option.id)}
         aria-pressed={value === option.id}
-        className={`rounded-full px-3.5 py-1 text-xs font-bold transition-colors ${
+        // 보이는 크기는 그대로 두고 눌리는 자리만 넓힌다 — 손끝으로 겨누기엔 24px이 좁다
+        className={`relative rounded-full px-3.5 py-1 text-xs font-bold transition-colors after:absolute after:-inset-x-1 after:-inset-y-3 after:content-[''] ${
           value === option.id
             ? 'bg-background text-foreground shadow-sm'
             : 'text-muted-foreground'
