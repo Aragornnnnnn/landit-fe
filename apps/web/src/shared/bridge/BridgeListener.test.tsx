@@ -11,8 +11,7 @@ const mocks = vi.hoisted(() => ({
   showToast: vi.fn(),
   routerPush: vi.fn(),
   nativeListener: null as
-    | ((message: { type: string; url?: string }) => void)
-    | null,
+    ((message: { type: string; url?: string }) => void) | null,
   pathname: '/scenario',
 }));
 
