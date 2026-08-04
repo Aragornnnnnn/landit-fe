@@ -15,10 +15,12 @@ export const useStreakCalendar = () => {
   const [today] = useState(todayInSeoul);
   const [view, setView] = useState(() => monthOf(today));
 
-  const { data, error, isPending, refetch } = useQuery({
+  const { data, error, refetch } = useQuery({
     queryKey: streakKeys.calendar(userId, view.year, view.month),
     queryFn: () => getStreakCalendar(view.year, view.month),
     enabled: userId !== null,
+    // 지나간 달의 기록은 더 늘지 않는다 — 오갈 때마다 다시 부르지 않는다
+    staleTime: canGoForward(view, today) ? Infinity : undefined,
     // 달을 넘기는 동안 이전 달을 그대로 두어 화면이 비었다 다시 차오르지 않게 한다
     placeholderData: (previous) => previous,
     refetchOnMount: 'always',
@@ -33,7 +35,6 @@ export const useStreakCalendar = () => {
     view,
     calendar: data ?? null,
     error,
-    isLoading: isPending,
     // 앞은 이번 달까지, 뒤는 첫 완료일이 있는 달까지
     canGoForward: canGoForward(view, today),
     canGoBack: canGoBack(view, data?.streakStartedDate ?? null),
