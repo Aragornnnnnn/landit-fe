@@ -90,10 +90,13 @@ vi.mock('@/shared/stt/useStt', () => ({
   },
 }));
 
-// QueryClient는 경계 — 완료 시 피드백 prefetch·시나리오 무효화 호출만 확인한다
+// QueryClient는 경계 — 완료 시 피드백 prefetch·시나리오 무효화 호출만 확인한다.
+// 스트릭은 완료 순간 캐시를 미리 고치므로 쓰기 메서드도 받아 둔다
 const queryClientMock = vi.hoisted(() => ({
   prefetchQuery: vi.fn(),
   invalidateQueries: vi.fn(),
+  setQueryData: vi.fn(),
+  setQueriesData: vi.fn(),
 }));
 vi.mock('@tanstack/react-query', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@tanstack/react-query')>()),

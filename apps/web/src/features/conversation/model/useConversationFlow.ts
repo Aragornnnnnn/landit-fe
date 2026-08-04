@@ -11,7 +11,7 @@ import { prefetchSessionFeedback } from '@/features/feedback/model/useSessionFee
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { scenarioKeys } from '@/features/scenario/model/keys';
 // 대화 완료가 스트릭도 늘린다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
-import { streakKeys } from '@/features/streak/model/keys';
+import { markTodayCompleted } from '@/features/streak/model/mark-today-completed';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { reportError } from '@/shared/monitoring/report';
@@ -81,11 +81,12 @@ export const useConversationFlow = (scenario: Scenario) => {
 
   // 대화가 완료되면: 피드백을 미리 생성 요청(prefetch)해 화면 진입 시 즉시 뜨게 하고,
   // 해금된 다음 시나리오(다음 대화)가 홈에 반영되도록 시나리오 캐시를 무효화한다.
-  // 오늘 열매가 채워진 것도 이 순간이라 스트릭 캐시도 같이 버린다.
+  // 오늘 열매가 채워진 것도 이 순간이라, 스트릭은 캐시를 미리 고쳐 둔다 —
+  // 무효화만 하면 홈으로 돌아왔을 때 옛 숫자를 먼저 그리고 응답이 온 뒤 번쩍인다.
   const prepareFeedbackAndUnlock = (finishedSessionId: number) => {
     void prefetchSessionFeedback(queryClient, finishedSessionId);
     void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
-    void queryClient.invalidateQueries({ queryKey: streakKeys.all });
+    markTodayCompleted(queryClient);
   };
 
   const send = (event: ConversationEvent) =>
