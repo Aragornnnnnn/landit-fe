@@ -5,8 +5,10 @@ import Link from 'next/link';
 // 아이콘이 앉는 줄. 이 높이만 지키면 안쪽 그림이 더 커도 라벨 위치는 안 흔들린다
 const ICON_ROW_HEIGHT = 22;
 
+// 폭은 라벨이 정하되 44px 아래로는 안 내려간다 — 짧은 라벨(예: "5일")이 터치 최소 크기에 미달하던 걸 막는다.
+// 전부 같은 폭으로 맞추지는 않는다. 라벨 길이가 제각각이라 그러면 짧은 칸에 빈 여백만 생겨 성기게 보인다
 const ITEM_STYLE =
-  'flex h-11 flex-col items-center justify-center gap-0.5 rounded-xl px-3 text-muted-foreground transition-all active:scale-90 active:bg-secondary';
+  'flex h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-xl px-3 text-muted-foreground transition-all active:scale-90 active:bg-secondary';
 
 interface HeaderActionProps {
   label: string;
