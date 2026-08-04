@@ -10,7 +10,7 @@ import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSke
 import { toScenario } from '@/features/scenario/lib/to-scenario';
 import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { track } from '@/shared/analytics';
-import { scenarioReturnPath } from '@/shared/lib/routes';
+import { readDateParam, scenarioReturnPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
@@ -34,7 +34,7 @@ function ConversationContent({
   const { scenarioId } = use(params);
   // 지난 날 카드에서 들어오면 그 날짜가 실려 온다. 없으면 오늘이다.
   // searchParams prop은 앱 안에서 이동할 때 갱신되지 않아 훅으로 읽는다
-  const date = useSearchParams().get('date') ?? undefined;
+  const date = readDateParam(useSearchParams());
   const id = Number(scenarioId);
   const router = useRouter();
   const { daily, error, isLoading, retry } = useDailyScenarioQuery(date);

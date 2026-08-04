@@ -1,7 +1,13 @@
 // 시나리오 복귀 주소 조립 검증 — 앰플리튜드가 읽는 신호와 날짜가 함께 실려야 한다
 import { describe, expect, it } from 'vitest';
 
-import { conversationPath, scenarioReturnPath } from './routes';
+import {
+  conversationPath,
+  expressionBranchPath,
+  expressionPath,
+  readDateParam,
+  scenarioReturnPath,
+} from './routes';
 
 describe('scenarioReturnPath', () => {
   it('아무것도 안 주면 시나리오 탭 그대로다', () => {
@@ -41,5 +47,53 @@ describe('conversationPath', () => {
     expect(conversationPath(12, '2026-07-29')).toBe(
       '/conversation/12?date=2026-07-29',
     );
+  });
+});
+
+describe('expressionBranchPath', () => {
+  it('오늘 대화 직후면 날짜를 달지 않는다', () => {
+    expect(expressionBranchPath(12)).toBe('/expressions/12/branch');
+  });
+
+  it('지난 날에서 온 대화면 그 날짜를 이어 나른다', () => {
+    expect(expressionBranchPath(12, '2026-07-29')).toBe(
+      '/expressions/12/branch?date=2026-07-29',
+    );
+  });
+});
+
+describe('expressionPath', () => {
+  it('오늘 카드에서 들어가면 날짜를 달지 않는다', () => {
+    expect(expressionPath(12, 34)).toBe('/expressions/12/34');
+  });
+
+  it('지난 날 카드에서 들어가면 그 날짜를 달고 간다', () => {
+    // Given 지난 날 카드를 뒤집어 표현을 골랐을 때
+    // When 학습 주소를 만들면
+    // Then 날짜가 실린다 — 나올 때 그 날로 돌아가야 한다
+    expect(expressionPath(12, 34, '2026-07-29')).toBe(
+      '/expressions/12/34?date=2026-07-29',
+    );
+  });
+});
+
+describe('readDateParam', () => {
+  it('yyyy-MM-dd면 그대로 읽는다', () => {
+    expect(readDateParam(new URLSearchParams('date=2026-07-29'))).toBe(
+      '2026-07-29',
+    );
+  });
+
+  it('날짜가 없으면 오늘로 본다', () => {
+    expect(readDateParam(new URLSearchParams(''))).toBeUndefined();
+  });
+
+  it('형식이 어긋나면 없는 것으로 본다', () => {
+    // Given 손으로 고친 주소가 들어왔을 때
+    // When 날짜를 읽으면
+    // Then 조회로 흘려보내지 않는다 — 백엔드가 400을 준다
+    expect(readDateParam(new URLSearchParams('date=7-29'))).toBeUndefined();
+    expect(readDateParam(new URLSearchParams('date=abc'))).toBeUndefined();
+    expect(readDateParam(new URLSearchParams('date='))).toBeUndefined();
   });
 });
