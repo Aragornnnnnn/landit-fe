@@ -40,6 +40,12 @@ export const canGoBack = (
   startedAt === null ||
   shiftWindow(date, type, -1) >= firstDayOfWindow(startedAt, type);
 
+// 일요일 시작 — 서버가 주 창을 일요일부터 내려주는 것과 맞춘다
+export const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+
+// 그 날의 요일. 로컬 타임존으로 읽으면 하루가 밀려 요일이 어긋난다
+export const weekdayIndexOf = (date: string) => parse(date).getUTCDay();
+
 // 같은 창을 가리키는 날짜들을 하나로 모은다 — 8월 3일과 8월 5일은 같은 주, 같은 조회다
 export const firstDayOfWindow = (date: string, type: ScenarioCalendarType) => {
   if (type === 'MONTH') return `${date.slice(0, 8)}01`;
