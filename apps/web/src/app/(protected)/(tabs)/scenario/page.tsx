@@ -10,7 +10,7 @@ import { CalendarStrip } from '@/features/scenario/ui/CalendarStrip';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
 import { TodayCard } from '@/features/scenario/ui/TodayCard';
 import { track } from '@/shared/analytics';
-import { conversationPath } from '@/shared/lib/routes';
+import { conversationPath, readDateParam } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
@@ -27,7 +27,7 @@ function ScenarioContent() {
   const router = useRouter();
 
   // 날짜가 없으면 서버가 오늘 것을 준다 — 기기에서 오늘을 계산하면 자정 경계가 서버와 어긋난다
-  const date = searchParams.get('date') ?? undefined;
+  const date = readDateParam(searchParams);
   // 표현 마무리 후 복귀 — 그 카드를 뒷면(표현 리스트)으로 펴 둔다
   const autoFlip = searchParams.get('flip') !== null;
 

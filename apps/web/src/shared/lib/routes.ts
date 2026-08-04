@@ -47,3 +47,12 @@ export const expressionPath = (
   date
     ? `/expressions/${scenarioId}/${expressionId}?date=${date}`
     : `/expressions/${scenarioId}/${expressionId}`;
+
+// 주소의 ?date=를 읽는다. yyyy-MM-dd가 아니면 없는 것으로 본다 —
+// 손으로 고친 주소가 그대로 조회로 흘러가면 백엔드가 400을 준다
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+export const readDateParam = (searchParams: URLSearchParams) => {
+  const date = searchParams.get('date');
+  return date && DATE_PATTERN.test(date) ? date : undefined;
+};

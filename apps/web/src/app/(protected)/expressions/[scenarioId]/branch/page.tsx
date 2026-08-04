@@ -2,6 +2,7 @@
 import { use } from 'react';
 
 import { ExpressionBranch } from '@/features/expression/ui/list/ExpressionBranch';
+import { readDateParam } from '@/shared/lib/routes';
 
 export default function ExpressionBranchPage({
   params,
@@ -13,5 +14,10 @@ export default function ExpressionBranchPage({
 }) {
   const { scenarioId } = use(params);
   const { date } = use(searchParams);
-  return <ExpressionBranch scenarioId={Number(scenarioId)} date={date} />;
+  return (
+    <ExpressionBranch
+      scenarioId={Number(scenarioId)}
+      date={readDateParam(new URLSearchParams(date ? { date } : {}))}
+    />
+  );
 }
