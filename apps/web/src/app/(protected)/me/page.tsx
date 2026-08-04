@@ -104,7 +104,7 @@ export default function MyPage() {
       >
         <button
           type="button"
-          onClick={() => router.replace('/home')}
+          onClick={() => router.replace('/scenario')}
           className="flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90 active:bg-zinc-200"
           style={{ color: '#444', marginLeft: -4 }}
           aria-label="뒤로 가기"

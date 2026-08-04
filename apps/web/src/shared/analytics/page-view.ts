@@ -6,7 +6,14 @@ type PageViewProps = EventProps['Page Viewed'];
 // 계측 제외 — 루트는 즉시 redirect라 페이지뷰로 의미가 없다
 const EXCLUDED = new Set(['/']);
 
-const STATIC_PAGES = new Set(['login', 'onboarding', 'me', 'privacy', 'terms']);
+const STATIC_PAGES = new Set([
+  'login',
+  'onboarding',
+  'me',
+  'privacy',
+  'terms',
+  'smalltalk',
+]);
 
 const toId = (raw: string | null) => {
   const id = Number(raw);
@@ -21,8 +28,8 @@ export const toPageView = (
 
   const seg = pathname.split('/').filter(Boolean);
 
-  if (pathname === '/home') {
-    const base: PageViewProps = { page_name: 'home', path: pathname };
+  if (pathname === '/scenario') {
+    const base: PageViewProps = { page_name: 'scenario', path: pathname };
     // 복귀 신호 우선순위 — flip(표현 완료 복귀) > card(중도 이탈 복귀) > just(해금 직후)
     if (searchParams.has('flip')) {
       return {

@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
 import { postToNative } from '@/shared/bridge/web-bridge';
+import { SCENARIO_PATH } from '@/shared/lib/routes';
 
 import {
   hasSeenConsentPrompt,
@@ -27,7 +28,7 @@ export const NotificationConsentGate = () => {
   // 온보딩·대화 중에 끼어들지 않게 홈에서만 띄운다.
   // denied는 인앱 재요청이 불가능해 물어도 소용없고, granted는 물을 이유가 없고, unavailable은 요청 수단이 없는 환경
   const visible =
-    pathname === '/home' &&
+    pathname === SCENARIO_PATH &&
     !dismissed &&
     notificationPermission === 'undetermined';
   const source = promptSeen ? 'home_sheet' : 'home_fullscreen';

@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
   routerPush: vi.fn(),
   nativeListener: null as
     ((message: { type: string; url?: string }) => void) | null,
-  pathname: '/home',
+  pathname: '/scenario',
 }));
 
 vi.mock('@/shared/bridge/web-bridge', () => ({
@@ -49,7 +49,7 @@ const setNavigation = (canGoBack: boolean) => {
 describe('BridgeListener', () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    mocks.pathname = '/home';
+    mocks.pathname = '/scenario';
     mocks.postToNative.mockClear();
     mocks.showToast.mockClear();
     setNavigation(false);
@@ -113,7 +113,7 @@ describe('BridgeListener', () => {
     setNavigation(true);
     rerender(<BridgeListener />);
     pressBack(); // history-back — 무장이 풀려야 한다
-    mocks.pathname = '/home';
+    mocks.pathname = '/scenario';
     setNavigation(false);
     rerender(<BridgeListener />);
 

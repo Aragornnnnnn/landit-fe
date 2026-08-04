@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
 
 import { track } from '@/shared/analytics';
+import { SCENARIO_PATH } from '@/shared/lib/routes';
 
 import { collectPreloadImageUrls } from '../lib/preload-images';
 import type { InputState } from '../model/review-input';
@@ -87,10 +88,11 @@ export const ExpressionFlow = ({
 
   // 학습을 나가면 홈으로 돌아가 해당 카드를 뒤집어(뒷면=표현 리스트) 보여준다.
   // replace로 표현학습을 히스토리에서 지워, 홈에서 뒤로가기 시 퀴즈로 재진입하지 않게 한다.
-  const backToList = () => router.replace(`/home?flip=${scenarioId}`);
+  const backToList = () =>
+    router.replace(`${SCENARIO_PATH}?flip=${scenarioId}`);
   // 완료 후엔 방금 해금된 다음 표현으로 스크롤·강조되도록 just 신호를 붙인다
   const backToListUnlocked = () =>
-    router.replace(`/home?flip=${scenarioId}&just=1`);
+    router.replace(`${SCENARIO_PATH}?flip=${scenarioId}&just=1`);
 
   if (learningLoading) return <QuizStepSkeleton />;
   if (learningError || !learning) {

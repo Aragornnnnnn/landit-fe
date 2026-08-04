@@ -1,11 +1,11 @@
-// 홈 헤더 — 로고와 의견 보내기·내 정보 진입
+// 앱 헤더 — 로고와 의견 보내기·내 정보 진입. 탭이 늘면 탭들이 공유한다
 import Link from 'next/link';
 
 import { FeedbackButton } from '@/features/nps/ui/FeedbackButton';
 import { UserIcon } from '@/shared/ui/Icons';
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
-export const HomeHeader = () => (
+export const AppHeader = () => (
   <header className="flex shrink-0 items-center justify-between bg-background px-5 pt-[max(env(safe-area-inset-top),16px)] pb-2">
     <LanditLogo className="h-5 w-auto text-foreground [&_.logo-dot-splash]:hidden" />
     <div className="-mr-1.5 flex items-center">

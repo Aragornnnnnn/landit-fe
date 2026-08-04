@@ -91,7 +91,7 @@ export const OnboardingFlow = () => {
     // 끝까지 본 기기로 기록해 재로그인 시 온보딩을 다시 보여주지 않는다
     markOnboardingSeen();
     router.replace(
-      scenarioId != null ? `/conversation/${scenarioId}` : '/home',
+      scenarioId != null ? `/conversation/${scenarioId}` : '/scenario',
     );
   };
 

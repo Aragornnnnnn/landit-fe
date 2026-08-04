@@ -30,7 +30,7 @@ describe('AuthedRedirect', () => {
 
     render(<AuthedRedirect />);
 
-    expect(mocks.replace).toHaveBeenCalledWith('/home');
+    expect(mocks.replace).toHaveBeenCalledWith('/scenario');
   });
 
   it('마운트 후 로그인이 완료돼도 홈으로 덮어쓰지 않는다 — 브릿지 로그인의 온보딩 분기 보호', () => {
