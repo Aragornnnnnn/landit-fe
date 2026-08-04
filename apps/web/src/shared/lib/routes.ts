@@ -2,6 +2,7 @@
 // 스몰톡 탭이 생기면 복귀 목적지가 둘로 갈리는데, 그 분기도 여기서 시작한다
 export const SCENARIO_PATH = '/scenario';
 export const SMALLTALK_PATH = '/smalltalk';
+export const STREAK_PATH = '/streak';
 
 interface ScenarioReturn {
   // 어느 날 카드로 돌아갈지. 오늘이면 붙이지 않는다 — 날짜 없는 주소가 오늘의 정본이다
