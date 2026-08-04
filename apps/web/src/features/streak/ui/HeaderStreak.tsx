@@ -2,14 +2,18 @@
 'use client';
 
 import { EVENTS } from '@landit/analytics';
-import Link from 'next/link';
 
 import { track } from '@/shared/analytics';
 import { STREAK_PATH } from '@/shared/lib/routes';
+import { HeaderAction } from '@/shared/ui/HeaderAction';
 
 import { fruitStateOf } from '../model/streak-status';
 import { useStreakQuery } from '../model/useStreakQuery';
 import { StreakFruit } from './StreakFruit';
+
+// 선 아이콘(18px)보다 작게 잡는다 — 열매는 면으로 칠해져 있어 같은 수치면 더 크게 읽힌다.
+// 눈에 띄어야 하는 칸이지만 그건 색이 맡는다. 크기로 키우면 강조가 아니라 정렬 오류로 보인다
+const HEADER_FRUIT_SIZE = 16;
 
 export const HeaderStreak = () => {
   const streak = useStreakQuery();
@@ -20,8 +24,11 @@ export const HeaderStreak = () => {
   const state = fruitStateOf({ currentStreakDays, activeToday });
 
   return (
-    <Link
+    <HeaderAction
       href={STREAK_PATH}
+      label={`${currentStreakDays}일`}
+      ariaLabel={`연속 학습 ${currentStreakDays}일, 연속 기록 보기`}
+      highlighted={state === 'fresh'}
       onClick={() =>
         track(EVENTS.STREAK_OPENED, {
           source: 'home_header',
@@ -29,17 +36,8 @@ export const HeaderStreak = () => {
           is_active_today: activeToday,
         })
       }
-      aria-label={`연속 학습 ${currentStreakDays}일, 연속 기록 보기`}
-      className="flex h-11 flex-col items-center justify-center gap-0.5 rounded-xl px-3 text-muted-foreground transition-all active:scale-90 active:bg-secondary"
     >
-      <StreakFruit state={state} size={22} />
-      <span
-        className={`text-[10px] font-medium whitespace-nowrap ${
-          state === 'fresh' ? 'text-primary' : ''
-        }`}
-      >
-        {currentStreakDays}일
-      </span>
-    </Link>
+      <StreakFruit state={state} size={HEADER_FRUIT_SIZE} />
+    </HeaderAction>
   );
 };

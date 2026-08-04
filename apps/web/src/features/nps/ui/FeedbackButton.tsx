@@ -6,6 +6,7 @@ import { EVENTS } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
+import { HeaderAction } from '@/shared/ui/HeaderAction';
 import { MessageCircleIcon } from '@/shared/ui/Icons';
 
 import { FeedbackSurvey } from './FeedbackSurvey';
@@ -15,20 +16,15 @@ export function FeedbackButton() {
 
   return (
     <>
-      <button
-        type="button"
+      <HeaderAction
+        label="의견 보내기"
         onClick={() => {
           track(EVENTS.NPS_SURVEY_OPENED, { source: 'home_header' });
           setOpen(true);
         }}
-        aria-label="의견 보내기"
-        className="flex h-11 flex-col items-center justify-center gap-0.5 rounded-xl px-3 text-muted-foreground transition-all active:scale-90 active:bg-secondary"
       >
         <MessageCircleIcon size={18} />
-        <span className="text-[10px] font-medium whitespace-nowrap">
-          의견 보내기
-        </span>
-      </button>
+      </HeaderAction>
 
       <BottomSheet open={open} onClose={() => setOpen(false)}>
         <FeedbackSurvey onDone={() => setOpen(false)} />
