@@ -13,12 +13,8 @@ const SEOUL_FORMAT = new Intl.DateTimeFormat('en-CA', {
 
 export const todayInSeoul = () => SEOUL_FORMAT.format(new Date());
 
-export const shiftDate = (date: string, days: number) => {
-  // 로컬 타임존으로 읽으면 자정 근처에서 하루가 밀린다 — Z를 붙여 UTC로 고정한다
-  const value = new Date(`${date}T00:00:00Z`);
-  value.setUTCDate(value.getUTCDate() + days);
-  return value.toISOString().slice(0, 10);
-};
+// Date → 날짜 문자열. 이 변환은 여기서만 한다 (UTC 자정으로 만든 Date라야 하루가 안 밀린다)
+export const toDateString = (value: Date) => value.toISOString().slice(0, 10);
 
 export const monthOf = (date: string): YearMonth => ({
   year: Number(date.slice(0, 4)),

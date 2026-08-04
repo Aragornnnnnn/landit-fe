@@ -1,5 +1,5 @@
 // 월 달력의 뼈대 — 7열 격자와 앞뒤로 넘길 수 있는 범위. Date도 타임존도 밖으로 새지 않는다
-import { monthOf, type YearMonth } from './seoul-date';
+import { monthOf, toDateString, type YearMonth } from './seoul-date';
 
 // 달 바깥 칸은 null — 앞뒤를 다른 달 날짜로 채우면 그 날의 완료 여부를 알 수 없어 거짓말이 된다
 export type MonthWeek = (string | null)[];
@@ -7,15 +7,13 @@ export type MonthWeek = (string | null)[];
 const utc = ({ year, month }: YearMonth, day: number) =>
   new Date(Date.UTC(year, month - 1, day));
 
-const format = (value: Date) => value.toISOString().slice(0, 10);
-
 export const buildMonthGrid = (view: YearMonth): MonthWeek[] => {
   const dayCount = lastDayOf(view);
   const leading = utc(view, 1).getUTCDay(); // 일요일 시작
 
   const cells: MonthWeek = Array.from({ length: leading }, () => null);
   for (let day = 1; day <= dayCount; day += 1) {
-    cells.push(format(utc(view, day)));
+    cells.push(toDateString(utc(view, day)));
   }
   // 마지막 주를 7칸으로 맞춘다
   while (cells.length % 7 !== 0) cells.push(null);

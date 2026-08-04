@@ -1,7 +1,7 @@
 // Asia/Seoul 날짜 도구의 계약 테스트 — 기기 타임존이 개입하면 하루가 밀린다
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { monthOf, shiftDate, todayInSeoul } from './seoul-date';
+import { monthOf, todayInSeoul } from './seoul-date';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -24,18 +24,6 @@ describe('todayInSeoul', () => {
 
     // when + then — 아직 날짜가 안 넘어갔다
     expect(todayInSeoul()).toBe('2026-08-03');
-  });
-});
-
-describe('shiftDate', () => {
-  it.each([
-    ['2026-08-03', -1, '2026-08-02'],
-    ['2026-08-01', -1, '2026-07-31'],
-    ['2026-01-01', -1, '2025-12-31'],
-    ['2026-02-28', 1, '2026-03-01'],
-    ['2026-12-31', 1, '2027-01-01'],
-  ])('%s에서 %i일 옮기면 %s가 된다', (date, days, expected) => {
-    expect(shiftDate(date, days)).toBe(expected);
   });
 });
 
