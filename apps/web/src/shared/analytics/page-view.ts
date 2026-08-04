@@ -30,13 +30,23 @@ export const toPageView = (
 
   if (pathname === '/scenario') {
     const base: PageViewProps = { page_name: 'scenario', path: pathname };
-    // 하루 한 장이 된 뒤로 복귀 신호는 flip(표현 완료 복귀) 하나다.
-    // card·just는 목록을 스크롤·강조하던 신호라 가리킬 대상이 없어졌다
+    // 복귀 신호는 flip(표현 완료 복귀)과 reminder(알림 탭 유입) 둘이다.
+    // card·just는 목록을 스크롤·강조하던 신호라 하루 한 장이 되면서 가리킬 대상이 없어졌다
     if (searchParams.has('flip')) {
       return {
         ...base,
         return_reason: 'flip',
         scenario_id: toId(searchParams.get('flip')),
+      };
+    }
+    // 데일리 리마인드 알림 탭 유입 — 셸 딥링크 url의 UTM에서 파생한다 (utm_* 자체는 앰플리튜드 어트리뷰션이 수집).
+    // 웜 딥링크는 SPA 내부 이동이라 어트리뷰션이 못 보므로, 문구 슬러그도 이벤트 속성으로 실어야 유실이 없다
+    if (searchParams.get('utm_campaign') === 'daily_reminder') {
+      const copySlug = searchParams.get('utm_content');
+      return {
+        ...base,
+        return_reason: 'reminder',
+        ...(copySlug && { notification_copy: copySlug }),
       };
     }
     return base;
