@@ -28,7 +28,7 @@ export const StreakCalendar = ({
 
   return (
     // 통계 카드와 같은 옷을 입혀 둘이 형제로 읽히게 한다 — 달력만 배경에 놓으면 혼자 떠 보인다
-    <section className="mx-5 mt-7 rounded-[20px] border border-border bg-card px-3 pt-4 pb-3">
+    <section className="mx-5 mt-7 rounded-[20px] border border-border bg-card pt-4 pb-3">
       {/* 화살표는 양 끝에 붙이고 달 이름은 폭 전체의 가운데에 둔다 */}
       <header className="relative flex items-center justify-center pb-4">
         <MonthArrow
