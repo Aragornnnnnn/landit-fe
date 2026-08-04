@@ -6,7 +6,6 @@ import type { DailyScenario, ScenarioOpeningPreview } from '../api/daily';
 export interface Scenario {
   scenarioId: number;
   starRating: number | null;
-  displayOrder: number;
   scenarioTitle: string;
   briefing: string;
   conversationGoal: string;
@@ -15,20 +14,17 @@ export interface Scenario {
   thumbnailUrl: string | null;
   completed: boolean;
   locked: boolean;
-  lockReason: string | null;
   openingPreview: ScenarioOpeningPreview | null;
 }
 
-// 카드 앞면·뒷면은 이미 Scenario로 만들어져 있다. 날짜별 응답에는 목록 전용 필드(displayOrder·lockReason)가
-// 없으므로 그 자리를 채워 넘긴다. 잠금은 서버가 판정한 playable을 그대로 따른다
+// 카드가 아는 어휘를 좁게 유지한다 — dailyScenarioType·expressionCount 같은 조회 전용 필드는
+// 넘기지 않는다. 잠금은 상태 조합으로 유추하지 않고 서버가 판정한 playable을 그대로 따른다
 export const toScenario = (
   daily: DailyScenario,
   playable: boolean,
 ): Scenario => ({
   scenarioId: daily.scenarioId,
   starRating: daily.starRating,
-  // 하루에 한 장이라 순서라는 개념이 없다
-  displayOrder: 0,
   scenarioTitle: daily.scenarioTitle,
   briefing: daily.briefing,
   conversationGoal: daily.conversationGoal,
@@ -37,6 +33,5 @@ export const toScenario = (
   thumbnailUrl: daily.thumbnailUrl,
   completed: daily.completed,
   locked: !playable,
-  lockReason: null,
   openingPreview: daily.openingPreview,
 });

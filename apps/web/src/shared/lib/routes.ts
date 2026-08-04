@@ -22,28 +22,23 @@ export const scenarioReturnPath = ({ date, flip }: ScenarioReturn = {}) => {
   return search ? `${SCENARIO_PATH}?${search}` : SCENARIO_PATH;
 };
 
-// 대화 화면. 지난 날 카드에서 들어가면 그 날짜를 달고 가야 어느 날 카드인지 알 수 있고,
-// 나올 때도 그 날로 돌아간다. 오늘이면 붙이지 않는다
-export const conversationPath = (scenarioId: number, date?: string | null) =>
-  date
-    ? `/conversation/${scenarioId}?date=${date}`
-    : `/conversation/${scenarioId}`;
+// 보고 있는 날을 달고 간다. 오늘이면 붙이지 않는다 — 날짜 없는 주소가 오늘의 정본이다
+const withDate = (path: string, date?: string | null) =>
+  date ? `${path}?date=${encodeURIComponent(date)}` : path;
 
-// 대화 직후 표현 분기 화면. 어느 날 카드에서 온 대화였는지를 이어 나른다
+// 대화 화면. 어느 날 카드인지 알아야 그 날 배정을 받아 오고, 나올 때도 그 날로 돌아간다
+export const conversationPath = (scenarioId: number, date?: string | null) =>
+  withDate(`/conversation/${scenarioId}`, date);
+
+// 대화 직후 표현 분기 화면
 export const expressionBranchPath = (
   scenarioId: number,
   date?: string | null,
-) =>
-  date
-    ? `/expressions/${scenarioId}/branch?date=${date}`
-    : `/expressions/${scenarioId}/branch`;
+) => withDate(`/expressions/${scenarioId}/branch`, date);
 
 // 표현 하나를 배우는 화면
 export const expressionPath = (
   scenarioId: number,
   expressionId: number,
   date?: string | null,
-) =>
-  date
-    ? `/expressions/${scenarioId}/${expressionId}?date=${date}`
-    : `/expressions/${scenarioId}/${expressionId}`;
+) => withDate(`/expressions/${scenarioId}/${expressionId}`, date);

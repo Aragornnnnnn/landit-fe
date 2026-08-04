@@ -13,9 +13,9 @@ export const useDailyScenarioQuery = (date?: string) => {
   const { data, error, isPending, refetch } = useQuery({
     queryKey: scenarioKeys.daily(userId, date ?? null),
     queryFn: () => getDailyScenario(date),
-    // 로그아웃 직후 리다이렉트 전 한 프레임에 userId 없는 키로 fetch가 나가는 것을 막는다
     // 날짜를 옮기는 동안 이전 카드를 그대로 둔다 — 비우면 스켈레톤이 한 번 깜빡인다
     placeholderData: keepPreviousData,
+    // 로그아웃 직후 리다이렉트 전 한 프레임에 userId 없는 키로 fetch가 나가는 것을 막는다
     enabled: userId !== null,
   });
 

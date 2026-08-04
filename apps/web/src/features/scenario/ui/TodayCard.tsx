@@ -18,6 +18,8 @@ interface TodayCardProps {
   // 나중에 "카드는 주되 시작은 막는" 경우가 생겨도 화면을 고치지 않아도 된다
   playable: boolean;
   onStart: (scenario: Scenario) => void;
+  // 어느 날 카드인지. 뒷면에서 표현 학습으로 들어갈 때 이어 나른다
+  date?: string;
   // 표현 마무리 후 복귀 — 완료 카드를 뒷면(표현 리스트)으로 펴 둔다
   autoFlip?: boolean;
 }
@@ -26,6 +28,7 @@ export const TodayCard = ({
   daily,
   playable,
   onStart,
+  date,
   autoFlip = false,
 }: TodayCardProps) => {
   const reduced = useReducedMotion() ?? false;
@@ -37,6 +40,7 @@ export const TodayCard = ({
         <ScenarioCard
           scenario={scenario}
           onStart={onStart}
+          date={date}
           autoFlip={autoFlip}
           expressions={{
             completed: daily.completedExpressionCount,

@@ -3,7 +3,6 @@
 // 시나리오 카드 — 앞면(썸네일·제목·브리핑·CTA), 완료 시 뒤집으면 뒷면에 표현 학습 리스트
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
-import { motion } from 'motion/react';
 
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
@@ -18,8 +17,8 @@ import { ScenarioCardBack } from './ScenarioCardBack';
 interface ScenarioCardProps {
   scenario: Scenario;
   onStart: (scenario: Scenario) => void;
-  // 방금 해금됐을 때 한 번 펄스로 강조한다
-  highlight?: boolean;
+  // 어느 날 카드인지. 뒷면에서 표현 학습으로 들어갈 때 이어 나른다
+  date?: string;
   // 홈이 flip 신호로 진입하면(표현 마무리 후 복귀) 마운트 시 자동으로 뒷면을 편다
   autoFlip?: boolean;
   // 완료 카드에 띄우는 표현 학습 진행도
@@ -29,7 +28,7 @@ interface ScenarioCardProps {
 export const ScenarioCard = ({
   scenario,
   onStart,
-  highlight = false,
+  date,
   autoFlip = false,
   expressions,
 }: ScenarioCardProps) => {
@@ -86,11 +85,7 @@ export const ScenarioCard = ({
   };
 
   return (
-    <motion.div
-      animate={highlight ? { scale: [1, 1.03, 1] } : undefined}
-      transition={{ duration: 0.6, delay: 0.3, ease: 'easeInOut' }}
-      className="relative h-full w-full [perspective:1600px]"
-    >
+    <div className="relative h-full w-full [perspective:1600px]">
       {/* 앞/뒤 면을 겹쳐 rotateY로 뒤집는다. preserve-3d 유지 위해 이 요소엔 overflow를 두지 않는다 */}
       <div
         className={`relative h-full w-full transition-transform duration-500 [transform-style:preserve-3d] ${
@@ -175,11 +170,12 @@ export const ScenarioCard = ({
           <div className="absolute inset-0 flex [transform:rotateY(-180deg)] flex-col overflow-hidden rounded-2xl bg-card shadow-md [-webkit-backface-visibility:hidden] [backface-visibility:hidden]">
             <ScenarioCardBack
               scenarioId={scenario.scenarioId}
+              date={date}
               onBack={closeExpressions}
             />
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };

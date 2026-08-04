@@ -8,17 +8,21 @@ import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQ
 import { ExpressionList } from '@/features/expression/ui/list/ExpressionList';
 import { ExpressionListSkeleton } from '@/features/expression/ui/list/ExpressionListSkeleton';
 import { track } from '@/shared/analytics';
+import { expressionPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
 interface ScenarioCardBackProps {
   scenarioId: number;
+  // 어느 날 카드의 뒷면인지. 표현 학습으로 들어갈 때 이어 나른다
+  date?: string;
   // 앞면으로 되돌린다(뒤집기 복귀)
   onBack: () => void;
 }
 
 export const ScenarioCardBack = ({
   scenarioId,
+  date,
   onBack,
 }: ScenarioCardBackProps) => {
   const router = useRouter();
@@ -71,7 +75,7 @@ export const ScenarioCardBack = ({
                 scenario_id: scenarioId,
                 source: 'card_back',
               });
-              router.push(`/expressions/${scenarioId}/${expressionId}`);
+              router.push(expressionPath(scenarioId, expressionId, date));
             }}
           />
         )}

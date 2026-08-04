@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { markOnboardingSeen } from '@/shared/auth/onboarding-seen';
+import { conversationPath, SCENARIO_PATH } from '@/shared/lib/routes';
 import { Transition } from '@/shared/motion';
 
 import { STEP_ORDER, type OnboardingStep } from '../model/steps';
@@ -66,7 +67,7 @@ export const OnboardingFlow = () => {
     // 끝까지 본 기기로 기록해 재로그인 시 온보딩을 다시 보여주지 않는다
     markOnboardingSeen();
     router.replace(
-      scenarioId != null ? `/conversation/${scenarioId}` : '/scenario',
+      scenarioId != null ? conversationPath(scenarioId) : SCENARIO_PATH,
     );
   };
 

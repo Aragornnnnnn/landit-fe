@@ -33,6 +33,8 @@ interface CalendarDayProps {
   // 지금 카드로 보고 있는 날
   selected: boolean;
   onSelect: (date: string) => void;
+  // 월 패널에 덮여 안 보이는 칸은 빛 쓸기를 돌리지 않는다
+  animated?: boolean;
 }
 
 export const CalendarDay = ({
@@ -41,6 +43,7 @@ export const CalendarDay = ({
   startedAt,
   selected,
   onSelect,
+  animated = true,
 }: CalendarDayProps) => {
   const reduced = useReducedMotion() ?? false;
   const state = dayStateOf(day, { today, startedAt });
@@ -76,7 +79,7 @@ export const CalendarDay = ({
           <>
             {/* 표면을 훑는 빛 — 오늘 카드와 같은 박자라 둘이 한 짝으로 읽힌다.
                 기울인 만큼 위아래로 빼야 회전해도 모서리가 안 잘린다 */}
-            {!reduced && (
+            {!reduced && animated && (
               <motion.span
                 aria-hidden
                 className="absolute -inset-y-1/2 -left-1/2 w-1/2 rotate-12 bg-linear-to-r from-transparent via-white/55 to-transparent"
