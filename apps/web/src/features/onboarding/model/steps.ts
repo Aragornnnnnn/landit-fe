@@ -4,6 +4,7 @@ export const STEP_ORDER = [
   'sound',
   'mic',
   'thought',
+  'notification',
   'scenario',
 ] as const;
 

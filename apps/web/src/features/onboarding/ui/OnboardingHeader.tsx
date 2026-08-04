@@ -3,16 +3,19 @@
 
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
-import { STEP_ORDER, type OnboardingStep } from '../model/steps';
+import { type OnboardingStep } from '../model/steps';
 
 export const OnboardingHeader = ({
   step,
+  stepOrder,
   onBack,
 }: {
   step: OnboardingStep;
+  // 환경에 따라 알림 스텝이 빠질 수 있어 순서를 플로우에서 받는다
+  stepOrder: readonly OnboardingStep[];
   onBack: () => void;
 }) => {
-  const stepIndex = STEP_ORDER.indexOf(step);
+  const stepIndex = stepOrder.indexOf(step);
 
   return (
     <header
@@ -30,7 +33,7 @@ export const OnboardingHeader = ({
       </button>
 
       <div className="flex items-center gap-1.5">
-        {STEP_ORDER.map((item, index) => (
+        {stepOrder.map((item, index) => (
           <span
             key={item}
             className={`h-1.5 rounded-full transition-all duration-300 ${index <= stepIndex ? 'bg-foreground' : 'bg-border'}`}

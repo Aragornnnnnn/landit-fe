@@ -9,7 +9,10 @@ import { BridgeListener } from './BridgeListener';
 const mocks = vi.hoisted(() => ({
   postToNative: vi.fn(),
   showToast: vi.fn(),
-  nativeListener: null as ((message: { type: string }) => void) | null,
+  routerPush: vi.fn(),
+  nativeListener: null as
+    | ((message: { type: string; url?: string }) => void)
+    | null,
   pathname: '/scenario',
 }));
 
@@ -30,6 +33,7 @@ vi.mock('@/shared/ui/toast', () => ({
 
 vi.mock('next/navigation', () => ({
   usePathname: () => mocks.pathname,
+  useRouter: () => ({ push: mocks.routerPush }),
 }));
 
 const pressBack = () =>
@@ -135,5 +139,26 @@ describe('BridgeListener', () => {
     pressBack();
     expect(mocks.postToNative).not.toHaveBeenCalled();
     expect(mocks.showToast).toHaveBeenCalledTimes(2);
+  });
+
+  it('NAVIGATE 메시지를 받으면 그 경로로 이동한다', () => {
+    render(<BridgeListener />);
+
+    act(() => {
+      mocks.nativeListener?.({ type: 'NAVIGATE', url: '/expressions' });
+    });
+
+    expect(mocks.routerPush).toHaveBeenCalledWith('/expressions');
+  });
+
+  it('NAVIGATE는 뒤로가기 처리에 영향을 주지 않는다', () => {
+    render(<BridgeListener />);
+
+    act(() => {
+      mocks.nativeListener?.({ type: 'NAVIGATE', url: '/expressions' });
+    });
+
+    expect(mocks.postToNative).not.toHaveBeenCalled();
+    expect(mocks.showToast).not.toHaveBeenCalled();
   });
 });
