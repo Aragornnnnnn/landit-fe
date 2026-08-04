@@ -49,7 +49,8 @@ export const ExpressionProgress = ({
   if (stage === 'unavailable') return null;
 
   const style = STAGE_STYLE[stage];
-  const done = Math.min(completed, total);
+  // 서버 값이 어긋나도 게이지가 넘치거나 음수가 되지 않게 가둔다
+  const done = Math.max(0, Math.min(completed, total));
 
   return (
     <div className="flex flex-col gap-2">
