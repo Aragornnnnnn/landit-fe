@@ -41,7 +41,7 @@ export const StreakDay = ({ date, mark }: StreakDayProps) => (
       <DayMarkShape mark={mark} />
     </span>
 
-    <span className={`mt-1 text-[11px] leading-none ${LABEL_STYLE[mark]}`}>
+    <span className={`mt-1 text-[12px] leading-none ${LABEL_STYLE[mark]}`}>
       {Number(date.slice(8))}
     </span>
   </div>

@@ -61,7 +61,7 @@ export const StreakCalendar = ({
         {WEEKDAYS.map((weekday) => (
           <span
             key={weekday}
-            className="text-center text-[11px] font-medium text-muted-foreground"
+            className="text-center text-[13px] font-medium text-muted-foreground"
           >
             {weekday}
           </span>
