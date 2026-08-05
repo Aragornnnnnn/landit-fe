@@ -89,7 +89,6 @@ export const DIM = {
 export const BUBBLE_MS = { delay: 1.11 * SLOW, duration: 0.3 * SLOW };
 export const ACCEPT_MS = { delay: 1.41 * SLOW, duration: 0.3 * SLOW };
 // 닫기는 선택지와 같이 뜬다 — 답을 요구하면서 물러날 길도 같이 열어야 한다
-export const CLOSE_MS = { delay: 1.41 * SLOW, duration: 0.3 * SLOW };
 
 // 말풍선·선택지가 공통으로 쓰는 등장 — 아래에서 살짝 올라오며 한 번 넘쳤다 제자리
 export const popIn = ({
@@ -144,11 +143,18 @@ const BUBBLE_GAP = 3 / DESIGN.lamp.w;
 // 빛 알맹이가 피어나는 자리 — 시안에서 안개(240px)·먼지퍼프(16px) 모두 램프 목 언저리에서 나온다.
 // 색은 둘 다 #FFFBF4, 블러가 걸려 있다
 export const GLOW_COLOR = '#FFFBF4';
+
+// 말풍선 꼭대기(BUBBLE_AT.top)는 아래에서 계산되므로, 스택 높이는 소비처에서
+// (LAMP_ASPECT - BUBBLE_AT.top)으로 얻는다
 export const MIST_AT = { x: 0.404, y: -0.251, size: 1.021 };
 export const DUST_AT = { x: 0.404, y: 0.366, size: 0.068 };
 
 // 시안보다 조금 키운다
 const BUBBLE_GROWTH = 1.18;
+
+// 구도 전체의 세로 폭 — 말풍선 꼭대기부터 램프 바닥까지, 램프 폭 배수.
+// 세로가 짧은 폰에서 램프 폭을 얼마나 줄여야 다 들어가는지 여기서 계산한다
+export const LAMP_ASPECT = 528 / 660;
 
 export const BUBBLE_AT = {
   left: bubbleBase.left - (bubbleBase.width * (BUBBLE_GROWTH - 1)) / 2,
@@ -159,21 +165,72 @@ export const BUBBLE_AT = {
     BUBBLE_GAP,
 };
 
-// 나가기 — 래디가 램프로 빨려 들어간다 (시안: 550~950ms, scale 0.05, x -72 y +112, rotate 10).
-// 램프 폭 기준 배수로 두어 화면 크기가 달라져도 램프 입으로 빨려 들어간다
+// 나가기 — 래디가 램프로 빨려 들어가고, 램프가 삼키며 출렁인 뒤 퍼프가 터진다.
+// 시안 타임라인의 복귀 구간(550~1750ms)을 복귀 시작 기준으로 옮긴 값
+const RETURN_MS = 1200;
+const back = (...marks: number[]) => marks.map((ms) => ms / RETURN_MS);
+const RETURN_DURATION = (RETURN_MS * SLOW) / 1000;
+
 export const RETURN = {
+  // 변형 기준점이 꼬리 끝(램프 입)이라 크기만 줄이면 그 점으로 빨려 들어간다.
+  // 시안의 x·y 오프셋은 중심 기준일 때의 값이라 여기선 쓰지 않는다 — 쓰면 램프가 아니라 아래로 밀린다
   genie: {
-    animate: { scale: 0.05, x: -0.31, y: 0.48, rotate: 10, opacity: 0 },
-    transition: { duration: 0.6, ease: 'easeIn' as const },
+    animate: {
+      scale: [1, 0.85, 0.04, 0.04],
+      rotate: [0, 8, 14, 14],
+      opacity: [1, 1, 0, 0],
+    },
+    transition: {
+      duration: RETURN_DURATION,
+      scale: { duration: RETURN_DURATION, times: back(0, 140, 400, 1200) },
+      rotate: { duration: RETURN_DURATION, times: back(0, 200, 400, 1200) },
+      opacity: { duration: RETURN_DURATION, times: back(0, 330, 400, 1200) },
+      ease: 'easeIn' as const,
+    },
+  },
+  // 램프가 래디를 삼키며 한 번 출렁인다 — 이 반동이 "뿅" 하는 맛을 낸다
+  lamp: {
+    animate: {
+      scaleX: [1, 1, 1.1, 0.95, 1, 1],
+      scaleY: [1, 1, 0.9, 1.05, 1, 1],
+    },
+    transition: {
+      duration: RETURN_DURATION,
+      times: back(0, 370, 480, 590, 690, 1200),
+      ease: 'easeOut' as const,
+    },
+  },
+  // 퍼프가 터지는 순간 오버레이 램프를 지운다 — 뒤에 있던 잠든 램프로 갈아끼워지는 느낌
+  swap: {
+    animate: { opacity: [1, 1, 0, 0] },
+    transition: {
+      duration: RETURN_DURATION,
+      times: back(0, 740, 840, 1200),
+      ease: 'easeOut' as const,
+    },
+  },
+  // 삼킨 자리에서 터지는 퍼프
+  puff: {
+    animate: { opacity: [0, 0, 1, 0, 0], scale: [0.3, 0.3, 1.7, 1.7] },
+    transition: {
+      duration: RETURN_DURATION,
+      opacity: {
+        duration: RETURN_DURATION,
+        times: back(0, 700, 800, 1200, 1200),
+      },
+      scale: { duration: RETURN_DURATION, times: back(0, 700, 1200, 1200) },
+      ease: 'easeOut' as const,
+    },
   },
   // 말풍선·선택지는 래디보다 먼저 걷힌다 — 말이 남은 채로 사라지면 어색하다
   props: {
     animate: { opacity: 0, scale: 0.92, y: 8 },
     transition: { duration: 0.2, ease: 'easeIn' as const },
   },
+  // 퍼프가 사그라든 뒤 카드가 드러난다
   dim: {
     animate: { opacity: 0 },
-    transition: { delay: 0.45, duration: 0.35, ease: 'easeOut' as const },
+    transition: { delay: 0.95, duration: 0.35, ease: 'easeOut' as const },
   },
 };
 

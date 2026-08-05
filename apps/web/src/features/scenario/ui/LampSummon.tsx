@@ -2,7 +2,7 @@
 
 // 소환 오버레이 — 램프가 흔들리다 래디가 튀어나와 오늘 대화를 건넨다.
 // 앱 컬럼을 통째로 덮는다. 딤이 헤더·달력까지 가리는 것이 시안의 의도다
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import Image from 'next/image';
 
@@ -14,7 +14,6 @@ import {
   ACCEPT_MS,
   BUBBLE_AT,
   BUBBLE_MS,
-  CLOSE_MS,
   DIM,
   DUST_AT,
   DUST_DIRECTIONS,
@@ -23,6 +22,7 @@ import {
   GENIE_AT,
   GLOW_COLOR,
   LAMP,
+  LAMP_ASPECT,
   MIST_AT,
   MIST_COUNT,
   MIST_MS,
@@ -31,14 +31,20 @@ import {
 } from '../lib/summon-timeline';
 
 // 카드에 놓인 램프의 자리. 같은 자리에서 시작해야 카드에서 오버레이로 넘어갈 때 튀지 않는다
+// 오버레이가 쓰는 자리는 늘 시안 자리다 — 여기서 래디·말풍선 위치가 다 파생되므로
+// 카드의 램프가 커지거나 옮겨져도 소환 구도는 흔들리지 않아야 한다
 export interface LampRect {
   left: number;
   top: number;
   width: number;
+  // 카드에 놓인 램프에서 여기까지의 차이. 그 자리에서 출발해 시안 자리로 옮겨온다
+  from: { x: number; y: number; scale: number };
 }
 
 interface LampSummonProps {
   lamp: LampRect;
+  // 화면이 알아서 띄운 경우에만 의사를 묻는다. 사용자가 직접 부른 것이면 이미 답을 들은 셈이다
+  asks: boolean;
   onAccept: () => void;
   onClose: () => void;
 }
@@ -64,7 +70,12 @@ const settle = (reduced: boolean, animated: object, settled: object) =>
 // 소환 → 나가기(램프로 돌아감) / 수락(대화로 들어감). 연출이 끝나야 넘어간다
 type Phase = 'summon' | 'closing' | 'accepting';
 
-export const LampSummon = ({ lamp, onAccept, onClose }: LampSummonProps) => {
+export const LampSummon = ({
+  lamp,
+  asks,
+  onAccept,
+  onClose,
+}: LampSummonProps) => {
   const reduced = useReducedMotion() ?? false;
   const [phase, setPhase] = useState<Phase>('summon');
 
@@ -72,41 +83,104 @@ export const LampSummon = ({ lamp, onAccept, onClose }: LampSummonProps) => {
   const leave = (next: Phase, done: () => void) =>
     reduced ? done() : setPhase(next);
 
-  const finish = () => (phase === 'accepting' ? onAccept() : onClose());
+  // 완료 신호는 애니메이션 트랙 수만큼 올 수 있다 — 한 번만 내보낸다 (수락이 두 번 가면 라우팅이 두 번 쌓인다)
+  const finishedRef = useRef(false);
+  const finish = () => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    if (phase === 'accepting') onAccept();
+    else onClose();
+  };
+
+  // 수락 연출이 끝나면 대화로 넘어간다 — 완료 콜백 대신 시계로 확정한다.
+  // 래디의 완료 이벤트는 다른 트랙(램프 이동)과 겹치면 늦거나 안 올 수 있다
+  useEffect(() => {
+    if (phase !== 'accepting') return;
+    const timer = setTimeout(
+      finish,
+      ACCEPT.genie.transition.duration * 1000 + 80,
+    );
+    return () => clearTimeout(timer);
+    // finish는 렌더마다 새 참조지만 ref 잠금이 있어 한 번만 나간다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
+
+  // 묻지 않는 소환은 래디가 자리를 잡는 순간 스스로 수락으로 넘어간다
+  useEffect(() => {
+    if (asks || phase !== 'summon') return;
+    if (reduced) {
+      onAccept();
+      return;
+    }
+    const timer = setTimeout(
+      () => setPhase('accepting'),
+      BUBBLE_MS.delay * 1000,
+    );
+    return () => clearTimeout(timer);
+    // onAccept은 렌더마다 새 참조라 걸면 타이머가 매번 리셋된다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [asks, phase, reduced]);
 
   return (
     <div className="absolute inset-0 z-40">
       <motion.div
         aria-hidden
-        className="absolute inset-0 bg-black/45"
+        className="absolute inset-0 bg-black/60"
         {...(phase === 'closing'
           ? RETURN.dim
           : settle(reduced, DIM, { opacity: 1 }))}
-        onAnimationComplete={phase === 'summon' ? undefined : finish}
+        onAnimationComplete={phase === 'closing' ? finish : undefined}
       />
 
-      <motion.button
-        type="button"
-        onClick={() => leave('closing', onClose)}
-        aria-label="나가기"
-        className="absolute top-[max(env(safe-area-inset-top),16px)] left-3 z-10 flex size-11 items-center justify-center rounded-xl text-white transition-transform active:scale-90"
-        {...controlProps(phase, reduced, CLOSE_MS)}
-      >
-        <CloseIcon size={24} />
-      </motion.button>
+      {asks && (
+        <motion.button
+          type="button"
+          onClick={() => leave('closing', onClose)}
+          aria-label="나가기"
+          className="absolute top-[max(env(safe-area-inset-top),16px)] left-3 z-10 flex size-11 items-center justify-center rounded-xl text-white transition-transform active:scale-90"
+          {...(phase === 'summon'
+            ? { initial: false, animate: { opacity: 1 } }
+            : phase === 'closing'
+              ? RETURN.props
+              : ACCEPT.props)}
+        >
+          <CloseIcon size={24} />
+        </motion.button>
+      )}
 
-      {/* 카드의 램프와 같은 자리에서 시작한다. 말풍선·래디는 이 상자를 기준으로 놓인다 */}
-      <div
+      {/* 카드의 램프와 같은 자리에서 시작해 시안 자리로 내려간다.
+          말풍선·래디는 이 상자를 기준으로 놓여 함께 움직인다 */}
+      <motion.div
         className="absolute"
-        style={{ left: lamp.left, top: lamp.top, width: lamp.width }}
+        style={{
+          left: lamp.left,
+          top: lamp.top,
+          width: lamp.width,
+          transformOrigin: 'top left',
+        }}
+        initial={reduced ? false : lamp.from}
+        animate={
+          phase === 'closing' && !reduced ? lamp.from : { x: 0, y: 0, scale: 1 }
+        }
+        transition={{
+          duration: phase === 'closing' ? 0.5 : 0.9,
+          ease: 'easeOut',
+        }}
       >
-        <SpeechBubble
-          reduced={reduced}
-          lampWidth={lamp.width}
-          leaving={phase !== 'summon'}
-        />
+        {asks && (
+          <SpeechBubble
+            reduced={reduced}
+            lampWidth={lamp.width}
+            leaving={phase !== 'summon'}
+          />
+        )}
 
-        {phase === 'closing' && !reduced && <Mist lampWidth={lamp.width} />}
+        {phase === 'closing' && !reduced && (
+          <>
+            <Mist lampWidth={lamp.width} />
+            <Puff lampWidth={lamp.width} />
+          </>
+        )}
 
         {/* 래디는 램프 위로 솟는다 — 램프 상자 기준으로 띄워야 어느 화면에서도 입에서 나온다 */}
         <motion.div
@@ -120,14 +194,7 @@ export const LampSummon = ({ lamp, onAccept, onClose }: LampSummonProps) => {
             transformOrigin: '50% 100%',
           }}
           {...(phase === 'closing'
-            ? {
-                animate: {
-                  ...RETURN.genie.animate,
-                  x: RETURN.genie.animate.x * lamp.width,
-                  y: RETURN.genie.animate.y * lamp.width,
-                },
-                transition: RETURN.genie.transition,
-              }
+            ? RETURN.genie
             : phase === 'accepting'
               ? ACCEPT.genie
               : settle(reduced, GENIE, {
@@ -150,8 +217,20 @@ export const LampSummon = ({ lamp, onAccept, onClose }: LampSummonProps) => {
 
         <motion.div
           className="relative origin-bottom"
-          animate={reduced ? undefined : LAMP.animate}
-          transition={reduced ? undefined : LAMP.transition}
+          animate={
+            phase === 'closing'
+              ? { ...RETURN.lamp.animate, opacity: RETURN.swap.animate.opacity }
+              : reduced
+                ? undefined
+                : LAMP.animate
+          }
+          transition={
+            phase === 'closing'
+              ? { ...RETURN.lamp.transition, opacity: RETURN.swap.transition }
+              : reduced
+                ? undefined
+                : LAMP.transition
+          }
         >
           <Image
             src="/images/character/lamp-idle.webp"
@@ -164,14 +243,23 @@ export const LampSummon = ({ lamp, onAccept, onClose }: LampSummonProps) => {
         </motion.div>
 
         {!reduced && <Dust lampWidth={lamp.width} />}
-      </div>
-
-      <motion.div
-        className="absolute inset-x-6 bottom-8"
-        {...controlProps(phase, reduced, ACCEPT_MS)}
-      >
-        <Button onClick={() => leave('accepting', onAccept)}>네!</Button>
       </motion.div>
+
+      {/* CTA는 화면 바닥이 아니라 램프 바로 아래 선다 — 램프에서 시선이 그대로 떨어진다 */}
+      {asks && (
+        <motion.div
+          className="absolute inset-x-6"
+          style={{ top: lamp.top + lamp.width * LAMP_ASPECT + 24 }}
+          {...controlProps(phase, reduced, ACCEPT_MS)}
+        >
+          <Button
+            className="text-lg"
+            onClick={() => leave('accepting', onAccept)}
+          >
+            네!
+          </Button>
+        </motion.div>
+      )}
     </div>
   );
 };
@@ -208,9 +296,12 @@ const SpeechBubble = ({
       className="w-full"
     />
 
-    {/* 시안 텍스트 박스(본문 240x90 안에서 x56 y24 w126)를 이 그림 크기로 환산한 값.
-        폭이 좁아야 시안처럼 두 줄로 접힌다 */}
-    <p className="absolute top-[48.9%] left-[49.4%] w-[41.9%] -translate-x-1/2 -translate-y-1/2 text-center text-base leading-snug font-extrabold break-keep text-foreground">
+    {/* 자리는 시안 텍스트 박스(본문 240x90 안에서 x56 y24)를 이 그림 크기로 환산한 값.
+        글자도 램프 폭에 비례한다 — 고정 px면 작은 폰에서 말풍선을 뚫고 나온다 (기준 20px/램프 226px) */}
+    <p
+      className="absolute top-[48.9%] left-[49.4%] w-[54%] -translate-x-1/2 -translate-y-1/2 text-center leading-snug font-extrabold break-keep text-foreground"
+      style={{ fontSize: lampWidth * 0.0885 }}
+    >
       오늘의 대화를 시작할까요?
     </p>
   </motion.div>
@@ -246,6 +337,23 @@ const Mist = ({ lampWidth }: { lampWidth: number }) => (
       />
     ))}
   </>
+);
+
+// 램프가 래디를 삼킨 자리에서 터지는 퍼프
+const Puff = ({ lampWidth }: { lampWidth: number }) => (
+  <motion.span
+    aria-hidden
+    className="absolute rounded-full"
+    style={{
+      left: (DUST_AT.x - 0.5) * lampWidth,
+      top: (DUST_AT.y - 0.5) * lampWidth,
+      width: lampWidth,
+      height: lampWidth,
+      background: `radial-gradient(circle, ${GLOW_COLOR} 0%, transparent 68%)`,
+    }}
+    initial={{ opacity: 0, scale: 0.3 }}
+    {...RETURN.puff}
+  />
 );
 
 // 램프가 터질 때 목에서 사방으로 튀는 먼지
