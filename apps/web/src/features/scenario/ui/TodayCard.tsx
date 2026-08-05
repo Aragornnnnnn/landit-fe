@@ -8,7 +8,7 @@ import { EASE_STANDARD } from '@/shared/motion';
 
 import type { DailyScenario } from '../api/daily';
 import { toScenario, type Scenario } from '../lib/to-scenario';
-import { LampWaiting } from './LampWaiting';
+import { LampStage } from './LampStage';
 import { ScenarioCard } from './ScenarioCard';
 
 interface TodayCardProps {
@@ -48,10 +48,9 @@ export const TodayCard = ({
           }}
         />
       ) : (
-        // TODO(소환 오버레이 PR): 지금은 부르는 즉시 대화로 보낸다 — 아직 열 오버레이가 없다
-        <LampWaiting
+        <LampStage
           retry={daily.dailyScenarioType === 'RETRY'}
-          onSummon={playable ? () => onStart(scenario) : undefined}
+          onStart={playable ? () => onStart(scenario) : undefined}
         />
       )}
     </Arrival>
