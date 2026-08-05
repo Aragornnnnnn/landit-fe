@@ -19,7 +19,7 @@ const futureReminder = {
   notifyAt: '2099-01-01T20:00:00+09:00',
   title: '오늘의 시나리오',
   body: '카페에서 주문하기가 기다리고 있어요',
-  url: '/home',
+  url: '/scenario',
 };
 
 beforeEach(() => {
@@ -81,7 +81,7 @@ describe('syncReminders', () => {
       content: {
         title: futureReminder.title,
         body: futureReminder.body,
-        data: { kind: 'daily-reminder', url: '/home' },
+        data: { kind: 'daily-reminder', url: '/scenario' },
       },
       trigger: { type: 'date', date: new Date(futureReminder.notifyAt) },
     });
