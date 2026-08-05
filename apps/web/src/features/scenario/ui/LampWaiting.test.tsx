@@ -19,7 +19,7 @@ afterEach(() => cleanup());
 
 describe('LampWaiting', () => {
   it('오늘 처음 받는 카드면 래디가 기다린다고 알린다', () => {
-    render(<LampWaiting onRub={vi.fn()} />);
+    render(<LampWaiting onSummon={vi.fn()} />);
 
     expect(screen.getByText('래디가 램프에서 기다리고 있어요')).toBeTruthy();
     expect(
@@ -29,7 +29,7 @@ describe('LampWaiting', () => {
 
   it('전날 못 끝내 다시 받은 카드면 이어서 하는 것이라고 말한다', () => {
     // Given 어제 시작했다 못 끝낸 대화를 다시 받은 상태에서
-    render(<LampWaiting onRub={vi.fn()} retry />);
+    render(<LampWaiting onSummon={vi.fn()} retry />);
 
     // When 대기면을 그리면
     // Then 도착이 아니라 남아 있다고 말한다
@@ -39,14 +39,14 @@ describe('LampWaiting', () => {
   });
 
   it('램프를 누르면 래디를 부른다', () => {
-    const onRub = vi.fn();
-    render(<LampWaiting onRub={onRub} />);
+    const onSummon = vi.fn();
+    render(<LampWaiting onSummon={onSummon} />);
 
     fireEvent.click(
       screen.getByRole('button', { name: '램프 문질러 대화 시작하기' }),
     );
 
-    expect(onRub).toHaveBeenCalledTimes(1);
+    expect(onSummon).toHaveBeenCalledTimes(1);
   });
 
   it('서버가 시작 불가로 판정하면 램프가 눌리지 않는다', () => {

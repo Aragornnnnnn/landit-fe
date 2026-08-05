@@ -8,8 +8,8 @@ import { Button } from '@/shared/ui/Button';
 
 interface LampWaitingProps {
   ref?: React.Ref<HTMLDivElement>;
-  // 램프를 문질렀다. 서버가 시작 불가로 판정하면 넘어오지 않는다
-  onRub?: () => void;
+  // 램프를 문질러 래디를 부른다. 서버가 시작 불가로 판정하면 넘어오지 않는다
+  onSummon?: () => void;
   // 전날 시작했다 못 끝내 다시 받은 카드는 "도착"이 아니라 이어서 하는 것이다
   retry?: boolean;
   // 소환 중에는 래디가 램프를 떠나 있다 — 뒤에 남아 있으면 램프가 두 개로 보인다
@@ -19,7 +19,7 @@ interface LampWaitingProps {
 // 램프 상자에 ref를 흘린다 — 소환할 때 이 자리를 재서 오버레이가 같은 곳에서 시작한다
 export const LampWaiting = ({
   ref,
-  onRub,
+  onSummon,
   retry = false,
   asleep = true,
 }: LampWaitingProps) => {
@@ -84,7 +84,7 @@ export const LampWaiting = ({
 
       {/* 소환 중에는 오버레이의 CTA가 대신 선다 — 둘이 겹치면 어느 쪽을 눌러야 할지 알 수 없다 */}
       <div className={`w-full ${asleep ? 'visible' : 'invisible'}`}>
-        <Button onClick={onRub} disabled={!onRub}>
+        <Button onClick={onSummon} disabled={!onSummon}>
           램프 문질러 대화 시작하기
         </Button>
       </div>

@@ -134,7 +134,7 @@ export const LampStage = ({ onStart, retry, today }: LampStageProps) => {
         ref={lampBoxRef}
         retry={retry}
         asleep={!summon}
-        onRub={onStart ? () => startSummon(false) : undefined}
+        onSummon={onStart ? () => startSummon(false) : undefined}
       />
 
       {summon &&
