@@ -27,26 +27,29 @@ export const LampWaiting = ({
 
   return (
     <div className="flex h-full w-full flex-col items-center rounded-3xl bg-card px-6 pt-8 pb-6">
-      {/* break-keep이 없으면 좁은 화면에서 "있어 / 요"로 갈린다 */}
-      <p className="text-center text-lg leading-snug font-extrabold break-keep text-foreground">
-        {retry
-          ? '어제 마치지 못한 대화가 남아 있어요'
-          : '래디가 램프에서 기다리고 있어요'}
-      </p>
-      <p className="mt-2 text-center text-sm font-medium text-muted-foreground">
-        밤 12시가 지나면 오늘의 대화가 사라져요
-      </p>
+      {/* 소환 중에는 글도 감춘다 — 딤 위로 비쳐 말풍선·래디와 겹친다 */}
+      <div className={asleep ? 'visible' : 'invisible'}>
+        {/* break-keep이 없으면 좁은 화면에서 "있어 / 요"로 갈린다 */}
+        <p className="text-center text-xl leading-snug font-extrabold break-keep text-foreground">
+          {retry
+            ? '어제 마치지 못한 대화가 남아 있어요'
+            : '래디가 램프에서 기다리고 있어요'}
+        </p>
+        <p className="mt-2 text-center text-base font-medium text-muted-foreground">
+          밤 12시가 지나면 오늘의 대화가 사라져요
+        </p>
+      </div>
 
-      {/* 램프를 아래에 붙인다 — 시안에서 램프는 화면 아래쪽(세로 58%)에 놓이고,
-          소환하면 그 위로 래디와 말풍선이 올라설 자리가 필요하다 */}
-      <div className="flex min-h-0 flex-1 items-end pb-2">
+      {/* 대기 중엔 램프가 카드 가운데 있다. 소환하면 오버레이가 시안 자리(세로 58%)로 내려보낸다.
+          container-type은 아래 cqh 계산의 기준 — 남는 세로에 맞춰 램프 폭을 거른다 */}
+      <div className="[container-type:size] flex min-h-0 w-full flex-1 items-center justify-center">
         {/* 램프 크기에 맞춘 상자 — zZ가 화면이 아니라 램프를 기준으로 떠야 한다 */}
         {/* 소환 중에는 램프만 남기지 않고 통째로 비운다 — 오버레이의 램프와 겹쳐 두 개로 보인다 */}
         <div
           ref={ref}
-          // 시안에서 램프는 화면 폭의 60.3%, 왼쪽 25.6% 자리다 — 화면 중심보다 오른쪽에 놓여야
-          // 램프 입에서 나온 래디가 가운데 선다. 카드 여백을 뺀 환산값
-          className={`relative ml-[17%] w-[81%] ${asleep ? 'visible' : 'invisible'}`}
+          // 폭을 다 채우되 세로가 좁으면 높이에 맞춰 줄인다(램프 비율 660:528) — 안 그러면
+          // 작은 폰에서 카드가 밀려 스크롤이 생기고 세로 중앙도 어긋난다
+          className={`relative w-[min(100%,125cqh)] ${asleep ? 'visible' : 'invisible'}`}
         >
           {/* 이미지 안에도 zZ가 그려져 있다 — 이건 그 위로 한 겹 더 떠오르는 쪽 */}
           {!reduced && (
