@@ -144,27 +144,26 @@ const grown = (at: { left: number; top: number; width: number }) => {
 };
 
 export const GENIE_AT = grown(relativeToLamp(DESIGN.genie));
-// 말풍선은 래디 머리 바로 위에 앉는다 (시안에서 둘 사이가 3px).
-// 래디 크기를 조절하면 말풍선도 따라 올라가야 해서 top을 래디에서 끌어온다
-const BUBBLE_ASPECT = 300 / 600;
-const bubbleBase = relativeToLamp(DESIGN.bubble);
-const BUBBLE_GAP = 3 / DESIGN.lamp.w;
 
 // 빛 알맹이가 피어나는 자리 — 시안에서 안개(240px)·먼지퍼프(16px) 모두 램프 목 언저리에서 나온다.
 // 색은 둘 다 #FFFBF4, 블러가 걸려 있다
 export const GLOW_COLOR = '#FFFBF4';
-
-// 말풍선 꼭대기(BUBBLE_AT.top)는 아래에서 계산되므로, 스택 높이는 소비처에서
-// (LAMP_ASPECT - BUBBLE_AT.top)으로 얻는다
 export const MIST_AT = { x: 0.404, y: -0.251, size: 1.021 };
 export const DUST_AT = { x: 0.404, y: 0.366, size: 0.068 };
 
+// 램프 그림의 세로/가로 — 램프 폭만 알면 아래끝이 어디인지 나온다
+export const LAMP_ASPECT = 528 / 660;
+
+// CTA는 화면 바닥이 아니라 램프 바로 아래 이만큼 떨어져 선다
+export const CTA_GAP_PX = 24;
+
+// 말풍선은 래디 머리 바로 위에 앉는다 (시안에서 둘 사이가 3px).
+// 래디 크기를 조절하면 말풍선도 따라 올라가야 해서 top을 래디에서 끌어온다
+const BUBBLE_ASPECT = 300 / 600;
+const BUBBLE_GAP = 3 / DESIGN.lamp.w;
 // 시안보다 조금 키운다
 const BUBBLE_GROWTH = 1.18;
-
-// 구도 전체의 세로 폭 — 말풍선 꼭대기부터 램프 바닥까지, 램프 폭 배수.
-// 세로가 짧은 폰에서 램프 폭을 얼마나 줄여야 다 들어가는지 여기서 계산한다
-export const LAMP_ASPECT = 528 / 660;
+const bubbleBase = relativeToLamp(DESIGN.bubble);
 
 export const BUBBLE_AT = {
   left: bubbleBase.left - (bubbleBase.width * (BUBBLE_GROWTH - 1)) / 2,
@@ -174,6 +173,10 @@ export const BUBBLE_AT = {
     bubbleBase.width * BUBBLE_GROWTH * BUBBLE_ASPECT -
     BUBBLE_GAP,
 };
+
+// 구도 전체의 세로 폭 — 말풍선 꼭대기부터 램프 바닥까지, 램프 폭 배수.
+// 세로가 짧은 폰에서 램프 폭을 얼마나 줄여야 다 들어가는지 이 비율로 계산한다
+export const STACK_ASPECT = LAMP_ASPECT - BUBBLE_AT.top;
 
 // 나가기 — 래디가 램프로 빨려 들어가고, 램프가 삼키며 출렁인 뒤 퍼프가 터진다.
 // 시안 타임라인의 복귀 구간(550~1750ms)을 복귀 시작 기준으로 옮긴 값
@@ -196,24 +199,22 @@ export const RETURN = {
       ease: 'easeIn' as const,
     },
   },
-  // 램프가 래디를 삼키며 한 번 출렁인다 — 이 반동이 "뿅" 하는 맛을 낸다
+  // 램프 몸통이 나가면서 타는 트랙 — 래디를 삼키며 한 번 출렁이고("뿅" 하는 반동),
+  // 퍼프가 터지는 순간 사라진다(뒤의 잠든 램프로 갈아끼워지는 느낌).
+  // 둘은 한 요소에 같이 걸리므로 여기서 묶는다 — 컴포넌트가 펼쳐 합치면 무엇이 일어나는지 안 보인다
   lamp: {
     animate: {
       scaleX: [1, 1, 1.1, 0.95, 1, 1],
       scaleY: [1, 1, 0.9, 1.05, 1, 1],
+      opacity: [1, 1, 0, 0],
     },
     transition: {
       duration: RETURN_DURATION,
       times: back(0, 370, 480, 590, 690, 1200),
-      ease: 'easeOut' as const,
-    },
-  },
-  // 퍼프가 터지는 순간 오버레이 램프를 지운다 — 뒤에 있던 잠든 램프로 갈아끼워지는 느낌
-  swap: {
-    animate: { opacity: [1, 1, 0, 0] },
-    transition: {
-      duration: RETURN_DURATION,
-      times: back(0, 740, 840, 1200),
+      opacity: {
+        duration: RETURN_DURATION,
+        times: back(0, 740, 840, 1200),
+      },
       ease: 'easeOut' as const,
     },
   },
@@ -242,6 +243,10 @@ export const RETURN = {
   },
 };
 
+// 래디의 완료 이벤트는 다른 트랙과 겹치면 늦거나 안 올 수 있다 — 애니메이션 시간에
+// 이만큼 여유를 더해 시계로 확정한다
+export const ACCEPT_FINISH_BUFFER_MS = 80;
+
 // 수락 — 래디가 빛을 남기며 앞으로 다가오고 화면이 밝아진다. 대화로 넘어가는 문이 된다
 export const ACCEPT = {
   genie: {
@@ -251,9 +256,5 @@ export const ACCEPT = {
   props: {
     animate: { opacity: 0, y: 12 },
     transition: { duration: 0.18, ease: 'easeIn' as const },
-  },
-  flare: {
-    animate: { opacity: [0, 1], scale: [0.2, 6] },
-    transition: { duration: 0.55, ease: 'easeIn' as const },
   },
 };

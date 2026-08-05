@@ -9,7 +9,12 @@ import { createPortal } from 'react-dom';
 import { DAILY_REMINDER_CAMPAIGN } from '@/shared/analytics/utm';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
-import { BUBBLE_AT, LAMP_ASPECT, LAMP_FRAME } from '../lib/summon-timeline';
+import {
+  BUBBLE_AT,
+  LAMP_ASPECT,
+  LAMP_FRAME,
+  STACK_ASPECT,
+} from '../lib/summon-timeline';
 import {
   decideSummon,
   markSummoned,
@@ -71,12 +76,11 @@ export const LampStage = ({ onStart, retry, today }: LampStageProps) => {
     // 시안 자리(LAMP_FRAME) 그대로 서되, 세로가 짧은 폰에선 그 폭대로면 말풍선이
     // 화면 위로 나간다 — 위 여백과 CTA 자리를 뺀 높이에 맞춰 폭을 줄이고,
     // 구도 전체(말풍선→램프)가 비율 그대로 작아지게 한다
-    const stack = LAMP_ASPECT - BUBBLE_AT.top;
     const topMargin = 76; // 닫기 X와 상태바가 서는 자리
     const ctaSpace = 128; // "네!" 버튼과 아래 여백
     const width = Math.min(
       screen.width * LAMP_FRAME.widthRatio,
-      (screen.height - topMargin - ctaSpace) / stack,
+      (screen.height - topMargin - ctaSpace) / STACK_ASPECT,
     );
 
     // 폭이 줄어도 램프 중심은 시안 자리를 지킨다

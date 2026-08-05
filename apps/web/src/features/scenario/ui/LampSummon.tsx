@@ -12,9 +12,11 @@ import { CloseIcon } from '@/shared/ui/Icons';
 
 import {
   ACCEPT,
+  ACCEPT_FINISH_BUFFER_MS,
   ACCEPT_MS,
   BUBBLE_AT,
   BUBBLE_MS,
+  CTA_GAP_PX,
   DIM,
   DUST_AT,
   DUST_DIRECTIONS,
@@ -99,7 +101,7 @@ export const LampSummon = ({
     if (phase !== 'accepting') return;
     const timer = setTimeout(
       finish,
-      ACCEPT.genie.transition.duration * 1000 + 80,
+      ACCEPT.genie.transition.duration * 1000 + ACCEPT_FINISH_BUFFER_MS,
     );
     return () => clearTimeout(timer);
     // finish는 렌더마다 새 참조지만 ref 잠금이 있어 한 번만 나간다
@@ -229,14 +231,14 @@ export const LampSummon = ({
           className="relative origin-bottom"
           animate={
             phase === 'closing'
-              ? { ...RETURN.lamp.animate, opacity: RETURN.swap.animate.opacity }
+              ? RETURN.lamp.animate
               : reduced
                 ? undefined
                 : LAMP.animate
           }
           transition={
             phase === 'closing'
-              ? { ...RETURN.lamp.transition, opacity: RETURN.swap.transition }
+              ? RETURN.lamp.transition
               : reduced
                 ? undefined
                 : LAMP.transition
@@ -259,7 +261,7 @@ export const LampSummon = ({
       {asks && (
         <motion.div
           className="absolute inset-x-6"
-          style={{ top: lamp.top + lamp.width * LAMP_ASPECT + 24 }}
+          style={{ top: lamp.top + lamp.width * LAMP_ASPECT + CTA_GAP_PX }}
           {...controlProps(phase, reduced, ACCEPT_MS)}
         >
           <Button
