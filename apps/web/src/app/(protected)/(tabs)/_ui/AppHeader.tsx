@@ -1,7 +1,7 @@
-// 앱 헤더 — 로고와 의견 보내기·내 정보 진입. 탭이 늘면 탭들이 공유한다
-import Link from 'next/link';
-
+// 앱 헤더 — 로고와 열매·의견 보내기·내 정보 진입. 탭이 늘면 탭들이 공유한다
 import { FeedbackButton } from '@/features/nps/ui/FeedbackButton';
+import { HeaderStreak } from '@/features/streak/ui/HeaderStreak';
+import { HeaderAction } from '@/shared/ui/HeaderAction';
 import { UserIcon } from '@/shared/ui/Icons';
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
@@ -9,17 +9,11 @@ export const AppHeader = () => (
   <header className="flex shrink-0 items-center justify-between bg-background px-5 pt-[max(env(safe-area-inset-top),16px)] pb-2">
     <LanditLogo className="h-5 w-auto text-foreground [&_.logo-dot-splash]:hidden" />
     <div className="-mr-1.5 flex items-center">
+      <HeaderStreak />
       <FeedbackButton />
-      <Link
-        href="/me"
-        aria-label="내 정보"
-        className="flex h-11 flex-col items-center justify-center gap-0.5 rounded-xl px-3 text-muted-foreground transition-all active:scale-90 active:bg-secondary"
-      >
+      <HeaderAction href="/me" label="내 정보">
         <UserIcon size={18} />
-        <span className="text-[10px] font-medium whitespace-nowrap">
-          내 정보
-        </span>
-      </Link>
+      </HeaderAction>
     </div>
   </header>
 );

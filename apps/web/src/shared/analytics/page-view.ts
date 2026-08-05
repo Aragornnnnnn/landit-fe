@@ -13,6 +13,7 @@ const STATIC_PAGES = new Set([
   'privacy',
   'terms',
   'smalltalk',
+  'streak',
 ]);
 
 const toId = (raw: string | null) => {
