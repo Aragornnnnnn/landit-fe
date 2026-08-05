@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import Image from 'next/image';
 
+import { registerOpenSheet } from '@/shared/ui/bottom-sheet-back';
 import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
@@ -104,6 +105,15 @@ export const LampSummon = ({
     // finish는 렌더마다 새 참조지만 ref 잠금이 있어 한 번만 나간다
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
+
+  // 네이티브 뒤로가기가 화면 이동 대신 이 오버레이를 닫게 한다 — Modal·BottomSheet와 같은 결.
+  // 묻지 않는 소환은 이미 대화로 가는 중이라 뒤로가기로 끊지 않는다
+  useEffect(() => {
+    if (!asks || phase !== 'summon') return;
+    return registerOpenSheet(() => leave('closing', onClose));
+    // leave·onClose는 렌더마다 새 참조 — 걸면 매 렌더 재등록만 반복한다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [asks, phase]);
 
   // 묻지 않는 소환은 래디가 자리를 잡는 순간 스스로 수락으로 넘어간다
   useEffect(() => {
