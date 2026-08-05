@@ -1,6 +1,8 @@
 // 스트릭 조회 — 현재 연속 일수와 월별 달력 (백엔드 CurrentStreakResponse·StreakCalendarResponse 미러)
 import { api } from '@/shared/api/client';
 
+import type { YearMonth } from '../lib/seoul-date';
+
 export interface CurrentStreakResponse {
   currentStreakDays: number;
   activeToday: boolean;
@@ -19,14 +21,18 @@ export interface StreakCalendarResponse {
   firstActiveDate: string | null;
   longestStreakDays: number;
   totalActiveDays: number;
-  // 요청한 월의 완료 날짜만 온다 (yyyy-MM-dd)
+  // 조회한 월의 완료 날짜만 온다 (yyyy-MM-dd)
   activeDates: string[];
 }
 
 export const getCurrentStreak = () =>
   api.get<CurrentStreakResponse>('/api/v1/me/streak');
 
-export const getStreakCalendar = (year: number, month: number) =>
+// view가 null이면 파라미터를 붙이지 않는다 — 서버가 KST 오늘이 든 달을 골라 응답의 year·month로 알려준다.
+// 연·월은 둘 다 주거나 둘 다 빼야 한다 (하나만 주면 400)
+export const getStreakCalendar = (view: YearMonth | null) =>
   api.get<StreakCalendarResponse>(
-    `/api/v1/me/streak/calendar?year=${year}&month=${month}`,
+    view === null
+      ? '/api/v1/me/streak/calendar'
+      : `/api/v1/me/streak/calendar?year=${view.year}&month=${view.month}`,
   );
