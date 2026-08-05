@@ -1,13 +1,13 @@
 'use client';
 
 // 램프 자리 — 자는 래디를 보여주다 부르면 소환 연출로 넘긴다.
-// 오버레이는 앱 컬럼을 통째로 덮어야 하는데 카드가 transform 안에 있어 기준점이 어긋난다.
-// 그래서 카드 안에서 그리지 않고 컬럼으로 실어 보낸다
+// 오버레이는 카드 안에서 그릴 수 없다 — 카드가 transform(도착 스프링) 안에 있어서
+// 그 안의 fixed는 화면이 아니라 카드 박스에 갇힌다. 그래서 body로 실어 보낸다
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DAILY_REMINDER_CAMPAIGN } from '@/shared/analytics/utm';
-import { useAppColumn } from '@/shared/lib/app-column';
+import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
 import { BUBBLE_AT, LAMP_ASPECT, LAMP_FRAME } from '../lib/summon-timeline';
 import {
@@ -56,16 +56,17 @@ interface Summon {
 export const LampStage = ({ onStart, retry, today }: LampStageProps) => {
   const [summon, setSummon] = useState<Summon | null>(null);
   const lampBoxRef = useRef<HTMLDivElement>(null);
-  const column = useAppColumn();
+  // 서버 렌더엔 document가 없다 — 붙은 뒤에만 포털 대상이 생긴다
+  const portalTarget = useClientOnlyValue(() => document.body, null);
 
   // 카드에 놓인 램프의 자리를 재고, 오버레이가 설 시안 자리를 계산한다.
   // 같은 자리에서 출발해야 카드에서 오버레이로 넘어갈 때 튀지 않는다
   const measure = (): LampRect | null => {
     const box = lampBoxRef.current;
-    if (!box || !column) return null;
+    if (!box) return null;
 
     const lampBox = box.getBoundingClientRect();
-    const columnBox = column.getBoundingClientRect();
+    const screen = { width: window.innerWidth, height: window.innerHeight };
 
     // 시안 자리(LAMP_FRAME) 그대로 서되, 세로가 짧은 폰에선 그 폭대로면 말풍선이
     // 화면 위로 나간다 — 위 여백과 CTA 자리를 뺀 높이에 맞춰 폭을 줄이고,
@@ -74,27 +75,27 @@ export const LampStage = ({ onStart, retry, today }: LampStageProps) => {
     const topMargin = 76; // 닫기 X와 상태바가 서는 자리
     const ctaSpace = 128; // "네!" 버튼과 아래 여백
     const width = Math.min(
-      columnBox.width * LAMP_FRAME.widthRatio,
-      (columnBox.height - topMargin - ctaSpace) / stack,
+      screen.width * LAMP_FRAME.widthRatio,
+      (screen.height - topMargin - ctaSpace) / stack,
     );
 
     // 폭이 줄어도 램프 중심은 시안 자리를 지킨다
     const clampTop = (value: number) =>
       Math.min(
         Math.max(value, topMargin - BUBBLE_AT.top * width),
-        columnBox.height - ctaSpace - LAMP_ASPECT * width,
+        screen.height - ctaSpace - LAMP_ASPECT * width,
       );
     const target = {
-      left: columnBox.width * LAMP_FRAME.centerXRatio - width / 2,
-      top: clampTop(columnBox.height * LAMP_FRAME.topRatio),
+      left: screen.width * LAMP_FRAME.centerXRatio - width / 2,
+      top: clampTop(screen.height * LAMP_FRAME.topRatio),
       width,
     };
 
     return {
       ...target,
       from: {
-        x: lampBox.left - columnBox.left - target.left,
-        y: lampBox.top - columnBox.top - target.top,
+        x: lampBox.left - target.left,
+        y: lampBox.top - target.top,
         scale: lampBox.width / target.width,
       },
     };
@@ -108,10 +109,9 @@ export const LampStage = ({ onStart, retry, today }: LampStageProps) => {
     setSummon({ lamp, asks });
   };
 
-  // 자동 소환 — 그날 처음이거나 알림으로 들어왔을 때만. 그 외엔 카드에 담겨 있다.
-  // column이 의존성에 있는 것은 첫 실행 때 아직 못 잡았을 수 있어서다 — 잡히면 다시 판정한다
+  // 자동 소환 — 그날 처음이거나 알림으로 들어왔을 때만. 그 외엔 카드에 담겨 있다
   useEffect(() => {
-    if (!today || !onStart || !column) return;
+    if (!today || !onStart) return;
 
     const fromReminder = consumeReminderEntry();
     if (!decideSummon({ lastSeen: readLastSummoned(), today, fromReminder }))
@@ -122,7 +122,7 @@ export const LampStage = ({ onStart, retry, today }: LampStageProps) => {
     return () => cancelAnimationFrame(frame);
     // 마운트 시점의 판정이다 — today가 바뀌는 건 리마운트(다른 날 카드)뿐이다
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [today, column]);
+  }, [today]);
 
   return (
     <>
@@ -134,7 +134,7 @@ export const LampStage = ({ onStart, retry, today }: LampStageProps) => {
       />
 
       {summon &&
-        column &&
+        portalTarget &&
         createPortal(
           <LampSummon
             lamp={summon.lamp}
@@ -142,7 +142,7 @@ export const LampStage = ({ onStart, retry, today }: LampStageProps) => {
             onAccept={() => onStart?.()}
             onClose={() => setSummon(null)}
           />,
-          column,
+          portalTarget,
         )}
     </>
   );

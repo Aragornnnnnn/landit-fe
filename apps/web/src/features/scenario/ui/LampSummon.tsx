@@ -1,7 +1,7 @@
 'use client';
 
 // 소환 오버레이 — 램프가 흔들리다 래디가 튀어나와 오늘 대화를 건넨다.
-// 앱 컬럼을 통째로 덮는다. 딤이 헤더·달력까지 가리는 것이 시안의 의도다
+// 화면을 통째로 덮는다. 딤이 헤더·달력까지 가리는 것이 시안의 의도다
 import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import Image from 'next/image';
@@ -132,10 +132,10 @@ export const LampSummon = ({
   }, [asks, phase, reduced]);
 
   return (
-    <div className="absolute inset-0 z-40">
+    <div className="fixed inset-0 z-40">
       <motion.div
         aria-hidden
-        className="absolute inset-0 bg-black/60"
+        className="fixed inset-0 bg-black/60"
         {...(phase === 'closing'
           ? RETURN.dim
           : settle(reduced, DIM, { opacity: 1 }))}
