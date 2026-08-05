@@ -10,7 +10,6 @@ import { StreakWeek } from './StreakWeek';
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
 export interface StreakCalendarProps {
-  today: string;
   calendar: StreakCalendarResponse;
   canGoBack: boolean;
   canGoForward: boolean;
@@ -20,21 +19,20 @@ export interface StreakCalendarProps {
 }
 
 export const StreakCalendar = ({
-  today,
   calendar,
   canGoBack,
   canGoForward,
   onGoMonth,
   isSwitching,
 }: StreakCalendarProps) => {
-  // 그리는 달은 받은 데이터가 정한다. 요청한 달로 격자를 그리면 응답이 오기 전까지
+  // 그리는 달도 오늘도 받은 응답이 정한다. 요청한 달로 격자를 그리면 응답이 오기 전까지
   // 새 달 격자에 이전 달 활동일을 맞춰 보게 돼 달력이 통째로 비어 보인다
   const view = { year: calendar.year, month: calendar.month };
   const activeDates = new Set(calendar.activeDates);
   // 칸 상태를 여기서 한 번만 정한다 — 띠와 칸이 서로 다른 기준으로 "깬 날"을 판단하지 않게
   const markOfDate = (date: string) =>
     markOf(date, {
-      today,
+      today: calendar.today,
       activeDates,
       firstRecordDate: calendar.firstActiveDate,
     });

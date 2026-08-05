@@ -19,8 +19,6 @@ export const StreakFlow = () => {
   const router = useRouter();
   const { ref: scrollRef, onScroll, hasShadow } = useScrollShadow();
   const {
-    today,
-    view,
     calendar,
     error,
     canGoBack,
@@ -30,11 +28,15 @@ export const StreakFlow = () => {
     retry,
   } = useStreakCalendar();
 
+  // 화살표는 달력이 그려진 뒤에만 눌린다
   const changeMonth = (direction: -1 | 1) => {
+    if (calendar === null) return;
+
+    // 떠나는 달을 남긴다
     track(EVENTS.STREAK_MONTH_CHANGED, {
       direction: direction === -1 ? 'prev' : 'next',
-      year: view.year,
-      month: view.month,
+      year: calendar.year,
+      month: calendar.month,
     });
     goMonth(direction);
   };
@@ -59,7 +61,6 @@ export const StreakFlow = () => {
         {/* 달력이 있으면 달력이 이긴다 — 달을 넘기다 실패해도 보고 있던 달은 그대로 둔다 */}
         {calendar ? (
           <LoadedRecord
-            today={today}
             calendar={calendar}
             canGoBack={canGoBack}
             canGoForward={canGoForward}
