@@ -7,8 +7,9 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { useAppColumn } from '@/shared/lib/app-column';
+import { DAILY_REMINDER_CAMPAIGN } from '@/shared/lib/routes';
 
-import { BUBBLE_AT, LAMP_ASPECT } from '../lib/summon-timeline';
+import { BUBBLE_AT, LAMP_ASPECT, LAMP_FRAME } from '../lib/summon-timeline';
 import {
   decideSummon,
   markSummoned,
@@ -17,15 +18,12 @@ import {
 import { LampSummon, type LampRect } from './LampSummon';
 import { LampWaiting } from './LampWaiting';
 
-// 알림 딥링크의 유입 딱지 — 자리 규칙은 docs/analytics-utm.md
-const REMINDER_CAMPAIGN = 'daily_reminder';
-
 // 판정하면서 히스토리의 주소에서 utm을 지운다 — 남겨두면 하드웨어 뒤로가기로
 // 이 주소에 돌아올 때마다 알림 진입으로 오인해 다시 소환한다.
 // 라우터를 안 거치므로 앰플리튜드 페이지뷰가 중복 발사되지도 않는다
 const consumeReminderEntry = () => {
   const params = new URLSearchParams(window.location.search);
-  const fromReminder = params.get('utm_campaign') === REMINDER_CAMPAIGN;
+  const fromReminder = params.get('utm_campaign') === DAILY_REMINDER_CAMPAIGN;
   if (!fromReminder) return false;
 
   [...params.keys()]
@@ -69,26 +67,26 @@ export const LampStage = ({ onStart, retry, today }: LampStageProps) => {
     const lampBox = box.getBoundingClientRect();
     const columnBox = column.getBoundingClientRect();
 
-    // 시안에서 램프는 화면 폭의 60.3%, 세로 58% 자리다. 그런데 세로가 짧은 폰에선
-    // 그 폭대로면 말풍선이 화면 위로 나간다 — 위 여백과 CTA 자리를 뺀 높이에 맞춰
-    // 폭을 줄이고, 구도 전체(말풍선→램프)가 비율 그대로 작아지게 한다
+    // 시안 자리(LAMP_FRAME) 그대로 서되, 세로가 짧은 폰에선 그 폭대로면 말풍선이
+    // 화면 위로 나간다 — 위 여백과 CTA 자리를 뺀 높이에 맞춰 폭을 줄이고,
+    // 구도 전체(말풍선→램프)가 비율 그대로 작아지게 한다
     const stack = LAMP_ASPECT - BUBBLE_AT.top;
     const topMargin = 76; // 닫기 X와 상태바가 서는 자리
     const ctaSpace = 128; // "네!" 버튼과 아래 여백
     const width = Math.min(
-      columnBox.width * 0.603,
+      columnBox.width * LAMP_FRAME.widthRatio,
       (columnBox.height - topMargin - ctaSpace) / stack,
     );
 
-    // 폭이 줄어도 램프 중심은 시안 자리(가로 55.75%)를 지킨다
+    // 폭이 줄어도 램프 중심은 시안 자리를 지킨다
     const clampTop = (value: number) =>
       Math.min(
         Math.max(value, topMargin - BUBBLE_AT.top * width),
         columnBox.height - ctaSpace - LAMP_ASPECT * width,
       );
     const target = {
-      left: columnBox.width * 0.5575 - width / 2,
-      top: clampTop(columnBox.height * 0.58),
+      left: columnBox.width * LAMP_FRAME.centerXRatio - width / 2,
+      top: clampTop(columnBox.height * LAMP_FRAME.topRatio),
       width,
     };
 

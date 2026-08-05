@@ -111,9 +111,9 @@ export const LampSummon = ({
   useEffect(() => {
     if (!asks || phase !== 'summon') return;
     return registerOpenSheet(() => leave('closing', onClose));
-    // leave·onClose는 렌더마다 새 참조 — 걸면 매 렌더 재등록만 반복한다
+    // onClose는 렌더마다 새 참조 — 걸면 매 렌더 재등록만 반복한다
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [asks, phase]);
+  }, [asks, phase, reduced]);
 
   // 묻지 않는 소환은 래디가 자리를 잡는 순간 스스로 수락으로 넘어간다
   useEffect(() => {

@@ -5,13 +5,14 @@
 // 박자를 유지한 채 전체를 늘린다 — 비율을 건드리지 않아야 시안의 리듬이 남는다
 const SLOW = 1.5;
 
+// ms 눈금을 motion이 먹는 비율(times)과 초 단위 길이로 옮긴다 — 소환·복귀가 같은 산식을 쓴다
+const timeline = (totalMs: number) => ({
+  at: (...marks: number[]) => marks.map((ms) => ms / totalMs),
+  duration: (totalMs * SLOW) / 1000,
+});
+
 // 램프가 흔들리기 시작해 선택지가 다 뜰 때까지 (시안 기준)
-const SUMMON_MS = 2600;
-
-// ms를 이 타임라인 안의 비율로. motion의 times는 0~1이라 여기서 한 번에 옮긴다
-const at = (...marks: number[]) => marks.map((ms) => ms / SUMMON_MS);
-
-const DURATION = (SUMMON_MS * SLOW) / 1000;
+const { at, duration: DURATION } = timeline(2600);
 
 // 램프 — 200ms부터 좌우 일곱 번 급하게 휘청이다 부풀며 튀어오른다.
 // 흔들림과 점프가 한 몸이라 트랙을 나누지 않는다
@@ -84,7 +85,7 @@ export const DIM = {
   transition: { duration: DURATION, times: at(0, 880, 1120, 2600) },
 };
 
-// 말풍선과 선택지는 래디가 자리를 잡은 뒤 차례로 얹힌다
+// 말풍선과 선택지는 래디가 자리를 잡은 뒤 차례로 얹힌다. 닫기 X는 처음부터 떠 있다
 // 래디가 마지막 크기로 앉는 순간(타임라인 1110ms)에 맞춘다 — 말이 먼저 나오면 입이 따로 논다
 export const BUBBLE_MS = { delay: 1.11 * SLOW, duration: 0.3 * SLOW };
 export const ACCEPT_MS = { delay: 1.41 * SLOW, duration: 0.3 * SLOW };
@@ -105,10 +106,19 @@ export const popIn = ({
 
 // 시안(390×844 프레임)에서 읽은 각 레이어의 자리.
 // 램프 하나만 실측하고 나머지는 램프 기준 배수로 놓는다 — 화면 크기가 달라져도 구도가 유지된다
+const FRAME = { w: 390, h: 844 };
 const DESIGN = {
   lamp: { x: 100, y: 489, w: 235 },
   genie: { x: 61, y: 277, w: 250 },
   bubble: { x: 76, y: 184, w: 240 },
+};
+
+// 시안 프레임 안에서 램프가 서는 자리 — 오버레이가 이 비율로 목표 자리를 잡는다.
+// 손으로 나눈 소수를 흩어두면 시안을 재잴 때 어디를 고쳐야 하는지 못 찾는다
+export const LAMP_FRAME = {
+  widthRatio: DESIGN.lamp.w / FRAME.w,
+  centerXRatio: (DESIGN.lamp.x + DESIGN.lamp.w / 2) / FRAME.w,
+  topRatio: DESIGN.lamp.y / FRAME.h,
 };
 
 const relativeToLamp = ({ x, y, w }: { x: number; y: number; w: number }) => ({
@@ -167,9 +177,7 @@ export const BUBBLE_AT = {
 
 // 나가기 — 래디가 램프로 빨려 들어가고, 램프가 삼키며 출렁인 뒤 퍼프가 터진다.
 // 시안 타임라인의 복귀 구간(550~1750ms)을 복귀 시작 기준으로 옮긴 값
-const RETURN_MS = 1200;
-const back = (...marks: number[]) => marks.map((ms) => ms / RETURN_MS);
-const RETURN_DURATION = (RETURN_MS * SLOW) / 1000;
+const { at: back, duration: RETURN_DURATION } = timeline(1200);
 
 export const RETURN = {
   // 변형 기준점이 꼬리 끝(램프 입)이라 크기만 줄이면 그 점으로 빨려 들어간다.
