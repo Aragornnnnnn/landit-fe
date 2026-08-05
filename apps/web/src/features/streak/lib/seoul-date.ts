@@ -1,5 +1,8 @@
-// Asia/Seoul 기준 날짜 도구 — 스트릭의 하루 경계는 기기 타임존이 아니라 서울이 정한다
-// 날짜는 늘 yyyy-MM-dd 문자열로 다루고, 계산할 때만 UTC 자정 Date로 잠깐 바꿨다 되돌린다
+// Asia/Seoul 기준 날짜 도구 — 날짜는 늘 yyyy-MM-dd 문자열로 다루고,
+// 계산할 때만 UTC 자정 Date로 잠깐 바꿨다 되돌린다
+//
+// 하루의 경계는 서버가 정한다(응답의 today). todayInSeoul은 "어느 달을 먼저 물을지"를
+// 고르는 데만 쓴다 — 응답을 받기 전에는 물을 달을 알아야 해서 기기 값이 필요하다
 
 export interface YearMonth {
   year: number;
@@ -15,6 +18,7 @@ const SEOUL_PARTS = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
 });
 
+// 응답을 받기 전 한 번만 쓰는 값 — 화면 판단에는 서버가 준 today를 쓴다
 export const todayInSeoul = () => {
   const parts = SEOUL_PARTS.formatToParts(new Date());
   const value = (type: Intl.DateTimeFormatPartTypes) =>

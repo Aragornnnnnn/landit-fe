@@ -14,6 +14,7 @@ export const refreshStreakAfterCompletion = (queryClient: QueryClient) => {
   const userId = useAuthStore.getState().member?.userId ?? null;
   if (userId === null) return;
 
+  // 아직 응답이 없어 어느 달을 받아둘지는 기기 값으로 고른다
   const { year, month } = monthOf(todayInSeoul());
 
   // 받아 둔 것을 먼저 낡은 것으로 표시해야 아래 미리받기가 실제로 나간다

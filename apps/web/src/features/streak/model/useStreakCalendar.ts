@@ -12,9 +12,9 @@ import { streakKeys } from './keys';
 export const useStreakCalendar = () => {
   const userId = useAuthStore((state) => state.member?.userId ?? null);
   const queryClient = useQueryClient();
-  // 렌더 중 한 번 읽어 이 화면이 사는 동안 오늘을 고정한다 — 자정을 넘겨도 화면이 스스로 뒤틀리지 않는다
-  const [today] = useState(todayInSeoul);
-  const [view, setView] = useState(() => monthOf(today));
+  // 첫 조회에 어느 달을 물을지 정하는 용도. 화면 판단은 아래에서 서버가 준 오늘로 한다
+  const [deviceToday] = useState(todayInSeoul);
+  const [view, setView] = useState(() => monthOf(deviceToday));
 
   const { data, error, refetch, isPlaceholderData } = useQuery({
     queryKey: streakKeys.calendar(userId, view.year, view.month),
@@ -24,15 +24,19 @@ export const useStreakCalendar = () => {
       queryClient.setQueryData(streakKeys.current(userId), {
         currentStreakDays: calendar.currentStreakDays,
         activeToday: calendar.activeToday,
+        today: calendar.today,
       });
       return calendar;
     },
     enabled: userId !== null,
     // 지나간 달의 기록은 더 늘지 않는다 — 오갈 때마다 다시 부르지 않는다
-    staleTime: canGoForward(view, today) ? Infinity : undefined,
+    staleTime: canGoForward(view, deviceToday) ? Infinity : undefined,
     // 달을 넘기는 동안 이전 달을 그대로 두어 화면이 비었다 다시 차오르지 않게 한다
     placeholderData: (previous) => previous,
   });
+
+  // 하루의 경계는 서버가 정한다. 응답이 오기 전 한 프레임만 기기 값으로 버틴다
+  const today = data?.today ?? deviceToday;
 
   const goMonth = (direction: -1 | 1) => {
     setView((current) => shiftMonth(current, direction));
@@ -48,7 +52,7 @@ export const useStreakCalendar = () => {
     error,
     // 앞은 이번 달까지, 뒤는 첫 완료일이 있는 달까지
     canGoForward: canGoForward(view, today),
-    canGoBack: canGoBack(view, data?.streakStartedDate ?? null),
+    canGoBack: canGoBack(view, data?.firstActiveDate ?? null),
     goMonth,
     retry: () => void refetch(),
   };

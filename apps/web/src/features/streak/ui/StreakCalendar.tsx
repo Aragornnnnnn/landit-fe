@@ -36,7 +36,7 @@ export const StreakCalendar = ({
     markOf(date, {
       today,
       activeDates,
-      firstRecordDate: calendar.streakStartedDate,
+      firstRecordDate: calendar.firstActiveDate,
     });
 
   return (

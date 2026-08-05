@@ -4,6 +4,8 @@ import { api } from '@/shared/api/client';
 export interface CurrentStreakResponse {
   currentStreakDays: number;
   activeToday: boolean;
+  // 서버가 activeToday를 판단할 때 쓴 KST 오늘 (yyyy-MM-dd)
+  today: string;
 }
 
 export interface StreakCalendarResponse {
@@ -11,8 +13,10 @@ export interface StreakCalendarResponse {
   month: number;
   currentStreakDays: number;
   activeToday: boolean;
+  // 서버가 activeToday를 판단할 때 쓴 KST 오늘 (yyyy-MM-dd)
+  today: string;
   // 이력 전체의 첫 완료일. 현재 이어지는 구간의 시작일이 아니다
-  streakStartedDate: string | null;
+  firstActiveDate: string | null;
   longestStreakDays: number;
   totalActiveDays: number;
   // 요청한 월의 완료 날짜만 온다 (yyyy-MM-dd)
