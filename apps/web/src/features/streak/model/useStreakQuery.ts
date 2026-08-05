@@ -9,7 +9,7 @@ import { streakKeys } from './keys';
 export const useStreakQuery = () => {
   const userId = useAuthStore((state) => state.member?.userId ?? null);
 
-  const { data } = useQuery({
+  const { data, isPending } = useQuery({
     queryKey: streakKeys.current(userId),
     queryFn: getCurrentStreak,
     enabled: userId !== null,
@@ -17,5 +17,10 @@ export const useStreakQuery = () => {
     retry: 1,
   });
 
-  return data ?? null;
+  return {
+    streak: data ?? null,
+    // 아직 못 받은 것과 받다 실패한 것은 다르다 — 부르는 쪽이 둘을 나눠 그릴 수 있게 한다.
+    // 로그인 전에는 쿼리가 돌지 않아 isPending이 계속 참이다. 그건 기다리는 게 아니라 볼 게 없는 것
+    isPending: userId !== null && isPending,
+  };
 };

@@ -16,9 +16,11 @@ import { StreakFruit } from './StreakFruit';
 const HEADER_FRUIT_SIZE = 16;
 
 export const HeaderStreak = () => {
-  const streak = useStreakQuery();
+  const { streak, isPending } = useStreakQuery();
 
-  // 조회 전·실패에도 자리를 지키고 0일로 그린다 — 홈은 스트릭 없이도 멀쩡히 돌아야 한다
+  // 조회에 실패해도 자리를 지키고 0일로 그린다 — 홈은 스트릭 없이도 멀쩡히 돌아야 한다.
+  // 다만 아직 못 받은 건 실패가 아니다. 여기에도 0일을 쓰면 앱을 켤 때마다
+  // 0일을 먼저 그렸다가 응답이 온 순간 숫자가 튄다 — 그럴 바엔 기다렸다 제 숫자를 그린다
   const currentStreakDays = streak?.currentStreakDays ?? 0;
   const activeToday = streak?.activeToday ?? false;
   const state = fruitStateOf({ currentStreakDays, activeToday });
@@ -26,8 +28,12 @@ export const HeaderStreak = () => {
   return (
     <HeaderAction
       href={STREAK_PATH}
-      label={`${currentStreakDays}일`}
-      ariaLabel={`연속 학습 ${currentStreakDays}일, 연속 기록 보기`}
+      label={isPending ? '' : `${currentStreakDays}일`}
+      ariaLabel={
+        isPending
+          ? '연속 기록 보기'
+          : `연속 학습 ${currentStreakDays}일, 연속 기록 보기`
+      }
       highlighted={state === 'fresh'}
       onClick={() =>
         track(EVENTS.STREAK_OPENED, {
