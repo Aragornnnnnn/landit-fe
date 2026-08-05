@@ -1,7 +1,7 @@
 // 경로 → Page Viewed 속성 매핑 — 동적 세그먼트는 page_name으로 정규화하고 id는 속성으로 뺀다 (정책 2-2)
 import type { EventProps } from '@landit/analytics';
 
-import { DAILY_REMINDER_CAMPAIGN } from '@/shared/lib/routes';
+import { DAILY_REMINDER_CAMPAIGN } from './utm';
 
 type PageViewProps = EventProps['Page Viewed'];
 

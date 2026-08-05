@@ -1,7 +1,8 @@
 // 매일 KST 20시 리마인드 목록을 만든다 — 완료 여부와 무관하게 전 일수를 깐다 (클리어 시 오늘 취소는 후속: 오늘 뺀 목록을 재발신하면 된다)
 import type { Reminder } from '@landit/bridge';
 
-import { DAILY_REMINDER_CAMPAIGN, SCENARIO_PATH } from '@/shared/lib/routes';
+import { DAILY_REMINDER_CAMPAIGN } from '@/shared/analytics/utm';
+import { SCENARIO_PATH } from '@/shared/lib/routes';
 
 import { REMINDER_COPIES } from './reminder-copies';
 

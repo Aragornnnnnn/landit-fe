@@ -6,8 +6,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { DAILY_REMINDER_CAMPAIGN } from '@/shared/analytics/utm';
 import { useAppColumn } from '@/shared/lib/app-column';
-import { DAILY_REMINDER_CAMPAIGN } from '@/shared/lib/routes';
 
 import { BUBBLE_AT, LAMP_ASPECT, LAMP_FRAME } from '../lib/summon-timeline';
 import {
@@ -101,7 +101,7 @@ export const LampStage = ({ onStart, retry, today }: LampStageProps) => {
   };
 
   // 연출이 시작된 순간 기록한다 — 수락까지 기다리면 X 뒤 재진입마다 다시 나와 성가시다
-  const summonWith = (asks: boolean) => {
+  const startSummon = (asks: boolean) => {
     const lamp = measure();
     if (!lamp) return;
     if (today) markSummoned(today);
@@ -118,7 +118,7 @@ export const LampStage = ({ onStart, retry, today }: LampStageProps) => {
       return;
 
     // 한 프레임 미룬다 — 레이아웃이 앉은 뒤에 램프 자리를 재고, 효과 안 동기 setState도 피한다
-    const frame = requestAnimationFrame(() => summonWith(true));
+    const frame = requestAnimationFrame(() => startSummon(true));
     return () => cancelAnimationFrame(frame);
     // 마운트 시점의 판정이다 — today가 바뀌는 건 리마운트(다른 날 카드)뿐이다
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -130,7 +130,7 @@ export const LampStage = ({ onStart, retry, today }: LampStageProps) => {
         ref={lampBoxRef}
         retry={retry}
         asleep={!summon}
-        onSummon={onStart ? () => summonWith(false) : undefined}
+        onRub={onStart ? () => startSummon(false) : undefined}
       />
 
       {summon &&

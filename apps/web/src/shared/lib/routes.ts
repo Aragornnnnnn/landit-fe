@@ -1,9 +1,6 @@
 // 화면 주소 상수 — 여러 곳에서 같은 경로를 문자열로 반복하지 않도록 한 곳에 모은다
 // 스몰톡 탭이 생기면 복귀 목적지가 둘로 갈리는데, 그 분기도 여기서 시작한다
 export const SCENARIO_PATH = '/scenario';
-
-// 시나리오 리마인더 알림의 utm_campaign 값 — 만드는 곳(알림 예약)과 읽는 곳(계측·램프 게이트)이 같이 쓴다
-export const DAILY_REMINDER_CAMPAIGN = 'daily_reminder';
 export const SMALLTALK_PATH = '/smalltalk';
 
 interface ScenarioReturn {
