@@ -18,11 +18,4 @@ describe('resolveStoreTarget', () => {
       store: 'app_store',
     });
   });
-
-  it('플랫폼을 모르면 /download로 보내고 계측은 라우트에 맡긴다', () => {
-    expect(resolveStoreTarget(null)).toEqual({
-      url: '/download?source=app_update',
-      store: null,
-    });
-  });
 });

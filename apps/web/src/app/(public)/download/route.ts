@@ -38,16 +38,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const userAgent = request.headers.get('user-agent') ?? '';
   const isAndroid = /android/i.test(userAgent);
 
-  // 출처는 자기 신고 — 앱 업데이트 UI만 ?source=app_update를 달고 온다. 그 외 값은 전부 link
-  const source: VisitProps['source'] =
-    new URL(request.url).searchParams.get('source') === 'app_update'
-      ? 'app_update'
-      : 'link';
-
-  await trackDownloadVisit({
-    store: isAndroid ? 'play_store' : 'app_store',
-    source,
-  });
+  await trackDownloadVisit({ store: isAndroid ? 'play_store' : 'app_store' });
 
   if (isAndroid) {
     return NextResponse.redirect(PLAY_STORE_URL);

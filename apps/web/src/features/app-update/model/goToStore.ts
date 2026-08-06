@@ -9,12 +9,11 @@ import { getNativeContext } from '@/shared/bridge/native-context';
 import { resolveStoreTarget } from './resolveStoreTarget';
 
 export const goToStore = () => {
-  const { url, store } = resolveStoreTarget(
-    getNativeContext()?.platform ?? null,
-  );
+  // AppUpdateGate가 surface === 'app' && nativeContext !== null일 때만 이 버튼을 렌더링한다 —
+  // 여기 도달했는데 null이면 그 전제가 깨진 버그이니 조용히 /download로 새지 않고 그대로 터뜨린다
+  const { platform } = getNativeContext()!;
+  const { url, store } = resolveStoreTarget(platform);
 
-  if (store) {
-    track(EVENTS.DOWNLOAD_LINK_VISITED, { store, source: 'app_update' });
-  }
+  track(EVENTS.APP_UPDATE_STORE_OPENED, { store });
   window.location.href = url;
 };

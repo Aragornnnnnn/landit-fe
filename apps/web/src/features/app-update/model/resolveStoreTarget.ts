@@ -7,25 +7,16 @@ import {
   PLAY_STORE_APP_URL,
 } from '@/shared/lib/store-listing';
 
-type StoreName = EventProps['Download Link Visited']['store'];
+type StoreName = EventProps['App Update Store Opened']['store'];
 
 export interface StoreTarget {
   url: string;
-  // 계측에 남길 스토어. null이면 /download가 UA로 판별해 서버에서 대신 발화한다
-  store: StoreName | null;
+  store: StoreName;
 }
 
-// source — 인스타 등 외부 링크 유입과 구분해 계측한다
-const FALLBACK_URL = '/download?source=app_update';
-
 export const resolveStoreTarget = (
-  platform: NativeContext['platform'] | null,
-): StoreTarget => {
-  if (platform === 'android') {
-    return { url: PLAY_STORE_APP_URL, store: 'play_store' };
-  }
-  if (platform === 'ios') {
-    return { url: APP_STORE_APP_URL, store: 'app_store' };
-  }
-  return { url: FALLBACK_URL, store: null };
-};
+  platform: NativeContext['platform'],
+): StoreTarget =>
+  platform === 'android'
+    ? { url: PLAY_STORE_APP_URL, store: 'play_store' }
+    : { url: APP_STORE_APP_URL, store: 'app_store' };

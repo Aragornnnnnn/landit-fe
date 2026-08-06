@@ -3,11 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GET } from './route';
 
-function downloadRequest(
-  userAgent?: string,
-  url = 'http://localhost/download',
-): Request {
-  return new Request(url, {
+function downloadRequest(userAgent?: string): Request {
+  return new Request('http://localhost/download', {
     headers: userAgent ? { 'user-agent': userAgent } : {},
   });
 }
@@ -119,7 +116,7 @@ describe('GET /download 앰플리튜드 계측', () => {
     expect(body.api_key).toBe('test-key');
     expect(body.events[0]).toMatchObject({
       event_type: 'Download Link Visited',
-      event_properties: { store: 'play_store', source: 'link' },
+      event_properties: { store: 'play_store' },
     });
     expect(body.events[0].device_id).toBeTruthy();
   });
@@ -129,27 +126,7 @@ describe('GET /download 앰플리튜드 계측', () => {
 
     expect(sentBody().events[0]).toMatchObject({
       event_type: 'Download Link Visited',
-      event_properties: { store: 'app_store', source: 'link' },
-    });
-  });
-
-  it('?source=app_update로 오면 source=app_update로 기록한다', async () => {
-    await GET(
-      downloadRequest(IPHONE_UA, 'http://localhost/download?source=app_update'),
-    );
-
-    expect(sentBody().events[0].event_properties).toMatchObject({
-      source: 'app_update',
-    });
-  });
-
-  it('모르는 source 값은 link로 기록한다', async () => {
-    await GET(
-      downloadRequest(IPHONE_UA, 'http://localhost/download?source=hacked'),
-    );
-
-    expect(sentBody().events[0].event_properties).toMatchObject({
-      source: 'link',
+      event_properties: { store: 'app_store' },
     });
   });
 
