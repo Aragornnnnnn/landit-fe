@@ -1,4 +1,4 @@
-// resolveAppUpdateRequest — 브라우저·구버전 셸을 건너뛰고, platform 표기를 BE 계약(대문자)으로 바꾸는지 검증
+// resolveAppUpdateRequest — 브라우저·구버전 셸·형식이 어긋난 버전명을 건너뛰고, platform 표기를 BE 계약(대문자)으로 바꾸는지 검증
 import type { NativeContext } from '@landit/bridge';
 import { describe, expect, it } from 'vitest';
 
@@ -29,6 +29,15 @@ describe('resolveAppUpdateRequest', () => {
     ).toBeNull();
   });
 
+  it.each(['1.0', '1.0.0-beta', 'v1.0.0'])(
+    'appVersion이 Major.Minor.Patch 형식이 아니면(%s) 요청을 만들지 않는다',
+    (appVersion) => {
+      expect(
+        resolveAppUpdateRequest('app', fakeContext({ appVersion })),
+      ).toBeNull();
+    },
+  );
+
   it.each([
     ['ios', 'IOS'],
     ['android', 'ANDROID'],
@@ -36,7 +45,7 @@ describe('resolveAppUpdateRequest', () => {
     '앱이고 유효한 컨텍스트면 platform을 %s에서 %s로 바꿔 요청을 만든다',
     (platform, expected) => {
       expect(resolveAppUpdateRequest('app', fakeContext({ platform }))).toEqual(
-        { platform: expected, buildNumber: 18 },
+        { platform: expected, versionName: '1.0.0', buildNumber: 18 },
       );
     },
   );

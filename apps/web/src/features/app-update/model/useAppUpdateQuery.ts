@@ -5,7 +5,12 @@ import { checkAppUpdate } from '../api/app-update';
 import type { AppUpdateRequest } from './resolveAppUpdateRequest';
 
 export const appUpdateKey = (request: AppUpdateRequest | null) =>
-  ['app-update', request?.platform, request?.buildNumber] as const;
+  [
+    'app-update',
+    request?.platform,
+    request?.versionName,
+    request?.buildNumber,
+  ] as const;
 
 export const useAppUpdateQuery = (request: AppUpdateRequest | null) => {
   const { data } = useQuery({
@@ -13,6 +18,7 @@ export const useAppUpdateQuery = (request: AppUpdateRequest | null) => {
     queryFn: () =>
       checkAppUpdate(
         (request as AppUpdateRequest).platform,
+        (request as AppUpdateRequest).versionName,
         (request as AppUpdateRequest).buildNumber,
       ),
     enabled: request !== null,
