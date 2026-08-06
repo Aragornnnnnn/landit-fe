@@ -81,7 +81,8 @@ export const StreakStamp = () => {
           <p className="text-[26px] leading-none font-extrabold text-foreground">
             {celebration.title}
           </p>
-          <p className="mt-2.5 text-sm font-medium text-muted-foreground">
+          {/* 고비를 채운 날 문구는 길어서 두 줄로 감긴다 — 가운데 정렬로 감겨야 줄이 흐트러지지 않는다 */}
+          <p className="mt-2.5 text-center text-sm font-medium text-muted-foreground">
             {celebration.guide}
           </p>
         </motion.div>

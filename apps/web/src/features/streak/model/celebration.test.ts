@@ -133,10 +133,10 @@ describe('celebrationOf — 문구', () => {
   });
 
   it.each([
-    [7, '일주일을 채웠어요, 내일도 이어가요'],
-    [30, '한 달을 채웠어요, 여기서 더 가봐요'],
-    [100, '백 일을 채웠어요, 계속 이어가요'],
-  ])('%i일째를 채운 날엔 축하하되 다음을 열어 둔다', (days, guide) => {
+    [7, '일주일 연속! 이 기세면 원어민 실력도 시간 문제예요'],
+    [30, '한 달을 채웠어요! 꾸준히 하는 모습이 멋져요'],
+    [100, '백 일 동안 하루도 안 빠졌어요! 정말 멋져요'],
+  ])('%i일째를 채운 날엔 그날만의 축하를 건넨다', (days, guide) => {
     const celebration = celebrationOf({
       currentStreakDays: days,
       base: { activeToday: false },
@@ -153,6 +153,8 @@ describe('celebrationOf — 문구', () => {
       base: { activeToday: false },
     });
 
-    expect(celebration.guide).not.toBe('일주일을 꽉 채웠어요!');
+    expect(celebration.guide).not.toBe(
+      '일주일 연속! 이 기세면 원어민 실력도 시간 문제예요',
+    );
   });
 });
