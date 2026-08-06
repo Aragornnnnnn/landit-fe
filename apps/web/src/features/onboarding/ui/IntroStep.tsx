@@ -26,13 +26,13 @@ export const IntroStep = ({
               👋
             </motion.span>
             <br />
-            같이 편하게 이야기해봐요
+            원어민으로 만들어드릴게요
           </h1>
 
           <p className="text-xl leading-snug font-bold">
-            대화가 끝나면 외국인 귀에
+            매일 대화 하나를 준비해드려요
             <br />
-            어떻게 들렸는지 알려드릴게요
+            꾸준히 하다 보면 입이 트여요
           </p>
         </div>
 

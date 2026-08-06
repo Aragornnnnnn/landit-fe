@@ -32,7 +32,7 @@ export const ThoughtStep = ({ onNext }: { onNext: () => void }) => {
         <h1 className="text-3xl leading-[1.18] font-black tracking-normal">
           말할 때마다 나와서
           <br />
-          상대 속마음을 대신 알려줄게요
+          상대 속마음을 알려줄게요
         </h1>
 
         <div className="flex flex-1 items-center justify-center py-6">
