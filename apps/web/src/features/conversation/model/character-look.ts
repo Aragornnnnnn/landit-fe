@@ -4,8 +4,26 @@
 import type { ConversationPhase } from './conversation-machine';
 import type { FloatingThought, ThoughtType } from './thought';
 
-/** 대화 상대가 누구인가 — 세션 TTS 음성 성별이 고른다 */
-export type Partner = 'marco' | 'chloe';
+/** 대화 상대가 누구인가 */
+export type Partner = 'marco' | 'chloe' | 'teddy';
+
+/**
+ * 목소리가 곧 캐스팅이다 — 백엔드는 시나리오별 음성만 내려주고(공개 API에 캐릭터 필드 없음),
+ * 어느 캐릭터의 목소리인지는 여기서 안다. 기준은 TTS 모델 — 백엔드가 테디에게 모델 자체를
+ * 따로 배정했다(landit-be V38). 개별 voice ID로 걸면 같은 모델의 다른 목소리가 시드될 때 깨진다.
+ * 목록에 없으면 음성 성별로 폴백한다(남=마르코, 여=클로이).
+ */
+const PARTNER_BY_MODEL: Record<string, Partner> = {
+  'deepgram/aura-2': 'teddy',
+};
+
+export const toPartner = (
+  voice: { model: string; gender: 'MALE' | 'FEMALE' } | null,
+): Partner => {
+  const cast = voice && PARTNER_BY_MODEL[voice.model];
+  if (cast) return cast;
+  return voice?.gender === 'FEMALE' ? 'chloe' : 'marco';
+};
 
 /** 몸이 무엇을 하는 중인가 */
 export type CharacterPosture = 'idle' | 'listening' | 'speaking';

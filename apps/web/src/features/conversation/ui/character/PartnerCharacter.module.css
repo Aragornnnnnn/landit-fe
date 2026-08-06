@@ -135,8 +135,16 @@
 }
 
 /* 표정 교체용 파츠는 기본 숨김 — 포즈 규칙과 특이도가 같아 반드시 위에 둔다 */
-.parts :global(#mouth-frown) {
+.parts :global(#mouth-frown),
+.parts :global(#frown-brow-left),
+.parts :global(#frown-brow-right) {
   display: none;
+}
+
+/* 화난 눈썹(곰) — 찡그림 동안 눈 위에 얹힌다. 입과 달리 말하는 중에도 유지된다 */
+.frown .parts :global(#frown-brow-left),
+.frown .parts :global(#frown-brow-right) {
+  display: block;
 }
 
 /* 눈웃음은 display 대신 opacity·scale로 둬서 눈이 감기며 아크로 이어진다 */
