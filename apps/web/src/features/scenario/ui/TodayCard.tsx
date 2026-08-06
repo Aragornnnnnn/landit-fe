@@ -8,7 +8,7 @@ import { EASE_STANDARD } from '@/shared/motion';
 
 import type { DailyScenario } from '../api/daily';
 import { toScenario, type Scenario } from '../lib/to-scenario';
-import { LampWaiting } from './LampWaiting';
+import { LampStage } from './LampStage';
 import { ScenarioCard } from './ScenarioCard';
 
 interface TodayCardProps {
@@ -20,6 +20,8 @@ interface TodayCardProps {
   onStart: (scenario: Scenario) => void;
   // 어느 날 카드인지. 뒷면에서 표현 학습으로 들어갈 때 이어 나른다
   date?: string;
+  // 서버가 준 이 카드의 날 (yyyy-MM-dd). 램프 자동 소환을 "그날 처음"으로 거르는 열쇠다
+  today?: string;
   // 표현 마무리 후 복귀 — 완료 카드를 뒷면(표현 리스트)으로 펴 둔다
   autoFlip?: boolean;
 }
@@ -29,6 +31,7 @@ export const TodayCard = ({
   playable,
   onStart,
   date,
+  today,
   autoFlip = false,
 }: TodayCardProps) => {
   const reduced = useReducedMotion() ?? false;
@@ -48,10 +51,10 @@ export const TodayCard = ({
           }}
         />
       ) : (
-        // TODO(소환 오버레이 PR): 지금은 부르는 즉시 대화로 보낸다 — 아직 열 오버레이가 없다
-        <LampWaiting
+        <LampStage
           retry={daily.dailyScenarioType === 'RETRY'}
-          onSummon={playable ? () => onStart(scenario) : undefined}
+          today={today}
+          onStart={playable ? () => onStart(scenario) : undefined}
         />
       )}
     </Arrival>

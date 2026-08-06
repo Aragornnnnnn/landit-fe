@@ -82,6 +82,7 @@ function ScenarioContent() {
           daily={daily.scenario}
           playable={daily.playable}
           date={date}
+          today={daily.date}
           autoFlip={autoFlip}
           onStart={(scenario) =>
             router.push(conversationPath(scenario.scenarioId, date))

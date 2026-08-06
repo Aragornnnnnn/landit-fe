@@ -1,6 +1,8 @@
 // 경로 → Page Viewed 속성 매핑 — 동적 세그먼트는 page_name으로 정규화하고 id는 속성으로 뺀다 (정책 2-2)
 import type { EventProps } from '@landit/analytics';
 
+import { DAILY_REMINDER_CAMPAIGN } from './utm';
+
 type PageViewProps = EventProps['Page Viewed'];
 
 // 계측 제외 — 루트는 즉시 redirect라 페이지뷰로 의미가 없다
@@ -42,7 +44,7 @@ export const toPageView = (
     }
     // 데일리 리마인드 알림 탭 유입 — 셸 딥링크 url의 UTM에서 파생한다 (utm_* 자체는 앰플리튜드 어트리뷰션이 수집).
     // 웜 딥링크는 SPA 내부 이동이라 어트리뷰션이 못 보므로, 문구 슬러그도 이벤트 속성으로 실어야 유실이 없다
-    if (searchParams.get('utm_campaign') === 'daily_reminder') {
+    if (searchParams.get('utm_campaign') === DAILY_REMINDER_CAMPAIGN) {
       const copySlug = searchParams.get('utm_content');
       return {
         ...base,
