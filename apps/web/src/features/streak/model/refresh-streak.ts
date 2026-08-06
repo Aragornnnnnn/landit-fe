@@ -5,7 +5,12 @@ import type { QueryClient } from '@tanstack/react-query';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
 
-import { getCurrentStreak, getStreakCalendar } from '../api/streak';
+import {
+  getCurrentStreak,
+  getStreakCalendar,
+  type CurrentStreakResponse,
+} from '../api/streak';
+import type { StreakBase } from './celebration';
 import { streakKeys } from './keys';
 
 export const refreshStreakAfterCompletion = (queryClient: QueryClient) => {
@@ -13,8 +18,20 @@ export const refreshStreakAfterCompletion = (queryClient: QueryClient) => {
   const userId = useAuthStore.getState().member?.userId ?? null;
   if (userId === null) return;
 
+  // 버리기 전에 집어둔다 — 여기 남아 있는 게 곧 대화에 들어갈 때 알던 값이고,
+  // 축하 화면은 그때 오늘이 아직이었을 때만 열매가 찍히는 연출을 켠다
+  const previous = queryClient.getQueryData<CurrentStreakResponse>(
+    streakKeys.current(userId),
+  );
+
   // 받아 둔 것을 먼저 낡은 것으로 표시해야 아래 미리받기가 실제로 나간다
   void queryClient.invalidateQueries({ queryKey: streakKeys.all });
+
+  // 집어둔 값은 무효화 뒤에 심는다 — 조회 결과가 아니라 이번 완료를 설명하는 값이라 같이 버려지면 안 된다
+  const celebrationBase: StreakBase | null = previous
+    ? { activeToday: previous.activeToday }
+    : null;
+  queryClient.setQueryData(streakKeys.celebrationBase(userId), celebrationBase);
 
   // 홈 헤더가 볼 숫자와, 연속 기록 페이지가 열자마자 그릴 달.
   // 어느 달인지는 서버가 정한다 — 연속 기록 페이지도 같은 키로 연다

@@ -3,11 +3,9 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 
 import type { StreakCalendarResponse } from '../api/streak';
 import { buildMonthGrid } from '../lib/month-grid';
-import { formatMonthLabel } from '../lib/seoul-date';
+import { formatMonthLabel, WEEKDAY_LABELS } from '../lib/seoul-date';
 import { markOf } from '../model/calendar-day';
 import { StreakWeek } from './StreakWeek';
-
-const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
 export interface StreakCalendarProps {
   calendar: StreakCalendarResponse;
@@ -64,7 +62,7 @@ export const StreakCalendar = ({
       </header>
 
       <div className="grid grid-cols-7 pb-3">
-        {WEEKDAYS.map((weekday) => (
+        {WEEKDAY_LABELS.map((weekday) => (
           <span
             key={weekday}
             className="text-center text-[13px] font-medium text-muted-foreground"
