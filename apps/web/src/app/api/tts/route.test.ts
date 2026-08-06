@@ -55,6 +55,24 @@ describe('POST /api/tts', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('테디 음성 모델(deepgram/aura-2)도 허용한다', async () => {
+    vi.stubEnv('OPENROUTER_API_KEY', 'real-key');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('mp3-bytes', { status: 200 })),
+    );
+
+    const res = await POST(
+      ttsRequest({
+        input: 'Hello',
+        model: 'deepgram/aura-2',
+        voice: 'aura-2-orpheus-en',
+      }),
+    );
+
+    expect(res.status).toBe(200);
+  });
+
   it('허용 목록에 없는 model이면 400을 돌려주고 합성을 부르지 않는다', async () => {
     vi.stubEnv('OPENROUTER_API_KEY', 'real-key');
     const fetchMock = vi.fn();

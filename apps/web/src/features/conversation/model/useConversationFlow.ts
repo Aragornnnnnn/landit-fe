@@ -18,7 +18,7 @@ import { reportError } from '@/shared/monitoring/report';
 import { showToast } from '@/shared/ui/toast';
 
 import { submitMessage, type NextMessage } from '../api/session';
-import type { Partner } from './character-look';
+import { toPartner } from './character-look';
 import {
   initialConversationState,
   nextConversationState,
@@ -257,8 +257,8 @@ export const useConversationFlow = (scenario: Scenario) => {
     isUserOpening: !aiMessage && Boolean(preview?.userOpeningInstruction),
   };
 
-  // 상대 캐릭터 성별은 시나리오 TTS 음성을 따른다 (미설정 시 남성)
-  const partner: Partner = voice?.gender === 'FEMALE' ? 'chloe' : 'marco';
+  // 상대 캐릭터는 시나리오 TTS 음성이 정한다 — 지정(character)이 우선, 없으면 성별
+  const partner = toPartner(voice);
 
   return {
     phase: state.phase,
