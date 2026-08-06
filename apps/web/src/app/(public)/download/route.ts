@@ -2,9 +2,7 @@
 import { EVENTS, type EventProps } from '@landit/analytics';
 import { NextResponse } from 'next/server';
 
-const APP_STORE_URL = 'https://apps.apple.com/kr/app/id6787414201';
-const PLAY_STORE_URL =
-  'https://play.google.com/store/apps/details?id=com.saynow.app';
+import { APP_STORE_URL, PLAY_STORE_URL } from '@/shared/lib/store-listing';
 
 const AMPLITUDE_HTTP_API = 'https://api2.amplitude.com/2/httpapi';
 
