@@ -8,12 +8,17 @@ export interface AppUpdateCheckResponse {
   updateType: AppUpdateType;
   latestVersionName: string;
   latestBuildNumber: number;
-  minimumSupportedBuildNumber: number;
+  minimumSupportedVersionName: string;
   reason: string | null;
   releasedAt: string;
 }
 
-export const checkAppUpdate = (platform: AppPlatform, buildNumber: number) =>
+// buildNumber는 필수 파라미터지만 업데이트 판단에는 쓰이지 않는다 — 기준은 versionName이다
+export const checkAppUpdate = (
+  platform: AppPlatform,
+  versionName: string,
+  buildNumber: number,
+) =>
   api.get<AppUpdateCheckResponse>(
-    `/api/v1/app-versions/check?platform=${platform}&buildNumber=${buildNumber}`,
+    `/api/v1/app-versions/check?platform=${platform}&versionName=${versionName}&buildNumber=${buildNumber}`,
   );
