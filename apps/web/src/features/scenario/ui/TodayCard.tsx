@@ -24,6 +24,8 @@ interface TodayCardProps {
   today?: string;
   // 표현 마무리 후 복귀 — 완료 카드를 뒷면(표현 리스트)으로 펴 둔다
   autoFlip?: boolean;
+  // 소환을 닫아 오늘은 안 하기로 했다. 복귀 연출까지 끝난 뒤에 온다
+  onSummonClose?: () => void;
 }
 
 export const TodayCard = ({
@@ -33,6 +35,7 @@ export const TodayCard = ({
   date,
   today,
   autoFlip = false,
+  onSummonClose,
 }: TodayCardProps) => {
   const reduced = useReducedMotion() ?? false;
   const scenario = toScenario(daily, playable);
@@ -55,6 +58,7 @@ export const TodayCard = ({
           retry={daily.dailyScenarioType === 'RETRY'}
           today={today}
           onStart={playable ? () => onStart(scenario) : undefined}
+          onSummonClose={onSummonClose}
         />
       )}
     </Arrival>

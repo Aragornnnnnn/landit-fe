@@ -50,6 +50,8 @@ interface LampStageProps {
   retry?: boolean;
   // 이 카드의 날 (서버가 준 yyyy-MM-dd). 자동 소환을 "그날 처음"으로 거르는 열쇠다
   today?: string;
+  // 소환을 닫고 대기 카드로 돌아왔다 — 복귀 연출이 끝난 뒤에 나간다
+  onSummonClose?: () => void;
 }
 
 // 소환에는 두 결이 있다 — 화면이 알아서 띄우면 묻고, 사용자가 부르면 묻지 않는다
@@ -58,7 +60,12 @@ interface Summon {
   asks: boolean;
 }
 
-export const LampStage = ({ onStart, retry, today }: LampStageProps) => {
+export const LampStage = ({
+  onStart,
+  retry,
+  today,
+  onSummonClose,
+}: LampStageProps) => {
   const [summon, setSummon] = useState<Summon | null>(null);
   const lampBoxRef = useRef<HTMLDivElement>(null);
   // 서버 렌더엔 document가 없다 — 붙은 뒤에만 포털 대상이 생긴다
@@ -144,7 +151,10 @@ export const LampStage = ({ onStart, retry, today }: LampStageProps) => {
             lamp={summon.lamp}
             asks={summon.asks}
             onAccept={() => onStart?.()}
-            onClose={() => setSummon(null)}
+            onClose={() => {
+              setSummon(null);
+              onSummonClose?.();
+            }}
           />,
           portalTarget,
         )}

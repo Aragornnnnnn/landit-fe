@@ -3,7 +3,6 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
 
 import { AppUpdateGate } from '@/features/app-update/ui/AppUpdateGate';
-import { NotificationConsentGate } from '@/features/notification/ui/NotificationConsentGate';
 import { PushTokenSync } from '@/features/notification/ui/PushTokenSync';
 import { ReminderSync } from '@/features/notification/ui/ReminderSync';
 import { AnalyticsBootstrap, PageViewTracker } from '@/shared/analytics';
@@ -54,7 +53,6 @@ export default function RootLayout({
         <Providers>
           {children}
           <AppUpdateGate />
-          <NotificationConsentGate />
           <ReminderSync />
           <PushTokenSync />
         </Providers>
