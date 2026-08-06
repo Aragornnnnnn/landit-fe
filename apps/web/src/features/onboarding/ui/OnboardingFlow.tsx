@@ -10,15 +10,15 @@ import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { markOnboardingSeen } from '@/shared/auth/onboarding-seen';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
-import { conversationPath, SCENARIO_PATH } from '@/shared/lib/routes';
+import { ONBOARDED_PARAM, SCENARIO_PATH } from '@/shared/lib/routes';
 import { Transition } from '@/shared/motion';
 
 import { STEP_ORDER, type OnboardingStep } from '../model/steps';
 import { IntroStep } from './IntroStep';
+import { LampStep } from './LampStep';
 import { MicStep } from './MicStep';
 import { NotificationStep } from './NotificationStep';
 import { OnboardingHeader } from './OnboardingHeader';
-import { ScenarioStep } from './ScenarioStep';
 import { SoundStep } from './SoundStep';
 import { ThoughtStep } from './ThoughtStep';
 
@@ -85,15 +85,14 @@ export const OnboardingFlow = () => {
     if (currentIndex > 0) goTo(stepOrder[currentIndex - 1]);
   };
 
-  // 소개한 첫 시나리오 대화로 곧장 들어간다 — 리스트 경유 없이. 시나리오를 못 받았으면 홈으로 폴백
-  const startConversation = (scenarioId: number | null) => {
+  // 홈으로 보낸다 — 거기서 램프가 열리며 오늘 대화로 이어진다.
+  // onboarded 표식을 달면 홈이 다시 묻지 않는다 (방금 시작하겠다고 답했다)
+  const startFirstConversation = () => {
     track(EVENTS.ONBOARDING_STEP_COMPLETED, { step: 'scenario' });
     track(EVENTS.ONBOARDING_COMPLETED);
     // 끝까지 본 기기로 기록해 재로그인 시 온보딩을 다시 보여주지 않는다
     markOnboardingSeen();
-    router.replace(
-      scenarioId != null ? conversationPath(scenarioId) : SCENARIO_PATH,
-    );
+    router.replace(`${SCENARIO_PATH}?${ONBOARDED_PARAM}=1`);
   };
 
   return (
@@ -150,7 +149,7 @@ export const OnboardingFlow = () => {
             }
           />
         )}
-        {step === 'scenario' && <ScenarioStep onStart={startConversation} />}
+        {step === 'scenario' && <LampStep onStart={startFirstConversation} />}
       </Transition>
     </main>
   );
