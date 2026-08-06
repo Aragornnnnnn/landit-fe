@@ -1,7 +1,7 @@
 'use client';
 
 // 표현학습 분기 — 대화 완료 축하를 잠깐 보여준 뒤, 표현을 준비한 듯 분석 연출과 준비된
-// 표현 리스트를 노출한다. [학습하러 가기]는 첫 표현부터, [다음 대화하러 가기]는 홈으로 보낸다.
+// 표현 리스트를 노출한다. [학습하러 가기]는 첫 표현부터, [다시 대화해볼래요]는 홈으로 보낸다.
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence, motion } from 'motion/react';
@@ -256,7 +256,7 @@ const RevealStage = ({
         onClick={onSkip}
         className="flex h-11 w-full items-center justify-center text-sm font-semibold text-muted-foreground transition-colors active:text-foreground"
       >
-        다음 대화하러 갈게요
+        다시 대화해볼래요
       </button>
     </div>
   </motion.div>

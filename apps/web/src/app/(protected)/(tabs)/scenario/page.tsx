@@ -6,8 +6,10 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { NotificationConsentGate } from '@/features/notification/ui/NotificationConsentGate';
+import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { CalendarStrip } from '@/features/scenario/ui/CalendarStrip';
+import { ScenarioBriefing } from '@/features/scenario/ui/ScenarioBriefing';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
 import { TodayCard } from '@/features/scenario/ui/TodayCard';
 import { track } from '@/shared/analytics';
@@ -42,9 +44,23 @@ function ScenarioContent() {
   // 들어오자마자 물으면 램프 연출을 덮고, 대화를 해보기도 전이라 무엇을 알려주겠다는 건지 와닿지 않는다.
   // 지난 날 카드도 완료했으면 CLEARED라 날짜가 없는(=오늘) 화면으로 한정한다
   const [summonClosed, setSummonClosed] = useState(false);
-  const settled =
-    date === undefined &&
-    (daily?.scenario?.dailyScenarioType === 'CLEARED' || summonClosed);
+  // 대화 시작을 눌렀다 — 바로 이동하지 않고 브리핑 카드를 잠깐 보여준 뒤 대화로 들어간다
+  const [briefingScenario, setBriefingScenario] = useState<Scenario | null>(
+    null,
+  );
+
+  // 완료한 날은 카드 앞면(같은 썸네일·제목·설명)이 이미 떠 있다 — 램프로 시작하는 날만 브리핑이 필요하다
+  const cleared = daily?.scenario?.dailyScenarioType === 'CLEARED';
+  const start = (scenario: Scenario) => {
+    if (cleared) {
+      router.push(conversationPath(scenario.scenarioId, date));
+      return;
+    }
+    setBriefingScenario(scenario);
+    // 브리핑을 읽는 동안 대화 라우트를 미리 받아 둔다 — 이 화면은 링크로 오갈 수 없어 자동 프리페치가 안 걸린다
+    router.prefetch(conversationPath(scenario.scenarioId, date));
+  };
+  const settled = date === undefined && (cleared || summonClosed);
 
   // 날짜 이동은 replace다 — push면 히스토리가 쌓여 뒤로가기가 날짜 되감기가 된다.
   // 오늘은 날짜 없는 주소가 정본이다 — 붙여 두면 자정을 넘겨도 어제에 머문다
@@ -93,14 +109,23 @@ function ScenarioContent() {
           date={date}
           today={daily.date}
           autoFlip={autoFlip}
-          onStart={(scenario) =>
-            router.push(conversationPath(scenario.scenarioId, date))
-          }
+          onStart={start}
           onSummonClose={() => setSummonClosed(true)}
         />
       )}
 
       {settled && <NotificationConsentGate />}
+
+      {/* 브리핑을 다 보여주면 대화로 넘어간다 — push라 뒤로가기는 이 화면(카드)으로 돌아온다 */}
+      {briefingScenario && (
+        <ScenarioBriefing
+          scenario={briefingScenario}
+          onDone={() =>
+            router.push(conversationPath(briefingScenario.scenarioId, date))
+          }
+          onCancel={() => setBriefingScenario(null)}
+        />
+      )}
     </>
   );
 }
