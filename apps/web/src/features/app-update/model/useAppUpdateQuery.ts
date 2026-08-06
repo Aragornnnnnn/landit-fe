@@ -1,16 +1,11 @@
-// 앱 버전 정책 조회 쿼리 — request가 null이면(브라우저·구버전 셸) 비활성
+// 앱 버전 정책 조회 쿼리 — request가 null이면(브라우저·버전명 없음) 비활성
 import { useQuery } from '@tanstack/react-query';
 
 import { checkAppUpdate } from '../api/app-update';
 import type { AppUpdateRequest } from './resolveAppUpdateRequest';
 
 export const appUpdateKey = (request: AppUpdateRequest | null) =>
-  [
-    'app-update',
-    request?.platform,
-    request?.versionName,
-    request?.buildNumber,
-  ] as const;
+  ['app-update', request?.platform, request?.versionName] as const;
 
 export const useAppUpdateQuery = (request: AppUpdateRequest | null) => {
   const { data } = useQuery({
@@ -19,7 +14,6 @@ export const useAppUpdateQuery = (request: AppUpdateRequest | null) => {
       checkAppUpdate(
         (request as AppUpdateRequest).platform,
         (request as AppUpdateRequest).versionName,
-        (request as AppUpdateRequest).buildNumber,
       ),
     enabled: request !== null,
     staleTime: Infinity,
