@@ -4,7 +4,7 @@ export const REMINDER_COPIES = [
   {
     slug: 'today_only',
     title: '오늘만 가능한 시나리오 도착 💌',
-    body: '자기 전 5분으로 불꽃을 지키세요',
+    body: '자기 전 5분으로 래디에게 열매를 먹여주세요',
   },
   {
     slug: 'white_bird',
@@ -14,7 +14,7 @@ export const REMINDER_COPIES = [
   {
     slug: 'give_up',
     title: '오늘 학습 포기하실 건가요? 🥺',
-    body: '5분만 투자하면 불꽃을 지킬 수 있어요. 오늘만 할 수 있는 시나리오가 당신을 기다리고 있어요 💌',
+    body: '5분만 투자하면 열매를 얻을 수 있어요. 오늘만 할 수 있는 시나리오가 당신을 기다리고 있어요 💌',
   },
   {
     slug: 'come_back',
@@ -33,7 +33,7 @@ export const REMINDER_COPIES = [
   },
   {
     slug: 'flame_deadline',
-    title: '🚨불꽃 유지까지 2시간🚨',
+    title: '🚨열매 유지까지 2시간🚨',
     body: '5분이면 끝나요. 잠깐 시간낼 수 있어요?',
   },
 ];

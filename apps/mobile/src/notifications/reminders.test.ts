@@ -1,6 +1,7 @@
 // 리마인더 동기화 검증 — 리마인더 표식이 붙은 알림만 걷어내고 미래 시각만 재예약하는 계약
 import * as Notifications from 'expo-notifications';
 
+import { REMINDER_CHANNEL_ID } from './reminder-schedule';
 import { syncReminders } from './reminders';
 
 jest.mock('expo-notifications', () => ({
@@ -74,7 +75,9 @@ describe('syncReminders', () => {
     expect(mocked.dismissNotificationAsync).toHaveBeenCalledWith('ours');
   });
 
-  it('미래 시각 리마인더를 표식·경로를 담아 DATE 트리거로 예약한다', async () => {
+  // 트리거에 채널을 지정하지 않으면 안드로이드가 우리가 만든 채널 대신
+  // expo 폴백 채널로 게시한다 — 알림 설정에 우리가 지은 이름이 안 나온다
+  it('미래 시각 리마인더를 표식·경로·채널을 담아 DATE 트리거로 예약한다', async () => {
     await syncReminders([futureReminder]);
 
     expect(mocked.scheduleNotificationAsync).toHaveBeenCalledWith({
@@ -83,7 +86,11 @@ describe('syncReminders', () => {
         body: futureReminder.body,
         data: { kind: 'daily-reminder', url: '/scenario' },
       },
-      trigger: { type: 'date', date: new Date(futureReminder.notifyAt) },
+      trigger: {
+        type: 'date',
+        date: new Date(futureReminder.notifyAt),
+        channelId: REMINDER_CHANNEL_ID,
+      },
     });
   });
 

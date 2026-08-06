@@ -13,12 +13,7 @@ export interface AppUpdateCheckResponse {
   releasedAt: string;
 }
 
-// buildNumber는 필수 파라미터지만 업데이트 판단에는 쓰이지 않는다 — 기준은 versionName이다
-export const checkAppUpdate = (
-  platform: AppPlatform,
-  versionName: string,
-  buildNumber: number,
-) =>
+export const checkAppUpdate = (platform: AppPlatform, versionName: string) =>
   api.get<AppUpdateCheckResponse>(
-    `/api/v1/app-versions/check?platform=${platform}&versionName=${versionName}&buildNumber=${buildNumber}`,
+    `/api/v1/app-versions/check?platform=${platform}&versionName=${versionName}`,
   );

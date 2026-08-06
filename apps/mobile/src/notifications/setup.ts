@@ -2,7 +2,7 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
-import { REMINDER_KIND } from './reminder-schedule';
+import { REMINDER_CHANNEL_ID, REMINDER_KIND } from './reminder-schedule';
 
 // 포그라운드 표시 정책 — 우리 리마인더는 앱을 쓰는 중이니 배너만 가리고, 알림 센터에는 남겨 나중에 보게 한다
 export const resolveForegroundBehavior = (data: unknown) => {
@@ -28,7 +28,7 @@ export const initializeNotifications = async () => {
 
   if (Platform.OS === 'android') {
     // importance HIGH — 헤드업 배너까지 띄우되 방해금지 모드는 뚫지 않는다
-    await Notifications.setNotificationChannelAsync('default', {
+    await Notifications.setNotificationChannelAsync(REMINDER_CHANNEL_ID, {
       name: '기본 알림',
       importance: Notifications.AndroidImportance.HIGH,
     });
