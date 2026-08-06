@@ -2,16 +2,13 @@
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
 
+import { goToStore } from '../model/goToStore';
+
 interface ForceUpdateModalProps {
   reason: string | null;
 }
 
 const DEFAULT_REASON = '새로운 기능을 사용하려면 업데이트가 꼭 필요해요';
-
-const goToStore = () => {
-  // source — 인스타 등 외부 링크 유입과 구분해 계측한다
-  window.location.href = '/download?source=app_update';
-};
 
 export const ForceUpdateModal = ({ reason }: ForceUpdateModalProps) => (
   <Modal open onClose={() => {}} dismissible={false}>

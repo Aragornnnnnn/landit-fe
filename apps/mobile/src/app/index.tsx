@@ -20,6 +20,7 @@ import { runHaptic } from '@/bridge/haptics';
 import { nativeContextScript } from '@/bridge/nativeContext';
 import { useNativeBridge } from '@/bridge/useNativeBridge';
 import { WEB_URL } from '@/config/webUrl';
+import { isExternalNavigation } from '@/navigation/isExternalNavigation';
 import {
   getNotificationPermission,
   requestNotificationPermission,
@@ -179,6 +180,14 @@ const ShellScreen = () => {
       // 콘텐츠 로드 전 네이티브 컨텍스트(플랫폼·앱 버전)를 window에 주입 — 웹 계측이 첫 렌더에서 바로 읽는다
       injectedJavaScriptBeforeContentLoaded={nativeContextScript}
       onMessage={onMessage}
+      // 웹 도메인 밖으로 나가는 이동(스토어 등)은 WebView 대신 OS가 연다 —
+      // 스토어가 웹뷰 안에서 로그인 페이지로 열리는 문제 방지
+      onShouldStartLoadWithRequest={(request) => {
+        if (request.isTopFrame === false) return true;
+        if (!isExternalNavigation(request.url, WEB_URL)) return true;
+        void Linking.openURL(request.url);
+        return false;
+      }}
       onLoad={() => setIsWebReady(true)}
       onError={() => setLoadFailed(true)}
       // onError는 네트워크 자체가 안 될 때만 잡는다. 서버가 4xx/5xx로 응답한 경우는
