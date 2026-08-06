@@ -2,7 +2,11 @@
 import type { Reminder } from '@landit/bridge';
 import * as Notifications from 'expo-notifications';
 
-import { planReminders, REMINDER_KIND } from './reminder-schedule';
+import {
+  planReminders,
+  REMINDER_CHANNEL_ID,
+  REMINDER_KIND,
+} from './reminder-schedule';
 
 // 리마인더 표식이 붙은 것만 걷어낸다 — cancelAll·dismissAll은 다른 종류의 알림까지 지워서 쓰지 않는다
 const clearOurReminders = async () => {
@@ -36,6 +40,8 @@ export const syncReminders = async (reminders: Reminder[]) => {
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
           date,
+          // 채널을 지정해야 setup이 만든 채널(이름·중요도)로 게시된다 — iOS는 무시하는 값이라 무해하다
+          channelId: REMINDER_CHANNEL_ID,
         },
       }),
     ),
