@@ -95,7 +95,7 @@ export type RetryScreen =
   'scenario' | 'conversation' | 'card_back' | 'expression_list';
 // 알림 동의를 청한 지면 — 온보딩 스텝은 기존 온보딩 계측이 커버해서 없다.
 // 키는 source — surface는 baseProps의 전역 속성(app·browser)이라 겹치면 덮어쓴다
-export type NotificationConsentSource = 'home_fullscreen' | 'home_sheet' | 'me';
+export type NotificationConsentSource = 'scenario' | 'me';
 
 // 이벤트별 속성 계약 — 키는 snake_case. 속성이 없는 이벤트는 undefined
 export type EventProps = {
