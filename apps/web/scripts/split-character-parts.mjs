@@ -62,6 +62,38 @@ const CHARACTERS = {
       ],
     },
   },
+  teddy: {
+    src: 'teddy.svg',
+    out: 'TeddyParts.tsx',
+    component: 'TeddyParts',
+    label: '테디 (제3자 곰)',
+    // 단순 도형 캐릭터라 id 없이 문서 순서로 가른다. 몸통 실루엣이 path 하나(머리 포함)라
+    // 머리를 따로 못 움직인다 — 얼굴 클러스터를 head-inner로 묶어 끄덕임을 얼굴 움직임으로 낸다
+    byIndex: true,
+    viewBox: '40 20 865 790',
+    slices: [
+      ['torso', range(0, 8)],
+      ['muzzle', [9]],
+      ['nose', [10]],
+      ['eye-left', [11]],
+      ['eye-right', [12]],
+      ['mouth', range(13, 15)],
+    ],
+    headParts: ['muzzle', 'nose', 'eye-left', 'eye-right', 'mouth'],
+    extras: {
+      'eye-left': [
+        '<path id="eye-left-happy" d="M355 340 Q378 316 401 340" stroke="#1B1817" stroke-width="14" stroke-linecap="round" fill="none"/>',
+        '<path id="frown-brow-left" d="M348 274 L402 296" stroke="#1B1817" stroke-width="13" stroke-linecap="round" fill="none"/>',
+      ],
+      'eye-right': [
+        '<path id="eye-right-happy" d="M505 340 Q528 316 551 340" stroke="#1B1817" stroke-width="14" stroke-linecap="round" fill="none"/>',
+        '<path id="frown-brow-right" d="M558 274 L504 296" stroke="#1B1817" stroke-width="13" stroke-linecap="round" fill="none"/>',
+      ],
+      mouth: [
+        '<path id="mouth-frown" d="M432 486 Q455 470 478 486" stroke="#762A16" stroke-width="10" stroke-linecap="round" fill="none"/>',
+      ],
+    },
+  },
   chloe: {
     src: 'female.svg',
     out: 'ChloeParts.tsx',
@@ -140,17 +172,25 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
   for (const [sliceName, ids] of cfg.slices)
     for (const id of ids) sliceOf.set(id, sliceName);
 
-  // 문서 순서대로 슬라이스에 담는다. id 없는 path는 직전 path를 따라간다
-  // (피그마에서 수동 보정된 조각들로, 앞 도형의 음영이라 같은 그룹이 맞다)
   const buckets = new Map(cfg.slices.map(([n]) => [n, []]));
-  let prevSlice = null;
-  for (const p of paths) {
-    const m = p.match(/id="Vector(?:_(\d+))?"/);
-    const slice = m
-      ? sliceOf.get(cfg.base + (m[1] ? Number(m[1]) - 1 : 0))
-      : prevSlice;
-    if (slice) buckets.get(slice).push(p);
-    prevSlice = slice ?? prevSlice;
+  if (cfg.byIndex) {
+    // 순서 기반 — id 없이 내보낸 단순 캐릭터용. slices의 번호가 문서 순서(0부터)다
+    paths.forEach((p, index) => {
+      const slice = sliceOf.get(index);
+      if (slice) buckets.get(slice).push(p);
+    });
+  } else {
+    // id 기반 — 문서 순서대로 슬라이스에 담는다. id 없는 path는 직전 path를 따라간다
+    // (피그마에서 수동 보정된 조각들로, 앞 도형의 음영이라 같은 그룹이 맞다)
+    let prevSlice = null;
+    for (const p of paths) {
+      const m = p.match(/id="Vector(?:_(\d+))?"/);
+      const slice = m
+        ? sliceOf.get(cfg.base + (m[1] ? Number(m[1]) - 1 : 0))
+        : prevSlice;
+      if (slice) buckets.get(slice).push(p);
+      prevSlice = slice ?? prevSlice;
+    }
   }
 
   const headSet = new Set(cfg.headParts);
