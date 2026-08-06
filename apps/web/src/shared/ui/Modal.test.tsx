@@ -7,51 +7,8 @@ import { Modal } from './Modal';
 // createPortal로 document.body에 그려지는 내용이라, 테스트 사이에 명시적으로 걷어낸다
 afterEach(() => cleanup());
 
-// 중첩된 framer-motion 인스턴스가 렌더러 아이덴티티를 갈라놔서, 테스트에선 순수 DOM으로 치환한다.
-// forwardRef로 만들어야 Modal의 포커스 관리(panelRef)가 실제 DOM 노드를 잡는다
-vi.mock('motion/react', async () => {
-  const { createElement, forwardRef, Fragment } = await import('react');
-  const MOTION_PROPS = new Set([
-    'initial',
-    'animate',
-    'exit',
-    'transition',
-    'whileTap',
-    'whileHover',
-    'whileInView',
-    'layout',
-    'variants',
-  ]);
-  const motion = new Proxy(
-    {},
-    {
-      get: (_target, tag: string) =>
-        forwardRef(
-          (
-            { children, ...props }: Record<string, unknown>,
-            ref: React.Ref<unknown>,
-          ) =>
-            createElement(
-              tag,
-              {
-                ref,
-                ...Object.fromEntries(
-                  Object.entries(props).filter(
-                    ([key]) => !MOTION_PROPS.has(key),
-                  ),
-                ),
-              },
-              children as React.ReactNode,
-            ),
-        ),
-    },
-  );
-  return {
-    motion,
-    AnimatePresence: ({ children }: { children: React.ReactNode }) =>
-      createElement(Fragment, null, children),
-  };
-});
+// 연출은 순수 DOM으로 치환한다 — 대역이 하는 일은 shared/motion/test-double 참고
+vi.mock('motion/react', () => import('@/shared/motion/test-double'));
 
 describe('Modal', () => {
   it('open이 false면 아무것도 렌더링하지 않는다', () => {

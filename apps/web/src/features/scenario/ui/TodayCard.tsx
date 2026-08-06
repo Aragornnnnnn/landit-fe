@@ -1,6 +1,6 @@
 'use client';
 
-// 오늘의 카드 — 아직 안 끝낸 날은 봉인면만 보여주고 대화로 곧장 들어간다.
+// 오늘의 카드 — 아직 안 끝낸 날은 램프에서 자는 래디를 보여주고 대화로 들어간다.
 // 끝낸 날만 카드 앞면(별점·표현)을 편다. 상태는 서버가 준 것만 믿는다
 import { motion, useReducedMotion } from 'motion/react';
 
@@ -8,8 +8,8 @@ import { EASE_STANDARD } from '@/shared/motion';
 
 import type { DailyScenario } from '../api/daily';
 import { toScenario, type Scenario } from '../lib/to-scenario';
+import { LampWaiting } from './LampWaiting';
 import { ScenarioCard } from './ScenarioCard';
-import { SealedFace } from './SealedFace';
 
 interface TodayCardProps {
   // 그날 배정된 시나리오. 없는 날은 이 컴포넌트를 그리지 않는다
@@ -48,10 +48,10 @@ export const TodayCard = ({
           }}
         />
       ) : (
-        <SealedFace
+        // TODO(소환 오버레이 PR): 지금은 부르는 즉시 대화로 보낸다 — 아직 열 오버레이가 없다
+        <LampWaiting
           retry={daily.dailyScenarioType === 'RETRY'}
-          onStart={playable ? () => onStart(scenario) : undefined}
-          reduced={reduced}
+          onSummon={playable ? () => onStart(scenario) : undefined}
         />
       )}
     </Arrival>
