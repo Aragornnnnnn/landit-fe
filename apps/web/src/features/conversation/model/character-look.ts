@@ -5,7 +5,7 @@ import type { ConversationPhase } from './conversation-machine';
 import type { FloatingThought, ThoughtType } from './thought';
 
 /** 대화 상대가 누구인가 — 세션 TTS 음성 성별이 고른다 */
-export type Partner = 'marco' | 'chloe';
+export type Partner = 'marco' | 'chloe' | 'teddy';
 
 /** 몸이 무엇을 하는 중인가 */
 export type CharacterPosture = 'idle' | 'listening' | 'speaking';

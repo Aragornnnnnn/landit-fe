@@ -19,6 +19,7 @@ import type { PlayingSpeech } from '../../model/useAiSpeech';
 import { ChloeParts } from './ChloeParts';
 import { MarcoParts } from './MarcoParts';
 import styles from './PartnerCharacter.module.css';
+import { TeddyParts } from './TeddyParts';
 
 /**
  * partner — 누구를 그릴지. 세션 TTS 음성 성별이 정한다.
@@ -38,6 +39,7 @@ interface PartnerCharacterProps {
 const PARTS: Record<Partner, ComponentType<SVGProps<SVGSVGElement>>> = {
   marco: MarcoParts,
   chloe: ChloeParts,
+  teddy: TeddyParts,
 };
 
 type Range = readonly [number, number];
