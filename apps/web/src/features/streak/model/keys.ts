@@ -10,4 +10,8 @@ export const streakKeys = {
   // 받고 나면 그 달의 키에도 심어 둬서 되돌아올 때 다시 부르지 않는다 (useStreakCalendar 참고)
   calendar: (userId: number | null, view: YearMonth | null) =>
     [...streakKeys.all, userId, 'calendar', view ?? 'current'] as const,
+  // 조회 결과가 아니라 완료 순간에 심어 두는 값 — 대화에 들어갈 때 알던 스트릭.
+  // 캐시에 두는 건 계정 스코프와 로그아웃 정리를 그대로 물려받기 위해서다 (celebration 참고)
+  celebrationBase: (userId: number | null) =>
+    [...streakKeys.all, userId, 'celebration-base'] as const,
 };
