@@ -23,9 +23,9 @@
 
 ## 현재 등록된 조합
 
-| 유입                 | URL 예시                                                                                   |
-| -------------------- | ------------------------------------------------------------------------------------------ |
-| 데일리 리마인드 알림 | `/home?utm_source=landit&utm_medium=push&utm_campaign=daily_reminder&utm_content=marco_dm` |
+| 유입                 | URL 예시                                                                                       |
+| -------------------- | ---------------------------------------------------------------------------------------------- |
+| 데일리 리마인드 알림 | `/scenario?utm_source=landit&utm_medium=push&utm_campaign=daily_reminder&utm_content=marco_dm` |
 
 `utm_content`는 문구 슬러그 — 차트에서 어떤 문구인지 바로 읽히고, 문구 순서를 재배치해도 과거 데이터와 어긋나지 않는다. 어휘는 `apps/web/src/features/notification/model/reminder-copies.ts`가 단일 출처.
 

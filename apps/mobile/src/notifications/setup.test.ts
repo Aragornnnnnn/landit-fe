@@ -11,7 +11,7 @@ describe('resolveForegroundBehavior', () => {
   it('우리 리마인더면 배너는 가리되 알림 센터에는 남긴다', () => {
     const behavior = resolveForegroundBehavior({
       kind: 'daily-reminder',
-      url: '/home',
+      url: '/scenario',
     });
 
     expect(behavior.shouldShowBanner).toBe(false);
