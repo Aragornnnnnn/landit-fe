@@ -1,4 +1,4 @@
-// 온보딩 4단계 — 랜디가 상대 속마음을 대신 알려주는 걸 실제 오버레이 형태 그대로 박스 안에서 시연
+// 온보딩 4단계 — 래디가 상대 속마음을 대신 알려주는 걸 실제 오버레이 형태 그대로 박스 안에서 시연
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -36,7 +36,7 @@ export const ThoughtStep = ({ onNext }: { onNext: () => void }) => {
         </h1>
 
         <div className="flex flex-1 items-center justify-center py-6">
-          {/* 실제 속마음 오버레이(어두운 배경 + 날아드는 랜디)를 박스 안에 그대로 담는다 */}
+          {/* 실제 속마음 오버레이(어두운 배경 + 날아드는 래디)를 박스 안에 그대로 담는다 */}
           <div className="flex min-h-[340px] w-full items-center justify-center overflow-hidden rounded-[32px] bg-black/55 px-6">
             <AnimatePresence mode="wait">
               <ThoughtReveal key={index} thought={DEMOS[index]} />

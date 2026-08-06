@@ -3,6 +3,10 @@
 export const SCENARIO_PATH = '/scenario';
 export const SMALLTALK_PATH = '/smalltalk';
 
+// 온보딩을 막 끝내고 넘어왔다는 표식 — 홈이 램프를 열되 다시 묻지 않는다.
+// flip처럼 주소에 남겨 둔다. 그날 한 번 보면 등장 판정에서 걸러지므로 지울 필요가 없다
+export const ONBOARDED_PARAM = 'onboarded';
+
 interface ScenarioReturn {
   // 어느 날 카드로 돌아갈지. 오늘이면 붙이지 않는다 — 날짜 없는 주소가 오늘의 정본이다
   date?: string | null;

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DAILY_REMINDER_CAMPAIGN } from '@/shared/analytics/utm';
+import { ONBOARDED_PARAM } from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
 import {
@@ -121,8 +122,14 @@ export const LampStage = ({ onStart, retry, today }: LampStageProps) => {
     if (!decideSummon({ lastSeen: readLastSummoned(), today, fromReminder }))
       return;
 
+    // 온보딩을 막 끝낸 사람은 방금 "시작할게요"라고 답했다 — 다시 묻지 않는다.
+    // 표식은 지우지 않아도 된다. 한 번 보면 그날은 위 판정에서 걸러진다
+    const fromOnboarding = new URLSearchParams(window.location.search).has(
+      ONBOARDED_PARAM,
+    );
+
     // 한 프레임 미룬다 — 레이아웃이 앉은 뒤에 램프 자리를 재고, 효과 안 동기 setState도 피한다
-    const frame = requestAnimationFrame(() => startSummon(true));
+    const frame = requestAnimationFrame(() => startSummon(!fromOnboarding));
     return () => cancelAnimationFrame(frame);
     // 마운트 시점의 판정이다 — today가 바뀌는 건 리마운트(다른 날 카드)뿐이다
     // eslint-disable-next-line react-hooks/exhaustive-deps
