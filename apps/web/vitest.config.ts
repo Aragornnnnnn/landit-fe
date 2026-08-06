@@ -14,7 +14,8 @@ export default defineConfig({
       deps: {
         // node_modules는 기본적으로 Node 해석으로 그냥 불러와 아래 react 별칭이 안 먹는다.
         // react-query가 자기 밑 react 복사본을 잡으면 훅 dispatcher가 null이 되므로 번들에 태운다
-        inline: ['@tanstack/react-query'],
+        // motion(framer-motion)도 같은 이유 — useReducedMotion이 다른 react를 잡으면 깨진다
+        inline: ['@tanstack/react-query', 'motion', 'framer-motion'],
       },
     },
   },

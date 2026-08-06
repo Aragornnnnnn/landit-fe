@@ -166,25 +166,30 @@ export const CalendarStrip = ({
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-7 gap-y-0.5">
-                    {/* 1일이 실제 요일 칸에 서야 한다 — 앞을 빈 칸으로 채운다 */}
-                    {Array.from({
-                      length: leadingBlanks(shown.days[0].date),
-                    }).map((_, index) => (
-                      <span key={`blank-${index}`} />
-                    ))}
+                  {/* 월 응답이 오기 전에는 스켈레톤 — 주 7일을 달 격자에 그리면 달력이 주처럼 보인다 */}
+                  {month ? (
+                    <div className="grid grid-cols-7 gap-y-0.5">
+                      {/* 1일이 실제 요일 칸에 서야 한다 — 앞을 빈 칸으로 채운다 */}
+                      {Array.from({
+                        length: leadingBlanks(month.days[0].date),
+                      }).map((_, index) => (
+                        <span key={`blank-${index}`} />
+                      ))}
 
-                    {shown.days.map((day) => (
-                      <CalendarDay
-                        key={day.date}
-                        day={day}
-                        today={today}
-                        startedAt={startedAt}
-                        selected={day.date === selected}
-                        onSelect={selectDay}
-                      />
-                    ))}
-                  </div>
+                      {month.days.map((day) => (
+                        <CalendarDay
+                          key={day.date}
+                          day={day}
+                          today={today}
+                          startedAt={startedAt}
+                          selected={day.date === selected}
+                          onSelect={selectDay}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <MonthSkeleton />
+                  )}
                 </div>
               </motion.div>
             </>
@@ -194,6 +199,25 @@ export const CalendarStrip = ({
     </div>
   );
 };
+
+// 달 격자와 같은 골격의 5주 스켈레톤 — 응답이 와도 높이가 안 튀게 칸 치수를 CalendarDay에 맞춘다
+const MonthSkeleton = () => (
+  <div
+    role="status"
+    aria-label="달력 불러오는 중"
+    className="grid animate-pulse grid-cols-7 gap-y-0.5"
+  >
+    {Array.from({ length: 35 }).map((_, index) => (
+      <span
+        key={index}
+        className="flex w-full flex-col items-center gap-1 border-2 border-transparent pt-1.5 pb-1"
+      >
+        <span className="size-10 rounded-full bg-secondary min-[390px]:size-11" />
+        <span className="h-[15px] w-4 rounded bg-secondary" />
+      </span>
+    ))}
+  </div>
+);
 
 const ArrowButton = ({
   direction,
