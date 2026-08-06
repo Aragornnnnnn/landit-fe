@@ -1,10 +1,11 @@
 'use client';
 
 // 시나리오 탭 — 그날 배정된 카드 한 장을 받는다. 날짜는 ?date=로 넘기고 없으면 오늘
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { NotificationConsentGate } from '@/features/notification/ui/NotificationConsentGate';
 import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { CalendarStrip } from '@/features/scenario/ui/CalendarStrip';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
@@ -36,6 +37,14 @@ function ScenarioContent() {
   const autoFlip = searchParams.get('flip') !== null;
 
   const { daily, error, retry } = useDailyScenarioQuery(date);
+
+  // 알림은 오늘 카드에 대한 판단이 끝난 뒤에만 청한다 — 대화를 끝냈거나, 지금은 안 하기로 했거나.
+  // 들어오자마자 물으면 램프 연출을 덮고, 대화를 해보기도 전이라 무엇을 알려주겠다는 건지 와닿지 않는다.
+  // 지난 날 카드도 완료했으면 CLEARED라 날짜가 없는(=오늘) 화면으로 한정한다
+  const [summonClosed, setSummonClosed] = useState(false);
+  const settled =
+    date === undefined &&
+    (daily?.scenario?.dailyScenarioType === 'CLEARED' || summonClosed);
 
   // 날짜 이동은 replace다 — push면 히스토리가 쌓여 뒤로가기가 날짜 되감기가 된다.
   // 오늘은 날짜 없는 주소가 정본이다 — 붙여 두면 자정을 넘겨도 어제에 머문다
@@ -87,8 +96,11 @@ function ScenarioContent() {
           onStart={(scenario) =>
             router.push(conversationPath(scenario.scenarioId, date))
           }
+          onSummonClose={() => setSummonClosed(true)}
         />
       )}
+
+      {settled && <NotificationConsentGate />}
     </>
   );
 }
