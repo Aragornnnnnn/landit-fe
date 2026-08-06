@@ -222,11 +222,35 @@
   }
 }
 
+/* 첫 열매를 받아 문 래디 — 오물오물. 그림 한 장이라 입은 못 움직이니 몸 전체가 씹는 리듬을 대신한다.
+ * 열매와 같은 원리(가로·세로 반대)에 주기만 짧게 잡아, 숨 쉬는 게 아니라 씹는 것으로 읽히게 한다 */
+@keyframes landy-chew {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  25% {
+    transform: scale(1.035, 0.965);
+  }
+  50% {
+    transform: scale(0.985, 1.02);
+  }
+  75% {
+    transform: scale(1.02, 0.985);
+  }
+}
+
 @layer utilities {
   .animate-fruit-squish {
     /* 바닥을 축으로 — 위에서 누르는 것처럼 보여야 무게가 느껴진다 */
     transform-origin: 50% 85%;
     animation: fruit-squish 2.4s ease-in-out infinite;
+  }
+
+  .animate-landy-chew {
+    /* 앉은 자세라 바닥에 붙은 엉덩이가 축이다 */
+    transform-origin: 50% 92%;
+    animation: landy-chew 0.62s ease-in-out infinite;
   }
 
   .animate-shake {

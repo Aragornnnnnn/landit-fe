@@ -1,12 +1,14 @@
 'use client';
 
-// 표현학습 분기 — 대화 완료 축하(폭죽)를 잠깐 보여준 뒤, 표현을 준비한 듯 분석 연출과 준비된
+// 표현학습 분기 — 대화 완료 축하를 잠깐 보여준 뒤, 표현을 준비한 듯 분석 연출과 준비된
 // 표현 리스트를 노출한다. [학습하러 가기]는 첫 표현부터, [다음 대화하러 가기]는 홈으로 보낸다.
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence, motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
+// 완료 축하를 이 화면이 띄운다 — 완료 직후를 여는 자리가 여기뿐이라 가로 import를 둔다 (widgets 후보)
+import { StreakStamp } from '@/features/streak/ui/StreakStamp';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { expressionPath, scenarioReturnPath } from '@/shared/lib/routes';
@@ -20,8 +22,9 @@ import { ExpressionList } from './ExpressionList';
 const TITLE_CLASS =
   'pt-1 text-3xl leading-[1.22] font-black tracking-normal whitespace-pre-line text-foreground';
 
-// 축하 노출 시간과, 분석 문구를 다 읽을 정도의 시간
-const CELEBRATE_MS = 2000;
+// 축하 노출 시간과, 분석 문구를 다 읽을 정도의 시간.
+// 축하는 열매가 찍히고 숫자가 선 뒤에도 잠깐 남는다 — 연출이 끝나자마자 걷히면 본 것을 못 읽는다
+const CELEBRATE_MS = 2600;
 const ANALYZE_MS = 2000;
 
 export const ExpressionBranch = ({
@@ -46,7 +49,7 @@ export const ExpressionBranch = ({
   const name = nickname ?? '회원';
   const count = expressions?.length ?? 0;
 
-  // 진입 연출 2단계 — 축하(폭죽) 2초 → 분석(랜디) 문구를 읽을 만큼만 → 리빌.
+  // 진입 연출 2단계 — 축하(스트릭 도장) → 분석(랜디) 문구를 읽을 만큼만 → 리빌.
   // 타자기 없이 고정 문구라, 분석은 글을 다 읽을 정도의 시간만 잡아둔다.
   const [step, setStep] = useState<'celebrate' | 'analyze' | 'done'>(
     'celebrate',
@@ -152,7 +155,8 @@ export const ExpressionBranch = ({
   );
 };
 
-// 대화 완료 축하 — 분석 연출과 같은 골격(좌상단 타이틀 + 가운데 캐릭터)으로 그려 전환이 매끄럽다
+// 대화 완료 축하 — 분석 연출과 같은 골격(좌상단 타이틀 + 가운데)으로 그려 전환이 매끄럽다.
+// 가운데는 오늘 열매가 찍히는 순간이 채운다 — 완료를 매번 같은 폭죽으로 갚으면 며칠째든 감흥이 없다
 const CelebrateStage = () => (
   <motion.div
     className="flex min-h-0 flex-1 flex-col"
@@ -162,21 +166,7 @@ const CelebrateStage = () => (
     transition={{ duration: 0.25 }}
   >
     <h1 className={TITLE_CLASS}>{'대화 하나를\n잘 완료했어요!'}</h1>
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6">
-      <motion.div
-        initial={{ scale: 0.6, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 420, damping: 18 }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element -- 구글이 호스팅하는 모션 이모지 GIF라 next/image 최적화 대상이 아니다 */}
-        <img
-          src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.gif"
-          alt="🎉"
-          width={168}
-          height={168}
-        />
-      </motion.div>
-    </div>
+    <StreakStamp />
   </motion.div>
 );
 
