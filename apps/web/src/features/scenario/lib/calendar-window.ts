@@ -31,13 +31,13 @@ export const canGoForward = (
   today: string,
 ) => shiftWindow(date, type, 1) <= lastDayOfWindow(today, type);
 
-// 지금 보고 있는 창이 시작일보다 앞서면 더 갈 곳이 없다
+// 지금 보고 있는 창이 시작일보다 앞서면 더 갈 곳이 없다. 완료 이력이 없으면(startedAt null) 볼 기록 자체가 없어 뒤로 갈 이유가 없다
 export const canGoBack = (
   date: string,
   type: ScenarioCalendarType,
   startedAt: string | null,
 ) =>
-  startedAt === null ||
+  startedAt !== null &&
   shiftWindow(date, type, -1) >= firstDayOfWindow(startedAt, type);
 
 // 일요일 시작 — 서버가 주 창을 일요일부터 내려주는 것과 맞춘다

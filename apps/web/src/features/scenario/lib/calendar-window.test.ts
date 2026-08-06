@@ -58,8 +58,8 @@ describe('canGoBack', () => {
     expect(canGoBack('2026-07-27', 'WEEK', '2026-07-28')).toBe(false);
   });
 
-  it('기록이 아예 없으면 뒤로 갈 곳도 없다고 보지 않는다', () => {
-    // 신규 사용자는 startedAt이 null이다 — 막지 않고 서버 응답에 맡긴다
-    expect(canGoBack('2026-08-02', 'WEEK', null)).toBe(true);
+  it('완료 이력이 아예 없으면 뒤로 갈 곳이 없다', () => {
+    // 신규 사용자는 startedAt이 null이다 — 볼 완료 기록이 없으니 뒤로 갈 이유도 없다
+    expect(canGoBack('2026-08-02', 'WEEK', null)).toBe(false);
   });
 });
