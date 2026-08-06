@@ -1,6 +1,14 @@
 // 날짜 스트립의 월 패널 계약 검증 — 월 응답 전에는 주 폴백이 아니라 스켈레톤을 그린다
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { closeTopSheet } from '@/shared/ui/bottom-sheet-back';
 
 import type { ScenarioCalendarResponse } from '../api/calendar';
 import { useScenarioCalendarQuery } from '../model/useScenarioCalendarQuery';
@@ -89,5 +97,42 @@ describe('CalendarStrip 월 패널', () => {
     expect(
       screen.getByRole('button', { name: '8월 31일' }),
     ).toBeInTheDocument();
+  });
+});
+
+describe('CalendarStrip 월 패널 — 뒤로가기·스크롤', () => {
+  it('펼친 동안 네이티브 뒤로가기를 누르면 주 보기로 접힌다', () => {
+    // Given 월 패널이 펼쳐진 상태에서
+    givenCalendars(MONTH);
+    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: '월' }));
+
+    // When 네이티브 뒤로가기가 오면
+    let handled = false;
+    act(() => {
+      handled = closeTopSheet();
+    });
+
+    // Then 화면 전환 대신 패널이 접힌다
+    expect(handled).toBe(true);
+    expect(screen.getByRole('button', { name: '주' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('펼친 동안 배경 스크롤을 막고, 접히면 되돌린다', () => {
+    givenCalendars(MONTH);
+    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+
+    // When 월 패널을 펼치면
+    fireEvent.click(screen.getByRole('button', { name: '월' }));
+    // Then 배경 스크롤이 막힌다
+    expect(document.body.style.overflow).toBe('hidden');
+
+    // When 다시 접으면
+    fireEvent.click(screen.getByRole('button', { name: '주' }));
+    // Then 스크롤 잠금이 풀린다
+    expect(document.body.style.overflow).toBe('');
   });
 });

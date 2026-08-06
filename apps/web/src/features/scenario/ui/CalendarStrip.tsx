@@ -1,10 +1,11 @@
 'use client';
 
 // 날짜 스트립 — 접으면 한 주, 펼치면 한 달. 누르면 그날 카드로 간다
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
 import { DURATION, EASE_STANDARD } from '@/shared/motion';
+import { registerOpenSheet } from '@/shared/ui/bottom-sheet-back';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 
 import type { ScenarioCalendarType } from '../api/calendar';
@@ -47,6 +48,24 @@ export const CalendarStrip = ({
   const [collapsedFrom, setCollapsedFrom] = useState<string | undefined>(
     undefined,
   );
+
+  // 펼친 동안 네이티브 뒤로가기는 화면 전환 대신 패널을 접는다 — 안 그러면 뒤로가기가 탭 종료 흐름으로 새서 두 번째 뒤로가기에 앱이 꺼진다
+  useEffect(() => {
+    if (!expanded) return;
+    return registerOpenSheet(() => {
+      setMovedTo(picked.current ? undefined : collapsedFrom);
+      setExpanded(false);
+    });
+  }, [expanded, collapsedFrom]);
+
+  // 펼친 동안 배경 스크롤을 막는다 — 패널이 absolute라 막지 않으면 배경과 같이 스크롤돼 겹침이 깨진다
+  useEffect(() => {
+    if (!expanded) return;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [expanded]);
 
   // 스트립과 패널은 서로 다른 창을 본다. 조회 하나를 돌려 쓰면 펼치는 순간
   // 주 스트립이 그릴 것을 잃어 번쩍인다.
