@@ -49,14 +49,18 @@ function ScenarioContent() {
     null,
   );
 
-  // 브리핑을 읽는 동안 대화 라우트를 미리 받아 둔다 — 이 화면은 링크로 오갈 수 없어 자동 프리페치가 안 걸린다
-  const startBriefing = (scenario: Scenario) => {
+  // 완료한 날은 카드 앞면(같은 썸네일·제목·설명)이 이미 떠 있다 — 램프로 시작하는 날만 브리핑이 필요하다
+  const cleared = daily?.scenario?.dailyScenarioType === 'CLEARED';
+  const start = (scenario: Scenario) => {
+    if (cleared) {
+      router.push(conversationPath(scenario.scenarioId, date));
+      return;
+    }
     setBriefingScenario(scenario);
+    // 브리핑을 읽는 동안 대화 라우트를 미리 받아 둔다 — 이 화면은 링크로 오갈 수 없어 자동 프리페치가 안 걸린다
     router.prefetch(conversationPath(scenario.scenarioId, date));
   };
-  const settled =
-    date === undefined &&
-    (daily?.scenario?.dailyScenarioType === 'CLEARED' || summonClosed);
+  const settled = date === undefined && (cleared || summonClosed);
 
   // 날짜 이동은 replace다 — push면 히스토리가 쌓여 뒤로가기가 날짜 되감기가 된다.
   // 오늘은 날짜 없는 주소가 정본이다 — 붙여 두면 자정을 넘겨도 어제에 머문다
@@ -105,7 +109,7 @@ function ScenarioContent() {
           date={date}
           today={daily.date}
           autoFlip={autoFlip}
-          onStart={startBriefing}
+          onStart={start}
           onSummonClose={() => setSummonClosed(true)}
         />
       )}
