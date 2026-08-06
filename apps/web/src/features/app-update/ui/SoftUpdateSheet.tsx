@@ -2,17 +2,14 @@
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
 
+import { goToStore } from '../model/goToStore';
+
 interface SoftUpdateSheetProps {
   reason: string | null;
   onClose: () => void;
 }
 
 const DEFAULT_REASON = '새로워진 기능을 만나보세요';
-
-const goToStore = () => {
-  // source — 인스타 등 외부 링크 유입과 구분해 계측한다
-  window.location.href = '/download?source=app_update';
-};
 
 export const SoftUpdateSheet = ({ reason, onClose }: SoftUpdateSheetProps) => (
   <BottomSheet open onClose={onClose}>
