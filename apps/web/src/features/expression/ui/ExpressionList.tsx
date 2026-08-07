@@ -3,8 +3,8 @@
 // 표현 리스트(433) — 진행도 바 + 표현 항목들
 import { motion } from 'motion/react';
 
-import type { Expression } from '../../api/list';
-import { ExpressionListItem } from './ExpressionListItem';
+import type { Expression } from '../api/list';
+import { ExpressionListItem } from './list/ExpressionListItem';
 
 interface ExpressionListProps {
   expressions: Expression[];

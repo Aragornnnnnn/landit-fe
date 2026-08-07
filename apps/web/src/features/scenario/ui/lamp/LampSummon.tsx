@@ -31,7 +31,7 @@ import {
   MIST_MS,
   popIn,
   RETURN,
-} from '../lib/summon-timeline';
+} from '../../lib/summon-timeline';
 
 // 카드에 놓인 램프의 자리. 같은 자리에서 시작해야 카드에서 오버레이로 넘어갈 때 튀지 않는다
 // 오버레이가 쓰는 자리는 늘 시안 자리다 — 여기서 래디·말풍선 위치가 다 파생되므로

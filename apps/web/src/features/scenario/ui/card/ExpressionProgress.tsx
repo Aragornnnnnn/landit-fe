@@ -6,7 +6,7 @@ import { Button } from '@/shared/ui/Button';
 import {
   expressionStageOf,
   type ExpressionStage,
-} from '../lib/expression-progress';
+} from '../../lib/expression-progress';
 
 // 남은 게 있으면 주황, 다 했으면 초록 — 색이 곧 "할 일이 남았는지"다
 type Tone = 'primary' | 'success';

@@ -27,8 +27,8 @@ import {
   type ReviewInputAction,
 } from '../../model/review-input';
 import type { SentenceQuiz } from '../../model/sentence-quiz';
-import { QuizPrompt } from '../QuizPrompt';
-import { StepScaffold } from '../StepScaffold';
+import { QuizPrompt } from '../common/QuizPrompt';
+import { StepScaffold } from '../common/StepScaffold';
 import { HintButton } from './HintButton';
 import { ReviewSuccess } from './ReviewSuccess';
 

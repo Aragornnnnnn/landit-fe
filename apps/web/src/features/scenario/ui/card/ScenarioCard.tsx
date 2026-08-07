@@ -10,7 +10,7 @@ import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, LockIcon, ReplayIcon } from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
 
-import type { Scenario } from '../lib/to-scenario';
+import type { Scenario } from '../../lib/to-scenario';
 import { ExpressionProgress } from './ExpressionProgress';
 import { ScenarioCardBack } from './ScenarioCardBack';
 

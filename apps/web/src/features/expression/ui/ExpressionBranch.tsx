@@ -15,7 +15,7 @@ import { expressionPath, scenarioReturnPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
-import { useExpressionsQuery } from '../../model/useExpressionsQuery';
+import { useExpressionsQuery } from '../model/useExpressionsQuery';
 import { ExpressionList } from './ExpressionList';
 
 // 축하·분석 화면이 같은 타이틀 타이포를 공유해야 전환 순간 글자가 튀지 않는다

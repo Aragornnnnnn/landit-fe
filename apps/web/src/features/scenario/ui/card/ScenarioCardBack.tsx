@@ -5,8 +5,8 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQuery'; // 완료 카드 뒷면이 표현 목록을 조합한다 — 교차 조립 블록(widgets 후보)
-import { ExpressionList } from '@/features/expression/ui/list/ExpressionList';
-import { ExpressionListSkeleton } from '@/features/expression/ui/list/ExpressionListSkeleton';
+import { ExpressionList } from '@/features/expression/ui/ExpressionList';
+import { ExpressionListSkeleton } from '@/features/expression/ui/ExpressionListSkeleton';
 import { track } from '@/shared/analytics';
 import { expressionPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';

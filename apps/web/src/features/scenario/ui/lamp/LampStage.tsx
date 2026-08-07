@@ -17,12 +17,12 @@ import {
   LAMP_ASPECT,
   LAMP_FRAME,
   STACK_ASPECT,
-} from '../lib/summon-timeline';
+} from '../../lib/summon-timeline';
 import {
   decideSummon,
   markSummoned,
   readLastSummoned,
-} from '../model/lamp-gate';
+} from '../../model/lamp-gate';
 import { LampSummon, type LampRect } from './LampSummon';
 import { LampWaiting } from './LampWaiting';
 

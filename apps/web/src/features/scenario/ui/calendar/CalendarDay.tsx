@@ -3,10 +3,10 @@
 // 달력 한 칸 — 원 하나와 그 아래 이름표. 상태별로 무엇을 그릴지는 dayStateOf가 정한다
 import { motion, useReducedMotion } from 'motion/react';
 
-import type { ScenarioCalendarDay } from '../api/calendar';
-import { WEEKDAY_LABELS, weekdayIndexOf } from '../lib/calendar-window';
-import { dayStateOf, isOpenable, type DayState } from '../lib/day-state';
-import { SHIMMER } from '../lib/shimmer';
+import type { ScenarioCalendarDay } from '../../api/calendar';
+import { WEEKDAY_LABELS, weekdayIndexOf } from '../../lib/calendar-window';
+import { dayStateOf, isOpenable, type DayState } from '../../lib/day-state';
+import { SHIMMER } from '../../lib/shimmer';
 
 // 원 안쪽 배경 — 완료한 날은 사진이 덮으므로 회색은 사진 로딩 전 자리만 지킨다
 const MARK_STYLE: Record<DayState, string> = {
