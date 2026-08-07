@@ -117,8 +117,13 @@ export const ScenarioCard = ({
             )}
           </div>
 
-          {/* 텍스트 + CTA */}
-          <div className="flex flex-none flex-col gap-3 px-5 pt-4 pb-5">
+          {/* 텍스트 + CTA — 완료 카드는 맨 아래가 고스트 버튼이라 하단 패딩을 줄여
+              '다시 대화하기' 위아래 여백을 맞춘다 (위: gap 4px+버튼 안 10px = 아래: 안 10px+패딩 4px) */}
+          <div
+            className={`flex flex-none flex-col gap-3 px-5 pt-4 ${
+              !locked && completed ? 'pb-1' : 'pb-5'
+            }`}
+          >
             <div>
               <p
                 className={`text-xl leading-snug font-extrabold ${
@@ -150,7 +155,7 @@ export const ScenarioCard = ({
                 <button
                   type="button"
                   onClick={() => onStart(scenario)}
-                  className="flex h-14 w-full items-center justify-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors active:text-foreground"
+                  className="flex h-10 w-full items-center justify-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors active:text-foreground"
                 >
                   다시 대화하기
                   <ReplayIcon size={15} />

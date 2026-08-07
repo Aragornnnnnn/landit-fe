@@ -84,7 +84,9 @@ export const CalendarStrip = ({
     expanded,
   );
 
-  if (!week) return <div className="h-[104px] shrink-0" />;
+  // 실제 스트립 높이와 같아야 응답이 와도 화면이 안 튄다 — 390px 경계는 날짜 원 크기를 따라간다
+  if (!week)
+    return <div className="h-[115px] shrink-0 min-[390px]:h-[119px]" />;
 
   // 라벨과 이동 한계는 지금 보고 있는 단위에서 가져온다
   const shown = expanded ? (month ?? week) : week;
@@ -123,7 +125,7 @@ export const CalendarStrip = ({
 
   return (
     // 달 보기는 카드를 밀어내지 않고 그 위에 겹쳐 뜬다 — 카드가 눌리면 오늘 할 일이 작아 보인다
-    <div className="relative z-20 shrink-0 bg-background px-5 pt-1 pb-3">
+    <div className="relative z-20 shrink-0 bg-background px-5 pt-1 pb-1">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
           <ArrowButton
@@ -146,7 +148,7 @@ export const CalendarStrip = ({
 
       {/* 주 스트립은 달을 펼쳐도 지우지 않는다 — 지우면 이 영역 높이가 줄어
           아래 붙은 패널이 위로 점프한다. 달 패널이 이 위를 덮으며 펼쳐진다 */}
-      <div className="relative mt-3 min-h-[72px]">
+      <div className="relative mt-1.5 min-h-[72px]">
         <div className="grid grid-cols-7">
           {week.days.map((day) => (
             <CalendarDay
@@ -179,7 +181,7 @@ export const CalendarStrip = ({
               />
 
               <motion.div
-                className="absolute -inset-x-5 -top-3 overflow-hidden rounded-b-[24px] bg-background shadow-[0_14px_14px_0_rgba(26,20,13,0.2)]"
+                className="absolute -inset-x-5 -top-1.5 overflow-hidden rounded-b-[24px] bg-background shadow-[0_14px_14px_0_rgba(26,20,13,0.2)]"
                 initial={reduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
                 animate={
                   reduced ? { opacity: 1 } : { height: 'auto', opacity: 1 }
