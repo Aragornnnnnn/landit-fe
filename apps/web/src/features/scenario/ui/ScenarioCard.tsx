@@ -133,7 +133,7 @@ export const ScenarioCard = ({
                 {scenario.scenarioTitle}
               </p>
               {scenario.briefing && (
-                <p className="mt-2 text-sm leading-relaxed font-medium text-muted-foreground">
+                <p className="mt-1.5 text-sm leading-relaxed font-medium text-muted-foreground">
                   {scenario.briefing}
                 </p>
               )}
