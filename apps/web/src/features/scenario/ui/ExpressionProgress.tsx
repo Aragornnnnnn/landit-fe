@@ -79,11 +79,11 @@ export const ExpressionProgress = ({
         />
       </div>
 
-      {/* 완료 카드는 진행줄+버튼 두 줄이 쌓여 작은 폰에서 썸네일을 밀어낸다 — 높이는 제일 작게,
+      {/* 완료 카드는 진행줄+버튼 두 줄이 쌓여 작은 폰에서 썸네일을 밀어낸다 — 높이는 md로 낮추고,
           글자는 키워서 아래 고스트(다시 대화하기)보다 CTA가 먼저 읽히게 한다 */}
       <Button
         variant={style.tone}
-        size="sm"
+        size="md"
         className="text-base! font-bold!"
         onClick={onLearn}
       >
