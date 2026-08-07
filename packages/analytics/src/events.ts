@@ -56,7 +56,6 @@ export const EVENTS = {
 
   // 표현 학습
   EXPRESSION_LIST_VIEWED: 'Expression List Viewed',
-  EXPRESSION_LEARNING_SKIPPED: 'Expression Learning Skipped',
   EXPRESSION_LEARNING_STARTED: 'Expression Learning Started',
   EXPRESSION_STEP_VIEWED: 'Expression Step Viewed',
   QUIZ_WORD_PICKED: 'Quiz Word Picked',
