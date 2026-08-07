@@ -31,7 +31,7 @@
 - **서버 발화**: `/download`는 서버 302 리다이렉트라 클라이언트 SDK가 못 잡는다 — route 핸들러가 HTTP V2 API로 직접 발화한다(`Download Link Visited`). 키는 클라이언트와 같은 `NEXT_PUBLIC_AMPLITUDE_API_KEY`(공개 키라 서버 전용으로 나누지 않는다), device_id는 랜덤이라 방문 횟수 집계용.
 - **dev/prod 분리**: 프로젝트 키를 환경별로 나눈다. 로컬·프리뷰는 dev 키, 프로덕션 배포 환경변수에만 prod 키.
 
-## 이벤트 택소노미 (54개)
+## 이벤트 택소노미 (55개)
 
 ### 공통
 
@@ -113,6 +113,7 @@
 | 이벤트                      | 속성                                               | 시점                                                              |
 | --------------------------- | -------------------------------------------------- | ----------------------------------------------------------------- |
 | Expression List Viewed      | scenario_id, expression_count                      | 분기 화면 리스트 리빌                                             |
+| Expression Learning Skipped | scenario_id, expression_count                      | 분기 화면을 X로 닫고 학습 없이 나감 (연출 중이면 count 0 가능)    |
 | Expression Learning Started | expression_id, scenario_id                         | 학습 데이터 로드 완료                                             |
 | Expression Step Viewed      | expression_id, step(quiz\|explain\|review)         | 스텝 노출                                                         |
 | Quiz Word Picked            | expression_id, picked_count                        | 단어 칩 선택                                                      |

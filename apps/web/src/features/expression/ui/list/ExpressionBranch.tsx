@@ -97,7 +97,14 @@ export const ExpressionBranch = ({
     >
       <header className="relative flex h-14 flex-none items-center px-3">
         <button
-          onClick={() => router.replace(scenarioReturnPath({ date }))}
+          onClick={() => {
+            // X가 유일한 이탈 경로다 — 학습 없이 나가는 신호를 여기서 남긴다
+            track(EVENTS.EXPRESSION_LEARNING_SKIPPED, {
+              scenario_id: scenarioId,
+              expression_count: count,
+            });
+            router.replace(scenarioReturnPath({ date }));
+          }}
           className="flex size-10 items-center justify-center text-muted-foreground"
           aria-label="닫기"
         >
