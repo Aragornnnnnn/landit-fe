@@ -79,7 +79,8 @@ export const ExpressionProgress = ({
         />
       </div>
 
-      <Button variant={style.tone} onClick={onLearn}>
+      {/* 완료 카드는 진행줄+버튼 두 줄이 쌓여 작은 폰에서 썸네일을 밀어낸다 — 제일 작은 사이즈로 */}
+      <Button variant={style.tone} size="sm" onClick={onLearn}>
         {style.label}
       </Button>
     </div>
