@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'motion/react';
 
-import type { NpsScore } from '../api/nps';
+import type { NpsScore } from '../../api/nps';
 
 // 점수 → 표정 매핑 — Record라 점수가 늘면 표정을 채워야 컴파일된다
 const EMOJIS: Record<NpsScore, string> = {
