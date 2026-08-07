@@ -31,7 +31,7 @@
 - **서버 발화**: `/download`는 서버 302 리다이렉트라 클라이언트 SDK가 못 잡는다 — route 핸들러가 HTTP V2 API로 직접 발화한다(`Download Link Visited`). 키는 클라이언트와 같은 `NEXT_PUBLIC_AMPLITUDE_API_KEY`(공개 키라 서버 전용으로 나누지 않는다), device_id는 랜덤이라 방문 횟수 집계용.
 - **dev/prod 분리**: 프로젝트 키를 환경별로 나눈다. 로컬·프리뷰는 dev 키, 프로덕션 배포 환경변수에만 prod 키.
 
-## 이벤트 택소노미 (55개)
+## 이벤트 택소노미 (58개)
 
 ### 공통
 
@@ -78,6 +78,18 @@
 | Scenario Card Viewed  | card_type(scenario\|completion), position, scenario_id?, difficulty?, is_completed?, is_locked? | 스냅으로 카드가 중앙에 설 때                 |
 | Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto)                                      | 원어민 표현 배우기 / 자동 뒤집힘 / 앞면 복귀 |
 | Expression Selected   | expression_id, scenario_id, source(card_back\|post_conversation)                                | 표현 항목 탭                                 |
+
+### 오늘의 시나리오 (램프)
+
+대화 시작 전 갈림길 세 곳. 온보딩 직후 자동 진행은 누른 버튼이 없어 기록하지 않는다.
+
+| 이벤트                        | 속성  | 시점                                            |
+| ----------------------------- | ----- | ----------------------------------------------- |
+| Conversation Start Tapped     | retry | 자고 있는 카드의 "램프 문질러 대화 시작하기" 탭 |
+| Conversation Prompt Accepted  | retry | 자동으로 뜬 "오늘의 대화를 시작할까요?"에 "네!" |
+| Conversation Prompt Dismissed | retry | 그 프롬프트를 X·뒤로가기로 닫음                 |
+
+`retry`는 전날 못 끝낸 대화를 이어받은 카드였는지 (오늘 새로 받은 시나리오면 false). 완료 카드의 "다시 대화하기"는 램프를 거치지 않으며 `Conversation Started`의 `is_retry`로 잡힌다.
 
 ### 대화
 
