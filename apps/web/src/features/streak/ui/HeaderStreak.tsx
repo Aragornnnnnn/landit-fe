@@ -15,8 +15,9 @@ import { StreakFruit } from './StreakFruit';
 // 눈에 띄어야 하는 칸이지만 그건 색이 맡는다. 크기로 키우면 강조가 아니라 정렬 오류로 보인다
 const HEADER_FRUIT_SIZE = 16;
 
-// "7일" 두 자리 폭 기준 — 못 받은 동안 라벨 칸을 비워 두면 폭이 좁았다 넓어지며 아이콘이 옆으로 튄다
-const LABEL_MIN_WIDTH = 20;
+// "999일" 세 자리 폭 기준 — 못 받은 동안 라벨 칸을 비워 두면 폭이 좁았다 넓어지며 아이콘이 옆으로 튄다.
+// 두 자리까지만 잡으면 스트릭이 100일을 넘는 순간 다시 튄다
+const LABEL_MIN_WIDTH = 32;
 
 export const HeaderStreak = () => {
   const { streak, isPending } = useStreakQuery();

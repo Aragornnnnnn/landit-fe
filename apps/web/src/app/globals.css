@@ -150,12 +150,13 @@
   img {
     -webkit-user-drag: none;
   }
-  /* 입력·편집 영역은 선택 허용 (위 차단의 예외) */
+  /* 입력·편집 영역은 선택·콜아웃 허용 (위 차단의 예외) — 안 풀면 롱프레스 복사·붙여넣기가 막힌다 */
   input,
   textarea,
   [contenteditable='true'] {
     -webkit-user-select: text;
     user-select: text;
+    -webkit-touch-callout: default;
   }
   body {
     @apply bg-background text-foreground;
