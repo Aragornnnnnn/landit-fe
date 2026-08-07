@@ -6,7 +6,7 @@ import { EVENTS } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
 
-import type { SessionFeedbackResponse } from '../api/session-feedback';
+import type { SessionFeedbackResponse } from '../../api/session-feedback';
 import { FeedbackDetail } from './FeedbackDetail';
 import { FeedbackSummary } from './FeedbackSummary';
 

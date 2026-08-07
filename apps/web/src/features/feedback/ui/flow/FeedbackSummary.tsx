@@ -5,8 +5,8 @@ import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
 
-import type { SessionFeedbackResponse } from '../api/session-feedback';
-import { detailCtaLabel, scoreHeadline } from '../model/feedback-view';
+import type { SessionFeedbackResponse } from '../../api/session-feedback';
+import { detailCtaLabel, scoreHeadline } from '../../model/feedback-view';
 import { ScoreTrack } from './ScoreTrack';
 
 export const FeedbackSummary = ({

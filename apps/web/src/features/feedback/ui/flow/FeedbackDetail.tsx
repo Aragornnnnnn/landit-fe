@@ -8,8 +8,8 @@ import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
-import type { MessageFeedbackResponse } from '../api/session-feedback';
-import { evaluationContextLabel } from '../model/feedback-view';
+import type { MessageFeedbackResponse } from '../../api/session-feedback';
+import { evaluationContextLabel } from '../../model/feedback-view';
 
 export const FeedbackDetail = ({
   sessionId,
