@@ -1,6 +1,6 @@
 // 달력 한 칸 — 위에 그 날의 마크(열매·빈 원), 아래에 날짜. 이어진 구간 띠는 주 행이 뒤에 깐다
-import type { DayMark } from '../model/calendar-day';
-import { StreakFruit } from './StreakFruit';
+import type { DayMark } from '../../model/calendar-day';
+import { StreakFruit } from '../common/StreakFruit';
 
 // 마크가 앉는 줄의 높이. 이어진 구간 띠도 같은 높이를 써야 마크가 띠 한가운데 놓인다 (StreakWeek 참고)
 export const MARK_ROW_HEIGHT = 34;

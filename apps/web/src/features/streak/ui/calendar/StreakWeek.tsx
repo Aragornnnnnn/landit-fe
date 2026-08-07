@@ -1,6 +1,6 @@
 // 달력 한 주 — 이어진 구간 띠를 먼저 깔고 그 위에 칸 일곱 개를 올린다
-import type { MonthWeek } from '../lib/month-grid';
-import { runsOf, type DayMark } from '../model/calendar-day';
+import type { MonthWeek } from '../../lib/month-grid';
+import { runsOf, type DayMark } from '../../model/calendar-day';
 import { MARK_ROW_HEIGHT, StreakDay } from './StreakDay';
 
 // 띠가 열 양옆에서 물러나는 폭. 시안 F1이 하루짜리 띠를 열 폭 50px 안에 40px로 그린다

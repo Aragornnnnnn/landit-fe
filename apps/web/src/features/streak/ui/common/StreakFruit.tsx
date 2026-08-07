@@ -3,8 +3,8 @@
 // 여백이 절반이라(320px 중 열매 163px) size와 눈에 보이는 크기가 두 배로 어긋났다. 이제 size가 곧 지름이다
 import Image from 'next/image';
 
-import fruitImage from '../assets/fruit.png';
-import type { FruitState } from '../model/streak-status';
+import fruitImage from '../../assets/fruit.png';
+import type { FruitState } from '../../model/streak-status';
 
 // 시안(F1b·F1c)이 0일 열매를 opacity 40%로 그린다. 오늘치가 빈 상태는 그 사이에 둔다
 const OPACITY: Record<FruitState, number> = {

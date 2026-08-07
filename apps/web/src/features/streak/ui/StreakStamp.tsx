@@ -14,7 +14,7 @@ import { streakRunOf, type StreakRunCell } from '../model/streak-run';
 import { useCelebrationBase } from '../model/useCelebrationBase';
 import { useStreakQuery } from '../model/useStreakQuery';
 import { useStreakRecord } from '../model/useStreakRecord';
-import { StreakFruit } from './StreakFruit';
+import { StreakFruit } from './common/StreakFruit';
 
 // 열매가 찍히고, 오늘 칸이 차고, 문구가 선다
 const DROP_DELAY = 0.15;

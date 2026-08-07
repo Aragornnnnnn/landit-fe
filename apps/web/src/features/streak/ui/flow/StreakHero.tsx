@@ -1,6 +1,6 @@
 // 연속 기록 히어로 — 큰 열매와 현재 상태 한 줄, 그 아래 다음 행동을 가리키는 안내
-import { fruitStateOf, heroMessageOf } from '../model/streak-status';
-import { StreakFruit } from './StreakFruit';
+import { fruitStateOf, heroMessageOf } from '../../model/streak-status';
+import { StreakFruit } from '../common/StreakFruit';
 
 interface StreakHeroProps {
   currentStreakDays: number;
