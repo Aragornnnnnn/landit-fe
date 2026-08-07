@@ -82,7 +82,7 @@ export const CalendarStrip = ({
 
   // 실제 스트립 높이와 같아야 응답이 와도 화면이 안 튄다 — 390px 경계는 날짜 원 크기를 따라간다
   if (!week)
-    return <div className="h-[115px] shrink-0 min-[390px]:h-[119px]" />;
+    return <div className="h-[111px] shrink-0 min-[390px]:h-[115px]" />;
 
   // 라벨과 이동 한계는 지금 보고 있는 단위에서 가져온다
   const shown = expanded ? (month ?? week) : week;
@@ -112,7 +112,7 @@ export const CalendarStrip = ({
 
   return (
     // 달 보기는 카드를 밀어내지 않고 그 위에 겹쳐 뜬다 — 카드가 눌리면 오늘 할 일이 작아 보인다
-    <div className="relative z-20 shrink-0 bg-background px-5 pt-1 pb-1">
+    <div className="relative z-20 shrink-0 bg-background px-5 pb-1">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
           <ArrowButton
