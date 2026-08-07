@@ -153,11 +153,12 @@ export const CalendarStrip = ({
           {expanded && (
             <>
               {/* 바깥을 누르면 접힌다 — 토글을 다시 찾아가지 않아도 되게 */}
+              {/* 좌우는 패널(-inset-x-5)과 같은 폭까지 — 스트립 패딩만큼 좁으면 양옆에 안 덮인 띠가 남는다 */}
               <motion.button
                 type="button"
                 aria-label="달력 닫기"
                 onClick={() => toggle('WEEK')}
-                className="absolute inset-x-0 top-0 h-screen cursor-default bg-black/30"
+                className="absolute -inset-x-5 top-0 h-screen cursor-default bg-black/30"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}

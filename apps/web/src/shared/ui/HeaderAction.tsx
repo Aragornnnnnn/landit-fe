@@ -42,7 +42,8 @@ export const HeaderAction = ({
         {children}
       </span>
       <span
-        className={`text-[10px] font-medium whitespace-nowrap ${
+        // 예약 폭이 실제 라벨보다 넓을 때 글자가 왼쪽으로 쏠린다 — 가운데로 고정해야 아이콘과 축이 맞는다
+        className={`text-center text-[10px] font-medium whitespace-nowrap ${
           highlighted ? 'text-primary' : ''
         }`}
         style={labelMinWidth ? { minWidth: labelMinWidth } : undefined}
