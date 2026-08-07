@@ -15,6 +15,9 @@ import { StreakFruit } from './StreakFruit';
 // 눈에 띄어야 하는 칸이지만 그건 색이 맡는다. 크기로 키우면 강조가 아니라 정렬 오류로 보인다
 const HEADER_FRUIT_SIZE = 16;
 
+// "7일" 두 자리 폭 기준 — 못 받은 동안 라벨 칸을 비워 두면 폭이 좁았다 넓어지며 아이콘이 옆으로 튄다
+const LABEL_MIN_WIDTH = 20;
+
 export const HeaderStreak = () => {
   const { streak, isPending } = useStreakQuery();
 
@@ -35,6 +38,7 @@ export const HeaderStreak = () => {
           : `연속 학습 ${currentStreakDays}일, 연속 기록 보기`
       }
       highlighted={state === 'fresh'}
+      labelMinWidth={LABEL_MIN_WIDTH}
       onClick={() =>
         track(EVENTS.STREAK_OPENED, {
           source: 'home_header',
