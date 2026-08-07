@@ -111,8 +111,8 @@ export const ScenarioCard = ({
 
             {/* 완료 시 별점을 썸네일 좌상단에 배지로 띄운다 — 어두운 스크림으로 밝은/어두운 이미지 모두에서 대비 확보 */}
             {completed && (
-              <div className="absolute top-3 left-3 rounded-full bg-black/45 px-2 py-1 shadow-sm backdrop-blur-sm">
-                <StarRating rating={scenario.starRating ?? 0} size={20} />
+              <div className="absolute top-3 left-3 rounded-full bg-black/45 px-3 py-2 shadow-sm backdrop-blur-sm">
+                <StarRating rating={scenario.starRating ?? 0} size={24} />
               </div>
             )}
           </div>
