@@ -2,7 +2,7 @@
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
 
-import { goToStore } from '../model/goToStore';
+import { goToStore } from '../../model/goToStore';
 
 interface ForceUpdateModalProps {
   reason: string | null;

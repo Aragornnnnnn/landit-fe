@@ -2,7 +2,7 @@
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
 
-import { goToStore } from '../model/goToStore';
+import { goToStore } from '../../model/goToStore';
 
 interface SoftUpdateSheetProps {
   reason: string | null;
