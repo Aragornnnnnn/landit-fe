@@ -6,7 +6,7 @@ import Image from 'next/image';
 
 import { Button } from '@/shared/ui/Button';
 
-import lampPeekImage from '../assets/landy-lamp-peek.webp';
+import lampPeekImage from '../../assets/landy-lamp-peek.webp';
 
 // 달그락 — 안에 뭔가 있다는 신호. 홈의 등장 연출(±14도로 일곱 번)에서 진폭을 줄이고
 // 쉬는 틈을 둬 반복시킨다. 계속 머무는 화면이라 그대로 쓰면 안절부절못하는 것처럼 보인다

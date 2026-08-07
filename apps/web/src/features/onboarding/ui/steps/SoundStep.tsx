@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'motion/react';
 
 import { Button } from '@/shared/ui/Button';
 
-import { useSoundPlayback } from '../model/useSoundPlayback';
+import { useSoundPlayback } from '../../model/useSoundPlayback';
 
 export const SoundStep = ({ onNext }: { onNext: () => void }) => {
   const { question, isSpeaking, bubbleVisible, progress } = useSoundPlayback();

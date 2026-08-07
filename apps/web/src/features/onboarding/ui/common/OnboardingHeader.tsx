@@ -3,7 +3,7 @@
 
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
-import { type OnboardingStep } from '../model/steps';
+import { type OnboardingStep } from '../../model/steps';
 
 export const OnboardingHeader = ({
   step,

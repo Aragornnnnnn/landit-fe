@@ -3,7 +3,7 @@
 
 import { Button } from '@/shared/ui/Button';
 
-import { useMicPermission } from '../model/useMicPermission';
+import { useMicPermission } from '../../model/useMicPermission';
 import { PermissionPreview } from './PermissionPreview';
 
 export const MicStep = ({ onNext }: { onNext: () => void }) => {
