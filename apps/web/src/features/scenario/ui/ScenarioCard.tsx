@@ -155,7 +155,7 @@ export const ScenarioCard = ({
                 <button
                   type="button"
                   onClick={() => onStart(scenario)}
-                  className="flex h-11 w-full items-center justify-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors active:text-foreground"
+                  className="flex h-12 w-full items-center justify-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors active:text-foreground"
                 >
                   다시 대화하기
                   <ReplayIcon size={15} />
