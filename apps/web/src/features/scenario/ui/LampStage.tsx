@@ -4,8 +4,10 @@
 // 오버레이는 카드 안에서 그릴 수 없다 — 카드가 transform(도착 스프링) 안에 있어서
 // 그 안의 fixed는 화면이 아니라 카드 박스에 갇힌다. 그래서 body로 실어 보낸다
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { createPortal } from 'react-dom';
 
+import { track } from '@/shared/analytics';
 import { DAILY_REMINDER_CAMPAIGN } from '@/shared/analytics/utm';
 import { ONBOARDED_PARAM } from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
@@ -148,7 +150,16 @@ export const LampStage = ({
         ref={lampBoxRef}
         retry={retry}
         asleep={!summon}
-        onSummon={onStart ? () => startSummon(false) : undefined}
+        onSummon={
+          onStart
+            ? () => {
+                track(EVENTS.CONVERSATION_START_TAPPED, {
+                  retry: retry ?? false,
+                });
+                startSummon(false);
+              }
+            : undefined
+        }
       />
 
       {summon &&
@@ -157,8 +168,19 @@ export const LampStage = ({
           <LampSummon
             lamp={summon.lamp}
             asks={summon.asks}
-            onAccept={() => onStart?.()}
+            onAccept={() => {
+              // 물어본 소환의 수락만 답이다 — 직접 부른 소환은 이미 시작 탭으로 기록됐다
+              if (summon.asks)
+                track(EVENTS.CONVERSATION_PROMPT_ACCEPTED, {
+                  retry: retry ?? false,
+                });
+              onStart?.();
+            }}
             onClose={() => {
+              // 닫기(X·뒤로가기)는 물어본 소환에서만 가능하다 — 조건 없이 거절로 기록한다
+              track(EVENTS.CONVERSATION_PROMPT_DISMISSED, {
+                retry: retry ?? false,
+              });
               setSummon(null);
               onSummonClose?.();
             }}

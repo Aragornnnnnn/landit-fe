@@ -28,6 +28,12 @@ export const EVENTS = {
   SCENARIO_CARD_FLIPPED: 'Scenario Card Flipped',
   EXPRESSION_SELECTED: 'Expression Selected',
 
+  // 오늘의 시나리오 — 대화 시작 전 갈리는 지점 3곳.
+  // 자고 있는 카드의 시작 버튼을 직접 누르는지, 자동으로 뜬 "오늘의 대화를 시작할까요?"에 네/X로 답하는지
+  CONVERSATION_START_TAPPED: 'Conversation Start Tapped',
+  CONVERSATION_PROMPT_ACCEPTED: 'Conversation Prompt Accepted',
+  CONVERSATION_PROMPT_DISMISSED: 'Conversation Prompt Dismissed',
+
   // 스트릭
   STREAK_OPENED: 'Streak Opened',
   STREAK_MONTH_CHANGED: 'Streak Month Changed',
@@ -171,6 +177,11 @@ export type EventProps = {
     // post_conversation = 대화 직후 표현 리스트 화면, card_back = 홈 카드 뒷면
     source: 'card_back' | 'post_conversation';
   };
+
+  // retry = 전날 못 끝낸 대화를 이어서 하는 카드였는지 (오늘 새로 받은 시나리오면 false)
+  'Conversation Start Tapped': { retry: boolean };
+  'Conversation Prompt Accepted': { retry: boolean };
+  'Conversation Prompt Dismissed': { retry: boolean };
 
   // 헤더 열매로 연속 기록 페이지 진입 — 얼마나 눌리는지, 어떤 상태에서 눌리는지 본다
   'Streak Opened': {
