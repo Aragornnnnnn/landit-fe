@@ -17,6 +17,9 @@ interface HeaderActionProps {
   ariaLabel?: string;
   // 라벨을 브랜드색으로 띄운다. 클래스를 직접 받지 않는 건 규격을 밖에서 못 덮게 하려는 것
   highlighted?: boolean;
+  // 라벨이 비었다가 나중에 채워지는 칸용 — 그 사이 폭이 좁았다 넓어지며 아이콘이 옆으로 튄다.
+  // 최종 라벨 폭만큼 미리 자리를 잡아 둔다
+  labelMinWidth?: number;
   href?: string;
   onClick?: () => void;
 }
@@ -26,6 +29,7 @@ export const HeaderAction = ({
   children,
   ariaLabel,
   highlighted = false,
+  labelMinWidth,
   href,
   onClick,
 }: HeaderActionProps) => {
@@ -41,6 +45,7 @@ export const HeaderAction = ({
         className={`text-[10px] font-medium whitespace-nowrap ${
           highlighted ? 'text-primary' : ''
         }`}
+        style={labelMinWidth ? { minWidth: labelMinWidth } : undefined}
       >
         {label}
       </span>

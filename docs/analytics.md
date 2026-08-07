@@ -113,7 +113,7 @@
 | 이벤트                      | 속성                                               | 시점                                                              |
 | --------------------------- | -------------------------------------------------- | ----------------------------------------------------------------- |
 | Expression List Viewed      | scenario_id, expression_count                      | 분기 화면 리스트 리빌                                             |
-| Expression Learning Skipped | scenario_id, expression_count                      | 분기에서 "다음 대화하러 갈게요"                                   |
+| Expression Learning Skipped | scenario_id, expression_count                      | 분기 화면을 X로 닫고 학습 없이 나감 (연출 중이면 count 0 가능)    |
 | Expression Learning Started | expression_id, scenario_id                         | 학습 데이터 로드 완료                                             |
 | Expression Step Viewed      | expression_id, step(quiz\|explain\|review)         | 스텝 노출                                                         |
 | Quiz Word Picked            | expression_id, picked_count                        | 단어 칩 선택                                                      |

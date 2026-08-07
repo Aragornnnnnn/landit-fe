@@ -249,7 +249,8 @@ export type EventProps = {
   'Feedback Completed': { session_id: number };
 
   'Expression List Viewed': { scenario_id: number; expression_count: number };
-  // 분기에서 표현을 배우지 않고 "다음 대화"로 넘어간 경우 — 학습 퍼널 이탈 지점
+  // 분기 화면을 X로 닫고 학습 없이 나감 — 학습 퍼널 이탈 지점.
+  // 연출 중에 닫으면 리스트를 아직 못 받았을 수 있어 expression_count가 0일 수 있다
   'Expression Learning Skipped': {
     scenario_id: number;
     expression_count: number;

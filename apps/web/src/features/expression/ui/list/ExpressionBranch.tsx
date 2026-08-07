@@ -1,7 +1,7 @@
 'use client';
 
 // 표현학습 분기 — 대화 완료 축하를 잠깐 보여준 뒤, 표현을 준비한 듯 분석 연출과 준비된
-// 표현 리스트를 노출한다. [학습하러 가기]는 첫 표현부터, [다시 대화해볼래요]는 홈으로 보낸다.
+// 표현 리스트를 노출한다. [학습하러 가기]는 첫 표현부터 시작한다.
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence, motion } from 'motion/react';
@@ -97,7 +97,14 @@ export const ExpressionBranch = ({
     >
       <header className="relative flex h-14 flex-none items-center px-3">
         <button
-          onClick={() => router.replace(scenarioReturnPath({ date }))}
+          onClick={() => {
+            // X가 유일한 이탈 경로다 — 학습 없이 나가는 신호를 여기서 남긴다
+            track(EVENTS.EXPRESSION_LEARNING_SKIPPED, {
+              scenario_id: scenarioId,
+              expression_count: count,
+            });
+            router.replace(scenarioReturnPath({ date }));
+          }}
           className="flex size-10 items-center justify-center text-muted-foreground"
           aria-label="닫기"
         >
@@ -139,13 +146,6 @@ export const ExpressionBranch = ({
                 expressions={expressions}
                 onSelect={goExpression}
                 onLearn={goLearn}
-                onSkip={() => {
-                  track(EVENTS.EXPRESSION_LEARNING_SKIPPED, {
-                    scenario_id: scenarioId,
-                    expression_count: count,
-                  });
-                  router.replace(scenarioReturnPath({ date }));
-                }}
               />
             )}
           </AnimatePresence>
@@ -209,7 +209,6 @@ const RevealStage = ({
   expressions,
   onSelect,
   onLearn,
-  onSkip,
 }: {
   count: number;
   name: string;
@@ -217,7 +216,6 @@ const RevealStage = ({
     React.ComponentProps<typeof ExpressionList>['expressions'] | null;
   onSelect: (expressionId: number) => void;
   onLearn: () => void;
-  onSkip: () => void;
 }) => (
   <motion.div
     className="flex min-h-0 flex-1 flex-col"
@@ -251,13 +249,6 @@ const RevealStage = ({
         첫 표현부터 배워볼게요
         <ArrowRightIcon size={16} />
       </Button>
-      <button
-        type="button"
-        onClick={onSkip}
-        className="flex h-11 w-full items-center justify-center text-sm font-semibold text-muted-foreground transition-colors active:text-foreground"
-      >
-        다시 대화해볼래요
-      </button>
     </div>
   </motion.div>
 );
