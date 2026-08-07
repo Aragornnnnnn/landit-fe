@@ -248,11 +248,6 @@ export type EventProps = {
   'Feedback Completed': { session_id: number };
 
   'Expression List Viewed': { scenario_id: number; expression_count: number };
-  // 분기에서 표현을 배우지 않고 "다음 대화"로 넘어간 경우 — 학습 퍼널 이탈 지점
-  'Expression Learning Skipped': {
-    scenario_id: number;
-    expression_count: number;
-  };
   'Expression Learning Started': { expression_id: number; scenario_id: number };
   'Expression Step Viewed': { expression_id: number; step: ExpressionStep };
   'Quiz Word Picked': { expression_id: number; picked_count: number };
