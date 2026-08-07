@@ -120,7 +120,7 @@ export const ScenarioCard = ({
           {/* 텍스트 + CTA — 완료 카드는 맨 아래가 고스트 버튼이라 하단 패딩을 줄여
               '다시 대화하기' 위아래 여백을 맞춘다 (위: gap 4px+버튼 안 10px = 아래: 안 10px+패딩 4px) */}
           <div
-            className={`flex flex-none flex-col gap-3 px-5 pt-4 ${
+            className={`flex flex-none flex-col gap-2 px-5 pt-3 ${
               !locked && completed ? 'pb-1' : 'pb-5'
             }`}
           >
