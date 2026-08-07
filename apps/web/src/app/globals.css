@@ -37,6 +37,7 @@
   --color-good: var(--good);
   --color-good-bg: var(--good-bg);
   --color-good-border: var(--good-border);
+  --color-streak-band: var(--streak-band);
   --color-need: var(--need);
   --color-need-bg: var(--need-bg);
   --color-need-border: var(--need-border);
@@ -65,6 +66,7 @@
   --gray-500: #6b7280;
   --gray-950: #111111;
   /* 브랜드 테라코타 램프 */
+  --orange-50: #fdf1e8;
   --orange-300: #e8935a;
   --orange-500: #e07a3a;
   --orange-600: #c4601f;
@@ -110,6 +112,8 @@
   --backdrop: var(--gray-200);
   --star-filled: var(--amber-400);
   --star-empty: var(--gray-300);
+  /* 스트릭 — 달력의 이어진 구간 띠 (피그마 스트릭 Flow 스펙) */
+  --streak-band: var(--orange-50);
   --good: var(--blue-700);
   --good-bg: var(--blue-100);
   --good-border: var(--blue-200);
@@ -136,18 +140,23 @@
   *::-webkit-scrollbar {
     display: none;
   }
-  /* 웹뷰 셸 — 웹페이지스러운 제스처 차단 (텍스트 선택·오버스크롤) */
+  /* 웹뷰 셸 — 웹페이지스러운 제스처 차단 (텍스트 선택·오버스크롤·이미지 꾹 눌러 저장) */
   html {
     -webkit-user-select: none;
     user-select: none;
     overscroll-behavior: none;
+    -webkit-touch-callout: none;
   }
-  /* 입력·편집 영역은 선택 허용 (위 차단의 예외) */
+  img {
+    -webkit-user-drag: none;
+  }
+  /* 입력·편집 영역은 선택·콜아웃 허용 (위 차단의 예외) — 안 풀면 롱프레스 복사·붙여넣기가 막힌다 */
   input,
   textarea,
   [contenteditable='true'] {
     -webkit-user-select: text;
     user-select: text;
+    -webkit-touch-callout: default;
   }
   body {
     @apply bg-background text-foreground;
@@ -200,7 +209,55 @@
   }
 }
 
+/* 히어로 열매 — 익어서 탱글한 과육이 숨 쉬듯 눌렸다 부푼다.
+ * 가로·세로를 반대로 움직여야(가로로 눌리면 세로로 부풀고) 부피가 유지돼 말랑하게 읽힌다 */
+@keyframes fruit-squish {
+  0%,
+  100% {
+    transform: scale(1, 1) translateY(0);
+  }
+  30% {
+    transform: scale(1.06, 0.94) translateY(2%);
+  }
+  55% {
+    transform: scale(0.96, 1.05) translateY(-2%);
+  }
+  80% {
+    transform: scale(1.02, 0.98) translateY(0);
+  }
+}
+
+/* 첫 열매를 받아 문 래디 — 오물오물. 그림 한 장이라 입은 못 움직이니 몸 전체가 씹는 리듬을 대신한다.
+ * 열매와 같은 원리(가로·세로 반대)에 주기만 짧게 잡아, 숨 쉬는 게 아니라 씹는 것으로 읽히게 한다 */
+@keyframes landy-chew {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  25% {
+    transform: scale(1.035, 0.965);
+  }
+  50% {
+    transform: scale(0.985, 1.02);
+  }
+  75% {
+    transform: scale(1.02, 0.985);
+  }
+}
+
 @layer utilities {
+  .animate-fruit-squish {
+    /* 바닥을 축으로 — 위에서 누르는 것처럼 보여야 무게가 느껴진다 */
+    transform-origin: 50% 85%;
+    animation: fruit-squish 2.4s ease-in-out infinite;
+  }
+
+  .animate-landy-chew {
+    /* 앉은 자세라 바닥에 붙은 엉덩이가 축이다 */
+    transform-origin: 50% 92%;
+    animation: landy-chew 0.62s ease-in-out infinite;
+  }
+
   .animate-shake {
     animation: shake 0.4s ease-in-out;
   }

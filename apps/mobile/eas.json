@@ -1,7 +1,7 @@
 {
   "cli": {
     "version": ">= 18.12.3",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -12,7 +12,6 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true,
       "channel": "production"
     }
   },

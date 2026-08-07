@@ -28,6 +28,21 @@ export const EVENTS = {
   SCENARIO_CARD_FLIPPED: 'Scenario Card Flipped',
   EXPRESSION_SELECTED: 'Expression Selected',
 
+  // 오늘의 시나리오 — 대화 시작 전 갈리는 지점 3곳.
+  // 자고 있는 카드의 시작 버튼을 직접 누르는지, 자동으로 뜬 "오늘의 대화를 시작할까요?"에 네/X로 답하는지
+  CONVERSATION_START_TAPPED: 'Conversation Start Tapped',
+  CONVERSATION_PROMPT_ACCEPTED: 'Conversation Prompt Accepted',
+  CONVERSATION_PROMPT_DISMISSED: 'Conversation Prompt Dismissed',
+
+  // 달력 스트립 — 완료한 지난 날을 되짚어 보는지, 월 뷰를 실제로 쓰는지
+  CALENDAR_DATE_SELECTED: 'Calendar Date Selected',
+  CALENDAR_VIEW_SWITCHED: 'Calendar View Switched',
+  CALENDAR_PERIOD_MOVED: 'Calendar Period Moved',
+
+  // 스트릭
+  STREAK_OPENED: 'Streak Opened',
+  STREAK_MONTH_CHANGED: 'Streak Month Changed',
+
   // 대화
   CONVERSATION_STARTED: 'Conversation Started',
   RECORDING_STARTED: 'Recording Started',
@@ -68,6 +83,17 @@ export const EVENTS = {
   NPS_SCORE_SELECTED: 'NPS Score Selected',
   NPS_SURVEY_SUBMITTED: 'NPS Survey Submitted',
   NPS_SURVEY_DISMISSED: 'NPS Survey Dismissed',
+
+  // 알림 동의
+  NOTIFICATION_CONSENT_VIEWED: 'Notification Consent Viewed',
+  NOTIFICATION_CONSENT_ACCEPTED: 'Notification Consent Accepted',
+  NOTIFICATION_CONSENT_DISMISSED: 'Notification Consent Dismissed',
+
+  // 유입 — /download 스토어 리다이렉트가 서버에서 발화한다 (route 핸들러, LAN-237)
+  DOWNLOAD_LINK_VISITED: 'Download Link Visited',
+
+  // 앱 업데이트 유도 UI에서 스토어 앱을 직접 연다
+  APP_UPDATE_STORE_OPENED: 'App Update Store Opened',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -75,15 +101,20 @@ export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
 // 속성 값 유니언 — 변형은 이벤트명이 아니라 속성으로 관리한다 (정책 2-1)
 export type AuthProvider = 'kakao' | 'google' | 'apple';
 export type LoginMethod = 'native' | 'web';
-export type OnboardingStep = 'intro' | 'sound' | 'mic' | 'thought' | 'scenario';
+export type OnboardingStep =
+  'intro' | 'sound' | 'mic' | 'thought' | 'notification' | 'scenario';
 export type ExpressionStep = 'quiz' | 'explain' | 'review';
 export type TurnInputType = 'voice' | 'text';
 export type HintSource = 'quiz' | 'review';
-export type HomeReturnReason = 'just' | 'flip' | 'card';
+export type HomeReturnReason = 'just' | 'flip' | 'card' | 'reminder';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
-  'home' | 'conversation' | 'card_back' | 'expression_list';
+  'scenario' | 'conversation' | 'card_back' | 'expression_list' | 'streak';
+// 알림 동의를 청한 지면 — 온보딩 스텝은 기존 온보딩 계측이 커버해서 없다.
+// 키는 source — surface는 baseProps의 전역 속성(app·browser)이라 겹치면 덮어쓴다
+export type NotificationConsentSource = 'scenario' | 'me';
+export type CalendarView = 'week' | 'month';
 
 // 이벤트별 속성 계약 — 키는 snake_case. 속성이 없는 이벤트는 undefined
 export type EventProps = {
@@ -93,6 +124,10 @@ export type EventProps = {
     return_reason?: HomeReturnReason;
     scenario_id?: number;
     expression_id?: number;
+    // 알림 유입(reminder)일 때만 — 탭한 알림의 문구 슬러그 (utm_content에서 파생, 어휘는 reminder-copies.ts)
+    notification_copy?: string;
+    // 시나리오 화면에서 완료한 지난 날 카드를 볼 때만 — 열 수 있는 과거는 완료한 날뿐이다 (yyyy-MM-dd)
+    completed_date?: string;
   };
   // 파괴적 행동(이탈·탈퇴) 전 확인 시트 — 열림/취소로 고민율을 본다. 확정은 각 Abandoned/Deleted 이벤트
   'Confirm Sheet Opened': { sheet: ConfirmSheetKind };
@@ -149,6 +184,27 @@ export type EventProps = {
     scenario_id: number;
     // post_conversation = 대화 직후 표현 리스트 화면, card_back = 홈 카드 뒷면
     source: 'card_back' | 'post_conversation';
+  };
+
+  // retry = 전날 못 끝낸 대화를 이어서 하는 카드였는지 (오늘 새로 받은 시나리오면 false)
+  'Conversation Start Tapped': { retry: boolean };
+  'Conversation Prompt Accepted': { retry: boolean };
+  'Conversation Prompt Dismissed': { retry: boolean };
+
+  'Calendar Date Selected': { is_today: boolean };
+  'Calendar View Switched': { view: CalendarView };
+  'Calendar Period Moved': { direction: 'prev' | 'next'; view: CalendarView };
+
+  // 헤더 열매로 연속 기록 페이지 진입 — 얼마나 눌리는지, 어떤 상태에서 눌리는지 본다
+  'Streak Opened': {
+    source: 'home_header';
+    streak_days: number;
+    is_active_today: boolean;
+  };
+  'Streak Month Changed': {
+    direction: 'prev' | 'next';
+    year: number;
+    month: number;
   };
 
   'Conversation Started': {
@@ -216,7 +272,8 @@ export type EventProps = {
   'Feedback Completed': { session_id: number };
 
   'Expression List Viewed': { scenario_id: number; expression_count: number };
-  // 분기에서 표현을 배우지 않고 "다음 대화"로 넘어간 경우 — 학습 퍼널 이탈 지점
+  // 분기 화면을 X로 닫고 학습 없이 나감 — 학습 퍼널 이탈 지점.
+  // 연출 중에 닫으면 리스트를 아직 못 받았을 수 있어 expression_count가 0일 수 있다
   'Expression Learning Skipped': {
     scenario_id: number;
     expression_count: number;
@@ -245,6 +302,18 @@ export type EventProps = {
   'NPS Survey Submitted': { score: number; has_comment: boolean };
   // ✕로 제출 없이 닫음 — 점수를 골라놓고 닫았으면 score가 담긴다
   'NPS Survey Dismissed': { score?: number };
+
+  'Notification Consent Viewed': { source: NotificationConsentSource };
+  // 수락 = OS 권한창 요청까지 이어짐. 실제 허용/거부는 OS 팝업 결과라 별도 (권한 상태로 세그먼트)
+  'Notification Consent Accepted': { source: NotificationConsentSource };
+  'Notification Consent Dismissed': { source: NotificationConsentSource };
+
+  // 서버 발화라 세션·리플레이·공통 속성 없음. device_id 랜덤 — 방문 횟수 집계용.
+  // /download 링크 자체를 방문한 경우만 (외부 링크·인스타 등)
+  'Download Link Visited': { store: 'play_store' | 'app_store' };
+
+  // /download를 거치지 않고 스토어 앱을 바로 연 경우만 (앱 업데이트 유도 UI)
+  'App Update Store Opened': { store: 'play_store' | 'app_store' };
 };
 
 // 컴파일 타임 검증 ① EventProps가 모든 이벤트를 빠짐없이 커버한다

@@ -5,7 +5,7 @@ import { StrictMode } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Scenario } from '@/features/scenario/api/list';
+import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 import * as sessionApi from '../api/session';
@@ -447,13 +447,13 @@ describe('useConversationFlow', () => {
     expect(result.current.phase).toBe('USER_READY');
   });
 
-  it('ttsVoice 성별이 FEMALE이면 partner가 female이다', async () => {
+  it('ttsVoice 성별이 FEMALE이면 상대가 클로이다', async () => {
     const { result } = renderHook(() =>
       useConversationFlow(withVoice(scenario, { ...voice, gender: 'FEMALE' })),
     );
     await act(async () => {});
 
-    expect(result.current.partner).toBe('female');
+    expect(result.current.partner).toBe('chloe');
   });
 
   it('제출 응답의 다음 질문을 미리 합성(prefetch)한다', async () => {

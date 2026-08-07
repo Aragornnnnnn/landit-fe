@@ -7,7 +7,7 @@ const SPEECH_URL = 'https://openrouter.ai/api/v1/audio/speech';
 // 제대로 된 세션 인증은 런칭 전 별도 이슈(LAN-118 후속)로 다룬다
 const MAX_INPUT_LENGTH = 1000;
 // 우리 키로 임의 모델을 부르지 못하게 TTS 모델만 허용 (백엔드 시드 model과 일치)
-const ALLOWED_MODELS = ['microsoft/mai-voice-2'];
+const ALLOWED_MODELS = ['microsoft/mai-voice-2', 'deepgram/aura-2'];
 
 export async function POST(request: Request) {
   const apiKey = process.env.OPENROUTER_API_KEY;

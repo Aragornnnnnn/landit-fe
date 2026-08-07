@@ -18,7 +18,7 @@ export const MicStep = ({ onNext }: { onNext: () => void }) => {
     <>
       <div className="flex flex-1 flex-col pt-7">
         <h1 className="text-3xl leading-[1.18] font-black tracking-normal">
-          다음으로 마이크를 켜서
+          마이크를 켜서
           <br />
           제가 들을 수 있게 해주세요
         </h1>

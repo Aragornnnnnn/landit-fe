@@ -20,6 +20,15 @@ import { runHaptic } from '@/bridge/haptics';
 import { nativeContextScript } from '@/bridge/nativeContext';
 import { useNativeBridge } from '@/bridge/useNativeBridge';
 import { WEB_URL } from '@/config/webUrl';
+import { isExternalNavigation } from '@/navigation/isExternalNavigation';
+import {
+  getNotificationPermission,
+  requestNotificationPermission,
+} from '@/notifications/permission';
+import { getExpoPushToken } from '@/notifications/push-token';
+import { syncReminders } from '@/notifications/reminders';
+import { initializeNotifications } from '@/notifications/setup';
+import { useNotificationDeepLink } from '@/notifications/useNotificationDeepLink';
 
 // 네이티브 스플래시를 웹 첫 페인트까지 붙잡아 둔다 — 자동 숨김을 막고 WebView onLoad에서 수동으로 감춘다
 void SplashScreen.preventAutoHideAsync();
@@ -31,12 +40,32 @@ const ShellScreen = () => {
   // 재시도 시 WebView를 새로 마운트하기 위한 key
   const [loadAttempt, setLoadAttempt] = useState(0);
 
+  // 푸시 토큰은 권한이 허용된 뒤에만 발급된다 — 실패하면 건너뛰고 다음 실행에서 다시 시도한다
+  const sendPushToken = async () => {
+    const token = await getExpoPushToken();
+    if (token) postToWeb({ type: 'PUSH_TOKEN', token });
+  };
+
   const { onMessage, postToWeb } = useNativeBridge(webviewRef, {
     EXIT_APP: () => BackHandler.exitApp(),
     // 웹이 인터랙션 시점에 보낸 진동 요청을 expo-haptics로 실행한다
     HAPTIC: ({ pattern }) => void runHaptic(pattern),
     // 마이크 권한이 차단된 상태 — OS 앱 설정 화면을 연다 (iOS·Android 공통)
     OPEN_SETTINGS: () => void Linking.openSettings(),
+    // 웹이 만든 예약 목록대로 로컬 알림을 통째로 다시 깐다 (증분 갱신이 아니다)
+    SYNC_REMINDERS: ({ reminders }) => void syncReminders(reminders),
+    // 알림 권한 상태 조회 — 다이얼로그 없이 현재 상태만 회신한다
+    GET_NOTIFICATION_PERMISSION: async () => {
+      const status = await getNotificationPermission();
+      postToWeb({ type: 'NOTIFICATION_PERMISSION', status });
+      if (status === 'granted') await sendPushToken();
+    },
+    // 알림 권한 능동 요청 — OS 권한창을 띄울 수 있고, 결과를 회신한다
+    REQUEST_NOTIFICATION_PERMISSION: async () => {
+      const status = await requestNotificationPermission();
+      postToWeb({ type: 'NOTIFICATION_PERMISSION', status });
+      if (status === 'granted') await sendPushToken();
+    },
     // 웹의 로그인 요청을 받아 provider SDK로 idToken을 발급받고, nonce와 함께 웹으로 돌려준다
     SOCIAL_LOGIN_REQUEST: async ({ provider }) => {
       try {
@@ -63,9 +92,19 @@ const ShellScreen = () => {
     },
   });
 
+  // 알림 탭 딥링크 — 콜드 스타트는 초기 URI로, 웜 상태 탭은 NAVIGATE 브릿지로 웹 라우터에 위임한다
+  const coldStart = useNotificationDeepLink((path) =>
+    postToWeb({ type: 'NAVIGATE', url: path }),
+  );
+
   // Meta SDK 초기화와 iOS ATT 동의 요청 — 앱 첫 진입에 1회 (광고 설치 어트리뷰션)
   useEffect(() => {
     void initMetaSdk();
+  }, []);
+
+  // 알림 표시 정책·Android 채널 등록 — 권한 요청은 웹이 브릿지로 시점을 정한다
+  useEffect(() => {
+    void initializeNotifications();
   }, []);
 
   // 웹 첫 페인트(onLoad)나 로드 실패로 화면이 바뀌면 스플래시를 감춘다 — 그 전까지 네이티브 스플래시가 흰 로딩 화면을 가려 준다
@@ -127,15 +166,28 @@ const ShellScreen = () => {
     );
   }
 
+  // 콜드 스타트 조회가 끝나야 초기 URI가 정해진다 — 그때까지 마운트 보류 (수 ms, 스플래시가 가린다)
+  if (coldStart.status === 'loading') {
+    return null;
+  }
+
   return (
     <WebView
       key={loadAttempt}
       ref={webviewRef}
-      // 앱 진입점은 루트 — 로그인 여부는 웹의 인증 가드가 판단해 로그인/홈으로 보낸다
-      source={{ uri: `${WEB_URL}/` }}
+      // 진입점은 루트, 알림 콜드 스타트면 페이로드의 경로 — 로그인 여부는 웹의 인증 가드가 판단한다
+      source={{ uri: `${WEB_URL}${coldStart.path ?? '/'}` }}
       // 콘텐츠 로드 전 네이티브 컨텍스트(플랫폼·앱 버전)를 window에 주입 — 웹 계측이 첫 렌더에서 바로 읽는다
       injectedJavaScriptBeforeContentLoaded={nativeContextScript}
       onMessage={onMessage}
+      // 웹 도메인 밖으로 나가는 이동(스토어 등)은 WebView 대신 OS가 연다 —
+      // 스토어가 웹뷰 안에서 로그인 페이지로 열리는 문제 방지
+      onShouldStartLoadWithRequest={(request) => {
+        if (request.isTopFrame === false) return true;
+        if (!isExternalNavigation(request.url, WEB_URL)) return true;
+        void Linking.openURL(request.url);
+        return false;
+      }}
       onLoad={() => setIsWebReady(true)}
       onError={() => setLoadFailed(true)}
       // onError는 네트워크 자체가 안 될 때만 잡는다. 서버가 4xx/5xx로 응답한 경우는

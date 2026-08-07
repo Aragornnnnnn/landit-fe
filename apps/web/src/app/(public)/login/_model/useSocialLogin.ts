@@ -12,6 +12,7 @@ import { generateRandomHex } from '@/shared/auth/crypto';
 import { hasSeenOnboarding } from '@/shared/auth/onboarding-seen';
 import { startWebSocialLogin } from '@/shared/auth/web-social-login';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
+import { SCENARIO_PATH } from '@/shared/lib/routes';
 
 type SocialProvider = 'kakao' | 'google' | 'apple';
 
@@ -58,7 +59,7 @@ export function useSocialLogin() {
           });
           // TODO: 기기 로컬 플래그는 기기 간 공유가 안 된다 — 서버 완료 플래그가 생기면 그걸로 분기
           router.replace(
-            newUser || !hasSeenOnboarding() ? '/onboarding' : '/home',
+            newUser || !hasSeenOnboarding() ? '/onboarding' : SCENARIO_PATH,
           );
         } catch (error) {
           track(EVENTS.LOGIN_FAILED, {

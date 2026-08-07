@@ -1,12 +1,22 @@
 // 경로 → Page Viewed 속성 매핑 — 동적 세그먼트는 page_name으로 정규화하고 id는 속성으로 뺀다 (정책 2-2)
 import type { EventProps } from '@landit/analytics';
 
+import { DAILY_REMINDER_CAMPAIGN } from './utm';
+
 type PageViewProps = EventProps['Page Viewed'];
 
 // 계측 제외 — 루트는 즉시 redirect라 페이지뷰로 의미가 없다
 const EXCLUDED = new Set(['/']);
 
-const STATIC_PAGES = new Set(['login', 'onboarding', 'me', 'privacy', 'terms']);
+const STATIC_PAGES = new Set([
+  'login',
+  'onboarding',
+  'me',
+  'privacy',
+  'terms',
+  'smalltalk',
+  'streak',
+]);
 
 const toId = (raw: string | null) => {
   const id = Number(raw);
@@ -21,9 +31,19 @@ export const toPageView = (
 
   const seg = pathname.split('/').filter(Boolean);
 
-  if (pathname === '/home') {
-    const base: PageViewProps = { page_name: 'home', path: pathname };
-    // 복귀 신호 우선순위 — flip(표현 완료 복귀) > card(중도 이탈 복귀) > just(해금 직후)
+  if (pathname === '/scenario') {
+    // 날짜가 붙으면 완료한 지난 날 카드를 다시 보는 것 — 열 수 있는 과거는 완료한 날뿐이다
+    const completedDate = searchParams.get('date');
+    const base: PageViewProps = {
+      page_name: 'scenario',
+      path: pathname,
+      ...(completedDate &&
+        /^\d{4}-\d{2}-\d{2}$/.test(completedDate) && {
+          completed_date: completedDate,
+        }),
+    };
+    // 복귀 신호는 flip(표현 완료 복귀)과 reminder(알림 탭 유입) 둘이다.
+    // card·just는 목록을 스크롤·강조하던 신호라 하루 한 장이 되면서 가리킬 대상이 없어졌다
     if (searchParams.has('flip')) {
       return {
         ...base,
@@ -31,20 +51,14 @@ export const toPageView = (
         scenario_id: toId(searchParams.get('flip')),
       };
     }
-    if (searchParams.has('card')) {
+    // 데일리 리마인드 알림 탭 유입 — 셸 딥링크 url의 UTM에서 파생한다 (utm_* 자체는 앰플리튜드 어트리뷰션이 수집).
+    // 웜 딥링크는 SPA 내부 이동이라 어트리뷰션이 못 보므로, 문구 슬러그도 이벤트 속성으로 실어야 유실이 없다
+    if (searchParams.get('utm_campaign') === DAILY_REMINDER_CAMPAIGN) {
+      const copySlug = searchParams.get('utm_content');
       return {
         ...base,
-        return_reason: 'card',
-        scenario_id: toId(searchParams.get('card')),
-      };
-    }
-    if (searchParams.has('just')) {
-      // just는 시나리오 id를 담을 수 있다 (레거시 '1'은 강조 전용 플래그라 id 아님)
-      const just = searchParams.get('just');
-      return {
-        ...base,
-        return_reason: 'just',
-        scenario_id: just !== '1' ? toId(just) : undefined,
+        return_reason: 'reminder',
+        ...(copySlug && { notification_copy: copySlug }),
       };
     }
     return base;

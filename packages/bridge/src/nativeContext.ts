@@ -2,7 +2,7 @@
 import { z } from 'zod';
 
 // 브릿지 계약 버전 — 브릿지 메시지/컨텍스트 규격이 바뀌면 올린다. 웹이 구 셸 능력 판단에 쓴다
-export const NATIVE_BRIDGE_VERSION = 1;
+export const NATIVE_BRIDGE_VERSION = 2;
 
 // 셸이 주입하고 웹이 읽는 전역 키
 export const NATIVE_CONTEXT_GLOBAL = '__LANDIT_NATIVE__';

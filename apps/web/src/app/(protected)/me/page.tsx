@@ -5,18 +5,21 @@ import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { disablePushToken } from '@/features/notification/model/push-token-registration';
 import { FeedbackSurvey } from '@/features/nps/ui/FeedbackSurvey';
 import { track } from '@/shared/analytics';
 import { logout as requestLogout } from '@/shared/auth/api/logout';
 import { withdraw } from '@/shared/auth/api/withdraw';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { clearSession } from '@/shared/auth/clear-session';
+import { SCENARIO_PATH } from '@/shared/lib/routes';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import { MenuButton, MenuGroup, MenuLink } from './_ui/Menu';
+import { NotificationMenuEntry } from './_ui/NotificationMenuEntry';
 import { StatChip } from './_ui/StatChip';
 
 export default function MyPage() {
@@ -53,6 +56,8 @@ export default function MyPage() {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
     try {
+      // 푸시 해제가 먼저다 — 토큰을 폐기한 뒤엔 인증이 필요한 이 요청을 보낼 수 없다
+      await disablePushToken();
       if (refreshToken) await requestLogout(refreshToken);
     } catch (error) {
       console.warn('[Auth] logout failed:', error);
@@ -70,6 +75,11 @@ export default function MyPage() {
     setIsDeletingAccount(true);
     setDeleteErrorMessage(null);
     try {
+      // 탈퇴 전에 이 기기로 가는 푸시를 끊는다 — 계정이 사라진 뒤엔 해제할 방법이 없다.
+      // 부가 정리라 실패해도 탈퇴 자체는 막지 않는다
+      await disablePushToken().catch((error: unknown) =>
+        console.warn('[push-token] 해제 실패:', error),
+      );
       await withdraw();
       track(EVENTS.ACCOUNT_DELETED);
       finishSignedOut();
@@ -95,7 +105,7 @@ export default function MyPage() {
       >
         <button
           type="button"
-          onClick={() => router.replace('/home')}
+          onClick={() => router.replace(SCENARIO_PATH)}
           className="flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90 active:bg-zinc-200"
           style={{ color: '#444', marginLeft: -4 }}
           aria-label="뒤로 가기"
@@ -152,6 +162,9 @@ export default function MyPage() {
 
         {/* 메뉴 그룹 */}
         <div className="space-y-3 px-4 pb-8">
+          {/* 알림을 아직 안 켠 유저에게만 보인다 */}
+          <NotificationMenuEntry />
+
           <MenuGroup>
             <MenuButton
               title="Landit에게 의견 보내기"

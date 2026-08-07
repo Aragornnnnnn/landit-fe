@@ -2,7 +2,7 @@
   "expo": {
     "name": "Landit",
     "slug": "saynow",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": [
@@ -22,7 +22,7 @@
       }
     },
     "ios": {
-      "buildNumber": "11",
+      "buildNumber": "12",
       "bundleIdentifier": "com.saynow.app",
       "usesAppleSignIn": true,
       "infoPlist": {
@@ -53,12 +53,14 @@
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#e66827",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.saynow.app",
+      "versionCode": 17,
       "intentFilters": [
         {
           "action": "VIEW",
@@ -128,7 +130,8 @@
         {
           "userTrackingPermission": "광고 성과를 측정하고 서비스를 개선하기 위해 기기의 활동 정보를 사용해요."
         }
-      ]
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,

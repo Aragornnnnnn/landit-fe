@@ -10,6 +10,14 @@ export default defineConfig({
     // 목·스파이를 테스트마다 자동 리셋 — 한 테스트의 목 상태가 다음 테스트로 새지 않게 (docs/testing.md)
     clearMocks: true,
     restoreMocks: true,
+    server: {
+      deps: {
+        // node_modules는 기본적으로 Node 해석으로 그냥 불러와 아래 react 별칭이 안 먹는다.
+        // react-query가 자기 밑 react 복사본을 잡으면 훅 dispatcher가 null이 되므로 번들에 태운다
+        // motion(framer-motion)도 같은 이유 — useReducedMotion이 다른 react를 잡으면 깨진다
+        inline: ['@tanstack/react-query', 'motion', 'framer-motion'],
+      },
+    },
   },
   resolve: {
     alias: {

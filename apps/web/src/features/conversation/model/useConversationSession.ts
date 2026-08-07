@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
-import type { Scenario } from '@/features/scenario/api/list';
+import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
 import { reportError, reportWarning } from '@/shared/monitoring/report';
 

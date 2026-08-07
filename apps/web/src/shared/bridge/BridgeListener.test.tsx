@@ -9,8 +9,10 @@ import { BridgeListener } from './BridgeListener';
 const mocks = vi.hoisted(() => ({
   postToNative: vi.fn(),
   showToast: vi.fn(),
-  nativeListener: null as ((message: { type: string }) => void) | null,
-  pathname: '/home',
+  routerPush: vi.fn(),
+  nativeListener: null as
+    ((message: { type: string; url?: string }) => void) | null,
+  pathname: '/scenario',
 }));
 
 vi.mock('@/shared/bridge/web-bridge', () => ({
@@ -30,6 +32,7 @@ vi.mock('@/shared/ui/toast', () => ({
 
 vi.mock('next/navigation', () => ({
   usePathname: () => mocks.pathname,
+  useRouter: () => ({ push: mocks.routerPush }),
 }));
 
 const pressBack = () =>
@@ -46,7 +49,7 @@ const setNavigation = (canGoBack: boolean) => {
 describe('BridgeListener', () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    mocks.pathname = '/home';
+    mocks.pathname = '/scenario';
     mocks.postToNative.mockClear();
     mocks.showToast.mockClear();
     setNavigation(false);
@@ -110,7 +113,7 @@ describe('BridgeListener', () => {
     setNavigation(true);
     rerender(<BridgeListener />);
     pressBack(); // history-back — 무장이 풀려야 한다
-    mocks.pathname = '/home';
+    mocks.pathname = '/scenario';
     setNavigation(false);
     rerender(<BridgeListener />);
 
@@ -135,5 +138,26 @@ describe('BridgeListener', () => {
     pressBack();
     expect(mocks.postToNative).not.toHaveBeenCalled();
     expect(mocks.showToast).toHaveBeenCalledTimes(2);
+  });
+
+  it('NAVIGATE 메시지를 받으면 그 경로로 이동한다', () => {
+    render(<BridgeListener />);
+
+    act(() => {
+      mocks.nativeListener?.({ type: 'NAVIGATE', url: '/expressions' });
+    });
+
+    expect(mocks.routerPush).toHaveBeenCalledWith('/expressions');
+  });
+
+  it('NAVIGATE는 뒤로가기 처리에 영향을 주지 않는다', () => {
+    render(<BridgeListener />);
+
+    act(() => {
+      mocks.nativeListener?.({ type: 'NAVIGATE', url: '/expressions' });
+    });
+
+    expect(mocks.postToNative).not.toHaveBeenCalled();
+    expect(mocks.showToast).not.toHaveBeenCalled();
   });
 });

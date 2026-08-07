@@ -28,21 +28,26 @@
   - 전 이벤트 공통 속성: `surface`(app|browser), `platform`(ios|android|web), `app_version`, `build_number` — 셸이 주입한 `window.__LANDIT_NATIVE__`(LAN-156)에서 온다.
 - **유저 식별**: `AnalyticsBootstrap`이 auth 스토어를 구독해 로그인 시 `setUserId(member.userId)` + `provider` 유저 속성, 로그아웃 시 `reset()`. 앱/브라우저 어디서든 같은 유저로 묶인다.
 - **화면 노출**: `PageViewTracker`가 라우트 변경마다 `Page Viewed` 발화. 동적 세그먼트는 `page_name`으로 정규화하고 id는 속성으로 뺀다. `/stt-demo`, `/dev`, `/`(즉시 redirect)는 제외.
+- **서버 발화**: `/download`는 서버 302 리다이렉트라 클라이언트 SDK가 못 잡는다 — route 핸들러가 HTTP V2 API로 직접 발화한다(`Download Link Visited`). 키는 클라이언트와 같은 `NEXT_PUBLIC_AMPLITUDE_API_KEY`(공개 키라 서버 전용으로 나누지 않는다), device_id는 랜덤이라 방문 횟수 집계용.
 - **dev/prod 분리**: 프로젝트 키를 환경별로 나눈다. 로컬·프리뷰는 dev 키, 프로덕션 배포 환경변수에만 prod 키.
 
-## 이벤트 택소노미 (53개)
+## 이벤트 택소노미 (61개)
 
 ### 공통
 
-| 이벤트                  | 속성                                                          | 시점                                   |
-| ----------------------- | ------------------------------------------------------------- | -------------------------------------- |
-| Page Viewed             | page_name, path, return_reason?, scenario_id?, expression_id? | 라우트 변경                            |
-| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete)     | 이탈·탈퇴 확인 시트 열림               |
-| Confirm Sheet Dismissed | sheet                                                         | 확인 시트에서 계속하기/닫기            |
-| Error Retried           | screen(home\|conversation\|card_back\|expression_list)        | 에러 화면 "다시 시도"                  |
-| App Exited              | trigger(back_button)                                          | 네이티브 뒤로가기로 앱 종료 (셸에서만) |
+| 이벤트                  | 속성                                                                           | 시점                                                          |
+| ----------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| Page Viewed             | page_name, path, return_reason?, scenario_id?, expression_id?, completed_date? | 라우트 변경                                                   |
+| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete)                      | 이탈·탈퇴 확인 시트 열림                                      |
+| Confirm Sheet Dismissed | sheet                                                                          | 확인 시트에서 계속하기/닫기                                   |
+| Error Retried           | screen(home\|conversation\|card_back\|expression_list)                         | 에러 화면 "다시 시도"                                         |
+| App Exited              | trigger(back_button)                                                           | 네이티브 뒤로가기로 앱 종료 (셸에서만)                        |
+| Download Link Visited   | store(play_store\|app_store)                                                   | /download 스토어 리다이렉트 진입 (서버 발화, 익명)            |
+| App Update Store Opened | store(play_store\|app_store)                                                   | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화) |
 
 `return_reason`은 홈 복귀 신호(`flip` 표현 완료 복귀 / `card` 대화 이탈 복귀 / `just` 해금 직후). 확인 시트의 확정은 각각 `Conversation Abandoned` / `Expression Abandoned` / `Account Deleted`로 찍힌다.
+
+`completed_date`는 시나리오 화면에서 완료한 지난 날 카드를 볼 때만 붙는다 (yyyy-MM-dd) — 열 수 있는 과거는 완료한 날뿐이라, 없으면 오늘 카드다.
 
 ### 인증
 
@@ -75,6 +80,28 @@
 | Scenario Card Viewed  | card_type(scenario\|completion), position, scenario_id?, difficulty?, is_completed?, is_locked? | 스냅으로 카드가 중앙에 설 때                 |
 | Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto)                                      | 원어민 표현 배우기 / 자동 뒤집힘 / 앞면 복귀 |
 | Expression Selected   | expression_id, scenario_id, source(card_back\|post_conversation)                                | 표현 항목 탭                                 |
+
+### 오늘의 시나리오 (램프)
+
+대화 시작 전 갈림길 세 곳. 온보딩 직후 자동 진행은 누른 버튼이 없어 기록하지 않는다.
+
+| 이벤트                        | 속성  | 시점                                            |
+| ----------------------------- | ----- | ----------------------------------------------- |
+| Conversation Start Tapped     | retry | 자고 있는 카드의 "램프 문질러 대화 시작하기" 탭 |
+| Conversation Prompt Accepted  | retry | 자동으로 뜬 "오늘의 대화를 시작할까요?"에 "네!" |
+| Conversation Prompt Dismissed | retry | 그 프롬프트를 X·뒤로가기로 닫음                 |
+
+`retry`는 전날 못 끝낸 대화를 이어받은 카드였는지 (오늘 새로 받은 시나리오면 false). 완료 카드의 "다시 대화하기"는 램프를 거치지 않으며 `Conversation Started`의 `is_retry`로 잡힌다.
+
+### 달력 스트립
+
+| 이벤트                 | 속성                        | 시점                                                   |
+| ---------------------- | --------------------------- | ------------------------------------------------------ |
+| Calendar Date Selected | is_today                    | 주 스트립·월 격자에서 날짜 탭 (열 수 있는 날만 눌린다) |
+| Calendar View Switched | view(week\|month)           | 주↔월 전환 (토글·바깥 탭·뒤로가기로 접는 것 포함)      |
+| Calendar Period Moved  | direction(prev\|next), view | 이전/다음 화살표로 주·월 넘김                          |
+
+`is_today: false`면 완료한 지난 날이다 — 어느 날인지는 이어지는 `Page Viewed`의 `completed_date`가 남긴다.
 
 ### 대화
 
@@ -110,7 +137,7 @@
 | 이벤트                      | 속성                                               | 시점                                                              |
 | --------------------------- | -------------------------------------------------- | ----------------------------------------------------------------- |
 | Expression List Viewed      | scenario_id, expression_count                      | 분기 화면 리스트 리빌                                             |
-| Expression Learning Skipped | scenario_id, expression_count                      | 분기에서 "다음 대화하러 갈게요"                                   |
+| Expression Learning Skipped | scenario_id, expression_count                      | 분기 화면을 X로 닫고 학습 없이 나감 (연출 중이면 count 0 가능)    |
 | Expression Learning Started | expression_id, scenario_id                         | 학습 데이터 로드 완료                                             |
 | Expression Step Viewed      | expression_id, step(quiz\|explain\|review)         | 스텝 노출                                                         |
 | Quiz Word Picked            | expression_id, picked_count                        | 단어 칩 선택                                                      |

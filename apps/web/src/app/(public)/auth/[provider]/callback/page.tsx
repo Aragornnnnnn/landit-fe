@@ -14,6 +14,7 @@ import {
   readPendingSocialLogin,
   type WebSocialProvider,
 } from '@/shared/auth/web-social-login';
+import { SCENARIO_PATH } from '@/shared/lib/routes';
 
 const WEB_PROVIDERS: WebSocialProvider[] = ['kakao', 'google'];
 const isWebProvider = (value: string): value is WebSocialProvider =>
@@ -122,7 +123,7 @@ export default function SocialLoginCallbackPage({
           is_new_user: newUser,
         });
         router.replace(
-          newUser || !hasSeenOnboarding() ? '/onboarding' : '/home',
+          newUser || !hasSeenOnboarding() ? '/onboarding' : SCENARIO_PATH,
         );
       } catch (err) {
         track(EVENTS.LOGIN_FAILED, {

@@ -3,7 +3,6 @@
 // 시나리오 카드 — 앞면(썸네일·제목·브리핑·CTA), 완료 시 뒤집으면 뒷면에 표현 학습 리스트
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
-import { motion } from 'motion/react';
 
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
@@ -11,23 +10,27 @@ import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, LockIcon, ReplayIcon } from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
 
-import type { Scenario } from '../api/list';
+import type { Scenario } from '../lib/to-scenario';
+import { ExpressionProgress } from './ExpressionProgress';
 import { ScenarioCardBack } from './ScenarioCardBack';
 
 interface ScenarioCardProps {
   scenario: Scenario;
   onStart: (scenario: Scenario) => void;
-  // 방금 해금됐을 때 한 번 펄스로 강조한다
-  highlight?: boolean;
+  // 어느 날 카드인지. 뒷면에서 표현 학습으로 들어갈 때 이어 나른다
+  date?: string;
   // 홈이 flip 신호로 진입하면(표현 마무리 후 복귀) 마운트 시 자동으로 뒷면을 편다
   autoFlip?: boolean;
+  // 완료 카드에 띄우는 표현 학습 진행도
+  expressions: { completed: number; total: number };
 }
 
 export const ScenarioCard = ({
   scenario,
   onStart,
-  highlight = false,
+  date,
   autoFlip = false,
+  expressions,
 }: ScenarioCardProps) => {
   // 잠금·완료 판정은 전부 백엔드 몫(직전 시나리오를 깨야 다음이 열린다). 카드는 두 플래그를 그리기만 한다.
   // locked   → 흑백 썸네일 + 회색 제목 + "잠겨있어요"
@@ -82,11 +85,7 @@ export const ScenarioCard = ({
   };
 
   return (
-    <motion.div
-      animate={highlight ? { scale: [1, 1.03, 1] } : undefined}
-      transition={{ duration: 0.6, delay: 0.3, ease: 'easeInOut' }}
-      className="relative h-full w-full [perspective:1600px]"
-    >
+    <div className="relative h-full w-full [perspective:1600px]">
       {/* 앞/뒤 면을 겹쳐 rotateY로 뒤집는다. preserve-3d 유지 위해 이 요소엔 overflow를 두지 않는다 */}
       <div
         className={`relative h-full w-full transition-transform duration-500 [transform-style:preserve-3d] ${
@@ -102,7 +101,9 @@ export const ScenarioCard = ({
               <img
                 src={scenario.thumbnailUrl}
                 alt={scenario.scenarioTitle}
-                className={`h-full w-full object-cover transition-[filter] duration-500 ${filterClass}`}
+                // 세로형 썸네일의 얼굴이 위쪽 1/4 부근에 있다 — 가운데 크롭(기본)은 얼굴을 자르고,
+                // 맨 위 고정은 아래 행동을 버린다. 15%가 얼굴과 행동을 둘 다 담는 지점(실제 40장 검증)
+                className={`h-full w-full object-cover object-[50%_15%] transition-[filter] duration-500 ${filterClass}`}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-secondary">
@@ -118,8 +119,13 @@ export const ScenarioCard = ({
             )}
           </div>
 
-          {/* 텍스트 + CTA */}
-          <div className="flex flex-none flex-col gap-3 px-5 pt-4 pb-5">
+          {/* 텍스트 + CTA — 완료 카드는 맨 아래가 고스트 버튼이라 하단 패딩을 줄여
+              '다시 대화하기' 위아래 여백을 맞춘다 (위: gap 4px+버튼 안 10px = 아래: 안 10px+패딩 4px) */}
+          <div
+            className={`flex flex-none flex-col gap-2 px-5 pt-3 ${
+              !locked && completed ? 'pb-1' : 'pb-5'
+            }`}
+          >
             <div>
               <p
                 className={`text-xl leading-snug font-extrabold ${
@@ -129,7 +135,7 @@ export const ScenarioCard = ({
                 {scenario.scenarioTitle}
               </p>
               {scenario.briefing && (
-                <p className="mt-2 text-sm leading-relaxed font-medium text-muted-foreground">
+                <p className="mt-1.5 text-sm leading-relaxed font-medium text-muted-foreground">
                   {scenario.briefing}
                 </p>
               )}
@@ -141,15 +147,17 @@ export const ScenarioCard = ({
               </div>
             ) : completed ? (
               // 완료 카드 — 메인은 표현 학습(뒤집기), 다시 해보기는 아래 고스트로.
-              // '대화 시작하기'(주황)와 역할이 달라 보이게 학습은 초록으로 구분한다
+              // 할 일이 남았으면 주황, 다 했으면 초록이다 — 남은 일이 눈에 띄어야 한다
               <div className="flex flex-col gap-1">
-                <Button variant="success" onClick={openExpressions}>
-                  원어민 표현 배우기
-                </Button>
+                <ExpressionProgress
+                  completed={expressions.completed}
+                  total={expressions.total}
+                  onLearn={openExpressions}
+                />
                 <button
                   type="button"
                   onClick={() => onStart(scenario)}
-                  className="flex h-14 w-full items-center justify-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors active:text-foreground"
+                  className="flex h-12 w-full items-center justify-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors active:text-foreground"
                 >
                   다시 대화하기
                   <ReplayIcon size={15} />
@@ -169,11 +177,12 @@ export const ScenarioCard = ({
           <div className="absolute inset-0 flex [transform:rotateY(-180deg)] flex-col overflow-hidden rounded-2xl bg-card shadow-md [-webkit-backface-visibility:hidden] [backface-visibility:hidden]">
             <ScenarioCardBack
               scenarioId={scenario.scenarioId}
+              date={date}
               onBack={closeExpressions}
             />
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };
