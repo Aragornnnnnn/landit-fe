@@ -1,4 +1,5 @@
 // 날짜 스트립의 월 패널 계약 검증 — 월 응답 전에는 주 폴백이 아니라 스켈레톤을 그린다
+import { EVENTS } from '@landit/analytics';
 import {
   act,
   cleanup,
@@ -6,8 +7,9 @@ import {
   render,
   screen,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { track } from '@/shared/analytics';
 import { closeTopSheet } from '@/shared/ui/bottom-sheet-back';
 
 import type { ScenarioCalendarResponse } from '../api/calendar';
@@ -17,8 +19,10 @@ import { CalendarStrip } from './CalendarStrip';
 vi.mock('../model/useScenarioCalendarQuery', () => ({
   useScenarioCalendarQuery: vi.fn(),
 }));
+vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 
 const mockQuery = vi.mocked(useScenarioCalendarQuery);
+const trackMock = vi.mocked(track);
 
 const day = (date: string) => ({
   date,
@@ -61,6 +65,7 @@ const givenCalendars = (month: ScenarioCalendarResponse | null) =>
     calendar: type === 'WEEK' ? WEEK : month,
   }));
 
+beforeEach(() => trackMock.mockReset());
 afterEach(() => cleanup());
 
 describe('CalendarStrip 월 패널', () => {
@@ -134,5 +139,83 @@ describe('CalendarStrip 월 패널 — 뒤로가기·스크롤', () => {
     fireEvent.click(screen.getByRole('button', { name: '주' }));
     // Then 스크롤 잠금이 풀린다
     expect(document.body.style.overflow).toBe('');
+  });
+});
+
+// 완료한 5일이 낀 주 — 과거 완료일 탭은 열 수 있는 유일한 과거라 계측 대상이다
+const WEEK_WITH_COMPLETED: ScenarioCalendarResponse = {
+  ...WEEK,
+  days: WEEK.days.map((item) =>
+    item.date === '2026-08-05' ? { ...item, completed: true } : item,
+  ),
+};
+
+describe('CalendarStrip 계측', () => {
+  const givenCompletedWeek = () =>
+    mockQuery.mockImplementation((type) => ({
+      calendar: type === 'WEEK' ? WEEK_WITH_COMPLETED : MONTH,
+    }));
+
+  it('완료한 지난 날을 누르면 오늘이 아니라고 기록한다', () => {
+    givenCompletedWeek();
+    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: '8월 5일 완료' }));
+
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.CALENDAR_DATE_SELECTED, {
+      is_today: false,
+    });
+  });
+
+  it('오늘 칸을 누르면 오늘이라고 기록한다', () => {
+    givenCompletedWeek();
+    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: '8월 6일 오늘' }));
+
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.CALENDAR_DATE_SELECTED, {
+      is_today: true,
+    });
+  });
+
+  it('월로 펼치고 주로 접는 전환을 각각 기록한다', () => {
+    givenCalendars(MONTH);
+    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: '월' }));
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.CALENDAR_VIEW_SWITCHED, {
+      view: 'month',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '주' }));
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.CALENDAR_VIEW_SWITCHED, {
+      view: 'week',
+    });
+  });
+
+  it('네이티브 뒤로가기로 접혀도 주 전환으로 기록한다', () => {
+    givenCalendars(MONTH);
+    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: '월' }));
+
+    act(() => {
+      closeTopSheet();
+    });
+
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.CALENDAR_VIEW_SWITCHED, {
+      view: 'week',
+    });
+  });
+
+  it('이전 주로 넘기면 넘김을 기록한다', () => {
+    givenCalendars(MONTH);
+    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: '이전' }));
+
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.CALENDAR_PERIOD_MOVED, {
+      direction: 'prev',
+      view: 'week',
+    });
   });
 });

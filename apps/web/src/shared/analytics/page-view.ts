@@ -32,7 +32,16 @@ export const toPageView = (
   const seg = pathname.split('/').filter(Boolean);
 
   if (pathname === '/scenario') {
-    const base: PageViewProps = { page_name: 'scenario', path: pathname };
+    // 날짜가 붙으면 완료한 지난 날 카드를 다시 보는 것 — 열 수 있는 과거는 완료한 날뿐이다
+    const completedDate = searchParams.get('date');
+    const base: PageViewProps = {
+      page_name: 'scenario',
+      path: pathname,
+      ...(completedDate &&
+        /^\d{4}-\d{2}-\d{2}$/.test(completedDate) && {
+          completed_date: completedDate,
+        }),
+    };
     // 복귀 신호는 flip(표현 완료 복귀)과 reminder(알림 탭 유입) 둘이다.
     // card·just는 목록을 스크롤·강조하던 신호라 하루 한 장이 되면서 가리킬 대상이 없어졌다
     if (searchParams.has('flip')) {

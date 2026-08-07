@@ -2,8 +2,10 @@
 
 // 날짜 스트립 — 접으면 한 주, 펼치면 한 달. 누르면 그날 카드로 간다
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
+import { track } from '@/shared/analytics';
 import { DURATION, EASE_STANDARD } from '@/shared/motion';
 import { registerOpenSheet } from '@/shared/ui/bottom-sheet-back';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
@@ -53,6 +55,8 @@ export const CalendarStrip = ({
   useEffect(() => {
     if (!expanded) return;
     return registerOpenSheet(() => {
+      // 접는 길이 셋(토글·바깥 탭·뒤로가기)이라 여기도 전환으로 남긴다 — 빼면 주 전환 수만 준다
+      track(EVENTS.CALENDAR_VIEW_SWITCHED, { view: 'week' });
       setMovedTo(picked.current ? undefined : collapsedFrom);
       setExpanded(false);
     });
@@ -88,10 +92,18 @@ export const CalendarStrip = ({
   const type: ScenarioCalendarType = expanded ? 'MONTH' : 'WEEK';
   const anchor = windowDate ?? today;
 
-  const move = (direction: -1 | 1) =>
+  const move = (direction: -1 | 1) => {
+    track(EVENTS.CALENDAR_PERIOD_MOVED, {
+      direction: direction === -1 ? 'prev' : 'next',
+      view: expanded ? 'month' : 'week',
+    });
     setMovedTo(shiftWindow(anchor, type, direction));
+  };
 
   const toggle = (next: ScenarioCalendarType) => {
+    track(EVENTS.CALENDAR_VIEW_SWITCHED, {
+      view: next === 'MONTH' ? 'month' : 'week',
+    });
     if (next === 'MONTH') {
       setCollapsedFrom(windowDate);
       picked.current = false;
@@ -104,6 +116,7 @@ export const CalendarStrip = ({
   };
 
   const selectDay = (day: string) => {
+    track(EVENTS.CALENDAR_DATE_SELECTED, { is_today: day === today });
     picked.current = true;
     onSelect(day === today ? null : day);
   };

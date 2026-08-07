@@ -33,8 +33,26 @@ describe('toPageView', () => {
     });
   });
 
-  it('날짜만 붙은 복귀는 지난 날 보기라 복귀 사유가 아니다', () => {
+  it('날짜가 붙으면 완료한 날을 다시 보는 것이다 — completed_date로 남기되 복귀 사유는 아니다', () => {
     expect(pv('/scenario', 'date=2026-07-29')).toEqual({
+      page_name: 'scenario',
+      path: '/scenario',
+      completed_date: '2026-07-29',
+    });
+  });
+
+  it('표현 완료 복귀(flip)에 날짜가 붙으면 completed_date도 함께 남긴다', () => {
+    expect(pv('/scenario', 'flip=3&date=2026-07-29')).toEqual({
+      page_name: 'scenario',
+      path: '/scenario',
+      return_reason: 'flip',
+      scenario_id: 3,
+      completed_date: '2026-07-29',
+    });
+  });
+
+  it('날짜 형식이 아니면 completed_date를 남기지 않는다', () => {
+    expect(pv('/scenario', 'date=abc')).toEqual({
       page_name: 'scenario',
       path: '/scenario',
     });

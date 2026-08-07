@@ -34,6 +34,11 @@ export const EVENTS = {
   CONVERSATION_PROMPT_ACCEPTED: 'Conversation Prompt Accepted',
   CONVERSATION_PROMPT_DISMISSED: 'Conversation Prompt Dismissed',
 
+  // 달력 스트립 — 완료한 지난 날을 되짚어 보는지, 월 뷰를 실제로 쓰는지
+  CALENDAR_DATE_SELECTED: 'Calendar Date Selected',
+  CALENDAR_VIEW_SWITCHED: 'Calendar View Switched',
+  CALENDAR_PERIOD_MOVED: 'Calendar Period Moved',
+
   // 스트릭
   STREAK_OPENED: 'Streak Opened',
   STREAK_MONTH_CHANGED: 'Streak Month Changed',
@@ -109,6 +114,7 @@ export type RetryScreen =
 // 알림 동의를 청한 지면 — 온보딩 스텝은 기존 온보딩 계측이 커버해서 없다.
 // 키는 source — surface는 baseProps의 전역 속성(app·browser)이라 겹치면 덮어쓴다
 export type NotificationConsentSource = 'scenario' | 'me';
+export type CalendarView = 'week' | 'month';
 
 // 이벤트별 속성 계약 — 키는 snake_case. 속성이 없는 이벤트는 undefined
 export type EventProps = {
@@ -120,6 +126,8 @@ export type EventProps = {
     expression_id?: number;
     // 알림 유입(reminder)일 때만 — 탭한 알림의 문구 슬러그 (utm_content에서 파생, 어휘는 reminder-copies.ts)
     notification_copy?: string;
+    // 시나리오 화면에서 완료한 지난 날 카드를 볼 때만 — 열 수 있는 과거는 완료한 날뿐이다 (yyyy-MM-dd)
+    completed_date?: string;
   };
   // 파괴적 행동(이탈·탈퇴) 전 확인 시트 — 열림/취소로 고민율을 본다. 확정은 각 Abandoned/Deleted 이벤트
   'Confirm Sheet Opened': { sheet: ConfirmSheetKind };
@@ -182,6 +190,10 @@ export type EventProps = {
   'Conversation Start Tapped': { retry: boolean };
   'Conversation Prompt Accepted': { retry: boolean };
   'Conversation Prompt Dismissed': { retry: boolean };
+
+  'Calendar Date Selected': { is_today: boolean };
+  'Calendar View Switched': { view: CalendarView };
+  'Calendar Period Moved': { direction: 'prev' | 'next'; view: CalendarView };
 
   // 헤더 열매로 연속 기록 페이지 진입 — 얼마나 눌리는지, 어떤 상태에서 눌리는지 본다
   'Streak Opened': {
