@@ -18,13 +18,13 @@ import { toCharacterLook } from '../model/character-look';
 import { userIntroHoldMs } from '../model/pacing';
 import type { FloatingThought } from '../model/thought';
 import { useConversationFlow } from '../model/useConversationFlow';
-import { CharacterStage } from './CharacterStage';
-import { ExitConfirmSheet } from './ExitConfirmSheet';
-import { MicControl } from './MicControl';
-import { MicPermissionSheet } from './MicPermissionSheet';
-import { QuestionCard } from './QuestionCard';
-import { ThoughtOverlay } from './ThoughtOverlay';
-import { UserTranscript } from './UserTranscript';
+import { CharacterStage } from './flow/CharacterStage';
+import { ExitConfirmSheet } from './flow/ExitConfirmSheet';
+import { MicControl } from './flow/MicControl';
+import { MicPermissionSheet } from './flow/MicPermissionSheet';
+import { QuestionCard } from './flow/QuestionCard';
+import { ThoughtOverlay } from './flow/ThoughtOverlay';
+import { UserTranscript } from './flow/UserTranscript';
 
 export const ConversationFlow = ({
   scenario,

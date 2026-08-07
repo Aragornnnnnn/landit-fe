@@ -3,9 +3,9 @@
 
 import { motion } from 'motion/react';
 
-import type { CharacterLook, Partner } from '../model/character-look';
-import type { PlayingSpeech } from '../model/useAiSpeech';
-import { PartnerCharacter } from './character/PartnerCharacter';
+import type { CharacterLook, Partner } from '../../model/character-look';
+import type { PlayingSpeech } from '../../model/useAiSpeech';
+import { PartnerCharacter } from '../character/PartnerCharacter';
 
 /**
  * partner는 세션 TTS 음성 성별을 따르고, look은 대화 단계에 맞춘 자세와 표정,

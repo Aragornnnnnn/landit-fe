@@ -4,7 +4,7 @@
 
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
-import type { ConversationPhase } from '../model/conversation-machine';
+import type { ConversationPhase } from '../../model/conversation-machine';
 import { TypingCursor } from './TypingCursor';
 
 interface UserTranscriptProps {
