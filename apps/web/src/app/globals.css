@@ -140,11 +140,15 @@
   *::-webkit-scrollbar {
     display: none;
   }
-  /* 웹뷰 셸 — 웹페이지스러운 제스처 차단 (텍스트 선택·오버스크롤) */
+  /* 웹뷰 셸 — 웹페이지스러운 제스처 차단 (텍스트 선택·오버스크롤·이미지 꾹 눌러 저장) */
   html {
     -webkit-user-select: none;
     user-select: none;
     overscroll-behavior: none;
+    -webkit-touch-callout: none;
+  }
+  img {
+    -webkit-user-drag: none;
   }
   /* 입력·편집 영역은 선택 허용 (위 차단의 예외) */
   input,
