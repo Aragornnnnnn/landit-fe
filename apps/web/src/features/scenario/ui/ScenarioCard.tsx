@@ -101,7 +101,9 @@ export const ScenarioCard = ({
               <img
                 src={scenario.thumbnailUrl}
                 alt={scenario.scenarioTitle}
-                className={`h-full w-full object-cover transition-[filter] duration-500 ${filterClass}`}
+                // 세로형 썸네일의 얼굴이 위쪽 1/4 부근에 있다 — 가운데 크롭(기본)은 얼굴을 자르고,
+                // 맨 위 고정은 아래 행동을 버린다. 15%가 얼굴과 행동을 둘 다 담는 지점(실제 40장 검증)
+                className={`h-full w-full object-cover object-[50%_15%] transition-[filter] duration-500 ${filterClass}`}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-secondary">
