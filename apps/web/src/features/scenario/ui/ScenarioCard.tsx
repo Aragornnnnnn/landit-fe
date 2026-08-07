@@ -101,7 +101,9 @@ export const ScenarioCard = ({
               <img
                 src={scenario.thumbnailUrl}
                 alt={scenario.scenarioTitle}
-                className={`h-full w-full object-cover transition-[filter] duration-500 ${filterClass}`}
+                // 세로형 썸네일의 얼굴이 위쪽 1/4 부근에 있다 — 가운데 크롭(기본)은 얼굴을 자르고,
+                // 맨 위 고정은 아래 행동을 버린다. 15%가 얼굴과 행동을 둘 다 담는 지점(실제 40장 검증)
+                className={`h-full w-full object-cover object-[50%_15%] transition-[filter] duration-500 ${filterClass}`}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-secondary">
@@ -120,7 +122,7 @@ export const ScenarioCard = ({
           {/* 텍스트 + CTA — 완료 카드는 맨 아래가 고스트 버튼이라 하단 패딩을 줄여
               '다시 대화하기' 위아래 여백을 맞춘다 (위: gap 4px+버튼 안 10px = 아래: 안 10px+패딩 4px) */}
           <div
-            className={`flex flex-none flex-col gap-3 px-5 pt-4 ${
+            className={`flex flex-none flex-col gap-2 px-5 pt-3 ${
               !locked && completed ? 'pb-1' : 'pb-5'
             }`}
           >
@@ -133,7 +135,7 @@ export const ScenarioCard = ({
                 {scenario.scenarioTitle}
               </p>
               {scenario.briefing && (
-                <p className="mt-2 text-sm leading-relaxed font-medium text-muted-foreground">
+                <p className="mt-1.5 text-sm leading-relaxed font-medium text-muted-foreground">
                   {scenario.briefing}
                 </p>
               )}
@@ -155,7 +157,7 @@ export const ScenarioCard = ({
                 <button
                   type="button"
                   onClick={() => onStart(scenario)}
-                  className="flex h-10 w-full items-center justify-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors active:text-foreground"
+                  className="flex h-12 w-full items-center justify-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors active:text-foreground"
                 >
                   다시 대화하기
                   <ReplayIcon size={15} />
