@@ -131,8 +131,8 @@ export default function SocialLoginCallbackPage({
           method: 'web',
           reason: 'login_api_failed',
         });
+        console.debug('[auth] 웹 소셜 로그인 실패:', err);
         const isDev = process.env.NODE_ENV === 'development';
-        if (isDev) console.error('[auth] 웹 소셜 로그인 실패:', err);
         const detail = isDev && err instanceof Error ? ` (${err.message})` : '';
         setMessage(`로그인에 실패했어요. 다시 시도해 주세요.${detail}`);
       }

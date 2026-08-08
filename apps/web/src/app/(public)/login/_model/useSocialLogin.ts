@@ -67,9 +67,9 @@ export function useSocialLogin() {
             method: 'native',
             reason: 'login_api_failed',
           });
-          // 개발 모드에선 서버가 준 실패 사유를 화면·콘솔에 그대로 노출한다 (프로덕션은 일반 문구만)
+          // 개발 모드에선 서버가 준 실패 사유를 화면에 그대로 노출한다 (프로덕션은 일반 문구만)
+          console.debug('[auth] social-login 실패:', error);
           const isDev = process.env.NODE_ENV === 'development';
-          if (isDev) console.error('[auth] social-login 실패:', error);
           const detail =
             isDev && error instanceof Error ? ` (${error.message})` : '';
           setError(`로그인에 실패했어요. 다시 시도해 주세요.${detail}`);

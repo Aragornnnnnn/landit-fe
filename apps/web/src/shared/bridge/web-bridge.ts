@@ -16,16 +16,6 @@ declare global {
   }
 }
 
-// 개발 모드에서만 로그를 남긴다
-const log = (...args: unknown[]) => {
-  if (process.env.NODE_ENV === 'development')
-    console.log('[bridge:web]', ...args);
-};
-const warn = (...args: unknown[]) => {
-  if (process.env.NODE_ENV === 'development')
-    console.warn('[bridge:web]', ...args);
-};
-
 /**
  * 네이티브 셸로 메시지를 보낸다.
  *
@@ -37,11 +27,11 @@ export function postToNative(message: WebToNativeMessage) {
   const webview =
     typeof window !== 'undefined' ? window.ReactNativeWebView : undefined;
   if (!webview) {
-    warn('WebView 밖이라 발신 스킵:', message);
+    console.debug('[bridge:web] WebView 밖이라 발신 스킵:', message);
     return false;
   }
 
-  log('web -> native:', message.type, message);
+  console.debug('[bridge:web] web -> native:', message.type, message);
   webview.postMessage(serializeBridgeMessage(message));
   return true;
 }
@@ -57,7 +47,7 @@ export function subscribeFromNative(listener: BridgeListener) {
     const message = parseNativeToWebMessage(event.data);
     if (!message) return;
 
-    log('native -> web:', message.type, message);
+    console.debug('[bridge:web] native -> web:', message.type, message);
     listener(message);
   };
 
