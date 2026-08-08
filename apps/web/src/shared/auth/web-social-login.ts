@@ -65,7 +65,13 @@ export function clearPendingSocialLogin(): void {
   sessionStorage.removeItem(SOCIAL_LOGIN_STORAGE_KEY);
 }
 
-// 로그인 시작 — pending을 저장하고 제공자 인증 페이지로 이동시킨다(성공 시 현재 페이지를 떠남)
+/**
+ * 웹 단독 소셜 로그인을 시작한다 — pending을 sessionStorage에 저장하고 제공자 인증 페이지로 이동한다.
+ * 성공 경로에선 현재 페이지를 떠나므로 resolve 이후 코드는 실행되지 않는다고 봐야 한다.
+ *
+ * @param provider 로그인 제공자 (kakao | google)
+ * @param nonce ID 토큰 재사용 공격 방지 값 — 콜백에서 토큰 검증 시 대조한다
+ */
 export async function startWebSocialLogin(
   provider: WebSocialProvider,
   nonce: string,
