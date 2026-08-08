@@ -26,7 +26,13 @@ const warn = (...args: unknown[]) => {
     console.warn('[bridge:web]', ...args);
 };
 
-// 네이티브로 메시지를 보낸다. WebView 밖(일반 브라우저)이면 아무 일도 안 하고 false를 반환한다
+/**
+ * 네이티브 셸로 메시지를 보낸다.
+ *
+ * @param message 웹→네이티브 브릿지 메시지 (`@landit/bridge` 프로토콜 타입)
+ * @returns 전송했으면 `true`, WebView 밖(일반 브라우저)이라 보낼 곳이 없으면 `false` —
+ *   호출부는 이 값으로 네이티브/웹 단독 경로를 분기한다
+ */
 export function postToNative(message: WebToNativeMessage) {
   const webview =
     typeof window !== 'undefined' ? window.ReactNativeWebView : undefined;
@@ -40,7 +46,12 @@ export function postToNative(message: WebToNativeMessage) {
   return true;
 }
 
-// 네이티브에서 오는 메시지를 구독한다. 검증을 통과한 메시지만 listener로 넘기고, 구독 해제 함수를 돌려준다
+/**
+ * 네이티브에서 오는 메시지를 구독한다. 검증(파싱)을 통과한 메시지만 전달한다.
+ *
+ * @param listener 유효한 네이티브→웹 메시지를 받을 콜백
+ * @returns 구독 해제 함수 — 보통 useEffect의 cleanup으로 그대로 반환한다
+ */
 export function subscribeFromNative(listener: BridgeListener) {
   const handler = (event: MessageEvent) => {
     const message = parseNativeToWebMessage(event.data);
