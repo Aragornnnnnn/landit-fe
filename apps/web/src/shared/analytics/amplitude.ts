@@ -18,9 +18,7 @@ const shouldLog = () =>
 // no-op(키 없음)·개발/프리뷰 콘솔 로깅을 한곳에서 — 반환값은 SDK로 실제 전송할지 여부
 const logAndShouldSend = (...args: unknown[]) => {
   const enabled = Boolean(getApiKey());
-  // console.warn — removeConsole이 log·debug는 dev/preview 구분 없이 모든 프로덕션 빌드에서 통째로
-  // 지워버린다. warn은 exclude 대상이라 빌드엔 남고, 위 shouldLog()의 런타임 체크가 노출 여부를 가른다
-  if (!enabled || shouldLog()) console.warn('[analytics]', ...args);
+  if (!enabled || shouldLog()) console.log('[analytics]', ...args);
   return enabled;
 };
 

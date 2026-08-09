@@ -4,7 +4,8 @@
  * 명시한 설정
  * - transpilePackages: 워크스페이스 패키지(@landit/*)를 web 빌드에서 함께 컴파일
  * - reactCompiler: 자동 메모이제이션 — "수동 useCallback/useMemo 금지" 팀 규칙의 전제
- * - compiler.removeConsole: 프로덕션 번들에서 console.log·info·debug 제거
+ * - compiler.removeConsole: 프로덕션 빌드(next build)에서만 console.log·info·debug 제거.
+ *   NODE_ENV로 직접 분기 — 옵션 자체가 dev·build를 안 가려서, 걸어두면 `next dev`에서도 지워진다
  * - rewrites: /api/* → 백엔드 프록시 (CORS 회피)
  * - withSentryConfig: 소스맵을 Sentry에만 올리고 배포 산출물에서는 삭제
  *
@@ -25,8 +26,13 @@ const nextConfig: NextConfig = {
   transpilePackages: ['@landit/analytics', '@landit/bridge'],
   reactCompiler: true,
   compiler: {
-    // error·warn은 Sentry breadcrumb과 API 라우트 서버 로그로 쓰여서 남긴다
-    removeConsole: { exclude: ['error', 'warn'] },
+    // next dev에서는 끈다 — removeConsole은 NODE_ENV를 안 가려서, 켜두면 로컬 개발 중에도
+    // console.log·debug가 안 보인다 (실제 dev 서버 빌드로 확인함).
+    // error·warn은 프로덕션에도 남긴다 — Sentry breadcrumb과 API 라우트 서버 로그로 쓰인다
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? { exclude: ['error', 'warn'] }
+        : false,
   },
   // env가 없으면 프록시가 조용히 꺼진다 — 빌드는 성공하므로 누락은 런타임에야 드러난다
   async rewrites() {

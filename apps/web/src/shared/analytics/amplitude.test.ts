@@ -152,7 +152,7 @@ describe('track', () => {
   it('개발 환경에서는 키가 있어도 어떤 이벤트를 쏘는지 콘솔에 같이 찍는다', async () => {
     vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
     vi.stubEnv('NODE_ENV', 'development');
-    const logSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const { track } = await loadWrapper();
 
     track('Logout Completed');
@@ -169,7 +169,7 @@ describe('track', () => {
     vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
     vi.stubEnv('NODE_ENV', 'production');
     vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview');
-    const logSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const { track } = await loadWrapper();
 
     track('Logout Completed');
@@ -182,7 +182,7 @@ describe('track', () => {
     vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
     vi.stubEnv('NODE_ENV', 'production');
     vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'production');
-    const logSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const { track } = await loadWrapper();
 
     track('Logout Completed');
@@ -195,7 +195,7 @@ describe('track', () => {
     vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
     vi.stubEnv('NODE_ENV', 'production');
     // NEXT_PUBLIC_VERCEL_ENV 미설정 — fail-closed 확인
-    const logSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const { track } = await loadWrapper();
 
     track('Logout Completed');
