@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import * as Sentry from '@sentry/nextjs';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { prefetchSessionFeedback } from '@/features/feedback/model/useSessionFeedbackQuery';
@@ -164,7 +165,11 @@ export const useConversationFlow = (scenario: Scenario) => {
       // 반환하는 sessionId state와 다른 값 — 백그라운드 시작이 아직이면 확보를 기다린 결과
       const activeSessionId = await session.ensure();
       if (activeSessionId == null) {
-        console.warn('[conversation] 세션이 없어 제출할 수 없어요');
+        Sentry.addBreadcrumb({
+          category: 'conversation',
+          message: '세션이 없어 제출할 수 없어요',
+          level: 'warning',
+        });
         haptic('error');
         send('AI_RESPONSE_FAILED');
         showToast('연결에 문제가 생겼어요. 잠시 후 다시 시도해 주세요');
@@ -221,7 +226,12 @@ export const useConversationFlow = (scenario: Scenario) => {
           send('AI_RESPONSE_READY'); // → AI_INNER_THOUGHT
         });
     } catch (error) {
-      console.warn('[conversation] 발화 제출 실패', error);
+      Sentry.addBreadcrumb({
+        category: 'conversation',
+        message: '발화 제출 실패',
+        level: 'warning',
+        data: { error: String(error) },
+      });
       reportError(error);
       haptic('error');
       send('AI_RESPONSE_FAILED'); // → USER_READY (다시 시도)

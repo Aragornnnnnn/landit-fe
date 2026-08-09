@@ -3,6 +3,7 @@
 // 대화 세션 수명 훅 — 진입을 막지 않게 백그라운드로 시작하고, 제출 시점의 확보 대기(ensure)와 중도 종료(end)를 맡는다
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import * as Sentry from '@sentry/nextjs';
 
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
@@ -59,7 +60,12 @@ export const useConversationSession = (
         return res.sessionId;
       })
       .catch((error) => {
-        console.warn('[conversation] 세션 시작 실패', error);
+        Sentry.addBreadcrumb({
+          category: 'conversation',
+          message: '세션 시작 실패',
+          level: 'warning',
+          data: { error: String(error) },
+        });
         reportError(error);
         return null;
       });
@@ -73,7 +79,12 @@ export const useConversationSession = (
   const end = () => {
     if (sessionIdRef.current == null) return;
     endSession(sessionIdRef.current).catch((error) => {
-      console.warn('[conversation] 세션 종료 실패', error);
+      Sentry.addBreadcrumb({
+        category: 'conversation',
+        message: '세션 종료 실패',
+        level: 'warning',
+        data: { error: String(error) },
+      });
       reportWarning(error);
     });
   };
