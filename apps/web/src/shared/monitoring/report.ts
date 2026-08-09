@@ -21,9 +21,13 @@ const apiTags = (failure: unknown) =>
  * 연산이 실패로 끝났음을 Sentry에 보고한다 — 유저 데이터 유실·진행 불가 수준(알림 대상).
  *
  * @param error 잡은 예외. `ApiError`면 endpoint·status·code가 태그로 승격돼 이슈 필터링에 쓰인다
+ * @param extra 이슈에 첨부할 추가 컨텍스트 (검색은 안 되고 상세에서만 보인다)
  */
-export const reportError = (error: unknown) => {
-  Sentry.captureException(error, { tags: apiTags(error) });
+export const reportError = (
+  error: unknown,
+  extra?: Record<string, unknown>,
+) => {
+  Sentry.captureException(error, { tags: apiTags(error), extra });
 };
 
 /**

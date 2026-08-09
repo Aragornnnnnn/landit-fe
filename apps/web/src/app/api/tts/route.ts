@@ -1,7 +1,7 @@
 // OpenRouter TTS 합성을 중계하는 프록시 라우트 — API 키를 서버에만 두고 mp3 스트림을 그대로 전달
 import { NextResponse } from 'next/server';
 
-import { reportWarning } from '@/shared/monitoring/report';
+import { reportError } from '@/shared/monitoring/report';
 
 const SPEECH_URL = 'https://openrouter.ai/api/v1/audio/speech';
 
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
   if (!res.ok) {
     const detail = await res.text();
     console.error('[tts] 합성 실패:', res.status, detail);
-    reportWarning('[tts] 합성 실패', { status: res.status, detail });
+    reportError(new Error('[tts] 합성 실패'), { status: res.status, detail });
     return NextResponse.json(
       { error: 'TTS 합성 실패' },
       { status: res.status },
