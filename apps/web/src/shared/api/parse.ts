@@ -12,7 +12,12 @@ function endpointOf(response: Response): string {
   return new URL(response.url).pathname;
 }
 
-// 성공이면 data를 돌려주고, 실패면 상태·코드·엔드포인트를 보존한 ApiError를 던진다
+/**
+ * 백엔드 공통 응답 봉투(`{ success, data, error }`)를 해석한다.
+ *
+ * @typeParam T 성공 시 `data`의 타입 — 호출부가 기대하는 타입을 그대로 신뢰한다 (런타임 검증 없음)
+ * @throws ApiError 실패 응답이거나 공통 봉투가 아닌 응답(스프링 기본 에러 페이지 등)이면
+ */
 export async function parseApiResponse<T>(response: Response): Promise<T> {
   let body: ApiBody | null = null;
   try {

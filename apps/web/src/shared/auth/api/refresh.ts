@@ -16,6 +16,14 @@ type RefreshTokenResponse = {
 // 딱 한 번만 나가게 해서, 회전(rotation)되는 refreshToken끼리 꼬여 로그아웃되는 걸 막는다.
 let inflight: Promise<string | null> | null = null;
 
+/**
+ * refreshToken으로 accessToken을 새로 발급받는다. `api/client.ts`의 401 재시도가 호출부.
+ *
+ * 동시에 여러 요청이 401을 만나도 refresh는 한 번만 나가도록 진행 중인 Promise를 공유한다 —
+ * 회전(rotation)되는 refreshToken끼리 경합해 로그아웃되는 걸 막는다.
+ *
+ * @returns 성공하면 새 accessToken, refreshToken이 없거나 재발급이 실패하면 `null` (throw하지 않는다)
+ */
 export function refreshAccessToken(): Promise<string | null> {
   inflight ??= doRefresh().finally(() => {
     inflight = null;
