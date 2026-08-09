@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { subscribeFromNative } from '@/shared/bridge/web-bridge';
+import { reportWarning } from '@/shared/monitoring/report';
 
 import { registerPushToken } from '../model/push-token-registration';
 
@@ -25,9 +26,10 @@ export const PushTokenSync = () => {
   useEffect(() => {
     if (!token || !userId) return;
     // 등록 실패로 화면이 깨지면 안 된다 — 다음 실행에서 셸이 토큰을 다시 보낸다
-    registerPushToken(token).catch((error: unknown) =>
-      console.warn('[push-token] 등록 실패:', error),
-    );
+    registerPushToken(token).catch((error: unknown) => {
+      console.warn('[push-token] 등록 실패:', error);
+      reportWarning(error);
+    });
   }, [token, userId]);
 
   return null;
