@@ -54,6 +54,12 @@ async function synthesizeSpeech(
   return response.blob();
 }
 
+/**
+ * TTS 합성·재생 훅. 재생 소유권(오디오 엘리먼트·objectURL)은 훅이 쥐고, 밖에는 읽기 전용 통로만 내준다.
+ *
+ * @returns `speak`(합성 후 재생 — prefetch 캐시가 있으면 왕복 없이 즉시), `speakSrc`(정적 파일 재생),
+ *   `prefetch`(미리 합성해 캐시), `stop`(재생 중단·리소스 정리), `status`(idle→loading→active, 실패 시 error)
+ */
 export function useTts() {
   const [status, setStatus] = useState<TtsStatus>('idle');
   const abortRef = useRef<AbortController | null>(null);

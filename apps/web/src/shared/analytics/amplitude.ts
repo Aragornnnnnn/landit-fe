@@ -18,7 +18,6 @@ const shouldLog = () =>
 // no-op(키 없음)·개발/프리뷰 콘솔 로깅을 한곳에서 — 반환값은 SDK로 실제 전송할지 여부
 const logAndShouldSend = (...args: unknown[]) => {
   const enabled = Boolean(getApiKey());
-  // console.log — debug는 크롬 기본 레벨(Verbose 꺼짐)에서 숨겨져 안 보인다
   if (!enabled || shouldLog()) console.log('[analytics]', ...args);
   return enabled;
 };
@@ -78,6 +77,12 @@ type TrackArgs<E extends EventName> = EventProps[E] extends undefined
   ? [event: E]
   : [event: E, props: EventProps[E]];
 
+/**
+ * 앰플리튜드로 이벤트를 보낸다. SSR에선 아무 일도 안 한다.
+ *
+ * @param args 이벤트 이름과, 그 이벤트에 프로퍼티 계약(`EventProps`)이 있으면 필수 props.
+ *   계약이 없는 이벤트는 이름만 넘긴다 — 어느 쪽이든 타입이 강제한다
+ */
 export const track = <E extends EventName>(...args: TrackArgs<E>) => {
   if (typeof window === 'undefined') return;
 

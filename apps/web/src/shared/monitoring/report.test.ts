@@ -57,6 +57,17 @@ describe('monitoring', () => {
     });
   });
 
+  it('reportError는 extra 컨텍스트를 그대로 전달한다 — 실패 상세(status·응답 본문 등)를 이슈에 첨부', () => {
+    const error = new Error('[tts] 합성 실패');
+
+    reportError(error, { status: 502, detail: 'upstream timeout' });
+
+    expect(sentryMock.captureException).toHaveBeenCalledWith(error, {
+      tags: undefined,
+      extra: { status: 502, detail: 'upstream timeout' },
+    });
+  });
+
   it('reportWarning은 warning 레벨로 보고한다 (수집만, 알림 없음)', () => {
     const error = new Error('flaky');
 

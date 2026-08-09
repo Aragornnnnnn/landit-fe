@@ -36,7 +36,14 @@ interface DeepgramMessage {
   from_finalize?: boolean;
 }
 
-// getUserMedia 거부·미지원, 토큰 실패, WS 연결 실패 시 throw → 호출부(훅)가 폴백을 판단한다
+/**
+ * Deepgram 실시간 STT 세션을 연다 — 마이크 캡처를 시작하고 트랜스크립트를 콜백으로 전달한다.
+ *
+ * @param options 콜백(onInterim·onFinal·onError)과 언어·침묵 감지 설정
+ * @returns 진행 중인 세션 — `stop()`은 마지막 발화를 마무리하고, `abort()`는 onFinal 없이 즉시 파기
+ * @throws getUserMedia 거부·미지원, 토큰 발급 실패, WebSocket 생성 실패(동기) — 호출부(훅)가 폴백을 판단한다.
+ *   연결 후(onerror·onclose) 실패는 던지지 않고 onError 콜백으로 전달된다
+ */
 export const startDeepgramStt = async (
   options: DeepgramSttOptions,
 ): Promise<SttSession> => {

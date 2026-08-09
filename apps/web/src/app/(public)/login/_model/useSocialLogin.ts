@@ -16,6 +16,12 @@ import { SCENARIO_PATH } from '@/shared/lib/routes';
 
 type SocialProvider = 'kakao' | 'google' | 'apple';
 
+/**
+ * 소셜 로그인 진행을 관리한다. 네이티브 셸 안이면 브릿지로 네이티브 SDK를, 밖이면 웹 OAuth를 탄다.
+ *
+ * @returns `login`(제공자 선택 시 호출), `pending`(진행 중인 제공자, 없으면 `null` — 버튼 로딩 상태에 사용),
+ *   `error`(마지막 실패 메시지, dev 모드에서는 원인 상세가 덧붙는다)
+ */
 export function useSocialLogin() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -67,9 +73,9 @@ export function useSocialLogin() {
             method: 'native',
             reason: 'login_api_failed',
           });
-          // 개발 모드에선 서버가 준 실패 사유를 화면·콘솔에 그대로 노출한다 (프로덕션은 일반 문구만)
+          // 개발 모드에선 서버가 준 실패 사유를 화면에 그대로 노출한다 (프로덕션은 일반 문구만)
+          console.debug('[auth] social-login 실패:', error);
           const isDev = process.env.NODE_ENV === 'development';
-          if (isDev) console.error('[auth] social-login 실패:', error);
           const detail =
             isDev && error instanceof Error ? ` (${error.message})` : '';
           setError(`로그인에 실패했어요. 다시 시도해 주세요.${detail}`);

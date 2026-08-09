@@ -4,6 +4,12 @@ import { REFRESH_PATH, refreshAccessToken } from '@/shared/auth/api/refresh';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { clearSession } from '@/shared/auth/clear-session';
 
+/**
+ * API 호출 진입점. 로그인 토큰 부착과 401 재발급·1회 재시도를 알아서 처리한다.
+ *
+ * @typeParam T 성공 응답 `data`의 타입 — 백엔드 응답을 가공 없이 그대로 반환한다
+ * @throws ApiError 백엔드가 실패 응답을 주면 (endpoint·status·code 포함 — reportError가 태그로 승격)
+ */
 export const api = {
   get: <T>(path: string) => request<T>('GET', path),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
