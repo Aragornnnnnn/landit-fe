@@ -47,7 +47,8 @@ export function subscribeFromNative(listener: BridgeListener) {
     const message = parseNativeToWebMessage(event.data);
     if (!message) return;
 
-    console.debug('[bridge:web] native -> web:', message.type, message);
+    // idToken·nonce·push token처럼 민감한 값이 실릴 수 있어 payload는 안 찍는다
+    console.debug('[bridge:web] native -> web:', message.type);
     listener(message);
   };
 
