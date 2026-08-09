@@ -3,6 +3,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { POST } from './route';
 
+const reportErrorMock = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/monitoring/report', () => ({
+  reportError: reportErrorMock,
+}));
+
 function ttsRequest(body: unknown): Request {
   return new Request('http://localhost/api/tts', {
     method: 'POST',
@@ -86,7 +91,7 @@ describe('POST /api/tts', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('OpenRouter 합성이 실패하면 그 상태 코드를 그대로 돌려준다', async () => {
+  it('OpenRouter 합성이 실패하면 그 상태 코드를 그대로 돌려주고 Sentry에 보고한다', async () => {
     vi.stubEnv('OPENROUTER_API_KEY', 'real-key');
     vi.stubGlobal(
       'fetch',
@@ -101,6 +106,10 @@ describe('POST /api/tts', () => {
     const res = await POST(ttsRequest(validBody));
 
     expect(res.status).toBe(429);
+    expect(reportErrorMock).toHaveBeenCalledWith(expect.any(Error), {
+      status: 429,
+      detail: 'rate limited',
+    });
   });
 
   it('합성이 성공하면 오디오를 audio/mpeg로 돌려준다', async () => {

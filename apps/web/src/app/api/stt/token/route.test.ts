@@ -3,6 +3,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { POST } from './route';
 
+const reportErrorMock = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/monitoring/report', () => ({
+  reportError: reportErrorMock,
+}));
+
 describe('POST /api/stt/token', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -17,7 +22,7 @@ describe('POST /api/stt/token', () => {
     expect(res.status).toBe(500);
   });
 
-  it('Deepgram grant가 실패하면 502를 돌려준다', async () => {
+  it('Deepgram grant가 실패하면 502를 돌려주고 Sentry에 보고한다', async () => {
     vi.stubEnv('DEEPGRAM_API_KEY', 'real-key');
     vi.stubGlobal(
       'fetch',
@@ -28,6 +33,9 @@ describe('POST /api/stt/token', () => {
     const res = await POST();
 
     expect(res.status).toBe(502);
+    expect(reportErrorMock).toHaveBeenCalledWith(expect.any(Error), {
+      detail: 'unauthorized',
+    });
   });
 
   it('grant가 성공하면 임시 토큰만 돌려주고 원본 키는 응답에 없다', async () => {
