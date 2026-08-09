@@ -46,9 +46,7 @@ async function doRefresh(): Promise<string | null> {
     setAuth(data.accessToken, data.refreshToken, member);
     return data.accessToken;
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[auth] refresh 실패:', error);
-    }
+    console.debug('[auth] refresh 실패:', error);
     return null;
   }
 }
