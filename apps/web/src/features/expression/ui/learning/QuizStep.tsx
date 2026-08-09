@@ -14,8 +14,8 @@ import {
   isWordsCorrect,
   type WordChip,
 } from '../../model/word-bank';
-import { QuizPrompt } from '../QuizPrompt';
-import { StepScaffold } from '../StepScaffold';
+import { QuizPrompt } from '../common/QuizPrompt';
+import { StepScaffold } from '../common/StepScaffold';
 import { ResultSheet } from './ResultSheet';
 
 interface QuizStepProps {

@@ -15,11 +15,11 @@ import { fromLearning, fromWritingSentence } from '../model/sentence-quiz';
 import { useExpressionLearningQuery } from '../model/useExpressionLearningQuery';
 import { useExpressionPracticeQuery } from '../model/useExpressionPracticeQuery';
 import { useFinishExpressionMutation } from '../model/useFinishExpressionMutation';
-import { ExpressionExitSheet } from './ExpressionExitSheet';
+import { ExpressionExitSheet } from './common/ExpressionExitSheet';
 import { ExplanationStep } from './learning/ExplanationStep';
 import { QuizStep } from './learning/QuizStep';
-import { QuizStepSkeleton } from './learning/QuizStepSkeleton';
 import { ReviewInputStep } from './practice/ReviewInputStep';
+import { QuizStepSkeleton } from './QuizStepSkeleton';
 
 interface ExpressionFlowProps {
   scenarioId: number;
