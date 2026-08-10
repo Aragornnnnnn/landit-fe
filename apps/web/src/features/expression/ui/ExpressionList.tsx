@@ -27,17 +27,21 @@ export const ExpressionList = ({
   const total = expressions.length;
   const done = expressions.filter((expression) => expression.completed).length;
   const ratio = total === 0 ? 0 : (done / total) * 100;
+  // 카드 앞면(ExpressionProgress)과 같은 규칙 — 다 하면 초록, 아니면 주황
+  const complete = total > 0 && done >= total;
 
   return (
     <div className="px-5 pt-2">
       {!hideProgress && (
         <div className="mb-5">
-          <p className="mb-2 text-sm font-bold text-primary">
+          <p
+            className={`mb-2 text-sm font-bold ${complete ? 'text-success' : 'text-primary'}`}
+          >
             {done}/{total} 완료
           </p>
           <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
             <div
-              className="h-full rounded-full bg-primary transition-[width] duration-500"
+              className={`h-full rounded-full transition-[width] duration-500 ${complete ? 'bg-success' : 'bg-primary'}`}
               style={{ width: `${ratio}%` }}
             />
           </div>
