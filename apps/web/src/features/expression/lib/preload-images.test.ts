@@ -23,6 +23,8 @@ const practice = (sentences: PracticeSentence[]): ExpressionPractice => ({
     writingSentenceTranslation: '',
     writingQuestion: '',
     writingQuestionTranslation: '',
+    writingSentenceWords: [],
+    writingSentenceWordChoices: [],
   },
 });
 

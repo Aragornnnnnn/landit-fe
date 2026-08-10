@@ -13,6 +13,8 @@ interface StepScaffoldProps {
   footer?: React.ReactNode;
   footerBleed?: boolean; // 키보드처럼 하단을 좌우 끝까지 채울 때
   bottomInset?: number; // 네이티브 키보드가 가린 높이(px) — 하단 footer를 그만큼 위로 올린다
+  // 진행바 색 — 기본 primary, 학습을 마친 성공 연출 중엔 success(초록)로
+  progressTone?: 'primary' | 'success';
 }
 
 export const StepScaffold = ({
@@ -24,6 +26,7 @@ export const StepScaffold = ({
   footer,
   footerBleed,
   bottomInset = 0,
+  progressTone = 'primary',
 }: StepScaffoldProps) => (
   <div
     className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
@@ -34,7 +37,9 @@ export const StepScaffold = ({
   >
     <div className="h-1 w-full bg-secondary">
       <div
-        className="h-full bg-primary transition-[width] duration-300"
+        className={`h-full transition-[width,background-color] duration-300 ${
+          progressTone === 'success' ? 'bg-success' : 'bg-primary'
+        }`}
         style={{ width: `${progress * 100}%` }}
       />
     </div>

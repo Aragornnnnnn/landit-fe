@@ -10,7 +10,6 @@ import { track } from '@/shared/analytics';
 import { scenarioReturnPath } from '@/shared/lib/routes';
 
 import { collectPreloadImageUrls } from '../lib/preload-images';
-import type { InputState } from '../model/review-input';
 import { fromLearning, fromWritingSentence } from '../model/sentence-quiz';
 import { useExpressionLearningQuery } from '../model/useExpressionLearningQuery';
 import { useExpressionPracticeQuery } from '../model/useExpressionPracticeQuery';
@@ -18,7 +17,7 @@ import { useFinishExpressionMutation } from '../model/useFinishExpressionMutatio
 import { ExpressionExitSheet } from './common/ExpressionExitSheet';
 import { ExplanationStep } from './learning/ExplanationStep';
 import { QuizStep } from './learning/QuizStep';
-import { ReviewInputStep } from './practice/ReviewInputStep';
+import { ReviewSuccess } from './practice/ReviewSuccess';
 import { QuizStepSkeleton } from './QuizStepSkeleton';
 
 interface ExpressionFlowProps {
@@ -35,6 +34,9 @@ const STEP_PROP: Record<'QUIZ' | 'EXPLAIN' | 'REVIEW', ExpressionStep> = {
   REVIEW: 'review',
 };
 
+// EXPLAIN이 멈추는 진행바 지점 — REVIEW가 이 지점부터 이어받아 1까지 채운다
+const EXPLAIN_PROGRESS = 0.7;
+
 export const ExpressionFlow = ({
   scenarioId,
   expressionId,
@@ -44,10 +46,10 @@ export const ExpressionFlow = ({
   const [step, setStep] = useState<'QUIZ' | 'EXPLAIN' | 'REVIEW'>('QUIZ');
   // 예문까지(QUIZ·EXPLAIN)는 뒤로가기 대신 X로 나가며, 중단 확인 시트를 먼저 띄운다
   const [exitOpen, setExitOpen] = useState(false);
-  // 복습 영작 draft — 예문(설명)을 보러 나갔다 돌아와도 입력이 유지되게 문제 문장과 함께 보관한다
+  // 복습 영작 draft — 예문(설명)을 보러 나갔다 돌아와도 고른 칩이 유지되게 문제 문장과 함께 보관한다
   const [reviewDraft, setReviewDraft] = useState<{
     sentence: string;
-    state: InputState;
+    selected: number[];
   } | null>(null);
 
   // 플로우 전체(퀴즈·설명·복습)는 대표 예문(learning-start)만으로 굴러간다.
@@ -153,8 +155,8 @@ export const ExpressionFlow = ({
           usageDescription={learning.usageDescription}
           examples={practice?.practiceSentence ?? []}
           title={learning.baseExpressionMeaningText}
-          progress={0.7}
-          nextLabel="복습 영작 할게요"
+          progress={EXPLAIN_PROGRESS}
+          nextLabel="복습 퀴즈 풀게요"
           leftAction="close"
           onBack={openExitSheet}
           onNext={() => setStep('REVIEW')}
@@ -164,44 +166,53 @@ export const ExpressionFlow = ({
     );
   }
 
-  // 복습 영작 — practice가 주는 별도 영작 문제(writingSentence)를 입력으로 푼다.
+  // 복습 영작 — practice가 주는 별도 영작 문제(writingSentence)를 QUIZ와 같은 단어 칩 방식으로 푼다.
   // 아직 로딩 중이면 잠깐 스켈레톤을 유지한다 — 폴백 문제를 먼저 보여줬다가 도착 후 바꿔치기하면
-  // 입력 중이던 상태와 단어 수가 어긋난다. 실패(404 등) 시에만 대표 예문으로 폴백해 플로우를 막지 않는다.
+  // 고른 칩과 단어 수가 어긋난다. 실패(404 등) 시에만 대표 예문으로 폴백해 플로우를 막지 않는다.
   if (practiceLoading && !practice) return <QuizStepSkeleton />;
   const reviewQuiz = practice?.writingSentence
     ? fromWritingSentence(practice.writingSentence)
     : quiz;
 
+  const finishFlow = () =>
+    finish.mutate(undefined, {
+      onSuccess: () => {
+        track(EVENTS.EXPRESSION_COMPLETED, {
+          expression_id: expressionId,
+          scenario_id: scenarioId,
+        });
+        backToList();
+      },
+    });
+
   return (
-    <ReviewInputStep
+    <QuizStep
       // 문제가 바뀌면(이론상 폴백→practice 교체) 상태를 통째로 리셋한다
       key={reviewQuiz.writingSentenceText}
       quiz={reviewQuiz}
       expressionId={expressionId}
-      targetExpressionText={learning.targetExpressionText}
-      meaning={learning.baseExpressionMeaningText}
-      // 예문을 보러 나갔다 돌아와도 같은 문제면 draft를 이어서 쓴다
-      initialState={
+      onBack={() => setStep('EXPLAIN')}
+      onNext={finishFlow}
+      nextLabel="학습 완료"
+      finishing={finish.isPending}
+      progressRange={[EXPLAIN_PROGRESS, 1]}
+      // 예문을 보러 나갔다 돌아와도 같은 문제면 고른 칩을 이어서 쓴다
+      initialSelected={
         reviewDraft?.sentence === reviewQuiz.writingSentenceText
-          ? reviewDraft.state
+          ? reviewDraft.selected
           : undefined
       }
-      onStateChange={(state) =>
-        setReviewDraft({ sentence: reviewQuiz.writingSentenceText, state })
+      onSelectedChange={(selected) =>
+        setReviewDraft({ sentence: reviewQuiz.writingSentenceText, selected })
       }
-      onBack={() => setStep('EXPLAIN')}
-      finishing={finish.isPending}
-      onFinish={() =>
-        finish.mutate(undefined, {
-          onSuccess: () => {
-            track(EVENTS.EXPRESSION_COMPLETED, {
-              expression_id: expressionId,
-              scenario_id: scenarioId,
-            });
-            backToList();
-          },
-        })
-      }
+      correctSlot={() => (
+        <ReviewSuccess
+          expression={learning.targetExpressionText}
+          meaning={learning.baseExpressionMeaningText}
+          onFinish={finishFlow}
+          finishing={finish.isPending}
+        />
+      )}
     />
   );
 };

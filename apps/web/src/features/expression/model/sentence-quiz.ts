@@ -22,10 +22,8 @@ export const fromLearning = (learning: ExpressionLearning): SentenceQuiz => ({
   shuffledWords: learning.representativeSentenceWordChoices,
 });
 
-// 복습 영작 문제(practice.writingSentence)를 입력 퀴즈 형태로 변환한다.
-// BE가 단어 배열을 따로 주지 않아 문장을 직접 쪼갠다 — 가장자리 문장부호는 떼고
-// 아포스트로피(can't)는 남겨, learning-start 단어뱅크와 같은 규칙을 따른다.
-// 복습은 타이핑 입력이라 단어뱅크(shuffledWords)를 쓰지 않는다.
+// 복습 영작 문제(practice.writingSentence)를 단어 선택 퀴즈 형태로 변환한다.
+// learning-start와 같은 규칙 — BE가 준 단어뱅크(정답 순서 words, 섞인 선택지 wordChoices)를 그대로 옮긴다.
 export const fromWritingSentence = (
   writing: WritingSentence,
 ): SentenceQuiz => ({
@@ -33,11 +31,6 @@ export const fromWritingSentence = (
   writingQuestionTranslation: writing.writingQuestionTranslation,
   writingSentenceText: writing.writingSentenceText,
   writingSentenceTranslation: writing.writingSentenceTranslation,
-  answerWords: writing.writingSentenceText
-    .split(/\s+/)
-    .map((word) =>
-      word.replace(/^[.,!?;:"“”'‘’()—–…]+|[.,!?;:"“”'‘’()—–…]+$/g, ''),
-    )
-    .filter((word) => word.length > 0),
-  shuffledWords: [],
+  answerWords: writing.writingSentenceWords,
+  shuffledWords: writing.writingSentenceWordChoices,
 });

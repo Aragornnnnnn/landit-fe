@@ -63,6 +63,8 @@ const practice = (imageUrls: (string | null)[]): ExpressionPractice => ({
     writingSentenceTranslation: '',
     writingQuestion: '',
     writingQuestionTranslation: '',
+    writingSentenceWords: [],
+    writingSentenceWordChoices: [],
   },
 });
 

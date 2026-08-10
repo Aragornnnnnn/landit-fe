@@ -1,7 +1,8 @@
 'use client';
 
 // 듀오링고식 단어 선택 퀴즈 — 뱅크에서 단어를 순서대로 골라 문장을 완성하고 판정, 결과는 하단 슬라이드업 시트로 띄운다
-import { useState } from 'react';
+// QUIZ·REVIEW 두 스텝이 공용으로 쓴다(진행바 구간·칩 선택 복원·정답 연출은 props로 스텝별로 갈라진다)
+import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
@@ -28,6 +29,14 @@ interface QuizStepProps {
   onNext: () => void;
   nextLabel?: string;
   finishing?: boolean;
+  // 상단 진행바를 [idle일 때, 판정 후] 두 값으로 — 기본은 퀴즈 스텝 구간(0→0.5)
+  progressRange?: [number, number];
+  // 설명 스텝을 보러 나갔다 돌아와도 고른 칩을 복원한다(복습에서 사용, 뱅크 순서가 고정이라 칩 id로 안전하게 복원됨)
+  initialSelected?: number[];
+  onSelectedChange?: (selected: number[]) => void;
+  // 정답일 때 결과 시트 자리에 대신 띄울 연출(없으면 기본 ResultSheet) — 복습의 획득 연출(콘페티+카드)에 쓴다.
+  // 오답은 이 슬롯을 타지 않고 항상 기본 ResultSheet를 보여준다. onNext/finishing은 호출부가 이미 쥐고 있으니 다시 넘기지 않는다.
+  correctSlot?: () => React.ReactNode;
 }
 
 type Checked = 'idle' | 'wrong' | 'correct';
@@ -47,17 +56,30 @@ export const QuizStep = ({
   onNext,
   nextLabel = '표현 배우러 갈게요',
   finishing = false,
+  progressRange = [0, 0.5],
+  initialSelected,
+  onSelectedChange,
+  correctSlot,
 }: QuizStepProps) => {
   const answer = quiz.answerWords;
 
   // 뱅크는 BE가 섞어준 shuffledWords 그대로. 선택은 칩 id의 순서 배열로 관리한다(중복 단어 안전).
   const [bank] = useState<WordChip[]>(() => chipsFromWords(quiz.shuffledWords));
-  const [selected, setSelected] = useState<number[]>([]);
+  const [selected, setSelected] = useState<number[]>(
+    () => initialSelected ?? [],
+  );
   const [checked, setChecked] = useState<Checked>('idle');
   // 힌트는 일회성 — 누르면 지금 자리의 힌트가 켜지고, 단어를 올리거나 내리면 꺼진다. 버튼은 계속 남는다
   const [hintActive, setHintActive] = useState(false);
   // 제출 계측용 — 이 퀴즈에서 힌트를 한 번이라도 썼는가
   const [hintUsed, setHintUsed] = useState(false);
+
+  // 부모에 선택을 보고한다 — 설명 스텝을 다녀와도 고른 칩이 유지되게(복습에서 사용)
+  useEffect(() => {
+    onSelectedChange?.(selected);
+    // onSelectedChange는 인라인 함수라 매 렌더 바뀐다 — selected 변화에만 보고하면 충분하다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected]);
 
   const usedIds = new Set(selected);
   const full = selected.length === answer.length;
@@ -103,8 +125,11 @@ export const QuizStep = ({
     setChecked(tone);
   };
 
-  // 게이지는 단어를 고르는 동안엔 비워두고, 판정을 마쳐야 절반이 찬다(나머지 절반은 이후 스텝 몫).
-  const progress = checked === 'idle' ? 0 : 0.5;
+  // 게이지는 단어를 고르는 동안엔 구간 시작값, 판정을 마쳐야 구간 끝값이 찬다.
+  const progress = checked === 'idle' ? progressRange[0] : progressRange[1];
+  // 정답 연출 슬롯이 뜨는 순간(표현학습 마지막 완료)엔 게이지도 성공 색으로 맞춘다
+  const progressTone =
+    checked === 'correct' && correctSlot ? 'success' : 'primary';
 
   // 힌트 활성 중엔 이미 올린 칩의 정오도 알려준다 — 자리와 다른 칩은 빨갛게 표시
   const misplacedAt = (index: number) =>
@@ -124,6 +149,7 @@ export const QuizStep = ({
   return (
     <StepScaffold
       progress={progress}
+      progressTone={progressTone}
       onBack={onBack}
       leftAction={leftAction}
       footer={
@@ -198,15 +224,18 @@ export const QuizStep = ({
         })}
       </div>
 
-      {checked !== 'idle' && (
-        <ResultSheet
-          tone={checked}
-          answer={quiz.writingSentenceText}
-          onNext={onNext}
-          nextLabel={nextLabel}
-          finishing={finishing}
-        />
-      )}
+      {checked !== 'idle' &&
+        (checked === 'correct' && correctSlot ? (
+          correctSlot()
+        ) : (
+          <ResultSheet
+            tone={checked}
+            answer={quiz.writingSentenceText}
+            onNext={onNext}
+            nextLabel={nextLabel}
+            finishing={finishing}
+          />
+        ))}
     </StepScaffold>
   );
 };
