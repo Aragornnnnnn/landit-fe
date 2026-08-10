@@ -15,6 +15,9 @@ export interface WritingSentence {
   writingSentenceTranslation: string;
   writingQuestion: string;
   writingQuestionTranslation: string;
+  // 정답 문장을 단어 단위로 나눈 배열(정답 순서)과, 정답+오답을 섞은 선택지 배열(BE 저장 순서)
+  writingSentenceWords: string[];
+  writingSentenceWordChoices: string[];
 }
 
 export interface ExpressionPractice {
