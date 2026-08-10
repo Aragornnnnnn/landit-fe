@@ -22,7 +22,7 @@ interface ExplanationStepProps {
   examples: PracticeSentence[];
   title: string;
   progress: number;
-  nextLabel: string; // 다음 스텝(복습 영작) 유무에 따라 "복습 영작 할게요" / "학습 완료"
+  nextLabel: string; // 다음 스텝(복습 퀴즈) 유무에 따라 "복습 퀴즈 풀게요" / "학습 완료"
   finishing?: boolean; // 마지막 스텝일 때 완료 처리 중이면 버튼 비활성
   onBack: () => void;
   leftAction?: 'back' | 'close';
