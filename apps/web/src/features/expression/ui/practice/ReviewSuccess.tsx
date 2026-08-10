@@ -54,7 +54,8 @@ export const ReviewSuccess = ({
       animate={{ y: 0 }}
       transition={{ type: 'spring', stiffness: 320, damping: 30 }}
     >
-      <div className="mx-auto flex max-w-[430px] flex-col items-center gap-4 rounded-t-3xl bg-success/12 px-5 pt-7 pb-[max(env(safe-area-inset-bottom),24px)]">
+      {/* 배경은 불투명해야 한다 — 반투명 틴트면 뒤의 단어 칩이 비쳐 지저분하다(ResultSheet와 동일 처리) */}
+      <div className="mx-auto flex max-w-[430px] flex-col items-center gap-4 rounded-t-3xl bg-[color-mix(in_srgb,var(--success)_12%,var(--card))] px-5 pt-7 pb-[max(env(safe-area-inset-bottom),24px)]">
         {/* 획득 배지 */}
         <motion.div
           className="flex items-center gap-2 rounded-full bg-success px-4 py-1.5"

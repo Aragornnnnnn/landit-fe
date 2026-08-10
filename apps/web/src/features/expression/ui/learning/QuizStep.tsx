@@ -127,6 +127,9 @@ export const QuizStep = ({
 
   // 게이지는 단어를 고르는 동안엔 구간 시작값, 판정을 마쳐야 구간 끝값이 찬다.
   const progress = checked === 'idle' ? progressRange[0] : progressRange[1];
+  // 정답 연출 슬롯이 뜨는 순간(표현학습 마지막 완료)엔 게이지도 성공 색으로 맞춘다
+  const progressTone =
+    checked === 'correct' && correctSlot ? 'success' : 'primary';
 
   // 힌트 활성 중엔 이미 올린 칩의 정오도 알려준다 — 자리와 다른 칩은 빨갛게 표시
   const misplacedAt = (index: number) =>
@@ -146,6 +149,7 @@ export const QuizStep = ({
   return (
     <StepScaffold
       progress={progress}
+      progressTone={progressTone}
       onBack={onBack}
       leftAction={leftAction}
       footer={
