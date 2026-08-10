@@ -11,9 +11,12 @@ import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import { useStreakCalendar } from '../model/useStreakCalendar';
-import { StreakCalendar, type StreakCalendarProps } from './StreakCalendar';
-import { StreakHero } from './StreakHero';
-import { StreakStats } from './StreakStats';
+import {
+  StreakCalendar,
+  type StreakCalendarProps,
+} from './calendar/StreakCalendar';
+import { StreakHero } from './flow/StreakHero';
+import { StreakStats } from './flow/StreakStats';
 
 export const StreakFlow = () => {
   const router = useRouter();

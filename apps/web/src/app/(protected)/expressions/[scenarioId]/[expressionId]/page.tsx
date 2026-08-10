@@ -5,7 +5,7 @@ import { Suspense, use } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import { ExpressionFlow } from '@/features/expression/ui/ExpressionFlow';
-import { QuizStepSkeleton } from '@/features/expression/ui/learning/QuizStepSkeleton';
+import { QuizStepSkeleton } from '@/features/expression/ui/QuizStepSkeleton';
 import { readDateParam } from '@/shared/lib/routes';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다

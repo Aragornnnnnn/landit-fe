@@ -4,8 +4,8 @@
 import { Button } from '@/shared/ui/Button';
 
 import { useSessionFeedbackQuery } from '../model/useSessionFeedbackQuery';
-import { FeedbackContent } from './FeedbackContent';
-import { FeedbackSkeleton } from './FeedbackSkeleton';
+import { FeedbackContent } from './flow/FeedbackContent';
+import { FeedbackSkeleton } from './flow/FeedbackSkeleton';
 
 interface FeedbackFlowProps {
   sessionId: number | null;

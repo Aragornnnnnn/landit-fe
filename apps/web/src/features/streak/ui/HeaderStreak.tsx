@@ -9,7 +9,7 @@ import { HeaderAction } from '@/shared/ui/HeaderAction';
 
 import { fruitStateOf } from '../model/streak-status';
 import { useStreakQuery } from '../model/useStreakQuery';
-import { StreakFruit } from './StreakFruit';
+import { StreakFruit } from './common/StreakFruit';
 
 // 선 아이콘(18px)보다 작게 잡는다 — 열매는 면으로 칠해져 있어 같은 수치면 더 크게 읽힌다.
 // 눈에 띄어야 하는 칸이지만 그건 색이 맡는다. 크기로 키우면 강조가 아니라 정렬 오류로 보인다

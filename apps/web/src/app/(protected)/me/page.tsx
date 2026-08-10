@@ -14,6 +14,7 @@ import { useAuthStore } from '@/shared/auth/auth-store';
 import { clearSession } from '@/shared/auth/clear-session';
 import { SCENARIO_PATH } from '@/shared/lib/routes';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
+import { reportWarning } from '@/shared/monitoring/report';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
@@ -61,6 +62,7 @@ export default function MyPage() {
       if (refreshToken) await requestLogout(refreshToken);
     } catch (error) {
       console.warn('[Auth] logout failed:', error);
+      reportWarning(error);
     } finally {
       // 세션 정리(resetUser)보다 먼저 찍어야 로그아웃한 유저에게 귀속된다
       track(EVENTS.LOGOUT_COMPLETED);
@@ -77,9 +79,10 @@ export default function MyPage() {
     try {
       // 탈퇴 전에 이 기기로 가는 푸시를 끊는다 — 계정이 사라진 뒤엔 해제할 방법이 없다.
       // 부가 정리라 실패해도 탈퇴 자체는 막지 않는다
-      await disablePushToken().catch((error: unknown) =>
-        console.warn('[push-token] 해제 실패:', error),
-      );
+      await disablePushToken().catch((error: unknown) => {
+        console.warn('[push-token] 해제 실패:', error);
+        reportWarning(error);
+      });
       await withdraw();
       track(EVENTS.ACCOUNT_DELETED);
       finishSignedOut();

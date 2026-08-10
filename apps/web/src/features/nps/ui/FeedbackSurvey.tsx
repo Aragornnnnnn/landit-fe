@@ -9,7 +9,7 @@ import { reportError } from '@/shared/monitoring/report';
 import { Button } from '@/shared/ui/Button';
 
 import { submitNps, type NpsScore } from '../api/nps';
-import { EmojiScoreButton } from './EmojiScoreButton';
+import { EmojiScoreButton } from './survey/EmojiScoreButton';
 
 const NPS_SCORES = [1, 2, 3, 4, 5] as const;
 
