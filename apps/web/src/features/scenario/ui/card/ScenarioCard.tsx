@@ -3,6 +3,7 @@
 // 시나리오 카드 — 앞면(썸네일·제목·브리핑·CTA), 완료 시 뒤집으면 뒷면에 표현 학습 리스트
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import confetti from 'canvas-confetti';
 
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
@@ -10,9 +11,29 @@ import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, LockIcon, ReplayIcon } from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
 
+import { expressionStageOf } from '../../lib/expression-progress';
 import type { Scenario } from '../../lib/to-scenario';
 import { ExpressionProgress } from './ExpressionProgress';
 import { ScenarioCardBack } from './ScenarioCardBack';
+
+// 원어민 표현을 전부 깨고 카드로 복귀한 순간의 축하 — ReviewSuccess와 같은 브랜드 색·패턴
+const celebrateAllExpressionsDone = () => {
+  const colors = ['#e07a3a', '#2f7d54', '#fbbf24', '#ffffff'];
+  const base = { spread: 70, startVelocity: 45, ticks: 150, colors };
+  confetti({ ...base, particleCount: 55, angle: 60, origin: { x: 0, y: 0.9 } });
+  confetti({
+    ...base,
+    particleCount: 55,
+    angle: 120,
+    origin: { x: 1, y: 0.9 },
+  });
+  confetti({
+    ...base,
+    particleCount: 45,
+    spread: 110,
+    origin: { x: 0.5, y: 0.6 },
+  });
+};
 
 interface ScenarioCardProps {
   scenario: Scenario;
@@ -52,7 +73,9 @@ export const ScenarioCard = ({
 
   const filterClass = locked ? 'brightness-70 grayscale' : '';
 
-  // autoFlip으로 처음부터 뒤집힌 채 마운트된 경우도 노출로 기록한다
+  // autoFlip으로 처음부터 뒤집힌 채 마운트된 경우도 노출로 기록한다.
+  // 이 순간 표현까지 전부 깬 상태(done)면 막 마지막 표현을 끝내고 돌아온 것이므로 축하한다 —
+  // 이미 다 깬 카드를 나중에 다시 열 때는 autoFlip이 아니라서 재발동하지 않는다.
   useEffect(() => {
     if (autoFlip && completed) {
       track(EVENTS.SCENARIO_CARD_FLIPPED, {
@@ -60,6 +83,11 @@ export const ScenarioCard = ({
         direction: 'back',
         trigger: 'auto',
       });
+      if (
+        expressionStageOf(expressions.completed, expressions.total) === 'done'
+      ) {
+        celebrateAllExpressionsDone();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 마운트 시 1회만
   }, []);
