@@ -57,4 +57,16 @@ describe('ExpressionList 진행바', () => {
     expect(fill?.className).toContain('bg-success');
     expect(fill?.className).not.toContain('bg-primary');
   });
+
+  it('배정된 표현이 없으면(0/0) 초록으로 착각하지 않는다', () => {
+    render(<ExpressionList expressions={[]} onSelect={vi.fn()} />);
+
+    const label = screen.getByText('0/0 완료');
+    expect(label.className).toContain('text-primary');
+    expect(label.className).not.toContain('text-success');
+
+    const fill = label.parentElement?.querySelector('.h-full.rounded-full');
+    expect(fill?.className).toContain('bg-primary');
+    expect(fill?.className).not.toContain('bg-success');
+  });
 });
