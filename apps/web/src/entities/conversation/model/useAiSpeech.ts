@@ -19,7 +19,8 @@ interface AiSpeechOptions {
   playing: boolean;
   content: string | null;
   voice: TtsVoice | null;
-  scenarioId: number;
+  // 미리 녹음된 오프닝 오디오 경로 — 없으면(null) 오프닝도 일반 재생 경로를 탄다
+  openingSrc: string | null;
   onSpeechEnd: () => void;
 }
 
@@ -27,7 +28,7 @@ export const useAiSpeech = ({
   playing,
   content,
   voice,
-  scenarioId,
+  openingSrc,
   onSpeechEnd,
 }: AiSpeechOptions) => {
   const tts = useTts();
@@ -69,9 +70,9 @@ export const useAiSpeech = ({
     let stop: () => void;
     // 정리가 끝난 뒤 도착한 실패 콜백이 폴백 재생을 되살리지 않게 막는다 (멈출 주체가 없다)
     let cancelled = false;
-    if (isOpeningRef.current) {
+    if (isOpeningRef.current && openingSrc) {
       stop = () => tts.stop();
-      tts.speakSrc(`/audio/opening-${scenarioId}.mp3`, {
+      tts.speakSrc(openingSrc, {
         // 미리 녹음된 오디오도 재생 시각을 읽을 수 있어 입모양이 똑같이 붙는다
         onStart: startLipSync,
         onEnd: finish,
