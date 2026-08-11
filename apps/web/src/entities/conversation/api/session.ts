@@ -1,8 +1,8 @@
-// 대화 세션 API — 시작·발화 제출·종료 (백엔드 세션 엔드포인트 미러)
+// 대화 세션 공용 API — 세션 타입(시나리오·스몰톡) 무관 엔드포인트와 공유 응답 부품만 둔다.
+// sessionId는 세션 타입 공용 네임스페이스다. 특정 대화 유형만 쓰는 엔드포인트는
+// 그 유형의 feature(api/)에 둔다 — 소속 기준은 URL 모양이 아니라 실제 소비자.
 // FE는 BE만 호출하고, BE가 내부에서 AI 서버를 오케스트레이션한다.
 import { api } from '@/shared/api/client';
-// ttsVoice는 재생(useTts)과 같은 타입을 공유한다
-import type { TtsVoice } from '@/shared/tts/voice';
 
 export type InputType = 'VOICE' | 'TEXT' | 'GENERATED';
 
@@ -16,24 +16,6 @@ export interface CurrentMessage {
   translatedContent: string;
   innerThought: string;
   innerThoughtType: string;
-}
-
-export interface SessionProgress {
-  currentTurnNumber: number;
-  currentMessageSequenceNumber: number;
-  totalQuestionCount: number;
-  completed: boolean;
-}
-
-export interface SessionStartResponse {
-  sessionId: number;
-  scenarioId: number;
-  sessionType: string;
-  firstSpeaker: 'AI' | 'USER';
-  userOpeningInstruction: string | null;
-  ttsVoice: TtsVoice | null;
-  currentMessage: CurrentMessage | null;
-  progress: SessionProgress;
 }
 
 export type ProcessingStatus = 'PREPARING' | 'COMPLETED' | 'FAILED';
@@ -68,30 +50,6 @@ export interface NextMessage {
   content: string;
   translatedContent: string;
 }
-
-export interface SessionMessageSubmitResponse {
-  sessionId: number;
-  submittedMessage: SubmittedMessage;
-  // 다음 AI 발화. 대화가 끝나는(progress.completed) 턴에는 다음 질문 대신 종료 메시지가 담겨 온다.
-  // (둘 다 재생 대상이라 FE는 nextMessage 유무로 발화 여부를, completed로 종료 여부를 판단한다)
-  nextMessage: NextMessage | null;
-  progress: SessionProgress;
-}
-
-// 시나리오 세션 시작 — sessionId·선발화자·오프닝·TTS 보이스를 받는다
-export const startSession = (scenarioId: number) =>
-  api.post<SessionStartResponse>(`/api/v1/scenarios/${scenarioId}/sessions`);
-
-// 유저 발화 제출 — 상대 속마음·다음 질문·진행 상태를 받는다
-export const submitMessage = (
-  sessionId: number,
-  content: string,
-  inputType: InputType,
-) =>
-  api.post<SessionMessageSubmitResponse>(
-    `/api/v1/sessions/${sessionId}/messages`,
-    { content, inputType },
-  );
 
 // 속마음 폴링 — 제출 시 PREPARING이면 준비될 때까지 이 엔드포인트로 조회한다
 export const getInnerThought = (sessionId: number, messageId: number) =>
