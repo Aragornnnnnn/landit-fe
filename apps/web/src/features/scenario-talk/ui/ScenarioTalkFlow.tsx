@@ -1,10 +1,20 @@
-// 대화 플로우 화면 — 캐릭터 무대·질문 카드·내 답변·마이크를 상태 기계 단계에 맞춰 오케스트레이션한다
+// 시나리오 대화 화면 — 캐릭터 무대·질문 카드·내 답변·마이크를 상태 기계 단계에 맞춰 오케스트레이션한다
 'use client';
 
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { toCharacterLook } from '@/entities/conversation/model/character-look';
+import { userIntroHoldMs } from '@/entities/conversation/model/pacing';
+import type { FloatingThought } from '@/entities/conversation/model/thought';
+import { CharacterStage } from '@/entities/conversation/ui/flow/CharacterStage';
+import { ExitConfirmSheet } from '@/entities/conversation/ui/flow/ExitConfirmSheet';
+import { MicControl } from '@/entities/conversation/ui/flow/MicControl';
+import { MicPermissionSheet } from '@/entities/conversation/ui/flow/MicPermissionSheet';
+import { QuestionCard } from '@/entities/conversation/ui/flow/QuestionCard';
+import { ThoughtOverlay } from '@/entities/conversation/ui/flow/ThoughtOverlay';
+import { UserTranscript } from '@/entities/conversation/ui/flow/UserTranscript';
 import { FeedbackFlow } from '@/features/feedback/ui/FeedbackFlow';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
@@ -14,19 +24,9 @@ import { Transition } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
-import { toCharacterLook } from '../model/character-look';
-import { userIntroHoldMs } from '../model/pacing';
-import type { FloatingThought } from '../model/thought';
-import { useConversationFlow } from '../model/useConversationFlow';
-import { CharacterStage } from './flow/CharacterStage';
-import { ExitConfirmSheet } from './flow/ExitConfirmSheet';
-import { MicControl } from './flow/MicControl';
-import { MicPermissionSheet } from './flow/MicPermissionSheet';
-import { QuestionCard } from './flow/QuestionCard';
-import { ThoughtOverlay } from './flow/ThoughtOverlay';
-import { UserTranscript } from './flow/UserTranscript';
+import { useScenarioTalkFlow } from '../model/useScenarioTalkFlow';
 
-export const ConversationFlow = ({
+export const ScenarioTalkFlow = ({
   scenario,
   date,
 }: {
@@ -53,7 +53,7 @@ export const ConversationFlow = ({
     input,
     leave,
     sessionId,
-  } = useConversationFlow(scenario);
+  } = useScenarioTalkFlow(scenario);
   const {
     transcript,
     setTranscript,

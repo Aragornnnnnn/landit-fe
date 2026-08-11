@@ -3,14 +3,18 @@ import { StrictMode } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import * as sessionApi from '@/entities/conversation/api/session';
+import * as scenarioTalkApi from '@/features/scenario-talk/api/session';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 
-import * as sessionApi from '../api/session';
 import { useConversationSession } from './useConversationSession';
 
-vi.mock('../api/session', () => ({
-  startSession: vi.fn(),
+vi.mock('@/entities/conversation/api/session', () => ({
   endSession: vi.fn(),
+}));
+
+vi.mock('@/features/scenario-talk/api/session', () => ({
+  startSession: vi.fn(),
 }));
 
 const monitoringMock = vi.hoisted(() => ({
@@ -19,7 +23,7 @@ const monitoringMock = vi.hoisted(() => ({
 }));
 vi.mock('@/shared/monitoring/report', () => monitoringMock);
 
-const startSession = vi.mocked(sessionApi.startSession);
+const startSession = vi.mocked(scenarioTalkApi.startSession);
 const endSession = vi.mocked(sessionApi.endSession);
 
 const scenario = {
@@ -35,7 +39,7 @@ const startResponse = (
     sessionId: 7,
     currentMessage,
     progress: { completed: false },
-  }) as Awaited<ReturnType<typeof sessionApi.startSession>>;
+  }) as Awaited<ReturnType<typeof scenarioTalkApi.startSession>>;
 
 const renderSession = (
   onOpeningMessage: (message: {

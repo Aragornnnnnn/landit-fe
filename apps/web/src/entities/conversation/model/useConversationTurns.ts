@@ -1,23 +1,18 @@
-// 대화 플로우 훅 — 상태 기계를 세션 API·입력(STT/키보드)·발화 재생에 배선한다 (시작·발화 제출·종료)
-// 오프닝은 시나리오(리스트 캐시)의 openingPreview로 즉시 시드하고, 세션 시작은 백그라운드로 돌려
-// 진입을 막지 않는다. 세션은 발화 제출 때 필요한 sessionId 확보용.
+// 대화 턴 엔진 훅 — 상태 기계를 입력(STT/키보드)·발화 재생·속마음 폴링에 배선해 턴 루프를 굴린다.
+// 어느 대화 유형인지는 모른다 — 세션 확보(ensureSession)·발화 제출과 완료 판정(submit)은 주입받고,
+// 완료 후 무엇이 일어나는지는 호출자 소관이다.
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
-import { useQueryClient } from '@tanstack/react-query';
 
-import { prefetchSessionFeedback } from '@/features/feedback/model/useSessionFeedbackQuery';
-import type { Scenario } from '@/features/scenario/lib/to-scenario';
-import { scenarioKeys } from '@/features/scenario/model/keys';
-// 대화 완료가 스트릭도 늘린다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
-import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { reportError } from '@/shared/monitoring/report';
+import type { TtsVoice } from '@/shared/tts/voice';
 import { showToast } from '@/shared/ui/toast';
 
-import { submitMessage, type NextMessage } from '../api/session';
+import type { NextMessage, SubmittedMessage } from '../api/session';
 import { toPartner } from './character-look';
 import {
   initialConversationState,
@@ -28,11 +23,10 @@ import { expressionHoldMs, thoughtHoldMs, toThoughtType } from './pacing';
 import type { FloatingThought, ThoughtType } from './thought';
 import { useAiSpeech } from './useAiSpeech';
 import { useConversationInput } from './useConversationInput';
-import { useConversationSession } from './useConversationSession';
 import { useInnerThought } from './useInnerThought';
 
-// 화면이 그리는 현재 턴 — 오프닝은 openingPreview, 이후는 서버 응답에서 조립한다
-interface ConversationTurn {
+// 화면이 그리는 현재 턴 — 오프닝은 opening 시드, 이후는 제출 결과에서 조립한다
+export interface ConversationTurn {
   aiMessage: string; // 크게 보이는 AI 질문(또는 USER 선발화 안내)
   aiTranslation: string | null;
   innerThought: string; // 내 발화 뒤 상대 속마음
@@ -41,25 +35,55 @@ interface ConversationTurn {
   isUserOpening: boolean;
 }
 
-export const useConversationFlow = (scenario: Scenario) => {
-  const preview = scenario.openingPreview;
-  const voice = preview?.ttsVoice ?? null;
+// 제출 결과 계약 — 호출자가 자기 API 응답을 이 모양으로 판정해 돌려준다
+export interface TurnSubmitResult {
+  submittedMessage: SubmittedMessage;
+  nextMessage: NextMessage | null;
+  // 이 발화를 끝으로 대화가 종료되는가 — 판정 기준(진행도·턴 상태)은 호출자가 안다
+  completed: boolean;
+}
 
-  // 상태·오프닝은 세션을 기다리지 않고 시나리오에서 바로 시드한다
+interface ConversationTurnsOptions {
+  firstSpeaker: 'AI' | 'USER';
+  voice: TtsVoice | null;
+  // 진입 시 보여줄 첫 AI 발화 — 뒤늦게 도착(세션 응답 폴백)해도 대화가 진행되기 전이면 반영된다
+  opening: { content: string; translatedContent: string | null } | null;
+  // USER 선발화 안내 문구 — 첫 AI 발화가 오기 전까지 카드가 안내 구조로 그려진다
+  openingInstruction: string | null;
+  // 미리 녹음된 오프닝 오디오 경로 — 없으면(null) 오프닝도 합성으로 말한다
+  openingAudioSrc: string | null;
+  // 화면·계측용 세션 id (백그라운드 확보 전엔 null)
+  sessionId: number | null;
+  // 제출 직전 세션 확보 — 실패하면 null을 주고, 턴은 재시도 대기로 되돌아간다
+  ensureSession: () => Promise<number | null>;
+  submit: (args: {
+    sessionId: number;
+    content: string;
+    inputType: 'VOICE' | 'TEXT';
+    turnIndex: number;
+  }) => Promise<TurnSubmitResult>;
+}
+
+export const useConversationTurns = ({
+  firstSpeaker,
+  voice,
+  opening,
+  openingInstruction,
+  openingAudioSrc,
+  sessionId,
+  ensureSession,
+  submit,
+}: ConversationTurnsOptions) => {
   const [state, setState] = useState(() =>
-    initialConversationState(scenario.firstSpeaker),
+    initialConversationState(firstSpeaker),
   );
+  // 제출 결과로 갈아끼운 발화만 상태로 — 오프닝은 아래 currentMessage에서 렌더 폴백으로 얹는다
   const [aiMessage, setAiMessage] = useState<{
     content: string;
     translatedContent: string | null;
-  } | null>(() =>
-    scenario.firstSpeaker === 'AI' && preview?.aiOpeningMessage
-      ? {
-          content: preview.aiOpeningMessage,
-          translatedContent: preview.aiOpeningMessageTranslation,
-        }
-      : null,
-  );
+  } | null>(null);
+  // 대화가 진행되기 전까지는 오프닝이 현재 발화다 — 뒤늦게 도착(세션 응답 폴백)해도 그대로 반영된다
+  const currentMessage = aiMessage ?? opening;
   const [thought, setThought] = useState<FloatingThought | null>(null);
   // 노출을 끝낸 속마음 — 화면이 표정으로 반응할 수 있게 그 사실만 남긴다.
   // 매번 새 객체라 같은 종류가 연달아 와도 서로 다른 반응으로 구분된다
@@ -71,35 +95,19 @@ export const useConversationFlow = (scenario: Scenario) => {
   const nextMessageRef = useRef<NextMessage | null>(null);
   const submittingRef = useRef(false); // 중복 제출 방지 (연출은 AI_THINKING phase가 맡는다)
 
-  // 세션 수명(백그라운드 시작·확보 대기·중도 종료)은 훅 안에 — 여기서는 오프닝 폴백만 받는다
-  const session = useConversationSession(scenario, {
-    onOpeningMessage: (message) => setAiMessage((prev) => prev ?? message),
-  });
-
   const innerThought = useInnerThought();
-  const queryClient = useQueryClient();
-
-  // 대화가 완료되면: 피드백을 미리 생성 요청(prefetch)해 화면 진입 시 즉시 뜨게 하고,
-  // 해금된 다음 시나리오(다음 대화)가 홈에 반영되도록 시나리오 캐시를 무효화한다.
-  // 오늘 열매가 채워진 것도 이 순간이라, 스트릭은 새 값을 미리 받아 둔다 —
-  // 버리기만 하면 홈으로 돌아왔을 때 옛 숫자를 먼저 그리고 응답이 온 뒤 번쩍인다.
-  const prepareFeedbackAndUnlock = (finishedSessionId: number) => {
-    void prefetchSessionFeedback(queryClient, finishedSessionId);
-    void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
-    refreshStreakAfterCompletion(queryClient);
-  };
 
   const send = (event: ConversationEvent) =>
     setState((prev) =>
       nextConversationState(prev, event, completedRef.current),
     );
 
-  // AI 발화 재생 — 끝나면 상태기계에 알린다 (오프닝 mp3·TTS 합성·타이머 폴백은 훅 안에)
+  // AI 발화 재생 — 끝나면 상태기계에 알린다 (오프닝 오디오·TTS 합성·타이머 폴백은 훅 안에)
   const aiSpeech = useAiSpeech({
-    playing: state.phase === 'AI_SPEAKING' && aiMessage != null,
-    content: aiMessage?.content ?? null,
+    playing: state.phase === 'AI_SPEAKING' && currentMessage != null,
+    content: currentMessage?.content ?? null,
     voice,
-    scenarioId: scenario.scenarioId,
+    openingSrc: openingAudioSrc,
     onSpeechEnd: () => send('AI_SPEAKING_DONE'),
   });
 
@@ -107,7 +115,7 @@ export const useConversationFlow = (scenario: Scenario) => {
   const input = useConversationInput({
     canStart: state.phase === 'USER_READY',
     trackContext: () => ({
-      sessionId: session.sessionId,
+      sessionId,
       turnIndex: state.turnIndex,
     }),
     onInputStart: () => send('USER_SPEAKING_STARTED'),
@@ -161,8 +169,8 @@ export const useConversationFlow = (scenario: Scenario) => {
     submittingRef.current = true;
     send('USER_SPEAKING_DONE'); // → AI_THINKING (상대가 생각 중)
     try {
-      // 반환하는 sessionId state와 다른 값 — 백그라운드 시작이 아직이면 확보를 기다린 결과
-      const activeSessionId = await session.ensure();
+      // 반환하는 sessionId 옵션과 다른 값 — 백그라운드 시작이 아직이면 확보를 기다린 결과
+      const activeSessionId = await ensureSession();
       if (activeSessionId == null) {
         console.warn('[conversation] 세션이 없어 제출할 수 없어요');
         haptic('error');
@@ -175,26 +183,15 @@ export const useConversationFlow = (scenario: Scenario) => {
         return;
       }
 
-      const res = await submitMessage(activeSessionId, content, inputType);
-      track(EVENTS.TURN_COMPLETED, {
-        session_id: activeSessionId,
-        scenario_id: scenario.scenarioId,
-        turn_index: state.turnIndex,
-        input_type: inputType === 'VOICE' ? 'voice' : 'text',
-        char_count: content.length,
+      const res = await submit({
+        sessionId: activeSessionId,
+        content,
+        inputType,
+        turnIndex: state.turnIndex,
       });
       // 종료 인사도 nextMessage로 오고, 그 인사를 끝으로 종료인지는 completed가 알려준다 (인사 재생 후 CTA)
       nextMessageRef.current = res.nextMessage;
-      completedRef.current = res.progress.completed;
-      // 마지막 발화였다면 피드백을 미리 만들고 다음 대화 해금을 홈에 반영한다
-      if (res.progress.completed) {
-        track(EVENTS.CONVERSATION_COMPLETED, {
-          session_id: activeSessionId,
-          scenario_id: scenario.scenarioId,
-          turn_count: res.progress.totalQuestionCount,
-        });
-        prepareFeedbackAndUnlock(activeSessionId);
-      }
+      completedRef.current = res.completed;
       // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 합성한다 — 다음 발화 재생 지연을 없앤다
       if (res.nextMessage) aiSpeech.prefetch(res.nextMessage.content);
       // 속마음은 준비됐으면 즉시, 아직이면 폴링으로 완료된 뒤 노출한다.
@@ -227,7 +224,7 @@ export const useConversationFlow = (scenario: Scenario) => {
       send('AI_RESPONSE_FAILED'); // → USER_READY (다시 시도)
       showToast('전송에 실패했어요. 다시 시도해 주세요');
       track(EVENTS.TURN_FAILED, {
-        session_id: session.sessionId ?? undefined,
+        session_id: sessionId ?? undefined,
         turn_index: state.turnIndex,
         reason: 'api_error',
       });
@@ -236,32 +233,27 @@ export const useConversationFlow = (scenario: Scenario) => {
     }
   };
 
-  // 중도 이탈 (정상 완료는 서버가 판정하므로 세션을 끝내지 않는다)
-  const leave = () => {
-    track(EVENTS.CONVERSATION_ABANDONED, {
-      session_id: session.sessionId ?? undefined,
-      scenario_id: scenario.scenarioId,
-      turn_index: state.turnIndex,
-    });
-    innerThought.cancel(); // 진행 중인 속마음 폴링을 멈춘다
-    session.end();
+  // 중도 이탈 — 진행 중인 속마음 폴링을 멈춘다 (세션 정리는 세션을 소유한 호출자 몫)
+  const abandon = () => {
+    innerThought.cancel();
   };
 
   // USER 선발화면 오프닝 안내를, AI 선발화면 현재 질문을 보여준다
   const turn: ConversationTurn = {
-    aiMessage: aiMessage?.content ?? preview?.userOpeningInstruction ?? '',
-    aiTranslation: aiMessage?.translatedContent ?? null,
+    aiMessage: currentMessage?.content ?? openingInstruction ?? '',
+    aiTranslation: currentMessage?.translatedContent ?? null,
     innerThought: thought?.text ?? '',
     innerThoughtType: thought?.type ?? 'NORMAL',
     // 첫 AI 발화가 오기 전까지가 선발화 안내 구간
-    isUserOpening: !aiMessage && Boolean(preview?.userOpeningInstruction),
+    isUserOpening: !currentMessage && Boolean(openingInstruction),
   };
 
-  // 상대 캐릭터는 시나리오 TTS 음성이 정한다 — 지정(character)이 우선, 없으면 성별
+  // 상대 캐릭터는 TTS 음성이 정한다 — 지정(character)이 우선, 없으면 성별
   const partner = toPartner(voice);
 
   return {
     phase: state.phase,
+    turnIndex: state.turnIndex,
     turn,
     partner,
     finishedThought,
@@ -269,8 +261,6 @@ export const useConversationFlow = (scenario: Scenario) => {
     speech: aiSpeech.speech,
     // 입력은 하위 훅 결과를 통째로 — 낱개 중계를 안 해야 input의 반환 형태에 flow가 결합하지 않는다
     input,
-    leave,
-    // DONE 시점엔 세션이 확보돼 있다 — 피드백 생성에 쓴다 (없으면 세션 시작이 실패한 경우)
-    sessionId: session.sessionId,
+    abandon,
   };
 };
