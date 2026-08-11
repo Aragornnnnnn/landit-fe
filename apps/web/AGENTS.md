@@ -6,7 +6,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## 폴더 구조와 배치 규칙
 
-`src`는 3층이다. `app`(라우트) → `features`(도메인) → `shared`(전역 인프라). import는 위에서 아래로만 흐른다.
+`src`는 4층이다. `app`(라우트) → `features`(도메인 동사) → `entities`(도메인 명사) → `shared`(전역 인프라). import는 위에서 아래로만 흐른다.
 
 새 파일의 자리는 이 순서로 정한다.
 
@@ -41,5 +41,9 @@ import 경로는 FSD 규칙을 따른다 — 같은 슬라이스(라우트 구�
 
 팀원이 늘어나면 그때 도입한다. slice별 `index.ts` 공개 API, import 경계 ESLint. 그 전엔 하지 않는다.
 
-`entities` 레이어는 공용 슬라이스가 3개가 되거나 방향 위반이 발견되는 시점에 도입한다. 그때 명사(데이터·표현용 UI)만 내리고 동사(유저 행동 흐름)는 features에 남긴다. 프리톡 도입으로 conversation을 명사(대화 엔진)/동사(시나리오 대화 흐름)로 가르는 때가 유력한 시점이다.
+`entities` 레이어는 스몰톡 도입(LAN-217)과 함께 열렸다. `entities/conversation`이 대화 엔진(상태기계·턴 루프·입력/재생/속마음 훅·대화 UI)을 담고, 대화 유형별 동사는 features가 담는다 — `scenario-talk`(시나리오 대화 흐름), `small-talk`(스몰톡). 규칙 둘.
+
+- entities는 feature를 모른다 — entities 안에 scenario·smalltalk·feedback·streak 같은 도메인 단어가 등장하면 경계 위반이다. 다른 부분(세션 시작·발화 제출·완료 판정·완료 후속)은 엔진이 주입받는다 (`useConversationTurns`의 submit/ensureSession).
+- 미리 일반화하지 않는다 — 실제로 두 대화 유형이 다르다고 확인된 지점만 주입점으로 만들고, 나머지는 엔진에 그대로 둔다. 세 번째 유형이 생겨 실제로 다를 때 그때 뽑는다.
+
 <!-- END:nextjs-agent-rules -->
