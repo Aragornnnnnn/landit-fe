@@ -14,19 +14,19 @@ import { readDateParam, scenarioReturnPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
-export default function ConversationPage({
+export default function ScenarioTalkPage({
   params,
 }: {
   params: Promise<{ scenarioId: string }>;
 }) {
   return (
     <Suspense fallback={<ConversationSkeleton />}>
-      <ConversationContent params={params} />
+      <ScenarioTalkContent params={params} />
     </Suspense>
   );
 }
 
-function ConversationContent({
+function ScenarioTalkContent({
   params,
 }: {
   params: Promise<{ scenarioId: string }>;

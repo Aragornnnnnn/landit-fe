@@ -109,7 +109,7 @@ describe('BridgeListener', () => {
 
     pressBack(); // 홈에서 무장
     // 상세 화면으로 이동했다가 뒤로가기로 홈 복귀 (2초 창 안)
-    mocks.pathname = '/conversation/1';
+    mocks.pathname = '/conversation/scenario/1';
     setNavigation(true);
     rerender(<BridgeListener />);
     pressBack(); // history-back — 무장이 풀려야 한다

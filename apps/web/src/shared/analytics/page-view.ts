@@ -80,11 +80,12 @@ export const toPageView = (
     return base;
   }
 
-  if (seg[0] === 'conversation' && seg[1]) {
+  // 대화 화면은 /conversation 아래에 종류별로 있다 — 시나리오는 어느 카드인지 id가 붙는다
+  if (seg[0] === 'conversation' && seg[1] === 'scenario' && seg[2]) {
     return {
-      page_name: 'conversation',
+      page_name: 'scenario_talk',
       path: pathname,
-      scenario_id: toId(seg[1]),
+      scenario_id: toId(seg[2]),
     };
   }
 

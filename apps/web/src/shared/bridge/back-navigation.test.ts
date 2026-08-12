@@ -17,7 +17,7 @@ describe('decideBack', () => {
   });
 
   it('탭이 아닌 화면에서 뒤로 갈 곳이 있으면 히스토리를 되돌린다', () => {
-    expect(decideBack('/conversation/3', true)).toBe('history-back');
+    expect(decideBack('/conversation/scenario/3', true)).toBe('history-back');
     expect(decideBack('/expressions/3/5', true)).toBe('history-back');
   });
 
