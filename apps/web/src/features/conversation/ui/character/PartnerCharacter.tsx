@@ -30,13 +30,15 @@ interface PartnerCharacterProps {
   partner: Partner;
   look: CharacterLook;
   speech: PlayingSpeech | null;
+  // 그릴 영역을 좁혀 상반신만 보여줄 때 쓴다. 생략하면 파츠 원본 그대로(전신)
+  viewBox?: string;
 }
 
 /**
  * 캐릭터별 파츠 — 생성 스크립트 산출물을 여기에 등록한다.
  * Record라 Partner에 캐릭터를 추가하면 여기 빠진 자리를 타입 검사가 잡아준다.
  */
-const PARTS: Record<Partner, ComponentType<SVGProps<SVGSVGElement>>> = {
+export const PARTS: Record<Partner, ComponentType<SVGProps<SVGSVGElement>>> = {
   marco: MarcoParts,
   chloe: ChloeParts,
   teddy: TeddyParts,
@@ -305,6 +307,7 @@ export const PartnerCharacter = ({
   partner,
   look: { posture, expression },
   speech,
+  viewBox,
 }: PartnerCharacterProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   // 1겹은 CSS가 접지만 3겹은 여기서 판단해야 한다. 입모양은 소리를 따라가는 정보라 남긴다
@@ -348,7 +351,7 @@ export const PartnerCharacter = ({
         .filter(Boolean)
         .join(' ')}
     >
-      <Parts className={styles.parts} aria-hidden />
+      <Parts className={styles.parts} viewBox={viewBox} aria-hidden />
     </div>
   );
 };
