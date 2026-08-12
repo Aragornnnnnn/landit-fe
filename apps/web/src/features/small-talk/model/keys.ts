@@ -5,4 +5,7 @@ export const smallTalkKeys = {
   // 고를 주제 + 오늘 남은 말하기 예산. 대화를 마치면 예산이 줄어 다시 받아야 한다
   main: (userId: number | null) =>
     [...smallTalkKeys.all, userId, 'main'] as const,
+  // 끝난 대화 한 건 — 대화 직후 축하 화면과 지난 스몰톡 상세가 같은 캐시를 본다
+  session: (userId: number | null, sessionId: number) =>
+    [...smallTalkKeys.all, userId, 'session', sessionId] as const,
 };
