@@ -6,9 +6,9 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { PartnerCharacter } from '@/features/conversation/ui/character/PartnerCharacter';
-import type { FreeTalkTopic } from '@/features/small-talk/api/free-talk';
+import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
-import { useFreeTalkMainQuery } from '@/features/small-talk/model/useFreeTalkMainQuery';
+import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
 import { track } from '@/shared/analytics';
 import { smallTalkPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
@@ -26,7 +26,7 @@ import { TopicPickerModal } from './_ui/TopicPickerModal';
 
 export default function SmallTalkPage() {
   const router = useRouter();
-  const { main, error, isLoading, retry } = useFreeTalkMainQuery();
+  const { main, error, isLoading, retry } = useSmallTalkMainQuery();
   // 오늘 예산을 다 썼는지는 서버(canStart)가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
   const exhausted = main !== null && !main.canStart;
   const [topicOpen, setTopicOpen] = useState(false);
@@ -47,7 +47,7 @@ export default function SmallTalkPage() {
   const startWithMe = () =>
     router.push(smallTalkPath({ partner: partner.id, mode: 'user_first' }));
 
-  const startWithTopic = (topic: FreeTalkTopic) => {
+  const startWithTopic = (topic: SmallTalkTopic) => {
     setTopicOpen(false);
     router.push(
       smallTalkPath({

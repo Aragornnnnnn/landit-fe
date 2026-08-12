@@ -1,15 +1,15 @@
 // 주제 고르기 — 상대가 먼저 말을 걸려면 무슨 얘기로 열지 정해야 한다
 'use client';
 
-import type { FreeTalkTopic } from '@/features/small-talk/api/free-talk';
+import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
 import { Modal } from '@/shared/ui/Modal';
 
 interface TopicPickerModalProps {
   open: boolean;
   // 누구와 얘기할지는 이미 골랐다 — 이름을 불러 어느 상대의 주제인지 이어 준다
   partnerName: string;
-  topics: FreeTalkTopic[];
-  onSelect: (topic: FreeTalkTopic) => void;
+  topics: SmallTalkTopic[];
+  onSelect: (topic: SmallTalkTopic) => void;
   onClose: () => void;
 }
 

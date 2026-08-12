@@ -3,15 +3,15 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
 
-import { getFreeTalkTopics } from '../api/free-talk';
+import { getSmallTalkTopics } from '../api/small-talk';
 import { smallTalkKeys } from './keys';
 
-export const useFreeTalkMainQuery = () => {
+export const useSmallTalkMainQuery = () => {
   const userId = useAuthStore((state) => state.member?.userId ?? null);
 
   const { data, error, isPending, refetch } = useQuery({
     queryKey: smallTalkKeys.main(userId),
-    queryFn: getFreeTalkTopics,
+    queryFn: getSmallTalkTopics,
     // 로그아웃 직후 리다이렉트 전 한 프레임에 userId 없는 키로 fetch가 나가는 것을 막는다
     enabled: userId !== null,
   });
