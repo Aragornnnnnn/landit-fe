@@ -4,22 +4,22 @@
 
 import { useRef, useState } from 'react';
 
-import type { FreeTalkExitDecision } from '@/features/small-talk/api/free-talk';
+import type { SmallTalkExitDecision } from '@/features/small-talk/api/small-talk';
 
 export const useExitDecision = () => {
   const [asking, setAsking] = useState(false);
-  const answerRef = useRef<((decision: FreeTalkExitDecision) => void) | null>(
+  const answerRef = useRef<((decision: SmallTalkExitDecision) => void) | null>(
     null,
   );
 
   // 시트를 띄우고 답을 기다린다 — 이미 묻는 중이면 앞선 기다림은 버려진다(서버가 한 번에 하나만 묻는다)
   const ask = () =>
-    new Promise<FreeTalkExitDecision>((resolve) => {
+    new Promise<SmallTalkExitDecision>((resolve) => {
       answerRef.current = resolve;
       setAsking(true);
     });
 
-  const answer = (decision: FreeTalkExitDecision) => {
+  const answer = (decision: SmallTalkExitDecision) => {
     setAsking(false);
     answerRef.current?.(decision);
     answerRef.current = null;

@@ -11,13 +11,13 @@ import { track } from '@/shared/analytics';
 import { SMALLTALK_PATH } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 
-import type { FreeTalkStartMode } from '@/features/small-talk/api/free-talk';
-import { useFreeTalkMainQuery } from '@/features/small-talk/model/useFreeTalkMainQuery';
+import type { SmallTalkStartMode } from '@/features/small-talk/api/small-talk';
+import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
 import { useSmallTalkSession } from '../_model/useSmallTalkSession';
 import { SmallTalkConversation } from './SmallTalkConversation';
 
 interface SmallTalkFlowProps {
-  startMode: FreeTalkStartMode;
+  startMode: SmallTalkStartMode;
   topicId?: number;
   partner: Partner;
 }
@@ -35,7 +35,7 @@ export const SmallTalkFlow = ({
   });
   // 오늘 남은 시간은 홈이 이미 받아 둔 값이다 — 주소로 바로 들어왔으면 여기서 받아온다.
   // 세션 시작 응답의 speakingTimeLimitMs는 하루 총량이라 잔량 대신 쓸 수 없다
-  const { main } = useFreeTalkMainQuery();
+  const { main } = useSmallTalkMainQuery();
 
   if (error) {
     return (

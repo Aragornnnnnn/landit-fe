@@ -13,11 +13,11 @@ import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 
 import {
-  decideFreeTalkExit,
-  submitFreeTalkMessage,
-  type FreeTalkProgress,
-  type FreeTalkSessionStartResponse,
-} from '@/features/small-talk/api/free-talk';
+  decideSmallTalkExit,
+  submitSmallTalkMessage,
+  type SmallTalkProgress,
+  type SmallTalkSessionStartResponse,
+} from '@/features/small-talk/api/small-talk';
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
 import { findPartner } from '@/features/small-talk/model/partner';
 import { useExitDecision } from './useExitDecision';
@@ -27,7 +27,7 @@ const USER_OPENING_INSTRUCTION =
   '오늘 있었던 일이든 요즘 관심사든, 먼저 말을 걸어보세요';
 
 interface SmallTalkFlowOptions {
-  session: FreeTalkSessionStartResponse;
+  session: SmallTalkSessionStartResponse;
   // 홈에서 고른 상대. 목소리도 여기서 나온다 — 서버 ttsVoice는 고른 상대와 무관한 값이라 쓰지 않는다
   // (BE에 characterId 요청 중)
   partner: Partner;
@@ -48,7 +48,7 @@ export const useSmallTalkFlow = ({
   const exitDecision = useExitDecision();
   const [remainingMs, setRemainingMs] = useState(remainingSpeakingTimeMs);
   // 마지막 제출이 알려준 진행 상태 — 종료 화면의 "얘기한 시간"이 여기서 나온다
-  const [progress, setProgress] = useState<FreeTalkProgress | null>(null);
+  const [progress, setProgress] = useState<SmallTalkProgress | null>(null);
   // 주고받은 말의 수 — 서버가 매기는 메시지 순번이 곧 그 수다
   const [exchangeCount, setExchangeCount] = useState(
     session.currentMessage ? 1 : 0,
@@ -78,7 +78,7 @@ export const useSmallTalkFlow = ({
     sessionId: session.sessionId,
     ensureSession: async () => session.sessionId,
     submit: async ({ content, inputType, turnIndex, utteranceDurationMs }) => {
-      let result = await submitFreeTalkMessage(session.sessionId, {
+      let result = await submitSmallTalkMessage(session.sessionId, {
         clientMessageId: clientMessageIdFor(turnIndex),
         content,
         inputType,
@@ -96,7 +96,7 @@ export const useSmallTalkFlow = ({
           partner,
           decision: decision === 'END' ? 'end' : 'continue',
         });
-        result = await decideFreeTalkExit(session.sessionId, {
+        result = await decideSmallTalkExit(session.sessionId, {
           submittedMessageId: result.submittedMessage.messageId,
           decision,
         });

@@ -11,13 +11,13 @@ import { track } from '@/shared/analytics';
 import { reportError, reportWarning } from '@/shared/monitoring/report';
 
 import {
-  startFreeTalkSession,
-  type FreeTalkSessionStartResponse,
-  type FreeTalkStartMode,
-} from '@/features/small-talk/api/free-talk';
+  startSmallTalkSession,
+  type SmallTalkSessionStartResponse,
+  type SmallTalkStartMode,
+} from '@/features/small-talk/api/small-talk';
 
 interface SmallTalkSessionOptions {
-  startMode: FreeTalkStartMode;
+  startMode: SmallTalkStartMode;
   // 상대가 먼저 말을 걸 때 고른 주제. 내가 먼저 걸면 없다
   topicId?: number;
   // 홈에서 고른 상대 — 계측에만 쓴다. 서버는 아직 상대 개념을 모른다
@@ -29,7 +29,7 @@ export const useSmallTalkSession = ({
   topicId,
   partner,
 }: SmallTalkSessionOptions) => {
-  const [session, setSession] = useState<FreeTalkSessionStartResponse | null>(
+  const [session, setSession] = useState<SmallTalkSessionStartResponse | null>(
     null,
   );
   const [error, setError] = useState<unknown>(null);
@@ -41,7 +41,7 @@ export const useSmallTalkSession = ({
     if (startedRef.current) return; // StrictMode 이중 실행에도 세션은 하나만 만든다
     startedRef.current = true;
 
-    startFreeTalkSession({ startMode, topicId })
+    startSmallTalkSession({ startMode, topicId })
       .then((started) => {
         sessionIdRef.current = started.sessionId;
         setSession(started);

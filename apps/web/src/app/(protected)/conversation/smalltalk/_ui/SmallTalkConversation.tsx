@@ -24,14 +24,14 @@ import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
-import type { FreeTalkSessionStartResponse } from '@/features/small-talk/api/free-talk';
+import type { SmallTalkSessionStartResponse } from '@/features/small-talk/api/small-talk';
 import { toCountdownLabel, toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkFlow } from '../_model/useSmallTalkFlow';
 import { ExitDecisionSheet } from './ExitDecisionSheet';
 import { SmallTalkExitSheet } from './SmallTalkExitSheet';
 
 interface SmallTalkConversationProps {
-  session: FreeTalkSessionStartResponse;
+  session: SmallTalkSessionStartResponse;
   partner: Partner;
   remainingSpeakingTimeMs: number;
   endSession: () => void;
