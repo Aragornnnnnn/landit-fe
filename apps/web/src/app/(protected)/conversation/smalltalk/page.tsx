@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 
 import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSkeleton';
 import { toPartnerId } from '@/features/small-talk/model/partner';
+
 import { SmallTalkFlow } from './_ui/SmallTalkFlow';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다

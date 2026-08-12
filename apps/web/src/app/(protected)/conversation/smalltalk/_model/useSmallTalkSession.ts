@@ -7,14 +7,13 @@ import { EVENTS } from '@landit/analytics';
 
 import { endSession } from '@/features/conversation/api/session';
 import type { Partner } from '@/features/conversation/model/character-look';
-import { track } from '@/shared/analytics';
-import { reportError, reportWarning } from '@/shared/monitoring/report';
-
 import {
   startSmallTalkSession,
   type SmallTalkSessionStartResponse,
   type SmallTalkStartMode,
 } from '@/features/small-talk/api/small-talk';
+import { track } from '@/shared/analytics';
+import { reportError, reportWarning } from '@/shared/monitoring/report';
 
 interface SmallTalkSessionOptions {
   startMode: SmallTalkStartMode;

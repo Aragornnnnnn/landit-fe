@@ -9,9 +9,6 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import type { Partner } from '@/features/conversation/model/character-look';
 import { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
-import { track } from '@/shared/analytics';
-import { useAuthStore } from '@/shared/auth/auth-store';
-
 import {
   decideSmallTalkExit,
   submitSmallTalkMessage,
@@ -20,6 +17,9 @@ import {
 } from '@/features/small-talk/api/small-talk';
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
 import { findPartner } from '@/features/small-talk/model/partner';
+import { track } from '@/shared/analytics';
+import { useAuthStore } from '@/shared/auth/auth-store';
+
 import { useExitDecision } from './useExitDecision';
 
 // 내가 먼저 걸 때 카드에 뜨는 안내 — 시나리오와 달리 읽을 상황이 없어서 주제부터 열어 준다

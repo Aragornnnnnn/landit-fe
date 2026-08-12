@@ -18,14 +18,17 @@ import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissio
 import { QuestionCard } from '@/features/conversation/ui/flow/QuestionCard';
 import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
 import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
+import type { SmallTalkSessionStartResponse } from '@/features/small-talk/api/small-talk';
+import {
+  toCountdownLabel,
+  toSpeakingTimeLabel,
+} from '@/features/small-talk/lib/speaking-time';
 import { track } from '@/shared/analytics';
 import { SMALLTALK_PATH } from '@/shared/lib/routes';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
-import type { SmallTalkSessionStartResponse } from '@/features/small-talk/api/small-talk';
-import { toCountdownLabel, toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkFlow } from '../_model/useSmallTalkFlow';
 import { ExitDecisionSheet } from './ExitDecisionSheet';
 import { SmallTalkExitSheet } from './SmallTalkExitSheet';

@@ -7,12 +7,12 @@ import { useRouter } from 'next/navigation';
 
 import type { Partner } from '@/features/conversation/model/character-look';
 import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSkeleton';
+import type { SmallTalkStartMode } from '@/features/small-talk/api/small-talk';
+import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
 import { track } from '@/shared/analytics';
 import { SMALLTALK_PATH } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 
-import type { SmallTalkStartMode } from '@/features/small-talk/api/small-talk';
-import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
 import { useSmallTalkSession } from '../_model/useSmallTalkSession';
 import { SmallTalkConversation } from './SmallTalkConversation';
 
