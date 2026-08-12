@@ -2,7 +2,7 @@
 // userId를 키에 포함해 계정이 바뀌면 다른 캐시를 보게 한다 — 세션 종료 시 clearSession()과 함께 가는 이중 방어
 export const smallTalkKeys = {
   all: ['small-talk'] as const,
-  // 홈이 받는 주제 목록 + 오늘 남은 발화 예산. 대화를 마치면 예산이 줄어 다시 받아야 한다
+  // 고를 주제 + 오늘 남은 말하기 예산. 대화를 마치면 예산이 줄어 다시 받아야 한다
   main: (userId: number | null) =>
     [...smallTalkKeys.all, userId, 'main'] as const,
 };

@@ -17,7 +17,7 @@ import {
 } from '../../model/lipsync';
 import type { PlayingSpeech } from '../../model/useAiSpeech';
 import styles from './PartnerCharacter.module.css';
-import { PARTS } from './parts';
+import { PARTS } from './parts-by-partner';
 
 /**
  * partner — 누구를 그릴지. 세션 TTS 음성 성별이 정한다.

@@ -38,9 +38,6 @@ const withDate = (path: string, date?: string | null) =>
 export const scenarioTalkPath = (scenarioId: number, date?: string | null) =>
   withDate(`/conversation/scenario/${scenarioId}`, date);
 
-// 지난 스몰톡 목록 — 그때 만든 표현을 다시 보러 간다
-export const SMALLTALK_HISTORY_PATH = `${SMALLTALK_PATH}/history`;
-
 // 스몰톡 대화. 시나리오와 달리 가리킬 콘텐츠가 없어 "누구와 어떻게 시작할지"를 싣는다 —
 // 주제를 고르면 상대가 먼저, 직접 걸면 내가 먼저다. 주제는 상대가 먼저일 때만 있다.
 // 상대는 홈에서 고른 값이다 — 새로고침해도 고른 상대가 유지되려면 주소에 있어야 한다

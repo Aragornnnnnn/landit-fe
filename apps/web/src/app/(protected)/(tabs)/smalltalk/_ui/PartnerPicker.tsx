@@ -2,7 +2,7 @@
 'use client';
 
 import type { Partner } from '@/features/conversation/model/character-look';
-import { PartnerPortrait } from '@/features/conversation/ui/character/PartnerPortrait';
+import { PartnerAvatar } from '@/features/conversation/ui/character/PartnerAvatar';
 import { PARTNERS } from '@/features/small-talk/model/partner';
 
 interface PartnerPickerProps {
@@ -33,7 +33,7 @@ export const PartnerPicker = ({ selected, onSelect }: PartnerPickerProps) => (
             }`}
           >
             {/* 고르지 않은 사람은 뒤로 물러나 있다 — 원 배경은 그대로 두고 그림만 흐리게 */}
-            <PartnerPortrait
+            <PartnerAvatar
               partner={partner.id}
               viewBox={partner.avatarViewBox}
               className={isSelected ? 'size-full' : 'size-full opacity-50'}

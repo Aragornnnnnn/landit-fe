@@ -1,5 +1,6 @@
-// 캐릭터별 파츠 등록부 — 움직이는 캐릭터와 정지 초상이 같은 그림을 나눠 쓴다.
-// 따로 두는 이유 — 초상은 한 컷만 그리는데 등록부가 캐릭터 파일에 있으면 립싱크·랜덤 모션까지 딸려 온다
+// 상대별 파츠 — 캐릭터를 그리는 컴포넌트들이 그림 파일을 여기서 찾는다.
+// 따로 두는 이유 — 이 표가 PartnerCharacter 안에 있으면, 한 컷만 그리면 되는 쪽도
+// 립싱크·랜덤 모션 코드까지 함께 불러오게 된다
 import type { ComponentType, SVGProps } from 'react';
 
 import type { Partner } from '../../model/character-look';

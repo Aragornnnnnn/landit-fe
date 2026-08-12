@@ -58,9 +58,9 @@ export const IntroGuide = ({ onClose }: { onClose: () => void }) => (
             한도는 지금 모두에게 1분이라 문구에 박아 둔다 (사람마다 달라지면 topics 응답의
             dailySpeakingTimeLimitMs를 받아 쓰도록 바꾼다) */}
         <p className="mt-2 text-center text-sm leading-relaxed font-medium break-keep text-muted-foreground">
-          외국에선 자주 있는 스몰톡, 매일 1분씩 드려요.
+          매일 1분, 마음에 드는 친구와 얘기해봐요.
           <br />
-          내가 말한 시간만큼만 줄어들어요.
+          내가 말한 만큼만 시간이 줄어들어요.
         </p>
         <div className="mt-4">
           <Button size="md" onClick={onClose}>

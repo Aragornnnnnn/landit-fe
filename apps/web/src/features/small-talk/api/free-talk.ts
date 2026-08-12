@@ -18,5 +18,5 @@ export interface FreeTalkMainResponse {
   canStart: boolean;
 }
 
-export const getFreeTalkMain = () =>
+export const getFreeTalkTopics = () =>
   api.get<FreeTalkMainResponse>('/api/v1/free-talk/topics');
