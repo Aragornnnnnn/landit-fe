@@ -7,10 +7,10 @@ import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 
+import type { Partner } from '@/features/conversation/model/character-look';
 import { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
-import type { TtsVoice } from '@/shared/tts/voice';
 
 import {
   decideFreeTalkExit,
@@ -19,6 +19,7 @@ import {
   type FreeTalkSessionStartResponse,
 } from '@/features/small-talk/api/free-talk';
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
+import { findPartner } from '@/features/small-talk/model/partner';
 import { useExitDecision } from './useExitDecision';
 
 // 내가 먼저 걸 때 카드에 뜨는 안내 — 시나리오와 달리 읽을 상황이 없어서 주제부터 열어 준다
@@ -27,8 +28,9 @@ const USER_OPENING_INSTRUCTION =
 
 interface SmallTalkFlowOptions {
   session: FreeTalkSessionStartResponse;
-  // 홈에서 고른 상대의 목소리 — 서버 ttsVoice는 상대와 무관한 값이라 쓰지 않는다 (BE에 characterId 요청 중)
-  voice: TtsVoice;
+  // 홈에서 고른 상대. 목소리도 여기서 나온다 — 서버 ttsVoice는 고른 상대와 무관한 값이라 쓰지 않는다
+  // (BE에 characterId 요청 중)
+  partner: Partner;
   // 진입 시점의 오늘 남은 발화 시간
   remainingSpeakingTimeMs: number;
   // 중도 이탈 시 세션 정리 — 세션을 만든 쪽(화면)이 소유한다
@@ -37,7 +39,7 @@ interface SmallTalkFlowOptions {
 
 export const useSmallTalkFlow = ({
   session,
-  voice,
+  partner,
   remainingSpeakingTimeMs,
   endSession,
 }: SmallTalkFlowOptions) => {
@@ -64,7 +66,7 @@ export const useSmallTalkFlow = ({
 
   const engine = useConversationTurns({
     firstSpeaker: session.startMode === 'AI_FIRST' ? 'AI' : 'USER',
-    voice,
+    voice: findPartner(partner).voice,
     opening: session.currentMessage && {
       content: session.currentMessage.content,
       translatedContent: session.currentMessage.translatedContent,
@@ -88,9 +90,15 @@ export const useSmallTalkFlow = ({
       // 상대가 작별 인사를 알아챈 턴 — 다음 발화도 속마음도 없이 멈춰 있다.
       // 답을 보내야 대화가 풀리므로, 물어보고 기다렸다가 그 결과를 이번 턴의 결과로 삼는다
       if (result.turnStatus === 'EXIT_CONFIRMATION_REQUIRED') {
+        const decision = await exitDecision.ask();
+        track(EVENTS.SMALL_TALK_EXIT_DECIDED, {
+          session_id: session.sessionId,
+          partner,
+          decision: decision === 'END' ? 'end' : 'continue',
+        });
         result = await decideFreeTalkExit(session.sessionId, {
           submittedMessageId: result.submittedMessage.messageId,
-          decision: await exitDecision.ask(),
+          decision,
         });
       }
 
@@ -100,9 +108,9 @@ export const useSmallTalkFlow = ({
         result.nextMessage?.messageSequence ??
           result.submittedMessage.messageSequence,
       );
-      track(EVENTS.TURN_COMPLETED, {
-        talk_type: 'small_talk',
+      track(EVENTS.SMALL_TALK_TURN_COMPLETED, {
         session_id: session.sessionId,
+        partner,
         turn_index: turnIndex,
         input_type: inputType === 'VOICE' ? 'voice' : 'text',
         char_count: content.length,
@@ -111,9 +119,9 @@ export const useSmallTalkFlow = ({
 
       const completed = result.turnStatus === 'COMPLETED';
       if (completed) {
-        track(EVENTS.CONVERSATION_COMPLETED, {
-          talk_type: 'small_talk',
+        track(EVENTS.SMALL_TALK_COMPLETED, {
           session_id: session.sessionId,
+          partner,
           turn_count: turnIndex + 1,
           speaking_duration_ms: result.progress.accumulatedSpeakingDurationMs,
           // 예산이 0이 된 턴은 서버가 스스로 닫은 것 — 사용자가 인사로 끝낸 것과 구분한다
@@ -160,9 +168,9 @@ export const useSmallTalkFlow = ({
 
   // 중도 이탈 (정상 완료는 서버가 판정한다)
   const leave = () => {
-    track(EVENTS.CONVERSATION_ABANDONED, {
-      talk_type: 'small_talk',
+    track(EVENTS.SMALL_TALK_ABANDONED, {
       session_id: session.sessionId,
+      partner,
       turn_index: engine.turnIndex,
     });
     engine.abandon(); // 진행 중인 속마음 폴링을 멈춘다

@@ -26,7 +26,6 @@ import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
 import type { FreeTalkSessionStartResponse } from '@/features/small-talk/api/free-talk';
 import { toCountdownLabel, toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
-import { findPartner } from '@/features/small-talk/model/partner';
 import { useSmallTalkFlow } from '../_model/useSmallTalkFlow';
 import { ExitDecisionSheet } from './ExitDecisionSheet';
 import { SmallTalkExitSheet } from './SmallTalkExitSheet';
@@ -61,7 +60,7 @@ export const SmallTalkConversation = ({
     exitDecision,
   } = useSmallTalkFlow({
     session,
-    voice: findPartner(partner).voice,
+    partner,
     remainingSpeakingTimeMs,
     endSession,
   });

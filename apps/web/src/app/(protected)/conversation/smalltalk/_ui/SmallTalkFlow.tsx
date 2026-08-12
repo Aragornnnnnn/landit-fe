@@ -28,7 +28,11 @@ export const SmallTalkFlow = ({
   partner,
 }: SmallTalkFlowProps) => {
   const router = useRouter();
-  const { session, error, end } = useSmallTalkSession({ startMode, topicId });
+  const { session, error, end } = useSmallTalkSession({
+    startMode,
+    topicId,
+    partner,
+  });
   // 오늘 남은 시간은 홈이 이미 받아 둔 값이다 — 주소로 바로 들어왔으면 여기서 받아온다.
   // 세션 시작 응답의 speakingTimeLimitMs는 하루 총량이라 잔량 대신 쓸 수 없다
   const { main } = useFreeTalkMainQuery();

@@ -45,8 +45,7 @@ export const useScenarioTalkSession = (
       .then((res) => {
         sessionIdRef.current = res.sessionId;
         setSessionId(res.sessionId);
-        track(EVENTS.CONVERSATION_STARTED, {
-          talk_type: 'scenario',
+        track(EVENTS.SCENARIO_TALK_STARTED, {
           scenario_id: scenario.scenarioId,
           session_id: res.sessionId,
           first_speaker: scenario.firstSpeaker,

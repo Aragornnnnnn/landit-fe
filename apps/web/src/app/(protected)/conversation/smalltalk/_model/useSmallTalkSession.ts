@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
 import { endSession } from '@/features/conversation/api/session';
+import type { Partner } from '@/features/conversation/model/character-look';
 import { track } from '@/shared/analytics';
 import { reportError, reportWarning } from '@/shared/monitoring/report';
 
@@ -19,11 +20,14 @@ interface SmallTalkSessionOptions {
   startMode: FreeTalkStartMode;
   // 상대가 먼저 말을 걸 때 고른 주제. 내가 먼저 걸면 없다
   topicId?: number;
+  // 홈에서 고른 상대 — 계측에만 쓴다. 서버는 아직 상대 개념을 모른다
+  partner: Partner;
 }
 
 export const useSmallTalkSession = ({
   startMode,
   topicId,
+  partner,
 }: SmallTalkSessionOptions) => {
   const [session, setSession] = useState<FreeTalkSessionStartResponse | null>(
     null,
@@ -41,9 +45,9 @@ export const useSmallTalkSession = ({
       .then((started) => {
         sessionIdRef.current = started.sessionId;
         setSession(started);
-        track(EVENTS.CONVERSATION_STARTED, {
-          talk_type: 'small_talk',
+        track(EVENTS.SMALL_TALK_STARTED, {
           session_id: started.sessionId,
+          partner,
           first_speaker: startMode === 'AI_FIRST' ? 'AI' : 'USER',
           ...(topicId !== undefined && { topic_id: topicId }),
         });
@@ -53,7 +57,7 @@ export const useSmallTalkSession = ({
         reportError(cause);
         setError(cause);
       });
-  }, [startMode, topicId]);
+  }, [startMode, topicId, partner]);
 
   // 중도 종료 — 정상 완료는 서버가 판정하므로 부르지 않는다
   const end = () => {
