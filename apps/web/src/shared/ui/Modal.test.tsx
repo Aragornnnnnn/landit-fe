@@ -13,7 +13,7 @@ vi.mock('motion/react', () => import('@/shared/motion/test-double'));
 describe('Modal', () => {
   it('open이 false면 아무것도 렌더링하지 않는다', () => {
     render(
-      <Modal open={false} onClose={vi.fn()}>
+      <Modal label="테스트 다이얼로그" open={false} onClose={vi.fn()}>
         내용
       </Modal>,
     );
@@ -24,7 +24,7 @@ describe('Modal', () => {
   it('dismissible 기본값(true)에서 배경을 클릭하면 onClose가 호출된다', () => {
     const onClose = vi.fn();
     render(
-      <Modal open onClose={onClose}>
+      <Modal label="테스트 다이얼로그" open onClose={onClose}>
         내용
       </Modal>,
     );
@@ -37,7 +37,7 @@ describe('Modal', () => {
   it('dismissible=false면 배경을 클릭해도 onClose가 호출되지 않는다', () => {
     const onClose = vi.fn();
     render(
-      <Modal open onClose={onClose} dismissible={false}>
+      <Modal label="테스트 다이얼로그" open onClose={onClose} dismissible={false}>
         내용
       </Modal>,
     );
@@ -50,7 +50,7 @@ describe('Modal', () => {
   it('dismissible 기본값(true)에서 Escape를 누르면 onClose가 호출된다', () => {
     const onClose = vi.fn();
     render(
-      <Modal open onClose={onClose}>
+      <Modal label="테스트 다이얼로그" open onClose={onClose}>
         내용
       </Modal>,
     );
@@ -63,7 +63,7 @@ describe('Modal', () => {
   it('dismissible=false면 Escape를 눌러도 onClose가 호출되지 않는다', () => {
     const onClose = vi.fn();
     render(
-      <Modal open onClose={onClose} dismissible={false}>
+      <Modal label="테스트 다이얼로그" open onClose={onClose} dismissible={false}>
         내용
       </Modal>,
     );
@@ -76,7 +76,7 @@ describe('Modal', () => {
   it('dismissible 기본값(true)에서 네이티브 뒤로가기로 닫힌다', () => {
     const onClose = vi.fn();
     render(
-      <Modal open onClose={onClose}>
+      <Modal label="테스트 다이얼로그" open onClose={onClose}>
         내용
       </Modal>,
     );
@@ -90,7 +90,7 @@ describe('Modal', () => {
   it('dismissible=false면 네이티브 뒤로가기로 닫히지 않는다', () => {
     const onClose = vi.fn();
     render(
-      <Modal open onClose={onClose} dismissible={false}>
+      <Modal label="테스트 다이얼로그" open onClose={onClose} dismissible={false}>
         내용
       </Modal>,
     );
@@ -103,7 +103,7 @@ describe('Modal', () => {
 
   it('다이얼로그 role과 aria-modal을 갖는다', () => {
     render(
-      <Modal open onClose={vi.fn()}>
+      <Modal label="테스트 다이얼로그" open onClose={vi.fn()}>
         내용
       </Modal>,
     );
@@ -113,7 +113,7 @@ describe('Modal', () => {
 
   it('열리면 포커스가 다이얼로그 패널로 이동한다', () => {
     render(
-      <Modal open onClose={vi.fn()}>
+      <Modal label="테스트 다이얼로그" open onClose={vi.fn()}>
         내용
       </Modal>,
     );
@@ -127,12 +127,12 @@ describe('Modal', () => {
     outsideButton.focus();
 
     const { rerender } = render(
-      <Modal open onClose={vi.fn()}>
+      <Modal label="테스트 다이얼로그" open onClose={vi.fn()}>
         내용
       </Modal>,
     );
     rerender(
-      <Modal open={false} onClose={vi.fn()}>
+      <Modal label="테스트 다이얼로그" open={false} onClose={vi.fn()}>
         내용
       </Modal>,
     );
@@ -143,7 +143,7 @@ describe('Modal', () => {
 
   it('열려있는 동안 Tab으로 마지막 요소 다음에서 처음 요소로 순환한다', () => {
     render(
-      <Modal open onClose={vi.fn()}>
+      <Modal label="테스트 다이얼로그" open onClose={vi.fn()}>
         <button>첫번째</button>
         <button>마지막</button>
       </Modal>,
@@ -158,7 +158,7 @@ describe('Modal', () => {
 
   it('열려있는 동안 Shift+Tab으로 첫 요소 이전에서 마지막 요소로 순환한다', () => {
     render(
-      <Modal open onClose={vi.fn()}>
+      <Modal label="테스트 다이얼로그" open onClose={vi.fn()}>
         <button>첫번째</button>
         <button>마지막</button>
       </Modal>,
@@ -172,7 +172,7 @@ describe('Modal', () => {
 
   it('막 열려 패널 자체에 포커스가 있을 때 Shift+Tab을 누르면 마지막 요소로 간다', () => {
     render(
-      <Modal open onClose={vi.fn()}>
+      <Modal label="테스트 다이얼로그" open onClose={vi.fn()}>
         <button>첫번째</button>
         <button>마지막</button>
       </Modal>,
@@ -181,5 +181,17 @@ describe('Modal', () => {
     fireEvent.keyDown(window, { key: 'Tab', shiftKey: true });
 
     expect(document.activeElement).toBe(screen.getByText('마지막'));
+  });
+
+  it('스크린 리더가 읽을 이름을 다이얼로그에 붙인다', () => {
+    render(
+      <Modal label="어떤 주제로 대화할까요?" open onClose={vi.fn()}>
+        <button>첫번째</button>
+      </Modal>,
+    );
+
+    expect(
+      screen.getByRole('dialog', { name: '어떤 주제로 대화할까요?' }),
+    ).toBeInTheDocument();
   });
 });

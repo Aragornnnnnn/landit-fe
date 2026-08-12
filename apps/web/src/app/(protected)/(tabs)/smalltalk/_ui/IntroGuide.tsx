@@ -48,6 +48,7 @@ export const IntroGuide = ({ onClose }: { onClose: () => void }) => (
         className="relative -mt-2 w-full rounded-3xl bg-card px-5 pt-5 pb-4 shadow-xl"
         role="dialog"
         aria-modal="true"
+        aria-label="점수도 피드백도 없는 수다 시간이에요"
       >
         {/* 위쪽 꼬리 */}
         <span className="absolute -top-1.5 left-1/2 size-3 -translate-x-1/2 rotate-45 rounded-[3px] bg-card" />

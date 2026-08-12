@@ -14,6 +14,8 @@ interface ModalProps {
   open: boolean;
   onClose: () => void;
   dismissible?: boolean;
+  // 스크린 리더가 읽을 다이얼로그 이름 — 없으면 "대화 상자"라고만 읽힌다
+  label: string;
   children: React.ReactNode;
 }
 
@@ -24,6 +26,7 @@ export function Modal({
   open,
   onClose,
   dismissible = true,
+  label,
   children,
 }: ModalProps) {
   const mounted = useClientOnlyValue(() => true, false);
@@ -107,6 +110,7 @@ export function Modal({
             ref={panelRef}
             role="dialog"
             aria-modal="true"
+            aria-label={label}
             tabIndex={-1}
             className="fixed top-1/2 left-1/2 z-50 w-full max-w-[330px] -translate-x-1/2 -translate-y-1/2 rounded-3xl bg-white p-6 outline-none"
             initial={{ opacity: 0, scale: 0.95 }}

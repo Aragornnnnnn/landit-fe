@@ -20,7 +20,7 @@ export const TopicPickerModal = ({
   onSelect,
   onClose,
 }: TopicPickerModalProps) => (
-  <Modal open={open} onClose={onClose}>
+  <Modal open={open} onClose={onClose} label={`${partnerName}와 어떤 주제로 대화할까요?`}>
     {/* 왼쪽 제목 ↔ 오른쪽 닫기로 한 줄을 잡는다. 오른쪽 여백은 X 자리를 비켜 준다.
         색은 검정 — 눌러야 할 건 칩이라 주황은 그쪽에 양보한다 */}
     <h2 className="pr-8 text-[17px] font-bold text-foreground">
