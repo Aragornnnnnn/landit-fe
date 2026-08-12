@@ -41,7 +41,8 @@ const toListItems = (
 export const SmallTalkResult = ({ sessionId }: { sessionId: number }) => {
   const router = useRouter();
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
-  const { session, generationStuck } = useSmallTalkSessionQuery(sessionId);
+  const { session, error, generationStuck } =
+    useSmallTalkSessionQuery(sessionId);
 
   // 축하는 시간이 정하고, 그 뒤는 표현이 준비됐는지가 정한다
   const [celebrating, setCelebrating] = useState(true);
@@ -102,8 +103,23 @@ export const SmallTalkResult = ({ sessionId }: { sessionId: number }) => {
         <AnimatePresence mode="wait">
           {celebrating ? (
             <CelebrateStage key="celebrate" />
+          ) : error ? (
+            // 조회가 막히면 만드는 중 화면에 갇힌다 — 표현이 없는 이유를 말하고 내보낸다
+            <ClosingStage
+              key="error"
+              title={'표현을 불러오지 못했어요'}
+              description={'잠시 후 기록에서 다시 열어볼 수 있어요.'}
+              onClose={goHome}
+            />
           ) : generationStuck ? (
-            <GenerationStuckStage key="stuck" onClose={goHome} />
+            <ClosingStage
+              key="stuck"
+              title={'표현은 조금 뒤에\n만들어 둘게요'}
+              description={
+                '지금은 만들기가 오래 걸리고 있어요.\n다 되면 기록에서 볼 수 있어요.'
+              }
+              onClose={goHome}
+            />
           ) : !expressions ? (
             <AnalyzeStage key="analyzing" />
           ) : (
@@ -122,15 +138,23 @@ export const SmallTalkResult = ({ sessionId }: { sessionId: number }) => {
   );
 };
 
-// 표현을 못 만들었을 때 — 다 만들 때까지 붙잡아 두지 않는다. 준비되면 기록에 남는다
-const GenerationStuckStage = ({ onClose }: { onClose: () => void }) => (
+// 표현 없이 화면을 닫는 자리 — 못 만들었거나 못 불러왔을 때. 기다리는 화면에 가두지 않는다
+const ClosingStage = ({
+  title,
+  description,
+  onClose,
+}: {
+  title: string;
+  description: string;
+  onClose: () => void;
+}) => (
   <div className="flex min-h-0 flex-1 flex-col">
     <h1 className="pt-1 text-3xl leading-[1.22] font-black whitespace-pre-line text-foreground">
-      {'표현은 조금 뒤에\n만들어 둘게요'}
+      {title}
     </h1>
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
-      <p className="text-center text-sm leading-6 break-keep text-muted-foreground">
-        {'지금은 만들기가 오래 걸리고 있어요.\n다 되면 기록에서 볼 수 있어요.'}
+      <p className="text-center text-sm leading-6 break-keep whitespace-pre-line text-muted-foreground">
+        {description}
       </p>
     </div>
     <Button onClick={onClose}>돌아가기</Button>

@@ -47,14 +47,17 @@ const expressionOf = (expressionId: number, completed: boolean) => ({
 const setup = ({
   status = 'READY' as ExpressionGenerationStatus,
   generationStuck = false,
+  error = null as Error | null,
   expressions = [expressionOf(1, false), expressionOf(2, false)],
 } = {}) => {
   sessionQuery.mockReturnValue({
-    session: {
-      expressionGenerationStatus: status,
-      expressions,
-    } as SmallTalkSessionDetailResponse,
-    error: null,
+    session: error
+      ? null
+      : ({
+          expressionGenerationStatus: status,
+          expressions,
+        } as SmallTalkSessionDetailResponse),
+    error,
     isLoading: false,
     generationStuck,
     retry: vi.fn(),
@@ -115,6 +118,18 @@ describe('SmallTalkResult', () => {
       expect.objectContaining({ expressionId: 2, locked: false }),
       expect.objectContaining({ expressionId: 3, locked: true }),
     ]);
+  });
+
+  it('조회가 막혀도 만드는 중에 갇히지 않는다', () => {
+    // 완료되지 않은 세션이거나 통신이 막힌 경우 — 이유를 말하고 내보낸다
+    setup({ error: new Error('404'), expressions: [] });
+
+    skipCelebration();
+
+    expect(screen.getByText(/불러오지 못했어요/)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '돌아가기' }),
+    ).toBeInTheDocument();
   });
 
   it('표현을 못 만들면 붙잡아 두지 않고 돌아갈 길을 준다', () => {
