@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
 import { registerOpenSheet } from './bottom-sheet-back';
+import { CloseIcon } from './Icons';
 
 interface ModalProps {
   open: boolean;
@@ -113,6 +114,18 @@ export function Modal({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
           >
+            {/* 닫을 수 있는 모달엔 닫는 길이 보여야 한다 — 배경 탭·뒤로가기는 아는 사람만 쓴다.
+                내용 위에 겹쳐 둔다 — 자기 줄을 주면 카드 위에 빈 띠가 생긴다 */}
+            {dismissible && (
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="닫기"
+                className="absolute top-5 right-5 flex size-8 items-center justify-center rounded-full text-muted-foreground transition-transform active:scale-90"
+              >
+                <CloseIcon size={22} />
+              </button>
+            )}
             {children}
           </motion.div>
         </>

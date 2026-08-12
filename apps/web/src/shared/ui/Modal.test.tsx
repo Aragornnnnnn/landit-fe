@@ -152,7 +152,8 @@ describe('Modal', () => {
 
     fireEvent.keyDown(window, { key: 'Tab' });
 
-    expect(document.activeElement).toBe(screen.getByText('첫번째'));
+    // 닫기 버튼이 패널의 첫 요소다
+    expect(document.activeElement).toBe(screen.getByLabelText('닫기'));
   });
 
   it('열려있는 동안 Shift+Tab으로 첫 요소 이전에서 마지막 요소로 순환한다', () => {
@@ -162,7 +163,7 @@ describe('Modal', () => {
         <button>마지막</button>
       </Modal>,
     );
-    screen.getByText('첫번째').focus();
+    screen.getByLabelText('닫기').focus();
 
     fireEvent.keyDown(window, { key: 'Tab', shiftKey: true });
 
