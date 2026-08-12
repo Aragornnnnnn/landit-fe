@@ -1,0 +1,109 @@
+'use client';
+
+// 스몰톡 대화 직후 — 축하를 잠깐 보여준 뒤, 서버가 표현을 다 만들 때까지 기다렸다가 리스트를 편다.
+// 시나리오는 표현이 콘텐츠에 이미 있어 연출 시간만 채우면 되지만, 스몰톡 표현은 그 대화에서 그때 만들어진다
+import { useEffect, useState } from 'react';
+import { AnimatePresence } from 'motion/react';
+import { useRouter } from 'next/navigation';
+
+import type { Expression } from '@/features/expression/api/list';
+import {
+  AnalyzeStage,
+  CelebrateStage,
+  RevealStage,
+} from '@/features/expression/ui/ExpressionStages';
+import type { SmallTalkSessionExpression } from '@/features/small-talk/api/small-talk';
+import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
+import { useAuthStore } from '@/shared/auth/auth-store';
+import { sessionExpressionPath, SMALLTALK_PATH } from '@/shared/lib/routes';
+import { Button } from '@/shared/ui/Button';
+import { CloseIcon } from '@/shared/ui/Icons';
+
+// 축하가 머무는 시간 — 열매가 찍히고 숫자가 선 뒤에도 잠깐 남는다.
+// 연출이 끝나자마자 걷히면 본 것을 못 읽는다 (시나리오와 같은 값)
+const CELEBRATE_MS = 2600;
+
+// 서버는 잠금을 내려주지 않는다 — 아직 안 배운 것 중 첫 표현만 열고 나머지는 잠근다.
+// 이미 배운 표현은 다시 볼 수 있게 열어 둔다
+const toListItems = (
+  expressions: SmallTalkSessionExpression[],
+): Expression[] => {
+  const next = expressions.find((expression) => !expression.completed);
+  return expressions.map((expression) => ({
+    ...expression,
+    locked:
+      !expression.completed && expression.expressionId !== next?.expressionId,
+  }));
+};
+
+export const SmallTalkResult = ({ sessionId }: { sessionId: number }) => {
+  const router = useRouter();
+  const nickname = useAuthStore((state) => state.member?.nickname ?? null);
+  const { session, generationStuck } = useSmallTalkSessionQuery(sessionId);
+
+  // 축하는 시간이 정하고, 그 뒤는 표현이 준비됐는지가 정한다
+  const [celebrating, setCelebrating] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setCelebrating(false), CELEBRATE_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const goHome = () => router.replace(SMALLTALK_PATH);
+  const ready = session?.expressionGenerationStatus === 'READY';
+  const expressions = ready ? toListItems(session.expressions) : null;
+  const goLearn = (expressionId: number) =>
+    router.push(sessionExpressionPath(sessionId, expressionId));
+
+  return (
+    <main
+      className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
+      <header className="relative flex h-14 flex-none items-center px-3">
+        <button
+          onClick={goHome}
+          className="flex size-10 items-center justify-center text-muted-foreground"
+          aria-label="닫기"
+        >
+          <CloseIcon size={22} />
+        </button>
+      </header>
+
+      <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(env(safe-area-inset-bottom),24px)]">
+        <AnimatePresence mode="wait">
+          {celebrating ? (
+            <CelebrateStage key="celebrate" />
+          ) : generationStuck ? (
+            <GenerationStuckStage key="stuck" onClose={goHome} />
+          ) : !expressions ? (
+            <AnalyzeStage key="analyzing" />
+          ) : (
+            <RevealStage
+              key="reveal"
+              count={expressions.length}
+              name={nickname ?? '회원'}
+              expressions={expressions}
+              onSelect={goLearn}
+              onLearn={() => goLearn(expressions[0].expressionId)}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+    </main>
+  );
+};
+
+// 표현을 못 만들었을 때 — 다 만들 때까지 붙잡아 두지 않는다. 준비되면 기록에 남는다
+const GenerationStuckStage = ({ onClose }: { onClose: () => void }) => (
+  <div className="flex min-h-0 flex-1 flex-col">
+    <h1 className="pt-1 text-3xl leading-[1.22] font-black whitespace-pre-line text-foreground">
+      {'표현은 조금 뒤에\n만들어 둘게요'}
+    </h1>
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
+      <p className="text-center text-sm leading-6 break-keep text-muted-foreground">
+        {'지금은 만들기가 오래 걸리고 있어요.\n다 되면 기록에서 볼 수 있어요.'}
+      </p>
+    </div>
+    <Button onClick={onClose}>돌아가기</Button>
+  </div>
+);

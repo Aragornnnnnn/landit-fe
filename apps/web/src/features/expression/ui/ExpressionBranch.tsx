@@ -4,7 +4,7 @@
 // 표현 리스트를 노출한다. [학습하러 가기]는 첫 표현부터 시작한다.
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';

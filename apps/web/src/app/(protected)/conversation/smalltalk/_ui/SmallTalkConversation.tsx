@@ -22,7 +22,10 @@ import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
 import type { SmallTalkSessionStartResponse } from '@/features/small-talk/api/small-talk';
 import { toCountdownLabel } from '@/features/small-talk/lib/speaking-time';
 import { track } from '@/shared/analytics';
-import { SMALLTALK_PATH } from '@/shared/lib/routes';
+import {
+  sessionExpressionBranchPath,
+  SMALLTALK_PATH,
+} from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
@@ -131,9 +134,13 @@ export const SmallTalkConversation = ({
 
       <footer className="flex-none pb-[max(env(safe-area-inset-bottom),16px)]">
         {ended ? (
-          // TODO(PR4): 축하·스트릭·맞춤 표현으로 이어진다. 지금은 홈으로 돌려보낸다
+          // 축하 → 맞춤 표현으로 이어진다. 표현은 서버가 지금 만들고 있어 그 화면이 기다린다
           <div className="flex h-36 items-end px-5 pb-3">
-            <Button onClick={goHome}>
+            <Button
+              onClick={() =>
+                router.replace(sessionExpressionBranchPath(session.sessionId))
+              }
+            >
               대화 종료하기
               <ArrowRightIcon size={16} />
             </Button>
