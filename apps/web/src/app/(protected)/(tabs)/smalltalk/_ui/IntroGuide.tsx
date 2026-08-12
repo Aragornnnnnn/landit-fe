@@ -60,7 +60,7 @@ export const IntroGuide = ({ onClose }: { onClose: () => void }) => (
         <p className="mt-2 text-center text-sm leading-relaxed font-medium break-keep text-muted-foreground">
           매일 1분, 마음에 드는 친구와 얘기해봐요.
           <br />
-          내가 말한 만큼만 시간이 줄어들어요.
+          시간은 마이크가 켜져 있을 때만 줄어들어요.
         </p>
         <div className="mt-4">
           <Button size="md" onClick={onClose}>
