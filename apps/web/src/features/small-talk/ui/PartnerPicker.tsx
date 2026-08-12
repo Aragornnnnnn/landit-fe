@@ -12,7 +12,8 @@ interface PartnerPickerProps {
 }
 
 export const PartnerPicker = ({ selected, onSelect }: PartnerPickerProps) => (
-  <div className="flex justify-center gap-[22px] pt-3 pb-2">
+  // 낮은 화면에서는 위아래 여백부터 깎는다 — 스크롤 없는 화면이라 어디선가는 양보해야 한다
+  <div className="flex justify-center gap-[22px] pt-3 pb-2 [@media(max-height:740px)]:pt-1 [@media(max-height:740px)]:pb-1">
     {PARTNERS.map((partner) => {
       const isSelected = partner.id === selected;
 
@@ -24,10 +25,11 @@ export const PartnerPicker = ({ selected, onSelect }: PartnerPickerProps) => (
           aria-pressed={isSelected}
           className="flex flex-col items-center gap-[5px]"
         >
-          {/* 테두리는 늘 두고 색만 바꾼다 — 두께가 생겼다 사라지면 고를 때마다 그림 크기가 튀고,
+          {/* 원 배경은 탭 화면 배경(muted)과 같은 회색이라 그대로 두면 안 보인다 — 반투명으로 눌러 둔다.
+              테두리는 늘 두고 색만 바꾼다 — 두께가 생겼다 사라지면 고를 때마다 그림 크기가 튀고,
               색이 기본값에서 물드는 과정이 검은 테를 스치게 한다 */}
           <span
-            className={`flex size-[54px] items-center justify-center overflow-hidden rounded-full border-[2.5px] bg-muted transition-colors ${
+            className={`flex size-[54px] items-center justify-center overflow-hidden rounded-full border-[2.5px] bg-muted-foreground/10 transition-colors ${
               isSelected ? 'border-primary' : 'border-transparent'
             }`}
           >

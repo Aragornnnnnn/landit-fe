@@ -70,9 +70,9 @@ export const PARTNERS: PartnerProfile[] = [
     koreanName: '테디',
     flag: '🇬🇧',
     intro:
-      "Hi, I'm Teddy.\nAte something odd up in the mountains - now I speak British English. Doing odd jobs in London for honey.",
+      "Hi, I'm Teddy. Ate something odd up in the mountains - now I speak British English. Doing odd jobs in London for honey.",
     introTranslation:
-      '안녕, 나 테디야. 산에서 뭘 좀 잘못 먹고 영국 영어를 하게 됐어. 지금은 런던에서 꿀 값 벌려고 알바 중이야.',
+      '안녕, 나 테디야. 산에서 뭘 잘못 먹고 영국 영어를 하게 됐어. 런던에서 꿀 값 버는 중이야.',
     avatarViewBox: '0 -90 900 900',
     portraitViewBox: '34 52 840 904',
     voice: {

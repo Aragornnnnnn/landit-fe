@@ -76,7 +76,6 @@ export default function SmallTalkPage() {
   };
   // 오늘 예산을 다 썼는지는 서버(canStart)가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
   const exhausted = main !== null && !main.canStart;
-  const blocked = exhausted || isLoading;
 
   // 계측은 세션이 실제로 열리는 대화 화면에서 한다 — 여기서 쏘면 들어가다 만 것도 시작으로 잡힌다
   const startWithMe = () =>
@@ -113,11 +112,12 @@ export default function SmallTalkPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto pb-8">
+    <div className="flex flex-1 flex-col overflow-hidden pb-4">
       <PartnerPicker selected={partnerId} onSelect={selectPartner} />
 
-      {/* 상체만 보이는 구도 — 전신을 다 담으면 얼굴이 작아진다 */}
-      <div className="flex h-[155px] justify-center">
+      {/* 이 화면은 스크롤이 없다 — 남는 자리는 캐릭터가 먹되 아래위로 한계를 둔다.
+          낮은 화면에서 먼저 양보하는 쪽은 캐릭터가 아니라 소개 카드다(글자·여백을 줄인다) */}
+      <div className="flex max-h-[190px] min-h-[142px] flex-1 justify-center">
         <PartnerCharacter
           partner={partnerId}
           // 인사하는 동안은 웃는 눈으로 — 처음 마주치는 얼굴이라 반가운 쪽이 낫다
@@ -130,48 +130,58 @@ export default function SmallTalkPage() {
         />
       </div>
 
-      <div className="mt-4 px-5">
+      {/* 소개 길이가 상대마다 달라 카드 높이도 다르다(174~198) — 그 차이는 위 캐릭터 칸이 흡수하므로
+          여기서 자리를 미리 잡아 둘 필요가 없다. 아래 버튼은 어느 상대에서도 제자리다 */}
+      <div className="px-5">
         <PartnerIntroCard partner={partner} />
       </div>
 
-      {/* 남은 시간은 시작을 누르기 직전에 알아야 하는 값이라, 잔글씨 대신 알약으로 세워 둔다.
-          테두리를 두면 입력칸처럼 보여서, 흰 바탕에 옅은 그림자만으로 배경에서 띄운다 */}
-      <div className="mt-5 flex justify-center">
-        {main && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
-            {exhausted ? (
-              // "다 썼다"는 소진이지만 실은 오늘 몫을 완주한 것이라 채웠다고 말한다.
-              // 막다른 길로 끝내지 않게 언제 다시 만나는지까지 붙인다
-              // (1분은 안내 문구와 같은 하드코딩 — 사람마다 달라지면 둘 다 서버 값으로 바꾼다)
-              '오늘 1분을 꽉 채웠어요 · 내일 또 이야기해요'
-            ) : (
-              <>
+      {/* 다 쓴 날은 잠긴 버튼 대신 마무리 인사가 그 자리를 대신한다 — 눌리지 않는 버튼을 남겨 두면
+          왜 안 되는지부터 묻게 된다. "다 썼다"는 소진이지만 실은 오늘 몫을 완주한 것이라 채웠다고 말한다
+          (1분은 안내 문구와 같은 하드코딩 — 사람마다 달라지면 둘 다 서버 값으로 바꾼다) */}
+      {exhausted ? (
+        <div className="mt-8 flex flex-col items-center gap-1.5 px-5">
+          <p className="text-lg font-extrabold break-keep text-foreground">
+            오늘의 1분 스몰톡을 다 했어요
+          </p>
+          <p className="text-sm font-medium break-keep text-muted-foreground">
+            내일 또 같이 이야기해요
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* 남은 시간은 시작을 누르기 직전에 알아야 하는 값이라, 잔글씨 대신 알약으로 세워 둔다.
+              테두리를 두면 입력칸처럼 보여서, 흰 바탕에 옅은 그림자만으로 배경에서 띄운다 */}
+          <div className="mt-3 flex justify-center">
+            {main && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
                 오늘 남은 말하기
                 <span className="text-sm font-bold text-primary">
                   {toSpeakingTimeLabel(main.remainingSpeakingTimeMs)}
                 </span>
-              </>
+              </span>
             )}
-          </span>
-        )}
-      </div>
+          </div>
 
-      {/* 하고 싶은 말이 있으면 바로, 아니면 상대가 주제로 열어 준다 — 주 행동이 위다 */}
-      <div className="mt-4 flex flex-col gap-4 px-5">
-        <Button disabled={blocked} onClick={startWithMe}>
-          내가 먼저 말 걸기
-          <ArrowRightIcon size={16} />
-        </Button>
-        {/* 배경이 muted라 secondary(같은 회색)는 묻힌다 — 흰 바탕에 테두리를 둔 ghost가 떠 보인다 */}
-        <Button
-          variant="ghost"
-          disabled={blocked}
-          onClick={() => setTopicOpen(true)}
-        >
-          {partner.koreanName}가 먼저 말 걸기
-          <ArrowRightIcon size={16} />
-        </Button>
-      </div>
+          {/* 하고 싶은 말이 있으면 바로, 아니면 상대가 주제로 열어 준다 — 주 행동이 위다 */}
+          <div className="mt-4 flex flex-col gap-3 px-5">
+            <Button size="md" disabled={isLoading} onClick={startWithMe}>
+              내가 먼저 말 걸기
+              <ArrowRightIcon size={16} />
+            </Button>
+            {/* 배경이 muted라 secondary(같은 회색)는 묻힌다 — 흰 바탕에 테두리를 둔 ghost가 떠 보인다 */}
+            <Button
+              variant="ghost"
+              size="md"
+              disabled={isLoading}
+              onClick={() => setTopicOpen(true)}
+            >
+              {partner.koreanName}가 먼저 말 걸기
+              <ArrowRightIcon size={16} />
+            </Button>
+          </div>
+        </>
+      )}
 
       {guideOpen && <IntroGuide onClose={closeGuide} />}
 
