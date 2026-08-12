@@ -150,6 +150,7 @@ export default function SmallTalkPage() {
 
       <TopicPickerModal
         open={topicOpen}
+        partnerName={partner.koreanName}
         topics={main?.topics ?? []}
         onSelect={startWithTopic}
         onClose={() => setTopicOpen(false)}
