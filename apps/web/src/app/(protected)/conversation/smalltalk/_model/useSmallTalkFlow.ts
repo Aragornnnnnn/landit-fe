@@ -103,7 +103,9 @@ export const useSmallTalkFlow = ({
       }
 
       setProgress(result.progress);
+      // 서버가 정산한 값이 눈금의 정본이다 — 되돌릴 기준도 여기서 놓는다
       setRemainingMs(result.progress.remainingSpeakingTimeMs);
+      setSpeechBudgetMs(null);
       setExchangeCount(
         result.nextMessage?.messageSequence ??
           result.submittedMessage.messageSequence,
@@ -149,11 +151,17 @@ export const useSmallTalkFlow = ({
   const speaking =
     engine.phase === 'USER_SPEAKING' && !engine.input.keyboardMode;
 
-  // 말하기를 누른 순간의 잔량 — 타이머 링은 이 값을 가득 찬 것으로 잡는다.
+  // 말하기를 누른 순간의 잔량 — 타이머 링이 이 값을 가득 찬 것으로 잡고,
+  // 되돌려야 할 때의 기준이 된다. 제출 응답이 오면 그 값이 정본이 되므로 거기서 놓는다.
   // 하루치를 기준으로 잡으면 남은 게 적은 날엔 말을 시작하기도 전에 링이 비어 있다
   const [speechBudgetMs, setSpeechBudgetMs] = useState<number | null>(null);
   if (speaking && speechBudgetMs === null) setSpeechBudgetMs(remainingMs);
-  if (!speaking && speechBudgetMs !== null) setSpeechBudgetMs(null);
+  // 말하기 대기로 되돌아왔다면 서버에 간 말이 없다는 뜻이다 — 취소·인식 실패·제출 실패 모두.
+  // 깎아 둔 눈금을 되돌리지 않으면 다음 제출 때 시간이 되살아난 것처럼 보인다
+  if (engine.phase === 'USER_READY' && speechBudgetMs !== null) {
+    setRemainingMs(speechBudgetMs);
+    setSpeechBudgetMs(null);
+  }
   useEffect(() => {
     if (!speaking) return;
     const ticker = setInterval(

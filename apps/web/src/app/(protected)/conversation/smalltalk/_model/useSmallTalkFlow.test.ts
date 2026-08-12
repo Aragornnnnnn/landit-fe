@@ -1,0 +1,323 @@
+// useSmallTalkFlow — 스몰톡에만 있는 두 가지를 검증한다.
+// (1) 남은 말하기 시간을 언제 깎고 언제 되돌리는가 (2) 종료 확인 왕복
+// (턴 전이·속마음 같은 엔진 공통 동작은 useScenarioTalkFlow 테스트가 맡는다)
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import * as sessionApi from '@/features/conversation/api/session';
+import * as smallTalkApi from '@/features/small-talk/api/small-talk';
+import type {
+  SmallTalkMessageSubmitResponse,
+  SmallTalkSessionStartResponse,
+} from '@/features/small-talk/api/small-talk';
+
+import { useSmallTalkFlow } from './useSmallTalkFlow';
+
+const monitoringMock = vi.hoisted(() => ({
+  reportError: vi.fn(),
+  reportWarning: vi.fn(),
+}));
+vi.mock('@/shared/monitoring/report', () => monitoringMock);
+
+vi.mock('@/features/conversation/api/session', () => ({
+  getInnerThought: vi.fn(),
+  endSession: vi.fn(),
+}));
+
+vi.mock('@/features/small-talk/api/small-talk', () => ({
+  submitSmallTalkMessage: vi.fn(),
+  decideSmallTalkExit: vi.fn(),
+}));
+
+// TTS·STT는 경계라 목으로 둔다 — 재생 종료와 인식 결과만 흉내 낸다
+const ttsMock = vi.hoisted(() => ({
+  state: { onEnd: undefined as (() => void) | undefined },
+  speak: vi.fn((_t: string, _v: unknown, opts?: { onEnd?: () => void }) => {
+    ttsMock.state.onEnd = opts?.onEnd;
+    return Promise.resolve();
+  }),
+  speakSrc: vi.fn(),
+  prefetch: vi.fn(() => Promise.resolve()),
+  stop: vi.fn(),
+}));
+vi.mock('@/shared/tts/useTts', () => ({
+  useTts: () => ({
+    speak: ttsMock.speak,
+    speakSrc: ttsMock.speakSrc,
+    prefetch: ttsMock.prefetch,
+    stop: ttsMock.stop,
+    status: 'idle',
+  }),
+}));
+
+const sttMock = vi.hoisted(() => ({
+  callbacks: { onFinal: undefined as ((t: string) => void) | undefined },
+  start: vi.fn(),
+  stop: vi.fn(),
+  abort: vi.fn(),
+}));
+vi.mock('@/shared/stt/useStt', () => ({
+  useStt: (opts: { onFinal?: (t: string) => void }) => {
+    sttMock.callbacks.onFinal = opts.onFinal;
+    return { start: sttMock.start, stop: sttMock.stop, abort: sttMock.abort };
+  },
+}));
+
+// 로그인 상태는 쿼리 키에만 쓰인다 — 스토어를 통째로 목으로 둔다
+vi.mock('@/shared/auth/auth-store', () => ({
+  useAuthStore: (selector: (state: unknown) => unknown) =>
+    selector({ member: { userId: 39 } }),
+}));
+
+vi.mock('@tanstack/react-query', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-query')>()),
+  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
+}));
+
+const submitSmallTalkMessage = vi.mocked(smallTalkApi.submitSmallTalkMessage);
+const decideSmallTalkExit = vi.mocked(smallTalkApi.decideSmallTalkExit);
+const getInnerThought = vi.mocked(sessionApi.getInnerThought);
+
+// 내가 먼저 거는 대화 — 말하기 대기(USER_READY)에서 시작한다
+const session = {
+  sessionId: 7,
+  startMode: 'USER_FIRST',
+  title: null,
+  speakingTimeLimitMs: 60_000,
+  ttsVoice: null,
+  currentMessage: null,
+} as unknown as SmallTalkSessionStartResponse;
+
+const progress = (remainingSpeakingTimeMs: number) => ({
+  sessionStatus: 'IN_PROGRESS' as const,
+  accumulatedSpeakingDurationMs: 5_000,
+  speakingTimeLimitMs: 60_000,
+  usedSpeakingTimeMs: 60_000 - remainingSpeakingTimeMs,
+  remainingSpeakingTimeMs,
+  expressionGenerationStatus: 'PREPARING' as const,
+});
+
+const submitResponse = (
+  over: Partial<SmallTalkMessageSubmitResponse> = {},
+): SmallTalkMessageSubmitResponse =>
+  ({
+    sessionId: 7,
+    title: null,
+    turnStatus: 'CONTINUE',
+    submittedMessage: {
+      messageId: 100,
+      turnNumber: 1,
+      messageSequence: 1,
+      role: 'USER',
+      feedbackProcessingStatus: 'COMPLETED',
+      innerThoughtProcessingStatus: 'COMPLETED',
+      innerThought: '반갑네',
+      innerThoughtType: 'NORMAL',
+    },
+    nextMessage: {
+      messageId: 101,
+      turnNumber: 2,
+      messageSequence: 2,
+      role: 'AI',
+      content: 'Nice!',
+      translatedContent: '좋다!',
+    },
+    progress: progress(12_000),
+    ...over,
+  }) as SmallTalkMessageSubmitResponse;
+
+const renderFlow = (remainingSpeakingTimeMs = 20_000) =>
+  renderHook(() =>
+    useSmallTalkFlow({
+      session,
+      partner: 'chloe',
+      remainingSpeakingTimeMs,
+      endSession: vi.fn(),
+    }),
+  );
+
+// 마이크를 켜고 seconds초 동안 말한다 (눈금은 1초에 한 칸씩 깎인다)
+const speakFor = (
+  result: { current: ReturnType<typeof useSmallTalkFlow> },
+  seconds: number,
+) => {
+  act(() => result.current.input.pressMic());
+  act(() => vi.advanceTimersByTime(seconds * 1000));
+};
+
+beforeEach(() => {
+  vi.useFakeTimers();
+  getInnerThought.mockResolvedValue({
+    processingStatus: 'COMPLETED',
+    innerThought: '반갑네',
+    innerThoughtType: 'NORMAL',
+  });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('useSmallTalkFlow — 남은 말하기 시간', () => {
+  it('말하는 동안 1초에 한 칸씩 줄어든다', () => {
+    const { result } = renderFlow(20_000);
+
+    speakFor(result, 5);
+
+    expect(result.current.remainingMs).toBe(15_000);
+  });
+
+  it('말하다 취소하면 말하기 전 값으로 되돌아온다', () => {
+    // 보낸 말이 없으면 서버도 안 깎는다 — 화면만 깎인 채로 두면 다음 제출에서 시간이 되살아난다
+    const { result } = renderFlow(20_000);
+
+    speakFor(result, 5);
+    act(() => result.current.input.cancelInput());
+
+    expect(result.current.remainingMs).toBe(20_000);
+  });
+
+  it('말이 인식되지 않아도 되돌아온다', () => {
+    // 취소만 되돌리면 "말했는데 인식이 안 됐다"가 그대로 새어나간다
+    const { result } = renderFlow(20_000);
+
+    speakFor(result, 5);
+    act(() => result.current.input.finishListening());
+    act(() => sttMock.callbacks.onFinal?.('   '));
+
+    expect(result.current.remainingMs).toBe(20_000);
+  });
+
+  it('제출이 실패해도 되돌아온다', async () => {
+    // 서버가 받지 못했으면 차감도 없다
+    submitSmallTalkMessage.mockRejectedValueOnce(new Error('503'));
+    const { result } = renderFlow(20_000);
+
+    speakFor(result, 5);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Hello there.');
+    });
+
+    expect(result.current.remainingMs).toBe(20_000);
+  });
+
+  it('제출이 성공하면 서버가 정산한 값으로 맞춘다', async () => {
+    // 화면의 1초 눈금은 어림값이다 — 정본은 서버가 준 잔량이다
+    submitSmallTalkMessage.mockResolvedValueOnce(submitResponse());
+    const { result } = renderFlow(20_000);
+
+    speakFor(result, 5);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Hello there.');
+    });
+
+    expect(result.current.remainingMs).toBe(12_000);
+  });
+
+  it('말한 시간을 제출에 실어 보낸다 — 이 값으로 서버가 깎는다', async () => {
+    submitSmallTalkMessage.mockResolvedValueOnce(submitResponse());
+    const { result } = renderFlow(20_000);
+
+    speakFor(result, 5);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Hello there.');
+    });
+
+    expect(submitSmallTalkMessage).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({
+        content: 'Hello there.',
+        inputType: 'VOICE',
+        utteranceDurationMs: 5_000,
+        timeLimitReached: false,
+      }),
+    );
+  });
+
+  it('시간이 0이 돼도 말을 끊지 않고, 다 썼다고 알린다', async () => {
+    // 시작한 발화는 끝까지 간다 — 서버도 초과분을 받아 주고 그 턴을 작별 인사로 닫는다
+    submitSmallTalkMessage.mockResolvedValueOnce(
+      submitResponse({ turnStatus: 'COMPLETED', progress: progress(0) }),
+    );
+    const { result } = renderFlow(3_000);
+
+    speakFor(result, 10);
+    expect(result.current.remainingMs).toBe(0);
+
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Bye!');
+    });
+
+    expect(submitSmallTalkMessage).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({
+        utteranceDurationMs: 10_000,
+        timeLimitReached: true,
+      }),
+    );
+  });
+});
+
+describe('useSmallTalkFlow — 종료 확인', () => {
+  const requiresExit = submitResponse({
+    turnStatus: 'EXIT_CONFIRMATION_REQUIRED',
+    nextMessage: null,
+  });
+
+  it('상대가 작별 인사를 알아채면 답을 받을 때까지 시트를 띄운 채 기다린다', async () => {
+    submitSmallTalkMessage.mockResolvedValueOnce(requiresExit);
+    const { result } = renderFlow();
+
+    speakFor(result, 3);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('I should get going.');
+    });
+
+    expect(result.current.exitDecision.asking).toBe(true);
+    expect(decideSmallTalkExit).not.toHaveBeenCalled();
+  });
+
+  it('마치기를 고르면 그 답을 서버에 보낸다', async () => {
+    submitSmallTalkMessage.mockResolvedValueOnce(requiresExit);
+    decideSmallTalkExit.mockResolvedValueOnce(
+      submitResponse({ turnStatus: 'COMPLETED' }),
+    );
+    const { result } = renderFlow();
+
+    speakFor(result, 3);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('I should get going.');
+    });
+    await act(async () => result.current.exitDecision.answer('END'));
+
+    expect(decideSmallTalkExit).toHaveBeenCalledWith(7, {
+      submittedMessageId: 100,
+      decision: 'END',
+    });
+    expect(result.current.exitDecision.asking).toBe(false);
+  });
+
+  it('더 얘기하기를 골라도 답은 보낸다 — 안 보내면 서버가 멈춘 채로 있다', async () => {
+    submitSmallTalkMessage.mockResolvedValueOnce(requiresExit);
+    decideSmallTalkExit.mockResolvedValueOnce(submitResponse());
+    const { result } = renderFlow();
+
+    speakFor(result, 3);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('I should get going.');
+    });
+    await act(async () => result.current.exitDecision.answer('CONTINUE'));
+
+    expect(decideSmallTalkExit).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({ decision: 'CONTINUE' }),
+    );
+  });
+});

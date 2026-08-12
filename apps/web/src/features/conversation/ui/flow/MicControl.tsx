@@ -10,7 +10,8 @@ import type { ConversationPhase } from '../../model/conversation-machine';
 interface MicControlProps {
   phase: ConversationPhase;
   onPress: () => void;
-  onKeyboard: () => void;
+  // 타이핑으로 답할 수 있는 대화만 넘긴다 — 없으면 키보드 아이콘을 그리지 않는다
+  onKeyboard?: () => void;
   onCancel: () => void;
   onDone: () => void;
   // 남은 몫(0~1). 시간이 걸린 대화(스몰톡)만 준다 — 주면 완료 버튼 둘레가 그만큼 차 있다
@@ -109,14 +110,16 @@ export const MicControl = ({
           className="relative flex flex-col items-center gap-2"
         >
           {/* 마이크는 가운데 고정, 키보드 아이콘은 오른쪽에 작게 — 누르면 내 답변 박스가 입력창으로 바뀐다 */}
-          <button
-            onClick={onKeyboard}
-            disabled={disabled}
-            aria-label="키보드로 입력"
-            className="absolute top-1.5 left-[calc(50%+3rem)] flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground transition-opacity active:scale-95 disabled:opacity-30"
-          >
-            <KeyboardIcon size={22} />
-          </button>
+          {onKeyboard && (
+            <button
+              onClick={onKeyboard}
+              disabled={disabled}
+              aria-label="키보드로 입력"
+              className="absolute top-1.5 left-[calc(50%+3rem)] flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground transition-opacity active:scale-95 disabled:opacity-30"
+            >
+              <KeyboardIcon size={22} />
+            </button>
+          )}
           <button
             onClick={onPress}
             disabled={disabled}
