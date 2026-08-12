@@ -1,5 +1,5 @@
 // useSmallTalkFlow — 스몰톡에만 있는 두 가지를 검증한다.
-// (1) 남은 말하기 시간을 언제 깎고 언제 되돌리는가 (2) 종료 확인 왕복
+// (1) 남은 말하기 시간을 언제 깎고 언제 되돌리는가 (2) 종료 확인 응답 처리
 // (턴 전이·속마음 같은 엔진 공통 동작은 useScenarioTalkFlow 테스트가 맡는다)
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -128,6 +128,8 @@ const submitResponse = (
     ...over,
   }) as SmallTalkMessageSubmitResponse;
 
+const goHome = vi.fn();
+
 const renderFlow = (remainingSpeakingTimeMs = 20_000) =>
   renderHook(() =>
     useSmallTalkFlow({
@@ -135,6 +137,7 @@ const renderFlow = (remainingSpeakingTimeMs = 20_000) =>
       partner: 'chloe',
       remainingSpeakingTimeMs,
       endSession: vi.fn(),
+      goHome,
     }),
   );
 
@@ -293,6 +296,7 @@ describe('useSmallTalkFlow — 중도 이탈', () => {
         partner: 'chloe',
         remainingSpeakingTimeMs: 20_000,
         endSession,
+        goHome,
       }),
     );
 
@@ -316,21 +320,8 @@ describe('useSmallTalkFlow — 종료 확인', () => {
     nextMessage: null,
   });
 
-  it('상대가 작별 인사를 알아채면 답을 받을 때까지 시트를 띄운 채 기다린다', async () => {
-    submitSmallTalkMessage.mockResolvedValueOnce(requiresExit);
-    const { result } = renderFlow();
-
-    speakFor(result, 3);
-    await act(async () => {
-      result.current.input.finishListening();
-      sttMock.callbacks.onFinal?.('I should get going.');
-    });
-
-    expect(result.current.exitDecision.asking).toBe(true);
-    expect(decideSmallTalkExit).not.toHaveBeenCalled();
-  });
-
-  it('마치기를 고르면 그 답을 서버에 보낸다', async () => {
+  it('종료 확인이 오면 되묻지 않고 END로 답한다', async () => {
+    // 작별 인사를 한 사람에게 정말 끝낼 거냐고 다시 묻지 않는다 — CONTINUE는 보낼 일이 없다
     submitSmallTalkMessage.mockResolvedValueOnce(requiresExit);
     decideSmallTalkExit.mockResolvedValueOnce(
       submitResponse({ turnStatus: 'COMPLETED' }),
@@ -342,30 +333,36 @@ describe('useSmallTalkFlow — 종료 확인', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('I should get going.');
     });
-    await act(async () => result.current.exitDecision.answer('END'));
 
     expect(decideSmallTalkExit).toHaveBeenCalledWith(7, {
       submittedMessageId: 100,
       decision: 'END',
     });
-    expect(result.current.exitDecision.asking).toBe(false);
+    expect(result.current.phase).not.toBe('USER_READY');
   });
 
-  it('더 얘기하기를 골라도 답은 보낸다 — 안 보내면 서버가 멈춘 채로 있다', async () => {
+  it('그 답을 보내지 못하면 대화를 나가는 것으로 정리한다', async () => {
+    // 세션은 답을 기다리는 상태로 남는다 — 화면만 되돌리면 다시 말해도 제출이 막힌다
     submitSmallTalkMessage.mockResolvedValueOnce(requiresExit);
-    decideSmallTalkExit.mockResolvedValueOnce(submitResponse());
-    const { result } = renderFlow();
+    decideSmallTalkExit.mockRejectedValueOnce(new Error('500'));
+    const endSession = vi.fn();
+    const { result } = renderHook(() =>
+      useSmallTalkFlow({
+        session,
+        partner: 'chloe',
+        remainingSpeakingTimeMs: 20_000,
+        endSession,
+        goHome,
+      }),
+    );
 
     speakFor(result, 3);
     await act(async () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('I should get going.');
     });
-    await act(async () => result.current.exitDecision.answer('CONTINUE'));
 
-    expect(decideSmallTalkExit).toHaveBeenCalledWith(
-      7,
-      expect.objectContaining({ decision: 'CONTINUE' }),
-    );
+    expect(endSession).toHaveBeenCalled();
+    expect(goHome).toHaveBeenCalled();
   });
 });

@@ -27,7 +27,6 @@ import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
 import { useSmallTalkFlow } from '../_model/useSmallTalkFlow';
-import { ExitDecisionSheet } from './ExitDecisionSheet';
 import { SmallTalkExitSheet } from './SmallTalkExitSheet';
 import { TalkSummary } from './TalkSummary';
 
@@ -45,6 +44,7 @@ export const SmallTalkConversation = ({
   endSession,
 }: SmallTalkConversationProps) => {
   const router = useRouter();
+  const goHome = () => router.replace(SMALLTALK_PATH);
   const [showExitSheet, setShowExitSheet] = useState(false);
   // 내가 먼저 거는 대화의 진입 안내 — 랜디가 먼저 말을 걸어보라고 알려주고 잠시 후 사라진다
   const [introDismissed, setIntroDismissed] = useState(false);
@@ -58,12 +58,12 @@ export const SmallTalkConversation = ({
     remainingMs,
     speakingRatio,
     summary,
-    exitDecision,
   } = useSmallTalkFlow({
     session,
     partner,
     remainingSpeakingTimeMs,
     endSession,
+    goHome,
   });
   const {
     transcript,
@@ -92,8 +92,6 @@ export const SmallTalkConversation = ({
   };
   const overlayThought = resolveOverlayThought();
   const characterLook = toCharacterLook(phase, finishedThought);
-
-  const goHome = () => router.replace(SMALLTALK_PATH);
 
   return (
     <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
@@ -161,10 +159,9 @@ export const SmallTalkConversation = ({
         )}
       </footer>
 
-      {/* 속마음 — 제출 대기(AI_THINKING)부터 랜디가 떠 있다가 속마음을 전한다.
-          종료 확인을 묻는 동안에는 생각 중 연출을 접는다 — 답을 기다리는 건 상대가 아니라 우리다 */}
+      {/* 속마음 — 제출 대기(AI_THINKING)부터 랜디가 떠 있다가 속마음을 전한다 */}
       <ThoughtOverlay
-        loading={phase === 'AI_THINKING' && !exitDecision.asking}
+        loading={phase === 'AI_THINKING'}
         thought={overlayThought}
       />
 
@@ -172,19 +169,12 @@ export const SmallTalkConversation = ({
         open={showExitSheet}
         onConfirm={() => {
           leave();
-          router.replace(SMALLTALK_PATH);
+          goHome();
         }}
         onClose={() => {
           track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'conversation_exit' });
           setShowExitSheet(false);
         }}
-      />
-
-      {/* 상대가 작별 인사를 알아챘을 때 — 어느 쪽을 골라도 서버에 답을 보내야 대화가 풀린다 */}
-      <ExitDecisionSheet
-        open={exitDecision.asking}
-        onEnd={() => exitDecision.answer('END')}
-        onContinue={() => exitDecision.answer('CONTINUE')}
       />
 
       <MicPermissionSheet

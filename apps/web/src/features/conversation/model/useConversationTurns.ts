@@ -63,7 +63,8 @@ interface ConversationTurnsOptions {
     turnIndex: number;
     // 이번 턴에 실제로 말한 시간 — 발화 예산을 쓰는 대화(스몰톡)가 이 값으로 차감한다
     utteranceDurationMs: number;
-  }) => Promise<TurnSubmitResult>;
+    // null이면 호출자가 이 턴을 스스로 정리한 것 — 엔진은 화면을 건드리지 않고 손을 뗀다
+  }) => Promise<TurnSubmitResult | null>;
 }
 
 export const useConversationTurns = ({
@@ -194,6 +195,8 @@ export const useConversationTurns = ({
         turnIndex: state.turnIndex,
         utteranceDurationMs,
       });
+      // 호출자가 이 턴을 스스로 접었다(예: 대화를 나가는 중) — 다음 연출을 이어붙이지 않는다
+      if (!res) return;
       // 종료 인사도 nextMessage로 오고, 그 인사를 끝으로 종료인지는 completed가 알려준다 (인사 재생 후 CTA)
       nextMessageRef.current = res.nextMessage;
       completedRef.current = res.completed;

@@ -43,7 +43,7 @@ export const EVENTS = {
   STREAK_OPENED: 'Streak Opened',
   STREAK_MONTH_CHANGED: 'Streak Month Changed',
 
-  // 시나리오 대화 — 이름을 스몰톡과 짝 맞춰 둔다 (page_name·폴더명도 scenario_talk)
+  // 시나리오 대화 — 이름을 스몰톡과 짝 맞춰 둔다 (폴더명도 conversation/scenario)
   SCENARIO_TALK_STARTED: 'Scenario Talk Started',
   RECORDING_STARTED: 'Recording Started',
   RECORDING_STOPPED: 'Recording Stopped',
@@ -62,7 +62,6 @@ export const EVENTS = {
   // 마이크·STT처럼 대화 엔진이 쏘는 것(Recording·Turn Failed·Inner Thought Viewed)은 두 대화가 함께 쓴다
   SMALL_TALK_STARTED: 'Small Talk Started',
   SMALL_TALK_TURN_COMPLETED: 'Small Talk Turn Completed',
-  SMALL_TALK_EXIT_DECIDED: 'Small Talk Exit Decided',
   SMALL_TALK_COMPLETED: 'Small Talk Completed',
   SMALL_TALK_ABANDONED: 'Small Talk Abandoned',
 
@@ -300,12 +299,6 @@ export type EventProps = {
     char_count: number;
     // 이 발화로 깎인 오늘의 말하기 예산
     utterance_duration_ms: number;
-  };
-  // 상대가 작별 인사를 알아채고 물었을 때 — 정말 끝냈는지, 더 얘기했는지
-  'Small Talk Exit Decided': {
-    session_id: number;
-    partner: TalkPartner;
-    decision: 'end' | 'continue';
   };
   'Small Talk Completed': {
     session_id: number;

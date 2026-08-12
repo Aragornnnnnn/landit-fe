@@ -1,5 +1,5 @@
 // 스몰톡 대화 흐름 훅 — 대화 엔진에 스몰톡 세션·제출 API를 배선하고, 스몰톡에만 있는 두 가지를 맡는다.
-// (1) 상대가 작별 인사를 알아채면 정말 끝낼지 묻고 그 답을 서버에 보내 대화를 풀어 준다
+// (1) 발화 응답이 종료 확인(EXIT_CONFIRMATION_REQUIRED)이면 END로 답해 대화를 닫는다
 // (2) 오늘 남은 발화 시간을 들고 있다가, 말하는 동안 줄이고 제출 후 서버 값으로 정정한다
 'use client';
 
@@ -19,8 +19,9 @@ import { smallTalkKeys } from '@/features/small-talk/model/keys';
 import { findPartner } from '@/features/small-talk/model/partner';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
+import { reportError } from '@/shared/monitoring/report';
+import { showToast } from '@/shared/ui/toast';
 
-import { useExitDecision } from './useExitDecision';
 import { useSpeakingBudget } from './useSpeakingBudget';
 
 // 내가 먼저 걸 때 카드에 뜨는 안내 — 시나리오와 달리 읽을 상황이 없어서 주제부터 열어 준다
@@ -36,6 +37,8 @@ interface SmallTalkFlowOptions {
   remainingSpeakingTimeMs: number;
   // 중도 이탈 시 세션 정리 — 세션을 만든 쪽(화면)이 소유한다
   endSession: () => void;
+  // 대화를 접고 홈으로 — 종료 확인을 못 보내 대화가 멈춰 버렸을 때 이 길로 빠져나간다
+  goHome: () => void;
 }
 
 export const useSmallTalkFlow = ({
@@ -43,10 +46,10 @@ export const useSmallTalkFlow = ({
   partner,
   remainingSpeakingTimeMs,
   endSession,
+  goHome,
 }: SmallTalkFlowOptions) => {
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.member?.userId ?? null);
-  const exitDecision = useExitDecision();
   // 마지막 제출이 알려준 진행 상태 — 종료 화면의 "얘기한 시간"이 여기서 나온다
   const [progress, setProgress] = useState<SmallTalkProgress | null>(null);
   // 주고받은 말의 수 — 서버가 매기는 메시지 순번이 곧 그 수다
@@ -69,6 +72,25 @@ export const useSmallTalkFlow = ({
     void queryClient.invalidateQueries({
       queryKey: smallTalkKeys.main(userId),
     });
+
+  // 종료 확인에 대한 답. END를 보내면 서버가 마무리 인사와 함께 세션을 완료한다.
+  // 사용자에게 다시 묻지 않으므로 CONTINUE(서버가 작별 인사로 잘못 판정했을 때의 정정)는 보내지 않는다.
+  // 이 요청이 실패하면 세션은 답을 기다리는 상태로 남아 다음 발화도 못 받는다 — 나가는 것으로 정리한다
+  const sendExitDecision = async (submittedMessageId: number) => {
+    try {
+      return await decideSmallTalkExit(session.sessionId, {
+        submittedMessageId,
+        decision: 'END',
+      });
+    } catch (cause) {
+      console.warn('[smalltalk] 종료 확인 전송 실패', cause);
+      reportError(cause);
+      showToast('연결에 문제가 생겨 대화를 이어가지 못했어요');
+      leave();
+      goHome();
+      return null;
+    }
+  };
 
   const engine = useConversationTurns({
     firstSpeaker: session.startMode === 'AI_FIRST' ? 'AI' : 'USER',
@@ -93,19 +115,13 @@ export const useSmallTalkFlow = ({
         timeLimitReached: budget.remainingMs === 0,
       });
 
-      // 상대가 작별 인사를 알아챈 턴 — 다음 발화도 속마음도 없이 멈춰 있다.
-      // 답을 보내야 대화가 풀리므로, 물어보고 기다렸다가 그 결과를 이번 턴의 결과로 삼는다
+      // 종료 확인 — 이 응답에는 다음 발화도 속마음도 없다. 답을 보내야 그 자리가 채워진다
       if (result.turnStatus === 'EXIT_CONFIRMATION_REQUIRED') {
-        const decision = await exitDecision.ask();
-        track(EVENTS.SMALL_TALK_EXIT_DECIDED, {
-          session_id: session.sessionId,
-          partner,
-          decision: decision === 'END' ? 'end' : 'continue',
-        });
-        result = await decideSmallTalkExit(session.sessionId, {
-          submittedMessageId: result.submittedMessage.messageId,
-          decision,
-        });
+        const decided = await sendExitDecision(
+          result.submittedMessage.messageId,
+        );
+        if (!decided) return null; // 전송 실패로 나가는 중 — 엔진도 손을 뗀다
+        result = decided;
       }
 
       setProgress(result.progress);
@@ -180,6 +196,5 @@ export const useSmallTalkFlow = ({
       speakingDurationMs: progress?.accumulatedSpeakingDurationMs ?? 0,
       exchangeCount,
     },
-    exitDecision,
   };
 };

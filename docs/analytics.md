@@ -124,13 +124,12 @@
 
 ### 스몰톡
 
-| 이벤트                    | 속성                                                                                        | 시점                            |
-| ------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------- |
-| Small Talk Started        | session_id, partner, first_speaker, topic_id?                                               | 세션 시작 성공                  |
-| Small Talk Turn Completed | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms | 발화 제출 성공                  |
-| Small Talk Exit Decided   | session_id, partner, decision(end\|continue)                                                | 작별 인사 감지 후 사용자의 선택 |
-| Small Talk Completed      | session_id, partner, turn_count, speaking_duration_ms, end_reason(user_ended\|time_limit)   | 서버가 완료 판정                |
-| Small Talk Abandoned      | session_id, partner, turn_index                                                             | 중도 이탈 확정                  |
+| 이벤트                    | 속성                                                                                        | 시점             |
+| ------------------------- | ------------------------------------------------------------------------------------------- | ---------------- |
+| Small Talk Started        | session_id, partner, first_speaker, topic_id?                                               | 세션 시작 성공   |
+| Small Talk Turn Completed | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms | 발화 제출 성공   |
+| Small Talk Completed      | session_id, partner, turn_count, speaking_duration_ms, end_reason(user_ended\|time_limit)   | 서버가 완료 판정 |
+| Small Talk Abandoned      | session_id, partner, turn_index                                                             | 중도 이탈 확정   |
 
 스몰톡은 탭도 목적도 달라 대화 이벤트를 따로 둔다 — 시나리오는 오늘의 과제를 끝냈는지, 스몰톡은 누구와 얼마나 얘기했는지를 본다. 상대(`partner`)는 시나리오에 없는 축이라 전 이벤트에 싣는다.
 
