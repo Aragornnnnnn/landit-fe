@@ -3,7 +3,7 @@
 // (2) 오늘 남은 발화 시간을 들고 있다가, 말하는 동안 줄이고 제출 후 서버 값으로 정정한다
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -21,6 +21,7 @@ import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 
 import { useExitDecision } from './useExitDecision';
+import { useSpeakingBudget } from './useSpeakingBudget';
 
 // 내가 먼저 걸 때 카드에 뜨는 안내 — 시나리오와 달리 읽을 상황이 없어서 주제부터 열어 준다
 const USER_OPENING_INSTRUCTION =
@@ -46,7 +47,6 @@ export const useSmallTalkFlow = ({
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.member?.userId ?? null);
   const exitDecision = useExitDecision();
-  const [remainingMs, setRemainingMs] = useState(remainingSpeakingTimeMs);
   // 마지막 제출이 알려준 진행 상태 — 종료 화면의 "얘기한 시간"이 여기서 나온다
   const [progress, setProgress] = useState<SmallTalkProgress | null>(null);
   // 주고받은 말의 수 — 서버가 매기는 메시지 순번이 곧 그 수다
@@ -63,6 +63,12 @@ export const useSmallTalkFlow = ({
     clientMessageIdsRef.current.set(turnIndex, created);
     return created;
   };
+
+  // 오늘 남은 시간이 줄었다 — 홈이 옛 숫자를 먼저 그리지 않게 다시 받아 둔다 (캐시는 30초를 신선하게 본다)
+  const refreshHome = () =>
+    void queryClient.invalidateQueries({
+      queryKey: smallTalkKeys.main(userId),
+    });
 
   const engine = useConversationTurns({
     firstSpeaker: session.startMode === 'AI_FIRST' ? 'AI' : 'USER',
@@ -84,7 +90,7 @@ export const useSmallTalkFlow = ({
         inputType,
         utteranceDurationMs,
         // 시간이 다 돼서 우리가 말을 끊었는가 (서버는 참고만 하고 자기 잔량으로 판단한다)
-        timeLimitReached: remainingMs === 0,
+        timeLimitReached: budget.remainingMs === 0,
       });
 
       // 상대가 작별 인사를 알아챈 턴 — 다음 발화도 속마음도 없이 멈춰 있다.
@@ -103,9 +109,7 @@ export const useSmallTalkFlow = ({
       }
 
       setProgress(result.progress);
-      // 서버가 정산한 값이 눈금의 정본이다 — 되돌릴 기준도 여기서 놓는다
-      setRemainingMs(result.progress.remainingSpeakingTimeMs);
-      setSpeechBudgetMs(null);
+      budget.settle(result.progress.remainingSpeakingTimeMs);
       setExchangeCount(
         result.nextMessage?.messageSequence ??
           result.submittedMessage.messageSequence,
@@ -132,10 +136,7 @@ export const useSmallTalkFlow = ({
               ? 'time_limit'
               : 'user_ended',
         });
-        // 오늘 남은 시간이 줄었다 — 홈이 옛 숫자를 먼저 그리지 않게 다시 받아 둔다
-        void queryClient.invalidateQueries({
-          queryKey: smallTalkKeys.main(userId),
-        });
+        refreshHome();
       }
 
       return {
@@ -146,33 +147,14 @@ export const useSmallTalkFlow = ({
     },
   });
 
-  // 말하는 동안만 시간이 줄어든다 — 타이핑은 발화가 아니라 예산을 쓰지 않는다.
-  // 여기 값은 보여주기용이고, 진짜 정산은 제출 응답(progress)이 한다
-  const speaking =
-    engine.phase === 'USER_SPEAKING' && !engine.input.keyboardMode;
-
-  // 말하기를 누른 순간의 잔량 — 타이머 링이 이 값을 가득 찬 것으로 잡고,
-  // 되돌려야 할 때의 기준이 된다. 제출 응답이 오면 그 값이 정본이 되므로 거기서 놓는다.
-  // 하루치를 기준으로 잡으면 남은 게 적은 날엔 말을 시작하기도 전에 링이 비어 있다
-  const [speechBudgetMs, setSpeechBudgetMs] = useState<number | null>(null);
-  if (speaking && speechBudgetMs === null) setSpeechBudgetMs(remainingMs);
-  // 말하기 대기로 되돌아왔다면 서버에 간 말이 없다는 뜻이다 — 취소·인식 실패·제출 실패 모두.
-  // 깎아 둔 눈금을 되돌리지 않으면 다음 제출 때 시간이 되살아난 것처럼 보인다
-  if (engine.phase === 'USER_READY' && speechBudgetMs !== null) {
-    setRemainingMs(speechBudgetMs);
-    setSpeechBudgetMs(null);
-  }
-  useEffect(() => {
-    if (!speaking) return;
-    const ticker = setInterval(
-      () => setRemainingMs((ms) => Math.max(0, ms - 1000)),
-      1000,
-    );
-    return () => clearInterval(ticker);
-  }, [speaking]);
-
+  // 남은 시간 눈금 — 말하는 동안 깎이고, 보내지 않은 발화(취소·인식 실패·제출 실패)는 되돌아온다.
   // 시간이 0이 돼도 하던 말은 끊지 않는다 — 노래방 마지막 곡처럼, 시작한 발화는 끝까지 간다.
-  // 서버도 예약 차감이라 초과분을 받아 주고(잔량은 0에서 멈춘다), 그 턱을 작별 인사로 닫는다
+  // 서버도 예약 차감이라 초과분을 받아 주고(잔량은 0에서 멈춘다), 그 턴을 작별 인사로 닫는다
+  const budget = useSpeakingBudget({
+    initialMs: remainingSpeakingTimeMs,
+    speaking: engine.phase === 'USER_SPEAKING',
+    waiting: engine.phase === 'USER_READY',
+  });
 
   // 중도 이탈 (정상 완료는 서버가 판정한다)
   const leave = () => {
@@ -183,14 +165,16 @@ export const useSmallTalkFlow = ({
     });
     engine.abandon(); // 진행 중인 속마음 폴링을 멈춘다
     endSession();
+    // 여기까지 주고받은 발화도 시간을 썼다 — 완료했을 때와 똑같이 홈을 다시 받는다
+    refreshHome();
   };
 
   return {
     ...engine,
     leave,
-    remainingMs,
-    // 이번 발화에서 남은 몫(0~1) — 타이머 링이 그린다. 말하기 전에는 가득 찬 상태다
-    speakingRatio: speechBudgetMs ? remainingMs / speechBudgetMs : 1,
+    remainingMs: budget.remainingMs,
+    // 이번 발화에서 남은 몫(0~1) — 마이크 둘레의 타이머 링이 그린다
+    speakingRatio: budget.ratio,
     // 종료 화면이 보여주는 이 대화의 기록
     summary: {
       speakingDurationMs: progress?.accumulatedSpeakingDurationMs ?? 0,

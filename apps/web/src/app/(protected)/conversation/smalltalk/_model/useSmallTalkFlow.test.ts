@@ -10,6 +10,7 @@ import type {
   SmallTalkMessageSubmitResponse,
   SmallTalkSessionStartResponse,
 } from '@/features/small-talk/api/small-talk';
+import { smallTalkKeys } from '@/features/small-talk/model/keys';
 
 import { useSmallTalkFlow } from './useSmallTalkFlow';
 
@@ -69,9 +70,10 @@ vi.mock('@/shared/auth/auth-store', () => ({
     selector({ member: { userId: 39 } }),
 }));
 
+const queryClientMock = vi.hoisted(() => ({ invalidateQueries: vi.fn() }));
 vi.mock('@tanstack/react-query', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@tanstack/react-query')>()),
-  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
+  useQueryClient: () => queryClientMock,
 }));
 
 const submitSmallTalkMessage = vi.mocked(smallTalkApi.submitSmallTalkMessage);
@@ -167,6 +169,24 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
     expect(result.current.remainingMs).toBe(15_000);
   });
 
+  it('타이머 링은 이번 발화에서 남은 몫을 그린다', () => {
+    const { result } = renderFlow(20_000);
+
+    expect(result.current.speakingRatio).toBe(1); // 말하기 전에는 가득 차 있다
+    speakFor(result, 5);
+
+    expect(result.current.speakingRatio).toBe(0.75);
+  });
+
+  it('시간을 다 쓴 채로 시작한 발화는 빈 링으로 그린다', () => {
+    // 잔량 0이 "값이 없음"으로 새면 다 쓴 자리에서 링이 가득 찬 채로 뜬다
+    const { result } = renderFlow(0);
+
+    act(() => result.current.input.pressMic());
+
+    expect(result.current.speakingRatio).toBe(0);
+  });
+
   it('말하다 취소하면 말하기 전 값으로 되돌아온다', () => {
     // 보낸 말이 없으면 서버도 안 깎는다 — 화면만 깎인 채로 두면 다음 제출에서 시간이 되살아난다
     const { result } = renderFlow(20_000);
@@ -259,6 +279,34 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
         timeLimitReached: true,
       }),
     );
+  });
+});
+
+describe('useSmallTalkFlow — 중도 이탈', () => {
+  it('나가면 세션을 정리하고 홈의 남은 시간을 다시 받게 한다', async () => {
+    // 여기까지 주고받은 발화도 시간을 썼다 — 캐시가 옛 숫자를 30초 동안 신선하다고 본다
+    submitSmallTalkMessage.mockResolvedValueOnce(submitResponse());
+    const endSession = vi.fn();
+    const { result } = renderHook(() =>
+      useSmallTalkFlow({
+        session,
+        partner: 'chloe',
+        remainingSpeakingTimeMs: 20_000,
+        endSession,
+      }),
+    );
+
+    speakFor(result, 5);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Hello there.');
+    });
+    act(() => result.current.leave());
+
+    expect(endSession).toHaveBeenCalled();
+    expect(queryClientMock.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: smallTalkKeys.main(39),
+    });
   });
 });
 
