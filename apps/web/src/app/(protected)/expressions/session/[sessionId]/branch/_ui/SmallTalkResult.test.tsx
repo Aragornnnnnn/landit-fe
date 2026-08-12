@@ -61,6 +61,7 @@ const setup = ({
     isLoading: false,
     generationStuck,
     retry: vi.fn(),
+    regenerate: vi.fn(),
   });
   render(<SmallTalkResult sessionId={7} celebrating />);
 };
@@ -96,6 +97,7 @@ describe('SmallTalkResult', () => {
       isLoading: false,
       generationStuck: false,
       retry: vi.fn(),
+      regenerate: vi.fn(),
     });
     render(<SmallTalkResult sessionId={7} celebrating={false} />);
 

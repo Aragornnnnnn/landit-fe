@@ -3,7 +3,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { reportWarning } from '@/shared/monitoring/report';
@@ -21,6 +21,8 @@ export const WAIT_LIMIT_MS = 60_000;
 
 export const useSmallTalkSessionQuery = (sessionId: number) => {
   const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const queryClient = useQueryClient();
+  const queryKey = smallTalkKeys.session(userId, sessionId);
 
   // 기다린 지 오래됐는가 — 상한을 넘기면 그만 묻는다
   const [waitedTooLong, setWaitedTooLong] = useState(false);
@@ -29,7 +31,7 @@ export const useSmallTalkSessionQuery = (sessionId: number) => {
   const [revivalSettled, setRevivalSettled] = useState(false);
 
   const { data, error, isPending, refetch } = useQuery({
-    queryKey: smallTalkKeys.session(userId, sessionId),
+    queryKey,
     queryFn: () => getSmallTalkSession(sessionId),
     // 아직 만드는 중이면 1초 뒤 다시 조회한다.
     // 준비가 끝났거나(READY·FAILED) 상한까지 기다렸으면 false를 돌려 멈춘다
@@ -69,5 +71,11 @@ export const useSmallTalkSessionQuery = (sessionId: number) => {
     // 붙잡아 두지 않고 "나중에 만들어 둘게요"로 보낸다 — 만들어지면 기록에 남는다
     generationStuck: waitedTooLong || (failed && revivalSettled),
     retry: () => void refetch(),
+    // 다시 만들기 — 서버는 접수만 하고 뒤에서 만든다. 상태를 다시 받아 폴링을 잇는다.
+    // 대화 직후 화면은 알아서 한 번 걸어 보므로, 이 버튼은 기록에서 다시 시도할 때 쓴다
+    regenerate: async () => {
+      await retrySmallTalkExpressions(sessionId);
+      await queryClient.invalidateQueries({ queryKey });
+    },
   };
 };

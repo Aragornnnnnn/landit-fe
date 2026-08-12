@@ -147,6 +147,8 @@ export type EventProps = {
     // 스몰톡에서 온 표현 화면만 — 어느 대화에서 나온 표현인지
     session_id?: number;
     expression_id?: number;
+    // 지난 스몰톡 상세에서만 — 어느 대화인지
+    session_id?: number;
     // 알림 유입(reminder)일 때만 — 탭한 알림의 문구 슬러그 (utm_content에서 파생, 어휘는 reminder-copies.ts)
     notification_copy?: string;
     // 시나리오 화면에서 완료한 지난 날 카드를 볼 때만 — 열 수 있는 과거는 완료한 날뿐이다 (yyyy-MM-dd)
@@ -210,8 +212,8 @@ export type EventProps = {
   };
   'Expression Selected': ExpressionSource & {
     expression_id: number;
-    // post_conversation = 대화 직후 표현 리스트 화면, card_back = 홈 카드 뒷면
-    source: 'card_back' | 'post_conversation';
+    // post_conversation = 대화 직후 표현 리스트, card_back = 홈 카드 뒷면, history = 지난 스몰톡 기록
+    source: 'card_back' | 'post_conversation' | 'history';
   };
 
   // retry = 전날 못 끝낸 대화를 이어서 하는 카드였는지 (오늘 새로 받은 시나리오면 false)

@@ -94,6 +94,19 @@ export const toPageView = (
     return { page_name: 'conversation_smalltalk', path: pathname };
   }
 
+  // 지난 스몰톡 — 목록과 그 대화 한 건. 어느 대화인지는 세션 id로 남긴다
+  if (seg[0] === 'smalltalk' && seg[1] === 'sessions') {
+    if (!seg[2]) return { page_name: 'smalltalk_history', path: pathname };
+    return {
+      page_name:
+        seg[3] === 'messages'
+          ? 'smalltalk_history_transcript'
+          : 'smalltalk_history_detail',
+      path: pathname,
+      session_id: toId(seg[2]),
+    };
+  }
+
   // 표현 학습은 둘째 칸에 출처를 달고 온다 (/expressions/{출처}/{출처id}/...).
   // 화면 이름은 출처와 무관하게 같고, 어디서 온 표현인지는 id 속성이 가른다
   if (

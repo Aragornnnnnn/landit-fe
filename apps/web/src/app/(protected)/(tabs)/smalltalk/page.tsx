@@ -10,9 +10,9 @@ import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
 import { track } from '@/shared/analytics';
-import { smallTalkPath } from '@/shared/lib/routes';
+import { SMALLTALK_HISTORY_PATH, smallTalkPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
-import { ArrowRightIcon } from '@/shared/ui/Icons';
+import { ArrowRightIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 
 import {
   hasSeenIntroGuide,
@@ -79,7 +79,17 @@ export default function SmallTalkPage() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden pb-4">
-      <PartnerPicker selected={partner.id} onSelect={selectPartner} />
+      {/* 기록은 오늘 대화를 시작하는 길과 섞이면 안 된다 — 화면 안쪽 오른쪽 위에 잔글씨로 둔다 */}
+      <div className="relative">
+        <button
+          onClick={() => router.push(SMALLTALK_HISTORY_PATH)}
+          className="absolute top-4 right-5 flex items-center gap-0.5 text-[13px] font-semibold text-muted-foreground active:opacity-60"
+        >
+          기록
+          <ChevronRightIcon size={14} />
+        </button>
+        <PartnerPicker selected={partner.id} onSelect={selectPartner} />
+      </div>
 
       {/* 이 화면은 스크롤이 없다 — 남는 자리는 캐릭터가 먹되 아래위로 한계를 둔다.
           낮은 화면에서 먼저 양보하는 쪽은 캐릭터가 아니라 소개 카드다(글자·여백을 줄인다) */}
