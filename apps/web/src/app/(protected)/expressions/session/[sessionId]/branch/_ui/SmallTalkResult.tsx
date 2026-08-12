@@ -3,6 +3,7 @@
 // 스몰톡 대화 직후 — 축하를 잠깐 보여준 뒤, 서버가 표현을 다 만들 때까지 기다렸다가 리스트를 편다.
 // 시나리오는 표현이 콘텐츠에 이미 있어 연출 시간만 채우면 되지만, 스몰톡 표현은 그 대화에서 그때 만들어진다
 import { useEffect, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
@@ -14,6 +15,7 @@ import {
 } from '@/features/expression/ui/ExpressionStages';
 import type { SmallTalkSessionExpression } from '@/features/small-talk/api/small-talk';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
+import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { sessionExpressionPath, SMALLTALK_PATH } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
@@ -48,11 +50,38 @@ export const SmallTalkResult = ({ sessionId }: { sessionId: number }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const goHome = () => router.replace(SMALLTALK_PATH);
   const ready = session?.expressionGenerationStatus === 'READY';
   const expressions = ready ? toListItems(session.expressions) : null;
-  const goLearn = (expressionId: number) =>
+
+  // 축하가 끝나고 표현 리스트가 실제로 드러난 순간을 노출로 기록한다
+  const listed = !celebrating && expressions !== null;
+  const count = expressions?.length ?? 0;
+  useEffect(() => {
+    if (!listed) return;
+    track(EVENTS.EXPRESSION_LIST_VIEWED, {
+      session_id: sessionId,
+      expression_count: count,
+    });
+  }, [listed, sessionId, count]);
+
+  // X가 유일한 이탈 경로다 — 학습 없이 나가는 신호를 여기서 남긴다
+  const close = () => {
+    track(EVENTS.EXPRESSION_LEARNING_SKIPPED, {
+      session_id: sessionId,
+      expression_count: count,
+    });
+    goHome();
+  };
+
+  const goHome = () => router.replace(SMALLTALK_PATH);
+  const goLearn = (expressionId: number) => {
+    track(EVENTS.EXPRESSION_SELECTED, {
+      expression_id: expressionId,
+      session_id: sessionId,
+      source: 'post_conversation',
+    });
     router.push(sessionExpressionPath(sessionId, expressionId));
+  };
 
   return (
     <main
@@ -61,7 +90,7 @@ export const SmallTalkResult = ({ sessionId }: { sessionId: number }) => {
     >
       <header className="relative flex h-14 flex-none items-center px-3">
         <button
-          onClick={goHome}
+          onClick={close}
           className="flex size-10 items-center justify-center text-muted-foreground"
           aria-label="닫기"
         >
