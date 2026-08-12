@@ -7,6 +7,7 @@ import {
   readDateParam,
   scenarioReturnPath,
   scenarioTalkPath,
+  smallTalkPath,
 } from './routes';
 
 describe('scenarioReturnPath', () => {
@@ -95,5 +96,23 @@ describe('readDateParam', () => {
     expect(readDateParam(new URLSearchParams('date=7-29'))).toBeUndefined();
     expect(readDateParam(new URLSearchParams('date=abc'))).toBeUndefined();
     expect(readDateParam(new URLSearchParams('date='))).toBeUndefined();
+  });
+});
+
+describe('smallTalkPath', () => {
+  it('주제를 고르면 상대가 먼저 시작하는 주소가 된다', () => {
+    // Given 홈에서 상대를 고르고 주제까지 골랐을 때
+    // When 대화 주소를 만들면
+    // Then 상대·시작 방식·주제가 함께 실린다 — 새로고침해도 무슨 대화를 열지 알 수 있어야 한다
+    expect(
+      smallTalkPath({ partner: 'teddy', mode: 'ai_first', topicId: 2 }),
+    ).toBe('/conversation/smalltalk?mode=ai_first&partner=teddy&topicId=2');
+  });
+
+  it('내가 먼저 걸면 주제 없이 상대와 시작 방식만 싣는다', () => {
+    // 자유 발화라 고른 주제가 없다 — 빈 topicId를 붙이면 서버가 없는 주제를 찾는다
+    expect(smallTalkPath({ partner: 'marco', mode: 'user_first' })).toBe(
+      '/conversation/smalltalk?mode=user_first&partner=marco',
+    );
   });
 });

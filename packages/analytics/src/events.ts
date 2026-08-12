@@ -110,6 +110,7 @@ export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
   | 'scenario'
+  | 'smalltalk'
   | 'conversation'
   | 'card_back'
   | 'expression_list'
