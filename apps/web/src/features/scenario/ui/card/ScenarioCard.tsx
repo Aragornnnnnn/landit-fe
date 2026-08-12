@@ -179,6 +179,7 @@ export const ScenarioCard = ({
               scenarioId={scenario.scenarioId}
               date={date}
               onBack={closeExpressions}
+              autoFlip={autoFlip}
             />
           </div>
         )}
