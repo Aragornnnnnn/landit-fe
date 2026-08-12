@@ -22,12 +22,9 @@ export default function SmallTalkPage() {
 function SmallTalkContent() {
   const searchParams = useSearchParams();
   // 주제를 고르고 들어오면 상대가 먼저(ai_first), 직접 걸면 내가 먼저다. 주제 없이 온 ai_first는 성립하지 않는다
-  const rawTopicId = searchParams.get('topicId');
-  const topicId = Number(rawTopicId);
-  const aiFirst =
-    searchParams.get('mode') === 'ai_first' &&
-    Boolean(rawTopicId) &&
-    Number.isInteger(topicId);
+  const topicId = Number(searchParams.get('topicId'));
+  const hasTopic = Number.isSafeInteger(topicId) && topicId > 0;
+  const aiFirst = searchParams.get('mode') === 'ai_first' && hasTopic;
 
   return (
     <SmallTalkFlow

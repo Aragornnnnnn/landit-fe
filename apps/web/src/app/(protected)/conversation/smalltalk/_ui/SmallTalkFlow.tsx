@@ -35,9 +35,11 @@ export const SmallTalkFlow = ({
   });
   // 오늘 남은 시간은 홈이 이미 받아 둔 값이다 — 주소로 바로 들어왔으면 여기서 받아온다.
   // 세션 시작 응답의 speakingTimeLimitMs는 하루 총량이라 잔량 대신 쓸 수 없다
-  const { main } = useSmallTalkMainQuery();
+  const { main, error: mainError } = useSmallTalkMainQuery();
 
-  if (error) {
+  // 세션을 못 열었거나 오늘 남은 시간을 못 받았거나 — 어느 쪽이든 대화를 열 수 없다.
+  // 잔량 조회가 실패한 경우엔 세션이 이미 열려 있을 수 있어 돌아가면서 정리한다(안 열렸으면 end는 아무 일도 안 한다)
+  if (error || mainError) {
     return (
       <main className="mx-auto flex h-dvh max-w-[430px] flex-col items-center justify-center gap-4 bg-background px-6 text-center">
         <p className="break-keep text-muted-foreground">
@@ -49,6 +51,7 @@ export const SmallTalkFlow = ({
           className="w-auto px-6"
           onClick={() => {
             track(EVENTS.ERROR_RETRIED, { screen: 'smalltalk' });
+            end();
             router.replace(SMALLTALK_PATH);
           }}
         >
