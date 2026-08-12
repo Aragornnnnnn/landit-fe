@@ -62,7 +62,7 @@ const setup = ({
     generationStuck,
     retry: vi.fn(),
   });
-  render(<SmallTalkResult sessionId={7} />);
+  render(<SmallTalkResult sessionId={7} celebrating />);
 };
 
 beforeEach(() => {
@@ -79,10 +79,27 @@ afterEach(() => {
 const skipCelebration = () => act(() => vi.advanceTimersByTime(3_000));
 
 describe('SmallTalkResult', () => {
-  it('먼저 축하를 보여준다', () => {
+  it('대화를 막 끝내고 오면 먼저 축하를 보여준다', () => {
     setup();
 
     expect(screen.getByText('축하')).toBeInTheDocument();
+  });
+
+  it('표현 학습에서 돌아온 길이면 축하 없이 리스트만 편다', () => {
+    // 표현 하나 배우고 나올 때마다 또 축하할 일은 아니다
+    sessionQuery.mockReturnValue({
+      session: {
+        expressionGenerationStatus: 'READY',
+        expressions: [expressionOf(1, true)],
+      } as SmallTalkSessionDetailResponse,
+      error: null,
+      isLoading: false,
+      generationStuck: false,
+      retry: vi.fn(),
+    });
+    render(<SmallTalkResult sessionId={7} celebrating={false} />);
+
+    expect(screen.getByText('표현 리스트')).toBeInTheDocument();
   });
 
   it('축하가 끝나도 표현이 아직이면 만드는 중을 보여준다', () => {

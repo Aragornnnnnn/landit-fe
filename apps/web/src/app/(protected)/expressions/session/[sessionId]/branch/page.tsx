@@ -5,9 +5,19 @@ import { SmallTalkResult } from './_ui/SmallTalkResult';
 
 export default function SmallTalkResultPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ sessionId: string }>;
+  // 대화를 막 끝내고 왔는지 — 표현 학습에서 돌아올 때는 축하 없이 리스트만 편다
+  searchParams: Promise<{ celebrate?: string }>;
 }) {
   const { sessionId } = use(params);
-  return <SmallTalkResult sessionId={Number(sessionId)} />;
+  const { celebrate } = use(searchParams);
+
+  return (
+    <SmallTalkResult
+      sessionId={Number(sessionId)}
+      celebrating={celebrate === '1'}
+    />
+  );
 }

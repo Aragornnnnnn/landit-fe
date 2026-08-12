@@ -38,18 +38,28 @@ const toListItems = (
   }));
 };
 
-export const SmallTalkResult = ({ sessionId }: { sessionId: number }) => {
+interface SmallTalkResultProps {
+  sessionId: number;
+  // 대화를 막 끝내고 온 길인가 — 표현 학습에서 돌아온 길이면 축하를 다시 하지 않는다
+  celebrating: boolean;
+}
+
+export const SmallTalkResult = ({
+  sessionId,
+  celebrating: celebrateOnArrival,
+}: SmallTalkResultProps) => {
   const router = useRouter();
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
   const { session, error, generationStuck } =
     useSmallTalkSessionQuery(sessionId);
 
   // 축하는 시간이 정하고, 그 뒤는 표현이 준비됐는지가 정한다
-  const [celebrating, setCelebrating] = useState(true);
+  const [celebrating, setCelebrating] = useState(celebrateOnArrival);
   useEffect(() => {
+    if (!celebrateOnArrival) return;
     const timer = setTimeout(() => setCelebrating(false), CELEBRATE_MS);
     return () => clearTimeout(timer);
-  }, []);
+  }, [celebrateOnArrival]);
 
   const ready = session?.expressionGenerationStatus === 'READY';
   const expressions = ready ? toListItems(session.expressions) : null;
@@ -65,6 +75,8 @@ export const SmallTalkResult = ({ sessionId }: { sessionId: number }) => {
     });
   }, [listed, sessionId, count]);
 
+  const goHome = () => router.replace(SMALLTALK_PATH);
+
   // X가 유일한 이탈 경로다 — 학습 없이 나가는 신호를 여기서 남긴다
   const close = () => {
     track(EVENTS.EXPRESSION_LEARNING_SKIPPED, {
@@ -73,8 +85,6 @@ export const SmallTalkResult = ({ sessionId }: { sessionId: number }) => {
     });
     goHome();
   };
-
-  const goHome = () => router.replace(SMALLTALK_PATH);
   const goLearn = (expressionId: number) => {
     track(EVENTS.EXPRESSION_SELECTED, {
       expression_id: expressionId,

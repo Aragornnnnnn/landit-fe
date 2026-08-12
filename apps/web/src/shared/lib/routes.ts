@@ -74,9 +74,13 @@ export const scenarioExpressionPath = (
   date?: string | null,
 ) => withDate(`${expressionsOf('scenario', scenarioId)}/${expressionId}`, date);
 
-// 스몰톡은 "어느 날 카드"라는 개념이 없어 날짜를 달지 않는다
-export const sessionExpressionBranchPath = (sessionId: number) =>
-  `${expressionsOf('session', sessionId)}/branch`;
+// 스몰톡은 "어느 날 카드"라는 개념이 없어 날짜를 달지 않는다.
+// 대화를 막 끝내고 왔을 때만 축하를 켠다 — 표현 학습을 마치고 돌아올 때마다 또 축하할 일은 아니다
+export const sessionExpressionBranchPath = (
+  sessionId: number,
+  { celebrate = false } = {},
+) =>
+  `${expressionsOf('session', sessionId)}/branch${celebrate ? '?celebrate=1' : ''}`;
 
 export const sessionExpressionPath = (
   sessionId: number,

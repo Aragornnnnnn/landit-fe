@@ -138,7 +138,11 @@ export const SmallTalkConversation = ({
           <div className="flex h-36 items-end px-5 pb-3">
             <Button
               onClick={() =>
-                router.replace(sessionExpressionBranchPath(session.sessionId))
+                router.replace(
+                  sessionExpressionBranchPath(session.sessionId, {
+                    celebrate: true,
+                  }),
+                )
               }
             >
               대화 종료하기
