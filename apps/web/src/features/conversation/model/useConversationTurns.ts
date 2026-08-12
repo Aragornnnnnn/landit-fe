@@ -61,6 +61,8 @@ interface ConversationTurnsOptions {
     content: string;
     inputType: 'VOICE' | 'TEXT';
     turnIndex: number;
+    // 이번 턴에 실제로 말한 시간 — 발화 예산을 쓰는 대화(스몰톡)가 이 값으로 차감한다
+    utteranceDurationMs: number;
   }) => Promise<TurnSubmitResult>;
 }
 
@@ -120,7 +122,8 @@ export const useConversationTurns = ({
     }),
     onInputStart: () => send('USER_SPEAKING_STARTED'),
     onInputCancel: () => send('USER_SPEAKING_CANCELLED'),
-    onContent: (content, inputType) => void submitContent(content, inputType),
+    onContent: (content, inputType, utteranceDurationMs) =>
+      void submitContent(content, inputType, utteranceDurationMs),
   });
 
   // 다음 질문을 화면에 올리고 턴을 넘긴다 — 속마음 노출을 마쳤을 때와 건너뛸 때가 공유한다
@@ -164,6 +167,7 @@ export const useConversationTurns = ({
   const submitContent = async (
     content: string,
     inputType: 'VOICE' | 'TEXT',
+    utteranceDurationMs: number,
   ) => {
     if (submittingRef.current) return;
     submittingRef.current = true;
@@ -188,6 +192,7 @@ export const useConversationTurns = ({
         content,
         inputType,
         turnIndex: state.turnIndex,
+        utteranceDurationMs,
       });
       // 종료 인사도 nextMessage로 오고, 그 인사를 끝으로 종료인지는 completed가 알려준다 (인사 재생 후 CTA)
       nextMessageRef.current = res.nextMessage;

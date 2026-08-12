@@ -17,7 +17,12 @@ interface ConversationInputOptions {
   trackContext: () => { sessionId: number | null; turnIndex: number }; // 계측용 최신값 getter
   onInputStart: () => void; // → USER_SPEAKING_STARTED
   onInputCancel: () => void; // → USER_SPEAKING_CANCELLED
-  onContent: (content: string, inputType: 'VOICE' | 'TEXT') => void; // 다듬어진 최종 발화 (음성·타이핑 공통)
+  // 다듬어진 최종 발화 (음성·타이핑 공통) — utteranceDurationMs는 실제로 말한 시간, 타이핑은 0
+  onContent: (
+    content: string,
+    inputType: 'VOICE' | 'TEXT',
+    utteranceDurationMs: number,
+  ) => void;
 }
 
 export const useConversationInput = ({
@@ -34,10 +39,20 @@ export const useConversationInput = ({
   const [micPermissionDenied, setMicPermissionDenied] = useState(false);
   // 권한 거부는 "결정" 이벤트라 대화당 1회만 — 차단 상태에서 반복 탭할 때마다 찍히지 않게
   const micDeniedTrackedRef = useRef(false);
+  // 말하기 시작 시각 — 마이크를 켠 순간부터 최종 텍스트가 올 때까지가 발화 시간이다
+  const spokeFromRef = useRef<number | null>(null);
+
+  // 이번 발화에 걸린 시간. 시작 표시가 없으면(취소 후 늦게 온 결과) 0으로 둔다
+  const takeUtteranceDuration = () => {
+    const spokeFrom = spokeFromRef.current;
+    spokeFromRef.current = null;
+    return spokeFrom == null ? 0 : Date.now() - spokeFrom;
+  };
 
   // 음성 최종 텍스트 — 비었으면(인식 실패) 마이크 대기로 되돌리고 이유를 알린다. 취소 후엔 오지 않는다(useStt 보장)
   const submitVoice = (raw: string) => {
     const content = raw.trim();
+    const utteranceDurationMs = takeUtteranceDuration();
     if (!content) {
       const { sessionId, turnIndex } = trackContext();
       haptic('error');
@@ -51,7 +66,7 @@ export const useConversationInput = ({
       });
       return;
     }
-    onContent(content, 'VOICE');
+    onContent(content, 'VOICE', utteranceDurationMs);
   };
 
   // 인식 오류 — 권한 거부는 설정 유도 안내를, 그 외에는 토스트로 알리고 마이크 대기로 되돌린다
@@ -100,6 +115,7 @@ export const useConversationInput = ({
       turn_index: turnIndex,
     });
     setKeyboardMode(false);
+    spokeFromRef.current = Date.now();
     onInputStart();
     void stt.start();
   };
@@ -150,7 +166,8 @@ export const useConversationInput = ({
   const submitText = () => {
     const content = transcript.trim();
     if (!content) return;
-    onContent(content, 'TEXT');
+    // 타이핑은 말한 게 아니라 쓴 것 — 발화 시간을 차감하지 않는다
+    onContent(content, 'TEXT', 0);
   };
 
   // 다음 턴 준비 — 미리보기를 비우고 기본 입력 수단(마이크)부터 다시 시작한다
