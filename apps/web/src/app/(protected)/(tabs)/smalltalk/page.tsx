@@ -132,16 +132,19 @@ export default function SmallTalkPage() {
               내가 먼저 말 걸기
               <ArrowRightIcon size={16} />
             </Button>
-            {/* 배경이 muted라 secondary(같은 회색)는 묻힌다 — 흰 바탕에 테두리를 둔 ghost가 떠 보인다 */}
-            <Button
-              variant="ghost"
-              size="md"
-              disabled={isLoading}
-              onClick={() => setTopicOpen(true)}
-            >
-              {partner.koreanName}가 먼저 말 걸기
-              <ArrowRightIcon size={16} />
-            </Button>
+            {/* 고를 주제가 없으면 이 길은 없는 것이다 — 조회 중엔 자리를 지킨다.
+                배경이 muted라 secondary(같은 회색)는 묻힌다 — 흰 바탕에 테두리를 둔 ghost가 떠 보인다 */}
+            {(!main || main.topics.length > 0) && (
+              <Button
+                variant="ghost"
+                size="md"
+                disabled={isLoading}
+                onClick={() => setTopicOpen(true)}
+              >
+                {partner.koreanName}가 먼저 말 걸기
+                <ArrowRightIcon size={16} />
+              </Button>
+            )}
           </div>
         </>
       )}

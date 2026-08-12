@@ -46,7 +46,8 @@ export const IntroGuide = ({ onClose }: { onClose: () => void }) => (
           damping: 19,
         }}
         className="relative -mt-2 w-full rounded-3xl bg-card px-5 pt-5 pb-4 shadow-xl"
-        role="status"
+        role="dialog"
+        aria-modal="true"
       >
         {/* 위쪽 꼬리 */}
         <span className="absolute -top-1.5 left-1/2 size-3 -translate-x-1/2 rotate-45 rounded-[3px] bg-card" />
