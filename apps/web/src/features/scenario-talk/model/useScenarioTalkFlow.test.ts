@@ -11,8 +11,8 @@ import {
   innerThoughtPollMs,
   thoughtHoldMs,
 } from '@/entities/conversation/model/pacing';
-import * as scenarioTalkApi from '@/features/scenario-talk/api/session';
-import type { SessionMessageSubmitResponse } from '@/features/scenario-talk/api/session';
+import * as scenarioTalkApi from '@/features/scenario-talk/api/scenario-session';
+import type { SessionMessageSubmitResponse } from '@/features/scenario-talk/api/scenario-session';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import type { TtsVoice } from '@/shared/tts/voice';
 
@@ -29,7 +29,7 @@ vi.mock('@/entities/conversation/api/session', () => ({
   endSession: vi.fn(),
 }));
 
-vi.mock('@/features/scenario-talk/api/session', () => ({
+vi.mock('@/features/scenario-talk/api/scenario-session', () => ({
   startSession: vi.fn(),
   submitMessage: vi.fn(),
 }));

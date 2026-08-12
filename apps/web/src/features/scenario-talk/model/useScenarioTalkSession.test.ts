@@ -4,16 +4,16 @@ import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as sessionApi from '@/entities/conversation/api/session';
-import * as scenarioTalkApi from '@/features/scenario-talk/api/session';
+import * as scenarioTalkApi from '@/features/scenario-talk/api/scenario-session';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 
-import { useConversationSession } from './useConversationSession';
+import { useScenarioTalkSession } from './useScenarioTalkSession';
 
 vi.mock('@/entities/conversation/api/session', () => ({
   endSession: vi.fn(),
 }));
 
-vi.mock('@/features/scenario-talk/api/session', () => ({
+vi.mock('@/features/scenario-talk/api/scenario-session', () => ({
   startSession: vi.fn(),
 }));
 
@@ -46,7 +46,7 @@ const renderSession = (
     content: string;
     translatedContent: string | null;
   }) => void = () => {},
-) => renderHook(() => useConversationSession(scenario, { onOpeningMessage }));
+) => renderHook(() => useScenarioTalkSession(scenario, { onOpeningMessage }));
 
 beforeEach(() => {
   startSession.mockReset();
@@ -55,7 +55,7 @@ beforeEach(() => {
   endSession.mockResolvedValue(undefined as never);
 });
 
-describe('useConversationSession', () => {
+describe('useScenarioTalkSession', () => {
   it('백그라운드로 세션을 시작하고 확보된 sessionId를 노출한다', async () => {
     const { result } = renderSession();
 
@@ -66,7 +66,7 @@ describe('useConversationSession', () => {
 
   it('StrictMode 재마운트에도 세션은 한 번만 만든다', async () => {
     renderHook(
-      () => useConversationSession(scenario, { onOpeningMessage: () => {} }),
+      () => useScenarioTalkSession(scenario, { onOpeningMessage: () => {} }),
       { wrapper: StrictMode },
     );
 

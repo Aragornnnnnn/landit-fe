@@ -1,4 +1,5 @@
-// 시나리오 대화 화면 — 캐릭터 무대·질문 카드·내 답변·마이크를 상태 기계 단계에 맞춰 오케스트레이션한다
+// 시나리오 대화 화면 — features/scenario(콘텐츠)를 재료로 entities/conversation 엔진을 진행시키는 동사.
+// 캐릭터 무대·질문 카드·내 답변·마이크를 상태 기계 단계에 맞춰 오케스트레이션한다
 'use client';
 
 import { useEffect, useState } from 'react';

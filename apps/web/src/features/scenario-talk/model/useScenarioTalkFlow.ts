@@ -16,8 +16,8 @@ import { scenarioKeys } from '@/features/scenario/model/keys';
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
 import { track } from '@/shared/analytics';
 
-import { submitMessage } from '../api/session';
-import { useConversationSession } from './useConversationSession';
+import { submitMessage } from '../api/scenario-session';
+import { useScenarioTalkSession } from './useScenarioTalkSession';
 
 export const useScenarioTalkFlow = (scenario: Scenario) => {
   const preview = scenario.openingPreview;
@@ -34,7 +34,7 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
   );
 
   // 세션 수명(백그라운드 시작·확보 대기·중도 종료)은 훅 안에 — 여기서는 오프닝 폴백만 받는다
-  const session = useConversationSession(scenario, {
+  const session = useScenarioTalkSession(scenario, {
     onOpeningMessage: (message) => setOpening((prev) => prev ?? message),
   });
 
