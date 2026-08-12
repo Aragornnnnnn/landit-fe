@@ -55,18 +55,33 @@ export const smallTalkPath = (start: SmallTalkStart) => {
   return `/conversation/smalltalk?${query.toString()}`;
 };
 
+// 표현 학습은 /expressions 아래 한자리에 모으고, 둘째 칸에 출처를 세운다.
+// 표현의 주인이 대화 종류마다 다르기 때문이다 — 시나리오 표현은 콘텐츠에 붙어 있어 몇 번을 대화해도 같고,
+// 스몰톡 표현은 그 대화에서 그때 만들어져 세션으로만 가리킬 수 있다
+const expressionsOf = (source: 'scenario' | 'session', sourceId: number) =>
+  `/expressions/${source}/${sourceId}`;
+
 // 대화 직후 표현 분기 화면
-export const expressionBranchPath = (
+export const scenarioExpressionBranchPath = (
   scenarioId: number,
   date?: string | null,
-) => withDate(`/expressions/${scenarioId}/branch`, date);
+) => withDate(`${expressionsOf('scenario', scenarioId)}/branch`, date);
 
 // 표현 하나를 배우는 화면
-export const expressionPath = (
+export const scenarioExpressionPath = (
   scenarioId: number,
   expressionId: number,
   date?: string | null,
-) => withDate(`/expressions/${scenarioId}/${expressionId}`, date);
+) => withDate(`${expressionsOf('scenario', scenarioId)}/${expressionId}`, date);
+
+// 스몰톡은 "어느 날 카드"라는 개념이 없어 날짜를 달지 않는다
+export const sessionExpressionBranchPath = (sessionId: number) =>
+  `${expressionsOf('session', sessionId)}/branch`;
+
+export const sessionExpressionPath = (
+  sessionId: number,
+  expressionId: number,
+) => `${expressionsOf('session', sessionId)}/${expressionId}`;
 
 // 주소의 ?date=를 읽는다. yyyy-MM-dd가 아니면 없는 것으로 본다 —
 // 손으로 고친 주소가 그대로 조회로 흘러가면 백엔드가 400을 준다

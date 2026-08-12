@@ -11,7 +11,10 @@ import { useRouter } from 'next/navigation';
 import { StreakStamp } from '@/features/streak/ui/StreakStamp';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
-import { expressionPath, scenarioReturnPath } from '@/shared/lib/routes';
+import {
+  scenarioExpressionPath,
+  scenarioReturnPath,
+} from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
@@ -82,7 +85,7 @@ export const ExpressionBranch = ({
       scenario_id: scenarioId,
       source: 'post_conversation',
     });
-    router.push(expressionPath(scenarioId, expressionId, date));
+    router.push(scenarioExpressionPath(scenarioId, expressionId, date));
   };
 
   const goLearn = () =>

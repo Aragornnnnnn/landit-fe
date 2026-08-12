@@ -19,7 +19,10 @@ import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
 import { FeedbackFlow } from '@/features/feedback/ui/FeedbackFlow';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
-import { expressionBranchPath, scenarioReturnPath } from '@/shared/lib/routes';
+import {
+  scenarioExpressionBranchPath,
+  scenarioReturnPath,
+} from '@/shared/lib/routes';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Transition } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
@@ -105,7 +108,9 @@ export const ScenarioTalkFlow = ({
             // 재대화(이미 완료한 시나리오)면 표현은 예전에 생성됐으니 분기 연출 없이 홈의 그 카드로 돌아간다
             wasCompleted
               ? router.replace(scenarioReturnPath({ date }))
-              : router.replace(expressionBranchPath(scenario.scenarioId, date))
+              : router.replace(
+                  scenarioExpressionBranchPath(scenario.scenarioId, date),
+                )
           }
         />
       </Transition>

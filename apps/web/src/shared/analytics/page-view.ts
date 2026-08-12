@@ -94,19 +94,21 @@ export const toPageView = (
     return { page_name: 'conversation_smalltalk', path: pathname };
   }
 
-  if (seg[0] === 'expressions' && seg[1] && seg[2]) {
-    if (seg[2] === 'branch') {
+  // 표현 학습은 둘째 칸에 출처를 달고 온다 (/expressions/{출처}/{출처id}/...)
+  if (seg[0] === 'expressions' && seg[1] === 'scenario' && seg[2] && seg[3]) {
+    const scenarioId = toId(seg[2]);
+    if (seg[3] === 'branch') {
       return {
         page_name: 'expression_list',
         path: pathname,
-        scenario_id: toId(seg[1]),
+        scenario_id: scenarioId,
       };
     }
     return {
       page_name: 'expression_learning',
       path: pathname,
-      scenario_id: toId(seg[1]),
-      expression_id: toId(seg[2]),
+      scenario_id: scenarioId,
+      expression_id: toId(seg[3]),
     };
   }
 

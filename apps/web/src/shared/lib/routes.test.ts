@@ -2,11 +2,13 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  expressionBranchPath,
-  expressionPath,
   readDateParam,
+  scenarioExpressionBranchPath,
+  scenarioExpressionPath,
   scenarioReturnPath,
   scenarioTalkPath,
+  sessionExpressionBranchPath,
+  sessionExpressionPath,
   smallTalkPath,
 } from './routes';
 
@@ -51,30 +53,47 @@ describe('scenarioTalkPath', () => {
   });
 });
 
-describe('expressionBranchPath', () => {
-  it('오늘 대화 직후면 날짜를 달지 않는다', () => {
-    expect(expressionBranchPath(12)).toBe('/expressions/12/branch');
+describe('scenarioExpressionBranchPath', () => {
+  it('둘째 칸에 출처를 세운다 — 시나리오 표현은 시나리오가 주인이다', () => {
+    expect(scenarioExpressionBranchPath(12)).toBe(
+      '/expressions/scenario/12/branch',
+    );
   });
 
   it('지난 날에서 온 대화면 그 날짜를 이어 나른다', () => {
-    expect(expressionBranchPath(12, '2026-07-29')).toBe(
-      '/expressions/12/branch?date=2026-07-29',
+    expect(scenarioExpressionBranchPath(12, '2026-07-29')).toBe(
+      '/expressions/scenario/12/branch?date=2026-07-29',
     );
   });
 });
 
-describe('expressionPath', () => {
+describe('scenarioExpressionPath', () => {
   it('오늘 카드에서 들어가면 날짜를 달지 않는다', () => {
-    expect(expressionPath(12, 34)).toBe('/expressions/12/34');
+    expect(scenarioExpressionPath(12, 34)).toBe('/expressions/scenario/12/34');
   });
 
   it('지난 날 카드에서 들어가면 그 날짜를 달고 간다', () => {
     // Given 지난 날 카드를 뒤집어 표현을 골랐을 때
     // When 학습 주소를 만들면
     // Then 날짜가 실린다 — 나올 때 그 날로 돌아가야 한다
-    expect(expressionPath(12, 34, '2026-07-29')).toBe(
-      '/expressions/12/34?date=2026-07-29',
+    expect(scenarioExpressionPath(12, 34, '2026-07-29')).toBe(
+      '/expressions/scenario/12/34?date=2026-07-29',
     );
+  });
+});
+
+describe('sessionExpressionBranchPath', () => {
+  it('스몰톡 표현은 그 대화에서 만들어져 세션이 주인이다', () => {
+    // 날짜를 달지 않는다 — 시나리오와 달리 "어느 날 카드"라는 개념이 없다
+    expect(sessionExpressionBranchPath(7)).toBe(
+      '/expressions/session/7/branch',
+    );
+  });
+});
+
+describe('sessionExpressionPath', () => {
+  it('학습을 마치면 한 칸 위인 그 세션의 표현 목록으로 돌아간다', () => {
+    expect(sessionExpressionPath(7, 34)).toBe('/expressions/session/7/34');
   });
 });
 
