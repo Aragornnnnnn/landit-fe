@@ -98,6 +98,13 @@ describe('toPageView', () => {
     });
   });
 
+  it('스몰톡 대화는 id 없이 page_name small_talk으로 남는다', () => {
+    // 주소의 상대·시작 방식(mode/partner)은 여기 싣지 않는다 — Conversation Started가 이미 남긴다
+    expect(
+      pv('/conversation/smalltalk', 'mode=user_first&partner=chloe'),
+    ).toEqual({ page_name: 'small_talk', path: '/conversation/smalltalk' });
+  });
+
   it('표현 분기·학습 경로를 각각 정규화한다', () => {
     expect(pv('/expressions/3/branch')).toEqual({
       page_name: 'expression_list',

@@ -104,6 +104,8 @@ export type OnboardingStep =
   'intro' | 'sound' | 'mic' | 'thought' | 'notification' | 'scenario';
 export type ExpressionStep = 'quiz' | 'explain' | 'review';
 export type TurnInputType = 'voice' | 'text';
+// 어떤 대화인가 — 대화 이벤트는 두 종류가 같은 이름으로 쌓이므로 속성으로 가른다 (정책 2-1)
+export type TalkType = 'scenario' | 'small_talk';
 export type HintSource = 'quiz' | 'review';
 export type HomeReturnReason = 'just' | 'flip' | 'card' | 'reminder';
 export type ConfirmSheetKind =
@@ -227,11 +229,14 @@ export type EventProps = {
     month: number;
   };
 
+  // scenario_id·is_retry는 시나리오만, topic_id는 스몰톡의 AI 선시작만 (내가 먼저 걸면 주제가 없다)
   'Conversation Started': {
-    scenario_id: number;
+    talk_type: TalkType;
     session_id: number;
     first_speaker: string;
-    is_retry: boolean;
+    scenario_id?: number;
+    is_retry?: boolean;
+    topic_id?: number;
   };
   // 세션은 백그라운드로 시작돼 확보 전에도 발화 준비가 가능하다 — session_id가 없을 수 있다
   'Recording Started': { session_id?: number; turn_index: number };
@@ -241,11 +246,14 @@ export type EventProps = {
   'Mic Settings Opened': undefined;
   'Input Mode Switched': { session_id?: number; mode: TurnInputType };
   'Turn Completed': {
+    talk_type: TalkType;
     session_id: number;
-    scenario_id: number;
+    scenario_id?: number;
     turn_index: number;
     input_type: TurnInputType;
     char_count: number;
+    // 스몰톡만 — 이 발화로 깎인 발화 예산
+    utterance_duration_ms?: number;
   };
   'Turn Failed': {
     session_id?: number;
@@ -263,13 +271,18 @@ export type EventProps = {
   };
   'Hint Used': { source: HintSource; level: number };
   'Conversation Completed': {
+    talk_type: TalkType;
     session_id: number;
-    scenario_id: number;
+    scenario_id?: number;
     turn_count: number;
+    // 스몰톡만 — 이 대화에서 말한 시간과, 시간을 다 써서 끝났는지
+    speaking_duration_ms?: number;
+    end_reason?: 'user_ended' | 'time_limit';
   };
   'Conversation Abandoned': {
+    talk_type: TalkType;
     session_id?: number;
-    scenario_id: number;
+    scenario_id?: number;
     turn_index: number;
   };
 

@@ -89,6 +89,11 @@ export const toPageView = (
     };
   }
 
+  // 스몰톡 대화는 가리킬 콘텐츠가 없어 id가 없다 — 상대·시작 방식은 Conversation Started가 남긴다
+  if (seg[0] === 'conversation' && seg[1] === 'smalltalk') {
+    return { page_name: 'small_talk', path: pathname };
+  }
+
   if (seg[0] === 'expressions' && seg[1] && seg[2]) {
     if (seg[2] === 'branch') {
       return {

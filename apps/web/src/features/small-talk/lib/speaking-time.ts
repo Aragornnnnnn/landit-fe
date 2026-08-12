@@ -12,3 +12,12 @@ export const toSpeakingTimeLabel = (ms: number): string => {
   // 딱 떨어지는 분에 "0초"를 붙이지 않는다
   return seconds === 0 ? `${minutes}분` : `${minutes}분 ${seconds}초`;
 };
+
+// 대화 중 줄어드는 시간 표기 — 초 단위로 깎이는 값이라 문장("41초") 대신 시계(0:41)로 읽힌다
+export const toCountdownLabel = (ms: number): string => {
+  const totalSeconds = Math.max(0, Math.floor(ms / SECOND_MS));
+  const minutes = Math.floor(totalSeconds / MINUTE_SECONDS);
+  const seconds = totalSeconds % MINUTE_SECONDS;
+
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+};

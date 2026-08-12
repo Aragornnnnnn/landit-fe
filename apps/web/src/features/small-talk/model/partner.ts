@@ -87,6 +87,10 @@ export const PARTNERS: PartnerProfile[] = [
 // 고르지 않고 바로 시작해도 한 명은 서 있어야 한다
 export const DEFAULT_PARTNER: Partner = 'chloe';
 
+// 주소에 실려 온 상대 — 손으로 고친 값이 그대로 흘러가지 않게 목록에서 확인하고, 없으면 기본 상대다
+export const toPartnerId = (raw: string | null): Partner =>
+  PARTNERS.find((partner) => partner.id === raw)?.id ?? DEFAULT_PARTNER;
+
 // 목록에 없는 값이 들어오면 기본 상대를 세운다
 export const findPartner = (id: Partner): PartnerProfile =>
   PARTNERS.find((partner) => partner.id === id) ??
