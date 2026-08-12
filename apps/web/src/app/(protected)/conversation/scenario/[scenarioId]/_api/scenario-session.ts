@@ -6,7 +6,7 @@ import type {
   InputType,
   NextMessage,
   SubmittedMessage,
-} from '@/entities/conversation/api/session';
+} from '@/features/conversation/api/session';
 import { api } from '@/shared/api/client';
 // ttsVoice는 재생(useTts)과 같은 타입을 공유한다
 import type { TtsVoice } from '@/shared/tts/voice';

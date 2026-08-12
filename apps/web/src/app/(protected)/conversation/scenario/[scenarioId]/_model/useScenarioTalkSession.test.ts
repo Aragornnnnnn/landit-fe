@@ -3,17 +3,17 @@ import { StrictMode } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import * as sessionApi from '@/entities/conversation/api/session';
-import * as scenarioTalkApi from '@/features/scenario-talk/api/scenario-session';
+import * as sessionApi from '@/features/conversation/api/session';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 
+import * as scenarioTalkApi from '../_api/scenario-session';
 import { useScenarioTalkSession } from './useScenarioTalkSession';
 
-vi.mock('@/entities/conversation/api/session', () => ({
+vi.mock('@/features/conversation/api/session', () => ({
   endSession: vi.fn(),
 }));
 
-vi.mock('@/features/scenario-talk/api/scenario-session', () => ({
+vi.mock('../_api/scenario-session', () => ({
   startSession: vi.fn(),
 }));
 

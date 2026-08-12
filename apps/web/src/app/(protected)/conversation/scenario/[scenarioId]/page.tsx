@@ -5,13 +5,14 @@ import { Suspense, use } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { ConversationSkeleton } from '@/entities/conversation/ui/ConversationSkeleton';
-import { ScenarioTalkFlow } from '@/features/scenario-talk/ui/ScenarioTalkFlow';
+import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSkeleton';
 import { toScenario } from '@/features/scenario/lib/to-scenario';
 import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { track } from '@/shared/analytics';
 import { readDateParam, scenarioReturnPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
+
+import { ScenarioTalkFlow } from './_ui/ScenarioTalkFlow';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
 export default function ScenarioTalkPage({

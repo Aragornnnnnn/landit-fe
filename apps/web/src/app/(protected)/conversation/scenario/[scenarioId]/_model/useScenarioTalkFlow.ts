@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { useConversationTurns } from '@/entities/conversation/model/useConversationTurns';
+import { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { prefetchSessionFeedback } from '@/features/feedback/model/useSessionFeedbackQuery';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { scenarioKeys } from '@/features/scenario/model/keys';
@@ -16,7 +16,7 @@ import { scenarioKeys } from '@/features/scenario/model/keys';
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
 import { track } from '@/shared/analytics';
 
-import { submitMessage } from '../api/scenario-session';
+import { submitMessage } from '../_api/scenario-session';
 import { useScenarioTalkSession } from './useScenarioTalkSession';
 
 export const useScenarioTalkFlow = (scenario: Scenario) => {

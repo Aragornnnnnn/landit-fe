@@ -4,12 +4,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
-import { endSession } from '@/entities/conversation/api/session';
+import { endSession } from '@/features/conversation/api/session';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
 import { reportError, reportWarning } from '@/shared/monitoring/report';
 
-import { startSession } from '../api/scenario-session';
+import { startSession } from '../_api/scenario-session';
 
 interface ScenarioTalkSessionOptions {
   // openingPreview로 오프닝을 못 시드했을 때(예외적) 세션 응답의 첫 발화로 채우는 폴백

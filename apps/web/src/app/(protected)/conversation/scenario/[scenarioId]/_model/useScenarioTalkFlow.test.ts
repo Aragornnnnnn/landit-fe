@@ -5,17 +5,17 @@ import { StrictMode } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import * as sessionApi from '@/entities/conversation/api/session';
+import * as sessionApi from '@/features/conversation/api/session';
 import {
   innerThoughtMaxPolls,
   innerThoughtPollMs,
   thoughtHoldMs,
-} from '@/entities/conversation/model/pacing';
-import * as scenarioTalkApi from '@/features/scenario-talk/api/scenario-session';
-import type { SessionMessageSubmitResponse } from '@/features/scenario-talk/api/scenario-session';
+} from '@/features/conversation/model/pacing';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import type { TtsVoice } from '@/shared/tts/voice';
 
+import * as scenarioTalkApi from '../_api/scenario-session';
+import type { SessionMessageSubmitResponse } from '../_api/scenario-session';
 import { useScenarioTalkFlow } from './useScenarioTalkFlow';
 
 const monitoringMock = vi.hoisted(() => ({
@@ -24,12 +24,12 @@ const monitoringMock = vi.hoisted(() => ({
 }));
 vi.mock('@/shared/monitoring/report', () => monitoringMock);
 
-vi.mock('@/entities/conversation/api/session', () => ({
+vi.mock('@/features/conversation/api/session', () => ({
   getInnerThought: vi.fn(),
   endSession: vi.fn(),
 }));
 
-vi.mock('@/features/scenario-talk/api/scenario-session', () => ({
+vi.mock('../_api/scenario-session', () => ({
   startSession: vi.fn(),
   submitMessage: vi.fn(),
 }));

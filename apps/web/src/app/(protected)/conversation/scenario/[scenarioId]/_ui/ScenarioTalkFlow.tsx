@@ -1,4 +1,4 @@
-// 시나리오 대화 화면 — features/scenario(콘텐츠)를 재료로 entities/conversation 엔진을 진행시키는 동사.
+// 시나리오 대화 화면 — features/scenario(콘텐츠)를 재료로 features/conversation 엔진을 진행시킨다.
 // 캐릭터 무대·질문 카드·내 답변·마이크를 상태 기계 단계에 맞춰 오케스트레이션한다
 'use client';
 
@@ -6,16 +6,16 @@ import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
-import { toCharacterLook } from '@/entities/conversation/model/character-look';
-import { userIntroHoldMs } from '@/entities/conversation/model/pacing';
-import type { FloatingThought } from '@/entities/conversation/model/thought';
-import { CharacterStage } from '@/entities/conversation/ui/flow/CharacterStage';
-import { ExitConfirmSheet } from '@/entities/conversation/ui/flow/ExitConfirmSheet';
-import { MicControl } from '@/entities/conversation/ui/flow/MicControl';
-import { MicPermissionSheet } from '@/entities/conversation/ui/flow/MicPermissionSheet';
-import { QuestionCard } from '@/entities/conversation/ui/flow/QuestionCard';
-import { ThoughtOverlay } from '@/entities/conversation/ui/flow/ThoughtOverlay';
-import { UserTranscript } from '@/entities/conversation/ui/flow/UserTranscript';
+import { toCharacterLook } from '@/features/conversation/model/character-look';
+import { userIntroHoldMs } from '@/features/conversation/model/pacing';
+import type { FloatingThought } from '@/features/conversation/model/thought';
+import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
+import { ExitConfirmSheet } from '@/features/conversation/ui/flow/ExitConfirmSheet';
+import { MicControl } from '@/features/conversation/ui/flow/MicControl';
+import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
+import { QuestionCard } from '@/features/conversation/ui/flow/QuestionCard';
+import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
+import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
 import { FeedbackFlow } from '@/features/feedback/ui/FeedbackFlow';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
@@ -25,7 +25,7 @@ import { Transition } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
-import { useScenarioTalkFlow } from '../model/useScenarioTalkFlow';
+import { useScenarioTalkFlow } from '../_model/useScenarioTalkFlow';
 
 export const ScenarioTalkFlow = ({
   scenario,
