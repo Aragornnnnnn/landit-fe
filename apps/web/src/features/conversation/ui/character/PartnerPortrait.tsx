@@ -21,7 +21,8 @@ export const PartnerPortrait = ({
 
   return (
     <Parts
-      viewBox={viewBox}
+      // 있을 때만 넘긴다 — undefined로 넘기면 파츠의 원본 viewBox를 지워 그림이 사라진다
+      {...(viewBox && { viewBox })}
       className={[styles.parts, className].filter(Boolean).join(' ')}
       aria-hidden
     />

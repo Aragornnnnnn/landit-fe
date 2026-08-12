@@ -339,7 +339,12 @@ export const PartnerCharacter = ({
         .filter(Boolean)
         .join(' ')}
     >
-      <Parts className={styles.parts} viewBox={viewBox} aria-hidden />
+      {/* viewBox는 있을 때만 넘긴다 — undefined로 넘기면 파츠가 들고 있던 원본 viewBox를 지워 캐릭터가 사라진다 */}
+      <Parts
+        className={styles.parts}
+        {...(viewBox && { viewBox })}
+        aria-hidden
+      />
     </div>
   );
 };
