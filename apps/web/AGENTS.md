@@ -27,9 +27,9 @@ import 경로는 FSD 규칙을 따른다 — 같은 슬라이스(라우트 구�
 
 - `utils.ts`, `helpers.ts` 금지 — 이름을 못 지으면 개념이 안 선 것이다. `types.ts`, `constants.ts`도 같은 병 — 내용물 형태가 아니라 개념으로 파일을 가른다.
 - 파일명 — 컴포넌트 `Pascal.tsx`, 훅 `useCamel.ts`, 나머지 모듈은 `kebab-case.ts`.
-- 서버 상태 훅(본체가 useQuery/useMutation 하나인 얇은 래퍼)은 `Query`/`Mutation` 접미사를 붙인다. 쿼리를 부품으로 쓰는 지휘자 훅(useConversationFlow 등)은 제외.
+- 서버 상태 훅(본체가 useQuery/useMutation 하나인 얇은 래퍼)은 `Query`/`Mutation` 접미사를 붙인다. 쿼리를 부품으로 쓰는 지휘자 훅(useScenarioTalkFlow 등)은 제외.
 - `features` 간 가로 import는 지양한다. 불가피하면 이유를 한 줄 주석으로 남긴다 (나중에 entities로 뽑을 후보 목록이 된다).
-- 예외: `scenario`·`feedback`처럼 여러 feature가 참조하는 공용 슬라이스는 가로 import를 허용한다. 단 공용 슬라이스 자신은 다른 feature를 import하지 않는다 (방향 고정).
+- 예외: `scenario`·`feedback`처럼 여러 feature가 참조하는 공용 슬라이스는 가로 import를 허용한다. 단 공용 슬라이스 자신은 다른 feature를 import하지 않는다 (방향 고정). `scenario`는 콘텐츠(카드·캘린더·잠금)만 담당한다 — 대화 진행은 `scenario-talk`, 스몰톡은 `small-talk`이 명사/동사로 갈라 담당한다.
 - `page.tsx`는 파라미터 해석과 조립만 한다. 로직이 생기면 model로 뽑는다.
 
 이름 규칙.
