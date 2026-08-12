@@ -37,7 +37,12 @@ describe('Modal', () => {
   it('dismissible=false면 배경을 클릭해도 onClose가 호출되지 않는다', () => {
     const onClose = vi.fn();
     render(
-      <Modal label="테스트 다이얼로그" open onClose={onClose} dismissible={false}>
+      <Modal
+        label="테스트 다이얼로그"
+        open
+        onClose={onClose}
+        dismissible={false}
+      >
         내용
       </Modal>,
     );
@@ -63,7 +68,12 @@ describe('Modal', () => {
   it('dismissible=false면 Escape를 눌러도 onClose가 호출되지 않는다', () => {
     const onClose = vi.fn();
     render(
-      <Modal label="테스트 다이얼로그" open onClose={onClose} dismissible={false}>
+      <Modal
+        label="테스트 다이얼로그"
+        open
+        onClose={onClose}
+        dismissible={false}
+      >
         내용
       </Modal>,
     );
@@ -90,7 +100,12 @@ describe('Modal', () => {
   it('dismissible=false면 네이티브 뒤로가기로 닫히지 않는다', () => {
     const onClose = vi.fn();
     render(
-      <Modal label="테스트 다이얼로그" open onClose={onClose} dismissible={false}>
+      <Modal
+        label="테스트 다이얼로그"
+        open
+        onClose={onClose}
+        dismissible={false}
+      >
         내용
       </Modal>,
     );
