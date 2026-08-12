@@ -38,7 +38,11 @@ const startResponse = (
   ({
     sessionId: 7,
     currentMessage,
-    progress: { completed: false },
+    progress: {
+      currentTurnNumber: 1,
+      totalQuestionCount: 3,
+      completed: false,
+    },
   }) as Awaited<ReturnType<typeof scenarioTalkApi.startSession>>;
 
 const renderSession = (

@@ -11,11 +11,16 @@ import { api } from '@/shared/api/client';
 // ttsVoice는 재생(useTts)과 같은 타입을 공유한다
 import type { TtsVoice } from '@/shared/tts/voice';
 
-export interface SessionProgress {
+// 시작 응답의 진행도 — 아직 주고받은 메시지가 없어 순번이 없다 (백엔드 DTO가 제출 응답과 다른 레코드다)
+export interface SessionStartProgress {
   currentTurnNumber: number;
-  currentMessageSequenceNumber: number;
   totalQuestionCount: number;
   completed: boolean;
+}
+
+// 제출 응답의 진행도 — 방금 오간 메시지의 순번이 붙는다
+export interface SessionProgress extends SessionStartProgress {
+  currentMessageSequenceNumber: number;
 }
 
 export interface SessionStartResponse {
@@ -26,7 +31,7 @@ export interface SessionStartResponse {
   userOpeningInstruction: string | null;
   ttsVoice: TtsVoice | null;
   currentMessage: CurrentMessage | null;
-  progress: SessionProgress;
+  progress: SessionStartProgress;
 }
 
 export interface SessionMessageSubmitResponse {
