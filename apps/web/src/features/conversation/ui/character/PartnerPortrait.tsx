@@ -2,8 +2,8 @@
 // 표정 변형 조각(웃는 눈·찡그린 눈썹)은 파츠 SVG에 다 들어 있어서, 감추는 규칙을
 // 얹지 않으면 전부 겹쳐 보인다 — 그 규칙이 PartnerCharacter.module.css의 .parts다
 import type { Partner } from '../../model/character-look';
-import { PARTS } from './PartnerCharacter';
 import styles from './PartnerCharacter.module.css';
+import { PARTS } from './parts';
 
 interface PartnerPortraitProps {
   partner: Partner;

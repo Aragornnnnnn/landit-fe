@@ -5,7 +5,7 @@
 // 3겹은 주기가 일정하면 어색해지는 움직임이라 여기서 랜덤 타이밍으로 쏜다.
 //
 // 값은 전부 아래 사양표(BLINKING·NODDING·MIMING)에 모아 두고, 함수는 "언제 쏘는가"만 말한다.
-import { useEffect, useRef, type ComponentType, type SVGProps } from 'react';
+import { useEffect, useRef } from 'react';
 import { useReducedMotion } from 'motion/react';
 
 import type { CharacterLook, Partner } from '../../model/character-look';
@@ -16,10 +16,8 @@ import {
   toVisemes,
 } from '../../model/lipsync';
 import type { PlayingSpeech } from '../../model/useAiSpeech';
-import { ChloeParts } from './ChloeParts';
-import { MarcoParts } from './MarcoParts';
 import styles from './PartnerCharacter.module.css';
-import { TeddyParts } from './TeddyParts';
+import { PARTS } from './parts';
 
 /**
  * partner — 누구를 그릴지. 세션 TTS 음성 성별이 정한다.
@@ -33,16 +31,6 @@ interface PartnerCharacterProps {
   // 그릴 영역을 좁혀 상반신만 보여줄 때 쓴다. 생략하면 파츠 원본 그대로(전신)
   viewBox?: string;
 }
-
-/**
- * 캐릭터별 파츠 — 생성 스크립트 산출물을 여기에 등록한다.
- * Record라 Partner에 캐릭터를 추가하면 여기 빠진 자리를 타입 검사가 잡아준다.
- */
-export const PARTS: Record<Partner, ComponentType<SVGProps<SVGSVGElement>>> = {
-  marco: MarcoParts,
-  chloe: ChloeParts,
-  teddy: TeddyParts,
-};
 
 type Range = readonly [number, number];
 

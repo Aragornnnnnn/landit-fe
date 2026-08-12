@@ -1,6 +1,6 @@
 // 스몰톡 대화 상대 — 누구와 얘기할지 홈에서 고른다. 상대마다 출신과 말투가 달라 자기소개가 붙는다.
 // 소개 문구는 화면 고정값이다 — 서버는 상대 개념을 아직 모르고, 세션 시작 응답의 음성만 내려준다.
-import type { Partner } from '@/entities/conversation/model/character-look';
+import type { Partner } from '@/features/conversation/model/character-look';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 export interface PartnerProfile {

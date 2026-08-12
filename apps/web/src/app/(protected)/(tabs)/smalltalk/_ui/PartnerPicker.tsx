@@ -1,10 +1,9 @@
 // 대화 상대 고르기 — 얼굴만 잘라 낸 아바타 셋. 고른 사람만 테두리가 생기고 이름이 진해진다
 'use client';
 
-import type { Partner } from '@/entities/conversation/model/character-look';
-import { PartnerPortrait } from '@/entities/conversation/ui/character/PartnerPortrait';
-
-import { PARTNERS } from '../model/partner';
+import type { Partner } from '@/features/conversation/model/character-look';
+import { PartnerPortrait } from '@/features/conversation/ui/character/PartnerPortrait';
+import { PARTNERS } from '@/features/small-talk/model/partner';
 
 interface PartnerPickerProps {
   selected: Partner;

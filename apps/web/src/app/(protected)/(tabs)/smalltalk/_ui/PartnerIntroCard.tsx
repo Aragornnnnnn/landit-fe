@@ -1,5 +1,5 @@
 // 상대 자기소개 카드 — 영어가 본문이고 한국어는 못 알아들었을 때를 위한 받침이다
-import type { PartnerProfile } from '../model/partner';
+import type { PartnerProfile } from '@/features/small-talk/model/partner';
 
 // 이 화면은 스크롤이 없다 — 낮은 화면(≤740px)에서는 캐릭터 대신 이 카드가 먼저 줄어든다.
 // 여백을 먼저 깎고 그래도 모자라면 글자를 한 단계 내린다.

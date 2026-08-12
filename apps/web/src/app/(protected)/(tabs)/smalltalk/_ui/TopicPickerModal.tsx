@@ -1,9 +1,8 @@
 // 주제 고르기 — 상대가 먼저 말을 걸려면 무슨 얘기로 열지 정해야 한다
 'use client';
 
+import type { FreeTalkTopic } from '@/features/small-talk/api/free-talk';
 import { Modal } from '@/shared/ui/Modal';
-
-import type { FreeTalkTopic } from '../api/free-talk';
 
 interface TopicPickerModalProps {
   open: boolean;

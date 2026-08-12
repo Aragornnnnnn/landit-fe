@@ -1,91 +1,57 @@
 'use client';
 
 // 스몰톡 탭 — 대화 상대를 고르고, 내가 먼저 걸거나 상대가 주제로 먼저 걸게 한다. 정답도 점수도 없는 대화다
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
-import type { Partner } from '@/entities/conversation/model/character-look';
-import { useAiSpeech } from '@/entities/conversation/model/useAiSpeech';
-import { PartnerCharacter } from '@/entities/conversation/ui/character/PartnerCharacter';
+import { PartnerCharacter } from '@/features/conversation/ui/character/PartnerCharacter';
 import type { FreeTalkTopic } from '@/features/small-talk/api/free-talk';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
-import {
-  hasSeenIntroGuide,
-  markIntroGuideSeen,
-} from '@/features/small-talk/model/intro-guide-seen';
-import {
-  DEFAULT_PARTNER,
-  findPartner,
-} from '@/features/small-talk/model/partner';
 import { useFreeTalkMainQuery } from '@/features/small-talk/model/useFreeTalkMainQuery';
-import { IntroGuide } from '@/features/small-talk/ui/IntroGuide';
-import { PartnerIntroCard } from '@/features/small-talk/ui/PartnerIntroCard';
-import { PartnerPicker } from '@/features/small-talk/ui/PartnerPicker';
-import { TopicPickerModal } from '@/features/small-talk/ui/TopicPickerModal';
 import { track } from '@/shared/analytics';
 import { smallTalkPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon } from '@/shared/ui/Icons';
 
-// 인사 첫머리만 웃는 얼굴 — 말하는 내내 웃고 있으면 표정이 아니라 그림이 된다
-const GREETING_SMILE_MS = 2000;
+import {
+  hasSeenIntroGuide,
+  markIntroGuideSeen,
+} from './_model/intro-guide-seen';
+import { usePartnerGreeting } from './_model/usePartnerGreeting';
+import { IntroGuide } from './_ui/IntroGuide';
+import { PartnerIntroCard } from './_ui/PartnerIntroCard';
+import { PartnerPicker } from './_ui/PartnerPicker';
+import { TopicPickerModal } from './_ui/TopicPickerModal';
 
 export default function SmallTalkPage() {
   const router = useRouter();
   const { main, error, isLoading, retry } = useFreeTalkMainQuery();
-  const [partnerId, setPartnerId] = useState<Partner>(DEFAULT_PARTNER);
+  // 오늘 예산을 다 썼는지는 서버(canStart)가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
+  const exhausted = main !== null && !main.canStart;
   const [topicOpen, setTopicOpen] = useState(false);
   // 처음 들어온 사람에겐 안내부터 — 닫아야 인사가 시작된다. 서버 렌더엔 localStorage가 없어 안 본 것으로 두고,
   // 하이드레이션 뒤 첫 상태 계산에서 본 기록이 반영된다
   const [guideOpen, setGuideOpen] = useState(() => !hasSeenIntroGuide());
-  // 안내를 닫은 뒤 상대가 자기소개를 한다. 상대를 바꾸면 새로 고른 사람이 다시 말한다
-  const [greeting, setGreeting] = useState(() => hasSeenIntroGuide());
-  // 웃는 얼굴은 인사보다 짧게 스친다 — 발화가 끝나기 전에 평소 표정으로 돌아온다
-  const [smiling, setSmiling] = useState(() => hasSeenIntroGuide());
-
-  useEffect(() => {
-    if (!smiling) return;
-    const timer = setTimeout(() => setSmiling(false), GREETING_SMILE_MS);
-    return () => clearTimeout(timer);
-  }, [smiling]);
-
-  const partner = findPartner(partnerId);
-
-  // 자기소개 재생 — 문구가 고정이라 미리 만든 음원을 튼다(합성 왕복 없음).
-  // 음원이 없거나 실패하면 훅이 알아서 합성으로 폴백하고, 소리가 나면 입이 소리를 따라간다
-  const speech = useAiSpeech({
-    playing: greeting,
-    content: partner.intro,
-    voice: partner.voice,
-    openingSrc: partner.introAudioSrc,
-    onSpeechEnd: () => setGreeting(false),
+  const { partner, look, speech, greet, selectPartner } = usePartnerGreeting({
+    greetsOnMount: !guideOpen,
   });
 
   const closeGuide = () => {
     markIntroGuideSeen();
     setGuideOpen(false);
-    setGreeting(true);
-    setSmiling(true);
+    greet();
   };
-
-  const selectPartner = (next: Partner) => {
-    setPartnerId(next);
-    setGreeting(true);
-    setSmiling(true);
-  };
-  // 오늘 예산을 다 썼는지는 서버(canStart)가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
-  const exhausted = main !== null && !main.canStart;
 
   // 계측은 세션이 실제로 열리는 대화 화면에서 한다 — 여기서 쏘면 들어가다 만 것도 시작으로 잡힌다
   const startWithMe = () =>
-    router.push(smallTalkPath({ partner: partnerId, mode: 'user_first' }));
+    router.push(smallTalkPath({ partner: partner.id, mode: 'user_first' }));
 
   const startWithTopic = (topic: FreeTalkTopic) => {
     setTopicOpen(false);
     router.push(
       smallTalkPath({
-        partner: partnerId,
+        partner: partner.id,
         mode: 'ai_first',
         topicId: topic.topicId,
       }),
@@ -113,19 +79,15 @@ export default function SmallTalkPage() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden pb-4">
-      <PartnerPicker selected={partnerId} onSelect={selectPartner} />
+      <PartnerPicker selected={partner.id} onSelect={selectPartner} />
 
       {/* 이 화면은 스크롤이 없다 — 남는 자리는 캐릭터가 먹되 아래위로 한계를 둔다.
           낮은 화면에서 먼저 양보하는 쪽은 캐릭터가 아니라 소개 카드다(글자·여백을 줄인다) */}
       <div className="flex max-h-[190px] min-h-[142px] flex-1 justify-center">
         <PartnerCharacter
-          partner={partnerId}
-          // 인사하는 동안은 웃는 눈으로 — 처음 마주치는 얼굴이라 반가운 쪽이 낫다
-          look={{
-            posture: greeting ? 'speaking' : 'idle',
-            expression: smiling ? 'happy' : 'neutral',
-          }}
-          speech={speech.speech}
+          partner={partner.id}
+          look={look}
+          speech={speech}
           viewBox={partner.portraitViewBox}
         />
       </div>
