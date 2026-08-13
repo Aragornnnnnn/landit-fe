@@ -1,6 +1,7 @@
 // 편지함 임시 데이터 — 아직 서버를 부르지 않는다. 실제 호출이 붙으면 이 파일과 letters.ts의 반환부를 함께 지운다 (LAN-218)
 // 모양은 백엔드 계약 그대로다. 문구는 피그마 840-495의 목업을 옮긴 것이라 제품 문구가 아니다
 import type { MailboxPage, ReceivedLetter, SentFeedback } from './letter';
+import type { LetterDetail } from './letter-detail';
 
 export const RECEIVED_FIXTURE: MailboxPage<ReceivedLetter> = {
   items: [
@@ -59,4 +60,77 @@ export const SENT_FIXTURE: MailboxPage<SentFeedback> = {
   ],
   nextCursor: null,
   hasNext: false,
+};
+
+// 편지 한 통을 펼쳤을 때 — 목록의 letterId를 그대로 키로 쓴다
+export const DETAIL_FIXTURE: Record<number, LetterDetail> = {
+  1: {
+    letterId: 1,
+    kind: 'NOTICE',
+    title: '우리가 앱을 만든 이유',
+    sentAt: '2026-08-01T01:00:00Z',
+    read: true,
+    blocks: [
+      { type: 'IMAGE', url: '', caption: '시작하는 마음' },
+      {
+        type: 'PARAGRAPH',
+        text: '누구나 외국어 앞에서 작아지는 순간이 있어요. 랜딧은 그 순간을 함께 연습할 수 있는 자리를 만들고 싶어서 시작했습니다.',
+      },
+      {
+        type: 'PARAGRAPH',
+        text: '실제로 겪을 법한 상황을 시나리오로 만들고, 편하게 여러 번 말해보면서 자신감을 쌓을 수 있도록 돕고 있어요.',
+      },
+    ],
+  },
+  2: {
+    letterId: 2,
+    kind: 'UPDATE',
+    title: '이번 업데이트 소식',
+    sentAt: '2026-08-09T02:30:00Z',
+    read: true,
+    blocks: [
+      { type: 'IMAGE', url: '', caption: '이번 업데이트 하이라이트' },
+      {
+        type: 'ORDERED_LIST',
+        items: [
+          '고객의 소리함 편지함으로 개편 — 공지·답장을 한 곳에서 확인하고, 피드백도 더 쉽게 보낼 수 있어요.',
+          '복습 영작 단어뱅크 추가 — 표현이 잘 기억나지 않을 때 단어 칩으로 힌트를 받을 수 있어요.',
+          '자잘한 버그 수정 — 홈 화면 스크롤과 진행도 표시가 더 매끄러워졌어요.',
+        ],
+      },
+    ],
+  },
+  3: {
+    letterId: 3,
+    kind: 'REPLY',
+    feedbackType: 'BUG',
+    sentAt: '2026-08-09T06:47:00Z',
+    replyText:
+      '불편을 드려 죄송해요! 로그인 세션 유지 시간을 늘리는 패치를 준비 중이에요. 다음 업데이트에 반영될 예정입니다.',
+    quotedText:
+      '로그인이 자꾸 풀려요. 하루에 서너 번은 다시 로그인해야 해서 너무 불편해요.',
+    read: false,
+  },
+  11: {
+    letterId: 11,
+    kind: 'FEEDBACK',
+    feedbackType: 'FEATURE',
+    status: 'PENDING',
+    sentAt: '2026-08-08T09:20:00Z',
+    content: '다크모드 지원해주세요. 밤에 쓸 때 눈이 너무 부셔요.',
+    reply: null,
+  },
+  12: {
+    letterId: 12,
+    kind: 'FEEDBACK',
+    feedbackType: 'BUG',
+    status: 'ANSWERED',
+    sentAt: '2026-08-03T00:14:00Z',
+    content:
+      '로그인이 자꾸 풀려요. 하루에 서너 번은 다시 로그인해야 해서 너무 불편해요.',
+    reply: {
+      text: '불편을 드려 죄송해요! 로그인 세션 유지 시간을 늘리는 패치를 준비 중이에요. 다음 업데이트에 반영될 예정입니다.',
+      sentAt: '2026-08-09T06:47:00Z',
+    },
+  },
 };
