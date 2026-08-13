@@ -6,13 +6,12 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { disablePushToken } from '@/features/notification/model/push-token-registration';
-import { FeedbackSurvey } from '@/features/nps/ui/FeedbackSurvey';
 import { track } from '@/shared/analytics';
 import { logout as requestLogout } from '@/shared/auth/api/logout';
 import { withdraw } from '@/shared/auth/api/withdraw';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { clearSession } from '@/shared/auth/clear-session';
-import { SCENARIO_PATH } from '@/shared/lib/routes';
+import { MAILBOX_PATH, SCENARIO_PATH } from '@/shared/lib/routes';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { reportWarning } from '@/shared/monitoring/report';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
@@ -30,7 +29,6 @@ export default function MyPage() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
-  const [isFeedbackSheetOpen, setIsFeedbackSheetOpen] = useState(false);
   const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(
     null,
   );
@@ -169,13 +167,7 @@ export default function MyPage() {
           <NotificationMenuEntry />
 
           <MenuGroup>
-            <MenuButton
-              title="Landit에게 의견 보내기"
-              onClick={() => {
-                track(EVENTS.NPS_SURVEY_OPENED, { source: 'me' });
-                setIsFeedbackSheetOpen(true);
-              }}
-            />
+            <MenuLink href={MAILBOX_PATH} title="편지함" />
           </MenuGroup>
 
           <MenuGroup>
@@ -201,14 +193,6 @@ export default function MyPage() {
           </MenuGroup>
         </div>
       </div>
-
-      {/* 의견 보내기 바텀시트 — 헤더의 의견 보내기와 동일한 서베이 */}
-      <BottomSheet
-        open={isFeedbackSheetOpen}
-        onClose={() => setIsFeedbackSheetOpen(false)}
-      >
-        <FeedbackSurvey onDone={() => setIsFeedbackSheetOpen(false)} />
-      </BottomSheet>
 
       {/* 회원탈퇴 확인 바텀시트 */}
       <BottomSheet open={isDeleteSheetOpen} onClose={dismissDeleteSheet}>
