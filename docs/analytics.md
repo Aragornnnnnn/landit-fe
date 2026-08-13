@@ -158,6 +158,12 @@
 | NPS Survey Submitted | score(1–5), has_comment                | 의견 제출          |
 | NPS Survey Dismissed | score?                                 | ✕로 제출 없이 닫음 |
 
+### 편지함
+
+| 이벤트               | 속성                | 시점              |
+| -------------------- | ------------------- | ----------------- |
+| Mailbox Tab Switched | box(received\|sent) | 받은/보낸 칸 이동 |
+
 ### 유저 속성
 
 | 속성                                            | 값                       | 시점           |

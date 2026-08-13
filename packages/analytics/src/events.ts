@@ -84,6 +84,9 @@ export const EVENTS = {
   NPS_SURVEY_SUBMITTED: 'NPS Survey Submitted',
   NPS_SURVEY_DISMISSED: 'NPS Survey Dismissed',
 
+  // 편지함
+  MAILBOX_TAB_SWITCHED: 'Mailbox Tab Switched',
+
   // 알림 동의
   NOTIFICATION_CONSENT_VIEWED: 'Notification Consent Viewed',
   NOTIFICATION_CONSENT_ACCEPTED: 'Notification Consent Accepted',
@@ -110,7 +113,12 @@ export type HomeReturnReason = 'just' | 'flip' | 'card' | 'reminder';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
-  'scenario' | 'conversation' | 'card_back' | 'expression_list' | 'streak';
+  | 'scenario'
+  | 'conversation'
+  | 'card_back'
+  | 'expression_list'
+  | 'streak'
+  | 'mailbox';
 // 알림 동의를 청한 지면 — 온보딩 스텝은 기존 온보딩 계측이 커버해서 없다.
 // 키는 source — surface는 baseProps의 전역 속성(app·browser)이라 겹치면 덮어쓴다
 export type NotificationConsentSource = 'scenario' | 'me';
@@ -201,6 +209,8 @@ export type EventProps = {
     streak_days: number;
     is_active_today: boolean;
   };
+  // 편지함에서 받은/보낸 칸을 옮긴다 — 보낸 편지를 실제로 되짚어 보는지 본다
+  'Mailbox Tab Switched': { box: 'received' | 'sent' };
   'Streak Month Changed': {
     direction: 'prev' | 'next';
     year: number;

@@ -119,6 +119,13 @@ describe('toPageView', () => {
     });
   });
 
+  it('편지함 목록은 보고 있는 칸이 달라도 같은 화면이다', () => {
+    expect(pv('/mailbox', 'box=sent')).toEqual({
+      page_name: 'mailbox',
+      path: '/mailbox',
+    });
+  });
+
   it('루트는 계측하지 않는다', () => {
     expect(pv('/')).toBeNull();
   });

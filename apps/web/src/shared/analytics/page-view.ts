@@ -16,6 +16,7 @@ const STATIC_PAGES = new Set([
   'terms',
   'smalltalk',
   'streak',
+  'mailbox',
 ]);
 
 const toId = (raw: string | null) => {
