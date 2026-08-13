@@ -108,7 +108,7 @@ export const SmallTalkHistoryDetail = ({
                 <Divider />
                 <Stat
                   label="주고받은 말"
-                  value={`${session.messages.length}번`}
+                  value={`${session.messages.length}개`}
                 />
               </div>
             </div>
@@ -116,7 +116,11 @@ export const SmallTalkHistoryDetail = ({
 
           {/* 표현은 대화가 끝난 뒤 서버가 만든다 — 아직이면 리스트에 셀 것이 없다 */}
           {expressions && expressions.length > 0 ? (
-            <ExpressionList expressions={expressions} onSelect={goExpression} />
+            <ExpressionList
+              title="이날 만든 표현"
+              expressions={expressions}
+              onSelect={goExpression}
+            />
           ) : (
             session &&
             (generationStuck ? (
