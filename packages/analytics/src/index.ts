@@ -11,4 +11,5 @@ export {
   type HintSource,
   type HomeReturnReason,
   type RetryScreen,
+  type FeedbackType,
 } from './events';

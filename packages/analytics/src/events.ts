@@ -86,6 +86,8 @@ export const EVENTS = {
 
   // 편지함
   MAILBOX_TAB_SWITCHED: 'Mailbox Tab Switched',
+  FEEDBACK_TYPE_SELECTED: 'Feedback Type Selected',
+  FEEDBACK_SUBMITTED: 'Feedback Submitted',
 
   // 알림 동의
   NOTIFICATION_CONSENT_VIEWED: 'Notification Consent Viewed',
@@ -119,6 +121,8 @@ export type RetryScreen =
   | 'expression_list'
   | 'streak'
   | 'mailbox';
+// 피드백 유형 — 작성 화면에서 고르는 넷
+export type FeedbackType = 'BUG' | 'FEATURE' | 'QUESTION' | 'CHEER';
 // 알림 동의를 청한 지면 — 온보딩 스텝은 기존 온보딩 계측이 커버해서 없다.
 // 키는 source — surface는 baseProps의 전역 속성(app·browser)이라 겹치면 덮어쓴다
 export type NotificationConsentSource = 'scenario' | 'me';
@@ -140,6 +144,8 @@ export type EventProps = {
     letter_id?: number;
     // 보낸 피드백 상세에서만 — 받은 편지와 아이디 공간이 다르다
     feedback_id?: number;
+    // 피드백 작성일 때만 — 유형별로 주소가 갈려도 화면 이름은 하나로 둔다
+    feedback_type?: FeedbackType;
   };
   // 파괴적 행동(이탈·탈퇴) 전 확인 시트 — 열림/취소로 고민율을 본다. 확정은 각 Abandoned/Deleted 이벤트
   'Confirm Sheet Opened': { sheet: ConfirmSheetKind };
@@ -215,6 +221,10 @@ export type EventProps = {
   };
   // 편지함에서 받은/보낸 칸을 옮긴다 — 보낸 편지를 실제로 되짚어 보는지 본다
   'Mailbox Tab Switched': { box: 'received' | 'sent' };
+  // 유형 선택 화면에서 하나를 고른다 — 무슨 말을 하고 싶어 들어오는지의 분포
+  'Feedback Type Selected': { feedback_type: FeedbackType };
+  // 실제로 보냈다. 원문은 PII 위험이 있어 길이만 남긴다
+  'Feedback Submitted': { feedback_type: FeedbackType; length: number };
   'Streak Month Changed': {
     direction: 'prev' | 'next';
     year: number;
