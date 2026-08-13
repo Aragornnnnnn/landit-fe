@@ -119,6 +119,14 @@ describe('toPageView', () => {
     });
   });
 
+  it('편지 상세는 편지 번호를 속성으로 뺀다 — 주소마다 화면 이름이 갈리지 않게', () => {
+    expect(pv('/mailbox/3')).toEqual({
+      page_name: 'letter_detail',
+      path: '/mailbox/3',
+      letter_id: 3,
+    });
+  });
+
   it('편지함 목록은 보고 있는 칸이 달라도 같은 화면이다', () => {
     expect(pv('/mailbox', 'box=sent')).toEqual({
       page_name: 'mailbox',

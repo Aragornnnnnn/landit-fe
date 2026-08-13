@@ -89,6 +89,14 @@ export const toPageView = (
     };
   }
 
+  if (seg[0] === 'mailbox' && seg[1]) {
+    return {
+      page_name: 'letter_detail',
+      path: pathname,
+      letter_id: toId(seg[1]),
+    };
+  }
+
   if (seg[0] === 'auth') return { page_name: 'auth_callback', path: pathname };
 
   if (seg.length === 1 && STATIC_PAGES.has(seg[0])) {
