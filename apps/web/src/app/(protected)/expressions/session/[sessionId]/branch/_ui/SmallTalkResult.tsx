@@ -61,8 +61,13 @@ export const SmallTalkResult = ({
     return () => clearTimeout(timer);
   }, [celebrateOnArrival]);
 
+  // 준비가 끝났는데 표현이 하나도 없을 수 있다 — 리스트를 펴 봐야 보여줄 것도 배울 것도 없다
   const ready = session?.expressionGenerationStatus === 'READY';
-  const expressions = ready ? toListItems(session.expressions) : null;
+  const expressions =
+    ready && session.expressions.length > 0
+      ? toListItems(session.expressions)
+      : null;
+  const nothingToLearn = ready && session.expressions.length === 0;
 
   // 축하가 끝나고 표현 리스트가 실제로 드러난 순간을 노출로 기록한다
   const listed = !celebrating && expressions !== null;
@@ -121,7 +126,7 @@ export const SmallTalkResult = ({
               description={'잠시 후 기록에서 다시 열어볼 수 있어요.'}
               onClose={goHome}
             />
-          ) : generationStuck ? (
+          ) : generationStuck || nothingToLearn ? (
             <ClosingStage
               key="stuck"
               title={'표현은 조금 뒤에\n만들어 둘게요'}

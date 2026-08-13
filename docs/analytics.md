@@ -35,15 +35,15 @@
 
 ### 공통
 
-| 이벤트                  | 속성                                                                                                                     | 시점                                                          |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| Page Viewed             | page_name, path, return_reason?, scenario_id?, expression_id?, completed_date?, letter_id?, feedback_id?, feedback_type? | 라우트 변경                                                   |
-| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete)                                                                | 이탈·탈퇴 확인 시트 열림                                      |
-| Confirm Sheet Dismissed | sheet                                                                                                                    | 확인 시트에서 계속하기/닫기                                   |
-| Error Retried           | screen(scenario\|conversation\|card_back\|expression_list\|streak\|mailbox)                                              | 에러 화면 "다시 시도"                                         |
-| App Exited              | trigger(back_button)                                                                                                     | 네이티브 뒤로가기로 앱 종료 (셸에서만)                        |
-| Download Link Visited   | store(play_store\|app_store)                                                                                             | /download 스토어 리다이렉트 진입 (서버 발화, 익명)            |
-| App Update Store Opened | store(play_store\|app_store)                                                                                             | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화) |
+| 이벤트                  | 속성                                                                                                                                  | 시점                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Page Viewed             | page_name, path, return_reason?, scenario_id?, session_id?, expression_id?, completed_date?, letter_id?, feedback_id?, feedback_type? | 라우트 변경                                                   |
+| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete)                                                                             | 이탈·탈퇴 확인 시트 열림                                      |
+| Confirm Sheet Dismissed | sheet                                                                                                                                 | 확인 시트에서 계속하기/닫기                                   |
+| Error Retried           | screen(scenario\|smalltalk\|conversation\|card_back\|expression_list\|streak\|mailbox)                                                | 에러 화면 "다시 시도"                                         |
+| App Exited              | trigger(back_button)                                                                                                                  | 네이티브 뒤로가기로 앱 종료 (셸에서만)                        |
+| Download Link Visited   | store(play_store\|app_store)                                                                                                          | /download 스토어 리다이렉트 진입 (서버 발화, 익명)            |
+| App Update Store Opened | store(play_store\|app_store)                                                                                                          | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화) |
 
 `return_reason`은 홈 복귀 신호(`flip` 표현 완료 복귀 / `card` 대화 이탈 복귀 / `just` 해금 직후). 확인 시트의 확정은 각각 `Conversation Abandoned` / `Expression Abandoned` / `Account Deleted`로 찍힌다.
 
@@ -79,7 +79,7 @@
 | Category Selected     | category_id, category_name, is_locked                                                           | 카테고리 칩 탭                               |
 | Scenario Card Viewed  | card_type(scenario\|completion), position, scenario_id?, difficulty?, is_completed?, is_locked? | 스냅으로 카드가 중앙에 설 때                 |
 | Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto)                                      | 원어민 표현 배우기 / 자동 뒤집힘 / 앞면 복귀 |
-| Expression Selected   | expression_id, scenario_id, source(card_back\|post_conversation)                                | 표현 항목 탭                                 |
+| Expression Selected   | expression_id, 출처(scenario_id\|session_id), source(card_back\|post_conversation)              | 표현 항목 탭                                 |
 
 ### 오늘의 시나리오 (램프)
 

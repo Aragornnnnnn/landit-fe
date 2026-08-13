@@ -91,6 +91,15 @@ describe('sessionExpressionBranchPath', () => {
   });
 });
 
+describe('sessionExpressionBranchPath — 축하 신호', () => {
+  it('대화를 막 끝내고 온 길에만 축하를 켠다', () => {
+    // 표현 학습을 마치고 돌아올 때마다 또 축하할 일은 아니다
+    expect(sessionExpressionBranchPath(7, { celebrate: true })).toBe(
+      '/expressions/session/7/branch?celebrate=1',
+    );
+  });
+});
+
 describe('sessionExpressionPath', () => {
   it('학습을 마치면 한 칸 위인 그 세션의 표현 목록으로 돌아간다', () => {
     expect(sessionExpressionPath(7, 34)).toBe('/expressions/session/7/34');

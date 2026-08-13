@@ -135,7 +135,7 @@ export type CalendarView = 'week' | 'month';
 
 // 표현이 어디서 왔는가 — 시나리오 콘텐츠에 붙어 있던 표현인지, 그 스몰톡에서 만들어진 표현인지.
 // 표현 학습 화면은 둘이 같이 쓰므로 이벤트도 하나로 두고 출처만 갈아 끼운다 (둘 중 하나만 실린다)
-type ExpressionSource = { scenario_id?: number; session_id?: number };
+type ExpressionSource = { scenario_id: number } | { session_id: number };
 
 // 이벤트별 속성 계약 — 키는 snake_case. 속성이 없는 이벤트는 undefined
 export type EventProps = {
@@ -144,6 +144,8 @@ export type EventProps = {
     path: string;
     return_reason?: HomeReturnReason;
     scenario_id?: number;
+    // 스몰톡에서 온 표현 화면만 — 어느 대화에서 나온 표현인지
+    session_id?: number;
     expression_id?: number;
     // 알림 유입(reminder)일 때만 — 탭한 알림의 문구 슬러그 (utm_content에서 파생, 어휘는 reminder-copies.ts)
     notification_copy?: string;

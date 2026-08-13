@@ -123,6 +123,21 @@ describe('toPageView', () => {
     });
   });
 
+  it('스몰톡 표현은 같은 화면 이름에 세션 id를 싣는다', () => {
+    // 화면은 시나리오와 같은 것이다 — 어디서 온 표현인지만 id로 갈린다
+    expect(pv('/expressions/session/7/branch')).toEqual({
+      page_name: 'expression_list',
+      path: '/expressions/session/7/branch',
+      session_id: 7,
+    });
+    expect(pv('/expressions/session/7/45')).toEqual({
+      page_name: 'expression_learning',
+      path: '/expressions/session/7/45',
+      session_id: 7,
+      expression_id: 45,
+    });
+  });
+
   it('OAuth 콜백은 provider를 이벤트명이 아닌 경로로만 남긴다', () => {
     expect(pv('/auth/kakao/callback')).toEqual({
       page_name: 'auth_callback',
