@@ -9,13 +9,13 @@ import { track } from '@/shared/analytics';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { reportError } from '@/shared/monitoring/report';
 import { BackHeader } from '@/shared/ui/BackHeader';
-import { Button } from '@/shared/ui/Button';
 import { showToast } from '@/shared/ui/toast';
 
 import type { FeedbackType } from '../api/letter';
 import { MAILBOX_COMPOSE_PATH, mailboxPath } from '../model/box';
 import { FEEDBACK_TYPE_FACES } from '../model/feedback-type';
 import { useSendFeedbackMutation } from '../model/useSendFeedbackMutation';
+import { SubmitBar } from './compose/SubmitBar';
 
 // 한 통에 담을 수 있는 길이. 넘겨 쓰게 두면 읽는 쪽도 보내는 쪽도 지친다
 const MAX_LENGTH = 1000;
@@ -66,12 +66,18 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
   };
 
   return (
-    <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
+    // 키보드가 가린 만큼 화면을 줄인다 — 웹뷰는 키보드가 떠도 dvh가 그대로라,
+    // 안 줄이면 입력창 아랫부분과 보내기 바가 키보드 뒤로 숨는다.
+    // 줄어드는 건 입력창뿐이고 질문은 맨 위에 그대로 남는다
+    <main
+      style={{ height: `calc(100dvh - ${keyboardInset}px)` }}
+      className="mx-auto flex max-w-[430px] flex-col bg-background"
+    >
       {/* 유형을 다시 고르러 간다. 되짚기로 두면 히스토리 없는 진입에서 막다른 화면이 된다 */}
       <BackHeader onBack={() => router.replace(MAILBOX_COMPOSE_PATH)} />
 
-      <div className="flex flex-1 flex-col overflow-y-auto px-5">
-        <h1 className="mt-3 text-[22px] leading-snug font-bold whitespace-pre-line text-foreground">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-4">
+        <h1 className="mt-3 shrink-0 text-[22px] leading-snug font-bold whitespace-pre-line text-foreground">
           {question}
         </h1>
 
@@ -80,31 +86,22 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
           onChange={(event) => setContent(event.target.value)}
           maxLength={MAX_LENGTH}
           placeholder={placeholder}
-          // 자동 초점을 주지 않는다 — 들어오자마자 키보드가 올라오면 무엇을 묻는지 읽을 틈이 없다
-          className="mt-7 min-h-[180px] w-full resize-none rounded-2xl border border-border bg-card p-4 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          // 들어오자마자 쓸 수 있게 초점을 준다. 질문은 위에 고정돼 있어 키보드가 올라와도 안 가린다
+          autoFocus
+          className="mt-6 h-[180px] w-full shrink-0 resize-none rounded-2xl border border-border bg-card p-4 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
         />
 
-        <p className="mt-3 pb-6 text-xs text-muted-foreground">{assurance}</p>
+        <p className="mt-3 shrink-0 text-xs text-muted-foreground">
+          {assurance}
+        </p>
       </div>
 
-      {/* 키보드가 올라오면 그 위로 올라선다 — 웹뷰는 키보드가 떠도 dvh가 줄지 않는다 */}
-      <div
-        className="shrink-0 px-5 pt-2"
-        style={{
-          paddingBottom: keyboardInset
-            ? keyboardInset + 12
-            : 'max(env(safe-area-inset-bottom), 20px)',
-        }}
-      >
-        <Button
-          size="lg"
-          onClick={submit}
-          disabled={!trimmed}
-          loading={isSending}
-        >
-          보내기
-        </Button>
-      </div>
+      <SubmitBar
+        disabled={!trimmed}
+        loading={isSending}
+        keyboardOpen={keyboardInset > 0}
+        onClick={submit}
+      />
     </main>
   );
 };
