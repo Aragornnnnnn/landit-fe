@@ -1,4 +1,4 @@
-// 그 대화의 표현을 리스트가 그릴 수 있는 모양으로 — 잠금은 서버가 안 내려줘서 여기서 정한다
+// 그 대화의 표현을 리스트가 그릴 수 있는 모양으로 — 배우는 순서와 잠금은 서버가 안 정해 줘서 여기서 정한다
 import type { Expression } from '@/features/expression/api/list';
 
 import type { SmallTalkSessionExpression } from '../api/small-talk';

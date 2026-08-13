@@ -12,7 +12,7 @@ import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 export const SmallTalkTranscript = ({ sessionId }: { sessionId: number }) => {
   const router = useRouter();
-  const { session, error } = useSmallTalkSessionQuery(sessionId);
+  const { session, error, isLoading } = useSmallTalkSessionQuery(sessionId);
 
   return (
     <main
@@ -35,6 +35,13 @@ export const SmallTalkTranscript = ({ sessionId }: { sessionId: number }) => {
       {error ? (
         <p className="flex flex-1 items-center justify-center px-6 text-center text-sm text-muted-foreground">
           {error.message || '대화를 불러오지 못했어요.'}
+        </p>
+      ) : isLoading ? (
+        <p
+          role="status"
+          className="flex flex-1 items-center justify-center text-sm text-muted-foreground"
+        >
+          대화를 불러오는 중이에요
         </p>
       ) : (
         <ul className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 pt-2 pb-8">

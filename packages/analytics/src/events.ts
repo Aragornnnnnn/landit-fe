@@ -144,11 +144,9 @@ export type EventProps = {
     path: string;
     return_reason?: HomeReturnReason;
     scenario_id?: number;
-    // 스몰톡에서 온 표현 화면만 — 어느 대화에서 나온 표현인지
+    // 스몰톡에서 갈라져 나온 화면들만 — 지난 스몰톡 기록과 거기서 만든 표현
     session_id?: number;
     expression_id?: number;
-    // 지난 스몰톡 상세에서만 — 어느 대화인지
-    session_id?: number;
     // 알림 유입(reminder)일 때만 — 탭한 알림의 문구 슬러그 (utm_content에서 파생, 어휘는 reminder-copies.ts)
     notification_copy?: string;
     // 시나리오 화면에서 완료한 지난 날 카드를 볼 때만 — 열 수 있는 과거는 완료한 날뿐이다 (yyyy-MM-dd)

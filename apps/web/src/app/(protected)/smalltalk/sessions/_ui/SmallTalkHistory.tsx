@@ -19,7 +19,8 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 
 export const SmallTalkHistory = () => {
   const router = useRouter();
-  const { sessions, error, retry } = useSmallTalkSessionsQuery();
+  const { sessions, error, retry, hasMore, loadingMore, loadMore } =
+    useSmallTalkSessionsQuery();
 
   return (
     <main
@@ -55,8 +56,13 @@ export const SmallTalkHistory = () => {
           </Button>
         </div>
       ) : sessions === null ? (
-        // 조회 중 — 안내 문구만 덩그러니 두면 목록이 빈 것처럼 읽힌다
-        <div className="flex-1" />
+        // 조회 중 — 빈 화면만 두면 목록이 비었는지 아직인지 알 수 없다
+        <p
+          role="status"
+          className="flex flex-1 items-center justify-center text-sm text-muted-foreground"
+        >
+          지난 대화를 불러오는 중이에요
+        </p>
       ) : sessions.length === 0 ? (
         <p className="flex flex-1 items-center justify-center px-6 text-center text-sm break-keep whitespace-pre-line text-muted-foreground">
           {'아직 나눈 대화가 없어요.\n오늘 한 대화부터 여기 쌓여요.'}
@@ -78,6 +84,21 @@ export const SmallTalkHistory = () => {
               </li>
             ))}
           </ul>
+
+          {/* 쌓이면 첫 장 밖으로 밀린다 — 옛 대화도 이어서 볼 수 있게 한다 */}
+          {hasMore && (
+            <div className="flex justify-center pt-4">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="w-auto px-6"
+                disabled={loadingMore}
+                onClick={loadMore}
+              >
+                {loadingMore ? '불러오는 중' : '더 보기'}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </main>

@@ -6,12 +6,12 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { ExpressionList } from '@/features/expression/ui/ExpressionList';
-import { toExpressionListItems } from '@/features/small-talk/lib/session-expressions';
 import {
   toDayLabel,
   toSessionTitle,
 } from '@/features/small-talk/lib/session-summary';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
+import { toExpressionListItems } from '@/features/small-talk/model/session-expressions';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
 import { track } from '@/shared/analytics';
 import {
@@ -28,7 +28,7 @@ export const SmallTalkHistoryDetail = ({
   sessionId: number;
 }) => {
   const router = useRouter();
-  const { session, error, generationStuck, retry, regenerate } =
+  const { session, error, isLoading, generationStuck, retry, regenerate } =
     useSmallTalkSessionQuery(sessionId);
 
   const expressions = session
@@ -89,6 +89,13 @@ export const SmallTalkHistoryDetail = ({
             다시 시도
           </Button>
         </div>
+      ) : isLoading ? (
+        <p
+          role="status"
+          className="flex flex-1 items-center justify-center text-sm text-muted-foreground"
+        >
+          표현을 불러오는 중이에요
+        </p>
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto pb-6">
           {/* 언제 얼마나 얘기했는지 — 표현보다 먼저 읽히는 맥락이다.

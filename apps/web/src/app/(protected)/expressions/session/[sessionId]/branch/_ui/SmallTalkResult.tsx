@@ -12,7 +12,7 @@ import {
   CelebrateStage,
   RevealStage,
 } from '@/features/expression/ui/ExpressionStages';
-import { toExpressionListItems } from '@/features/small-talk/lib/session-expressions';
+import { toExpressionListItems } from '@/features/small-talk/model/session-expressions';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
