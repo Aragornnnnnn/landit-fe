@@ -3,6 +3,8 @@
 export const SCENARIO_PATH = '/scenario';
 export const SMALLTALK_PATH = '/smalltalk';
 export const STREAK_PATH = '/streak';
+// 편지함 진입점. 그 아래 주소들은 편지 종류·피드백 유형을 알아야 해서 features/mailbox가 만든다
+export const MAILBOX_PATH = '/mailbox';
 
 // 온보딩을 막 끝내고 넘어왔다는 표식 — 홈이 램프를 열되 다시 묻지 않는다.
 // flip처럼 주소에 남겨 둔다. 그날 한 번 보면 등장 판정에서 걸러지므로 지울 필요가 없다
