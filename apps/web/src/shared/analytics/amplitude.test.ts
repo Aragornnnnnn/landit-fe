@@ -125,15 +125,15 @@ describe('track', () => {
     };
     const { track } = await loadWrapper();
 
-    track('NPS Survey Submitted', { score: 5, has_comment: false });
+    track('Feedback Submitted', { feedback_type: 'BUG', length: 12 });
 
-    expect(amplitudeMock.track).toHaveBeenCalledWith('NPS Survey Submitted', {
+    expect(amplitudeMock.track).toHaveBeenCalledWith('Feedback Submitted', {
       surface: 'app',
       platform: 'ios',
       app_version: '1.2.0',
       build_number: '42',
-      score: 5,
-      has_comment: false,
+      feedback_type: 'BUG',
+      length: 12,
     });
   });
 
