@@ -13,6 +13,7 @@ import { track } from '@/shared/analytics';
 import {
   sessionExpressionPath,
   SMALLTALK_HISTORY_PATH,
+  smallTalkTranscriptPath,
 } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
@@ -102,6 +103,19 @@ export const SmallTalkHistoryDetail = ({
                 }
               </p>
             ))
+          )}
+
+          {/* 표현이 이 화면의 본론이라, 그날 나눈 말은 아래에서 따로 열어 본다 */}
+          {session && session.messages.length > 0 && (
+            <div className="px-5 pt-8">
+              <Button
+                variant="ghost"
+                size="md"
+                onClick={() => router.push(smallTalkTranscriptPath(sessionId))}
+              >
+                대화 다시 보기
+              </Button>
+            </div>
           )}
         </div>
       )}
