@@ -26,7 +26,13 @@ export const ReviewSuccess = ({
   useEffect(() => {
     const colors = ['#e07a3a', '#2f7d54', '#fbbf24', '#ffffff'];
     // ticks 150 ≈ 2.5초(60fps 기준). 3발 합쳐 155개 — 화려하되 과하지 않게.
-    const base = { spread: 70, startVelocity: 45, ticks: 150, colors };
+    const base = {
+      spread: 70,
+      startVelocity: 45,
+      ticks: 150,
+      colors,
+      disableForReducedMotion: true,
+    };
     confetti({
       ...base,
       particleCount: 55,
