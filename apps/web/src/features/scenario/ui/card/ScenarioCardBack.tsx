@@ -19,7 +19,13 @@ import { expressionStageOf } from '../../lib/expression-progress';
 // 원어민 표현을 전부 깨고 카드로 복귀한 순간의 축하 — ReviewSuccess와 같은 브랜드 색·패턴
 const celebrateAllExpressionsDone = () => {
   const colors = ['#e07a3a', '#2f7d54', '#fbbf24', '#ffffff'];
-  const base = { spread: 70, startVelocity: 45, ticks: 150, colors };
+  const base = {
+    spread: 70,
+    startVelocity: 45,
+    ticks: 150,
+    colors,
+    disableForReducedMotion: true,
+  };
   confetti({ ...base, particleCount: 55, angle: 60, origin: { x: 0, y: 0.9 } });
   confetti({
     ...base,
