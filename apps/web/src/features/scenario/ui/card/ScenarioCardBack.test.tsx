@@ -3,6 +3,7 @@ import { cleanup, render } from '@testing-library/react';
 import confetti from 'canvas-confetti';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+// 가로 import 예외 — ScenarioCardBack 본체가 쓰는 expression 훅을 목킹하려면 같은 경로를 참조해야 한다
 import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQuery';
 
 import { ScenarioCardBack } from './ScenarioCardBack';
