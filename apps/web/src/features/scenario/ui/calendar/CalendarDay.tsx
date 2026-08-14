@@ -67,8 +67,9 @@ export const CalendarDay = ({
         selected ? 'border-primary' : 'border-transparent'
       }`}
     >
+      {/* transform-gpu는 장식이 아니다 — iOS 사파리가 리페인트 때 배지와 선택 테두리를 한 레이어에 다시 그리다 테두리를 흰색으로 파먹어서, 배지를 자체 레이어로 분리한다 */}
       <span
-        className={`relative flex size-10 items-center justify-center overflow-hidden rounded-full transition-transform active:scale-95 min-[390px]:size-11 ${MARK_STYLE[state]}`}
+        className={`relative flex size-10 transform-gpu items-center justify-center overflow-hidden rounded-full transition-transform active:scale-95 min-[390px]:size-11 ${MARK_STYLE[state]}`}
       >
         {state === 'completed' && day.thumbnailUrl && (
           // eslint-disable-next-line @next/next/no-img-element -- 백엔드 썸네일 도메인이 미정이라 next/image 원격 허용 목록을 아직 못 만든다 (ScenarioCard와 같은 이유)
