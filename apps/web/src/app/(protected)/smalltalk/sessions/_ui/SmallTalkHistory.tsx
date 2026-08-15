@@ -85,19 +85,21 @@ export const SmallTalkHistory = () => {
             ))}
           </ul>
 
-          {/* 쌓이면 첫 장 밖으로 밀린다 — 옛 대화도 이어서 볼 수 있게 한다 */}
+          {/* 쌓이면 첫 장 밖으로 밀린다 — 옛 대화도 이어서 볼 수 있게 한다.
+              편지함 목록과 같은 모양으로, 목록의 마지막 한 줄처럼 읽히게 한다 */}
           {hasMore && (
-            <div className="flex justify-center pt-4">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="w-auto px-6"
-                disabled={loadingMore}
-                onClick={loadMore}
-              >
-                {loadingMore ? '불러오는 중' : '더 보기'}
-              </Button>
-            </div>
+            <button
+              type="button"
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="flex w-full items-center justify-center gap-1 py-4 text-sm font-semibold text-muted-foreground disabled:opacity-60"
+            >
+              {loadingMore ? '불러오는 중' : '더 보기'}
+              {/* 아래 화살표가 아직 공용 아이콘에 없다 — 있는 걸 돌려 쓴다 */}
+              {!loadingMore && (
+                <ChevronRightIcon size={16} className="rotate-90" />
+              )}
+            </button>
           )}
         </div>
       )}
