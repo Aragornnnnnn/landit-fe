@@ -1,5 +1,5 @@
 // 공지·업데이트 본문 렌더러 — 마크다운 대신 블록 배열이라 타입별 단순 분기로 끝난다
-import type { LetterBlock } from '../../api/letter-detail';
+import type { LetterBlock } from '../../model/letter-blocks';
 
 export const LetterBlocks = ({ blocks }: { blocks: LetterBlock[] }) => (
   <div className="flex flex-col gap-5">

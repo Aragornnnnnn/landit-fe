@@ -15,6 +15,7 @@ import type {
 } from '../api/letter-detail';
 import { formatLetterDateTime } from '../lib/letter-date';
 import { mailboxPath, type MailboxBox } from '../model/box';
+import { readLetterBlocks } from '../model/letter-blocks';
 import {
   toReceivedHead,
   toSentHead,
@@ -127,8 +128,8 @@ const LetterShell = ({
 };
 
 const ReceivedBody = ({ letter }: { letter: ReceivedLetterDetail }) => {
-  if (letter.contentBlocks)
-    return <LetterBlocks blocks={letter.contentBlocks} />;
+  const blocks = readLetterBlocks(letter.contentBlocks);
+  if (blocks.length > 0) return <LetterBlocks blocks={blocks} />;
 
   return (
     <div className="flex flex-col gap-6">

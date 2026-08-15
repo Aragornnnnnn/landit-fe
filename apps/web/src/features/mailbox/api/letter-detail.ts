@@ -2,19 +2,13 @@
 // 받은 편지와 보낸 피드백은 서버에서 다른 리소스라 응답도 따로다
 import type { FeedbackStatus, FeedbackType, MailboxLetterType } from './letter';
 
-// 운영이 쓴 본문. 마크다운 파서를 들이는 대신 블록 배열로 받는다 (피그마 SPEC 권고).
-// 렌더러가 타입별 단순 분기라 문법 모호성(줄바꿈·중첩 리스트)을 안고 갈 일이 없다
-export type LetterBlock =
-  | { type: 'PARAGRAPH'; text: string }
-  | { type: 'IMAGE'; url: string; caption?: string }
-  | { type: 'ORDERED_LIST'; items: string[] };
-
 // 받은 편지 한 통. 공지·업데이트는 contentBlocks가, 답장은 bodyText가 채워진다
 export interface ReceivedLetterDetail {
   letterId: number;
   letterType: MailboxLetterType;
   title: string;
-  contentBlocks: LetterBlock[] | null;
+  // 서버는 JsonNode — 관리자가 넣은 JSON 그대로다. 아는 모양으로 거르는 일은 model/letter-blocks가 한다
+  contentBlocks: unknown;
   bodyText: string | null;
   pinned: boolean;
   sentAt: string;
