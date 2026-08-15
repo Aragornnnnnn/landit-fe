@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
+import { ChevronRightIcon } from '@/shared/ui/Icons';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { letterPath, mailboxPath, type MailboxBox } from '../model/box';
@@ -45,13 +46,32 @@ export const MailboxFlow = ({ box }: { box: MailboxBox }) => {
 
 // 한 칸의 속살 — 목록이 있으면 목록이 이긴다. 칸을 옮기다 실패해도 보고 있던 목록은 그대로 둔다
 const LetterBox = ({ box }: { box: MailboxBox }) => {
-  const { rows, isPending, error, retry } = useLetterRowsQuery(box);
+  const { rows, isPending, error, retry, hasMore, loadingMore, loadMore } =
+    useLetterRowsQuery(box);
 
   if (rows) {
-    return rows.length > 0 ? (
-      <LetterList box={box} rows={rows} />
-    ) : (
-      <MailboxEmpty box={box} />
+    if (rows.length === 0) return <MailboxEmpty box={box} />;
+
+    return (
+      <>
+        <LetterList box={box} rows={rows} />
+        {/* 편지가 쌓이면 첫 장 밖으로 밀린다 — 옛 편지도 이어서 볼 수 있게 한다.
+            줄과 같은 여백에 두어 목록의 마지막 한 줄처럼 읽히게 한다 */}
+        {hasMore && (
+          <button
+            type="button"
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="flex w-full items-center justify-center gap-1 py-4 text-sm font-semibold text-muted-foreground disabled:opacity-60"
+          >
+            {loadingMore ? '불러오는 중' : '더 보기'}
+            {/* 아래 화살표가 아직 공용 아이콘에 없다 — 있는 걸 돌려 쓴다 */}
+            {!loadingMore && (
+              <ChevronRightIcon size={16} className="rotate-90" />
+            )}
+          </button>
+        )}
+      </>
     );
   }
   if (error) {
