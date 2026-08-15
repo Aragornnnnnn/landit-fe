@@ -8,10 +8,13 @@ interface FeedbackTypeFace {
   label: string;
   // 주소에 실리는 조각 — 대문자 enum을 그대로 노출하지 않는다
   slug: string;
-  // 작성 화면에서 무엇을 물을지. 유형마다 묻는 방식이 달라야 답이 달라진다
+  // 작성 화면의 제목 — 유저는 이것만 읽는다고 보고, 무엇을 쓰면 되는지가 여기 다 있게 한다.
+  // 두 줄로 끊되 아랫줄이 더 길게 — 윗줄이 길면 홀로 남은 꼬리처럼 보인다
   question: string;
+  // 입력창 안 한 줄. 제목이 "뭘"을 말하니 여기는 "그걸 여기에"만 — 힌트를 더 얹으면 문턱이 생겨 덜 보내온다.
+  // 작은 폰(320px)에서도 한 줄이어야 한다 — 15px 기준 240px 안쪽
   placeholder: string;
-  // 다 쓴 뒤 눈이 닿는 자리 — 보내도 괜찮다는 말을 대신한다
+  // 입력창 아래 한 줄 — 읽는 사람이 있다는 걸 알리는 마음 한마디. 끝의 이모지는 토스페이스로 그린다
   assurance: string;
 }
 
@@ -20,33 +23,33 @@ export const FEEDBACK_TYPE_FACES: Record<FeedbackType, FeedbackTypeFace> = {
     emoji: '🐛',
     label: '문제 신고하기',
     slug: 'bug',
-    question: '무슨 일이 있었는지\n편하게 알려주세요',
-    placeholder: '내용을 자유롭게 적어주세요',
-    assurance: '불편을 드려 죄송해요. 남겨주신 말씀, 하나하나 다 확인할게요.',
+    question: '겪으신 문제를\n자세히 알려주세요',
+    placeholder: '이곳에 문제 상황을 적어주세요',
+    assurance: '알려주셔서 고마워요, 얼른 살펴볼게요 👀',
   },
   FEATURE_REQUEST: {
     emoji: '💡',
     label: '신규 기능 요청하기',
     slug: 'feature',
-    question: '어떤 게 있으면\n더 편하게 쓰실 수 있을까요?',
-    placeholder: '어떤 상황에서 필요했는지 적어주시면 더 좋아요',
-    assurance: '좋은 의견, 하나하나 다 확인할게요.',
+    question: '있었으면 하는\n기능을 알려주세요',
+    placeholder: '이곳에 원하는 기능을 적어주세요',
+    assurance: '여러분의 의견 하나하나가 모여 랜딧을 만들어요 🤗',
   },
   QUESTION: {
     emoji: '🙋',
     label: '궁금한 점 문의하기',
     slug: 'question',
-    question: '무엇이든 편하게 물어보세요',
-    placeholder: '궁금한 내용을 편하게 적어주세요',
-    assurance: '궁금한 점, 빠짐없이 확인하고 답해드릴게요.',
+    question: '궁금한 점이 있다면\n무엇이든 물어봐주세요',
+    placeholder: '이곳에 궁금한 점을 적어주세요',
+    assurance: '랜딧을 궁금해해 주셔서 고마워요 😊',
   },
   CHEER: {
     emoji: '🙌',
     label: '개발자 응원하기',
     slug: 'cheer',
-    question: '랜딧 팀에게\n따뜻한 한마디를 남겨주세요',
-    placeholder: '힘이 되는 한마디를 자유롭게 적어주세요',
-    assurance: '여러분의 응원 한 마디가 저희의 원동력이 돼요🥹',
+    question: '응원하고 싶은\n내용을 남겨주세요',
+    placeholder: '이곳에 응원 한마디를 적어주세요',
+    assurance: '여러분의 응원 한 마디가 저희의 원동력이 돼요 🥹',
   },
 };
 
