@@ -2,7 +2,7 @@
 // 라우트를 가르지 않고 쿼리로 둔 건, 칸을 옮겨도 같은 화면·같은 스크롤 자리이기 때문이다
 import { MAILBOX_PATH } from '@/shared/lib/routes';
 
-import type { FeedbackType } from '../api/letter';
+import type { FeedbackType } from '../api/mailbox';
 import { FEEDBACK_TYPE_FACES } from './feedback-type';
 
 export type MailboxBox = 'received' | 'sent';

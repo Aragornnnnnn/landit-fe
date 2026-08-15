@@ -9,10 +9,7 @@ import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
-import type {
-  ReceivedLetterDetail,
-  SentFeedbackDetail,
-} from '../api/letter-detail';
+import type { ReceivedLetterDetail, SentFeedbackDetail } from '../api/mailbox';
 import { formatLetterDateTime } from '../lib/letter-date';
 import { mailboxPath, type MailboxBox } from '../model/box';
 import { readLetterBlocks } from '../model/letter-blocks';
@@ -136,7 +133,7 @@ const ReceivedBody = ({ letter }: { letter: ReceivedLetterDetail }) => {
       <p className="text-[15px] leading-relaxed text-foreground">
         {letter.bodyText}
       </p>
-      {/* 답장에 딸린 내 원문 — 아직 응답에 없어서, 오면 그때부터 상자가 선다 */}
+      {/* 답장에 딸린 내 원문 — 무엇에 대한 답장인지 다시 찾아보지 않게 한다 */}
       {letter.quotedFeedbackContent && (
         <QuotedLetter text={letter.quotedFeedbackContent} />
       )}

@@ -1,7 +1,7 @@
 // 받은 편지와 보낸 피드백을 같은 줄 모양으로 맞추는 변환 — 두 갈래가 제목과 미읽음을 다르게 정한다
 import { describe, expect, it } from 'vitest';
 
-import type { ReceivedLetter, SentFeedback } from '../api/letter';
+import type { ReceivedLetter, SentFeedback } from '../api/mailbox';
 import { toReceivedRow, toSentRow } from './letter-row';
 
 const received: ReceivedLetter = {

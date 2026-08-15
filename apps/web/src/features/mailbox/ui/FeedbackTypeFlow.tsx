@@ -11,7 +11,7 @@ import { MAILBOX_PATH } from '@/shared/lib/routes';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { ChevronRightIcon } from '@/shared/ui/Icons';
 
-import type { FeedbackType } from '../api/letter';
+import type { FeedbackType } from '../api/mailbox';
 import { feedbackComposePath } from '../model/box';
 import { FEEDBACK_TYPE_FACES, FEEDBACK_TYPES } from '../model/feedback-type';
 

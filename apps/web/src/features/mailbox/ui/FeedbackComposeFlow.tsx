@@ -11,7 +11,7 @@ import { reportError } from '@/shared/monitoring/report';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { showToast } from '@/shared/ui/toast';
 
-import type { FeedbackType } from '../api/letter';
+import type { FeedbackType } from '../api/mailbox';
 import { MAILBOX_COMPOSE_PATH, mailboxPath } from '../model/box';
 import { FEEDBACK_TYPE_FACES } from '../model/feedback-type';
 import { useSendFeedbackMutation } from '../model/useSendFeedbackMutation';

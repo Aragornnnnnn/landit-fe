@@ -1,9 +1,9 @@
 // 편지를 펼쳤을 때 맨 위에 오는 제목과 칩 — 종류마다 제목이 어디서 오는지가 달라 여기서 하나로 맞춘다
-import type { FeedbackStatus } from '../api/letter';
 import type {
+  FeedbackStatus,
   ReceivedLetterDetail,
   SentFeedbackDetail,
-} from '../api/letter-detail';
+} from '../api/mailbox';
 import { FEEDBACK_TYPE_FACES } from './feedback-type';
 import { RECEIVED_BADGES, type LetterBadge } from './letter-row';
 
@@ -20,7 +20,7 @@ const FEEDBACK_BADGES: Record<FeedbackStatus, LetterBadge> = {
 };
 
 // 답장의 제목은 내가 골랐던 유형이다 (시안: "문제 신고하기").
-// 그 유형이 아직 응답에 없어서, 없으면 운영이 붙인 편지 제목으로 물러선다
+// 계약상 답장엔 유형이 실려 오지만, 비어 오면 운영이 붙인 편지 제목으로 물러선다
 export const toReceivedHead = (letter: ReceivedLetterDetail): LetterHead => ({
   title:
     letter.letterType === 'REPLY' && letter.feedbackType

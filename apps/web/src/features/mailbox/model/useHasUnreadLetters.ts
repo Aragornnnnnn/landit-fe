@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
 
-import { getUnreadCount } from '../api/letters';
+import { getUnreadCount } from '../api/mailbox';
 import { mailboxKeys } from './keys';
 
 export const useHasUnreadLetters = () => {

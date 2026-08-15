@@ -1,6 +1,6 @@
 // 피드백 유형이 화면에 나오는 모든 모습 — 이름·이모지·주소 조각, 그리고 작성 화면의 말투
 // 유형이 하나 늘면 여기만 고치면 선택·작성·보낸 편지 제목이 함께 따라온다
-import type { FeedbackType } from '../api/letter';
+import type { FeedbackType } from '../api/mailbox';
 
 interface FeedbackTypeFace {
   emoji: string;

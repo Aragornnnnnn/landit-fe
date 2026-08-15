@@ -4,8 +4,13 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
 
-import type { MailboxPage, ReceivedLetter, SentFeedback } from '../api/letter';
-import { getReceivedLetters, getSentFeedbacks } from '../api/letters';
+import {
+  getReceivedLetters,
+  getSentFeedbacks,
+  type MailboxPage,
+  type ReceivedLetter,
+  type SentFeedback,
+} from '../api/mailbox';
 import type { MailboxBox } from './box';
 import { mailboxKeys } from './keys';
 import { nextLetterCursor } from './letter-page';

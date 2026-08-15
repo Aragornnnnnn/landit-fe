@@ -4,8 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
 
-import type { FeedbackType } from '../api/letter';
-import { submitFeedback } from '../api/submit-feedback';
+import { submitFeedback, type FeedbackType } from '../api/mailbox';
 import { mailboxKeys } from './keys';
 
 export const useSendFeedbackMutation = (type: FeedbackType) => {

@@ -5,7 +5,7 @@ import type {
   MailboxLetterType,
   ReceivedLetter,
   SentFeedback,
-} from '../api/letter';
+} from '../api/mailbox';
 import { FEEDBACK_TYPE_FACES } from './feedback-type';
 
 // 칩의 색갈래. 색값이 아니라 의미를 넘긴다 — 팔레트는 UI가 정한다

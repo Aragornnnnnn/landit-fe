@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/shared/api/api-error';
 import { useAuthStore } from '@/shared/auth/auth-store';
 
-import { getReceivedLetterDetail, getSentFeedbackDetail } from '../api/letters';
+import { getReceivedLetterDetail, getSentFeedbackDetail } from '../api/mailbox';
 import { mailboxKeys } from './keys';
 
 // 없는 편지를 다시 물어도 답은 같다 — 기본 재시도(3회 지수 백오프)에 걸리면

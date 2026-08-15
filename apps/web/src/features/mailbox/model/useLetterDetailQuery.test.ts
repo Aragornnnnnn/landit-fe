@@ -4,18 +4,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type {
-  ReceivedLetterDetail,
-  SentFeedbackDetail,
-} from '../api/letter-detail';
-import * as lettersApi from '../api/letters';
+import type { ReceivedLetterDetail, SentFeedbackDetail } from '../api/mailbox';
+import * as lettersApi from '../api/mailbox';
 import { mailboxKeys } from './keys';
 import {
   useReceivedLetterQuery,
   useSentFeedbackQuery,
 } from './useLetterDetailQuery';
 
-vi.mock('../api/letters', () => ({
+vi.mock('../api/mailbox', () => ({
   getReceivedLetterDetail: vi.fn(),
   getSentFeedbackDetail: vi.fn(),
 }));
@@ -37,6 +34,8 @@ const RECEIVED: ReceivedLetterDetail = {
   pinned: false,
   sentAt: '2026-08-09T15:47:00',
   readAt: '2026-08-15T10:00:00',
+  feedbackType: 'BUG_REPORT',
+  quotedFeedbackContent: '로그인이 자꾸 풀려요.',
 };
 
 const SENT: SentFeedbackDetail = {
