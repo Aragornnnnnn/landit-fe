@@ -15,7 +15,7 @@ import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 import * as scenarioTalkApi from '../_api/scenario-session';
-import type { SessionMessageSubmitResponse } from '../_api/scenario-session';
+import type { ScenarioTalkSubmitResponse } from '../_api/scenario-session';
 import { useScenarioTalkFlow } from './useScenarioTalkFlow';
 
 const monitoringMock = vi.hoisted(() => ({
@@ -30,8 +30,8 @@ vi.mock('@/features/conversation/api/session', () => ({
 }));
 
 vi.mock('../_api/scenario-session', () => ({
-  startSession: vi.fn(),
-  submitMessage: vi.fn(),
+  startScenarioTalkSession: vi.fn(),
+  submitScenarioTalkMessage: vi.fn(),
 }));
 
 // TTS는 경계(재생)라 목으로 둔다 — speak/speakSrc의 onEnd를 붙잡아 재생 종료를 흉내 낸다.
@@ -104,8 +104,12 @@ vi.mock('@tanstack/react-query', async (importOriginal) => ({
   useQueryClient: () => queryClientMock,
 }));
 
-const startSession = vi.mocked(scenarioTalkApi.startSession);
-const submitMessage = vi.mocked(scenarioTalkApi.submitMessage);
+const startScenarioTalkSession = vi.mocked(
+  scenarioTalkApi.startScenarioTalkSession,
+);
+const submitScenarioTalkMessage = vi.mocked(
+  scenarioTalkApi.submitScenarioTalkMessage,
+);
 const getInnerThought = vi.mocked(sessionApi.getInnerThought);
 
 const voice: TtsVoice = {
@@ -166,8 +170,8 @@ const startResponse = () => ({
 });
 
 const submitResponse = (
-  over: Partial<SessionMessageSubmitResponse> = {},
-): SessionMessageSubmitResponse => ({
+  over: Partial<ScenarioTalkSubmitResponse> = {},
+): ScenarioTalkSubmitResponse => ({
   sessionId: 1,
   submittedMessage: {
     messageId: 2,
@@ -198,7 +202,7 @@ const submitResponse = (
 
 // USER 선발화로 렌더하고 백그라운드 세션을 flush한다 (제출에 sessionId 필요)
 const renderUserFirst = async () => {
-  startSession.mockResolvedValue(startResponse());
+  startScenarioTalkSession.mockResolvedValue(startResponse());
   const hook = renderHook(() => useScenarioTalkFlow(userScenario));
   await act(async () => {});
   return hook;
@@ -256,7 +260,7 @@ beforeEach(() => {
   queryClientMock.prefetchQuery.mockClear();
   queryClientMock.invalidateQueries.mockClear();
   vi.unstubAllEnvs();
-  startSession.mockResolvedValue(startResponse());
+  startScenarioTalkSession.mockResolvedValue(startResponse());
   getInnerThought.mockReset();
 });
 
@@ -283,7 +287,7 @@ describe('useScenarioTalkFlow', () => {
   });
 
   it('세션 시작이 실패해도 화면은 뜨고, 제출 시 마이크 대기로 되돌아간다', async () => {
-    startSession.mockRejectedValue(new Error('boom'));
+    startScenarioTalkSession.mockRejectedValue(new Error('boom'));
     const { result } = renderHook(() => useScenarioTalkFlow(userScenario));
     await act(async () => {});
 
@@ -291,14 +295,14 @@ describe('useScenarioTalkFlow', () => {
 
     await speakAndSubmit(result, 'Hello!');
 
-    expect(submitMessage).not.toHaveBeenCalled();
+    expect(submitScenarioTalkMessage).not.toHaveBeenCalled();
     expect(result.current.phase).toBe('USER_READY');
   });
 
   it('제출하면 응답이 오기 전까지 대기(생각 중) 상태가 된다', async () => {
     const { result } = await renderUserFirst();
-    let resolve: (value: SessionMessageSubmitResponse) => void = () => {};
-    submitMessage.mockReturnValue(
+    let resolve: (value: ScenarioTalkSubmitResponse) => void = () => {};
+    submitScenarioTalkMessage.mockReturnValue(
       new Promise((r) => {
         resolve = r;
       }),
@@ -319,7 +323,7 @@ describe('useScenarioTalkFlow', () => {
 
   it('발화를 제출하면 상대 속마음을 노출한다', async () => {
     const { result } = await renderUserFirst();
-    submitMessage.mockResolvedValue(submitResponse());
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
 
     await speakAndSubmit(result, 'Hello!');
 
@@ -330,7 +334,7 @@ describe('useScenarioTalkFlow', () => {
 
   it('제출이 실패하면 마이크 대기로 되돌아간다', async () => {
     const { result } = await renderUserFirst();
-    submitMessage.mockRejectedValue(new Error('network'));
+    submitScenarioTalkMessage.mockRejectedValue(new Error('network'));
 
     await speakAndSubmit(result, 'Hello!');
 
@@ -340,7 +344,7 @@ describe('useScenarioTalkFlow', () => {
   it('제출 실패를 Sentry로 보고한다 — 대화 턴이 유실되는 사고라 바로 알아야 한다', async () => {
     const { result } = await renderUserFirst();
     const error = new Error('network');
-    submitMessage.mockRejectedValue(error);
+    submitScenarioTalkMessage.mockRejectedValue(error);
 
     await speakAndSubmit(result, 'Hello!');
 
@@ -349,7 +353,7 @@ describe('useScenarioTalkFlow', () => {
 
   it('다음 질문이 있으면 속마음이 끝난 뒤 다음 AI 질문으로 이어간다', async () => {
     const { result } = await renderUserFirst();
-    submitMessage.mockResolvedValue(submitResponse());
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
     await speakAndSubmit(result, 'Hello!');
 
     act(() => {
@@ -362,7 +366,7 @@ describe('useScenarioTalkFlow', () => {
 
   it('완료 턴에 종료 메시지가 오면 그걸 발화한 뒤 대화가 종료된다', async () => {
     const { result } = await renderUserFirst();
-    submitMessage.mockResolvedValue(
+    submitScenarioTalkMessage.mockResolvedValue(
       submitResponse({
         nextMessage: {
           messageId: 9,
@@ -396,7 +400,7 @@ describe('useScenarioTalkFlow', () => {
 
   it('대화가 완료되면 피드백을 미리 생성하고 시나리오 캐시를 무효화한다', async () => {
     const { result } = await renderUserFirst();
-    submitMessage.mockResolvedValue(
+    submitScenarioTalkMessage.mockResolvedValue(
       submitResponse({
         nextMessage: {
           messageId: 4,
@@ -429,7 +433,7 @@ describe('useScenarioTalkFlow', () => {
 
   it('대화가 안 끝났으면 피드백을 미리 만들지 않는다', async () => {
     const { result } = await renderUserFirst();
-    submitMessage.mockResolvedValue(submitResponse()); // completed: false
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse()); // completed: false
 
     await speakAndSubmit(result, 'Hello!');
 
@@ -462,7 +466,7 @@ describe('useScenarioTalkFlow', () => {
 
   it('제출 응답의 다음 질문을 미리 합성(prefetch)한다', async () => {
     const { result } = await renderUserFirst();
-    submitMessage.mockResolvedValue(submitResponse());
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
 
     await speakAndSubmit(result, 'Hello!');
 
@@ -474,7 +478,7 @@ describe('useScenarioTalkFlow', () => {
 
   it('속마음이 아직 준비 중이면 다음 질문은 바로 합성하고, 속마음은 폴링으로 완료를 기다렸다 노출한다', async () => {
     const { result } = await renderUserFirst();
-    submitMessage.mockResolvedValue(preparingSubmitResponse());
+    submitScenarioTalkMessage.mockResolvedValue(preparingSubmitResponse());
     getInnerThought
       .mockResolvedValueOnce({
         processingStatus: 'PREPARING',
@@ -512,12 +516,12 @@ describe('useScenarioTalkFlow', () => {
   });
 
   it('StrictMode 재마운트 뒤에도 속마음 폴링이 죽지 않고 완료를 노출한다', async () => {
-    startSession.mockResolvedValue(startResponse());
+    startScenarioTalkSession.mockResolvedValue(startResponse());
     const { result } = renderHook(() => useScenarioTalkFlow(userScenario), {
       wrapper: StrictMode,
     });
     await act(async () => {});
-    submitMessage.mockResolvedValue(preparingSubmitResponse());
+    submitScenarioTalkMessage.mockResolvedValue(preparingSubmitResponse());
     getInnerThought.mockResolvedValue({
       processingStatus: 'COMPLETED',
       innerThought: '좋아, 자연스러웠어.',
@@ -537,7 +541,7 @@ describe('useScenarioTalkFlow', () => {
 
   it('속마음 생성이 실패(FAILED)하면 빈 말풍선 대신 건너뛰고 다음 질문으로 넘어간다', async () => {
     const { result } = await renderUserFirst();
-    submitMessage.mockResolvedValue(preparingSubmitResponse());
+    submitScenarioTalkMessage.mockResolvedValue(preparingSubmitResponse());
     getInnerThought.mockResolvedValue({
       processingStatus: 'FAILED',
       innerThought: null,
@@ -559,7 +563,7 @@ describe('useScenarioTalkFlow', () => {
 
   it('속마음 생성 실패(FAILED)를 Sentry에 warning으로 보고한다 — 대화는 건너뛰고 계속된다', async () => {
     const { result } = await renderUserFirst();
-    submitMessage.mockResolvedValue(preparingSubmitResponse());
+    submitScenarioTalkMessage.mockResolvedValue(preparingSubmitResponse());
     getInnerThought.mockResolvedValue({
       processingStatus: 'FAILED',
       innerThought: null,
@@ -579,7 +583,7 @@ describe('useScenarioTalkFlow', () => {
 
   it('폴링이 API 오류로 끝나면 그 오류를 보고한다 — 문자열만 남기면 원인을 잃는다', async () => {
     const { result } = await renderUserFirst();
-    submitMessage.mockResolvedValue(preparingSubmitResponse());
+    submitScenarioTalkMessage.mockResolvedValue(preparingSubmitResponse());
     const apiError = new Error('서버 오류가 발생했어요. (500)');
     getInnerThought.mockRejectedValue(apiError);
 
@@ -615,7 +619,7 @@ describe('useScenarioTalkFlow', () => {
 
   it('음성으로 완료하면 STT 최종 텍스트를 VOICE로 제출한다', async () => {
     const { result } = await renderUserFirst();
-    submitMessage.mockResolvedValue(submitResponse());
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
 
     act(() => result.current.input.pressMic());
     // 발화 중 실시간 미리보기
@@ -627,24 +631,32 @@ describe('useScenarioTalkFlow', () => {
       await result.current.input.finishListening();
     });
     expect(sttMock.stop).toHaveBeenCalled();
-    expect(submitMessage).not.toHaveBeenCalled();
+    expect(submitScenarioTalkMessage).not.toHaveBeenCalled();
 
     await act(async () => {
       sttMock.callbacks.onFinal?.('Hello there.');
     });
 
-    expect(submitMessage).toHaveBeenCalledWith(1, 'Hello there.', 'VOICE');
+    expect(submitScenarioTalkMessage).toHaveBeenCalledWith(
+      1,
+      'Hello there.',
+      'VOICE',
+    );
     // 제출이 이어져 속마음까지 진행된다 (submitResponse 기본은 COMPLETED)
     expect(result.current.phase).toBe('AI_INNER_THOUGHT');
   });
 
   it('키보드로 입력한 텍스트는 TEXT로 제출한다', async () => {
     const { result } = await renderUserFirst();
-    submitMessage.mockResolvedValue(submitResponse());
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
 
     await typeAndSubmit(result, 'Hello there.');
 
-    expect(submitMessage).toHaveBeenCalledWith(1, 'Hello there.', 'TEXT');
+    expect(submitScenarioTalkMessage).toHaveBeenCalledWith(
+      1,
+      'Hello there.',
+      'TEXT',
+    );
     expect(sttMock.start).not.toHaveBeenCalled();
   });
 

@@ -12,18 +12,18 @@ import { api } from '@/shared/api/client';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 // 시작 응답의 진행도 — 아직 주고받은 메시지가 없어 순번이 없다 (백엔드 DTO가 제출 응답과 다른 레코드다)
-export interface SessionStartProgress {
+export interface ScenarioTalkStartProgress {
   currentTurnNumber: number;
   totalQuestionCount: number;
   completed: boolean;
 }
 
 // 제출 응답의 진행도 — 방금 오간 메시지의 순번이 붙는다
-export interface SessionProgress extends SessionStartProgress {
+export interface ScenarioTalkProgress extends ScenarioTalkStartProgress {
   currentMessageSequenceNumber: number;
 }
 
-export interface SessionStartResponse {
+export interface ScenarioTalkStartResponse {
   sessionId: number;
   scenarioId: number;
   sessionType: string;
@@ -31,29 +31,31 @@ export interface SessionStartResponse {
   userOpeningInstruction: string | null;
   ttsVoice: TtsVoice | null;
   currentMessage: CurrentMessage | null;
-  progress: SessionStartProgress;
+  progress: ScenarioTalkStartProgress;
 }
 
-export interface SessionMessageSubmitResponse {
+export interface ScenarioTalkSubmitResponse {
   sessionId: number;
   submittedMessage: SubmittedMessage;
   // 다음 AI 발화. 대화가 끝나는(progress.completed) 턴에는 다음 질문 대신 종료 메시지가 담겨 온다.
   // (둘 다 재생 대상이라 FE는 nextMessage 유무로 발화 여부를, completed로 종료 여부를 판단한다)
   nextMessage: NextMessage | null;
-  progress: SessionProgress;
+  progress: ScenarioTalkProgress;
 }
 
 // 시나리오 세션 시작 — sessionId·선발화자·오프닝·TTS 보이스를 받는다
-export const startSession = (scenarioId: number) =>
-  api.post<SessionStartResponse>(`/api/v1/scenarios/${scenarioId}/sessions`);
+export const startScenarioTalkSession = (scenarioId: number) =>
+  api.post<ScenarioTalkStartResponse>(
+    `/api/v1/scenarios/${scenarioId}/sessions`,
+  );
 
 // 유저 발화 제출 — 상대 속마음·다음 질문·진행 상태를 받는다
-export const submitMessage = (
+export const submitScenarioTalkMessage = (
   sessionId: number,
   content: string,
   inputType: InputType,
 ) =>
-  api.post<SessionMessageSubmitResponse>(
+  api.post<ScenarioTalkSubmitResponse>(
     `/api/v1/sessions/${sessionId}/messages`,
     { content, inputType },
   );

@@ -14,7 +14,7 @@ vi.mock('@/features/conversation/api/session', () => ({
 }));
 
 vi.mock('../_api/scenario-session', () => ({
-  startSession: vi.fn(),
+  startScenarioTalkSession: vi.fn(),
 }));
 
 const monitoringMock = vi.hoisted(() => ({
@@ -23,7 +23,9 @@ const monitoringMock = vi.hoisted(() => ({
 }));
 vi.mock('@/shared/monitoring/report', () => monitoringMock);
 
-const startSession = vi.mocked(scenarioTalkApi.startSession);
+const startScenarioTalkSession = vi.mocked(
+  scenarioTalkApi.startScenarioTalkSession,
+);
 const endSession = vi.mocked(sessionApi.endSession);
 
 const scenario = {
@@ -43,7 +45,7 @@ const startResponse = (
       totalQuestionCount: 3,
       completed: false,
     },
-  }) as Awaited<ReturnType<typeof scenarioTalkApi.startSession>>;
+  }) as Awaited<ReturnType<typeof scenarioTalkApi.startScenarioTalkSession>>;
 
 const renderSession = (
   onOpeningMessage: (message: {
@@ -53,9 +55,9 @@ const renderSession = (
 ) => renderHook(() => useScenarioTalkSession(scenario, { onOpeningMessage }));
 
 beforeEach(() => {
-  startSession.mockReset();
+  startScenarioTalkSession.mockReset();
   endSession.mockReset();
-  startSession.mockResolvedValue(startResponse(null));
+  startScenarioTalkSession.mockResolvedValue(startResponse(null));
   endSession.mockResolvedValue(undefined as never);
 });
 
@@ -76,12 +78,12 @@ describe('useScenarioTalkSession', () => {
 
     await act(async () => {});
 
-    expect(startSession).toHaveBeenCalledTimes(1);
+    expect(startScenarioTalkSession).toHaveBeenCalledTimes(1);
   });
 
   it('ensure는 시작이 끝나기 전에 불려도 확보를 기다렸다가 sessionId를 돌려준다', async () => {
     let resolve!: (value: ReturnType<typeof startResponse>) => void;
-    startSession.mockReturnValue(
+    startScenarioTalkSession.mockReturnValue(
       new Promise((r) => {
         resolve = r;
       }),
@@ -100,7 +102,7 @@ describe('useScenarioTalkSession', () => {
   });
 
   it('시작이 실패하면 ensure는 null을 준다 (화면은 계속 뜬다)', async () => {
-    startSession.mockRejectedValue(new Error('boom'));
+    startScenarioTalkSession.mockRejectedValue(new Error('boom'));
     const { result } = renderSession();
     await act(async () => {});
 
@@ -110,7 +112,7 @@ describe('useScenarioTalkSession', () => {
 
   it('시작 실패를 Sentry로 보고한다 — 이후 모든 제출이 막히는 사고라 바로 알아야 한다', async () => {
     const error = new Error('boom');
-    startSession.mockRejectedValue(error);
+    startScenarioTalkSession.mockRejectedValue(error);
     renderSession();
     await act(async () => {});
 
@@ -119,7 +121,7 @@ describe('useScenarioTalkSession', () => {
 
   it('세션 응답에 첫 발화가 있으면 오프닝 폴백으로 알려준다', async () => {
     const onOpeningMessage = vi.fn();
-    startSession.mockResolvedValue(
+    startScenarioTalkSession.mockResolvedValue(
       startResponse({ content: 'Hello!', translatedContent: '안녕!' }),
     );
 
@@ -163,7 +165,7 @@ describe('useScenarioTalkSession', () => {
   });
 
   it('세션이 확보되기 전의 end는 아무것도 부르지 않는다', async () => {
-    startSession.mockReturnValue(new Promise(() => {})); // 영원히 시작 중
+    startScenarioTalkSession.mockReturnValue(new Promise(() => {})); // 영원히 시작 중
     const { result } = renderSession();
 
     act(() => result.current.end());

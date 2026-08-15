@@ -9,7 +9,7 @@ import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
 import { reportError, reportWarning } from '@/shared/monitoring/report';
 
-import { startSession } from '../_api/scenario-session';
+import { startScenarioTalkSession } from '../_api/scenario-session';
 
 interface ScenarioTalkSessionOptions {
   // openingPreview로 오프닝을 못 시드했을 때(예외적) 세션 응답의 첫 발화로 채우는 폴백
@@ -41,7 +41,7 @@ export const useScenarioTalkSession = (
     if (startedRef.current) return;
     startedRef.current = true;
 
-    promiseRef.current = startSession(scenario.scenarioId)
+    promiseRef.current = startScenarioTalkSession(scenario.scenarioId)
       .then((res) => {
         sessionIdRef.current = res.sessionId;
         setSessionId(res.sessionId);

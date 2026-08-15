@@ -16,7 +16,7 @@ import { scenarioKeys } from '@/features/scenario/model/keys';
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
 import { track } from '@/shared/analytics';
 
-import { submitMessage } from '../_api/scenario-session';
+import { submitScenarioTalkMessage } from '../_api/scenario-session';
 import { useScenarioTalkSession } from './useScenarioTalkSession';
 
 export const useScenarioTalkFlow = (scenario: Scenario) => {
@@ -59,7 +59,11 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
     sessionId: session.sessionId,
     ensureSession: session.ensure,
     submit: async ({ sessionId, content, inputType, turnIndex }) => {
-      const res = await submitMessage(sessionId, content, inputType);
+      const res = await submitScenarioTalkMessage(
+        sessionId,
+        content,
+        inputType,
+      );
       track(EVENTS.SCENARIO_TALK_TURN_COMPLETED, {
         session_id: sessionId,
         scenario_id: scenario.scenarioId,
