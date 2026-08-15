@@ -119,11 +119,17 @@ describe('toPageView', () => {
     });
   });
 
-  it('편지 상세는 편지 번호를 속성으로 뺀다 — 주소마다 화면 이름이 갈리지 않게', () => {
-    expect(pv('/mailbox/3')).toEqual({
-      page_name: 'letter_detail',
-      path: '/mailbox/3',
+  it('편지 상세는 받은·보낸이 다른 화면이고, 번호는 속성으로 뺀다', () => {
+    // 두 칸이 아이디 공간을 따로 써서 화면 이름도 주소를 따라 갈린다
+    expect(pv('/mailbox/received/3')).toEqual({
+      page_name: 'mailbox_received',
+      path: '/mailbox/received/3',
       letter_id: 3,
+    });
+    expect(pv('/mailbox/sent/11')).toEqual({
+      page_name: 'mailbox_sent',
+      path: '/mailbox/sent/11',
+      feedback_id: 11,
     });
   });
 

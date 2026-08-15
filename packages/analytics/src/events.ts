@@ -138,6 +138,8 @@ export type EventProps = {
     completed_date?: string;
     // 편지 상세일 때만
     letter_id?: number;
+    // 보낸 피드백 상세에서만 — 받은 편지와 아이디 공간이 다르다
+    feedback_id?: number;
   };
   // 파괴적 행동(이탈·탈퇴) 전 확인 시트 — 열림/취소로 고민율을 본다. 확정은 각 Abandoned/Deleted 이벤트
   'Confirm Sheet Opened': { sheet: ConfirmSheetKind };

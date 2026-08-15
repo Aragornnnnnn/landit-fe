@@ -12,6 +12,7 @@ export const mailboxKeys = {
     [...mailboxKeys.summaries(userId), 'letters', box] as const,
   unread: (userId: number | null) =>
     [...mailboxKeys.summaries(userId), 'unread'] as const,
-  letter: (userId: number | null, letterId: number) =>
-    [...mailboxKeys.all, userId, 'letter', letterId] as const,
+  // 받은 편지와 보낸 피드백은 아이디 공간이 달라 칸까지 키에 넣는다
+  letter: (userId: number | null, box: MailboxBox, id: number) =>
+    [...mailboxKeys.all, userId, 'letter', box, id] as const,
 };

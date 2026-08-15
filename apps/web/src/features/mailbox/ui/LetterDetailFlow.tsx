@@ -1,35 +1,93 @@
 'use client';
 
-// 편지 한 통을 펼쳐 보는 화면 — 종류에 따라 본문 모양이 갈린다
+// 편지 한 통을 펼쳐 보는 화면 — 받은 편지와 보낸 피드백이 리소스가 달라 화면도 둘로 갈린다.
+// 겉모습(헤더·제목·칩·시각)은 같아서 그 골격만 여기서 공유한다
+import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
-import type { LetterDetail } from '../api/letter-detail';
+import type {
+  ReceivedLetterDetail,
+  SentFeedbackDetail,
+} from '../api/letter-detail';
 import { formatLetterDateTime } from '../lib/letter-date';
-import { mailboxPath } from '../model/box';
-import { toLetterHead } from '../model/letter-detail-head';
-import { useLetterDetailQuery } from '../model/useLetterDetailQuery';
-import { useMarkLetterRead } from '../model/useMarkLetterRead';
+import { mailboxPath, type MailboxBox } from '../model/box';
+import {
+  toReceivedHead,
+  toSentHead,
+  type LetterHead,
+} from '../model/letter-detail-head';
+import {
+  useReceivedLetterQuery,
+  useSentFeedbackQuery,
+} from '../model/useLetterDetailQuery';
 import { LetterBlocks } from './detail/LetterBlocks';
 import { QuotedLetter } from './detail/QuotedLetter';
 import { WaitingNotice } from './detail/WaitingNotice';
 import { LetterBadge } from './LetterBadge';
 
-export const LetterDetailFlow = ({ letterId }: { letterId: number }) => {
+// 받은 편지 — 공지·업데이트는 블록 본문, 답장은 글 한 덩이에 내가 보낸 내용이 따라붙는다
+export const ReceivedLetterFlow = ({ letterId }: { letterId: number }) => {
+  const { letter, isPending, error, retry } = useReceivedLetterQuery(letterId);
+
+  return (
+    <LetterShell
+      box="received"
+      isPending={isPending}
+      error={error}
+      onRetry={retry}
+      head={letter && toReceivedHead(letter)}
+      sentAt={letter?.sentAt ?? null}
+    >
+      {letter && <ReceivedBody letter={letter} />}
+    </LetterShell>
+  );
+};
+
+// 보낸 피드백 — 내가 쓴 글이 먼저고, 답장이 도착했으면 그 아래에 붙는다
+export const SentFeedbackFlow = ({ feedbackId }: { feedbackId: number }) => {
+  const { letter, isPending, error, retry } = useSentFeedbackQuery(feedbackId);
+
+  return (
+    <LetterShell
+      box="sent"
+      isPending={isPending}
+      error={error}
+      onRetry={retry}
+      head={letter && toSentHead(letter)}
+      sentAt={letter?.createdAt ?? null}
+    >
+      {letter && <SentBody feedback={letter} />}
+    </LetterShell>
+  );
+};
+
+const LetterShell = ({
+  box,
+  head,
+  sentAt,
+  isPending,
+  error,
+  onRetry,
+  children,
+}: {
+  box: MailboxBox;
+  head: LetterHead | null;
+  sentAt: string | null;
+  isPending: boolean;
+  error: Error | null;
+  onRetry: () => void;
+  children: ReactNode;
+}) => {
   const router = useRouter();
   const { ref: scrollRef, onScroll, hasShadow } = useScrollShadow();
-  const { letter, isPending, error, retry } = useLetterDetailQuery(letterId);
-  useMarkLetterRead(letter);
 
   // 편지가 있던 칸으로 돌려보낸다. 되짚기(back)로 두면 알림 딥링크처럼 히스토리가
   // 없는 진입에서 화살표가 아무 일도 하지 않는 막다른 화면이 된다
-  const backToBox = () =>
-    router.replace(
-      mailboxPath(letter?.kind === 'FEEDBACK' ? 'sent' : 'received'),
-    );
+  const backToBox = () => router.replace(mailboxPath(box));
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
@@ -40,91 +98,69 @@ export const LetterDetailFlow = ({ letterId }: { letterId: number }) => {
         onScroll={onScroll}
         className="flex-1 overflow-y-auto px-5 pb-10"
       >
-        <LetterView
-          letter={letter}
-          error={error}
-          isPending={isPending}
-          onRetry={retry}
-        />
+        {/* 편지가 있으면 편지가 이긴다 — 다시 불러오다 실패해도 보고 있던 편지는 그대로 둔다 */}
+        {head && sentAt ? (
+          <article>
+            <h1 className="text-xl leading-snug font-bold text-foreground">
+              {head.title}
+            </h1>
+            <div className="mt-3 flex items-center gap-2">
+              <LetterBadge label={head.badge.label} tone={head.badge.tone} />
+              <time className="text-[13px] text-muted-foreground">
+                {formatLetterDateTime(sentAt)}
+              </time>
+            </div>
+            <div className="mt-6">{children}</div>
+          </article>
+        ) : error ? (
+          <RetryNotice
+            screen="mailbox"
+            message={error.message}
+            onRetry={onRetry}
+          />
+        ) : isPending ? (
+          <Skeleton />
+        ) : null}
       </div>
     </main>
   );
 };
 
-// 편지가 있으면 편지가 이긴다 — 다시 불러오다 실패해도 보고 있던 편지는 그대로 둔다
-const LetterView = ({
-  letter,
-  error,
-  isPending,
-  onRetry,
-}: {
-  letter: LetterDetail | null;
-  error: Error | null;
-  isPending: boolean;
-  onRetry: () => void;
-}) => {
-  if (letter) return <LetterBody letter={letter} />;
-  if (error) {
-    return (
-      <RetryNotice screen="mailbox" message={error.message} onRetry={onRetry} />
-    );
-  }
-  return isPending ? <Skeleton /> : null;
-};
-
-const LetterBody = ({ letter }: { letter: LetterDetail }) => {
-  const { title, badge } = toLetterHead(letter);
-
-  return (
-    <article>
-      <h1 className="text-xl leading-snug font-bold text-foreground">
-        {title}
-      </h1>
-      <div className="mt-3 flex items-center gap-2">
-        <LetterBadge label={badge.label} tone={badge.tone} />
-        <time className="text-[13px] text-muted-foreground">
-          {formatLetterDateTime(letter.sentAt)}
-        </time>
-      </div>
-
-      <div className="mt-6">
-        <LetterContent letter={letter} />
-      </div>
-    </article>
-  );
-};
-
-// 종류마다 읽는 순서가 다르다 — 답장은 답장이 먼저고 내 원문이 뒤,
-// 보낸 편지는 내가 쓴 글이 먼저고 그에 대한 응답이 뒤다
-const LetterContent = ({ letter }: { letter: LetterDetail }) => {
-  if (letter.kind === 'NOTICE' || letter.kind === 'UPDATE') {
-    return <LetterBlocks blocks={letter.blocks} />;
-  }
-
-  if (letter.kind === 'REPLY') {
-    return (
-      <div className="flex flex-col gap-6">
-        <p className="text-[15px] leading-relaxed text-foreground">
-          {letter.replyText}
-        </p>
-        <QuotedLetter text={letter.quotedText} />
-      </div>
-    );
-  }
+const ReceivedBody = ({ letter }: { letter: ReceivedLetterDetail }) => {
+  if (letter.contentBlocks)
+    return <LetterBlocks blocks={letter.contentBlocks} />;
 
   return (
     <div className="flex flex-col gap-6">
       <p className="text-[15px] leading-relaxed text-foreground">
-        {letter.content}
+        {letter.bodyText}
       </p>
-      {letter.reply ? (
-        <ReplySection text={letter.reply.text} sentAt={letter.reply.sentAt} />
-      ) : (
-        <WaitingNotice />
+      {/* 답장에 딸린 내 원문 — 아직 응답에 없어서, 오면 그때부터 상자가 선다 */}
+      {letter.quotedFeedbackContent && (
+        <QuotedLetter text={letter.quotedFeedbackContent} />
       )}
     </div>
   );
 };
+
+const SentBody = ({ feedback }: { feedback: SentFeedbackDetail }) => (
+  <div className="flex flex-col gap-6">
+    <p className="text-[15px] leading-relaxed text-foreground">
+      {feedback.content}
+    </p>
+    {feedback.replies.length > 0 ? (
+      feedback.replies.map((reply) => (
+        <ReplySection
+          key={reply.letterId}
+          text={reply.bodyText}
+          sentAt={reply.sentAt}
+        />
+      ))
+    ) : (
+      <WaitingNotice />
+    )}
+  </div>
+);
 
 const ReplySection = ({ text, sentAt }: { text: string; sentAt: string }) => (
   <div className="border-t border-border pt-6">

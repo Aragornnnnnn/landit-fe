@@ -164,6 +164,8 @@
 | -------------------- | ------------------- | ----------------- |
 | Mailbox Tab Switched | box(received\|sent) | 받은/보낸 칸 이동 |
 
+편지 상세는 받은·보낸이 다른 리소스라 `Page Viewed`의 화면 이름도 갈린다 — `mailbox_received`(letter_id) / `mailbox_sent`(feedback_id). 목록은 칸을 옮겨도 같은 화면이라 `mailbox` 하나다.
+
 ### 유저 속성
 
 | 속성                                            | 값                       | 시점           |

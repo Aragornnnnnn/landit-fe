@@ -1,67 +1,73 @@
-// 편지를 펼쳤을 때의 머리말 — 종류마다 제목이 어디서 오는지가 다르다
+// 편지를 펼쳤을 때의 제목과 칩 — 받은 편지와 보낸 피드백이 제목을 다른 데서 가져온다
 import { describe, expect, it } from 'vitest';
 
-import { toLetterHead } from './letter-detail-head';
+import type {
+  ReceivedLetterDetail,
+  SentFeedbackDetail,
+} from '../api/letter-detail';
+import { toReceivedHead, toSentHead } from './letter-detail-head';
 
-describe('toLetterHead', () => {
-  it('공지는 편지에 적힌 제목을 그대로 쓴다', () => {
-    const head = toLetterHead({
-      letterId: 1,
-      kind: 'NOTICE',
-      title: '우리가 앱을 만든 이유',
-      sentAt: '2026-08-01T01:00:00Z',
-      blocks: [],
-      read: true,
-    });
+const received: ReceivedLetterDetail = {
+  letterId: 1,
+  letterType: 'NOTICE',
+  title: '우리가 앱을 만든 이유',
+  contentBlocks: [{ type: 'PARAGRAPH', text: '본문' }],
+  bodyText: null,
+  pinned: false,
+  sentAt: '2026-08-01T10:00:00',
+  readAt: null,
+};
 
-    expect(head).toEqual({
-      title: '우리가 앱을 만든 이유',
-      badge: { label: '공지', tone: 'notice' },
-    });
+const sent: SentFeedbackDetail = {
+  feedbackId: 11,
+  type: 'BUG_REPORT',
+  title: '버그 제보',
+  content: '로그인이 자꾸 풀려요.',
+  status: 'PENDING',
+  resolvedByFeedbackId: null,
+  createdAt: '2026-08-08T18:20:00',
+  updatedAt: '2026-08-08T18:20:00',
+  replies: [],
+};
+
+describe('toReceivedHead', () => {
+  it('공지·업데이트는 편지 제목을 그대로 쓴다', () => {
+    expect(toReceivedHead(received).title).toBe('우리가 앱을 만든 이유');
+    expect(toReceivedHead(received).badge.label).toBe('공지');
   });
 
-  it('답장의 제목은 내가 골랐던 피드백 유형이다', () => {
-    const head = toLetterHead({
-      letterId: 3,
-      kind: 'REPLY',
-      feedbackType: 'BUG',
-      sentAt: '2026-08-09T06:47:00Z',
-      replyText: '패치를 준비 중이에요.',
-      quotedText: '로그인이 자꾸 풀려요.',
-      read: false,
-    });
+  it('답장은 내가 골랐던 유형이 제목이 된다', () => {
+    const reply = {
+      ...received,
+      letterType: 'REPLY',
+      feedbackType: 'BUG_REPORT',
+    } as const;
 
-    expect(head).toEqual({
-      title: '문제 신고하기',
-      badge: { label: '답장', tone: 'reply' },
-    });
+    expect(toReceivedHead(reply).title).toBe('문제 신고하기');
+    expect(toReceivedHead(reply).badge.label).toBe('답장');
   });
 
-  it('보낸 편지는 답장이 왔는지를 칩으로 알린다', () => {
-    const pending = toLetterHead({
-      letterId: 11,
-      kind: 'FEEDBACK',
-      feedbackType: 'FEATURE',
-      status: 'PENDING',
-      sentAt: '2026-08-08T09:20:00Z',
-      content: '다크모드 지원해주세요.',
-      reply: null,
-    });
+  it('그 유형이 아직 안 오면 운영이 붙인 편지 제목으로 물러선다', () => {
+    // 받은 편지 상세에 피드백 유형을 실어달라고 요청해 둔 상태다
+    const reply = {
+      ...received,
+      letterType: 'REPLY',
+      title: '보내주신 의견에 대한 답장',
+    } as const;
 
-    expect(pending.badge).toEqual({ label: '처리중', tone: 'pending' });
+    expect(toReceivedHead(reply).title).toBe('보내주신 의견에 대한 답장');
+  });
+});
+
+describe('toSentHead', () => {
+  it('제목은 내가 골랐던 유형이고, 칩은 처리 상태다', () => {
+    expect(toSentHead(sent).title).toBe('문제 신고하기');
+    expect(toSentHead(sent).badge.label).toBe('처리중');
   });
 
-  it('답장이 도착한 보낸 편지는 목록의 처리완료 대신 도착을 말한다', () => {
-    const answered = toLetterHead({
-      letterId: 12,
-      kind: 'FEEDBACK',
-      feedbackType: 'BUG',
-      status: 'ANSWERED',
-      sentAt: '2026-08-03T00:14:00Z',
-      content: '로그인이 자꾸 풀려요.',
-      reply: { text: '패치를 준비 중이에요.', sentAt: '2026-08-09T06:47:00Z' },
-    });
-
-    expect(answered.badge).toEqual({ label: '답장 도착', tone: 'answered' });
+  it('답장이 오면 칩 문구가 바뀐다 — 목록의 "처리완료"와 달리 읽는 자리다', () => {
+    expect(toSentHead({ ...sent, status: 'COMPLETED' }).badge.label).toBe(
+      '답장 도착',
+    );
   });
 });

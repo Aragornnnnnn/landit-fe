@@ -16,7 +16,14 @@ export const readBoxParam = (searchParams: URLSearchParams): MailboxBox =>
 export const mailboxPath = (box: MailboxBox) =>
   box === 'sent' ? `${MAILBOX_PATH}?box=sent` : MAILBOX_PATH;
 
-// 편지 한 통을 펼쳐 보는 주소. 받은·보낸 편지가 한 식별자 공간을 쓴다는 계약 초안에 기대고 있다
-export const letterPath = (letterId: number) => `${MAILBOX_PATH}/${letterId}`;
+// 편지 한 통을 펼쳐 보는 주소 — 받은 편지와 보낸 피드백은 아이디 공간이 달라 주소도 가른다
+export const receivedLetterPath = (letterId: number) =>
+  `${MAILBOX_PATH}/received/${letterId}`;
+
+export const sentFeedbackPath = (feedbackId: number) =>
+  `${MAILBOX_PATH}/sent/${feedbackId}`;
+
+export const letterPath = (box: MailboxBox, id: number) =>
+  box === 'sent' ? sentFeedbackPath(id) : receivedLetterPath(id);
 
 export const MAILBOX_COMPOSE_PATH = `${MAILBOX_PATH}/compose`;
