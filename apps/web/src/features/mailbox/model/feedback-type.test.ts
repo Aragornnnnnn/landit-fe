@@ -5,7 +5,7 @@ import { readFeedbackType } from './feedback-type';
 
 describe('readFeedbackType', () => {
   it('아는 조각이면 그 유형을 돌려준다', () => {
-    expect(readFeedbackType('bug')).toBe('BUG');
+    expect(readFeedbackType('bug')).toBe('BUG_REPORT');
   });
 
   it('모르는 조각이면 유형이 없는 것으로 본다', () => {

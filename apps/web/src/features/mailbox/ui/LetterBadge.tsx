@@ -8,7 +8,7 @@ const TONE_CLASSES: Record<LetterBadgeTone, string> = {
   update: 'bg-letter-update-bg text-letter-update',
   reply: 'bg-letter-reply-bg text-letter-reply',
   pending: 'bg-letter-pending-bg text-letter-pending',
-  answered: 'bg-letter-answered-bg text-letter-answered',
+  completed: 'bg-letter-answered-bg text-letter-answered',
 };
 
 interface LetterBadgeProps {

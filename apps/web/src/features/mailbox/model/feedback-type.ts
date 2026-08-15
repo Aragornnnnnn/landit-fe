@@ -4,7 +4,7 @@ import type { FeedbackType } from '../api/letter';
 
 interface FeedbackTypeFace {
   emoji: string;
-  // 선택 화면의 줄 이름이자 보낸 편지의 제목
+  // 선택 화면의 줄 이름. 보낸 편지의 제목은 서버가 유형 이름으로 내려준다
   label: string;
   // 주소에 실리는 조각 — 대문자 enum을 그대로 노출하지 않는다
   slug: string;
@@ -16,7 +16,7 @@ interface FeedbackTypeFace {
 }
 
 export const FEEDBACK_TYPE_FACES: Record<FeedbackType, FeedbackTypeFace> = {
-  BUG: {
+  BUG_REPORT: {
     emoji: '🐛',
     label: '문제 신고하기',
     slug: 'bug',
@@ -24,7 +24,7 @@ export const FEEDBACK_TYPE_FACES: Record<FeedbackType, FeedbackTypeFace> = {
     placeholder: '내용을 자유롭게 적어주세요',
     assurance: '불편을 드려 죄송해요. 남겨주신 말씀, 하나하나 다 확인할게요.',
   },
-  FEATURE: {
+  FEATURE_REQUEST: {
     emoji: '💡',
     label: '신규 기능 요청하기',
     slug: 'feature',
@@ -52,8 +52,8 @@ export const FEEDBACK_TYPE_FACES: Record<FeedbackType, FeedbackTypeFace> = {
 
 // 선택 화면이 그리는 순서 — 급한 것부터
 export const FEEDBACK_TYPES = [
-  'BUG',
-  'FEATURE',
+  'BUG_REPORT',
+  'FEATURE_REQUEST',
   'QUESTION',
   'CHEER',
 ] as const satisfies readonly FeedbackType[];
