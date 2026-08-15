@@ -14,6 +14,12 @@ describe('readLetterBlocks', () => {
     expect(readLetterBlocks(blocks)).toEqual(blocks);
   });
 
+  it('이미지의 caption은 없어도 통과한다 — 선택 속성이다', () => {
+    const blocks = [{ type: 'IMAGE', url: 'https://x/a.png' }];
+
+    expect(readLetterBlocks(blocks)).toEqual(blocks);
+  });
+
   it('모르는 타입이나 모양이 어긋난 블록은 건너뛰고 나머지는 살린다', () => {
     const blocks = [
       { type: 'PARAGRAPH', text: '살아남는다' },
