@@ -28,14 +28,16 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
     useSendFeedbackMutation(type);
 
   // 느린 회선에서 보내는 동안 뒤로 나갈 수 있다. 그때 도착한 응답이 화면을 갈아끼우면
-  // 유저가 고른 자리에서 보낸 편지함으로 끌려간다
+  // 유저가 고른 자리에서 보낸 편지함으로 끌려간다.
+  // 켜는 일도 setup에서 한다 — StrictMode는 setup·cleanup·setup으로 도는데,
+  // 첫 cleanup이 끈 값을 되살리지 않으면 개발 중엔 보낸 뒤 아무 일도 일어나지 않는다
   const isOnScreen = useRef(true);
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    isOnScreen.current = true;
+    return () => {
       isOnScreen.current = false;
-    },
-    [],
-  );
+    };
+  }, []);
 
   const { question, placeholder, assurance } = FEEDBACK_TYPE_FACES[type];
   const trimmed = content.trim();

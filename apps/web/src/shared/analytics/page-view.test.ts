@@ -134,11 +134,20 @@ describe('toPageView', () => {
   });
 
   it('피드백 작성은 유형이 달라도 화면 이름이 하나다', () => {
-    expect(pv('/mailbox/compose/bug')).toEqual({
-      page_name: 'feedback_compose',
-      path: '/mailbox/compose/bug',
-      feedback_type: 'BUG_REPORT',
-    });
+    const slugs = {
+      bug: 'BUG_REPORT',
+      feature: 'FEATURE_REQUEST',
+      question: 'QUESTION',
+      cheer: 'CHEER',
+    };
+
+    for (const [slug, feedbackType] of Object.entries(slugs)) {
+      expect(pv(`/mailbox/compose/${slug}`)).toEqual({
+        page_name: 'feedback_compose',
+        path: `/mailbox/compose/${slug}`,
+        feedback_type: feedbackType,
+      });
+    }
   });
 
   it('유형을 고르기 전 작성 진입은 유형 없이 남긴다', () => {
