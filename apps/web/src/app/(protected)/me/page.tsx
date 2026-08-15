@@ -11,7 +11,8 @@ import { logout as requestLogout } from '@/shared/auth/api/logout';
 import { withdraw } from '@/shared/auth/api/withdraw';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { clearSession } from '@/shared/auth/clear-session';
-import { MAILBOX_PATH, SCENARIO_PATH } from '@/shared/lib/routes';
+import { homePath } from '@/shared/lib/last-tab';
+import { MAILBOX_PATH } from '@/shared/lib/routes';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { reportWarning } from '@/shared/monitoring/report';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
@@ -106,7 +107,7 @@ export default function MyPage() {
       >
         <button
           type="button"
-          onClick={() => router.replace(SCENARIO_PATH)}
+          onClick={() => router.replace(homePath())}
           className="flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90 active:bg-zinc-200"
           style={{ color: '#444', marginLeft: -4 }}
           aria-label="뒤로 가기"

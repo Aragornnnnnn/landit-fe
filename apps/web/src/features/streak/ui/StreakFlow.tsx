@@ -5,7 +5,7 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
-import { SCENARIO_PATH } from '@/shared/lib/routes';
+import { homePath } from '@/shared/lib/last-tab';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
@@ -49,7 +49,7 @@ export const StreakFlow = () => {
       <BackHeader
         title="연속 학습 기록"
         hasShadow={hasShadow}
-        onBack={() => router.replace(SCENARIO_PATH)}
+        onBack={() => router.replace(homePath())}
       />
 
       <div
