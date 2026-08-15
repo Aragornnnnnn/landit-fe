@@ -79,11 +79,12 @@ export default function SmallTalkPage() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden pb-4">
-      {/* 기록은 오늘 대화를 시작하는 길과 섞이면 안 된다 — 화면 안쪽 오른쪽 위에 잔글씨로 둔다 */}
+      {/* 기록은 오늘 대화를 시작하는 길과 섞이면 안 된다 — 화면 안쪽 오른쪽 위에 잔글씨로 둔다.
+          상대 줄과 수직 중앙을 맞추면 네 번째 상대처럼 읽혀서, 그 줄보다 위에 걸쳐 둔다 */}
       <div className="relative">
         <button
           onClick={() => router.push(SMALLTALK_HISTORY_PATH)}
-          className="absolute top-3 right-5 flex h-[54px] items-center gap-0.5 text-[13px] font-semibold text-muted-foreground active:opacity-60"
+          className="absolute top-1 right-5 flex items-center gap-0.5 py-1 text-[13px] font-semibold text-muted-foreground active:opacity-60"
         >
           기록
           <ChevronRightIcon size={14} />
