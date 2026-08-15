@@ -11,7 +11,7 @@ import { mailboxKeys } from './keys';
 import { nextLetterCursor } from './letter-page';
 import { toReceivedRow, toSentRow, type LetterRow } from './letter-row';
 
-// 캐시에는 백엔드 응답을 그대로 담고, 줄 모양으로 바꾸는 건 select가 한다
+// 캐시에는 백엔드 응답을 그대로 담고, 줄 모양으로 바꾸는 건 select가 한다 — 응답 모양이 정본이다
 const fetchLetters = (
   box: MailboxBox,
   cursor: string | null,

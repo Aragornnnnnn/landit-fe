@@ -38,8 +38,9 @@ const useLetterQuery = <T>(
 };
 
 // 받은 편지는 조회가 읽음 처리를 겸한다 — 따로 알릴 API가 없다.
-// 그래서 이 조회가 끝나면 헤더의 미읽음 개수가 낡는다. 개수를 직접 깎지 않고 다시 묻는다 —
-// 이미 읽은 편지를 또 열었는지 응답만 보고는 알 수 없어(열면 언제나 읽음이다) 깎으면 틀린다
+// 그래서 받고 나면 목록의 미읽음 표시와 헤더의 개수가 낡는다. 그 둘(summaries)만 다시 묻게 한다 —
+// 방금 받은 상세는 그대로 두고, 값을 직접 깎지도 않는다. 이미 읽은 편지를 또 열었는지
+// 응답만 보고는 알 수 없어(열면 언제나 읽음이다) 깎으면 틀린다
 export const useReceivedLetterQuery = (letterId: number) => {
   const userId = useAuthStore((state) => state.member?.userId ?? null);
   const queryClient = useQueryClient();
@@ -47,7 +48,7 @@ export const useReceivedLetterQuery = (letterId: number) => {
   return useLetterQuery('received', letterId, async () => {
     const letter = await getReceivedLetterDetail(letterId);
     void queryClient.invalidateQueries({
-      queryKey: mailboxKeys.unread(userId),
+      queryKey: mailboxKeys.summaries(userId),
     });
     return letter;
   });

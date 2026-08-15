@@ -4,8 +4,8 @@ import type { MailboxBox } from './box';
 
 export const mailboxKeys = {
   all: ['mailbox'] as const,
-  // 편지를 읽으면 목록과 미읽음 점만 낡는다. 그 둘만 묶어 두면 방금 받아온 상세를
-  // 다시 부르지 않고도 걷어낼 수 있다 (useLetterDetailQuery 참고)
+  // 편지를 읽으면 목록의 미읽음 표시와 헤더 개수만 낡는다. 그 둘만 묶어 두면
+  // 방금 받아온 상세는 두고 둘만 다시 묻게 할 수 있다 (useLetterDetailQuery 참고)
   summaries: (userId: number | null) =>
     [...mailboxKeys.all, userId, 'summaries'] as const,
   letters: (userId: number | null, box: MailboxBox) =>
