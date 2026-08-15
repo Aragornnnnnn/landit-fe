@@ -137,7 +137,7 @@ describe('toPageView', () => {
     expect(pv('/mailbox/compose/bug')).toEqual({
       page_name: 'feedback_compose',
       path: '/mailbox/compose/bug',
-      feedback_type: 'BUG',
+      feedback_type: 'BUG_REPORT',
     });
   });
 

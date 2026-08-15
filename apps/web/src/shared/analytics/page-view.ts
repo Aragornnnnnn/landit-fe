@@ -23,8 +23,8 @@ const STATIC_PAGES = new Set([
 // 키를 유형 쪽에 둔다. 유형이 늘 때 여기를 빠뜨리면 빌드가 깨진다 —
 // 슬러그를 키로 두면 조용히 통과하고 새 유형의 페이지뷰만 속성 없이 쌓인다
 const FEEDBACK_TYPE_SLUGS: Record<FeedbackType, string> = {
-  BUG: 'bug',
-  FEATURE: 'feature',
+  BUG_REPORT: 'bug',
+  FEATURE_REQUEST: 'feature',
   QUESTION: 'question',
   CHEER: 'cheer',
 };

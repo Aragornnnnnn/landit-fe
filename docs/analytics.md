@@ -160,18 +160,18 @@
 
 ### 편지함
 
-| 이벤트                 | 속성                                         | 시점                         |
-| ---------------------- | -------------------------------------------- | ---------------------------- |
-| Mailbox Tab Switched   | box(received\|sent)                          | 받은/보낸 칸 이동            |
-| Feedback Type Selected | feedback_type(BUG\|FEATURE\|QUESTION\|CHEER) | 유형 선택 화면에서 하나 고름 |
-| Feedback Submitted     | feedback_type, length                        | 피드백 전송 성공             |
+| 이벤트                 | 속성                                                        | 시점                         |
+| ---------------------- | ----------------------------------------------------------- | ---------------------------- |
+| Mailbox Tab Switched   | box(received\|sent)                                         | 받은/보낸 칸 이동            |
+| Feedback Type Selected | feedback_type(BUG_REPORT\|FEATURE_REQUEST\|QUESTION\|CHEER) | 유형 선택 화면에서 하나 고름 |
+| Feedback Submitted     | feedback_type, length                                       | 피드백 전송 성공             |
 
 원문은 PII 위험이 있어 싣지 않는다 — 길이만 남긴다. `Feedback Submitted`는 전송이 성공한 뒤에만 쏜다.
 
-편지 상세와 피드백 작성은 `Page Viewed`가 담당한다. 주소가 유형·편지마다 갈려도 화면 이름은
-하나로 두고(`letter_detail` / `feedback_compose`) 갈리는 값은 `letter_id`·`feedback_type` 속성으로 싣는다.
-
-편지 상세는 받은·보낸이 다른 리소스라 `Page Viewed`의 화면 이름도 갈린다 — `mailbox_received`(letter_id) / `mailbox_sent`(feedback_id). 목록은 칸을 옮겨도 같은 화면이라 `mailbox` 하나다.
+편지 상세와 피드백 작성 진입은 `Page Viewed`가 담당한다. 편지 상세는 받은·보낸이 서로 다른
+리소스라 화면 이름도 갈리고(`mailbox_received`+letter_id / `mailbox_sent`+feedback_id),
+목록은 칸을 옮겨도 같은 화면이라 `mailbox` 하나다. 작성은 유형마다 주소가 갈려도 화면 이름은
+`feedback_compose` 하나로 두고 고른 유형을 `feedback_type`으로 싣는다.
 
 ### 유저 속성
 

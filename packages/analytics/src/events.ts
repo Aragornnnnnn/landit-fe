@@ -121,8 +121,9 @@ export type RetryScreen =
   | 'expression_list'
   | 'streak'
   | 'mailbox';
-// 피드백 유형 — 작성 화면에서 고르는 넷
-export type FeedbackType = 'BUG' | 'FEATURE' | 'QUESTION' | 'CHEER';
+// 피드백 유형 — 작성 화면에서 고르는 넷. 값은 서버 enum 그대로다 (지표와 데이터가 같은 말을 쓰도록)
+export type FeedbackType =
+  'BUG_REPORT' | 'FEATURE_REQUEST' | 'QUESTION' | 'CHEER';
 // 알림 동의를 청한 지면 — 온보딩 스텝은 기존 온보딩 계측이 커버해서 없다.
 // 키는 source — surface는 baseProps의 전역 속성(app·browser)이라 겹치면 덮어쓴다
 export type NotificationConsentSource = 'scenario' | 'me';
