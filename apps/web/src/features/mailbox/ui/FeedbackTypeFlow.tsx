@@ -46,7 +46,10 @@ const FeedbackTypeRow = ({ type }: { type: FeedbackType }) => {
   const { emoji, label } = FEEDBACK_TYPE_FACES[type];
 
   return (
+    // 유형 선택 화면을 히스토리에 남기지 않는다 — 편지함 안은 한 층이다 (ComposeFab 참고).
+    // 유형을 다시 고르는 길은 작성 화면의 화살표가 낸다
     <Link
+      replace
       href={feedbackComposePath(type)}
       onClick={() =>
         track(EVENTS.FEEDBACK_TYPE_SELECTED, { feedback_type: type })
