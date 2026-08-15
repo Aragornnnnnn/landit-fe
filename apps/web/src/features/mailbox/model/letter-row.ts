@@ -26,7 +26,8 @@ export interface LetterRow {
   unread: boolean;
 }
 
-const RECEIVED_BADGES: Record<MailboxLetterType, LetterBadge> = {
+// 받은 편지의 칩은 목록과 상세가 같은 표를 쓴다 — 보낸 편지는 자리마다 문구가 달라 각자 둔다
+export const RECEIVED_BADGES: Record<MailboxLetterType, LetterBadge> = {
   NOTICE: { label: '공지', tone: 'notice' },
   UPDATE: { label: '업데이트', tone: 'update' },
   REPLY: { label: '답장', tone: 'reply' },

@@ -1,22 +1,16 @@
 // 편지를 펼쳤을 때 맨 위에 오는 제목과 칩 — 종류마다 제목이 어디서 오는지가 달라 여기서 하나로 맞춘다
-import type { FeedbackStatus, MailboxLetterType } from '../api/letter';
+import type { FeedbackStatus } from '../api/letter';
 import type {
   ReceivedLetterDetail,
   SentFeedbackDetail,
 } from '../api/letter-detail';
 import { FEEDBACK_TYPE_FACES } from './feedback-type';
-import type { LetterBadge } from './letter-row';
+import { RECEIVED_BADGES, type LetterBadge } from './letter-row';
 
 export interface LetterHead {
   title: string;
   badge: LetterBadge;
 }
-
-const RECEIVED_BADGES: Record<MailboxLetterType, LetterBadge> = {
-  NOTICE: { label: '공지', tone: 'notice' },
-  UPDATE: { label: '업데이트', tone: 'update' },
-  REPLY: { label: '답장', tone: 'reply' },
-};
 
 // 목록에선 '처리완료'라고 적지만 펼친 자리에선 '답장 도착'이다 —
 // 목록은 처리 단계를 훑는 자리고, 여기는 그 답장을 읽는 자리라 시안이 문구를 달리 뒀다
