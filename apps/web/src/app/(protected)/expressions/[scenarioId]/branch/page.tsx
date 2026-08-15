@@ -1,7 +1,7 @@
 // 표현학습 분기 라우트 — 대화 피드백 후 진입점
 import { use } from 'react';
 
-import { ExpressionBranch } from '@/features/expression/ui/list/ExpressionBranch';
+import { ExpressionBranch } from '@/features/expression/ui/ExpressionBranch';
 import { readDateParam } from '@/shared/lib/routes';
 
 export default function ExpressionBranchPage({

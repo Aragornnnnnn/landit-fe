@@ -14,13 +14,13 @@ import { ONBOARDED_PARAM, SCENARIO_PATH } from '@/shared/lib/routes';
 import { Transition } from '@/shared/motion';
 
 import { STEP_ORDER, type OnboardingStep } from '../model/steps';
-import { IntroStep } from './IntroStep';
-import { LampStep } from './LampStep';
-import { MicStep } from './MicStep';
-import { NotificationStep } from './NotificationStep';
-import { OnboardingHeader } from './OnboardingHeader';
-import { SoundStep } from './SoundStep';
-import { ThoughtStep } from './ThoughtStep';
+import { OnboardingHeader } from './common/OnboardingHeader';
+import { IntroStep } from './steps/IntroStep';
+import { LampStep } from './steps/LampStep';
+import { MicStep } from './steps/MicStep';
+import { NotificationStep } from './steps/NotificationStep';
+import { SoundStep } from './steps/SoundStep';
+import { ThoughtStep } from './steps/ThoughtStep';
 
 export const OnboardingFlow = () => {
   const router = useRouter();

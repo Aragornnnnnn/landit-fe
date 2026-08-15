@@ -19,7 +19,7 @@ import {
   weekdayIndexOf,
 } from '../lib/calendar-window';
 import { useScenarioCalendarQuery } from '../model/useScenarioCalendarQuery';
-import { CalendarDay } from './CalendarDay';
+import { CalendarDay } from './calendar/CalendarDay';
 
 // 그 달 1일이 몇 번째 칸에서 시작하는지
 const leadingBlanks = (firstDate: string) => weekdayIndexOf(firstDate);

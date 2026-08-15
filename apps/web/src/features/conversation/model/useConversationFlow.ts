@@ -164,7 +164,7 @@ export const useConversationFlow = (scenario: Scenario) => {
       // 반환하는 sessionId state와 다른 값 — 백그라운드 시작이 아직이면 확보를 기다린 결과
       const activeSessionId = await session.ensure();
       if (activeSessionId == null) {
-        console.error('세션이 없어 제출할 수 없어요');
+        console.warn('[conversation] 세션이 없어 제출할 수 없어요');
         haptic('error');
         send('AI_RESPONSE_FAILED');
         showToast('연결에 문제가 생겼어요. 잠시 후 다시 시도해 주세요');
@@ -221,7 +221,7 @@ export const useConversationFlow = (scenario: Scenario) => {
           send('AI_RESPONSE_READY'); // → AI_INNER_THOUGHT
         });
     } catch (error) {
-      console.error('발화 제출 실패', error);
+      console.warn('[conversation] 발화 제출 실패', error);
       reportError(error);
       haptic('error');
       send('AI_RESPONSE_FAILED'); // → USER_READY (다시 시도)

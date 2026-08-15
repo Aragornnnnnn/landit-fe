@@ -4,8 +4,8 @@
 import { useState } from 'react';
 
 import { useAppUpdateCheck } from '../model/useAppUpdateCheck';
-import { ForceUpdateModal } from './ForceUpdateModal';
-import { SoftUpdateSheet } from './SoftUpdateSheet';
+import { ForceUpdateModal } from './gate/ForceUpdateModal';
+import { SoftUpdateSheet } from './gate/SoftUpdateSheet';
 
 export const AppUpdateGate = () => {
   const { updateType, reason } = useAppUpdateCheck();

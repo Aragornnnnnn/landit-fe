@@ -59,7 +59,7 @@ export const useConversationSession = (
         return res.sessionId;
       })
       .catch((error) => {
-        console.error('세션 시작 실패', error);
+        console.warn('[conversation] 세션 시작 실패', error);
         reportError(error);
         return null;
       });
@@ -73,7 +73,7 @@ export const useConversationSession = (
   const end = () => {
     if (sessionIdRef.current == null) return;
     endSession(sessionIdRef.current).catch((error) => {
-      console.error('세션 종료 실패', error);
+      console.warn('[conversation] 세션 종료 실패', error);
       reportWarning(error);
     });
   };

@@ -8,8 +8,8 @@ import { EASE_STANDARD } from '@/shared/motion';
 
 import type { DailyScenario } from '../api/daily';
 import { toScenario, type Scenario } from '../lib/to-scenario';
-import { LampStage } from './LampStage';
-import { ScenarioCard } from './ScenarioCard';
+import { ScenarioCard } from './card/ScenarioCard';
+import { LampStage } from './lamp/LampStage';
 
 interface TodayCardProps {
   // 그날 배정된 시나리오. 없는 날은 이 컴포넌트를 그리지 않는다
