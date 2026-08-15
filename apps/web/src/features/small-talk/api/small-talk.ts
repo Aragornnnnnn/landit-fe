@@ -9,6 +9,19 @@ import type {
 import { api } from '@/shared/api/client';
 import type { TtsVoice } from '@/shared/tts/voice';
 
+// 상대의 감정 — 저장된 값이 없으면 비어 온다 (백엔드 문자열 그대로, 좁히기는 소비 지점에서)
+export type SmallTalkEmotion = string | null;
+
+// 스몰톡 첫 질문은 내 발화 전에 나와 속마음이 없다 — 대신 상대의 감정이 실린다
+export interface SmallTalkCurrentMessage extends CurrentMessage {
+  emotion: SmallTalkEmotion;
+}
+
+// 다음 발화에도 감정이 실린다 (시나리오엔 없는 축)
+export interface SmallTalkNextMessage extends NextMessage {
+  emotion: SmallTalkEmotion;
+}
+
 export interface SmallTalkTopic {
   topicId: number;
   displayName: string;
@@ -41,7 +54,7 @@ export interface SmallTalkSessionStartResponse {
   speakingTimeLimitMs: number;
   ttsVoice: TtsVoice | null;
   // AI 선시작의 첫 발화. 내가 먼저 시작하면 null
-  currentMessage: CurrentMessage | null;
+  currentMessage: SmallTalkCurrentMessage | null;
 }
 
 // 이 발화로 대화가 어떻게 되는가 — 이어가거나, 종료 의사를 확인받거나, 끝난다.
@@ -66,9 +79,10 @@ export interface SmallTalkMessageSubmitResponse {
   sessionId: number;
   title: string | null;
   turnStatus: SmallTalkTurnStatus;
+  // 스몰톡은 메시지별 피드백을 만들지 않아 공용 계약 그대로다 (시나리오만 피드백 상태가 더 온다)
   submittedMessage: SubmittedMessage;
   // 다음 AI 발화. 종료(COMPLETED) 턴에는 작별 인사가 담겨 온다
-  nextMessage: NextMessage | null;
+  nextMessage: SmallTalkNextMessage | null;
   progress: SmallTalkProgress;
 }
 

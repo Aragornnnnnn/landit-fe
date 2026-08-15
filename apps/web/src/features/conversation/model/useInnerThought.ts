@@ -36,7 +36,10 @@ export const useInnerThought = () => {
     submitted: SubmittedMessage,
   ): Promise<ResolvedThought | null> => {
     if (submitted.innerThoughtProcessingStatus === 'COMPLETED') {
-      return { text: submitted.innerThought, type: submitted.innerThoughtType };
+      return {
+        text: submitted.innerThought ?? '',
+        type: submitted.innerThoughtType,
+      };
     }
     let fallbackReason: 'timeout' | 'failed' = 'timeout';
     // 폴링 도중 마지막으로 받은 오류 — 끝내 실패하면 원인으로 보고한다
@@ -65,7 +68,10 @@ export const useInnerThought = () => {
       messageId: submitted.messageId,
       reason: fallbackReason,
     });
-    return { text: submitted.innerThought, type: submitted.innerThoughtType };
+    return {
+      text: submitted.innerThought ?? '',
+      type: submitted.innerThoughtType,
+    };
   };
 
   // 중도 이탈 시 진행 중인 폴링을 즉시 멈춘다 (언마운트를 기다리지 않고)
