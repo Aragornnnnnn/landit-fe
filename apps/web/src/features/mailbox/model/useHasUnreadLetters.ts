@@ -23,5 +23,5 @@ export const useHasUnreadLetters = () => {
     retry: 1,
   });
 
-  return (data ?? 0) > 0;
+  return (data?.unreadCount ?? 0) > 0;
 };

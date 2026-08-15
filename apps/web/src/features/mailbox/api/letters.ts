@@ -32,6 +32,5 @@ export const getSentFeedbackDetail = (feedbackId: number) =>
   api.get<SentFeedbackDetail>(`/api/v1/mailbox/sent/${feedbackId}`);
 
 // 헤더의 미읽음 점 — 목록 전체를 받아 세는 대신 개수만 묻는다
-export const getUnreadCount = async () =>
-  (await api.get<{ unreadCount: number }>('/api/v1/mailbox/unread-count'))
-    .unreadCount;
+export const getUnreadCount = () =>
+  api.get<{ unreadCount: number }>('/api/v1/mailbox/unread-count');
