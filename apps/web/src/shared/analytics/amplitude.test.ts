@@ -125,14 +125,14 @@ describe('track', () => {
     };
     const { track } = await loadWrapper();
 
-    track('Feedback Submitted', { feedback_type: 'BUG', length: 12 });
+    track('Feedback Submitted', { feedback_type: 'BUG_REPORT', length: 12 });
 
     expect(amplitudeMock.track).toHaveBeenCalledWith('Feedback Submitted', {
       surface: 'app',
       platform: 'ios',
       app_version: '1.2.0',
       build_number: '42',
-      feedback_type: 'BUG',
+      feedback_type: 'BUG_REPORT',
       length: 12,
     });
   });
