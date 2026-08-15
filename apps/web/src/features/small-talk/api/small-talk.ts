@@ -6,6 +6,7 @@ import type {
   NextMessage,
   SubmittedMessage,
 } from '@/features/conversation/api/session';
+import type { Partner } from '@/features/conversation/model/character-look';
 import { api } from '@/shared/api/client';
 import type { TtsVoice } from '@/shared/tts/voice';
 
@@ -48,6 +49,8 @@ export interface SmallTalkSessionStartResponse {
   sessionId: number;
   sessionType: string;
   startMode: SmallTalkStartMode;
+  // 이 대화의 상대. 페르소나와 TTS 음성이 여기서 갈린다
+  characterId: Partner;
   // AI 선시작의 주제명. 내가 먼저 시작하면 null이고, 대화 중 서버가 주제를 추론해 채운다
   title: string | null;
   // 하루 총량(잔량이 아니다) — 잔량은 홈 조회와 매 제출의 progress에만 있다
@@ -98,10 +101,12 @@ export interface SmallTalkMessageSubmitRequest {
 
 export type SmallTalkExitDecision = 'CONTINUE' | 'END';
 
-// 스몰톡 세션 시작 — 상대의 첫 발화까지 만들어 오므로(AI 선시작) 응답이 느리다
+// 스몰톡 세션 시작 — 상대의 첫 발화까지 만들어 오므로(AI 선시작) 응답이 느리다.
+// 상대(characterId)는 필수다 — 서버가 그 값으로 페르소나와 음성을 정한다
 export const startSmallTalkSession = (body: {
   startMode: SmallTalkStartMode;
   topicId?: number;
+  characterId: Partner;
 }) =>
   api.post<SmallTalkSessionStartResponse>('/api/v1/free-talk/sessions', body);
 

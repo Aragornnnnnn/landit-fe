@@ -19,7 +19,7 @@ interface SmallTalkSessionOptions {
   startMode: SmallTalkStartMode;
   // 상대가 먼저 말을 걸 때 고른 주제. 내가 먼저 걸면 없다
   topicId?: number;
-  // 홈에서 고른 상대 — 계측에만 쓴다. 서버는 아직 상대 개념을 모른다
+  // 홈에서 고른 상대 — 서버가 이 값으로 페르소나와 음성을 정한다
   partner: Partner;
 }
 
@@ -40,7 +40,7 @@ export const useSmallTalkSession = ({
     if (startedRef.current) return; // StrictMode 이중 실행에도 세션은 하나만 만든다
     startedRef.current = true;
 
-    startSmallTalkSession({ startMode, topicId })
+    startSmallTalkSession({ startMode, topicId, characterId: partner })
       .then((started) => {
         sessionIdRef.current = started.sessionId;
         setSession(started);
