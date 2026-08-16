@@ -37,6 +37,12 @@ describe('readLetterBlocks', () => {
     ]);
   });
 
+  it('이미지 url이 비어 있어도 통과한다 — 아직 그림이 없는 자리를 잡아 두는 블록이다', () => {
+    const blocks = [{ type: 'IMAGE', url: '', caption: '일러스트 자리' }];
+
+    expect(readLetterBlocks(blocks)).toEqual(blocks);
+  });
+
   it('배열이 아니면 빈 목록이다', () => {
     expect(readLetterBlocks(null)).toEqual([]);
     expect(readLetterBlocks({ type: 'PARAGRAPH', text: '홀로' })).toEqual([]);

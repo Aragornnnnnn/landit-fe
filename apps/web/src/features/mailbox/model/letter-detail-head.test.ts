@@ -30,9 +30,10 @@ const sent: SentFeedbackDetail = {
 };
 
 describe('toReceivedHead', () => {
-  it('공지·업데이트는 편지 제목을 그대로 쓴다', () => {
+  it('공지·업데이트는 편지 제목을 그대로 쓰고, 시각은 발송 시각이다', () => {
     expect(toReceivedHead(received).title).toBe('우리가 앱을 만든 이유');
     expect(toReceivedHead(received).badge.label).toBe('공지');
+    expect(toReceivedHead(received).sentAt).toBe(received.sentAt);
   });
 
   it('답장은 내가 골랐던 유형이 제목이 된다', () => {
@@ -58,9 +59,10 @@ describe('toReceivedHead', () => {
 });
 
 describe('toSentHead', () => {
-  it('제목은 내가 골랐던 유형이고, 칩은 처리 상태다', () => {
+  it('제목은 내가 골랐던 유형이고, 칩은 처리 상태, 시각은 내가 쓴 시각이다', () => {
     expect(toSentHead(sent).title).toBe('문제 신고하기');
     expect(toSentHead(sent).badge.label).toBe('처리중');
+    expect(toSentHead(sent).sentAt).toBe(sent.createdAt);
   });
 
   it('답장이 오면 칩 문구가 바뀐다 — 목록의 "처리완료"와 달리 읽는 자리다', () => {

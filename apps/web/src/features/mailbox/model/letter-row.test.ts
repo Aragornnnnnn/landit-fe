@@ -28,6 +28,10 @@ describe('toReceivedRow', () => {
     expect(toReceivedRow(received).badge.label).toBe('답장');
   });
 
+  it('주소는 받은 편지 상세다 — 화면은 어느 칸인지 몰라도 된다', () => {
+    expect(toReceivedRow(received).href).toBe('/mailbox/received/1');
+  });
+
   it('서버가 준 미읽음을 그대로 쓴다', () => {
     expect(toReceivedRow(received).unread).toBe(true);
     expect(toReceivedRow({ ...received, unread: false }).unread).toBe(false);
@@ -46,6 +50,10 @@ describe('toSentRow', () => {
     expect(toSentRow({ ...sent, status: 'COMPLETED' }).badge.label).toBe(
       '처리완료',
     );
+  });
+
+  it('주소는 보낸 피드백 상세다 — 받은 편지와 아이디 공간이 달라 주소도 다르다', () => {
+    expect(toSentRow(sent).href).toBe('/mailbox/sent/7');
   });
 
   it('보낸 편지에는 미읽음이라는 개념이 없다', () => {

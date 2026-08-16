@@ -5,10 +5,10 @@ import { MAILBOX_PATH } from '@/shared/lib/routes';
 import { HeaderAction } from '@/shared/ui/HeaderAction';
 import { MailIcon } from '@/shared/ui/Icons';
 
-import { useHasUnreadLetters } from '../model/useHasUnreadLetters';
+import { useUnreadCountQuery } from '../model/useUnreadCountQuery';
 
 export const MailboxButton = () => {
-  const hasUnread = useHasUnreadLetters();
+  const { hasUnread } = useUnreadCountQuery();
 
   return (
     <HeaderAction

@@ -3,7 +3,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
-import { showToast } from '@/shared/ui/toast';
 
 import {
   getReceivedLetters,
@@ -62,10 +61,7 @@ export const useLetterRowsQuery = (box: MailboxBox) => {
     retry: () => void refetch(),
     hasMore: hasNextPage,
     loadingMore: isFetchingNextPage,
-    // 다음 장이 실패하면 목록은 그대로고 버튼만 돌아온다 — 첫 장 실패(RetryNotice)와 달리 알릴 자리가 없어 토스트로 말한다
-    loadMore: () =>
-      void fetchNextPage().then((result) => {
-        if (result.isError) showToast('편지를 더 불러오지 못했어요.');
-      }),
+    // 결과를 돌려준다 — 실패를 어떻게 알릴지는 화면이 정한다
+    loadMore: () => fetchNextPage(),
   };
 };

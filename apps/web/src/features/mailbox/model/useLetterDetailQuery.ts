@@ -5,27 +5,29 @@ import { ApiError } from '@/shared/api/api-error';
 import { useAuthStore } from '@/shared/auth/auth-store';
 
 import { getReceivedLetterDetail, getSentFeedbackDetail } from '../api/mailbox';
+import type { MailboxBox } from './box';
 import { mailboxKeys } from './keys';
 
-// 없는 편지를 다시 물어도 답은 같다 — 기본 재시도(3회 지수 백오프)에 걸리면
-// 못 찾았다는 사실을 알기까지 7초를 스켈레톤만 본다
-const retryUnlessMissing = (failureCount: number, error: Error) => {
+// 4xx는 다시 물어도 답이 같다(없는 편지·권한 없음) — 기본 재시도(3회 지수 백오프)에 걸리면
+// 못 찾았다는 사실을 알기까지 7초를 스켈레톤만 본다. 5xx만 두 번까지 다시 묻는다
+const DETAIL_MAX_RETRIES = 2;
+const retryUnlessClientError = (failureCount: number, error: Error) => {
   if (error instanceof ApiError && error.status < 500) return false;
-  return failureCount < 2;
+  return failureCount < DETAIL_MAX_RETRIES;
 };
 
 const useLetterQuery = <T>(
-  box: 'received' | 'sent',
+  box: MailboxBox,
   id: number,
-  fetch: () => Promise<T>,
+  queryFn: () => Promise<T>,
 ) => {
   const userId = useAuthStore((state) => state.member?.userId ?? null);
 
   const { data, isPending, error, refetch } = useQuery({
     queryKey: mailboxKeys.letter(userId, box, id),
-    queryFn: fetch,
+    queryFn,
     enabled: userId !== null,
-    retry: retryUnlessMissing,
+    retry: retryUnlessClientError,
   });
 
   return {

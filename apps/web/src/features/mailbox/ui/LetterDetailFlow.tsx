@@ -1,7 +1,7 @@
 'use client';
 
 // 편지 한 통을 펼쳐 보는 화면 — 받은 편지와 보낸 피드백이 리소스가 달라 화면도 둘로 갈린다.
-// 겉모습(헤더·제목·칩·시각)은 같아서 그 골격만 여기서 공유한다
+// 겉모습(헤더·제목·칩·시각)은 같아서 그 골격만 여기서 공유하고, 본문은 ui/detail이 그린다
 import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -9,10 +9,8 @@ import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
-import type { ReceivedLetterDetail, SentFeedbackDetail } from '../api/mailbox';
 import { formatLetterDateTime } from '../lib/letter-date';
-import { mailboxPath, type MailboxBox } from '../model/box';
-import { readLetterBlocks } from '../model/letter-blocks';
+import { mailboxPath } from '../model/box';
 import {
   toReceivedHead,
   toSentHead,
@@ -22,155 +20,107 @@ import {
   useReceivedLetterQuery,
   useSentFeedbackQuery,
 } from '../model/useLetterDetailQuery';
-import { LetterBlocks } from './detail/LetterBlocks';
-import { QuotedLetter } from './detail/QuotedLetter';
-import { WaitingNotice } from './detail/WaitingNotice';
+import { ReceivedBody } from './detail/ReceivedBody';
+import { SentBody } from './detail/SentBody';
 import { LetterBadge } from './LetterBadge';
 
-// 받은 편지 — 공지·업데이트는 블록 본문, 답장은 글 한 덩이에 내가 보낸 내용이 따라붙는다
 export const ReceivedLetterFlow = ({ letterId }: { letterId: number }) => {
   const { letter, isPending, error, retry } = useReceivedLetterQuery(letterId);
 
   return (
     <LetterShell
-      box="received"
+      fallbackHref={mailboxPath('received')}
+      head={letter && toReceivedHead(letter)}
       isPending={isPending}
       error={error}
       onRetry={retry}
-      head={letter && toReceivedHead(letter)}
-      sentAt={letter?.sentAt ?? null}
     >
       {letter && <ReceivedBody letter={letter} />}
     </LetterShell>
   );
 };
 
-// 보낸 피드백 — 내가 쓴 글이 먼저고, 답장이 도착했으면 그 아래에 붙는다
 export const SentFeedbackFlow = ({ feedbackId }: { feedbackId: number }) => {
   const { letter, isPending, error, retry } = useSentFeedbackQuery(feedbackId);
 
   return (
     <LetterShell
-      box="sent"
+      fallbackHref={mailboxPath('sent')}
+      head={letter && toSentHead(letter)}
       isPending={isPending}
       error={error}
       onRetry={retry}
-      head={letter && toSentHead(letter)}
-      sentAt={letter?.createdAt ?? null}
     >
       {letter && <SentBody feedback={letter} />}
     </LetterShell>
   );
 };
 
-const LetterShell = ({
-  box,
-  head,
-  sentAt,
-  isPending,
-  error,
-  onRetry,
-  children,
-}: {
-  box: MailboxBox;
+interface LetterShellProps {
+  // 주소로 바로 열어 되돌아갈 곳이 없을 때 보낼 곳
+  fallbackHref: string;
   head: LetterHead | null;
-  sentAt: string | null;
   isPending: boolean;
   error: Error | null;
   onRetry: () => void;
   children: ReactNode;
-}) => {
+}
+
+const LetterShell = ({ fallbackHref, ...content }: LetterShellProps) => {
   const router = useRouter();
   const { ref: scrollRef, onScroll, hasShadow } = useScrollShadow();
 
   // 목록에서 열고 들어왔으면 되돌아간다 — replace로 두면 편지 칸이 목록으로 바뀌어 목록이 히스토리에 두 겹 남고,
-  // 그 뒤 휴대폰 뒤로가기가 한 번 헛눌린다. 주소로 바로 열었으면(딥링크·새로고침) 되돌아갈 데가 없으니 편지가 있던 칸으로 보낸다
-  const backToBox = () =>
-    window.history.length > 1
-      ? router.back()
-      : router.replace(mailboxPath(box));
+  // 그 뒤 휴대폰 뒤로가기가 한 번 헛눌린다. 주소로 바로 열었으면(딥링크·새로고침) 되돌아갈 데가 없으니 fallback으로
+  const back = () =>
+    window.history.length > 1 ? router.back() : router.replace(fallbackHref);
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
-      <BackHeader hasShadow={hasShadow} onBack={backToBox} />
+      <BackHeader hasShadow={hasShadow} onBack={back} />
 
       <div
         ref={scrollRef}
         onScroll={onScroll}
         className="flex-1 overflow-y-auto px-5 pb-10"
       >
-        {/* 편지가 있으면 편지가 이긴다 — 다시 불러오다 실패해도 보고 있던 편지는 그대로 둔다 */}
-        {head && sentAt ? (
-          <article>
-            <h1 className="text-xl leading-snug font-bold text-foreground">
-              {head.title}
-            </h1>
-            <div className="mt-3 flex items-center gap-2">
-              <LetterBadge label={head.badge.label} tone={head.badge.tone} />
-              <time className="text-[13px] text-muted-foreground">
-                {formatLetterDateTime(sentAt)}
-              </time>
-            </div>
-            <div className="mt-6">{children}</div>
-          </article>
-        ) : error ? (
-          <RetryNotice
-            screen="mailbox"
-            message={error.message}
-            onRetry={onRetry}
-          />
-        ) : isPending ? (
-          <Skeleton />
-        ) : null}
+        <LetterContent {...content} />
       </div>
     </main>
   );
 };
 
-const ReceivedBody = ({ letter }: { letter: ReceivedLetterDetail }) => {
-  const blocks = readLetterBlocks(letter.contentBlocks);
-  if (blocks.length > 0) return <LetterBlocks blocks={blocks} />;
-
-  return (
-    <div className="flex flex-col gap-6">
-      <p className="text-[15px] leading-relaxed text-foreground">
-        {letter.bodyText}
-      </p>
-      {/* 답장에 딸린 내 원문 — 무엇에 대한 답장인지 다시 찾아보지 않게 한다 */}
-      {letter.quotedFeedbackContent && (
-        <QuotedLetter text={letter.quotedFeedbackContent} />
-      )}
-    </div>
-  );
+// 편지가 있으면 편지가 이긴다 — 다시 불러오다 실패해도 보고 있던 편지는 그대로 둔다
+const LetterContent = ({
+  head,
+  isPending,
+  error,
+  onRetry,
+  children,
+}: Omit<LetterShellProps, 'fallbackHref'>) => {
+  if (head) {
+    return (
+      <article>
+        <h1 className="text-xl leading-snug font-bold text-foreground">
+          {head.title}
+        </h1>
+        <div className="mt-3 flex items-center gap-2">
+          <LetterBadge label={head.badge.label} tone={head.badge.tone} />
+          <time className="text-[13px] text-muted-foreground">
+            {formatLetterDateTime(head.sentAt)}
+          </time>
+        </div>
+        <div className="mt-6">{children}</div>
+      </article>
+    );
+  }
+  if (error) {
+    return (
+      <RetryNotice screen="mailbox" message={error.message} onRetry={onRetry} />
+    );
+  }
+  return isPending ? <Skeleton /> : null;
 };
-
-const SentBody = ({ feedback }: { feedback: SentFeedbackDetail }) => (
-  <div className="flex flex-col gap-6">
-    <p className="text-[15px] leading-relaxed text-foreground">
-      {feedback.content}
-    </p>
-    {feedback.replies.length > 0 ? (
-      feedback.replies.map((reply) => (
-        <ReplySection
-          key={reply.letterId}
-          text={reply.bodyText}
-          sentAt={reply.sentAt}
-        />
-      ))
-    ) : (
-      <WaitingNotice />
-    )}
-  </div>
-);
-
-const ReplySection = ({ text, sentAt }: { text: string; sentAt: string }) => (
-  <div className="border-t border-border pt-6">
-    <p className="text-xs font-semibold text-muted-foreground">
-      랜딧 팀의 답장 · {formatLetterDateTime(sentAt)}
-    </p>
-    <p className="mt-2 text-[15px] leading-relaxed text-foreground">{text}</p>
-  </div>
-);
 
 // 제목·칩·본문 자리를 미리 잡아 둔다 — 도착한 뒤 글이 위아래로 튀지 않게
 const Skeleton = () => (

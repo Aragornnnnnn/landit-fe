@@ -1,9 +1,8 @@
 // 피드백 보내기 버튼 — 목록이 비어 있든 가득하든 늘 같은 자리에 떠 있다.
-// 편지함 안(목록·유형 선택·작성)은 히스토리에 한 층만 쓴다 — 보내고 나서 휴대폰 뒤로가기를 누르면
-// 편지함 목록이 아니라 들어오기 전 탭으로 나가야 해서, 목록 위에 작성 화면을 쌓지 않는다
+// replace인 건 작성 흐름이 히스토리 한 층이라서다 (model/feedback-type.ts의 MAILBOX_COMPOSE_PATH 참고)
 import Link from 'next/link';
 
-import { MAILBOX_COMPOSE_PATH } from '../../model/box';
+import { MAILBOX_COMPOSE_PATH } from '../../model/feedback-type';
 
 // 목록이 FAB 뒤로 숨지 않으려면 이만큼 띄워야 한다 — 아래 높이(h-12)와 바닥 여백의 합
 export const COMPOSE_FAB_CLEARANCE = 'pb-28';

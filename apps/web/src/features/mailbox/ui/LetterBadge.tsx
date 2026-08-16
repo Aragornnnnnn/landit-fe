@@ -1,5 +1,5 @@
 // 편지 종류·처리 상태 칩 — 리스트와 상세가 같은 칩을 쓴다
-import type { LetterBadgeTone } from '../model/letter-row';
+import type { LetterBadgeTone } from '../model/letter-badge';
 
 const TONE_CLASSES: Record<LetterBadgeTone, string> = {
   // 공지는 색을 안 준다 — 늘 맨 위에 있어서 색까지 주면 리스트가 시끄러워진다.
