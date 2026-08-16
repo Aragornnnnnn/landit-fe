@@ -1,5 +1,5 @@
 // 경로 → Page Viewed 속성 매핑 — 동적 세그먼트는 page_name으로 정규화하고 id는 속성으로 뺀다 (정책 2-2)
-import type { EventProps } from '@landit/analytics';
+import type { EventProps, FeedbackType } from '@landit/analytics';
 
 import { DAILY_REMINDER_CAMPAIGN } from './utm';
 
@@ -18,6 +18,21 @@ const STATIC_PAGES = new Set([
   'streak',
   'mailbox',
 ]);
+
+// 피드백 작성은 유형별로 주소가 갈리지만 화면은 하나다 — 이름을 넷으로 쪼개지 않고 속성으로 싣는다.
+// 키를 유형 쪽에 둔다. 유형이 늘 때 여기를 빠뜨리면 빌드가 깨진다 —
+// 슬러그를 키로 두면 조용히 통과하고 새 유형의 페이지뷰만 속성 없이 쌓인다
+const FEEDBACK_TYPE_SLUGS: Record<FeedbackType, string> = {
+  BUG_REPORT: 'bug',
+  FEATURE_REQUEST: 'feature',
+  QUESTION: 'question',
+  CHEER: 'cheer',
+};
+
+const readFeedbackType = (slug: string | undefined) =>
+  (Object.keys(FEEDBACK_TYPE_SLUGS) as FeedbackType[]).find(
+    (type) => FEEDBACK_TYPE_SLUGS[type] === slug,
+  );
 
 const toId = (raw: string | null) => {
   const id = Number(raw);
@@ -86,6 +101,16 @@ export const toPageView = (
       path: pathname,
       scenario_id: toId(seg[1]),
       expression_id: toId(seg[2]),
+    };
+  }
+
+  // 작성 화면은 어떤 유형을 고르고 들어왔는지가 주소에 남는다
+  if (seg[0] === 'mailbox' && seg[1] === 'compose') {
+    const feedbackType = readFeedbackType(seg[2]);
+    return {
+      page_name: 'feedback_compose',
+      path: pathname,
+      ...(feedbackType && { feedback_type: feedbackType }),
     };
   }
 

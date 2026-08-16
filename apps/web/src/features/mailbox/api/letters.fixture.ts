@@ -1,7 +1,20 @@
 // 편지함 임시 데이터 — 아직 서버를 부르지 않는다. 실제 호출이 붙으면 이 파일과 letters.ts의 반환부를 함께 지운다 (LAN-218)
 // 모양은 백엔드 계약 그대로다. 문구는 피그마 840-495의 목업을 옮긴 것이라 제품 문구가 아니다
-import type { MailboxPage, ReceivedLetter, SentFeedback } from './letter';
+import type {
+  FeedbackType,
+  MailboxPage,
+  ReceivedLetter,
+  SentFeedback,
+} from './letter';
 import type { ReceivedLetterDetail, SentFeedbackDetail } from './letter-detail';
+
+// 서버가 유형마다 붙여 주는 표시 제목. 화면은 우리 문구를 쓰므로 모양을 맞추려고만 둔다
+export const SENT_TITLES: Record<FeedbackType, string> = {
+  BUG_REPORT: '버그 제보',
+  FEATURE_REQUEST: '기능 제안',
+  QUESTION: '문의',
+  CHEER: '응원',
+};
 
 export const RECEIVED_FIXTURE: MailboxPage<ReceivedLetter> = {
   items: [

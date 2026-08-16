@@ -133,6 +133,30 @@ describe('toPageView', () => {
     });
   });
 
+  it('피드백 작성은 유형이 달라도 화면 이름이 하나다', () => {
+    const slugs = {
+      bug: 'BUG_REPORT',
+      feature: 'FEATURE_REQUEST',
+      question: 'QUESTION',
+      cheer: 'CHEER',
+    };
+
+    for (const [slug, feedbackType] of Object.entries(slugs)) {
+      expect(pv(`/mailbox/compose/${slug}`)).toEqual({
+        page_name: 'feedback_compose',
+        path: `/mailbox/compose/${slug}`,
+        feedback_type: feedbackType,
+      });
+    }
+  });
+
+  it('유형을 고르기 전 작성 진입은 유형 없이 남긴다', () => {
+    expect(pv('/mailbox/compose')).toEqual({
+      page_name: 'feedback_compose',
+      path: '/mailbox/compose',
+    });
+  });
+
   it('편지함 목록은 보고 있는 칸이 달라도 같은 화면이다', () => {
     expect(pv('/mailbox', 'box=sent')).toEqual({
       page_name: 'mailbox',

@@ -35,15 +35,15 @@
 
 ### 공통
 
-| 이벤트                  | 속성                                                                                                     | 시점                                                          |
-| ----------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Page Viewed             | page_name, path, return_reason?, scenario_id?, expression_id?, completed_date?, letter_id?, feedback_id? | 라우트 변경                                                   |
-| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete)                                                | 이탈·탈퇴 확인 시트 열림                                      |
-| Confirm Sheet Dismissed | sheet                                                                                                    | 확인 시트에서 계속하기/닫기                                   |
-| Error Retried           | screen(scenario\|conversation\|card_back\|expression_list\|streak\|mailbox)                              | 에러 화면 "다시 시도"                                         |
-| App Exited              | trigger(back_button)                                                                                     | 네이티브 뒤로가기로 앱 종료 (셸에서만)                        |
-| Download Link Visited   | store(play_store\|app_store)                                                                             | /download 스토어 리다이렉트 진입 (서버 발화, 익명)            |
-| App Update Store Opened | store(play_store\|app_store)                                                                             | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화) |
+| 이벤트                  | 속성                                                                                                                     | 시점                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| Page Viewed             | page_name, path, return_reason?, scenario_id?, expression_id?, completed_date?, letter_id?, feedback_id?, feedback_type? | 라우트 변경                                                   |
+| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete)                                                                | 이탈·탈퇴 확인 시트 열림                                      |
+| Confirm Sheet Dismissed | sheet                                                                                                                    | 확인 시트에서 계속하기/닫기                                   |
+| Error Retried           | screen(scenario\|conversation\|card_back\|expression_list\|streak\|mailbox)                                              | 에러 화면 "다시 시도"                                         |
+| App Exited              | trigger(back_button)                                                                                                     | 네이티브 뒤로가기로 앱 종료 (셸에서만)                        |
+| Download Link Visited   | store(play_store\|app_store)                                                                                             | /download 스토어 리다이렉트 진입 (서버 발화, 익명)            |
+| App Update Store Opened | store(play_store\|app_store)                                                                                             | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화) |
 
 `return_reason`은 홈 복귀 신호(`flip` 표현 완료 복귀 / `card` 대화 이탈 복귀 / `just` 해금 직후). 확인 시트의 확정은 각각 `Conversation Abandoned` / `Expression Abandoned` / `Account Deleted`로 찍힌다.
 
@@ -160,11 +160,18 @@
 
 ### 편지함
 
-| 이벤트               | 속성                | 시점              |
-| -------------------- | ------------------- | ----------------- |
-| Mailbox Tab Switched | box(received\|sent) | 받은/보낸 칸 이동 |
+| 이벤트                 | 속성                                                        | 시점                         |
+| ---------------------- | ----------------------------------------------------------- | ---------------------------- |
+| Mailbox Tab Switched   | box(received\|sent)                                         | 받은/보낸 칸 이동            |
+| Feedback Type Selected | feedback_type(BUG_REPORT\|FEATURE_REQUEST\|QUESTION\|CHEER) | 유형 선택 화면에서 하나 고름 |
+| Feedback Submitted     | feedback_type, length                                       | 피드백 전송 성공             |
 
-편지 상세는 받은·보낸이 다른 리소스라 `Page Viewed`의 화면 이름도 갈린다 — `mailbox_received`(letter_id) / `mailbox_sent`(feedback_id). 목록은 칸을 옮겨도 같은 화면이라 `mailbox` 하나다.
+원문은 PII 위험이 있어 싣지 않는다 — 길이만 남긴다. `Feedback Submitted`는 전송이 성공한 뒤에만 쏜다.
+
+편지 상세와 피드백 작성 진입은 `Page Viewed`가 담당한다. 편지 상세는 받은·보낸이 서로 다른
+리소스라 화면 이름도 갈리고(`mailbox_received`+letter_id / `mailbox_sent`+feedback_id),
+목록은 칸을 옮겨도 같은 화면이라 `mailbox` 하나다. 작성은 유형마다 주소가 갈려도 화면 이름은
+`feedback_compose` 하나로 두고 고른 유형을 `feedback_type`으로 싣는다.
 
 ### 유저 속성
 
