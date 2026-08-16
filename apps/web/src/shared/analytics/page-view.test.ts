@@ -90,11 +90,21 @@ describe('toPageView', () => {
     });
   });
 
-  it('시나리오 대화 동적 세그먼트를 page_name scenario_talk + scenario_id로 정규화한다', () => {
+  it('시나리오 대화 동적 세그먼트를 page_name conversation_scenario + scenario_id로 정규화한다', () => {
     expect(pv('/conversation/scenario/12')).toEqual({
-      page_name: 'scenario_talk',
+      page_name: 'conversation_scenario',
       path: '/conversation/scenario/12',
       scenario_id: 12,
+    });
+  });
+
+  it('스몰톡 대화는 id 없이 page_name conversation_smalltalk으로 남는다', () => {
+    // 주소의 상대·시작 방식(mode/partner)은 여기 싣지 않는다 — Conversation Started가 이미 남긴다
+    expect(
+      pv('/conversation/smalltalk', 'mode=user_first&partner=chloe'),
+    ).toEqual({
+      page_name: 'conversation_smalltalk',
+      path: '/conversation/smalltalk',
     });
   });
 

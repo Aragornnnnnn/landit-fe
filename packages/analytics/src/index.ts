@@ -8,6 +8,7 @@ export {
   type OnboardingStep,
   type ExpressionStep,
   type TurnInputType,
+  type TalkPartner,
   type HintSource,
   type HomeReturnReason,
   type RetryScreen,

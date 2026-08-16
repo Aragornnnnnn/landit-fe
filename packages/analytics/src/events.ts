@@ -43,20 +43,27 @@ export const EVENTS = {
   STREAK_OPENED: 'Streak Opened',
   STREAK_MONTH_CHANGED: 'Streak Month Changed',
 
-  // 대화
-  CONVERSATION_STARTED: 'Conversation Started',
+  // 시나리오 대화 — 이름을 스몰톡과 짝 맞춰 둔다 (폴더명도 conversation/scenario)
+  SCENARIO_TALK_STARTED: 'Scenario Talk Started',
   RECORDING_STARTED: 'Recording Started',
   RECORDING_STOPPED: 'Recording Stopped',
   RECORDING_CANCELED: 'Recording Canceled',
   MIC_SETTINGS_OPENED: 'Mic Settings Opened',
   INPUT_MODE_SWITCHED: 'Input Mode Switched',
-  TURN_COMPLETED: 'Turn Completed',
+  SCENARIO_TALK_TURN_COMPLETED: 'Scenario Talk Turn Completed',
   TURN_FAILED: 'Turn Failed',
   INNER_THOUGHT_VIEWED: 'Inner Thought Viewed',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
   HINT_USED: 'Hint Used',
-  CONVERSATION_COMPLETED: 'Conversation Completed',
-  CONVERSATION_ABANDONED: 'Conversation Abandoned',
+  SCENARIO_TALK_COMPLETED: 'Scenario Talk Completed',
+  SCENARIO_TALK_ABANDONED: 'Scenario Talk Abandoned',
+
+  // 스몰톡 — 시나리오와 탭도 목적도 달라 이벤트를 따로 둔다.
+  // 마이크·STT처럼 대화 엔진이 쏘는 것(Recording·Turn Failed·Inner Thought Viewed)은 두 대화가 함께 쓴다
+  SMALL_TALK_STARTED: 'Small Talk Started',
+  SMALL_TALK_TURN_COMPLETED: 'Small Talk Turn Completed',
+  SMALL_TALK_COMPLETED: 'Small Talk Completed',
+  SMALL_TALK_ABANDONED: 'Small Talk Abandoned',
 
   // 분석 피드백
   FEEDBACK_VIEWED: 'Feedback Viewed',
@@ -104,6 +111,8 @@ export type OnboardingStep =
   'intro' | 'sound' | 'mic' | 'thought' | 'notification' | 'scenario';
 export type ExpressionStep = 'quiz' | 'explain' | 'review';
 export type TurnInputType = 'voice' | 'text';
+// 스몰톡 대화 상대 — 홈에서 고른 캐릭터. 시나리오엔 없는 축이라 스몰톡 이벤트에만 붙는다
+export type TalkPartner = 'chloe' | 'marco' | 'teddy';
 export type HintSource = 'quiz' | 'review';
 export type HomeReturnReason = 'just' | 'flip' | 'card' | 'reminder';
 export type ConfirmSheetKind =
@@ -227,7 +236,7 @@ export type EventProps = {
     month: number;
   };
 
-  'Conversation Started': {
+  'Scenario Talk Started': {
     scenario_id: number;
     session_id: number;
     first_speaker: string;
@@ -235,12 +244,12 @@ export type EventProps = {
   };
   // 세션은 백그라운드로 시작돼 확보 전에도 발화 준비가 가능하다 — session_id가 없을 수 있다
   'Recording Started': { session_id?: number; turn_index: number };
-  // ■(답변 완료) 탭 순간 — 이후 인식·제출 결과는 Turn Completed/Failed로 이어진다
+  // ■(답변 완료) 탭 순간 — 이후 인식·제출 결과는 각 대화의 Turn Completed / Turn Failed로 이어진다
   'Recording Stopped': { session_id?: number; turn_index: number };
   'Recording Canceled': { session_id?: number; turn_index: number };
   'Mic Settings Opened': undefined;
   'Input Mode Switched': { session_id?: number; mode: TurnInputType };
-  'Turn Completed': {
+  'Scenario Talk Turn Completed': {
     session_id: number;
     scenario_id: number;
     turn_index: number;
@@ -262,14 +271,46 @@ export type EventProps = {
     reason?: string;
   };
   'Hint Used': { source: HintSource; level: number };
-  'Conversation Completed': {
+  'Scenario Talk Completed': {
     session_id: number;
     scenario_id: number;
     turn_count: number;
   };
-  'Conversation Abandoned': {
+  'Scenario Talk Abandoned': {
     session_id?: number;
     scenario_id: number;
+    turn_index: number;
+  };
+
+  // 스몰톡 — 상대(partner)는 시나리오에 없는 축이라 전 이벤트에 싣는다. 누구와 얘기하는지로 다 갈린다
+  'Small Talk Started': {
+    session_id: number;
+    partner: TalkPartner;
+    // 주제를 고르면 상대가 먼저(AI), 직접 걸면 내가 먼저(USER)
+    first_speaker: string;
+    // 상대가 먼저 걸 때만 — 고른 주제
+    topic_id?: number;
+  };
+  'Small Talk Turn Completed': {
+    session_id: number;
+    partner: TalkPartner;
+    turn_index: number;
+    input_type: TurnInputType;
+    char_count: number;
+    // 이 발화로 깎인 오늘의 말하기 예산
+    utterance_duration_ms: number;
+  };
+  'Small Talk Completed': {
+    session_id: number;
+    partner: TalkPartner;
+    turn_count: number;
+    // 이 대화에서 말한 시간과, 시간을 다 써서 끝났는지
+    speaking_duration_ms: number;
+    end_reason: 'user_ended' | 'time_limit';
+  };
+  'Small Talk Abandoned': {
+    session_id: number;
+    partner: TalkPartner;
     turn_index: number;
   };
 

@@ -4,11 +4,11 @@
 
 ## 네이밍 규칙 요약
 
-| 구분        | 규칙                                        | 예시                   |
-| ----------- | ------------------------------------------- | ---------------------- |
-| 이벤트      | Title Case + 공백, `[명사] + [과거형 동사]` | `Conversation Started` |
-| 이벤트 속성 | snake_case                                  | `scenario_id`          |
-| 유저 속성   | snake_case (불리언은 `is_`/`has_`)          | `provider`             |
+| 구분        | 규칙                                        | 예시                    |
+| ----------- | ------------------------------------------- | ----------------------- |
+| 이벤트      | Title Case + 공백, `[명사] + [과거형 동사]` | `Scenario Talk Started` |
+| 이벤트 속성 | snake_case                                  | `scenario_id`           |
+| 유저 속성   | snake_case (불리언은 `is_`/`has_`)          | `provider`              |
 
 핵심 원칙.
 
@@ -91,7 +91,7 @@
 | Conversation Prompt Accepted  | retry | 자동으로 뜬 "오늘의 대화를 시작할까요?"에 "네!" |
 | Conversation Prompt Dismissed | retry | 그 프롬프트를 X·뒤로가기로 닫음                 |
 
-`retry`는 전날 못 끝낸 대화를 이어받은 카드였는지 (오늘 새로 받은 시나리오면 false). 완료 카드의 "다시 대화하기"는 램프를 거치지 않으며 `Conversation Started`의 `is_retry`로 잡힌다.
+`retry`는 전날 못 끝낸 대화를 이어받은 카드였는지 (오늘 새로 받은 시나리오면 false). 완료 카드의 "다시 대화하기"는 램프를 거치지 않으며 `Scenario Talk Started`의 `is_retry`로 잡힌다.
 
 ### 달력 스트립
 
@@ -103,24 +103,37 @@
 
 `is_today: false`면 완료한 지난 날이다 — 어느 날인지는 이어지는 `Page Viewed`의 `completed_date`가 남긴다.
 
-### 대화
+### 시나리오 대화
 
-| 이벤트                    | 속성                                                                     | 시점                                          |
-| ------------------------- | ------------------------------------------------------------------------ | --------------------------------------------- |
-| Conversation Started      | scenario_id, session_id, first_speaker, is_retry                         | 세션 시작 성공                                |
-| Recording Started         | session_id?, turn_index                                                  | 마이크 눌러 말하기                            |
-| Recording Stopped         | session_id?, turn_index                                                  | ■ 답변 완료 탭 (결과는 Turn Completed/Failed) |
-| Recording Canceled        | session_id?, turn_index                                                  | 듣기 취소 (음성)                              |
-| Mic Settings Opened       | —                                                                        | 권한 안내에서 "설정 열기"                     |
-| Input Mode Switched       | session_id?, mode(text\|voice)                                           | 키보드↔마이크 전환 (타이핑 취소 포함)         |
-| Turn Completed            | session_id, scenario_id, turn_index, input_type(voice\|text), char_count | 발화 제출 성공                                |
-| Turn Failed               | session_id?, turn_index, reason(empty\|api_error)                        | 빈 발화 / 제출 실패                           |
-| Inner Thought Viewed      | session_id, turn_index, thought_type?                                    | 상대 속마음 노출                              |
-| Speech Recognition Failed | engine?, reason?                                                         | STT 오류 (권한 거부 제외)                     |
-| Conversation Completed    | session_id, scenario_id, turn_count                                      | 서버가 완료 판정                              |
-| Conversation Abandoned    | session_id?, scenario_id, turn_index                                     | 중도 이탈 확정                                |
+| 이벤트                       | 속성                                                                     | 시점                                                           |
+| ---------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| Scenario Talk Started        | scenario_id, session_id, first_speaker, is_retry                         | 세션 시작 성공                                                 |
+| Recording Started            | session_id?, turn_index                                                  | 마이크 눌러 말하기                                             |
+| Recording Stopped            | session_id?, turn_index                                                  | ■ 답변 완료 탭 (결과는 각 대화의 Turn Completed / Turn Failed) |
+| Recording Canceled           | session_id?, turn_index                                                  | 듣기 취소 (음성)                                               |
+| Mic Settings Opened          | —                                                                        | 권한 안내에서 "설정 열기"                                      |
+| Input Mode Switched          | session_id?, mode(text\|voice)                                           | 키보드↔마이크 전환 (타이핑 취소 포함)                          |
+| Scenario Talk Turn Completed | session_id, scenario_id, turn_index, input_type(voice\|text), char_count | 발화 제출 성공                                                 |
+| Turn Failed                  | session_id?, turn_index, reason(empty\|api_error)                        | 빈 발화 / 제출 실패                                            |
+| Inner Thought Viewed         | session_id, turn_index, thought_type?                                    | 상대 속마음 노출                                               |
+| Speech Recognition Failed    | engine?, reason?                                                         | STT 오류 (권한 거부 제외)                                      |
+| Scenario Talk Completed      | session_id, scenario_id, turn_count                                      | 서버가 완료 판정                                               |
+| Scenario Talk Abandoned      | session_id?, scenario_id, turn_index                                     | 중도 이탈 확정                                                 |
 
 `session_id`가 optional인 이벤트는 세션이 백그라운드로 시작돼 확보 전에도 발생할 수 있다.
+
+### 스몰톡
+
+| 이벤트                    | 속성                                                                                        | 시점             |
+| ------------------------- | ------------------------------------------------------------------------------------------- | ---------------- |
+| Small Talk Started        | session_id, partner, first_speaker, topic_id?                                               | 세션 시작 성공   |
+| Small Talk Turn Completed | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms | 발화 제출 성공   |
+| Small Talk Completed      | session_id, partner, turn_count, speaking_duration_ms, end_reason(user_ended\|time_limit)   | 서버가 완료 판정 |
+| Small Talk Abandoned      | session_id, partner, turn_index                                                             | 중도 이탈 확정   |
+
+스몰톡은 탭도 목적도 달라 대화 이벤트를 따로 둔다 — 시나리오는 오늘의 과제를 끝냈는지, 스몰톡은 누구와 얼마나 얘기했는지를 본다. 상대(`partner`)는 시나리오에 없는 축이라 전 이벤트에 싣는다.
+
+단, 마이크·STT처럼 **대화 엔진이 쏘는 것은 두 대화가 함께 쓴다** (Recording Started/Stopped/Canceled, Input Mode Switched, Turn Failed, Inner Thought Viewed, Speech Recognition Failed). 입력 기계의 사건이라 어느 대화인지와 무관하고, 대화 엔진(features/conversation)은 대화 종류를 모른다.
 
 ### 분석 피드백
 

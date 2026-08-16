@@ -83,10 +83,15 @@ export const toPageView = (
   // 대화 화면은 /conversation 아래에 종류별로 있다 — 시나리오는 어느 카드인지 id가 붙는다
   if (seg[0] === 'conversation' && seg[1] === 'scenario' && seg[2]) {
     return {
-      page_name: 'scenario_talk',
+      page_name: 'conversation_scenario',
       path: pathname,
       scenario_id: toId(seg[2]),
     };
+  }
+
+  // 스몰톡 대화는 가리킬 콘텐츠가 없어 id가 없다 — 상대·시작 방식은 Small Talk Started가 남긴다
+  if (seg[0] === 'conversation' && seg[1] === 'smalltalk') {
+    return { page_name: 'conversation_smalltalk', path: pathname };
   }
 
   if (seg[0] === 'expressions' && seg[1] && seg[2]) {

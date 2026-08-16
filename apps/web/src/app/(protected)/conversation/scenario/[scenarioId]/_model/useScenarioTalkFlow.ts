@@ -16,7 +16,7 @@ import { scenarioKeys } from '@/features/scenario/model/keys';
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
 import { track } from '@/shared/analytics';
 
-import { submitMessage } from '../_api/scenario-session';
+import { submitScenarioTalkMessage } from '../_api/scenario-session';
 import { useScenarioTalkSession } from './useScenarioTalkSession';
 
 export const useScenarioTalkFlow = (scenario: Scenario) => {
@@ -59,8 +59,12 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
     sessionId: session.sessionId,
     ensureSession: session.ensure,
     submit: async ({ sessionId, content, inputType, turnIndex }) => {
-      const res = await submitMessage(sessionId, content, inputType);
-      track(EVENTS.TURN_COMPLETED, {
+      const res = await submitScenarioTalkMessage(
+        sessionId,
+        content,
+        inputType,
+      );
+      track(EVENTS.SCENARIO_TALK_TURN_COMPLETED, {
         session_id: sessionId,
         scenario_id: scenario.scenarioId,
         turn_index: turnIndex,
@@ -69,7 +73,7 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
       });
       // 마지막 발화였다면 피드백을 미리 만들고 다음 대화 해금을 홈에 반영한다
       if (res.progress.completed) {
-        track(EVENTS.CONVERSATION_COMPLETED, {
+        track(EVENTS.SCENARIO_TALK_COMPLETED, {
           session_id: sessionId,
           scenario_id: scenario.scenarioId,
           turn_count: res.progress.totalQuestionCount,
@@ -86,7 +90,7 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
 
   // 중도 이탈 (정상 완료는 서버가 판정하므로 세션을 끝내지 않는다)
   const leave = () => {
-    track(EVENTS.CONVERSATION_ABANDONED, {
+    track(EVENTS.SCENARIO_TALK_ABANDONED, {
       session_id: session.sessionId ?? undefined,
       scenario_id: scenario.scenarioId,
       turn_index: engine.turnIndex,

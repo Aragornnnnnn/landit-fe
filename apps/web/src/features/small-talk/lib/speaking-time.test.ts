@@ -1,7 +1,7 @@
 // 발화 시간 표기 규칙 검증 — 서버가 밀리초로 주는 값을 사람이 읽는 문장으로 바꾼다
 import { describe, expect, it } from 'vitest';
 
-import { toSpeakingTimeLabel } from './speaking-time';
+import { toCountdownLabel, toSpeakingTimeLabel } from './speaking-time';
 
 describe('toSpeakingTimeLabel', () => {
   it('1분이 안 되면 초만 말한다', () => {
@@ -32,5 +32,21 @@ describe('toSpeakingTimeLabel', () => {
   it('음수가 와도 0초로 막는다', () => {
     // 서버가 초과분을 음수로 줄 수 있다 — 화면에 "-3초"가 뜨면 안 된다
     expect(toSpeakingTimeLabel(-5_000)).toBe('0초');
+  });
+});
+
+describe('toCountdownLabel', () => {
+  it('대화 중 줄어드는 시간은 시계처럼 읽힌다', () => {
+    // Given 41초가 남았을 때
+    // When 카운트다운 표기를 만들면
+    // Then 초 자리를 채워 0:41로 — 매 초 자릿수가 바뀌면 숫자가 흔들려 보인다
+    expect(toCountdownLabel(41_000)).toBe('0:41');
+    expect(toCountdownLabel(9_000)).toBe('0:09');
+    expect(toCountdownLabel(161_000)).toBe('2:41');
+  });
+
+  it('다 쓰면 0:00에서 멈춘다 — 음수도 마찬가지다', () => {
+    expect(toCountdownLabel(0)).toBe('0:00');
+    expect(toCountdownLabel(-5_000)).toBe('0:00');
   });
 });
