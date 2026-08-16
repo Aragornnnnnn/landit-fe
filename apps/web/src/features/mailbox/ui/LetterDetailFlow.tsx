@@ -83,9 +83,12 @@ const LetterShell = ({
   const router = useRouter();
   const { ref: scrollRef, onScroll, hasShadow } = useScrollShadow();
 
-  // 편지가 있던 칸으로 돌려보낸다. 되짚기(back)로 두면 알림 딥링크처럼 히스토리가
-  // 없는 진입에서 화살표가 아무 일도 하지 않는 막다른 화면이 된다
-  const backToBox = () => router.replace(mailboxPath(box));
+  // 목록에서 열고 들어왔으면 되돌아간다 — replace로 두면 편지 칸이 목록으로 바뀌어 목록이 히스토리에 두 겹 남고,
+  // 그 뒤 휴대폰 뒤로가기가 한 번 헛눌린다. 주소로 바로 열었으면(딥링크·새로고침) 되돌아갈 데가 없으니 편지가 있던 칸으로 보낸다
+  const backToBox = () =>
+    window.history.length > 1
+      ? router.back()
+      : router.replace(mailboxPath(box));
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
