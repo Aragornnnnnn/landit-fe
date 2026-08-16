@@ -41,7 +41,13 @@ const Block = ({ block }: { block: LetterBlock }) => {
 
 // 이미지가 아직 없는 편지는 자리만 잡는다 — 시안의 illustration 자리와 같은 크기라
 // 그림이 붙는 순간에도 글의 위치가 흔들리지 않는다
-const LetterImage = ({ url, caption }: { url: string; caption?: string }) =>
+const LetterImage = ({
+  url,
+  caption,
+}: {
+  url: string;
+  caption?: string | null;
+}) =>
   url ? (
     // eslint-disable-next-line @next/next/no-img-element -- 편지 이미지 도메인이 미정이라 next/image 원격 허용 목록을 아직 못 만든다 (시나리오 썸네일과 같은 사정)
     <img

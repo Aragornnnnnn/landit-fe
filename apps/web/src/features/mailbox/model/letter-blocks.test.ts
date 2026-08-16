@@ -14,8 +14,11 @@ describe('readLetterBlocks', () => {
     expect(readLetterBlocks(blocks)).toEqual(blocks);
   });
 
-  it('이미지의 caption은 없어도 통과한다 — 선택 속성이다', () => {
-    const blocks = [{ type: 'IMAGE', url: 'https://x/a.png' }];
+  it('이미지의 caption은 없거나 null이어도 통과한다 — JSON에는 undefined가 없어 "없음"이 null로 온다', () => {
+    const blocks = [
+      { type: 'IMAGE', url: 'https://x/a.png' },
+      { type: 'IMAGE', url: 'https://x/b.png', caption: null },
+    ];
 
     expect(readLetterBlocks(blocks)).toEqual(blocks);
   });
