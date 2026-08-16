@@ -41,6 +41,15 @@
   --color-need: var(--need);
   --color-need-bg: var(--need-bg);
   --color-need-border: var(--need-border);
+  --color-letter-update: var(--letter-update);
+  --color-letter-update-bg: var(--letter-update-bg);
+  --color-letter-reply: var(--letter-reply);
+  --color-letter-reply-bg: var(--letter-reply-bg);
+  --color-letter-pending: var(--letter-pending);
+  --color-letter-pending-bg: var(--letter-pending-bg);
+  --color-letter-answered: var(--letter-answered);
+  --color-letter-answered-bg: var(--letter-answered-bg);
+  --color-letter-unread: var(--letter-unread);
 
   --font-sans:
     'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont,
@@ -84,6 +93,13 @@
   --green-50: #f0fdf4;
   --green-200: #bbf7d0;
   --green-600: #16a34a;
+  /* 편지 칩 팔레트 (피그마 편지함 Flow 스펙) — 기존 단계보다 채도가 낮고 배경이 진해 단계를 새로 연다 */
+  --green-100: #d9edd9;
+  --green-700: #38784c;
+  --blue-600: #4a70d4;
+  --amber-100: #fcedcc;
+  --amber-700: #9e7314;
+  --red-400: #e3574a;
 
   /* ── Layer 2: Semantic — 역할 토큰. 다크모드 도입 시 이 블록만 재정의한다 ── */
   --background: var(--gray-50);
@@ -120,6 +136,19 @@
   --need: var(--green-600);
   --need-bg: var(--green-50);
   --need-border: var(--green-200);
+  /* 편지 칩 — 편지 종류와 처리 상태를 색으로 가른다 (피그마 편지함 Flow 스펙).
+   * 대화 피드백의 good/need와 색이 비슷해도 재사용하지 않는다. 뜻이 다른 색은 따로 둔다 */
+  --letter-update: var(--green-700);
+  --letter-update-bg: var(--green-100);
+  --letter-reply: var(--blue-600);
+  --letter-reply-bg: var(--blue-100);
+  --letter-pending: var(--amber-700);
+  --letter-pending-bg: var(--amber-100);
+  /* 답장이 도착한 보낸 편지 — 지금은 답장 칩과 같은 색이지만 뜻이 달라 이름을 따로 준다 */
+  --letter-answered: var(--blue-600);
+  --letter-answered-bg: var(--blue-100);
+  /* 안 읽은 편지 점. destructive(경고 빨강)보다 한 톤 죽인 색이라 따로 둔다 */
+  --letter-unread: var(--red-400);
   --radius: 0.75rem;
 }
 
