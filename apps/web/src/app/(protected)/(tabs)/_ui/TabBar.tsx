@@ -4,6 +4,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { TAB_CHIP_ROW, tabChipClass } from '@/shared/ui/tab-chip';
+
 import type { Tab } from './tabs';
 
 export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
@@ -12,10 +14,7 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
   if (tabs.length < 2) return null;
 
   return (
-    <nav
-      aria-label="탭"
-      className="flex shrink-0 gap-2 bg-background px-5 pt-1 pb-2.5"
-    >
+    <nav aria-label="탭" className={TAB_CHIP_ROW}>
       {tabs.map((tab) => {
         const isActive = pathname === tab.href;
 
@@ -24,11 +23,7 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
             key={tab.href}
             href={tab.href}
             aria-current={isActive ? 'page' : undefined}
-            className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-              isActive
-                ? 'bg-foreground text-background'
-                : 'bg-secondary text-secondary-foreground'
-            }`}
+            className={tabChipClass(isActive)}
           >
             {tab.label}
           </Link>

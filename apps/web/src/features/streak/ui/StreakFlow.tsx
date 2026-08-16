@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation';
 import { track } from '@/shared/analytics';
 import { SCENARIO_PATH } from '@/shared/lib/routes';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
-import { Button } from '@/shared/ui/Button';
-import { ChevronLeftIcon } from '@/shared/ui/Icons';
+import { BackHeader } from '@/shared/ui/BackHeader';
+import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { useStreakCalendar } from '../model/useStreakCalendar';
 import {
@@ -44,14 +44,10 @@ export const StreakFlow = () => {
     goMonth(direction);
   };
 
-  const retryAfterError = () => {
-    track(EVENTS.ERROR_RETRIED, { screen: 'streak' });
-    retry();
-  };
-
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
-      <TopBar
+      <BackHeader
+        title="연속 학습 기록"
         hasShadow={hasShadow}
         onBack={() => router.replace(SCENARIO_PATH)}
       />
@@ -71,7 +67,11 @@ export const StreakFlow = () => {
             isSwitching={isSwitching}
           />
         ) : error ? (
-          <ErrorNotice message={error.message} onRetry={retryAfterError} />
+          <RetryNotice
+            screen="streak"
+            message={error.message}
+            onRetry={retry}
+          />
         ) : (
           <Skeleton />
         )}
@@ -79,31 +79,6 @@ export const StreakFlow = () => {
     </main>
   );
 };
-
-const TopBar = ({
-  hasShadow,
-  onBack,
-}: {
-  hasShadow: boolean;
-  onBack: () => void;
-}) => (
-  <header
-    className="relative flex shrink-0 items-center bg-background px-4 pt-[max(env(safe-area-inset-top),16px)] pb-2 transition-shadow duration-200"
-    style={{ boxShadow: hasShadow ? '0 2px 8px rgba(0,0,0,0.06)' : 'none' }}
-  >
-    <button
-      type="button"
-      onClick={onBack}
-      aria-label="뒤로 가기"
-      className="-ml-1 flex size-9 items-center justify-center rounded-full text-muted-foreground transition-all active:scale-90 active:bg-secondary"
-    >
-      <ChevronLeftIcon size={24} />
-    </button>
-    <h1 className="absolute left-1/2 -translate-x-1/2 text-[18px] font-bold text-foreground">
-      연속 학습 기록
-    </h1>
-  </header>
-);
 
 const LoadedRecord = (props: StreakCalendarProps) => (
   <div className="pb-8">
@@ -120,30 +95,6 @@ const LoadedRecord = (props: StreakCalendarProps) => (
         totalActiveDays={props.calendar.totalActiveDays}
       />
     </div>
-  </div>
-);
-
-const ErrorNotice = ({
-  message,
-  onRetry,
-}: {
-  message: string;
-  onRetry: () => void;
-}) => (
-  // 스켈레톤이 조용히 교체되면 보조 기술은 실패를 모른다 — 뜨는 즉시 읽히게 한다
-  <div
-    role="alert"
-    className="flex flex-col items-center gap-4 px-6 pt-24 text-center"
-  >
-    <p className="text-muted-foreground">{message}</p>
-    <Button
-      variant="secondary"
-      size="sm"
-      className="w-auto px-6"
-      onClick={onRetry}
-    >
-      다시 시도
-    </Button>
   </div>
 );
 
