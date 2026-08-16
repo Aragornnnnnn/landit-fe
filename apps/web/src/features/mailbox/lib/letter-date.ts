@@ -17,13 +17,12 @@ const seoulParts = new Intl.DateTimeFormat('en-US', {
 const HAS_OFFSET = /(Z|[+-]\d{2}:?\d{2})$/;
 
 // 오프셋이 없는 시각은 서버가 서울 벽시계로 적어 보낸 것으로 읽는다.
-// 백엔드가 LocalDateTime으로 내리면 `2026-08-09T11:30:00`처럼 오프셋이 빠지는데,
+// 백엔드가 LocalDateTime으로 내려 `2026-08-09T11:30:00`처럼 오프셋이 빠진다 —
 // 그대로 Date에 넘기면 기기 시간대로 해석돼 해외에서 하루가 밀린다
 const toInstant = (sentAt: string) =>
   new Date(HAS_OFFSET.test(sentAt) ? sentAt : `${sentAt}+09:00`);
 
-// 읽을 수 없는 시각이면 null. 던지면 그 편지 한 줄 때문에 목록 전체가 에러 화면으로 간다 —
-// 계약이 아직 백엔드와 맞춰지지 않아 빈 값·날짜만 있는 값이 올 수 있다
+// 읽을 수 없는 시각이면 null. 던지면 그 편지 한 줄 때문에 목록 전체가 에러 화면으로 간다
 const readSeoulDate = (sentAt: string) => {
   const instant = toInstant(sentAt);
   if (Number.isNaN(instant.getTime())) return null;

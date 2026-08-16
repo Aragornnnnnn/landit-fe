@@ -2,9 +2,6 @@
 // 라우트를 가르지 않고 쿼리로 둔 건, 칸을 옮겨도 같은 화면·같은 스크롤 자리이기 때문이다
 import { MAILBOX_PATH } from '@/shared/lib/routes';
 
-import type { FeedbackType } from '../api/letter';
-import { FEEDBACK_TYPE_FACES } from './feedback-type';
-
 export type MailboxBox = 'received' | 'sent';
 
 export const MAILBOX_BOXES: { box: MailboxBox; label: string }[] = [
@@ -25,11 +22,3 @@ export const receivedLetterPath = (letterId: number) =>
 
 export const sentFeedbackPath = (feedbackId: number) =>
   `${MAILBOX_PATH}/sent/${feedbackId}`;
-
-export const letterPath = (box: MailboxBox, id: number) =>
-  box === 'sent' ? sentFeedbackPath(id) : receivedLetterPath(id);
-
-export const MAILBOX_COMPOSE_PATH = `${MAILBOX_PATH}/compose`;
-
-export const feedbackComposePath = (type: FeedbackType) =>
-  `${MAILBOX_COMPOSE_PATH}/${FEEDBACK_TYPE_FACES[type].slug}`;

@@ -11,16 +11,19 @@ import { MAILBOX_PATH } from '@/shared/lib/routes';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { ChevronRightIcon } from '@/shared/ui/Icons';
 
-import type { FeedbackType } from '../api/letter';
-import { feedbackComposePath } from '../model/box';
-import { FEEDBACK_TYPE_FACES, FEEDBACK_TYPES } from '../model/feedback-type';
+import type { FeedbackType } from '../api/mailbox';
+import {
+  FEEDBACK_TYPE_FACES,
+  FEEDBACK_TYPES,
+  feedbackComposePath,
+} from '../model/feedback-type';
 
 export const FeedbackTypeFlow = () => {
   const router = useRouter();
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
-      {/* 되짚기로 두면 히스토리 없는 진입에서 화살표가 아무 일도 하지 않는다 */}
+      {/* 한 층이라 되짚으면 편지함 밖으로 나간다 — 목록으로 갈아끼운다 */}
       <BackHeader onBack={() => router.replace(MAILBOX_PATH)} />
 
       <div className="flex-1 overflow-y-auto px-5">
@@ -46,7 +49,9 @@ const FeedbackTypeRow = ({ type }: { type: FeedbackType }) => {
   const { emoji, label } = FEEDBACK_TYPE_FACES[type];
 
   return (
+    // 한 층이라 replace (MAILBOX_COMPOSE_PATH 참고). 유형을 다시 고르는 길은 작성 화면의 화살표가 낸다
     <Link
+      replace
       href={feedbackComposePath(type)}
       onClick={() =>
         track(EVENTS.FEEDBACK_TYPE_SELECTED, { feedback_type: type })

@@ -1,10 +1,7 @@
 // 편지를 펼쳤을 때의 제목과 칩 — 받은 편지와 보낸 피드백이 제목을 다른 데서 가져온다
 import { describe, expect, it } from 'vitest';
 
-import type {
-  ReceivedLetterDetail,
-  SentFeedbackDetail,
-} from '../api/letter-detail';
+import type { ReceivedLetterDetail, SentFeedbackDetail } from '../api/mailbox';
 import { toReceivedHead, toSentHead } from './letter-detail-head';
 
 const received: ReceivedLetterDetail = {
@@ -16,6 +13,8 @@ const received: ReceivedLetterDetail = {
   pinned: false,
   sentAt: '2026-08-01T10:00:00',
   readAt: null,
+  feedbackType: null,
+  quotedFeedbackContent: null,
 };
 
 const sent: SentFeedbackDetail = {
@@ -31,9 +30,10 @@ const sent: SentFeedbackDetail = {
 };
 
 describe('toReceivedHead', () => {
-  it('공지·업데이트는 편지 제목을 그대로 쓴다', () => {
+  it('공지·업데이트는 편지 제목을 그대로 쓰고, 시각은 발송 시각이다', () => {
     expect(toReceivedHead(received).title).toBe('우리가 앱을 만든 이유');
     expect(toReceivedHead(received).badge.label).toBe('공지');
+    expect(toReceivedHead(received).sentAt).toBe(received.sentAt);
   });
 
   it('답장은 내가 골랐던 유형이 제목이 된다', () => {
@@ -47,8 +47,7 @@ describe('toReceivedHead', () => {
     expect(toReceivedHead(reply).badge.label).toBe('답장');
   });
 
-  it('그 유형이 아직 안 오면 운영이 붙인 편지 제목으로 물러선다', () => {
-    // 받은 편지 상세에 피드백 유형을 실어달라고 요청해 둔 상태다
+  it('답장인데 유형이 비어 있으면 운영이 붙인 편지 제목으로 물러선다', () => {
     const reply = {
       ...received,
       letterType: 'REPLY',
@@ -60,9 +59,10 @@ describe('toReceivedHead', () => {
 });
 
 describe('toSentHead', () => {
-  it('제목은 내가 골랐던 유형이고, 칩은 처리 상태다', () => {
+  it('제목은 내가 골랐던 유형이고, 칩은 처리 상태, 시각은 내가 쓴 시각이다', () => {
     expect(toSentHead(sent).title).toBe('문제 신고하기');
     expect(toSentHead(sent).badge.label).toBe('처리중');
+    expect(toSentHead(sent).sentAt).toBe(sent.createdAt);
   });
 
   it('답장이 오면 칩 문구가 바뀐다 — 목록의 "처리완료"와 달리 읽는 자리다', () => {

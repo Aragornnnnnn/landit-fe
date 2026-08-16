@@ -6,9 +6,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
+import { ChevronRightIcon } from '@/shared/ui/Icons';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
+import { showToast } from '@/shared/ui/toast';
 
-import { letterPath, mailboxPath, type MailboxBox } from '../model/box';
+import { mailboxPath, type MailboxBox } from '../model/box';
 import type { LetterRow } from '../model/letter-row';
 import { useLetterRowsQuery } from '../model/useLetterRowsQuery';
 import { COMPOSE_FAB_CLEARANCE, ComposeFab } from './list/ComposeFab';
@@ -45,13 +47,37 @@ export const MailboxFlow = ({ box }: { box: MailboxBox }) => {
 
 // 한 칸의 속살 — 목록이 있으면 목록이 이긴다. 칸을 옮기다 실패해도 보고 있던 목록은 그대로 둔다
 const LetterBox = ({ box }: { box: MailboxBox }) => {
-  const { rows, isPending, error, retry } = useLetterRowsQuery(box);
+  const { rows, isPending, error, retry, hasMore, loadingMore, loadMore } =
+    useLetterRowsQuery(box);
 
   if (rows) {
-    return rows.length > 0 ? (
-      <LetterList box={box} rows={rows} />
-    ) : (
-      <MailboxEmpty box={box} />
+    if (rows.length === 0) return <MailboxEmpty box={box} />;
+
+    return (
+      <>
+        <LetterList rows={rows} />
+        {/* 편지가 쌓이면 첫 장 밖으로 밀린다 — 옛 편지도 이어서 볼 수 있게 한다.
+            줄과 같은 여백에 두어 목록의 마지막 한 줄처럼 읽히게 한다 */}
+        {hasMore && (
+          <button
+            type="button"
+            // 다음 장이 실패하면 목록은 그대로고 버튼만 돌아온다 — 첫 장 실패(RetryNotice)와 달리 알릴 자리가 없어 토스트로
+            onClick={() =>
+              void loadMore().then((result) => {
+                if (result.isError) showToast('편지를 더 불러오지 못했어요.');
+              })
+            }
+            disabled={loadingMore}
+            className="flex w-full items-center justify-center gap-1 py-4 text-sm font-semibold text-muted-foreground disabled:opacity-60"
+          >
+            {loadingMore ? '불러오는 중' : '더 보기'}
+            {/* 아래 화살표가 아직 공용 아이콘에 없다 — 있는 걸 돌려 쓴다 */}
+            {!loadingMore && (
+              <ChevronRightIcon size={16} className="rotate-90" />
+            )}
+          </button>
+        )}
+      </>
     );
   }
   if (error) {
@@ -63,11 +89,11 @@ const LetterBox = ({ box }: { box: MailboxBox }) => {
 };
 
 // 구분선으로만 나눈다 — 편지가 쌓여도 카드가 겹겹이 놓인 것처럼 답답해지지 않는다
-const LetterList = ({ box, rows }: { box: MailboxBox; rows: LetterRow[] }) => (
+const LetterList = ({ rows }: { rows: LetterRow[] }) => (
   <ul className="divide-y divide-border px-5">
     {rows.map((row) => (
-      <li key={row.letterId}>
-        <Link href={letterPath(box, row.letterId)} className="block">
+      <li key={row.id}>
+        <Link href={row.href} className="block">
           <LetterListItem row={row} />
         </Link>
       </li>

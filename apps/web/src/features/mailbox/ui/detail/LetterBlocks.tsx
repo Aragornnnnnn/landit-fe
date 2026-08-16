@@ -1,5 +1,5 @@
 // 공지·업데이트 본문 렌더러 — 마크다운 대신 블록 배열이라 타입별 단순 분기로 끝난다
-import type { LetterBlock } from '../../api/letter-detail';
+import type { LetterBlock } from '../../model/letter-blocks';
 
 export const LetterBlocks = ({ blocks }: { blocks: LetterBlock[] }) => (
   <div className="flex flex-col gap-5">
@@ -39,10 +39,16 @@ const Block = ({ block }: { block: LetterBlock }) => {
   return <LetterImage url={block.url} caption={block.caption} />;
 };
 
-// 이미지가 아직 없는 편지는 자리만 잡는다 — 시안의 illustration 자리와 같은 크기라
+// url이 빈 문자열이면 "아직 그림이 없는 자리"다 — 시안의 illustration 자리와 같은 크기로 비워 두어
 // 그림이 붙는 순간에도 글의 위치가 흔들리지 않는다
-const LetterImage = ({ url, caption }: { url: string; caption?: string }) =>
-  url ? (
+const LetterImage = ({
+  url,
+  caption,
+}: {
+  url: string;
+  caption?: string | null;
+}) =>
+  url !== '' ? (
     // eslint-disable-next-line @next/next/no-img-element -- 편지 이미지 도메인이 미정이라 next/image 원격 허용 목록을 아직 못 만든다 (시나리오 썸네일과 같은 사정)
     <img
       src={url}
