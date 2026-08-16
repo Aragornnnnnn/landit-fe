@@ -1,21 +1,22 @@
-// useConversationFlow — 오프닝은 openingPreview로 즉시 시드, 세션은 백그라운드.
+// useScenarioTalkFlow — 오프닝은 openingPreview로 즉시 시드, 세션은 백그라운드.
 // 발화 제출 뒤 대기·속마음·다음질문·종료 전이와 입력·재생 훅 배선을 검증한다.
 // (재생 폴백·입력 전환 세부는 useAiSpeech·useConversationInput 테스트가 맡는다)
 import { StrictMode } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Scenario } from '@/features/scenario/lib/to-scenario';
-import type { TtsVoice } from '@/shared/tts/voice';
-
-import * as sessionApi from '../api/session';
-import type { SessionMessageSubmitResponse } from '../api/session';
+import * as sessionApi from '@/features/conversation/api/session';
 import {
   innerThoughtMaxPolls,
   innerThoughtPollMs,
   thoughtHoldMs,
-} from './pacing';
-import { useConversationFlow } from './useConversationFlow';
+} from '@/features/conversation/model/pacing';
+import type { Scenario } from '@/features/scenario/lib/to-scenario';
+import type { TtsVoice } from '@/shared/tts/voice';
+
+import * as scenarioTalkApi from '../_api/scenario-session';
+import type { SessionMessageSubmitResponse } from '../_api/scenario-session';
+import { useScenarioTalkFlow } from './useScenarioTalkFlow';
 
 const monitoringMock = vi.hoisted(() => ({
   reportError: vi.fn(),
@@ -23,11 +24,14 @@ const monitoringMock = vi.hoisted(() => ({
 }));
 vi.mock('@/shared/monitoring/report', () => monitoringMock);
 
-vi.mock('../api/session', () => ({
-  startSession: vi.fn(),
-  submitMessage: vi.fn(),
+vi.mock('@/features/conversation/api/session', () => ({
   getInnerThought: vi.fn(),
   endSession: vi.fn(),
+}));
+
+vi.mock('../_api/scenario-session', () => ({
+  startSession: vi.fn(),
+  submitMessage: vi.fn(),
 }));
 
 // TTS는 경계(재생)라 목으로 둔다 — speak/speakSrc의 onEnd를 붙잡아 재생 종료를 흉내 낸다.
@@ -100,8 +104,8 @@ vi.mock('@tanstack/react-query', async (importOriginal) => ({
   useQueryClient: () => queryClientMock,
 }));
 
-const startSession = vi.mocked(sessionApi.startSession);
-const submitMessage = vi.mocked(sessionApi.submitMessage);
+const startSession = vi.mocked(scenarioTalkApi.startSession);
+const submitMessage = vi.mocked(scenarioTalkApi.submitMessage);
 const getInnerThought = vi.mocked(sessionApi.getInnerThought);
 
 const voice: TtsVoice = {
@@ -195,14 +199,14 @@ const submitResponse = (
 // USER 선발화로 렌더하고 백그라운드 세션을 flush한다 (제출에 sessionId 필요)
 const renderUserFirst = async () => {
   startSession.mockResolvedValue(startResponse());
-  const hook = renderHook(() => useConversationFlow(userScenario));
+  const hook = renderHook(() => useScenarioTalkFlow(userScenario));
   await act(async () => {});
   return hook;
 };
 
 // 마이크 대기 → 음성으로 말하기 → 완료(STT 최종) 제출까지 한 번에 몰아준다
 const speakAndSubmit = async (
-  result: { current: ReturnType<typeof useConversationFlow> },
+  result: { current: ReturnType<typeof useScenarioTalkFlow> },
   text: string,
 ) => {
   act(() => result.current.input.pressMic());
@@ -216,7 +220,7 @@ const speakAndSubmit = async (
 
 // 키보드로 입력 → 전송까지 몰아준다
 const typeAndSubmit = async (
-  result: { current: ReturnType<typeof useConversationFlow> },
+  result: { current: ReturnType<typeof useScenarioTalkFlow> },
   text: string,
 ) => {
   act(() => result.current.input.pressKeyboard());
@@ -260,9 +264,9 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('useConversationFlow', () => {
+describe('useScenarioTalkFlow', () => {
   it('AI 선발화면 openingPreview로 세션을 기다리지 않고 바로 AI 발화부터 시작한다', async () => {
-    const { result } = renderHook(() => useConversationFlow(scenario));
+    const { result } = renderHook(() => useScenarioTalkFlow(scenario));
 
     // 세션 flush 전에도 즉시 시드된다
     expect(result.current.phase).toBe('AI_SPEAKING');
@@ -280,7 +284,7 @@ describe('useConversationFlow', () => {
 
   it('세션 시작이 실패해도 화면은 뜨고, 제출 시 마이크 대기로 되돌아간다', async () => {
     startSession.mockRejectedValue(new Error('boom'));
-    const { result } = renderHook(() => useConversationFlow(userScenario));
+    const { result } = renderHook(() => useScenarioTalkFlow(userScenario));
     await act(async () => {});
 
     expect(result.current.phase).toBe('USER_READY');
@@ -433,7 +437,7 @@ describe('useConversationFlow', () => {
   });
 
   it('오프닝은 미리 만든 정적 mp3로 재생하고, 끝나면 마이크 대기로 넘어간다', async () => {
-    const { result } = renderHook(() => useConversationFlow(scenario));
+    const { result } = renderHook(() => useScenarioTalkFlow(scenario));
     await act(async () => {});
 
     expect(ttsMock.speakSrc).toHaveBeenCalledWith(
@@ -449,7 +453,7 @@ describe('useConversationFlow', () => {
 
   it('ttsVoice 성별이 FEMALE이면 상대가 클로이다', async () => {
     const { result } = renderHook(() =>
-      useConversationFlow(withVoice(scenario, { ...voice, gender: 'FEMALE' })),
+      useScenarioTalkFlow(withVoice(scenario, { ...voice, gender: 'FEMALE' })),
     );
     await act(async () => {});
 
@@ -509,7 +513,7 @@ describe('useConversationFlow', () => {
 
   it('StrictMode 재마운트 뒤에도 속마음 폴링이 죽지 않고 완료를 노출한다', async () => {
     startSession.mockResolvedValue(startResponse());
-    const { result } = renderHook(() => useConversationFlow(userScenario), {
+    const { result } = renderHook(() => useScenarioTalkFlow(userScenario), {
       wrapper: StrictMode,
     });
     await act(async () => {});

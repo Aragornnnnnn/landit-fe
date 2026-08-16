@@ -6,7 +6,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## 폴더 구조와 배치 규칙
 
-`src`는 3층이다. `app`(라우트) → `features`(도메인) → `shared`(전역 인프라). import는 위에서 아래로만 흐른다.
+`src`는 3층이다. `app`(라우트·화면) → `features`(도메인) → `shared`(전역 인프라). import는 위에서 아래로만 흐른다.
 
 새 파일의 자리는 이 순서로 정한다.
 
@@ -14,7 +14,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
    - 공유 범위 = 폴더 범위. 소비자가 파일 하나면 인라인, 몇 개 라우트면 그들만 담는 중첩 그룹(`(legal)`처럼), 그룹 전체면 그룹 루트 `_ui/`.
    - `app` 최상위는 접근 조건으로 가른다 — `(public)`(비로그인 접근 가능) / `(protected)`(로그인 필요).
    - `app/api`는 요청을 받는 URL(route.ts는 해석·위임만), features의 `api`는 요청을 보내는 코드다.
-2. **도메인 소속인가?** → `features/<도메인>/`의 segment로. 도메인 = 기획에서 독립된 이름으로 불리는 기능 단위(대화, 표현, 온보딩…). 슬라이스 하나가 그 도메인의 전부를 담는다 — entities 도입 전까지 명사(데이터)/동사(행동)를 가르지 않는다.
+2. **도메인 소속인가?** → `features/<도메인>/`의 segment로. 도메인 = 기획에서 독립된 이름으로 불리는 기능 단위(대화, 표현, 온보딩…). 슬라이스 하나가 그 도메인의 전부를 담는다 — 명사(데이터)/동사(행동)를 가르지 않는다.
    - `api/` 백엔드 요청 함수와 응답 타입
    - `model/` 도메인 규칙·상태·쿼리 훅. 규칙은 React 없는 순수 모듈로 쓰고 옆에 테스트를 붙인다. 훅은 배선만 한다
    - `ui/` 도메인 컴포넌트. 화면 덩어리는 Flow 컴포넌트가 담당한다
@@ -27,9 +27,9 @@ import 경로는 FSD 규칙을 따른다 — 같은 슬라이스(라우트 구�
 
 - `utils.ts`, `helpers.ts` 금지 — 이름을 못 지으면 개념이 안 선 것이다. `types.ts`, `constants.ts`도 같은 병 — 내용물 형태가 아니라 개념으로 파일을 가른다.
 - 파일명 — 컴포넌트 `Pascal.tsx`, 훅 `useCamel.ts`, 나머지 모듈은 `kebab-case.ts`.
-- 서버 상태 훅(본체가 useQuery/useMutation 하나인 얇은 래퍼)은 `Query`/`Mutation` 접미사를 붙인다. 쿼리를 부품으로 쓰는 지휘자 훅(useConversationFlow 등)은 제외.
-- `features` 간 가로 import는 지양한다. 불가피하면 이유를 한 줄 주석으로 남긴다 (나중에 entities로 뽑을 후보 목록이 된다).
-- 예외: `scenario`·`feedback`처럼 여러 feature가 참조하는 공용 슬라이스는 가로 import를 허용한다. 단 공용 슬라이스 자신은 다른 feature를 import하지 않는다 (방향 고정).
+- 서버 상태 훅(본체가 useQuery/useMutation 하나인 얇은 래퍼)은 `Query`/`Mutation` 접미사를 붙인다. 쿼리를 부품으로 쓰는 지휘자 훅(useScenarioTalkFlow 등)은 제외.
+- `features` 간 가로 import는 지양한다. 불가피하면 이유를 한 줄 주석으로 남긴다.
+- 예외: `conversation`·`scenario`·`feedback`처럼 여러 feature가 참조하는 공용 슬라이스는 가로 import를 허용한다. 단 공용 슬라이스 자신은 다른 feature를 import하지 않는다 (방향 고정). `scenario`는 콘텐츠(카드·캘린더·잠금)만 담당하고, 그 콘텐츠로 대화를 진행하는 흐름은 대화 라우트가 담당한다.
 - `page.tsx`는 파라미터 해석과 조립만 한다. 로직이 생기면 model로 뽑는다.
 
 이름 규칙.
@@ -41,5 +41,11 @@ import 경로는 FSD 규칙을 따른다 — 같은 슬라이스(라우트 구�
 
 팀원이 늘어나면 그때 도입한다. slice별 `index.ts` 공개 API, import 경계 ESLint. 그 전엔 하지 않는다.
 
-`entities` 레이어는 공용 슬라이스가 3개가 되거나 방향 위반이 발견되는 시점에 도입한다. 그때 명사(데이터·표현용 UI)만 내리고 동사(유저 행동 흐름)는 features에 남긴다. 프리톡 도입으로 conversation을 명사(대화 엔진)/동사(시나리오 대화 흐름)로 가르는 때가 유력한 시점이다.
+`features/conversation`은 대화 엔진이다(상태기계·턴 루프·입력/재생/속마음 훅·대화 UI). 스몰톡 도입(LAN-217)으로 시나리오 결합을 떼면서 공용 슬라이스가 됐다 — 시나리오 대화·스몰톡·온보딩이 함께 쓴다. 규칙 둘.
+
+- 엔진은 어느 대화인지 모른다 — 그 안에 scenario·smalltalk·feedback·streak 같은 도메인 단어가 등장하면 경계 위반이다. 대화 유형마다 다른 것(세션 시작·발화 제출·완료 판정·완료 후속)은 엔진이 주입받는다 (`useConversationTurns`의 submit/ensureSession).
+- 미리 일반화하지 않는다 — 실제로 두 대화 유형이 다르다고 확인된 지점만 주입점으로 만들고, 나머지는 엔진에 그대로 둔다. 세 번째 유형이 생겨 실제로 다를 때 그때 뽑는다.
+
+대화 유형별 흐름(어댑터 훅·세션 API·화면)은 그 대화의 라우트 폴더에 둔다 — `app/(protected)/conversation/scenario/[scenarioId]/{_ui,_model,_api}`. 화면 하나에서만 쓰는 코드라 features로 올릴 이유가 없고, 라우트는 아래층을 자유롭게 참조할 수 있어 완료 후속(피드백·스트릭)도 여기서 엮는다.
+
 <!-- END:nextjs-agent-rules -->

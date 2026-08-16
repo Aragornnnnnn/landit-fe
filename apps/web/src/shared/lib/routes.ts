@@ -33,9 +33,10 @@ export const scenarioReturnPath = ({ date, flip }: ScenarioReturn = {}) => {
 const withDate = (path: string, date?: string | null) =>
   date ? `${path}?date=${encodeURIComponent(date)}` : path;
 
-// 대화 화면. 어느 날 카드인지 알아야 그 날 배정을 받아 오고, 나올 때도 그 날로 돌아간다
-export const conversationPath = (scenarioId: number, date?: string | null) =>
-  withDate(`/conversation/${scenarioId}`, date);
+// 대화 화면은 종류별로 /conversation 아래에 모은다 — 탭바 없는 전체화면이라 탭 라우트와 갈라 둔다
+// 시나리오 대화. 어느 날 카드인지 알아야 그 날 배정을 받아 오고, 나올 때도 그 날로 돌아간다
+export const scenarioTalkPath = (scenarioId: number, date?: string | null) =>
+  withDate(`/conversation/scenario/${scenarioId}`, date);
 
 // 대화 직후 표현 분기 화면
 export const expressionBranchPath = (

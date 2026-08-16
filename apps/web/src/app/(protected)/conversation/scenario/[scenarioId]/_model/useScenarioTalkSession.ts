@@ -4,13 +4,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
+import { endSession } from '@/features/conversation/api/session';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
 import { reportError, reportWarning } from '@/shared/monitoring/report';
 
-import { endSession, startSession } from '../api/session';
+import { startSession } from '../_api/scenario-session';
 
-interface ConversationSessionOptions {
+interface ScenarioTalkSessionOptions {
   // openingPreview로 오프닝을 못 시드했을 때(예외적) 세션 응답의 첫 발화로 채우는 폴백
   onOpeningMessage: (message: {
     content: string;
@@ -18,9 +19,9 @@ interface ConversationSessionOptions {
   }) => void;
 }
 
-export const useConversationSession = (
+export const useScenarioTalkSession = (
   scenario: Scenario,
-  { onOpeningMessage }: ConversationSessionOptions,
+  { onOpeningMessage }: ScenarioTalkSessionOptions,
 ) => {
   // state는 화면 노출용, ref는 핸들러 클로저가 최신 값을 읽는 용도
   const [sessionId, setSessionId] = useState<number | null>(null);

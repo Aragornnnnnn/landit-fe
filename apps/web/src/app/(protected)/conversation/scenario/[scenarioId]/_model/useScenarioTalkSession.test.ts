@@ -3,14 +3,18 @@ import { StrictMode } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import * as sessionApi from '@/features/conversation/api/session';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 
-import * as sessionApi from '../api/session';
-import { useConversationSession } from './useConversationSession';
+import * as scenarioTalkApi from '../_api/scenario-session';
+import { useScenarioTalkSession } from './useScenarioTalkSession';
 
-vi.mock('../api/session', () => ({
-  startSession: vi.fn(),
+vi.mock('@/features/conversation/api/session', () => ({
   endSession: vi.fn(),
+}));
+
+vi.mock('../_api/scenario-session', () => ({
+  startSession: vi.fn(),
 }));
 
 const monitoringMock = vi.hoisted(() => ({
@@ -19,7 +23,7 @@ const monitoringMock = vi.hoisted(() => ({
 }));
 vi.mock('@/shared/monitoring/report', () => monitoringMock);
 
-const startSession = vi.mocked(sessionApi.startSession);
+const startSession = vi.mocked(scenarioTalkApi.startSession);
 const endSession = vi.mocked(sessionApi.endSession);
 
 const scenario = {
@@ -34,15 +38,19 @@ const startResponse = (
   ({
     sessionId: 7,
     currentMessage,
-    progress: { completed: false },
-  }) as Awaited<ReturnType<typeof sessionApi.startSession>>;
+    progress: {
+      currentTurnNumber: 1,
+      totalQuestionCount: 3,
+      completed: false,
+    },
+  }) as Awaited<ReturnType<typeof scenarioTalkApi.startSession>>;
 
 const renderSession = (
   onOpeningMessage: (message: {
     content: string;
     translatedContent: string | null;
   }) => void = () => {},
-) => renderHook(() => useConversationSession(scenario, { onOpeningMessage }));
+) => renderHook(() => useScenarioTalkSession(scenario, { onOpeningMessage }));
 
 beforeEach(() => {
   startSession.mockReset();
@@ -51,7 +59,7 @@ beforeEach(() => {
   endSession.mockResolvedValue(undefined as never);
 });
 
-describe('useConversationSession', () => {
+describe('useScenarioTalkSession', () => {
   it('백그라운드로 세션을 시작하고 확보된 sessionId를 노출한다', async () => {
     const { result } = renderSession();
 
@@ -62,7 +70,7 @@ describe('useConversationSession', () => {
 
   it('StrictMode 재마운트에도 세션은 한 번만 만든다', async () => {
     renderHook(
-      () => useConversationSession(scenario, { onOpeningMessage: () => {} }),
+      () => useScenarioTalkSession(scenario, { onOpeningMessage: () => {} }),
       { wrapper: StrictMode },
     );
 

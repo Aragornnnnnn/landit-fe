@@ -5,7 +5,6 @@ import { Suspense, use } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { ConversationFlow } from '@/features/conversation/ui/ConversationFlow';
 import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSkeleton';
 import { toScenario } from '@/features/scenario/lib/to-scenario';
 import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
@@ -13,20 +12,22 @@ import { track } from '@/shared/analytics';
 import { readDateParam, scenarioReturnPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 
+import { ScenarioTalkFlow } from './_ui/ScenarioTalkFlow';
+
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
-export default function ConversationPage({
+export default function ScenarioTalkPage({
   params,
 }: {
   params: Promise<{ scenarioId: string }>;
 }) {
   return (
     <Suspense fallback={<ConversationSkeleton />}>
-      <ConversationContent params={params} />
+      <ScenarioTalkContent params={params} />
     </Suspense>
   );
 }
 
-function ConversationContent({
+function ScenarioTalkContent({
   params,
 }: {
   params: Promise<{ scenarioId: string }>;
@@ -78,7 +79,7 @@ function ConversationContent({
 
   // key: 시나리오가 바뀌면 세션·상태를 새로 시작하도록 인스턴스를 다시 마운트한다
   return (
-    <ConversationFlow
+    <ScenarioTalkFlow
       key={scenario.scenarioId}
       scenario={scenario}
       date={date}

@@ -8,7 +8,7 @@ import type { FloatingThought, ThoughtType } from './thought';
 export type Partner = 'marco' | 'chloe' | 'teddy';
 
 /**
- * 목소리가 곧 캐스팅이다 — 백엔드는 시나리오별 음성만 내려주고(공개 API에 캐릭터 필드 없음),
+ * 목소리가 곧 캐스팅이다 — 백엔드는 세션 시작 응답에 음성만 내려주고(공개 API에 캐릭터 필드 없음),
  * 어느 캐릭터의 목소리인지는 여기서 안다. 기준은 TTS 모델 — 백엔드가 테디에게 모델 자체를
  * 따로 배정했다(landit-be V38). 개별 voice ID로 걸면 같은 모델의 다른 목소리가 시드될 때 깨진다.
  * 목록에 없으면 음성 성별로 폴백한다(남=마르코, 여=클로이).

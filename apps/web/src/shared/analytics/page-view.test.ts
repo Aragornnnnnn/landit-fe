@@ -90,10 +90,10 @@ describe('toPageView', () => {
     });
   });
 
-  it('대화 동적 세그먼트를 page_name conversation + scenario_id로 정규화한다', () => {
-    expect(pv('/conversation/12')).toEqual({
-      page_name: 'conversation',
-      path: '/conversation/12',
+  it('시나리오 대화 동적 세그먼트를 page_name scenario_talk + scenario_id로 정규화한다', () => {
+    expect(pv('/conversation/scenario/12')).toEqual({
+      page_name: 'scenario_talk',
+      path: '/conversation/scenario/12',
       scenario_id: 12,
     });
   });

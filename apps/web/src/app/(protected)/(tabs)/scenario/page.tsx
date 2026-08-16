@@ -14,9 +14,9 @@ import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleto
 import { TodayCard } from '@/features/scenario/ui/TodayCard';
 import { track } from '@/shared/analytics';
 import {
-  conversationPath,
   readDateParam,
   scenarioReturnPath,
+  scenarioTalkPath,
 } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 
@@ -53,12 +53,12 @@ function ScenarioContent() {
   const cleared = daily?.scenario?.dailyScenarioType === 'CLEARED';
   const start = (scenario: Scenario) => {
     if (cleared) {
-      router.push(conversationPath(scenario.scenarioId, date));
+      router.push(scenarioTalkPath(scenario.scenarioId, date));
       return;
     }
     setBriefingScenario(scenario);
     // 브리핑을 읽는 동안 대화 라우트를 미리 받아 둔다 — 이 화면은 링크로 오갈 수 없어 자동 프리페치가 안 걸린다
-    router.prefetch(conversationPath(scenario.scenarioId, date));
+    router.prefetch(scenarioTalkPath(scenario.scenarioId, date));
   };
   const settled = date === undefined && (cleared || summonClosed);
 
@@ -121,7 +121,7 @@ function ScenarioContent() {
         <ScenarioBriefing
           scenario={briefingScenario}
           onDone={() =>
-            router.push(conversationPath(briefingScenario.scenarioId, date))
+            router.push(scenarioTalkPath(briefingScenario.scenarioId, date))
           }
           onCancel={() => setBriefingScenario(null)}
         />

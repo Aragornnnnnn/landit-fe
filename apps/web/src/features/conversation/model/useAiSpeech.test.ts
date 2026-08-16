@@ -59,7 +59,7 @@ const renderSpeech = (
     playing: true,
     content: OPENING,
     voice: voice as TtsVoice | null,
-    scenarioId: 10,
+    openingSrc: '/audio/opening-10.mp3' as string | null,
     onSpeechEnd,
     ...over,
   };
@@ -93,6 +93,21 @@ describe('useAiSpeech', () => {
 
     act(() => ttsMock.state.onEnd?.());
 
+    expect(onSpeechEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('오프닝 소스가 없으면 정적 재생 없이 바로 합성으로 말한다', () => {
+    // 미리 녹음된 오프닝이 없는 대화(예: 스몰톡)는 처음부터 일반 재생 경로를 탄다
+    const { onSpeechEnd } = renderSpeech({ openingSrc: null });
+
+    expect(ttsMock.speakSrc).not.toHaveBeenCalled();
+    expect(ttsMock.speak).toHaveBeenCalledWith(
+      OPENING,
+      voice,
+      expect.anything(),
+    );
+
+    act(() => ttsMock.state.onEnd?.());
     expect(onSpeechEnd).toHaveBeenCalledTimes(1);
   });
 
