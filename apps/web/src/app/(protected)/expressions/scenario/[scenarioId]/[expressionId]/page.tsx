@@ -1,6 +1,6 @@
 'use client';
 
-// 표현학습 플로우 페이지 — 한 표현의 영작~복습 스텝을 렌더한다
+// 시나리오 표현 학습 라우트 — 한 표현의 영작~복습 스텝을 렌더한다
 import { Suspense, use } from 'react';
 import { useSearchParams } from 'next/navigation';
 
@@ -35,9 +35,8 @@ function ExpressionFlowContent({
   return (
     <ExpressionFlow
       key={expressionId}
-      scenarioId={Number(scenarioId)}
+      origin={{ kind: 'scenario', scenarioId: Number(scenarioId), date }}
       expressionId={Number(expressionId)}
-      date={date}
     />
   );
 }

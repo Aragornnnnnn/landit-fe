@@ -133,6 +133,10 @@ export type FeedbackType =
 export type NotificationConsentSource = 'scenario' | 'me';
 export type CalendarView = 'week' | 'month';
 
+// 표현이 어디서 왔는가 — 시나리오 콘텐츠에 붙어 있던 표현인지, 그 스몰톡에서 만들어진 표현인지.
+// 표현 학습 화면은 둘이 같이 쓰므로 이벤트도 하나로 두고 출처만 갈아 끼운다 (둘 중 하나만 실린다)
+type ExpressionSource = { scenario_id: number } | { session_id: number };
+
 // 이벤트별 속성 계약 — 키는 snake_case. 속성이 없는 이벤트는 undefined
 export type EventProps = {
   'Page Viewed': {
@@ -140,6 +144,8 @@ export type EventProps = {
     path: string;
     return_reason?: HomeReturnReason;
     scenario_id?: number;
+    // 스몰톡에서 온 표현 화면만 — 어느 대화에서 나온 표현인지
+    session_id?: number;
     expression_id?: number;
     // 알림 유입(reminder)일 때만 — 탭한 알림의 문구 슬러그 (utm_content에서 파생, 어휘는 reminder-copies.ts)
     notification_copy?: string;
@@ -202,9 +208,8 @@ export type EventProps = {
     direction: 'back' | 'front';
     trigger: 'button' | 'auto';
   };
-  'Expression Selected': {
+  'Expression Selected': ExpressionSource & {
     expression_id: number;
-    scenario_id: number;
     // post_conversation = 대화 직후 표현 리스트 화면, card_back = 홈 카드 뒷면
     source: 'card_back' | 'post_conversation';
   };
@@ -332,14 +337,15 @@ export type EventProps = {
   };
   'Feedback Completed': { session_id: number };
 
-  'Expression List Viewed': { scenario_id: number; expression_count: number };
+  // 표현 학습은 시나리오 대화와 스몰톡이 같은 화면·같은 API를 쓴다 — 이벤트도 하나로 두고
+  // 어디서 온 표현인지만 출처로 싣는다 (둘 중 하나만 온다)
+  'Expression List Viewed': ExpressionSource & { expression_count: number };
   // 분기 화면을 X로 닫고 학습 없이 나감 — 학습 퍼널 이탈 지점.
   // 연출 중에 닫으면 리스트를 아직 못 받았을 수 있어 expression_count가 0일 수 있다
-  'Expression Learning Skipped': {
-    scenario_id: number;
+  'Expression Learning Skipped': ExpressionSource & {
     expression_count: number;
   };
-  'Expression Learning Started': { expression_id: number; scenario_id: number };
+  'Expression Learning Started': ExpressionSource & { expression_id: number };
   'Expression Step Viewed': { expression_id: number; step: ExpressionStep };
   'Quiz Word Picked': { expression_id: number; picked_count: number };
   'Quiz Word Removed': { expression_id: number; picked_count: number };
@@ -355,7 +361,7 @@ export type EventProps = {
     wrong_count: number;
     hint_level: number;
   };
-  'Expression Completed': { expression_id: number; scenario_id: number };
+  'Expression Completed': ExpressionSource & { expression_id: number };
   'Expression Abandoned': { expression_id: number; step: ExpressionStep };
 
   'Notification Consent Viewed': { source: NotificationConsentSource };

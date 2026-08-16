@@ -109,15 +109,31 @@ describe('toPageView', () => {
   });
 
   it('표현 분기·학습 경로를 각각 정규화한다', () => {
-    expect(pv('/expressions/3/branch')).toEqual({
+    // 둘째 칸이 출처라 시나리오 id는 셋째 칸에서 읽는다
+    expect(pv('/expressions/scenario/3/branch')).toEqual({
       page_name: 'expression_list',
-      path: '/expressions/3/branch',
+      path: '/expressions/scenario/3/branch',
       scenario_id: 3,
     });
-    expect(pv('/expressions/3/45')).toEqual({
+    expect(pv('/expressions/scenario/3/45')).toEqual({
       page_name: 'expression_learning',
-      path: '/expressions/3/45',
+      path: '/expressions/scenario/3/45',
       scenario_id: 3,
+      expression_id: 45,
+    });
+  });
+
+  it('스몰톡 표현은 같은 화면 이름에 세션 id를 싣는다', () => {
+    // 화면은 시나리오와 같은 것이다 — 어디서 온 표현인지만 id로 갈린다
+    expect(pv('/expressions/session/7/branch')).toEqual({
+      page_name: 'expression_list',
+      path: '/expressions/session/7/branch',
+      session_id: 7,
+    });
+    expect(pv('/expressions/session/7/45')).toEqual({
+      page_name: 'expression_learning',
+      path: '/expressions/session/7/45',
+      session_id: 7,
       expression_id: 45,
     });
   });

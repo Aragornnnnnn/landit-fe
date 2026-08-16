@@ -70,6 +70,12 @@ vi.mock('@/shared/auth/auth-store', () => ({
     selector({ member: { userId: 39 } }),
 }));
 
+// 스트릭 미리받기는 경계라 목으로 둔다 — 여기서는 완료 때 부르는지만 본다
+const refreshStreak = vi.hoisted(() => vi.fn());
+vi.mock('@/features/streak/model/refresh-streak', () => ({
+  refreshStreakAfterCompletion: refreshStreak,
+}));
+
 const queryClientMock = vi.hoisted(() => ({ invalidateQueries: vi.fn() }));
 vi.mock('@tanstack/react-query', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@tanstack/react-query')>()),
@@ -339,6 +345,8 @@ describe('useSmallTalkFlow — 종료 확인', () => {
       decision: 'END',
     });
     expect(result.current.phase).not.toBe('USER_READY');
+    // 축하 화면이 옛 숫자를 그리지 않게 스트릭을 미리 받아 둔다
+    expect(refreshStreak).toHaveBeenCalled();
   });
 
   it('그 답을 보내지 못하면 대화를 나가는 것으로 정리한다', async () => {

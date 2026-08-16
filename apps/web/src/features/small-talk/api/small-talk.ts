@@ -68,6 +68,9 @@ export type SmallTalkTurnStatus =
 export type SmallTalkSessionStatus =
   'IN_PROGRESS' | 'AWAITING_EXIT_DECISION' | 'COMPLETED';
 
+// 맞춤 표현은 대화가 끝난 뒤 서버가 따로 만든다 — 준비될 때까지 PREPARING이다
+export type ExpressionGenerationStatus = 'PREPARING' | 'READY' | 'FAILED';
+
 export interface SmallTalkProgress {
   sessionStatus: SmallTalkSessionStatus;
   // 이 대화에서 말한 시간 (오늘 누적인 usedSpeakingTimeMs와 다르다)
@@ -75,7 +78,7 @@ export interface SmallTalkProgress {
   speakingTimeLimitMs: number;
   usedSpeakingTimeMs: number;
   remainingSpeakingTimeMs: number;
-  expressionGenerationStatus: 'PREPARING' | 'READY' | 'FAILED';
+  expressionGenerationStatus: ExpressionGenerationStatus;
 }
 
 export interface SmallTalkMessageSubmitResponse {
@@ -119,6 +122,56 @@ export const submitSmallTalkMessage = (
     `/api/v1/free-talk/sessions/${sessionId}/messages`,
     body,
   );
+
+// 대화가 끝난 뒤의 그 대화 한 건 — 완료된 세션만 준다(진행 중이면 404).
+// 대화 직후 축하 화면과 지난 스몰톡 상세가 같은 응답을 다르게 그린다
+export interface SmallTalkSessionDetailResponse {
+  sessionId: number;
+  // 서버가 대화 내용에서 뽑은 제목. 아직 못 정했으면 null
+  title: string | null;
+  startedAt: string;
+  completedAt: string;
+  userSpeakingDurationMs: number;
+  messages: SmallTalkHistoryMessage[];
+  expressionGenerationStatus: ExpressionGenerationStatus;
+  expressionLearningStatus: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
+  // 이 대화에서 만들어진 표현. 생성이 끝나기 전(PREPARING)에는 비어 있다
+  expressions: SmallTalkSessionExpression[];
+}
+
+export interface SmallTalkHistoryMessage {
+  messageId: number;
+  turnNumber: number;
+  messageSequence: number;
+  role: string;
+  content: string;
+  translatedContent: string | null;
+  emotion: string | null;
+  innerThought: string | null;
+  innerThoughtType: string | null;
+}
+
+export interface SmallTalkSessionExpression {
+  expressionId: number;
+  displayOrder: number;
+  targetExpressionText: string;
+  baseExpressionMeaningText: string;
+  completed: boolean;
+  // 이전 스몰톡에서 같은 표현을 추천받았던 마지막 시각. 처음 만나는 표현이면 null
+  lastRecommendedAt: string | null;
+}
+
+export const getSmallTalkSession = (sessionId: number) =>
+  api.get<SmallTalkSessionDetailResponse>(
+    `/api/v1/free-talk/sessions/${sessionId}`,
+  );
+
+// 표현 생성이 실패했을 때 다시 만들어 달라고 한다 — 접수만 하고(202) 생성은 뒤에서 돈다
+export const retrySmallTalkExpressions = (sessionId: number) =>
+  api.post<{
+    sessionId: number;
+    expressionGenerationStatus: ExpressionGenerationStatus;
+  }>(`/api/v1/free-talk/sessions/${sessionId}/expressions/retry`);
 
 // 종료 의사 확인에 대한 답 — 응답 모양은 발화 제출과 같아서 대화가 그대로 이어진다
 export const decideSmallTalkExit = (

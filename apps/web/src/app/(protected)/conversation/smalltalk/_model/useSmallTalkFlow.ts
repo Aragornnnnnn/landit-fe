@@ -17,6 +17,7 @@ import {
 } from '@/features/small-talk/api/small-talk';
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
 import { findPartner } from '@/features/small-talk/model/partner';
+import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { reportError } from '@/shared/monitoring/report';
@@ -153,6 +154,8 @@ export const useSmallTalkFlow = ({
               : 'user_ended',
         });
         refreshHome();
+        // 축하 화면이 열자마자 새 숫자를 그리도록 미리 받아 둔다 (시나리오 대화와 같은 처리)
+        refreshStreakAfterCompletion(queryClient);
       }
 
       return {

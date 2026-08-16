@@ -94,19 +94,26 @@ export const toPageView = (
     return { page_name: 'conversation_smalltalk', path: pathname };
   }
 
-  if (seg[0] === 'expressions' && seg[1] && seg[2]) {
-    if (seg[2] === 'branch') {
-      return {
-        page_name: 'expression_list',
-        path: pathname,
-        scenario_id: toId(seg[1]),
-      };
+  // 표현 학습은 둘째 칸에 출처를 달고 온다 (/expressions/{출처}/{출처id}/...).
+  // 화면 이름은 출처와 무관하게 같고, 어디서 온 표현인지는 id 속성이 가른다
+  if (
+    seg[0] === 'expressions' &&
+    (seg[1] === 'scenario' || seg[1] === 'session') &&
+    seg[2] &&
+    seg[3]
+  ) {
+    const source =
+      seg[1] === 'scenario'
+        ? { scenario_id: toId(seg[2]) }
+        : { session_id: toId(seg[2]) };
+    if (seg[3] === 'branch') {
+      return { page_name: 'expression_list', path: pathname, ...source };
     }
     return {
       page_name: 'expression_learning',
       path: pathname,
-      scenario_id: toId(seg[1]),
-      expression_id: toId(seg[2]),
+      ...source,
+      expression_id: toId(seg[3]),
     };
   }
 
