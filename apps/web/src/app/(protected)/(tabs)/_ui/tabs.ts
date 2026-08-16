@@ -10,7 +10,7 @@ export interface Tab {
 
 export const TABS: Tab[] = [
   { href: SCENARIO_PATH, label: '시나리오', ready: true },
-  { href: SMALLTALK_PATH, label: '스몰톡', ready: false },
+  { href: SMALLTALK_PATH, label: '스몰톡', ready: true },
 ];
 
 export const VISIBLE_TABS = TABS.filter((tab) => tab.ready);

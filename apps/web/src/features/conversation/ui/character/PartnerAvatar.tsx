@@ -1,0 +1,30 @@
+// 캐릭터 아바타 — 움직임 없이 한 컷만 그린다. viewBox로 얼굴만 잘라 쓴다.
+// 표정 변형 조각(웃는 눈·찡그린 눈썹)은 파츠 SVG에 다 들어 있어서, 감추는 규칙을
+// 얹지 않으면 전부 겹쳐 보인다 — 그 규칙이 PartnerCharacter.module.css의 .parts다
+import type { Partner } from '../../model/character-look';
+import styles from './PartnerCharacter.module.css';
+import { PARTS } from './parts-by-partner';
+
+interface PartnerAvatarProps {
+  partner: Partner;
+  // 그릴 영역. 생략하면 파츠 원본 그대로(전신)
+  viewBox?: string;
+  className?: string;
+}
+
+export const PartnerAvatar = ({
+  partner,
+  viewBox,
+  className,
+}: PartnerAvatarProps) => {
+  const Parts = PARTS[partner];
+
+  return (
+    <Parts
+      // 있을 때만 넘긴다 — undefined로 넘기면 파츠의 원본 viewBox를 지워 그림이 사라진다
+      {...(viewBox && { viewBox })}
+      className={[styles.parts, className].filter(Boolean).join(' ')}
+      aria-hidden
+    />
+  );
+};

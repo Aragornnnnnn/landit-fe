@@ -38,6 +38,23 @@ const withDate = (path: string, date?: string | null) =>
 export const scenarioTalkPath = (scenarioId: number, date?: string | null) =>
   withDate(`/conversation/scenario/${scenarioId}`, date);
 
+// 스몰톡 대화. 시나리오와 달리 가리킬 콘텐츠가 없어 "누구와 어떻게 시작할지"를 싣는다 —
+// 주제를 고르면 상대가 먼저, 직접 걸면 내가 먼저다. 주제는 상대가 먼저일 때만 있다.
+// 상대는 홈에서 고른 값이다 — 새로고침해도 고른 상대가 유지되려면 주소에 있어야 한다
+export type SmallTalkStart = { partner: string } & (
+  { mode: 'ai_first'; topicId: number } | { mode: 'user_first' }
+);
+
+export const smallTalkPath = (start: SmallTalkStart) => {
+  const query = new URLSearchParams({
+    mode: start.mode,
+    partner: start.partner,
+  });
+  if (start.mode === 'ai_first') query.set('topicId', String(start.topicId));
+
+  return `/conversation/smalltalk?${query.toString()}`;
+};
+
 // 대화 직후 표현 분기 화면
 export const expressionBranchPath = (
   scenarioId: number,
