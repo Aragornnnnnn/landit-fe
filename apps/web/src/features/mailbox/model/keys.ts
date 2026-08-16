@@ -4,9 +4,15 @@ import type { MailboxBox } from './box';
 
 export const mailboxKeys = {
   all: ['mailbox'] as const,
-  // 편지를 읽으면 낡는 것들을 한 묶음으로 둔다 — 상세를 다시 부르지 않고 걷어내기 위해서다
+  // 편지를 읽으면 목록과 미읽음 점만 낡는다. 그 둘만 묶어 두면 방금 받아온 상세를
+  // 다시 부르지 않고도 걷어낼 수 있다 (useLetterDetailQuery 참고)
   summaries: (userId: number | null) =>
     [...mailboxKeys.all, userId, 'summaries'] as const,
   letters: (userId: number | null, box: MailboxBox) =>
     [...mailboxKeys.summaries(userId), 'letters', box] as const,
+  unread: (userId: number | null) =>
+    [...mailboxKeys.summaries(userId), 'unread'] as const,
+  // 받은 편지와 보낸 피드백은 아이디 공간이 달라 칸까지 키에 넣는다
+  letter: (userId: number | null, box: MailboxBox, id: number) =>
+    [...mailboxKeys.all, userId, 'letter', box, id] as const,
 };

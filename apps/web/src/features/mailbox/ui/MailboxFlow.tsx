@@ -49,7 +49,7 @@ const LetterBox = ({ box }: { box: MailboxBox }) => {
 
   if (rows) {
     return rows.length > 0 ? (
-      <LetterList rows={rows} />
+      <LetterList box={box} rows={rows} />
     ) : (
       <MailboxEmpty box={box} />
     );
@@ -63,11 +63,11 @@ const LetterBox = ({ box }: { box: MailboxBox }) => {
 };
 
 // 구분선으로만 나눈다 — 편지가 쌓여도 카드가 겹겹이 놓인 것처럼 답답해지지 않는다
-const LetterList = ({ rows }: { rows: LetterRow[] }) => (
+const LetterList = ({ box, rows }: { box: MailboxBox; rows: LetterRow[] }) => (
   <ul className="divide-y divide-border px-5">
     {rows.map((row) => (
       <li key={row.letterId}>
-        <Link href={letterPath(row.letterId)} className="block">
+        <Link href={letterPath(box, row.letterId)} className="block">
           <LetterListItem row={row} />
         </Link>
       </li>

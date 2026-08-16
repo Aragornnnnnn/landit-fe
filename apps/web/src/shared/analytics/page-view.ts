@@ -89,6 +89,24 @@ export const toPageView = (
     };
   }
 
+  // 편지함은 받은·보낸이 다른 리소스라 주소도 화면 이름도 갈린다 (/mailbox/{칸}/{id})
+  if (seg[0] === 'mailbox' && seg[2]) {
+    if (seg[1] === 'received') {
+      return {
+        page_name: 'mailbox_received',
+        path: pathname,
+        letter_id: toId(seg[2]),
+      };
+    }
+    if (seg[1] === 'sent') {
+      return {
+        page_name: 'mailbox_sent',
+        path: pathname,
+        feedback_id: toId(seg[2]),
+      };
+    }
+  }
+
   if (seg[0] === 'auth') return { page_name: 'auth_callback', path: pathname };
 
   if (seg.length === 1 && STATIC_PAGES.has(seg[0])) {
