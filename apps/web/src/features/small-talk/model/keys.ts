@@ -8,4 +8,7 @@ export const smallTalkKeys = {
   // 끝난 대화 한 건 — 대화 직후 축하 화면과 지난 스몰톡 상세가 같은 캐시를 본다
   session: (userId: number | null, sessionId: number) =>
     [...smallTalkKeys.all, userId, 'session', sessionId] as const,
+  // 지난 스몰톡 목록
+  sessions: (userId: number | null) =>
+    [...smallTalkKeys.all, userId, 'sessions'] as const,
 };

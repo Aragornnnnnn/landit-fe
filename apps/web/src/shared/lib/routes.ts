@@ -55,6 +55,17 @@ export const smallTalkPath = (start: SmallTalkStart) => {
   return `/conversation/smalltalk?${query.toString()}`;
 };
 
+// 지난 스몰톡 — 목록과 그 대화 한 건. 표현은 /expressions 아래에 서지만,
+// 기록은 스몰톡 도메인이라 탭 주소 아래에 둔다
+export const SMALLTALK_HISTORY_PATH = `${SMALLTALK_PATH}/sessions`;
+
+export const smallTalkHistoryPath = (sessionId: number) =>
+  `${SMALLTALK_HISTORY_PATH}/${sessionId}`;
+
+// 그날 주고받은 말 다시 보기
+export const smallTalkTranscriptPath = (sessionId: number) =>
+  `${smallTalkHistoryPath(sessionId)}/messages`;
+
 // 표현 학습은 /expressions 아래 한자리에 모으고, 둘째 칸에 출처를 세운다.
 // 표현의 주인이 대화 종류마다 다르기 때문이다 — 시나리오 표현은 콘텐츠에 붙어 있어 몇 번을 대화해도 같고,
 // 스몰톡 표현은 그 대화에서 그때 만들어져 세션으로만 가리킬 수 있다

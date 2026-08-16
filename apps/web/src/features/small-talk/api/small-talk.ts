@@ -71,6 +71,10 @@ export type SmallTalkSessionStatus =
 // 맞춤 표현은 대화가 끝난 뒤 서버가 따로 만든다 — 준비될 때까지 PREPARING이다
 export type ExpressionGenerationStatus = 'PREPARING' | 'READY' | 'FAILED';
 
+// 그 대화의 표현을 얼마나 배웠는가
+export type ExpressionLearningStatus =
+  'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
+
 export interface SmallTalkProgress {
   sessionStatus: SmallTalkSessionStatus;
   // 이 대화에서 말한 시간 (오늘 누적인 usedSpeakingTimeMs와 다르다)
@@ -134,7 +138,7 @@ export interface SmallTalkSessionDetailResponse {
   userSpeakingDurationMs: number;
   messages: SmallTalkHistoryMessage[];
   expressionGenerationStatus: ExpressionGenerationStatus;
-  expressionLearningStatus: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
+  expressionLearningStatus: ExpressionLearningStatus;
   // 이 대화에서 만들어진 표현. 생성이 끝나기 전(PREPARING)에는 비어 있다
   expressions: SmallTalkSessionExpression[];
 }
@@ -160,6 +164,31 @@ export interface SmallTalkSessionExpression {
   // 이전 스몰톡에서 같은 표현을 추천받았던 마지막 시각. 처음 만나는 표현이면 null
   lastRecommendedAt: string | null;
 }
+
+// 지난 스몰톡 목록 — 완료한 대화만 최신순으로 온다
+export interface SmallTalkSessionListResponse {
+  items: SmallTalkSessionSummary[];
+  page: number;
+  size: number;
+  hasNext: boolean;
+}
+
+export interface SmallTalkSessionSummary {
+  sessionId: number;
+  title: string | null;
+  startedAt: string;
+  completedAt: string;
+  userSpeakingDurationMs: number;
+  expressionGenerationStatus: ExpressionGenerationStatus;
+  expressionLearningStatus: ExpressionLearningStatus;
+  expressionCount: number;
+  completedExpressionCount: number;
+}
+
+export const getSmallTalkSessions = (page = 0, size = 20) =>
+  api.get<SmallTalkSessionListResponse>(
+    `/api/v1/free-talk/sessions?page=${page}&size=${size}`,
+  );
 
 export const getSmallTalkSession = (sessionId: number) =>
   api.get<SmallTalkSessionDetailResponse>(

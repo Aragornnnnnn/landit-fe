@@ -10,9 +10,9 @@ import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
 import { track } from '@/shared/analytics';
-import { smallTalkPath } from '@/shared/lib/routes';
+import { SMALLTALK_HISTORY_PATH, smallTalkPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
-import { ArrowRightIcon } from '@/shared/ui/Icons';
+import { ArrowRightIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 
 import {
   hasSeenIntroGuide,
@@ -79,7 +79,18 @@ export default function SmallTalkPage() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden pb-4">
-      <PartnerPicker selected={partner.id} onSelect={selectPartner} />
+      {/* 기록은 오늘 대화를 시작하는 길과 섞이면 안 된다 — 화면 안쪽 오른쪽 위에 잔글씨로 둔다.
+          상대 줄과 수직 중앙을 맞추면 네 번째 상대처럼 읽혀서, 그 줄보다 위에 걸쳐 둔다 */}
+      <div className="relative">
+        <button
+          onClick={() => router.push(SMALLTALK_HISTORY_PATH)}
+          className="absolute top-1 right-5 flex items-center gap-0.5 py-1 text-[13px] font-semibold text-muted-foreground active:opacity-60"
+        >
+          기록
+          <ChevronRightIcon size={14} />
+        </button>
+        <PartnerPicker selected={partner.id} onSelect={selectPartner} />
+      </div>
 
       {/* 이 화면은 스크롤이 없다 — 남는 자리는 캐릭터가 먹되 아래위로 한계를 둔다.
           낮은 화면에서 먼저 양보하는 쪽은 캐릭터가 아니라 소개 카드다(글자·여백을 줄인다) */}
@@ -115,36 +126,41 @@ export default function SmallTalkPage() {
           {/* 남은 시간은 시작을 누르기 직전에 알아야 하는 값이라, 잔글씨 대신 알약으로 세워 둔다.
               테두리를 두면 입력칸처럼 보여서, 흰 바탕에 옅은 그림자만으로 배경에서 띄운다.
               높이(h-8)는 알약 크기로 미리 잡아 둔다 — 값이 늦게 와서 그때 나타나면 아래 버튼이 밀린다 */}
-          <div className="mt-3 flex h-8 justify-center">
-            {main && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
-                오늘 남은 말하기
-                <span className="text-sm font-bold text-primary">
-                  {toSpeakingTimeLabel(main.remainingSpeakingTimeMs)}
+          {/* 잔량과 시작 버튼은 한 덩이다 — 주제가 없어 아래 버튼이 빠지는 날에도
+              둘이 함께 바닥 쪽에 서서 손이 기억하는 자리가 안 바뀐다 */}
+          <div className="mt-auto">
+            <div className="mt-3 flex h-8 justify-center">
+              {main && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
+                  오늘 남은 말하기
+                  <span className="text-sm font-bold text-primary">
+                    {toSpeakingTimeLabel(main.remainingSpeakingTimeMs)}
+                  </span>
                 </span>
-              </span>
-            )}
-          </div>
+              )}
+            </div>
 
-          {/* 하고 싶은 말이 있으면 바로, 아니면 상대가 주제로 열어 준다 — 주 행동이 위다 */}
-          <div className="mt-4 flex flex-col gap-3 px-5">
-            <Button size="md" disabled={isLoading} onClick={startWithMe}>
-              내가 먼저 말 걸기
-              <ArrowRightIcon size={16} />
-            </Button>
-            {/* 고를 주제가 없으면 이 길은 없는 것이다 — 조회 중엔 자리를 지킨다.
-                배경이 muted라 secondary(같은 회색)는 묻힌다 — 흰 바탕에 테두리를 둔 ghost가 떠 보인다 */}
-            {(!main || main.topics.length > 0) && (
-              <Button
-                variant="ghost"
-                size="md"
-                disabled={isLoading}
-                onClick={() => setTopicOpen(true)}
-              >
-                {partner.koreanName}가 먼저 말 걸기
+            {/* 하고 싶은 말이 있으면 바로, 아니면 상대가 주제로 열어 준다 — 주 행동이 위다.
+              주제가 없어 아래 버튼이 빠지는 날에도 시작 버튼이 같은 자리에 서도록 바닥에 붙인다 */}
+            <div className="mt-4 flex flex-col gap-3 px-5">
+              <Button size="md" disabled={isLoading} onClick={startWithMe}>
+                내가 먼저 말 걸기
                 <ArrowRightIcon size={16} />
               </Button>
-            )}
+              {/* 고를 주제가 없으면 이 길은 없는 것이다 — 조회 중엔 자리를 지킨다.
+                배경이 muted라 secondary(같은 회색)는 묻힌다 — 흰 바탕에 테두리를 둔 ghost가 떠 보인다 */}
+              {(!main || main.topics.length > 0) && (
+                <Button
+                  variant="ghost"
+                  size="md"
+                  disabled={isLoading}
+                  onClick={() => setTopicOpen(true)}
+                >
+                  {partner.koreanName}가 먼저 말 걸기
+                  <ArrowRightIcon size={16} />
+                </Button>
+              )}
+            </div>
           </div>
         </>
       )}

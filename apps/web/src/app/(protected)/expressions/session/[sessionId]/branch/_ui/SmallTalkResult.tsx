@@ -7,13 +7,12 @@ import { EVENTS } from '@landit/analytics';
 import { AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
-import type { Expression } from '@/features/expression/api/list';
 import {
   AnalyzeStage,
   CelebrateStage,
   RevealStage,
 } from '@/features/expression/ui/ExpressionStages';
-import type { SmallTalkSessionExpression } from '@/features/small-talk/api/small-talk';
+import { toExpressionListItems } from '@/features/small-talk/model/session-expressions';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
@@ -24,19 +23,6 @@ import { CloseIcon } from '@/shared/ui/Icons';
 // 축하가 머무는 시간 — 열매가 찍히고 숫자가 선 뒤에도 잠깐 남는다.
 // 연출이 끝나자마자 걷히면 본 것을 못 읽는다 (시나리오와 같은 값)
 const CELEBRATE_MS = 2600;
-
-// 서버는 잠금을 내려주지 않는다 — 아직 안 배운 것 중 첫 표현만 열고 나머지는 잠근다.
-// 이미 배운 표현은 다시 볼 수 있게 열어 둔다
-const toListItems = (
-  expressions: SmallTalkSessionExpression[],
-): Expression[] => {
-  const next = expressions.find((expression) => !expression.completed);
-  return expressions.map((expression) => ({
-    ...expression,
-    locked:
-      !expression.completed && expression.expressionId !== next?.expressionId,
-  }));
-};
 
 interface SmallTalkResultProps {
   sessionId: number;
@@ -65,7 +51,7 @@ export const SmallTalkResult = ({
   const ready = session?.expressionGenerationStatus === 'READY';
   const expressions =
     ready && session.expressions.length > 0
-      ? toListItems(session.expressions)
+      ? toExpressionListItems(session.expressions)
       : null;
   const nothingToLearn = ready && session.expressions.length === 0;
 

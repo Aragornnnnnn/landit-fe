@@ -11,9 +11,9 @@ export const TalkSummary = ({
   exchangeCount,
 }: TalkSummaryProps) => (
   <div className="mt-4 flex items-center rounded-2xl bg-card px-6 py-4 shadow-sm">
-    <Stat label="얘기한 시간" value={toSpeakingTimeLabel(speakingDurationMs)} />
+    <Stat label="말한 시간" value={toSpeakingTimeLabel(speakingDurationMs)} />
     <div className="h-12 w-px bg-border" />
-    <Stat label="주고받은 말" value={`${exchangeCount}번`} className="pl-6" />
+    <Stat label="주고받은 말" value={`${exchangeCount}개`} className="pl-6" />
   </div>
 );
 

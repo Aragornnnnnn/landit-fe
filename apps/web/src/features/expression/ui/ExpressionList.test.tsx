@@ -33,7 +33,7 @@ describe('ExpressionList 진행바', () => {
     expect(label.className).toContain('text-primary');
     expect(label.className).not.toContain('text-success');
 
-    const fill = label.parentElement?.querySelector('.h-full.rounded-full');
+    const fill = label.closest('.mb-5')?.querySelector('.h-full.rounded-full');
     expect(fill?.className).toContain('bg-primary');
     expect(fill?.className).not.toContain('bg-success');
   });
@@ -53,7 +53,7 @@ describe('ExpressionList 진행바', () => {
     expect(label.className).toContain('text-success');
     expect(label.className).not.toContain('text-primary');
 
-    const fill = label.parentElement?.querySelector('.h-full.rounded-full');
+    const fill = label.closest('.mb-5')?.querySelector('.h-full.rounded-full');
     expect(fill?.className).toContain('bg-success');
     expect(fill?.className).not.toContain('bg-primary');
   });
@@ -65,7 +65,7 @@ describe('ExpressionList 진행바', () => {
     expect(label.className).toContain('text-primary');
     expect(label.className).not.toContain('text-success');
 
-    const fill = label.parentElement?.querySelector('.h-full.rounded-full');
+    const fill = label.closest('.mb-5')?.querySelector('.h-full.rounded-full');
     expect(fill?.className).toContain('bg-primary');
     expect(fill?.className).not.toContain('bg-success');
   });

@@ -15,6 +15,8 @@ interface ExpressionListProps {
   hideStartAction?: boolean;
   // 상단 진행바(N/M 완료)를 숨긴다 (막 생성돼 전부 미완료일 때는 불필요)
   hideProgress?: boolean;
+  // 진행 표시 왼쪽에 서는 제목 — 화면에 다른 블록이 함께 있어 무슨 목록인지 밝혀야 할 때만 준다
+  title?: string;
 }
 
 export const ExpressionList = ({
@@ -23,6 +25,7 @@ export const ExpressionList = ({
   stagger = false,
   hideStartAction = false,
   hideProgress = false,
+  title,
 }: ExpressionListProps) => {
   const total = expressions.length;
   const done = expressions.filter((expression) => expression.completed).length;
@@ -34,11 +37,16 @@ export const ExpressionList = ({
     <div className="px-5 pt-2">
       {!hideProgress && (
         <div className="mb-5">
-          <p
-            className={`mb-2 text-sm font-bold ${complete ? 'text-success' : 'text-primary'}`}
-          >
-            {done}/{total} 완료
-          </p>
+          <div className="mb-2 flex items-baseline justify-between gap-3">
+            {title && (
+              <p className="text-sm font-bold text-foreground">{title}</p>
+            )}
+            <p
+              className={`text-sm font-bold ${complete ? 'text-success' : 'text-primary'}`}
+            >
+              {done}/{total} 완료
+            </p>
+          </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
             <div
               className={`h-full rounded-full transition-[width] duration-500 ${complete ? 'bg-success' : 'bg-primary'}`}
