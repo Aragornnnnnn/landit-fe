@@ -78,12 +78,6 @@ export const EVENTS = {
   EXPRESSION_COMPLETED: 'Expression Completed',
   EXPRESSION_ABANDONED: 'Expression Abandoned',
 
-  // NPS
-  NPS_SURVEY_OPENED: 'NPS Survey Opened',
-  NPS_SCORE_SELECTED: 'NPS Score Selected',
-  NPS_SURVEY_SUBMITTED: 'NPS Survey Submitted',
-  NPS_SURVEY_DISMISSED: 'NPS Survey Dismissed',
-
   // 편지함
   MAILBOX_TAB_SWITCHED: 'Mailbox Tab Switched',
   FEEDBACK_TYPE_SELECTED: 'Feedback Type Selected',
@@ -321,12 +315,6 @@ export type EventProps = {
   };
   'Expression Completed': { expression_id: number; scenario_id: number };
   'Expression Abandoned': { expression_id: number; step: ExpressionStep };
-
-  'NPS Survey Opened': { source: 'home_header' | 'all_completed' | 'me' };
-  'NPS Score Selected': { score: number };
-  'NPS Survey Submitted': { score: number; has_comment: boolean };
-  // ✕로 제출 없이 닫음 — 점수를 골라놓고 닫았으면 score가 담긴다
-  'NPS Survey Dismissed': { score?: number };
 
   'Notification Consent Viewed': { source: NotificationConsentSource };
   // 수락 = OS 권한창 요청까지 이어짐. 실제 허용/거부는 OS 팝업 결과라 별도 (권한 상태로 세그먼트)

@@ -149,15 +149,6 @@
 | Expression Completed        | expression_id, scenario_id                         | 학습 완료 처리 성공                                               |
 | Expression Abandoned        | expression_id, step                                | 중단 확정                                                         |
 
-### NPS
-
-| 이벤트               | 속성                                   | 시점               |
-| -------------------- | -------------------------------------- | ------------------ |
-| NPS Survey Opened    | source(home_header\|all_completed\|me) | 의견 보내기 열기   |
-| NPS Score Selected   | score(1–5)                             | 만족도 이모지 탭   |
-| NPS Survey Submitted | score(1–5), has_comment                | 의견 제출          |
-| NPS Survey Dismissed | score?                                 | ✕로 제출 없이 닫음 |
-
 ### 편지함
 
 | 이벤트                 | 속성                                                        | 시점                         |
@@ -184,9 +175,9 @@
 
 아래는 놓친 게 아니라 검토 후 뺀 것이다. 원클릭 수준까지 필요해지면 오토캡처 elementInteractions를 다시 켜서 사후 수집할 수 있다.
 
-- 키 입력·IME 글자 단위, NPS 코멘트 타이핑, 복습 영작 단어 박스 포커스 — 노이즈 대비 분석 가치가 없다.
+- 키 입력·IME 글자 단위, 피드백 작성 타이핑, 복습 영작 단어 박스 포커스 — 노이즈 대비 분석 가치가 없다.
 - 단순 화면 이동 버튼(내 정보·약관 링크, 뒤로가기, 콜백 "로그인으로 돌아가기") — `Page Viewed`가 목적지를 찍는다.
-- 바텀시트 오버레이 클릭 닫기 — ✕/닫기 버튼 이벤트와 중복. 시트별 닫기는 `Confirm Sheet Dismissed`·`NPS Survey Dismissed`가 담당.
+- 바텀시트 오버레이 클릭 닫기 — ✕/닫기 버튼 이벤트와 중복. 시트별 닫기는 `Confirm Sheet Dismissed`가 담당.
 - 상세 분석 첫 장에서 ‹로 총평 복귀 — `Feedback Turn Viewed`/`Feedback Detail Opened` 재발화로 추적 가능.
 - 장식성 인터랙션(스크롤 그림자, 전역 햅틱 pointerdown), TTS 재생 내부 상태, `/stt-demo`·`/dev` 개발 화면.
 

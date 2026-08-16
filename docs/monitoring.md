@@ -8,7 +8,7 @@
 
 - **도메인 코드는 Sentry를 직접 부르지 않는다.** 수동 보고는 전부 [shared/monitoring/report.ts](../apps/web/src/shared/monitoring/report.ts)의 두 함수로 — analytics의 `track()`과 같은 단일 통로 패턴. `@sentry/nextjs` 직접 import는 instrumentation·config 파일에만 허용된다.
   - 레벨 의미는 **표준 로깅 관례(syslog·log4j)** 를 따른다. Sentry는 레벨 목록만 주고 의미는 정하지 않는다 — 공식 문서의 설명은 "로깅 레벨과 비슷하다"가 전부다.
-  - `reportError(error)` — **연산이 실패로 끝났다.** 유저 데이터가 유실되거나 진행이 막히는 실패 (세션 시작·발화 제출·NPS 제출). catch로 처리돼 Sentry 자동 그물(미처리 예외)에 안 걸리므로 명시 호출이 필요하다.
+  - `reportError(error)` — **연산이 실패로 끝났다.** 유저 데이터가 유실되거나 진행이 막히는 실패 (세션 시작·발화 제출·피드백 전송). catch로 처리돼 Sentry 자동 그물(미처리 예외)에 안 걸리므로 명시 호출이 필요하다.
   - `reportWarning(failure, extra?)` — **비정상이지만 감내하고 계속한다(degraded).** 폴백으로 흐름이 이어지거나 유저가 이미 화면을 떠난 실패 (STT 인식·TTS 합성/재생·속마음 폴백·세션 종료). 백엔드가 같은 org에 있어 장애 상관관계를 엮는 단서가 된다.
 - **유저의 선택은 보고하지 않는다.** 마이크 권한 거부, 빈 발화(아무 말 안 함) 같은 건 결함이 아니다 — 앰플리튜드 몫.
 - **트레이싱은 켜지 않고, 리플레이는 에러 세션만.** 상시 리플레이는 앰플리튜드가 100% 수집 중이라 중복 — Sentry는 `replaysOnErrorSampleRate: 1.0`으로 에러가 난 순간의 직전 구간(최대 60초 버퍼)만 이슈에 첨부한다(평소엔 버퍼만, 전송 없음). warning 이벤트에도 첨부된다 — 저하 실패는 드물어 쿼터 부담이 작고, 문제 되면 그때 `beforeErrorSampling`으로 제한한다. 무료 쿼터(월 50개)를 넘으면 조용히 안 담길 뿐이다. 텍스트는 기본 마스킹(maskAllText) 그대로 둔다 — 발화 원문 보호.
@@ -17,19 +17,19 @@
 
 ## 수집 경로
 
-| 상황                                | 레벨    | 잡는 곳                                                                                               | 유저가 보는 것                        |
-| ----------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| 웹 페이지 렌더 중 예외              | error   | [apps/web/src/app/error.tsx](../apps/web/src/app/error.tsx)                                           | 우는 뱁새 + "다시 시도할게요"         |
-| 루트 레이아웃까지 죽음              | error   | [apps/web/src/app/global-error.tsx](../apps/web/src/app/global-error.tsx) (인라인 스타일 최후 방어선) | 같은 화면                             |
-| 이벤트 핸들러·비동기 예외           | error   | SDK 자동 (unhandled error/rejection)                                                                  | 화면 변화 없음                        |
-| 서버 라우트(RSC·route handler) 예외 | error   | [apps/web/src/instrumentation.ts](../apps/web/src/instrumentation.ts) `onRequestError`                | —                                     |
-| 대화 세션 시작 실패                 | error   | useConversationSession (reportError)                                                                  | 제출 시 토스트                        |
-| 발화 제출 실패                      | error   | useConversationFlow (reportError)                                                                     | 토스트 + 재시도                       |
-| NPS 제출 실패                       | error   | FeedbackSurvey (reportError)                                                                          | 감사 화면 (유실을 숨기므로 보고 필수) |
-| STT 인식 오류 (권한 거부 제외)      | warning | useConversationInput (reportWarning)                                                                  | 토스트                                |
-| TTS 합성·재생 실패                  | warning | useTts (reportWarning)                                                                                | 타이머 폴백으로 대화 계속             |
-| 속마음 생성 실패·시간초과           | warning | useInnerThought (reportWarning)                                                                       | 속마음 생략하고 다음 턴               |
-| 대화 세션 종료(중도 이탈) 실패      | warning | useConversationSession (reportWarning)                                                                | 없음 — 유저는 이미 나감               |
+| 상황                                | 레벨    | 잡는 곳                                                                                               | 유저가 보는 것                              |
+| ----------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 웹 페이지 렌더 중 예외              | error   | [apps/web/src/app/error.tsx](../apps/web/src/app/error.tsx)                                           | 우는 뱁새 + "다시 시도할게요"               |
+| 루트 레이아웃까지 죽음              | error   | [apps/web/src/app/global-error.tsx](../apps/web/src/app/global-error.tsx) (인라인 스타일 최후 방어선) | 같은 화면                                   |
+| 이벤트 핸들러·비동기 예외           | error   | SDK 자동 (unhandled error/rejection)                                                                  | 화면 변화 없음                              |
+| 서버 라우트(RSC·route handler) 예외 | error   | [apps/web/src/instrumentation.ts](../apps/web/src/instrumentation.ts) `onRequestError`                | —                                           |
+| 대화 세션 시작 실패                 | error   | useConversationSession (reportError)                                                                  | 제출 시 토스트                              |
+| 발화 제출 실패                      | error   | useConversationFlow (reportError)                                                                     | 토스트 + 재시도                             |
+| 피드백 전송 실패                    | error   | FeedbackComposeFlow (reportError)                                                                     | 토스트로 재시도 안내 (유실되므로 보고 필수) |
+| STT 인식 오류 (권한 거부 제외)      | warning | useConversationInput (reportWarning)                                                                  | 토스트                                      |
+| TTS 합성·재생 실패                  | warning | useTts (reportWarning)                                                                                | 타이머 폴백으로 대화 계속                   |
+| 속마음 생성 실패·시간초과           | warning | useInnerThought (reportWarning)                                                                       | 속마음 생략하고 다음 턴                     |
+| 대화 세션 종료(중도 이탈) 실패      | warning | useConversationSession (reportWarning)                                                                | 없음 — 유저는 이미 나감                     |
 
 앱(웹뷰) 안에서 웹뷰 프로세스가 통째로 죽는 경우(흰 화면)는 Sentry가 못 잡는다 — 셸의 프로세스 복구 핸들러가 담당한다(별도 작업).
 

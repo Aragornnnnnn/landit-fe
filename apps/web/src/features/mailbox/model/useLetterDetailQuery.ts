@@ -1,5 +1,5 @@
 // 편지 한 통 조회 — 받은 편지와 보낸 피드백은 리소스가 달라 조회도 따로 연다
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { ApiError } from '@/shared/api/api-error';
 import { useAuthStore } from '@/shared/auth/auth-store';
@@ -37,9 +37,21 @@ const useLetterQuery = <T>(
   };
 };
 
-// 받은 편지는 조회가 읽음 처리를 겸한다 — 따로 알릴 API가 없다
-export const useReceivedLetterQuery = (letterId: number) =>
-  useLetterQuery('received', letterId, () => getReceivedLetterDetail(letterId));
+// 받은 편지는 조회가 읽음 처리를 겸한다 — 따로 알릴 API가 없다.
+// 그래서 이 조회가 끝나면 헤더의 미읽음 개수가 낡는다. 개수를 직접 깎지 않고 다시 묻는다 —
+// 이미 읽은 편지를 또 열었는지 응답만 보고는 알 수 없어(열면 언제나 읽음이다) 깎으면 틀린다
+export const useReceivedLetterQuery = (letterId: number) => {
+  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const queryClient = useQueryClient();
+
+  return useLetterQuery('received', letterId, async () => {
+    const letter = await getReceivedLetterDetail(letterId);
+    void queryClient.invalidateQueries({
+      queryKey: mailboxKeys.unread(userId),
+    });
+    return letter;
+  });
+};
 
 export const useSentFeedbackQuery = (feedbackId: number) =>
   useLetterQuery('sent', feedbackId, () => getSentFeedbackDetail(feedbackId));
