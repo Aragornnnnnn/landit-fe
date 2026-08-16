@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
+import { reportError } from '@/shared/monitoring/report';
 
 import { submitFeedback, type FeedbackType } from '../api/mailbox';
 import { mailboxKeys } from './keys';
@@ -16,6 +17,8 @@ export const useSendFeedbackMutation = (type: FeedbackType) => {
 
   return useMutation({
     mutationFn: (content: string) => submitFeedback({ type, content }),
+    // 실패 기록도 여기서 — 화면이 사라진 뒤 실패한 전송은 화면 쪽 콜백이 안 불려 놓친다
+    onError: (error) => reportError(error),
     onSuccess: (_, content) => {
       // 보낸 뒤에만 남긴다 — 실패한 시도가 전송으로 집계되면 지표가 부푼다. 원문은 PII 위험이 있어 길이만
       track(EVENTS.FEEDBACK_SUBMITTED, {

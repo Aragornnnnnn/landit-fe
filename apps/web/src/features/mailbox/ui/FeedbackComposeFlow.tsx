@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
-import { reportError } from '@/shared/monitoring/report';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { showToast } from '@/shared/ui/toast';
 
@@ -41,10 +40,7 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
         // 방금 보낸 편지가 보이는 자리로 데려간다. replace라 뒤로가기가 작성 화면으로 되돌지 않는다
         router.replace(mailboxPath('sent'));
       },
-      onError: (error) => {
-        reportError(error);
-        showToast('보내지 못했어요. 잠시 후 다시 시도해 주세요.');
-      },
+      onError: () => showToast('보내지 못했어요. 잠시 후 다시 시도해 주세요.'),
     });
   };
 
