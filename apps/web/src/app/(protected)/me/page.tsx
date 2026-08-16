@@ -12,7 +12,6 @@ import { withdraw } from '@/shared/auth/api/withdraw';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { clearSession } from '@/shared/auth/clear-session';
 import { homePath } from '@/shared/lib/last-tab';
-import { MAILBOX_PATH } from '@/shared/lib/routes';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { reportWarning } from '@/shared/monitoring/report';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
@@ -166,10 +165,6 @@ export default function MyPage() {
         <div className="space-y-3 px-4 pb-8">
           {/* 알림을 아직 안 켠 유저에게만 보인다 */}
           <NotificationMenuEntry />
-
-          <MenuGroup>
-            <MenuLink href={MAILBOX_PATH} title="편지함" />
-          </MenuGroup>
 
           <MenuGroup>
             <MenuLink href="/privacy" title="개인정보 처리방침" />
