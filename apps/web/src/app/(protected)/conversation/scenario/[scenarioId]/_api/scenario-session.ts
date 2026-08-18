@@ -8,6 +8,7 @@ import type {
   ProcessingStatus,
   SubmittedMessage,
 } from '@/features/conversation/api/session';
+import type { Partner } from '@/features/conversation/model/character-look';
 import { api } from '@/shared/api/client';
 // ttsVoice는 재생(useTts)과 같은 타입을 공유한다
 import type { TtsVoice } from '@/shared/tts/voice';
@@ -38,6 +39,8 @@ export interface ScenarioTalkProgress extends ScenarioTalkStartProgress {
 export interface ScenarioTalkStartResponse {
   sessionId: number;
   scenarioId: number;
+  // 시나리오의 상대. 얼굴은 openingPreview의 같은 값으로 이미 정해져 있어 여기서는 읽지 않는다
+  characterId: Partner | null;
   sessionType: string;
   firstSpeaker: 'AI' | 'USER';
   userOpeningInstruction: string | null;

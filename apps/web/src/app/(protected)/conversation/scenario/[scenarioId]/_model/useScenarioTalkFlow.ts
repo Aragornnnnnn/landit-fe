@@ -22,6 +22,8 @@ import { useScenarioTalkSession } from './useScenarioTalkSession';
 export const useScenarioTalkFlow = (scenario: Scenario) => {
   const preview = scenario.openingPreview;
   const voice = preview?.ttsVoice ?? null;
+  // 상대는 시나리오가 정한다 — 세션 응답을 기다리지 않는다. 배정이 없으면(음성 없는 시나리오) 마르코
+  const partner = preview?.characterId ?? 'marco';
 
   // 오프닝은 세션을 기다리지 않고 시나리오에서 바로 시드한다 — 세션 응답의 첫 발화는 폴백
   const [opening, setOpening] = useState(() =>
@@ -101,6 +103,7 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
 
   return {
     ...engine,
+    partner,
     leave,
     // DONE 시점엔 세션이 확보돼 있다 — 피드백 생성에 쓴다 (없으면 세션 시작이 실패한 경우)
     sessionId: session.sessionId,

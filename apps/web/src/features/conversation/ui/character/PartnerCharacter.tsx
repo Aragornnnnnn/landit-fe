@@ -20,7 +20,7 @@ import styles from './PartnerCharacter.module.css';
 import { PARTS } from './parts-by-partner';
 
 /**
- * partner — 누구를 그릴지. 세션 TTS 음성 성별이 정한다.
+ * partner — 누구를 그릴지. 서버가 내려주는 characterId다.
  * look — 자세와 표정. 둘 다 CSS 클래스가 되어 겹쳐 붙는다.
  * speech — 재생 중인 발화. 있으면 입을 소리에 맞추고, 없으면 음절 흉내로 움직인다.
  */
