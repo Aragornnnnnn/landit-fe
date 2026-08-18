@@ -39,7 +39,7 @@ export const AnalyzeStage = () => (
     transition={{ duration: 0.28 }}
   >
     <h1 className={TITLE_CLASS}>
-      {'방금 대화를 바탕으로\n맞춤형 표현 학습을 만들고 있어요'}
+      {'방금 대화를 분석해\n표현 학습을 만들고 있어요'}
     </h1>
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
       <motion.div
