@@ -57,4 +57,25 @@ describe('SentBody', () => {
     expect(screen.getByText('확인해서 고쳤어요.')).toBeTruthy();
     expect(screen.queryByText('랜딧 팀이 읽고 있어요')).toBeNull();
   });
+
+  it('처리 전(PENDING)인데 답장이 붙어 있으면 답장과 안내를 함께 보여준다', () => {
+    render(
+      <SentBody
+        feedback={{
+          ...pending,
+          replies: [
+            {
+              letterId: 201,
+              title: '답장',
+              bodyText: '확인 중이에요.',
+              sentAt: '2026-08-09T10:00:00',
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(screen.getByText('확인 중이에요.')).toBeTruthy();
+    expect(screen.getByText('랜딧 팀이 읽고 있어요')).toBeTruthy();
+  });
 });
