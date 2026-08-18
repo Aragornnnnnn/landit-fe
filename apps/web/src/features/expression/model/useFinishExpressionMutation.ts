@@ -8,11 +8,14 @@ import { smallTalkKeys } from '@/features/small-talk/model/keys';
 import { finishExpression } from '../api/finish';
 import { expressionKeys } from './keys';
 
-export const useFinishExpressionMutation = (expressionId: number) => {
+export const useFinishExpressionMutation = (
+  expressionId: number,
+  freeTalkSessionId?: number,
+) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => finishExpression(expressionId),
+    mutationFn: () => finishExpression(expressionId, freeTalkSessionId),
     onSuccess: () => {
       // 전역 staleTime(30s)이 있어 명시적 무효화가 없으면 stale locked가 남는다
       void queryClient.invalidateQueries({ queryKey: expressionKeys.all });

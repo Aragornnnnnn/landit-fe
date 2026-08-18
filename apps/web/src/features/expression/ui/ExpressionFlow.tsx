@@ -73,7 +73,11 @@ export const ExpressionFlow = ({
     expressionId,
     !!learning,
   );
-  const finish = useFinishExpressionMutation(expressionId);
+  // 스몰톡 표현은 완료 요청에 세션 ID를 실어야 서버가 기록한다
+  const finish = useFinishExpressionMutation(
+    expressionId,
+    origin.kind === 'session' ? origin.sessionId : undefined,
+  );
 
   // 데이터가 준비돼 실제 학습이 뜬 시점을 시작으로 본다
   const learningReady = Boolean(learning);
