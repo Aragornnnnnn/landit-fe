@@ -116,6 +116,12 @@ const CHARACTERS = {
       ['nose', range(536, 538)],
       ['hair-front', range(539, 588)],
     ],
+    // 벡터화 때 배경(#FDFCFC)이 도형으로 같이 잡혔다 — 어두운 바탕 위에서 흰 얼룩으로 드러난다.
+    // 팔 옆 조각(478·479·486)은 그냥 뺀다. 머리카락 틈 조각(544·559)은 자기보다 앞에 그려진 머리·얼굴을
+    // 가려 틈을 내던 것이라, 빼면 뒷머리가 드러나 머리가 두꺼워진다 — 대신 같은 자리를 구멍(마스크)으로
+    // 파서 배경이 비치게 한다. 눈 흰자(524·527)·이(531)는 같은 색이지만 진짜 흰색이라 남긴다
+    omit: [478, 479, 486],
+    holes: [544, 559],
     headParts: [
       'hair-back',
       'face',
@@ -173,6 +179,8 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
     for (const id of ids) sliceOf.set(id, sliceName);
 
   const buckets = new Map(cfg.slices.map(([n]) => [n, []]));
+  // 구멍 — 노드 번호별 경로와, 그 구멍이 어느 슬라이스의 몇 번째 자리에 있었는지(그 앞의 것만 가린다)
+  const holes = [];
   if (cfg.byIndex) {
     // 순서 기반 — id 없이 내보낸 단순 캐릭터용. slices의 번호가 문서 순서(0부터)다
     paths.forEach((p, index) => {
@@ -182,22 +190,70 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
   } else {
     // id 기반 — 문서 순서대로 슬라이스에 담는다. id 없는 path는 직전 path를 따라간다
     // (피그마에서 수동 보정된 조각들로, 앞 도형의 음영이라 같은 그룹이 맞다)
+    const omit = new Set(cfg.omit ?? []);
+    const holeSet = new Set(cfg.holes ?? []);
     let prevSlice = null;
     for (const p of paths) {
       const m = p.match(/id="Vector(?:_(\d+))?"/);
-      const slice = m
-        ? sliceOf.get(cfg.base + (m[1] ? Number(m[1]) - 1 : 0))
-        : prevSlice;
+      const node = m ? cfg.base + (m[1] ? Number(m[1]) - 1 : 0) : null;
+      if (node !== null && omit.has(node)) continue;
+      const slice = node !== null ? sliceOf.get(node) : prevSlice;
+      if (node !== null && holeSet.has(node)) {
+        if (slice)
+          holes.push({ node, path: p, slice, at: buckets.get(slice).length });
+        continue;
+      }
       if (slice) buckets.get(slice).push(p);
       prevSlice = slice ?? prevSlice;
     }
   }
 
   const headSet = new Set(cfg.headParts);
+  const sliceIndex = new Map(cfg.slices.map(([n], i) => [n, i]));
+
+  // 어떤 경로(슬라이스 s의 j번째)를 가리는 구멍들 — 문서 순서상 뒤에 오는 구멍만.
+  // 머리 파츠는 함께 회전하므로 구멍도 머리 안에서만 판다(몸통에 걸면 머리가 돌 때 어긋난다)
+  const holesOver = (sliceName, j) =>
+    holes.filter(
+      (h) =>
+        headSet.has(h.slice) === headSet.has(sliceName) &&
+        (sliceIndex.get(h.slice) > sliceIndex.get(sliceName) ||
+          (h.slice === sliceName && h.at > j)),
+    );
+  const maskId = (hs) => `${name}-holes-${hs.map((h) => h.node).join('-')}`;
+  const masks = new Map();
+  const maskFor = (hs) => {
+    const id = maskId(hs);
+    if (!masks.has(id)) {
+      const [x, y, w, h] = cfg.viewBox.split(' ');
+      const black = hs.map(
+        (hole) => `      ${hole.path.replace(/fill="[^"]*"/, 'fill="black"')}`,
+      );
+      masks.set(
+        id,
+        `    <mask id="${id}" maskUnits="userSpaceOnUse" x="${x}" y="${y}" width="${w}" height="${h}">\n      <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="white" />\n${black.join('\n')}\n    </mask>`,
+      );
+    }
+    return ` mask="url(#${id})"`;
+  };
+
+  // 같은 구멍 집합에 가려지는 연속 경로를 한 <g mask>로 묶는다 — 슬라이스 그룹 자체는 그대로 둔다
   const groupOf = (sliceName, indent) => {
-    const inner = buckets
-      .get(sliceName)
-      .map((p) => `${indent}  ${p}`)
+    const runs = [];
+    buckets.get(sliceName).forEach((p, j) => {
+      const key = holesOver(sliceName, j)
+        .map((h) => h.node)
+        .join('-');
+      const last = runs.at(-1);
+      if (last && last.key === key) last.paths.push(p);
+      else runs.push({ key, hs: holesOver(sliceName, j), paths: [p] });
+    });
+    const inner = runs
+      .map((run) =>
+        run.hs.length
+          ? `${indent}  <g${maskFor(run.hs)}>\n${run.paths.map((p) => `${indent}    ${p}`).join('\n')}\n${indent}  </g>`
+          : run.paths.map((p) => `${indent}  ${p}`).join('\n'),
+      )
       .join('\n');
     const bake = cfg.bake?.[sliceName];
     // 구운 회전은 전역 transform-box와 충돌하므로 CSS에서 baked 클래스로 예외 처리한다
@@ -234,7 +290,8 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
       pushExtras(sliceName, '    ');
     }
     if (headOpen) body.push('      </g>\n    </g>');
-    return body.join('\n');
+    // 마스크 정의는 본문을 만들며 모인다 — 앞에 둔다
+    return [...masks.values(), ...body].join('\n');
   };
 
   const openTag = `<svg viewBox="${cfg.viewBox}" fill="none" xmlns="http://www.w3.org/2000/svg"`;
