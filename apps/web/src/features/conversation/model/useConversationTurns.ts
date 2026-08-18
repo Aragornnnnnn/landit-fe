@@ -13,7 +13,6 @@ import type { TtsVoice } from '@/shared/tts/voice';
 import { showToast } from '@/shared/ui/toast';
 
 import type { NextMessage, SubmittedMessage } from '../api/session';
-import { toPartner } from './character-look';
 import {
   initialConversationState,
   nextConversationState,
@@ -256,14 +255,10 @@ export const useConversationTurns = ({
     isUserOpening: !currentMessage && Boolean(openingInstruction),
   };
 
-  // 상대 캐릭터는 TTS 음성이 정한다 — 지정(character)이 우선, 없으면 성별
-  const partner = toPartner(voice);
-
   return {
     phase: state.phase,
     turnIndex: state.turnIndex,
     turn,
-    partner,
     finishedThought,
     // 지금 소리 나는 발화 — 캐릭터가 입모양을 맞추는 데 쓴다 (음성이 없으면 null)
     speech: aiSpeech.speech,

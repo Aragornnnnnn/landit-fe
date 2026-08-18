@@ -6,6 +6,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as sessionApi from '@/features/conversation/api/session';
+import type { Partner } from '@/features/conversation/model/character-look';
 import {
   innerThoughtMaxPolls,
   innerThoughtPollMs,
@@ -130,6 +131,7 @@ const scenario = {
     innerThought: null,
     innerThoughtType: null,
     ttsVoice: voice,
+    characterId: 'marco',
   },
 } as unknown as Scenario;
 
@@ -146,16 +148,21 @@ const userScenario = {
   },
 } as unknown as Scenario;
 
-const withVoice = (base: Scenario, ttsVoice: TtsVoice | null): Scenario =>
+const withCharacter = (
+  base: Scenario,
+  characterId: Partner | null,
+  ttsVoice: TtsVoice | null = voice,
+): Scenario =>
   ({
     ...base,
-    openingPreview: { ...base.openingPreview, ttsVoice },
+    openingPreview: { ...base.openingPreview, characterId, ttsVoice },
   }) as unknown as Scenario;
 
 // 세션 시작 응답 — 이제 주로 sessionId·progress 확보용 (오프닝은 openingPreview에서 시드)
 const startResponse = () => ({
   sessionId: 1,
   scenarioId: 10,
+  characterId: 'marco' as const,
   sessionType: 'SCENARIO',
   firstSpeaker: 'AI' as const,
   userOpeningInstruction: null,
@@ -455,13 +462,69 @@ describe('useScenarioTalkFlow', () => {
     expect(result.current.phase).toBe('USER_READY');
   });
 
-  it('ttsVoice 성별이 FEMALE이면 상대가 클로이다', async () => {
+  it('상대는 시나리오의 characterId가 정한다', async () => {
+    // given — 세션 응답을 기다리지 않고 openingPreview 값으로 바로 정해진다
     const { result } = renderHook(() =>
-      useScenarioTalkFlow(withVoice(scenario, { ...voice, gender: 'FEMALE' })),
+      useScenarioTalkFlow(withCharacter(scenario, 'chloe')),
     );
     await act(async () => {});
 
+    // then
     expect(result.current.partner).toBe('chloe');
+  });
+
+  it('마르코가 테디와 같은 TTS 모델을 써도 마르코다', async () => {
+    // given — 음성 모델로 상대를 추측하던 때의 회귀 (마르코=aura-2 hyperion, 테디=aura-2 draco)
+    const auraVoice: TtsVoice = {
+      ...voice,
+      model: 'deepgram/aura-2',
+      providerVoiceId: 'aura-2-hyperion-en',
+    };
+    const { result } = renderHook(() =>
+      useScenarioTalkFlow(withCharacter(scenario, 'marco', auraVoice)),
+    );
+    await act(async () => {});
+
+    // then
+    expect(result.current.partner).toBe('marco');
+  });
+
+  it('테디 시나리오면 테디다', async () => {
+    // given / when
+    const { result } = renderHook(() =>
+      useScenarioTalkFlow(withCharacter(scenario, 'teddy')),
+    );
+    await act(async () => {});
+
+    // then
+    expect(result.current.partner).toBe('teddy');
+  });
+
+  it('세션 시작 응답의 characterId는 얼굴을 바꾸지 않는다 — 시나리오 값으로 즉시 정하고 끝이다', async () => {
+    // given — 세션은 백그라운드로 뒤늦게 오고, 값이 어긋나도 얼굴이 도중에 바뀌면 안 된다
+    startScenarioTalkSession.mockResolvedValue({
+      ...startResponse(),
+      characterId: 'teddy',
+    });
+    const { result } = renderHook(() =>
+      useScenarioTalkFlow(withCharacter(scenario, 'marco')),
+    );
+    await act(async () => {});
+
+    // then
+    expect(result.current.sessionId).toBe(1);
+    expect(result.current.partner).toBe('marco');
+  });
+
+  it('characterId가 없으면 마르코다', async () => {
+    // given — 음성 미배정 시나리오도 대화는 계속된다
+    const { result } = renderHook(() =>
+      useScenarioTalkFlow(withCharacter(scenario, null, null)),
+    );
+    await act(async () => {});
+
+    // then
+    expect(result.current.partner).toBe('marco');
   });
 
   it('제출 응답의 다음 질문을 미리 합성(prefetch)한다', async () => {

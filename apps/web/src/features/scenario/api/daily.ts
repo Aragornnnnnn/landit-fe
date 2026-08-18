@@ -1,4 +1,6 @@
 // 날짜별 시나리오 조회 — 오늘 배정분 또는 그 날 최초 완료한 시나리오 하나 (백엔드 DailyScenarioResponse 미러)
+// 상대 캐릭터는 대화 도메인 개념이라 그쪽 타입을 그대로 쓴다 — 스몰톡 API도 같은 이유로 가로 import
+import type { Partner } from '@/features/conversation/model/character-look';
 import { api } from '@/shared/api/client';
 import type { TtsVoice } from '@/shared/tts/voice';
 
@@ -9,6 +11,8 @@ export interface ScenarioOpeningPreview {
   innerThought: string | null;
   innerThoughtType: string | null;
   ttsVoice: TtsVoice | null; // 활성 시나리오 TTS 음성 (세션 시작 ttsVoice와 동일 구조)
+  // 이 시나리오의 상대. 얼굴은 이 값으로 정한다 — 세션 시작 응답에도 같은 값이 오지만 그건 백그라운드라 늦다
+  characterId: Partner | null;
 }
 
 // NEW = 처음 받는 시나리오, RETRY = 전날 시작했다 못 끝내 다시 받는 것, CLEARED = 그 날 최초 완료한 것
