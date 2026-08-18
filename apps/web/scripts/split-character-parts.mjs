@@ -192,20 +192,34 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
     // (피그마에서 수동 보정된 조각들로, 앞 도형의 음영이라 같은 그룹이 맞다)
     const omit = new Set(cfg.omit ?? []);
     const holeSet = new Set(cfg.holes ?? []);
+    // 설정한 노드가 하나도 안 걸리면 조용히 넘어가지 않는다 — 재export로 번호가 밀리면 흰 얼룩이 소리 없이 돌아온다
+    const matched = new Set();
     let prevSlice = null;
     for (const p of paths) {
       const m = p.match(/id="Vector(?:_(\d+))?"/);
       const node = m ? cfg.base + (m[1] ? Number(m[1]) - 1 : 0) : null;
-      if (node !== null && omit.has(node)) continue;
       const slice = node !== null ? sliceOf.get(node) : prevSlice;
+      // 빼거나 구멍으로 쓰는 경로도 "직전 경로"다 — 뒤따르는 id 없는 조각이 그 슬라이스를 물려받아야 한다
+      prevSlice = slice ?? prevSlice;
+      if (node !== null && omit.has(node)) {
+        matched.add(node);
+        continue;
+      }
       if (node !== null && holeSet.has(node)) {
+        matched.add(node);
+        if (!/\bfill="/.test(p))
+          throw new Error(
+            `${name}: 구멍 ${node}에 fill이 없어 마스크로 못 쓴다`,
+          );
         if (slice)
           holes.push({ node, path: p, slice, at: buckets.get(slice).length });
         continue;
       }
       if (slice) buckets.get(slice).push(p);
-      prevSlice = slice ?? prevSlice;
     }
+    const missing = [...omit, ...holeSet].filter((n) => !matched.has(n));
+    if (missing.length)
+      throw new Error(`${name}: omit/holes에 없는 노드 ${missing.join(', ')}`);
   }
 
   const headSet = new Set(cfg.headParts);
@@ -220,33 +234,34 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
         (sliceIndex.get(h.slice) > sliceIndex.get(sliceName) ||
           (h.slice === sliceName && h.at > j)),
     );
-  const maskId = (hs) => `${name}-holes-${hs.map((h) => h.node).join('-')}`;
+  // 마스크 id는 인스턴스마다 다르다(같은 화면에 아바타·초상화로 두 번 그려진다) — 컴포넌트가 useId로 앞머리를 붙인다.
+  // 마스크 영역은 넉넉히 잡는다 — 소비처가 viewBox를 더 넓게 덮어써도 마스크 밖이라고 잘려 나가면 안 된다.
+  // 구멍 경로의 id는 뗀다 — 같은 구멍이 여러 마스크에 들어가면 id가 겹친다
   const masks = new Map();
   const maskFor = (hs) => {
-    const id = maskId(hs);
-    if (!masks.has(id)) {
-      const [x, y, w, h] = cfg.viewBox.split(' ');
+    const key = `holes-${hs.map((h) => h.node).join('-')}`;
+    if (!masks.has(key)) {
       const black = hs.map(
-        (hole) => `      ${hole.path.replace(/fill="[^"]*"/, 'fill="black"')}`,
+        (hole) =>
+          `      ${hole.path.replace(/\s+id="[^"]*"/, '').replace(/fill="[^"]*"/, 'fill="black"')}`,
       );
       masks.set(
-        id,
-        `    <mask id="${id}" maskUnits="userSpaceOnUse" x="${x}" y="${y}" width="${w}" height="${h}">\n      <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="white" />\n${black.join('\n')}\n    </mask>`,
+        key,
+        `    <mask id={\`\${uid}${key}\`} maskUnits="userSpaceOnUse" x="-10000" y="-10000" width="20000" height="20000">\n      <rect x="-10000" y="-10000" width="20000" height="20000" fill="white" />\n${black.join('\n')}\n    </mask>`,
       );
     }
-    return ` mask="url(#${id})"`;
+    return ` mask={\`url(#\${uid}${key})\`}`;
   };
 
   // 같은 구멍 집합에 가려지는 연속 경로를 한 <g mask>로 묶는다 — 슬라이스 그룹 자체는 그대로 둔다
   const groupOf = (sliceName, indent) => {
     const runs = [];
     buckets.get(sliceName).forEach((p, j) => {
-      const key = holesOver(sliceName, j)
-        .map((h) => h.node)
-        .join('-');
+      const hs = holesOver(sliceName, j);
+      const key = hs.map((h) => h.node).join('-');
       const last = runs.at(-1);
       if (last && last.key === key) last.paths.push(p);
-      else runs.push({ key, hs: holesOver(sliceName, j), paths: [p] });
+      else runs.push({ key, hs, paths: [p] });
     });
     const inner = runs
       .map((run) =>
@@ -295,22 +310,37 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
   };
 
   const openTag = `<svg viewBox="${cfg.viewBox}" fill="none" xmlns="http://www.w3.org/2000/svg"`;
+  const body = toJsx(buildBody());
 
-  // 파츠를 움직여야 하므로 컴포넌트로 인라인한다
+  // 파츠를 움직여야 하므로 컴포넌트로 인라인한다. 마스크가 있으면 useId로 인스턴스마다 다른 id를 앞머리에 붙인다
+  // (useId 값의 구두점은 뗀다 — url(#…) 안에서 안전하게, 고유성은 그대로다)
+  const component = masks.size
+    ? `import { useId, type SVGProps } from 'react';
+
+export const ${cfg.component} = (props: SVGProps<SVGSVGElement>) => {
+  const uid = useId().replace(/[^A-Za-z0-9_-]/g, '');
+  return (
+    ${openTag} {...props}>
+${body.replace(/^/gm, '  ')}
+    </svg>
+  );
+};
+`
+    : `import type { SVGProps } from 'react';
+
+export const ${cfg.component} = (props: SVGProps<SVGSVGElement>) => (
+  ${openTag} {...props}>
+${body}
+  </svg>
+);
+`;
   writeFileSync(
     new URL(
       `../src/features/conversation/ui/character/${cfg.out}`,
       import.meta.url,
     ),
     `// ${cfg.label} 캐릭터 파츠 — 생성 파일이라 직접 고치지 말고 scripts/split-character-parts.mjs를 고쳐 다시 생성한다
-import type { SVGProps } from 'react';
-
-export const ${cfg.component} = (props: SVGProps<SVGSVGElement>) => (
-  ${openTag} {...props}>
-${toJsx(buildBody())}
-  </svg>
-);
-`,
+${component}`,
   );
 
   const total = [...buckets.values()].reduce((s, b) => s + b.length, 0);
