@@ -1,4 +1,5 @@
 // 날짜별 시나리오 조회 — 오늘 배정분 또는 그 날 최초 완료한 시나리오 하나 (백엔드 DailyScenarioResponse 미러)
+// 상대 캐릭터는 대화 도메인 개념이라 그쪽 타입을 그대로 쓴다 — 스몰톡 API도 같은 이유로 가로 import
 import type { Partner } from '@/features/conversation/model/character-look';
 import { api } from '@/shared/api/client';
 import type { TtsVoice } from '@/shared/tts/voice';
