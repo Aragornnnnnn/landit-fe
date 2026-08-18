@@ -57,12 +57,17 @@ export const usePartnerGreeting = () => {
     setSmileCount((count) => count + 1);
   };
 
+  // 인사와 웃음은 짝이다 — 멈출 땐 둘 다 멈춰야 새 상대에게 앞 사람의 웃음 타이머가 남지 않는다
+  const stopGreeting = () => {
+    setGreeting(false);
+    setSmileCount(0);
+  };
+
   // 상대를 바꾸면 새 상대는 서 있기만 한다 — 하던 인사는 멈춘다.
   // 안 멈추면 바뀐 문구로 재생 훅이 곧장 새 인사를 시작해 "저절로 말하는" 셈이 된다
   const selectPartner = (next: Partner) => {
     setPartnerId(next);
-    setGreeting(false);
-    setSmileCount(0);
+    stopGreeting();
   };
 
   return { partner, look, speech, greet, selectPartner };

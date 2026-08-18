@@ -3,6 +3,7 @@
 // 스몰톡 탭 — 대화 상대를 고르고, 내가 먼저 걸거나 상대가 주제로 먼저 걸게 한다. 정답도 점수도 없는 대화다
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
 import { PartnerCharacter } from '@/features/conversation/ui/character/PartnerCharacter';
@@ -14,16 +15,9 @@ import { SMALLTALK_HISTORY_PATH, smallTalkPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 
-import {
-  hasSeenIntroGuide,
-  markIntroGuideSeen,
-} from './_model/intro-guide-seen';
-import {
-  hasSeenTapGreeting,
-  markTapGreetingSeen,
-} from './_model/tap-greeting-seen';
+import { useGreetingCoach } from './_model/useGreetingCoach';
 import { usePartnerGreeting } from './_model/usePartnerGreeting';
-import { GreetingCoach } from './_ui/GreetingCoach';
+import { CoachBubble, CoachDim } from './_ui/GreetingCoach';
 import { IntroGuide } from './_ui/IntroGuide';
 import { PartnerIntroCard } from './_ui/PartnerIntroCard';
 import { PartnerPicker } from './_ui/PartnerPicker';
@@ -35,27 +29,10 @@ export default function SmallTalkPage() {
   // 오늘 예산을 다 썼는지는 서버(canStart)가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
   const exhausted = main !== null && !main.canStart;
   const [topicOpen, setTopicOpen] = useState(false);
-  // 처음 들어온 사람에겐 안내부터. 서버 렌더엔 localStorage가 없어 안 본 것으로 두고,
-  // 하이드레이션 뒤 첫 상태 계산에서 본 기록이 반영된다
-  const [guideOpen, setGuideOpen] = useState(() => !hasSeenIntroGuide());
   const { partner, look, speech, greet, selectPartner } = usePartnerGreeting();
-
-  // 캐릭터를 누르면 인사한다는 건 한 번만 가르친다 — 안내를 닫은 뒤 화면을 어둡게 하고 캐릭터만 눌리게 둔다.
-  // 눌러서 인사를 들으면 배운 것이다
-  const [coachOpen, setCoachOpen] = useState(() => !hasSeenTapGreeting());
-  const coaching = !guideOpen && coachOpen;
-
-  const closeGuide = () => {
-    markIntroGuideSeen();
-    setGuideOpen(false);
-  };
-
-  const tapPartner = () => {
-    greet();
-    if (!coachOpen) return;
-    markTapGreetingSeen();
-    setCoachOpen(false);
-  };
+  // 처음 들어온 사람에겐 래디 안내부터, 닫으면 캐릭터를 눌러 보라는 코치마크 — 둘 다 기기당 한 번이다
+  const { guideOpen, coaching, closeGuide, tapPartner, partnerRef, trapFocus } =
+    useGreetingCoach({ onTap: greet });
 
   // 계측은 세션이 실제로 열리는 대화 화면에서 한다 — 여기서 쏘면 들어가다 만 것도 시작으로 잡힌다
   const startWithMe = () =>
@@ -108,17 +85,22 @@ export default function SmallTalkPage() {
 
       {/* 이 화면은 스크롤이 없다 — 남는 자리는 캐릭터가 먹되 아래위로 한계를 둔다.
           낮은 화면에서 먼저 양보하는 쪽은 캐릭터가 아니라 소개 카드다(글자·여백을 줄인다) */}
-      {/* 캐릭터는 눌리는 것이다 — 누르면 자기소개를 한다. 코치마크가 켜진 동안은 딤 위(z-50)로 올라와
+      {/* 캐릭터는 눌리는 것이다 — 누르면 자기소개를 한다. 코치마크가 켜진 동안은 딤(z-40) 위 z-50으로 올라와
           화면에서 유일하게 눌리는 것이 되고, 말풍선 한마디가 붙는다. 눌린 느낌은 살짝 눌리는 크기로 준다 */}
       <button
+        ref={partnerRef}
         type="button"
         onClick={tapPartner}
+        onKeyDown={trapFocus}
         aria-label={`${partner.koreanName} 인사 듣기`}
-        className={`relative flex max-h-[190px] min-h-[142px] flex-1 justify-center transition-transform active:scale-[0.97] ${
-          coaching ? 'z-50' : ''
-        }`}
+        className={[
+          'relative flex max-h-[190px] min-h-[142px] flex-1 justify-center transition-transform active:scale-[0.97]',
+          coaching && 'z-50',
+        ]
+          .filter(Boolean)
+          .join(' ')}
       >
-        {coaching && <GreetingCoach.Bubble />}
+        <AnimatePresence>{coaching && <CoachBubble />}</AnimatePresence>
         <PartnerCharacter
           partner={partner.id}
           look={look}
@@ -190,7 +172,7 @@ export default function SmallTalkPage() {
       )}
 
       {guideOpen && <IntroGuide onClose={closeGuide} />}
-      {coaching && <GreetingCoach.Dim />}
+      <AnimatePresence>{coaching && <CoachDim />}</AnimatePresence>
 
       <TopicPickerModal
         open={topicOpen}
