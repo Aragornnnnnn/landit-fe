@@ -1,4 +1,5 @@
-// 스몰톡 홈의 인사 — 고른 상대가 자기소개를 하고, 그동안의 자세·표정이 함께 정해진다.
+// 스몰톡 홈의 인사 — 캐릭터를 누르면 고른 상대가 자기소개를 하고, 그동안의 자세·표정이 함께 정해진다.
+// 저절로 시작하지 않는다 — 소리는 눌러서 듣는 것이라 놀라지 않고, 브라우저의 소리 재생 제약(제스처)도 자연히 푼다.
 // 상대·인사·표정이 늘 같이 움직여서 한 훅에 묶는다 — 하나만 바꾸면 나머지가 어긋난다
 'use client';
 
@@ -17,19 +18,14 @@ import {
 // 인사 첫머리만 웃는 얼굴 — 말하는 내내 웃고 있으면 표정이 아니라 그림이 된다
 const GREETING_SMILE_MS = 2000;
 
-/** greetsOnMount는 첫 렌더에서만 읽는다 — 안내를 이미 본 기기는 들어오자마자 인사가 시작된다 */
-export const usePartnerGreeting = ({
-  greetsOnMount,
-}: {
-  greetsOnMount: boolean;
-}) => {
+export const usePartnerGreeting = () => {
   const [partnerId, setPartnerId] = useState<Partner>(DEFAULT_PARTNER);
-  // 안내를 닫은 뒤 상대가 자기소개를 한다. 상대를 바꾸면 새로 고른 사람이 다시 말한다
-  const [greeting, setGreeting] = useState(greetsOnMount);
+  // 캐릭터를 누르면 자기소개를 한다. 끝나면 다시 눌러야 다시 말한다
+  const [greeting, setGreeting] = useState(false);
   // 웃는 얼굴은 인사보다 짧게 스친다 — 발화가 끝나기 전에 평소 표정으로 돌아온다.
-  // 참/거짓 대신 인사 횟수를 세는 이유 — 웃는 중에 상대를 바꾸면 참을 다시 넣어도 값이 그대로라
+  // 참/거짓 대신 인사 횟수를 세는 이유 — 웃는 중에 다시 인사하면 참을 다시 넣어도 값이 그대로라
   // 타이머가 안 걸리고 앞 인사의 남은 시간만 쓰게 된다
-  const [smileCount, setSmileCount] = useState(greetsOnMount ? 1 : 0);
+  const [smileCount, setSmileCount] = useState(0);
   const smiling = smileCount > 0;
 
   useEffect(() => {
@@ -61,9 +57,12 @@ export const usePartnerGreeting = ({
     setSmileCount((count) => count + 1);
   };
 
+  // 상대를 바꾸면 새 상대는 서 있기만 한다 — 하던 인사는 멈춘다.
+  // 안 멈추면 바뀐 문구로 재생 훅이 곧장 새 인사를 시작해 "저절로 말하는" 셈이 된다
   const selectPartner = (next: Partner) => {
     setPartnerId(next);
-    greet();
+    setGreeting(false);
+    setSmileCount(0);
   };
 
   return { partner, look, speech, greet, selectPartner };

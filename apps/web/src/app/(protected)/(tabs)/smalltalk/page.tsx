@@ -18,7 +18,12 @@ import {
   hasSeenIntroGuide,
   markIntroGuideSeen,
 } from './_model/intro-guide-seen';
+import {
+  hasSeenTapGreeting,
+  markTapGreetingSeen,
+} from './_model/tap-greeting-seen';
 import { usePartnerGreeting } from './_model/usePartnerGreeting';
+import { GreetingCoach } from './_ui/GreetingCoach';
 import { IntroGuide } from './_ui/IntroGuide';
 import { PartnerIntroCard } from './_ui/PartnerIntroCard';
 import { PartnerPicker } from './_ui/PartnerPicker';
@@ -30,17 +35,26 @@ export default function SmallTalkPage() {
   // 오늘 예산을 다 썼는지는 서버(canStart)가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
   const exhausted = main !== null && !main.canStart;
   const [topicOpen, setTopicOpen] = useState(false);
-  // 처음 들어온 사람에겐 안내부터 — 닫아야 인사가 시작된다. 서버 렌더엔 localStorage가 없어 안 본 것으로 두고,
+  // 처음 들어온 사람에겐 안내부터. 서버 렌더엔 localStorage가 없어 안 본 것으로 두고,
   // 하이드레이션 뒤 첫 상태 계산에서 본 기록이 반영된다
   const [guideOpen, setGuideOpen] = useState(() => !hasSeenIntroGuide());
-  const { partner, look, speech, greet, selectPartner } = usePartnerGreeting({
-    greetsOnMount: !guideOpen,
-  });
+  const { partner, look, speech, greet, selectPartner } = usePartnerGreeting();
+
+  // 캐릭터를 누르면 인사한다는 건 한 번만 가르친다 — 안내를 닫은 뒤 화면을 어둡게 하고 캐릭터만 눌리게 둔다.
+  // 눌러서 인사를 들으면 배운 것이다
+  const [coachOpen, setCoachOpen] = useState(() => !hasSeenTapGreeting());
+  const coaching = !guideOpen && coachOpen;
 
   const closeGuide = () => {
     markIntroGuideSeen();
     setGuideOpen(false);
+  };
+
+  const tapPartner = () => {
     greet();
+    if (!coachOpen) return;
+    markTapGreetingSeen();
+    setCoachOpen(false);
   };
 
   // 계측은 세션이 실제로 열리는 대화 화면에서 한다 — 여기서 쏘면 들어가다 만 것도 시작으로 잡힌다
@@ -94,14 +108,24 @@ export default function SmallTalkPage() {
 
       {/* 이 화면은 스크롤이 없다 — 남는 자리는 캐릭터가 먹되 아래위로 한계를 둔다.
           낮은 화면에서 먼저 양보하는 쪽은 캐릭터가 아니라 소개 카드다(글자·여백을 줄인다) */}
-      <div className="flex max-h-[190px] min-h-[142px] flex-1 justify-center">
+      {/* 캐릭터는 눌리는 것이다 — 누르면 자기소개를 한다. 코치마크가 켜진 동안은 딤 위(z-50)로 올라와
+          화면에서 유일하게 눌리는 것이 되고, 말풍선 한마디가 붙는다. 눌린 느낌은 살짝 눌리는 크기로 준다 */}
+      <button
+        type="button"
+        onClick={tapPartner}
+        aria-label={`${partner.koreanName} 인사 듣기`}
+        className={`relative flex max-h-[190px] min-h-[142px] flex-1 justify-center transition-transform active:scale-[0.97] ${
+          coaching ? 'z-50' : ''
+        }`}
+      >
+        {coaching && <GreetingCoach.Bubble />}
         <PartnerCharacter
           partner={partner.id}
           look={look}
           speech={speech}
           viewBox={partner.portraitViewBox}
         />
-      </div>
+      </button>
 
       {/* 소개 길이가 상대마다 달라 카드 높이도 다르다(174~198) — 그 차이는 위 캐릭터 칸이 흡수하므로
           여기서 자리를 미리 잡아 둘 필요가 없다. 아래 버튼은 어느 상대에서도 제자리다 */}
@@ -166,6 +190,7 @@ export default function SmallTalkPage() {
       )}
 
       {guideOpen && <IntroGuide onClose={closeGuide} />}
+      {coaching && <GreetingCoach.Dim />}
 
       <TopicPickerModal
         open={topicOpen}
