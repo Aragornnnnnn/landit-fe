@@ -70,9 +70,12 @@ export const MicControl = ({
                   transition={{ duration: 1.2, repeat: Infinity }}
                 />
               ) : (
-                // 12시 방향에서 시작해 시계 방향으로 줄어든다. 1초에 한 번 갱신되는 값이라 그만큼 이어 그린다
+                // 12시 방향에서 시작해 시계 방향으로 줄어든다. 1초에 한 번 갱신되는 값이라 그만큼 이어 그린다.
+                // 크기는 명시한다 — inset만 주면 WebKit이 svg를 늘리지 않고 버튼 폭에 맞춰 링이 왼쪽 위로 밀린다
                 <svg
                   className="pointer-events-none absolute -inset-1.5 -rotate-90"
+                  width={RING_SIZE}
+                  height={RING_SIZE}
                   viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}
                   aria-hidden
                 >
