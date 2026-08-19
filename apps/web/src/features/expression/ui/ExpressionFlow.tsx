@@ -152,6 +152,7 @@ export const ExpressionFlow = ({
     return (
       <>
         <QuizStep
+          step="quiz"
           quiz={quiz}
           expressionId={expressionId}
           leftAction="close"
@@ -205,6 +206,7 @@ export const ExpressionFlow = ({
 
   return (
     <QuizStep
+      step="review"
       // 문제가 바뀌면(이론상 폴백→practice 교체) 상태를 통째로 리셋한다
       key={reviewQuiz.writingSentenceText}
       quiz={reviewQuiz}

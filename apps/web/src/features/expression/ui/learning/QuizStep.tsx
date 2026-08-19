@@ -3,7 +3,7 @@
 // 듀오링고식 단어 선택 퀴즈 — 뱅크에서 단어를 순서대로 골라 문장을 완성하고 판정, 결과는 하단 슬라이드업 시트로 띄운다
 // QUIZ·REVIEW 두 스텝이 공용으로 쓴다(진행바 구간·칩 선택 복원·정답 연출은 props로 스텝별로 갈라진다)
 import { useEffect, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type QuizStepKind } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
@@ -19,7 +19,15 @@ import { QuizPrompt } from '../common/QuizPrompt';
 import { StepScaffold } from '../common/StepScaffold';
 import { ResultSheet } from './ResultSheet';
 
+// 제출 이벤트는 스텝마다 다르다 — 복습을 퀴즈로 세지 않게
+const SUBMIT_EVENT = {
+  quiz: EVENTS.QUIZ_ANSWER_SUBMITTED,
+  review: EVENTS.REVIEW_ANSWER_SUBMITTED,
+} as const;
+
 interface QuizStepProps {
+  // 어느 스텝의 퀴즈인지 — 제출·힌트 이벤트가 이 값으로 갈린다. 빠뜨리면 오귀속이라 기본값을 두지 않는다
+  step: QuizStepKind;
   quiz: SentenceQuiz;
   // 계측 속성용 — 어떤 표현의 퀴즈인지
   expressionId: number;
@@ -49,6 +57,7 @@ const CHIP_STYLE =
   'active:translate-y-[3px] active:shadow-none';
 
 export const QuizStep = ({
+  step,
   quiz,
   expressionId,
   onBack,
@@ -87,7 +96,7 @@ export const QuizStep = ({
     bank.find((chip) => chip.id === id)?.word ?? '';
 
   const showHint = () => {
-    track(EVENTS.HINT_USED, { source: 'quiz', level: 1 });
+    track(EVENTS.HINT_USED, { source: step, level: 1 });
     setHintActive(true);
     setHintUsed(true);
   };
@@ -116,7 +125,7 @@ export const QuizStep = ({
     const tone = isWordsCorrect(selected.map(wordOf), answer)
       ? 'correct'
       : 'wrong';
-    track(EVENTS.QUIZ_ANSWER_SUBMITTED, {
+    track(SUBMIT_EVENT[step], {
       expression_id: expressionId,
       is_correct: tone === 'correct',
       hint_level: hintUsed ? 1 : 0,

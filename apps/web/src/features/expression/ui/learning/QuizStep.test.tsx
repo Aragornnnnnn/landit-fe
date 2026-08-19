@@ -3,6 +3,8 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { track } from '@/shared/analytics';
+
 import type { SentenceQuiz } from '../../model/sentence-quiz';
 import { QuizStep } from './QuizStep';
 
@@ -36,6 +38,7 @@ describe('QuizStep', () => {
     const user = userEvent.setup();
     render(
       <QuizStep
+        step="quiz"
         quiz={quiz}
         expressionId={1}
         onBack={vi.fn()}
@@ -53,6 +56,7 @@ describe('QuizStep', () => {
     const user = userEvent.setup();
     render(
       <QuizStep
+        step="quiz"
         quiz={quiz}
         expressionId={1}
         onBack={vi.fn()}
@@ -72,6 +76,7 @@ describe('QuizStep', () => {
     const user = userEvent.setup();
     render(
       <QuizStep
+        step="quiz"
         quiz={quiz}
         expressionId={1}
         onBack={vi.fn()}
@@ -90,6 +95,7 @@ describe('QuizStep', () => {
   it('initialSelected로 고른 칩을 복원해 바로 확인할 수 있다', () => {
     render(
       <QuizStep
+        step="quiz"
         quiz={quiz}
         expressionId={1}
         onBack={vi.fn()}
@@ -106,6 +112,7 @@ describe('QuizStep', () => {
     const onSelectedChange = vi.fn();
     render(
       <QuizStep
+        step="quiz"
         quiz={quiz}
         expressionId={1}
         onBack={vi.fn()}
@@ -117,5 +124,72 @@ describe('QuizStep', () => {
     await user.click(screen.getByRole('button', { name: 'I' }));
 
     expect(onSelectedChange).toHaveBeenLastCalledWith([1]);
+  });
+
+  // 퀴즈·복습이 같은 컴포넌트를 쓰므로 스텝별로 다른 이벤트로 갈라져야 한다 — 안 그러면 복습이 퀴즈로 집계된다
+  describe('계측', () => {
+    it('퀴즈 스텝에서 확인하면 Quiz Answer Submitted로 찍는다', async () => {
+      const user = userEvent.setup();
+      render(
+        <QuizStep
+          step="quiz"
+          quiz={quiz}
+          expressionId={7}
+          onBack={vi.fn()}
+          onNext={vi.fn()}
+        />,
+      );
+
+      await pickCorrectAnswer(user);
+      await user.click(screen.getByRole('button', { name: '확인할게요' }));
+
+      expect(track).toHaveBeenCalledWith('Quiz Answer Submitted', {
+        expression_id: 7,
+        is_correct: true,
+        hint_level: 0,
+      });
+    });
+
+    it('복습 스텝에서 확인하면 Review Answer Submitted로 찍는다', async () => {
+      const user = userEvent.setup();
+      render(
+        <QuizStep
+          step="review"
+          quiz={quiz}
+          expressionId={7}
+          onBack={vi.fn()}
+          onNext={vi.fn()}
+        />,
+      );
+
+      await pickWrongAnswer(user);
+      await user.click(screen.getByRole('button', { name: '확인할게요' }));
+
+      expect(track).toHaveBeenCalledWith('Review Answer Submitted', {
+        expression_id: 7,
+        is_correct: false,
+        hint_level: 0,
+      });
+    });
+
+    it('복습 스텝에서 힌트를 보면 source가 review로 찍힌다', async () => {
+      const user = userEvent.setup();
+      render(
+        <QuizStep
+          step="review"
+          quiz={quiz}
+          expressionId={7}
+          onBack={vi.fn()}
+          onNext={vi.fn()}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /힌트 보기/ }));
+
+      expect(track).toHaveBeenCalledWith('Hint Used', {
+        source: 'review',
+        level: 1,
+      });
+    });
   });
 });
