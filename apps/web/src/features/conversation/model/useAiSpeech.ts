@@ -83,9 +83,10 @@ export const useAiSpeech = ({
         onStart: startLipSync,
         onEnd: finish,
         onError: () => {
+          // 이미 떠난 뒤 도착한 실패는 세지도, 되살리지도 않는다
+          if (cancelled) return;
           track(EVENTS.SPEECH_PLAYBACK_FAILED, { source: 'opening_mp3' });
           setSpeech(null);
-          if (cancelled) return;
           stop = startSpeaking();
         },
       });

@@ -178,13 +178,14 @@ describe('useAiSpeech', () => {
     expect(ttsMock.stop).toHaveBeenCalled();
   });
 
-  it('발화 단계를 벗어난 뒤 도착한 오프닝 실패는 재생을 되살리지 않는다', () => {
+  it('발화 단계를 벗어난 뒤 도착한 오프닝 실패는 실패로 세지도, 재생을 되살리지도 않는다', () => {
     // 정리(cleanup)가 끝난 뒤 mp3 실패가 뒤늦게 도착하면, 폴백을 시작할 주체가 이미 없다
     const { rerender, onSpeechEnd, initialProps } = renderSpeech();
 
     rerender({ ...initialProps, playing: false }); // 이탈 — 정리 완료
     act(() => ttsMock.state.onError?.()); // 그 뒤에야 도착한 정적 파일 실패
 
+    expect(track).not.toHaveBeenCalled();
     expect(ttsMock.speak).not.toHaveBeenCalled();
     act(() => {
       vi.advanceTimersByTime(speechTypingMs(OPENING) + speechEndPauseMs);
