@@ -53,6 +53,7 @@ export const SmallTalkConversation = ({
   const [introDismissed, setIntroDismissed] = useState(false);
   const {
     phase,
+    turnIndex,
     turn,
     finishedThought,
     speech,
@@ -117,12 +118,20 @@ export const SmallTalkConversation = ({
       <CharacterStage partner={partner} look={characterLook} speech={speech} />
 
       <section className="flex min-h-0 flex-1 flex-col px-5">
-        <div className="min-h-0 flex-1 overflow-y-auto [mask-image:linear-gradient(to_bottom,transparent,#000_1.25rem)] pt-5 [-webkit-mask-image:linear-gradient(to_bottom,transparent,#000_1.25rem)]">
+        {/* 카드가 남는 높이를 다 쓰되 넘치진 않는다 — 넘치는 글은 카드 안에서 스크롤된다 */}
+        <div className="flex min-h-0 flex-1 flex-col pt-2">
           <QuestionCard
             question={turn.aiMessage}
             translation={turn.aiTranslation}
             speaking={phase === 'AI_SPEAKING'}
             instruction={turn.isUserOpening}
+            onTranslationToggled={(opened) =>
+              track(EVENTS.TRANSLATION_TOGGLED, {
+                session_id: session.sessionId,
+                turn_index: turnIndex,
+                opened,
+              })
+            }
           />
         </div>
         {ended ? (
@@ -153,7 +162,7 @@ export const SmallTalkConversation = ({
           <>
             {/* 남은 시간은 말하기 직전에 보여야 하는 값이라 마이크 바로 위에 둔다.
                 0이 돼도 하던 말은 끊지 않고, 그 발화를 끝으로 상대가 대화를 마무리한다 */}
-            <p className="mt-4 mb-1 text-center text-sm font-medium text-muted-foreground">
+            <p className="mt-1 text-center text-sm font-medium text-muted-foreground">
               남은 말하기 시간{' '}
               <span className="font-bold text-primary">
                 {toCountdownLabel(remainingMs)}
