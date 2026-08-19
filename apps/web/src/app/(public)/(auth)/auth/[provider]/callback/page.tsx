@@ -16,6 +16,8 @@ import {
 } from '@/shared/auth/web-social-login';
 import { SCENARIO_PATH } from '@/shared/lib/routes';
 
+import { LoginScreen } from '../../../_ui/LoginScreen';
+
 const WEB_PROVIDERS: WebSocialProvider[] = ['kakao', 'google'];
 const isWebProvider = (value: string): value is WebSocialProvider =>
   (WEB_PROVIDERS as string[]).includes(value);
@@ -141,24 +143,12 @@ export default function SocialLoginCallbackPage({
     run();
   }, [provider, code, state, error, router, setAuth]);
 
+  // 떠났던 로그인 화면으로 돌아온다 — 교환이 도는 동안은 눌렀던 제공자 버튼이 로그인 중이고,
+  // 실패하면 그 화면 위에 이유를 보여주고 버튼을 풀어 바로 다시 누를 수 있게 한다
   return (
-    <main className="mx-auto flex h-dvh max-w-[430px] flex-col items-center justify-center gap-6 bg-background px-6 text-center">
-      {message ? (
-        <>
-          <p className="text-sm font-medium text-destructive">{message}</p>
-          <button
-            type="button"
-            className="rounded-lg bg-foreground px-5 py-2.5 text-sm font-semibold text-background"
-            onClick={() => router.replace('/login')}
-          >
-            로그인으로 돌아가기
-          </button>
-        </>
-      ) : (
-        <p className="text-sm font-medium text-muted-foreground">
-          로그인 중이에요…
-        </p>
-      )}
-    </main>
+    <LoginScreen
+      pending={message ? null : isWebProvider(provider) ? provider : null}
+      error={message}
+    />
   );
 }

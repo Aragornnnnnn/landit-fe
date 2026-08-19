@@ -1,6 +1,7 @@
 // 로그인 화면 본체 — /login과 소셜 로그인 콜백이 같은 화면을 그린다. 콜백은 돌아온 자리에서 버튼 로딩 상태로 이어받는다
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
+import type { SocialProvider } from '../_model/useSocialLogin';
 import styles from './login-motion.module.css';
 import { SocialLoginButtons } from './SocialLoginButtons';
 
@@ -15,7 +16,16 @@ const splashSkip = `
   } catch (e) {}
 `;
 
-export const LoginScreen = ({ children }: { children?: React.ReactNode }) => (
+export const LoginScreen = ({
+  pending,
+  error,
+  children,
+}: {
+  // 바깥에서 진행 중인 로그인(콜백) — 그 제공자 버튼이 로그인 중으로 그려진다
+  pending?: SocialProvider | null;
+  error?: string | null;
+  children?: React.ReactNode;
+}) => (
   <main className="relative mx-auto h-dvh max-w-[430px] overflow-x-hidden overflow-y-auto bg-background">
     <script dangerouslySetInnerHTML={{ __html: splashSkip }} />
     {children}
@@ -37,7 +47,7 @@ export const LoginScreen = ({ children }: { children?: React.ReactNode }) => (
 
       <div className="flex-1" />
 
-      <SocialLoginButtons />
+      <SocialLoginButtons pending={pending} error={error} />
     </div>
   </main>
 );
