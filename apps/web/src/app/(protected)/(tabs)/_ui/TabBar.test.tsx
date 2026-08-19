@@ -1,6 +1,9 @@
 // TabBar — 고를 게 있을 때만 칩을 그리고, 현재 탭을 활성으로 표시하는지 검증
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { track } from '@/shared/analytics';
 
 import { TabBar } from './TabBar';
 import type { Tab } from './tabs';
@@ -10,19 +13,42 @@ const mocks = vi.hoisted(() => ({ pathname: '/scenario' }));
 vi.mock('next/navigation', () => ({
   usePathname: () => mocks.pathname,
 }));
+vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 
 // next/link는 next 밑의 react 복사본을 잡아 훅 dispatcher가 null이 된다(vitest.config의 별칭은 소스용).
-// 여기서 검증할 건 주소와 활성 표시라 평범한 앵커로 대체한다
+// 여기서 검증할 건 주소·활성 표시·클릭이라 평범한 앵커로 대체한다 (jsdom엔 이동이 없어 기본 동작만 막는다)
 vi.mock('next/link', () => ({
-  default: ({ href, children, ...rest }: React.ComponentProps<'a'>) => (
-    <a href={href} {...rest}>
+  default: ({
+    href,
+    children,
+    onClick,
+    ...rest
+  }: React.ComponentProps<'a'>) => (
+    <a
+      href={href}
+      {...rest}
+      onClick={(event) => {
+        event.preventDefault();
+        onClick?.(event);
+      }}
+    >
       {children}
     </a>
   ),
 }));
 
-const scenario: Tab = { href: '/scenario', label: '시나리오', ready: true };
-const smalltalk: Tab = { href: '/smalltalk', label: '스몰톡', ready: true };
+const scenario: Tab = {
+  id: 'scenario',
+  href: '/scenario',
+  label: '시나리오',
+  ready: true,
+};
+const smalltalk: Tab = {
+  id: 'smalltalk',
+  href: '/smalltalk',
+  label: '스몰톡',
+  ready: true,
+};
 
 afterEach(cleanup);
 
@@ -67,5 +93,27 @@ describe('TabBar', () => {
     expect(screen.getByRole('link', { name: '스몰톡' })).not.toHaveAttribute(
       'aria-current',
     );
+  });
+
+  it('다른 탭 칩을 누르면 어느 탭으로 갔는지 남긴다', async () => {
+    mocks.pathname = '/scenario';
+    const user = userEvent.setup();
+    render(<TabBar tabs={[scenario, smalltalk]} />);
+
+    await user.click(screen.getByRole('link', { name: '스몰톡' }));
+
+    expect(track).toHaveBeenCalledWith('Home Tab Switched', {
+      tab: 'smalltalk',
+    });
+  });
+
+  it('지금 보고 있는 탭 칩을 다시 눌러도 전환으로 세지 않는다', async () => {
+    mocks.pathname = '/scenario';
+    const user = userEvent.setup();
+    render(<TabBar tabs={[scenario, smalltalk]} />);
+
+    await user.click(screen.getByRole('link', { name: '시나리오' }));
+
+    expect(track).not.toHaveBeenCalled();
   });
 });
