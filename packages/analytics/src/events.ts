@@ -113,7 +113,9 @@ export type ExpressionStep = 'quiz' | 'explain' | 'review';
 export type TurnInputType = 'voice' | 'text';
 // 스몰톡 대화 상대 — 홈에서 고른 캐릭터. 시나리오엔 없는 축이라 스몰톡 이벤트에만 붙는다
 export type TalkPartner = 'chloe' | 'marco' | 'teddy';
-export type HintSource = 'quiz' | 'review';
+// 단어 퀴즈 화면은 퀴즈 스텝과 복습 스텝이 같이 쓴다 — 제출·힌트 이벤트가 이 값으로 갈린다
+export type QuizStepKind = 'quiz' | 'review';
+export type HintSource = QuizStepKind;
 export type HomeReturnReason = 'just' | 'flip' | 'card' | 'reminder';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
@@ -358,7 +360,6 @@ export type EventProps = {
   'Review Answer Submitted': {
     expression_id: number;
     is_correct: boolean;
-    wrong_count: number;
     hint_level: number;
   };
   'Expression Completed': ExpressionSource & { expression_id: number };
