@@ -53,6 +53,7 @@ export const EVENTS = {
   SCENARIO_TALK_TURN_COMPLETED: 'Scenario Talk Turn Completed',
   TURN_FAILED: 'Turn Failed',
   INNER_THOUGHT_VIEWED: 'Inner Thought Viewed',
+  TRANSLATION_TOGGLED: 'Translation Toggled',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
   HINT_USED: 'Hint Used',
   SCENARIO_TALK_COMPLETED: 'Scenario Talk Completed',
@@ -270,6 +271,12 @@ export type EventProps = {
     session_id: number;
     turn_index: number;
     thought_type?: string;
+  };
+  // 상대 발화의 해석을 펼치거나 접은 순간 — 어느 길이의 발화에서 해석을 필요로 하는지 본다
+  'Translation Toggled': {
+    session_id?: number;
+    turn_index: number;
+    opened: boolean;
   };
   'Speech Recognition Failed': {
     engine?: 'deepgram' | 'web_speech';
