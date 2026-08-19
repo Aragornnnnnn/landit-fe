@@ -54,6 +54,7 @@ export const EVENTS = {
   TURN_FAILED: 'Turn Failed',
   INNER_THOUGHT_VIEWED: 'Inner Thought Viewed',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
+  SPEECH_PLAYBACK_FAILED: 'Speech Playback Failed',
   HINT_USED: 'Hint Used',
   SCENARIO_TALK_COMPLETED: 'Scenario Talk Completed',
   SCENARIO_TALK_ABANDONED: 'Scenario Talk Abandoned',
@@ -282,6 +283,9 @@ export type EventProps = {
     engine?: 'deepgram' | 'web_speech';
     reason?: string;
   };
+  // AI 발화 재생 실패 — 실패 비율을 본다. 스몰톡 탭의 캐릭터 인사도 같은 재생 훅이라 포함된다.
+  // opening_mp3 = 미리 녹음한 오프닝(실패하면 합성으로 폴백해 체감 없음), synth = 런타임 합성(그 발화가 통째로 건너뛰어진다, 원인은 Sentry)
+  'Speech Playback Failed': { source: 'opening_mp3' | 'synth' };
   'Hint Used': { source: HintSource; level: number };
   'Scenario Talk Completed': {
     session_id: number;

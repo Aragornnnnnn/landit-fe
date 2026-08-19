@@ -105,20 +105,21 @@
 
 ### 시나리오 대화
 
-| 이벤트                       | 속성                                                                     | 시점                                                           |
-| ---------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| Scenario Talk Started        | scenario_id, session_id, first_speaker, is_retry                         | 세션 시작 성공                                                 |
-| Recording Started            | session_id?, turn_index                                                  | 마이크 눌러 말하기                                             |
-| Recording Stopped            | session_id?, turn_index                                                  | ■ 답변 완료 탭 (결과는 각 대화의 Turn Completed / Turn Failed) |
-| Recording Canceled           | session_id?, turn_index                                                  | 듣기 취소 (음성)                                               |
-| Mic Settings Opened          | —                                                                        | 권한 안내에서 "설정 열기"                                      |
-| Input Mode Switched          | session_id?, mode(text\|voice)                                           | 키보드↔마이크 전환 (타이핑 취소 포함)                          |
-| Scenario Talk Turn Completed | session_id, scenario_id, turn_index, input_type(voice\|text), char_count | 발화 제출 성공                                                 |
-| Turn Failed                  | session_id?, turn_index, reason(empty\|api_error)                        | 빈 발화 / 제출 실패                                            |
-| Inner Thought Viewed         | session_id, turn_index, thought_type?                                    | 상대 속마음 노출                                               |
-| Speech Recognition Failed    | engine?, reason?                                                         | STT 오류 (권한 거부 제외)                                      |
-| Scenario Talk Completed      | session_id, scenario_id, turn_count                                      | 서버가 완료 판정                                               |
-| Scenario Talk Abandoned      | session_id?, scenario_id, turn_index                                     | 중도 이탈 확정                                                 |
+| 이벤트                       | 속성                                                                     | 시점                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Scenario Talk Started        | scenario_id, session_id, first_speaker, is_retry                         | 세션 시작 성공                                                               |
+| Recording Started            | session_id?, turn_index                                                  | 마이크 눌러 말하기                                                           |
+| Recording Stopped            | session_id?, turn_index                                                  | ■ 답변 완료 탭 (결과는 각 대화의 Turn Completed / Turn Failed)               |
+| Recording Canceled           | session_id?, turn_index                                                  | 듣기 취소 (음성)                                                             |
+| Mic Settings Opened          | —                                                                        | 권한 안내에서 "설정 열기"                                                    |
+| Input Mode Switched          | session_id?, mode(text\|voice)                                           | 키보드↔마이크 전환 (타이핑 취소 포함)                                        |
+| Scenario Talk Turn Completed | session_id, scenario_id, turn_index, input_type(voice\|text), char_count | 발화 제출 성공                                                               |
+| Turn Failed                  | session_id?, turn_index, reason(empty\|api_error)                        | 빈 발화 / 제출 실패                                                          |
+| Inner Thought Viewed         | session_id, turn_index, thought_type?                                    | 상대 속마음 노출                                                             |
+| Speech Recognition Failed    | engine?, reason?                                                         | STT 오류 (권한 거부 제외)                                                    |
+| Speech Playback Failed       | source(opening_mp3\|synth)                                               | AI 발화 재생 실패 — 실패 비율용. 스몰톡 탭 인사도 포함 (synth 원인은 Sentry) |
+| Scenario Talk Completed      | session_id, scenario_id, turn_count                                      | 서버가 완료 판정                                                             |
+| Scenario Talk Abandoned      | session_id?, scenario_id, turn_index                                     | 중도 이탈 확정                                                               |
 
 `session_id`가 optional인 이벤트는 세션이 백그라운드로 시작돼 확보 전에도 발생할 수 있다.
 
@@ -139,7 +140,7 @@
 
 탭의 네 이벤트는 대화 시작 전 갈림길이다. 기본 상대로 그냥 시작하면 `Partner Selected`는 안 찍히고 `Started`의 `partner`로 본다. 주제 모달 열림은 안 찍는다 — `Started`의 `topic_id` 유무로 "주제로 시작" 비율이 나온다.
 
-단, 마이크·STT처럼 **대화 엔진이 쏘는 것은 두 대화가 함께 쓴다** (Recording Started/Stopped/Canceled, Input Mode Switched, Turn Failed, Inner Thought Viewed, Speech Recognition Failed). 입력 기계의 사건이라 어느 대화인지와 무관하고, 대화 엔진(features/conversation)은 대화 종류를 모른다.
+단, 마이크·STT처럼 **대화 엔진이 쏘는 것은 두 대화가 함께 쓴다** (Recording Started/Stopped/Canceled, Input Mode Switched, Turn Failed, Inner Thought Viewed, Speech Recognition Failed, Speech Playback Failed). 입력 기계의 사건이라 어느 대화인지와 무관하고, 대화 엔진(features/conversation)은 대화 종류를 모른다.
 
 ### 분석 피드백
 
