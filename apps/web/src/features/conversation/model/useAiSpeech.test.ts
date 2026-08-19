@@ -2,10 +2,13 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { track } from '@/shared/analytics';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 import { speechEndPauseMs, speechTypingMs } from './pacing';
 import { useAiSpeech } from './useAiSpeech';
+
+vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 
 // TTS는 경계(재생)라 목으로 둔다 — speak/speakSrc의 onEnd·onError를 붙잡아 종료·실패를 흉내 낸다
 const ttsMock = vi.hoisted(() => {
@@ -16,8 +19,13 @@ const ttsMock = vi.hoisted(() => {
   return {
     state,
     speak: vi.fn(
-      (_text: string, _voice: unknown, opts?: { onEnd?: () => void }) => {
+      (
+        _text: string,
+        _voice: unknown,
+        opts?: { onEnd?: () => void; onError?: () => void },
+      ) => {
         state.onEnd = opts?.onEnd;
+        state.onError = opts?.onError;
         return Promise.resolve();
       },
     ),
@@ -111,11 +119,14 @@ describe('useAiSpeech', () => {
     expect(onSpeechEnd).toHaveBeenCalledTimes(1);
   });
 
-  it('오프닝 정적 파일이 없으면 합성으로 폴백한다', () => {
+  it('오프닝 정적 파일이 없으면 실패를 남기고 합성으로 폴백한다', () => {
     const { onSpeechEnd } = renderSpeech();
 
     act(() => ttsMock.state.onError?.()); // 정적 파일 없음(404)
 
+    expect(track).toHaveBeenCalledWith('Speech Playback Failed', {
+      source: 'opening_mp3',
+    });
     expect(ttsMock.speak).toHaveBeenCalledWith(
       OPENING,
       voice,
@@ -193,6 +204,17 @@ describe('useAiSpeech', () => {
     });
 
     expect(onSpeechEnd).not.toHaveBeenCalled();
+  });
+
+  it('합성 재생이 실패하면 synth 출처로 실패 이벤트를 찍고 발화를 마친다', () => {
+    const { onSpeechEnd } = renderSpeech({ openingSrc: null });
+
+    act(() => ttsMock.state.onError?.());
+
+    expect(track).toHaveBeenCalledWith('Speech Playback Failed', {
+      source: 'synth',
+    });
+    expect(onSpeechEnd).toHaveBeenCalledTimes(1);
   });
 
   it('다음 질문 프리페치는 음성이 있을 때만 합성을 요청한다', () => {

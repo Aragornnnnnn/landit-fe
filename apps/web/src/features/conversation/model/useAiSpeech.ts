@@ -2,7 +2,9 @@
 
 // AI 발화 재생 훅 — 오프닝은 미리 만든 정적 mp3, 이후엔 TTS 합성, 음성이 없으면 글자 수 타이머로 폴백한다
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 
+import { track } from '@/shared/analytics';
 import { useTts, type TtsPlayback } from '@/shared/tts/useTts';
 import type { TtsVoice } from '@/shared/tts/voice';
 
@@ -56,7 +58,11 @@ export const useAiSpeech = ({
         void tts.speak(content, voice, {
           onStart: startLipSync,
           onEnd: finish,
-          onError: finish,
+          // 합성 실패는 이 발화를 건너뛰고 다음으로 간다
+          onError: () => {
+            track(EVENTS.SPEECH_PLAYBACK_FAILED, { source: 'synth' });
+            finish();
+          },
         });
         return () => tts.stop();
       }
@@ -77,6 +83,7 @@ export const useAiSpeech = ({
         onStart: startLipSync,
         onEnd: finish,
         onError: () => {
+          track(EVENTS.SPEECH_PLAYBACK_FAILED, { source: 'opening_mp3' });
           setSpeech(null);
           if (cancelled) return;
           stop = startSpeaking();
