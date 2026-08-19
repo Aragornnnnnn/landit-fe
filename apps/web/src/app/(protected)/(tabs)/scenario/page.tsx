@@ -6,6 +6,7 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { NotificationConsentGate } from '@/features/notification/ui/NotificationConsentGate';
+import { SatisfactionGate } from '@/features/satisfaction/ui/SatisfactionGate';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { CalendarStrip } from '@/features/scenario/ui/CalendarStrip';
@@ -19,6 +20,8 @@ import {
   scenarioTalkPath,
 } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
+
+import { useHomeSheet } from './_model/useHomeSheet';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
 export default function ScenarioPage() {
@@ -44,6 +47,8 @@ function ScenarioContent() {
   // 들어오자마자 물으면 램프 연출을 덮고, 대화를 해보기도 전이라 무엇을 알려주겠다는 건지 와닿지 않는다.
   // 지난 날 카드도 완료했으면 CLEARED라 날짜가 없는(=오늘) 화면으로 한정한다
   const [summonClosed, setSummonClosed] = useState(false);
+  // 이번 방문에 띄울 시트 하나 — 첫 소감 → 랜딧 소감 → 알림 동의 (규칙은 useHomeSheet)
+  const homeSheet = useHomeSheet();
   // 대화 시작을 눌렀다 — 바로 이동하지 않고 브리핑 카드를 잠깐 보여준 뒤 대화로 들어간다
   const [briefingScenario, setBriefingScenario] = useState<Scenario | null>(
     null,
@@ -114,7 +119,13 @@ function ScenarioContent() {
         />
       )}
 
-      {settled && <NotificationConsentGate />}
+      {settled && homeSheet === 'first-satisfaction' && (
+        <SatisfactionGate moment="scenario" />
+      )}
+      {settled && homeSheet === 'app-satisfaction' && (
+        <SatisfactionGate moment="app" />
+      )}
+      {settled && homeSheet === 'consent' && <NotificationConsentGate />}
 
       {/* 브리핑을 다 보여주면 대화로 넘어간다 — push라 뒤로가기는 이 화면(카드)으로 돌아온다 */}
       {briefingScenario && (

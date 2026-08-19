@@ -7,6 +7,7 @@ import { AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
 import { PartnerCharacter } from '@/features/conversation/ui/character/PartnerCharacter';
+import { SatisfactionGate } from '@/features/satisfaction/ui/SatisfactionGate';
 import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
@@ -173,6 +174,8 @@ export default function SmallTalkPage() {
 
       {guideOpen && <IntroGuide onClose={closeGuide} />}
       <AnimatePresence>{coaching && <CoachDim />}</AnimatePresence>
+      {/* 첫 스몰톡을 마치고 돌아온 사람에게 한 번 — 안내·코치마크는 첫 진입 때 이미 끝난 뒤라 겹치지 않는다 */}
+      <SatisfactionGate moment="smalltalk" />
 
       <TopicPickerModal
         open={topicOpen}
