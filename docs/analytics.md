@@ -74,10 +74,11 @@
 
 ### 홈
 
-| 이벤트                | 속성                                                                                        | 시점                                         |
-| --------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto)                                  | 원어민 표현 배우기 / 자동 뒤집힘 / 앞면 복귀 |
-| Expression Selected   | expression_id, 출처(scenario_id\|session_id), source(card_back\|post_conversation\|history) | 표현 항목 탭                                 |
+| 이벤트                | 속성                                                                                        | 시점                                          |
+| --------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Home Tab Switched     | tab(scenario\|smalltalk)                                                                    | 상단 탭 칩 눌러 이동 (보고 있는 탭 재탭 제외) |
+| Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto)                                  | 원어민 표현 배우기 / 자동 뒤집힘 / 앞면 복귀  |
+| Expression Selected   | expression_id, 출처(scenario_id\|session_id), source(card_back\|post_conversation\|history) | 표현 항목 탭                                  |
 
 ### 오늘의 시나리오 (램프)
 

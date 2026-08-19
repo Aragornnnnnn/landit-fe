@@ -14,4 +14,5 @@ export {
   type HomeReturnReason,
   type RetryScreen,
   type FeedbackType,
+  type HomeTab,
 } from './events';

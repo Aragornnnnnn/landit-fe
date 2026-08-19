@@ -23,6 +23,7 @@ export const EVENTS = {
   ONBOARDING_COMPLETED: 'Onboarding Completed',
 
   // 홈
+  HOME_TAB_SWITCHED: 'Home Tab Switched',
   SCENARIO_CARD_FLIPPED: 'Scenario Card Flipped',
   EXPRESSION_SELECTED: 'Expression Selected',
 
@@ -138,6 +139,7 @@ export type FeedbackType =
 // 키는 source — surface는 baseProps의 전역 속성(app·browser)이라 겹치면 덮어쓴다
 export type NotificationConsentSource = 'scenario' | 'me';
 export type CalendarView = 'week' | 'month';
+export type HomeTab = 'scenario' | 'smalltalk';
 
 // 표현이 어디서 왔는가 — 시나리오 콘텐츠에 붙어 있던 표현인지, 그 스몰톡에서 만들어진 표현인지.
 // 표현 학습 화면은 둘이 같이 쓰므로 이벤트도 하나로 두고 출처만 갈아 끼운다 (둘 중 하나만 실린다)
@@ -196,6 +198,8 @@ export type EventProps = {
   };
   'Onboarding Completed': undefined;
 
+  // 홈 상단 탭 칩을 눌러 옮긴다 — 화면 노출(Page Viewed)엔 뒤로가기·복귀도 섞이니, 손으로 고른 것만 따로 본다
+  'Home Tab Switched': { tab: HomeTab };
   'Scenario Card Flipped': {
     scenario_id: number;
     direction: 'back' | 'front';
