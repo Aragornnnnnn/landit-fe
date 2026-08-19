@@ -59,7 +59,12 @@ export const EVENTS = {
   SCENARIO_TALK_ABANDONED: 'Scenario Talk Abandoned',
 
   // 스몰톡 — 시나리오와 탭도 목적도 달라 이벤트를 따로 둔다.
-  // 마이크·STT처럼 대화 엔진이 쏘는 것(Recording·Turn Failed·Inner Thought Viewed)은 두 대화가 함께 쓴다
+  // 마이크·STT처럼 대화 엔진이 쏘는 것(Recording·Turn Failed·Inner Thought Viewed)은 두 대화가 함께 쓴다.
+  // 앞의 넷은 탭에서 대화를 시작하기 전 갈림길(상대·주제·안내·인사)이다
+  SMALL_TALK_PARTNER_SELECTED: 'Small Talk Partner Selected',
+  SMALL_TALK_TOPIC_SELECTED: 'Small Talk Topic Selected',
+  SMALL_TALK_INTRO_GUIDE_CLOSED: 'Small Talk Intro Guide Closed',
+  SMALL_TALK_GREETING_TAPPED: 'Small Talk Greeting Tapped',
   SMALL_TALK_STARTED: 'Small Talk Started',
   SMALL_TALK_TURN_COMPLETED: 'Small Talk Turn Completed',
   SMALL_TALK_COMPLETED: 'Small Talk Completed',
@@ -290,6 +295,11 @@ export type EventProps = {
   };
 
   // 스몰톡 — 상대(partner)는 시나리오에 없는 축이라 전 이벤트에 싣는다. 누구와 얘기하는지로 다 갈린다
+  'Small Talk Partner Selected': { partner: TalkPartner };
+  'Small Talk Topic Selected': { partner: TalkPartner; topic_id: number };
+  'Small Talk Intro Guide Closed': undefined;
+  // coached = 코치마크가 켜진 채로 눌렀는지 (코치마크가 시킨 첫 탭)
+  'Small Talk Greeting Tapped': { partner: TalkPartner; coached: boolean };
   'Small Talk Started': {
     session_id: number;
     partner: TalkPartner;

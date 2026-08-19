@@ -124,14 +124,20 @@
 
 ### 스몰톡
 
-| 이벤트                    | 속성                                                                                        | 시점             |
-| ------------------------- | ------------------------------------------------------------------------------------------- | ---------------- |
-| Small Talk Started        | session_id, partner, first_speaker, topic_id?                                               | 세션 시작 성공   |
-| Small Talk Turn Completed | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms | 발화 제출 성공   |
-| Small Talk Completed      | session_id, partner, turn_count, speaking_duration_ms, end_reason(user_ended\|time_limit)   | 서버가 완료 판정 |
-| Small Talk Abandoned      | session_id, partner, turn_index                                                             | 중도 이탈 확정   |
+| 이벤트                        | 속성                                                                                        | 시점                                                    |
+| ----------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Small Talk Partner Selected   | partner                                                                                     | 탭에서 상대 칩 선택                                     |
+| Small Talk Topic Selected     | partner, topic_id                                                                           | 주제 모달에서 주제 선택                                 |
+| Small Talk Intro Guide Closed | —                                                                                           | 첫 진입 안내 닫음 (기기당 한 번)                        |
+| Small Talk Greeting Tapped    | partner, coached                                                                            | 캐릭터를 눌러 인사 들음 (coached=코치마크 켜진 채 누름) |
+| Small Talk Started            | session_id, partner, first_speaker, topic_id?                                               | 세션 시작 성공                                          |
+| Small Talk Turn Completed     | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms | 발화 제출 성공                                          |
+| Small Talk Completed          | session_id, partner, turn_count, speaking_duration_ms, end_reason(user_ended\|time_limit)   | 서버가 완료 판정                                        |
+| Small Talk Abandoned          | session_id, partner, turn_index                                                             | 중도 이탈 확정                                          |
 
 스몰톡은 탭도 목적도 달라 대화 이벤트를 따로 둔다 — 시나리오는 오늘의 과제를 끝냈는지, 스몰톡은 누구와 얼마나 얘기했는지를 본다. 상대(`partner`)는 시나리오에 없는 축이라 전 이벤트에 싣는다.
+
+탭의 네 이벤트는 대화 시작 전 갈림길이다. 기본 상대로 그냥 시작하면 `Partner Selected`는 안 찍히고 `Started`의 `partner`로 본다. 주제 모달 열림은 안 찍는다 — `Started`의 `topic_id` 유무로 "주제로 시작" 비율이 나온다.
 
 단, 마이크·STT처럼 **대화 엔진이 쏘는 것은 두 대화가 함께 쓴다** (Recording Started/Stopped/Canceled, Input Mode Switched, Turn Failed, Inner Thought Viewed, Speech Recognition Failed). 입력 기계의 사건이라 어느 대화인지와 무관하고, 대화 엔진(features/conversation)은 대화 종류를 모른다.
 
