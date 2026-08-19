@@ -40,7 +40,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const ASK = '첫 대화, 어떠셨나요?';
+const ASK = '방금 대화, 어떠셨나요?';
 
 describe('SatisfactionGate', () => {
   it('대화를 마친 기록이 없으면 아무것도 띄우지 않는다', () => {
@@ -49,7 +49,7 @@ describe('SatisfactionGate', () => {
     expect(screen.queryByText(ASK)).not.toBeInTheDocument();
   });
 
-  it('첫 대화를 마치고 왔으면 소감 시트를 띄우고 노출을 계측한다', () => {
+  it('대화를 마치고 왔으면 소감 시트를 띄우고 노출을 계측한다', () => {
     markTalkCompleted('scenario');
 
     render(<SatisfactionGate moment="scenario" />);

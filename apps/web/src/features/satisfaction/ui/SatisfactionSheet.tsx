@@ -1,7 +1,8 @@
 'use client';
 
 // 소감 바텀시트 — 묻기(ask) → 답에 따라 감사(thanks)·피드백 안내(letter)·별점판(review)으로 같은 시트 안에서 말만 바꾼다.
-// 첫 소감(scenario·smalltalk)은 좋았어요 → 감사, 랜딧 소감(app)은 잘 쓰고 있어요 → 별점판으로 간다
+// 대화 소감(scenario·smalltalk)은 좋았어요 → 감사, 랜딧 소감(app)은 잘 쓰고 있어요 → 별점판으로 간다.
+// 시나리오 쪽 제목이 "첫 대화"가 아니라 "방금 대화"인 건, 배포 전부터 쓰던 사람에겐 첫 대화가 아니어서다
 import type { SatisfactionMoment } from '@landit/analytics';
 
 import { BottomSheet } from '@/shared/ui/BottomSheet';
@@ -58,7 +59,7 @@ const faceOf = (moment: SatisfactionMoment, view: SatisfactionView): Face => {
     return {
       image: PEEK_RIGHT,
       title: '랜딧, 잘 사용하고 계신가요?',
-      body: '두 번째 대화까지 마치셨네요!\n솔직하게 알려주세요',
+      body: '오늘도 대화 하나 마치셨네요!\n솔직하게 알려주세요',
       bad: '아쉬워요',
       good: '잘 쓰고 있어요',
     };
@@ -81,7 +82,7 @@ const faceOf = (moment: SatisfactionMoment, view: SatisfactionView): Face => {
     title:
       moment === 'smalltalk'
         ? '첫 스몰톡, 어떠셨나요?'
-        : '첫 대화, 어떠셨나요?',
+        : '방금 대화, 어떠셨나요?',
     body: '래디가 많이 궁금해요!\n솔직하게 골라주세요',
     bad: '아쉬웠어요',
     good: '좋았어요',
