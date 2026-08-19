@@ -4,8 +4,11 @@ import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PARTNERS } from '@/features/small-talk/model/partner';
+import { track } from '@/shared/analytics';
 
 import { usePartnerGreeting } from './usePartnerGreeting';
+
+vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 
 const ttsMock = vi.hoisted(() => ({
   state: { onEnd: undefined as (() => void) | undefined },
@@ -71,6 +74,18 @@ describe('usePartnerGreeting', () => {
 
     expect(result.current.partner.id).toBe(teddy.id);
     expect(ttsMock.speakSrc).not.toHaveBeenCalled();
+  });
+
+  it('상대를 바꾸면 선택 이벤트를 찍고, 같은 상대를 다시 누르면 찍지 않는다', () => {
+    const { result } = renderHook(() => usePartnerGreeting());
+
+    act(() => result.current.selectPartner(teddy.id));
+    act(() => result.current.selectPartner(teddy.id));
+
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith('Small Talk Partner Selected', {
+      partner: teddy.id,
+    });
   });
 
   it('인사하는 중에 상대를 바꾸면 하던 인사를 멈추고 새 상대는 말하지 않는다', () => {
