@@ -23,8 +23,6 @@ export const EVENTS = {
   ONBOARDING_COMPLETED: 'Onboarding Completed',
 
   // 홈
-  CATEGORY_SELECTED: 'Category Selected',
-  SCENARIO_CARD_VIEWED: 'Scenario Card Viewed',
   SCENARIO_CARD_FLIPPED: 'Scenario Card Flipped',
   EXPRESSION_SELECTED: 'Expression Selected',
 
@@ -198,19 +196,6 @@ export type EventProps = {
   };
   'Onboarding Completed': undefined;
 
-  'Category Selected': {
-    category_id: number;
-    category_name: string;
-    is_locked: boolean;
-  };
-  'Scenario Card Viewed': {
-    card_type: 'scenario' | 'completion';
-    position: number;
-    scenario_id?: number;
-    difficulty?: string;
-    is_completed?: boolean;
-    is_locked?: boolean;
-  };
   'Scenario Card Flipped': {
     scenario_id: number;
     direction: 'back' | 'front';

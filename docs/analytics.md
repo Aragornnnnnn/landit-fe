@@ -74,12 +74,10 @@
 
 ### 홈
 
-| 이벤트                | 속성                                                                                            | 시점                                         |
-| --------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| Category Selected     | category_id, category_name, is_locked                                                           | 카테고리 칩 탭                               |
-| Scenario Card Viewed  | card_type(scenario\|completion), position, scenario_id?, difficulty?, is_completed?, is_locked? | 스냅으로 카드가 중앙에 설 때                 |
-| Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto)                                      | 원어민 표현 배우기 / 자동 뒤집힘 / 앞면 복귀 |
-| Expression Selected   | expression_id, 출처(scenario_id\|session_id), source(card_back\|post_conversation)              | 표현 항목 탭                                 |
+| 이벤트                | 속성                                                                               | 시점                                         |
+| --------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------- |
+| Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto)                         | 원어민 표현 배우기 / 자동 뒤집힘 / 앞면 복귀 |
+| Expression Selected   | expression_id, 출처(scenario_id\|session_id), source(card_back\|post_conversation) | 표현 항목 탭                                 |
 
 ### 오늘의 시나리오 (램프)
 
