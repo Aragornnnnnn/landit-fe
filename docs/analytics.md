@@ -185,6 +185,17 @@
 목록은 칸을 옮겨도 같은 화면이라 `mailbox` 하나다. 작성은 유형마다 주소가 갈려도 화면 이름은
 `feedback_compose` 하나로 두고 고른 유형을 `feedback_type`으로 싣는다.
 
+### 알림
+
+| 이벤트                          | 속성                                      | 시점                                                     |
+| ------------------------------- | ----------------------------------------- | -------------------------------------------------------- |
+| Notification Consent Viewed     | source(scenario\|me)                      | 알림 안내 시트 노출                                      |
+| Notification Consent Accepted   | source                                    | 시트에서 수락 (OS 권한창 요청까지 이어짐)                |
+| Notification Consent Dismissed  | source                                    | 시트 닫음                                                |
+| Notification Permission Decided | granted, source(onboarding\|scenario\|me) | OS 권한창 결과 — 셸의 회신에서 찍는다 (마이크와 같은 짝) |
+
+온보딩의 알림 스텝은 시트 없이 바로 OS 권한창을 띄워 Consent 이벤트가 없고, 결과는 `Notification Permission Decided(source: onboarding)`로 남는다. 이미 거부한 상태에서 내 정보의 "OS 설정 열기"는 안 찍는다 — 결과를 알 수 없다.
+
 ### 유저 속성
 
 | 속성                                            | 값                       | 시점           |

@@ -99,6 +99,7 @@ export const EVENTS = {
   NOTIFICATION_CONSENT_VIEWED: 'Notification Consent Viewed',
   NOTIFICATION_CONSENT_ACCEPTED: 'Notification Consent Accepted',
   NOTIFICATION_CONSENT_DISMISSED: 'Notification Consent Dismissed',
+  NOTIFICATION_PERMISSION_DECIDED: 'Notification Permission Decided',
 
   // 유입 — /download 스토어 리다이렉트가 서버에서 발화한다 (route 핸들러, LAN-237)
   DOWNLOAD_LINK_VISITED: 'Download Link Visited',
@@ -138,6 +139,9 @@ export type FeedbackType =
 // 알림 동의를 청한 지면 — 온보딩 스텝은 기존 온보딩 계측이 커버해서 없다.
 // 키는 source — surface는 baseProps의 전역 속성(app·browser)이라 겹치면 덮어쓴다
 export type NotificationConsentSource = 'scenario' | 'me';
+// OS 알림 권한창을 띄운 지면 — 안내 시트 둘에 온보딩 스텝이 더해진다
+export type NotificationPermissionSource =
+  'onboarding' | NotificationConsentSource;
 export type CalendarView = 'week' | 'month';
 export type HomeTab = 'scenario' | 'smalltalk';
 
@@ -372,6 +376,11 @@ export type EventProps = {
   // 수락 = OS 권한창 요청까지 이어짐. 실제 허용/거부는 OS 팝업 결과라 별도 (권한 상태로 세그먼트)
   'Notification Consent Accepted': { source: NotificationConsentSource };
   'Notification Consent Dismissed': { source: NotificationConsentSource };
+  // OS 권한창의 결과 — 마이크(Mic Permission Decided)와 짝. 셸의 회신에서 찍는다
+  'Notification Permission Decided': {
+    granted: boolean;
+    source: NotificationPermissionSource;
+  };
 
   // 서버 발화라 세션·리플레이·공통 속성 없음. device_id 랜덤 — 방문 횟수 집계용.
   // /download 링크 자체를 방문한 경우만 (외부 링크·인스타 등)

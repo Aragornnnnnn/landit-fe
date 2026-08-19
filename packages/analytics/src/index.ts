@@ -15,4 +15,5 @@ export {
   type RetryScreen,
   type FeedbackType,
   type HomeTab,
+  type NotificationPermissionSource,
 } from './events';
