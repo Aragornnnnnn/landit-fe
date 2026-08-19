@@ -17,6 +17,7 @@ vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 
 vi.mock('@/shared/bridge/web-bridge', () => ({
   postToNative: vi.fn(() => true),
+  subscribeFromNative: vi.fn(() => () => {}),
 }));
 const postToNativeMock = vi.mocked(postToNative);
 
