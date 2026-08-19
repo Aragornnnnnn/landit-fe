@@ -84,7 +84,7 @@ export const UserTranscript = ({
   }
 
   return (
-    <div className="mt-3 flex h-28 w-full flex-none flex-col rounded-2xl border border-border/60 bg-muted/50 px-5 py-4">
+    <div className="mt-3 flex h-28 w-full flex-none flex-col rounded-2xl border border-border/60 bg-muted/50 px-5 py-3">
       <p className="text-xs font-semibold text-muted-foreground">내 답변</p>
       {/* 넘치면 끝으로 붙이고 윗변을 흐린다 — 방금 한 말이 항상 보이고 앞은 …처럼 사라진다 */}
       <div
@@ -95,7 +95,8 @@ export const UserTranscript = ({
             : ''
         }`}
       >
-        <p className="text-lg leading-relaxed font-semibold text-foreground">
+        {/* 같은 높이에 세 줄이 들어오는 조합 — 글자 16px에 줄 간격을 좁혀 잡았다 */}
+        <p className="text-base leading-snug font-semibold text-foreground">
           {text}
           {listening && <TypingCursor />}
         </p>
