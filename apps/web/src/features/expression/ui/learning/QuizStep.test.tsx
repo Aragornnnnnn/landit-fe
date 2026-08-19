@@ -172,24 +172,27 @@ describe('QuizStep', () => {
       });
     });
 
-    it('복습 스텝에서 힌트를 보면 source가 review로 찍힌다', async () => {
-      const user = userEvent.setup();
-      render(
-        <QuizStep
-          step="review"
-          quiz={quiz}
-          expressionId={7}
-          onBack={vi.fn()}
-          onNext={vi.fn()}
-        />,
-      );
+    it.each([['quiz'], ['review']] as const)(
+      '%s 스텝에서 힌트를 보면 source가 그 스텝으로 찍힌다',
+      async (step) => {
+        const user = userEvent.setup();
+        render(
+          <QuizStep
+            step={step}
+            quiz={quiz}
+            expressionId={7}
+            onBack={vi.fn()}
+            onNext={vi.fn()}
+          />,
+        );
 
-      await user.click(screen.getByRole('button', { name: /힌트 보기/ }));
+        await user.click(screen.getByRole('button', { name: /힌트 보기/ }));
 
-      expect(track).toHaveBeenCalledWith('Hint Used', {
-        source: 'review',
-        level: 1,
-      });
-    });
+        expect(track).toHaveBeenCalledWith('Hint Used', {
+          source: step,
+          level: 1,
+        });
+      },
+    );
   });
 });
