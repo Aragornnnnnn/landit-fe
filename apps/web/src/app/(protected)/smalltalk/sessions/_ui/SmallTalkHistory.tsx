@@ -17,6 +17,8 @@ import { SMALLTALK_PATH, smallTalkHistoryPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 
+import { SmallTalkHistorySkeleton } from './SmallTalkHistorySkeleton';
+
 export const SmallTalkHistory = () => {
   const router = useRouter();
   const { sessions, error, retry, hasMore, loadingMore, loadMore } =
@@ -57,12 +59,7 @@ export const SmallTalkHistory = () => {
         </div>
       ) : sessions === null ? (
         // 조회 중 — 빈 화면만 두면 목록이 비었는지 아직인지 알 수 없다
-        <p
-          role="status"
-          className="flex flex-1 items-center justify-center text-sm text-muted-foreground"
-        >
-          지난 대화를 불러오는 중이에요
-        </p>
+        <SmallTalkHistorySkeleton />
       ) : sessions.length === 0 ? (
         <p className="flex flex-1 items-center justify-center px-6 text-center text-sm break-keep whitespace-pre-line text-muted-foreground">
           {'아직 나눈 대화가 없어요.\n오늘 한 대화부터 여기 쌓여요.'}
