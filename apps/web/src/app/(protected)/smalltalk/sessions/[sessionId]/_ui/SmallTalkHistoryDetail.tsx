@@ -22,6 +22,8 @@ import {
 import { Button } from '@/shared/ui/Button';
 import { ChatHistoryIcon, ChevronLeftIcon } from '@/shared/ui/Icons';
 
+import { SmallTalkHistoryDetailSkeleton } from './SmallTalkHistoryDetailSkeleton';
+
 export const SmallTalkHistoryDetail = ({
   sessionId,
 }: {
@@ -90,12 +92,7 @@ export const SmallTalkHistoryDetail = ({
           </Button>
         </div>
       ) : isLoading ? (
-        <p
-          role="status"
-          className="flex flex-1 items-center justify-center text-sm text-muted-foreground"
-        >
-          표현을 불러오는 중이에요
-        </p>
+        <SmallTalkHistoryDetailSkeleton />
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto pb-6">
           {/* 언제 얼마나 얘기했는지 — 표현보다 먼저 읽히는 맥락이다.

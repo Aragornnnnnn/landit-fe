@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
+import { requestNotificationPermission } from '@/features/notification/model/request-permission';
 import { useNotificationPermission } from '@/features/notification/model/useNotificationPermission';
 import { NotificationConsentSheet } from '@/features/notification/ui/NotificationConsentSheet';
 import { track } from '@/shared/analytics';
@@ -35,7 +36,7 @@ export const NotificationMenuEntry = () => {
   // 수락 = OS 권한창 요청 — 회신은 훅이 받아 상태를 갱신하고, 허용되면 행이 사라지고 예약까지 이어진다
   const accept = () => {
     track(EVENTS.NOTIFICATION_CONSENT_ACCEPTED, { source: 'me' });
-    postToNative({ type: 'REQUEST_NOTIFICATION_PERMISSION' });
+    requestNotificationPermission('me');
     setIsPromptOpen(false);
   };
 

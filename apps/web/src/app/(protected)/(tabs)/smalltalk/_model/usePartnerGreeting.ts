@@ -4,6 +4,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 
 import type {
   CharacterLook,
@@ -14,6 +15,7 @@ import {
   DEFAULT_PARTNER,
   findPartner,
 } from '@/features/small-talk/model/partner';
+import { track } from '@/shared/analytics';
 
 // 인사 첫머리만 웃는 얼굴 — 말하는 내내 웃고 있으면 표정이 아니라 그림이 된다
 const GREETING_SMILE_MS = 2000;
@@ -66,6 +68,10 @@ export const usePartnerGreeting = () => {
   // 상대를 바꾸면 새 상대는 서 있기만 한다 — 하던 인사는 멈춘다.
   // 안 멈추면 바뀐 문구로 재생 훅이 곧장 새 인사를 시작해 "저절로 말하는" 셈이 된다
   const selectPartner = (next: Partner) => {
+    // 이미 고른 상대를 다시 눌러도 선택은 아니다 — 하던 인사만 멈춘다
+    if (next !== partnerId) {
+      track(EVENTS.SMALL_TALK_PARTNER_SELECTED, { partner: next });
+    }
     setPartnerId(next);
     stopGreeting();
   };

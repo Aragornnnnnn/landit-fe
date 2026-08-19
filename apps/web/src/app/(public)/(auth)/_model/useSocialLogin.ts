@@ -14,7 +14,7 @@ import { startWebSocialLogin } from '@/shared/auth/web-social-login';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { SCENARIO_PATH } from '@/shared/lib/routes';
 
-type SocialProvider = 'kakao' | 'google' | 'apple';
+export type SocialProvider = 'kakao' | 'google' | 'apple';
 
 /**
  * 소셜 로그인 진행을 관리한다. 네이티브 셸 안이면 브릿지로 네이티브 SDK를, 밖이면 웹 OAuth를 탄다.

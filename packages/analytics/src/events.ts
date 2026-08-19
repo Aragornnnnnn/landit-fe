@@ -23,8 +23,7 @@ export const EVENTS = {
   ONBOARDING_COMPLETED: 'Onboarding Completed',
 
   // 홈
-  CATEGORY_SELECTED: 'Category Selected',
-  SCENARIO_CARD_VIEWED: 'Scenario Card Viewed',
+  HOME_TAB_SWITCHED: 'Home Tab Switched',
   SCENARIO_CARD_FLIPPED: 'Scenario Card Flipped',
   EXPRESSION_SELECTED: 'Expression Selected',
 
@@ -54,12 +53,18 @@ export const EVENTS = {
   TURN_FAILED: 'Turn Failed',
   INNER_THOUGHT_VIEWED: 'Inner Thought Viewed',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
+  SPEECH_PLAYBACK_FAILED: 'Speech Playback Failed',
   HINT_USED: 'Hint Used',
   SCENARIO_TALK_COMPLETED: 'Scenario Talk Completed',
   SCENARIO_TALK_ABANDONED: 'Scenario Talk Abandoned',
 
   // 스몰톡 — 시나리오와 탭도 목적도 달라 이벤트를 따로 둔다.
-  // 마이크·STT처럼 대화 엔진이 쏘는 것(Recording·Turn Failed·Inner Thought Viewed)은 두 대화가 함께 쓴다
+  // 마이크·STT처럼 대화 엔진이 쏘는 것(Recording·Turn Failed·Inner Thought Viewed)은 두 대화가 함께 쓴다.
+  // 앞의 넷은 탭에서 대화를 시작하기 전 갈림길(상대·주제·안내·인사)이다
+  SMALL_TALK_PARTNER_SELECTED: 'Small Talk Partner Selected',
+  SMALL_TALK_TOPIC_SELECTED: 'Small Talk Topic Selected',
+  SMALL_TALK_INTRO_GUIDE_CLOSED: 'Small Talk Intro Guide Closed',
+  SMALL_TALK_GREETING_TAPPED: 'Small Talk Greeting Tapped',
   SMALL_TALK_STARTED: 'Small Talk Started',
   SMALL_TALK_TURN_COMPLETED: 'Small Talk Turn Completed',
   SMALL_TALK_COMPLETED: 'Small Talk Completed',
@@ -94,6 +99,7 @@ export const EVENTS = {
   NOTIFICATION_CONSENT_VIEWED: 'Notification Consent Viewed',
   NOTIFICATION_CONSENT_ACCEPTED: 'Notification Consent Accepted',
   NOTIFICATION_CONSENT_DISMISSED: 'Notification Consent Dismissed',
+  NOTIFICATION_PERMISSION_DECIDED: 'Notification Permission Decided',
 
   // 소감 시트 — 첫 시나리오 대화·첫 스몰톡·다른 날 두 번째 대화(랜딧 소감)를 마치고 홈에 돌아왔을 때 한 번 묻는다
   SATISFACTION_PROMPT_VIEWED: 'Satisfaction Prompt Viewed',
@@ -119,7 +125,9 @@ export type ExpressionStep = 'quiz' | 'explain' | 'review';
 export type TurnInputType = 'voice' | 'text';
 // 스몰톡 대화 상대 — 홈에서 고른 캐릭터. 시나리오엔 없는 축이라 스몰톡 이벤트에만 붙는다
 export type TalkPartner = 'chloe' | 'marco' | 'teddy';
-export type HintSource = 'quiz' | 'review';
+// 단어 퀴즈 화면은 퀴즈 스텝과 복습 스텝이 같이 쓴다 — 제출·힌트 이벤트가 이 값으로 갈린다
+export type QuizStepKind = 'quiz' | 'review';
+export type HintSource = QuizStepKind;
 export type HomeReturnReason = 'just' | 'flip' | 'card' | 'reminder';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
@@ -137,12 +145,16 @@ export type FeedbackType =
 // 알림 동의를 청한 지면 — 온보딩 스텝은 기존 온보딩 계측이 커버해서 없다.
 // 키는 source — surface는 baseProps의 전역 속성(app·browser)이라 겹치면 덮어쓴다
 export type NotificationConsentSource = 'scenario' | 'me';
+// OS 알림 권한창을 띄운 지면 — 안내 시트 둘에 온보딩 스텝이 더해진다
+export type NotificationPermissionSource =
+  'onboarding' | NotificationConsentSource;
 // 소감을 물은 순간과 답 — 닫기(딤·뒤로가기)도 답으로 셈해 다시 묻지 않는다.
 // talk = 대화 종류(첫 소감), app = 다른 날 두 번째 대화 뒤 랜딧 전체를 묻는 소감(별점 유도)
 export type SatisfactionTalk = 'scenario' | 'smalltalk';
 export type SatisfactionMoment = SatisfactionTalk | 'app';
 export type SatisfactionAnswer = 'good' | 'bad' | 'dismiss';
 export type CalendarView = 'week' | 'month';
+export type HomeTab = 'scenario' | 'smalltalk';
 
 // 표현이 어디서 왔는가 — 시나리오 콘텐츠에 붙어 있던 표현인지, 그 스몰톡에서 만들어진 표현인지.
 // 표현 학습 화면은 둘이 같이 쓰므로 이벤트도 하나로 두고 출처만 갈아 끼운다 (둘 중 하나만 실린다)
@@ -201,19 +213,8 @@ export type EventProps = {
   };
   'Onboarding Completed': undefined;
 
-  'Category Selected': {
-    category_id: number;
-    category_name: string;
-    is_locked: boolean;
-  };
-  'Scenario Card Viewed': {
-    card_type: 'scenario' | 'completion';
-    position: number;
-    scenario_id?: number;
-    difficulty?: string;
-    is_completed?: boolean;
-    is_locked?: boolean;
-  };
+  // 홈 상단 탭 칩을 눌러 옮긴다 — 화면 노출(Page Viewed)엔 뒤로가기·복귀도 섞이니, 손으로 고른 것만 따로 본다
+  'Home Tab Switched': { tab: HomeTab };
   'Scenario Card Flipped': {
     scenario_id: number;
     direction: 'back' | 'front';
@@ -286,6 +287,9 @@ export type EventProps = {
     engine?: 'deepgram' | 'web_speech';
     reason?: string;
   };
+  // AI 발화 재생 실패 — 실패 비율을 본다. 스몰톡 탭의 캐릭터 인사도 같은 재생 훅이라 포함된다.
+  // opening_mp3 = 미리 녹음한 오프닝(실패하면 합성으로 폴백해 체감 없음), synth = 런타임 합성(그 발화가 통째로 건너뛰어진다, 원인은 Sentry)
+  'Speech Playback Failed': { source: 'opening_mp3' | 'synth' };
   'Hint Used': { source: HintSource; level: number };
   'Scenario Talk Completed': {
     session_id: number;
@@ -299,6 +303,11 @@ export type EventProps = {
   };
 
   // 스몰톡 — 상대(partner)는 시나리오에 없는 축이라 전 이벤트에 싣는다. 누구와 얘기하는지로 다 갈린다
+  'Small Talk Partner Selected': { partner: TalkPartner };
+  'Small Talk Topic Selected': { partner: TalkPartner; topic_id: number };
+  'Small Talk Intro Guide Closed': undefined;
+  // coached = 코치마크가 켜진 채로 눌렀는지 (코치마크가 시킨 첫 탭)
+  'Small Talk Greeting Tapped': { partner: TalkPartner; coached: boolean };
   'Small Talk Started': {
     session_id: number;
     partner: TalkPartner;
@@ -369,7 +378,6 @@ export type EventProps = {
   'Review Answer Submitted': {
     expression_id: number;
     is_correct: boolean;
-    wrong_count: number;
     hint_level: number;
   };
   'Expression Completed': ExpressionSource & { expression_id: number };
@@ -379,6 +387,11 @@ export type EventProps = {
   // 수락 = OS 권한창 요청까지 이어짐. 실제 허용/거부는 OS 팝업 결과라 별도 (권한 상태로 세그먼트)
   'Notification Consent Accepted': { source: NotificationConsentSource };
   'Notification Consent Dismissed': { source: NotificationConsentSource };
+  // OS 권한창의 결과 — 마이크(Mic Permission Decided)와 짝. 셸의 회신에서 찍는다
+  'Notification Permission Decided': {
+    granted: boolean;
+    source: NotificationPermissionSource;
+  };
 
   'Satisfaction Prompt Viewed': { moment: SatisfactionMoment };
   'Satisfaction Prompt Answered': {

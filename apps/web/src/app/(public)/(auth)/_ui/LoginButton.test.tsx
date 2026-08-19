@@ -35,4 +35,26 @@ describe('LoginButton', () => {
 
     expect(onClick).not.toHaveBeenCalled();
   });
+
+  it('loading이면 비활성이 되고 진행 중임을 알린다', () => {
+    // given — 제공자 창으로 갔다 돌아온 뒤 로그인이 마무리되는 중
+    const onClick = vi.fn();
+    render(
+      <LoginButton
+        label="카카오로 로그인하기"
+        icon={<svg />}
+        onClick={onClick}
+        loading
+      />,
+    );
+
+    // when
+    const button = screen.getByRole('button', { name: /카카오로 로그인하기/ });
+    fireEvent.click(button);
+
+    // then — 눌러도 반응하지 않고, 보조기기엔 진행 중으로 읽힌다
+    expect(onClick).not.toHaveBeenCalled();
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('aria-busy', 'true');
+  });
 });

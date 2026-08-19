@@ -23,7 +23,7 @@
 - **발화 래퍼**: [`apps/web/src/shared/analytics/amplitude.ts`](../apps/web/src/shared/analytics/amplitude.ts) — `track(EVENTS.X, props)` 단일 통로.
   - `NEXT_PUBLIC_AMPLITUDE_API_KEY`가 없으면 no-op으로 `console.debug`만 남긴다.
   - dev 환경(`NODE_ENV=development`)에선 키가 있어도 모든 이벤트를 콘솔에 같이 찍는다.
-  - 세션 리플레이는 초기 단계라 **100% 수집**(`@amplitude/unified` `initAll`). **오토캡처는 전부 off** — 커스텀 이벤트 53종으로 충분하고 노이즈·볼륨을 줄인다.
+  - 세션 리플레이는 초기 단계라 **100% 수집**(`@amplitude/unified` `initAll`). **오토캡처는 전부 off** — 커스텀 이벤트(events.ts 계약)로 충분하고 노이즈·볼륨을 줄인다.
   - `minIdLength: 1` — 백엔드 회원번호가 1~4자리라 앰플리튜드 기본 5자 제한(400 Invalid id length)에 걸리는 것을 푼다.
   - 전 이벤트 공통 속성: `surface`(app|browser), `platform`(ios|android|web), `app_version`, `build_number` — 셸이 주입한 `window.__LANDIT_NATIVE__`(LAN-156)에서 온다.
 - **유저 식별**: `AnalyticsBootstrap`이 auth 스토어를 구독해 로그인 시 `setUserId(member.userId)` + `provider` 유저 속성, 로그아웃 시 `reset()`. 앱/브라우저 어디서든 같은 유저로 묶인다.
@@ -74,12 +74,11 @@
 
 ### 홈
 
-| 이벤트                | 속성                                                                                            | 시점                                         |
-| --------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| Category Selected     | category_id, category_name, is_locked                                                           | 카테고리 칩 탭                               |
-| Scenario Card Viewed  | card_type(scenario\|completion), position, scenario_id?, difficulty?, is_completed?, is_locked? | 스냅으로 카드가 중앙에 설 때                 |
-| Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto)                                      | 원어민 표현 배우기 / 자동 뒤집힘 / 앞면 복귀 |
-| Expression Selected   | expression_id, 출처(scenario_id\|session_id), source(card_back\|post_conversation)              | 표현 항목 탭                                 |
+| 이벤트                | 속성                                                                                        | 시점                                          |
+| --------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Home Tab Switched     | tab(scenario\|smalltalk)                                                                    | 상단 탭 칩 눌러 이동 (보고 있는 탭 재탭 제외) |
+| Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto)                                  | 원어민 표현 배우기 / 자동 뒤집힘 / 앞면 복귀  |
+| Expression Selected   | expression_id, 출처(scenario_id\|session_id), source(card_back\|post_conversation\|history) | 표현 항목 탭                                  |
 
 ### 오늘의 시나리오 (램프)
 
@@ -105,35 +104,42 @@
 
 ### 시나리오 대화
 
-| 이벤트                       | 속성                                                                     | 시점                                                           |
-| ---------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| Scenario Talk Started        | scenario_id, session_id, first_speaker, is_retry                         | 세션 시작 성공                                                 |
-| Recording Started            | session_id?, turn_index                                                  | 마이크 눌러 말하기                                             |
-| Recording Stopped            | session_id?, turn_index                                                  | ■ 답변 완료 탭 (결과는 각 대화의 Turn Completed / Turn Failed) |
-| Recording Canceled           | session_id?, turn_index                                                  | 듣기 취소 (음성)                                               |
-| Mic Settings Opened          | —                                                                        | 권한 안내에서 "설정 열기"                                      |
-| Input Mode Switched          | session_id?, mode(text\|voice)                                           | 키보드↔마이크 전환 (타이핑 취소 포함)                          |
-| Scenario Talk Turn Completed | session_id, scenario_id, turn_index, input_type(voice\|text), char_count | 발화 제출 성공                                                 |
-| Turn Failed                  | session_id?, turn_index, reason(empty\|api_error)                        | 빈 발화 / 제출 실패                                            |
-| Inner Thought Viewed         | session_id, turn_index, thought_type?                                    | 상대 속마음 노출                                               |
-| Speech Recognition Failed    | engine?, reason?                                                         | STT 오류 (권한 거부 제외)                                      |
-| Scenario Talk Completed      | session_id, scenario_id, turn_count                                      | 서버가 완료 판정                                               |
-| Scenario Talk Abandoned      | session_id?, scenario_id, turn_index                                     | 중도 이탈 확정                                                 |
+| 이벤트                       | 속성                                                                     | 시점                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Scenario Talk Started        | scenario_id, session_id, first_speaker, is_retry                         | 세션 시작 성공                                                               |
+| Recording Started            | session_id?, turn_index                                                  | 마이크 눌러 말하기                                                           |
+| Recording Stopped            | session_id?, turn_index                                                  | ■ 답변 완료 탭 (결과는 각 대화의 Turn Completed / Turn Failed)               |
+| Recording Canceled           | session_id?, turn_index                                                  | 듣기 취소 (음성)                                                             |
+| Mic Settings Opened          | —                                                                        | 권한 안내에서 "설정 열기"                                                    |
+| Input Mode Switched          | session_id?, mode(text\|voice)                                           | 키보드↔마이크 전환 (타이핑 취소 포함)                                        |
+| Scenario Talk Turn Completed | session_id, scenario_id, turn_index, input_type(voice\|text), char_count | 발화 제출 성공                                                               |
+| Turn Failed                  | session_id?, turn_index, reason(empty\|api_error)                        | 빈 발화 / 제출 실패                                                          |
+| Inner Thought Viewed         | session_id, turn_index, thought_type?                                    | 상대 속마음 노출                                                             |
+| Speech Recognition Failed    | engine?, reason?                                                         | STT 오류 (권한 거부 제외)                                                    |
+| Speech Playback Failed       | source(opening_mp3\|synth)                                               | AI 발화 재생 실패 — 실패 비율용. 스몰톡 탭 인사도 포함 (synth 원인은 Sentry) |
+| Scenario Talk Completed      | session_id, scenario_id, turn_count                                      | 서버가 완료 판정                                                             |
+| Scenario Talk Abandoned      | session_id?, scenario_id, turn_index                                     | 중도 이탈 확정                                                               |
 
 `session_id`가 optional인 이벤트는 세션이 백그라운드로 시작돼 확보 전에도 발생할 수 있다.
 
 ### 스몰톡
 
-| 이벤트                    | 속성                                                                                        | 시점             |
-| ------------------------- | ------------------------------------------------------------------------------------------- | ---------------- |
-| Small Talk Started        | session_id, partner, first_speaker, topic_id?                                               | 세션 시작 성공   |
-| Small Talk Turn Completed | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms | 발화 제출 성공   |
-| Small Talk Completed      | session_id, partner, turn_count, speaking_duration_ms, end_reason(user_ended\|time_limit)   | 서버가 완료 판정 |
-| Small Talk Abandoned      | session_id, partner, turn_index                                                             | 중도 이탈 확정   |
+| 이벤트                        | 속성                                                                                        | 시점                                                    |
+| ----------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Small Talk Partner Selected   | partner                                                                                     | 탭에서 상대 칩 선택                                     |
+| Small Talk Topic Selected     | partner, topic_id                                                                           | 주제 모달에서 주제 선택                                 |
+| Small Talk Intro Guide Closed | —                                                                                           | 첫 진입 안내 닫음 (기기당 한 번)                        |
+| Small Talk Greeting Tapped    | partner, coached                                                                            | 캐릭터를 눌러 인사 들음 (coached=코치마크 켜진 채 누름) |
+| Small Talk Started            | session_id, partner, first_speaker, topic_id?                                               | 세션 시작 성공                                          |
+| Small Talk Turn Completed     | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms | 발화 제출 성공                                          |
+| Small Talk Completed          | session_id, partner, turn_count, speaking_duration_ms, end_reason(user_ended\|time_limit)   | 서버가 완료 판정                                        |
+| Small Talk Abandoned          | session_id, partner, turn_index                                                             | 중도 이탈 확정                                          |
 
 스몰톡은 탭도 목적도 달라 대화 이벤트를 따로 둔다 — 시나리오는 오늘의 과제를 끝냈는지, 스몰톡은 누구와 얼마나 얘기했는지를 본다. 상대(`partner`)는 시나리오에 없는 축이라 전 이벤트에 싣는다.
 
-단, 마이크·STT처럼 **대화 엔진이 쏘는 것은 두 대화가 함께 쓴다** (Recording Started/Stopped/Canceled, Input Mode Switched, Turn Failed, Inner Thought Viewed, Speech Recognition Failed). 입력 기계의 사건이라 어느 대화인지와 무관하고, 대화 엔진(features/conversation)은 대화 종류를 모른다.
+탭의 네 이벤트는 대화 시작 전 갈림길이다. 기본 상대로 그냥 시작하면 `Partner Selected`는 안 찍히고 `Started`의 `partner`로 본다. 주제 모달 열림은 안 찍는다 — `Started`의 `topic_id` 유무로 "주제로 시작" 비율이 나온다.
+
+단, 마이크·STT처럼 **대화 엔진이 쏘는 것은 두 대화가 함께 쓴다** (Recording Started/Stopped/Canceled, Input Mode Switched, Turn Failed, Inner Thought Viewed, Speech Recognition Failed, Speech Playback Failed). 입력 기계의 사건이라 어느 대화인지와 무관하고, 대화 엔진(features/conversation)은 대화 종류를 모른다.
 
 ### 분석 피드백
 
@@ -157,20 +163,20 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 
 ### 표현 학습
 
-| 이벤트                      | 속성                                               | 시점                                                              |
-| --------------------------- | -------------------------------------------------- | ----------------------------------------------------------------- |
-| Expression List Viewed      | 출처(scenario_id\|session_id), expression_count    | 분기 화면 리스트 리빌                                             |
-| Expression Learning Skipped | 출처(scenario_id\|session_id), expression_count    | 분기 화면을 X로 닫고 학습 없이 나감 (연출 중이면 count 0 가능)    |
-| Expression Learning Started | expression_id, 출처(scenario_id\|session_id)       | 학습 데이터 로드 완료                                             |
-| Expression Step Viewed      | expression_id, step(quiz\|explain\|review)         | 스텝 노출                                                         |
-| Quiz Word Picked            | expression_id, picked_count                        | 단어 칩 선택                                                      |
-| Quiz Word Removed           | expression_id, picked_count                        | 단어 칩 제거                                                      |
-| Quiz Answer Submitted       | expression_id, is_correct, hint_level              | 퀴즈 확인                                                         |
-| Example Sentence Viewed     | expression_id, sentence_index                      | 예문 캐러셀 스냅                                                  |
-| Review Answer Submitted     | expression_id, is_correct, wrong_count, hint_level | 복습 영작 확인                                                    |
-| Hint Used                   | source(quiz\|review), level                        | 힌트 보기 (퀴즈=일회성·누를 때마다 level 1, 복습=힌트→정답 2단계) |
-| Expression Completed        | expression_id, 출처(scenario_id\|session_id)       | 학습 완료 처리 성공                                               |
-| Expression Abandoned        | expression_id, step                                | 중단 확정                                                         |
+| 이벤트                      | 속성                                            | 시점                                                           |
+| --------------------------- | ----------------------------------------------- | -------------------------------------------------------------- |
+| Expression List Viewed      | 출처(scenario_id\|session_id), expression_count | 분기 화면 리스트 리빌                                          |
+| Expression Learning Skipped | 출처(scenario_id\|session_id), expression_count | 분기 화면을 X로 닫고 학습 없이 나감 (연출 중이면 count 0 가능) |
+| Expression Learning Started | expression_id, 출처(scenario_id\|session_id)    | 학습 데이터 로드 완료                                          |
+| Expression Step Viewed      | expression_id, step(quiz\|explain\|review)      | 스텝 노출                                                      |
+| Quiz Word Picked            | expression_id, picked_count                     | 단어 칩 선택                                                   |
+| Quiz Word Removed           | expression_id, picked_count                     | 단어 칩 제거                                                   |
+| Quiz Answer Submitted       | expression_id, is_correct, hint_level           | 퀴즈 확인                                                      |
+| Example Sentence Viewed     | expression_id, sentence_index                   | 예문 캐러셀 스냅                                               |
+| Review Answer Submitted     | expression_id, is_correct, hint_level           | 복습 영작 확인 (오답이어도 재시도 없이 완료로 이어진다)        |
+| Hint Used                   | source(quiz\|review), level                     | 힌트 보기 (퀴즈·복습 모두 일회성, 누를 때마다 level 1)         |
+| Expression Completed        | expression_id, 출처(scenario_id\|session_id)    | 학습 완료 처리 성공                                            |
+| Expression Abandoned        | expression_id, step                             | 중단 확정                                                      |
 
 표현 학습 화면은 시나리오 대화와 스몰톡이 같이 쓴다. 어디서 온 표현인지는 출처 속성으로 갈린다 — 시나리오 표현이면 `scenario_id`, 스몰톡 표현이면 `session_id`가 실린다.
 
@@ -188,6 +194,17 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 리소스라 화면 이름도 갈리고(`mailbox_received`+letter_id / `mailbox_sent`+feedback_id),
 목록은 칸을 옮겨도 같은 화면이라 `mailbox` 하나다. 작성은 유형마다 주소가 갈려도 화면 이름은
 `feedback_compose` 하나로 두고 고른 유형을 `feedback_type`으로 싣는다.
+
+### 알림
+
+| 이벤트                          | 속성                                      | 시점                                                     |
+| ------------------------------- | ----------------------------------------- | -------------------------------------------------------- |
+| Notification Consent Viewed     | source(scenario\|me)                      | 알림 안내 시트 노출                                      |
+| Notification Consent Accepted   | source                                    | 시트에서 수락 (OS 권한창 요청까지 이어짐)                |
+| Notification Consent Dismissed  | source                                    | 시트 닫음                                                |
+| Notification Permission Decided | granted, source(onboarding\|scenario\|me) | OS 권한창 결과 — 셸의 회신에서 찍는다 (마이크와 같은 짝) |
+
+온보딩의 알림 스텝은 시트 없이 바로 OS 권한창을 띄워 Consent 이벤트가 없고, 결과는 `Notification Permission Decided(source: onboarding)`로 남는다. 이미 거부한 상태에서 내 정보의 "OS 설정 열기"는 안 찍는다 — 결과를 알 수 없다.
 
 ### 유저 속성
 

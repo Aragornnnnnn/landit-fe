@@ -6,12 +6,12 @@ import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
-import { postToNative } from '@/shared/bridge/web-bridge';
 
 import {
   hasSeenConsentPrompt,
   markConsentPromptSeen,
 } from '../model/consent-prompt';
+import { requestNotificationPermission } from '../model/request-permission';
 import { useNotificationPermission } from '../model/useNotificationPermission';
 import { NotificationConsentSheet } from './NotificationConsentSheet';
 
@@ -45,7 +45,7 @@ export const NotificationConsentGate = () => {
   // 수락 = OS 권한창 요청 — 회신은 훅이 받아 상태를 갱신하고, 허용되면 ReminderSync가 예약까지 이어간다
   const accept = () => {
     track(EVENTS.NOTIFICATION_CONSENT_ACCEPTED, { source: 'scenario' });
-    postToNative({ type: 'REQUEST_NOTIFICATION_PERMISSION' });
+    requestNotificationPermission('scenario');
     close();
   };
 
