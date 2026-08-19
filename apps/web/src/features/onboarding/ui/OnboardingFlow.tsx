@@ -5,11 +5,12 @@ import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { requestNotificationPermission } from '@/features/notification/model/request-permission';
 import { useNotificationPermission } from '@/features/notification/model/useNotificationPermission';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { markOnboardingSeen } from '@/shared/auth/onboarding-seen';
-import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
+import { subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { ONBOARDED_PARAM, SCENARIO_PATH } from '@/shared/lib/routes';
 import { Transition } from '@/shared/motion';
 
@@ -144,9 +145,7 @@ export const OnboardingFlow = () => {
           <NotificationStep
             // OS 권한창만 요청한다 — 회신은 useNotificationPermission이 받고, 아래 effect가 확정을 보고 다음 스텝으로 넘긴다.
             // 여기서 답하면 권한 상태가 확정되므로 홈의 동의 게이트는 저절로 조용해진다
-            onNext={() =>
-              postToNative({ type: 'REQUEST_NOTIFICATION_PERMISSION' })
-            }
+            onNext={() => requestNotificationPermission('onboarding')}
           />
         )}
         {step === 'scenario' && <LampStep onStart={startFirstConversation} />}

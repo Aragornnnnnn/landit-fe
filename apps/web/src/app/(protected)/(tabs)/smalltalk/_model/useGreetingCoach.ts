@@ -4,6 +4,9 @@
 'use client';
 
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { EVENTS } from '@landit/analytics';
+
+import { track } from '@/shared/analytics';
 
 import { introGuideSeen } from './intro-guide-seen';
 import { tapGreetingSeen } from './tap-greeting-seen';
@@ -22,6 +25,7 @@ export const useGreetingCoach = ({ onTap }: { onTap: () => void }) => {
   }, [coaching]);
 
   const closeGuide = () => {
+    track(EVENTS.SMALL_TALK_INTRO_GUIDE_CLOSED);
     introGuideSeen.mark();
     setGuideOpen(false);
   };

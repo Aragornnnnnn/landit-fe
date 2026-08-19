@@ -9,8 +9,11 @@ export {
   type ExpressionStep,
   type TurnInputType,
   type TalkPartner,
+  type QuizStepKind,
   type HintSource,
   type HomeReturnReason,
   type RetryScreen,
   type FeedbackType,
+  type HomeTab,
+  type NotificationPermissionSource,
 } from './events';

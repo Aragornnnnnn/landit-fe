@@ -34,11 +34,24 @@ export default function SmallTalkPage() {
   const { guideOpen, coaching, closeGuide, tapPartner, partnerRef, trapFocus } =
     useGreetingCoach({ onTap: greet });
 
-  // 계측은 세션이 실제로 열리는 대화 화면에서 한다 — 여기서 쏘면 들어가다 만 것도 시작으로 잡힌다
+  // 캐릭터 탭 인사 — 코치마크가 켜진 채로 눌렀는지도 함께 남긴다 (코치마크가 시킨 첫 탭인지)
+  const tapGreeting = () => {
+    track(EVENTS.SMALL_TALK_GREETING_TAPPED, {
+      partner: partner.id,
+      coached: coaching,
+    });
+    tapPartner();
+  };
+
+  // 대화 시작 계측은 세션이 실제로 열리는 대화 화면에서 한다 — 여기서 쏘면 들어가다 만 것도 시작으로 잡힌다
   const startWithMe = () =>
     router.push(smallTalkPath({ partner: partner.id, mode: 'user_first' }));
 
   const startWithTopic = (topic: SmallTalkTopic) => {
+    track(EVENTS.SMALL_TALK_TOPIC_SELECTED, {
+      partner: partner.id,
+      topic_id: topic.topicId,
+    });
     setTopicOpen(false);
     router.push(
       smallTalkPath({
@@ -90,7 +103,7 @@ export default function SmallTalkPage() {
       <button
         ref={partnerRef}
         type="button"
-        onClick={tapPartner}
+        onClick={tapGreeting}
         onKeyDown={trapFocus}
         aria-label={`${partner.koreanName} 인사 듣기`}
         className={[

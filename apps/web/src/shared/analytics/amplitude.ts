@@ -46,7 +46,7 @@ export const initAnalytics = () => {
   const apiKey = getApiKey();
   if (!apiKey) return;
 
-  // 세션 리플레이는 초기 단계라 100% 수집. 오토캡처 이벤트는 전부 끈다 — 커스텀 이벤트 53종으로 충분.
+  // 세션 리플레이는 초기 단계라 100% 수집. 오토캡처 이벤트는 전부 끈다 — 커스텀 이벤트(events.ts 계약)로 충분.
   // attribution만 켠다 — 알림 딥링크 등 URL의 utm_*를 유저 프로퍼티로 자동 수집한다 (이벤트 노이즈 없음).
   // minIdLength: 백엔드 회원번호가 1~4자리라 앰플리튜드 기본 5자 제한에 걸려
   // "Invalid id length for user_id"(400)로 이벤트가 통째로 거절되던 것을 푼다
