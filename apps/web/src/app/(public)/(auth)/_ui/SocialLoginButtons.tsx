@@ -4,7 +4,7 @@
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
 import { useSocialLogin } from '../_model/useSocialLogin';
-import styles from '../login-motion.module.css';
+import styles from './login-motion.module.css';
 import { LoginButton } from './LoginButton';
 import { AppleIcon, GoogleIcon, KakaoIcon } from './SocialIcons';
 

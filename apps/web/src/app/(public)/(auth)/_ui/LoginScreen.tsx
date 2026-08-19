@@ -1,9 +1,8 @@
-// 로그인 화면 — 소셜 로그인 진입점 + 네이티브 스플래시에서 이어지는 진입 모션
+// 로그인 화면 본체 — /login과 소셜 로그인 콜백이 같은 화면을 그린다. 콜백은 돌아온 자리에서 버튼 로딩 상태로 이어받는다
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
-import { AuthedRedirect } from './_ui/AuthedRedirect';
-import { SocialLoginButtons } from './_ui/SocialLoginButtons';
 import styles from './login-motion.module.css';
+import { SocialLoginButtons } from './SocialLoginButtons';
 
 // 세션 내 재방문이면 모션을 스킵하도록 첫 페인트 전에 html에 클래스 부여 (FOUC 방지 위해 인라인 블로킹 스크립트 — useEffect는 이미 한 프레임 그려진 뒤라 늦음)
 const splashSkip = `
@@ -16,10 +15,10 @@ const splashSkip = `
   } catch (e) {}
 `;
 
-const LoginPage = () => (
+export const LoginScreen = ({ children }: { children?: React.ReactNode }) => (
   <main className="relative mx-auto h-dvh max-w-[430px] overflow-x-hidden overflow-y-auto bg-background">
     <script dangerouslySetInnerHTML={{ __html: splashSkip }} />
-    <AuthedRedirect />
+    {children}
 
     <div className={styles.logoWrap}>
       <LanditLogo className={`${styles.logo} h-12 text-foreground`} />
@@ -42,5 +41,3 @@ const LoginPage = () => (
     </div>
   </main>
 );
-
-export default LoginPage;
