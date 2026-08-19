@@ -1,6 +1,6 @@
 // 피드백 유형이 화면에 나오는 모든 모습 — 이름·이모지·주소 조각, 그리고 작성 화면의 말투
 // 유형이 하나 늘면 여기만 고치면 선택·작성·보낸 편지 제목이 함께 따라온다
-import { MAILBOX_PATH } from '@/shared/lib/routes';
+import { MAILBOX_COMPOSE_PATH } from '@/shared/lib/routes';
 
 import type { FeedbackType } from '../api/mailbox';
 
@@ -70,8 +70,8 @@ export const readFeedbackType = (slug: string): FeedbackType | null =>
   null;
 
 // 작성 흐름(목록 → 유형 선택 → 작성)은 히스토리에 한 층만 쓴다 — 진입·다음 단계·화살표 모두 replace,
-// 보내면 보낸 편지함으로 replace. 보내고 나서 휴대폰 뒤로가기를 누르면 편지함이 아니라 들어오기 전 탭으로 나가야 해서다
-export const MAILBOX_COMPOSE_PATH = `${MAILBOX_PATH}/compose`;
+// 보내면 보낸 편지함으로 replace. 보내고 나서 휴대폰 뒤로가기를 누르면 편지함이 아니라 들어오기 전 탭으로 나가야 해서다.
+// 진입 주소(MAILBOX_COMPOSE_PATH)는 편지함 밖에서도 써서 shared/lib/routes에 있다
 
 // 유형을 주소 조각으로 실어 보낸다. 되돌리는 쪽은 바로 위 readFeedbackType — 왕복이 한 파일에 있다
 export const feedbackComposePath = (type: FeedbackType) =>
