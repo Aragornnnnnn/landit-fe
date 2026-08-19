@@ -13,4 +13,7 @@ export {
   type HomeReturnReason,
   type RetryScreen,
   type FeedbackType,
+  type SatisfactionTalk,
+  type SatisfactionMoment,
+  type SatisfactionAnswer,
 } from './events';
