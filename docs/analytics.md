@@ -23,7 +23,7 @@
 - **발화 래퍼**: [`apps/web/src/shared/analytics/amplitude.ts`](../apps/web/src/shared/analytics/amplitude.ts) — `track(EVENTS.X, props)` 단일 통로.
   - `NEXT_PUBLIC_AMPLITUDE_API_KEY`가 없으면 no-op으로 `console.debug`만 남긴다.
   - dev 환경(`NODE_ENV=development`)에선 키가 있어도 모든 이벤트를 콘솔에 같이 찍는다.
-  - 세션 리플레이는 초기 단계라 **100% 수집**(`@amplitude/unified` `initAll`). **오토캡처는 전부 off** — 커스텀 이벤트 53종으로 충분하고 노이즈·볼륨을 줄인다.
+  - 세션 리플레이는 초기 단계라 **100% 수집**(`@amplitude/unified` `initAll`). **오토캡처는 전부 off** — 커스텀 이벤트(events.ts 계약)로 충분하고 노이즈·볼륨을 줄인다.
   - `minIdLength: 1` — 백엔드 회원번호가 1~4자리라 앰플리튜드 기본 5자 제한(400 Invalid id length)에 걸리는 것을 푼다.
   - 전 이벤트 공통 속성: `surface`(app|browser), `platform`(ios|android|web), `app_version`, `build_number` — 셸이 주입한 `window.__LANDIT_NATIVE__`(LAN-156)에서 온다.
 - **유저 식별**: `AnalyticsBootstrap`이 auth 스토어를 구독해 로그인 시 `setUserId(member.userId)` + `provider` 유저 속성, 로그아웃 시 `reset()`. 앱/브라우저 어디서든 같은 유저로 묶인다.
