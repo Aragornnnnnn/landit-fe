@@ -50,13 +50,17 @@ const update = (
 
 const read = (moment: SatisfactionMoment) => readAll()[entryKey(moment)];
 
+const TALKS: SatisfactionTalk[] = ['scenario', 'smalltalk'];
+
 // 대화를 마쳤다 — 홈에 돌아오면 물을 차례라고 남긴다
 export const markTalkCompleted = (talk: SatisfactionTalk) =>
   update(talk, { pending: true });
 
-// 홈에서 소감 시트를 하나 띄웠다 — 같은 완료로 다른 시트가 또 뜨지 않게 차례를 소비한다
-export const consumeTalkPending = (talk: SatisfactionTalk) =>
-  update(talk, { pending: false });
+// 홈에서 시트를 하나 띄웠다 — 쌓여 있던 차례를 모두 지운다. 리뷰 요청은 대화 종류를 가리지 않아,
+// 하나만 지우면 남은 차례로 다른 시트가 곧바로 이어 뜬다
+export const consumeAllTalkPending = () => {
+  for (const talk of TALKS) update(talk, { pending: false });
+};
 
 export const recordSatisfactionAnswer = (
   moment: SatisfactionMoment,
@@ -73,29 +77,17 @@ export const shouldAskSatisfaction = (talk: SatisfactionTalk) => {
   return record?.pending === true && record.answer === undefined;
 };
 
-// 랜딧 소감(별점 유도) — 시나리오 대화를 막 마쳤고, 서버 기준으로 오늘이 두 번째 이상의 완료일이며,
-// 첫 소감에서 아쉬웠다고 하지 않았고, 아직 묻지 않았을 때. 같은 날 두 번째 대화는 완료일이 안 늘어 치지 않는다.
-// 완료일 숫자는 부르는 쪽이 넘긴다(스트릭 달력) — 이 슬라이스는 스트릭을 모른다
-export const shouldAskAppSatisfaction = (streak: {
+// 리뷰 요청 — 첫 소감에서 좋았다고 한 사람에게만, 다른 날 다시 와서 대화(종류 무관)를 마쳤을 때 한 번.
+// 완료일 숫자는 부르는 쪽이 넘긴다(스트릭 달력) — 이 슬라이스는 스트릭을 모른다.
+// 같은 날 두 번째 대화는 완료일이 안 늘어 치지 않는다
+export const shouldAskReview = (streak: {
   activeToday: boolean;
   totalActiveDays: number;
-}) => {
-  const first = read('scenario');
-  return (
-    first?.pending === true &&
-    first.answer !== 'bad' &&
-    read('app')?.answer === undefined &&
-    streak.activeToday &&
-    streak.totalActiveDays >= 2
-  );
-};
+}) => mayAskReview() && streak.activeToday && streak.totalActiveDays >= 2;
 
-// 위 조건 중 로컬만으로 알 수 있는 부분 — 스트릭을 굳이 조회할 필요가 있는지 먼저 거른다
-export const mayAskAppSatisfaction = () => {
-  const first = read('scenario');
-  return (
-    first?.pending === true &&
-    first.answer !== 'bad' &&
-    read('app')?.answer === undefined
-  );
-};
+// 위 조건 중 로컬만으로 알 수 있는 부분 — 스트릭을 굳이 조회할 필요가 있는지 먼저 거른다.
+// 어느 대화든 방금 마쳤고, 어느 소감에서든 좋았다고 했고, 아직 리뷰를 청하지 않았을 때
+export const mayAskReview = () =>
+  TALKS.some((talk) => read(talk)?.pending === true) &&
+  TALKS.some((talk) => read(talk)?.answer === 'good') &&
+  read('review')?.answer === undefined;

@@ -14,7 +14,6 @@ import { getNativeContext } from '@/shared/bridge/native-context';
 import {
   markTalkCompleted,
   readSatisfactionAnswer,
-  recordSatisfactionAnswer,
   shouldAskSatisfaction,
 } from '../model/prompt-record';
 import { SatisfactionGate, THANKS_MS } from './SatisfactionGate';
@@ -43,30 +42,17 @@ afterEach(() => {
 const ASK = '방금 대화, 어떠셨나요?';
 
 describe('SatisfactionGate', () => {
-  it('대화를 마친 기록이 없으면 아무것도 띄우지 않는다', () => {
-    render(<SatisfactionGate moment="scenario" />);
-
-    expect(screen.queryByText(ASK)).not.toBeInTheDocument();
-  });
-
-  it('대화를 마치고 왔으면 소감 시트를 띄우고 노출을 계측한다', () => {
+  it('띄우면 노출을 계측하고, 쌓여 있던 차례를 소비한다', () => {
     markTalkCompleted('scenario');
 
     render(<SatisfactionGate moment="scenario" />);
+
+    expect(shouldAskSatisfaction('scenario')).toBe(false);
 
     expect(screen.getByText(ASK)).toBeInTheDocument();
     expect(trackMock).toHaveBeenCalledWith('Satisfaction Prompt Viewed', {
       moment: 'scenario',
     });
-  });
-
-  it('이미 답한 적 있으면 다시 띄우지 않는다', () => {
-    markTalkCompleted('scenario');
-    recordSatisfactionAnswer('scenario', 'dismiss');
-
-    render(<SatisfactionGate moment="scenario" />);
-
-    expect(screen.queryByText(ASK)).not.toBeInTheDocument();
   });
 
   it('스몰톡은 스몰톡 문구로 묻는다', () => {
@@ -148,64 +134,53 @@ describe('SatisfactionGate', () => {
       answer: 'dismiss',
     });
   });
-
-  it('첫 소감이 뜨면 이번 완료의 차례를 소비한다 — 같은 완료로 다시 마운트돼도 안 뜬다', () => {
-    markTalkCompleted('scenario');
-    const { unmount } = render(<SatisfactionGate moment="scenario" />);
-    expect(screen.getByText(ASK)).toBeInTheDocument();
-
-    // 답하지 않고 화면을 떠났다가(언마운트) 홈에 다시 온다
-    unmount();
-    render(<SatisfactionGate moment="scenario" />);
-
-    expect(screen.queryByText(ASK)).not.toBeInTheDocument();
-  });
 });
 
-describe('SatisfactionGate — 랜딧 소감(app)', () => {
-  const ASK_APP = '랜딧, 잘 사용하고 계신가요?';
+describe('SatisfactionGate — 리뷰 요청(review)', () => {
+  it('묻는 단계 없이 별점판으로 바로 열린다', () => {
+    render(<SatisfactionGate moment="review" />);
 
-  it('띄우기로 결정돼 마운트되면 바로 묻고, 시나리오 완료 차례를 소비한다', () => {
-    markTalkCompleted('scenario');
-
-    render(<SatisfactionGate moment="app" />);
-
-    expect(screen.getByText(ASK_APP)).toBeInTheDocument();
+    expect(screen.getByText('잘 써주셔서 감사해요!')).toBeInTheDocument();
+    expect(screen.getByText('응원 남기러 가기')).toBeInTheDocument();
     expect(trackMock).toHaveBeenCalledWith('Satisfaction Prompt Viewed', {
-      moment: 'app',
+      moment: 'review',
     });
-    // 차례가 소비돼 첫 소감도 이 완료로는 더 뜨지 않는다
-    expect(shouldAskSatisfaction('scenario')).toBe(false);
   });
 
-  it('잘 쓰고 있어요를 누르면 별점판으로 바뀌고, 리뷰 남기러 가기는 스토어를 연다', () => {
+  it('뜨면 쌓여 있던 차례를 모두 소비한다 — 닫자마자 다른 시트가 이어 뜨지 않게', () => {
+    markTalkCompleted('scenario');
+    markTalkCompleted('smalltalk');
+
+    render(<SatisfactionGate moment="review" />);
+
+    expect(shouldAskSatisfaction('scenario')).toBe(false);
+    expect(shouldAskSatisfaction('smalltalk')).toBe(false);
+  });
+
+  it('응원 남기러 가기를 누르면 스토어를 연다', () => {
     getNativeContextMock.mockReturnValue({
       platform: 'ios',
     } as ReturnType<typeof getNativeContext>);
-    const assign = vi
+    const location = vi
       .spyOn(window, 'location', 'get')
       .mockReturnValue({ href: '' } as Location);
-    render(<SatisfactionGate moment="app" />);
-
-    fireEvent.click(screen.getByText('잘 쓰고 있어요'));
-
-    expect(screen.getByText('잘 써주셔서 감사해요!')).toBeInTheDocument();
-    expect(readSatisfactionAnswer('app')).toBe('good');
+    render(<SatisfactionGate moment="review" />);
 
     fireEvent.click(screen.getByText('응원 남기러 가기'));
 
+    expect(readSatisfactionAnswer('review')).toBe('good');
     expect(trackMock).toHaveBeenCalledWith('Review Store Opened', {
       store: 'app_store',
     });
-    assign.mockRestore();
+    location.mockRestore();
   });
 
-  it('아쉬워요를 누르면 랜딧용 피드백 안내로 바뀐다', () => {
-    render(<SatisfactionGate moment="app" />);
+  it('딤으로 닫으면 dismiss로 남겨 다시 청하지 않는다', () => {
+    render(<SatisfactionGate moment="review" />);
 
-    fireEvent.click(screen.getByText('아쉬워요'));
+    fireEvent.click(screen.getByTestId('bottom-sheet-dim'));
 
-    expect(screen.getByText('어떤 부분이 아쉬우셨나요?')).toBeInTheDocument();
-    expect(readSatisfactionAnswer('app')).toBe('bad');
+    expect(readSatisfactionAnswer('review')).toBe('dismiss');
+    expect(screen.queryByText('잘 써주셔서 감사해요!')).not.toBeInTheDocument();
   });
 });

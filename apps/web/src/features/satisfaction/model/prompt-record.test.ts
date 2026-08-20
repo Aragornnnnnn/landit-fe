@@ -2,13 +2,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
-  consumeTalkPending,
+  consumeAllTalkPending,
   markTalkCompleted,
-  mayAskAppSatisfaction,
+  mayAskReview,
   PROMPT_RECORD_KEY,
   readSatisfactionAnswer,
   recordSatisfactionAnswer,
-  shouldAskAppSatisfaction,
+  shouldAskReview,
   shouldAskSatisfaction,
 } from './prompt-record';
 
@@ -50,83 +50,93 @@ describe('shouldAskSatisfaction', () => {
   });
 });
 
-describe('shouldAskAppSatisfaction — 랜딧 소감(별점 유도)', () => {
-  const secondDay = { activeToday: true, totalActiveDays: 2 };
+describe('shouldAskReview — 리뷰 요청', () => {
+  const anotherDay = { activeToday: true, totalActiveDays: 2 };
 
-  it('시나리오 대화를 막 마쳤고 서버 기준 두 번째 완료일이면 묻는다', () => {
+  // 좋았다고 한 사람이 다른 날 다시 와서 대화를 마친 상태
+  const cameBackAfterGood = (talk: 'scenario' | 'smalltalk' = 'scenario') => {
+    markTalkCompleted(talk);
+    recordSatisfactionAnswer(talk, 'good');
+    consumeAllTalkPending();
+    markTalkCompleted(talk);
+  };
+
+  it('좋았다고 했던 사람이 다른 날 또 대화를 마쳤으면 청한다', () => {
+    cameBackAfterGood();
+
+    expect(shouldAskReview(anotherDay)).toBe(true);
+  });
+
+  it('대화 종류는 가리지 않는다 — 시나리오에서 좋았다고 하고 스몰톡을 마쳐도 청한다', () => {
     markTalkCompleted('scenario');
     recordSatisfactionAnswer('scenario', 'good');
+    consumeAllTalkPending();
+    markTalkCompleted('smalltalk');
 
-    expect(shouldAskAppSatisfaction(secondDay)).toBe(true);
+    expect(shouldAskReview(anotherDay)).toBe(true);
   });
 
-  it('첫 완료일이면(totalActiveDays 1) 묻지 않는다', () => {
-    markTalkCompleted('scenario');
+  it('첫 완료일이면(totalActiveDays 1) 청하지 않는다 — 같은 날 두 번째 대화도 여기 걸린다', () => {
+    cameBackAfterGood();
 
-    expect(
-      shouldAskAppSatisfaction({ activeToday: true, totalActiveDays: 1 }),
-    ).toBe(false);
+    expect(shouldAskReview({ activeToday: true, totalActiveDays: 1 })).toBe(
+      false,
+    );
   });
 
-  it('오늘 완료한 게 아니면 묻지 않는다 — 며칠 전 두 번째를 마친 사람이 오늘 홈만 연 경우', () => {
-    markTalkCompleted('scenario');
+  it('오늘 완료한 게 아니면 청하지 않는다 — 며칠 전 대화한 사람이 오늘 홈만 연 경우', () => {
+    cameBackAfterGood();
 
-    expect(
-      shouldAskAppSatisfaction({ activeToday: false, totalActiveDays: 3 }),
-    ).toBe(false);
+    expect(shouldAskReview({ activeToday: false, totalActiveDays: 3 })).toBe(
+      false,
+    );
   });
 
-  it('막 마친 차례(pending)가 아니면 묻지 않는다', () => {
-    expect(shouldAskAppSatisfaction(secondDay)).toBe(false);
+  it('막 마친 차례가 아니면 청하지 않는다', () => {
+    markTalkCompleted('scenario');
+    recordSatisfactionAnswer('scenario', 'good');
+    consumeAllTalkPending();
+
+    expect(shouldAskReview(anotherDay)).toBe(false);
   });
 
-  it('첫 소감에서 아쉬웠다고 한 사람에겐 묻지 않는다', () => {
-    markTalkCompleted('scenario');
-    recordSatisfactionAnswer('scenario', 'bad');
+  it.each([['bad'], ['dismiss']] as const)(
+    '좋았다고 하지 않은 사람에게는(%s) 청하지 않는다',
+    (answer) => {
+      markTalkCompleted('scenario');
+      recordSatisfactionAnswer('scenario', answer);
+      consumeAllTalkPending();
+      markTalkCompleted('scenario');
 
-    expect(shouldAskAppSatisfaction(secondDay)).toBe(false);
-  });
+      expect(shouldAskReview(anotherDay)).toBe(false);
+    },
+  );
 
-  it('첫 소감을 닫기만 한 사람에겐 묻는다', () => {
-    markTalkCompleted('scenario');
-    recordSatisfactionAnswer('scenario', 'dismiss');
+  it('한 번 청했으면 다시 청하지 않는다', () => {
+    cameBackAfterGood();
+    recordSatisfactionAnswer('review', 'dismiss');
 
-    expect(shouldAskAppSatisfaction(secondDay)).toBe(true);
-  });
-
-  it('한 번 답했으면 다시 묻지 않는다', () => {
-    markTalkCompleted('scenario');
-    recordSatisfactionAnswer('app', 'dismiss');
-
-    expect(shouldAskAppSatisfaction(secondDay)).toBe(false);
-  });
-
-  it('시트를 하나 띄워 차례를 소비하면 같은 완료로는 또 묻지 않는다', () => {
-    // Given 이번 완료로 첫 소감 시트가 이미 떴다
-    markTalkCompleted('scenario');
-    consumeTalkPending('scenario');
-
-    // Then 다음 완료 전까지 랜딧 소감도 뜨지 않는다
-    expect(shouldAskAppSatisfaction(secondDay)).toBe(false);
-
-    // When 다시 마치면 차례가 돌아온다
-    markTalkCompleted('scenario');
-    expect(shouldAskAppSatisfaction(secondDay)).toBe(true);
+    expect(shouldAskReview(anotherDay)).toBe(false);
   });
 });
 
-describe('mayAskAppSatisfaction — 스트릭을 조회할 필요가 있는지 로컬만으로 거른다', () => {
-  it('막 마쳤고 첫 소감이 bad가 아니고 아직 안 물었으면 조회할 가치가 있다', () => {
+describe('mayAskReview — 스트릭을 조회할 필요가 있는지 로컬만으로 거른다', () => {
+  it('막 마쳤고 좋았다고 했고 아직 안 청했으면 조회할 가치가 있다', () => {
+    markTalkCompleted('scenario');
+    recordSatisfactionAnswer('scenario', 'good');
+    consumeAllTalkPending();
     markTalkCompleted('scenario');
 
-    expect(mayAskAppSatisfaction()).toBe(true);
+    expect(mayAskReview()).toBe(true);
   });
 
-  it('첫 소감이 bad면 조회할 필요가 없다', () => {
+  it('좋았다고 한 적이 없으면 조회할 필요가 없다', () => {
     markTalkCompleted('scenario');
     recordSatisfactionAnswer('scenario', 'bad');
+    consumeAllTalkPending();
+    markTalkCompleted('scenario');
 
-    expect(mayAskAppSatisfaction()).toBe(false);
+    expect(mayAskReview()).toBe(false);
   });
 });
 

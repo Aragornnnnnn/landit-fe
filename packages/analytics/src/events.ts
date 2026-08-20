@@ -149,9 +149,9 @@ export type NotificationConsentSource = 'scenario' | 'me';
 export type NotificationPermissionSource =
   'onboarding' | NotificationConsentSource;
 // 소감을 물은 순간과 답 — 닫기(딤·뒤로가기)도 답으로 셈해 다시 묻지 않는다.
-// talk = 대화 종류(첫 소감), app = 다른 날 두 번째 대화 뒤 랜딧 전체를 묻는 소감(별점 유도)
+// talk = 대화 종류(첫 소감), review = 다른 날 다시 와서 대화를 마쳤을 때 청하는 스토어 리뷰
 export type SatisfactionTalk = 'scenario' | 'smalltalk';
-export type SatisfactionMoment = SatisfactionTalk | 'app';
+export type SatisfactionMoment = SatisfactionTalk | 'review';
 export type SatisfactionAnswer = 'good' | 'bad' | 'dismiss';
 export type CalendarView = 'week' | 'month';
 export type HomeTab = 'scenario' | 'smalltalk';

@@ -16,6 +16,7 @@ import { SMALLTALK_HISTORY_PATH, smallTalkPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 
+import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
 import { useGreetingCoach } from './_model/useGreetingCoach';
 import { usePartnerGreeting } from './_model/usePartnerGreeting';
 import { CoachBubble, CoachDim } from './_ui/GreetingCoach';
@@ -34,6 +35,8 @@ export default function SmallTalkPage() {
   // 처음 들어온 사람에겐 래디 안내부터, 닫으면 캐릭터를 눌러 보라는 코치마크 — 둘 다 기기당 한 번이다
   const { guideOpen, coaching, closeGuide, tapPartner, partnerRef, trapFocus } =
     useGreetingCoach({ onTap: greet });
+  // 이번 방문에 띄울 시트 하나 — 첫 스몰톡 소감 → 리뷰 요청
+  const satisfaction = useSatisfactionSheet('smalltalk');
 
   // 캐릭터 탭 인사 — 코치마크가 켜진 채로 눌렀는지도 함께 남긴다 (코치마크가 시킨 첫 탭인지)
   const tapGreeting = () => {
@@ -187,8 +190,9 @@ export default function SmallTalkPage() {
 
       {guideOpen && <IntroGuide onClose={closeGuide} />}
       <AnimatePresence>{coaching && <CoachDim />}</AnimatePresence>
-      {/* 첫 스몰톡을 마치고 돌아온 사람에게 한 번 — 안내·코치마크는 첫 진입 때 이미 끝난 뒤라 겹치지 않는다 */}
-      <SatisfactionGate moment="smalltalk" />
+      {/* 스몰톡을 마치고 돌아온 사람에게 한 번 — 안내·코치마크는 첫 진입 때 이미 끝난 뒤라 겹치지 않는다 */}
+      {satisfaction.sheet === 'talk' && <SatisfactionGate moment="smalltalk" />}
+      {satisfaction.sheet === 'review' && <SatisfactionGate moment="review" />}
 
       <TopicPickerModal
         open={topicOpen}

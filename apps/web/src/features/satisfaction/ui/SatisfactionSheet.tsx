@@ -1,7 +1,7 @@
 'use client';
 
-// 소감 바텀시트 — 묻기(ask) → 답에 따라 감사(thanks)·피드백 안내(letter)·별점판(review)으로 같은 시트 안에서 말만 바꾼다.
-// 대화 소감(scenario·smalltalk)은 좋았어요 → 감사, 랜딧 소감(app)은 잘 쓰고 있어요 → 별점판으로 간다.
+// 소감 바텀시트 — 대화 소감(scenario·smalltalk)은 묻기(ask)로 열려 좋았어요 → 감사(thanks),
+// 아쉬웠어요 → 피드백 안내(letter)로 같은 시트 안에서 말만 바뀐다. 리뷰 요청(review)은 물을 게 없어 별점판으로 바로 열린다.
 // 시나리오 쪽 제목이 "첫 대화"가 아니라 "방금 대화"인 건, 배포 전부터 쓰던 사람에겐 첫 대화가 아니어서다
 import type { SatisfactionMoment } from '@landit/analytics';
 
@@ -25,15 +25,15 @@ interface Face {
   image: string;
   title: string;
   body: string;
-  // 묻기 화면의 두 버튼 — 질문에 맞는 답으로 쓴다 (어떠셨나요 → 좋았어요, 잘 사용하고 계신가요 → 잘 쓰고 있어요)
+  // 묻기 화면의 두 버튼
   bad?: string;
   good?: string;
   // 한 버튼 화면의 CTA
   cta?: string;
 }
 
+// 시나리오는 왼쪽에서, 스몰톡은 반대쪽에서 빼꼼 — 두 번째로 볼 때 같은 그림이 아니게 (물음표는 정방향인 별도 에셋)
 const PEEK = '/images/character/landy-peek.webp';
-// 두 번째 질문(랜딧 소감)은 반대쪽에서 빼꼼 — 같은 그림을 또 보이지 않게. 물음표는 정방향으로 유지한 별도 에셋
 const PEEK_RIGHT = '/images/character/landy-peek-right.webp';
 const WAVE = '/images/character/landy-wave-smile.webp';
 const CRYING = '/images/character/landy-crying.webp';
@@ -41,29 +41,13 @@ const REVIEW = '/images/character/landy-review.webp';
 
 // 순간·화면별 얼굴과 말 — 본문은 모두 두 줄 이내로 맞춰 시트 높이가 같게 유지되게 한다
 const faceOf = (moment: SatisfactionMoment, view: SatisfactionView): Face => {
-  if (moment === 'app') {
-    if (view === 'review')
-      return {
-        image: REVIEW,
-        title: '잘 써주셔서 감사해요!',
-        body: '스토어에 남겨주신 응원 한마디가\n랜딧에겐 큰 힘이 돼요',
-        cta: '응원 남기러 가기',
-      };
-    if (view === 'letter')
-      return {
-        image: CRYING,
-        title: '어떤 부분이 아쉬우셨나요?',
-        body: '피드백을 보내주시면 꼭 읽고 답장드릴게요',
-        cta: '피드백 보내기',
-      };
+  if (moment === 'review')
     return {
-      image: PEEK_RIGHT,
-      title: '랜딧, 잘 사용하고 계신가요?',
-      body: '오늘도 대화 하나 마치셨네요!\n솔직하게 알려주세요',
-      bad: '아쉬워요',
-      good: '잘 쓰고 있어요',
+      image: REVIEW,
+      title: '잘 써주셔서 감사해요!',
+      body: '스토어에 남겨주신 응원 한마디가\n랜딧에겐 큰 힘이 돼요',
+      cta: '응원 남기러 가기',
     };
-  }
   if (view === 'thanks')
     return {
       image: WAVE,
@@ -78,7 +62,7 @@ const faceOf = (moment: SatisfactionMoment, view: SatisfactionView): Face => {
       cta: '피드백 보내기',
     };
   return {
-    image: PEEK,
+    image: moment === 'smalltalk' ? PEEK_RIGHT : PEEK,
     title:
       moment === 'smalltalk'
         ? '첫 스몰톡, 어떠셨나요?'
