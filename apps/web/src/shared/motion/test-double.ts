@@ -12,6 +12,7 @@ const MOTION_PROPS = new Set([
   'whileHover',
   'whileInView',
   'layout',
+  'layoutDependency',
   'variants',
 ]);
 
