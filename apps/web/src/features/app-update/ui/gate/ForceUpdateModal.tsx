@@ -11,7 +11,12 @@ interface ForceUpdateModalProps {
 const DEFAULT_REASON = '새로운 기능을 사용하려면 업데이트가 꼭 필요해요';
 
 export const ForceUpdateModal = ({ reason }: ForceUpdateModalProps) => (
-  <Modal open onClose={() => {}} dismissible={false}>
+  <Modal
+    open
+    onClose={() => {}}
+    dismissible={false}
+    label="Landit 새 버전 출시!"
+  >
     <div className="flex flex-col items-center text-center">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img

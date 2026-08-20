@@ -1,0 +1,53 @@
+// 로그인 화면 본체 — /login과 소셜 로그인 콜백이 같은 화면을 그린다. 콜백은 돌아온 자리에서 버튼 로딩 상태로 이어받는다
+import { LanditLogo } from '@/shared/ui/LanditLogo';
+
+import type { SocialProvider } from '../_model/useSocialLogin';
+import styles from './login-motion.module.css';
+import { SocialLoginButtons } from './SocialLoginButtons';
+
+// 세션 내 재방문이면 모션을 스킵하도록 첫 페인트 전에 html에 클래스 부여 (FOUC 방지 위해 인라인 블로킹 스크립트 — useEffect는 이미 한 프레임 그려진 뒤라 늦음)
+const splashSkip = `
+  try {
+    if (sessionStorage.getItem('landit-splash-played')) {
+      document.documentElement.classList.add('splash-played');
+    } else {
+      sessionStorage.setItem('landit-splash-played', '1');
+    }
+  } catch (e) {}
+`;
+
+export const LoginScreen = ({
+  pending,
+  error,
+  children,
+}: {
+  // 바깥에서 진행 중인 로그인(콜백) — 그 제공자 버튼이 로그인 중으로 그려진다
+  pending?: SocialProvider | null;
+  error?: string | null;
+  children?: React.ReactNode;
+}) => (
+  <main className="relative mx-auto h-dvh max-w-[430px] overflow-x-hidden overflow-y-auto bg-background">
+    <script dangerouslySetInnerHTML={{ __html: splashSkip }} />
+    {children}
+
+    <div className={styles.logoWrap}>
+      <LanditLogo className={`${styles.logo} h-12 text-foreground`} />
+    </div>
+
+    <div
+      className={`${styles.content} flex flex-col px-6 pt-[calc(env(safe-area-inset-top)+258px)] pb-[max(env(safe-area-inset-bottom),24px)]`}
+    >
+      <p
+        className={`${styles.tagline} text-center text-[17px] leading-relaxed font-semibold text-muted-foreground`}
+      >
+        방금 그 영어, 진짜 통했을까?
+        <br />
+        외국인 속마음을 들려드려요
+      </p>
+
+      <div className="flex-1" />
+
+      <SocialLoginButtons pending={pending} error={error} />
+    </div>
+  </main>
+);

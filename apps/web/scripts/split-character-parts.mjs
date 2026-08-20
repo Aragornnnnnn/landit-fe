@@ -116,6 +116,12 @@ const CHARACTERS = {
       ['nose', range(536, 538)],
       ['hair-front', range(539, 588)],
     ],
+    // 벡터화 때 배경(#FDFCFC)이 도형으로 같이 잡혔다 — 어두운 바탕 위에서 흰 얼룩으로 드러난다.
+    // 팔 옆 조각(478·479·486)은 그냥 뺀다. 머리카락 틈 조각(544·559)은 자기보다 앞에 그려진 머리·얼굴을
+    // 가려 틈을 내던 것이라, 빼면 뒷머리가 드러나 머리가 두꺼워진다 — 대신 같은 자리를 구멍(마스크)으로
+    // 파서 배경이 비치게 한다. 눈 흰자(524·527)·이(531)는 같은 색이지만 진짜 흰색이라 남긴다
+    omit: [478, 479, 486],
+    holes: [544, 559],
     headParts: [
       'hair-back',
       'face',
@@ -173,6 +179,8 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
     for (const id of ids) sliceOf.set(id, sliceName);
 
   const buckets = new Map(cfg.slices.map(([n]) => [n, []]));
+  // 구멍 — 노드 번호별 경로와, 그 구멍이 어느 슬라이스의 몇 번째 자리에 있었는지(그 앞의 것만 가린다)
+  const holes = [];
   if (cfg.byIndex) {
     // 순서 기반 — id 없이 내보낸 단순 캐릭터용. slices의 번호가 문서 순서(0부터)다
     paths.forEach((p, index) => {
@@ -182,22 +190,85 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
   } else {
     // id 기반 — 문서 순서대로 슬라이스에 담는다. id 없는 path는 직전 path를 따라간다
     // (피그마에서 수동 보정된 조각들로, 앞 도형의 음영이라 같은 그룹이 맞다)
+    const omit = new Set(cfg.omit ?? []);
+    const holeSet = new Set(cfg.holes ?? []);
+    // 설정한 노드가 하나도 안 걸리면 조용히 넘어가지 않는다 — 재export로 번호가 밀리면 흰 얼룩이 소리 없이 돌아온다
+    const matched = new Set();
     let prevSlice = null;
     for (const p of paths) {
       const m = p.match(/id="Vector(?:_(\d+))?"/);
-      const slice = m
-        ? sliceOf.get(cfg.base + (m[1] ? Number(m[1]) - 1 : 0))
-        : prevSlice;
-      if (slice) buckets.get(slice).push(p);
+      const node = m ? cfg.base + (m[1] ? Number(m[1]) - 1 : 0) : null;
+      const slice = node !== null ? sliceOf.get(node) : prevSlice;
+      // 빼거나 구멍으로 쓰는 경로도 "직전 경로"다 — 뒤따르는 id 없는 조각이 그 슬라이스를 물려받아야 한다
       prevSlice = slice ?? prevSlice;
+      if (node !== null && omit.has(node)) {
+        matched.add(node);
+        continue;
+      }
+      if (node !== null && holeSet.has(node)) {
+        matched.add(node);
+        if (!/\bfill="/.test(p))
+          throw new Error(
+            `${name}: 구멍 ${node}에 fill이 없어 마스크로 못 쓴다`,
+          );
+        if (slice)
+          holes.push({ node, path: p, slice, at: buckets.get(slice).length });
+        continue;
+      }
+      if (slice) buckets.get(slice).push(p);
     }
+    const missing = [...omit, ...holeSet].filter((n) => !matched.has(n));
+    if (missing.length)
+      throw new Error(`${name}: omit/holes에 없는 노드 ${missing.join(', ')}`);
   }
 
   const headSet = new Set(cfg.headParts);
+  const sliceIndex = new Map(cfg.slices.map(([n], i) => [n, i]));
+
+  // 어떤 경로(슬라이스 s의 j번째)를 가리는 구멍들 — 문서 순서상 뒤에 오는 구멍만.
+  // 머리 파츠는 함께 회전하므로 구멍도 머리 안에서만 판다(몸통에 걸면 머리가 돌 때 어긋난다)
+  const holesOver = (sliceName, j) =>
+    holes.filter(
+      (h) =>
+        headSet.has(h.slice) === headSet.has(sliceName) &&
+        (sliceIndex.get(h.slice) > sliceIndex.get(sliceName) ||
+          (h.slice === sliceName && h.at > j)),
+    );
+  // 마스크 id는 인스턴스마다 다르다(같은 화면에 아바타·초상화로 두 번 그려진다) — 컴포넌트가 useId로 앞머리를 붙인다.
+  // 마스크 영역은 넉넉히 잡는다 — 소비처가 viewBox를 더 넓게 덮어써도 마스크 밖이라고 잘려 나가면 안 된다.
+  // 구멍 경로의 id는 뗀다 — 같은 구멍이 여러 마스크에 들어가면 id가 겹친다
+  const masks = new Map();
+  const maskFor = (hs) => {
+    const key = `holes-${hs.map((h) => h.node).join('-')}`;
+    if (!masks.has(key)) {
+      const black = hs.map(
+        (hole) =>
+          `      ${hole.path.replace(/\s+id="[^"]*"/, '').replace(/fill="[^"]*"/, 'fill="black"')}`,
+      );
+      masks.set(
+        key,
+        `    <mask id={\`\${uid}${key}\`} maskUnits="userSpaceOnUse" x="-10000" y="-10000" width="20000" height="20000">\n      <rect x="-10000" y="-10000" width="20000" height="20000" fill="white" />\n${black.join('\n')}\n    </mask>`,
+      );
+    }
+    return ` mask={\`url(#\${uid}${key})\`}`;
+  };
+
+  // 같은 구멍 집합에 가려지는 연속 경로를 한 <g mask>로 묶는다 — 슬라이스 그룹 자체는 그대로 둔다
   const groupOf = (sliceName, indent) => {
-    const inner = buckets
-      .get(sliceName)
-      .map((p) => `${indent}  ${p}`)
+    const runs = [];
+    buckets.get(sliceName).forEach((p, j) => {
+      const hs = holesOver(sliceName, j);
+      const key = hs.map((h) => h.node).join('-');
+      const last = runs.at(-1);
+      if (last && last.key === key) last.paths.push(p);
+      else runs.push({ key, hs, paths: [p] });
+    });
+    const inner = runs
+      .map((run) =>
+        run.hs.length
+          ? `${indent}  <g${maskFor(run.hs)}>\n${run.paths.map((p) => `${indent}    ${p}`).join('\n')}\n${indent}  </g>`
+          : run.paths.map((p) => `${indent}  ${p}`).join('\n'),
+      )
       .join('\n');
     const bake = cfg.bake?.[sliceName];
     // 구운 회전은 전역 transform-box와 충돌하므로 CSS에서 baked 클래스로 예외 처리한다
@@ -234,26 +305,42 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
       pushExtras(sliceName, '    ');
     }
     if (headOpen) body.push('      </g>\n    </g>');
-    return body.join('\n');
+    // 마스크 정의는 본문을 만들며 모인다 — 앞에 둔다
+    return [...masks.values(), ...body].join('\n');
   };
 
   const openTag = `<svg viewBox="${cfg.viewBox}" fill="none" xmlns="http://www.w3.org/2000/svg"`;
+  const body = toJsx(buildBody());
 
-  // 파츠를 움직여야 하므로 컴포넌트로 인라인한다
+  // 파츠를 움직여야 하므로 컴포넌트로 인라인한다. 마스크가 있으면 useId로 인스턴스마다 다른 id를 앞머리에 붙인다
+  // (useId 값의 구두점은 뗀다 — url(#…) 안에서 안전하게, 고유성은 그대로다)
+  const component = masks.size
+    ? `import { useId, type SVGProps } from 'react';
+
+export const ${cfg.component} = (props: SVGProps<SVGSVGElement>) => {
+  const uid = useId().replace(/[^A-Za-z0-9_-]/g, '');
+  return (
+    ${openTag} {...props}>
+${body.replace(/^/gm, '  ')}
+    </svg>
+  );
+};
+`
+    : `import type { SVGProps } from 'react';
+
+export const ${cfg.component} = (props: SVGProps<SVGSVGElement>) => (
+  ${openTag} {...props}>
+${body}
+  </svg>
+);
+`;
   writeFileSync(
     new URL(
       `../src/features/conversation/ui/character/${cfg.out}`,
       import.meta.url,
     ),
     `// ${cfg.label} 캐릭터 파츠 — 생성 파일이라 직접 고치지 말고 scripts/split-character-parts.mjs를 고쳐 다시 생성한다
-import type { SVGProps } from 'react';
-
-export const ${cfg.component} = (props: SVGProps<SVGSVGElement>) => (
-  ${openTag} {...props}>
-${toJsx(buildBody())}
-  </svg>
-);
-`,
+${component}`,
   );
 
   const total = [...buckets.values()].reduce((s, b) => s + b.length, 0);

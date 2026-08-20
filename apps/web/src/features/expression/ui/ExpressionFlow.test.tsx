@@ -86,7 +86,12 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
       isLoading: false,
     });
 
-    render(<ExpressionFlow scenarioId={1} expressionId={7} />);
+    render(
+      <ExpressionFlow
+        origin={{ kind: 'scenario', scenarioId: 1 }}
+        expressionId={7}
+      />,
+    );
 
     // 첫 화면은 QUIZ지만 practice는 enabled=true로 호출돼 체류 중 데워진다
     expect(practiceMock).toHaveBeenCalledWith(7, true);
@@ -104,7 +109,12 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
       isLoading: false,
     });
 
-    render(<ExpressionFlow scenarioId={1} expressionId={7} />);
+    render(
+      <ExpressionFlow
+        origin={{ kind: 'scenario', scenarioId: 1 }}
+        expressionId={7}
+      />,
+    );
 
     expect(practiceMock).toHaveBeenCalledWith(7, false);
   });
@@ -121,7 +131,12 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
       isLoading: false,
     });
 
-    render(<ExpressionFlow scenarioId={1} expressionId={7} />);
+    render(
+      <ExpressionFlow
+        origin={{ kind: 'scenario', scenarioId: 1 }}
+        expressionId={7}
+      />,
+    );
 
     expect(preloadMock).toHaveBeenCalledWith('a.webp', { as: 'image' });
     expect(preloadMock).toHaveBeenCalledWith('b.webp', { as: 'image' });

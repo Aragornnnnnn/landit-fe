@@ -2,7 +2,9 @@
 
 // AI 발화 재생 훅 — 오프닝은 미리 만든 정적 mp3, 이후엔 TTS 합성, 음성이 없으면 글자 수 타이머로 폴백한다
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 
+import { track } from '@/shared/analytics';
 import { useTts, type TtsPlayback } from '@/shared/tts/useTts';
 import type { TtsVoice } from '@/shared/tts/voice';
 
@@ -19,7 +21,8 @@ interface AiSpeechOptions {
   playing: boolean;
   content: string | null;
   voice: TtsVoice | null;
-  scenarioId: number;
+  // 미리 녹음된 오프닝 오디오 경로 — 없으면(null) 오프닝도 일반 재생 경로를 탄다
+  openingSrc: string | null;
   onSpeechEnd: () => void;
 }
 
@@ -27,7 +30,7 @@ export const useAiSpeech = ({
   playing,
   content,
   voice,
-  scenarioId,
+  openingSrc,
   onSpeechEnd,
 }: AiSpeechOptions) => {
   const tts = useTts();
@@ -55,7 +58,11 @@ export const useAiSpeech = ({
         void tts.speak(content, voice, {
           onStart: startLipSync,
           onEnd: finish,
-          onError: finish,
+          // 합성 실패는 이 발화를 건너뛰고 다음으로 간다
+          onError: () => {
+            track(EVENTS.SPEECH_PLAYBACK_FAILED, { source: 'synth' });
+            finish();
+          },
         });
         return () => tts.stop();
       }
@@ -69,15 +76,17 @@ export const useAiSpeech = ({
     let stop: () => void;
     // 정리가 끝난 뒤 도착한 실패 콜백이 폴백 재생을 되살리지 않게 막는다 (멈출 주체가 없다)
     let cancelled = false;
-    if (isOpeningRef.current) {
+    if (isOpeningRef.current && openingSrc) {
       stop = () => tts.stop();
-      tts.speakSrc(`/audio/opening-${scenarioId}.mp3`, {
+      tts.speakSrc(openingSrc, {
         // 미리 녹음된 오디오도 재생 시각을 읽을 수 있어 입모양이 똑같이 붙는다
         onStart: startLipSync,
         onEnd: finish,
         onError: () => {
-          setSpeech(null);
+          // 이미 떠난 뒤 도착한 실패는 세지도, 되살리지도 않는다
           if (cancelled) return;
+          track(EVENTS.SPEECH_PLAYBACK_FAILED, { source: 'opening_mp3' });
+          setSpeech(null);
           stop = startSpeaking();
         },
       });

@@ -1,5 +1,5 @@
 // 경로 → Page Viewed 속성 매핑 — 동적 세그먼트는 page_name으로 정규화하고 id는 속성으로 뺀다 (정책 2-2)
-import type { EventProps } from '@landit/analytics';
+import type { EventProps, FeedbackType } from '@landit/analytics';
 
 import { DAILY_REMINDER_CAMPAIGN } from './utm';
 
@@ -16,7 +16,23 @@ const STATIC_PAGES = new Set([
   'terms',
   'smalltalk',
   'streak',
+  'mailbox',
 ]);
+
+// 피드백 작성은 유형별로 주소가 갈리지만 화면은 하나다 — 이름을 넷으로 쪼개지 않고 속성으로 싣는다.
+// 키를 유형 쪽에 둔다. 유형이 늘 때 여기를 빠뜨리면 빌드가 깨진다 —
+// 슬러그를 키로 두면 조용히 통과하고 새 유형의 페이지뷰만 속성 없이 쌓인다
+const FEEDBACK_TYPE_SLUGS: Record<FeedbackType, string> = {
+  BUG_REPORT: 'bug',
+  FEATURE_REQUEST: 'feature',
+  QUESTION: 'question',
+  CHEER: 'cheer',
+};
+
+const readFeedbackType = (slug: string | undefined) =>
+  (Object.keys(FEEDBACK_TYPE_SLUGS) as FeedbackType[]).find(
+    (type) => FEEDBACK_TYPE_SLUGS[type] === slug,
+  );
 
 const toId = (raw: string | null) => {
   const id = Number(raw);
@@ -64,28 +80,82 @@ export const toPageView = (
     return base;
   }
 
-  if (seg[0] === 'conversation' && seg[1]) {
+  // 대화 화면은 /conversation 아래에 종류별로 있다 — 시나리오는 어느 카드인지 id가 붙는다
+  if (seg[0] === 'conversation' && seg[1] === 'scenario' && seg[2]) {
     return {
-      page_name: 'conversation',
+      page_name: 'conversation_scenario',
       path: pathname,
-      scenario_id: toId(seg[1]),
+      scenario_id: toId(seg[2]),
     };
   }
 
-  if (seg[0] === 'expressions' && seg[1] && seg[2]) {
-    if (seg[2] === 'branch') {
-      return {
-        page_name: 'expression_list',
-        path: pathname,
-        scenario_id: toId(seg[1]),
-      };
+  // 스몰톡 대화는 가리킬 콘텐츠가 없어 id가 없다 — 상대·시작 방식은 Small Talk Started가 남긴다
+  if (seg[0] === 'conversation' && seg[1] === 'smalltalk') {
+    return { page_name: 'conversation_smalltalk', path: pathname };
+  }
+
+  // 지난 스몰톡 — 목록과 그 대화 한 건. 어느 대화인지는 세션 id로 남긴다
+  if (seg[0] === 'smalltalk' && seg[1] === 'sessions') {
+    if (!seg[2]) return { page_name: 'smalltalk_history', path: pathname };
+    return {
+      page_name:
+        seg[3] === 'messages'
+          ? 'smalltalk_history_transcript'
+          : 'smalltalk_history_detail',
+      path: pathname,
+      session_id: toId(seg[2]),
+    };
+  }
+
+  // 표현 학습은 둘째 칸에 출처를 달고 온다 (/expressions/{출처}/{출처id}/...).
+  // 화면 이름은 출처와 무관하게 같고, 어디서 온 표현인지는 id 속성이 가른다
+  if (
+    seg[0] === 'expressions' &&
+    (seg[1] === 'scenario' || seg[1] === 'session') &&
+    seg[2] &&
+    seg[3]
+  ) {
+    const source =
+      seg[1] === 'scenario'
+        ? { scenario_id: toId(seg[2]) }
+        : { session_id: toId(seg[2]) };
+    if (seg[3] === 'branch') {
+      return { page_name: 'expression_list', path: pathname, ...source };
     }
     return {
       page_name: 'expression_learning',
       path: pathname,
-      scenario_id: toId(seg[1]),
-      expression_id: toId(seg[2]),
+      ...source,
+      expression_id: toId(seg[3]),
     };
+  }
+
+  // 작성 화면은 어떤 유형을 고르고 들어왔는지가 주소에 남는다
+  if (seg[0] === 'mailbox' && seg[1] === 'compose') {
+    const feedbackType = readFeedbackType(seg[2]);
+    return {
+      page_name: 'feedback_compose',
+      path: pathname,
+      ...(feedbackType && { feedback_type: feedbackType }),
+    };
+  }
+
+  // 편지함은 받은·보낸이 다른 리소스라 주소도 화면 이름도 갈린다 (/mailbox/{칸}/{id})
+  if (seg[0] === 'mailbox' && seg[2]) {
+    if (seg[1] === 'received') {
+      return {
+        page_name: 'mailbox_received',
+        path: pathname,
+        letter_id: toId(seg[2]),
+      };
+    }
+    if (seg[1] === 'sent') {
+      return {
+        page_name: 'mailbox_sent',
+        path: pathname,
+        feedback_id: toId(seg[2]),
+      };
+    }
   }
 
   if (seg[0] === 'auth') return { page_name: 'auth_callback', path: pathname };

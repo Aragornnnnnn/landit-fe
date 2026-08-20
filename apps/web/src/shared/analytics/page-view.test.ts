@@ -90,24 +90,50 @@ describe('toPageView', () => {
     });
   });
 
-  it('대화 동적 세그먼트를 page_name conversation + scenario_id로 정규화한다', () => {
-    expect(pv('/conversation/12')).toEqual({
-      page_name: 'conversation',
-      path: '/conversation/12',
+  it('시나리오 대화 동적 세그먼트를 page_name conversation_scenario + scenario_id로 정규화한다', () => {
+    expect(pv('/conversation/scenario/12')).toEqual({
+      page_name: 'conversation_scenario',
+      path: '/conversation/scenario/12',
       scenario_id: 12,
     });
   });
 
+  it('스몰톡 대화는 id 없이 page_name conversation_smalltalk으로 남는다', () => {
+    // 주소의 상대·시작 방식(mode/partner)은 여기 싣지 않는다 — Conversation Started가 이미 남긴다
+    expect(
+      pv('/conversation/smalltalk', 'mode=user_first&partner=chloe'),
+    ).toEqual({
+      page_name: 'conversation_smalltalk',
+      path: '/conversation/smalltalk',
+    });
+  });
+
   it('표현 분기·학습 경로를 각각 정규화한다', () => {
-    expect(pv('/expressions/3/branch')).toEqual({
+    // 둘째 칸이 출처라 시나리오 id는 셋째 칸에서 읽는다
+    expect(pv('/expressions/scenario/3/branch')).toEqual({
       page_name: 'expression_list',
-      path: '/expressions/3/branch',
+      path: '/expressions/scenario/3/branch',
       scenario_id: 3,
     });
-    expect(pv('/expressions/3/45')).toEqual({
+    expect(pv('/expressions/scenario/3/45')).toEqual({
       page_name: 'expression_learning',
-      path: '/expressions/3/45',
+      path: '/expressions/scenario/3/45',
       scenario_id: 3,
+      expression_id: 45,
+    });
+  });
+
+  it('스몰톡 표현은 같은 화면 이름에 세션 id를 싣는다', () => {
+    // 화면은 시나리오와 같은 것이다 — 어디서 온 표현인지만 id로 갈린다
+    expect(pv('/expressions/session/7/branch')).toEqual({
+      page_name: 'expression_list',
+      path: '/expressions/session/7/branch',
+      session_id: 7,
+    });
+    expect(pv('/expressions/session/7/45')).toEqual({
+      page_name: 'expression_learning',
+      path: '/expressions/session/7/45',
+      session_id: 7,
       expression_id: 45,
     });
   });
@@ -116,6 +142,51 @@ describe('toPageView', () => {
     expect(pv('/auth/kakao/callback')).toEqual({
       page_name: 'auth_callback',
       path: '/auth/kakao/callback',
+    });
+  });
+
+  it('편지 상세는 받은·보낸이 다른 화면이고, 번호는 속성으로 뺀다', () => {
+    // 두 칸이 아이디 공간을 따로 써서 화면 이름도 주소를 따라 갈린다
+    expect(pv('/mailbox/received/3')).toEqual({
+      page_name: 'mailbox_received',
+      path: '/mailbox/received/3',
+      letter_id: 3,
+    });
+    expect(pv('/mailbox/sent/11')).toEqual({
+      page_name: 'mailbox_sent',
+      path: '/mailbox/sent/11',
+      feedback_id: 11,
+    });
+  });
+
+  it('피드백 작성은 유형이 달라도 화면 이름이 하나다', () => {
+    const slugs = {
+      bug: 'BUG_REPORT',
+      feature: 'FEATURE_REQUEST',
+      question: 'QUESTION',
+      cheer: 'CHEER',
+    };
+
+    for (const [slug, feedbackType] of Object.entries(slugs)) {
+      expect(pv(`/mailbox/compose/${slug}`)).toEqual({
+        page_name: 'feedback_compose',
+        path: `/mailbox/compose/${slug}`,
+        feedback_type: feedbackType,
+      });
+    }
+  });
+
+  it('유형을 고르기 전 작성 진입은 유형 없이 남긴다', () => {
+    expect(pv('/mailbox/compose')).toEqual({
+      page_name: 'feedback_compose',
+      path: '/mailbox/compose',
+    });
+  });
+
+  it('편지함 목록은 보고 있는 칸이 달라도 같은 화면이다', () => {
+    expect(pv('/mailbox', 'box=sent')).toEqual({
+      page_name: 'mailbox',
+      path: '/mailbox',
     });
   });
 

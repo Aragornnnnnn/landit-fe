@@ -2,11 +2,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  conversationPath,
-  expressionBranchPath,
-  expressionPath,
   readDateParam,
+  scenarioExpressionBranchPath,
+  scenarioExpressionPath,
   scenarioReturnPath,
+  scenarioTalkPath,
+  sessionExpressionBranchPath,
+  sessionExpressionPath,
+  smallTalkPath,
 } from './routes';
 
 describe('scenarioReturnPath', () => {
@@ -35,45 +38,71 @@ describe('scenarioReturnPath', () => {
   });
 });
 
-describe('conversationPath', () => {
+describe('scenarioTalkPath', () => {
   it('오늘 카드에서 들어가면 날짜를 달지 않는다', () => {
-    expect(conversationPath(12)).toBe('/conversation/12');
+    expect(scenarioTalkPath(12)).toBe('/conversation/scenario/12');
   });
 
   it('지난 날 카드에서 들어가면 그 날짜를 달고 간다', () => {
     // Given 지난 날 카드에서 다시 대화하기를 눌렀을 때
     // When 대화 주소를 만들면
     // Then 날짜가 실린다 — 그래야 어느 날 카드인지 대화 화면이 알 수 있다
-    expect(conversationPath(12, '2026-07-29')).toBe(
-      '/conversation/12?date=2026-07-29',
+    expect(scenarioTalkPath(12, '2026-07-29')).toBe(
+      '/conversation/scenario/12?date=2026-07-29',
     );
   });
 });
 
-describe('expressionBranchPath', () => {
-  it('오늘 대화 직후면 날짜를 달지 않는다', () => {
-    expect(expressionBranchPath(12)).toBe('/expressions/12/branch');
+describe('scenarioExpressionBranchPath', () => {
+  it('둘째 칸에 출처를 세운다 — 시나리오 표현은 시나리오가 주인이다', () => {
+    expect(scenarioExpressionBranchPath(12)).toBe(
+      '/expressions/scenario/12/branch',
+    );
   });
 
   it('지난 날에서 온 대화면 그 날짜를 이어 나른다', () => {
-    expect(expressionBranchPath(12, '2026-07-29')).toBe(
-      '/expressions/12/branch?date=2026-07-29',
+    expect(scenarioExpressionBranchPath(12, '2026-07-29')).toBe(
+      '/expressions/scenario/12/branch?date=2026-07-29',
     );
   });
 });
 
-describe('expressionPath', () => {
+describe('scenarioExpressionPath', () => {
   it('오늘 카드에서 들어가면 날짜를 달지 않는다', () => {
-    expect(expressionPath(12, 34)).toBe('/expressions/12/34');
+    expect(scenarioExpressionPath(12, 34)).toBe('/expressions/scenario/12/34');
   });
 
   it('지난 날 카드에서 들어가면 그 날짜를 달고 간다', () => {
     // Given 지난 날 카드를 뒤집어 표현을 골랐을 때
     // When 학습 주소를 만들면
     // Then 날짜가 실린다 — 나올 때 그 날로 돌아가야 한다
-    expect(expressionPath(12, 34, '2026-07-29')).toBe(
-      '/expressions/12/34?date=2026-07-29',
+    expect(scenarioExpressionPath(12, 34, '2026-07-29')).toBe(
+      '/expressions/scenario/12/34?date=2026-07-29',
     );
+  });
+});
+
+describe('sessionExpressionBranchPath', () => {
+  it('스몰톡 표현은 그 대화에서 만들어져 세션이 주인이다', () => {
+    // 날짜를 달지 않는다 — 시나리오와 달리 "어느 날 카드"라는 개념이 없다
+    expect(sessionExpressionBranchPath(7)).toBe(
+      '/expressions/session/7/branch',
+    );
+  });
+});
+
+describe('sessionExpressionBranchPath — 축하 신호', () => {
+  it('대화를 막 끝내고 온 길에만 축하를 켠다', () => {
+    // 표현 학습을 마치고 돌아올 때마다 또 축하할 일은 아니다
+    expect(sessionExpressionBranchPath(7, { celebrate: true })).toBe(
+      '/expressions/session/7/branch?celebrate=1',
+    );
+  });
+});
+
+describe('sessionExpressionPath', () => {
+  it('학습을 마치면 한 칸 위인 그 세션의 표현 목록으로 돌아간다', () => {
+    expect(sessionExpressionPath(7, 34)).toBe('/expressions/session/7/34');
   });
 });
 
@@ -95,5 +124,23 @@ describe('readDateParam', () => {
     expect(readDateParam(new URLSearchParams('date=7-29'))).toBeUndefined();
     expect(readDateParam(new URLSearchParams('date=abc'))).toBeUndefined();
     expect(readDateParam(new URLSearchParams('date='))).toBeUndefined();
+  });
+});
+
+describe('smallTalkPath', () => {
+  it('주제를 고르면 상대가 먼저 시작하는 주소가 된다', () => {
+    // Given 홈에서 상대를 고르고 주제까지 골랐을 때
+    // When 대화 주소를 만들면
+    // Then 상대·시작 방식·주제가 함께 실린다 — 새로고침해도 무슨 대화를 열지 알 수 있어야 한다
+    expect(
+      smallTalkPath({ partner: 'teddy', mode: 'ai_first', topicId: 2 }),
+    ).toBe('/conversation/smalltalk?mode=ai_first&partner=teddy&topicId=2');
+  });
+
+  it('내가 먼저 걸면 주제 없이 상대와 시작 방식만 싣는다', () => {
+    // 자유 발화라 고른 주제가 없다 — 빈 topicId를 붙이면 서버가 없는 주제를 찾는다
+    expect(smallTalkPath({ partner: 'marco', mode: 'user_first' })).toBe(
+      '/conversation/smalltalk?mode=user_first&partner=marco',
+    );
   });
 });

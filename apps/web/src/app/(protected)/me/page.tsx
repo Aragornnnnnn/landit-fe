@@ -6,13 +6,12 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { disablePushToken } from '@/features/notification/model/push-token-registration';
-import { FeedbackSurvey } from '@/features/nps/ui/FeedbackSurvey';
 import { track } from '@/shared/analytics';
 import { logout as requestLogout } from '@/shared/auth/api/logout';
 import { withdraw } from '@/shared/auth/api/withdraw';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { clearSession } from '@/shared/auth/clear-session';
-import { SCENARIO_PATH } from '@/shared/lib/routes';
+import { homePath } from '@/shared/lib/last-tab';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { reportWarning } from '@/shared/monitoring/report';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
@@ -30,7 +29,6 @@ export default function MyPage() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
-  const [isFeedbackSheetOpen, setIsFeedbackSheetOpen] = useState(false);
   const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(
     null,
   );
@@ -108,7 +106,7 @@ export default function MyPage() {
       >
         <button
           type="button"
-          onClick={() => router.replace(SCENARIO_PATH)}
+          onClick={() => router.replace(homePath())}
           className="flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90 active:bg-zinc-200"
           style={{ color: '#444', marginLeft: -4 }}
           aria-label="뒤로 가기"
@@ -169,16 +167,6 @@ export default function MyPage() {
           <NotificationMenuEntry />
 
           <MenuGroup>
-            <MenuButton
-              title="Landit에게 의견 보내기"
-              onClick={() => {
-                track(EVENTS.NPS_SURVEY_OPENED, { source: 'me' });
-                setIsFeedbackSheetOpen(true);
-              }}
-            />
-          </MenuGroup>
-
-          <MenuGroup>
             <MenuLink href="/privacy" title="개인정보 처리방침" />
             <MenuLink href="/terms" title="서비스 이용약관" />
           </MenuGroup>
@@ -201,14 +189,6 @@ export default function MyPage() {
           </MenuGroup>
         </div>
       </div>
-
-      {/* 의견 보내기 바텀시트 — 헤더의 의견 보내기와 동일한 서베이 */}
-      <BottomSheet
-        open={isFeedbackSheetOpen}
-        onClose={() => setIsFeedbackSheetOpen(false)}
-      >
-        <FeedbackSurvey onDone={() => setIsFeedbackSheetOpen(false)} />
-      </BottomSheet>
 
       {/* 회원탈퇴 확인 바텀시트 */}
       <BottomSheet open={isDeleteSheetOpen} onClose={dismissDeleteSheet}>

@@ -14,6 +14,8 @@ interface ConfirmSheetProps {
   onClose: () => void;
   // 타이틀 위 슬롯(일러스트 등) — 있으면 가운데 정렬로 그린다
   top?: React.ReactNode;
+  // 설명과 버튼 사이 슬롯 — 결정에 도움이 되는 덧붙임(예문 등)
+  extra?: React.ReactNode;
 }
 
 export const ConfirmSheet = ({
@@ -25,6 +27,7 @@ export const ConfirmSheet = ({
   onConfirm,
   onClose,
   top,
+  extra,
 }: ConfirmSheetProps) => (
   <BottomSheet open={open} onClose={onClose}>
     <div className={top ? 'flex flex-col items-center text-center' : undefined}>
@@ -38,6 +41,7 @@ export const ConfirmSheet = ({
         {description}
       </p>
     </div>
+    {extra && <div className="mt-4">{extra}</div>}
     <div className="mt-5 grid grid-cols-2 gap-2">
       <Button variant="ghost" size="md" onClick={onConfirm}>
         {confirmLabel}

@@ -1,0 +1,228 @@
+// 시나리오 대화 화면 — features/scenario(콘텐츠)를 재료로 features/conversation 엔진을 진행시킨다.
+// 캐릭터 무대·질문 카드·내 답변·마이크를 상태 기계 단계에 맞춰 오케스트레이션한다
+'use client';
+
+import { useEffect, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
+import { useRouter } from 'next/navigation';
+
+import { toCharacterLook } from '@/features/conversation/model/character-look';
+import { userIntroHoldMs } from '@/features/conversation/model/pacing';
+import type { FloatingThought } from '@/features/conversation/model/thought';
+import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
+import { ExitConfirmSheet } from '@/features/conversation/ui/flow/ExitConfirmSheet';
+import { MicControl } from '@/features/conversation/ui/flow/MicControl';
+import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
+import { QuestionCard } from '@/features/conversation/ui/flow/QuestionCard';
+import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
+import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
+import { FeedbackFlow } from '@/features/feedback/ui/FeedbackFlow';
+import type { Scenario } from '@/features/scenario/lib/to-scenario';
+import { track } from '@/shared/analytics';
+import {
+  scenarioExpressionBranchPath,
+  scenarioReturnPath,
+} from '@/shared/lib/routes';
+import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
+import { Transition } from '@/shared/motion';
+import { Button } from '@/shared/ui/Button';
+import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
+
+import { useScenarioTalkFlow } from '../_model/useScenarioTalkFlow';
+
+export const ScenarioTalkFlow = ({
+  scenario,
+  date,
+}: {
+  scenario: Scenario;
+  // 어느 날 카드에서 들어왔는지. 나갈 때 그 날로 돌려보낸다
+  date?: string;
+}) => {
+  const router = useRouter();
+  const [showExitModal, setShowExitModal] = useState(false);
+  // 대화 종료 후 CTA를 누르면 피드백으로 넘어간다 (그 전까진 마지막 화면 + CTA를 보여준다)
+  const [showFeedback, setShowFeedback] = useState(false);
+  // 진입 시점의 완료 여부(재대화 판별) — 세션이 끝나면 시나리오 리스트가 invalidate돼
+  // scenario.completed가 뒤늦게 true로 바뀌므로, 첫 완료와 구분하려면 진입 값으로 고정해야 한다
+  const [wasCompleted] = useState(scenario.completed);
+  // USER 선발화 진입 안내 — 랜디가 먼저 날아들어 말을 걸어보라고 알려주고 잠시 후 사라진다.
+  // 판정은 turn.isUserOpening 한 곳에 위임하고(카드 안내 구조와 같은 소스), 여기선 노출 시간만 관리한다.
+  const [introDismissed, setIntroDismissed] = useState(false);
+  const {
+    phase,
+    turnIndex,
+    turn,
+    partner,
+    finishedThought,
+    speech,
+    input,
+    leave,
+    sessionId,
+  } = useScenarioTalkFlow(scenario);
+  const {
+    transcript,
+    setTranscript,
+    keyboardMode,
+    pressMic,
+    pressKeyboard,
+    cancelInput,
+    finishListening,
+    submitText,
+    micPermissionDenied,
+    dismissMicPermissionNotice,
+  } = input;
+
+  const ended = phase === 'DONE';
+  // 키보드 입력 중 — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
+  const typing = keyboardMode && phase === 'USER_SPEAKING';
+  const keyboardInset = useKeyboardInset();
+  // 선발화 안내는 대기(USER_READY) 동안만 — 사용자가 말하기 시작하거나 속마음이 오면 즉시 비켜준다
+  const showUserFirstIntro =
+    turn.isUserOpening && phase === 'USER_READY' && !introDismissed;
+  useEffect(() => {
+    if (!showUserFirstIntro) return;
+    const timer = setTimeout(() => setIntroDismissed(true), userIntroHoldMs);
+    return () => clearTimeout(timer);
+  }, [showUserFirstIntro]);
+  // 속마음 오버레이 내용 — 선발화 안내가 우선, 다음이 속마음, 그 외엔 안 띄운다
+  const resolveOverlayThought = (): FloatingThought | null => {
+    if (showUserFirstIntro)
+      return { text: '상황을 잘 읽고 먼저 말을 걸어보세요!', type: 'NORMAL' };
+    if (phase === 'AI_INNER_THOUGHT')
+      return { text: turn.innerThought, type: turn.innerThoughtType };
+    return null;
+  };
+  const overlayThought = resolveOverlayThought();
+  // 캐릭터 자세 — 평소엔 단계를 따르고, 속마음이 끝난 직후에만 그 감정 표정이 잠깐 스친다
+  const characterLook = toCharacterLook(phase, finishedThought);
+  // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로 페이드 인해 넘어간다. 마치면 표현 학습 분기로 보낸다.
+  const view = ended && showFeedback ? 'feedback' : 'conversation';
+
+  if (view === 'feedback') {
+    return (
+      <Transition transitionKey="feedback" fade>
+        <FeedbackFlow
+          sessionId={sessionId}
+          title={scenario.scenarioTitle}
+          onExit={() =>
+            // 대화는 끝났으니 히스토리에서 지운다 — 뒤로가기로 종료된 대화에 다시 들어오지 않게.
+            // 재대화(이미 완료한 시나리오)면 표현은 예전에 생성됐으니 분기 연출 없이 홈의 그 카드로 돌아간다
+            wasCompleted
+              ? router.replace(scenarioReturnPath({ date }))
+              : router.replace(
+                  scenarioExpressionBranchPath(scenario.scenarioId, date),
+                )
+          }
+        />
+      </Transition>
+    );
+  }
+
+  return (
+    <main
+      className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
+      // iOS WKWebView는 키보드가 떠도 레이아웃이 안 줄어든다 — 가려진 높이만큼 올려 입력 박스를 보이게 한다
+      style={
+        typing && keyboardInset ? { paddingBottom: keyboardInset } : undefined
+      }
+    >
+      {/* 무대가 상태바 밑까지 이어지고, X만 safe area 아래에 뜬다 — 플레인 아이콘(마이페이지와 통일) */}
+      <header
+        className="absolute inset-x-0 top-0 z-20 flex items-center px-3"
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 8px)' }}
+      >
+        <button
+          onClick={() => {
+            track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'conversation_exit' });
+            setShowExitModal(true);
+          }}
+          className="flex size-10 items-center justify-center text-foreground transition-transform active:scale-90"
+          aria-label="대화 나가기"
+        >
+          <CloseIcon size={24} />
+        </button>
+      </header>
+
+      <CharacterStage partner={partner} look={characterLook} speech={speech} />
+
+      {/* 무대·답변·마이크는 고정. 질문만 남는 공간을 채우는 스크롤 영역에 담아, 길어져도 겹치지 않고 카드 안에서 스크롤된다 */}
+      <section className="flex min-h-0 flex-1 flex-col px-5">
+        {/* pt-5는 무대와의 간격이자 페이드 구간 — 위로 스크롤될 때 무대 밑에서 그림자·글자가 직각으로 잘리지 않고 서서히 사라진다 */}
+        {/* 카드가 남는 높이를 다 쓰되 넘치진 않는다 — 넘치는 글은 카드 안에서 스크롤된다 */}
+        <div className="flex min-h-0 flex-1 flex-col pt-2">
+          <QuestionCard
+            question={turn.aiMessage}
+            translation={turn.aiTranslation}
+            speaking={phase === 'AI_SPEAKING'}
+            instruction={turn.isUserOpening}
+            onTranslationToggled={(opened) =>
+              track(EVENTS.TRANSLATION_TOGGLED, {
+                session_id: sessionId ?? undefined,
+                turn_index: turnIndex,
+                opened,
+              })
+            }
+          />
+        </div>
+        {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다 */}
+        {!ended && (
+          <UserTranscript
+            text={transcript}
+            phase={phase}
+            editing={typing}
+            onChange={setTranscript}
+            onSubmit={submitText}
+            onCancel={cancelInput}
+          />
+        )}
+      </section>
+
+      <footer className="flex-none pb-[max(env(safe-area-inset-bottom),16px)]">
+        {ended ? (
+          // 대화 종료 — 마지막 AI 발화만 남기고 마이크 대신 분석으로 가는 CTA를 아래쪽에 보여준다
+          <div className="flex h-36 items-end px-5 pb-3">
+            <Button onClick={() => setShowFeedback(true)}>
+              상세 분석 보러갈래요
+              <ArrowRightIcon size={16} />
+            </Button>
+          </div>
+        ) : typing ? null : (
+          <MicControl
+            phase={phase}
+            onPress={pressMic}
+            onKeyboard={pressKeyboard}
+            onCancel={cancelInput}
+            onDone={finishListening}
+          />
+        )}
+      </footer>
+
+      {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(AI_THINKING)부터 랜디가 떠 있다가 속마음을 전한다.
+          USER 선발화 진입 시엔 같은 연출로 랜디가 먼저 안내하고 사라진다 */}
+      <ThoughtOverlay
+        loading={phase === 'AI_THINKING'}
+        thought={overlayThought}
+      />
+
+      <ExitConfirmSheet
+        open={showExitModal}
+        onConfirm={() => {
+          leave();
+          // 대화를 도중에 나가면 강제로 다음 카드로 보내지 말고, 온 카드로 복귀시킨다.
+          // replace로 대화를 히스토리에서 지워, 홈에서 뒤로가기 시 대화로 재진입하지 않게 한다.
+          router.replace(scenarioReturnPath({ date }));
+        }}
+        onClose={() => {
+          track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'conversation_exit' });
+          setShowExitModal(false);
+        }}
+      />
+
+      {/* 마이크 권한이 거부된 채 말하기를 누르면 설정 유도 안내를 띄운다 */}
+      <MicPermissionSheet
+        open={micPermissionDenied}
+        onClose={dismissMicPermissionNotice}
+      />
+    </main>
+  );
+};

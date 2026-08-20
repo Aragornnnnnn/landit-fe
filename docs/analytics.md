@@ -4,11 +4,11 @@
 
 ## 네이밍 규칙 요약
 
-| 구분        | 규칙                                        | 예시                   |
-| ----------- | ------------------------------------------- | ---------------------- |
-| 이벤트      | Title Case + 공백, `[명사] + [과거형 동사]` | `Conversation Started` |
-| 이벤트 속성 | snake_case                                  | `scenario_id`          |
-| 유저 속성   | snake_case (불리언은 `is_`/`has_`)          | `provider`             |
+| 구분        | 규칙                                        | 예시                    |
+| ----------- | ------------------------------------------- | ----------------------- |
+| 이벤트      | Title Case + 공백, `[명사] + [과거형 동사]` | `Scenario Talk Started` |
+| 이벤트 속성 | snake_case                                  | `scenario_id`           |
+| 유저 속성   | snake_case (불리언은 `is_`/`has_`)          | `provider`              |
 
 핵심 원칙.
 
@@ -23,7 +23,7 @@
 - **발화 래퍼**: [`apps/web/src/shared/analytics/amplitude.ts`](../apps/web/src/shared/analytics/amplitude.ts) — `track(EVENTS.X, props)` 단일 통로.
   - `NEXT_PUBLIC_AMPLITUDE_API_KEY`가 없으면 no-op으로 `console.debug`만 남긴다.
   - dev 환경(`NODE_ENV=development`)에선 키가 있어도 모든 이벤트를 콘솔에 같이 찍는다.
-  - 세션 리플레이는 초기 단계라 **100% 수집**(`@amplitude/unified` `initAll`). **오토캡처는 전부 off** — 커스텀 이벤트 53종으로 충분하고 노이즈·볼륨을 줄인다.
+  - 세션 리플레이는 초기 단계라 **100% 수집**(`@amplitude/unified` `initAll`). **오토캡처는 전부 off** — 커스텀 이벤트(events.ts 계약)로 충분하고 노이즈·볼륨을 줄인다.
   - `minIdLength: 1` — 백엔드 회원번호가 1~4자리라 앰플리튜드 기본 5자 제한(400 Invalid id length)에 걸리는 것을 푼다.
   - 전 이벤트 공통 속성: `surface`(app|browser), `platform`(ios|android|web), `app_version`, `build_number` — 셸이 주입한 `window.__LANDIT_NATIVE__`(LAN-156)에서 온다.
 - **유저 식별**: `AnalyticsBootstrap`이 auth 스토어를 구독해 로그인 시 `setUserId(member.userId)` + `provider` 유저 속성, 로그아웃 시 `reset()`. 앱/브라우저 어디서든 같은 유저로 묶인다.
@@ -31,19 +31,19 @@
 - **서버 발화**: `/download`는 서버 302 리다이렉트라 클라이언트 SDK가 못 잡는다 — route 핸들러가 HTTP V2 API로 직접 발화한다(`Download Link Visited`). 키는 클라이언트와 같은 `NEXT_PUBLIC_AMPLITUDE_API_KEY`(공개 키라 서버 전용으로 나누지 않는다), device_id는 랜덤이라 방문 횟수 집계용.
 - **dev/prod 분리**: 프로젝트 키를 환경별로 나눈다. 로컬·프리뷰는 dev 키, 프로덕션 배포 환경변수에만 prod 키.
 
-## 이벤트 택소노미 (61개)
+## 이벤트 택소노미
 
 ### 공통
 
-| 이벤트                  | 속성                                                                           | 시점                                                          |
-| ----------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| Page Viewed             | page_name, path, return_reason?, scenario_id?, expression_id?, completed_date? | 라우트 변경                                                   |
-| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete)                      | 이탈·탈퇴 확인 시트 열림                                      |
-| Confirm Sheet Dismissed | sheet                                                                          | 확인 시트에서 계속하기/닫기                                   |
-| Error Retried           | screen(home\|conversation\|card_back\|expression_list)                         | 에러 화면 "다시 시도"                                         |
-| App Exited              | trigger(back_button)                                                           | 네이티브 뒤로가기로 앱 종료 (셸에서만)                        |
-| Download Link Visited   | store(play_store\|app_store)                                                   | /download 스토어 리다이렉트 진입 (서버 발화, 익명)            |
-| App Update Store Opened | store(play_store\|app_store)                                                   | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화) |
+| 이벤트                  | 속성                                                                                                                                  | 시점                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Page Viewed             | page_name, path, return_reason?, scenario_id?, session_id?, expression_id?, completed_date?, letter_id?, feedback_id?, feedback_type? | 라우트 변경                                                   |
+| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete)                                                                             | 이탈·탈퇴 확인 시트 열림                                      |
+| Confirm Sheet Dismissed | sheet                                                                                                                                 | 확인 시트에서 계속하기/닫기                                   |
+| Error Retried           | screen(scenario\|smalltalk\|conversation\|card_back\|expression_list\|streak\|mailbox)                                                | 에러 화면 "다시 시도"                                         |
+| App Exited              | trigger(back_button)                                                                                                                  | 네이티브 뒤로가기로 앱 종료 (셸에서만)                        |
+| Download Link Visited   | store(play_store\|app_store)                                                                                                          | /download 스토어 리다이렉트 진입 (서버 발화, 익명)            |
+| App Update Store Opened | store(play_store\|app_store)                                                                                                          | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화) |
 
 `return_reason`은 홈 복귀 신호(`flip` 표현 완료 복귀 / `card` 대화 이탈 복귀 / `just` 해금 직후). 확인 시트의 확정은 각각 `Conversation Abandoned` / `Expression Abandoned` / `Account Deleted`로 찍힌다.
 
@@ -74,12 +74,11 @@
 
 ### 홈
 
-| 이벤트                | 속성                                                                                            | 시점                                         |
-| --------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| Category Selected     | category_id, category_name, is_locked                                                           | 카테고리 칩 탭                               |
-| Scenario Card Viewed  | card_type(scenario\|completion), position, scenario_id?, difficulty?, is_completed?, is_locked? | 스냅으로 카드가 중앙에 설 때                 |
-| Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto)                                      | 원어민 표현 배우기 / 자동 뒤집힘 / 앞면 복귀 |
-| Expression Selected   | expression_id, scenario_id, source(card_back\|post_conversation)                                | 표현 항목 탭                                 |
+| 이벤트                | 속성                                                                                        | 시점                                          |
+| --------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Home Tab Switched     | tab(scenario\|smalltalk)                                                                    | 상단 탭 칩 눌러 이동 (보고 있는 탭 재탭 제외) |
+| Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto)                                  | 원어민 표현 배우기 / 자동 뒤집힘 / 앞면 복귀  |
+| Expression Selected   | expression_id, 출처(scenario_id\|session_id), source(card_back\|post_conversation\|history) | 표현 항목 탭                                  |
 
 ### 오늘의 시나리오 (램프)
 
@@ -91,7 +90,7 @@
 | Conversation Prompt Accepted  | retry | 자동으로 뜬 "오늘의 대화를 시작할까요?"에 "네!" |
 | Conversation Prompt Dismissed | retry | 그 프롬프트를 X·뒤로가기로 닫음                 |
 
-`retry`는 전날 못 끝낸 대화를 이어받은 카드였는지 (오늘 새로 받은 시나리오면 false). 완료 카드의 "다시 대화하기"는 램프를 거치지 않으며 `Conversation Started`의 `is_retry`로 잡힌다.
+`retry`는 전날 못 끝낸 대화를 이어받은 카드였는지 (오늘 새로 받은 시나리오면 false). 완료 카드의 "다시 대화하기"는 램프를 거치지 않으며 `Scenario Talk Started`의 `is_retry`로 잡힌다.
 
 ### 달력 스트립
 
@@ -103,24 +102,44 @@
 
 `is_today: false`면 완료한 지난 날이다 — 어느 날인지는 이어지는 `Page Viewed`의 `completed_date`가 남긴다.
 
-### 대화
+### 시나리오 대화
 
-| 이벤트                    | 속성                                                                     | 시점                                          |
-| ------------------------- | ------------------------------------------------------------------------ | --------------------------------------------- |
-| Conversation Started      | scenario_id, session_id, first_speaker, is_retry                         | 세션 시작 성공                                |
-| Recording Started         | session_id?, turn_index                                                  | 마이크 눌러 말하기                            |
-| Recording Stopped         | session_id?, turn_index                                                  | ■ 답변 완료 탭 (결과는 Turn Completed/Failed) |
-| Recording Canceled        | session_id?, turn_index                                                  | 듣기 취소 (음성)                              |
-| Mic Settings Opened       | —                                                                        | 권한 안내에서 "설정 열기"                     |
-| Input Mode Switched       | session_id?, mode(text\|voice)                                           | 키보드↔마이크 전환 (타이핑 취소 포함)         |
-| Turn Completed            | session_id, scenario_id, turn_index, input_type(voice\|text), char_count | 발화 제출 성공                                |
-| Turn Failed               | session_id?, turn_index, reason(empty\|api_error)                        | 빈 발화 / 제출 실패                           |
-| Inner Thought Viewed      | session_id, turn_index, thought_type?                                    | 상대 속마음 노출                              |
-| Speech Recognition Failed | engine?, reason?                                                         | STT 오류 (권한 거부 제외)                     |
-| Conversation Completed    | session_id, scenario_id, turn_count                                      | 서버가 완료 판정                              |
-| Conversation Abandoned    | session_id?, scenario_id, turn_index                                     | 중도 이탈 확정                                |
+| 이벤트                       | 속성                                                                     | 시점                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Scenario Talk Started        | scenario_id, session_id, first_speaker, is_retry                         | 세션 시작 성공                                                               |
+| Recording Started            | session_id?, turn_index                                                  | 마이크 눌러 말하기                                                           |
+| Recording Stopped            | session_id?, turn_index                                                  | ■ 답변 완료 탭 (결과는 각 대화의 Turn Completed / Turn Failed)               |
+| Recording Canceled           | session_id?, turn_index                                                  | 듣기 취소 (음성)                                                             |
+| Mic Settings Opened          | —                                                                        | 권한 안내에서 "설정 열기"                                                    |
+| Input Mode Switched          | session_id?, mode(text\|voice)                                           | 키보드↔마이크 전환 (타이핑 취소 포함)                                        |
+| Scenario Talk Turn Completed | session_id, scenario_id, turn_index, input_type(voice\|text), char_count | 발화 제출 성공                                                               |
+| Turn Failed                  | session_id?, turn_index, reason(empty\|api_error)                        | 빈 발화 / 제출 실패                                                          |
+| Inner Thought Viewed         | session_id, turn_index, thought_type?                                    | 상대 속마음 노출                                                             |
+| Speech Recognition Failed    | engine?, reason?                                                         | STT 오류 (권한 거부 제외)                                                    |
+| Speech Playback Failed       | source(opening_mp3\|synth)                                               | AI 발화 재생 실패 — 실패 비율용. 스몰톡 탭 인사도 포함 (synth 원인은 Sentry) |
+| Scenario Talk Completed      | session_id, scenario_id, turn_count                                      | 서버가 완료 판정                                                             |
+| Scenario Talk Abandoned      | session_id?, scenario_id, turn_index                                     | 중도 이탈 확정                                                               |
 
 `session_id`가 optional인 이벤트는 세션이 백그라운드로 시작돼 확보 전에도 발생할 수 있다.
+
+### 스몰톡
+
+| 이벤트                        | 속성                                                                                        | 시점                                                    |
+| ----------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Small Talk Partner Selected   | partner                                                                                     | 탭에서 상대 칩 선택                                     |
+| Small Talk Topic Selected     | partner, topic_id                                                                           | 주제 모달에서 주제 선택                                 |
+| Small Talk Intro Guide Closed | —                                                                                           | 첫 진입 안내 닫음 (기기당 한 번)                        |
+| Small Talk Greeting Tapped    | partner, coached                                                                            | 캐릭터를 눌러 인사 들음 (coached=코치마크 켜진 채 누름) |
+| Small Talk Started            | session_id, partner, first_speaker, topic_id?                                               | 세션 시작 성공                                          |
+| Small Talk Turn Completed     | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms | 발화 제출 성공                                          |
+| Small Talk Completed          | session_id, partner, turn_count, speaking_duration_ms, end_reason(user_ended\|time_limit)   | 서버가 완료 판정                                        |
+| Small Talk Abandoned          | session_id, partner, turn_index                                                             | 중도 이탈 확정                                          |
+
+스몰톡은 탭도 목적도 달라 대화 이벤트를 따로 둔다 — 시나리오는 오늘의 과제를 끝냈는지, 스몰톡은 누구와 얼마나 얘기했는지를 본다. 상대(`partner`)는 시나리오에 없는 축이라 전 이벤트에 싣는다.
+
+탭의 네 이벤트는 대화 시작 전 갈림길이다. 기본 상대로 그냥 시작하면 `Partner Selected`는 안 찍히고 `Started`의 `partner`로 본다. 주제 모달 열림은 안 찍는다 — `Started`의 `topic_id` 유무로 "주제로 시작" 비율이 나온다.
+
+단, 마이크·STT처럼 **대화 엔진이 쏘는 것은 두 대화가 함께 쓴다** (Recording Started/Stopped/Canceled, Input Mode Switched, Turn Failed, Inner Thought Viewed, Speech Recognition Failed, Speech Playback Failed). 입력 기계의 사건이라 어느 대화인지와 무관하고, 대화 엔진(features/conversation)은 대화 종류를 모른다.
 
 ### 분석 피드백
 
@@ -132,31 +151,60 @@
 | Feedback Turn Viewed   | session_id, turn_index, feedback_type                           | 턴별 분석 노출                                |
 | Feedback Completed     | session_id                                                      | 분석 다 봤어요                                |
 
+### 소감 시트
+
+| 이벤트                       | 속성                                | 시점                                                    |
+| ---------------------------- | ----------------------------------- | ------------------------------------------------------- |
+| Satisfaction Prompt Viewed   | moment(scenario\|smalltalk\|review) | 대화를 마치고 홈에 돌아와 소감 시트가 뜸                |
+| Satisfaction Prompt Answered | moment, answer(good\|bad\|dismiss)  | 좋았어요/아쉬웠어요 탭, 또는 딤·뒤로가기로 닫음         |
+| Review Store Opened          | store(play_store\|app_store)        | 랜딧 소감(app)에서 좋았어요 → 별점판 → 리뷰 남기러 가기 |
+
+moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 날 두 번째 이상의 시나리오 대화를 마쳤을 때(랜딧 전체를 묻고 별점을 유도). 기기당 순간마다 한 번만 뜬다. dismiss도 답으로 셈해 다시 묻지 않고, 첫 소감이 bad였던 사람에겐 app을 묻지 않는다.
+
 ### 표현 학습
 
-| 이벤트                      | 속성                                               | 시점                                                              |
-| --------------------------- | -------------------------------------------------- | ----------------------------------------------------------------- |
-| Expression List Viewed      | scenario_id, expression_count                      | 분기 화면 리스트 리빌                                             |
-| Expression Learning Skipped | scenario_id, expression_count                      | 분기 화면을 X로 닫고 학습 없이 나감 (연출 중이면 count 0 가능)    |
-| Expression Learning Started | expression_id, scenario_id                         | 학습 데이터 로드 완료                                             |
-| Expression Step Viewed      | expression_id, step(quiz\|explain\|review)         | 스텝 노출                                                         |
-| Quiz Word Picked            | expression_id, picked_count                        | 단어 칩 선택                                                      |
-| Quiz Word Removed           | expression_id, picked_count                        | 단어 칩 제거                                                      |
-| Quiz Answer Submitted       | expression_id, is_correct, hint_level              | 퀴즈 확인                                                         |
-| Example Sentence Viewed     | expression_id, sentence_index                      | 예문 캐러셀 스냅                                                  |
-| Review Answer Submitted     | expression_id, is_correct, wrong_count, hint_level | 복습 영작 확인                                                    |
-| Hint Used                   | source(quiz\|review), level                        | 힌트 보기 (퀴즈=일회성·누를 때마다 level 1, 복습=힌트→정답 2단계) |
-| Expression Completed        | expression_id, scenario_id                         | 학습 완료 처리 성공                                               |
-| Expression Abandoned        | expression_id, step                                | 중단 확정                                                         |
+| 이벤트                      | 속성                                            | 시점                                                           |
+| --------------------------- | ----------------------------------------------- | -------------------------------------------------------------- |
+| Expression List Viewed      | 출처(scenario_id\|session_id), expression_count | 분기 화면 리스트 리빌                                          |
+| Expression Learning Skipped | 출처(scenario_id\|session_id), expression_count | 분기 화면을 X로 닫고 학습 없이 나감 (연출 중이면 count 0 가능) |
+| Expression Learning Started | expression_id, 출처(scenario_id\|session_id)    | 학습 데이터 로드 완료                                          |
+| Expression Step Viewed      | expression_id, step(quiz\|explain\|review)      | 스텝 노출                                                      |
+| Quiz Word Picked            | expression_id, picked_count                     | 단어 칩 선택                                                   |
+| Quiz Word Removed           | expression_id, picked_count                     | 단어 칩 제거                                                   |
+| Quiz Answer Submitted       | expression_id, is_correct, hint_level           | 퀴즈 확인                                                      |
+| Example Sentence Viewed     | expression_id, sentence_index                   | 예문 캐러셀 스냅                                               |
+| Review Answer Submitted     | expression_id, is_correct, hint_level           | 복습 영작 확인 (오답이어도 재시도 없이 완료로 이어진다)        |
+| Hint Used                   | source(quiz\|review), level                     | 힌트 보기 (퀴즈·복습 모두 일회성, 누를 때마다 level 1)         |
+| Expression Completed        | expression_id, 출처(scenario_id\|session_id)    | 학습 완료 처리 성공                                            |
+| Expression Abandoned        | expression_id, step                             | 중단 확정                                                      |
 
-### NPS
+표현 학습 화면은 시나리오 대화와 스몰톡이 같이 쓴다. 어디서 온 표현인지는 출처 속성으로 갈린다 — 시나리오 표현이면 `scenario_id`, 스몰톡 표현이면 `session_id`가 실린다.
 
-| 이벤트               | 속성                                   | 시점               |
-| -------------------- | -------------------------------------- | ------------------ |
-| NPS Survey Opened    | source(home_header\|all_completed\|me) | 의견 보내기 열기   |
-| NPS Score Selected   | score(1–5)                             | 만족도 이모지 탭   |
-| NPS Survey Submitted | score(1–5), has_comment                | 의견 제출          |
-| NPS Survey Dismissed | score?                                 | ✕로 제출 없이 닫음 |
+### 편지함
+
+| 이벤트                 | 속성                                                        | 시점                         |
+| ---------------------- | ----------------------------------------------------------- | ---------------------------- |
+| Mailbox Tab Switched   | box(received\|sent)                                         | 받은/보낸 칸 이동            |
+| Feedback Type Selected | feedback_type(BUG_REPORT\|FEATURE_REQUEST\|QUESTION\|CHEER) | 유형 선택 화면에서 하나 고름 |
+| Feedback Submitted     | feedback_type, length                                       | 피드백 전송 성공             |
+
+원문은 PII 위험이 있어 싣지 않는다 — 길이만 남긴다. `Feedback Submitted`는 전송이 성공한 뒤에만 쏜다.
+
+편지 상세와 피드백 작성 진입은 `Page Viewed`가 담당한다. 편지 상세는 받은·보낸이 서로 다른
+리소스라 화면 이름도 갈리고(`mailbox_received`+letter_id / `mailbox_sent`+feedback_id),
+목록은 칸을 옮겨도 같은 화면이라 `mailbox` 하나다. 작성은 유형마다 주소가 갈려도 화면 이름은
+`feedback_compose` 하나로 두고 고른 유형을 `feedback_type`으로 싣는다.
+
+### 알림
+
+| 이벤트                          | 속성                                      | 시점                                                     |
+| ------------------------------- | ----------------------------------------- | -------------------------------------------------------- |
+| Notification Consent Viewed     | source(scenario\|me)                      | 알림 안내 시트 노출                                      |
+| Notification Consent Accepted   | source                                    | 시트에서 수락 (OS 권한창 요청까지 이어짐)                |
+| Notification Consent Dismissed  | source                                    | 시트 닫음                                                |
+| Notification Permission Decided | granted, source(onboarding\|scenario\|me) | OS 권한창 결과 — 셸의 회신에서 찍는다 (마이크와 같은 짝) |
+
+온보딩의 알림 스텝은 시트 없이 바로 OS 권한창을 띄워 Consent 이벤트가 없고, 결과는 `Notification Permission Decided(source: onboarding)`로 남는다. 이미 거부한 상태에서 내 정보의 "OS 설정 열기"는 안 찍는다 — 결과를 알 수 없다.
 
 ### 유저 속성
 
@@ -169,9 +217,9 @@
 
 아래는 놓친 게 아니라 검토 후 뺀 것이다. 원클릭 수준까지 필요해지면 오토캡처 elementInteractions를 다시 켜서 사후 수집할 수 있다.
 
-- 키 입력·IME 글자 단위, NPS 코멘트 타이핑, 복습 영작 단어 박스 포커스 — 노이즈 대비 분석 가치가 없다.
+- 키 입력·IME 글자 단위, 피드백 작성 타이핑, 복습 영작 단어 박스 포커스 — 노이즈 대비 분석 가치가 없다.
 - 단순 화면 이동 버튼(내 정보·약관 링크, 뒤로가기, 콜백 "로그인으로 돌아가기") — `Page Viewed`가 목적지를 찍는다.
-- 바텀시트 오버레이 클릭 닫기 — ✕/닫기 버튼 이벤트와 중복. 시트별 닫기는 `Confirm Sheet Dismissed`·`NPS Survey Dismissed`가 담당.
+- 바텀시트 오버레이 클릭 닫기 — ✕/닫기 버튼 이벤트와 중복. 시트별 닫기는 `Confirm Sheet Dismissed`가 담당.
 - 상세 분석 첫 장에서 ‹로 총평 복귀 — `Feedback Turn Viewed`/`Feedback Detail Opened` 재발화로 추적 가능.
 - 장식성 인터랙션(스크롤 그림자, 전역 햅틱 pointerdown), TTS 재생 내부 상태, `/stt-demo`·`/dev` 개발 화면.
 

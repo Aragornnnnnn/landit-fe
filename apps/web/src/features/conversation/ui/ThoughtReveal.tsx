@@ -45,7 +45,7 @@ export const ThoughtReveal = ({
             src={characterSrc}
             alt="랜디"
             className="object-contain"
-            style={{ width: 148, height: 148 }}
+            style={{ width: 180, height: 180 }}
           />
         </motion.div>
       </motion.div>

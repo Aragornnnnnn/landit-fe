@@ -3,13 +3,16 @@
 // 듀오링고식 단어 선택 퀴즈 — 뱅크에서 단어를 순서대로 골라 문장을 완성하고 판정, 결과는 하단 슬라이드업 시트로 띄운다
 // QUIZ·REVIEW 두 스텝이 공용으로 쓴다(진행바 구간·칩 선택 복원·정답 연출은 props로 스텝별로 갈라진다)
 import { useEffect, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type QuizStepKind } from '@landit/analytics';
+import { motion, useReducedMotion } from 'motion/react';
 
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
+import { EASE_STANDARD } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
 
 import type { SentenceQuiz } from '../../model/sentence-quiz';
+import { useChipReorder } from '../../model/useChipReorder';
 import {
   chipsFromWords,
   isWordsCorrect,
@@ -19,7 +22,15 @@ import { QuizPrompt } from '../common/QuizPrompt';
 import { StepScaffold } from '../common/StepScaffold';
 import { ResultSheet } from './ResultSheet';
 
+// 제출 이벤트는 스텝마다 다르다 — 복습을 퀴즈로 세지 않게
+const SUBMIT_EVENT = {
+  quiz: EVENTS.QUIZ_ANSWER_SUBMITTED,
+  review: EVENTS.REVIEW_ANSWER_SUBMITTED,
+} as const;
+
 interface QuizStepProps {
+  // 어느 스텝의 퀴즈인지 — 제출·힌트 이벤트가 이 값으로 갈린다. 빠뜨리면 오귀속이라 기본값을 두지 않는다
+  step: QuizStepKind;
   quiz: SentenceQuiz;
   // 계측 속성용 — 어떤 표현의 퀴즈인지
   expressionId: number;
@@ -43,12 +54,22 @@ type Checked = 'idle' | 'wrong' | 'correct';
 
 // 단어 칩 — 공용 Button과 같은 3D 눌림 효과 (흰 배경 + 회색 엣지 그림자)
 // min-w로 짧은 단어("I")가 원형으로 뭉치지 않게 최소 폭을 준다
+const CHIP_BASE =
+  'inline-flex min-w-[44px] items-center justify-center rounded-xl border border-border bg-card px-3.5 py-2.5 text-base font-semibold text-foreground';
+// 빈 자리 — 뱅크에서 고른 칩 자리와 끌고 나간 자리에 같은 회색 슬랩을 쓴다
+const CHIP_SLAB = 'rounded-xl bg-secondary';
 const CHIP_STYLE =
-  'inline-flex min-w-[44px] items-center justify-center rounded-xl border border-border bg-card px-3.5 py-2.5 text-base font-semibold text-foreground ' +
-  'shadow-[0_3px_0_var(--border)] transition-[translate,box-shadow] duration-75 ' +
+  `${CHIP_BASE} shadow-[0_3px_0_var(--border)] transition-[translate,box-shadow] duration-75 ` +
   'active:translate-y-[3px] active:shadow-none';
+// 밀려나는 칩이 새 자리로 미끄러지는 속도
+const SLOT_SHIFT = { duration: 0.18, ease: EASE_STANDARD } as const;
+// 답변 줄에 올린 칩 — 끌 수 있어야 하므로 이 칩 위에서 시작한 터치는 화면 스크롤로 넘기지 않는다
+const CHIP_PLACED = `${CHIP_STYLE} touch-none`;
+// 끌고 있는 칩 — 눌림 효과 대신 살짝 떠서 손가락을 따라온다
+const CHIP_DRAGGING = `${CHIP_BASE} relative z-10 touch-none scale-105 shadow-[0_8px_16px_rgba(0,0,0,0.18)]`;
 
 export const QuizStep = ({
+  step,
   quiz,
   expressionId,
   onBack,
@@ -62,6 +83,7 @@ export const QuizStep = ({
   correctSlot,
 }: QuizStepProps) => {
   const answer = quiz.answerWords;
+  const reduced = useReducedMotion() ?? false;
 
   // 뱅크는 BE가 섞어준 shuffledWords 그대로. 선택은 칩 id의 순서 배열로 관리한다(중복 단어 안전).
   const [bank] = useState<WordChip[]>(() => chipsFromWords(quiz.shuffledWords));
@@ -87,13 +109,23 @@ export const QuizStep = ({
     bank.find((chip) => chip.id === id)?.word ?? '';
 
   const showHint = () => {
-    track(EVENTS.HINT_USED, { source: 'quiz', level: 1 });
+    track(EVENTS.HINT_USED, { source: step, level: 1 });
     setHintActive(true);
     setHintUsed(true);
   };
 
+  // 순서를 바꾸는 것도 단어를 놓는 일이다 — 올리거나 내릴 때처럼 힌트가 꺼진다
+  const reorderChips = (next: number[]) => {
+    setHintActive(false);
+    setSelected(next);
+  };
+
+  const { drag, rowRef, bindChip, pressChip, swallowDragClick } =
+    useChipReorder(selected, reorderChips);
+
   const pick = (chip: WordChip) => {
-    if (checked !== 'idle' || usedIds.has(chip.id) || full) return;
+    // 끌고 있는 중엔 뱅크를 받지 않는다 — 드래그가 들고 있는 순서를 덮어쓰기 때문
+    if (checked !== 'idle' || usedIds.has(chip.id) || full || drag) return;
     track(EVENTS.QUIZ_WORD_PICKED, {
       expression_id: expressionId,
       picked_count: selected.length + 1,
@@ -112,11 +144,23 @@ export const QuizStep = ({
     setSelected((current) => current.filter((_, i) => i !== index));
   };
 
+  // 판정을 마친 뒤엔 답변 줄을 건드리지 않는다 — pick·removeAt과 같은 자리에서 막는다
+  const dragChip = (id: number) => (event: React.PointerEvent) => {
+    if (checked !== 'idle') return;
+    pressChip(id)(event);
+  };
+
+  // 칩을 빼는 탭 — 끌고 나서 따라오는 클릭은 순서만 바꾸고 끝낸다
+  const tapChip = (index: number) => {
+    if (swallowDragClick()) return;
+    removeAt(index);
+  };
+
   const check = () => {
     const tone = isWordsCorrect(selected.map(wordOf), answer)
       ? 'correct'
       : 'wrong';
-    track(EVENTS.QUIZ_ANSWER_SUBMITTED, {
+    track(SUBMIT_EVENT[step], {
       expression_id: expressionId,
       is_correct: tone === 'correct',
       hint_level: hintUsed ? 1 : 0,
@@ -154,7 +198,7 @@ export const QuizStep = ({
       leftAction={leftAction}
       footer={
         checked === 'idle' ? (
-          <Button disabled={!full} onClick={check}>
+          <Button disabled={selected.length === 0} onClick={check}>
             확인할게요
           </Button>
         ) : undefined
@@ -164,26 +208,47 @@ export const QuizStep = ({
 
       {/* 내 답변 — 중앙 밑줄 2줄, 고른 칩이 줄 위에 올라간다 */}
       <div
-        className="mt-6 flex min-h-[124px] flex-wrap content-start gap-x-2"
+        ref={rowRef}
+        className="relative mt-6 flex min-h-[124px] flex-wrap content-start gap-x-2"
         style={{
           backgroundImage:
             'repeating-linear-gradient(to bottom, transparent, transparent 60px, var(--border) 60px, var(--border) 62px)',
         }}
       >
-        {selected.map((id, index) => (
-          <span key={id} className="flex h-[62px] items-center">
-            <button
-              onClick={() => removeAt(index)}
-              className={
-                misplacedAt(index)
-                  ? `${CHIP_STYLE} border-destructive! text-destructive`
-                  : CHIP_STYLE
-              }
+        {selected.map((id, index) => {
+          const dragging = drag?.id === id;
+          return (
+            <motion.span
+              key={id}
+              ref={bindChip(id)}
+              layout={!dragging}
+              layoutDependency={index}
+              transition={reduced ? { duration: 0 } : SLOT_SHIFT}
+              className="relative flex h-[62px] items-center"
             >
-              {wordOf(id)}
-            </button>
-          </span>
-        ))}
+              {/* 끌고 나간 자리는 비워둔다 */}
+              {dragging && (
+                <span className={`absolute inset-x-0 inset-y-2 ${CHIP_SLAB}`} />
+              )}
+              <button
+                onPointerDown={dragChip(id)}
+                onClick={() => tapChip(index)}
+                style={
+                  dragging
+                    ? { translate: `${drag.dx}px ${drag.dy}px` }
+                    : undefined
+                }
+                className={`${dragging ? CHIP_DRAGGING : CHIP_PLACED} ${
+                  misplacedAt(index)
+                    ? 'border-destructive! text-destructive'
+                    : ''
+                }`}
+              >
+                {wordOf(id)}
+              </button>
+            </motion.span>
+          );
+        })}
       </div>
 
       {/* 힌트 — 항상 떠 있고, 누를 때마다 지금 자리의 힌트(다음 단어·오배치)를 일회성으로 보여준다.
@@ -212,7 +277,7 @@ export const QuizStep = ({
               disabled={used || checked !== 'idle'}
               className={
                 used
-                  ? 'inline-flex min-w-[44px] items-center justify-center rounded-xl border border-transparent bg-secondary px-3.5 py-2.5 text-base font-semibold text-transparent'
+                  ? `inline-flex min-w-[44px] items-center justify-center border border-transparent px-3.5 py-2.5 text-base font-semibold text-transparent ${CHIP_SLAB}`
                   : chip.id === hintChipId
                     ? `${CHIP_STYLE} border-primary! text-primary`
                     : CHIP_STYLE

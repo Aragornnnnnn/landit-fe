@@ -1,5 +1,5 @@
 // 대화 진행 규칙표 — 현재 단계에서 어떤 사건이 발생하면 다음 단계가 무엇인지 결정한다.
-// useConversationFlow(유일한 사용처)가 사건을 넣고, 결정된 단계에 맞춰 실제 동작(재생·녹음·API)을 진행한다.
+// useConversationTurns(유일한 사용처)가 사건을 넣고, 결정된 단계에 맞춰 실제 동작(재생·녹음·API)을 진행한다.
 
 /** 대화가 밟는 단계 — "누가(AI/USER) 무엇을 하는 중인가"로 읽는다. */
 export type ConversationPhase =

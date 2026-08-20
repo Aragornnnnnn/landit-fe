@@ -2,10 +2,13 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { track } from '@/shared/analytics';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 import { speechEndPauseMs, speechTypingMs } from './pacing';
 import { useAiSpeech } from './useAiSpeech';
+
+vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 
 // TTS는 경계(재생)라 목으로 둔다 — speak/speakSrc의 onEnd·onError를 붙잡아 종료·실패를 흉내 낸다
 const ttsMock = vi.hoisted(() => {
@@ -16,8 +19,13 @@ const ttsMock = vi.hoisted(() => {
   return {
     state,
     speak: vi.fn(
-      (_text: string, _voice: unknown, opts?: { onEnd?: () => void }) => {
+      (
+        _text: string,
+        _voice: unknown,
+        opts?: { onEnd?: () => void; onError?: () => void },
+      ) => {
         state.onEnd = opts?.onEnd;
+        state.onError = opts?.onError;
         return Promise.resolve();
       },
     ),
@@ -59,7 +67,7 @@ const renderSpeech = (
     playing: true,
     content: OPENING,
     voice: voice as TtsVoice | null,
-    scenarioId: 10,
+    openingSrc: '/audio/opening-10.mp3' as string | null,
     onSpeechEnd,
     ...over,
   };
@@ -96,11 +104,29 @@ describe('useAiSpeech', () => {
     expect(onSpeechEnd).toHaveBeenCalledTimes(1);
   });
 
-  it('오프닝 정적 파일이 없으면 합성으로 폴백한다', () => {
+  it('오프닝 소스가 없으면 정적 재생 없이 바로 합성으로 말한다', () => {
+    // 미리 녹음된 오프닝이 없는 대화(예: 스몰톡)는 처음부터 일반 재생 경로를 탄다
+    const { onSpeechEnd } = renderSpeech({ openingSrc: null });
+
+    expect(ttsMock.speakSrc).not.toHaveBeenCalled();
+    expect(ttsMock.speak).toHaveBeenCalledWith(
+      OPENING,
+      voice,
+      expect.anything(),
+    );
+
+    act(() => ttsMock.state.onEnd?.());
+    expect(onSpeechEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('오프닝 정적 파일이 없으면 실패를 남기고 합성으로 폴백한다', () => {
     const { onSpeechEnd } = renderSpeech();
 
     act(() => ttsMock.state.onError?.()); // 정적 파일 없음(404)
 
+    expect(track).toHaveBeenCalledWith('Speech Playback Failed', {
+      source: 'opening_mp3',
+    });
     expect(ttsMock.speak).toHaveBeenCalledWith(
       OPENING,
       voice,
@@ -152,13 +178,14 @@ describe('useAiSpeech', () => {
     expect(ttsMock.stop).toHaveBeenCalled();
   });
 
-  it('발화 단계를 벗어난 뒤 도착한 오프닝 실패는 재생을 되살리지 않는다', () => {
+  it('발화 단계를 벗어난 뒤 도착한 오프닝 실패는 실패로 세지도, 재생을 되살리지도 않는다', () => {
     // 정리(cleanup)가 끝난 뒤 mp3 실패가 뒤늦게 도착하면, 폴백을 시작할 주체가 이미 없다
     const { rerender, onSpeechEnd, initialProps } = renderSpeech();
 
     rerender({ ...initialProps, playing: false }); // 이탈 — 정리 완료
     act(() => ttsMock.state.onError?.()); // 그 뒤에야 도착한 정적 파일 실패
 
+    expect(track).not.toHaveBeenCalled();
     expect(ttsMock.speak).not.toHaveBeenCalled();
     act(() => {
       vi.advanceTimersByTime(speechTypingMs(OPENING) + speechEndPauseMs);
@@ -178,6 +205,17 @@ describe('useAiSpeech', () => {
     });
 
     expect(onSpeechEnd).not.toHaveBeenCalled();
+  });
+
+  it('합성 재생이 실패하면 synth 출처로 실패 이벤트를 찍고 발화를 마친다', () => {
+    const { onSpeechEnd } = renderSpeech({ openingSrc: null });
+
+    act(() => ttsMock.state.onError?.());
+
+    expect(track).toHaveBeenCalledWith('Speech Playback Failed', {
+      source: 'synth',
+    });
+    expect(onSpeechEnd).toHaveBeenCalledTimes(1);
   });
 
   it('다음 질문 프리페치는 음성이 있을 때만 합성을 요청한다', () => {

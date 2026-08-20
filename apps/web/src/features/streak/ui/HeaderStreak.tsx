@@ -15,16 +15,12 @@ import { StreakFruit } from './common/StreakFruit';
 // 눈에 띄어야 하는 칸이지만 그건 색이 맡는다. 크기로 키우면 강조가 아니라 정렬 오류로 보인다
 const HEADER_FRUIT_SIZE = 16;
 
-// "999일" 세 자리 폭 기준 — 못 받은 동안 라벨 칸을 비워 두면 폭이 좁았다 넓어지며 아이콘이 옆으로 튄다.
-// 두 자리까지만 잡으면 스트릭이 100일을 넘는 순간 다시 튄다
-const LABEL_MIN_WIDTH = 32;
-
 export const HeaderStreak = () => {
   const { streak, isPending } = useStreakQuery();
 
-  // 조회에 실패해도 자리를 지키고 0일로 그린다 — 홈은 스트릭 없이도 멀쩡히 돌아야 한다.
-  // 다만 아직 못 받은 건 실패가 아니다. 여기에도 0일을 쓰면 앱을 켤 때마다
-  // 0일을 먼저 그렸다가 응답이 온 순간 숫자가 튄다 — 그럴 바엔 기다렸다 제 숫자를 그린다
+  // 조회에 실패해도 자리를 지키고 0일로 친다 — 홈은 스트릭 없이도 멀쩡히 돌아야 한다.
+  // 다만 아직 못 받은 건 실패가 아니다. 눈에 보이는 숫자는 없어졌지만 읽어 주는 문구는
+  // 남아 있어서, 여기에도 0일을 쓰면 보조 기술 사용자만 틀린 일수를 듣게 된다
   const currentStreakDays = streak?.currentStreakDays ?? 0;
   const activeToday = streak?.activeToday ?? false;
   const state = fruitStateOf({ currentStreakDays, activeToday });
@@ -32,14 +28,11 @@ export const HeaderStreak = () => {
   return (
     <HeaderAction
       href={STREAK_PATH}
-      label={isPending ? '' : `${currentStreakDays}일`}
-      ariaLabel={
+      label={
         isPending
           ? '연속 기록 보기'
           : `연속 학습 ${currentStreakDays}일, 연속 기록 보기`
       }
-      highlighted={state === 'fresh'}
-      labelMinWidth={LABEL_MIN_WIDTH}
       onClick={() =>
         track(EVENTS.STREAK_OPENED, {
           source: 'home_header',

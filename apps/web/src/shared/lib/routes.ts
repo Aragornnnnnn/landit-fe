@@ -3,6 +3,11 @@
 export const SCENARIO_PATH = '/scenario';
 export const SMALLTALK_PATH = '/smalltalk';
 export const STREAK_PATH = '/streak';
+// 편지함 진입점. 편지 종류·피드백 유형이 붙는 그 아래 주소들은 features/mailbox가 만든다
+export const MAILBOX_PATH = '/mailbox';
+// 피드백 작성 진입(유형 선택) — 편지함 밖(소감 시트)에서도 보내는 주소라 여기 둔다.
+// 작성 흐름은 히스토리 한 층만 쓴다 (진입·다음 단계·화살표 모두 replace, features/mailbox 참고)
+export const MAILBOX_COMPOSE_PATH = `${MAILBOX_PATH}/compose`;
 
 // 온보딩을 막 끝내고 넘어왔다는 표식 — 홈이 램프를 열되 다시 묻지 않는다.
 // flip처럼 주소에 남겨 둔다. 그날 한 번 보면 등장 판정에서 걸러지므로 지울 필요가 없다
@@ -31,22 +36,70 @@ export const scenarioReturnPath = ({ date, flip }: ScenarioReturn = {}) => {
 const withDate = (path: string, date?: string | null) =>
   date ? `${path}?date=${encodeURIComponent(date)}` : path;
 
-// 대화 화면. 어느 날 카드인지 알아야 그 날 배정을 받아 오고, 나올 때도 그 날로 돌아간다
-export const conversationPath = (scenarioId: number, date?: string | null) =>
-  withDate(`/conversation/${scenarioId}`, date);
+// 대화 화면은 종류별로 /conversation 아래에 모은다 — 탭바 없는 전체화면이라 탭 라우트와 갈라 둔다
+// 시나리오 대화. 어느 날 카드인지 알아야 그 날 배정을 받아 오고, 나올 때도 그 날로 돌아간다
+export const scenarioTalkPath = (scenarioId: number, date?: string | null) =>
+  withDate(`/conversation/scenario/${scenarioId}`, date);
+
+// 스몰톡 대화. 시나리오와 달리 가리킬 콘텐츠가 없어 "누구와 어떻게 시작할지"를 싣는다 —
+// 주제를 고르면 상대가 먼저, 직접 걸면 내가 먼저다. 주제는 상대가 먼저일 때만 있다.
+// 상대는 홈에서 고른 값이다 — 새로고침해도 고른 상대가 유지되려면 주소에 있어야 한다
+export type SmallTalkStart = { partner: string } & (
+  { mode: 'ai_first'; topicId: number } | { mode: 'user_first' }
+);
+
+export const smallTalkPath = (start: SmallTalkStart) => {
+  const query = new URLSearchParams({
+    mode: start.mode,
+    partner: start.partner,
+  });
+  if (start.mode === 'ai_first') query.set('topicId', String(start.topicId));
+
+  return `/conversation/smalltalk?${query.toString()}`;
+};
+
+// 지난 스몰톡 — 목록과 그 대화 한 건. 표현은 /expressions 아래에 서지만,
+// 기록은 스몰톡 도메인이라 탭 주소 아래에 둔다
+export const SMALLTALK_HISTORY_PATH = `${SMALLTALK_PATH}/sessions`;
+
+export const smallTalkHistoryPath = (sessionId: number) =>
+  `${SMALLTALK_HISTORY_PATH}/${sessionId}`;
+
+// 그날 주고받은 말 다시 보기
+export const smallTalkTranscriptPath = (sessionId: number) =>
+  `${smallTalkHistoryPath(sessionId)}/messages`;
+
+// 표현 학습은 /expressions 아래 한자리에 모으고, 둘째 칸에 출처를 세운다.
+// 표현의 주인이 대화 종류마다 다르기 때문이다 — 시나리오 표현은 콘텐츠에 붙어 있어 몇 번을 대화해도 같고,
+// 스몰톡 표현은 그 대화에서 그때 만들어져 세션으로만 가리킬 수 있다
+const expressionsOf = (source: 'scenario' | 'session', sourceId: number) =>
+  `/expressions/${source}/${sourceId}`;
 
 // 대화 직후 표현 분기 화면
-export const expressionBranchPath = (
+export const scenarioExpressionBranchPath = (
   scenarioId: number,
   date?: string | null,
-) => withDate(`/expressions/${scenarioId}/branch`, date);
+) => withDate(`${expressionsOf('scenario', scenarioId)}/branch`, date);
 
 // 표현 하나를 배우는 화면
-export const expressionPath = (
+export const scenarioExpressionPath = (
   scenarioId: number,
   expressionId: number,
   date?: string | null,
-) => withDate(`/expressions/${scenarioId}/${expressionId}`, date);
+) => withDate(`${expressionsOf('scenario', scenarioId)}/${expressionId}`, date);
+
+// 스몰톡은 "어느 날 카드"라는 개념이 없어 날짜를 달지 않는다.
+// 대화를 막 끝내고 왔을 때만 축하를 켠다 — 표현 학습을 마치고 돌아올 때마다 또 축하할 일은 아니다
+export const sessionExpressionBranchPath = (
+  sessionId: number,
+  { celebrate = false } = {},
+) =>
+  `${expressionsOf('session', sessionId)}/branch${celebrate ? '?celebrate=1' : ''}`;
+
+export const sessionExpressionPath = (
+  sessionId: number,
+  expressionId: number,
+) => `${expressionsOf('session', sessionId)}/${expressionId}`;
 
 // 주소의 ?date=를 읽는다. yyyy-MM-dd가 아니면 없는 것으로 본다 —
 // 손으로 고친 주소가 그대로 조회로 흘러가면 백엔드가 400을 준다

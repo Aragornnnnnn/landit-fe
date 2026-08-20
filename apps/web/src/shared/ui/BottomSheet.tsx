@@ -37,6 +37,7 @@ export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
       {open && (
         <>
           <motion.div
+            data-testid="bottom-sheet-dim"
             className="fixed inset-0 z-50 bg-black/40"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

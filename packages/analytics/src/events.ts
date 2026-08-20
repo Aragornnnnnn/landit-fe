@@ -23,8 +23,7 @@ export const EVENTS = {
   ONBOARDING_COMPLETED: 'Onboarding Completed',
 
   // 홈
-  CATEGORY_SELECTED: 'Category Selected',
-  SCENARIO_CARD_VIEWED: 'Scenario Card Viewed',
+  HOME_TAB_SWITCHED: 'Home Tab Switched',
   SCENARIO_CARD_FLIPPED: 'Scenario Card Flipped',
   EXPRESSION_SELECTED: 'Expression Selected',
 
@@ -43,20 +42,34 @@ export const EVENTS = {
   STREAK_OPENED: 'Streak Opened',
   STREAK_MONTH_CHANGED: 'Streak Month Changed',
 
-  // 대화
-  CONVERSATION_STARTED: 'Conversation Started',
+  // 시나리오 대화 — 이름을 스몰톡과 짝 맞춰 둔다 (폴더명도 conversation/scenario)
+  SCENARIO_TALK_STARTED: 'Scenario Talk Started',
   RECORDING_STARTED: 'Recording Started',
   RECORDING_STOPPED: 'Recording Stopped',
   RECORDING_CANCELED: 'Recording Canceled',
   MIC_SETTINGS_OPENED: 'Mic Settings Opened',
   INPUT_MODE_SWITCHED: 'Input Mode Switched',
-  TURN_COMPLETED: 'Turn Completed',
+  SCENARIO_TALK_TURN_COMPLETED: 'Scenario Talk Turn Completed',
   TURN_FAILED: 'Turn Failed',
   INNER_THOUGHT_VIEWED: 'Inner Thought Viewed',
+  TRANSLATION_TOGGLED: 'Translation Toggled',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
+  SPEECH_PLAYBACK_FAILED: 'Speech Playback Failed',
   HINT_USED: 'Hint Used',
-  CONVERSATION_COMPLETED: 'Conversation Completed',
-  CONVERSATION_ABANDONED: 'Conversation Abandoned',
+  SCENARIO_TALK_COMPLETED: 'Scenario Talk Completed',
+  SCENARIO_TALK_ABANDONED: 'Scenario Talk Abandoned',
+
+  // 스몰톡 — 시나리오와 탭도 목적도 달라 이벤트를 따로 둔다.
+  // 마이크·STT처럼 대화 엔진이 쏘는 것(Recording·Turn Failed·Inner Thought Viewed)은 두 대화가 함께 쓴다.
+  // 앞의 넷은 탭에서 대화를 시작하기 전 갈림길(상대·주제·안내·인사)이다
+  SMALL_TALK_PARTNER_SELECTED: 'Small Talk Partner Selected',
+  SMALL_TALK_TOPIC_SELECTED: 'Small Talk Topic Selected',
+  SMALL_TALK_INTRO_GUIDE_CLOSED: 'Small Talk Intro Guide Closed',
+  SMALL_TALK_GREETING_TAPPED: 'Small Talk Greeting Tapped',
+  SMALL_TALK_STARTED: 'Small Talk Started',
+  SMALL_TALK_TURN_COMPLETED: 'Small Talk Turn Completed',
+  SMALL_TALK_COMPLETED: 'Small Talk Completed',
+  SMALL_TALK_ABANDONED: 'Small Talk Abandoned',
 
   // 분석 피드백
   FEEDBACK_VIEWED: 'Feedback Viewed',
@@ -78,16 +91,22 @@ export const EVENTS = {
   EXPRESSION_COMPLETED: 'Expression Completed',
   EXPRESSION_ABANDONED: 'Expression Abandoned',
 
-  // NPS
-  NPS_SURVEY_OPENED: 'NPS Survey Opened',
-  NPS_SCORE_SELECTED: 'NPS Score Selected',
-  NPS_SURVEY_SUBMITTED: 'NPS Survey Submitted',
-  NPS_SURVEY_DISMISSED: 'NPS Survey Dismissed',
+  // 편지함
+  MAILBOX_TAB_SWITCHED: 'Mailbox Tab Switched',
+  FEEDBACK_TYPE_SELECTED: 'Feedback Type Selected',
+  FEEDBACK_SUBMITTED: 'Feedback Submitted',
 
   // 알림 동의
   NOTIFICATION_CONSENT_VIEWED: 'Notification Consent Viewed',
   NOTIFICATION_CONSENT_ACCEPTED: 'Notification Consent Accepted',
   NOTIFICATION_CONSENT_DISMISSED: 'Notification Consent Dismissed',
+  NOTIFICATION_PERMISSION_DECIDED: 'Notification Permission Decided',
+
+  // 소감 시트 — 첫 시나리오 대화·첫 스몰톡·다른 날 두 번째 대화(랜딧 소감)를 마치고 홈에 돌아왔을 때 한 번 묻는다
+  SATISFACTION_PROMPT_VIEWED: 'Satisfaction Prompt Viewed',
+  SATISFACTION_PROMPT_ANSWERED: 'Satisfaction Prompt Answered',
+  // 랜딧 소감에서 좋았어요 → 별점판 → 스토어 리뷰 화면을 연다
+  REVIEW_STORE_OPENED: 'Review Store Opened',
 
   // 유입 — /download 스토어 리다이렉트가 서버에서 발화한다 (route 핸들러, LAN-237)
   DOWNLOAD_LINK_VISITED: 'Download Link Visited',
@@ -105,16 +124,42 @@ export type OnboardingStep =
   'intro' | 'sound' | 'mic' | 'thought' | 'notification' | 'scenario';
 export type ExpressionStep = 'quiz' | 'explain' | 'review';
 export type TurnInputType = 'voice' | 'text';
-export type HintSource = 'quiz' | 'review';
+// 스몰톡 대화 상대 — 홈에서 고른 캐릭터. 시나리오엔 없는 축이라 스몰톡 이벤트에만 붙는다
+export type TalkPartner = 'chloe' | 'marco' | 'teddy';
+// 단어 퀴즈 화면은 퀴즈 스텝과 복습 스텝이 같이 쓴다 — 제출·힌트 이벤트가 이 값으로 갈린다
+export type QuizStepKind = 'quiz' | 'review';
+export type HintSource = QuizStepKind;
 export type HomeReturnReason = 'just' | 'flip' | 'card' | 'reminder';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
-  'scenario' | 'conversation' | 'card_back' | 'expression_list' | 'streak';
+  | 'scenario'
+  | 'smalltalk'
+  | 'conversation'
+  | 'card_back'
+  | 'expression_list'
+  | 'streak'
+  | 'mailbox';
+// 피드백 유형 — 작성 화면에서 고르는 넷. 값은 서버 enum 그대로다 (지표와 데이터가 같은 말을 쓰도록)
+export type FeedbackType =
+  'BUG_REPORT' | 'FEATURE_REQUEST' | 'QUESTION' | 'CHEER';
 // 알림 동의를 청한 지면 — 온보딩 스텝은 기존 온보딩 계측이 커버해서 없다.
 // 키는 source — surface는 baseProps의 전역 속성(app·browser)이라 겹치면 덮어쓴다
 export type NotificationConsentSource = 'scenario' | 'me';
+// OS 알림 권한창을 띄운 지면 — 안내 시트 둘에 온보딩 스텝이 더해진다
+export type NotificationPermissionSource =
+  'onboarding' | NotificationConsentSource;
+// 소감을 물은 순간과 답 — 닫기(딤·뒤로가기)도 답으로 셈해 다시 묻지 않는다.
+// talk = 대화 종류(첫 소감), review = 다른 날 다시 와서 대화를 마쳤을 때 청하는 스토어 리뷰
+export type SatisfactionTalk = 'scenario' | 'smalltalk';
+export type SatisfactionMoment = SatisfactionTalk | 'review';
+export type SatisfactionAnswer = 'good' | 'bad' | 'dismiss';
 export type CalendarView = 'week' | 'month';
+export type HomeTab = 'scenario' | 'smalltalk';
+
+// 표현이 어디서 왔는가 — 시나리오 콘텐츠에 붙어 있던 표현인지, 그 스몰톡에서 만들어진 표현인지.
+// 표현 학습 화면은 둘이 같이 쓰므로 이벤트도 하나로 두고 출처만 갈아 끼운다 (둘 중 하나만 실린다)
+type ExpressionSource = { scenario_id: number } | { session_id: number };
 
 // 이벤트별 속성 계약 — 키는 snake_case. 속성이 없는 이벤트는 undefined
 export type EventProps = {
@@ -123,11 +168,19 @@ export type EventProps = {
     path: string;
     return_reason?: HomeReturnReason;
     scenario_id?: number;
+    // 스몰톡에서 갈라져 나온 화면들만 — 지난 스몰톡 기록과 거기서 만든 표현
+    session_id?: number;
     expression_id?: number;
     // 알림 유입(reminder)일 때만 — 탭한 알림의 문구 슬러그 (utm_content에서 파생, 어휘는 reminder-copies.ts)
     notification_copy?: string;
     // 시나리오 화면에서 완료한 지난 날 카드를 볼 때만 — 열 수 있는 과거는 완료한 날뿐이다 (yyyy-MM-dd)
     completed_date?: string;
+    // 편지 상세일 때만
+    letter_id?: number;
+    // 보낸 피드백 상세에서만 — 받은 편지와 아이디 공간이 다르다
+    feedback_id?: number;
+    // 피드백 작성일 때만 — 유형별로 주소가 갈려도 화면 이름은 하나로 둔다
+    feedback_type?: FeedbackType;
   };
   // 파괴적 행동(이탈·탈퇴) 전 확인 시트 — 열림/취소로 고민율을 본다. 확정은 각 Abandoned/Deleted 이벤트
   'Confirm Sheet Opened': { sheet: ConfirmSheetKind };
@@ -161,29 +214,17 @@ export type EventProps = {
   };
   'Onboarding Completed': undefined;
 
-  'Category Selected': {
-    category_id: number;
-    category_name: string;
-    is_locked: boolean;
-  };
-  'Scenario Card Viewed': {
-    card_type: 'scenario' | 'completion';
-    position: number;
-    scenario_id?: number;
-    difficulty?: string;
-    is_completed?: boolean;
-    is_locked?: boolean;
-  };
+  // 홈 상단 탭 칩을 눌러 옮긴다 — 화면 노출(Page Viewed)엔 뒤로가기·복귀도 섞이니, 손으로 고른 것만 따로 본다
+  'Home Tab Switched': { tab: HomeTab };
   'Scenario Card Flipped': {
     scenario_id: number;
     direction: 'back' | 'front';
     trigger: 'button' | 'auto';
   };
-  'Expression Selected': {
+  'Expression Selected': ExpressionSource & {
     expression_id: number;
-    scenario_id: number;
-    // post_conversation = 대화 직후 표현 리스트 화면, card_back = 홈 카드 뒷면
-    source: 'card_back' | 'post_conversation';
+    // post_conversation = 대화 직후 표현 리스트, card_back = 홈 카드 뒷면, history = 지난 스몰톡 기록
+    source: 'card_back' | 'post_conversation' | 'history';
   };
 
   // retry = 전날 못 끝낸 대화를 이어서 하는 카드였는지 (오늘 새로 받은 시나리오면 false)
@@ -201,13 +242,19 @@ export type EventProps = {
     streak_days: number;
     is_active_today: boolean;
   };
+  // 편지함에서 받은/보낸 칸을 옮긴다 — 보낸 편지를 실제로 되짚어 보는지 본다
+  'Mailbox Tab Switched': { box: 'received' | 'sent' };
+  // 유형 선택 화면에서 하나를 고른다 — 무슨 말을 하고 싶어 들어오는지의 분포
+  'Feedback Type Selected': { feedback_type: FeedbackType };
+  // 실제로 보냈다. 원문은 PII 위험이 있어 길이만 남긴다
+  'Feedback Submitted': { feedback_type: FeedbackType; length: number };
   'Streak Month Changed': {
     direction: 'prev' | 'next';
     year: number;
     month: number;
   };
 
-  'Conversation Started': {
+  'Scenario Talk Started': {
     scenario_id: number;
     session_id: number;
     first_speaker: string;
@@ -215,12 +262,12 @@ export type EventProps = {
   };
   // 세션은 백그라운드로 시작돼 확보 전에도 발화 준비가 가능하다 — session_id가 없을 수 있다
   'Recording Started': { session_id?: number; turn_index: number };
-  // ■(답변 완료) 탭 순간 — 이후 인식·제출 결과는 Turn Completed/Failed로 이어진다
+  // ■(답변 완료) 탭 순간 — 이후 인식·제출 결과는 각 대화의 Turn Completed / Turn Failed로 이어진다
   'Recording Stopped': { session_id?: number; turn_index: number };
   'Recording Canceled': { session_id?: number; turn_index: number };
   'Mic Settings Opened': undefined;
   'Input Mode Switched': { session_id?: number; mode: TurnInputType };
-  'Turn Completed': {
+  'Scenario Talk Turn Completed': {
     session_id: number;
     scenario_id: number;
     turn_index: number;
@@ -237,19 +284,65 @@ export type EventProps = {
     turn_index: number;
     thought_type?: string;
   };
+  // 상대 발화의 해석을 펼치거나 접은 순간 — 어느 길이의 발화에서 해석을 필요로 하는지 본다
+  'Translation Toggled': {
+    session_id?: number;
+    turn_index: number;
+    opened: boolean;
+  };
   'Speech Recognition Failed': {
     engine?: 'deepgram' | 'web_speech';
     reason?: string;
   };
+  // AI 발화 재생 실패 — 실패 비율을 본다. 스몰톡 탭의 캐릭터 인사도 같은 재생 훅이라 포함된다.
+  // opening_mp3 = 미리 녹음한 오프닝(실패하면 합성으로 폴백해 체감 없음), synth = 런타임 합성(그 발화가 통째로 건너뛰어진다, 원인은 Sentry)
+  'Speech Playback Failed': { source: 'opening_mp3' | 'synth' };
   'Hint Used': { source: HintSource; level: number };
-  'Conversation Completed': {
+  'Scenario Talk Completed': {
     session_id: number;
     scenario_id: number;
     turn_count: number;
   };
-  'Conversation Abandoned': {
+  'Scenario Talk Abandoned': {
     session_id?: number;
     scenario_id: number;
+    turn_index: number;
+  };
+
+  // 스몰톡 — 상대(partner)는 시나리오에 없는 축이라 전 이벤트에 싣는다. 누구와 얘기하는지로 다 갈린다
+  'Small Talk Partner Selected': { partner: TalkPartner };
+  'Small Talk Topic Selected': { partner: TalkPartner; topic_id: number };
+  'Small Talk Intro Guide Closed': undefined;
+  // coached = 코치마크가 켜진 채로 눌렀는지 (코치마크가 시킨 첫 탭)
+  'Small Talk Greeting Tapped': { partner: TalkPartner; coached: boolean };
+  'Small Talk Started': {
+    session_id: number;
+    partner: TalkPartner;
+    // 주제를 고르면 상대가 먼저(AI), 직접 걸면 내가 먼저(USER)
+    first_speaker: string;
+    // 상대가 먼저 걸 때만 — 고른 주제
+    topic_id?: number;
+  };
+  'Small Talk Turn Completed': {
+    session_id: number;
+    partner: TalkPartner;
+    turn_index: number;
+    input_type: TurnInputType;
+    char_count: number;
+    // 이 발화로 깎인 오늘의 말하기 예산
+    utterance_duration_ms: number;
+  };
+  'Small Talk Completed': {
+    session_id: number;
+    partner: TalkPartner;
+    turn_count: number;
+    // 이 대화에서 말한 시간과, 시간을 다 써서 끝났는지
+    speaking_duration_ms: number;
+    end_reason: 'user_ended' | 'time_limit';
+  };
+  'Small Talk Abandoned': {
+    session_id: number;
+    partner: TalkPartner;
     turn_index: number;
   };
 
@@ -271,14 +364,15 @@ export type EventProps = {
   };
   'Feedback Completed': { session_id: number };
 
-  'Expression List Viewed': { scenario_id: number; expression_count: number };
+  // 표현 학습은 시나리오 대화와 스몰톡이 같은 화면·같은 API를 쓴다 — 이벤트도 하나로 두고
+  // 어디서 온 표현인지만 출처로 싣는다 (둘 중 하나만 온다)
+  'Expression List Viewed': ExpressionSource & { expression_count: number };
   // 분기 화면을 X로 닫고 학습 없이 나감 — 학습 퍼널 이탈 지점.
   // 연출 중에 닫으면 리스트를 아직 못 받았을 수 있어 expression_count가 0일 수 있다
-  'Expression Learning Skipped': {
-    scenario_id: number;
+  'Expression Learning Skipped': ExpressionSource & {
     expression_count: number;
   };
-  'Expression Learning Started': { expression_id: number; scenario_id: number };
+  'Expression Learning Started': ExpressionSource & { expression_id: number };
   'Expression Step Viewed': { expression_id: number; step: ExpressionStep };
   'Quiz Word Picked': { expression_id: number; picked_count: number };
   'Quiz Word Removed': { expression_id: number; picked_count: number };
@@ -291,22 +385,27 @@ export type EventProps = {
   'Review Answer Submitted': {
     expression_id: number;
     is_correct: boolean;
-    wrong_count: number;
     hint_level: number;
   };
-  'Expression Completed': { expression_id: number; scenario_id: number };
+  'Expression Completed': ExpressionSource & { expression_id: number };
   'Expression Abandoned': { expression_id: number; step: ExpressionStep };
-
-  'NPS Survey Opened': { source: 'home_header' | 'all_completed' | 'me' };
-  'NPS Score Selected': { score: number };
-  'NPS Survey Submitted': { score: number; has_comment: boolean };
-  // ✕로 제출 없이 닫음 — 점수를 골라놓고 닫았으면 score가 담긴다
-  'NPS Survey Dismissed': { score?: number };
 
   'Notification Consent Viewed': { source: NotificationConsentSource };
   // 수락 = OS 권한창 요청까지 이어짐. 실제 허용/거부는 OS 팝업 결과라 별도 (권한 상태로 세그먼트)
   'Notification Consent Accepted': { source: NotificationConsentSource };
   'Notification Consent Dismissed': { source: NotificationConsentSource };
+  // OS 권한창의 결과 — 마이크(Mic Permission Decided)와 짝. 셸의 회신에서 찍는다
+  'Notification Permission Decided': {
+    granted: boolean;
+    source: NotificationPermissionSource;
+  };
+
+  'Satisfaction Prompt Viewed': { moment: SatisfactionMoment };
+  'Satisfaction Prompt Answered': {
+    moment: SatisfactionMoment;
+    answer: SatisfactionAnswer;
+  };
+  'Review Store Opened': { store: 'play_store' | 'app_store' };
 
   // 서버 발화라 세션·리플레이·공통 속성 없음. device_id 랜덤 — 방문 횟수 집계용.
   // /download 링크 자체를 방문한 경우만 (외부 링크·인스타 등)

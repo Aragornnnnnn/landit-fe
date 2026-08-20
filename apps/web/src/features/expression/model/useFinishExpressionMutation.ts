@@ -2,19 +2,25 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { scenarioKeys } from '@/features/scenario/model/keys';
+// 스몰톡 표현의 완료 여부는 그 대화의 세션 상세가 들고 있다 — 목록 주인이 둘이라 양쪽을 다 턴다
+import { smallTalkKeys } from '@/features/small-talk/model/keys';
 
 import { finishExpression } from '../api/finish';
 import { expressionKeys } from './keys';
 
-export const useFinishExpressionMutation = (expressionId: number) => {
+export const useFinishExpressionMutation = (
+  expressionId: number,
+  freeTalkSessionId?: number,
+) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => finishExpression(expressionId),
+    mutationFn: () => finishExpression(expressionId, freeTalkSessionId),
     onSuccess: () => {
       // 전역 staleTime(30s)이 있어 명시적 무효화가 없으면 stale locked가 남는다
       void queryClient.invalidateQueries({ queryKey: expressionKeys.all });
       void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
+      void queryClient.invalidateQueries({ queryKey: smallTalkKeys.all });
     },
   });
 };

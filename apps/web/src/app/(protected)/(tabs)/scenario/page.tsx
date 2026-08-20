@@ -6,6 +6,7 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { NotificationConsentGate } from '@/features/notification/ui/NotificationConsentGate';
+import { SatisfactionGate } from '@/features/satisfaction/ui/SatisfactionGate';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { CalendarStrip } from '@/features/scenario/ui/CalendarStrip';
@@ -14,11 +15,13 @@ import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleto
 import { TodayCard } from '@/features/scenario/ui/TodayCard';
 import { track } from '@/shared/analytics';
 import {
-  conversationPath,
   readDateParam,
   scenarioReturnPath,
+  scenarioTalkPath,
 } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
+
+import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
 export default function ScenarioPage() {
@@ -44,6 +47,8 @@ function ScenarioContent() {
   // 들어오자마자 물으면 램프 연출을 덮고, 대화를 해보기도 전이라 무엇을 알려주겠다는 건지 와닿지 않는다.
   // 지난 날 카드도 완료했으면 CLEARED라 날짜가 없는(=오늘) 화면으로 한정한다
   const [summonClosed, setSummonClosed] = useState(false);
+  // 이번 방문에 띄울 시트 하나 — 소감·리뷰가 없을 때만 알림 동의를 청한다
+  const satisfaction = useSatisfactionSheet('scenario');
   // 대화 시작을 눌렀다 — 바로 이동하지 않고 브리핑 카드를 잠깐 보여준 뒤 대화로 들어간다
   const [briefingScenario, setBriefingScenario] = useState<Scenario | null>(
     null,
@@ -53,12 +58,12 @@ function ScenarioContent() {
   const cleared = daily?.scenario?.dailyScenarioType === 'CLEARED';
   const start = (scenario: Scenario) => {
     if (cleared) {
-      router.push(conversationPath(scenario.scenarioId, date));
+      router.push(scenarioTalkPath(scenario.scenarioId, date));
       return;
     }
     setBriefingScenario(scenario);
     // 브리핑을 읽는 동안 대화 라우트를 미리 받아 둔다 — 이 화면은 링크로 오갈 수 없어 자동 프리페치가 안 걸린다
-    router.prefetch(conversationPath(scenario.scenarioId, date));
+    router.prefetch(scenarioTalkPath(scenario.scenarioId, date));
   };
   const settled = date === undefined && (cleared || summonClosed);
 
@@ -114,14 +119,22 @@ function ScenarioContent() {
         />
       )}
 
-      {settled && <NotificationConsentGate />}
+      {settled && satisfaction.sheet === 'talk' && (
+        <SatisfactionGate moment="scenario" />
+      )}
+      {settled && satisfaction.sheet === 'review' && (
+        <SatisfactionGate moment="review" />
+      )}
+      {settled && satisfaction.settled && satisfaction.sheet === null && (
+        <NotificationConsentGate />
+      )}
 
       {/* 브리핑을 다 보여주면 대화로 넘어간다 — push라 뒤로가기는 이 화면(카드)으로 돌아온다 */}
       {briefingScenario && (
         <ScenarioBriefing
           scenario={briefingScenario}
           onDone={() =>
-            router.push(conversationPath(briefingScenario.scenarioId, date))
+            router.push(scenarioTalkPath(briefingScenario.scenarioId, date))
           }
           onCancel={() => setBriefingScenario(null)}
         />

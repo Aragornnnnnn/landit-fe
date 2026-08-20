@@ -111,7 +111,24 @@ describe('useConversationInput', () => {
 
     act(() => sttMock.callbacks.onFinal?.('Hello there.'));
 
-    expect(onContent).toHaveBeenCalledWith('Hello there.', 'VOICE');
+    expect(onContent).toHaveBeenCalledWith(
+      'Hello there.',
+      'VOICE',
+      expect.any(Number),
+    );
+  });
+
+  it('음성은 마이크를 켠 순간부터 최종 텍스트까지 걸린 시간을 함께 전달한다', () => {
+    // 스몰톡의 일일 발화 예산이 이 값으로 깎인다 — STT가 FE라 잴 수 있는 곳이 여기뿐이다
+    vi.useFakeTimers();
+    const { result, onContent } = renderInput();
+
+    act(() => result.current.pressMic());
+    act(() => vi.advanceTimersByTime(3200));
+    act(() => sttMock.callbacks.onFinal?.('Hello there.'));
+
+    expect(onContent).toHaveBeenCalledWith('Hello there.', 'VOICE', 3200);
+    vi.useRealTimers();
   });
 
   it('최종 텍스트가 공백뿐이면 전달하지 않고 듣기 취소로 되돌린다', () => {
@@ -153,7 +170,8 @@ describe('useConversationInput', () => {
     act(() => result.current.setTranscript('  Hello there. '));
     act(() => result.current.submitText());
 
-    expect(onContent).toHaveBeenCalledWith('Hello there.', 'TEXT');
+    // 타이핑은 말한 게 아니라 쓴 것 — 발화 시간은 0이다
+    expect(onContent).toHaveBeenCalledWith('Hello there.', 'TEXT', 0);
   });
 
   it('빈 타이핑은 전달하지 않는다', () => {

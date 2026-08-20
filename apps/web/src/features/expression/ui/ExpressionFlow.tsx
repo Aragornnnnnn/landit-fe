@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
 
 import { track } from '@/shared/analytics';
-import { scenarioReturnPath } from '@/shared/lib/routes';
+import { scenarioReturnPath, smallTalkHistoryPath } from '@/shared/lib/routes';
 
 import { collectPreloadImageUrls } from '../lib/preload-images';
 import { fromLearning, fromWritingSentence } from '../model/sentence-quiz';
@@ -20,11 +20,16 @@ import { QuizStep } from './learning/QuizStep';
 import { ReviewSuccess } from './practice/ReviewSuccess';
 import { QuizStepSkeleton } from './QuizStepSkeleton';
 
+// 이 표현이 어디서 왔는지 — 나갈 때 돌아갈 곳과 계측에 싣는 출처가 여기서 갈린다.
+// 시나리오 표현은 콘텐츠에 붙어 있어 그 날 카드로 돌아가고, 스몰톡 표현은 그 대화의 표현 목록으로 돌아간다
+export type ExpressionOrigin =
+  // 어느 날 카드에서 들어왔는지도 함께 — 나갈 때 그 날 카드로 돌려보낸다
+  | { kind: 'scenario'; scenarioId: number; date?: string }
+  | { kind: 'session'; sessionId: number };
+
 interface ExpressionFlowProps {
-  scenarioId: number;
+  origin: ExpressionOrigin;
   expressionId: number;
-  // 어느 날 카드에서 들어왔는지. 나갈 때 그 날 카드로 돌려보낸다
-  date?: string;
 }
 
 // 화면 스텝(QUIZ/EXPLAIN/REVIEW) → 이벤트 속성 값
@@ -38,11 +43,15 @@ const STEP_PROP: Record<'QUIZ' | 'EXPLAIN' | 'REVIEW', ExpressionStep> = {
 const EXPLAIN_PROGRESS = 0.7;
 
 export const ExpressionFlow = ({
-  scenarioId,
+  origin,
   expressionId,
-  date,
 }: ExpressionFlowProps) => {
   const router = useRouter();
+  // 계측에 싣는 출처 — 시나리오면 시나리오 id, 스몰톡이면 세션 id
+  const originProps =
+    origin.kind === 'scenario'
+      ? { scenario_id: origin.scenarioId }
+      : { session_id: origin.sessionId };
   const [step, setStep] = useState<'QUIZ' | 'EXPLAIN' | 'REVIEW'>('QUIZ');
   // 예문까지(QUIZ·EXPLAIN)는 뒤로가기 대신 X로 나가며, 중단 확인 시트를 먼저 띄운다
   const [exitOpen, setExitOpen] = useState(false);
@@ -64,7 +73,11 @@ export const ExpressionFlow = ({
     expressionId,
     !!learning,
   );
-  const finish = useFinishExpressionMutation(expressionId);
+  // 스몰톡 표현은 완료 요청에 세션 ID를 실어야 서버가 기록한다
+  const finish = useFinishExpressionMutation(
+    expressionId,
+    origin.kind === 'session' ? origin.sessionId : undefined,
+  );
 
   // 데이터가 준비돼 실제 학습이 뜬 시점을 시작으로 본다
   const learningReady = Boolean(learning);
@@ -72,9 +85,10 @@ export const ExpressionFlow = ({
     if (!learningReady) return;
     track(EVENTS.EXPRESSION_LEARNING_STARTED, {
       expression_id: expressionId,
-      scenario_id: scenarioId,
+      ...originProps,
     });
-  }, [learningReady, expressionId, scenarioId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [learningReady, expressionId]);
 
   // 첫 스텝(QUIZ) 포함, 스텝 전환마다 노출로 기록한다
   useEffect(() => {
@@ -91,10 +105,14 @@ export const ExpressionFlow = ({
     preload(url, { as: 'image' });
   }
 
-  // 학습을 나가면 홈으로 돌아가 해당 카드를 뒤집어(뒷면=표현 리스트) 보여준다.
-  // replace로 표현학습을 히스토리에서 지워, 홈에서 뒤로가기 시 퀴즈로 재진입하지 않게 한다.
+  // 학습을 나가면 그 표현이 서 있던 목록으로 돌아간다 — 시나리오는 홈 카드를 뒤집어(뒷면=표현 리스트),
+  // 스몰톡은 그 대화의 기록으로 (대화 직후 결과 화면은 축하가 붙은 1회용이라 돌아갈 자리가 아니다). replace로 표현학습을 히스토리에서 지워, 뒤로가기로 퀴즈에 재진입하지 않게 한다
   const backToList = () =>
-    router.replace(scenarioReturnPath({ flip: scenarioId, date }));
+    router.replace(
+      origin.kind === 'scenario'
+        ? scenarioReturnPath({ flip: origin.scenarioId, date: origin.date })
+        : smallTalkHistoryPath(origin.sessionId),
+    );
 
   if (learningLoading) return <QuizStepSkeleton />;
   if (learningError || !learning) {
@@ -134,6 +152,7 @@ export const ExpressionFlow = ({
     return (
       <>
         <QuizStep
+          step="quiz"
           quiz={quiz}
           expressionId={expressionId}
           leftAction="close"
@@ -179,7 +198,7 @@ export const ExpressionFlow = ({
       onSuccess: () => {
         track(EVENTS.EXPRESSION_COMPLETED, {
           expression_id: expressionId,
-          scenario_id: scenarioId,
+          ...originProps,
         });
         backToList();
       },
@@ -187,6 +206,7 @@ export const ExpressionFlow = ({
 
   return (
     <QuizStep
+      step="review"
       // 문제가 바뀌면(이론상 폴백→practice 교체) 상태를 통째로 리셋한다
       key={reviewQuiz.writingSentenceText}
       quiz={reviewQuiz}

@@ -10,7 +10,7 @@ import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQ
 import { ExpressionList } from '@/features/expression/ui/ExpressionList';
 import { ExpressionListSkeleton } from '@/features/expression/ui/ExpressionListSkeleton';
 import { track } from '@/shared/analytics';
-import { expressionPath } from '@/shared/lib/routes';
+import { scenarioExpressionPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
@@ -120,7 +120,9 @@ export const ScenarioCardBack = ({
                 scenario_id: scenarioId,
                 source: 'card_back',
               });
-              router.push(expressionPath(scenarioId, expressionId, date));
+              router.push(
+                scenarioExpressionPath(scenarioId, expressionId, date),
+              );
             }}
           />
         )}

@@ -52,7 +52,11 @@ export default withSentryConfig(nextConfig, {
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: !process.env.CI,
-  // 업로드 후 산출물에서 지운다 — 원본 코드 노출 방지, 원본 스택은 Sentry 안에서만 보인다
+  // 업로드 후 산출물에서 지운다 — 원본 코드 노출 방지, 원본 스택은 Sentry 안에서만 보인다.
+  // 이 옵션은 빌드 뒤 static JS의 sourceMappingURL 주석을 정규식으로 지우는데, 원본 정규식은
+  // 줄 시작 앵커가 없어 문자열 안의 "//# sourceMappingURL="부터 파일 끝까지 잘라낸다
+  // (rrweb 청크가 잘려 Amplitude 세션 리플레이가 죽었음). patches/@sentry__nextjs 로 앵커를 붙여둠 —
+  // Sentry 버전을 올릴 때 업스트림에 고쳐졌는지 확인하고 패치를 재적용하거나 제거할 것
   sourcemaps: {
     disable: !process.env.SENTRY_AUTH_TOKEN,
     deleteSourcemapsAfterUpload: true,

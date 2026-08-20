@@ -1,0 +1,30 @@
+diff --git a/build/cjs/config/handleRunAfterProductionCompile.js b/build/cjs/config/handleRunAfterProductionCompile.js
+index c9a8840e7fb45a8a2a8c89b292e81dd41e72d44f..6e8861c46cefbe5084eff1f93197aad1bb9cfcd6 100644
+--- a/build/cjs/config/handleRunAfterProductionCompile.js
++++ b/build/cjs/config/handleRunAfterProductionCompile.js
+@@ -76,8 +76,8 @@ async function warnAboutUncoveredSourcemaps(staticDir, uploadAssets) {
+     );
+   }
+ }
+-const SOURCEMAPPING_URL_COMMENT_REGEX = /\n?\/\/[#@] sourceMappingURL=[^\n]+$/;
+-const CSS_SOURCEMAPPING_URL_COMMENT_REGEX = /\n?\/\*[#@] sourceMappingURL=[^\n]+\*\/$/;
++const SOURCEMAPPING_URL_COMMENT_REGEX = /(?:^|\n)\/\/[#@] sourceMappingURL=[^\n]+$/;
++const CSS_SOURCEMAPPING_URL_COMMENT_REGEX = /(?:^|\n)\/\*[#@] sourceMappingURL=[^\n]+\*\/$/;
+ async function stripSourceMappingURLComments(staticDir, debug) {
+   let entries;
+   try {
+diff --git a/build/esm/config/handleRunAfterProductionCompile.js b/build/esm/config/handleRunAfterProductionCompile.js
+index 98516c0a0cb4282f82777edf10ea88dad76e6cad..a05fe9bb6602547d0d37437df1d4bb27031f1c65 100644
+--- a/build/esm/config/handleRunAfterProductionCompile.js
++++ b/build/esm/config/handleRunAfterProductionCompile.js
+@@ -74,8 +74,8 @@ async function warnAboutUncoveredSourcemaps(staticDir, uploadAssets) {
+     );
+   }
+ }
+-const SOURCEMAPPING_URL_COMMENT_REGEX = /\n?\/\/[#@] sourceMappingURL=[^\n]+$/;
+-const CSS_SOURCEMAPPING_URL_COMMENT_REGEX = /\n?\/\*[#@] sourceMappingURL=[^\n]+\*\/$/;
++const SOURCEMAPPING_URL_COMMENT_REGEX = /(?:^|\n)\/\/[#@] sourceMappingURL=[^\n]+$/;
++const CSS_SOURCEMAPPING_URL_COMMENT_REGEX = /(?:^|\n)\/\*[#@] sourceMappingURL=[^\n]+\*\/$/;
+ async function stripSourceMappingURLComments(staticDir, debug) {
+   let entries;
+   try {
