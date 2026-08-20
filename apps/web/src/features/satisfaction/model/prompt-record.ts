@@ -12,6 +12,9 @@ export const PROMPT_RECORD_KEY = 'landit-prompts';
 interface ImpressionRecord {
   // 대화를 마치고 아직 홈에서 소감 시트를 보지 않았다 — 시트를 띄우는 순간 소비한다
   pending?: boolean;
+  // 그 대화를 마친 날(기기 기준 yyyy-MM-dd) — 오늘 마친 차례만 친다.
+  // 마치고 홈에 안 들른 채 앱을 껐다가 다른 날 열면 "방금 마침"이 아니다
+  pendingOn?: string;
   // 한 번 답하면 다시 묻지 않는다. 닫기(dismiss)도 답이다
   answer?: SatisfactionAnswer;
   // 답한 날(기기 기준 yyyy-MM-dd) — 리뷰는 답한 날과 다른 날에만 청한다
@@ -63,7 +66,11 @@ const today = () => {
 
 // 대화를 마쳤다 — 홈에 돌아오면 물을 차례라고 남긴다
 export const markTalkCompleted = (talk: SatisfactionTalk) =>
-  update(talk, { pending: true });
+  update(talk, { pending: true, pendingOn: today() });
+
+// 오늘 마친 차례인가 — 묵은 차례(마치고 홈에 안 들른 채 날이 바뀐 것)는 치지 않는다
+const completedToday = (record?: ImpressionRecord) =>
+  record?.pending === true && record.pendingOn === today();
 
 // 홈에서 시트를 하나 띄웠다 — 쌓여 있던 차례를 모두 지운다. 리뷰 요청은 대화 종류를 가리지 않아,
 // 하나만 지우면 남은 차례로 다른 시트가 곧바로 이어 뜬다
@@ -86,7 +93,7 @@ export const readSatisfactionAnswer = (
 // 첫 소감 — 그 대화를 막 마쳤고 아직 답한 적 없을 때만. 답이 있으면 몇 번을 마쳐도 묻지 않는다
 export const shouldAskSatisfaction = (talk: SatisfactionTalk) => {
   const record = read(talk);
-  return record?.pending === true && record.answer === undefined;
+  return completedToday(record) && record?.answer === undefined;
 };
 
 // 리뷰 요청 — 소감에서 좋았다고 한 사람에게만, 다른 날 다시 와서 대화(종류 무관)를 마쳤을 때 한 번.
@@ -102,7 +109,7 @@ export const shouldAskReview = (streak: {
 export const mayAskReview = () => {
   const records = TALKS.map(read);
   return (
-    records.some((r) => r?.pending === true) &&
+    records.some(completedToday) &&
     records.some((r) => r?.answer === 'good' && r.answeredOn !== today()) &&
     read('review')?.answer === undefined
   );

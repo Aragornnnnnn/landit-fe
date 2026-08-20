@@ -50,6 +50,36 @@ describe('shouldAskSatisfaction', () => {
   });
 });
 
+describe('묵은 차례는 치지 않는다', () => {
+  // 대화를 마치고 홈에 들르지 않은 채 앱을 껐다가 다른 날 다시 연 상황
+  const completedOnAnotherDay = (talk: 'scenario' | 'smalltalk') => {
+    markTalkCompleted(talk);
+    const all = JSON.parse(localStorage.getItem(PROMPT_RECORD_KEY)!);
+    all[`satisfaction:${talk}`].pendingOn = '2000-01-01';
+    localStorage.setItem(PROMPT_RECORD_KEY, JSON.stringify(all));
+  };
+
+  it('어제 마치고 홈에 안 들렀으면 오늘 소감을 묻지 않는다 — 방금 마친 게 아니다', () => {
+    completedOnAnotherDay('scenario');
+
+    expect(shouldAskSatisfaction('scenario')).toBe(false);
+  });
+
+  it('어제 마친 차례로는 리뷰도 청하지 않는다 — 오늘 다른 활동으로 스트릭만 올라간 경우', () => {
+    markTalkCompleted('scenario');
+    recordSatisfactionAnswer('scenario', 'good');
+    const all = JSON.parse(localStorage.getItem(PROMPT_RECORD_KEY)!);
+    all['satisfaction:scenario'].answeredOn = '2000-01-01';
+    localStorage.setItem(PROMPT_RECORD_KEY, JSON.stringify(all));
+    consumeAllTalkPending();
+    completedOnAnotherDay('scenario');
+
+    expect(shouldAskReview({ activeToday: true, totalActiveDays: 5 })).toBe(
+      false,
+    );
+  });
+});
+
 describe('shouldAskReview — 리뷰 요청', () => {
   const anotherDay = { activeToday: true, totalActiveDays: 2 };
 
@@ -206,6 +236,8 @@ describe('저장 형식', () => {
       'satisfaction:scenario': {
         pending: true,
         answer: 'good',
+        // 마친 날 — 오늘 마친 차례만 친다
+        pendingOn: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
         // 답한 날 — 리뷰를 다른 날에만 청하기 위한 값
         answeredOn: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       },
