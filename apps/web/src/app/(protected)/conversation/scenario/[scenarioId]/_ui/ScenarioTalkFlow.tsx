@@ -50,6 +50,7 @@ export const ScenarioTalkFlow = ({
   const [introDismissed, setIntroDismissed] = useState(false);
   const {
     phase,
+    turnIndex,
     turn,
     partner,
     finishedThought,
@@ -147,12 +148,20 @@ export const ScenarioTalkFlow = ({
       {/* 무대·답변·마이크는 고정. 질문만 남는 공간을 채우는 스크롤 영역에 담아, 길어져도 겹치지 않고 카드 안에서 스크롤된다 */}
       <section className="flex min-h-0 flex-1 flex-col px-5">
         {/* pt-5는 무대와의 간격이자 페이드 구간 — 위로 스크롤될 때 무대 밑에서 그림자·글자가 직각으로 잘리지 않고 서서히 사라진다 */}
-        <div className="min-h-0 flex-1 overflow-y-auto [mask-image:linear-gradient(to_bottom,transparent,#000_1.25rem)] pt-5 [-webkit-mask-image:linear-gradient(to_bottom,transparent,#000_1.25rem)]">
+        {/* 카드가 남는 높이를 다 쓰되 넘치진 않는다 — 넘치는 글은 카드 안에서 스크롤된다 */}
+        <div className="flex min-h-0 flex-1 flex-col pt-2">
           <QuestionCard
             question={turn.aiMessage}
             translation={turn.aiTranslation}
             speaking={phase === 'AI_SPEAKING'}
             instruction={turn.isUserOpening}
+            onTranslationToggled={(opened) =>
+              track(EVENTS.TRANSLATION_TOGGLED, {
+                session_id: sessionId ?? undefined,
+                turn_index: turnIndex,
+                opened,
+              })
+            }
           />
         </div>
         {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다 */}

@@ -1,4 +1,5 @@
-// 마이크 컨트롤 — 대기(말하기·키보드) ↔ 듣는 중(X·■)을 전환한다. 키보드 입력창은 내 답변 박스(UserTranscript)가 맡는다
+// 마이크 컨트롤 — 대기(말하기·키보드) ↔ 듣는 중(X·■)을 전환한다.
+// 키보드 입력창도, 듣는 중이라는 안내도 내 답변 박스(UserTranscript)가 맡는다 — 같은 말을 두 군데서 하지 않는다
 'use client';
 
 import { motion } from 'motion/react';
@@ -36,7 +37,7 @@ export const MicControl = ({
   const disabled = phase !== 'USER_READY' && !listening;
 
   return (
-    <div className="flex h-36 flex-none flex-col items-center justify-center gap-2">
+    <div className="flex h-24 flex-none flex-col items-center justify-center">
       {/* 컨트롤은 즉시 전환한다 — exit 애니메이션 대기는 입력 지연으로 느껴진다 */}
       {listening ? (
         <motion.div
@@ -46,9 +47,6 @@ export const MicControl = ({
           transition={{ duration: 0.18 }}
           className="flex flex-col items-center gap-3"
         >
-          <p className="text-sm font-medium text-muted-foreground">
-            말을 듣고 있어요..
-          </p>
           <div className="flex items-center gap-8">
             <button
               onClick={onCancel}
@@ -131,11 +129,6 @@ export const MicControl = ({
           >
             <MicIcon size={34} />
           </button>
-          <p
-            className={`text-base font-bold ${disabled ? 'text-primary/30' : 'text-primary'}`}
-          >
-            말하기
-          </p>
         </motion.div>
       )}
     </div>
