@@ -12,6 +12,7 @@ import {
   innerThoughtPollMs,
   thoughtHoldMs,
 } from '@/features/conversation/model/pacing';
+import { shouldAskSatisfaction } from '@/features/satisfaction/model/prompt-record';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import type { TtsVoice } from '@/shared/tts/voice';
 
@@ -257,6 +258,7 @@ const preparingSubmitResponse = () =>
   });
 
 beforeEach(() => {
+  localStorage.clear();
   vi.useFakeTimers();
   ttsMock.state.onEnd = undefined;
   sttMock.callbacks.onInterim = undefined;
@@ -436,6 +438,8 @@ describe('useScenarioTalkFlow', () => {
     expect(queryClientMock.invalidateQueries).toHaveBeenCalledWith({
       queryKey: ['scenarios'],
     });
+    // 홈에 돌아가면 소감을 물을 차례라고 남긴다
+    expect(shouldAskSatisfaction('scenario')).toBe(true);
   });
 
   it('대화가 안 끝났으면 피드백을 미리 만들지 않는다', async () => {
@@ -445,6 +449,7 @@ describe('useScenarioTalkFlow', () => {
     await speakAndSubmit(result, 'Hello!');
 
     expect(queryClientMock.prefetchQuery).not.toHaveBeenCalled();
+    expect(shouldAskSatisfaction('scenario')).toBe(false);
   });
 
   it('오프닝은 미리 만든 정적 mp3로 재생하고, 끝나면 마이크 대기로 넘어간다', async () => {

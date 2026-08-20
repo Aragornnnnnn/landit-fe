@@ -102,6 +102,12 @@ export const EVENTS = {
   NOTIFICATION_CONSENT_DISMISSED: 'Notification Consent Dismissed',
   NOTIFICATION_PERMISSION_DECIDED: 'Notification Permission Decided',
 
+  // 소감 시트 — 첫 시나리오 대화·첫 스몰톡·다른 날 두 번째 대화(랜딧 소감)를 마치고 홈에 돌아왔을 때 한 번 묻는다
+  SATISFACTION_PROMPT_VIEWED: 'Satisfaction Prompt Viewed',
+  SATISFACTION_PROMPT_ANSWERED: 'Satisfaction Prompt Answered',
+  // 랜딧 소감에서 좋았어요 → 별점판 → 스토어 리뷰 화면을 연다
+  REVIEW_STORE_OPENED: 'Review Store Opened',
+
   // 유입 — /download 스토어 리다이렉트가 서버에서 발화한다 (route 핸들러, LAN-237)
   DOWNLOAD_LINK_VISITED: 'Download Link Visited',
 
@@ -143,6 +149,11 @@ export type NotificationConsentSource = 'scenario' | 'me';
 // OS 알림 권한창을 띄운 지면 — 안내 시트 둘에 온보딩 스텝이 더해진다
 export type NotificationPermissionSource =
   'onboarding' | NotificationConsentSource;
+// 소감을 물은 순간과 답 — 닫기(딤·뒤로가기)도 답으로 셈해 다시 묻지 않는다.
+// talk = 대화 종류(첫 소감), review = 다른 날 다시 와서 대화를 마쳤을 때 청하는 스토어 리뷰
+export type SatisfactionTalk = 'scenario' | 'smalltalk';
+export type SatisfactionMoment = SatisfactionTalk | 'review';
+export type SatisfactionAnswer = 'good' | 'bad' | 'dismiss';
 export type CalendarView = 'week' | 'month';
 export type HomeTab = 'scenario' | 'smalltalk';
 
@@ -388,6 +399,13 @@ export type EventProps = {
     granted: boolean;
     source: NotificationPermissionSource;
   };
+
+  'Satisfaction Prompt Viewed': { moment: SatisfactionMoment };
+  'Satisfaction Prompt Answered': {
+    moment: SatisfactionMoment;
+    answer: SatisfactionAnswer;
+  };
+  'Review Store Opened': { store: 'play_store' | 'app_store' };
 
   // 서버 발화라 세션·리플레이·공통 속성 없음. device_id 랜덤 — 방문 횟수 집계용.
   // /download 링크 자체를 방문한 경우만 (외부 링크·인스타 등)

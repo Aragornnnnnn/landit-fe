@@ -3,8 +3,11 @@
 export const SCENARIO_PATH = '/scenario';
 export const SMALLTALK_PATH = '/smalltalk';
 export const STREAK_PATH = '/streak';
-// 편지함 진입점. 그 아래 주소들은 편지 종류·피드백 유형을 알아야 해서 features/mailbox가 만든다
+// 편지함 진입점. 편지 종류·피드백 유형이 붙는 그 아래 주소들은 features/mailbox가 만든다
 export const MAILBOX_PATH = '/mailbox';
+// 피드백 작성 진입(유형 선택) — 편지함 밖(소감 시트)에서도 보내는 주소라 여기 둔다.
+// 작성 흐름은 히스토리 한 층만 쓴다 (진입·다음 단계·화살표 모두 replace, features/mailbox 참고)
+export const MAILBOX_COMPOSE_PATH = `${MAILBOX_PATH}/compose`;
 
 // 온보딩을 막 끝내고 넘어왔다는 표식 — 홈이 램프를 열되 다시 묻지 않는다.
 // flip처럼 주소에 남겨 둔다. 그날 한 번 보면 등장 판정에서 걸러지므로 지울 필요가 없다

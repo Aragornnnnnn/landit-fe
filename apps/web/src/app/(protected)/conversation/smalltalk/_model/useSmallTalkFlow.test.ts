@@ -5,6 +5,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as sessionApi from '@/features/conversation/api/session';
+import { shouldAskSatisfaction } from '@/features/satisfaction/model/prompt-record';
 import * as smallTalkApi from '@/features/small-talk/api/small-talk';
 import type {
   SmallTalkMessageSubmitResponse,
@@ -157,6 +158,7 @@ const speakFor = (
 };
 
 beforeEach(() => {
+  localStorage.clear();
   vi.useFakeTimers();
   getInnerThought.mockResolvedValue({
     processingStatus: 'COMPLETED',
@@ -288,6 +290,33 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
         timeLimitReached: true,
       }),
     );
+  });
+
+  it('대화가 완료되면 스몰톡 탭에서 소감을 물을 차례라고 남긴다', async () => {
+    submitSmallTalkMessage.mockResolvedValueOnce(
+      submitResponse({ turnStatus: 'COMPLETED' }),
+    );
+    const { result } = renderFlow(30_000);
+    speakFor(result, 3);
+
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Bye!');
+    });
+
+    expect(shouldAskSatisfaction('smalltalk')).toBe(true);
+  });
+
+  it('대화가 안 끝났으면 소감을 물을 차례가 아니다', async () => {
+    const { result } = renderFlow(30_000);
+    speakFor(result, 3);
+
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Hello!');
+    });
+
+    expect(shouldAskSatisfaction('smalltalk')).toBe(false);
   });
 });
 

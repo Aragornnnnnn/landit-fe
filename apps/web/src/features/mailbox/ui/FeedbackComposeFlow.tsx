@@ -4,16 +4,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { MAILBOX_COMPOSE_PATH } from '@/shared/lib/routes';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { showToast } from '@/shared/ui/toast';
 
 import type { FeedbackType } from '../api/mailbox';
 import { mailboxPath } from '../model/box';
-import {
-  FEEDBACK_TYPE_FACES,
-  MAILBOX_COMPOSE_PATH,
-} from '../model/feedback-type';
+import { FEEDBACK_TYPE_FACES } from '../model/feedback-type';
 import { useSendFeedbackMutation } from '../model/useSendFeedbackMutation';
 import { SubmitBar } from './compose/SubmitBar';
 

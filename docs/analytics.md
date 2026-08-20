@@ -151,6 +151,16 @@
 | Feedback Turn Viewed   | session_id, turn_index, feedback_type                           | 턴별 분석 노출                                |
 | Feedback Completed     | session_id                                                      | 분석 다 봤어요                                |
 
+### 소감 시트
+
+| 이벤트                       | 속성                                | 시점                                                    |
+| ---------------------------- | ----------------------------------- | ------------------------------------------------------- |
+| Satisfaction Prompt Viewed   | moment(scenario\|smalltalk\|review) | 대화를 마치고 홈에 돌아와 소감 시트가 뜸                |
+| Satisfaction Prompt Answered | moment, answer(good\|bad\|dismiss)  | 좋았어요/아쉬웠어요 탭, 또는 딤·뒤로가기로 닫음         |
+| Review Store Opened          | store(play_store\|app_store)        | 랜딧 소감(app)에서 좋았어요 → 별점판 → 리뷰 남기러 가기 |
+
+moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 날 두 번째 이상의 시나리오 대화를 마쳤을 때(랜딧 전체를 묻고 별점을 유도). 기기당 순간마다 한 번만 뜬다. dismiss도 답으로 셈해 다시 묻지 않고, 첫 소감이 bad였던 사람에겐 app을 묻지 않는다.
+
 ### 표현 학습
 
 | 이벤트                      | 속성                                            | 시점                                                           |

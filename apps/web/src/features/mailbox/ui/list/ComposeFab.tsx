@@ -1,8 +1,8 @@
 // 피드백 보내기 버튼 — 목록이 비어 있든 가득하든 늘 같은 자리에 떠 있다.
-// replace인 건 작성 흐름이 히스토리 한 층이라서다 (model/feedback-type.ts의 MAILBOX_COMPOSE_PATH 참고)
+// replace인 건 작성 흐름이 히스토리 한 층이라서다 (shared/lib/routes의 MAILBOX_COMPOSE_PATH 참고)
 import Link from 'next/link';
 
-import { MAILBOX_COMPOSE_PATH } from '../../model/feedback-type';
+import { MAILBOX_COMPOSE_PATH } from '@/shared/lib/routes';
 
 // 목록이 FAB 뒤로 숨지 않으려면 이만큼 띄워야 한다 — 아래 높이(h-12)와 바닥 여백의 합
 export const COMPOSE_FAB_CLEARANCE = 'pb-28';

@@ -16,4 +16,7 @@ export {
   type FeedbackType,
   type HomeTab,
   type NotificationPermissionSource,
+  type SatisfactionTalk,
+  type SatisfactionMoment,
+  type SatisfactionAnswer,
 } from './events';
