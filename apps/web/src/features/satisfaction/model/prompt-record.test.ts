@@ -133,6 +133,20 @@ describe('shouldAskReview — 리뷰 요청', () => {
     );
   });
 
+  it('좋았다고 한 게 둘이면 그중 하나라도 다른 날이면 청한다', () => {
+    // Given 스몰톡은 어제 좋았다고 했고, 시나리오는 오늘 좋았다고 답했다
+    answeredGoodYesterday('smalltalk');
+    markTalkCompleted('scenario');
+    recordSatisfactionAnswer('scenario', 'good');
+    consumeAllTalkPending();
+
+    // When 오늘 대화를 한 번 더 마치면
+    markTalkCompleted('scenario');
+
+    // Then 어제 좋았다고 한 사람이 오늘 다시 온 것이니 청한다
+    expect(shouldAskReview(anotherDay)).toBe(true);
+  });
+
   it('한 번 청했으면 다시 청하지 않는다', () => {
     cameBackAfterGood();
     recordSatisfactionAnswer('review', 'dismiss');

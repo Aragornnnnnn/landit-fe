@@ -89,22 +89,21 @@ export const shouldAskSatisfaction = (talk: SatisfactionTalk) => {
   return record?.pending === true && record.answer === undefined;
 };
 
-// 리뷰 요청 — 첫 소감에서 좋았다고 한 사람에게만, 다른 날 다시 와서 대화(종류 무관)를 마쳤을 때 한 번.
-// 완료일 숫자는 부르는 쪽이 넘긴다(스트릭 달력) — 이 슬라이스는 스트릭을 모른다.
-// 같은 날 두 번째 대화는 완료일이 안 늘어 치지 않는다
+// 리뷰 요청 — 소감에서 좋았다고 한 사람에게만, 다른 날 다시 와서 대화(종류 무관)를 마쳤을 때 한 번.
+// 완료일 숫자는 부르는 쪽이 넘긴다(스트릭 달력) — 이 슬라이스는 스트릭을 모른다
 export const shouldAskReview = (streak: {
   activeToday: boolean;
   totalActiveDays: number;
 }) => mayAskReview() && streak.activeToday && streak.totalActiveDays >= 2;
 
 // 위 조건 중 로컬만으로 알 수 있는 부분 — 스트릭을 굳이 조회할 필요가 있는지 먼저 거른다.
-// 어느 대화든 방금 마쳤고, 좋았다고 답한 날이 오늘이 아니고, 아직 리뷰를 청하지 않았을 때
+// 어느 대화든 방금 마쳤고, 지난 날 좋았다고 답한 적이 있고, 아직 리뷰를 청하지 않았을 때.
+// 좋았다고 한 소감이 둘이면 그중 하나만 지난 날이어도 된다
 export const mayAskReview = () => {
-  const said = TALKS.map(read).find((r) => r?.answer === 'good');
+  const records = TALKS.map(read);
   return (
-    TALKS.some((talk) => read(talk)?.pending === true) &&
-    said !== undefined &&
-    said.answeredOn !== today() &&
+    records.some((r) => r?.pending === true) &&
+    records.some((r) => r?.answer === 'good' && r.answeredOn !== today()) &&
     read('review')?.answer === undefined
   );
 };

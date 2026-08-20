@@ -1,8 +1,8 @@
 'use client';
 
-// 소감 게이트 — 그 순간에 딱 한 번 묻는다. 첫 소감(scenario·smalltalk)은 좋았어요 → 감사 후 닫힘,
-// 랜딧 소감(app)은 잘 쓰고 있어요 → 별점판 → 스토어 리뷰. 아쉬웠어요는 어느 순간이든 피드백 안내 → 편지함.
-// 첫 소감은 여기서 물을 차례인지 판단하고, 랜딧 소감은 스트릭 조건까지 본 띄우는 쪽(홈의 useHomeSheet)이 판단해 마운트한다
+// 소감 게이트 — 대화 소감(scenario·smalltalk)은 좋았어요 → 감사 후 닫히고, 아쉬웠어요 → 피드백 안내 → 편지함.
+// 리뷰 요청(review)은 물을 게 없어 별점판으로 바로 열려 스토어로 보낸다.
+// 띄울지 말지는 부르는 쪽(홈 탭의 useSatisfactionSheet)이 정하고, 여기서는 띄운 뒤의 흐름만 맡는다
 import { useEffect, useState } from 'react';
 import {
   EVENTS,
