@@ -163,7 +163,7 @@ export const QuizStep = ({
       leftAction={leftAction}
       footer={
         checked === 'idle' ? (
-          <Button disabled={!full} onClick={check}>
+          <Button disabled={selected.length === 0} onClick={check}>
             확인할게요
           </Button>
         ) : undefined

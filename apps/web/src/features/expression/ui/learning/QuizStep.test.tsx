@@ -107,6 +107,38 @@ describe('QuizStep', () => {
     expect(screen.getByRole('button', { name: '확인할게요' })).toBeEnabled();
   });
 
+  it('칩을 하나도 올리지 않으면 확인할 수 없다', () => {
+    render(
+      <QuizStep
+        step="quiz"
+        quiz={quiz}
+        expressionId={1}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: '확인할게요' })).toBeDisabled();
+  });
+
+  it('칩을 다 채우지 않고 확인하면 오답 결과 시트를 보여준다', async () => {
+    const user = userEvent.setup();
+    render(
+      <QuizStep
+        step="quiz"
+        quiz={quiz}
+        expressionId={1}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'I' }));
+    await user.click(screen.getByRole('button', { name: '확인할게요' }));
+
+    expect(screen.getByText('아쉬워요')).toBeInTheDocument();
+  });
+
   it('칩을 고르면 onSelectedChange로 선택 배열을 보고한다', async () => {
     const user = userEvent.setup();
     const onSelectedChange = vi.fn();
