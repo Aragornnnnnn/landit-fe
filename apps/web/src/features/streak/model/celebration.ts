@@ -63,14 +63,22 @@ export const celebrationOf = ({
   // 들어갈 때 오늘이 아직이었을 때만 오늘 열매가 새로 찍힌다.
   // 같은 날 두 번째 대화면 숫자가 그대로라, 찍히는 연출이 거짓말이 된다
   const stamping = base !== null && !base.activeToday;
-  // 완료한 날이 오늘 하나뿐이어야 첫 열매다. 끊겼다 다시 붙은 1일과는 다른 날이다
-  const first = totalActiveDays === 1;
+  // 오늘을 이미 채우고 들어온 대화인가. stamping과 달리 집어둔 값이 없는 날(오늘이 어땠는지 모르는 날)과 섞이지 않는다
+  const filledEarlier = base?.activeToday === true;
+  // 완료한 날이 오늘 하나뿐이어야 첫 열매다. 끊겼다 다시 붙은 1일과는 다른 날이다.
+  // 같은 날 두 번째 대화에도 총합은 그대로 1이라, 여기서 걸러야 계정당 한 번이 지켜진다
+  const first = totalActiveDays === 1 && !filledEarlier;
 
   if (currentStreakDays === 1) {
     return {
       stamping,
       first,
-      title: first ? '첫 열매예요!' : '오늘 열매를 채웠어요',
+      // 이미 채운 날엔 방금 찍힌 것처럼 말하지 않는다 — 그 자리에 상황을 두고, 안내는 다음 목표를 그대로 건다
+      title: filledEarlier
+        ? '오늘 열매는 이미 채웠어요'
+        : first
+          ? '첫 열매예요!'
+          : '오늘 열매를 채웠어요',
       // "2일이 돼요"는 굳이 안 알려줘도 아는 말이다. 화면에 이미 서 있는 일곱 칸을 가리킨다
       guide: '내일도 이어가서 한 주를 채워봐요',
     };
@@ -80,6 +88,9 @@ export const celebrationOf = ({
     stamping,
     first: false,
     title: `${currentStreakDays}일 연속`,
-    guide: guideOf(currentStreakDays, longestStreakDays),
+    // 이미 채운 날엔 다음 목표를 걸지 않는다 — 남은 날을 세면 오늘 뭔가 는 것처럼 읽힌다
+    guide: filledEarlier
+      ? '오늘 열매는 이미 채웠어요'
+      : guideOf(currentStreakDays, longestStreakDays),
   };
 };
