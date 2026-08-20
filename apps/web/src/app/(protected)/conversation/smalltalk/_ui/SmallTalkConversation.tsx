@@ -118,8 +118,9 @@ export const SmallTalkConversation = ({
       <CharacterStage partner={partner} look={characterLook} speech={speech} />
 
       <section className="flex min-h-0 flex-1 flex-col px-5">
-        {/* 카드가 남는 높이를 다 쓰되 넘치진 않는다 — 넘치는 글은 카드 안에서 스크롤된다 */}
-        <div className="flex min-h-0 flex-1 flex-col pt-2">
+        {/* 카드가 남는 높이를 다 쓰되 넘치진 않는다 — 넘치는 글은 카드 안에서 스크롤된다.
+            끝난 뒤엔 남는 높이를 통계 시트 아래로 넘긴다 — 시트가 작별 인사에 붙어야 이 대화의 결과로 읽힌다 */}
+        <div className={`flex min-h-0 flex-col pt-2 ${ended ? '' : 'flex-1'}`}>
           <QuestionCard
             question={turn.aiMessage}
             translation={turn.aiTranslation}
@@ -135,7 +136,10 @@ export const SmallTalkConversation = ({
           />
         </div>
         {ended ? (
-          <TalkSummary {...summary} />
+          <>
+            <TalkSummary {...summary} />
+            <div className="flex-1" />
+          </>
         ) : (
           <UserTranscript text={transcript} phase={phase} />
         )}
