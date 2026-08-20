@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   consumeAllTalkPending,
   markTalkCompleted,
+  PROMPT_RECORD_KEY,
   recordSatisfactionAnswer,
 } from '@/features/satisfaction/model/prompt-record';
 import * as streakApi from '@/features/streak/api/streak';
@@ -49,10 +50,13 @@ const renderSheet = (talk: 'scenario' | 'smalltalk' = 'scenario') => {
   });
 };
 
-// 좋았다고 답한 뒤 다른 날 다시 와서 대화를 마친 상태
+// 지난 날 좋았다고 답한 뒤, 다른 날 다시 와서 대화를 마친 상태
 const cameBackAfterGood = (talk: 'scenario' | 'smalltalk' = 'scenario') => {
   markTalkCompleted(talk);
   recordSatisfactionAnswer(talk, 'good');
+  const all = JSON.parse(localStorage.getItem(PROMPT_RECORD_KEY)!);
+  all[`satisfaction:${talk}`].answeredOn = '2000-01-01';
+  localStorage.setItem(PROMPT_RECORD_KEY, JSON.stringify(all));
   consumeAllTalkPending();
   markTalkCompleted(talk);
 };

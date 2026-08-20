@@ -14,6 +14,8 @@ interface ImpressionRecord {
   pending?: boolean;
   // 한 번 답하면 다시 묻지 않는다. 닫기(dismiss)도 답이다
   answer?: SatisfactionAnswer;
+  // 답한 날(기기 기준 yyyy-MM-dd) — 리뷰는 답한 날과 다른 날에만 청한다
+  answeredOn?: string;
 }
 
 type PromptRecords = Record<string, ImpressionRecord | undefined>;
@@ -52,6 +54,13 @@ const read = (moment: SatisfactionMoment) => readAll()[entryKey(moment)];
 
 const TALKS: SatisfactionTalk[] = ['scenario', 'smalltalk'];
 
+// 기기 기준 오늘 (yyyy-MM-dd)
+const today = () => {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+};
+
 // 대화를 마쳤다 — 홈에 돌아오면 물을 차례라고 남긴다
 export const markTalkCompleted = (talk: SatisfactionTalk) =>
   update(talk, { pending: true });
@@ -62,10 +71,13 @@ export const consumeAllTalkPending = () => {
   for (const talk of TALKS) update(talk, { pending: false });
 };
 
+// 답한 날을 함께 남긴다 — 완료일 수만 보면 배포 전부터 쓰던 사람은 이미 이틀을 넘겨서
+// 좋았다고 한 그날 또 대화해도 리뷰가 뜬다. 기기 날짜라 자정 경계가 서버와 어긋날 수 있지만,
+// 그래봐야 하루 이르거나 늦게 청하는 정도다
 export const recordSatisfactionAnswer = (
   moment: SatisfactionMoment,
   answer: SatisfactionAnswer,
-) => update(moment, { answer });
+) => update(moment, { answer, answeredOn: today() });
 
 export const readSatisfactionAnswer = (
   moment: SatisfactionMoment,
@@ -86,8 +98,13 @@ export const shouldAskReview = (streak: {
 }) => mayAskReview() && streak.activeToday && streak.totalActiveDays >= 2;
 
 // 위 조건 중 로컬만으로 알 수 있는 부분 — 스트릭을 굳이 조회할 필요가 있는지 먼저 거른다.
-// 어느 대화든 방금 마쳤고, 어느 소감에서든 좋았다고 했고, 아직 리뷰를 청하지 않았을 때
-export const mayAskReview = () =>
-  TALKS.some((talk) => read(talk)?.pending === true) &&
-  TALKS.some((talk) => read(talk)?.answer === 'good') &&
-  read('review')?.answer === undefined;
+// 어느 대화든 방금 마쳤고, 좋았다고 답한 날이 오늘이 아니고, 아직 리뷰를 청하지 않았을 때
+export const mayAskReview = () => {
+  const said = TALKS.map(read).find((r) => r?.answer === 'good');
+  return (
+    TALKS.some((talk) => read(talk)?.pending === true) &&
+    said !== undefined &&
+    said.answeredOn !== today() &&
+    read('review')?.answer === undefined
+  );
+};
