@@ -158,3 +158,49 @@ describe('celebrationOf — 문구', () => {
     );
   });
 });
+
+describe('celebrationOf — 오늘을 이미 채운 날', () => {
+  it('이어가는 중이면 다음 목표 대신 이미 채운 날이라고 말한다', () => {
+    // given — 시나리오로 오늘을 채운 뒤 이어서 한 스몰톡. 남은 날을 세면 오늘 뭔가 는 것처럼 읽힌다
+    const celebration = celebrationOf({
+      currentStreakDays: 4,
+      base: { activeToday: true },
+    });
+
+    expect(celebration.title).toBe('4일 연속');
+    expect(celebration.guide).toBe('오늘 열매는 이미 채웠어요');
+  });
+
+  it('고비를 채운 날이어도 축하를 두 번 하지 않는다', () => {
+    // given — 이레째. 그 축하는 오늘 첫 대화에서 이미 받았다
+    const celebration = celebrationOf({
+      currentStreakDays: 7,
+      base: { activeToday: true },
+    });
+
+    expect(celebration.guide).toBe('오늘 열매는 이미 채웠어요');
+  });
+
+  it('첫 열매 화면은 같은 날 두 번 뜨지 않는다', () => {
+    // given — 가입 첫날의 두 번째 대화. 총합은 그대로 1이라 그것만 보면 또 첫 열매가 된다
+    const celebration = celebrationOf({
+      currentStreakDays: 1,
+      base: { activeToday: true },
+      totalActiveDays: 1,
+    });
+
+    expect(celebration.first).toBe(false);
+    expect(celebration.title).toBe('오늘 열매는 이미 채웠어요');
+    expect(celebration.guide).toBe('내일도 이어가서 한 주를 채워봐요');
+  });
+
+  it('집어둔 값이 없으면 이미 채웠다고 단정하지 않는다', () => {
+    // given — 홈을 안 거치고 바로 들어온 경우. 오늘이 어땠는지 모르니 하던 말을 그대로 한다
+    const celebration = celebrationOf({
+      currentStreakDays: 4,
+      base: null,
+    });
+
+    expect(celebration.guide).toBe('한 주 연속까지 3일 남았어요');
+  });
+});
