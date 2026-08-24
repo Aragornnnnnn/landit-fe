@@ -15,7 +15,7 @@ export const LevelStep = ({
       영어를 얼마나 알고 계시나요?
     </h1>
     <p className="mt-4 text-xl font-bold text-muted-foreground">
-      맞춤 학습을 제공해드릴게요
+      실력에 맞춰 학습을 준비해드릴게요
     </p>
 
     <div className="mt-6 flex min-h-0 flex-1 flex-col">

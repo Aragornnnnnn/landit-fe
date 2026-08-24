@@ -21,11 +21,12 @@ export const EnglishLevelForm = ({
 
   return (
     <>
-      <div className="flex flex-1 flex-col overflow-y-auto">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         <EnglishLevelOptions selected={selected} onSelect={setSelected} />
       </div>
 
       <Button
+        className="mt-4"
         disabled={selected === null}
         onClick={() => selected && onConfirm(selected)}
       >

@@ -26,23 +26,26 @@ export const EnglishLevelMenuEntry = () => {
   return (
     <>
       <MenuGroup>
-        <MenuButton title="영어 수준" onClick={() => setOpen(true)} />
+        <MenuButton title="내 영어 수준" onClick={() => setOpen(true)} />
       </MenuGroup>
 
       <BottomSheet open={open} onClose={() => setOpen(false)}>
-        <h2 className="text-[17px] font-bold" style={{ color: '#111' }}>
-          영어 수준을 다시 골라주세요
-        </h2>
-        <p
-          className="mt-1 mb-5 text-[14px] leading-6"
-          style={{ color: '#666' }}
-        >
-          맞춤 학습을 제공해드릴게요
-        </p>
-        {/* 시트를 다시 열면 그때의 저장값이 미리 골라진 채 열린다 — 닫힘 동안 언마운트라 key 없이도 초기화된다 */}
-        {open && (
-          <EnglishLevelForm initial={getEnglishLevel()} onConfirm={confirm} />
-        )}
+        {/* 작은 화면에서 시트가 화면을 벗어나지 않게 높이를 묶고, 넘치면 선택지만 안에서 스크롤된다 */}
+        <div className="flex max-h-[75dvh] flex-col">
+          <h2 className="text-[17px] font-bold" style={{ color: '#111' }}>
+            영어 실력을 다시 골라주세요
+          </h2>
+          <p
+            className="mt-1 mb-5 text-[14px] leading-6"
+            style={{ color: '#666' }}
+          >
+            실력에 맞춰 학습을 준비해드릴게요
+          </p>
+          {/* 시트를 다시 열면 그때의 저장값이 미리 골라진 채 열린다 — 닫힘 동안 언마운트라 key 없이도 초기화된다 */}
+          {open && (
+            <EnglishLevelForm initial={getEnglishLevel()} onConfirm={confirm} />
+          )}
+        </div>
       </BottomSheet>
     </>
   );
