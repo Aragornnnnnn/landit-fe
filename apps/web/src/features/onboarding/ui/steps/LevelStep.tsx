@@ -11,10 +11,10 @@ export const LevelStep = ({
   onNext: (level: EnglishLevel) => void;
 }) => (
   <div className="flex min-h-0 flex-1 flex-col pt-7">
-    <h1 className="text-3xl leading-[1.18] font-black tracking-normal">
+    <h1 className="text-3xl leading-[1.18] font-black tracking-normal break-keep">
       맞춤 학습을 위해
       <br />
-      영어 실력을 알려주세요
+      영어를 얼마나 아는지 알려주세요
     </h1>
 
     <div className="mt-6 flex min-h-0 flex-1 flex-col">
