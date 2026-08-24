@@ -44,9 +44,9 @@ export const EnglishLevelGate = () => {
       }}
     >
       <h1 className="pt-10 text-3xl leading-[1.18] font-black tracking-normal break-keep">
-        맞춤 학습을 위해
+        영어를 얼마나
         <br />
-        영어를 얼마나 아는지 알려주세요
+        알고 계신지 알려주세요
       </h1>
 
       <div className="mt-8 flex min-h-0 flex-1 flex-col">
