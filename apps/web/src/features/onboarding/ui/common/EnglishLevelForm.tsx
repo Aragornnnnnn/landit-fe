@@ -21,7 +21,8 @@ export const EnglishLevelForm = ({
 
   return (
     <>
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+      {/* pb-1 — 마지막 카드의 3px 엣지 그림자가 스크롤 경계에 잘리지 않게 숨 쉴 틈을 둔다 */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-1">
         <EnglishLevelOptions selected={selected} onSelect={setSelected} />
       </div>
 
