@@ -26,7 +26,10 @@ export const EnglishLevelMenuEntry = () => {
   return (
     <>
       <MenuGroup>
-        <MenuButton title="영어 실력 변경하기" onClick={() => setOpen(true)} />
+        <MenuButton
+          title="내 영어 수준 변경하기"
+          onClick={() => setOpen(true)}
+        />
       </MenuGroup>
 
       <BottomSheet open={open} onClose={() => setOpen(false)}>

@@ -27,7 +27,7 @@ describe('EnglishLevelMenuEntry', () => {
   it('메뉴 행을 누르면 선택지 시트가 열린다', () => {
     render(<EnglishLevelMenuEntry />);
 
-    fireEvent.click(screen.getByText('영어 실력 변경하기'));
+    fireEvent.click(screen.getByText('내 영어 수준 변경하기'));
 
     expect(
       screen.getByText('영어를 이제 막 배우기 시작했어요'),
@@ -38,7 +38,7 @@ describe('EnglishLevelMenuEntry', () => {
     markEnglishLevelAnswered('ADVANCED');
 
     render(<EnglishLevelMenuEntry />);
-    fireEvent.click(screen.getByText('영어 실력 변경하기'));
+    fireEvent.click(screen.getByText('내 영어 수준 변경하기'));
 
     expect(
       screen
@@ -52,7 +52,7 @@ describe('EnglishLevelMenuEntry', () => {
 
   it('처음 여는데 아직 답한 적 없으면 확인 버튼이 비활성 상태다', () => {
     render(<EnglishLevelMenuEntry />);
-    fireEvent.click(screen.getByText('영어 실력 변경하기'));
+    fireEvent.click(screen.getByText('내 영어 수준 변경하기'));
 
     expect(screen.getByText('선택했어요!').closest('button')).toBeDisabled();
   });
@@ -61,7 +61,7 @@ describe('EnglishLevelMenuEntry', () => {
     markEnglishLevelAnswered('BEGINNER');
 
     render(<EnglishLevelMenuEntry />);
-    fireEvent.click(screen.getByText('영어 실력 변경하기'));
+    fireEvent.click(screen.getByText('내 영어 수준 변경하기'));
     fireEvent.click(screen.getByText('단어를 조합해서 말할 수 있어요'));
     expect(localStorage.getItem('landit-english-level')).toBe('BEGINNER');
 
