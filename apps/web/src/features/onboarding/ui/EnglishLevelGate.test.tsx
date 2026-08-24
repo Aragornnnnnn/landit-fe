@@ -8,7 +8,11 @@ import { markOnboardingSeen } from '@/shared/auth/onboarding-seen';
 
 import { EnglishLevelGate } from './EnglishLevelGate';
 
+vi.mock('motion/react', () => import('@/shared/motion/test-double'));
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
+vi.mock('../api/learning-level', () => ({
+  updateLearningLevel: vi.fn(() => Promise.resolve(null)),
+}));
 
 const trackMock = vi.mocked(track);
 
@@ -61,11 +65,24 @@ describe('EnglishLevelGate', () => {
     expect(screen.getByText('선택했어요!').closest('button')).toBeDisabled();
   });
 
-  it('선택지를 고르고 확인하면 저장하고 닫힌다', () => {
+  it('선택지를 고르면 확인 버튼이 활성화된다', () => {
     markOnboardingSeen();
 
     render(<EnglishLevelGate />);
     fireEvent.click(screen.getByText('단어를 조합해서 말할 수 있어요'));
+
+    expect(
+      screen.getByText('선택했어요!').closest('button'),
+    ).not.toBeDisabled();
+  });
+
+  it('선택지를 고르고 확인을 눌러야 저장하고 닫힌다', () => {
+    markOnboardingSeen();
+
+    render(<EnglishLevelGate />);
+    fireEvent.click(screen.getByText('단어를 조합해서 말할 수 있어요'));
+    expect(localStorage.getItem('landit-english-level')).toBeNull();
+
     fireEvent.click(screen.getByText('선택했어요!'));
 
     expect(localStorage.getItem('landit-english-level')).toBe('ELEMENTARY');
