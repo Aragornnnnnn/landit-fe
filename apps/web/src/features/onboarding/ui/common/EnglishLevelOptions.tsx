@@ -19,13 +19,13 @@ export const EnglishLevelOptions = ({
 
   return (
     <div className="flex flex-col gap-3">
-      {ENGLISH_LEVELS.map((level) => {
-        const isSelected = selected === level.id;
+      {ENGLISH_LEVELS.map((item) => {
+        const isSelected = selected === item.level;
         return (
           <button
-            key={level.id}
+            key={item.level}
             type="button"
-            onClick={() => onSelect(level.id)}
+            onClick={() => onSelect(item.level)}
             aria-pressed={isSelected}
             className={`flex w-full items-center gap-3 rounded-2xl px-4 py-4 text-left transition-[translate,box-shadow,background-color] duration-75 ${
               isSelected
@@ -41,10 +41,10 @@ export const EnglishLevelOptions = ({
                 reduced ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }
               }
             >
-              {level.emoji}
+              {item.emoji}
             </motion.span>
             <span className="text-base font-extrabold text-foreground">
-              {level.label}
+              {item.label}
             </span>
           </button>
         );

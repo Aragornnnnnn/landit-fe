@@ -35,7 +35,7 @@ describe('EnglishLevelMenuEntry', () => {
   });
 
   it('지금 값을 강조해서 보여주고, 확인 버튼은 이미 활성 상태다', () => {
-    markEnglishLevelAnswered('ADVANCED');
+    markEnglishLevelAnswered(4);
 
     render(<EnglishLevelMenuEntry />);
     fireEvent.click(screen.getByText('내 영어 실력 변경하기'));
@@ -58,21 +58,21 @@ describe('EnglishLevelMenuEntry', () => {
   });
 
   it('다른 선택지를 고르고 확인을 눌러야 바뀌고 시트가 닫힌다', () => {
-    markEnglishLevelAnswered('BEGINNER');
+    markEnglishLevelAnswered(1);
 
     render(<EnglishLevelMenuEntry />);
     fireEvent.click(screen.getByText('내 영어 실력 변경하기'));
     fireEvent.click(screen.getByText('단어를 조합해서 말할 수 있어요'));
-    expect(localStorage.getItem('landit-english-level')).toBe('BEGINNER');
+    expect(localStorage.getItem('landit-english-level')).toBe('1');
 
     fireEvent.click(screen.getByText('선택했어요!'));
 
-    expect(localStorage.getItem('landit-english-level')).toBe('ELEMENTARY');
+    expect(localStorage.getItem('landit-english-level')).toBe('2');
     expect(
       screen.queryByText('단어를 조합해서 말할 수 있어요'),
     ).not.toBeInTheDocument();
     expect(trackMock).toHaveBeenCalledWith(EVENTS.ENGLISH_LEVEL_CHANGED, {
-      level: 'ELEMENTARY',
+      level: 2,
     });
   });
 });

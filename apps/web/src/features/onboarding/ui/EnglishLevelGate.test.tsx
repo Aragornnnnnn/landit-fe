@@ -40,7 +40,7 @@ describe('EnglishLevelGate', () => {
 
   it('이미 답한 유저에겐 다시 띄우지 않는다', () => {
     markOnboardingSeen();
-    localStorage.setItem('landit-english-level', 'BEGINNER');
+    localStorage.setItem('landit-english-level', '1');
 
     render(<EnglishLevelGate />);
 
@@ -85,10 +85,10 @@ describe('EnglishLevelGate', () => {
 
     fireEvent.click(screen.getByText('선택했어요!'));
 
-    expect(localStorage.getItem('landit-english-level')).toBe('ELEMENTARY');
+    expect(localStorage.getItem('landit-english-level')).toBe('2');
     expect(screen.queryByText('선택했어요!')).not.toBeInTheDocument();
     expect(trackMock).toHaveBeenCalledWith(EVENTS.ENGLISH_LEVEL_GATE_ANSWERED, {
-      level: 'ELEMENTARY',
+      level: 2,
     });
   });
 });

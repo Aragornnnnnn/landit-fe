@@ -129,9 +129,8 @@ export type AuthProvider = 'kakao' | 'google' | 'apple';
 export type LoginMethod = 'native' | 'web';
 export type OnboardingStep =
   'intro' | 'sound' | 'mic' | 'thought' | 'notification' | 'level' | 'scenario';
-// 영어 수준 — BE 필드가 아직 없어 FE가 임시로 정한 값이다. 서버 계약이 정해지면 이 값에 맞춰 조정한다
-export type EnglishLevel =
-  'BEGINNER' | 'ELEMENTARY' | 'INTERMEDIATE' | 'ADVANCED' | 'FLUENT';
+// 영어 수준 — BE 저장 API(learningLevel)와 같은 1(막 시작)~5(유창) 정수 척도. 지표와 서버 데이터가 같은 말을 쓴다
+export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
 export type ExpressionStep = 'quiz' | 'explain' | 'review';
 export type TurnInputType = 'voice' | 'text';
 // 스몰톡 대화 상대 — 홈에서 고른 캐릭터. 시나리오엔 없는 축이라 스몰톡 이벤트에만 붙는다
