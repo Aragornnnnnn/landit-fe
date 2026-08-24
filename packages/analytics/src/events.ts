@@ -26,6 +26,8 @@ export const EVENTS = {
   // 기존 유저는 온보딩 밖 별도 게이트라 노출·응답을 따로 찍는다
   ENGLISH_LEVEL_GATE_VIEWED: 'English Level Gate Viewed',
   ENGLISH_LEVEL_GATE_ANSWERED: 'English Level Gate Answered',
+  // 마이페이지에서 스스로 다시 고른 경우 — 최초 응답(Gate·온보딩)과 의도가 달라 별도로 찍는다
+  ENGLISH_LEVEL_CHANGED: 'English Level Changed',
 
   // 홈
   HOME_TAB_SWITCHED: 'Home Tab Switched',
@@ -223,6 +225,7 @@ export type EventProps = {
   'Onboarding Completed': undefined;
   'English Level Gate Viewed': undefined;
   'English Level Gate Answered': { level: EnglishLevel };
+  'English Level Changed': { level: EnglishLevel };
 
   // 홈 상단 탭 칩을 눌러 옮긴다 — 화면 노출(Page Viewed)엔 뒤로가기·복귀도 섞이니, 손으로 고른 것만 따로 본다
   'Home Tab Switched': { tab: HomeTab };
