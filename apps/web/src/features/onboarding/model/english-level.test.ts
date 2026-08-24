@@ -74,8 +74,4 @@ describe('ENGLISH_LEVELS', () => {
   it('선택지가 5개이고 level이 1부터 5까지 순서대로다 — BE 계약(정수 1~5)과 같다', () => {
     expect(ENGLISH_LEVELS.map((item) => item.level)).toEqual([1, 2, 3, 4, 5]);
   });
-
-  it('emoji가 서로 겹치지 않는다', () => {
-    expect(new Set(ENGLISH_LEVELS.map((item) => item.emoji)).size).toBe(5);
-  });
 });

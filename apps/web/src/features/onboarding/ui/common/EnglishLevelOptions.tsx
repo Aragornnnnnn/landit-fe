@@ -33,15 +33,15 @@ export const EnglishLevelOptions = ({
                 : 'bg-card shadow-[0_3px_0_var(--border)] active:translate-y-[3px] active:shadow-none'
             }`}
           >
-            {/* 선택되면 이모지가 살짝 커진 채로 머문다 — 커진 크기 자체가 선택 표시를 겸한다 */}
+            {/* 토스페이스 숫자 글리프 — 선택되면 살짝 커진 채로 머물러 선택 표시를 겸한다 */}
             <motion.span
-              className="tossface shrink-0 text-2xl leading-none"
+              className="tossface w-7 shrink-0 text-center text-2xl leading-none"
               animate={{ scale: isSelected ? 1.25 : 1 }}
               transition={
                 reduced ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }
               }
             >
-              {item.emoji}
+              {item.level}
             </motion.span>
             <span className="text-base font-extrabold text-foreground">
               {item.label}

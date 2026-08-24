@@ -8,25 +8,12 @@ import { updateLearningLevel } from '../api/learning-level';
 
 const STORAGE_KEY = 'landit-english-level';
 
-// emoji는 선택지 옆 아이콘 — 얼굴 이모지로 난이도를 한눈에 보여준다
-export const ENGLISH_LEVELS: {
-  level: EnglishLevel;
-  label: string;
-  emoji: string;
-}[] = [
-  { level: 1, label: '영어를 이제 막 배우기 시작했어요', emoji: '👶' },
-  { level: 2, label: '단어를 조합해서 말할 수 있어요', emoji: '😅' },
-  { level: 3, label: '기본적인 문장으로 대화할 수 있어요', emoji: '😎' },
-  {
-    level: 4,
-    label: '다양한 숙어 및 문법 규칙을 적용할 수 있어요',
-    emoji: '🧐',
-  },
-  {
-    level: 5,
-    label: '외국 학교의 수업에서 영어로 토론할 수 있어요',
-    emoji: '👑',
-  },
+export const ENGLISH_LEVELS: { level: EnglishLevel; label: string }[] = [
+  { level: 1, label: '영어를 이제 막 배우기 시작했어요' },
+  { level: 2, label: '단어를 조합해서 말할 수 있어요' },
+  { level: 3, label: '기본적인 문장으로 대화할 수 있어요' },
+  { level: 4, label: '다양한 숙어 및 문법 규칙을 적용할 수 있어요' },
+  { level: 5, label: '외국 학교의 수업에서 영어로 토론할 수 있어요' },
 ];
 
 export const hasAnsweredEnglishLevel = () => getEnglishLevel() !== null;
