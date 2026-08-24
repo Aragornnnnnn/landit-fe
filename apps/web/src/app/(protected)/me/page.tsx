@@ -18,6 +18,7 @@ import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
+import { EnglishLevelMenuEntry } from './_ui/EnglishLevelMenuEntry';
 import { MenuButton, MenuGroup, MenuLink } from './_ui/Menu';
 import { NotificationMenuEntry } from './_ui/NotificationMenuEntry';
 import { StatChip } from './_ui/StatChip';
@@ -163,6 +164,8 @@ export default function MyPage() {
 
         {/* 메뉴 그룹 */}
         <div className="space-y-3 px-4 pb-8">
+          <EnglishLevelMenuEntry />
+
           {/* 알림을 아직 안 켠 유저에게만 보인다 */}
           <NotificationMenuEntry />
 
