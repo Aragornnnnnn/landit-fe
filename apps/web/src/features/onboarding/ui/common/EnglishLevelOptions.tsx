@@ -19,13 +19,13 @@ export const EnglishLevelOptions = ({
 
   return (
     <div className="flex flex-col gap-3">
-      {ENGLISH_LEVELS.map((level) => {
-        const isSelected = selected === level.id;
+      {ENGLISH_LEVELS.map((item) => {
+        const isSelected = selected === item.level;
         return (
           <button
-            key={level.id}
+            key={item.level}
             type="button"
-            onClick={() => onSelect(level.id)}
+            onClick={() => onSelect(item.level)}
             aria-pressed={isSelected}
             className={`flex w-full items-center gap-3 rounded-2xl px-4 py-4 text-left transition-[translate,box-shadow,background-color] duration-75 ${
               isSelected
@@ -33,18 +33,18 @@ export const EnglishLevelOptions = ({
                 : 'bg-card shadow-[0_3px_0_var(--border)] active:translate-y-[3px] active:shadow-none'
             }`}
           >
-            {/* 선택되면 이모지가 살짝 커진 채로 머문다 — 커진 크기 자체가 선택 표시를 겸한다 */}
+            {/* 토스페이스 숫자 글리프 — 선택되면 살짝 커진 채로 머물러 선택 표시를 겸한다 */}
             <motion.span
-              className="tossface shrink-0 text-2xl leading-none"
+              className="tossface w-7 shrink-0 text-center text-2xl leading-none"
               animate={{ scale: isSelected ? 1.25 : 1 }}
               transition={
                 reduced ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }
               }
             >
-              {level.emoji}
+              {item.level}
             </motion.span>
             <span className="text-base font-extrabold text-foreground">
-              {level.label}
+              {item.label}
             </span>
           </button>
         );
