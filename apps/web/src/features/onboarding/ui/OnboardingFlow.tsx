@@ -14,10 +14,12 @@ import { subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { ONBOARDED_PARAM, SCENARIO_PATH } from '@/shared/lib/routes';
 import { Transition } from '@/shared/motion';
 
+import { markEnglishLevelAnswered } from '../model/english-level';
 import { STEP_ORDER, type OnboardingStep } from '../model/steps';
 import { OnboardingHeader } from './common/OnboardingHeader';
 import { IntroStep } from './steps/IntroStep';
 import { LampStep } from './steps/LampStep';
+import { LevelStep } from './steps/LevelStep';
 import { MicStep } from './steps/MicStep';
 import { NotificationStep } from './steps/NotificationStep';
 import { SoundStep } from './steps/SoundStep';
@@ -76,7 +78,7 @@ export const OnboardingFlow = () => {
         if (stepRef.current !== 'notification') return;
         track(EVENTS.ONBOARDING_STEP_COMPLETED, { step: 'notification' });
         setDirection(1);
-        setStep((prev) => (prev === 'notification' ? 'scenario' : prev));
+        setStep((prev) => (prev === 'notification' ? 'level' : prev));
       }),
     [],
   );
@@ -134,9 +136,7 @@ export const OnboardingFlow = () => {
             onNext={() =>
               finishStep(
                 'thought',
-                stepOrder.includes('notification')
-                  ? 'notification'
-                  : 'scenario',
+                stepOrder.includes('notification') ? 'notification' : 'level',
               )
             }
           />
@@ -146,6 +146,14 @@ export const OnboardingFlow = () => {
             // OS 권한창만 요청한다 — 회신은 useNotificationPermission이 받고, 아래 effect가 확정을 보고 다음 스텝으로 넘긴다.
             // 여기서 답하면 권한 상태가 확정되므로 홈의 동의 게이트는 저절로 조용해진다
             onNext={() => requestNotificationPermission('onboarding')}
+          />
+        )}
+        {step === 'level' && (
+          <LevelStep
+            onNext={(level) => {
+              markEnglishLevelAnswered(level);
+              finishStep('level', 'scenario');
+            }}
           />
         )}
         {step === 'scenario' && <LampStep onStart={startFirstConversation} />}

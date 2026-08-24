@@ -6,6 +6,7 @@ export {
   type AuthProvider,
   type LoginMethod,
   type OnboardingStep,
+  type EnglishLevel,
   type ExpressionStep,
   type TurnInputType,
   type TalkPartner,

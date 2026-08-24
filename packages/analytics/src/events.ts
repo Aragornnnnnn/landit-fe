@@ -22,6 +22,13 @@ export const EVENTS = {
   MIC_PERMISSION_DECIDED: 'Mic Permission Decided',
   ONBOARDING_COMPLETED: 'Onboarding Completed',
 
+  // 영어 수준 체크 — 신규 유저는 온보딩 스텝(level)이라 위 계측이 그대로 커버한다.
+  // 기존 유저는 온보딩 밖 별도 게이트라 노출·응답을 따로 찍는다
+  ENGLISH_LEVEL_GATE_VIEWED: 'English Level Gate Viewed',
+  ENGLISH_LEVEL_GATE_ANSWERED: 'English Level Gate Answered',
+  // 마이페이지에서 스스로 다시 고른 경우 — 최초 응답(Gate·온보딩)과 의도가 달라 별도로 찍는다
+  ENGLISH_LEVEL_CHANGED: 'English Level Changed',
+
   // 홈
   HOME_TAB_SWITCHED: 'Home Tab Switched',
   SCENARIO_CARD_FLIPPED: 'Scenario Card Flipped',
@@ -121,7 +128,9 @@ export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
 export type AuthProvider = 'kakao' | 'google' | 'apple';
 export type LoginMethod = 'native' | 'web';
 export type OnboardingStep =
-  'intro' | 'sound' | 'mic' | 'thought' | 'notification' | 'scenario';
+  'intro' | 'sound' | 'mic' | 'thought' | 'notification' | 'level' | 'scenario';
+// 영어 수준 — BE 저장 API(learningLevel)와 같은 1(막 시작)~5(유창) 정수 척도. 지표와 서버 데이터가 같은 말을 쓴다
+export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
 export type ExpressionStep = 'quiz' | 'explain' | 'review';
 export type TurnInputType = 'voice' | 'text';
 // 스몰톡 대화 상대 — 홈에서 고른 캐릭터. 시나리오엔 없는 축이라 스몰톡 이벤트에만 붙는다
@@ -213,6 +222,9 @@ export type EventProps = {
     source: 'onboarding' | 'conversation';
   };
   'Onboarding Completed': undefined;
+  'English Level Gate Viewed': undefined;
+  'English Level Gate Answered': { level: EnglishLevel };
+  'English Level Changed': { level: EnglishLevel };
 
   // 홈 상단 탭 칩을 눌러 옮긴다 — 화면 노출(Page Viewed)엔 뒤로가기·복귀도 섞이니, 손으로 고른 것만 따로 본다
   'Home Tab Switched': { tab: HomeTab };

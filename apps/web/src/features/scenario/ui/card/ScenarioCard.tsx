@@ -111,8 +111,10 @@ export const ScenarioCard = ({
               </div>
             )}
 
-            {/* 완료 시 별점을 썸네일 좌상단에 배지로 띄운다 — 어두운 스크림으로 밝은/어두운 이미지 모두에서 대비 확보 */}
-            {completed && (
+            {/* 완료 시 별점을 썸네일 좌상단에 배지로 띄운다 — 어두운 스크림으로 밝은/어두운 이미지 모두에서 대비 확보.
+              뒤집힌 동안에는 그리지 않는다 — iOS(WebKit)에서 backdrop-filter 레이어가 backface-visibility를
+              무시하고 뒷면 위에 잔상으로 남는다 */}
+            {completed && !flipped && (
               <div className="absolute top-3 left-3 rounded-full bg-black/45 px-3 py-2 shadow-sm backdrop-blur-sm">
                 <StarRating rating={scenario.starRating ?? 0} size={24} />
               </div>
