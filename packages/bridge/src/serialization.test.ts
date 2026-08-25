@@ -178,6 +178,96 @@ describe('parseWebToNativeMessage', () => {
   });
 });
 
+describe('parseWebToNativeMessage — 위젯', () => {
+  it('위젯 데이터 동기화 요청을 그대로 되돌린다 (round-trip)', () => {
+    const message: WebToNativeMessage = {
+      type: 'SYNC_WIDGET_DATA',
+      data: {
+        streak: 5,
+        todayDone: false,
+        lastCompletedDate: '2026-08-24',
+        todayCardTitle: '룸메이트와 첫인사',
+        weeklyDone: [true, true, false, true, true, true, false],
+      },
+    };
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('한 번도 완료한 적 없는 유저는 완료 날짜와 카드 제목이 null일 수 있다', () => {
+    const message: WebToNativeMessage = {
+      type: 'SYNC_WIDGET_DATA',
+      data: {
+        streak: 0,
+        todayDone: false,
+        lastCompletedDate: null,
+        todayCardTitle: null,
+        weeklyDone: [false, false, false, false, false, false, false],
+      },
+    };
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('주간 완료 배열이 7개가 아니면 버린다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({
+          type: 'SYNC_WIDGET_DATA',
+          data: {
+            streak: 5,
+            todayDone: false,
+            lastCompletedDate: '2026-08-24',
+            todayCardTitle: '룸메이트와 첫인사',
+            weeklyDone: [true, false],
+          },
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it('스트릭이 음수거나 정수가 아니면 버린다', () => {
+    const base = {
+      todayDone: false,
+      lastCompletedDate: '2026-08-24',
+      todayCardTitle: '룸메이트와 첫인사',
+      weeklyDone: [true, true, false, true, true, true, false],
+    };
+
+    for (const streak of [-1, 1.5]) {
+      expect(
+        parseWebToNativeMessage(
+          JSON.stringify({
+            type: 'SYNC_WIDGET_DATA',
+            data: { ...base, streak },
+          }),
+        ),
+      ).toBeNull();
+    }
+  });
+
+  it('완료 날짜가 yyyy-MM-dd 형식이 아니면 버린다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({
+          type: 'SYNC_WIDGET_DATA',
+          data: {
+            streak: 5,
+            todayDone: false,
+            lastCompletedDate: '2026-08-24T00:00:00+09:00',
+            todayCardTitle: null,
+            weeklyDone: [true, true, false, true, true, true, false],
+          },
+        }),
+      ),
+    ).toBeNull();
+  });
+});
+
 describe('parseNativeToWebMessage — 알림', () => {
   it('알림 권한 상태 메시지를 그대로 되돌린다 (round-trip)', () => {
     const message = {
