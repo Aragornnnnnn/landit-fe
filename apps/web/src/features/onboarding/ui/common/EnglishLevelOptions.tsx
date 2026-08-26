@@ -6,6 +6,8 @@
 import type { EnglishLevel } from '@landit/analytics';
 import { motion, useReducedMotion } from 'motion/react';
 
+import { Emoji } from '@/shared/ui/emoji';
+
 import { ENGLISH_LEVELS } from '../../model/english-level';
 
 export const EnglishLevelOptions = ({
@@ -35,13 +37,13 @@ export const EnglishLevelOptions = ({
           >
             {/* 토스페이스 숫자 글리프 — 선택되면 살짝 커진 채로 머물러 선택 표시를 겸한다 */}
             <motion.span
-              className="tossface w-7 shrink-0 text-center text-2xl leading-none"
+              className="w-7 shrink-0 text-center text-2xl leading-none"
               animate={{ scale: isSelected ? 1.25 : 1 }}
               transition={
                 reduced ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }
               }
             >
-              {item.level}
+              <Emoji>{String(item.level)}</Emoji>
             </motion.span>
             <span className="text-base font-extrabold text-foreground">
               {item.label}
