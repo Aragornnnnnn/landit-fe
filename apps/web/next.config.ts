@@ -33,6 +33,18 @@ const nextConfig: NextConfig = {
     // Sentry에 이미 보고되고 있어서, console에 중복으로 남길 이유가 없다
     removeConsole: process.env.NODE_ENV === 'production',
   },
+  // 일부 기기(iOS WebView)에서 앱을 껐다 켜면 항상 흰 화면이 뜨고 재설치(=캐시 초기화)로만
+  // 리셋되는 문제가 있다. 재현 패턴상 캐시된 HTML의 재사용 경로가 원인으로 추정되어,
+  // 문서 응답은 캐시를 금지해 매번 전체를 새로 받게 한다.
+  // 파일 확장자가 있는 경로(public 에셋)·/_next(청크, 자체 immutable 정책)·/api(백엔드 프록시)는 제외
+  async headers() {
+    return [
+      {
+        source: '/((?!api/|_next/|.*\\..*).*)',
+        headers: [{ key: 'Cache-Control', value: 'no-store' }],
+      },
+    ];
+  },
   // env가 없으면 프록시가 조용히 꺼진다 — 빌드는 성공하므로 누락은 런타임에야 드러난다
   async rewrites() {
     if (!apiBaseUrl) return [];
