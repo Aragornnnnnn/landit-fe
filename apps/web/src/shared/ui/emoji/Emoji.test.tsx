@@ -31,11 +31,22 @@ describe('Emoji', () => {
 
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
-});
+  it('글자 사이에 놓이도록 인라인으로 그린다', () => {
+    // Tailwind preflight가 svg를 block으로 만들어서, 그냥 두면 이모지가 글줄에서 떨어져 나간다
+    const { container } = render(<Emoji>💬</Emoji>);
 
-it('글자 사이에 놓이도록 인라인으로 그린다', () => {
-  // Tailwind preflight가 svg를 block으로 만들어서, 그냥 두면 이모지가 글줄에서 떨어져 나간다
-  const { container } = render(<Emoji>💬</Emoji>);
+    expect(container.querySelector('svg')).toHaveClass('inline-block');
+  });
+  it('토스페이스에 없는 이모지도 자리와 이름을 그대로 지킨다', () => {
+    // 폴백은 안 걸리는 게 정상이지만, 걸렸을 때 위치 클래스와 접근성 이름까지 잃으면 화면이 무너진다
+    render(
+      <Emoji label="녹는 얼굴" className="absolute right-0">
+        🫠
+      </Emoji>,
+    );
 
-  expect(container.querySelector('svg')).toHaveClass('inline-block');
+    expect(screen.getByRole('img', { name: '녹는 얼굴' })).toHaveClass(
+      'absolute',
+    );
+  });
 });

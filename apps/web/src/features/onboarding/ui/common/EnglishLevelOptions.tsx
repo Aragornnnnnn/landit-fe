@@ -43,7 +43,7 @@ export const EnglishLevelOptions = ({
                 reduced ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }
               }
             >
-              <Emoji>{String(item.level)}</Emoji>
+              <Emoji label={String(item.level)}>{String(item.level)}</Emoji>
             </motion.span>
             <span className="text-base font-extrabold text-foreground">
               {item.label}
