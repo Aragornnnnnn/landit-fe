@@ -1,0 +1,19 @@
+/* 페이지 진입 페이드 — 컴포지터가 재생하는 CSS 애니메이션.
+   framer-motion(rAF 의존)은 일부 iOS WebView의 세션 복원 콜드 스타트에서 rAF가 멈추면
+   opacity 0에 갇혀 화면 전체가 흰 화면이 됐다. CSS 애니메이션은 rAF 없이도 재생되고,
+   재생이 아예 안 돼도 기본 상태가 '보임'이라 화면을 인질로 잡지 않는다.
+   duration·ease는 tokens.ts의 DURATION.base·EASE_STANDARD와 같은 값을 유지할 것 */
+@media (prefers-reduced-motion: no-preference) {
+  .fadeIn {
+    animation: page-fade-in 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

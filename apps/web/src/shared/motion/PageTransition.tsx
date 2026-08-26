@@ -1,24 +1,10 @@
 // 라우트 전환 래퍼 — 매 페이지 진입 시 페이드 인. app/template.tsx에서 전역 적용한다.
-'use client';
+// 페이드는 CSS 애니메이션으로 재생한다 — motion(rAF 의존)은 일부 iOS WebView에서 콜드
+// 스타트 시 rAF가 재개되지 않으면 페이지 전체가 opacity 0에 갇혀 흰 화면이 됐다.
+// CSS 애니메이션은 rAF 없이 재생되고, 안 돌아도 기본 상태가 '보임'이라 화면을 인질로
+// 잡지 않는다. reduced motion 분기는 CSS 미디어 쿼리가 담당한다 (page-transition.module.css)
+import styles from './page-transition.module.css';
 
-import { motion, useReducedMotion } from 'motion/react';
-
-import { DURATION, EASE_STANDARD } from './tokens';
-
-export const PageTransition = ({ children }: { children: React.ReactNode }) => {
-  const reduced = useReducedMotion() ?? false;
-
-  // reduced motion이면 애니메이션 없이 그대로 — 래퍼 div가 h-dvh 레이아웃을 방해하지 않게 contents로 흘린다.
-  if (reduced) return <div style={{ display: 'contents' }}>{children}</div>;
-
-  return (
-    <motion.div
-      // 페이드만 — transform이 없어 fixed 오버레이의 기준이 뷰포트로 유지된다.
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: DURATION.base, ease: EASE_STANDARD }}
-    >
-      {children}
-    </motion.div>
-  );
-};
+export const PageTransition = ({ children }: { children: React.ReactNode }) => (
+  <div className={styles.fadeIn}>{children}</div>
+);
