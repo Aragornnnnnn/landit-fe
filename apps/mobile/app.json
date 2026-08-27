@@ -153,7 +153,7 @@
               "minHeight": "110dp",
               "targetCellWidth": 2,
               "targetCellHeight": 2,
-              "previewImage": "./assets/widgets/preview-small.png",
+              "previewImage": "./assets/widgets/preview-small.webp",
               "resizeMode": "none",
               "updatePeriodMillis": 1800000
             },
@@ -165,7 +165,7 @@
               "minHeight": "110dp",
               "targetCellWidth": 4,
               "targetCellHeight": 2,
-              "previewImage": "./assets/widgets/preview-medium.png",
+              "previewImage": "./assets/widgets/preview-medium.webp",
               "resizeMode": "none",
               "updatePeriodMillis": 1800000
             },
@@ -177,7 +177,7 @@
               "minHeight": "250dp",
               "targetCellWidth": 4,
               "targetCellHeight": 4,
-              "previewImage": "./assets/widgets/preview-large.png",
+              "previewImage": "./assets/widgets/preview-large.webp",
               "resizeMode": "none",
               "updatePeriodMillis": 1800000
             }
