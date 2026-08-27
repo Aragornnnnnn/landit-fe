@@ -29,8 +29,12 @@
         "NSMicrophoneUsageDescription": "음성 인식(말하기) 기능에 마이크를 사용합니다.",
         "ITSAppUsesNonExemptEncryption": false,
         "SKAdNetworkItems": [
-          { "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork" },
-          { "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork" }
+          {
+            "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork"
+          },
+          {
+            "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork"
+          }
         ]
       },
       "privacyManifests": {
@@ -65,7 +69,11 @@
         {
           "action": "VIEW",
           "category": ["DEFAULT", "BROWSABLE"],
-          "data": [{ "scheme": "com.saynow.app" }]
+          "data": [
+            {
+              "scheme": "com.saynow.app"
+            }
+          ]
         }
       ]
     },
@@ -131,7 +139,31 @@
           "userTrackingPermission": "광고 성과를 측정하고 서비스를 개선하기 위해 기기의 활동 정보를 사용해요."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-widgets",
+        {
+          "groupIdentifier": "group.com.saynow.app",
+          "widgets": [
+            {
+              "name": "StreakWidget",
+              "displayName": "랜딧",
+              "description": "래디와 함께 매일 대화 스트릭을 지켜요",
+              "supportedFamilies": [
+                "systemSmall",
+                "systemMedium",
+                "systemLarge"
+              ],
+              "contentMarginsDisabled": true
+            }
+          ]
+        }
+      ],
+      "expo-asset",
+      "expo-font",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

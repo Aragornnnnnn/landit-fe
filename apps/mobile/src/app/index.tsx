@@ -29,12 +29,18 @@ import { getExpoPushToken } from '@/notifications/push-token';
 import { syncReminders } from '@/notifications/reminders';
 import { initializeNotifications } from '@/notifications/setup';
 import { useNotificationDeepLink } from '@/notifications/useNotificationDeepLink';
+import { syncStreakWidget, syncWidgetOnLaunch } from '@/widgets/sync';
 import { saveWidgetData } from '@/widgets/widget-store';
 
 // 네이티브 스플래시를 웹 첫 페인트까지 붙잡아 둔다 — 자동 숨김을 막고 WebView onLoad에서 수동으로 감춘다
 void SplashScreen.preventAutoHideAsync();
 
 const ShellScreen = () => {
+  // 위젯 타임라인 되살리기 — 로그인 전에도 0일 시간표가 돌게 한다
+  useEffect(() => {
+    void syncWidgetOnLaunch();
+  }, []);
+
   const webviewRef = useRef<WebView>(null);
   const [isWebReady, setIsWebReady] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -55,8 +61,11 @@ const ShellScreen = () => {
     OPEN_SETTINGS: () => void Linking.openSettings(),
     // 웹이 만든 예약 목록대로 로컬 알림을 통째로 다시 깐다 (증분 갱신이 아니다)
     SYNC_REMINDERS: ({ reminders }) => void syncReminders(reminders),
-    // 홈 위젯용 스트릭 데이터를 기록한다 — 위젯 갱신 호출은 위젯 타깃이 생기는 단계에서 잇는다
-    SYNC_WIDGET_DATA: ({ data }) => void saveWidgetData(data),
+    // 홈 위젯용 스트릭 스냅샷을 기록하고 iOS 위젯 타임라인을 새로 예약한다
+    SYNC_WIDGET_DATA: ({ data }) => {
+      void saveWidgetData(data);
+      syncStreakWidget(data);
+    },
     // 알림 권한 상태 조회 — 다이얼로그 없이 현재 상태만 회신한다
     GET_NOTIFICATION_PERMISSION: async () => {
       const status = await getNotificationPermission();
