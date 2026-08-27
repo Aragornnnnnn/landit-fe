@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { MAILBOX_COMPOSE_PATH } from '@/shared/lib/routes';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { BackHeader } from '@/shared/ui/BackHeader';
+import { Emoji } from '@/shared/ui/emoji';
 import { showToast } from '@/shared/ui/toast';
 
 import type { FeedbackType } from '../api/mailbox';
@@ -24,7 +25,8 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
   const [content, setContent] = useState('');
   const { mutate: send, isPending: isSending } = useSendFeedbackMutation(type);
 
-  const { question, placeholder, assurance } = FEEDBACK_TYPE_FACES[type];
+  const { question, placeholder, assurance, assuranceEmoji } =
+    FEEDBACK_TYPE_FACES[type];
   const trimmed = content.trim();
 
   const submit = () => {
@@ -68,8 +70,8 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
           className="mt-6 h-[180px] w-full shrink-0 resize-none rounded-2xl border border-border bg-card p-4 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
         />
 
-        <p className="tossface mt-3 shrink-0 text-xs text-muted-foreground">
-          {assurance}
+        <p className="mt-3 shrink-0 text-xs text-muted-foreground">
+          {assurance} <Emoji>{assuranceEmoji}</Emoji>
         </p>
       </div>
 

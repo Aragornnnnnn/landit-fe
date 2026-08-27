@@ -16,6 +16,7 @@ import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { reportWarning } from '@/shared/monitoring/report';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
+import { Emoji } from '@/shared/ui/emoji';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import { EnglishLevelMenuEntry } from './_ui/EnglishLevelMenuEntry';
@@ -134,7 +135,7 @@ export default function MyPage() {
               className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full text-4xl"
               style={{ background: '#E8F4E8' }}
             >
-              <span className="tossface">🛬</span>
+              <Emoji>🛬</Emoji>
             </div>
             <div className="min-w-0">
               <p

@@ -88,7 +88,8 @@ describe('ScenarioBriefing', () => {
   it('썸네일이 없으면 이미지 대신 기본 아이콘을 보여준다', () => {
     vi.useFakeTimers();
 
-    render(
+    // 이 화면은 포털로 body에 그려져서 container가 아니라 baseElement를 봐야 한다
+    const { baseElement } = render(
       <ScenarioBriefing
         scenario={{ ...scenario, thumbnailUrl: null }}
         onDone={vi.fn()}
@@ -97,6 +98,7 @@ describe('ScenarioBriefing', () => {
     );
 
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
-    expect(screen.getByText('💬')).toBeInTheDocument();
+    // 기본 아이콘은 토스페이스 SVG로 그린다 — 글자가 아니라 그림이라 텍스트로는 안 잡힌다
+    expect(baseElement.querySelector('svg')).toBeInTheDocument();
   });
 });

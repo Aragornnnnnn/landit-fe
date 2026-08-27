@@ -4,6 +4,7 @@
 import type { Partner } from '@/features/conversation/model/character-look';
 import { PartnerAvatar } from '@/features/conversation/ui/character/PartnerAvatar';
 import { PARTNERS } from '@/features/small-talk/model/partner';
+import { Emoji } from '@/shared/ui/emoji';
 
 interface PartnerPickerProps {
   selected: Partner;
@@ -47,9 +48,7 @@ export const PartnerPicker = ({ selected, onSelect }: PartnerPickerProps) => (
             }`}
           >
             {partner.name}
-            <span className="tossface text-[11px]" aria-hidden>
-              {partner.flag}
-            </span>
+            <Emoji className="text-[11px]">{partner.flag}</Emoji>
           </span>
         </button>
       );

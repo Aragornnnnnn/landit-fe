@@ -16,8 +16,10 @@ interface FeedbackTypeFace {
   // 입력창 안 한 줄. 제목이 "뭘"을 말하니 여기는 "그걸 여기에"만 — 힌트를 더 얹으면 문턱이 생겨 덜 보내온다.
   // 작은 폰(320px)에서도 한 줄이어야 한다 — 15px 기준 240px 안쪽
   placeholder: string;
-  // 입력창 아래 한 줄 — 읽는 사람이 있다는 걸 알리는 마음 한마디. 끝의 이모지는 토스페이스로 그린다
+  // 입력창 아래 한 줄 — 읽는 사람이 있다는 걸 알리는 마음 한마디
   assurance: string;
+  // 그 한마디 끝에 붙는 이모지. 문장과 나눠둬야 토스페이스 그림으로 그릴 수 있다
+  assuranceEmoji: string;
 }
 
 export const FEEDBACK_TYPE_FACES: Record<FeedbackType, FeedbackTypeFace> = {
@@ -27,7 +29,8 @@ export const FEEDBACK_TYPE_FACES: Record<FeedbackType, FeedbackTypeFace> = {
     slug: 'bug',
     question: '겪으신 문제를\n자세히 알려주세요',
     placeholder: '이곳에 문제 상황을 적어주세요',
-    assurance: '알려주셔서 고마워요, 얼른 살펴볼게요 👀',
+    assurance: '알려주셔서 고마워요, 얼른 살펴볼게요',
+    assuranceEmoji: '👀',
   },
   FEATURE_REQUEST: {
     emoji: '💡',
@@ -35,7 +38,8 @@ export const FEEDBACK_TYPE_FACES: Record<FeedbackType, FeedbackTypeFace> = {
     slug: 'feature',
     question: '있었으면 하는\n기능을 알려주세요',
     placeholder: '이곳에 원하는 기능을 적어주세요',
-    assurance: '여러분의 의견 하나하나가 모여 랜딧을 만들어요 🤗',
+    assurance: '여러분의 의견 하나하나가 모여 랜딧을 만들어요',
+    assuranceEmoji: '🤗',
   },
   QUESTION: {
     emoji: '🙋',
@@ -43,7 +47,8 @@ export const FEEDBACK_TYPE_FACES: Record<FeedbackType, FeedbackTypeFace> = {
     slug: 'question',
     question: '궁금한 점이 있다면\n무엇이든 물어봐주세요',
     placeholder: '이곳에 궁금한 점을 적어주세요',
-    assurance: '랜딧을 궁금해해 주셔서 고마워요 😊',
+    assurance: '랜딧을 궁금해해 주셔서 고마워요',
+    assuranceEmoji: '😊',
   },
   CHEER: {
     emoji: '🙌',
@@ -51,7 +56,8 @@ export const FEEDBACK_TYPE_FACES: Record<FeedbackType, FeedbackTypeFace> = {
     slug: 'cheer',
     question: '응원하고 싶은\n내용을 남겨주세요',
     placeholder: '이곳에 응원 한마디를 적어주세요',
-    assurance: '여러분의 응원 한 마디가 저희의 원동력이 돼요 🥹',
+    assurance: '여러분의 응원 한 마디가 저희의 원동력이 돼요',
+    assuranceEmoji: '🥹',
   },
 };
 

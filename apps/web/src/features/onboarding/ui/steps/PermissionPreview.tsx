@@ -2,6 +2,7 @@
 'use client';
 
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
+import { Emoji } from '@/shared/ui/emoji';
 
 export const PermissionPreview = () => {
   const isAndroid = useClientOnlyValue(
@@ -39,9 +40,9 @@ const IosPermissionPreview = () => {
           </div>
         </div>
       </div>
-      <span className="tossface pointer-events-none absolute right-[45px] -bottom-9 text-[40px] leading-none">
+      <Emoji className="pointer-events-none absolute right-[45px] -bottom-9 text-[40px] leading-none">
         👆
-      </span>
+      </Emoji>
     </div>
   );
 };
@@ -67,9 +68,9 @@ const AndroidPermissionPreview = () => {
         <div className="mt-7 space-y-1 text-xl leading-none font-bold">
           <div className="relative flex h-14 w-full items-center justify-center">
             앱 사용 중에만 허용
-            <span className="tossface pointer-events-none absolute right-0 text-[34px] leading-none">
+            <Emoji className="pointer-events-none absolute right-0 text-[34px] leading-none">
               👈
-            </span>
+            </Emoji>
           </div>
           <div className="flex h-14 items-center justify-center opacity-40">
             이번만 허용

@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { DURATION, EASE_STANDARD } from '@/shared/motion';
 import { registerOpenSheet } from '@/shared/ui/bottom-sheet-back';
+import { Emoji } from '@/shared/ui/emoji';
 
 import type { Scenario } from '../lib/to-scenario';
 
@@ -73,7 +74,7 @@ export const ScenarioBriefing = ({
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-secondary">
-                <span className="tossface text-6xl">💬</span>
+                <Emoji className="text-6xl">💬</Emoji>
               </div>
             )}
           </div>

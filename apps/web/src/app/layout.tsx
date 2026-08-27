@@ -1,4 +1,4 @@
-// 앱 전체 공통 레이아웃 (루트) — Tossface(이모지) CDN 로딩. Pretendard는 globals.css에서 자체 호스팅
+// 앱 전체 공통 레이아웃 (루트). 폰트는 globals.css에서 자체 호스팅하는 Pretendard 하나뿐이다
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
 
@@ -34,17 +34,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className="antialiased" suppressHydrationWarning>
-      <head>
-        <link
-          rel="preconnect"
-          href="https://cdn.jsdelivr.net"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/gh/toss/tossface/dist/tossface.css"
-        />
-      </head>
       <body>
         <AnalyticsBootstrap />
         <PageViewTracker />

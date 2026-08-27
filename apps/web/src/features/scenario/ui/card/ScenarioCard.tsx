@@ -7,6 +7,7 @@ import { EVENTS } from '@landit/analytics';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { Button } from '@/shared/ui/Button';
+import { Emoji } from '@/shared/ui/emoji';
 import { ArrowRightIcon, LockIcon, ReplayIcon } from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
 
@@ -107,7 +108,7 @@ export const ScenarioCard = ({
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-secondary">
-                <span className="tossface text-6xl">💬</span>
+                <Emoji className="text-6xl">💬</Emoji>
               </div>
             )}
 
