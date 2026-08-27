@@ -6,7 +6,7 @@ import { WaitingNotice } from './WaitingNotice';
 
 export const SentBody = ({ feedback }: { feedback: SentFeedbackDetail }) => (
   <div className="flex flex-col gap-6">
-    <p className="text-[15px] leading-relaxed text-foreground">
+    <p className="text-[15px] leading-relaxed whitespace-pre-line text-foreground">
       {feedback.content}
     </p>
     {feedback.replies.map((reply) => (
@@ -25,6 +25,8 @@ const ReplySection = ({ text, sentAt }: { text: string; sentAt: string }) => (
     <p className="text-xs font-semibold text-muted-foreground">
       랜딧 팀의 답장 · {formatLetterDateTime(sentAt)}
     </p>
-    <p className="mt-2 text-[15px] leading-relaxed text-foreground">{text}</p>
+    <p className="mt-2 text-[15px] leading-relaxed whitespace-pre-line text-foreground">
+      {text}
+    </p>
   </div>
 );

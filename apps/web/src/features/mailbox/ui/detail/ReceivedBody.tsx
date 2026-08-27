@@ -10,7 +10,7 @@ export const ReceivedBody = ({ letter }: { letter: ReceivedLetterDetail }) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-[15px] leading-relaxed text-foreground">
+      <p className="text-[15px] leading-relaxed whitespace-pre-line text-foreground">
         {letter.bodyText}
       </p>
       {/* 답장에 딸린 내 원문 — 무엇에 대한 답장인지 다시 찾아보지 않게 한다 */}
