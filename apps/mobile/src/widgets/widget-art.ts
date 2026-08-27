@@ -1,6 +1,6 @@
 // 위젯 아트 매니페스트 — 상태×사이즈별 webp를 정적 require로 묶는다
 // 생성 파일: scripts/generate-widget-art.mjs 로 다시 만든다 (아트 원본 = 피그마 "🧩 위젯 Final" 보드)
-export const WIDGET_ART_VERSION = 7;
+export const WIDGET_ART_VERSION = 8;
 
 export const WIDGET_ART: Record<string, number> = {
   'arrived-large': require('../../assets/widgets/arrived-large.webp'),
@@ -24,7 +24,7 @@ export const WIDGET_ART: Record<string, number> = {
   'done-large': require('../../assets/widgets/done-large.webp'),
   'done-medium': require('../../assets/widgets/done-medium.webp'),
   'done-small': require('../../assets/widgets/done-small.webp'),
-  'fruit': require('../../assets/widgets/fruit.webp'),
+  fruit: require('../../assets/widgets/fruit.webp'),
   'gone-large': require('../../assets/widgets/gone-large.webp'),
   'gone-medium': require('../../assets/widgets/gone-medium.webp'),
   'gone-small': require('../../assets/widgets/gone-small.webp'),

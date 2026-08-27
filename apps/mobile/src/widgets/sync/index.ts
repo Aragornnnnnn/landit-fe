@@ -1,8 +1,8 @@
 // 위젯 동기화 진입점 — 플랫폼별 갱신 방식을 감춘다
-import type { WidgetData } from '@landit/bridge';
 import { Platform } from 'react-native';
+import { EMPTY_WIDGET_DATA, type WidgetData } from '@landit/bridge';
 
-import { EMPTY_WIDGET_DATA, loadWidgetData } from '../widget-store';
+import { loadWidgetData } from '../widget-store';
 import { syncIosWidget } from './ios';
 
 export const syncStreakWidget = (data: WidgetData): void => {

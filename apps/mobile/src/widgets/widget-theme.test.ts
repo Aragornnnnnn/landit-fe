@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import {
+  MILESTONE_INKS,
   TITLE_FONT_SIZE,
   TITLE_KINDS,
   WEEK_STRIP_COLORS,
@@ -36,6 +37,12 @@ describe('widget-theme ↔ iOS 위젯 인라인 값', () => {
       expect(iosWidgetSource).toContain(`fruit: ${layout.fruit}`);
     },
   );
+
+  it('마일스톤 단계별 숫자 색이 iOS 위젯에도 그대로 있다', () => {
+    for (const [milestone, ink] of Object.entries(MILESTONE_INKS)) {
+      expect(iosWidgetSource).toContain(`${milestone}: '${ink}'`);
+    }
+  });
 
   it('주간 스트립 색과 제목 규칙이 iOS 위젯에도 그대로 있다', () => {
     for (const color of Object.values(WEEK_STRIP_COLORS)) {

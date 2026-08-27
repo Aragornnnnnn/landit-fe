@@ -43,6 +43,14 @@ export const WIDGET_LAYOUTS: Record<
   large: { number: 46, fruit: 34, numberTop: 26, numberLeading: null },
 };
 
+// 마일스톤은 달성 단계마다 배경이 달라 숫자 색도 다르다 — 시안의 달성 문구 색을 그대로 쓴다
+export const MILESTONE_INKS: Record<number, string> = {
+  7: '#FFFFFF',
+  14: '#7A4A10',
+  20: '#4A3D78',
+  30: '#E4FFF6',
+};
+
 // 주간 스트립 색 — 시안 WeekStrip에서 추출
 export const WEEK_STRIP_COLORS = {
   background: '#140F3AB8',

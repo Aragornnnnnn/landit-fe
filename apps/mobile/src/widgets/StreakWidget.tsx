@@ -101,14 +101,27 @@ const StreakWidgetView = (
   }
 
   const theme = THEMES[props.kind] ?? THEMES.arrived;
-  const ink = family === 'small' ? theme.ink : theme.inkML;
+  // 마일스톤은 달성 단계마다 배경이 달라 숫자 색도 다르다 — 시안의 달성 문구 색
+  const MILESTONE_INKS: Record<number, string> = {
+    7: '#FFFFFF',
+    14: '#7A4A10',
+    20: '#4A3D78',
+    30: '#E4FFF6',
+  };
+  const ink =
+    props.kind === 'milestone' && props.milestone != null
+      ? (MILESTONE_INKS[props.milestone] ?? theme.inkML)
+      : family === 'small'
+        ? theme.ink
+        : theme.inkML;
   const artKey =
     (props.kind === 'milestone' && props.milestone != null
       ? `milestone-${props.milestone}`
       : props.kind) + `-${family}`;
   const artUri = props.artDir == null ? null : `${props.artDir}${artKey}.webp`;
-  // 마일스톤 아트는 숫자가 그림에 포함돼 있어 오버레이하지 않는다
-  const showNumber = props.kind !== 'milestone';
+  // 마일스톤 M·L 아트는 달성 문구가 그림에 포함돼 있어 오버레이하지 않는다.
+  // Small은 다른 상태와 같은 자리에 열매+숫자를 그린다 — 크기별로 형태가 달라 보이지 않게
+  const showNumber = props.kind !== 'milestone' || family === 'small';
   // 스트릭 열매 아이콘 — 웹 StreakFruit와 같은 정본 에셋
   const fruitUri = props.artDir == null ? null : `${props.artDir}fruit.webp`;
 
