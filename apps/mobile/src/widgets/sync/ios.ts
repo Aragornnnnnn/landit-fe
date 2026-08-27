@@ -39,7 +39,10 @@ const copyArtToSharedDirectory = async (): Promise<string | null> => {
     // dev에서는 에셋이 디스크가 아닌 Metro 서버에 있다 — downloadAsync가 두 모드 모두 로컬 파일 경로를 보장한다
     const asset = Asset.fromModule(moduleId);
     await asset.downloadAsync();
-    if (asset.localUri == null) continue;
+    // 한 장이라도 못 받으면 멈춘다 — 그냥 넘기면 마커만 남아 그 그림은 영영 안 깔린다
+    if (asset.localUri == null) {
+      throw new Error(`위젯 아트를 받지 못했다: ${key}`);
+    }
     const to = `${dir}${key}.webp`;
     await FileSystem.deleteAsync(to, { idempotent: true });
     await FileSystem.copyAsync({ from: asset.localUri, to });
