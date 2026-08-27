@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { useScenarioCalendarQuery } from '@/features/scenario/model/useScenarioCalendarQuery';
+import { useStreakCalendarQuery } from '@/features/streak/model/useStreakCalendarQuery';
 import { useStreakQuery } from '@/features/streak/model/useStreakQuery';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { postToNative } from '@/shared/bridge/web-bridge';
@@ -23,6 +24,9 @@ const useDailyScenarioQueryMock = vi.mocked(useDailyScenarioQuery);
 
 vi.mock('@/features/scenario/model/useScenarioCalendarQuery');
 const useScenarioCalendarQueryMock = vi.mocked(useScenarioCalendarQuery);
+
+vi.mock('@/features/streak/model/useStreakCalendarQuery');
+const useStreakCalendarQueryMock = vi.mocked(useStreakCalendarQuery);
 
 vi.mock('@/shared/auth/auth-store');
 const useAuthStoreMock = vi.mocked(useAuthStore);
@@ -52,6 +56,10 @@ const arrange = () => {
     retry: () => {},
   });
   useScenarioCalendarQueryMock.mockReturnValue({ calendar: null });
+  useStreakCalendarQueryMock.mockReturnValue({
+    calendar: null,
+    isError: false,
+  });
   setLoggedIn(true);
 };
 
