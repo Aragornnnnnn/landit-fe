@@ -10,6 +10,7 @@ import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { EASE_STANDARD } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
+import { Emoji } from '@/shared/ui/emoji';
 
 import type { SentenceQuiz } from '../../model/sentence-quiz';
 import { useChipReorder } from '../../model/useChipReorder';
@@ -261,7 +262,7 @@ export const QuizStep = ({
             disabled={hintActive}
             className="text-sm font-semibold text-muted-foreground underline underline-offset-4 transition-colors active:text-foreground disabled:opacity-60"
           >
-            <span className="tossface mr-1">💡</span>힌트 보기
+            <Emoji className="mr-1">💡</Emoji>힌트 보기
           </button>
         </div>
       )}

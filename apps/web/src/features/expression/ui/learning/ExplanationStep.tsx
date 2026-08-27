@@ -7,6 +7,7 @@ import { EVENTS } from '@landit/analytics';
 import { track } from '@/shared/analytics';
 import { useSnapIndex } from '@/shared/lib/useSnapIndex';
 import { Button } from '@/shared/ui/Button';
+import { Emoji } from '@/shared/ui/emoji';
 
 import type { PracticeSentence } from '../../api/practice';
 import { StepScaffold } from '../common/StepScaffold';
@@ -134,7 +135,7 @@ const ExampleCard = ({ sentence }: { sentence: PracticeSentence }) => (
           className="h-full w-full object-cover"
         />
       ) : (
-        <span className="tossface text-4xl">🖼️</span>
+        <Emoji className="text-4xl">🖼️</Emoji>
       )}
     </div>
     <div className="flex flex-col gap-2 px-4 py-3">

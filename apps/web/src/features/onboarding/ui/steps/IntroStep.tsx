@@ -4,6 +4,7 @@
 import { motion } from 'motion/react';
 
 import { Button } from '@/shared/ui/Button';
+import { Emoji } from '@/shared/ui/emoji';
 
 export const IntroStep = ({
   nickname,
@@ -19,11 +20,11 @@ export const IntroStep = ({
           <h1 className="text-3xl leading-[1.3] font-black tracking-normal">
             안녕하세요{nickname ? `, ${nickname}님` : ''}{' '}
             <motion.span
-              className="tossface inline-block"
+              className="inline-block"
               animate={{ rotate: [0, 20, -10, 20, -5, 0] }}
               transition={{ delay: 0.5, duration: 1, ease: 'easeInOut' }}
             >
-              👋
+              <Emoji>👋</Emoji>
             </motion.span>
             <br />
             원어민으로 만들어드릴게요

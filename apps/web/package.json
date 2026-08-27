@@ -9,6 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "emoji": "node --experimental-strip-types scripts/build-emoji-assets.ts",
     "characters": "node scripts/split-character-parts.mjs"
   },
   "dependencies": {

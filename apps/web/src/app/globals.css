@@ -294,17 +294,4 @@
   .animate-pop {
     animation: pop 0.45s ease;
   }
-
-  /* 이모지는 Tossface로 렌더해 플랫폼 간 일관성 유지 */
-  .tossface {
-    font-family:
-      Tossface,
-      'Pretendard Variable',
-      -apple-system,
-      BlinkMacSystemFont,
-      'Apple Color Emoji',
-      'Segoe UI Emoji',
-      'Noto Color Emoji',
-      sans-serif;
-  }
 }

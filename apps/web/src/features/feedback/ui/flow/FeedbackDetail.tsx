@@ -6,6 +6,7 @@ import { EVENTS } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
+import { Emoji } from '@/shared/ui/emoji';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import type { MessageFeedbackResponse } from '../../api/session-feedback';
@@ -93,7 +94,7 @@ const TurnCard = ({ turn }: { turn: MessageFeedbackResponse }) => {
   return (
     <div className="flex flex-col gap-[18px] pt-2">
       <p className="text-xl font-bold text-foreground">
-        <span className="tossface">{isGood ? '✅' : '💪'}</span>{' '}
+        <Emoji>{isGood ? '✅' : '💪'}</Emoji>{' '}
         {isGood ? '잘 통했어요' : '한 단계 더 업그레이드해봐요'}
       </p>
 
