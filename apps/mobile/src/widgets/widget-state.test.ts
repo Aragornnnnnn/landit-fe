@@ -23,6 +23,29 @@ const dataOf = (
 const decide = (now: Date, over: Parameters<typeof dataOf>[0] = {}) =>
   decideWidgetState({ data: dataOf(over), now });
 
+describe('decideWidgetState — 시작 전', () => {
+  it('완료 이력도 오늘 카드도 없으면 시작 안내를 보여준다 — 로그인 전이 이 경우다', () => {
+    const state = decide(kst('2026-08-25', '15:00'), {
+      streak: 0,
+      lastCompletedDate: null,
+      todayCardTitle: null,
+    });
+
+    expect(state.kind).toBe('welcome');
+    expect(state.displayStreak).toBe(0);
+  });
+
+  it('오늘 카드가 있으면 아직 한 번도 완료 안 했어도 시간표를 탄다 — 로그인한 신규 사용자다', () => {
+    const state = decide(kst('2026-08-25', '15:00'), {
+      streak: 0,
+      lastCompletedDate: null,
+      todayCardTitle: '룸메이트와 첫인사',
+    });
+
+    expect(state.kind).toBe('nudge');
+  });
+});
+
 describe('decideWidgetState — 우선순위', () => {
   it('오늘 완료했으면 밤 급박 시각이어도 완료 상태를 보여준다', () => {
     const state = decide(kst('2026-08-25', '23:30'), {

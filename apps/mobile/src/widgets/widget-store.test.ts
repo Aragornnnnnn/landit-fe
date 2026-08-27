@@ -32,14 +32,14 @@ describe('widget-store', () => {
     expect(await loadWidgetData()).toBeNull();
   });
 
-  it('로그인 전 기본값으로 그리면 브릿지 규격을 만족하고 몰락 없이 시간표를 탄다', () => {
+  it('로그인 전 기본값으로 그리면 브릿지 규격을 만족하고 시작 안내를 보여준다', () => {
     expect(widgetDataSchema.safeParse(EMPTY_WIDGET_DATA).success).toBe(true);
 
     const state = decideWidgetState({
       data: EMPTY_WIDGET_DATA,
       now: new Date('2026-08-27T14:00:00+09:00'),
     });
-    expect(state.kind).toBe('nudge');
+    expect(state.kind).toBe('welcome');
     expect(state.displayStreak).toBe(0);
   });
 

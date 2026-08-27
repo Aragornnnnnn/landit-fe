@@ -8,6 +8,8 @@ export const WIDGET_THEMES: Record<
   WidgetStateKind,
   { bg: string; ink: string; inkML: string }
 > = {
+  // 시작 전 — 아트 없이 배경색과 안내 문구만 그린다
+  welcome: { bg: '#EFE6F7', ink: '#5D4694', inkML: '#5D4694' },
   arrived: { bg: '#92D8F7', ink: '#0E3A5C', inkML: '#FFF3E0' },
   carpet: { bg: '#FFF3D8', ink: '#8A5A0E', inkML: '#8A5A0E' },
   nudge: { bg: '#FFF9D6', ink: '#9C6200', inkML: '#9C6200' },

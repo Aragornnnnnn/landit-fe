@@ -64,7 +64,8 @@ export const StreakAndroidWidget = ({
   // 마일스톤 M·L 아트는 달성 문구가 그림에 포함돼 있어 오버레이하지 않는다.
   // Small은 다른 상태와 같은 자리에 열매+숫자를 그린다 — 크기별로 형태가 달라 보이지 않게
   const showNumber = state.kind !== 'milestone' || family === 'small';
-  const showWeekStrip = family === 'large';
+  // 시작 전 카드에는 주간 스트립 자리가 없다 — 쌓은 기록이 아직 없다
+  const showWeekStrip = family === 'large' && state.kind !== 'welcome';
   // 오늘 카드 제목 — Medium 시간표 카드에만 제목 자리(24,112)가 있다
   const showTitle =
     family === 'medium' &&

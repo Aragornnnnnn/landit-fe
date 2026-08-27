@@ -1,6 +1,6 @@
 // 위젯 아트 매니페스트 — 상태×사이즈별 webp를 정적 require로 묶는다
 // 생성 파일: scripts/generate-widget-art.mjs 로 다시 만든다 (아트 원본 = 피그마 "🧩 위젯 Final" 보드)
-export const WIDGET_ART_VERSION = 8;
+export const WIDGET_ART_VERSION = 9;
 
 export const WIDGET_ART: Record<string, number> = {
   'arrived-large': require('../../assets/widgets/arrived-large.webp'),
@@ -58,6 +58,9 @@ export const WIDGET_ART: Record<string, number> = {
   'plead-large': require('../../assets/widgets/plead-large.webp'),
   'plead-medium': require('../../assets/widgets/plead-medium.webp'),
   'plead-small': require('../../assets/widgets/plead-small.webp'),
+  'preview-large': require('../../assets/widgets/preview-large.webp'),
+  'preview-medium': require('../../assets/widgets/preview-medium.webp'),
+  'preview-small': require('../../assets/widgets/preview-small.webp'),
   'risk-large': require('../../assets/widgets/risk-large.webp'),
   'risk-medium': require('../../assets/widgets/risk-medium.webp'),
   'risk-small': require('../../assets/widgets/risk-small.webp'),
@@ -67,4 +70,7 @@ export const WIDGET_ART: Record<string, number> = {
   'wait-large': require('../../assets/widgets/wait-large.webp'),
   'wait-medium': require('../../assets/widgets/wait-medium.webp'),
   'wait-small': require('../../assets/widgets/wait-small.webp'),
+  'welcome-large': require('../../assets/widgets/welcome-large.webp'),
+  'welcome-medium': require('../../assets/widgets/welcome-medium.webp'),
+  'welcome-small': require('../../assets/widgets/welcome-small.webp'),
 };

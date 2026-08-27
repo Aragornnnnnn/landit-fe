@@ -3,6 +3,7 @@ import type { WidgetData } from '@landit/bridge';
 
 // 시안 상태 키 — 피그마 카드 이름(Widget/Small · {kind})과 1:1
 export type WidgetStateKind =
+  | 'welcome' // ⓪ 시작 전 — 로그인 전이거나 아직 받은 카드가 없다
   | 'arrived' // ① 카드 도착
   | 'carpet' // 카드 도착 배리에이션 — 양탄자 배송 (뱁새)
   | 'nudge' // ② 가벼운 재촉
@@ -63,6 +64,11 @@ export const decideWidgetState = ({
   now: Date;
 }): WidgetState => {
   const clock = seoulClock(now);
+  // 완료 이력도 오늘 카드도 없다 = 아직 시작 전이다. 로그인 전에는 웹이 빈 값을 보내 여기 걸린다.
+  // 이 사람에게 시간표로 재촉해봐야 누를 카드가 없다
+  if (data.lastCompletedDate === null && data.todayCardTitle === null) {
+    return { kind: 'welcome', displayStreak: 0, milestone: null };
+  }
   // todayDone은 저장 당시의 오늘일 뿐이라 믿지 않는다 — 낡은 데이터도 날짜 차이로는 항상 옳다
   const daysSinceLastDone =
     data.lastCompletedDate === null
