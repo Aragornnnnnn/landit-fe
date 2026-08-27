@@ -6,6 +6,8 @@ export const QuotedLetter = ({ text }: { text: string }) => (
     <p className="text-xs font-semibold text-muted-foreground">
       <Emoji>✉️</Emoji> 내가 보낸 내용
     </p>
-    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{text}</p>
+    <p className="mt-2 text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
+      {text}
+    </p>
   </div>
 );
