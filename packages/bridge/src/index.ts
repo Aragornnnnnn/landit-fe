@@ -3,6 +3,7 @@ export {
   reminderSchema,
   notificationPermissionStatusSchema,
   widgetDataSchema,
+  EMPTY_WIDGET_DATA,
   type WebToNativeMessage,
   type NativeToWebMessage,
   type HapticPattern,

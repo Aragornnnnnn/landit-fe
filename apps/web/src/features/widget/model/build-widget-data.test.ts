@@ -134,4 +134,25 @@ describe('buildWidgetData — 오늘 카드', () => {
 
     expect(data.todayCardTitle).toBeNull();
   });
+
+  it('달력 창보다 오래 쉰 유저는 마지막 완료일을 알 수 없어 null이 된다 — 위젯이 0일 시간표를 그린다', () => {
+    // 마지막 완료가 2주 창 밖. 서버에 마지막 완료일 필드가 생기면 실제 날짜로 채운다
+    const data = buildWidgetData(
+      { currentStreakDays: 0, activeToday: false, today: '2026-08-25' },
+      null,
+      [calendarOf([]), calendarOf([])],
+    );
+
+    expect(data.lastCompletedDate).toBeNull();
+    expect(data.streak).toBe(0);
+    expect(data.weeklyDone).toEqual([
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+    ]);
+  });
 });

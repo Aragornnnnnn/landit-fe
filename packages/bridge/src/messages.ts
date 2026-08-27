@@ -41,16 +41,31 @@ export const widgetDataSchema = z.object({
   streak: z.number().int().min(0),
   // 오늘 대화 완료 여부 — 상태 사다리 1번 분기
   todayDone: z.boolean(),
-  // 마지막 대화 완료 날짜 — 몰락 단계(끊긴 지 며칠)를 위젯이 스스로 계산하는 근거. 완료 이력 없으면 null
+  // 마지막 대화 완료 날짜 — 몰락 단계(끊긴 지 며칠)를 위젯이 스스로 계산하는 근거. 완료 이력 없으면 null.
+  // 형식뿐 아니라 실제 존재하는 날짜인지도 본다 — 2026-02-31 같은 값이 통과하면 경과 일수 계산이 어긋난다
   lastCompletedDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine(
+      (value) => new Date(`${value}T00:00:00Z`).toISOString().startsWith(value),
+      { message: '달력에 없는 날짜예요' },
+    )
     .nullable(),
   // 오늘 카드 제목 — Medium 미완료 화면의 부제. 발행 전이면 null
   todayCardTitle: z.string().min(1).nullable(),
   // 오늘 포함 최근 7일 완료 여부 (과거→오늘 순) — Large 주간 스트립
   weeklyDone: z.array(z.boolean()).length(7),
 });
+
+// 로그인 전·로그아웃 후에 쓰는 빈 값 — 웹이 이걸 보내 셸에 남은 이전 사용자 기록을 지운다.
+// 완료 이력이 없으므로(null) 위젯은 몰락 연출 없이 0일 시간표만 그린다
+export const EMPTY_WIDGET_DATA = {
+  streak: 0,
+  todayDone: false,
+  lastCompletedDate: null,
+  todayCardTitle: null,
+  weeklyDone: [false, false, false, false, false, false, false],
+} as const satisfies z.infer<typeof widgetDataSchema>;
 
 // 웹 → 네이티브로 보낼 수 있는 메시지 목록. type 필드로 종류를 구분한다(discriminated union)
 export const webToNativeMessageSchema = z.discriminatedUnion('type', [

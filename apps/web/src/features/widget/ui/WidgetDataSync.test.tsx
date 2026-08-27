@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { useScenarioCalendarQuery } from '@/features/scenario/model/useScenarioCalendarQuery';
 import { useStreakQuery } from '@/features/streak/model/useStreakQuery';
+import { useAuthStore } from '@/shared/auth/auth-store';
 import { postToNative } from '@/shared/bridge/web-bridge';
 
 import { WidgetDataSync } from './WidgetDataSync';
@@ -22,6 +23,11 @@ const useDailyScenarioQueryMock = vi.mocked(useDailyScenarioQuery);
 
 vi.mock('@/features/scenario/model/useScenarioCalendarQuery');
 const useScenarioCalendarQueryMock = vi.mocked(useScenarioCalendarQuery);
+
+vi.mock('@/shared/auth/auth-store');
+const useAuthStoreMock = vi.mocked(useAuthStore);
+const setLoggedIn = (value: boolean) =>
+  useAuthStoreMock.mockReturnValue(value as never);
 
 const streakOf = (over: object = {}) => ({
   streak: {
@@ -46,6 +52,7 @@ const arrange = () => {
     retry: () => {},
   });
   useScenarioCalendarQueryMock.mockReturnValue({ calendar: null });
+  setLoggedIn(true);
 };
 
 describe('WidgetDataSync', () => {
@@ -80,6 +87,42 @@ describe('WidgetDataSync', () => {
 
     const { rerender } = render(<WidgetDataSync />);
     rerender(<WidgetDataSync />);
+
+    expect(postToNativeMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('로그아웃하면 빈 값을 보내 셸에 남은 이전 사용자 기록을 지운다', () => {
+    arrange();
+    useStreakQueryMock.mockReturnValue(streakOf());
+    const { rerender } = render(<WidgetDataSync />);
+
+    setLoggedIn(false);
+    useStreakQueryMock.mockReturnValue({ streak: null, isPending: false });
+    rerender(<WidgetDataSync />);
+
+    const message = postToNativeMock.mock.calls.at(-1)?.[0];
+    expect(message?.type).toBe('SYNC_WIDGET_DATA');
+    if (message?.type === 'SYNC_WIDGET_DATA') {
+      expect(message.data.streak).toBe(0);
+      expect(message.data.lastCompletedDate).toBeNull();
+      expect(message.data.weeklyDone).toEqual([
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+      ]);
+    }
+  });
+
+  it('로그인 전에도 빈 값을 보낸다 — 위젯이 0일 시작 화면을 그린다', () => {
+    arrange();
+    setLoggedIn(false);
+    useStreakQueryMock.mockReturnValue({ streak: null, isPending: false });
+
+    render(<WidgetDataSync />);
 
     expect(postToNativeMock).toHaveBeenCalledTimes(1);
   });

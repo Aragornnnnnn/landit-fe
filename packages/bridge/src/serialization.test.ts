@@ -266,6 +266,23 @@ describe('parseWebToNativeMessage — 위젯', () => {
       ),
     ).toBeNull();
   });
+
+  it('형식은 맞아도 달력에 없는 날짜면 버린다 — 경과 일수 계산이 어긋난다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({
+          type: 'SYNC_WIDGET_DATA',
+          data: {
+            streak: 5,
+            todayDone: false,
+            lastCompletedDate: '2026-02-31',
+            todayCardTitle: null,
+            weeklyDone: [true, true, false, true, true, true, false],
+          },
+        }),
+      ),
+    ).toBeNull();
+  });
 });
 
 describe('parseNativeToWebMessage — 알림', () => {

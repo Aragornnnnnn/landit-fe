@@ -57,8 +57,10 @@ const deriveLastCompletedDate = (
   if (streak.activeToday) return streak.today;
   if (streak.currentStreakDays > 0) return addDays(streak.today, -1);
 
-  // 끊긴 유저는 달력 창 안에서 가장 최근 완료일을 찾는다. 창 밖(더 오래된 이탈)은 null —
-  // 앱을 다시 연 시점이라 위젯은 곧 새 데이터로 덮인다
+  // 끊긴 유저는 달력 창(최근 2주) 안에서 가장 최근 완료일을 찾는다.
+  // 창보다 오래 쉰 유저는 null이 되어 위젯이 '완료 이력 없음'과 똑같이 다룬다 —
+  // 몰락 단계 대신 0일 시간표를 그린다. 두 경우를 나누려면 서버의 마지막 완료일 필드가 필요하다(백엔드 요청 예정).
+  // 위젯에 이미 저장된 값은 그 사용자가 마지막으로 앱을 열었을 때의 정확한 날짜라, 앱을 안 여는 동안의 몰락 연출은 정상 동작한다
   let latest: string | null = null;
   for (const [date, completed] of completedByDate) {
     if (!completed || date >= streak.today) continue;
