@@ -18,33 +18,36 @@ const iosWidgetSource = fs.readFileSync(
 );
 
 describe('widget-theme ↔ iOS 위젯 인라인 값', () => {
+  // 값이 소스 어딘가에 있기만 하면 통과하지 않도록 상태·사이즈 블록 단위로 묶어서 본다
   it.each(Object.entries(WIDGET_THEMES))(
-    '%s 상태의 배경·잉크 색이 iOS 위젯에도 그대로 있다',
+    '%s 상태를 바꾸면 iOS 위젯의 같은 상태 블록도 함께 바뀌어야 한다',
     (kind, theme) => {
-      expect(iosWidgetSource).toContain(kind);
-      expect(iosWidgetSource).toContain(theme.bg);
-      expect(iosWidgetSource).toContain(theme.ink);
-      expect(iosWidgetSource).toContain(theme.inkML);
+      expect(iosWidgetSource).toMatch(
+        new RegExp(
+          `${kind}:\\s*\\{\\s*bg: '${theme.bg}',\\s*ink: '${theme.ink}',\\s*inkML: '${theme.inkML}'`,
+        ),
+      );
     },
   );
 
   it.each(Object.entries(WIDGET_LAYOUTS))(
-    '%s 사이즈의 숫자·열매 크기가 iOS 위젯에도 그대로 있다',
+    '%s 사이즈를 바꾸면 iOS 위젯의 같은 사이즈 블록도 함께 바뀌어야 한다',
     (family, layout) => {
-      expect(iosWidgetSource).toContain(
-        `${family}: { number: ${layout.number}`,
+      expect(iosWidgetSource).toMatch(
+        new RegExp(
+          `${family}:\\s*\\{\\s*number: ${layout.number},\\s*fruit: ${layout.fruit}\\b`,
+        ),
       );
-      expect(iosWidgetSource).toContain(`fruit: ${layout.fruit}`);
     },
   );
 
-  it('마일스톤 단계별 숫자 색이 iOS 위젯에도 그대로 있다', () => {
+  it('마일스톤 숫자 색을 바꾸면 iOS 위젯의 같은 단계 색도 함께 바뀌어야 한다', () => {
     for (const [milestone, ink] of Object.entries(MILESTONE_INKS)) {
       expect(iosWidgetSource).toContain(`${milestone}: '${ink}'`);
     }
   });
 
-  it('주간 스트립 색과 제목 규칙이 iOS 위젯에도 그대로 있다', () => {
+  it('주간 스트립 색이나 제목 규칙을 바꾸면 iOS 위젯도 함께 바뀌어야 한다', () => {
     for (const color of Object.values(WEEK_STRIP_COLORS)) {
       expect(iosWidgetSource).toContain(color);
     }

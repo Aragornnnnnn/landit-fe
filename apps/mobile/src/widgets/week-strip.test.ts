@@ -25,7 +25,7 @@ describe('buildWeekStrip', () => {
     expect(labels).toEqual(['월', '화', '수', '목', '금', '토', '일']);
   });
 
-  it('요일 판정은 기기 시각이 아니라 서울 기준이다 — UTC 자정 직전에도 서울 날짜를 따른다', () => {
+  it('UTC 자정 직전에 만들면 기기 시각이 아니라 서울 날짜로 요일을 붙인다', () => {
     // UTC 2026-08-25 23:00 = 서울 2026-08-26 08:00 (수요일)
     const { labels } = buildWeekStrip({
       weeklyDone: WEEKLY,
@@ -35,7 +35,7 @@ describe('buildWeekStrip', () => {
     expect(labels[6]).toBe('수');
   });
 
-  it('완료 배열은 스냅샷 순서 그대로 돌려준다', () => {
+  it('완료 배열을 주면 순서를 그대로 돌려준다', () => {
     const { done } = buildWeekStrip({
       weeklyDone: WEEKLY,
       now: kst('2026-08-26', '21:00'),

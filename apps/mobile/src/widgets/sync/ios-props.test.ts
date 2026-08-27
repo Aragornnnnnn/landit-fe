@@ -13,7 +13,7 @@ const dataOf = (over = {}) => ({
 const now = new Date('2026-08-27T15:00:00+09:00');
 
 describe('buildTimelineEntries', () => {
-  it('예약 시각마다 그 시각의 상태와 주간 스트립을 함께 싣는다', () => {
+  it('엔트리를 만들면 시각마다 그 시각의 상태와 주간 스트립을 함께 싣는다', () => {
     const [first] = buildTimelineEntries({
       data: dataOf(),
       now,
@@ -30,7 +30,7 @@ describe('buildTimelineEntries', () => {
     expect(first.props.weekLabels).toHaveLength(7);
   });
 
-  it('값이 없는 필드는 키 자체를 빼서 보낸다 — 네이티브 변환이 null을 거부한다', () => {
+  it('값이 null이면 키 자체를 빼서 보낸다 — 네이티브 변환이 null을 거부한다', () => {
     const [first] = buildTimelineEntries({
       data: dataOf({ todayCardTitle: null }),
       now,
@@ -42,7 +42,7 @@ describe('buildTimelineEntries', () => {
     expect(first.props).not.toHaveProperty('milestone');
   });
 
-  it('마일스톤 달성일에는 달성 숫자를 싣는다', () => {
+  it('마일스톤 달성일이면 달성 숫자를 싣는다', () => {
     const [first] = buildTimelineEntries({
       data: dataOf({ streak: 14, lastCompletedDate: '2026-08-27' }),
       now,
@@ -52,7 +52,7 @@ describe('buildTimelineEntries', () => {
     expect(first.props).toMatchObject({ kind: 'milestone', milestone: 14 });
   });
 
-  it('모든 엔트리가 같은 주간 스트립을 공유한다 — 창이 스냅샷 기준이라 시각별로 흔들리지 않는다', () => {
+  it('엔트리를 여러 개 만들어도 주간 스트립은 하나를 공유한다 — 창이 위젯 데이터 기준이라 시각별로 흔들리지 않는다', () => {
     const entries = buildTimelineEntries({ data: dataOf(), now, artDir: null });
 
     for (const entry of entries) {
