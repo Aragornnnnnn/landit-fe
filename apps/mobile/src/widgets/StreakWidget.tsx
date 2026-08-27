@@ -74,7 +74,7 @@ const StreakWidgetView = (
   } as const;
   const layout = LAYOUTS[family];
 
-  // 스냅샷이 아직 없는 상태(설치 직후·로그인 전) — 브랜드 배경에 시작 안내만 그린다
+  // 위젯 데이터가 아직 없는 상태(설치 직후·로그인 전) — 브랜드 배경에 시작 안내만 그린다
   // 주의: 이 함수 안에서는 역슬래시 이스케이프(줄바꿈 등)가 직렬화 때 실제 문자로 풀려 소스가 깨진다
   if (props.kind == null) {
     const guideFont = font({

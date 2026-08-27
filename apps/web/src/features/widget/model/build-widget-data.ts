@@ -1,7 +1,7 @@
-// 위젯 스냅샷 조립 — 스트릭·오늘 카드·주간 달력 응답을 브릿지 WidgetData 하나로 합친다
+// 위젯 데이터 조립 — 스트릭·오늘 카드·주간 달력 응답을 브릿지 WidgetData 하나로 합친다
 import type { WidgetData } from '@landit/bridge';
 
-// 위젯 스냅샷은 세 도메인 응답을 합쳐야 만들어져서 가로 참조가 불가피하다 (타입만 쓴다)
+// 위젯 데이터는 세 도메인 응답을 합쳐야 만들어져서 가로 참조가 불가피하다 (타입만 쓴다)
 import type { ScenarioCalendarResponse } from '@/features/scenario/api/calendar';
 import type { DailyScenarioResponse } from '@/features/scenario/api/daily';
 import type {
@@ -64,7 +64,7 @@ export const buildWidgetData = (
       searchedFrom: earliestSearchedDate(streakCalendars, completedByDate),
       hasHistory,
     }),
-    // 빈 제목은 null로 바꾼다 — 스키마가 빈 문자열을 거부해서, 그대로 두면 스냅샷 전체가 버려진다
+    // 빈 제목은 null로 바꾼다 — 스키마가 빈 문자열을 거부해서, 그대로 두면 위젯 데이터 전체가 버려진다
     todayCardTitle: daily?.scenario?.scenarioTitle?.trim() || null,
     weeklyDone,
   };

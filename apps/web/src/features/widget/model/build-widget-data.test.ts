@@ -1,4 +1,4 @@
-// 위젯 스냅샷 조립 검증 — 마지막 완료일 유도와 최근 7일 창 계산이 핵심 계약이다
+// 위젯 데이터 조립 검증 — 마지막 완료일 유도와 최근 7일 창 계산이 핵심 계약이다
 import { describe, expect, it } from 'vitest';
 
 import type { ScenarioCalendarResponse } from '@/features/scenario/api/calendar';
@@ -122,7 +122,7 @@ describe('buildWidgetData — 주간 완료 창', () => {
     ]);
   });
 
-  it('달력 조회가 실패해도 스냅샷은 만들어진다 — 오늘 칸만 완료 여부를 안다', () => {
+  it('달력 조회가 실패해도 위젯 데이터는 만들어진다 — 오늘 칸만 완료 여부를 안다', () => {
     const data = buildWidgetData(streakOf({ activeToday: true }), null, [
       null,
       null,
@@ -209,7 +209,7 @@ describe('buildWidgetData — 오늘 카드', () => {
     expect(data.lastCompletedDate).toBeNull();
   });
 
-  it('오늘 카드 제목이 비어 있으면 null로 보낸다 — 빈 문자열은 브릿지 스키마가 거부해 스냅샷 전체가 버려진다', () => {
+  it('오늘 카드 제목이 비어 있으면 null로 보낸다 — 빈 문자열은 브릿지 스키마가 거부해 위젯 데이터 전체가 버려진다', () => {
     const data = buildWidgetData(
       { currentStreakDays: 3, activeToday: false, today: '2026-08-25' },
       { scenario: { scenarioTitle: '   ' } } as never,

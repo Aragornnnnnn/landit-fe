@@ -34,7 +34,7 @@ export const notificationPermissionStatusSchema = z.enum([
   'undetermined',
 ]);
 
-// 홈 위젯에 보여줄 스트릭 스냅샷 — 셸이 공유 저장소(App Group/AsyncStorage)에 기록하고 위젯이 읽는다.
+// 홈 위젯에 보여줄 데이터 — 셸이 공유 저장소(App Group/AsyncStorage)에 기록하고 위젯이 읽는다.
 // 날짜는 전부 Asia/Seoul 기준 yyyy-MM-dd. 상태 판정(시간표·몰락 단계)은 위젯 쪽이 현재 시각으로 계산한다
 export const widgetDataSchema = z.object({
   // 현재 스트릭 수 — 배지 숫자. 끊긴 직후(⑨)엔 마지막으로 알던 값이 직전 스트릭 표시로 쓰인다
@@ -92,7 +92,7 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('GET_NOTIFICATION_PERMISSION') }),
   // 알림 권한 능동 요청 — OS 권한창을 띄울 수 있다. 응답은 NOTIFICATION_PERMISSION
   z.object({ type: z.literal('REQUEST_NOTIFICATION_PERMISSION') }),
-  // 홈 위젯용 스트릭 스냅샷을 셸에 동기화한다 — 셸은 저장 후 위젯 새로고침을 요청한다 (단방향)
+  // 홈 위젯 데이터를 셸에 동기화한다 — 셸은 저장 후 위젯 새로고침을 요청한다 (단방향)
   z.object({
     type: z.literal('SYNC_WIDGET_DATA'),
     data: widgetDataSchema,

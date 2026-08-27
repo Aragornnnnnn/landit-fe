@@ -1,4 +1,4 @@
-// 위젯 상태 결정 — 스냅샷과 현재 시각으로 어떤 래디를 보여줄지 정한다. 양 플랫폼(Android JS·iOS Swift)의 공통 정답지
+// 위젯 상태 결정 — 위젯 데이터와 현재 시각으로 어떤 래디를 보여줄지 정한다. 양 플랫폼(Android JS·iOS Swift)의 공통 정답지
 import type { WidgetData } from '@landit/bridge';
 
 // 시안 상태 키 — 피그마 카드 이름(Widget/Small · {kind})과 1:1

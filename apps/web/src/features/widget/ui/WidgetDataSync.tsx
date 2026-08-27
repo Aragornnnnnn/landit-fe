@@ -1,10 +1,10 @@
-// 홈 위젯용 스트릭 스냅샷을 셸로 동기화한다 — 루트 레이아웃에 마운트, WebView 밖에서는 조용히 무시된다
+// 홈 위젯 데이터를 셸로 동기화한다 — 루트 레이아웃에 마운트, WebView 밖에서는 조용히 무시된다
 'use client';
 
 import { useEffect } from 'react';
 import { EMPTY_WIDGET_DATA } from '@landit/bridge';
 
-// 위젯 스냅샷은 스트릭·시나리오 데이터를 합쳐야 만들어져서 가로 참조가 불가피하다
+// 위젯 데이터는 스트릭·시나리오 데이터를 합쳐야 만들어져서 가로 참조가 불가피하다
 import { shiftWindow } from '@/features/scenario/lib/calendar-window';
 import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { useScenarioCalendarQuery } from '@/features/scenario/model/useScenarioCalendarQuery';

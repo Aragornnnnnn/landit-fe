@@ -1,4 +1,4 @@
-// WidgetDataSync — 데이터가 준비된 순간·바뀐 순간에만 위젯 스냅샷을 셸로 보내는 계약 검증
+// WidgetDataSync — 데이터가 준비된 순간·바뀐 순간에만 위젯 데이터를 셸로 보내는 계약 검증
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -64,7 +64,7 @@ const arrange = () => {
 };
 
 describe('WidgetDataSync', () => {
-  it('스트릭 데이터가 준비되면 위젯 스냅샷을 셸로 보낸다', () => {
+  it('스트릭 데이터가 준비되면 위젯 데이터를 셸로 보낸다', () => {
     arrange();
     useStreakQueryMock.mockReturnValue(streakOf());
 
@@ -135,7 +135,7 @@ describe('WidgetDataSync', () => {
     expect(postToNativeMock).toHaveBeenCalledTimes(1);
   });
 
-  it('대화 완료로 데이터가 바뀌면 새 스냅샷을 다시 보낸다', () => {
+  it('대화 완료로 데이터가 바뀌면 위젯 데이터를 다시 보낸다', () => {
     arrange();
     useStreakQueryMock.mockReturnValue(streakOf());
     const { rerender } = render(<WidgetDataSync />);

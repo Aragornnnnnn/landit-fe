@@ -1,4 +1,4 @@
-// 안드로이드 위젯 동기화 — 타임라인 예약이 없으므로 등록된 위젯 3종을 지금 스냅샷으로 즉시 다시 그린다
+// 안드로이드 위젯 동기화 — 타임라인 예약이 없으므로 등록된 위젯 3종을 지금 위젯 데이터로 즉시 다시 그린다
 // (주기 갱신은 app.json의 updatePeriodMillis로 시스템이 맡는다)
 import type { WidgetData } from '@landit/bridge';
 

@@ -18,7 +18,7 @@ export const buildTimelineEntries = ({
   now: Date;
   artDir: string | null;
 }): TimelineEntry[] => {
-  // 주간 스트립의 7일 창은 스냅샷 기준(오늘로 끝남)이라 라벨도 지금 시각으로 한 번만 계산한다
+  // 주간 스트립의 7일 창은 위젯 데이터 기준(오늘로 끝남)이라 라벨도 지금 시각으로 한 번만 계산한다
   const week = buildWeekStrip({ weeklyDone: data.weeklyDone, now });
 
   return buildWidgetTimeline({ data, now }).map(({ date, state }) => ({

@@ -32,8 +32,8 @@ describe('decideWidgetState — 우선순위', () => {
     expect(DONE_POOL).toContain(state.kind);
   });
 
-  it('판정은 todayDone이 아니라 마지막 완료 날짜로 한다 — 낡은 스냅샷도 자정이 지나면 시간표로 돌아온다', () => {
-    // 어제 완료 직후 저장된 스냅샷(todayDone: true)을 오늘 아침에 읽는 상황
+  it('판정은 todayDone이 아니라 마지막 완료 날짜로 한다 — 낡은 위젯 데이터도 자정이 지나면 시간표로 돌아온다', () => {
+    // 어제 완료 직후 저장된 위젯 데이터(todayDone: true)를 오늘 아침에 읽는 상황
     const state = decide(kst('2026-08-25', '09:00'), {
       todayDone: true,
       lastCompletedDate: '2026-08-24',

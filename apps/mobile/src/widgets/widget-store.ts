@@ -2,7 +2,7 @@
 import { widgetDataSchema, type WidgetData } from '@landit/bridge';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const STORAGE_KEY = 'landit.widget.snapshot';
+const STORAGE_KEY = 'landit.widget.data';
 
 export const saveWidgetData = async (data: WidgetData): Promise<void> => {
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
