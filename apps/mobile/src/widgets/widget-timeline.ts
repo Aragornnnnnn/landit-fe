@@ -1,4 +1,4 @@
-// 위젯 타임라인 계획 — 스냅샷과 현재 시각으로 향후 전환 시각마다 보여줄 상태 목록을 만든다
+// 위젯 타임라인 계획 — 위젯 데이터와 현재 시각으로 향후 전환 시각마다 보여줄 상태 목록을 만든다
 import type { WidgetData } from '@landit/bridge';
 
 import { decideWidgetState, type WidgetState } from './widget-state';
@@ -20,8 +20,9 @@ const BOUNDARIES = [
   '23:30',
 ] as const;
 
-// 오늘 포함 3일치만 예약 — 그 뒤는 앱이 다시 열릴 때 갱신된다
-const DAYS_AHEAD = 3;
+// 오늘 포함 31일치를 예약한다 — 마지막 몰락 단계(완료 30일 뒤 소등)까지 닿는 길이다.
+// 앱을 안 열면 예약이 바닥난 자리에 화면이 멈추므로, 안 여는 사람일수록 창이 길어야 한다
+const DAYS_AHEAD = 31;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SEOUL_OFFSET_MS = 9 * 60 * 60 * 1000;
@@ -46,8 +47,18 @@ export const buildWidgetTimeline = ({
   }
   dates.sort((a, b) => a.getTime() - b.getTime());
 
-  return dates.map((date) => ({
-    date,
-    state: decideWidgetState({ data, now: date }),
-  }));
+  return (
+    dates
+      .map((date) => ({ date, state: decideWidgetState({ data, now: date }) }))
+      // 앞 시각과 같은 화면이면 예약하지 않는다 — 몰락 구간은 며칠씩 그대로라 대부분이 중복이다
+      .filter(
+        (plan, index, all) =>
+          index === 0 || !sameState(plan.state, all[index - 1].state),
+      )
+  );
 };
+
+const sameState = (one: WidgetState, other: WidgetState) =>
+  one.kind === other.kind &&
+  one.displayStreak === other.displayStreak &&
+  one.milestone === other.milestone;

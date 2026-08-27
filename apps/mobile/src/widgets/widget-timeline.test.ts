@@ -18,7 +18,7 @@ const dataOf = (
 });
 
 describe('buildWidgetTimeline', () => {
-  it('첫 엔트리는 지금 시각과 지금의 상태다', () => {
+  it('타임라인을 만들면 첫 엔트리가 지금 시각과 지금 상태다', () => {
     const now = kst('2026-08-25', '15:00');
     const [first] = buildWidgetTimeline({ data: dataOf(), now });
 
@@ -26,7 +26,7 @@ describe('buildWidgetTimeline', () => {
     expect(first.state.kind).toBe('nudge');
   });
 
-  it('오늘 남은 시간표 경계들이 순서대로 예약된다', () => {
+  it('낮에 만들면 오늘 남은 시간표 경계를 순서대로 예약한다', () => {
     const plans = buildWidgetTimeline({
       data: dataOf(),
       now: kst('2026-08-25', '15:00'),
@@ -46,7 +46,7 @@ describe('buildWidgetTimeline', () => {
     );
   });
 
-  it('오늘 완료한 상태는 자정 엔트리에서 카드 도착으로 넘어간다', () => {
+  it('오늘 완료한 뒤 만들면 자정 엔트리에서 카드 도착으로 넘어간다', () => {
     const plans = buildWidgetTimeline({
       data: dataOf({ lastCompletedDate: '2026-08-25', todayDone: true }),
       now: kst('2026-08-25', '21:00'),
@@ -59,7 +59,7 @@ describe('buildWidgetTimeline', () => {
     expect(ARRIVED_POOL).toContain(midnight?.state.kind);
   });
 
-  it('지나간 경계는 예약하지 않고 시각은 항상 오름차순이다', () => {
+  it('경계를 지난 시각에 만들면 지나간 경계를 빼고 오름차순으로 준다', () => {
     const now = kst('2026-08-25', '20:10');
     const plans = buildWidgetTimeline({ data: dataOf(), now });
 
@@ -71,15 +71,30 @@ describe('buildWidgetTimeline', () => {
     }
   });
 
-  it('오늘 포함 3일치 경계까지만 예약한다 — 그 뒤는 앱이 다시 열릴 때 갱신한다', () => {
-    const now = kst('2026-08-25', '15:00');
-    const plans = buildWidgetTimeline({ data: dataOf(), now });
+  it('한 번 예약하면 완료 30일 뒤 소등까지 흘러간다 — 앱을 안 열어도 몰락이 진행된다', () => {
+    const plans = buildWidgetTimeline({
+      data: dataOf({ lastCompletedDate: '2026-08-25' }),
+      now: kst('2026-08-25', '21:00'),
+    });
 
-    const last = plans[plans.length - 1];
-    expect(last.date).toEqual(kst('2026-08-27', '23:30'));
+    const gone = plans.find((p) => p.state.kind === 'gone');
+    expect(gone?.date).toEqual(kst('2026-09-24', '00:00'));
   });
 
-  it('내일 아무것도 안 하면 모레 자정 엔트리부터 몰락 상태가 예약된다', () => {
+  it('앞 시각과 같은 화면이면 예약하지 않는다 — 몰락 구간은 며칠씩 그대로다', () => {
+    const plans = buildWidgetTimeline({
+      data: dataOf({ lastCompletedDate: '2026-08-25' }),
+      now: kst('2026-08-25', '21:00'),
+    });
+
+    for (let i = 1; i < plans.length; i += 1) {
+      expect(plans[i].state).not.toEqual(plans[i - 1].state);
+    }
+    // 한 달치를 훑어도 실제 전환은 서른 번 남짓이다
+    expect(plans.length).toBeLessThan(40);
+  });
+
+  it('내일 아무것도 안 하면 모레 자정 엔트리부터 몰락 상태를 예약한다', () => {
     // 오늘(25일) 완료 → 26일을 통째로 거르면 27일 자정부터 끊김
     const plans = buildWidgetTimeline({
       data: dataOf({ lastCompletedDate: '2026-08-25' }),
