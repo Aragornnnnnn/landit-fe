@@ -115,4 +115,36 @@ describe('QuestionCard', () => {
       screen.queryByRole('button', { name: '해석 보기' }),
     ).not.toBeInTheDocument();
   });
+
+  it('발화 중에는 아직 나오지 않은 글자 끝이 아니라 지금 말하는 줄로 스크롤한다', async () => {
+    // Given 카드를 넘치는 긴 발화 — jsdom엔 레이아웃이 없어 카드·커서의 위치를 심어 준다.
+    // 카드 아래끝은 200, 커서는 그보다 80 아래, 안 나온 글자까지 합친 전체 높이는 1000이다
+    const scrollTo = vi.fn();
+    Element.prototype.scrollTo = scrollTo;
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(
+      1000,
+    );
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(200);
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+      function (this: HTMLElement) {
+        const bottom = this.className.includes('animate-pulse') ? 280 : 200;
+        return { top: 0, bottom, height: bottom } as DOMRect;
+      },
+    );
+
+    // When 발화가 시작돼 한 프레임이 흐르면
+    render(
+      <QuestionCard
+        question={'A long opening line. '.repeat(40)}
+        translation="아주 긴 발화"
+        speaking
+      />,
+    );
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    // Then 커서가 카드 안으로 들어오는 만큼만 내려간다 — 스크롤 최대치(800)로 뛰지 않는다
+    const tops = scrollTo.mock.calls.map(([option]) => option.top);
+    expect(Math.max(...tops)).toBeGreaterThanOrEqual(80);
+    expect(Math.max(...tops)).toBeLessThan(800);
+  });
 });
