@@ -89,6 +89,7 @@
     },
     "plugins": [
       "./plugins/withGradleJvmArgs.js",
+      "./plugins/withAndroidxWorkAlignment.js",
       "expo-router",
       "expo-apple-authentication",
       [
@@ -140,6 +141,49 @@
         }
       ],
       "expo-notifications",
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "StreakSmall",
+              "label": "랜딧",
+              "description": "래디와 함께 매일 대화 스트릭을 지켜요",
+              "minWidth": "110dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "previewImage": "./assets/widgets/preview-small.png",
+              "resizeMode": "none",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "StreakMedium",
+              "label": "랜딧",
+              "description": "래디와 함께 매일 대화 스트릭을 지켜요",
+              "minWidth": "250dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "previewImage": "./assets/widgets/preview-medium.png",
+              "resizeMode": "none",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "StreakLarge",
+              "label": "랜딧",
+              "description": "래디와 함께 매일 대화 스트릭과 주간 기록을 지켜요",
+              "minWidth": "250dp",
+              "minHeight": "250dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 4,
+              "previewImage": "./assets/widgets/preview-large.png",
+              "resizeMode": "none",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ],
       [
         "expo-widgets",
         {
