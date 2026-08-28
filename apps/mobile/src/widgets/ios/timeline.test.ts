@@ -1,5 +1,5 @@
 // 위젯 타임라인 계획 검증 — 예약 엔트리의 시각 경계와 상태 전환을 고정한다
-import { buildWidgetTimeline } from './widget-timeline';
+import { buildWidgetTimeline } from './timeline';
 
 const kst = (date: string, time: string) =>
   new Date(`${date}T${time}:00+09:00`);

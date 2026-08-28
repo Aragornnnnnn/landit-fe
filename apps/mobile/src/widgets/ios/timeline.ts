@@ -1,8 +1,8 @@
 // 위젯 타임라인 계획 — 위젯 데이터와 현재 시각으로 향후 전환 시각마다 보여줄 상태 목록을 만든다
 import type { WidgetData } from '@landit/bridge';
 
-import { seoulDate } from './seoul-date';
-import { decideWidgetState, type WidgetState } from './widget-state';
+import { seoulDate } from '../model/seoul-date';
+import { decideWidgetState, type WidgetState } from '../model/widget-state';
 
 export interface WidgetTimelinePlan {
   date: Date;

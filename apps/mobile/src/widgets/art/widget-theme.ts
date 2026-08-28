@@ -1,7 +1,7 @@
 // 위젯 팔레트·레이아웃 수치 — 피그마 카드에서 추출한 값의 단일 출처
 // 주의: iOS 위젯 컴포넌트(StreakWidget)는 직렬화 제약으로 같은 값을 함수 안에 인라인로 갖는다 — 값 변경 시 함께 고칠 것
+import type { WidgetStateKind } from '../model/widget-state';
 import type { WidgetFamily } from './widget-art-key';
-import type { WidgetStateKind } from './widget-state';
 
 // ink는 Small(단색 배경), inkML은 M/L(그라데이션 배경) 카드의 실제 숫자 색
 export const WIDGET_THEMES: Record<

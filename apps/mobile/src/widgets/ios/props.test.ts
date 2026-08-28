@@ -1,5 +1,5 @@
 // 타임라인 엔트리 조립 검증 — 네이티브가 거부하는 null이 새어 나가지 않는지가 핵심 계약
-import { buildTimelineEntries } from './ios-props';
+import { buildTimelineEntries } from './props';
 
 const dataOf = (over = {}) => ({
   streak: 5,

@@ -9,10 +9,8 @@ import {
   TextWidget,
 } from 'react-native-android-widget';
 
-import { buildWeekStrip } from '../week-strip';
-import { WIDGET_ART } from '../widget-art';
-import { artKeyOf, type WidgetFamily } from '../widget-art-key';
-import type { WidgetState } from '../widget-state';
+import { WIDGET_ART } from '../art/widget-art';
+import { artKeyOf, type WidgetFamily } from '../art/widget-art-key';
 import {
   MILESTONE_INKS,
   TITLE_ALPHA_HEX,
@@ -22,7 +20,9 @@ import {
   WEEK_STRIP_COLORS,
   WIDGET_LAYOUTS,
   WIDGET_THEMES,
-} from '../widget-theme';
+} from '../art/widget-theme';
+import { buildWeekStrip } from '../model/week-strip';
+import type { WidgetState } from '../model/widget-state';
 import { ART_RATIO, CARD_RADIUS, fitCard } from './card-box';
 
 interface StreakAndroidWidgetProps {

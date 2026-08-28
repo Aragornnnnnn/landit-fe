@@ -29,8 +29,8 @@ import { getExpoPushToken } from '@/notifications/push-token';
 import { syncReminders } from '@/notifications/reminders';
 import { initializeNotifications } from '@/notifications/setup';
 import { useNotificationDeepLink } from '@/notifications/useNotificationDeepLink';
-import { syncStreakWidget, syncWidgetOnLaunch } from '@/widgets/sync';
-import { saveWidgetData } from '@/widgets/widget-store';
+import { syncStreakWidget, syncWidgetOnLaunch } from '@/widgets';
+import { saveWidgetData } from '@/widgets/model/widget-store';
 
 // 네이티브 스플래시를 웹 첫 페인트까지 붙잡아 둔다 — 자동 숨김을 막고 WebView onLoad에서 수동으로 감춘다
 void SplashScreen.preventAutoHideAsync();

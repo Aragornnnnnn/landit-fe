@@ -2,9 +2,9 @@
 import { Platform } from 'react-native';
 import { EMPTY_WIDGET_DATA, type WidgetData } from '@landit/bridge';
 
-import { loadWidgetData } from '../widget-store';
-import { syncAndroidWidgets } from './android';
-import { syncIosWidget } from './ios';
+import { syncAndroidWidgets } from './android/sync';
+import { syncIosWidget } from './ios/sync';
+import { loadWidgetData } from './model/widget-store';
 
 export const syncStreakWidget = (data: WidgetData): void => {
   if (Platform.OS === 'android') {

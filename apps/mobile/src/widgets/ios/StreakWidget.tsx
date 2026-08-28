@@ -15,7 +15,7 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import { createWidget, type WidgetEnvironment } from 'expo-widgets';
 
-import type { WidgetStateKind } from './widget-state';
+import type { WidgetStateKind } from '../model/widget-state';
 
 export interface StreakWidgetProps {
   // WidgetKit placeholder(설치 직후·로그인 전)는 props 없이 렌더한다 — 모두 없을 수 있다

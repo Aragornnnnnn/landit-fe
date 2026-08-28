@@ -1,9 +1,9 @@
 // iOS 위젯 타임라인 엔트리 조립 — 예약 시각마다 위젯이 받을 props를 만든다
 import type { WidgetData } from '@landit/bridge';
 
-import { buildWeekStrip } from '../week-strip';
-import { freshCardTitle } from '../widget-state';
-import { buildWidgetTimeline } from '../widget-timeline';
+import { buildWeekStrip } from '../model/week-strip';
+import { freshCardTitle } from '../model/widget-state';
+import { buildWidgetTimeline } from './timeline';
 
 export interface TimelineEntry {
   date: Date;

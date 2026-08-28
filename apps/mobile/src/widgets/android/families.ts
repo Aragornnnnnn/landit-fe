@@ -1,5 +1,5 @@
 // 안드로이드 위젯 이름·사이즈 매핑 — app.json의 react-native-android-widget 등록 이름과 1:1
-import type { WidgetFamily } from '../widget-art-key';
+import type { WidgetFamily } from '../art/widget-art-key';
 
 export const ANDROID_WIDGETS = {
   StreakSmall: 'small',

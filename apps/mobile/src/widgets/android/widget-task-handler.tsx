@@ -5,9 +5,9 @@ import type {
   WidgetTaskHandler,
 } from 'react-native-android-widget';
 
-import { buildWeekStrip } from '../week-strip';
-import { decideWidgetState, freshCardTitle } from '../widget-state';
-import { loadWidgetData } from '../widget-store';
+import { buildWeekStrip } from '../model/week-strip';
+import { decideWidgetState, freshCardTitle } from '../model/widget-state';
+import { loadWidgetData } from '../model/widget-store';
 import { familyForWidget } from './families';
 import { StreakAndroidWidget } from './StreakAndroidWidget';
 

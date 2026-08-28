@@ -1,5 +1,5 @@
 // 아트 키·안드로이드 위젯 매핑 검증 — 파일명 규칙과 등록 이름이 어긋나면 위젯이 빈 그림을 그린다
-import { familyForWidget } from './android/families';
+import { familyForWidget } from '../android/families';
 import { artKeyOf } from './widget-art-key';
 
 describe('artKeyOf', () => {

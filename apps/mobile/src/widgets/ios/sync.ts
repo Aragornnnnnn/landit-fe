@@ -1,7 +1,7 @@
 // iOS 위젯 동기화 — 아트를 App Group 공유 디렉터리에 복사하고 타임라인을 새로 예약한다
 import type { WidgetData } from '@landit/bridge';
 
-import { buildTimelineEntries } from './ios-props';
+import { buildTimelineEntries } from './props';
 
 let artDirPromise: Promise<string | null> | null = null;
 
@@ -25,7 +25,7 @@ const copyArtToSharedDirectory = async (): Promise<string | null> => {
     widgetsDirectory: string | null;
   };
   const { WIDGET_ART, WIDGET_ART_VERSION } =
-    require('../widget-art') as typeof import('../widget-art');
+    require('../art/widget-art') as typeof import('../art/widget-art');
   if (widgetsDirectory === null) return null;
 
   const dir = widgetsDirectory.endsWith('/')
@@ -54,7 +54,7 @@ const copyArtToSharedDirectory = async (): Promise<string | null> => {
 export const syncIosWidget = async (data: WidgetData): Promise<void> => {
   try {
     const streakWidget = (
-      require('../StreakWidget') as typeof import('../StreakWidget')
+      require('./StreakWidget') as typeof import('./StreakWidget')
     ).default;
     const artDir = await ensureWidgetArt();
     streakWidget.updateTimeline(

@@ -14,7 +14,7 @@ import {
 } from './widget-theme';
 
 const iosWidgetSource = fs.readFileSync(
-  path.join(__dirname, 'StreakWidget.tsx'),
+  path.join(__dirname, '../ios/StreakWidget.tsx'),
   'utf8',
 );
 

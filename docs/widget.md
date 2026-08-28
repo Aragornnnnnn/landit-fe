@@ -9,12 +9,12 @@
 | `packages/bridge` | `src/messages.ts`                            | `WidgetData` 규격과 `SYNC_WIDGET_DATA` 메시지         |
 | `apps/web`        | `features/widget/model/build-widget-data.ts` | 서버 응답 세 개를 위젯 값 하나로 조립                 |
 | `apps/web`        | `features/widget/ui/WidgetDataSync.tsx`      | 값이 바뀌면 셸로 보낸다 (루트 레이아웃에 상주)        |
-| `apps/mobile`     | `widgets/widget-state.ts`                    | **어떤 그림을 보여줄지 정하는 규칙 (양 플랫폼 공용)** |
-| `apps/mobile`     | `widgets/widget-store.ts`                    | 받은 값을 기기에 저장·복원                            |
-| `apps/mobile`     | `widgets/widget-timeline.ts`                 | iOS용 — 앞으로의 전환 시각 목록을 만든다              |
-| `apps/mobile`     | `widgets/StreakWidget.tsx`                   | iOS 화면                                              |
+| `apps/mobile`     | `widgets/model/widget-state.ts`              | **어떤 그림을 보여줄지 정하는 규칙 (양 플랫폼 공용)** |
+| `apps/mobile`     | `widgets/model/widget-store.ts`              | 받은 값을 기기에 저장·복원                            |
+| `apps/mobile`     | `widgets/ios/timeline.ts`                    | iOS용 — 앞으로의 전환 시각 목록을 만든다              |
+| `apps/mobile`     | `widgets/ios/StreakWidget.tsx`               | iOS 화면                                              |
 | `apps/mobile`     | `widgets/android/StreakAndroidWidget.tsx`    | 안드로이드 화면                                       |
-| `apps/mobile`     | `widgets/sync/{ios,android}.ts`              | 플랫폼별 갱신 방식                                    |
+| `apps/mobile`     | `widgets/{ios,android}/sync.ts`              | 플랫폼별 갱신 방식                                    |
 
 ## 값이 흐르는 길
 
@@ -28,7 +28,12 @@
 
 ```ts
 {
-  (streak, todayDone, lastCompletedDate, todayCardTitle, weeklyDone);
+  (streak,
+    todayDone,
+    lastCompletedDate,
+    todayCardTitle,
+    weeklyDone,
+    capturedOn);
 }
 ```
 

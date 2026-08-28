@@ -7,9 +7,9 @@ export const syncAndroidWidgets = (data: WidgetData): void => {
     const { requestWidgetUpdate } =
       require('react-native-android-widget') as typeof import('react-native-android-widget');
     const { renderStreakWidget } =
-      require('../android/widget-task-handler') as typeof import('../android/widget-task-handler');
+      require('./widget-task-handler') as typeof import('./widget-task-handler');
     const { ANDROID_WIDGET_NAMES } =
-      require('../android/families') as typeof import('../android/families');
+      require('./families') as typeof import('./families');
 
     for (const widgetName of ANDROID_WIDGET_NAMES) {
       requestWidgetUpdate({
