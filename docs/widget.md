@@ -27,14 +27,14 @@
 넘기는 값은 여섯 가지뿐이다.
 
 ```ts
-{
-  (streak,
-    todayDone,
-    lastCompletedDate,
-    todayCardTitle,
-    weeklyDone,
-    capturedOn);
-}
+const widgetData = {
+  streak: 5, // 현재 스트릭
+  todayDone: false, // 오늘 완료했나
+  lastCompletedDate: '2026-08-27', // 마지막으로 완료한 날
+  todayCardTitle: '카페에서 주문하기', // 오늘 카드 제목 (없으면 null)
+  weeklyDone: [true, true, false, true, true, true, false], // 최근 7일 완료 여부
+  capturedOn: '2026-08-28', // 이 값들의 기준 날짜 — 서버가 준 오늘
+};
 ```
 
 **"지금 어떤 그림"은 값에 담지 않는다.** 앱이 꺼져 있어도 시간이 지나면 화면이 바뀌어야 하므로, 판단은 위젯 쪽이 현재 시각으로 직접 한다.
