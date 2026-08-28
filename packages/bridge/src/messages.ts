@@ -108,6 +108,8 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
     type: z.literal('SYNC_WIDGET_DATA'),
     data: widgetDataSchema,
   }),
+  // 홈 위젯 설치 다이얼로그를 요청한다 — Android만 시스템 핀 요청을 띄운다 (iOS는 그런 API가 없어 무시)
+  z.object({ type: z.literal('REQUEST_WIDGET_PIN') }),
 ]);
 
 // 네이티브 → 웹으로 보낼 수 있는 메시지 목록

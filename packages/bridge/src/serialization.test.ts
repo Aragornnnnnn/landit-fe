@@ -179,6 +179,14 @@ describe('parseWebToNativeMessage', () => {
 });
 
 describe('parseWebToNativeMessage — 위젯', () => {
+  it('위젯 핀 요청을 그대로 되돌린다 (round-trip)', () => {
+    const message = { type: 'REQUEST_WIDGET_PIN' } as const;
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
   it('위젯 데이터 동기화 요청을 그대로 되돌린다 (round-trip)', () => {
     const message: WebToNativeMessage = {
       type: 'SYNC_WIDGET_DATA',
