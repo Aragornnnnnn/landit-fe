@@ -3,7 +3,6 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
-import { useScenarioCalendarQuery } from '@/features/scenario/model/useScenarioCalendarQuery';
 import { useStreakCalendarQuery } from '@/features/streak/model/useStreakCalendarQuery';
 import { useStreakQuery } from '@/features/streak/model/useStreakQuery';
 import { useAuthStore } from '@/shared/auth/auth-store';
@@ -21,9 +20,6 @@ const useStreakQueryMock = vi.mocked(useStreakQuery);
 
 vi.mock('@/features/scenario/model/useDailyScenarioQuery');
 const useDailyScenarioQueryMock = vi.mocked(useDailyScenarioQuery);
-
-vi.mock('@/features/scenario/model/useScenarioCalendarQuery');
-const useScenarioCalendarQueryMock = vi.mocked(useScenarioCalendarQuery);
 
 vi.mock('@/features/streak/model/useStreakCalendarQuery');
 const useStreakCalendarQueryMock = vi.mocked(useStreakCalendarQuery);
@@ -48,6 +44,18 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+const calendarOf = (activeDates: string[] = ['2026-08-24']) => ({
+  year: 2026,
+  month: 8,
+  currentStreakDays: 5,
+  activeToday: false,
+  today: '2026-08-25',
+  firstActiveDate: activeDates[0] ?? null,
+  longestStreakDays: 5,
+  totalActiveDays: activeDates.length,
+  activeDates,
+});
+
 const arrange = () => {
   useDailyScenarioQueryMock.mockReturnValue({
     daily: null,
@@ -55,9 +63,8 @@ const arrange = () => {
     isLoading: false,
     retry: () => {},
   });
-  useScenarioCalendarQueryMock.mockReturnValue({ calendar: null });
   useStreakCalendarQueryMock.mockReturnValue({
-    calendar: null,
+    calendar: calendarOf(),
     isError: false,
   });
   setLoggedIn(true);
