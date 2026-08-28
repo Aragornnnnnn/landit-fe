@@ -97,6 +97,14 @@ describe('buildWidgetData — 마지막 완료일', () => {
   });
 });
 
+describe('buildWidgetData — 기준 날짜', () => {
+  it('서버가 준 오늘을 기준 날짜로 싣는다 — 위젯이 날짜에 묶인 표시를 판정하는 근거다', () => {
+    const data = buildWidgetData(streakOf(), null, []);
+
+    expect(data.capturedOn).toBe('2026-08-25');
+  });
+});
+
 describe('buildWidgetData — 주간 완료 창', () => {
   it('오늘이 마지막 칸인 최근 7일을 두 주 창에서 합쳐 만든다', () => {
     // 최근 7일: 08-19 ~ 08-25. 지난주 창(19·20)과 이번 주 창(24·25)에 흩어져 있다

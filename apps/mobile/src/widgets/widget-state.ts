@@ -1,6 +1,9 @@
 // 위젯 상태 결정 — 위젯 데이터와 현재 시각으로 어떤 래디를 보여줄지 정한다. 양 플랫폼(Android JS·iOS Swift)의 공통 정답지
 import type { WidgetData } from '@landit/bridge';
 
+// 기기 타임존과 무관하게 서울 기준으로 판정한다
+import { seoulClock } from './seoul-date';
+
 // 시안 상태 키 — 피그마 카드 이름(Widget/Small · {kind})과 1:1
 export type WidgetStateKind =
   | 'welcome' // ⓪ 시작 전 — 로그인 전이거나 아직 받은 카드가 없다
@@ -38,23 +41,16 @@ export const MILESTONES = [7, 14, 20, 30] as const;
 const DONE_POOL: WidgetStateKind[] = ['done', 'love', 'scored'];
 const ARRIVED_POOL: WidgetStateKind[] = ['arrived', 'carpet'];
 
-const SEOUL_OFFSET_MS = 9 * 60 * 60 * 1000;
-
-// 기기 타임존과 무관하게 서울 기준 날짜·시각으로 판정한다
-const seoulClock = (now: Date) => {
-  const seoulTime = new Date(now.getTime() + SEOUL_OFFSET_MS);
-  return {
-    date: seoulTime.toISOString().slice(0, 10),
-    hour: seoulTime.getUTCHours(),
-    minute: seoulTime.getUTCMinutes(),
-  };
-};
-
 const daysBetween = (from: string, to: string) =>
   Math.round(
     (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) /
       (24 * 60 * 60 * 1000),
   );
+
+// 카드 제목은 기준일(capturedOn)과 같은 날만 믿는다 — 날이 바뀌면 서버가 새 카드를 배정했는데
+// 그 제목을 모르므로 버린다. 다른 값들과 달리 제목만은 날짜 계산으로 되살릴 수 없다
+export const freshCardTitle = (data: WidgetData, now: Date): string | null =>
+  data.capturedOn === seoulClock(now).date ? data.todayCardTitle : null;
 
 export const decideWidgetState = ({
   data,

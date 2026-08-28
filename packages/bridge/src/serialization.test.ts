@@ -188,6 +188,7 @@ describe('parseWebToNativeMessage — 위젯', () => {
         lastCompletedDate: '2026-08-24',
         todayCardTitle: '룸메이트와 첫인사',
         weeklyDone: [true, true, false, true, true, true, false],
+        capturedOn: '2026-08-25',
       },
     };
 
@@ -205,6 +206,7 @@ describe('parseWebToNativeMessage — 위젯', () => {
         lastCompletedDate: null,
         todayCardTitle: null,
         weeklyDone: [false, false, false, false, false, false, false],
+        capturedOn: null,
       },
     };
 

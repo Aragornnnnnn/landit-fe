@@ -67,6 +67,8 @@ export const buildWidgetData = (
     // 빈 제목은 null로 바꾼다 — 스키마가 빈 문자열을 거부해서, 그대로 두면 위젯 데이터 전체가 버려진다
     todayCardTitle: daily?.scenario?.scenarioTitle?.trim() || null,
     weeklyDone,
+    // 이 값들의 기준 날짜 — 서버가 준 오늘. 위젯이 날짜에 묶인 표시(제목·주간 라벨)를 판정할 근거다
+    capturedOn: today,
   };
 };
 

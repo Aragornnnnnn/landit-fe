@@ -55,6 +55,12 @@ export const widgetDataSchema = z.object({
   todayCardTitle: z.string().min(1).nullable(),
   // 오늘 포함 최근 7일 완료 여부 (과거→오늘 순) — Large 주간 스트립
   weeklyDone: z.array(z.boolean()).length(7),
+  // 이 값들이 며칠 기준인지 — 서버가 준 오늘(/me/streak의 today). 로그인 전 빈 값이면 null.
+  // 위젯은 이 날짜가 지금의 오늘과 다르면 날짜에 묶인 표시(카드 제목·주간 라벨)를 그날 기준으로 되돌린다
+  capturedOn: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable(),
 });
 
 // 로그인 전·로그아웃 후에 쓰는 빈 값 — 웹이 이걸 보내 셸에 남은 이전 사용자 기록을 지운다.
@@ -65,6 +71,7 @@ export const EMPTY_WIDGET_DATA = {
   lastCompletedDate: null,
   todayCardTitle: null,
   weeklyDone: [false, false, false, false, false, false, false],
+  capturedOn: null,
 } as const satisfies z.infer<typeof widgetDataSchema>;
 
 // 웹 → 네이티브로 보낼 수 있는 메시지 목록. type 필드로 종류를 구분한다(discriminated union)
