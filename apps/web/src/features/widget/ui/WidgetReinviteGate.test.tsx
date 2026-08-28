@@ -2,15 +2,13 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { hasSeenConsentPrompt } from '@/features/notification/model/consent-prompt';
+import { isConsentPromptDue } from '@/features/notification/model/consent-prompt';
 import { useNotificationPermission } from '@/features/notification/model/useNotificationPermission';
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { postToNative } from '@/shared/bridge/web-bridge';
 
 import {
   markTalkCompletedForWidget,
-  recordInstallDeferred,
-  recordInstallInvited,
   shouldReinvite,
 } from '../model/install-prompt';
 import { WidgetReinviteGate } from './WidgetReinviteGate';
@@ -32,7 +30,7 @@ vi.mock('@/shared/bridge/web-bridge', () => ({ postToNative: vi.fn() }));
 const postToNativeMock = vi.mocked(postToNative);
 
 vi.mock('@/features/notification/model/consent-prompt');
-const hasSeenConsentPromptMock = vi.mocked(hasSeenConsentPrompt);
+const isConsentPromptDueMock = vi.mocked(isConsentPromptDue);
 
 vi.mock('@/features/notification/model/useNotificationPermission');
 const useNotificationPermissionMock = vi.mocked(useNotificationPermission);
@@ -44,13 +42,11 @@ const contextOf = (platform: 'ios' | 'android') => ({
   bridgeVersion: 2,
 });
 
-// 미뤘고 오늘 대화를 막 마친, 재유도를 물을 차례인 상태
+// 재유도를 물을 차례인 상태 — 오늘 대화를 막 마쳤고, 권한 회신이 왔고, 동의 차례가 아니다
 const arrangeDue = (platform: 'ios' | 'android' = 'ios') => {
   getNativeContextMock.mockReturnValue(contextOf(platform));
-  hasSeenConsentPromptMock.mockReturnValue(true);
-  useNotificationPermissionMock.mockReturnValue('undetermined');
-  recordInstallInvited();
-  recordInstallDeferred();
+  isConsentPromptDueMock.mockReturnValue(false);
+  useNotificationPermissionMock.mockReturnValue('granted');
   markTalkCompletedForWidget();
 };
 
@@ -62,7 +58,7 @@ afterEach(() => {
 });
 
 describe('WidgetReinviteGate', () => {
-  it('미룬 사람이 대화를 막 마쳤으면 시트를 띄우고 차례를 소비한다', () => {
+  it('대화를 막 마친 사람에게 시트를 띄우고 차례를 소비한다', () => {
     arrangeDue();
 
     render(<WidgetReinviteGate />);
@@ -83,11 +79,37 @@ describe('WidgetReinviteGate', () => {
     expect(screen.queryByText('오늘 열매, 홈에서도 보고 싶다면')).toBeNull();
   });
 
-  it('알림 동의가 뜰 차례면 미룬다 — 차례를 소비하지 않아 다음 대화 뒤에 다시 온다', () => {
+  it('권한 회신이 오기 전에는 띄우지도, 차례를 소비하지도 않는다 — 초기값으로 섣불리 판정하지 않는다', () => {
     arrangeDue();
-    hasSeenConsentPromptMock.mockReturnValue(false);
+    useNotificationPermissionMock.mockReturnValue('unavailable');
 
     render(<WidgetReinviteGate />);
+
+    expect(screen.queryByText('오늘 열매, 홈에서도 보고 싶다면')).toBeNull();
+    expect(shouldReinvite()).toBe(true);
+  });
+
+  it('알림 동의가 뜰 차례면 미룬다 — 차례를 소비하지 않아 다음 대화 뒤에 다시 온다', () => {
+    arrangeDue();
+    useNotificationPermissionMock.mockReturnValue('undetermined');
+    isConsentPromptDueMock.mockReturnValue(true);
+
+    render(<WidgetReinviteGate />);
+
+    expect(screen.queryByText('오늘 열매, 홈에서도 보고 싶다면')).toBeNull();
+    expect(shouldReinvite()).toBe(true);
+  });
+
+  it('미룬 판정은 고정된다 — 동의에 답해 권한이 바뀌어도 같은 방문에서 뒤늦게 뜨지 않는다', () => {
+    arrangeDue();
+    useNotificationPermissionMock.mockReturnValue('undetermined');
+    isConsentPromptDueMock.mockReturnValue(true);
+    const { rerender } = render(<WidgetReinviteGate />);
+
+    // 동의 시트에 답해 권한이 확정되고 동의 차례도 끝난 상황
+    useNotificationPermissionMock.mockReturnValue('granted');
+    isConsentPromptDueMock.mockReturnValue(false);
+    rerender(<WidgetReinviteGate />);
 
     expect(screen.queryByText('오늘 열매, 홈에서도 보고 싶다면')).toBeNull();
     expect(shouldReinvite()).toBe(true);

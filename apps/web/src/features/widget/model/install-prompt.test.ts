@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
   markTalkCompletedForWidget,
-  recordInstallDeferred,
+  recordInstallAccepted,
   recordInstallInvited,
   recordReinviteAnswer,
   shouldInviteInstall,
@@ -65,27 +65,30 @@ describe('shouldInviteInstall — 온보딩 끝 설치 유도는 한 번만', ()
   });
 });
 
-describe('shouldReinvite — 재유도 시트는 미룬 사람에게 대화 직후 한 번만', () => {
-  const defer = () => {
-    recordInstallInvited();
-    recordInstallDeferred();
-  };
-
-  it('나중에 하기를 누른 적 없으면 묻지 않는다', () => {
-    markTalkCompletedForWidget();
-
-    expect(shouldReinvite()).toBe(false);
-  });
-
-  it('미뤘고 오늘 대화를 마쳤으면 묻는다', () => {
-    defer();
+describe('shouldReinvite — 재유도 시트는 설치로 답한 적 없는 사람에게 대화 직후 한 번만', () => {
+  it('아무 기록 없는 기존 유저도 대화를 막 마쳤으면 묻는다 — 온보딩을 다시 볼 일이 없어서다', () => {
     markTalkCompletedForWidget();
 
     expect(shouldReinvite()).toBe(true);
   });
 
-  it('미뤘어도 대화를 막 마친 게 아니면 묻지 않는다 — 홈에 그냥 들어온 사람을 붙잡지 않는다', () => {
-    defer();
+  it('설치 유도를 미룬 사람도 대화를 마쳤으면 묻는다', () => {
+    recordInstallInvited();
+    markTalkCompletedForWidget();
+
+    expect(shouldReinvite()).toBe(true);
+  });
+
+  it('설치 유도에서 위젯 추가하기를 누른 사람에게는 묻지 않는다 — 설치 길은 이미 안내했다', () => {
+    recordInstallInvited();
+    recordInstallAccepted();
+    markTalkCompletedForWidget();
+
+    expect(shouldReinvite()).toBe(false);
+  });
+
+  it('대화를 막 마친 게 아니면 묻지 않는다 — 홈에 그냥 들어온 사람을 붙잡지 않는다', () => {
+    recordInstallInvited();
 
     expect(shouldReinvite()).toBe(false);
   });
@@ -93,7 +96,6 @@ describe('shouldReinvite — 재유도 시트는 미룬 사람에게 대화 직�
   it.each([['install'], ['dismiss']] as const)(
     '재유도에 한 번 답했으면(%s) 다음 대화를 마쳐도 다시 묻지 않는다',
     (answer) => {
-      defer();
       markTalkCompletedForWidget();
       recordReinviteAnswer(answer);
 

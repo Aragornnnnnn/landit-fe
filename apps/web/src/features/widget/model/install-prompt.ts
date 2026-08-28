@@ -24,11 +24,11 @@ export const supportsWidgetInstall = (
   return true;
 };
 
-interface InstallRecord extends Record<string, unknown> {
-  // 온보딩 끝 설치 유도를 보여줬다 — 한 번만
+interface InstallRecord {
+  // 온보딩 끝 설치 유도를 보여줬다 — 화면 노출은 한 번만
   invited?: boolean;
-  // 나중에 하기를 눌렀다 — 재유도 자격이 생긴다
-  deferred?: boolean;
+  // 설치 유도에서 위젯 추가하기를 눌렀다 — 설치 길로 들어간 사람에겐 다시 청하지 않는다
+  inviteAccepted?: boolean;
   // 대화를 마치고 아직 홈에서 재유도를 안 봤다 — 시트를 띄우는 순간 소비한다
   pending?: boolean;
   // 그 대화를 마친 날(기기 기준) — 오늘 마친 차례만 친다
@@ -43,25 +43,31 @@ const read = () => readPromptEntry<InstallRecord>(KEY);
 const update = (patch: Partial<InstallRecord>) =>
   updatePromptEntry<InstallRecord>(KEY, patch);
 
+// 재유도해볼 만한 사람인가 — 설치 길로 들어갔거나 재유도에 이미 답한 사람만 제외한다.
+// 미룬 신규 유저뿐 아니라, 유도 화면을 본 적 없는 기존 유저와 안내 도중 이탈한 사람도 포함된다
+const isReinviteCandidate = (record: InstallRecord | undefined) =>
+  record?.inviteAccepted !== true && record?.reinviteAnswer === undefined;
+
 // 온보딩 끝 설치 유도 — 보여준 적 없을 때만
 export const shouldInviteInstall = () => read()?.invited !== true;
 
 export const recordInstallInvited = () => update({ invited: true });
 
-export const recordInstallDeferred = () => update({ deferred: true });
+export const recordInstallAccepted = () => update({ inviteAccepted: true });
 
-// 대화를 마쳤다 — 홈에 돌아오면 재유도를 물을 차례라고 남긴다
-export const markTalkCompletedForWidget = () =>
+// 대화를 마쳤다 — 재유도해볼 만한 사람에게만 차례를 남긴다 (아닌 사람에겐 쓰기 자체를 생략)
+export const markTalkCompletedForWidget = () => {
+  if (!isReinviteCandidate(read())) return;
   update({ pending: true, pendingOn: deviceToday() });
+};
 
-// 재유도 시트 — 미룬 사람이 오늘 대화를 막 마쳤고 아직 답한 적 없을 때 한 번
+// 재유도 시트 — 재유도해볼 만한 사람이 오늘 대화를 막 마쳤을 때
 export const shouldReinvite = () => {
   const record = read();
   return (
-    record?.deferred === true &&
-    record.pending === true &&
-    record.pendingOn === deviceToday() &&
-    record.reinviteAnswer === undefined
+    isReinviteCandidate(record) &&
+    record?.pending === true &&
+    record.pendingOn === deviceToday()
   );
 };
 
