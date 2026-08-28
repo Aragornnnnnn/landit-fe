@@ -226,6 +226,7 @@ describe('parseWebToNativeMessage — 위젯', () => {
             lastCompletedDate: '2026-08-24',
             todayCardTitle: '룸메이트와 첫인사',
             weeklyDone: [true, false],
+            capturedOn: '2026-08-25',
           },
         }),
       ),
@@ -238,6 +239,7 @@ describe('parseWebToNativeMessage — 위젯', () => {
       lastCompletedDate: '2026-08-24',
       todayCardTitle: '룸메이트와 첫인사',
       weeklyDone: [true, true, false, true, true, true, false],
+      capturedOn: '2026-08-25',
     };
 
     for (const streak of [-1, 1.5]) {
@@ -263,6 +265,7 @@ describe('parseWebToNativeMessage — 위젯', () => {
             lastCompletedDate: '2026-08-24T00:00:00+09:00',
             todayCardTitle: null,
             weeklyDone: [true, true, false, true, true, true, false],
+            capturedOn: '2026-08-25',
           },
         }),
       ),
@@ -278,6 +281,42 @@ describe('parseWebToNativeMessage — 위젯', () => {
             streak: 5,
             todayDone: false,
             lastCompletedDate: '2026-02-31',
+            todayCardTitle: null,
+            weeklyDone: [true, true, false, true, true, true, false],
+            capturedOn: '2026-08-25',
+          },
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it('기준 날짜가 달력에 없는 날이면 버린다 — 주간 창 경과 계산이 어긋난다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({
+          type: 'SYNC_WIDGET_DATA',
+          data: {
+            streak: 5,
+            todayDone: false,
+            lastCompletedDate: '2026-08-24',
+            todayCardTitle: null,
+            weeklyDone: [true, true, false, true, true, true, false],
+            capturedOn: '2026-02-31',
+          },
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it('기준 날짜가 아예 없으면(구 페이로드) 버린다 — 낡음 판정이 불가능하다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({
+          type: 'SYNC_WIDGET_DATA',
+          data: {
+            streak: 5,
+            todayDone: false,
+            lastCompletedDate: '2026-08-24',
             todayCardTitle: null,
             weeklyDone: [true, true, false, true, true, true, false],
           },

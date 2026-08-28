@@ -60,6 +60,10 @@ export const widgetDataSchema = z.object({
   capturedOn: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine(
+      (value) => new Date(`${value}T00:00:00Z`).toISOString().startsWith(value),
+      { message: '달력에 없는 날짜예요' },
+    )
     .nullable(),
 });
 
