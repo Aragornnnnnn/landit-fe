@@ -145,10 +145,9 @@ const StreakWidgetView = (
     'risk',
     'melted',
   ];
-  const showTitle =
-    family === 'medium' &&
-    props.todayCardTitle != null &&
-    TITLE_KINDS.includes(props.kind);
+  // 제목을 몰라도 자리는 채운다 — 기준일이 지나 빠졌거나 오늘 카드가 없을 때다
+  const TITLE_FALLBACK = '래디가 기다리고 있어요';
+  const showTitle = family === 'medium' && TITLE_KINDS.includes(props.kind);
 
   return (
     <ZStack
@@ -199,7 +198,7 @@ const StreakWidgetView = (
               padding({ top: 112, leading: 24 }),
             ]}
           >
-            {props.todayCardTitle}
+            {props.todayCardTitle ?? TITLE_FALLBACK}
           </Text>
         ) : null}
       </ZStack>

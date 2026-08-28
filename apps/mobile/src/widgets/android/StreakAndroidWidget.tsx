@@ -16,6 +16,7 @@ import type { WidgetState } from '../widget-state';
 import {
   MILESTONE_INKS,
   TITLE_ALPHA_HEX,
+  TITLE_FALLBACK,
   TITLE_FONT_SIZE,
   TITLE_KINDS,
   WEEK_STRIP_COLORS,
@@ -31,7 +32,7 @@ interface StreakAndroidWidgetProps {
   // 위젯 실제 크기(dp) — 아트를 꽉 채우는 데 쓴다
   width: number;
   height: number;
-  todayCardTitle?: string;
+  todayCardTitle?: string | null;
 }
 
 export const StreakAndroidWidget = ({
@@ -66,11 +67,9 @@ export const StreakAndroidWidget = ({
   const showNumber = state.kind !== 'milestone' || family === 'small';
   // 시작 전 카드에는 주간 스트립 자리가 없다 — 쌓은 기록이 아직 없다
   const showWeekStrip = family === 'large' && state.kind !== 'welcome';
-  // 오늘 카드 제목 — Medium 시간표 카드에만 제목 자리(24,112)가 있다
-  const showTitle =
-    family === 'medium' &&
-    todayCardTitle != null &&
-    TITLE_KINDS.includes(state.kind);
+  // 오늘 카드 제목 — Medium 시간표 카드에만 제목 자리(24,112)가 있다.
+  // 제목을 몰라도 자리는 채운다(TITLE_FALLBACK) — 비워 두면 카드가 허전하다
+  const showTitle = family === 'medium' && TITLE_KINDS.includes(state.kind);
 
   return (
     // 카드 밖은 비워 둔다 — 칸을 꽉 채우면 아트가 잘리고 옆 위젯들보다 길쭉해 보인다
@@ -134,7 +133,7 @@ export const StreakAndroidWidget = ({
         ) : null}
         {showTitle ? (
           <TextWidget
-            text={todayCardTitle}
+            text={todayCardTitle ?? TITLE_FALLBACK}
             maxLines={1}
             truncate="END"
             style={{
