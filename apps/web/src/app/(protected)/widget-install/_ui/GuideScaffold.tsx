@@ -50,3 +50,39 @@ export const PhoneMockup = ({ children }: { children: React.ReactNode }) => (
     {children}
   </div>
 );
+
+// 홈 화면 목업의 앱 자리들 — 화면마다 좌표만 다르고 생김새는 같다 (편집 모드만 살짝 밝다)
+export const AppSlots = ({
+  slots,
+  className = 'rounded-[14px] bg-white/55',
+}: {
+  slots: ReadonlyArray<readonly [number, number]>;
+  className?: string;
+}) =>
+  slots.map(([left, top]) => (
+    <div
+      key={`${left}-${top}`}
+      className={`absolute size-[52px] ${className}`}
+      style={{ left, top }}
+    />
+  ));
+
+// iOS 편집 모드의 좌우 캡슐 버튼
+export const Capsule = ({
+  left,
+  highlight = false,
+  children,
+}: {
+  left: number;
+  highlight?: boolean;
+  children: React.ReactNode;
+}) => (
+  <span
+    className={`absolute top-[16px] rounded-[20px] border border-[#c9d4e2] px-4 py-1.5 text-[12px] font-bold whitespace-nowrap text-[#3c4654] ${
+      highlight ? 'bg-white' : 'bg-white/90'
+    }`}
+    style={{ left }}
+  >
+    {children}
+  </span>
+);

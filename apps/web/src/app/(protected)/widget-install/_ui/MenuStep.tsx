@@ -3,8 +3,7 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 
-import { GuideScaffold, PhoneMockup } from './GuideScaffold';
-import { Capsule } from './PressStep';
+import { AppSlots, Capsule, GuideScaffold, PhoneMockup } from './GuideScaffold';
 
 const APP_SLOTS = [
   [186, 108],
@@ -34,13 +33,7 @@ export const MenuStep = ({ onNext }: { onNext: () => void }) => {
       onCta={onNext}
     >
       <PhoneMockup>
-        {APP_SLOTS.map(([left, top]) => (
-          <div
-            key={`${left}-${top}`}
-            className="absolute size-[52px] rounded-[14px] bg-white/55"
-            style={{ left, top }}
-          />
-        ))}
+        <AppSlots slots={APP_SLOTS} />
 
         {/* 편집 캡슐이 0.96으로 눌렸다 돌아온다 */}
         <motion.div

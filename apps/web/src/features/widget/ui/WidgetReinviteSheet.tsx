@@ -8,6 +8,9 @@ import { Button } from '@/shared/ui/Button';
 
 import { WidgetPreviewMedium, WidgetPreviewSmall } from './WidgetPreviewCard';
 
+// 공용 BottomSheet 스프링(damping 28·stiffness 300)이 잦아드는 근사 시간 — 스프링을 바꾸면 같이 조정해야 한다
+const SHEET_SETTLE_S = 0.28;
+
 // 위젯 두 장은 시트가 멈춘 뒤 60ms 간격으로 나타난다
 const previewFade = (order: number, reduced: boolean) =>
   reduced
@@ -15,7 +18,7 @@ const previewFade = (order: number, reduced: boolean) =>
     : {
         initial: { opacity: 0 },
         animate: { opacity: 1 },
-        transition: { duration: 0.2, delay: 0.28 + order * 0.06 },
+        transition: { duration: 0.2, delay: SHEET_SETTLE_S + order * 0.06 },
       };
 
 export const WidgetReinviteSheet = ({

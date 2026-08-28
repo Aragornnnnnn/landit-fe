@@ -19,11 +19,10 @@ const readAll = (): PromptRecords => {
   }
 };
 
-export const readPromptEntry = <T extends Record<string, unknown>>(
-  key: string,
-): T | undefined => readAll()[key] as T | undefined;
+export const readPromptEntry = <T extends object>(key: string): T | undefined =>
+  readAll()[key] as T | undefined;
 
-export const updatePromptEntry = <T extends Record<string, unknown>>(
+export const updatePromptEntry = <T extends object>(
   key: string,
   patch: Partial<T>,
 ) => {

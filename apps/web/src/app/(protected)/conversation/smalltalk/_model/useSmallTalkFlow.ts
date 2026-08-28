@@ -9,6 +9,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import type { Partner } from '@/features/conversation/model/character-look';
 import { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
+// 첫 완료 뒤 스몰톡 탭에서 소감을 묻는다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { markTalkCompleted } from '@/features/satisfaction/model/prompt-record';
 import {
   decideSmallTalkExit,
@@ -19,7 +20,7 @@ import {
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
 import { findPartner } from '@/features/small-talk/model/partner';
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
-// 첫 완료 뒤 스몰톡 탭에서 소감을 묻는다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
+// 대화 직후 위젯 재유도를 물을 차례를 남긴다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { markTalkCompletedForWidget } from '@/features/widget/model/install-prompt';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';

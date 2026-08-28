@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from 'motion/react';
 
 import { WidgetPreviewSmall } from '@/features/widget/ui/WidgetPreviewCard';
 
-import { GuideScaffold, PhoneMockup } from './GuideScaffold';
+import { AppSlots, GuideScaffold, PhoneMockup } from './GuideScaffold';
 
 // 홈 화면 앱 자리들 — [left, top]. 위젯 카드가 들어갈 왼쪽 위는 비워져 있다
 const APP_SLOTS = [
@@ -40,13 +40,7 @@ export const InviteStep = ({
       onLater={onLater}
     >
       <PhoneMockup>
-        {APP_SLOTS.map(([left, top]) => (
-          <div
-            key={`${left}-${top}`}
-            className="absolute size-[52px] rounded-[14px] bg-white/55"
-            style={{ left, top }}
-          />
-        ))}
+        <AppSlots slots={APP_SLOTS} />
         {/* 위젯 카드가 아래에서 8px 떠오르며 페이드인 — 홈에 "새로 놓이는" 감각 */}
         <motion.div
           className="absolute top-[30px] left-[24px]"

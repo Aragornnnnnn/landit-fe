@@ -194,6 +194,7 @@ export default function SmallTalkPage() {
       {/* 스몰톡을 마치고 돌아온 사람에게 한 번 — 안내·코치마크는 첫 진입 때 이미 끝난 뒤라 겹치지 않는다 */}
       {satisfaction.sheet === 'talk' && <SatisfactionGate moment="smalltalk" />}
       {satisfaction.sheet === 'review' && <SatisfactionGate moment="review" />}
+      {/* 소감이 안 뜰 때만 — 위젯 재유도는 소감 다음 순번이다 */}
       {satisfaction.settled && satisfaction.sheet === null && (
         <WidgetReinviteGate />
       )}

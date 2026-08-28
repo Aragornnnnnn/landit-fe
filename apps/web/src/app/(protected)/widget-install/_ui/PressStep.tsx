@@ -3,7 +3,7 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 
-import { GuideScaffold, PhoneMockup } from './GuideScaffold';
+import { Capsule, GuideScaffold, PhoneMockup } from './GuideScaffold';
 
 // 3×3 앱 자리 — [left, top]. 가운데 자리는 눌린 연출을 위해 따로 그린다
 const APP_SLOTS = [
@@ -105,23 +105,3 @@ export const PressStep = ({ onNext }: { onNext: () => void }) => {
     </GuideScaffold>
   );
 };
-
-// iOS 편집 모드의 좌우 캡슐 버튼
-export const Capsule = ({
-  left,
-  highlight = false,
-  children,
-}: {
-  left: number;
-  highlight?: boolean;
-  children: React.ReactNode;
-}) => (
-  <span
-    className={`absolute top-[16px] rounded-[20px] border border-[#c9d4e2] px-4 py-1.5 text-[12px] font-bold whitespace-nowrap text-[#3c4654] ${
-      highlight ? 'bg-white' : 'bg-white/90'
-    }`}
-    style={{ left }}
-  >
-    {children}
-  </span>
-);

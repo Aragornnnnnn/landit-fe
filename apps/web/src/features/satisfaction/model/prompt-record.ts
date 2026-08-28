@@ -14,7 +14,7 @@ import {
 // 기록은 공용 프롬프트 버킷(landit-prompts)에 satisfaction: 네임스페이스로 남긴다
 export { PROMPT_RECORD_KEY } from '@/shared/lib/prompt-store';
 
-interface ImpressionRecord extends Record<string, unknown> {
+interface ImpressionRecord {
   // 대화를 마치고 아직 홈에서 소감 시트를 보지 않았다 — 시트를 띄우는 순간 소비한다
   pending?: boolean;
   // 그 대화를 마친 날(기기 기준 yyyy-MM-dd) — 오늘 마친 차례만 친다.
