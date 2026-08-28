@@ -13,6 +13,7 @@ import { CalendarStrip } from '@/features/scenario/ui/CalendarStrip';
 import { ScenarioBriefing } from '@/features/scenario/ui/ScenarioBriefing';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
 import { TodayCard } from '@/features/scenario/ui/TodayCard';
+import { WidgetReinviteGate } from '@/features/widget/ui/WidgetReinviteGate';
 import { track } from '@/shared/analytics';
 import {
   readDateParam,
@@ -127,6 +128,9 @@ function ScenarioContent() {
       )}
       {settled && satisfaction.settled && satisfaction.sheet === null && (
         <NotificationConsentGate />
+      )}
+      {settled && satisfaction.settled && satisfaction.sheet === null && (
+        <WidgetReinviteGate />
       )}
 
       {/* 브리핑을 다 보여주면 대화로 넘어간다 — push라 뒤로가기는 이 화면(카드)으로 돌아온다 */}

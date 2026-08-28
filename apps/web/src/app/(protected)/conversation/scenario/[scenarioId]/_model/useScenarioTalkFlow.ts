@@ -10,12 +10,13 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { prefetchSessionFeedback } from '@/features/feedback/model/useSessionFeedbackQuery';
-// 첫 완료 뒤 홈에서 소감을 묻는다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { markTalkCompleted } from '@/features/satisfaction/model/prompt-record';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { scenarioKeys } from '@/features/scenario/model/keys';
 // 대화 완료가 스트릭도 늘린다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
+// 첫 완료 뒤 홈에서 소감을 묻는다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
+import { markTalkCompletedForWidget } from '@/features/widget/model/install-prompt';
 import { track } from '@/shared/analytics';
 
 import { submitScenarioTalkMessage } from '../_api/scenario-session';
@@ -84,6 +85,7 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
         });
         prepareFeedbackAndUnlock(sessionId);
         markTalkCompleted('scenario');
+        markTalkCompletedForWidget();
       }
       return {
         submittedMessage: res.submittedMessage,
