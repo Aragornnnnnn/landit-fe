@@ -7,11 +7,20 @@ import { useRouter } from 'next/navigation';
 
 import { requestNotificationPermission } from '@/features/notification/model/request-permission';
 import { useNotificationPermission } from '@/features/notification/model/useNotificationPermission';
+import {
+  shouldInviteInstall,
+  supportsWidgetInstall,
+} from '@/features/widget/model/install-prompt';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { markOnboardingSeen } from '@/shared/auth/onboarding-seen';
+import { getNativeContext } from '@/shared/bridge/native-context';
 import { subscribeFromNative } from '@/shared/bridge/web-bridge';
-import { ONBOARDED_PARAM, SCENARIO_PATH } from '@/shared/lib/routes';
+import {
+  ONBOARDED_PARAM,
+  SCENARIO_PATH,
+  WIDGET_INSTALL_PATH,
+} from '@/shared/lib/routes';
 import { Transition } from '@/shared/motion';
 
 import { markEnglishLevelAnswered } from '../model/english-level';
@@ -95,6 +104,11 @@ export const OnboardingFlow = () => {
     track(EVENTS.ONBOARDING_COMPLETED);
     // 끝까지 본 기기로 기록해 재로그인 시 온보딩을 다시 보여주지 않는다
     markOnboardingSeen();
+    // 위젯 있는 앱이면 설치 유도를 한 장 끼운다 — 끝나면 같은 표식을 이어받아 홈이 첫 대화를 계속한다
+    if (supportsWidgetInstall(getNativeContext()) && shouldInviteInstall()) {
+      router.replace(`${WIDGET_INSTALL_PATH}?${ONBOARDED_PARAM}=1`);
+      return;
+    }
     router.replace(`${SCENARIO_PATH}?${ONBOARDED_PARAM}=1`);
   };
 
