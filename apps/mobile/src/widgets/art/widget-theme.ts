@@ -1,13 +1,15 @@
 // 위젯 팔레트·레이아웃 수치 — 피그마 카드에서 추출한 값의 단일 출처
 // 주의: iOS 위젯 컴포넌트(StreakWidget)는 직렬화 제약으로 같은 값을 함수 안에 인라인로 갖는다 — 값 변경 시 함께 고칠 것
+import type { WidgetStateKind } from '../model/widget-state';
 import type { WidgetFamily } from './widget-art-key';
-import type { WidgetStateKind } from './widget-state';
 
 // ink는 Small(단색 배경), inkML은 M/L(그라데이션 배경) 카드의 실제 숫자 색
 export const WIDGET_THEMES: Record<
   WidgetStateKind,
   { bg: string; ink: string; inkML: string }
 > = {
+  // 시작 전 — 아트 없이 배경색과 안내 문구만 그린다
+  welcome: { bg: '#EFE6F7', ink: '#5D4694', inkML: '#5D4694' },
   arrived: { bg: '#92D8F7', ink: '#0E3A5C', inkML: '#FFF3E0' },
   carpet: { bg: '#FFF3D8', ink: '#8A5A0E', inkML: '#8A5A0E' },
   nudge: { bg: '#FFF9D6', ink: '#9C6200', inkML: '#9C6200' },
@@ -70,5 +72,9 @@ export const TITLE_KINDS: WidgetStateKind[] = [
 ];
 
 // 제목 스타일 — 색은 해당 상태 inkML의 72%(hex B8), 크기 13 (디자인 값)
+// 오늘 카드 제목을 모를 때 대신 쓰는 문구 — 자정을 넘겨 제목이 지워졌거나 오늘 카드가 없을 때다.
+// 빈 자리로 두면 카드가 허전해서, 어느 날에나 맞는 말을 대신 세운다
+export const TITLE_FALLBACK = '래디가 기다리고 있어요';
+
 export const TITLE_ALPHA_HEX = 'B8';
 export const TITLE_FONT_SIZE = 13;

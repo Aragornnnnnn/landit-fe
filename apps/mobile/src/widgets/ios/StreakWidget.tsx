@@ -15,7 +15,7 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import { createWidget, type WidgetEnvironment } from 'expo-widgets';
 
-import type { WidgetStateKind } from './widget-state';
+import type { WidgetStateKind } from '../model/widget-state';
 
 export interface StreakWidgetProps {
   // WidgetKit placeholder(설치 직후·로그인 전)는 props 없이 렌더한다 — 모두 없을 수 있다
@@ -40,6 +40,7 @@ const StreakWidgetView = (
   // 함수 밖 값은 위젯 런타임에 존재하지 않는다(소스 문자열만 직렬화) — 상수도 함수 안에 둔다
   // 상태별 배경(아트 결손 대비)과 숫자 잉크 — ink는 Small(단색 배경), inkML은 M/L(그라데이션 배경) 카드의 실제 값
   const THEMES: Record<string, { bg: string; ink: string; inkML: string }> = {
+    welcome: { bg: '#EFE6F7', ink: '#5D4694', inkML: '#5D4694' },
     arrived: { bg: '#92D8F7', ink: '#0E3A5C', inkML: '#FFF3E0' },
     // carpet은 밝은 모래빛 배경이라 사이즈 무관 진갈색 — 원본 카드의 숫자 색 그대로
     carpet: { bg: '#FFF3D8', ink: '#8A5A0E', inkML: '#8A5A0E' },
@@ -74,7 +75,8 @@ const StreakWidgetView = (
   } as const;
   const layout = LAYOUTS[family];
 
-  // 스냅샷이 아직 없는 상태(설치 직후·로그인 전) — 브랜드 배경에 시작 안내만 그린다
+  // 위젯 데이터가 아직 없는 상태(설치 직후) — 아트가 공유 디렉터리에 복사되기 전이라 그림을 못 쓴다.
+  // 브랜드 배경에 시작 안내만 그린다. 로그인 전(welcome)은 아트가 있어서 아래 일반 경로로 그린다.
   // 주의: 이 함수 안에서는 역슬래시 이스케이프(줄바꿈 등)가 직렬화 때 실제 문자로 풀려 소스가 깨진다
   if (props.kind == null) {
     const guideFont = font({
@@ -125,8 +127,10 @@ const StreakWidgetView = (
   // 스트릭 열매 아이콘 — 웹 StreakFruit와 같은 정본 에셋
   const fruitUri = props.artDir == null ? null : `${props.artDir}fruit.webp`;
 
+  // 시작 전 카드에는 주간 스트립 자리가 없다 — 쌓은 기록이 아직 없다
   const showWeekStrip =
     family === 'large' &&
+    props.kind !== 'welcome' &&
     props.weekLabels != null &&
     props.weekDone != null &&
     props.weekLabels.length === 7;
@@ -141,10 +145,9 @@ const StreakWidgetView = (
     'risk',
     'melted',
   ];
-  const showTitle =
-    family === 'medium' &&
-    props.todayCardTitle != null &&
-    TITLE_KINDS.includes(props.kind);
+  // 제목을 몰라도 자리는 채운다 — 기준일이 지나 빠졌거나 오늘 카드가 없을 때다
+  const TITLE_FALLBACK = '래디가 기다리고 있어요';
+  const showTitle = family === 'medium' && TITLE_KINDS.includes(props.kind);
 
   return (
     <ZStack
@@ -195,7 +198,7 @@ const StreakWidgetView = (
               padding({ top: 112, leading: 24 }),
             ]}
           >
-            {props.todayCardTitle}
+            {props.todayCardTitle ?? TITLE_FALLBACK}
           </Text>
         ) : null}
       </ZStack>

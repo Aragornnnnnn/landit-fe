@@ -29,8 +29,8 @@ import { getExpoPushToken } from '@/notifications/push-token';
 import { syncReminders } from '@/notifications/reminders';
 import { initializeNotifications } from '@/notifications/setup';
 import { useNotificationDeepLink } from '@/notifications/useNotificationDeepLink';
-import { syncStreakWidget, syncWidgetOnLaunch } from '@/widgets/sync';
-import { saveWidgetData } from '@/widgets/widget-store';
+import { syncStreakWidget, syncWidgetOnLaunch } from '@/widgets';
+import { saveWidgetData } from '@/widgets/model/widget-store';
 
 // 네이티브 스플래시를 웹 첫 페인트까지 붙잡아 둔다 — 자동 숨김을 막고 WebView onLoad에서 수동으로 감춘다
 void SplashScreen.preventAutoHideAsync();
@@ -61,7 +61,7 @@ const ShellScreen = () => {
     OPEN_SETTINGS: () => void Linking.openSettings(),
     // 웹이 만든 예약 목록대로 로컬 알림을 통째로 다시 깐다 (증분 갱신이 아니다)
     SYNC_REMINDERS: ({ reminders }) => void syncReminders(reminders),
-    // 홈 위젯용 스트릭 스냅샷을 기록하고 iOS 위젯 타임라인을 새로 예약한다
+    // 홈 위젯 데이터를 기록하고 iOS 위젯 타임라인을 새로 예약한다.
     // 저장을 먼저 끝낸다 — 저장이 실패하면 다음 실행이 낡은 데이터로 위젯을 되돌려 놓는다
     SYNC_WIDGET_DATA: async ({ data }) => {
       await saveWidgetData(data);

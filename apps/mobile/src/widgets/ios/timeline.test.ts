@@ -1,5 +1,5 @@
 // 위젯 타임라인 계획 검증 — 예약 엔트리의 시각 경계와 상태 전환을 고정한다
-import { buildWidgetTimeline } from './widget-timeline';
+import { buildWidgetTimeline } from './timeline';
 
 const kst = (date: string, time: string) =>
   new Date(`${date}T${time}:00+09:00`);
@@ -14,6 +14,7 @@ const dataOf = (
   lastCompletedDate: '2026-08-24',
   todayCardTitle: '룸메이트와 첫인사',
   weeklyDone: [true, true, false, true, true, true, false],
+  capturedOn: '2026-08-25',
   ...over,
 });
 
@@ -81,17 +82,37 @@ describe('buildWidgetTimeline', () => {
     expect(gone?.date).toEqual(kst('2026-09-24', '00:00'));
   });
 
-  it('앞 시각과 같은 화면이면 예약하지 않는다 — 몰락 구간은 며칠씩 그대로다', () => {
+  it('같은 날 안에서 화면이 같으면 예약하지 않는다 — 몰락 구간은 시각 경계가 전부 접힌다', () => {
     const plans = buildWidgetTimeline({
       data: dataOf({ lastCompletedDate: '2026-08-25' }),
       now: kst('2026-08-25', '21:00'),
     });
 
     for (let i = 1; i < plans.length; i += 1) {
-      expect(plans[i].state).not.toEqual(plans[i - 1].state);
+      // 서울 기준으로 비교한다 — toISOString은 UTC라 서울의 자정~아침이 전날로 묶인다
+      const seoulDay = (d: Date) =>
+        new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const sameDay = seoulDay(plans[i].date) === seoulDay(plans[i - 1].date);
+      if (sameDay) expect(plans[i].state).not.toEqual(plans[i - 1].state);
     }
-    // 한 달치를 훑어도 실제 전환은 서른 번 남짓이다
-    expect(plans.length).toBeLessThan(40);
+    // 하루 8경계 × 31일이 날짜당 한두 개로 줄어든다
+    expect(plans.length).toBeLessThan(50);
+  });
+
+  it('화면이 같아도 날이 바뀌면 자정 엔트리는 남긴다 — 주간 스트립 창을 그날로 밀어야 한다', () => {
+    // 해골 구간(3~6일째)은 화면이 며칠째 같지만, 날마다 스트립이 하루씩 밀린다
+    const plans = buildWidgetTimeline({
+      data: dataOf({ lastCompletedDate: '2026-08-25' }),
+      now: kst('2026-08-25', '21:00'),
+    });
+
+    // 기기 로컬이 아니라 서울 기준 자정이어야 한다 — CI는 UTC로 돈다
+    const seoulMidnight = (d: Date) =>
+      (d.getTime() + 9 * 60 * 60 * 1000) % (24 * 60 * 60 * 1000) === 0;
+    const boneMidnights = plans.filter(
+      (p) => p.state.kind === 'bone' && seoulMidnight(p.date),
+    );
+    expect(boneMidnights.length).toBeGreaterThanOrEqual(3);
   });
 
   it('내일 아무것도 안 하면 모레 자정 엔트리부터 몰락 상태를 예약한다', () => {

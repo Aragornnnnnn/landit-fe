@@ -1,7 +1,8 @@
 // 위젯 타임라인 계획 — 위젯 데이터와 현재 시각으로 향후 전환 시각마다 보여줄 상태 목록을 만든다
 import type { WidgetData } from '@landit/bridge';
 
-import { decideWidgetState, type WidgetState } from './widget-state';
+import { seoulDate } from '../model/seoul-date';
+import { decideWidgetState, type WidgetState } from '../model/widget-state';
 
 export interface WidgetTimelinePlan {
   date: Date;
@@ -25,10 +26,6 @@ const BOUNDARIES = [
 const DAYS_AHEAD = 31;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const SEOUL_OFFSET_MS = 9 * 60 * 60 * 1000;
-
-const seoulDateString = (at: Date) =>
-  new Date(at.getTime() + SEOUL_OFFSET_MS).toISOString().slice(0, 10);
 
 export const buildWidgetTimeline = ({
   data,
@@ -39,7 +36,7 @@ export const buildWidgetTimeline = ({
 }): WidgetTimelinePlan[] => {
   const dates: Date[] = [now];
   for (let day = 0; day < DAYS_AHEAD; day += 1) {
-    const dateString = seoulDateString(new Date(now.getTime() + day * DAY_MS));
+    const dateString = seoulDate(new Date(now.getTime() + day * DAY_MS));
     for (const time of BOUNDARIES) {
       const boundary = new Date(`${dateString}T${time}:00+09:00`);
       if (boundary > now) dates.push(boundary);
@@ -50,10 +47,13 @@ export const buildWidgetTimeline = ({
   return (
     dates
       .map((date) => ({ date, state: decideWidgetState({ data, now: date }) }))
-      // 앞 시각과 같은 화면이면 예약하지 않는다 — 몰락 구간은 며칠씩 그대로라 대부분이 중복이다
+      // 같은 날 안에서 화면이 같으면 예약하지 않는다 — 몰락 구간은 시각 경계가 전부 중복이다.
+      // 날이 바뀌면 화면이 같아도 남긴다 — 주간 스트립 창을 그날로 밀어야 한다
       .filter(
         (plan, index, all) =>
-          index === 0 || !sameState(plan.state, all[index - 1].state),
+          index === 0 ||
+          !sameState(plan.state, all[index - 1].state) ||
+          seoulDate(plan.date) !== seoulDate(all[index - 1].date),
       )
   );
 };

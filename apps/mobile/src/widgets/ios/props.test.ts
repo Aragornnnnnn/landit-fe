@@ -1,5 +1,5 @@
 // 타임라인 엔트리 조립 검증 — 네이티브가 거부하는 null이 새어 나가지 않는지가 핵심 계약
-import { buildTimelineEntries } from './ios-props';
+import { buildTimelineEntries } from './props';
 
 const dataOf = (over = {}) => ({
   streak: 5,
@@ -7,6 +7,7 @@ const dataOf = (over = {}) => ({
   lastCompletedDate: '2026-08-26',
   todayCardTitle: '룸메이트와 첫인사',
   weeklyDone: [true, true, false, true, true, true, false],
+  capturedOn: '2026-08-27',
   ...over,
 });
 
@@ -52,11 +53,34 @@ describe('buildTimelineEntries', () => {
     expect(first.props).toMatchObject({ kind: 'milestone', milestone: 14 });
   });
 
-  it('엔트리를 여러 개 만들어도 주간 스트립은 하나를 공유한다 — 창이 위젯 데이터 기준이라 시각별로 흔들리지 않는다', () => {
+  it('예약 시점의 오늘이 아닌 날짜에는 카드 제목을 싣지 않는다 — 앱을 안 열면 어제 제목이 남는다', () => {
     const entries = buildTimelineEntries({ data: dataOf(), now, artDir: null });
 
-    for (const entry of entries) {
-      expect(entry.props.weekLabels).toEqual(entries[0].props.weekLabels);
-    }
+    const today = entries.filter(
+      (e) => e.date.getTime() < new Date('2026-08-28T00:00:00+09:00').getTime(),
+    );
+    const later = entries.filter(
+      (e) =>
+        e.date.getTime() >= new Date('2026-08-28T00:00:00+09:00').getTime(),
+    );
+
+    expect(
+      today.every((e) => e.props.todayCardTitle === '룸메이트와 첫인사'),
+    ).toBe(true);
+    expect(later.every((e) => !('todayCardTitle' in e.props))).toBe(true);
+  });
+
+  it('날이 바뀐 엔트리는 주간 창도 그 날짜로 민다 — 라벨과 열매가 항상 짝이 맞는다', () => {
+    const entries = buildTimelineEntries({ data: dataOf(), now, artDir: null });
+
+    const tomorrow = entries.find(
+      (e) =>
+        e.date.getTime() >= new Date('2026-08-28T00:00:00+09:00').getTime(),
+    );
+    // 오늘(목)로 끝나던 창이 내일 엔트리에서는 금으로 끝난다
+    expect((entries[0].props.weekLabels as string[]).at(-1)).toBe('목');
+    expect((tomorrow?.props.weekLabels as string[]).at(-1)).toBe('금');
+    // 새로 생긴 날은 미완료다 — 앱을 안 열면 완료했을 리 없다
+    expect((tomorrow?.props.weekDone as boolean[]).at(-1)).toBe(false);
   });
 });

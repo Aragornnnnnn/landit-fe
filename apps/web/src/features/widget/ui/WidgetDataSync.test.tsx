@@ -1,9 +1,8 @@
-// WidgetDataSync — 데이터가 준비된 순간·바뀐 순간에만 위젯 스냅샷을 셸로 보내는 계약 검증
+// WidgetDataSync — 데이터가 준비된 순간·바뀐 순간에만 위젯 데이터를 셸로 보내는 계약 검증
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
-import { useScenarioCalendarQuery } from '@/features/scenario/model/useScenarioCalendarQuery';
 import { useStreakCalendarQuery } from '@/features/streak/model/useStreakCalendarQuery';
 import { useStreakQuery } from '@/features/streak/model/useStreakQuery';
 import { useAuthStore } from '@/shared/auth/auth-store';
@@ -21,9 +20,6 @@ const useStreakQueryMock = vi.mocked(useStreakQuery);
 
 vi.mock('@/features/scenario/model/useDailyScenarioQuery');
 const useDailyScenarioQueryMock = vi.mocked(useDailyScenarioQuery);
-
-vi.mock('@/features/scenario/model/useScenarioCalendarQuery');
-const useScenarioCalendarQueryMock = vi.mocked(useScenarioCalendarQuery);
 
 vi.mock('@/features/streak/model/useStreakCalendarQuery');
 const useStreakCalendarQueryMock = vi.mocked(useStreakCalendarQuery);
@@ -48,6 +44,18 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+const calendarOf = (activeDates: string[] = ['2026-08-24']) => ({
+  year: 2026,
+  month: 8,
+  currentStreakDays: 5,
+  activeToday: false,
+  today: '2026-08-25',
+  firstActiveDate: activeDates[0] ?? null,
+  longestStreakDays: 5,
+  totalActiveDays: activeDates.length,
+  activeDates,
+});
+
 const arrange = () => {
   useDailyScenarioQueryMock.mockReturnValue({
     daily: null,
@@ -55,16 +63,15 @@ const arrange = () => {
     isLoading: false,
     retry: () => {},
   });
-  useScenarioCalendarQueryMock.mockReturnValue({ calendar: null });
   useStreakCalendarQueryMock.mockReturnValue({
-    calendar: null,
+    calendar: calendarOf(),
     isError: false,
   });
   setLoggedIn(true);
 };
 
 describe('WidgetDataSync', () => {
-  it('스트릭 데이터가 준비되면 위젯 스냅샷을 셸로 보낸다', () => {
+  it('스트릭 데이터가 준비되면 위젯 데이터를 셸로 보낸다', () => {
     arrange();
     useStreakQueryMock.mockReturnValue(streakOf());
 
@@ -135,7 +142,7 @@ describe('WidgetDataSync', () => {
     expect(postToNativeMock).toHaveBeenCalledTimes(1);
   });
 
-  it('대화 완료로 데이터가 바뀌면 새 스냅샷을 다시 보낸다', () => {
+  it('대화 완료로 데이터가 바뀌면 위젯 데이터를 다시 보낸다', () => {
     arrange();
     useStreakQueryMock.mockReturnValue(streakOf());
     const { rerender } = render(<WidgetDataSync />);
