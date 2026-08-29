@@ -1,4 +1,4 @@
-// iOS / 3 랜딧 검색 — 갤러리 시트가 올라오고, 검색어가 찍히면 랜딧 위젯들이 차례로 나타난다
+// iOS / 3 랜딧 검색 — landit을 검색해 결과에서 앱을 누르면, 그제야 위젯 크기 목록이 펼쳐진다
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -9,23 +9,13 @@ import {
   WidgetPreviewSmall,
 } from '@/features/widget/ui/WidgetPreviewCard';
 
-import { GuideScaffold, PhoneMockup } from './GuideScaffold';
+import { GuideScaffold, PhoneMockup, TouchPulse } from './GuideScaffold';
 
 const QUERY = 'landit';
-// 시트(250ms)가 멈춘 뒤 타이핑이 시작되고(글자당 80ms), 다 찍히면 결과가 60ms 간격으로 나타난다
 const SHEET_MS = 0.25;
 const TYPE_MS = 80;
-const RESULTS_AT = SHEET_MS + (QUERY.length * TYPE_MS) / 1000 + 0.1;
-
-// 검색 결과 카드가 위에서부터 차례로 페이드인
-const resultFade = (order: number, reduced: boolean) =>
-  reduced
-    ? {}
-    : {
-        initial: { opacity: 0 },
-        animate: { opacity: 1 },
-        transition: { duration: 0.2, delay: RESULTS_AT + order * 0.06 },
-      };
+// 다 친 뒤 결과 행이 떠 있는 걸 보여주는 시간 — 이 사이 손끝이 행을 누른다
+const RESULT_TAP_MS = 1500;
 
 const SizeCaption = ({ size }: { size: string }) => (
   <span className="flex flex-col items-center gap-px">
@@ -34,40 +24,48 @@ const SizeCaption = ({ size }: { size: string }) => (
   </span>
 );
 
+// 위젯 카드가 위에서부터 차례로 페이드인
+const cardFade = (order: number, reduced: boolean) =>
+  reduced
+    ? {}
+    : {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        transition: { duration: 0.2, delay: order * 0.06 },
+      };
+
 export const SearchStep = ({ onDone }: { onDone: () => void }) => {
   const reduced = useReducedMotion() ?? false;
   const [typed, setTyped] = useState(reduced ? QUERY : '');
+  // 'search' = 검색 결과에서 landit 앱을 고르는 중, 'widgets' = 위젯 크기 목록이 펼쳐짐
+  const [view, setView] = useState<'search' | 'widgets'>(
+    reduced ? 'widgets' : 'search',
+  );
 
-  // 검색창에 한 글자씩 찍는다 — 시트가 자리잡은 뒤 시작하고, 다 친 뒤 잠깐 두었다
-  // 지우고 다시 친다. 늦게 본 사람도 "landit이라고 검색하는구나"를 놓치지 않게 되풀이한다
+  // landit을 한 글자씩 친 뒤 결과 행을 톡 누르면 위젯 목록으로 넘어간다
   useEffect(() => {
     if (reduced) return;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    let interval: ReturnType<typeof setInterval>;
-
-    const typeOnce = () => {
-      let count = 0;
-      interval = setInterval(() => {
+    let count = 0;
+    let typing: ReturnType<typeof setInterval>;
+    let toWidgets: ReturnType<typeof setTimeout>;
+    const start = setTimeout(() => {
+      typing = setInterval(() => {
         count += 1;
         setTyped(QUERY.slice(0, count));
         if (count < QUERY.length) return;
-        clearInterval(interval);
-        // 다 쳤으면 잠깐 보여준 뒤 지우고 다음 사이클을 예약한다
-        timers.push(
-          setTimeout(() => {
-            setTyped('');
-            timers.push(setTimeout(typeOnce, 600));
-          }, 1800),
-        );
+        clearInterval(typing);
+        // 다 쳤으면 결과 행이 떠 있는 걸 잠깐 보여준 뒤(손끝이 누른다) 위젯 목록으로
+        toWidgets = setTimeout(() => setView('widgets'), RESULT_TAP_MS);
       }, TYPE_MS);
-    };
-
-    timers.push(setTimeout(typeOnce, SHEET_MS * 1000));
+    }, SHEET_MS * 1000);
     return () => {
-      timers.forEach(clearTimeout);
-      clearInterval(interval);
+      clearTimeout(start);
+      clearInterval(typing);
+      clearTimeout(toWidgets);
     };
   }, [reduced]);
+
+  const typedFull = typed === QUERY;
 
   return (
     <GuideScaffold
@@ -83,9 +81,9 @@ export const SearchStep = ({ onDone }: { onDone: () => void }) => {
       onCta={onDone}
     >
       <PhoneMockup>
-        {/* 위젯 갤러리 시트 — 아래에서 올라온다. 마지막 카드는 일부러 잘려 더 있음을 알린다 */}
+        {/* 위젯 갤러리 시트 — 아래에서 올라온다 */}
         <motion.div
-          className="absolute top-[24px] left-0 h-[406px] w-full rounded-t-[20px] bg-[#f1f1f3]"
+          className="absolute top-[24px] left-0 h-[406px] w-full overflow-hidden rounded-t-[20px] bg-[#f1f1f3]"
           initial={reduced ? false : { y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: SHEET_MS, ease: 'easeOut' }}
@@ -113,30 +111,61 @@ export const SearchStep = ({ onDone }: { onDone: () => void }) => {
             </span>
           </div>
 
-          <motion.div
-            className="absolute top-[62px] left-[72px]"
-            {...resultFade(0, reduced)}
-          >
-            <WidgetPreviewSmall size={118} />
-          </motion.div>
-          <motion.div
-            className="absolute top-[188px] left-1/2 -translate-x-1/2"
-            {...resultFade(1, reduced)}
-          >
-            <SizeCaption size="2 x 2" />
-          </motion.div>
-          <motion.div
-            className="absolute top-[232px] left-[24px]"
-            {...resultFade(2, reduced)}
-          >
-            <WidgetPreviewMedium />
-          </motion.div>
-          <motion.div
-            className="absolute top-[340px] left-1/2 -translate-x-1/2"
-            {...resultFade(3, reduced)}
-          >
-            <SizeCaption size="4 x 2" />
-          </motion.div>
+          {/* 검색 결과: landit 앱 한 줄 — 이걸 눌러야 위젯 크기 목록이 열린다 */}
+          {view === 'search' && typedFull && (
+            <motion.div
+              className="absolute top-[68px] left-[24px] flex h-[52px] w-[214px] items-center gap-2.5 rounded-[14px] bg-white px-3"
+              initial={reduced ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <span className="flex size-[38px] items-center justify-center rounded-[9px] bg-gradient-to-b from-[#f0912a] to-[#e07a3a] text-[15px] font-black text-white">
+                L
+              </span>
+              <span className="flex flex-col">
+                <span className="text-[13px] font-bold text-[#1c1c1e]">
+                  landit
+                </span>
+                <span className="text-[10px] font-medium text-[#8e8e93]">
+                  대화 스트릭 위젯
+                </span>
+              </span>
+              {/* 손끝이 결과 행을 톡 누른다 */}
+              {!reduced && (
+                <TouchPulse left={168} top={11} size={30} mode="tap" />
+              )}
+            </motion.div>
+          )}
+
+          {/* landit을 누른 뒤 펼쳐지는 위젯 크기 목록 */}
+          {view === 'widgets' && (
+            <>
+              <motion.div
+                className="absolute top-[62px] left-[72px]"
+                {...cardFade(0, reduced)}
+              >
+                <WidgetPreviewSmall size={118} />
+              </motion.div>
+              <motion.div
+                className="absolute top-[188px] left-1/2 -translate-x-1/2"
+                {...cardFade(1, reduced)}
+              >
+                <SizeCaption size="2 x 2" />
+              </motion.div>
+              <motion.div
+                className="absolute top-[232px] left-[24px]"
+                {...cardFade(2, reduced)}
+              >
+                <WidgetPreviewMedium />
+              </motion.div>
+              <motion.div
+                className="absolute top-[340px] left-1/2 -translate-x-1/2"
+                {...cardFade(3, reduced)}
+              >
+                <SizeCaption size="4 x 2" />
+              </motion.div>
+            </>
+          )}
         </motion.div>
       </PhoneMockup>
     </GuideScaffold>

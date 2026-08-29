@@ -39,7 +39,7 @@ export const MenuStep = ({ onNext }: { onNext: () => void }) => {
           위젯 추가를 골라주세요
         </>
       }
-      subtitle="왼쪽 위에 편집 버튼이 나타나요"
+      subtitle="메뉴가 열리면 위젯 추가가 보여요"
       cta="다음"
       onCta={onNext}
     >

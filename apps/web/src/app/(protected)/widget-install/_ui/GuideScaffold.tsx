@@ -102,16 +102,24 @@ export const TouchPulse = ({
   size?: number;
   mode?: 'press' | 'tap';
 }) => {
-  const period = mode === 'press' ? 1.1 : 0.9;
+  const period = mode === 'press' ? 0.95 : 0.75;
   return (
     <div className="absolute" style={{ left, top, width: size, height: size }}>
-      {/* 퍼지는 물결 — 눌린 자리에서 웅웅 번진다 */}
+      {/* 퍼지는 물결 — 투명하게 시작해 번지며 다시 투명해진다. 끝과 시작이 모두 0이라 툭 끊기지 않는다 */}
       <motion.span
         className="absolute inset-0 rounded-full"
         style={{ border: '2px solid rgba(224,122,58,0.55)' }}
-        initial={{ scale: 0.5, opacity: 0.7 }}
-        animate={{ scale: mode === 'press' ? 1.9 : 1.5, opacity: 0 }}
-        transition={{ duration: period, repeat: Infinity, ease: 'easeOut' }}
+        initial={false}
+        animate={{
+          scale: [0.4, mode === 'press' ? 1.9 : 1.5],
+          opacity: [0, 0.6, 0],
+        }}
+        transition={{
+          duration: period,
+          repeat: Infinity,
+          ease: 'easeOut',
+          times: [0, 0.25, 1],
+        }}
       />
       {/* 손끝 — 주황 원이 눌렸다 돌아오며 톡톡거린다 */}
       <motion.span
