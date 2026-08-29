@@ -131,7 +131,9 @@ export type OnboardingStep =
   'intro' | 'sound' | 'mic' | 'thought' | 'notification' | 'level' | 'scenario';
 // 영어 수준 — BE 저장 API(learningLevel)와 같은 1(막 시작)~5(유창) 정수 척도. 지표와 서버 데이터가 같은 말을 쓴다
 export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
-export type ExpressionStep = 'quiz' | 'explain' | 'review';
+// pronounce = 발음 평가, examples = 발음 뒤 추가 예문 화면 (발음 없는 표현은 explain이 예문까지 포함)
+export type ExpressionStep =
+  'quiz' | 'explain' | 'pronounce' | 'examples' | 'review';
 export type TurnInputType = 'voice' | 'text';
 // 스몰톡 대화 상대 — 홈에서 고른 캐릭터. 시나리오엔 없는 축이라 스몰톡 이벤트에만 붙는다
 export type TalkPartner = 'chloe' | 'marco' | 'teddy';
