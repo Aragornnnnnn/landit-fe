@@ -28,6 +28,8 @@ interface ExplanationStepProps {
   onBack: () => void;
   leftAction?: 'back' | 'close';
   onNext: () => void;
+  // 발음 뒤 추가 예문 화면(EXAMPLES)은 설명을 B안 화면에서 이미 봤으므로 설명 카드를 접는다
+  showDescription?: boolean;
 }
 
 export const ExplanationStep = ({
@@ -43,6 +45,7 @@ export const ExplanationStep = ({
   onBack,
   leftAction,
   onNext,
+  showDescription = true,
 }: ExplanationStepProps) => {
   // 중앙에 가장 가까운 카드가 활성 dot — snap-center와 정확히 일치한다 (홈 리스트와 같은 공용 훅)
   const { scrollRef, activeIndex: active, onScroll } = useSnapIndex('x');
@@ -63,35 +66,35 @@ export const ExplanationStep = ({
       onBack={onBack}
       leftAction={leftAction}
       footer={
-        <Button onClick={onNext} disabled={finishing}>
+        <Button size="md" onClick={onNext} disabled={finishing}>
           {nextLabel}
         </Button>
       }
     >
       <div className="pt-2 pb-6">
-        <div className="rounded-2xl bg-primary/10 px-5 py-4">
-          <p className="text-2xl font-extrabold text-primary">
-            {targetExpressionText}
-          </p>
-          <p className="mt-1 text-sm font-medium text-muted-foreground">
-            {baseExpressionMeaningText}
-          </p>
-          <p className="mt-3 text-base leading-relaxed font-medium text-foreground">
-            {usageDescription}
-          </p>
-        </div>
+        {showDescription && (
+          <div className="rounded-2xl bg-primary/10 px-5 py-4">
+            <p className="text-2xl font-extrabold text-primary">
+              {targetExpressionText}
+            </p>
+            <p className="mt-1 text-sm font-medium text-muted-foreground">
+              {baseExpressionMeaningText}
+            </p>
+            <p className="mt-3 text-base leading-relaxed font-medium text-foreground">
+              {usageDescription}
+            </p>
+          </div>
+        )}
 
         {examples.length > 0 && (
           <>
-            <div className="mt-6 mb-3 flex items-baseline justify-between">
+            <div
+              className={`mb-3 flex items-baseline justify-between ${showDescription ? 'mt-6' : 'mt-2'}`}
+            >
+              {/* 스와이프 힌트 문구는 뺐다 — 도트와 빼꼼 보이는 다음 카드가 넘김을 이미 말해준다 */}
               <p className="text-lg font-extrabold text-foreground">
                 이렇게도 써요
               </p>
-              {examples.length > 1 && (
-                <p className="text-sm font-medium text-muted-foreground">
-                  옆으로 넘겨봐요
-                </p>
-              )}
             </div>
 
             <div
@@ -114,6 +117,21 @@ export const ExplanationStep = ({
                     }`}
                   />
                 ))}
+              </div>
+            )}
+
+            {/* 예문 전용 화면에선 래디가 예고를 하나 흘린다 — 복습 퀴즈는 이 예문들 중 하나다(서버 랜덤 선택) */}
+            {!showDescription && (
+              <div className="mt-6 flex items-center gap-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/character/landy-point.webp"
+                  alt=""
+                  className="w-16 flex-none object-contain"
+                />
+                <div className="rounded-2xl rounded-bl-sm bg-secondary px-3.5 py-2.5 text-sm leading-snug font-semibold text-foreground">
+                  잘 봐두세요! 이 중 하나가 복습 퀴즈로 나와요
+                </div>
               </div>
             )}
           </>

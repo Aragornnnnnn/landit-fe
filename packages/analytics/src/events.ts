@@ -94,6 +94,11 @@ export const EVENTS = {
   QUIZ_WORD_REMOVED: 'Quiz Word Removed',
   QUIZ_ANSWER_SUBMITTED: 'Quiz Answer Submitted',
   EXAMPLE_SENTENCE_VIEWED: 'Example Sentence Viewed',
+  // 발음 평가 — 결과는 재도전마다 찍는다(attempt로 회차 구분). 건너뛰기는 설명 화면에서의 이탈 신호
+  PRONUNCIATION_RESULT_VIEWED: 'Pronunciation Result Viewed',
+  PRONUNCIATION_SKIPPED: 'Pronunciation Skipped',
+  // 발음 듣기 — 어떤 소리를 다시 듣는지 source 하나로 몰아 찍는다. 자동재생·토글 끄기는 제외
+  PRONUNCIATION_AUDIO_PLAYED: 'Pronunciation Audio Played',
   REVIEW_ANSWER_SUBMITTED: 'Review Answer Submitted',
   EXPRESSION_COMPLETED: 'Expression Completed',
   EXPRESSION_ABANDONED: 'Expression Abandoned',
@@ -131,7 +136,9 @@ export type OnboardingStep =
   'intro' | 'sound' | 'mic' | 'thought' | 'notification' | 'level' | 'scenario';
 // 영어 수준 — BE 저장 API(learningLevel)와 같은 1(막 시작)~5(유창) 정수 척도. 지표와 서버 데이터가 같은 말을 쓴다
 export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
-export type ExpressionStep = 'quiz' | 'explain' | 'review';
+// pronounce = 발음 평가, examples = 발음 뒤 추가 예문 화면 (발음 없는 표현은 explain이 예문까지 포함)
+export type ExpressionStep =
+  'quiz' | 'explain' | 'pronounce' | 'examples' | 'review';
 export type TurnInputType = 'voice' | 'text';
 // 스몰톡 대화 상대 — 홈에서 고른 캐릭터. 시나리오엔 없는 축이라 스몰톡 이벤트에만 붙는다
 export type TalkPartner = 'chloe' | 'marco' | 'teddy';
@@ -397,6 +404,21 @@ export type EventProps = {
     hint_level: number;
   };
   'Example Sentence Viewed': { expression_id: number; sentence_index: number };
+  'Pronunciation Result Viewed': {
+    expression_id: number;
+    // BE 원점수(0~100)와 통과 판정 그대로
+    score: number;
+    passed: boolean;
+    error_count: number;
+    // 재도전 포함 몇 번째 분석 결과인지 (1부터)
+    attempt: number;
+  };
+  'Pronunciation Skipped': { expression_id: number };
+  'Pronunciation Audio Played': {
+    expression_id: number;
+    // expression·sentence = 설명·발음 화면 스피커, native_word·my_word = 피드백 카드 행
+    source: 'expression' | 'sentence' | 'native_word' | 'my_word';
+  };
   'Review Answer Submitted': {
     expression_id: number;
     is_correct: boolean;

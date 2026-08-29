@@ -106,7 +106,7 @@ export const RevealStage = ({
       )}
     </div>
     <div className="flex flex-none flex-col gap-1 pt-3">
-      <Button onClick={onLearn}>
+      <Button size="md" onClick={onLearn}>
         첫 표현부터 배워볼게요
         <ArrowRightIcon size={16} />
       </Button>
