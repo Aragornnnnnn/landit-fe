@@ -17,6 +17,17 @@ import type { TtsVoice } from '@/shared/tts/voice';
 export interface ScenarioTalkCurrentMessage extends CurrentMessage {
   innerThought: string;
   innerThoughtType: string;
+  // 첫 고정 질문 음원 — 오프닝은 번들 mp3 즉시 재생을 유지해 아직 읽지 않는다 (세션 응답이 재생 시점보다 늦다)
+  questionAudioUrl: string | null;
+}
+
+// 다음 AI 발화의 분리 재생 소스 — 맞장구(ttsText)는 프론트가 합성하고, 고정 질문은 미리 만든
+// 음원(questionAudioUrl)을 이어 튼다. fixedQuestionText는 질문 구간 립싱크용 질문 원문이다.
+// 종료 인사처럼 고정 질문이 없는 발화는 세 값이 비어 오고, 그때는 content 전체를 합성한다
+export interface ScenarioTalkNextMessage extends NextMessage {
+  ttsText: string | null;
+  fixedQuestionText: string | null;
+  questionAudioUrl: string | null;
 }
 
 // 시나리오는 메시지별 피드백을 만든다 — 그 생성 상태가 함께 온다
@@ -54,7 +65,7 @@ export interface ScenarioTalkSubmitResponse {
   submittedMessage: ScenarioTalkSubmittedMessage;
   // 다음 AI 발화. 대화가 끝나는(progress.completed) 턴에는 다음 질문 대신 종료 메시지가 담겨 온다.
   // (둘 다 재생 대상이라 FE는 nextMessage 유무로 발화 여부를, completed로 종료 여부를 판단한다)
-  nextMessage: NextMessage | null;
+  nextMessage: ScenarioTalkNextMessage | null;
   progress: ScenarioTalkProgress;
 }
 
