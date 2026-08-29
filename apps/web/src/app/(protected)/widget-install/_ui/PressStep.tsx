@@ -25,18 +25,17 @@ const APP_SLOTS = [
   [186, 224],
 ] as const;
 
-// 한 번의 시연 — 가만히 있다 → 빈 곳을 한 번 누르고 → 편집 모드로 들어가 거기서 멈춘다.
-// 되풀이하지 않는다: "한 번 꾹 누르면 된다"를 보여줘야지, 계속 눌러야 하는 것처럼 보이면 안 된다
+// 한 사이클 — 가만히 있다 → 빈 곳을 누르고 → 편집 모드로 흔들린다. 그리고 처음으로 되풀이한다
 type Phase = 'idle' | 'pressing' | 'editing';
 const PHASE_MS: Record<Phase, number> = {
   idle: 700,
   pressing: 1400,
-  editing: 0,
+  editing: 1800,
 };
-// editing이 종착점 — 여기 오면 더 넘어가지 않고 편집 모드(흔들림)로 남는다
 const NEXT_PHASE: Partial<Record<Phase, Phase>> = {
   idle: 'pressing',
   pressing: 'editing',
+  editing: 'idle',
 };
 
 const DeleteBadge = () => (
