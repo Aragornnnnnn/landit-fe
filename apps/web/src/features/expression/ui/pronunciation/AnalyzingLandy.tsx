@@ -54,7 +54,12 @@ export const AnalyzingLandy = () => {
         />
       </div>
       {/* pop(등장)은 바깥, shimmer(상시)는 안쪽 — 한 요소에 두 animation을 겹치면 서로 덮어쓴다 */}
-      <p key={stage} className="animate-pop text-base font-medium">
+      <p
+        key={stage}
+        role="status"
+        aria-live="polite"
+        className="animate-pop text-base font-medium"
+      >
         <span className="animate-text-shimmer">{text}...</span>
       </p>
     </div>

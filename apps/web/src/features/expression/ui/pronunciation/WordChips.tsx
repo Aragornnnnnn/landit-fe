@@ -22,8 +22,12 @@ export const WordChips = ({ words, onSelectWord }: WordChipsProps) => (
   <div className="flex flex-wrap justify-center gap-x-2 gap-y-2.5">
     {words.map((word, index) => {
       const isError = word.status !== 'CORRECT';
+      // 이동할 교정 카드가 실제로 있는 오류만 버튼으로 — 음절 없는 강세 오류는 카드가 접혀 정적 칩으로 남긴다
+      const hasCard =
+        word.status === 'PHONEME_ERROR' ||
+        (word.status === 'STRESS_ERROR' && Boolean(word.syllables?.length));
       // 눌리는 것만 눌리게 보이게 — 오류 단어만 3D 돌출(퀴즈 칩 문법), 정상 단어는 납작하게 가라앉힌다
-      if (isError && onSelectWord) {
+      if (hasCard && onSelectWord) {
         return (
           <button
             key={word.order}
