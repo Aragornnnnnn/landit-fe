@@ -1,7 +1,7 @@
 // 위젯 설치 안내 — 온보딩 끝(설치 유도부터)과 재유도 시트(iOS 안내부터)가 함께 쓰는 화면 묶음
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import {
@@ -14,12 +14,16 @@ import { postToNative } from '@/shared/bridge/web-bridge';
 import { ONBOARDED_PARAM, SCENARIO_PATH } from '@/shared/lib/routes';
 import { Transition } from '@/shared/motion';
 
+import { GuideHeader } from './_ui/GuideHeader';
 import { InviteStep } from './_ui/InviteStep';
 import { MenuStep } from './_ui/MenuStep';
 import { PressStep } from './_ui/PressStep';
 import { SearchStep } from './_ui/SearchStep';
 
 type Step = 'invite' | 'press' | 'menu' | 'search';
+
+// iOS 안내 3장 — 뒤로가기·진행점이 이 순서를 따른다 (설치 유도는 갈림길이라 제외)
+const GUIDE_STEPS: Step[] = ['press', 'menu', 'search'];
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
 export default function WidgetInstallPage() {
@@ -49,6 +53,11 @@ const InstallFlow = () => {
     if (fromReinvite) router.back();
     else router.replace(destination);
   };
+  // effect가 최신 finish를 읽게 한다 — 리스너는 한 번만 걸고 참조만 갈아끼운다
+  const finishRef = useRef(finish);
+  useEffect(() => {
+    finishRef.current = finish;
+  });
 
   const supported = supportsWidgetInstall(getNativeContext());
   useEffect(() => {
@@ -61,6 +70,18 @@ const InstallFlow = () => {
     if (step === 'invite') recordInstallInvited();
     // 마운트 때 한 번 — 지원 여부·시작 스텝·목적지는 세션 동안 안 바뀐다
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 위젯을 얹으러 홈으로 나갔다 돌아오면 안내를 닫는다 — 설치했든 안 했든 할 일은 끝났다.
+  // 백그라운드로 갔다가(hidden) 다시 보이는(visible) 전환을 "돌아왔다"로 본다
+  useEffect(() => {
+    let leftApp = false;
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') leftApp = true;
+      else if (leftApp) finishRef.current();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
   if (!supported) return null;
@@ -84,20 +105,42 @@ const InstallFlow = () => {
     setStep('press');
   };
 
+  // 안내 3장 안에서만 뒤로 간다 — 첫 장(press)에서 뒤로면 온보딩은 설치 유도로, 재유도는 시트로 되돌린다
+  const guideIndex = GUIDE_STEPS.indexOf(step);
+  const back = () => {
+    if (guideIndex > 0) setStep(GUIDE_STEPS[guideIndex - 1]);
+    else if (fromReinvite) router.back();
+    else setStep('invite');
+  };
+
   return (
-    <Transition
-      transitionKey={step}
-      direction={1}
-      className="flex min-h-0 flex-1 flex-col"
-      style={{
-        paddingTop: 'max(env(safe-area-inset-top), 18px)',
-        paddingBottom: 'max(env(safe-area-inset-bottom), 20px)',
-      }}
-    >
-      {step === 'invite' && <InviteStep onAdd={add} onLater={finish} />}
-      {step === 'press' && <PressStep onNext={() => setStep('menu')} />}
-      {step === 'menu' && <MenuStep onNext={() => setStep('search')} />}
-      {step === 'search' && <SearchStep onDone={leaveToHome} />}
-    </Transition>
+    <>
+      {/* 헤더는 전환 밖에 고정 — 내용만 슬라이드하고 뒤로가기·진행점은 제자리를 지킨다 */}
+      {guideIndex >= 0 && (
+        <GuideHeader
+          index={guideIndex}
+          total={GUIDE_STEPS.length}
+          onBack={back}
+        />
+      )}
+      <Transition
+        transitionKey={step}
+        direction={1}
+        className="flex min-h-0 flex-1 flex-col"
+        style={{
+          // 안내 3장은 헤더(뒤로가기·진행점)를 피해 제목을 아래로 내린다
+          paddingTop:
+            guideIndex >= 0
+              ? 'calc(max(env(safe-area-inset-top), 18px) + 48px)'
+              : 'max(env(safe-area-inset-top), 18px)',
+          paddingBottom: 'max(env(safe-area-inset-bottom), 20px)',
+        }}
+      >
+        {step === 'invite' && <InviteStep onAdd={add} onLater={finish} />}
+        {step === 'press' && <PressStep onNext={() => setStep('menu')} />}
+        {step === 'menu' && <MenuStep onNext={() => setStep('search')} />}
+        {step === 'search' && <SearchStep onDone={leaveToHome} />}
+      </Transition>
+    </>
   );
 };
