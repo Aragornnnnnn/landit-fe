@@ -115,7 +115,13 @@ export const ExpressionFlow = ({
   const introAudioUrl = learning?.representativeSentenceAudioUrl ?? null;
   const introExpressionAudioUrl = learning?.targetExpressionAudioUrl ?? null;
   useEffect(() => {
-    if (step !== 'EXPLAIN' || introPlayedRef.current || !introAudioUrl) return;
+    if (step !== 'EXPLAIN') {
+      // 설명 화면을 떠나면 자동재생과 예약된 다음 재생을 끊는다 — 발음 녹음 화면에 소리가 새지 않게
+      clearIntroGap();
+      player.stop();
+      return;
+    }
+    if (introPlayedRef.current || !introAudioUrl) return;
     introPlayedRef.current = true;
     if (introExpressionAudioUrl) {
       player.play(introExpressionAudioUrl, {
@@ -302,8 +308,9 @@ export const ExpressionFlow = ({
               setStep(skippedWithoutResult ? 'EXPLAIN' : 'PRONOUNCE')
             }
             onNext={() => setStep('REVIEW')}
-            // 설명은 B안 화면에서 이미 봤다 — 여기선 추가 예문만
-            showDescription={false}
+            // 설명은 B안 화면에서 이미 봤다 — 여기선 추가 예문만.
+            // 예문이 비어 있으면(미시딩·404) 빈 화면 대신 설명 카드를 다시 편다
+            showDescription={(practice?.practiceSentence?.length ?? 0) === 0}
           />
         )}
         {(step === 'PRONOUNCE' || pronounceDone) && (
