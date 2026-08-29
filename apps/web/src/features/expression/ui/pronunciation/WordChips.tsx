@@ -32,6 +32,7 @@ export const WordChips = ({ words, onSelectWord }: WordChipsProps) => (
           <button
             key={word.order}
             onClick={() => onSelectWord(word.order)}
+            aria-label={`${word.word}, 발음 교정 필요 — 교정 카드로 이동`}
             style={chipDelay(index)}
             className={`${CHIP_BASE} animate-fade-up border border-border bg-card text-destructive shadow-[0_3px_0_var(--border)] transition-[translate,box-shadow] duration-75 active:translate-y-[3px] active:shadow-none`}
           >
@@ -42,6 +43,7 @@ export const WordChips = ({ words, onSelectWord }: WordChipsProps) => (
       return (
         <span
           key={word.order}
+          aria-label={isError ? `${word.word}, 발음 교정 필요` : undefined}
           style={chipDelay(index)}
           className={`${CHIP_BASE} animate-fade-up ${
             isError
