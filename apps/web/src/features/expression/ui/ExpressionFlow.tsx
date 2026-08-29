@@ -1,7 +1,7 @@
 'use client';
 
-// 표현학습 플로우 — 단어 선택 퀴즈(D안 ①') → 표현 설명(D안 ④) → 복습 영작(D안 ⑤) → 완료 처리 후 리스트로.
-import { useEffect, useState } from 'react';
+// 표현학습 플로우 — 단어 선택 퀴즈(D안 ①') → 표현 설명(D안 ④) → [발음 자산 있으면: 발음 평가 → 추가 예문] → 복습 영작(D안 ⑤) → 완료 처리 후 리스트로.
+import { useEffect, useRef, useState } from 'react';
 import { EVENTS, type ExpressionStep } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
@@ -11,13 +11,16 @@ import { scenarioReturnPath, smallTalkHistoryPath } from '@/shared/lib/routes';
 
 import { collectPreloadImageUrls } from '../lib/preload-images';
 import { fromLearning, fromWritingSentence } from '../model/sentence-quiz';
+import { useAudioPlayer } from '../model/useAudioPlayer';
 import { useExpressionLearningQuery } from '../model/useExpressionLearningQuery';
 import { useExpressionPracticeQuery } from '../model/useExpressionPracticeQuery';
 import { useFinishExpressionMutation } from '../model/useFinishExpressionMutation';
 import { ExpressionExitSheet } from './common/ExpressionExitSheet';
 import { ExplanationStep } from './learning/ExplanationStep';
+import { ExpressionIntroStep } from './learning/ExpressionIntroStep';
 import { QuizStep } from './learning/QuizStep';
 import { ReviewSuccess } from './practice/ReviewSuccess';
+import { PronunciationStep } from './pronunciation/PronunciationStep';
 import { QuizStepSkeleton } from './QuizStepSkeleton';
 
 // 이 표현이 어디서 왔는지 — 나갈 때 돌아갈 곳과 계측에 싣는 출처가 여기서 갈린다.
@@ -32,15 +35,26 @@ interface ExpressionFlowProps {
   expressionId: number;
 }
 
-// 화면 스텝(QUIZ/EXPLAIN/REVIEW) → 이벤트 속성 값
-const STEP_PROP: Record<'QUIZ' | 'EXPLAIN' | 'REVIEW', ExpressionStep> = {
+// 화면 스텝 — PRONOUNCE(발음 평가)·EXAMPLES(발음 뒤 추가 예문)는 발음 자산이 있는 표현에만 낀다
+type Step = 'QUIZ' | 'EXPLAIN' | 'PRONOUNCE' | 'EXAMPLES' | 'REVIEW';
+
+// 화면 스텝 → 이벤트 속성 값
+const STEP_PROP: Record<Step, ExpressionStep> = {
   QUIZ: 'quiz',
   EXPLAIN: 'explain',
+  PRONOUNCE: 'pronounce',
+  EXAMPLES: 'examples',
   REVIEW: 'review',
 };
 
-// EXPLAIN이 멈추는 진행바 지점 — REVIEW가 이 지점부터 이어받아 1까지 채운다
+// EXPLAIN(추가 예문 포함 화면)이 멈추는 진행바 지점 — REVIEW가 이 지점부터 이어받아 1까지 채운다
 const EXPLAIN_PROGRESS = 0.7;
+// 발음 스텝이 낀 플로우의 앞쪽 구간 배치 — 퀴즈(0~0.3)→설명(0.45)→발음(0.6)→추가 예문(0.7)
+const QUIZ_RANGE_WITH_PRONUNCIATION: [number, number] = [0, 0.3];
+const EXPLAIN_PROGRESS_WITH_PRONUNCIATION = 0.45;
+const PRONUNCIATION_PROGRESS = 0.6;
+// 설명 화면 자동재생에서 표현 → 예문 사이 숨 고르는 텀
+const INTRO_GAP_MS = 600;
 
 export const ExpressionFlow = ({
   origin,
@@ -52,7 +66,14 @@ export const ExpressionFlow = ({
     origin.kind === 'scenario'
       ? { scenario_id: origin.scenarioId }
       : { session_id: origin.sessionId };
-  const [step, setStep] = useState<'QUIZ' | 'EXPLAIN' | 'REVIEW'>('QUIZ');
+  const [step, setStep] = useState<Step>('QUIZ');
+  // 발음 분석이 결과 화면(피드백·실패)에 한 번이라도 도달했는지 — 그 뒤 설명·추가 예문으로 나가도
+  // 발음 스텝을 숨김 유지해 보던 화면을 잃지 않고, 설명 CTA는 "다음"으로 바뀐다.
+  // 녹음 전에 되돌아가는 건 그냥 첫 방문 취급
+  const [pronounceDone, setPronounceDone] = useState(false);
+  // 발음을 건너뛰었는지 — 추가 예문에서 뒤로 가면 마이크가 아니라 설명(다음 CTA)으로 돌아가고,
+  // 설명의 "다음"은 발음이 아니라 추가 예문으로 복귀한다
+  const [pronounceSkipped, setPronounceSkipped] = useState(false);
   // 예문까지(QUIZ·EXPLAIN)는 뒤로가기 대신 X로 나가며, 중단 확인 시트를 먼저 띄운다
   const [exitOpen, setExitOpen] = useState(false);
   // 복습 영작 draft — 예문(설명)을 보러 나갔다 돌아와도 고른 칩이 유지되게 문제 문장과 함께 보관한다
@@ -78,6 +99,39 @@ export const ExpressionFlow = ({
     expressionId,
     origin.kind === 'session' ? origin.sessionId : undefined,
   );
+  // 설명 화면(B안)의 원어민 발음 듣기 재생용
+  const player = useAudioPlayer();
+  // 설명 화면 첫 진입 시 표현 → 예문 순서로 자동 1회 들려준다 — 발음 화면에서 되돌아와도 다시 틀지 않고,
+  // 중간에 사용자가 끄면(stopped) 다음 재생을 잇지 않는다. 표현 전용 음원이 없으면 예문만 튼다
+  const introPlayedRef = useRef(false);
+  // 표현→예문 사이 숨 고르는 텀 — 사용자가 그 사이 다른 듣기를 누르면 취소한다
+  const introGapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearIntroGap = () => {
+    if (introGapTimerRef.current) clearTimeout(introGapTimerRef.current);
+    introGapTimerRef.current = null;
+  };
+  useEffect(() => clearIntroGap, []);
+
+  const introAudioUrl = learning?.representativeSentenceAudioUrl ?? null;
+  const introExpressionAudioUrl = learning?.targetExpressionAudioUrl ?? null;
+  useEffect(() => {
+    if (step !== 'EXPLAIN' || introPlayedRef.current || !introAudioUrl) return;
+    introPlayedRef.current = true;
+    if (introExpressionAudioUrl) {
+      player.play(introExpressionAudioUrl, {
+        id: 'intro-expression',
+        onDone: (reason) => {
+          if (reason !== 'ended') return;
+          introGapTimerRef.current = setTimeout(() => {
+            player.play(introAudioUrl, { id: 'intro-sentence' });
+          }, INTRO_GAP_MS);
+        },
+      });
+    } else {
+      player.play(introAudioUrl, { id: 'intro-sentence' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 진입 시 1회, player는 안정적이지 않아 제외
+  }, [step, introAudioUrl, introExpressionAudioUrl]);
 
   // 데이터가 준비돼 실제 학습이 뜬 시점을 시작으로 본다
   const learningReady = Boolean(learning);
@@ -124,6 +178,8 @@ export const ExpressionFlow = ({
   }
 
   const quiz = fromLearning(learning);
+  // 발음 자산(원어민 TTS)이 있는 표현만 발음 스텝이 열린다 — null이면 기존 3스텝 플로우 그대로
+  const hasPronunciation = Boolean(learning.representativeSentenceAudioUrl);
 
   const openExitSheet = () => {
     track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'expression_exit' });
@@ -158,7 +214,114 @@ export const ExpressionFlow = ({
           leftAction="close"
           onBack={openExitSheet}
           onNext={() => setStep('EXPLAIN')}
+          progressRange={
+            hasPronunciation ? QUIZ_RANGE_WITH_PRONUNCIATION : undefined
+          }
         />
+        {exitSheet}
+      </>
+    );
+  }
+
+  // EXPLAIN·PRONOUNCE·EXAMPLES(발음 자산 있음) — 설명 단독 화면(B안)·발음 평가·추가 예문을 한 트리에서 렌더한다.
+  // 피드백을 받은 뒤엔 설명·추가 예문으로 나가도 발음 스텝은 숨김 유지 — 리마운트되면 피드백·녹음이 날아간다
+  if (
+    (step === 'EXPLAIN' || step === 'PRONOUNCE' || step === 'EXAMPLES') &&
+    learning.representativeSentenceAudioUrl
+  ) {
+    const audioUrl = learning.representativeSentenceAudioUrl;
+    // 발음 스텝을 지나온 재방문 — 설명 CTA가 "다음"(복귀)으로 바뀌고 건너뛰기는 사라진다
+    const pronounceRevisit = pronounceDone || pronounceSkipped;
+    // 결과 없이 건너뛴 상태 — 재방문 동선이 발음(마이크) 대신 설명↔추가 예문을 오간다
+    const skippedWithoutResult = pronounceSkipped && !pronounceDone;
+    return (
+      <>
+        {step === 'EXPLAIN' && (
+          <ExpressionIntroStep
+            targetExpressionText={learning.targetExpressionText}
+            baseExpressionMeaningText={learning.baseExpressionMeaningText}
+            usageDescription={learning.usageDescription}
+            sentenceText={learning.representativeSentenceText}
+            sentenceTranslation={learning.representativeSentenceTranslation}
+            imageUrl={learning.representativeImageUrl}
+            // 표현 전용 TTS가 오면 그걸, 아직 없으면 문장 음원을 재생한다. toggle이라 재생 중 다시 누르면 꺼진다.
+            // 수동 조작은 자동 순차 재생의 대기 타이머를 취소한다
+            onPlayExpressionAudio={() => {
+              clearIntroGap();
+              player.toggle(learning.targetExpressionAudioUrl ?? audioUrl, {
+                id: 'intro-expression',
+              });
+            }}
+            playingExpressionAudio={player.playingId === 'intro-expression'}
+            expressionAudioProgress={
+              player.playingId === 'intro-expression' ? player.progress : 0
+            }
+            onPlaySentenceAudio={() => {
+              clearIntroGap();
+              player.toggle(audioUrl, { id: 'intro-sentence' });
+            }}
+            playingSentenceAudio={player.playingId === 'intro-sentence'}
+            sentenceAudioProgress={
+              player.playingId === 'intro-sentence' ? player.progress : 0
+            }
+            progress={EXPLAIN_PROGRESS_WITH_PRONUNCIATION}
+            leftAction="close"
+            onBack={openExitSheet}
+            // 재방문의 "다음"은 떠나온 자리로 복귀 — 발음 결과가 있으면 그 화면, 건너뛰었으면 추가 예문
+            onNext={() =>
+              setStep(skippedWithoutResult ? 'EXAMPLES' : 'PRONOUNCE')
+            }
+            nextLabel={pronounceRevisit ? '다음' : undefined}
+            // 마이크를 쓸 수 없는 상황(장소 등)을 위한 발음 건너뛰기 — 기획 확정 동선. 재방문 땐 없다
+            onSkip={
+              pronounceRevisit
+                ? undefined
+                : () => {
+                    setPronounceSkipped(true);
+                    setStep('EXAMPLES');
+                  }
+            }
+          />
+        )}
+        {/* EXAMPLES — 발음 뒤 추가 예문 화면. 설명 카드는 이미 봤지만 예문 카드의 맥락으로 함께 남긴다 */}
+        {step === 'EXAMPLES' && (
+          <ExplanationStep
+            expressionId={expressionId}
+            targetExpressionText={learning.targetExpressionText}
+            baseExpressionMeaningText={learning.baseExpressionMeaningText}
+            usageDescription={learning.usageDescription}
+            examples={practice?.practiceSentence ?? []}
+            title={learning.baseExpressionMeaningText}
+            progress={EXPLAIN_PROGRESS}
+            nextLabel="복습 퀴즈 풀게요"
+            // 발음을 건너뛴 사람은 마이크가 아니라 설명으로 되돌린다 — 말하기를 강요하는 화면이 불쑥 뜨지 않게
+            onBack={() =>
+              setStep(skippedWithoutResult ? 'EXPLAIN' : 'PRONOUNCE')
+            }
+            onNext={() => setStep('REVIEW')}
+            // 설명은 B안 화면에서 이미 봤다 — 여기선 추가 예문만
+            showDescription={false}
+          />
+        )}
+        {(step === 'PRONOUNCE' || pronounceDone) && (
+          <div className={step === 'PRONOUNCE' ? undefined : 'hidden'}>
+            <PronunciationStep
+              active={step === 'PRONOUNCE'}
+              onSettled={() => setPronounceDone(true)}
+              expressionId={expressionId}
+              sentenceText={learning.representativeSentenceText}
+              sentenceTranslation={learning.representativeSentenceTranslation}
+              targetExpressionText={learning.targetExpressionText}
+              imageUrl={learning.representativeImageUrl}
+              sentenceAudioUrl={audioUrl}
+              progress={PRONUNCIATION_PROGRESS}
+              onBack={() => setStep('EXPLAIN')}
+              onExit={openExitSheet}
+              onNext={() => setStep('EXAMPLES')}
+              onUnavailable={() => setStep('EXAMPLES')}
+            />
+          </div>
+        )}
         {exitSheet}
       </>
     );
@@ -211,7 +374,7 @@ export const ExpressionFlow = ({
       key={reviewQuiz.writingSentenceText}
       quiz={reviewQuiz}
       expressionId={expressionId}
-      onBack={() => setStep('EXPLAIN')}
+      onBack={() => setStep(hasPronunciation ? 'EXAMPLES' : 'EXPLAIN')}
       onNext={finishFlow}
       nextLabel="학습 완료"
       finishing={finish.isPending}
