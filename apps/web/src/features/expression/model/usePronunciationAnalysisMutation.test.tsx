@@ -27,7 +27,7 @@ describe('usePronunciationAnalysisMutation', () => {
       wrapper,
     });
 
-    result.current.mutate({ blob, filename: 'recording.webm' });
+    result.current.mutate({ blob, filename: 'recording.webm', peak: 0.5 });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(postPronunciationAnalysis).toHaveBeenCalledWith(

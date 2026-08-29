@@ -1,7 +1,10 @@
 // 발화 녹음 전송 계층 검증 — 미지원 차단·청크 조립·파기 시 마이크 반납
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { startSentenceRecording } from './sentence-recording';
+import {
+  isSilentRecording,
+  startSentenceRecording,
+} from './sentence-recording';
 
 class FakeMediaRecorder {
   static isTypeSupported = (type: string) => type === 'audio/webm';
@@ -73,5 +76,25 @@ describe('startSentenceRecording', () => {
     expect(recorder.state).toBe('inactive');
     expect(recorder.ondataavailable).toBeNull();
     expect(trackStop).toHaveBeenCalled();
+  });
+});
+
+describe('isSilentRecording', () => {
+  const recording = (peak: number | null) => ({
+    blob: new Blob(['x']),
+    filename: 'recording.webm',
+    peak,
+  });
+
+  it('피크가 임계 미만이면 무음으로 판정한다', () => {
+    expect(isSilentRecording(recording(0.005))).toBe(true);
+  });
+
+  it('말소리 수준의 피크면 무음이 아니다', () => {
+    expect(isSilentRecording(recording(0.3))).toBe(false);
+  });
+
+  it('측정 불가(null)면 무음으로 판정하지 않는다 — 서버 판정에 맡긴다', () => {
+    expect(isSilentRecording(recording(null))).toBe(false);
   });
 });

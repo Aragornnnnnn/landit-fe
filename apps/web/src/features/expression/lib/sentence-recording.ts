@@ -8,7 +8,16 @@ export interface SentenceRecording {
   blob: Blob;
   // BE가 확장자로 형식을 검증한다 — 실제 쓰인 mimeType에서 결정
   filename: string;
+  // 녹음 중 관측한 최대 진폭(0~1) — 측정 불가 환경(AudioContext 없음)은 null
+  peak: number | null;
 }
+
+// 무음 판정 임계 — 이보다 작으면 말소리가 담기지 않은 것으로 보고 업로드 전에 거른다.
+// 측정 불가(null)면 서버 판정에 맡긴다
+const SILENCE_PEAK = 0.02;
+
+export const isSilentRecording = (recording: SentenceRecording): boolean =>
+  recording.peak !== null && recording.peak < SILENCE_PEAK;
 
 export interface RecordingSession {
   /** 확정 (완료 ■) — 남은 청크까지 모아 녹음 파일을 돌려준다 */
@@ -44,7 +53,34 @@ export const startSentenceRecording = async (): Promise<RecordingSession> => {
     if (event.data.size > 0) chunks.push(event.data);
   };
 
+  // 무음 감지용 레벨 미터 — 녹음과 병렬로 스트림 진폭의 최댓값을 기록한다.
+  // rAF는 웹뷰에서 멈출 수 있어 인터벌로 샘플링한다. AudioContext가 없으면 측정을 포기한다(peak=null)
+  let peak: number | null = null;
+  let meterTimer: ReturnType<typeof setInterval> | null = null;
+  let audioContext: AudioContext | null = null;
+  if (typeof AudioContext !== 'undefined') {
+    try {
+      audioContext = new AudioContext();
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 2048;
+      audioContext.createMediaStreamSource(stream).connect(analyser);
+      const samples = new Uint8Array(analyser.fftSize);
+      peak = 0;
+      meterTimer = setInterval(() => {
+        analyser.getByteTimeDomainData(samples);
+        for (const value of samples) {
+          const amplitude = Math.abs(value - 128) / 128;
+          if (peak !== null && amplitude > peak) peak = amplitude;
+        }
+      }, 200);
+    } catch {
+      peak = null;
+    }
+  }
+
   const releaseMic = () => {
+    if (meterTimer) clearInterval(meterTimer);
+    void audioContext?.close().catch(() => {});
     if (recorder.state !== 'inactive') recorder.stop();
     stream.getTracks().forEach((track) => track.stop());
   };
@@ -63,6 +99,7 @@ export const startSentenceRecording = async (): Promise<RecordingSession> => {
           resolve({
             blob: new Blob(chunks, type ? { type } : undefined),
             filename: recordingFilename(type),
+            peak,
           });
         };
         releaseMic();

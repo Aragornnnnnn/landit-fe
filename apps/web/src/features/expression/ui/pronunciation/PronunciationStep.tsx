@@ -16,6 +16,7 @@ import type {
   PronunciationAnalysis,
   PronunciationWord,
 } from '../../api/pronunciation';
+import { isSilentRecording } from '../../lib/sentence-recording';
 import { toFeedbackCards } from '../../model/pronunciation-feedback';
 import {
   feedbackCoachMessage,
@@ -140,7 +141,12 @@ export const PronunciationStep = ({
 
   const submitRecording = async () => {
     const recording = await recorder.stop();
-    if (!recording || recording.blob.size === 0) {
+    // 빈 파일이거나 말소리가 담기지 않은 무음이면 업로드 없이 바로 되돌린다
+    if (
+      !recording ||
+      recording.blob.size === 0 ||
+      isSilentRecording(recording)
+    ) {
       setNotice('녹음된 소리가 없어요. 다시 말해볼까요?');
       setPhase(analysis ? 'feedback' : 'ready');
       return;
