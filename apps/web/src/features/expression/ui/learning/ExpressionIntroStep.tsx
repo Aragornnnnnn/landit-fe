@@ -17,8 +17,8 @@ interface ExpressionIntroStepProps {
   sentenceTranslation: string;
   // 대표 예문 이미지 — 표현 뉘앙스 시각화. 없으면 이미지 영역을 접는다
   imageUrl: string | null;
-  // 표현 줄·예문 줄 스피커 (사전 카드처럼 각각). 표현 전용 TTS는 BE 노출 대기라 당장은 둘 다 문장 음원
-  onPlayExpressionAudio: () => void;
+  // 표현 줄·예문 줄 스피커 (사전 카드처럼 각각). 표현 전용 음원이 없는 표현(패턴형)은 버튼을 숨긴다
+  onPlayExpressionAudio?: () => void;
   playingExpressionAudio: boolean;
   // 표현 재생 진행률 0~1 — 타이틀 글자가 순서대로 물든다
   expressionAudioProgress: number;
@@ -106,11 +106,13 @@ export const ExpressionIntroStep = ({
             progress={expressionAudioProgress}
           />
         </h1>
-        <ListenButton
-          playing={playingExpressionAudio}
-          onClick={onPlayExpressionAudio}
-          ariaLabel="표현 발음 듣기"
-        />
+        {onPlayExpressionAudio && (
+          <ListenButton
+            playing={playingExpressionAudio}
+            onClick={onPlayExpressionAudio}
+            ariaLabel="표현 발음 듣기"
+          />
+        )}
       </div>
       <p className="mt-2 text-base font-medium text-muted-foreground">
         {baseExpressionMeaningText}

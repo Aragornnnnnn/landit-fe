@@ -301,21 +301,25 @@ export const ExpressionFlow = ({
             sentenceText={learning.representativeSentenceText}
             sentenceTranslation={learning.representativeSentenceTranslation}
             imageUrl={learning.representativeImageUrl}
-            // 표현 전용 TTS가 오면 그걸, 아직 없으면 문장 음원을 재생한다. toggle이라 재생 중 다시 누르면 꺼진다.
-            // 수동 조작은 자동 순차 재생의 대기 타이머를 취소한다
-            onPlayExpressionAudio={() => {
-              clearIntroGap();
-              // 재생 시작만 찍는다 — 같은 id가 나오는 중이면 이 토글은 끄기다
-              if (player.playingId !== 'intro-expression') {
-                track(EVENTS.PRONUNCIATION_AUDIO_PLAYED, {
-                  expression_id: expressionId,
-                  source: 'expression',
-                });
-              }
-              player.toggle(learning.targetExpressionAudioUrl ?? audioUrl, {
-                id: 'intro-expression',
-              });
-            }}
+            // 표현 전용 음원이 없는 표현(패턴형)은 표현 듣기 버튼을 숨긴다 — 예문이 대신 나오면 헷갈린다.
+            // toggle이라 재생 중 다시 누르면 꺼지고, 수동 조작은 자동 순차 재생의 대기 타이머를 취소한다
+            onPlayExpressionAudio={
+              introExpressionAudioUrl
+                ? () => {
+                    clearIntroGap();
+                    // 재생 시작만 찍는다 — 같은 id가 나오는 중이면 이 토글은 끄기다
+                    if (player.playingId !== 'intro-expression') {
+                      track(EVENTS.PRONUNCIATION_AUDIO_PLAYED, {
+                        expression_id: expressionId,
+                        source: 'expression',
+                      });
+                    }
+                    player.toggle(introExpressionAudioUrl, {
+                      id: 'intro-expression',
+                    });
+                  }
+                : undefined
+            }
             playingExpressionAudio={player.playingId === 'intro-expression'}
             expressionAudioProgress={
               player.playingId === 'intro-expression' ? player.progress : 0
