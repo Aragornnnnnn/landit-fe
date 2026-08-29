@@ -29,6 +29,7 @@ import { getExpoPushToken } from '@/notifications/push-token';
 import { syncReminders } from '@/notifications/reminders';
 import { initializeNotifications } from '@/notifications/setup';
 import { useNotificationDeepLink } from '@/notifications/useNotificationDeepLink';
+import { saveWidgetData } from '@/widgets/widget-store';
 
 // 네이티브 스플래시를 웹 첫 페인트까지 붙잡아 둔다 — 자동 숨김을 막고 WebView onLoad에서 수동으로 감춘다
 void SplashScreen.preventAutoHideAsync();
@@ -54,6 +55,8 @@ const ShellScreen = () => {
     OPEN_SETTINGS: () => void Linking.openSettings(),
     // 웹이 만든 예약 목록대로 로컬 알림을 통째로 다시 깐다 (증분 갱신이 아니다)
     SYNC_REMINDERS: ({ reminders }) => void syncReminders(reminders),
+    // 홈 위젯용 스트릭 데이터를 기록한다 — 위젯 갱신 호출은 위젯 타깃이 생기는 단계에서 잇는다
+    SYNC_WIDGET_DATA: ({ data }) => void saveWidgetData(data),
     // 알림 권한 상태 조회 — 다이얼로그 없이 현재 상태만 회신한다
     GET_NOTIFICATION_PERMISSION: async () => {
       const status = await getNotificationPermission();
