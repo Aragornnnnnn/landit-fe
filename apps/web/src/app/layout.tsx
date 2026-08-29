@@ -5,6 +5,7 @@ import type { Metadata, Viewport } from 'next';
 import { AppUpdateGate } from '@/features/app-update/ui/AppUpdateGate';
 import { PushTokenSync } from '@/features/notification/ui/PushTokenSync';
 import { ReminderSync } from '@/features/notification/ui/ReminderSync';
+import { WidgetDataSync } from '@/features/widget/ui/WidgetDataSync';
 import { AnalyticsBootstrap, PageViewTracker } from '@/shared/analytics';
 import { BridgeListener } from '@/shared/bridge/BridgeListener';
 import { GlobalHaptics } from '@/shared/haptics';
@@ -44,6 +45,7 @@ export default function RootLayout({
           <AppUpdateGate />
           <ReminderSync />
           <PushTokenSync />
+          <WidgetDataSync />
         </Providers>
         <Toaster />
         <SpeedInsights />
