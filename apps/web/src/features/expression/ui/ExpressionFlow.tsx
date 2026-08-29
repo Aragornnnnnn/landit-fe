@@ -210,6 +210,60 @@ export const ExpressionFlow = ({
     />
   );
 
+  // 복습 영작 — practice가 주는 별도 영작 문제(writingSentence)를 QUIZ와 같은 단어 칩 방식으로 푼다.
+  // 아직 로딩 중이면 잠깐 스켈레톤을 유지한다 — 폴백 문제를 먼저 보여줬다가 도착 후 바꿔치기하면
+  // 고른 칩과 단어 수가 어긋난다. 실패(404 등) 시에만 대표 예문으로 폴백해 플로우를 막지 않는다.
+  const reviewQuiz = practice?.writingSentence
+    ? fromWritingSentence(practice.writingSentence)
+    : quiz;
+
+  const finishFlow = () =>
+    finish.mutate(undefined, {
+      onSuccess: () => {
+        track(EVENTS.EXPRESSION_COMPLETED, {
+          expression_id: expressionId,
+          ...originProps,
+        });
+        backToList();
+      },
+    });
+
+  // 발음 keep-alive 트리와 기존 3스텝 폴백이 같은 화면을 쓴다
+  const reviewScreen =
+    practiceLoading && !practice ? (
+      <QuizStepSkeleton />
+    ) : (
+      <QuizStep
+        step="review"
+        // 문제가 바뀌면(이론상 폴백→practice 교체) 상태를 통째로 리셋한다
+        key={reviewQuiz.writingSentenceText}
+        quiz={reviewQuiz}
+        expressionId={expressionId}
+        onBack={() => setStep(hasPronunciation ? 'EXAMPLES' : 'EXPLAIN')}
+        onNext={finishFlow}
+        nextLabel="학습 완료"
+        finishing={finish.isPending}
+        progressRange={[EXPLAIN_PROGRESS, 1]}
+        // 예문을 보러 나갔다 돌아와도 같은 문제면 고른 칩을 이어서 쓴다
+        initialSelected={
+          reviewDraft?.sentence === reviewQuiz.writingSentenceText
+            ? reviewDraft.selected
+            : undefined
+        }
+        onSelectedChange={(selected) =>
+          setReviewDraft({ sentence: reviewQuiz.writingSentenceText, selected })
+        }
+        correctSlot={() => (
+          <ReviewSuccess
+            expression={learning.targetExpressionText}
+            meaning={learning.baseExpressionMeaningText}
+            onFinish={finishFlow}
+            finishing={finish.isPending}
+          />
+        )}
+      />
+    );
+
   if (step === 'QUIZ') {
     return (
       <>
@@ -229,12 +283,9 @@ export const ExpressionFlow = ({
     );
   }
 
-  // EXPLAIN·PRONOUNCE·EXAMPLES(발음 자산 있음) — 설명 단독 화면(B안)·발음 평가·추가 예문을 한 트리에서 렌더한다.
-  // 피드백을 받은 뒤엔 설명·추가 예문으로 나가도 발음 스텝은 숨김 유지 — 리마운트되면 피드백·녹음이 날아간다
-  if (
-    (step === 'EXPLAIN' || step === 'PRONOUNCE' || step === 'EXAMPLES') &&
-    learning.representativeSentenceAudioUrl
-  ) {
+  // 발음 자산이 있으면 QUIZ 이후 스텝 전부(설명·발음·추가 예문·복습)를 한 트리에서 렌더한다 (QUIZ는 위에서 반환됨).
+  // 피드백을 받은 뒤엔 어느 스텝으로 나가도 발음 스텝은 숨김 유지 — 리마운트되면 피드백·녹음이 날아간다
+  if (learning.representativeSentenceAudioUrl) {
     const audioUrl = learning.representativeSentenceAudioUrl;
     // 발음 스텝을 지나온 재방문 — 설명 CTA가 "다음"(복귀)으로 바뀌고 건너뛰기는 사라진다
     const pronounceRevisit = pronounceDone || pronounceSkipped;
@@ -313,6 +364,7 @@ export const ExpressionFlow = ({
             showDescription={(practice?.practiceSentence?.length ?? 0) === 0}
           />
         )}
+        {step === 'REVIEW' && reviewScreen}
         {(step === 'PRONOUNCE' || pronounceDone) && (
           <div className={step === 'PRONOUNCE' ? undefined : 'hidden'}>
             <PronunciationStep
@@ -358,56 +410,7 @@ export const ExpressionFlow = ({
     );
   }
 
-  // 복습 영작 — practice가 주는 별도 영작 문제(writingSentence)를 QUIZ와 같은 단어 칩 방식으로 푼다.
-  // 아직 로딩 중이면 잠깐 스켈레톤을 유지한다 — 폴백 문제를 먼저 보여줬다가 도착 후 바꿔치기하면
-  // 고른 칩과 단어 수가 어긋난다. 실패(404 등) 시에만 대표 예문으로 폴백해 플로우를 막지 않는다.
-  if (practiceLoading && !practice) return <QuizStepSkeleton />;
-  const reviewQuiz = practice?.writingSentence
-    ? fromWritingSentence(practice.writingSentence)
-    : quiz;
-
-  const finishFlow = () =>
-    finish.mutate(undefined, {
-      onSuccess: () => {
-        track(EVENTS.EXPRESSION_COMPLETED, {
-          expression_id: expressionId,
-          ...originProps,
-        });
-        backToList();
-      },
-    });
-
-  return (
-    <QuizStep
-      step="review"
-      // 문제가 바뀌면(이론상 폴백→practice 교체) 상태를 통째로 리셋한다
-      key={reviewQuiz.writingSentenceText}
-      quiz={reviewQuiz}
-      expressionId={expressionId}
-      onBack={() => setStep(hasPronunciation ? 'EXAMPLES' : 'EXPLAIN')}
-      onNext={finishFlow}
-      nextLabel="학습 완료"
-      finishing={finish.isPending}
-      progressRange={[EXPLAIN_PROGRESS, 1]}
-      // 예문을 보러 나갔다 돌아와도 같은 문제면 고른 칩을 이어서 쓴다
-      initialSelected={
-        reviewDraft?.sentence === reviewQuiz.writingSentenceText
-          ? reviewDraft.selected
-          : undefined
-      }
-      onSelectedChange={(selected) =>
-        setReviewDraft({ sentence: reviewQuiz.writingSentenceText, selected })
-      }
-      correctSlot={() => (
-        <ReviewSuccess
-          expression={learning.targetExpressionText}
-          meaning={learning.baseExpressionMeaningText}
-          onFinish={finishFlow}
-          finishing={finish.isPending}
-        />
-      )}
-    />
-  );
+  return reviewScreen;
 };
 
 const FlowStatus = ({ children }: { children: React.ReactNode }) => (

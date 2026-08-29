@@ -28,10 +28,19 @@ vi.mock('../model/useFinishExpressionMutation', () => ({
 // 스텝 UI는 이 테스트 관심사가 아니라 스텁으로 대체(무거운 하위 의존 회피).
 // 전환 검증용으로 onNext·onSkip만 버튼으로 노출한다
 vi.mock('./learning/QuizStep', () => ({
-  QuizStep: ({ step, onNext }: { step: string; onNext: () => void }) => (
+  QuizStep: ({
+    step,
+    onNext,
+    onBack,
+  }: {
+    step: string;
+    onNext: () => void;
+    onBack: () => void;
+  }) => (
     <div>
       <p>quiz:{step}</p>
       <button onClick={onNext}>quiz-next</button>
+      <button onClick={onBack}>quiz-back</button>
     </div>
   ),
 }));
@@ -397,6 +406,45 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
 
     await user.click(screen.getByText('intro-next'));
     expect(screen.getByText('explain:복습 퀴즈 풀게요:0')).toBeInTheDocument();
+  });
+
+  it('복습 영작까지 갔다 뒤로 와도 발음 스텝이 유지된다', async () => {
+    const user = userEvent.setup();
+    learningMock.mockReturnValue({
+      learning: {
+        ...learning,
+        representativeSentenceAudioUrl: 'https://cdn/audio.mp3',
+      },
+      error: null,
+      isLoading: false,
+    });
+    practiceMock.mockReturnValue({
+      practice: practice([]),
+      error: null,
+      isLoading: false,
+    });
+    render(
+      <ExpressionFlow
+        origin={{ kind: 'scenario', scenarioId: 1 }}
+        expressionId={7}
+      />,
+    );
+
+    await user.click(screen.getByText('quiz-next'));
+    await user.click(screen.getByText('intro-next'));
+    await user.click(screen.getByText('pronounce-settled'));
+    const firstMount = screen.getByText(/pronounce#/).textContent;
+
+    // 추가 예문 → 복습 영작까지 전진해도 발음 스텝은 숨어서 살아 있다
+    await user.click(screen.getByText('pronounce-next'));
+    await user.click(screen.getByText('explain-next'));
+    expect(screen.getByText('quiz:review')).toBeInTheDocument();
+    expect(screen.getByText(/pronounce#/).textContent).toBe(firstMount);
+
+    // 복습 ‹ → 추가 예문 ‹ → 보던 발음 결과 그대로
+    await user.click(screen.getByText('quiz-back'));
+    await user.click(screen.getByText('explain-back'));
+    expect(screen.getByText(/pronounce#/).textContent).toBe(firstMount);
   });
 
   it('발음 자산이 없으면 기존 3스텝 그대로 — 발음 스텝이 뜨지 않는다', async () => {
