@@ -1,13 +1,10 @@
-// 발음 점수 표시 규칙 — 93% 이상은 통과로 치고 100%로 올려 보여준다 (관대한 경험, 기획 확정)
+// 발음 점수 표시 규칙 — 통과 판정은 BE passed를 그대로 따르고, 여기선 구간별 표시만 정한다
 import type { PronunciationAnalysis } from '../api/pronunciation';
-
-// 기획 확정 통과선 — BE passed(오류 0개)보다 관대하다. 화면 계약은 이 함수가 단일 출처
-const PASS_SCORE = 93;
 
 export type ScoreTone = 'red' | 'yellow' | 'green';
 
 export interface ScoreView {
-  // 화면에 보여줄 % — 통과면 실제 점수 대신 100
+  // 화면에 보여줄 % — 통과면 100 고정 (BE 계약상 통과 = 오류 0개라 실점수도 100이다)
   display: number;
   label: string;
   tone: ScoreTone;
@@ -30,7 +27,7 @@ export const scoreView = ({
   score,
   passed,
 }: Pick<PronunciationAnalysis, 'score' | 'passed'>): ScoreView => {
-  if (passed || score >= PASS_SCORE) {
+  if (passed) {
     return { display: 100, label: 'Perfect!', tone: 'green', passed: true };
   }
   if (score >= 71) {

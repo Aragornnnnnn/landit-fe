@@ -1,6 +1,6 @@
 'use client';
 
-// 발음 평가 스텝 — 대기→녹음→분석→피드백(재도전 루프). 점수·통과 기준은 pronunciation-score가 정한다
+// 발음 평가 스텝 — 대기→녹음→분석→피드백(재도전 루프). 점수 구간 표시는 pronunciation-score가 정한다
 import { useEffect, useRef, useState } from 'react';
 
 // 마이크 컨트롤·권한 시트는 공용 슬라이스(conversation)의 것을 그대로 쓴다 — 대화와 같은 조작감
@@ -196,10 +196,6 @@ export const PronunciationStep = ({
   // 하단만 녹음 컨트롤로 바뀐다. 제출 후 분석은 첫 분석과 같은 로딩 화면으로 전환한다
   if (analysis && (phase === 'feedback' || phase === 'recording')) {
     const view = scoreView(analysis);
-    // 통과 화면은 관대하게 전부 초록 칩 — 93~99% 통과에서 남은 오류 단어를 다시 들추지 않는다
-    const chipWords = view.passed
-      ? analysis.words.map((word) => ({ ...word, status: 'CORRECT' as const }))
-      : analysis.words;
 
     return (
       <StepScaffold
@@ -253,7 +249,7 @@ export const PronunciationStep = ({
         >
           <ScoreGauge view={view} />
           <WordChips
-            words={chipWords}
+            words={analysis.words}
             // 오류 단어 칩을 누르면 해당 피드백 카드로 이동 (통과 화면엔 카드가 없다)
             onSelectWord={
               view.passed
