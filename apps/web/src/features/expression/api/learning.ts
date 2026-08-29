@@ -14,6 +14,11 @@ export interface ExpressionLearning {
   representativeSentenceWords: string[];
   representativeSentenceWordChoices: string[];
   representativeImageUrl: string | null;
+  // 대표 예문 원어민 TTS URL — null이면 발음 자산 미구축(또는 튜터 미설정)이라 발음 스텝을 숨긴다
+  representativeSentenceAudioUrl: string | null;
+  // 표현만 읽는 원어민 TTS URL — 음원은 자산 파이프라인에 이미 있고 BE 노출 요청 중(명세 targetExpressionAudioUrl).
+  // 아직 응답에 없으므로 옵셔널, 없으면 문장 음원으로 폴백한다
+  targetExpressionAudioUrl?: string | null;
 }
 
 export const getExpressionLearning = (expressionId: number) =>

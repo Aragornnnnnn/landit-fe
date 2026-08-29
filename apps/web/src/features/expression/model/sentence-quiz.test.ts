@@ -32,6 +32,7 @@ const baseLearning: ExpressionLearning = {
     'amazing',
   ],
   representativeImageUrl: null,
+  representativeSentenceAudioUrl: null,
 };
 
 describe('fromLearning', () => {
