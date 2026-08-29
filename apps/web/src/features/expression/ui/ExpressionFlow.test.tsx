@@ -120,6 +120,7 @@ const learning: ExpressionLearning = {
   representativeSentenceWordChoices: ['I', 'get', 'it'],
   representativeImageUrl: null,
   representativeSentenceAudioUrl: null,
+  targetExpressionAudioUrl: null,
 };
 
 const practice = (imageUrls: (string | null)[]): ExpressionPractice => ({

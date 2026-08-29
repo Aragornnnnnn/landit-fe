@@ -33,6 +33,7 @@ const baseLearning: ExpressionLearning = {
   ],
   representativeImageUrl: null,
   representativeSentenceAudioUrl: null,
+  targetExpressionAudioUrl: null,
 };
 
 describe('fromLearning', () => {
