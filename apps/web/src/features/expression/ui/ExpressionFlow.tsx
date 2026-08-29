@@ -305,6 +305,13 @@ export const ExpressionFlow = ({
             // 수동 조작은 자동 순차 재생의 대기 타이머를 취소한다
             onPlayExpressionAudio={() => {
               clearIntroGap();
+              // 재생 시작만 찍는다 — 같은 id가 나오는 중이면 이 토글은 끄기다
+              if (player.playingId !== 'intro-expression') {
+                track(EVENTS.PRONUNCIATION_AUDIO_PLAYED, {
+                  expression_id: expressionId,
+                  source: 'expression',
+                });
+              }
               player.toggle(learning.targetExpressionAudioUrl ?? audioUrl, {
                 id: 'intro-expression',
               });
@@ -315,6 +322,12 @@ export const ExpressionFlow = ({
             }
             onPlaySentenceAudio={() => {
               clearIntroGap();
+              if (player.playingId !== 'intro-sentence') {
+                track(EVENTS.PRONUNCIATION_AUDIO_PLAYED, {
+                  expression_id: expressionId,
+                  source: 'sentence',
+                });
+              }
               player.toggle(audioUrl, { id: 'intro-sentence' });
             }}
             playingSentenceAudio={player.playingId === 'intro-sentence'}

@@ -194,11 +194,25 @@ export const PronunciationStep = ({
     });
   };
 
-  // 듣기 버튼은 전부 토글 — 재생 중 다시 누르면 꺼진다
-  const playNativeSentence = () =>
+  // 듣기 버튼은 전부 토글 — 재생 중 다시 누르면 꺼진다.
+  // 계측은 재생 시작만 찍는다 — 같은 id가 나오는 중이면 그 토글은 끄기다
+  const trackAudioPlayed = (
+    id: string,
+    source: 'sentence' | 'native_word' | 'my_word',
+  ) => {
+    if (player.playingId === id) return;
+    track(EVENTS.PRONUNCIATION_AUDIO_PLAYED, {
+      expression_id: expressionId,
+      source,
+    });
+  };
+  const playNativeSentence = () => {
+    trackAudioPlayed('sentence', 'sentence');
     player.toggle(sentenceAudioUrl, { id: 'sentence' });
+  };
   const playNativeWord = (word: PronunciationWord) => {
     if (word.nativeWordAudioUrl) {
+      trackAudioPlayed(nativeWordAudioId(word.order), 'native_word');
       player.toggle(word.nativeWordAudioUrl, {
         id: nativeWordAudioId(word.order),
       });
@@ -210,6 +224,7 @@ export const PronunciationStep = ({
       word.startTimeMs !== null &&
       word.endTimeMs !== null
     ) {
+      trackAudioPlayed(myWordAudioId(word.order), 'my_word');
       player.toggle(recordingUrlRef.current, {
         id: myWordAudioId(word.order),
         segment: { startMs: word.startTimeMs, endMs: word.endTimeMs },
