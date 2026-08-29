@@ -71,8 +71,8 @@ export const ExpressionFlow = ({
   // 발음 스텝을 숨김 유지해 보던 화면을 잃지 않고, 설명 CTA는 "다음"으로 바뀐다.
   // 녹음 전에 되돌아가는 건 그냥 첫 방문 취급
   const [pronounceDone, setPronounceDone] = useState(false);
-  // 발음을 건너뛰었는지 — 추가 예문에서 뒤로 가면 마이크가 아니라 설명(다음 CTA)으로 돌아가고,
-  // 설명의 "다음"은 발음이 아니라 추가 예문으로 복귀한다
+  // 발음을 결과 없이 지나갔는지(사용자 건너뛰기 또는 자산 소실 404) — 이 상태에선 뒤로가기가
+  // 마이크 대신 설명(다음 CTA)으로 돌아가고, 설명의 "다음"은 추가 예문으로 복귀한다
   const [pronounceSkipped, setPronounceSkipped] = useState(false);
   // 예문까지(QUIZ·EXPLAIN)는 뒤로가기 대신 X로 나가며, 중단 확인 시트를 먼저 띄운다
   const [exitOpen, setExitOpen] = useState(false);

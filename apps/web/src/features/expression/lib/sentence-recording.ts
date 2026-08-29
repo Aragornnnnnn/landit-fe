@@ -26,6 +26,46 @@ export interface RecordingSession {
   abort: () => void;
 }
 
+// 무음 감지용 레벨 미터 — 녹음과 병렬로 스트림 진폭의 최댓값을 기록한다.
+// rAF는 웹뷰에서 멈출 수 있어 인터벌로 샘플링하고, AudioContext가 없으면 측정을 포기한다(peak=null).
+// iOS는 제스처 스택 밖에서 만든 컨텍스트를 suspended로 둘 수 있다 — 재개를 시도하고,
+// running이 아닌 동안의 샘플(전부 무음으로 보임)은 버려 peak를 null(측정 불가)로 유지한다
+const startLevelMeter = (stream: MediaStream) => {
+  let peak: number | null = null;
+  let timer: ReturnType<typeof setInterval> | null = null;
+  let context: AudioContext | null = null;
+  if (typeof AudioContext !== 'undefined') {
+    try {
+      context = new AudioContext();
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 2048;
+      context.createMediaStreamSource(stream).connect(analyser);
+      const samples = new Uint8Array(analyser.fftSize);
+      const runningContext = context;
+      if (runningContext.state !== 'running') {
+        void runningContext.resume().catch(() => {});
+      }
+      timer = setInterval(() => {
+        if (runningContext.state !== 'running') return;
+        analyser.getByteTimeDomainData(samples);
+        for (const value of samples) {
+          const amplitude = Math.abs(value - 128) / 128;
+          if (peak === null || amplitude > peak) peak = amplitude;
+        }
+      }, 200);
+    } catch {
+      peak = null;
+    }
+  }
+  return {
+    peak: () => peak,
+    stop: () => {
+      if (timer) clearInterval(timer);
+      void context?.close().catch(() => {});
+    },
+  };
+};
+
 /**
  * 발화 녹음 세션을 연다 — 마이크 캡처를 시작하고 stop() 시 녹음 파일을 돌려준다.
  *
@@ -53,38 +93,10 @@ export const startSentenceRecording = async (): Promise<RecordingSession> => {
     if (event.data.size > 0) chunks.push(event.data);
   };
 
-  // 무음 감지용 레벨 미터 — 녹음과 병렬로 스트림 진폭의 최댓값을 기록한다.
-  // rAF는 웹뷰에서 멈출 수 있어 인터벌로 샘플링한다. AudioContext가 없으면 측정을 포기한다(peak=null)
-  let peak: number | null = null;
-  let meterTimer: ReturnType<typeof setInterval> | null = null;
-  let audioContext: AudioContext | null = null;
-  if (typeof AudioContext !== 'undefined') {
-    try {
-      const context = new AudioContext();
-      audioContext = context;
-      const analyser = context.createAnalyser();
-      analyser.fftSize = 2048;
-      context.createMediaStreamSource(stream).connect(analyser);
-      const samples = new Uint8Array(analyser.fftSize);
-      // iOS는 제스처 스택 밖에서 만든 컨텍스트를 suspended로 둘 수 있다 — 재개를 시도하고,
-      // running이 아닌 동안의 샘플(전부 무음으로 보임)은 버려 peak를 null(측정 불가)로 유지한다
-      if (context.state !== 'running') void context.resume().catch(() => {});
-      meterTimer = setInterval(() => {
-        if (context.state !== 'running') return;
-        analyser.getByteTimeDomainData(samples);
-        for (const value of samples) {
-          const amplitude = Math.abs(value - 128) / 128;
-          if (peak === null || amplitude > peak) peak = amplitude;
-        }
-      }, 200);
-    } catch {
-      peak = null;
-    }
-  }
+  const meter = startLevelMeter(stream);
 
   const releaseMic = () => {
-    if (meterTimer) clearInterval(meterTimer);
-    void audioContext?.close().catch(() => {});
+    meter.stop();
     if (recorder.state !== 'inactive') recorder.stop();
     stream.getTracks().forEach((track) => track.stop());
   };
@@ -102,7 +114,7 @@ export const startSentenceRecording = async (): Promise<RecordingSession> => {
           resolve({
             blob: new Blob(chunks, type ? { type } : undefined),
             filename: recordingFilename(type),
-            peak,
+            peak: meter.peak(),
           });
         };
         // 트랙이 먼저 죽는 등(장치 점유·분리) 이미 멈춘 recorder는 onstop을 내지 않는다 — 즉시 확정
