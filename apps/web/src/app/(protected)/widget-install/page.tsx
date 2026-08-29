@@ -65,6 +65,13 @@ const InstallFlow = () => {
 
   if (!supported) return null;
 
+  // iOS 안내 마지막 — 실제로 홈 화면으로 내려보내 사용자가 위젯을 얹게 한다.
+  // 셸이 없거나 못 내리면(브라우저 등) 앱 안 홈 탭으로 돌아가는 것으로 갈음한다
+  const leaveToHome = () => {
+    finish();
+    postToNative({ type: 'GO_HOME' });
+  };
+
   // 위젯 추가하기 — 안드로이드는 시스템 핀 다이얼로그로 직행, iOS는 갤러리 여는 길을 화면으로 안내한다.
   // 설치 길로 들어갔다고 기록해, 이후 재유도 시트가 같은 사람을 다시 붙잡지 않게 한다
   const add = () => {
@@ -90,7 +97,7 @@ const InstallFlow = () => {
       {step === 'invite' && <InviteStep onAdd={add} onLater={finish} />}
       {step === 'press' && <PressStep onNext={() => setStep('menu')} />}
       {step === 'menu' && <MenuStep onNext={() => setStep('search')} />}
-      {step === 'search' && <SearchStep onDone={finish} />}
+      {step === 'search' && <SearchStep onDone={leaveToHome} />}
     </Transition>
   );
 };
