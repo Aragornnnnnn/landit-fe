@@ -79,6 +79,22 @@ describe('startSentenceRecording', () => {
   });
 });
 
+describe('startSentenceRecording — 비정상 종료', () => {
+  it('트랙이 먼저 죽어 recorder가 이미 inactive여도 stop()이 즉시 확정된다', async () => {
+    const session = await startSentenceRecording();
+    const recorder = FakeMediaRecorder.instances[0];
+    // 다른 앱의 장치 점유 등으로 recorder가 스스로 멈춘 상황 — onstop은 다시 오지 않는다
+    recorder.ondataavailable?.({ data: new Blob(['early']) });
+    recorder.state = 'inactive';
+
+    const recording = await session.stop();
+
+    expect(recording.blob.size).toBeGreaterThan(0);
+    expect(recording.filename).toBe('recording.webm');
+    expect(trackStop).toHaveBeenCalled();
+  });
+});
+
 describe('isSilentRecording', () => {
   const recording = (peak: number | null) => ({
     blob: new Blob(['x']),

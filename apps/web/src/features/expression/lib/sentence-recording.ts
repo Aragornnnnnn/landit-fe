@@ -60,17 +60,21 @@ export const startSentenceRecording = async (): Promise<RecordingSession> => {
   let audioContext: AudioContext | null = null;
   if (typeof AudioContext !== 'undefined') {
     try {
-      audioContext = new AudioContext();
-      const analyser = audioContext.createAnalyser();
+      const context = new AudioContext();
+      audioContext = context;
+      const analyser = context.createAnalyser();
       analyser.fftSize = 2048;
-      audioContext.createMediaStreamSource(stream).connect(analyser);
+      context.createMediaStreamSource(stream).connect(analyser);
       const samples = new Uint8Array(analyser.fftSize);
-      peak = 0;
+      // iOS는 제스처 스택 밖에서 만든 컨텍스트를 suspended로 둘 수 있다 — 재개를 시도하고,
+      // running이 아닌 동안의 샘플(전부 무음으로 보임)은 버려 peak를 null(측정 불가)로 유지한다
+      if (context.state !== 'running') void context.resume().catch(() => {});
       meterTimer = setInterval(() => {
+        if (context.state !== 'running') return;
         analyser.getByteTimeDomainData(samples);
         for (const value of samples) {
           const amplitude = Math.abs(value - 128) / 128;
-          if (peak !== null && amplitude > peak) peak = amplitude;
+          if (peak === null || amplitude > peak) peak = amplitude;
         }
       }, 200);
     } catch {
@@ -92,8 +96,7 @@ export const startSentenceRecording = async (): Promise<RecordingSession> => {
     stop: () =>
       new Promise((resolve) => {
         finished = true;
-        // onstop 시점엔 마지막 dataavailable까지 도착해 있다 (스펙 순서 보장)
-        recorder.onstop = () => {
+        const settle = () => {
           // 요청한 mimeType과 실제 쓰인 값이 다를 수 있어 recorder 쪽을 신뢰한다
           const type = recorder.mimeType || mimeType || '';
           resolve({
@@ -102,6 +105,14 @@ export const startSentenceRecording = async (): Promise<RecordingSession> => {
             peak,
           });
         };
+        // 트랙이 먼저 죽는 등(장치 점유·분리) 이미 멈춘 recorder는 onstop을 내지 않는다 — 즉시 확정
+        if (recorder.state === 'inactive') {
+          releaseMic();
+          settle();
+          return;
+        }
+        // onstop 시점엔 마지막 dataavailable까지 도착해 있다 (스펙 순서 보장)
+        recorder.onstop = settle;
         releaseMic();
       }),
     abort: () => {
