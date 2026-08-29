@@ -397,7 +397,12 @@ export const ExpressionFlow = ({
               onBack={() => setStep('EXPLAIN')}
               onExit={openExitSheet}
               onNext={() => setStep('EXAMPLES')}
-              onUnavailable={() => setStep('EXAMPLES')}
+              // 자산 소실(404)도 발음을 못 거친 채 지나가는 경우 — 건너뛰기 동선을 재사용해
+              // 뒤로가기가 죽은 발음 화면으로 되돌아가지 않게 한다
+              onUnavailable={() => {
+                setPronounceSkipped(true);
+                setStep('EXAMPLES');
+              }}
             />
           </div>
         )}

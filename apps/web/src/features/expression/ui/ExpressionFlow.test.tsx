@@ -91,10 +91,12 @@ vi.mock('./pronunciation/PronunciationStep', async () => {
       onNext,
       onBack,
       onSettled,
+      onUnavailable,
     }: {
       onNext: () => void;
       onBack: () => void;
       onSettled?: () => void;
+      onUnavailable: () => void;
     }) => {
       const [mountId] = useState(() => ++mountSeq);
       return (
@@ -103,6 +105,7 @@ vi.mock('./pronunciation/PronunciationStep', async () => {
           <button onClick={onNext}>pronounce-next</button>
           <button onClick={onBack}>pronounce-back</button>
           <button onClick={onSettled}>pronounce-settled</button>
+          <button onClick={onUnavailable}>pronounce-unavailable</button>
         </div>
       );
     },
@@ -445,6 +448,40 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
     await user.click(screen.getByText('quiz-back'));
     await user.click(screen.getByText('explain-back'));
     expect(screen.getByText(/pronounce#/).textContent).toBe(firstMount);
+  });
+
+  it('발음 자산 소실(404) 뒤에는 뒤로가기가 죽은 발음 화면으로 되돌아가지 않는다', async () => {
+    const user = userEvent.setup();
+    learningMock.mockReturnValue({
+      learning: {
+        ...learning,
+        representativeSentenceAudioUrl: 'https://cdn/audio.mp3',
+      },
+      error: null,
+      isLoading: false,
+    });
+    practiceMock.mockReturnValue({
+      practice: practice([]),
+      error: null,
+      isLoading: false,
+    });
+    render(
+      <ExpressionFlow
+        origin={{ kind: 'scenario', scenarioId: 1 }}
+        expressionId={7}
+      />,
+    );
+
+    await user.click(screen.getByText('quiz-next'));
+    await user.click(screen.getByText('intro-next'));
+    await user.click(screen.getByText('pronounce-unavailable'));
+
+    // 추가 예문에서 뒤로 가면 발음(마이크)이 아니라 설명으로, 설명 다음도 추가 예문으로 복귀
+    await user.click(screen.getByText('explain-back'));
+    expect(screen.queryByText(/pronounce#/)).not.toBeInTheDocument();
+    expect(screen.getByText('intro:다음')).toBeInTheDocument();
+    await user.click(screen.getByText('intro-next'));
+    expect(screen.getByText('explain:복습 퀴즈 풀게요:0')).toBeInTheDocument();
   });
 
   it('발음 자산이 없으면 기존 3스텝 그대로 — 발음 스텝이 뜨지 않는다', async () => {
