@@ -18,7 +18,6 @@ import {
   type SmallTalkSessionStartResponse,
 } from '@/features/small-talk/api/small-talk';
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
-import { findPartner } from '@/features/small-talk/model/partner';
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
@@ -33,8 +32,7 @@ const USER_OPENING_INSTRUCTION =
 
 interface SmallTalkFlowOptions {
   session: SmallTalkSessionStartResponse;
-  // 홈에서 고른 상대. 목소리도 여기서 나온다 — 서버 ttsVoice는 고른 상대와 무관한 값이라 쓰지 않는다
-  // (BE에 characterId 요청 중)
+  // 홈에서 고른 상대 — 계측·화면 표시용. 목소리는 세션 응답 ttsVoice가 정본이다
   partner: Partner;
   // 진입 시점의 오늘 남은 발화 시간
   remainingSpeakingTimeMs: number;
@@ -97,7 +95,8 @@ export const useSmallTalkFlow = ({
 
   const engine = useConversationTurns({
     firstSpeaker: session.startMode === 'AI_FIRST' ? 'AI' : 'USER',
-    voice: findPartner(partner).voice,
+    // 캐릭터별 목소리는 서버(conversation_character)가 정본이다 — 세션 시작이 고른 상대의 보이스를 내려준다
+    voice: session.ttsVoice,
     opening: session.currentMessage && {
       content: session.currentMessage.content,
       translatedContent: session.currentMessage.translatedContent,
