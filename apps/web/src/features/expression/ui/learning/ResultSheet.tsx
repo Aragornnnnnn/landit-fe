@@ -63,6 +63,7 @@ export const ResultSheet = ({
         <p className="-mt-2 text-base font-bold text-foreground">{answer}</p>
 
         <Button
+          size="md"
           variant={correct ? 'success' : 'danger'}
           loading={finishing}
           onClick={onNext}
