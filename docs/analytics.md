@@ -163,20 +163,22 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 
 ### 표현 학습
 
-| 이벤트                      | 속성                                            | 시점                                                           |
-| --------------------------- | ----------------------------------------------- | -------------------------------------------------------------- |
-| Expression List Viewed      | 출처(scenario_id\|session_id), expression_count | 분기 화면 리스트 리빌                                          |
-| Expression Learning Skipped | 출처(scenario_id\|session_id), expression_count | 분기 화면을 X로 닫고 학습 없이 나감 (연출 중이면 count 0 가능) |
-| Expression Learning Started | expression_id, 출처(scenario_id\|session_id)    | 학습 데이터 로드 완료                                          |
-| Expression Step Viewed      | expression_id, step(quiz\|explain\|review)      | 스텝 노출                                                      |
-| Quiz Word Picked            | expression_id, picked_count                     | 단어 칩 선택                                                   |
-| Quiz Word Removed           | expression_id, picked_count                     | 단어 칩 제거                                                   |
-| Quiz Answer Submitted       | expression_id, is_correct, hint_level           | 퀴즈 확인                                                      |
-| Example Sentence Viewed     | expression_id, sentence_index                   | 예문 캐러셀 스냅                                               |
-| Review Answer Submitted     | expression_id, is_correct, hint_level           | 복습 영작 확인 (오답이어도 재시도 없이 완료로 이어진다)        |
-| Hint Used                   | source(quiz\|review), level                     | 힌트 보기 (퀴즈·복습 모두 일회성, 누를 때마다 level 1)         |
-| Expression Completed        | expression_id, 출처(scenario_id\|session_id)    | 학습 완료 처리 성공                                            |
-| Expression Abandoned        | expression_id, step                             | 중단 확정                                                      |
+| 이벤트                      | 속성                                                            | 시점                                                           |
+| --------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------- |
+| Expression List Viewed      | 출처(scenario_id\|session_id), expression_count                 | 분기 화면 리스트 리빌                                          |
+| Expression Learning Skipped | 출처(scenario_id\|session_id), expression_count                 | 분기 화면을 X로 닫고 학습 없이 나감 (연출 중이면 count 0 가능) |
+| Expression Learning Started | expression_id, 출처(scenario_id\|session_id)                    | 학습 데이터 로드 완료                                          |
+| Expression Step Viewed      | expression_id, step(quiz\|explain\|pronounce\|examples\|review) | 스텝 노출                                                      |
+| Quiz Word Picked            | expression_id, picked_count                                     | 단어 칩 선택                                                   |
+| Quiz Word Removed           | expression_id, picked_count                                     | 단어 칩 제거                                                   |
+| Quiz Answer Submitted       | expression_id, is_correct, hint_level                           | 퀴즈 확인                                                      |
+| Example Sentence Viewed     | expression_id, sentence_index                                   | 예문 캐러셀 스냅                                               |
+| Pronunciation Result Viewed | expression_id, score, passed, error_count, attempt              | 발음 분석 결과 도착 (재도전 포함, attempt=회차)                |
+| Pronunciation Skipped       | expression_id                                                   | 설명 화면에서 "지금은 말할 수 없어요"로 발음 건너뛰기          |
+| Review Answer Submitted     | expression_id, is_correct, hint_level                           | 복습 영작 확인 (오답이어도 재시도 없이 완료로 이어진다)        |
+| Hint Used                   | source(quiz\|review), level                                     | 힌트 보기 (퀴즈·복습 모두 일회성, 누를 때마다 level 1)         |
+| Expression Completed        | expression_id, 출처(scenario_id\|session_id)                    | 학습 완료 처리 성공                                            |
+| Expression Abandoned        | expression_id, step                                             | 중단 확정                                                      |
 
 표현 학습 화면은 시나리오 대화와 스몰톡이 같이 쓴다. 어디서 온 표현인지는 출처 속성으로 갈린다 — 시나리오 표현이면 `scenario_id`, 스몰톡 표현이면 `session_id`가 실린다.
 

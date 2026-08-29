@@ -94,6 +94,9 @@ export const EVENTS = {
   QUIZ_WORD_REMOVED: 'Quiz Word Removed',
   QUIZ_ANSWER_SUBMITTED: 'Quiz Answer Submitted',
   EXAMPLE_SENTENCE_VIEWED: 'Example Sentence Viewed',
+  // 발음 평가 — 결과는 재도전마다 찍는다(attempt로 회차 구분). 건너뛰기는 설명 화면에서의 이탈 신호
+  PRONUNCIATION_RESULT_VIEWED: 'Pronunciation Result Viewed',
+  PRONUNCIATION_SKIPPED: 'Pronunciation Skipped',
   REVIEW_ANSWER_SUBMITTED: 'Review Answer Submitted',
   EXPRESSION_COMPLETED: 'Expression Completed',
   EXPRESSION_ABANDONED: 'Expression Abandoned',
@@ -396,6 +399,16 @@ export type EventProps = {
     hint_level: number;
   };
   'Example Sentence Viewed': { expression_id: number; sentence_index: number };
+  'Pronunciation Result Viewed': {
+    expression_id: number;
+    // BE 원점수(0~100)와 통과 판정 그대로
+    score: number;
+    passed: boolean;
+    error_count: number;
+    // 재도전 포함 몇 번째 분석 결과인지 (1부터)
+    attempt: number;
+  };
+  'Pronunciation Skipped': { expression_id: number };
   'Review Answer Submitted': {
     expression_id: number;
     is_correct: boolean;
