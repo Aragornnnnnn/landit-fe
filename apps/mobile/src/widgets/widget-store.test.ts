@@ -1,6 +1,8 @@
-// 위젯 스냅샷 저장소 검증 — 위젯이 낡거나 깨진 규격으로 그리지 않게 하는 계약
+// 위젯 데이터 저장소 검증 — 위젯이 낡거나 깨진 규격으로 그리지 않게 하는 계약
+import { EMPTY_WIDGET_DATA, widgetDataSchema } from '@landit/bridge';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { decideWidgetState } from './widget-state';
 import { loadWidgetData, saveWidgetData } from './widget-store';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
@@ -28,6 +30,17 @@ describe('widget-store', () => {
 
   it('저장된 것이 없으면 null을 돌려준다', async () => {
     expect(await loadWidgetData()).toBeNull();
+  });
+
+  it('로그인 전 기본 스냅샷은 브릿지 규격을 만족하고, 완료 이력이 없어 몰락 없이 시간표를 탄다', () => {
+    expect(widgetDataSchema.safeParse(EMPTY_WIDGET_DATA).success).toBe(true);
+
+    const state = decideWidgetState({
+      data: EMPTY_WIDGET_DATA,
+      now: new Date('2026-08-27T14:00:00+09:00'),
+    });
+    expect(state.kind).toBe('nudge');
+    expect(state.displayStreak).toBe(0);
   });
 
   it('깨진 저장값이면 null을 돌려준다 — 위젯이 낡은 규격으로 그리게 두지 않는다', async () => {
