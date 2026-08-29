@@ -1,6 +1,8 @@
 // 설치 안내 화면 공통 뼈대 — 온보딩과 같은 결의 제목·목업·CTA 배치
 'use client';
 
+import { motion } from 'motion/react';
+
 import { Button } from '@/shared/ui/Button';
 
 export const GuideScaffold = ({
@@ -86,3 +88,43 @@ export const Capsule = ({
     {children}
   </span>
 );
+
+// 손끝이 누르는 표시 — 주황 원과 퍼져 나가는 물결로 "여기를 누른다"를 눈에 띄게 짚는다.
+// press(꾹 누름)는 물결이 크게 번지고, tap(가볍게 누름)은 작게 톡 눌린다
+export const TouchPulse = ({
+  left,
+  top,
+  size = 48,
+  mode = 'press',
+}: {
+  left: number;
+  top: number;
+  size?: number;
+  mode?: 'press' | 'tap';
+}) => {
+  const period = mode === 'press' ? 1.1 : 0.9;
+  return (
+    <div className="absolute" style={{ left, top, width: size, height: size }}>
+      {/* 퍼지는 물결 — 눌린 자리에서 웅웅 번진다 */}
+      <motion.span
+        className="absolute inset-0 rounded-full"
+        style={{ border: '2px solid rgba(224,122,58,0.55)' }}
+        initial={{ scale: 0.5, opacity: 0.7 }}
+        animate={{ scale: mode === 'press' ? 1.9 : 1.5, opacity: 0 }}
+        transition={{ duration: period, repeat: Infinity, ease: 'easeOut' }}
+      />
+      {/* 손끝 — 주황 원이 눌렸다 돌아오며 톡톡거린다 */}
+      <motion.span
+        className="absolute inset-0 rounded-full"
+        style={{
+          background:
+            'radial-gradient(closest-side, rgba(224,122,58,0.6), rgba(224,122,58,0.28))',
+          boxShadow: '0 2px 8px rgba(224,122,58,0.35)',
+        }}
+        initial={{ scale: 1 }}
+        animate={{ scale: [1, 0.85, 1] }}
+        transition={{ duration: period, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    </div>
+  );
+};

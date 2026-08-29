@@ -1,16 +1,27 @@
-// iOS / 2 위젯 추가 — 편집 캡슐이 눌리고 메뉴가 펼쳐진다. 첫 항목(위젯 추가)만 밝게 짚는다
+// iOS / 2 위젯 추가 — 편집 캡슐이 눌리고 메뉴가 펼쳐진다. 첫 항목(위젯 추가)을 톡톡 눌러 짚는다
 'use client';
 
 import { motion, useReducedMotion } from 'motion/react';
 
-import { AppSlots, Capsule, GuideScaffold, PhoneMockup } from './GuideScaffold';
+import {
+  AppSlots,
+  Capsule,
+  GuideScaffold,
+  PhoneMockup,
+  TouchPulse,
+} from './GuideScaffold';
 
+// 배경은 꽉 찬 홈 화면 — 메뉴가 좌상단을 덮고 나머지 아이콘이 뒤로 비친다
 const APP_SLOTS = [
-  [186, 108],
-  [186, 184],
-  [24, 278],
-  [105, 278],
-  [186, 278],
+  [24, 62],
+  [105, 62],
+  [186, 62],
+  [24, 143],
+  [105, 143],
+  [186, 143],
+  [24, 224],
+  [105, 224],
+  [186, 224],
 ] as const;
 
 // 캡슐이 먼저 눌리고, 그 반동으로 메뉴가 열린다
@@ -55,12 +66,29 @@ export const MenuStep = ({ onNext }: { onNext: () => void }) => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.15, ease: 'easeOut', delay: PRESS_MS }}
         >
-          <div className="flex h-8 items-center bg-[#eef3f9] pl-3.5 text-[12px] font-semibold text-[#3c4654]">
+          {/* 첫 항목(위젯 추가)이 눌리는 하이라이트를 되풀이한다 — 여기를 고르라는 신호 */}
+          <motion.div
+            className="flex h-8 items-center pl-3.5 text-[12px] font-semibold text-[#3c4654]"
+            initial={false}
+            animate={
+              reduced
+                ? { backgroundColor: '#eef3f9' }
+                : { backgroundColor: ['#ffffff', '#e3ecf7', '#ffffff'] }
+            }
+            transition={
+              reduced
+                ? undefined
+                : { duration: 0.9, repeat: Infinity, ease: 'easeInOut' }
+            }
+          >
             위젯 추가
-          </div>
+          </motion.div>
           <div className="h-8" />
           <div className="h-8" />
         </motion.div>
+
+        {/* 손끝이 위젯 추가 항목을 톡톡 누른다 — 물결로 클릭을 짚어준다 */}
+        {!reduced && <TouchPulse left={150} top={52} size={30} mode="tap" />}
       </PhoneMockup>
     </GuideScaffold>
   );

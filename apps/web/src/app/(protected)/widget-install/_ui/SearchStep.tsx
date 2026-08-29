@@ -38,20 +38,33 @@ export const SearchStep = ({ onDone }: { onDone: () => void }) => {
   const reduced = useReducedMotion() ?? false;
   const [typed, setTyped] = useState(reduced ? QUERY : '');
 
-  // 검색창에 한 글자씩 찍는다 — 시트가 자리잡은 뒤 시작한다
+  // 검색창에 한 글자씩 찍는다 — 시트가 자리잡은 뒤 시작하고, 다 친 뒤 잠깐 두었다
+  // 지우고 다시 친다. 늦게 본 사람도 "landit이라고 검색하는구나"를 놓치지 않게 되풀이한다
   useEffect(() => {
     if (reduced) return;
-    let count = 0;
+    const timers: ReturnType<typeof setTimeout>[] = [];
     let interval: ReturnType<typeof setInterval>;
-    const start = setTimeout(() => {
+
+    const typeOnce = () => {
+      let count = 0;
       interval = setInterval(() => {
         count += 1;
         setTyped(QUERY.slice(0, count));
-        if (count === QUERY.length) clearInterval(interval);
+        if (count < QUERY.length) return;
+        clearInterval(interval);
+        // 다 쳤으면 잠깐 보여준 뒤 지우고 다음 사이클을 예약한다
+        timers.push(
+          setTimeout(() => {
+            setTyped('');
+            timers.push(setTimeout(typeOnce, 600));
+          }, 1800),
+        );
       }, TYPE_MS);
-    }, SHEET_MS * 1000);
+    };
+
+    timers.push(setTimeout(typeOnce, SHEET_MS * 1000));
     return () => {
-      clearTimeout(start);
+      timers.forEach(clearTimeout);
       clearInterval(interval);
     };
   }, [reduced]);
