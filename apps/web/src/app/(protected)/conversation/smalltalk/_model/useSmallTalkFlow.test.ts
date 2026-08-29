@@ -40,6 +40,7 @@ const ttsMock = vi.hoisted(() => ({
   }),
   speakSrc: vi.fn(),
   prefetch: vi.fn(() => Promise.resolve()),
+  prefetchSrc: vi.fn(),
   stop: vi.fn(),
 }));
 vi.mock('@/shared/tts/useTts', () => ({
@@ -47,6 +48,7 @@ vi.mock('@/shared/tts/useTts', () => ({
     speak: ttsMock.speak,
     speakSrc: ttsMock.speakSrc,
     prefetch: ttsMock.prefetch,
+    prefetchSrc: ttsMock.prefetchSrc,
     stop: ttsMock.stop,
     status: 'idle',
   }),
