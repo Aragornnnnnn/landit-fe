@@ -77,7 +77,8 @@ export const ExpressionIntroStep = ({
       </div>
     }
   >
-    <div className="flex flex-col pb-6">
+    {/* 오버레이 헤더(h-14)가 본문 위에 떠 있다 — 히어로 이미지가 없으면 그만큼 자리를 비워준다 */}
+    <div className={`flex flex-col pb-6 ${imageUrl ? '' : 'pt-14'}`}>
       {imageUrl && (
         // 히어로 이미지는 좌우 풀블리드 — 스캐폴드 본문 여백(px-5)을 상쇄해 화면 폭을 다 쓴다
         <div className="-mx-5 overflow-hidden bg-secondary">

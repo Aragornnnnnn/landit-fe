@@ -121,6 +121,8 @@ export const PronunciationStep = ({
 
   const startRecording = async () => {
     setNotice(null);
+    // 원어민·내 녹음이 나오는 중이면 끈다 — 스피커 소리가 마이크로 들어가지 않게
+    player.stop();
     try {
       await recorder.start();
       setPhase('recording');
@@ -144,7 +146,11 @@ export const PronunciationStep = ({
       return;
     }
 
-    if (recordingUrlRef.current) URL.revokeObjectURL(recordingUrlRef.current);
+    if (recordingUrlRef.current) {
+      // 재생 중이던 이전 녹음을 멈추고 해제 — 끊긴 URL로 재생 상태가 굳지 않게
+      player.stop();
+      URL.revokeObjectURL(recordingUrlRef.current);
+    }
     recordingUrlRef.current = URL.createObjectURL(recording.blob);
 
     setPhase('analyzing');
@@ -332,7 +338,10 @@ export const PronunciationStep = ({
 
   return (
     <StepScaffold progress={progress} onBack={onBack} headerOverlay>
-      <div className="flex min-h-full flex-col pb-8">
+      {/* 오버레이 헤더가 본문 위에 떠 있다 — 히어로 이미지가 없으면 그만큼 자리를 비워준다 */}
+      <div
+        className={`flex min-h-full flex-col pb-8 ${imageUrl ? '' : 'pt-14'}`}
+      >
         {imageUrl && (
           // 설명 화면과 같은 자리의 풀블리드 히어로 — 스텝이 바뀌어도 화면이 이어져 보인다
           <div className="-mx-5 overflow-hidden bg-secondary">
@@ -438,7 +447,10 @@ export const PronunciationStep = ({
 };
 
 const Notice = ({ text }: { text: string }) => (
-  <p className="rounded-xl bg-destructive/10 px-4 py-2.5 text-center text-sm font-medium text-destructive">
+  <p
+    role="alert"
+    className="rounded-xl bg-destructive/10 px-4 py-2.5 text-center text-sm font-medium text-destructive"
+  >
     {text}
   </p>
 );
