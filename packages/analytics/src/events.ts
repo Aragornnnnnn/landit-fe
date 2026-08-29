@@ -97,6 +97,8 @@ export const EVENTS = {
   // 발음 평가 — 결과는 재도전마다 찍는다(attempt로 회차 구분). 건너뛰기는 설명 화면에서의 이탈 신호
   PRONUNCIATION_RESULT_VIEWED: 'Pronunciation Result Viewed',
   PRONUNCIATION_SKIPPED: 'Pronunciation Skipped',
+  // 발음 듣기 — 어떤 소리를 다시 듣는지 source 하나로 몰아 찍는다. 자동재생·토글 끄기는 제외
+  PRONUNCIATION_AUDIO_PLAYED: 'Pronunciation Audio Played',
   REVIEW_ANSWER_SUBMITTED: 'Review Answer Submitted',
   EXPRESSION_COMPLETED: 'Expression Completed',
   EXPRESSION_ABANDONED: 'Expression Abandoned',
@@ -409,6 +411,11 @@ export type EventProps = {
     attempt: number;
   };
   'Pronunciation Skipped': { expression_id: number };
+  'Pronunciation Audio Played': {
+    expression_id: number;
+    // expression·sentence = 설명·발음 화면 스피커, native_word·my_word = 피드백 카드 행
+    source: 'expression' | 'sentence' | 'native_word' | 'my_word';
+  };
   'Review Answer Submitted': {
     expression_id: number;
     is_correct: boolean;
