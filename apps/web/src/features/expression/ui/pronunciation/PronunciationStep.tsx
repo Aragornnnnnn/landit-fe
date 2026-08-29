@@ -2,10 +2,12 @@
 
 // 발음 평가 스텝 — 대기→녹음→분석→피드백(재도전 루프). 점수 구간 표시는 pronunciation-score가 정한다
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 
 // 마이크 컨트롤·권한 시트는 공용 슬라이스(conversation)의 것을 그대로 쓴다 — 대화와 같은 조작감
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
+import { track } from '@/shared/analytics';
 import { ApiError } from '@/shared/api/api-error';
 import { isMicPermissionDeniedError } from '@/shared/stt/errors';
 import { Button } from '@/shared/ui/Button';
@@ -83,6 +85,8 @@ export const PronunciationStep = ({
   const [notice, setNotice] = useState<string | null>(null);
   // 내 녹음 재생용 object URL — 새 녹음이 오면 이전 것을 해제한다
   const recordingUrlRef = useRef<string | null>(null);
+  // 분석 회차 — 재도전 포함 몇 번째 결과인지 계측에 싣는다
+  const attemptRef = useRef(0);
 
   const recorder = useSentenceRecorder();
   const analysisMutation = usePronunciationAnalysisMutation(expressionId);
@@ -146,6 +150,15 @@ export const PronunciationStep = ({
     setPhase('analyzing');
     analysisMutation.mutate(recording, {
       onSuccess: (result) => {
+        attemptRef.current += 1;
+        track(EVENTS.PRONUNCIATION_RESULT_VIEWED, {
+          expression_id: expressionId,
+          score: result.score,
+          passed: result.passed,
+          error_count: result.words.filter((word) => word.status !== 'CORRECT')
+            .length,
+          attempt: attemptRef.current,
+        });
         setAnalysis(result);
         setPhase('feedback');
         onSettled?.();

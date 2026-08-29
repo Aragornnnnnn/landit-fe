@@ -277,6 +277,9 @@ export const ExpressionFlow = ({
               pronounceRevisit
                 ? undefined
                 : () => {
+                    track(EVENTS.PRONUNCIATION_SKIPPED, {
+                      expression_id: expressionId,
+                    });
                     setPronounceSkipped(true);
                     setStep('EXAMPLES');
                   }
