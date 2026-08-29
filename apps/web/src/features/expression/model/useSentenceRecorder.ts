@@ -9,6 +9,12 @@ import {
   type SentenceRecording,
 } from '../lib/sentence-recording';
 
+/**
+ * 발음 발화 녹음 훅 — start(권한 요청 포함) → stop(녹음 확정) / abort(파기)로 세션을 관리한다.
+ * 언마운트 시 진행 중 녹음을 파기해 마이크 인디케이터가 남지 않는다.
+ *
+ * @throws start()가 권한 거부 시 MicPermissionDeniedError — 소비 지점이 안내 시트를 띄운다
+ */
 export const useSentenceRecorder = () => {
   const sessionRef = useRef<RecordingSession | null>(null);
   // 시작(getUserMedia 권한 대기) 중 중복 호출 방지 — 세션이 생기기 전 공백을 막는다

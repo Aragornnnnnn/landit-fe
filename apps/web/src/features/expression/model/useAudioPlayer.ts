@@ -2,6 +2,12 @@
 // 지금 뭐가 재생 중인지(playingId)를 노출해 듣기 버튼들이 같은 문법으로 상태를 그린다
 import { useEffect, useRef, useState } from 'react';
 
+/**
+ * 오디오 재생 훅 — 전체 또는 ms 구간 재생. 새 재생이 이전 재생을 멈추고 재생은 한 번에 하나다.
+ *
+ * @returns play(src, {id, segment, onDone}) · toggle(같은 id면 끄기) · stop ·
+ *   playingId(지금 나오는 소리의 id) · progress(0~1, 카라오케 하이라이트용)
+ */
 export const useAudioPlayer = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressRafRef = useRef(0);

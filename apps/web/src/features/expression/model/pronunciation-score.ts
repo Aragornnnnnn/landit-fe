@@ -11,7 +11,7 @@ export interface ScoreView {
   passed: boolean;
 }
 
-// 미통과 피드백에서 래디가 건네는 말 — 점수 구간과 남은 오류 수에 맞춰 달라진다
+/** 미통과 피드백에서 래디가 건네는 말 — 점수 구간(tone)과 남은 오류 수에 맞춰 달라진다 */
 export const feedbackCoachMessage = (
   view: ScoreView,
   errorCount: number,
@@ -23,6 +23,11 @@ export const feedbackCoachMessage = (
   return '거의 다 왔어요! 조금만 다듬어봐요';
 };
 
+/**
+ * 분석 결과를 화면 표시 규칙으로 바꾼다 — 통과 여부는 BE passed 그대로, 구간별 라벨·색만 정한다.
+ *
+ * @returns 통과면 display 100 고정, 미통과면 원점수와 구간 라벨(Great/Good/Keep going)
+ */
 export const scoreView = ({
   score,
   passed,

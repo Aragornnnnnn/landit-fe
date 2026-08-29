@@ -18,10 +18,11 @@ interface FeedbackCardsProps {
   onPlayMine: (word: PronunciationWord) => void;
 }
 
-// 재생 식별자 — PronunciationStep의 play 호출과 같은 규칙을 써야 상태가 맞는다
+/** 원어민 단어 음원의 재생 식별자 — 재생 호출과 버튼 상태가 같은 규칙을 써야 맞는다 */
 export const nativeWordAudioId = (order: number) => `native-${order}`;
+/** 내 녹음 구간 재생 식별자 */
 export const myWordAudioId = (order: number) => `mine-${order}`;
-// 단어 칩 → 카드 스크롤 이동용 앵커 id
+/** 단어 칩 → 교정 카드 스크롤 이동용 앵커 id */
 export const feedbackCardId = (order: number) => `pronunciation-word-${order}`;
 
 export const FeedbackCards = ({

@@ -16,6 +16,7 @@ export interface SentenceRecording {
 // 측정 불가(null)면 서버 판정에 맡긴다
 const SILENCE_PEAK = 0.02;
 
+/** 말소리가 담기지 않은 녹음인지 — 업로드 전에 걸러 서버 왕복을 아낀다. 측정 불가(peak=null)면 false */
 export const isSilentRecording = (recording: SentenceRecording): boolean =>
   recording.peak !== null && recording.peak < SILENCE_PEAK;
 

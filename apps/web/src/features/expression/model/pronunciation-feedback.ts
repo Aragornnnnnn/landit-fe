@@ -6,7 +6,7 @@ export interface DisplaySegment {
   error: boolean;
 }
 
-// respelling에서 틀린 부분(span)만 error 세그먼트로 분리한다. span이 없거나 못 찾으면 통짜 텍스트
+/** respelling에서 틀린 부분(span)만 error 세그먼트로 분리한다 — span이 없거나 못 찾으면 통짜 텍스트 하나 */
 export const splitDisplay = (
   display: string | null,
   span: string | null,
@@ -36,7 +36,10 @@ export type FeedbackCard =
       userStressIndex: number | null;
     };
 
-// 오류 단어만 카드로 만든다. order 오름차순 — 응답 순서를 신뢰하지 않고 직접 정렬한다
+/**
+ * 오류 단어만 교정 카드 모델로 바꾼다 — 발음 오류는 respelling 비교, 강세 오류는 음절·강세 위치.
+ * order 오름차순으로 직접 정렬하고, 음절 데이터가 없는 강세 오류는 그릴 수 없어 조용히 뺀다.
+ */
 export const toFeedbackCards = (words: PronunciationWord[]): FeedbackCard[] =>
   [...words]
     .sort((a, b) => a.order - b.order)

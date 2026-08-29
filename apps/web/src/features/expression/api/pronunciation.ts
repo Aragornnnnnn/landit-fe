@@ -34,7 +34,12 @@ export interface PronunciationAnalysis {
   words: PronunciationWord[];
 }
 
-// 파일명 확장자가 BE 형식 검증 기준이라 filename까지 받는다 (recording-format이 정한다)
+/**
+ * 발화 녹음을 올려 문장 발음 분석 결과(점수·단어별 판정)를 받는다.
+ *
+ * @param filename 업로드 파일명 — BE가 확장자로 형식을 검증하므로 recording-format이 정한 값을 그대로 넘긴다
+ * @throws ApiError 404(발음 데이터 없음) · 400 INVALID_AUDIO(녹음 판독 불가) 등
+ */
 export const postPronunciationAnalysis = (
   expressionId: number,
   audio: Blob,
