@@ -96,7 +96,7 @@ export const useSmallTalkFlow = ({
   const engine = useConversationTurns({
     firstSpeaker: session.startMode === 'AI_FIRST' ? 'AI' : 'USER',
     // 캐릭터별 목소리는 서버(conversation_character)가 정본이다 — 세션 시작이 고른 상대의 보이스를 내려준다
-    voice: session.ttsVoice,
+    voice: session.character.ttsVoice,
     opening: session.currentMessage && {
       content: session.currentMessage.content,
       translatedContent: session.currentMessage.translatedContent,
