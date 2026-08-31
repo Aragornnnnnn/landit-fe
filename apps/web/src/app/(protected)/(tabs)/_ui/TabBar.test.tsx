@@ -1,10 +1,11 @@
 // TabBar — 고를 게 있을 때만 칩을 그리고, 현재 탭을 활성으로 표시하는지 검증
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
 
+import { tapGreetingSeen } from '../_model/tap-greeting-seen';
 import { TabBar } from './TabBar';
 import type { Tab } from './tabs';
 
@@ -50,7 +51,12 @@ const smalltalk: Tab = {
   ready: true,
 };
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  localStorage.clear();
+});
+
+const greetingDot = () => screen.queryByTestId('smalltalk-greeting-dot');
 
 describe('TabBar', () => {
   it('보이는 탭이 하나뿐이면 칩을 그리지 않는다', () => {
@@ -115,5 +121,36 @@ describe('TabBar', () => {
     await user.click(screen.getByRole('link', { name: '시나리오' }));
 
     expect(track).not.toHaveBeenCalled();
+  });
+
+  it('인사를 아직 안 들어 본 기기면 스몰톡 칩에 점을 붙인다', () => {
+    // Given 캐릭터 인사를 한 번도 안 들은 기기에서
+    // When 셸이 탭 칩을 그리면
+    render(<TabBar tabs={[scenario, smalltalk]} />);
+
+    // Then 스몰톡 칩이 점으로 눈짓한다
+    expect(greetingDot()).toBeInTheDocument();
+  });
+
+  it('인사를 들은 기기면 점을 붙이지 않는다', () => {
+    // Given 캐릭터를 눌러 인사를 들어 본 기기에서
+    tapGreetingSeen.mark();
+
+    // When 셸이 탭 칩을 그리면
+    render(<TabBar tabs={[scenario, smalltalk]} />);
+
+    // Then 더 알릴 게 없으니 점은 없다
+    expect(greetingDot()).not.toBeInTheDocument();
+  });
+
+  it('스몰톡 화면에서 인사를 들으면 점이 바로 사라진다', () => {
+    // Given 점이 붙은 채로 탭 셸이 서 있을 때
+    render(<TabBar tabs={[scenario, smalltalk]} />);
+
+    // When 다른 화면(스몰톡 캐릭터)에서 인사를 들어 기록하면
+    act(() => tapGreetingSeen.mark());
+
+    // Then 셸이 리마운트되지 않아도 점이 사라진다
+    expect(greetingDot()).not.toBeInTheDocument();
   });
 });
