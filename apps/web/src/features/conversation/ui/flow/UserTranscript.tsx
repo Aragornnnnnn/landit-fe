@@ -29,8 +29,6 @@ export const UserTranscript = ({
   onCancel,
 }: UserTranscriptProps) => {
   const listening = phase === 'USER_SPEAKING';
-  // 듣는 중인데 아직 인식된 말이 없는 동안만 정지 버튼 안내로 바꿔 보여준다
-  const showListeningHint = listening && !text;
   const boxRef = useRef<HTMLDivElement>(null);
   // 넘쳐서 앞부분이 잘렸는지 — 잘렸을 때만 윗변을 흐린다. 짧은 답변의 첫 줄까지 흐려지면 안 된다
   const [clipped, setClipped] = useState(false);
@@ -101,18 +99,9 @@ export const UserTranscript = ({
         }`}
       >
         {/* 같은 높이에 세 줄이 들어오는 조합 — 글자 16px에 줄 간격을 좁혀 잡았다 */}
-        {/* 듣는 중인데 아직 인식된 말이 없으면, 정지 버튼을 눌러야 끝난다는 걸 미리 알려준다 */}
-        <p
-          className={`text-base leading-snug font-semibold ${showListeningHint ? 'text-muted-foreground/60' : 'text-foreground'}`}
-        >
-          {showListeningHint ? (
-            '문장을 다 말했으면 정지 버튼을 눌러주세요'
-          ) : (
-            <>
-              {text}
-              {listening && <TypingCursor />}
-            </>
-          )}
+        <p className="text-base leading-snug font-semibold text-foreground">
+          {text}
+          {listening && <TypingCursor />}
         </p>
       </div>
     </div>
