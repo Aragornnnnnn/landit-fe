@@ -104,7 +104,7 @@ const session = {
   startMode: 'USER_FIRST',
   title: null,
   speakingTimeLimitMs: 60_000,
-  ttsVoice: sessionVoice,
+  character: { characterId: 'marco', ttsVoice: sessionVoice },
   currentMessage: null,
 } as unknown as SmallTalkSessionStartResponse;
 
