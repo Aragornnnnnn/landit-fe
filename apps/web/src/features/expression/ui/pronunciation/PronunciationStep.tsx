@@ -218,18 +218,12 @@ export const PronunciationStep = ({
       });
     }
   };
+  // 단어 구간(startTimeMs~endTimeMs)이 아니라 내 발화 전체를 튼다 —
+  // 정렬 모델의 단어 타임스탬프가 부정확해 구간 재생이 어긋날 수 있다 (LAN-402 결정)
   const playMyWord = (word: PronunciationWord) => {
-    if (
-      recordingUrlRef.current &&
-      word.startTimeMs !== null &&
-      word.endTimeMs !== null
-    ) {
-      trackAudioPlayed(myWordAudioId(word.order), 'my_word');
-      player.toggle(recordingUrlRef.current, {
-        id: myWordAudioId(word.order),
-        segment: { startMs: word.startTimeMs, endMs: word.endTimeMs },
-      });
-    }
+    if (!recordingUrlRef.current) return;
+    trackAudioPlayed(myWordAudioId(word.order), 'my_word');
+    player.toggle(recordingUrlRef.current, { id: myWordAudioId(word.order) });
   };
 
   // 재도전(다시 말하기) 녹음은 페이지 이동 없이 이 화면에서 — 교정 팁을 보면서 다시 말하도록
