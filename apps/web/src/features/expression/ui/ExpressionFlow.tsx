@@ -75,23 +75,24 @@ export const ExpressionFlow = ({
     !!learning,
   );
 
-  if (learningLoading) return <QuizStepSkeleton />;
-  if (learningError || !learning) {
+  // 데이터가 있으면 본체를 유지한다 — 백그라운드 리페치가 실패해도(에러가 서도)
+  // 진행 중인 학습 상태(step·피드백 등)를 리셋하지 않는다
+  if (learning) {
     return (
-      <FlowStatus>
-        {learningError?.message ?? '표현을 불러오지 못했어요.'}
-      </FlowStatus>
+      <LoadedExpressionFlow
+        origin={origin}
+        expressionId={expressionId}
+        learning={learning}
+        practice={practice}
+        practiceLoading={practiceLoading}
+      />
     );
   }
-
+  if (learningLoading) return <QuizStepSkeleton />;
   return (
-    <LoadedExpressionFlow
-      origin={origin}
-      expressionId={expressionId}
-      learning={learning}
-      practice={practice ?? null}
-      practiceLoading={practiceLoading}
-    />
+    <FlowStatus>
+      {learningError?.message ?? '표현을 불러오지 못했어요.'}
+    </FlowStatus>
   );
 };
 
@@ -283,7 +284,6 @@ const LoadedExpressionFlow = ({
   // 발음 자산이 있으면 QUIZ 이후 스텝 전부(설명·발음·추가 예문·복습)를 한 트리에서 렌더한다 (QUIZ는 위에서 반환됨).
   // 피드백을 받은 뒤엔 어느 스텝으로 나가도 발음 스텝은 숨김 유지 — 리마운트되면 피드백·녹음이 날아간다
   if (learning.representativeSentenceAudioUrl) {
-    const audioUrl = learning.representativeSentenceAudioUrl;
     // 발음 스텝을 지나온 재방문 — 설명 CTA가 "다음"(복귀)으로 바뀌고 건너뛰기는 사라진다
     const pronounceRevisit = pronounceDone || pronounceSkipped;
     // 결과 없이 건너뛴 상태 — 재방문 동선이 발음(마이크) 대신 설명↔추가 예문을 오간다
@@ -354,7 +354,7 @@ const LoadedExpressionFlow = ({
               sentenceTranslation={learning.representativeSentenceTranslation}
               targetExpressionText={learning.targetExpressionText}
               imageUrl={learning.representativeImageUrl}
-              sentenceAudioUrl={audioUrl}
+              sentenceAudioUrl={learning.representativeSentenceAudioUrl}
               progress={PRONUNCIATION_PROGRESS}
               onBack={() => setStep('EXPLAIN')}
               onExit={openExitSheet}

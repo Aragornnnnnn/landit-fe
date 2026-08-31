@@ -66,7 +66,7 @@ export const useExpressionIntroStepAudio = ({
   }, [active, sentenceAudioUrl, expressionAudioUrl]);
 
   // 재생 시작만 찍는다 — 같은 id가 나오는 중이면 그 토글은 끄기다
-  const trackPlayed = (id: string, source: 'expression' | 'sentence') => {
+  const trackAudioPlayed = (id: string, source: 'expression' | 'sentence') => {
     if (player.playingId === id) return;
     track(EVENTS.PRONUNCIATION_AUDIO_PLAYED, {
       expression_id: expressionId,
@@ -78,7 +78,7 @@ export const useExpressionIntroStepAudio = ({
     onPlayExpressionAudio: expressionAudioUrl
       ? () => {
           clearGap();
-          trackPlayed('intro-expression', 'expression');
+          trackAudioPlayed('intro-expression', 'expression');
           player.toggle(expressionAudioUrl, { id: 'intro-expression' });
         }
       : undefined,
@@ -88,7 +88,7 @@ export const useExpressionIntroStepAudio = ({
     onPlaySentenceAudio: () => {
       if (!sentenceAudioUrl) return;
       clearGap();
-      trackPlayed('intro-sentence', 'sentence');
+      trackAudioPlayed('intro-sentence', 'sentence');
       player.toggle(sentenceAudioUrl, { id: 'intro-sentence' });
     },
     playingSentenceAudio: player.playingId === 'intro-sentence',
