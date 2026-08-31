@@ -1,13 +1,11 @@
-// 알림이 도착한 잠금화면 목업 — 실제 첫 리마인드 문구를 기본값으로, 알림이 방금 도착한 듯 카드가 내려앉는다 (피그마 874:157)
+// 알림이 도착한 잠금화면 목업 — 알림이 방금 도착한 듯 카드가 내려앉는다 (피그마 874:157)
 'use client';
 
 import { motion, useReducedMotion } from 'motion/react';
 
-import { REMINDER_COPIES } from '../model/reminder-copies';
-
 export const LockScreenMockup = ({
-  title = REMINDER_COPIES[0].title,
-  body = REMINDER_COPIES[0].body,
+  title = '오늘만 가능한 시나리오 도착 💌',
+  body = '자기 전 5분으로 래디에게 열매를 먹여주세요',
 }: {
   title?: string;
   body?: string;
