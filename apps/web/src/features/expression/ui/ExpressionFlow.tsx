@@ -1,7 +1,7 @@
 'use client';
 
 // 표현학습 플로우 — 단어 선택 퀴즈(D안 ①') → 표현 설명(D안 ④) → [발음 자산 있으면: 발음 평가 → 추가 예문] → 복습 영작(D안 ⑤) → 완료 처리 후 리스트로.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EVENTS, type ExpressionStep } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
@@ -13,7 +13,7 @@ import type { ExpressionLearning } from '../api/learning';
 import type { ExpressionPractice } from '../api/practice';
 import { collectPreloadImageUrls } from '../lib/preload-images';
 import { fromLearning, fromWritingSentence } from '../model/sentence-quiz';
-import { useAudioPlayer } from '../model/useAudioPlayer';
+import { useExpressionIntroStepAudio } from '../model/useExpressionIntroStepAudio';
 import { useExpressionLearningQuery } from '../model/useExpressionLearningQuery';
 import { useExpressionPracticeQuery } from '../model/useExpressionPracticeQuery';
 import { useFinishExpressionMutation } from '../model/useFinishExpressionMutation';
@@ -55,8 +55,6 @@ const EXPLAIN_PROGRESS = 0.7;
 const QUIZ_RANGE_WITH_PRONUNCIATION: [number, number] = [0, 0.3];
 const EXPLAIN_PROGRESS_WITH_PRONUNCIATION = 0.45;
 const PRONUNCIATION_PROGRESS = 0.6;
-// 설명 화면 자동재생에서 표현 → 예문 사이 숨 고르는 텀
-const INTRO_GAP_MS = 600;
 
 // 데이터 로딩 껍데기 — learning이 준비된 뒤에만 본체를 마운트한다.
 // 본체가 learning을 항상 들고 시작하므로 시작 스텝을 useState 초기값으로 자연스럽게 정할 수 있다
@@ -142,45 +140,13 @@ const LoadedExpressionFlow = ({
     expressionId,
     origin.kind === 'session' ? origin.sessionId : undefined,
   );
-  // 설명 화면(B안)의 원어민 발음 듣기 재생용
-  const player = useAudioPlayer();
-  // 설명 화면 첫 진입 시 표현 → 예문 순서로 자동 1회 들려준다 — 발음 화면에서 되돌아와도 다시 틀지 않고,
-  // 중간에 사용자가 끄면(stopped) 다음 재생을 잇지 않는다. 표현 전용 음원이 없으면 예문만 튼다
-  const introPlayedRef = useRef(false);
-  // 표현→예문 사이 숨 고르는 텀 — 사용자가 그 사이 다른 듣기를 누르면 취소한다
-  const introGapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const clearIntroGap = () => {
-    if (introGapTimerRef.current) clearTimeout(introGapTimerRef.current);
-    introGapTimerRef.current = null;
-  };
-  useEffect(() => clearIntroGap, []);
-
-  const introAudioUrl = learning.representativeSentenceAudioUrl;
-  const introExpressionAudioUrl = learning.targetExpressionAudioUrl;
-  useEffect(() => {
-    if (step !== 'EXPLAIN') {
-      // 설명 화면을 떠나면 자동재생과 예약된 다음 재생을 끊는다 — 발음 녹음 화면에 소리가 새지 않게
-      clearIntroGap();
-      player.stop();
-      return;
-    }
-    if (introPlayedRef.current || !introAudioUrl) return;
-    introPlayedRef.current = true;
-    if (introExpressionAudioUrl) {
-      player.play(introExpressionAudioUrl, {
-        id: 'intro-expression',
-        onDone: (reason) => {
-          if (reason !== 'ended') return;
-          introGapTimerRef.current = setTimeout(() => {
-            player.play(introAudioUrl, { id: 'intro-sentence' });
-          }, INTRO_GAP_MS);
-        },
-      });
-    } else {
-      player.play(introAudioUrl, { id: 'intro-sentence' });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 진입 시 1회, player는 안정적이지 않아 제외
-  }, [step, introAudioUrl, introExpressionAudioUrl]);
+  // 설명 화면(B안)의 소리 배선 — 자동재생·스피커 토글·진행률·계측 (자세한 규칙은 훅 참고)
+  const introAudio = useExpressionIntroStepAudio({
+    active: step === 'EXPLAIN',
+    expressionId,
+    sentenceAudioUrl: learning.representativeSentenceAudioUrl,
+    expressionAudioUrl: learning.targetExpressionAudioUrl,
+  });
 
   // 실제 학습이 뜬 시점(본체 마운트)을 시작으로 본다
   useEffect(() => {
@@ -332,43 +298,8 @@ const LoadedExpressionFlow = ({
             sentenceText={learning.representativeSentenceText}
             sentenceTranslation={learning.representativeSentenceTranslation}
             imageUrl={learning.representativeImageUrl}
-            // 표현 전용 음원이 없는 표현(패턴형)은 표현 듣기 버튼을 숨긴다 — 예문이 대신 나오면 헷갈린다.
-            // toggle이라 재생 중 다시 누르면 꺼지고, 수동 조작은 자동 순차 재생의 대기 타이머를 취소한다
-            onPlayExpressionAudio={
-              introExpressionAudioUrl
-                ? () => {
-                    clearIntroGap();
-                    // 재생 시작만 찍는다 — 같은 id가 나오는 중이면 이 토글은 끄기다
-                    if (player.playingId !== 'intro-expression') {
-                      track(EVENTS.PRONUNCIATION_AUDIO_PLAYED, {
-                        expression_id: expressionId,
-                        source: 'expression',
-                      });
-                    }
-                    player.toggle(introExpressionAudioUrl, {
-                      id: 'intro-expression',
-                    });
-                  }
-                : undefined
-            }
-            playingExpressionAudio={player.playingId === 'intro-expression'}
-            expressionAudioProgress={
-              player.playingId === 'intro-expression' ? player.progress : 0
-            }
-            onPlaySentenceAudio={() => {
-              clearIntroGap();
-              if (player.playingId !== 'intro-sentence') {
-                track(EVENTS.PRONUNCIATION_AUDIO_PLAYED, {
-                  expression_id: expressionId,
-                  source: 'sentence',
-                });
-              }
-              player.toggle(audioUrl, { id: 'intro-sentence' });
-            }}
-            playingSentenceAudio={player.playingId === 'intro-sentence'}
-            sentenceAudioProgress={
-              player.playingId === 'intro-sentence' ? player.progress : 0
-            }
+            // 듣기 배선(자동재생·토글·진행률·계측)은 훅이 만든 props 그대로
+            {...introAudio}
             progress={EXPLAIN_PROGRESS_WITH_PRONUNCIATION}
             leftAction="close"
             onBack={openExitSheet}
