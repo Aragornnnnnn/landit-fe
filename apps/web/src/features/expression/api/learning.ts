@@ -16,6 +16,8 @@ export interface ExpressionLearning {
   representativeImageUrl: string | null;
   // 대표 예문 원어민 TTS URL — null이면 발음 자산 미구축(또는 튜터 미설정)이라 발음 스텝을 숨긴다
   representativeSentenceAudioUrl: string | null;
+  // 이 표현을 이미 완료했는지 — 완료 표현 재진입은 퀴즈를 건너뛰고 설명부터 시작한다
+  completed: boolean;
   // 표현만 읽는 원어민 TTS URL — 일부 표현은 음원 미합성이라 null이 온다. 그때는 문장 음원으로 폴백한다
   targetExpressionAudioUrl: string | null;
 }

@@ -1,7 +1,7 @@
 'use client';
 
 // 표현학습 플로우 — 단어 선택 퀴즈(D안 ①') → 표현 설명(D안 ④) → [발음 자산 있으면: 발음 평가 → 추가 예문] → 복습 영작(D안 ⑤) → 완료 처리 후 리스트로.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EVENTS, type ExpressionStep } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
@@ -9,9 +9,11 @@ import { preload } from 'react-dom';
 import { track } from '@/shared/analytics';
 import { scenarioReturnPath, smallTalkHistoryPath } from '@/shared/lib/routes';
 
+import type { ExpressionLearning } from '../api/learning';
+import type { ExpressionPractice } from '../api/practice';
 import { collectPreloadImageUrls } from '../lib/preload-images';
 import { fromLearning, fromWritingSentence } from '../model/sentence-quiz';
-import { useAudioPlayer } from '../model/useAudioPlayer';
+import { useExpressionIntroStepAudio } from '../model/useExpressionIntroStepAudio';
 import { useExpressionLearningQuery } from '../model/useExpressionLearningQuery';
 import { useExpressionPracticeQuery } from '../model/useExpressionPracticeQuery';
 import { useFinishExpressionMutation } from '../model/useFinishExpressionMutation';
@@ -53,20 +55,72 @@ const EXPLAIN_PROGRESS = 0.7;
 const QUIZ_RANGE_WITH_PRONUNCIATION: [number, number] = [0, 0.3];
 const EXPLAIN_PROGRESS_WITH_PRONUNCIATION = 0.45;
 const PRONUNCIATION_PROGRESS = 0.6;
-// 설명 화면 자동재생에서 표현 → 예문 사이 숨 고르는 텀
-const INTRO_GAP_MS = 600;
 
+// 데이터 로딩 껍데기 — learning이 준비된 뒤에만 본체를 마운트한다.
+// 본체가 learning을 항상 들고 시작하므로 시작 스텝을 useState 초기값으로 자연스럽게 정할 수 있다
 export const ExpressionFlow = ({
   origin,
   expressionId,
 }: ExpressionFlowProps) => {
+  // 플로우 전체(퀴즈·설명·복습)는 대표 예문(learning-start)만으로 굴러간다.
+  // 추가 예문(practice)은 설명 스텝의 "이렇게도 써요"에만 쓰는 보강 데이터라, 없거나 실패해도 플로우를 막지 않는다.
+  const {
+    learning,
+    error: learningError,
+    isLoading: learningLoading,
+  } = useExpressionLearningQuery(expressionId);
+  // learning이 오면(=QUIZ 진입) 예문을 미리 받아, QUIZ 체류 중 EXPLAIN용 practice를 데워둔다.
+  const { practice, isLoading: practiceLoading } = useExpressionPracticeQuery(
+    expressionId,
+    !!learning,
+  );
+
+  // 데이터가 있으면 본체를 유지한다 — 백그라운드 리페치가 실패해도(에러가 서도)
+  // 진행 중인 학습 상태(step·피드백 등)를 리셋하지 않는다
+  if (learning) {
+    return (
+      <LoadedExpressionFlow
+        origin={origin}
+        expressionId={expressionId}
+        learning={learning}
+        practice={practice}
+        practiceLoading={practiceLoading}
+      />
+    );
+  }
+  if (learningLoading) return <QuizStepSkeleton />;
+  return (
+    <FlowStatus>
+      {learningError?.message ?? '표현을 불러오지 못했어요.'}
+    </FlowStatus>
+  );
+};
+
+interface LoadedExpressionFlowProps {
+  origin: ExpressionOrigin;
+  expressionId: number;
+  learning: ExpressionLearning;
+  practice: ExpressionPractice | null;
+  practiceLoading: boolean;
+}
+
+const LoadedExpressionFlow = ({
+  origin,
+  expressionId,
+  learning,
+  practice,
+  practiceLoading,
+}: LoadedExpressionFlowProps) => {
   const router = useRouter();
   // 계측에 싣는 출처 — 시나리오면 시나리오 id, 스몰톡이면 세션 id
   const originProps =
     origin.kind === 'scenario'
       ? { scenario_id: origin.scenarioId }
       : { session_id: origin.sessionId };
-  const [step, setStep] = useState<Step>('QUIZ');
+  // 완료한 표현의 재진입은 퀴즈를 건너뛰고 설명부터 시작한다 — 판정은 서버(learning.completed) 한 곳
+  const [step, setStep] = useState<Step>(
+    learning.completed ? 'EXPLAIN' : 'QUIZ',
+  );
   // 발음 분석이 결과 화면(피드백·실패)에 한 번이라도 도달했는지 — 그 뒤 설명·추가 예문으로 나가도
   // 발음 스텝을 숨김 유지해 보던 화면을 잃지 않고, 설명 CTA는 "다음"으로 바뀐다.
   // 녹음 전에 되돌아가는 건 그냥 첫 방문 취급
@@ -82,82 +136,35 @@ export const ExpressionFlow = ({
     selected: number[];
   } | null>(null);
 
-  // 플로우 전체(퀴즈·설명·복습)는 대표 예문(learning-start)만으로 굴러간다.
-  // 추가 예문(practice)은 설명 스텝의 "이렇게도 써요"에만 쓰는 보강 데이터라, 없거나 실패해도 플로우를 막지 않는다.
-  const {
-    learning,
-    error: learningError,
-    isLoading: learningLoading,
-  } = useExpressionLearningQuery(expressionId);
-  // learning이 오면(=QUIZ 진입) 예문을 미리 받아, QUIZ 체류 중 EXPLAIN용 practice를 데워둔다.
-  const { practice, isLoading: practiceLoading } = useExpressionPracticeQuery(
-    expressionId,
-    !!learning,
-  );
   // 스몰톡 표현은 완료 요청에 세션 ID를 실어야 서버가 기록한다
   const finish = useFinishExpressionMutation(
     expressionId,
     origin.kind === 'session' ? origin.sessionId : undefined,
   );
-  // 설명 화면(B안)의 원어민 발음 듣기 재생용
-  const player = useAudioPlayer();
-  // 설명 화면 첫 진입 시 표현 → 예문 순서로 자동 1회 들려준다 — 발음 화면에서 되돌아와도 다시 틀지 않고,
-  // 중간에 사용자가 끄면(stopped) 다음 재생을 잇지 않는다. 표현 전용 음원이 없으면 예문만 튼다
-  const introPlayedRef = useRef(false);
-  // 표현→예문 사이 숨 고르는 텀 — 사용자가 그 사이 다른 듣기를 누르면 취소한다
-  const introGapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const clearIntroGap = () => {
-    if (introGapTimerRef.current) clearTimeout(introGapTimerRef.current);
-    introGapTimerRef.current = null;
-  };
-  useEffect(() => clearIntroGap, []);
+  // 설명 화면(B안)의 소리 배선 — 자동재생·스피커 토글·진행률·계측 (자세한 규칙은 훅 참고)
+  const introAudio = useExpressionIntroStepAudio({
+    active: step === 'EXPLAIN',
+    expressionId,
+    sentenceAudioUrl: learning.representativeSentenceAudioUrl,
+    expressionAudioUrl: learning.targetExpressionAudioUrl,
+  });
 
-  const introAudioUrl = learning?.representativeSentenceAudioUrl ?? null;
-  const introExpressionAudioUrl = learning?.targetExpressionAudioUrl ?? null;
+  // 실제 학습이 뜬 시점(본체 마운트)을 시작으로 본다
   useEffect(() => {
-    if (step !== 'EXPLAIN') {
-      // 설명 화면을 떠나면 자동재생과 예약된 다음 재생을 끊는다 — 발음 녹음 화면에 소리가 새지 않게
-      clearIntroGap();
-      player.stop();
-      return;
-    }
-    if (introPlayedRef.current || !introAudioUrl) return;
-    introPlayedRef.current = true;
-    if (introExpressionAudioUrl) {
-      player.play(introExpressionAudioUrl, {
-        id: 'intro-expression',
-        onDone: (reason) => {
-          if (reason !== 'ended') return;
-          introGapTimerRef.current = setTimeout(() => {
-            player.play(introAudioUrl, { id: 'intro-sentence' });
-          }, INTRO_GAP_MS);
-        },
-      });
-    } else {
-      player.play(introAudioUrl, { id: 'intro-sentence' });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 진입 시 1회, player는 안정적이지 않아 제외
-  }, [step, introAudioUrl, introExpressionAudioUrl]);
-
-  // 데이터가 준비돼 실제 학습이 뜬 시점을 시작으로 본다
-  const learningReady = Boolean(learning);
-  useEffect(() => {
-    if (!learningReady) return;
     track(EVENTS.EXPRESSION_LEARNING_STARTED, {
       expression_id: expressionId,
       ...originProps,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [learningReady, expressionId]);
+  }, [expressionId]);
 
-  // 첫 스텝(QUIZ) 포함, 스텝 전환마다 노출로 기록한다
+  // 첫 스텝 포함, 스텝 전환마다 노출로 기록한다
   useEffect(() => {
-    if (!learningReady) return;
     track(EVENTS.EXPRESSION_STEP_VIEWED, {
       expression_id: expressionId,
       step: STEP_PROP[step],
     });
-  }, [learningReady, step, expressionId]);
+  }, [step, expressionId]);
 
   // 예문 이미지는 QUIZ→EXPLAIN에서 마운트되지만, URL을 아는 즉시 브라우저 캐시에 선로드해
   // EXPLAIN 도착 시 img가 곧바로 뜨게 한다. preload는 멱등이라 렌더 중 호출해도 안전하다.
@@ -173,15 +180,6 @@ export const ExpressionFlow = ({
         ? scenarioReturnPath({ flip: origin.scenarioId, date: origin.date })
         : smallTalkHistoryPath(origin.sessionId),
     );
-
-  if (learningLoading) return <QuizStepSkeleton />;
-  if (learningError || !learning) {
-    return (
-      <FlowStatus>
-        {learningError?.message ?? '표현을 불러오지 못했어요.'}
-      </FlowStatus>
-    );
-  }
 
   const quiz = fromLearning(learning);
   // 발음 자산(원어민 TTS)이 있는 표현만 발음 스텝이 열린다 — null이면 기존 3스텝 플로우 그대로
@@ -286,7 +284,6 @@ export const ExpressionFlow = ({
   // 발음 자산이 있으면 QUIZ 이후 스텝 전부(설명·발음·추가 예문·복습)를 한 트리에서 렌더한다 (QUIZ는 위에서 반환됨).
   // 피드백을 받은 뒤엔 어느 스텝으로 나가도 발음 스텝은 숨김 유지 — 리마운트되면 피드백·녹음이 날아간다
   if (learning.representativeSentenceAudioUrl) {
-    const audioUrl = learning.representativeSentenceAudioUrl;
     // 발음 스텝을 지나온 재방문 — 설명 CTA가 "다음"(복귀)으로 바뀌고 건너뛰기는 사라진다
     const pronounceRevisit = pronounceDone || pronounceSkipped;
     // 결과 없이 건너뛴 상태 — 재방문 동선이 발음(마이크) 대신 설명↔추가 예문을 오간다
@@ -301,43 +298,8 @@ export const ExpressionFlow = ({
             sentenceText={learning.representativeSentenceText}
             sentenceTranslation={learning.representativeSentenceTranslation}
             imageUrl={learning.representativeImageUrl}
-            // 표현 전용 음원이 없는 표현(패턴형)은 표현 듣기 버튼을 숨긴다 — 예문이 대신 나오면 헷갈린다.
-            // toggle이라 재생 중 다시 누르면 꺼지고, 수동 조작은 자동 순차 재생의 대기 타이머를 취소한다
-            onPlayExpressionAudio={
-              introExpressionAudioUrl
-                ? () => {
-                    clearIntroGap();
-                    // 재생 시작만 찍는다 — 같은 id가 나오는 중이면 이 토글은 끄기다
-                    if (player.playingId !== 'intro-expression') {
-                      track(EVENTS.PRONUNCIATION_AUDIO_PLAYED, {
-                        expression_id: expressionId,
-                        source: 'expression',
-                      });
-                    }
-                    player.toggle(introExpressionAudioUrl, {
-                      id: 'intro-expression',
-                    });
-                  }
-                : undefined
-            }
-            playingExpressionAudio={player.playingId === 'intro-expression'}
-            expressionAudioProgress={
-              player.playingId === 'intro-expression' ? player.progress : 0
-            }
-            onPlaySentenceAudio={() => {
-              clearIntroGap();
-              if (player.playingId !== 'intro-sentence') {
-                track(EVENTS.PRONUNCIATION_AUDIO_PLAYED, {
-                  expression_id: expressionId,
-                  source: 'sentence',
-                });
-              }
-              player.toggle(audioUrl, { id: 'intro-sentence' });
-            }}
-            playingSentenceAudio={player.playingId === 'intro-sentence'}
-            sentenceAudioProgress={
-              player.playingId === 'intro-sentence' ? player.progress : 0
-            }
+            // 듣기 배선(자동재생·토글·진행률·계측)은 훅이 만든 props 그대로
+            {...introAudio}
             progress={EXPLAIN_PROGRESS_WITH_PRONUNCIATION}
             leftAction="close"
             onBack={openExitSheet}
@@ -392,7 +354,7 @@ export const ExpressionFlow = ({
               sentenceTranslation={learning.representativeSentenceTranslation}
               targetExpressionText={learning.targetExpressionText}
               imageUrl={learning.representativeImageUrl}
-              sentenceAudioUrl={audioUrl}
+              sentenceAudioUrl={learning.representativeSentenceAudioUrl}
               progress={PRONUNCIATION_PROGRESS}
               onBack={() => setStep('EXPLAIN')}
               onExit={openExitSheet}
