@@ -95,6 +95,35 @@ describe('parseWebToNativeMessage', () => {
     );
   });
 
+  it('구 셸 예약 정리 신호(SYNC_REMINDERS 빈 배열)를 그대로 되돌린다 (round-trip)', () => {
+    const message: WebToNativeMessage = {
+      type: 'SYNC_REMINDERS',
+      reminders: [],
+    };
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('예약을 만들려는 SYNC_REMINDERS(빈 배열 아님)는 버린다 — 정리 신호 전용이다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({
+          type: 'SYNC_REMINDERS',
+          reminders: [
+            {
+              notifyAt: '2026-09-02T20:00:00+09:00',
+              title: '제목',
+              body: '본문',
+              url: '/scenario',
+            },
+          ],
+        }),
+      ),
+    ).toBeNull();
+  });
+
   it('알림 권한 조회 요청을 그대로 되돌린다 (round-trip)', () => {
     const message = { type: 'GET_NOTIFICATION_PERMISSION' } as const;
 
