@@ -37,7 +37,6 @@ export const FeedbackCards = ({
       const playNative = word.nativeWordAudioUrl
         ? () => onPlayNative(word)
         : undefined;
-      const playMine = () => onPlayMine(word);
 
       return (
         // scroll-mt로 앵커 이동 시 헤더에 가리지 않게 여유를 둔다 (단어 칩에서 이동해 온다).
@@ -81,7 +80,7 @@ export const FeedbackCards = ({
               </PronRow>
               <PronRow
                 label="나"
-                onPlay={playMine}
+                onPlay={() => onPlayMine(word)}
                 playing={playingId === myWordAudioId(word.order)}
               >
                 {card.kind === 'phoneme' ? (

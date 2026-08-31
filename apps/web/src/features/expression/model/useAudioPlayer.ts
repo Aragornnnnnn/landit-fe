@@ -16,7 +16,7 @@ export const useAudioPlayer = () => {
   const finishRef = useRef<((reason?: 'ended' | 'stopped') => void) | null>(
     null,
   );
-  // 재생 중인 소리의 식별자 — 같은 파일의 다른 구간(단어별)도 구분하도록 id를 따로 받는다
+  // 재생 중인 소리의 식별자 — 같은 파일을 여러 버튼(행)이 틀 수 있어 id를 따로 받는다
   const [playingId, setPlayingId] = useState<string | null>(null);
   // 재생 진행률 0~1 — 글자 하이라이트(카라오케)가 따라간다. 끝나면 0으로 돌아간다
   const [progress, setProgress] = useState(0);
