@@ -8,7 +8,7 @@ export interface PronunciationWord {
   order: number;
   word: string;
   status: PronunciationWordStatus;
-  // 사용자 녹음에서 이 단어가 들린 구간(ms) — 내 발음 다시 듣기에 쓴다
+  // 사용자 녹음에서 이 단어가 들린 구간(ms) — 정렬 모델이 부정확해 FE는 쓰지 않는다(LAN-402, 구간 재생 제거)
   startTimeMs: number | null;
   endTimeMs: number | null;
   // 아래는 오류 단어만 채워진다 — CORRECT는 전부 null
