@@ -131,6 +131,7 @@ const learning: ExpressionLearning = {
   representativeSentenceWords: ['I', 'get', 'it'],
   representativeSentenceWordChoices: ['I', 'get', 'it'],
   representativeImageUrl: null,
+  completed: false,
   representativeSentenceAudioUrl: null,
   targetExpressionAudioUrl: null,
 };
@@ -482,6 +483,32 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
     expect(screen.getByText('intro:다음')).toBeInTheDocument();
     await user.click(screen.getByText('intro-next'));
     expect(screen.getByText('explain:복습 퀴즈 풀게요:0')).toBeInTheDocument();
+  });
+
+  it('완료한 표현 재진입(learning.completed)이면 퀴즈 없이 설명부터 시작한다', () => {
+    learningMock.mockReturnValue({
+      learning: {
+        ...learning,
+        completed: true,
+        representativeSentenceAudioUrl: 'https://cdn/audio.mp3',
+      },
+      error: null,
+      isLoading: false,
+    });
+    practiceMock.mockReturnValue({
+      practice: practice([]),
+      error: null,
+      isLoading: false,
+    });
+    render(
+      <ExpressionFlow
+        origin={{ kind: 'scenario', scenarioId: 1 }}
+        expressionId={7}
+      />,
+    );
+
+    expect(screen.queryByText('quiz:quiz')).not.toBeInTheDocument();
+    expect(screen.getByText('intro:소리 내서 말해볼게요')).toBeInTheDocument();
   });
 
   it('발음 자산이 없으면 기존 3스텝 그대로 — 발음 스텝이 뜨지 않는다', async () => {

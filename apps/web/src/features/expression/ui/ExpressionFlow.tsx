@@ -9,6 +9,8 @@ import { preload } from 'react-dom';
 import { track } from '@/shared/analytics';
 import { scenarioReturnPath, smallTalkHistoryPath } from '@/shared/lib/routes';
 
+import type { ExpressionLearning } from '../api/learning';
+import type { ExpressionPractice } from '../api/practice';
 import { collectPreloadImageUrls } from '../lib/preload-images';
 import { fromLearning, fromWritingSentence } from '../model/sentence-quiz';
 import { useAudioPlayer } from '../model/useAudioPlayer';
@@ -56,17 +58,70 @@ const PRONUNCIATION_PROGRESS = 0.6;
 // 설명 화면 자동재생에서 표현 → 예문 사이 숨 고르는 텀
 const INTRO_GAP_MS = 600;
 
+// 데이터 로딩 껍데기 — learning이 준비된 뒤에만 본체를 마운트한다.
+// 본체가 learning을 항상 들고 시작하므로 시작 스텝을 useState 초기값으로 자연스럽게 정할 수 있다
 export const ExpressionFlow = ({
   origin,
   expressionId,
 }: ExpressionFlowProps) => {
+  // 플로우 전체(퀴즈·설명·복습)는 대표 예문(learning-start)만으로 굴러간다.
+  // 추가 예문(practice)은 설명 스텝의 "이렇게도 써요"에만 쓰는 보강 데이터라, 없거나 실패해도 플로우를 막지 않는다.
+  const {
+    learning,
+    error: learningError,
+    isLoading: learningLoading,
+  } = useExpressionLearningQuery(expressionId);
+  // learning이 오면(=QUIZ 진입) 예문을 미리 받아, QUIZ 체류 중 EXPLAIN용 practice를 데워둔다.
+  const { practice, isLoading: practiceLoading } = useExpressionPracticeQuery(
+    expressionId,
+    !!learning,
+  );
+
+  if (learningLoading) return <QuizStepSkeleton />;
+  if (learningError || !learning) {
+    return (
+      <FlowStatus>
+        {learningError?.message ?? '표현을 불러오지 못했어요.'}
+      </FlowStatus>
+    );
+  }
+
+  return (
+    <LoadedExpressionFlow
+      origin={origin}
+      expressionId={expressionId}
+      learning={learning}
+      practice={practice ?? null}
+      practiceLoading={practiceLoading}
+    />
+  );
+};
+
+interface LoadedExpressionFlowProps {
+  origin: ExpressionOrigin;
+  expressionId: number;
+  learning: ExpressionLearning;
+  practice: ExpressionPractice | null;
+  practiceLoading: boolean;
+}
+
+const LoadedExpressionFlow = ({
+  origin,
+  expressionId,
+  learning,
+  practice,
+  practiceLoading,
+}: LoadedExpressionFlowProps) => {
   const router = useRouter();
   // 계측에 싣는 출처 — 시나리오면 시나리오 id, 스몰톡이면 세션 id
   const originProps =
     origin.kind === 'scenario'
       ? { scenario_id: origin.scenarioId }
       : { session_id: origin.sessionId };
-  const [step, setStep] = useState<Step>('QUIZ');
+  // 완료한 표현의 재진입은 퀴즈를 건너뛰고 설명부터 시작한다 — 판정은 서버(learning.completed) 한 곳
+  const [step, setStep] = useState<Step>(
+    learning.completed ? 'EXPLAIN' : 'QUIZ',
+  );
   // 발음 분석이 결과 화면(피드백·실패)에 한 번이라도 도달했는지 — 그 뒤 설명·추가 예문으로 나가도
   // 발음 스텝을 숨김 유지해 보던 화면을 잃지 않고, 설명 CTA는 "다음"으로 바뀐다.
   // 녹음 전에 되돌아가는 건 그냥 첫 방문 취급
@@ -82,18 +137,6 @@ export const ExpressionFlow = ({
     selected: number[];
   } | null>(null);
 
-  // 플로우 전체(퀴즈·설명·복습)는 대표 예문(learning-start)만으로 굴러간다.
-  // 추가 예문(practice)은 설명 스텝의 "이렇게도 써요"에만 쓰는 보강 데이터라, 없거나 실패해도 플로우를 막지 않는다.
-  const {
-    learning,
-    error: learningError,
-    isLoading: learningLoading,
-  } = useExpressionLearningQuery(expressionId);
-  // learning이 오면(=QUIZ 진입) 예문을 미리 받아, QUIZ 체류 중 EXPLAIN용 practice를 데워둔다.
-  const { practice, isLoading: practiceLoading } = useExpressionPracticeQuery(
-    expressionId,
-    !!learning,
-  );
   // 스몰톡 표현은 완료 요청에 세션 ID를 실어야 서버가 기록한다
   const finish = useFinishExpressionMutation(
     expressionId,
@@ -112,8 +155,8 @@ export const ExpressionFlow = ({
   };
   useEffect(() => clearIntroGap, []);
 
-  const introAudioUrl = learning?.representativeSentenceAudioUrl ?? null;
-  const introExpressionAudioUrl = learning?.targetExpressionAudioUrl ?? null;
+  const introAudioUrl = learning.representativeSentenceAudioUrl;
+  const introExpressionAudioUrl = learning.targetExpressionAudioUrl;
   useEffect(() => {
     if (step !== 'EXPLAIN') {
       // 설명 화면을 떠나면 자동재생과 예약된 다음 재생을 끊는다 — 발음 녹음 화면에 소리가 새지 않게
@@ -139,25 +182,22 @@ export const ExpressionFlow = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 진입 시 1회, player는 안정적이지 않아 제외
   }, [step, introAudioUrl, introExpressionAudioUrl]);
 
-  // 데이터가 준비돼 실제 학습이 뜬 시점을 시작으로 본다
-  const learningReady = Boolean(learning);
+  // 실제 학습이 뜬 시점(본체 마운트)을 시작으로 본다
   useEffect(() => {
-    if (!learningReady) return;
     track(EVENTS.EXPRESSION_LEARNING_STARTED, {
       expression_id: expressionId,
       ...originProps,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [learningReady, expressionId]);
+  }, [expressionId]);
 
-  // 첫 스텝(QUIZ) 포함, 스텝 전환마다 노출로 기록한다
+  // 첫 스텝 포함, 스텝 전환마다 노출로 기록한다
   useEffect(() => {
-    if (!learningReady) return;
     track(EVENTS.EXPRESSION_STEP_VIEWED, {
       expression_id: expressionId,
       step: STEP_PROP[step],
     });
-  }, [learningReady, step, expressionId]);
+  }, [step, expressionId]);
 
   // 예문 이미지는 QUIZ→EXPLAIN에서 마운트되지만, URL을 아는 즉시 브라우저 캐시에 선로드해
   // EXPLAIN 도착 시 img가 곧바로 뜨게 한다. preload는 멱등이라 렌더 중 호출해도 안전하다.
@@ -173,15 +213,6 @@ export const ExpressionFlow = ({
         ? scenarioReturnPath({ flip: origin.scenarioId, date: origin.date })
         : smallTalkHistoryPath(origin.sessionId),
     );
-
-  if (learningLoading) return <QuizStepSkeleton />;
-  if (learningError || !learning) {
-    return (
-      <FlowStatus>
-        {learningError?.message ?? '표현을 불러오지 못했어요.'}
-      </FlowStatus>
-    );
-  }
 
   const quiz = fromLearning(learning);
   // 발음 자산(원어민 TTS)이 있는 표현만 발음 스텝이 열린다 — null이면 기존 3스텝 플로우 그대로
