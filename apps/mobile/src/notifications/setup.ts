@@ -15,6 +15,9 @@ const FOREGROUND_BEHAVIOR = {
 
 // 정책 핸들러를 등록하고 Android 채널을 만든다 — Android 13+ 권한 팝업은 채널이 있어야 뜬다
 export const initializeNotifications = async () => {
+  // 로컬 리마인더 시절 기기에 남은 예약분부터 정리 — 이제 로컬 예약이 없으므로 남은 예약은 전부 구버전 잔재다
+  await Notifications.cancelAllScheduledNotificationsAsync();
+
   Notifications.setNotificationHandler({
     handleNotification: async () => FOREGROUND_BEHAVIOR,
   });
