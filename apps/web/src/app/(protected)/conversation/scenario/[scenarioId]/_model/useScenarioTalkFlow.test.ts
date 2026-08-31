@@ -133,8 +133,7 @@ const scenario = {
     userOpeningInstruction: null,
     innerThought: null,
     innerThoughtType: null,
-    ttsVoice: voice,
-    characterId: 'marco',
+    character: { characterId: 'marco', ttsVoice: voice },
   },
 } as unknown as Scenario;
 
@@ -147,7 +146,7 @@ const userScenario = {
     userOpeningInstruction: '먼저 인사를 건네보세요.',
     innerThought: null,
     innerThoughtType: null,
-    ttsVoice: voice,
+    character: { characterId: null, ttsVoice: voice },
   },
 } as unknown as Scenario;
 
@@ -158,18 +157,20 @@ const withCharacter = (
 ): Scenario =>
   ({
     ...base,
-    openingPreview: { ...base.openingPreview, characterId, ttsVoice },
+    openingPreview: {
+      ...base.openingPreview,
+      character: { characterId, ttsVoice },
+    },
   }) as unknown as Scenario;
 
 // 세션 시작 응답 — 이제 주로 sessionId·progress 확보용 (오프닝은 openingPreview에서 시드)
 const startResponse = () => ({
   sessionId: 1,
   scenarioId: 10,
-  characterId: 'marco' as const,
+  character: { characterId: 'marco' as const, ttsVoice: null },
   sessionType: 'SCENARIO',
   firstSpeaker: 'AI' as const,
   userOpeningInstruction: null,
-  ttsVoice: null,
   currentMessage: null,
   progress: {
     currentTurnNumber: 1,
@@ -536,7 +537,7 @@ describe('useScenarioTalkFlow', async () => {
     // given — 세션은 백그라운드로 뒤늦게 오고, 값이 어긋나도 얼굴이 도중에 바뀌면 안 된다
     startScenarioTalkSession.mockResolvedValue({
       ...startResponse(),
-      characterId: 'teddy',
+      character: { characterId: 'teddy', ttsVoice: null },
     });
     const { result } = renderHook(() =>
       useScenarioTalkFlow(withCharacter(scenario, 'marco')),

@@ -2,16 +2,14 @@
 // 발화 제출 URL(/sessions/{id}/messages)은 중립적으로 생겼지만 스몰톡은 전용 엔드포인트
 // (스몰톡 전용 주소)를 쓰므로 사실상 시나리오 전용이다. 소속은 URL 모양이 아니라 소비자로 정한다.
 import type {
+  ConversationCharacter,
   CurrentMessage,
   InputType,
   NextMessage,
   ProcessingStatus,
   SubmittedMessage,
 } from '@/features/conversation/api/session';
-import type { Partner } from '@/features/conversation/model/character-look';
 import { api } from '@/shared/api/client';
-// ttsVoice는 재생(useTts)과 같은 타입을 공유한다
-import type { TtsVoice } from '@/shared/tts/voice';
 
 // 시나리오 첫 질문에는 속마음이 함께 온다 (스몰톡과 달리 이미 오간 맥락 위에서 나온다)
 export interface ScenarioTalkCurrentMessage extends CurrentMessage {
@@ -50,12 +48,11 @@ export interface ScenarioTalkProgress extends ScenarioTalkStartProgress {
 export interface ScenarioTalkStartResponse {
   sessionId: number;
   scenarioId: number;
-  // 시나리오의 상대. 얼굴은 openingPreview의 같은 값으로 이미 정해져 있어 여기서는 읽지 않는다
-  characterId: Partner | null;
+  // 시나리오의 상대. 얼굴도 목소리도 openingPreview의 같은 값으로 이미 정해져 있어 여기서는 읽지 않는다
+  character: ConversationCharacter;
   sessionType: string;
   firstSpeaker: 'AI' | 'USER';
   userOpeningInstruction: string | null;
-  ttsVoice: TtsVoice | null;
   currentMessage: ScenarioTalkCurrentMessage | null;
   progress: ScenarioTalkStartProgress;
 }
