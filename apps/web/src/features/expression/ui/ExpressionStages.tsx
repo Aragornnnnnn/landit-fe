@@ -94,7 +94,7 @@ export const RevealStage = ({
         `${name}님을 위한 표현을 준비했어요`
       )}
     </p>
-    <div className="-mx-6 mt-4 min-h-0 flex-1 overflow-y-auto">
+    <div className="-mx-6 mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain">
       {expressions && (
         <ExpressionList
           expressions={expressions}
