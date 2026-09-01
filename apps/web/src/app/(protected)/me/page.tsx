@@ -19,6 +19,7 @@ import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
+import { AccentMenuEntry } from './_ui/AccentMenuEntry';
 import { EnglishLevelMenuEntry } from './_ui/EnglishLevelMenuEntry';
 import { MenuButton, MenuGroup, MenuLink } from './_ui/Menu';
 import { NotificationMenuEntry } from './_ui/NotificationMenuEntry';
@@ -166,6 +167,7 @@ export default function MyPage() {
         {/* 메뉴 그룹 */}
         <div className="space-y-3 px-4 pb-8">
           <EnglishLevelMenuEntry />
+          <AccentMenuEntry />
 
           {/* 알림을 아직 안 켠 유저에게만 보인다 */}
           <NotificationMenuEntry />
