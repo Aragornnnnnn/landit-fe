@@ -1,5 +1,5 @@
 // 탭 셸 — 헤더와 탭 칩을 탭들이 공유한다. 탭을 오가도 이 껍데기는 리마운트되지 않는다
-import { EnglishLevelGate } from '@/features/onboarding/ui/EnglishLevelGate';
+import { ProfileGate } from '@/features/onboarding/ui/ProfileGate';
 
 import { AppHeader } from '../_ui/AppHeader';
 import { RememberLastTab } from './_ui/RememberLastTab';
@@ -18,7 +18,7 @@ export default function TabsLayout({
       <TabBar tabs={VISIBLE_TABS} />
       {children}
       {/* 어느 탭으로 들어오든 무조건 앞을 막는다 — 온보딩을 마쳤지만 아직 답 안 한 기존 유저만 대상 */}
-      <EnglishLevelGate />
+      <ProfileGate />
     </main>
   );
 }
