@@ -245,13 +245,11 @@ export type EventProps = {
     source: 'onboarding' | 'conversation';
   };
   'Onboarding Completed': undefined;
-  // 답이 질문마다 달라서 값 속성이 갈린다 — question이 어느 쪽을 읽을지 말해준다
   'Profile Gate Viewed': { question: GateQuestion };
-  'Profile Gate Answered': {
-    question: GateQuestion;
-    level?: EnglishLevel;
-    accent?: AccentLocale;
-  };
+  // 답이 질문마다 달라서 question으로 갈린다 — 짝이 안 맞는 조합(level 질문에 accent 값)은 타입이 막는다
+  'Profile Gate Answered':
+    | { question: 'level'; level: EnglishLevel }
+    | { question: 'accent'; accent: AccentLocale };
   'English Level Changed': { level: EnglishLevel };
   'Accent Changed': { accent: AccentLocale };
 
