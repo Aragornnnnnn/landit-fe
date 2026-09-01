@@ -18,11 +18,20 @@ export const useSaveLearningLevelMutation = () => {
 
   return useMutation({
     mutationFn: (level: EnglishLevel) => updateLearningLevel(level),
-    onMutate: (level) => {
+    onMutate: async (level) => {
+      // 진행 중인 조회를 먼저 끊는다 — 늦게 도착한 응답이 방금 고른 값을 덮으면 게이트가 다시 묻는다
+      await queryClient.cancelQueries({
+        queryKey: profileKeys.learningLevel(userId),
+      });
       queryClient.setQueryData(profileKeys.learningLevel(userId), {
         learningLevel: level,
       });
     },
     onError: (error) => reportWarning(error),
+    // 성공이든 실패든 서버 값을 다시 확인한다 — 저장이 실패했다면 조회가 null로 와서 다시 묻게 된다
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: profileKeys.learningLevel(userId),
+      }),
   });
 };

@@ -16,7 +16,11 @@ export const useSaveAccentMutation = () => {
 
   return useMutation({
     mutationFn: (accent: AccentLocale) => updateAccentLocale(accent),
-    onMutate: (accent) => {
+    onMutate: async (accent) => {
+      // 진행 중인 조회를 먼저 끊는다 — 늦게 도착한 응답이 방금 고른 값을 덮으면 게이트가 다시 묻는다
+      await queryClient.cancelQueries({
+        queryKey: profileKeys.accent(userId),
+      });
       // name은 서버가 붙여주는 표시용 값이라 여기선 모른다 — 다음 조회에 채워진다
       queryClient.setQueryData(profileKeys.accent(userId), {
         accentLocale: accent,
@@ -24,5 +28,8 @@ export const useSaveAccentMutation = () => {
       });
     },
     onError: (error) => reportWarning(error),
+    // 성공이든 실패든 서버 값을 다시 확인한다 — 저장이 실패했다면 조회가 null로 와서 다시 묻게 된다
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: profileKeys.accent(userId) }),
   });
 };
