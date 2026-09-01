@@ -42,7 +42,7 @@ export const NotificationConsentGate = () => {
     close();
   };
 
-  // 수락 = OS 권한창 요청 — 회신은 훅이 받아 상태를 갱신하고, 허용되면 ReminderSync가 예약까지 이어간다
+  // 수락 = OS 권한창 요청 — 회신은 훅이 받아 상태를 갱신하고, 허용되면 PushTokenSync가 토큰을 서버에 등록한다
   const accept = () => {
     track(EVENTS.NOTIFICATION_CONSENT_ACCEPTED, { source: 'scenario' });
     requestNotificationPermission('scenario');
