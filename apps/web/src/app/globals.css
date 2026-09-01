@@ -34,6 +34,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-backdrop: var(--backdrop);
+  --color-selected: var(--selected);
   --color-good: var(--good);
   --color-good-bg: var(--good-bg);
   --color-good-border: var(--good-border);
@@ -126,6 +127,9 @@
   --ring: var(--orange-500);
   /* 데스크톱 웹에서 430px 앱 컬럼 바깥에 까는 여백색 — 컬럼(밝은 background)이 살짝 떠 보이게 한 톤 더 진한 웜 그레이 */
   --backdrop: var(--gray-200);
+  /* 목록에서 고른 항목의 배경 — 주황을 반투명으로 얹으면 카드 배경과 섞여 탁해진다.
+   * 반투명 틴트 대신 정해진 색을 쓴다 */
+  --selected: var(--orange-50);
   --star-filled: var(--amber-400);
   --star-empty: var(--gray-300);
   /* 스트릭 — 달력의 이어진 구간 띠 (피그마 스트릭 Flow 스펙) */

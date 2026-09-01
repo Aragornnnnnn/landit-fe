@@ -36,7 +36,7 @@ export const AccentOptions = ({
           aria-pressed={isSelected}
           className={`flex w-full items-center gap-3 rounded-2xl px-4 py-4 text-left transition-[translate,box-shadow,background-color] duration-75 ${
             isSelected
-              ? 'translate-y-[3px] bg-primary/15 shadow-none'
+              ? 'translate-y-[3px] bg-selected shadow-none'
               : 'bg-card shadow-[0_3px_0_var(--border)] active:translate-y-[3px] active:shadow-none'
           }`}
         >
