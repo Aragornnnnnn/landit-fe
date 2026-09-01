@@ -22,12 +22,17 @@ export const EVENTS = {
   MIC_PERMISSION_DECIDED: 'Mic Permission Decided',
   ONBOARDING_COMPLETED: 'Onboarding Completed',
 
-  // 영어 수준 체크 — 신규 유저는 온보딩 스텝(level)이라 위 계측이 그대로 커버한다.
-  // 기존 유저는 온보딩 밖 별도 게이트라 노출·응답을 따로 찍는다
-  ENGLISH_LEVEL_GATE_VIEWED: 'English Level Gate Viewed',
-  ENGLISH_LEVEL_GATE_ANSWERED: 'English Level Gate Answered',
+  // 프로필 질문 게이트 — 신규 유저는 온보딩 스텝(level·accent)이라 위 계측이 그대로 커버한다.
+  // 온보딩을 이미 마친 기존 유저는 온보딩 밖 별도 게이트라 노출·응답을 따로 찍는다.
+  // 질문이 늘어도 이름을 늘리지 않고 question 속성으로 가른다 (정책 2-1)
+  PROFILE_GATE_VIEWED: 'Profile Gate Viewed',
+  PROFILE_GATE_ANSWERED: 'Profile Gate Answered',
   // 마이페이지에서 스스로 다시 고른 경우 — 최초 응답(Gate·온보딩)과 의도가 달라 별도로 찍는다
   ENGLISH_LEVEL_CHANGED: 'English Level Changed',
+
+  // 배울 영어(억양) — 최초 선택은 온보딩 스텝(accent)이라 위 계측이 그대로 커버한다.
+  // 마이페이지에서 다시 고른 것만 따로 찍는다
+  ACCENT_CHANGED: 'Accent Changed',
 
   // 홈
   HOME_TAB_SWITCHED: 'Home Tab Switched',
@@ -133,9 +138,20 @@ export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
 export type AuthProvider = 'kakao' | 'google' | 'apple';
 export type LoginMethod = 'native' | 'web';
 export type OnboardingStep =
-  'intro' | 'sound' | 'mic' | 'thought' | 'notification' | 'level' | 'scenario';
+  | 'intro'
+  | 'sound'
+  | 'mic'
+  | 'thought'
+  | 'notification'
+  | 'level'
+  | 'accent'
+  | 'scenario';
 // 영어 수준 — BE 저장 API(learningLevel)와 같은 1(막 시작)~5(유창) 정수 척도. 지표와 서버 데이터가 같은 말을 쓴다
 export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
+// 배울 영어 — BE 발음 에셋(accentLocale)과 같은 enum 값을 쓴다. 지표와 서버 데이터가 같은 말을 쓴다
+export type AccentLocale = 'EN_US' | 'EN_GB' | 'EN_AU';
+// 기존 유저 게이트가 묻는 질문 — 온보딩 스텝과 같은 말을 쓴다
+export type GateQuestion = Extract<OnboardingStep, 'level' | 'accent'>;
 // pronounce = 발음 평가, examples = 발음 뒤 추가 예문 화면 (발음 없는 표현은 explain이 예문까지 포함)
 export type ExpressionStep =
   'quiz' | 'explain' | 'pronounce' | 'examples' | 'review';
@@ -229,9 +245,15 @@ export type EventProps = {
     source: 'onboarding' | 'conversation';
   };
   'Onboarding Completed': undefined;
-  'English Level Gate Viewed': undefined;
-  'English Level Gate Answered': { level: EnglishLevel };
+  // 답이 질문마다 달라서 값 속성이 갈린다 — question이 어느 쪽을 읽을지 말해준다
+  'Profile Gate Viewed': { question: GateQuestion };
+  'Profile Gate Answered': {
+    question: GateQuestion;
+    level?: EnglishLevel;
+    accent?: AccentLocale;
+  };
   'English Level Changed': { level: EnglishLevel };
+  'Accent Changed': { accent: AccentLocale };
 
   // 홈 상단 탭 칩을 눌러 옮긴다 — 화면 노출(Page Viewed)엔 뒤로가기·복귀도 섞이니, 손으로 고른 것만 따로 본다
   'Home Tab Switched': { tab: HomeTab };

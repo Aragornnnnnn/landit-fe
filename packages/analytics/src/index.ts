@@ -7,6 +7,8 @@ export {
   type LoginMethod,
   type OnboardingStep,
   type EnglishLevel,
+  type AccentLocale,
+  type GateQuestion,
   type ExpressionStep,
   type TurnInputType,
   type TalkPartner,
