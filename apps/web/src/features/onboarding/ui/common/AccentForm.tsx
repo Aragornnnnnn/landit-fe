@@ -1,5 +1,5 @@
-// 배울 영어 선택 폼 — 선택지 목록 + 확정 CTA 한 묶음. 온보딩 스텝과 마이페이지 변경이 함께 쓴다.
-// 선택지는 프론트 상수라 언제나 바로 그린다. 조회는 어느 걸 강조할지에만 쓴다
+// 배울 영어 선택 폼 — 선택지 목록 + 확정 CTA 한 묶음. 온보딩 스텝·기존 유저 게이트·마이페이지 변경이 함께 쓴다.
+// 고르면 CTA가 켜지고, CTA를 눌러야 확정된다. 미리 골라둔 값 없이 열면 아무도 고르지 않은 채로 저장될 일이 없다
 'use client';
 
 import { useState } from 'react';
@@ -7,17 +7,14 @@ import type { AccentLocale } from '@landit/analytics';
 
 import { Button } from '@/shared/ui/Button';
 
-import { DEFAULT_ACCENT } from '../../model/accent';
 import { AccentOptions } from './AccentOptions';
 
 export const AccentForm = ({
-  initial = DEFAULT_ACCENT,
+  initial = null,
   footnote,
   onConfirm,
 }: {
-  // 처음 골라둘 값. 마이페이지처럼 지금 값이 있으면 그걸 미리 골라둔 채 연다.
-  // null이면 아무것도 안 고른 채로 연다 — 지금 값을 아직 모를 때다.
-  // 그땐 CTA가 잠겨서, 기본값(미국 영어)으로 원래 값을 덮어쓰는 일이 없다
+  // 마이페이지처럼 지금 값이 있으면 그걸 미리 골라둔 채 연다
   initial?: AccentLocale | null;
   // 선택지 아래 각주 — 나중에 바꿀 수 있다는 안심은 처음 고를 때만 할 말이라 화면이 정한다
   footnote?: string;

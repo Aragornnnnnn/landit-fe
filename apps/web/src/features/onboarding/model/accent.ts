@@ -9,6 +9,3 @@ export const ACCENTS: { locale: AccentLocale; label: string }[] = [
   { locale: 'EN_GB', label: '영국 영어' },
   { locale: 'EN_AU', label: '호주 영어' },
 ];
-
-// 아직 안 고른 사람에게 미리 골라두는 값 — 시안에서 미국 영어가 선택된 채로 열린다
-export const DEFAULT_ACCENT: AccentLocale = 'EN_US';
