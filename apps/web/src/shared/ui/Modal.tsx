@@ -50,8 +50,10 @@ export function Modal({
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [open, dismissible]);
 
-  // 포커스를 다이얼로그 안에 가두고, 닫히면 이전 포커스로 되돌린다
-  useFocusTrap(open, panelRef);
+  // 포커스를 다이얼로그 안에 가두고, 닫히면 이전 포커스로 되돌린다.
+  // mounted를 함께 보는 이유 — 패널은 mounted 뒤에야 그려지는데, open만 보면
+  // 처음부터 열린 모달에서 ref가 빈 채로 effect가 한 번 돌고 다시 돌지 않는다
+  useFocusTrap(open && mounted, panelRef);
 
   if (!mounted) return null;
 
