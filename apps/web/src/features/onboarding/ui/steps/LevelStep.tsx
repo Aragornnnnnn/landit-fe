@@ -22,7 +22,7 @@ export const LevelStep = ({
 
     <div className="mt-6 flex min-h-0 flex-1 flex-col">
       <EnglishLevelForm
-        footnote="학습 수준은 마이페이지에서 언제든 변경할 수 있어요"
+        footnote="학습 수준은 언제든 변경할 수 있어요"
         onConfirm={onNext}
       />
     </div>

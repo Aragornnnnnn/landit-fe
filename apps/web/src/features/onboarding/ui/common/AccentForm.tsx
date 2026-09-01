@@ -19,7 +19,7 @@ export const AccentForm = ({
   // null이면 아무것도 안 고른 채로 연다 — 지금 값을 아직 모를 때다.
   // 그땐 CTA가 잠겨서, 기본값(미국 영어)으로 원래 값을 덮어쓰는 일이 없다
   initial?: AccentLocale | null;
-  // 선택지 아래 각주 — 마이페이지에서 바꿀 수 있다는 안내는 온보딩에서만 할 말이라 화면이 정한다
+  // 선택지 아래 각주 — 나중에 바꿀 수 있다는 안심은 처음 고를 때만 할 말이라 화면이 정한다
   footnote?: string;
   onConfirm: (locale: AccentLocale) => void;
 }) => {

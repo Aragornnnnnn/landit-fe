@@ -16,7 +16,7 @@ export const EnglishLevelForm = ({
 }: {
   // 마이페이지처럼 지금 값이 있으면 그걸 미리 골라둔 채 연다
   initial?: EnglishLevel | null;
-  // 선택지 아래 각주 — 마이페이지에서 바꿀 수 있다는 안내는 온보딩에서만 할 말이라 화면이 정한다
+  // 선택지 아래 각주 — 나중에 바꿀 수 있다는 안심은 처음 고를 때만 할 말이라 화면이 정한다
   footnote?: string;
   onConfirm: (level: EnglishLevel) => void;
 }) => {

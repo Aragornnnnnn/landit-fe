@@ -153,7 +153,7 @@ describe('AccentMenuEntry', () => {
     await openSheet();
 
     expect(
-      screen.queryByText('배울 영어는 마이페이지에서 언제든 변경할 수 있어요'),
+      screen.queryByText('배울 영어는 언제든 변경할 수 있어요'),
     ).not.toBeInTheDocument();
   });
 });
