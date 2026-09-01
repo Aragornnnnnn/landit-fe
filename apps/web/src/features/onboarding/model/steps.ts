@@ -7,6 +7,7 @@ export const STEP_ORDER = [
   'thought',
   'notification',
   'level',
+  'accent',
   'scenario',
 ] as const;
 
