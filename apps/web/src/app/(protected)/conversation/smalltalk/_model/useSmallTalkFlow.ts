@@ -20,7 +20,6 @@ import {
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
 // 대화 직후 위젯 재유도를 물을 차례를 남긴다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
-import { markTalkCompletedForWidget } from '@/features/widget/model/install-prompt';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { reportError } from '@/shared/monitoring/report';
@@ -160,7 +159,6 @@ export const useSmallTalkFlow = ({
         // 축하 화면이 열자마자 새 숫자를 그리도록 미리 받아 둔다 (시나리오 대화와 같은 처리)
         refreshStreakAfterCompletion(queryClient);
         markTalkCompleted('smalltalk');
-        markTalkCompletedForWidget();
       }
 
       return {

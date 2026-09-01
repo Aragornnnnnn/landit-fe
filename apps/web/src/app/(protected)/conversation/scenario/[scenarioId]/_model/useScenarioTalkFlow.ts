@@ -17,7 +17,6 @@ import { scenarioKeys } from '@/features/scenario/model/keys';
 // 대화 완료가 스트릭도 늘린다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
 // 대화 직후 위젯 재유도를 물을 차례를 남긴다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
-import { markTalkCompletedForWidget } from '@/features/widget/model/install-prompt';
 import { track } from '@/shared/analytics';
 
 import { submitScenarioTalkMessage } from '../_api/scenario-session';
@@ -86,7 +85,6 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
         });
         prepareFeedbackAndUnlock(sessionId);
         markTalkCompleted('scenario');
-        markTalkCompletedForWidget();
       }
       return {
         submittedMessage: res.submittedMessage,

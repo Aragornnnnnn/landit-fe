@@ -13,7 +13,6 @@ import { CalendarStrip } from '@/features/scenario/ui/CalendarStrip';
 import { ScenarioBriefing } from '@/features/scenario/ui/ScenarioBriefing';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
 import { TodayCard } from '@/features/scenario/ui/TodayCard';
-import { WidgetReinviteGate } from '@/features/widget/ui/WidgetReinviteGate';
 import { track } from '@/shared/analytics';
 import {
   readDateParam,
@@ -129,13 +128,7 @@ function ScenarioContent() {
       {settled && satisfaction.sheet === 'review' && (
         <SatisfactionGate moment="review" />
       )}
-      {promptTurn && (
-        <>
-          {/* 순서는 게이트 안에서 조정된다 — 위젯 재유도가 알림 동의 차례에 양보한다 */}
-          <NotificationConsentGate />
-          <WidgetReinviteGate />
-        </>
-      )}
+      {promptTurn && <NotificationConsentGate />}
 
       {/* 브리핑을 다 보여주면 대화로 넘어간다 — push라 뒤로가기는 이 화면(카드)으로 돌아온다 */}
       {briefingScenario && (

@@ -1,4 +1,4 @@
-// 위젯 설치 안내 — 온보딩 끝(설치 유도부터)과 재유도 시트(iOS 안내부터)가 함께 쓰는 화면 묶음
+// 위젯 설치 안내 — 온보딩 끝에 설치 유도부터 시작하는 화면 묶음
 'use client';
 
 import { Suspense, useEffect, useRef, useState } from 'react';
@@ -6,7 +6,6 @@ import { EVENTS, type WidgetGuideStep } from '@landit/analytics';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import {
-  recordInstallAccepted,
   recordInstallInvited,
   supportsWidgetInstall,
 } from '@/features/widget/model/install-prompt';
@@ -41,20 +40,15 @@ export default function WidgetInstallPage() {
 const InstallFlow = () => {
   const router = useRouter();
   const params = useSearchParams();
-  // 재유도 시트에서 왔으면 설치는 이미 답했다 — iOS 안내부터 시작한다
-  const fromReinvite = params.get('start') === 'guide';
-  const [step, setStep] = useState<Step>(fromReinvite ? 'press' : 'invite');
+  const [step, setStep] = useState<Step>('invite');
 
   // 온보딩에서 왔으면 표식을 이어 달아, 끝난 뒤 홈이 첫 대화 유도를 계속한다
   const destination =
     params.get(ONBOARDED_PARAM) === '1'
       ? `${SCENARIO_PATH}?${ONBOARDED_PARAM}=1`
       : SCENARIO_PATH;
-  // 재유도는 홈 탭에서 push로 들어와 back이 출발한 탭으로 돌려보낸다. 온보딩은 replace 체인이라 목적지로 간다
-  const finish = () => {
-    if (fromReinvite) router.back();
-    else router.replace(destination);
-  };
+  // 온보딩은 replace 체인이라 안내를 닫으면 목적지(홈)로 간다
+  const finish = () => router.replace(destination);
   // effect가 최신 finish를 읽게 한다 — 리스너는 한 번만 걸고 참조만 갈아끼운다
   const finishRef = useRef(finish);
   useEffect(() => {
@@ -107,10 +101,8 @@ const InstallFlow = () => {
     postToNative({ type: 'GO_HOME' });
   };
 
-  // 위젯 추가하기 — 안드로이드는 시스템 핀 다이얼로그로 직행, iOS는 갤러리 여는 길을 화면으로 안내한다.
-  // 설치 길로 들어갔다고 기록해, 이후 재유도 시트가 같은 사람을 다시 붙잡지 않게 한다
+  // 위젯 추가하기 — 안드로이드는 시스템 핀 다이얼로그로 직행, iOS는 갤러리 여는 길을 화면으로 안내한다
   const add = () => {
-    recordInstallAccepted();
     track(EVENTS.WIDGET_INSTALL_INVITE_ANSWERED, { answer: 'install' });
     if (getNativeContext()?.platform === 'android') {
       track(EVENTS.WIDGET_PIN_REQUESTED, { platform: 'android' });
@@ -128,11 +120,10 @@ const InstallFlow = () => {
     finish();
   };
 
-  // 안내 3장 안에서만 뒤로 간다 — 첫 장(press)에서 뒤로면 온보딩은 설치 유도로, 재유도는 시트로 되돌린다
+  // 안내 3장 안에서만 뒤로 간다 — 첫 장(press)에서 뒤로면 설치 유도로 되돌린다
   const guideIndex = GUIDE_STEPS.indexOf(step);
   const back = () => {
     if (guideIndex > 0) setStep(GUIDE_STEPS[guideIndex - 1]);
-    else if (fromReinvite) router.back();
     else setStep('invite');
   };
 

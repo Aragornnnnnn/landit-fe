@@ -131,13 +131,11 @@ export const EVENTS = {
   // 앱 업데이트 유도 UI에서 스토어 앱을 직접 연다
   APP_UPDATE_STORE_OPENED: 'App Update Store Opened',
 
-  // 위젯 설치 안내 — 온보딩 끝 유도 화면과 iOS 안내 3장, 대화 후 재유도 시트.
+  // 위젯 설치 안내 — 온보딩 끝 유도 화면과 iOS 안내 3장.
   // 변형(어느 답·어느 스텝·어느 플랫폼)은 이벤트명이 아니라 속성으로 가른다 (정책 2-1)
   WIDGET_INSTALL_INVITE_VIEWED: 'Widget Install Invite Viewed',
   WIDGET_INSTALL_INVITE_ANSWERED: 'Widget Install Invite Answered',
   WIDGET_INSTALL_GUIDE_STEP_VIEWED: 'Widget Install Guide Step Viewed',
-  WIDGET_REINVITE_SHEET_VIEWED: 'Widget Reinvite Sheet Viewed',
-  WIDGET_REINVITE_SHEET_ANSWERED: 'Widget Reinvite Sheet Answered',
   WIDGET_PIN_REQUESTED: 'Widget Pin Requested',
 } as const;
 
@@ -490,8 +488,6 @@ export type EventProps = {
   'Widget Install Invite Viewed': undefined;
   'Widget Install Invite Answered': { answer: WidgetInstallAnswer };
   'Widget Install Guide Step Viewed': { step: WidgetGuideStep };
-  'Widget Reinvite Sheet Viewed': undefined;
-  'Widget Reinvite Sheet Answered': { answer: WidgetInstallAnswer };
   // 위젯 추가를 실제로 청한 순간 — Android는 시스템 핀 다이얼로그, iOS는 안내 화면으로 갈린다
   'Widget Pin Requested': { platform: WidgetInstallPlatform };
 };
