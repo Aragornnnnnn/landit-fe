@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
+import Image from 'next/image';
 
 import {
   WidgetPreviewMedium,
@@ -119,9 +120,13 @@ export const SearchStep = ({ onDone }: { onDone: () => void }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <span className="flex size-[38px] items-center justify-center rounded-[9px] bg-gradient-to-b from-[#f0912a] to-[#e07a3a] text-[15px] font-black text-white">
-                L
-              </span>
+              <Image
+                src="/brand/app-icon.png"
+                alt=""
+                width={38}
+                height={38}
+                className="size-[38px] rounded-[9px]"
+              />
               <span className="flex flex-col">
                 <span className="text-[13px] font-bold text-[#1c1c1e]">
                   landit

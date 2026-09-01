@@ -47,7 +47,7 @@ const Scaled = ({
   );
 };
 
-// 2×2 스트릭 위젯 — 래디 + 열매 6 + "오늘도 완료!" 색종이
+// 2×2 스트릭 위젯 — 래디 + 열매 6 + 색종이
 export const WidgetPreviewSmall = ({
   size = SMALL_BASE,
 }: {
@@ -74,9 +74,6 @@ export const WidgetPreviewSmall = ({
           }}
         />
       ))}
-      <span className="absolute top-[40px] left-[7px] w-[126px] text-center text-[12px] text-[#f0912a] opacity-80">
-        오늘도 완료!
-      </span>
       <span className="absolute top-[11px] left-[49px] flex items-center gap-[4px]">
         <Image src={fruitImage} alt="" className="size-[19.5px]" />
         <span className="text-[30px] leading-[1.1] font-black text-[#f0912a] opacity-[0.94]">
