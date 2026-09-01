@@ -16,6 +16,11 @@ import { SCENARIO_PATH } from '@/shared/lib/routes';
 
 export type SocialProvider = 'kakao' | 'google' | 'apple';
 
+// 애플 개발자 계정 이전 중에는 애플이 주는 sub가 바뀌어 기존 사용자가 신규 계정으로 갈린다.
+// 이전이 끝날 때까지 애플 로그인만 잠시 막는다 (환경변수로 켜고 끄며, 값이 없으면 평소대로 동작한다)
+const isAppleLoginPaused = () =>
+  process.env.NEXT_PUBLIC_APPLE_LOGIN_PAUSED === 'true';
+
 /**
  * 소셜 로그인 진행을 관리한다. 네이티브 셸 안이면 브릿지로 네이티브 SDK를, 밖이면 웹 OAuth를 탄다.
  *
@@ -87,6 +92,12 @@ export function useSocialLogin() {
 
   const login = async (provider: SocialProvider) => {
     setError(null);
+    if (provider === 'apple' && isAppleLoginPaused()) {
+      setError(
+        '애플 로그인을 잠시 점검하고 있어요. 잠시 후 다시 시도해 주세요.',
+      );
+      return;
+    }
     // 네이티브 셸(WebView) 안이면 네이티브 SDK로, 밖(일반 브라우저)이면 웹 OAuth로 진행한다
     if (postToNative({ type: 'SOCIAL_LOGIN_REQUEST', provider })) {
       track(EVENTS.LOGIN_STARTED, { provider, method: 'native' });
