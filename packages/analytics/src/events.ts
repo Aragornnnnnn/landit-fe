@@ -150,6 +150,7 @@ export type OnboardingStep =
   | 'mic'
   | 'thought'
   | 'notification'
+  | 'widget'
   | 'level'
   | 'accent'
   | 'scenario';
