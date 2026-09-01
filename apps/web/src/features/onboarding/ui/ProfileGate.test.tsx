@@ -28,24 +28,29 @@ vi.mock('@/shared/auth/auth-store', () => ({
 }));
 vi.mock('../api/accent', () => ({
   getMyAccentLocale: vi.fn(),
-  updateAccentLocale: vi.fn(() => Promise.resolve(null)),
+  updateAccentLocale: vi.fn(),
 }));
 vi.mock('../api/learning-level', () => ({
   getMyLearningLevel: vi.fn(),
-  updateLearningLevel: vi.fn(() => Promise.resolve(null)),
+  updateLearningLevel: vi.fn(),
 }));
 
 const trackMock = vi.mocked(track);
 const getMyAccentLocale = vi.mocked(accentApi.getMyAccentLocale);
 const getMyLearningLevel = vi.mocked(levelApi.getMyLearningLevel);
+const updateAccentLocale = vi.mocked(accentApi.updateAccentLocale);
+const updateLearningLevel = vi.mocked(levelApi.updateLearningLevel);
+
+// 저장한 값을 기억하는 가짜 서버 — 저장 뒤 무효화로 다시 조회하면 방금 실은 값이 와야 한다.
+// 늘 null을 돌려주는 목을 쓰면 답한 질문이 되살아나 실제와 다른 화면을 검증하게 된다
+let stored: { learningLevel: number | null; accentLocale: AccentLocale | null };
 
 // 서버가 아는 답 — null이 곧 "아직 안 답함"이다
 const serverAnswers = (
   learningLevel: number | null,
   accentLocale: AccentLocale | null,
 ) => {
-  getMyLearningLevel.mockResolvedValue({ learningLevel });
-  getMyAccentLocale.mockResolvedValue({ accentLocale, name: null });
+  stored = { learningLevel, accentLocale };
 };
 
 const renderGate = () =>
@@ -59,15 +64,32 @@ const renderGate = () =>
 const waitForGate = () =>
   waitFor(() => expect(screen.getByText('선택했어요!')).toBeInTheDocument());
 
-// 앞 질문(수준)에 답하고 지나간다
-const answerLevel = () => {
+// 앞 질문(수준)에 답하고 나라 질문이 뜰 때까지 기다린다.
+// 저장은 진행 중인 조회를 먼저 끊느라 캐시 반영이 마이크로태스크 뒤로 밀린다
+const answerLevel = async () => {
   fireEvent.click(screen.getByText('단어를 조합해서 말할 수 있어요'));
   fireEvent.click(screen.getByText('선택했어요!'));
+  await screen.findByText('추천 표현과 피드백이 달라져요');
 };
 
 beforeEach(() => {
   localStorage.clear();
   serverAnswers(null, null);
+  getMyLearningLevel.mockImplementation(async () => ({
+    learningLevel: stored.learningLevel,
+  }));
+  getMyAccentLocale.mockImplementation(async () => ({
+    accentLocale: stored.accentLocale,
+    name: null,
+  }));
+  updateLearningLevel.mockImplementation(async (level) => {
+    stored.learningLevel = level;
+    return null;
+  });
+  updateAccentLocale.mockImplementation(async (accent) => {
+    stored.accentLocale = accent;
+    return null;
+  });
 });
 
 afterEach(() => {
@@ -125,9 +147,24 @@ describe('ProfileGate', () => {
     ).toBeInTheDocument();
     expect(container.querySelectorAll('span.h-1\\.5')).toHaveLength(0);
 
-    answerLevel();
+    fireEvent.click(screen.getByText('단어를 조합해서 말할 수 있어요'));
+    fireEvent.click(screen.getByText('선택했어요!'));
 
-    expect(screen.queryByText('선택했어요!')).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByText('선택했어요!')).not.toBeInTheDocument(),
+    );
+  });
+
+  it('뒤 화면을 가리는 게 아니라 다이얼로그로 격리한다 — 보조기기가 뒤 내용에 닿으면 건너뛸 길이 생긴다', async () => {
+    markOnboardingSeen();
+
+    renderGate();
+    await waitForGate();
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(dialog).toHaveAccessibleName();
+    expect(dialog).toHaveFocus();
   });
 
   it('건너뛸 방법이 없다 — 닫기·나중에·뒤로가기 버튼이 없다', async () => {
@@ -147,12 +184,9 @@ describe('ProfileGate', () => {
 
     renderGate();
     await waitForGate();
-    answerLevel();
+    await answerLevel();
 
-    expect(
-      screen.getByText('추천 표현과 피드백이 달라져요'),
-    ).toBeInTheDocument();
-    // 저장은 화면 전환을 기다리게 하지 않는다 — 캐시에 먼저 심고 요청은 뒤따라 나간다
+    // 저장은 네트워크 응답을 기다리게 하지 않는다 — 캐시에 먼저 심고 요청은 뒤따라 나간다
     await waitFor(() =>
       expect(levelApi.updateLearningLevel).toHaveBeenCalledWith(2),
     );
@@ -170,7 +204,7 @@ describe('ProfileGate', () => {
     const countDots = () => container.querySelectorAll('span.h-1\\.5').length;
     expect(countDots()).toBe(2);
 
-    answerLevel();
+    await answerLevel();
 
     expect(countDots()).toBe(2);
   });
@@ -190,10 +224,13 @@ describe('ProfileGate', () => {
 
     renderGate();
     await waitForGate();
-    answerLevel();
+    await answerLevel();
+    fireEvent.click(screen.getByText('미국 영어'));
     fireEvent.click(screen.getByText('선택했어요!'));
 
-    expect(screen.queryByText('선택했어요!')).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByText('선택했어요!')).not.toBeInTheDocument(),
+    );
     await waitFor(() =>
       expect(accentApi.updateAccentLocale).toHaveBeenCalledWith('EN_US'),
     );
@@ -217,9 +254,26 @@ describe('ProfileGate', () => {
       question: 'accent',
     });
 
+    fireEvent.click(screen.getByText('미국 영어'));
     fireEvent.click(screen.getByText('선택했어요!'));
 
-    expect(screen.queryByText('선택했어요!')).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByText('선택했어요!')).not.toBeInTheDocument(),
+    );
+  });
+
+  it('나라 질문도 고르기 전엔 확인 버튼이 잠겨 있다 — 안 고른 사람이 기본값으로 저장되지 않게', async () => {
+    markOnboardingSeen();
+    serverAnswers(3, null);
+
+    renderGate();
+    await waitForGate();
+
+    expect(screen.getByText('미국 영어').closest('button')).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    expect(screen.getByText('선택했어요!').closest('button')).toBeDisabled();
   });
 
   it('수준 질문은 고르기 전엔 확인 버튼이 잠겨 있다 — 기본값이 없다', async () => {

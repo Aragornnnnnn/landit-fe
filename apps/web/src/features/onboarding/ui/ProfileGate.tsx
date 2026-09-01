@@ -4,7 +4,7 @@
 // 탭 셸에 심겨 있어 딥링크로 다른 화면에 직행하면 그때는 지나가고, 다음 홈 방문에 막는다
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   EVENTS,
   type AccentLocale,
@@ -15,6 +15,7 @@ import {
 import { track } from '@/shared/analytics';
 import { hasSeenOnboarding } from '@/shared/auth/onboarding-seen';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
+import { useFocusTrap } from '@/shared/lib/useFocusTrap';
 
 import { collectPendingQuestions } from '../model/profile-gate';
 import { useAccentQuery } from '../model/useAccentQuery';
@@ -51,6 +52,10 @@ export const ProfileGate = () => {
     : [];
   const question = remaining[0];
 
+  // 화면을 덮기만 하면 키보드·스크린 리더는 뒤의 탭바와 콘텐츠에 그대로 닿는다 — 건너뛸 길이 생기는 셈이다
+  const panelRef = useRef<HTMLElement>(null);
+  useFocusTrap(question !== undefined, panelRef);
+
   useEffect(() => {
     if (question) track(EVENTS.PROFILE_GATE_VIEWED, { question });
   }, [question]);
@@ -74,7 +79,12 @@ export const ProfileGate = () => {
 
   return (
     <main
-      className="fixed inset-0 z-50 mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background px-6 text-foreground"
+      ref={panelRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="시작하기 전에 몇 가지만 알려주세요"
+      tabIndex={-1}
+      className="fixed inset-0 z-50 mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background px-6 text-foreground outline-none"
       style={{
         paddingTop: 'max(env(safe-area-inset-top), 24px)',
         paddingBottom: 'max(env(safe-area-inset-bottom), 20px)',
