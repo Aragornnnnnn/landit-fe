@@ -4,6 +4,7 @@
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import { type OnboardingStep } from '../../model/steps';
+import { StepDots } from './StepDots';
 
 export const OnboardingHeader = ({
   step,
@@ -32,18 +33,7 @@ export const OnboardingHeader = ({
         <ChevronLeftIcon size={28} strokeWidth={2.8} />
       </button>
 
-      <div className="flex items-center gap-1.5">
-        {stepOrder.map((item, index) => (
-          <span
-            key={item}
-            className={`h-1.5 rounded-full transition-all duration-300 ${index <= stepIndex ? 'bg-foreground' : 'bg-border'}`}
-            style={{
-              width: index === stepIndex ? 18 : 6,
-              opacity: index === stepIndex ? 0.95 : 0.6,
-            }}
-          />
-        ))}
-      </div>
+      <StepDots step={step} stepOrder={stepOrder} />
     </header>
   );
 };
