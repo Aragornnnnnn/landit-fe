@@ -14,13 +14,13 @@ interface FeedbackCardsProps {
   playingId: string | null;
   // 원어민 단어 발음 재생 — CDN URL이 없으면 버튼을 숨긴다
   onPlayNative: (word: PronunciationWord) => void;
-  // 내 발화 전체 재생 — 단어 정렬 타임스탬프가 부정확해 구간 대신 전체를 들려준다
+  // 내 녹음에서 그 단어 구간 재생 — 구간 정보가 없으면 버튼을 숨긴다
   onPlayMine: (word: PronunciationWord) => void;
 }
 
 /** 원어민 단어 음원의 재생 식별자 — 재생 호출과 버튼 상태가 같은 규칙을 써야 맞는다 */
 export const nativeWordAudioId = (order: number) => `native-${order}`;
-/** 내 발화 재생 식별자 — 어느 행에서 틀었는지 구분한다 */
+/** 내 녹음 구간 재생 식별자 */
 export const myWordAudioId = (order: number) => `mine-${order}`;
 /** 단어 칩 → 교정 카드 스크롤 이동용 앵커 id */
 export const feedbackCardId = (order: number) => `pronunciation-word-${order}`;
@@ -37,6 +37,10 @@ export const FeedbackCards = ({
       const playNative = word.nativeWordAudioUrl
         ? () => onPlayNative(word)
         : undefined;
+      const playMine =
+        word.startTimeMs !== null && word.endTimeMs !== null
+          ? () => onPlayMine(word)
+          : undefined;
 
       return (
         // scroll-mt로 앵커 이동 시 헤더에 가리지 않게 여유를 둔다 (단어 칩에서 이동해 온다).
@@ -80,7 +84,7 @@ export const FeedbackCards = ({
               </PronRow>
               <PronRow
                 label="나"
-                onPlay={() => onPlayMine(word)}
+                onPlay={playMine}
                 playing={playingId === myWordAudioId(word.order)}
               >
                 {card.kind === 'phoneme' ? (
