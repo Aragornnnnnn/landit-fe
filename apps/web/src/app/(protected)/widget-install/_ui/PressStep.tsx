@@ -27,9 +27,10 @@ const APP_SLOTS = [
 
 // 한 사이클 — 가만히 있다 → 빈 곳을 누르고 → 편집 모드로 흔들린다. 그리고 처음으로 되풀이한다
 type Phase = 'idle' | 'pressing' | 'editing';
+// pressing은 물결(0.7s)과 같은 길이 — 물결이 사라지는 순간 곧바로 편집 모드로 흔들리게 한다
 const PHASE_MS: Record<Phase, number> = {
-  idle: 700,
-  pressing: 1400,
+  idle: 550,
+  pressing: 750,
   editing: 1800,
 };
 const NEXT_PHASE: Partial<Record<Phase, Phase>> = {

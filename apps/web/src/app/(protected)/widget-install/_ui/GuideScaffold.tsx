@@ -90,7 +90,8 @@ export const Capsule = ({
 );
 
 // 손끝이 누르는 표시 — 주황 원과 퍼져 나가는 물결로 "여기를 누른다"를 눈에 띄게 짚는다.
-// press(꾹 누름)는 물결이 크게 번지고, tap(가볍게 누름)은 작게 톡 눌린다
+// press(꾹 누름)는 물결이 딱 한 번 번지고 손끝은 눌린 채 유지된다 — "한 번 오래 누른다"를 뜻한다.
+// tap(가볍게 누름)은 작은 물결이 톡톡 되풀이된다 — "여기를 누르라"는 지목이다
 export const TouchPulse = ({
   left,
   top,
@@ -102,26 +103,23 @@ export const TouchPulse = ({
   size?: number;
   mode?: 'press' | 'tap';
 }) => {
-  const period = mode === 'press' ? 0.95 : 0.75;
+  const press = mode === 'press';
   return (
     <div className="absolute" style={{ left, top, width: size, height: size }}>
-      {/* 퍼지는 물결 — 투명하게 시작해 번지며 다시 투명해진다. 끝과 시작이 모두 0이라 툭 끊기지 않는다 */}
+      {/* 퍼지는 물결 — press는 한 번만(두 번 눌러야 하나 오해 방지), tap은 반복 */}
       <motion.span
         className="absolute inset-0 rounded-full"
         style={{ border: '2px solid rgba(224,122,58,0.55)' }}
         initial={false}
-        animate={{
-          scale: [0.4, mode === 'press' ? 1.9 : 1.5],
-          opacity: [0, 0.6, 0],
-        }}
+        animate={{ scale: [0.4, press ? 1.9 : 1.5], opacity: [0, 0.6, 0] }}
         transition={{
-          duration: period,
-          repeat: Infinity,
+          duration: press ? 0.7 : 0.75,
+          repeat: press ? 0 : Infinity,
           ease: 'easeOut',
           times: [0, 0.25, 1],
         }}
       />
-      {/* 손끝 — 주황 원이 눌렸다 돌아오며 톡톡거린다 */}
+      {/* 손끝 — press는 눌러 들어간 채 유지(꾹), tap은 톡톡 눌렸다 돌아온다 */}
       <motion.span
         className="absolute inset-0 rounded-full"
         style={{
@@ -129,9 +127,13 @@ export const TouchPulse = ({
             'radial-gradient(closest-side, rgba(224,122,58,0.6), rgba(224,122,58,0.28))',
           boxShadow: '0 2px 8px rgba(224,122,58,0.35)',
         }}
-        initial={{ scale: 1 }}
-        animate={{ scale: [1, 0.85, 1] }}
-        transition={{ duration: period, repeat: Infinity, ease: 'easeInOut' }}
+        initial={{ scale: press ? 1.1 : 1 }}
+        animate={press ? { scale: 0.9 } : { scale: [1, 0.85, 1] }}
+        transition={
+          press
+            ? { duration: 0.35, ease: 'easeOut' }
+            : { duration: 0.75, repeat: Infinity, ease: 'easeInOut' }
+        }
       />
     </div>
   );
