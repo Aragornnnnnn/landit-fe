@@ -2,11 +2,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 // 알림 동의 시트와의 겹침 방지를 위한 가로 참조 — 같은 순간에 시트 두 장을 띄우지 않는다
 import { isConsentPromptDue } from '@/features/notification/model/consent-prompt';
 import { useNotificationPermission } from '@/features/notification/model/useNotificationPermission';
+import { track } from '@/shared/analytics';
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { postToNative } from '@/shared/bridge/web-bridge';
 import { WIDGET_INSTALL_PATH } from '@/shared/lib/routes';
@@ -42,9 +44,12 @@ const ArmedReinviteGate = () => {
   }
   const [open, setOpen] = useState(true);
 
-  // 띄우는 순간 차례를 소비한다 — 같은 완료로 또 뜨지 않게
+  // 띄우는 순간 차례를 소비하고 노출을 계측한다 — 같은 완료로 또 뜨지 않게
   useEffect(() => {
-    if (turn) consumeReinvitePending();
+    if (turn) {
+      consumeReinvitePending();
+      track(EVENTS.WIDGET_REINVITE_SHEET_VIEWED);
+    }
   }, [turn]);
 
   if (!turn) return null;
@@ -52,7 +57,9 @@ const ArmedReinviteGate = () => {
   // 설치로 답했다 — 안드로이드는 시스템 다이얼로그, iOS는 갤러리 여는 길 안내로
   const install = () => {
     recordReinviteAnswer('install');
+    track(EVENTS.WIDGET_REINVITE_SHEET_ANSWERED, { answer: 'install' });
     if (getNativeContext()?.platform === 'android') {
+      track(EVENTS.WIDGET_PIN_REQUESTED, { platform: 'android' });
       postToNative({ type: 'REQUEST_WIDGET_PIN' });
       setOpen(false);
       return;
@@ -63,6 +70,7 @@ const ArmedReinviteGate = () => {
   // 거절도 답이다 — 이후 다시 묻지 않는다
   const dismiss = () => {
     recordReinviteAnswer('dismiss');
+    track(EVENTS.WIDGET_REINVITE_SHEET_ANSWERED, { answer: 'dismiss' });
     setOpen(false);
   };
 

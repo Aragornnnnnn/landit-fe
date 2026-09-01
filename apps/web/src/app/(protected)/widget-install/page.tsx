@@ -2,6 +2,7 @@
 'use client';
 
 import { Suspense, useEffect, useRef, useState } from 'react';
+import { EVENTS, type WidgetGuideStep } from '@landit/analytics';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import {
@@ -9,6 +10,7 @@ import {
   recordInstallInvited,
   supportsWidgetInstall,
 } from '@/features/widget/model/install-prompt';
+import { track } from '@/shared/analytics';
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { postToNative } from '@/shared/bridge/web-bridge';
 import { ONBOARDED_PARAM, SCENARIO_PATH } from '@/shared/lib/routes';
@@ -66,11 +68,23 @@ const InstallFlow = () => {
       router.replace(destination);
       return;
     }
-    // 설치 유도는 한 번만 보여준다 — 노출 자체를 소비로 기록한다
-    if (step === 'invite') recordInstallInvited();
+    // 설치 유도는 한 번만 보여준다 — 노출 자체를 소비로 기록하고 계측한다
+    if (step === 'invite') {
+      recordInstallInvited();
+      track(EVENTS.WIDGET_INSTALL_INVITE_VIEWED);
+    }
     // 마운트 때 한 번 — 지원 여부·시작 스텝·목적지는 세션 동안 안 바뀐다
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 안내 스텝(press·menu·search)에 들어설 때마다 노출을 계측한다 — 어디서 이탈하는지 본다
+  useEffect(() => {
+    if (GUIDE_STEPS.includes(step)) {
+      track(EVENTS.WIDGET_INSTALL_GUIDE_STEP_VIEWED, {
+        step: step as WidgetGuideStep,
+      });
+    }
+  }, [step]);
 
   // 위젯을 얹으러 홈으로 나갔다 돌아오면 안내를 닫는다 — 설치했든 안 했든 할 일은 끝났다.
   // 백그라운드로 갔다가(hidden) 다시 보이는(visible) 전환을 "돌아왔다"로 본다
@@ -97,12 +111,21 @@ const InstallFlow = () => {
   // 설치 길로 들어갔다고 기록해, 이후 재유도 시트가 같은 사람을 다시 붙잡지 않게 한다
   const add = () => {
     recordInstallAccepted();
+    track(EVENTS.WIDGET_INSTALL_INVITE_ANSWERED, { answer: 'install' });
     if (getNativeContext()?.platform === 'android') {
+      track(EVENTS.WIDGET_PIN_REQUESTED, { platform: 'android' });
       postToNative({ type: 'REQUEST_WIDGET_PIN' });
       finish();
       return;
     }
+    track(EVENTS.WIDGET_PIN_REQUESTED, { platform: 'ios' });
     setStep('press');
+  };
+
+  // 설치 유도에서 나중에 하기 — 미룬 답으로 계측하고 홈으로 보낸다
+  const later = () => {
+    track(EVENTS.WIDGET_INSTALL_INVITE_ANSWERED, { answer: 'dismiss' });
+    finish();
   };
 
   // 안내 3장 안에서만 뒤로 간다 — 첫 장(press)에서 뒤로면 온보딩은 설치 유도로, 재유도는 시트로 되돌린다
@@ -136,7 +159,7 @@ const InstallFlow = () => {
           paddingBottom: 'max(env(safe-area-inset-bottom), 20px)',
         }}
       >
-        {step === 'invite' && <InviteStep onAdd={add} onLater={finish} />}
+        {step === 'invite' && <InviteStep onAdd={add} onLater={later} />}
         {step === 'press' && <PressStep onNext={() => setStep('menu')} />}
         {step === 'menu' && <MenuStep onNext={() => setStep('search')} />}
         {step === 'search' && <SearchStep onDone={leaveToHome} />}
