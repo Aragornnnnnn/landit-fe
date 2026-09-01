@@ -4,10 +4,9 @@
 import { useState } from 'react';
 import { EVENTS, type EnglishLevel } from '@landit/analytics';
 
-import {
-  getEnglishLevel,
-  markEnglishLevelAnswered,
-} from '@/features/onboarding/model/english-level';
+import { toEnglishLevel } from '@/features/onboarding/model/english-level';
+import { useLearningLevelQuery } from '@/features/onboarding/model/useLearningLevelQuery';
+import { useSaveLearningLevelMutation } from '@/features/onboarding/model/useSaveLearningLevelMutation';
 import { EnglishLevelForm } from '@/features/onboarding/ui/common/EnglishLevelForm';
 import { track } from '@/shared/analytics';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
@@ -16,9 +15,11 @@ import { MenuButton, MenuGroup } from './Menu';
 
 export const EnglishLevelMenuEntry = () => {
   const [open, setOpen] = useState(false);
+  const { data } = useLearningLevelQuery();
+  const saveLearningLevel = useSaveLearningLevelMutation();
 
   const confirm = (level: EnglishLevel) => {
-    markEnglishLevelAnswered(level);
+    saveLearningLevel.mutate(level);
     track(EVENTS.ENGLISH_LEVEL_CHANGED, { level });
     setOpen(false);
   };
@@ -26,17 +27,14 @@ export const EnglishLevelMenuEntry = () => {
   return (
     <>
       <MenuGroup>
-        <MenuButton
-          title="내 영어 실력 변경하기"
-          onClick={() => setOpen(true)}
-        />
+        <MenuButton title="학습 수준 변경하기" onClick={() => setOpen(true)} />
       </MenuGroup>
 
       <BottomSheet open={open} onClose={() => setOpen(false)}>
         {/* 작은 화면에서 시트가 화면을 벗어나지 않게 높이를 묶고, 넘치면 선택지만 안에서 스크롤된다 */}
         <div className="flex max-h-[75dvh] flex-col">
           <h2 className="text-[17px] font-bold" style={{ color: '#111' }}>
-            영어 실력을 다시 골라주세요
+            학습 수준을 다시 골라주세요
           </h2>
           <p
             className="mt-1 mb-5 text-[14px] leading-6"
@@ -46,7 +44,10 @@ export const EnglishLevelMenuEntry = () => {
           </p>
           {/* 시트를 다시 열면 그때의 저장값이 미리 골라진 채 열린다 — 닫힘 동안 언마운트라 key 없이도 초기화된다 */}
           {open && (
-            <EnglishLevelForm initial={getEnglishLevel()} onConfirm={confirm} />
+            <EnglishLevelForm
+              initial={toEnglishLevel(data?.learningLevel ?? null)}
+              onConfirm={confirm}
+            />
           )}
         </div>
       </BottomSheet>
