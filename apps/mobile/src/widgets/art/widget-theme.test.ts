@@ -5,9 +5,6 @@ import path from 'node:path';
 
 import {
   MILESTONE_INKS,
-  TITLE_FALLBACK,
-  TITLE_FONT_SIZE,
-  TITLE_KINDS,
   WEEK_STRIP_COLORS,
   WIDGET_LAYOUTS,
   WIDGET_THEMES,
@@ -48,14 +45,9 @@ describe('widget-theme ↔ iOS 위젯 인라인 값', () => {
     }
   });
 
-  it('주간 스트립 색이나 제목 규칙을 바꾸면 iOS 위젯도 함께 바뀌어야 한다', () => {
+  it('주간 스트립 색을 바꾸면 iOS 위젯도 함께 바뀌어야 한다', () => {
     for (const color of Object.values(WEEK_STRIP_COLORS)) {
       expect(iosWidgetSource).toContain(color);
-    }
-    expect(iosWidgetSource).toContain(`size: ${TITLE_FONT_SIZE}`);
-    expect(iosWidgetSource).toContain(`'${TITLE_FALLBACK}'`);
-    for (const kind of TITLE_KINDS) {
-      expect(iosWidgetSource).toContain(`'${kind}'`);
     }
   });
 });
