@@ -22,12 +22,17 @@ export const EVENTS = {
   MIC_PERMISSION_DECIDED: 'Mic Permission Decided',
   ONBOARDING_COMPLETED: 'Onboarding Completed',
 
-  // 영어 수준 체크 — 신규 유저는 온보딩 스텝(level)이라 위 계측이 그대로 커버한다.
-  // 기존 유저는 온보딩 밖 별도 게이트라 노출·응답을 따로 찍는다
-  ENGLISH_LEVEL_GATE_VIEWED: 'English Level Gate Viewed',
-  ENGLISH_LEVEL_GATE_ANSWERED: 'English Level Gate Answered',
+  // 프로필 질문 게이트 — 신규 유저는 온보딩 스텝(level·accent)이라 위 계측이 그대로 커버한다.
+  // 온보딩을 이미 마친 기존 유저는 온보딩 밖 별도 게이트라 노출·응답을 따로 찍는다.
+  // 질문이 늘어도 이름을 늘리지 않고 question 속성으로 가른다 (정책 2-1)
+  PROFILE_GATE_VIEWED: 'Profile Gate Viewed',
+  PROFILE_GATE_ANSWERED: 'Profile Gate Answered',
   // 마이페이지에서 스스로 다시 고른 경우 — 최초 응답(Gate·온보딩)과 의도가 달라 별도로 찍는다
   ENGLISH_LEVEL_CHANGED: 'English Level Changed',
+
+  // 배울 영어(억양) — 최초 선택은 온보딩 스텝(accent)이라 위 계측이 그대로 커버한다.
+  // 마이페이지에서 다시 고른 것만 따로 찍는다
+  ACCENT_CHANGED: 'Accent Changed',
 
   // 홈
   HOME_TAB_SWITCHED: 'Home Tab Switched',
@@ -94,6 +99,11 @@ export const EVENTS = {
   QUIZ_WORD_REMOVED: 'Quiz Word Removed',
   QUIZ_ANSWER_SUBMITTED: 'Quiz Answer Submitted',
   EXAMPLE_SENTENCE_VIEWED: 'Example Sentence Viewed',
+  // 발음 평가 — 결과는 재도전마다 찍는다(attempt로 회차 구분). 건너뛰기는 설명 화면에서의 이탈 신호
+  PRONUNCIATION_RESULT_VIEWED: 'Pronunciation Result Viewed',
+  PRONUNCIATION_SKIPPED: 'Pronunciation Skipped',
+  // 발음 듣기 — 어떤 소리를 다시 듣는지 source 하나로 몰아 찍는다. 자동재생·토글 끄기는 제외
+  PRONUNCIATION_AUDIO_PLAYED: 'Pronunciation Audio Played',
   REVIEW_ANSWER_SUBMITTED: 'Review Answer Submitted',
   EXPRESSION_COMPLETED: 'Expression Completed',
   EXPRESSION_ABANDONED: 'Expression Abandoned',
@@ -137,10 +147,23 @@ export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
 export type AuthProvider = 'kakao' | 'google' | 'apple';
 export type LoginMethod = 'native' | 'web';
 export type OnboardingStep =
-  'intro' | 'sound' | 'mic' | 'thought' | 'notification' | 'level' | 'scenario';
+  | 'intro'
+  | 'sound'
+  | 'mic'
+  | 'thought'
+  | 'notification'
+  | 'level'
+  | 'accent'
+  | 'scenario';
 // 영어 수준 — BE 저장 API(learningLevel)와 같은 1(막 시작)~5(유창) 정수 척도. 지표와 서버 데이터가 같은 말을 쓴다
 export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
-export type ExpressionStep = 'quiz' | 'explain' | 'review';
+// 배울 영어 — BE 발음 에셋(accentLocale)과 같은 enum 값을 쓴다. 지표와 서버 데이터가 같은 말을 쓴다
+export type AccentLocale = 'EN_US' | 'EN_GB' | 'EN_AU';
+// 기존 유저 게이트가 묻는 질문 — 온보딩 스텝과 같은 말을 쓴다
+export type GateQuestion = Extract<OnboardingStep, 'level' | 'accent'>;
+// pronounce = 발음 평가, examples = 발음 뒤 추가 예문 화면 (발음 없는 표현은 explain이 예문까지 포함)
+export type ExpressionStep =
+  'quiz' | 'explain' | 'pronounce' | 'examples' | 'review';
 export type TurnInputType = 'voice' | 'text';
 // 스몰톡 대화 상대 — 홈에서 고른 캐릭터. 시나리오엔 없는 축이라 스몰톡 이벤트에만 붙는다
 export type TalkPartner = 'chloe' | 'marco' | 'teddy';
@@ -195,7 +218,7 @@ export type EventProps = {
     // 스몰톡에서 갈라져 나온 화면들만 — 지난 스몰톡 기록과 거기서 만든 표현
     session_id?: number;
     expression_id?: number;
-    // 알림 유입(reminder)일 때만 — 탭한 알림의 문구 슬러그 (utm_content에서 파생, 어휘는 reminder-copies.ts)
+    // 알림 유입(reminder)일 때만 — 탭한 알림의 문구 슬러그 (utm_content에서 파생, 어휘는 docs/analytics-utm.md)
     notification_copy?: string;
     // 시나리오 화면에서 완료한 지난 날 카드를 볼 때만 — 열 수 있는 과거는 완료한 날뿐이다 (yyyy-MM-dd)
     completed_date?: string;
@@ -237,9 +260,13 @@ export type EventProps = {
     source: 'onboarding' | 'conversation';
   };
   'Onboarding Completed': undefined;
-  'English Level Gate Viewed': undefined;
-  'English Level Gate Answered': { level: EnglishLevel };
+  'Profile Gate Viewed': { question: GateQuestion };
+  // 답이 질문마다 달라서 question으로 갈린다 — 짝이 안 맞는 조합(level 질문에 accent 값)은 타입이 막는다
+  'Profile Gate Answered':
+    | { question: 'level'; level: EnglishLevel }
+    | { question: 'accent'; accent: AccentLocale };
   'English Level Changed': { level: EnglishLevel };
+  'Accent Changed': { accent: AccentLocale };
 
   // 홈 상단 탭 칩을 눌러 옮긴다 — 화면 노출(Page Viewed)엔 뒤로가기·복귀도 섞이니, 손으로 고른 것만 따로 본다
   'Home Tab Switched': { tab: HomeTab };
@@ -322,8 +349,11 @@ export type EventProps = {
     reason?: string;
   };
   // AI 발화 재생 실패 — 실패 비율을 본다. 스몰톡 탭의 캐릭터 인사도 같은 재생 훅이라 포함된다.
-  // opening_mp3 = 미리 녹음한 오프닝(실패하면 합성으로 폴백해 체감 없음), synth = 런타임 합성(그 발화가 통째로 건너뛰어진다, 원인은 Sentry)
-  'Speech Playback Failed': { source: 'opening_mp3' | 'synth' };
+  // opening_mp3 = 미리 녹음한 오프닝(실패하면 합성으로 폴백해 체감 없음), synth = 런타임 합성(분리 재생이면 질문 음원으로 폴백, 아니면 발화가 통째로 건너뛰어진다),
+  // question_audio = 고정 질문 음원(남은 질문이 통째로 건너뛰어진다, 원인은 Sentry)
+  'Speech Playback Failed': {
+    source: 'opening_mp3' | 'synth' | 'question_audio';
+  };
   'Hint Used': { source: HintSource; level: number };
   'Scenario Talk Completed': {
     session_id: number;
@@ -409,6 +439,21 @@ export type EventProps = {
     hint_level: number;
   };
   'Example Sentence Viewed': { expression_id: number; sentence_index: number };
+  'Pronunciation Result Viewed': {
+    expression_id: number;
+    // BE 원점수(0~100)와 통과 판정 그대로
+    score: number;
+    passed: boolean;
+    error_count: number;
+    // 재도전 포함 몇 번째 분석 결과인지 (1부터)
+    attempt: number;
+  };
+  'Pronunciation Skipped': { expression_id: number };
+  'Pronunciation Audio Played': {
+    expression_id: number;
+    // expression·sentence = 설명·발음 화면 스피커, native_word·my_word = 피드백 카드 행
+    source: 'expression' | 'sentence' | 'native_word' | 'my_word';
+  };
   'Review Answer Submitted': {
     expression_id: number;
     is_correct: boolean;

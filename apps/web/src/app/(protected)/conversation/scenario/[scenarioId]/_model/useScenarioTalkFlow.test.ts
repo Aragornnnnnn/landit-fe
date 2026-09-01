@@ -54,6 +54,7 @@ const ttsMock = vi.hoisted(() => {
       state.onEnd = opts?.onEnd;
     }),
     prefetch: vi.fn(() => Promise.resolve()),
+    prefetchSrc: vi.fn(),
     stop: vi.fn(),
   };
 });
@@ -62,6 +63,7 @@ vi.mock('@/shared/tts/useTts', () => ({
     speak: ttsMock.speak,
     speakSrc: ttsMock.speakSrc,
     prefetch: ttsMock.prefetch,
+    prefetchSrc: ttsMock.prefetchSrc,
     stop: ttsMock.stop,
     status: 'idle',
   }),
@@ -131,8 +133,7 @@ const scenario = {
     userOpeningInstruction: null,
     innerThought: null,
     innerThoughtType: null,
-    ttsVoice: voice,
-    characterId: 'marco',
+    character: { characterId: 'marco', ttsVoice: voice },
   },
 } as unknown as Scenario;
 
@@ -145,7 +146,7 @@ const userScenario = {
     userOpeningInstruction: '먼저 인사를 건네보세요.',
     innerThought: null,
     innerThoughtType: null,
-    ttsVoice: voice,
+    character: { characterId: null, ttsVoice: voice },
   },
 } as unknown as Scenario;
 
@@ -156,18 +157,20 @@ const withCharacter = (
 ): Scenario =>
   ({
     ...base,
-    openingPreview: { ...base.openingPreview, characterId, ttsVoice },
+    openingPreview: {
+      ...base.openingPreview,
+      character: { characterId, ttsVoice },
+    },
   }) as unknown as Scenario;
 
 // 세션 시작 응답 — 이제 주로 sessionId·progress 확보용 (오프닝은 openingPreview에서 시드)
 const startResponse = () => ({
   sessionId: 1,
   scenarioId: 10,
-  characterId: 'marco' as const,
+  character: { characterId: 'marco' as const, ttsVoice: null },
   sessionType: 'SCENARIO',
   firstSpeaker: 'AI' as const,
   userOpeningInstruction: null,
-  ttsVoice: null,
   currentMessage: null,
   progress: {
     currentTurnNumber: 1,
@@ -198,6 +201,9 @@ const submitResponse = (
     role: 'AI',
     content: 'What size would you like?',
     translatedContent: '사이즈는 어떻게 드릴까요?',
+    ttsText: null,
+    fixedQuestionText: null,
+    questionAudioUrl: null,
   },
   progress: {
     currentTurnNumber: 2,
@@ -207,6 +213,22 @@ const submitResponse = (
   },
   ...over,
 });
+
+// 분리 재생 소스(맞장구+질문 음원)가 실린 제출 응답
+const splitSubmitResponse = () =>
+  submitResponse({
+    nextMessage: {
+      messageId: 3,
+      turnNumber: 2,
+      messageSequence: 1,
+      role: 'AI',
+      content: 'Thanks! What size would you like?',
+      translatedContent: '고마워요! 사이즈는 어떻게 드릴까요?',
+      ttsText: 'Thanks!',
+      fixedQuestionText: 'What size would you like?',
+      questionAudioUrl: 'https://cdn.example.com/question-2.mp3',
+    },
+  });
 
 // USER 선발화로 렌더하고 백그라운드 세션을 flush한다 (제출에 sessionId 필요)
 const renderUserFirst = async () => {
@@ -277,7 +299,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('useScenarioTalkFlow', () => {
+describe('useScenarioTalkFlow', async () => {
   it('AI 선발화면 openingPreview로 세션을 기다리지 않고 바로 AI 발화부터 시작한다', async () => {
     const { result } = renderHook(() => useScenarioTalkFlow(scenario));
 
@@ -384,6 +406,9 @@ describe('useScenarioTalkFlow', () => {
           role: 'AI',
           content: 'Thanks for chatting!',
           translatedContent: '대화 고마워요!',
+          ttsText: null,
+          fixedQuestionText: null,
+          questionAudioUrl: null,
         },
         progress: {
           currentTurnNumber: 3,
@@ -403,7 +428,7 @@ describe('useScenarioTalkFlow', () => {
     expect(result.current.turn.aiMessage).toBe('Thanks for chatting!');
 
     // 그 발화가 끝나야 종료(→ CTA)로 간다
-    act(() => ttsMock.state.onEnd?.());
+    await act(async () => ttsMock.state.onEnd?.());
     expect(result.current.phase).toBe('DONE');
   });
 
@@ -418,6 +443,9 @@ describe('useScenarioTalkFlow', () => {
           role: 'AI',
           content: 'Great job today!',
           translatedContent: '오늘 잘했어요!',
+          ttsText: null,
+          fixedQuestionText: null,
+          questionAudioUrl: null,
         },
         progress: {
           currentTurnNumber: 3,
@@ -462,7 +490,7 @@ describe('useScenarioTalkFlow', () => {
     );
     expect(ttsMock.speak).not.toHaveBeenCalled();
 
-    act(() => ttsMock.state.onEnd?.());
+    await act(async () => ttsMock.state.onEnd?.());
 
     expect(result.current.phase).toBe('USER_READY');
   });
@@ -509,7 +537,7 @@ describe('useScenarioTalkFlow', () => {
     // given — 세션은 백그라운드로 뒤늦게 오고, 값이 어긋나도 얼굴이 도중에 바뀌면 안 된다
     startScenarioTalkSession.mockResolvedValue({
       ...startResponse(),
-      characterId: 'teddy',
+      character: { characterId: 'teddy', ttsVoice: null },
     });
     const { result } = renderHook(() =>
       useScenarioTalkFlow(withCharacter(scenario, 'marco')),
@@ -541,6 +569,36 @@ describe('useScenarioTalkFlow', () => {
     expect(ttsMock.prefetch).toHaveBeenCalledWith(
       'What size would you like?',
       voice,
+    );
+  });
+
+  it('분리 재생 소스가 오면 맞장구만 미리 합성하고 질문 음원을 미리 연다', async () => {
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockResolvedValue(splitSubmitResponse());
+
+    await speakAndSubmit(result, 'Hello!');
+
+    expect(ttsMock.prefetch).toHaveBeenCalledWith('Thanks!', voice);
+    expect(ttsMock.prefetchSrc).toHaveBeenCalledWith(
+      'https://cdn.example.com/question-2.mp3',
+    );
+  });
+
+  it('분리 재생 소스가 실린 다음 발화는 맞장구만 합성해 말한다', async () => {
+    // 질문 음원 이어 재생은 useAiSpeech 테스트가 맡는다 — 여기서는 소스가 재생 훅까지 닿는 것만 본다
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockResolvedValue(splitSubmitResponse());
+    await speakAndSubmit(result, 'Hello!');
+
+    act(() => {
+      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+    });
+
+    expect(result.current.phase).toBe('AI_SPEAKING');
+    expect(ttsMock.speak).toHaveBeenCalledWith(
+      'Thanks!',
+      voice,
+      expect.anything(),
     );
   });
 

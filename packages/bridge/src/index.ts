@@ -1,13 +1,11 @@
 export {
   hapticPatternSchema,
-  reminderSchema,
   notificationPermissionStatusSchema,
   widgetDataSchema,
   EMPTY_WIDGET_DATA,
   type WebToNativeMessage,
   type NativeToWebMessage,
   type HapticPattern,
-  type Reminder,
   type NotificationPermissionStatus,
   type WidgetData,
 } from './messages';

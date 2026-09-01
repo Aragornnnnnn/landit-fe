@@ -20,7 +20,7 @@ import {
 } from './conversation-machine';
 import { expressionHoldMs, thoughtHoldMs, toThoughtType } from './pacing';
 import type { FloatingThought, ThoughtType } from './thought';
-import { useAiSpeech } from './useAiSpeech';
+import { useAiSpeech, type SpeechSource } from './useAiSpeech';
 import { useConversationInput } from './useConversationInput';
 import { useInnerThought } from './useInnerThought';
 
@@ -34,10 +34,13 @@ export interface ConversationTurn {
   isUserOpening: boolean;
 }
 
+// 제출 결과의 다음 발화 — 분리 재생 소스(맞장구·고정 질문 음원)가 실려 오면 재생 훅에 그대로 전달된다
+export interface TurnNextMessage extends NextMessage, SpeechSource {}
+
 // 제출 결과 계약 — 호출자가 자기 API 응답을 이 모양으로 판정해 돌려준다
 export interface TurnSubmitResult {
   submittedMessage: SubmittedMessage;
-  nextMessage: NextMessage | null;
+  nextMessage: TurnNextMessage | null;
   // 이 발화를 끝으로 대화가 종료되는가 — 판정 기준(진행도·턴 상태)은 호출자가 안다
   completed: boolean;
 }
@@ -80,10 +83,7 @@ export const useConversationTurns = ({
     initialConversationState(firstSpeaker),
   );
   // 제출 결과로 갈아끼운 발화만 상태로 — 오프닝은 아래 currentMessage에서 렌더 폴백으로 얹는다
-  const [aiMessage, setAiMessage] = useState<{
-    content: string;
-    translatedContent: string | null;
-  } | null>(null);
+  const [aiMessage, setAiMessage] = useState<TurnNextMessage | null>(null);
   // 대화가 진행되기 전까지는 오프닝이 현재 발화다 — 뒤늦게 도착(세션 응답 폴백)해도 그대로 반영된다
   const currentMessage = aiMessage ?? opening;
   const [thought, setThought] = useState<FloatingThought | null>(null);
@@ -94,7 +94,7 @@ export const useConversationTurns = ({
 
   // send 클로저가 최신 값을 읽도록 ref로 들고 있는다
   const completedRef = useRef(false); // 그 발화를 끝으로 대화가 종료되는가
-  const nextMessageRef = useRef<NextMessage | null>(null);
+  const nextMessageRef = useRef<TurnNextMessage | null>(null);
   const submittingRef = useRef(false); // 중복 제출 방지 (연출은 AI_THINKING phase가 맡는다)
 
   const innerThought = useInnerThought();
@@ -107,7 +107,8 @@ export const useConversationTurns = ({
   // AI 발화 재생 — 끝나면 상태기계에 알린다 (오프닝 오디오·TTS 합성·타이머 폴백은 훅 안에)
   const aiSpeech = useAiSpeech({
     playing: state.phase === 'AI_SPEAKING' && currentMessage != null,
-    content: currentMessage?.content ?? null,
+    // 오프닝은 content만 있는 소스라 자연히 전체 합성 경로를 탄다
+    source: currentMessage,
     voice,
     openingSrc: openingAudioSrc,
     onSpeechEnd: () => send('AI_SPEAKING_DONE'),
@@ -134,12 +135,9 @@ export const useConversationTurns = ({
     if (event === 'INNER_THOUGHT_DONE' && thought) setFinishedThought(thought);
     setThought(null);
     if (nextMessageRef.current) {
-      setAiMessage({
-        content: nextMessageRef.current.content,
-        translatedContent: nextMessageRef.current.translatedContent,
-      });
+      setAiMessage(nextMessageRef.current);
       nextMessageRef.current = null;
-      aiSpeech.markDynamic();
+      aiSpeech.markOpeningPlayed();
     }
     send(event);
   };
@@ -199,8 +197,9 @@ export const useConversationTurns = ({
       // 종료 인사도 nextMessage로 오고, 그 인사를 끝으로 종료인지는 completed가 알려준다 (인사 재생 후 CTA)
       nextMessageRef.current = res.nextMessage;
       completedRef.current = res.completed;
-      // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 합성한다 — 다음 발화 재생 지연을 없앤다
-      if (res.nextMessage) aiSpeech.prefetch(res.nextMessage.content);
+      // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 준비한다 — 합성분은 미리 합성하고,
+      // 질문 음원은 미리 열어 다음 발화 재생 지연을 없앤다
+      if (res.nextMessage) aiSpeech.prefetch(res.nextMessage);
       // 속마음은 준비됐으면 즉시, 아직이면 폴링으로 완료된 뒤 노출한다.
       // 그 사이 AI_THINKING(생각 중) 연출이 화면을 가리고, 다음 질문 합성은 이미 시작됐다.
       void innerThought

@@ -25,14 +25,21 @@ async function request<T>(
   body?: unknown,
 ): Promise<T> {
   const { accessToken, refreshToken } = useAuthStore.getState();
-  const headers = new Headers({ 'Content-Type': 'application/json' });
+  // FormData면 Content-Type을 안 붙인다 — 브라우저가 multipart boundary까지 직접 정한다
+  const headers = new Headers(
+    body instanceof FormData ? {} : { 'Content-Type': 'application/json' },
+  );
   if (accessToken) {
     headers.set('Authorization', `Bearer ${accessToken}`);
   }
 
   // body가 undefined면 JSON.stringify도 undefined라 GET/DELETE에선 body가 안 실린다
   const send = () =>
-    fetch(path, { method, headers, body: JSON.stringify(body) });
+    fetch(path, {
+      method,
+      headers,
+      body: body instanceof FormData ? body : JSON.stringify(body),
+    });
   const response = await send();
 
   // 토큰이 만료됐으면(401) 새로 발급받아 다시 시도한다

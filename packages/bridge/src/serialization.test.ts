@@ -95,25 +95,7 @@ describe('parseWebToNativeMessage', () => {
     );
   });
 
-  it('리마인더 동기화 요청을 그대로 되돌린다 (round-trip)', () => {
-    const message: WebToNativeMessage = {
-      type: 'SYNC_REMINDERS',
-      reminders: [
-        {
-          notifyAt: '2026-07-29T20:00:00+09:00',
-          title: '오늘의 시나리오',
-          body: '카페에서 주문하기가 기다리고 있어요',
-          url: '/home',
-        },
-      ],
-    };
-
-    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
-      message,
-    );
-  });
-
-  it('리마인더가 하나도 없으면 빈 배열로 동기화한다 (전체 해제)', () => {
+  it('구 셸 예약 정리 신호(SYNC_REMINDERS 빈 배열)를 그대로 되돌린다 (round-trip)', () => {
     const message: WebToNativeMessage = {
       type: 'SYNC_REMINDERS',
       reminders: [],
@@ -124,42 +106,23 @@ describe('parseWebToNativeMessage', () => {
     );
   });
 
-  it('notifyAt에 시간대 오프셋이 없으면 버린다', () => {
+  it('예약을 만들려는 SYNC_REMINDERS(빈 배열 아님)는 버린다 — 정리 신호 전용이다', () => {
     expect(
       parseWebToNativeMessage(
         JSON.stringify({
           type: 'SYNC_REMINDERS',
           reminders: [
             {
-              notifyAt: '2026-07-29T20:00:00',
-              title: '오늘의 시나리오',
+              notifyAt: '2026-09-02T20:00:00+09:00',
+              title: '제목',
               body: '본문',
-              url: '/home',
+              url: '/scenario',
             },
           ],
         }),
       ),
     ).toBeNull();
   });
-
-  it.each([['title'], ['body'], ['url']])(
-    '리마인더의 %s가 빈 문자열이면 버린다',
-    (field) => {
-      const reminder = {
-        notifyAt: '2026-07-29T20:00:00+09:00',
-        title: '제목',
-        body: '본문',
-        url: '/home',
-        [field]: '',
-      };
-
-      expect(
-        parseWebToNativeMessage(
-          JSON.stringify({ type: 'SYNC_REMINDERS', reminders: [reminder] }),
-        ),
-      ).toBeNull();
-    },
-  );
 
   it('알림 권한 조회 요청을 그대로 되돌린다 (round-trip)', () => {
     const message = { type: 'GET_NOTIFICATION_PERMISSION' } as const;

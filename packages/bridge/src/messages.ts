@@ -17,16 +17,6 @@ export const hapticPatternSchema = z.enum([
   'error',
 ]);
 
-// 로컬 알림 리마인더 단건 — 셸이 이 정보로 OS 로컬 알림을 예약한다
-export const reminderSchema = z.object({
-  // 오프셋 포함 ISO 8601 (예: 2026-07-29T20:00:00+09:00). 오프셋 없으면 거부한다
-  notifyAt: z.string().datetime({ offset: true }),
-  title: z.string().min(1),
-  body: z.string().min(1),
-  // 알림 탭 시 웹이 이동할 경로 — 내부 경로 검증은 읽는 쪽(셸 extractNotificationPath)이 한다
-  url: z.string().min(1),
-});
-
 // 알림 권한 상태 — expo-notifications의 PermissionStatus와 대응
 export const notificationPermissionStatusSchema = z.enum([
   'granted',
@@ -94,10 +84,11 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   }),
   // 마이크 등 OS 권한이 차단된 상태 — 네이티브가 앱 설정 화면을 연다 (iOS·Android 공통, 단방향)
   z.object({ type: z.literal('OPEN_SETTINGS') }),
-  // 예약할 로컬 알림 전체를 셸에 동기화한다 — 빈 배열이면 전부 해제
+  // [한시] 구 셸(로컬 리마인더 시절)에 남은 예약을 지우는 정리 신호 — 빈 배열만 허용한다.
+  // 구 셸은 "전부 해제"로 처리하고, 새 셸은 핸들러가 없어 무시한다. 구 바이너리가 소멸하면 웹 발신과 함께 제거한다
   z.object({
     type: z.literal('SYNC_REMINDERS'),
-    reminders: z.array(reminderSchema),
+    reminders: z.array(z.never()),
   }),
   // 알림 권한 상태 조회 — 다이얼로그를 띄우지 않는다. 응답은 NOTIFICATION_PERMISSION
   z.object({ type: z.literal('GET_NOTIFICATION_PERMISSION') }),
@@ -153,7 +144,6 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
 
 // 위 스키마에서 자동으로 뽑아낸 타입 — 스키마를 고치면 타입도 같이 바뀐다
 export type HapticPattern = z.infer<typeof hapticPatternSchema>;
-export type Reminder = z.infer<typeof reminderSchema>;
 export type WidgetData = z.infer<typeof widgetDataSchema>;
 export type NotificationPermissionStatus = z.infer<
   typeof notificationPermissionStatusSchema

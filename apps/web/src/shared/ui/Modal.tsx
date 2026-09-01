@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { createPortal } from 'react-dom';
 
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
+import { useFocusTrap } from '@/shared/lib/useFocusTrap';
 
 import { registerOpenSheet } from './bottom-sheet-back';
 import { CloseIcon } from './Icons';
@@ -19,9 +20,6 @@ interface ModalProps {
   children: React.ReactNode;
 }
 
-const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
 export function Modal({
   open,
   onClose,
@@ -31,7 +29,6 @@ export function Modal({
 }: ModalProps) {
   const mounted = useClientOnlyValue(() => true, false);
   const panelRef = useRef<HTMLDivElement>(null);
-  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
   // onClose는 대개 인라인 함수라 렌더마다 참조가 바뀐다 — ref로 최신 것을 읽는다
   const onCloseRef = useRef(onClose);
@@ -53,44 +50,10 @@ export function Modal({
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [open, dismissible]);
 
-  // 열리면 포커스를 다이얼로그로 옮기고, 닫히면 이전 포커스로 되돌린다
-  useEffect(() => {
-    if (!open) return;
-    previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
-    panelRef.current?.focus();
-    return () => {
-      previouslyFocusedRef.current?.focus();
-    };
-  }, [open]);
-
-  // 열려있는 동안 Tab 포커스가 다이얼로그 밖으로 나가지 않게 가둔다
-  useEffect(() => {
-    if (!open) return;
-    const trapFocus = (event: KeyboardEvent) => {
-      if (event.key !== 'Tab' || !panelRef.current) return;
-      const focusable =
-        panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
-      if (focusable.length === 0) {
-        event.preventDefault();
-        return;
-      }
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      // 열리자마자는 패널 자체가 포커스를 갖고 있어, first가 아니라 패널 기준으로도 검사해야 한다
-      const onFirstOrPanel =
-        document.activeElement === first ||
-        document.activeElement === panelRef.current;
-      if (event.shiftKey && onFirstOrPanel) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    window.addEventListener('keydown', trapFocus);
-    return () => window.removeEventListener('keydown', trapFocus);
-  }, [open]);
+  // 포커스를 다이얼로그 안에 가두고, 닫히면 이전 포커스로 되돌린다.
+  // mounted를 함께 보는 이유 — 패널은 mounted 뒤에야 그려지는데, open만 보면
+  // 처음부터 열린 모달에서 ref가 빈 채로 effect가 한 번 돌고 다시 돌지 않는다
+  useFocusTrap(open && mounted, panelRef);
 
   if (!mounted) return null;
 

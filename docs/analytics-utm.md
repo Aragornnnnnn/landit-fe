@@ -27,7 +27,7 @@
 | -------------------- | ---------------------------------------------------------------------------------------------- |
 | 데일리 리마인드 알림 | `/scenario?utm_source=landit&utm_medium=push&utm_campaign=daily_reminder&utm_content=marco_dm` |
 
-`utm_content`는 문구 슬러그 — 차트에서 어떤 문구인지 바로 읽히고, 문구 순서를 재배치해도 과거 데이터와 어긋나지 않는다. 어휘는 `apps/web/src/features/notification/model/reminder-copies.ts`가 단일 출처.
+`utm_content`는 문구 슬러그 — 차트에서 어떤 문구인지 바로 읽히고, 문구 순서를 재배치해도 과거 데이터와 어긋나지 않는다. 문구와 슬러그는 발송하는 쪽(서버 푸시 페이로드)이 정하며, 어휘는 이 문서가 단일 출처다. 등록된 슬러그: `today_only` `white_bird` `give_up` `come_back` `marco_dm` `landy_letter` `flame_deadline`. 문구를 고쳐도 같은 문구면 슬러그를 유지하고, 새 문구엔 새 슬러그를 짓는다.
 
 ## 확장 예시 (미리 합의된 자리)
 
@@ -62,7 +62,7 @@ Event Segmentation 차트 → 이벤트 `Page Viewed` → where `return_reason =
 
 **2. 문구별 성과 — 어떤 문구가 탭을 부르나**
 위 차트에서 group by `notification_copy` → 문구 슬러그(`today_only`/`marco_dm` 등)별 비교.
-슬러그↔문구 매핑은 `apps/web/src/features/notification/model/reminder-copies.ts`.
+슬러그 어휘는 위 "현재 등록된 조합" 절 참고.
 
 **3. 알림 유입 유저 세그먼트 — 리텐션에 효과가 있나**
 Cohort 생성 → who performed `Page Viewed` where `return_reason = reminder` → 이 코호트를 Retention 차트에 얹어 전체 유저와 비교.

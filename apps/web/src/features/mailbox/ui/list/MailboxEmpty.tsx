@@ -1,4 +1,6 @@
 // 편지가 한 통도 없을 때 — 칸마다 없다는 사실의 뜻이 달라서 문구를 따로 쓴다
+import { Emoji } from '@/shared/ui/emoji';
+
 import type { MailboxBox } from '../../model/box';
 
 const COPY: Record<MailboxBox, { emoji: string; title: string; body: string }> =
@@ -20,8 +22,8 @@ export const MailboxEmpty = ({ box }: { box: MailboxBox }) => {
 
   return (
     <div className="flex flex-col items-center px-8 pt-24 text-center">
-      <span className="tossface flex size-[140px] items-center justify-center rounded-full bg-secondary text-5xl">
-        {emoji}
+      <span className="flex size-[140px] items-center justify-center rounded-full bg-secondary text-5xl">
+        <Emoji>{emoji}</Emoji>
       </span>
       <p className="mt-7 text-base font-bold text-foreground">{title}</p>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">

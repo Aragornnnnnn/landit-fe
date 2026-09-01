@@ -23,9 +23,11 @@ import {
 } from '@/shared/lib/routes';
 import { Transition } from '@/shared/motion';
 
-import { markEnglishLevelAnswered } from '../model/english-level';
 import { STEP_ORDER, type OnboardingStep } from '../model/steps';
+import { useSaveAccentMutation } from '../model/useSaveAccentMutation';
+import { useSaveLearningLevelMutation } from '../model/useSaveLearningLevelMutation';
 import { OnboardingHeader } from './common/OnboardingHeader';
+import { AccentStep } from './steps/AccentStep';
 import { IntroStep } from './steps/IntroStep';
 import { LampStep } from './steps/LampStep';
 import { LevelStep } from './steps/LevelStep';
@@ -37,6 +39,10 @@ import { ThoughtStep } from './steps/ThoughtStep';
 export const OnboardingFlow = () => {
   const router = useRouter();
   const member = useAuthStore((state) => state.member);
+  // 저장 응답을 기다리지 않고 다음 스텝으로 간다 — 고른 값은 캐시에 바로 심겨서
+  // 온보딩 직후 홈에 도착해도 게이트가 같은 걸 다시 묻지 않는다
+  const saveLearningLevel = useSaveLearningLevelMutation();
+  const saveAccent = useSaveAccentMutation();
   // 물어볼 수 있는 상태(undetermined)에만 알림 스텝을 넣는다 — 이미 확정(granted·denied)이거나 요청 수단이 없으면(unavailable) 5스텝
   const canAskNotification = useNotificationPermission() === 'undetermined';
 
@@ -165,8 +171,16 @@ export const OnboardingFlow = () => {
         {step === 'level' && (
           <LevelStep
             onNext={(level) => {
-              markEnglishLevelAnswered(level);
-              finishStep('level', 'scenario');
+              saveLearningLevel.mutate(level);
+              finishStep('level', 'accent');
+            }}
+          />
+        )}
+        {step === 'accent' && (
+          <AccentStep
+            onNext={(locale) => {
+              saveAccent.mutate(locale);
+              finishStep('accent', 'scenario');
             }}
           />
         )}

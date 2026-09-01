@@ -12,6 +12,7 @@ import type {
   SmallTalkSessionStartResponse,
 } from '@/features/small-talk/api/small-talk';
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
+import type { TtsVoice } from '@/shared/tts/voice';
 
 import { useSmallTalkFlow } from './useSmallTalkFlow';
 
@@ -40,6 +41,7 @@ const ttsMock = vi.hoisted(() => ({
   }),
   speakSrc: vi.fn(),
   prefetch: vi.fn(() => Promise.resolve()),
+  prefetchSrc: vi.fn(),
   stop: vi.fn(),
 }));
 vi.mock('@/shared/tts/useTts', () => ({
@@ -47,6 +49,7 @@ vi.mock('@/shared/tts/useTts', () => ({
     speak: ttsMock.speak,
     speakSrc: ttsMock.speakSrc,
     prefetch: ttsMock.prefetch,
+    prefetchSrc: ttsMock.prefetchSrc,
     stop: ttsMock.stop,
     status: 'idle',
   }),
@@ -87,13 +90,21 @@ const submitSmallTalkMessage = vi.mocked(smallTalkApi.submitSmallTalkMessage);
 const decideSmallTalkExit = vi.mocked(smallTalkApi.decideSmallTalkExit);
 const getInnerThought = vi.mocked(sessionApi.getInnerThought);
 
+// 세션이 내려준 목소리 — 파트너 프로필 값과 다르게 둬서 어느 쪽을 쓰는지 구분한다
+const sessionVoice: TtsVoice = {
+  provider: 'OPENROUTER',
+  model: 'deepgram/aura-2',
+  providerVoiceId: 'session-voice-for-test',
+  gender: 'FEMALE',
+};
+
 // 내가 먼저 거는 대화 — 말하기 대기(USER_READY)에서 시작한다
 const session = {
   sessionId: 7,
   startMode: 'USER_FIRST',
   title: null,
   speakingTimeLimitMs: 60_000,
-  ttsVoice: null,
+  character: { characterId: 'marco', ttsVoice: sessionVoice },
   currentMessage: null,
 } as unknown as SmallTalkSessionStartResponse;
 
@@ -245,6 +256,20 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
     });
 
     expect(result.current.remainingMs).toBe(12_000);
+  });
+
+  it('발화 합성 목소리는 세션 응답의 ttsVoice를 쓴다', async () => {
+    // 캐릭터별 목소리는 서버(conversation_character)가 정본이다 — 파트너 프로필 하드코딩이 아니라
+    submitSmallTalkMessage.mockResolvedValueOnce(submitResponse());
+    const { result } = renderFlow(20_000);
+
+    speakFor(result, 5);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Hello there.');
+    });
+
+    expect(ttsMock.prefetch).toHaveBeenCalledWith('Nice!', sessionVoice);
   });
 
   it('말한 시간을 제출에 실어 보낸다 — 이 값으로 서버가 깎는다', async () => {

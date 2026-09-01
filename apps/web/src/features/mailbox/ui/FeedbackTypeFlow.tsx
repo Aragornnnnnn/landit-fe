@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { track } from '@/shared/analytics';
 import { MAILBOX_PATH } from '@/shared/lib/routes';
 import { BackHeader } from '@/shared/ui/BackHeader';
+import { Emoji } from '@/shared/ui/emoji';
 import { ChevronRightIcon } from '@/shared/ui/Icons';
 
 import type { FeedbackType } from '../api/mailbox';
@@ -58,9 +59,7 @@ const FeedbackTypeRow = ({ type }: { type: FeedbackType }) => {
       }
       className="flex h-[58px] items-center gap-4 rounded-2xl bg-secondary px-4 transition-transform active:scale-[0.98]"
     >
-      <span aria-hidden className="tossface text-[22px]">
-        {emoji}
-      </span>
+      <Emoji className="text-[22px]">{emoji}</Emoji>
       <span className="flex-1 text-[15px] font-semibold text-foreground">
         {label}
       </span>

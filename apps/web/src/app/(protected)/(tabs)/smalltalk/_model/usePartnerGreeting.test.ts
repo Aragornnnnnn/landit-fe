@@ -34,8 +34,8 @@ const teddy = PARTNERS[2];
 
 beforeEach(() => vi.clearAllMocks());
 
-describe('usePartnerGreeting', () => {
-  it('들어오면 기본 상대가 소리 없이 가만히 서 있다', () => {
+describe('usePartnerGreeting', async () => {
+  it('들어오면 기본 상대가 소리 없이 가만히 서 있다', async () => {
     const { result } = renderHook(() => usePartnerGreeting());
 
     expect(result.current.partner.id).toBe(chloe.id);
@@ -43,7 +43,7 @@ describe('usePartnerGreeting', () => {
     expect(ttsMock.speakSrc).not.toHaveBeenCalled();
   });
 
-  it('캐릭터를 누르면 그 상대의 자기소개 음원이 재생되고 웃으며 말하는 자세가 된다', () => {
+  it('캐릭터를 누르면 그 상대의 자기소개 음원이 재생되고 웃으며 말하는 자세가 된다', async () => {
     const { result } = renderHook(() => usePartnerGreeting());
 
     act(() => result.current.greet());
@@ -58,16 +58,16 @@ describe('usePartnerGreeting', () => {
     });
   });
 
-  it('인사가 끝나면 평소 자세로 돌아온다', () => {
+  it('인사가 끝나면 평소 자세로 돌아온다', async () => {
     const { result } = renderHook(() => usePartnerGreeting());
     act(() => result.current.greet());
 
-    act(() => ttsMock.state.onEnd?.());
+    await act(async () => ttsMock.state.onEnd?.());
 
     expect(result.current.look.posture).toBe('idle');
   });
 
-  it('상대를 바꾸면 새 상대가 서기만 하고 인사는 하지 않는다', () => {
+  it('상대를 바꾸면 새 상대가 서기만 하고 인사는 하지 않는다', async () => {
     const { result } = renderHook(() => usePartnerGreeting());
 
     act(() => result.current.selectPartner(teddy.id));
@@ -76,7 +76,7 @@ describe('usePartnerGreeting', () => {
     expect(ttsMock.speakSrc).not.toHaveBeenCalled();
   });
 
-  it('상대를 바꾸면 선택 이벤트를 찍고, 같은 상대를 다시 누르면 찍지 않는다', () => {
+  it('상대를 바꾸면 선택 이벤트를 찍고, 같은 상대를 다시 누르면 찍지 않는다', async () => {
     const { result } = renderHook(() => usePartnerGreeting());
 
     act(() => result.current.selectPartner(teddy.id));
@@ -88,7 +88,7 @@ describe('usePartnerGreeting', () => {
     });
   });
 
-  it('인사하는 중에 상대를 바꾸면 하던 인사를 멈추고 새 상대는 말하지 않는다', () => {
+  it('인사하는 중에 상대를 바꾸면 하던 인사를 멈추고 새 상대는 말하지 않는다', async () => {
     const { result } = renderHook(() => usePartnerGreeting());
     act(() => result.current.greet());
 

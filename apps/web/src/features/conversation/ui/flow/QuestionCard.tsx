@@ -13,6 +13,9 @@ import { ChevronRightIcon } from '@/shared/ui/Icons';
 import { speechTypingMs } from '../../model/pacing';
 import { TypingCursor } from './TypingCursor';
 
+// 카드 위·아래 흐림 폭(마스크 그라데이션의 1.5rem과 같은 값) — 말하는 줄이 흐림에 걸리지 않게 그만큼 띄운다
+const fadeEdgePx = 24;
+
 interface QuestionCardProps {
   question: string;
   translation: string | null;
@@ -42,6 +45,7 @@ export const QuestionCard = ({
   const hasMoreBelow = edges.question === question && edges.below;
   const scrollRef = useRef<HTMLDivElement>(null);
   const translationRef = useRef<HTMLDivElement>(null);
+  const cursorRef = useRef<HTMLSpanElement>(null);
 
   const syncEdges = () => {
     const box = scrollRef.current;
@@ -74,6 +78,20 @@ export const QuestionCard = ({
     if (Math.abs(offset) > 0.5) box.scrollTop += offset;
   };
 
+  // 말하는 속도를 따라간다 — 카드보다 긴 발화도 지금 말하는 줄이 늘 보이게.
+  // 아래끝이 아니라 커서를 기준으로 잡는다 — 안 나온 글자를 투명하게 깔아 둬서
+  // 아래끝으로 내리면 첫 줄부터 말하는 내내 빈 자리만 보이고, 위로 스크롤해도 매 프레임 되돌아간다
+  const followCursor = () => {
+    const box = scrollRef.current;
+    const cursor = cursorRef.current;
+    if (!box || !cursor) return;
+    const overflow =
+      cursor.getBoundingClientRect().bottom -
+      (box.getBoundingClientRect().bottom - fadeEdgePx);
+    if (overflow > 0)
+      box.scrollTo?.({ top: box.scrollTop + overflow, behavior: 'instant' });
+  };
+
   const revealTranslation = () => {
     followTranslation();
     syncEdges();
@@ -94,11 +112,7 @@ export const QuestionCard = ({
           ? prev
           : { question, count },
       );
-      // 말하는 속도를 따라간다 — 카드보다 긴 발화도 지금 말하는 줄이 늘 보이게
-      scrollRef.current?.scrollTo?.({
-        top: scrollRef.current.scrollHeight,
-        behavior: 'instant',
-      });
+      followCursor();
       syncEdges();
       if (t < 1) raf = requestAnimationFrame(tick);
     };
@@ -168,7 +182,7 @@ export const QuestionCard = ({
             className={`${questionSize} leading-snug font-bold text-foreground`}
           >
             {question.slice(0, visibleCount)}
-            {typing && <TypingCursor />}
+            {typing && <TypingCursor ref={cursorRef} />}
             {/* 아직 안 나온 글자를 투명하게 깔아 첫 프레임부터 최종 높이를 잡는다 —
                 말풍선이 글자 따라 커지면 발화 내내 화면이 계속 달라진다 */}
             {typing && (
