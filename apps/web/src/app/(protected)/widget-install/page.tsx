@@ -29,9 +29,10 @@ const InstallFlow = () => {
   const router = useRouter();
   const params = useSearchParams();
 
-  // 안내를 닫으면 대화 플로우가 넘겨준 자리로 돌아간다 (없으면 기본 홈)
+  // 안내를 닫으면 대화 플로우가 넘겨준 자리로 돌아간다 (없으면 기본 홈).
+  // 내부 경로만 허용한다 — "//호스트"나 "/\호스트" 같은 프로토콜 상대 URL은 외부로 튀어 오픈 리다이렉트가 된다
   const next = params.get('next');
-  const destination = next?.startsWith('/') ? next : SCENARIO_PATH;
+  const destination = next && /^\/(?![/\\])/.test(next) ? next : SCENARIO_PATH;
   const finish = () => router.replace(destination);
   // effect가 최신 finish를 읽게 한다 — 리스너는 한 번만 걸고 참조만 갈아끼운다
   const finishRef = useRef(finish);
