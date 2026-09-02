@@ -50,4 +50,11 @@ describe('widget-theme ↔ iOS 위젯 인라인 값', () => {
       expect(iosWidgetSource).toContain(color);
     }
   });
+
+  it('4×2 위젯에 카드 제목 오버레이를 다시 넣지 않는다', () => {
+    // todayCardTitle을 Text로 렌더하면 그 제목 padding이 medium ZStack을 늘려 아트가 찌부됐었다.
+    // prop 선언 한 곳에만 있어야 한다 — 렌더 자리에 다시 쓰이면 개수가 늘어 이 테스트가 잡는다
+    const uses = iosWidgetSource.match(/todayCardTitle/g) ?? [];
+    expect(uses).toHaveLength(1);
+  });
 });
