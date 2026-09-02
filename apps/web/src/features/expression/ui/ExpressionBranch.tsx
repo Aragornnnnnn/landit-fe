@@ -7,7 +7,6 @@ import { EVENTS } from '@landit/analytics';
 import { AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
-import { homeOrReinvitePath } from '@/features/widget/model/reinvite-home';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import {
@@ -96,13 +95,12 @@ export const ExpressionBranch = ({
       <header className="relative flex h-14 flex-none items-center px-3">
         <button
           onClick={() => {
-            // X가 유일한 이탈 경로다 — 학습 없이 나가는 신호를 여기서 남긴다.
-            // 대화를 마치고 나가는 길이라, 위젯 재유도 자격이면 설치 안내를 한 번 거쳐 간다
+            // X가 유일한 이탈 경로다 — 학습 없이 나가는 신호를 여기서 남긴다
             track(EVENTS.EXPRESSION_LEARNING_SKIPPED, {
               scenario_id: scenarioId,
               expression_count: count,
             });
-            router.replace(homeOrReinvitePath(scenarioReturnPath({ date })));
+            router.replace(scenarioReturnPath({ date }));
           }}
           className="flex size-10 items-center justify-center text-muted-foreground"
           aria-label="닫기"

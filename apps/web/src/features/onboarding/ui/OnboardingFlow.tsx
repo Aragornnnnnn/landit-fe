@@ -9,7 +9,6 @@ import { requestNotificationPermission } from '@/features/notification/model/req
 import { useNotificationPermission } from '@/features/notification/model/useNotificationPermission';
 // 위젯 설치 유도의 노출 조건·기록은 widget feature가 정본이라 온보딩 위젯 스텝이 가로 import한다
 import {
-  recordInstallAccepted,
   recordInstallInvited,
   shouldInviteInstall,
   supportsWidgetInstall,
@@ -138,12 +137,10 @@ export const OnboardingFlow = () => {
           <InstallGuide
             onDecline={() => finishStep('widget', 'level')}
             onAndroidPin={() => {
-              recordInstallAccepted();
               postToNative({ type: 'REQUEST_WIDGET_PIN' });
               finishStep('widget', 'level');
             }}
             onLeaveHome={() => {
-              recordInstallAccepted();
               finishStep('widget', 'level');
               postToNative({ type: 'GO_HOME' });
             }}

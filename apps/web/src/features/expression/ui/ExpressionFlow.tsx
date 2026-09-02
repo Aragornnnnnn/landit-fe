@@ -6,7 +6,6 @@ import { EVENTS, type ExpressionStep } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
 
-import { homeOrReinvitePath } from '@/features/widget/model/reinvite-home';
 import { track } from '@/shared/analytics';
 import { scenarioReturnPath, smallTalkHistoryPath } from '@/shared/lib/routes';
 
@@ -223,8 +222,7 @@ const LoadedExpressionFlow = ({
           expression_id: expressionId,
           ...originProps,
         });
-        // 학습을 끝까지 마치고 나가는 길에만 위젯 재유도를 한 번 끼운다
-        router.replace(homeOrReinvitePath(listPath));
+        router.replace(listPath);
       },
     });
 

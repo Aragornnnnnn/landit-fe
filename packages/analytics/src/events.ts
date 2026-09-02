@@ -196,7 +196,7 @@ export type SatisfactionMoment = SatisfactionTalk | 'review';
 export type SatisfactionAnswer = 'good' | 'bad' | 'dismiss';
 export type CalendarView = 'week' | 'month';
 export type HomeTab = 'scenario' | 'smalltalk';
-// 위젯 설치 유도·재유도에서 고른 답 — 닫기·나중에는 dismiss로 묶는다
+// 위젯 설치 유도에서 고른 답 — 닫기·나중에는 dismiss로 묶는다
 export type WidgetInstallAnswer = 'install' | 'dismiss';
 // iOS 위젯 갤러리 여는 길을 알려주는 안내 3장
 export type WidgetGuideStep = 'press' | 'menu' | 'search';
