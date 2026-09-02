@@ -33,7 +33,6 @@ export const InstallGuide = ({
   // 설치 유도 노출을 계측한다 — 마운트 때 한 번
   useEffect(() => {
     track(EVENTS.WIDGET_INSTALL_INVITE_VIEWED);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 안내 스텝(press·menu·search)에 들어설 때마다 노출을 계측한다 — 어디서 이탈하는지 본다
