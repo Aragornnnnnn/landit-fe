@@ -45,6 +45,32 @@ export const SurveyFlow = () => {
   useEffect(() => {
     stepRef.current = step;
   }, [step]);
+  // iOS 웹뷰는 키보드가 뜨면 입력칸을 보이려고 문서 전체를 위로 밀어 헤더가 상태바 밑으로 들어간다.
+  // 이 화면은 높이가 늘 뷰포트와 같아 문서 스크롤이 생길 일이 없으니, 밀리는 족족 0으로 되돌린다.
+  // 입력칸이 가려지는 건 화면 높이를 키보드만큼 줄이는 쪽(useKeyboardInset)이 맡는다
+  useEffect(() => {
+    const resetScroll = () => {
+      if (window.scrollY !== 0) window.scrollTo(0, 0);
+    };
+    const viewport = window.visualViewport;
+    window.addEventListener('scroll', resetScroll);
+    viewport?.addEventListener('scroll', resetScroll);
+    viewport?.addEventListener('resize', resetScroll);
+    return () => {
+      window.removeEventListener('scroll', resetScroll);
+      viewport?.removeEventListener('scroll', resetScroll);
+      viewport?.removeEventListener('resize', resetScroll);
+    };
+  }, []);
+  // 화면이 키보드만큼 줄면 포커스된 입력칸이 선택지 목록 아래로 숨을 수 있다 — 목록 안에서만 끌어올린다.
+  // 문서는 위 effect가 0에 붙잡고 있어 헤더는 그대로다
+  useEffect(() => {
+    if (keyboardInset === 0) return;
+    const frame = window.requestAnimationFrame(() => {
+      document.activeElement?.scrollIntoView?.({ block: 'nearest' });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [keyboardInset]);
   // 조건 문항이 끼고 빠지므로 스텝 번호는 이 목록 기준이다
   const questions = visibleQuestions(QUESTIONS, answers);
 
