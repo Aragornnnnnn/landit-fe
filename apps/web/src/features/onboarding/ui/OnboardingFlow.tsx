@@ -13,6 +13,7 @@ import {
   shouldInviteInstall,
   supportsWidgetInstall,
 } from '@/features/widget/model/install-prompt';
+// 같은 설치 안내 화면을 온보딩(1차)과 대화 후(2차)가 공유해 widget feature에 두고 가로 import한다
 import { InstallGuide } from '@/features/widget/ui/install-guide/InstallGuide';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';

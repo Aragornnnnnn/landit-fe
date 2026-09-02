@@ -1,4 +1,4 @@
-// 남은 스텝을 알려주는 진행점 — 온보딩 헤더와 기존 유저 게이트가 함께 쓴다
+// 남은 스텝을 알려주는 진행점 — 온보딩·위젯 설치 안내 등 여러 스텝 흐름이 공용으로 쓴다
 'use client';
 
 export const StepDots = <Step extends string>({

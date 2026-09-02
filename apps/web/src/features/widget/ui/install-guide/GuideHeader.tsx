@@ -1,8 +1,8 @@
 // 안내 3장 상단 — 뒤로가기 + 진행점. 온보딩 헤더와 같은 결로 "몇 번째 안내인지" 보여준다
 'use client';
 
-import { StepDots } from '@/features/onboarding/ui/common/StepDots';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
+import { StepDots } from '@/shared/ui/StepDots';
 
 export const GuideHeader = <Step extends string>({
   step,
