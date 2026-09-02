@@ -17,6 +17,7 @@ const STATIC_PAGES = new Set([
   'smalltalk',
   'streak',
   'mailbox',
+  'survey',
 ]);
 
 // 피드백 작성은 유형별로 주소가 갈리지만 화면은 하나다 — 이름을 넷으로 쪼개지 않고 속성으로 싣는다.
