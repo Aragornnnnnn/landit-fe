@@ -43,7 +43,8 @@ export const recordInstallInvited = () => update({ invited: true });
 // "위젯 추가하기"를 눌렀다 — 이후 재유도로 다시 붙잡지 않는다
 export const recordInstallAccepted = () => update({ inviteAccepted: true });
 
-// 대화 후 2차 재유도 자격 — 온보딩 유도를 봤지만 설치 안 했고, 아직 재유도를 안 띄운 사람
+// 대화 후 2차 재유도 자격 — 온보딩 유도를 봤지만 "추가하기"를 누르지 않았고, 아직 재유도를 안 띄운 사람.
+// 실제 설치 여부는 못 본다(네이티브 조회 필요) — 안내를 밟은 적 없는 사람에게 한 번 더 청하는 것까지다
 export const shouldReinviteInstall = () => {
   const record = read();
   return (
