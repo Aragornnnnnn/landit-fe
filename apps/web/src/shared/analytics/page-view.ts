@@ -17,6 +17,7 @@ const STATIC_PAGES = new Set([
   'smalltalk',
   'streak',
   'mailbox',
+  // LAN-428 설문(임시) — 설문이 끝나면 지운다
   'survey',
 ]);
 

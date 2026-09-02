@@ -11,6 +11,8 @@ import { readUserId } from './_model/access-token';
 // 토큰이 진짜인지 백엔드에 묻는 데 쓰는 가벼운 인증 필요 API — 200이면 서명·만료가 확인된 것
 const VERIFY_PATH = '/api/v1/me/learning-level';
 const TABLE = 'survey_responses';
+// 바깥 서버가 답이 없으면 이만큼만 기다린다 — 사용자가 제출 버튼에서 무한정 기다리지 않게
+const UPSTREAM_TIMEOUT_MS = 10_000;
 
 const ok = (data: unknown) => NextResponse.json({ success: true, data });
 const fail = (status: number, message: string) =>
@@ -18,6 +20,18 @@ const fail = (status: number, message: string) =>
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
+
+// 끊김·지연으로 fetch 자체가 실패하면 응답 대신 null — 호출부가 상태 코드 분기와 같은 자리에서 처리한다
+const fetchUpstream = async (input: string, init: RequestInit) => {
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    });
+  } catch {
+    return null;
+  }
+};
 
 export async function POST(request: Request) {
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -28,31 +42,29 @@ export async function POST(request: Request) {
   }
 
   const authorization = request.headers.get('authorization');
-  const userId = authorization
-    ? readUserId(authorization.replace(/^Bearer\s+/i, ''))
-    : null;
-  if (!authorization || userId === null) {
-    return fail(401, '로그인이 필요해요');
-  }
+  if (!authorization) return fail(401, '로그인이 필요해요');
+  const userId = readUserId(authorization.replace(/^Bearer\s+/i, ''));
+  if (userId === null) return fail(401, '로그인이 필요해요');
 
-  // 클라이언트가 토큰을 위조해 남의 id로 넣지 못하게 — 서명 키가 없으니 백엔드가 받아주는지로 판단한다
-  const verified = await fetch(`${apiBaseUrl}${VERIFY_PATH}`, {
-    headers: { Authorization: authorization },
-  });
-  if (verified.status === 401) return fail(401, '로그인이 필요해요');
-  if (!verified.ok) {
-    reportError(new Error('[survey] 로그인 확인 실패'), {
-      status: verified.status,
-    });
-    return fail(502, '로그인 확인에 실패했어요');
-  }
-
+  // 백엔드에 묻기 전에 본문부터 — 모양이 틀린 요청에 바깥 왕복을 쓰지 않는다
   const body: unknown = await request.json().catch(() => null);
   if (!isRecord(body) || !isRecord(body.answers)) {
     return fail(400, 'answers가 필요해요');
   }
 
-  const inserted = await fetch(`${supabaseUrl}/rest/v1/${TABLE}`, {
+  // 클라이언트가 토큰을 위조해 남의 id로 넣지 못하게 — 서명 키가 없으니 백엔드가 받아주는지로 판단한다
+  const verified = await fetchUpstream(`${apiBaseUrl}${VERIFY_PATH}`, {
+    headers: { Authorization: authorization },
+  });
+  if (verified?.status === 401) return fail(401, '로그인이 필요해요');
+  if (!verified?.ok) {
+    reportError(new Error('[survey] 로그인 확인 실패'), {
+      status: verified?.status ?? 'network',
+    });
+    return fail(502, '로그인 확인에 실패했어요');
+  }
+
+  const inserted = await fetchUpstream(`${supabaseUrl}/rest/v1/${TABLE}`, {
     method: 'POST',
     headers: {
       apikey: secretKey,
@@ -69,11 +81,11 @@ export async function POST(request: Request) {
     }),
   });
 
-  if (inserted.status === 409) return ok({ result: 'duplicate' });
-  if (!inserted.ok) {
+  if (inserted?.status === 409) return ok({ result: 'duplicate' });
+  if (!inserted?.ok) {
     reportError(new Error('[survey] 저장 실패'), {
-      status: inserted.status,
-      detail: await inserted.text(),
+      status: inserted?.status ?? 'network',
+      detail: inserted ? await inserted.text() : 'fetch 실패',
     });
     return fail(502, '설문을 저장하지 못했어요');
   }

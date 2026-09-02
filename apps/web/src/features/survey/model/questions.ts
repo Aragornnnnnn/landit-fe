@@ -9,24 +9,40 @@ interface QuestionBase {
   showIf?: { questionId: string; equals: string };
 }
 
-export type Question = QuestionBase &
-  (
-    | {
-        kind: 'single';
-        options: readonly string[];
-        // "기타 (직접 입력)" 선택지를 끝에 붙인다
-        other?: boolean;
-      }
-    | { kind: 'multi'; options: readonly string[]; other?: boolean }
-    // 1~5점. 양 끝에 뜻을 단다
-    | { kind: 'scale'; low: string; high: string }
-    | { kind: 'text'; placeholder: string }
-  );
+export type SingleQuestion = QuestionBase & {
+  kind: 'single';
+  options: readonly string[];
+  // "기타 (직접 입력)" 선택지를 끝에 붙인다
+  other?: boolean;
+};
+export type MultiQuestion = QuestionBase & {
+  kind: 'multi';
+  options: readonly string[];
+  other?: boolean;
+};
+// 1~5점. 양 끝에 뜻을 단다
+export type ScaleQuestion = QuestionBase & {
+  kind: 'scale';
+  low: string;
+  high: string;
+};
+export type TextQuestion = QuestionBase & {
+  kind: 'text';
+  placeholder: string;
+};
+export type Question =
+  SingleQuestion | MultiQuestion | ScaleQuestion | TextQuestion;
 
 // 기타 선택지의 저장값. 화면 라벨은 OTHER_LABEL, 직접 쓴 내용은 `${id}_other` 키에 따로 싣는다
 export const OTHER_OPTION = '기타';
 export const OTHER_LABEL = '기타 (직접 입력)';
 export const otherKey = (id: string) => `${id}_other`;
+
+// 화면에 놓을 선택지 — 기타를 쓰는 문항은 끝에 붙는다
+export const choiceOptions = (question: SingleQuestion | MultiQuestion) =>
+  question.other ? [...question.options, OTHER_OPTION] : question.options;
+export const optionLabel = (option: string) =>
+  option === OTHER_OPTION ? OTHER_LABEL : option;
 
 export const SCALE_MAX = 5;
 

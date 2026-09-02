@@ -10,8 +10,10 @@ export const readUserId = (token: string): number | null => {
     );
     if (typeof claims !== 'object' || claims === null) return null;
     const sub = (claims as { sub?: unknown }).sub;
+    if (typeof sub !== 'string') return null;
     const userId = Number(sub);
-    return typeof sub === 'string' && Number.isInteger(userId) ? userId : null;
+    // 자바스크립트 숫자로 정확히 담기는 범위만 — 넘치면 반올림된 남의 id로 저장될 수 있다
+    return Number.isSafeInteger(userId) ? userId : null;
   } catch {
     return null;
   }

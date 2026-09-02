@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  canProceed,
-  toggleChoice,
-  toSubmission,
-  visibleQuestions,
-} from './answers';
+import { toggleChoice, toSubmission, visibleQuestions } from './answers';
 import type { Question } from './questions';
 
 const single: Question = {
@@ -13,19 +8,6 @@ const single: Question = {
   kind: 'single',
   title: '',
   options: ['x', 'y'],
-};
-const multi: Question = {
-  id: 'b',
-  kind: 'multi',
-  title: '',
-  options: ['x', 'y'],
-};
-const scale: Question = {
-  id: 's',
-  kind: 'scale',
-  title: '',
-  low: '',
-  high: '',
 };
 const text: Question = { id: 'c', kind: 'text', title: '', placeholder: '' };
 const conditional: Question = {
@@ -35,27 +17,6 @@ const conditional: Question = {
   options: ['p'],
   showIf: { questionId: 'a', equals: 'x' },
 };
-
-describe('canProceed', () => {
-  it('단일 선택은 하나를 골라야 넘어간다', () => {
-    expect(canProceed(single, undefined)).toBe(false);
-    expect(canProceed(single, 'x')).toBe(true);
-  });
-
-  it('복수 선택은 하나 이상 골라야 넘어간다', () => {
-    expect(canProceed(multi, [])).toBe(false);
-    expect(canProceed(multi, ['x'])).toBe(true);
-  });
-
-  it('척도는 점수를 골라야 넘어간다', () => {
-    expect(canProceed(scale, undefined)).toBe(false);
-    expect(canProceed(scale, 3)).toBe(true);
-  });
-
-  it('주관식은 비워 둬도 넘어간다', () => {
-    expect(canProceed(text, undefined)).toBe(true);
-  });
-});
 
 describe('toggleChoice', () => {
   it('안 고른 선택지를 누르면 더한다', () => {

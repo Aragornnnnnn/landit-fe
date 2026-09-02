@@ -48,15 +48,15 @@ const answerCurrent = async (question: Question) => {
   await screen.findByText(titleOf(question));
   if (question.kind === 'single') {
     await userEvent.click(
-      screen.getByRole('button', { name: optionOf(question) }),
+      screen.getByRole('radio', { name: optionOf(question) }),
     );
   } else if (question.kind === 'multi') {
     await userEvent.click(
-      screen.getByRole('button', { name: optionOf(question) }),
+      screen.getByRole('checkbox', { name: optionOf(question) }),
     );
     await userEvent.click(screen.getByRole('button', { name: '다음' }));
   } else if (question.kind === 'scale') {
-    await userEvent.click(screen.getByRole('button', { name: '3점' }));
+    await userEvent.click(screen.getByRole('radio', { name: '3점' }));
   } else {
     await userEvent.click(screen.getByRole('button', { name: '건너뛰기' }));
   }
@@ -87,7 +87,7 @@ describe('SurveyFlow', () => {
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
 
     await userEvent.click(
-      screen.getByRole('button', { name: optionOf(QUESTIONS[0]) }),
+      screen.getByRole('radio', { name: optionOf(QUESTIONS[0]) }),
     );
 
     expect(await screen.findByText(titleOf(QUESTIONS[1]))).toBeTruthy();
@@ -97,7 +97,7 @@ describe('SurveyFlow', () => {
     render(<SurveyFlow />);
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
 
-    await userEvent.click(screen.getByRole('button', { name: OTHER_LABEL }));
+    await userEvent.click(screen.getByRole('radio', { name: OTHER_LABEL }));
 
     expect(screen.getByText(titleOf(QUESTIONS[0]))).toBeTruthy();
     expect(screen.getByRole('textbox', { name: '기타 내용' })).toBeTruthy();
@@ -110,7 +110,7 @@ describe('SurveyFlow', () => {
     await answerCurrent(byId('channel'));
     await screen.findByText(titleOf(byId('study_purpose')));
 
-    await userEvent.click(screen.getByRole('button', { name: '유학 준비' }));
+    await userEvent.click(screen.getByRole('radio', { name: '유학 준비' }));
 
     expect(
       await screen.findByText(titleOf(byId('study_abroad_prep'))),
@@ -129,7 +129,7 @@ describe('SurveyFlow', () => {
     expect(next).toHaveProperty('disabled', true);
 
     await userEvent.click(
-      screen.getByRole('button', { name: optionOf(features) }),
+      screen.getByRole('checkbox', { name: optionOf(features) }),
     );
     expect(next).toHaveProperty('disabled', false);
   });

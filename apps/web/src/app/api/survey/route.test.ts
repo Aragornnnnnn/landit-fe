@@ -105,14 +105,32 @@ describe('POST /api/survey', () => {
     });
   });
 
-  it('answers가 없으면 400을 돌려준다', async () => {
-    fetchMock.mockResolvedValueOnce(new Response(null, { status: 200 }));
-
+  it('answers가 없으면 400을 돌려주고 백엔드에 묻지 않는다', async () => {
     const res = await POST(
       surveyRequest({ email: 'a@b.c' }, `Bearer ${token}`),
     );
 
     expect(res.status).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('백엔드에 닿지 못하면(fetch 실패) 502를 돌려주고 저장하지 않는다', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('network'));
+
+    const res = await POST(surveyRequest({ answers: {} }, `Bearer ${token}`));
+
+    expect(res.status).toBe(502);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('슈퍼베이스에 닿지 못하면(fetch 실패) 502를 돌려준다', async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(null, { status: 200 }))
+      .mockRejectedValueOnce(new Error('network'));
+
+    const res = await POST(surveyRequest({ answers: {} }, `Bearer ${token}`));
+
+    expect(res.status).toBe(502);
   });
 
   it('슈퍼베이스가 실패하면 502를 돌려준다', async () => {
