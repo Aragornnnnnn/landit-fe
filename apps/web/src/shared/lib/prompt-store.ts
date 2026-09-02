@@ -36,7 +36,7 @@ export const updatePromptEntry = <T extends object>(
 };
 
 // 기기 기준 오늘 (yyyy-MM-dd) — "막 마쳤다" 같은 당일 판정에 쓴다
-export const deviceToday = () => {
+export const getDeviceToday = () => {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;

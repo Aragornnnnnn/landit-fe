@@ -6,7 +6,7 @@ import type {
 } from '@landit/analytics';
 
 import {
-  deviceToday,
+  getDeviceToday,
   readPromptEntry,
   updatePromptEntry,
 } from '@/shared/lib/prompt-store';
@@ -36,7 +36,7 @@ const read = (moment: SatisfactionMoment) =>
 
 const TALKS: SatisfactionTalk[] = ['scenario', 'smalltalk'];
 
-const today = deviceToday;
+const today = getDeviceToday;
 
 // 대화를 마쳤다 — 홈에 돌아오면 물을 차례라고 남긴다
 export const markTalkCompleted = (talk: SatisfactionTalk) =>
