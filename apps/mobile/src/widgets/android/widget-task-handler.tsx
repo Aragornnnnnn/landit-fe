@@ -6,7 +6,7 @@ import type {
 } from 'react-native-android-widget';
 
 import { buildWeekStrip } from '../model/week-strip';
-import { decideWidgetState, freshCardTitle } from '../model/widget-state';
+import { decideWidgetState } from '../model/widget-state';
 import { loadWidgetData } from '../model/widget-store';
 import { familyForWidget } from './families';
 import { StreakAndroidWidget } from './StreakAndroidWidget';
@@ -29,7 +29,6 @@ export const renderStreakWidget = async (
       family={familyForWidget(widgetInfo.widgetName)}
       width={widgetInfo.width}
       height={widgetInfo.height}
-      todayCardTitle={freshCardTitle(data, now)}
     />
   );
 };

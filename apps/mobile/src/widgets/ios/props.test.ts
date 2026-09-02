@@ -26,20 +26,18 @@ describe('buildTimelineEntries', () => {
       kind: 'nudge',
       displayStreak: 5,
       artDir: 'file:///art/',
-      todayCardTitle: '룸메이트와 첫인사',
     });
     expect(first.props.weekLabels).toHaveLength(7);
   });
 
   it('값이 null이면 키 자체를 빼서 보낸다 — 네이티브 변환이 null을 거부한다', () => {
     const [first] = buildTimelineEntries({
-      data: dataOf({ todayCardTitle: null }),
+      data: dataOf(),
       now,
       artDir: null,
     });
 
     expect(first.props).not.toHaveProperty('artDir');
-    expect(first.props).not.toHaveProperty('todayCardTitle');
     expect(first.props).not.toHaveProperty('milestone');
   });
 
@@ -51,23 +49,6 @@ describe('buildTimelineEntries', () => {
     });
 
     expect(first.props).toMatchObject({ kind: 'milestone', milestone: 14 });
-  });
-
-  it('예약 시점의 오늘이 아닌 날짜에는 카드 제목을 싣지 않는다 — 앱을 안 열면 어제 제목이 남는다', () => {
-    const entries = buildTimelineEntries({ data: dataOf(), now, artDir: null });
-
-    const today = entries.filter(
-      (e) => e.date.getTime() < new Date('2026-08-28T00:00:00+09:00').getTime(),
-    );
-    const later = entries.filter(
-      (e) =>
-        e.date.getTime() >= new Date('2026-08-28T00:00:00+09:00').getTime(),
-    );
-
-    expect(
-      today.every((e) => e.props.todayCardTitle === '룸메이트와 첫인사'),
-    ).toBe(true);
-    expect(later.every((e) => !('todayCardTitle' in e.props))).toBe(true);
   });
 
   it('날이 바뀐 엔트리는 주간 창도 그 날짜로 민다 — 라벨과 열매가 항상 짝이 맞는다', () => {

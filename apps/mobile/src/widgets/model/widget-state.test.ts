@@ -1,5 +1,5 @@
 // 위젯 상태 결정 로직 검증 — 스펙의 우선순위 사다리(완료 → 끊김 → 시간표)와 모든 시각 경계를 고정한다
-import { decideWidgetState, freshCardTitle } from './widget-state';
+import { decideWidgetState } from './widget-state';
 
 // Asia/Seoul 시각을 만든다 — 위젯 판정은 전부 서울 기준
 const kst = (date: string, time: string) =>
@@ -23,24 +23,6 @@ const dataOf = (
 
 const decide = (now: Date, over: Parameters<typeof dataOf>[0] = {}) =>
   decideWidgetState({ data: dataOf(over), now });
-
-describe('freshCardTitle — 카드 제목은 기준일과 같은 날만 믿는다', () => {
-  it('기준일과 같은 날이면 제목을 그대로 쓴다', () => {
-    expect(freshCardTitle(dataOf(), kst('2026-08-25', '21:00'))).toBe(
-      '룸메이트와 첫인사',
-    );
-  });
-
-  it('날이 바뀌었으면 제목을 버린다 — 서버가 새 카드를 배정했는데 그 제목을 모른다', () => {
-    expect(freshCardTitle(dataOf(), kst('2026-08-26', '09:00'))).toBeNull();
-  });
-
-  it('기준일이 없으면(로그인 전) 제목도 없다', () => {
-    expect(
-      freshCardTitle(dataOf({ capturedOn: null }), kst('2026-08-25', '21:00')),
-    ).toBeNull();
-  });
-});
 
 describe('decideWidgetState — 시작 전', () => {
   it('완료 이력도 오늘 카드도 없으면 시작 안내를 보여준다 — 로그인 전이 이 경우다', () => {

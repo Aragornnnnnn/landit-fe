@@ -47,11 +47,6 @@ const daysBetween = (from: string, to: string) =>
       (24 * 60 * 60 * 1000),
   );
 
-// 카드 제목은 기준일(capturedOn)과 같은 날만 믿는다 — 날이 바뀌면 서버가 새 카드를 배정했는데
-// 그 제목을 모르므로 버린다. 다른 값들과 달리 제목만은 날짜 계산으로 되살릴 수 없다
-export const freshCardTitle = (data: WidgetData, now: Date): string | null =>
-  data.capturedOn === seoulClock(now).date ? data.todayCardTitle : null;
-
 export const decideWidgetState = ({
   data,
   now,

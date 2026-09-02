@@ -2,7 +2,6 @@
 import type { WidgetData } from '@landit/bridge';
 
 import { buildWeekStrip } from '../model/week-strip';
-import { freshCardTitle } from '../model/widget-state';
 import { buildWidgetTimeline } from './timeline';
 
 export interface TimelineEntry {
@@ -20,13 +19,12 @@ export const buildTimelineEntries = ({
   artDir: string | null;
 }): TimelineEntry[] =>
   buildWidgetTimeline({ data, now }).map(({ date, state }) => {
-    // 엔트리마다 그 시각 기준으로 다시 계산한다 — 날이 바뀐 엔트리는 제목이 빠지고 주간 창이 밀린다
+    // 엔트리마다 그 시각 기준으로 다시 계산한다 — 날이 바뀐 엔트리는 주간 창이 밀린다
     const week = buildWeekStrip({
       weeklyDone: data.weeklyDone,
       capturedOn: data.capturedOn,
       now: date,
     });
-    const title = freshCardTitle(data, date);
     return {
       date,
       // 네이티브 props 변환([String: Any])이 null을 거부한다 — 값이 없는 필드는 키 자체를 뺀다
@@ -37,7 +35,6 @@ export const buildTimelineEntries = ({
         weekDone: week.done,
         ...(state.milestone !== null && { milestone: state.milestone }),
         ...(artDir !== null && { artDir }),
-        ...(title !== null && { todayCardTitle: title }),
       },
     };
   });
