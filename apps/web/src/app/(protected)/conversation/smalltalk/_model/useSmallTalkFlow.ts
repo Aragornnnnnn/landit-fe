@@ -19,7 +19,6 @@ import {
 } from '@/features/small-talk/api/small-talk';
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
-// 대화 직후 위젯 재유도를 물을 차례를 남긴다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { reportError } from '@/shared/monitoring/report';

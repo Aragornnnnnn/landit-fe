@@ -9,7 +9,7 @@ export const MAILBOX_PATH = '/mailbox';
 // 작성 흐름은 히스토리 한 층만 쓴다 (진입·다음 단계·화살표 모두 replace, features/mailbox 참고)
 export const MAILBOX_COMPOSE_PATH = `${MAILBOX_PATH}/compose`;
 
-// 위젯 설치 안내 — 온보딩 끝에 설치 유도부터 보여준다
+// 위젯 설치 2차 재유도 — 대화를 마치고 홈으로 나가는 길에 들르는 안내 화면
 export const WIDGET_INSTALL_PATH = '/widget-install';
 
 // 온보딩을 막 끝내고 넘어왔다는 표식 — 홈이 램프를 열되 다시 묻지 않는다.

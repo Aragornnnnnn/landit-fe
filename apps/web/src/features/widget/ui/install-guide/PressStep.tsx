@@ -50,7 +50,7 @@ export const PressStep = ({ onNext }: { onNext: () => void }) => {
   // reduced motion이면 사이클 없이 편집 모드 정지 화면으로 시작한다
   const [phase, setPhase] = useState<Phase>(reduced ? 'editing' : 'idle');
 
-  // 다음 국면으로 한 번씩 넘어간다 — editing에 닿으면 다음이 없어 거기서 멈춘다
+  // 한 국면씩 넘어간다 — editing 다음은 idle이라 시연이 처음부터 되풀이된다
   useEffect(() => {
     if (reduced) return;
     const next = NEXT_PHASE[phase];
