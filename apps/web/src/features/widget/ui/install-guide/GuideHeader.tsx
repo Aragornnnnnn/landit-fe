@@ -1,15 +1,16 @@
 // 안내 3장 상단 — 뒤로가기 + 진행점. 온보딩 헤더와 같은 결로 "몇 번째 안내인지" 보여준다
 'use client';
 
+import { StepDots } from '@/features/onboarding/ui/common/StepDots';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
-export const GuideHeader = ({
-  index,
-  total,
+export const GuideHeader = <Step extends string>({
+  step,
+  stepOrder,
   onBack,
 }: {
-  index: number;
-  total: number;
+  step: Step;
+  stepOrder: readonly Step[];
   onBack: () => void;
 }) => (
   <header
@@ -25,17 +26,6 @@ export const GuideHeader = ({
       <ChevronLeftIcon size={28} strokeWidth={2.8} />
     </button>
 
-    <div className="flex items-center gap-1.5">
-      {Array.from({ length: total }, (_, i) => (
-        <span
-          key={i}
-          className={`h-1.5 rounded-full transition-all duration-300 ${i <= index ? 'bg-foreground' : 'bg-border'}`}
-          style={{
-            width: i === index ? 18 : 6,
-            opacity: i === index ? 0.95 : 0.6,
-          }}
-        />
-      ))}
-    </div>
+    <StepDots step={step} stepOrder={stepOrder} />
   </header>
 );

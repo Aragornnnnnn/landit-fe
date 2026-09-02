@@ -73,11 +73,7 @@ export const InstallGuide = ({
     <>
       {/* 헤더는 전환 밖에 고정 — 내용만 슬라이드하고 뒤로가기·진행점은 제자리를 지킨다 */}
       {guideIndex >= 0 && (
-        <GuideHeader
-          index={guideIndex}
-          total={GUIDE_STEPS.length}
-          onBack={back}
-        />
+        <GuideHeader step={step} stepOrder={GUIDE_STEPS} onBack={back} />
       )}
       <Transition
         transitionKey={step}
