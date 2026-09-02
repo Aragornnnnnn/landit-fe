@@ -55,9 +55,9 @@ export const decideWidgetState = ({
   now: Date;
 }): WidgetState => {
   const clock = seoulClock(now);
-  // 완료 이력도 오늘 카드도 없다 = 아직 시작 전이다. 로그인 전에는 웹이 빈 값을 보내 여기 걸린다.
-  // 이 사람에게 시간표로 재촉해봐야 누를 카드가 없다
-  if (data.lastCompletedDate === null && data.todayCardTitle === null) {
+  // 완료 이력도 없고 로그인 전(capturedOn=null)이면 아직 시작 전이다 — 웹이 빈 값을 보내 여기 걸린다.
+  // 로그인만 하면 서버가 오늘 날짜를 실어 주고 카드는 매일 배정되므로, 시작한 사람에겐 시간표를 보여준다
+  if (data.lastCompletedDate === null && data.capturedOn === null) {
     return { kind: 'welcome', displayStreak: 0, milestone: null };
   }
   // todayDone은 저장 당시의 오늘일 뿐이라 믿지 않는다 — 낡은 데이터도 날짜 차이로는 항상 옳다

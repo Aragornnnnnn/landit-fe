@@ -4,8 +4,7 @@
 import { useEffect } from 'react';
 import { EMPTY_WIDGET_DATA } from '@landit/bridge';
 
-// 위젯 데이터는 스트릭·시나리오 데이터를 합쳐야 만들어져서 가로 참조가 불가피하다
-import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
+// 위젯 데이터는 스트릭·달력 데이터를 합쳐야 만들어져서 가로 참조가 불가피하다
 import { shiftMonth } from '@/features/streak/lib/month-grid';
 import { useStreakCalendarQuery } from '@/features/streak/model/useStreakCalendarQuery';
 import { useStreakQuery } from '@/features/streak/model/useStreakQuery';
@@ -17,7 +16,6 @@ import { buildWidgetData } from '../model/build-widget-data';
 export const WidgetDataSync = () => {
   const isLoggedIn = useAuthStore((state) => state.member !== null);
   const { streak } = useStreakQuery();
-  const { daily } = useDailyScenarioQuery();
   // 이번 달 활동 날짜 전체 — 주간 창을 채우고, 오래 쉰 유저의 마지막 완료일을 넓게 찾는다.
   // 완료 직후 프리페치된 캐시를 재사용해 보통은 네트워크를 타지 않는다
   const { calendar: thisMonth } = useStreakCalendarQuery({
@@ -40,9 +38,7 @@ export const WidgetDataSync = () => {
   const serializePayload = () => {
     if (!isLoggedIn) return JSON.stringify(EMPTY_WIDGET_DATA);
     if (streak === null) return null;
-    return JSON.stringify(
-      buildWidgetData(streak, daily, [thisMonth, lastMonth]),
-    );
+    return JSON.stringify(buildWidgetData(streak, [thisMonth, lastMonth]));
   };
   const payload = serializePayload();
 

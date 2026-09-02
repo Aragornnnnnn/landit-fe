@@ -2,7 +2,6 @@
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { useStreakCalendarQuery } from '@/features/streak/model/useStreakCalendarQuery';
 import { useStreakQuery } from '@/features/streak/model/useStreakQuery';
 import { useAuthStore } from '@/shared/auth/auth-store';
@@ -17,9 +16,6 @@ const postToNativeMock = vi.mocked(postToNative);
 
 vi.mock('@/features/streak/model/useStreakQuery');
 const useStreakQueryMock = vi.mocked(useStreakQuery);
-
-vi.mock('@/features/scenario/model/useDailyScenarioQuery');
-const useDailyScenarioQueryMock = vi.mocked(useDailyScenarioQuery);
 
 vi.mock('@/features/streak/model/useStreakCalendarQuery');
 const useStreakCalendarQueryMock = vi.mocked(useStreakCalendarQuery);
@@ -57,12 +53,6 @@ const calendarOf = (activeDates: string[] = ['2026-08-24']) => ({
 });
 
 const arrange = () => {
-  useDailyScenarioQueryMock.mockReturnValue({
-    daily: null,
-    error: null,
-    isLoading: false,
-    retry: () => {},
-  });
   useStreakCalendarQueryMock.mockReturnValue({
     calendar: calendarOf(),
     isError: false,

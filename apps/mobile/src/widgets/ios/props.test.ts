@@ -5,7 +5,6 @@ const dataOf = (over = {}) => ({
   streak: 5,
   todayDone: false,
   lastCompletedDate: '2026-08-26',
-  todayCardTitle: '룸메이트와 첫인사',
   weeklyDone: [true, true, false, true, true, true, false],
   capturedOn: '2026-08-27',
   ...over,

@@ -4,8 +4,7 @@
 
 import type { WidgetData } from '@landit/bridge';
 
-// 위젯 데이터는 스트릭·시나리오 응답을 합쳐야 만들어져서 가로 참조가 불가피하다 (타입만 쓴다)
-import type { DailyScenarioResponse } from '@/features/scenario/api/daily';
+// 위젯 데이터는 스트릭·달력 응답을 합쳐야 만들어져서 가로 참조가 불가피하다 (타입만 쓴다)
 import type {
   CurrentStreakResponse,
   StreakCalendarResponse,
@@ -26,13 +25,11 @@ const addDays = (date: string, days: number) => {
  * 서버 응답 3종을 위젯이 쓸 WidgetData 하나로 조립한다.
  *
  * @param streak - `/me/streak` 응답. 스트릭 숫자·오늘 완료 여부·서버 기준 오늘의 단일 출처
- * @param daily - 오늘의 시나리오 응답. 카드 제목만 쓴다. 없으면 null
  * @param streakCalendars - 이번 달·지난달 스트릭 달력. 주간 창을 채우고 마지막 완료일을
  *   최소 한 달 범위에서 찾는다. 최근 7일은 항상 두 달 안에 들어간다. 조회 실패한 달은 null
  */
 export const buildWidgetData = (
   streak: CurrentStreakResponse,
-  daily: DailyScenarioResponse | null,
   streakCalendars: Array<StreakCalendarResponse | null> = [],
 ): WidgetData => {
   const today = streak.today;
@@ -61,16 +58,12 @@ export const buildWidgetData = (
     hasHistory,
   });
 
-  // 빈 제목은 null로 바꾼다 — 스키마가 빈 문자열을 거부해서, 그대로 두면 위젯 데이터 전체가 버려진다
-  const todayCardTitle = daily?.scenario?.scenarioTitle?.trim() || null;
-
   return {
     streak: streak.currentStreakDays,
     todayDone: streak.activeToday,
     lastCompletedDate,
-    todayCardTitle,
     weeklyDone,
-    // 이 값들의 기준 날짜 — 서버가 준 오늘. 위젯이 날짜에 묶인 표시(제목·주간 라벨)를 판정할 근거다
+    // 이 값들의 기준 날짜 — 서버가 준 오늘. 위젯이 시작 전 여부·주간 라벨을 판정할 근거다
     capturedOn: today,
   };
 };

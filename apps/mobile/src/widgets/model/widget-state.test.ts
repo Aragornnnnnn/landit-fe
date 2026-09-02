@@ -15,7 +15,6 @@ const dataOf = (
   streak: 5,
   todayDone: false,
   lastCompletedDate: '2026-08-24',
-  todayCardTitle: '룸메이트와 첫인사',
   weeklyDone: [true, true, false, true, true, true, false],
   capturedOn: '2026-08-25',
   ...over,
@@ -25,22 +24,22 @@ const decide = (now: Date, over: Parameters<typeof dataOf>[0] = {}) =>
   decideWidgetState({ data: dataOf(over), now });
 
 describe('decideWidgetState — 시작 전', () => {
-  it('완료 이력도 오늘 카드도 없으면 시작 안내를 보여준다 — 로그인 전이 이 경우다', () => {
+  it('완료 이력도 없고 로그인 전(capturedOn=null)이면 시작 안내를 보여준다', () => {
     const state = decide(kst('2026-08-25', '15:00'), {
       streak: 0,
       lastCompletedDate: null,
-      todayCardTitle: null,
+      capturedOn: null,
     });
 
     expect(state.kind).toBe('welcome');
     expect(state.displayStreak).toBe(0);
   });
 
-  it('오늘 카드가 있으면 아직 한 번도 완료 안 했어도 시간표를 탄다 — 로그인한 신규 사용자다', () => {
+  it('로그인했으면(capturedOn 있음) 아직 한 번도 완료 안 했어도 시간표를 탄다 — 신규 사용자다', () => {
     const state = decide(kst('2026-08-25', '15:00'), {
       streak: 0,
       lastCompletedDate: null,
-      todayCardTitle: '룸메이트와 첫인사',
+      capturedOn: '2026-08-25',
     });
 
     expect(state.kind).toBe('nudge');
