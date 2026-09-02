@@ -11,12 +11,25 @@ vi.mock('next/navigation', () => ({
 }));
 // 연출은 순수 DOM으로 치환한다 — 대역이 하는 일은 shared/motion/test-double 참고
 vi.mock('motion/react', () => import('@/shared/motion/test-double'));
-vi.mock('@/shared/auth/auth-store', () => ({
-  useAuthStore: (selector: (state: unknown) => unknown) =>
-    selector({ member: { userId: 7, email: 'a@b.c' } }),
-}));
+// 화면은 member만 읽고, api 클라이언트는 getState로 토큰을 읽는다
+vi.mock('@/shared/auth/auth-store', () => {
+  const state = {
+    member: { userId: 7, email: 'a@b.c' },
+    accessToken: 'token',
+    refreshToken: 'refresh',
+  };
+  return {
+    useAuthStore: Object.assign(
+      (selector: (value: unknown) => unknown) => selector(state),
+      { getState: () => state },
+    ),
+  };
+});
 
 const fetchMock = vi.fn();
+// 서버 라우트는 백엔드와 같은 봉투로 답한다
+const routeReply = (status: number, body: unknown) =>
+  new Response(JSON.stringify(body), { status });
 
 // 제목의 줄바꿈은 화면에선 그대로지만 매처는 공백 하나로 봐야 찾는다
 const titleOf = (question: Question) => question.title.replace('\n', ' ');
@@ -59,8 +72,6 @@ const answerUntilLast = async () => {
 
 beforeEach(() => {
   localStorage.clear();
-  vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co');
-  vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key');
   vi.stubGlobal('fetch', fetchMock);
 });
 
@@ -123,8 +134,10 @@ describe('SurveyFlow', () => {
     expect(next).toHaveProperty('disabled', false);
   });
 
-  it('마지막 주관식을 비운 채 제출하면 그 답 없이 저장하고 완료 화면을 보여준다', async () => {
-    fetchMock.mockResolvedValue(new Response(null, { status: 201 }));
+  it('마지막 주관식을 비운 채 제출하면 그 답 없이 서버 라우트로 보내고 완료 화면을 보여준다', async () => {
+    fetchMock.mockResolvedValue(
+      routeReply(200, { success: true, data: { result: 'saved' } }),
+    );
     render(<SurveyFlow />);
     await answerUntilLast();
 
@@ -133,16 +146,20 @@ describe('SurveyFlow', () => {
     );
 
     expect(await screen.findByText('소중한 의견 고마워요!')).toBeTruthy();
-    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-    expect(body.user_id).toBe(7);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('/api/survey');
+    expect(init.headers.get('Authorization')).toBe('Bearer token');
+    const body = JSON.parse(init.body);
     expect(body.email).toBe('a@b.c');
     expect(body.answers.satisfaction).toBe(3);
     expect(body.answers).not.toHaveProperty('wish');
     expect(localStorage.getItem('survey-done')).not.toBeNull();
   });
 
-  it('이미 참여한 유저면(409) 그대로 완료 화면을 보여준다', async () => {
-    fetchMock.mockResolvedValue(new Response(null, { status: 409 }));
+  it('이미 참여한 유저면(duplicate) 그대로 완료 화면을 보여준다', async () => {
+    fetchMock.mockResolvedValue(
+      routeReply(200, { success: true, data: { result: 'duplicate' } }),
+    );
     render(<SurveyFlow />);
     await answerUntilLast();
 
@@ -154,7 +171,9 @@ describe('SurveyFlow', () => {
   });
 
   it('저장에 실패하면 문항에 머문다', async () => {
-    fetchMock.mockResolvedValue(new Response(null, { status: 500 }));
+    fetchMock.mockResolvedValue(
+      routeReply(502, { success: false, error: { message: '실패' } }),
+    );
     render(<SurveyFlow />);
     await answerUntilLast();
 

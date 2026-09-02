@@ -66,10 +66,7 @@ export const SurveyFlow = () => {
     setSubmitting(true);
     try {
       // 이미 참여한 사람(duplicate)도 완료 화면으로 — 두 번 낼 수 없다는 걸 따로 설명할 이유가 없다
-      await submitSurvey(
-        { userId: member.userId, email: member.email },
-        toSubmission(QUESTIONS, answers),
-      );
+      await submitSurvey(member.email, toSubmission(QUESTIONS, answers));
       surveyDone.mark();
       goTo('done', 1);
     } catch {
