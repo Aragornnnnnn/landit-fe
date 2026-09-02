@@ -6,6 +6,7 @@ import { EVENTS, type ExpressionStep } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
 
+import { homeOrReinvitePath } from '@/features/widget/model/reinvite-home';
 import { track } from '@/shared/analytics';
 import { scenarioReturnPath, smallTalkHistoryPath } from '@/shared/lib/routes';
 
@@ -173,13 +174,13 @@ const LoadedExpressionFlow = ({
   }
 
   // 학습을 나가면 그 표현이 서 있던 목록으로 돌아간다 — 시나리오는 홈 카드를 뒤집어(뒷면=표현 리스트),
-  // 스몰톡은 그 대화의 기록으로 (대화 직후 결과 화면은 축하가 붙은 1회용이라 돌아갈 자리가 아니다). replace로 표현학습을 히스토리에서 지워, 뒤로가기로 퀴즈에 재진입하지 않게 한다
-  const backToList = () =>
-    router.replace(
-      origin.kind === 'scenario'
-        ? scenarioReturnPath({ flip: origin.scenarioId, date: origin.date })
-        : smallTalkHistoryPath(origin.sessionId),
-    );
+  // 스몰톡은 그 대화의 기록으로 (대화 직후 결과 화면은 축하가 붙은 1회용이라 돌아갈 자리가 아니다)
+  const listPath =
+    origin.kind === 'scenario'
+      ? scenarioReturnPath({ flip: origin.scenarioId, date: origin.date })
+      : smallTalkHistoryPath(origin.sessionId);
+  // 중도 이탈(그만두기·뒤로가기)은 곧장 목록으로. replace로 표현학습을 히스토리에서 지워 뒤로가기로 퀴즈에 재진입하지 않게 한다
+  const backToList = () => router.replace(listPath);
 
   const quiz = fromLearning(learning);
   // 발음 자산(원어민 TTS)이 있는 표현만 발음 스텝이 열린다 — null이면 기존 3스텝 플로우 그대로
@@ -222,7 +223,8 @@ const LoadedExpressionFlow = ({
           expression_id: expressionId,
           ...originProps,
         });
-        backToList();
+        // 학습을 끝까지 마치고 나가는 길에만 위젯 재유도를 한 번 끼운다
+        router.replace(homeOrReinvitePath(listPath));
       },
     });
 

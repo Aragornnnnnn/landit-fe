@@ -14,6 +14,7 @@ import {
 } from '@/features/expression/ui/ExpressionStages';
 import { toExpressionListItems } from '@/features/small-talk/model/session-expressions';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
+import { homeOrReinvitePath } from '@/features/widget/model/reinvite-home';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { sessionExpressionPath, SMALLTALK_PATH } from '@/shared/lib/routes';
@@ -66,15 +67,17 @@ export const SmallTalkResult = ({
     });
   }, [listed, sessionId, count]);
 
+  // 오류·표현 없음으로 나갈 땐 곧장 홈으로 (뭔가 잘못된 뒤라 위젯을 조르지 않는다)
   const goHome = () => router.replace(SMALLTALK_PATH);
 
-  // X가 유일한 이탈 경로다 — 학습 없이 나가는 신호를 여기서 남긴다
+  // X가 유일한 이탈 경로다 — 학습 없이 나가는 신호를 여기서 남긴다.
+  // 정상적으로 대화를 마치고 나가는 길이라, 위젯 재유도 자격이면 설치 안내를 한 번 거쳐 간다
   const close = () => {
     track(EVENTS.EXPRESSION_LEARNING_SKIPPED, {
       session_id: sessionId,
       expression_count: count,
     });
-    goHome();
+    router.replace(homeOrReinvitePath(SMALLTALK_PATH));
   };
   const goLearn = (expressionId: number) => {
     track(EVENTS.EXPRESSION_SELECTED, {

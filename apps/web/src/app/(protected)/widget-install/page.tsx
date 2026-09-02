@@ -1,17 +1,18 @@
-// 위젯 설치 안내 라우트 — 게이트·소비 기록·네비게이션을 맡고 안내 흐름은 InstallGuide에 위임한다
+// 위젯 설치 2차 재유도 라우트 — 대화를 마치고 홈으로 나가는 길에 한 번 들른다.
+// 게이트·소비 기록·네비게이션을 맡고 안내 흐름은 InstallGuide에 위임한다 (자격 판정은 오는 쪽 homeOrReinvitePath가 한다)
 'use client';
 
 import { Suspense, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import {
-  recordInstallInvited,
+  recordReinvited,
   supportsWidgetInstall,
 } from '@/features/widget/model/install-prompt';
 import { InstallGuide } from '@/features/widget/ui/install-guide/InstallGuide';
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { postToNative } from '@/shared/bridge/web-bridge';
-import { ONBOARDED_PARAM, SCENARIO_PATH } from '@/shared/lib/routes';
+import { SCENARIO_PATH } from '@/shared/lib/routes';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
 export default function WidgetInstallPage() {
@@ -28,12 +29,9 @@ const InstallFlow = () => {
   const router = useRouter();
   const params = useSearchParams();
 
-  // 온보딩에서 왔으면 표식을 이어 달아, 끝난 뒤 홈이 첫 대화 유도를 계속한다
-  const destination =
-    params.get(ONBOARDED_PARAM) === '1'
-      ? `${SCENARIO_PATH}?${ONBOARDED_PARAM}=1`
-      : SCENARIO_PATH;
-  // 온보딩은 replace 체인이라 안내를 닫으면 목적지(홈)로 간다
+  // 안내를 닫으면 대화 플로우가 넘겨준 자리로 돌아간다 (없으면 기본 홈)
+  const next = params.get('next');
+  const destination = next?.startsWith('/') ? next : SCENARIO_PATH;
   const finish = () => router.replace(destination);
   // effect가 최신 finish를 읽게 한다 — 리스너는 한 번만 걸고 참조만 갈아끼운다
   const finishRef = useRef(finish);
@@ -48,8 +46,8 @@ const InstallFlow = () => {
       router.replace(destination);
       return;
     }
-    // 설치 유도는 한 번만 보여준다 — 노출 자체를 소비로 기록한다 (계측은 InstallGuide가 한다)
-    recordInstallInvited();
+    // 2차 재유도를 띄웠다고 기록한다 — 이 화면에 온 것 자체가 노출이라 한 번으로 끝낸다 (계측은 InstallGuide가 한다)
+    recordReinvited();
     // 마운트 때 한 번 — 지원 여부·목적지는 세션 동안 안 바뀐다
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

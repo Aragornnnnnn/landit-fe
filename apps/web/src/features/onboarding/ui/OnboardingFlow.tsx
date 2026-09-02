@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { requestNotificationPermission } from '@/features/notification/model/request-permission';
 import { useNotificationPermission } from '@/features/notification/model/useNotificationPermission';
 import {
+  recordInstallAccepted,
   recordInstallInvited,
   shouldInviteInstall,
   supportsWidgetInstall,
@@ -135,10 +136,12 @@ export const OnboardingFlow = () => {
           <InstallGuide
             onDecline={() => finishStep('widget', 'level')}
             onAndroidPin={() => {
+              recordInstallAccepted();
               postToNative({ type: 'REQUEST_WIDGET_PIN' });
               finishStep('widget', 'level');
             }}
             onLeaveHome={() => {
+              recordInstallAccepted();
               finishStep('widget', 'level');
               postToNative({ type: 'GO_HOME' });
             }}
