@@ -8,25 +8,24 @@ import { SurveyLetterCta } from './SurveyLetterCta';
 
 export const ReceivedBody = ({ letter }: { letter: ReceivedLetterDetail }) => {
   const blocks = readLetterBlocks(letter.contentBlocks);
-  if (blocks.length > 0) {
-    return (
-      <>
-        <LetterBlocks blocks={blocks} />
-        {/* 설문 안내 편지(임시) — 본문을 다 읽은 자리에서 설문으로 보낸다 */}
-        {isSurveyLetter(letter.letterId) && <SurveyLetterCta />}
-      </>
-    );
-  }
 
   return (
-    <div className="flex flex-col gap-6">
-      <p className="text-[15px] leading-relaxed whitespace-pre-line text-foreground">
-        {letter.bodyText}
-      </p>
-      {/* 답장에 딸린 내 원문 — 무엇에 대한 답장인지 다시 찾아보지 않게 한다 */}
-      {letter.quotedFeedbackContent && (
-        <QuotedLetter text={letter.quotedFeedbackContent} />
+    <>
+      {blocks.length > 0 ? (
+        <LetterBlocks blocks={blocks} />
+      ) : (
+        <div className="flex flex-col gap-6">
+          <p className="text-[15px] leading-relaxed whitespace-pre-line text-foreground">
+            {letter.bodyText}
+          </p>
+          {/* 답장에 딸린 내 원문 — 무엇에 대한 답장인지 다시 찾아보지 않게 한다 */}
+          {letter.quotedFeedbackContent && (
+            <QuotedLetter text={letter.quotedFeedbackContent} />
+          )}
+        </div>
       )}
-    </div>
+      {/* 설문 안내 편지(임시) — 본문을 다 읽은 자리에서 설문으로 보낸다. 블록 본문이든 글 본문이든 같은 자리 */}
+      {isSurveyLetter(letter.letterId) && <SurveyLetterCta />}
+    </>
   );
 };

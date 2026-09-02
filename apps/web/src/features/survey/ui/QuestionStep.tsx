@@ -185,6 +185,7 @@ export const QuestionStep = ({
               onChange={(event) => onAnswer(event.target.value)}
               maxLength={TEXT_MAX_LENGTH}
               placeholder={question.placeholder}
+              aria-label={question.title}
               autoFocus
               className="h-[180px] w-full shrink-0 resize-none rounded-2xl border border-border bg-card p-4 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             />

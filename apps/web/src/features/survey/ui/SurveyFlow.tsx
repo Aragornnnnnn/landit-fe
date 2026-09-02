@@ -1,7 +1,7 @@
 'use client';
 
 // 설문 플로우 — 안내 → 문항 하나씩 → 완료. 온보딩처럼 한 화면에 한 문항, 옆으로 넘긴다
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
@@ -40,6 +40,11 @@ export const SurveyFlow = () => {
   const [direction, setDirection] = useState(1);
   const [answers, setAnswers] = useState<Answers>({});
   const [submitting, setSubmitting] = useState(false);
+  // 지연 콜백(단일 선택의 자동 진행)이 최신 스텝을 읽기 위한 ref — 렌더 시점 값을 잡은 클로저는 뒤로가기를 못 본다
+  const stepRef = useRef(step);
+  useEffect(() => {
+    stepRef.current = step;
+  }, [step]);
   // 조건 문항이 끼고 빠지므로 스텝 번호는 이 목록 기준이다
   const questions = visibleQuestions(QUESTIONS, answers);
 
@@ -76,9 +81,10 @@ export const SurveyFlow = () => {
     }
   };
 
-  // 단일 선택은 살짝 늦게 넘어가므로, 그 사이 다른 스텝으로 옮겼으면 무시한다
+  // 단일 선택은 살짝 늦게 넘어가므로, 그 사이 뒤로 갔으면 무시한다.
+  // 나가는 화면은 전환이 끝날 때까지 남아 있어 타이머가 그 뒤에도 울린다 — 그래서 state가 아니라 ref를 본다
   const advanceFrom = (index: number) => {
-    if (step !== index) return;
+    if (stepRef.current !== index) return;
     if (index === questions.length - 1) void submit();
     else goTo(index + 1, 1);
   };
