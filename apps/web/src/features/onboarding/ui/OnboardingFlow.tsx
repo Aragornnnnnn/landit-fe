@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import { requestNotificationPermission } from '@/features/notification/model/request-permission';
 import { useNotificationPermission } from '@/features/notification/model/useNotificationPermission';
+// 위젯 설치 유도의 노출 조건·기록은 widget feature가 정본이라 온보딩 위젯 스텝이 가로 import한다
 import {
   recordInstallAccepted,
   recordInstallInvited,
