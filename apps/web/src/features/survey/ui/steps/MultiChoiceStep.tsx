@@ -3,7 +3,7 @@
 // 복수 선택 — 여러 개 고르고 다음 버튼으로 넘어간다. 하나도 안 골랐으면 못 넘어간다
 import { Button } from '@/shared/ui/Button';
 
-import { toggleChoice, type Answer } from '../../model/answers';
+import { toggleChoice } from '../../model/answers';
 import {
   choiceOptions,
   optionLabel,
@@ -11,18 +11,11 @@ import {
   type MultiQuestion,
 } from '../../model/questions';
 import { ChoiceCard } from '../ChoiceCard';
+import type { ChoiceStepProps } from './ChoiceStepProps';
 import { OtherInput } from './OtherInput';
 
-interface MultiChoiceStepProps {
+interface MultiChoiceStepProps extends ChoiceStepProps {
   question: MultiQuestion;
-  titleId: string;
-  answer: Answer | undefined;
-  otherText: string;
-  proceedLabel: string;
-  submitting: boolean;
-  onAnswer: (answer: Answer) => void;
-  onOtherText: (text: string) => void;
-  onNext: () => void;
 }
 
 export const MultiChoiceStep = ({

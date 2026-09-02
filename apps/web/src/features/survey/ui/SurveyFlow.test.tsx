@@ -16,7 +16,6 @@ vi.mock('@/shared/auth/auth-store', () => {
   const state = {
     member: { userId: 7, email: 'a@b.c' },
     accessToken: 'token',
-    refreshToken: 'refresh',
   };
   return {
     useAuthStore: Object.assign(
@@ -77,7 +76,6 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
-  vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
 
@@ -102,6 +100,21 @@ describe('SurveyFlow', () => {
     expect(screen.getByText(titleOf(QUESTIONS[0]))).toBeTruthy();
     expect(screen.getByRole('textbox', { name: '기타 내용' })).toBeTruthy();
     expect(screen.getByRole('button', { name: '다음' })).toBeTruthy();
+  });
+
+  it('다른 선택지를 누른 직후 기타를 누르면 넘어가지 않고 기타 입력에 머문다', async () => {
+    render(<SurveyFlow />);
+    await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+
+    await userEvent.click(
+      screen.getByRole('radio', { name: optionOf(QUESTIONS[0]) }),
+    );
+    await userEvent.click(screen.getByRole('radio', { name: OTHER_LABEL }));
+    // 자동 진행 지연(160ms)이 지나도 첫 문항에 머문다
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
+    expect(screen.getByText(titleOf(QUESTIONS[0]))).toBeTruthy();
+    expect(screen.getByRole('textbox', { name: '기타 내용' })).toBeTruthy();
   });
 
   it('유학 준비를 고르면 준비 방법 문항이 끼어든다', async () => {
@@ -153,7 +166,7 @@ describe('SurveyFlow', () => {
     expect(body.email).toBe('a@b.c');
     expect(body.answers.satisfaction).toBe(3);
     expect(body.answers).not.toHaveProperty('wish');
-    expect(localStorage.getItem('survey-done')).not.toBeNull();
+    expect(localStorage.getItem('landit-survey-done')).not.toBeNull();
   });
 
   it('이미 참여한 유저면(duplicate) 그대로 완료 화면을 보여준다', async () => {
@@ -188,7 +201,7 @@ describe('SurveyFlow', () => {
   });
 
   it('이 기기에서 이미 마쳤으면 문항 없이 완료 화면을 보여준다', () => {
-    localStorage.setItem('survey-done', '1');
+    localStorage.setItem('landit-survey-done', '1');
 
     render(<SurveyFlow />);
 

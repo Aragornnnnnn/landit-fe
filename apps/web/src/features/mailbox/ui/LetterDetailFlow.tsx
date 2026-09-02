@@ -5,8 +5,7 @@
 import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
-// LAN-428 설문(임시) — features 간 가로 import. 설문이 끝나면 이 두 import와 아래 CTA 한 줄을 지운다
-import { isSurveyLetter } from '@/features/survey/model/survey-letter';
+// LAN-428 설문(임시) — features 간 가로 import. 설문이 끝나면 이 import와 아래 CTA 한 줄을 지운다
 import { SurveyLetterCta } from '@/features/survey/ui/SurveyLetterCta';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { BackHeader } from '@/shared/ui/BackHeader';
@@ -39,7 +38,7 @@ export const ReceivedLetterFlow = ({ letterId }: { letterId: number }) => {
       onRetry={retry}
     >
       {letter && <ReceivedBody letter={letter} />}
-      {letter && isSurveyLetter(letter.letterId) && <SurveyLetterCta />}
+      {letter && <SurveyLetterCta letterId={letter.letterId} />}
     </LetterShell>
   );
 };

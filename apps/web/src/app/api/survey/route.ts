@@ -43,7 +43,8 @@ export async function POST(request: Request) {
 
   const authorization = request.headers.get('authorization');
   if (!authorization) return fail(401, '로그인이 필요해요');
-  const userId = readUserId(authorization.replace(/^Bearer\s+/i, ''));
+  // 백엔드 필터와 같은 모양("Bearer ")만 — 다르게 쓰면 백엔드가 토큰으로 안 본다
+  const userId = readUserId(authorization.replace(/^Bearer /, ''));
   if (userId === null) return fail(401, '로그인이 필요해요');
 
   // 백엔드에 묻기 전에 본문부터 — 모양이 틀린 요청에 바깥 왕복을 쓰지 않는다
@@ -56,6 +57,8 @@ export async function POST(request: Request) {
   const verified = await fetchUpstream(`${apiBaseUrl}${VERIFY_PATH}`, {
     headers: { Authorization: authorization },
   });
+  // 본문은 안 본다 — 읽지 않은 스트림이 연결을 붙잡지 않게 버린다
+  void verified?.body?.cancel();
   if (verified?.status === 401) return fail(401, '로그인이 필요해요');
   if (!verified?.ok) {
     reportError(new Error('[survey] 로그인 확인 실패'), {

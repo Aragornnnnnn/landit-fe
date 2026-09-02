@@ -3,9 +3,9 @@
 // 1~5점 척도 — 점수를 누르면 바로 다음. 양 끝에 뜻을 달아 1과 5가 무엇인지 보여준다
 import { useAdvanceAfterPress } from '../../lib/useAdvanceAfterPress';
 import type { Answer } from '../../model/answers';
-import { SCALE_MAX, type ScaleQuestion } from '../../model/questions';
+import type { ScaleQuestion } from '../../model/questions';
 
-const SCORES = Array.from({ length: SCALE_MAX }, (_, index) => index + 1);
+const SCORES = [1, 2, 3, 4, 5];
 
 export const ScaleStep = ({
   question,
@@ -20,7 +20,7 @@ export const ScaleStep = ({
   onAnswer: (answer: Answer) => void;
   onNext: () => void;
 }) => {
-  const pressAndAdvance = useAdvanceAfterPress(onNext);
+  const { pressAndAdvance } = useAdvanceAfterPress(onNext);
 
   return (
     <div className="mt-10">

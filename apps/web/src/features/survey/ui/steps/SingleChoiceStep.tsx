@@ -4,7 +4,6 @@
 import { Button } from '@/shared/ui/Button';
 
 import { useAdvanceAfterPress } from '../../lib/useAdvanceAfterPress';
-import type { Answer } from '../../model/answers';
 import {
   choiceOptions,
   optionLabel,
@@ -12,18 +11,11 @@ import {
   type SingleQuestion,
 } from '../../model/questions';
 import { ChoiceCard } from '../ChoiceCard';
+import type { ChoiceStepProps } from './ChoiceStepProps';
 import { OtherInput } from './OtherInput';
 
-interface SingleChoiceStepProps {
+interface SingleChoiceStepProps extends ChoiceStepProps {
   question: SingleQuestion;
-  titleId: string;
-  answer: Answer | undefined;
-  otherText: string;
-  proceedLabel: string;
-  submitting: boolean;
-  onAnswer: (answer: Answer) => void;
-  onOtherText: (text: string) => void;
-  onNext: () => void;
 }
 
 export const SingleChoiceStep = ({
@@ -37,7 +29,7 @@ export const SingleChoiceStep = ({
   onOtherText,
   onNext,
 }: SingleChoiceStepProps) => {
-  const pressAndAdvance = useAdvanceAfterPress(onNext);
+  const { pressAndAdvance, cancelAdvance } = useAdvanceAfterPress(onNext);
   const options = choiceOptions(question);
   const isOtherChosen = answer === OTHER_OPTION;
 
@@ -54,11 +46,15 @@ export const SingleChoiceStep = ({
             role="radio"
             label={optionLabel(option)}
             checked={answer === option}
-            onSelect={() =>
-              option === OTHER_OPTION
-                ? onAnswer(option)
-                : pressAndAdvance(() => onAnswer(option))
-            }
+            onSelect={() => {
+              if (option === OTHER_OPTION) {
+                // 다른 카드를 누른 직후 기타로 고쳐 눌렀으면 걸려 있던 진행을 물리고 여기 머문다
+                cancelAdvance();
+                onAnswer(option);
+                return;
+              }
+              pressAndAdvance(() => onAnswer(option));
+            }}
           />
         ))}
         {isOtherChosen && (

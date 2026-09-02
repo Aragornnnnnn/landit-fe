@@ -1,3 +1,4 @@
+// 답변 규칙 — 복수 선택 토글, 조건 문항 노출, 제출 페이로드(기타·주관식 다듬기)
 import { describe, expect, it } from 'vitest';
 
 import { toggleChoice, toSubmission, visibleQuestions } from './answers';

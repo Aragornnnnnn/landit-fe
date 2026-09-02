@@ -5,6 +5,10 @@
 // 하단 고정 입력창이 키보드에 가린다. 이 값을 padding-bottom으로 주어 입력창을 키보드 위로 올린다.
 import { useEffect, useState } from 'react';
 
+// iOS 웹뷰는 키보드가 뜨는 순간 innerHeight까지 잠깐 줄였다가 알리지 않고 되돌린다.
+// 그 순간의 값으로 재면 0이 나오므로, 뷰포트 이벤트 뒤 조금 있다가 두 번 더 잰다
+const RECHECK_DELAYS_MS = [80, 250];
+
 export const useKeyboardInset = (): number => {
   const [inset, setInset] = useState(0);
 
@@ -12,32 +16,29 @@ export const useKeyboardInset = (): number => {
     const vv = window.visualViewport;
     if (!vv) return;
 
-    // 키보드 없는 상태의 레이아웃 높이. iOS 웹뷰는 키보드가 뜨는 순간 innerHeight까지 잠깐 줄였다가
-    // 알리지 않고 되돌리므로, 그 찰나의 값 대신 같은 방향에서 본 가장 큰 높이를 기준으로 잰다.
-    // 화면이 돌아가면(너비가 바뀌면) 옛 높이가 기준이 될 수 없으니 새로 잰다
-    let layoutWidth = window.innerWidth;
-    let layoutHeight = window.innerHeight;
-
     const update = () => {
-      if (window.innerWidth !== layoutWidth) {
-        layoutWidth = window.innerWidth;
-        layoutHeight = window.innerHeight;
-      }
-      layoutHeight = Math.max(layoutHeight, window.innerHeight);
       // 레이아웃 뷰포트 대비 가려진 하단 높이 = 키보드 높이(스크롤 오프셋 보정)
-      const covered = layoutHeight - vv.height - vv.offsetTop;
+      const covered = window.innerHeight - vv.height - vv.offsetTop;
       setInset(Math.max(0, Math.round(covered)));
     };
 
+    let rechecks: number[] = [];
+    const updateAndRecheck = () => {
+      update();
+      rechecks.forEach((id) => window.clearTimeout(id));
+      rechecks = RECHECK_DELAYS_MS.map((ms) => window.setTimeout(update, ms));
+    };
+
     update();
-    vv.addEventListener('resize', update);
-    vv.addEventListener('scroll', update);
+    vv.addEventListener('resize', updateAndRecheck);
+    vv.addEventListener('scroll', updateAndRecheck);
     // 키보드가 문서를 밀었다 되돌아올 때 vv 이벤트 없이 window 스크롤만 오는 경우가 있다
     window.addEventListener('scroll', update);
     window.addEventListener('resize', update);
     return () => {
-      vv.removeEventListener('resize', update);
-      vv.removeEventListener('scroll', update);
+      rechecks.forEach((id) => window.clearTimeout(id));
+      vv.removeEventListener('resize', updateAndRecheck);
+      vv.removeEventListener('scroll', updateAndRecheck);
       window.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
     };

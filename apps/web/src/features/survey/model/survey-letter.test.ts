@@ -1,3 +1,4 @@
+// 설문 안내 편지 판별 — env에 적힌 편지 id와 같을 때만
 import { describe, expect, it } from 'vitest';
 
 import { isSurveyLetter } from './survey-letter';

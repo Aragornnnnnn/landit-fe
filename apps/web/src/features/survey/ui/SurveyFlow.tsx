@@ -30,7 +30,8 @@ type Step = 'intro' | 'done' | number;
 
 export const SurveyFlow = () => {
   const router = useRouter();
-  const member = useAuthStore((state) => state.member);
+  // 이메일은 쿠폰 줄 때 참고값일 뿐이라 없어도 낸다 — 누구인지는 서버가 토큰으로 정한다
+  const email = useAuthStore((state) => state.member?.email ?? null);
   const keyboardInset = useKeyboardSafeLayout();
 
   // 이미 마친 기기면 문항을 다시 묻지 않는다
@@ -67,11 +68,11 @@ export const SurveyFlow = () => {
     setAnswers((prev) => ({ ...prev, [id]: value }));
 
   const submit = async () => {
-    if (!member || submitting) return;
+    if (submitting) return;
     setSubmitting(true);
     try {
       // 이미 참여한 사람(duplicate)도 완료 화면으로 — 두 번 낼 수 없다는 걸 따로 설명할 이유가 없다
-      await submitSurvey(member.email, toSubmission(QUESTIONS, answers));
+      await submitSurvey(email, toSubmission(QUESTIONS, answers));
       surveyDone.mark();
       goTo('done', 1);
     } catch {
@@ -89,7 +90,8 @@ export const SurveyFlow = () => {
     else goTo(index + 1, 1);
   };
 
-  const transitionKey = typeof step === 'number' ? `question-${step}` : step;
+  // 'intro' · '0'~'11' · 'done' — 서로 겹치지 않으니 그대로 전환 키로 쓴다
+  const transitionKey = String(step);
 
   return (
     // 키보드가 가린 만큼 줄인다 — 주관식 입력창과 제출 버튼이 키보드 뒤로 숨지 않게
