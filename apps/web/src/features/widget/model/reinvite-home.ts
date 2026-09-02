@@ -3,12 +3,9 @@
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { WIDGET_INSTALL_PATH } from '@/shared/lib/routes';
 
-import {
-  shouldReinviteOnStreak,
-  supportsWidgetInstall,
-} from './install-prompt';
+import { shouldReinviteInstall, supportsWidgetInstall } from './install-prompt';
 
 export const homeOrReinvitePath = (home: string): string =>
-  supportsWidgetInstall(getNativeContext()) && shouldReinviteOnStreak()
+  supportsWidgetInstall(getNativeContext()) && shouldReinviteInstall()
     ? `${WIDGET_INSTALL_PATH}?next=${encodeURIComponent(home)}`
     : home;
