@@ -4,6 +4,7 @@
 // 응답 봉투는 백엔드와 같은 { success, data, error } — 클라이언트의 api 클라이언트가 그대로 읽는다
 import { NextResponse } from 'next/server';
 
+import { isAnswers } from '@/features/survey/model/answer-shape';
 import { reportError } from '@/shared/monitoring/report';
 
 import { readUserId } from './_model/access-token';
@@ -20,33 +21,6 @@ const fail = (status: number, message: string) =>
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
-
-// 답변 모양 — 단일·주관식·기타는 문자열, 척도는 숫자, 복수는 문자열 배열 (features/survey의 Answer와 같다).
-// 한 번 넣으면 기본키 때문에 다시 못 넣으니, 이상한 모양은 저장 전에 돌려보낸다
-const MAX_ANSWERS = 40;
-const MAX_TEXT_LENGTH = 1000;
-const isText = (value: unknown) =>
-  typeof value === 'string' && value.length <= MAX_TEXT_LENGTH;
-const isAnswer = (value: unknown) =>
-  isText(value) ||
-  (typeof value === 'number' && Number.isFinite(value)) ||
-  (Array.isArray(value) && value.every(isText));
-const isAnswers = (value: unknown): value is Record<string, unknown> =>
-  isRecord(value) &&
-  Object.keys(value).length <= MAX_ANSWERS &&
-  Object.values(value).every(isAnswer);
-
-// 끊김·지연으로 fetch 자체가 실패하면 응답 대신 null — 호출부가 상태 코드 분기와 같은 자리에서 처리한다
-const fetchUpstream = async (input: string, init: RequestInit) => {
-  try {
-    return await fetch(input, {
-      ...init,
-      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-    });
-  } catch {
-    return null;
-  }
-};
 
 export async function POST(request: Request) {
   const supabaseUrl = process.env.SUPABASE_URL;
