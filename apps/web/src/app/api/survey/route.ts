@@ -21,6 +21,21 @@ const fail = (status: number, message: string) =>
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
+// 답변 모양 — 단일·주관식·기타는 문자열, 척도는 숫자, 복수는 문자열 배열 (features/survey의 Answer와 같다).
+// 한 번 넣으면 기본키 때문에 다시 못 넣으니, 이상한 모양은 저장 전에 돌려보낸다
+const MAX_ANSWERS = 40;
+const MAX_TEXT_LENGTH = 1000;
+const isText = (value: unknown) =>
+  typeof value === 'string' && value.length <= MAX_TEXT_LENGTH;
+const isAnswer = (value: unknown) =>
+  isText(value) ||
+  (typeof value === 'number' && Number.isFinite(value)) ||
+  (Array.isArray(value) && value.every(isText));
+const isAnswers = (value: unknown): value is Record<string, unknown> =>
+  isRecord(value) &&
+  Object.keys(value).length <= MAX_ANSWERS &&
+  Object.values(value).every(isAnswer);
+
 // 끊김·지연으로 fetch 자체가 실패하면 응답 대신 null — 호출부가 상태 코드 분기와 같은 자리에서 처리한다
 const fetchUpstream = async (input: string, init: RequestInit) => {
   try {
@@ -49,8 +64,8 @@ export async function POST(request: Request) {
 
   // 백엔드에 묻기 전에 본문부터 — 모양이 틀린 요청에 바깥 왕복을 쓰지 않는다
   const body: unknown = await request.json().catch(() => null);
-  if (!isRecord(body) || !isRecord(body.answers)) {
-    return fail(400, 'answers가 필요해요');
+  if (!isRecord(body) || !isAnswers(body.answers)) {
+    return fail(400, 'answers 모양이 맞지 않아요');
   }
 
   // 클라이언트가 토큰을 위조해 남의 id로 넣지 못하게 — 서명 키가 없으니 백엔드가 받아주는지로 판단한다

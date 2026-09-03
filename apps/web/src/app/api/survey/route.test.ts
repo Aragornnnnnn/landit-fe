@@ -123,6 +123,20 @@ describe('POST /api/survey', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it.each([
+    ['중첩 객체', { q: { nested: true } }],
+    ['숫자 아닌 배열', { q: [1, 2] }],
+    ['너무 긴 글', { q: 'a'.repeat(1001) }],
+  ])(
+    '답변 값이 약속한 모양이 아니면(%s) 400을 돌려주고 저장하지 않는다',
+    async (_, answers) => {
+      const res = await POST(surveyRequest({ answers }, `Bearer ${token}`));
+
+      expect(res.status).toBe(400);
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
   it('슈퍼베이스에 닿지 못하면(fetch 실패) 502를 돌려준다', async () => {
     fetchMock
       .mockResolvedValueOnce(new Response(null, { status: 200 }))
