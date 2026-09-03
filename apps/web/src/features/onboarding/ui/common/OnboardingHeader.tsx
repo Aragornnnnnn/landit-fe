@@ -2,9 +2,9 @@
 'use client';
 
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
+import { StepDots } from '@/shared/ui/StepDots';
 
 import { type OnboardingStep } from '../../model/steps';
-import { StepDots } from './StepDots';
 
 export const OnboardingHeader = ({
   step,

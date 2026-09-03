@@ -130,6 +130,13 @@ export const EVENTS = {
 
   // 앱 업데이트 유도 UI에서 스토어 앱을 직접 연다
   APP_UPDATE_STORE_OPENED: 'App Update Store Opened',
+
+  // 위젯 설치 안내 — 온보딩 끝 유도 화면과 iOS 안내 3장.
+  // 변형(어느 답·어느 스텝·어느 플랫폼)은 이벤트명이 아니라 속성으로 가른다 (정책 2-1)
+  WIDGET_INSTALL_INVITE_VIEWED: 'Widget Install Invite Viewed',
+  WIDGET_INSTALL_INVITE_ANSWERED: 'Widget Install Invite Answered',
+  WIDGET_INSTALL_GUIDE_STEP_VIEWED: 'Widget Install Guide Step Viewed',
+  WIDGET_PIN_REQUESTED: 'Widget Pin Requested',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -143,6 +150,7 @@ export type OnboardingStep =
   | 'mic'
   | 'thought'
   | 'notification'
+  | 'widget'
   | 'level'
   | 'accent'
   | 'scenario';
@@ -188,6 +196,12 @@ export type SatisfactionMoment = SatisfactionTalk | 'review';
 export type SatisfactionAnswer = 'good' | 'bad' | 'dismiss';
 export type CalendarView = 'week' | 'month';
 export type HomeTab = 'scenario' | 'smalltalk';
+// 위젯 설치 유도에서 고른 답 — 닫기·나중에는 dismiss로 묶는다
+export type WidgetInstallAnswer = 'install' | 'dismiss';
+// iOS 위젯 갤러리 여는 길을 알려주는 안내 3장
+export type WidgetGuideStep = 'press' | 'menu' | 'search';
+// 위젯 추가 요청이 어느 플랫폼에서 났나 — Android는 핀 다이얼로그, iOS는 안내로 갈린다
+export type WidgetInstallPlatform = 'ios' | 'android';
 
 // 표현이 어디서 왔는가 — 시나리오 콘텐츠에 붙어 있던 표현인지, 그 스몰톡에서 만들어진 표현인지.
 // 표현 학습 화면은 둘이 같이 쓰므로 이벤트도 하나로 두고 출처만 갈아 끼운다 (둘 중 하나만 실린다)
@@ -470,6 +484,13 @@ export type EventProps = {
 
   // /download를 거치지 않고 스토어 앱을 바로 연 경우만 (앱 업데이트 유도 UI)
   'App Update Store Opened': { store: 'play_store' | 'app_store' };
+
+  // 위젯 설치 안내 — 노출·답·플랫폼을 속성으로 가른다
+  'Widget Install Invite Viewed': undefined;
+  'Widget Install Invite Answered': { answer: WidgetInstallAnswer };
+  'Widget Install Guide Step Viewed': { step: WidgetGuideStep };
+  // 위젯 추가를 실제로 청한 순간 — Android는 시스템 핀 다이얼로그, iOS는 안내 화면으로 갈린다
+  'Widget Pin Requested': { platform: WidgetInstallPlatform };
 };
 
 // 컴파일 타임 검증 ① EventProps가 모든 이벤트를 빠짐없이 커버한다

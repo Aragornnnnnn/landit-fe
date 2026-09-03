@@ -7,10 +7,8 @@ import {
   font,
   foregroundStyle,
   frame,
-  lineLimit,
   padding,
   resizable,
-  truncationMode,
   widgetURL,
 } from '@expo/ui/swift-ui/modifiers';
 import { createWidget, type WidgetEnvironment } from 'expo-widgets';
@@ -25,7 +23,7 @@ export interface StreakWidgetProps {
   milestone?: number;
   // 아트 webp가 복사된 공유 디렉터리 file URI (트레일링 슬래시 포함), 복사 실패 시 생략
   artDir?: string;
-  // 오늘 카드 제목 — Medium 시간표 상태에서만 그린다
+  // 오늘 카드 제목 — 브릿지 계약상 받지만 현재 위젯에는 그리지 않는다(레이아웃 이슈로 제목 오버레이 제거)
   todayCardTitle?: string;
   // 주간 스트립 — 오늘(서울)로 끝나는 7칸의 요일 라벨과 완료 여부 (Large 전용)
   weekLabels?: string[];
@@ -135,20 +133,6 @@ const StreakWidgetView = (
     props.weekDone != null &&
     props.weekLabels.length === 7;
 
-  // 오늘 카드 제목 — Medium 시간표 카드에만 제목 자리(24,112)가 있다. 색은 inkML의 72%(hex B8)
-  const TITLE_KINDS = [
-    'arrived',
-    'carpet',
-    'nudge',
-    'ask',
-    'wait',
-    'risk',
-    'melted',
-  ];
-  // 제목을 몰라도 자리는 채운다 — 기준일이 지나 빠졌거나 오늘 카드가 없을 때다
-  const TITLE_FALLBACK = '래디가 기다리고 있어요';
-  const showTitle = family === 'medium' && TITLE_KINDS.includes(props.kind);
-
   return (
     <ZStack
       alignment="bottom"
@@ -186,20 +170,6 @@ const StreakWidgetView = (
               {String(props.displayStreak ?? 0)}
             </Text>
           </HStack>
-        ) : null}
-        {showTitle ? (
-          <Text
-            modifiers={[
-              font({ size: 13, weight: 'medium' }),
-              foregroundStyle(`${theme.inkML}B8`),
-              lineLimit(1),
-              truncationMode('tail'),
-              frame({ maxWidth: 150, alignment: 'leading' }),
-              padding({ top: 112, leading: 24 }),
-            ]}
-          >
-            {props.todayCardTitle ?? TITLE_FALLBACK}
-          </Text>
         ) : null}
       </ZStack>
       {showWeekStrip ? (

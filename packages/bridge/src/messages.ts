@@ -99,6 +99,10 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
     type: z.literal('SYNC_WIDGET_DATA'),
     data: widgetDataSchema,
   }),
+  // 홈 위젯 설치 다이얼로그를 요청한다 — Android만 시스템 핀 요청을 띄운다 (iOS는 그런 API가 없어 무시)
+  z.object({ type: z.literal('REQUEST_WIDGET_PIN') }),
+  // 앱을 홈 화면으로 내린다 — iOS만. 위젯 설치 안내 끝에 사용자가 직접 위젯을 얹으러 나가게 한다
+  z.object({ type: z.literal('GO_HOME') }),
 ]);
 
 // 네이티브 → 웹으로 보낼 수 있는 메시지 목록

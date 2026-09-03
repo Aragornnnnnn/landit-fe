@@ -22,4 +22,7 @@ export {
   type SatisfactionTalk,
   type SatisfactionMoment,
   type SatisfactionAnswer,
+  type WidgetInstallAnswer,
+  type WidgetGuideStep,
+  type WidgetInstallPlatform,
 } from './events';

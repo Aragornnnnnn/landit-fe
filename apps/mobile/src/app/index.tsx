@@ -29,7 +29,10 @@ import { getExpoPushToken } from '@/notifications/push-token';
 import { initializeNotifications } from '@/notifications/setup';
 import { useNotificationDeepLink } from '@/notifications/useNotificationDeepLink';
 import { syncStreakWidget, syncWidgetOnLaunch } from '@/widgets';
+import { requestWidgetPin } from '@/widgets/android/pin';
 import { saveWidgetData } from '@/widgets/model/widget-store';
+
+import { goHome } from '../../modules/app-suspender';
 
 // 네이티브 스플래시를 웹 첫 페인트까지 붙잡아 둔다 — 자동 숨김을 막고 WebView onLoad에서 수동으로 감춘다
 void SplashScreen.preventAutoHideAsync();
@@ -64,6 +67,10 @@ const ShellScreen = () => {
       await saveWidgetData(data);
       syncStreakWidget(data);
     },
+    // 웹의 위젯 설치 안내 CTA — Android만 시스템 핀 다이얼로그를 띄운다
+    REQUEST_WIDGET_PIN: () => requestWidgetPin(),
+    // 위젯 설치 안내 끝 — iOS에서 앱을 홈 화면으로 내려 사용자가 직접 위젯을 얹게 한다
+    GO_HOME: () => goHome(),
     // 알림 권한 상태 조회 — 다이얼로그 없이 현재 상태만 회신한다
     GET_NOTIFICATION_PERMISSION: async () => {
       const status = await getNotificationPermission();

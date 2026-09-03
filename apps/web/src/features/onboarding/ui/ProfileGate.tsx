@@ -16,13 +16,13 @@ import { track } from '@/shared/analytics';
 import { hasSeenOnboarding } from '@/shared/auth/onboarding-seen';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { useFocusTrap } from '@/shared/lib/useFocusTrap';
+import { StepDots } from '@/shared/ui/StepDots';
 
 import { collectPendingQuestions } from '../model/profile-gate';
 import { useAccentQuery } from '../model/useAccentQuery';
 import { useLearningLevelQuery } from '../model/useLearningLevelQuery';
 import { useSaveAccentMutation } from '../model/useSaveAccentMutation';
 import { useSaveLearningLevelMutation } from '../model/useSaveLearningLevelMutation';
-import { StepDots } from './common/StepDots';
 import { AccentStep } from './steps/AccentStep';
 import { LevelStep } from './steps/LevelStep';
 

@@ -6,6 +6,7 @@ export const STEP_ORDER = [
   'mic',
   'thought',
   'notification',
+  'widget',
   'level',
   'accent',
   'scenario',

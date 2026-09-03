@@ -66,6 +66,9 @@ function ScenarioContent() {
     router.prefetch(scenarioTalkPath(scenario.scenarioId, date));
   };
   const settled = date === undefined && (cleared || summonClosed);
+  // 시트류(소감 다음 순번)가 나설 차례 — 카드 판단과 소감 판정이 모두 끝났고 소감 시트가 안 뜰 때
+  const promptTurn =
+    settled && satisfaction.settled && satisfaction.sheet === null;
 
   // 날짜 이동은 replace다 — push면 히스토리가 쌓여 뒤로가기가 날짜 되감기가 된다.
   // 오늘은 날짜 없는 주소가 정본이다 — 붙여 두면 자정을 넘겨도 어제에 머문다
@@ -125,9 +128,7 @@ function ScenarioContent() {
       {settled && satisfaction.sheet === 'review' && (
         <SatisfactionGate moment="review" />
       )}
-      {settled && satisfaction.settled && satisfaction.sheet === null && (
-        <NotificationConsentGate />
-      )}
+      {promptTurn && <NotificationConsentGate />}
 
       {/* 브리핑을 다 보여주면 대화로 넘어간다 — push라 뒤로가기는 이 화면(카드)으로 돌아온다 */}
       {briefingScenario && (
