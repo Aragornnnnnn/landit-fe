@@ -17,7 +17,7 @@ export const SurveyLetterCta = ({ letterId }: { letterId: number }) => {
 
   return (
     <Button className="mt-8" onClick={() => router.push(SURVEY_PATH)}>
-      <Emoji>💌</Emoji> 설문하고 쿠폰 받기
+      <Emoji>💌</Emoji> 설문하고 이용권 받기
     </Button>
   );
 };
