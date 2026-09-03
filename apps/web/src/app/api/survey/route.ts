@@ -22,6 +22,18 @@ const fail = (status: number, message: string) =>
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
+// 끊김·지연으로 fetch 자체가 실패하면 응답 대신 null — 호출부가 상태 코드 분기와 같은 자리에서 처리한다
+const fetchUpstream = async (input: string, init: RequestInit) => {
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    });
+  } catch {
+    return null;
+  }
+};
+
 export async function POST(request: Request) {
   const supabaseUrl = process.env.SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
