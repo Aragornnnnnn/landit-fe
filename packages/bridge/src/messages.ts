@@ -41,12 +41,10 @@ export const widgetDataSchema = z.object({
       { message: '달력에 없는 날짜예요' },
     )
     .nullable(),
-  // 오늘 카드 제목 — Medium 미완료 화면의 부제. 발행 전이면 null
-  todayCardTitle: z.string().min(1).nullable(),
   // 오늘 포함 최근 7일 완료 여부 (과거→오늘 순) — Large 주간 스트립
   weeklyDone: z.array(z.boolean()).length(7),
   // 이 값들이 며칠 기준인지 — 서버가 준 오늘(/me/streak의 today). 로그인 전 빈 값이면 null.
-  // 위젯은 이 날짜가 지금의 오늘과 다르면 날짜에 묶인 표시(카드 제목·주간 라벨)를 그날 기준으로 되돌린다
+  // 위젯은 이 값이 null이면(로그인 전) 시작 전 화면을, 아니면 주간 라벨을 그날 기준으로 되돌린다
   capturedOn: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -63,7 +61,6 @@ export const EMPTY_WIDGET_DATA = {
   streak: 0,
   todayDone: false,
   lastCompletedDate: null,
-  todayCardTitle: null,
   weeklyDone: [false, false, false, false, false, false, false],
   capturedOn: null,
 } as const satisfies z.infer<typeof widgetDataSchema>;

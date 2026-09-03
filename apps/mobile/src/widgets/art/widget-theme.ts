@@ -59,22 +59,3 @@ export const WEEK_STRIP_COLORS = {
   emptyDot: '#D8D2FF38',
   label: '#E3DFF7',
 } as const;
-
-// 오늘 카드 제목을 보여주는 상태 — Medium 시간표 카드에만 제목 자리가 있다 (디자인 좌표 24,112)
-export const TITLE_KINDS: WidgetStateKind[] = [
-  'arrived',
-  'carpet',
-  'nudge',
-  'ask',
-  'wait',
-  'risk',
-  'melted',
-];
-
-// 제목 스타일 — 색은 해당 상태 inkML의 72%(hex B8), 크기 13 (디자인 값)
-// 오늘 카드 제목을 모를 때 대신 쓰는 문구 — 자정을 넘겨 제목이 지워졌거나 오늘 카드가 없을 때다.
-// 빈 자리로 두면 카드가 허전해서, 어느 날에나 맞는 말을 대신 세운다
-export const TITLE_FALLBACK = '래디가 기다리고 있어요';
-
-export const TITLE_ALPHA_HEX = 'B8';
-export const TITLE_FONT_SIZE = 13;

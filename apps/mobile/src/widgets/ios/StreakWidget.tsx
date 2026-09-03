@@ -23,8 +23,6 @@ export interface StreakWidgetProps {
   milestone?: number;
   // 아트 webp가 복사된 공유 디렉터리 file URI (트레일링 슬래시 포함), 복사 실패 시 생략
   artDir?: string;
-  // 오늘 카드 제목 — 브릿지 계약상 받지만 현재 위젯에는 그리지 않는다(레이아웃 이슈로 제목 오버레이 제거)
-  todayCardTitle?: string;
   // 주간 스트립 — 오늘(서울)로 끝나는 7칸의 요일 라벨과 완료 여부 (Large 전용)
   weekLabels?: string[];
   weekDone?: boolean[];

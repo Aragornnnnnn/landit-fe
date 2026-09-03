@@ -51,10 +51,9 @@ describe('widget-theme ↔ iOS 위젯 인라인 값', () => {
     }
   });
 
-  it('4×2 위젯에 카드 제목 오버레이를 다시 넣지 않는다', () => {
+  it('iOS 위젯은 카드 제목을 참조하지 않는다 — 4×2 아트를 찌부시켰던 오버레이 제거', () => {
     // todayCardTitle을 Text로 렌더하면 그 제목 padding이 medium ZStack을 늘려 아트가 찌부됐었다.
-    // prop 선언 한 곳에만 있어야 한다 — 렌더 자리에 다시 쓰이면 개수가 늘어 이 테스트가 잡는다
-    const uses = iosWidgetSource.match(/todayCardTitle/g) ?? [];
-    expect(uses).toHaveLength(1);
+    // 어떤 형태로도 다시 들어오지 않게 소스에서 완전히 사라졌는지 본다
+    expect(iosWidgetSource).not.toContain('todayCardTitle');
   });
 });
