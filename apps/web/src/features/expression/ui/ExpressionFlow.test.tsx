@@ -30,15 +30,18 @@ vi.mock('../model/useFinishExpressionMutation', () => ({
 vi.mock('./learning/QuizStep', () => ({
   QuizStep: ({
     step,
+    partner,
     onNext,
     onBack,
   }: {
     step: string;
+    partner: string;
     onNext: () => void;
     onBack: () => void;
   }) => (
     <div>
       <p>quiz:{step}</p>
+      <p>partner:{partner}</p>
       <button onClick={onNext}>quiz-next</button>
       <button onClick={onBack}>quiz-back</button>
     </div>
@@ -534,6 +537,33 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
     // EXPLAIN → 곧장 REVIEW
     await user.click(screen.getByText('explain-next'));
     expect(screen.getByText('quiz:review')).toBeInTheDocument();
+  });
+
+  it('복습 영작으로 넘어가면 퀴즈에서 뽑은 상대를 그대로 쓴다', async () => {
+    // given — 퀴즈가 클로이로 뜬 상태. 난수는 이후 호출마다 다른 값을 주어, 스텝마다 새로 뽑으면 상대가 바뀌게 한다
+    const user = userEvent.setup();
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValue(0.9);
+    learningMock.mockReturnValue({ learning, error: null, isLoading: false });
+    practiceMock.mockReturnValue({
+      practice: practice([]),
+      error: null,
+      isLoading: false,
+    });
+    render(
+      <ExpressionFlow
+        origin={{ kind: 'scenario', scenarioId: 1 }}
+        expressionId={7}
+      />,
+    );
+    expect(screen.getByText('partner:chloe')).toBeInTheDocument();
+
+    // when — 설명을 지나 복습 영작까지 간다
+    await user.click(screen.getByText('quiz-next'));
+    await user.click(screen.getByText('explain-next'));
+
+    // then — 복습도 클로이다
+    expect(screen.getByText('quiz:review')).toBeInTheDocument();
+    expect(screen.getByText('partner:chloe')).toBeInTheDocument();
   });
 
   it('예문 이미지가 있으면 URL을 image로 preload한다', () => {

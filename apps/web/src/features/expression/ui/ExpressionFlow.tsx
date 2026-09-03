@@ -12,6 +12,7 @@ import { scenarioReturnPath, smallTalkHistoryPath } from '@/shared/lib/routes';
 import type { ExpressionLearning } from '../api/learning';
 import type { ExpressionPractice } from '../api/practice';
 import { collectPreloadImageUrls } from '../lib/preload-images';
+import { pickRandomPartner } from '../model/quiz-partner';
 import { fromLearning, fromWritingSentence } from '../model/sentence-quiz';
 import { useExpressionIntroStepAudio } from '../model/useExpressionIntroStepAudio';
 import { useExpressionLearningQuery } from '../model/useExpressionLearningQuery';
@@ -130,6 +131,8 @@ const LoadedExpressionFlow = ({
   const [pronounceSkipped, setPronounceSkipped] = useState(false);
   // 예문까지(QUIZ·EXPLAIN)는 뒤로가기 대신 X로 나가며, 중단 확인 시트를 먼저 띄운다
   const [exitOpen, setExitOpen] = useState(false);
+  // 질문을 건네는 상대 — 들어올 때 한 번만 뽑아 퀴즈와 복습이 같은 얼굴을 쓴다
+  const [partner] = useState(() => pickRandomPartner());
   // 복습 영작 draft — 예문(설명)을 보러 나갔다 돌아와도 고른 칩이 유지되게 문제 문장과 함께 보관한다
   const [reviewDraft, setReviewDraft] = useState<{
     sentence: string;
@@ -236,6 +239,7 @@ const LoadedExpressionFlow = ({
         // 문제가 바뀌면(이론상 폴백→practice 교체) 상태를 통째로 리셋한다
         key={reviewQuiz.writingSentenceText}
         quiz={reviewQuiz}
+        partner={partner}
         expressionId={expressionId}
         onBack={() => setStep(hasPronunciation ? 'EXAMPLES' : 'EXPLAIN')}
         onNext={finishFlow}
@@ -268,6 +272,7 @@ const LoadedExpressionFlow = ({
         <QuizStep
           step="quiz"
           quiz={quiz}
+          partner={partner}
           expressionId={expressionId}
           leftAction="close"
           onBack={openExitSheet}
