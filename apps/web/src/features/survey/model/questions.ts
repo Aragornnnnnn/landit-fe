@@ -5,8 +5,10 @@ interface QuestionBase {
   title: string;
   // 제목 아래 한 줄 보조 문구
   hint?: string;
-  // 앞 문항의 답이 이 값일 때만 보여준다 (유학 준비를 골라야 나오는 2-1번)
-  showIf?: { questionId: string; equals: string };
+  // 앞 문항의 답이 조건에 맞을 때만 보여준다 — 고른 값이 같거나(유학 준비 → 준비 방법), 점수가 이상이거나(추천 의향 3점↑ → 소개 여부)
+  showIf?:
+    | { questionId: string; equals: string }
+    | { questionId: string; atLeast: number };
 }
 
 export type SingleQuestion = QuestionBase & {
@@ -52,11 +54,12 @@ export const QUESTIONS: readonly Question[] = [
     id: 'channel',
     kind: 'single',
     title: '랜딧을 어떻게\n알게 되셨나요?',
+    // 광고와 랜딧 계정은 둘 다 인스타그램이라 붙여 두면 헷갈려 사이를 띄운다
     options: [
       '앱스토어 · 플레이스토어 검색',
-      'SNS (인스타그램, 유튜브 등)',
+      '인스타그램 광고',
       '지인 추천',
-      '블로그 · 커뮤니티 글',
+      '랜딧 인스타그램 계정',
     ],
     other: true,
   },
@@ -122,29 +125,8 @@ export const QUESTIONS: readonly Question[] = [
   {
     id: 'monthly_price_limit',
     kind: 'single',
-    title: '월 얼마부터는 비싸다고 느껴\n결제를 포기하시겠어요?',
-    options: [
-      '월 5,000원부터',
-      '월 8,000원부터',
-      '월 10,000원부터',
-      '월 15,000원부터',
-      '월 15,000원이 넘어도 결제할래요',
-      '유료면 안 쓸 것 같아요',
-    ],
-  },
-  {
-    id: 'yearly_price_limit',
-    kind: 'single',
-    title: '1년치를 한 번에 내는\n연간 결제라면 얼마부터 부담되세요?',
-    hint: '연간 결제엔 할인이 붙어요',
-    options: [
-      '연 30,000원부터',
-      '연 50,000원부터',
-      '연 70,000원부터',
-      '연 100,000원부터',
-      '연 100,000원이 넘어도 결제할래요',
-      '연간 결제 자체가 부담돼요',
-    ],
+    title: '랜딧은 월 얼마부터\n적정하다고 느끼세요?',
+    options: ['5,000원', '8,000원', '10,000원', '15,000원', '15,000원 이상'],
   },
   {
     id: 'recommend_intent',
@@ -157,6 +139,7 @@ export const QUESTIONS: readonly Question[] = [
     id: 'has_recommended',
     kind: 'single',
     title: '실제로 주변에\n소개한 적이 있으세요?',
+    showIf: { questionId: 'recommend_intent', atLeast: 3 },
     options: ['있어요', '없어요'],
   },
   {

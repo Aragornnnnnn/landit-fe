@@ -33,7 +33,23 @@ describe('toggleChoice', () => {
   });
 });
 
+const scaleGated: Question = {
+  id: 'g',
+  kind: 'single',
+  title: '',
+  options: ['p'],
+  showIf: { questionId: 's', atLeast: 3 },
+};
+
 describe('visibleQuestions', () => {
+  it('점수 조건 문항은 앞 척도가 그 점수 이상일 때만 들어간다', () => {
+    const questions = [scaleGated];
+
+    expect(visibleQuestions(questions, { s: 3 })).toHaveLength(1);
+    expect(visibleQuestions(questions, { s: 2 })).toHaveLength(0);
+    expect(visibleQuestions(questions, {})).toHaveLength(0);
+  });
+
   it('조건 문항은 앞 문항의 답이 맞을 때만 들어간다', () => {
     const questions = [single, conditional, text];
 

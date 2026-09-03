@@ -61,10 +61,12 @@ const answerCurrent = async (question: Question) => {
   }
 };
 
-// 첫 문항부터 마지막 문항 직전까지. 조건 문항(유학 준비)은 안 뜨게 답한다
+// 첫 문항부터 마지막 문항 직전까지. 유학 준비 조건 문항은 안 뜨게, 척도는 3점이라 점수 조건 문항은 뜬다
 const answerUntilLast = async () => {
   await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
-  const shown = QUESTIONS.filter((question) => !question.showIf);
+  const shown = QUESTIONS.filter(
+    (question) => !question.showIf || 'atLeast' in question.showIf,
+  );
   for (const question of shown.slice(0, -1)) await answerCurrent(question);
   await screen.findByText(titleOf(shown[shown.length - 1]));
 };
@@ -115,6 +117,24 @@ describe('SurveyFlow', () => {
 
     expect(screen.getByText(titleOf(QUESTIONS[0]))).toBeTruthy();
     expect(screen.getByRole('textbox', { name: '기타 내용' })).toBeTruthy();
+  });
+
+  it('추천 의향이 3점 미만이면 소개 여부 문항을 건너뛴다', async () => {
+    render(<SurveyFlow />);
+    await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+    const before = QUESTIONS.slice(
+      0,
+      QUESTIONS.findIndex((question) => question.id === 'recommend_intent'),
+    );
+    for (const question of before) {
+      if (question.showIf) continue;
+      await answerCurrent(question);
+    }
+    await screen.findByText(titleOf(byId('recommend_intent')));
+
+    await userEvent.click(screen.getByRole('radio', { name: '2점' }));
+
+    expect(await screen.findByText(titleOf(byId('wish')))).toBeTruthy();
   });
 
   it('유학 준비를 고르면 준비 방법 문항이 끼어든다', async () => {

@@ -13,14 +13,21 @@ export const toggleChoice = (current: Answer | undefined, option: string) => {
 };
 
 // 지금 답 기준으로 보여줄 문항 — 조건 문항은 앞 문항의 답이 맞을 때만 끼어든다
+const meetsCondition = (
+  showIf: NonNullable<Question['showIf']>,
+  answers: Answers,
+) => {
+  const answer = answers[showIf.questionId];
+  if ('equals' in showIf) return answer === showIf.equals;
+  return typeof answer === 'number' && answer >= showIf.atLeast;
+};
+
 export const visibleQuestions = (
   questions: readonly Question[],
   answers: Answers,
 ) =>
   questions.filter(
-    (question) =>
-      !question.showIf ||
-      answers[question.showIf.questionId] === question.showIf.equals,
+    (question) => !question.showIf || meetsCondition(question.showIf, answers),
   );
 
 const hasOther = (answer: Answer | undefined) =>
