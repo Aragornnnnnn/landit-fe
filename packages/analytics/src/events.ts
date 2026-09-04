@@ -137,6 +137,12 @@ export const EVENTS = {
   WIDGET_INSTALL_INVITE_ANSWERED: 'Widget Install Invite Answered',
   WIDGET_INSTALL_GUIDE_STEP_VIEWED: 'Widget Install Guide Step Viewed',
   WIDGET_PIN_REQUESTED: 'Widget Pin Requested',
+
+  // LAN-428 결제 전 설문(임시) — 편지 CTA → 시작 → 문항 → 제출의 퍼널. 설문이 끝나면 설문 코드와 함께 지운다
+  SURVEY_INVITE_TAPPED: 'Survey Invite Tapped',
+  SURVEY_STARTED: 'Survey Started',
+  SURVEY_QUESTION_VIEWED: 'Survey Question Viewed',
+  SURVEY_SUBMITTED: 'Survey Submitted',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -494,6 +500,14 @@ export type EventProps = {
   'Widget Install Guide Step Viewed': { step: WidgetGuideStep };
   // 위젯 추가를 실제로 청한 순간 — Android는 시스템 핀 다이얼로그, iOS는 안내 화면으로 갈린다
   'Widget Pin Requested': { platform: WidgetInstallPlatform };
+
+  // LAN-428 설문(임시) — 답 내용은 싣지 않는다(PII). 문항 id는 설문 정의(questions.ts)의 id 그대로
+  'Survey Invite Tapped': { letter_id: number };
+  'Survey Started': undefined;
+  // 조건 문항이 끼고 빠지므로 index는 그 사람에게 보인 순서다 — 어느 문항인지는 question_id로 본다
+  'Survey Question Viewed': { question_id: string; question_index: number };
+  // 저장 성공 뒤에만 — 보인 문항 수를 남긴다
+  'Survey Submitted': { question_count: number };
 };
 
 // 컴파일 타임 검증 ① EventProps가 모든 이벤트를 빠짐없이 커버한다

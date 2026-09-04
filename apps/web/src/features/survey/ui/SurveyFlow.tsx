@@ -2,8 +2,10 @@
 
 // 설문 플로우 — 안내 → 문항 하나씩 → 완료. 온보딩처럼 한 화면에 한 문항, 옆으로 넘긴다
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { homePath } from '@/shared/lib/last-tab';
 import { MAILBOX_PATH } from '@/shared/lib/routes';
@@ -48,6 +50,16 @@ export const SurveyFlow = () => {
   }, [step]);
   // 조건 문항이 끼고 빠지므로 스텝 번호는 이 목록 기준이다
   const questions = visibleQuestions(QUESTIONS, answers);
+  // 문항이 보일 때마다 노출을 남긴다 — 뒤로 갔다 다시 봐도 찍혀서 어디서 머뭇거리는지 본다.
+  // 어느 문항인지는 id가 정하므로, 답으로 목록이 바뀌어도(같은 스텝에 다른 문항) 새 노출로 잡힌다
+  const questionId = typeof step === 'number' ? questions[step]?.id : undefined;
+  useEffect(() => {
+    if (typeof step !== 'number' || !questionId) return;
+    track(EVENTS.SURVEY_QUESTION_VIEWED, {
+      question_id: questionId,
+      question_index: step,
+    });
+  }, [step, questionId]);
 
   const goTo = (next: Step, dir: number) => {
     setDirection(dir);
@@ -64,6 +76,11 @@ export const SurveyFlow = () => {
     else if (typeof step === 'number') goTo(step - 1, -1);
   };
 
+  const start = () => {
+    track(EVENTS.SURVEY_STARTED);
+    goTo(0, 1);
+  };
+
   const recordAnswer = (id: string, value: Answer) =>
     setAnswers((prev) => ({ ...prev, [id]: value }));
 
@@ -74,6 +91,7 @@ export const SurveyFlow = () => {
       // 이미 참여한 사람(duplicate)도 완료 화면으로 — 두 번 낼 수 없다는 걸 따로 설명할 이유가 없다
       await submitSurvey(email, toSubmission(QUESTIONS, answers));
       surveyDone.mark();
+      track(EVENTS.SURVEY_SUBMITTED, { question_count: questions.length });
       goTo('done', 1);
     } catch {
       showToast('저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
@@ -116,7 +134,7 @@ export const SurveyFlow = () => {
           paddingBottom: 'max(env(safe-area-inset-bottom), 20px)',
         }}
       >
-        {step === 'intro' && <SurveyIntro onStart={() => goTo(0, 1)} />}
+        {step === 'intro' && <SurveyIntro onStart={start} />}
         {typeof step === 'number' && (
           <QuestionStep
             question={questions[step]}
