@@ -36,10 +36,11 @@ const renderStep = (examples: PracticeSentence[]) =>
   );
 
 describe('ExamplesStep', () => {
-  it('예문 안의 표현 구간만 따로 강조한다', () => {
+  it('예문 안의 표현 구간을 따로 떼어 보여준다', () => {
     renderStep([example('The special effects blew my mind.')]);
 
-    expect(screen.getByText('blew my mind')).toHaveAttribute('data-highlight');
+    // 표현 구간이 제 요소로 분리돼 있어야 강조를 입힐 수 있다
+    expect(screen.getByText('blew my mind')).toBeInTheDocument();
     expect(screen.getByText('How was the movie?')).toBeInTheDocument();
     expect(screen.getByText('특수효과가 끝내줬어.')).toBeInTheDocument();
   });

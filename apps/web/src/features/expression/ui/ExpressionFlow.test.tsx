@@ -3,6 +3,8 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { track } from '@/shared/analytics';
+
 import type { ExpressionLearning } from '../api/learning';
 import type { ExpressionPractice } from '../api/practice';
 import { useExpressionLearningQuery } from '../model/useExpressionLearningQuery';
@@ -10,6 +12,7 @@ import { useExpressionPracticeQuery } from '../model/useExpressionPracticeQuery'
 import { ExpressionFlow } from './ExpressionFlow';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 vi.mock('../model/useExpressionLearningQuery', () => ({
   useExpressionLearningQuery: vi.fn(),
 }));
@@ -21,47 +24,50 @@ vi.mock('../model/useFinishExpressionMutation', () => ({
 }));
 // 스텝 UI는 이 테스트 관심사가 아니라 스텁으로 대체(무거운 하위 의존 회피).
 // 전환 검증용으로 onNext·onSkip만 버튼으로 노출한다
-// 복습 큐 검증용으로 지금 문제(answerText)·CTA 문구·마지막 여부(correctSlot)·칩 복원 여부를 함께 노출한다
-vi.mock('./learning/QuizStep', () => ({
-  QuizStep: ({
-    step,
-    quiz,
-    partner,
-    onNext,
-    onBack,
-    nextLabel,
-    wrongLabel,
-    correctSlot,
-    initialSelected,
-    onSelectedChange,
-  }: {
-    step: string;
-    quiz: { answerText: string };
-    partner: string;
-    onNext: (result: 'correct' | 'wrong') => void;
-    onBack: () => void;
-    nextLabel?: string;
-    wrongLabel?: string;
-    correctSlot?: () => React.ReactNode;
-    initialSelected?: number[];
-    onSelectedChange?: (selected: number[]) => void;
-  }) => (
-    <div>
-      <p>quiz:{step}</p>
-      <p>partner:{partner}</p>
-      <p>question:{quiz.answerText}</p>
-      <p>
-        labels:{nextLabel}/{wrongLabel}
-      </p>
-      <p>last:{correctSlot ? 'y' : 'n'}</p>
-      <p>restored:{initialSelected ? 'y' : 'n'}</p>
-      <button onClick={() => onNext('correct')}>quiz-next</button>
-      <button onClick={() => onNext('wrong')}>quiz-wrong</button>
-      <button onClick={onBack}>quiz-back</button>
-      <button onClick={() => onSelectedChange?.([1])}>quiz-pick</button>
-    </div>
-  ),
-}));
+// 복습 큐 검증용으로 지금 문제(answerText)·CTA 문구·마지막 여부(correctSlot)를 노출하고,
+// 마운트 식별자로 예문을 다녀와도 리마운트(상태 소실)되지 않는지 본다
+vi.mock('./learning/QuizStep', async () => {
+  const { useState } = await import('react');
+  let mountSeq = 0;
+  return {
+    QuizStep: ({
+      step,
+      quiz,
+      partner,
+      onNext,
+      onBack,
+      nextLabel,
+      wrongLabel,
+      correctSlot,
+    }: {
+      step: string;
+      quiz: { answerText: string };
+      partner: string;
+      onNext: (result: 'correct' | 'wrong') => void;
+      onBack: () => void;
+      nextLabel?: string;
+      wrongLabel?: string;
+      correctSlot?: () => React.ReactNode;
+    }) => {
+      const [mountId] = useState(() => ++mountSeq);
+      return (
+        <div>
+          <p>quiz:{step}</p>
+          <p>quiz#{mountId}</p>
+          <p>partner:{partner}</p>
+          <p>question:{quiz.answerText}</p>
+          <p>
+            labels:{nextLabel}/{wrongLabel ?? nextLabel}
+          </p>
+          <p>last:{correctSlot ? 'y' : 'n'}</p>
+          <button onClick={() => onNext('correct')}>quiz-next</button>
+          <button onClick={() => onNext('wrong')}>quiz-wrong</button>
+          <button onClick={onBack}>quiz-back</button>
+        </div>
+      );
+    },
+  };
+});
 // 예문 스텝 — 예문 개수를 노출한다
 vi.mock('./learning/ExamplesStep', () => ({
   ExamplesStep: ({
@@ -658,15 +664,39 @@ describe('ExpressionFlow 복습 큐', () => {
     expect(
       screen.getByText('labels:다음 문제/다시 풀어볼게요'),
     ).toBeInTheDocument();
+    const beforeWrong = screen.getByText(/quiz#/).textContent;
 
-    // 고른 칩이 있는 채로 틀린다
-    await user.click(screen.getByText('quiz-pick'));
     await user.click(screen.getByText('quiz-wrong'));
 
-    // 같은 문제가 다시 나오되, 틀렸던 칩 배치는 복원하지 않는다
+    // 같은 문제가 새 QuizStep으로 다시 나온다 — 틀렸던 칩 배치가 남지 않는다
     expect(screen.getByText('question:이해돼?')).toBeInTheDocument();
     expect(screen.getByText('last:y')).toBeInTheDocument();
-    expect(screen.getByText('restored:n')).toBeInTheDocument();
+    expect(screen.getByText(/quiz#/).textContent).not.toBe(beforeWrong);
+  });
+
+  it('예문을 다시 보러 나갔다 돌아와도 복습 QuizStep이 그대로라 고른 칩과 큐가 유지된다', async () => {
+    const user = userEvent.setup();
+    learningMock.mockReturnValue({ learning, error: null, isLoading: false });
+    practiceMock.mockReturnValue({
+      practice: practice(2, twoWritingSentences),
+      error: null,
+      isLoading: false,
+    });
+    render(
+      <ExpressionFlow
+        origin={{ kind: 'scenario', scenarioId: 1 }}
+        expressionId={7}
+      />,
+    );
+    await user.click(screen.getByText('quiz-next'));
+    await user.click(screen.getByText('examples-next'));
+    const mount = screen.getByText(/quiz#/).textContent;
+
+    await user.click(screen.getByText('quiz-back'));
+    expect(screen.getByText('examples:2:close')).toBeInTheDocument();
+    await user.click(screen.getByText('examples-next'));
+
+    expect(screen.getByText(/quiz#/).textContent).toBe(mount);
   });
 
   it('작문 문제를 못 받았으면 대표 예문 1문제로 폴백해 바로 마지막이다', async () => {
@@ -725,5 +755,69 @@ describe('ExpressionFlow 예문 스텝', () => {
 
     expect(screen.queryByText('quiz:quiz')).not.toBeInTheDocument();
     expect(screen.getByText('examples:2:close')).toBeInTheDocument();
+  });
+
+  it('practice가 아직 안 왔으면 예문 자리에서 기다렸다가, 도착하면 예문을 보여준다', async () => {
+    const user = userEvent.setup();
+    learningMock.mockReturnValue({ learning, error: null, isLoading: false });
+    practiceMock.mockReturnValue({
+      practice: null,
+      error: null,
+      isLoading: true,
+    });
+    const view = render(
+      <ExpressionFlow
+        origin={{ kind: 'scenario', scenarioId: 1 }}
+        expressionId={7}
+      />,
+    );
+    await user.click(screen.getByText('quiz-next'));
+
+    // 아직 예문도 복습도 아니다 — 로딩 자리만
+    expect(screen.queryByText(/^examples:/)).not.toBeInTheDocument();
+    expect(screen.queryByText('quiz:review')).not.toBeInTheDocument();
+
+    practiceMock.mockReturnValue({
+      practice: practice(2),
+      error: null,
+      isLoading: false,
+    });
+    view.rerender(
+      <ExpressionFlow
+        origin={{ kind: 'scenario', scenarioId: 1 }}
+        expressionId={7}
+      />,
+    );
+
+    expect(screen.getByText('examples:2:close')).toBeInTheDocument();
+  });
+
+  it('예문 차례인데 예문이 없으면 복습을 보여주고 계측 step도 review다', () => {
+    learningMock.mockReturnValue({
+      learning: { ...learning, completed: true },
+      error: null,
+      isLoading: false,
+    });
+    practiceMock.mockReturnValue({
+      practice: practice(0),
+      error: null,
+      isLoading: false,
+    });
+    render(
+      <ExpressionFlow
+        origin={{ kind: 'scenario', scenarioId: 1 }}
+        expressionId={7}
+      />,
+    );
+
+    expect(screen.getByText('quiz:review')).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith('Expression Step Viewed', {
+      expression_id: 7,
+      step: 'review',
+    });
+    expect(track).not.toHaveBeenCalledWith('Expression Step Viewed', {
+      expression_id: 7,
+      step: 'examples',
+    });
   });
 });

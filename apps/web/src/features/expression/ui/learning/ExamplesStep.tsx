@@ -164,9 +164,7 @@ const HighlightedSentence = ({
   return (
     <>
       {text.slice(0, index)}
-      <span data-highlight className="text-primary">
-        {highlight}
-      </span>
+      <span className="text-primary">{highlight}</span>
       {text.slice(index + highlight.length)}
     </>
   );

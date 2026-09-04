@@ -46,14 +46,13 @@ interface QuizStepProps {
   nextLabel?: string;
   // 오답 시트의 CTA 문구 — 없으면 정답과 같다 (복습에서 "다시 풀어볼게요"로 갈린다)
   wrongLabel?: string;
-  finishing?: boolean;
-  // 상단 진행바를 [idle일 때, 판정 후] 두 값으로 — 기본은 퀴즈 스텝 구간(0→0.5)
+  // 상단 진행바를 [풀기 전, 맞힌 뒤] 두 값으로 — 기본은 퀴즈 스텝 구간(0→0.5)
   progressRange?: [number, number];
   // 설명 스텝을 보러 나갔다 돌아와도 고른 칩을 복원한다(복습에서 사용, 뱅크 순서가 고정이라 칩 id로 안전하게 복원됨)
   initialSelected?: number[];
   onSelectedChange?: (selected: number[]) => void;
   // 정답일 때 결과 시트 자리에 대신 띄울 연출(없으면 기본 ResultSheet) — 복습의 획득 연출(콘페티+카드)에 쓴다.
-  // 오답은 이 슬롯을 타지 않고 항상 기본 ResultSheet를 보여준다. onNext/finishing은 호출부가 이미 쥐고 있으니 다시 넘기지 않는다.
+  // 오답은 이 슬롯을 타지 않고 항상 기본 ResultSheet를 보여준다. onNext는 호출부가 이미 쥐고 있으니 다시 넘기지 않는다.
   correctSlot?: () => React.ReactNode;
 }
 
@@ -85,7 +84,6 @@ export const QuizStep = ({
   onNext,
   nextLabel = '표현 배우러 갈게요',
   wrongLabel = nextLabel,
-  finishing = false,
   progressRange = [0, 0.5],
   initialSelected,
   onSelectedChange,
@@ -178,8 +176,8 @@ export const QuizStep = ({
     setChecked(tone);
   };
 
-  // 게이지는 단어를 고르는 동안엔 구간 시작값, 판정을 마쳐야 구간 끝값이 찬다.
-  const progress = checked === 'idle' ? progressRange[0] : progressRange[1];
+  // 게이지는 맞혀야 구간 끝값이 찬다 — 틀리면 시작값 그대로. 복습은 틀린 문제를 다시 내므로 찼다가 되돌아가면 안 된다
+  const progress = checked === 'correct' ? progressRange[1] : progressRange[0];
   // 정답 연출 슬롯이 뜨는 순간(표현학습 마지막 완료)엔 게이지도 성공 색으로 맞춘다
   const progressTone =
     checked === 'correct' && correctSlot ? 'success' : 'primary';
@@ -307,7 +305,6 @@ export const QuizStep = ({
             answer={quiz.answerText}
             onNext={() => onNext(checked)}
             nextLabel={checked === 'correct' ? nextLabel : wrongLabel}
-            finishing={finishing}
           />
         ))}
     </StepScaffold>

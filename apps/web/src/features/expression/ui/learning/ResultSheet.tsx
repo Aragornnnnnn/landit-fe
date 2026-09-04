@@ -11,7 +11,6 @@ interface ResultSheetProps {
   answer: string;
   onNext: () => void;
   nextLabel: string;
-  finishing: boolean;
 }
 
 export const ResultSheet = ({
@@ -19,7 +18,6 @@ export const ResultSheet = ({
   answer,
   onNext,
   nextLabel,
-  finishing,
 }: ResultSheetProps) => {
   const correct = tone === 'correct';
   return (
@@ -65,7 +63,6 @@ export const ResultSheet = ({
         <Button
           size="md"
           variant={correct ? 'success' : 'danger'}
-          loading={finishing}
           onClick={onNext}
         >
           {nextLabel}
