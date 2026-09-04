@@ -35,6 +35,26 @@ describe('MarkdownBody', () => {
     );
   });
 
+  it('| 로 나눈 줄을 표로 그린다', () => {
+    render(
+      <MarkdownBody
+        text={'| 기기 | 결과 |\n| --- | --- |\n| iPhone | 풀림 |'}
+      />,
+    );
+
+    expect(screen.getByRole('table')).toBeTruthy();
+    expect(screen.getByRole('columnheader', { name: '기기' })).toBeTruthy();
+    expect(screen.getByRole('cell', { name: '풀림' })).toBeTruthy();
+  });
+
+  it('- [x]와 - [ ]를 체크된·안 된 체크박스로 그린다', () => {
+    render(<MarkdownBody text={'- [x] 재설치 해봄\n- [ ] 로그아웃 해봄'} />);
+
+    const [done, todo] = screen.getAllByRole('checkbox') as HTMLInputElement[];
+    expect(done.checked).toBe(true);
+    expect(todo.checked).toBe(false);
+  });
+
   it('![설명](주소)를 이미지로 그린다', () => {
     render(<MarkdownBody text="![캡처](https://img.landit.im/a.png)" />);
 
