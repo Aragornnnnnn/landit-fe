@@ -53,7 +53,7 @@ interface QuizStepProps {
   onSelectedChange?: (selected: number[]) => void;
   // 상단 지시문 — 복습 재도전에서 "다시 한번 해보세요" 등으로 바꾼다. 없으면 기본 문구
   instruction?: string;
-  // 정답 공개 — 내 말풍선에 옮길 문장 대신 정답 문장을 보여준다(복습에서 여러 번 틀렸을 때)
+  // 정답 공개 — 내 말풍선의 옮길 문장 아래에 정답 문장을 덧붙인다(복습에서 두 번 틀렸을 때)
   revealAnswer?: boolean;
   // 정답일 때 결과 시트 자리에 대신 띄울 연출(없으면 기본 ResultSheet) — 복습의 획득 연출(콘페티+카드)에 쓴다.
   // 오답은 이 슬롯을 타지 않고 항상 기본 ResultSheet를 보여준다. onNext는 호출부가 이미 쥐고 있으니 다시 넘기지 않는다.

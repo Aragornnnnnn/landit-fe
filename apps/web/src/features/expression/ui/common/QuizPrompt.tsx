@@ -16,7 +16,7 @@ export const QuizPrompt = ({
   writingSentence: SentenceQuiz;
   partner: Partner;
   instruction?: string;
-  // 정답 공개 — 내 말풍선에 옮길 문장 대신 정답 문장을 띄워 그대로 조립하게 한다
+  // 정답 공개 — 내 말풍선의 옮길 문장 아래에 정답 문장을 덧붙여 그대로 조립하게 한다
   revealAnswer?: boolean;
 }) => (
   <>
@@ -49,10 +49,14 @@ export const QuizPrompt = ({
     <div className="mt-4 flex justify-end">
       <div className="max-w-[82%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5">
         <p className="text-base leading-snug font-bold text-primary-foreground">
-          {revealAnswer
-            ? writingSentence.answerText
-            : writingSentence.promptText}
+          {writingSentence.promptText}
         </p>
+        {/* 정답 공개 — 옮길 문장은 그대로 두고 아래에 정답을 덧붙인다. 문장이 바뀌면 뭐가 달라졌는지 못 알아본다 */}
+        {revealAnswer && (
+          <p className="mt-1.5 border-t border-primary-foreground/30 pt-1.5 text-sm font-semibold text-primary-foreground/90">
+            {writingSentence.answerText}
+          </p>
+        )}
       </div>
     </div>
   </>

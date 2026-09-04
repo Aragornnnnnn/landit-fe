@@ -112,7 +112,7 @@ describe('QuizStep', () => {
     expect(screen.queryByText('정답이에요!')).not.toBeInTheDocument();
   });
 
-  it('정답 공개(revealAnswer)면 내 말풍선에 옮길 문장 대신 정답 문장이 보인다', () => {
+  it('정답 공개(revealAnswer)면 내 말풍선에 옮길 문장과 정답 문장이 함께 보인다', () => {
     render(
       <QuizStep
         step="review"
@@ -130,7 +130,7 @@ describe('QuizStep', () => {
       screen.getByText('정답을 보고 그대로 만들어보세요'),
     ).toBeInTheDocument();
     expect(screen.getByText('I win')).toBeInTheDocument();
-    expect(screen.queryByText('내가 이겨')).not.toBeInTheDocument();
+    expect(screen.getByText('내가 이겨')).toBeInTheDocument();
   });
 
   it('오답이면 오답용 CTA 문구를 띄우고 onNext에 wrong을 넘긴다', async () => {
