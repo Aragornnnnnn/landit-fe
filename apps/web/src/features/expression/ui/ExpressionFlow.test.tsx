@@ -680,7 +680,7 @@ describe('ExpressionFlow 복습 큐', () => {
     expect(screen.getByText(/quiz#/).textContent).not.toBe(beforeWrong);
   });
 
-  it('틀린 문제가 다시 나오면 라벨이 "다시 한번 해보세요"로 바뀌고, 세 번 틀리면 정답을 보여준다', async () => {
+  it('틀린 문제가 다시 나오면 라벨이 "다시 한번 해보세요"로 바뀌고, 두 번 틀리면 정답을 보여준다', async () => {
     const user = userEvent.setup();
     await renderAtReview(user, twoWritingSentences);
     expect(screen.getByText('instruction:-')).toBeInTheDocument();
@@ -690,7 +690,7 @@ describe('ExpressionFlow 복습 큐', () => {
     expect(screen.getByText('question:이해돼?')).toBeInTheDocument();
     expect(screen.getByText('instruction:-')).toBeInTheDocument();
 
-    // 2번 문제 맞힘 → 1번 문제 재도전: 라벨만 바뀐다
+    // 2번 문제 맞힘 → 1번 문제 재도전: 같은 문제에 라벨만 바뀐다
     await user.click(screen.getByText('quiz-next'));
     expect(screen.getByText('question:I get it now')).toBeInTheDocument();
     expect(
@@ -698,14 +698,7 @@ describe('ExpressionFlow 복습 큐', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('reveal:n')).toBeInTheDocument();
 
-    // 두 번째 틀림 → 아직 라벨만
-    await user.click(screen.getByText('quiz-wrong'));
-    expect(
-      screen.getByText('instruction:다시 한번 해보세요'),
-    ).toBeInTheDocument();
-    expect(screen.getByText('reveal:n')).toBeInTheDocument();
-
-    // 세 번째 틀림 → 정답을 보여주며 다시 낸다
+    // 두 번째 틀림 → 정답을 보여주며 다시 낸다
     await user.click(screen.getByText('quiz-wrong'));
     expect(screen.getByText('question:I get it now')).toBeInTheDocument();
     expect(

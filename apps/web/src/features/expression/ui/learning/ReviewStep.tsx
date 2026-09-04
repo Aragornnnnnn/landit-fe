@@ -10,8 +10,8 @@ import type { SentenceQuiz } from '../../model/sentence-quiz';
 import { ReviewSuccess } from '../practice/ReviewSuccess';
 import { QuizStep } from './QuizStep';
 
-// 이만큼 틀리면 정답을 보여준다 — 맞출 때까지 내는 구조라 끝없이 막히지 않게
-const REVEAL_AFTER_WRONGS = 3;
+// 이만큼 틀리면 정답을 보여준다 — 1회 오답까지는 같은 문제 그대로, 2회부터는 정답을 보고 만든다
+const REVEAL_AFTER_WRONGS = 2;
 
 interface ReviewStepProps {
   // 풀 문제 목록 — 목록이 바뀌면(폴백→실제 문제 도착) 호출부가 key로 새로 세운다. 큐 인덱스가 이 목록에 묶여 있어서다
@@ -47,7 +47,7 @@ export const ReviewStep = ({
   );
   // 판정할 때마다 오른다 — 같은 문제가 다시 나와도 QuizStep을 새로 세우는 key
   const [round, setRound] = useState(0);
-  // 문제별 틀린 횟수 — 재도전이면 라벨을 바꾸고, 세 번 틀리면 정답을 보여주며 낸다
+  // 문제별 틀린 횟수 — 재도전이면 라벨을 바꾸고, 두 번 틀리면 정답을 보여주며 낸다
   const [wrongCounts, setWrongCounts] = useState<Record<number, number>>({});
 
   const current = pending[0];
@@ -63,7 +63,7 @@ export const ReviewStep = ({
     setPending(settleReviewQueue(pending, result));
     setRound((current) => current + 1);
   };
-  // 재도전 라벨 — 세 번째 틀린 뒤엔 정답을 보여주고 그대로 만들게 한다
+  // 재도전 라벨 — 두 번째 틀린 뒤엔 정답을 보여주고 그대로 만들게 한다
   const revealAnswer = wrongCount >= REVEAL_AFTER_WRONGS;
   const instruction =
     wrongCount === 0
