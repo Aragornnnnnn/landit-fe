@@ -19,6 +19,7 @@ import {
 } from '../art/widget-theme';
 import { buildWeekStrip } from '../model/week-strip';
 import type { WidgetState } from '../model/widget-state';
+import { WIDGET_ENTRY_URL } from '../widget-link';
 import { ART_RATIO, CARD_RADIUS, fitCard } from './card-box';
 
 interface StreakAndroidWidgetProps {
@@ -64,8 +65,10 @@ export const StreakAndroidWidget = ({
 
   return (
     // 카드 밖은 비워 둔다 — 칸을 꽉 채우면 아트가 잘리고 옆 위젯들보다 길쭉해 보인다
+    // 탭은 iOS와 같은 위젯 딥링크로 연다 — 셸이 위젯 진입을 알아보고 유입 딱지를 붙인 경로로 웹을 띄운다
     <FlexWidget
-      clickAction="OPEN_APP"
+      clickAction="OPEN_URI"
+      clickActionData={{ uri: WIDGET_ENTRY_URL }}
       style={{
         width,
         height,

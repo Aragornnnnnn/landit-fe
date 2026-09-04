@@ -31,6 +31,7 @@ import { useNotificationDeepLink } from '@/notifications/useNotificationDeepLink
 import { syncStreakWidget, syncWidgetOnLaunch } from '@/widgets';
 import { requestWidgetPin } from '@/widgets/android/pin';
 import { saveWidgetData } from '@/widgets/model/widget-store';
+import { useWidgetEntry } from '@/widgets/useWidgetEntry';
 
 import { goHome } from '../../modules/app-suspender';
 
@@ -113,6 +114,10 @@ const ShellScreen = () => {
   const coldStart = useNotificationDeepLink((path) =>
     postToWeb({ type: 'NAVIGATE', url: path }),
   );
+  // 위젯 탭도 같은 길 — 웹이 유입 딱지(UTM)를 읽어 위젯 유입을 센다
+  const widgetEntry = useWidgetEntry((path) =>
+    postToWeb({ type: 'NAVIGATE', url: path }),
+  );
 
   // Meta SDK 초기화와 iOS ATT 동의 요청 — 앱 첫 진입에 1회 (광고 설치 어트리뷰션)
   useEffect(() => {
@@ -183,8 +188,8 @@ const ShellScreen = () => {
     );
   }
 
-  // 콜드 스타트 조회가 끝나야 초기 URI가 정해진다 — 그때까지 마운트 보류 (수 ms, 스플래시가 가린다)
-  if (coldStart.status === 'loading') {
+  // 콜드 스타트 조회(알림·위젯)가 끝나야 초기 URI가 정해진다 — 그때까지 마운트 보류 (수 ms, 스플래시가 가린다)
+  if (coldStart.status === 'loading' || widgetEntry.status === 'loading') {
     return null;
   }
 
@@ -192,8 +197,10 @@ const ShellScreen = () => {
     <WebView
       key={loadAttempt}
       ref={webviewRef}
-      // 진입점은 루트, 알림 콜드 스타트면 페이로드의 경로 — 로그인 여부는 웹의 인증 가드가 판단한다
-      source={{ uri: `${WEB_URL}${coldStart.path ?? '/'}` }}
+      // 진입점은 루트, 알림 콜드 스타트면 페이로드의 경로, 위젯 탭이면 위젯 진입 경로 — 로그인 여부는 웹의 인증 가드가 판단한다
+      source={{
+        uri: `${WEB_URL}${coldStart.path ?? widgetEntry.path ?? '/'}`,
+      }}
       // 콘텐츠 로드 전 네이티브 컨텍스트(플랫폼·앱 버전)를 window에 주입 — 웹 계측이 첫 렌더에서 바로 읽는다
       injectedJavaScriptBeforeContentLoaded={nativeContextScript}
       onMessage={onMessage}
