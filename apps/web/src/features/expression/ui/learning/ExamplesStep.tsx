@@ -104,8 +104,9 @@ export const ExamplesStep = ({
 };
 
 // 예문 카드 — 이미지 + Q(질문) / A(표현 활용 문장). A는 강조 구간만 주황으로.
+// 폭은 화면 폭 기준(-72px) — 작은 폰에서도 다음 카드가 반드시 빼꼼 보여야 옆으로 넘길 수 있다는 걸 안다
 const ExampleCard = ({ sentence }: { sentence: PracticeSentence }) => (
-  <div className="w-[280px] shrink-0 snap-center snap-always overflow-hidden rounded-2xl border border-border bg-card">
+  <div className="w-[calc(100%-72px)] shrink-0 snap-center snap-always overflow-hidden rounded-2xl border border-border bg-card">
     <div className="flex aspect-square items-center justify-center bg-secondary">
       {sentence.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- 예문 이미지 도메인 미정이라 next/image 원격 허용 목록을 아직 못 만든다
@@ -118,24 +119,24 @@ const ExampleCard = ({ sentence }: { sentence: PracticeSentence }) => (
         <Emoji className="text-4xl">🖼️</Emoji>
       )}
     </div>
-    <div className="flex flex-col gap-2 px-4 py-3">
+    <div className="flex flex-col gap-3 px-5 py-4">
       <div>
-        <p className="text-sm font-semibold text-foreground">
+        <p className="text-base font-semibold text-foreground">
           <QaBadge label="Q" /> {sentence.practiceQuestion}
         </p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           {sentence.practiceQuestionTranslation}
         </p>
       </div>
       <div>
-        <p className="text-sm font-bold text-foreground">
+        <p className="text-base font-bold text-foreground">
           <QaBadge label="A" />{' '}
           <HighlightedSentence
             text={sentence.sentenceText}
             highlight={sentence.highlightingPart}
           />
         </p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           {sentence.sentenceTranslation}
         </p>
       </div>
@@ -144,7 +145,7 @@ const ExampleCard = ({ sentence }: { sentence: PracticeSentence }) => (
 );
 
 const QaBadge = ({ label }: { label: string }) => (
-  <span className="mr-0.5 inline-flex size-4 items-center justify-center rounded-full bg-secondary text-[10px] font-bold text-muted-foreground">
+  <span className="mr-1 inline-flex size-5 items-center justify-center rounded-full bg-secondary text-xs font-bold text-muted-foreground">
     {label}
   </span>
 );
