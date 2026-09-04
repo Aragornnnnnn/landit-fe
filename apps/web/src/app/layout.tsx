@@ -5,6 +5,7 @@ import type { Metadata, Viewport } from 'next';
 import { AppUpdateGate } from '@/features/app-update/ui/AppUpdateGate';
 import { LegacyReminderCleanup } from '@/features/notification/ui/LegacyReminderCleanup';
 import { PushTokenSync } from '@/features/notification/ui/PushTokenSync';
+import { WidgetChangeSync } from '@/features/widget/ui/WidgetChangeSync';
 import { WidgetDataSync } from '@/features/widget/ui/WidgetDataSync';
 import { AnalyticsBootstrap, PageViewTracker } from '@/shared/analytics';
 import { BridgeListener } from '@/shared/bridge/BridgeListener';
@@ -46,6 +47,7 @@ export default function RootLayout({
           <LegacyReminderCleanup />
           <PushTokenSync />
           <WidgetDataSync />
+          <WidgetChangeSync />
         </Providers>
         <Toaster />
         <SpeedInsights />

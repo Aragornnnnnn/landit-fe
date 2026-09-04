@@ -55,6 +55,11 @@ export const widgetDataSchema = z.object({
     .nullable(),
 });
 
+// 홈 위젯 크기 — iOS small/medium, Android 2×2/4×2/4×4를 같은 말로 부른다
+export const widgetFamilySchema = z.enum(['small', 'medium', 'large']);
+// 홈 화면에 위젯이 실제로 놓였는가·치워졌는가 — Android 위젯 프로바이더 콜백에서 온다 (iOS는 콜백이 없어 못 보낸다)
+export const widgetChangeSchema = z.enum(['added', 'removed']);
+
 // 로그인 전·로그아웃 후에 쓰는 빈 값 — 웹이 이걸 보내 셸에 남은 이전 사용자 기록을 지운다.
 // 완료 이력이 없으므로(null) 위젯은 몰락 연출 없이 0일 시간표만 그린다
 export const EMPTY_WIDGET_DATA = {
@@ -100,6 +105,8 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('REQUEST_WIDGET_PIN') }),
   // 앱을 홈 화면으로 내린다 — iOS만. 위젯 설치 안내 끝에 사용자가 직접 위젯을 얹으러 나가게 한다
   z.object({ type: z.literal('GO_HOME') }),
+  // 웹이 준비됐으니 쌓아 둔 위젯 추가·삭제를 보내 달라 — 응답은 WIDGET_CHANGED (건별, 없으면 무응답)
+  z.object({ type: z.literal('REQUEST_WIDGET_CHANGES') }),
 ]);
 
 // 네이티브 → 웹으로 보낼 수 있는 메시지 목록
@@ -132,16 +139,24 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     type: z.literal('PUSH_TOKEN'),
     token: z.string().min(1),
   }),
-  // 앱이 떠 있는 상태에서 알림을 탭했을 때 — 웹 라우터가 이 경로로 이동한다
+  // 앱이 떠 있는 상태에서 알림·위젯을 탭했을 때 — 웹 라우터가 이 경로로 이동한다
   z.object({
     type: z.literal('NAVIGATE'),
     url: z.string().min(1),
+  }),
+  // 홈 화면에 위젯이 놓이거나 치워졌다 — 웹이 계측한다. 셸이 쌓아 뒀다가 웹이 청하면(REQUEST_WIDGET_CHANGES) 건별로 보낸다
+  z.object({
+    type: z.literal('WIDGET_CHANGED'),
+    change: widgetChangeSchema,
+    family: widgetFamilySchema,
   }),
 ]);
 
 // 위 스키마에서 자동으로 뽑아낸 타입 — 스키마를 고치면 타입도 같이 바뀐다
 export type HapticPattern = z.infer<typeof hapticPatternSchema>;
 export type WidgetData = z.infer<typeof widgetDataSchema>;
+export type WidgetFamily = z.infer<typeof widgetFamilySchema>;
+export type WidgetChange = z.infer<typeof widgetChangeSchema>;
 export type NotificationPermissionStatus = z.infer<
   typeof notificationPermissionStatusSchema
 >;

@@ -6,6 +6,7 @@ import type {
 } from 'react-native-android-widget';
 
 import { buildWeekStrip } from '../model/week-strip';
+import { recordWidgetChange } from '../model/widget-changes';
 import { decideWidgetState } from '../model/widget-state';
 import { loadWidgetData } from '../model/widget-store';
 import { familyForWidget } from './families';
@@ -38,7 +39,14 @@ export const widgetTaskHandler: WidgetTaskHandler = async ({
   widgetAction,
   renderWidget,
 }) => {
-  // 클릭은 OPEN_APP으로 네이티브가 처리하고, 삭제는 그릴 것이 없다
+  // 홈 화면에 놓이거나 치워진 건 계측용으로 쌓는다 — 셸이 웹으로 보낸다
+  if (widgetAction === 'WIDGET_ADDED' || widgetAction === 'WIDGET_DELETED') {
+    await recordWidgetChange({
+      change: widgetAction === 'WIDGET_ADDED' ? 'added' : 'removed',
+      family: familyForWidget(widgetInfo.widgetName),
+    });
+  }
+  // 클릭은 OPEN_URI(위젯 딥링크)로 네이티브가 처리하고, 삭제는 그릴 것이 없다
   if (widgetAction === 'WIDGET_DELETED' || widgetAction === 'WIDGET_CLICK') {
     return;
   }
