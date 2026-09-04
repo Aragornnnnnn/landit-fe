@@ -176,13 +176,16 @@ const LoadedExpressionFlow = ({
       ? 'REVIEW'
       : step;
 
-  // 첫 스텝 포함, 스텝 전환마다 노출로 기록한다
+  // 첫 스텝 포함, 스텝 전환마다 노출로 기록한다.
+  // 예문 차례인데 practice를 아직 기다리는 중이면 화면은 스켈레톤이라 세지 않는다 — 결론이 나면 예문 또는 복습으로 찍힌다
+  const stepShown = step !== 'EXAMPLES' || practiceSettled;
   useEffect(() => {
+    if (!stepShown) return;
     track(EVENTS.EXPRESSION_STEP_VIEWED, {
       expression_id: expressionId,
       step: STEP_PROP[visibleStep],
     });
-  }, [visibleStep, expressionId]);
+  }, [visibleStep, stepShown, expressionId]);
 
   // 예문 이미지는 EXAMPLES에서 마운트되지만, URL을 아는 즉시 브라우저 캐시에 선로드해
   // 도착 시 img가 곧바로 뜨게 한다. preload는 멱등이라 렌더 중 호출해도 안전하다.

@@ -843,4 +843,48 @@ describe('ExpressionFlow 예문 스텝', () => {
       step: 'examples',
     });
   });
+
+  it('practice를 기다리는 동안엔 examples 노출을 찍지 않고, 빈 응답이면 review만 찍는다', async () => {
+    const user = userEvent.setup();
+    learningMock.mockReturnValue({ learning, error: null, isLoading: false });
+    practiceMock.mockReturnValue({
+      practice: null,
+      error: null,
+      isLoading: true,
+    });
+    const view = render(
+      <ExpressionFlow
+        origin={{ kind: 'scenario', scenarioId: 1 }}
+        expressionId={7}
+      />,
+    );
+    await user.click(screen.getByText('quiz-next'));
+
+    // 스켈레톤을 보는 동안은 어떤 스텝도 노출로 세지 않는다
+    expect(track).not.toHaveBeenCalledWith('Expression Step Viewed', {
+      expression_id: 7,
+      step: 'examples',
+    });
+
+    practiceMock.mockReturnValue({
+      practice: practice(0),
+      error: null,
+      isLoading: false,
+    });
+    view.rerender(
+      <ExpressionFlow
+        origin={{ kind: 'scenario', scenarioId: 1 }}
+        expressionId={7}
+      />,
+    );
+
+    expect(track).toHaveBeenCalledWith('Expression Step Viewed', {
+      expression_id: 7,
+      step: 'review',
+    });
+    expect(track).not.toHaveBeenCalledWith('Expression Step Viewed', {
+      expression_id: 7,
+      step: 'examples',
+    });
+  });
 });
