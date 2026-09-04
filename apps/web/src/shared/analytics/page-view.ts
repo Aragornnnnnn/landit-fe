@@ -17,6 +17,8 @@ const STATIC_PAGES = new Set([
   'smalltalk',
   'streak',
   'mailbox',
+  // LAN-428 설문(임시) — 설문이 끝나면 지운다
+  'survey',
 ]);
 
 // 피드백 작성은 유형별로 주소가 갈리지만 화면은 하나다 — 이름을 넷으로 쪼개지 않고 속성으로 싣는다.
