@@ -13,6 +13,7 @@ import { EASE_STANDARD } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 
+import type { QuizResult } from '../../model/review-queue';
 import type { SentenceQuiz } from '../../model/sentence-quiz';
 import { useChipReorder } from '../../model/useChipReorder';
 import {
@@ -40,9 +41,11 @@ interface QuizStepProps {
   expressionId: number;
   onBack: () => void;
   leftAction?: 'back' | 'close';
-  // 정답·오답 모두 결과 시트의 CTA로 다음 스텝으로 이어진다 (퀴즈→설명, 복습→완료)
-  onNext: () => void;
+  // 정답·오답 모두 결과 시트의 CTA로 이어진다 — 판정을 실어 보내, 복습은 틀린 문제를 다시 낼 수 있다
+  onNext: (result: QuizResult) => void;
   nextLabel?: string;
+  // 오답 시트의 CTA 문구 — 없으면 정답과 같다 (복습에서 "다시 풀어볼게요"로 갈린다)
+  wrongLabel?: string;
   finishing?: boolean;
   // 상단 진행바를 [idle일 때, 판정 후] 두 값으로 — 기본은 퀴즈 스텝 구간(0→0.5)
   progressRange?: [number, number];
@@ -54,7 +57,7 @@ interface QuizStepProps {
   correctSlot?: () => React.ReactNode;
 }
 
-type Checked = 'idle' | 'wrong' | 'correct';
+type Checked = 'idle' | QuizResult;
 
 // 단어 칩 — 공용 Button과 같은 3D 눌림 효과 (흰 배경 + 회색 엣지 그림자)
 // min-w로 짧은 단어("I")가 원형으로 뭉치지 않게 최소 폭을 준다
@@ -81,6 +84,7 @@ export const QuizStep = ({
   leftAction,
   onNext,
   nextLabel = '표현 배우러 갈게요',
+  wrongLabel = nextLabel,
   finishing = false,
   progressRange = [0, 0.5],
   initialSelected,
@@ -300,9 +304,9 @@ export const QuizStep = ({
         ) : (
           <ResultSheet
             tone={checked}
-            answer={quiz.writingSentenceText}
-            onNext={onNext}
-            nextLabel={nextLabel}
+            answer={quiz.answerText}
+            onNext={() => onNext(checked)}
+            nextLabel={checked === 'correct' ? nextLabel : wrongLabel}
             finishing={finishing}
           />
         ))}

@@ -1,7 +1,6 @@
-// 예문 워터폴 제거 배선 검증(프리페치·preload) + 발음 스텝 게이트 검증
+// 예문 프리페치 배선 검증 + 발음 스텝 게이트 검증
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { preload } from 'react-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ExpressionLearning } from '../api/learning';
@@ -10,11 +9,6 @@ import { useExpressionLearningQuery } from '../model/useExpressionLearningQuery'
 import { useExpressionPracticeQuery } from '../model/useExpressionPracticeQuery';
 import { ExpressionFlow } from './ExpressionFlow';
 
-// preload만 스파이로 바꾸고 나머지 react-dom(렌더러가 씀)은 원본 유지
-vi.mock('react-dom', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-dom')>()),
-  preload: vi.fn(),
-}));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('../model/useExpressionLearningQuery', () => ({
   useExpressionLearningQuery: vi.fn(),
@@ -27,44 +21,66 @@ vi.mock('../model/useFinishExpressionMutation', () => ({
 }));
 // 스텝 UI는 이 테스트 관심사가 아니라 스텁으로 대체(무거운 하위 의존 회피).
 // 전환 검증용으로 onNext·onSkip만 버튼으로 노출한다
+// 복습 큐 검증용으로 지금 문제(answerText)·CTA 문구·마지막 여부(correctSlot)·칩 복원 여부를 함께 노출한다
 vi.mock('./learning/QuizStep', () => ({
   QuizStep: ({
     step,
+    quiz,
     partner,
     onNext,
     onBack,
+    nextLabel,
+    wrongLabel,
+    correctSlot,
+    initialSelected,
+    onSelectedChange,
   }: {
     step: string;
+    quiz: { answerText: string };
     partner: string;
-    onNext: () => void;
+    onNext: (result: 'correct' | 'wrong') => void;
     onBack: () => void;
+    nextLabel?: string;
+    wrongLabel?: string;
+    correctSlot?: () => React.ReactNode;
+    initialSelected?: number[];
+    onSelectedChange?: (selected: number[]) => void;
   }) => (
     <div>
       <p>quiz:{step}</p>
       <p>partner:{partner}</p>
-      <button onClick={onNext}>quiz-next</button>
+      <p>question:{quiz.answerText}</p>
+      <p>
+        labels:{nextLabel}/{wrongLabel}
+      </p>
+      <p>last:{correctSlot ? 'y' : 'n'}</p>
+      <p>restored:{initialSelected ? 'y' : 'n'}</p>
+      <button onClick={() => onNext('correct')}>quiz-next</button>
+      <button onClick={() => onNext('wrong')}>quiz-wrong</button>
       <button onClick={onBack}>quiz-back</button>
+      <button onClick={() => onSelectedChange?.([1])}>quiz-pick</button>
     </div>
   ),
 }));
-vi.mock('./learning/ExplanationStep', () => ({
-  ExplanationStep: ({
-    nextLabel,
+// 예문 스텝 — 예문 개수를 노출한다
+vi.mock('./learning/ExamplesStep', () => ({
+  ExamplesStep: ({
     examples,
+    leftAction = 'back',
     onNext,
     onBack,
   }: {
-    nextLabel: string;
     examples: unknown[];
+    leftAction?: string;
     onNext: () => void;
     onBack: () => void;
   }) => (
     <div>
       <p>
-        explain:{nextLabel}:{examples.length}
+        examples:{examples.length}:{leftAction}
       </p>
-      <button onClick={onNext}>explain-next</button>
-      <button onClick={onBack}>explain-back</button>
+      <button onClick={onNext}>examples-next</button>
+      <button onClick={onBack}>examples-back</button>
     </div>
   ),
 }));
@@ -115,12 +131,12 @@ vi.mock('./pronunciation/PronunciationStep', async () => {
   };
 });
 vi.mock('./common/ExpressionExitSheet', () => ({
-  ExpressionExitSheet: () => null,
+  ExpressionExitSheet: ({ open }: { open: boolean }) =>
+    open ? <p>exit-sheet</p> : null,
 }));
 
 const learningMock = vi.mocked(useExpressionLearningQuery);
 const practiceMock = vi.mocked(useExpressionPracticeQuery);
-const preloadMock = vi.mocked(preload);
 
 const learning: ExpressionLearning = {
   expressionId: 7,
@@ -139,34 +155,74 @@ const learning: ExpressionLearning = {
   targetExpressionAudioUrl: null,
 };
 
-const practice = (imageUrls: (string | null)[]): ExpressionPractice => ({
+// 예문 개수만 바꿔 쓰는 practice 응답 — 내용은 스텝 스텁이 보지 않는다.
+// 작문 문제는 기본 비워 대표 예문 폴백(1문제)으로 두고, 큐 검증에서만 EN·KR 두 문제를 넣는다
+const practice = (
+  exampleCount: number,
+  writingSentence: ExpressionPractice['writingSentence'] = [],
+): ExpressionPractice => ({
   targetExpressionText: 'get it',
   baseExpressionMeaningText: '이해하다',
   usageDescription: '설명',
-  practiceSentence: imageUrls.map((imageUrl) => ({
+  practiceSentence: Array.from({ length: exampleCount }, () => ({
     sentenceText: '',
     highlightingPart: '',
     sentenceTranslation: '',
     practiceQuestion: '',
     practiceQuestionTranslation: '',
-    imageUrl,
+    imageUrl: null,
   })),
-  writingSentence: {
-    writingSentenceText: '',
-    writingSentenceTranslation: '',
+  writingSentence,
+});
+
+// 영어 문제 → 한국어 문제 순으로 온 작문 문제 2건
+const twoWritingSentences: ExpressionPractice['writingSentence'] = [
+  {
+    quizLanguage: 'EN',
+    writingSentenceText: 'I get it now',
+    writingSentenceTranslation: '이제 알겠어',
     writingQuestion: '',
     writingQuestionTranslation: '',
-    writingSentenceWords: [],
-    writingSentenceWordChoices: [],
+    writingSentenceWords: ['I', 'get', 'it', 'now'],
+    writingSentenceWordChoices: ['now', 'I', 'it', 'get'],
   },
-});
+  {
+    quizLanguage: 'KR',
+    writingSentenceText: 'Do you get it?',
+    writingSentenceTranslation: '이해돼?',
+    writingQuestion: '',
+    writingQuestionTranslation: '',
+    writingSentenceWords: ['이해돼?'],
+    writingSentenceWordChoices: ['이해돼?', '몰라'],
+  },
+];
+
+// 발음 없는 표현으로 복습까지 간다 — 큐 검증의 공통 출발점
+const renderAtReview = async (
+  user: ReturnType<typeof userEvent.setup>,
+  writingSentence: ExpressionPractice['writingSentence'],
+) => {
+  learningMock.mockReturnValue({ learning, error: null, isLoading: false });
+  practiceMock.mockReturnValue({
+    practice: practice(0, writingSentence),
+    error: null,
+    isLoading: false,
+  });
+  render(
+    <ExpressionFlow
+      origin={{ kind: 'scenario', scenarioId: 1 }}
+      expressionId={7}
+    />,
+  );
+  await user.click(screen.getByText('quiz-next'));
+};
 
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
 });
 
-describe('ExpressionFlow 예문 프리페치·preload', () => {
+describe('ExpressionFlow 예문 프리페치', () => {
   it('QUIZ 스텝에서도 learning이 오면 practice를 미리 받도록 enabled를 켠다', () => {
     learningMock.mockReturnValue({
       learning,
@@ -212,7 +268,7 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
     expect(practiceMock).toHaveBeenCalledWith(7, false);
   });
 
-  it('발음 자산이 있으면 설명(단독)→발음→추가 예문 순으로 스텝이 낀다', async () => {
+  it('발음 자산이 있으면 설명→발음→예문→복습 순으로 스텝이 낀다', async () => {
     const user = userEvent.setup();
     learningMock.mockReturnValue({
       learning: {
@@ -223,7 +279,7 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
       isLoading: false,
     });
     practiceMock.mockReturnValue({
-      practice: practice(['a.webp']),
+      practice: practice(2),
       error: null,
       isLoading: false,
     });
@@ -238,11 +294,13 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
     await user.click(screen.getByText('quiz-next'));
     expect(screen.getByText('intro:소리 내서 말해볼게요')).toBeInTheDocument();
 
-    // EXPLAIN → PRONOUNCE → EXAMPLES: 추가 예문이 이제야 나온다
+    // EXPLAIN → PRONOUNCE → 예문 → REVIEW
     await user.click(screen.getByText('intro-next'));
     expect(screen.getByText(/pronounce#/)).toBeInTheDocument();
     await user.click(screen.getByText('pronounce-next'));
-    expect(screen.getByText('explain:복습 퀴즈 풀게요:1')).toBeInTheDocument();
+    expect(screen.getByText('examples:2:back')).toBeInTheDocument();
+    await user.click(screen.getByText('examples-next'));
+    expect(screen.getByText('quiz:review')).toBeInTheDocument();
   });
 
   it('녹음 전에 설명으로 되돌아가면 첫 방문 그대로 — 말하기 CTA와 건너뛰기가 남는다', async () => {
@@ -256,7 +314,7 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
       isLoading: false,
     });
     practiceMock.mockReturnValue({
-      practice: practice([]),
+      practice: practice(0),
       error: null,
       isLoading: false,
     });
@@ -288,7 +346,7 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
       isLoading: false,
     });
     practiceMock.mockReturnValue({
-      practice: practice([]),
+      practice: practice(0),
       error: null,
       isLoading: false,
     });
@@ -316,7 +374,7 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
     expect(screen.getByText(/pronounce#/).textContent).toBe(firstMount);
   });
 
-  it('피드백을 받은 뒤 추가 예문으로 나갔다 뒤로 와도 발음 스텝이 유지된다', async () => {
+  it('예문이 없으면 발음 뒤 예문 화면 없이 곧장 복습이고, 뒤로 와도 발음 스텝이 유지된다', async () => {
     const user = userEvent.setup();
     learningMock.mockReturnValue({
       learning: {
@@ -327,7 +385,7 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
       isLoading: false,
     });
     practiceMock.mockReturnValue({
-      practice: practice([]),
+      practice: practice(0),
       error: null,
       isLoading: false,
     });
@@ -343,15 +401,15 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
     await user.click(screen.getByText('pronounce-settled'));
     const firstMount = screen.getByText(/pronounce#/).textContent;
 
-    // 추가 예문으로 나가도 발음 스텝은 숨어서 살아 있고, ‹로 돌아오면 그 피드백 그대로
+    // 복습으로 나가도 발음 스텝은 숨어서 살아 있고, ‹로 돌아오면 그 피드백 그대로
     await user.click(screen.getByText('pronounce-next'));
-    expect(screen.getByText('explain:복습 퀴즈 풀게요:0')).toBeInTheDocument();
+    expect(screen.getByText('quiz:review')).toBeInTheDocument();
     expect(screen.getByText(/pronounce#/).textContent).toBe(firstMount);
-    await user.click(screen.getByText('explain-back'));
+    await user.click(screen.getByText('quiz-back'));
     expect(screen.getByText(/pronounce#/).textContent).toBe(firstMount);
   });
 
-  it('발음 스텝은 건너뛰기로 추가 예문까지 바로 갈 수 있다', async () => {
+  it('발음 스텝은 건너뛰기로 예문까지 바로 갈 수 있다', async () => {
     const user = userEvent.setup();
     learningMock.mockReturnValue({
       learning: {
@@ -362,7 +420,7 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
       isLoading: false,
     });
     practiceMock.mockReturnValue({
-      practice: practice([]),
+      practice: practice(2),
       error: null,
       isLoading: false,
     });
@@ -377,10 +435,10 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
     await user.click(screen.getByText('intro-skip'));
 
     expect(screen.queryByText(/pronounce#/)).not.toBeInTheDocument();
-    expect(screen.getByText('explain:복습 퀴즈 풀게요:0')).toBeInTheDocument();
+    expect(screen.getByText('examples:2:back')).toBeInTheDocument();
   });
 
-  it('건너뛴 뒤 추가 예문에서 뒤로 가면 설명(다음 CTA)으로 돌아가고, 다음은 추가 예문으로 복귀한다', async () => {
+  it('건너뛴 뒤 예문에서 뒤로 가면 설명(다음 CTA)으로 돌아가고, 다음은 예문으로 복귀한다', async () => {
     const user = userEvent.setup();
     learningMock.mockReturnValue({
       learning: {
@@ -391,7 +449,7 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
       isLoading: false,
     });
     practiceMock.mockReturnValue({
-      practice: practice([]),
+      practice: practice(2),
       error: null,
       isLoading: false,
     });
@@ -404,7 +462,7 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
 
     await user.click(screen.getByText('quiz-next'));
     await user.click(screen.getByText('intro-skip'));
-    await user.click(screen.getByText('explain-back'));
+    await user.click(screen.getByText('examples-back'));
 
     // 말하기를 건너뛴 사람에게 마이크를 다시 들이밀지 않는다 — 설명 재방문 + "다음"만
     expect(screen.queryByText(/pronounce#/)).not.toBeInTheDocument();
@@ -412,7 +470,7 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
     expect(screen.queryByText('intro-skip')).not.toBeInTheDocument();
 
     await user.click(screen.getByText('intro-next'));
-    expect(screen.getByText('explain:복습 퀴즈 풀게요:0')).toBeInTheDocument();
+    expect(screen.getByText('examples:2:back')).toBeInTheDocument();
   });
 
   it('복습 영작까지 갔다 뒤로 와도 발음 스텝이 유지된다', async () => {
@@ -426,7 +484,7 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
       isLoading: false,
     });
     practiceMock.mockReturnValue({
-      practice: practice([]),
+      practice: practice(0),
       error: null,
       isLoading: false,
     });
@@ -442,15 +500,13 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
     await user.click(screen.getByText('pronounce-settled'));
     const firstMount = screen.getByText(/pronounce#/).textContent;
 
-    // 추가 예문 → 복습 영작까지 전진해도 발음 스텝은 숨어서 살아 있다
+    // 복습 영작까지 전진해도 발음 스텝은 숨어서 살아 있다
     await user.click(screen.getByText('pronounce-next'));
-    await user.click(screen.getByText('explain-next'));
     expect(screen.getByText('quiz:review')).toBeInTheDocument();
     expect(screen.getByText(/pronounce#/).textContent).toBe(firstMount);
 
-    // 복습 ‹ → 추가 예문 ‹ → 보던 발음 결과 그대로
+    // 복습 ‹ → 보던 발음 결과 그대로
     await user.click(screen.getByText('quiz-back'));
-    await user.click(screen.getByText('explain-back'));
     expect(screen.getByText(/pronounce#/).textContent).toBe(firstMount);
   });
 
@@ -465,7 +521,7 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
       isLoading: false,
     });
     practiceMock.mockReturnValue({
-      practice: practice([]),
+      practice: practice(0),
       error: null,
       isLoading: false,
     });
@@ -480,12 +536,12 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
     await user.click(screen.getByText('intro-next'));
     await user.click(screen.getByText('pronounce-unavailable'));
 
-    // 추가 예문에서 뒤로 가면 발음(마이크)이 아니라 설명으로, 설명 다음도 추가 예문으로 복귀
-    await user.click(screen.getByText('explain-back'));
+    // 복습에서 뒤로 가면 발음(마이크)이 아니라 설명으로, 설명 다음도 복습으로 복귀
+    await user.click(screen.getByText('quiz-back'));
     expect(screen.queryByText(/pronounce#/)).not.toBeInTheDocument();
     expect(screen.getByText('intro:다음')).toBeInTheDocument();
     await user.click(screen.getByText('intro-next'));
-    expect(screen.getByText('explain:복습 퀴즈 풀게요:0')).toBeInTheDocument();
+    expect(screen.getByText('quiz:review')).toBeInTheDocument();
   });
 
   it('완료한 표현 재진입(learning.completed)이면 퀴즈 없이 설명부터 시작한다', () => {
@@ -499,7 +555,7 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
       isLoading: false,
     });
     practiceMock.mockReturnValue({
-      practice: practice([]),
+      practice: practice(0),
       error: null,
       isLoading: false,
     });
@@ -514,11 +570,11 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
     expect(screen.getByText('intro:소리 내서 말해볼게요')).toBeInTheDocument();
   });
 
-  it('발음 자산이 없으면 기존 3스텝 그대로 — 발음 스텝이 뜨지 않는다', async () => {
+  it('발음 자산이 없고 예문도 없으면 퀴즈 다음이 곧장 복습이고, 뒤로가기는 나가기 확인이다', async () => {
     const user = userEvent.setup();
     learningMock.mockReturnValue({ learning, error: null, isLoading: false });
     practiceMock.mockReturnValue({
-      practice: practice([]),
+      practice: practice(0),
       error: null,
       isLoading: false,
     });
@@ -529,14 +585,13 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
       />,
     );
 
-    // EXPLAIN이 예문까지 품는 기존 화면 그대로 — B안 설명 단독 화면이 아니다
     await user.click(screen.getByText('quiz-next'));
-    expect(screen.getByText('explain:복습 퀴즈 풀게요:0')).toBeInTheDocument();
     expect(screen.queryByText(/^intro:/)).not.toBeInTheDocument();
-
-    // EXPLAIN → 곧장 REVIEW
-    await user.click(screen.getByText('explain-next'));
     expect(screen.getByText('quiz:review')).toBeInTheDocument();
+
+    // 되돌아갈 설명 화면이 없으니 ‹ 대신 X — 나가기 확인 시트
+    await user.click(screen.getByText('quiz-back'));
+    expect(screen.getByText('exit-sheet')).toBeInTheDocument();
   });
 
   it('복습 영작으로 넘어가면 퀴즈에서 뽑은 상대를 그대로 쓴다', async () => {
@@ -545,7 +600,7 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
     vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValue(0.9);
     learningMock.mockReturnValue({ learning, error: null, isLoading: false });
     practiceMock.mockReturnValue({
-      practice: practice([]),
+      practice: practice(0),
       error: null,
       isLoading: false,
     });
@@ -557,27 +612,81 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
     );
     expect(screen.getByText('partner:chloe')).toBeInTheDocument();
 
-    // when — 설명을 지나 복습 영작까지 간다
+    // when — 복습 영작까지 간다
     await user.click(screen.getByText('quiz-next'));
-    await user.click(screen.getByText('explain-next'));
 
     // then — 복습도 클로이다
     expect(screen.getByText('quiz:review')).toBeInTheDocument();
     expect(screen.getByText('partner:chloe')).toBeInTheDocument();
   });
+});
 
-  it('예문 이미지가 있으면 URL을 image로 preload한다', () => {
-    learningMock.mockReturnValue({
-      learning,
-      error: null,
-      isLoading: false,
-    });
+describe('ExpressionFlow 복습 큐', () => {
+  it('두 문제를 차례로 맞히면 첫 정답은 다음 문제로 넘기고 마지막 정답에서만 획득 연출을 띄운다', async () => {
+    const user = userEvent.setup();
+    await renderAtReview(user, twoWritingSentences);
+
+    // 첫 문제(EN) — 아직 마지막이 아니라 획득 연출 없이 "다음 문제"
+    expect(screen.getByText('question:I get it now')).toBeInTheDocument();
+    expect(screen.getByText('last:n')).toBeInTheDocument();
+    expect(screen.getByText('labels:다음 문제/다음 문제')).toBeInTheDocument();
+
+    await user.click(screen.getByText('quiz-next'));
+
+    // 둘째 문제(KR) — 마지막이라 정답에 획득 연출이 붙는다
+    expect(screen.getByText('question:이해돼?')).toBeInTheDocument();
+    expect(screen.getByText('last:y')).toBeInTheDocument();
+  });
+
+  it('틀린 문제는 다른 문제를 낸 뒤 다시 나오고, 그때 맞히면 마지막이다', async () => {
+    const user = userEvent.setup();
+    await renderAtReview(user, twoWritingSentences);
+
+    await user.click(screen.getByText('quiz-wrong'));
+    expect(screen.getByText('question:이해돼?')).toBeInTheDocument();
+    expect(screen.getByText('last:n')).toBeInTheDocument();
+
+    await user.click(screen.getByText('quiz-next'));
+    expect(screen.getByText('question:I get it now')).toBeInTheDocument();
+    expect(screen.getByText('last:y')).toBeInTheDocument();
+  });
+
+  it('남은 문제가 하나뿐일 때 틀리면 오답 CTA가 "다시 풀어볼게요"고, 같은 문제를 새로 낸다', async () => {
+    const user = userEvent.setup();
+    await renderAtReview(user, twoWritingSentences);
+    await user.click(screen.getByText('quiz-next'));
+    expect(
+      screen.getByText('labels:다음 문제/다시 풀어볼게요'),
+    ).toBeInTheDocument();
+
+    // 고른 칩이 있는 채로 틀린다
+    await user.click(screen.getByText('quiz-pick'));
+    await user.click(screen.getByText('quiz-wrong'));
+
+    // 같은 문제가 다시 나오되, 틀렸던 칩 배치는 복원하지 않는다
+    expect(screen.getByText('question:이해돼?')).toBeInTheDocument();
+    expect(screen.getByText('last:y')).toBeInTheDocument();
+    expect(screen.getByText('restored:n')).toBeInTheDocument();
+  });
+
+  it('작문 문제를 못 받았으면 대표 예문 1문제로 폴백해 바로 마지막이다', async () => {
+    const user = userEvent.setup();
+    await renderAtReview(user, []);
+
+    expect(screen.getByText('question:I get it')).toBeInTheDocument();
+    expect(screen.getByText('last:y')).toBeInTheDocument();
+  });
+});
+
+describe('ExpressionFlow 예문 스텝', () => {
+  it('발음이 없으면 퀴즈→예문→복습이고, 예문의 X는 나가기 확인, 복습의 뒤로는 예문이다', async () => {
+    const user = userEvent.setup();
+    learningMock.mockReturnValue({ learning, error: null, isLoading: false });
     practiceMock.mockReturnValue({
-      practice: practice(['a.webp', null, 'b.webp']),
+      practice: practice(2),
       error: null,
       isLoading: false,
     });
-
     render(
       <ExpressionFlow
         origin={{ kind: 'scenario', scenarioId: 1 }}
@@ -585,8 +694,36 @@ describe('ExpressionFlow 예문 프리페치·preload', () => {
       />,
     );
 
-    expect(preloadMock).toHaveBeenCalledWith('a.webp', { as: 'image' });
-    expect(preloadMock).toHaveBeenCalledWith('b.webp', { as: 'image' });
-    expect(preloadMock).toHaveBeenCalledTimes(2);
+    await user.click(screen.getByText('quiz-next'));
+    expect(screen.getByText('examples:2:close')).toBeInTheDocument();
+    await user.click(screen.getByText('examples-next'));
+    expect(screen.getByText('quiz:review')).toBeInTheDocument();
+
+    await user.click(screen.getByText('quiz-back'));
+    expect(screen.getByText('examples:2:close')).toBeInTheDocument();
+    await user.click(screen.getByText('examples-back'));
+    expect(screen.getByText('exit-sheet')).toBeInTheDocument();
+  });
+
+  it('완료한 표현 재진입에 발음이 없으면 퀴즈 없이 예문부터 시작한다', () => {
+    learningMock.mockReturnValue({
+      learning: { ...learning, completed: true },
+      error: null,
+      isLoading: false,
+    });
+    practiceMock.mockReturnValue({
+      practice: practice(2),
+      error: null,
+      isLoading: false,
+    });
+    render(
+      <ExpressionFlow
+        origin={{ kind: 'scenario', scenarioId: 1 }}
+        expressionId={7}
+      />,
+    );
+
+    expect(screen.queryByText('quiz:quiz')).not.toBeInTheDocument();
+    expect(screen.getByText('examples:2:close')).toBeInTheDocument();
   });
 });

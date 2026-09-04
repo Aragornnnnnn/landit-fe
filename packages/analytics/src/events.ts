@@ -160,7 +160,7 @@ export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
 export type AccentLocale = 'EN_US' | 'EN_GB' | 'EN_AU';
 // 기존 유저 게이트가 묻는 질문 — 온보딩 스텝과 같은 말을 쓴다
 export type GateQuestion = Extract<OnboardingStep, 'level' | 'accent'>;
-// pronounce = 발음 평가, examples = 발음 뒤 추가 예문 화면 (발음 없는 표현은 explain이 예문까지 포함)
+// pronounce = 발음 평가 (발음 자산이 있는 표현에만), examples = 추가 예문 화면(한 장씩 두 장)
 export type ExpressionStep =
   'quiz' | 'explain' | 'pronounce' | 'examples' | 'review';
 export type TurnInputType = 'voice' | 'text';

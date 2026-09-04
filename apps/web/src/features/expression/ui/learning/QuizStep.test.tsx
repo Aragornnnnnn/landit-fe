@@ -17,8 +17,8 @@ afterEach(cleanup);
 const quiz: SentenceQuiz = {
   writingQuestion: 'Who won?',
   writingQuestionTranslation: '누가 이겼어?',
-  writingSentenceText: 'I win',
-  writingSentenceTranslation: '내가 이겨',
+  answerText: 'I win',
+  promptText: '내가 이겨',
   answerWords: ['I', 'win'],
   shuffledWords: ['win', 'I'],
 };
@@ -110,6 +110,54 @@ describe('QuizStep', () => {
 
     expect(screen.getByText('커스텀 연출')).toBeInTheDocument();
     expect(screen.queryByText('정답이에요!')).not.toBeInTheDocument();
+  });
+
+  it('오답이면 오답용 CTA 문구를 띄우고 onNext에 wrong을 넘긴다', async () => {
+    // given — 정답·오답 CTA 문구가 다른 복습 퀴즈
+    const user = userEvent.setup();
+    const onNext = vi.fn();
+    render(
+      <QuizStep
+        step="review"
+        quiz={quiz}
+        partner="chloe"
+        expressionId={1}
+        onBack={vi.fn()}
+        onNext={onNext}
+        nextLabel="다음 문제"
+        wrongLabel="다시 풀어볼게요"
+      />,
+    );
+
+    // when — 틀리고 시트 CTA를 누른다
+    await pickWrongAnswer(user);
+    await user.click(screen.getByRole('button', { name: '확인할게요' }));
+    await user.click(screen.getByRole('button', { name: '다시 풀어볼게요' }));
+
+    // then
+    expect(onNext).toHaveBeenCalledWith('wrong');
+  });
+
+  it('정답이면 onNext에 correct를 넘긴다', async () => {
+    const user = userEvent.setup();
+    const onNext = vi.fn();
+    render(
+      <QuizStep
+        step="review"
+        quiz={quiz}
+        partner="chloe"
+        expressionId={1}
+        onBack={vi.fn()}
+        onNext={onNext}
+        nextLabel="다음 문제"
+      />,
+    );
+
+    await pickCorrectAnswer(user);
+    await user.click(screen.getByRole('button', { name: '확인할게요' }));
+    await user.click(screen.getByRole('button', { name: '다음 문제' }));
+
+    expect(onNext).toHaveBeenCalledWith('correct');
   });
 
   it('initialSelected로 고른 칩을 복원해 바로 확인할 수 있다', () => {
