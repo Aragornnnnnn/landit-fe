@@ -3,8 +3,7 @@
 // 복습 영작 스텝 — 작문 문제 여러 개를 큐로 돌린다. 틀리면 맨 뒤로 보내 맞출 때까지 다시 내고, 마지막 정답에서만 획득 연출로 완료한다
 import { useState } from 'react';
 
-import type { Partner } from '@/features/conversation/model/character-look';
-
+import { pickDistinctPartners } from '../../model/quiz-partner';
 import { settleReviewQueue, type QuizResult } from '../../model/review-queue';
 import type { SentenceQuiz } from '../../model/sentence-quiz';
 import { ReviewSuccess } from '../practice/ReviewSuccess';
@@ -16,7 +15,6 @@ const REVEAL_AFTER_WRONGS = 2;
 interface ReviewStepProps {
   // 풀 문제 목록 — 목록이 바뀌면(폴백→실제 문제 도착) 호출부가 key로 새로 세운다. 큐 인덱스가 이 목록에 묶여 있어서다
   quizzes: SentenceQuiz[];
-  partner: Partner;
   expressionId: number;
   onBack: () => void;
   leftAction?: 'back' | 'close';
@@ -31,7 +29,6 @@ interface ReviewStepProps {
 
 export const ReviewStep = ({
   quizzes,
-  partner,
   expressionId,
   onBack,
   leftAction,
@@ -45,6 +42,8 @@ export const ReviewStep = ({
   const [pending, setPending] = useState(() =>
     quizzes.map((_, index) => index),
   );
+  // 문제마다 질문을 건네는 상대 — 서로 다른 얼굴이어야 두 문제가 구분되고, 같은 문제가 다시 나오면 같은 얼굴이다
+  const [partners] = useState(() => pickDistinctPartners(quizzes.length));
   // 판정할 때마다 오른다 — 같은 문제가 다시 나와도 QuizStep을 새로 세우는 key
   const [round, setRound] = useState(0);
   // 문제별 틀린 횟수 — 재도전이면 라벨을 바꾸고, 두 번 틀리면 정답을 보여주며 낸다
@@ -84,7 +83,7 @@ export const ReviewStep = ({
       instruction={instruction}
       revealAnswer={revealAnswer}
       quiz={quiz}
-      partner={partner}
+      partner={partners[current % partners.length]}
       expressionId={expressionId}
       onBack={onBack}
       leftAction={leftAction}

@@ -606,30 +606,20 @@ describe('ExpressionFlow 예문 프리페치', () => {
     expect(screen.getByText('exit-sheet')).toBeInTheDocument();
   });
 
-  it('복습 영작으로 넘어가면 퀴즈에서 뽑은 상대를 그대로 쓴다', async () => {
-    // given — 퀴즈가 클로이로 뜬 상태. 난수는 이후 호출마다 다른 값을 주어, 스텝마다 새로 뽑으면 상대가 바뀌게 한다
+  it('복습 두 문제는 서로 다른 상대가 묻고, 같은 문제가 다시 나오면 같은 상대다', async () => {
     const user = userEvent.setup();
-    vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValue(0.9);
-    learningMock.mockReturnValue({ learning, error: null, isLoading: false });
-    practiceMock.mockReturnValue({
-      practice: practice(0),
-      error: null,
-      isLoading: false,
-    });
-    render(
-      <ExpressionFlow
-        origin={{ kind: 'scenario', scenarioId: 1 }}
-        expressionId={7}
-      />,
-    );
-    expect(screen.getByText('partner:chloe')).toBeInTheDocument();
+    await renderAtReview(user, twoWritingSentences);
+    const first = screen.getByText(/^partner:/).textContent;
 
-    // when — 복습 영작까지 간다
+    // 1번 틀림 → 2번 문제는 다른 상대
+    await user.click(screen.getByText('quiz-wrong'));
+    const second = screen.getByText(/^partner:/).textContent;
+    expect(second).not.toBe(first);
+
+    // 2번 맞힘 → 1번 재출제는 처음 그 상대
     await user.click(screen.getByText('quiz-next'));
-
-    // then — 복습도 클로이다
-    expect(screen.getByText('quiz:review')).toBeInTheDocument();
-    expect(screen.getByText('partner:chloe')).toBeInTheDocument();
+    expect(screen.getByText('question:I get it now')).toBeInTheDocument();
+    expect(screen.getByText(/^partner:/).textContent).toBe(first);
   });
 });
 

@@ -136,7 +136,7 @@ const LoadedExpressionFlow = ({
   const [pronounceSkipped, setPronounceSkipped] = useState(false);
   // 되돌아갈 앞 화면이 없는 스텝(QUIZ·EXPLAIN, 발음 없으면 EXAMPLES까지)은 X로 나가며, 중단 확인 시트를 먼저 띄운다
   const [exitOpen, setExitOpen] = useState(false);
-  // 질문을 건네는 상대 — 들어올 때 한 번만 뽑아 퀴즈와 복습이 같은 얼굴을 쓴다
+  // 퀴즈에서 질문을 건네는 상대 — 들어올 때 한 번만 뽑는다 (복습은 문제마다 ReviewStep이 따로 뽑는다)
   const [partner] = useState(() => pickRandomPartner());
   // 예문에서 복습으로 넘어간 적이 있는지 — 그 뒤 예문을 다시 보러 나가도 복습 스텝을 숨김 유지해 고른 칩과 큐를 잃지 않는다
   const [reviewVisited, setReviewVisited] = useState(false);
@@ -256,7 +256,6 @@ const LoadedExpressionFlow = ({
     <ReviewStep
       key={reviewQuizzes.map((item) => item.answerText).join('\n')}
       quizzes={reviewQuizzes}
-      partner={partner}
       expressionId={expressionId}
       // 예문을 봤으면 예문으로, 예문이 없었으면 그 앞 화면으로
       onBack={() =>

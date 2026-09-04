@@ -16,3 +16,15 @@ const QUIZ_PARTNERS = Object.keys(QUIZ_VIEWBOX) as Partner[];
 
 export const pickRandomPartner = (rand: () => number = Math.random): Partner =>
   QUIZ_PARTNERS[Math.floor(rand() * QUIZ_PARTNERS.length)];
+
+// 서로 다른 상대를 count명 뽑는다 — 복습 두 문제가 같은 얼굴로 나오지 않게. 남은 후보에서 하나씩 빼며 고른다
+export const pickDistinctPartners = (
+  count: number,
+  rand: () => number = Math.random,
+): Partner[] => {
+  const remaining = [...QUIZ_PARTNERS];
+  return Array.from(
+    { length: Math.min(count, remaining.length) },
+    () => remaining.splice(Math.floor(rand() * remaining.length), 1)[0],
+  );
+};
