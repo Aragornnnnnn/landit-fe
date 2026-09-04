@@ -17,8 +17,6 @@ export const MarkdownBody = ({
   className?: string;
 }) => (
   <div className={`${styles.root} ${className}`}>
-    <Markdown remarkPlugins={plugins} skipHtml>
-      {text}
-    </Markdown>
+    <Markdown remarkPlugins={plugins}>{text}</Markdown>
   </div>
 );

@@ -71,18 +71,14 @@ describe('MarkdownBody', () => {
     );
   });
 
-  it('본문에 적은 HTML 태그는 실행하지도, 글자로 보여주지도 않는다', () => {
+  it('본문에 적은 HTML 태그는 실행하지 않고 글자 그대로 보여준다', () => {
     const { container } = render(
       <MarkdownBody
-        text={
-          '<script>alert(1)</script><img src=x onerror=alert(1)>\n\n다음 문단'
-        }
+        text={'줄바꿈은 <br> 로 되나요? <script>alert(1)</script>'}
       />,
     );
 
     expect(container.querySelector('script')).toBeNull();
-    expect(container.querySelector('img')).toBeNull();
-    expect(container.textContent).not.toContain('<script>');
-    expect(screen.getByText('다음 문단')).toBeTruthy();
+    expect(container.textContent).toContain('줄바꿈은 <br> 로 되나요?');
   });
 });
