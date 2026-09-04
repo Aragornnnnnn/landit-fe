@@ -16,7 +16,7 @@ export const QuizPrompt = ({
   writingSentence: SentenceQuiz;
   partner: Partner;
   instruction?: string;
-  // 정답 공개 — 내 말풍선의 옮길 문장 아래에 정답 문장을 덧붙여 그대로 조립하게 한다
+  // 정답 공개 — 내 말풍선을 질문 말풍선처럼 두 줄로: 정답(조립할 문장) 위에, 옮길 문장 아래에
   revealAnswer?: boolean;
 }) => (
   <>
@@ -45,16 +45,18 @@ export const QuizPrompt = ({
       </div>
     </div>
 
-    {/* 내가 할 말 — 오른쪽 '내 채팅' 말풍선. 이 문장을 다른 언어로 조립하는 게 문제다 */}
+    {/* 내가 할 말 — 오른쪽 '내 채팅' 말풍선. 이 문장을 다른 언어로 조립하는 게 문제다.
+        정답 공개면 질문 말풍선과 같은 구조로, 조립할 문장(정답)을 위에 크게·옮길 문장을 아래 작게 둔다 */}
     <div className="mt-4 flex justify-end">
       <div className="max-w-[82%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5">
         <p className="text-base leading-snug font-bold text-primary-foreground">
-          {writingSentence.promptText}
+          {revealAnswer
+            ? writingSentence.answerText
+            : writingSentence.promptText}
         </p>
-        {/* 정답 공개 — 옮길 문장은 그대로 두고 아래에 정답을 덧붙인다. 문장이 바뀌면 뭐가 달라졌는지 못 알아본다 */}
         {revealAnswer && (
-          <p className="mt-1.5 border-t border-primary-foreground/30 pt-1.5 text-sm font-semibold text-primary-foreground/90">
-            {writingSentence.answerText}
+          <p className="mt-1 text-sm font-medium text-primary-foreground/80">
+            {writingSentence.promptText}
           </p>
         )}
       </div>
