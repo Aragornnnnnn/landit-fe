@@ -11,10 +11,13 @@ export const QuizPrompt = ({
   writingSentence,
   partner,
   instruction = '질문에 대한 대답을 완성하세요',
+  revealAnswer = false,
 }: {
   writingSentence: SentenceQuiz;
   partner: Partner;
   instruction?: string;
+  // 정답 공개 — 내 말풍선에 옮길 문장 대신 정답 문장을 띄워 그대로 조립하게 한다
+  revealAnswer?: boolean;
 }) => (
   <>
     <h2 className="pt-2 text-xl leading-snug font-extrabold text-foreground">
@@ -46,7 +49,9 @@ export const QuizPrompt = ({
     <div className="mt-4 flex justify-end">
       <div className="max-w-[82%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5">
         <p className="text-base leading-snug font-bold text-primary-foreground">
-          {writingSentence.promptText}
+          {revealAnswer
+            ? writingSentence.answerText
+            : writingSentence.promptText}
         </p>
       </div>
     </div>

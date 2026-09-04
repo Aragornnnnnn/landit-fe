@@ -10,6 +10,9 @@ import type { SentenceQuiz } from '../../model/sentence-quiz';
 import { ReviewSuccess } from '../practice/ReviewSuccess';
 import { QuizStep } from './QuizStep';
 
+// 이만큼 틀리면 정답을 보여준다 — 맞출 때까지 내는 구조라 끝없이 막히지 않게
+const REVEAL_AFTER_WRONGS = 3;
+
 interface ReviewStepProps {
   // 풀 문제 목록 — 목록이 바뀌면(폴백→실제 문제 도착) 호출부가 key로 새로 세운다. 큐 인덱스가 이 목록에 묶여 있어서다
   quizzes: SentenceQuiz[];
@@ -44,15 +47,30 @@ export const ReviewStep = ({
   );
   // 판정할 때마다 오른다 — 같은 문제가 다시 나와도 QuizStep을 새로 세우는 key
   const [round, setRound] = useState(0);
+  // 문제별 틀린 횟수 — 재도전이면 라벨을 바꾸고, 세 번 틀리면 정답을 보여주며 낸다
+  const [wrongCounts, setWrongCounts] = useState<Record<number, number>>({});
 
-  const quiz = quizzes[pending[0]];
+  const current = pending[0];
+  const quiz = quizzes[current];
   // 마지막 문제(이걸 맞히면 큐가 빈다)에서만 획득 연출과 완료가 붙는다
   const last = pending.length === 1;
+  const wrongCount = wrongCounts[current] ?? 0;
   // 틀리면 맨 뒤로 보내 맞출 때까지 다시 낸다(힌트를 봤든 아니든)
   const settle = (result: QuizResult) => {
+    if (result === 'wrong') {
+      setWrongCounts({ ...wrongCounts, [current]: wrongCount + 1 });
+    }
     setPending(settleReviewQueue(pending, result));
     setRound((current) => current + 1);
   };
+  // 재도전 라벨 — 세 번째 틀린 뒤엔 정답을 보여주고 그대로 만들게 한다
+  const revealAnswer = wrongCount >= REVEAL_AFTER_WRONGS;
+  const instruction =
+    wrongCount === 0
+      ? undefined
+      : revealAnswer
+        ? '정답을 보고 그대로 만들어보세요'
+        : '다시 한번 해보세요';
   // 진행바는 푼 문제 수만큼 시작점에서 1까지 나눠 찬다
   const progressAt = (solved: number) =>
     progressStart + (1 - progressStart) * (solved / quizzes.length);
@@ -62,7 +80,9 @@ export const ReviewStep = ({
     <QuizStep
       step="review"
       // 판정마다 새 문제(또는 같은 문제의 재도전)로 상태를 통째로 리셋한다
-      key={`${pending[0]}#${round}`}
+      key={`${current}#${round}`}
+      instruction={instruction}
+      revealAnswer={revealAnswer}
       quiz={quiz}
       partner={partner}
       expressionId={expressionId}

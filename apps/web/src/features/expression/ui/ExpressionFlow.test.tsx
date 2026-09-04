@@ -39,6 +39,8 @@ vi.mock('./learning/QuizStep', async () => {
       nextLabel,
       wrongLabel,
       correctSlot,
+      instruction,
+      revealAnswer,
     }: {
       step: string;
       quiz: { answerText: string };
@@ -48,6 +50,8 @@ vi.mock('./learning/QuizStep', async () => {
       nextLabel?: string;
       wrongLabel?: string;
       correctSlot?: () => React.ReactNode;
+      instruction?: string;
+      revealAnswer?: boolean;
     }) => {
       const [mountId] = useState(() => ++mountSeq);
       return (
@@ -60,6 +64,8 @@ vi.mock('./learning/QuizStep', async () => {
             labels:{nextLabel}/{wrongLabel ?? nextLabel}
           </p>
           <p>last:{correctSlot ? 'y' : 'n'}</p>
+          <p>instruction:{instruction ?? '-'}</p>
+          <p>reveal:{revealAnswer ? 'y' : 'n'}</p>
           <button onClick={() => onNext('correct')}>quiz-next</button>
           <button onClick={() => onNext('wrong')}>quiz-wrong</button>
           <button onClick={onBack}>quiz-back</button>
@@ -672,6 +678,40 @@ describe('ExpressionFlow 복습 큐', () => {
     expect(screen.getByText('question:이해돼?')).toBeInTheDocument();
     expect(screen.getByText('last:y')).toBeInTheDocument();
     expect(screen.getByText(/quiz#/).textContent).not.toBe(beforeWrong);
+  });
+
+  it('틀린 문제가 다시 나오면 라벨이 "다시 한번 해보세요"로 바뀌고, 세 번 틀리면 정답을 보여준다', async () => {
+    const user = userEvent.setup();
+    await renderAtReview(user, twoWritingSentences);
+    expect(screen.getByText('instruction:-')).toBeInTheDocument();
+
+    // 1번 문제 틀림 → 2번 문제(처음)는 기본 라벨
+    await user.click(screen.getByText('quiz-wrong'));
+    expect(screen.getByText('question:이해돼?')).toBeInTheDocument();
+    expect(screen.getByText('instruction:-')).toBeInTheDocument();
+
+    // 2번 문제 맞힘 → 1번 문제 재도전: 라벨만 바뀐다
+    await user.click(screen.getByText('quiz-next'));
+    expect(screen.getByText('question:I get it now')).toBeInTheDocument();
+    expect(
+      screen.getByText('instruction:다시 한번 해보세요'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('reveal:n')).toBeInTheDocument();
+
+    // 두 번째 틀림 → 아직 라벨만
+    await user.click(screen.getByText('quiz-wrong'));
+    expect(
+      screen.getByText('instruction:다시 한번 해보세요'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('reveal:n')).toBeInTheDocument();
+
+    // 세 번째 틀림 → 정답을 보여주며 다시 낸다
+    await user.click(screen.getByText('quiz-wrong'));
+    expect(screen.getByText('question:I get it now')).toBeInTheDocument();
+    expect(
+      screen.getByText('instruction:정답을 보고 그대로 만들어보세요'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('reveal:y')).toBeInTheDocument();
   });
 
   it('예문을 다시 보러 나갔다 돌아와도 복습 QuizStep이 그대로라 고른 칩과 큐가 유지된다', async () => {

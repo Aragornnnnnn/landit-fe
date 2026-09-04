@@ -51,6 +51,10 @@ interface QuizStepProps {
   // 설명 스텝을 보러 나갔다 돌아와도 고른 칩을 복원한다(복습에서 사용, 뱅크 순서가 고정이라 칩 id로 안전하게 복원됨)
   initialSelected?: number[];
   onSelectedChange?: (selected: number[]) => void;
+  // 상단 지시문 — 복습 재도전에서 "다시 한번 해보세요" 등으로 바꾼다. 없으면 기본 문구
+  instruction?: string;
+  // 정답 공개 — 내 말풍선에 옮길 문장 대신 정답 문장을 보여준다(복습에서 여러 번 틀렸을 때)
+  revealAnswer?: boolean;
   // 정답일 때 결과 시트 자리에 대신 띄울 연출(없으면 기본 ResultSheet) — 복습의 획득 연출(콘페티+카드)에 쓴다.
   // 오답은 이 슬롯을 타지 않고 항상 기본 ResultSheet를 보여준다. onNext는 호출부가 이미 쥐고 있으니 다시 넘기지 않는다.
   correctSlot?: () => React.ReactNode;
@@ -87,6 +91,8 @@ export const QuizStep = ({
   progressRange = [0, 0.5],
   initialSelected,
   onSelectedChange,
+  instruction,
+  revealAnswer = false,
   correctSlot,
 }: QuizStepProps) => {
   const answer = quiz.answerWords;
@@ -211,7 +217,12 @@ export const QuizStep = ({
         ) : undefined
       }
     >
-      <QuizPrompt writingSentence={quiz} partner={partner} />
+      <QuizPrompt
+        writingSentence={quiz}
+        partner={partner}
+        instruction={instruction}
+        revealAnswer={revealAnswer}
+      />
 
       {/* 내 답변 — 중앙 밑줄 2줄, 고른 칩이 줄 위에 올라간다 */}
       <div

@@ -112,6 +112,27 @@ describe('QuizStep', () => {
     expect(screen.queryByText('정답이에요!')).not.toBeInTheDocument();
   });
 
+  it('정답 공개(revealAnswer)면 내 말풍선에 옮길 문장 대신 정답 문장이 보인다', () => {
+    render(
+      <QuizStep
+        step="review"
+        quiz={quiz}
+        partner="chloe"
+        expressionId={1}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+        instruction="정답을 보고 그대로 만들어보세요"
+        revealAnswer
+      />,
+    );
+
+    expect(
+      screen.getByText('정답을 보고 그대로 만들어보세요'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('I win')).toBeInTheDocument();
+    expect(screen.queryByText('내가 이겨')).not.toBeInTheDocument();
+  });
+
   it('오답이면 오답용 CTA 문구를 띄우고 onNext에 wrong을 넘긴다', async () => {
     // given — 정답·오답 CTA 문구가 다른 복습 퀴즈
     const user = userEvent.setup();
