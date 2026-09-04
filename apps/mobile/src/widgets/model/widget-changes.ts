@@ -35,9 +35,11 @@ const parseRecord = (raw: string): WidgetChangeRecord | null => {
 type Listener = () => void;
 const listeners = new Set<Listener>();
 
-// 같은 밀리초에 두 건이 와도 키가 겹치지 않게 난수를 붙인다. 키 순서가 곧 시간 순서다
+// 키 순서가 곧 시간 순서다. 같은 밀리초에 여러 건이 와도 같은 런타임 안에선 순번으로 순서를 지키고,
+// 다른 런타임(헤드리스)과 겹칠 때만 난수로 키 충돌을 피한다
+let sequence = 0;
 const nextKey = () =>
-  `${KEY_PREFIX}${Date.now().toString().padStart(13, '0')}-${Math.random().toString(36).slice(2, 8)}`;
+  `${KEY_PREFIX}${Date.now().toString().padStart(13, '0')}-${(sequence++).toString().padStart(4, '0')}-${Math.random().toString(36).slice(2, 6)}`;
 
 // 쌓고 알린다 — 같은 프로세스에 셸이 떠 있으면 구독자가 바로 비워 간다
 export const recordWidgetChange = async (
