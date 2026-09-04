@@ -7,7 +7,10 @@ import { WaitingNotice } from './WaitingNotice';
 
 export const SentBody = ({ feedback }: { feedback: SentFeedbackDetail }) => (
   <div className="flex flex-col gap-6">
-    <MarkdownBody text={feedback.content} />
+    <MarkdownBody
+      text={feedback.content}
+      className="text-[15px] text-foreground"
+    />
     {feedback.replies.map((reply) => (
       <ReplySection
         key={reply.letterId}
@@ -25,7 +28,7 @@ const ReplySection = ({ text, sentAt }: { text: string; sentAt: string }) => (
       랜딧 팀의 답장 · {formatLetterDateTime(sentAt)}
     </p>
     <div className="mt-2">
-      <MarkdownBody text={text} />
+      <MarkdownBody text={text} className="text-[15px] text-foreground" />
     </div>
   </div>
 );

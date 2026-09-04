@@ -12,7 +12,10 @@ export const LetterBlocks = ({ blocks }: { blocks: LetterBlock[] }) => (
 );
 
 const Block = ({ block }: { block: LetterBlock }) => {
-  if (block.type === 'PARAGRAPH') return <MarkdownBody text={block.text} />;
+  if (block.type === 'PARAGRAPH')
+    return (
+      <MarkdownBody text={block.text} className="text-[15px] text-foreground" />
+    );
 
   if (block.type === 'ORDERED_LIST') {
     return (

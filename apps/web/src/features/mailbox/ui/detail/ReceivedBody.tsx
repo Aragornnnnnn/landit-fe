@@ -11,7 +11,10 @@ export const ReceivedBody = ({ letter }: { letter: ReceivedLetterDetail }) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <MarkdownBody text={letter.bodyText ?? ''} />
+      <MarkdownBody
+        text={letter.bodyText ?? ''}
+        className="text-[15px] text-foreground"
+      />
       {/* 답장에 딸린 내 원문 — 무엇에 대한 답장인지 다시 찾아보지 않게 한다 */}
       {letter.quotedFeedbackContent && (
         <QuotedLetter text={letter.quotedFeedbackContent} />
