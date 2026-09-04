@@ -1,6 +1,6 @@
 'use client';
 
-// 표현학습 플로우 — 단어 선택 퀴즈(D안 ①') → 표현 설명(D안 ④) → [발음 자산 있으면: 발음 평가 → 추가 예문] → 복습 영작(D안 ⑤) → 완료 처리 후 리스트로.
+// 표현학습 플로우 — 단어 선택 퀴즈(D안 ①') → [발음 자산 있으면: 표현 설명(D안 ④) → 발음 평가] → 추가 예문 → 복습 영작 2문제(D안 ⑤) → 완료 처리 후 리스트로.
 import { useEffect, useState } from 'react';
 import { EVENTS, type ExpressionStep } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
@@ -19,10 +19,10 @@ import { useExpressionLearningQuery } from '../model/useExpressionLearningQuery'
 import { useExpressionPracticeQuery } from '../model/useExpressionPracticeQuery';
 import { useFinishExpressionMutation } from '../model/useFinishExpressionMutation';
 import { ExpressionExitSheet } from './common/ExpressionExitSheet';
-import { ExplanationStep } from './learning/ExplanationStep';
+import { ExamplesStep } from './learning/ExamplesStep';
 import { ExpressionIntroStep } from './learning/ExpressionIntroStep';
 import { QuizStep } from './learning/QuizStep';
-import { ReviewSuccess } from './practice/ReviewSuccess';
+import { ReviewStep } from './learning/ReviewStep';
 import { PronunciationStep } from './pronunciation/PronunciationStep';
 import { QuizStepSkeleton } from './QuizStepSkeleton';
 
@@ -38,7 +38,8 @@ interface ExpressionFlowProps {
   expressionId: number;
 }
 
-// 화면 스텝 — PRONOUNCE(발음 평가)·EXAMPLES(발음 뒤 추가 예문)는 발음 자산이 있는 표현에만 낀다
+// 화면 스텝 — EXPLAIN(설명)·PRONOUNCE(발음 평가)는 발음 자산이 있는 표현에만, EXAMPLES(추가 예문)는 예문을 받았을 때만 낀다.
+// 발음 없는 표현은 설명 화면 없이 퀴즈→예문→복습이다 (설명 카드만 있는 화면은 굳이 두지 않는다)
 type Step = 'QUIZ' | 'EXPLAIN' | 'PRONOUNCE' | 'EXAMPLES' | 'REVIEW';
 
 // 화면 스텝 → 이벤트 속성 값
@@ -50,9 +51,9 @@ const STEP_PROP: Record<Step, ExpressionStep> = {
   REVIEW: 'review',
 };
 
-// EXPLAIN(추가 예문 포함 화면)이 멈추는 진행바 지점 — REVIEW가 이 지점부터 이어받아 1까지 채운다
-const EXPLAIN_PROGRESS = 0.7;
-// 발음 스텝이 낀 플로우의 앞쪽 구간 배치 — 퀴즈(0~0.3)→설명(0.45)→발음(0.6)→추가 예문(0.7)
+// 진행바 배치 — 예문이 멈추는 지점. 복습이 여기서 1까지 이어받아 채운다
+const EXAMPLES_PROGRESS = 0.7;
+// 발음 스텝이 낀 플로우의 앞쪽 구간 배치 — 퀴즈(0~0.3)→설명(0.45)→발음(0.6)→예문→복습
 const QUIZ_RANGE_WITH_PRONUNCIATION: [number, number] = [0, 0.3];
 const EXPLAIN_PROGRESS_WITH_PRONUNCIATION = 0.45;
 const PRONUNCIATION_PROGRESS = 0.6;
@@ -118,26 +119,27 @@ const LoadedExpressionFlow = ({
     origin.kind === 'scenario'
       ? { scenario_id: origin.scenarioId }
       : { session_id: origin.sessionId };
-  // 완료한 표현의 재진입은 퀴즈를 건너뛰고 설명부터 시작한다 — 판정은 서버(learning.completed) 한 곳
-  const [step, setStep] = useState<Step>(
-    learning.completed ? 'EXPLAIN' : 'QUIZ',
-  );
-  // 발음 분석이 결과 화면(피드백·실패)에 한 번이라도 도달했는지 — 그 뒤 설명·추가 예문으로 나가도
+  // 발음 자산(원어민 TTS)이 있는 표현만 설명·발음 스텝이 열린다
+  const hasPronunciation = Boolean(learning.representativeSentenceAudioUrl);
+  // 완료한 표현의 재진입은 퀴즈를 건너뛰고 퀴즈 다음 화면(설명, 발음 없으면 예문)부터 시작한다 — 판정은 서버(learning.completed) 한 곳.
+  // EXAMPLES는 "예문을 볼 차례"라는 뜻이고, 실제로 예문을 보여줄지는 아래 visibleStep이 practice 도착 뒤에 정한다
+  const [step, setStep] = useState<Step>(() => {
+    if (!learning.completed) return 'QUIZ';
+    return hasPronunciation ? 'EXPLAIN' : 'EXAMPLES';
+  });
+  // 발음 분석이 결과 화면(피드백·실패)에 한 번이라도 도달했는지 — 그 뒤 설명·예문으로 나가도
   // 발음 스텝을 숨김 유지해 보던 화면을 잃지 않고, 설명 CTA는 "다음"으로 바뀐다.
   // 녹음 전에 되돌아가는 건 그냥 첫 방문 취급
   const [pronounceDone, setPronounceDone] = useState(false);
-  // 발음을 결과 없이 지나갔는지(사용자 건너뛰기 또는 자산 소실 404) — 이 상태에선 뒤로가기가
-  // 마이크 대신 설명(다음 CTA)으로 돌아가고, 설명의 "다음"은 추가 예문으로 복귀한다
+  // 발음을 결과 없이 지나갔는지(사용자 건너뛰기 또는 자산 소실 404) — 이 상태에선 예문의 뒤로가기가
+  // 마이크 대신 설명(다음 CTA)으로 돌아가고, 설명의 "다음"은 예문으로 복귀한다
   const [pronounceSkipped, setPronounceSkipped] = useState(false);
-  // 예문까지(QUIZ·EXPLAIN)는 뒤로가기 대신 X로 나가며, 중단 확인 시트를 먼저 띄운다
+  // 되돌아갈 앞 화면이 없는 스텝(QUIZ·EXPLAIN, 발음 없으면 EXAMPLES까지)은 X로 나가며, 중단 확인 시트를 먼저 띄운다
   const [exitOpen, setExitOpen] = useState(false);
-  // 질문을 건네는 상대 — 들어올 때 한 번만 뽑아 퀴즈와 복습이 같은 얼굴을 쓴다
+  // 퀴즈에서 질문을 건네는 상대 — 들어올 때 한 번만 뽑는다 (복습은 문제마다 ReviewStep이 따로 뽑는다)
   const [partner] = useState(() => pickRandomPartner());
-  // 복습 영작 draft — 예문(설명)을 보러 나갔다 돌아와도 고른 칩이 유지되게 문제 문장과 함께 보관한다
-  const [reviewDraft, setReviewDraft] = useState<{
-    sentence: string;
-    selected: number[];
-  } | null>(null);
+  // 예문에서 복습으로 넘어간 적이 있는지 — 그 뒤 예문을 다시 보러 나가도 복습 스텝을 숨김 유지해 고른 칩과 큐를 잃지 않는다
+  const [reviewVisited, setReviewVisited] = useState(false);
 
   // 스몰톡 표현은 완료 요청에 세션 ID를 실어야 서버가 기록한다
   const finish = useFinishExpressionMutation(
@@ -161,16 +163,32 @@ const LoadedExpressionFlow = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expressionId]);
 
-  // 첫 스텝 포함, 스텝 전환마다 노출로 기록한다
+  const quiz = fromLearning(learning);
+  // 결과 없이 건너뛴 상태 — 재방문 동선이 발음(마이크) 대신 설명↔예문을 오간다
+  const skippedWithoutResult = pronounceSkipped && !pronounceDone;
+  // practice가 결론이 났는지(도착했거나 실패했거나) — 아직이면 예문·복습 자리에 스켈레톤을 둔다
+  const practiceSettled = !(practiceLoading && !practice);
+  const examples = practice?.practiceSentence ?? [];
+  // 실제로 보여줄 스텝 — 예문 차례인데 결론 난 practice에 예문이 없으면(미시딩·404) 예문 화면을 건너뛰고 복습이다.
+  // step 자체를 바꾸지 않아 practice가 늦게 와도 예문을 놓치지 않고, 계측도 이 값을 쓴다
+  const visibleStep: Step =
+    step === 'EXAMPLES' && practiceSettled && examples.length === 0
+      ? 'REVIEW'
+      : step;
+
+  // 첫 스텝 포함, 스텝 전환마다 노출로 기록한다.
+  // 예문 차례인데 practice를 아직 기다리는 중이면 화면은 스켈레톤이라 세지 않는다 — 결론이 나면 예문 또는 복습으로 찍힌다
+  const stepShown = step !== 'EXAMPLES' || practiceSettled;
   useEffect(() => {
+    if (!stepShown) return;
     track(EVENTS.EXPRESSION_STEP_VIEWED, {
       expression_id: expressionId,
-      step: STEP_PROP[step],
+      step: STEP_PROP[visibleStep],
     });
-  }, [step, expressionId]);
+  }, [visibleStep, stepShown, expressionId]);
 
-  // 예문 이미지는 QUIZ→EXPLAIN에서 마운트되지만, URL을 아는 즉시 브라우저 캐시에 선로드해
-  // EXPLAIN 도착 시 img가 곧바로 뜨게 한다. preload는 멱등이라 렌더 중 호출해도 안전하다.
+  // 예문 이미지는 EXAMPLES에서 마운트되지만, URL을 아는 즉시 브라우저 캐시에 선로드해
+  // 도착 시 img가 곧바로 뜨게 한다. preload는 멱등이라 렌더 중 호출해도 안전하다.
   for (const url of collectPreloadImageUrls(practice)) {
     preload(url, { as: 'image' });
   }
@@ -184,14 +202,19 @@ const LoadedExpressionFlow = ({
   // 중도 이탈(그만두기·뒤로가기)은 곧장 목록으로. replace로 표현학습을 히스토리에서 지워 뒤로가기로 퀴즈에 재진입하지 않게 한다
   const backToList = () => router.replace(listPath);
 
-  const quiz = fromLearning(learning);
-  // 발음 자산(원어민 TTS)이 있는 표현만 발음 스텝이 열린다 — null이면 기존 3스텝 플로우 그대로
-  const hasPronunciation = Boolean(learning.representativeSentenceAudioUrl);
-
   const openExitSheet = () => {
     track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'expression_exit' });
     setExitOpen(true);
   };
+
+  // 예문·복습에서 뒤로 — 발음 결과가 있으면 그 화면으로, 결과 없이 지나갔으면 설명으로(말하기를 강요하는
+  // 화면이 불쑥 뜨지 않게). 발음 없는 표현은 앞 화면이 퀴즈뿐이라 되돌리지 않고 나가기 확인을 띄운다
+  const backBeforeExamples = () => {
+    if (!hasPronunciation) return openExitSheet();
+    setStep(skippedWithoutResult ? 'EXPLAIN' : 'PRONOUNCE');
+  };
+  // 예문·복습이 플로우의 첫 되돌림 지점일 때는 ‹ 대신 X다
+  const closeInsteadOfBack = !hasPronunciation;
 
   // 중단 확인 시트 — QUIZ·EXPLAIN에서 X를 누르면 뜬다. 확인 시 완료 처리 없이 리스트로.
   const exitSheet = (
@@ -200,7 +223,7 @@ const LoadedExpressionFlow = ({
       onConfirm={() => {
         track(EVENTS.EXPRESSION_ABANDONED, {
           expression_id: expressionId,
-          step: STEP_PROP[step],
+          step: STEP_PROP[visibleStep],
         });
         backToList();
       }}
@@ -211,12 +234,13 @@ const LoadedExpressionFlow = ({
     />
   );
 
-  // 복습 영작 — practice가 주는 별도 영작 문제(writingSentence)를 QUIZ와 같은 단어 칩 방식으로 푼다.
+  // 복습 영작 — practice가 주는 작문 문제 2건(영어·한국어)을 QUIZ와 같은 단어 칩 방식으로 차례로 푼다.
   // 아직 로딩 중이면 잠깐 스켈레톤을 유지한다 — 폴백 문제를 먼저 보여줬다가 도착 후 바꿔치기하면
-  // 고른 칩과 단어 수가 어긋난다. 실패(404 등) 시에만 대표 예문으로 폴백해 플로우를 막지 않는다.
-  const reviewQuiz = practice?.writingSentence
-    ? fromWritingSentence(practice.writingSentence)
-    : quiz;
+  // 고른 칩과 단어 수가 어긋난다. 실패(404 등) 시에만 대표 예문 1문제로 폴백해 플로우를 막지 않는다.
+  // 옛 응답(객체)이나 빈 값도 폴백으로 흘러 프론트가 먼저 배포돼도 깨지지 않는다
+  const reviewQuizzes = practice?.writingSentence?.length
+    ? practice.writingSentence.map(fromWritingSentence)
+    : [quiz];
 
   const finishFlow = () =>
     finish.mutate(undefined, {
@@ -229,42 +253,53 @@ const LoadedExpressionFlow = ({
       },
     });
 
-  // 발음 keep-alive 트리와 기존 3스텝 폴백이 같은 화면을 쓴다
-  const reviewScreen =
-    practiceLoading && !practice ? (
-      <QuizStepSkeleton />
-    ) : (
-      <QuizStep
-        step="review"
-        // 문제가 바뀌면(이론상 폴백→practice 교체) 상태를 통째로 리셋한다
-        key={reviewQuiz.writingSentenceText}
-        quiz={reviewQuiz}
-        partner={partner}
-        expressionId={expressionId}
-        onBack={() => setStep(hasPronunciation ? 'EXAMPLES' : 'EXPLAIN')}
-        onNext={finishFlow}
-        nextLabel="학습 완료"
-        finishing={finish.isPending}
-        progressRange={[EXPLAIN_PROGRESS, 1]}
-        // 예문을 보러 나갔다 돌아와도 같은 문제면 고른 칩을 이어서 쓴다
-        initialSelected={
-          reviewDraft?.sentence === reviewQuiz.writingSentenceText
-            ? reviewDraft.selected
-            : undefined
-        }
-        onSelectedChange={(selected) =>
-          setReviewDraft({ sentence: reviewQuiz.writingSentenceText, selected })
-        }
-        correctSlot={() => (
-          <ReviewSuccess
-            expression={learning.targetExpressionText}
-            meaning={learning.baseExpressionMeaningText}
-            onFinish={finishFlow}
-            finishing={finish.isPending}
-          />
-        )}
-      />
-    );
+  // 발음 keep-alive 트리와 3스텝 플로우가 같은 화면을 쓴다.
+  // 문제 목록이 바뀌면(폴백→실제 문제 도착) key로 큐를 새로 세운다 — 큐 인덱스가 목록에 묶여 있어서다
+  const reviewScreen = practiceSettled ? (
+    <ReviewStep
+      key={reviewQuizzes.map((item) => item.answerText).join('\n')}
+      quizzes={reviewQuizzes}
+      expressionId={expressionId}
+      // 예문을 봤으면 예문으로, 예문이 없었으면 그 앞 화면으로
+      onBack={() =>
+        examples.length > 0 ? setStep('EXAMPLES') : backBeforeExamples()
+      }
+      leftAction={
+        examples.length === 0 && closeInsteadOfBack ? 'close' : 'back'
+      }
+      progressStart={EXAMPLES_PROGRESS}
+      expression={learning.targetExpressionText}
+      meaning={learning.baseExpressionMeaningText}
+      onFinish={finishFlow}
+      finishing={finish.isPending}
+    />
+  ) : (
+    <QuizStepSkeleton />
+  );
+  // 예문을 거쳐 복습에 들어왔으면 예문으로 나가도 숨김 유지 — 돌아오면 고른 칩과 큐가 그대로다
+  const reviewSlot = (visibleStep === 'REVIEW' || reviewVisited) && (
+    <div className={visibleStep === 'REVIEW' ? undefined : 'hidden'}>
+      {reviewScreen}
+    </div>
+  );
+
+  // 추가 예문 — 발음 keep-alive 트리와 3스텝 플로우가 같은 화면을 쓴다. practice가 아직이면 스켈레톤으로 기다린다
+  const exampleScreen = practiceSettled ? (
+    <ExamplesStep
+      expressionId={expressionId}
+      examples={examples}
+      title={learning.baseExpressionMeaningText}
+      progress={EXAMPLES_PROGRESS}
+      onBack={backBeforeExamples}
+      leftAction={closeInsteadOfBack ? 'close' : 'back'}
+      onNext={() => {
+        setReviewVisited(true);
+        setStep('REVIEW');
+      }}
+    />
+  ) : (
+    <QuizStepSkeleton />
+  );
 
   if (step === 'QUIZ') {
     return (
@@ -276,7 +311,7 @@ const LoadedExpressionFlow = ({
           expressionId={expressionId}
           leftAction="close"
           onBack={openExitSheet}
-          onNext={() => setStep('EXPLAIN')}
+          onNext={() => setStep(hasPronunciation ? 'EXPLAIN' : 'EXAMPLES')}
           progressRange={
             hasPronunciation ? QUIZ_RANGE_WITH_PRONUNCIATION : undefined
           }
@@ -291,8 +326,6 @@ const LoadedExpressionFlow = ({
   if (learning.representativeSentenceAudioUrl) {
     // 발음 스텝을 지나온 재방문 — 설명 CTA가 "다음"(복귀)으로 바뀌고 건너뛰기는 사라진다
     const pronounceRevisit = pronounceDone || pronounceSkipped;
-    // 결과 없이 건너뛴 상태 — 재방문 동선이 발음(마이크) 대신 설명↔추가 예문을 오간다
-    const skippedWithoutResult = pronounceSkipped && !pronounceDone;
     return (
       <>
         {step === 'EXPLAIN' && (
@@ -308,7 +341,7 @@ const LoadedExpressionFlow = ({
             progress={EXPLAIN_PROGRESS_WITH_PRONUNCIATION}
             leftAction="close"
             onBack={openExitSheet}
-            // 재방문의 "다음"은 떠나온 자리로 복귀 — 발음 결과가 있으면 그 화면, 건너뛰었으면 추가 예문
+            // 재방문의 "다음"은 떠나온 자리로 복귀 — 발음 결과가 있으면 그 화면, 건너뛰었으면 예문
             onNext={() =>
               setStep(skippedWithoutResult ? 'EXAMPLES' : 'PRONOUNCE')
             }
@@ -327,28 +360,8 @@ const LoadedExpressionFlow = ({
             }
           />
         )}
-        {/* EXAMPLES — 발음 뒤 추가 예문 화면. 설명 카드는 이미 봤지만 예문 카드의 맥락으로 함께 남긴다 */}
-        {step === 'EXAMPLES' && (
-          <ExplanationStep
-            expressionId={expressionId}
-            targetExpressionText={learning.targetExpressionText}
-            baseExpressionMeaningText={learning.baseExpressionMeaningText}
-            usageDescription={learning.usageDescription}
-            examples={practice?.practiceSentence ?? []}
-            title={learning.baseExpressionMeaningText}
-            progress={EXPLAIN_PROGRESS}
-            nextLabel="복습 퀴즈 풀게요"
-            // 발음을 건너뛴 사람은 마이크가 아니라 설명으로 되돌린다 — 말하기를 강요하는 화면이 불쑥 뜨지 않게
-            onBack={() =>
-              setStep(skippedWithoutResult ? 'EXPLAIN' : 'PRONOUNCE')
-            }
-            onNext={() => setStep('REVIEW')}
-            // 설명은 B안 화면에서 이미 봤다 — 여기선 추가 예문만.
-            // 예문이 비어 있으면(미시딩·404) 빈 화면 대신 설명 카드를 다시 편다
-            showDescription={(practice?.practiceSentence?.length ?? 0) === 0}
-          />
-        )}
-        {step === 'REVIEW' && reviewScreen}
+        {visibleStep === 'EXAMPLES' && exampleScreen}
+        {reviewSlot}
         {(step === 'PRONOUNCE' || pronounceDone) && (
           <div className={step === 'PRONOUNCE' ? undefined : 'hidden'}>
             <PronunciationStep
@@ -378,28 +391,14 @@ const LoadedExpressionFlow = ({
     );
   }
 
-  if (step === 'EXPLAIN') {
-    return (
-      <>
-        <ExplanationStep
-          expressionId={expressionId}
-          targetExpressionText={learning.targetExpressionText}
-          baseExpressionMeaningText={learning.baseExpressionMeaningText}
-          usageDescription={learning.usageDescription}
-          examples={practice?.practiceSentence ?? []}
-          title={learning.baseExpressionMeaningText}
-          progress={EXPLAIN_PROGRESS}
-          nextLabel="복습 퀴즈 풀게요"
-          leftAction="close"
-          onBack={openExitSheet}
-          onNext={() => setStep('REVIEW')}
-        />
-        {exitSheet}
-      </>
-    );
-  }
-
-  return reviewScreen;
+  // 발음 없는 표현 — 퀴즈 뒤는 예문·복습뿐
+  return (
+    <>
+      {visibleStep === 'EXAMPLES' && exampleScreen}
+      {reviewSlot}
+      {exitSheet}
+    </>
+  );
 };
 
 const FlowStatus = ({ children }: { children: React.ReactNode }) => (

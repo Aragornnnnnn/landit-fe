@@ -13,6 +13,7 @@ import { EASE_STANDARD } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 
+import type { QuizResult } from '../../model/review-queue';
 import type { SentenceQuiz } from '../../model/sentence-quiz';
 import { useChipReorder } from '../../model/useChipReorder';
 import {
@@ -40,21 +41,26 @@ interface QuizStepProps {
   expressionId: number;
   onBack: () => void;
   leftAction?: 'back' | 'close';
-  // 정답·오답 모두 결과 시트의 CTA로 다음 스텝으로 이어진다 (퀴즈→설명, 복습→완료)
-  onNext: () => void;
+  // 정답·오답 모두 결과 시트의 CTA로 이어진다 — 판정을 실어 보내, 복습은 틀린 문제를 다시 낼 수 있다
+  onNext: (result: QuizResult) => void;
   nextLabel?: string;
-  finishing?: boolean;
-  // 상단 진행바를 [idle일 때, 판정 후] 두 값으로 — 기본은 퀴즈 스텝 구간(0→0.5)
+  // 오답 시트의 CTA 문구 — 없으면 정답과 같다 (복습에서 "다시 풀어볼게요"로 갈린다)
+  wrongLabel?: string;
+  // 상단 진행바를 [풀기 전, 맞힌 뒤] 두 값으로 — 기본은 퀴즈 스텝 구간(0→0.5)
   progressRange?: [number, number];
   // 설명 스텝을 보러 나갔다 돌아와도 고른 칩을 복원한다(복습에서 사용, 뱅크 순서가 고정이라 칩 id로 안전하게 복원됨)
   initialSelected?: number[];
   onSelectedChange?: (selected: number[]) => void;
+  // 상단 지시문 — 복습 재도전에서 "다시 한번 해보세요" 등으로 바꾼다. 없으면 기본 문구
+  instruction?: string;
+  // 정답 공개 — 내 말풍선에 정답을 위에, 옮길 문장을 아래에 보여준다(복습에서 두 번 틀렸을 때)
+  revealAnswer?: boolean;
   // 정답일 때 결과 시트 자리에 대신 띄울 연출(없으면 기본 ResultSheet) — 복습의 획득 연출(콘페티+카드)에 쓴다.
-  // 오답은 이 슬롯을 타지 않고 항상 기본 ResultSheet를 보여준다. onNext/finishing은 호출부가 이미 쥐고 있으니 다시 넘기지 않는다.
+  // 오답은 이 슬롯을 타지 않고 항상 기본 ResultSheet를 보여준다. onNext는 호출부가 이미 쥐고 있으니 다시 넘기지 않는다.
   correctSlot?: () => React.ReactNode;
 }
 
-type Checked = 'idle' | 'wrong' | 'correct';
+type Checked = 'idle' | QuizResult;
 
 // 단어 칩 — 공용 Button과 같은 3D 눌림 효과 (흰 배경 + 회색 엣지 그림자)
 // min-w로 짧은 단어("I")가 원형으로 뭉치지 않게 최소 폭을 준다
@@ -81,10 +87,12 @@ export const QuizStep = ({
   leftAction,
   onNext,
   nextLabel = '표현 배우러 갈게요',
-  finishing = false,
+  wrongLabel = nextLabel,
   progressRange = [0, 0.5],
   initialSelected,
   onSelectedChange,
+  instruction,
+  revealAnswer = false,
   correctSlot,
 }: QuizStepProps) => {
   const answer = quiz.answerWords;
@@ -174,8 +182,8 @@ export const QuizStep = ({
     setChecked(tone);
   };
 
-  // 게이지는 단어를 고르는 동안엔 구간 시작값, 판정을 마쳐야 구간 끝값이 찬다.
-  const progress = checked === 'idle' ? progressRange[0] : progressRange[1];
+  // 게이지는 맞혀야 구간 끝값이 찬다 — 틀리면 시작값 그대로. 복습은 틀린 문제를 다시 내므로 찼다가 되돌아가면 안 된다
+  const progress = checked === 'correct' ? progressRange[1] : progressRange[0];
   // 정답 연출 슬롯이 뜨는 순간(표현학습 마지막 완료)엔 게이지도 성공 색으로 맞춘다
   const progressTone =
     checked === 'correct' && correctSlot ? 'success' : 'primary';
@@ -209,7 +217,12 @@ export const QuizStep = ({
         ) : undefined
       }
     >
-      <QuizPrompt writingSentence={quiz} partner={partner} />
+      <QuizPrompt
+        writingSentence={quiz}
+        partner={partner}
+        instruction={instruction}
+        revealAnswer={revealAnswer}
+      />
 
       {/* 내 답변 — 중앙 밑줄 2줄, 고른 칩이 줄 위에 올라간다 */}
       <div
@@ -300,10 +313,9 @@ export const QuizStep = ({
         ) : (
           <ResultSheet
             tone={checked}
-            answer={quiz.writingSentenceText}
-            onNext={onNext}
-            nextLabel={nextLabel}
-            finishing={finishing}
+            answer={quiz.answerText}
+            onNext={() => onNext(checked)}
+            nextLabel={checked === 'correct' ? nextLabel : wrongLabel}
           />
         ))}
     </StepScaffold>
