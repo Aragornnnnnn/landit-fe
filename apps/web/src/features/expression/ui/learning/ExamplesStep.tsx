@@ -104,9 +104,9 @@ export const ExamplesStep = ({
 };
 
 // 예문 카드 — 이미지 + Q(질문) / A(표현 활용 문장). A는 강조 구간만 주황으로.
-// 폭은 화면 폭 기준(-72px) — 작은 폰에서도 다음 카드가 반드시 빼꼼 보여야 옆으로 넘길 수 있다는 걸 안다
+// 폭은 화면 폭 기준(-60px) — 작은 폰에서도 다음 카드가 반드시 빼꼼 보여야 옆으로 넘길 수 있다는 걸 안다
 const ExampleCard = ({ sentence }: { sentence: PracticeSentence }) => (
-  <div className="w-[calc(100%-72px)] shrink-0 snap-center snap-always overflow-hidden rounded-2xl border border-border bg-card">
+  <div className="w-[calc(100%-60px)] shrink-0 snap-center snap-always overflow-hidden rounded-2xl border border-border bg-card">
     <div className="flex aspect-square items-center justify-center bg-secondary">
       {sentence.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- 예문 이미지 도메인 미정이라 next/image 원격 허용 목록을 아직 못 만든다
