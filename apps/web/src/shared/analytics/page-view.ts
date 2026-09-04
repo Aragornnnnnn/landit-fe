@@ -1,9 +1,24 @@
 // 경로 → Page Viewed 속성 매핑 — 동적 세그먼트는 page_name으로 정규화하고 id는 속성으로 뺀다 (정책 2-2)
 import type { EventProps, FeedbackType } from '@landit/analytics';
 
-import { DAILY_REMINDER_CAMPAIGN } from './utm';
+import { isExternalEntry } from './utm';
 
 type PageViewProps = EventProps['Page Viewed'];
+
+// 밖에서 들어온 유입(알림·위젯 탭) — 셸 딥링크 url의 UTM에서 파생한다 (utm_* 자체는 앰플리튜드 어트리뷰션이 유저 프로퍼티로 수집).
+// 웜 딥링크는 SPA 내부 이동이라 어트리뷰션이 못 보므로, 캠페인·문구 슬러그를 이벤트 속성으로 실어야 유실이 없다
+const readEntry = (
+  searchParams: URLSearchParams,
+): Pick<PageViewProps, 'entry_campaign' | 'entry_content'> | null => {
+  if (!isExternalEntry(searchParams)) return null;
+
+  const campaign = searchParams.get('utm_campaign');
+  const content = searchParams.get('utm_content');
+  return {
+    ...(campaign && { entry_campaign: campaign }),
+    ...(content && { entry_content: content }),
+  };
+};
 
 // 계측 제외 — 루트는 즉시 redirect라 페이지뷰로 의미가 없다
 const EXCLUDED = new Set(['/']);
@@ -45,6 +60,16 @@ export const toPageView = (
   pathname: string,
   searchParams: URLSearchParams,
 ): PageViewProps | null => {
+  const page = resolvePage(pathname, searchParams);
+  if (page === null) return null;
+  // 유입 속성은 화면과 무관하게 붙는다 — 어느 경로로 딥링크해도 캠페인 비교가 되게
+  return { ...page, ...readEntry(searchParams) };
+};
+
+const resolvePage = (
+  pathname: string,
+  searchParams: URLSearchParams,
+): PageViewProps | null => {
   if (EXCLUDED.has(pathname)) return null;
 
   const seg = pathname.split('/').filter(Boolean);
@@ -69,16 +94,7 @@ export const toPageView = (
         scenario_id: toId(searchParams.get('flip')),
       };
     }
-    // 데일리 리마인드 알림 탭 유입 — 셸 딥링크 url의 UTM에서 파생한다 (utm_* 자체는 앰플리튜드 어트리뷰션이 수집).
-    // 웜 딥링크는 SPA 내부 이동이라 어트리뷰션이 못 보므로, 문구 슬러그도 이벤트 속성으로 실어야 유실이 없다
-    if (searchParams.get('utm_campaign') === DAILY_REMINDER_CAMPAIGN) {
-      const copySlug = searchParams.get('utm_content');
-      return {
-        ...base,
-        return_reason: 'reminder',
-        ...(copySlug && { notification_copy: copySlug }),
-      };
-    }
+    // 알림·위젯으로 들어온 건 복귀 사유가 아니라 유입이다 — entry_campaign이 밖에서 붙는다
     return base;
   }
 

@@ -169,7 +169,8 @@ export type TalkPartner = 'chloe' | 'marco' | 'teddy';
 // 단어 퀴즈 화면은 퀴즈 스텝과 복습 스텝이 같이 쓴다 — 제출·힌트 이벤트가 이 값으로 갈린다
 export type QuizStepKind = 'quiz' | 'review';
 export type HintSource = QuizStepKind;
-export type HomeReturnReason = 'just' | 'flip' | 'card' | 'reminder';
+// 홈 복귀 신호 — 앱 안에서 돌아온 이유. 밖에서 들어온 유입(알림·위젯)은 entry_campaign이 맡는다
+export type HomeReturnReason = 'just' | 'flip' | 'card';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
@@ -217,8 +218,10 @@ export type EventProps = {
     // 스몰톡에서 갈라져 나온 화면들만 — 지난 스몰톡 기록과 거기서 만든 표현
     session_id?: number;
     expression_id?: number;
-    // 알림 유입(reminder)일 때만 — 탭한 알림의 문구 슬러그 (utm_content에서 파생, 어휘는 docs/analytics-utm.md)
-    notification_copy?: string;
+    // 밖에서 들어온 유입(알림·위젯 탭)의 첫 화면에만 — 어느 경로로 들어왔든 붙는다. 딥링크 URL의 utm_campaign·utm_content에서
+    // 파생한다 (어휘는 docs/analytics-utm.md). 웜 딥링크는 어트리뷰션이 못 보므로 이벤트 속성으로도 실어야 유실이 없다
+    entry_campaign?: string;
+    entry_content?: string;
     // 시나리오 화면에서 완료한 지난 날 카드를 볼 때만 — 열 수 있는 과거는 완료한 날뿐이다 (yyyy-MM-dd)
     completed_date?: string;
     // 편지 상세일 때만
