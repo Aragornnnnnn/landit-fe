@@ -1,7 +1,7 @@
 // 설문 저장 라우트 — 설정 부재·인증·백엔드 확인·슈퍼베이스 응답 갈림길 검증
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { POST } from './route';
+import { GET, POST } from './route';
 
 vi.mock('@/shared/monitoring/report', () => ({ reportError: vi.fn() }));
 
@@ -34,6 +34,12 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
+});
+
+describe('GET /api/survey', () => {
+  it('깨우기 요청엔 내용 없이 204로 답한다', () => {
+    expect(GET().status).toBe(204);
+  });
 });
 
 describe('POST /api/survey', () => {

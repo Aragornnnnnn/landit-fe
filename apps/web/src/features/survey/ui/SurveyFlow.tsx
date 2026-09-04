@@ -10,7 +10,7 @@ import { MAILBOX_PATH } from '@/shared/lib/routes';
 import { Transition } from '@/shared/motion';
 import { showToast } from '@/shared/ui/toast';
 
-import { submitSurvey } from '../api/survey';
+import { submitSurvey, warmUpSurveyRoute } from '../api/survey';
 import { useKeyboardSafeLayout } from '../lib/useKeyboardSafeLayout';
 import {
   toSubmission,
@@ -46,6 +46,9 @@ export const SurveyFlow = () => {
   useEffect(() => {
     stepRef.current = step;
   }, [step]);
+  useEffect(() => {
+    warmUpSurveyRoute();
+  }, []);
   // 조건 문항이 끼고 빠지므로 스텝 번호는 이 목록 기준이다
   const questions = visibleQuestions(QUESTIONS, answers);
 

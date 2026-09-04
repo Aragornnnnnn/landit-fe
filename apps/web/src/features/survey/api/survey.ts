@@ -5,6 +5,13 @@ import { api } from '@/shared/api/client';
 
 import type { Answer } from '../model/answers';
 
+// 설문을 시작할 때 한 번 — 잠들어 있던 서버 함수를 깨워 제출이 콜드 스타트를 안 겪게 한다. 실패해도 상관없다
+export const warmUpSurveyRoute = () => {
+  void Promise.resolve()
+    .then(() => fetch('/api/survey'))
+    .catch(() => undefined);
+};
+
 export const submitSurvey = async (
   // 쿠폰 줄 때 누군지 바로 보려는 참고값 — 애플 가리기·카카오 미동의면 없다
   email: string | null,

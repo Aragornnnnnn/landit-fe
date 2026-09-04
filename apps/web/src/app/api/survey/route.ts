@@ -34,6 +34,11 @@ const fetchUpstream = async (input: string, init: RequestInit) => {
   }
 };
 
+// 미리 깨우기 — 설문 첫 화면이 이걸 한 번 불러 함수를 띄워 두면, 제출 때 콜드 스타트를 안 겪는다
+export function GET() {
+  return new Response(null, { status: 204 });
+}
+
 export async function POST(request: Request) {
   const supabaseUrl = process.env.SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY;

@@ -168,6 +168,7 @@ describe('SurveyFlow', () => {
   });
 
   it('마지막 주관식을 비운 채 제출하면 그 답 없이 서버 라우트로 보내고 완료 화면을 보여준다', async () => {
+    // 첫 호출은 깨우기, 마지막이 제출
     fetchMock.mockResolvedValue(
       routeReply(200, { success: true, data: { result: 'saved' } }),
     );
@@ -179,7 +180,7 @@ describe('SurveyFlow', () => {
     );
 
     expect(await screen.findByText('소중한 의견 고마워요!')).toBeTruthy();
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchMock.mock.calls.at(-1)!;
     expect(url).toBe('/api/survey');
     expect(init.headers.get('Authorization')).toBe('Bearer token');
     const body = JSON.parse(init.body);
