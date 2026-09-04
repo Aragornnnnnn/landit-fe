@@ -123,8 +123,12 @@ const ShellScreen = () => {
   const widgetEntry = useWidgetEntry((path) =>
     postToWeb({ type: 'NAVIGATE', url: path }),
   );
-  // 위젯이 홈 화면에 놓이거나 치워진 기록을 웹(계측)으로 흘려보낸다
-  const flushWidgetChanges = useWidgetChangeFlush(postToWeb, isWebReady);
+  // 위젯이 홈 화면에 놓이거나 치워진 기록을 웹(계측)으로 흘려보낸다.
+  // 로드 실패 화면에선 WebView가 없어 보내면 유실된다 — 재시도로 웹이 다시 뜨면 웹이 청해서 받아 간다
+  const flushWidgetChanges = useWidgetChangeFlush(
+    postToWeb,
+    isWebReady && !loadFailed,
+  );
 
   // iOS는 설치 콜백이 없다 — 실행·복귀 때 놓인 목록을 지난번과 비교해 추가·삭제를 알아낸다 (안드로이드는 no-op)
   useEffect(() => {
