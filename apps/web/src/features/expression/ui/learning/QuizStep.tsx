@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { EVENTS, type QuizStepKind } from '@landit/analytics';
 import { motion, useReducedMotion } from 'motion/react';
 
+import type { Partner } from '@/features/conversation/model/character-look';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { EASE_STANDARD } from '@/shared/motion';
@@ -33,6 +34,8 @@ interface QuizStepProps {
   // 어느 스텝의 퀴즈인지 — 제출·힌트 이벤트가 이 값으로 갈린다. 빠뜨리면 오귀속이라 기본값을 두지 않는다
   step: QuizStepKind;
   quiz: SentenceQuiz;
+  // 질문을 건네는 상대 — 플로우가 뽑아 넘긴다(퀴즈·복습이 같은 얼굴)
+  partner: Partner;
   // 계측 속성용 — 어떤 표현의 퀴즈인지
   expressionId: number;
   onBack: () => void;
@@ -72,6 +75,7 @@ const CHIP_DRAGGING = `${CHIP_BASE} relative z-10 touch-none scale-105 shadow-[0
 export const QuizStep = ({
   step,
   quiz,
+  partner,
   expressionId,
   onBack,
   leftAction,
@@ -205,7 +209,7 @@ export const QuizStep = ({
         ) : undefined
       }
     >
-      <QuizPrompt writingSentence={quiz} />
+      <QuizPrompt writingSentence={quiz} partner={partner} />
 
       {/* 내 답변 — 중앙 밑줄 2줄, 고른 칩이 줄 위에 올라간다 */}
       <div

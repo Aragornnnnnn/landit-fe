@@ -57,6 +57,7 @@ describe('QuizStep', () => {
       <QuizStep
         step="quiz"
         quiz={quiz}
+        partner="chloe"
         expressionId={1}
         onBack={vi.fn()}
         onNext={vi.fn()}
@@ -75,6 +76,7 @@ describe('QuizStep', () => {
       <QuizStep
         step="quiz"
         quiz={quiz}
+        partner="chloe"
         expressionId={1}
         onBack={vi.fn()}
         onNext={vi.fn()}
@@ -95,6 +97,7 @@ describe('QuizStep', () => {
       <QuizStep
         step="quiz"
         quiz={quiz}
+        partner="chloe"
         expressionId={1}
         onBack={vi.fn()}
         onNext={vi.fn()}
@@ -114,6 +117,7 @@ describe('QuizStep', () => {
       <QuizStep
         step="quiz"
         quiz={quiz}
+        partner="chloe"
         expressionId={1}
         onBack={vi.fn()}
         onNext={vi.fn()}
@@ -129,6 +133,7 @@ describe('QuizStep', () => {
       <QuizStep
         step="quiz"
         quiz={quiz}
+        partner="chloe"
         expressionId={1}
         onBack={vi.fn()}
         onNext={vi.fn()}
@@ -144,6 +149,7 @@ describe('QuizStep', () => {
       <QuizStep
         step="quiz"
         quiz={quiz}
+        partner="chloe"
         expressionId={1}
         onBack={vi.fn()}
         onNext={vi.fn()}
@@ -163,6 +169,7 @@ describe('QuizStep', () => {
       <QuizStep
         step="quiz"
         quiz={quiz}
+        partner="chloe"
         expressionId={1}
         onBack={vi.fn()}
         onNext={vi.fn()}
@@ -183,6 +190,7 @@ describe('QuizStep', () => {
       <QuizStep
         step="quiz"
         quiz={quiz}
+        partner="chloe"
         expressionId={1}
         onBack={vi.fn()}
         onNext={vi.fn()}
@@ -206,6 +214,7 @@ describe('QuizStep', () => {
       <QuizStep
         step="quiz"
         quiz={quiz}
+        partner="chloe"
         expressionId={1}
         onBack={vi.fn()}
         onNext={vi.fn()}
@@ -226,6 +235,7 @@ describe('QuizStep', () => {
         <QuizStep
           step="quiz"
           quiz={quiz}
+          partner="chloe"
           expressionId={7}
           onBack={vi.fn()}
           onNext={vi.fn()}
@@ -247,6 +257,7 @@ describe('QuizStep', () => {
       render(
         <QuizStep
           step="review"
+          partner="chloe"
           quiz={quiz}
           expressionId={7}
           onBack={vi.fn()}
@@ -271,6 +282,7 @@ describe('QuizStep', () => {
         render(
           <QuizStep
             step={step}
+            partner="chloe"
             quiz={quiz}
             expressionId={7}
             onBack={vi.fn()}
