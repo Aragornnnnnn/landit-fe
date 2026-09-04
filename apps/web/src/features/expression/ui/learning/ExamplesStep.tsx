@@ -86,7 +86,7 @@ export const ExamplesStep = ({
           </div>
         )}
 
-        {/* 래디의 예고 — 복습 퀴즈는 이 예문들이 아니라 다른 문장으로 나오므로 "이 중 하나"라고 하지 않는다 */}
+        {/* 래디 한마디 — 예문 둘이 상황이 다르다는 걸 짚는다. 복습 퀴즈는 다른 문장으로 나오므로 "이 중 하나가 나와요"라고 하지 않는다 */}
         <div className="mt-6 flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -95,7 +95,7 @@ export const ExamplesStep = ({
             className="w-16 flex-none object-contain"
           />
           <div className="rounded-2xl rounded-bl-sm bg-secondary px-3.5 py-2.5 text-sm leading-snug font-semibold break-keep text-foreground">
-            표현 쓰임새가 보이죠? 이제 마무리 퀴즈를 풀어볼 거예요
+            한 표현으로 이렇게 다양한 상황을 말할 수 있어요
           </div>
         </div>
       </div>
