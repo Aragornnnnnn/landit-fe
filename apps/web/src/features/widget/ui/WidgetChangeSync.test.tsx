@@ -85,5 +85,6 @@ describe('WidgetChangeSync', () => {
     vi.mocked(getNativeContext).mockReturnValue(null);
     render(<WidgetChangeSync />);
     expect(mocks.postToNative).not.toHaveBeenCalled();
+    expect(mocks.nativeListener).toBeNull();
   });
 });

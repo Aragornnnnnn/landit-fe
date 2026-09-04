@@ -78,7 +78,7 @@ Cohort 생성 → who performed `Page Viewed` where `entry_campaign is set` → 
 유저 프로퍼티로도 가능: where `utm_medium = notification` (attribution 자동 수집분 — 콜드 유입만 확실하므로 코호트 방식을 우선).
 
 **4. 동의 퍼널 — 어느 지면이 수락률이 좋은가**
-Funnel 차트 → `Notification Consent Viewed` → `Notification Consent Accepted` → group by `source` (`home_fullscreen`/`home_sheet`/`me`).
+Funnel 차트 → `Notification Consent Viewed` → `Notification Consent Accepted` → group by `source` (`scenario`/`me`).
 온보딩 스텝의 수락은 기존 온보딩 퍼널(`Onboarding Step Viewed/Completed`, step=notification)로 본다.
 
 **5. 캠페인 간 비교**

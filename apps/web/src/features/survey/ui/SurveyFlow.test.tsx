@@ -273,10 +273,11 @@ describe('SurveyFlow', () => {
     );
     await screen.findByRole('button', { name: '건너뛰고 제출하기' });
 
-    expect(track).not.toHaveBeenCalledWith(
-      EVENTS.SURVEY_SUBMITTED,
-      expect.anything(),
-    );
+    expect(
+      vi
+        .mocked(track)
+        .mock.calls.filter(([name]) => name === EVENTS.SURVEY_SUBMITTED),
+    ).toHaveLength(0);
   });
 
   it('뒤로 갔다 다시 보면 같은 문항 노출이 한 번 더 찍힌다', async () => {
