@@ -1,4 +1,4 @@
-// AI 발화 재생 훅 검증 — 오프닝 정적 mp3·합성 폴백·타이머 폴백과 다음 질문 프리페치
+// AI 발화 재생 훅 검증 — 오프닝 음원·합성 폴백·타이머 폴백과 다음 질문 프리페치
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -71,7 +71,7 @@ const renderSpeech = (
     playing: true,
     source: { content: OPENING } as SpeechSource | null,
     voice: voice as TtsVoice | null,
-    openingSrc: '/audio/opening-10.mp3' as string | null,
+    openingSrc: 'https://cdn.example.com/questions/10.mp3' as string | null,
     onSpeechEnd,
     ...over,
   };
@@ -96,11 +96,11 @@ afterEach(() => {
 });
 
 describe('useAiSpeech', () => {
-  it('오프닝은 미리 만든 정적 mp3로 재생하고, 끝나면 종료를 알린다', async () => {
+  it('오프닝은 서버가 준 음원으로 재생하고, 끝나면 종료를 알린다', async () => {
     const { onSpeechEnd } = renderSpeech();
 
     expect(ttsMock.speakSrc).toHaveBeenCalledWith(
-      '/audio/opening-10.mp3',
+      'https://cdn.example.com/questions/10.mp3',
       expect.anything(),
     );
     expect(ttsMock.speak).not.toHaveBeenCalled();
@@ -110,8 +110,8 @@ describe('useAiSpeech', () => {
     expect(onSpeechEnd).toHaveBeenCalledTimes(1);
   });
 
-  it('오프닝 소스가 없으면 정적 재생 없이 바로 합성으로 말한다', async () => {
-    // 미리 녹음된 오프닝이 없는 대화(예: 스몰톡)는 처음부터 일반 재생 경로를 탄다
+  it('오프닝 음원이 없으면 파일 재생 없이 바로 합성으로 말한다', async () => {
+    // 음원이 없는 대화(스몰톡, 음원 미등록 시나리오)는 처음부터 일반 재생 경로를 탄다
     const { onSpeechEnd } = renderSpeech({ openingSrc: null });
 
     expect(ttsMock.speakSrc).not.toHaveBeenCalled();
@@ -125,13 +125,13 @@ describe('useAiSpeech', () => {
     expect(onSpeechEnd).toHaveBeenCalledTimes(1);
   });
 
-  it('오프닝 정적 파일이 없으면 실패를 남기고 합성으로 폴백한다', async () => {
+  it('오프닝 음원 재생이 실패하면 실패를 남기고 합성으로 폴백한다', async () => {
     const { onSpeechEnd } = renderSpeech();
 
-    await act(async () => ttsMock.state.onError?.()); // 정적 파일 없음(404)
+    await act(async () => ttsMock.state.onError?.()); // 음원 못 받음(404·네트워크)
 
     expect(track).toHaveBeenCalledWith('Speech Playback Failed', {
-      source: 'opening_mp3',
+      source: 'question_audio',
     });
     expect(ttsMock.speak).toHaveBeenCalledWith(
       OPENING,
@@ -144,10 +144,10 @@ describe('useAiSpeech', () => {
     expect(onSpeechEnd).toHaveBeenCalledTimes(1);
   });
 
-  it('정적 파일도 음성도 없으면 글자 수 타이머로 발화를 마친다', async () => {
+  it('음원도 음성도 없으면 글자 수 타이머로 발화를 마친다', async () => {
     const { onSpeechEnd } = renderSpeech({ voice: null });
 
-    await act(async () => ttsMock.state.onError?.()); // 정적 파일 없음
+    await act(async () => ttsMock.state.onError?.()); // 음원 못 받음
 
     expect(ttsMock.speak).not.toHaveBeenCalled();
 
@@ -158,7 +158,7 @@ describe('useAiSpeech', () => {
     expect(onSpeechEnd).toHaveBeenCalledTimes(1);
   });
 
-  it('markOpeningPlayed 이후의 발화는 정적 mp3가 아니라 합성으로 재생한다', async () => {
+  it('markOpeningPlayed 이후의 발화는 오프닝 음원이 아니라 합성으로 재생한다', async () => {
     const { result, rerender, onSpeechEnd, initialProps } = renderSpeech();
     await act(async () => ttsMock.state.onEnd?.()); // 오프닝 재생 종료
 
@@ -173,7 +173,7 @@ describe('useAiSpeech', () => {
       voice,
       expect.anything(),
     );
-    expect(ttsMock.speakSrc).toHaveBeenCalledTimes(1); // 정적 재생은 오프닝 한 번뿐
+    expect(ttsMock.speakSrc).toHaveBeenCalledTimes(1); // 음원 재생은 오프닝 한 번뿐
 
     await act(async () => ttsMock.state.onEnd?.());
     expect(onSpeechEnd).toHaveBeenCalledTimes(2);
@@ -192,7 +192,7 @@ describe('useAiSpeech', () => {
     const { rerender, onSpeechEnd, initialProps } = renderSpeech();
 
     rerender({ ...initialProps, playing: false }); // 이탈 — 정리 완료
-    await act(async () => ttsMock.state.onError?.()); // 그 뒤에야 도착한 정적 파일 실패
+    await act(async () => ttsMock.state.onError?.()); // 그 뒤에야 도착한 음원 실패
 
     expect(track).not.toHaveBeenCalled();
     expect(ttsMock.speak).not.toHaveBeenCalled();
