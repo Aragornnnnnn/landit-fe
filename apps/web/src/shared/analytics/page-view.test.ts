@@ -58,7 +58,21 @@ describe('toPageView', () => {
     });
   });
 
-  it('알림 딥링크 유입(utm_campaign=daily_reminder)을 return_reason reminder와 문구 슬러그로 해석한다', () => {
+  it('오늘의 시나리오 리마인드 알림 유입을 캠페인으로 남긴다', () => {
+    // BE가 다는 값 그대로 — utm_source=push&utm_medium=notification&utm_campaign=…
+    expect(
+      pv(
+        '/scenario',
+        'utm_source=push&utm_medium=notification&utm_campaign=daily_scenario_reminder',
+      ),
+    ).toEqual({
+      page_name: 'scenario',
+      path: '/scenario',
+      entry_campaign: 'daily_scenario_reminder',
+    });
+  });
+
+  it('구 로컬 알림 주소(utm_medium=push, daily_reminder, 문구 슬러그)도 알림 유입으로 읽는다', () => {
     expect(
       pv(
         '/scenario',
@@ -67,16 +81,68 @@ describe('toPageView', () => {
     ).toEqual({
       page_name: 'scenario',
       path: '/scenario',
-      return_reason: 'reminder',
-      notification_copy: 'marco_dm',
+      entry_campaign: 'daily_reminder',
+      entry_content: 'marco_dm',
     });
-    // content가 없으면 문구 슬러그 없이 유입만 남긴다
-    expect(pv('/scenario', 'utm_campaign=daily_reminder')).toEqual({
+  });
+
+  it('시나리오 밖 경로로 온 알림 유입도 같은 자리에 캠페인을 남긴다', () => {
+    expect(
+      pv(
+        '/expressions/scenario/10/100',
+        'utm_source=push&utm_medium=notification&utm_campaign=continue_expression',
+      ),
+    ).toEqual({
+      page_name: 'expression_learning',
+      path: '/expressions/scenario/10/100',
+      scenario_id: 10,
+      expression_id: 100,
+      entry_campaign: 'continue_expression',
+    });
+    expect(
+      pv(
+        '/smalltalk',
+        'utm_source=push&utm_medium=notification&utm_campaign=small_talk_reminder',
+      ),
+    ).toEqual({
+      page_name: 'smalltalk',
+      path: '/smalltalk',
+      entry_campaign: 'small_talk_reminder',
+    });
+    expect(
+      pv(
+        '/mailbox/received/3',
+        'utm_source=push&utm_medium=notification&utm_campaign=mailbox_reply',
+      ),
+    ).toEqual({
+      page_name: 'mailbox_received',
+      path: '/mailbox/received/3',
+      letter_id: 3,
+      entry_campaign: 'mailbox_reply',
+    });
+  });
+
+  it('홈 화면 위젯 탭 유입(utm_medium=widget)도 캠페인으로 남긴다', () => {
+    expect(
+      pv(
+        '/scenario',
+        'utm_source=widget&utm_medium=widget&utm_campaign=streak_widget',
+      ),
+    ).toEqual({
       page_name: 'scenario',
       path: '/scenario',
-      return_reason: 'reminder',
+      entry_campaign: 'streak_widget',
     });
-    expect(pv('/scenario', 'utm_campaign=other_campaign')).toEqual({
+  });
+
+  it('알림·위젯이 아닌 유입(소셜)이나 캠페인만 있는 주소는 유입 속성을 남기지 않는다', () => {
+    expect(
+      pv('/scenario', 'utm_medium=social&utm_campaign=launch_event'),
+    ).toEqual({
+      page_name: 'scenario',
+      path: '/scenario',
+    });
+    expect(pv('/scenario', 'utm_campaign=daily_scenario_reminder')).toEqual({
       page_name: 'scenario',
       path: '/scenario',
     });

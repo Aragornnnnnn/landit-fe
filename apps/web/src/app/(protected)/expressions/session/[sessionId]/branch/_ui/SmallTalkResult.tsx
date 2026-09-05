@@ -66,6 +66,7 @@ export const SmallTalkResult = ({
     });
   }, [listed, sessionId, count]);
 
+  // 오류·표현 없음으로 나갈 땐 곧장 홈으로
   const goHome = () => router.replace(SMALLTALK_PATH);
 
   // X가 유일한 이탈 경로다 — 학습 없이 나가는 신호를 여기서 남긴다
@@ -74,7 +75,7 @@ export const SmallTalkResult = ({
       session_id: sessionId,
       expression_count: count,
     });
-    goHome();
+    router.replace(SMALLTALK_PATH);
   };
   const goLearn = (expressionId: number) => {
     track(EVENTS.EXPRESSION_SELECTED, {

@@ -2,13 +2,15 @@
 // "읽고 있어요"는 replies가 아니라 status로 정한다 — 묶음 답장은 replies 없이 COMPLETED가 될 수 있다
 import type { SentFeedbackDetail } from '../../api/mailbox';
 import { formatLetterDateTime } from '../../lib/letter-date';
+import { MarkdownBody } from './MarkdownBody';
 import { WaitingNotice } from './WaitingNotice';
 
 export const SentBody = ({ feedback }: { feedback: SentFeedbackDetail }) => (
   <div className="flex flex-col gap-6">
-    <p className="text-[15px] leading-relaxed whitespace-pre-line text-foreground">
-      {feedback.content}
-    </p>
+    <MarkdownBody
+      text={feedback.content}
+      className="text-[15px] text-foreground"
+    />
     {feedback.replies.map((reply) => (
       <ReplySection
         key={reply.letterId}
@@ -25,8 +27,8 @@ const ReplySection = ({ text, sentAt }: { text: string; sentAt: string }) => (
     <p className="text-xs font-semibold text-muted-foreground">
       랜딧 팀의 답장 · {formatLetterDateTime(sentAt)}
     </p>
-    <p className="mt-2 text-[15px] leading-relaxed whitespace-pre-line text-foreground">
-      {text}
-    </p>
+    <div className="mt-2">
+      <MarkdownBody text={text} className="text-[15px] text-foreground" />
+    </div>
   </div>
 );

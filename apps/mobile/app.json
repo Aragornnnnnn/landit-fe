@@ -2,7 +2,7 @@
   "expo": {
     "name": "Landit",
     "slug": "saynow",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": [
@@ -22,15 +22,19 @@
       }
     },
     "ios": {
-      "buildNumber": "12",
+      "buildNumber": "5",
       "bundleIdentifier": "com.saynow.app",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "음성 인식(말하기) 기능에 마이크를 사용합니다.",
         "ITSAppUsesNonExemptEncryption": false,
         "SKAdNetworkItems": [
-          { "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork" },
-          { "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork" }
+          {
+            "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork"
+          },
+          {
+            "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork"
+          }
         ]
       },
       "privacyManifests": {
@@ -60,12 +64,16 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.saynow.app",
-      "versionCode": 17,
+      "versionCode": 18,
       "intentFilters": [
         {
           "action": "VIEW",
           "category": ["DEFAULT", "BROWSABLE"],
-          "data": [{ "scheme": "com.saynow.app" }]
+          "data": [
+            {
+              "scheme": "com.saynow.app"
+            }
+          ]
         }
       ]
     },
@@ -81,6 +89,7 @@
     },
     "plugins": [
       "./plugins/withGradleJvmArgs.js",
+      "./plugins/withAndroidxWorkAlignment.js",
       "expo-router",
       "expo-apple-authentication",
       [
@@ -131,7 +140,74 @@
           "userTrackingPermission": "광고 성과를 측정하고 서비스를 개선하기 위해 기기의 활동 정보를 사용해요."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "StreakSmall",
+              "label": "랜딧",
+              "description": "래디와 함께 매일 대화 스트릭을 지켜요",
+              "minWidth": "110dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "previewImage": "./assets/widgets/preview-small.webp",
+              "resizeMode": "none",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "StreakMedium",
+              "label": "랜딧",
+              "description": "래디와 함께 매일 대화 스트릭을 지켜요",
+              "minWidth": "250dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "previewImage": "./assets/widgets/preview-medium.webp",
+              "resizeMode": "none",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "StreakLarge",
+              "label": "랜딧",
+              "description": "래디와 함께 매일 대화 스트릭과 주간 기록을 지켜요",
+              "minWidth": "250dp",
+              "minHeight": "250dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 4,
+              "previewImage": "./assets/widgets/preview-large.webp",
+              "resizeMode": "none",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "groupIdentifier": "group.com.saynow.app",
+          "widgets": [
+            {
+              "name": "StreakWidget",
+              "displayName": "랜딧",
+              "description": "래디와 함께 매일 대화 스트릭을 지켜요",
+              "supportedFamilies": [
+                "systemSmall",
+                "systemMedium",
+                "systemLarge"
+              ],
+              "contentMarginsDisabled": true
+            }
+          ]
+        }
+      ],
+      "expo-asset",
+      "expo-font",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

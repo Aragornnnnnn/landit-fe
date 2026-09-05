@@ -1,4 +1,5 @@
-// SentBody — "읽고 있어요" 안내는 처리 상태(status)로 정한다. 묶음 답장은 replies 없이 COMPLETED가 될 수 있다
+// SentBody — "읽고 있어요" 안내는 처리 상태(status)로 정한다. 묶음 답장은 replies 없이 COMPLETED가 될 수 있다.
+// 내 글과 답장은 마크다운으로 그린다
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -77,5 +78,32 @@ describe('SentBody', () => {
 
     expect(screen.getByText('확인 중이에요.')).toBeTruthy();
     expect(screen.getByText('랜딧 팀이 읽고 있어요')).toBeTruthy();
+  });
+
+  it('내 글과 답장의 마크다운 링크를 둘 다 링크로 그린다', () => {
+    render(
+      <SentBody
+        feedback={{
+          ...pending,
+          content: '[캡처](https://img.landit.im/bug.png) 여기 보세요',
+          status: 'COMPLETED',
+          replies: [
+            {
+              letterId: 201,
+              title: '답장',
+              bodyText: '[릴리즈 노트](https://landit.im/notes)에서 확인해요.',
+              sentAt: '2026-08-09T10:00:00',
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByRole('link', { name: '캡처' }).getAttribute('href'),
+    ).toBe('https://img.landit.im/bug.png');
+    expect(
+      screen.getByRole('link', { name: '릴리즈 노트' }).getAttribute('href'),
+    ).toBe('https://landit.im/notes');
   });
 });

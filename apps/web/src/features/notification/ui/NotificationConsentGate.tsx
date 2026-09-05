@@ -9,6 +9,7 @@ import { track } from '@/shared/analytics';
 
 import {
   hasSeenConsentPrompt,
+  isConsentPromptDue,
   markConsentPromptSeen,
 } from '../model/consent-prompt';
 import { requestNotificationPermission } from '../model/request-permission';
@@ -21,8 +22,9 @@ export const NotificationConsentGate = () => {
   // 서버에선 localStorage가 없어 false로 초기화되지만, 권한도 첫 렌더엔 unavailable이라 하이드레이션이 어긋나지 않는다
   const [asked, setAsked] = useState(hasSeenConsentPrompt);
 
-  // denied는 인앱 재요청이 불가능해 물어도 소용없고, granted는 물을 이유가 없고, unavailable은 요청 수단이 없는 환경
-  const visible = !asked && notificationPermission === 'undetermined';
+  // denied는 인앱 재요청이 불가능해 물어도 소용없고, granted는 물을 이유가 없고, unavailable은 요청 수단이 없는 환경.
+  // 이번 실행의 응답(asked)만 여기서 얹고, 노출 차례 판정 자체는 모델의 단일 출처를 쓴다
+  const visible = !asked && isConsentPromptDue(notificationPermission);
 
   useEffect(() => {
     if (visible)
@@ -42,7 +44,7 @@ export const NotificationConsentGate = () => {
     close();
   };
 
-  // 수락 = OS 권한창 요청 — 회신은 훅이 받아 상태를 갱신하고, 허용되면 ReminderSync가 예약까지 이어간다
+  // 수락 = OS 권한창 요청 — 회신은 훅이 받아 상태를 갱신하고, 허용되면 PushTokenSync가 토큰을 서버에 등록한다
   const accept = () => {
     track(EVENTS.NOTIFICATION_CONSENT_ACCEPTED, { source: 'scenario' });
     requestNotificationPermission('scenario');

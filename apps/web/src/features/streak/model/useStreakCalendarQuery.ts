@@ -5,14 +5,22 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/shared/auth/auth-store';
 
 import { getStreakCalendar } from '../api/streak';
+import type { YearMonth } from '../lib/seoul-date';
 import { streakKeys } from './keys';
 
-export const useStreakCalendarQuery = ({ enabled }: { enabled: boolean }) => {
+// view를 주면 그 달을, 생략하면 서버가 고른 이번 달을 읽는다
+export const useStreakCalendarQuery = ({
+  enabled,
+  view = null,
+}: {
+  enabled: boolean;
+  view?: YearMonth | null;
+}) => {
   const userId = useAuthStore((state) => state.member?.userId ?? null);
 
   const { data, isError } = useQuery({
-    queryKey: streakKeys.calendar(userId, null),
-    queryFn: () => getStreakCalendar(null),
+    queryKey: streakKeys.calendar(userId, view),
+    queryFn: () => getStreakCalendar(view),
     enabled: enabled && userId !== null,
     retry: 1,
   });

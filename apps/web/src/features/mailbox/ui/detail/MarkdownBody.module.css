@@ -1,0 +1,145 @@
+/* 편지 본문 마크다운 — Tailwind 리셋이 지운 제목·목록·표 꾸밈을 깃허브 코멘트 느낌으로 되살린다.
+   글자 크기·색은 여기서 정하지 않는다. 쓰는 쪽이 정한다(본문은 15px 검정, 인용은 작은 회색). */
+
+.root {
+  line-height: 1.625;
+  overflow-wrap: anywhere;
+}
+
+/* 블록 사이 간격 — 인용문·목록 항목 안에 문단이 여럿일 때도 같은 규칙 */
+.root > * + *,
+.root blockquote > * + * {
+  margin-top: 1em;
+}
+
+.root li > * + * {
+  margin-top: 0.5em;
+}
+
+.root a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.root a:active {
+  opacity: 0.7;
+}
+
+/* 한 줄에 이미지만 있으면 IMAGE 블록(LetterImage)과 같은 모양으로 꽉 채우고, 문장 속 이미지는 원래 크기 */
+.root img {
+  max-width: 100%;
+  border-radius: var(--radius-2xl);
+}
+
+.root p > img:only-child {
+  width: 100%;
+}
+
+.root h1,
+.root h2,
+.root h3,
+.root h4,
+.root h5,
+.root h6 {
+  font-weight: 700;
+  line-height: 1.375;
+}
+
+.root h1 {
+  font-size: 20px;
+}
+
+.root h2 {
+  font-size: 18px;
+}
+
+.root h3,
+.root h4,
+.root h5,
+.root h6 {
+  font-size: 16px;
+}
+
+.root ul,
+.root ol {
+  padding-left: 1.5em;
+}
+
+.root ul {
+  list-style: disc;
+}
+
+.root ol {
+  list-style: decimal;
+}
+
+.root li + li {
+  margin-top: 0.25em;
+}
+
+/* 체크박스 항목 — remark-gfm이 li에 task-list-item을 붙인다. 항목 사이에 빈 줄이 있으면 input이 p 안에 들어가므로 후손으로 잡는다 */
+.root :global(.task-list-item) {
+  list-style: none;
+}
+
+.root :global(.task-list-item) input {
+  margin: 0 0.5em 0 -1.5em;
+  vertical-align: middle;
+}
+
+.root blockquote {
+  padding-left: 1em;
+  border-left: 3px solid var(--color-border);
+  color: var(--color-muted-foreground);
+}
+
+.root code {
+  padding: 0.125em 0.375em;
+  border-radius: 0.375rem;
+  background: var(--color-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.root pre {
+  padding: 1em;
+  border-radius: var(--radius-2xl);
+  background: var(--color-secondary);
+  overflow-x: auto;
+}
+
+.root pre code {
+  padding: 0;
+  background: none;
+}
+
+/* 표는 내용만큼 넓어지고 본문보다 넓으면 가로 스크롤 */
+.root table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.root th,
+.root td {
+  padding: 0.375em 0.75em;
+  border: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.root th {
+  font-weight: 600;
+  background: var(--color-secondary);
+}
+
+.root hr {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.root del {
+  color: var(--color-muted-foreground);
+}

@@ -46,7 +46,8 @@ export interface SentFeedback {
 
 /**
  * 받은 편지 한 통 (`GET /mailbox/received/{letterId}`).
- * 공지·업데이트는 contentBlocks가, 답장은 bodyText가 채워진다
+ * 공지·업데이트는 contentBlocks가, 답장은 bodyText가 채워진다.
+ * 글자로 오는 본문(bodyText, PARAGRAPH 블록의 text, 피드백 content)은 전부 마크다운으로 그린다
  */
 export interface ReceivedLetterDetail {
   letterId: number;

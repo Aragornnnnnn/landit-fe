@@ -4,8 +4,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
 
+import { tapGreetingSeen } from '../../_model/tap-greeting-seen';
 import { introGuideSeen } from './intro-guide-seen';
-import { tapGreetingSeen } from './tap-greeting-seen';
 import { useGreetingCoach } from './useGreetingCoach';
 
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));

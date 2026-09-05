@@ -20,6 +20,7 @@ class FakeAudio {
   static instances: FakeAudio[] = [];
   static playRejection: unknown = null; // 설정 시 play()가 이 값으로 거부된다
   src: string;
+  preload = 'none';
   onended: (() => void) | null = null;
   onerror: (() => void) | null = null;
   play = vi.fn(() =>
@@ -28,6 +29,8 @@ class FakeAudio {
       : Promise.resolve(),
   );
   pause = vi.fn();
+  removeAttribute = vi.fn();
+  load = vi.fn();
 
   constructor(src: string) {
     this.src = src;
@@ -258,6 +261,91 @@ describe('useTts', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(FakeAudio.instances[0]!.play).toHaveBeenCalled();
     expect(result.current.status).toBe('active');
+  });
+
+  it('prefetchSrc는 음원을 미리 열어두고, speakSrc가 그 엘리먼트로 바로 재생한다', () => {
+    const { result } = renderHook(() => useTts());
+
+    act(() => result.current.prefetchSrc('/audio/question-2.mp3'));
+
+    expect(FakeAudio.instances).toHaveLength(1);
+    expect(FakeAudio.instances[0]!.preload).toBe('auto');
+    expect(FakeAudio.instances[0]!.play).not.toHaveBeenCalled();
+
+    act(() => result.current.speakSrc('/audio/question-2.mp3'));
+
+    expect(FakeAudio.instances).toHaveLength(1); // 새로 만들지 않고 재사용
+    expect(FakeAudio.instances[0]!.play).toHaveBeenCalled();
+  });
+
+  it('prefetchSrc는 같은 주소를 두 번 열지 않는다', () => {
+    const { result } = renderHook(() => useTts());
+
+    act(() => {
+      result.current.prefetchSrc('/audio/question-2.mp3');
+      result.current.prefetchSrc('/audio/question-2.mp3');
+    });
+
+    expect(FakeAudio.instances).toHaveLength(1);
+  });
+
+  it('prefetchSrc는 새 음원을 열면 이전 항목의 로드를 끊고 비운다', () => {
+    const { result } = renderHook(() => useTts());
+
+    act(() => result.current.prefetchSrc('/audio/question-2.mp3'));
+    act(() => result.current.prefetchSrc('/audio/question-3.mp3'));
+
+    expect(FakeAudio.instances).toHaveLength(2);
+    expect(FakeAudio.instances[0]!.removeAttribute).toHaveBeenCalledWith('src');
+    expect(FakeAudio.instances[0]!.load).toHaveBeenCalled();
+
+    act(() => result.current.speakSrc('/audio/question-2.mp3'));
+
+    expect(FakeAudio.instances).toHaveLength(3); // 끊긴 항목은 재사용하지 않고 새로 연다
+  });
+
+  it('프리로드가 실패로 끝난 항목은 슬롯에서 내려가 speakSrc가 새로 연다', () => {
+    const { result } = renderHook(() => useTts());
+    act(() => result.current.prefetchSrc('/audio/question-2.mp3'));
+
+    act(() => FakeAudio.instances[0]!.onerror?.()); // 백그라운드 로드 실패
+
+    act(() => result.current.speakSrc('/audio/question-2.mp3'));
+
+    expect(FakeAudio.instances).toHaveLength(2); // 죽은 항목 대신 새 엘리먼트
+    expect(FakeAudio.instances[1]!.play).toHaveBeenCalled();
+  });
+
+  it('프리로드 엘리먼트 재생이 실패하면 새 엘리먼트로 한 번 다시 연다', () => {
+    const { result } = renderHook(() => useTts());
+    const onError = vi.fn();
+    act(() => result.current.prefetchSrc('/audio/question-2.mp3'));
+    act(() => result.current.speakSrc('/audio/question-2.mp3', { onError }));
+
+    act(() => FakeAudio.instances[0]!.onerror?.()); // 묵는 동안 죽어 있던 엘리먼트
+
+    expect(FakeAudio.instances).toHaveLength(2); // 새 엘리먼트로 재시도
+    expect(FakeAudio.instances[1]!.play).toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalled();
+
+    act(() => FakeAudio.instances[1]!.onerror?.()); // 재시도도 실패하면 그때 실패를 알린다
+
+    expect(onError).toHaveBeenCalledTimes(1);
+  });
+
+  it('합성 재생 실패가 onerror와 play 거부로 겹쳐 도착해도 실패 콜백은 한 번만 부른다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => fakeAudioResponse()),
+    );
+    FakeAudio.playRejection = new Error('boom');
+    const onError = vi.fn();
+    const { result } = renderHook(() => useTts());
+
+    await act(() => result.current.speak('Hello', harper, { onError }));
+    act(() => FakeAudio.instances[0]!.onerror?.()); // 같은 실패가 onerror로도 도착
+
+    expect(onError).toHaveBeenCalledTimes(1);
   });
 
   it('prefetch가 아직 합성 중이면 speak가 중복 요청 없이 그 결과를 재사용한다', async () => {

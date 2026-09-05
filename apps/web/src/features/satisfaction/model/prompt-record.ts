@@ -5,9 +5,14 @@ import type {
   SatisfactionTalk,
 } from '@landit/analytics';
 
-// 프롬프트류 기록은 키 하나에 JSON으로 모은다 — 물어본 것이 늘어도 키가 흩어지지 않게.
-// 온보딩·알림 동의의 기존 키는 그대로 두고, 여기서부터 새로 시작한다
-export const PROMPT_RECORD_KEY = 'landit-prompts';
+import {
+  getDeviceToday,
+  readPromptEntry,
+  updatePromptEntry,
+} from '@/shared/lib/prompt-store';
+
+// 기록은 공용 프롬프트 버킷(landit-prompts)에 satisfaction: 네임스페이스로 남긴다
+export { PROMPT_RECORD_KEY } from '@/shared/lib/prompt-store';
 
 interface ImpressionRecord {
   // 대화를 마치고 아직 홈에서 소감 시트를 보지 않았다 — 시트를 띄우는 순간 소비한다
@@ -21,48 +26,17 @@ interface ImpressionRecord {
   answeredOn?: string;
 }
 
-type PromptRecords = Record<string, ImpressionRecord | undefined>;
-
 const entryKey = (moment: SatisfactionMoment) => `satisfaction:${moment}`;
 
-const readAll = (): PromptRecords => {
-  try {
-    const raw = localStorage.getItem(PROMPT_RECORD_KEY);
-    if (!raw) return {};
-    const parsed: unknown = JSON.parse(raw);
-    return parsed && typeof parsed === 'object'
-      ? (parsed as PromptRecords)
-      : {};
-  } catch {
-    // 없거나 깨진 값은 기록이 없는 것과 같다 — 한 번 더 묻는 정도라 감수한다
-    return {};
-  }
-};
+const update = (moment: SatisfactionMoment, patch: Partial<ImpressionRecord>) =>
+  updatePromptEntry<ImpressionRecord>(entryKey(moment), patch);
 
-const update = (
-  moment: SatisfactionMoment,
-  patch: Partial<ImpressionRecord>,
-) => {
-  try {
-    const all = readAll();
-    const key = entryKey(moment);
-    all[key] = { ...all[key], ...patch };
-    localStorage.setItem(PROMPT_RECORD_KEY, JSON.stringify(all));
-  } catch {
-    // 저장 실패는 무시 — 다음 대화 뒤에 한 번 더 뜰 뿐이다
-  }
-};
-
-const read = (moment: SatisfactionMoment) => readAll()[entryKey(moment)];
+const read = (moment: SatisfactionMoment) =>
+  readPromptEntry<ImpressionRecord>(entryKey(moment));
 
 const TALKS: SatisfactionTalk[] = ['scenario', 'smalltalk'];
 
-// 기기 기준 오늘 (yyyy-MM-dd)
-const today = () => {
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-};
+const today = getDeviceToday;
 
 // 대화를 마쳤다 — 홈에 돌아오면 물을 차례라고 남긴다
 export const markTalkCompleted = (talk: SatisfactionTalk) =>

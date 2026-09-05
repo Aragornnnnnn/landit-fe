@@ -34,6 +34,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-backdrop: var(--backdrop);
+  --color-selected: var(--selected);
   --color-good: var(--good);
   --color-good-bg: var(--good-bg);
   --color-good-border: var(--good-border);
@@ -126,6 +127,9 @@
   --ring: var(--orange-500);
   /* 데스크톱 웹에서 430px 앱 컬럼 바깥에 까는 여백색 — 컬럼(밝은 background)이 살짝 떠 보이게 한 톤 더 진한 웜 그레이 */
   --backdrop: var(--gray-200);
+  /* 목록에서 고른 항목의 배경 — 주황을 반투명으로 얹으면 카드 배경과 섞여 탁해진다.
+   * 반투명 틴트 대신 정해진 색을 쓴다 */
+  --selected: var(--orange-50);
   --star-filled: var(--amber-400);
   --star-empty: var(--gray-300);
   /* 스트릭 — 달력의 이어진 구간 띠 (피그마 스트릭 Flow 스펙) */
@@ -274,7 +278,81 @@
   }
 }
 
+/* 발음 스텝 진입 — 설명 화면의 예문이 표현 자리로 부드럽게 올라오는 연출.
+ * motion(rAF) 대신 CSS 애니메이션 — rAF가 멎은 웹뷰에서도 멈추지 않는다 (LAN-375 교훈) */
+@keyframes rise-in {
+  from {
+    transform: translateY(88px);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 피드백 요소 순차 등장 — 게이지가 차오른 뒤 칩·말풍선·카드가 아래에서 떠오른다.
+ * both로 딜레이 동안 숨겨 두고, 끝난 상태를 유지한다 */
+@keyframes fade-up {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 로딩 문구 전체를 훑는 하이라이트 — 문구가 멈춰 있어도 진행 중임이 보인다 */
+@keyframes text-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
+}
+
+/* 마이크 대기 숨쉬기 — 눌러야 하는 버튼임을 크기 맥동으로 알린다 */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
+}
+
 @layer utilities {
+  .animate-rise-in {
+    animation: rise-in 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .animate-breathe {
+    animation: breathe 1.6s ease-in-out infinite;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.45s ease-out both;
+  }
+
+  /* 글자에 그라데이션을 클리핑해 밝은 띠가 좌→우로 흐른다 (rAF 없이 CSS만) */
+  .animate-text-shimmer {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-muted-foreground) 40%,
+      var(--color-foreground) 50%,
+      var(--color-muted-foreground) 60%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: text-shimmer 1.8s linear infinite;
+  }
+
   .animate-fruit-squish {
     /* 바닥을 축으로 — 위에서 누르는 것처럼 보여야 무게가 느껴진다 */
     transform-origin: 50% 85%;

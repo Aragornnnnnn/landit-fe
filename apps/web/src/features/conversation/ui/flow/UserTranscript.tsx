@@ -3,7 +3,7 @@
 // 키보드 입력 모드(editing)에선 이 박스가 그대로 입력창이 된다 — 별도 입력바 없이 답변 자리에서 쓰고 보낸다.
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useRef, useState } from 'react';
 
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
@@ -32,6 +32,9 @@ export const UserTranscript = ({
   const boxRef = useRef<HTMLDivElement>(null);
   // 넘쳐서 앞부분이 잘렸는지 — 잘렸을 때만 윗변을 흐린다. 짧은 답변의 첫 줄까지 흐려지면 안 된다
   const [clipped, setClipped] = useState(false);
+  // STT interim이 말하는 동안 초당 여러 번 들어와 text가 바뀐다 — 그때마다 강제 리플로우를 돌리면
+  // 메인 스레드가 밀려 화면 전체가 버벅여 보인다. deferred 값으로 늦춰 브라우저가 한가할 때만 계산한다
+  const deferredText = useDeferredValue(text);
 
   // 말이 길어지면 끝이 보이게 아래로 붙인다. 짧으면 그대로 라벨 밑에서 시작한다
   useEffect(() => {
@@ -39,7 +42,7 @@ export const UserTranscript = ({
     if (!box) return;
     box.scrollTop = box.scrollHeight;
     setClipped(box.scrollTop > 0);
-  }, [text]);
+  }, [deferredText]);
 
   if (editing) {
     return (

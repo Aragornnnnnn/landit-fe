@@ -1,8 +1,10 @@
 // 셸이 웹에 주입하는 네이티브 컨텍스트 스키마·직렬화 — 앱 버전·플랫폼을 웹 계측(앰플리튜드)에 전달한다
 import { z } from 'zod';
 
-// 브릿지 계약 버전 — 브릿지 메시지/컨텍스트 규격이 바뀌면 올린다. 웹이 구 셸 능력 판단에 쓴다
-export const NATIVE_BRIDGE_VERSION = 2;
+// 브릿지 계약 버전 — 브릿지 메시지/컨텍스트 규격이 바뀌면 올린다. 웹이 구 셸 능력 판단에 쓴다.
+// 3: REQUEST_WIDGET_PIN 추가 (위젯 설치 안내 노출 자체는 위젯이 실린 릴리즈 여부라 appVersion으로 게이트한다)
+// 4: REQUEST_WIDGET_CHANGES / WIDGET_CHANGED 추가 (위젯 설치·삭제 계측)
+export const NATIVE_BRIDGE_VERSION = 4;
 
 // 셸이 주입하고 웹이 읽는 전역 키
 export const NATIVE_CONTEXT_GLOBAL = '__LANDIT_NATIVE__';

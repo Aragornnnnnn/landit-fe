@@ -8,7 +8,6 @@ import { EVENTS } from '@landit/analytics';
 import { createPortal } from 'react-dom';
 
 import { track } from '@/shared/analytics';
-import { DAILY_REMINDER_CAMPAIGN } from '@/shared/analytics/utm';
 import { ONBOARDED_PARAM } from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
@@ -23,28 +22,9 @@ import {
   markSummoned,
   readLastSummoned,
 } from '../../model/lamp-gate';
+import { consumeReminderEntry } from '../../model/reminder-entry';
 import { LampSummon, type LampRect } from './LampSummon';
 import { LampWaiting } from './LampWaiting';
-
-// 판정하면서 히스토리의 주소에서 utm을 지운다 — 남겨두면 하드웨어 뒤로가기로
-// 이 주소에 돌아올 때마다 알림 진입으로 오인해 다시 소환한다.
-// 라우터를 안 거치므로 앰플리튜드 페이지뷰가 중복 발사되지도 않는다
-const consumeReminderEntry = () => {
-  const params = new URLSearchParams(window.location.search);
-  const fromReminder = params.get('utm_campaign') === DAILY_REMINDER_CAMPAIGN;
-  if (!fromReminder) return false;
-
-  [...params.keys()]
-    .filter((key) => key.startsWith('utm_'))
-    .forEach((key) => params.delete(key));
-  const search = params.toString();
-  window.history.replaceState(
-    null,
-    '',
-    window.location.pathname + (search ? `?${search}` : ''),
-  );
-  return true;
-};
 
 interface LampStageProps {
   // 대화를 시작한다. 서버가 시작 불가로 판정하면 넘어오지 않는다
