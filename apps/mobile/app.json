@@ -22,7 +22,7 @@
       }
     },
     "ios": {
-      "buildNumber": "1",
+      "buildNumber": "5",
       "bundleIdentifier": "com.saynow.app",
       "usesAppleSignIn": true,
       "infoPlist": {

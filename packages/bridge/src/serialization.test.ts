@@ -353,3 +353,46 @@ describe('parseNativeToWebMessage — 알림', () => {
     ).toBeNull();
   });
 });
+
+describe('위젯 설치·삭제 메시지', () => {
+  it('웹의 위젯 변경 요청은 페이로드 없이 오간다 (round-trip)', () => {
+    const message = { type: 'REQUEST_WIDGET_CHANGES' } as const;
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('위젯 변경 메시지를 그대로 되돌린다 (round-trip)', () => {
+    const message = {
+      type: 'WIDGET_CHANGED',
+      change: 'added',
+      family: 'small',
+    } as const;
+
+    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('규격 밖 변경 종류나 크기면 버린다', () => {
+    expect(
+      parseNativeToWebMessage(
+        JSON.stringify({
+          type: 'WIDGET_CHANGED',
+          change: 'resized',
+          family: 'small',
+        }),
+      ),
+    ).toBeNull();
+    expect(
+      parseNativeToWebMessage(
+        JSON.stringify({
+          type: 'WIDGET_CHANGED',
+          change: 'added',
+          family: 'xl',
+        }),
+      ),
+    ).toBeNull();
+  });
+});

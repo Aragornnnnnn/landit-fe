@@ -137,6 +137,15 @@ export const EVENTS = {
   WIDGET_INSTALL_INVITE_ANSWERED: 'Widget Install Invite Answered',
   WIDGET_INSTALL_GUIDE_STEP_VIEWED: 'Widget Install Guide Step Viewed',
   WIDGET_PIN_REQUESTED: 'Widget Pin Requested',
+  // 홈 화면에 실제로 놓였다·치워졌다 — Android 위젯 프로바이더 콜백을 셸이 브릿지로 넘긴다 (iOS는 콜백이 없어 못 잡는다)
+  WIDGET_INSTALLED: 'Widget Installed',
+  WIDGET_REMOVED: 'Widget Removed',
+
+  // LAN-428 결제 전 설문(임시) — 편지 CTA → 시작 → 문항 → 제출의 퍼널. 설문이 끝나면 설문 코드와 함께 지운다
+  SURVEY_INVITE_TAPPED: 'Survey Invite Tapped',
+  SURVEY_STARTED: 'Survey Started',
+  SURVEY_QUESTION_VIEWED: 'Survey Question Viewed',
+  SURVEY_SUBMITTED: 'Survey Submitted',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -169,7 +178,8 @@ export type TalkPartner = 'chloe' | 'marco' | 'teddy';
 // 단어 퀴즈 화면은 퀴즈 스텝과 복습 스텝이 같이 쓴다 — 제출·힌트 이벤트가 이 값으로 갈린다
 export type QuizStepKind = 'quiz' | 'review';
 export type HintSource = QuizStepKind;
-export type HomeReturnReason = 'just' | 'flip' | 'card' | 'reminder';
+// 홈 복귀 신호 — 앱 안에서 돌아온 이유. 밖에서 들어온 유입(알림·위젯)은 entry_campaign이 맡는다
+export type HomeReturnReason = 'just' | 'flip' | 'card';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
@@ -202,6 +212,8 @@ export type WidgetInstallAnswer = 'install' | 'dismiss';
 export type WidgetGuideStep = 'press' | 'menu' | 'search';
 // 위젯 추가 요청이 어느 플랫폼에서 났나 — Android는 핀 다이얼로그, iOS는 안내로 갈린다
 export type WidgetInstallPlatform = 'ios' | 'android';
+// 홈 위젯 크기 — 브릿지 widgetFamilySchema와 같은 말
+export type WidgetFamily = 'small' | 'medium' | 'large';
 
 // 표현이 어디서 왔는가 — 시나리오 콘텐츠에 붙어 있던 표현인지, 그 스몰톡에서 만들어진 표현인지.
 // 표현 학습 화면은 둘이 같이 쓰므로 이벤트도 하나로 두고 출처만 갈아 끼운다 (둘 중 하나만 실린다)
@@ -217,8 +229,10 @@ export type EventProps = {
     // 스몰톡에서 갈라져 나온 화면들만 — 지난 스몰톡 기록과 거기서 만든 표현
     session_id?: number;
     expression_id?: number;
-    // 알림 유입(reminder)일 때만 — 탭한 알림의 문구 슬러그 (utm_content에서 파생, 어휘는 docs/analytics-utm.md)
-    notification_copy?: string;
+    // 밖에서 들어온 유입(알림·위젯 탭)의 첫 화면에만 — 어느 경로로 들어왔든 붙는다. 딥링크 URL의 utm_campaign·utm_content에서
+    // 파생한다 (어휘는 docs/analytics-utm.md). 웜 딥링크는 어트리뷰션이 못 보므로 이벤트 속성으로도 실어야 유실이 없다
+    entry_campaign?: string;
+    entry_content?: string;
     // 시나리오 화면에서 완료한 지난 날 카드를 볼 때만 — 열 수 있는 과거는 완료한 날뿐이다 (yyyy-MM-dd)
     completed_date?: string;
     // 편지 상세일 때만
@@ -491,6 +505,17 @@ export type EventProps = {
   'Widget Install Guide Step Viewed': { step: WidgetGuideStep };
   // 위젯 추가를 실제로 청한 순간 — Android는 시스템 핀 다이얼로그, iOS는 안내 화면으로 갈린다
   'Widget Pin Requested': { platform: WidgetInstallPlatform };
+  // 홈 화면에 놓인·치워진 위젯의 크기 — 플랫폼은 공통 속성(platform)이 이미 가른다
+  'Widget Installed': { family: WidgetFamily };
+  'Widget Removed': { family: WidgetFamily };
+
+  // LAN-428 설문(임시) — 답 내용은 싣지 않는다(PII). 문항 id는 설문 정의(questions.ts)의 id 그대로
+  'Survey Invite Tapped': { letter_id: number };
+  'Survey Started': undefined;
+  // 조건 문항이 끼고 빠지므로 index는 그 사람에게 보인 순서다 — 어느 문항인지는 question_id로 본다
+  'Survey Question Viewed': { question_id: string; question_index: number };
+  // 저장 성공 뒤에만 — 보인 문항 수를 남긴다
+  'Survey Submitted': { question_count: number };
 };
 
 // 컴파일 타임 검증 ① EventProps가 모든 이벤트를 빠짐없이 커버한다

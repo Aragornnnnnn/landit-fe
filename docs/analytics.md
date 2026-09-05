@@ -35,17 +35,19 @@
 
 ### 공통
 
-| 이벤트                  | 속성                                                                                                                                  | 시점                                                          |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Page Viewed             | page_name, path, return_reason?, scenario_id?, session_id?, expression_id?, completed_date?, letter_id?, feedback_id?, feedback_type? | 라우트 변경                                                   |
-| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete)                                                                             | 이탈·탈퇴 확인 시트 열림                                      |
-| Confirm Sheet Dismissed | sheet                                                                                                                                 | 확인 시트에서 계속하기/닫기                                   |
-| Error Retried           | screen(scenario\|smalltalk\|conversation\|card_back\|expression_list\|streak\|mailbox)                                                | 에러 화면 "다시 시도"                                         |
-| App Exited              | trigger(back_button)                                                                                                                  | 네이티브 뒤로가기로 앱 종료 (셸에서만)                        |
-| Download Link Visited   | store(play_store\|app_store)                                                                                                          | /download 스토어 리다이렉트 진입 (서버 발화, 익명)            |
-| App Update Store Opened | store(play_store\|app_store)                                                                                                          | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화) |
+| 이벤트                  | 속성                                                                                                                                                                   | 시점                                                          |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Page Viewed             | page_name, path, return_reason?, scenario_id?, session_id?, expression_id?, completed_date?, letter_id?, feedback_id?, feedback_type?, entry_campaign?, entry_content? | 라우트 변경                                                   |
+| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete)                                                                                                              | 이탈·탈퇴 확인 시트 열림                                      |
+| Confirm Sheet Dismissed | sheet                                                                                                                                                                  | 확인 시트에서 계속하기/닫기                                   |
+| Error Retried           | screen(scenario\|smalltalk\|conversation\|card_back\|expression_list\|streak\|mailbox)                                                                                 | 에러 화면 "다시 시도"                                         |
+| App Exited              | trigger(back_button)                                                                                                                                                   | 네이티브 뒤로가기로 앱 종료 (셸에서만)                        |
+| Download Link Visited   | store(play_store\|app_store)                                                                                                                                           | /download 스토어 리다이렉트 진입 (서버 발화, 익명)            |
+| App Update Store Opened | store(play_store\|app_store)                                                                                                                                           | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화) |
 
-`return_reason`은 홈 복귀 신호(`flip` 표현 완료 복귀 / `card` 대화 이탈 복귀 / `just` 해금 직후). 확인 시트의 확정은 각각 `Conversation Abandoned` / `Expression Abandoned` / `Account Deleted`로 찍힌다.
+`return_reason`은 앱 안에서 홈으로 돌아온 이유(`flip` 표현 완료 복귀 / `card` 대화 이탈 복귀 / `just` 해금 직후). 확인 시트의 확정은 각각 `Conversation Abandoned` / `Expression Abandoned` / `Account Deleted`로 찍힌다.
+
+`entry_campaign`·`entry_content`는 밖에서(알림·홈 화면 위젯 탭) 들어온 첫 화면에 붙는다 — 딥링크 URL의 `utm_medium`이 `notification`(서버 푸시)·`push`(구 로컬 알림)·`widget`이면 `utm_campaign`·`utm_content`에서 파생한다. 어느 경로로 딥링크했든 붙으며, 어느 채널인지는 캠페인 이름이 가른다(`daily_scenario_reminder`·`mailbox_reply`… / `streak_widget`). 어휘는 [analytics-utm.md](analytics-utm.md).
 
 `completed_date`는 시나리오 화면에서 완료한 지난 날 카드를 볼 때만 붙는다 (yyyy-MM-dd) — 열 수 있는 과거는 완료한 날뿐이라, 없으면 오늘 카드다.
 
@@ -64,13 +66,26 @@
 
 ### 온보딩
 
-| 이벤트                    | 속성                                      | 시점                                         |
-| ------------------------- | ----------------------------------------- | -------------------------------------------- |
-| Onboarding Started        | —                                         | 온보딩 진입                                  |
-| Onboarding Step Viewed    | step, step_index                          | 스텝 노출 (intro→sound→mic→thought→scenario) |
-| Onboarding Step Completed | step                                      | 각 스텝 전진 CTA                             |
-| Mic Permission Decided    | granted, source(onboarding\|conversation) | 마이크 권한 프롬프트 결과                    |
-| Onboarding Completed      | —                                         | 마지막 스텝 시작하기                         |
+| 이벤트                    | 속성                                      | 시점                                                                          |
+| ------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------- |
+| Onboarding Started        | —                                         | 온보딩 진입                                                                   |
+| Onboarding Step Viewed    | step, step_index                          | 스텝 노출 (intro→sound→mic→thought→notification→widget→level→accent→scenario) |
+| Onboarding Step Completed | step                                      | 각 스텝 전진 CTA                                                              |
+| Mic Permission Decided    | granted, source(onboarding\|conversation) | 마이크 권한 프롬프트 결과                                                     |
+| Onboarding Completed      | —                                         | 마지막 스텝 시작하기                                                          |
+
+`step_index`는 전체 스텝 기준 고정값이라 조건부 스텝이 빠져도 뒤 번호가 흔들리지 않는다. notification은 OS 권한이 아직 결정되지 않았을 때만, widget은 위젯이 실린 앱 버전이고 아직 설치 유도를 안 봤을 때만 들어간다. 알림 스텝의 완료는 OS 권한창 회신이 왔을 때 찍힌다(마이크 스텝과 같은 방식).
+
+### 프로필 (영어 수준·배울 영어)
+
+| 이벤트                | 속성                                                  | 시점                                                            |
+| --------------------- | ----------------------------------------------------- | --------------------------------------------------------------- |
+| Profile Gate Viewed   | question(level\|accent)                               | 온보딩을 이미 마친 기존 유저에게 홈에서 프로필 질문 게이트 노출 |
+| Profile Gate Answered | question, level(1~5) 또는 accent(EN_US\|EN_GB\|EN_AU) | 게이트에서 답 선택                                              |
+| English Level Changed | level                                                 | 내 정보에서 영어 수준을 다시 고름                               |
+| Accent Changed        | accent                                                | 내 정보에서 배울 영어를 다시 고름                               |
+
+신규 유저의 최초 응답은 온보딩 스텝(level·accent)이라 `Onboarding Step Viewed/Completed`로 잡히고, 게이트 이벤트는 온보딩 밖에서 묻는 기존 유저에게만 찍힌다. 질문이 늘어도 이름을 늘리지 않고 `question`으로 가른다. 답은 질문마다 속성이 달라(`level` / `accent`) 짝이 안 맞는 조합은 타입이 막는다.
 
 ### 홈
 
@@ -102,6 +117,15 @@
 
 `is_today: false`면 완료한 지난 날이다 — 어느 날인지는 이어지는 `Page Viewed`의 `completed_date`가 남긴다.
 
+### 스트릭
+
+| 이벤트               | 속성                                              | 시점                                            |
+| -------------------- | ------------------------------------------------- | ----------------------------------------------- |
+| Streak Opened        | source(home_header), streak_days, is_active_today | 홈 헤더 열매를 눌러 연속 기록 화면 진입         |
+| Streak Month Changed | direction(prev\|next), year, month                | 연속 기록 달력에서 달 넘김 (떠나는 달을 남긴다) |
+
+`Streak Opened`는 어떤 상태(며칠째, 오늘 채웠는지)에서 눌리는지를 본다. 화면 노출 자체는 `Page Viewed(streak)`가 찍는다.
+
 ### 시나리오 대화
 
 | 이벤트                       | 속성                                                                     | 시점                                                                         |
@@ -115,6 +139,7 @@
 | Scenario Talk Turn Completed | session_id, scenario_id, turn_index, input_type(voice\|text), char_count | 발화 제출 성공                                                               |
 | Turn Failed                  | session_id?, turn_index, reason(empty\|api_error)                        | 빈 발화 / 제출 실패                                                          |
 | Inner Thought Viewed         | session_id, turn_index, thought_type?                                    | 상대 속마음 노출                                                             |
+| Translation Toggled          | session_id?, turn_index, opened                                          | 상대 발화 해석을 펼침(true)/접음(false)                                      |
 | Speech Recognition Failed    | engine?, reason?                                                         | STT 오류 (권한 거부 제외)                                                    |
 | Speech Playback Failed       | source(opening_mp3\|synth)                                               | AI 발화 재생 실패 — 실패 비율용. 스몰톡 탭 인사도 포함 (synth 원인은 Sentry) |
 | Scenario Talk Completed      | session_id, scenario_id, turn_count                                      | 서버가 완료 판정                                                             |
@@ -139,7 +164,7 @@
 
 탭의 네 이벤트는 대화 시작 전 갈림길이다. 기본 상대로 그냥 시작하면 `Partner Selected`는 안 찍히고 `Started`의 `partner`로 본다. 주제 모달 열림은 안 찍는다 — `Started`의 `topic_id` 유무로 "주제로 시작" 비율이 나온다.
 
-단, 마이크·STT처럼 **대화 엔진이 쏘는 것은 두 대화가 함께 쓴다** (Recording Started/Stopped/Canceled, Input Mode Switched, Turn Failed, Inner Thought Viewed, Speech Recognition Failed, Speech Playback Failed). 입력 기계의 사건이라 어느 대화인지와 무관하고, 대화 엔진(features/conversation)은 대화 종류를 모른다.
+단, 마이크·STT처럼 **대화 엔진이 쏘는 것은 두 대화가 함께 쓴다** (Recording Started/Stopped/Canceled, Input Mode Switched, Turn Failed, Inner Thought Viewed, Translation Toggled, Speech Recognition Failed, Speech Playback Failed). 입력 기계의 사건이라 어느 대화인지와 무관하고, 대화 엔진(features/conversation)은 대화 종류를 모른다.
 
 ### 분석 피드백
 
@@ -208,6 +233,34 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 | Notification Permission Decided | granted, source(onboarding\|scenario\|me) | OS 권한창 결과 — 셸의 회신에서 찍는다 (마이크와 같은 짝) |
 
 온보딩의 알림 스텝은 시트 없이 바로 OS 권한창을 띄워 Consent 이벤트가 없고, 결과는 `Notification Permission Decided(source: onboarding)`로 남는다. 이미 거부한 상태에서 내 정보의 "OS 설정 열기"는 안 찍는다 — 결과를 알 수 없다.
+
+### 위젯 설치 안내
+
+| 이벤트                           | 속성                         | 시점                                                                   |
+| -------------------------------- | ---------------------------- | ---------------------------------------------------------------------- |
+| Widget Install Invite Viewed     | —                            | 온보딩 widget 스텝의 설치 유도 화면 노출                               |
+| Widget Install Invite Answered   | answer(install\|dismiss)     | "위젯 추가하기" / "나중에 하기"                                        |
+| Widget Pin Requested             | platform(ios\|android)       | 추가를 실제로 청한 순간 — Android는 시스템 핀 다이얼로그, iOS는 안내로 |
+| Widget Install Guide Step Viewed | step(press\|menu\|search)    | iOS 갤러리 여는 길 안내 3장 각각 노출 (어디서 이탈하는지)              |
+| Widget Installed                 | family(small\|medium\|large) | 홈 화면에 위젯이 실제로 놓임 — 셸이 브릿지로 넘긴다                    |
+| Widget Removed                   | family                       | 홈 화면에서 위젯이 치워짐                                              |
+
+`Widget Pin Requested`는 요청이지 설치가 아니다 — 설치 안내 → 실제 설치 전환은 `Widget Installed`로 본다. 설치 유도는 기기당 한 번만 노출된다.
+
+`Widget Installed`/`Removed`는 안드로이드는 위젯 프로바이더 콜백에서, iOS는 앱 실행·포그라운드 복귀 때 놓인 위젯 목록을 지난번과 비교해 만든다. 그래서 iOS는 설치한 뒤 앱으로 돌아온 시점에 찍히고, 앱을 안 열면 다음 실행 때 잡힌다. 위젯 탭 유입은 `Page Viewed { entry_campaign: 'streak_widget' }`이다.
+
+### 결제 전 설문 (LAN-428, 임시)
+
+설문이 끝나면 설문 코드(`features/survey`)와 함께 지운다. 완료 응답 자체는 슈퍼베이스에 있으니 여기서는 퍼널(편지 → 진입 → 문항별 이탈 → 제출)만 본다.
+
+| 이벤트                 | 속성                        | 시점                                                         |
+| ---------------------- | --------------------------- | ------------------------------------------------------------ |
+| Survey Invite Tapped   | letter_id                   | 설문 안내 편지의 "설문하고 이용권 받기"                      |
+| Survey Started         | —                           | 인트로에서 시작하기                                          |
+| Survey Question Viewed | question_id, question_index | 문항 노출 (뒤로 갔다 다시 봐도 찍힌다)                       |
+| Survey Submitted       | question_count              | 저장 성공 (이미 참여한 사람의 재제출도 서버가 성공으로 답함) |
+
+답 내용은 싣지 않는다. `question_id`는 설문 정의(`questions.ts`)의 id 그대로이고, `question_index`는 조건 문항이 끼고 빠진 뒤 그 사람에게 보인 순서다. 설문 화면 진입은 `Page Viewed(survey)`가 찍는다.
 
 ### 유저 속성
 

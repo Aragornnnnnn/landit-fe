@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
   BackHandler,
   Image,
   Linking,
@@ -30,7 +31,10 @@ import { initializeNotifications } from '@/notifications/setup';
 import { useNotificationDeepLink } from '@/notifications/useNotificationDeepLink';
 import { syncStreakWidget, syncWidgetOnLaunch } from '@/widgets';
 import { requestWidgetPin } from '@/widgets/android/pin';
+import { syncWidgetInventory } from '@/widgets/model/widget-inventory';
 import { saveWidgetData } from '@/widgets/model/widget-store';
+import { useWidgetChangeFlush } from '@/widgets/useWidgetChangeFlush';
+import { useWidgetEntry } from '@/widgets/useWidgetEntry';
 
 import { goHome } from '../../modules/app-suspender';
 
@@ -69,6 +73,8 @@ const ShellScreen = () => {
     },
     // 웹의 위젯 설치 안내 CTA — Android만 시스템 핀 다이얼로그를 띄운다
     REQUEST_WIDGET_PIN: () => requestWidgetPin(),
+    // 웹이 떴다 — 그동안 쌓인 위젯 추가·삭제를 건별로 보낸다
+    REQUEST_WIDGET_CHANGES: () => flushWidgetChanges(),
     // 위젯 설치 안내 끝 — iOS에서 앱을 홈 화면으로 내려 사용자가 직접 위젯을 얹게 한다
     GO_HOME: () => goHome(),
     // 알림 권한 상태 조회 — 다이얼로그 없이 현재 상태만 회신한다
@@ -113,6 +119,25 @@ const ShellScreen = () => {
   const coldStart = useNotificationDeepLink((path) =>
     postToWeb({ type: 'NAVIGATE', url: path }),
   );
+  // 위젯 탭도 같은 길 — 웹이 유입 딱지(UTM)를 읽어 위젯 유입을 센다
+  const widgetEntry = useWidgetEntry((path) =>
+    postToWeb({ type: 'NAVIGATE', url: path }),
+  );
+  // 위젯이 홈 화면에 놓이거나 치워진 기록을 웹(계측)으로 흘려보낸다.
+  // 로드 실패 화면에선 WebView가 없어 보내면 유실된다 — 재시도로 웹이 다시 뜨면 웹이 청해서 받아 간다
+  const flushWidgetChanges = useWidgetChangeFlush(
+    postToWeb,
+    isWebReady && !loadFailed,
+  );
+
+  // iOS는 설치 콜백이 없다 — 실행·복귀 때 놓인 목록을 지난번과 비교해 추가·삭제를 알아낸다 (안드로이드는 no-op)
+  useEffect(() => {
+    void syncWidgetInventory();
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void syncWidgetInventory();
+    });
+    return () => subscription.remove();
+  }, []);
 
   // Meta SDK 초기화와 iOS ATT 동의 요청 — 앱 첫 진입에 1회 (광고 설치 어트리뷰션)
   useEffect(() => {
@@ -183,8 +208,8 @@ const ShellScreen = () => {
     );
   }
 
-  // 콜드 스타트 조회가 끝나야 초기 URI가 정해진다 — 그때까지 마운트 보류 (수 ms, 스플래시가 가린다)
-  if (coldStart.status === 'loading') {
+  // 콜드 스타트 조회(알림·위젯)가 끝나야 초기 URI가 정해진다 — 그때까지 마운트 보류 (수 ms, 스플래시가 가린다)
+  if (coldStart.status === 'loading' || widgetEntry.status === 'loading') {
     return null;
   }
 
@@ -192,8 +217,10 @@ const ShellScreen = () => {
     <WebView
       key={loadAttempt}
       ref={webviewRef}
-      // 진입점은 루트, 알림 콜드 스타트면 페이로드의 경로 — 로그인 여부는 웹의 인증 가드가 판단한다
-      source={{ uri: `${WEB_URL}${coldStart.path ?? '/'}` }}
+      // 진입점은 루트, 알림 콜드 스타트면 페이로드의 경로, 위젯 탭이면 위젯 진입 경로 — 로그인 여부는 웹의 인증 가드가 판단한다
+      source={{
+        uri: `${WEB_URL}${coldStart.path ?? widgetEntry.path ?? '/'}`,
+      }}
       // 콘텐츠 로드 전 네이티브 컨텍스트(플랫폼·앱 버전)를 window에 주입 — 웹 계측이 첫 렌더에서 바로 읽는다
       injectedJavaScriptBeforeContentLoaded={nativeContextScript}
       onMessage={onMessage}

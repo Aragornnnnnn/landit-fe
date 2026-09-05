@@ -120,5 +120,7 @@ const widgetData = {
 ## 알아둘 것
 
 - `lastCompletedDate`는 서버에 없어서 프론트가 유도한다. 스트릭이 살아 있으면 어제, 끊겼으면 달력 네 개(주간 2 + 월간 2)를 뒤진다. 못 찾으면 조회 범위의 하루 전을 쓴다 — 정확한 날짜는 몰라도 "적어도 이만큼 쉬었다"는 사실이라 몰락 단계를 과장하지 않는다. **서버가 이 필드를 내려주면 이 유도 로직은 통째로 지울 수 있다**
-- 위젯을 탭하면 앱만 열린다. 경로는 나르지 않는다 (알림과 다른 점)
+- 위젯을 탭하면 `landit://widget` 딥링크로 앱이 열리고, 셸이 이를 알아보고 유입 딱지(UTM)를 단 `/scenario`로 웹을 띄운다(`widget-link.ts`의 `WIDGET_ENTRY_PATH`). 위젯 자체는 경로를 모른다 — 어디로 갈지는 셸이 정한다
+- 안드로이드 위젯 태스크 핸들러는 앱 진입점(`apps/mobile/index.ts`)에서 등록한다. 위젯 추가·삭제·주기 갱신은 화면 없이(헤드리스) 번들만 실행하는데, 라우터 레이아웃에서 등록하면 그 경로에선 실행되지 않아 콜백이 버려진다("No task registered").
+- 홈 화면에 실제로 놓였는지는 플랫폼마다 다르게 알아낸다. 안드로이드는 프로바이더 콜백(`WIDGET_ADDED`/`WIDGET_DELETED`)을 `widget-task-handler.tsx`가 받아 쌓고, iOS는 콜백이 없어 앱 실행·복귀 때 `WidgetCenter.getCurrentConfigurations`(로컬 모듈 `modules/widget-inventory`)로 놓인 목록을 읽어 지난번과 비교한다(`widget-inventory.ts`). 둘 다 `widget-changes.ts`에 쌓였다가 웹이 청하면(`REQUEST_WIDGET_CHANGES`) `WIDGET_CHANGED`로 넘어가 `Widget Installed`/`Widget Removed` 이벤트가 된다
 - 위젯이 새로 붙는 앱 업데이트는 **버전을 올려야 한다**. `runtimeVersion`이 `appVersion`이라, 안 올리면 이 JS가 무선 업데이트로 옛 앱에 내려가 안드로이드에서 부팅이 실패한다

@@ -1,7 +1,10 @@
 // SurveyFlow — 문항 종류별 진행 조건, 기타·조건 문항, 제출 결과에 따른 화면 분기
+import { EVENTS } from '@landit/analytics';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { track } from '@/shared/analytics';
 
 import { OTHER_LABEL, QUESTIONS, type Question } from '../model/questions';
 import { SurveyFlow } from './SurveyFlow';
@@ -9,6 +12,7 @@ import { SurveyFlow } from './SurveyFlow';
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: vi.fn(), back: vi.fn() }),
 }));
+vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 // 연출은 순수 DOM으로 치환한다 — 대역이 하는 일은 shared/motion/test-double 참고
 vi.mock('motion/react', () => import('@/shared/motion/test-double'));
 // 화면은 member만 읽고, api 클라이언트는 getState로 토큰을 읽는다
@@ -73,6 +77,7 @@ const answerUntilLast = async () => {
 
 beforeEach(() => {
   localStorage.clear();
+  vi.clearAllMocks();
   vi.stubGlobal('fetch', fetchMock);
 });
 
@@ -218,6 +223,81 @@ describe('SurveyFlow', () => {
     expect(
       await screen.findByRole('button', { name: '건너뛰고 제출하기' }),
     ).toBeTruthy();
+  });
+
+  it('시작·문항 노출·제출 성공을 계측한다 — 답 내용은 싣지 않는다', async () => {
+    fetchMock.mockResolvedValue(
+      routeReply(200, { success: true, data: { result: 'saved' } }),
+    );
+    render(<SurveyFlow />);
+    expect(track).not.toHaveBeenCalledWith(EVENTS.SURVEY_STARTED);
+
+    await answerUntilLast();
+    await userEvent.click(
+      screen.getByRole('button', { name: '건너뛰고 제출하기' }),
+    );
+    await screen.findByText('소중한 의견 고마워요!');
+
+    expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_STARTED);
+    expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_QUESTION_VIEWED, {
+      question_id: 'channel',
+      question_index: 0,
+    });
+    // 유학 준비 조건 문항이 빠져 열 문항 — index는 보인 순서라 wish가 9번이다
+    expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_QUESTION_VIEWED, {
+      question_id: 'wish',
+      question_index: 9,
+    });
+    expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_SUBMITTED, {
+      question_count: 10,
+    });
+    expect(
+      vi
+        .mocked(track)
+        .mock.calls.filter(([name]) => name === EVENTS.SURVEY_QUESTION_VIEWED),
+    ).toHaveLength(10);
+    for (const [, props] of vi.mocked(track).mock.calls) {
+      expect(JSON.stringify(props ?? {})).not.toContain('3점');
+    }
+  });
+
+  it('저장에 실패하면 제출을 계측하지 않는다', async () => {
+    fetchMock.mockResolvedValue(
+      routeReply(502, { success: false, error: { message: '실패' } }),
+    );
+    render(<SurveyFlow />);
+    await answerUntilLast();
+
+    await userEvent.click(
+      screen.getByRole('button', { name: '건너뛰고 제출하기' }),
+    );
+    await screen.findByRole('button', { name: '건너뛰고 제출하기' });
+
+    expect(
+      vi
+        .mocked(track)
+        .mock.calls.filter(([name]) => name === EVENTS.SURVEY_SUBMITTED),
+    ).toHaveLength(0);
+  });
+
+  it('뒤로 갔다 다시 보면 같은 문항 노출이 한 번 더 찍힌다', async () => {
+    render(<SurveyFlow />);
+    await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+    await answerCurrent(QUESTIONS[0]);
+    await screen.findByText(titleOf(QUESTIONS[1]));
+
+    await userEvent.click(screen.getByRole('button', { name: '이전' }));
+    await screen.findByText(titleOf(QUESTIONS[0]));
+
+    expect(
+      vi
+        .mocked(track)
+        .mock.calls.filter(
+          ([name, props]) =>
+            name === EVENTS.SURVEY_QUESTION_VIEWED &&
+            (props as { question_id: string }).question_id === 'channel',
+        ),
+    ).toHaveLength(2);
   });
 
   it('이 기기에서 이미 마쳤으면 문항 없이 완료 화면을 보여준다', () => {

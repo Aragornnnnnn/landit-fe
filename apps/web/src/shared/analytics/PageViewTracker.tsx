@@ -8,6 +8,15 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { track } from './amplitude';
 import { toPageView } from './page-view';
 
+// 직전 페이지뷰 속성에서 유입 딱지만 뺀 서명 — 유입 딱지만 사라진 재렌더를 알아보는 데 쓴다
+const withoutEntry = (signature: string | null) => {
+  if (signature === null) return null;
+  const props = JSON.parse(signature) as Record<string, unknown>;
+  delete props.entry_campaign;
+  delete props.entry_content;
+  return JSON.stringify(props);
+};
+
 const Tracker = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -26,6 +35,13 @@ const Tracker = () => {
 
     const signature = JSON.stringify(props);
     if (lastPropsRef.current === signature) return;
+    // 외부 유입(알림·위젯) 첫 화면은 UTM을 읽은 뒤 주소에서 지운다 — 라우터가 같은 화면을 유입 속성만 뺀 채
+    // 다시 그리는데, 이건 새 페이지뷰가 아니다. 반대로 보던 화면에 유입 속성이 "붙는" 변화(웜 딥링크)는 쏜다
+    if (withoutEntry(lastPropsRef.current) === signature) {
+      // 지운 뒤의 모습을 기억해 둔다 — 같은 알림을 곧바로 또 탭하면 그건 새 유입이다
+      lastPropsRef.current = signature;
+      return;
+    }
     lastPropsRef.current = signature;
 
     track(EVENTS.PAGE_VIEWED, props);

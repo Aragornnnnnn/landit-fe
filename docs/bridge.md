@@ -26,17 +26,19 @@ landit 앱은 네이티브 UI 없이 웹(Next.js)을 WebView로 감싸는 셸이
 
 ## 메시지 카탈로그
 
-| 메시지                            | 방향  | 페이로드    | 역할                                                                                                                   | 처리 위치              |
-| --------------------------------- | ----- | ----------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| `BACK_PRESSED`                    | 앱→웹 | 없음        | Android 뒤로가기가 눌렸음을 알림. 판단은 웹이 한다                                                                     | `bridge-listener.tsx`  |
-| `EXIT_APP`                        | 웹→앱 | 없음        | 웹이 "더 뒤로 갈 곳 없음"을 판단했을 때 앱 종료 요청                                                                   | `index.tsx`의 핸들러   |
-| `HAPTIC`                          | 웹→앱 | `pattern`   | 웹 인터랙션 시점의 진동 요청. 세기·종류는 앱이 expo-haptics로 결정                                                     | `index.tsx`의 핸들러   |
-| `SYNC_REMINDERS`                  | 웹→앱 | `reminders` | [한시] 구 셸에 남은 로컬 리마인더 예약을 지우는 정리 신호 — 빈 배열만 허용. 새 셸은 무시한다. 구 바이너리 소멸 시 제거 | 구 셸의 핸들러         |
-| `GET_NOTIFICATION_PERMISSION`     | 웹→앱 | 없음        | 알림 권한 상태 조회 (다이얼로그 없음). 응답은 `NOTIFICATION_PERMISSION`                                                | `index.tsx`의 핸들러   |
-| `REQUEST_NOTIFICATION_PERMISSION` | 웹→앱 | 없음        | 알림 권한 능동 요청 — OS 권한창을 띄울 수 있다. 응답은 `NOTIFICATION_PERMISSION`                                       | `index.tsx`의 핸들러   |
-| `NOTIFICATION_PERMISSION`         | 앱→웹 | `status`    | 권한 조회·요청에 대한 응답 (`granted`/`denied`/`undetermined`)                                                         | 알림 기능 훅 (LAN-189) |
-| `PUSH_TOKEN`                      | 앱→웹 | `token`     | 셸이 발급받은 푸시 토큰 전달. 웹이 백엔드에 등록한다                                                                   | 알림 기능 훅 (LAN-189) |
-| `NAVIGATE`                        | 앱→웹 | `url`       | 앱이 떠 있는 상태에서 알림을 탭했을 때 웹에 화면 이동을 요청한다                                                       | `BridgeListener.tsx`   |
+| 메시지                            | 방향  | 페이로드           | 역할                                                                                                                   | 처리 위치              |
+| --------------------------------- | ----- | ------------------ | ---------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| `BACK_PRESSED`                    | 앱→웹 | 없음               | Android 뒤로가기가 눌렸음을 알림. 판단은 웹이 한다                                                                     | `bridge-listener.tsx`  |
+| `EXIT_APP`                        | 웹→앱 | 없음               | 웹이 "더 뒤로 갈 곳 없음"을 판단했을 때 앱 종료 요청                                                                   | `index.tsx`의 핸들러   |
+| `HAPTIC`                          | 웹→앱 | `pattern`          | 웹 인터랙션 시점의 진동 요청. 세기·종류는 앱이 expo-haptics로 결정                                                     | `index.tsx`의 핸들러   |
+| `SYNC_REMINDERS`                  | 웹→앱 | `reminders`        | [한시] 구 셸에 남은 로컬 리마인더 예약을 지우는 정리 신호 — 빈 배열만 허용. 새 셸은 무시한다. 구 바이너리 소멸 시 제거 | 구 셸의 핸들러         |
+| `GET_NOTIFICATION_PERMISSION`     | 웹→앱 | 없음               | 알림 권한 상태 조회 (다이얼로그 없음). 응답은 `NOTIFICATION_PERMISSION`                                                | `index.tsx`의 핸들러   |
+| `REQUEST_NOTIFICATION_PERMISSION` | 웹→앱 | 없음               | 알림 권한 능동 요청 — OS 권한창을 띄울 수 있다. 응답은 `NOTIFICATION_PERMISSION`                                       | `index.tsx`의 핸들러   |
+| `NOTIFICATION_PERMISSION`         | 앱→웹 | `status`           | 권한 조회·요청에 대한 응답 (`granted`/`denied`/`undetermined`)                                                         | 알림 기능 훅 (LAN-189) |
+| `PUSH_TOKEN`                      | 앱→웹 | `token`            | 셸이 발급받은 푸시 토큰 전달. 웹이 백엔드에 등록한다                                                                   | 알림 기능 훅 (LAN-189) |
+| `NAVIGATE`                        | 앱→웹 | `url`              | 앱이 떠 있는 상태에서 알림·위젯을 탭했을 때 웹에 화면 이동을 요청한다                                                  | `BridgeListener.tsx`   |
+| `REQUEST_WIDGET_CHANGES`          | 웹→앱 | 없음               | 웹이 떴으니 쌓아 둔 위젯 추가·삭제를 보내 달라. 응답은 `WIDGET_CHANGED` 건별 (없으면 무응답)                           | `index.tsx`의 핸들러   |
+| `WIDGET_CHANGED`                  | 앱→웹 | `change`, `family` | 홈 화면에 위젯이 놓였다(`added`)·치워졌다(`removed`)와 크기. 웹이 앰플리튜드에 남긴다                                  | `WidgetChangeSync.tsx` |
 
 STT·TTS·인증 등 기능 메시지는 각 기능 이슈에서 추가한다.
 
