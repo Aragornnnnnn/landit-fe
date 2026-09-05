@@ -52,7 +52,7 @@ interface ConversationTurnsOptions {
   opening: { content: string; translatedContent: string | null } | null;
   // USER 선발화 안내 문구 — 첫 AI 발화가 오기 전까지 카드가 안내 구조로 그려진다
   openingInstruction: string | null;
-  // 미리 녹음된 오프닝 오디오 경로 — 없으면(null) 오프닝도 합성으로 말한다
+  // 오프닝의 첫 질문 음원 URL — 없으면(null) 오프닝도 합성으로 말한다
   openingAudioSrc: string | null;
   // 화면·계측용 세션 id (백그라운드 확보 전엔 null)
   sessionId: number | null;

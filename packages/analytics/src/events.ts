@@ -362,10 +362,10 @@ export type EventProps = {
     reason?: string;
   };
   // AI 발화 재생 실패 — 실패 비율을 본다. 스몰톡 탭의 캐릭터 인사도 같은 재생 훅이라 포함된다.
-  // opening_mp3 = 미리 녹음한 오프닝(실패하면 합성으로 폴백해 체감 없음), synth = 런타임 합성(분리 재생이면 질문 음원으로 폴백, 아니면 발화가 통째로 건너뛰어진다),
-  // question_audio = 고정 질문 음원(남은 질문이 통째로 건너뛰어진다, 원인은 Sentry)
+  // synth = 런타임 합성(분리 재생이면 질문 음원으로 폴백, 아니면 발화가 통째로 건너뛰어진다),
+  // question_audio = 서버 음원(오프닝 첫 질문은 합성으로 폴백, 이어 재생 질문은 통째로 건너뛰어진다. 원인은 Sentry)
   'Speech Playback Failed': {
-    source: 'opening_mp3' | 'synth' | 'question_audio';
+    source: 'synth' | 'question_audio';
   };
   'Hint Used': { source: HintSource; level: number };
   'Scenario Talk Completed': {

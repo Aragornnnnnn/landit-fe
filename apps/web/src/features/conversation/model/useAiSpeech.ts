@@ -1,6 +1,6 @@
 'use client';
 
-// AI 발화 재생 훅 — 오프닝은 미리 만든 정적 mp3, 이후엔 TTS 합성, 음성이 없으면 글자 수 타이머로 폴백한다.
+// AI 발화 재생 훅 — 오프닝은 서버가 준 첫 질문 음원, 이후엔 TTS 합성, 음성이 없으면 글자 수 타이머로 폴백한다.
 // 발화가 맞장구(ttsText)와 고정 질문 음원(questionAudioUrl)으로 나뉘어 오면 맞장구만 합성하고 음원을 이어 튼다
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
@@ -52,14 +52,14 @@ const resolveSpeechPlan = (source: SpeechSource) => {
 interface SpeechRunDeps {
   source: SpeechSource;
   voice: TtsVoice | null;
-  // 오프닝 발화일 때만 채워지는 정적 mp3 경로
+  // 오프닝 발화일 때만 채워지는 첫 질문 음원 URL
   openingSrc: string | null;
   tts: ReturnType<typeof useTts>;
   setSpeech: (speech: PlayingSpeech | null) => void;
   onSpeechEnd: () => void;
 }
 
-// 상대의 발화 한 회차를 소리로 낸다 — 오프닝이면 정적 mp3를, 이후엔 맞장구 합성(+질문 음원 이어 재생)을 틀고
+// 상대의 발화 한 회차를 소리로 낸다 — 오프닝이면 첫 질문 음원을, 이후엔 맞장구 합성(+질문 음원 이어 재생)을 틀고
 // 발화 종료 통지까지 책임진다. 시작시키고 중단 함수를 돌려주므로 effect가 그대로 cleanup으로 쓴다
 const runSpeech = ({
   source,
@@ -103,18 +103,14 @@ const runSpeech = ({
     });
 
   // 미리 만든 음원을 튼다. 끝까지 재생했는지를 돌려줘 호출부가 폴백을 결정한다
-  const playAudio = (
-    src: string,
-    lipSyncText: string,
-    failSource: 'opening_mp3' | 'question_audio',
-  ) =>
+  const playAudio = (src: string, lipSyncText: string) =>
     new Promise<boolean>((resolve) => {
       tts.speakSrc(src, {
         onStart: (playback) => startLipSync(playback, lipSyncText),
         onEnd: () => resolve(true),
         onError: () => {
           if (!ignore)
-            track(EVENTS.SPEECH_PLAYBACK_FAILED, { source: failSource });
+            track(EVENTS.SPEECH_PLAYBACK_FAILED, { source: 'question_audio' });
           setSpeech(null);
           resolve(false);
         },
@@ -131,9 +127,9 @@ const runSpeech = ({
     });
 
   const speakThrough = async () => {
-    // 1) 오프닝은 미리 녹음된 mp3부터 튼다 — 성공하면 그대로 발화 끝, 실패하면 아래 일반 재생으로 폴백
+    // 1) 오프닝은 서버가 준 첫 질문 음원부터 튼다 — 성공하면 그대로 발화 끝, 실패하면 아래 일반 재생으로 폴백
     if (openingSrc) {
-      const played = await playAudio(openingSrc, content, 'opening_mp3');
+      const played = await playAudio(openingSrc, content);
       if (ignore) return;
       if (played) return finish();
     }
@@ -152,7 +148,7 @@ const runSpeech = ({
     // 4) 질문 음원이 있으면 이어 튼다 — 실패해도(대신 낼 소리가 없어) 발화는 여기서 끝난다
     if (question) {
       setSpeech(null);
-      await playAudio(question.src, question.lipSyncText, 'question_audio');
+      await playAudio(question.src, question.lipSyncText);
     }
     finish();
   };
@@ -171,7 +167,7 @@ interface AiSpeechOptions {
   playing: boolean;
   source: SpeechSource | null;
   voice: TtsVoice | null;
-  // 미리 녹음된 오프닝 오디오 경로 — 없으면(null) 오프닝도 일반 재생 경로를 탄다
+  // 오프닝의 첫 질문 음원 URL — 없으면(null) 오프닝도 일반 재생 경로를 탄다
   openingSrc: string | null;
   onSpeechEnd: () => void;
 }
@@ -190,7 +186,7 @@ export const useAiSpeech = ({
   onSpeechEnd,
 }: AiSpeechOptions) => {
   const tts = useTts();
-  // 첫 AI 발화(오프닝)인지 — 미리 만든 정적 mp3 재생 대상
+  // 첫 AI 발화(오프닝)인지 — 첫 질문 음원 재생 대상
   const isOpeningRef = useRef(true);
   // 재생이 시작돼야 알 수 있는 값이라 상태로 둔다 (오프닝 mp3·합성 어느 쪽이든 같다)
   const [speech, setSpeech] = useState<PlayingSpeech | null>(null);
@@ -209,7 +205,7 @@ export const useAiSpeech = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, source?.content, source?.ttsText, source?.questionAudioUrl]);
 
-  // 오프닝을 지나갔다는 표시 — 이후 발화는 동적 생성이라 정적 mp3 대상이 아니다. 다음 질문이 화면에 올라갈 때 부른다
+  // 오프닝을 지나갔다는 표시 — 이후 발화는 동적 생성이라 오프닝 음원 대상이 아니다. 다음 질문이 화면에 올라갈 때 부른다
   const markOpeningPlayed = () => {
     isOpeningRef.current = false;
   };

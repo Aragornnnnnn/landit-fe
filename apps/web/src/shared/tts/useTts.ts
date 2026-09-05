@@ -201,7 +201,7 @@ export function useTts() {
     }
   };
 
-  // 미리 만들어둔 정적 오디오(예: /audio/opening-{id}.mp3)를 URL로 바로 재생한다 — 합성 없음.
+  // 미리 만들어둔 정적 오디오(서버 질문 음원, 스몰톡 자기소개 mp3)를 URL로 바로 재생한다 — 합성 없음.
   // 파일이 없으면(404 등) onError로 알려, 호출부가 런타임 합성으로 폴백할 수 있게 한다.
   const speakSrc = (src: string, options?: SpeakOptions) => {
     stop();
