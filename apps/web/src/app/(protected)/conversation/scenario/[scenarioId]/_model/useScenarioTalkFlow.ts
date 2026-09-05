@@ -59,7 +59,8 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
     voice,
     opening,
     openingInstruction: preview?.userOpeningInstruction ?? null,
-    openingAudioSrc: `/audio/opening-${scenario.scenarioId}.mp3`,
+    // 오프닝 소리는 서버가 준 첫 질문 음원 — 없으면 엔진이 합성으로 말한다
+    openingAudioSrc: preview?.questionAudioUrl ?? null,
     sessionId: session.sessionId,
     ensureSession: session.ensure,
     submit: async ({ sessionId, content, inputType, turnIndex }) => {

@@ -123,6 +123,9 @@ const voice: TtsVoice = {
   gender: 'MALE',
 };
 
+// 서버가 준 첫 질문 음원 — 오프닝은 이 파일을 튼다
+const OPENING_AUDIO_URL = 'https://cdn.example.com/questions/10.mp3';
+
 // AI 선발화 시나리오 — 오프닝은 openingPreview에서 즉시 시드된다
 const scenario = {
   scenarioId: 10,
@@ -130,6 +133,7 @@ const scenario = {
   openingPreview: {
     aiOpeningMessage: 'Hello, welcome in.',
     aiOpeningMessageTranslation: '어서 오세요.',
+    questionAudioUrl: OPENING_AUDIO_URL,
     userOpeningInstruction: null,
     innerThought: null,
     innerThoughtType: null,
@@ -143,6 +147,7 @@ const userScenario = {
   openingPreview: {
     aiOpeningMessage: null,
     aiOpeningMessageTranslation: null,
+    questionAudioUrl: null,
     userOpeningInstruction: '먼저 인사를 건네보세요.',
     innerThought: null,
     innerThoughtType: null,
@@ -480,12 +485,12 @@ describe('useScenarioTalkFlow', async () => {
     expect(shouldAskSatisfaction('scenario')).toBe(false);
   });
 
-  it('오프닝은 미리 만든 정적 mp3로 재생하고, 끝나면 마이크 대기로 넘어간다', async () => {
+  it('오프닝은 openingPreview의 서버 음원(questionAudioUrl)으로 재생하고, 끝나면 마이크 대기로 넘어간다', async () => {
     const { result } = renderHook(() => useScenarioTalkFlow(scenario));
     await act(async () => {});
 
     expect(ttsMock.speakSrc).toHaveBeenCalledWith(
-      '/audio/opening-10.mp3',
+      OPENING_AUDIO_URL,
       expect.anything(),
     );
     expect(ttsMock.speak).not.toHaveBeenCalled();
@@ -493,6 +498,26 @@ describe('useScenarioTalkFlow', async () => {
     await act(async () => ttsMock.state.onEnd?.());
 
     expect(result.current.phase).toBe('USER_READY');
+  });
+
+  it('서버 음원이 없는 시나리오는 오프닝을 합성으로 말한다', async () => {
+    // given — 음원이 아직 없는 시나리오 (구 데이터·신규 등록 직후)
+    const withoutAudio = {
+      ...scenario,
+      openingPreview: { ...scenario.openingPreview, questionAudioUrl: null },
+    } as unknown as Scenario;
+
+    // when
+    renderHook(() => useScenarioTalkFlow(withoutAudio));
+    await act(async () => {});
+
+    // then — 정적 재생 없이 첫 발화 원문을 상대 목소리로 합성한다
+    expect(ttsMock.speakSrc).not.toHaveBeenCalled();
+    expect(ttsMock.speak).toHaveBeenCalledWith(
+      'Hello, welcome in.',
+      voice,
+      expect.anything(),
+    );
   });
 
   it('상대는 시나리오의 characterId가 정한다', async () => {

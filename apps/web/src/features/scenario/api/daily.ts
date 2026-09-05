@@ -6,6 +6,8 @@ import { api } from '@/shared/api/client';
 export interface ScenarioOpeningPreview {
   aiOpeningMessage: string | null;
   aiOpeningMessageTranslation: string | null;
+  // 첫 고정 질문 음원 — 오프닝은 이 파일을 튼다. 없으면 상대 목소리로 합성한다
+  questionAudioUrl: string | null;
   userOpeningInstruction: string | null;
   innerThought: string | null;
   innerThoughtType: string | null;
