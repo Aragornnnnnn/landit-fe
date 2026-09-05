@@ -70,7 +70,15 @@ export const useAudioPlayer = () => {
 
     const segment = options?.segment;
     if (segment) {
-      audio.currentTime = segment.startMs / 1000;
+      // iOS 사파리는 길이를 모르는 녹음 blob(MediaRecorder 산출물)에 대해 메타데이터 로드 전 seek를
+      // 버려 0초부터 나온다 — 메타데이터가 오면 이동한다. 그 전엔 소리가 나지 않아 0초 구간이 새지 않는다
+      audio.addEventListener(
+        'loadedmetadata',
+        () => {
+          audio.currentTime = segment.startMs / 1000;
+        },
+        { once: true },
+      );
       const stopAt = segment.endMs / 1000;
       // 명세 계약: 구간 경계 보정은 서버가 적용해 내려주고, 프론트는 값 그대로 쓰되
       // 20ms 페이드아웃만 얹는다 (뚝 끊기는 클릭음 방지). timeupdate(~250ms)는 다음
