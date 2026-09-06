@@ -1,6 +1,7 @@
 'use client';
 
-// 표현 설명 단독 스텝 (B안) — 히어로 이미지 + 표현·발음 듣기 + 래디 말풍선. 발음 평가 전에 뜻·뉘앙스를 각인한다
+// 표현 설명 단독 스텝 (B안) — 히어로 이미지 + 표현·발음 듣기 + 래디 말풍선. 발음 평가 전에 뜻·뉘앙스를 각인한다.
+// 발음 자산이 없는 표현도 이 화면은 뜬다 — 그땐 스피커만 빠진 사전 카드다
 import { Button } from '@/shared/ui/Button';
 
 import { StepScaffold } from '../common/StepScaffold';
@@ -22,7 +23,8 @@ interface ExpressionIntroStepProps {
   playingExpressionAudio: boolean;
   // 표현 재생 진행률 0~1 — 타이틀 글자가 순서대로 물든다
   expressionAudioProgress: number;
-  onPlaySentenceAudio: () => void;
+  // 문장 음원이 없는 표현(발음 자산 미준비)은 예문 스피커도 숨긴다
+  onPlaySentenceAudio?: () => void;
   playingSentenceAudio: boolean;
   // 예문 재생 진행률 0~1 — 글자가 순서대로 물든다
   sentenceAudioProgress: number;

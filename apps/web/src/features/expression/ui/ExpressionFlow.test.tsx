@@ -96,19 +96,26 @@ vi.mock('./learning/ExamplesStep', () => ({
     </div>
   ),
 }));
+// 설명 스텝 — CTA 문구·문장 듣기 유무(음원 없으면 스피커가 빠진다)·건너뛰기 유무를 노출한다
 vi.mock('./learning/ExpressionIntroStep', () => ({
   ExpressionIntroStep: ({
     onNext,
+    onBack,
+    onPlaySentenceAudio,
     nextLabel = '소리 내서 말해볼게요',
     onSkip,
   }: {
     onNext: () => void;
+    onBack: () => void;
+    onPlaySentenceAudio?: () => void;
     nextLabel?: string;
     onSkip?: () => void;
   }) => (
     <div>
       <p>intro:{nextLabel}</p>
+      <p>listen:{onPlaySentenceAudio ? 'y' : 'n'}</p>
       <button onClick={onNext}>intro-next</button>
+      <button onClick={onBack}>intro-back</button>
       {onSkip && <button onClick={onSkip}>intro-skip</button>}
     </div>
   ),
@@ -209,7 +216,7 @@ const twoWritingSentences: ExpressionPractice['writingSentence'] = [
   },
 ];
 
-// 발음 없는 표현으로 복습까지 간다 — 큐 검증의 공통 출발점
+// 발음 없는 표현으로 설명을 지나 복습까지 간다 — 큐 검증의 공통 출발점
 const renderAtReview = async (
   user: ReturnType<typeof userEvent.setup>,
   writingSentence: ExpressionPractice['writingSentence'],
@@ -227,6 +234,7 @@ const renderAtReview = async (
     />,
   );
   await user.click(screen.getByText('quiz-next'));
+  await user.click(screen.getByText('intro-next'));
 };
 
 afterEach(() => {
@@ -302,9 +310,10 @@ describe('ExpressionFlow 예문 프리페치', () => {
       />,
     );
 
-    // QUIZ → EXPLAIN: 설명 단독 화면(B안)이 뜬다
+    // QUIZ → EXPLAIN: 설명 단독 화면(B안)이 뜬다 — 문장 듣기가 달려 있다
     await user.click(screen.getByText('quiz-next'));
     expect(screen.getByText('intro:소리 내서 말해볼게요')).toBeInTheDocument();
+    expect(screen.getByText('listen:y')).toBeInTheDocument();
 
     // EXPLAIN → PRONOUNCE → 예문 → REVIEW
     await user.click(screen.getByText('intro-next'));
@@ -582,7 +591,7 @@ describe('ExpressionFlow 예문 프리페치', () => {
     expect(screen.getByText('intro:소리 내서 말해볼게요')).toBeInTheDocument();
   });
 
-  it('발음 자산이 없고 예문도 없으면 퀴즈 다음이 곧장 복습이고, 뒤로가기는 나가기 확인이다', async () => {
+  it('발음 자산이 없고 예문도 없으면 설명 다음이 곧장 복습이고, 복습의 뒤로는 설명이다', async () => {
     const user = userEvent.setup();
     learningMock.mockReturnValue({ learning, error: null, isLoading: false });
     practiceMock.mockReturnValue({
@@ -598,12 +607,14 @@ describe('ExpressionFlow 예문 프리페치', () => {
     );
 
     await user.click(screen.getByText('quiz-next'));
-    expect(screen.queryByText(/^intro:/)).not.toBeInTheDocument();
+    expect(screen.getByText('intro:다음')).toBeInTheDocument();
+    await user.click(screen.getByText('intro-next'));
     expect(screen.getByText('quiz:review')).toBeInTheDocument();
 
-    // 되돌아갈 설명 화면이 없으니 ‹ 대신 X — 나가기 확인 시트
+    // 예문이 없어도 앞에 설명 화면이 있으니 ‹로 설명에 돌아간다
     await user.click(screen.getByText('quiz-back'));
-    expect(screen.getByText('exit-sheet')).toBeInTheDocument();
+    expect(screen.getByText('intro:다음')).toBeInTheDocument();
+    expect(screen.queryByText('exit-sheet')).not.toBeInTheDocument();
   });
 
   it('복습 두 문제는 서로 다른 상대가 묻고, 같은 문제가 다시 나오면 같은 상대다', async () => {
@@ -712,11 +723,12 @@ describe('ExpressionFlow 복습 큐', () => {
       />,
     );
     await user.click(screen.getByText('quiz-next'));
+    await user.click(screen.getByText('intro-next'));
     await user.click(screen.getByText('examples-next'));
     const mount = screen.getByText(/quiz#/).textContent;
 
     await user.click(screen.getByText('quiz-back'));
-    expect(screen.getByText('examples:2:close')).toBeInTheDocument();
+    expect(screen.getByText('examples:2:back')).toBeInTheDocument();
     await user.click(screen.getByText('examples-next'));
 
     expect(screen.getByText(/quiz#/).textContent).toBe(mount);
@@ -732,7 +744,7 @@ describe('ExpressionFlow 복습 큐', () => {
 });
 
 describe('ExpressionFlow 예문 스텝', () => {
-  it('발음이 없으면 퀴즈→예문→복습이고, 예문의 X는 나가기 확인, 복습의 뒤로는 예문이다', async () => {
+  it('발음이 없어도 퀴즈 뒤 설명이 뜬다 — 듣기·건너뛰기 없이 "다음"으로 예문에 가고, 예문의 ‹는 설명, 설명의 X는 나가기 확인이다', async () => {
     const user = userEvent.setup();
     learningMock.mockReturnValue({ learning, error: null, isLoading: false });
     practiceMock.mockReturnValue({
@@ -747,18 +759,27 @@ describe('ExpressionFlow 예문 스텝', () => {
       />,
     );
 
+    // 음원이 없으니 스피커·자동재생·건너뛰기 없이 설명만 — 말하기 대신 "다음"
     await user.click(screen.getByText('quiz-next'));
-    expect(screen.getByText('examples:2:close')).toBeInTheDocument();
+    expect(screen.getByText('intro:다음')).toBeInTheDocument();
+    expect(screen.getByText('listen:n')).toBeInTheDocument();
+    expect(screen.queryByText('intro-skip')).not.toBeInTheDocument();
+
+    await user.click(screen.getByText('intro-next'));
+    expect(screen.getByText('examples:2:back')).toBeInTheDocument();
     await user.click(screen.getByText('examples-next'));
     expect(screen.getByText('quiz:review')).toBeInTheDocument();
 
+    // 복습 ‹ → 예문, 예문 ‹ → 설명, 설명 X → 나가기 확인
     await user.click(screen.getByText('quiz-back'));
-    expect(screen.getByText('examples:2:close')).toBeInTheDocument();
+    expect(screen.getByText('examples:2:back')).toBeInTheDocument();
     await user.click(screen.getByText('examples-back'));
+    expect(screen.getByText('intro:다음')).toBeInTheDocument();
+    await user.click(screen.getByText('intro-back'));
     expect(screen.getByText('exit-sheet')).toBeInTheDocument();
   });
 
-  it('완료한 표현 재진입에 발음이 없으면 퀴즈 없이 예문부터 시작한다', () => {
+  it('완료한 표현 재진입에 발음이 없으면 퀴즈 없이 설명부터 시작한다', () => {
     learningMock.mockReturnValue({
       learning: { ...learning, completed: true },
       error: null,
@@ -777,7 +798,7 @@ describe('ExpressionFlow 예문 스텝', () => {
     );
 
     expect(screen.queryByText('quiz:quiz')).not.toBeInTheDocument();
-    expect(screen.getByText('examples:2:close')).toBeInTheDocument();
+    expect(screen.getByText('intro:다음')).toBeInTheDocument();
   });
 
   it('practice가 아직 안 왔으면 예문 자리에서 기다렸다가, 도착하면 예문을 보여준다', async () => {
@@ -795,6 +816,7 @@ describe('ExpressionFlow 예문 스텝', () => {
       />,
     );
     await user.click(screen.getByText('quiz-next'));
+    await user.click(screen.getByText('intro-next'));
 
     // 아직 예문도 복습도 아니다 — 로딩 자리만
     expect(screen.queryByText(/^examples:/)).not.toBeInTheDocument();
@@ -812,10 +834,11 @@ describe('ExpressionFlow 예문 스텝', () => {
       />,
     );
 
-    expect(screen.getByText('examples:2:close')).toBeInTheDocument();
+    expect(screen.getByText('examples:2:back')).toBeInTheDocument();
   });
 
-  it('예문 차례인데 예문이 없으면 복습을 보여주고 계측 step도 review다', () => {
+  it('예문 차례인데 예문이 없으면 복습을 보여주고 계측 step도 review다', async () => {
+    const user = userEvent.setup();
     learningMock.mockReturnValue({
       learning: { ...learning, completed: true },
       error: null,
@@ -833,6 +856,7 @@ describe('ExpressionFlow 예문 스텝', () => {
       />,
     );
 
+    await user.click(screen.getByText('intro-next'));
     expect(screen.getByText('quiz:review')).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith('Expression Step Viewed', {
       expression_id: 7,
@@ -859,6 +883,7 @@ describe('ExpressionFlow 예문 스텝', () => {
       />,
     );
     await user.click(screen.getByText('quiz-next'));
+    await user.click(screen.getByText('intro-next'));
 
     // 스켈레톤을 보는 동안은 어떤 스텝도 노출로 세지 않는다
     expect(track).not.toHaveBeenCalledWith('Expression Step Viewed', {

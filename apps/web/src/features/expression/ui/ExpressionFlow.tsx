@@ -1,6 +1,6 @@
 'use client';
 
-// 표현학습 플로우 — 단어 선택 퀴즈(D안 ①') → [발음 자산 있으면: 표현 설명(D안 ④) → 발음 평가] → 추가 예문 → 복습 영작 2문제(D안 ⑤) → 완료 처리 후 리스트로.
+// 표현학습 플로우 — 단어 선택 퀴즈(D안 ①') → 표현 설명(D안 ④) → [발음 자산 있으면: 발음 평가] → 추가 예문 → 복습 영작 2문제(D안 ⑤) → 완료 처리 후 리스트로.
 import { useEffect, useState } from 'react';
 import { EVENTS, type ExpressionStep } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
@@ -38,8 +38,8 @@ interface ExpressionFlowProps {
   expressionId: number;
 }
 
-// 화면 스텝 — EXPLAIN(설명)·PRONOUNCE(발음 평가)는 발음 자산이 있는 표현에만, EXAMPLES(추가 예문)는 예문을 받았을 때만 낀다.
-// 발음 없는 표현은 설명 화면 없이 퀴즈→예문→복습이다 (설명 카드만 있는 화면은 굳이 두지 않는다)
+// 화면 스텝 — PRONOUNCE(발음 평가)는 발음 자산이 있는 표현에만, EXAMPLES(추가 예문)는 예문을 받았을 때만 낀다.
+// EXPLAIN(설명)은 자산이 없어도 뜬다 — 뜻·뉘앙스 설명은 음원과 무관하게 학습의 핵심이라, 그땐 듣기만 빠지고 "다음"으로 예문에 간다
 type Step = 'QUIZ' | 'EXPLAIN' | 'PRONOUNCE' | 'EXAMPLES' | 'REVIEW';
 
 // 화면 스텝 → 이벤트 속성 값
@@ -53,9 +53,9 @@ const STEP_PROP: Record<Step, ExpressionStep> = {
 
 // 진행바 배치 — 예문이 멈추는 지점. 복습이 여기서 1까지 이어받아 채운다
 const EXAMPLES_PROGRESS = 0.7;
-// 발음 스텝이 낀 플로우의 앞쪽 구간 배치 — 퀴즈(0~0.3)→설명(0.45)→발음(0.6)→예문→복습
-const QUIZ_RANGE_WITH_PRONUNCIATION: [number, number] = [0, 0.3];
-const EXPLAIN_PROGRESS_WITH_PRONUNCIATION = 0.45;
+// 앞쪽 구간 배치 — 퀴즈(0~0.3)→설명(0.45)→발음(0.6)→예문→복습. 발음 없는 표현은 0.6 자리를 비우고 같은 좌표를 쓴다
+const QUIZ_RANGE: [number, number] = [0, 0.3];
+const EXPLAIN_PROGRESS = 0.45;
 const PRONUNCIATION_PROGRESS = 0.6;
 
 // 데이터 로딩 껍데기 — learning이 준비된 뒤에만 본체를 마운트한다.
@@ -119,14 +119,12 @@ const LoadedExpressionFlow = ({
     origin.kind === 'scenario'
       ? { scenario_id: origin.scenarioId }
       : { session_id: origin.sessionId };
-  // 발음 자산(원어민 TTS)이 있는 표현만 설명·발음 스텝이 열린다
+  // 발음 자산(원어민 TTS)이 있는 표현만 발음 스텝이 열린다 — 설명은 자산 없이도 뜬다
   const hasPronunciation = Boolean(learning.representativeSentenceAudioUrl);
-  // 완료한 표현의 재진입은 퀴즈를 건너뛰고 퀴즈 다음 화면(설명, 발음 없으면 예문)부터 시작한다 — 판정은 서버(learning.completed) 한 곳.
-  // EXAMPLES는 "예문을 볼 차례"라는 뜻이고, 실제로 예문을 보여줄지는 아래 visibleStep이 practice 도착 뒤에 정한다
-  const [step, setStep] = useState<Step>(() => {
-    if (!learning.completed) return 'QUIZ';
-    return hasPronunciation ? 'EXPLAIN' : 'EXAMPLES';
-  });
+  // 완료한 표현의 재진입은 퀴즈를 건너뛰고 설명부터 시작한다 — 판정은 서버(learning.completed) 한 곳
+  const [step, setStep] = useState<Step>(
+    learning.completed ? 'EXPLAIN' : 'QUIZ',
+  );
   // 발음 분석이 결과 화면(피드백·실패)에 한 번이라도 도달했는지 — 그 뒤 설명·예문으로 나가도
   // 발음 스텝을 숨김 유지해 보던 화면을 잃지 않고, 설명 CTA는 "다음"으로 바뀐다.
   // 녹음 전에 되돌아가는 건 그냥 첫 방문 취급
@@ -134,7 +132,7 @@ const LoadedExpressionFlow = ({
   // 발음을 결과 없이 지나갔는지(사용자 건너뛰기 또는 자산 소실 404) — 이 상태에선 예문의 뒤로가기가
   // 마이크 대신 설명(다음 CTA)으로 돌아가고, 설명의 "다음"은 예문으로 복귀한다
   const [pronounceSkipped, setPronounceSkipped] = useState(false);
-  // 되돌아갈 앞 화면이 없는 스텝(QUIZ·EXPLAIN, 발음 없으면 EXAMPLES까지)은 X로 나가며, 중단 확인 시트를 먼저 띄운다
+  // 되돌아갈 앞 화면이 없는 스텝(QUIZ·EXPLAIN)은 X로 나가며, 중단 확인 시트를 먼저 띄운다
   const [exitOpen, setExitOpen] = useState(false);
   // 퀴즈에서 질문을 건네는 상대 — 들어올 때 한 번만 뽑는다 (복습은 문제마다 ReviewStep이 따로 뽑는다)
   const [partner] = useState(() => pickRandomPartner());
@@ -207,14 +205,12 @@ const LoadedExpressionFlow = ({
     setExitOpen(true);
   };
 
-  // 예문·복습에서 뒤로 — 발음 결과가 있으면 그 화면으로, 결과 없이 지나갔으면 설명으로(말하기를 강요하는
-  // 화면이 불쑥 뜨지 않게). 발음 없는 표현은 앞 화면이 퀴즈뿐이라 되돌리지 않고 나가기 확인을 띄운다
-  const backBeforeExamples = () => {
-    if (!hasPronunciation) return openExitSheet();
-    setStep(skippedWithoutResult ? 'EXPLAIN' : 'PRONOUNCE');
-  };
-  // 예문·복습이 플로우의 첫 되돌림 지점일 때는 ‹ 대신 X다
-  const closeInsteadOfBack = !hasPronunciation;
+  // 발음 스텝 없이 예문으로 가는 경우 — 자산이 없거나, 결과 없이 건너뛰었을 때.
+  // 이 상태에선 설명의 "다음"이 예문이고, 예문·복습의 뒤로도 설명이다(말하기를 강요하는 화면이 불쑥 뜨지 않게)
+  const bypassPronunciation = !hasPronunciation || skippedWithoutResult;
+  // 예문·복습에서 뒤로 — 발음 결과가 있으면 그 화면으로, 아니면 설명으로
+  const backBeforeExamples = () =>
+    setStep(bypassPronunciation ? 'EXPLAIN' : 'PRONOUNCE');
 
   // 중단 확인 시트 — QUIZ·EXPLAIN에서 X를 누르면 뜬다. 확인 시 완료 처리 없이 리스트로.
   const exitSheet = (
@@ -264,9 +260,6 @@ const LoadedExpressionFlow = ({
       onBack={() =>
         examples.length > 0 ? setStep('EXAMPLES') : backBeforeExamples()
       }
-      leftAction={
-        examples.length === 0 && closeInsteadOfBack ? 'close' : 'back'
-      }
       progressStart={EXAMPLES_PROGRESS}
       expression={learning.targetExpressionText}
       meaning={learning.baseExpressionMeaningText}
@@ -291,7 +284,6 @@ const LoadedExpressionFlow = ({
       title={learning.baseExpressionMeaningText}
       progress={EXAMPLES_PROGRESS}
       onBack={backBeforeExamples}
-      leftAction={closeInsteadOfBack ? 'close' : 'back'}
       onNext={() => {
         setReviewVisited(true);
         setStep('REVIEW');
@@ -311,58 +303,54 @@ const LoadedExpressionFlow = ({
           expressionId={expressionId}
           leftAction="close"
           onBack={openExitSheet}
-          onNext={() => setStep(hasPronunciation ? 'EXPLAIN' : 'EXAMPLES')}
-          progressRange={
-            hasPronunciation ? QUIZ_RANGE_WITH_PRONUNCIATION : undefined
-          }
+          onNext={() => setStep('EXPLAIN')}
+          progressRange={QUIZ_RANGE}
         />
         {exitSheet}
       </>
     );
   }
 
-  // 발음 자산이 있으면 QUIZ 이후 스텝 전부(설명·발음·추가 예문·복습)를 한 트리에서 렌더한다 (QUIZ는 위에서 반환됨).
-  // 피드백을 받은 뒤엔 어느 스텝으로 나가도 발음 스텝은 숨김 유지 — 리마운트되면 피드백·녹음이 날아간다
-  if (learning.representativeSentenceAudioUrl) {
-    // 발음 스텝을 지나온 재방문 — 설명 CTA가 "다음"(복귀)으로 바뀌고 건너뛰기는 사라진다
-    const pronounceRevisit = pronounceDone || pronounceSkipped;
-    return (
-      <>
-        {step === 'EXPLAIN' && (
-          <ExpressionIntroStep
-            targetExpressionText={learning.targetExpressionText}
-            baseExpressionMeaningText={learning.baseExpressionMeaningText}
-            usageDescription={learning.usageDescription}
-            sentenceText={learning.representativeSentenceText}
-            sentenceTranslation={learning.representativeSentenceTranslation}
-            imageUrl={learning.representativeImageUrl}
-            // 듣기 배선(자동재생·토글·진행률·계측)은 훅이 만든 props 그대로
-            {...introAudio}
-            progress={EXPLAIN_PROGRESS_WITH_PRONUNCIATION}
-            leftAction="close"
-            onBack={openExitSheet}
-            // 재방문의 "다음"은 떠나온 자리로 복귀 — 발음 결과가 있으면 그 화면, 건너뛰었으면 예문
-            onNext={() =>
-              setStep(skippedWithoutResult ? 'EXAMPLES' : 'PRONOUNCE')
-            }
-            nextLabel={pronounceRevisit ? '다음' : undefined}
-            // 마이크를 쓸 수 없는 상황(장소 등)을 위한 발음 건너뛰기 — 기획 확정 동선. 재방문 땐 없다
-            onSkip={
-              pronounceRevisit
-                ? undefined
-                : () => {
-                    track(EVENTS.PRONUNCIATION_SKIPPED, {
-                      expression_id: expressionId,
-                    });
-                    setPronounceSkipped(true);
-                    setStep('EXAMPLES');
-                  }
-            }
-          />
-        )}
-        {visibleStep === 'EXAMPLES' && exampleScreen}
-        {reviewSlot}
-        {(step === 'PRONOUNCE' || pronounceDone) && (
+  // QUIZ 이후 스텝 전부(설명·발음·추가 예문·복습)를 한 트리에서 렌더한다 (QUIZ는 위에서 반환됨).
+  // 피드백을 받은 뒤엔 어느 스텝으로 나가도 발음 스텝은 숨김 유지 — 리마운트되면 피드백·녹음이 날아간다.
+  // 말하기 CTA와 건너뛰기는 발음 스텝을 아직 안 거친 첫 방문에만 — 자산이 없거나 재방문이면 "다음"뿐이다
+  const speakNext = hasPronunciation && !pronounceDone && !pronounceSkipped;
+  return (
+    <>
+      {step === 'EXPLAIN' && (
+        <ExpressionIntroStep
+          targetExpressionText={learning.targetExpressionText}
+          baseExpressionMeaningText={learning.baseExpressionMeaningText}
+          usageDescription={learning.usageDescription}
+          sentenceText={learning.representativeSentenceText}
+          sentenceTranslation={learning.representativeSentenceTranslation}
+          imageUrl={learning.representativeImageUrl}
+          // 듣기 배선(자동재생·토글·진행률·계측)은 훅이 만든 props 그대로 — 음원이 없으면 스피커가 빠진다
+          {...introAudio}
+          progress={EXPLAIN_PROGRESS}
+          leftAction="close"
+          onBack={openExitSheet}
+          // "다음"은 발음 결과가 있으면 그 화면으로 복귀, 발음을 안 거치는 경우엔 예문으로
+          onNext={() => setStep(bypassPronunciation ? 'EXAMPLES' : 'PRONOUNCE')}
+          nextLabel={speakNext ? undefined : '다음'}
+          // 마이크를 쓸 수 없는 상황(장소 등)을 위한 발음 건너뛰기 — 기획 확정 동선
+          onSkip={
+            speakNext
+              ? () => {
+                  track(EVENTS.PRONUNCIATION_SKIPPED, {
+                    expression_id: expressionId,
+                  });
+                  setPronounceSkipped(true);
+                  setStep('EXAMPLES');
+                }
+              : undefined
+          }
+        />
+      )}
+      {visibleStep === 'EXAMPLES' && exampleScreen}
+      {reviewSlot}
+      {learning.representativeSentenceAudioUrl &&
+        (step === 'PRONOUNCE' || pronounceDone) && (
           <div className={step === 'PRONOUNCE' ? undefined : 'hidden'}>
             <PronunciationStep
               active={step === 'PRONOUNCE'}
@@ -386,16 +374,6 @@ const LoadedExpressionFlow = ({
             />
           </div>
         )}
-        {exitSheet}
-      </>
-    );
-  }
-
-  // 발음 없는 표현 — 퀴즈 뒤는 예문·복습뿐
-  return (
-    <>
-      {visibleStep === 'EXAMPLES' && exampleScreen}
-      {reviewSlot}
       {exitSheet}
     </>
   );
