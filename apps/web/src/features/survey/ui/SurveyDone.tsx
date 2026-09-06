@@ -6,8 +6,6 @@ import { motion, useReducedMotion } from 'motion/react';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 
-import { REWARD_DATE } from '../model/questions';
-
 export const SurveyDone = ({ onGoHome }: { onGoHome: () => void }) => {
   const reduced = useReducedMotion() ?? false;
 
@@ -32,7 +30,7 @@ export const SurveyDone = ({ onGoHome }: { onGoHome: () => void }) => {
           소중한 의견 고마워요!
         </h1>
         <p className="mt-4 text-lg leading-snug font-bold break-keep text-muted-foreground">
-          무료 이용권은 유료 전환일({REWARD_DATE})에
+          무료 이용권은 유료 전환일에
           <br />
           지금 로그인한 계정으로 넣어드릴게요
         </p>

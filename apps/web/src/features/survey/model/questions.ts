@@ -46,9 +46,6 @@ export const choiceOptions = (question: SingleQuestion | MultiQuestion) =>
 export const optionLabel = (option: string) =>
   option === OTHER_OPTION ? OTHER_LABEL : option;
 
-// 이용권이 들어가는 날 — 완료 화면이 알려 준다
-export const REWARD_DATE = '9월 7일';
-
 export const QUESTIONS: readonly Question[] = [
   {
     id: 'channel',
