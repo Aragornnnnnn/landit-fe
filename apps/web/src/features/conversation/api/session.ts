@@ -3,8 +3,19 @@
 // 그 유형의 feature(api/)에 둔다 — 소속 기준은 URL 모양이 아니라 실제 소비자.
 // FE는 BE만 호출하고, BE가 내부에서 AI 서버를 오케스트레이션한다.
 import { api } from '@/shared/api/client';
+import type { TtsVoice } from '@/shared/tts/voice';
+
+import type { Partner } from '../model/character-look';
 
 export type InputType = 'VOICE' | 'TEXT' | 'GENERATED';
+
+// 대화 상대 — 시나리오·스몰톡이 같은 모양으로 받는다 (백엔드 ConversationCharacterResponse 미러).
+// 얼굴(characterId)과 목소리(ttsVoice)는 한 캐릭터의 두 면이라 늘 함께 온다.
+// 음성이 미설정이거나 비활성이면 캐릭터는 남고 ttsVoice만 null이다
+export interface ConversationCharacter {
+  characterId: Partner | null;
+  ttsVoice: TtsVoice | null;
+}
 
 // 시작 응답의 currentMessage — AI 선발화 시 첫 질문.
 // 여기 있는 건 두 대화가 함께 쓰는 최소 계약이다. 대화마다 더 오는 필드는 그 대화의 api/에서 얹는다

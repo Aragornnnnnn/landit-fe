@@ -18,14 +18,7 @@ const practice = (sentences: PracticeSentence[]): ExpressionPractice => ({
   baseExpressionMeaningText: '',
   usageDescription: '',
   practiceSentence: sentences,
-  writingSentence: {
-    writingSentenceText: '',
-    writingSentenceTranslation: '',
-    writingQuestion: '',
-    writingQuestionTranslation: '',
-    writingSentenceWords: [],
-    writingSentenceWordChoices: [],
-  },
+  writingSentence: [],
 });
 
 describe('collectPreloadImageUrls', () => {

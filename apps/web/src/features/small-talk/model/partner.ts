@@ -39,8 +39,8 @@ export const PARTNERS: PartnerProfile[] = [
     portraitViewBox: '185 50 650 630',
     voice: {
       provider: 'OPENROUTER',
-      model: 'microsoft/mai-voice-2',
-      providerVoiceId: 'en-US-Harper:MAI-Voice-2',
+      model: 'deepgram/aura-2',
+      providerVoiceId: 'aura-2-luna-en',
       gender: 'FEMALE',
     },
   },

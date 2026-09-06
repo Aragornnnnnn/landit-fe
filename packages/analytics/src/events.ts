@@ -22,12 +22,17 @@ export const EVENTS = {
   MIC_PERMISSION_DECIDED: 'Mic Permission Decided',
   ONBOARDING_COMPLETED: 'Onboarding Completed',
 
-  // 영어 수준 체크 — 신규 유저는 온보딩 스텝(level)이라 위 계측이 그대로 커버한다.
-  // 기존 유저는 온보딩 밖 별도 게이트라 노출·응답을 따로 찍는다
-  ENGLISH_LEVEL_GATE_VIEWED: 'English Level Gate Viewed',
-  ENGLISH_LEVEL_GATE_ANSWERED: 'English Level Gate Answered',
+  // 프로필 질문 게이트 — 신규 유저는 온보딩 스텝(level·accent)이라 위 계측이 그대로 커버한다.
+  // 온보딩을 이미 마친 기존 유저는 온보딩 밖 별도 게이트라 노출·응답을 따로 찍는다.
+  // 질문이 늘어도 이름을 늘리지 않고 question 속성으로 가른다 (정책 2-1)
+  PROFILE_GATE_VIEWED: 'Profile Gate Viewed',
+  PROFILE_GATE_ANSWERED: 'Profile Gate Answered',
   // 마이페이지에서 스스로 다시 고른 경우 — 최초 응답(Gate·온보딩)과 의도가 달라 별도로 찍는다
   ENGLISH_LEVEL_CHANGED: 'English Level Changed',
+
+  // 배울 영어(억양) — 최초 선택은 온보딩 스텝(accent)이라 위 계측이 그대로 커버한다.
+  // 마이페이지에서 다시 고른 것만 따로 찍는다
+  ACCENT_CHANGED: 'Accent Changed',
 
   // 홈
   HOME_TAB_SWITCHED: 'Home Tab Switched',
@@ -94,6 +99,11 @@ export const EVENTS = {
   QUIZ_WORD_REMOVED: 'Quiz Word Removed',
   QUIZ_ANSWER_SUBMITTED: 'Quiz Answer Submitted',
   EXAMPLE_SENTENCE_VIEWED: 'Example Sentence Viewed',
+  // 발음 평가 — 결과는 재도전마다 찍는다(attempt로 회차 구분). 건너뛰기는 설명 화면에서의 이탈 신호
+  PRONUNCIATION_RESULT_VIEWED: 'Pronunciation Result Viewed',
+  PRONUNCIATION_SKIPPED: 'Pronunciation Skipped',
+  // 발음 듣기 — 어떤 소리를 다시 듣는지 source 하나로 몰아 찍는다. 자동재생·토글 끄기는 제외
+  PRONUNCIATION_AUDIO_PLAYED: 'Pronunciation Audio Played',
   REVIEW_ANSWER_SUBMITTED: 'Review Answer Submitted',
   EXPRESSION_COMPLETED: 'Expression Completed',
   EXPRESSION_ABANDONED: 'Expression Abandoned',
@@ -120,6 +130,22 @@ export const EVENTS = {
 
   // 앱 업데이트 유도 UI에서 스토어 앱을 직접 연다
   APP_UPDATE_STORE_OPENED: 'App Update Store Opened',
+
+  // 위젯 설치 안내 — 온보딩 끝 유도 화면과 iOS 안내 3장.
+  // 변형(어느 답·어느 스텝·어느 플랫폼)은 이벤트명이 아니라 속성으로 가른다 (정책 2-1)
+  WIDGET_INSTALL_INVITE_VIEWED: 'Widget Install Invite Viewed',
+  WIDGET_INSTALL_INVITE_ANSWERED: 'Widget Install Invite Answered',
+  WIDGET_INSTALL_GUIDE_STEP_VIEWED: 'Widget Install Guide Step Viewed',
+  WIDGET_PIN_REQUESTED: 'Widget Pin Requested',
+  // 홈 화면에 실제로 놓였다·치워졌다 — Android 위젯 프로바이더 콜백을 셸이 브릿지로 넘긴다 (iOS는 콜백이 없어 못 잡는다)
+  WIDGET_INSTALLED: 'Widget Installed',
+  WIDGET_REMOVED: 'Widget Removed',
+
+  // LAN-428 결제 전 설문(임시) — 편지 CTA → 시작 → 문항 → 제출의 퍼널. 설문이 끝나면 설문 코드와 함께 지운다
+  SURVEY_INVITE_TAPPED: 'Survey Invite Tapped',
+  SURVEY_STARTED: 'Survey Started',
+  SURVEY_QUESTION_VIEWED: 'Survey Question Viewed',
+  SURVEY_SUBMITTED: 'Survey Submitted',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -128,17 +154,32 @@ export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
 export type AuthProvider = 'kakao' | 'google' | 'apple';
 export type LoginMethod = 'native' | 'web';
 export type OnboardingStep =
-  'intro' | 'sound' | 'mic' | 'thought' | 'notification' | 'level' | 'scenario';
+  | 'intro'
+  | 'sound'
+  | 'mic'
+  | 'thought'
+  | 'notification'
+  | 'widget'
+  | 'level'
+  | 'accent'
+  | 'scenario';
 // 영어 수준 — BE 저장 API(learningLevel)와 같은 1(막 시작)~5(유창) 정수 척도. 지표와 서버 데이터가 같은 말을 쓴다
 export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
-export type ExpressionStep = 'quiz' | 'explain' | 'review';
+// 배울 영어 — BE 발음 에셋(accentLocale)과 같은 enum 값을 쓴다. 지표와 서버 데이터가 같은 말을 쓴다
+export type AccentLocale = 'EN_US' | 'EN_GB' | 'EN_AU';
+// 기존 유저 게이트가 묻는 질문 — 온보딩 스텝과 같은 말을 쓴다
+export type GateQuestion = Extract<OnboardingStep, 'level' | 'accent'>;
+// pronounce = 발음 평가 (발음 자산이 있는 표현에만), examples = 추가 예문 화면(한 장씩 두 장)
+export type ExpressionStep =
+  'quiz' | 'explain' | 'pronounce' | 'examples' | 'review';
 export type TurnInputType = 'voice' | 'text';
 // 스몰톡 대화 상대 — 홈에서 고른 캐릭터. 시나리오엔 없는 축이라 스몰톡 이벤트에만 붙는다
 export type TalkPartner = 'chloe' | 'marco' | 'teddy';
 // 단어 퀴즈 화면은 퀴즈 스텝과 복습 스텝이 같이 쓴다 — 제출·힌트 이벤트가 이 값으로 갈린다
 export type QuizStepKind = 'quiz' | 'review';
 export type HintSource = QuizStepKind;
-export type HomeReturnReason = 'just' | 'flip' | 'card' | 'reminder';
+// 홈 복귀 신호 — 앱 안에서 돌아온 이유. 밖에서 들어온 유입(알림·위젯)은 entry_campaign이 맡는다
+export type HomeReturnReason = 'just' | 'flip' | 'card';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
@@ -165,6 +206,14 @@ export type SatisfactionMoment = SatisfactionTalk | 'review';
 export type SatisfactionAnswer = 'good' | 'bad' | 'dismiss';
 export type CalendarView = 'week' | 'month';
 export type HomeTab = 'scenario' | 'smalltalk';
+// 위젯 설치 유도에서 고른 답 — 닫기·나중에는 dismiss로 묶는다
+export type WidgetInstallAnswer = 'install' | 'dismiss';
+// iOS 위젯 갤러리 여는 길을 알려주는 안내 3장
+export type WidgetGuideStep = 'press' | 'menu' | 'search';
+// 위젯 추가 요청이 어느 플랫폼에서 났나 — Android는 핀 다이얼로그, iOS는 안내로 갈린다
+export type WidgetInstallPlatform = 'ios' | 'android';
+// 홈 위젯 크기 — 브릿지 widgetFamilySchema와 같은 말
+export type WidgetFamily = 'small' | 'medium' | 'large';
 
 // 표현이 어디서 왔는가 — 시나리오 콘텐츠에 붙어 있던 표현인지, 그 스몰톡에서 만들어진 표현인지.
 // 표현 학습 화면은 둘이 같이 쓰므로 이벤트도 하나로 두고 출처만 갈아 끼운다 (둘 중 하나만 실린다)
@@ -180,8 +229,10 @@ export type EventProps = {
     // 스몰톡에서 갈라져 나온 화면들만 — 지난 스몰톡 기록과 거기서 만든 표현
     session_id?: number;
     expression_id?: number;
-    // 알림 유입(reminder)일 때만 — 탭한 알림의 문구 슬러그 (utm_content에서 파생, 어휘는 reminder-copies.ts)
-    notification_copy?: string;
+    // 밖에서 들어온 유입(알림·위젯 탭)의 첫 화면에만 — 어느 경로로 들어왔든 붙는다. 딥링크 URL의 utm_campaign·utm_content에서
+    // 파생한다 (어휘는 docs/analytics-utm.md). 웜 딥링크는 어트리뷰션이 못 보므로 이벤트 속성으로도 실어야 유실이 없다
+    entry_campaign?: string;
+    entry_content?: string;
     // 시나리오 화면에서 완료한 지난 날 카드를 볼 때만 — 열 수 있는 과거는 완료한 날뿐이다 (yyyy-MM-dd)
     completed_date?: string;
     // 편지 상세일 때만
@@ -222,9 +273,13 @@ export type EventProps = {
     source: 'onboarding' | 'conversation';
   };
   'Onboarding Completed': undefined;
-  'English Level Gate Viewed': undefined;
-  'English Level Gate Answered': { level: EnglishLevel };
+  'Profile Gate Viewed': { question: GateQuestion };
+  // 답이 질문마다 달라서 question으로 갈린다 — 짝이 안 맞는 조합(level 질문에 accent 값)은 타입이 막는다
+  'Profile Gate Answered':
+    | { question: 'level'; level: EnglishLevel }
+    | { question: 'accent'; accent: AccentLocale };
   'English Level Changed': { level: EnglishLevel };
+  'Accent Changed': { accent: AccentLocale };
 
   // 홈 상단 탭 칩을 눌러 옮긴다 — 화면 노출(Page Viewed)엔 뒤로가기·복귀도 섞이니, 손으로 고른 것만 따로 본다
   'Home Tab Switched': { tab: HomeTab };
@@ -307,8 +362,11 @@ export type EventProps = {
     reason?: string;
   };
   // AI 발화 재생 실패 — 실패 비율을 본다. 스몰톡 탭의 캐릭터 인사도 같은 재생 훅이라 포함된다.
-  // opening_mp3 = 미리 녹음한 오프닝(실패하면 합성으로 폴백해 체감 없음), synth = 런타임 합성(그 발화가 통째로 건너뛰어진다, 원인은 Sentry)
-  'Speech Playback Failed': { source: 'opening_mp3' | 'synth' };
+  // synth = 런타임 합성(분리 재생이면 질문 음원으로 폴백, 아니면 발화가 통째로 건너뛰어진다),
+  // question_audio = 서버 음원(오프닝 첫 질문은 합성으로 폴백, 이어 재생 질문은 통째로 건너뛰어진다. 원인은 Sentry)
+  'Speech Playback Failed': {
+    source: 'synth' | 'question_audio';
+  };
   'Hint Used': { source: HintSource; level: number };
   'Scenario Talk Completed': {
     session_id: number;
@@ -394,6 +452,21 @@ export type EventProps = {
     hint_level: number;
   };
   'Example Sentence Viewed': { expression_id: number; sentence_index: number };
+  'Pronunciation Result Viewed': {
+    expression_id: number;
+    // BE 원점수(0~100)와 통과 판정 그대로
+    score: number;
+    passed: boolean;
+    error_count: number;
+    // 재도전 포함 몇 번째 분석 결과인지 (1부터)
+    attempt: number;
+  };
+  'Pronunciation Skipped': { expression_id: number };
+  'Pronunciation Audio Played': {
+    expression_id: number;
+    // expression·sentence = 설명·발음 화면 스피커, native_word·my_word = 피드백 카드 행
+    source: 'expression' | 'sentence' | 'native_word' | 'my_word';
+  };
   'Review Answer Submitted': {
     expression_id: number;
     is_correct: boolean;
@@ -425,6 +498,24 @@ export type EventProps = {
 
   // /download를 거치지 않고 스토어 앱을 바로 연 경우만 (앱 업데이트 유도 UI)
   'App Update Store Opened': { store: 'play_store' | 'app_store' };
+
+  // 위젯 설치 안내 — 노출·답·플랫폼을 속성으로 가른다
+  'Widget Install Invite Viewed': undefined;
+  'Widget Install Invite Answered': { answer: WidgetInstallAnswer };
+  'Widget Install Guide Step Viewed': { step: WidgetGuideStep };
+  // 위젯 추가를 실제로 청한 순간 — Android는 시스템 핀 다이얼로그, iOS는 안내 화면으로 갈린다
+  'Widget Pin Requested': { platform: WidgetInstallPlatform };
+  // 홈 화면에 놓인·치워진 위젯의 크기 — 플랫폼은 공통 속성(platform)이 이미 가른다
+  'Widget Installed': { family: WidgetFamily };
+  'Widget Removed': { family: WidgetFamily };
+
+  // LAN-428 설문(임시) — 답 내용은 싣지 않는다(PII). 문항 id는 설문 정의(questions.ts)의 id 그대로
+  'Survey Invite Tapped': { letter_id: number };
+  'Survey Started': undefined;
+  // 조건 문항이 끼고 빠지므로 index는 그 사람에게 보인 순서다 — 어느 문항인지는 question_id로 본다
+  'Survey Question Viewed': { question_id: string; question_index: number };
+  // 저장 성공 뒤에만 — 보인 문항 수를 남긴다
+  'Survey Submitted': { question_count: number };
 };
 
 // 컴파일 타임 검증 ① EventProps가 모든 이벤트를 빠짐없이 커버한다

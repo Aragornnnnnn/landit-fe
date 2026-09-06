@@ -23,6 +23,28 @@ const daily = (overrides: Partial<DailyScenario> = {}): DailyScenario => ({
 });
 
 describe('toScenario', () => {
+  it('오프닝 미리보기(첫 질문 음원 포함)는 그대로 넘긴다', () => {
+    // given — 서버가 첫 질문 음원 URL을 실어 준 시나리오
+    const preview = {
+      aiOpeningMessage: 'Hi there!',
+      aiOpeningMessageTranslation: '안녕!',
+      questionAudioUrl: 'https://cdn.example.com/questions/1.mp3',
+      userOpeningInstruction: null,
+      innerThought: null,
+      innerThoughtType: null,
+      character: { characterId: 'marco', ttsVoice: null },
+    };
+
+    // when
+    const scenario = toScenario(
+      daily({ openingPreview: preview as never }),
+      true,
+    );
+
+    // then
+    expect(scenario.openingPreview).toBe(preview);
+  });
+
   it('시작할 수 있는 날은 잠기지 않은 카드가 된다', () => {
     // Given 서버가 시작 가능하다고 판정한 시나리오에서
     // When 카드 모양으로 바꾸면

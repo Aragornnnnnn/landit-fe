@@ -17,22 +17,58 @@ export const hapticPatternSchema = z.enum([
   'error',
 ]);
 
-// 로컬 알림 리마인더 단건 — 셸이 이 정보로 OS 로컬 알림을 예약한다
-export const reminderSchema = z.object({
-  // 오프셋 포함 ISO 8601 (예: 2026-07-29T20:00:00+09:00). 오프셋 없으면 거부한다
-  notifyAt: z.string().datetime({ offset: true }),
-  title: z.string().min(1),
-  body: z.string().min(1),
-  // 알림 탭 시 웹이 이동할 경로 — 내부 경로 검증은 읽는 쪽(셸 extractNotificationPath)이 한다
-  url: z.string().min(1),
-});
-
 // 알림 권한 상태 — expo-notifications의 PermissionStatus와 대응
 export const notificationPermissionStatusSchema = z.enum([
   'granted',
   'denied',
   'undetermined',
 ]);
+
+// 홈 위젯에 보여줄 데이터 — 셸이 공유 저장소(App Group/AsyncStorage)에 기록하고 위젯이 읽는다.
+// 날짜는 전부 Asia/Seoul 기준 yyyy-MM-dd. 상태 판정(시간표·몰락 단계)은 위젯 쪽이 현재 시각으로 계산한다
+export const widgetDataSchema = z.object({
+  // 현재 스트릭 수 — 배지 숫자. 끊긴 직후(⑨)엔 마지막으로 알던 값이 직전 스트릭 표시로 쓰인다
+  streak: z.number().int().min(0),
+  // 오늘 대화 완료 여부 — 상태 사다리 1번 분기
+  todayDone: z.boolean(),
+  // 마지막 대화 완료 날짜 — 몰락 단계(끊긴 지 며칠)를 위젯이 스스로 계산하는 근거. 완료 이력 없으면 null.
+  // 형식뿐 아니라 실제 존재하는 날짜인지도 본다 — 2026-02-31 같은 값이 통과하면 경과 일수 계산이 어긋난다
+  lastCompletedDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine(
+      (value) => new Date(`${value}T00:00:00Z`).toISOString().startsWith(value),
+      { message: '달력에 없는 날짜예요' },
+    )
+    .nullable(),
+  // 오늘 포함 최근 7일 완료 여부 (과거→오늘 순) — Large 주간 스트립
+  weeklyDone: z.array(z.boolean()).length(7),
+  // 이 값들이 며칠 기준인지 — 서버가 준 오늘(/me/streak의 today). 로그인 전 빈 값이면 null.
+  // 위젯은 이 값이 null이면(로그인 전) 시작 전 화면을, 아니면 주간 라벨을 그날 기준으로 되돌린다
+  capturedOn: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine(
+      (value) => new Date(`${value}T00:00:00Z`).toISOString().startsWith(value),
+      { message: '달력에 없는 날짜예요' },
+    )
+    .nullable(),
+});
+
+// 홈 위젯 크기 — iOS small/medium, Android 2×2/4×2/4×4를 같은 말로 부른다
+export const widgetFamilySchema = z.enum(['small', 'medium', 'large']);
+// 홈 화면에 위젯이 실제로 놓였는가·치워졌는가 — Android 위젯 프로바이더 콜백에서 온다 (iOS는 콜백이 없어 못 보낸다)
+export const widgetChangeSchema = z.enum(['added', 'removed']);
+
+// 로그인 전·로그아웃 후에 쓰는 빈 값 — 웹이 이걸 보내 셸에 남은 이전 사용자 기록을 지운다.
+// 완료 이력이 없으므로(null) 위젯은 몰락 연출 없이 0일 시간표만 그린다
+export const EMPTY_WIDGET_DATA = {
+  streak: 0,
+  todayDone: false,
+  lastCompletedDate: null,
+  weeklyDone: [false, false, false, false, false, false, false],
+  capturedOn: null,
+} as const satisfies z.infer<typeof widgetDataSchema>;
 
 // 웹 → 네이티브로 보낼 수 있는 메시지 목록. type 필드로 종류를 구분한다(discriminated union)
 export const webToNativeMessageSchema = z.discriminatedUnion('type', [
@@ -50,15 +86,27 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   }),
   // 마이크 등 OS 권한이 차단된 상태 — 네이티브가 앱 설정 화면을 연다 (iOS·Android 공통, 단방향)
   z.object({ type: z.literal('OPEN_SETTINGS') }),
-  // 예약할 로컬 알림 전체를 셸에 동기화한다 — 빈 배열이면 전부 해제
+  // [한시] 구 셸(로컬 리마인더 시절)에 남은 예약을 지우는 정리 신호 — 빈 배열만 허용한다.
+  // 구 셸은 "전부 해제"로 처리하고, 새 셸은 핸들러가 없어 무시한다. 구 바이너리가 소멸하면 웹 발신과 함께 제거한다
   z.object({
     type: z.literal('SYNC_REMINDERS'),
-    reminders: z.array(reminderSchema),
+    reminders: z.array(z.never()),
   }),
   // 알림 권한 상태 조회 — 다이얼로그를 띄우지 않는다. 응답은 NOTIFICATION_PERMISSION
   z.object({ type: z.literal('GET_NOTIFICATION_PERMISSION') }),
   // 알림 권한 능동 요청 — OS 권한창을 띄울 수 있다. 응답은 NOTIFICATION_PERMISSION
   z.object({ type: z.literal('REQUEST_NOTIFICATION_PERMISSION') }),
+  // 홈 위젯 데이터를 셸에 동기화한다 — 셸은 저장 후 위젯 새로고침을 요청한다 (단방향)
+  z.object({
+    type: z.literal('SYNC_WIDGET_DATA'),
+    data: widgetDataSchema,
+  }),
+  // 홈 위젯 설치 다이얼로그를 요청한다 — Android만 시스템 핀 요청을 띄운다 (iOS는 그런 API가 없어 무시)
+  z.object({ type: z.literal('REQUEST_WIDGET_PIN') }),
+  // 앱을 홈 화면으로 내린다 — iOS만. 위젯 설치 안내 끝에 사용자가 직접 위젯을 얹으러 나가게 한다
+  z.object({ type: z.literal('GO_HOME') }),
+  // 웹이 준비됐으니 쌓아 둔 위젯 추가·삭제를 보내 달라 — 응답은 WIDGET_CHANGED (건별, 없으면 무응답)
+  z.object({ type: z.literal('REQUEST_WIDGET_CHANGES') }),
 ]);
 
 // 네이티브 → 웹으로 보낼 수 있는 메시지 목록
@@ -91,16 +139,24 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     type: z.literal('PUSH_TOKEN'),
     token: z.string().min(1),
   }),
-  // 앱이 떠 있는 상태에서 알림을 탭했을 때 — 웹 라우터가 이 경로로 이동한다
+  // 앱이 떠 있는 상태에서 알림·위젯을 탭했을 때 — 웹 라우터가 이 경로로 이동한다
   z.object({
     type: z.literal('NAVIGATE'),
     url: z.string().min(1),
+  }),
+  // 홈 화면에 위젯이 놓이거나 치워졌다 — 웹이 계측한다. 셸이 쌓아 뒀다가 웹이 청하면(REQUEST_WIDGET_CHANGES) 건별로 보낸다
+  z.object({
+    type: z.literal('WIDGET_CHANGED'),
+    change: widgetChangeSchema,
+    family: widgetFamilySchema,
   }),
 ]);
 
 // 위 스키마에서 자동으로 뽑아낸 타입 — 스키마를 고치면 타입도 같이 바뀐다
 export type HapticPattern = z.infer<typeof hapticPatternSchema>;
-export type Reminder = z.infer<typeof reminderSchema>;
+export type WidgetData = z.infer<typeof widgetDataSchema>;
+export type WidgetFamily = z.infer<typeof widgetFamilySchema>;
+export type WidgetChange = z.infer<typeof widgetChangeSchema>;
 export type NotificationPermissionStatus = z.infer<
   typeof notificationPermissionStatusSchema
 >;

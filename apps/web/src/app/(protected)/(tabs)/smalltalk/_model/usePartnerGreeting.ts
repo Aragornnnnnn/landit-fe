@@ -42,7 +42,7 @@ export const usePartnerGreeting = () => {
   // 음원이 없거나 실패하면 훅이 알아서 합성으로 폴백하고, 소리가 나면 입이 소리를 따라간다
   const { speech } = useAiSpeech({
     playing: greeting,
-    content: partner.intro,
+    source: { content: partner.intro },
     voice: partner.voice,
     openingSrc: partner.introAudioSrc,
     onSpeechEnd: () => setGreeting(false),

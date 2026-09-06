@@ -1,12 +1,6 @@
-// 영어 수준 선택지와 저장 — 기기(다시 묻지 않기)와 서버(맞춤 학습, BE PR #119)에 함께 남긴다.
-// 값은 서버 계약과 같은 1(막 시작)~5(유창) 정수 하나로 통일한다
+// 영어 수준 선택지 — 값은 서버 계약과 같은 1(막 시작)~5(유창) 정수 하나로 통일한다.
+// 고른 값은 서버에만 남는다 (useSaveLearningLevelMutation)
 import type { EnglishLevel } from '@landit/analytics';
-
-import { reportWarning } from '@/shared/monitoring/report';
-
-import { updateLearningLevel } from '../api/learning-level';
-
-const STORAGE_KEY = 'landit-english-level';
 
 export const ENGLISH_LEVELS: { level: EnglishLevel; label: string }[] = [
   { level: 1, label: '영어를 이제 막 배우기 시작했어요' },
@@ -16,26 +10,7 @@ export const ENGLISH_LEVELS: { level: EnglishLevel; label: string }[] = [
   { level: 5, label: '외국 학교의 수업에서 영어로 토론할 수 있어요' },
 ];
 
-export const hasAnsweredEnglishLevel = () => getEnglishLevel() !== null;
-
-// 마이페이지에서 지금 값을 보여주고 바꿀 수 있게 읽는다
-export const getEnglishLevel = (): EnglishLevel | null => {
-  try {
-    const stored = Number(localStorage.getItem(STORAGE_KEY));
-    return ENGLISH_LEVELS.find((item) => item.level === stored)?.level ?? null;
-  } catch {
-    return null;
-  }
-};
-
-export const markEnglishLevelAnswered = (level: EnglishLevel) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, String(level));
-  } catch {
-    // 저장 실패 시 다음 방문에 한 번 더 물을 뿐이라 무시한다
-  }
-
-  // 서버에도 남긴다 — 실패해도 흐름을 막지 않는다.
-  // 기기 기록이 남아 다시 묻지 않고, 마이페이지에서 바꿀 때 다시 실릴 기회가 있다
-  updateLearningLevel(level).catch(reportWarning);
-};
+// 서버가 준 정수가 우리 선택지 안에 있는지 확인해 화면에 미리 골라둘 값으로 바꾼다.
+// 범위 밖이면 아무것도 안 고른 채로 연다 — 없는 카드를 강조할 수는 없다
+export const toEnglishLevel = (value: number | null): EnglishLevel | null =>
+  ENGLISH_LEVELS.find((item) => item.level === value)?.level ?? null;

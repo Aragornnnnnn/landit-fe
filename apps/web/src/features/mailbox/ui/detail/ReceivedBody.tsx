@@ -2,6 +2,7 @@
 import type { ReceivedLetterDetail } from '../../api/mailbox';
 import { readLetterBlocks } from '../../model/letter-blocks';
 import { LetterBlocks } from './LetterBlocks';
+import { MarkdownBody } from './MarkdownBody';
 import { QuotedLetter } from './QuotedLetter';
 
 export const ReceivedBody = ({ letter }: { letter: ReceivedLetterDetail }) => {
@@ -10,9 +11,10 @@ export const ReceivedBody = ({ letter }: { letter: ReceivedLetterDetail }) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-[15px] leading-relaxed whitespace-pre-line text-foreground">
-        {letter.bodyText}
-      </p>
+      <MarkdownBody
+        text={letter.bodyText ?? ''}
+        className="text-[15px] text-foreground"
+      />
       {/* 답장에 딸린 내 원문 — 무엇에 대한 답장인지 다시 찾아보지 않게 한다 */}
       {letter.quotedFeedbackContent && (
         <QuotedLetter text={letter.quotedFeedbackContent} />

@@ -1,5 +1,6 @@
-// 공지·업데이트 본문 렌더러 — 마크다운 대신 블록 배열이라 타입별 단순 분기로 끝난다
+// 공지·업데이트 본문 렌더러 — 블록 배열을 타입별로 나눠 그리고, 문단 블록은 마크다운이라 블록 하나에 링크·이미지·목록을 담을 수 있다
 import type { LetterBlock } from '../../model/letter-blocks';
+import { MarkdownBody } from './MarkdownBody';
 
 export const LetterBlocks = ({ blocks }: { blocks: LetterBlock[] }) => (
   <div className="flex flex-col gap-5">
@@ -11,13 +12,10 @@ export const LetterBlocks = ({ blocks }: { blocks: LetterBlock[] }) => (
 );
 
 const Block = ({ block }: { block: LetterBlock }) => {
-  if (block.type === 'PARAGRAPH') {
+  if (block.type === 'PARAGRAPH')
     return (
-      <p className="text-[15px] leading-relaxed whitespace-pre-line text-foreground">
-        {block.text}
-      </p>
+      <MarkdownBody text={block.text} className="text-[15px] text-foreground" />
     );
-  }
 
   if (block.type === 'ORDERED_LIST') {
     return (

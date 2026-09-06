@@ -23,9 +23,9 @@ import { useScenarioTalkSession } from './useScenarioTalkSession';
 
 export const useScenarioTalkFlow = (scenario: Scenario) => {
   const preview = scenario.openingPreview;
-  const voice = preview?.ttsVoice ?? null;
+  const voice = preview?.character?.ttsVoice ?? null;
   // 상대는 시나리오가 정한다 — 세션 응답을 기다리지 않는다. 배정이 없으면(음성 없는 시나리오) 마르코
-  const partner = preview?.characterId ?? 'marco';
+  const partner = preview?.character?.characterId ?? 'marco';
 
   // 오프닝은 세션을 기다리지 않고 시나리오에서 바로 시드한다 — 세션 응답의 첫 발화는 폴백
   const [opening, setOpening] = useState(() =>
@@ -59,7 +59,8 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
     voice,
     opening,
     openingInstruction: preview?.userOpeningInstruction ?? null,
-    openingAudioSrc: `/audio/opening-${scenario.scenarioId}.mp3`,
+    // 오프닝 소리는 서버가 준 첫 질문 음원 — 없으면 엔진이 합성으로 말한다
+    openingAudioSrc: preview?.questionAudioUrl ?? null,
     sessionId: session.sessionId,
     ensureSession: session.ensure,
     submit: async ({ sessionId, content, inputType, turnIndex }) => {

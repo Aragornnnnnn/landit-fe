@@ -95,25 +95,7 @@ describe('parseWebToNativeMessage', () => {
     );
   });
 
-  it('리마인더 동기화 요청을 그대로 되돌린다 (round-trip)', () => {
-    const message: WebToNativeMessage = {
-      type: 'SYNC_REMINDERS',
-      reminders: [
-        {
-          notifyAt: '2026-07-29T20:00:00+09:00',
-          title: '오늘의 시나리오',
-          body: '카페에서 주문하기가 기다리고 있어요',
-          url: '/home',
-        },
-      ],
-    };
-
-    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
-      message,
-    );
-  });
-
-  it('리마인더가 하나도 없으면 빈 배열로 동기화한다 (전체 해제)', () => {
+  it('구 셸 예약 정리 신호(SYNC_REMINDERS 빈 배열)를 그대로 되돌린다 (round-trip)', () => {
     const message: WebToNativeMessage = {
       type: 'SYNC_REMINDERS',
       reminders: [],
@@ -124,42 +106,23 @@ describe('parseWebToNativeMessage', () => {
     );
   });
 
-  it('notifyAt에 시간대 오프셋이 없으면 버린다', () => {
+  it('예약을 만들려는 SYNC_REMINDERS(빈 배열 아님)는 버린다 — 정리 신호 전용이다', () => {
     expect(
       parseWebToNativeMessage(
         JSON.stringify({
           type: 'SYNC_REMINDERS',
           reminders: [
             {
-              notifyAt: '2026-07-29T20:00:00',
-              title: '오늘의 시나리오',
+              notifyAt: '2026-09-02T20:00:00+09:00',
+              title: '제목',
               body: '본문',
-              url: '/home',
+              url: '/scenario',
             },
           ],
         }),
       ),
     ).toBeNull();
   });
-
-  it.each([['title'], ['body'], ['url']])(
-    '리마인더의 %s가 빈 문자열이면 버린다',
-    (field) => {
-      const reminder = {
-        notifyAt: '2026-07-29T20:00:00+09:00',
-        title: '제목',
-        body: '본문',
-        url: '/home',
-        [field]: '',
-      };
-
-      expect(
-        parseWebToNativeMessage(
-          JSON.stringify({ type: 'SYNC_REMINDERS', reminders: [reminder] }),
-        ),
-      ).toBeNull();
-    },
-  );
 
   it('알림 권한 조회 요청을 그대로 되돌린다 (round-trip)', () => {
     const message = { type: 'GET_NOTIFICATION_PERMISSION' } as const;
@@ -175,6 +138,162 @@ describe('parseWebToNativeMessage', () => {
     expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
       message,
     );
+  });
+});
+
+describe('parseWebToNativeMessage — 위젯', () => {
+  it('위젯 핀 요청을 그대로 되돌린다 (round-trip)', () => {
+    const message = { type: 'REQUEST_WIDGET_PIN' } as const;
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('홈 화면으로 내리기 요청을 그대로 되돌린다 (round-trip)', () => {
+    const message = { type: 'GO_HOME' } as const;
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('위젯 데이터 동기화 요청을 그대로 되돌린다 (round-trip)', () => {
+    const message: WebToNativeMessage = {
+      type: 'SYNC_WIDGET_DATA',
+      data: {
+        streak: 5,
+        todayDone: false,
+        lastCompletedDate: '2026-08-24',
+        weeklyDone: [true, true, false, true, true, true, false],
+        capturedOn: '2026-08-25',
+      },
+    };
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('한 번도 완료한 적 없는 유저는 완료 날짜와 카드 제목이 null일 수 있다', () => {
+    const message: WebToNativeMessage = {
+      type: 'SYNC_WIDGET_DATA',
+      data: {
+        streak: 0,
+        todayDone: false,
+        lastCompletedDate: null,
+        weeklyDone: [false, false, false, false, false, false, false],
+        capturedOn: null,
+      },
+    };
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('주간 완료 배열이 7개가 아니면 버린다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({
+          type: 'SYNC_WIDGET_DATA',
+          data: {
+            streak: 5,
+            todayDone: false,
+            lastCompletedDate: '2026-08-24',
+            weeklyDone: [true, false],
+            capturedOn: '2026-08-25',
+          },
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it('스트릭이 음수거나 정수가 아니면 버린다', () => {
+    const base = {
+      todayDone: false,
+      lastCompletedDate: '2026-08-24',
+      weeklyDone: [true, true, false, true, true, true, false],
+      capturedOn: '2026-08-25',
+    };
+
+    for (const streak of [-1, 1.5]) {
+      expect(
+        parseWebToNativeMessage(
+          JSON.stringify({
+            type: 'SYNC_WIDGET_DATA',
+            data: { ...base, streak },
+          }),
+        ),
+      ).toBeNull();
+    }
+  });
+
+  it('완료 날짜가 yyyy-MM-dd 형식이 아니면 버린다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({
+          type: 'SYNC_WIDGET_DATA',
+          data: {
+            streak: 5,
+            todayDone: false,
+            lastCompletedDate: '2026-08-24T00:00:00+09:00',
+            weeklyDone: [true, true, false, true, true, true, false],
+            capturedOn: '2026-08-25',
+          },
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it('형식은 맞아도 달력에 없는 날짜면 버린다 — 경과 일수 계산이 어긋난다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({
+          type: 'SYNC_WIDGET_DATA',
+          data: {
+            streak: 5,
+            todayDone: false,
+            lastCompletedDate: '2026-02-31',
+            weeklyDone: [true, true, false, true, true, true, false],
+            capturedOn: '2026-08-25',
+          },
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it('기준 날짜가 달력에 없는 날이면 버린다 — 주간 창 경과 계산이 어긋난다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({
+          type: 'SYNC_WIDGET_DATA',
+          data: {
+            streak: 5,
+            todayDone: false,
+            lastCompletedDate: '2026-08-24',
+            weeklyDone: [true, true, false, true, true, true, false],
+            capturedOn: '2026-02-31',
+          },
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it('기준 날짜가 아예 없으면(구 페이로드) 버린다 — 낡음 판정이 불가능하다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({
+          type: 'SYNC_WIDGET_DATA',
+          data: {
+            streak: 5,
+            todayDone: false,
+            lastCompletedDate: '2026-08-24',
+            weeklyDone: [true, true, false, true, true, true, false],
+          },
+        }),
+      ),
+    ).toBeNull();
   });
 });
 
@@ -231,6 +350,49 @@ describe('parseNativeToWebMessage — 알림', () => {
   it('이동 경로가 빈 문자열이면 버린다', () => {
     expect(
       parseNativeToWebMessage(JSON.stringify({ type: 'NAVIGATE', url: '' })),
+    ).toBeNull();
+  });
+});
+
+describe('위젯 설치·삭제 메시지', () => {
+  it('웹의 위젯 변경 요청은 페이로드 없이 오간다 (round-trip)', () => {
+    const message = { type: 'REQUEST_WIDGET_CHANGES' } as const;
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('위젯 변경 메시지를 그대로 되돌린다 (round-trip)', () => {
+    const message = {
+      type: 'WIDGET_CHANGED',
+      change: 'added',
+      family: 'small',
+    } as const;
+
+    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('규격 밖 변경 종류나 크기면 버린다', () => {
+    expect(
+      parseNativeToWebMessage(
+        JSON.stringify({
+          type: 'WIDGET_CHANGED',
+          change: 'resized',
+          family: 'small',
+        }),
+      ),
+    ).toBeNull();
+    expect(
+      parseNativeToWebMessage(
+        JSON.stringify({
+          type: 'WIDGET_CHANGED',
+          change: 'added',
+          family: 'xl',
+        }),
+      ),
     ).toBeNull();
   });
 });

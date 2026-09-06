@@ -20,9 +20,9 @@ export const QuizStepSkeleton = () => (
       {/* 지시문 자리 */}
       <div className="mt-2 h-6 w-2/3 animate-pulse rounded bg-muted" />
 
-      {/* 캐릭터 + 질문 말풍선 */}
+      {/* 상대 상반신 + 질문 말풍선 — 상반신 자리 크기는 QuizPrompt와 같아야 한다 */}
       <div className="mt-5 flex items-start gap-2">
-        <div className="h-32 w-24 shrink-0 animate-pulse rounded-2xl bg-muted/60" />
+        <div className="h-24 w-20 shrink-0 animate-pulse rounded-2xl bg-muted/60" />
         <div className="mt-3 flex-1 rounded-2xl rounded-tl-sm bg-secondary px-4 py-3">
           <div className="h-4 w-5/6 animate-pulse rounded bg-muted" />
           <div className="mt-2 h-3.5 w-2/3 animate-pulse rounded bg-muted" />

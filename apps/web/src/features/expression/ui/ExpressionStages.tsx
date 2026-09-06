@@ -94,7 +94,7 @@ export const RevealStage = ({
         `${name}님을 위한 표현을 준비했어요`
       )}
     </p>
-    <div className="-mx-6 mt-4 min-h-0 flex-1 overflow-y-auto">
+    <div className="-mx-6 mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain">
       {expressions && (
         <ExpressionList
           expressions={expressions}
@@ -106,7 +106,7 @@ export const RevealStage = ({
       )}
     </div>
     <div className="flex flex-none flex-col gap-1 pt-3">
-      <Button onClick={onLearn}>
+      <Button size="md" onClick={onLearn}>
         첫 표현부터 배워볼게요
         <ArrowRightIcon size={16} />
       </Button>

@@ -30,6 +30,12 @@ const toPlayback = (audio: HTMLAudioElement): TtsPlayback => ({
   source: audio.currentSrc,
 });
 
+// 재생 없이 버려지는 프리로드는 네트워크 로드까지 끊는다 — src를 비운 load()가 표준 중단 관용구다
+const abortPreload = (audio: HTMLAudioElement) => {
+  audio.removeAttribute('src');
+  audio.load();
+};
+
 // 합성 요청을 한 곳에서 만든다 — 재생(speak)과 미리 담기(prefetch)가 공유한다.
 // 성공 시 오디오 Blob을, 실패 시 예외를 던진다. objectURL은 재생 직전에 새로 만든다
 // (iOS WebView는 미리 만들어 묵힌 blob URL 재생이 불안정해서다).
@@ -57,8 +63,8 @@ async function synthesizeSpeech(
 /**
  * TTS 합성·재생 훅. 재생 소유권(오디오 엘리먼트·objectURL)은 훅이 쥐고, 밖에는 읽기 전용 통로만 내준다.
  *
- * @returns `speak`(합성 후 재생 — prefetch 캐시가 있으면 왕복 없이 즉시), `speakSrc`(정적 파일 재생),
- *   `prefetch`(미리 합성해 캐시), `stop`(재생 중단·리소스 정리), `status`(idle→loading→active, 실패 시 error)
+ * @returns `speak`(합성 후 재생 — prefetch 캐시가 있으면 왕복 없이 즉시), `speakSrc`(정적 파일 재생 — prefetchSrc 슬롯이 있으면 바로),
+ *   `prefetch`(미리 합성해 캐시), `prefetchSrc`(정적 음원 미리 열기), `stop`(재생 중단·리소스 정리), `status`(idle→loading→active, 실패 시 error)
  */
 export function useTts() {
   const [status, setStatus] = useState<TtsStatus>('idle');
@@ -71,6 +77,10 @@ export function useTts() {
   const cacheRef = useRef<Map<string, Blob>>(new Map());
   // prefetch 진행 중인 합성(text→Promise) — speak가 겹치면 새로 합성하지 말고 이 Promise를 기다린다
   const inflightRef = useRef<Map<string, Promise<Blob>>>(new Map());
+  // 미리 열어둔 정적 오디오 한 슬롯 — 이어 재생 때 네트워크 대기 없이 바로 튼다. 필요한 건 늘 다음 발화 하나다
+  const preloadedRef = useRef<{ src: string; audio: HTMLAudioElement } | null>(
+    null,
+  );
   const mountedRef = useRef(true);
 
   // 재생 리소스(오디오·objectURL·콜백)를 정리한다. stop과 onended가 공유하는 뒷정리
@@ -95,6 +105,9 @@ export function useTts() {
       audioRef.current?.pause();
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
       cache.clear(); // 캐시엔 Blob만 담으므로 정리할 objectURL이 없다
+      // 안 튼 프리로드가 화면을 떠난 뒤에도 내려받는 것 방지
+      if (preloadedRef.current) abortPreload(preloadedRef.current.audio);
+      preloadedRef.current = null;
     };
   }, []);
 
@@ -141,12 +154,18 @@ export function useTts() {
 
       const audio = new Audio(url);
       audioRef.current = audio;
+      // 재생 실패는 onerror와 play() 거부 양쪽으로 도착할 수 있다 — 실패 콜백은 한 번만 부른다
+      let handled = false;
       audio.onended = () => {
+        if (handled) return;
+        handled = true;
         cleanup();
         setStatus('idle');
         options?.onEnd?.();
       };
       audio.onerror = () => {
+        if (handled) return;
+        handled = true;
         cleanup();
         setStatus('error');
         const playbackError = new Error('오디오 재생에 실패했어요.');
@@ -154,7 +173,15 @@ export function useTts() {
         options?.onError?.(playbackError);
       };
 
-      await audio.play();
+      try {
+        await audio.play();
+      } catch (error) {
+        // onerror가 먼저 처리한 재생 실패면 여기서는 더 하지 않는다
+        if (handled) return;
+        handled = true;
+        throw error;
+      }
+      if (handled) return;
       setStatus('active');
       options?.onStart?.(toPlayback(audio));
     } catch (error) {
@@ -174,47 +201,60 @@ export function useTts() {
     }
   };
 
-  // 미리 만들어둔 정적 오디오(예: /audio/opening-{id}.mp3)를 URL로 바로 재생한다 — 합성 없음.
+  // 미리 만들어둔 정적 오디오(서버 질문 음원, 스몰톡 자기소개 mp3)를 URL로 바로 재생한다 — 합성 없음.
   // 파일이 없으면(404 등) onError로 알려, 호출부가 런타임 합성으로 폴백할 수 있게 한다.
   const speakSrc = (src: string, options?: SpeakOptions) => {
     stop();
     setStatus('loading');
     onEndRef.current = options?.onEnd;
 
-    const audio = new Audio(src);
-    audioRef.current = audio;
-    let handled = false; // onended·onerror·play().catch 중복 처리 방지
+    // 미리 열어둔(prefetchSrc) 엘리먼트가 있으면 그대로 재생한다 — 이어 재생 때 네트워크 대기가 없다
+    const preloaded =
+      preloadedRef.current?.src === src ? preloadedRef.current.audio : null;
+    if (preloaded) preloadedRef.current = null;
 
-    audio.onended = () => {
-      if (handled) return;
-      handled = true;
-      cleanup();
-      setStatus('idle');
-      options?.onEnd?.();
-    };
-    const fail = () => {
-      if (handled) return;
-      handled = true;
-      cleanup();
-      setStatus('error');
-      options?.onError?.(new Error('오디오 재생에 실패했어요.'));
-    };
-    audio.onerror = fail;
-    audio.play().then(
-      () => {
-        if (!handled) {
-          setStatus('active');
-          options?.onStart?.(toPlayback(audio));
-        }
-      },
-      (error) => {
-        // stop()으로 pause되어 play가 거부된 경우(AbortError)는 실패가 아니다 —
-        // 합성 폴백을 부르지 않는다. (StrictMode 재실행·전환에서 발생)
-        if (error instanceof DOMException && error.name === 'AbortError')
+    const start = (audio: HTMLAudioElement, isPreloaded: boolean) => {
+      audioRef.current = audio;
+      let handled = false; // onended·onerror·play().catch 중복 처리 방지
+
+      audio.onended = () => {
+        if (handled) return;
+        handled = true;
+        cleanup();
+        setStatus('idle');
+        options?.onEnd?.();
+      };
+      const fail = () => {
+        if (handled) return;
+        handled = true;
+        // 프리로드해 둔 엘리먼트는 묵는 동안 로드가 죽었을 수 있다 — 새 엘리먼트로 한 번 다시 연다
+        if (isPreloaded) {
+          audio.pause();
+          start(new Audio(src), false);
           return;
-        fail();
-      },
-    );
+        }
+        cleanup();
+        setStatus('error');
+        options?.onError?.(new Error('오디오 재생에 실패했어요.'));
+      };
+      audio.onerror = fail;
+      audio.play().then(
+        () => {
+          if (!handled) {
+            setStatus('active');
+            options?.onStart?.(toPlayback(audio));
+          }
+        },
+        (error) => {
+          // stop()으로 pause되어 play가 거부된 경우(AbortError)는 실패가 아니다 —
+          // 합성 폴백을 부르지 않는다. (StrictMode 재실행·전환에서 발생)
+          if (error instanceof DOMException && error.name === 'AbortError')
+            return;
+          fail();
+        },
+      );
+    };
+    start(preloaded ?? new Audio(src), preloaded != null);
   };
 
   // 미리 합성해 캐시에 담아둔다 — 다음 speak를 즉시 재생시켜 재생 지연을 없앤다.
@@ -237,6 +277,22 @@ export function useTts() {
     await pending.catch(() => {});
   };
 
+  // 정적 음원을 미리 열어 로드해둔다 — 뒤이은 speakSrc가 네트워크 대기 없이 바로 튼다.
+  // 새로 열 때 이전 항목은 로드를 끊고 슬롯을 비우고, 로드가 실패한 항목도 스스로 내려간다
+  // (speakSrc가 새 엘리먼트로 열게). 언마운트 뒤 도착한 요청은 슬롯을 되살리지 않는다
+  const prefetchSrc = (src: string) => {
+    if (!mountedRef.current || preloadedRef.current?.src === src) return;
+    if (preloadedRef.current) abortPreload(preloadedRef.current.audio);
+    // preload 힌트는 src를 주기 전에 걸어야 로드 시작부터 적용된다
+    const audio = new Audio();
+    audio.preload = 'auto';
+    audio.src = src;
+    audio.onerror = () => {
+      if (preloadedRef.current?.audio === audio) preloadedRef.current = null;
+    };
+    preloadedRef.current = { src, audio };
+  };
+
   // 중단은 '재생 완료'가 아니다 — onEnd는 오디오가 실제로 끝났을 때(onended)만 부른다.
   // (effect 정리·언마운트·StrictMode 재실행에서 stop이 불려도 대화가 advance되면 안 된다)
   const stop = () => {
@@ -246,5 +302,5 @@ export function useTts() {
     setStatus('idle');
   };
 
-  return { speak, speakSrc, prefetch, stop, status };
+  return { speak, speakSrc, prefetch, prefetchSrc, stop, status };
 }

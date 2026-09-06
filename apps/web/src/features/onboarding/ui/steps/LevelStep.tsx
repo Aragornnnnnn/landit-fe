@@ -16,9 +16,15 @@ export const LevelStep = ({
       <br />
       알고 계신지 알려주세요
     </h1>
+    <p className="mt-4 text-xl font-bold text-muted-foreground">
+      딱 맞는 학습을 준비해드릴게요
+    </p>
 
     <div className="mt-6 flex min-h-0 flex-1 flex-col">
-      <EnglishLevelForm onConfirm={onNext} />
+      <EnglishLevelForm
+        footnote="학습 수준은 언제든 변경할 수 있어요"
+        onConfirm={onNext}
+      />
     </div>
   </div>
 );

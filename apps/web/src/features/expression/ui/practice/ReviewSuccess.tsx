@@ -96,7 +96,12 @@ export const ReviewSuccess = ({
           </p>
         </motion.div>
 
-        <Button variant="success" loading={finishing} onClick={onFinish}>
+        <Button
+          size="md"
+          variant="success"
+          loading={finishing}
+          onClick={onFinish}
+        >
           학습 완료
         </Button>
       </div>

@@ -1,6 +1,7 @@
 // 스몰톡 API — 주소는 백엔드가 부르는 이름(free-talk) 그대로, 코드 어휘는 우리 이름(스몰톡)으로 쓴다.
 // 세션 타입을 가리지 않는 종료·속마음은 여기 없다 — features/conversation의 공용 세션 API에 있다.
 import type {
+  ConversationCharacter,
   CurrentMessage,
   InputType,
   NextMessage,
@@ -8,7 +9,6 @@ import type {
 } from '@/features/conversation/api/session';
 import type { Partner } from '@/features/conversation/model/character-look';
 import { api } from '@/shared/api/client';
-import type { TtsVoice } from '@/shared/tts/voice';
 
 // 상대의 감정 — 저장된 값이 없으면 비어 온다 (백엔드 문자열 그대로, 좁히기는 소비 지점에서)
 export type SmallTalkEmotion = string | null;
@@ -50,12 +50,11 @@ export interface SmallTalkSessionStartResponse {
   sessionType: string;
   startMode: SmallTalkStartMode;
   // 이 대화의 상대. 페르소나와 TTS 음성이 여기서 갈린다
-  characterId: Partner;
+  character: ConversationCharacter;
   // AI 선시작의 주제명. 내가 먼저 시작하면 null이고, 대화 중 서버가 주제를 추론해 채운다
   title: string | null;
   // 하루 총량(잔량이 아니다) — 잔량은 홈 조회와 매 제출의 progress에만 있다
   speakingTimeLimitMs: number;
-  ttsVoice: TtsVoice | null;
   // AI 선시작의 첫 발화. 내가 먼저 시작하면 null
   currentMessage: SmallTalkCurrentMessage | null;
 }

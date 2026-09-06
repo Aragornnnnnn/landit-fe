@@ -1,4 +1,4 @@
-// 대표 예문 → 퀴즈 변환 검증 — 단어뱅크 필드가 learning-start에서 제대로 옮겨오는지
+// 대표 예문·영작 문제 → 퀴즈 변환 검증 — 단어뱅크가 제대로 옮겨오고, 출제 언어에 따라 보여줄 문장과 조립할 문장이 갈리는지
 import { describe, expect, it } from 'vitest';
 
 import type { ExpressionLearning } from '../api/learning';
@@ -32,6 +32,9 @@ const baseLearning: ExpressionLearning = {
     'amazing',
   ],
   representativeImageUrl: null,
+  completed: false,
+  representativeSentenceAudioUrl: null,
+  targetExpressionAudioUrl: null,
 };
 
 describe('fromLearning', () => {
@@ -39,8 +42,8 @@ describe('fromLearning', () => {
     expect(fromLearning(baseLearning)).toEqual({
       writingQuestion: 'What should I see in Korea?',
       writingQuestionTranslation: '한국에서 뭘 봐야 해?',
-      writingSentenceText: 'Gyeongbokgung Palace will blow your mind.',
-      writingSentenceTranslation: '경복궁은 널 완전 놀라게 할 거야.',
+      promptText: '경복궁은 널 완전 놀라게 할 거야.',
+      answerText: 'Gyeongbokgung Palace will blow your mind.',
       answerWords: ['Gyeongbokgung', 'Palace', 'will', 'blow', 'your', 'mind'],
       shuffledWords: [
         'blow',
@@ -68,6 +71,7 @@ describe('fromLearning', () => {
 
 describe('fromWritingSentence', () => {
   const writing: WritingSentence = {
+    quizLanguage: 'EN',
     writingSentenceText: 'The special effects blew my mind.',
     writingSentenceTranslation: '특수효과가 끝내줬어.',
     writingQuestion: 'How was the musical?',
@@ -84,12 +88,12 @@ describe('fromWritingSentence', () => {
     ],
   };
 
-  it('영작 문제의 단어뱅크와 질문·문장을 퀴즈 형태로 옮긴다', () => {
+  it('영어 문제(EN)는 해석을 보여주고 영어 문장을 조립한다', () => {
     expect(fromWritingSentence(writing)).toEqual({
       writingQuestion: 'How was the musical?',
       writingQuestionTranslation: '뮤지컬 어땠어?',
-      writingSentenceText: 'The special effects blew my mind.',
-      writingSentenceTranslation: '특수효과가 끝내줬어.',
+      promptText: '특수효과가 끝내줬어.',
+      answerText: 'The special effects blew my mind.',
       answerWords: ['The', 'special', 'effects', 'blew', 'my', 'mind'],
       shuffledWords: [
         'blew',
@@ -101,5 +105,22 @@ describe('fromWritingSentence', () => {
         'amazing',
       ],
     });
+  });
+
+  it('한국어 문제(KR)는 영어 문장을 보여주고 해석을 조립한다', () => {
+    // given — BE가 단어 배열에 한국어를 담아 준 KR 문제
+    const korean: WritingSentence = {
+      ...writing,
+      quizLanguage: 'KR',
+      writingSentenceWords: ['특수효과가', '끝내줬어'],
+      writingSentenceWordChoices: ['별로였어', '특수효과가', '끝내줬어'],
+    };
+
+    const quiz = fromWritingSentence(korean);
+
+    expect(quiz.promptText).toBe('The special effects blew my mind.');
+    expect(quiz.answerText).toBe('특수효과가 끝내줬어.');
+    expect(quiz.answerWords).toEqual(['특수효과가', '끝내줬어']);
+    expect(quiz.shuffledWords).toEqual(['별로였어', '특수효과가', '끝내줬어']);
   });
 });
