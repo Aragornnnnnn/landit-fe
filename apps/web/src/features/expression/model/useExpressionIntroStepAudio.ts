@@ -85,12 +85,13 @@ export const useExpressionIntroStepAudio = ({
     playingExpressionAudio: player.playingId === 'intro-expression',
     expressionAudioProgress:
       player.playingId === 'intro-expression' ? player.progress : 0,
-    onPlaySentenceAudio: () => {
-      if (!sentenceAudioUrl) return;
-      clearGap();
-      trackAudioPlayed('intro-sentence', 'sentence');
-      player.toggle(sentenceAudioUrl, { id: 'intro-sentence' });
-    },
+    onPlaySentenceAudio: sentenceAudioUrl
+      ? () => {
+          clearGap();
+          trackAudioPlayed('intro-sentence', 'sentence');
+          player.toggle(sentenceAudioUrl, { id: 'intro-sentence' });
+        }
+      : undefined,
     playingSentenceAudio: player.playingId === 'intro-sentence',
     sentenceAudioProgress:
       player.playingId === 'intro-sentence' ? player.progress : 0,

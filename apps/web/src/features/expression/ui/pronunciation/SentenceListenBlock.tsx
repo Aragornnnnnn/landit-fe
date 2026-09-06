@@ -9,7 +9,8 @@ interface SentenceListenBlockProps {
   sentenceTranslation: string;
   // 굵게 강조할 표현 구간
   highlight: string;
-  onPlay: () => void;
+  // 음원이 없는 표현(발음 자산 미준비)은 스피커 없이 문장만 보여준다
+  onPlay?: () => void;
   playing: boolean;
   // 재생 진행률 0~1 — 글자가 순서대로 물든다
   progress: number;
@@ -33,11 +34,13 @@ export const SentenceListenBlock = ({
           progress={progress}
         />
       </p>
-      <ListenButton
-        playing={playing}
-        onClick={onPlay}
-        ariaLabel="예문 발음 듣기"
-      />
+      {onPlay && (
+        <ListenButton
+          playing={playing}
+          onClick={onPlay}
+          ariaLabel="예문 발음 듣기"
+        />
+      )}
     </div>
     <p className="mt-2 text-[15px] font-medium text-muted-foreground">
       {sentenceTranslation}
