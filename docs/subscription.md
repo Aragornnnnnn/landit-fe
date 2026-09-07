@@ -151,7 +151,7 @@ App Store Connect 구독 그룹 `premium` (ID 22358008, 표시명 "랜딧 프리
 
 ## 브릿지 메시지
 
-`packages/bridge`에 추가한다. 이름은 구현 시 확정. 스키마는 `packages/bridge/src/messages.ts`(zod), 버전 상수는 `nativeContext.ts`의 `NATIVE_BRIDGE_VERSION`(현재 2)을 올린다. 왕복 선례는 `GET_NOTIFICATION_PERMISSION` → `NOTIFICATION_PERMISSION`.
+`packages/bridge`에 추가한다. 이름은 구현 시 확정. 스키마는 `packages/bridge/src/messages.ts`(zod), 버전 상수는 `nativeContext.ts`의 `NATIVE_BRIDGE_VERSION`(4 → 결제 메시지로 5)을 올린다. 왕복 선례는 `GET_NOTIFICATION_PERMISSION` → `NOTIFICATION_PERMISSION`.
 
 웹 → 셸
 
@@ -165,11 +165,11 @@ App Store Connect 구독 그룹 `premium` (ID 22358008, 표시명 "랜딧 프리
 
 셸 → 웹
 
-| 메시지            | 페이로드                                                    |
-| ----------------- | ----------------------------------------------------------- |
-| `OFFERINGS`       | `{ packages: [{ id, priceString, period }] }`               |
-| `PURCHASE_RESULT` | `{ status: 'success' \| 'cancelled' \| 'error', message? }` |
-| `RESTORE_RESULT`  | `{ status: 'success' \| 'error', message? }`                |
+| 메시지            | 페이로드                                                     |
+| ----------------- | ------------------------------------------------------------ |
+| `OFFERINGS`       | `{ packages: [{ id, plan, price, currency, priceString }] }` |
+| `PURCHASE_RESULT` | `{ status: 'success' \| 'cancelled' \| 'error', message? }`  |
+| `RESTORE_RESULT`  | `{ status: 'success' \| 'error', message? }`                 |
 
 `priceString`은 스토어가 주는 로컬라이즈된 문자열을 그대로 쓴다. 결제 연동 뒤 웹은 이 값으로 카드 가격을 덮어쓴다. 결제 메시지를 모르는 구버전 셸에서는 웹이 앱 업데이트 안내로 빠진다.
 
