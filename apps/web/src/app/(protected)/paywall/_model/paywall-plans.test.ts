@@ -2,12 +2,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildPaywallPlans,
   calculateDiscountRate,
   calculateMonthlyEquivalent,
   DEFAULT_PLAN_ID,
   formatWon,
   MONTHLY_PLAN,
   PAYWALL_PLANS,
+  toPlanPrices,
   YEARLY_PLAN,
 } from './paywall-plans';
 
@@ -76,5 +78,39 @@ describe('PAYWALL_PLANS', () => {
     expect(YEARLY_PLAN.subtitle).toBe(
       `연 ${formatWon(YEARLY_PLAN.price)} · 7일 무료 체험`,
     );
+  });
+});
+
+describe('buildPaywallPlans', () => {
+  it('스토어 가격을 주면 큰 숫자·취소선·배지·부제가 전부 그 값에서 다시 계산된다', () => {
+    const [monthly, yearly] = buildPaywallPlans({
+      monthly: 11_000,
+      yearly: 66_000,
+    });
+
+    expect(monthly.price).toBe(11_000);
+    expect(monthly.badge).toBeUndefined();
+    expect(yearly.monthlyListPrice).toBe(11_000);
+    expect(yearly.monthlyPrice).toBe(5_500);
+    expect(yearly.badge).toBe('월간보다 50% 저렴');
+    expect(yearly.subtitle).toBe('연 66,000원 · 7일 무료 체험');
+  });
+
+  it('한 플랜만 주면 나머지는 기본값을 쓴다', () => {
+    const [monthly, yearly] = buildPaywallPlans({ yearly: 49_900 });
+
+    expect(monthly.price).toBe(14_900);
+    expect(yearly.price).toBe(49_900);
+  });
+});
+
+describe('toPlanPrices', () => {
+  it('원화 가격만 숫자로 넘기고 다른 통화는 기본값에 맡긴다', () => {
+    expect(
+      toPlanPrices({
+        monthly: { packageId: '$rc_monthly', price: 9_900, currency: 'KRW' },
+        yearly: { packageId: '$rc_annual', price: 39.99, currency: 'USD' },
+      }),
+    ).toEqual({ monthly: 9_900, yearly: undefined });
   });
 });

@@ -9,11 +9,17 @@ import { GOLD_GRADIENT } from './PlanCard';
 
 interface PaywallHeroProps {
   onClose: () => void;
+  onRestore: () => void;
+  restoreDisabled?: boolean;
 }
 
-export const PaywallHero = ({ onClose }: PaywallHeroProps) => (
+export const PaywallHero = ({
+  onClose,
+  onRestore,
+  restoreDisabled = false,
+}: PaywallHeroProps) => (
   <section className="shrink-0 bg-[linear-gradient(180deg,#fdf1e8,#fff8f2)] pt-[max(env(safe-area-inset-top),8px)]">
-    <div className="flex h-10 items-center pl-4 short:h-8">
+    <div className="flex h-10 items-center justify-between pr-5 pl-4 short:h-8">
       <button
         type="button"
         onClick={onClose}
@@ -21,6 +27,15 @@ export const PaywallHero = ({ onClose }: PaywallHeroProps) => (
         className="-ml-2 flex size-9 items-center justify-center rounded-full text-foreground transition-all active:scale-90 active:bg-black/5"
       >
         <CloseIcon size={24} />
+      </button>
+      {/* 스토어 심사가 요구하는 구매 복원 진입점 — 애플 지침 3.1.1 */}
+      <button
+        type="button"
+        onClick={onRestore}
+        disabled={restoreDisabled}
+        className="text-[13px] leading-none text-muted-foreground disabled:opacity-50"
+      >
+        구매 복원
       </button>
     </div>
 
