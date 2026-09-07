@@ -146,6 +146,11 @@ export const EVENTS = {
   SURVEY_STARTED: 'Survey Started',
   SURVEY_QUESTION_VIEWED: 'Survey Question Viewed',
   SURVEY_SUBMITTED: 'Survey Submitted',
+  // 페이월 — 노출은 Page Viewed(page_name=paywall)로 잡고, 플랜 선택·결제 시작·복원만 따로 찍는다.
+  // 결제 성공·취소는 결제 연동(LAN-447)에서 결과 메시지를 받을 때 추가한다
+  PAYWALL_PLAN_SELECTED: 'Paywall Plan Selected',
+  PURCHASE_STARTED: 'Purchase Started',
+  PURCHASE_RESTORE_TAPPED: 'Purchase Restore Tapped',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -180,6 +185,9 @@ export type QuizStepKind = 'quiz' | 'review';
 export type HintSource = QuizStepKind;
 // 홈 복귀 신호 — 앱 안에서 돌아온 이유. 밖에서 들어온 유입(알림·위젯)은 entry_campaign이 맡는다
 export type HomeReturnReason = 'just' | 'flip' | 'card';
+
+// 구독 플랜 — 페이월 카드와 스토어 상품(monthly/yearly)이 같은 이름을 쓴다
+export type SubscriptionPlan = 'monthly' | 'yearly';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
@@ -498,6 +506,9 @@ export type EventProps = {
 
   // /download를 거치지 않고 스토어 앱을 바로 연 경우만 (앱 업데이트 유도 UI)
   'App Update Store Opened': { store: 'play_store' | 'app_store' };
+  'Paywall Plan Selected': { plan: SubscriptionPlan };
+  'Purchase Started': { plan: SubscriptionPlan };
+  'Purchase Restore Tapped': undefined;
 
   // 위젯 설치 안내 — 노출·답·플랫폼을 속성으로 가른다
   'Widget Install Invite Viewed': undefined;
