@@ -1,0 +1,74 @@
+// 페이월 플랜 표시값 계약 — 화면에 박히는 할인율·환산가가 실제 가격 산식과 어긋나지 않게 지킨다
+import { describe, expect, it } from 'vitest';
+
+import {
+  DEFAULT_PLAN_ID,
+  discountRate,
+  formatWon,
+  MONTHLY_PLAN,
+  monthlyEquivalent,
+  PAYWALL_PLANS,
+  YEARLY_PLAN,
+} from './paywall-plans';
+
+describe('discountRate', () => {
+  it('정가와 판매가로 정수 퍼센트를 돌려준다', () => {
+    expect(discountRate(19_800, 9_900)).toBe(50);
+  });
+
+  it('소수점은 반올림한다 — 월 9,900 대비 월 4,990은 49.6%라 50으로 본다', () => {
+    expect(discountRate(9_900, 4_990)).toBe(50);
+  });
+});
+
+describe('monthlyEquivalent', () => {
+  it('연 결제액을 12로 나눠 10원 단위로 내린다 — 59,900원이면 월 4,990원', () => {
+    expect(monthlyEquivalent(59_900)).toBe(4_990);
+  });
+});
+
+describe('formatWon', () => {
+  it('천 단위 쉼표와 원을 붙인다', () => {
+    expect(formatWon(59_900)).toBe('59,900원');
+  });
+});
+
+describe('PAYWALL_PLANS', () => {
+  it('월간·연간 두 장이고 기본 선택은 연간이다', () => {
+    expect(PAYWALL_PLANS.map((plan) => plan.id)).toEqual(['monthly', 'yearly']);
+    expect(DEFAULT_PLAN_ID).toBe('yearly');
+  });
+
+  it('월간 배지의 할인율은 정가 대비 판매가 산식과 같다', () => {
+    const rate = discountRate(
+      MONTHLY_PLAN.monthlyListPrice,
+      MONTHLY_PLAN.monthlyPrice,
+    );
+
+    expect(MONTHLY_PLAN.badge).toBe(`출시 기념 ${rate}%`);
+  });
+
+  it('월간 카드의 월 금액은 실제 청구액과 같다', () => {
+    expect(MONTHLY_PLAN.monthlyPrice).toBe(MONTHLY_PLAN.price);
+  });
+
+  it('연간 카드의 큰 숫자는 연 결제액을 달로 나눈 값이고, 취소선은 월간 실제 판매가다', () => {
+    expect(YEARLY_PLAN.monthlyPrice).toBe(monthlyEquivalent(YEARLY_PLAN.price));
+    expect(YEARLY_PLAN.monthlyListPrice).toBe(MONTHLY_PLAN.price);
+  });
+
+  it('연간 배지의 퍼센트는 월간 판매가 대비 월 환산가 산식과 같다', () => {
+    const rate = discountRate(
+      YEARLY_PLAN.monthlyListPrice,
+      YEARLY_PLAN.monthlyPrice,
+    );
+
+    expect(YEARLY_PLAN.badge).toBe(`월간보다 ${rate}% 저렴`);
+  });
+
+  it('연간 부제에는 실제 청구되는 연 결제액이 들어간다', () => {
+    expect(YEARLY_PLAN.subtitle).toBe(
+      `연 ${formatWon(YEARLY_PLAN.price)} · 7일 무료 체험`,
+    );
+  });
+});
