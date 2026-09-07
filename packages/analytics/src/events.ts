@@ -151,6 +151,11 @@ export const EVENTS = {
   PAYWALL_PLAN_SELECTED: 'Paywall Plan Selected',
   PURCHASE_STARTED: 'Purchase Started',
   PURCHASE_RESTORE_TAPPED: 'Purchase Restore Tapped',
+  // 셸의 결제 결과 회신 — 성공은 스토어 결제가 끝난 것이고, 서버 유료 반영(unlocked)은 별도 속성으로 남긴다
+  PURCHASE_COMPLETED: 'Purchase Completed',
+  PURCHASE_CANCELED: 'Purchase Canceled',
+  PURCHASE_FAILED: 'Purchase Failed',
+  PURCHASE_RESTORED: 'Purchase Restored',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -509,6 +514,12 @@ export type EventProps = {
   'Paywall Plan Selected': { plan: SubscriptionPlan };
   'Purchase Started': { plan: SubscriptionPlan };
   'Purchase Restore Tapped': undefined;
+  // unlocked: 결제 직후 몇 초 안에 서버가 유료로 바뀌었는가 (웹훅 지연 관찰용)
+  'Purchase Completed': { plan: SubscriptionPlan; unlocked: boolean };
+  'Purchase Canceled': { plan: SubscriptionPlan };
+  // reason: 셸이 준 실패 사유 또는 환경 문제(browser / outdated_shell / no_response)
+  'Purchase Failed': { plan: SubscriptionPlan; reason: string };
+  'Purchase Restored': { succeeded: boolean };
 
   // 위젯 설치 안내 — 노출·답·플랫폼을 속성으로 가른다
   'Widget Install Invite Viewed': undefined;
