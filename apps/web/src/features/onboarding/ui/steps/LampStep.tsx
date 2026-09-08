@@ -1,4 +1,4 @@
-// 온보딩 마지막 — 램프에서 래디가 빼꼼 내다본다. 누르면 홈에서 그 램프가 열린다
+// 온보딩 마지막 — 램프에서 래디가 빼꼼 내다본다. 누르면 홈에서 그 램프가 열리고 첫 대화가 곧 수준 파악이다
 'use client';
 
 import { motion, useReducedMotion } from 'motion/react';
@@ -28,8 +28,7 @@ export const LampStep = ({ onStart }: { onStart: () => void }) => {
       <div className="flex flex-1 flex-col gap-6 pt-7">
         <h1 className="text-3xl leading-[1.18] font-black tracking-normal">
           준비는 끝났어요
-          <br />
-          오늘의 대화가 기다려요
+          <br />첫 대화로 레벨을 알아볼게요
         </h1>
 
         {/* 램프가 무엇인지 글로 설명하지 않는다 — 여기선 처음 보는 물건이라 말이 겉돈다.
@@ -51,7 +50,7 @@ export const LampStep = ({ onStart }: { onStart: () => void }) => {
         </div>
       </div>
 
-      <Button onClick={onStart}>시작할게요!</Button>
+      <Button onClick={onStart}>첫 대화 시작할게요!</Button>
     </>
   );
 };
