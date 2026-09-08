@@ -14,4 +14,8 @@ export const streakKeys = {
   // 캐시에 두는 건 계정 스코프와 로그아웃 정리를 그대로 물려받기 위해서다 (celebration 참고)
   celebrationBase: (userId: number | null) =>
     [...streakKeys.all, userId, 'celebration-base'] as const,
+  // 완료 순간에 심는 값 — 이번 대화가 생애 첫 완료였는가 (그때 달력의 첫 완료일이 비어 있었는지).
+  // 조회 결과는 완료 직후 뒤집혀 "첫 대화"를 잃어버리므로 그 전 값을 여기 남긴다
+  firstConversationBase: (userId: number | null) =>
+    [...streakKeys.all, userId, 'first-conversation-base'] as const,
 };

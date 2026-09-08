@@ -9,6 +9,7 @@ import {
   getCurrentStreak,
   getStreakCalendar,
   type CurrentStreakResponse,
+  type StreakCalendarResponse,
 } from '../api/streak';
 import type { StreakBase } from './celebration';
 import { streakKeys } from './keys';
@@ -23,6 +24,10 @@ export const refreshStreakAfterCompletion = (queryClient: QueryClient) => {
   const previous = queryClient.getQueryData<CurrentStreakResponse>(
     streakKeys.current(userId),
   );
+  // 달력의 첫 완료일이 비어 있었다면 이번이 생애 첫 대화다 — 대화 직후 흐름이 이걸로 신규를 가른다
+  const previousCalendar = queryClient.getQueryData<StreakCalendarResponse>(
+    streakKeys.calendar(userId, null),
+  );
 
   // 받아 둔 것을 먼저 낡은 것으로 표시해야 아래 미리받기가 실제로 나간다
   void queryClient.invalidateQueries({ queryKey: streakKeys.all });
@@ -32,6 +37,10 @@ export const refreshStreakAfterCompletion = (queryClient: QueryClient) => {
     ? { activeToday: previous.activeToday }
     : null;
   queryClient.setQueryData(streakKeys.celebrationBase(userId), celebrationBase);
+  queryClient.setQueryData<boolean | null>(
+    streakKeys.firstConversationBase(userId),
+    previousCalendar ? previousCalendar.firstActiveDate === null : null,
+  );
 
   // 홈 헤더가 볼 숫자와, 연속 기록 페이지가 열자마자 그릴 달.
   // 어느 달인지는 서버가 정한다 — 연속 기록 페이지도 같은 키로 연다

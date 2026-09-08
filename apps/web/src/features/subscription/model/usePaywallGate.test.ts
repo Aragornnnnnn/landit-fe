@@ -135,6 +135,16 @@ describe('usePaywallGate', () => {
     );
   });
 
+  it('방금 대화를 끝내면 잠기는지를 미리 알려준다 — 무료면 참, 유료면 거짓', () => {
+    expect(renderGate().result.current.locksAfterConversation).toBe(true);
+
+    mocks.subscription = {
+      subscription: { premium: true, conversationCompletedSinceLaunch: false },
+      isError: false,
+    };
+    expect(renderGate().result.current.locksAfterConversation).toBe(false);
+  });
+
   it('브라우저에서는 잠그지 않고, 구독도 묻지 않는다 — 어차피 열린다', () => {
     mocks.getNativeContext.mockReturnValue(null);
     const { result } = renderGate();
