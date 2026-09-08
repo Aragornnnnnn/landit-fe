@@ -7,27 +7,27 @@ export type PlanId = SubscriptionPlan;
 export interface PaywallPlan {
   id: PlanId;
   title: string;
-  // 카드는 두 플랜을 같은 자로 재도록 월 기준으로 보여준다 — 취소선(비교 기준)과 큰 숫자
-  monthlyListPrice: number;
+  // 카드는 두 플랜을 같은 자로 재도록 월 기준으로 보여준다 — 큰 숫자는 월 금액, 비교 기준이 있는 카드만 취소선
+  monthlyListPrice?: number;
   monthlyPrice: number;
   // 실제 청구액 — 스토어 등록값과 같아야 한다 (월간은 달마다, 연간은 해마다)
   price: number;
-  // 카드 위 테두리에 걸치는 배지 문구
-  badge: string;
+  // 카드 위 테두리에 걸치는 배지 문구. 할인을 강조하는 카드에만 단다
+  badge?: string;
   subtitle: string;
 }
 
-// 스토어 등록값 (App Store Connect, 2026-09-04). 월간 정가 19,800원은 스토어에 없고 표시용이다
-const MONTHLY_LIST_PRICE = 19_800;
-const MONTHLY_PRICE = 9_900;
-const YEARLY_PRICE = 59_900;
+// 스토어 등록값 (2026-09-07 재설정). 월간은 할인 없는 기본가라 비교선도 배지도 없다
+const MONTHLY_PRICE = 14_900;
+const YEARLY_PRICE = 58_500;
 
 export const discountRate = (listPrice: number, price: number) =>
   Math.round((1 - price / listPrice) * 100);
 
-// 연 결제액을 달로 나눈 값. 10원 단위로 내려 읽기 쉽게 한다 — 실제 청구액(연 결제액)은 부제에 같이 적는다
+// 연 결제액을 달로 나눈 값. 100원 단위로 올려 읽기 쉽게 한다 — 58,500원은 4,875원이라 월 4,900원.
+// 실제보다 낮게 보이면 기만이라 내림은 쓰지 않고, 실제 청구액(연 결제액)은 부제에 같이 적는다
 export const monthlyEquivalent = (yearlyPrice: number) =>
-  Math.floor(yearlyPrice / 12 / 10) * 10;
+  Math.ceil(yearlyPrice / 12 / 100) * 100;
 
 export const formatWon = (amount: number) =>
   `${amount.toLocaleString('ko-KR')}원`;
@@ -35,12 +35,9 @@ export const formatWon = (amount: number) =>
 export const MONTHLY_PLAN: PaywallPlan = {
   id: 'monthly',
   title: '월간',
-  monthlyListPrice: MONTHLY_LIST_PRICE,
   monthlyPrice: MONTHLY_PRICE,
   price: MONTHLY_PRICE,
-  badge: `출시 기념 ${discountRate(MONTHLY_LIST_PRICE, MONTHLY_PRICE)}%`,
-  // 출시 기념가는 인트로 오퍼가 아니라 기본가라, 지금 가입한 사람은 그 금액이 계속 유지된다
-  subtitle: '지금 시작하면 계속 이 가격',
+  subtitle: '매달 결제 · 언제든 해지',
 };
 
 // 연간의 비교 기준은 스토어에 없는 정가가 아니라 월간으로 낼 때의 실제 월 금액이다

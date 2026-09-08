@@ -63,10 +63,10 @@ describe('PaywallScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: '월간 플랜' }));
 
     expect(
-      screen.getByRole('button', { name: '월 9,900원으로 시작하기' }),
+      screen.getByRole('button', { name: '월 14,900원으로 시작하기' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('매월 9,900원 자동 결제 · 언제든 해지 가능'),
+      screen.getByText('매월 14,900원 자동 결제 · 언제든 해지 가능'),
     ).toBeInTheDocument();
     expect(mocks.track).toHaveBeenCalledWith('Paywall Plan Selected', {
       plan: 'monthly',

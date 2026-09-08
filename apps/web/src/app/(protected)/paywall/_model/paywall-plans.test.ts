@@ -12,24 +12,32 @@ import {
 } from './paywall-plans';
 
 describe('discountRate', () => {
-  it('정가와 판매가로 정수 퍼센트를 돌려준다', () => {
-    expect(discountRate(19_800, 9_900)).toBe(50);
+  it('비교가와 판매가로 정수 퍼센트를 돌려준다', () => {
+    expect(discountRate(10_000, 5_000)).toBe(50);
   });
 
-  it('소수점은 반올림한다 — 월 9,900 대비 월 4,990은 49.6%라 50으로 본다', () => {
-    expect(discountRate(9_900, 4_990)).toBe(50);
+  it('소수점은 반올림한다 — 월 14,900 대비 월 4,900은 67.1%라 67로 본다', () => {
+    expect(discountRate(14_900, 4_900)).toBe(67);
   });
 });
 
 describe('monthlyEquivalent', () => {
-  it('연 결제액을 12로 나눠 10원 단위로 내린다 — 59,900원이면 월 4,990원', () => {
-    expect(monthlyEquivalent(59_900)).toBe(4_990);
+  it('연 결제액을 12로 나눠 100원 단위로 올린다 — 58,500원은 4,875원이라 월 4,900원', () => {
+    expect(monthlyEquivalent(58_500)).toBe(4_900);
+  });
+
+  it('딱 떨어지면 그대로다 — 58,800원이면 월 4,900원', () => {
+    expect(monthlyEquivalent(58_800)).toBe(4_900);
+  });
+
+  it('실제보다 낮게 보이지 않게 올린다 — 59,900원이면 월 4,990원이 아니라 5,000원', () => {
+    expect(monthlyEquivalent(59_900)).toBe(5_000);
   });
 });
 
 describe('formatWon', () => {
   it('천 단위 쉼표와 원을 붙인다', () => {
-    expect(formatWon(59_900)).toBe('59,900원');
+    expect(formatWon(58_500)).toBe('58,500원');
   });
 });
 
@@ -39,13 +47,9 @@ describe('PAYWALL_PLANS', () => {
     expect(DEFAULT_PLAN_ID).toBe('yearly');
   });
 
-  it('월간 배지의 할인율은 정가 대비 판매가 산식과 같다', () => {
-    const rate = discountRate(
-      MONTHLY_PLAN.monthlyListPrice,
-      MONTHLY_PLAN.monthlyPrice,
-    );
-
-    expect(MONTHLY_PLAN.badge).toBe(`출시 기념 ${rate}%`);
+  it('월간 카드는 할인 강조가 없다 — 배지도 비교 취소선도 두지 않는다', () => {
+    expect(MONTHLY_PLAN.badge).toBeUndefined();
+    expect(MONTHLY_PLAN.monthlyListPrice).toBeUndefined();
   });
 
   it('월간 카드의 월 금액은 실제 청구액과 같다', () => {
@@ -58,10 +62,7 @@ describe('PAYWALL_PLANS', () => {
   });
 
   it('연간 배지의 퍼센트는 월간 판매가 대비 월 환산가 산식과 같다', () => {
-    const rate = discountRate(
-      YEARLY_PLAN.monthlyListPrice,
-      YEARLY_PLAN.monthlyPrice,
-    );
+    const rate = discountRate(MONTHLY_PLAN.price, YEARLY_PLAN.monthlyPrice);
 
     expect(YEARLY_PLAN.badge).toBe(`월간보다 ${rate}% 저렴`);
   });
