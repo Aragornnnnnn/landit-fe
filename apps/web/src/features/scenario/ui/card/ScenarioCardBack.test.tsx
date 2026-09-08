@@ -8,6 +8,13 @@ import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQ
 
 import { ScenarioCardBack } from './ScenarioCardBack';
 
+// 페이월 게이트는 구독·스트릭 조회를 끌고 온다 — 이 화면 테스트에선 항상 열린 문으로 치환한다
+vi.mock('@/features/subscription/model/usePaywallGate', () => ({
+  usePaywallGate: () => ({
+    decision: 'open',
+    guard: (go: () => void) => go(),
+  }),
+}));
 vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));

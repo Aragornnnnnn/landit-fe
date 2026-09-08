@@ -11,8 +11,13 @@ import { SatisfactionGate } from '@/features/satisfaction/ui/SatisfactionGate';
 import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
+import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
 import { track } from '@/shared/analytics';
-import { SMALLTALK_HISTORY_PATH, smallTalkPath } from '@/shared/lib/routes';
+import {
+  SMALLTALK_HISTORY_PATH,
+  SMALLTALK_PATH,
+  smallTalkPath,
+} from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 
@@ -30,6 +35,8 @@ export default function SmallTalkPage() {
   const { main, error, isLoading, retry } = useSmallTalkMainQuery();
   // 오늘 예산을 다 썼는지는 서버(canStart)가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
   const exhausted = main !== null && !main.canStart;
+  // 무료 구간을 다 쓴 무료 사용자는 스몰톡 시작 대신 페이월로 보낸다
+  const gate = usePaywallGate();
   const [topicOpen, setTopicOpen] = useState(false);
   const { partner, look, speech, greet, selectPartner } = usePartnerGreeting();
   // 처음 들어온 사람에겐 래디 안내부터, 닫으면 캐릭터를 눌러 보라는 코치마크 — 둘 다 기기당 한 번이다
@@ -49,7 +56,11 @@ export default function SmallTalkPage() {
 
   // 대화 시작 계측은 세션이 실제로 열리는 대화 화면에서 한다 — 여기서 쏘면 들어가다 만 것도 시작으로 잡힌다
   const startWithMe = () =>
-    router.push(smallTalkPath({ partner: partner.id, mode: 'user_first' }));
+    gate.guard(
+      () =>
+        router.push(smallTalkPath({ partner: partner.id, mode: 'user_first' })),
+      { entry: 'smalltalk', returnTo: SMALLTALK_PATH },
+    );
 
   const startWithTopic = (topic: SmallTalkTopic) => {
     track(EVENTS.SMALL_TALK_TOPIC_SELECTED, {
@@ -57,12 +68,16 @@ export default function SmallTalkPage() {
       topic_id: topic.topicId,
     });
     setTopicOpen(false);
-    router.push(
-      smallTalkPath({
-        partner: partner.id,
-        mode: 'ai_first',
-        topicId: topic.topicId,
-      }),
+    gate.guard(
+      () =>
+        router.push(
+          smallTalkPath({
+            partner: partner.id,
+            mode: 'ai_first',
+            topicId: topic.topicId,
+          }),
+        ),
+      { entry: 'smalltalk', returnTo: SMALLTALK_PATH },
     );
   };
 

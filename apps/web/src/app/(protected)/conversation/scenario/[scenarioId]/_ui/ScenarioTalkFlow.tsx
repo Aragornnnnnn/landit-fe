@@ -18,6 +18,8 @@ import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
 import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
 import { FeedbackFlow } from '@/features/feedback/ui/FeedbackFlow';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
+// 가로 import 사유: 대화가 끝나는 자리가 무료 구간이 끝나는 자리라 여기서 페이월 게이트를 건다
+import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
 import { track } from '@/shared/analytics';
 import {
   scenarioExpressionBranchPath,
@@ -45,6 +47,7 @@ export const ScenarioTalkFlow = ({
   // 진입 시점의 완료 여부(재대화 판별) — 세션이 끝나면 시나리오 리스트가 invalidate돼
   // scenario.completed가 뒤늦게 true로 바뀌므로, 첫 완료와 구분하려면 진입 값으로 고정해야 한다
   const [wasCompleted] = useState(scenario.completed);
+  const paywallGate = usePaywallGate();
   // USER 선발화 진입 안내 — 랜디가 먼저 날아들어 말을 걸어보라고 알려주고 잠시 후 사라진다.
   // 판정은 turn.isUserOpening 한 곳에 위임하고(카드 안내 구조와 같은 소스), 여기선 노출 시간만 관리한다.
   const [introDismissed, setIntroDismissed] = useState(false);
@@ -98,21 +101,34 @@ export const ScenarioTalkFlow = ({
   // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로 페이드 인해 넘어간다. 마치면 표현 학습 분기로 보낸다.
   const view = ended && showFeedback ? 'feedback' : 'conversation';
 
+  // 피드백을 다 본 뒤 갈 곳 — 재대화면 홈의 그 카드로, 첫 완료면 표현 분기로.
+  // 무료 구간(도입 뒤 대화 하나)이 여기서 끝나므로 무료 사용자는 표현 대신 페이월을 본다.
+  // 방금 끝난 대화가 곧 그 하나라 서버 값을 기다리지 않는다. 결제하면 표현 분기로 돌아온다
+  const leaveFeedback = () => {
+    if (wasCompleted) {
+      router.replace(scenarioReturnPath({ date }));
+      return;
+    }
+    const expressionBranchPath = scenarioExpressionBranchPath(
+      scenario.scenarioId,
+      date,
+    );
+    paywallGate.guard(() => router.replace(expressionBranchPath), {
+      entry: 'conversation_finished',
+      returnTo: expressionBranchPath,
+      conversationJustFinished: true,
+    });
+  };
+
   if (view === 'feedback') {
     return (
       <Transition transitionKey="feedback" fade>
         <FeedbackFlow
           sessionId={sessionId}
           title={scenario.scenarioTitle}
-          onExit={() =>
-            // 대화는 끝났으니 히스토리에서 지운다 — 뒤로가기로 종료된 대화에 다시 들어오지 않게.
-            // 재대화(이미 완료한 시나리오)면 표현은 예전에 생성됐으니 분기 연출 없이 홈의 그 카드로 돌아간다
-            wasCompleted
-              ? router.replace(scenarioReturnPath({ date }))
-              : router.replace(
-                  scenarioExpressionBranchPath(scenario.scenarioId, date),
-                )
-          }
+          // 대화는 끝났으니 히스토리에서 지운다(replace) — 뒤로가기로 종료된 대화에 다시 들어오지 않게.
+          // 재대화(이미 완료한 시나리오)면 표현은 예전에 생성됐으니 분기 연출 없이 홈의 그 카드로 돌아간다
+          onExit={leaveFeedback}
         />
       </Transition>
     );

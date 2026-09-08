@@ -13,6 +13,7 @@ import { CalendarStrip } from '@/features/scenario/ui/CalendarStrip';
 import { ScenarioBriefing } from '@/features/scenario/ui/ScenarioBriefing';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
 import { TodayCard } from '@/features/scenario/ui/TodayCard';
+import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
 import { track } from '@/shared/analytics';
 import {
   readDateParam,
@@ -42,6 +43,8 @@ function ScenarioContent() {
   const autoFlip = searchParams.get('flip') !== null;
 
   const { daily, error, retry } = useDailyScenarioQuery(date);
+  // 무료 구간(첫 대화 1 + 표현 1)을 다 쓴 무료 사용자는 새 대화 대신 페이월로 보낸다
+  const gate = usePaywallGate();
 
   // 알림은 오늘 카드에 대한 판단이 끝난 뒤에만 청한다 — 대화를 끝냈거나, 지금은 안 하기로 했거나.
   // 들어오자마자 물으면 램프 연출을 덮고, 대화를 해보기도 전이라 무엇을 알려주겠다는 건지 와닿지 않는다.
@@ -56,15 +59,19 @@ function ScenarioContent() {
 
   // 완료한 날은 카드 앞면(같은 썸네일·제목·설명)이 이미 떠 있다 — 램프로 시작하는 날만 브리핑이 필요하다
   const cleared = daily?.scenario?.dailyScenarioType === 'CLEARED';
-  const start = (scenario: Scenario) => {
-    if (cleared) {
-      router.push(scenarioTalkPath(scenario.scenarioId, date));
-      return;
-    }
-    setBriefingScenario(scenario);
-    // 브리핑을 읽는 동안 대화 라우트를 미리 받아 둔다 — 이 화면은 링크로 오갈 수 없어 자동 프리페치가 안 걸린다
-    router.prefetch(scenarioTalkPath(scenario.scenarioId, date));
-  };
+  const start = (scenario: Scenario) =>
+    gate.guard(
+      () => {
+        if (cleared) {
+          router.push(scenarioTalkPath(scenario.scenarioId, date));
+          return;
+        }
+        setBriefingScenario(scenario);
+        // 브리핑을 읽는 동안 대화 라우트를 미리 받아 둔다 — 이 화면은 링크로 오갈 수 없어 자동 프리페치가 안 걸린다
+        router.prefetch(scenarioTalkPath(scenario.scenarioId, date));
+      },
+      { entry: 'scenario', returnTo: scenarioReturnPath({ date }) },
+    );
   const settled = date === undefined && (cleared || summonClosed);
   // 시트류(소감 다음 순번)가 나설 차례 — 카드 판단과 소감 판정이 모두 끝났고 소감 시트가 안 뜰 때
   const promptTurn =

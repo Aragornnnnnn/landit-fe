@@ -9,8 +9,13 @@ import { useRouter } from 'next/navigation';
 import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQuery'; // 완료 카드 뒷면이 표현 목록을 조합한다 — 교차 조립 블록(widgets 후보)
 import { ExpressionList } from '@/features/expression/ui/ExpressionList';
 import { ExpressionListSkeleton } from '@/features/expression/ui/ExpressionListSkeleton';
+// 가로 import 사유: 학습 진입 문마다 같은 페이월 게이트를 걸어야 한다 (docs/subscription.md)
+import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
 import { track } from '@/shared/analytics';
-import { scenarioExpressionPath } from '@/shared/lib/routes';
+import {
+  scenarioExpressionPath,
+  scenarioReturnPath,
+} from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
@@ -58,6 +63,7 @@ export const ScenarioCardBack = ({
   autoFlip = false,
 }: ScenarioCardBackProps) => {
   const router = useRouter();
+  const gate = usePaywallGate();
   const { expressions, error, isLoading, retry } =
     useExpressionsQuery(scenarioId);
 
@@ -120,8 +126,15 @@ export const ScenarioCardBack = ({
                 scenario_id: scenarioId,
                 source: 'card_back',
               });
-              router.push(
-                scenarioExpressionPath(scenarioId, expressionId, date),
+              gate.guard(
+                () =>
+                  router.push(
+                    scenarioExpressionPath(scenarioId, expressionId, date),
+                  ),
+                {
+                  entry: 'expression',
+                  returnTo: scenarioReturnPath({ flip: scenarioId, date }),
+                },
               );
             }}
           />
