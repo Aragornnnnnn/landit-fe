@@ -11,7 +11,7 @@ import { track } from '@/shared/analytics';
 import { homePath } from '@/shared/lib/last-tab';
 import { Button } from '@/shared/ui/Button';
 
-import { billingNotice, ctaLabel } from '../_model/paywall-copy';
+import { getBillingNotice, getCtaLabel } from '../_model/paywall-copy';
 import {
   DEFAULT_PLAN_ID,
   PAYWALL_PLANS,
@@ -67,9 +67,9 @@ export const PaywallScreen = () => {
       </section>
 
       <footer className="px-5 pt-3 pb-[max(env(safe-area-inset-bottom),24px)] short:pb-[max(env(safe-area-inset-bottom),8px)]">
-        <Button onClick={startPurchase}>{ctaLabel(selectedId)}</Button>
+        <Button onClick={startPurchase}>{getCtaLabel(selectedId)}</Button>
         <p className="mt-3.5 text-center text-[11px] leading-[1.35] text-muted-foreground short:mt-2">
-          {billingNotice(selectedId)}
+          {getBillingNotice(selectedId)}
         </p>
         <nav className="mt-3 flex justify-center gap-3 text-[10px] leading-[1.3] font-medium text-muted-foreground underline short:mt-2">
           <Link href="/terms">이용약관</Link>

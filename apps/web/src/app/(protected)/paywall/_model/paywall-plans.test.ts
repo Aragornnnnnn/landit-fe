@@ -2,36 +2,36 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  calculateDiscountRate,
+  calculateMonthlyEquivalent,
   DEFAULT_PLAN_ID,
-  discountRate,
   formatWon,
   MONTHLY_PLAN,
-  monthlyEquivalent,
   PAYWALL_PLANS,
   YEARLY_PLAN,
 } from './paywall-plans';
 
-describe('discountRate', () => {
+describe('calculateDiscountRate', () => {
   it('비교가와 판매가로 정수 퍼센트를 돌려준다', () => {
-    expect(discountRate(10_000, 5_000)).toBe(50);
+    expect(calculateDiscountRate(10_000, 5_000)).toBe(50);
   });
 
   it('소수점은 반올림한다 — 월 14,900 대비 월 4,900은 67.1%라 67로 본다', () => {
-    expect(discountRate(14_900, 4_900)).toBe(67);
+    expect(calculateDiscountRate(14_900, 4_900)).toBe(67);
   });
 });
 
-describe('monthlyEquivalent', () => {
+describe('calculateMonthlyEquivalent', () => {
   it('연 결제액을 12로 나눠 100원 단위로 올린다 — 58,500원은 4,875원이라 월 4,900원', () => {
-    expect(monthlyEquivalent(58_500)).toBe(4_900);
+    expect(calculateMonthlyEquivalent(58_500)).toBe(4_900);
   });
 
   it('딱 떨어지면 그대로다 — 58,800원이면 월 4,900원', () => {
-    expect(monthlyEquivalent(58_800)).toBe(4_900);
+    expect(calculateMonthlyEquivalent(58_800)).toBe(4_900);
   });
 
   it('실제보다 낮게 보이지 않게 올린다 — 59,900원이면 월 4,990원이 아니라 5,000원', () => {
-    expect(monthlyEquivalent(59_900)).toBe(5_000);
+    expect(calculateMonthlyEquivalent(59_900)).toBe(5_000);
   });
 });
 
@@ -57,12 +57,17 @@ describe('PAYWALL_PLANS', () => {
   });
 
   it('연간 카드의 큰 숫자는 연 결제액을 달로 나눈 값이고, 취소선은 월간 실제 판매가다', () => {
-    expect(YEARLY_PLAN.monthlyPrice).toBe(monthlyEquivalent(YEARLY_PLAN.price));
+    expect(YEARLY_PLAN.monthlyPrice).toBe(
+      calculateMonthlyEquivalent(YEARLY_PLAN.price),
+    );
     expect(YEARLY_PLAN.monthlyListPrice).toBe(MONTHLY_PLAN.price);
   });
 
   it('연간 배지의 퍼센트는 월간 판매가 대비 월 환산가 산식과 같다', () => {
-    const rate = discountRate(MONTHLY_PLAN.price, YEARLY_PLAN.monthlyPrice);
+    const rate = calculateDiscountRate(
+      MONTHLY_PLAN.price,
+      YEARLY_PLAN.monthlyPrice,
+    );
 
     expect(YEARLY_PLAN.badge).toBe(`월간보다 ${rate}% 저렴`);
   });

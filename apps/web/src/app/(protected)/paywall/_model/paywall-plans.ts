@@ -21,12 +21,12 @@ export interface PaywallPlan {
 const MONTHLY_PRICE = 14_900;
 const YEARLY_PRICE = 58_500;
 
-export const discountRate = (listPrice: number, price: number) =>
+export const calculateDiscountRate = (listPrice: number, price: number) =>
   Math.round((1 - price / listPrice) * 100);
 
 // 연 결제액을 달로 나눈 값. 100원 단위로 올려 읽기 쉽게 한다 — 58,500원은 4,875원이라 월 4,900원.
 // 실제보다 낮게 보이면 기만이라 내림은 쓰지 않고, 실제 청구액(연 결제액)은 부제에 같이 적는다
-export const monthlyEquivalent = (yearlyPrice: number) =>
+export const calculateMonthlyEquivalent = (yearlyPrice: number) =>
   Math.ceil(yearlyPrice / 12 / 100) * 100;
 
 export const formatWon = (amount: number) =>
@@ -41,7 +41,7 @@ export const MONTHLY_PLAN: PaywallPlan = {
 };
 
 // 연간의 비교 기준은 스토어에 없는 정가가 아니라 월간으로 낼 때의 실제 월 금액이다
-const YEARLY_MONTHLY_PRICE = monthlyEquivalent(YEARLY_PRICE);
+const YEARLY_MONTHLY_PRICE = calculateMonthlyEquivalent(YEARLY_PRICE);
 
 export const YEARLY_PLAN: PaywallPlan = {
   id: 'yearly',
@@ -49,7 +49,7 @@ export const YEARLY_PLAN: PaywallPlan = {
   monthlyListPrice: MONTHLY_PRICE,
   monthlyPrice: YEARLY_MONTHLY_PRICE,
   price: YEARLY_PRICE,
-  badge: `월간보다 ${discountRate(MONTHLY_PRICE, YEARLY_MONTHLY_PRICE)}% 저렴`,
+  badge: `월간보다 ${calculateDiscountRate(MONTHLY_PRICE, YEARLY_MONTHLY_PRICE)}% 저렴`,
   subtitle: `연 ${formatWon(YEARLY_PRICE)} · 7일 무료 체험`,
 };
 
