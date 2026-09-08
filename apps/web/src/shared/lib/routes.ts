@@ -109,3 +109,9 @@ export const readDateParam = (searchParams: URLSearchParams) => {
   const date = searchParams.get('date');
   return date && DATE_PATTERN.test(date) ? date : undefined;
 };
+
+// 프리미엄 페이월. from은 결제 뒤 돌아갈 내부 경로 — 학습 진입에서 막혀 왔을 때만 붙는다
+export const PAYWALL_PATH = '/paywall';
+
+export const paywallPath = ({ from }: { from?: string } = {}) =>
+  from ? `${PAYWALL_PATH}?from=${encodeURIComponent(from)}` : PAYWALL_PATH;

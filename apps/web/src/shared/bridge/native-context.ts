@@ -18,6 +18,18 @@ export function getNativeContext(): NativeContext | null {
   return readNativeContext(window.__LANDIT_NATIVE__);
 }
 
+// 렌더 중 읽을 때(useSyncExternalStore·useClientOnlyValue)는 이쪽 — 같은 주입값이면 같은 객체를 돌려준다.
+// getNativeContext는 매번 새 객체를 만들어 스냅샷 비교가 계속 달라지고 React가 무한 루프로 본다
+let snapshot: { raw: unknown; value: NativeContext | null } | null = null;
+export function getNativeContextSnapshot(): NativeContext | null {
+  if (typeof window === 'undefined') return null;
+  const raw = window.__LANDIT_NATIVE__;
+  if (!snapshot || snapshot.raw !== raw) {
+    snapshot = { raw, value: readNativeContext(raw) };
+  }
+  return snapshot.value;
+}
+
 // 실행 표면 — 셸 안이면 'app', 아니면 'browser'
 export function getSurface(): Surface {
   return getNativeContext() ? 'app' : 'browser';
