@@ -53,11 +53,12 @@
 
 ### 페이월
 
-| 이벤트                  | 속성                  | 시점                                                                  |
-| ----------------------- | --------------------- | --------------------------------------------------------------------- |
-| Paywall Plan Selected   | plan(monthly\|yearly) | 페이월에서 다른 플랜 카드를 골랐을 때 (같은 카드 다시 누르면 안 찍음) |
-| Purchase Started        | plan(monthly\|yearly) | CTA를 눌러 결제를 요청한 순간                                         |
-| Purchase Restore Tapped | 없음                  | 구매 복원을 눌렀을 때                                                 |
+| 이벤트                  | 속성                                                          | 시점                                                                                    |
+| ----------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Paywall Plan Selected   | plan(monthly\|yearly)                                         | 페이월에서 다른 플랜 카드를 골랐을 때 (같은 카드 다시 누르면 안 찍음)                   |
+| Purchase Started        | plan(monthly\|yearly)                                         | CTA를 눌러 결제를 요청한 순간                                                           |
+| Purchase Restore Tapped | 없음                                                          | 구매 복원을 눌렀을 때                                                                   |
+| Paywall Gate Locked     | entry(scenario\|expression\|smalltalk\|conversation_finished) | 무료 구간을 다 쓴 무료 사용자가 학습 진입(또는 대화 피드백 끝)에서 페이월로 보내졌을 때 |
 
 페이월 노출은 별도 이벤트 없이 `Page Viewed`(page_name=paywall)로 본다. 결제 성공·취소·실패는 결제 연동(LAN-447)에서 셸의 결과 메시지를 받을 때 추가한다.
 

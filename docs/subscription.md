@@ -12,7 +12,7 @@
 | 상품           | 월간 `com.saynow.app.premium.monthly` ₩14,900, 연간 `com.saynow.app.premium.yearly` ₩58,500 (2026-09-07 재설정, 스토어 재등록 필요) |
 | 월간 가격 성격 | 할인 없는 기본가 14,900원. 카드에 할인 배지·취소선을 두지 않는다                                                                    |
 | 연간 혜택      | 7일 무료 체험 후 연 58,500원. 월 4,900원(100원 단위 올림), 월간보다 67% 저렴                                                        |
-| 무료 구간      | 온보딩, 첫 대화 하나, 그 대화의 표현 학습 하나까지. 그다음 학습 진입부터 페이월                                                     |
+| 무료 구간      | 결제 오픈 뒤 대화 하나까지. 신규는 첫 대화, 기존 사용자는 오늘의 시나리오. 그 피드백 끝에서 첫 페이월                               |
 | 페이월 UI      | 피그마 `paywall` 페이지 `★ 최종 레이아웃` 섹션 3장                                                                                  |
 | 아이콘         | 혜택 목록은 기능별 라인 아이콘 (이모지 안 씀)                                                                                       |
 | 버튼           | 앱 `Button` lg 3D 그대로                                                                                                            |
@@ -55,23 +55,22 @@ App Store Connect 구독 그룹 `premium` (ID 22358008, 표시명 "랜딧 프리
 
 1. 온보딩
 2. 첫 대화 하나
-3. 첫 대화 직후 "수준 파악 완료" 화면 (한 번만 뜬다, CTA는 표현 학습으로)
-4. 그 대화의 표현 학습 하나
+3. 그 대화의 피드백(총평·상세)
 
-표현 학습 하나를 완료한 뒤부터 새 대화 시작, 다음 표현 학습, 스몰톡 진입이 페이월로 막힌다. 홈은 열람할 수 있다. 페이월을 닫으면 홈으로 가고, 학습에 다시 들어가면 페이월이 또 뜬다.
+피드백을 마치고 표현 분기로 넘어가는 자리가 무료 사용자에게는 첫 페이월이다(`ScenarioTalkFlow`의 `leaveFeedback`, entry `conversation_finished`). 결제하면 그 대화의 표현 분기로 돌아온다. 그 뒤로 새 대화 시작, 표현 학습, 스몰톡 진입이 모두 페이월로 막힌다. 홈은 열람할 수 있다. 페이월을 닫으면 홈으로 가고, 학습에 다시 들어가면 페이월이 또 뜬다. 2026-09-08 시안의 신규 사용자용 "분석 중 → 레벨 결과 → 학습 준비" 세 화면은 BE 수준 평가(landit-be #169)가 안정된 뒤 이 자리에 끼우는 별도 이슈다.
 
-게이트는 학습 진입 지점에 건다 (`features/conversation`, `features/expression`, `features/small-talk`). `(protected)/layout.tsx`로 화면 전체를 막지 않는다.
+게이트는 학습 진입 지점에 건다. `usePaywallGate().guard(이동, { entry, returnTo })`가 대화 시작(시나리오 탭), 스몰톡 시작(내가 먼저·주제로), 표현 학습 진입(대화 직후 분기·홈 카드 뒷면·스몰톡 결과·스몰톡 기록) 여섯 곳과 대화 피드백 끝을 감싼다. 피드백 끝은 `conversationJustFinished: true`로 불러 서버 값이 아직 안 따라왔어도 잠근다(방금 끝난 대화가 곧 그 하나다). 잠기면 `/paywall?from=돌아갈곳`으로 보내고 `Paywall Gate Locked{entry}`를 남긴다. 판정은 `decidePaywallGate` 순수 함수 하나다. 구독 조회 실패·진행도 조회 실패·판단 재료 미도착(unknown)은 잠그지 않는다 — 잘못 막는 쪽이 더 나쁘다. `(protected)/layout.tsx`로 화면 전체를 막지 않는다.
 
-"첫 대화 완료·첫 표현 완료"는 서버 값으로 판단해 기기를 바꿔도 같아야 한다. 시나리오 완료 상태와 표현 학습 진행도 필드를 확인하고 없으면 BE 이슈로 뺀다. 무료 체험 중(`periodType=TRIAL`)과 해지 예약(`CANCELED`, 만료 전)은 `premium=true`라 게이트에 걸리지 않는다.
+잠금 조건은 "첫 대화 완료"가 아니라 "결제 오픈일 이후 대화를 하나 끝냈다"이다(2026-09-08 확정). 신규 사용자는 모든 대화가 오픈 뒤라 첫 대화가 끝나는 순간 잠기고, 기존 사용자는 오픈 전에 몇 개를 했든 오픈 뒤 첫 대화(오늘의 시나리오)를 끝내는 순간 잠긴다. 둘 다 그 대화의 피드백을 마친 자리에서 첫 페이월을 만나고, 신규만 그 사이에 수준 파악 화면을 거친다. 이 값은 서버가 준다 — `/api/v1/me/subscription`의 `conversationCompletedSinceLaunch`(도입 시점은 BE 환경변수). 필드가 없는 구버전 응답이면 `unknown`으로 두고 잠그지 않는다. 무료 체험 중(`periodType=TRIAL`)과 해지 예약(`CANCELED`, 만료 전)은 `premium=true`라 게이트에 걸리지 않는다.
 
-전환 시점에 이미 대화와 표현을 여러 개 끝낸 기존 사용자는 즉시 게이트에 걸린다. 유예를 줄지는 미정.
+기존 사용자는 오픈 뒤 대화 하나가 사실상의 유예다. 그 뒤 새 대화 시작·표현 학습·스몰톡 진입이 잠긴다.
 
 ## 페이월 노출 조건
 
 세 조건이 전부 참일 때만 결제 UI를 보여준다.
 
-1. `window.__LANDIT_NATIVE__.appVersion >= 1.3.0` — 1.2.x 셸에는 SDK도 브릿지 핸들러도 없다. 브라우저 단독 접속은 값이 없어서 자연히 안 뜬다. 웹에는 아직 버전 비교 유틸이 없다(앱 업데이트 판단은 서버가 `versionName`으로 한다). 게이트 이슈에서 semver 비교를 새로 만들고 테스트를 붙인다.
-2. `NEXT_PUBLIC_PAYMENT_ENABLED` — 오픈 시점을 잡는 플래그. Vercel 환경변수라 바꾸면 재배포가 필요하다 (`NEXT_PUBLIC_`은 빌드 시점에 박힌다).
+1. `window.__LANDIT_NATIVE__.appVersion >= 1.3.0` — 1.2.x 셸에는 SDK도 브릿지 핸들러도 없다. 브라우저 단독 접속은 값이 없어서 자연히 안 뜬다. 비교는 `features/subscription/model/app-version.ts`의 `isAppVersionAtLeast`(자리별 정수, 못 읽는 버전은 낮은 것으로).
+2. `NEXT_PUBLIC_PAYMENT_ENABLED` — 오픈 시점을 잡는 플래그(`features/subscription/model/payment-flag.ts`, 값 `true`일 때만 켜짐). Vercel 환경변수라 바꾸면 재배포가 필요하다 (`NEXT_PUBLIC_`은 빌드 시점에 박힌다).
 3. BE `premium`이 `false` — 이미 구독 중이면 안 보여준다.
 
 이 세 조건은 페이월 노출뿐 아니라 위 절의 잠금 게이트에도 같이 걸린다. 1.2.x 유저는 결제를 못 하니 잠기면 안 된다.
@@ -118,7 +117,7 @@ App Store Connect 구독 그룹 `premium` (ID 22358008, 표시명 "랜딧 프리
 1. **웹 배포.** 결제 UI 포함, 버전 게이트 걸림, `NEXT_PUBLIC_PAYMENT_ENABLED=true`. 1.2.x 유저는 게이트 때문에 변화가 없다.
 2. **BE 운영 설정 확인.** `apply-sandbox-events`가 `true`인지. (아래 샌드박스 절 참고)
 3. **프로덕션 RevenueCat 프로젝트 준비.** 운영 웹훅 URL `https://api.landit.im/webhooks/revenuecat`과 Authorization 값 등록. IAP 상품은 1.3.0 빌드에 첨부해서 같이 제출한다 (첫 제출 시 필수). 애플 계정 이전이 진행 중이라 App Store 연결(공유 비밀, In-App Purchase 키)은 새 팀 기준으로 잡는다.
-4. **1.3.0 심사 제출.** 심사관만 결제 UI를 보고 샌드박스로 결제한다. 심사관이 페이월까지 가려면 대화 하나와 표현 하나를 끝내야 하므로 심사 노트에 경로를 적거나, 그 상태를 이미 만든 테스트 계정을 준다.
+4. **1.3.0 심사 제출.** 심사관만 결제 UI를 보고 샌드박스로 결제한다. 심사관이 페이월까지 가려면 대화 하나를 끝내야 하므로 심사 노트에 경로를 적거나, 그 상태를 이미 만든 테스트 계정을 준다.
 5. **승인.** `NEXT_PUBLIC_PAYMENT_ENABLED=false`로 웹 재배포한 뒤 1.3.0을 출시한다. BE에 `apply-sandbox-events=false` 전환을 요청한다.
 6. **결제 오픈.** 원하는 날 `NEXT_PUBLIC_PAYMENT_ENABLED=true`로 재배포. 앱 업데이트 없이 그 자리에서 열린다.
 
@@ -136,18 +135,19 @@ App Store Connect 구독 그룹 `premium` (ID 22358008, 표시명 "랜딧 프리
 
 `GET /api/v1/me/subscription`
 
-| 필드                 | 값                                                              | 웹에서 쓰는 곳          |
-| -------------------- | --------------------------------------------------------------- | ----------------------- |
-| `premium`            | `boolean`                                                       | 잠금·페이월 분기 (유일) |
-| `subscriptionStatus` | `NONE` / `ACTIVE` / `CANCELED` / `EXPIRED`                      | 배지 표시               |
-| `periodType`         | `TRIAL` / `INTRO` / `NORMAL` / `PROMOTIONAL` / `PREPAID` / null | 무료 체험 표시          |
-| `expiresAt`          | `LocalDateTime` / null                                          | 만료일·다음 결제일 표시 |
+| 필드                               | 값                                                              | 웹에서 쓰는 곳                      |
+| ---------------------------------- | --------------------------------------------------------------- | ----------------------------------- |
+| `premium`                          | `boolean`                                                       | 잠금·페이월 분기 (유일)             |
+| `subscriptionStatus`               | `NONE` / `ACTIVE` / `CANCELED` / `EXPIRED`                      | 배지 표시                           |
+| `periodType`                       | `TRIAL` / `INTRO` / `NORMAL` / `PROMOTIONAL` / `PREPAID` / null | 무료 체험 표시                      |
+| `expiresAt`                        | `LocalDateTime` / null                                          | 만료일·다음 결제일 표시             |
+| `conversationCompletedSinceLaunch` | `boolean` (BE 추가 요청 중)                                     | 게이트 — 오픈일 이후 대화 완료 여부 |
 
-`CANCELED`는 해지 예약 상태로 만료 전까지 `premium=true`다. 잠금 판단은 반드시 `premium`만 본다.
+`CANCELED`는 해지 예약 상태로 만료 전까지 `premium=true`다. 잠금 판단은 `premium`과 `conversationCompletedSinceLaunch`만 본다.
 
 웹훅은 BE가 처리하므로 웹·셸은 관여하지 않는다. `app_user_id`는 우리 유저 id를 문자열로 넘긴 값이어야 한다.
 
-게이트에 필요한 "첫 대화 완료·첫 표현 완료" 값은 이 응답에 없다. 기존 시나리오·표현 API의 완료 필드를 쓰거나 BE에 요청한다.
+`conversationCompletedSinceLaunch`는 BE PR #166에 있다. 도입 시점(`LANDIT_SUBSCRIPTION_LAUNCHED_AT`, ISO-8601 offset) 이후에 시나리오를 끝까지 완료(CLEARED)한 이력이 있으면 `true`. 스몰톡은 세지 않는다. 도입 시점이 비어 있으면 항상 `false`라 잠기지 않는다. 기존 사용자의 도입 전 기록은 세지 않는다.
 
 ## 브릿지 메시지
 
@@ -196,15 +196,13 @@ App Store Connect 구독 그룹 `premium` (ID 22358008, 표시명 "랜딧 프리
 | ---- | ------- | -------------------------------------------------------------------------- | -------------------------------------------------- |
 | 1    | LAN-446 | 페이월 화면. 라우트·UI·플랜 선택 상태·계측. CTA는 빈 `requestPurchase`     | 없음 (진입점 없음)                                 |
 | 2    | LAN-447 | RevenueCat 연동. 셸 SDK, 브릿지 메시지, CTA 연결, 결과 수신, 샌드박스 검증 | 없음 (진입점 없음)                                 |
-| 3    | LAN-448 | 게이트(첫 대화+첫 표현 완료, 버전 ≥ 1.3.0, 플래그)와 수준 파악 완료 화면   | 1.3.0 유저에게 열림. 1.3.0 심사 제출과 같이 잡는다 |
+| 3    | LAN-448 | 게이트(도입 뒤 대화 완료, 버전 ≥ 1.3.0, 플래그)와 대화 피드백 끝 → 페이월  | 1.3.0 유저에게 열림. 1.3.0 심사 제출과 같이 잡는다 |
 | 4    | LAN-449 | 마이페이지 구독 정보·구독 관리·환불 안내, 약관·개인정보 처리방침 구독 조항 | 심사 제출 전 필요                                  |
 
 UI(446)와 RevenueCat(447)은 합치지 않는다. 447은 셸·브릿지·대시보드·실기기·애플 계정 이전에 걸려 있어 UI가 그 일정에 묶이는 걸 피한다. 446이 리뷰 중일 때 447 브랜치를 그 위에 파서 셸 SDK 세팅부터 시작한다.
 
 ## 미정
 
-- 첫 대화·첫 표현 완료 값의 출처(기존 API 필드 또는 BE 신규).
-- 기존 사용자 유예 여부.
 - `IDENTIFY`를 보낼 시점. 웹이 로그인 완료 시 셸로 보내는 메시지가 이미 있으면 거기 얹고, 없으면 새로 추가.
 - Android. Google Play 결제를 RevenueCat이 같은 SDK로 처리한다. 심사 절차는 iOS보다 가볍지만 상품 등록은 별도이며 등록 여부 미확인.
 
@@ -215,7 +213,7 @@ UI(446)와 RevenueCat(447)은 합치지 않는다. 447은 셸·브릿지·대시
 - [ ] BE #166 머지, 운영 `apply-sandbox-events=true` 확인
 - [ ] 프로덕션 RevenueCat 프로젝트에 운영 웹훅 URL·Authorization 등록, App Store 연결은 새 애플 팀 기준
 - [ ] 약관·개인정보 처리방침 문안 확정·반영
-- [ ] 심사용 테스트 계정(첫 대화·첫 표현 완료 상태) 준비, 심사 노트 작성
+- [ ] 심사용 테스트 계정(첫 대화 완료 상태) 준비, 심사 노트 작성
 - [ ] 웹 배포 (`NEXT_PUBLIC_PAYMENT_ENABLED=true`)
 - [ ] 1.3.0 빌드에 구독 상품 첨부해 심사 제출
 - [ ] 승인 후 웹 플래그 `false` 재배포, BE 샌드박스 `false` 요청, 1.3.0 출시
