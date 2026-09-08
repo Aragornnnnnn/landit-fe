@@ -151,6 +151,8 @@ export const EVENTS = {
   PAYWALL_PLAN_SELECTED: 'Paywall Plan Selected',
   PURCHASE_STARTED: 'Purchase Started',
   PURCHASE_RESTORE_TAPPED: 'Purchase Restore Tapped',
+  // 학습 진입 게이트 — 무료 구간을 다 쓴 무료 사용자가 어느 문에서 페이월로 보내졌는가
+  PAYWALL_GATE_LOCKED: 'Paywall Gate Locked',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -188,6 +190,14 @@ export type HomeReturnReason = 'just' | 'flip' | 'card';
 
 // 구독 플랜 — 페이월 카드와 스토어 상품(monthly/yearly)이 같은 이름을 쓴다
 export type SubscriptionPlan = 'monthly' | 'yearly';
+
+// 페이월 게이트가 걸린 진입 문 — 새 대화 시작 / 표현 학습 진입 / 스몰톡 시작
+export type PaywallGateEntry =
+  | 'scenario'
+  | 'expression'
+  | 'smalltalk'
+  // 대화 피드백을 마치고 표현으로 넘어가는 자리 — 무료 구간이 끝나는 곳이라 페이월이 처음 뜬다
+  | 'conversation_finished';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
@@ -509,6 +519,7 @@ export type EventProps = {
   'Paywall Plan Selected': { plan: SubscriptionPlan };
   'Purchase Started': { plan: SubscriptionPlan };
   'Purchase Restore Tapped': undefined;
+  'Paywall Gate Locked': { entry: PaywallGateEntry };
 
   // 위젯 설치 안내 — 노출·답·플랫폼을 속성으로 가른다
   'Widget Install Invite Viewed': undefined;
