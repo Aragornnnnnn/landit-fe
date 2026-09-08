@@ -153,6 +153,10 @@ export const EVENTS = {
   PURCHASE_RESTORE_TAPPED: 'Purchase Restore Tapped',
   // 학습 진입 게이트 — 무료 구간을 다 쓴 무료 사용자가 어느 문에서 페이월로 보내졌는가
   PAYWALL_GATE_LOCKED: 'Paywall Gate Locked',
+  // 대화 직후 무료 사용자가 페이월 전에 지나는 화면 — 레벨 결과(첫 대화만)와 학습 준비
+  LEVEL_RESULT_VIEWED: 'Level Result Viewed',
+  PREPARED_LEARNING_VIEWED: 'Prepared Learning Viewed',
+  PREPARED_LEARNING_CONTINUED: 'Prepared Learning Continued',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -520,6 +524,14 @@ export type EventProps = {
   'Purchase Started': { plan: SubscriptionPlan };
   'Purchase Restore Tapped': undefined;
   'Paywall Gate Locked': { entry: PaywallGateEntry };
+  // change_type: BE가 이번 평가로 적용 수준을 어떻게 바꿨는가 (INITIALIZED / PROMOTED / UNCHANGED / NOT_APPLIED)
+  'Level Result Viewed': {
+    scenario_id: number;
+    level: EnglishLevel;
+    change_type: string;
+  };
+  'Prepared Learning Viewed': { scenario_id: number; count: number | null };
+  'Prepared Learning Continued': { scenario_id: number };
 
   // 위젯 설치 안내 — 노출·답·플랫폼을 속성으로 가른다
   'Widget Install Invite Viewed': undefined;
