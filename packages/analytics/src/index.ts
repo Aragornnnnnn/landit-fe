@@ -25,4 +25,5 @@ export {
   type WidgetInstallAnswer,
   type WidgetGuideStep,
   type WidgetInstallPlatform,
+  type SubscriptionPlan,
 } from './events';

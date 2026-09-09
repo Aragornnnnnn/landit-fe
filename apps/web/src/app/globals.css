@@ -9,6 +9,9 @@
 /* Pretendard 자체 호스팅 (다이나믹 서브셋) — 화면에 나온 글자가 포함된 조각만 다운로드된다 */
 @import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 
+/* 키가 작은 폰(iPhone SE 계열, 세로 700px 이하) 전용 변형 — 한 화면에 다 들어가야 하는 화면이 간격을 줄일 때 쓴다 */
+@custom-variant short (@media (max-height: 700px));
+
 /* Tailwind 유틸리티 클래스(bg-primary 등)와 시맨틱 토큰 연결 */
 @theme inline {
   --color-background: var(--background);
