@@ -26,7 +26,12 @@ import { BenefitList } from './BenefitList';
 import { PaywallHero } from './PaywallHero';
 import { PlanCard } from './PlanCard';
 
-export const PaywallScreen = () => {
+interface PaywallScreenProps {
+  /** 결제·복원이 끝난 뒤 돌아갈 내부 경로. 학습 진입에서 막혀 왔을 때만 있고, 없으면 홈으로 간다 */
+  returnTo?: string;
+}
+
+export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<PlanId>(DEFAULT_PLAN_ID);
 
@@ -37,9 +42,11 @@ export const PaywallScreen = () => {
 
   // 닫으면 홈으로 — 학습 진입에서 밀려 올라온 화면이라 온 곳으로 되돌리면 다시 페이월에 걸린다 (docs/subscription.md)
   const close = () => router.replace(homePath());
+  // 유료가 되면 원래 가려던 곳으로 — 게이트가 붙인 ?from=. 캐시가 이미 유료라 다시 막히지 않는다
+  const unlock = () => router.replace(returnTo ?? homePath());
   const { busy, purchase, restore } = usePurchase({
     pricing,
-    onUnlocked: close,
+    onUnlocked: unlock,
   });
 
   const selectPlan = (plan: PaywallPlan) => {

@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   restore: vi.fn(),
   busy: false,
   pricing: {} as Record<string, unknown>,
-  purchaseOptions: null as { pricing: unknown } | null,
+  purchaseOptions: null as { pricing: unknown; onUnlocked: () => void } | null,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -20,7 +20,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 // 결제 지휘는 features/subscription 몫 — 여기선 무엇을 넘기고 어떤 인자로 부르는지, 버튼 상태만 본다
 vi.mock('@/features/subscription/model/usePurchase', () => ({
-  usePurchase: (options: { pricing: unknown }) => {
+  usePurchase: (options: { pricing: unknown; onUnlocked: () => void }) => {
     mocks.purchaseOptions = options;
     return {
       busy: mocks.busy,
@@ -140,6 +140,24 @@ describe('PaywallScreen', () => {
 
     expect(mocks.track).toHaveBeenCalledWith('Purchase Restore Tapped');
     expect(mocks.restore).toHaveBeenCalledTimes(1);
+  });
+
+  it('유료가 확인되면 게이트가 붙여 준 곳으로 돌아간다', () => {
+    render(<PaywallScreen returnTo="/conversation/scenario/7/expressions" />);
+
+    mocks.purchaseOptions?.onUnlocked();
+
+    expect(mocks.replace).toHaveBeenCalledWith(
+      '/conversation/scenario/7/expressions',
+    );
+  });
+
+  it('돌아갈 곳이 없으면 유료가 돼도 홈으로 간다', () => {
+    render(<PaywallScreen />);
+
+    mocks.purchaseOptions?.onUnlocked();
+
+    expect(mocks.replace).toHaveBeenCalledWith('/scenario');
   });
 
   it('닫기를 누르면 홈으로 돌아간다', () => {
