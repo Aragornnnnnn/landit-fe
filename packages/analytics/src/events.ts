@@ -167,15 +167,14 @@ export type OnboardingStep =
   | 'thought'
   | 'notification'
   | 'widget'
-  | 'level'
   | 'accent'
   | 'scenario';
 // 영어 수준 — BE 저장 API(learningLevel)와 같은 1(막 시작)~5(유창) 정수 척도. 지표와 서버 데이터가 같은 말을 쓴다
 export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
 // 배울 영어 — BE 발음 에셋(accentLocale)과 같은 enum 값을 쓴다. 지표와 서버 데이터가 같은 말을 쓴다
 export type AccentLocale = 'EN_US' | 'EN_GB' | 'EN_AU';
-// 기존 유저 게이트가 묻는 질문 — 온보딩 스텝과 같은 말을 쓴다
-export type GateQuestion = Extract<OnboardingStep, 'level' | 'accent'>;
+// 기존 유저 게이트가 묻는 질문 — 온보딩 스텝과 같은 말을 쓴다. 영어 수준은 첫 대화로 BE가 매겨 더 이상 묻지 않는다
+export type GateQuestion = Extract<OnboardingStep, 'accent'>;
 // pronounce = 발음 평가 (발음 자산이 있는 표현에만), examples = 추가 예문 화면(한 장씩 두 장)
 export type ExpressionStep =
   'quiz' | 'explain' | 'pronounce' | 'examples' | 'review';
@@ -190,6 +189,10 @@ export type HomeReturnReason = 'just' | 'flip' | 'card';
 
 // 구독 플랜 — 페이월 카드와 스토어 상품(monthly/yearly)이 같은 이름을 쓴다
 export type SubscriptionPlan = 'monthly' | 'yearly';
+
+// 수준 평가가 적용 수준을 어떻게 바꿨는가 — BE LearningLevelPolicy.ChangeType과 같은 값
+export type LevelChangeType =
+  'INITIALIZED' | 'PROMOTED' | 'UNCHANGED' | 'NOT_APPLIED';
 
 // 페이월 게이트가 걸린 진입 문 — 새 대화 시작 / 표현 학습 진입 / 스몰톡 시작
 export type PaywallGateEntry =
@@ -292,10 +295,7 @@ export type EventProps = {
   };
   'Onboarding Completed': undefined;
   'Profile Gate Viewed': { question: GateQuestion };
-  // 답이 질문마다 달라서 question으로 갈린다 — 짝이 안 맞는 조합(level 질문에 accent 값)은 타입이 막는다
-  'Profile Gate Answered':
-    | { question: 'level'; level: EnglishLevel }
-    | { question: 'accent'; accent: AccentLocale };
+  'Profile Gate Answered': { question: 'accent'; accent: AccentLocale };
   'English Level Changed': { level: EnglishLevel };
   'Accent Changed': { accent: AccentLocale };
 
