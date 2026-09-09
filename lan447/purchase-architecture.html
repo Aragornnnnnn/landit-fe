@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>인앱 결제 전달 구조</title>
+<style>
+  :root {
+    --bg: #faf7f1;
+    --ink: #1b1712;
+    --muted: #7a7166;
+    --faint: #b9b0a3;
+    --rule: #e6dfd3;
+    --accent: #ef6f1a;
+    --accent-ink: #8a3d07;
+    --truth: #16875c;
+    --truth-ink: #0b5a3c;
+    --lane-web: #fff9f3;
+    --lane-shell: #f2f4f8;
+    --lane-out: #f6f4ef;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); }
+  body {
+    font-family: -apple-system, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .canvas { position: relative; width: 1600px; height: 900px; overflow: hidden; }
+  .abs { position: absolute; }
+  code, .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+
+  h1 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+  .sub { margin-top: 8px; font-size: 15px; color: var(--muted); }
+  .sub b { color: var(--ink); font-weight: 700; }
+
+  /* 레인 */
+  .lane { left: 0; width: 1600px; }
+  .lane-web  { top: 150px; height: 220px; background: var(--lane-web); }
+  .lane-shell{ top: 370px; height: 190px; background: var(--lane-shell); }
+  .lane-out  { top: 560px; height: 220px; background: var(--lane-out); }
+  .lane-rule { left: 0; width: 1600px; height: 1px; background: var(--rule); }
+
+  .lane-head { left: 48px; width: 200px; }
+  .lane-head .name { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; }
+  .lane-head .path { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .lane-head .files { margin-top: 12px; font-size: 12px; line-height: 1.7; color: var(--muted); }
+  .lane-head .files code { font-size: 11.5px; color: var(--ink); }
+  .lane-head .files .dim { color: var(--faint); }
+
+  /* 정거장 */
+  .stop { width: 200px; }
+  .stop .n {
+    position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%;
+    background: #fff; border: 3px solid var(--accent); color: var(--accent-ink);
+    font-size: 14px; font-weight: 900; display: flex; align-items: center; justify-content: center;
+  }
+  .stop.truth .n { border-color: var(--truth); color: var(--truth-ink); }
+  .stop .t { position: absolute; left: 0; top: 40px; font-size: 15px; font-weight: 800; white-space: nowrap; }
+  .stop .d { position: absolute; left: 0; top: 62px; width: 200px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+  .stop .d b { color: var(--ink); font-weight: 700; }
+  .stop .d code { font-size: 11.5px; color: var(--ink); }
+  .stop.up .t { top: auto; bottom: 40px; }
+  .stop.up .d { top: auto; bottom: 62px; }
+
+  /* 메시지 태그 (레인 경계를 넘는 곳) */
+  .msg {
+    display: inline-flex; align-items: center; gap: 8px; height: 26px; padding: 0 10px;
+    border-radius: 6px; background: var(--ink); color: #fff;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; font-weight: 700; white-space: nowrap;
+  }
+  .msg .pl { font-weight: 500; opacity: 0.7; }
+  .msg.truth { background: var(--truth); }
+  .note { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .note code { font-size: 11.5px; color: var(--ink); }
+
+  /* 하단 원칙 */
+  .principles { left: 48px; top: 812px; width: 1504px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; }
+  .p .k { font-size: 14px; font-weight: 800; }
+  .p .k::before { content: ""; display: inline-block; width: 22px; height: 3px; border-radius: 2px; background: var(--accent); margin-right: 10px; vertical-align: 4px; }
+  .p.truth .k::before { background: var(--truth); }
+  .p.bridge .k::before { background: var(--ink); }
+  .p .v { margin-top: 6px; font-size: 12.5px; line-height: 1.55; color: var(--muted); }
+  .p .v b { color: var(--ink); }
+
+  svg { position: absolute; inset: 0; width: 1600px; height: 900px; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="abs" style="left:48px; top:40px;">
+    <h1>인앱 결제, 한 바퀴</h1>
+    <div class="sub">웹은 <b>시키고</b>, 셸은 <b>전하고</b>, 유료 여부는 <b>BE만</b> 판단한다. 주황 선이 결제 한 번의 길, 초록 선이 유료가 확정되는 길.</div>
+  </div>
+
+  <!-- 레인 배경 -->
+  <div class="abs lane lane-web"></div>
+  <div class="abs lane lane-shell"></div>
+  <div class="abs lane lane-out"></div>
+  <div class="abs lane-rule" style="top:150px"></div>
+  <div class="abs lane-rule" style="top:370px"></div>
+  <div class="abs lane-rule" style="top:560px"></div>
+  <div class="abs lane-rule" style="top:780px"></div>
+
+  <!-- 레인 머리 -->
+  <div class="abs lane-head" style="top:172px">
+    <div class="name">웹</div>
+    <div class="path">apps/web</div>
+    <div class="files">
+      <code>paywall/PaywallScreen</code><br/>
+      <code>usePurchase</code> <span class="dim">지휘</span><br/>
+      <code>shell-purchases</code> <span class="dim">동작·조건</span><br/>
+      <code>shared/bridge/request</code> <span class="dim">왕복</span><br/>
+      <code>useSubscriptionQuery</code> <span class="dim">premium</span>
+    </div>
+  </div>
+  <div class="abs lane-head" style="top:392px">
+    <div class="name">셸</div>
+    <div class="path">apps/mobile</div>
+    <div class="files">
+      <code>useNativeBridge</code> <span class="dim">핸들러</span><br/>
+      <code>purchases.ts</code> <span class="dim">SDK 래퍼</span><br/>
+      <code>react-native-purchases</code>
+    </div>
+  </div>
+  <div class="abs lane-head" style="top:582px">
+    <div class="name">바깥</div>
+    <div class="path">우리 코드가 아닌 곳</div>
+    <div class="files">
+      App Store<br/>RevenueCat 서버<br/>BE <span class="dim">landit-be</span>
+    </div>
+  </div>
+
+  <!-- 선 -->
+  <svg viewBox="0 0 1600 900" aria-hidden="true">
+    <defs>
+      <marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M0,0 L8,4 L0,8 z" fill="#ef6f1a"/>
+      </marker>
+      <marker id="g" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M0,0 L8,4 L0,8 z" fill="#16875c"/>
+      </marker>
+    </defs>
+    <!-- 결제 한 번의 길: 1 → 2 → 3 → 4 → 5 → 6 -->
+    <path d="M330,205 H470 Q490,205 490,225 V405 Q490,425 510,425 H700 Q720,425 720,445 V615 Q720,635 740,635 H900"
+          fill="none" stroke="#ef6f1a" stroke-width="5" stroke-linecap="round"/>
+    <path d="M930,635 H1070 Q1090,635 1090,615 V445 Q1090,425 1110,425 H1130 Q1150,425 1150,405 V225 Q1150,205 1170,205 H1260"
+          fill="none" stroke="#ef6f1a" stroke-width="5" stroke-linecap="round" marker-end="url(#a)"/>
+    <!-- 유료가 확정되는 길: 5 → 7(BE) → 8(웹 폴링) -->
+    <path d="M932,660 H1143" fill="none" stroke="#16875c" stroke-width="3" stroke-dasharray="7 6" stroke-linecap="round" marker-end="url(#g)"/>
+    <path d="M1160,672 V745 Q1160,760 1177,760 H1545 Q1562,760 1562,743 V222 Q1562,205 1545,205 H1332" fill="none" stroke="#16875c" stroke-width="3" stroke-dasharray="7 6" stroke-linecap="round" marker-end="url(#g)"/>
+  </svg>
+
+  <!-- 정거장: 웹 -->
+  <div class="abs stop" style="left:300px; top:190px;">
+    <div class="n">1</div>
+    <div class="t">CTA를 누른다</div>
+    <div class="d" style="width:172px;"><code>usePurchase</code>가 환경을 본다. 브라우저·구버전 셸이면 여기서 안내하고 끝. 가격표에서 <b>패키지 id</b>를 고른다</div>
+  </div>
+
+  <!-- 2: 웹 → 셸 메시지 (레인 경계 위) -->
+  <div class="abs" style="left:510px; top:292px;">
+    <div class="msg"><span>PURCHASE</span><span class="pl">packageId</span></div>
+    <div class="note" style="margin-top:6px; width:200px;">회신 구독을 먼저 걸고 보낸다. <b>5분</b> 안에 회신이 없거나 화면이 사라지면 끊는다</div>
+  </div>
+  <div class="abs" style="left:475px; top:295px;"><div class="stop"><div class="n">2</div></div></div>
+
+  <!-- 정거장: 셸 -->
+  <div class="abs stop" style="left:520px; top:410px;">
+    <div class="n">3</div>
+    <div class="t">식별을 기다렸다가 결제</div>
+    <div class="d" style="width:182px;"><code>purchases.ts</code>는 진행 중인 <b>logIn</b>이 끝난 뒤 SDK에 결제를 시킨다. 익명으로 결제되면 웹훅이 우리 유저를 못 찾는다</div>
+  </div>
+
+  <!-- 정거장: 바깥 -->
+  <div class="abs stop" style="left:730px; top:620px;">
+    <div class="n">4</div>
+    <div class="t">App Store 결제 시트</div>
+    <div class="d" style="width:168px;">승인하면 영수증, 닫으면 <b>userCancelled</b>. 취소는 실패가 아니다</div>
+  </div>
+  <div class="abs stop truth" style="left:915px; top:620px;">
+    <div class="n">5</div>
+    <div class="t" style="top:50px;">RevenueCat이 검증</div>
+    <div class="d" style="width:200px; top:72px;">영수증을 확인하고 <b>app_user_id</b>(우리 유저 id)에 구독을 기록한다. 여기서 길이 둘로 갈린다</div>
+  </div>
+  <div class="abs stop truth" style="left:1145px; top:640px;">
+    <div class="n">7</div>
+    <div class="t" style="top:-1px; left:42px;">BE가 webhook을 받는다</div>
+    <div class="d" style="top:22px; left:42px; width:330px;"><b>premium</b>을 저장한다. 유료 여부를 아는 곳은 여기 하나. <code>GET /api/v1/me/subscription</code>으로 알려 준다</div>
+  </div>
+
+  <!-- 6: 셸 → 웹 회신 -->
+  <div class="abs" style="left:1178px; top:340px;">
+    <div class="msg"><span>PURCHASE_RESULT</span><span class="pl">success · cancelled · error</span></div>
+    <div class="note" style="margin-top:6px; width:260px;">셸은 결과를 <b>옮길 뿐</b> 유료라고 말하지 않는다</div>
+  </div>
+  <div class="abs" style="left:1135px; top:295px;"><div class="stop"><div class="n">6</div></div></div>
+
+  <!-- 정거장: 웹 마무리 -->
+  <div class="abs stop truth" style="left:1290px; top:190px;">
+    <div class="n">8</div>
+    <div class="t">BE에 묻고 닫는다</div>
+    <div class="d" style="width:240px;"><code>GET /me/subscription</code>을 <b>최대 5회 × 2초</b>. premium이면 캐시에 넣고 페이월을 닫는다. 늦으면 "확인 중" 안내 후 닫는다 — 결제는 이미 끝났으니 붙잡지 않는다</div>
+  </div>
+
+  <!-- 같은 길로 오가는 나머지 메시지 -->
+  <div class="abs note" style="left:48px; top:734px; width:220px; color:var(--faint);"></div>
+  <div class="abs" style="left:1180px; top:460px; width:300px;">
+    <div class="note"><b>같은 길로 오가는 나머지</b><br/>
+      <span class="mono">IDENTIFY</span> 로그인 사용자 묶기 · <span class="mono">GET_OFFERINGS → OFFERINGS</span> 가격표 · <span class="mono">RESTORE_PURCHASES → RESTORE_RESULT</span> 복원.<br/>
+      메시지 7개는 <code>packages/bridge</code>의 zod 스키마 하나에서 나온다 (브릿지 v5)
+    </div>
+  </div>
+
+  <!-- 원칙 -->
+  <div class="abs principles">
+    <div class="p">
+      <div class="k">웹은 판단하지 않는다</div>
+      <div class="v">셸 회신은 "스토어 결제가 끝났다"까지. 유료는 <b>BE premium</b>으로만 확정하고, 못 받으면 잠그지 않는다.</div>
+    </div>
+    <div class="p bridge">
+      <div class="k">셸은 전하기만 한다</div>
+      <div class="v">SDK 결과를 회신 모양으로 옮길 뿐 상태를 갖지 않는다. 유일한 규칙은 <b>식별이 끝난 뒤 결제</b>.</div>
+    </div>
+    <div class="p truth">
+      <div class="k">유료 여부를 아는 곳은 하나</div>
+      <div class="v">RevenueCat → BE 웹훅 → <b>premium</b>. 웹·셸·게이트(448)가 전부 이 값 하나를 본다.</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
