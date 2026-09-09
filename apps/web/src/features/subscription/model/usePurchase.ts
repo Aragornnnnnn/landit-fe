@@ -2,7 +2,7 @@
 
 // 결제·복원 지휘 훅 — 환경 판정 → 셸에 요청 → 회신 분기 → 서버 유료 반영 확인 순으로 위에서 아래로 읽힌다.
 // 화면은 busy로 버튼만 잠그고, 유료가 확인되면(또는 결제는 끝났는데 반영이 늦으면) onUnlocked로 다음 화면을 정한다
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { EVENTS, type PurchaseFailureReason } from '@landit/analytics';
 import type { SubscriptionPlan } from '@landit/bridge';
 import { useQueryClient } from '@tanstack/react-query';
@@ -57,10 +57,14 @@ export const usePurchase = ({ pricing, onUnlocked }: UsePurchaseOptions) => {
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.member?.userId ?? null);
 
-  // 화면이 사라지면 진행 중인 셸 왕복을 끊는다 — 결제 시트는 5분까지 기다리므로 회신이 사라진 화면에 닿지 않게
-  const [controller] = useState(() => new AbortController());
-  useEffect(() => () => controller.abort(), [controller]);
-  const { signal } = controller;
+  // 화면이 사라지면 진행 중인 셸 왕복을 끊는다 — 결제 시트는 5분까지 기다리므로 회신이 사라진 화면에 닿지 않게.
+  // 컨트롤러는 effect 안에서 만든다. 밖에서 만들면 dev의 effect 이중 실행이 한 번 끊은 컨트롤러가 그대로 남아 모든 요청이 즉시 null이 된다
+  const lifetime = useRef<AbortController | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    lifetime.current = controller;
+    return () => controller.abort();
+  }, []);
 
   // 서버가 유료로 바뀌었는지 몇 초 확인하고, 확인되면 구독 캐시에 바로 넣는다 — 게이트가 다시 조회하지 않아도 되게
   const confirmPremium = async () => {
@@ -80,13 +84,14 @@ export const usePurchase = ({ pricing, onUnlocked }: UsePurchaseOptions) => {
       return;
     }
 
+    const signal = lifetime.current?.signal;
     setBusy(true);
     try {
       const result = await purchaseViaBridge(
         packageIdFor(plan, pricing),
         signal,
       );
-      if (signal.aborted) return;
+      if (signal?.aborted) return;
 
       if (!result) {
         track(EVENTS.PURCHASE_FAILED, { plan, reason: 'no_response' });
@@ -130,10 +135,11 @@ export const usePurchase = ({ pricing, onUnlocked }: UsePurchaseOptions) => {
       return;
     }
 
+    const signal = lifetime.current?.signal;
     setBusy(true);
     try {
       const result = await restoreViaBridge(signal);
-      if (signal.aborted) return;
+      if (signal?.aborted) return;
 
       if (!result || result.status === 'error') {
         track(EVENTS.PURCHASE_RESTORED, { succeeded: false });

@@ -1,5 +1,5 @@
 // 결제 지휘 훅의 갈림길 — 환경 차단, 취소·실패·성공, 서버 반영 대기, 복원 결과, 화면이 사라진 뒤의 회신
-import { createElement, type ReactNode } from 'react';
+import { createElement, StrictMode, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -57,10 +57,14 @@ const free = { premium: false, subscriptionStatus: 'NONE' };
 const wrapper = ({ children }: { children: ReactNode }) =>
   createElement(QueryClientProvider, { client: new QueryClient() }, children);
 
-const renderPurchase = (pricing: PlanPricingMap = {}) => {
+// StrictMode는 dev에서 effect를 마운트→정리→마운트로 두 번 돌린다 — 끊기 컨트롤러가 이걸 견뎌야 한다
+const strictWrapper = ({ children }: { children: ReactNode }) =>
+  createElement(StrictMode, null, wrapper({ children }));
+
+const renderPurchase = (pricing: PlanPricingMap = {}, strict = false) => {
   const onUnlocked = vi.fn();
   const hook = renderHook(() => usePurchase({ pricing, onUnlocked }), {
-    wrapper,
+    wrapper: strict ? strictWrapper : wrapper,
   });
   return { ...hook, onUnlocked };
 };
@@ -208,6 +212,21 @@ describe('usePurchase — 결제', () => {
     expect(mocks.showToast).toHaveBeenCalledWith(
       '결제가 확인되는 중이에요. 잠시 후 다시 열어 주세요',
     );
+  });
+
+  it('dev StrictMode처럼 effect가 다시 실행돼도 결제 요청은 그대로 나간다', async () => {
+    mocks.purchaseViaBridge.mockResolvedValue({
+      type: 'PURCHASE_RESULT',
+      status: 'success',
+    });
+    const { result, onUnlocked } = renderPurchase({}, true);
+
+    await act(() => result.current.purchase('yearly'));
+
+    expect(mocks.purchaseViaBridge).toHaveBeenCalledTimes(1);
+    const signal = mocks.purchaseViaBridge.mock.calls[0][1] as AbortSignal;
+    expect(signal.aborted).toBe(false);
+    await waitFor(() => expect(onUnlocked).toHaveBeenCalledTimes(1));
   });
 
   it('화면이 사라진 뒤 도착한 회신은 아무 일도 하지 않는다', async () => {
