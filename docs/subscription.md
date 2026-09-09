@@ -186,9 +186,9 @@ App Store Connect 구독 그룹 `premium` (ID 22358008, 표시명 "랜딧 프리
 
 ## 마이페이지와 법적 문서
 
-마이페이지(`(protected)/me`)에 플랜 이름, 상태(체험 중·구독 중·해지 예정), 다음 결제일, 구독 관리 진입, 환불 안내를 둔다. 구독 관리는 셸이 `OPEN_SUBSCRIPTION_MANAGEMENT`로 스토어 화면을 연다. 환불은 앱에서 처리하지 않고 애플은 `reportaproblem.apple.com`, 구글은 Play 환불 요청으로 안내한다. 구독 없는 사용자에게는 이 영역 대신 페이월 진입 버튼을 보여준다.
+마이페이지(`(protected)/me`)의 `SubscriptionMenuEntry`가 유료 사용자에게 상태 배지(무료 체험 중·구독 중·해지 예정), 날짜 한 줄(체험은 첫 결제일, 구독은 다음 결제일, 그날로 끝나면 이용 만료일), 구독 관리, 환불 안내를 둔다. 표시 규칙은 `features/subscription/model/subscription-summary.ts`(유료 여부는 `premium`만, 해지 예약이 체험보다 우선), 날짜는 `lib/subscription-date.ts`(BE LocalDateTime을 서울로). BE 응답에 상품 구분이 없어 플랜 이름은 "Landit 프리미엄"으로만 쓴다(월간·연간 표기는 BE에 상품 식별자를 받은 뒤). 구독 관리와 환불은 브릿지 메시지 없이 스토어 링크다(`model/store-links.ts`) — 셸이 웹 도메인 밖 주소를 OS로 넘긴다(`isExternalNavigation`). iOS는 `apps.apple.com/account/subscriptions`·`reportaproblem.apple.com`, Android는 Play 정기 결제·환불 안내 페이지. 브라우저는 플랫폼이 없어 iOS 링크를 쓴다. 무료 사용자에게는 결제할 수 있는 환경(`canLockPaywall`)일 때만 "프리미엄 시작하기"(`/paywall?from=/me`)를 보여주고, 그 외엔 영역 자체가 없다. 계측 `Subscription Manage Tapped{status}`·`Refund Guide Viewed{status}`·`Paywall Entry Tapped{source}`.
 
-이용약관에는 구독 상품·가격 고지·자동 갱신·무료 체험 종료 시 과금·해지 방법·환불 기준 조항이, 개인정보 처리방침에는 결제 처리 위탁(애플·구글·RevenueCat)과 수집 항목이 들어가야 한다. 문서는 `(public)/(legal)/terms`, `privacy`. 문안은 팀에서 확정한 텍스트를 받아 넣고 시행일을 갱신한다. 심사 제출 전에 반영돼야 한다.
+이용약관 v1.1에 7조 「유료 구독 서비스」(상품·가격은 스토어 표시 기준, 자동 갱신, 무료 체험 종료 시 과금과 24시간 전 해지, 스토어에서 해지·남은 기간 환불 없음, 환불은 스토어 절차, 가격 변경 고지, 앱 삭제는 해지가 아님)를, 개인정보 처리방침 v1.1에 구독 결제 정보 항목(결제 수단은 수집 안 함)·이용 목적·결제 처리 위탁(Apple·Google·RevenueCat)을 넣었다. 문서는 `(public)/(legal)/terms`, `privacy`. 시행일은 2026-10-01로 적어 두었고 문안·시행일은 팀 확정 뒤 갱신한다. 심사 제출 전에 반영돼야 한다.
 
 ## 이슈와 PR 순서
 
