@@ -10,13 +10,14 @@ import { GOLD_GRADIENT } from './PlanCard';
 interface PaywallHeroProps {
   onClose: () => void;
   onRestore: () => void;
-  restoreDisabled?: boolean;
+  /** 결제·복원이 진행 중일 때 복원 버튼을 잠근다 */
+  restoreDisabled: boolean;
 }
 
 export const PaywallHero = ({
   onClose,
   onRestore,
-  restoreDisabled = false,
+  restoreDisabled,
 }: PaywallHeroProps) => (
   <section className="shrink-0 bg-[linear-gradient(180deg,#fdf1e8,#fff8f2)] pt-[max(env(safe-area-inset-top),8px)]">
     <div className="flex h-10 items-center justify-between pr-5 pl-4 short:h-8">

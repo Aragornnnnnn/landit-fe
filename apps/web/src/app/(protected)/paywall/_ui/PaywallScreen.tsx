@@ -7,7 +7,7 @@ import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { packageIdFor } from '@/features/subscription/model/offerings';
+import { toKrwPrices } from '@/features/subscription/model/offerings';
 import { useOfferings } from '@/features/subscription/model/useOfferings';
 import { usePurchase } from '@/features/subscription/model/usePurchase';
 import { track } from '@/shared/analytics';
@@ -18,7 +18,7 @@ import { getBillingNotice, getCtaLabel } from '../_model/paywall-copy';
 import {
   buildPaywallPlans,
   DEFAULT_PLAN_ID,
-  toPlanPrices,
+  PLAN_ORDER,
   type PaywallPlan,
   type PlanId,
 } from '../_model/paywall-plans';
@@ -32,13 +32,15 @@ export const PaywallScreen = () => {
 
   // 셸이 스토어 가격을 주면 카드 숫자를 그 값으로 다시 만든다 — 못 받으면 등록값 그대로
   const pricing = useOfferings();
-  const plans = buildPaywallPlans(toPlanPrices(pricing));
-  const selectedPlan = plans.find((plan) => plan.id === selectedId) ?? plans[1];
+  const plans = buildPaywallPlans(toKrwPrices(pricing));
+  const selectedPlan = plans[selectedId];
 
   // 닫으면 홈으로 — 학습 진입에서 밀려 올라온 화면이라 온 곳으로 되돌리면 다시 페이월에 걸린다 (docs/subscription.md)
   const close = () => router.replace(homePath());
-  const { phase, purchase, restore } = usePurchase({ onUnlocked: close });
-  const busy = phase !== 'idle';
+  const { busy, purchase, restore } = usePurchase({
+    pricing,
+    onUnlocked: close,
+  });
 
   const selectPlan = (plan: PaywallPlan) => {
     if (plan.id === selectedId) return;
@@ -48,7 +50,7 @@ export const PaywallScreen = () => {
 
   const startPurchase = () => {
     track(EVENTS.PURCHASE_STARTED, { plan: selectedId });
-    void purchase(selectedId, packageIdFor(selectedId, pricing));
+    void purchase(selectedId);
   };
 
   const startRestore = () => {
@@ -70,11 +72,11 @@ export const PaywallScreen = () => {
       <div className="min-h-0 flex-1" />
 
       <section className="flex gap-2.5 px-5 pt-[22px] short:pt-3">
-        {plans.map((plan) => (
+        {PLAN_ORDER.map((id) => (
           <PlanCard
-            key={plan.id}
-            plan={plan}
-            selected={plan.id === selectedId}
+            key={id}
+            plan={plans[id]}
+            selected={id === selectedId}
             onSelect={selectPlan}
           />
         ))}

@@ -1,9 +1,10 @@
-// 결제 지휘 훅의 갈림길 — 환경 차단, 취소·실패·성공, 서버 반영 대기, 복원 결과
+// 결제 지휘 훅의 갈림길 — 환경 차단, 취소·실패·성공, 서버 반영 대기, 복원 결과, 화면이 사라진 뒤의 회신
 import { createElement, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { PlanPricingMap } from './offerings';
 import { usePurchase } from './usePurchase';
 
 const mocks = vi.hoisted(() => ({
@@ -12,7 +13,6 @@ const mocks = vi.hoisted(() => ({
   getNativeContext: vi.fn(),
   purchaseViaBridge: vi.fn(),
   restoreViaBridge: vi.fn(),
-  identifyViaBridge: vi.fn(),
   getMySubscription: vi.fn(),
 }));
 
@@ -26,11 +26,15 @@ vi.mock('@/shared/ui/toast', () => ({ showToast: mocks.showToast }));
 vi.mock('@/shared/bridge/native-context', () => ({
   getNativeContext: mocks.getNativeContext,
 }));
-vi.mock('./purchase-flow', () => ({
-  purchaseViaBridge: mocks.purchaseViaBridge,
-  restoreViaBridge: mocks.restoreViaBridge,
-  identifyViaBridge: mocks.identifyViaBridge,
-}));
+// 환경 판정은 진짜를 쓰고 셸 왕복만 대역으로
+vi.mock('./shell-purchases', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./shell-purchases')>();
+  return {
+    ...actual,
+    purchaseViaBridge: mocks.purchaseViaBridge,
+    restoreViaBridge: mocks.restoreViaBridge,
+  };
+});
 vi.mock('../api/subscription', () => ({
   getMySubscription: mocks.getMySubscription,
 }));
@@ -46,20 +50,24 @@ const readyShell = {
   buildNumber: '6',
   bridgeVersion: 5,
 };
+const premium = { premium: true, subscriptionStatus: 'ACTIVE' };
+const free = { premium: false, subscriptionStatus: 'NONE' };
 
 // JSX 대신 createElement — 이 레포 테스트의 react 복사본 정렬 방식(useSatisfactionSheet.test 참고)
 const wrapper = ({ children }: { children: ReactNode }) =>
   createElement(QueryClientProvider, { client: new QueryClient() }, children);
 
-const renderPurchase = () => {
+const renderPurchase = (pricing: PlanPricingMap = {}) => {
   const onUnlocked = vi.fn();
-  const hook = renderHook(() => usePurchase({ onUnlocked }), { wrapper });
+  const hook = renderHook(() => usePurchase({ pricing, onUnlocked }), {
+    wrapper,
+  });
   return { ...hook, onUnlocked };
 };
 
 beforeEach(() => {
   mocks.getNativeContext.mockReturnValue(readyShell);
-  mocks.getMySubscription.mockResolvedValue({ premium: true });
+  mocks.getMySubscription.mockResolvedValue(premium);
 });
 
 describe('usePurchase — 결제', () => {
@@ -67,7 +75,7 @@ describe('usePurchase — 결제', () => {
     mocks.getNativeContext.mockReturnValue(null);
     const { result } = renderPurchase();
 
-    await act(() => result.current.purchase('yearly', '$rc_annual'));
+    await act(() => result.current.purchase('yearly'));
 
     expect(mocks.purchaseViaBridge).not.toHaveBeenCalled();
     expect(mocks.showToast).toHaveBeenCalledWith(
@@ -83,7 +91,7 @@ describe('usePurchase — 결제', () => {
     mocks.getNativeContext.mockReturnValue({ ...readyShell, bridgeVersion: 4 });
     const { result } = renderPurchase();
 
-    await act(() => result.current.purchase('monthly', '$rc_monthly'));
+    await act(() => result.current.purchase('monthly'));
 
     expect(mocks.purchaseViaBridge).not.toHaveBeenCalled();
     expect(mocks.track).toHaveBeenCalledWith('Purchase Failed', {
@@ -92,22 +100,27 @@ describe('usePurchase — 결제', () => {
     });
   });
 
-  it('결제 직전에 로그인 사용자를 셸에 다시 알리고 패키지 id로 결제를 요청한다', async () => {
+  it('가격표에 있는 패키지로 결제하고, 없으면 표준 identifier로 결제한다', async () => {
     mocks.purchaseViaBridge.mockResolvedValue({
       type: 'PURCHASE_RESULT',
       status: 'success',
     });
-    const { result } = renderPurchase();
+    const { result } = renderPurchase({
+      yearly: { packageId: '$rc_annual_kr', price: 49_900, currency: 'KRW' },
+    });
 
-    await act(() => result.current.purchase('yearly', '$rc_annual'));
+    await act(() => result.current.purchase('yearly'));
+    await act(() => result.current.purchase('monthly'));
 
-    expect(mocks.identifyViaBridge).toHaveBeenCalledWith(
-      expect.anything(),
-      '42',
+    expect(mocks.purchaseViaBridge).toHaveBeenNthCalledWith(
+      1,
+      '$rc_annual_kr',
+      expect.any(AbortSignal),
     );
-    expect(mocks.purchaseViaBridge).toHaveBeenCalledWith(
-      expect.anything(),
-      '$rc_annual',
+    expect(mocks.purchaseViaBridge).toHaveBeenNthCalledWith(
+      2,
+      '$rc_monthly',
+      expect.any(AbortSignal),
     );
   });
 
@@ -118,9 +131,9 @@ describe('usePurchase — 결제', () => {
     });
     const { result, onUnlocked } = renderPurchase();
 
-    await act(() => result.current.purchase('yearly', '$rc_annual'));
+    await act(() => result.current.purchase('yearly'));
 
-    expect(result.current.phase).toBe('idle');
+    expect(result.current.busy).toBe(false);
     expect(mocks.showToast).not.toHaveBeenCalled();
     expect(onUnlocked).not.toHaveBeenCalled();
     expect(mocks.track).toHaveBeenCalledWith('Purchase Canceled', {
@@ -128,7 +141,7 @@ describe('usePurchase — 결제', () => {
     });
   });
 
-  it('셸이 실패를 회신하면 그 사유를 토스트로 보여준다', async () => {
+  it('셸이 실패를 회신하면 그 사유를 토스트로 보여주고 계측에는 문구를 따로 남긴다', async () => {
     mocks.purchaseViaBridge.mockResolvedValue({
       type: 'PURCHASE_RESULT',
       status: 'error',
@@ -136,14 +149,15 @@ describe('usePurchase — 결제', () => {
     });
     const { result } = renderPurchase();
 
-    await act(() => result.current.purchase('yearly', '$rc_annual'));
+    await act(() => result.current.purchase('yearly'));
 
     expect(mocks.showToast).toHaveBeenCalledWith(
       '지금은 살 수 없는 상품이에요.',
     );
     expect(mocks.track).toHaveBeenCalledWith('Purchase Failed', {
       plan: 'yearly',
-      reason: '지금은 살 수 없는 상품이에요.',
+      reason: 'shell_error',
+      message: '지금은 살 수 없는 상품이에요.',
     });
   });
 
@@ -151,7 +165,7 @@ describe('usePurchase — 결제', () => {
     mocks.purchaseViaBridge.mockResolvedValue(null);
     const { result } = renderPurchase();
 
-    await act(() => result.current.purchase('yearly', '$rc_annual'));
+    await act(() => result.current.purchase('yearly'));
 
     expect(mocks.track).toHaveBeenCalledWith('Purchase Failed', {
       plan: 'yearly',
@@ -166,7 +180,7 @@ describe('usePurchase — 결제', () => {
     });
     const { result, onUnlocked } = renderPurchase();
 
-    await act(() => result.current.purchase('yearly', '$rc_annual'));
+    await act(() => result.current.purchase('yearly'));
 
     await waitFor(() => expect(onUnlocked).toHaveBeenCalledTimes(1));
     expect(mocks.track).toHaveBeenCalledWith('Purchase Completed', {
@@ -181,10 +195,10 @@ describe('usePurchase — 결제', () => {
       type: 'PURCHASE_RESULT',
       status: 'success',
     });
-    mocks.getMySubscription.mockResolvedValue({ premium: false });
+    mocks.getMySubscription.mockResolvedValue(free);
     const { result, onUnlocked } = renderPurchase();
 
-    await act(() => result.current.purchase('monthly', '$rc_monthly'));
+    await act(() => result.current.purchase('monthly'));
 
     await waitFor(() => expect(onUnlocked).toHaveBeenCalledTimes(1));
     expect(mocks.track).toHaveBeenCalledWith('Purchase Completed', {
@@ -195,9 +209,43 @@ describe('usePurchase — 결제', () => {
       '결제가 확인되는 중이에요. 잠시 후 다시 열어 주세요',
     );
   });
+
+  it('화면이 사라진 뒤 도착한 회신은 아무 일도 하지 않는다', async () => {
+    let reply: (value: unknown) => void = () => {};
+    mocks.purchaseViaBridge.mockReturnValue(
+      new Promise((resolve) => {
+        reply = resolve;
+      }),
+    );
+    const { result, unmount, onUnlocked } = renderPurchase();
+
+    let pending: Promise<void> = Promise.resolve();
+    act(() => {
+      pending = result.current.purchase('yearly');
+    });
+    unmount();
+    reply({ type: 'PURCHASE_RESULT', status: 'success' });
+    await pending;
+
+    expect(mocks.getMySubscription).not.toHaveBeenCalled();
+    expect(mocks.showToast).not.toHaveBeenCalled();
+    expect(onUnlocked).not.toHaveBeenCalled();
+  });
 });
 
 describe('usePurchase — 복원', () => {
+  it('브라우저에서는 복원도 막고 플랜 없이 사유만 남긴다', async () => {
+    mocks.getNativeContext.mockReturnValue(null);
+    const { result } = renderPurchase();
+
+    await act(() => result.current.restore());
+
+    expect(mocks.restoreViaBridge).not.toHaveBeenCalled();
+    expect(mocks.track).toHaveBeenCalledWith('Purchase Failed', {
+      reason: 'browser',
+    });
+  });
+
   it('복원이 되고 서버가 유료면 다음 화면으로 넘긴다', async () => {
     mocks.restoreViaBridge.mockResolvedValue({
       type: 'RESTORE_RESULT',
@@ -218,7 +266,7 @@ describe('usePurchase — 복원', () => {
       type: 'RESTORE_RESULT',
       status: 'success',
     });
-    mocks.getMySubscription.mockResolvedValue({ premium: false });
+    mocks.getMySubscription.mockResolvedValue(free);
     const { result, onUnlocked } = renderPurchase();
 
     await act(() => result.current.restore());

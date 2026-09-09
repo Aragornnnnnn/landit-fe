@@ -1,21 +1,19 @@
 // 셸이 준 오퍼링을 플랜별 가격표로 — 원화만 숫자로 쓰고, 같은 플랜이 둘이면 앞의 것을 믿는다
 import { describe, expect, it } from 'vitest';
 
-import { packageIdFor, toPlanPricing } from './offerings';
+import { packageIdFor, toKrwPrices, toPlanPricing } from './offerings';
 
 const monthly = {
   id: '$rc_monthly',
   plan: 'monthly' as const,
   price: 9900,
   currency: 'KRW',
-  priceString: '₩9,900',
 };
 const yearly = {
   id: '$rc_annual',
   plan: 'yearly' as const,
   price: 59900,
   currency: 'KRW',
-  priceString: '₩59,900',
 };
 
 describe('toPlanPricing', () => {
@@ -38,6 +36,17 @@ describe('toPlanPricing', () => {
     expect(toPlanPricing([yearly, duplicate]).yearly?.packageId).toBe(
       '$rc_annual',
     );
+  });
+});
+
+describe('toKrwPrices', () => {
+  it('원화 가격만 숫자로 넘기고 다른 통화는 비워 둔다', () => {
+    const pricing = toPlanPricing([
+      monthly,
+      { ...yearly, price: 39.99, currency: 'USD' },
+    ]);
+
+    expect(toKrwPrices(pricing)).toEqual({ monthly: 9900, yearly: undefined });
   });
 });
 

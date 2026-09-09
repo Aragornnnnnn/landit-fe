@@ -14,8 +14,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/shared/bridge/native-context', () => ({
   getNativeContext: mocks.getNativeContext,
 }));
-vi.mock('../model/bridge-request', () => ({
-  webBridge: { post: mocks.post, subscribe: vi.fn(() => () => {}) },
+vi.mock('@/shared/bridge/web-bridge', () => ({
+  postToNative: mocks.post,
 }));
 
 const member = (userId: number) =>

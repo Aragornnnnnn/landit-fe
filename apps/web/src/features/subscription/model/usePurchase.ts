@@ -1,129 +1,157 @@
 'use client';
 
-// 결제·복원 지휘 훅 — 환경 판정 → 셸에 결제 요청 → 결과 분기 → 서버 유료 반영 대기까지 한 줄로 잇는다.
-// 화면은 phase로 버튼 상태만 그리고, 성공하면 onUnlocked로 다음 화면을 정한다
-import { useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+// 결제·복원 지휘 훅 — 환경 판정 → 셸에 요청 → 회신 분기 → 서버 유료 반영 확인 순으로 위에서 아래로 읽힌다.
+// 화면은 busy로 버튼만 잠그고, 유료가 확인되면(또는 결제는 끝났는데 반영이 늦으면) onUnlocked로 다음 화면을 정한다
+import { useEffect, useState } from 'react';
+import { EVENTS, type PurchaseFailureReason } from '@landit/analytics';
 import type { SubscriptionPlan } from '@landit/bridge';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
-import { getNativeContext } from '@/shared/bridge/native-context';
 import { showToast } from '@/shared/ui/toast';
 
 import { getMySubscription } from '../api/subscription';
-import { webBridge } from './bridge-request';
 import { subscriptionKeys } from './keys';
+import { packageIdFor, type PlanPricingMap } from './offerings';
 import {
-  identifyViaBridge,
   purchaseViaBridge,
+  resolvePurchaseSupport,
   restoreViaBridge,
-} from './purchase-flow';
-import { resolvePurchaseSupport } from './purchase-support';
+  type PurchaseSupport,
+} from './shell-purchases';
 import { PREMIUM_WAIT, waitForPremium } from './wait-for-premium';
 
-export type PurchasePhase = 'idle' | 'purchasing' | 'unlocking' | 'restoring';
-
 interface UsePurchaseOptions {
-  // 서버가 유료로 바뀌었거나(정상), 결제는 끝났는데 반영이 늦을 때(안내 후) 호출된다
+  /** 셸이 준 가격표 — 결제할 패키지 id를 여기서 고른다. 비어 있으면 표준 identifier로 결제한다 */
+  pricing: PlanPricingMap;
+  /** 유료가 확인됐거나, 결제는 끝났는데 서버 반영이 늦을 때(안내 뒤) 불린다 — 보통 페이월을 닫는다 */
   onUnlocked: () => void;
 }
 
-const SUPPORT_MESSAGE = {
-  browser: '결제는 랜딧 앱에서 할 수 있어요',
-  'outdated-shell': '앱을 최신 버전으로 업데이트하면 결제할 수 있어요',
-} as const;
+// 결제를 시킬 수 없는 환경별 계측 사유와 안내 문구
+const UNSUPPORTED: Record<
+  Exclude<PurchaseSupport, 'ready'>,
+  { reason: PurchaseFailureReason; message: string }
+> = {
+  browser: { reason: 'browser', message: '결제는 랜딧 앱에서 할 수 있어요' },
+  'outdated-shell': {
+    reason: 'outdated_shell',
+    message: '앱을 최신 버전으로 업데이트하면 결제할 수 있어요',
+  },
+};
 
-const fetchPremium = async () => (await getMySubscription()).premium;
+/** 결제를 시킬 수 없는 환경이면 그 사유와 안내, 시킬 수 있으면 null */
+const findUnsupported = () => {
+  const support = resolvePurchaseSupport();
+  return support === 'ready' ? null : UNSUPPORTED[support];
+};
 
-export const usePurchase = ({ onUnlocked }: UsePurchaseOptions) => {
-  const [phase, setPhase] = useState<PurchasePhase>('idle');
+/**
+ * 페이월의 결제와 복원을 지휘한다.
+ *
+ * @returns `busy`는 셸 왕복이나 서버 확인이 진행 중인지, `purchase(plan)`·`restore()`는 각각 결제·복원을 시작한다
+ */
+export const usePurchase = ({ pricing, onUnlocked }: UsePurchaseOptions) => {
+  const [busy, setBusy] = useState(false);
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.member?.userId ?? null);
 
-  // 브라우저·구버전 셸이면 여기서 끝 — 안내만 하고 결제 요청을 보내지 않는다
-  const ensureSupported = (plan: SubscriptionPlan) => {
-    const support = resolvePurchaseSupport(getNativeContext());
-    if (support === 'ready') return true;
-    track(EVENTS.PURCHASE_FAILED, {
-      plan,
-      reason: support === 'browser' ? 'browser' : 'outdated_shell',
-    });
-    showToast(SUPPORT_MESSAGE[support]);
-    return false;
+  // 화면이 사라지면 진행 중인 셸 왕복을 끊는다 — 결제 시트는 5분까지 기다리므로 회신이 사라진 화면에 닿지 않게
+  const [controller] = useState(() => new AbortController());
+  useEffect(() => () => controller.abort(), [controller]);
+  const { signal } = controller;
+
+  // 서버가 유료로 바뀌었는지 몇 초 확인하고, 확인되면 구독 캐시에 바로 넣는다 — 게이트가 다시 조회하지 않아도 되게
+  const confirmPremium = async () => {
+    const subscription = await waitForPremium(getMySubscription, PREMIUM_WAIT);
+    if (subscription) {
+      queryClient.setQueryData(subscriptionKeys.mine(userId), subscription);
+    }
+    return subscription !== null;
   };
 
-  const settleUnlock = async () => {
-    setPhase('unlocking');
-    const unlocked = await waitForPremium(fetchPremium, PREMIUM_WAIT);
-    await queryClient.invalidateQueries({ queryKey: subscriptionKeys.all });
-    return unlocked;
-  };
-
-  const purchase = async (plan: SubscriptionPlan, packageId: string) => {
-    if (phase !== 'idle' || !ensureSupported(plan)) return;
-    setPhase('purchasing');
-    // 결제 직전에 한 번 더 — 로그인 직후 IDENTIFY가 셸에 닿기 전에 결제하는 순서 문제를 막는다
-    if (userId !== null) identifyViaBridge(webBridge, String(userId));
-
-    const result = await purchaseViaBridge(webBridge, packageId);
-
-    if (!result) {
-      track(EVENTS.PURCHASE_FAILED, { plan, reason: 'no_response' });
-      showToast('결제 응답이 없어요. 잠시 후 다시 시도해 주세요');
-      setPhase('idle');
+  const purchase = async (plan: SubscriptionPlan) => {
+    if (busy) return;
+    const unsupported = findUnsupported();
+    if (unsupported) {
+      track(EVENTS.PURCHASE_FAILED, { plan, reason: unsupported.reason });
+      showToast(unsupported.message);
       return;
     }
-    if (result.status === 'cancelled') {
-      track(EVENTS.PURCHASE_CANCELED, { plan });
-      setPhase('idle');
-      return;
-    }
-    if (result.status === 'error') {
-      track(EVENTS.PURCHASE_FAILED, {
-        plan,
-        reason: result.message ?? 'unknown',
-      });
-      showToast(
-        result.message ?? '결제에 실패했어요. 잠시 후 다시 시도해 주세요',
+
+    setBusy(true);
+    try {
+      const result = await purchaseViaBridge(
+        packageIdFor(plan, pricing),
+        signal,
       );
-      setPhase('idle');
-      return;
-    }
+      if (signal.aborted) return;
 
-    const unlocked = await settleUnlock();
-    track(EVENTS.PURCHASE_COMPLETED, { plan, unlocked });
-    // 스토어 결제는 끝났다 — 웹훅이 늦어도 사용자를 페이월에 붙잡아 두지 않는다
-    if (!unlocked)
-      showToast('결제가 확인되는 중이에요. 잠시 후 다시 열어 주세요');
-    setPhase('idle');
-    onUnlocked();
+      if (!result) {
+        track(EVENTS.PURCHASE_FAILED, { plan, reason: 'no_response' });
+        showToast('결제 응답이 없어요. 잠시 후 다시 시도해 주세요');
+        return;
+      }
+      if (result.status === 'cancelled') {
+        track(EVENTS.PURCHASE_CANCELED, { plan });
+        return;
+      }
+      if (result.status === 'error') {
+        track(EVENTS.PURCHASE_FAILED, {
+          plan,
+          reason: 'shell_error',
+          message: result.message,
+        });
+        showToast(
+          result.message ?? '결제에 실패했어요. 잠시 후 다시 시도해 주세요',
+        );
+        return;
+      }
+
+      const unlocked = await confirmPremium();
+      track(EVENTS.PURCHASE_COMPLETED, { plan, unlocked });
+      // 스토어 결제는 끝났다 — 웹훅이 늦어도 사용자를 페이월에 붙잡아 두지 않는다
+      if (!unlocked) {
+        showToast('결제가 확인되는 중이에요. 잠시 후 다시 열어 주세요');
+      }
+      onUnlocked();
+    } finally {
+      setBusy(false);
+    }
   };
 
   const restore = async () => {
-    // 복원은 플랜이 없다 — 환경 판정 계측은 연간으로 남긴다 (실패 사유가 중요하지 플랜은 아니다)
-    if (phase !== 'idle' || !ensureSupported('yearly')) return;
-    setPhase('restoring');
-    if (userId !== null) identifyViaBridge(webBridge, String(userId));
-
-    const result = await restoreViaBridge(webBridge);
-
-    if (!result || result.status === 'error') {
-      track(EVENTS.PURCHASE_RESTORED, { succeeded: false });
-      showToast(
-        result?.message ?? '구매 복원에 실패했어요. 잠시 후 다시 시도해 주세요',
-      );
-      setPhase('idle');
+    if (busy) return;
+    const unsupported = findUnsupported();
+    if (unsupported) {
+      track(EVENTS.PURCHASE_FAILED, { reason: unsupported.reason });
+      showToast(unsupported.message);
       return;
     }
 
-    const unlocked = await settleUnlock();
-    track(EVENTS.PURCHASE_RESTORED, { succeeded: unlocked });
-    setPhase('idle');
-    if (unlocked) onUnlocked();
-    else showToast('복원할 구매 내역이 없어요');
+    setBusy(true);
+    try {
+      const result = await restoreViaBridge(signal);
+      if (signal.aborted) return;
+
+      if (!result || result.status === 'error') {
+        track(EVENTS.PURCHASE_RESTORED, { succeeded: false });
+        showToast(
+          result?.message ??
+            '구매 복원에 실패했어요. 잠시 후 다시 시도해 주세요',
+        );
+        return;
+      }
+
+      const unlocked = await confirmPremium();
+      track(EVENTS.PURCHASE_RESTORED, { succeeded: unlocked });
+      if (unlocked) onUnlocked();
+      else showToast('복원할 구매 내역이 없어요');
+    } finally {
+      setBusy(false);
+    }
   };
 
-  return { phase, purchase, restore };
+  return { busy, purchase, restore };
 };

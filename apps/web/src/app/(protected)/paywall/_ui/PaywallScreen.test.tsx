@@ -9,21 +9,25 @@ const mocks = vi.hoisted(() => ({
   track: vi.fn(),
   purchase: vi.fn(),
   restore: vi.fn(),
-  phase: 'idle' as string,
+  busy: false,
   pricing: {} as Record<string, unknown>,
+  purchaseOptions: null as { pricing: unknown } | null,
 }));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace }),
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
-// 결제 지휘는 features/subscription 몫 — 여기선 어떤 인자로 부르는지와 버튼 상태만 본다
+// 결제 지휘는 features/subscription 몫 — 여기선 무엇을 넘기고 어떤 인자로 부르는지, 버튼 상태만 본다
 vi.mock('@/features/subscription/model/usePurchase', () => ({
-  usePurchase: () => ({
-    phase: mocks.phase,
-    purchase: mocks.purchase,
-    restore: mocks.restore,
-  }),
+  usePurchase: (options: { pricing: unknown }) => {
+    mocks.purchaseOptions = options;
+    return {
+      busy: mocks.busy,
+      purchase: mocks.purchase,
+      restore: mocks.restore,
+    };
+  },
 }));
 vi.mock('@/features/subscription/model/useOfferings', () => ({
   useOfferings: () => mocks.pricing,
@@ -52,8 +56,9 @@ vi.mock('next/image', () => ({
 }));
 
 beforeEach(() => {
-  mocks.phase = 'idle';
+  mocks.busy = false;
   mocks.pricing = {};
+  mocks.purchaseOptions = null;
 });
 afterEach(() => cleanup());
 
@@ -94,7 +99,7 @@ describe('PaywallScreen', () => {
     expect(mocks.track).not.toHaveBeenCalled();
   });
 
-  it('CTA를 누르면 결제 시작 이벤트를 찍고 고른 플랜의 패키지로 결제를 요청한다', () => {
+  it('CTA를 누르면 결제 시작 이벤트를 찍고 고른 플랜으로 결제를 요청한다', () => {
     render(<PaywallScreen />);
 
     fireEvent.click(
@@ -104,10 +109,10 @@ describe('PaywallScreen', () => {
     expect(mocks.track).toHaveBeenCalledWith('Purchase Started', {
       plan: 'yearly',
     });
-    expect(mocks.purchase).toHaveBeenCalledWith('yearly', '$rc_annual');
+    expect(mocks.purchase).toHaveBeenCalledWith('yearly');
   });
 
-  it('셸이 준 가격표가 있으면 그 패키지 id와 금액으로 결제·표시한다', () => {
+  it('셸이 준 가격표는 표시에 쓰고 결제 훅에도 그대로 넘긴다', () => {
     mocks.pricing = {
       yearly: { packageId: '$rc_annual_kr', price: 49_900, currency: 'KRW' },
     };
@@ -116,14 +121,11 @@ describe('PaywallScreen', () => {
     expect(
       screen.getByText('7일 무료 체험 후 연 49,900원 · 언제든 해지 가능'),
     ).toBeInTheDocument();
-    fireEvent.click(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
-    );
-    expect(mocks.purchase).toHaveBeenCalledWith('yearly', '$rc_annual_kr');
+    expect(mocks.purchaseOptions?.pricing).toBe(mocks.pricing);
   });
 
   it('결제가 진행 중이면 CTA와 복원이 잠긴다', () => {
-    mocks.phase = 'purchasing';
+    mocks.busy = true;
     render(<PaywallScreen />);
 
     expect(screen.getByRole('button', { name: '구매 복원' })).toBeDisabled();

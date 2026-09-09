@@ -5,27 +5,25 @@
 import { useEffect } from 'react';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
-import { getNativeContext } from '@/shared/bridge/native-context';
 
-import { webBridge } from '../model/bridge-request';
-import { identifyViaBridge } from '../model/purchase-flow';
-import { resolvePurchaseSupport } from '../model/purchase-support';
+import {
+  identifyViaBridge,
+  resolvePurchaseSupport,
+  toRevenueCatUserId,
+} from '../model/shell-purchases';
 
-const toRevenueCatUserId = (userId: number | null | undefined) =>
-  userId === null || userId === undefined ? null : String(userId);
-
+/** 회원이 바뀔 때만 셸에 IDENTIFY를 보낸다. 결제 메시지를 모르는 셸·브라우저에는 보내지 않는다 */
 export const IdentifySync = () => {
   useEffect(() => {
-    // 결제 메시지를 모르는 셸·브라우저에는 보내지 않는다 — 폐기될 메시지라 경고만 남긴다
-    if (resolvePurchaseSupport(getNativeContext()) !== 'ready') return;
+    if (resolvePurchaseSupport() !== 'ready') return;
 
     const { member } = useAuthStore.getState();
-    if (member) identifyViaBridge(webBridge, toRevenueCatUserId(member.userId));
+    if (member) identifyViaBridge(toRevenueCatUserId(member));
 
+    // 같은 사용자로 토큰만 갱신되는 경우는 건너뛴다 — 셸의 logIn은 멱등이지만 왕복을 아낀다
     return useAuthStore.subscribe((state, prev) => {
-      const next = toRevenueCatUserId(state.member?.userId);
-      if (next === toRevenueCatUserId(prev.member?.userId)) return;
-      identifyViaBridge(webBridge, next);
+      if (state.member?.userId === prev.member?.userId) return;
+      identifyViaBridge(toRevenueCatUserId(state.member));
     });
   }, []);
 
