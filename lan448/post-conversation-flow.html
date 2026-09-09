@@ -13,136 +13,164 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); }
   body { font-family: -apple-system, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
-  .canvas { width: 1600px; height: 900px; padding: 48px 56px; position: relative; }
+  .canvas { position: relative; width: 1600px; height: 1000px; overflow: hidden; }
+  .abs { position: absolute; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; }
   h1 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
   .sub { margin-top: 8px; font-size: 15px; color: var(--muted); }
   .sub b { color: var(--ink); font-weight: 700; }
-  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; }
 
-  .lanes { margin-top: 34px; display: flex; flex-direction: column; gap: 14px; }
-  .lane { display: grid; grid-template-columns: 210px 1fr; align-items: center; border-radius: 14px; padding: 18px 22px; background: #fff; border: 1px solid var(--rule); }
-  .who .name { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; }
-  .who .cond { margin-top: 4px; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
-  .who .cond code { color: var(--ink); }
+  /* 입구 카드 */
+  .entry { width: 300px; height: 104px; padding: 14px 16px; border-radius: 14px; background: #fff; border: 1px solid var(--rule); }
+  .entry .who { font-size: 15px; font-weight: 800; }
+  .entry .who span { font-weight: 600; color: var(--muted); font-size: 12px; margin-left: 6px; }
+  .entry .steps { margin-top: 10px; display: flex; align-items: center; gap: 6px; }
+  .entry .st { height: 34px; padding: 0 12px; border-radius: 8px; background: var(--gray-soft); display: flex; align-items: center; font-size: 13px; font-weight: 700; white-space: nowrap; }
+  .entry .st small { font-weight: 500; color: var(--muted); margin-left: 5px; font-size: 11px; }
+  .entry .ar { color: var(--faint); font-weight: 700; }
 
-  .flow { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
-  .chip { display: flex; flex-direction: column; justify-content: center; min-width: 118px; height: 64px; padding: 0 14px; border-radius: 10px; background: var(--gray-soft); }
-  .chip .t { font-size: 14.5px; font-weight: 800; white-space: nowrap; }
-  .chip .d { margin-top: 3px; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
-  .chip.new { background: var(--accent-soft); border: 2px solid var(--accent); }
-  .chip.new .t { color: var(--accent-ink); }
-  .chip.pay { background: var(--lock-soft); border: 2px solid var(--lock); }
-  .chip.pay .t { color: var(--lock); }
-  .chip.ok { background: var(--truth-soft); border: 2px solid var(--truth); }
-  .chip.ok .t { color: var(--truth-ink); }
-  .arrow { color: var(--faint); font-size: 18px; font-weight: 700; padding: 0 2px; }
-  .arrow.lbl { position: relative; }
-  .arrow.lbl span { position: absolute; left: 50%; top: -22px; transform: translateX(-50%); font-size: 11px; color: var(--muted); white-space: nowrap; }
+  /* 노드 */
+  .node { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border-radius: 14px; background: #fff; border: 1px solid var(--rule); }
+  .node .t { font-size: 16px; font-weight: 800; }
+  .node .d { margin-top: 4px; font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+  .node.q { background: #fff; border: 2px solid var(--ink); }
+  .node.q .t { font-size: 15px; }
+  .node.ok { background: var(--truth-soft); border: 2px solid var(--truth); } .node.ok .t { color: var(--truth-ink); }
+  .node.home { background: var(--gray-soft); border: 2px solid var(--faint); }
 
-  .legend { margin-top: 14px; display: flex; gap: 22px; font-size: 12.5px; color: var(--muted); }
-  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+  /* 폰 */
+  .phone { width: 152px; }
+  .phone .cap { height: 40px; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 8px; }
+  .phone .cap .t { font-size: 14px; font-weight: 800; color: var(--accent-ink); white-space: nowrap; }
+  .phone .cap .d { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .phone .scr { width: 152px; height: 329px; border-radius: 18px; overflow: hidden; border: 3px solid var(--accent); background: #fff; box-shadow: 0 10px 24px rgba(27,23,18,.12); }
+  .phone .scr img { display: block; width: 152px; height: 329px; object-fit: cover; object-position: top; }
+  .phone.pay .cap .t { color: var(--lock); }
+  .phone.pay .scr { border-color: var(--lock); }
 
-  .bottom { margin-top: 26px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-  .panel { border-radius: 14px; padding: 18px 22px; background: #fff; border: 1px solid var(--rule); }
-  .panel h2 { margin: 0 0 10px; font-size: 15px; font-weight: 800; }
-  .panel ul { margin: 0; padding-left: 0; list-style: none; font-size: 13px; line-height: 1.75; color: var(--ink); }
-  .panel li { padding-left: 14px; position: relative; }
-  .panel li::before { content: ""; position: absolute; left: 0; top: 10px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-  .panel li b { font-weight: 800; }
-  .panel li .m { color: var(--muted); }
-  .panel.lock li::before { background: var(--lock); }
+  /* 선 라벨 */
+  .lbl { font-size: 12px; font-weight: 700; white-space: nowrap; padding: 2px 8px; border-radius: 6px; background: var(--bg); }
+  .lbl.free { color: var(--accent-ink); }
+  .lbl.open { color: var(--truth-ink); }
+  .lbl.dim { color: var(--muted); font-weight: 600; }
+
+  /* 하단 노트 */
+  .note { width: 480px; padding: 16px 20px; border-radius: 14px; background: #fff; border: 1px solid var(--rule); }
+  .note h2 { margin: 0 0 8px; font-size: 14px; font-weight: 800; }
+  .note ul { margin: 0; padding: 0; list-style: none; font-size: 12.5px; line-height: 1.7; }
+  .note li { padding-left: 13px; position: relative; }
+  .note li::before { content: ""; position: absolute; left: 0; top: 9px; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+  .note li b { font-weight: 800; }
+  .note .m { color: var(--muted); }
+  .note.lock li::before { background: var(--lock); }
+  .note.ok li::before { background: var(--truth); }
 </style>
 </head>
 <body>
 <div class="canvas">
-  <h1>대화가 끝난 뒤 누가 무엇을 보나</h1>
-  <div class="sub">피드백을 다 본 순간 <b>decidePostFeedbackView</b>가 갈 곳을 정합니다. 무료 사용자는 신규·기존 가리지 않고 같은 화면을 지납니다. 주황이 이 PR의 새 화면, 빨강이 페이월입니다.</div>
-
-  <div class="lanes">
-    <div class="lane">
-      <div class="who">
-        <div class="name">신규 무료 사용자</div>
-        <div class="cond">오픈 뒤 가입 · 생애 첫 대화<br/>잠김 = <code>premium false</code></div>
-      </div>
-      <div class="flow">
-        <div class="chip"><div class="t">온보딩</div><div class="d">수준 질문 없음</div></div><div class="arrow">→</div>
-        <div class="chip"><div class="t">첫 대화</div><div class="d">공통 진단 시나리오</div></div><div class="arrow">→</div>
-        <div class="chip"><div class="t">피드백</div><div class="d">총평 · 상세</div></div><div class="arrow">→</div>
-        <div class="chip new"><div class="t">분석 중</div><div class="d">2초 폴링 · 20초 상한</div></div><div class="arrow">→</div>
-        <div class="chip new"><div class="t">레벨 결과</div><div class="d">마법사 5단계 · 레이더</div></div><div class="arrow">→</div>
-        <div class="chip new"><div class="t">학습 준비</div><div class="d">흐린 슬라이드 · 표현은 안 보임</div></div><div class="arrow">→</div>
-        <div class="chip pay"><div class="t">페이월</div><div class="d">entry conversation_finished</div></div>
-      </div>
-    </div>
-
-    <div class="lane">
-      <div class="who">
-        <div class="name">기존 무료 사용자</div>
-        <div class="cond">오픈 전 가입 · 대화 이력 있음<br/>오픈 뒤 첫 대화가 무료 하나</div>
-      </div>
-      <div class="flow">
-        <div class="chip"><div class="t">홈</div><div class="d">배울 영어만 물음</div></div><div class="arrow">→</div>
-        <div class="chip"><div class="t">오늘의 시나리오</div><div class="d">오픈 뒤 첫 완료</div></div><div class="arrow">→</div>
-        <div class="chip"><div class="t">피드백</div><div class="d">총평 · 상세</div></div><div class="arrow">→</div>
-        <div class="chip new"><div class="t">분석 중</div><div class="d">신규와 같음</div></div><div class="arrow">→</div>
-        <div class="chip new"><div class="t">레벨 결과</div><div class="d">신규와 같음</div></div><div class="arrow">→</div>
-        <div class="chip new"><div class="t">학습 준비</div><div class="d">신규와 같음</div></div><div class="arrow">→</div>
-        <div class="chip pay"><div class="t">페이월</div><div class="d">entry conversation_finished</div></div>
-      </div>
-    </div>
-
-    <div class="lane">
-      <div class="who">
-        <div class="name">유료 사용자</div>
-        <div class="cond">체험 중 · 해지 예정 포함<br/>브라우저 · 1.2.x · 플래그 꺼짐도 같음</div>
-      </div>
-      <div class="flow">
-        <div class="chip"><div class="t">아무 대화</div><div class="d"></div></div><div class="arrow">→</div>
-        <div class="chip"><div class="t">피드백</div><div class="d">총평 · 상세</div></div><div class="arrow">→</div>
-        <div class="chip ok"><div class="t">표현 분기</div><div class="d">전과 같음 · 새 화면 없음</div></div>
-      </div>
-    </div>
-
-    <div class="lane">
-      <div class="who">
-        <div class="name">재대화</div>
-        <div class="cond">이미 완료한 시나리오를 다시</div>
-      </div>
-      <div class="flow">
-        <div class="chip pay"><div class="t">시작 자체가 게이트</div><div class="d">잠긴 사람은 여기서 페이월</div></div><div class="arrow">→</div>
-        <div class="chip"><div class="t">대화</div><div class="d"></div></div><div class="arrow">→</div>
-        <div class="chip"><div class="t">피드백</div><div class="d"></div></div><div class="arrow">→</div>
-        <div class="chip ok"><div class="t">홈</div><div class="d">페이월 전 화면 없음</div></div>
-      </div>
-    </div>
+  <div class="abs" style="left:56px; top:44px;">
+    <h1>대화가 끝난 뒤 누가 무엇을 보나</h1>
+    <div class="sub">피드백을 다 본 순간 <b>decidePostFeedbackView</b>가 갈림길 하나를 봅니다 — 게이트가 잠그는가. 무료 사용자는 신규·기존 가리지 않고 같은 네 화면을 지납니다.</div>
   </div>
 
-  <div class="legend">
-    <span><i style="background:var(--accent-soft);border:2px solid var(--accent)"></i>이 PR의 새 화면</span>
-    <span><i style="background:var(--lock-soft);border:2px solid var(--lock)"></i>페이월</span>
-    <span><i style="background:var(--truth-soft);border:2px solid var(--truth)"></i>기존 흐름 그대로</span>
-    <span><i style="background:var(--gray-soft)"></i>기존 화면</span>
+  <!-- 선 -->
+  <svg class="abs" style="left:0; top:0;" width="1600" height="1000" fill="none">
+    <defs>
+      <marker id="a-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1b1712"/></marker>
+      <marker id="a-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ef6f1a"/></marker>
+      <marker id="a-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16875c"/></marker>
+      <marker id="a-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b9b0a3"/></marker>
+    </defs>
+    <!-- 입구 → 피드백 -->
+    <path d="M356,262 C390,262 390,326 420,326" stroke="#1b1712" stroke-width="2.5" marker-end="url(#a-ink)"/>
+    <path d="M356,402 C390,402 390,346 420,346" stroke="#1b1712" stroke-width="2.5" marker-end="url(#a-ink)"/>
+    <!-- 피드백 → 갈림길 -->
+    <path d="M550,336 H600" stroke="#1b1712" stroke-width="2.5" marker-end="url(#a-ink)"/>
+    <!-- 예 → 폰들 -->
+    <path d="M770,336 H830" stroke="#ef6f1a" stroke-width="3" marker-end="url(#a-acc)"/>
+    <path d="M982,336 H1000" stroke="#ef6f1a" stroke-width="3" marker-end="url(#a-acc)"/>
+    <path d="M1152,336 H1170" stroke="#ef6f1a" stroke-width="3" marker-end="url(#a-acc)"/>
+    <path d="M1322,336 H1340" stroke="#ef6f1a" stroke-width="3" marker-end="url(#a-acc)"/>
+    <!-- 페이월 → 결제 / 닫기 -->
+    <path d="M1446,500 V560" stroke="#16875c" stroke-width="3" marker-end="url(#a-ok)"/>
+    <path d="M1386,500 C1386,540 1276,520 1276,560" stroke="#b9b0a3" stroke-width="2.5" marker-end="url(#a-dim)"/>
+    <!-- 아니오 → 표현 분기 -->
+    <path d="M685,396 V672 H1416 V640" stroke="#16875c" stroke-width="3" marker-end="url(#a-ok)"/>
+  </svg>
+
+  <!-- 입구 -->
+  <div class="abs entry" style="left:56px; top:210px;">
+    <div class="who">신규 사용자 <span>결제 오픈 뒤 가입</span></div>
+    <div class="steps"><div class="st">온보딩<small>수준 질문 없음</small></div><span class="ar">→</span><div class="st">첫 대화<small>공통 진단</small></div></div>
+  </div>
+  <div class="abs entry" style="left:56px; top:350px;">
+    <div class="who">기존 사용자 <span>오픈 전부터 쓰던 사람</span></div>
+    <div class="steps"><div class="st">홈<small>배울 영어만 물음</small></div><span class="ar">→</span><div class="st">오늘의 시나리오<small>오픈 뒤 첫 대화</small></div></div>
   </div>
 
-  <div class="bottom">
-    <div class="panel">
-      <h2>페이월에서</h2>
-      <ul>
-        <li><b>결제 성공</b> → BE가 유료로 바뀐 걸 확인하면 <b>그 대화의 표현 분기</b>로 돌아옵니다 <span class="m">(#213의 <code>?from=</code>)</span></li>
-        <li><b>확인이 늦으면</b> "확인 중" 토스트 뒤 같은 자리로. 다음 진입은 BE가 유료라고 답할 때까지 다시 페이월</li>
-        <li><b>취소·실패</b> → 페이월에 머뭅니다. <b>닫기</b> → 홈</li>
-        <li>그 뒤 새 대화 · 표현 학습 · 스몰톡 · 재대화는 전부 페이월. <b>홈 · 기록 · 편지함 · 마이페이지</b>는 열려 있습니다</li>
-      </ul>
-    </div>
-    <div class="panel lock">
-      <h2>중간에 끊기면</h2>
-      <ul>
-        <li><b>첫 대화 중 이탈</b> → BE에 완료가 없어 무료 그대로. 다음에 다시 첫 대화</li>
-        <li><b>피드백 뒤 앱 종료</b> → 완료는 이미 서버에. 다음 학습 진입에서 바로 페이월, 분석 · 레벨 화면은 못 봅니다</li>
-        <li><b>분석 결과가 없거나 20초 초과</b> → 레벨 결과를 건너뛰고 학습 준비로</li>
-        <li><b>온보딩 중 이탈</b> → 다음 실행은 홈. 온보딩은 로그인 때만 다시 나옵니다 <span class="m">(기존 동작)</span></li>
-      </ul>
-    </div>
+  <!-- 피드백 · 갈림길 -->
+  <div class="abs node" style="left:420px; top:276px; width:130px; height:120px;">
+    <div class="t">피드백</div><div class="d">총평 · 상세<br/>재대화면 여기서 홈으로</div>
+  </div>
+  <div class="abs node q" style="left:600px; top:276px; width:170px; height:120px;">
+    <div class="t">게이트가 잠그나?</div><div class="d">무료 · 오픈 뒤 첫 대화를<br/>방금 끝냈다</div>
+  </div>
+  <div class="abs lbl free" style="left:774px; top:306px;">예 · 무료</div>
+  <div class="abs lbl open" style="left:700px; top:658px;">아니오 · 유료 · 브라우저 · 1.2.x · 플래그 꺼짐 — 전과 같음</div>
+
+  <!-- 폰 4장 -->
+  <div class="abs phone" style="left:830px; top:131px;">
+    <div class="cap"><div class="t">분석 중</div><div class="d">2초 폴링 · 20초 상한</div></div>
+    <div class="scr"><img src="01-analyzing.png" alt="분석 중" /></div>
+  </div>
+  <div class="abs phone" style="left:1000px; top:131px;">
+    <div class="cap"><div class="t">레벨 결과</div><div class="d">근거 충분할 때만 · 없으면 건너뜀</div></div>
+    <div class="scr"><img src="02-level-lv3.png" alt="레벨 결과" /></div>
+  </div>
+  <div class="abs phone" style="left:1170px; top:131px;">
+    <div class="cap"><div class="t">학습 준비</div><div class="d">표현은 흐림 · 개수만</div></div>
+    <div class="scr"><img src="05-prepared.png" alt="학습 준비" /></div>
+  </div>
+  <div class="abs phone pay" style="left:1340px; top:131px;">
+    <div class="cap"><div class="t">페이월</div><div class="d">entry conversation_finished</div></div>
+    <div class="scr"><img src="paywall-yearly.png" alt="페이월" /></div>
+  </div>
+
+  <!-- 페이월 뒤 -->
+  <div class="abs lbl open" style="left:1456px; top:518px;">결제</div>
+  <div class="abs lbl dim" style="left:1296px; top:512px;">닫기</div>
+  <div class="abs node ok" style="left:1340px; top:560px; width:152px; height:80px;">
+    <div class="t">표현 분기</div><div class="d">그 대화의 표현 학습<br/><code>?from=</code>으로 복귀 (#213)</div>
+  </div>
+  <div class="abs node home" style="left:1200px; top:560px; width:120px; height:80px;">
+    <div class="t">홈</div><div class="d">학습 진입마다<br/>다시 페이월</div>
+  </div>
+
+  <!-- 하단 노트 -->
+  <div class="abs note" style="left:56px; top:730px;">
+    <h2>같은 화면, 다른 이유</h2>
+    <ul>
+      <li><b>신규</b>는 첫 대화가 공통 진단이라 레벨이 처음 매겨집니다 <span class="m">(change_type INITIALIZED)</span></li>
+      <li><b>기존</b>은 오픈 뒤 첫 대화로 다시 매깁니다. BE #169가 세션 완료마다 평가합니다</li>
+      <li><b>유료</b>는 첫 대화여도 새 화면을 보지 않습니다 — 결제 전 사람에게 가치를 보여주는 자리입니다</li>
+    </ul>
+  </div>
+  <div class="abs note lock" style="left:560px; top:730px;">
+    <h2>중간에 끊기면</h2>
+    <ul>
+      <li><b>첫 대화 중 이탈</b> → 완료가 아니라 무료 그대로. 다음에 다시 첫 대화</li>
+      <li><b>피드백 뒤 앱 종료</b> → 완료는 서버에. 다음 학습 진입에서 바로 페이월, 새 화면은 못 봅니다</li>
+      <li><b>평가가 없거나 20초 초과</b> → 레벨 결과만 건너뛰고 학습 준비로. 레벨을 지어내지 않습니다</li>
+      <li><b>온보딩 중 이탈</b> → 다음 실행은 홈. 온보딩은 로그인 때만 다시 나옵니다 <span class="m">(기존 동작)</span></li>
+    </ul>
+  </div>
+  <div class="abs note ok" style="left:1064px; top:730px;">
+    <h2>결제 뒤</h2>
+    <ul>
+      <li><b>BE가 유료로 바뀐 걸 확인</b>하면 그 대화의 표현 분기로. 최대 5회 × 2초 기다립니다</li>
+      <li><b>확인이 늦으면</b> "확인 중" 토스트 뒤 같은 자리로. 다음 진입은 BE가 유료라 할 때까지 페이월</li>
+      <li><b>취소 · 실패</b>는 페이월에 머뭅니다. <b>닫기</b>는 홈. 홈 · 기록 · 편지함 · 마이페이지는 늘 열려 있습니다</li>
+    </ul>
   </div>
 </div>
 </body>
