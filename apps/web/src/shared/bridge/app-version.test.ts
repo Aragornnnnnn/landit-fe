@@ -1,4 +1,4 @@
-// 앱 버전 비교 — 결제 메시지를 아는 셸(1.3.0 이상)인지 가르는 데 쓴다. 문자열 비교로는 1.10.0 < 1.3.0이 돼서 정수로 잰다
+// 앱 버전 비교 — 어떤 기능이 실린 릴리즈인지 가르는 계약. 문자열 비교로는 1.10.0 < 1.3.0이 돼서 정수로 잰다
 import { describe, expect, it } from 'vitest';
 
 import { isAppVersionAtLeast } from './app-version';
@@ -23,7 +23,7 @@ describe('isAppVersionAtLeast', () => {
     expect(isAppVersionAtLeast('1.3', '1.3.0')).toBe(true);
   });
 
-  it('숫자로 읽을 수 없는 버전은 낮은 것으로 본다 — 모르는 셸에 결제를 열지 않는다', () => {
+  it('숫자로 읽을 수 없는 버전은 낮은 것으로 본다 — 모르는 셸에 기능을 열지 않는다', () => {
     expect(isAppVersionAtLeast('dev', '1.3.0')).toBe(false);
     expect(isAppVersionAtLeast('', '1.3.0')).toBe(false);
   });

@@ -11,49 +11,59 @@ import { paywallPath } from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
 import { PAYMENT_ENABLED } from './payment-flag';
-import { decidePaywallGate, type PaywallGateDecision } from './paywall-gate';
+import { canLockPaywall, decidePaywallGate } from './paywall-gate';
 import { useSubscriptionQuery } from './useSubscriptionQuery';
 
 interface GuardOptions {
-  // 계측용 — 어느 문에서 막혔는지
+  /** 계측용 — 어느 문에서 막혔는지 */
   entry: PaywallGateEntry;
-  // 결제 뒤 돌아올 곳. 없으면 페이월이 홈으로 보낸다
+  /** 결제 뒤 돌아올 곳. 없으면 페이월이 홈으로 보낸다 */
   returnTo?: string;
-  // 호출부가 대화가 방금 끝났음을 이미 아는 경우 — 서버 값이 아직 안 따라왔어도 무료 구간을 다 쓴 것으로 본다
+  /** 호출부가 대화가 방금 끝났음을 이미 아는 경우 — 서버 값이 아직 안 따라왔어도 무료 구간을 다 쓴 것으로 본다 */
   conversationJustFinished?: boolean;
 }
 
+/**
+ * 학습 진입을 감싸는 게이트.
+ *
+ * @returns `guard(이동, 옵션)`은 열려 있으면 이동을 그대로 실행하고, 잠겼으면 계측을 남기고 페이월로 보낸다
+ */
 export const usePaywallGate = () => {
   const router = useRouter();
   // 셸 컨텍스트는 클라이언트에서만 — 서버 렌더와 첫 렌더를 맞추려고 그때까지는 브라우저로 본다
   const context = useClientOnlyValue(getNativeContextSnapshot, null);
-  const { subscription, isError } = useSubscriptionQuery();
+  const environment = {
+    paymentEnabled: PAYMENT_ENABLED,
+    appVersion: context?.appVersion ?? null,
+  };
+  // 잠글 수 없는 환경(플래그 꺼짐·브라우저·구버전 셸)에서는 구독을 묻지 않는다 — 어차피 열린다
+  const { subscription, isError } = useSubscriptionQuery({
+    enabled: canLockPaywall(environment),
+  });
 
-  const decide = (
-    conversationCompletedSinceLaunch: boolean | null,
-  ): PaywallGateDecision =>
+  const decide = (conversationCompletedSinceLaunch: boolean | null) =>
     // 구독 조회 실패(구독 API 미배포 포함)는 잠그지 않는다 — 잘못 막는 쪽이 더 나쁘다
     isError
       ? 'open'
       : decidePaywallGate({
-          paymentEnabled: PAYMENT_ENABLED,
-          appVersion: context?.appVersion ?? null,
+          ...environment,
           // 아직 못 받았거나 BE가 필드를 아직 안 주면 null — decidePaywallGate가 unknown으로 둔다
           premium: subscription?.premium ?? null,
           conversationCompletedSinceLaunch,
         });
 
-  const decision = decide(
-    subscription?.conversationCompletedSinceLaunch ?? null,
-  );
+  const lockedNow =
+    decide(subscription?.conversationCompletedSinceLaunch ?? null) === 'locked';
 
-  // locked면 페이월로, 아니면 원래 하려던 이동을 그대로. unknown(재료가 늦음)도 막지 않는다 — 다음 진입에서 잡힌다
+  // 잠겼을 때만 페이월로. unknown(재료가 늦음)도 막지 않는다 — 다음 진입에서 잡힌다
   const guard = (
     go: () => void,
     { entry, returnTo, conversationJustFinished }: GuardOptions,
   ) => {
-    const verdict = conversationJustFinished ? decide(true) : decision;
-    if (verdict !== 'locked') {
+    const locked = conversationJustFinished
+      ? decide(true) === 'locked'
+      : lockedNow;
+    if (!locked) {
       go();
       return;
     }
@@ -61,5 +71,5 @@ export const usePaywallGate = () => {
     router.push(paywallPath({ from: returnTo }));
   };
 
-  return { decision, guard };
+  return { guard };
 };

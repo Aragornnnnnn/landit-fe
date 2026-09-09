@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   track: vi.fn(),
   getNativeContext: vi.fn(),
   subscription: { subscription: null as unknown, isError: false },
+  subscriptionOptions: null as { enabled?: boolean } | null,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -22,7 +23,10 @@ vi.mock('@/shared/bridge/native-context', () => ({
 }));
 vi.mock('./payment-flag', () => ({ PAYMENT_ENABLED: true }));
 vi.mock('./useSubscriptionQuery', () => ({
-  useSubscriptionQuery: () => mocks.subscription,
+  useSubscriptionQuery: (options: { enabled?: boolean }) => {
+    mocks.subscriptionOptions = options;
+    return mocks.subscription;
+  },
 }));
 
 const wrapper = ({ children }: { children: ReactNode }) =>
@@ -35,7 +39,10 @@ const readyShell = {
   bridgeVersion: 5,
 };
 
+const renderGate = () => renderHook(() => usePaywallGate(), { wrapper });
+
 beforeEach(() => {
+  vi.clearAllMocks();
   mocks.getNativeContext.mockReturnValue(readyShell);
   mocks.subscription = {
     subscription: { premium: false, conversationCompletedSinceLaunch: true },
@@ -45,7 +52,7 @@ beforeEach(() => {
 
 describe('usePaywallGate', () => {
   it('무료 구간을 다 쓴 무료 사용자는 원래 이동 대신 페이월로 가고, 어느 문이었는지 남긴다', () => {
-    const { result } = renderHook(() => usePaywallGate(), { wrapper });
+    const { result } = renderGate();
     const go = vi.fn();
 
     result.current.guard(go, { entry: 'scenario', returnTo: '/scenario' });
@@ -55,12 +62,14 @@ describe('usePaywallGate', () => {
     expect(mocks.track).toHaveBeenCalledWith('Paywall Gate Locked', {
       entry: 'scenario',
     });
-    expect(result.current.decision).toBe('locked');
   });
 
   it('유료 사용자는 그대로 들어간다', () => {
-    mocks.subscription = { subscription: { premium: true }, isError: false };
-    const { result } = renderHook(() => usePaywallGate(), { wrapper });
+    mocks.subscription = {
+      subscription: { premium: true, conversationCompletedSinceLaunch: true },
+      isError: false,
+    };
+    const { result } = renderGate();
     const go = vi.fn();
 
     result.current.guard(go, { entry: 'expression' });
@@ -71,23 +80,21 @@ describe('usePaywallGate', () => {
 
   it('구독 조회가 실패했으면 잠그지 않는다 — 구독 API가 아직 없어도 학습은 막히지 않아야 한다', () => {
     mocks.subscription = { subscription: null, isError: true };
-    const { result } = renderHook(() => usePaywallGate(), { wrapper });
+    const { result } = renderGate();
     const go = vi.fn();
 
     result.current.guard(go, { entry: 'smalltalk' });
 
-    expect(result.current.decision).toBe('open');
     expect(go).toHaveBeenCalledTimes(1);
   });
 
-  it('BE가 무료 구간 값을 아직 안 주면(unknown) 막지 않고 들여보낸다 — 다음 진입에서 잡힌다', () => {
+  it('BE가 무료 구간 값을 아직 안 주면 막지 않고 들여보낸다 — 다음 진입에서 잡힌다', () => {
     mocks.subscription = { subscription: { premium: false }, isError: false };
-    const { result } = renderHook(() => usePaywallGate(), { wrapper });
+    const { result } = renderGate();
     const go = vi.fn();
 
     result.current.guard(go, { entry: 'scenario' });
 
-    expect(result.current.decision).toBe('unknown');
     expect(go).toHaveBeenCalledTimes(1);
   });
 
@@ -96,7 +103,7 @@ describe('usePaywallGate', () => {
       subscription: { premium: false, conversationCompletedSinceLaunch: false },
       isError: false,
     };
-    const { result } = renderHook(() => usePaywallGate(), { wrapper });
+    const { result } = renderGate();
     const go = vi.fn();
 
     result.current.guard(go, {
@@ -109,28 +116,22 @@ describe('usePaywallGate', () => {
     expect(mocks.push).toHaveBeenCalledWith(
       '/paywall?from=%2Fconversation%2Fscenario%2F7%2Fexpressions',
     );
-    expect(mocks.track).toHaveBeenCalledWith('Paywall Gate Locked', {
-      entry: 'conversation_finished',
-    });
   });
 
-  it('대화가 방금 끝났어도 유료 사용자는 그대로 들어간다', () => {
-    mocks.subscription = { subscription: { premium: true }, isError: false };
-    const { result } = renderHook(() => usePaywallGate(), { wrapper });
+  it('브라우저에서는 잠그지 않고, 구독도 묻지 않는다 — 어차피 열린다', () => {
+    mocks.getNativeContext.mockReturnValue(null);
+    const { result } = renderGate();
     const go = vi.fn();
 
-    result.current.guard(go, {
-      entry: 'conversation_finished',
-      conversationJustFinished: true,
-    });
+    result.current.guard(go, { entry: 'scenario' });
 
     expect(go).toHaveBeenCalledTimes(1);
+    expect(mocks.subscriptionOptions?.enabled).toBe(false);
   });
 
-  it('브라우저에서는 잠그지 않는다', () => {
-    mocks.getNativeContext.mockReturnValue(null);
-    const { result } = renderHook(() => usePaywallGate(), { wrapper });
+  it('결제를 아는 셸에서는 구독을 묻는다', () => {
+    renderGate();
 
-    expect(result.current.decision).toBe('open');
+    expect(mocks.subscriptionOptions?.enabled).toBe(true);
   });
 });

@@ -83,7 +83,7 @@ export const ExpressionBranch = ({
       scenario_id: scenarioId,
       source: 'post_conversation',
     });
-    // 첫 표현은 무료 구간이라 열리고, 그다음부터는 게이트가 페이월로 보낸다
+    // 무료 구간을 다 쓴 사람은 게이트가 페이월로 보낸다 — 결제하면 이 분기로 돌아온다
     gate.guard(
       () => router.push(scenarioExpressionPath(scenarioId, expressionId, date)),
       {

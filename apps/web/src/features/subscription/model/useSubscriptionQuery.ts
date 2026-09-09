@@ -6,13 +6,20 @@ import { useAuthStore } from '@/shared/auth/auth-store';
 import { getMySubscription } from '../api/subscription';
 import { subscriptionKeys } from './keys';
 
-export const useSubscriptionQuery = () => {
+/**
+ * BE의 구독 상태를 읽는다 — 유료 여부를 아는 유일한 창구.
+ *
+ * @param enabled 판단에 안 쓸 곳(잠글 수 없는 환경)에서는 끄고 조회를 아낀다
+ */
+export const useSubscriptionQuery = ({
+  enabled = true,
+}: { enabled?: boolean } = {}) => {
   const userId = useAuthStore((state) => state.member?.userId ?? null);
 
   const { data, isPending, isError } = useQuery({
     queryKey: subscriptionKeys.mine(userId),
     queryFn: getMySubscription,
-    enabled: userId !== null,
+    enabled: enabled && userId !== null,
     retry: 1,
   });
 

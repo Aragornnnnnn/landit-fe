@@ -43,7 +43,7 @@ function ScenarioContent() {
   const autoFlip = searchParams.get('flip') !== null;
 
   const { daily, error, retry } = useDailyScenarioQuery(date);
-  // 무료 구간(첫 대화 1 + 표현 1)을 다 쓴 무료 사용자는 새 대화 대신 페이월로 보낸다
+  // 무료 구간(오픈 뒤 대화 하나)을 다 쓴 무료 사용자는 새 대화 대신 페이월로 보낸다
   const gate = usePaywallGate();
 
   // 알림은 오늘 카드에 대한 판단이 끝난 뒤에만 청한다 — 대화를 끝냈거나, 지금은 안 하기로 했거나.
