@@ -1,33 +1,42 @@
 'use client';
 
-// 내 정보(/me) — 프로필 헤더 + 메뉴 목록. 페이지 전환 모션은 전역 라우트 트랜지션 도입 시 함께 다룬다
-import { useState } from 'react';
+// 내 정보(/me) — 프로필 헤더, 프리미엄 카드, 학습 · 설정 · 지원 · 계정 네 묶음. 페이지 전환 모션은 전역 라우트 트랜지션이 맡는다
+import { useState, useSyncExternalStore } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { disablePushToken } from '@/features/notification/model/push-token-registration';
+import { surveyDone } from '@/features/survey/model/survey-done';
 import { track } from '@/shared/analytics';
 import { logout as requestLogout } from '@/shared/auth/api/logout';
 import { withdraw } from '@/shared/auth/api/withdraw';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { clearSession } from '@/shared/auth/clear-session';
 import { homePath } from '@/shared/lib/last-tab';
+import { MAILBOX_COMPOSE_PATH, SURVEY_PATH } from '@/shared/lib/routes';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { reportWarning } from '@/shared/monitoring/report';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
-import { Emoji } from '@/shared/ui/emoji';
-import { ChevronLeftIcon } from '@/shared/ui/Icons';
+import {
+  ChevronLeftIcon,
+  ClipboardListIcon,
+  FileTextIcon,
+  LogOutIcon,
+  MessageSquareIcon,
+  TrashIcon,
+} from '@/shared/ui/Icons';
 
 import { AccentMenuEntry } from './_ui/AccentMenuEntry';
 import { EnglishLevelMenuEntry } from './_ui/EnglishLevelMenuEntry';
-import { MenuButton, MenuGroup, MenuLink } from './_ui/Menu';
+import { HapticMenuEntry } from './_ui/HapticMenuEntry';
+import { MenuButton, MenuLink, MenuSection } from './_ui/Menu';
 import { NotificationMenuEntry } from './_ui/NotificationMenuEntry';
-import { StatChip } from './_ui/StatChip';
+import { PremiumEntry } from './_ui/PremiumEntry';
+import { ProfileHeader } from './_ui/ProfileHeader';
 
 export default function MyPage() {
   const router = useRouter();
-  const member = useAuthStore((state) => state.member);
   const refreshToken = useAuthStore((state) => state.refreshToken);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
@@ -37,8 +46,12 @@ export default function MyPage() {
   );
   const { ref: scrollRef, onScroll, hasShadow } = useScrollShadow();
 
-  const displayName = member?.nickname?.trim() || '게스트';
-  const emailText = member?.email ?? '';
+  // 설문은 한 번 답하면 목록에서 빠진다. 서버 렌더에서는 숨겨 두고 클라이언트에서 저장값을 읽는다
+  const surveyAnswered = useSyncExternalStore(
+    surveyDone.subscribe,
+    surveyDone.has,
+    () => true,
+  );
 
   // 탈퇴 시트 닫기 — 버튼·오버레이 두 경로가 같은 취소 이벤트를 쓴다
   function dismissDeleteSheet() {
@@ -129,70 +142,66 @@ export default function MyPage() {
         onScroll={onScroll}
         className="flex-1 overflow-y-auto bg-muted"
       >
-        {/* 프로필 섹션 */}
-        <div className="px-5 pt-6 pb-5">
-          <div className="flex items-center gap-4">
-            <div
-              className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full text-4xl"
-              style={{ background: '#E8F4E8' }}
-            >
-              <Emoji>🛬</Emoji>
-            </div>
-            <div className="min-w-0">
-              <p
-                className="text-[22px] leading-tight font-bold"
-                style={{ color: '#111' }}
-              >
-                {displayName}
-              </p>
-              {emailText ? (
-                <p
-                  className="mt-0.5 truncate text-[14px]"
-                  style={{ color: '#888' }}
-                >
-                  {emailText}
-                </p>
-              ) : null}
-            </div>
-          </div>
+        <div className="space-y-5 px-4 pt-3 pb-8">
+          <ProfileHeader />
+          <PremiumEntry />
 
-          <div className="mt-4 flex gap-2">
-            <StatChip
-              label="로그인"
-              value={getProviderLabel(member?.provider)}
+          <MenuSection title="학습">
+            <EnglishLevelMenuEntry />
+            <AccentMenuEntry />
+          </MenuSection>
+
+          <MenuSection title="설정">
+            {/* 권한 체계가 없는 환경에선 알림 행이 비고 진동만 남는다 */}
+            <NotificationMenuEntry />
+            <HapticMenuEntry />
+          </MenuSection>
+
+          <MenuSection title="지원">
+            <MenuLink
+              href={MAILBOX_COMPOSE_PATH}
+              icon={<MessageSquareIcon size={22} />}
+              title="피드백 남기기"
             />
-          </div>
-        </div>
+            {!surveyAnswered && (
+              <MenuLink
+                href={SURVEY_PATH}
+                icon={<ClipboardListIcon size={22} />}
+                title="설문조사 참여하기"
+              />
+            )}
+          </MenuSection>
 
-        {/* 메뉴 그룹 */}
-        <div className="space-y-3 px-4 pb-8">
-          <EnglishLevelMenuEntry />
-          <AccentMenuEntry />
-
-          {/* 알림을 아직 안 켠 유저에게만 보인다 */}
-          <NotificationMenuEntry />
-
-          <MenuGroup>
-            <MenuLink href="/privacy" title="개인정보 처리방침" />
-            <MenuLink href="/terms" title="서비스 이용약관" />
-          </MenuGroup>
-
-          <MenuGroup>
+          <MenuSection title="계정">
+            <MenuLink
+              href="/terms"
+              icon={<FileTextIcon size={22} />}
+              title="서비스 이용약관"
+            />
+            <MenuLink
+              href="/privacy"
+              icon={<FileTextIcon size={22} />}
+              title="개인정보 처리방침"
+            />
             <MenuButton
               title={isLoggingOut ? '로그아웃 중...' : '로그아웃'}
+              icon={<LogOutIcon size={22} />}
+              chevron={false}
               onClick={logout}
               disabled={isLoggingOut}
             />
             <MenuButton
               title="회원탈퇴"
+              icon={<TrashIcon size={22} />}
               tone="danger"
+              chevron={false}
               onClick={() => {
                 track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'account_delete' });
                 setDeleteErrorMessage(null);
                 setIsDeleteSheetOpen(true);
               }}
             />
-          </MenuGroup>
+          </MenuSection>
         </div>
       </div>
 
@@ -233,17 +242,4 @@ export default function MyPage() {
       </BottomSheet>
     </main>
   );
-}
-
-function getProviderLabel(provider?: string) {
-  switch (provider) {
-    case 'GOOGLE':
-      return '구글';
-    case 'KAKAO':
-      return '카카오';
-    case 'APPLE':
-      return '애플';
-    default:
-      return '-';
-  }
 }

@@ -39,7 +39,7 @@ const renderEntry = () =>
 
 const openSheet = async () => {
   await waitFor(() => expect(getMyLearningLevel).toHaveBeenCalled());
-  fireEvent.click(screen.getByText('학습 수준 변경하기'));
+  fireEvent.click(screen.getByText('학습 레벨'));
 };
 
 beforeEach(() => {

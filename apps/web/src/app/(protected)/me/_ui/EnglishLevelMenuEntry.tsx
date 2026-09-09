@@ -10,8 +10,9 @@ import { useSaveLearningLevelMutation } from '@/features/onboarding/model/useSav
 import { EnglishLevelForm } from '@/features/onboarding/ui/common/EnglishLevelForm';
 import { track } from '@/shared/analytics';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
+import { BookOpenIcon } from '@/shared/ui/Icons';
 
-import { MenuButton, MenuGroup } from './Menu';
+import { MenuButton } from './Menu';
 
 export const EnglishLevelMenuEntry = () => {
   const [open, setOpen] = useState(false);
@@ -26,9 +27,11 @@ export const EnglishLevelMenuEntry = () => {
 
   return (
     <>
-      <MenuGroup>
-        <MenuButton title="학습 수준 변경하기" onClick={() => setOpen(true)} />
-      </MenuGroup>
+      <MenuButton
+        title="학습 레벨"
+        icon={<BookOpenIcon size={22} />}
+        onClick={() => setOpen(true)}
+      />
 
       <BottomSheet open={open} onClose={() => setOpen(false)}>
         {/* 작은 화면에서 시트가 화면을 벗어나지 않게 높이를 묶고, 넘치면 선택지만 안에서 스크롤된다 */}

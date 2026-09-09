@@ -41,7 +41,7 @@ const renderEntry = () =>
 
 const openSheet = async () => {
   await waitFor(() => expect(getMyAccentLocale).toHaveBeenCalled());
-  fireEvent.click(screen.getByText('배울 영어 변경하기'));
+  fireEvent.click(screen.getByText('배울 영어'));
 };
 
 beforeEach(() => {
@@ -111,7 +111,7 @@ describe('AccentMenuEntry', () => {
 
     renderEntry();
     await waitFor(() => expect(getMyAccentLocale).toHaveBeenCalled());
-    fireEvent.click(screen.getByText('배울 영어 변경하기'));
+    fireEvent.click(screen.getByText('배울 영어'));
 
     expect(screen.getByText('미국 영어')).toBeInTheDocument();
     expect(screen.getByText('영국 영어')).toBeInTheDocument();
@@ -123,7 +123,7 @@ describe('AccentMenuEntry', () => {
 
     renderEntry();
     await waitFor(() => expect(getMyAccentLocale).toHaveBeenCalled());
-    fireEvent.click(screen.getByText('배울 영어 변경하기'));
+    fireEvent.click(screen.getByText('배울 영어'));
 
     expect(screen.getByText('미국 영어').closest('button')).toHaveAttribute(
       'aria-pressed',
@@ -137,7 +137,7 @@ describe('AccentMenuEntry', () => {
 
     renderEntry();
     await waitFor(() => expect(getMyAccentLocale).toHaveBeenCalled());
-    fireEvent.click(screen.getByText('배울 영어 변경하기'));
+    fireEvent.click(screen.getByText('배울 영어'));
     fireEvent.click(screen.getByText('호주 영어'));
 
     fireEvent.click(screen.getByText('선택했어요!'));
