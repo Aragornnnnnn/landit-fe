@@ -28,4 +28,6 @@ export {
   type SubscriptionPlan,
   type PaywallGateEntry,
   type LevelChangeType,
+  type SubscriptionState,
+  type PaywallEntrySource,
 } from './events';

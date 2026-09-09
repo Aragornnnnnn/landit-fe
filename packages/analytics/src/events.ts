@@ -157,6 +157,13 @@ export const EVENTS = {
   LEVEL_RESULT_VIEWED: 'Level Result Viewed',
   PREPARED_LEARNING_VIEWED: 'Prepared Learning Viewed',
   PREPARED_LEARNING_CONTINUED: 'Prepared Learning Continued',
+  // 마이페이지 — 유료 사용자가 구독 관리로 들어갔다 / 무료 사용자가 페이월로 들어갔다 / 진동 토글
+  SUBSCRIPTION_MANAGE_TAPPED: 'Subscription Manage Tapped',
+  PAYWALL_ENTRY_TAPPED: 'Paywall Entry Tapped',
+  HAPTICS_TOGGLED: 'Haptics Toggled',
+  // 구독 관리 화면 — 스토어 구독 관리로 나갔다 / 환불 안내 링크를 눌렀다
+  STORE_SUBSCRIPTION_TAPPED: 'Store Subscription Tapped',
+  REFUND_LINK_TAPPED: 'Refund Link Tapped',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -197,6 +204,10 @@ export type SubscriptionPlan = 'monthly' | 'yearly';
 // 수준 평가가 적용 수준을 어떻게 바꿨는가 — BE LearningLevelPolicy.ChangeType과 같은 값
 export type LevelChangeType =
   'INITIALIZED' | 'PROMOTED' | 'UNCHANGED' | 'NOT_APPLIED';
+// 마이페이지 구독 카드의 상태 — 무료 체험 중 / 구독 중 / 해지 예약(만료일까지 이용)
+export type SubscriptionState = 'trial' | 'active' | 'canceled';
+// 게이트가 아닌 자리에서 페이월로 들어간 곳 — 지금은 마이페이지뿐
+export type PaywallEntrySource = 'my_page';
 
 // 페이월 게이트가 걸린 진입 문 — 새 대화 시작 / 표현 학습 진입 / 스몰톡 시작
 export type PaywallGateEntry =
@@ -531,6 +542,11 @@ export type EventProps = {
   };
   'Prepared Learning Viewed': { scenario_id: number };
   'Prepared Learning Continued': { scenario_id: number };
+  'Subscription Manage Tapped': { status: SubscriptionState };
+  'Paywall Entry Tapped': { source: PaywallEntrySource };
+  'Haptics Toggled': { enabled: boolean };
+  'Store Subscription Tapped': { status: SubscriptionState };
+  'Refund Link Tapped': { status: SubscriptionState };
 
   // 위젯 설치 안내 — 노출·답·플랫폼을 속성으로 가른다
   'Widget Install Invite Viewed': undefined;
