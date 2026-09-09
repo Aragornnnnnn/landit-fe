@@ -53,15 +53,15 @@
 
 ### 페이월
 
-| 이벤트                  | 속성                  | 시점                                                                               |
-| ----------------------- | --------------------- | ---------------------------------------------------------------------------------- |
-| Paywall Plan Selected   | plan(monthly\|yearly) | 페이월에서 다른 플랜 카드를 골랐을 때 (같은 카드 다시 누르면 안 찍음)              |
-| Purchase Started        | plan(monthly\|yearly) | CTA를 눌러 결제를 요청한 순간                                                      |
-| Purchase Restore Tapped | 없음                  | 구매 복원을 눌렀을 때                                                              |
-| Purchase Completed      | plan, unlocked(bool)  | 셸이 결제 성공을 회신했을 때. unlocked는 그 뒤 몇 초 안에 서버가 유료로 바뀌었는가 |
-| Purchase Canceled       | plan                  | 사용자가 스토어 결제 시트를 닫았을 때                                              |
-| Purchase Failed         | plan, reason          | 결제 실패. reason은 셸이 준 사유 또는 browser / outdated_shell / no_response       |
-| Purchase Restored       | succeeded(bool)       | 구매 복원 요청이 끝났을 때                                                         |
+| 이벤트                  | 속성                    | 시점                                                                                                                                                           |
+| ----------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Paywall Plan Selected   | plan(monthly\|yearly)   | 페이월에서 다른 플랜 카드를 골랐을 때 (같은 카드 다시 누르면 안 찍음)                                                                                          |
+| Purchase Started        | plan(monthly\|yearly)   | CTA를 눌러 결제를 요청한 순간                                                                                                                                  |
+| Purchase Restore Tapped | 없음                    | 구매 복원을 눌렀을 때                                                                                                                                          |
+| Purchase Completed      | plan, unlocked(bool)    | 셸이 결제 성공을 회신했을 때. unlocked는 그 뒤 몇 초 안에 서버가 유료로 바뀌었는가                                                                             |
+| Purchase Canceled       | plan                    | 사용자가 스토어 결제 시트를 닫았을 때                                                                                                                          |
+| Purchase Failed         | plan?, reason, message? | 결제·복원이 막히거나 실패. reason은 browser / outdated_shell / no_response / shell_error. shell_error면 셸이 준 문구가 message. 복원이 막힌 경우엔 plan이 없다 |
+| Purchase Restored       | succeeded(bool)         | 구매 복원 요청이 끝났을 때                                                                                                                                     |
 
 페이월 노출은 별도 이벤트 없이 `Page Viewed`(page_name=paywall)로 본다.
 

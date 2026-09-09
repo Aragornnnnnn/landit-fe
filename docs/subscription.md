@@ -165,22 +165,24 @@ App Store Connect 구독 그룹 `premium` (ID 22358008, 표시명 "랜딧 프리
 
 셸 → 웹
 
-| 메시지            | 페이로드                                                     |
-| ----------------- | ------------------------------------------------------------ |
-| `OFFERINGS`       | `{ packages: [{ id, plan, price, currency, priceString }] }` |
-| `PURCHASE_RESULT` | `{ status: 'success' \| 'cancelled' \| 'error', message? }`  |
-| `RESTORE_RESULT`  | `{ status: 'success' \| 'error', message? }`                 |
+| 메시지            | 페이로드                                                    |
+| ----------------- | ----------------------------------------------------------- |
+| `OFFERINGS`       | `{ packages: [{ id, plan, price, currency }] }`             |
+| `PURCHASE_RESULT` | `{ status: 'success' \| 'cancelled' \| 'error', message? }` |
+| `RESTORE_RESULT`  | `{ status: 'success' \| 'error', message? }`                |
 
-`priceString`은 스토어가 주는 로컬라이즈된 문자열을 그대로 쓴다. 결제 연동 뒤 웹은 이 값으로 카드 가격을 덮어쓴다. 결제 메시지를 모르는 구버전 셸에서는 웹이 앱 업데이트 안내로 빠진다.
+웹은 `currency`가 KRW일 때만 `price`로 카드 숫자를 다시 계산한다. 다른 통화는 등록값을 그대로 보여준다 (해외 스토어프런트는 다음 이슈). 결제 메시지를 모르는 구버전 셸에서는 웹이 앱 업데이트 안내로 빠진다.
 
 ## 웹 결제 흐름
 
-1. 페이월 진입 시 `GET_OFFERINGS`로 가격을 받아 채운다.
-2. 구매 버튼 → `PURCHASE`. 복원 버튼 → `RESTORE_PURCHASES`.
-3. `success`를 받으면 구독 쿼리를 invalidate하고 최대 10초쯤 짧게 폴링한다. 웹훅이 BE에 닿기까지 몇 초 지연이 있어 한 번 refetch로는 아직 `premium=false`일 수 있다. 그동안은 로딩 상태.
-4. `premium=true`가 되면 페이월을 닫고 원래 가려던 화면으로 이어진다.
+셸과 주고받는 코드는 `features/subscription/model/shell-purchases.ts` 한 파일이다. 결제를 시킬 수 있는 환경인지(브라우저·구버전 셸·준비된 셸)와 왕복 네 가지, 제한 시간이 여기 있다. 왕복 자체는 `shared/bridge/request.ts`의 `requestFromNative`가 맡는다 — 회신 구독을 먼저 걸고 요청을 보낸 뒤 기다리던 종류의 회신 하나로 끝내며, 화면이 사라지면 `AbortSignal`로 끊어 5분짜리 결제 대기가 남지 않게 한다.
 
-페이월 화면 쪽에서는 CTA가 `requestPurchase(plan)` 하나만 부른다. LAN-446에서는 이 함수가 비어 있고, LAN-447에서 브릿지 왕복으로 채운다.
+1. 페이월 진입 시 `useOfferings`가 `GET_OFFERINGS`로 가격표를 받는다. 원화면 카드 숫자를 그 값으로 다시 계산하고, 못 받으면 등록값 그대로다.
+2. CTA → `usePurchase().purchase(plan)`. 훅이 가격표에서 패키지 id를 고르고(없으면 `$rc_monthly`/`$rc_annual`) `PURCHASE`를 보낸다. 복원 버튼 → `restore()` → `RESTORE_PURCHASES`.
+3. `success`를 받으면 구독 조회를 최대 5회×2초 반복해 `premium=true`를 기다린다. 웹훅이 BE에 닿기까지 몇 초 걸린다. 확인되면 그 응답을 구독 쿼리 캐시에 바로 넣어 게이트가 다시 조회하지 않게 한다. 그동안 CTA는 로딩이다.
+4. 확인되면 페이월을 닫는다. 끝까지 무료면 "확인 중" 안내를 띄우고도 닫는다 — 스토어 결제는 끝났으니 사용자를 붙잡아 두지 않는다. 취소는 토스트 없이 버튼만 복구한다.
+
+로그인 사용자와 RevenueCat 사용자는 루트 레이아웃의 `IdentifySync`가 `IDENTIFY`로 묶는다. 셸은 `logIn`이 끝나기 전에 온 결제·복원·오퍼링 요청을 그 뒤로 미뤄, 익명 사용자로 결제되는 순서 문제를 셸 한 곳에서 막는다.
 
 ## 마이페이지와 법적 문서
 

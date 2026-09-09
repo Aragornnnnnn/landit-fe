@@ -43,7 +43,7 @@ landit 앱은 네이티브 UI 없이 웹(Next.js)을 WebView로 감싸는 셸이
 | `GET_OFFERINGS`                   | 웹→앱 | 없음                 | 스토어 오퍼링의 패키지(상품·가격) 조회. 응답은 `OFFERINGS`                                                             | `index.tsx`의 핸들러   |
 | `PURCHASE`                        | 웹→앱 | `packageId`          | 패키지 결제 — 스토어 결제 시트가 뜬다. 응답은 `PURCHASE_RESULT`                                                        | `index.tsx`의 핸들러   |
 | `RESTORE_PURCHASES`               | 웹→앱 | 없음                 | 이전 구매 복원. 응답은 `RESTORE_RESULT`                                                                                | `index.tsx`의 핸들러   |
-| `OFFERINGS`                       | 앱→웹 | `packages`           | 패키지 목록(`id`, `plan`, `price`, `currency`, `priceString`). `plan`은 셸이 packageType으로 판단해 붙인다             | 구독 기능 훅 (LAN-447) |
+| `OFFERINGS`                       | 앱→웹 | `packages`           | 패키지 목록(`id`, `plan`, `price`, `currency`). `plan`은 셸이 packageType으로 판단해 붙인다                            | 구독 기능 훅 (LAN-447) |
 | `PURCHASE_RESULT`                 | 앱→웹 | `status`, `message?` | `success`/`cancelled`/`error`. 취소는 실패가 아니라 조용히 끝낸다                                                      | 구독 기능 훅 (LAN-447) |
 | `RESTORE_RESULT`                  | 앱→웹 | `status`, `message?` | `success`/`error`                                                                                                      | 구독 기능 훅 (LAN-447) |
 
