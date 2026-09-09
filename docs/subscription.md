@@ -59,7 +59,7 @@ App Store Connect 구독 그룹 `premium` (ID 22358008, 표시명 "랜딧 프리
 
 피드백을 마치고 표현 분기로 넘어가는 자리가 무료 사용자에게는 첫 페이월이다(`ScenarioTalkFlow`의 `leaveFeedback`, entry `conversation_finished`). 결제하면 그 대화의 표현 분기로 돌아온다. 그 뒤로 새 대화 시작, 표현 학습, 스몰톡 진입이 모두 페이월로 막힌다. 홈은 열람할 수 있다. 페이월을 닫으면 홈으로 가고, 학습에 다시 들어가면 페이월이 또 뜬다. 2026-09-08 시안의 신규 사용자용 "분석 중 → 레벨 결과 → 학습 준비" 세 화면은 BE 수준 평가(landit-be #169)가 안정된 뒤 이 자리에 끼우는 별도 이슈다.
 
-게이트는 학습 진입 지점에 건다. `usePaywallGate().guard(이동, { entry, returnTo })`가 대화 시작(시나리오 탭), 스몰톡 시작(내가 먼저·주제로), 표현 학습 진입(대화 직후 분기·홈 카드 뒷면·스몰톡 결과·스몰톡 기록) 여섯 곳과 대화 피드백 끝을 감싼다. 피드백 끝은 `conversationJustFinished: true`로 불러 서버 값이 아직 안 따라왔어도 잠근다(방금 끝난 대화가 곧 그 하나다). 잠기면 `/paywall?from=돌아갈곳`으로 보내고 `Paywall Gate Locked{entry}`를 남긴다. 판정은 `decidePaywallGate` 순수 함수 하나다. 구독 조회 실패·진행도 조회 실패·판단 재료 미도착(unknown)은 잠그지 않는다 — 잘못 막는 쪽이 더 나쁘다. `(protected)/layout.tsx`로 화면 전체를 막지 않는다.
+게이트는 학습 진입 지점에 건다. `usePaywallGate().guard(이동, { entry, returnTo })`가 대화 시작(시나리오 탭), 스몰톡 시작(내가 먼저·주제로), 표현 학습 진입(대화 직후 분기·홈 카드 뒷면·스몰톡 결과·스몰톡 기록) 일곱 곳과 대화 피드백 끝을 감싼다. 피드백 끝은 `conversationJustFinished: true`로 불러 서버 값이 아직 안 따라왔어도 잠근다(방금 끝난 대화가 곧 그 하나다). 잠기면 `/paywall?from=돌아갈곳`으로 보내고 `Paywall Gate Locked{entry}`를 남긴다. 판정은 `decidePaywallGate` 순수 함수 하나다. 구독 조회 실패·진행도 조회 실패·판단 재료 미도착(unknown)은 잠그지 않는다 — 잘못 막는 쪽이 더 나쁘다. `(protected)/layout.tsx`로 화면 전체를 막지 않는다.
 
 잠금 조건은 "첫 대화 완료"가 아니라 "결제 오픈일 이후 대화를 하나 끝냈다"이다(2026-09-08 확정). 신규 사용자는 모든 대화가 오픈 뒤라 첫 대화가 끝나는 순간 잠기고, 기존 사용자는 오픈 전에 몇 개를 했든 오픈 뒤 첫 대화(오늘의 시나리오)를 끝내는 순간 잠긴다. 둘 다 그 대화의 피드백을 마친 자리에서 첫 페이월을 만나고, 신규만 그 사이에 수준 파악 화면을 거친다. 이 값은 서버가 준다 — `/api/v1/me/subscription`의 `conversationCompletedSinceLaunch`(도입 시점은 BE 환경변수). 필드가 없는 구버전 응답이면 `unknown`으로 두고 잠그지 않는다. 무료 체험 중(`periodType=TRIAL`)과 해지 예약(`CANCELED`, 만료 전)은 `premium=true`라 게이트에 걸리지 않는다.
 
@@ -69,11 +69,11 @@ App Store Connect 구독 그룹 `premium` (ID 22358008, 표시명 "랜딧 프리
 
 세 조건이 전부 참일 때만 결제 UI를 보여준다.
 
-1. `window.__LANDIT_NATIVE__.appVersion >= 1.3.0` — 1.2.x 셸에는 SDK도 브릿지 핸들러도 없다. 브라우저 단독 접속은 값이 없어서 자연히 안 뜬다. 비교는 `features/subscription/model/app-version.ts`의 `isAppVersionAtLeast`(자리별 정수, 못 읽는 버전은 낮은 것으로).
+1. `window.__LANDIT_NATIVE__.appVersion >= 1.3.0` — 1.2.x 셸에는 SDK도 브릿지 핸들러도 없다. 브라우저 단독 접속은 값이 없어서 자연히 안 뜬다. 비교는 `shared/bridge/app-version.ts`의 `isAppVersionAtLeast`(자리별 정수, 못 읽는 버전은 낮은 것으로). 위젯 설치 안내의 버전 판정도 같은 함수다.
 2. `NEXT_PUBLIC_PAYMENT_ENABLED` — 오픈 시점을 잡는 플래그(`features/subscription/model/payment-flag.ts`, 값 `true`일 때만 켜짐). Vercel 환경변수라 바꾸면 재배포가 필요하다 (`NEXT_PUBLIC_`은 빌드 시점에 박힌다).
 3. BE `premium`이 `false` — 이미 구독 중이면 안 보여준다.
 
-이 세 조건은 페이월 노출뿐 아니라 위 절의 잠금 게이트에도 같이 걸린다. 1.2.x 유저는 결제를 못 하니 잠기면 안 된다.
+이 세 조건은 페이월 노출뿐 아니라 위 절의 잠금 게이트에도 같이 걸린다(`canLockPaywall`). 1.2.x 유저는 결제를 못 하니 잠기면 안 되고, 잠글 수 없는 환경에서는 구독 조회도 하지 않는다.
 
 버전 게이트만으로도 "누가 보느냐"는 제어된다. 플래그를 따로 두는 이유는 1.3.0 출시일과 결제 오픈일을 분리하고, BE 샌드박스 설정 전환(아래 절)과 시점을 맞추기 위해서다.
 
