@@ -3,7 +3,7 @@
 // 학습 준비 — 방금 대화에서 뽑은 표현 다섯 개를 흐리게 깔고, 그 위에서 래디와 대화 상대들이 장면을 바꿔 가며
 // "레벨에 맞춰 준비했다 → 프리톡 → 학습하면 이런 게 나온다"를 소개한다. CTA가 페이월(무료) 또는 표현 분기(유료)로 이어진다.
 // 내용을 흐리는 건 의도다 — 더 궁금하게 두고 결제창을 만난다 (docs/subscription.md 「무료 구간과 페이월 게이트」)
-import { useEffect, useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import Image from 'next/image';
@@ -42,19 +42,20 @@ const PLACEHOLDER_ROWS = [
 ];
 const DEFAULT_COUNT = PLACEHOLDER_ROWS.length;
 
-// 말풍선은 1.5초만 떠 있다 — 한 줄로 끝나는 짧은 문장에, 핵심 단어 하나만 색으로 띄운다
+// 말풍선은 한 장면(SLIDE_MS)만 떠 있다 — 한 줄로 끝나는 짧은 문장에, 핵심 단어 하나만 색으로 띄운다
 interface Caption {
   text: string;
   highlight: string;
 }
 
+// 프리톡 장면의 얼굴은 여기 없다 — 바퀴마다 PARTNER_ROTATION에서 고른다
 type Slide =
   | { kind: 'landy'; image: string; caption: Caption }
-  | { kind: 'partner'; partner: Partner; caption: Caption };
+  | { kind: 'partner'; caption: Caption };
 
 // 장면 순서 — 레벨 맞춤 → 방금 대화에서 뽑은 5개 → 이미지·예문·퀴즈 → 발음 평가 → 복습 퀴즈 → 프리톡(상대).
 // 여섯 장, 한 바퀴 10.8초. 문장은 각각 끝나게 쓴다(~요)
-const slidesFor = (nickname: string | null, count: number | null): Slide[] => [
+const toSlides = (nickname: string | null, count: number | null): Slide[] => [
   {
     kind: 'landy',
     image: '/images/character/landy-point.webp',
@@ -103,7 +104,6 @@ const slidesFor = (nickname: string | null, count: number | null): Slide[] => [
   },
   {
     kind: 'partner',
-    partner: 'chloe',
     caption: { text: '무제한 프리톡에서 활용해요', highlight: '무제한 프리톡' },
   },
 ];
@@ -132,7 +132,7 @@ export const PreparedLearningView = ({
   onContinue,
 }: PreparedLearningViewProps) => {
   const reduced = useReducedMotion() ?? false;
-  const slides = slidesFor(nickname, count);
+  const slides = toSlides(nickname, count);
   const rows = PLACEHOLDER_ROWS.slice(0, count ?? DEFAULT_COUNT);
   // 몇 번째 장면인지 누적으로 센다 — 바퀴 수로 프리톡 얼굴을 고른다
   const [tick, setTick] = useState(0);
@@ -146,11 +146,13 @@ export const PreparedLearningView = ({
     return () => clearInterval(timer);
   }, [reduced]);
 
+  // 노출은 한 번만 — 개수가 늦게 와도 다시 찍지 않는다
+  const trackViewed = useEffectEvent(() =>
+    track(EVENTS.PREPARED_LEARNING_VIEWED, { scenario_id: scenarioId, count }),
+  );
   useEffect(() => {
-    track(EVENTS.PREPARED_LEARNING_VIEWED, { scenario_id: scenarioId, count });
-    // 노출은 한 번만 — 개수가 늦게 와도 다시 찍지 않는다
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scenarioId]);
+    trackViewed();
+  }, []);
 
   const proceed = () => {
     track(EVENTS.PREPARED_LEARNING_CONTINUED, { scenario_id: scenarioId });
@@ -159,11 +161,8 @@ export const PreparedLearningView = ({
 
   const slide = slides[tick % slides.length];
   const loop = Math.floor(tick / slides.length);
-  const partner =
-    slide.kind === 'partner'
-      ? PARTNER_ROTATION[loop % PARTNER_ROTATION.length]
-      : null;
-  const slideKey = `${tick % slides.length}-${partner ?? ''}`;
+  const partner = PARTNER_ROTATION[loop % PARTNER_ROTATION.length];
+  const slideKey = `${tick % slides.length}-${slide.kind === 'partner' ? partner : ''}`;
 
   return (
     <main
@@ -210,7 +209,7 @@ export const PreparedLearningView = ({
             </li>
           ))}
         </ul>
-        <p className="sr-only">{`잠긴 학습 ${count ?? rows.length}개`}</p>
+        <p className="sr-only">{`잠긴 학습 ${count ?? DEFAULT_COUNT}개`}</p>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
           <AnimatePresence mode="wait" initial={false}>
@@ -231,13 +230,13 @@ export const PreparedLearningView = ({
                 {renderCaption(slide.caption)}
               </p>
               <div className="flex h-[150px] items-end justify-center">
-                {slide.kind === 'partner' && partner ? (
+                {slide.kind === 'partner' ? (
                   <PartnerAvatar
                     partner={partner}
                     viewBox={QUIZ_VIEWBOX[partner]}
                     className="h-[150px] w-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.12)]"
                   />
-                ) : slide.kind === 'landy' ? (
+                ) : (
                   <Image
                     src={slide.image}
                     alt=""
@@ -245,7 +244,7 @@ export const PreparedLearningView = ({
                     height={150}
                     className="h-[140px] w-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.12)]"
                   />
-                ) : null}
+                )}
               </div>
             </motion.div>
           </AnimatePresence>
@@ -260,7 +259,8 @@ export const PreparedLearningView = ({
   );
 };
 
-// 실제 화면 — 개수만 그 대화의 표현 목록에서 읽는다. 내용은 흐린 자리라 목록이 늦거나 실패해도 화면은 그대로다
+// 실제 화면 — 개수만 그 대화의 표현 목록에서 읽는다. 내용은 흐린 자리라 목록이 늦거나 실패해도 화면은 그대로다.
+// 이 조회는 결제한 뒤 돌아올 표현 분기의 캐시도 미리 채운다
 export const PreparedLearningScreen = ({
   scenarioId,
   onContinue,

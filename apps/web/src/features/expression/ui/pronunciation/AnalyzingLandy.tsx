@@ -37,15 +37,18 @@ export const AnalyzingLandy = ({
   stages?: AnalyzingStage[];
 }) => {
   const [stage, setStage] = useState(0);
-  const LAST = stages.length - 1;
+  const lastIndex = stages.length - 1;
 
   useEffect(() => {
     const timer = setInterval(
-      () => setStage((current) => (current >= LAST ? LAST - 1 : current + 1)),
+      () =>
+        setStage((current) =>
+          current >= lastIndex ? lastIndex - 1 : current + 1,
+        ),
       STAGE_MS,
     );
     return () => clearInterval(timer);
-  }, [LAST]);
+  }, [lastIndex]);
 
   const { image, text } = stages[stage];
 

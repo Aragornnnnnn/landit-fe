@@ -1,20 +1,22 @@
 'use client';
 
-// 대화 직후 레벨 분석 대기 — BE가 세션 수준 평가를 마칠 때까지 폴링하고, 쓸 수 있는 결과면 넘기고 아니면 빈손으로 넘긴다.
+// 대화 직후 레벨 분석 대기 — BE가 세션 수준 평가를 마칠 때까지 기다리고, 쓸 수 있는 결과면 넘기고 아니면 빈손으로 넘긴다.
 // 기다림은 발음 평가와 같은 래디 서사(듣기→비교→검토→정리)로 채운다. 상한을 두는 이유는 이 화면 뒤가 페이월이라서다
-import { useEffect } from 'react';
+import { useEffect, useEffectEvent } from 'react';
 
 // 가로 import 사유: 같은 대기 연출을 두 벌 두지 않는다 — 문구만 레벨 분석용으로 바꿔 쓴다
 import {
   AnalyzingLandy,
   type AnalyzingStage,
 } from '@/features/expression/ui/pronunciation/AnalyzingLandy';
-import type { SessionLevelAssessment } from '@/features/feedback/api/level-assessment';
-import { isUsableAssessment } from '@/features/feedback/model/level-assessment';
+import {
+  isUsableAssessment,
+  type UsableAssessment,
+} from '@/features/feedback/model/level-assessment';
 import { useLevelAssessmentQuery } from '@/features/feedback/model/useLevelAssessmentQuery';
 
 // 이 시간 안에 결과가 안 오면 레벨 화면 없이 진행한다 (BE 자체 만료는 120초)
-export const ANALYSIS_WAIT_MS = 20_000;
+const ANALYSIS_WAIT_MS = 20_000;
 
 const LEVEL_STAGES: AnalyzingStage[] = [
   {
@@ -37,11 +39,11 @@ const LEVEL_STAGES: AnalyzingStage[] = [
 
 interface AnalyzingScreenProps {
   sessionId: number | null;
-  // 결과가 쓸 만하면 그 결과를, 아니면(실패·근거 부족·시간 초과) null을 준다. 한 번만 부른다
-  onDone: (assessment: SessionLevelAssessment | null) => void;
+  /** 결과가 쓸 만하면 그 결과를, 아니면(실패·근거 부족·시간 초과) null을 준다. 한 번만 부른다 */
+  onDone: (assessment: UsableAssessment | null) => void;
 }
 
-// 보이는 부분만 — 데이터가 없어 미리보기에서도 그대로 쓴다
+/** 보이는 부분만 — 데이터가 없어 미리보기에서도 그대로 쓴다 */
 export const AnalyzingView = () => (
   <main
     className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background px-6"
@@ -62,26 +64,22 @@ export const AnalyzingScreen = ({
   sessionId,
   onDone,
 }: AnalyzingScreenProps) => {
-  const { assessment, isError } = useLevelAssessmentQuery(sessionId);
-  const status = assessment?.processingStatus;
+  const { outcome, levelAssessment } = useLevelAssessmentQuery(sessionId);
+  // 부모의 화면 전환 함수는 매 렌더 새로 만들어진다 — 이벤트로 감싸 effect가 그것 때문에 다시 돌지 않게 한다
+  const finish = useEffectEvent(onDone);
 
   useEffect(() => {
-    if (isError || status === 'FAILED') {
-      onDone(null);
-      return;
-    }
-    if (status === 'COMPLETED') {
-      const result = assessment?.levelAssessment ?? null;
-      onDone(isUsableAssessment(result) ? result : null);
-    }
-    // onDone은 부모의 화면 전환 함수라 매 렌더 새로 만들어진다 — 상태가 바뀔 때만 한 번 부른다
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, isError]);
+    if (outcome === 'pending') return;
+    finish(
+      outcome === 'ready' && isUsableAssessment(levelAssessment)
+        ? levelAssessment
+        : null,
+    );
+  }, [outcome, levelAssessment]);
 
   useEffect(() => {
-    const timer = setTimeout(() => onDone(null), ANALYSIS_WAIT_MS);
+    const timer = setTimeout(() => finish(null), ANALYSIS_WAIT_MS);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return <AnalyzingView />;

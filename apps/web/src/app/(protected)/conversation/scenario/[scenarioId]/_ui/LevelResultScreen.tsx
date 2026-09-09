@@ -2,12 +2,14 @@
 
 // 레벨 결과 — 첫 대화로 매긴 수준을 캐릭터·이름·영역별 점수로 보여주고 "학습지 받기"로 넘긴다.
 // 쓸 만한 결과(isUsableAssessment)일 때만 그린다. 그 다음 화면이 학습 준비, 그 다음이 페이월이다
-import { useEffect } from 'react';
+import { useEffect, useEffectEvent } from 'react';
 import { EVENTS, type EnglishLevel } from '@landit/analytics';
 import Image from 'next/image';
 
-import type { SessionLevelAssessment } from '@/features/feedback/api/level-assessment';
-import { toLevelResult } from '@/features/feedback/model/level-assessment';
+import {
+  toLevelResult,
+  type UsableAssessment,
+} from '@/features/feedback/model/level-assessment';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { Button } from '@/shared/ui/Button';
@@ -16,7 +18,8 @@ import { ScoreChart } from './ScoreChart';
 
 interface LevelResultScreenProps {
   scenarioId: number;
-  assessment: SessionLevelAssessment;
+  /** isUsableAssessment를 통과한 결과만 — 여기서 다시 검사하지 않는다 */
+  assessment: UsableAssessment;
   onContinue: () => void;
 }
 
@@ -37,15 +40,17 @@ export const LevelResultScreen = ({
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
   const result = toLevelResult(assessment);
 
-  useEffect(() => {
+  // 노출은 한 번만 — 이벤트로 감싸 값이 바뀌어도 다시 찍지 않는다
+  const trackViewed = useEffectEvent(() =>
     track(EVENTS.LEVEL_RESULT_VIEWED, {
       scenario_id: scenarioId,
       level: result.level,
       change_type: assessment.changeType,
-    });
-    // 노출은 한 번만
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scenarioId]);
+    }),
+  );
+  useEffect(() => {
+    trackViewed();
+  }, []);
 
   return (
     <main

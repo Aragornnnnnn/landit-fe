@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { SessionLevelAssessment } from '@/features/feedback/api/level-assessment';
+import type { UsableAssessment } from '@/features/feedback/model/level-assessment';
 
 import { LevelResultScreen } from './LevelResultScreen';
 
@@ -17,7 +17,7 @@ vi.mock('@/shared/auth/auth-store', () => ({
 }));
 
 const domain = (score: number) => ({ score, confidence: 0.9 });
-const assessment: SessionLevelAssessment = {
+const assessment: UsableAssessment = {
   situationPerformance: domain(4.1),
   grammar: domain(2.7),
   vocabulary: domain(3.55),
@@ -38,7 +38,7 @@ const assessment: SessionLevelAssessment = {
 afterEach(() => cleanup());
 
 describe('LevelResultScreen', () => {
-  it('이름과 레벨, 영역별 점수와 종합 점수를 보여주고 노출을 남긴다', () => {
+  it('이름과 레벨, 영역별 점수를 보여주고 노출을 남긴다', () => {
     render(
       <LevelResultScreen
         scenarioId={7}

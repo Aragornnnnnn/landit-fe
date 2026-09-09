@@ -4,7 +4,6 @@
 
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
-import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
 import { toCharacterLook } from '@/features/conversation/model/character-look';
@@ -17,11 +16,8 @@ import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissio
 import { QuestionCard } from '@/features/conversation/ui/flow/QuestionCard';
 import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
 import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
-import type { SessionLevelAssessment } from '@/features/feedback/api/level-assessment';
 import { FeedbackFlow } from '@/features/feedback/ui/FeedbackFlow';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
-import { readFirstConversationBase } from '@/features/streak/model/first-conversation';
-import { useStreakCalendarQuery } from '@/features/streak/model/useStreakCalendarQuery';
 // 가로 import 사유: 대화가 끝나는 자리가 무료 구간이 끝나는 자리라 여기서 페이월 게이트를 건다
 import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
 import { track } from '@/shared/analytics';
@@ -36,12 +32,11 @@ import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
 import {
   decidePostFeedbackView,
-  type PostFeedbackView,
+  type PostConversationStart,
 } from '../_model/post-feedback-view';
 import { useScenarioTalkFlow } from '../_model/useScenarioTalkFlow';
-import { AnalyzingScreen } from './AnalyzingScreen';
-import { LevelResultScreen } from './LevelResultScreen';
-import { PreparedLearningScreen } from './PreparedLearningScreen';
+import { useWasFirstConversation } from '../_model/useWasFirstConversation';
+import { PostConversationFlow } from './PostConversationFlow';
 
 export const ScenarioTalkFlow = ({
   scenario,
@@ -59,17 +54,13 @@ export const ScenarioTalkFlow = ({
   // scenario.completed가 뒤늦게 true로 바뀌므로, 첫 완료와 구분하려면 진입 값으로 고정해야 한다
   const [wasCompleted] = useState(scenario.completed);
   const paywallGate = usePaywallGate();
-  const queryClient = useQueryClient();
-  // 대화 중에 달력을 받아 둔다 — 완료 순간 "첫 완료일이 비어 있었는가"를 읽어야 신규를 가를 수 있는데,
-  // 홈은 이 조회를 조건부로만 해서 첫 사용자일수록 캐시가 없다
-  useStreakCalendarQuery({ enabled: true });
-  // 피드백 뒤 화면 — 무료 사용자는 페이월 전에 학습 준비(첫 대화면 레벨 분석·결과까지)를 지난다
-  const [afterFeedback, setAfterFeedback] = useState<
-    Exclude<PostFeedbackView, 'home' | 'branch'> | 'level' | null
-  >(null);
-  const [assessment, setAssessment] = useState<SessionLevelAssessment | null>(
-    null,
+  // 첫 대화인지는 무료 사용자의 첫 완료일 때만 묻는다 — 재대화·유료는 그 화면을 안 본다
+  const wasFirstConversation = useWasFirstConversation(
+    !wasCompleted && paywallGate.locksAfterConversation,
   );
+  // 피드백 뒤 페이월 전 화면 — 무료 사용자는 학습 준비(첫 대화면 레벨 분석·결과까지)를 지난다
+  const [postConversation, setPostConversation] =
+    useState<PostConversationStart | null>(null);
   // USER 선발화 진입 안내 — 랜디가 먼저 날아들어 말을 걸어보라고 알려주고 잠시 후 사라진다.
   // 판정은 turn.isUserOpening 한 곳에 위임하고(카드 안내 구조와 같은 소스), 여기선 노출 시간만 관리한다.
   const [introDismissed, setIntroDismissed] = useState(false);
@@ -123,68 +114,38 @@ export const ScenarioTalkFlow = ({
   // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로 페이드 인해 넘어간다. 마치면 표현 학습 분기로 보낸다.
   const view = ended && showFeedback ? 'feedback' : 'conversation';
 
-  // 피드백을 다 본 뒤 갈 곳 — 재대화면 홈, 잠기지 않는 사람은 표현 분기,
-  // 무료 사용자는 학습 준비 화면(생애 첫 대화면 레벨 분석부터)을 거쳐 페이월을 만난다.
-  // 결제하면 표현 분기로 돌아온다. 방금 끝난 대화가 곧 무료 구간의 그 하나라 서버 값을 기다리지 않는다
+  // 표현 분기로 — 무료 사용자는 여기가 무료 구간이 끝나는 자리라 게이트가 페이월로 보낸다.
+  // 방금 끝난 대화가 곧 무료 구간의 그 하나라 서버 값을 기다리지 않는다. 결제하면 표현 분기로 돌아온다
   const expressionBranchPath = scenarioExpressionBranchPath(
     scenario.scenarioId,
     date,
   );
-  const goExpressionBranch = () =>
+  const continueToExpressionBranch = () =>
     paywallGate.guard(() => router.replace(expressionBranchPath), {
       entry: 'conversation_finished',
       returnTo: expressionBranchPath,
       conversationJustFinished: true,
     });
-  const leaveFeedback = () => {
+  // 피드백을 다 본 뒤 — 재대화면 홈, 잠기지 않는 사람은 표현 분기, 무료 사용자는 페이월 전 화면부터
+  const goAfterFeedback = () => {
     const next = decidePostFeedbackView({
       wasCompleted,
       locked: paywallGate.locksAfterConversation,
-      firstEver: readFirstConversationBase(queryClient),
+      firstEver: wasFirstConversation,
     });
-    if (next === 'home') {
-      router.replace(scenarioReturnPath({ date }));
-      return;
-    }
-    if (next === 'branch') {
-      goExpressionBranch();
-      return;
-    }
-    setAfterFeedback(next);
+    if (next === 'home') router.replace(scenarioReturnPath({ date }));
+    else if (next === 'branch') continueToExpressionBranch();
+    else setPostConversation(next);
   };
 
-  if (afterFeedback === 'analyzing') {
+  if (postConversation) {
     return (
-      <Transition transitionKey="analyzing" fade>
-        <AnalyzingScreen
-          sessionId={sessionId}
-          onDone={(result) => {
-            setAssessment(result);
-            setAfterFeedback(result ? 'level' : 'prepared');
-          }}
-        />
-      </Transition>
-    );
-  }
-  if (afterFeedback === 'level' && assessment) {
-    return (
-      <Transition transitionKey="level" fade>
-        <LevelResultScreen
-          scenarioId={scenario.scenarioId}
-          assessment={assessment}
-          onContinue={() => setAfterFeedback('prepared')}
-        />
-      </Transition>
-    );
-  }
-  if (afterFeedback === 'prepared') {
-    return (
-      <Transition transitionKey="prepared" fade>
-        <PreparedLearningScreen
-          scenarioId={scenario.scenarioId}
-          onContinue={goExpressionBranch}
-        />
-      </Transition>
+      <PostConversationFlow
+        start={postConversation}
+        sessionId={sessionId}
+        scenarioId={scenario.scenarioId}
+        onFinish={continueToExpressionBranch}
+      />
     );
   }
 
@@ -194,9 +155,8 @@ export const ScenarioTalkFlow = ({
         <FeedbackFlow
           sessionId={sessionId}
           title={scenario.scenarioTitle}
-          // 대화는 끝났으니 히스토리에서 지운다(replace) — 뒤로가기로 종료된 대화에 다시 들어오지 않게.
-          // 재대화(이미 완료한 시나리오)면 표현은 예전에 생성됐으니 분기 연출 없이 홈의 그 카드로 돌아간다
-          onExit={leaveFeedback}
+          // 대화는 끝났으니 히스토리에서 지운다(replace) — 뒤로가기로 종료된 대화에 다시 들어오지 않게
+          onExit={goAfterFeedback}
         />
       </Transition>
     );

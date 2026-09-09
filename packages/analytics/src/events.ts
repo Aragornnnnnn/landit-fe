@@ -524,11 +524,10 @@ export type EventProps = {
   'Purchase Started': { plan: SubscriptionPlan };
   'Purchase Restore Tapped': undefined;
   'Paywall Gate Locked': { entry: PaywallGateEntry };
-  // change_type: BE가 이번 평가로 적용 수준을 어떻게 바꿨는가 (INITIALIZED / PROMOTED / UNCHANGED / NOT_APPLIED)
   'Level Result Viewed': {
     scenario_id: number;
     level: EnglishLevel;
-    change_type: string;
+    change_type: LevelChangeType;
   };
   'Prepared Learning Viewed': { scenario_id: number; count: number | null };
   'Prepared Learning Continued': { scenario_id: number };
