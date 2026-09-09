@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>대화가 끝난 뒤 누가 무엇을 보나</title>
+<style>
+  :root {
+    --bg: #faf7f1; --ink: #1b1712; --muted: #7a7166; --faint: #b9b0a3; --rule: #e6dfd3;
+    --accent: #ef6f1a; --accent-ink: #8a3d07; --accent-soft: #fdebdc;
+    --truth: #16875c; --truth-ink: #0b5a3c; --truth-soft: #dff3e9;
+    --gray-soft: #ece9e3; --lock: #b23b3b; --lock-soft: #f8e1e1;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); }
+  body { font-family: -apple-system, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  .canvas { width: 1600px; height: 900px; padding: 48px 56px; position: relative; }
+  h1 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+  .sub { margin-top: 8px; font-size: 15px; color: var(--muted); }
+  .sub b { color: var(--ink); font-weight: 700; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; }
+
+  .lanes { margin-top: 34px; display: flex; flex-direction: column; gap: 14px; }
+  .lane { display: grid; grid-template-columns: 210px 1fr; align-items: center; border-radius: 14px; padding: 18px 22px; background: #fff; border: 1px solid var(--rule); }
+  .who .name { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; }
+  .who .cond { margin-top: 4px; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+  .who .cond code { color: var(--ink); }
+
+  .flow { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+  .chip { display: flex; flex-direction: column; justify-content: center; min-width: 118px; height: 64px; padding: 0 14px; border-radius: 10px; background: var(--gray-soft); }
+  .chip .t { font-size: 14.5px; font-weight: 800; white-space: nowrap; }
+  .chip .d { margin-top: 3px; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  .chip.new { background: var(--accent-soft); border: 2px solid var(--accent); }
+  .chip.new .t { color: var(--accent-ink); }
+  .chip.pay { background: var(--lock-soft); border: 2px solid var(--lock); }
+  .chip.pay .t { color: var(--lock); }
+  .chip.ok { background: var(--truth-soft); border: 2px solid var(--truth); }
+  .chip.ok .t { color: var(--truth-ink); }
+  .arrow { color: var(--faint); font-size: 18px; font-weight: 700; padding: 0 2px; }
+  .arrow.lbl { position: relative; }
+  .arrow.lbl span { position: absolute; left: 50%; top: -22px; transform: translateX(-50%); font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+  .legend { margin-top: 14px; display: flex; gap: 22px; font-size: 12.5px; color: var(--muted); }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+
+  .bottom { margin-top: 26px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .panel { border-radius: 14px; padding: 18px 22px; background: #fff; border: 1px solid var(--rule); }
+  .panel h2 { margin: 0 0 10px; font-size: 15px; font-weight: 800; }
+  .panel ul { margin: 0; padding-left: 0; list-style: none; font-size: 13px; line-height: 1.75; color: var(--ink); }
+  .panel li { padding-left: 14px; position: relative; }
+  .panel li::before { content: ""; position: absolute; left: 0; top: 10px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .panel li b { font-weight: 800; }
+  .panel li .m { color: var(--muted); }
+  .panel.lock li::before { background: var(--lock); }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <h1>대화가 끝난 뒤 누가 무엇을 보나</h1>
+  <div class="sub">피드백을 다 본 순간 <b>decidePostFeedbackView</b>가 갈 곳을 정합니다. 주황 화면이 이 PR에서 새로 생긴 것, 빨강이 페이월입니다.</div>
+
+  <div class="lanes">
+    <div class="lane">
+      <div class="who">
+        <div class="name">신규 무료 사용자</div>
+        <div class="cond">오픈 뒤 가입 · 생애 첫 대화<br/>잠김 = <code>premium false</code></div>
+      </div>
+      <div class="flow">
+        <div class="chip"><div class="t">온보딩</div><div class="d">수준 질문 없음</div></div><div class="arrow">→</div>
+        <div class="chip"><div class="t">첫 대화</div><div class="d">공통 진단 시나리오</div></div><div class="arrow">→</div>
+        <div class="chip"><div class="t">피드백</div><div class="d">총평 · 상세</div></div><div class="arrow">→</div>
+        <div class="chip new"><div class="t">분석 중</div><div class="d">2초 폴링 · 20초 상한</div></div><div class="arrow">→</div>
+        <div class="chip new"><div class="t">레벨 결과</div><div class="d">마법사 5단계 · 레이더</div></div><div class="arrow">→</div>
+        <div class="chip new"><div class="t">학습 준비</div><div class="d">흐린 슬라이드 · 표현은 안 보임</div></div><div class="arrow">→</div>
+        <div class="chip pay"><div class="t">페이월</div><div class="d">entry conversation_finished</div></div>
+      </div>
+    </div>
+
+    <div class="lane">
+      <div class="who">
+        <div class="name">기존 무료 사용자</div>
+        <div class="cond">오픈 전 가입 · 대화 이력 있음<br/>오픈 뒤 첫 대화가 무료 하나</div>
+      </div>
+      <div class="flow">
+        <div class="chip"><div class="t">홈</div><div class="d">배울 영어만 물음</div></div><div class="arrow">→</div>
+        <div class="chip"><div class="t">오늘의 시나리오</div><div class="d">오픈 뒤 첫 완료</div></div><div class="arrow">→</div>
+        <div class="chip"><div class="t">피드백</div><div class="d">총평 · 상세</div></div><div class="arrow">→</div>
+        <div class="chip new"><div class="t">학습 준비</div><div class="d">분석 · 레벨은 건너뜀</div></div><div class="arrow">→</div>
+        <div class="chip pay"><div class="t">페이월</div><div class="d">entry conversation_finished</div></div>
+      </div>
+    </div>
+
+    <div class="lane">
+      <div class="who">
+        <div class="name">유료 사용자</div>
+        <div class="cond">체험 중 · 해지 예정 포함<br/>브라우저 · 1.2.x · 플래그 꺼짐도 같음</div>
+      </div>
+      <div class="flow">
+        <div class="chip"><div class="t">아무 대화</div><div class="d"></div></div><div class="arrow">→</div>
+        <div class="chip"><div class="t">피드백</div><div class="d">총평 · 상세</div></div><div class="arrow">→</div>
+        <div class="chip ok"><div class="t">표현 분기</div><div class="d">전과 같음 · 새 화면 없음</div></div>
+      </div>
+    </div>
+
+    <div class="lane">
+      <div class="who">
+        <div class="name">재대화</div>
+        <div class="cond">이미 완료한 시나리오를 다시</div>
+      </div>
+      <div class="flow">
+        <div class="chip pay"><div class="t">시작 자체가 게이트</div><div class="d">잠긴 사람은 여기서 페이월</div></div><div class="arrow">→</div>
+        <div class="chip"><div class="t">대화</div><div class="d"></div></div><div class="arrow">→</div>
+        <div class="chip"><div class="t">피드백</div><div class="d"></div></div><div class="arrow">→</div>
+        <div class="chip ok"><div class="t">홈</div><div class="d">페이월 전 화면 없음</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:var(--accent-soft);border:2px solid var(--accent)"></i>이 PR의 새 화면</span>
+    <span><i style="background:var(--lock-soft);border:2px solid var(--lock)"></i>페이월</span>
+    <span><i style="background:var(--truth-soft);border:2px solid var(--truth)"></i>기존 흐름 그대로</span>
+    <span><i style="background:var(--gray-soft)"></i>기존 화면</span>
+  </div>
+
+  <div class="bottom">
+    <div class="panel">
+      <h2>페이월에서</h2>
+      <ul>
+        <li><b>결제 성공</b> → BE가 유료로 바뀐 걸 확인하면 <b>그 대화의 표현 분기</b>로 돌아옵니다 <span class="m">(#213의 <code>?from=</code>)</span></li>
+        <li><b>확인이 늦으면</b> "확인 중" 토스트 뒤 같은 자리로. 다음 진입은 BE가 유료라고 답할 때까지 다시 페이월</li>
+        <li><b>취소·실패</b> → 페이월에 머뭅니다. <b>닫기</b> → 홈</li>
+        <li>그 뒤 새 대화 · 표현 학습 · 스몰톡 · 재대화는 전부 페이월. <b>홈 · 기록 · 편지함 · 마이페이지</b>는 열려 있습니다</li>
+      </ul>
+    </div>
+    <div class="panel lock">
+      <h2>중간에 끊기면</h2>
+      <ul>
+        <li><b>첫 대화 중 이탈</b> → BE에 완료가 없어 무료 그대로. 다음에 다시 첫 대화</li>
+        <li><b>피드백 뒤 앱 종료</b> → 완료는 이미 서버에. 다음 학습 진입에서 바로 페이월, 분석 · 레벨 화면은 못 봅니다</li>
+        <li><b>분석 결과가 없거나 20초 초과</b> → 레벨 결과를 건너뛰고 학습 준비로</li>
+        <li><b>첫 대화인지 못 알아내면</b>(달력 조회 실패) → 첫 대화로 치지 않고 학습 준비만</li>
+        <li><b>온보딩 중 이탈</b> → 다음 실행은 홈. 온보딩은 로그인 때만 다시 나옵니다 <span class="m">(기존 동작)</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+</body>
+</html>
