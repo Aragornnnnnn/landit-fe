@@ -40,7 +40,8 @@ export const resolveApiKey = (
 };
 
 let configured = false;
-// 진행 중인 logIn/logOut — 결제·복원·오퍼링은 이게 끝난 뒤에 간다. 브릿지 핸들러는 메시지마다 따로 돌아 순서를 보장하지 않는다
+// 식별 작업의 꼬리 — 결제·복원·오퍼링은 이게 끝난 뒤에 간다. 브릿지 핸들러는 메시지마다 따로 돌아 순서를 보장하지 않는다.
+// 새 식별은 앞 식별 뒤에 이어 붙여, 앞 것이 늦게 끝나도 마지막에 보낸 사용자가 남는다
 let identifying: Promise<unknown> = Promise.resolve();
 
 const NOT_CONFIGURED_MESSAGE = '결제를 사용할 수 없는 빌드예요.';
@@ -71,7 +72,9 @@ export const configurePurchases = (
  */
 export const identifyUser = async (userId: string | null): Promise<void> => {
   if (!configured) return;
-  identifying = userId ? Purchases.logIn(userId) : Purchases.logOut();
+  const next = (): Promise<unknown> =>
+    userId ? Purchases.logIn(userId) : Purchases.logOut();
+  identifying = identifying.catch(() => undefined).then(next);
   await identifying;
 };
 

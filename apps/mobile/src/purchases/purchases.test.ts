@@ -44,6 +44,9 @@ const weekly = {
   product: { price: 3000, currencyCode: 'KRW' },
 };
 
+// 체인으로 이어진 식별이 실제 SDK 호출까지 가도록 마이크로태스크를 비운다
+const flushMicrotasks = () => new Promise((resolve) => setTimeout(resolve, 0));
+
 const offeringsWith = (packages: unknown[]) =>
   ({ current: { availablePackages: packages } }) as never;
 
@@ -99,12 +102,38 @@ describe('identifyUser', () => {
 
     void identifyUser('42');
     const pending = purchasePackage('$rc_annual');
-    await Promise.resolve();
+    await flushMicrotasks();
     expect(mockPurchases.getOfferings).not.toHaveBeenCalled();
 
     finishLogIn();
     await expect(pending).resolves.toEqual({ status: 'success' });
     expect(mockPurchases.purchasePackage).toHaveBeenCalledWith(annual);
+  });
+
+  it('식별이 연달아 오면 순서대로 처리하고, 결제는 마지막 식별까지 끝난 뒤에 간다', async () => {
+    let finishA: () => void = () => {};
+    mockPurchases.logIn
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          finishA = () => resolve({} as never);
+        }),
+      )
+      .mockResolvedValueOnce({} as never);
+    mockPurchases.getOfferings.mockResolvedValue(offeringsWith([annual]));
+    mockPurchases.purchasePackage.mockResolvedValueOnce({} as never);
+
+    void identifyUser('A');
+    void identifyUser('B');
+    const pending = purchasePackage('$rc_annual');
+    await flushMicrotasks();
+    // B는 A가 끝나기 전엔 시작하지 않고, 결제도 기다린다
+    expect(mockPurchases.logIn).toHaveBeenCalledTimes(1);
+    expect(mockPurchases.logIn).toHaveBeenCalledWith('A');
+    expect(mockPurchases.getOfferings).not.toHaveBeenCalled();
+
+    finishA();
+    await expect(pending).resolves.toEqual({ status: 'success' });
+    expect(mockPurchases.logIn).toHaveBeenNthCalledWith(2, 'B');
   });
 
   it('식별이 실패해도 결제는 막지 않는다', async () => {
