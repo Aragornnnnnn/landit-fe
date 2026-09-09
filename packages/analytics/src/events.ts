@@ -191,8 +191,11 @@ export type HintSource = QuizStepKind;
 // 홈 복귀 신호 — 앱 안에서 돌아온 이유. 밖에서 들어온 유입(알림·위젯)은 entry_campaign이 맡는다
 export type HomeReturnReason = 'just' | 'flip' | 'card';
 
-// 구독 플랜 — 페이월 카드와 스토어 상품(monthly/yearly)이 같은 이름을 쓴다
+// 구독 플랜 — 페이월 카드와 스토어 상품(monthly/yearly)이 같은 이름을 쓴다. 브릿지의 subscriptionPlanSchema와 같은 값이다
 export type SubscriptionPlan = 'monthly' | 'yearly';
+// 결제가 실패한 갈래 — 환경 문제 셋과 셸이 회신한 실패. 셸의 문구는 message에 따로 싣는다
+export type PurchaseFailureReason =
+  'browser' | 'outdated_shell' | 'no_response' | 'shell_error';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
@@ -517,8 +520,12 @@ export type EventProps = {
   // unlocked: 결제 직후 몇 초 안에 서버가 유료로 바뀌었는가 (웹훅 지연 관찰용)
   'Purchase Completed': { plan: SubscriptionPlan; unlocked: boolean };
   'Purchase Canceled': { plan: SubscriptionPlan };
-  // reason: 셸이 준 실패 사유 또는 환경 문제(browser / outdated_shell / no_response)
-  'Purchase Failed': { plan: SubscriptionPlan; reason: string };
+  // plan은 복원이 막혔을 때 없다. message는 shell_error일 때 셸이 준 문구
+  'Purchase Failed': {
+    plan?: SubscriptionPlan;
+    reason: PurchaseFailureReason;
+    message?: string;
+  };
   'Purchase Restored': { succeeded: boolean };
 
   // 위젯 설치 안내 — 노출·답·플랫폼을 속성으로 가른다
