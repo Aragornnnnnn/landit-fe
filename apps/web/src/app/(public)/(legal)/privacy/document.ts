@@ -1,10 +1,10 @@
-// 개인정보 처리방침 v1.0 문서 데이터
+// 개인정보 처리방침 v1.1 문서 데이터 — 1.1에서 유료 구독 결제 항목과 결제 처리 위탁 추가
 import type { LegalDocument } from '../_ui/LegalDocumentPage';
 
 export const privacyDocument: LegalDocument = {
   title: '개인정보 처리방침',
-  effectiveDate: '2026년 7월 10일',
-  version: 'v1.0',
+  effectiveDate: '2026년 10월 1일',
+  version: 'v1.1',
   introduction: [
     'Landit는 이용자의 개인정보를 중요하게 생각하며, 개인정보 보호 관련 법령을 준수하기 위해 본 개인정보 처리방침을 수립하여 공개합니다.',
     '본 방침은 Landit가 제공하는 영어 회화 연습 및 AI 피드백 서비스에서 처리하는 개인정보의 항목, 이용 목적, 보관 및 파기, 이용자의 권리를 설명합니다.',
@@ -23,6 +23,7 @@ export const privacyDocument: LegalDocument = {
         '음성 처리 정보: 회화 연습 중 제출한 음성 파일은 음성 인식과 피드백 생성을 위해 일시적으로 전송 및 처리됩니다.',
         '기기 및 로그 정보: 접속 시간, 브라우저/기기 환경, 오류 로그, 서비스 이용 이벤트',
         '인증 정보: access token, refresh token, 로그인 상태 유지를 위한 세션 정보',
+        '구독 결제 정보: 구독 상태, 구독 기간과 만료일, 결제 기간 종류(무료 체험·정가 등), 스토어 거래 식별자. 카드 번호 등 결제 수단 정보는 Apple·Google이 처리하며 Landit는 수집하지 않습니다.',
       ],
     },
     {
@@ -36,6 +37,7 @@ export const privacyDocument: LegalDocument = {
         'AI 회화 연습 진행, 음성 인식, 대화 피드백 제공',
         '서비스 품질 개선, 오류 분석, 이용 통계 확인',
         '회원 문의 대응 및 고지사항 전달',
+        '유료 구독 상태 확인과 유료 기능 제공, 구독 갱신·해지·환불 처리 결과 반영',
       ],
     },
     {
@@ -77,6 +79,7 @@ export const privacyDocument: LegalDocument = {
         '서비스 인프라: 웹 호스팅, 서버, 데이터베이스, 저장소',
         'AI 및 음성 처리: 음성 인식, TTS, 회화 피드백 생성',
         '이용 분석: 서비스 안정성 및 품질 개선을 위한 통계 처리',
+        '구독 결제: Apple App Store, Google Play(인앱 결제 처리), RevenueCat(구독 상태 관리와 결제 이벤트 수신)',
       ],
     },
     {
