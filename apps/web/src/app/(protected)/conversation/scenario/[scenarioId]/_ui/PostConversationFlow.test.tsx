@@ -40,12 +40,7 @@ describe('PostConversationFlow', () => {
   it('분석에서 결과가 오면 레벨 결과를 거쳐 학습 준비로 가고, CTA가 끝이다', () => {
     const onFinish = vi.fn();
     render(
-      <PostConversationFlow
-        start="analyzing"
-        sessionId={1}
-        scenarioId={7}
-        onFinish={onFinish}
-      />,
+      <PostConversationFlow sessionId={1} scenarioId={7} onFinish={onFinish} />,
     );
 
     fireEvent.click(screen.getByText('결과 있음'));
@@ -57,30 +52,12 @@ describe('PostConversationFlow', () => {
 
   it('분석 결과를 못 받으면 레벨 화면 없이 학습 준비로 간다', () => {
     render(
-      <PostConversationFlow
-        start="analyzing"
-        sessionId={1}
-        scenarioId={7}
-        onFinish={vi.fn()}
-      />,
+      <PostConversationFlow sessionId={1} scenarioId={7} onFinish={vi.fn()} />,
     );
 
     fireEvent.click(screen.getByText('결과 없음'));
 
     expect(screen.getByText('학습 시작하기')).toBeInTheDocument();
     expect(screen.queryByText(/레벨/)).not.toBeInTheDocument();
-  });
-
-  it('기존 사용자는 학습 준비부터 시작한다', () => {
-    render(
-      <PostConversationFlow
-        start="prepared"
-        sessionId={1}
-        scenarioId={7}
-        onFinish={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByText('학습 시작하기')).toBeInTheDocument();
   });
 });

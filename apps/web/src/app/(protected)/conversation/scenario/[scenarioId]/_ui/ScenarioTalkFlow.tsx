@@ -30,12 +30,8 @@ import { Transition } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
-import {
-  decidePostFeedbackView,
-  type PostConversationStart,
-} from '../_model/post-feedback-view';
+import { decidePostFeedbackView } from '../_model/post-feedback-view';
 import { useScenarioTalkFlow } from '../_model/useScenarioTalkFlow';
-import { useWasFirstConversation } from '../_model/useWasFirstConversation';
 import { PostConversationFlow } from './PostConversationFlow';
 
 export const ScenarioTalkFlow = ({
@@ -54,13 +50,8 @@ export const ScenarioTalkFlow = ({
   // scenario.completed가 뒤늦게 true로 바뀌므로, 첫 완료와 구분하려면 진입 값으로 고정해야 한다
   const [wasCompleted] = useState(scenario.completed);
   const paywallGate = usePaywallGate();
-  // 첫 대화인지는 무료 사용자의 첫 완료일 때만 묻는다 — 재대화·유료는 그 화면을 안 본다
-  const wasFirstConversation = useWasFirstConversation(
-    !wasCompleted && paywallGate.locksAfterConversation,
-  );
-  // 피드백 뒤 페이월 전 화면 — 무료 사용자는 학습 준비(첫 대화면 레벨 분석·결과까지)를 지난다
-  const [postConversation, setPostConversation] =
-    useState<PostConversationStart | null>(null);
+  // 피드백 뒤 페이월 전 화면 — 무료 사용자는 레벨 분석·결과·학습 준비를 지난다
+  const [postConversation, setPostConversation] = useState(false);
   // USER 선발화 진입 안내 — 랜디가 먼저 날아들어 말을 걸어보라고 알려주고 잠시 후 사라진다.
   // 판정은 turn.isUserOpening 한 곳에 위임하고(카드 안내 구조와 같은 소스), 여기선 노출 시간만 관리한다.
   const [introDismissed, setIntroDismissed] = useState(false);
@@ -131,17 +122,15 @@ export const ScenarioTalkFlow = ({
     const next = decidePostFeedbackView({
       wasCompleted,
       locked: paywallGate.locksAfterConversation,
-      firstEver: wasFirstConversation,
     });
     if (next === 'home') router.replace(scenarioReturnPath({ date }));
     else if (next === 'branch') continueToExpressionBranch();
-    else setPostConversation(next);
+    else setPostConversation(true);
   };
 
   if (postConversation) {
     return (
       <PostConversationFlow
-        start={postConversation}
         sessionId={sessionId}
         scenarioId={scenario.scenarioId}
         onFinish={continueToExpressionBranch}
