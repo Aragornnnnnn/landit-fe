@@ -13,45 +13,44 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); }
   body { font-family: -apple-system, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
-  .canvas { width: 1600px; height: 800px; padding: 48px 56px; }
+  .canvas { position: relative; width: 1600px; height: 1000px; overflow: hidden; }
+  .abs { position: absolute; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; }
   h1 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
   .sub { margin-top: 8px; font-size: 15px; color: var(--muted); }
   .sub b { color: var(--ink); font-weight: 700; }
-  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; }
 
-  .grid { margin-top: 30px; display: grid; grid-template-columns: 900px 1fr; gap: 20px; }
+  /* 문 */
+  .doors { width: 250px; }
+  .doors h2 { margin: 0 0 10px; font-size: 13px; font-weight: 800; color: var(--muted); letter-spacing: .02em; }
+  .door { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; margin-bottom: 8px; border-radius: 10px; background: #fff; border: 1px solid var(--rule); font-size: 13.5px; font-weight: 700; }
+  .door small { margin-left: auto; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 10.5px; font-weight: 600; color: var(--muted); }
+  .door i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; }
 
-  /* 판정 사다리 */
-  .ladder { display: flex; flex-direction: column; gap: 0; }
-  .q { display: grid; grid-template-columns: 44px 1fr 250px; align-items: center; gap: 14px; padding: 14px 18px; background: #fff; border: 1px solid var(--rule); border-radius: 12px; }
-  .q + .q { margin-top: 10px; }
-  .q .n { width: 34px; height: 34px; border-radius: 50%; background: #fff; border: 3px solid var(--accent); color: var(--accent-ink); font-size: 15px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
-  .q .ask { font-size: 16px; font-weight: 800; }
-  .q .how { margin-top: 3px; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  /* 질문 */
+  .q { width: 420px; height: 96px; padding: 14px 18px 14px 18px; border-radius: 14px; background: #fff; border: 2px solid var(--ink); }
+  .q .n { position: absolute; left: -17px; top: 30px; width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 15px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+  .q .ask { font-size: 17px; font-weight: 800; }
+  .q .how { margin-top: 5px; font-size: 12px; line-height: 1.5; color: var(--muted); }
   .q .how code { color: var(--ink); }
-  .out { display: flex; flex-direction: column; gap: 6px; }
-  .pill { display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px; border-radius: 8px; font-size: 12.5px; font-weight: 800; white-space: nowrap; }
-  .pill.open { background: var(--truth-soft); color: var(--truth-ink); border: 1.5px solid var(--truth); }
-  .pill.lock { background: var(--lock-soft); color: var(--lock); border: 1.5px solid var(--lock); }
-  .pill.next { background: var(--gray-soft); color: var(--muted); }
-  .pill .k { font-weight: 600; opacity: .8; }
-  .down { text-align: center; color: var(--faint); font-size: 16px; line-height: 1; margin: 2px 0; }
 
-  /* 오른쪽 */
-  .side { display: flex; flex-direction: column; gap: 16px; }
-  .panel { border-radius: 14px; padding: 16px 20px; background: #fff; border: 1px solid var(--rule); }
-  .panel h2 { margin: 0 0 8px; font-size: 15px; font-weight: 800; }
-  .panel ul { margin: 0; padding: 0; list-style: none; font-size: 13px; line-height: 1.7; }
-  .panel li { padding-left: 14px; position: relative; }
-  .panel li::before { content: ""; position: absolute; left: 0; top: 9px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-  .panel.open li::before { background: var(--truth); }
-  .panel .m { color: var(--muted); }
+  /* 출구 */
+  .exit { height: 40px; padding: 0 14px; border-radius: 10px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; white-space: nowrap; }
+  .exit.open { background: var(--truth-soft); color: var(--truth-ink); border: 2px solid var(--truth); }
+  .exit.open span { font-weight: 600; opacity: .85; }
+  .exit.lock { background: var(--lock-soft); color: var(--lock); border: 2px solid var(--lock); height: 64px; font-size: 17px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; padding: 0 18px; }
+  .exit.lock small { font-size: 12px; font-weight: 600; opacity: .9; }
+  .rail { width: 200px; }
+  .rail .exit.open.big { height: 64px; font-size: 17px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; padding: 0 18px; }
+  .rail .exit.open.big small { font-size: 12px; font-weight: 600; }
+  .lbl { font-size: 12px; font-weight: 700; white-space: nowrap; color: var(--muted); background: var(--bg); padding: 0 6px; }
+  .lbl.no { color: var(--ink); }
 
-  /* 상태 타임라인 */
-  .timeline { margin-top: 20px; padding: 18px 22px; background: #fff; border: 1px solid var(--rule); border-radius: 14px; }
-  .timeline h2 { margin: 0 0 12px; font-size: 15px; font-weight: 800; }
+  /* 타임라인 */
+  .timeline { width: 1488px; padding: 16px 22px; background: #fff; border: 1px solid var(--rule); border-radius: 14px; }
+  .timeline h2 { margin: 0 0 12px; font-size: 14px; font-weight: 800; }
   .tl { display: flex; align-items: center; gap: 8px; }
-  .st { min-width: 150px; height: 60px; padding: 0 14px; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; background: var(--gray-soft); }
+  .st { min-width: 150px; height: 58px; padding: 0 14px; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; background: var(--gray-soft); }
   .st .t { font-size: 14px; font-weight: 800; white-space: nowrap; }
   .st .d { margin-top: 3px; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
   .st.open { background: var(--truth-soft); border: 2px solid var(--truth); } .st.open .t { color: var(--truth-ink); }
@@ -62,55 +61,84 @@
 </head>
 <body>
 <div class="canvas">
-  <h1>학습 진입을 누를 때 게이트가 보는 것</h1>
-  <div class="sub">여덟 문의 탭 핸들러가 <b>guard(이동, { entry, returnTo })</b>로 감싸 부릅니다. 위에서 아래로 처음 걸리는 답이 결과이고, 잠길 때만 <b>/paywall?from=</b>으로 보냅니다.</div>
-
-  <div class="grid">
-    <div class="ladder">
-      <div class="q">
-        <div class="n">1</div>
-        <div><div class="ask">잠글 수 있는 환경인가</div><div class="how"><code>canLockPaywall</code> — 웹 플래그 <code>NEXT_PUBLIC_PAYMENT_ENABLED</code>가 켜져 있고 앱 1.3.0 이상. 아니면 구독을 묻지도 않는다</div></div>
-        <div class="out"><span class="pill open"><span class="k">브라우저 · 1.2.x · 플래그 꺼짐</span> 열림</span><span class="pill next">아니면 ↓</span></div>
-      </div>
-      <div class="q">
-        <div class="n">2</div>
-        <div><div class="ask">유료인가</div><div class="how">BE <code>premium</code> — 무료 체험 중과 해지 예정(만료 전)도 true</div></div>
-        <div class="out"><span class="pill open"><span class="k">premium true</span> 열림</span><span class="pill next">아니면 ↓</span></div>
-      </div>
-      <div class="q">
-        <div class="n">3</div>
-        <div><div class="ask">판단 재료가 있나</div><div class="how">구독 조회 실패 · 아직 응답 전 · 구버전 BE 응답(필드 없음)이면 <code>unknown</code>. 잘못 막는 쪽이 더 나쁘다</div></div>
-        <div class="out"><span class="pill open"><span class="k">모르면</span> 열림 · 다음 진입에서 다시</span><span class="pill next">아니면 ↓</span></div>
-      </div>
-      <div class="q">
-        <div class="n">4</div>
-        <div><div class="ask">결제 오픈 뒤 대화를 하나 끝냈나</div><div class="how">BE <code>conversationCompletedSinceLaunch</code> — 시나리오만 센다. 피드백 끝에서는 방금 끝난 대화가 그 하나라 서버 값을 기다리지 않는다(<code>conversationJustFinished</code>)</div></div>
-        <div class="out"><span class="pill open"><span class="k">아니오</span> 열림 · 무료 구간</span><span class="pill lock"><span class="k">예</span> 잠김 → 페이월</span></div>
-      </div>
-    </div>
-
-    <div class="side">
-      <div class="panel">
-        <h2>막는 문 여덟</h2>
-        <ul>
-          <li>오늘의 시나리오 시작 · 재대화 <span class="m">scenario</span></li>
-          <li>스몰톡 내가 먼저 · 주제로 <span class="m">smalltalk</span></li>
-          <li>표현 학습 — 카드 뒷면 · 표현 분기 · 스몰톡 결과 · 스몰톡 기록 <span class="m">expression</span></li>
-          <li>대화 피드백 끝 → 표현 분기 <span class="m">conversation_finished</span></li>
-        </ul>
-      </div>
-      <div class="panel open">
-        <h2>막지 않는 곳</h2>
-        <ul>
-          <li>홈 · 기록 달력 · 편지함 · 마이페이지 · 페이월 자체</li>
-          <li>진행 중이던 대화 · 표현 화면(새로고침 · 딥링크) <span class="m">— 페이지 게이트는 후속</span></li>
-          <li>스몰톡만 한 사람 <span class="m">— BE가 시나리오만 세서 무료가 안 끝난다, BE 후속</span></li>
-        </ul>
-      </div>
-    </div>
+  <div class="abs" style="left:56px; top:44px;">
+    <h1>학습 진입을 누를 때 게이트가 보는 것</h1>
+    <div class="sub">문 여덟 개의 탭 핸들러가 <b>guard(이동, { entry, returnTo })</b>를 부릅니다. 질문 넷을 위에서 아래로 내려가다 처음 걸리는 답이 결과이고, 잠기는 출구는 하나뿐입니다.</div>
   </div>
 
-  <div class="timeline">
+  <svg class="abs" style="left:0; top:0;" width="1600" height="1000" fill="none">
+    <defs>
+      <marker id="a-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1b1712"/></marker>
+      <marker id="a-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16875c"/></marker>
+      <marker id="a-lock" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b23b3b"/></marker>
+    </defs>
+    <!-- 문 → 질문 1 -->
+    <path d="M306,168 H340 V196 H400" stroke="#1b1712" stroke-width="2.5" marker-end="url(#a-ink)"/>
+    <path d="M306,220 H340 V196" stroke="#1b1712" stroke-width="2.5"/>
+    <path d="M306,272 H340 V196" stroke="#1b1712" stroke-width="2.5"/>
+    <path d="M306,324 H340 V196" stroke="#1b1712" stroke-width="2.5"/>
+    <!-- 질문 사이 -->
+    <path d="M610,244 V290" stroke="#1b1712" stroke-width="2.5" marker-end="url(#a-ink)"/>
+    <path d="M610,386 V432" stroke="#1b1712" stroke-width="2.5" marker-end="url(#a-ink)"/>
+    <path d="M610,528 V574" stroke="#1b1712" stroke-width="2.5" marker-end="url(#a-ink)"/>
+    <!-- 열림 출구들 → 오른쪽 레일 -->
+    <path d="M820,196 H1330" stroke="#16875c" stroke-width="3"/>
+    <path d="M820,338 H1330" stroke="#16875c" stroke-width="3"/>
+    <path d="M820,480 H1330" stroke="#16875c" stroke-width="3"/>
+    <path d="M820,622 H1330" stroke="#16875c" stroke-width="3"/>
+    <path d="M1330,196 V622 H1390" stroke="#16875c" stroke-width="3" marker-end="url(#a-ok)"/>
+    <!-- 잠김 -->
+    <path d="M610,670 V730" stroke="#b23b3b" stroke-width="3" marker-end="url(#a-lock)"/>
+  </svg>
+
+  <!-- 문 여덟 -->
+  <div class="abs doors" style="left:56px; top:118px;">
+    <h2>막는 문 여덟</h2>
+    <div class="door"><i></i>오늘의 시나리오 · 재대화<small>scenario</small></div>
+    <div class="door"><i></i>스몰톡 내가 먼저 · 주제로<small>smalltalk</small></div>
+    <div class="door"><i></i>표현 학습 네 곳<small>expression</small></div>
+    <div class="door"><i></i>대화 피드백 끝<small>conversation_finished</small></div>
+    <div style="margin-top:14px; font-size:12px; line-height:1.6; color:var(--muted);">표현 학습 네 곳 = 카드 뒷면 · 표현 분기 · 스몰톡 결과 · 스몰톡 기록.<br/>홈 · 기록 달력 · 편지함 · 마이페이지 · 페이월은 막지 않습니다.</div>
+  </div>
+
+  <!-- 질문 넷 -->
+  <div class="abs q" style="left:400px; top:148px;"><div class="n">1</div>
+    <div class="ask">잠글 수 있는 환경인가</div>
+    <div class="how"><code>canLockPaywall</code> — 웹 플래그가 켜져 있고 앱 1.3.0 이상. 아니면 구독을 묻지도 않습니다</div>
+  </div>
+  <div class="abs q" style="left:400px; top:290px;"><div class="n">2</div>
+    <div class="ask">유료인가</div>
+    <div class="how">BE <code>premium</code> — 무료 체험 중과 해지 예정(만료 전)도 true</div>
+  </div>
+  <div class="abs q" style="left:400px; top:432px;"><div class="n">3</div>
+    <div class="ask">판단 재료가 있나</div>
+    <div class="how">구독 조회 실패 · 아직 응답 전 · BE에 필드 없음이면 <code>unknown</code>. 잘못 막는 쪽이 더 나쁩니다</div>
+  </div>
+  <div class="abs q" style="left:400px; top:574px;"><div class="n">4</div>
+    <div class="ask">결제 오픈 뒤 시나리오를 하나 끝냈나</div>
+    <div class="how">BE <code>conversationCompletedSinceLaunch</code>. 피드백 끝에서는 방금 끝난 대화가 그 하나라 기다리지 않습니다(<code>conversationJustFinished</code>)</div>
+  </div>
+
+  <!-- 출구 라벨 -->
+  <div class="abs exit open" style="left:836px; top:176px;">브라우저 · 1.2.x · 플래그 꺼짐</div>
+  <div class="abs exit open" style="left:836px; top:318px;">premium true</div>
+  <div class="abs exit open" style="left:836px; top:460px;">모름 <span>· 다음 진입에서 다시</span></div>
+  <div class="abs exit open" style="left:836px; top:602px;">아니오 <span>· 무료 구간</span></div>
+  <div class="abs lbl no" style="left:622px; top:260px;">아니면</div>
+  <div class="abs lbl no" style="left:622px; top:402px;">아니면</div>
+  <div class="abs lbl no" style="left:622px; top:544px;">아니면</div>
+  <div class="abs lbl no" style="left:622px; top:686px;">예</div>
+
+  <!-- 최종 출구 -->
+  <div class="abs rail" style="left:1390px; top:590px;">
+    <div class="exit open big">열림<small>이동을 그대로 실행</small></div>
+  </div>
+  <div class="abs" style="left:400px; top:730px; width:420px;">
+    <div class="exit lock">잠김 → /paywall?from=<small>Paywall Gate Locked { entry } 남기고 페이월로. 닫으면 홈</small></div>
+  </div>
+
+  <!-- 타임라인 -->
+  <div class="abs timeline" style="left:56px; top:840px;">
     <h2>한 사람의 상태 변화</h2>
     <div class="tl">
       <div class="st open"><div class="t">무료 구간</div><div class="d">가입 · 오픈 뒤 대화 0</div></div>
