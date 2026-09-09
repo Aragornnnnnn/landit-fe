@@ -17,10 +17,13 @@ const mocks = vi.hoisted(() => ({
 }));
 
 // zustand 훅은 자기 밑 react 복사본을 잡아 렌더러와 어긋난다 — 선택자만 흉내 낸다 (useSatisfactionSheet.test 선례)
-vi.mock('@/shared/auth/auth-store', () => ({
-  useAuthStore: (selector: (state: unknown) => unknown) =>
-    selector({ member: { userId: 42 } }),
-}));
+vi.mock('@/shared/auth/auth-store', () => {
+  const state = { member: { userId: 42 } };
+  const useAuthStore = (selector: (s: unknown) => unknown) => selector(state);
+  // 확인 뒤 계정이 바뀌었는지 볼 때 getState로 읽는다
+  useAuthStore.getState = () => state;
+  return { useAuthStore };
+});
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 vi.mock('@/shared/ui/toast', () => ({ showToast: mocks.showToast }));
 vi.mock('@/shared/bridge/native-context', () => ({
@@ -247,6 +250,38 @@ describe('usePurchase — 결제', () => {
     await pending;
 
     expect(mocks.getMySubscription).not.toHaveBeenCalled();
+    expect(mocks.showToast).not.toHaveBeenCalled();
+    expect(onUnlocked).not.toHaveBeenCalled();
+  });
+});
+
+describe('usePurchase — 서버 확인 중 화면을 떠남', () => {
+  it('확인이 끝나기 전에 화면이 사라지면 안내와 이동을 하지 않는다 — 캐시 반영만 남는다', async () => {
+    mocks.purchaseViaBridge.mockResolvedValue({
+      type: 'PURCHASE_RESULT',
+      status: 'success',
+    });
+    let answer: (value: unknown) => void = () => {};
+    mocks.getMySubscription.mockReturnValue(
+      new Promise((resolve) => {
+        answer = resolve;
+      }),
+    );
+    const { result, unmount, onUnlocked } = renderPurchase();
+
+    let pending: Promise<void> = Promise.resolve();
+    act(() => {
+      pending = result.current.purchase('yearly');
+    });
+    await waitFor(() => expect(mocks.getMySubscription).toHaveBeenCalled());
+    unmount();
+    answer(free);
+    await pending;
+
+    expect(mocks.track).toHaveBeenCalledWith('Purchase Completed', {
+      plan: 'yearly',
+      unlocked: false,
+    });
     expect(mocks.showToast).not.toHaveBeenCalled();
     expect(onUnlocked).not.toHaveBeenCalled();
   });

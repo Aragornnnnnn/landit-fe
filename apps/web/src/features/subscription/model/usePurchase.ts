@@ -66,10 +66,13 @@ export const usePurchase = ({ pricing, onUnlocked }: UsePurchaseOptions) => {
     return () => controller.abort();
   }, []);
 
-  // 서버가 유료로 바뀌었는지 몇 초 확인하고, 확인되면 구독 캐시에 바로 넣는다 — 게이트가 다시 조회하지 않아도 되게
+  // 서버가 유료로 바뀌었는지 몇 초 확인하고, 확인되면 구독 캐시에 바로 넣는다 — 게이트가 다시 조회하지 않아도 되게.
+  // 기다리는 사이 계정이 바뀌었으면(로그아웃 뒤 다른 로그인) 그 응답은 다른 사람 것이라 캐시에 넣지 않는다
   const confirmPremium = async () => {
     const subscription = await waitForPremium(getMySubscription, PREMIUM_WAIT);
-    if (subscription) {
+    const sameUser =
+      (useAuthStore.getState().member?.userId ?? null) === userId;
+    if (subscription && sameUser) {
       queryClient.setQueryData(subscriptionKeys.mine(userId), subscription);
     }
     return subscription !== null;
@@ -116,6 +119,8 @@ export const usePurchase = ({ pricing, onUnlocked }: UsePurchaseOptions) => {
 
       const unlocked = await confirmPremium();
       track(EVENTS.PURCHASE_COMPLETED, { plan, unlocked });
+      // 기다리는 사이 화면을 떠났으면 안내와 이동은 하지 않는다 — 캐시 반영은 위에서 이미 끝났다
+      if (signal?.aborted) return;
       // 스토어 결제는 끝났다 — 웹훅이 늦어도 사용자를 페이월에 붙잡아 두지 않는다
       if (!unlocked) {
         showToast('결제가 확인되는 중이에요. 잠시 후 다시 열어 주세요');
@@ -152,6 +157,7 @@ export const usePurchase = ({ pricing, onUnlocked }: UsePurchaseOptions) => {
 
       const unlocked = await confirmPremium();
       track(EVENTS.PURCHASE_RESTORED, { succeeded: unlocked });
+      if (signal?.aborted) return;
       if (unlocked) onUnlocked();
       else showToast('복원할 구매 내역이 없어요');
     } finally {
