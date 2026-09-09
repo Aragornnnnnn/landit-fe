@@ -1,4 +1,4 @@
-// RevenueCat 래퍼의 갈림길 — 키 없을 때 비활성, 패키지 매핑, 취소와 실패 구분, 로그인·로그아웃 위임
+// RevenueCat 래퍼의 갈림길 — 키 없을 때 비활성, 패키지 매핑, 취소와 실패 구분, 로그인·로그아웃 위임과 그 뒤에 가는 결제
 import Purchases, { PACKAGE_TYPE } from 'react-native-purchases';
 
 import {
@@ -31,17 +31,17 @@ const mockPurchases = Purchases as jest.Mocked<typeof Purchases>;
 const monthly = {
   identifier: '$rc_monthly',
   packageType: PACKAGE_TYPE.MONTHLY,
-  product: { price: 9900, currencyCode: 'KRW', priceString: '₩9,900' },
+  product: { price: 9900, currencyCode: 'KRW' },
 };
 const annual = {
   identifier: '$rc_annual',
   packageType: PACKAGE_TYPE.ANNUAL,
-  product: { price: 59900, currencyCode: 'KRW', priceString: '₩59,900' },
+  product: { price: 59900, currencyCode: 'KRW' },
 };
 const weekly = {
   identifier: '$rc_weekly',
   packageType: PACKAGE_TYPE.WEEKLY,
-  product: { price: 3000, currencyCode: 'KRW', priceString: '₩3,000' },
+  product: { price: 3000, currencyCode: 'KRW' },
 };
 
 const offeringsWith = (packages: unknown[]) =>
@@ -86,6 +86,38 @@ describe('identifyUser', () => {
     await identifyUser(null);
     expect(mockPurchases.logOut).toHaveBeenCalledTimes(1);
   });
+
+  it('식별이 진행 중이면 결제는 그것이 끝난 뒤에 간다 — 익명 사용자로 결제되지 않게', async () => {
+    let finishLogIn: () => void = () => {};
+    mockPurchases.logIn.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishLogIn = () => resolve({} as never);
+      }),
+    );
+    mockPurchases.getOfferings.mockResolvedValue(offeringsWith([annual]));
+    mockPurchases.purchasePackage.mockResolvedValueOnce({} as never);
+
+    void identifyUser('42');
+    const pending = purchasePackage('$rc_annual');
+    await Promise.resolve();
+    expect(mockPurchases.getOfferings).not.toHaveBeenCalled();
+
+    finishLogIn();
+    await expect(pending).resolves.toEqual({ status: 'success' });
+    expect(mockPurchases.purchasePackage).toHaveBeenCalledWith(annual);
+  });
+
+  it('식별이 실패해도 결제는 막지 않는다', async () => {
+    mockPurchases.logIn.mockRejectedValueOnce(new Error('network'));
+    mockPurchases.getOfferings.mockResolvedValue(offeringsWith([annual]));
+    mockPurchases.purchasePackage.mockResolvedValueOnce({} as never);
+
+    await identifyUser('42').catch(() => undefined);
+
+    await expect(purchasePackage('$rc_annual')).resolves.toEqual({
+      status: 'success',
+    });
+  });
 });
 
 describe('toOfferingPackages', () => {
@@ -95,20 +127,8 @@ describe('toOfferingPackages', () => {
     );
 
     expect(packages).toEqual([
-      {
-        id: '$rc_monthly',
-        plan: 'monthly',
-        price: 9900,
-        currency: 'KRW',
-        priceString: '₩9,900',
-      },
-      {
-        id: '$rc_annual',
-        plan: 'yearly',
-        price: 59900,
-        currency: 'KRW',
-        priceString: '₩59,900',
-      },
+      { id: '$rc_monthly', plan: 'monthly', price: 9900, currency: 'KRW' },
+      { id: '$rc_annual', plan: 'yearly', price: 59900, currency: 'KRW' },
     ]);
   });
 

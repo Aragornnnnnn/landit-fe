@@ -453,20 +453,8 @@ describe('parseNativeToWebMessage — 결제', () => {
     const message: NativeToWebMessage = {
       type: 'OFFERINGS',
       packages: [
-        {
-          id: '$rc_monthly',
-          plan: 'monthly',
-          price: 9900,
-          currency: 'KRW',
-          priceString: '₩9,900',
-        },
-        {
-          id: '$rc_annual',
-          plan: 'yearly',
-          price: 59900,
-          currency: 'KRW',
-          priceString: '₩59,900',
-        },
+        { id: '$rc_monthly', plan: 'monthly', price: 9900, currency: 'KRW' },
+        { id: '$rc_annual', plan: 'yearly', price: 59900, currency: 'KRW' },
       ],
     };
 
@@ -476,12 +464,7 @@ describe('parseNativeToWebMessage — 결제', () => {
   });
 
   it('패키지의 plan이 월간·연간 밖이거나 가격이 음수면 버린다', () => {
-    const base = {
-      id: '$rc_weekly',
-      price: 1000,
-      currency: 'KRW',
-      priceString: '₩1,000',
-    };
+    const base = { id: '$rc_weekly', price: 1000, currency: 'KRW' };
 
     expect(
       parseNativeToWebMessage(

@@ -49,13 +49,10 @@ import { goHome } from '../../modules/app-suspender';
 void SplashScreen.preventAutoHideAsync();
 
 const ShellScreen = () => {
-  // 위젯 타임라인 되살리기 — 로그인 전에도 0일 시간표가 돌게 한다
+  // 앱 시작 시 한 번 — 위젯 타임라인 되살리기(로그인 전에도 0일 시간표가 돌게)와 RevenueCat 켜기.
+  // RevenueCat 키가 없는 빌드(로컬 dev)면 꺼진 채로 두고 결제 요청은 실패로 회신한다
   useEffect(() => {
     void syncWidgetOnLaunch();
-  }, []);
-
-  // RevenueCat은 앱 시작 시 한 번 켠다 — 키가 없는 빌드(로컬 dev)면 꺼진 채로 두고 결제 요청은 실패로 회신한다
-  useEffect(() => {
     configurePurchases();
   }, []);
 

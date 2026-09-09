@@ -69,11 +69,9 @@ export const offeringPackageSchema = z.object({
   // RevenueCat 패키지 identifier (예: $rc_monthly). PURCHASE가 이 값을 되돌려 보낸다
   id: z.string().min(1),
   plan: subscriptionPlanSchema,
-  // 숫자 가격과 통화(ISO 4217) — 웹이 KRW면 월 환산 같은 계산에 쓴다
+  // 숫자 가격과 통화(ISO 4217) — 웹은 KRW일 때만 이 숫자로 카드를 다시 계산한다
   price: z.number().nonnegative(),
   currency: z.string().length(3),
-  // 스토어가 준 로컬라이즈 문자열 — 계산 없이 그대로 보여줄 때 쓴다
-  priceString: z.string().min(1),
 });
 
 // 결제 결과 — 사용자가 시트를 닫은 취소는 실패가 아니다. 복원엔 취소가 없다
