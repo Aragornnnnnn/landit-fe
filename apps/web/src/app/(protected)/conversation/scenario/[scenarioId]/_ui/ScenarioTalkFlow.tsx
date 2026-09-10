@@ -117,6 +117,8 @@ export const ScenarioTalkFlow = ({
       entry: 'conversation_finished',
       returnTo: expressionBranchPath,
       conversationJustFinished: true,
+      // 페이월로 갈 때도 끝난 대화를 히스토리에서 지운다 — 뒤로가기로 돌아오면 세션이 새로 시작된다
+      replace: true,
     });
   };
 

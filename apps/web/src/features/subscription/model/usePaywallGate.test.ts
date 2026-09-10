@@ -8,6 +8,7 @@ import { usePaywallGate } from './usePaywallGate';
 
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
+  replace: vi.fn(),
   track: vi.fn(),
   getNativeContext: vi.fn(),
   subscription: { subscription: null as unknown, isError: false },
@@ -15,7 +16,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mocks.push }),
+  useRouter: () => ({ push: mocks.push, replace: mocks.replace }),
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 vi.mock('@/shared/bridge/native-context', () => ({
@@ -133,6 +134,26 @@ describe('usePaywallGate', () => {
     expect(mocks.push).toHaveBeenCalledWith(
       '/paywall?from=%2Fconversation%2Fscenario%2F7%2Fexpressions',
     );
+  });
+
+  it('끝난 대화를 히스토리에서 지우라고 하면 페이월로 replace한다 — 뒤로가기로 그 대화에 되돌아가지 않게', () => {
+    mocks.subscription = {
+      subscription: { premium: false, conversationCompletedSinceLaunch: false },
+      isError: false,
+    };
+    const { result } = renderGate();
+
+    result.current.guard(vi.fn(), {
+      entry: 'conversation_finished',
+      returnTo: '/expressions/scenario/7/branch',
+      conversationJustFinished: true,
+      replace: true,
+    });
+
+    expect(mocks.replace).toHaveBeenCalledWith(
+      '/paywall?from=%2Fexpressions%2Fscenario%2F7%2Fbranch',
+    );
+    expect(mocks.push).not.toHaveBeenCalled();
   });
 
   it('브라우저에서는 잠그지 않고, 구독도 묻지 않는다 — 어차피 열린다', () => {

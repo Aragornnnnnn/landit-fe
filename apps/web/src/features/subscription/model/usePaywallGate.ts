@@ -27,6 +27,8 @@ interface GuardOptions {
   conversationJustFinished?: boolean;
   /** 어느 문인가. 오늘 카드의 대화 시작만 today_scenario, 나머지는 기본값 learning — 무료 구간이 없는 문이다 */
   door?: PaywallDoor;
+  /** 잠겼을 때 지금 화면을 히스토리에서 지우고 간다 — 호출부의 이동이 replace라 뒤로 돌아가면 안 되는 자리 */
+  replace?: boolean;
 }
 
 /**
@@ -73,6 +75,7 @@ export const usePaywallGate = () => {
       returnTo,
       conversationJustFinished,
       door = 'learning',
+      replace = false,
     }: GuardOptions,
   ) => {
     // 방금 끝낸 대화가 무료 구간의 그 하나다 — 오늘의 시나리오 문으로 보고 완료를 참으로 둔다
@@ -84,7 +87,9 @@ export const usePaywallGate = () => {
       return;
     }
     track(EVENTS.PAYWALL_GATE_LOCKED, { entry });
-    router.push(paywallPath({ from: returnTo }));
+    const to = paywallPath({ from: returnTo });
+    if (replace) router.replace(to);
+    else router.push(to);
   };
 
   return { guard };
