@@ -119,5 +119,7 @@ export const paywallPath = ({ from }: { from?: string } = {}) =>
 // 마이페이지와 그 아래 화면. 구독 관리는 유료 사용자만 들어온다
 export const MY_PAGE_PATH = '/me';
 export const SUBSCRIPTION_MANAGE_PATH = '/me/subscription';
+// 홈 화면 위젯 설치 안내 — 온보딩에서 미뤘던 사람이 마이페이지에서 다시 연다
+export const WIDGET_GUIDE_PATH = '/me/widget';
 // 설문 — 마이페이지 "지원" 묶음의 진입점
 export const SURVEY_PATH = '/survey';
