@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   readDateParam,
+  readReturnParam,
   scenarioExpressionBranchPath,
   scenarioExpressionPath,
   scenarioReturnPath,
@@ -142,5 +143,23 @@ describe('smallTalkPath', () => {
     expect(smallTalkPath({ partner: 'marco', mode: 'user_first' })).toBe(
       '/conversation/smalltalk?mode=user_first&partner=marco',
     );
+  });
+});
+
+describe('readReturnParam', () => {
+  it('내부 절대 경로면 그대로 돌려준다', () => {
+    expect(readReturnParam('/conversation/scenario/7/expressions')).toBe(
+      '/conversation/scenario/7/expressions',
+    );
+  });
+
+  it.each([
+    ['없음', undefined],
+    ['외부 주소', 'https://evil.example'],
+    ['프로토콜 상대 주소', '//evil.example'],
+    ['상대 경로', 'scenario'],
+    ['배열', ['/a', '/b']],
+  ])('%s은 버린다', (_label, from) => {
+    expect(readReturnParam(from)).toBeUndefined();
   });
 });
