@@ -15,6 +15,15 @@ export const LEVEL_NAMES: Record<EnglishLevel, string> = {
   5: '중급 마법사',
 };
 
+/** 레벨별 마법사 래디 — 피그마 2136:2437에서 배경 제거한 원본을 480px webp로. 레벨 결과와 마이페이지가 같이 쓴다 */
+export const LEVEL_IMAGES: Record<EnglishLevel, string> = {
+  1: '/images/character/level-wizard-1.webp',
+  2: '/images/character/level-wizard-2.webp',
+  3: '/images/character/level-wizard-3.webp',
+  4: '/images/character/level-wizard-4.webp',
+  5: '/images/character/level-wizard-5.webp',
+};
+
 export type DomainKey =
   | 'situationPerformance'
   | 'grammar'

@@ -157,6 +157,13 @@ export const EVENTS = {
   LEVEL_RESULT_VIEWED: 'Level Result Viewed',
   PREPARED_LEARNING_VIEWED: 'Prepared Learning Viewed',
   PREPARED_LEARNING_CONTINUED: 'Prepared Learning Continued',
+  // 마이페이지 — 유료 사용자가 구독 관리로 들어갔다 / 무료 사용자가 페이월로 들어갔다 / 진동 토글
+  SUBSCRIPTION_MANAGE_TAPPED: 'Subscription Manage Tapped',
+  PAYWALL_ENTRY_TAPPED: 'Paywall Entry Tapped',
+  HAPTICS_TOGGLED: 'Haptics Toggled',
+  // 구독 관리 화면 — 결제 내역으로 들어갔다 / 스토어 구독 화면으로 나갔다
+  SUBSCRIPTION_HISTORY_TAPPED: 'Subscription History Tapped',
+  STORE_SUBSCRIPTION_TAPPED: 'Store Subscription Tapped',
   // 셸의 결제 결과 회신 — 성공은 스토어 결제가 끝난 것이고, 서버 유료 반영(unlocked)은 별도 속성으로 남긴다
   PURCHASE_COMPLETED: 'Purchase Completed',
   PURCHASE_CANCELED: 'Purchase Canceled',
@@ -202,6 +209,12 @@ export type SubscriptionPlan = 'monthly' | 'yearly';
 // 수준 평가가 적용 수준을 어떻게 바꿨는가 — BE LearningLevelPolicy.ChangeType과 같은 값
 export type LevelChangeType =
   'INITIALIZED' | 'PROMOTED' | 'UNCHANGED' | 'NOT_APPLIED';
+// 마이페이지 구독 카드의 상태 — 무료 체험 중 / 구독 중 / 해지 예약(만료일까지 이용)
+export type SubscriptionState = 'trial' | 'active' | 'canceled';
+// 게이트가 아닌 자리에서 페이월로 들어간 곳 — 지금은 마이페이지(me)뿐. 알림 동의의 source와 같은 이름을 쓴다
+export type PaywallEntrySource = 'me';
+// 구독 관리에서 스토어로 나간 이유 — 해지 / 해지 취소. 둘 다 같은 스토어 화면이 열리지만 의도를 남긴다
+export type StoreSubscriptionAction = 'cancel' | 'resubscribe';
 
 // 페이월 게이트가 걸린 진입 문 — 새 대화 시작 / 표현 학습 진입 / 스몰톡 시작
 export type PaywallGateEntry =
@@ -241,6 +254,8 @@ export type CalendarView = 'week' | 'month';
 export type HomeTab = 'scenario' | 'smalltalk';
 // 위젯 설치 유도에서 고른 답 — 닫기·나중에는 dismiss로 묶는다
 export type WidgetInstallAnswer = 'install' | 'dismiss';
+// 위젯 설치 안내를 연 자리 — 온보딩 스텝인지 마이페이지에서 다시 연 것인지. 온보딩 전환율 분모가 섞이지 않게 한다
+export type WidgetGuideSource = 'onboarding' | 'me';
 // iOS 위젯 갤러리 여는 길을 알려주는 안내 3장
 export type WidgetGuideStep = 'press' | 'menu' | 'search';
 // 위젯 추가 요청이 어느 플랫폼에서 났나 — Android는 핀 다이얼로그, iOS는 안내로 갈린다
@@ -539,6 +554,14 @@ export type EventProps = {
   };
   'Prepared Learning Viewed': { scenario_id: number };
   'Prepared Learning Continued': { scenario_id: number };
+  'Subscription Manage Tapped': { status: SubscriptionState };
+  'Paywall Entry Tapped': { source: PaywallEntrySource };
+  'Haptics Toggled': { enabled: boolean };
+  'Subscription History Tapped': { status: SubscriptionState };
+  'Store Subscription Tapped': {
+    status: SubscriptionState;
+    action: StoreSubscriptionAction;
+  };
   // unlocked: 결제 직후 몇 초 안에 서버가 유료로 바뀌었는가 (웹훅 지연 관찰용)
   'Purchase Completed': { plan: SubscriptionPlan; unlocked: boolean };
   'Purchase Canceled': { plan: SubscriptionPlan };
@@ -551,11 +574,17 @@ export type EventProps = {
   'Purchase Restored': { succeeded: boolean };
 
   // 위젯 설치 안내 — 노출·답·플랫폼을 속성으로 가른다
-  'Widget Install Invite Viewed': undefined;
-  'Widget Install Invite Answered': { answer: WidgetInstallAnswer };
+  'Widget Install Invite Viewed': { source: WidgetGuideSource };
+  'Widget Install Invite Answered': {
+    answer: WidgetInstallAnswer;
+    source: WidgetGuideSource;
+  };
   'Widget Install Guide Step Viewed': { step: WidgetGuideStep };
   // 위젯 추가를 실제로 청한 순간 — Android는 시스템 핀 다이얼로그, iOS는 안내 화면으로 갈린다
-  'Widget Pin Requested': { platform: WidgetInstallPlatform };
+  'Widget Pin Requested': {
+    platform: WidgetInstallPlatform;
+    source: WidgetGuideSource;
+  };
   // 홈 화면에 놓인·치워진 위젯의 크기 — 플랫폼은 공통 속성(platform)이 이미 가른다
   'Widget Installed': { family: WidgetFamily };
   'Widget Removed': { family: WidgetFamily };

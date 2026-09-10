@@ -1,4 +1,4 @@
-// 페이월에 보여주는 두 플랜의 표시값 — 숫자는 여기 한 곳에만 둔다 (docs/subscription.md 「상품과 가격」)
+// 두 플랜의 표시값 — 숫자는 여기 한 곳에만 둔다. 페이월 카드와 구독 관리의 결제 금액이 같이 쓴다 (docs/subscription.md 「상품과 가격」)
 // 기본값은 스토어 등록값이고, 셸이 준 원화 가격이 있으면 buildPaywallPlans가 그 값으로 전부 다시 계산한다
 import type { SubscriptionPlan } from '@landit/analytics';
 
@@ -78,3 +78,21 @@ export const buildPaywallPlans = (
     },
   };
 };
+
+// 등록값 기준 플랜 하나 — 구독 관리처럼 스토어 가격 없이 그리는 곳. 페이월은 buildPaywallPlans(스토어 가격)를 쓴다
+export const findPlan = (id: PlanId): PaywallPlan => buildPaywallPlans()[id];
+
+// 월간으로 1년을 낼 때 금액 — 연간 결제액의 비교 기준. 스토어에 없는 정가를 지어내지 않고 실제 월간 금액으로 잰다
+export const YEARLY_LIST_PRICE = MONTHLY_PRICE * 12;
+
+// 스토어 상품 식별자 (docs/subscription.md 「상품과 가격」)
+const PRODUCT_IDS: Record<PlanId, string> = {
+  monthly: 'com.saynow.app.premium.monthly',
+  yearly: 'com.saynow.app.premium.yearly',
+};
+
+// BE가 준 상품 식별자를 플랜으로. 모르는 값(프로모션·옛 상품)은 null
+export const planFromProductId = (
+  productId: string | null | undefined,
+): PlanId | null =>
+  PLAN_ORDER.find((id) => PRODUCT_IDS[id] === productId) ?? null;

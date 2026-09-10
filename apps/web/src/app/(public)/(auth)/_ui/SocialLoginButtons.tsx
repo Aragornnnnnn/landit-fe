@@ -3,11 +3,11 @@
 // 로그인 화면의 소셜 버튼 3종 — 클릭을 useSocialLogin에 연결하고 에러를 노출한다.
 // 콜백처럼 바깥에서 진행 중인 로그인이 있으면(pending·error) 그 상태를 이어받아 그린다
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
+import { AppleIcon, GoogleIcon, KakaoIcon } from '@/shared/ui/SocialIcons';
 
 import { useSocialLogin, type SocialProvider } from '../_model/useSocialLogin';
 import styles from './login-motion.module.css';
 import { LoginButton } from './LoginButton';
-import { AppleIcon, GoogleIcon, KakaoIcon } from './SocialIcons';
 
 export const SocialLoginButtons = ({
   pending: outerPending = null,

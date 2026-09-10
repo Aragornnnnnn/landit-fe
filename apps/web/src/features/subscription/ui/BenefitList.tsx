@@ -7,7 +7,7 @@ import {
   SparklesIcon,
 } from '@/shared/ui/Icons';
 
-import { PAYWALL_BENEFITS, type BenefitIcon } from '../_model/paywall-benefits';
+import { PAYWALL_BENEFITS, type BenefitIcon } from '../model/benefits';
 
 const ICONS: Record<BenefitIcon, typeof CalendarIcon> = {
   calendar: CalendarIcon,

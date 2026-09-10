@@ -28,5 +28,9 @@ export {
   type SubscriptionPlan,
   type PaywallGateEntry,
   type LevelChangeType,
+  type SubscriptionState,
+  type WidgetGuideSource,
+  type PaywallEntrySource,
+  type StoreSubscriptionAction,
   type PurchaseFailureReason,
 } from './events';

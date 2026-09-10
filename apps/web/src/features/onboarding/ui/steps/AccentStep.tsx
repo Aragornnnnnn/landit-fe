@@ -22,7 +22,7 @@ export const AccentStep = ({
 
     <div className="mt-6 flex min-h-0 flex-1 flex-col">
       <AccentForm
-        footnote="배울 영어는 언제든 변경할 수 있어요"
+        footnote="배울 억양은 언제든 변경할 수 있어요"
         onConfirm={onNext}
       />
     </div>

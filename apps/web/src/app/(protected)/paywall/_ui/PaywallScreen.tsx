@@ -8,21 +8,21 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { toKrwPrices } from '@/features/subscription/model/offerings';
-import { useOfferings } from '@/features/subscription/model/useOfferings';
-import { usePurchase } from '@/features/subscription/model/usePurchase';
-import { track } from '@/shared/analytics';
-import { homePath } from '@/shared/lib/last-tab';
-import { Button } from '@/shared/ui/Button';
-
-import { getBillingNotice, getCtaLabel } from '../_model/paywall-copy';
 import {
   buildPaywallPlans,
   DEFAULT_PLAN_ID,
   PLAN_ORDER,
   type PaywallPlan,
   type PlanId,
-} from '../_model/paywall-plans';
-import { BenefitList } from './BenefitList';
+} from '@/features/subscription/model/plans';
+import { useOfferings } from '@/features/subscription/model/useOfferings';
+import { usePurchase } from '@/features/subscription/model/usePurchase';
+import { BenefitList } from '@/features/subscription/ui/BenefitList';
+import { track } from '@/shared/analytics';
+import { homePath } from '@/shared/lib/last-tab';
+import { Button } from '@/shared/ui/Button';
+
+import { getBillingNotice, getCtaLabel } from '../_model/paywall-copy';
 import { PaywallHero } from './PaywallHero';
 import { PlanCard } from './PlanCard';
 

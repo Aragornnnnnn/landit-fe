@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 
 // LAN-428 설문(임시) — features 간 가로 import. 설문이 끝나면 이 import와 아래 CTA 한 줄을 지운다
 import { SurveyLetterCta } from '@/features/survey/ui/SurveyLetterCta';
+import { backOrReplace } from '@/shared/lib/routes';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
@@ -75,8 +76,7 @@ const LetterShell = ({ fallbackHref, ...content }: LetterShellProps) => {
 
   // 목록에서 열고 들어왔으면 되돌아간다 — replace로 두면 편지 칸이 목록으로 바뀌어 목록이 히스토리에 두 겹 남고,
   // 그 뒤 휴대폰 뒤로가기가 한 번 헛눌린다. 주소로 바로 열었으면(딥링크·새로고침) 되돌아갈 데가 없으니 fallback으로
-  const back = () =>
-    window.history.length > 1 ? router.back() : router.replace(fallbackHref);
+  const back = () => backOrReplace(router, fallbackHref);
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">

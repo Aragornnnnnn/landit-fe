@@ -1,5 +1,8 @@
 // 고른 플랜에 따라 갈리는 문구 — 연간에만 무료 체험이 있어 CTA와 결제 안내가 달라진다
-import { formatWon, type PaywallPlan } from './paywall-plans';
+import {
+  formatWon,
+  type PaywallPlan,
+} from '@/features/subscription/model/plans';
 
 /** CTA 문구. 연간은 무료 체험을, 월간은 월 결제액을 앞세운다 */
 export const getCtaLabel = (plan: PaywallPlan) =>

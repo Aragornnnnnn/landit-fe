@@ -8,7 +8,8 @@ import {
   DEFAULT_PLAN_ID,
   formatWon,
   PLAN_ORDER,
-} from './paywall-plans';
+  planFromProductId,
+} from './plans';
 
 describe('calculateDiscountRate', () => {
   it('비교가와 판매가로 정수 퍼센트를 돌려준다', () => {
@@ -95,5 +96,18 @@ describe('buildPaywallPlans — 스토어 가격', () => {
 
     expect(monthly.price).toBe(14_900);
     expect(yearly.price).toBe(49_900);
+  });
+});
+
+describe('planFromProductId', () => {
+  it('스토어 상품 식별자를 플랜으로 바꾼다', () => {
+    expect(planFromProductId('com.saynow.app.premium.monthly')).toBe('monthly');
+    expect(planFromProductId('com.saynow.app.premium.yearly')).toBe('yearly');
+  });
+
+  it('모르는 값이나 빈 값은 null이다', () => {
+    expect(planFromProductId('com.saynow.app.premium.promo')).toBeNull();
+    expect(planFromProductId(null)).toBeNull();
+    expect(planFromProductId(undefined)).toBeNull();
   });
 });

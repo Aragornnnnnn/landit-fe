@@ -3,10 +3,11 @@
 // 레벨 결과 — 첫 대화로 매긴 수준을 캐릭터·이름·영역별 점수로 보여주고 "학습지 받기"로 넘긴다.
 // 쓸 만한 결과(isUsableAssessment)일 때만 그린다. 그 다음 화면이 학습 준비, 그 다음이 페이월이다
 import { useEffect, useEffectEvent } from 'react';
-import { EVENTS, type EnglishLevel } from '@landit/analytics';
+import { EVENTS } from '@landit/analytics';
 import Image from 'next/image';
 
 import {
+  LEVEL_IMAGES,
   toLevelResult,
   type UsableAssessment,
 } from '@/features/feedback/model/level-assessment';
@@ -22,15 +23,6 @@ interface LevelResultScreenProps {
   assessment: UsableAssessment;
   onContinue: () => void;
 }
-
-// 레벨별 마법사 래디 — 피그마 2136:2437에서 배경 제거한 원본을 480px webp로
-const LEVEL_IMAGE: Record<EnglishLevel, string> = {
-  1: '/images/character/level-wizard-1.webp',
-  2: '/images/character/level-wizard-2.webp',
-  3: '/images/character/level-wizard-3.webp',
-  4: '/images/character/level-wizard-4.webp',
-  5: '/images/character/level-wizard-5.webp',
-};
 
 export const LevelResultScreen = ({
   scenarioId,
@@ -60,7 +52,7 @@ export const LevelResultScreen = ({
       {/* 캐릭터가 주인공 — 가운데 위에 크게, 이름과 레벨은 그 아래 중앙 정렬 */}
       <section className="flex flex-col items-center text-center">
         <Image
-          src={LEVEL_IMAGE[result.level]}
+          src={LEVEL_IMAGES[result.level]}
           alt=""
           width={200}
           height={200}
