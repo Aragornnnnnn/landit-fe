@@ -529,7 +529,7 @@ export type EventProps = {
     level: EnglishLevel;
     change_type: LevelChangeType;
   };
-  'Prepared Learning Viewed': { scenario_id: number; count: number | null };
+  'Prepared Learning Viewed': { scenario_id: number };
   'Prepared Learning Continued': { scenario_id: number };
 
   // 위젯 설치 안내 — 노출·답·플랫폼을 속성으로 가른다

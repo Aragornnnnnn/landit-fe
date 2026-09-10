@@ -7,14 +7,8 @@ import {
   PreparedLearningView,
 } from './PreparedLearningScreen';
 
-const mocks = vi.hoisted(() => ({
-  track: vi.fn(),
-  query: { expressions: null as { expressionId: number }[] | null },
-}));
+const mocks = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
-vi.mock('@/features/expression/model/useExpressionsQuery', () => ({
-  useExpressionsQuery: () => mocks.query,
-}));
 vi.mock('motion/react', () => import('@/shared/motion/test-double'));
 vi.mock('next/image', () => ({ default: () => <span data-testid="landy" /> }));
 // 파츠 SVG는 무겁고 이 화면의 계약이 아니다
@@ -34,41 +28,36 @@ afterEach(() => {
 });
 
 describe('PreparedLearningView', () => {
-  it('개수를 제목에 넣고, 흐린 자리는 보조기기에서 숨기며, 첫 장면은 래디가 준비했다고 말한다', () => {
+  it('개수 4를 제목에 넣고, 흐린 자리는 보조기기에서 숨기며, 첫 장면은 래디가 준비했다고 말한다', () => {
     render(
       <PreparedLearningView
         scenarioId={7}
-        count={3}
         nickname="준서"
         onContinue={vi.fn()}
       />,
     );
 
-    expect(screen.getByText('3개')).toBeInTheDocument();
+    expect(screen.getByText('4개')).toBeInTheDocument();
     expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
-    expect(screen.getByText('잠긴 학습 3개')).toBeInTheDocument();
+    expect(screen.getByText('잠긴 학습 4개')).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent(
       '준서님 레벨에 딱 맞춰 드려요',
     );
     expect(screen.getByTestId('landy')).toBeInTheDocument();
     expect(mocks.track).toHaveBeenCalledWith('Prepared Learning Viewed', {
       scenario_id: 7,
-      count: 3,
     });
   });
 
-  it('개수를 아직 모르면 숫자 없이 제목을 쓰고 자리는 기본 개수만큼 깐다', () => {
+  it('닉네임이 없으면 첫 장면을 "내 레벨"로 말한다', () => {
     render(
       <PreparedLearningView
         scenarioId={7}
-        count={null}
         nickname={null}
         onContinue={vi.fn()}
       />,
     );
 
-    expect(screen.getByText(/맞춤형 학습을 준비했어요/)).toBeInTheDocument();
-    expect(screen.getByText('잠긴 학습 5개')).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent(
       '내 레벨에 딱 맞춰 드려요',
     );
@@ -79,7 +68,6 @@ describe('PreparedLearningView', () => {
     render(
       <PreparedLearningView
         scenarioId={7}
-        count={5}
         nickname="준서"
         onContinue={onContinue}
       />,
@@ -95,10 +83,11 @@ describe('PreparedLearningView', () => {
 });
 
 describe('PreparedLearningScreen', () => {
-  it('표현 목록에서 개수만 읽어 뷰에 넘긴다', () => {
-    mocks.query = { expressions: [{ expressionId: 1 }, { expressionId: 2 }] };
+  it('로그인한 사람의 닉네임을 뷰에 넘긴다', () => {
     render(<PreparedLearningScreen scenarioId={7} onContinue={vi.fn()} />);
 
-    expect(screen.getByText('2개')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '준서님 레벨에 딱 맞춰 드려요',
+    );
   });
 });

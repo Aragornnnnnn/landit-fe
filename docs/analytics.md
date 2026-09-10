@@ -60,7 +60,7 @@
 | Purchase Restore Tapped     | 없음                                                          | 구매 복원을 눌렀을 때                                                                                |
 | Paywall Gate Locked         | entry(scenario\|expression\|smalltalk\|conversation_finished) | 무료 구간을 다 쓴 무료 사용자가 학습 진입(또는 대화 피드백 끝)에서 페이월로 보내졌을 때              |
 | Level Result Viewed         | scenario_id, level, change_type                               | 무료 사용자가 오픈 뒤 첫 대화 직후 레벨 결과 화면이 떴을 때. 쓸 수 있는 평가(MODEL·근거 충분)일 때만 |
-| Prepared Learning Viewed    | scenario_id, count                                            | 대화 직후 학습 준비 화면(표현 N개, 첫 항목만 노출)이 떴을 때. count는 목록 못 받았으면 null          |
+| Prepared Learning Viewed    | scenario_id                                                   | 대화 직후 학습 준비 화면(흐린 학습 4개, 내용 없음)이 떴을 때                                         |
 | Prepared Learning Continued | scenario_id                                                   | 그 화면에서 학습 시작하기를 눌렀을 때 (무료 사용자는 이어서 Paywall Gate Locked)                     |
 
 페이월 노출은 별도 이벤트 없이 `Page Viewed`(page_name=paywall)로 본다. 결제 성공·취소·실패는 결제 연동(LAN-447)에서 셸의 결과 메시지를 받을 때 추가한다.

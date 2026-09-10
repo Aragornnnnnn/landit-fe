@@ -1,6 +1,6 @@
 'use client';
 
-// 학습 준비 — 방금 대화에서 뽑은 표현 다섯 개를 흐리게 깔고, 그 위에서 래디와 대화 상대들이 장면을 바꿔 가며
+// 학습 준비 — 방금 대화에서 뽑은 표현 네 개를 흐리게 깔고, 그 위에서 래디와 대화 상대들이 장면을 바꿔 가며
 // "레벨에 맞춰 준비했다 → 프리톡 → 학습하면 이런 게 나온다"를 소개한다. CTA가 페이월(무료) 또는 표현 분기(유료)로 이어진다.
 // 내용을 흐리는 건 의도다 — 더 궁금하게 두고 결제창을 만난다 (docs/subscription.md 「무료 구간과 페이월 게이트」)
 import { useEffect, useEffectEvent, useState } from 'react';
@@ -12,8 +12,6 @@ import type { Partner } from '@/features/conversation/model/character-look';
 // 가로 import 사유: 소개하는 얼굴은 대화 상대 셋이고, 그 그림과 상반신 크롭은 conversation·expression이 정본이다
 import { PartnerAvatar } from '@/features/conversation/ui/character/PartnerAvatar';
 import { QUIZ_VIEWBOX } from '@/features/expression/model/quiz-partner';
-// 가로 import 사유: 제목의 개수는 그 대화의 표현 목록 API가 정본이다 (내용은 안 보여주므로 개수만 쓴다)
-import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQuery';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { DURATION, EASE_STANDARD } from '@/shared/motion';
@@ -26,21 +24,19 @@ interface PreparedLearningScreenProps {
 
 interface PreparedLearningViewProps {
   scenarioId: number;
-  // 준비한 학습 개수. 아직 모르면 null — 제목에서 숫자를 빼고 자리는 기본 개수만큼 깐다
-  count: number | null;
   nickname: string | null;
   onContinue: () => void;
 }
 
-// 흐린 자리에 넣는 글 — 실제 표현은 보여주지 않는다. 길이와 리듬만 카드처럼 보이면 된다
+// 흐린 자리에 넣는 글 — 실제 표현은 보여주지 않는다. 길이와 리듬만 카드처럼 보이면 된다.
+// 개수도 고정이다. 시나리오마다 표현이 네 개이고, 진짜 목록은 결제한 뒤 표현 분기에서 받는다 — 여기서 미리 부르면 숫자가 튄다
 const PLACEHOLDER_ROWS = [
   ['커피 한잔 하러 갈래?', 'grab a coffee'],
   ['나도 완전 콜이야', "I'm down for it"],
   ['잠깐 들를게', 'stop by'],
   ['내가 늘 찾는 메뉴야', 'my go-to'],
-  ['딱 좋다, 제대로다', 'hit the spot'],
 ];
-const DEFAULT_COUNT = PLACEHOLDER_ROWS.length;
+const COUNT = PLACEHOLDER_ROWS.length;
 
 // 말풍선은 한 장면(SLIDE_MS)만 떠 있다 — 한 줄로 끝나는 짧은 문장에, 핵심 단어 하나만 색으로 띄운다
 interface Caption {
@@ -53,9 +49,9 @@ type Slide =
   | { kind: 'landy'; image: string; caption: Caption }
   | { kind: 'partner'; caption: Caption };
 
-// 장면 순서 — 레벨 맞춤 → 방금 대화에서 뽑은 5개 → 이미지·예문·퀴즈 → 발음 평가 → 복습 퀴즈 → 프리톡(상대).
+// 장면 순서 — 레벨 맞춤 → 방금 대화에서 뽑은 4개 → 이미지·예문·퀴즈 → 발음 평가 → 복습 퀴즈 → 프리톡(상대).
 // 여섯 장, 한 바퀴 10.8초. 문장은 각각 끝나게 쓴다(~요)
-const toSlides = (nickname: string | null, count: number | null): Slide[] => [
+const toSlides = (nickname: string | null): Slide[] => [
   {
     kind: 'landy',
     image: '/images/character/landy-point.webp',
@@ -70,13 +66,10 @@ const toSlides = (nickname: string | null, count: number | null): Slide[] => [
     kind: 'landy',
     // 학습지를 들고 내미는 래디 — 2026-09-08 받은 전용 이미지
     image: '/images/character/landy-worksheet.webp',
-    caption:
-      count === null
-        ? { text: '방금 대화에서 바로 뽑은 표현이에요', highlight: '표현' }
-        : {
-            text: `방금 대화에서 바로 뽑은 표현 ${count}개예요`,
-            highlight: `표현 ${count}개`,
-          },
+    caption: {
+      text: `방금 대화에서 바로 뽑은 표현 ${COUNT}개예요`,
+      highlight: `표현 ${COUNT}개`,
+    },
   },
   {
     kind: 'landy',
@@ -127,13 +120,11 @@ const SLIDE_MS = 1_800;
 
 export const PreparedLearningView = ({
   scenarioId,
-  count,
   nickname,
   onContinue,
 }: PreparedLearningViewProps) => {
   const reduced = useReducedMotion() ?? false;
-  const slides = toSlides(nickname, count);
-  const rows = PLACEHOLDER_ROWS.slice(0, count ?? DEFAULT_COUNT);
+  const slides = toSlides(nickname);
   // 몇 번째 장면인지 누적으로 센다 — 바퀴 수로 프리톡 얼굴을 고른다
   const [tick, setTick] = useState(0);
 
@@ -146,9 +137,9 @@ export const PreparedLearningView = ({
     return () => clearInterval(timer);
   }, [reduced]);
 
-  // 노출은 한 번만 — 개수가 늦게 와도 다시 찍지 않는다
+  // 노출은 한 번만
   const trackViewed = useEffectEvent(() =>
-    track(EVENTS.PREPARED_LEARNING_VIEWED, { scenario_id: scenarioId, count }),
+    track(EVENTS.PREPARED_LEARNING_VIEWED, { scenario_id: scenarioId }),
   );
   useEffect(() => {
     trackViewed();
@@ -172,27 +163,21 @@ export const PreparedLearningView = ({
       <h1 className="text-[22px] leading-[1.35] font-black break-keep">
         방금 대화를 더 원어민처럼 할 수 있도록
         <br />
-        {count === null ? (
-          '맞춤형 학습을 준비했어요'
-        ) : (
-          <>
-            맞춤형 학습{' '}
-            <span className="text-[30px] leading-none font-black text-primary">
-              {count}개
-            </span>
-            를 준비했어요
-          </>
-        )}
+        맞춤형 학습{' '}
+        <span className="text-[30px] leading-none font-black text-primary">
+          {COUNT}개
+        </span>
+        를 준비했어요
       </h1>
 
       {/* 흐린 학습지 위에서 장면이 바뀐다 — 말풍선과 얼굴이 함께 넘어가고, 자물쇠 줄은 고정 */}
-      {/* 자리가 적어도 장면이 설 높이는 확보한다 — 개수가 3개면 카드 높이만으로는 캐릭터가 넘친다 */}
+      {/* 카드 네 장 높이만으로는 캐릭터가 넘칠 수 있어 장면이 설 높이를 확보한다 */}
       <section className="relative mt-4 min-h-[380px]">
         <ul
           className="flex flex-col gap-2.5 blur-[5px] select-none"
           aria-hidden="true"
         >
-          {rows.map(([meaning, expression], index) => (
+          {PLACEHOLDER_ROWS.map(([meaning, expression], index) => (
             <li
               key={expression}
               className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5"
@@ -209,7 +194,7 @@ export const PreparedLearningView = ({
             </li>
           ))}
         </ul>
-        <p className="sr-only">{`잠긴 학습 ${count ?? DEFAULT_COUNT}개`}</p>
+        <p className="sr-only">{`잠긴 학습 ${COUNT}개`}</p>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
           <AnimatePresence mode="wait" initial={false}>
@@ -259,19 +244,16 @@ export const PreparedLearningView = ({
   );
 };
 
-// 실제 화면 — 개수만 그 대화의 표현 목록에서 읽는다. 내용은 흐린 자리라 목록이 늦거나 실패해도 화면은 그대로다.
-// 이 조회는 결제한 뒤 돌아올 표현 분기의 캐시도 미리 채운다
+// 실제 화면 — 닉네임만 읽는다. 표현 목록은 여기서 부르지 않는다 (결제한 뒤 표현 분기가 받는다)
 export const PreparedLearningScreen = ({
   scenarioId,
   onContinue,
 }: PreparedLearningScreenProps) => {
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
-  const { expressions } = useExpressionsQuery(scenarioId);
 
   return (
     <PreparedLearningView
       scenarioId={scenarioId}
-      count={expressions?.length ?? null}
       nickname={nickname}
       onContinue={onContinue}
     />
