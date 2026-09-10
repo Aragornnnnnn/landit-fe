@@ -1,6 +1,6 @@
 'use client';
 
-// 학습 준비 — 방금 대화에서 뽑은 표현 네 개를 흐리게 깔고, 그 위에서 래디와 대화 상대들이 장면을 바꿔 가며
+// 학습 준비 — 방금 대화에서 뽑은 표현들을 개수만큼 흐리게 깔고, 그 위에서 래디와 대화 상대들이 장면을 바꿔 가며
 // "레벨에 맞춰 준비했다 → 프리톡 → 학습하면 이런 게 나온다"를 소개한다. CTA가 페이월(무료) 또는 표현 분기(유료)로 이어진다.
 // 내용을 흐리는 건 의도다 — 더 궁금하게 두고 결제창을 만난다 (docs/subscription.md 「무료 구간과 페이월 게이트」)
 import { useEffect, useEffectEvent, useState } from 'react';
@@ -12,6 +12,7 @@ import type { Partner } from '@/features/conversation/model/character-look';
 // 가로 import 사유: 소개하는 얼굴은 대화 상대 셋이고, 그 그림과 상반신 크롭은 conversation·expression이 정본이다
 import { PartnerAvatar } from '@/features/conversation/ui/character/PartnerAvatar';
 import { QUIZ_VIEWBOX } from '@/features/expression/model/quiz-partner';
+import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQuery';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { DURATION, EASE_STANDARD } from '@/shared/motion';
@@ -25,18 +26,26 @@ interface PreparedLearningScreenProps {
 interface PreparedLearningViewProps {
   scenarioId: number;
   nickname: string | null;
+  /** 준비된 학습 개수 — 레벨마다 다르니 BE 표현 목록 길이를 쓴다 */
+  count: number;
   onContinue: () => void;
 }
 
-// 흐린 자리에 넣는 글 — 실제 표현은 보여주지 않는다. 길이와 리듬만 카드처럼 보이면 된다.
-// 개수도 고정이다. 시나리오마다 표현이 네 개이고, 진짜 목록은 결제한 뒤 표현 분기에서 받는다 — 여기서 미리 부르면 숫자가 튄다
+// 흐린 자리에 넣는 글 — 실제 표현은 보여주지 않는다. 길이와 리듬만 카드처럼 보이면 된다. 개수가 더 많으면 돌려 쓴다
 const PLACEHOLDER_ROWS = [
   ['커피 한잔 하러 갈래?', 'grab a coffee'],
   ['나도 완전 콜이야', "I'm down for it"],
   ['잠깐 들를게', 'stop by'],
   ['내가 늘 찾는 메뉴야', 'my go-to'],
 ];
-const COUNT = PLACEHOLDER_ROWS.length;
+// 목록이 아직 안 왔을 때 쓰는 개수 — 흐름 첫 화면에서 미리 받아 두므로 거의 안 쓰인다
+const FALLBACK_COUNT = PLACEHOLDER_ROWS.length;
+
+const toPlaceholderRows = (count: number) =>
+  Array.from(
+    { length: count },
+    (_, index) => PLACEHOLDER_ROWS[index % PLACEHOLDER_ROWS.length],
+  );
 
 // 말풍선은 한 장면(SLIDE_MS)만 떠 있다 — 한 줄로 끝나는 짧은 문장에, 핵심 단어 하나만 색으로 띄운다
 interface Caption {
@@ -49,9 +58,9 @@ type Slide =
   | { kind: 'landy'; image: string; caption: Caption }
   | { kind: 'partner'; caption: Caption };
 
-// 장면 순서 — 레벨 맞춤 → 방금 대화에서 뽑은 4개 → 이미지·예문·퀴즈 → 발음 평가 → 복습 퀴즈 → 프리톡(상대).
+// 장면 순서 — 레벨 맞춤 → 방금 대화에서 뽑은 표현 개수 → 이미지·예문·퀴즈 → 발음 평가 → 복습 퀴즈 → 프리톡(상대).
 // 여섯 장, 한 바퀴 10.8초. 문장은 각각 끝나게 쓴다(~요)
-const toSlides = (nickname: string | null): Slide[] => [
+const toSlides = (nickname: string | null, count: number): Slide[] => [
   {
     kind: 'landy',
     image: '/images/character/landy-point.webp',
@@ -67,8 +76,8 @@ const toSlides = (nickname: string | null): Slide[] => [
     // 학습지를 들고 내미는 래디 — 2026-09-08 받은 전용 이미지
     image: '/images/character/landy-worksheet.webp',
     caption: {
-      text: `방금 대화에서 바로 뽑은 표현 ${COUNT}개예요`,
-      highlight: `표현 ${COUNT}개`,
+      text: `방금 대화에서 바로 뽑은 표현 ${count}개예요`,
+      highlight: `표현 ${count}개`,
     },
   },
   {
@@ -121,10 +130,11 @@ const SLIDE_MS = 1_800;
 export const PreparedLearningView = ({
   scenarioId,
   nickname,
+  count,
   onContinue,
 }: PreparedLearningViewProps) => {
   const reduced = useReducedMotion() ?? false;
-  const slides = toSlides(nickname);
+  const slides = toSlides(nickname, count);
   // 몇 번째 장면인지 누적으로 센다 — 바퀴 수로 프리톡 얼굴을 고른다
   const [tick, setTick] = useState(0);
 
@@ -160,12 +170,11 @@ export const PreparedLearningView = ({
       className="mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background px-6"
       style={{ paddingTop: 'calc(max(env(safe-area-inset-top), 18px) + 44px)' }}
     >
+      {/* 줄은 강제로 끊지 않는다 — 22px에서 첫 문장이 한 줄에 안 들어가 "있도록"만 남는 줄이 생겼다 */}
       <h1 className="text-[22px] leading-[1.35] font-black break-keep">
-        방금 대화를 더 원어민처럼 할 수 있도록
-        <br />
-        맞춤형 학습{' '}
+        방금 대화를 더 원어민처럼 하도록 맞춤형 학습{' '}
         <span className="text-[30px] leading-none font-black text-primary">
-          {COUNT}개
+          {count}개
         </span>
         를 준비했어요
       </h1>
@@ -177,9 +186,9 @@ export const PreparedLearningView = ({
           className="flex flex-col gap-2.5 blur-[5px] select-none"
           aria-hidden="true"
         >
-          {PLACEHOLDER_ROWS.map(([meaning, expression], index) => (
+          {toPlaceholderRows(count).map(([meaning, expression], index) => (
             <li
-              key={expression}
+              key={index}
               className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5"
             >
               <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-[12px] font-bold text-muted-foreground">
@@ -195,7 +204,7 @@ export const PreparedLearningView = ({
           ))}
         </ul>
         <p className="sr-only">
-          {`잠긴 학습 ${COUNT}개. 레벨에 맞춰 준비한 학습을 이미지·예문·퀴즈, 발음 평가, 복습 퀴즈, 프리톡으로 이어 가요`}
+          {`잠긴 학습 ${count}개. 레벨에 맞춰 준비한 학습을 이미지·예문·퀴즈, 발음 평가, 복습 퀴즈, 프리톡으로 이어 가요`}
         </p>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
@@ -247,17 +256,20 @@ export const PreparedLearningView = ({
   );
 };
 
-// 실제 화면 — 닉네임만 읽는다. 표현 목록은 여기서 부르지 않는다 (결제한 뒤 표현 분기가 받는다)
+// 실제 화면 — 닉네임과 표현 개수를 읽는다. 목록은 PostConversationFlow가 분석 중에 미리 받아 두어 여기선 캐시에서 온다.
+// 내용은 여전히 안 보여준다 — 흐린 자리 개수와 제목 숫자에만 쓴다
 export const PreparedLearningScreen = ({
   scenarioId,
   onContinue,
 }: PreparedLearningScreenProps) => {
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
+  const { expressions } = useExpressionsQuery(scenarioId);
 
   return (
     <PreparedLearningView
       scenarioId={scenarioId}
       nickname={nickname}
+      count={expressions?.length ?? FALLBACK_COUNT}
       onContinue={onContinue}
     />
   );

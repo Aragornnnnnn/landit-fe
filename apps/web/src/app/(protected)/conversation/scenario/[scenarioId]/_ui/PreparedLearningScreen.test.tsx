@@ -1,4 +1,4 @@
-// 학습 준비 화면 — 표현은 자리만 흐리게 깔고, 장면이 소개하며, CTA가 계측을 남기고 다음으로 넘긴다
+// 학습 준비 화면 — 표현은 개수만큼 자리만 흐리게 깔고, 장면이 소개하며, CTA가 계측을 남기고 다음으로 넘긴다
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -7,7 +7,10 @@ import {
   PreparedLearningView,
 } from './PreparedLearningScreen';
 
-const mocks = vi.hoisted(() => ({ track: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  track: vi.fn(),
+  expressionsQuery: { expressions: null as { expressionId: number }[] | null },
+}));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 vi.mock('motion/react', () => import('@/shared/motion/test-double'));
 vi.mock('next/image', () => ({ default: () => <span data-testid="landy" /> }));
@@ -16,6 +19,9 @@ vi.mock('@/features/conversation/ui/character/PartnerAvatar', () => ({
   PartnerAvatar: ({ partner }: { partner: string }) => (
     <span data-testid="presenter">{partner}</span>
   ),
+}));
+vi.mock('@/features/expression/model/useExpressionsQuery', () => ({
+  useExpressionsQuery: () => mocks.expressionsQuery,
 }));
 vi.mock('@/shared/auth/auth-store', () => ({
   useAuthStore: (selector: (state: unknown) => unknown) =>
@@ -28,11 +34,12 @@ afterEach(() => {
 });
 
 describe('PreparedLearningView', () => {
-  it('개수 4를 제목에 넣고, 흐린 자리는 보조기기에서 숨기며, 첫 장면은 래디가 준비했다고 말한다', () => {
+  it('받은 개수를 제목에 넣고, 흐린 자리는 보조기기에서 숨기며, 첫 장면은 래디가 준비했다고 말한다', () => {
     render(
       <PreparedLearningView
         scenarioId={7}
         nickname="준서"
+        count={4}
         onContinue={vi.fn()}
       />,
     );
@@ -54,6 +61,7 @@ describe('PreparedLearningView', () => {
       <PreparedLearningView
         scenarioId={7}
         nickname={null}
+        count={4}
         onContinue={vi.fn()}
       />,
     );
@@ -69,6 +77,7 @@ describe('PreparedLearningView', () => {
       <PreparedLearningView
         scenarioId={7}
         nickname="준서"
+        count={4}
         onContinue={onContinue}
       />,
     );
@@ -79,6 +88,29 @@ describe('PreparedLearningView', () => {
       scenario_id: 7,
     });
     expect(onContinue).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('PreparedLearningScreen 개수', () => {
+  it('BE 표현 목록 길이를 개수로 쓴다 — 레벨마다 다르다', () => {
+    mocks.expressionsQuery.expressions = [
+      { expressionId: 1 },
+      { expressionId: 2 },
+      { expressionId: 3 },
+      { expressionId: 4 },
+      { expressionId: 5 },
+      { expressionId: 6 },
+    ];
+    render(<PreparedLearningScreen scenarioId={7} onContinue={vi.fn()} />);
+
+    expect(screen.getByText('6개')).toBeInTheDocument();
+  });
+
+  it('목록이 아직 없으면 4개로 둔다', () => {
+    mocks.expressionsQuery.expressions = null;
+    render(<PreparedLearningScreen scenarioId={7} onContinue={vi.fn()} />);
+
+    expect(screen.getByText('4개')).toBeInTheDocument();
   });
 });
 

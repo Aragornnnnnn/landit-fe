@@ -4,6 +4,7 @@
 // 신규·기존을 가리지 않고 같은 순서다. 끝나면 onFinish로 표현 분기(또는 페이월)로 넘긴다
 import { useState } from 'react';
 
+import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQuery';
 import type { UsableAssessment } from '@/features/feedback/model/level-assessment';
 import { Transition } from '@/shared/motion';
 
@@ -29,6 +30,8 @@ export const PostConversationFlow = ({
   onFinish,
 }: PostConversationFlowProps) => {
   const [screen, setScreen] = useState<Screen>({ name: 'analyzing' });
+  // 학습 준비 화면이 쓸 표현 개수를 분석 중에 미리 받아 둔다 — 그 화면에서 숫자가 바뀌어 보이지 않게
+  useExpressionsQuery(scenarioId);
 
   if (screen.name === 'analyzing') {
     return (

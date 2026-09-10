@@ -7,6 +7,9 @@ import { PostConversationFlow } from './PostConversationFlow';
 vi.mock('@/shared/motion', () => ({
   Transition: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
+vi.mock('@/features/expression/model/useExpressionsQuery', () => ({
+  useExpressionsQuery: () => ({ expressions: null }),
+}));
 vi.mock('./AnalyzingScreen', () => ({
   AnalyzingScreen: ({
     onDone,
