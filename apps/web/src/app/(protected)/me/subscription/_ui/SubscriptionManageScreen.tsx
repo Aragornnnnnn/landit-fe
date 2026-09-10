@@ -1,6 +1,6 @@
 'use client';
 
-// 구독 관리 화면 — 골드 카드에 상태·플랜·날짜, 이용 중인 혜택, 플랜 변경 안내(iOS만), 맨 아래 해지.
+// 구독 관리 화면 — 골드 카드에 플랜 붙은 상태 제목과 결제일·결제 금액 표, 이용 중인 혜택, 플랜 변경 안내(iOS만), 맨 아래 해지.
 // 앱은 구독을 바꾸거나 해지할 수 없어 전부 스토어 구독 화면으로 보낸다. 플랜 이름·금액·결제 내역은 BE가
 // 상품 식별자와 결제 이벤트를 주면 붙인다 (docs/subscription.md 「마이페이지와 법적 문서」)
 import { useState } from 'react';
@@ -8,7 +8,11 @@ import { EVENTS, type StoreSubscriptionAction } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
-import { findPlan, formatWon } from '@/features/subscription/model/plans';
+import {
+  findPlan,
+  formatWon,
+  MONTHLY_PLAN,
+} from '@/features/subscription/model/plans';
 import {
   STORE,
   type StorePlatform,
@@ -50,22 +54,33 @@ const CANCEL_ROW: Record<
   canceled: { action: 'resubscribe', title: '해지 취소하기' },
 };
 
-// 플랜 한 줄 — BE가 상품 식별자를 줄 때만. 월간은 달마다, 연간은 해마다 내는 금액
-const toPlanLine = (summary: PaidSubscriptionSummary) => {
-  if (!summary.plan) return null;
-  const plan = findPlan(summary.plan);
-  return `${plan.title} 플랜 · ${summary.plan === 'monthly' ? '월' : '연'} ${formatWon(plan.price)}`;
-};
+// 제목 — 구독 중이고 플랜을 알면 "월간 프리미엄"처럼 플랜을 앞에 붙인다
+const toTitle = (summary: PaidSubscriptionSummary) =>
+  summary.kind === 'active' && summary.plan
+    ? `${findPlan(summary.plan).title} ${TITLE.active}`
+    : TITLE[summary.kind];
 
-// 날짜 한 줄 — 무엇의 날짜인지가 상태마다 다르다. 체험은 첫 결제, 구독은 다음 결제, 그날로 끝나면 만료
-const toDateLine = (summary: PaidSubscriptionSummary) => {
+// 날짜 행 — 무엇의 날짜인지가 상태마다 다르다. 체험은 첫 결제, 구독은 다음 결제, 그날로 끝나면 만료
+const toDateRow = (summary: PaidSubscriptionSummary) => {
   const date = summary.expiresAt
     ? formatSubscriptionDate(summary.expiresAt)
     : null;
   if (!date) return null;
-  if (summary.kind === 'trial') return `첫 결제일 ${date}`;
-  if (summary.renews) return `다음 결제일 ${date}`;
-  return `이용 만료일 ${date} · 자동 갱신 꺼짐`;
+  if (summary.kind === 'trial') return { label: '첫 결제일', value: date };
+  if (summary.renews) return { label: '다음 결제일', value: date };
+  return { label: '이용 만료일', value: `${date} · 자동 갱신 꺼짐` };
+};
+
+// 결제 금액 행 — 갱신되는 구독만, BE가 상품 식별자를 줄 때만. 연간은 월간으로 1년 낼 때 금액을 지운 값 옆에 혜택가로 보여준다
+const toAmountRow = (summary: PaidSubscriptionSummary) => {
+  if (!summary.plan || !summary.renews) return null;
+  const plan = findPlan(summary.plan);
+  return {
+    label: summary.kind === 'trial' ? '첫 결제 금액' : '다음 결제 금액',
+    listPrice:
+      summary.plan === 'yearly' ? formatWon(MONTHLY_PLAN.price * 12) : null,
+    value: formatWon(plan.price),
+  };
 };
 
 export const SubscriptionManageScreen = () => {
@@ -79,8 +94,8 @@ export const SubscriptionManageScreen = () => {
   const [planChangeOpen, setPlanChangeOpen] = useState(false);
 
   const summary = summarizeSubscription(subscription);
-  const planLine = summary.kind === 'none' ? null : toPlanLine(summary);
-  const dateLine = summary.kind === 'none' ? null : toDateLine(summary);
+  const dateRow = summary.kind === 'none' ? null : toDateRow(summary);
+  const amountRow = summary.kind === 'none' ? null : toAmountRow(summary);
 
   const openPlanChange = (status: PaidSubscriptionSummary['kind']) => {
     track(EVENTS.PLAN_CHANGE_VIEWED, { status });
@@ -108,13 +123,32 @@ export const SubscriptionManageScreen = () => {
               style={{ background: GOLD_GRADIENT, color: '#3a2500' }}
             >
               <PremiumBadge logoHeight={22} onGold />
-              <p className="mt-3 text-[17px] font-bold">
-                {TITLE[summary.kind]}
-              </p>
-              {(planLine || dateLine) && (
-                <p className="mt-1 text-[13px]" style={{ opacity: 0.85 }}>
-                  {[planLine, dateLine].filter(Boolean).join(' · ')}
-                </p>
+              <p className="mt-3 text-[17px] font-bold">{toTitle(summary)}</p>
+              {(dateRow || amountRow) && (
+                <dl className="mt-3 space-y-1.5 text-[13px]">
+                  {dateRow && (
+                    <div className="flex justify-between gap-3">
+                      <dt style={{ opacity: 0.75 }}>{dateRow.label}</dt>
+                      <dd className="font-semibold">{dateRow.value}</dd>
+                    </div>
+                  )}
+                  {amountRow && (
+                    <div className="flex justify-between gap-3">
+                      <dt style={{ opacity: 0.75 }}>{amountRow.label}</dt>
+                      <dd className="font-semibold">
+                        {amountRow.listPrice && (
+                          <s
+                            className="mr-1.5 font-normal"
+                            style={{ opacity: 0.6 }}
+                          >
+                            {amountRow.listPrice}
+                          </s>
+                        )}
+                        {amountRow.value}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
               )}
             </section>
 

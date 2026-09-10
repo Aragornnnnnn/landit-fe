@@ -79,7 +79,10 @@ describe('SubscriptionManageScreen', () => {
     render(<SubscriptionManageScreen />);
 
     expect(screen.getByText('프리미엄을 쓰고 있어요')).toBeInTheDocument();
-    expect(screen.getByText('다음 결제일 2026년 10월 4일')).toBeInTheDocument();
+    expect(screen.getByText('다음 결제일')).toBeInTheDocument();
+    expect(screen.getByText('2026년 10월 4일')).toBeInTheDocument();
+    // 플랜을 모르면 금액 행이 없다
+    expect(screen.queryByText('다음 결제 금액')).not.toBeInTheDocument();
     expect(screen.getByText('무제한 프리톡')).toBeInTheDocument();
     const cancel = screen.getByRole('link', { name: '구독 해지하기' });
     expect(cancel).toHaveAttribute(
@@ -111,7 +114,7 @@ describe('SubscriptionManageScreen', () => {
     setSubscription(premium({ periodType: 'TRIAL' }));
     const { unmount } = render(<SubscriptionManageScreen />);
     expect(screen.getByText('무료 체험 중이에요')).toBeInTheDocument();
-    expect(screen.getByText('첫 결제일 2026년 10월 4일')).toBeInTheDocument();
+    expect(screen.getByText('첫 결제일')).toBeInTheDocument();
     unmount();
 
     setSubscription(premium({ subscriptionStatus: 'CANCELED' }));
@@ -120,7 +123,7 @@ describe('SubscriptionManageScreen', () => {
     expect(screen.getByText('해지 취소하기')).toBeInTheDocument();
     expect(screen.queryByText('플랜 변경')).not.toBeInTheDocument();
     expect(
-      screen.getByText('이용 만료일 2026년 10월 4일 · 자동 갱신 꺼짐'),
+      screen.getByText('2026년 10월 4일 · 자동 갱신 꺼짐'),
     ).toBeInTheDocument();
   });
 
@@ -140,16 +143,29 @@ describe('SubscriptionManageScreen', () => {
     expect(screen.queryByText('플랜 변경')).not.toBeInTheDocument();
   });
 
-  it('BE가 상품 식별자를 주면 골드 카드에 플랜과 금액을 같이 적는다', () => {
+  it('BE가 상품 식별자를 주면 제목에 플랜을 붙이고 결제 금액 행을 적는다 — 연간은 월간 1년치를 지운 혜택가', () => {
     mocks.query.subscription = {
       ...mocks.query.subscription!,
       productId: 'com.saynow.app.premium.yearly',
     };
     render(<SubscriptionManageScreen />);
 
-    expect(
-      screen.getByText('연간 플랜 · 연 58,500원 · 다음 결제일 2026년 10월 4일'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('연간 프리미엄을 쓰고 있어요')).toBeInTheDocument();
+    expect(screen.getByText('다음 결제 금액')).toBeInTheDocument();
+    expect(screen.getByText('178,800원').tagName).toBe('S');
+    expect(screen.getByText('58,500원')).toBeInTheDocument();
+  });
+
+  it('월간은 비교가 없이 금액만 적는다', () => {
+    mocks.query.subscription = {
+      ...mocks.query.subscription!,
+      productId: 'com.saynow.app.premium.monthly',
+    };
+    render(<SubscriptionManageScreen />);
+
+    expect(screen.getByText('월간 프리미엄을 쓰고 있어요')).toBeInTheDocument();
+    expect(screen.getByText('14,900원')).toBeInTheDocument();
+    expect(document.querySelector('s')).toBeNull();
   });
 
   it('연간 사용자의 플랜 변경 시트는 월간이 기간 뒤 적용된다고만 말한다', () => {
