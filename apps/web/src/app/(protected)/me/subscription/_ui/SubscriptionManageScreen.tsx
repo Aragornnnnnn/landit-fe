@@ -25,7 +25,7 @@ import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
 import { backToMyPage, MY_PAGE_PATH, paywallPath } from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { BackHeader } from '@/shared/ui/BackHeader';
-import { Emoji } from '@/shared/ui/emoji';
+import { AppStoreIcon, GooglePlayIcon } from '@/shared/ui/StoreIcons';
 
 import { MenuGroup, MenuLink } from '../../_ui/Menu';
 
@@ -103,8 +103,11 @@ export const SubscriptionManageScreen = () => {
             <MenuGroup>
               <MenuLink
                 href={store.manageUrl}
-                icon={<Emoji>💳</Emoji>}
-                title={`${store.name}에서 구독 관리`}
+                icon={
+                  platform === 'ios' ? <AppStoreIcon /> : <GooglePlayIcon />
+                }
+                title="구독 해지 · 플랜 변경"
+                description={`${store.name}에서 열려요`}
                 onClick={() =>
                   track(EVENTS.STORE_SUBSCRIPTION_TAPPED, {
                     status: summary.kind,

@@ -79,7 +79,8 @@ describe('SubscriptionManageScreen', () => {
     expect(screen.getByText('프리미엄을 쓰고 있어요')).toBeInTheDocument();
     expect(screen.getByText('다음 결제일 2026년 10월 4일')).toBeInTheDocument();
     expect(screen.getByText('무제한 프리톡')).toBeInTheDocument();
-    const store = screen.getByRole('link', { name: 'App Store에서 구독 관리' });
+    const store = screen.getByRole('link', { name: /App Store에서 열려요/ });
+    expect(store).toHaveTextContent('구독 해지 · 플랜 변경');
     expect(store).toHaveAttribute(
       'href',
       'https://apps.apple.com/account/subscriptions',
@@ -115,7 +116,7 @@ describe('SubscriptionManageScreen', () => {
     render(<SubscriptionManageScreen />);
 
     expect(
-      screen.getByRole('link', { name: 'Google Play에서 구독 관리' }),
+      screen.getByRole('link', { name: /Google Play에서 열려요/ }),
     ).toHaveAttribute(
       'href',
       'https://play.google.com/store/account/subscriptions',

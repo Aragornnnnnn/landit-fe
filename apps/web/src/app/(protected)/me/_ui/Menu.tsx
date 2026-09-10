@@ -48,6 +48,8 @@ const Chevron = () => (
 interface RowContentProps {
   icon?: React.ReactNode;
   title: string;
+  /** 제목 아래 작은 설명 — 어디로 가는지 같은 한마디 */
+  description?: string;
   tone?: 'default' | 'danger';
   trailing?: React.ReactNode;
 }
@@ -56,6 +58,7 @@ interface RowContentProps {
 const RowContent = ({
   icon,
   title,
+  description,
   tone = 'default',
   trailing,
 }: RowContentProps) => {
@@ -71,8 +74,15 @@ const RowContent = ({
           {icon}
         </span>
       )}
-      <span className="flex-1 text-left text-[14.5px]" style={{ color }}>
-        {title}
+      <span className="flex flex-1 flex-col text-left">
+        <span className="text-[14.5px]" style={{ color }}>
+          {title}
+        </span>
+        {description && (
+          <span className="mt-0.5 text-[12px]" style={{ color: '#6b7280' }}>
+            {description}
+          </span>
+        )}
       </span>
       {trailing}
     </>
@@ -82,18 +92,25 @@ const RowContent = ({
 export function MenuLink({
   href,
   title,
+  description,
   icon,
   onClick,
 }: {
   href: string;
   title: string;
+  description?: string;
   icon?: React.ReactNode;
   /** 계측용 — 이동은 링크가 한다 */
   onClick?: () => void;
 }) {
   return (
     <Link href={href} onClick={onClick} className={ROW_CLASS} style={ROW_STYLE}>
-      <RowContent icon={icon} title={title} trailing={<Chevron />} />
+      <RowContent
+        icon={icon}
+        title={title}
+        description={description}
+        trailing={<Chevron />}
+      />
     </Link>
   );
 }
