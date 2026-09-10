@@ -116,6 +116,8 @@ export const ScenarioTalkFlow = ({
       entry: 'conversation_finished',
       returnTo: expressionBranchPath,
       conversationJustFinished: true,
+      // 페이월로 갈 때도 끝난 대화를 히스토리에서 지운다 — 뒤로가기로 돌아오면 세션이 새로 시작된다
+      replace: true,
     });
   // 피드백을 다 본 뒤 — 재대화면 홈, 잠기지 않는 사람은 표현 분기, 무료 사용자는 페이월 전 화면부터
   const goAfterFeedback = () => {
