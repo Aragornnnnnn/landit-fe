@@ -24,6 +24,19 @@ describe('haptics setting', () => {
     expect(localStorage.getItem('landit-haptics-off')).toBeNull();
   });
 
+  it('저장소를 못 읽으면 켠 것으로 본다 — 비공개 모드에서도 진동은 기본대로 울린다', () => {
+    const getItem = vi
+      .spyOn(Storage.prototype, 'getItem')
+      .mockImplementation(() => {
+        throw new Error('blocked');
+      });
+    try {
+      expect(isHapticsEnabled()).toBe(true);
+    } finally {
+      getItem.mockRestore();
+    }
+  });
+
   it('바뀔 때마다 구독자에게 알리고, 구독을 풀면 더는 부르지 않는다', () => {
     const onChange = vi.fn();
     const unsubscribe = subscribeHapticsSetting(onChange);

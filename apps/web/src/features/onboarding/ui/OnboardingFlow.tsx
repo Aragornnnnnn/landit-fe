@@ -132,6 +132,7 @@ export const OnboardingFlow = () => {
         // 나중에/핀/홈으로가기 모두 다음 스텝(accent)으로 넘긴 뒤 실행 — iOS는 그 다음 GO_HOME이라 복귀 시 accent에서 이어진다
         <div className="relative flex min-h-0 flex-1 flex-col px-6">
           <InstallGuide
+            source="onboarding"
             onDecline={() => finishStep('widget', 'accent')}
             onAndroidPin={() => {
               postToNative({ type: 'REQUEST_WIDGET_PIN' });

@@ -9,6 +9,7 @@ import { SubscriptionManageScreen } from './SubscriptionManageScreen';
 const mocks = vi.hoisted(() => ({
   track: vi.fn(),
   replace: vi.fn(),
+  back: vi.fn(),
   getNativeContext: vi.fn(),
   query: {
     subscription: null as MySubscription | null,
@@ -18,7 +19,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: mocks.replace }),
+  useRouter: () => ({ replace: mocks.replace, back: mocks.back }),
 }));
 vi.mock('@/shared/bridge/native-context', () => ({
   getNativeContextSnapshot: mocks.getNativeContext,
@@ -136,9 +137,25 @@ describe('SubscriptionManageScreen', () => {
     expect(screen.queryByText('무제한 프리톡')).not.toBeInTheDocument();
   });
 
-  it('뒤로 가기는 마이페이지로 돌아간다', () => {
+  it('받는 중이거나 실패했으면 아무것도 그리지 않는다 — 유료 사용자에게 무료 안내를 잘못 보여주지 않는다', () => {
+    mocks.query = { subscription: null, isPending: true, isError: false };
+    const { unmount } = render(<SubscriptionManageScreen />);
+    expect(screen.queryByText(/프리미엄/)).not.toBeInTheDocument();
+    unmount();
+
+    mocks.query = { subscription: null, isPending: false, isError: true };
+    render(<SubscriptionManageScreen />);
+    expect(screen.queryByText(/구독 중이 아니에요/)).not.toBeInTheDocument();
+  });
+
+  it('뒤로 가기는 밀고 들어온 마이페이지로 한 칸 돌아가고, 바로 들어왔으면 /me로 보낸다', () => {
     render(<SubscriptionManageScreen />);
     fireEvent.click(screen.getByRole('button', { name: '뒤로 가기' }));
+    // jsdom은 히스토리가 한 장이라 딥링크 진입과 같다
     expect(mocks.replace).toHaveBeenCalledWith('/me');
+
+    vi.spyOn(window.history, 'length', 'get').mockReturnValue(2);
+    fireEvent.click(screen.getByRole('button', { name: '뒤로 가기' }));
+    expect(mocks.back).toHaveBeenCalledTimes(1);
   });
 });

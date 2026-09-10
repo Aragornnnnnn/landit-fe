@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
     provider: string;
   } | null,
   learningLevel: null as number | null,
+  pending: false,
 }));
 vi.mock('@/shared/auth/auth-store', () => ({
   useAuthStore: (selector: (state: unknown) => unknown) =>
@@ -19,6 +20,7 @@ vi.mock('@/shared/auth/auth-store', () => ({
 vi.mock('@/features/onboarding/model/useLearningLevelQuery', () => ({
   useLearningLevelQuery: () => ({
     data: { learningLevel: mocks.learningLevel },
+    isPending: mocks.pending,
   }),
 }));
 vi.mock('next/image', () => ({
@@ -34,6 +36,7 @@ beforeEach(() => {
     provider: 'KAKAO',
   };
   mocks.learningLevel = 3;
+  mocks.pending = false;
 });
 afterEach(() => cleanup());
 
@@ -59,6 +62,24 @@ describe('ProfileHeader', () => {
       'src',
       '/images/character/landy-normal.webp',
     );
+  });
+
+  it('수준을 받는 동안은 그림을 그리지 않는다 — 기본 래디가 레벨 래디로 바뀌는 깜빡임을 막는다', () => {
+    mocks.pending = true;
+    render(<ProfileHeader />);
+    expect(
+      screen.queryByRole('presentation', { hidden: true }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('로그인 제공자를 모르면 배지 없이 이메일만 쓴다', () => {
+    mocks.member = {
+      nickname: '준서',
+      email: 'junseo@example.com',
+      provider: 'naver',
+    };
+    render(<ProfileHeader />);
+    expect(screen.getByText('junseo@example.com')).toBeInTheDocument();
   });
 
   it('닉네임이 없으면 게스트로 부르고, 이메일이 없으면 계정 줄을 뺀다', () => {

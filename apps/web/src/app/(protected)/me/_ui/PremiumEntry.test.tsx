@@ -104,8 +104,14 @@ describe('PremiumEntry', () => {
     expect(link).toHaveAttribute('href', paywallPath({ from: '/me' }));
     fireEvent.click(link);
     expect(mocks.track).toHaveBeenCalledWith('Paywall Entry Tapped', {
-      source: 'my_page',
+      source: 'me',
     });
+  });
+
+  it('유료 사용자는 브라우저에서도 카드가 보인다 — 결제 가능 여부는 무료 사용자만 가른다', () => {
+    mocks.getNativeContext.mockReturnValue(null);
+    render(<PremiumEntry />);
+    expect(screen.getByText('프리미엄 이용 중')).toBeInTheDocument();
   });
 
   it('브라우저나 구버전 셸의 무료 사용자에게는 아무것도 그리지 않는다', () => {

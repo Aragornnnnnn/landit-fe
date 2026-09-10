@@ -55,8 +55,7 @@ export const PremiumEntry = () => {
       ? {
           href: paywallPath({ from: MY_PAGE_PATH }),
           label: '프리미엄 구독하기',
-          onClick: () =>
-            track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'my_page' }),
+          onClick: () => track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'me' }),
         }
       : {
           href: SUBSCRIPTION_MANAGE_PATH,

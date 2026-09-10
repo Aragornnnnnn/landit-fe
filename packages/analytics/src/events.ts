@@ -206,8 +206,8 @@ export type LevelChangeType =
   'INITIALIZED' | 'PROMOTED' | 'UNCHANGED' | 'NOT_APPLIED';
 // 마이페이지 구독 카드의 상태 — 무료 체험 중 / 구독 중 / 해지 예약(만료일까지 이용)
 export type SubscriptionState = 'trial' | 'active' | 'canceled';
-// 게이트가 아닌 자리에서 페이월로 들어간 곳 — 지금은 마이페이지뿐
-export type PaywallEntrySource = 'my_page';
+// 게이트가 아닌 자리에서 페이월로 들어간 곳 — 지금은 마이페이지(me)뿐. 알림 동의의 source와 같은 이름을 쓴다
+export type PaywallEntrySource = 'me';
 
 // 페이월 게이트가 걸린 진입 문 — 새 대화 시작 / 표현 학습 진입 / 스몰톡 시작
 export type PaywallGateEntry =
@@ -244,6 +244,8 @@ export type CalendarView = 'week' | 'month';
 export type HomeTab = 'scenario' | 'smalltalk';
 // 위젯 설치 유도에서 고른 답 — 닫기·나중에는 dismiss로 묶는다
 export type WidgetInstallAnswer = 'install' | 'dismiss';
+// 위젯 설치 안내를 연 자리 — 온보딩 스텝인지 마이페이지에서 다시 연 것인지. 온보딩 전환율 분모가 섞이지 않게 한다
+export type WidgetGuideSource = 'onboarding' | 'me';
 // iOS 위젯 갤러리 여는 길을 알려주는 안내 3장
 export type WidgetGuideStep = 'press' | 'menu' | 'search';
 // 위젯 추가 요청이 어느 플랫폼에서 났나 — Android는 핀 다이얼로그, iOS는 안내로 갈린다
@@ -549,11 +551,17 @@ export type EventProps = {
   'Refund Link Tapped': { status: SubscriptionState };
 
   // 위젯 설치 안내 — 노출·답·플랫폼을 속성으로 가른다
-  'Widget Install Invite Viewed': undefined;
-  'Widget Install Invite Answered': { answer: WidgetInstallAnswer };
+  'Widget Install Invite Viewed': { source: WidgetGuideSource };
+  'Widget Install Invite Answered': {
+    answer: WidgetInstallAnswer;
+    source: WidgetGuideSource;
+  };
   'Widget Install Guide Step Viewed': { step: WidgetGuideStep };
   // 위젯 추가를 실제로 청한 순간 — Android는 시스템 핀 다이얼로그, iOS는 안내 화면으로 갈린다
-  'Widget Pin Requested': { platform: WidgetInstallPlatform };
+  'Widget Pin Requested': {
+    platform: WidgetInstallPlatform;
+    source: WidgetGuideSource;
+  };
   // 홈 화면에 놓인·치워진 위젯의 크기 — 플랫폼은 공통 속성(platform)이 이미 가른다
   'Widget Installed': { family: WidgetFamily };
   'Widget Removed': { family: WidgetFamily };

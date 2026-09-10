@@ -29,5 +29,6 @@ export {
   type PaywallGateEntry,
   type LevelChangeType,
   type SubscriptionState,
+  type WidgetGuideSource,
   type PaywallEntrySource,
 } from './events';

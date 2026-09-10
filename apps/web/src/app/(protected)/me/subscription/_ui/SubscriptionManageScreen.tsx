@@ -22,7 +22,7 @@ import {
 } from '@/features/subscription/ui/premium-brand';
 import { track } from '@/shared/analytics';
 import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
-import { MY_PAGE_PATH, paywallPath } from '@/shared/lib/routes';
+import { backToMyPage, MY_PAGE_PATH, paywallPath } from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { Emoji } from '@/shared/ui/emoji';
@@ -59,10 +59,7 @@ export const SubscriptionManageScreen = () => {
 
   return (
     <main className="flex h-dvh flex-col bg-background">
-      <BackHeader
-        title="구독 관리"
-        onBack={() => router.replace(MY_PAGE_PATH)}
-      />
+      <BackHeader title="구독 관리" onBack={() => backToMyPage(router)} />
 
       <div className="flex-1 space-y-4 overflow-y-auto bg-muted px-4 pt-4 pb-8">
         {/* 받는 중이거나 실패했으면 비워 둔다 — 유료 사용자에게 "구독 중이 아니에요"를 잘못 보여주지 않는다 (PremiumEntry와 같은 규칙) */}

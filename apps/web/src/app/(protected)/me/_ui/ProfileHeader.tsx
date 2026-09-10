@@ -26,7 +26,7 @@ const PROVIDER_BADGE: Record<
 
 export const ProfileHeader = () => {
   const member = useAuthStore((state) => state.member);
-  const { data } = useLearningLevelQuery();
+  const { data, isPending } = useLearningLevelQuery();
   const level = toEnglishLevel(data?.learningLevel ?? null);
   const badge = member?.provider ? PROVIDER_BADGE[member.provider] : undefined;
 
@@ -60,14 +60,17 @@ export const ProfileHeader = () => {
           </p>
         )}
       </div>
-      <div className="flex shrink-0 flex-col items-center">
-        <Image
-          src={level ? LEVEL_IMAGES[level] : DEFAULT_IMAGE}
-          alt=""
-          width={112}
-          height={112}
-          className="h-[112px] w-auto"
-        />
+      {/* 수준을 받는 동안은 자리만 잡는다 — 기본 래디가 떴다가 레벨 래디로 바뀌는 걸 막는다 */}
+      <div className="flex min-h-[112px] shrink-0 flex-col items-center">
+        {!isPending && (
+          <Image
+            src={level ? LEVEL_IMAGES[level] : DEFAULT_IMAGE}
+            alt=""
+            width={112}
+            height={112}
+            className="h-[112px] w-auto"
+          />
+        )}
         {level && (
           <p
             className="mt-0.5 text-[12.5px] font-bold"

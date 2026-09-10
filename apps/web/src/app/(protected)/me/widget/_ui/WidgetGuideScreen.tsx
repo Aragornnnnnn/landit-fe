@@ -6,15 +6,16 @@ import { useRouter } from 'next/navigation';
 
 import { InstallGuide } from '@/features/widget/ui/install-guide/InstallGuide';
 import { postToNative } from '@/shared/bridge/web-bridge';
-import { MY_PAGE_PATH } from '@/shared/lib/routes';
+import { backToMyPage } from '@/shared/lib/routes';
 
 export const WidgetGuideScreen = () => {
   const router = useRouter();
-  const back = () => router.replace(MY_PAGE_PATH);
+  const back = () => backToMyPage(router);
 
   return (
     <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background px-6 text-foreground">
       <InstallGuide
+        source="me"
         onDecline={back}
         onAndroidPin={() => {
           postToNative({ type: 'REQUEST_WIDGET_PIN' });

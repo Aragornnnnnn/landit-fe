@@ -121,5 +121,17 @@ export const MY_PAGE_PATH = '/me';
 export const SUBSCRIPTION_MANAGE_PATH = '/me/subscription';
 // 홈 화면 위젯 설치 안내 — 온보딩에서 미뤘던 사람이 마이페이지에서 다시 연다
 export const WIDGET_GUIDE_PATH = '/me/widget';
+
+/**
+ * 마이페이지 아래 화면에서 돌아가기. 마이페이지에서 밀고 들어왔으면 한 칸 뒤로 —
+ * replace로 /me를 다시 쌓으면 셸의 하드웨어 뒤로가기가 한 번 헛돈다. 딥링크로 바로 들어온 경우만 /me로 보낸다
+ */
+export const backToMyPage = (router: {
+  back: () => void;
+  replace: (href: string) => void;
+}) => {
+  if (window.history.length > 1) router.back();
+  else router.replace(MY_PAGE_PATH);
+};
 // 설문 — 마이페이지 "지원" 묶음의 진입점
 export const SURVEY_PATH = '/survey';
