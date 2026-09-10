@@ -2,8 +2,6 @@
 import { LegalDocumentPage } from '../_ui/LegalDocumentPage';
 import { privacyDocument } from './document';
 
-const PrivacyPage = () => (
-  <LegalDocumentPage document={privacyDocument} backLabel="돌아가기" />
-);
+const PrivacyPage = () => <LegalDocumentPage document={privacyDocument} />;
 
 export default PrivacyPage;

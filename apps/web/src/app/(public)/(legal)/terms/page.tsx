@@ -2,8 +2,6 @@
 import { LegalDocumentPage } from '../_ui/LegalDocumentPage';
 import { termsDocument } from './document';
 
-const TermsPage = () => (
-  <LegalDocumentPage document={termsDocument} backLabel="돌아가기" />
-);
+const TermsPage = () => <LegalDocumentPage document={termsDocument} />;
 
 export default TermsPage;
