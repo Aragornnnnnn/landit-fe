@@ -109,3 +109,16 @@ export const readDateParam = (searchParams: URLSearchParams) => {
   const date = searchParams.get('date');
   return date && DATE_PATTERN.test(date) ? date : undefined;
 };
+
+// 내부 절대 경로만 믿는다 — '//host'처럼 브라우저가 외부로 해석하는 값은 버린다
+const INTERNAL_PATH_PATTERN = /^\/(?![/\\])/;
+
+/**
+ * 페이월의 `?from=`을 읽는다 — 결제·복원이 끝난 뒤 돌아갈 곳.
+ *
+ * @param from 쿼리 값. 내부 절대 경로가 아니면(없음·외부 주소·배열) undefined
+ */
+export const readReturnParam = (from: unknown): string | undefined =>
+  typeof from === 'string' && INTERNAL_PATH_PATTERN.test(from)
+    ? from
+    : undefined;
