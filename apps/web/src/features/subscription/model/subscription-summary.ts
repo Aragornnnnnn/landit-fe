@@ -5,6 +5,7 @@ import type {
   MySubscription,
   SubscriptionPeriodType,
 } from '../api/subscription';
+import { planFromProductId, type PlanId } from './plans';
 
 export type SubscriptionSummary =
   | { kind: 'none' }
@@ -14,6 +15,8 @@ export type SubscriptionSummary =
       expiresAt: string | null;
       /** 그날 결제가 이어지는가 — 해지 예약·선결제·프로모션은 그날로 끝난다 */
       renews: boolean;
+      /** 월간·연간. BE가 상품 식별자를 안 주거나 모르는 상품이면 null */
+      plan: PlanId | null;
     };
 
 /** 유료인 경우만 — 상태와 날짜가 있다 */
@@ -39,12 +42,14 @@ export const summarizeSubscription = (
   if (!subscription?.premium) return { kind: 'none' };
 
   const { subscriptionStatus, periodType, expiresAt } = subscription;
+  const plan = planFromProductId(subscription.productId);
   if (subscriptionStatus === 'CANCELED') {
-    return { kind: 'canceled', expiresAt, renews: false };
+    return { kind: 'canceled', expiresAt, renews: false, plan };
   }
   return {
     kind: periodType === 'TRIAL' ? 'trial' : 'active',
     expiresAt,
     renews: periodType !== null && RENEWING_PERIODS.has(periodType),
+    plan,
   };
 };

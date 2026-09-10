@@ -1,6 +1,6 @@
 'use client';
 
-// 구독 관리 화면 — 골드 카드에 상태와 날짜, 이용 중인 혜택, 플랜 변경 안내, 환불 안내, 맨 아래 해지.
+// 구독 관리 화면 — 골드 카드에 상태·플랜·날짜, 이용 중인 혜택, 플랜 변경 안내(iOS만), 맨 아래 해지.
 // 앱은 구독을 바꾸거나 해지할 수 없어 전부 스토어 구독 화면으로 보낸다. 플랜 이름·금액·결제 내역은 BE가
 // 상품 식별자와 결제 이벤트를 주면 붙인다 (docs/subscription.md 「마이페이지와 법적 문서」)
 import { useState } from 'react';
@@ -8,6 +8,7 @@ import { EVENTS, type StoreSubscriptionAction } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
+import { findPlan, formatWon } from '@/features/subscription/model/plans';
 import {
   STORE,
   type StorePlatform,
@@ -49,6 +50,13 @@ const CANCEL_ROW: Record<
   canceled: { action: 'resubscribe', title: '해지 취소하기' },
 };
 
+// 플랜 한 줄 — BE가 상품 식별자를 줄 때만. 월간은 달마다, 연간은 해마다 내는 금액
+const toPlanLine = (summary: PaidSubscriptionSummary) => {
+  if (!summary.plan) return null;
+  const plan = findPlan(summary.plan);
+  return `${plan.title} 플랜 · ${summary.plan === 'monthly' ? '월' : '연'} ${formatWon(plan.price)}`;
+};
+
 // 날짜 한 줄 — 무엇의 날짜인지가 상태마다 다르다. 체험은 첫 결제, 구독은 다음 결제, 그날로 끝나면 만료
 const toDateLine = (summary: PaidSubscriptionSummary) => {
   const date = summary.expiresAt
@@ -71,6 +79,7 @@ export const SubscriptionManageScreen = () => {
   const [planChangeOpen, setPlanChangeOpen] = useState(false);
 
   const summary = summarizeSubscription(subscription);
+  const planLine = summary.kind === 'none' ? null : toPlanLine(summary);
   const dateLine = summary.kind === 'none' ? null : toDateLine(summary);
 
   const openPlanChange = (status: PaidSubscriptionSummary['kind']) => {
@@ -102,9 +111,9 @@ export const SubscriptionManageScreen = () => {
               <p className="mt-3 text-[17px] font-bold">
                 {TITLE[summary.kind]}
               </p>
-              {dateLine && (
+              {(planLine || dateLine) && (
                 <p className="mt-1 text-[13px]" style={{ opacity: 0.85 }}>
-                  {dateLine}
+                  {[planLine, dateLine].filter(Boolean).join(' · ')}
                 </p>
               )}
             </section>
@@ -121,8 +130,8 @@ export const SubscriptionManageScreen = () => {
               </div>
             </section>
 
-            {/* 해지 예약 중엔 플랜을 바꿀 수 없다 — 먼저 해지를 취소해야 한다 */}
-            {summary.kind !== 'canceled' && (
+            {/* 해지 예약 중엔 플랜을 바꿀 수 없다 — 먼저 해지를 취소해야 한다. Google Play는 스토어 화면에 플랜 변경이 없어 iOS만 */}
+            {summary.kind !== 'canceled' && platform === 'ios' && (
               <MenuGroup>
                 <MenuButton
                   title="플랜 변경"
@@ -132,31 +141,11 @@ export const SubscriptionManageScreen = () => {
               </MenuGroup>
             )}
 
-            <p
-              className="px-2 text-center text-[12px] leading-[1.7]"
-              style={{ color: '#6b7280' }}
-            >
-              해지해도 남은 기간은 계속 이용할 수 있어요.
-              <br />
-              환불은{' '}
-              <a
-                href={store.refundUrl}
-                className="underline underline-offset-2"
-                onClick={() =>
-                  track(EVENTS.REFUND_LINK_TAPPED, { status: summary.kind })
-                }
-              >
-                {store.refundLabel}
-              </a>
-              에서 요청해요.
-            </p>
-
             <MenuGroup>
               <MenuLink
                 href={store.manageUrl}
                 icon={storeIcon}
                 title={CANCEL_ROW[summary.kind].title}
-                description={`${store.name}에서 열려요`}
                 onClick={() =>
                   track(EVENTS.STORE_SUBSCRIPTION_TAPPED, {
                     status: summary.kind,
@@ -169,6 +158,7 @@ export const SubscriptionManageScreen = () => {
             <PlanChangeSheet
               open={planChangeOpen}
               status={summary.kind}
+              plan={summary.plan}
               store={store}
               onClose={() => setPlanChangeOpen(false)}
             />

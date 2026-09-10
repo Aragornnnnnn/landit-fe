@@ -8,6 +8,7 @@ import {
   formatWon,
   MONTHLY_PLAN,
   PAYWALL_PLANS,
+  planFromProductId,
   YEARLY_PLAN,
 } from './plans';
 
@@ -32,6 +33,19 @@ describe('calculateMonthlyEquivalent', () => {
 
   it('실제보다 낮게 보이지 않게 올린다 — 59,900원이면 월 4,990원이 아니라 5,000원', () => {
     expect(calculateMonthlyEquivalent(59_900)).toBe(5_000);
+  });
+});
+
+describe('planFromProductId', () => {
+  it('스토어 상품 식별자를 플랜으로 바꾼다', () => {
+    expect(planFromProductId('com.saynow.app.premium.monthly')).toBe('monthly');
+    expect(planFromProductId('com.saynow.app.premium.yearly')).toBe('yearly');
+  });
+
+  it('모르는 값이나 빈 값은 null이다', () => {
+    expect(planFromProductId('com.saynow.app.premium.promo')).toBeNull();
+    expect(planFromProductId(null)).toBeNull();
+    expect(planFromProductId(undefined)).toBeNull();
   });
 });
 

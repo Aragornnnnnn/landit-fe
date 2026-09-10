@@ -63,7 +63,6 @@
 | Paywall Entry Tapped        | source(me)                                                    | 게이트가 아닌 자리(마이페이지)에서 페이월로 들어감                                                   |
 | Haptics Toggled             | enabled                                                       | 마이페이지 진동 시트에서 켜거나 껐을 때                                                              |
 | Store Subscription Tapped   | status(trial\|active\|canceled)                               | 구독 관리에서 스토어 구독 관리 링크를 눌렀을 때                                                      |
-| Refund Link Tapped          | status(trial\|active\|canceled)                               | 구독 관리 맨 아래 환불 링크를 눌렀을 때                                                              |
 | Level Result Viewed         | scenario_id, level, change_type                               | 무료 사용자가 오픈 뒤 첫 대화 직후 레벨 결과 화면이 떴을 때. 쓸 수 있는 평가(MODEL·근거 충분)일 때만 |
 | Prepared Learning Viewed    | scenario_id                                                   | 대화 직후 학습 준비 화면(흐린 학습 4개, 내용 없음)이 떴을 때                                         |
 | Prepared Learning Continued | scenario_id                                                   | 그 화면에서 학습 시작하기를 눌렀을 때 (무료 사용자는 이어서 Paywall Gate Locked)                     |

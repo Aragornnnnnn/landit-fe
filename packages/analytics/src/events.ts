@@ -161,10 +161,9 @@ export const EVENTS = {
   SUBSCRIPTION_MANAGE_TAPPED: 'Subscription Manage Tapped',
   PAYWALL_ENTRY_TAPPED: 'Paywall Entry Tapped',
   HAPTICS_TOGGLED: 'Haptics Toggled',
-  // 구독 관리 화면 — 플랜 변경 안내를 열었다 / 스토어 구독 화면으로 나갔다 / 환불 안내 링크를 눌렀다
+  // 구독 관리 화면 — 플랜 변경 안내를 열었다 / 스토어 구독 화면으로 나갔다
   PLAN_CHANGE_VIEWED: 'Plan Change Viewed',
   STORE_SUBSCRIPTION_TAPPED: 'Store Subscription Tapped',
-  REFUND_LINK_TAPPED: 'Refund Link Tapped',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -555,7 +554,6 @@ export type EventProps = {
     status: SubscriptionState;
     action: StoreSubscriptionAction;
   };
-  'Refund Link Tapped': { status: SubscriptionState };
 
   // 위젯 설치 안내 — 노출·답·플랫폼을 속성으로 가른다
   'Widget Install Invite Viewed': { source: WidgetGuideSource };

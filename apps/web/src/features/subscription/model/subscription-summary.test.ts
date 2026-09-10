@@ -33,6 +33,7 @@ describe('summarizeSubscription', () => {
       kind: 'active',
       expiresAt: '2026-10-04T12:00:00',
       renews: true,
+      plan: null,
     });
     expect(
       summarizeSubscription(premium({ periodType: 'INTRO' })),
@@ -44,6 +45,7 @@ describe('summarizeSubscription', () => {
       kind: 'trial',
       expiresAt: '2026-10-04T12:00:00',
       renews: true,
+      plan: null,
     });
   });
 
@@ -56,6 +58,7 @@ describe('summarizeSubscription', () => {
       kind: 'canceled',
       expiresAt: '2026-10-04T12:00:00',
       renews: false,
+      plan: null,
     });
   });
 
@@ -66,5 +69,25 @@ describe('summarizeSubscription', () => {
         renews: false,
       });
     }
+  });
+
+  it('상품 식별자가 있으면 플랜을 같이 준다 — 없으면 null', () => {
+    expect(
+      summarizeSubscription({
+        premium: true,
+        subscriptionStatus: 'ACTIVE',
+        periodType: 'NORMAL',
+        expiresAt: null,
+        productId: 'com.saynow.app.premium.yearly',
+      }),
+    ).toMatchObject({ kind: 'active', plan: 'yearly' });
+    expect(
+      summarizeSubscription({
+        premium: true,
+        subscriptionStatus: 'ACTIVE',
+        periodType: 'NORMAL',
+        expiresAt: null,
+      }),
+    ).toMatchObject({ plan: null });
   });
 });

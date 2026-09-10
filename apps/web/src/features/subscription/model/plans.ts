@@ -59,3 +59,15 @@ export const DEFAULT_PLAN_ID: PlanId = 'yearly';
 
 export const findPlan = (id: PlanId): PaywallPlan =>
   id === 'monthly' ? MONTHLY_PLAN : YEARLY_PLAN;
+
+// 스토어 상품 식별자 (docs/subscription.md 「상품과 가격」)
+export const PRODUCT_IDS: Record<PlanId, string> = {
+  monthly: 'com.saynow.app.premium.monthly',
+  yearly: 'com.saynow.app.premium.yearly',
+};
+
+// BE가 준 상품 식별자를 플랜으로. 모르는 값(프로모션·옛 상품)은 null
+export const planFromProductId = (
+  productId: string | null | undefined,
+): PlanId | null =>
+  PAYWALL_PLANS.find((plan) => PRODUCT_IDS[plan.id] === productId)?.id ?? null;

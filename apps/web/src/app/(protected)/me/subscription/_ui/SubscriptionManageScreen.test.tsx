@@ -1,4 +1,4 @@
-// SubscriptionManageScreen — 상태별 제목·날짜 줄, 혜택, 스토어 링크와 환불 링크. 유료가 아니면 페이월 안내만
+// SubscriptionManageScreen — 상태별 제목·플랜·날짜 줄, 혜택, 플랜 변경(iOS만)과 맨 아래 해지 링크. 유료가 아니면 페이월 안내만
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -81,8 +81,7 @@ describe('SubscriptionManageScreen', () => {
     expect(screen.getByText('프리미엄을 쓰고 있어요')).toBeInTheDocument();
     expect(screen.getByText('다음 결제일 2026년 10월 4일')).toBeInTheDocument();
     expect(screen.getByText('무제한 프리톡')).toBeInTheDocument();
-    const cancel = screen.getByRole('link', { name: /App Store에서 열려요/ });
-    expect(cancel).toHaveTextContent('구독 해지하기');
+    const cancel = screen.getByRole('link', { name: '구독 해지하기' });
     expect(cancel).toHaveAttribute(
       'href',
       'https://apps.apple.com/account/subscriptions',
@@ -125,7 +124,7 @@ describe('SubscriptionManageScreen', () => {
     ).toBeInTheDocument();
   });
 
-  it('안드로이드 셸이면 Google Play 링크와 구글 환불 안내로 바꾼다', () => {
+  it('안드로이드 셸이면 해지 행이 Google Play로 가고, 플랜 변경은 없다 — Play 화면엔 플랜 변경이 없다', () => {
     mocks.getNativeContext.mockReturnValue({
       platform: 'android',
       appVersion: '1.3.0',
@@ -134,17 +133,38 @@ describe('SubscriptionManageScreen', () => {
     });
     render(<SubscriptionManageScreen />);
 
-    expect(
-      screen.getByRole('link', { name: /Google Play에서 열려요/ }),
-    ).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '구독 해지하기' })).toHaveAttribute(
       'href',
       'https://play.google.com/store/account/subscriptions',
     );
-    const refund = screen.getByRole('link', { name: '구글 환불 요청 안내' });
-    fireEvent.click(refund);
-    expect(mocks.track).toHaveBeenCalledWith('Refund Link Tapped', {
-      status: 'active',
-    });
+    expect(screen.queryByText('플랜 변경')).not.toBeInTheDocument();
+  });
+
+  it('BE가 상품 식별자를 주면 골드 카드에 플랜과 금액을 같이 적는다', () => {
+    mocks.query.subscription = {
+      ...mocks.query.subscription!,
+      productId: 'com.saynow.app.premium.yearly',
+    };
+    render(<SubscriptionManageScreen />);
+
+    expect(
+      screen.getByText('연간 플랜 · 연 58,500원 · 다음 결제일 2026년 10월 4일'),
+    ).toBeInTheDocument();
+  });
+
+  it('연간 사용자의 플랜 변경 시트는 월간이 기간 뒤 적용된다고만 말한다', () => {
+    mocks.query.subscription = {
+      ...mocks.query.subscription!,
+      productId: 'com.saynow.app.premium.yearly',
+    };
+    render(<SubscriptionManageScreen />);
+
+    fireEvent.click(screen.getByRole('button', { name: '플랜 변경' }));
+
+    expect(
+      screen.getByText(/월간으로 바꾸면 지금 기간이 끝난 뒤/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/월 4,900원꼴로/)).not.toBeInTheDocument();
   });
 
   it('유료가 아니면 페이월로 안내한다', () => {
