@@ -161,7 +161,8 @@ export const EVENTS = {
   SUBSCRIPTION_MANAGE_TAPPED: 'Subscription Manage Tapped',
   PAYWALL_ENTRY_TAPPED: 'Paywall Entry Tapped',
   HAPTICS_TOGGLED: 'Haptics Toggled',
-  // 구독 관리 화면 — 스토어 구독 관리로 나갔다 / 환불 안내 링크를 눌렀다
+  // 구독 관리 화면 — 플랜 변경 안내를 열었다 / 스토어 구독 화면으로 나갔다 / 환불 안내 링크를 눌렀다
+  PLAN_CHANGE_VIEWED: 'Plan Change Viewed',
   STORE_SUBSCRIPTION_TAPPED: 'Store Subscription Tapped',
   REFUND_LINK_TAPPED: 'Refund Link Tapped',
 } as const;
@@ -208,6 +209,8 @@ export type LevelChangeType =
 export type SubscriptionState = 'trial' | 'active' | 'canceled';
 // 게이트가 아닌 자리에서 페이월로 들어간 곳 — 지금은 마이페이지(me)뿐. 알림 동의의 source와 같은 이름을 쓴다
 export type PaywallEntrySource = 'me';
+// 구독 관리에서 스토어로 나간 이유 — 플랜 변경 / 해지 / 해지 취소. 셋 다 같은 스토어 화면이 열리지만 의도를 남긴다
+export type StoreSubscriptionAction = 'change_plan' | 'cancel' | 'resubscribe';
 
 // 페이월 게이트가 걸린 진입 문 — 새 대화 시작 / 표현 학습 진입 / 스몰톡 시작
 export type PaywallGateEntry =
@@ -547,7 +550,11 @@ export type EventProps = {
   'Subscription Manage Tapped': { status: SubscriptionState };
   'Paywall Entry Tapped': { source: PaywallEntrySource };
   'Haptics Toggled': { enabled: boolean };
-  'Store Subscription Tapped': { status: SubscriptionState };
+  'Plan Change Viewed': { status: SubscriptionState };
+  'Store Subscription Tapped': {
+    status: SubscriptionState;
+    action: StoreSubscriptionAction;
+  };
   'Refund Link Tapped': { status: SubscriptionState };
 
   // 위젯 설치 안내 — 노출·답·플랫폼을 속성으로 가른다

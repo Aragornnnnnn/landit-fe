@@ -1,8 +1,10 @@
 'use client';
 
-// 구독 관리 화면 — 골드 카드에 상태와 날짜, 이용 중인 혜택, 스토어 구독 관리 링크, 맨 아래 환불 안내 한 줄.
-// 플랜 이름·금액·결제 내역은 BE가 상품 식별자와 결제 이벤트를 주면 여기에 붙는다 (docs/subscription.md 「마이페이지와 법적 문서」)
-import { EVENTS } from '@landit/analytics';
+// 구독 관리 화면 — 골드 카드에 상태와 날짜, 이용 중인 혜택, 플랜 변경 안내, 환불 안내, 맨 아래 해지.
+// 앱은 구독을 바꾸거나 해지할 수 없어 전부 스토어 구독 화면으로 보낸다. 플랜 이름·금액·결제 내역은 BE가
+// 상품 식별자와 결제 이벤트를 주면 붙인다 (docs/subscription.md 「마이페이지와 법적 문서」)
+import { useState } from 'react';
+import { EVENTS, type StoreSubscriptionAction } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
@@ -25,14 +27,26 @@ import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
 import { backToMyPage, MY_PAGE_PATH, paywallPath } from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { BackHeader } from '@/shared/ui/BackHeader';
+import { Emoji } from '@/shared/ui/emoji';
 import { AppStoreIcon, GooglePlayIcon } from '@/shared/ui/StoreIcons';
 
-import { MenuGroup, MenuLink } from '../../_ui/Menu';
+import { MenuButton, MenuGroup, MenuLink } from '../../_ui/Menu';
+import { PlanChangeSheet } from './PlanChangeSheet';
 
 const TITLE: Record<PaidSubscriptionSummary['kind'], string> = {
   trial: '무료 체험 중이에요',
   active: '프리미엄을 쓰고 있어요',
   canceled: '해지가 예약됐어요',
+};
+
+// 맨 아래 해지 행 — 상태마다 지금 할 수 있는 일 하나. 해지 예약이면 되돌리는 쪽이다
+const CANCEL_ROW: Record<
+  PaidSubscriptionSummary['kind'],
+  { action: StoreSubscriptionAction; title: string }
+> = {
+  active: { action: 'cancel', title: '구독 해지하기' },
+  trial: { action: 'cancel', title: '체험 해지하기' },
+  canceled: { action: 'resubscribe', title: '해지 취소하기' },
 };
 
 // 날짜 한 줄 — 무엇의 날짜인지가 상태마다 다르다. 체험은 첫 결제, 구독은 다음 결제, 그날로 끝나면 만료
@@ -53,9 +67,16 @@ export const SubscriptionManageScreen = () => {
   // 브라우저에는 플랫폼이 없다 — 애플 구독 페이지는 웹에서도 열려 그쪽을 기본으로 둔다
   const platform: StorePlatform = context?.platform ?? 'ios';
   const store = STORE[platform];
+  const storeIcon = platform === 'ios' ? <AppStoreIcon /> : <GooglePlayIcon />;
+  const [planChangeOpen, setPlanChangeOpen] = useState(false);
 
   const summary = summarizeSubscription(subscription);
   const dateLine = summary.kind === 'none' ? null : toDateLine(summary);
+
+  const openPlanChange = (status: PaidSubscriptionSummary['kind']) => {
+    track(EVENTS.PLAN_CHANGE_VIEWED, { status });
+    setPlanChangeOpen(true);
+  };
 
   return (
     <main className="flex h-dvh flex-col bg-background">
@@ -90,7 +111,7 @@ export const SubscriptionManageScreen = () => {
 
             <section>
               <h2
-                className="mb-2 ml-1.5 text-[12.5px] font-medium"
+                className="mb-2 ml-1.5 text-[12px] font-medium"
                 style={{ color: '#6b7280' }}
               >
                 이용 중인 혜택
@@ -100,21 +121,16 @@ export const SubscriptionManageScreen = () => {
               </div>
             </section>
 
-            <MenuGroup>
-              <MenuLink
-                href={store.manageUrl}
-                icon={
-                  platform === 'ios' ? <AppStoreIcon /> : <GooglePlayIcon />
-                }
-                title="구독 해지 · 플랜 변경"
-                description={`${store.name}에서 열려요`}
-                onClick={() =>
-                  track(EVENTS.STORE_SUBSCRIPTION_TAPPED, {
-                    status: summary.kind,
-                  })
-                }
-              />
-            </MenuGroup>
+            {/* 해지 예약 중엔 플랜을 바꿀 수 없다 — 먼저 해지를 취소해야 한다 */}
+            {summary.kind !== 'canceled' && (
+              <MenuGroup>
+                <MenuButton
+                  title="플랜 변경"
+                  icon={<Emoji>🔁</Emoji>}
+                  onClick={() => openPlanChange(summary.kind)}
+                />
+              </MenuGroup>
+            )}
 
             <p
               className="px-2 text-center text-[12px] leading-[1.7]"
@@ -134,6 +150,28 @@ export const SubscriptionManageScreen = () => {
               </a>
               에서 요청해요.
             </p>
+
+            <MenuGroup>
+              <MenuLink
+                href={store.manageUrl}
+                icon={storeIcon}
+                title={CANCEL_ROW[summary.kind].title}
+                description={`${store.name}에서 열려요`}
+                onClick={() =>
+                  track(EVENTS.STORE_SUBSCRIPTION_TAPPED, {
+                    status: summary.kind,
+                    action: CANCEL_ROW[summary.kind].action,
+                  })
+                }
+              />
+            </MenuGroup>
+
+            <PlanChangeSheet
+              open={planChangeOpen}
+              status={summary.kind}
+              store={store}
+              onClose={() => setPlanChangeOpen(false)}
+            />
           </>
         )}
       </div>

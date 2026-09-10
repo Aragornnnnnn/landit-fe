@@ -31,4 +31,5 @@ export {
   type SubscriptionState,
   type WidgetGuideSource,
   type PaywallEntrySource,
+  type StoreSubscriptionAction,
 } from './events';
