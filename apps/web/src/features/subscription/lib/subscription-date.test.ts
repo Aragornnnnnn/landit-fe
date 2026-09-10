@@ -16,7 +16,7 @@ describe('formatSubscriptionDate', () => {
     );
   });
 
-  it('읽을 수 없는 시각이면 빈 문자열이다', () => {
-    expect(formatSubscriptionDate('언젠가')).toBe('');
+  it('읽을 수 없는 시각이면 null이다 — 호출부가 날짜 줄을 뺀다', () => {
+    expect(formatSubscriptionDate('언젠가')).toBeNull();
   });
 });

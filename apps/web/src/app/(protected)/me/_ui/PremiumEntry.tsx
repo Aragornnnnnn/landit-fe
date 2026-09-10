@@ -2,15 +2,12 @@
 
 // 마이페이지 프리미엄 카드 — 골드 한 줄. 무료면 페이월로, 유료면 구독 관리로 간다.
 // 결제할 수 없는 환경(브라우저·구버전 셸·플래그 꺼짐)의 무료 사용자에겐 그리지 않는다 (docs/subscription.md 「마이페이지와 법적 문서」)
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type SubscriptionState } from '@landit/analytics';
 import Link from 'next/link';
 
 import { PAYMENT_ENABLED } from '@/features/subscription/model/payment-flag';
 import { canLockPaywall } from '@/features/subscription/model/paywall-gate';
-import {
-  summarizeSubscription,
-  type SubscriptionSummary,
-} from '@/features/subscription/model/subscription-summary';
+import { summarizeSubscription } from '@/features/subscription/model/subscription-summary';
 import { useSubscriptionQuery } from '@/features/subscription/model/useSubscriptionQuery';
 import {
   GOLD_GRADIENT,
@@ -26,7 +23,7 @@ import {
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { ChevronRightIcon } from '@/shared/ui/Icons';
 
-const LABEL: Record<Exclude<SubscriptionSummary['kind'], 'none'>, string> = {
+const LABEL: Record<SubscriptionState, string> = {
   trial: '무료 체험 중',
   active: '프리미엄 이용 중',
   canceled: '해지 예정',

@@ -1,11 +1,10 @@
 // 마이페이지 구독 카드가 보여줄 상태 — BE 구독 응답을 체험 중·구독 중·해지 예정·없음 넷으로 접는다 (docs/subscription.md 「마이페이지와 법적 문서」)
+import type { SubscriptionState } from '@landit/analytics';
+
 import type {
   MySubscription,
   SubscriptionPeriodType,
 } from '../api/subscription';
-
-/** 유료 사용자의 세 상태 — 무료 체험 중 / 구독 중 / 해지 예약(만료일까지 이용) */
-export type SubscriptionState = 'trial' | 'active' | 'canceled';
 
 export type SubscriptionSummary =
   | { kind: 'none' }
@@ -16,6 +15,12 @@ export type SubscriptionSummary =
       /** 그날 결제가 이어지는가 — 해지 예약·선결제·프로모션은 그날로 끝난다 */
       renews: boolean;
     };
+
+/** 유료인 경우만 — 상태와 날짜가 있다 */
+export type PaidSubscriptionSummary = Extract<
+  SubscriptionSummary,
+  { kind: SubscriptionState }
+>;
 
 // 만료일에 스토어가 다시 결제하는 기간 종류 — 무료 체험도 끝나면 첫 결제가 된다
 const RENEWING_PERIODS = new Set<SubscriptionPeriodType>([

@@ -17,13 +17,13 @@ export function MenuGroup({ children }: { children: React.ReactNode }) {
 }
 
 /** 제목 붙은 카드 묶음 — 학습 · 설정 · 지원 · 계정 */
-export function MenuSection({
+export const MenuSection = ({
   title,
   children,
 }: {
   title: string;
   children: React.ReactNode;
-}) {
+}) => {
   return (
     <section>
       <h2
@@ -35,7 +35,7 @@ export function MenuSection({
       <MenuGroup>{children}</MenuGroup>
     </section>
   );
-}
+};
 
 const Chevron = () => (
   <ChevronRightIcon
@@ -132,7 +132,7 @@ export function MenuButton({
   );
 }
 
-export function MenuToggle({
+export const MenuToggle = ({
   title,
   icon,
   checked,
@@ -142,7 +142,7 @@ export function MenuToggle({
   icon?: React.ReactNode;
   checked: boolean;
   onChange: (checked: boolean) => void;
-}) {
+}) => {
   return (
     <div className={ROW_CLASS} style={ROW_STYLE}>
       <RowContent
@@ -170,4 +170,4 @@ export function MenuToggle({
       />
     </div>
   );
-}
+};
