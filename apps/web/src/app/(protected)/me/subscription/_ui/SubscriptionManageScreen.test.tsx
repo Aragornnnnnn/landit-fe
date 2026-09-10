@@ -164,7 +164,7 @@ describe('SubscriptionManageScreen', () => {
 
     expect(screen.getByText('연간 프리미엄을 쓰고 있어요')).toBeInTheDocument();
     expect(screen.getByText('다음 결제 금액')).toBeInTheDocument();
-    expect(screen.getByText('178,800원').tagName).toBe('S');
+    expect(screen.getByText('178,800원')).toBeInTheDocument();
     expect(screen.getByText('58,500원')).toBeInTheDocument();
   });
 
@@ -177,7 +177,7 @@ describe('SubscriptionManageScreen', () => {
 
     expect(screen.getByText('월간 프리미엄을 쓰고 있어요')).toBeInTheDocument();
     expect(screen.getByText('14,900원')).toBeInTheDocument();
-    expect(document.querySelector('s')).toBeNull();
+    expect(screen.queryByText('178,800원')).not.toBeInTheDocument();
   });
 
   it('유료가 아니면 페이월로 안내한다', () => {

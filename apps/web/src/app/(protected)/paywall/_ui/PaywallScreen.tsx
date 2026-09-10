@@ -9,8 +9,8 @@ import { useRouter } from 'next/navigation';
 
 import {
   DEFAULT_PLAN_ID,
-  PAYWALL_PLANS,
-  type PaywallPlan,
+  PLANS,
+  type Plan,
   type PlanId,
 } from '@/features/subscription/model/plans';
 import { BenefitList } from '@/features/subscription/ui/BenefitList';
@@ -27,7 +27,7 @@ export const PaywallScreen = () => {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<PlanId>(DEFAULT_PLAN_ID);
 
-  const selectPlan = (plan: PaywallPlan) => {
+  const selectPlan = (plan: Plan) => {
     if (plan.id === selectedId) return;
     setSelectedId(plan.id);
     track(EVENTS.PAYWALL_PLAN_SELECTED, { plan: plan.id });
@@ -56,7 +56,7 @@ export const PaywallScreen = () => {
       <div className="min-h-0 flex-1" />
 
       <section className="flex gap-2.5 px-5 pt-[22px] short:pt-3">
-        {PAYWALL_PLANS.map((plan) => (
+        {PLANS.map((plan) => (
           <PlanCard
             key={plan.id}
             plan={plan}

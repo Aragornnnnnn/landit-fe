@@ -4,7 +4,7 @@ import type { SubscriptionPlan } from '@landit/analytics';
 
 export type PlanId = SubscriptionPlan;
 
-export interface PaywallPlan {
+export interface Plan {
   id: PlanId;
   title: string;
   // 카드는 두 플랜을 같은 자로 재도록 월 기준으로 보여준다 — 큰 숫자는 월 금액, 비교 기준이 있는 카드만 취소선
@@ -32,7 +32,7 @@ export const calculateMonthlyEquivalent = (yearlyPrice: number) =>
 export const formatWon = (amount: number) =>
   `${amount.toLocaleString('ko-KR')}원`;
 
-export const MONTHLY_PLAN: PaywallPlan = {
+export const MONTHLY_PLAN: Plan = {
   id: 'monthly',
   title: '월간',
   monthlyPrice: MONTHLY_PRICE,
@@ -43,7 +43,7 @@ export const MONTHLY_PLAN: PaywallPlan = {
 // 연간의 비교 기준은 스토어에 없는 정가가 아니라 월간으로 낼 때의 실제 월 금액이다
 const YEARLY_MONTHLY_PRICE = calculateMonthlyEquivalent(YEARLY_PRICE);
 
-export const YEARLY_PLAN: PaywallPlan = {
+export const YEARLY_PLAN: Plan = {
   id: 'yearly',
   title: '연간',
   monthlyListPrice: MONTHLY_PRICE,
@@ -53,15 +53,18 @@ export const YEARLY_PLAN: PaywallPlan = {
   subtitle: `연 ${formatWon(YEARLY_PRICE)} · 7일 무료 체험`,
 };
 
-export const PAYWALL_PLANS: PaywallPlan[] = [MONTHLY_PLAN, YEARLY_PLAN];
+export const PLANS: Plan[] = [MONTHLY_PLAN, YEARLY_PLAN];
+
+// 월간으로 1년을 낼 때 금액 — 연간 결제액의 비교 기준. 스토어에 없는 정가를 지어내지 않고 실제 월간 금액으로 잰다
+export const YEARLY_LIST_PRICE = MONTHLY_PRICE * 12;
 
 export const DEFAULT_PLAN_ID: PlanId = 'yearly';
 
-export const findPlan = (id: PlanId): PaywallPlan =>
+export const findPlan = (id: PlanId): Plan =>
   id === 'monthly' ? MONTHLY_PLAN : YEARLY_PLAN;
 
 // 스토어 상품 식별자 (docs/subscription.md 「상품과 가격」)
-export const PRODUCT_IDS: Record<PlanId, string> = {
+const PRODUCT_IDS: Record<PlanId, string> = {
   monthly: 'com.saynow.app.premium.monthly',
   yearly: 'com.saynow.app.premium.yearly',
 };
@@ -70,4 +73,4 @@ export const PRODUCT_IDS: Record<PlanId, string> = {
 export const planFromProductId = (
   productId: string | null | undefined,
 ): PlanId | null =>
-  PAYWALL_PLANS.find((plan) => PRODUCT_IDS[plan.id] === productId)?.id ?? null;
+  PLANS.find((plan) => PRODUCT_IDS[plan.id] === productId)?.id ?? null;

@@ -3,9 +3,9 @@ import Link from 'next/link';
 
 import { ChevronRightIcon } from '@/shared/ui/Icons';
 
-const ROW_CLASS =
+export const ROW_CLASS =
   'flex min-h-[54px] w-full items-center gap-3.5 border-b px-4 last:border-b-0 active:bg-gray-50';
-const ROW_STYLE = { borderColor: '#F2F2F7' };
+export const ROW_STYLE = { borderColor: '#F2F2F7' };
 const DANGER = '#FF3B30';
 
 export function MenuGroup({ children }: { children: React.ReactNode }) {

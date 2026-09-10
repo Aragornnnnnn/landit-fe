@@ -4,12 +4,12 @@
 import { useRouter } from 'next/navigation';
 
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
-import { describeSubscriptionEvent } from '@/features/subscription/model/subscription-events';
+import { summarizeSubscriptionEvent } from '@/features/subscription/model/subscription-events';
 import { useSubscriptionEventsQuery } from '@/features/subscription/model/useSubscriptionEventsQuery';
 import { backOrReplace, SUBSCRIPTION_MANAGE_PATH } from '@/shared/lib/routes';
 import { BackHeader } from '@/shared/ui/BackHeader';
 
-import { MenuGroup } from '../../../_ui/Menu';
+import { MenuGroup, ROW_CLASS, ROW_STYLE } from '../../../_ui/Menu';
 
 const Notice = ({ children }: { children: React.ReactNode }) => (
   <p className="pt-16 text-center text-[14px]" style={{ color: '#6b7280' }}>
@@ -36,13 +36,13 @@ export const SubscriptionHistoryScreen = () => {
         ) : (
           <MenuGroup>
             {events.map((event) => {
-              const line = describeSubscriptionEvent(event);
+              const line = summarizeSubscriptionEvent(event);
               const date = formatSubscriptionDate(event.occurredAt);
               return (
                 <div
                   key={event.eventId}
-                  className="flex min-h-[54px] items-center gap-3 border-b px-4 py-3 last:border-b-0"
-                  style={{ borderColor: '#F2F2F7' }}
+                  className={`${ROW_CLASS} py-3`}
+                  style={ROW_STYLE}
                 >
                   <div className="flex flex-1 flex-col">
                     <span className="text-[14.5px]" style={{ color: '#111' }}>

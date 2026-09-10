@@ -57,8 +57,8 @@ export interface SubscriptionEvent {
   // ISO 4217. 없으면 null
   currency: string | null;
   store: SubscriptionStore | null;
-  // SANDBOX(테스트 결제) | PRODUCTION
-  environment: string;
+  // 심사관·테스트 계정 결제는 SANDBOX
+  environment: 'SANDBOX' | 'PRODUCTION';
   // CANCELLATION만. 환불이면 CUSTOMER_SUPPORT
   cancelReason: string | null;
   occurredAt: string;

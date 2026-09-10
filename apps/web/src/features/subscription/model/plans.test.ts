@@ -7,8 +7,8 @@ import {
   DEFAULT_PLAN_ID,
   formatWon,
   MONTHLY_PLAN,
-  PAYWALL_PLANS,
   planFromProductId,
+  PLANS,
   YEARLY_PLAN,
 } from './plans';
 
@@ -55,9 +55,9 @@ describe('formatWon', () => {
   });
 });
 
-describe('PAYWALL_PLANS', () => {
+describe('PLANS', () => {
   it('월간·연간 두 장이고 기본 선택은 연간이다', () => {
-    expect(PAYWALL_PLANS.map((plan) => plan.id)).toEqual(['monthly', 'yearly']);
+    expect(PLANS.map((plan) => plan.id)).toEqual(['monthly', 'yearly']);
     expect(DEFAULT_PLAN_ID).toBe('yearly');
   });
 
