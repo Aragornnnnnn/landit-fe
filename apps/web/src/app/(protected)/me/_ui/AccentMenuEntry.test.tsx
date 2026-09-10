@@ -1,4 +1,4 @@
-// AccentMenuEntry — 마이페이지에서 배울 억양를 다시 고를 수 있는 진입점 계약 검증
+// AccentMenuEntry — 마이페이지에서 배울 억양을 다시 고를 수 있는 진입점 계약 검증
 import { EVENTS } from '@landit/analytics';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -153,7 +153,7 @@ describe('AccentMenuEntry', () => {
     await openSheet();
 
     expect(
-      screen.queryByText('배울 억양는 언제든 변경할 수 있어요'),
+      screen.queryByText('배울 억양은 언제든 변경할 수 있어요'),
     ).not.toBeInTheDocument();
   });
 });
