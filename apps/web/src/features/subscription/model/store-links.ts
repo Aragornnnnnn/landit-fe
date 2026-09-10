@@ -5,7 +5,7 @@ export type StorePlatform = 'ios' | 'android';
 
 export interface StoreInfo {
   name: string;
-  /** 구독 해지·플랜 변경을 하는 스토어 화면 */
+  /** 구독을 해지하거나 해지를 취소하는 스토어 화면 */
   manageUrl: string;
 }
 

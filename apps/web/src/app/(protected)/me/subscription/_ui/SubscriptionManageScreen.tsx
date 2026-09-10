@@ -1,9 +1,8 @@
 'use client';
 
-// 구독 관리 화면 — 골드 카드에 플랜 붙은 상태 제목과 결제일·결제 금액 표, 이용 중인 혜택, 플랜 변경 안내(iOS만), 맨 아래 해지.
+// 구독 관리 화면 — 골드 카드에 플랜 붙은 상태 제목과 결제일·결제 금액 표, 이용 중인 혜택, 맨 아래 해지.
 // 앱은 구독을 바꾸거나 해지할 수 없어 전부 스토어 구독 화면으로 보낸다. 플랜 이름·금액·결제 내역은 BE가
 // 상품 식별자와 결제 이벤트를 주면 붙인다 (docs/subscription.md 「마이페이지와 법적 문서」)
-import { useState } from 'react';
 import { EVENTS, type StoreSubscriptionAction } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
@@ -32,11 +31,9 @@ import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
 import { backToMyPage, MY_PAGE_PATH, paywallPath } from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { BackHeader } from '@/shared/ui/BackHeader';
-import { Emoji } from '@/shared/ui/emoji';
 import { AppStoreIcon, GooglePlayIcon } from '@/shared/ui/StoreIcons';
 
-import { MenuButton, MenuGroup, MenuLink } from '../../_ui/Menu';
-import { PlanChangeSheet } from './PlanChangeSheet';
+import { MenuGroup, MenuLink } from '../../_ui/Menu';
 
 const TITLE: Record<PaidSubscriptionSummary['kind'], string> = {
   trial: '무료 체험 중이에요',
@@ -91,16 +88,10 @@ export const SubscriptionManageScreen = () => {
   const platform: StorePlatform = context?.platform ?? 'ios';
   const store = STORE[platform];
   const storeIcon = platform === 'ios' ? <AppStoreIcon /> : <GooglePlayIcon />;
-  const [planChangeOpen, setPlanChangeOpen] = useState(false);
 
   const summary = summarizeSubscription(subscription);
   const dateRow = summary.kind === 'none' ? null : toDateRow(summary);
   const amountRow = summary.kind === 'none' ? null : toAmountRow(summary);
-
-  const openPlanChange = (status: PaidSubscriptionSummary['kind']) => {
-    track(EVENTS.PLAN_CHANGE_VIEWED, { status });
-    setPlanChangeOpen(true);
-  };
 
   return (
     <main className="flex h-dvh flex-col bg-background">
@@ -164,17 +155,6 @@ export const SubscriptionManageScreen = () => {
               </div>
             </section>
 
-            {/* 해지 예약 중엔 플랜을 바꿀 수 없다 — 먼저 해지를 취소해야 한다. Google Play는 스토어 화면에 플랜 변경이 없어 iOS만 */}
-            {summary.kind !== 'canceled' && platform === 'ios' && (
-              <MenuGroup>
-                <MenuButton
-                  title="플랜 변경"
-                  icon={<Emoji>🔁</Emoji>}
-                  onClick={() => openPlanChange(summary.kind)}
-                />
-              </MenuGroup>
-            )}
-
             <MenuGroup>
               <MenuLink
                 href={store.manageUrl}
@@ -188,14 +168,6 @@ export const SubscriptionManageScreen = () => {
                 }
               />
             </MenuGroup>
-
-            <PlanChangeSheet
-              open={planChangeOpen}
-              status={summary.kind}
-              plan={summary.plan}
-              store={store}
-              onClose={() => setPlanChangeOpen(false)}
-            />
           </>
         )}
       </div>
