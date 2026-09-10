@@ -34,7 +34,8 @@ interface GuardOptions {
 /**
  * 학습 진입을 감싸는 게이트.
  *
- * @returns `guard(이동, 옵션)`은 열려 있으면 이동을 그대로 실행하고, 잠겼으면 계측을 남기고 페이월로 보낸다
+ * @returns `guard(이동, 옵션)`은 열려 있으면 이동을 그대로 실행하고, 잠겼으면 계측을 남기고 페이월로 보낸다.
+ *   `locksAfterConversation`은 방금 대화를 끝낸 사람이 잠기는지 — 대화 직후 흐름이 페이월 전 화면을 보여줄지 정할 때 쓴다
  */
 export const usePaywallGate = () => {
   const router = useRouter();
@@ -66,6 +67,8 @@ export const usePaywallGate = () => {
 
   const completedSinceLaunch =
     subscription?.conversationCompletedSinceLaunch ?? null;
+  // 방금 끝낸 대화가 무료 구간의 그 하나다 — 오늘의 시나리오 문으로 보고 완료를 참으로 둔다
+  const locksAfterConversation = decide('today_scenario', true) === 'locked';
 
   // 잠겼을 때만 페이월로. unknown(재료가 늦음)도 막지 않는다 — 다음 진입에서 잡힌다
   const guard = (
@@ -78,9 +81,8 @@ export const usePaywallGate = () => {
       replace = false,
     }: GuardOptions,
   ) => {
-    // 방금 끝낸 대화가 무료 구간의 그 하나다 — 오늘의 시나리오 문으로 보고 완료를 참으로 둔다
     const locked = conversationJustFinished
-      ? decide('today_scenario', true) === 'locked'
+      ? locksAfterConversation
       : decide(door, completedSinceLaunch) === 'locked';
     if (!locked) {
       go();
@@ -92,5 +94,5 @@ export const usePaywallGate = () => {
     else router.push(to);
   };
 
-  return { guard };
+  return { locksAfterConversation, guard };
 };

@@ -136,6 +136,16 @@ describe('usePaywallGate', () => {
     );
   });
 
+  it('방금 대화를 끝내면 잠기는지를 미리 알려준다 — 무료면 참, 유료면 거짓', () => {
+    expect(renderGate().result.current.locksAfterConversation).toBe(true);
+
+    mocks.subscription = {
+      subscription: { premium: true, conversationCompletedSinceLaunch: false },
+      isError: false,
+    };
+    expect(renderGate().result.current.locksAfterConversation).toBe(false);
+  });
+
   it('끝난 대화를 히스토리에서 지우라고 하면 페이월로 replace한다 — 뒤로가기로 그 대화에 되돌아가지 않게', () => {
     mocks.subscription = {
       subscription: { premium: false, conversationCompletedSinceLaunch: false },

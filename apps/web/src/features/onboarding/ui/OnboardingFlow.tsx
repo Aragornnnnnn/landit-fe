@@ -25,12 +25,10 @@ import { Transition } from '@/shared/motion';
 
 import { STEP_ORDER, type OnboardingStep } from '../model/steps';
 import { useSaveAccentMutation } from '../model/useSaveAccentMutation';
-import { useSaveLearningLevelMutation } from '../model/useSaveLearningLevelMutation';
 import { OnboardingHeader } from './common/OnboardingHeader';
 import { AccentStep } from './steps/AccentStep';
 import { IntroStep } from './steps/IntroStep';
 import { LampStep } from './steps/LampStep';
-import { LevelStep } from './steps/LevelStep';
 import { MicStep } from './steps/MicStep';
 import { NotificationStep } from './steps/NotificationStep';
 import { SoundStep } from './steps/SoundStep';
@@ -41,7 +39,6 @@ export const OnboardingFlow = () => {
   const member = useAuthStore((state) => state.member);
   // 저장 응답을 기다리지 않고 다음 스텝으로 간다 — 고른 값은 캐시에 바로 심겨서
   // 온보딩 직후 홈에 도착해도 게이트가 같은 걸 다시 묻지 않는다
-  const saveLearningLevel = useSaveLearningLevelMutation();
   const saveAccent = useSaveAccentMutation();
   // 물어볼 수 있는 상태(undetermined)에만 알림 스텝을 넣는다 — 이미 확정(granted·denied)이거나 요청 수단이 없으면(unavailable) 5스텝
   const canAskNotification = useNotificationPermission() === 'undetermined';
@@ -106,8 +103,8 @@ export const OnboardingFlow = () => {
         if (stepRef.current !== 'notification') return;
         track(EVENTS.ONBOARDING_STEP_COMPLETED, { step: 'notification' });
         setDirection(1);
-        // 위젯 스텝이 있으면 그리로, 없으면 레벨로
-        const next = showWidgetStep ? 'widget' : 'level';
+        // 위젯 스텝이 있으면 그리로, 없으면 억양으로
+        const next = showWidgetStep ? 'widget' : 'accent';
         setStep((prev) => (prev === 'notification' ? next : prev));
       }),
     [showWidgetStep],
@@ -118,7 +115,7 @@ export const OnboardingFlow = () => {
     if (currentIndex > 0) goTo(stepOrder[currentIndex - 1]);
   };
 
-  // 홈으로 보낸다 — 거기서 램프가 열리며 오늘 대화로 이어진다.
+  // 홈으로 보낸다 — 거기서 램프가 열리며 첫 대화(수준 파악)로 이어진다.
   // onboarded 표식을 달면 홈이 다시 묻지 않는다 (방금 시작하겠다고 답했다)
   const startFirstConversation = () => {
     track(EVENTS.ONBOARDING_STEP_COMPLETED, { step: 'scenario' });
@@ -132,16 +129,16 @@ export const OnboardingFlow = () => {
     <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background text-foreground">
       {step === 'widget' ? (
         // 위젯 스텝은 InstallGuide가 자체 헤더(3 dot)·레이아웃을 가져 온보딩 헤더 밖에서 그린다.
-        // 나중에/핀/홈으로가기 모두 다음 스텝(level)으로 넘긴 뒤 실행 — iOS는 그 다음 GO_HOME이라 복귀 시 level에서 이어진다
+        // 나중에/핀/홈으로가기 모두 다음 스텝(accent)으로 넘긴 뒤 실행 — iOS는 그 다음 GO_HOME이라 복귀 시 accent에서 이어진다
         <div className="relative flex min-h-0 flex-1 flex-col px-6">
           <InstallGuide
-            onDecline={() => finishStep('widget', 'level')}
+            onDecline={() => finishStep('widget', 'accent')}
             onAndroidPin={() => {
               postToNative({ type: 'REQUEST_WIDGET_PIN' });
-              finishStep('widget', 'level');
+              finishStep('widget', 'accent');
             }}
             onLeaveHome={() => {
-              finishStep('widget', 'level');
+              finishStep('widget', 'accent');
               postToNative({ type: 'GO_HOME' });
             }}
           />
@@ -199,14 +196,6 @@ export const OnboardingFlow = () => {
                 // OS 권한창만 요청한다 — 회신은 useNotificationPermission이 받고, 아래 effect가 확정을 보고 다음 스텝으로 넘긴다.
                 // 여기서 답하면 권한 상태가 확정되므로 홈의 동의 게이트는 저절로 조용해진다
                 onNext={() => requestNotificationPermission('onboarding')}
-              />
-            )}
-            {step === 'level' && (
-              <LevelStep
-                onNext={(level) => {
-                  saveLearningLevel.mutate(level);
-                  finishStep('level', 'accent');
-                }}
               />
             )}
             {step === 'accent' && (
