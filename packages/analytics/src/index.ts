@@ -32,4 +32,5 @@ export {
   type WidgetGuideSource,
   type PaywallEntrySource,
   type StoreSubscriptionAction,
+  type PurchaseFailureReason,
 } from './events';

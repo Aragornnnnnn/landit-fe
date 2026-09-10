@@ -2,14 +2,13 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildPaywallPlans,
   calculateDiscountRate,
   calculateMonthlyEquivalent,
   DEFAULT_PLAN_ID,
   formatWon,
-  MONTHLY_PLAN,
+  PLAN_ORDER,
   planFromProductId,
-  PLANS,
-  YEARLY_PLAN,
 } from './plans';
 
 describe('calculateDiscountRate', () => {
@@ -36,6 +35,70 @@ describe('calculateMonthlyEquivalent', () => {
   });
 });
 
+describe('formatWon', () => {
+  it('천 단위 쉼표와 원을 붙인다', () => {
+    expect(formatWon(58_500)).toBe('58,500원');
+  });
+});
+
+describe('buildPaywallPlans — 등록값', () => {
+  const { monthly, yearly } = buildPaywallPlans();
+
+  it('월간·연간 순서로 놓이고 기본 선택은 연간이다', () => {
+    expect(PLAN_ORDER).toEqual(['monthly', 'yearly']);
+    expect(DEFAULT_PLAN_ID).toBe('yearly');
+  });
+
+  it('월간 카드는 할인 강조가 없다 — 배지도 비교 취소선도 두지 않는다', () => {
+    expect(monthly.badge).toBeUndefined();
+    expect(monthly.monthlyListPrice).toBeUndefined();
+  });
+
+  it('월간 카드의 월 금액은 실제 청구액과 같다', () => {
+    expect(monthly.monthlyPrice).toBe(monthly.price);
+  });
+
+  it('연간 카드의 큰 숫자는 연 결제액을 달로 나눈 값이고, 취소선은 월간 실제 판매가다', () => {
+    expect(yearly.monthlyPrice).toBe(calculateMonthlyEquivalent(yearly.price));
+    expect(yearly.monthlyListPrice).toBe(monthly.price);
+  });
+
+  it('연간 배지의 퍼센트는 월간 판매가 대비 월 환산가 산식과 같다', () => {
+    const rate = calculateDiscountRate(monthly.price, yearly.monthlyPrice);
+
+    expect(yearly.badge).toBe(`월간보다 ${rate}% 저렴`);
+  });
+
+  it('연간 부제에는 실제 청구되는 연 결제액이 들어간다', () => {
+    expect(yearly.subtitle).toBe(
+      `연 ${formatWon(yearly.price)} · 7일 무료 체험`,
+    );
+  });
+});
+
+describe('buildPaywallPlans — 스토어 가격', () => {
+  it('스토어 가격을 주면 큰 숫자·취소선·배지·부제가 전부 그 값에서 다시 계산된다', () => {
+    const { monthly, yearly } = buildPaywallPlans({
+      monthly: 11_000,
+      yearly: 66_000,
+    });
+
+    expect(monthly.price).toBe(11_000);
+    expect(monthly.badge).toBeUndefined();
+    expect(yearly.monthlyListPrice).toBe(11_000);
+    expect(yearly.monthlyPrice).toBe(5_500);
+    expect(yearly.badge).toBe('월간보다 50% 저렴');
+    expect(yearly.subtitle).toBe('연 66,000원 · 7일 무료 체험');
+  });
+
+  it('한 플랜만 주면 나머지는 등록값을 쓴다', () => {
+    const { monthly, yearly } = buildPaywallPlans({ yearly: 49_900 });
+
+    expect(monthly.price).toBe(14_900);
+    expect(yearly.price).toBe(49_900);
+  });
+});
+
 describe('planFromProductId', () => {
   it('스토어 상품 식별자를 플랜으로 바꾼다', () => {
     expect(planFromProductId('com.saynow.app.premium.monthly')).toBe('monthly');
@@ -46,49 +109,5 @@ describe('planFromProductId', () => {
     expect(planFromProductId('com.saynow.app.premium.promo')).toBeNull();
     expect(planFromProductId(null)).toBeNull();
     expect(planFromProductId(undefined)).toBeNull();
-  });
-});
-
-describe('formatWon', () => {
-  it('천 단위 쉼표와 원을 붙인다', () => {
-    expect(formatWon(58_500)).toBe('58,500원');
-  });
-});
-
-describe('PLANS', () => {
-  it('월간·연간 두 장이고 기본 선택은 연간이다', () => {
-    expect(PLANS.map((plan) => plan.id)).toEqual(['monthly', 'yearly']);
-    expect(DEFAULT_PLAN_ID).toBe('yearly');
-  });
-
-  it('월간 카드는 할인 강조가 없다 — 배지도 비교 취소선도 두지 않는다', () => {
-    expect(MONTHLY_PLAN.badge).toBeUndefined();
-    expect(MONTHLY_PLAN.monthlyListPrice).toBeUndefined();
-  });
-
-  it('월간 카드의 월 금액은 실제 청구액과 같다', () => {
-    expect(MONTHLY_PLAN.monthlyPrice).toBe(MONTHLY_PLAN.price);
-  });
-
-  it('연간 카드의 큰 숫자는 연 결제액을 달로 나눈 값이고, 취소선은 월간 실제 판매가다', () => {
-    expect(YEARLY_PLAN.monthlyPrice).toBe(
-      calculateMonthlyEquivalent(YEARLY_PLAN.price),
-    );
-    expect(YEARLY_PLAN.monthlyListPrice).toBe(MONTHLY_PLAN.price);
-  });
-
-  it('연간 배지의 퍼센트는 월간 판매가 대비 월 환산가 산식과 같다', () => {
-    const rate = calculateDiscountRate(
-      MONTHLY_PLAN.price,
-      YEARLY_PLAN.monthlyPrice,
-    );
-
-    expect(YEARLY_PLAN.badge).toBe(`월간보다 ${rate}% 저렴`);
-  });
-
-  it('연간 부제에는 실제 청구되는 연 결제액이 들어간다', () => {
-    expect(YEARLY_PLAN.subtitle).toBe(
-      `연 ${formatWon(YEARLY_PLAN.price)} · 7일 무료 체험`,
-    );
   });
 });

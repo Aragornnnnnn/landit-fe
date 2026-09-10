@@ -3,14 +3,17 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 
-import { formatWon, type Plan } from '@/features/subscription/model/plans';
+import {
+  formatWon,
+  type PaywallPlan,
+} from '@/features/subscription/model/plans';
 import { GOLD_GRADIENT } from '@/features/subscription/ui/premium-brand';
 import { SPRING_SELECT } from '@/shared/motion';
 
 interface PlanCardProps {
-  plan: Plan;
+  plan: PaywallPlan;
   selected: boolean;
-  onSelect: (plan: Plan) => void;
+  onSelect: (plan: PaywallPlan) => void;
 }
 
 // 골드 그라데이션 — PREMIUM 배지와 같은 색으로, 화면에서 '프리미엄'을 뜻하는 색은 이것 하나다
