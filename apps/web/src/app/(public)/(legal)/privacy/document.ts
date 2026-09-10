@@ -1,4 +1,4 @@
-// 개인정보 처리방침 v1.1 문서 데이터 — 1.1에서 유료 구독 결제 항목과 결제 처리 위탁 추가
+// 개인정보 처리방침 v1.1 문서 데이터 — 1.1에서 유료 구독 결제 항목, 법정 보관 기간, 국외 이전, 보호 담당 부서 추가
 import type { LegalDocument } from '../_ui/LegalDocumentPage';
 
 export const privacyDocument: LegalDocument = {
@@ -77,14 +77,27 @@ export const privacyDocument: LegalDocument = {
       ],
     },
     {
+      id: 'legal-retention',
+      title: '5. 법령에 따라 보관하는 정보',
+      paragraphs: [
+        '아래 정보는 전자상거래 등에서의 소비자보호에 관한 법률에 따라 회원탈퇴 후에도 정해진 기간 동안 다른 정보와 분리해 보관한 뒤 파기합니다.',
+      ],
+      bullets: [
+        '계약 또는 청약철회에 관한 기록: 5년',
+        '대금 결제와 유료 서비스 제공에 관한 기록: 5년',
+        '소비자 불만 또는 분쟁 처리에 관한 기록: 3년',
+        '표시·광고에 관한 기록: 6개월',
+      ],
+    },
+    {
       id: 'third-party',
-      title: '5. 제3자 서비스 및 처리위탁',
+      title: '6. 제3자 서비스 및 처리위탁',
       paragraphs: [
         'Landit는 로그인, 인프라 운영, 음성 처리, AI 피드백 제공 등 서비스 운영에 필요한 범위에서 외부 서비스를 사용할 수 있습니다.',
       ],
       bullets: [
         '소셜 로그인 제공자: Google, Kakao, Apple',
-        '서비스 인프라: 웹 호스팅(Vercel), 서버, 데이터베이스, 저장소',
+        '서비스 인프라: 웹 호스팅(Vercel), 서버·데이터베이스·저장소(Amazon Web Services 서울 리전, 국내 보관)',
         '음성 인식: Deepgram',
         'AI 회화·피드백·음성 합성: OpenRouter를 통한 AI 모델',
         '이용 분석: Amplitude(이용 통계, 조작 흐름 기록)',
@@ -95,8 +108,26 @@ export const privacyDocument: LegalDocument = {
       ],
     },
     {
+      id: 'overseas-transfer',
+      title: '7. 개인정보의 국외 이전',
+      paragraphs: [
+        'Landit는 6조의 외부 서비스 가운데 해외 사업자에게 개인정보 처리를 위탁하며, 이는 개인정보 보호법 제28조의8 제1항 제3호(처리위탁·보관)에 따른 이전입니다. 이전 시기와 방법은 이용자가 해당 기능을 사용하는 시점에 네트워크를 통해 전송하는 방식이고, 보유 기간은 위탁 업무가 끝나거나 회원이 탈퇴할 때까지입니다.',
+        '이용자는 아래 이전을 원하지 않으면 공식 문의 이메일로 거부할 수 있습니다. 다만 이 위탁은 서비스 제공에 꼭 필요한 처리라서, 거부하면 해당 기능이나 서비스 전체를 이용하지 못할 수 있습니다.',
+      ],
+      bullets: [
+        'Vercel Inc.(미국, privacy@vercel.com): 웹 호스팅. 접속 기록, 기기 정보',
+        'Deepgram, Inc.(미국, security@deepgram.com): 음성 인식. 회화 연습 음성(실시간 전송, 보관하지 않음)',
+        'OpenRouter, Inc.(미국, support@openrouter.ai): AI 대화·피드백·음성 합성. 대화 텍스트',
+        'Amplitude, Inc.(미국, privacy@amplitude.com): 이용 분석. 이용 이벤트, 조작 흐름 기록, 기기 정보',
+        'Functional Software, Inc.(Sentry, 미국, compliance@sentry.io): 오류 수집. 오류 로그, 오류 당시 화면 상태, 기기 정보',
+        '650 Industries, Inc.(Expo, 미국, expo.dev/contact): 푸시 알림 전송. 푸시 토큰',
+        'Supabase, Inc.(미국, privacy@supabase.com): 설문 응답 저장. 설문 응답',
+        'RevenueCat, Inc.(미국, compliance@revenuecat.com): 구독 상태 관리. 스토어 거래 식별자, 구독 상태',
+      ],
+    },
+    {
       id: 'rights',
-      title: '6. 이용자의 권리',
+      title: '8. 이용자의 권리',
       paragraphs: [
         '이용자는 자신의 개인정보에 대해 조회, 정정, 삭제, 처리 정지를 요청할 수 있습니다. 앱 내 마이페이지에서 로그아웃과 회원탈퇴를 진행할 수 있습니다.',
       ],
@@ -108,10 +139,13 @@ export const privacyDocument: LegalDocument = {
     },
     {
       id: 'contact',
-      title: '7. 문의',
+      title: '9. 개인정보 보호 담당 부서 및 문의',
       paragraphs: [
-        '개인정보와 관련한 문의는 아래 공식 문의 이메일을 통해 접수할 수 있습니다.',
-        '문의 이메일: landitkorea@gmail.com',
+        '개인정보와 관련한 문의, 열람·정정·삭제·처리 정지 요청, 국외 이전 거부는 아래 담당 부서로 접수할 수 있으며, 회사는 지체 없이 처리합니다.',
+        '개인정보 보호 담당 부서: Landit 운영팀 / 연락처: landitkorea@gmail.com',
+      ],
+      bullets: [
+        '개인정보 침해에 대한 신고나 상담은 개인정보침해신고센터(privacy.kisa.or.kr, 118), 개인정보분쟁조정위원회(kopico.go.kr, 1833-6972)에 문의할 수 있습니다.',
       ],
     },
   ],
