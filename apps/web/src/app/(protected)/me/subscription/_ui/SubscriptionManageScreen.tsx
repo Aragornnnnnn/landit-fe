@@ -26,7 +26,8 @@ import { track } from '@/shared/analytics';
 import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
 import { MY_PAGE_PATH, paywallPath } from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
-import { ChevronLeftIcon, CreditCardIcon } from '@/shared/ui/Icons';
+import { Emoji } from '@/shared/ui/emoji';
+import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import { MenuGroup, MenuLink } from '../../_ui/Menu';
 
@@ -129,7 +130,7 @@ export const SubscriptionManageScreen = () => {
             <MenuGroup>
               <MenuLink
                 href={SUBSCRIPTION_MANAGEMENT_URL[platform]}
-                icon={<CreditCardIcon size={22} />}
+                icon={<Emoji>💳</Emoji>}
                 title={`${STORE_NAME[platform]}에서 구독 관리`}
                 onClick={() =>
                   track(EVENTS.STORE_SUBSCRIPTION_TAPPED, {

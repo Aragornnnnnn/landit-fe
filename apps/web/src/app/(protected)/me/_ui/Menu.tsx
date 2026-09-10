@@ -1,4 +1,4 @@
-// iOS 설정풍 메뉴 — 회색 바탕 위 흰 카드 묶음. 묶음 제목, 라인 아이콘, 행(링크·버튼·토글)을 여기서만 그린다
+// iOS 설정풍 메뉴 — 회색 바탕 위 흰 카드 묶음. 묶음 제목, 토스페이스 이모지 아이콘, 행(링크·버튼·토글)을 여기서만 그린다
 import Link from 'next/link';
 
 import { ChevronRightIcon } from '@/shared/ui/Icons';
@@ -27,7 +27,7 @@ export function MenuSection({
   return (
     <section>
       <h2
-        className="mb-2 ml-1.5 text-[12.5px] font-medium"
+        className="mb-2 ml-1.5 text-[12px] font-medium"
         style={{ color: '#6b7280' }}
       >
         {title}
@@ -63,14 +63,15 @@ const RowContent = ({
   return (
     <>
       {icon && (
+        // 이모지는 부모 font-size를 따른다 — 행 글자보다 한 단계 크게
         <span
-          className="flex size-6 shrink-0 items-center justify-center"
+          className="flex size-6 shrink-0 items-center justify-center text-[19px]"
           style={{ color }}
         >
           {icon}
         </span>
       )}
-      <span className="flex-1 text-left text-[15px]" style={{ color }}>
+      <span className="flex-1 text-left text-[14.5px]" style={{ color }}>
         {title}
       </span>
       {trailing}

@@ -10,7 +10,7 @@ import { useSaveLearningLevelMutation } from '@/features/onboarding/model/useSav
 import { EnglishLevelForm } from '@/features/onboarding/ui/common/EnglishLevelForm';
 import { track } from '@/shared/analytics';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
-import { BookOpenIcon } from '@/shared/ui/Icons';
+import { Emoji } from '@/shared/ui/emoji';
 
 import { MenuButton } from './Menu';
 
@@ -29,7 +29,7 @@ export const EnglishLevelMenuEntry = () => {
     <>
       <MenuButton
         title="학습 레벨"
-        icon={<BookOpenIcon size={22} />}
+        icon={<Emoji>📚</Emoji>}
         onClick={() => setOpen(true)}
       />
 

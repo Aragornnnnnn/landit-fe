@@ -18,14 +18,8 @@ import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { reportWarning } from '@/shared/monitoring/report';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
-import {
-  ChevronLeftIcon,
-  ClipboardListIcon,
-  FileTextIcon,
-  LogOutIcon,
-  MessageSquareIcon,
-  TrashIcon,
-} from '@/shared/ui/Icons';
+import { Emoji } from '@/shared/ui/emoji';
+import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import { AccentMenuEntry } from './_ui/AccentMenuEntry';
 import { EnglishLevelMenuEntry } from './_ui/EnglishLevelMenuEntry';
@@ -162,13 +156,13 @@ export default function MyPage() {
           <MenuSection title="지원">
             <MenuLink
               href={MAILBOX_COMPOSE_PATH}
-              icon={<MessageSquareIcon size={22} />}
+              icon={<Emoji>💬</Emoji>}
               title="피드백 남기기"
             />
             {!surveyAnswered && (
               <MenuLink
                 href={SURVEY_PATH}
-                icon={<ClipboardListIcon size={22} />}
+                icon={<Emoji>📝</Emoji>}
                 title="설문조사 참여하기"
               />
             )}
@@ -177,24 +171,24 @@ export default function MyPage() {
           <MenuSection title="계정">
             <MenuLink
               href="/terms"
-              icon={<FileTextIcon size={22} />}
+              icon={<Emoji>📄</Emoji>}
               title="서비스 이용약관"
             />
             <MenuLink
               href="/privacy"
-              icon={<FileTextIcon size={22} />}
+              icon={<Emoji>🔒</Emoji>}
               title="개인정보 처리방침"
             />
             <MenuButton
               title={isLoggingOut ? '로그아웃 중...' : '로그아웃'}
-              icon={<LogOutIcon size={22} />}
+              icon={<Emoji>🚪</Emoji>}
               chevron={false}
               onClick={logout}
               disabled={isLoggingOut}
             />
             <MenuButton
               title="회원탈퇴"
-              icon={<TrashIcon size={22} />}
+              icon={<Emoji>🗑️</Emoji>}
               tone="danger"
               chevron={false}
               onClick={() => {

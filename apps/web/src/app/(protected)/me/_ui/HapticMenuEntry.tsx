@@ -12,7 +12,7 @@ import {
 } from '@/shared/haptics';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
-import { VibrateIcon } from '@/shared/ui/Icons';
+import { Emoji } from '@/shared/ui/emoji';
 
 import { MenuButton, MenuGroup, MenuToggle } from './Menu';
 
@@ -34,7 +34,7 @@ export const HapticMenuEntry = () => {
     <>
       <MenuButton
         title="진동"
-        icon={<VibrateIcon size={22} />}
+        icon={<Emoji>📳</Emoji>}
         onClick={() => setOpen(true)}
       />
 

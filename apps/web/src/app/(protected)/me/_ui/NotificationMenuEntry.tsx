@@ -10,7 +10,7 @@ import { useNotificationPermission } from '@/features/notification/model/useNoti
 import { NotificationConsentSheet } from '@/features/notification/ui/NotificationConsentSheet';
 import { track } from '@/shared/analytics';
 import { postToNative } from '@/shared/bridge/web-bridge';
-import { BellIcon } from '@/shared/ui/Icons';
+import { Emoji } from '@/shared/ui/emoji';
 
 import { MenuButton } from './Menu';
 
@@ -46,7 +46,7 @@ export const NotificationMenuEntry = () => {
     <>
       <MenuButton
         title="푸시 알림"
-        icon={<BellIcon size={22} />}
+        icon={<Emoji>🔔</Emoji>}
         onClick={openNotificationSetup}
       />
 

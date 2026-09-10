@@ -9,7 +9,7 @@ import { useSaveAccentMutation } from '@/features/onboarding/model/useSaveAccent
 import { AccentForm } from '@/features/onboarding/ui/common/AccentForm';
 import { track } from '@/shared/analytics';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
-import { GlobeIcon } from '@/shared/ui/Icons';
+import { Emoji } from '@/shared/ui/emoji';
 
 import { MenuButton } from './Menu';
 
@@ -28,7 +28,7 @@ export const AccentMenuEntry = () => {
     <>
       <MenuButton
         title="배울 영어"
-        icon={<GlobeIcon size={22} />}
+        icon={<Emoji>🌍</Emoji>}
         onClick={() => setOpen(true)}
       />
 

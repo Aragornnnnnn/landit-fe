@@ -5,7 +5,7 @@ import { supportsWidgetInstall } from '@/features/widget/model/install-prompt';
 import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
 import { WIDGET_GUIDE_PATH } from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
-import { LayoutGridIcon } from '@/shared/ui/Icons';
+import { Emoji } from '@/shared/ui/emoji';
 
 import { MenuLink } from './Menu';
 
@@ -17,7 +17,7 @@ export const WidgetMenuEntry = () => {
   return (
     <MenuLink
       href={WIDGET_GUIDE_PATH}
-      icon={<LayoutGridIcon size={22} />}
+      icon={<Emoji>🧩</Emoji>}
       title="홈 화면 위젯"
     />
   );
