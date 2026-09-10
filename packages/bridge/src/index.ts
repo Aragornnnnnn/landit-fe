@@ -4,6 +4,10 @@ export {
   widgetDataSchema,
   widgetFamilySchema,
   widgetChangeSchema,
+  subscriptionPlanSchema,
+  offeringPackageSchema,
+  purchaseStatusSchema,
+  restoreStatusSchema,
   EMPTY_WIDGET_DATA,
   type WebToNativeMessage,
   type NativeToWebMessage,
@@ -12,6 +16,10 @@ export {
   type WidgetData,
   type WidgetFamily,
   type WidgetChange,
+  type SubscriptionPlan,
+  type OfferingPackage,
+  type PurchaseStatus,
+  type RestoreStatus,
 } from './messages';
 
 export {

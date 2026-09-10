@@ -1,7 +1,7 @@
 // 브릿지 메시지 파싱·직렬화 검증 — 특히 optional 필드는 구버전 앱 셸과의 하위호환 약속이다
 import { describe, expect, it } from 'vitest';
 
-import type { WebToNativeMessage } from './messages';
+import type { NativeToWebMessage, WebToNativeMessage } from './messages';
 import {
   parseNativeToWebMessage,
   parseWebToNativeMessage,
@@ -392,6 +392,127 @@ describe('위젯 설치·삭제 메시지', () => {
           change: 'added',
           family: 'xl',
         }),
+      ),
+    ).toBeNull();
+  });
+});
+
+describe('parseWebToNativeMessage — 결제', () => {
+  it('로그인 사용자 식별 요청을 그대로 되돌린다 (round-trip)', () => {
+    const message = { type: 'IDENTIFY', userId: '42' } as const;
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('로그아웃은 userId null로 보낸다 — 셸이 익명으로 되돌린다', () => {
+    const message = { type: 'IDENTIFY', userId: null } as const;
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('userId가 문자열이 아니면 버린다 — RevenueCat app_user_id는 문자열이다', () => {
+    expect(
+      parseWebToNativeMessage(JSON.stringify({ type: 'IDENTIFY', userId: 42 })),
+    ).toBeNull();
+  });
+
+  it('오퍼링 조회와 구매 복원 요청을 그대로 되돌린다 (round-trip)', () => {
+    for (const message of [
+      { type: 'GET_OFFERINGS' },
+      { type: 'RESTORE_PURCHASES' },
+    ] as const) {
+      expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+        message,
+      );
+    }
+  });
+
+  it('결제 요청은 패키지 id를 싣는다 (round-trip)', () => {
+    const message = { type: 'PURCHASE', packageId: '$rc_annual' } as const;
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('패키지 id가 비면 버린다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({ type: 'PURCHASE', packageId: '' }),
+      ),
+    ).toBeNull();
+  });
+});
+
+describe('parseNativeToWebMessage — 결제', () => {
+  it('오퍼링 응답을 그대로 되돌린다 (round-trip)', () => {
+    const message: NativeToWebMessage = {
+      type: 'OFFERINGS',
+      packages: [
+        { id: '$rc_monthly', plan: 'monthly', price: 9900, currency: 'KRW' },
+        { id: '$rc_annual', plan: 'yearly', price: 59900, currency: 'KRW' },
+      ],
+    };
+
+    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('패키지의 plan이 월간·연간 밖이거나 가격이 음수면 버린다', () => {
+    const base = { id: '$rc_weekly', price: 1000, currency: 'KRW' };
+
+    expect(
+      parseNativeToWebMessage(
+        JSON.stringify({
+          type: 'OFFERINGS',
+          packages: [{ ...base, plan: 'weekly' }],
+        }),
+      ),
+    ).toBeNull();
+    expect(
+      parseNativeToWebMessage(
+        JSON.stringify({
+          type: 'OFFERINGS',
+          packages: [{ ...base, plan: 'monthly', price: -1 }],
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it('결제 결과는 성공·취소·실패 세 가지이고 실패엔 사유가 붙을 수 있다 (round-trip)', () => {
+    for (const message of [
+      { type: 'PURCHASE_RESULT', status: 'success' },
+      { type: 'PURCHASE_RESULT', status: 'cancelled' },
+      { type: 'PURCHASE_RESULT', status: 'error', message: '스토어 연결 실패' },
+    ] as const) {
+      expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
+        message,
+      );
+    }
+  });
+
+  it('규격 밖 결제 상태는 버린다', () => {
+    expect(
+      parseNativeToWebMessage(
+        JSON.stringify({ type: 'PURCHASE_RESULT', status: 'pending' }),
+      ),
+    ).toBeNull();
+  });
+
+  it('복원 결과는 성공·실패뿐이다 — 복원엔 취소가 없다', () => {
+    const message = { type: 'RESTORE_RESULT', status: 'success' } as const;
+
+    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+    expect(
+      parseNativeToWebMessage(
+        JSON.stringify({ type: 'RESTORE_RESULT', status: 'cancelled' }),
       ),
     ).toBeNull();
   });

@@ -60,6 +60,24 @@ export const widgetFamilySchema = z.enum(['small', 'medium', 'large']);
 // 홈 화면에 위젯이 실제로 놓였는가·치워졌는가 — Android 위젯 프로바이더 콜백에서 온다 (iOS는 콜백이 없어 못 보낸다)
 export const widgetChangeSchema = z.enum(['added', 'removed']);
 
+// 구독 플랜 — 페이월 카드·스토어 상품(monthly/yearly)·계측 속성이 같은 이름을 쓴다
+export const subscriptionPlanSchema = z.enum(['monthly', 'yearly']);
+
+// 스토어 오퍼링의 패키지 하나 — 셸이 RevenueCat 패키지를 웹이 그릴 수 있는 모양으로 옮긴 것.
+// plan은 셸이 packageType(MONTHLY/ANNUAL)으로 판단해 붙인다 — 웹이 identifier 규칙에 기대지 않게
+export const offeringPackageSchema = z.object({
+  // RevenueCat 패키지 identifier (예: $rc_monthly). PURCHASE가 이 값을 되돌려 보낸다
+  id: z.string().min(1),
+  plan: subscriptionPlanSchema,
+  // 숫자 가격과 통화(ISO 4217) — 웹은 KRW일 때만 이 숫자로 카드를 다시 계산한다
+  price: z.number().nonnegative(),
+  currency: z.string().length(3),
+});
+
+// 결제 결과 — 사용자가 시트를 닫은 취소는 실패가 아니다. 복원엔 취소가 없다
+export const purchaseStatusSchema = z.enum(['success', 'cancelled', 'error']);
+export const restoreStatusSchema = z.enum(['success', 'error']);
+
 // 로그인 전·로그아웃 후에 쓰는 빈 값 — 웹이 이걸 보내 셸에 남은 이전 사용자 기록을 지운다.
 // 완료 이력이 없으므로(null) 위젯은 몰락 연출 없이 0일 시간표만 그린다
 export const EMPTY_WIDGET_DATA = {
@@ -107,6 +125,20 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('GO_HOME') }),
   // 웹이 준비됐으니 쌓아 둔 위젯 추가·삭제를 보내 달라 — 응답은 WIDGET_CHANGED (건별, 없으면 무응답)
   z.object({ type: z.literal('REQUEST_WIDGET_CHANGES') }),
+  // 로그인한 사용자를 RevenueCat에 알린다(Purchases.logIn). null이면 로그아웃(logOut). 단방향
+  z.object({
+    type: z.literal('IDENTIFY'),
+    userId: z.string().min(1).nullable(),
+  }),
+  // 현재 오퍼링의 패키지(상품·가격)를 달라 — 응답은 OFFERINGS
+  z.object({ type: z.literal('GET_OFFERINGS') }),
+  // 패키지 하나를 결제한다 — 스토어 결제 시트가 뜬다. 응답은 PURCHASE_RESULT
+  z.object({
+    type: z.literal('PURCHASE'),
+    packageId: z.string().min(1),
+  }),
+  // 이전 구매를 복원한다 — 응답은 RESTORE_RESULT
+  z.object({ type: z.literal('RESTORE_PURCHASES') }),
 ]);
 
 // 네이티브 → 웹으로 보낼 수 있는 메시지 목록
@@ -150,6 +182,23 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     change: widgetChangeSchema,
     family: widgetFamilySchema,
   }),
+  // GET_OFFERINGS 응답 — 셸이 스토어에서 받은 패키지 목록. 오퍼링이 비어 있으면 빈 배열
+  z.object({
+    type: z.literal('OFFERINGS'),
+    packages: z.array(offeringPackageSchema),
+  }),
+  // PURCHASE 응답 — error일 때만 message가 실린다(사용자에게 보여줄 수 있는 문구)
+  z.object({
+    type: z.literal('PURCHASE_RESULT'),
+    status: purchaseStatusSchema,
+    message: z.string().optional(),
+  }),
+  // RESTORE_PURCHASES 응답
+  z.object({
+    type: z.literal('RESTORE_RESULT'),
+    status: restoreStatusSchema,
+    message: z.string().optional(),
+  }),
 ]);
 
 // 위 스키마에서 자동으로 뽑아낸 타입 — 스키마를 고치면 타입도 같이 바뀐다
@@ -157,6 +206,10 @@ export type HapticPattern = z.infer<typeof hapticPatternSchema>;
 export type WidgetData = z.infer<typeof widgetDataSchema>;
 export type WidgetFamily = z.infer<typeof widgetFamilySchema>;
 export type WidgetChange = z.infer<typeof widgetChangeSchema>;
+export type SubscriptionPlan = z.infer<typeof subscriptionPlanSchema>;
+export type OfferingPackage = z.infer<typeof offeringPackageSchema>;
+export type PurchaseStatus = z.infer<typeof purchaseStatusSchema>;
+export type RestoreStatus = z.infer<typeof restoreStatusSchema>;
 export type NotificationPermissionStatus = z.infer<
   typeof notificationPermissionStatusSchema
 >;
