@@ -2,7 +2,7 @@
 
 // 대화 직후 레벨 분석 대기 — BE가 세션 수준 평가를 마칠 때까지 기다리고, 쓸 수 있는 결과면 넘기고 아니면 빈손으로 넘긴다.
 // 기다림은 발음 평가와 같은 래디 서사(듣기→비교→검토→정리)로 채운다. 상한을 두는 이유는 이 화면 뒤가 페이월이라서다
-import { useEffect, useEffectEvent } from 'react';
+import { useEffect, useEffectEvent, useRef } from 'react';
 
 // 가로 import 사유: 같은 대기 연출을 두 벌 두지 않는다 — 문구만 레벨 분석용으로 바꿔 쓴다
 import {
@@ -65,8 +65,14 @@ export const AnalyzingScreen = ({
   onDone,
 }: AnalyzingScreenProps) => {
   const { outcome, levelAssessment } = useLevelAssessmentQuery(sessionId);
+  // 한 번만 넘긴다 — 결과를 넘긴 뒤에도 화면 전환이 끝날 때까지 이 화면이 잠깐 남아 있어 제한 시간 타이머가 뒤따라 울 수 있다.
   // 부모의 화면 전환 함수는 매 렌더 새로 만들어진다 — 이벤트로 감싸 effect가 그것 때문에 다시 돌지 않게 한다
-  const finish = useEffectEvent(onDone);
+  const settled = useRef(false);
+  const finish = useEffectEvent((assessment: UsableAssessment | null) => {
+    if (settled.current) return;
+    settled.current = true;
+    onDone(assessment);
+  });
 
   useEffect(() => {
     if (outcome === 'pending') return;

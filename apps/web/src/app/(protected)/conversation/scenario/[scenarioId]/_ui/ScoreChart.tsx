@@ -17,9 +17,29 @@ const GRID_RINGS = [0.25, 0.5, 0.75, 1];
 const toScoreDescription = (rows: DomainRow[]) =>
   `영역별 점수. ${rows.map((row) => `${row.label} ${row.score}점`).join(', ')}`;
 
-/** 관찰된 영역만 꼭짓점으로 그린다 — 다섯 개가 아니어도 도형은 닫힌다 */
+// 꼭짓점이 셋보다 적으면 도형이 안 된다 — 점수를 줄로 적는다. 하나도 없으면 아무것도 그리지 않는다
+const ScoreList = ({ rows }: { rows: DomainRow[] }) =>
+  rows.length === 0 ? null : (
+    <ul
+      aria-label={toScoreDescription(rows)}
+      className="rounded-2xl border border-border bg-card px-5 py-2"
+    >
+      {rows.map((row) => (
+        <li
+          key={row.key}
+          className="flex items-center justify-between py-2.5 text-[15px]"
+        >
+          <span className="text-muted-foreground">{row.label}</span>
+          <span className="text-[17px] font-black">{row.score}</span>
+        </li>
+      ))}
+    </ul>
+  );
+
+/** 관찰된 영역만 꼭짓점으로 그린다 — 다섯 개가 아니어도 도형은 닫힌다. 셋보다 적으면 목록으로 대신한다 */
 export const ScoreChart = ({ rows }: { rows: DomainRow[] }) => {
   const reduced = useReducedMotion() ?? false;
+  if (rows.length < 3) return <ScoreList rows={rows} />;
   const vertexCount = rows.length;
   const size = (RADAR_RADIUS + LABEL_MARGIN) * 2;
   const center = size / 2;

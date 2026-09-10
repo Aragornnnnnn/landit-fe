@@ -39,8 +39,8 @@ describe('PreparedLearningView', () => {
 
     expect(screen.getByText('4개')).toBeInTheDocument();
     expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
-    expect(screen.getByText('잠긴 학습 4개')).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent(
+    expect(screen.getByText(/잠긴 학습 4개/)).toBeInTheDocument();
+    expect(screen.getByTestId('slide-caption')).toHaveTextContent(
       '준서님 레벨에 딱 맞춰 드려요',
     );
     expect(screen.getByTestId('landy')).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('PreparedLearningView', () => {
       />,
     );
 
-    expect(screen.getByRole('status')).toHaveTextContent(
+    expect(screen.getByTestId('slide-caption')).toHaveTextContent(
       '내 레벨에 딱 맞춰 드려요',
     );
   });
@@ -86,7 +86,7 @@ describe('PreparedLearningScreen', () => {
   it('로그인한 사람의 닉네임을 뷰에 넘긴다', () => {
     render(<PreparedLearningScreen scenarioId={7} onContinue={vi.fn()} />);
 
-    expect(screen.getByRole('status')).toHaveTextContent(
+    expect(screen.getByTestId('slide-caption')).toHaveTextContent(
       '준서님 레벨에 딱 맞춰 드려요',
     );
   });

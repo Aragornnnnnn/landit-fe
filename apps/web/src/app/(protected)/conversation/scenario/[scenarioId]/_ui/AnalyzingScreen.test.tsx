@@ -92,4 +92,15 @@ describe('AnalyzingScreen', () => {
     expect(onDone).toHaveBeenCalledTimes(1);
     expect(onDone).toHaveBeenCalledWith(null);
   });
+
+  it('결과를 넘긴 뒤 제한 시간이 지나도 다시 부르지 않는다 — 화면 전환 중 남은 타이머가 결과를 덮어쓰면 안 된다', () => {
+    mocks.query = { outcome: 'ready', levelAssessment: usable };
+    const onDone = vi.fn();
+    render(<AnalyzingScreen sessionId={1} onDone={onDone} />);
+
+    vi.advanceTimersByTime(20_000);
+
+    expect(onDone).toHaveBeenCalledTimes(1);
+    expect(onDone).toHaveBeenCalledWith(usable);
+  });
 });

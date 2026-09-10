@@ -194,7 +194,9 @@ export const PreparedLearningView = ({
             </li>
           ))}
         </ul>
-        <p className="sr-only">{`잠긴 학습 ${COUNT}개`}</p>
+        <p className="sr-only">
+          {`잠긴 학습 ${COUNT}개. 레벨에 맞춰 준비한 학습을 이미지·예문·퀴즈, 발음 평가, 복습 퀴즈, 프리톡으로 이어 가요`}
+        </p>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
           <AnimatePresence mode="wait" initial={false}>
@@ -207,9 +209,10 @@ export const PreparedLearningView = ({
               transition={{ duration: DURATION.base, ease: EASE_STANDARD }}
             >
               {/* 꼬리는 가운데 아래 — 캐릭터가 바로 밑에 서 있으니 모서리를 깎는 대신 작은 삼각형으로 가리킨다 */}
+              {/* 장면은 보는 사람을 위한 장식이라 보조기기에 매번 읽히지 않는다 — 요약은 아래 sr-only 한 줄이 맡는다 */}
               <p
-                role="status"
-                aria-live="polite"
+                data-testid="slide-caption"
+                aria-hidden="true"
                 className="relative rounded-2xl bg-foreground px-5 py-3 text-[17px] font-bold whitespace-nowrap text-background shadow-lg after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-[6px] after:border-transparent after:border-t-foreground"
               >
                 {renderCaption(slide.caption)}
