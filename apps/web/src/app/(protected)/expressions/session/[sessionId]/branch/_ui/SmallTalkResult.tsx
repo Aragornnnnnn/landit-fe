@@ -14,9 +14,14 @@ import {
 } from '@/features/expression/ui/ExpressionStages';
 import { toExpressionListItems } from '@/features/small-talk/model/session-expressions';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
+import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
-import { sessionExpressionPath, SMALLTALK_PATH } from '@/shared/lib/routes';
+import {
+  sessionExpressionBranchPath,
+  sessionExpressionPath,
+  SMALLTALK_PATH,
+} from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
@@ -35,6 +40,7 @@ export const SmallTalkResult = ({
   celebrating: celebrateOnArrival,
 }: SmallTalkResultProps) => {
   const router = useRouter();
+  const gate = usePaywallGate();
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
   const { session, error, generationStuck } =
     useSmallTalkSessionQuery(sessionId);
@@ -83,7 +89,10 @@ export const SmallTalkResult = ({
       session_id: sessionId,
       source: 'post_conversation',
     });
-    router.push(sessionExpressionPath(sessionId, expressionId));
+    gate.guard(
+      () => router.push(sessionExpressionPath(sessionId, expressionId)),
+      { entry: 'expression', returnTo: sessionExpressionBranchPath(sessionId) },
+    );
   };
 
   return (

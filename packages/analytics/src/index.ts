@@ -26,5 +26,6 @@ export {
   type WidgetGuideStep,
   type WidgetInstallPlatform,
   type SubscriptionPlan,
+  type PaywallGateEntry,
   type PurchaseFailureReason,
 } from './events';

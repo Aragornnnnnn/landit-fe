@@ -151,6 +151,8 @@ export const EVENTS = {
   PAYWALL_PLAN_SELECTED: 'Paywall Plan Selected',
   PURCHASE_STARTED: 'Purchase Started',
   PURCHASE_RESTORE_TAPPED: 'Purchase Restore Tapped',
+  // 학습 진입 게이트 — 무료 구간을 다 쓴 무료 사용자가 어느 문에서 페이월로 보내졌는가
+  PAYWALL_GATE_LOCKED: 'Paywall Gate Locked',
   // 셸의 결제 결과 회신 — 성공은 스토어 결제가 끝난 것이고, 서버 유료 반영(unlocked)은 별도 속성으로 남긴다
   PURCHASE_COMPLETED: 'Purchase Completed',
   PURCHASE_CANCELED: 'Purchase Canceled',
@@ -193,6 +195,14 @@ export type HomeReturnReason = 'just' | 'flip' | 'card';
 
 // 구독 플랜 — 페이월 카드와 스토어 상품(monthly/yearly)이 같은 이름을 쓴다. 브릿지의 subscriptionPlanSchema와 같은 값이다
 export type SubscriptionPlan = 'monthly' | 'yearly';
+
+// 페이월 게이트가 걸린 진입 문 — 새 대화 시작 / 표현 학습 진입 / 스몰톡 시작
+export type PaywallGateEntry =
+  | 'scenario'
+  | 'expression'
+  | 'smalltalk'
+  // 대화 피드백을 마치고 표현으로 넘어가는 자리 — 무료 구간이 끝나는 곳이라 페이월이 처음 뜬다
+  | 'conversation_finished';
 // 결제가 실패한 갈래 — 환경 문제 셋과 셸이 회신한 실패. 셸의 문구는 message에 따로 싣는다
 export type PurchaseFailureReason =
   'browser' | 'outdated_shell' | 'no_response' | 'shell_error';
@@ -517,6 +527,7 @@ export type EventProps = {
   'Paywall Plan Selected': { plan: SubscriptionPlan };
   'Purchase Started': { plan: SubscriptionPlan };
   'Purchase Restore Tapped': undefined;
+  'Paywall Gate Locked': { entry: PaywallGateEntry };
   // unlocked: 결제 직후 몇 초 안에 서버가 유료로 바뀌었는가 (웹훅 지연 관찰용)
   'Purchase Completed': { plan: SubscriptionPlan; unlocked: boolean };
   'Purchase Canceled': { plan: SubscriptionPlan };
