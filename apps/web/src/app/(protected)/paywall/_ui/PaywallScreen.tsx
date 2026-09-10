@@ -7,6 +7,7 @@ import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+import { BenefitList } from '@/features/subscription/ui/BenefitList';
 import { track } from '@/shared/analytics';
 import { homePath } from '@/shared/lib/last-tab';
 import { Button } from '@/shared/ui/Button';
@@ -19,7 +20,6 @@ import {
   type PlanId,
 } from '../_model/paywall-plans';
 import { requestPurchase, requestRestore } from '../_model/request-purchase';
-import { BenefitList } from './BenefitList';
 import { PaywallHero } from './PaywallHero';
 import { PlanCard } from './PlanCard';
 

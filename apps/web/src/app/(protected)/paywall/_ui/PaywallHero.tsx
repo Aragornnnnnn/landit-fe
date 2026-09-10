@@ -2,10 +2,8 @@
 // 단체샷은 아래 경계에서 허리쯤이 잘리도록 슬롯보다 큰 이미지를 넣고 넘치는 부분을 숨긴다 (피그마 '빼꼼 컷')
 import Image from 'next/image';
 
+import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
 import { CloseIcon } from '@/shared/ui/Icons';
-import { LanditLogo } from '@/shared/ui/LanditLogo';
-
-import { GOLD_GRADIENT } from './PlanCard';
 
 interface PaywallHeroProps {
   onClose: () => void;
@@ -24,15 +22,8 @@ export const PaywallHero = ({ onClose }: PaywallHeroProps) => (
       </button>
     </div>
 
-    <div className="mt-1.5 flex items-center justify-center gap-2.5">
-      {/* 흰 점은 스플래시 연출용 덮개라 여기선 숨겨 주황 점이 보이게 한다 */}
-      <LanditLogo className="h-[37.5px] w-auto text-foreground [&_.logo-dot-splash]:hidden" />
-      <span
-        className="rounded-full px-[11px] py-1 text-[13px] leading-[1.2] font-bold tracking-[0.12em] text-[#4a2f00]"
-        style={{ background: GOLD_GRADIENT }}
-      >
-        PREMIUM
-      </span>
+    <div className="mt-1.5 flex justify-center">
+      <PremiumBadge />
     </div>
 
     {/* 슬롯 높이가 곧 크롭선이다. 작은 폰에서는 슬롯을 조금 줄이고 이미지를 위로 당겨 얼굴은 남긴다 */}
