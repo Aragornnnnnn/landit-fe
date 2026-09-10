@@ -1,6 +1,6 @@
 'use client';
 
-// 구독 관리 화면 — 골드 카드에 플랜 붙은 상태 제목과 결제일·결제 금액 표, 이용 중인 혜택, 결제 내역 진입, 맨 아래 해지.
+// 구독 관리 화면 — 골드 카드에 플랜 붙은 상태 제목과 결제일·결제 금액 표, 결제 내역 진입, 이용 중인 혜택, 맨 아래 해지.
 // 앱은 구독을 바꾸거나 해지할 수 없어 전부 스토어 구독 화면으로 보낸다. 플랜 이름·금액·결제 내역은 BE가
 // 상품 식별자와 결제 이벤트를 주면 붙인다 (docs/subscription.md 「마이페이지와 법적 문서」)
 import { EVENTS, type StoreSubscriptionAction } from '@landit/analytics';
@@ -149,18 +149,6 @@ export const SubscriptionManageScreen = () => {
               )}
             </section>
 
-            <section>
-              <h2
-                className="mb-2 ml-1.5 text-[12px] font-medium"
-                style={{ color: '#6b7280' }}
-              >
-                이용 중인 혜택
-              </h2>
-              <div className="rounded-xl pb-5" style={{ background: '#fff' }}>
-                <BenefitList />
-              </div>
-            </section>
-
             <MenuGroup>
               <MenuLink
                 href={SUBSCRIPTION_HISTORY_PATH}
@@ -173,6 +161,18 @@ export const SubscriptionManageScreen = () => {
                 }
               />
             </MenuGroup>
+
+            <section>
+              <h2
+                className="mb-2 ml-1.5 text-[12px] font-medium"
+                style={{ color: '#6b7280' }}
+              >
+                이용 중인 혜택
+              </h2>
+              <div className="rounded-xl pb-5" style={{ background: '#fff' }}>
+                <BenefitList />
+              </div>
+            </section>
 
             <MenuGroup>
               <MenuLink
