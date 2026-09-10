@@ -139,7 +139,7 @@ App Store Connect 구독 그룹 `premium` (ID 22358008, 표시명 "랜딧 프리
 
 | 필드                               | 값                                                              | 웹에서 쓰는 곳                      |
 | ---------------------------------- | --------------------------------------------------------------- | ----------------------------------- |
-| `premium`                          | `boolean`                                                       | 잠금·페이월 분기 (유일)             |
+| `premium`                          | `boolean`                                                       | 잠금·페이월 분기                    |
 | `subscriptionStatus`               | `NONE` / `ACTIVE` / `CANCELED` / `EXPIRED`                      | 배지 표시                           |
 | `periodType`                       | `TRIAL` / `INTRO` / `NORMAL` / `PROMOTIONAL` / `PREPAID` / null | 무료 체험 표시                      |
 | `expiresAt`                        | `LocalDateTime` / null                                          | 만료일·다음 결제일 표시             |
