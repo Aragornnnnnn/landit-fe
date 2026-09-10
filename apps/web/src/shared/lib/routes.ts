@@ -119,6 +119,7 @@ export const paywallPath = ({ from }: { from?: string } = {}) =>
 // 마이페이지와 그 아래 화면. 구독 관리는 유료 사용자가 들어오는 자리이고, 아니면 페이월로 안내한다
 export const MY_PAGE_PATH = '/me';
 export const SUBSCRIPTION_MANAGE_PATH = '/me/subscription';
+export const SUBSCRIPTION_HISTORY_PATH = '/me/subscription/history';
 // 홈 화면 위젯 설치 안내 — 온보딩에서 미뤘던 사람이 마이페이지에서 다시 연다
 export const WIDGET_GUIDE_PATH = '/me/widget';
 
@@ -129,9 +130,15 @@ export const WIDGET_GUIDE_PATH = '/me/widget';
 export const backToMyPage = (router: {
   back: () => void;
   replace: (href: string) => void;
-}) => {
+}) => backOrReplace(router, MY_PAGE_PATH);
+
+/** 한 칸 뒤로, 돌아갈 곳이 없으면(딥링크 직진입) fallback으로 */
+export const backOrReplace = (
+  router: { back: () => void; replace: (href: string) => void },
+  fallback: string,
+) => {
   if (window.history.length > 1) router.back();
-  else router.replace(MY_PAGE_PATH);
+  else router.replace(fallback);
 };
 // 설문 — 마이페이지 "지원" 묶음의 진입점
 export const SURVEY_PATH = '/survey';

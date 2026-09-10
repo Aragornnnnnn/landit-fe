@@ -161,7 +161,8 @@ export const EVENTS = {
   SUBSCRIPTION_MANAGE_TAPPED: 'Subscription Manage Tapped',
   PAYWALL_ENTRY_TAPPED: 'Paywall Entry Tapped',
   HAPTICS_TOGGLED: 'Haptics Toggled',
-  // 구독 관리 화면 — 스토어 구독 화면으로 나갔다
+  // 구독 관리 화면 — 결제 내역으로 들어갔다 / 스토어 구독 화면으로 나갔다
+  SUBSCRIPTION_HISTORY_TAPPED: 'Subscription History Tapped',
   STORE_SUBSCRIPTION_TAPPED: 'Store Subscription Tapped',
 } as const;
 
@@ -548,6 +549,7 @@ export type EventProps = {
   'Subscription Manage Tapped': { status: SubscriptionState };
   'Paywall Entry Tapped': { source: PaywallEntrySource };
   'Haptics Toggled': { enabled: boolean };
+  'Subscription History Tapped': { status: SubscriptionState };
   'Store Subscription Tapped': {
     status: SubscriptionState;
     action: StoreSubscriptionAction;

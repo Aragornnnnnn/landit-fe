@@ -2,4 +2,6 @@
 export const subscriptionKeys = {
   all: ['subscription'] as const,
   mine: (userId: number | null) => [...subscriptionKeys.all, userId] as const,
+  events: (userId: number | null) =>
+    [...subscriptionKeys.mine(userId), 'events'] as const,
 };

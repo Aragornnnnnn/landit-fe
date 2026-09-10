@@ -110,6 +110,36 @@ describe('SubscriptionManageScreen', () => {
     ).toBeInTheDocument();
   });
 
+  it('결제 내역 행이 결제 내역 화면으로 잇고 계측을 남긴다', () => {
+    render(<SubscriptionManageScreen />);
+
+    const history = screen.getByRole('link', { name: '결제 내역' });
+    expect(history).toHaveAttribute('href', '/me/subscription/history');
+    fireEvent.click(history);
+    expect(mocks.track).toHaveBeenCalledWith('Subscription History Tapped', {
+      status: 'active',
+    });
+  });
+
+  it('BE가 결제 스토어를 주면 셸 플랫폼과 달라도 그 스토어 링크를 쓴다 — 아이패드·기기 변경', () => {
+    mocks.getNativeContext.mockReturnValue({
+      platform: 'android',
+      appVersion: '1.3.0',
+      buildNumber: '6',
+      bridgeVersion: 5,
+    });
+    mocks.query.subscription = {
+      ...mocks.query.subscription!,
+      store: 'APP_STORE',
+    };
+    render(<SubscriptionManageScreen />);
+
+    expect(screen.getByRole('link', { name: '구독 해지하기' })).toHaveAttribute(
+      'href',
+      'https://apps.apple.com/account/subscriptions',
+    );
+  });
+
   it('안드로이드 셸이면 해지 행이 Google Play로 간다', () => {
     mocks.getNativeContext.mockReturnValue({
       platform: 'android',

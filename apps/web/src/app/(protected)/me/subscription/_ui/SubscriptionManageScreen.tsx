@@ -1,6 +1,6 @@
 'use client';
 
-// 구독 관리 화면 — 골드 카드에 플랜 붙은 상태 제목과 결제일·결제 금액 표, 이용 중인 혜택, 맨 아래 해지.
+// 구독 관리 화면 — 골드 카드에 플랜 붙은 상태 제목과 결제일·결제 금액 표, 이용 중인 혜택, 결제 내역 진입, 맨 아래 해지.
 // 앱은 구독을 바꾸거나 해지할 수 없어 전부 스토어 구독 화면으로 보낸다. 플랜 이름·금액·결제 내역은 BE가
 // 상품 식별자와 결제 이벤트를 주면 붙인다 (docs/subscription.md 「마이페이지와 법적 문서」)
 import { EVENTS, type StoreSubscriptionAction } from '@landit/analytics';
@@ -13,8 +13,8 @@ import {
   MONTHLY_PLAN,
 } from '@/features/subscription/model/plans';
 import {
+  resolveStorePlatform,
   STORE,
-  type StorePlatform,
 } from '@/features/subscription/model/store-links';
 import {
   summarizeSubscription,
@@ -28,9 +28,15 @@ import {
 } from '@/features/subscription/ui/premium-brand';
 import { track } from '@/shared/analytics';
 import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
-import { backToMyPage, MY_PAGE_PATH, paywallPath } from '@/shared/lib/routes';
+import {
+  backToMyPage,
+  MY_PAGE_PATH,
+  paywallPath,
+  SUBSCRIPTION_HISTORY_PATH,
+} from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { BackHeader } from '@/shared/ui/BackHeader';
+import { Emoji } from '@/shared/ui/emoji';
 import { AppStoreIcon, GooglePlayIcon } from '@/shared/ui/StoreIcons';
 
 import { MenuGroup, MenuLink } from '../../_ui/Menu';
@@ -84,8 +90,8 @@ export const SubscriptionManageScreen = () => {
   const router = useRouter();
   const { subscription, isPending, isError } = useSubscriptionQuery();
   const context = useClientOnlyValue(getNativeContextSnapshot, null);
-  // 브라우저에는 플랫폼이 없다 — 애플 구독 페이지는 웹에서도 열려 그쪽을 기본으로 둔다
-  const platform: StorePlatform = context?.platform ?? 'ios';
+  // 결제한 스토어(BE)가 우선, 없으면 셸 플랫폼, 브라우저는 iOS — 애플 구독 페이지는 웹에서도 열린다
+  const platform = resolveStorePlatform(subscription?.store, context?.platform);
   const store = STORE[platform];
   const storeIcon = platform === 'ios' ? <AppStoreIcon /> : <GooglePlayIcon />;
 
@@ -154,6 +160,19 @@ export const SubscriptionManageScreen = () => {
                 <BenefitList />
               </div>
             </section>
+
+            <MenuGroup>
+              <MenuLink
+                href={SUBSCRIPTION_HISTORY_PATH}
+                icon={<Emoji>🧾</Emoji>}
+                title="결제 내역"
+                onClick={() =>
+                  track(EVENTS.SUBSCRIPTION_HISTORY_TAPPED, {
+                    status: summary.kind,
+                  })
+                }
+              />
+            </MenuGroup>
 
             <MenuGroup>
               <MenuLink
