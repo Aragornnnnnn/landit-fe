@@ -1,6 +1,6 @@
 'use client';
 
-// 구독 관리 화면 — 골드 카드(플랜 붙은 상태 제목, 결제일·결제 금액 행), 결제 내역 진입, 이용 중인 혜택, 맨 아래 해지 행.
+// 구독 관리 화면 — 골드 카드(플랜 붙은 상태 제목, 결제일·결제 금액 행), 이용 중인 혜택, 구독 묶음(결제 내역·해지 행).
 // 앱은 구독을 바꾸거나 해지할 수 없어 스토어 구독 화면으로 보낸다 (docs/subscription.md 「마이페이지와 법적 문서」)
 import { EVENTS, type StoreSubscriptionAction } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
@@ -95,7 +95,13 @@ const PaidSubscription = ({ summary, platform }: PaidSubscriptionProps) => {
         )}
       </section>
 
-      <MenuGroup>
+      <MenuSection title="이용 중인 혜택">
+        <div className="pb-5">
+          <BenefitList />
+        </div>
+      </MenuSection>
+
+      <MenuSection title="구독">
         <MenuLink
           href={SUBSCRIPTION_HISTORY_PATH}
           icon={<Emoji>🧾</Emoji>}
@@ -104,15 +110,6 @@ const PaidSubscription = ({ summary, platform }: PaidSubscriptionProps) => {
             track(EVENTS.SUBSCRIPTION_HISTORY_TAPPED, { status: summary.kind })
           }
         />
-      </MenuGroup>
-
-      <MenuSection title="이용 중인 혜택">
-        <div className="pb-5">
-          <BenefitList />
-        </div>
-      </MenuSection>
-
-      <MenuGroup>
         <MenuLink
           href={store.manageUrl}
           icon={platform === 'ios' ? <AppStoreIcon /> : <GooglePlayIcon />}
@@ -124,7 +121,7 @@ const PaidSubscription = ({ summary, platform }: PaidSubscriptionProps) => {
             })
           }
         />
-      </MenuGroup>
+      </MenuSection>
     </>
   );
 };
