@@ -24,8 +24,8 @@ import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { ChevronRightIcon } from '@/shared/ui/Icons';
 
 const LABEL: Record<SubscriptionState, string> = {
-  trial: '무료 체험 중',
-  active: '프리미엄 이용 중',
+  trial: '체험 중',
+  active: '이용 중',
   canceled: '해지 예정',
 };
 
@@ -54,7 +54,7 @@ export const PremiumEntry = () => {
     summary.kind === 'none'
       ? {
           href: paywallPath({ from: MY_PAGE_PATH }),
-          label: '프리미엄 구독하기',
+          label: '구독하기',
           onClick: () => track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'me' }),
         }
       : {

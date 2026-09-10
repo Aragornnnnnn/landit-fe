@@ -74,10 +74,10 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('PremiumEntry', () => {
-  it('구독 중이면 "프리미엄 이용 중"으로 구독 관리에 들어가고 상태를 남긴다', () => {
+  it('구독 중이면 "이용 중"으로 구독 관리에 들어가고 상태를 남긴다', () => {
     render(<PremiumEntry />);
 
-    const link = screen.getByRole('link', { name: /프리미엄 이용 중/ });
+    const link = screen.getByRole('link', { name: /이용 중/ });
     expect(link).toHaveAttribute('href', SUBSCRIPTION_MANAGE_PATH);
     fireEvent.click(link);
     expect(mocks.track).toHaveBeenCalledWith('Subscription Manage Tapped', {
@@ -88,7 +88,7 @@ describe('PremiumEntry', () => {
   it('무료 체험 중과 해지 예정은 그 상태를 한 마디로 보여준다', () => {
     setSubscription(premium({ periodType: 'TRIAL' }));
     const { unmount } = render(<PremiumEntry />);
-    expect(screen.getByText('무료 체험 중')).toBeInTheDocument();
+    expect(screen.getByText('체험 중')).toBeInTheDocument();
     unmount();
 
     setSubscription(premium({ subscriptionStatus: 'CANCELED' }));
@@ -100,7 +100,7 @@ describe('PremiumEntry', () => {
     setSubscription(premium({ premium: false, subscriptionStatus: 'NONE' }));
     render(<PremiumEntry />);
 
-    const link = screen.getByRole('link', { name: /프리미엄 구독하기/ });
+    const link = screen.getByRole('link', { name: /구독하기/ });
     expect(link).toHaveAttribute('href', paywallPath({ from: '/me' }));
     fireEvent.click(link);
     expect(mocks.track).toHaveBeenCalledWith('Paywall Entry Tapped', {
@@ -111,7 +111,7 @@ describe('PremiumEntry', () => {
   it('유료 사용자는 브라우저에서도 카드가 보인다 — 결제 가능 여부는 무료 사용자만 가른다', () => {
     mocks.getNativeContext.mockReturnValue(null);
     render(<PremiumEntry />);
-    expect(screen.getByText('프리미엄 이용 중')).toBeInTheDocument();
+    expect(screen.getByText('이용 중')).toBeInTheDocument();
   });
 
   it('브라우저나 구버전 셸의 무료 사용자에게는 아무것도 그리지 않는다', () => {
