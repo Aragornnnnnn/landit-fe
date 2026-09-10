@@ -88,14 +88,31 @@ describe('usePaywallGate', () => {
     expect(go).toHaveBeenCalledTimes(1);
   });
 
-  it('BE가 무료 구간 값을 아직 안 주면 막지 않고 들여보낸다 — 다음 진입에서 잡힌다', () => {
+  it('BE가 무료 구간 값을 아직 안 주면 오늘의 시나리오 문은 막지 않고 들여보낸다 — 다음 진입에서 잡힌다', () => {
     mocks.subscription = { subscription: { premium: false }, isError: false };
     const { result } = renderGate();
     const go = vi.fn();
 
-    result.current.guard(go, { entry: 'scenario' });
+    result.current.guard(go, { entry: 'scenario', door: 'today_scenario' });
 
     expect(go).toHaveBeenCalledTimes(1);
+  });
+
+  it('대화를 아직 안 끝낸 무료 사용자도 오늘의 시나리오 문만 열리고, 학습 문은 페이월로 간다', () => {
+    mocks.subscription = {
+      subscription: { premium: false, conversationCompletedSinceLaunch: false },
+      isError: false,
+    };
+    const { result } = renderGate();
+    const start = vi.fn();
+    const learn = vi.fn();
+
+    result.current.guard(start, { entry: 'scenario', door: 'today_scenario' });
+    result.current.guard(learn, { entry: 'smalltalk' });
+
+    expect(start).toHaveBeenCalledTimes(1);
+    expect(learn).not.toHaveBeenCalled();
+    expect(mocks.push).toHaveBeenCalledWith('/paywall');
   });
 
   it('대화가 방금 끝났다고 알려 주면 서버 값이 아직 안 따라왔어도 잠근다 — 대화 직후 화면에서 바로 페이월로', () => {

@@ -11,7 +11,11 @@ import { paywallPath } from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
 import { PAYMENT_ENABLED } from './payment-flag';
-import { canLockPaywall, decidePaywallGate } from './paywall-gate';
+import {
+  canLockPaywall,
+  decidePaywallGate,
+  type PaywallDoor,
+} from './paywall-gate';
 import { useSubscriptionQuery } from './useSubscriptionQuery';
 
 interface GuardOptions {
@@ -21,6 +25,8 @@ interface GuardOptions {
   returnTo?: string;
   /** 호출부가 대화가 방금 끝났음을 이미 아는 경우 — 서버 값이 아직 안 따라왔어도 무료 구간을 다 쓴 것으로 본다 */
   conversationJustFinished?: boolean;
+  /** 어느 문인가. 오늘 카드의 대화 시작만 today_scenario, 나머지는 기본값 learning — 무료 구간이 없는 문이다 */
+  door?: PaywallDoor;
 }
 
 /**
@@ -41,28 +47,38 @@ export const usePaywallGate = () => {
     enabled: canLockPaywall(environment),
   });
 
-  const decide = (conversationCompletedSinceLaunch: boolean | null) =>
+  const decide = (
+    door: PaywallDoor,
+    conversationCompletedSinceLaunch: boolean | null,
+  ) =>
     // 구독 조회 실패(구독 API 미배포 포함)는 잠그지 않는다 — 잘못 막는 쪽이 더 나쁘다
     isError
       ? 'open'
       : decidePaywallGate({
           ...environment,
+          door,
           // 아직 못 받았거나 BE가 필드를 아직 안 주면 null — decidePaywallGate가 unknown으로 둔다
           premium: subscription?.premium ?? null,
           conversationCompletedSinceLaunch,
         });
 
-  const lockedNow =
-    decide(subscription?.conversationCompletedSinceLaunch ?? null) === 'locked';
+  const completedSinceLaunch =
+    subscription?.conversationCompletedSinceLaunch ?? null;
 
   // 잠겼을 때만 페이월로. unknown(재료가 늦음)도 막지 않는다 — 다음 진입에서 잡힌다
   const guard = (
     go: () => void,
-    { entry, returnTo, conversationJustFinished }: GuardOptions,
+    {
+      entry,
+      returnTo,
+      conversationJustFinished,
+      door = 'learning',
+    }: GuardOptions,
   ) => {
+    // 방금 끝낸 대화가 무료 구간의 그 하나다 — 오늘의 시나리오 문으로 보고 완료를 참으로 둔다
     const locked = conversationJustFinished
-      ? decide(true) === 'locked'
-      : lockedNow;
+      ? decide('today_scenario', true) === 'locked'
+      : decide(door, completedSinceLaunch) === 'locked';
     if (!locked) {
       go();
       return;

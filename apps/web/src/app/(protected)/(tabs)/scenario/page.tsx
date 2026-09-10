@@ -43,7 +43,7 @@ function ScenarioContent() {
   const autoFlip = searchParams.get('flip') !== null;
 
   const { daily, error, retry } = useDailyScenarioQuery(date);
-  // 무료 구간(오픈 뒤 대화 하나)을 다 쓴 무료 사용자는 새 대화 대신 페이월로 보낸다
+  // 무료 구간(오늘 카드의 대화 하나)을 다 쓴 무료 사용자는 새 대화 대신 페이월로 보낸다
   const gate = usePaywallGate();
 
   // 알림은 오늘 카드에 대한 판단이 끝난 뒤에만 청한다 — 대화를 끝냈거나, 지금은 안 하기로 했거나.
@@ -70,7 +70,12 @@ function ScenarioContent() {
         // 브리핑을 읽는 동안 대화 라우트를 미리 받아 둔다 — 이 화면은 링크로 오갈 수 없어 자동 프리페치가 안 걸린다
         router.prefetch(scenarioTalkPath(scenario.scenarioId, date));
       },
-      { entry: 'scenario', returnTo: scenarioReturnPath({ date }) },
+      {
+        entry: 'scenario',
+        returnTo: scenarioReturnPath({ date }),
+        // 무료 구간은 오늘 카드의 첫 대화에만 — 재대화(CLEARED)와 지난 날 카드는 유료가 아니면 잠긴다
+        door: !cleared && date === undefined ? 'today_scenario' : 'learning',
+      },
     );
   const settled = date === undefined && (cleared || summonClosed);
   // 시트류(소감 다음 순번)가 나설 차례 — 카드 판단과 소감 판정이 모두 끝났고 소감 시트가 안 뜰 때

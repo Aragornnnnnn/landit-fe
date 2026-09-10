@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { decidePaywallGate, type PaywallGateInput } from './paywall-gate';
 
 const base: PaywallGateInput = {
+  door: 'today_scenario',
   paymentEnabled: true,
   appVersion: '1.3.0',
   premium: false,
@@ -15,10 +16,27 @@ describe('decidePaywallGate', () => {
     expect(decidePaywallGate(base)).toBe('locked');
   });
 
-  it('오픈 뒤 대화를 아직 안 끝냈으면 열려 있다 — 기존 사용자도 오늘 대화 하나는 한다', () => {
+  it('오픈 뒤 대화를 아직 안 끝냈으면 오늘의 시나리오 문은 열려 있다 — 기존 사용자도 오늘 대화 하나는 한다', () => {
     expect(
       decidePaywallGate({ ...base, conversationCompletedSinceLaunch: false }),
     ).toBe('open');
+  });
+
+  it('스몰톡·표현 학습·재대화 문은 대화를 끝내기 전에도 잠긴다 — 무료는 오늘의 시나리오 대화 하나뿐이다', () => {
+    expect(
+      decidePaywallGate({
+        ...base,
+        door: 'learning',
+        conversationCompletedSinceLaunch: false,
+      }),
+    ).toBe('locked');
+    expect(
+      decidePaywallGate({
+        ...base,
+        door: 'learning',
+        conversationCompletedSinceLaunch: null,
+      }),
+    ).toBe('locked');
   });
 
   it('유료(체험 포함)면 언제나 열려 있다', () => {
@@ -37,8 +55,11 @@ describe('decidePaywallGate', () => {
     expect(decidePaywallGate({ ...base, appVersion: '1.2.5' })).toBe('open');
   });
 
-  it('유료 여부나 완료 여부를 아직 모르면 미확정이다 — 화면은 진입을 잠시 보류한다', () => {
+  it('유료 여부를 모르면 어느 문이든 미확정이고, 완료 여부를 모르면 오늘의 시나리오 문만 미확정이다', () => {
     expect(decidePaywallGate({ ...base, premium: null })).toBe('unknown');
+    expect(
+      decidePaywallGate({ ...base, door: 'learning', premium: null }),
+    ).toBe('unknown');
     expect(
       decidePaywallGate({ ...base, conversationCompletedSinceLaunch: null }),
     ).toBe('unknown');

@@ -4,8 +4,11 @@
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
+// 가로 import 사유: 완료 카드를 뒤집어 표현을 보는 것도 학습 진입이라 같은 페이월 게이트를 건다 (docs/subscription.md)
+import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
+import { scenarioReturnPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 import { ArrowRightIcon, LockIcon, ReplayIcon } from '@/shared/ui/Icons';
@@ -65,16 +68,22 @@ export const ScenarioCard = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 마운트 시 1회만
   }, []);
 
-  const openExpressions = () => {
-    haptic('medium'); // 완료 카드를 뒤집는 성취 순간엔 좀 더 묵직한 진동
-    track(EVENTS.SCENARIO_CARD_FLIPPED, {
-      scenario_id: scenario.scenarioId,
-      direction: 'back',
-      trigger: 'button',
-    });
-    setHasFlipped(true);
-    setFlipped(true);
-  };
+  // 잠긴 무료 사용자는 뒷면(표현 목록)도 못 본다 — 뒤집기가 곧 학습 진입이라 페이월로 보낸다
+  const gate = usePaywallGate();
+  const openExpressions = () =>
+    gate.guard(
+      () => {
+        haptic('medium'); // 완료 카드를 뒤집는 성취 순간엔 좀 더 묵직한 진동
+        track(EVENTS.SCENARIO_CARD_FLIPPED, {
+          scenario_id: scenario.scenarioId,
+          direction: 'back',
+          trigger: 'button',
+        });
+        setHasFlipped(true);
+        setFlipped(true);
+      },
+      { entry: 'expression', returnTo: scenarioReturnPath({ date }) },
+    );
 
   const closeExpressions = () => {
     track(EVENTS.SCENARIO_CARD_FLIPPED, {
