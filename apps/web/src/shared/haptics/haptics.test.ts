@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { postToNative } from '@/shared/bridge/web-bridge';
 
 import { haptic } from './haptics';
+import { setHapticsEnabled } from './haptics-setting';
 
 vi.mock('@/shared/bridge/web-bridge', () => ({
   postToNative: vi.fn(),
@@ -71,5 +72,17 @@ describe('haptic', () => {
       type: 'HAPTIC',
       pattern: 'error',
     });
+  });
+});
+
+describe('haptic 설정', () => {
+  it('마이페이지에서 진동을 껐으면 브릿지로도 브라우저로도 아무 것도 보내지 않는다', () => {
+    setHapticsEnabled(false);
+    try {
+      haptic('success');
+      expect(postToNativeMock).not.toHaveBeenCalled();
+    } finally {
+      setHapticsEnabled(true);
+    }
   });
 });
