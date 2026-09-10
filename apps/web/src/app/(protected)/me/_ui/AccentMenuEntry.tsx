@@ -1,4 +1,4 @@
-// 마이페이지 "배울 영어" 진입점 — 지금 값을 보여주고 다시 고를 수 있게 한다
+// 마이페이지 "배울 억양" 진입점 — 지금 값을 보여주고 다시 고를 수 있게 한다
 'use client';
 
 import { useState } from 'react';
@@ -27,7 +27,7 @@ export const AccentMenuEntry = () => {
   return (
     <>
       <MenuButton
-        title="배울 영어"
+        title="배울 억양"
         icon={<Emoji>🌍</Emoji>}
         onClick={() => setOpen(true)}
       />

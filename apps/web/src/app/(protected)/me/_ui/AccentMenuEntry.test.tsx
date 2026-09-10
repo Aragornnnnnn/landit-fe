@@ -1,4 +1,4 @@
-// AccentMenuEntry — 마이페이지에서 배울 영어를 다시 고를 수 있는 진입점 계약 검증
+// AccentMenuEntry — 마이페이지에서 배울 억양를 다시 고를 수 있는 진입점 계약 검증
 import { EVENTS } from '@landit/analytics';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -41,7 +41,7 @@ const renderEntry = () =>
 
 const openSheet = async () => {
   await waitFor(() => expect(getMyAccentLocale).toHaveBeenCalled());
-  fireEvent.click(screen.getByText('배울 영어'));
+  fireEvent.click(screen.getByText('배울 억양'));
 };
 
 beforeEach(() => {
@@ -111,7 +111,7 @@ describe('AccentMenuEntry', () => {
 
     renderEntry();
     await waitFor(() => expect(getMyAccentLocale).toHaveBeenCalled());
-    fireEvent.click(screen.getByText('배울 영어'));
+    fireEvent.click(screen.getByText('배울 억양'));
 
     expect(screen.getByText('미국 영어')).toBeInTheDocument();
     expect(screen.getByText('영국 영어')).toBeInTheDocument();
@@ -123,7 +123,7 @@ describe('AccentMenuEntry', () => {
 
     renderEntry();
     await waitFor(() => expect(getMyAccentLocale).toHaveBeenCalled());
-    fireEvent.click(screen.getByText('배울 영어'));
+    fireEvent.click(screen.getByText('배울 억양'));
 
     expect(screen.getByText('미국 영어').closest('button')).toHaveAttribute(
       'aria-pressed',
@@ -137,7 +137,7 @@ describe('AccentMenuEntry', () => {
 
     renderEntry();
     await waitFor(() => expect(getMyAccentLocale).toHaveBeenCalled());
-    fireEvent.click(screen.getByText('배울 영어'));
+    fireEvent.click(screen.getByText('배울 억양'));
     fireEvent.click(screen.getByText('호주 영어'));
 
     fireEvent.click(screen.getByText('선택했어요!'));
@@ -153,7 +153,7 @@ describe('AccentMenuEntry', () => {
     await openSheet();
 
     expect(
-      screen.queryByText('배울 영어는 언제든 변경할 수 있어요'),
+      screen.queryByText('배울 억양는 언제든 변경할 수 있어요'),
     ).not.toBeInTheDocument();
   });
 });
