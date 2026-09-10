@@ -63,7 +63,7 @@
 <div class="canvas">
   <div class="abs" style="left:56px; top:44px;">
     <h1>학습 진입을 누를 때 게이트가 보는 것</h1>
-    <div class="sub">문 여덟 개의 탭 핸들러가 <b>guard(이동, { entry, returnTo })</b>를 부릅니다. 질문 넷을 위에서 아래로 내려가다 처음 걸리는 답이 결과이고, 잠기는 출구는 하나뿐입니다.</div>
+    <div class="sub">문 아홉 개의 탭 핸들러가 <b>guard(이동, { entry, returnTo, door })</b>를 부릅니다. 질문을 위에서 아래로 내려가다 처음 걸리는 답이 결과이고, 무료 구간은 오늘의 시나리오 문에만 있습니다.</div>
   </div>
 
   <svg class="abs" style="left:0; top:0;" width="1600" height="1000" fill="none">
@@ -93,12 +93,13 @@
 
   <!-- 문 여덟 -->
   <div class="abs doors" style="left:56px; top:118px;">
-    <h2>막는 문 여덟</h2>
-    <div class="door"><i></i>오늘의 시나리오 · 재대화<small>scenario</small></div>
-    <div class="door"><i></i>스몰톡 내가 먼저 · 주제로<small>smalltalk</small></div>
-    <div class="door"><i></i>표현 학습 네 곳<small>expression</small></div>
-    <div class="door"><i></i>대화 피드백 끝<small>conversation_finished</small></div>
-    <div style="margin-top:14px; font-size:12px; line-height:1.6; color:var(--muted);">표현 학습 네 곳 = 카드 뒷면 · 표현 분기 · 스몰톡 결과 · 스몰톡 기록.<br/>홈 · 기록 달력 · 편지함 · 마이페이지 · 페이월은 막지 않습니다.</div>
+    <h2>막는 문 아홉</h2>
+    <div class="door"><i></i>오늘 카드의 첫 대화<small>today_scenario</small></div>
+    <div class="door"><i></i>재대화 · 지난 카드 · 카드 뒤집기<small>learning</small></div>
+    <div class="door"><i></i>스몰톡 내가 먼저 · 주제로<small>learning</small></div>
+    <div class="door"><i></i>표현 학습 네 곳<small>learning</small></div>
+    <div class="door"><i></i>대화 피드백 끝<small>끝낸 대화 = 그 하나</small></div>
+    <div style="margin-top:14px; font-size:12px; line-height:1.6; color:var(--muted);">표현 학습 네 곳 = 카드 뒷면 · 표현 분기 · 스몰톡 결과 · 스몰톡 기록.<br/>스몰톡 캐릭터 인사 탭, 홈 · 기록 달력 · 편지함 · 마이페이지는 막지 않습니다.</div>
   </div>
 
   <!-- 질문 넷 -->
@@ -115,19 +116,19 @@
     <div class="how">구독 조회 실패 · 아직 응답 전 · BE에 필드 없음이면 <code>unknown</code>. 잘못 막는 쪽이 더 나쁩니다</div>
   </div>
   <div class="abs q" style="left:400px; top:574px;"><div class="n">4</div>
-    <div class="ask">결제 오픈 뒤 시나리오를 하나 끝냈나</div>
-    <div class="how">BE <code>conversationCompletedSinceLaunch</code>. 피드백 끝에서는 방금 끝난 대화가 그 하나라 기다리지 않습니다(<code>conversationJustFinished</code>)</div>
+    <div class="ask">오늘의 시나리오 문인가, 그리고 대화를 하나 끝냈나</div>
+    <div class="how">다른 학습 문(<code>learning</code>)이면 여기서 바로 잠깁니다. 오늘 카드의 첫 대화만 BE <code>conversationCompletedSinceLaunch</code>를 봅니다. 피드백 끝에서는 방금 끝난 대화가 그 하나라 기다리지 않습니다</div>
   </div>
 
   <!-- 출구 라벨 -->
   <div class="abs exit open" style="left:836px; top:176px;">브라우저 · 1.2.x · 플래그 꺼짐</div>
   <div class="abs exit open" style="left:836px; top:318px;">premium true</div>
   <div class="abs exit open" style="left:836px; top:460px;">모름 <span>· 다음 진입에서 다시</span></div>
-  <div class="abs exit open" style="left:836px; top:602px;">아니오 <span>· 무료 구간</span></div>
+  <div class="abs exit open" style="left:836px; top:602px;">오늘 문 · 아직 안 끝냄 <span>· 무료 구간</span></div>
   <div class="abs lbl no" style="left:622px; top:260px;">아니면</div>
   <div class="abs lbl no" style="left:622px; top:402px;">아니면</div>
   <div class="abs lbl no" style="left:622px; top:544px;">아니면</div>
-  <div class="abs lbl no" style="left:622px; top:686px;">예</div>
+  <div class="abs lbl no" style="left:622px; top:686px;">다른 문이거나 끝냈음</div>
 
   <!-- 최종 출구 -->
   <div class="abs rail" style="left:1390px; top:590px;">
@@ -141,7 +142,7 @@
   <div class="abs timeline" style="left:56px; top:840px;">
     <h2>한 사람의 상태 변화</h2>
     <div class="tl">
-      <div class="st open"><div class="t">무료 구간</div><div class="d">가입 · 오픈 뒤 대화 0</div></div>
+      <div class="st open"><div class="t">무료 구간</div><div class="d">오늘의 시나리오 문만 열림</div></div>
       <div class="ev"><b>→</b>시나리오 완료</div>
       <div class="st lock"><div class="t">잠김</div><div class="d">학습 진입마다 페이월</div></div>
       <div class="ev"><b>→</b>결제 · 웹훅</div>
