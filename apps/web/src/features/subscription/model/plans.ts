@@ -1,4 +1,4 @@
-// 페이월에 보여주는 두 플랜의 표시값 — 숫자는 여기 한 곳에만 둔다 (docs/subscription.md 「상품과 가격」)
+// 두 플랜의 표시값 — 숫자는 여기 한 곳에만 둔다. 페이월 카드와 구독 관리의 플랜 변경 안내가 같이 쓴다 (docs/subscription.md 「상품과 가격」)
 // 실제 청구액은 스토어가 정한다. 결제 연동(LAN-447) 뒤에는 카드의 가격 문자열을 오퍼링 값으로 갈아 끼운다
 import type { SubscriptionPlan } from '@landit/analytics';
 

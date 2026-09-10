@@ -9,7 +9,7 @@ import {
   MONTHLY_PLAN,
   PAYWALL_PLANS,
   YEARLY_PLAN,
-} from './paywall-plans';
+} from './plans';
 
 describe('calculateDiscountRate', () => {
   it('비교가와 판매가로 정수 퍼센트를 돌려준다', () => {

@@ -1,5 +1,9 @@
 // 고른 플랜에 따라 갈리는 문구 — 연간에만 무료 체험이 있어 CTA와 결제 안내가 달라진다
-import { findPlan, formatWon, type PlanId } from './paywall-plans';
+import {
+  findPlan,
+  formatWon,
+  type PlanId,
+} from '@/features/subscription/model/plans';
 
 export const getCtaLabel = (planId: PlanId) =>
   planId === 'yearly'

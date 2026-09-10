@@ -3,10 +3,12 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 
+import {
+  formatWon,
+  type PaywallPlan,
+} from '@/features/subscription/model/plans';
 import { GOLD_GRADIENT } from '@/features/subscription/ui/premium-brand';
 import { SPRING_SELECT } from '@/shared/motion';
-
-import { formatWon, type PaywallPlan } from '../_model/paywall-plans';
 
 interface PlanCardProps {
   plan: PaywallPlan;

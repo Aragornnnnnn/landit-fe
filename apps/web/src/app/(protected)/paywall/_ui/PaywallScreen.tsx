@@ -7,18 +7,18 @@ import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+import {
+  DEFAULT_PLAN_ID,
+  PAYWALL_PLANS,
+  type PaywallPlan,
+  type PlanId,
+} from '@/features/subscription/model/plans';
 import { BenefitList } from '@/features/subscription/ui/BenefitList';
 import { track } from '@/shared/analytics';
 import { homePath } from '@/shared/lib/last-tab';
 import { Button } from '@/shared/ui/Button';
 
 import { getBillingNotice, getCtaLabel } from '../_model/paywall-copy';
-import {
-  DEFAULT_PLAN_ID,
-  PAYWALL_PLANS,
-  type PaywallPlan,
-  type PlanId,
-} from '../_model/paywall-plans';
 import { requestPurchase, requestRestore } from '../_model/request-purchase';
 import { PaywallHero } from './PaywallHero';
 import { PlanCard } from './PlanCard';
