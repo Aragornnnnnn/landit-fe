@@ -1,4 +1,4 @@
-// 서비스 이용약관 v1.1 문서 데이터 — 1.1에서 용어 정의·약관 변경·이용 제한·유료 구독·분쟁 해결·사업자 정보 조항 추가
+// 서비스 이용약관 v1.1 문서 데이터 — 1.1에서 용어 정의·약관 변경·이용 제한·유료 구독·분쟁 해결·문의 조항 추가
 import type { LegalDocument } from '../_ui/LegalDocumentPage';
 
 export const termsDocument: LegalDocument = {
@@ -151,10 +151,9 @@ export const termsDocument: LegalDocument = {
     },
     {
       id: 'contact',
-      title: '13. 문의 및 사업자 정보',
+      title: '13. 문의',
       paragraphs: [
         '서비스 이용 중 발생한 문의는 앱의 편지함(피드백 남기기)이나 공식 문의 이메일(landitkorea@gmail.com)로 접수할 수 있으며, 회사는 접수한 문의에 성실히 답합니다.',
-        '사업자 정보: 상호, 대표자, 사업자등록번호, 주소, 연락처는 [팀 확정 뒤 기입]',
       ],
     },
   ],
