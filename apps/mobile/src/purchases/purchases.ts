@@ -123,6 +123,11 @@ const NETWORK_MESSAGE = '네트워크 연결을 확인하고 다시 시도해 �
 const ERROR_MESSAGES: Partial<Record<PURCHASES_ERROR_CODE, string>> = {
   [PURCHASES_ERROR_CODE.PRODUCT_ALREADY_PURCHASED_ERROR]:
     '이 스토어 계정으로 이미 구독 중이에요. 구독했던 계정으로 로그인하거나 구매 복원을 눌러 주세요.',
+  // Keep with original 설정이라 다른 랜딧 계정이 가진 영수증은 복원이 거절된다
+  [PURCHASES_ERROR_CODE.RECEIPT_ALREADY_IN_USE_ERROR]:
+    '이 스토어 계정은 다른 랜딧 계정에서 구독 중이에요. 그 계정으로 로그인해 주세요.',
+  [PURCHASES_ERROR_CODE.PRODUCT_NOT_AVAILABLE_FOR_PURCHASE_ERROR]:
+    '지금은 살 수 없는 상품이에요. 잠시 후 다시 시도해 주세요.',
   [PURCHASES_ERROR_CODE.PURCHASE_NOT_ALLOWED_ERROR]:
     '이 기기에서는 결제할 수 없어요. 스토어 계정 설정을 확인해 주세요.',
   [PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR]:

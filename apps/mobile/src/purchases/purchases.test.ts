@@ -282,6 +282,19 @@ describe('restorePurchases', () => {
     configurePurchases('key');
   });
 
+  it('다른 랜딧 계정이 가진 영수증이면 그 계정으로 로그인하라고 안내한다 — Keep with original 설정의 거절', async () => {
+    mockPurchases.restorePurchases.mockRejectedValueOnce({
+      code: PURCHASES_ERROR_CODE.RECEIPT_ALREADY_IN_USE_ERROR,
+      message: 'The receipt is already in use by another subscriber.',
+    });
+
+    const failed = await restorePurchases();
+
+    expect(failed.message).toBe(
+      '이 스토어 계정은 다른 랜딧 계정에서 구독 중이에요. 그 계정으로 로그인해 주세요.',
+    );
+  });
+
   it('복원이 끝나면 성공, 실패하면 사유를 붙이고 보고한다 — 유료 사용자가 권한을 되찾지 못하는 상황', async () => {
     await expect(restorePurchases()).resolves.toEqual({ status: 'success' });
 
