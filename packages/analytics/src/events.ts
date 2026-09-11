@@ -27,7 +27,6 @@ export const EVENTS = {
   // 질문이 늘어도 이름을 늘리지 않고 question 속성으로 가른다 (정책 2-1)
   PROFILE_GATE_VIEWED: 'Profile Gate Viewed',
   PROFILE_GATE_ANSWERED: 'Profile Gate Answered',
-  // 마이페이지에서 스스로 다시 고른 경우 — 최초 응답(Gate·온보딩)과 의도가 달라 별도로 찍는다
 
   // 배울 영어(억양) — 최초 선택은 온보딩 스텝(accent)이라 위 계측이 그대로 커버한다.
   // 마이페이지에서 다시 고른 것만 따로 찍는다

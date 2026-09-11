@@ -10,5 +10,3 @@ export const getMyLearningLevel = () =>
   api.get<UserLearningLevelResponse>('/api/v1/me/learning-level');
 
 /** 1(막 시작)~5(유창) 정수 척도를 저장한다. 반복 호출하면 마지막 값으로 덮어쓴다 */
-export const updateLearningLevel = (learningLevel: number) =>
-  api.put<null>('/api/v1/me/learning-level', { learningLevel });
