@@ -64,23 +64,19 @@ describe('ProfileHeader', () => {
     );
   });
 
-  it('로그인한 곳을 로고 대신 이름 글자로 이메일 앞에 적는다', () => {
-    render(<ProfileHeader />);
+  it('로그인한 곳을 로그인 버튼과 같은 심볼 배지로 이메일 앞에 두고, 모르는 방식이면 배지가 없다', () => {
+    const { unmount } = render(<ProfileHeader />);
+    expect(document.querySelector('svg')).not.toBeNull();
+    unmount();
 
-    expect(screen.getByText('카카오')).toBeInTheDocument();
-    expect(document.querySelector('svg')).toBeNull();
-  });
-
-  it('모르는 로그인 방식이면 이메일만 적는다', () => {
     mocks.member = {
       nickname: '준서',
       email: 'junseo@example.com',
       provider: 'NAVER',
     };
     render(<ProfileHeader />);
-
     expect(screen.getByText('junseo@example.com')).toBeInTheDocument();
-    expect(screen.queryByText('·')).not.toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeNull();
   });
 
   it('학습 수준을 아직 모르면 레벨 글자 없이 기본 래디만 선다', () => {
