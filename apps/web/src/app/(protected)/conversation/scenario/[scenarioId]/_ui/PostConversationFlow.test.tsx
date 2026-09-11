@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PostConversationFlow } from './PostConversationFlow';
 
+// 그림 미리 받기는 자기 테스트가 있다 — 여기선 화면 계약만 본다
+vi.mock('@/shared/lib/preload-next-images', () => ({ preloadImages: vi.fn() }));
 vi.mock('@/shared/motion', () => ({
   Transition: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -32,6 +34,7 @@ vi.mock('./LevelResultScreen', () => ({
   }) => <button onClick={onContinue}>레벨 {assessment.assessedLevel}</button>,
 }));
 vi.mock('./PreparedLearningScreen', () => ({
+  SLIDE_IMAGES: [],
   PreparedLearningScreen: ({ onContinue }: { onContinue: () => void }) => (
     <button onClick={onContinue}>학습 시작하기</button>
   ),

@@ -52,10 +52,8 @@ export const LevelResultScreen = ({
       {/* 캐릭터가 주인공 — 가운데 위에 크게, 이름과 레벨은 그 아래 중앙 정렬 */}
       <section className="flex flex-col items-center text-center">
         <Image
-          src={LEVEL_IMAGES[result.level]}
+          {...LEVEL_IMAGES[result.level]}
           alt=""
-          width={200}
-          height={200}
           // 작은 폰(667pt)에서는 캐릭터를 줄여 표가 CTA 위로 더 올라오게 한다
           className="size-[200px] short:size-[132px]"
           priority
@@ -74,9 +72,11 @@ export const LevelResultScreen = ({
         </p>
       </section>
 
-      <section className="mt-6 min-h-0 flex-1 overflow-y-auto short:mt-4">
+      {/* 표는 캐릭터와 CTA 사이 남은 높이에 맞춰 줄어든다 — 어느 폰에서도 스크롤 없이 한 화면 */}
+      <section className="mt-6 flex min-h-0 flex-1 flex-col overflow-y-auto short:mt-4">
         <h2 className="px-1 text-[15px] font-bold">영역별 점수</h2>
-        <div className="mt-3">
+        {/* 표 바닥 높이 180 — 그 아래로는 줄이지 않고 절이 스크롤한다 */}
+        <div className="mt-3 min-h-[180px] flex-1">
           <ScoreChart rows={result.rows} />
         </div>
       </section>

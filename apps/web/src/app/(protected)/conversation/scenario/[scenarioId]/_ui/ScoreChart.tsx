@@ -60,13 +60,10 @@ export const ScoreChart = ({ rows }: { rows: DomainRow[] }) => {
     <div
       role="img"
       aria-label={toScoreDescription(rows)}
-      className="flex justify-center rounded-2xl border border-border bg-card py-2"
+      className="flex h-full max-h-[358px] justify-center rounded-2xl border border-border bg-card py-2"
     >
-      {/* 크기는 CSS로 — 작은 폰(667pt)에서는 줄여 CTA 위에 다 들어가게 한다 */}
-      <svg
-        viewBox={`0 0 ${size} ${size}`}
-        className="h-[340px] w-auto max-w-full short:h-[236px]"
-      >
+      {/* 크기는 부모 높이를 따른다 — 큰 폰은 340px(카드 358 = 340 + 안여백 16 + 테두리 2)에서 멈추고, 작은 폰은 CTA 위 남은 높이만큼 줄어든다 */}
+      <svg viewBox={`0 0 ${size} ${size}`} className="h-full w-auto max-w-full">
         {GRID_RINGS.map((ratio) => (
           <polygon
             key={ratio}
