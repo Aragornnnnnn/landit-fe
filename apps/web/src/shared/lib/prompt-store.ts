@@ -36,6 +36,15 @@ export const updatePromptEntry = <T extends object>(
 };
 
 // 기기 기준 오늘 (yyyy-MM-dd) — "막 마쳤다" 같은 당일 판정에 쓴다
+/** 시트 노출 기록을 전부 지운다 — 탈퇴 뒤 다시 가입한 사람이 소감·안내를 새로 만나게 */
+export const clearPromptRecords = () => {
+  try {
+    localStorage.removeItem(PROMPT_RECORD_KEY);
+  } catch {
+    // 못 지우면 시트가 한 번 덜 보일 뿐이다
+  }
+};
+
 export const getDeviceToday = () => {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');

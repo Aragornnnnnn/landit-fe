@@ -16,19 +16,18 @@ import { homePath } from '@/shared/lib/last-tab';
 import { MAILBOX_COMPOSE_PATH, SURVEY_PATH } from '@/shared/lib/routes';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { reportWarning } from '@/shared/monitoring/report';
-import { BottomSheet } from '@/shared/ui/BottomSheet';
-import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
+import { clearAccountLocalState } from './_model/account-local-state';
 import { AccentMenuEntry } from './_ui/AccentMenuEntry';
-import { EnglishLevelMenuEntry } from './_ui/EnglishLevelMenuEntry';
 import { HapticMenuEntry } from './_ui/HapticMenuEntry';
 import { MenuButton, MenuLink, MenuSection } from './_ui/Menu';
 import { NotificationMenuEntry } from './_ui/NotificationMenuEntry';
 import { PremiumEntry } from './_ui/PremiumEntry';
 import { ProfileHeader } from './_ui/ProfileHeader';
 import { WidgetMenuEntry } from './_ui/WidgetMenuEntry';
+import { WithdrawSheet } from './_ui/WithdrawSheet';
 
 export default function MyPage() {
   const router = useRouter();
@@ -94,6 +93,8 @@ export default function MyPage() {
       });
       await withdraw();
       track(EVENTS.ACCOUNT_DELETED);
+      // 다시 가입하면 첫 램프·첫 안내·소감 시트를 새로 만나야 한다 — 이 기기에 남은 계정 기록을 지운다
+      clearAccountLocalState();
       finishSignedOut();
     } catch (error) {
       const message =
@@ -142,7 +143,6 @@ export default function MyPage() {
           <PremiumEntry />
 
           <MenuSection title="학습">
-            <EnglishLevelMenuEntry />
             <AccentMenuEntry />
           </MenuSection>
 
@@ -201,41 +201,13 @@ export default function MyPage() {
         </div>
       </div>
 
-      {/* 회원탈퇴 확인 바텀시트 */}
-      <BottomSheet open={isDeleteSheetOpen} onClose={dismissDeleteSheet}>
-        <h2 className="text-[17px] font-bold" style={{ color: '#111' }}>
-          회원탈퇴
-        </h2>
-        <p className="mt-2 text-[14px] leading-6" style={{ color: '#666' }}>
-          계정과 이용 기록이 삭제됩니다. 계속 진행할까요?
-        </p>
-        {deleteErrorMessage && (
-          <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
-            {deleteErrorMessage}
-          </p>
-        )}
-        <div className="mt-5 grid grid-cols-2 gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="md"
-            onClick={dismissDeleteSheet}
-            disabled={isDeletingAccount}
-          >
-            닫기
-          </Button>
-          <Button
-            type="button"
-            variant="danger"
-            size="md"
-            onClick={deleteAccount}
-            loading={isDeletingAccount}
-            disabled={isDeletingAccount}
-          >
-            {isDeletingAccount ? '처리 중' : '탈퇴할게요'}
-          </Button>
-        </div>
-      </BottomSheet>
+      <WithdrawSheet
+        open={isDeleteSheetOpen}
+        deleting={isDeletingAccount}
+        errorMessage={deleteErrorMessage}
+        onClose={dismissDeleteSheet}
+        onConfirm={deleteAccount}
+      />
     </main>
   );
 }

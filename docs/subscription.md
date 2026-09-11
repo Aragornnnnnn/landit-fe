@@ -81,6 +81,14 @@ App Store Connect 구독 그룹 `premium` (ID 22358008, 표시명 "랜딧 프리
 
 로그인 전에는 결제 버튼을 아예 보여주지 않는다. BE가 웹훅의 `app_user_id`를 숫자 유저 id로 풀기 때문에 익명 상태 결제는 매핑이 안 된다.
 
+## 스몰톡 말하기 한도
+
+결제가 열리면 스몰톡의 하루 말하기 한도(`remainingSpeakingTimeMs`) 표시를 치운다 (LAN-480, 2026-09-11 확정). 홈 알약("오늘 남은 말하기")은 잔량 대신 "무제한"을 쓰고, 대화 화면은 마이크 위 카운트다운과 완료 버튼 둘레의 타이머 링을 그리지 않는다(`MicControl`에 `remainingRatio`를 안 넘기면 기존 펄스가 나온다).
+
+판정은 `useSpeakingLimit`(`features/small-talk/model`) 한 곳이다. 지금은 결제가 열린 환경(`usePaymentLive` = `canLockPaywall`, 플래그 + 셸 1.3.0 이상)이면 무제한이라, 지금 머지해도 플래그가 꺼진 동안은 기존 표시가 나오고 결제 오픈 재배포 때 같이 바뀐다. 브라우저 미리보기는 셸 버전이 없어 기존 표시다. 버전 게이트도 같이 보는 이유는 페이월과 같은 기준을 쓰기 위해서다(1.2.x는 1.3.0 출시 시 강제 업데이트 대상이라 실제로는 만나지 않는다). 무료 사용자 한도가 다시 생기면 이 훅에 구독 여부를 더한다.
+
+표시만 가린다. 말하는 동안 잔량을 깎는 `useSpeakingBudget`와 제출 시 보내는 `timeLimitReached`는 그대로 돌아, 한도가 되살아나면 표시만 다시 켜면 된다. BE가 프리미엄 사용자의 잔량을 깎지 않고 `canStart`를 늘 `true`로 주는지는 확인이 필요하다 — 깎는다면 표시 없이 대화가 끊긴다. "오늘의 1분 스몰톡을 다 했어요"(`canStart` false일 때)와 온보딩 안내의 "매일 1분" 문구는 그대로 남아 있다.
+
 ## 페이월 화면
 
 피그마 파일 `3LwSPCntVV55PU1CIcXbVN`, `paywall` 페이지의 `★ 최종 레이아웃` 섹션. 프레임은 연간 선택 `2020:3`, 월간 선택 `2020:86`, 작은 폰 375×667 `2021:2`.
@@ -99,14 +107,14 @@ App Store Connect 구독 그룹 `premium` (ID 22358008, 표시명 "랜딧 프리
 
 문구는 다음과 같다.
 
-| 위치           | 연간 선택 상태                                  | 월간 선택 상태                             |
-| -------------- | ----------------------------------------------- | ------------------------------------------ |
-| 월간 카드 태그 | 없음                                            | 같음                                       |
-| 월간 카드 부제 | 매달 결제 · 언제든 해지                         | 같음                                       |
-| 연간 카드 태그 | 월간보다 67% 저렴                               | 같음                                       |
-| 연간 카드 부제 | 연 58,500원 · 7일 무료 체험                     | 같음                                       |
-| CTA            | 7일 무료 체험 시작하기                          | 월 14,900원으로 시작하기                   |
-| 하단 안내      | 7일 무료 체험 후 연 58,500원 · 언제든 해지 가능 | 매월 14,900원 자동 결제 · 언제든 해지 가능 |
+| 위치           | 연간 선택 상태                                                                                               | 월간 선택 상태                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| 월간 카드 태그 | 없음                                                                                                         | 같음                                                                                                 |
+| 월간 카드 부제 | 매달 결제 · 언제든 해지                                                                                      | 같음                                                                                                 |
+| 연간 카드 태그 | 월간보다 67% 저렴                                                                                            | 같음                                                                                                 |
+| 연간 카드 부제 | 연 58,500원 · 7일 무료 체험                                                                                  | 같음                                                                                                 |
+| CTA            | 7일 무료 체험 시작하기                                                                                       | 월 14,900원으로 시작하기                                                                             |
+| 하단 안내      | 7일 무료 체험 후 연 58,500원 정기 결제 · 언제든 해지 가능 / 체험 종료 24시간 전까지 해지하면 청구되지 않아요 | 매월 14,900원 정기 결제 · 언제든 해지 가능 / 결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요 |
 
 혜택 5줄은 2026-09-07 확정 문구다 — 매일 새로운 시나리오 제공 / 무제한 프리톡 / 수준별 원어민 표현 추천 / 원어민에 가까운 발음 교정 / 미국, 영국, 호주식 영어 공부.
 
@@ -188,9 +196,9 @@ App Store Connect 구독 그룹 `premium` (ID 22358008, 표시명 "랜딧 프리
 
 ## 마이페이지와 법적 문서
 
-마이페이지(`(protected)/me`)는 프로필 헤더(`ProfileHeader` — 이름·로그인 계정·학습 수준의 마법사 래디), 골드 한 줄 카드(`PremiumEntry`), 학습·설정·지원·계정 네 묶음(`Menu.tsx`의 `MenuSection`)으로 짠다(2026-09-10 시안 확정). 프리미엄 카드는 무료면 "구독하기"로 페이월(`/paywall?from=/me`)에, 유료면 상태 한 마디(체험 중·이용 중·해지 예정)로 구독 관리(`/me/subscription`)에 간다. 결제할 수 없는 환경(`canLockPaywall` 거짓)의 무료 사용자에겐 카드가 없다. 구독 관리(`SubscriptionManageScreen`)는 골드 카드에 상태 제목(구독 중이고 플랜을 알면 "연간 프리미엄을 쓰고 있어요")과 두 행 — 날짜(체험은 첫 결제일, 구독은 다음 결제일, 해지 예약은 이용 만료일 + 자동 갱신 꺼짐)와 결제 금액(갱신되는 구독이고 플랜을 알 때만. 연간은 월간 1년치 178,800원을 지운 옆에 58,500원, 월간은 14,900원만), 이용 중인 혜택(페이월과 같은 `BenefitList`), 「구독」 묶음의 결제 내역 행(`/me/subscription/history`로 들어가서 본다 — BE #175 `GET /api/v1/me/subscription/events` 최근 50건을 최신순으로, 한 줄에 무슨 일(첫 결제·무료 체험 시작·갱신 결제·해지 예약·환불·해지 취소·만료·결제 실패·플랜 변경)·플랜·날짜와 금액, 샌드박스는 "테스트" 표시. 영수증·매출전표 링크는 없다. 규칙은 `model/subscription-events.ts`, 골드 카드 문구는 `me/subscription/_model/subscription-card.ts`)과 같은 묶음의 해지 행(구독 중 구독 해지하기 / 체험 해지하기 / 해지 예정은 해지 취소하기 — 같은 스토어 구독 화면)이다. 환불 안내는 두지 않는다(약관에만). 앱은 구독을 대신 해지하거나 바꿀 수 없고 RevenueCat도 마찬가지다. 플랜 변경 안내는 일단 두지 않는다(2026-09-10 결정) — Apple은 스토어 화면에서 사용자가 바꾸면 되지만 Google Play 구독 화면엔 플랜 변경이 없어 앱 안 전환 결제(셸 브릿지)가 있어야 양쪽이 맞는다. 후속. 제목의 플랜과 결제 금액 행은 BE가 `productId`를 줄 때만 나온다(`planFromProductId`, 모르는 상품은 생략. Play 상품은 RevenueCat이 `상품ID:베이스플랜ID` 형식으로 주므로 콜론 앞만 본다). 플랜 표시값은 `features/subscription/model/plans.ts`(페이월과 공용). 표시 규칙은 `features/subscription/model/subscription-summary.ts`(유료 여부는 `premium`만, 해지 예약이 체험보다 우선), 날짜는 `lib/subscription-date.ts`(BE LocalDateTime을 서울로). `productId`·`store`·결제 이력은 BE #175(LAN-469)가 준다 — 머지 전엔 플랜·금액이 비어 나가고 결제 내역은 빈 화면이다. 구독 관리 링크는 BE `store`(APP_STORE·PLAY_STORE)가 우선이고 없으면 셸 플랫폼(`resolveStorePlatform`). 구독 관리는 브릿지 메시지 없이 스토어 링크다(`model/store-links.ts`) — 셸이 웹 도메인 밖 주소를 OS로 넘긴다(`isExternalNavigation`). iOS는 `apps.apple.com/account/subscriptions`, Android는 Play 정기 결제 페이지. 브라우저는 플랫폼이 없어 iOS 링크를 쓴다. 설정 묶음의 푸시 알림은 권한 상태에 따라 동의 시트 또는 OS 설정을 열고, 진동은 기기 로컬 토글(`shared/haptics/haptics-setting.ts`)이다. 가입일은 BE 로그인 응답에 없어 아직 표시하지 않는다. 계측 `Subscription Manage Tapped{status}`·`Subscription History Tapped{status}`·`Paywall Entry Tapped{source}`·`Haptics Toggled{enabled}`·`Store Subscription Tapped{status, action}`.
+마이페이지(`(protected)/me`)는 프로필 헤더(`ProfileHeader` — 이름·로그인 계정·학습 수준의 마법사 래디. 로그인한 곳은 카카오·구글·애플 이름 글자로 적고 로고는 쓰지 않는다 — 각 사 심볼은 로그인 버튼 규격으로만 허용된다), 골드 한 줄 카드(`PremiumEntry`), 학습·설정·지원·계정 네 묶음(`Menu.tsx`의 `MenuSection`)으로 짠다(2026-09-10 시안 확정). 프리미엄 카드는 무료면 "구독하기"로 페이월(`/paywall?from=/me`)에, 유료면 상태 한 마디(체험 중·이용 중·해지 예정)로 구독 관리(`/me/subscription`)에 간다. 결제할 수 없는 환경(`canLockPaywall` 거짓)의 무료 사용자에겐 카드가 없다. 구독 관리(`SubscriptionManageScreen`)는 골드 카드에 상태 제목(구독 중이고 플랜을 알면 "연간 프리미엄을 쓰고 있어요")과 두 행 — 날짜(체험은 첫 결제일, 구독은 다음 결제일, 해지 예약은 이용 만료일 + 자동 갱신 꺼짐)와 결제 금액(갱신되는 구독이고 플랜을 알 때만. 연간은 월간 1년치 178,800원을 지운 옆에 58,500원, 월간은 14,900원만), 이용 중인 혜택(페이월과 같은 `BenefitList`), 「구독」 묶음의 결제 내역 행(`/me/subscription/history`로 들어가서 본다 — BE #175 `GET /api/v1/me/subscription/events` 최근 50건을 최신순으로, 한 줄에 무슨 일(첫 결제·무료 체험 시작·갱신 결제·해지 예약·환불·해지 취소·만료·결제 실패·플랜 변경)·플랜·날짜와 금액, 샌드박스는 "테스트" 표시. 영수증·매출전표 링크는 없다. 규칙은 `model/subscription-events.ts`, 골드 카드 문구는 `me/subscription/_model/subscription-card.ts`)과 같은 묶음의 해지 행(구독 중 구독 해지하기 / 체험 해지하기 / 해지 예정은 해지 취소하기 — 같은 스토어 구독 화면)이다. 환불 안내는 두지 않는다(약관에만). 앱은 구독을 대신 해지하거나 바꿀 수 없고 RevenueCat도 마찬가지다. 플랜 변경 안내는 일단 두지 않는다(2026-09-10 결정) — Apple은 스토어 화면에서 사용자가 바꾸면 되지만 Google Play 구독 화면엔 플랜 변경이 없어 앱 안 전환 결제(셸 브릿지)가 있어야 양쪽이 맞는다. 후속. 제목의 플랜과 결제 금액 행은 BE가 `productId`를 줄 때만 나온다(`planFromProductId`, 모르는 상품은 생략. Play 상품은 RevenueCat이 `상품ID:베이스플랜ID` 형식으로 주므로 콜론 앞만 본다). 플랜 표시값은 `features/subscription/model/plans.ts`(페이월과 공용). 표시 규칙은 `features/subscription/model/subscription-summary.ts`(유료 여부는 `premium`만, 해지 예약이 체험보다 우선), 날짜는 `lib/subscription-date.ts`(BE LocalDateTime을 서울로). `productId`·`store`·결제 이력은 BE #175(LAN-469)가 준다 — 머지 전엔 플랜·금액이 비어 나가고 결제 내역은 빈 화면이다. 구독 관리 링크는 BE `store`(APP_STORE·PLAY_STORE)가 우선이고 없으면 셸 플랫폼(`resolveStorePlatform`). 구독 관리는 브릿지 메시지 없이 스토어 링크다(`model/store-links.ts`) — 셸이 웹 도메인 밖 주소를 OS로 넘긴다(`isExternalNavigation`). iOS는 `apps.apple.com/account/subscriptions`, Android는 Play 정기 결제 페이지. 브라우저는 플랫폼이 없어 iOS 링크를 쓴다. 설정 묶음의 알림은 권한 상태에 따라 동의 시트 또는 OS 설정을 열고, 진동은 기기 로컬 토글(`shared/haptics/haptics-setting.ts`)이다. 가입일은 BE 로그인 응답에 없어 아직 표시하지 않는다. 계측 `Subscription Manage Tapped{status}`·`Subscription History Tapped{status}`·`Paywall Entry Tapped{source}`·`Haptics Toggled{enabled}`·`Store Subscription Tapped{status, action}`.
 
-이용약관 v1.1에 7조 「유료 구독 서비스」(상품·가격은 스토어 표시 기준, 자동 갱신, 무료 체험 종료 시 과금과 24시간 전 해지, 스토어에서 해지·남은 기간 환불 없음, 환불은 스토어 절차, 가격 변경 고지, 앱 삭제는 해지가 아님)를, 개인정보 처리방침 v1.1에 구독 결제 정보 항목(결제 수단은 수집 안 함)·이용 목적·결제 처리 위탁(Apple·Google·RevenueCat)을 넣었다. 문서는 `(public)/(legal)/terms`, `privacy`. 시행일은 2026-10-01로 적어 두었고 문안·시행일은 팀 확정 뒤 갱신한다. 심사 제출 전에 반영돼야 한다.
+이용약관 v1.1에 7조 「유료 구독 서비스」(상품·가격은 스토어 표시 기준, 자동 갱신, 무료 체험 종료 시 과금과 24시간 전 해지, 스토어에서 해지·남은 기간 환불 없음, 환불은 스토어 절차, 가격 변경 고지, 앱 삭제는 해지가 아님)를, 개인정보 처리방침 v1.1에 구독 결제 정보 항목(결제 수단은 수집 안 함)·이용 목적·결제 처리 위탁(Apple·Google·RevenueCat)을 넣었다. 문서는 `(public)/(legal)/terms`, `privacy`. 시행일은 2026-09-11(내부 테스트 시작일)로 적어 두었고 문안·시행일은 팀 확정 뒤 갱신한다. 심사 제출 전에 반영돼야 한다.
 
 ## 이슈와 PR 순서
 

@@ -27,8 +27,6 @@ export const EVENTS = {
   // 질문이 늘어도 이름을 늘리지 않고 question 속성으로 가른다 (정책 2-1)
   PROFILE_GATE_VIEWED: 'Profile Gate Viewed',
   PROFILE_GATE_ANSWERED: 'Profile Gate Answered',
-  // 마이페이지에서 스스로 다시 고른 경우 — 최초 응답(Gate·온보딩)과 의도가 달라 별도로 찍는다
-  ENGLISH_LEVEL_CHANGED: 'English Level Changed',
 
   // 배울 영어(억양) — 최초 선택은 온보딩 스텝(accent)이라 위 계측이 그대로 커버한다.
   // 마이페이지에서 다시 고른 것만 따로 찍는다
@@ -323,7 +321,6 @@ export type EventProps = {
   'Onboarding Completed': undefined;
   'Profile Gate Viewed': { question: GateQuestion };
   'Profile Gate Answered': { question: 'accent'; accent: AccentLocale };
-  'English Level Changed': { level: EnglishLevel };
   'Accent Changed': { accent: AccentLocale };
 
   // 홈 상단 탭 칩을 눌러 옮긴다 — 화면 노출(Page Viewed)엔 뒤로가기·복귀도 섞이니, 손으로 고른 것만 따로 본다

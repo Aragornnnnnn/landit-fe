@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { buildPaywallPlans } from '@/features/subscription/model/plans';
 
-import { getBillingNotice, getCtaLabel } from './paywall-copy';
+import { getBillingNotice, getCancelNotice, getCtaLabel } from './paywall-copy';
 
 const { monthly, yearly } = buildPaywallPlans();
 
@@ -26,13 +26,24 @@ describe('getCtaLabel', () => {
 describe('getBillingNotice', () => {
   it('연간은 체험 뒤 청구될 연 결제액과 해지 가능을 알린다', () => {
     expect(getBillingNotice(yearly)).toBe(
-      '7일 무료 체험 후 연 58,500원 · 언제든 해지 가능',
+      '7일 무료 체험 후 연 58,500원 정기 결제 · 언제든 해지 가능',
     );
   });
 
-  it('월간은 매달 자동 결제되는 금액과 해지 가능을 알린다', () => {
+  it('월간은 매달 정기 결제되는 금액과 해지 가능을 알린다', () => {
     expect(getBillingNotice(monthly)).toBe(
-      '매월 14,900원 자동 결제 · 언제든 해지 가능',
+      '매월 14,900원 정기 결제 · 언제든 해지 가능',
+    );
+  });
+});
+
+describe('getCancelNotice', () => {
+  it('연간(체험)은 체험 종료 24시간 전, 월간은 결제일 24시간 전 해지를 안내한다', () => {
+    expect(getCancelNotice(yearly)).toBe(
+      '체험 종료 24시간 전까지 해지하면 청구되지 않아요',
+    );
+    expect(getCancelNotice(monthly)).toBe(
+      '결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요',
     );
   });
 });

@@ -105,7 +105,6 @@
 | --------------------- | ----------------------------------------------------- | --------------------------------------------------------------- |
 | Profile Gate Viewed   | question(level\|accent)                               | 온보딩을 이미 마친 기존 유저에게 홈에서 프로필 질문 게이트 노출 |
 | Profile Gate Answered | question, level(1~5) 또는 accent(EN_US\|EN_GB\|EN_AU) | 게이트에서 답 선택                                              |
-| English Level Changed | level                                                 | 내 정보에서 영어 수준을 다시 고름                               |
 | Accent Changed        | accent                                                | 내 정보에서 배울 영어를 다시 고름                               |
 
 신규 유저의 최초 응답은 온보딩 스텝(level·accent)이라 `Onboarding Step Viewed/Completed`로 잡히고, 게이트 이벤트는 온보딩 밖에서 묻는 기존 유저에게만 찍힌다. 질문이 늘어도 이름을 늘리지 않고 `question`으로 가른다. 답은 질문마다 속성이 달라(`level` / `accent`) 짝이 안 맞는 조합은 타입이 막는다.
