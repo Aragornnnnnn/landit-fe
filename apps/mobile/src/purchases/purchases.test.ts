@@ -233,9 +233,7 @@ describe('purchasePackage', () => {
     const result = await purchasePackage('$rc_annual');
 
     expect(result.status).toBe('error');
-    expect(result.message).toBe(
-      '이 기기에서는 결제할 수 없어요. 스토어 계정 설정을 확인해 주세요.',
-    );
+    expect(result.message).toBe('이 기기에서는 결제할 수 없어요');
     expect(reportError).toHaveBeenCalledWith(error, {
       packageId: '$rc_annual',
     });
@@ -249,9 +247,7 @@ describe('purchasePackage', () => {
 
     const result = await purchasePackage('$rc_annual');
 
-    expect(result.message).toBe(
-      '이 스토어 계정으로 이미 구독 중이에요. 구독했던 계정으로 로그인하거나 구매 복원을 눌러 주세요.',
-    );
+    expect(result.message).toBe('이미 구독 중이에요. 구매 복원을 눌러 주세요');
   });
 
   it('모르는 오류나 코드 없는 오류는 공통 문구다 — 영문 원문은 화면에 내지 않는다', async () => {
@@ -261,9 +257,7 @@ describe('purchasePackage', () => {
 
     const result = await purchasePackage('$rc_annual');
 
-    expect(result.message).toBe(
-      '스토어와 통신하는 데 문제가 생겼어요. 잠시 후 다시 시도해 주세요.',
-    );
+    expect(result.message).toBe('문제가 생겼어요. 잠시 후 다시 시도해 주세요');
   });
 
   it('오퍼링에 없는 패키지 id면 스토어를 부르지 않고 실패로 끝내며 설정 결함으로 보고한다', async () => {
@@ -290,9 +284,7 @@ describe('restorePurchases', () => {
 
     const failed = await restorePurchases();
 
-    expect(failed.message).toBe(
-      '이 스토어 계정은 다른 랜딧 계정에서 구독 중이에요. 그 계정으로 로그인해 주세요.',
-    );
+    expect(failed.message).toBe('구독 중인 다른 계정으로 로그인해 주세요');
   });
 
   it('복원이 끝나면 성공, 실패하면 사유를 붙이고 보고한다 — 유료 사용자가 권한을 되찾지 못하는 상황', async () => {
@@ -306,7 +298,7 @@ describe('restorePurchases', () => {
     const failed = await restorePurchases();
 
     expect(failed.status).toBe('error');
-    expect(failed.message).toBe('네트워크 연결을 확인하고 다시 시도해 주세요.');
+    expect(failed.message).toBe('네트워크 연결을 확인해 주세요');
     expect(reportError).toHaveBeenCalledWith(error);
   });
 });
