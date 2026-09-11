@@ -28,13 +28,17 @@ const DEFAULT_IMAGE: PreloadableImage = {
   height: 200,
 };
 
-// 로그인한 곳을 작은 원 배지로 — 각 사 브랜드 색 위에 아이콘
+// 로그인한 곳을 로그인 버튼과 같은 심볼·바탕색의 작은 네모 배지로. 구글만 흰 바탕이라 테두리를 두른다
 const PROVIDER_BADGE: Record<
   string,
-  { icon: React.ReactNode; background: string }
+  { icon: React.ReactNode; background: string; bordered?: boolean }
 > = {
   KAKAO: { icon: <KakaoIcon size={11} />, background: '#FEE500' },
-  GOOGLE: { icon: <GoogleIcon size={10} />, background: '#fff' },
+  GOOGLE: {
+    icon: <GoogleIcon size={10} />,
+    background: '#fff',
+    bordered: true,
+  },
   APPLE: { icon: <AppleIcon size={11} />, background: '#000' },
 };
 
@@ -66,15 +70,17 @@ export const ProfileHeader = () => {
         </p>
         {member?.email && (
           <p
-            className="mt-1.5 flex items-center gap-1.5 text-[12.5px]"
+            className="mt-2 flex items-center gap-2 text-[12.5px]"
             style={{ color: '#6b7280' }}
           >
             {badge && (
               <span
-                className="flex size-4 shrink-0 items-center justify-center rounded-full"
+                className="flex size-[18px] shrink-0 items-center justify-center rounded-[5px]"
                 style={{
                   background: badge.background,
-                  boxShadow: '0 0 0 1px rgba(0,0,0,0.06)',
+                  boxShadow: badge.bordered
+                    ? '0 0 0 1px rgba(0,0,0,0.08)'
+                    : undefined,
                 }}
                 aria-hidden="true"
               >
