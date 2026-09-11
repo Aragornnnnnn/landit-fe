@@ -84,7 +84,7 @@ describe('PaywallScreen', () => {
       screen.getByRole('button', { name: '월 14,900원으로 시작하기' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('매월 14,900원 자동 결제 · 언제든 해지 가능'),
+      screen.getByText('매월 14,900원 정기 결제 · 언제든 해지 가능'),
     ).toBeInTheDocument();
     expect(mocks.track).toHaveBeenCalledWith('Paywall Plan Selected', {
       plan: 'monthly',
@@ -119,7 +119,9 @@ describe('PaywallScreen', () => {
     render(<PaywallScreen />);
 
     expect(
-      screen.getByText('7일 무료 체험 후 연 49,900원 · 언제든 해지 가능'),
+      screen.getByText(
+        '7일 무료 체험 후 연 49,900원 정기 결제 · 언제든 해지 가능',
+      ),
     ).toBeInTheDocument();
     expect(mocks.purchaseOptions?.pricing).toBe(mocks.pricing);
   });
