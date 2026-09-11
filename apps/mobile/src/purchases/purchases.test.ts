@@ -1,6 +1,7 @@
 // RevenueCat 래퍼의 갈림길 — 키 없을 때 비활성, 패키지 매핑, 취소와 실패 구분, 로그인·로그아웃 위임과 그 뒤에 가는 결제
 import Purchases, { PACKAGE_TYPE } from 'react-native-purchases';
 
+import { reportError, reportWarning } from '../monitoring/report';
 import {
   configurePurchases,
   fetchOfferingPackages,
@@ -24,6 +25,11 @@ jest.mock('react-native-purchases', () => ({
   },
   PACKAGE_TYPE: { MONTHLY: 'MONTHLY', ANNUAL: 'ANNUAL', WEEKLY: 'WEEKLY' },
   LOG_LEVEL: { DEBUG: 'DEBUG', INFO: 'INFO' },
+}));
+
+jest.mock('../monitoring/report', () => ({
+  reportError: jest.fn(),
+  reportWarning: jest.fn(),
 }));
 
 const mockPurchases = Purchases as jest.Mocked<typeof Purchases>;
@@ -171,10 +177,12 @@ describe('fetchOfferingPackages', () => {
     configurePurchases('key');
   });
 
-  it('스토어 조회가 실패하면 빈 배열로 끝낸다 — 웹은 기본 표시값을 유지한다', async () => {
-    mockPurchases.getOfferings.mockRejectedValueOnce(new Error('offline'));
+  it('스토어 조회가 실패하면 빈 배열로 끝내고 warning으로 보고한다 — 웹은 기본 표시값을 유지한다', async () => {
+    const error = new Error('offline');
+    mockPurchases.getOfferings.mockRejectedValueOnce(error);
 
     await expect(fetchOfferingPackages()).resolves.toEqual([]);
+    expect(reportWarning).toHaveBeenCalledWith(error);
   });
 });
 
@@ -204,25 +212,33 @@ describe('purchasePackage', () => {
     await expect(purchasePackage('$rc_annual')).resolves.toEqual({
       status: 'cancelled',
     });
+    expect(reportError).not.toHaveBeenCalled();
   });
 
-  it('그 밖의 오류는 실패이고 사유를 붙인다', async () => {
-    mockPurchases.purchasePackage.mockRejectedValueOnce({
+  it('그 밖의 오류는 실패이고 사유를 붙이며, 어떤 패키지였는지와 함께 보고한다', async () => {
+    const error = {
       userCancelled: false,
       message: 'The device or user is not allowed to make the purchase.',
-    });
+    };
+    mockPurchases.purchasePackage.mockRejectedValueOnce(error);
 
     const result = await purchasePackage('$rc_annual');
 
     expect(result.status).toBe('error');
     expect(result.message).toContain('not allowed');
+    expect(reportError).toHaveBeenCalledWith(error, {
+      packageId: '$rc_annual',
+    });
   });
 
-  it('오퍼링에 없는 패키지 id면 스토어를 부르지 않고 실패로 끝낸다', async () => {
+  it('오퍼링에 없는 패키지 id면 스토어를 부르지 않고 실패로 끝내며 설정 결함으로 보고한다', async () => {
     const result = await purchasePackage('$rc_lifetime');
 
     expect(mockPurchases.purchasePackage).not.toHaveBeenCalled();
     expect(result.status).toBe('error');
+    expect(reportError).toHaveBeenCalledWith(expect.any(Error), {
+      packageId: '$rc_lifetime',
+    });
   });
 });
 
@@ -231,13 +247,15 @@ describe('restorePurchases', () => {
     configurePurchases('key');
   });
 
-  it('복원이 끝나면 성공, 실패하면 사유를 붙인다', async () => {
+  it('복원이 끝나면 성공, 실패하면 사유를 붙이고 보고한다 — 유료 사용자가 권한을 되찾지 못하는 상황', async () => {
     await expect(restorePurchases()).resolves.toEqual({ status: 'success' });
 
-    mockPurchases.restorePurchases.mockRejectedValueOnce(new Error('network'));
+    const error = new Error('network');
+    mockPurchases.restorePurchases.mockRejectedValueOnce(error);
     const failed = await restorePurchases();
 
     expect(failed.status).toBe('error');
     expect(failed.message).toBe('network');
+    expect(reportError).toHaveBeenCalledWith(error);
   });
 });

@@ -12,6 +12,8 @@ import Purchases, {
   type PurchasesOfferings,
 } from 'react-native-purchases';
 
+import { reportError, reportWarning } from '../monitoring/report';
+
 /** 셸이 웹에 회신하는 결과 — 실패(error)일 때만 사용자에게 보여줄 문구가 붙는다 */
 export interface Outcome<Status extends string> {
   status: Status;
@@ -109,7 +111,8 @@ export const fetchOfferingPackages = async (): Promise<OfferingPackage[]> => {
   await afterIdentify();
   try {
     return toOfferingPackages(await Purchases.getOfferings());
-  } catch {
+  } catch (error) {
+    reportWarning(error);
     return [];
   }
 };
@@ -143,12 +146,15 @@ export const purchasePackage = async (
       (candidate) => candidate.identifier === packageId,
     );
     if (!pkg) {
+      // 웹이 내민 패키지가 스토어 오퍼링에 없다 — 등록값과 오퍼링이 어긋난 설정 결함
+      reportError(new Error('오퍼링에 없는 패키지'), { packageId });
       return { status: 'error', message: '지금은 살 수 없는 상품이에요.' };
     }
     await Purchases.purchasePackage(pkg);
     return { status: 'success' };
   } catch (error) {
     if (isUserCancelled(error)) return { status: 'cancelled' };
+    reportError(error, { packageId });
     return { status: 'error', message: toErrorMessage(error) };
   }
 };
@@ -161,6 +167,7 @@ export const restorePurchases = async (): Promise<RestoreOutcome> => {
     await Purchases.restorePurchases();
     return { status: 'success' };
   } catch (error) {
+    reportError(error);
     return { status: 'error', message: toErrorMessage(error) };
   }
 };
