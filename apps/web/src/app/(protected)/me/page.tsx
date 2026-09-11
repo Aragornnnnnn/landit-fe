@@ -21,6 +21,7 @@ import { Emoji } from '@/shared/ui/emoji';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import { AccentMenuEntry } from './_ui/AccentMenuEntry';
+import { EnglishLevelMenuEntry } from './_ui/EnglishLevelMenuEntry';
 import { HapticMenuEntry } from './_ui/HapticMenuEntry';
 import { MenuButton, MenuLink, MenuSection } from './_ui/Menu';
 import { NotificationMenuEntry } from './_ui/NotificationMenuEntry';
@@ -143,6 +144,7 @@ export default function MyPage() {
           <PremiumEntry />
 
           <MenuSection title="학습">
+            <EnglishLevelMenuEntry />
             <AccentMenuEntry />
           </MenuSection>
 
