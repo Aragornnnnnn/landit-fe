@@ -83,7 +83,8 @@ const toSlides = (nickname: string | null, count: number): Slide[] => [
   },
   {
     kind: 'landy',
-    image: '/images/character/landy-review.webp',
+    // 이미지·말풍선·퀴즈 카드를 떠올리는 래디 — 2026-09-11 받은 전용 이미지
+    image: '/images/character/landy-learn-expression.webp',
     caption: {
       text: '이미지·예문·퀴즈로 익혀요',
       highlight: '이미지·예문·퀴즈',
