@@ -74,8 +74,14 @@ export const BridgeListener = () => {
 
     return subscribeFromNative((message) => {
       if (message.type === 'BACK_PRESSED') routeBackPress();
-      // 셸이 전달한 알림 탭 딥링크 — 웜 스타트에선 라우터 이동으로 처리한다
-      if (message.type === 'NAVIGATE') router.push(message.url);
+      // 셸이 전달한 알림·위젯 탭 딥링크 — 웜 스타트에선 라우터 이동으로 처리한다.
+      // 온보딩 중엔 무시한다 — 위젯 설치 스텝에서 홈으로 나갔다 위젯을 눌러 돌아오면 온보딩이 밀려나 진행 상태가 사라진다
+      if (
+        message.type === 'NAVIGATE' &&
+        pathnameRef.current !== '/onboarding'
+      ) {
+        router.push(message.url);
+      }
     });
     // router는 App Router에서 안정된 객체라 재구독이 일어나지 않는다
   }, [router]);
