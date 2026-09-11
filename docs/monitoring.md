@@ -65,14 +65,16 @@ Sentry org는 백엔드와 같은 `saynow`. 기존 `{도메인}-{환경}` 컨벤
 
 ## 환경변수
 
-| 변수                                                  | 위치                                                     | 용도                                                |
-| ----------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------- |
-| `NEXT_PUBLIC_SENTRY_DSN`                              | Vercel 환경별로 다른 프로젝트 DSN                        | 전송 대상. 없으면 SDK off                           |
-| `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_AUTH_TOKEN` | Vercel에만. **auth token은 비밀 — 클라이언트 노출 금지** | 소스맵 업로드. 없으면 업로드만 스킵되고 빌드는 정상 |
+| 변수                                                  | 위치                                                                             | 용도                                                               |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `NEXT_PUBLIC_SENTRY_DSN`                              | Vercel 환경별로 다른 프로젝트 DSN                                                | 전송 대상. 없으면 SDK off                                          |
+| `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_AUTH_TOKEN` | 웹: Vercel Production. **auth token은 비밀 — 클라이언트 노출 금지**              | 소스맵 업로드. 없으면 업로드만 스킵되고 빌드는 정상                |
+| `EXPO_PUBLIC_SENTRY_DSN` / `SENTRY_PROJECT`           | 셸: EAS preview·production 환경변수 (preview=mobile-dev, production=mobile-prod) | 전송 대상과 소스맵 업로드 대상. 둘이 같은 프로젝트를 가리켜야 한다 |
+| `SENTRY_AUTH_TOKEN`                                   | 셸: EAS preview·production 시크릿                                                | 소스맵·dSYM 업로드. **없으면 릴리즈 빌드가 실패한다**              |
 
 DSN은 public key라 번들에 노출돼도 된다(전송만 가능, 조회 불가). 그래서 `NEXT_PUBLIC_` 접두사를 쓴다.
 
-셸은 `EXPO_PUBLIC_SENTRY_DSN`과 `SENTRY_PROJECT`(둘 다 EAS 환경변수, 프로필별로 짝을 맞춘다)와 `SENTRY_AUTH_TOKEN`(EAS 시크릿)을 쓴다. org는 `app.json`의 `@sentry/react-native/expo` 플러그인에, project는 DSN과 어긋나지 않게 env에 둔다. 소스맵·dSYM은 릴리즈 빌드에서 플러그인이 올린다. OTA(EAS Update)로 JS만 내보낼 땐 `npx sentry-expo-upload-sourcemaps dist`를 따로 돌려야 스택이 맞는다.
+셸은 `EXPO_PUBLIC_SENTRY_DSN`과 `SENTRY_PROJECT`(둘 다 EAS 환경변수, 프로필별로 짝을 맞춘다)와 `SENTRY_AUTH_TOKEN`(EAS 시크릿)을 쓴다. org는 `app.json`의 `@sentry/react-native/expo` 플러그인에, project는 DSN과 어긋나지 않게 env에 둔다. 소스맵·dSYM은 릴리즈 빌드에서 플러그인이 올린다. **웹과 달리 토큰이 없으면 릴리즈 빌드가 실패한다** — EAS preview·production 환경에는 `SENTRY_AUTH_TOKEN`이 반드시 있어야 하고, 토큰 없이 맥에서 릴리즈 빌드를 돌릴 땐 `SENTRY_DISABLE_AUTO_UPLOAD=true`를 앞에 붙인다. OTA(EAS Update)로 JS만 내보낼 땐 `npx sentry-expo-upload-sourcemaps dist`를 따로 돌려야 스택이 맞는다.
 
 ## 태그
 
