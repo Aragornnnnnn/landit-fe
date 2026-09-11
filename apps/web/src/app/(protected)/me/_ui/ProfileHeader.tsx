@@ -20,7 +20,6 @@ import {
   type PreloadableImage,
 } from '@/shared/lib/preload-next-images';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
-import { AppleIcon, GoogleIcon, KakaoIcon } from '@/shared/ui/SocialIcons';
 
 const DEFAULT_IMAGE: PreloadableImage = {
   src: '/images/character/landy-normal.webp',
@@ -28,14 +27,11 @@ const DEFAULT_IMAGE: PreloadableImage = {
   height: 200,
 };
 
-// 로그인한 곳을 작은 원 배지로 — 각 사 브랜드 색 위에 아이콘
-const PROVIDER_BADGE: Record<
-  string,
-  { icon: React.ReactNode; background: string }
-> = {
-  KAKAO: { icon: <KakaoIcon size={11} />, background: '#FEE500' },
-  GOOGLE: { icon: <GoogleIcon size={10} />, background: '#fff' },
-  APPLE: { icon: <AppleIcon size={11} />, background: '#000' },
+// 로그인한 곳은 로고가 아니라 이름 글자로 — 각 사 심볼은 로그인 버튼용 규격이라 작은 배지로는 지킬 수 없다. 이름은 로그인 버튼과 같다
+const PROVIDER_NAMES: Record<string, string> = {
+  KAKAO: '카카오',
+  GOOGLE: '구글',
+  APPLE: '애플',
 };
 
 export const ProfileHeader = () => {
@@ -47,7 +43,9 @@ export const ProfileHeader = () => {
   useEffect(() => {
     preloadImages([...Object.values(LEVEL_IMAGES), DEFAULT_IMAGE]);
   }, []);
-  const badge = member?.provider ? PROVIDER_BADGE[member.provider] : undefined;
+  const providerName = member?.provider
+    ? PROVIDER_NAMES[member.provider]
+    : undefined;
   // 프리미엄 카드와 같은 조건 — 결제 브릿지가 실린 셸에서 플래그가 켜져 있을 때
   const context = useClientOnlyValue(getNativeContextSnapshot, null);
   const levelVisible = canLockPaywall({
@@ -69,17 +67,11 @@ export const ProfileHeader = () => {
             className="mt-1.5 flex items-center gap-1.5 text-[12.5px]"
             style={{ color: '#6b7280' }}
           >
-            {badge && (
-              <span
-                className="flex size-4 shrink-0 items-center justify-center rounded-full"
-                style={{
-                  background: badge.background,
-                  boxShadow: '0 0 0 1px rgba(0,0,0,0.06)',
-                }}
-                aria-hidden="true"
-              >
-                {badge.icon}
-              </span>
+            {providerName && (
+              <>
+                <span className="shrink-0 font-medium">{providerName}</span>
+                <span aria-hidden="true">·</span>
+              </>
             )}
             <span className="truncate">{member.email}</span>
           </p>
