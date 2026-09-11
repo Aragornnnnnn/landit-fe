@@ -5,6 +5,7 @@ import { widgetFamilySchema, type WidgetFamily } from '@landit/bridge';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { getInstalledWidgetFamilies } from '../../../modules/widget-inventory';
+import { reportWarning } from '../../monitoring/report';
 import { recordWidgetChange, type WidgetChangeRecord } from './widget-changes';
 
 const STORAGE_KEY = 'landit.widget.inventory';
@@ -39,7 +40,10 @@ const loadSnapshot = async (): Promise<WidgetFamily[]> => {
             widgetFamilySchema.safeParse(item).success,
         )
       : [];
-  } catch {
+  } catch (error) {
+    // 저장값이 깨진 건 우리 쪽 결함 — 기록하고 지운다. 안 지우면 포그라운드 복귀마다 같은 보고가 반복된다
+    reportWarning(error);
+    await AsyncStorage.removeItem(STORAGE_KEY);
     return [];
   }
 };
@@ -60,5 +64,6 @@ export const syncWidgetInventory = async (): Promise<void> => {
     }
   } catch (error) {
     console.warn('[widget] 설치 목록 조회 실패', error);
+    reportWarning(error);
   }
 };

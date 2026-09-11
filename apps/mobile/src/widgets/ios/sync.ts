@@ -1,6 +1,7 @@
 // iOS 위젯 동기화 — 아트를 App Group 공유 디렉터리에 복사하고 타임라인을 새로 예약한다
 import type { WidgetData } from '@landit/bridge';
 
+import { reportWarning } from '../../monitoring/report';
 import { buildTimelineEntries } from './props';
 
 let artDirPromise: Promise<string | null> | null = null;
@@ -10,6 +11,7 @@ let artDirPromise: Promise<string | null> | null = null;
 const ensureWidgetArt = (): Promise<string | null> => {
   artDirPromise ??= copyArtToSharedDirectory().catch((error) => {
     console.warn('[widget] 아트 복사 실패', error);
+    reportWarning(error);
     artDirPromise = null;
     return null;
   });
@@ -62,5 +64,6 @@ export const syncIosWidget = async (data: WidgetData): Promise<void> => {
     );
   } catch (error) {
     console.warn('[widget] iOS 타임라인 동기화 실패', error);
+    reportWarning(error);
   }
 };

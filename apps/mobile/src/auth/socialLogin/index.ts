@@ -3,7 +3,7 @@ import { requestAppleLogin } from './providers/apple';
 import { requestGoogleIdToken } from './providers/google';
 import { requestKakaoIdToken } from './providers/kakao';
 
-export { SocialLoginError } from './shared/errors';
+export { toSocialLoginFailure } from './shared/failure';
 
 export type SocialProvider = 'kakao' | 'google' | 'apple';
 

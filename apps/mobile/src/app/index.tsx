@@ -16,11 +16,12 @@ import WebView from 'react-native-webview';
 
 import { initMetaSdk } from '@/analytics/meta';
 import { generateNonce } from '@/auth/nonce';
-import { requestSocialIdToken, SocialLoginError } from '@/auth/socialLogin';
+import { requestSocialIdToken, toSocialLoginFailure } from '@/auth/socialLogin';
 import { runHaptic } from '@/bridge/haptics';
 import { nativeContextScript } from '@/bridge/nativeContext';
 import { useNativeBridge } from '@/bridge/useNativeBridge';
 import { WEB_URL } from '@/config/webUrl';
+import { reportWarning, setMonitoringUser } from '@/monitoring/report';
 import { isExternalNavigation } from '@/navigation/isExternalNavigation';
 import {
   getNotificationPermission,
@@ -61,6 +62,27 @@ const ShellScreen = () => {
   const [loadFailed, setLoadFailed] = useState(false);
   // 재시도 시 WebView를 새로 마운트하기 위한 key
   const [loadAttempt, setLoadAttempt] = useState(0);
+  // 이번 실행에서 웹뷰 프로세스가 죽은 횟수 — 계속 죽으면 재마운트 대신 실패 화면으로 빠진다
+  const terminationsRef = useRef(0);
+
+  // 웹뷰를 새로 마운트한다 — reload()는 죽은 프로세스 위에서 동작하지 않는다(안드로이드는 인스턴스 재생성이 필요)
+  const restartWebView = () => {
+    setLoadFailed(false);
+    setIsWebReady(false);
+    setLoadAttempt((attempt) => attempt + 1);
+  };
+
+  // 웹뷰 프로세스가 OS에 의해 죽으면(메모리 압박 등) 흰 화면만 남는다 — 웹 Sentry는 프로세스와 함께 죽어 이 순간을 못 본다
+  const handleWebProcessTermination = (extra?: Record<string, unknown>) => {
+    terminationsRef.current += 1;
+    reportWarning('웹뷰 프로세스 종료', {
+      ...extra,
+      terminations: terminationsRef.current,
+    });
+    // 두 번째부터는 같은 상태로 다시 띄워 봐야 또 죽는다 — 사용자가 고르게 실패 화면을 보여준다
+    if (terminationsRef.current > 1) setLoadFailed(true);
+    else restartWebView();
+  };
 
   // 푸시 토큰은 권한이 허용된 뒤에만 발급된다 — 실패하면 건너뛰고 다음 실행에서 다시 시도한다
   const sendPushToken = async () => {
@@ -98,8 +120,11 @@ const ShellScreen = () => {
       postToWeb({ type: 'NOTIFICATION_PERMISSION', status });
       if (status === 'granted') await sendPushToken();
     },
-    // 로그인 사용자를 RevenueCat에 묶는다 — 웹훅의 app_user_id가 이 값. null이면 로그아웃
-    IDENTIFY: ({ userId }) => identifyUser(userId),
+    // 로그인 사용자를 RevenueCat과 Sentry에 같은 id로 묶는다 — 웹훅의 app_user_id가 이 값. null이면 로그아웃
+    IDENTIFY: ({ userId }) => {
+      setMonitoringUser(userId);
+      return identifyUser(userId);
+    },
     // 스토어 상품·가격을 웹 모양으로 회신한다. 조회 실패면 빈 목록
     GET_OFFERINGS: async () => {
       const packages = await fetchOfferingPackages();
@@ -130,12 +155,10 @@ const ShellScreen = () => {
           nickname,
         });
       } catch (error) {
-        const message =
-          error instanceof SocialLoginError
-            ? error.message
-            : '로그인 중 문제가 생겼어요.';
-        const cancelled = error instanceof SocialLoginError && error.cancelled;
-        postToWeb({ type: 'SOCIAL_LOGIN_ERROR', message, cancelled });
+        postToWeb({
+          type: 'SOCIAL_LOGIN_ERROR',
+          ...toSocialLoginFailure(error, provider),
+        });
       }
     },
   });
@@ -219,14 +242,7 @@ const ShellScreen = () => {
         <Text style={styles.errorDescription}>
           네트워크 연결을 확인하고{'\n'}다시 시도해 주세요
         </Text>
-        <Pressable
-          style={styles.retryButton}
-          onPress={() => {
-            setLoadFailed(false);
-            setIsWebReady(false);
-            setLoadAttempt((attempt) => attempt + 1);
-          }}
-        >
+        <Pressable style={styles.retryButton} onPress={restartWebView}>
           <Text style={styles.retryLabel}>다시 시도할게요</Text>
         </Pressable>
       </View>
@@ -258,6 +274,10 @@ const ShellScreen = () => {
         return false;
       }}
       onLoad={() => setIsWebReady(true)}
+      onContentProcessDidTerminate={() => handleWebProcessTermination()}
+      onRenderProcessGone={({ nativeEvent }) =>
+        handleWebProcessTermination({ didCrash: nativeEvent.didCrash })
+      }
       onError={() => setLoadFailed(true)}
       // onError는 네트워크 자체가 안 될 때만 잡는다. 서버가 4xx/5xx로 응답한 경우는
       // onHttpError가 따로 잡아야 한다 — 없으면 에러 화면 대신 날것의 에러 페이지가 보인다

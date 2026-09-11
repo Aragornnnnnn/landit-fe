@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { getInstalledWidgetFamilies } from '../../../modules/widget-inventory';
+import { reportWarning } from '../../monitoring/report';
 import { drainWidgetChanges } from './widget-changes';
 import { diffWidgetInventory, syncWidgetInventory } from './widget-inventory';
 
@@ -12,6 +13,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 jest.mock('../../../modules/widget-inventory', () => ({
   getInstalledWidgetFamilies: jest.fn(),
 }));
+jest.mock('../../monitoring/report', () => ({ reportWarning: jest.fn() }));
 const inventoryMock = jest.mocked(getInstalledWidgetFamilies);
 
 beforeEach(() => {
@@ -57,13 +59,14 @@ describe('syncWidgetInventory', () => {
   });
 
   it('조회에 실패하면 기록도 기준도 건드리지 않는다', async () => {
-    inventoryMock.mockRejectedValueOnce(new Error('unavailable'));
-    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const error = new Error('unavailable');
+    inventoryMock.mockRejectedValueOnce(error);
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
 
     await syncWidgetInventory();
 
     await expect(drainWidgetChanges()).resolves.toEqual([]);
-    expect(warn).toHaveBeenCalled();
+    expect(reportWarning).toHaveBeenCalledWith(error);
   });
 
   it('안드로이드에선 조회하지 않는다 — 프로바이더 콜백이 담당한다', async () => {

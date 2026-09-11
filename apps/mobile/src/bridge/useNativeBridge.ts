@@ -9,6 +9,8 @@ import {
 import type WebView from 'react-native-webview';
 import type { WebViewMessageEvent } from 'react-native-webview';
 
+import { reportError } from '../monitoring/report';
+
 // TType에 해당하는 메시지 모양만 뽑아낸다 (예: 'EXIT_APP' -> { type: 'EXIT_APP' })
 type MessageOfType<TType extends WebToNativeMessage['type']> = Extract<
   WebToNativeMessage,
@@ -63,11 +65,12 @@ export const useNativeBridge = (
 
     log('web -> native:', message.type, message);
 
-    // handler를 비동기로 실행하고, 동기/비동기 실패를 모두 catch로 잡는다
+    // handler를 비동기로 실행하고, 동기/비동기 실패를 모두 catch로 잡아 보고한다 — 웹은 회신을 못 받고 멈춘 상태다
     Promise.resolve()
       .then(() => handler(message))
       .catch((error) => {
         console.error(`[bridge] ${message.type} 핸들러 실패:`, error);
+        reportError(error, { messageType: message.type });
       });
   };
 
