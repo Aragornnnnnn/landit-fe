@@ -2,7 +2,7 @@
 
 웹(apps/web)의 예외 수집 규칙. 앰플리튜드([analytics.md](analytics.md))가 "유저가 뭘 했나"를 보면, Sentry는 "어디서 터졌나"를 본다.
 
-모바일(WebView 셸)에는 Sentry를 넣지 않는다 — 제품 로직이 전부 웹이라 앱 안에서 나는 에러도 웹 Sentry가 `surface: app` 태그로 잡는다. 셸 자체의 네이티브 크래시만 관측 밖이다.
+모바일(WebView 셸)은 별도 프로젝트로 본다 — 제품 로직이 전부 웹이라 앱 안에서 나는 웹 에러는 웹 Sentry가 `surface: app` 태그로 잡고, 셸 Sentry(`@sentry/react-native`, LAN-472)는 네이티브 크래시와 셸이 `catch`로 삼키는 실패(결제·로그인·브릿지·위젯·알림·웹뷰 프로세스 종료)를 본다. 셸의 보고 통로는 [apps/mobile/src/monitoring/report.ts](../apps/mobile/src/monitoring/report.ts)로 웹과 같은 모양이다.
 
 ## 원칙
 
@@ -31,16 +31,37 @@
 | 속마음 생성 실패·시간초과           | warning | useInnerThought (reportWarning)                                                                       | 속마음 생략하고 다음 턴                     |
 | 대화 세션 종료(중도 이탈) 실패      | warning | useConversationSession (reportWarning)                                                                | 없음 — 유저는 이미 나감                     |
 
-앱(웹뷰) 안에서 웹뷰 프로세스가 통째로 죽는 경우(흰 화면)는 Sentry가 못 잡는다 — 셸의 프로세스 복구 핸들러가 담당한다(별도 작업).
+### 셸(모바일)
+
+| 상황                                                    | 레벨    | 잡는 곳                                                          | 유저가 보는 것                  |
+| ------------------------------------------------------- | ------- | ---------------------------------------------------------------- | ------------------------------- |
+| 네이티브 크래시·JS 미처리 예외                          | error   | SDK 자동 (`_layout.tsx`의 `Sentry.init` + `Sentry.wrap`)         | 앱 종료 또는 재시작             |
+| 결제·복원 실패, 오퍼링에 없는 패키지 (사용자 취소 제외) | error   | purchases.ts (reportError, `packageId` 첨부)                     | 페이월 실패 문구                |
+| 브릿지 핸들러 예외                                      | error   | useNativeBridge.ts (reportError, `messageType` 첨부)             | 웹이 회신을 못 받고 멈춤        |
+| 소셜 로그인 실패 (사용자 취소 제외)                     | error   | socialLogin/shared/failure.ts (reportError, `provider` 첨부)     | 로그인 화면 에러 배너           |
+| 스토어 오퍼링 조회 실패                                 | warning | purchases.ts (reportWarning)                                     | 등록값 가격 표시로 계속         |
+| 웹뷰 프로세스 종료 (흰 화면)                            | warning | index.tsx `onContentProcessDidTerminate` / `onRenderProcessGone` | 다시 마운트, 반복되면 실패 화면 |
+| 푸시 토큰 발급 실패·projectId 누락                      | warning | push-token.ts (reportWarning)                                    | 없음 — 다음 실행에 다시 시도    |
+| 알림·위젯 콜드 스타트 경로 조회 실패                    | warning | useNotificationDeepLink.ts / useWidgetEntry.ts (reportWarning)   | 홈으로 열린다                   |
+| 위젯 갱신·핀·아트 복사·설치 목록 실패                   | warning | widgets/android/\*.ts, widgets/ios/sync.ts, widget-inventory.ts  | 위젯이 낡은 채로 남는다         |
+| 위젯 저장값 깨짐 (JSON 아님·규격 불일치)                | warning | widget-store.ts / widget-inventory.ts                            | 기본 화면으로 그린다            |
+
+보고하지 않는 것 — 사용자 취소(결제 시트 닫기, 로그인 취소), 결제 키가 없는 로컬 빌드, URL 파싱 실패(외부 이동 판정, 네이티브 인텐트)처럼 결함이 아닌 입력.
+
+셸은 `IDENTIFY` 브릿지 메시지의 userId를 Sentry 사용자로 붙인다 — RevenueCat app_user_id와 같은 값이라 결제 웹훅 미매칭 건을 사용자 단위로 좇을 수 있다.
 
 ## 프로젝트·환경 구조
 
 Sentry org는 백엔드와 같은 `saynow`. 기존 `{도메인}-{환경}` 컨벤션을 따른다.
 
-| 프로젝트      | 대상                    | DSN이 사는 곳                                     |
-| ------------- | ----------------------- | ------------------------------------------------- |
-| `web-develop` | 웹 dev 배포·로컬 테스트 | Vercel Preview/Dev env, 필요 시 로컬 `.env.local` |
-| `web-prod`    | 웹 프로덕션             | Vercel Production env                             |
+| 프로젝트      | 대상                             | DSN이 사는 곳                                     |
+| ------------- | -------------------------------- | ------------------------------------------------- |
+| `web-develop` | 웹 dev 배포·로컬 테스트          | Vercel Preview/Dev env, 필요 시 로컬 `.env.local` |
+| `web-prod`    | 웹 프로덕션                      | Vercel Production env                             |
+| `mobile-dev`  | 셸 preview 빌드·로컬 전송 테스트 | EAS preview 환경변수, 필요 시 로컬 `.env`         |
+| `mobile-prod` | 셸 스토어 빌드                   | EAS production 환경변수 `EXPO_PUBLIC_SENTRY_DSN`  |
+
+셸의 `environment` 태그는 `__DEV__`로 정해져 preview 빌드도 production으로 찍힌다 — 그래서 dev 백엔드를 보는 preview 빌드는 프로젝트를 나눠 prod 이슈와 섞이지 않게 한다. 로컬 dev 빌드는 DSN이 비어 SDK가 꺼진다.
 
 ## 환경변수
 
@@ -50,6 +71,8 @@ Sentry org는 백엔드와 같은 `saynow`. 기존 `{도메인}-{환경}` 컨벤
 | `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_AUTH_TOKEN` | Vercel에만. **auth token은 비밀 — 클라이언트 노출 금지** | 소스맵 업로드. 없으면 업로드만 스킵되고 빌드는 정상 |
 
 DSN은 public key라 번들에 노출돼도 된다(전송만 가능, 조회 불가). 그래서 `NEXT_PUBLIC_` 접두사를 쓴다.
+
+셸은 `EXPO_PUBLIC_SENTRY_DSN`과 `SENTRY_PROJECT`(둘 다 EAS 환경변수, 프로필별로 짝을 맞춘다)와 `SENTRY_AUTH_TOKEN`(EAS 시크릿)을 쓴다. org는 `app.json`의 `@sentry/react-native/expo` 플러그인에, project는 DSN과 어긋나지 않게 env에 둔다. 소스맵·dSYM은 릴리즈 빌드에서 플러그인이 올린다. OTA(EAS Update)로 JS만 내보낼 땐 `npx sentry-expo-upload-sourcemaps dist`를 따로 돌려야 스택이 맞는다.
 
 ## 태그
 
