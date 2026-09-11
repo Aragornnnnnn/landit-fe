@@ -1,7 +1,11 @@
-// 소셜 로그인 버튼용 브랜드 아이콘 — 각 사의 규정 색을 그대로 쓴다 (토큰화 대상 아님)
+// 소셜 로그인 브랜드 아이콘 — 각 사의 규정 색을 그대로 쓴다 (토큰화 대상 아님). 로그인 버튼과 마이페이지 프로필이 같이 쓴다
 
-export const KakaoIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+interface BrandIconProps {
+  size?: number;
+}
+
+export const KakaoIcon = ({ size = 22 }: BrandIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 22 22" fill="none">
     <path
       fillRule="evenodd"
       clipRule="evenodd"
@@ -11,8 +15,8 @@ export const KakaoIcon = () => (
   </svg>
 );
 
-export const GoogleIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+export const GoogleIcon = ({ size = 20 }: BrandIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 20 20" fill="none">
     <path
       d="M19.6 10.227c0-.709-.064-1.39-.182-2.045H10v3.868h5.382a4.6 4.6 0 0 1-1.996 3.018v2.51h3.232c1.891-1.742 2.982-4.305 2.982-7.35Z"
       fill="#4285F4"
@@ -32,8 +36,8 @@ export const GoogleIcon = () => (
   </svg>
 );
 
-export const AppleIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+export const AppleIcon = ({ size = 20 }: BrandIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <path
       d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.03 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09ZM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.56-1.702Z"
       fill="#FFFFFF"

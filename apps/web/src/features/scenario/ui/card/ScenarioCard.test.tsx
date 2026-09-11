@@ -6,6 +6,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Scenario } from '../../lib/to-scenario';
 import { ScenarioCard } from './ScenarioCard';
 
+// 페이월 게이트는 구독 조회를 끌고 온다 — 이 화면 테스트에선 항상 열린 문으로 치환한다
+vi.mock('@/features/subscription/model/usePaywallGate', () => ({
+  usePaywallGate: () => ({ guard: (go: () => void) => go() }),
+}));
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 vi.mock('@/shared/haptics', () => ({ haptic: vi.fn() }));
 vi.mock('@/shared/ui/StarRating', () => ({

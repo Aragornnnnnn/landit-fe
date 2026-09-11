@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { homePath } from '@/shared/lib/last-tab';
-import { MAILBOX_PATH } from '@/shared/lib/routes';
+import { backOrReplace, MAILBOX_PATH } from '@/shared/lib/routes';
 import { Transition } from '@/shared/motion';
 import { showToast } from '@/shared/ui/toast';
 
@@ -67,8 +67,7 @@ export const SurveyFlow = () => {
   };
 
   // 편지에서 넘어온 화면이라 되짚어 간다. 주소로 바로 열었으면 편지함으로
-  const leave = () =>
-    window.history.length > 1 ? router.back() : router.replace(MAILBOX_PATH);
+  const leave = () => backOrReplace(router, MAILBOX_PATH);
 
   const stepBack = () => {
     if (step === 'intro') leave();

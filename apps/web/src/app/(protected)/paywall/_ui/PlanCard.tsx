@@ -3,9 +3,12 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 
+import {
+  formatWon,
+  type PaywallPlan,
+} from '@/features/subscription/model/plans';
+import { GOLD_GRADIENT } from '@/features/subscription/ui/premium-brand';
 import { SPRING_SELECT } from '@/shared/motion';
-
-import { formatWon, type PaywallPlan } from '../_model/paywall-plans';
 
 interface PlanCardProps {
   plan: PaywallPlan;
@@ -14,8 +17,6 @@ interface PlanCardProps {
 }
 
 // 골드 그라데이션 — PREMIUM 배지와 같은 색으로, 화면에서 '프리미엄'을 뜻하는 색은 이것 하나다
-export const GOLD_GRADIENT = 'linear-gradient(90deg, #e0a63a, #f7cf5c)';
-
 export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
   const reduced = useReducedMotion() ?? false;
 

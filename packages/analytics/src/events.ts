@@ -151,6 +151,24 @@ export const EVENTS = {
   PAYWALL_PLAN_SELECTED: 'Paywall Plan Selected',
   PURCHASE_STARTED: 'Purchase Started',
   PURCHASE_RESTORE_TAPPED: 'Purchase Restore Tapped',
+  // 학습 진입 게이트 — 무료 구간을 다 쓴 무료 사용자가 어느 문에서 페이월로 보내졌는가
+  PAYWALL_GATE_LOCKED: 'Paywall Gate Locked',
+  // 대화 직후 무료 사용자가 페이월 전에 지나는 화면 — 레벨 결과(첫 대화만)와 학습 준비
+  LEVEL_RESULT_VIEWED: 'Level Result Viewed',
+  PREPARED_LEARNING_VIEWED: 'Prepared Learning Viewed',
+  PREPARED_LEARNING_CONTINUED: 'Prepared Learning Continued',
+  // 마이페이지 — 유료 사용자가 구독 관리로 들어갔다 / 무료 사용자가 페이월로 들어갔다 / 진동 토글
+  SUBSCRIPTION_MANAGE_TAPPED: 'Subscription Manage Tapped',
+  PAYWALL_ENTRY_TAPPED: 'Paywall Entry Tapped',
+  HAPTICS_TOGGLED: 'Haptics Toggled',
+  // 구독 관리 화면 — 결제 내역으로 들어갔다 / 스토어 구독 화면으로 나갔다
+  SUBSCRIPTION_HISTORY_TAPPED: 'Subscription History Tapped',
+  STORE_SUBSCRIPTION_TAPPED: 'Store Subscription Tapped',
+  // 셸의 결제 결과 회신 — 성공은 스토어 결제가 끝난 것이고, 서버 유료 반영(unlocked)은 별도 속성으로 남긴다
+  PURCHASE_COMPLETED: 'Purchase Completed',
+  PURCHASE_CANCELED: 'Purchase Canceled',
+  PURCHASE_FAILED: 'Purchase Failed',
+  PURCHASE_RESTORED: 'Purchase Restored',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -165,15 +183,14 @@ export type OnboardingStep =
   | 'thought'
   | 'notification'
   | 'widget'
-  | 'level'
   | 'accent'
   | 'scenario';
 // 영어 수준 — BE 저장 API(learningLevel)와 같은 1(막 시작)~5(유창) 정수 척도. 지표와 서버 데이터가 같은 말을 쓴다
 export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
 // 배울 영어 — BE 발음 에셋(accentLocale)과 같은 enum 값을 쓴다. 지표와 서버 데이터가 같은 말을 쓴다
 export type AccentLocale = 'EN_US' | 'EN_GB' | 'EN_AU';
-// 기존 유저 게이트가 묻는 질문 — 온보딩 스텝과 같은 말을 쓴다
-export type GateQuestion = Extract<OnboardingStep, 'level' | 'accent'>;
+// 기존 유저 게이트가 묻는 질문 — 온보딩 스텝과 같은 말을 쓴다. 영어 수준은 첫 대화로 BE가 매겨 더 이상 묻지 않는다
+export type GateQuestion = Extract<OnboardingStep, 'accent'>;
 // pronounce = 발음 평가 (발음 자산이 있는 표현에만), examples = 추가 예문 화면(한 장씩 두 장)
 export type ExpressionStep =
   'quiz' | 'explain' | 'pronounce' | 'examples' | 'review';
@@ -186,8 +203,29 @@ export type HintSource = QuizStepKind;
 // 홈 복귀 신호 — 앱 안에서 돌아온 이유. 밖에서 들어온 유입(알림·위젯)은 entry_campaign이 맡는다
 export type HomeReturnReason = 'just' | 'flip' | 'card';
 
-// 구독 플랜 — 페이월 카드와 스토어 상품(monthly/yearly)이 같은 이름을 쓴다
+// 구독 플랜 — 페이월 카드와 스토어 상품(monthly/yearly)이 같은 이름을 쓴다. 브릿지의 subscriptionPlanSchema와 같은 값이다
 export type SubscriptionPlan = 'monthly' | 'yearly';
+
+// 수준 평가가 적용 수준을 어떻게 바꿨는가 — BE LearningLevelPolicy.ChangeType과 같은 값
+export type LevelChangeType =
+  'INITIALIZED' | 'PROMOTED' | 'UNCHANGED' | 'NOT_APPLIED';
+// 마이페이지 구독 카드의 상태 — 무료 체험 중 / 구독 중 / 해지 예약(만료일까지 이용)
+export type SubscriptionState = 'trial' | 'active' | 'canceled';
+// 게이트가 아닌 자리에서 페이월로 들어간 곳 — 지금은 마이페이지(me)뿐. 알림 동의의 source와 같은 이름을 쓴다
+export type PaywallEntrySource = 'me';
+// 구독 관리에서 스토어로 나간 이유 — 해지 / 해지 취소. 둘 다 같은 스토어 화면이 열리지만 의도를 남긴다
+export type StoreSubscriptionAction = 'cancel' | 'resubscribe';
+
+// 페이월 게이트가 걸린 진입 문 — 새 대화 시작 / 표현 학습 진입 / 스몰톡 시작
+export type PaywallGateEntry =
+  | 'scenario'
+  | 'expression'
+  | 'smalltalk'
+  // 대화 피드백을 마치고 표현으로 넘어가는 자리 — 무료 구간이 끝나는 곳이라 페이월이 처음 뜬다
+  | 'conversation_finished';
+// 결제가 실패한 갈래 — 환경 문제 셋과 셸이 회신한 실패. 셸의 문구는 message에 따로 싣는다
+export type PurchaseFailureReason =
+  'browser' | 'outdated_shell' | 'no_response' | 'shell_error';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
@@ -216,6 +254,8 @@ export type CalendarView = 'week' | 'month';
 export type HomeTab = 'scenario' | 'smalltalk';
 // 위젯 설치 유도에서 고른 답 — 닫기·나중에는 dismiss로 묶는다
 export type WidgetInstallAnswer = 'install' | 'dismiss';
+// 위젯 설치 안내를 연 자리 — 온보딩 스텝인지 마이페이지에서 다시 연 것인지. 온보딩 전환율 분모가 섞이지 않게 한다
+export type WidgetGuideSource = 'onboarding' | 'me';
 // iOS 위젯 갤러리 여는 길을 알려주는 안내 3장
 export type WidgetGuideStep = 'press' | 'menu' | 'search';
 // 위젯 추가 요청이 어느 플랫폼에서 났나 — Android는 핀 다이얼로그, iOS는 안내로 갈린다
@@ -282,10 +322,7 @@ export type EventProps = {
   };
   'Onboarding Completed': undefined;
   'Profile Gate Viewed': { question: GateQuestion };
-  // 답이 질문마다 달라서 question으로 갈린다 — 짝이 안 맞는 조합(level 질문에 accent 값)은 타입이 막는다
-  'Profile Gate Answered':
-    | { question: 'level'; level: EnglishLevel }
-    | { question: 'accent'; accent: AccentLocale };
+  'Profile Gate Answered': { question: 'accent'; accent: AccentLocale };
   'English Level Changed': { level: EnglishLevel };
   'Accent Changed': { accent: AccentLocale };
 
@@ -509,13 +546,45 @@ export type EventProps = {
   'Paywall Plan Selected': { plan: SubscriptionPlan };
   'Purchase Started': { plan: SubscriptionPlan };
   'Purchase Restore Tapped': undefined;
+  'Paywall Gate Locked': { entry: PaywallGateEntry };
+  'Level Result Viewed': {
+    scenario_id: number;
+    level: EnglishLevel;
+    change_type: LevelChangeType;
+  };
+  'Prepared Learning Viewed': { scenario_id: number };
+  'Prepared Learning Continued': { scenario_id: number };
+  'Subscription Manage Tapped': { status: SubscriptionState };
+  'Paywall Entry Tapped': { source: PaywallEntrySource };
+  'Haptics Toggled': { enabled: boolean };
+  'Subscription History Tapped': { status: SubscriptionState };
+  'Store Subscription Tapped': {
+    status: SubscriptionState;
+    action: StoreSubscriptionAction;
+  };
+  // unlocked: 결제 직후 몇 초 안에 서버가 유료로 바뀌었는가 (웹훅 지연 관찰용)
+  'Purchase Completed': { plan: SubscriptionPlan; unlocked: boolean };
+  'Purchase Canceled': { plan: SubscriptionPlan };
+  // plan은 복원이 막혔을 때 없다. message는 shell_error일 때 셸이 준 문구
+  'Purchase Failed': {
+    plan?: SubscriptionPlan;
+    reason: PurchaseFailureReason;
+    message?: string;
+  };
+  'Purchase Restored': { succeeded: boolean };
 
   // 위젯 설치 안내 — 노출·답·플랫폼을 속성으로 가른다
-  'Widget Install Invite Viewed': undefined;
-  'Widget Install Invite Answered': { answer: WidgetInstallAnswer };
+  'Widget Install Invite Viewed': { source: WidgetGuideSource };
+  'Widget Install Invite Answered': {
+    answer: WidgetInstallAnswer;
+    source: WidgetGuideSource;
+  };
   'Widget Install Guide Step Viewed': { step: WidgetGuideStep };
   // 위젯 추가를 실제로 청한 순간 — Android는 시스템 핀 다이얼로그, iOS는 안내 화면으로 갈린다
-  'Widget Pin Requested': { platform: WidgetInstallPlatform };
+  'Widget Pin Requested': {
+    platform: WidgetInstallPlatform;
+    source: WidgetGuideSource;
+  };
   // 홈 화면에 놓인·치워진 위젯의 크기 — 플랫폼은 공통 속성(platform)이 이미 가른다
   'Widget Installed': { family: WidgetFamily };
   'Widget Removed': { family: WidgetFamily };

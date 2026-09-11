@@ -13,10 +13,12 @@ import {
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { toExpressionListItems } from '@/features/small-talk/model/session-expressions';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
+import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
 import { track } from '@/shared/analytics';
 import {
   sessionExpressionPath,
   SMALLTALK_HISTORY_PATH,
+  smallTalkHistoryPath,
   smallTalkTranscriptPath,
 } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
@@ -30,6 +32,7 @@ export const SmallTalkHistoryDetail = ({
   sessionId: number;
 }) => {
   const router = useRouter();
+  const gate = usePaywallGate();
   const { session, error, isLoading, generationStuck, retry, regenerate } =
     useSmallTalkSessionQuery(sessionId);
 
@@ -43,7 +46,10 @@ export const SmallTalkHistoryDetail = ({
       session_id: sessionId,
       source: 'history',
     });
-    router.push(sessionExpressionPath(sessionId, expressionId));
+    gate.guard(
+      () => router.push(sessionExpressionPath(sessionId, expressionId)),
+      { entry: 'expression', returnTo: smallTalkHistoryPath(sessionId) },
+    );
   };
 
   return (

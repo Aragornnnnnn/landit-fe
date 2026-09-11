@@ -1,4 +1,5 @@
-// 프리미엄 혜택 다섯 줄 — 2026-09-07 확정 문구 그대로. 아이콘은 shared/ui/Icons의 라인 아이콘 이름으로 가리킨다
+// 프리미엄 혜택 다섯 줄 — 2026-09-07 확정 문구 그대로. 페이월과 구독 관리 화면이 같은 목록을 쓴다.
+// 아이콘은 shared/ui/Icons의 라인 아이콘 이름으로 가리킨다
 export type BenefitIcon = 'calendar' | 'chat' | 'sparkles' | 'mic' | 'globe';
 
 export interface Benefit {

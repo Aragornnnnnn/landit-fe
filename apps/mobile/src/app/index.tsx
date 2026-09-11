@@ -29,6 +29,13 @@ import {
 import { getExpoPushToken } from '@/notifications/push-token';
 import { initializeNotifications } from '@/notifications/setup';
 import { useNotificationDeepLink } from '@/notifications/useNotificationDeepLink';
+import {
+  configurePurchases,
+  fetchOfferingPackages,
+  identifyUser,
+  purchasePackage,
+  restorePurchases,
+} from '@/purchases/purchases';
 import { syncStreakWidget, syncWidgetOnLaunch } from '@/widgets';
 import { requestWidgetPin } from '@/widgets/android/pin';
 import { syncWidgetInventory } from '@/widgets/model/widget-inventory';
@@ -42,9 +49,11 @@ import { goHome } from '../../modules/app-suspender';
 void SplashScreen.preventAutoHideAsync();
 
 const ShellScreen = () => {
-  // 위젯 타임라인 되살리기 — 로그인 전에도 0일 시간표가 돌게 한다
+  // 앱 시작 시 한 번 — 위젯 타임라인 되살리기(로그인 전에도 0일 시간표가 돌게)와 RevenueCat 켜기.
+  // RevenueCat 키가 없는 빌드(로컬 dev)면 꺼진 채로 두고 결제 요청은 실패로 회신한다
   useEffect(() => {
     void syncWidgetOnLaunch();
+    configurePurchases();
   }, []);
 
   const webviewRef = useRef<WebView>(null);
@@ -88,6 +97,22 @@ const ShellScreen = () => {
       const status = await requestNotificationPermission();
       postToWeb({ type: 'NOTIFICATION_PERMISSION', status });
       if (status === 'granted') await sendPushToken();
+    },
+    // 로그인 사용자를 RevenueCat에 묶는다 — 웹훅의 app_user_id가 이 값. null이면 로그아웃
+    IDENTIFY: ({ userId }) => identifyUser(userId),
+    // 스토어 상품·가격을 웹 모양으로 회신한다. 조회 실패면 빈 목록
+    GET_OFFERINGS: async () => {
+      const packages = await fetchOfferingPackages();
+      postToWeb({ type: 'OFFERINGS', packages });
+    },
+    // 결제 시트를 띄우고 성공·취소·실패를 회신한다. 유료 여부는 BE 웹훅이 정하므로 여기선 결과만 전한다
+    PURCHASE: async ({ packageId }) => {
+      const result = await purchasePackage(packageId);
+      postToWeb({ type: 'PURCHASE_RESULT', ...result });
+    },
+    RESTORE_PURCHASES: async () => {
+      const result = await restorePurchases();
+      postToWeb({ type: 'RESTORE_RESULT', ...result });
     },
     // 웹의 로그인 요청을 받아 provider SDK로 idToken을 발급받고, nonce와 함께 웹으로 돌려준다
     SOCIAL_LOGIN_REQUEST: async ({ provider }) => {

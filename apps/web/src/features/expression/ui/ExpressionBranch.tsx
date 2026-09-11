@@ -7,9 +7,12 @@ import { EVENTS } from '@landit/analytics';
 import { AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
+// 가로 import 사유: 학습 진입 문마다 같은 페이월 게이트를 걸어야 한다 (docs/subscription.md)
+import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import {
+  scenarioExpressionBranchPath,
   scenarioExpressionPath,
   scenarioReturnPath,
 } from '@/shared/lib/routes';
@@ -33,6 +36,7 @@ export const ExpressionBranch = ({
   date?: string;
 }) => {
   const router = useRouter();
+  const gate = usePaywallGate();
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
   const { expressions, error, retry } = useExpressionsQuery(scenarioId);
 
@@ -79,7 +83,14 @@ export const ExpressionBranch = ({
       scenario_id: scenarioId,
       source: 'post_conversation',
     });
-    router.push(scenarioExpressionPath(scenarioId, expressionId, date));
+    // 무료 구간을 다 쓴 사람은 게이트가 페이월로 보낸다 — 결제하면 이 분기로 돌아온다
+    gate.guard(
+      () => router.push(scenarioExpressionPath(scenarioId, expressionId, date)),
+      {
+        entry: 'expression',
+        returnTo: scenarioExpressionBranchPath(scenarioId, date),
+      },
+    );
   };
 
   const goLearn = () =>
