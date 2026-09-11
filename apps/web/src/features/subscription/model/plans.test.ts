@@ -105,6 +105,15 @@ describe('planFromProductId', () => {
     expect(planFromProductId('com.saynow.app.premium.yearly')).toBe('yearly');
   });
 
+  it('Play 상품은 RevenueCat이 뒤에 베이스 플랜 id를 붙여 준다 — 콜론 앞으로 맞춘다', () => {
+    expect(planFromProductId('com.saynow.app.premium.yearly:yearly')).toBe(
+      'yearly',
+    );
+    expect(
+      planFromProductId('com.saynow.app.premium.monthly:monthly-base'),
+    ).toBe('monthly');
+  });
+
   it('모르는 값이나 빈 값은 null이다', () => {
     expect(planFromProductId('com.saynow.app.premium.promo')).toBeNull();
     expect(planFromProductId(null)).toBeNull();
