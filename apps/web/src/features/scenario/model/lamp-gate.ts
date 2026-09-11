@@ -26,6 +26,15 @@ export const markSummoned = (today: string) => {
   }
 };
 
+/** 마지막 소환 기록을 지운다 — 탈퇴 뒤 다시 가입하면 첫 램프를 새로 문지르게 */
+export const clearSummoned = () => {
+  try {
+    localStorage.removeItem(SEEN_KEY);
+  } catch {
+    // 못 지우면 오늘 하루 램프가 안 뜰 뿐이다
+  }
+};
+
 export const readLastSummoned = () => {
   try {
     return localStorage.getItem(SEEN_KEY);

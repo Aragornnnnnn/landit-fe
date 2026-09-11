@@ -22,7 +22,11 @@ import { track } from '@/shared/analytics';
 import { homePath } from '@/shared/lib/last-tab';
 import { Button } from '@/shared/ui/Button';
 
-import { getBillingNotice, getCtaLabel } from '../_model/paywall-copy';
+import {
+  getBillingNotice,
+  getCancelNotice,
+  getCtaLabel,
+} from '../_model/paywall-copy';
 import { PaywallHero } from './PaywallHero';
 import { PlanCard } from './PlanCard';
 
@@ -95,6 +99,9 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
         </Button>
         <p className="mt-3.5 text-center text-[11px] leading-[1.35] text-muted-foreground short:mt-2">
           {getBillingNotice(selectedPlan)}
+        </p>
+        <p className="mt-1 text-center text-[11px] leading-[1.35] text-muted-foreground">
+          {getCancelNotice(selectedPlan)}
         </p>
         <nav className="mt-3 flex justify-center gap-3 text-[10px] leading-[1.3] font-medium text-muted-foreground underline short:mt-2">
           <Link href="/terms">이용약관</Link>

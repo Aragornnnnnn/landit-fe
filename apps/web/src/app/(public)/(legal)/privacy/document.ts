@@ -3,7 +3,7 @@ import type { LegalDocument } from '../_ui/LegalDocumentPage';
 
 export const privacyDocument: LegalDocument = {
   title: '개인정보 처리방침',
-  effectiveDate: '2026년 10월 1일',
+  effectiveDate: '2026년 9월 11일',
   version: 'v1.1',
   introduction: [
     'Landit는 이용자의 개인정보를 중요하게 생각하며, 개인정보 보호 관련 법령을 준수하기 위해 본 개인정보 처리방침을 수립하여 공개합니다.',
