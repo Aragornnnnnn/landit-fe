@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Linking } from 'react-native';
 
+import { reportWarning } from '../monitoring/report';
 import { widgetEntryPath } from './widget-link';
 
 // loading: 콜드 스타트 조회 전이라 WebView 마운트를 보류, ready: 경로 확정 (null이면 위젯으로 들어온 게 아니다)
@@ -39,7 +40,8 @@ export const useWidgetEntry = (
           setColdStart({ status: 'ready', path: widgetEntryPath(url) });
         })
         // 조회가 실패해도 "위젯 진입 아님"으로 열어준다 — ready가 안 오면 WebView가 영영 마운트되지 않는다
-        .catch(() => {
+        .catch((error) => {
+          reportWarning(error);
           if (!cancelled) setColdStart({ status: 'ready', path: null });
         });
     }
