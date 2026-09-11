@@ -23,6 +23,8 @@ vi.mock('@/features/onboarding/model/useLearningLevelQuery', () => ({
     isPending: mocks.pending,
   }),
 }));
+// 그림 미리 받기는 자기 테스트가 있다 — 여기선 화면 계약만 본다
+vi.mock('@/shared/lib/preload-next-images', () => ({ preloadImages: vi.fn() }));
 vi.mock('next/image', () => ({
   // 어느 그림을 골랐는지만 보면 되니 평범한 img로 — 최적화 경고는 테스트라 무관하다
   // eslint-disable-next-line @next/next/no-img-element

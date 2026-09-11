@@ -2,6 +2,7 @@
 // 단체샷은 아래 경계에서 허리쯤이 잘리도록 슬롯보다 큰 이미지를 넣고 넘치는 부분을 숨긴다 (피그마 '빼꼼 컷')
 import Image from 'next/image';
 
+import { PAYWALL_HERO } from '@/features/subscription/ui/paywall-hero-image';
 import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
 import { CloseIcon } from '@/shared/ui/Icons';
 
@@ -45,10 +46,8 @@ export const PaywallHero = ({
     {/* 슬롯 높이가 곧 크롭선이다. 작은 폰에서는 슬롯을 조금 줄이고 이미지를 위로 당겨 얼굴은 남긴다 */}
     <div className="relative mt-1.5 h-[194px] overflow-hidden short:h-[184px]">
       <Image
-        src="/images/paywall-hero.webp"
+        {...PAYWALL_HERO}
         alt=""
-        width={1200}
-        height={900}
         priority
         className="absolute top-[-14px] left-1/2 w-[calc(100%+10px)] max-w-none -translate-x-1/2 short:top-[-18px]"
       />
