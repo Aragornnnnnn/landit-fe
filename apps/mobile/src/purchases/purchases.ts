@@ -9,6 +9,7 @@ import type {
 import Purchases, {
   LOG_LEVEL,
   PACKAGE_TYPE,
+  PURCHASES_ERROR_CODE,
   type PurchasesOfferings,
 } from 'react-native-purchases';
 
@@ -117,12 +118,34 @@ export const fetchOfferingPackages = async (): Promise<OfferingPackage[]> => {
   }
 };
 
-// RevenueCat 오류는 Error일 수도, message만 있는 객체일 수도 있다 — 문자열 message가 있으면 그대로 쓴다
+// 사용자가 할 수 있는 일이 다른 오류만 코드로 가른다. 원문은 영문이라 화면에 내지 않고 Sentry 보고에만 남긴다.
+// 웹 토스트는 한 줄·2초라 문구는 20자 안팎, 할 일 하나만 담는다
+const NETWORK_MESSAGE = '네트워크 연결을 확인해 주세요';
+const ERROR_MESSAGES: Partial<Record<PURCHASES_ERROR_CODE, string>> = {
+  [PURCHASES_ERROR_CODE.PRODUCT_ALREADY_PURCHASED_ERROR]:
+    '이미 구독 중이에요. 구매 복원을 눌러 주세요',
+  // Keep with original 설정이라 다른 랜딧 계정이 가진 영수증은 결제·복원 모두 거절된다
+  [PURCHASES_ERROR_CODE.RECEIPT_ALREADY_IN_USE_ERROR]:
+    '구독 중인 다른 계정으로 로그인해 주세요',
+  [PURCHASES_ERROR_CODE.PRODUCT_NOT_AVAILABLE_FOR_PURCHASE_ERROR]:
+    '지금은 살 수 없는 상품이에요',
+  [PURCHASES_ERROR_CODE.PURCHASE_NOT_ALLOWED_ERROR]:
+    '이 기기에서는 결제할 수 없어요',
+  [PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR]:
+    '승인 대기 중이에요. 승인되면 바로 열려요',
+  [PURCHASES_ERROR_CODE.NETWORK_ERROR]: NETWORK_MESSAGE,
+  [PURCHASES_ERROR_CODE.OFFLINE_CONNECTION_ERROR]: NETWORK_MESSAGE,
+};
+const DEFAULT_ERROR_MESSAGE = '문제가 생겼어요. 잠시 후 다시 시도해 주세요';
+
+// RevenueCat 오류는 Error일 수도, code만 있는 객체일 수도 있다 — 아는 코드면 그 문구, 아니면 공통 문구
 const toErrorMessage = (error: unknown) => {
-  const message = (error as { message?: unknown } | null)?.message;
-  return typeof message === 'string' && message
-    ? message
-    : '결제 중 문제가 생겼어요.';
+  const code = (error as { code?: unknown } | null)?.code;
+  return (
+    (typeof code === 'string' &&
+      ERROR_MESSAGES[code as PURCHASES_ERROR_CODE]) ||
+    DEFAULT_ERROR_MESSAGE
+  );
 };
 
 // 사용자가 시트를 닫은 것(userCancelled)은 실패가 아니라 취소다
