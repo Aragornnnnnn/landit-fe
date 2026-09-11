@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { buildPaywallPlans } from '@/features/subscription/model/plans';
 
-import { getBillingNotice, getCancelNotice, getCtaLabel } from './paywall-copy';
+import { getBillingNotice, getCtaLabel, getTrialNotice } from './paywall-copy';
 
 const { monthly, yearly } = buildPaywallPlans();
 
@@ -37,13 +37,12 @@ describe('getBillingNotice', () => {
   });
 });
 
-describe('getCancelNotice', () => {
-  it('연간(체험)은 체험 종료 24시간 전, 월간은 결제일 24시간 전 해지를 안내한다', () => {
-    expect(getCancelNotice(yearly)).toBe(
+describe('getTrialNotice', () => {
+  it('연간(체험)에만 24시간 전 해지 안내를 붙이고 월간엔 없다', () => {
+    const { monthly, yearly } = buildPaywallPlans();
+    expect(getTrialNotice(yearly)).toBe(
       '체험 종료 24시간 전까지 해지하면 청구되지 않아요',
     );
-    expect(getCancelNotice(monthly)).toBe(
-      '결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요',
-    );
+    expect(getTrialNotice(monthly)).toBeNull();
   });
 });

@@ -24,8 +24,8 @@ import { Button } from '@/shared/ui/Button';
 
 import {
   getBillingNotice,
-  getCancelNotice,
   getCtaLabel,
+  getTrialNotice,
 } from '../_model/paywall-copy';
 import { PaywallHero } from './PaywallHero';
 import { PlanCard } from './PlanCard';
@@ -100,8 +100,12 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
         <p className="mt-3.5 text-center text-[11px] leading-[1.35] text-muted-foreground short:mt-2">
           {getBillingNotice(selectedPlan)}
         </p>
-        <p className="mt-1 text-center text-[11px] leading-[1.35] text-muted-foreground">
-          {getCancelNotice(selectedPlan)}
+        {/* 둘째 줄은 자리를 항상 잡는다 — 월간으로 바꿀 때 줄이 사라지며 CTA가 내려앉지 않게. 글자만 숨긴다 */}
+        <p
+          className={`mt-1 text-center text-[11px] leading-[1.35] text-muted-foreground ${getTrialNotice(selectedPlan) ? '' : 'invisible'}`}
+          aria-hidden={!getTrialNotice(selectedPlan)}
+        >
+          {getTrialNotice(selectedPlan) ?? '\u00a0'}
         </p>
         <nav className="mt-3 flex justify-center gap-3 text-[10px] leading-[1.3] font-medium text-muted-foreground underline short:mt-2">
           <Link href="/terms">이용약관</Link>
