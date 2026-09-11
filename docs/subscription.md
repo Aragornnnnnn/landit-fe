@@ -173,7 +173,7 @@ App Store Connect 구독 그룹 `premium` (ID 22358008, 표시명 "랜딧 프리
 | `PURCHASE_RESULT` | `{ status: 'success' \| 'cancelled' \| 'error', message? }` |
 | `RESTORE_RESULT`  | `{ status: 'success' \| 'error', message? }`                |
 
-웹은 `currency`가 KRW일 때만 `price`로 카드 숫자를 다시 계산한다. 다른 통화는 등록값을 그대로 보여준다 (해외 스토어프런트는 다음 이슈). 결제 메시지를 모르는 구버전 셸에서는 웹이 앱 업데이트 안내로 빠진다.
+`message`는 셸이 RevenueCat 오류 코드로 고른 한국어 문구다(`apps/mobile/src/purchases/purchases.ts` — 스토어 계정이 이미 구독 중·결제 불가 기기·승인 대기·네트워크, 그 밖엔 공통 문구). 영문 원문은 화면에 내지 않고 Sentry 보고에만 남는다. 웹은 `currency`가 KRW일 때만 `price`로 카드 숫자를 다시 계산한다. 다른 통화는 등록값을 그대로 보여준다 (해외 스토어프런트는 다음 이슈). 결제 메시지를 모르는 구버전 셸에서는 웹이 앱 업데이트 안내로 빠진다.
 
 ## 웹 결제 흐름
 

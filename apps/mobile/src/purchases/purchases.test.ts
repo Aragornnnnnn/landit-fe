@@ -1,5 +1,8 @@
 // RevenueCat 래퍼의 갈림길 — 키 없을 때 비활성, 패키지 매핑, 취소와 실패 구분, 로그인·로그아웃 위임과 그 뒤에 가는 결제
-import Purchases, { PACKAGE_TYPE } from 'react-native-purchases';
+import Purchases, {
+  PACKAGE_TYPE,
+  PURCHASES_ERROR_CODE,
+} from 'react-native-purchases';
 
 import { reportError, reportWarning } from '../monitoring/report';
 import {
@@ -25,6 +28,10 @@ jest.mock('react-native-purchases', () => ({
   },
   PACKAGE_TYPE: { MONTHLY: 'MONTHLY', ANNUAL: 'ANNUAL', WEEKLY: 'WEEKLY' },
   LOG_LEVEL: { DEBUG: 'DEBUG', INFO: 'INFO' },
+  // 오류 코드는 순수 TS 패키지의 실제 값 — 문구 표가 진짜 코드에 걸리는지 본다
+  PURCHASES_ERROR_CODE: jest.requireActual(
+    '@revenuecat/purchases-typescript-internal',
+  ).PURCHASES_ERROR_CODE,
 }));
 
 jest.mock('../monitoring/report', () => ({
@@ -215,8 +222,9 @@ describe('purchasePackage', () => {
     expect(reportError).not.toHaveBeenCalled();
   });
 
-  it('그 밖의 오류는 실패이고 사유를 붙이며, 어떤 패키지였는지와 함께 보고한다', async () => {
+  it('아는 오류 코드는 실패이고 그 코드의 한국어 문구를 붙이며, 어떤 패키지였는지와 함께 보고한다', async () => {
     const error = {
+      code: PURCHASES_ERROR_CODE.PURCHASE_NOT_ALLOWED_ERROR,
       userCancelled: false,
       message: 'The device or user is not allowed to make the purchase.',
     };
@@ -225,10 +233,37 @@ describe('purchasePackage', () => {
     const result = await purchasePackage('$rc_annual');
 
     expect(result.status).toBe('error');
-    expect(result.message).toContain('not allowed');
+    expect(result.message).toBe(
+      '이 기기에서는 결제할 수 없어요. 스토어 계정 설정을 확인해 주세요.',
+    );
     expect(reportError).toHaveBeenCalledWith(error, {
       packageId: '$rc_annual',
     });
+  });
+
+  it('스토어 계정이 이미 구독 중이면 영문 원문 대신 복원·계정 안내를 붙인다 — 같은 폰에서 랜딧 계정을 바꾼 경우', async () => {
+    mockPurchases.purchasePackage.mockRejectedValueOnce({
+      code: PURCHASES_ERROR_CODE.PRODUCT_ALREADY_PURCHASED_ERROR,
+      message: 'This product is already active for the user.',
+    });
+
+    const result = await purchasePackage('$rc_annual');
+
+    expect(result.message).toBe(
+      '이 스토어 계정으로 이미 구독 중이에요. 구독했던 계정으로 로그인하거나 구매 복원을 눌러 주세요.',
+    );
+  });
+
+  it('모르는 오류나 코드 없는 오류는 공통 문구다 — 영문 원문은 화면에 내지 않는다', async () => {
+    mockPurchases.purchasePackage.mockRejectedValueOnce(
+      new Error('Something went wrong'),
+    );
+
+    const result = await purchasePackage('$rc_annual');
+
+    expect(result.message).toBe(
+      '스토어와 통신하는 데 문제가 생겼어요. 잠시 후 다시 시도해 주세요.',
+    );
   });
 
   it('오퍼링에 없는 패키지 id면 스토어를 부르지 않고 실패로 끝내며 설정 결함으로 보고한다', async () => {
@@ -250,12 +285,15 @@ describe('restorePurchases', () => {
   it('복원이 끝나면 성공, 실패하면 사유를 붙이고 보고한다 — 유료 사용자가 권한을 되찾지 못하는 상황', async () => {
     await expect(restorePurchases()).resolves.toEqual({ status: 'success' });
 
-    const error = new Error('network');
+    const error = {
+      code: PURCHASES_ERROR_CODE.NETWORK_ERROR,
+      message: 'network',
+    };
     mockPurchases.restorePurchases.mockRejectedValueOnce(error);
     const failed = await restorePurchases();
 
     expect(failed.status).toBe('error');
-    expect(failed.message).toBe('network');
+    expect(failed.message).toBe('네트워크 연결을 확인하고 다시 시도해 주세요.');
     expect(reportError).toHaveBeenCalledWith(error);
   });
 });
