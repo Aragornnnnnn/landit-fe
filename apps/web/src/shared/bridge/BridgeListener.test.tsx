@@ -52,6 +52,7 @@ describe('BridgeListener', () => {
     mocks.pathname = '/scenario';
     mocks.postToNative.mockClear();
     mocks.showToast.mockClear();
+    mocks.routerPush.mockClear();
     setNavigation(false);
   });
 
@@ -142,6 +143,33 @@ describe('BridgeListener', () => {
 
   it('NAVIGATE 메시지를 받으면 그 경로로 이동한다', () => {
     render(<BridgeListener />);
+
+    act(() => {
+      mocks.nativeListener?.({ type: 'NAVIGATE', url: '/expressions' });
+    });
+
+    expect(mocks.routerPush).toHaveBeenCalledWith('/expressions');
+  });
+
+  it('온보딩 중에 받은 NAVIGATE는 무시한다 — 위젯 탭으로 돌아와도 온보딩이 밀려나지 않는다', () => {
+    mocks.pathname = '/onboarding';
+    render(<BridgeListener />);
+
+    act(() => {
+      mocks.nativeListener?.({
+        type: 'NAVIGATE',
+        url: '/scenario?utm_source=widget&utm_medium=widget&utm_campaign=streak_widget',
+      });
+    });
+
+    expect(mocks.routerPush).not.toHaveBeenCalled();
+  });
+
+  it('온보딩을 마치고 다른 화면으로 옮긴 뒤의 NAVIGATE는 다시 이동한다', () => {
+    mocks.pathname = '/onboarding';
+    const { rerender } = render(<BridgeListener />);
+    mocks.pathname = '/scenario';
+    rerender(<BridgeListener />);
 
     act(() => {
       mocks.nativeListener?.({ type: 'NAVIGATE', url: '/expressions' });
