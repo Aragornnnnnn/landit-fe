@@ -18,6 +18,7 @@ describe('toPageView', () => {
       page_name: 'smalltalk',
       path: '/smalltalk',
     });
+    expect(pv('/paywall')).toEqual({ page_name: 'paywall', path: '/paywall' });
   });
 
   it('표현 완료 복귀(flip)를 return_reason으로 해석한다', () => {

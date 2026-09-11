@@ -2,6 +2,8 @@
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 
+import { reportWarning } from '../monitoring/report';
+
 // 발급은 네이티브 등록 + Expo 서버 왕복이라 비싸다. 토큰은 설치 단위로 고정이라 실행당 한 번만 받는다
 let pending: Promise<string | null> | null = null;
 
@@ -10,6 +12,7 @@ const issue = async (): Promise<string | null> => {
   const projectId = Constants.expoConfig?.extra?.eas?.projectId;
   if (!projectId) {
     console.warn('[push-token] EAS projectId가 없어 발급을 건너뛴다');
+    reportWarning('EAS projectId가 없어 푸시 토큰을 발급하지 못한다');
     return null;
   }
 
@@ -18,6 +21,7 @@ const issue = async (): Promise<string | null> => {
     return data;
   } catch (error) {
     console.warn('[push-token] 발급 실패:', error);
+    reportWarning(error);
     // 일시적 실패는 다음 호출에서 다시 시도한다
     pending = null;
     return null;

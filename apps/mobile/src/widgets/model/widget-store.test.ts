@@ -2,12 +2,14 @@
 import { EMPTY_WIDGET_DATA, widgetDataSchema } from '@landit/bridge';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { reportWarning } from '../../monitoring/report';
 import { decideWidgetState } from './widget-state';
 import { loadWidgetData, saveWidgetData } from './widget-store';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
+jest.mock('../../monitoring/report', () => ({ reportWarning: jest.fn() }));
 
 const dataOf = (over: object = {}) => ({
   streak: 5,
@@ -52,5 +54,7 @@ describe('widget-store', () => {
       JSON.stringify({ streak: 'five' }),
     );
     expect(await loadWidgetData()).toBeNull();
+    // JSON 아님·규격 불일치 둘 다 우리 쪽 결함이라 기록해 둔다
+    expect(reportWarning).toHaveBeenCalledTimes(2);
   });
 });

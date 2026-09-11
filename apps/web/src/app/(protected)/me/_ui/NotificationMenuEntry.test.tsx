@@ -1,4 +1,4 @@
-// NotificationMenuEntry — 알림을 안 켠 유저에게만 보이고, 권한 상태별로 다른 동작을 하는지 검증
+// NotificationMenuEntry — 권한 상태별로 동의 시트 또는 OS 설정으로 가고, 권한 체계가 없으면 행이 없는지 검증
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -64,7 +64,7 @@ describe('NotificationMenuEntry', () => {
     useNotificationPermissionMock.mockReturnValue('undetermined');
 
     render(<NotificationMenuEntry />);
-    fireEvent.click(screen.getByText('알림 켜기'));
+    fireEvent.click(screen.getByText('알림'));
 
     expect(screen.getByText('알림 받을게요!')).toBeInTheDocument();
   });
@@ -73,7 +73,7 @@ describe('NotificationMenuEntry', () => {
     useNotificationPermissionMock.mockReturnValue('undetermined');
 
     render(<NotificationMenuEntry />);
-    fireEvent.click(screen.getByText('알림 켜기'));
+    fireEvent.click(screen.getByText('알림'));
     fireEvent.click(screen.getByText('알림 받을게요!'));
 
     expect(postToNativeMock).toHaveBeenCalledWith({
@@ -86,18 +86,20 @@ describe('NotificationMenuEntry', () => {
     useNotificationPermissionMock.mockReturnValue('denied');
 
     render(<NotificationMenuEntry />);
-    fireEvent.click(screen.getByText('알림 켜기'));
+    fireEvent.click(screen.getByText('알림'));
 
     expect(postToNativeMock).toHaveBeenCalledWith({ type: 'OPEN_SETTINGS' });
     expect(screen.queryByText('알림 받을게요!')).not.toBeInTheDocument();
   });
 
-  it('이미 허용한 유저에겐 항목 자체가 안 보인다', () => {
+  it('이미 허용한 유저에게도 행이 보이고, 누르면 끄고 켤 수 있는 OS 설정을 연다', () => {
     useNotificationPermissionMock.mockReturnValue('granted');
-
     render(<NotificationMenuEntry />);
 
-    expect(screen.queryByText('알림 켜기')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('알림'));
+
+    expect(postToNativeMock).toHaveBeenCalledWith({ type: 'OPEN_SETTINGS' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('권한 상태를 알 수 없는 환경(브라우저·구버전 셸)에선 안 보인다', () => {
@@ -105,6 +107,6 @@ describe('NotificationMenuEntry', () => {
 
     render(<NotificationMenuEntry />);
 
-    expect(screen.queryByText('알림 켜기')).not.toBeInTheDocument();
+    expect(screen.queryByText('알림')).not.toBeInTheDocument();
   });
 });

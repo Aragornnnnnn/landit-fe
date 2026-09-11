@@ -2,7 +2,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { EVENTS, type WidgetGuideStep } from '@landit/analytics';
+import {
+  EVENTS,
+  type WidgetGuideSource,
+  type WidgetGuideStep,
+} from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
 import { getNativeContext } from '@/shared/bridge/native-context';
@@ -20,10 +24,13 @@ type Step = 'invite' | 'press' | 'menu' | 'search';
 const GUIDE_STEPS: Step[] = ['press', 'menu', 'search'];
 
 export const InstallGuide = ({
+  source,
   onDecline,
   onAndroidPin,
   onLeaveHome,
 }: {
+  /** 계측용 — 온보딩 스텝인지 마이페이지에서 다시 연 것인지 */
+  source: WidgetGuideSource;
   onDecline: () => void;
   onAndroidPin: () => void;
   onLeaveHome: () => void;
@@ -32,8 +39,8 @@ export const InstallGuide = ({
 
   // 설치 유도 노출을 계측한다 — 마운트 때 한 번
   useEffect(() => {
-    track(EVENTS.WIDGET_INSTALL_INVITE_VIEWED);
-  }, []);
+    track(EVENTS.WIDGET_INSTALL_INVITE_VIEWED, { source });
+  }, [source]);
 
   // 안내 스텝(press·menu·search)에 들어설 때마다 노출을 계측한다 — 어디서 이탈하는지 본다
   useEffect(() => {
@@ -46,19 +53,19 @@ export const InstallGuide = ({
 
   // 위젯 추가하기 — 안드로이드는 시스템 핀 다이얼로그로 직행(호출자 몫), iOS는 갤러리 여는 길을 화면으로 안내한다
   const add = () => {
-    track(EVENTS.WIDGET_INSTALL_INVITE_ANSWERED, { answer: 'install' });
+    track(EVENTS.WIDGET_INSTALL_INVITE_ANSWERED, { answer: 'install', source });
     if (getNativeContext()?.platform === 'android') {
-      track(EVENTS.WIDGET_PIN_REQUESTED, { platform: 'android' });
+      track(EVENTS.WIDGET_PIN_REQUESTED, { platform: 'android', source });
       onAndroidPin();
       return;
     }
-    track(EVENTS.WIDGET_PIN_REQUESTED, { platform: 'ios' });
+    track(EVENTS.WIDGET_PIN_REQUESTED, { platform: 'ios', source });
     setStep('press');
   };
 
   // 설치 유도에서 나중에 하기 — 미룬 답으로 계측하고 닫는 건 호출자에게 맡긴다
   const later = () => {
-    track(EVENTS.WIDGET_INSTALL_INVITE_ANSWERED, { answer: 'dismiss' });
+    track(EVENTS.WIDGET_INSTALL_INVITE_ANSWERED, { answer: 'dismiss', source });
     onDecline();
   };
 

@@ -21,6 +21,7 @@ import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
 import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
 import type { SmallTalkSessionStartResponse } from '@/features/small-talk/api/small-talk';
 import { toCountdownLabel } from '@/features/small-talk/lib/speaking-time';
+import { useSpeakingLimit } from '@/features/small-talk/model/useSpeakingLimit';
 import { track } from '@/shared/analytics';
 import {
   sessionExpressionBranchPath,
@@ -49,6 +50,8 @@ export const SmallTalkConversation = ({
   const router = useRouter();
   const goHome = () => router.replace(SMALLTALK_PATH);
   const [showExitSheet, setShowExitSheet] = useState(false);
+  // 결제가 열리면 하루 한도가 없다 — 남은 시간과 타이머 링을 그리지 않는다 (잔량 계산은 뒤에서 그대로 돈다)
+  const { unlimited } = useSpeakingLimit();
   // 내가 먼저 거는 대화의 진입 안내 — 랜디가 먼저 말을 걸어보라고 알려주고 잠시 후 사라진다
   const [introDismissed, setIntroDismissed] = useState(false);
   const {
@@ -165,19 +168,22 @@ export const SmallTalkConversation = ({
         ) : (
           <>
             {/* 남은 시간은 말하기 직전에 보여야 하는 값이라 마이크 바로 위에 둔다.
-                0이 돼도 하던 말은 끊지 않고, 그 발화를 끝으로 상대가 대화를 마무리한다 */}
-            <p className="mt-3 text-center text-sm font-medium text-muted-foreground">
-              남은 말하기 시간{' '}
-              <span className="font-bold text-primary">
-                {toCountdownLabel(remainingMs)}
-              </span>
-            </p>
+                0이 돼도 하던 말은 끊지 않고, 그 발화를 끝으로 상대가 대화를 마무리한다.
+                무제한이면 이 줄째 없다 — "무제한"이라 써 둘 것도 없다 */}
+            {!unlimited && (
+              <p className="mt-3 text-center text-sm font-medium text-muted-foreground">
+                남은 말하기 시간{' '}
+                <span className="font-bold text-primary">
+                  {toCountdownLabel(remainingMs)}
+                </span>
+              </p>
+            )}
             <MicControl
               phase={phase}
               onPress={pressMic}
               onCancel={cancelInput}
               onDone={finishListening}
-              remainingRatio={speakingRatio}
+              remainingRatio={unlimited ? undefined : speakingRatio}
             />
           </>
         )}

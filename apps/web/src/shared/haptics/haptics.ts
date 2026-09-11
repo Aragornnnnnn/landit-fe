@@ -3,6 +3,8 @@ import type { HapticPattern } from '@landit/bridge';
 
 import { postToNative } from '@/shared/bridge/web-bridge';
 
+import { isHapticsEnabled } from './haptics-setting';
+
 // 일반 브라우저(주로 Android)용 폴백 진동 패턴(ms). iOS 브라우저는 vibrate 미지원이라 조용히 무시된다
 const VIBRATION_FALLBACK: Record<HapticPattern, number | number[]> = {
   selection: 8,
@@ -24,6 +26,9 @@ const now = () =>
 
 // 지정한 패턴으로 햅틱을 울린다. WebView 밖이면 Vibration API로 폴백하고, 그마저 없으면 아무 일도 안 한다
 export const haptic = (pattern: HapticPattern) => {
+  // 마이페이지에서 진동을 끈 사람에겐 아무 것도 울리지 않는다
+  if (!isHapticsEnabled()) return;
+
   const at = now();
   if (at - (lastFiredAt[pattern] ?? -Infinity) < MIN_INTERVAL_MS) return;
   lastFiredAt[pattern] = at;

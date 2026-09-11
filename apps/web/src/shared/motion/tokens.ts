@@ -8,6 +8,13 @@ export const DURATION = {
 // 코드 전반에서 이미 사실상 표준이던 ease. 부드럽게 감속하는 out 곡선.
 export const EASE_STANDARD = [0.22, 1, 0.36, 1] as const;
 
+// 선택 표시가 항목 사이를 옮겨 다닐 때 — 느긋하게 미끄러져 아주 살짝만 넘치는 스프링(감쇠비 약 0.85). 카드·탭 선택 프레임에 쓴다
+export const SPRING_SELECT = {
+  type: 'spring',
+  stiffness: 320,
+  damping: 30,
+} as const;
+
 // 라우트 전환·전면 화면 교체 — 이동 없이 페이드만. transform을 쓰지 않으므로
 // fixed 오버레이(바텀시트·오버레이)의 기준이 뷰포트로 유지된다.
 export const fadeVariants: Variants = {

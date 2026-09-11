@@ -51,6 +51,29 @@
 
 `completed_date`는 시나리오 화면에서 완료한 지난 날 카드를 볼 때만 붙는다 (yyyy-MM-dd) — 열 수 있는 과거는 완료한 날뿐이라, 없으면 오늘 카드다.
 
+### 페이월
+
+| 이벤트                      | 속성                                                          | 시점                                                                                                                                                                                                                                                                             |
+| --------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Paywall Plan Selected       | plan(monthly\|yearly)                                         | 페이월에서 다른 플랜 카드를 골랐을 때 (같은 카드 다시 누르면 안 찍음)                                                                                                                                                                                                            |
+| Purchase Started            | plan(monthly\|yearly)                                         | CTA를 눌러 결제를 요청한 순간                                                                                                                                                                                                                                                    |
+| Purchase Restore Tapped     | 없음                                                          | 구매 복원을 눌렀을 때                                                                                                                                                                                                                                                            |
+| Purchase Completed          | plan, unlocked(bool)                                          | 셸이 결제 성공을 회신했을 때. unlocked는 그 뒤 몇 초 안에 서버가 유료로 바뀌었는가                                                                                                                                                                                               |
+| Purchase Canceled           | plan                                                          | 사용자가 스토어 결제 시트를 닫았을 때                                                                                                                                                                                                                                            |
+| Purchase Failed             | plan?, reason, message?                                       | 결제 실패, 또는 결제·복원을 시작할 수 없는 환경(browser / outdated_shell). reason은 browser / outdated_shell / no_response / shell_error. shell_error면 셸이 준 문구가 message. 복원이 막힌 경우엔 plan이 없다. 복원 요청 자체의 실패는 Purchase Restored { succeeded: false }다 |
+| Purchase Restored           | succeeded(bool)                                               | 구매 복원 요청이 끝났을 때. 셸 오류·응답 없음·복원할 내역 없음은 모두 succeeded=false                                                                                                                                                                                            |
+| Paywall Gate Locked         | entry(scenario\|expression\|smalltalk\|conversation_finished) | 무료 구간을 다 쓴 무료 사용자가 학습 진입(또는 대화 피드백 끝)에서 페이월로 보내졌을 때                                                                                                                                                                                          |
+| Subscription Manage Tapped  | status(trial\|active\|canceled)                               | 마이페이지 골드 카드에서 구독 관리로 들어감                                                                                                                                                                                                                                      |
+| Paywall Entry Tapped        | source(me)                                                    | 게이트가 아닌 자리(마이페이지)에서 페이월로 들어감                                                                                                                                                                                                                               |
+| Haptics Toggled             | enabled                                                       | 마이페이지 진동 시트에서 켜거나 껐을 때                                                                                                                                                                                                                                          |
+| Subscription History Tapped | status(trial\|active\|canceled)                               | 구독 관리에서 결제 내역으로 들어감                                                                                                                                                                                                                                               |
+| Store Subscription Tapped   | status(trial\|active\|canceled)                               | 구독 관리에서 스토어 구독 관리 링크를 눌렀을 때                                                                                                                                                                                                                                  |
+| Level Result Viewed         | scenario_id, level, change_type                               | 무료 사용자가 오픈 뒤 첫 대화 직후 레벨 결과 화면이 떴을 때. 쓸 수 있는 평가(MODEL·근거 충분)일 때만                                                                                                                                                                             |
+| Prepared Learning Viewed    | scenario_id                                                   | 대화 직후 학습 준비 화면(흐린 학습 4개, 내용 없음)이 떴을 때                                                                                                                                                                                                                     |
+| Prepared Learning Continued | scenario_id                                                   | 그 화면에서 학습 시작하기를 눌렀을 때 (무료 사용자는 이어서 Paywall Gate Locked)                                                                                                                                                                                                 |
+
+페이월 노출은 별도 이벤트 없이 `Page Viewed`(page_name=paywall)로 본다.
+
 ### 인증
 
 | 이벤트           | 속성                          | 시점                 |
@@ -82,7 +105,6 @@
 | --------------------- | ----------------------------------------------------- | --------------------------------------------------------------- |
 | Profile Gate Viewed   | question(level\|accent)                               | 온보딩을 이미 마친 기존 유저에게 홈에서 프로필 질문 게이트 노출 |
 | Profile Gate Answered | question, level(1~5) 또는 accent(EN_US\|EN_GB\|EN_AU) | 게이트에서 답 선택                                              |
-| English Level Changed | level                                                 | 내 정보에서 영어 수준을 다시 고름                               |
 | Accent Changed        | accent                                                | 내 정보에서 배울 영어를 다시 고름                               |
 
 신규 유저의 최초 응답은 온보딩 스텝(level·accent)이라 `Onboarding Step Viewed/Completed`로 잡히고, 게이트 이벤트는 온보딩 밖에서 묻는 기존 유저에게만 찍힌다. 질문이 늘어도 이름을 늘리지 않고 `question`으로 가른다. 답은 질문마다 속성이 달라(`level` / `accent`) 짝이 안 맞는 조합은 타입이 막는다.
@@ -238,9 +260,9 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 
 | 이벤트                           | 속성                         | 시점                                                                   |
 | -------------------------------- | ---------------------------- | ---------------------------------------------------------------------- |
-| Widget Install Invite Viewed     | —                            | 온보딩 widget 스텝의 설치 유도 화면 노출                               |
-| Widget Install Invite Answered   | answer(install\|dismiss)     | "위젯 추가하기" / "나중에 하기"                                        |
-| Widget Pin Requested             | platform(ios\|android)       | 추가를 실제로 청한 순간 — Android는 시스템 핀 다이얼로그, iOS는 안내로 |
+| Widget Install Invite Viewed     | source(onboarding\|me)       | 설치 유도 화면 노출 — 온보딩 widget 스텝 또는 마이페이지 홈 화면 위젯  |
+| Widget Install Invite Answered   | answer, source               | "위젯 추가하기" / "나중에 하기"                                        |
+| Widget Pin Requested             | platform, source             | 추가를 실제로 청한 순간 — Android는 시스템 핀 다이얼로그, iOS는 안내로 |
 | Widget Install Guide Step Viewed | step(press\|menu\|search)    | iOS 갤러리 여는 길 안내 3장 각각 노출 (어디서 이탈하는지)              |
 | Widget Installed                 | family(small\|medium\|large) | 홈 화면에 위젯이 실제로 놓임 — 셸이 브릿지로 넘긴다                    |
 | Widget Removed                   | family                       | 홈 화면에서 위젯이 치워짐                                              |

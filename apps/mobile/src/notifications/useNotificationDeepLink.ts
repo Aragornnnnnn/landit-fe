@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 
+import { reportWarning } from '../monitoring/report';
 import { extractNotificationPath } from './deep-link';
 
 // loading: 콜드 스타트 조회 전이라 WebView 마운트를 보류, ready: 경로 확정 (null이면 알림으로 진입한 게 아니다)
@@ -46,7 +47,8 @@ export const useNotificationDeepLink = (
         if (response) void Notifications.clearLastNotificationResponseAsync();
       })
       // 조회가 실패해도 "알림 진입 아님"으로 열어준다 — ready가 안 오면 WebView가 영영 마운트되지 않는다
-      .catch(() => {
+      .catch((error) => {
+        reportWarning(error);
         if (!cancelled) setColdStart({ status: 'ready', path: null });
       });
 

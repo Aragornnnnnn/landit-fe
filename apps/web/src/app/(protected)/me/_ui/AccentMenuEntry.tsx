@@ -1,4 +1,4 @@
-// 마이페이지 "배울 영어" 진입점 — 지금 값을 보여주고 다시 고를 수 있게 한다
+// 마이페이지 "배울 억양" 진입점 — 지금 값을 보여주고 다시 고를 수 있게 한다
 'use client';
 
 import { useState } from 'react';
@@ -9,8 +9,9 @@ import { useSaveAccentMutation } from '@/features/onboarding/model/useSaveAccent
 import { AccentForm } from '@/features/onboarding/ui/common/AccentForm';
 import { track } from '@/shared/analytics';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
+import { Emoji } from '@/shared/ui/emoji';
 
-import { MenuButton, MenuGroup } from './Menu';
+import { MenuButton } from './Menu';
 
 export const AccentMenuEntry = () => {
   const [open, setOpen] = useState(false);
@@ -25,9 +26,11 @@ export const AccentMenuEntry = () => {
 
   return (
     <>
-      <MenuGroup>
-        <MenuButton title="배울 영어 변경하기" onClick={() => setOpen(true)} />
-      </MenuGroup>
+      <MenuButton
+        title="배울 억양"
+        icon={<Emoji>🌍</Emoji>}
+        onClick={() => setOpen(true)}
+      />
 
       <BottomSheet open={open} onClose={() => setOpen(false)}>
         <div className="flex max-h-[75dvh] flex-col">

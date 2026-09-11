@@ -3,6 +3,8 @@
 import { widgetDataSchema, type WidgetData } from '@landit/bridge';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { reportWarning } from '../../monitoring/report';
+
 const STORAGE_KEY = 'landit.widget.data';
 
 export const saveWidgetData = async (data: WidgetData): Promise<void> => {
@@ -13,10 +15,13 @@ export const loadWidgetData = async (): Promise<WidgetData | null> => {
   const raw = await AsyncStorage.getItem(STORAGE_KEY);
   if (raw === null) return null;
 
+  // 저장값이 깨진 건(JSON 아님·규격 불일치) 우리 쪽 결함 — 기록하고 기본 화면으로 그린다
   try {
     const result = widgetDataSchema.safeParse(JSON.parse(raw));
-    return result.success ? result.data : null;
-  } catch {
-    return null;
+    if (result.success) return result.data;
+    reportWarning(result.error);
+  } catch (error) {
+    reportWarning(error);
   }
+  return null;
 };

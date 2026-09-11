@@ -1,4 +1,5 @@
-// 내 정보의 "알림 켜기" 진입점 — 알림을 아직 안 켠 유저에게만 보인다
+// 마이페이지 "알림" 행 — 아직 안 물었으면 동의 시트를, 이미 답했으면(허용·거부) OS 설정을 연다.
+// 권한 체계가 없는 환경(브라우저·구버전 셸)에서는 행 자체가 없다
 'use client';
 
 import { useState } from 'react';
@@ -9,23 +10,19 @@ import { useNotificationPermission } from '@/features/notification/model/useNoti
 import { NotificationConsentSheet } from '@/features/notification/ui/NotificationConsentSheet';
 import { track } from '@/shared/analytics';
 import { postToNative } from '@/shared/bridge/web-bridge';
+import { Emoji } from '@/shared/ui/emoji';
 
-import { MenuButton, MenuGroup } from './Menu';
+import { MenuButton } from './Menu';
 
 export const NotificationMenuEntry = () => {
   const notificationPermission = useNotificationPermission();
   const [isPromptOpen, setIsPromptOpen] = useState(false);
 
-  // granted는 켤 게 없고, unavailable(브라우저·구버전 셸)은 켤 수단이 없다
-  if (
-    notificationPermission !== 'undetermined' &&
-    notificationPermission !== 'denied'
-  )
-    return null;
+  if (notificationPermission === 'unavailable') return null;
 
   const openNotificationSetup = () => {
-    // 이미 거부한 유저는 인앱 재요청이 불가능하다 — OS 설정으로 보낸다
-    if (notificationPermission === 'denied') {
+    // 이미 답한 유저는 인앱 재요청이 불가능하다 — 끄고 켜는 건 OS 설정에서
+    if (notificationPermission !== 'undetermined') {
       postToNative({ type: 'OPEN_SETTINGS' });
       return;
     }
@@ -33,7 +30,7 @@ export const NotificationMenuEntry = () => {
     setIsPromptOpen(true);
   };
 
-  // 수락 = OS 권한창 요청 — 회신은 훅이 받아 상태를 갱신하고, 허용되면 행이 사라지고 예약까지 이어진다
+  // 수락 = OS 권한창 요청 — 회신은 훅이 받아 상태를 갱신한다
   const accept = () => {
     track(EVENTS.NOTIFICATION_CONSENT_ACCEPTED, { source: 'me' });
     requestNotificationPermission('me');
@@ -47,9 +44,11 @@ export const NotificationMenuEntry = () => {
 
   return (
     <>
-      <MenuGroup>
-        <MenuButton title="알림 켜기" onClick={openNotificationSetup} />
-      </MenuGroup>
+      <MenuButton
+        title="알림"
+        icon={<Emoji>🔔</Emoji>}
+        onClick={openNotificationSetup}
+      />
 
       {/* 유저가 직접 연 시트라 닫아도 홈 게이트의 노출 기록에는 영향을 주지 않는다 */}
       {isPromptOpen && (

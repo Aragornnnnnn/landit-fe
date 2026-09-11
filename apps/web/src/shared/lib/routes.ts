@@ -109,3 +109,48 @@ export const readDateParam = (searchParams: URLSearchParams) => {
   const date = searchParams.get('date');
   return date && DATE_PATTERN.test(date) ? date : undefined;
 };
+
+// 프리미엄 페이월. from은 결제 뒤 돌아갈 내부 경로 — 학습 진입에서 막혀 왔을 때만 붙는다
+export const PAYWALL_PATH = '/paywall';
+
+export const paywallPath = ({ from }: { from?: string } = {}) =>
+  from ? `${PAYWALL_PATH}?from=${encodeURIComponent(from)}` : PAYWALL_PATH;
+
+// 마이페이지와 그 아래 화면. 구독 관리는 유료 사용자가 들어오는 자리이고, 아니면 페이월로 안내한다
+export const MY_PAGE_PATH = '/me';
+export const SUBSCRIPTION_MANAGE_PATH = '/me/subscription';
+export const SUBSCRIPTION_HISTORY_PATH = '/me/subscription/history';
+// 홈 화면 위젯 설치 안내 — 온보딩에서 미뤘던 사람이 마이페이지에서 다시 연다
+export const WIDGET_GUIDE_PATH = '/me/widget';
+
+/**
+ * 마이페이지 아래 화면에서 돌아가기. 마이페이지에서 밀고 들어왔으면 한 칸 뒤로 —
+ * replace로 /me를 다시 쌓으면 셸의 하드웨어 뒤로가기가 한 번 헛돈다. 딥링크로 바로 들어온 경우만 /me로 보낸다
+ */
+export const backToMyPage = (router: {
+  back: () => void;
+  replace: (href: string) => void;
+}) => backOrReplace(router, MY_PAGE_PATH);
+
+/** 한 칸 뒤로, 돌아갈 곳이 없으면(딥링크 직진입) fallback으로 */
+export const backOrReplace = (
+  router: { back: () => void; replace: (href: string) => void },
+  fallback: string,
+) => {
+  if (window.history.length > 1) router.back();
+  else router.replace(fallback);
+};
+// 설문 — 마이페이지 "지원" 묶음의 진입점
+export const SURVEY_PATH = '/survey';
+// 내부 절대 경로만 믿는다 — '//host'처럼 브라우저가 외부로 해석하는 값은 버린다
+const INTERNAL_PATH_PATTERN = /^\/(?![/\\])/;
+
+/**
+ * 페이월의 `?from=`을 읽는다 — 결제·복원이 끝난 뒤 돌아갈 곳.
+ *
+ * @param from 쿼리 값. 내부 절대 경로가 아니면(없음·외부 주소·배열) undefined
+ */
+export const readReturnParam = (from: unknown): string | undefined =>
+  typeof from === 'string' && INTERNAL_PATH_PATTERN.test(from)
+    ? from
+    : undefined;

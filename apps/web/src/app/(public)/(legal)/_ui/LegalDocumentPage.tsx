@@ -1,7 +1,12 @@
 'use client';
 
-// 개인정보 처리방침·서비스 이용약관 공통 레이아웃 — 문서 데이터를 받아 카드형으로 렌더한다
+// 개인정보 처리방침·서비스 이용약관 공통 레이아웃 — 문서 데이터를 받아 카드형으로 렌더한다.
+// 뒤로가기는 온 곳(페이월·마이페이지)으로 한 칸. 직접 진입(스토어 링크·새로고침)이면 로그인 여부를 모르니 첫 화면으로
 import { useRouter } from 'next/navigation';
+
+import { backOrReplace } from '@/shared/lib/routes';
+
+import { BusinessInfoFooter } from './BusinessInfoFooter';
 
 // 법률 문서(개인정보 처리방침·이용약관) 공통 타입 — 내용 수정 시 시행일과 버전을 함께 올릴 것
 export type LegalDocument = {
@@ -19,8 +24,6 @@ export type LegalDocument = {
 
 interface LegalDocumentPageProps {
   document: LegalDocument;
-  backHref: string;
-  backLabel: string;
 }
 
 const ChevronLeftIcon = () => (
@@ -35,11 +38,7 @@ const ChevronLeftIcon = () => (
   </svg>
 );
 
-export const LegalDocumentPage = ({
-  document,
-  backHref,
-  backLabel,
-}: LegalDocumentPageProps) => {
+export const LegalDocumentPage = ({ document }: LegalDocumentPageProps) => {
   const router = useRouter();
 
   return (
@@ -47,9 +46,9 @@ export const LegalDocumentPage = ({
       <header className="relative flex shrink-0 items-center border-b border-border bg-background px-4 pt-[max(env(safe-area-inset-top),16px)] pb-2">
         <button
           type="button"
-          onClick={() => router.replace(backHref)}
+          onClick={() => backOrReplace(router, '/')}
           className="-ml-1 flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-all active:scale-90 active:bg-border"
-          aria-label={backLabel}
+          aria-label="돌아가기"
         >
           <ChevronLeftIcon />
         </button>
@@ -124,6 +123,8 @@ export const LegalDocumentPage = ({
               </section>
             ))}
           </div>
+
+          <BusinessInfoFooter />
         </div>
       </div>
     </main>

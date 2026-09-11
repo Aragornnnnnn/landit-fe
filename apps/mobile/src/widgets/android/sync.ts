@@ -2,6 +2,8 @@
 // (주기 갱신은 app.json의 updatePeriodMillis로 시스템이 맡는다)
 import type { WidgetData } from '@landit/bridge';
 
+import { reportWarning } from '../../monitoring/report';
+
 export const syncAndroidWidgets = (data: WidgetData): void => {
   try {
     const { requestWidgetUpdate } =
@@ -15,11 +17,13 @@ export const syncAndroidWidgets = (data: WidgetData): void => {
       requestWidgetUpdate({
         widgetName,
         renderWidget: (info) => renderStreakWidget(info, data),
-      }).catch((error) =>
-        console.warn('[widget] 안드로이드 위젯 갱신 실패', widgetName, error),
-      );
+      }).catch((error) => {
+        console.warn('[widget] 안드로이드 위젯 갱신 실패', widgetName, error);
+        reportWarning(error, { widgetName });
+      });
     }
   } catch (error) {
     console.warn('[widget] 안드로이드 위젯 갱신 실패', error);
+    reportWarning(error);
   }
 };
