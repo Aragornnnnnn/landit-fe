@@ -65,8 +65,8 @@ export const WithdrawSheet = ({
           <p className="mt-2 text-[14px] leading-6 text-muted-foreground">
             계정과 이용 기록이 삭제됩니다. 계속 진행할까요?
           </p>
+          {/* 버튼에 포커스가 남은 채 늦게 뜨는 글이라 라이브 영역으로 — 스크린 리더가 실패를 읽어 준다 */}
           {errorMessage && (
-            {/* 버튼에 포커스가 남은 채 늦게 뜨는 글이라 라이브 영역으로 — 스크린 리더가 실패를 읽어 준다 */}
             <p
               role="alert"
               className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600"
