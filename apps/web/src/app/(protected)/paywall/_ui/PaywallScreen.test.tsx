@@ -86,6 +86,13 @@ describe('PaywallScreen', () => {
     expect(
       screen.getByText('매월 14,900원 정기 결제 · 언제든 해지 가능'),
     ).toBeInTheDocument();
+    // 체험 안내 줄은 글자만 숨기고 자리를 남긴다 — 카드를 오갈 때 CTA가 움직이지 않게
+    expect(
+      screen.queryByText('체험 종료 24시간 전까지 해지하면 청구되지 않아요'),
+    ).not.toBeInTheDocument();
+    expect(
+      document.querySelector('p[aria-hidden="true"].invisible'),
+    ).not.toBeNull();
     expect(mocks.track).toHaveBeenCalledWith('Paywall Plan Selected', {
       plan: 'monthly',
     });
