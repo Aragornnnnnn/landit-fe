@@ -40,6 +40,7 @@ const PLACEHOLDER_ROWS = [
 ];
 // 목록이 아직 안 왔을 때 쓰는 개수 — 흐름 첫 화면에서 미리 받아 두므로 거의 안 쓰인다
 const FALLBACK_COUNT = PLACEHOLDER_ROWS.length;
+const SLIDE_IMAGE_SIZE = 150;
 
 const toPlaceholderRows = (count: number) =>
   Array.from(
@@ -123,6 +124,13 @@ const renderCaption = ({ text, highlight }: Caption) => {
   );
 };
 
+/** 장면에 쓰는 래디 그림 — 분석 중 화면이 미리 받아 두어 장면이 넘어갈 때 비지 않는다 */
+export const SLIDE_IMAGES = toSlides(null, 0).flatMap((slide) =>
+  slide.kind === 'landy'
+    ? [{ src: slide.image, width: SLIDE_IMAGE_SIZE, height: SLIDE_IMAGE_SIZE }]
+    : [],
+);
+
 // 프리톡 장면의 얼굴은 한 바퀴마다 바꾼다 — 셋 다 있다는 걸 보여주되 장면 수는 늘리지 않는다
 const PARTNER_ROTATION: Partner[] = ['chloe', 'marco', 'teddy'];
 const SLIDE_MS = 1_800;
@@ -138,14 +146,14 @@ export const PreparedLearningView = ({
   // 몇 번째 장면인지 누적으로 센다 — 바퀴 수로 프리톡 얼굴을 고른다
   const [tick, setTick] = useState(0);
 
+  // 동작 줄이기 설정이어도 장면은 넘어간다 — 멈추면 소개가 첫 장에서 끝난다. 위아래 움직임만 뺀다
   useEffect(() => {
-    if (reduced) return;
     const timer = setInterval(
       () => setTick((current) => current + 1),
       SLIDE_MS,
     );
     return () => clearInterval(timer);
-  }, [reduced]);
+  }, []);
 
   // 노출은 한 번만
   const trackViewed = useEffectEvent(() =>
@@ -212,9 +220,9 @@ export const PreparedLearningView = ({
             <motion.div
               key={slideKey}
               className="flex flex-col items-center gap-3"
-              initial={{ opacity: 0, y: 6 }}
+              initial={{ opacity: 0, y: reduced ? 0 : 6 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
+              exit={{ opacity: 0, y: reduced ? 0 : -6 }}
               transition={{ duration: DURATION.base, ease: EASE_STANDARD }}
             >
               {/* 꼬리는 가운데 아래 — 캐릭터가 바로 밑에 서 있으니 모서리를 깎는 대신 작은 삼각형으로 가리킨다 */}
@@ -237,8 +245,8 @@ export const PreparedLearningView = ({
                   <Image
                     src={slide.image}
                     alt=""
-                    width={150}
-                    height={150}
+                    width={SLIDE_IMAGE_SIZE}
+                    height={SLIDE_IMAGE_SIZE}
                     className="h-[140px] w-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.12)]"
                   />
                 )}
