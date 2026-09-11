@@ -2,15 +2,20 @@
 
 // 대화 직후, 무료 사용자가 페이월 전에 지나는 화면들 — 분석 대기 → (쓸 만한 결과면) 레벨 결과 → 학습 준비.
 // 신규·기존을 가리지 않고 같은 순서다. 끝나면 onFinish로 표현 분기(또는 페이월)로 넘긴다
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQuery';
-import type { UsableAssessment } from '@/features/feedback/model/level-assessment';
+import {
+  LEVEL_IMAGES,
+  type UsableAssessment,
+} from '@/features/feedback/model/level-assessment';
+import { PAYWALL_HERO } from '@/features/subscription/ui/paywall-hero-image';
+import { preloadImages } from '@/shared/lib/preload-next-images';
 import { Transition } from '@/shared/motion';
 
 import { AnalyzingScreen } from './AnalyzingScreen';
 import { LevelResultScreen } from './LevelResultScreen';
-import { PreparedLearningScreen } from './PreparedLearningScreen';
+import { PreparedLearningScreen, SLIDE_IMAGES } from './PreparedLearningScreen';
 
 type Screen =
   | { name: 'analyzing' }
@@ -32,6 +37,14 @@ export const PostConversationFlow = ({
   const [screen, setScreen] = useState<Screen>({ name: 'analyzing' });
   // 학습 준비 화면이 쓸 표현 개수를 분석 중에 미리 받아 둔다 — 그 화면에서 숫자가 바뀌어 보이지 않게
   useExpressionsQuery(scenarioId);
+  // 뒤 화면의 그림도 분석 중에 미리 받는다 — 레벨 마법사 다섯, 장면 래디, 페이월 히어로. 장면이 넘어가거나 페이월이 뜰 때 빈 자리가 안 보이게
+  useEffect(() => {
+    preloadImages([
+      ...Object.values(LEVEL_IMAGES),
+      ...SLIDE_IMAGES,
+      PAYWALL_HERO,
+    ]);
+  }, []);
 
   if (screen.name === 'analyzing') {
     return (

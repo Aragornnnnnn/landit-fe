@@ -3,6 +3,7 @@ import type { EnglishLevel } from '@landit/analytics';
 
 // 가로 import 사유: 1~5 수준 척도와 그 검증은 온보딩 슬라이스가 정본이다
 import { toEnglishLevel } from '@/features/onboarding/model/english-level';
+import type { PreloadableImage } from '@/shared/lib/preload-next-images';
 
 import type { SessionLevelAssessment } from '../api/level-assessment';
 
@@ -16,12 +17,13 @@ export const LEVEL_NAMES: Record<EnglishLevel, string> = {
 };
 
 /** 레벨별 마법사 래디 — 피그마 2136:2437에서 배경 제거한 원본을 480px webp로. 레벨 결과와 마이페이지가 같이 쓴다 */
-export const LEVEL_IMAGES: Record<EnglishLevel, string> = {
-  1: '/images/character/level-wizard-1.webp',
-  2: '/images/character/level-wizard-2.webp',
-  3: '/images/character/level-wizard-3.webp',
-  4: '/images/character/level-wizard-4.webp',
-  5: '/images/character/level-wizard-5.webp',
+// next/image에 그대로 펼친다 — 미리 받는 곳(대화 직후 흐름·마이페이지)과 그리는 곳이 같은 주소를 쓰게 크기까지 여기 둔다
+export const LEVEL_IMAGES: Record<EnglishLevel, PreloadableImage> = {
+  1: { src: '/images/character/level-wizard-1.webp', width: 200, height: 200 },
+  2: { src: '/images/character/level-wizard-2.webp', width: 200, height: 200 },
+  3: { src: '/images/character/level-wizard-3.webp', width: 200, height: 200 },
+  4: { src: '/images/character/level-wizard-4.webp', width: 200, height: 200 },
+  5: { src: '/images/character/level-wizard-5.webp', width: 200, height: 200 },
 };
 
 export type DomainKey =
