@@ -91,8 +91,10 @@ const PRODUCT_IDS: Record<PlanId, string> = {
   yearly: 'com.saynow.app.premium.yearly',
 };
 
-// BE가 준 상품 식별자를 플랜으로. 모르는 값(프로모션·옛 상품)은 null
+// BE가 준 상품 식별자를 플랜으로. Play는 RevenueCat이 `상품ID:베이스플랜ID`로 주므로 콜론 앞만 본다. 모르는 값(프로모션·옛 상품)은 null
 export const planFromProductId = (
   productId: string | null | undefined,
-): PlanId | null =>
-  PLAN_ORDER.find((id) => PRODUCT_IDS[id] === productId) ?? null;
+): PlanId | null => {
+  const [storeProductId] = (productId ?? '').split(':');
+  return PLAN_ORDER.find((id) => PRODUCT_IDS[id] === storeProductId) ?? null;
+};
