@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation';
 import { disablePushToken } from '@/features/notification/model/push-token-registration';
 import { surveyDone } from '@/features/survey/model/survey-done';
 import { track } from '@/shared/analytics';
-import { clearAccountLocalState } from '@/shared/auth/account-local-state';
 import { logout as requestLogout } from '@/shared/auth/api/logout';
 import { withdraw } from '@/shared/auth/api/withdraw';
 import { useAuthStore } from '@/shared/auth/auth-store';
@@ -20,6 +19,7 @@ import { reportWarning } from '@/shared/monitoring/report';
 import { Emoji } from '@/shared/ui/emoji';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
+import { clearAccountLocalState } from './_model/account-local-state';
 import { AccentMenuEntry } from './_ui/AccentMenuEntry';
 import { EnglishLevelMenuEntry } from './_ui/EnglishLevelMenuEntry';
 import { HapticMenuEntry } from './_ui/HapticMenuEntry';
@@ -94,7 +94,7 @@ export default function MyPage() {
       });
       await withdraw();
       track(EVENTS.ACCOUNT_DELETED);
-      // 다시 가입하면 첫 램프·첫 안내를 새로 만나야 한다 — 이 기기에 남은 경험 기록을 지운다
+      // 다시 가입하면 첫 램프·첫 안내·소감 시트를 새로 만나야 한다 — 이 기기에 남은 계정 기록을 지운다
       clearAccountLocalState();
       finishSignedOut();
     } catch (error) {
