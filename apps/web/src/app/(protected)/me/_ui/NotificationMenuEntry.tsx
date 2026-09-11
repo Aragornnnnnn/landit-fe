@@ -1,4 +1,4 @@
-// 마이페이지 "푸시 알림" 행 — 아직 안 물었으면 동의 시트를, 이미 답했으면(허용·거부) OS 설정을 연다.
+// 마이페이지 "알림" 행 — 아직 안 물었으면 동의 시트를, 이미 답했으면(허용·거부) OS 설정을 연다.
 // 권한 체계가 없는 환경(브라우저·구버전 셸)에서는 행 자체가 없다
 'use client';
 
@@ -45,7 +45,7 @@ export const NotificationMenuEntry = () => {
   return (
     <>
       <MenuButton
-        title="푸시 알림"
+        title="알림"
         icon={<Emoji>🔔</Emoji>}
         onClick={openNotificationSetup}
       />

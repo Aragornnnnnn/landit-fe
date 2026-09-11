@@ -1,5 +1,5 @@
 // 영어 수준 선택지 — 값은 서버 계약과 같은 1(막 시작)~5(유창) 정수 하나로 통일한다.
-// 고른 값은 서버에만 남는다 (useSaveLearningLevelMutation)
+// 수준은 첫 대화로 BE가 매긴다 — 앱에서 손으로 고르는 화면은 없다
 import type { EnglishLevel } from '@landit/analytics';
 
 export const ENGLISH_LEVELS: { level: EnglishLevel; label: string }[] = [

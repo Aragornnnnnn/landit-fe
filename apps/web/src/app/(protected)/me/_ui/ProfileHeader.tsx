@@ -1,6 +1,7 @@
 'use client';
 
-// 마이페이지 상단 — 이름과 로그인 계정, 오른쪽에 학습 수준의 마법사 래디와 레벨 이름. 수준을 아직 모르면 기본 래디만 선다
+// 마이페이지 상단 — 이름과 로그인 계정, 오른쪽에 학습 수준의 마법사 래디와 레벨 이름. 수준을 아직 모르면 기본 래디만 선다.
+// 마법사와 레벨은 결제가 열린 환경(플래그·1.3.0 셸)에서만 — 수준 평가가 그 흐름에서 시작되니 그전엔 보여줄 게 없다
 import { useEffect } from 'react';
 import Image from 'next/image';
 
@@ -10,12 +11,15 @@ import {
 } from '@/features/feedback/model/level-assessment';
 import { toEnglishLevel } from '@/features/onboarding/model/english-level';
 import { useLearningLevelQuery } from '@/features/onboarding/model/useLearningLevelQuery';
+import { PAYMENT_ENABLED } from '@/features/subscription/model/payment-flag';
+import { canLockPaywall } from '@/features/subscription/model/paywall-gate';
 import { useAuthStore } from '@/shared/auth/auth-store';
+import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
 import {
   preloadImages,
   type PreloadableImage,
 } from '@/shared/lib/preload-next-images';
-import { AppleIcon, GoogleIcon, KakaoIcon } from '@/shared/ui/SocialIcons';
+import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
 const DEFAULT_IMAGE: PreloadableImage = {
   src: '/images/character/landy-normal.webp',
@@ -23,14 +27,11 @@ const DEFAULT_IMAGE: PreloadableImage = {
   height: 200,
 };
 
-// 로그인한 곳을 작은 원 배지로 — 각 사 브랜드 색 위에 아이콘
-const PROVIDER_BADGE: Record<
-  string,
-  { icon: React.ReactNode; background: string }
-> = {
-  KAKAO: { icon: <KakaoIcon size={11} />, background: '#FEE500' },
-  GOOGLE: { icon: <GoogleIcon size={10} />, background: '#fff' },
-  APPLE: { icon: <AppleIcon size={11} />, background: '#000' },
+// 로그인한 곳은 로고가 아니라 이름 글자로 — 각 사 심볼은 로그인 버튼용 규격이라 작은 배지로는 지킬 수 없다. 이름은 로그인 버튼과 같다
+const PROVIDER_NAMES: Record<string, string> = {
+  KAKAO: '카카오',
+  GOOGLE: '구글',
+  APPLE: '애플',
 };
 
 export const ProfileHeader = () => {
@@ -42,7 +43,15 @@ export const ProfileHeader = () => {
   useEffect(() => {
     preloadImages([...Object.values(LEVEL_IMAGES), DEFAULT_IMAGE]);
   }, []);
-  const badge = member?.provider ? PROVIDER_BADGE[member.provider] : undefined;
+  const providerName = member?.provider
+    ? PROVIDER_NAMES[member.provider]
+    : undefined;
+  // 프리미엄 카드와 같은 조건 — 결제 브릿지가 실린 셸에서 플래그가 켜져 있을 때
+  const context = useClientOnlyValue(getNativeContextSnapshot, null);
+  const levelVisible = canLockPaywall({
+    paymentEnabled: PAYMENT_ENABLED,
+    appVersion: context?.appVersion ?? null,
+  });
 
   return (
     <div className="flex items-center justify-between px-1.5 pt-2 pb-1">
@@ -58,40 +67,36 @@ export const ProfileHeader = () => {
             className="mt-1.5 flex items-center gap-1.5 text-[12.5px]"
             style={{ color: '#6b7280' }}
           >
-            {badge && (
-              <span
-                className="flex size-4 shrink-0 items-center justify-center rounded-full"
-                style={{
-                  background: badge.background,
-                  boxShadow: '0 0 0 1px rgba(0,0,0,0.06)',
-                }}
-                aria-hidden="true"
-              >
-                {badge.icon}
-              </span>
+            {providerName && (
+              <>
+                <span className="shrink-0 font-medium">{providerName}</span>
+                <span aria-hidden="true">·</span>
+              </>
             )}
             <span className="truncate">{member.email}</span>
           </p>
         )}
       </div>
       {/* 수준을 받는 동안은 자리만 잡는다 — 기본 래디가 떴다가 레벨 래디로 바뀌는 걸 막는다 */}
-      <div className="flex min-h-[112px] shrink-0 flex-col items-center">
-        {!isPending && (
-          <Image
-            {...(level ? LEVEL_IMAGES[level] : DEFAULT_IMAGE)}
-            alt=""
-            className="h-[112px] w-auto"
-          />
-        )}
-        {level && (
-          <p
-            className="mt-0.5 text-[12.5px] font-bold"
-            style={{ color: '#111' }}
-          >
-            {LEVEL_NAMES[level]} Lv.{level}
-          </p>
-        )}
-      </div>
+      {levelVisible && (
+        <div className="flex min-h-[112px] shrink-0 flex-col items-center">
+          {!isPending && (
+            <Image
+              {...(level ? LEVEL_IMAGES[level] : DEFAULT_IMAGE)}
+              alt=""
+              className="h-[112px] w-auto"
+            />
+          )}
+          {level && (
+            <p
+              className="mt-0.5 text-[12.5px] font-bold"
+              style={{ color: '#111' }}
+            >
+              {LEVEL_NAMES[level]} Lv.{level}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

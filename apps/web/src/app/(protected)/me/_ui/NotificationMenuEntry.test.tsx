@@ -64,7 +64,7 @@ describe('NotificationMenuEntry', () => {
     useNotificationPermissionMock.mockReturnValue('undetermined');
 
     render(<NotificationMenuEntry />);
-    fireEvent.click(screen.getByText('푸시 알림'));
+    fireEvent.click(screen.getByText('알림'));
 
     expect(screen.getByText('알림 받을게요!')).toBeInTheDocument();
   });
@@ -73,7 +73,7 @@ describe('NotificationMenuEntry', () => {
     useNotificationPermissionMock.mockReturnValue('undetermined');
 
     render(<NotificationMenuEntry />);
-    fireEvent.click(screen.getByText('푸시 알림'));
+    fireEvent.click(screen.getByText('알림'));
     fireEvent.click(screen.getByText('알림 받을게요!'));
 
     expect(postToNativeMock).toHaveBeenCalledWith({
@@ -86,7 +86,7 @@ describe('NotificationMenuEntry', () => {
     useNotificationPermissionMock.mockReturnValue('denied');
 
     render(<NotificationMenuEntry />);
-    fireEvent.click(screen.getByText('푸시 알림'));
+    fireEvent.click(screen.getByText('알림'));
 
     expect(postToNativeMock).toHaveBeenCalledWith({ type: 'OPEN_SETTINGS' });
     expect(screen.queryByText('알림 받을게요!')).not.toBeInTheDocument();
@@ -96,7 +96,7 @@ describe('NotificationMenuEntry', () => {
     useNotificationPermissionMock.mockReturnValue('granted');
     render(<NotificationMenuEntry />);
 
-    fireEvent.click(screen.getByText('푸시 알림'));
+    fireEvent.click(screen.getByText('알림'));
 
     expect(postToNativeMock).toHaveBeenCalledWith({ type: 'OPEN_SETTINGS' });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -107,6 +107,6 @@ describe('NotificationMenuEntry', () => {
 
     render(<NotificationMenuEntry />);
 
-    expect(screen.queryByText('푸시 알림')).not.toBeInTheDocument();
+    expect(screen.queryByText('알림')).not.toBeInTheDocument();
   });
 });
