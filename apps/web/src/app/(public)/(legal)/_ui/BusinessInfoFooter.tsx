@@ -1,4 +1,7 @@
-// 전자상거래법 10조가 요구하는 사업자 정보 표시 — 약관·처리방침 페이지 하단에 붙는다 (마이페이지 → 약관 링크로 닿는 순차 표시)
+'use client';
+
+// 전자상거래법 10조가 요구하는 사업자 정보 표시 — 약관·처리방침 페이지 하단에 접힌 채 붙고, 누르면 펼쳐진다 (모바일 순차 표시 예외)
+import { useState } from 'react';
 
 export type BusinessInfo = {
   name: string;
@@ -27,9 +30,30 @@ interface BusinessInfoFooterProps {
   info?: BusinessInfo;
 }
 
+const ChevronDownIcon = ({ open }: { open: boolean }) => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+    className={`transition-transform ${open ? 'rotate-180' : ''}`}
+  >
+    <path
+      d="M6 9l6 6 6-6"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 export const BusinessInfoFooter = ({
   info = BUSINESS_INFO,
 }: BusinessInfoFooterProps) => {
+  const [open, setOpen] = useState(false);
+
   const rows: Array<[string, string | null]> = [
     ['상호', info.name],
     ['대표자', info.representative],
@@ -43,21 +67,29 @@ export const BusinessInfoFooter = ({
 
   return (
     <footer className="mt-6 px-1">
-      <h2 className="text-xs font-semibold text-muted-foreground">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        className="flex items-center gap-1 py-1 text-xs font-semibold text-muted-foreground"
+      >
         사업자 정보
-      </h2>
-      <dl className="mt-2 space-y-1">
-        {rows.map(([label, value]) =>
-          value === null ? null : (
-            <div key={label} className="flex gap-3 text-xs leading-5">
-              <dt className="w-[104px] shrink-0 text-muted-foreground">
-                {label}
-              </dt>
-              <dd className="text-foreground">{value}</dd>
-            </div>
-          ),
-        )}
-      </dl>
+        <ChevronDownIcon open={open} />
+      </button>
+      {open && (
+        <dl className="mt-1 space-y-1">
+          {rows.map(([label, value]) =>
+            value === null ? null : (
+              <div key={label} className="flex gap-3 text-xs leading-5">
+                <dt className="w-[104px] shrink-0 text-muted-foreground">
+                  {label}
+                </dt>
+                <dd className="text-foreground">{value}</dd>
+              </div>
+            ),
+          )}
+        </dl>
+      )}
     </footer>
   );
 };
