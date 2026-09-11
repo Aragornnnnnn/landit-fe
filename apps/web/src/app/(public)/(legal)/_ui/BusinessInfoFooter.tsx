@@ -22,7 +22,7 @@ export const BUSINESS_INFO: BusinessInfo = {
   address: '충청북도 청주시 상당구 무농정로 6, 1층 S25호',
   email: 'landitkorea@gmail.com',
   hosting: 'Vercel Inc.',
-  phone: null,
+  phone: '0507-1396-7809',
   mailOrderNumber: null,
 };
 
