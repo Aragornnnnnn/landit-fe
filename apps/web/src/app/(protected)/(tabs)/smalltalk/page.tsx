@@ -11,6 +11,7 @@ import { SatisfactionGate } from '@/features/satisfaction/ui/SatisfactionGate';
 import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
+import { useSpeakingLimit } from '@/features/small-talk/model/useSpeakingLimit';
 import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
 import { track } from '@/shared/analytics';
 import {
@@ -37,6 +38,8 @@ export default function SmallTalkPage() {
   const exhausted = main !== null && !main.canStart;
   // 무료 구간을 다 쓴 무료 사용자는 스몰톡 시작 대신 페이월로 보낸다
   const gate = usePaywallGate();
+  // 결제가 열리면 하루 한도가 없다 — 알약에 잔량 대신 무제한을 쓴다
+  const { unlimited } = useSpeakingLimit();
   const [topicOpen, setTopicOpen] = useState(false);
   const { partner, look, speech, greet, selectPartner } = usePartnerGreeting();
   // 처음 들어온 사람에겐 래디 안내부터, 닫으면 캐릭터를 눌러 보라는 코치마크 — 둘 다 기기당 한 번이다
@@ -172,7 +175,9 @@ export default function SmallTalkPage() {
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
                   오늘 남은 말하기
                   <span className="text-sm font-bold text-primary">
-                    {toSpeakingTimeLabel(main.remainingSpeakingTimeMs)}
+                    {unlimited
+                      ? '무제한'
+                      : toSpeakingTimeLabel(main.remainingSpeakingTimeMs)}
                   </span>
                 </span>
               )}
