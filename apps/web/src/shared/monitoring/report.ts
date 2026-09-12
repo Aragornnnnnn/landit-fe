@@ -50,3 +50,12 @@ export const reportWarning = (
     });
   }
 };
+
+/**
+ * 로그인 사용자를 Sentry 이슈에 묶는다 — 셸의 setMonitoringUser·RevenueCat app_user_id와 같은 값(우리 유저 id).
+ *
+ * @param userId 우리 유저 id. null이면 푼다 (로그아웃 뒤 이슈가 이전 사용자에게 붙지 않게)
+ */
+export const setMonitoringUser = (userId: number | null) => {
+  Sentry.setUser(userId === null ? null : { id: String(userId) });
+};
