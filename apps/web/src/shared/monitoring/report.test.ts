@@ -3,11 +3,12 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/shared/api/api-error';
 
-import { reportError, reportWarning } from './report';
+import { reportError, reportWarning, setMonitoringUser } from './report';
 
 const sentryMock = vi.hoisted(() => ({
   captureException: vi.fn(),
   captureMessage: vi.fn(),
+  setUser: vi.fn(),
 }));
 vi.mock('@sentry/nextjs', () => sentryMock);
 
@@ -87,5 +88,19 @@ describe('monitoring', () => {
       '속마음 생성 폴백 (timeout)',
       { level: 'warning', extra: { sessionId: 1 } },
     );
+  });
+});
+
+describe('setMonitoringUser', () => {
+  it('userId가 있으면 문자열 id로 사용자를 묶는다 — 셸·RevenueCat app_user_id와 같은 값', () => {
+    setMonitoringUser(42);
+
+    expect(sentryMock.setUser).toHaveBeenCalledWith({ id: '42' });
+  });
+
+  it('null이면 사용자를 푼다 — 로그아웃 뒤 이슈가 이전 사용자에게 붙지 않게', () => {
+    setMonitoringUser(null);
+
+    expect(sentryMock.setUser).toHaveBeenCalledWith(null);
   });
 });
