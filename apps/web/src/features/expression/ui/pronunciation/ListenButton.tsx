@@ -41,7 +41,8 @@ export const ListenButton = ({
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel ?? label ?? '발음 듣기'}
-      className={`flex items-center justify-center rounded-full transition-colors active:opacity-70 ${SHAPE[shape]} ${
+      // 막힌 동안은 흐리게 — 눌러도 반응이 없으면 고장난 버튼으로 보인다
+      className={`flex items-center justify-center rounded-full transition-colors active:opacity-70 disabled:opacity-40 ${SHAPE[shape]} ${
         playing ? PLAYING : IDLE[shape]
       }`}
     >

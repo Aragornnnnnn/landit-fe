@@ -243,6 +243,9 @@ export const PronunciationStep = ({
   };
 
   const nativeSentencePlaying = player.playingId === NATIVE_SENTENCE_AUDIO_ID;
+  // 녹음 중엔 화면의 듣기를 전부 막는다 — 스피커 소리가 마이크로 들어가지 않게.
+  // 버튼이 늘어도 조건을 다시 쓰지 않도록 판정은 여기 한 곳에만 둔다
+  const listenBlocked = phase === 'recording';
 
   // 재도전(다시 말하기) 녹음은 페이지 이동 없이 이 화면에서 — 교정 팁을 보면서 다시 말하도록
   // 하단만 녹음 컨트롤로 바뀐다. 제출 후 분석은 첫 분석과 같은 로딩 화면으로 전환한다
@@ -297,7 +300,7 @@ export const PronunciationStep = ({
             듣기 버튼도 전부 막는다 — 스피커 소리가 마이크로 들어가지 않게 */}
         <div
           className={`flex flex-col gap-6 pt-2 pb-6 transition-opacity duration-300 ${
-            phase === 'recording' ? 'pointer-events-none opacity-60' : ''
+            listenBlocked ? 'pointer-events-none opacity-60' : ''
           }`}
         >
           <ScoreGauge view={view} />
@@ -334,7 +337,7 @@ export const PronunciationStep = ({
           ) : (
             <>
               <CompareListenBubble
-                disabled={phase === 'recording'}
+                disabled={listenBlocked}
                 nativePlaying={nativeSentencePlaying}
                 minePlaying={player.playingId === MY_SENTENCE_AUDIO_ID}
                 onPlayNative={() => playNativeSentence('compare_native')}
@@ -342,7 +345,7 @@ export const PronunciationStep = ({
               />
               <FeedbackCards
                 cards={toFeedbackCards(analysis.words)}
-                disabled={phase === 'recording'}
+                disabled={listenBlocked}
                 playingId={player.playingId}
                 onPlayNative={playNativeWord}
                 onPlayMine={playMyWord}
@@ -389,7 +392,7 @@ export const PronunciationStep = ({
               highlight={targetExpressionText}
               onPlay={() => playNativeSentence('sentence')}
               playing={nativeSentencePlaying}
-              disabled={phase === 'recording'}
+              disabled={listenBlocked}
               progress={nativeSentencePlaying ? player.progress : 0}
             />
           </div>
