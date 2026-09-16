@@ -25,7 +25,7 @@ export const SurveyLetterCta = ({ letterId }: { letterId: number }) => {
 
   return (
     <Button className="mt-8" onClick={enter}>
-      <Emoji>💌</Emoji> 설문하고 이용권 받기
+      <Emoji>💌</Emoji> 설문 참여하기
     </Button>
   );
 };
