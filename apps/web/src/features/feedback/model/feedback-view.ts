@@ -21,3 +21,7 @@ export const detailCtaLabel = (improvementCount: number): string =>
   improvementCount > 0
     ? `원어민까지 ${improvementCount}걸음, 고쳐볼게요`
     : '뭐가 잘 통했는지 볼게요';
+
+// 서버가 상세를 잠근 세션의 CTA — 턴 수를 모르니 걸음 수를 셀 수 없고, 누르면 페이월로 간다.
+// TODO: 제품 확정 카피로 교체.
+export const LOCKED_DETAIL_CTA_LABEL = '상세 피드백 볼게요';

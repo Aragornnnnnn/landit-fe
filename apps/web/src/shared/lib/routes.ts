@@ -47,18 +47,21 @@ interface ScenarioFeedback {
   date?: string | null;
   // 재대화였는지. 대화가 끝나면 카드가 완료로 바뀌어 피드백 화면에서는 다시 알 수 없다
   replay?: boolean;
+  // 총평을 건너뛰고 상세부터 열기 — 상세가 잠겨 페이월로 갔다가 결제하고 돌아올 때
+  detail?: boolean;
 }
 
 // 대화 피드백(총평·상세·레벨·학습 준비)은 대화 주소 아래에 산다 — 완료 후속은 그 대화의 라우트가 맡는다.
 // 자기 주소가 있어야 페이월이 결제 뒤 이 화면으로 돌려보낼 수 있다
 export const scenarioFeedbackPath = (
   scenarioId: number,
-  { session, date, replay = false }: ScenarioFeedback,
+  { session, date, replay = false, detail = false }: ScenarioFeedback,
 ) => {
   const query = new URLSearchParams();
   if (session !== null) query.set('session', String(session));
   if (date) query.set('date', date);
   if (replay) query.set('replay', '1');
+  if (detail) query.set('detail', '1');
 
   const search = query.toString();
   const path = `${scenarioTalkPath(scenarioId)}/feedback`;
@@ -138,7 +141,7 @@ export const readDateParam = (searchParams: URLSearchParams) => {
 // 세션은 양의 정수가 아니면 없는 것으로 본다. 피드백 화면은 세션이 없으면 못 불러왔다고 알린다
 export const readScenarioFeedbackParams = (
   searchParams: URLSearchParams,
-): Required<Pick<ScenarioFeedback, 'session' | 'replay'>> & {
+): Required<Pick<ScenarioFeedback, 'session' | 'replay' | 'detail'>> & {
   date: string | undefined;
 } => {
   const session = Number(searchParams.get('session'));
@@ -146,6 +149,7 @@ export const readScenarioFeedbackParams = (
     session: Number.isInteger(session) && session > 0 ? session : null,
     date: readDateParam(searchParams),
     replay: searchParams.get('replay') === '1',
+    detail: searchParams.get('detail') === '1',
   };
 };
 
