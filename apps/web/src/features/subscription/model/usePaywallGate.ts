@@ -1,7 +1,8 @@
 'use client';
 
-// 학습 진입 게이트 — 진입 지점(대화 시작·표현 학습·스몰톡·대화 직후 화면)이 guard로 감싸 부르면,
-// 무료 구간을 다 쓴 무료 사용자는 페이월로 보내고 나머지는 그대로 들여보낸다 (docs/subscription.md 「무료 구간과 페이월 게이트」)
+// 학습 진입 게이트 — 진입 지점(표현 학습·카드 뒤집기·스몰톡 시작)이 guard로 감싸 부르면,
+// 무료 사용자는 페이월로 보내고 나머지는 그대로 들여보낸다 (docs/subscription.md 「무료 구간과 페이월 게이트」).
+// 시나리오 대화는 문이 아니다 — 구독과 관계없이 열려 있고, 상세 피드백 잠금은 서버가 피드백 응답에서 정한다
 import { EVENTS, type PaywallGateEntry } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
@@ -11,11 +12,7 @@ import { paywallPath } from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
 import { PAYMENT_ENABLED } from './payment-flag';
-import {
-  canLockPaywall,
-  decidePaywallGate,
-  type PaywallDoor,
-} from './paywall-gate';
+import { canLockPaywall, decidePaywallGate } from './paywall-gate';
 import { useSubscriptionQuery } from './useSubscriptionQuery';
 
 interface GuardOptions {
@@ -23,10 +20,6 @@ interface GuardOptions {
   entry: PaywallGateEntry;
   /** 결제 뒤 돌아올 곳. 없으면 페이월이 홈으로 보낸다 */
   returnTo?: string;
-  /** 호출부가 대화가 방금 끝났음을 이미 아는 경우 — 서버 값이 아직 안 따라왔어도 무료 구간을 다 쓴 것으로 본다 */
-  conversationJustFinished?: boolean;
-  /** 어느 문인가. 오늘 카드의 대화 시작만 today_scenario, 나머지는 기본값 learning — 무료 구간이 없는 문이다 */
-  door?: PaywallDoor;
   /** 잠겼을 때 지금 화면을 히스토리에서 지우고 간다 — 호출부의 이동이 replace라 뒤로 돌아가면 안 되는 자리 */
   replace?: boolean;
 }
@@ -35,7 +28,7 @@ interface GuardOptions {
  * 학습 진입을 감싸는 게이트.
  *
  * @returns `guard(이동, 옵션)`은 열려 있으면 이동을 그대로 실행하고, 잠겼으면 계측을 남기고 페이월로 보낸다.
- *   `locksAfterConversation`은 방금 대화를 끝낸 사람이 잠기는지 — 대화 직후 흐름이 페이월 전 화면을 보여줄지 정할 때 쓴다
+ *   `locked`는 이 사람에게 학습 문이 잠기는지 — 피드백 뒤 어디로 갈지 정할 때 쓴다
  */
 export const usePaywallGate = () => {
   const router = useRouter();
@@ -50,40 +43,20 @@ export const usePaywallGate = () => {
     enabled: canLockPaywall(environment),
   });
 
-  const decide = (
-    door: PaywallDoor,
-    conversationCompletedSinceLaunch: boolean | null,
-  ) =>
-    // 구독 조회 실패(구독 API 미배포 포함)는 잠그지 않는다 — 잘못 막는 쪽이 더 나쁘다
-    isError
-      ? 'open'
-      : decidePaywallGate({
-          ...environment,
-          door,
-          // 아직 못 받았거나 BE가 필드를 아직 안 주면 null — decidePaywallGate가 unknown으로 둔다
-          premium: subscription?.premium ?? null,
-          conversationCompletedSinceLaunch,
-        });
+  // 구독 조회 실패(구독 API 미배포 포함)는 잠그지 않는다 — 잘못 막는 쪽이 더 나쁘다.
+  // 아직 못 받았으면 null — decidePaywallGate가 unknown으로 두고, unknown도 막지 않는다 (다음 진입에서 잡힌다)
+  const decision = isError
+    ? 'open'
+    : decidePaywallGate({
+        ...environment,
+        premium: subscription?.premium ?? null,
+      });
+  const locked = decision === 'locked';
 
-  const completedSinceLaunch =
-    subscription?.conversationCompletedSinceLaunch ?? null;
-  // 방금 끝낸 대화가 무료 구간의 그 하나다 — 오늘의 시나리오 문으로 보고 완료를 참으로 둔다
-  const locksAfterConversation = decide('today_scenario', true) === 'locked';
-
-  // 잠겼을 때만 페이월로. unknown(재료가 늦음)도 막지 않는다 — 다음 진입에서 잡힌다
   const guard = (
     go: () => void,
-    {
-      entry,
-      returnTo,
-      conversationJustFinished,
-      door = 'learning',
-      replace = false,
-    }: GuardOptions,
+    { entry, returnTo, replace = false }: GuardOptions,
   ) => {
-    const locked = conversationJustFinished
-      ? locksAfterConversation
-      : decide(door, completedSinceLaunch) === 'locked';
     if (!locked) {
       go();
       return;
@@ -94,5 +67,5 @@ export const usePaywallGate = () => {
     else router.push(to);
   };
 
-  return { locksAfterConversation, guard };
+  return { locked, guard };
 };
