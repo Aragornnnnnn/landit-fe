@@ -1,6 +1,6 @@
 // 설문 응답을 받아 슈퍼베이스에 넣는 서버 라우트 — Secret 키를 서버에만 두고, 누구의 응답인지는 토큰으로 정한다.
-// 테이블: survey_responses(user_id bigint primary key, email text, answers jsonb, created_at timestamptz default now())
-// user_id가 기본키라 같은 사람이 두 번 넣으면 409가 온다 — 그걸 "이미 참여"로 돌려준다.
+// 테이블: survey_responses(id bigint 기본키, user_id bigint, email text, answers jsonb, created_at timestamptz default now())
+// 같은 사람이 또 내면 새 행으로 쌓인다 — 생각이 바뀐 것도 응답이라 덮어쓰지 않는다.
 // 응답 봉투는 백엔드와 같은 { success, data, error } — 클라이언트의 api 클라이언트가 그대로 읽는다
 import { NextResponse } from 'next/server';
 
@@ -79,13 +79,12 @@ export async function POST(request: Request) {
     },
     body: JSON.stringify({
       user_id: userId,
-      // 이메일은 쿠폰 줄 때 누군지 바로 보려는 참고값 — 신원은 user_id가 정한다
+      // 이메일은 응답을 볼 때 누군지 바로 보려는 참고값 — 신원은 user_id가 정한다
       email: typeof body.email === 'string' ? body.email : null,
       answers: body.answers,
     }),
   });
 
-  if (inserted?.status === 409) return ok({ result: 'duplicate' });
   if (!inserted?.ok) {
     reportError(new Error('[survey] 저장 실패'), {
       status: inserted?.status ?? 'network',

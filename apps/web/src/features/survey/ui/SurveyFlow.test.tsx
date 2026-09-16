@@ -191,21 +191,6 @@ describe('SurveyFlow', () => {
     expect(body.email).toBe('a@b.c');
     expect(body.answers.satisfaction).toBe(3);
     expect(body.answers).not.toHaveProperty('wish');
-    expect(localStorage.getItem('landit-survey-done')).not.toBeNull();
-  });
-
-  it('이미 참여한 유저면(duplicate) 그대로 완료 화면을 보여준다', async () => {
-    fetchMock.mockResolvedValue(
-      routeReply(200, { success: true, data: { result: 'duplicate' } }),
-    );
-    render(<SurveyFlow />);
-    await answerUntilLast();
-
-    await userEvent.click(
-      screen.getByRole('button', { name: '건너뛰고 제출하기' }),
-    );
-
-    expect(await screen.findByText('소중한 의견 고마워요!')).toBeTruthy();
   });
 
   it('저장에 실패하면 문항에 머문다', async () => {
@@ -300,12 +285,13 @@ describe('SurveyFlow', () => {
     ).toHaveLength(2);
   });
 
-  it('이 기기에서 이미 마쳤으면 문항 없이 완료 화면을 보여준다', () => {
+  it('전에 설문을 마친 기기에서도 안내 화면부터 다시 시작한다', () => {
+    // 옛 버전이 남긴 완료 표시 — 이제 재참여를 막지 않는다
     localStorage.setItem('landit-survey-done', '1');
 
     render(<SurveyFlow />);
 
-    expect(screen.getByText('소중한 의견 고마워요!')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: '시작하기' })).toBeNull();
+    expect(screen.getByRole('button', { name: '시작하기' })).toBeTruthy();
+    expect(screen.queryByText('소중한 의견 고마워요!')).toBeNull();
   });
 });
