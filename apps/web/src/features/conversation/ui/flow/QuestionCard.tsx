@@ -50,7 +50,7 @@ const CardIconButton = ({
     onClick={onClick}
     disabled={disabled}
     aria-label={label}
-    className={`flex size-8 flex-none items-center justify-center rounded-full transition-colors active:opacity-70 disabled:opacity-40 ${
+    className={`flex size-7 flex-none items-center justify-center rounded-full transition-colors active:opacity-70 disabled:opacity-40 ${
       on ? 'bg-foreground text-background' : 'bg-secondary text-foreground'
     }`}
   >
@@ -255,7 +255,7 @@ export const QuestionCard = ({
               label={replay.playing ? '다시 듣기 멈추기' : '다시 듣기'}
               onClick={replay.toggle}
             >
-              <SpeakerIcon size={16} />
+              <SpeakerIcon size={14} />
             </CardIconButton>
           )}
           {translation && (
@@ -264,7 +264,7 @@ export const QuestionCard = ({
               label={translationOpen ? '해석 접기' : '해석 보기'}
               onClick={toggleTranslation}
             >
-              <TranslateIcon size={16} />
+              <TranslateIcon size={14} />
             </CardIconButton>
           )}
         </div>
