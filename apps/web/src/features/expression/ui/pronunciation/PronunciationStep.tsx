@@ -155,16 +155,17 @@ export const PronunciationStep = ({
       return;
     }
 
-    if (recordingUrlRef.current) {
-      // 재생 중이던 이전 녹음을 멈추고 해제 — 끊긴 URL로 재생 상태가 굳지 않게
-      player.stop();
-      URL.revokeObjectURL(recordingUrlRef.current);
-    }
-    recordingUrlRef.current = URL.createObjectURL(recording.blob);
-
     setPhase('analyzing');
     analysisMutation.mutate(recording, {
       onSuccess: (result) => {
+        // 재생용 음원은 결과가 온 다음에 갈아끼운다 — 분석이 실패해 이전 피드백으로
+        // 되돌아가면 화면의 단어 구간은 이전 녹음 기준이라, 음원만 새것이면 엉뚱한 데가 나온다
+        if (recordingUrlRef.current) {
+          // 재생 중이던 이전 녹음을 멈추고 해제 — 끊긴 URL로 재생 상태가 굳지 않게
+          player.stop();
+          URL.revokeObjectURL(recordingUrlRef.current);
+        }
+        recordingUrlRef.current = URL.createObjectURL(recording.blob);
         attemptRef.current += 1;
         track(EVENTS.PRONUNCIATION_RESULT_VIEWED, {
           expression_id: expressionId,
