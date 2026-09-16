@@ -41,6 +41,30 @@ const withDate = (path: string, date?: string | null) =>
 export const scenarioTalkPath = (scenarioId: number, date?: string | null) =>
   withDate(`/conversation/scenario/${scenarioId}`, date);
 
+interface ScenarioFeedback {
+  // 어느 세션의 피드백인지. 세션 시작이 실패했으면 null — 화면이 못 불러왔다고 알린다
+  session: number | null;
+  date?: string | null;
+  // 재대화였는지. 대화가 끝나면 카드가 완료로 바뀌어 피드백 화면에서는 다시 알 수 없다
+  replay?: boolean;
+}
+
+// 대화 피드백(총평·상세·레벨·학습 준비)은 대화 주소 아래에 산다 — 완료 후속은 그 대화의 라우트가 맡는다.
+// 자기 주소가 있어야 페이월이 결제 뒤 이 화면으로 돌려보낼 수 있다
+export const scenarioFeedbackPath = (
+  scenarioId: number,
+  { session, date, replay = false }: ScenarioFeedback,
+) => {
+  const query = new URLSearchParams();
+  if (session !== null) query.set('session', String(session));
+  if (date) query.set('date', date);
+  if (replay) query.set('replay', '1');
+
+  const search = query.toString();
+  const path = `${scenarioTalkPath(scenarioId)}/feedback`;
+  return search ? `${path}?${search}` : path;
+};
+
 // 스몰톡 대화. 시나리오와 달리 가리킬 콘텐츠가 없어 "누구와 어떻게 시작할지"를 싣는다 —
 // 주제를 고르면 상대가 먼저, 직접 걸면 내가 먼저다. 주제는 상대가 먼저일 때만 있다.
 // 상대는 홈에서 고른 값이다 — 새로고침해도 고른 상대가 유지되려면 주소에 있어야 한다
@@ -108,6 +132,21 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 export const readDateParam = (searchParams: URLSearchParams) => {
   const date = searchParams.get('date');
   return date && DATE_PATTERN.test(date) ? date : undefined;
+};
+
+// scenarioFeedbackPath가 실은 것을 되읽는다 — 쓰는 쪽과 짝이라 한쪽을 바꾸면 여기도 같이 바꾼다.
+// 세션은 양의 정수가 아니면 없는 것으로 본다. 피드백 화면은 세션이 없으면 못 불러왔다고 알린다
+export const readScenarioFeedbackParams = (
+  searchParams: URLSearchParams,
+): Required<Pick<ScenarioFeedback, 'session' | 'replay'>> & {
+  date: string | undefined;
+} => {
+  const session = Number(searchParams.get('session'));
+  return {
+    session: Number.isInteger(session) && session > 0 ? session : null,
+    date: readDateParam(searchParams),
+    replay: searchParams.get('replay') === '1',
+  };
 };
 
 // 프리미엄 페이월. from은 결제 뒤 돌아갈 내부 경로 — 학습 진입에서 막혀 왔을 때만 붙는다
