@@ -37,4 +37,14 @@ describe('BenefitComparison', () => {
     expect(within(head[1]).getByText('무료')).toBeInTheDocument();
     expect(within(head[2]).getByText('PREMIUM')).toBeInTheDocument();
   });
+
+  it('기능 이름이 줄의 머리글이라 낭독기가 어느 기능의 체크인지 읽어 준다', () => {
+    render(<BenefitComparison />);
+
+    // 열 머리글만 있고 줄 머리글이 없으면 "프리미엄 포함"이 어느 줄 것인지 알 수 없다
+    const rowHeaders = screen.getAllByRole('rowheader');
+    expect(rowHeaders.map((cell) => cell.textContent)).toEqual(
+      BENEFITS.map((benefit) => benefit.text),
+    );
+  });
 });

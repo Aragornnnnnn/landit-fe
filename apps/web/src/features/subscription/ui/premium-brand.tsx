@@ -38,6 +38,7 @@ interface PremiumBadgeProps {
   onGold?: boolean;
 }
 
+/** 로고와 PREMIUM 알약을 나란히 — 페이월 상단, 마이페이지 골드 카드, 구독 관리가 쓴다 */
 export const PremiumBadge = ({
   logoHeight = 37.5,
   onGold = false,

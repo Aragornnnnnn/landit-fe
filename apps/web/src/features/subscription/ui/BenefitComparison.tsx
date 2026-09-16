@@ -1,5 +1,4 @@
-// 무료 vs 프리미엄 비교표 — 기능 이름 왼쪽, 무료·프리미엄 두 열. 프리미엄 열만 연한 주황 기둥으로 띄운다.
-// 기둥과 무료 열은 처음부터 있고, 프리미엄 체크만 위에서 아래로 하나씩 켜진다 — 애니메이션은 CSS다 (rAF가 멎은 웹뷰에서도 끝까지 간다, LAN-375)
+// 페이월의 무료 vs 프리미엄 혜택 비교표
 import type { CSSProperties } from 'react';
 
 import { CheckIcon } from '@/shared/ui/Icons';
@@ -7,18 +6,24 @@ import { CheckIcon } from '@/shared/ui/Icons';
 import { BENEFITS } from '../model/benefits';
 import { PremiumPill } from './premium-brand';
 
-// 열 폭 — 체크 하나가 들어가는 칸이라 좁게, 프리미엄은 배지가 양옆에 여백을 두고 앉을 만큼 넓게.
-// 배지가 기둥을 꽉 채우면 기둥이 열이 아니라 배지 배경으로 읽힌다
+/** 체크 하나가 들어가는 칸이라 좁다 */
 const FREE_COLUMN = 'w-[52px]';
+/** 기둥 폭이자 머리글 배지가 앉는 칸 — 배지가 꽉 차면 기둥이 열이 아니라 배지 배경으로 읽힌다 */
 const PREMIUM_COLUMN = 'w-[86px]';
-// 줄 높이는 tr이 아니라 셀에 건다 — tr의 height는 내용 높이에 밀려 무시된다.
-// 작은 폰(667pt)은 여섯 줄이 겨우 들어가는 높이라 한 단계 더 좁힌다
+/** 줄 높이는 `tr`이 아니라 셀에 건다 — `tr`의 height는 내용 높이에 밀려 무시된다 */
 const ROW_HEIGHT = 'h-[30px] short:h-5';
 
+/**
+ * 기능 이름 왼쪽, 무료·프리미엄 두 열. 프리미엄 열만 연한 주황 기둥으로 띄운다.
+ *
+ * 줄은 {@link BENEFITS} 순서 그대로다. 기둥과 무료 열은 처음부터 떠 있고 프리미엄 체크만 위에서
+ * 아래로 켜지는데, 줄 번호를 CSS 변수 `--i`로 넘겨 `globals.css`의 `animate-check-in`이 딜레이를
+ * 계단으로 만든다. motion이 아니라 CSS인 것은 rAF가 멎은 웹뷰에서도 끝까지 가야 해서다 (LAN-375).
+ */
 export const BenefitComparison = () => (
   <section className="px-5 pt-2 short:pt-1">
     <div className="relative">
-      {/* 프리미엄 열 기둥 — 표 뒤에 깔려 머리글부터 마지막 줄까지 덮는다. 열의 틀이라 처음부터 떠 있는다 */}
+      {/* 표 뒤에 깔려 머리글부터 마지막 줄까지 덮는다 */}
       <div
         aria-hidden="true"
         className={`absolute inset-y-0 right-0 ${PREMIUM_COLUMN} rounded-xl bg-selected`}
@@ -41,11 +46,12 @@ export const BenefitComparison = () => (
         <tbody>
           {BENEFITS.map(({ text, free }, index) => (
             <tr key={text}>
-              <td
-                className={`${ROW_HEIGHT} text-[15px] leading-[1.3] text-foreground short:text-[13px]`}
+              <th
+                scope="row"
+                className={`${ROW_HEIGHT} text-left text-[15px] leading-[1.3] font-normal text-foreground short:text-[13px]`}
               >
                 {text}
-              </td>
+              </th>
               <td className="text-center">
                 {free ? (
                   <CheckIcon
@@ -61,7 +67,6 @@ export const BenefitComparison = () => (
                 </span>
               </td>
               <td className="text-center">
-                {/* 줄 번호가 등장 순서다 — CSS 변수로 넘겨 딜레이를 계단으로 만든다 */}
                 <span
                   className="animate-check-in inline-block"
                   style={{ '--i': index } as CSSProperties}
