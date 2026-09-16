@@ -177,6 +177,17 @@ describe('toPageView', () => {
     });
   });
 
+  it('피드백 주소의 세션이 양의 정수가 아니면 싣지 않는다 — 화면이 세션 없음으로 보는 값과 같아야 한다', () => {
+    // Given 손으로 고친 주소가 들어왔을 때
+    // When 페이지뷰 속성을 만들면
+    // Then session_id 없이 화면 이름만 남는다
+    expect(pv('/conversation/scenario/12/feedback', 'session=0')).toEqual({
+      page_name: 'conversation_scenario_feedback',
+      path: '/conversation/scenario/12/feedback',
+      scenario_id: 12,
+    });
+  });
+
   it('스몰톡 대화는 id 없이 page_name conversation_smalltalk으로 남는다', () => {
     // 주소의 상대·시작 방식(mode/partner)은 여기 싣지 않는다 — Conversation Started가 이미 남긴다
     expect(

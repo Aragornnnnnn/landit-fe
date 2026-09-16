@@ -1,6 +1,8 @@
 // 경로 → Page Viewed 속성 매핑 — 동적 세그먼트는 page_name으로 정규화하고 id는 속성으로 뺀다 (정책 2-2)
 import type { EventProps, FeedbackType } from '@landit/analytics';
 
+import { readScenarioFeedbackParams } from '@/shared/lib/routes';
+
 import { isExternalEntry } from './utm';
 
 type PageViewProps = EventProps['Page Viewed'];
@@ -103,11 +105,13 @@ const resolvePage = (
   if (seg[0] === 'conversation' && seg[1] === 'scenario' && seg[2]) {
     // 대화 피드백은 대화 주소 아래 자기 화면이다 — 어느 세션의 피드백인지는 주소의 session이 안다
     if (seg[3] === 'feedback') {
+      // 세션은 화면이 쓰는 읽기를 그대로 쓴다 — 따로 파싱하면 같은 주소가 화면과 계측에서 다른 세션이 된다
+      const { session } = readScenarioFeedbackParams(searchParams);
       return {
         page_name: 'conversation_scenario_feedback',
         path: pathname,
         scenario_id: toId(seg[2]),
-        session_id: toId(searchParams.get('session')),
+        ...(session !== null && { session_id: session }),
       };
     }
     return {
