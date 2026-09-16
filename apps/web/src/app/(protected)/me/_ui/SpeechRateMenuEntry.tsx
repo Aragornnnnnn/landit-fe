@@ -1,7 +1,7 @@
 'use client';
 
 // 마이페이지 "음성" 행 — 눌러 들어간 시트에서 영어 음성이 들리는 속도를 고른다. 값은 이 기기의 localStorage에만 산다
-import { useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { EVENTS } from '@landit/analytics';
 
 import { soundAudioSrc } from '@/features/onboarding/model/sound-check';
@@ -45,7 +45,18 @@ export const SpeechRateMenuEntry = () => {
     setPlaying(false);
   };
 
+  // 닫기를 거치지 않고 사라질 때(라우트 이동·인증 가드)도 소리를 남기지 않는다 — useAudioPlayer와 같은 뒷정리
+  useEffect(
+    () => () => {
+      audioRef.current?.pause();
+      audioRef.current = null;
+    },
+    [],
+  );
+
   const choose = (next: SpeechRate) => {
+    // 이미 고른 칸을 다시 눌러도 role="radio" 버튼은 클릭이 들어온다 — 바뀐 게 없으면 저장도 계측도 하지 않는다
+    if (next === getSpeechRate()) return;
     setSpeechRate(next);
     // 듣는 중에 바꾸면 그 소리부터 바로 바뀐다 — 멈췄다 다시 틀게 하지 않는다
     if (audioRef.current) audioRef.current.playbackRate = next;

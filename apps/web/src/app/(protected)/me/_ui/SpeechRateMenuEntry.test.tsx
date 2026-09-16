@@ -135,4 +135,24 @@ describe('SpeechRateMenuEntry', () => {
 
     expect(FakeAudio.instances[0]!.pause).toHaveBeenCalled();
   });
+  it('이미 고른 배속을 다시 누르면 저장도 계측도 하지 않는다 — 바뀐 게 없는데 변경 이벤트가 쌓이면 안 된다', () => {
+    setSpeechRate(1.25);
+    render(<SpeechRateMenuEntry />);
+    openSheet();
+
+    fireEvent.click(screen.getByRole('radio', { name: '1.25배' }));
+
+    expect(getSpeechRate()).toBe(1.25);
+    expect(mocks.track).not.toHaveBeenCalled();
+  });
+
+  it('듣는 중에 화면이 사라지면 재생을 멈춘다 — 닫기를 거치지 않는 라우트 이동에도 소리가 남으면 안 된다', () => {
+    const { unmount } = render(<SpeechRateMenuEntry />);
+    openSheet();
+    fireEvent.click(screen.getByRole('button', { name: '들어보기' }));
+
+    unmount();
+
+    expect(FakeAudio.instances[0]!.pause).toHaveBeenCalled();
+  });
 });
