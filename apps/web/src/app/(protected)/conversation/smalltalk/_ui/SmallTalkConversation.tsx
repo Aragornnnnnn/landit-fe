@@ -60,6 +60,7 @@ export const SmallTalkConversation = ({
     turn,
     finishedThought,
     speech,
+    replay,
     input,
     leave,
     remainingMs,
@@ -136,6 +137,7 @@ export const SmallTalkConversation = ({
                 opened,
               })
             }
+            replay={replay}
           />
         </div>
         {ended ? (
