@@ -62,6 +62,7 @@ export const ScenarioTalkFlow = ({
     partner,
     finishedThought,
     speech,
+    replay,
     input,
     leave,
     sessionId,
@@ -197,6 +198,7 @@ export const ScenarioTalkFlow = ({
                 opened,
               })
             }
+            replay={replay}
           />
         </div>
         {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다 */}
@@ -216,7 +218,13 @@ export const ScenarioTalkFlow = ({
         {ended ? (
           // 대화 종료 — 마지막 AI 발화만 남기고 마이크 대신 분석으로 가는 CTA를 아래쪽에 보여준다
           <div className="flex h-36 items-end px-5 pb-3">
-            <Button onClick={() => setShowFeedback(true)}>
+            <Button
+              onClick={() => {
+                // 화면은 피드백으로 갈아타도 이 훅은 살아 있다 — 작별 인사를 다시 듣던 중이면 여기서 끊는다
+                if (replay?.playing) replay.toggle();
+                setShowFeedback(true);
+              }}
+            >
               상세 분석 보러갈래요
               <ArrowRightIcon size={16} />
             </Button>

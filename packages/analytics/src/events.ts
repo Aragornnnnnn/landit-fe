@@ -63,6 +63,7 @@ export const EVENTS = {
   TURN_FAILED: 'Turn Failed',
   INNER_THOUGHT_VIEWED: 'Inner Thought Viewed',
   TRANSLATION_TOGGLED: 'Translation Toggled',
+  SPEECH_REPLAYED: 'Speech Replayed',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
   SPEECH_PLAYBACK_FAILED: 'Speech Playback Failed',
   HINT_USED: 'Hint Used',
@@ -398,6 +399,11 @@ export type EventProps = {
     session_id?: number;
     turn_index: number;
     opened: boolean;
+  };
+  // 상대 발화를 다시 들은 순간 — 어느 턴에서 못 알아들어 되감는지 본다. 멈추려고 누른 건 세지 않는다
+  'Speech Replayed': {
+    session_id?: number;
+    turn_index: number;
   };
   'Speech Recognition Failed': {
     engine?: 'deepgram' | 'web_speech';

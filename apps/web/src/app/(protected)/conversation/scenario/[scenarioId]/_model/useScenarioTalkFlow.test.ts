@@ -14,6 +14,7 @@ import {
 } from '@/features/conversation/model/pacing';
 import { shouldAskSatisfaction } from '@/features/satisfaction/model/prompt-record';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
+import { track } from '@/shared/analytics';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 import * as scenarioTalkApi from '../_api/scenario-session';
@@ -24,6 +25,7 @@ const monitoringMock = vi.hoisted(() => ({
   reportError: vi.fn(),
   reportWarning: vi.fn(),
 }));
+vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 vi.mock('@/shared/monitoring/report', () => monitoringMock);
 
 vi.mock('@/features/conversation/api/session', () => ({
@@ -498,6 +500,76 @@ describe('useScenarioTalkFlow', async () => {
     await act(async () => ttsMock.state.onEnd?.());
 
     expect(result.current.phase).toBe('USER_READY');
+  });
+
+  it('다시 듣기는 내 차례에만 열린다 — 상대 발화 중엔 잠겨 있고 내가 말하기 시작하면 다시 잠긴다', async () => {
+    const { result } = renderHook(() => useScenarioTalkFlow(scenario));
+    await act(async () => {});
+    expect(result.current.replay?.enabled).toBe(false);
+
+    await act(async () => ttsMock.state.onEnd?.()); // 오프닝 재생 종료 → 내 차례
+    expect(result.current.replay?.enabled).toBe(true);
+
+    act(() => result.current.input.pressMic());
+    expect(result.current.replay?.enabled).toBe(false);
+  });
+
+  it('다시 듣기 시작만 계측하고, 재생이 끝나도 턴은 그대로다', async () => {
+    const { result } = renderHook(() => useScenarioTalkFlow(scenario));
+    await act(async () => {});
+    await act(async () => ttsMock.state.onEnd?.());
+    const replayedCount = () =>
+      vi.mocked(track).mock.calls.filter(([name]) => name === 'Speech Replayed')
+        .length;
+
+    act(() => result.current.replay?.toggle()); // 시작
+    act(() => result.current.replay?.toggle()); // 멈춤 — 안 찍는다
+    expect(track).toHaveBeenCalledWith('Speech Replayed', {
+      session_id: 1,
+      turn_index: 0,
+    });
+    expect(replayedCount()).toBe(1);
+
+    act(() => result.current.replay?.toggle()); // 다시 시작
+    await act(async () => ttsMock.state.onEnd?.()); // 끝까지 재생
+    expect(replayedCount()).toBe(2);
+    expect(result.current.phase).toBe('USER_READY');
+    expect(result.current.replay?.playing).toBe(false);
+  });
+
+  it('대화가 끝난 뒤에도 작별 인사는 다시 들을 수 있다', async () => {
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockResolvedValue(
+      submitResponse({
+        nextMessage: {
+          messageId: 9,
+          turnNumber: 3,
+          messageSequence: 1,
+          role: 'AI',
+          content: 'Thanks for chatting!',
+          translatedContent: '대화 고마워요!',
+          ttsText: null,
+          fixedQuestionText: null,
+          questionAudioUrl: null,
+        },
+        progress: {
+          currentTurnNumber: 3,
+          currentMessageSequenceNumber: 1,
+          totalQuestionCount: 3,
+          completed: true,
+        },
+      }),
+    );
+    await speakAndSubmit(result, 'Yes, here you go.');
+    act(() => {
+      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+    });
+    expect(result.current.replay?.enabled).toBe(false); // 종료 인사 발화 중
+
+    await act(async () => ttsMock.state.onEnd?.());
+
+    expect(result.current.phase).toBe('DONE');
+    expect(result.current.replay?.enabled).toBe(true);
   });
 
   it('서버 음원이 없는 시나리오는 오프닝을 합성으로 말한다', async () => {
