@@ -3,6 +3,7 @@
 // OpenRouter 프록시(/api/tts)로 텍스트를 합성해 재생하는 TTS 훅 — STT 훅과 콜백·상태 컨벤션을 공유한다
 import { useEffect, useRef, useState } from 'react';
 
+import { getSpeechRate } from '@/shared/lib/speech-rate';
 import { reportWarning } from '@/shared/monitoring/report';
 import type { TtsVoice } from '@/shared/tts/voice';
 
@@ -170,6 +171,7 @@ export function useTts() {
       onEndRef.current = options?.onEnd;
 
       const audio = new Audio(url);
+      audio.playbackRate = getSpeechRate();
       audioRef.current = audio;
       // 재생 실패는 onerror와 play() 거부 양쪽으로 도착할 수 있다 — 실패 콜백은 한 번만 부른다
       let handled = false;
@@ -231,6 +233,8 @@ export function useTts() {
     if (preloaded) preloadedRef.current = null;
 
     const start = (audio: HTMLAudioElement, isPreloaded: boolean) => {
+      // 배속은 재생 직전에 읽는다 — prefetchSrc로 미리 연 엘리먼트는 그 사이 설정이 바뀌었을 수 있다
+      audio.playbackRate = getSpeechRate();
       audioRef.current = audio;
       let handled = false; // onended·onerror·play().catch 중복 처리 방지
 

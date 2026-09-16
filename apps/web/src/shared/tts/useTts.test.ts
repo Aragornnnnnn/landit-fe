@@ -2,6 +2,8 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setSpeechRate } from '@/shared/lib/speech-rate';
+
 import { useTts } from './useTts';
 import type { TtsVoice } from './voice';
 
@@ -31,6 +33,7 @@ class FakeAudio {
   pause = vi.fn();
   removeAttribute = vi.fn();
   load = vi.fn();
+  playbackRate = 1;
 
   constructor(src: string) {
     this.src = src;
@@ -46,6 +49,7 @@ function fakeAudioResponse(): Response {
 }
 
 beforeEach(() => {
+  localStorage.clear();
   FakeAudio.instances = [];
   FakeAudio.playRejection = null;
   vi.stubGlobal('Audio', FakeAudio);
@@ -501,5 +505,29 @@ describe('useTts', () => {
 
     // AbortError는 합성 폴백을 부르지 않는다 (정적 재생이 그대로 유지되도록)
     expect(onError).not.toHaveBeenCalled();
+  });
+  it('말하기 속도를 느리게 골라두면 합성 음성이 그 배속으로 재생된다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => fakeAudioResponse()),
+    );
+    setSpeechRate(0.75);
+    const { result } = renderHook(() => useTts());
+
+    await act(() => result.current.speak('Hello', harper));
+
+    expect(FakeAudio.instances[0].playbackRate).toBe(0.75);
+  });
+
+  it('미리 열어둔 음원도 재생하는 시점의 배속으로 튼다 — 프리로드 때 넣으면 그 사이 바뀐 설정을 놓친다', () => {
+    vi.stubGlobal('fetch', vi.fn());
+    const { result } = renderHook(() => useTts());
+
+    act(() => result.current.prefetchSrc('/audio/question-2.mp3'));
+    setSpeechRate(1.5);
+    act(() => result.current.speakSrc('/audio/question-2.mp3'));
+
+    expect(FakeAudio.instances).toHaveLength(1);
+    expect(FakeAudio.instances[0].playbackRate).toBe(1.5);
   });
 });

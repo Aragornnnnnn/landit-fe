@@ -156,10 +156,11 @@ export const EVENTS = {
   LEVEL_RESULT_VIEWED: 'Level Result Viewed',
   PREPARED_LEARNING_VIEWED: 'Prepared Learning Viewed',
   PREPARED_LEARNING_CONTINUED: 'Prepared Learning Continued',
-  // 마이페이지 — 유료 사용자가 구독 관리로 들어갔다 / 무료 사용자가 페이월로 들어갔다 / 진동 토글
+  // 마이페이지 — 유료 사용자가 구독 관리로 들어갔다 / 무료 사용자가 페이월로 들어갔다 / 진동 토글 / 말하기 속도 변경
   SUBSCRIPTION_MANAGE_TAPPED: 'Subscription Manage Tapped',
   PAYWALL_ENTRY_TAPPED: 'Paywall Entry Tapped',
   HAPTICS_TOGGLED: 'Haptics Toggled',
+  SPEECH_RATE_CHANGED: 'Speech Rate Changed',
   // 구독 관리 화면 — 결제 내역으로 들어갔다 / 스토어 구독 화면으로 나갔다
   SUBSCRIPTION_HISTORY_TAPPED: 'Subscription History Tapped',
   STORE_SUBSCRIPTION_TAPPED: 'Store Subscription Tapped',
@@ -567,6 +568,8 @@ export type EventProps = {
   'Subscription Manage Tapped': { status: SubscriptionState };
   'Paywall Entry Tapped': { source: PaywallEntrySource };
   'Haptics Toggled': { enabled: boolean };
+  // 고른 배속 그대로 — 0.75 · 1 · 1.25 · 1.5
+  'Speech Rate Changed': { rate: number };
   'Subscription History Tapped': { status: SubscriptionState };
   'Store Subscription Tapped': {
     status: SubscriptionState;

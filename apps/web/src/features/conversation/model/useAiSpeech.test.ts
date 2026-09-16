@@ -3,6 +3,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
+import { setSpeechRate } from '@/shared/lib/speech-rate';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 import { speechEndPauseMs, speechTypingMs } from './pacing';
@@ -89,6 +90,7 @@ const clearTtsCalls = () => {
 };
 
 beforeEach(() => {
+  localStorage.clear();
   vi.useFakeTimers();
   ttsMock.state.onStart = undefined;
   ttsMock.state.onEnd = undefined;
@@ -160,6 +162,24 @@ describe('useAiSpeech', () => {
       vi.advanceTimersByTime(speechTypingMs(OPENING) + speechEndPauseMs);
     });
 
+    expect(onSpeechEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('말하기 속도를 느리게 골라두면 타이머 폴백도 그만큼 길게 기다린다', async () => {
+    setSpeechRate(0.75);
+    const { onSpeechEnd } = renderSpeech({ voice: null });
+
+    await act(async () => ttsMock.state.onError?.()); // 음원 못 받음
+
+    // 1배 기준 시간이 지나도 아직 말하는 중이다
+    await act(async () => {
+      vi.advanceTimersByTime(speechTypingMs(OPENING) + speechEndPauseMs);
+    });
+    expect(onSpeechEnd).not.toHaveBeenCalled();
+
+    await act(async () => {
+      vi.advanceTimersByTime(speechTypingMs(OPENING));
+    });
     expect(onSpeechEnd).toHaveBeenCalledTimes(1);
   });
 

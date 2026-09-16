@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
+import { getSpeechRate } from '@/shared/lib/speech-rate';
 import { useTts, type TtsPlayback } from '@/shared/tts/useTts';
 import type { TtsVoice } from '@/shared/tts/voice';
 
@@ -122,7 +123,7 @@ const runSpeech = ({
     new Promise<void>((resolve) => {
       fallbackTimer = setTimeout(
         resolve,
-        speechTypingMs(text) + speechEndPauseMs,
+        speechTypingMs(text, getSpeechRate()) + speechEndPauseMs,
       );
     });
 

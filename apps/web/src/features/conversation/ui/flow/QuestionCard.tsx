@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
+import { getSpeechRate } from '@/shared/lib/speech-rate';
 import { SpeakerIcon, TranslateIcon } from '@/shared/ui/Icons';
 
 import { speechTypingMs } from '../../model/pacing';
@@ -133,7 +134,8 @@ export const QuestionCard = ({
   useEffect(() => {
     if (!speaking) return;
     const chars = question.length;
-    const duration = speechTypingMs(question);
+    // 글자가 나타나는 속도도 말하기 속도를 따른다 — 안 그러면 느리게 골랐을 때 글자가 음성보다 먼저 끝난다
+    const duration = speechTypingMs(question, getSpeechRate());
     const start = Date.now();
     let raf: number;
     const tick = () => {
