@@ -209,14 +209,15 @@ export const PronunciationStep = ({
       source,
     });
   };
-  const playNativeSentence = () => {
-    trackAudioPlayed(NATIVE_SENTENCE_AUDIO_ID, 'sentence');
+  // 같은 원어민 음원이라도 어디서 눌렀는지는 나눠 찍는다 — 비교 듣기 사용량을 따로 세려고
+  const playNativeSentence = (source: 'sentence' | 'compare_native') => {
+    trackAudioPlayed(NATIVE_SENTENCE_AUDIO_ID, source);
     player.toggle(sentenceAudioUrl, { id: NATIVE_SENTENCE_AUDIO_ID });
   };
   // 내 녹음 전체 재생 — 피드백 말풍선에서 원어민 전체 문장과 나란히 비교해 듣는다
   const playMySentence = () => {
     if (!recordingUrlRef.current) return;
-    trackAudioPlayed(MY_SENTENCE_AUDIO_ID, 'my_sentence');
+    trackAudioPlayed(MY_SENTENCE_AUDIO_ID, 'compare_mine');
     player.toggle(recordingUrlRef.current, { id: MY_SENTENCE_AUDIO_ID });
   };
   const playNativeWord = (word: PronunciationWord) => {
@@ -333,13 +334,15 @@ export const PronunciationStep = ({
           ) : (
             <>
               <CompareListenBubble
+                disabled={phase === 'recording'}
                 nativePlaying={nativeSentencePlaying}
                 minePlaying={player.playingId === MY_SENTENCE_AUDIO_ID}
-                onPlayNative={playNativeSentence}
+                onPlayNative={() => playNativeSentence('compare_native')}
                 onPlayMine={playMySentence}
               />
               <FeedbackCards
                 cards={toFeedbackCards(analysis.words)}
+                disabled={phase === 'recording'}
                 playingId={player.playingId}
                 onPlayNative={playNativeWord}
                 onPlayMine={playMyWord}
@@ -384,8 +387,9 @@ export const PronunciationStep = ({
               sentenceText={sentenceText}
               sentenceTranslation={sentenceTranslation}
               highlight={targetExpressionText}
-              onPlay={playNativeSentence}
+              onPlay={() => playNativeSentence('sentence')}
               playing={nativeSentencePlaying}
+              disabled={phase === 'recording'}
               progress={nativeSentencePlaying ? player.progress : 0}
             />
           </div>

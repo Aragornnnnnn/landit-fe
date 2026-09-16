@@ -7,6 +7,8 @@ import { ListenButton } from './ListenButton';
 interface CompareListenBubbleProps {
   nativePlaying: boolean;
   minePlaying: boolean;
+  // 재도전 녹음 중 — 포인터는 본문이 막지만 키보드 활성화까지 막으려면 버튼이 알아야 한다
+  disabled: boolean;
   onPlayNative: () => void;
   onPlayMine: () => void;
 }
@@ -14,6 +16,7 @@ interface CompareListenBubbleProps {
 export const CompareListenBubble = ({
   nativePlaying,
   minePlaying,
+  disabled,
   onPlayNative,
   onPlayMine,
 }: CompareListenBubbleProps) => (
@@ -36,12 +39,14 @@ export const CompareListenBubble = ({
         <ListenButton
           label="원어민"
           ariaLabel="원어민 문장 듣기"
+          disabled={disabled}
           playing={nativePlaying}
           onClick={onPlayNative}
         />
         <ListenButton
           label="내 발음"
           ariaLabel="내가 말한 문장 듣기"
+          disabled={disabled}
           playing={minePlaying}
           onClick={onPlayMine}
         />

@@ -10,10 +10,13 @@ interface ListenButtonProps {
   // 있으면 칩(아이콘+문구), 없으면 원형 아이콘 버튼
   label?: string;
   ariaLabel?: string;
+  // 지금은 들을 수 없는 상태 — 재도전 녹음 중엔 스피커 소리가 마이크로 들어가면 안 된다
+  disabled?: boolean;
 }
 
+// 칩은 대기·재생 모두 테두리를 그린다 — 폭이 상태에 따라 흔들리지 않게
 const SHAPE = {
-  chip: 'gap-1.5 border border-transparent px-3 py-1.5 text-xs font-semibold',
+  chip: 'gap-1.5 border px-3 py-1.5 text-xs font-semibold',
   circle: 'size-8 flex-none',
 } as const;
 
@@ -23,19 +26,23 @@ const IDLE = {
   circle: 'bg-secondary text-foreground',
 } as const;
 
+const PLAYING = 'border-transparent bg-foreground text-background';
+
 export const ListenButton = ({
   playing,
   onClick,
   label,
   ariaLabel,
+  disabled,
 }: ListenButtonProps) => {
   const shape = label ? 'chip' : 'circle';
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       aria-label={ariaLabel ?? label ?? '발음 듣기'}
       className={`flex items-center justify-center rounded-full transition-colors active:opacity-70 ${SHAPE[shape]} ${
-        playing ? 'bg-foreground text-background' : IDLE[shape]
+        playing ? PLAYING : IDLE[shape]
       }`}
     >
       <SpeakerIcon size={label ? 14 : 15} />

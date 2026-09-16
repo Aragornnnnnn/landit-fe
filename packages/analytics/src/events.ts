@@ -506,10 +506,15 @@ export type EventProps = {
   'Pronunciation Skipped': { expression_id: number };
   'Pronunciation Audio Played': {
     expression_id: number;
-    // expression·sentence = 설명·발음 화면 스피커(sentence는 피드백 말풍선의 원어민 전체 문장도),
-    // my_sentence = 피드백 말풍선의 내 녹음 전체, native_word·my_word = 피드백 카드 행
+    // expression·sentence = 설명·발음 대기 화면 스피커, compare_* = 피드백 말풍선의 전체 문장
+    // 비교 듣기(원어민/내 녹음), native_word·my_word = 피드백 카드 행
     source:
-      'expression' | 'sentence' | 'my_sentence' | 'native_word' | 'my_word';
+      | 'expression'
+      | 'sentence'
+      | 'compare_native'
+      | 'compare_mine'
+      | 'native_word'
+      | 'my_word';
   };
   'Review Answer Submitted': {
     expression_id: number;
