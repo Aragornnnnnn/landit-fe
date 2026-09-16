@@ -101,6 +101,15 @@ const resolvePage = (
 
   // 대화 화면은 /conversation 아래에 종류별로 있다 — 시나리오는 어느 카드인지 id가 붙는다
   if (seg[0] === 'conversation' && seg[1] === 'scenario' && seg[2]) {
+    // 대화 피드백은 대화 주소 아래 자기 화면이다 — 어느 세션의 피드백인지는 주소의 session이 안다
+    if (seg[3] === 'feedback') {
+      return {
+        page_name: 'conversation_scenario_feedback',
+        path: pathname,
+        scenario_id: toId(seg[2]),
+        session_id: toId(searchParams.get('session')),
+      };
+    }
     return {
       page_name: 'conversation_scenario',
       path: pathname,

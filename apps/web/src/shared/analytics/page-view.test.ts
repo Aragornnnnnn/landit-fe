@@ -165,6 +165,18 @@ describe('toPageView', () => {
     });
   });
 
+  it('시나리오 대화 피드백은 대화 주소 아래 자기 이름을 갖고, 어느 세션인지도 남긴다', () => {
+    // Given 대화가 끝나 피드백 주소로 넘어왔을 때
+    // When 페이지뷰 속성을 만들면
+    // Then 대화 화면과 다른 이름이고 시나리오·세션 id가 함께 실린다
+    expect(pv('/conversation/scenario/12/feedback', 'session=345')).toEqual({
+      page_name: 'conversation_scenario_feedback',
+      path: '/conversation/scenario/12/feedback',
+      scenario_id: 12,
+      session_id: 345,
+    });
+  });
+
   it('스몰톡 대화는 id 없이 page_name conversation_smalltalk으로 남는다', () => {
     // 주소의 상대·시작 방식(mode/partner)은 여기 싣지 않는다 — Conversation Started가 이미 남긴다
     expect(
