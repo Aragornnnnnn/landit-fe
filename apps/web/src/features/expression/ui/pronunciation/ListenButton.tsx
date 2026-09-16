@@ -12,22 +12,34 @@ interface ListenButtonProps {
   ariaLabel?: string;
 }
 
+const SHAPE = {
+  chip: 'gap-1.5 border border-transparent px-3 py-1.5 text-xs font-semibold',
+  circle: 'size-8 flex-none',
+} as const;
+
+// 칩은 말풍선(bg-secondary) 위에 놓이므로 대기 배경을 card로 해 윤곽을 살린다
+const IDLE = {
+  chip: 'border-border bg-card text-foreground',
+  circle: 'bg-secondary text-foreground',
+} as const;
+
 export const ListenButton = ({
   playing,
   onClick,
   label,
   ariaLabel,
-}: ListenButtonProps) => (
-  <button
-    onClick={onClick}
-    aria-label={ariaLabel ?? label ?? '발음 듣기'}
-    className={`flex items-center justify-center rounded-full transition-colors active:opacity-70 ${
-      label ? 'gap-1.5 px-3 py-1.5 text-xs font-semibold' : 'size-8 flex-none'
-    } ${
-      playing ? 'bg-foreground text-background' : 'bg-secondary text-foreground'
-    }`}
-  >
-    <SpeakerIcon size={label ? 14 : 15} />
-    {label}
-  </button>
-);
+}: ListenButtonProps) => {
+  const shape = label ? 'chip' : 'circle';
+  return (
+    <button
+      onClick={onClick}
+      aria-label={ariaLabel ?? label ?? '발음 듣기'}
+      className={`flex items-center justify-center rounded-full transition-colors active:opacity-70 ${SHAPE[shape]} ${
+        playing ? 'bg-foreground text-background' : IDLE[shape]
+      }`}
+    >
+      <SpeakerIcon size={label ? 14 : 15} />
+      {label}
+    </button>
+  );
+};
