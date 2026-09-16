@@ -258,6 +258,29 @@ export const ChatHistoryIcon = ({ size = 22, ...props }: IconProps) => (
   </svg>
 );
 
+// 번역 — 대화 카드의 해석 보기 버튼용 (글자 A와 한자를 겹친 통용 기호)
+export const TranslateIcon = ({ size = 22, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="m5 8 6 6" />
+    <path d="m4 14 6-6 2-3" />
+    <path d="M2 5h12" />
+    <path d="M7 2h1" />
+    <path d="m22 22-5-10-5 10" />
+    <path d="M14 18h6" />
+  </svg>
+);
+
 // 다시하기 — 대화 재도전 버튼용 (반시계 회전 화살표)
 export const ReplayIcon = ({ size = 22, ...props }: IconProps) => (
   <svg

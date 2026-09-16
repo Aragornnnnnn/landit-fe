@@ -13,6 +13,7 @@
 - **유저의 선택은 보고하지 않는다.** 마이크 권한 거부, 빈 발화(아무 말 안 함) 같은 건 결함이 아니다 — 앰플리튜드 몫.
 - **트레이싱은 켜지 않고, 리플레이는 에러 세션만.** 상시 리플레이는 앰플리튜드가 100% 수집 중이라 중복 — Sentry는 `replaysOnErrorSampleRate: 1.0`으로 에러가 난 순간의 직전 구간(최대 60초 버퍼)만 이슈에 첨부한다(평소엔 버퍼만, 전송 없음). warning 이벤트에도 첨부된다 — 저하 실패는 드물어 쿼터 부담이 작고, 문제 되면 그때 `beforeErrorSampling`으로 제한한다. 무료 쿼터(월 50개)를 넘으면 조용히 안 담길 뿐이다. 텍스트는 기본 마스킹(maskAllText) 그대로 둔다 — 발화 원문 보호.
 - **DSN이 없으면 SDK가 조용히 꺼진다.** 로컬 개발이 기본적으로 프로젝트를 오염시키지 않는 이유. 로컬에서 전송을 테스트하고 싶을 때만 env에 DSN을 넣는다.
+- **로그인 사용자는 유저 id로만 묶는다.** [shared/monitoring/MonitoringBootstrap.tsx](../apps/web/src/shared/monitoring/MonitoringBootstrap.tsx)가 auth store의 member를 보고 `setMonitoringUser`로 `user.id`(우리 유저 id 문자열)를 붙이고 로그아웃하면 푼다. 셸의 `IDENTIFY`·RevenueCat app_user_id와 같은 값이라 세 곳을 한 id로 좇는다. 이메일·닉네임은 보내지 않는다 (개인정보처리방침의 Sentry 위탁 여부 미확인).
 - **알림 규칙은 코드가 아니라 Sentry 대시보드에 있다.** 레벨은 심각도만 표시하고, 그걸로 언제 부를지는 대시보드에서 따로 정한다.
 
 ## 수집 경로

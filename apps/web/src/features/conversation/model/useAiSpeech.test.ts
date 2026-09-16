@@ -80,17 +80,22 @@ const renderSpeech = (
   return { ...hook, onSpeechEnd, initialProps };
 };
 
+// 재생 호출 기록만 비운다 — track 같은 다른 목은 그대로 둔다
+const clearTtsCalls = () => {
+  ttsMock.speak.mockClear();
+  ttsMock.speakSrc.mockClear();
+  ttsMock.prefetch.mockClear();
+  ttsMock.prefetchSrc.mockClear();
+  ttsMock.stop.mockClear();
+};
+
 beforeEach(() => {
   localStorage.clear();
   vi.useFakeTimers();
   ttsMock.state.onStart = undefined;
   ttsMock.state.onEnd = undefined;
   ttsMock.state.onError = undefined;
-  ttsMock.speak.mockClear();
-  ttsMock.speakSrc.mockClear();
-  ttsMock.prefetch.mockClear();
-  ttsMock.prefetchSrc.mockClear();
-  ttsMock.stop.mockClear();
+  clearTtsCalls();
 });
 
 afterEach(() => {
@@ -385,5 +390,150 @@ describe('useAiSpeech 분리 재생', () => {
 
     expect(ttsMock.prefetch).toHaveBeenCalledWith(BACKCHANNEL, voice);
     expect(ttsMock.prefetchSrc).toHaveBeenCalledWith(QUESTION_URL);
+  });
+});
+
+// 다시 듣기 — 같은 발화를 한 번 더 재생한다. 대화 진행은 건드리지 않는다
+describe('useAiSpeech 다시 듣기', () => {
+  const LINE = 'What size would you like?';
+
+  // 발화 한 구간을 끝까지 재생하고 유저 차례(playing=false, 다시 듣기 허용)로 넘어간 상태를 만든다
+  const renderAfterSpeech = async (
+    over: Partial<Parameters<typeof useAiSpeech>[0]> = {},
+  ) => {
+    const rendered = renderSpeech({
+      openingSrc: null,
+      source: { content: LINE },
+      ...over,
+    });
+    await act(async () => ttsMock.state.onEnd?.());
+    rendered.rerender({
+      ...rendered.initialProps,
+      playing: false,
+      replayAllowed: true,
+    });
+    clearTtsCalls();
+    return rendered;
+  };
+
+  it('다시 듣기를 부르면 같은 발화를 처음부터 다시 재생한다', async () => {
+    const { result } = await renderAfterSpeech();
+
+    act(() => result.current.replay());
+
+    expect(ttsMock.speak).toHaveBeenCalledWith(LINE, voice, expect.anything());
+    expect(result.current.replaying).toBe(true);
+  });
+
+  it('다시 듣기가 끝나도 대화를 다음 단계로 넘기지 않는다', async () => {
+    // Given 다시 듣기는 턴을 진행시키는 연출이 아니다 — 끝나도 유저 차례 그대로다
+    const { result, onSpeechEnd } = await renderAfterSpeech();
+    onSpeechEnd.mockClear();
+
+    act(() => result.current.replay());
+    await act(async () => ttsMock.state.onEnd?.());
+
+    expect(onSpeechEnd).not.toHaveBeenCalled();
+    expect(result.current.replaying).toBe(false);
+  });
+
+  it('다시 듣기 중에도 입모양은 지금 나는 소리를 따른다', async () => {
+    const { result } = await renderAfterSpeech();
+
+    act(() => result.current.replay());
+    await act(async () =>
+      ttsMock.state.onStart?.({ progress: () => 0, source: 'blob:fake' }),
+    );
+
+    expect(result.current.speech?.text).toBe(LINE);
+  });
+
+  it('재생 중에 다시 누르면 멈춘다', async () => {
+    const { result } = await renderAfterSpeech();
+    act(() => result.current.replay());
+
+    act(() => result.current.replay());
+
+    expect(ttsMock.stop).toHaveBeenCalled();
+    expect(result.current.replaying).toBe(false);
+    expect(result.current.speech).toBeNull();
+  });
+
+  it('허용 구간이 끝나면(내가 말하기 시작) 다시 듣기를 끊는다 — 소리가 STT에 섞이지 않게', async () => {
+    const { result, rerender, initialProps } = await renderAfterSpeech();
+    act(() => result.current.replay());
+
+    rerender({ ...initialProps, playing: false, replayAllowed: false });
+
+    expect(ttsMock.stop).toHaveBeenCalled();
+    expect(result.current.replaying).toBe(false);
+    expect(result.current.speech).toBeNull();
+  });
+
+  it('상대가 말하는 중(허용 밖)에 부른 다시 듣기는 무시한다 — 소리를 뺏으면 그 발화가 끝을 못 알린다', async () => {
+    const { result } = renderSpeech({
+      openingSrc: null,
+      source: { content: LINE },
+    });
+    ttsMock.speak.mockClear();
+
+    act(() => result.current.replay());
+
+    expect(ttsMock.speak).not.toHaveBeenCalled();
+    expect(result.current.replaying).toBe(false);
+  });
+
+  it('다시 듣기는 질문 음원을 미리 연다 — 맞장구 뒤 이어 재생 공백을 없앤다', async () => {
+    // Given 분리 재생 발화(맞장구 합성 → 질문 음원) — 첫 구간 종료는 헬퍼가, 둘째 구간은 여기서 흘린다
+    const { result } = await renderAfterSpeech({
+      source: {
+        content: 'Sure! What size?',
+        ttsText: 'Sure!',
+        questionAudioUrl: 'https://cdn.example.com/q.mp3',
+      },
+    });
+    await act(async () => ttsMock.state.onEnd?.());
+    clearTtsCalls();
+
+    act(() => result.current.replay());
+
+    expect(ttsMock.prefetchSrc).toHaveBeenCalledWith(
+      'https://cdn.example.com/q.mp3',
+    );
+  });
+
+  it('다시 듣기 중 다음 발화가 시작되면 새 발화가 이긴다', async () => {
+    const { result, rerender, initialProps } = await renderAfterSpeech();
+    act(() => result.current.replay());
+    ttsMock.speak.mockClear();
+
+    rerender({
+      ...initialProps,
+      playing: true,
+      replayAllowed: false,
+      source: { content: 'Anything else?' },
+    });
+
+    expect(result.current.replaying).toBe(false);
+    expect(ttsMock.speak).toHaveBeenCalledWith(
+      'Anything else?',
+      voice,
+      expect.anything(),
+    );
+  });
+
+  it('오프닝 구간에서 다시 들으면 첫 질문 음원을 그대로 다시 틀고, 안 쓸 합성은 미리 시키지 않는다', async () => {
+    // 아직 markOpeningPlayed 전이라 이 발화의 소리는 여전히 오프닝 음원이다
+    const { result } = await renderAfterSpeech({
+      openingSrc: 'https://cdn.example.com/questions/10.mp3',
+    });
+
+    act(() => result.current.replay());
+
+    expect(ttsMock.speakSrc).toHaveBeenCalledWith(
+      'https://cdn.example.com/questions/10.mp3',
+      expect.anything(),
+    );
+    expect(ttsMock.prefetch).not.toHaveBeenCalled();
   });
 });

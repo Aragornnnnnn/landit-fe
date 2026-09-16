@@ -171,13 +171,16 @@ interface AiSpeechOptions {
   // 오프닝의 첫 질문 음원 URL — 없으면(null) 오프닝도 일반 재생 경로를 탄다
   openingSrc: string | null;
   onSpeechEnd: () => void;
+  // 다시 듣기를 허용하는 구간인가 — 꺼지는 순간 돌던 다시 듣기도 함께 끊는다. 안 주면 다시 듣기가 없는 재생이다
+  replayAllowed?: boolean;
 }
 
 /**
  * AI 발화 재생 훅 — playing이 켜지면 source를 계획대로 재생하고(오프닝 mp3·합성·질문 음원), 끝나면 onSpeechEnd를 부른다.
  *
  * @returns `markOpeningPlayed`(오프닝을 지나갔다는 표시), `prefetch`(다음 발화 미리 준비),
- *   `speech`(지금 나는 소리 — 캐릭터 입모양용, 소리가 없으면 null)
+ *   `speech`(지금 나는 소리 — 캐릭터 입모양용, 소리가 없으면 null),
+ *   `replay`·`replaying`(다시 듣기 — 대화 진행과 무관한 별도 재생, replayAllowed 구간에서만)
  */
 export const useAiSpeech = ({
   playing,
@@ -185,31 +188,48 @@ export const useAiSpeech = ({
   voice,
   openingSrc,
   onSpeechEnd,
+  replayAllowed = false,
 }: AiSpeechOptions) => {
   const tts = useTts();
   // 첫 AI 발화(오프닝)인지 — 첫 질문 음원 재생 대상
   const isOpeningRef = useRef(true);
   // 재생이 시작돼야 알 수 있는 값이라 상태로 둔다 (오프닝 mp3·합성 어느 쪽이든 같다)
   const [speech, setSpeech] = useState<PlayingSpeech | null>(null);
+  // 다시 듣기 회차의 중단 손잡이 — 이 회차는 effect가 아니라 버튼이 시작하므로 정리도 직접 들고 있어야 한다
+  const replayStopRef = useRef<(() => void) | null>(null);
+  const [replaying, setReplaying] = useState(false);
 
-  // 발화가 바뀔 때마다 재생 한 회차를 시작한다 — runSpeech가 돌려준 중단 함수가 그대로 cleanup이다
-  useEffect(() => {
-    if (!playing || source == null) return;
-    return runSpeech({
-      source,
+  /** 다시 듣기를 끊는다 — 소리와 입모양을 함께 멈춘다. 돌고 있지 않으면 아무 일도 없다 */
+  const stopReplay = () => {
+    replayStopRef.current?.();
+    replayStopRef.current = null;
+    setReplaying(false);
+  };
+
+  // 다시 듣기는 허용 구간에서만 산다 — 허용이 꺼지는 순간(상대 발화·내 녹음·화면 이탈) 끊는다.
+  // 정리 없이 새 발화가 소리를 뺏으면 다시 듣기 회차가 끝을 못 알리고, 내 녹음엔 상대 목소리가 섞인다
+  useEffect(() => () => stopReplay(), [replayAllowed]);
+
+  // 오프닝 구간이면 첫 질문 음원을 그대로 튼다 — 이후 발화는 동적 생성이라 음원이 없다
+  const resolveOpeningSrc = () => (isOpeningRef.current ? openingSrc : null);
+
+  // 재생 한 회차 — 자동 재생과 다시 듣기가 같은 계획을 쓴다. 다른 건 끝났을 때 누구에게 알리느냐뿐이다
+  const startSpeech = (speechSource: SpeechSource, onEnd: () => void) =>
+    runSpeech({
+      source: speechSource,
       voice,
-      openingSrc: isOpeningRef.current ? openingSrc : null,
+      openingSrc: resolveOpeningSrc(),
       tts,
       setSpeech,
-      onSpeechEnd,
+      onSpeechEnd: onEnd,
     });
+
+  // 발화가 바뀔 때마다 재생 한 회차를 시작한다 — 돌려받은 중단 함수가 그대로 cleanup이다
+  useEffect(() => {
+    if (!playing || source == null) return;
+    return startSpeech(source, onSpeechEnd);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, source?.content, source?.ttsText, source?.questionAudioUrl]);
-
-  // 오프닝을 지나갔다는 표시 — 이후 발화는 동적 생성이라 오프닝 음원 대상이 아니다. 다음 질문이 화면에 올라갈 때 부른다
-  const markOpeningPlayed = () => {
-    isOpeningRef.current = false;
-  };
 
   // 다음 발화 재생을 미리 준비한다 — 합성분은 미리 합성하고, 질문 음원은 미리 열어 이어 재생 공백을 없앤다.
   // 음성이 없으면 재생 자체가 타이머 폴백이라 아무것도 준비하지 않는다
@@ -220,5 +240,29 @@ export const useAiSpeech = ({
     if (question) tts.prefetchSrc(question.src);
   };
 
-  return { markOpeningPlayed, prefetch, speech };
+  /**
+   * 방금 들은 발화를 한 번 더 — 끝나도 onSpeechEnd를 부르지 않는다. 부르는 순간 턴이 넘어가 버리기 때문이다.
+   * 재생 중에 다시 부르면 멈추고, 허용 구간 밖에서 부르면 무시한다 — 상대 발화 중에 소리를 뺏으면
+   * 그 발화가 끝을 못 알려 대화가 멈춘다. 새로 재생을 시작했는지를 돌려준다(계측용)
+   */
+  const replay = (): boolean => {
+    if (replaying) {
+      stopReplay();
+      return false;
+    }
+    if (!replayAllowed || source == null) return false;
+    // 오프닝은 음원을 그대로 다시 튼다 — 합성을 미리 시켜 봐야 안 쓰인다.
+    // 그 외엔 합성분은 방금 튼 게 캐시에 있어 요청이 안 나가고, 질문 음원만 미리 열려 맞장구 뒤 공백이 없어진다
+    if (!resolveOpeningSrc()) prefetch(source);
+    setReplaying(true);
+    replayStopRef.current = startSpeech(source, stopReplay);
+    return true;
+  };
+
+  // 오프닝을 지나갔다는 표시 — 다음 질문이 화면에 올라갈 때 부른다
+  const markOpeningPlayed = () => {
+    isOpeningRef.current = false;
+  };
+
+  return { markOpeningPlayed, prefetch, speech, replay, replaying };
 };

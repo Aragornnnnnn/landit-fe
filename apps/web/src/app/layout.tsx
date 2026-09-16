@@ -11,6 +11,7 @@ import { WidgetDataSync } from '@/features/widget/ui/WidgetDataSync';
 import { AnalyticsBootstrap, PageViewTracker } from '@/shared/analytics';
 import { BridgeListener } from '@/shared/bridge/BridgeListener';
 import { GlobalHaptics } from '@/shared/haptics';
+import { MonitoringBootstrap } from '@/shared/monitoring/MonitoringBootstrap';
 import { Toaster } from '@/shared/ui/toast';
 
 import { Providers } from './providers';
@@ -39,6 +40,7 @@ export default function RootLayout({
     <html lang="ko" className="antialiased" suppressHydrationWarning>
       <body>
         <AnalyticsBootstrap />
+        <MonitoringBootstrap />
         <PageViewTracker />
         <BridgeListener />
         <GlobalHaptics />

@@ -1,4 +1,4 @@
-// 질문 카드 — 상대 발화가 말하는 속도에 맞춰 글자가 생성되듯 촤르륵 나타나고, 끝나면 해석을 펼쳐볼 수 있다.
+// 질문 카드 — 상대 발화가 말하는 속도에 맞춰 글자가 생성되듯 촤르륵 나타나고, 끝나면 해석을 펼쳐보거나 그 발화를 다시 들을 수 있다.
 // 말풍선은 발화 길이만큼만 차지한다 — 짧은 말에 큰 풍선이 붙으면 어색하고, 내 답변과의 사이는 비어도 괜찮다.
 // 크기는 발화가 시작될 때 한 번에 잡는다 — 글자가 나타나는 내내 커지면 화면이 계속 달라져 산만하다.
 // 남은 자리를 다 쓰는 긴 발화만 안쪽 글자가 스크롤된다.
@@ -9,9 +9,10 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
 import { getSpeechRate } from '@/shared/lib/speech-rate';
-import { ChevronRightIcon } from '@/shared/ui/Icons';
+import { SpeakerIcon, TranslateIcon } from '@/shared/ui/Icons';
 
 import { speechTypingMs } from '../../model/pacing';
+import type { ReplayControl } from '../../model/useConversationTurns';
 import { TypingCursor } from './TypingCursor';
 
 // 카드 위·아래 흐림 폭(마스크 그라데이션의 1.5rem과 같은 값) — 말하는 줄이 흐림에 걸리지 않게 그만큼 띄운다
@@ -25,7 +26,38 @@ interface QuestionCardProps {
   instruction?: boolean;
   // 해석을 펼치거나 접은 순간 — 계측은 세션·턴을 아는 화면이 맡는다
   onTranslationToggled?: (opened: boolean) => void;
+  // 다시 듣기 — 주면 스피커 버튼이 붙는다
+  replay?: ReplayControl;
 }
+
+/**
+ * 카드 아래 동그란 아이콘 버튼 — 켜진 상태(재생 중·해석 펼침)는 색을 뒤집어 알린다.
+ * 발음 화면의 듣기 버튼과 같은 문법이라 앱 전체에서 "누르면 뭔가 나온다"가 한 모양으로 읽힌다.
+ */
+const CardIconButton = ({
+  on,
+  label,
+  disabled = false,
+  onClick,
+  children,
+}: {
+  on: boolean;
+  label: string;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    aria-label={label}
+    className={`flex size-7 flex-none items-center justify-center rounded-full transition-colors active:opacity-70 disabled:opacity-40 ${
+      on ? 'bg-foreground text-background' : 'bg-secondary text-foreground'
+    }`}
+  >
+    {children}
+  </button>
+);
 
 export const QuestionCard = ({
   question,
@@ -33,6 +65,7 @@ export const QuestionCard = ({
   speaking,
   instruction = false,
   onTranslationToggled,
+  replay,
 }: QuestionCardProps) => {
   // 진행값이 어느 질문 것인지 함께 저장한다 — 질문이 바뀐 첫 프레임에 이전 값이 새어 나오지 않도록
   const [typed, setTyped] = useState({ question, count: 0 });
@@ -214,19 +247,28 @@ export const QuestionCard = ({
           )}
         </AnimatePresence>
       </div>
-      {/* 카드 오른쪽 아래에 붙박이 — 글이 길어 안쪽이 스크롤돼도 이 버튼은 늘 같은 자리에 있다 */}
-      {!instruction && translation && done && (
-        <div className="-mr-2 -mb-3 flex flex-none justify-end">
-          <button
-            onClick={toggleTranslation}
-            className="flex items-center gap-0.5 rounded-full px-2 py-1 text-xs font-semibold text-muted-foreground active:scale-95"
-          >
-            {translationOpen ? '해석 접기' : '해석 보기'}
-            <ChevronRightIcon
-              size={14}
-              className={translationOpen ? '-rotate-90' : 'rotate-90'}
-            />
-          </button>
+      {/* 카드 오른쪽 아래에 붙박이 — 글이 길어 안쪽이 스크롤돼도 이 버튼들은 늘 같은 자리에 있다 */}
+      {!instruction && done && (replay || translation) && (
+        <div className="-mr-1 -mb-2 flex flex-none justify-end gap-1.5 pt-2">
+          {replay && (
+            <CardIconButton
+              on={replay.playing}
+              disabled={!replay.enabled}
+              label={replay.playing ? '다시 듣기 멈추기' : '다시 듣기'}
+              onClick={replay.toggle}
+            >
+              <SpeakerIcon size={14} />
+            </CardIconButton>
+          )}
+          {translation && (
+            <CardIconButton
+              on={translationOpen}
+              label={translationOpen ? '해석 접기' : '해석 보기'}
+              onClick={toggleTranslation}
+            >
+              <TranslateIcon size={14} />
+            </CardIconButton>
+          )}
         </div>
       )}
     </motion.div>
