@@ -2,6 +2,8 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setSpeechRate } from '@/shared/lib/speech-rate';
+
 import { useAudioPlayer } from './useAudioPlayer';
 
 // 경계 목 — iOS 사파리처럼 메타데이터가 로드되기 전(readyState 0)의 currentTime 세팅을 버린다
@@ -11,6 +13,7 @@ class FakeAudio extends EventTarget {
   duration = NaN;
   paused = true;
   volume = 1;
+  playbackRate = 1;
   onended: (() => void) | null = null;
   play = vi.fn(() => {
     this.paused = false;
@@ -42,6 +45,7 @@ class FakeAudio extends EventTarget {
 }
 
 beforeEach(() => {
+  localStorage.clear();
   FakeAudio.instances = [];
   vi.stubGlobal('Audio', FakeAudio);
 });
@@ -62,5 +66,13 @@ describe('useAudioPlayer', () => {
     act(() => audio.loadMetadata());
 
     expect(audio.currentTime).toBe(1.2);
+  });
+  it('말하기 속도를 골라두면 예문·녹음 재생도 그 배속으로 튼다', () => {
+    setSpeechRate(1.5);
+    const { result } = renderHook(() => useAudioPlayer());
+
+    act(() => result.current.play('/audio/example-1.mp3', { id: 'native-1' }));
+
+    expect(FakeAudio.instances[0]!.playbackRate).toBe(1.5);
   });
 });
