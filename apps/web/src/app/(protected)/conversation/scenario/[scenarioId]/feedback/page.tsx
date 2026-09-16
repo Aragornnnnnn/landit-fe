@@ -30,7 +30,7 @@ function ScenarioFeedbackContent({
 }) {
   const { scenarioId } = use(params);
   const id = Number(scenarioId);
-  const { session, date, replay } =
+  const { session, date, replay, detail } =
     readScenarioFeedbackParams(useSearchParams());
   const title = useFeedbackTitle(id, date);
 
@@ -41,6 +41,7 @@ function ScenarioFeedbackContent({
       title={title}
       date={date}
       replay={replay}
+      openDetail={detail}
     />
   );
 }
