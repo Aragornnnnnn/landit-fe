@@ -2,7 +2,7 @@
 
 // 발음 평가 스텝 — 대기→녹음→분석→피드백(재도전 루프). 점수 구간 표시는 pronunciation-score가 정한다
 import { useEffect, useRef, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type EventProps } from '@landit/analytics';
 
 // 마이크 컨트롤·권한 시트는 공용 슬라이스(conversation)의 것을 그대로 쓴다 — 대화와 같은 조작감
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
@@ -18,15 +18,13 @@ import type {
 } from '../../api/pronunciation';
 import { isSilentRecording } from '../../lib/sentence-recording';
 import { toFeedbackCards } from '../../model/pronunciation-feedback';
-import {
-  feedbackCoachMessage,
-  scoreView,
-} from '../../model/pronunciation-score';
+import { scoreView } from '../../model/pronunciation-score';
 import { useAudioPlayer } from '../../model/useAudioPlayer';
 import { usePronunciationAnalysisMutation } from '../../model/usePronunciationAnalysisMutation';
 import { useSentenceRecorder } from '../../model/useSentenceRecorder';
 import { StepScaffold } from '../common/StepScaffold';
 import { AnalyzingLandy } from './AnalyzingLandy';
+import { CompareListenBubble } from './CompareListenBubble';
 import {
   feedbackCardId,
   FeedbackCards,
@@ -63,6 +61,11 @@ interface PronunciationStepProps {
 }
 
 type Phase = 'ready' | 'recording' | 'analyzing' | 'failed' | 'feedback';
+
+// 전체 문장 재생 식별자 — 원어민은 대기 화면 스피커와 피드백 말풍선이 같은 소리를 튼다.
+// 내 녹음 전체는 카드 행의 단어 구간 재생(mine-N)과 구분한다
+const NATIVE_SENTENCE_AUDIO_ID = 'sentence';
+const MY_SENTENCE_AUDIO_ID = 'my-sentence';
 
 export const PronunciationStep = ({
   active = true,
@@ -198,7 +201,7 @@ export const PronunciationStep = ({
   // 계측은 재생 시작만 찍는다 — 같은 id가 나오는 중이면 그 토글은 끄기다
   const trackAudioPlayed = (
     id: string,
-    source: 'sentence' | 'native_word' | 'my_word',
+    source: EventProps['Pronunciation Audio Played']['source'],
   ) => {
     if (player.playingId === id) return;
     track(EVENTS.PRONUNCIATION_AUDIO_PLAYED, {
@@ -207,8 +210,14 @@ export const PronunciationStep = ({
     });
   };
   const playNativeSentence = () => {
-    trackAudioPlayed('sentence', 'sentence');
-    player.toggle(sentenceAudioUrl, { id: 'sentence' });
+    trackAudioPlayed(NATIVE_SENTENCE_AUDIO_ID, 'sentence');
+    player.toggle(sentenceAudioUrl, { id: NATIVE_SENTENCE_AUDIO_ID });
+  };
+  // 내 녹음 전체 재생 — 피드백 말풍선에서 원어민 전체 문장과 나란히 비교해 듣는다
+  const playMySentence = () => {
+    if (!recordingUrlRef.current) return;
+    trackAudioPlayed(MY_SENTENCE_AUDIO_ID, 'my_sentence');
+    player.toggle(recordingUrlRef.current, { id: MY_SENTENCE_AUDIO_ID });
   };
   const playNativeWord = (word: PronunciationWord) => {
     if (word.nativeWordAudioUrl) {
@@ -231,6 +240,8 @@ export const PronunciationStep = ({
       });
     }
   };
+
+  const nativeSentencePlaying = player.playingId === NATIVE_SENTENCE_AUDIO_ID;
 
   // 재도전(다시 말하기) 녹음은 페이지 이동 없이 이 화면에서 — 교정 팁을 보면서 다시 말하도록
   // 하단만 녹음 컨트롤로 바뀐다. 제출 후 분석은 첫 분석과 같은 로딩 화면으로 전환한다
@@ -281,10 +292,11 @@ export const PronunciationStep = ({
           )
         }
       >
-        {/* 재도전 녹음 중엔 본문을 살짝 가라앉혀 "지금은 말하는 중" 모드를 구분한다 — 교정 팁은 여전히 읽힌다 */}
+        {/* 재도전 녹음 중엔 본문을 살짝 가라앉혀 "지금은 말하는 중" 모드를 구분한다 — 교정 팁은 여전히 읽힌다.
+            듣기 버튼도 전부 막는다 — 스피커 소리가 마이크로 들어가지 않게 */}
         <div
           className={`flex flex-col gap-6 pt-2 pb-6 transition-opacity duration-300 ${
-            phase === 'recording' ? 'opacity-60' : ''
+            phase === 'recording' ? 'pointer-events-none opacity-60' : ''
           }`}
         >
           <ScoreGauge view={view} />
@@ -320,25 +332,12 @@ export const PronunciationStep = ({
             </div>
           ) : (
             <>
-              {/* 발음 화면의 약속("제가 듣고 도와드릴게요")을 지키러 온 래디 — 교정 카드로 시선을 넘긴다 */}
-              <div
-                className="animate-fade-up -my-1 flex items-center gap-2"
-                style={{ animationDelay: '950ms' }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/character/landy-point.webp"
-                  alt=""
-                  className="w-14 flex-none object-contain"
-                />
-                <div className="rounded-2xl rounded-bl-sm bg-secondary px-3.5 py-2 text-sm font-semibold text-foreground">
-                  {feedbackCoachMessage(
-                    view,
-                    analysis.words.filter((word) => word.status !== 'CORRECT')
-                      .length,
-                  )}
-                </div>
-              </div>
+              <CompareListenBubble
+                nativePlaying={nativeSentencePlaying}
+                minePlaying={player.playingId === MY_SENTENCE_AUDIO_ID}
+                onPlayNative={playNativeSentence}
+                onPlayMine={playMySentence}
+              />
               <FeedbackCards
                 cards={toFeedbackCards(analysis.words)}
                 playingId={player.playingId}
@@ -386,8 +385,8 @@ export const PronunciationStep = ({
               sentenceTranslation={sentenceTranslation}
               highlight={targetExpressionText}
               onPlay={playNativeSentence}
-              playing={player.playingId === 'sentence'}
-              progress={player.playingId === 'sentence' ? player.progress : 0}
+              playing={nativeSentencePlaying}
+              progress={nativeSentencePlaying ? player.progress : 0}
             />
           </div>
 
