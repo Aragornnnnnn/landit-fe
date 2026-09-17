@@ -161,13 +161,17 @@ export const PAYWALL_PATH = '/paywall';
 /**
  * 페이월 주소.
  *
+ * @param source 어느 문으로 보냈는가 — 노출 계측이 이 값으로 진입 경로를 가른다.
+ *   필수로 둬서, 페이월로 보내는 자리가 늘 때 어느 문인지 정하고 가게 한다
  * @param from 결제 뒤 돌아갈 내부 경로 — 학습 진입에서 막혀 왔을 때만 붙는다
- * @param source 어느 문으로 보냈는가 — 노출 계측이 이 값으로 진입 경로를 가른다
  */
 export const paywallPath = ({
-  from,
   source,
-}: { from?: string; source?: PaywallSource } = {}) => {
+  from,
+}: {
+  source: PaywallSource;
+  from?: string;
+}) => {
   const query = new URLSearchParams();
   if (from) query.set('from', from);
   if (source) query.set('source', source);
