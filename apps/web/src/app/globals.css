@@ -328,7 +328,38 @@
   }
 }
 
+/* 페이월 비교표 — 프리미엄 열의 체크가 위에서 아래로 하나씩 튀어나온다.
+ * motion(rAF) 대신 CSS — rAF가 멎은 웹뷰에서도 끝까지 간다 (LAN-375 교훈). both로 딜레이 동안 숨겨 두고 끝난 상태를 유지한다.
+ * 숨어 있는 건 체크뿐이다 — 기둥과 무료 열은 처음부터 떠 있어, 애니메이션 전에도 표가 표로 읽힌다 */
+@keyframes check-in {
+  /* 완전히 투명하게 두지 않는다 — 애니메이션이 안 돌아도 프리미엄 열이 빈 칸으로 보이면 안 된다 */
+  from {
+    transform: scale(0.5);
+    opacity: 0.18;
+  }
+  60% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 @layer utilities {
+  /* --i가 줄 번호 — 90ms 간격으로 계단처럼. 여섯 줄이 0.8초 안에 끝난다 */
+  .animate-check-in {
+    animation: check-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(180ms + var(--i, 0) * 90ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-check-in {
+      animation: none;
+    }
+  }
+
   .animate-rise-in {
     animation: rise-in 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   }

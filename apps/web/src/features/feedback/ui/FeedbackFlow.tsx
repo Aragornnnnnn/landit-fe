@@ -10,7 +10,11 @@ import { FeedbackSkeleton } from './flow/FeedbackSkeleton';
 interface FeedbackFlowProps {
   sessionId: number | null;
   title: string;
+  /** 총평을 건너뛰고 상세부터 — 결제하고 돌아온 길 */
+  openDetail?: boolean;
   onExit: () => void;
+  /** 서버가 잠근 상세를 보려고 했다 — 호출부가 페이월로 보낸다 */
+  onDetailLocked: () => void;
 }
 
 // 세션이 없거나 생성이 실패했을 때 — 조용히 다음 단계로 보낸다 (대화는 이미 끝났다)
@@ -28,13 +32,24 @@ const FeedbackUnavailable = ({ onExit }: { onExit: () => void }) => (
 export const FeedbackFlow = ({
   sessionId,
   title,
+  openDetail = false,
   onExit,
+  onDetailLocked,
 }: FeedbackFlowProps) => {
-  const { feedback, error } = useSessionFeedbackQuery(sessionId);
+  const { feedback, error, isRefreshing } = useSessionFeedbackQuery(sessionId);
 
   if (sessionId === null || error)
     return <FeedbackUnavailable onExit={onExit} />;
   if (!feedback) return <FeedbackSkeleton />;
 
-  return <FeedbackContent feedback={feedback} title={title} onExit={onExit} />;
+  return (
+    <FeedbackContent
+      feedback={feedback}
+      title={title}
+      openDetail={openDetail}
+      refreshing={isRefreshing}
+      onExit={onExit}
+      onDetailLocked={onDetailLocked}
+    />
+  );
 };

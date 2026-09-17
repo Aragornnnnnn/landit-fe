@@ -20,11 +20,17 @@ export interface CardRow {
   listPrice?: string;
 }
 
-// 구독 중이고 플랜을 알면 "월간 프리미엄"처럼 플랜을 앞에 붙인다
-export const toCardTitle = (summary: PaidSubscriptionSummary) =>
-  summary.kind === 'active' && summary.plan
+// 갱신이 없는데 프리미엄이면 무료로 받은 기간이다 — 우리 상품엔 선결제가 없어 대시보드 프로모션 부여뿐이다
+const isGranted = (summary: PaidSubscriptionSummary) =>
+  summary.kind === 'active' && !summary.renews;
+
+// 구독 중이고 플랜을 알면 "월간 프리미엄"처럼 플랜을 앞에 붙인다. 받은 기간은 체험과 같은 말로 부른다
+export const toCardTitle = (summary: PaidSubscriptionSummary) => {
+  if (isGranted(summary)) return STATUS_TITLE.trial;
+  return summary.kind === 'active' && summary.plan
     ? `${findPlan(summary.plan).title} ${STATUS_TITLE.active}`
     : STATUS_TITLE[summary.kind];
+};
 
 // 무엇의 날짜인지가 상태마다 다르다. 체험은 첫 결제, 구독은 다음 결제, 그날로 끝나면 만료
 export const toDateRow = (summary: PaidSubscriptionSummary): CardRow | null => {
@@ -34,7 +40,9 @@ export const toDateRow = (summary: PaidSubscriptionSummary): CardRow | null => {
   if (!date) return null;
   if (summary.kind === 'trial') return { label: '첫 결제일', value: date };
   if (summary.renews) return { label: '다음 결제일', value: date };
-  return { label: '이용 만료일', value: `${date} · 자동 갱신 꺼짐` };
+  // 갱신을 껐다고 말할 수 있는 건 해지 예약뿐이다. 프로모션으로 받은 기간은 갱신이 있던 적이 없다
+  const suffix = summary.kind === 'canceled' ? ' · 자동 갱신 꺼짐' : '';
+  return { label: '이용 만료일', value: `${date}${suffix}` };
 };
 
 // 갱신되는 구독만, 플랜을 알 때만. 연간은 월간으로 1년 낼 때 금액을 지운 옆에 혜택가로 보여준다

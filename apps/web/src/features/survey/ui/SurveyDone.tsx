@@ -1,6 +1,6 @@
 'use client';
 
-// 설문 완료 — 고맙다는 말과 이용권이 언제 어디로 오는지. 하트는 튕기며 나타난 뒤 두 번 뛰고 멈춘다
+// 설문 완료 — 고맙다는 말과 그 답이 어디에 쓰이는지. 하트는 튕기며 나타난 뒤 두 번 뛰고 멈춘다
 import { motion, useReducedMotion } from 'motion/react';
 
 import { Button } from '@/shared/ui/Button';
@@ -30,9 +30,8 @@ export const SurveyDone = ({ onGoHome }: { onGoHome: () => void }) => {
           소중한 의견 고마워요!
         </h1>
         <p className="mt-4 text-lg leading-snug font-bold break-keep text-muted-foreground">
-          무료 이용권은 유료 전환일에
-          <br />
-          지금 로그인한 계정으로 넣어드릴게요
+          들려주신 이야기는
+          <br />더 나은 랜딧을 만드는 데 쓸게요
         </p>
       </div>
 

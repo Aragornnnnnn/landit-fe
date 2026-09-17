@@ -45,31 +45,25 @@ const renderGate = () => renderHook(() => usePaywallGate(), { wrapper });
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.getNativeContext.mockReturnValue(readyShell);
-  mocks.subscription = {
-    subscription: { premium: false, conversationCompletedSinceLaunch: true },
-    isError: false,
-  };
+  mocks.subscription = { subscription: { premium: false }, isError: false };
 });
 
 describe('usePaywallGate', () => {
-  it('무료 구간을 다 쓴 무료 사용자는 원래 이동 대신 페이월로 가고, 어느 문이었는지 남긴다', () => {
+  it('무료 사용자는 원래 이동 대신 페이월로 가고, 어느 문이었는지 남긴다', () => {
     const { result } = renderGate();
     const go = vi.fn();
 
-    result.current.guard(go, { entry: 'scenario', returnTo: '/scenario' });
+    result.current.guard(go, { entry: 'expression', returnTo: '/scenario' });
 
     expect(go).not.toHaveBeenCalled();
     expect(mocks.push).toHaveBeenCalledWith('/paywall?from=%2Fscenario');
     expect(mocks.track).toHaveBeenCalledWith('Paywall Gate Locked', {
-      entry: 'scenario',
+      entry: 'expression',
     });
   });
 
   it('유료 사용자는 그대로 들어간다', () => {
-    mocks.subscription = {
-      subscription: { premium: true, conversationCompletedSinceLaunch: true },
-      isError: false,
-    };
+    mocks.subscription = { subscription: { premium: true }, isError: false };
     const { result } = renderGate();
     const go = vi.fn();
 
@@ -89,74 +83,30 @@ describe('usePaywallGate', () => {
     expect(go).toHaveBeenCalledTimes(1);
   });
 
-  it('BE가 무료 구간 값을 아직 안 주면 오늘의 시나리오 문은 막지 않고 들여보낸다 — 다음 진입에서 잡힌다', () => {
-    mocks.subscription = { subscription: { premium: false }, isError: false };
+  it('구독을 아직 못 받았으면 막지 않고 들여보낸다 — 다음 진입에서 잡힌다', () => {
+    mocks.subscription = { subscription: null, isError: false };
     const { result } = renderGate();
     const go = vi.fn();
 
-    result.current.guard(go, { entry: 'scenario', door: 'today_scenario' });
+    result.current.guard(go, { entry: 'smalltalk' });
 
     expect(go).toHaveBeenCalledTimes(1);
+    expect(result.current.locked).toBe(false);
   });
 
-  it('대화를 아직 안 끝낸 무료 사용자도 오늘의 시나리오 문만 열리고, 학습 문은 페이월로 간다', () => {
-    mocks.subscription = {
-      subscription: { premium: false, conversationCompletedSinceLaunch: false },
-      isError: false,
-    };
-    const { result } = renderGate();
-    const start = vi.fn();
-    const learn = vi.fn();
+  it('학습 문이 잠기는지를 미리 알려준다 — 무료면 참, 유료면 거짓', () => {
+    expect(renderGate().result.current.locked).toBe(true);
 
-    result.current.guard(start, { entry: 'scenario', door: 'today_scenario' });
-    result.current.guard(learn, { entry: 'smalltalk' });
-
-    expect(start).toHaveBeenCalledTimes(1);
-    expect(learn).not.toHaveBeenCalled();
-    expect(mocks.push).toHaveBeenCalledWith('/paywall');
+    mocks.subscription = { subscription: { premium: true }, isError: false };
+    expect(renderGate().result.current.locked).toBe(false);
   });
 
-  it('대화가 방금 끝났다고 알려 주면 서버 값이 아직 안 따라왔어도 잠근다 — 대화 직후 화면에서 바로 페이월로', () => {
-    mocks.subscription = {
-      subscription: { premium: false, conversationCompletedSinceLaunch: false },
-      isError: false,
-    };
-    const { result } = renderGate();
-    const go = vi.fn();
-
-    result.current.guard(go, {
-      entry: 'conversation_finished',
-      returnTo: '/conversation/scenario/7/expressions',
-      conversationJustFinished: true,
-    });
-
-    expect(go).not.toHaveBeenCalled();
-    expect(mocks.push).toHaveBeenCalledWith(
-      '/paywall?from=%2Fconversation%2Fscenario%2F7%2Fexpressions',
-    );
-  });
-
-  it('방금 대화를 끝내면 잠기는지를 미리 알려준다 — 무료면 참, 유료면 거짓', () => {
-    expect(renderGate().result.current.locksAfterConversation).toBe(true);
-
-    mocks.subscription = {
-      subscription: { premium: true, conversationCompletedSinceLaunch: false },
-      isError: false,
-    };
-    expect(renderGate().result.current.locksAfterConversation).toBe(false);
-  });
-
-  it('끝난 대화를 히스토리에서 지우라고 하면 페이월로 replace한다 — 뒤로가기로 그 대화에 되돌아가지 않게', () => {
-    mocks.subscription = {
-      subscription: { premium: false, conversationCompletedSinceLaunch: false },
-      isError: false,
-    };
+  it('히스토리에서 지우라고 하면 페이월로 replace한다 — 뒤로가기로 끝난 화면에 되돌아가지 않게', () => {
     const { result } = renderGate();
 
     result.current.guard(vi.fn(), {
       entry: 'conversation_finished',
       returnTo: '/expressions/scenario/7/branch',
-      conversationJustFinished: true,
       replace: true,
     });
 
@@ -171,9 +121,10 @@ describe('usePaywallGate', () => {
     const { result } = renderGate();
     const go = vi.fn();
 
-    result.current.guard(go, { entry: 'scenario' });
+    result.current.guard(go, { entry: 'expression' });
 
     expect(go).toHaveBeenCalledTimes(1);
+    expect(result.current.locked).toBe(false);
     expect(mocks.subscriptionOptions?.enabled).toBe(false);
   });
 

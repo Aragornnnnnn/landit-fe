@@ -63,6 +63,7 @@ export const EVENTS = {
   TURN_FAILED: 'Turn Failed',
   INNER_THOUGHT_VIEWED: 'Inner Thought Viewed',
   TRANSLATION_TOGGLED: 'Translation Toggled',
+  SPEECH_REPLAYED: 'Speech Replayed',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
   SPEECH_PLAYBACK_FAILED: 'Speech Playback Failed',
   HINT_USED: 'Hint Used',
@@ -155,10 +156,11 @@ export const EVENTS = {
   LEVEL_RESULT_VIEWED: 'Level Result Viewed',
   PREPARED_LEARNING_VIEWED: 'Prepared Learning Viewed',
   PREPARED_LEARNING_CONTINUED: 'Prepared Learning Continued',
-  // 마이페이지 — 유료 사용자가 구독 관리로 들어갔다 / 무료 사용자가 페이월로 들어갔다 / 진동 토글
+  // 마이페이지 — 유료 사용자가 구독 관리로 들어갔다 / 무료 사용자가 페이월로 들어갔다 / 진동 토글 / 말하기 속도 변경
   SUBSCRIPTION_MANAGE_TAPPED: 'Subscription Manage Tapped',
   PAYWALL_ENTRY_TAPPED: 'Paywall Entry Tapped',
   HAPTICS_TOGGLED: 'Haptics Toggled',
+  SPEECH_RATE_CHANGED: 'Speech Rate Changed',
   // 구독 관리 화면 — 결제 내역으로 들어갔다 / 스토어 구독 화면으로 나갔다
   SUBSCRIPTION_HISTORY_TAPPED: 'Subscription History Tapped',
   STORE_SUBSCRIPTION_TAPPED: 'Store Subscription Tapped',
@@ -214,13 +216,14 @@ export type PaywallEntrySource = 'me';
 // 구독 관리에서 스토어로 나간 이유 — 해지 / 해지 취소. 둘 다 같은 스토어 화면이 열리지만 의도를 남긴다
 export type StoreSubscriptionAction = 'cancel' | 'resubscribe';
 
-// 페이월 게이트가 걸린 진입 문 — 새 대화 시작 / 표현 학습 진입 / 스몰톡 시작
+// 페이월 게이트가 걸린 진입 문 — 표현 학습 진입 / 스몰톡 시작. 시나리오 대화 시작은 문이 아니다 (구독과 무관하게 열린다)
 export type PaywallGateEntry =
-  | 'scenario'
   | 'expression'
   | 'smalltalk'
-  // 대화 피드백을 마치고 표현으로 넘어가는 자리 — 무료 구간이 끝나는 곳이라 페이월이 처음 뜬다
-  | 'conversation_finished';
+  // 대화 피드백을 마치고 표현으로 넘어가는 자리 — 첫 시나리오의 무료 구간이 끝나는 곳
+  | 'conversation_finished'
+  // 총평에서 상세 피드백 보기를 눌렀는데 서버가 잠근 세션 — 두 번째 시나리오부터 페이월이 처음 뜨는 곳
+  | 'feedback_detail';
 // 결제가 실패한 갈래 — 환경 문제 셋과 셸이 회신한 실패. 셸의 문구는 message에 따로 싣는다
 export type PurchaseFailureReason =
   'browser' | 'outdated_shell' | 'no_response' | 'shell_error';
@@ -272,7 +275,7 @@ export type EventProps = {
     path: string;
     return_reason?: HomeReturnReason;
     scenario_id?: number;
-    // 스몰톡에서 갈라져 나온 화면들만 — 지난 스몰톡 기록과 거기서 만든 표현
+    // 세션이 주인인 화면들만 — 지난 스몰톡 기록과 거기서 만든 표현, 시나리오 대화 피드백
     session_id?: number;
     expression_id?: number;
     // 밖에서 들어온 유입(알림·위젯 탭)의 첫 화면에만 — 어느 경로로 들어왔든 붙는다. 딥링크 URL의 utm_campaign·utm_content에서
@@ -399,6 +402,11 @@ export type EventProps = {
     turn_index: number;
     opened: boolean;
   };
+  // 상대 발화를 다시 들은 순간 — 어느 턴에서 못 알아들어 되감는지 본다. 멈추려고 누른 건 세지 않는다
+  'Speech Replayed': {
+    session_id?: number;
+    turn_index: number;
+  };
   'Speech Recognition Failed': {
     engine?: 'deepgram' | 'web_speech';
     reason?: string;
@@ -461,6 +469,8 @@ export type EventProps = {
   // 피드백 응답에는 scenario_id가 없다 — session_id로 서버에서 조인한다
   'Feedback Viewed': {
     session_id: number;
+    // 서버가 상세를 잠근 세션이면 true — 그때 good_count·turn_count는 0이라 잠금과 같이 읽어야 한다
+    detail_locked: boolean;
     good_count: number;
     turn_count: number;
     native_score?: number;
@@ -506,8 +516,15 @@ export type EventProps = {
   'Pronunciation Skipped': { expression_id: number };
   'Pronunciation Audio Played': {
     expression_id: number;
-    // expression·sentence = 설명·발음 화면 스피커, native_word·my_word = 피드백 카드 행
-    source: 'expression' | 'sentence' | 'native_word' | 'my_word';
+    // expression·sentence = 설명·발음 대기 화면 스피커, compare_* = 피드백 말풍선의 전체 문장
+    // 비교 듣기(원어민/내 녹음), native_word·my_word = 피드백 카드 행
+    source:
+      | 'expression'
+      | 'sentence'
+      | 'compare_native'
+      | 'compare_mine'
+      | 'native_word'
+      | 'my_word';
   };
   'Review Answer Submitted': {
     expression_id: number;
@@ -554,6 +571,8 @@ export type EventProps = {
   'Subscription Manage Tapped': { status: SubscriptionState };
   'Paywall Entry Tapped': { source: PaywallEntrySource };
   'Haptics Toggled': { enabled: boolean };
+  // 고른 배속 그대로 — 0.75 · 1 · 1.25 · 1.5
+  'Speech Rate Changed': { rate: number };
   'Subscription History Tapped': { status: SubscriptionState };
   'Store Subscription Tapped': {
     status: SubscriptionState;

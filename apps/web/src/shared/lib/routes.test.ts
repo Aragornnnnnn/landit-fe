@@ -4,8 +4,10 @@ import { describe, expect, it } from 'vitest';
 import {
   readDateParam,
   readReturnParam,
+  readScenarioFeedbackParams,
   scenarioExpressionBranchPath,
   scenarioExpressionPath,
+  scenarioFeedbackPath,
   scenarioReturnPath,
   scenarioTalkPath,
   sessionExpressionBranchPath,
@@ -50,6 +52,35 @@ describe('scenarioTalkPath', () => {
     // Then 날짜가 실린다 — 그래야 어느 날 카드인지 대화 화면이 알 수 있다
     expect(scenarioTalkPath(12, '2026-07-29')).toBe(
       '/conversation/scenario/12?date=2026-07-29',
+    );
+  });
+});
+
+describe('scenarioFeedbackPath', () => {
+  it('대화 주소 아래에 서고, 어느 세션의 피드백인지 싣는다', () => {
+    // Given 오늘 카드의 대화가 끝났을 때
+    // When 피드백 주소를 만들면
+    // Then 대화 주소 아래 feedback이 붙고 세션만 실린다 — 날짜 없는 주소가 오늘의 정본이다
+    expect(scenarioFeedbackPath(12, { session: 345 })).toBe(
+      '/conversation/scenario/12/feedback?session=345',
+    );
+  });
+
+  it('지난 날 카드에서 온 대화면 그 날짜를 이어 나른다', () => {
+    expect(scenarioFeedbackPath(12, { session: 345, date: '2026-07-29' })).toBe(
+      '/conversation/scenario/12/feedback?session=345&date=2026-07-29',
+    );
+  });
+
+  it('재대화였으면 표식을 남긴다 — 피드백 뒤 홈으로 돌아갈지 정하는 유일한 단서다', () => {
+    expect(scenarioFeedbackPath(12, { session: 345, replay: true })).toBe(
+      '/conversation/scenario/12/feedback?session=345&replay=1',
+    );
+  });
+
+  it('세션이 없으면(시작 실패) 세션 없이 간다 — 피드백 화면이 못 불러왔다고 알린다', () => {
+    expect(scenarioFeedbackPath(12, { session: null })).toBe(
+      '/conversation/scenario/12/feedback',
     );
   });
 });
@@ -104,6 +135,47 @@ describe('sessionExpressionBranchPath — 축하 신호', () => {
 describe('sessionExpressionPath', () => {
   it('학습을 마치면 한 칸 위인 그 세션의 표현 목록으로 돌아간다', () => {
     expect(sessionExpressionPath(7, 34)).toBe('/expressions/session/7/34');
+  });
+});
+
+describe('readScenarioFeedbackParams', () => {
+  it('scenarioFeedbackPath가 실은 것을 그대로 되읽는다', () => {
+    // Given 재대화의 피드백 주소를 만들었을 때
+    const path = scenarioFeedbackPath(12, {
+      session: 345,
+      date: '2026-07-29',
+      replay: true,
+      detail: true,
+    });
+    // When 그 주소의 쿼리를 읽으면
+    const read = readScenarioFeedbackParams(
+      new URLSearchParams(path.split('?')[1]),
+    );
+    // Then 쓴 값이 그대로 돌아온다 — 쓰기와 읽기가 어긋나면 재대화가 표현 분기로 새어 나간다
+    expect(read).toEqual({
+      session: 345,
+      date: '2026-07-29',
+      replay: true,
+      detail: true,
+    });
+  });
+
+  it('아무것도 안 실렸으면 세션 없음·오늘·첫 완료·총평부터로 본다', () => {
+    expect(readScenarioFeedbackParams(new URLSearchParams(''))).toEqual({
+      session: null,
+      date: undefined,
+      replay: false,
+      detail: false,
+    });
+  });
+
+  it('세션이 양의 정수가 아니면 없는 것으로 본다 — 피드백 화면이 못 불러왔다고 알린다', () => {
+    expect(
+      readScenarioFeedbackParams(new URLSearchParams('session=abc')).session,
+    ).toBeNull();
+    expect(
+      readScenarioFeedbackParams(new URLSearchParams('session=0')).session,
+    ).toBeNull();
   });
 });
 

@@ -2,7 +2,7 @@
 // 캐릭터 무대·질문 카드·내 답변·마이크를 상태 기계 단계에 맞춰 오케스트레이션한다
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
@@ -16,23 +16,14 @@ import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissio
 import { QuestionCard } from '@/features/conversation/ui/flow/QuestionCard';
 import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
 import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
-import { FeedbackFlow } from '@/features/feedback/ui/FeedbackFlow';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
-// 가로 import 사유: 대화가 끝나는 자리가 무료 구간이 끝나는 자리라 여기서 페이월 게이트를 건다
-import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
 import { track } from '@/shared/analytics';
-import {
-  scenarioExpressionBranchPath,
-  scenarioReturnPath,
-} from '@/shared/lib/routes';
+import { scenarioFeedbackPath, scenarioReturnPath } from '@/shared/lib/routes';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
-import { Transition } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
-import { decidePostFeedbackView } from '../_model/post-feedback-view';
 import { useScenarioTalkFlow } from '../_model/useScenarioTalkFlow';
-import { PostConversationFlow } from './PostConversationFlow';
 
 export const ScenarioTalkFlow = ({
   scenario,
@@ -44,14 +35,10 @@ export const ScenarioTalkFlow = ({
 }) => {
   const router = useRouter();
   const [showExitModal, setShowExitModal] = useState(false);
-  // 대화 종료 후 CTA를 누르면 피드백으로 넘어간다 (그 전까진 마지막 화면 + CTA를 보여준다)
-  const [showFeedback, setShowFeedback] = useState(false);
   // 진입 시점의 완료 여부(재대화 판별) — 세션이 끝나면 시나리오 리스트가 invalidate돼
-  // scenario.completed가 뒤늦게 true로 바뀌므로, 첫 완료와 구분하려면 진입 값으로 고정해야 한다
+  // scenario.completed가 뒤늦게 true로 바뀌므로, 첫 완료와 구분하려면 진입 값으로 고정해야 한다.
+  // 피드백 화면은 이 값을 다시 구할 수 없어 주소로 넘긴다
   const [wasCompleted] = useState(scenario.completed);
-  const paywallGate = usePaywallGate();
-  // 피드백 뒤 페이월 전 화면 — 무료 사용자는 레벨 분석·결과·학습 준비를 지난다
-  const [postConversation, setPostConversation] = useState(false);
   // USER 선발화 진입 안내 — 랜디가 먼저 날아들어 말을 걸어보라고 알려주고 잠시 후 사라진다.
   // 판정은 turn.isUserOpening 한 곳에 위임하고(카드 안내 구조와 같은 소스), 여기선 노출 시간만 관리한다.
   const [introDismissed, setIntroDismissed] = useState(false);
@@ -62,6 +49,7 @@ export const ScenarioTalkFlow = ({
     partner,
     finishedThought,
     speech,
+    replay,
     input,
     leave,
     sessionId,
@@ -102,56 +90,25 @@ export const ScenarioTalkFlow = ({
   const overlayThought = resolveOverlayThought();
   // 캐릭터 자세 — 평소엔 단계를 따르고, 속마음이 끝난 직후에만 그 감정 표정이 잠깐 스친다
   const characterLook = toCharacterLook(phase, finishedThought);
-  // 대화 종료 후 CTA를 눌렀을 때만 피드백(총평·상세)으로 페이드 인해 넘어간다. 마치면 표현 학습 분기로 보낸다.
-  const view = ended && showFeedback ? 'feedback' : 'conversation';
-
-  // 표현 분기로 — 무료 사용자는 여기가 무료 구간이 끝나는 자리라 게이트가 페이월로 보낸다.
-  // 방금 끝난 대화가 곧 무료 구간의 그 하나라 서버 값을 기다리지 않는다. 결제하면 표현 분기로 돌아온다
-  const expressionBranchPath = scenarioExpressionBranchPath(
-    scenario.scenarioId,
+  // 대화 종료 후 CTA를 누르면 피드백 라우트로 넘어간다. 대화는 끝났으니 히스토리에서 지운다(replace) —
+  // 뒤로가기로 종료된 대화에 다시 들어와 세션이 새로 시작되지 않게
+  const feedbackPath = scenarioFeedbackPath(scenario.scenarioId, {
+    session: sessionId,
     date,
-  );
-  const continueToExpressionBranch = () =>
-    paywallGate.guard(() => router.replace(expressionBranchPath), {
-      entry: 'conversation_finished',
-      returnTo: expressionBranchPath,
-      conversationJustFinished: true,
-      // 페이월로 갈 때도 끝난 대화를 히스토리에서 지운다 — 뒤로가기로 돌아오면 세션이 새로 시작된다
-      replace: true,
-    });
-  // 피드백을 다 본 뒤 — 재대화면 홈, 잠기지 않는 사람은 표현 분기, 무료 사용자는 페이월 전 화면부터
-  const goAfterFeedback = () => {
-    const next = decidePostFeedbackView({
-      wasCompleted,
-      locked: paywallGate.locksAfterConversation,
-    });
-    if (next === 'home') router.replace(scenarioReturnPath({ date }));
-    else if (next === 'branch') continueToExpressionBranch();
-    else setPostConversation(true);
+    replay: wasCompleted,
+  });
+  // 마지막 발화가 끝나면 피드백 라우트를 미리 받아 둔다 — CTA가 버튼이라 링크 자동 프리페치가 안 걸리고,
+  // 누르는 순간 받으면 늦다
+  useEffect(() => {
+    if (ended) router.prefetch(feedbackPath);
+  }, [ended, feedbackPath, router]);
+  // 라우트 전환은 새 화면이 준비될 때까지 이 화면에 머문다 — 그동안 버튼이 돌아가야 눌린 줄 안다
+  const [leavingForFeedback, startLeaving] = useTransition();
+  const goToFeedback = () => {
+    // 화면은 피드백으로 갈아타도 이 훅은 살아 있다 — 작별 인사를 다시 듣던 중이면 여기서 끊는다
+    if (replay?.playing) replay.toggle();
+    startLeaving(() => router.replace(feedbackPath));
   };
-
-  if (postConversation) {
-    return (
-      <PostConversationFlow
-        sessionId={sessionId}
-        scenarioId={scenario.scenarioId}
-        onFinish={continueToExpressionBranch}
-      />
-    );
-  }
-
-  if (view === 'feedback') {
-    return (
-      <Transition transitionKey="feedback" fade>
-        <FeedbackFlow
-          sessionId={sessionId}
-          title={scenario.scenarioTitle}
-          // 대화는 끝났으니 히스토리에서 지운다(replace) — 뒤로가기로 종료된 대화에 다시 들어오지 않게
-          onExit={goAfterFeedback}
-        />
-      </Transition>
-    );
-  }
 
   return (
     <main
@@ -197,6 +154,7 @@ export const ScenarioTalkFlow = ({
                 opened,
               })
             }
+            replay={replay}
           />
         </div>
         {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다 */}
@@ -216,7 +174,7 @@ export const ScenarioTalkFlow = ({
         {ended ? (
           // 대화 종료 — 마지막 AI 발화만 남기고 마이크 대신 분석으로 가는 CTA를 아래쪽에 보여준다
           <div className="flex h-36 items-end px-5 pb-3">
-            <Button onClick={() => setShowFeedback(true)}>
+            <Button onClick={goToFeedback} loading={leavingForFeedback}>
               상세 분석 보러갈래요
               <ArrowRightIcon size={16} />
             </Button>

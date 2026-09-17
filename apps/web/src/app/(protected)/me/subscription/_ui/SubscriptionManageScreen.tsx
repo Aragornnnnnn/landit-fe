@@ -51,6 +51,13 @@ const STORE_ROW: Record<
   canceled: { action: 'resubscribe', title: '해지 취소하기' },
 };
 
+// 스토어에서 손댈 구독이 있는 상태만 — 갱신되는 구독과 해지 예약.
+// 갱신이 없는 기간(대시보드 프로모션·선결제)은 스토어에 구독이 없어 보내면 빈 화면이 뜬다
+const toStoreRow = (summary: PaidSubscriptionSummary) =>
+  summary.renews || summary.kind === 'canceled'
+    ? STORE_ROW[summary.kind]
+    : null;
+
 const CardRowItem = ({ row }: { row: CardRow }) => (
   <div className="flex justify-between gap-3">
     <dt style={{ opacity: 0.75 }}>{row.label}</dt>
@@ -76,7 +83,7 @@ const PaidSubscription = ({ summary, platform }: PaidSubscriptionProps) => {
   const rows = [toDateRow(summary), toAmountRow(summary)].filter(
     (row) => row !== null,
   );
-  const storeRow = STORE_ROW[summary.kind];
+  const storeRow = toStoreRow(summary);
 
   return (
     <>
@@ -110,17 +117,19 @@ const PaidSubscription = ({ summary, platform }: PaidSubscriptionProps) => {
             track(EVENTS.SUBSCRIPTION_HISTORY_TAPPED, { status: summary.kind })
           }
         />
-        <MenuLink
-          href={store.manageUrl}
-          icon={platform === 'ios' ? <AppStoreIcon /> : <GooglePlayIcon />}
-          title={storeRow.title}
-          onClick={() =>
-            track(EVENTS.STORE_SUBSCRIPTION_TAPPED, {
-              status: summary.kind,
-              action: storeRow.action,
-            })
-          }
-        />
+        {storeRow && (
+          <MenuLink
+            href={store.manageUrl}
+            icon={platform === 'ios' ? <AppStoreIcon /> : <GooglePlayIcon />}
+            title={storeRow.title}
+            onClick={() =>
+              track(EVENTS.STORE_SUBSCRIPTION_TAPPED, {
+                status: summary.kind,
+                action: storeRow.action,
+              })
+            }
+          />
+        )}
       </MenuSection>
     </>
   );

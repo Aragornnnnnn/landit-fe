@@ -1,12 +1,11 @@
 'use client';
 
 // 내 정보(/me) — 프로필 헤더, 프리미엄 카드, 학습 · 설정 · 지원 · 계정 네 묶음. 페이지 전환 모션은 전역 라우트 트랜지션이 맡는다
-import { useState, useSyncExternalStore } from 'react';
+import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { disablePushToken } from '@/features/notification/model/push-token-registration';
-import { surveyDone } from '@/features/survey/model/survey-done';
 import { track } from '@/shared/analytics';
 import { logout as requestLogout } from '@/shared/auth/api/logout';
 import { withdraw } from '@/shared/auth/api/withdraw';
@@ -26,6 +25,7 @@ import { MenuButton, MenuLink, MenuSection } from './_ui/Menu';
 import { NotificationMenuEntry } from './_ui/NotificationMenuEntry';
 import { PremiumEntry } from './_ui/PremiumEntry';
 import { ProfileHeader } from './_ui/ProfileHeader';
+import { SpeechRateMenuEntry } from './_ui/SpeechRateMenuEntry';
 import { WidgetMenuEntry } from './_ui/WidgetMenuEntry';
 import { WithdrawSheet } from './_ui/WithdrawSheet';
 
@@ -39,13 +39,6 @@ export default function MyPage() {
     null,
   );
   const { ref: scrollRef, onScroll, hasShadow } = useScrollShadow();
-
-  // 설문은 한 번 답하면 목록에서 빠진다. 서버 렌더에서는 숨겨 두고 클라이언트에서 저장값을 읽는다
-  const surveyAnswered = useSyncExternalStore(
-    surveyDone.subscribe,
-    surveyDone.has,
-    () => true,
-  );
 
   // 탈퇴 시트 닫기 — 버튼·오버레이 두 경로가 같은 취소 이벤트를 쓴다
   function dismissDeleteSheet() {
@@ -147,7 +140,8 @@ export default function MyPage() {
           </MenuSection>
 
           <MenuSection title="설정">
-            {/* 알림은 권한 체계가 있는 셸에서만, 위젯은 위젯이 실린 셸에서만 보인다 — 브라우저에선 진동만 남는다 */}
+            {/* 알림은 권한 체계가 있는 셸에서만, 위젯은 위젯이 실린 셸에서만 보인다 — 브라우저에선 음성과 진동만 남는다 */}
+            <SpeechRateMenuEntry />
             <NotificationMenuEntry />
             <HapticMenuEntry />
             <WidgetMenuEntry />
@@ -159,13 +153,11 @@ export default function MyPage() {
               icon={<Emoji>💬</Emoji>}
               title="피드백 남기기"
             />
-            {!surveyAnswered && (
-              <MenuLink
-                href={SURVEY_PATH}
-                icon={<Emoji>📝</Emoji>}
-                title="설문조사 참여하기"
-              />
-            )}
+            <MenuLink
+              href={SURVEY_PATH}
+              icon={<Emoji>📝</Emoji>}
+              title="설문조사 참여하기"
+            />
           </MenuSection>
 
           <MenuSection title="계정">

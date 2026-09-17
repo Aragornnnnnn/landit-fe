@@ -10,24 +10,44 @@ interface ListenButtonProps {
   // 있으면 칩(아이콘+문구), 없으면 원형 아이콘 버튼
   label?: string;
   ariaLabel?: string;
+  // 지금은 들을 수 없는 상태 — 재도전 녹음 중엔 스피커 소리가 마이크로 들어가면 안 된다
+  disabled?: boolean;
 }
+
+// 칩은 대기·재생 모두 테두리를 그린다 — 폭이 상태에 따라 흔들리지 않게
+const SHAPE = {
+  chip: 'gap-1.5 border px-3 py-1.5 text-xs font-semibold',
+  circle: 'size-8 flex-none',
+} as const;
+
+// 칩은 말풍선(bg-secondary) 위에 놓이므로 대기 배경을 card로 해 윤곽을 살린다
+const IDLE = {
+  chip: 'border-border bg-card text-foreground',
+  circle: 'bg-secondary text-foreground',
+} as const;
+
+const PLAYING = 'border-transparent bg-foreground text-background';
 
 export const ListenButton = ({
   playing,
   onClick,
   label,
   ariaLabel,
-}: ListenButtonProps) => (
-  <button
-    onClick={onClick}
-    aria-label={ariaLabel ?? label ?? '발음 듣기'}
-    className={`flex items-center justify-center rounded-full transition-colors active:opacity-70 ${
-      label ? 'gap-1.5 px-3 py-1.5 text-xs font-semibold' : 'size-8 flex-none'
-    } ${
-      playing ? 'bg-foreground text-background' : 'bg-secondary text-foreground'
-    }`}
-  >
-    <SpeakerIcon size={label ? 14 : 15} />
-    {label}
-  </button>
-);
+  disabled,
+}: ListenButtonProps) => {
+  const shape = label ? 'chip' : 'circle';
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={ariaLabel ?? label ?? '발음 듣기'}
+      // 막힌 동안은 흐리게 — 눌러도 반응이 없으면 고장난 버튼으로 보인다
+      className={`flex items-center justify-center rounded-full transition-colors active:opacity-70 disabled:opacity-40 ${SHAPE[shape]} ${
+        playing ? PLAYING : IDLE[shape]
+      }`}
+    >
+      <SpeakerIcon size={label ? 14 : 15} />
+      {label}
+    </button>
+  );
+};

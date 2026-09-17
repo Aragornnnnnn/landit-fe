@@ -10,6 +10,8 @@ import { ListenButton } from './ListenButton';
 
 interface FeedbackCardsProps {
   cards: FeedbackCard[];
+  // 재도전 녹음 중 — 포인터는 본문이 막지만 키보드 활성화까지 막으려면 버튼이 알아야 한다
+  disabled: boolean;
   // 지금 재생 중인 소리의 식별자 — 행별 듣기 버튼이 자기 차례에만 재생 상태를 그린다
   playingId: string | null;
   // 원어민 단어 발음 재생 — CDN URL이 없으면 버튼을 숨긴다
@@ -27,6 +29,7 @@ export const feedbackCardId = (order: number) => `pronunciation-word-${order}`;
 
 export const FeedbackCards = ({
   cards,
+  disabled,
   playingId,
   onPlayNative,
   onPlayMine,
@@ -70,6 +73,7 @@ export const FeedbackCards = ({
               <PronRow
                 label="원어민"
                 onPlay={playNative}
+                disabled={disabled}
                 playing={playingId === nativeWordAudioId(word.order)}
               >
                 {card.kind === 'phoneme' ? (
@@ -85,6 +89,7 @@ export const FeedbackCards = ({
               <PronRow
                 label="나"
                 onPlay={playMine}
+                disabled={disabled}
                 playing={playingId === myWordAudioId(word.order)}
               >
                 {card.kind === 'phoneme' ? (
@@ -116,11 +121,13 @@ const PronRow = ({
   label,
   onPlay,
   playing,
+  disabled,
   children,
 }: {
   label: string;
   onPlay?: () => void;
   playing: boolean;
+  disabled: boolean;
   children: React.ReactNode;
 }) => (
   <div className="flex items-center gap-2.5">
@@ -132,6 +139,7 @@ const PronRow = ({
       <ListenButton
         playing={playing}
         onClick={onPlay}
+        disabled={disabled}
         ariaLabel={`${label} 발음 듣기`}
       />
     )}
