@@ -49,6 +49,13 @@ describe('toDateRow', () => {
     });
   });
 
+  it('프로모션으로 받은 기간은 만료일만 말한다 — 끈 적 없는 자동 갱신을 껐다고 하지 않는다', () => {
+    expect(toDateRow(active({ renews: false }))).toEqual({
+      label: '이용 만료일',
+      value: '2026년 10월 4일',
+    });
+  });
+
   it('날짜가 없으면 행이 없다', () => {
     expect(toDateRow(active({ expiresAt: null }))).toBeNull();
   });

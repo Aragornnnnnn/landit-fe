@@ -34,7 +34,9 @@ export const toDateRow = (summary: PaidSubscriptionSummary): CardRow | null => {
   if (!date) return null;
   if (summary.kind === 'trial') return { label: '첫 결제일', value: date };
   if (summary.renews) return { label: '다음 결제일', value: date };
-  return { label: '이용 만료일', value: `${date} · 자동 갱신 꺼짐` };
+  // 갱신을 껐다고 말할 수 있는 건 해지 예약뿐이다. 프로모션으로 받은 기간은 갱신이 있던 적이 없다
+  const suffix = summary.kind === 'canceled' ? ' · 자동 갱신 꺼짐' : '';
+  return { label: '이용 만료일', value: `${date}${suffix}` };
 };
 
 // 갱신되는 구독만, 플랜을 알 때만. 연간은 월간으로 1년 낼 때 금액을 지운 옆에 혜택가로 보여준다
