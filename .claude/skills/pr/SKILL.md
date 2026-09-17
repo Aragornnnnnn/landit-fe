@@ -80,7 +80,10 @@ git add lanXXX && git commit -m "chore: LAN-XX PR 이미지 추가" && git push
 본문에는 이렇게 넣는다.
 
 ```html
-<img width="180" src="https://raw.githubusercontent.com/Aragornnnnnn/landit-fe/pr-assets/lanXXX/파일.png" />
+<img
+  width="180"
+  src="https://raw.githubusercontent.com/Aragornnnnnn/landit-fe/pr-assets/lanXXX/파일.png"
+/>
 ```
 
 여러 장이면 `<img width="180">`을 표 셀에 넣어 4열·3열로 배치한다(#183 참고). **푸시하기 전에 raw URL을 curl로 확인하지 마라.** GitHub CDN이 404를 약 5분 캐시해 PR에서 깨져 보인다. 확인은 푸시 뒤에만.

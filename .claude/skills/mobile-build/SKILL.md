@@ -9,11 +9,11 @@ description: landit 모바일 앱(Expo, apps/mobile)을 빌드해 실기기·Tes
 
 세 갈래다. 갈래마다 기준 커밋·프로필·번호가 다르다.
 
-| 목적 | 기준 커밋 | 프로필 | 웹뷰 URL |
-|---|---|---|---|
-| 실기기에서 바로 확인 | 작업 브랜치 | `expo run:*` (EAS 아님) | `.env.local`의 `EXPO_PUBLIC_WEB_URL` (맥 LAN IP 또는 develop.landit.im) |
-| TestFlight로 팀 QA | origin/develop | `qa` (로컬 전용, 아래) | develop.landit.im |
-| 스토어 제출 | origin/main (릴리즈 머지 커밋) | `production` | www.landit.im |
+| 목적                 | 기준 커밋                      | 프로필                  | 웹뷰 URL                                                                |
+| -------------------- | ------------------------------ | ----------------------- | ----------------------------------------------------------------------- |
+| 실기기에서 바로 확인 | 작업 브랜치                    | `expo run:*` (EAS 아님) | `.env.local`의 `EXPO_PUBLIC_WEB_URL` (맥 LAN IP 또는 develop.landit.im) |
+| TestFlight로 팀 QA   | origin/develop                 | `qa` (로컬 전용, 아래)  | develop.landit.im                                                       |
+| 스토어 제출          | origin/main (릴리즈 머지 커밋) | `production`            | www.landit.im                                                           |
 
 **웹뷰 URL은 번들 시점에 박힌다.** 빌드가 끝나면 반드시 번들에서 도메인을 확인한다(아래 "검증"). 지난번 EAS production env가 옛 도메인이라 잘못된 바이너리가 나갈 뻔했다.
 
@@ -56,7 +56,7 @@ export SENTRY_DISABLE_AUTO_UPLOAD=true              # SENTRY_AUTH_TOKEN은 Secre
 eas build -p ios --profile qa --local --output out/landit-<version>-b<buildNumber>-<develop|www>.ipa
 ```
 
-약 3~4분. 클라우드 빌드(`--local` 없이)는 7~8분이고 결과가 EAS 서버에 남아 `eas submit --id`로 바로 제출할 수 있다.
+약 3~~4분. 클라우드 빌드(`--local` 없이)는 7~~8분이고 결과가 EAS 서버에 남아 `eas submit --id`로 바로 제출할 수 있다.
 
 **새 Distribution Certificate가 필요하면 non-interactive에선 절대 안 만들어진다.** 저장된 옛 인증서를 그대로 돌려준다. 사용자가 진짜 TTY에서 `eas credentials -p ios`를 돌려야 한다. 현재 인증서는 2027-09-03 만료.
 
