@@ -118,7 +118,13 @@ export const usePurchase = ({ pricing, onUnlocked }: UsePurchaseOptions) => {
       }
 
       const unlocked = await confirmPremium();
-      track(EVENTS.PURCHASE_COMPLETED, { plan, unlocked });
+      // 금액은 셸이 준 스토어 가격 그대로 — 오퍼링을 못 받아 표준 패키지로 결제했으면 없다
+      const paid = pricing[plan];
+      track(EVENTS.PURCHASE_COMPLETED, {
+        plan,
+        unlocked,
+        ...(paid && { price: paid.price, currency: paid.currency }),
+      });
       // 기다리는 사이 화면을 떠났으면 안내와 이동은 하지 않는다 — 캐시 반영은 위에서 이미 끝났다
       if (signal?.aborted) return;
       // 스토어 결제는 끝났다 — 웹훅이 늦어도 사용자를 페이월에 붙잡아 두지 않는다
