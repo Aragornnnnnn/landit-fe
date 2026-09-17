@@ -49,6 +49,7 @@ export const ScenarioTalkFlow = ({
     partner,
     finishedThought,
     speech,
+    replay,
     input,
     leave,
     sessionId,
@@ -103,7 +104,11 @@ export const ScenarioTalkFlow = ({
   }, [ended, feedbackPath, router]);
   // 라우트 전환은 새 화면이 준비될 때까지 이 화면에 머문다 — 그동안 버튼이 돌아가야 눌린 줄 안다
   const [leavingForFeedback, startLeaving] = useTransition();
-  const goToFeedback = () => startLeaving(() => router.replace(feedbackPath));
+  const goToFeedback = () => {
+    // 화면은 피드백으로 갈아타도 이 훅은 살아 있다 — 작별 인사를 다시 듣던 중이면 여기서 끊는다
+    if (replay?.playing) replay.toggle();
+    startLeaving(() => router.replace(feedbackPath));
+  };
 
   return (
     <main
@@ -149,6 +154,7 @@ export const ScenarioTalkFlow = ({
                 opened,
               })
             }
+            replay={replay}
           />
         </div>
         {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다 */}

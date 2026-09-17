@@ -63,6 +63,7 @@ export const EVENTS = {
   TURN_FAILED: 'Turn Failed',
   INNER_THOUGHT_VIEWED: 'Inner Thought Viewed',
   TRANSLATION_TOGGLED: 'Translation Toggled',
+  SPEECH_REPLAYED: 'Speech Replayed',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
   SPEECH_PLAYBACK_FAILED: 'Speech Playback Failed',
   HINT_USED: 'Hint Used',
@@ -155,10 +156,11 @@ export const EVENTS = {
   LEVEL_RESULT_VIEWED: 'Level Result Viewed',
   PREPARED_LEARNING_VIEWED: 'Prepared Learning Viewed',
   PREPARED_LEARNING_CONTINUED: 'Prepared Learning Continued',
-  // 마이페이지 — 유료 사용자가 구독 관리로 들어갔다 / 무료 사용자가 페이월로 들어갔다 / 진동 토글
+  // 마이페이지 — 유료 사용자가 구독 관리로 들어갔다 / 무료 사용자가 페이월로 들어갔다 / 진동 토글 / 말하기 속도 변경
   SUBSCRIPTION_MANAGE_TAPPED: 'Subscription Manage Tapped',
   PAYWALL_ENTRY_TAPPED: 'Paywall Entry Tapped',
   HAPTICS_TOGGLED: 'Haptics Toggled',
+  SPEECH_RATE_CHANGED: 'Speech Rate Changed',
   // 구독 관리 화면 — 결제 내역으로 들어갔다 / 스토어 구독 화면으로 나갔다
   SUBSCRIPTION_HISTORY_TAPPED: 'Subscription History Tapped',
   STORE_SUBSCRIPTION_TAPPED: 'Store Subscription Tapped',
@@ -399,6 +401,11 @@ export type EventProps = {
     turn_index: number;
     opened: boolean;
   };
+  // 상대 발화를 다시 들은 순간 — 어느 턴에서 못 알아들어 되감는지 본다. 멈추려고 누른 건 세지 않는다
+  'Speech Replayed': {
+    session_id?: number;
+    turn_index: number;
+  };
   'Speech Recognition Failed': {
     engine?: 'deepgram' | 'web_speech';
     reason?: string;
@@ -506,8 +513,15 @@ export type EventProps = {
   'Pronunciation Skipped': { expression_id: number };
   'Pronunciation Audio Played': {
     expression_id: number;
-    // expression·sentence = 설명·발음 화면 스피커, native_word·my_word = 피드백 카드 행
-    source: 'expression' | 'sentence' | 'native_word' | 'my_word';
+    // expression·sentence = 설명·발음 대기 화면 스피커, compare_* = 피드백 말풍선의 전체 문장
+    // 비교 듣기(원어민/내 녹음), native_word·my_word = 피드백 카드 행
+    source:
+      | 'expression'
+      | 'sentence'
+      | 'compare_native'
+      | 'compare_mine'
+      | 'native_word'
+      | 'my_word';
   };
   'Review Answer Submitted': {
     expression_id: number;
@@ -554,6 +568,8 @@ export type EventProps = {
   'Subscription Manage Tapped': { status: SubscriptionState };
   'Paywall Entry Tapped': { source: PaywallEntrySource };
   'Haptics Toggled': { enabled: boolean };
+  // 고른 배속 그대로 — 0.75 · 1 · 1.25 · 1.5
+  'Speech Rate Changed': { rate: number };
   'Subscription History Tapped': { status: SubscriptionState };
   'Store Subscription Tapped': {
     status: SubscriptionState;

@@ -2,6 +2,8 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setSpeechRate } from '@/shared/lib/speech-rate';
+
 import { useTts } from './useTts';
 import type { TtsVoice } from './voice';
 
@@ -31,6 +33,7 @@ class FakeAudio {
   pause = vi.fn();
   removeAttribute = vi.fn();
   load = vi.fn();
+  playbackRate = 1;
 
   constructor(src: string) {
     this.src = src;
@@ -46,6 +49,7 @@ function fakeAudioResponse(): Response {
 }
 
 beforeEach(() => {
+  localStorage.clear();
   FakeAudio.instances = [];
   FakeAudio.playRejection = null;
   vi.stubGlobal('Audio', FakeAudio);
@@ -263,6 +267,56 @@ describe('useTts', () => {
     expect(result.current.status).toBe('active');
   });
 
+  it('방금 튼 발화를 다시 speak하면 합성 왕복 없이 그대로 다시 튼다 (다시 듣기)', async () => {
+    // Given 한 번 재생을 마친 발화가 있을 때
+    const fetchMock = vi.fn(async () => fakeAudioResponse());
+    vi.stubGlobal('fetch', fetchMock);
+    const { result } = renderHook(() => useTts());
+    await act(() => result.current.speak('Hello', harper));
+    act(() => FakeAudio.instances[0]!.onended?.());
+
+    // When 같은 발화를 다시 재생하면
+    await act(() => result.current.speak('Hello', harper));
+
+    // Then 다시 합성하지 않고 바로 소리가 난다
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(FakeAudio.instances[1]!.play).toHaveBeenCalled();
+  });
+
+  it('같은 문장이라도 목소리가 다르면 방금 튼 음원을 재사용하지 않고 다시 합성한다', async () => {
+    const fetchMock = vi.fn(async () => fakeAudioResponse());
+    vi.stubGlobal('fetch', fetchMock);
+    const { result } = renderHook(() => useTts());
+    await act(() => result.current.speak('Hello', harper));
+    act(() => FakeAudio.instances[0]!.onended?.());
+
+    await act(() =>
+      result.current.speak('Hello', {
+        ...harper,
+        providerVoiceId: 'en-US-Ethan:MAI-Voice-2',
+      }),
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('다음 발화를 틀면 그 앞 발화의 음원은 캐시에서 비운다 — 대화가 길어져도 메모리가 늘지 않는다', async () => {
+    const fetchMock = vi.fn(async () => fakeAudioResponse());
+    vi.stubGlobal('fetch', fetchMock);
+    const { result } = renderHook(() => useTts());
+    await act(() => result.current.speak('One', harper));
+    act(() => FakeAudio.instances[0]!.onended?.());
+    await act(() => result.current.speak('Two', harper));
+    act(() => FakeAudio.instances[1]!.onended?.());
+
+    // One은 비워졌으니 다시 합성하고, Two는 방금 튼 것이라 그대로다
+    await act(() => result.current.speak('One', harper));
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    act(() => FakeAudio.instances[2]!.onended?.());
+    await act(() => result.current.speak('Two', harper));
+    expect(fetchMock).toHaveBeenCalledTimes(4); // One을 틀며 Two가 비워졌다
+  });
+
   it('prefetchSrc는 음원을 미리 열어두고, speakSrc가 그 엘리먼트로 바로 재생한다', () => {
     const { result } = renderHook(() => useTts());
 
@@ -314,6 +368,21 @@ describe('useTts', () => {
 
     expect(FakeAudio.instances).toHaveLength(2); // 죽은 항목 대신 새 엘리먼트
     expect(FakeAudio.instances[1]!.play).toHaveBeenCalled();
+  });
+
+  it('정지한 뒤 늦게 도착한 프리로드 엘리먼트의 error는 재생을 되살리지 않는다', () => {
+    // Given 프리로드 음원을 틀다가 멈춘 상태에서
+    const { result } = renderHook(() => useTts());
+    act(() => result.current.prefetchSrc('/audio/q.mp3'));
+    act(() => result.current.speakSrc('/audio/q.mp3'));
+    act(() => result.current.stop());
+    const opened = FakeAudio.instances.length;
+
+    // When 그 엘리먼트가 뒤늦게 error를 내면
+    act(() => FakeAudio.instances[0]!.onerror?.());
+
+    // Then 새 엘리먼트로 다시 열지 않는다
+    expect(FakeAudio.instances.length).toBe(opened);
   });
 
   it('프리로드 엘리먼트 재생이 실패하면 새 엘리먼트로 한 번 다시 연다', () => {
@@ -436,5 +505,29 @@ describe('useTts', () => {
 
     // AbortError는 합성 폴백을 부르지 않는다 (정적 재생이 그대로 유지되도록)
     expect(onError).not.toHaveBeenCalled();
+  });
+  it('말하기 속도를 느리게 골라두면 합성 음성이 그 배속으로 재생된다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => fakeAudioResponse()),
+    );
+    setSpeechRate(0.75);
+    const { result } = renderHook(() => useTts());
+
+    await act(() => result.current.speak('Hello', harper));
+
+    expect(FakeAudio.instances[0].playbackRate).toBe(0.75);
+  });
+
+  it('미리 열어둔 음원도 재생하는 시점의 배속으로 튼다 — 프리로드 때 넣으면 그 사이 바뀐 설정을 놓친다', () => {
+    vi.stubGlobal('fetch', vi.fn());
+    const { result } = renderHook(() => useTts());
+
+    act(() => result.current.prefetchSrc('/audio/question-2.mp3'));
+    setSpeechRate(1.5);
+    act(() => result.current.speakSrc('/audio/question-2.mp3'));
+
+    expect(FakeAudio.instances).toHaveLength(1);
+    expect(FakeAudio.instances[0].playbackRate).toBe(1.5);
   });
 });
