@@ -55,15 +55,19 @@ export type SubscriptionEventType =
   | 'UNCANCELLATION'
   | 'EXPIRATION'
   | 'BILLING_ISSUE'
-  | 'PRODUCT_CHANGE';
+  | 'PRODUCT_CHANGE'
+  // 대시보드에서 부여한 무료 이용 기간. 우리는 일회성 상품이 없어 이 타입은 프로모션 부여뿐이다
+  | 'NON_RENEWING_PURCHASE'
+  // 다른 앱 계정에서 구독을 넘겨받음
+  | 'TRANSFER';
 
 export interface SubscriptionEvent {
   eventId: string;
   type: SubscriptionEventType;
   productId: string | null;
   periodType: SubscriptionPeriodType | null;
-  // 결제 통화 기준 금액. 체험·해지처럼 결제가 없으면 0
-  price: number;
+  // 결제 통화 기준 금액. 체험·해지·프로모션처럼 결제가 없으면 0이거나 null
+  price: number | null;
   // ISO 4217. 없으면 null
   currency: string | null;
   store: SubscriptionStore | null;
