@@ -53,7 +53,7 @@ export const PremiumEntry = () => {
   const entry =
     summary.kind === 'none'
       ? {
-          href: paywallPath({ from: MY_PAGE_PATH }),
+          href: paywallPath({ from: MY_PAGE_PATH, source: 'me' }),
           label: '구독하기',
           onClick: () => track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'me' }),
         }

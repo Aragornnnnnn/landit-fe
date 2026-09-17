@@ -139,7 +139,7 @@ const PaidSubscription = ({ summary, platform }: PaidSubscriptionProps) => {
 const NoSubscription = () => (
   <MenuGroup>
     <MenuLink
-      href={paywallPath({ from: MY_PAGE_PATH })}
+      href={paywallPath({ from: MY_PAGE_PATH, source: 'me' })}
       title="구독 중이 아니에요 · 프리미엄 구독하기"
     />
   </MenuGroup>

@@ -197,6 +197,27 @@ describe('usePurchase — 결제', () => {
     expect(mocks.showToast).not.toHaveBeenCalled();
   });
 
+  it('가격표가 있으면 결제 금액과 통화를 완료에 함께 남긴다 — 매출 집계용', async () => {
+    mocks.purchaseViaBridge.mockResolvedValue({
+      type: 'PURCHASE_RESULT',
+      status: 'success',
+    });
+    const { result } = renderPurchase({
+      yearly: { packageId: '$rc_annual_kr', price: 58_500, currency: 'KRW' },
+    });
+
+    await act(() => result.current.purchase('yearly'));
+
+    await waitFor(() =>
+      expect(mocks.track).toHaveBeenCalledWith('Purchase Completed', {
+        plan: 'yearly',
+        unlocked: true,
+        price: 58_500,
+        currency: 'KRW',
+      }),
+    );
+  });
+
   it('결제는 성공했는데 서버 반영이 늦으면 안내하고도 다음 화면으로 넘긴다', async () => {
     mocks.purchaseViaBridge.mockResolvedValue({
       type: 'PURCHASE_RESULT',

@@ -132,7 +132,7 @@ export const ScenarioCardBack = ({
                     scenarioExpressionPath(scenarioId, expressionId, date),
                   ),
                 {
-                  entry: 'expression',
+                  source: 'expression',
                   returnTo: scenarioReturnPath({ flip: scenarioId, date }),
                 },
               );

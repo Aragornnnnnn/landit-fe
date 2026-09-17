@@ -26,7 +26,7 @@ export {
   type WidgetGuideStep,
   type WidgetInstallPlatform,
   type SubscriptionPlan,
-  type PaywallGateEntry,
+  type PaywallGateSource,
   type LevelChangeType,
   type SubscriptionState,
   type SubscriptionProfileState,
@@ -34,6 +34,7 @@ export {
   type UserPropertyPatch,
   type WidgetGuideSource,
   type PaywallEntrySource,
+  type PaywallSource,
   type StoreSubscriptionAction,
   type PurchaseFailureReason,
 } from './events';
