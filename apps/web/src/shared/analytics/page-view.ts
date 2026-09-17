@@ -8,6 +8,7 @@ import type {
 import {
   PAYWALL_PATH,
   readScenarioFeedbackParams,
+  SUBSCRIPTION_CANCEL_PATH,
   SUBSCRIPTION_HISTORY_PATH,
   SUBSCRIPTION_MANAGE_PATH,
   WIDGET_GUIDE_PATH,
@@ -39,6 +40,7 @@ const EXCLUDED = new Set(['/']);
 const NESTED_PAGES: Record<string, string> = {
   [SUBSCRIPTION_MANAGE_PATH]: 'subscription_manage',
   [SUBSCRIPTION_HISTORY_PATH]: 'subscription_history',
+  [SUBSCRIPTION_CANCEL_PATH]: 'subscription_cancel',
   [WIDGET_GUIDE_PATH]: 'widget_guide',
 };
 
