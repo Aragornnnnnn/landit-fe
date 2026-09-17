@@ -54,3 +54,19 @@ export const stepBefore = (step: CancelStep): CancelStep | null => {
       return { kind: 'method' };
   }
 };
+
+/** 이 스텝이 어느 사유·방법 위에 있나 — 이벤트가 "어디서 남았나·나갔나"를 적을 때 쓴다. ①은 아직 고른 게 없다 */
+export const stepContext = (
+  step: CancelStep,
+): { reason?: CancelReason; method?: StudyMethod } => {
+  switch (step.kind) {
+    case 'reason':
+      return {};
+    case 'retention':
+      return { reason: step.reason };
+    case 'method':
+      return { reason: 'other_method' };
+    case 'method_retention':
+      return { reason: 'other_method', method: step.method };
+  }
+};

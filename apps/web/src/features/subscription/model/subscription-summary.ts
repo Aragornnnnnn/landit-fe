@@ -53,3 +53,13 @@ export const summarizeSubscription = (
     plan,
   };
 };
+
+/**
+ * 스토어에서 해지할 구독이 있는 상태인가 — 갱신되는 체험·구독.
+ * 해지 예약은 되돌리는 쪽이고, 갱신이 없는 기간(프로모션·선결제)은 스토어에 구독이 없다.
+ * 구독 관리의 해지 행과 해지 사유 화면이 같은 판정을 써야 한다 — 행은 그리는데 화면이 돌려보내면 안 된다
+ */
+export const canCancelAtStore = (
+  summary: SubscriptionSummary,
+): summary is PaidSubscriptionSummary =>
+  summary.kind !== 'none' && summary.kind !== 'canceled' && summary.renews;
