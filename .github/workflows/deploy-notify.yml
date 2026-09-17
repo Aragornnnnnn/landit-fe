@@ -1,0 +1,46 @@
+# Vercel 프로덕션 배포 결과를 디스코드 #웹-소식 채널로 알린다
+name: deploy-notify
+
+on: deployment_status
+
+jobs:
+  notify:
+    # 프리뷰 배포와 진행 중 상태는 거른다. 깃허브 표현식의 == 는 대소문자를 가리지 않는다
+    if: >-
+      github.event.deployment.environment == 'Production' &&
+      contains(fromJSON('["success", "failure", "error"]'), github.event.deployment_status.state)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 디스코드 전송
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_DEPLOY }}
+          GH_TOKEN: ${{ github.token }}
+          STATE: ${{ github.event.deployment_status.state }}
+          TARGET_URL: ${{ github.event.deployment_status.target_url }}
+          SHA: ${{ github.event.deployment.sha }}
+        run: |
+          set -euo pipefail
+          subject=$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA" --jq '.commit.message' | head -1)
+          if [ "$STATE" = "success" ]; then
+            title='프로덕션 배포 완료'
+            color=5763719
+          else
+            title='프로덕션 배포 실패'
+            color=15548997
+          fi
+          jq -n \
+            --arg title "$title" \
+            --arg url "$TARGET_URL" \
+            --arg description "$subject" \
+            --arg sha "${SHA:0:7}" \
+            --arg commit "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$SHA" \
+            --argjson color "$color" \
+            '{embeds: [{
+              title: $title,
+              url: $url,
+              description: $description,
+              color: $color,
+              fields: [{name: "커밋", value: "[\($sha)](\($commit))"}]
+            }]}' \
+            | curl -sS -f -X POST -H 'Content-Type: application/json' -d @- "$WEBHOOK"
