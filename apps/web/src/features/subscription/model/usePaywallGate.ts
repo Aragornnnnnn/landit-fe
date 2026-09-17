@@ -62,7 +62,7 @@ export const usePaywallGate = () => {
       return;
     }
     track(EVENTS.PAYWALL_GATE_LOCKED, { entry });
-    const to = paywallPath({ from: returnTo });
+    const to = paywallPath({ from: returnTo, source: entry });
     if (replace) router.replace(to);
     else router.push(to);
   };

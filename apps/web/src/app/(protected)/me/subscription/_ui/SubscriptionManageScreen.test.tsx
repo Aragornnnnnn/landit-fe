@@ -208,7 +208,7 @@ describe('SubscriptionManageScreen', () => {
 
     expect(
       screen.getByRole('link', { name: /프리미엄 구독하기/ }),
-    ).toHaveAttribute('href', '/paywall?from=%2Fme');
+    ).toHaveAttribute('href', '/paywall?from=%2Fme&source=me');
     expect(screen.queryByText('무제한 프리톡')).not.toBeInTheDocument();
   });
 

@@ -163,7 +163,7 @@ describe('ScenarioFeedbackFlow', () => {
     expect(mocks.push).toHaveBeenCalledWith(
       `/paywall?from=${encodeURIComponent(
         '/conversation/scenario/7/feedback?session=345&date=2026-07-29&detail=1',
-      )}`,
+      )}&source=feedback_detail`,
     );
   });
 

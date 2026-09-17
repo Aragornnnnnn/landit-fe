@@ -1,5 +1,7 @@
 // 화면 주소 상수 — 여러 곳에서 같은 경로를 문자열로 반복하지 않도록 한 곳에 모은다
 // 스몰톡 탭이 생기면 복귀 목적지가 둘로 갈리는데, 그 분기도 여기서 시작한다
+import type { PaywallSource } from '@landit/analytics';
+
 export const SCENARIO_PATH = '/scenario';
 export const SMALLTALK_PATH = '/smalltalk';
 export const STREAK_PATH = '/streak';
@@ -156,8 +158,22 @@ export const readScenarioFeedbackParams = (
 // 프리미엄 페이월. from은 결제 뒤 돌아갈 내부 경로 — 학습 진입에서 막혀 왔을 때만 붙는다
 export const PAYWALL_PATH = '/paywall';
 
-export const paywallPath = ({ from }: { from?: string } = {}) =>
-  from ? `${PAYWALL_PATH}?from=${encodeURIComponent(from)}` : PAYWALL_PATH;
+/**
+ * 페이월 주소.
+ *
+ * @param from 결제 뒤 돌아갈 내부 경로 — 학습 진입에서 막혀 왔을 때만 붙는다
+ * @param source 어느 문으로 보냈는가 — 노출 계측이 이 값으로 진입 경로를 가른다
+ */
+export const paywallPath = ({
+  from,
+  source,
+}: { from?: string; source?: PaywallSource } = {}) => {
+  const query = new URLSearchParams();
+  if (from) query.set('from', from);
+  if (source) query.set('source', source);
+  const suffix = query.toString();
+  return suffix ? `${PAYWALL_PATH}?${suffix}` : PAYWALL_PATH;
+};
 
 // 마이페이지와 그 아래 화면. 구독 관리는 유료 사용자가 들어오는 자리이고, 아니면 페이월로 안내한다
 export const MY_PAGE_PATH = '/me';

@@ -56,7 +56,9 @@ describe('usePaywallGate', () => {
     result.current.guard(go, { entry: 'expression', returnTo: '/scenario' });
 
     expect(go).not.toHaveBeenCalled();
-    expect(mocks.push).toHaveBeenCalledWith('/paywall?from=%2Fscenario');
+    expect(mocks.push).toHaveBeenCalledWith(
+      '/paywall?from=%2Fscenario&source=expression',
+    );
     expect(mocks.track).toHaveBeenCalledWith('Paywall Gate Locked', {
       entry: 'expression',
     });
@@ -111,7 +113,7 @@ describe('usePaywallGate', () => {
     });
 
     expect(mocks.replace).toHaveBeenCalledWith(
-      '/paywall?from=%2Fexpressions%2Fscenario%2F7%2Fbranch',
+      '/paywall?from=%2Fexpressions%2Fscenario%2F7%2Fbranch&source=conversation_finished',
     );
     expect(mocks.push).not.toHaveBeenCalled();
   });

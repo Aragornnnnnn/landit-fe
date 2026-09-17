@@ -87,6 +87,7 @@ export const ScenarioFeedbackFlow = ({
     track(EVENTS.PAYWALL_GATE_LOCKED, { entry: 'feedback_detail' });
     router.push(
       paywallPath({
+        source: 'feedback_detail',
         from: scenarioFeedbackPath(scenarioId, {
           session: sessionId,
           date,
