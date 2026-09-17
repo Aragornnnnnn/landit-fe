@@ -82,16 +82,14 @@ describe('SubscriptionManageScreen', () => {
     // 플랜을 모르면 금액 행이 없다
     expect(screen.queryByText('다음 결제 금액')).not.toBeInTheDocument();
     expect(screen.getByText('무제한 프리톡')).toBeInTheDocument();
+    // 해지는 스토어로 바로 가지 않고 사유 플로우를 먼저 거친다 — 스토어 링크와 이벤트는 그 안에서
     const cancel = screen.getByRole('link', { name: '구독 해지하기' });
-    expect(cancel).toHaveAttribute(
-      'href',
-      'https://apps.apple.com/account/subscriptions',
-    );
+    expect(cancel).toHaveAttribute('href', '/me/subscription/cancel');
     fireEvent.click(cancel);
-    expect(mocks.track).toHaveBeenCalledWith('Store Subscription Tapped', {
-      status: 'active',
-      action: 'cancel',
-    });
+    expect(mocks.track).not.toHaveBeenCalledWith(
+      'Store Subscription Tapped',
+      expect.anything(),
+    );
   });
 
   it('무료 체험은 첫 결제일로, 해지 예정은 만료일과 자동 갱신이 꺼졌음을 말한다', () => {
@@ -152,26 +150,31 @@ describe('SubscriptionManageScreen', () => {
     });
     mocks.query.subscription = {
       ...mocks.query.subscription!,
+      subscriptionStatus: 'CANCELED',
       store: 'APP_STORE',
     };
     render(<SubscriptionManageScreen />);
 
-    expect(screen.getByRole('link', { name: '구독 해지하기' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '해지 취소하기' })).toHaveAttribute(
       'href',
       'https://apps.apple.com/account/subscriptions',
     );
   });
 
-  it('안드로이드 셸이면 해지 행이 Google Play로 간다', () => {
+  it('안드로이드 셸이면 스토어 행이 Google Play로 간다', () => {
     mocks.getNativeContext.mockReturnValue({
       platform: 'android',
       appVersion: '1.3.0',
       buildNumber: '6',
       bridgeVersion: 5,
     });
+    mocks.query.subscription = {
+      ...mocks.query.subscription!,
+      subscriptionStatus: 'CANCELED',
+    };
     render(<SubscriptionManageScreen />);
 
-    expect(screen.getByRole('link', { name: '구독 해지하기' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '해지 취소하기' })).toHaveAttribute(
       'href',
       'https://play.google.com/store/account/subscriptions',
     );

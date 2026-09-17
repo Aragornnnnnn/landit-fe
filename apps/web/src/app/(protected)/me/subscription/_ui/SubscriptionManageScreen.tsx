@@ -1,7 +1,8 @@
 'use client';
 
 // 구독 관리 화면 — 골드 카드(플랜 붙은 상태 제목, 결제일·결제 금액 행), 이용 중인 혜택, 구독 묶음(결제 내역·해지 행).
-// 앱은 구독을 바꾸거나 해지할 수 없어 스토어 구독 화면으로 보낸다 (docs/subscription.md 「마이페이지와 법적 문서」)
+// 앱은 구독을 바꾸거나 해지할 수 없어 스토어 구독 화면으로 보낸다 (docs/subscription.md 「마이페이지와 법적 문서」).
+// 해지만은 사유 플로우(/me/subscription/cancel)를 먼저 거친다
 import { EVENTS, type StoreSubscriptionAction } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
@@ -26,6 +27,7 @@ import {
   backToMyPage,
   MY_PAGE_PATH,
   paywallPath,
+  SUBSCRIPTION_CANCEL_PATH,
   SUBSCRIPTION_HISTORY_PATH,
 } from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
@@ -117,7 +119,15 @@ const PaidSubscription = ({ summary, platform }: PaidSubscriptionProps) => {
             track(EVENTS.SUBSCRIPTION_HISTORY_TAPPED, { status: summary.kind })
           }
         />
-        {storeRow && (
+        {storeRow?.action === 'cancel' && (
+          // 해지는 바로 스토어로 보내지 않는다 — 사유를 묻고 사유별 화면을 거친 뒤 그 안의 링크로 나간다
+          <MenuLink
+            href={SUBSCRIPTION_CANCEL_PATH}
+            icon={platform === 'ios' ? <AppStoreIcon /> : <GooglePlayIcon />}
+            title={storeRow.title}
+          />
+        )}
+        {storeRow?.action === 'resubscribe' && (
           <MenuLink
             href={store.manageUrl}
             icon={platform === 'ios' ? <AppStoreIcon /> : <GooglePlayIcon />}
