@@ -21,6 +21,24 @@ describe('toPageView', () => {
     expect(pv('/paywall')).toEqual({ page_name: 'paywall', path: '/paywall' });
   });
 
+  it('페이월은 어느 문으로 보냈는지를 노출에 싣는다', () => {
+    expect(pv('/paywall', 'source=expression&from=%2Fscenario')).toEqual({
+      page_name: 'paywall',
+      path: '/paywall',
+      paywall_source: 'expression',
+    });
+    expect(pv('/paywall', 'source=me')).toMatchObject({
+      paywall_source: 'me',
+    });
+  });
+
+  it('모르는 문 값은 버린다 — 손으로 고친 주소가 지표를 늘리지 않게', () => {
+    expect(pv('/paywall', 'source=hacked')).toEqual({
+      page_name: 'paywall',
+      path: '/paywall',
+    });
+  });
+
   it('마이페이지 아래 두 칸짜리 화면도 이름으로 찍는다 — 경로가 그대로 이름이 되지 않게', () => {
     expect(pv('/me/subscription')).toEqual({
       page_name: 'subscription_manage',
