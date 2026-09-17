@@ -10,7 +10,7 @@ description: landit-fe PR을 팀 규칙대로 올린다 — 제목은 노션 이
 PR을 만들기 전에 세 가지를 본다. 순서대로.
 
 1. **브랜치와 경로.** 워크트리가 여럿이다. `git worktree list`로 올릴 브랜치가 어느 폴더에 있는지 먼저 찾고, 그 폴더에서 `git branch --show-current`가 `feat/LAN-XX` 같은 이슈 번호 브랜치인지 본다. `main`·`develop`이면 멈춘다. 머지 직후나 인터럽트 뒤 턴에는 로컬이 develop으로 바뀌어 있는 일이 실제로 있었다. 검사와 생성은 전부 그 폴더에서 한다.
-2. **검사.** 루트에서 `pnpm format:check`, `pnpm test`, `pnpm typecheck`. CI가 이 순서로 돈다. `--filter web`만 돌리면 `packages/analytics`의 이벤트 이름 컨벤션 테스트를 건너뛰어 CI가 빨간불로 올라간다. 새로 판 워크트리에 `node_modules`가 없으면 커밋 훅(husky의 prettier)이 조용히 안 돌아 포맷이 안 맞은 채 커밋된다. 워크트리를 만들었으면 `pnpm install`부터. 문서만 바꾼 PR도 포맷 검사는 받는다.
+2. **검사.** 루트에서 CI와 같은 순서로 `pnpm format:check` → `pnpm lint` → `pnpm typecheck` → `pnpm test` → `pnpm build`. 문서만 바꾼 PR이면 `build`는 건너뛰어도 되지만 나머지는 돌린다. `--filter web`만 돌리면 `packages/analytics`의 이벤트 이름 컨벤션 테스트를 건너뛰어 CI가 빨간불로 올라간다. 새로 판 워크트리에 `node_modules`가 없으면 커밋 훅(husky의 prettier)이 조용히 안 돌아 포맷이 안 맞은 채 커밋된다. 워크트리를 만들었으면 `pnpm install`부터. 문서만 바꾼 PR도 포맷 검사는 받는다.
 3. **승인.** "이 브랜치 PR 올릴까요?"를 **이 PR에 대해** 묻는다. 앞선 PR의 승인, 스택 흐름, "빨리 가자" 분위기는 다음 PR의 승인이 아니다. 사용자가 코드를 아직 못 본 변경이면 더더욱. 급하면 Draft를 제안한다.
 
 세 번째는 건너뛸 수 없다. 사용자 확인 없이 올렸다가 되돌린 전례가 있고, 수습은 `gh pr ready --undo`(Draft 전환) → 필요하면 close다.
