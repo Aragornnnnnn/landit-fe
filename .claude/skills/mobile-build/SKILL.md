@@ -56,7 +56,7 @@ export SENTRY_DISABLE_AUTO_UPLOAD=true              # SENTRY_AUTH_TOKEN은 Secre
 eas build -p ios --profile qa --local --output out/landit-<version>-b<buildNumber>-<develop|www>.ipa
 ```
 
-약 3~~4분. 클라우드 빌드(`--local` 없이)는 7~~8분이고 결과가 EAS 서버에 남아 `eas submit --id`로 바로 제출할 수 있다.
+약 3–4분. 클라우드 빌드(`--local` 없이)는 7–8분이고 결과가 EAS 서버에 남아 `eas submit --id`로 바로 제출할 수 있다.
 
 **새 Distribution Certificate가 필요하면 non-interactive에선 절대 안 만들어진다.** 저장된 옛 인증서를 그대로 돌려준다. 사용자가 진짜 TTY에서 `eas credentials -p ios`를 돌려야 한다. 현재 인증서는 2027-09-03 만료.
 
