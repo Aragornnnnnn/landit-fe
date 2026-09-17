@@ -205,6 +205,30 @@ describe('다른 방법 → ③', () => {
     });
   });
 
+  it('방법까지 골랐다가 ①로 돌아가 다른 사유를 고르면 이벤트에 이전 방법이 실리지 않는다', () => {
+    renderScreen(premium());
+    chooseReason('다른 방법으로 공부하려고요');
+    fireEvent.click(screen.getByRole('radio', { name: '유튜브 · 독학' }));
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+    fireEvent.click(screen.getByRole('button', { name: '뒤로 가기' }));
+    fireEvent.click(screen.getByRole('button', { name: '뒤로 가기' }));
+    chooseReason('가격이 부담돼요');
+    mocks.track.mockClear();
+
+    fireEvent.click(screen.getByRole('link', { name: '그래도 해지하러 가기' }));
+    fireEvent.click(screen.getByRole('button', { name: '조금 더 써볼게요' }));
+
+    expect(mocks.track).toHaveBeenCalledWith('Store Subscription Tapped', {
+      status: 'active',
+      action: 'cancel',
+      reason: 'price',
+    });
+    expect(mocks.track).toHaveBeenCalledWith('Cancel Stay Tapped', {
+      reason: 'price',
+      to: 'manage',
+    });
+  });
+
   it('③에서 뒤로 가면 방법 라디오로, 거기서 또 뒤로 가면 ①로 돌아간다', () => {
     renderScreen(premium());
     chooseReason('다른 방법으로 공부하려고요');

@@ -3,26 +3,20 @@
 // 구독 해지 사유 플로우 — 구독 관리의 "구독 해지하기"가 여기로 온다. 스토어로 나가기 전에 사유를 묻고(①) 사유별 화면(②·③)을 거친다.
 // 갱신되는 구독(체험·구독 중)에만 열린다. 해지 예약·프로모션 부여·유료 아님은 구독 관리로 돌려보낸다
 import { useEffect, useState } from 'react';
-import {
-  EVENTS,
-  type CancelReason,
-  type CancelStayDestination,
-  type StudyMethod,
-} from '@landit/analytics';
-import { useQuery } from '@tanstack/react-query';
+import { EVENTS, type CancelStayDestination } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { LEVEL_NAMES } from '@/features/feedback/model/level-assessment';
 import { toEnglishLevel } from '@/features/onboarding/model/english-level';
 import { useLearningLevelQuery } from '@/features/onboarding/model/useLearningLevelQuery';
-import { getStreakCalendar } from '@/features/streak/api/streak';
-import { streakKeys } from '@/features/streak/model/keys';
+import { useStreakCalendarQuery } from '@/features/streak/model/useStreakCalendarQuery';
 import type { MySubscription } from '@/features/subscription/api/subscription';
 import {
   resolveStorePlatform,
   STORE,
 } from '@/features/subscription/model/store-links';
 import {
+  canCancelAtStore,
   summarizeSubscription,
   type PaidSubscriptionSummary,
 } from '@/features/subscription/model/subscription-summary';
@@ -43,6 +37,7 @@ import {
   stepAfterMethod,
   stepAfterReason,
   stepBefore,
+  stepContext,
   type CancelDraft,
   type CancelStep,
 } from '../_model/cancel-flow';
@@ -53,12 +48,6 @@ import {
 import { MethodStep } from './MethodStep';
 import { ReasonStep } from './ReasonStep';
 import { RetentionStep } from './RetentionStep';
-
-// 스토어에서 해지할 구독이 있는 상태만 — 갱신되는 체험·구독. 해지 예약은 되돌리는 쪽이고 프로모션은 스토어에 구독이 없다
-const canCancel = (
-  summary: ReturnType<typeof summarizeSubscription>,
-): summary is PaidSubscriptionSummary =>
-  summary.kind !== 'none' && summary.kind !== 'canceled' && summary.renews;
 
 interface FlowProps {
   summary: PaidSubscriptionSummary;
@@ -77,12 +66,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
     (state) => state.member?.nickname?.trim() || '게스트',
   );
   // 실력 안 늚 화면의 카드 — 누적 학습일은 스트릭 달력에서, 레벨은 학습 수준에서
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
-  const { data: calendar } = useQuery({
-    queryKey: streakKeys.calendar(userId, null),
-    queryFn: () => getStreakCalendar(null),
-    enabled: userId !== null,
-  });
+  const { calendar } = useStreakCalendarQuery({ enabled: true });
   const { data: profile } = useLearningLevelQuery();
   const level = toEnglishLevel(profile?.learningLevel ?? null);
 
@@ -113,17 +97,13 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
     setStep(stepAfterMethod(method));
   };
 
-  // 남기 — 어느 화면에서 남았는지는 스텝이 안다. 구독 관리로 돌아가거나 편지함으로
-  const stay = (
-    reason: CancelReason,
-    to: CancelStayDestination,
-    method?: StudyMethod,
-  ) => {
-    track(EVENTS.CANCEL_STAY_TAPPED, {
-      reason,
-      ...(method && { method }),
-      to,
-    });
+  // 지금 어느 사유·방법 위에 있나 — 남거나 나갈 때 이벤트에 적는 값은 폼 초안이 아니라 스텝이 정한다
+  const at = stepContext(step);
+
+  // 남기 — 구독 관리로 돌아가거나 편지함으로
+  const stay = (to: CancelStayDestination) => {
+    if (!at.reason) return;
+    track(EVENTS.CANCEL_STAY_TAPPED, { ...at, reason: at.reason, to });
     if (to === 'mailbox') router.push(MAILBOX_COMPOSE_PATH);
     else leaveToManage();
   };
@@ -143,8 +123,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
         track(EVENTS.STORE_SUBSCRIPTION_TAPPED, {
           status: summary.kind,
           action: 'cancel',
-          ...(draft.reason && { reason: draft.reason }),
-          ...(draft.method && { method: draft.method }),
+          ...at,
         })
       }
     >
@@ -184,7 +163,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
         return (
           <RetentionStep
             content={content}
-            onPrimary={() => stay(step.reason, content.primary.to)}
+            onPrimary={() => stay(content.primary.to)}
             leaveLink={leaveLink}
           />
         );
@@ -194,9 +173,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
         return (
           <RetentionStep
             content={content}
-            onPrimary={() =>
-              stay('other_method', content.primary.to, step.method)
-            }
+            onPrimary={() => stay(content.primary.to)}
             leaveLink={leaveLink}
           />
         );
@@ -216,7 +193,7 @@ export const CancelFlowScreen = () => {
   const router = useRouter();
   const { subscription, isPending, isError } = useSubscriptionQuery();
   const summary = summarizeSubscription(subscription);
-  const eligible = canCancel(summary);
+  const eligible = canCancelAtStore(summary);
 
   // 여기서 해지할 구독이 없으면 구독 관리로 — 그쪽이 상태에 맞는 행(해지 취소·페이월)을 보여준다
   useEffect(() => {

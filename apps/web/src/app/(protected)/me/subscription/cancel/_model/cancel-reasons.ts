@@ -26,5 +26,5 @@ export const STUDY_METHODS: readonly ChoiceOption<StudyMethod>[] = [
   { id: 'abroad', emoji: '✈️', label: '어학연수 · 해외' },
 ];
 
-/** 기타 입력 글자 수 상한 — 설문의 기타 입력과 같다 */
+/** 기타 입력 글자 수 상한 */
 export const OTHER_TEXT_MAX_LENGTH = 100;
