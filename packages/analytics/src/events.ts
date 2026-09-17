@@ -213,6 +213,9 @@ export type LevelChangeType =
 export type SubscriptionState = 'trial' | 'active' | 'canceled';
 // 게이트가 아닌 자리에서 페이월로 들어간 곳 — 지금은 마이페이지(me)뿐. 알림 동의의 source와 같은 이름을 쓴다
 export type PaywallEntrySource = 'me';
+// 페이월에 어느 문으로 들어왔는가 — 게이트에 막혀 왔으면 그 문, 스스로 들어왔으면 마이페이지.
+// 노출(Page Viewed)에 실어 진입 경로별 전환율을 가른다
+export type PaywallSource = PaywallGateEntry | PaywallEntrySource;
 // 구독 관리에서 스토어로 나간 이유 — 해지 / 해지 취소. 둘 다 같은 스토어 화면이 열리지만 의도를 남긴다
 export type StoreSubscriptionAction = 'cancel' | 'resubscribe';
 
@@ -290,6 +293,8 @@ export type EventProps = {
     feedback_id?: number;
     // 피드백 작성일 때만 — 유형별로 주소가 갈려도 화면 이름은 하나로 둔다
     feedback_type?: FeedbackType;
+    // 페이월일 때만 — 어느 문으로 들어왔는가 (게이트에 막혀 왔으면 그 문, 마이페이지에서 들어왔으면 me)
+    paywall_source?: PaywallSource;
   };
   // 파괴적 행동(이탈·탈퇴) 전 확인 시트 — 열림/취소로 고민율을 본다. 확정은 각 Abandoned/Deleted 이벤트
   'Confirm Sheet Opened': { sheet: ConfirmSheetKind };
@@ -578,8 +583,14 @@ export type EventProps = {
     status: SubscriptionState;
     action: StoreSubscriptionAction;
   };
-  // unlocked: 결제 직후 몇 초 안에 서버가 유료로 바뀌었는가 (웹훅 지연 관찰용)
-  'Purchase Completed': { plan: SubscriptionPlan; unlocked: boolean };
+  // unlocked: 결제 직후 몇 초 안에 서버가 유료로 바뀌었는가 (웹훅 지연 관찰용).
+  // price·currency는 셸이 준 스토어 가격 — 오퍼링을 못 받아 표준 패키지로 결제하면 없다
+  'Purchase Completed': {
+    plan: SubscriptionPlan;
+    unlocked: boolean;
+    price?: number;
+    currency?: string;
+  };
   'Purchase Canceled': { plan: SubscriptionPlan };
   // plan은 복원이 막혔을 때 없다. message는 shell_error일 때 셸이 준 문구
   'Purchase Failed': {
