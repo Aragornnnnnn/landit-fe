@@ -70,6 +70,31 @@ describe('summarizeSubscriptionEvent', () => {
     ).toBe('환불');
   });
 
+  it('대시보드에서 부여한 무료 이용과 계정 이전도 무슨 일이었는지 말한다', () => {
+    expect(
+      summarizeSubscriptionEvent(
+        event({
+          type: 'NON_RENEWING_PURCHASE',
+          productId: 'rc_promo_premium_monthly',
+          periodType: 'PROMOTIONAL',
+          price: null,
+        }),
+      ),
+    ).toMatchObject({ title: '무료 이용 시작', plan: null, amount: null });
+    expect(
+      summarizeSubscriptionEvent(event({ type: 'TRANSFER', price: null }))
+        .title,
+    ).toBe('구독 이전');
+  });
+
+  it('모르는 종류가 와도 제목이 빈 줄이 되지 않는다', () => {
+    expect(
+      summarizeSubscriptionEvent(
+        event({ type: 'SUBSCRIPTION_PAUSED' as SubscriptionEvent['type'] }),
+      ).title,
+    ).toBe('구독 상태 변경');
+  });
+
   it('원화가 아니면 통화 코드를 붙이고, 모르는 상품은 플랜이 없고, 샌드박스는 표시한다', () => {
     expect(
       summarizeSubscriptionEvent(

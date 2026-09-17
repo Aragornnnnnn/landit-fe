@@ -31,11 +31,18 @@ const toTitle = (event: SubscriptionEvent) => {
       return '결제 실패';
     case 'PRODUCT_CHANGE':
       return '플랜 변경';
+    case 'NON_RENEWING_PURCHASE':
+      return '무료 이용 시작';
+    case 'TRANSFER':
+      return '구독 이전';
+    // BE가 이력에 남기는 타입이 늘어도 제목 없는 줄이 되지 않게 한다
+    default:
+      return '구독 상태 변경';
   }
 };
 
 const toAmount = (event: SubscriptionEvent) => {
-  if (event.price <= 0) return null;
+  if (event.price === null || event.price <= 0) return null;
   // 통화가 안 오면 원화로 본다 — 한국 스토어만 열려 있고, 원화만 "원"으로 붙인다
   const isWon = !event.currency || event.currency === 'KRW';
   if (isWon) return formatWon(event.price);
