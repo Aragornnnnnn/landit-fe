@@ -101,7 +101,10 @@ describe('PremiumEntry', () => {
     render(<PremiumEntry />);
 
     const link = screen.getByRole('link', { name: /구독하기/ });
-    expect(link).toHaveAttribute('href', paywallPath({ from: '/me' }));
+    expect(link).toHaveAttribute(
+      'href',
+      paywallPath({ from: '/me', source: 'me' }),
+    );
     fireEvent.click(link);
     expect(mocks.track).toHaveBeenCalledWith('Paywall Entry Tapped', {
       source: 'me',

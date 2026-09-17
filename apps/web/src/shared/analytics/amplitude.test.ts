@@ -3,8 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const amplitudeMock = vi.hoisted(() => {
   const identifySetCalls: Array<[string, unknown]> = [];
+  const identifyUnsetCalls: string[] = [];
   return {
     identifySetCalls,
+    identifyUnsetCalls,
     initAll: vi.fn(),
     track: vi.fn(),
     identify: vi.fn(),
@@ -13,6 +15,10 @@ const amplitudeMock = vi.hoisted(() => {
     Identify: class {
       set(key: string, value: unknown) {
         identifySetCalls.push([key, value]);
+        return this;
+      }
+      unset(key: string) {
+        identifyUnsetCalls.push(key);
         return this;
       }
     },
@@ -40,6 +46,7 @@ const loadWrapper = async () => await import('./amplitude');
 beforeEach(() => {
   vi.resetModules();
   amplitudeMock.identifySetCalls.length = 0;
+  amplitudeMock.identifyUnsetCalls.length = 0;
   nativeContextMock.context = null;
 });
 
@@ -237,5 +244,55 @@ describe('identifyUser / resetUser', () => {
 
     expect(amplitudeMock.setUserId).not.toHaveBeenCalled();
     expect(amplitudeMock.reset).not.toHaveBeenCalled();
+  });
+});
+
+describe('setUserProperties', () => {
+  it('값이 있는 속성은 프로필에 세팅한다', async () => {
+    vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
+    const { setUserProperties } = await loadWrapper();
+
+    setUserProperties({ is_premium: true, subscription_state: 'trial' });
+
+    expect(amplitudeMock.identifySetCalls).toEqual([
+      ['is_premium', true],
+      ['subscription_state', 'trial'],
+    ]);
+    expect(amplitudeMock.identify).toHaveBeenCalled();
+  });
+
+  it('값이 null인 속성은 프로필에서 지운다 — 지난 세션 값이 남지 않게', async () => {
+    vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
+    const { setUserProperties } = await loadWrapper();
+
+    setUserProperties({
+      is_premium: null,
+      subscription_state: 'unknown',
+      plan: null,
+    });
+
+    expect(amplitudeMock.identifyUnsetCalls).toEqual(['is_premium', 'plan']);
+    expect(amplitudeMock.identifySetCalls).toEqual([
+      ['subscription_state', 'unknown'],
+    ]);
+  });
+
+  it('거짓·0처럼 비어 보이는 값은 지우지 않고 그대로 세팅한다', async () => {
+    vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
+    const { setUserProperties } = await loadWrapper();
+
+    setUserProperties({ is_premium: false });
+
+    expect(amplitudeMock.identifyUnsetCalls).toEqual([]);
+    expect(amplitudeMock.identifySetCalls).toEqual([['is_premium', false]]);
+  });
+
+  it('키가 없으면 no-op이다', async () => {
+    vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', '');
+    const { setUserProperties } = await loadWrapper();
+
+    setUserProperties({ is_premium: true });
+
+    expect(amplitudeMock.identify).not.toHaveBeenCalled();
   });
 });

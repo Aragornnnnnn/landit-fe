@@ -2,7 +2,11 @@
 
 // 앰플리튜드 래퍼 — 이벤트 발화의 단일 통로. 키가 없으면 no-op으로 콘솔에만 남긴다 (dev/prod 프로젝트는 env 키로 분리)
 import * as amplitude from '@amplitude/unified';
-import type { EventName, EventProps } from '@landit/analytics';
+import type {
+  EventName,
+  EventProps,
+  UserPropertyPatch,
+} from '@landit/analytics';
 
 import { getNativeContext } from '@/shared/bridge/native-context';
 
@@ -101,6 +105,25 @@ export const identifyUser = (
   amplitude.setUserId(String(userId));
   const identify = new amplitude.Identify();
   identify.set('provider', userProps.provider);
+  amplitude.identify(identify);
+};
+
+/**
+ * 사람에 붙는 속성을 갱신한다 — 이 호출 뒤에 찍힌 이벤트부터 새 값을 달고 간다 (과거 이벤트는 소급되지 않는다).
+ *
+ * @param properties 값이 null인 속성은 프로필에서 지운다. 지난 세션의 값이 남아 "아직 모름"과 섞이지 않게
+ */
+export const setUserProperties = (properties: UserPropertyPatch) => {
+  if (typeof window === 'undefined') return;
+  if (!logAndShouldSend('user properties', properties)) return;
+
+  const identify = new amplitude.Identify();
+  for (const [key, value] of Object.entries(properties)) {
+    // 키를 아예 안 넘긴 것과 같다 — 지우려면 null이어야 한다
+    if (value === undefined) continue;
+    if (value === null) identify.unset(key);
+    else identify.set(key, value);
+  }
   amplitude.identify(identify);
 };
 

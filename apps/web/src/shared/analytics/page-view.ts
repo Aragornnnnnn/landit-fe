@@ -1,7 +1,17 @@
 // 경로 → Page Viewed 속성 매핑 — 동적 세그먼트는 page_name으로 정규화하고 id는 속성으로 뺀다 (정책 2-2)
-import type { EventProps, FeedbackType } from '@landit/analytics';
+import type {
+  EventProps,
+  FeedbackType,
+  PaywallSource,
+} from '@landit/analytics';
 
-import { readScenarioFeedbackParams } from '@/shared/lib/routes';
+import {
+  PAYWALL_PATH,
+  readScenarioFeedbackParams,
+  SUBSCRIPTION_HISTORY_PATH,
+  SUBSCRIPTION_MANAGE_PATH,
+  WIDGET_GUIDE_PATH,
+} from '@/shared/lib/routes';
 
 import { isExternalEntry } from './utm';
 
@@ -25,6 +35,25 @@ const readEntry = (
 // 계측 제외 — 루트는 즉시 redirect라 페이지뷰로 의미가 없다
 const EXCLUDED = new Set(['/']);
 
+// 두 칸짜리 주소라 STATIC_PAGES가 못 잡는 화면 — 이름을 주지 않으면 폴백이 경로를 그대로 이름으로 쓴다
+const NESTED_PAGES: Record<string, string> = {
+  [SUBSCRIPTION_MANAGE_PATH]: 'subscription_manage',
+  [SUBSCRIPTION_HISTORY_PATH]: 'subscription_history',
+  [WIDGET_GUIDE_PATH]: 'widget_guide',
+};
+
+// 페이월로 보낸 문 — 주소에 실려 온 값만 받는다. 문이 늘었는데 여기를 빠뜨리면 빌드가 깨진다
+const PAYWALL_SOURCES: Record<PaywallSource, true> = {
+  expression: true,
+  smalltalk: true,
+  conversation_finished: true,
+  feedback_detail: true,
+  me: true,
+};
+
+const readPaywallSource = (raw: string | null): PaywallSource | undefined =>
+  raw && raw in PAYWALL_SOURCES ? (raw as PaywallSource) : undefined;
+
 const STATIC_PAGES = new Set([
   'login',
   'onboarding',
@@ -36,7 +65,6 @@ const STATIC_PAGES = new Set([
   'mailbox',
   // LAN-428 설문(임시) — 설문이 끝나면 지운다
   'survey',
-  'paywall',
 ]);
 
 // 피드백 작성은 유형별로 주소가 갈리지만 화면은 하나다 — 이름을 넷으로 쪼개지 않고 속성으로 싣는다.
@@ -189,6 +217,19 @@ const resolvePage = (
       };
     }
   }
+
+  // 페이월은 어느 문으로 왔는지가 전환율의 축이다 — 주소의 source를 노출에 싣는다
+  if (pathname === PAYWALL_PATH) {
+    const source = readPaywallSource(searchParams.get('source'));
+    return {
+      page_name: 'paywall',
+      path: pathname,
+      ...(source && { paywall_source: source }),
+    };
+  }
+
+  const nested = NESTED_PAGES[pathname];
+  if (nested) return { page_name: nested, path: pathname };
 
   if (seg[0] === 'auth') return { page_name: 'auth_callback', path: pathname };
 

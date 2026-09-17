@@ -82,7 +82,7 @@ export const ScenarioCard = ({
         setHasFlipped(true);
         setFlipped(true);
       },
-      { entry: 'expression', returnTo: scenarioReturnPath({ date }) },
+      { source: 'expression', returnTo: scenarioReturnPath({ date }) },
     );
 
   const closeExpressions = () => {

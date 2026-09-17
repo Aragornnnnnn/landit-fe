@@ -75,7 +75,7 @@ export const ScenarioFeedbackFlow = ({
   const expressionBranchPath = scenarioExpressionBranchPath(scenarioId, date);
   const continueToExpressionBranch = () =>
     paywallGate.guard(() => router.replace(expressionBranchPath), {
-      entry: 'conversation_finished',
+      source: 'conversation_finished',
       returnTo: expressionBranchPath,
       // 페이월로 갈 때도 피드백을 히스토리에서 지운다 — 뒤로가기가 끝난 대화의 피드백으로 돌아오지 않게
       replace: true,
@@ -84,9 +84,10 @@ export const ScenarioFeedbackFlow = ({
   // 잠긴 상세를 보려 했다 — 페이월로. 결제하면 이 주소의 상세로 돌아온다.
   // 게이트의 환경 판정을 타지 않는다. 서버가 이미 상세를 비워 보냈으니 어느 환경이든 보여줄 게 없다
   const openPaywallForDetail = () => {
-    track(EVENTS.PAYWALL_GATE_LOCKED, { entry: 'feedback_detail' });
+    track(EVENTS.PAYWALL_GATE_LOCKED, { source: 'feedback_detail' });
     router.push(
       paywallPath({
+        source: 'feedback_detail',
         from: scenarioFeedbackPath(scenarioId, {
           session: sessionId,
           date,
