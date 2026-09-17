@@ -1,7 +1,12 @@
 // 경로 → Page Viewed 속성 매핑 — 동적 세그먼트는 page_name으로 정규화하고 id는 속성으로 뺀다 (정책 2-2)
 import type { EventProps, FeedbackType } from '@landit/analytics';
 
-import { readScenarioFeedbackParams } from '@/shared/lib/routes';
+import {
+  readScenarioFeedbackParams,
+  SUBSCRIPTION_HISTORY_PATH,
+  SUBSCRIPTION_MANAGE_PATH,
+  WIDGET_GUIDE_PATH,
+} from '@/shared/lib/routes';
 
 import { isExternalEntry } from './utm';
 
@@ -24,6 +29,13 @@ const readEntry = (
 
 // 계측 제외 — 루트는 즉시 redirect라 페이지뷰로 의미가 없다
 const EXCLUDED = new Set(['/']);
+
+// 두 칸짜리 주소라 STATIC_PAGES가 못 잡는 화면 — 이름을 주지 않으면 폴백이 경로를 그대로 이름으로 쓴다
+const NESTED_PAGES: Record<string, string> = {
+  [SUBSCRIPTION_MANAGE_PATH]: 'subscription_manage',
+  [SUBSCRIPTION_HISTORY_PATH]: 'subscription_history',
+  [WIDGET_GUIDE_PATH]: 'widget_guide',
+};
 
 const STATIC_PAGES = new Set([
   'login',
@@ -189,6 +201,9 @@ const resolvePage = (
       };
     }
   }
+
+  const nested = NESTED_PAGES[pathname];
+  if (nested) return { page_name: nested, path: pathname };
 
   if (seg[0] === 'auth') return { page_name: 'auth_callback', path: pathname };
 

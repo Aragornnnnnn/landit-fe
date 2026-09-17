@@ -21,6 +21,21 @@ describe('toPageView', () => {
     expect(pv('/paywall')).toEqual({ page_name: 'paywall', path: '/paywall' });
   });
 
+  it('마이페이지 아래 두 칸짜리 화면도 이름으로 찍는다 — 경로가 그대로 이름이 되지 않게', () => {
+    expect(pv('/me/subscription')).toEqual({
+      page_name: 'subscription_manage',
+      path: '/me/subscription',
+    });
+    expect(pv('/me/subscription/history')).toEqual({
+      page_name: 'subscription_history',
+      path: '/me/subscription/history',
+    });
+    expect(pv('/me/widget')).toEqual({
+      page_name: 'widget_guide',
+      path: '/me/widget',
+    });
+  });
+
   it('표현 완료 복귀(flip)를 return_reason으로 해석한다', () => {
     expect(pv('/scenario')).toEqual({
       page_name: 'scenario',
