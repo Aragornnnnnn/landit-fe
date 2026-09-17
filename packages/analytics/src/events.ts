@@ -211,6 +211,9 @@ export type LevelChangeType =
   'INITIALIZED' | 'PROMOTED' | 'UNCHANGED' | 'NOT_APPLIED';
 // 마이페이지 구독 카드의 상태 — 무료 체험 중 / 구독 중 / 해지 예약(만료일까지 이용)
 export type SubscriptionState = 'trial' | 'active' | 'canceled';
+// 유저 속성이 쓰는 구독 상태 — 위 셋에 "구독 없음"과 "아직 모름"을 더한다.
+// unknown은 로그인 직후 구독 조회가 끝나기 전 구간이다. 값이 아예 빠진 것과 구분하려고 명시적으로 남긴다
+export type SubscriptionProfileState = SubscriptionState | 'none' | 'unknown';
 // 게이트가 아닌 자리에서 페이월로 들어간 곳 — 지금은 마이페이지(me)뿐. 알림 동의의 source와 같은 이름을 쓴다
 export type PaywallEntrySource = 'me';
 // 구독 관리에서 스토어로 나간 이유 — 해지 / 해지 취소. 둘 다 같은 스토어 화면이 열리지만 의도를 남긴다
@@ -614,6 +617,22 @@ export type EventProps = {
   'Survey Submitted': { question_count: number };
 };
 
+// 사람에 붙는 속성 — 이벤트가 아니라 프로필에 쌓이고, 설정한 뒤에 찍힌 이벤트부터 따라붙는다.
+// 과거 이벤트는 소급되지 않으므로, 값이 바뀌는 순간 바로 올려야 그 뒤 이벤트가 맞는 값을 달고 간다 (docs/analytics.md 「유저 속성」)
+export interface UserProperties {
+  provider: AuthProvider;
+  is_premium: boolean;
+  subscription_state: SubscriptionProfileState;
+  plan: SubscriptionPlan | null;
+  learning_level: EnglishLevel | null;
+  accent_locale: AccentLocale | null;
+}
+
+// 한 번에 갱신할 속성들 — null은 "이 사람에게는 값이 없다"라는 뜻으로 프로필에서 그 속성을 지운다
+export type UserPropertyPatch = {
+  [K in keyof UserProperties]?: UserProperties[K] | null;
+};
+
 // 컴파일 타임 검증 ① EventProps가 모든 이벤트를 빠짐없이 커버한다
 type AssertExhaustive<T extends Record<EventName, unknown>> = T;
 type _EventPropsCoversAllEvents = AssertExhaustive<EventProps>;
@@ -626,3 +645,7 @@ type NonSnakeCaseKeys<T> = {
 }[keyof T];
 type AssertNever<T extends never> = T;
 type _PropKeysAreSnakeCase = AssertNever<NonSnakeCaseKeys<EventProps>>;
+// 컴파일 타임 검증 ③ 유저 속성 키도 snake_case여야 한다 (provider처럼 한 단어여도 규칙은 같다)
+type _UserPropKeysAreSnakeCase = AssertNever<
+  NonSnakeCaseKeys<{ user: UserProperties }>
+>;

@@ -5,7 +5,9 @@ import type { Metadata, Viewport } from 'next';
 import { AppUpdateGate } from '@/features/app-update/ui/AppUpdateGate';
 import { LegacyReminderCleanup } from '@/features/notification/ui/LegacyReminderCleanup';
 import { PushTokenSync } from '@/features/notification/ui/PushTokenSync';
+import { ProfilePropertiesSync } from '@/features/onboarding/ui/ProfilePropertiesSync';
 import { IdentifySync } from '@/features/subscription/ui/IdentifySync';
+import { SubscriptionPropertiesSync } from '@/features/subscription/ui/SubscriptionPropertiesSync';
 import { WidgetChangeSync } from '@/features/widget/ui/WidgetChangeSync';
 import { WidgetDataSync } from '@/features/widget/ui/WidgetDataSync';
 import { AnalyticsBootstrap, PageViewTracker } from '@/shared/analytics';
@@ -52,6 +54,8 @@ export default function RootLayout({
           <WidgetDataSync />
           <WidgetChangeSync />
           <IdentifySync />
+          <SubscriptionPropertiesSync />
+          <ProfilePropertiesSync />
         </Providers>
         <Toaster />
         <SpeedInsights />
