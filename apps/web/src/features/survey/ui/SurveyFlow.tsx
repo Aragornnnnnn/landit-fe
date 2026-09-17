@@ -21,7 +21,6 @@ import {
   type Answers,
 } from '../model/answers';
 import { otherKey, QUESTIONS } from '../model/questions';
-import { surveyDone } from '../model/survey-done';
 import { QuestionStep } from './QuestionStep';
 import { SurveyDone } from './SurveyDone';
 import { SurveyHeader } from './SurveyHeader';
@@ -32,14 +31,11 @@ type Step = 'intro' | 'done' | number;
 
 export const SurveyFlow = () => {
   const router = useRouter();
-  // 이메일은 쿠폰 줄 때 참고값일 뿐이라 없어도 낸다 — 누구인지는 서버가 토큰으로 정한다
+  // 이메일은 응답을 볼 때 참고값일 뿐이라 없어도 낸다 — 누구인지는 서버가 토큰으로 정한다
   const email = useAuthStore((state) => state.member?.email ?? null);
   const keyboardInset = useKeyboardSafeLayout();
 
-  // 이미 마친 기기면 문항을 다시 묻지 않는다
-  const [step, setStep] = useState<Step>(() =>
-    surveyDone.has() ? 'done' : 'intro',
-  );
+  const [step, setStep] = useState<Step>('intro');
   const [direction, setDirection] = useState(1);
   const [answers, setAnswers] = useState<Answers>({});
   const [submitting, setSubmitting] = useState(false);
@@ -87,9 +83,7 @@ export const SurveyFlow = () => {
     if (submitting) return;
     setSubmitting(true);
     try {
-      // 이미 참여한 사람(duplicate)도 완료 화면으로 — 두 번 낼 수 없다는 걸 따로 설명할 이유가 없다
       await submitSurvey(email, toSubmission(QUESTIONS, answers));
-      surveyDone.mark();
       track(EVENTS.SURVEY_SUBMITTED, { question_count: questions.length });
       goTo('done', 1);
     } catch {

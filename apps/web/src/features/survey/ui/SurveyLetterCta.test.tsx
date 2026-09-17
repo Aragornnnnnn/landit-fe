@@ -33,7 +33,7 @@ describe('SurveyLetterCta', () => {
     render(<SurveyLetterCta letterId={5} />);
 
     await userEvent.click(
-      screen.getByRole('button', { name: /설문하고 이용권 받기/ }),
+      screen.getByRole('button', { name: /설문 참여하기/ }),
     );
 
     expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_INVITE_TAPPED, {

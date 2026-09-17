@@ -94,15 +94,13 @@ describe('POST /api/survey', () => {
     });
   });
 
-  it('이미 응답한 유저면(409) duplicate를 돌려준다', async () => {
+  it('저장소가 겹친다며 거절하면(409) 502로 알린다', async () => {
+    // 같은 사람의 두 번째 응답도 새 행으로 쌓이므로 409는 저장소 설정이 틀어졌다는 뜻이다
     backendThenSupabase(200, 409);
 
     const res = await POST(surveyRequest({ answers: {} }, `Bearer ${token}`));
 
-    expect(await res.json()).toEqual({
-      success: true,
-      data: { result: 'duplicate' },
-    });
+    expect(res.status).toBe(502);
   });
 
   it('answers가 없으면 400을 돌려주고 백엔드에 묻지 않는다', async () => {

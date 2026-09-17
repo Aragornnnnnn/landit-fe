@@ -7,7 +7,7 @@ export interface SeenFlag {
   clear: () => void;
 }
 
-// 만든 깃발을 모아 둔다 — 전부 계정 경험 기록(첫 안내·코치마크·설문)이라 탈퇴 때 한 번에 지운다
+// 만든 깃발을 모아 둔다 — 전부 계정 경험 기록(첫 안내·코치마크)이라 탈퇴 때 한 번에 지운다
 const flags = new Set<SeenFlag>();
 
 export const seenFlag = (key: string): SeenFlag => {
