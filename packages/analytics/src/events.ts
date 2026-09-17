@@ -164,6 +164,11 @@ export const EVENTS = {
   // 구독 관리 화면 — 결제 내역으로 들어갔다 / 스토어 구독 화면으로 나갔다
   SUBSCRIPTION_HISTORY_TAPPED: 'Subscription History Tapped',
   STORE_SUBSCRIPTION_TAPPED: 'Store Subscription Tapped',
+  // 구독 해지 사유 플로우 — 사유를 고르고(①), 사유별 화면을 보고(②·③), 남거나 스토어로 나간다
+  CANCEL_REASON_SELECTED: 'Cancel Reason Selected',
+  CANCEL_RETENTION_VIEWED: 'Cancel Retention Viewed',
+  CANCEL_METHOD_SELECTED: 'Cancel Method Selected',
+  CANCEL_STAY_TAPPED: 'Cancel Stay Tapped',
   // 셸의 결제 결과 회신 — 성공은 스토어 결제가 끝난 것이고, 서버 유료 반영(unlocked)은 별도 속성으로 남긴다
   PURCHASE_COMPLETED: 'Purchase Completed',
   PURCHASE_CANCELED: 'Purchase Canceled',
@@ -221,6 +226,13 @@ export type PaywallEntrySource = 'me';
 export type PaywallSource = PaywallGateSource | PaywallEntrySource;
 // 구독 관리에서 스토어로 나간 이유 — 해지 / 해지 취소. 둘 다 같은 스토어 화면이 열리지만 의도를 남긴다
 export type StoreSubscriptionAction = 'cancel' | 'resubscribe';
+/** 구독 해지 사유 — ① 라디오 순서 그대로 */
+export type CancelReason =
+  'price' | 'time' | 'progress' | 'content' | 'bug' | 'other_method' | 'other';
+/** "다른 방법으로 공부" 사유의 방법 */
+export type StudyMethod = 'academy' | 'other_app' | 'youtube' | 'abroad';
+/** 남기로 한 사람이 어디로 갔나 — 구독 관리로 돌아감 / 편지함으로 의견 보내러 감 */
+export type CancelStayDestination = 'manage' | 'mailbox';
 
 // 페이월 게이트가 막은 자리 — 표현 학습 진입 / 스몰톡 시작. 시나리오 대화 시작은 문이 아니다 (구독과 무관하게 열린다)
 export type PaywallGateSource =
@@ -585,6 +597,25 @@ export type EventProps = {
   'Store Subscription Tapped': {
     status: SubscriptionState;
     action: StoreSubscriptionAction;
+    // 해지 사유 플로우를 거쳐 나갔으면 어느 사유·방법 화면에서였는지
+    reason?: CancelReason;
+    method?: StudyMethod;
+  };
+  // ① "다음" — 기타면 적은 글도 같이
+  'Cancel Reason Selected': { reason: CancelReason; other_text?: string };
+  // ②·③ 화면이 뜬 순간 — 가격이면 어느 플랜 화면인지, ③이면 어느 방법인지
+  'Cancel Retention Viewed': {
+    reason: CancelReason;
+    plan?: SubscriptionPlan;
+    method?: StudyMethod;
+  };
+  // 다른 방법 라디오에서 "다음"
+  'Cancel Method Selected': { method: StudyMethod };
+  // 주 버튼으로 남았다 — 구독 관리로 돌아가거나 편지함으로
+  'Cancel Stay Tapped': {
+    reason: CancelReason;
+    method?: StudyMethod;
+    to: CancelStayDestination;
   };
   // unlocked: 결제 직후 몇 초 안에 서버가 유료로 바뀌었는가 (웹훅 지연 관찰용).
   // price·currency는 셸이 준 스토어 가격 — 오퍼링을 못 받아 표준 패키지로 결제하면 없다

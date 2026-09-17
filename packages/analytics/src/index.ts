@@ -36,5 +36,8 @@ export {
   type PaywallEntrySource,
   type PaywallSource,
   type StoreSubscriptionAction,
+  type CancelReason,
+  type StudyMethod,
+  type CancelStayDestination,
   type PurchaseFailureReason,
 } from './events';
