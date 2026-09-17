@@ -3,6 +3,11 @@ name: deploy-notify
 
 on: deployment_status
 
+# gh api로 커밋·PR·태그를 읽기만 한다
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   notify:
     # 프리뷰 배포와 진행 중 상태는 거른다. 깃허브 표현식의 == 는 대소문자를 가리지 않는다
