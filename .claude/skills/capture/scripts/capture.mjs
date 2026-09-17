@@ -8,7 +8,8 @@
 //   --auth                localStorage에 가짜 세션(landit-auth)과 온보딩 완료 플래그를 넣는다
 //   --wait "<selector>"   이 셀렉터가 나타날 때까지 기다린다 (text=..., css 모두 가능)
 //   --delay <ms>          기다린 뒤 추가로 쉬는 시간 (애니메이션 끝나기용, 기본 1500)
-//   --steps <file.mjs>    export default async ({ page, ctx, shot }) => {...} — 목 라우트 등록·클릭 흐름·여러 장 촬영을 여기서
+//   --steps <file.mjs>    export const setup = async ({ ctx, page }) => {...} — 첫 이동 전에 돈다: 목 라우트·addInitScript 등록
+//                         export default async ({ page, ctx, shot }) => {...} — 이동 뒤에 돈다: 클릭 흐름·여러 장 촬영
 //   --mic                 가짜 마이크 장치로 띄운다 (녹음 화면)
 //   --full                뷰포트가 아니라 문서 전체 높이로 찍는다
 //
@@ -131,8 +132,11 @@ const shot = async (path = out) => {
 
 const stepsFile = opt('steps');
 const steps = stepsFile
-  ? (await import(pathToFileURL(resolve(stepsFile)).href)).default
-  : null;
+  ? await import(pathToFileURL(resolve(stepsFile)).href)
+  : {};
+
+// 목 라우트는 첫 페이지 요청에도 걸려야 하므로 goto 전에 등록한다
+if (steps.setup) await steps.setup({ ctx, page });
 
 // Next dev는 HMR 소켓 때문에 networkidle이 안 온다 — load까지만 기다리고 나머지는 셀렉터·딜레이로
 await page.goto(url, { waitUntil: 'load', timeout: 120000 });
@@ -140,7 +144,7 @@ const wait = opt('wait');
 if (wait) await page.waitForSelector(wait, { timeout: 60000 });
 await page.waitForTimeout(Number(opt('delay', 1500)));
 
-if (steps) await steps({ page, ctx, shot });
+if (steps.default) await steps.default({ page, ctx, shot });
 else await shot();
 
 await browser.close();

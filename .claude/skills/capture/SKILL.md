@@ -30,8 +30,8 @@ pnpm --filter web exec next dev -p 3124
 
 **2. 데이터.** 세 가지 중 하나.
 
-- **가짜 세션 + API 목** (기본) — `--auth`로 세션을 넣고, `--steps` 파일에서 `ctx.route('**/api/**', …)`로 응답을 준다. 토큰이 필요 없고 상태를 마음대로 만든다. 로딩 장면은 route 핸들러가 응답을 붙들고 있는 동안 찍는다(`unroute` 하지 마라 — "Route is already handled" 에러. 같은 주소를 다시 잡으면 새 핸들러가 우선).
-- **dev 서버 실데이터** — 사용자가 dev 토큰을 줬을 때만. `addInitScript`로 `/api/` 요청에 Authorization을 붙인다. 프로덕션 토큰을 잡아내는 fetch 패치는 하지 않는다. 프로덕션 콘텐츠가 필요하면 사용자 크롬(Claude in Chrome)의 로그인 세션에서 DOM(`innerText`, `img src`)만 읽어 목 데이터에 옮긴다.
+- **가짜 세션 + API 목** (기본) — `--auth`로 세션을 넣고, `--steps` 파일의 `setup`에서 `ctx.route('**/api/**', …)`로 응답을 준다. `setup`은 첫 이동 전에 돌아서 화면이 처음 뜰 때 나가는 요청부터 목이 걸린다. 토큰이 필요 없고 상태를 마음대로 만든다. 로딩 장면은 route 핸들러가 응답을 붙들고 있는 동안 찍는다(`unroute` 하지 마라 — "Route is already handled" 에러. 같은 주소를 다시 잡으면 새 핸들러가 우선).
+- **dev 서버 실데이터** — 사용자가 dev 토큰을 줬을 때만. `--steps`의 `setup`에서 `ctx.addInitScript`로 `/api/` 요청에 Authorization을 붙인다. 프로덕션 토큰을 잡아내는 fetch 패치는 하지 않는다. 프로덕션 콘텐츠가 필요하면 사용자 크롬(Claude in Chrome)의 로그인 세션에서 DOM(`innerText`, `img src`)만 읽어 목 데이터에 옮긴다.
 - **컴포넌트만** — 로그인 벽 뒤 컴포넌트를 상태별로 찍을 때는 임시 라우트 `app/(public)/dev-<이름>/page.tsx`를 만들어 상태 라디오로 전환한다. **커밋 금지.** `.git/info/exclude`에 넣는다.
 
 응답 봉투는 `{ success: true, data }`다. 봉투를 빼먹으면 화면이 빈다.
@@ -44,7 +44,7 @@ node <스킬 경로>/scripts/capture.mjs --url http://localhost:3124/home --out 
 ```
 
 - 프리셋 — PR은 기본(375×812 @2). 피그마 폰 목업·스토어는 `--preset figma`(390×832 @3, 폰 SCREEN 958×2044 비율이라 크롭 없이 FILL, 상단 58px 스테이터스 자리 비움).
-- 여러 장·클릭 흐름 — `--steps flow.mjs`. 파일은 `export default async ({ page, ctx, shot }) => { … }`. 목 라우트도 여기서 등록한다. 한 흐름을 한 파일에 두면 다음에 같은 화면을 다시 찍을 때 그대로 돌린다.
+- 여러 장·클릭 흐름 — `--steps flow.mjs`. 파일은 두 부분이다. `export const setup = async ({ ctx, page }) => { … }`는 첫 이동 **전에** 돌아 목 라우트·`addInitScript`를 등록하고, `export default async ({ page, ctx, shot }) => { … }`는 이동 **뒤에** 돌아 클릭하고 여러 장 찍는다. 라우트를 default 쪽에 두면 첫 화면의 요청은 목 없이 나간다. 한 흐름을 한 파일에 두면 다음에 같은 화면을 다시 찍을 때 그대로 돌린다.
 - 녹음 화면 — `--mic`. 가짜 장치라 무음 게이트를 통과한다. 애니메이션 중인 버튼은 `page.click(sel, { force: true })`.
 - 긴 화면 — `--full`.
 
@@ -65,7 +65,7 @@ node <스킬 경로>/scripts/capture.mjs --url "file://$PWD/diagram.html" --out 
 ## 자주 걸리는 것
 
 - **`networkidle`을 기다린다** — Next dev는 HMR 소켓 때문에 안 온다. 스크립트는 `load`까지만 기다린다. 나머지는 `--wait`·`--delay`.
-- **온보딩·코치마크가 뜬다** — `--auth`가 온보딩 완료 플래그를 넣는다. 스몰톡 안내·탭 코치마크는 `landit-smalltalk-intro-guide-seen`·`landit-smalltalk-tap-greeting-seen`을 steps에서 넣는다. 반대로 그 화면을 찍으려면 지운다.
+- **온보딩·코치마크가 뜬다** — `--auth`가 온보딩 완료 플래그를 넣는다. 스몰톡 안내·탭 코치마크는 `landit-smalltalk-intro-guide-seen`·`landit-smalltalk-tap-greeting-seen`을 `setup`의 `addInitScript`에서 넣는다. 반대로 그 화면을 찍으려면 지운다.
 - **`member.provider`가 없다** — 프로필 게이트가 다시 묻는다. 스크립트의 가짜 세션에는 들어 있다.
 - **데스크톱 뷰포트로 찍혔다** — 사용자 크롬으로 찍을 때 모바일 프리셋을 안 걸면 여백까지 찍혀 종횡비가 깨진다. 이 스크립트는 뷰포트를 고정하니 해당 없다.
 - **스토어 캡처에 dev 시드 콘텐츠** — 반려된다. 스토어·마케팅용은 프로덕션 콘텐츠(실제 표현·시나리오 텍스트와 이미지)를 목 데이터에 옮겨 찍는다.
