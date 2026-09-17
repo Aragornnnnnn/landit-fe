@@ -53,7 +53,8 @@ const findPlaywright = () => {
   const local = resolve(process.cwd(), 'node_modules/playwright-core');
   if (existsSync(local)) return resolve(process.cwd(), 'node_modules/');
   const cache = join(homedir(), '.npm/_npx');
-  for (const dir of readdirSync(cache)) {
+  const cached = existsSync(cache) ? readdirSync(cache) : [];
+  for (const dir of cached) {
     const candidate = join(cache, dir, 'node_modules/playwright-core');
     if (existsSync(candidate)) return join(cache, dir, 'node_modules/');
   }
