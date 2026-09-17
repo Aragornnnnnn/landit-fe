@@ -213,14 +213,14 @@ export type LevelChangeType =
 export type SubscriptionState = 'trial' | 'active' | 'canceled';
 // 게이트가 아닌 자리에서 페이월로 들어간 곳 — 지금은 마이페이지(me)뿐. 알림 동의의 source와 같은 이름을 쓴다
 export type PaywallEntrySource = 'me';
-// 페이월에 어느 문으로 들어왔는가 — 게이트에 막혀 왔으면 그 문, 스스로 들어왔으면 마이페이지.
+// 페이월에 어디서 왔는가 — 게이트에 막혀 왔으면 막힌 자리, 스스로 들어왔으면 마이페이지.
 // 노출(Page Viewed)에 실어 진입 경로별 전환율을 가른다
-export type PaywallSource = PaywallGateEntry | PaywallEntrySource;
+export type PaywallSource = PaywallGateSource | PaywallEntrySource;
 // 구독 관리에서 스토어로 나간 이유 — 해지 / 해지 취소. 둘 다 같은 스토어 화면이 열리지만 의도를 남긴다
 export type StoreSubscriptionAction = 'cancel' | 'resubscribe';
 
-// 페이월 게이트가 걸린 진입 문 — 표현 학습 진입 / 스몰톡 시작. 시나리오 대화 시작은 문이 아니다 (구독과 무관하게 열린다)
-export type PaywallGateEntry =
+// 페이월 게이트가 막은 자리 — 표현 학습 진입 / 스몰톡 시작. 시나리오 대화 시작은 문이 아니다 (구독과 무관하게 열린다)
+export type PaywallGateSource =
   | 'expression'
   | 'smalltalk'
   // 대화 피드백을 마치고 표현으로 넘어가는 자리 — 첫 시나리오의 무료 구간이 끝나는 곳
@@ -565,7 +565,7 @@ export type EventProps = {
   'Paywall Plan Selected': { plan: SubscriptionPlan };
   'Purchase Started': { plan: SubscriptionPlan };
   'Purchase Restore Tapped': undefined;
-  'Paywall Gate Locked': { entry: PaywallGateEntry };
+  'Paywall Gate Locked': { source: PaywallGateSource };
   'Level Result Viewed': {
     scenario_id: number;
     level: EnglishLevel;

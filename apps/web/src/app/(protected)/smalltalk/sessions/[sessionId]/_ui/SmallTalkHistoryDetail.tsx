@@ -48,7 +48,7 @@ export const SmallTalkHistoryDetail = ({
     });
     gate.guard(
       () => router.push(sessionExpressionPath(sessionId, expressionId)),
-      { entry: 'expression', returnTo: smallTalkHistoryPath(sessionId) },
+      { source: 'expression', returnTo: smallTalkHistoryPath(sessionId) },
     );
   };
 

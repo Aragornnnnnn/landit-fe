@@ -109,7 +109,7 @@ describe('ScenarioFeedbackFlow', () => {
     expect(mocks.guard).toHaveBeenCalledWith(
       expect.any(Function),
       expect.objectContaining({
-        entry: 'conversation_finished',
+        source: 'conversation_finished',
         returnTo: '/expressions/scenario/7/branch',
         replace: true,
       }),
@@ -135,7 +135,7 @@ describe('ScenarioFeedbackFlow', () => {
     fireEvent.click(screen.getByText('학습 준비 마침'));
     expect(mocks.guard).toHaveBeenCalledWith(
       expect.any(Function),
-      expect.objectContaining({ entry: 'conversation_finished' }),
+      expect.objectContaining({ source: 'conversation_finished' }),
     );
   });
 
@@ -158,7 +158,7 @@ describe('ScenarioFeedbackFlow', () => {
     fireEvent.click(screen.getByText('잠긴 상세 보기'));
 
     expect(mocks.track).toHaveBeenCalledWith('Paywall Gate Locked', {
-      entry: 'feedback_detail',
+      source: 'feedback_detail',
     });
     expect(mocks.push).toHaveBeenCalledWith(
       `/paywall?from=${encodeURIComponent(

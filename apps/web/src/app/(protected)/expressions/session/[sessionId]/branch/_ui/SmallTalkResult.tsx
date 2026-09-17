@@ -91,7 +91,10 @@ export const SmallTalkResult = ({
     });
     gate.guard(
       () => router.push(sessionExpressionPath(sessionId, expressionId)),
-      { entry: 'expression', returnTo: sessionExpressionBranchPath(sessionId) },
+      {
+        source: 'expression',
+        returnTo: sessionExpressionBranchPath(sessionId),
+      },
     );
   };
 

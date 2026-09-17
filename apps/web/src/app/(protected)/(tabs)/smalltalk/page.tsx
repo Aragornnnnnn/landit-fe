@@ -62,7 +62,7 @@ export default function SmallTalkPage() {
     gate.guard(
       () =>
         router.push(smallTalkPath({ partner: partner.id, mode: 'user_first' })),
-      { entry: 'smalltalk', returnTo: SMALLTALK_PATH },
+      { source: 'smalltalk', returnTo: SMALLTALK_PATH },
     );
 
   const startWithTopic = (topic: SmallTalkTopic) => {
@@ -80,7 +80,7 @@ export default function SmallTalkPage() {
             topicId: topic.topicId,
           }),
         ),
-      { entry: 'smalltalk', returnTo: SMALLTALK_PATH },
+      { source: 'smalltalk', returnTo: SMALLTALK_PATH },
     );
   };
 

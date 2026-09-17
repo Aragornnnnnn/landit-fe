@@ -53,14 +53,14 @@ describe('usePaywallGate', () => {
     const { result } = renderGate();
     const go = vi.fn();
 
-    result.current.guard(go, { entry: 'expression', returnTo: '/scenario' });
+    result.current.guard(go, { source: 'expression', returnTo: '/scenario' });
 
     expect(go).not.toHaveBeenCalled();
     expect(mocks.push).toHaveBeenCalledWith(
       '/paywall?from=%2Fscenario&source=expression',
     );
     expect(mocks.track).toHaveBeenCalledWith('Paywall Gate Locked', {
-      entry: 'expression',
+      source: 'expression',
     });
   });
 
@@ -69,7 +69,7 @@ describe('usePaywallGate', () => {
     const { result } = renderGate();
     const go = vi.fn();
 
-    result.current.guard(go, { entry: 'expression' });
+    result.current.guard(go, { source: 'expression' });
 
     expect(go).toHaveBeenCalledTimes(1);
     expect(mocks.push).not.toHaveBeenCalled();
@@ -80,7 +80,7 @@ describe('usePaywallGate', () => {
     const { result } = renderGate();
     const go = vi.fn();
 
-    result.current.guard(go, { entry: 'smalltalk' });
+    result.current.guard(go, { source: 'smalltalk' });
 
     expect(go).toHaveBeenCalledTimes(1);
   });
@@ -90,7 +90,7 @@ describe('usePaywallGate', () => {
     const { result } = renderGate();
     const go = vi.fn();
 
-    result.current.guard(go, { entry: 'smalltalk' });
+    result.current.guard(go, { source: 'smalltalk' });
 
     expect(go).toHaveBeenCalledTimes(1);
     expect(result.current.locked).toBe(false);
@@ -107,7 +107,7 @@ describe('usePaywallGate', () => {
     const { result } = renderGate();
 
     result.current.guard(vi.fn(), {
-      entry: 'conversation_finished',
+      source: 'conversation_finished',
       returnTo: '/expressions/scenario/7/branch',
       replace: true,
     });
@@ -123,7 +123,7 @@ describe('usePaywallGate', () => {
     const { result } = renderGate();
     const go = vi.fn();
 
-    result.current.guard(go, { entry: 'expression' });
+    result.current.guard(go, { source: 'expression' });
 
     expect(go).toHaveBeenCalledTimes(1);
     expect(result.current.locked).toBe(false);

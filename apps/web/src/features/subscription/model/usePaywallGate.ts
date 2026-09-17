@@ -3,7 +3,7 @@
 // 학습 진입 게이트 — 진입 지점(표현 학습·카드 뒤집기·스몰톡 시작)이 guard로 감싸 부르면,
 // 무료 사용자는 페이월로 보내고 나머지는 그대로 들여보낸다 (docs/subscription.md 「무료 구간과 페이월 게이트」).
 // 시나리오 대화는 문이 아니다 — 구독과 관계없이 열려 있고, 상세 피드백 잠금은 서버가 피드백 응답에서 정한다
-import { EVENTS, type PaywallGateEntry } from '@landit/analytics';
+import { EVENTS, type PaywallGateSource } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
@@ -16,8 +16,8 @@ import { canLockPaywall, decidePaywallGate } from './paywall-gate';
 import { useSubscriptionQuery } from './useSubscriptionQuery';
 
 interface GuardOptions {
-  /** 계측용 — 어느 문에서 막혔는지 */
-  entry: PaywallGateEntry;
+  /** 계측용 — 어느 자리에서 막혔는지 */
+  source: PaywallGateSource;
   /** 결제 뒤 돌아올 곳. 없으면 페이월이 홈으로 보낸다 */
   returnTo?: string;
   /** 잠겼을 때 지금 화면을 히스토리에서 지우고 간다 — 호출부의 이동이 replace라 뒤로 돌아가면 안 되는 자리 */
@@ -55,14 +55,14 @@ export const usePaywallGate = () => {
 
   const guard = (
     go: () => void,
-    { entry, returnTo, replace = false }: GuardOptions,
+    { source, returnTo, replace = false }: GuardOptions,
   ) => {
     if (!locked) {
       go();
       return;
     }
-    track(EVENTS.PAYWALL_GATE_LOCKED, { entry });
-    const to = paywallPath({ from: returnTo, source: entry });
+    track(EVENTS.PAYWALL_GATE_LOCKED, { source });
+    const to = paywallPath({ source, from: returnTo });
     if (replace) router.replace(to);
     else router.push(to);
   };

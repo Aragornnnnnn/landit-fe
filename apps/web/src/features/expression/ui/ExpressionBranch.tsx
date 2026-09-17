@@ -87,7 +87,7 @@ export const ExpressionBranch = ({
     gate.guard(
       () => router.push(scenarioExpressionPath(scenarioId, expressionId, date)),
       {
-        entry: 'expression',
+        source: 'expression',
         returnTo: scenarioExpressionBranchPath(scenarioId, date),
       },
     );

@@ -26,7 +26,7 @@ export {
   type WidgetGuideStep,
   type WidgetInstallPlatform,
   type SubscriptionPlan,
-  type PaywallGateEntry,
+  type PaywallGateSource,
   type LevelChangeType,
   type SubscriptionState,
   type WidgetGuideSource,
