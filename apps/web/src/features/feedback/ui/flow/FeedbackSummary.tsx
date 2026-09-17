@@ -2,21 +2,31 @@
 
 // 피드백 총평 — 별점·해석·점수 트랙·이번 대화 요약을 한 화면에 모아 상세로 넘긴다
 import { Button } from '@/shared/ui/Button';
-import { ChevronLeftIcon } from '@/shared/ui/Icons';
+import { ChevronLeftIcon, LockIcon } from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
 
 import type { SessionFeedbackResponse } from '../../api/session-feedback';
-import { detailCtaLabel, scoreHeadline } from '../../model/feedback-view';
+import {
+  detailCtaLabel,
+  LOCKED_DETAIL_CTA_LABEL,
+  scoreHeadline,
+} from '../../model/feedback-view';
 import { ScoreTrack } from './ScoreTrack';
 
 export const FeedbackSummary = ({
   feedback,
   title,
+  detailLocked,
+  refreshing = false,
   onBack,
   onDetail,
 }: {
   feedback: SessionFeedbackResponse;
   title: string;
+  /** 서버가 상세를 잠근 세션 — 턴별 피드백이 비어 와서 성공률을 셀 수 없고, CTA는 페이월로 이어진다 */
+  detailLocked: boolean;
+  /** 잠긴 응답을 다시 받는 중 — CTA를 돌려 기다리게 한다 */
+  refreshing?: boolean;
   onBack: () => void;
   onDetail: () => void;
 }) => {
@@ -63,10 +73,12 @@ export const FeedbackSummary = ({
         </p>
         <div className="divide-y divide-primary/10 rounded-2xl bg-primary/[0.06]">
           <CardRow label="전달력">{feedback.summaryMessage}</CardRow>
-          <CardRow label="대화 성공률">
-            {total}번 중 <span className="text-primary">{goodCount}번</span>{' '}
-            원어민처럼 말했어요
-          </CardRow>
+          {!detailLocked && (
+            <CardRow label="대화 성공률">
+              {total}번 중 <span className="text-primary">{goodCount}번</span>{' '}
+              원어민처럼 말했어요
+            </CardRow>
+          )}
           {feedback.highlightMessage && (
             <CardRow label="발견한 강점">{feedback.highlightMessage}</CardRow>
           )}
@@ -76,8 +88,24 @@ export const FeedbackSummary = ({
           className="mt-auto pt-8"
           style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
         >
-          <Button onClick={onDetail}>
-            {detailCtaLabel(total - goodCount)}
+          <Button
+            onClick={onDetail}
+            loading={detailLocked && refreshing}
+            // 자물쇠는 장식이라 읽어 주지 않는다 — 잠겼다는 것과 어디로 가는지를 이름에 담는다
+            aria-label={
+              detailLocked
+                ? '상세 피드백 보기. 결제 화면으로 갑니다'
+                : undefined
+            }
+          >
+            {detailLocked ? (
+              <>
+                <LockIcon size={18} />
+                {LOCKED_DETAIL_CTA_LABEL}
+              </>
+            ) : (
+              detailCtaLabel(total - goodCount)
+            )}
           </Button>
         </div>
       </div>

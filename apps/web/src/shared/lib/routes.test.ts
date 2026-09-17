@@ -145,20 +145,27 @@ describe('readScenarioFeedbackParams', () => {
       session: 345,
       date: '2026-07-29',
       replay: true,
+      detail: true,
     });
     // When 그 주소의 쿼리를 읽으면
     const read = readScenarioFeedbackParams(
       new URLSearchParams(path.split('?')[1]),
     );
     // Then 쓴 값이 그대로 돌아온다 — 쓰기와 읽기가 어긋나면 재대화가 표현 분기로 새어 나간다
-    expect(read).toEqual({ session: 345, date: '2026-07-29', replay: true });
+    expect(read).toEqual({
+      session: 345,
+      date: '2026-07-29',
+      replay: true,
+      detail: true,
+    });
   });
 
-  it('아무것도 안 실렸으면 세션 없음·오늘·첫 완료로 본다', () => {
+  it('아무것도 안 실렸으면 세션 없음·오늘·첫 완료·총평부터로 본다', () => {
     expect(readScenarioFeedbackParams(new URLSearchParams(''))).toEqual({
       session: null,
       date: undefined,
       replay: false,
+      detail: false,
     });
   });
 

@@ -1,4 +1,4 @@
-// 내 구독 상태 조회 — 백엔드 응답을 그대로 반환한다 (docs/subscription.md 「BE 계약」). 잠금 판단은 premium과 conversationCompletedSinceLaunch만 본다
+// 내 구독 상태 조회 — 백엔드 응답을 그대로 반환한다 (docs/subscription.md 「BE 계약」). 잠금 판단은 premium만 본다
 import { api } from '@/shared/api/client';
 
 export type SubscriptionStatus = 'NONE' | 'ACTIVE' | 'CANCELED' | 'EXPIRED';
@@ -30,8 +30,18 @@ export interface MySubscription {
   // 결제한 스토어 — 구독 관리 링크를 셸 플랫폼 대신 이걸로 고른다. 프리미엄이 꺼져 있으면 null
   store?: SubscriptionStore | null;
   // 유료 구독 도입 시점(BE 환경변수 LANDIT_SUBSCRIPTION_LAUNCHED_AT) 이후 시나리오를 끝까지 완료한 적이 있는가.
-  // 도입 시점이 비어 있으면 항상 false. 구버전 BE 응답에는 없을 수 있어 선택 필드로 둔다
+  // 대화가 무제한이 되면서(landit-be#192) 잠금 판단에는 쓰지 않는다. BE가 계속 내려주므로 미러만 둔다
   conversationCompletedSinceLaunch?: boolean;
+  // 아래 다섯은 BE LAN-474·#172가 더한 배포 전환·첫 시나리오 예약 정보 — 웹은 아직 안 쓴다. 응답 미러로만 둔다
+  // 현재 계정에 페이월 표시와 서버 유료 제한을 적용하는지
+  paymentEnabled?: boolean;
+  paymentPolicyVersion?: number;
+  // 배포 전환으로 새 학습 시작만 일시 중지됐는지
+  newStartsPaused?: boolean;
+  // 시나리오 대화는 구독과 관계없이 허용하므로 배포 전환 중이 아니면 항상 true
+  canStartScenario?: boolean;
+  // 유료 도입 후 무료 상태로 처음 시작한 첫 시나리오의 예약 세션. 24시간 내 같은 시나리오 재시작 시 이어간다
+  freeScenarioSessionId?: number | null;
 }
 
 export const getMySubscription = () =>

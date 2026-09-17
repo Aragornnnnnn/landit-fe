@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   detailCtaLabel,
   evaluationContextLabel,
+  LOCKED_DETAIL_CTA_LABEL,
   scoreHeadline,
 } from './feedback-view';
 
@@ -37,5 +38,9 @@ describe('detailCtaLabel', () => {
 
   it('개선할 턴이 없으면 잘한 점을 보라고 안내한다', () => {
     expect(detailCtaLabel(0)).toBe('뭐가 잘 통했는지 볼게요');
+  });
+
+  it('잠긴 세션의 문구는 걸음 수 문구와 겹치지 않는다 — 턴 수를 모르는 자리에 0걸음 문구가 나가면 안 된다', () => {
+    expect(LOCKED_DETAIL_CTA_LABEL).not.toBe(detailCtaLabel(0));
   });
 });

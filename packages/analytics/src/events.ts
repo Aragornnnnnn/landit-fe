@@ -216,13 +216,14 @@ export type PaywallEntrySource = 'me';
 // 구독 관리에서 스토어로 나간 이유 — 해지 / 해지 취소. 둘 다 같은 스토어 화면이 열리지만 의도를 남긴다
 export type StoreSubscriptionAction = 'cancel' | 'resubscribe';
 
-// 페이월 게이트가 걸린 진입 문 — 새 대화 시작 / 표현 학습 진입 / 스몰톡 시작
+// 페이월 게이트가 걸린 진입 문 — 표현 학습 진입 / 스몰톡 시작. 시나리오 대화 시작은 문이 아니다 (구독과 무관하게 열린다)
 export type PaywallGateEntry =
-  | 'scenario'
   | 'expression'
   | 'smalltalk'
-  // 대화 피드백을 마치고 표현으로 넘어가는 자리 — 무료 구간이 끝나는 곳이라 페이월이 처음 뜬다
-  | 'conversation_finished';
+  // 대화 피드백을 마치고 표현으로 넘어가는 자리 — 첫 시나리오의 무료 구간이 끝나는 곳
+  | 'conversation_finished'
+  // 총평에서 상세 피드백 보기를 눌렀는데 서버가 잠근 세션 — 두 번째 시나리오부터 페이월이 처음 뜨는 곳
+  | 'feedback_detail';
 // 결제가 실패한 갈래 — 환경 문제 셋과 셸이 회신한 실패. 셸의 문구는 message에 따로 싣는다
 export type PurchaseFailureReason =
   'browser' | 'outdated_shell' | 'no_response' | 'shell_error';
@@ -468,6 +469,8 @@ export type EventProps = {
   // 피드백 응답에는 scenario_id가 없다 — session_id로 서버에서 조인한다
   'Feedback Viewed': {
     session_id: number;
+    // 서버가 상세를 잠근 세션이면 true — 그때 good_count·turn_count는 0이라 잠금과 같이 읽어야 한다
+    detail_locked: boolean;
     good_count: number;
     turn_count: number;
     native_score?: number;
