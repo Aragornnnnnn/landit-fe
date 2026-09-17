@@ -120,6 +120,7 @@ describe('SubscriptionManageScreen', () => {
     );
     render(<SubscriptionManageScreen />);
 
+    expect(screen.getByText('무료 체험 중이에요')).toBeInTheDocument();
     expect(screen.getByText('이용 만료일')).toBeInTheDocument();
     expect(screen.getByText('2026년 10월 4일')).toBeInTheDocument();
     expect(screen.queryByText(/자동 갱신/)).not.toBeInTheDocument();

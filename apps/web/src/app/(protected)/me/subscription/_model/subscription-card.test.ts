@@ -23,6 +23,10 @@ describe('toCardTitle', () => {
     expect(toCardTitle(active())).toBe('프리미엄을 쓰고 있어요');
   });
 
+  it('프로모션으로 받은 기간은 무료 체험과 같은 제목을 쓴다 — 돈을 안 내고 쓰는 건 같다', () => {
+    expect(toCardTitle(active({ renews: false }))).toBe('무료 체험 중이에요');
+  });
+
   it('체험·해지 예정은 플랜을 알아도 상태만 말한다', () => {
     expect(toCardTitle(active({ kind: 'trial', plan: 'yearly' }))).toBe(
       '무료 체험 중이에요',

@@ -20,11 +20,17 @@ export interface CardRow {
   listPrice?: string;
 }
 
-// 구독 중이고 플랜을 알면 "월간 프리미엄"처럼 플랜을 앞에 붙인다
-export const toCardTitle = (summary: PaidSubscriptionSummary) =>
-  summary.kind === 'active' && summary.plan
+// 갱신이 없는데 프리미엄이면 무료로 받은 기간이다 — 우리 상품엔 선결제가 없어 대시보드 프로모션 부여뿐이다
+const isGranted = (summary: PaidSubscriptionSummary) =>
+  summary.kind === 'active' && !summary.renews;
+
+// 구독 중이고 플랜을 알면 "월간 프리미엄"처럼 플랜을 앞에 붙인다. 받은 기간은 체험과 같은 말로 부른다
+export const toCardTitle = (summary: PaidSubscriptionSummary) => {
+  if (isGranted(summary)) return STATUS_TITLE.trial;
+  return summary.kind === 'active' && summary.plan
     ? `${findPlan(summary.plan).title} ${STATUS_TITLE.active}`
     : STATUS_TITLE[summary.kind];
+};
 
 // 무엇의 날짜인지가 상태마다 다르다. 체험은 첫 결제, 구독은 다음 결제, 그날로 끝나면 만료
 export const toDateRow = (summary: PaidSubscriptionSummary): CardRow | null => {
