@@ -110,6 +110,27 @@ describe('SubscriptionManageScreen', () => {
     ).toBeInTheDocument();
   });
 
+  it('대시보드에서 부여한 무료 이용은 만료일만 말하고 스토어 해지 행이 없다 — 스토어에 해지할 구독이 없다', () => {
+    setSubscription(
+      premium({
+        periodType: 'PROMOTIONAL',
+        store: 'PROMOTIONAL',
+        productId: 'rc_promo_premium_monthly',
+      }),
+    );
+    render(<SubscriptionManageScreen />);
+
+    expect(screen.getByText('이용 만료일')).toBeInTheDocument();
+    expect(screen.getByText('2026년 10월 4일')).toBeInTheDocument();
+    expect(screen.queryByText(/자동 갱신/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /해지/ }),
+    ).not.toBeInTheDocument();
+    // 혜택과 결제 내역은 그대로 보인다
+    expect(screen.getByText('무제한 프리톡')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '결제 내역' })).toBeInTheDocument();
+  });
+
   it('결제 내역 행이 결제 내역 화면으로 잇고 계측을 남긴다', () => {
     render(<SubscriptionManageScreen />);
 
