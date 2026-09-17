@@ -12,6 +12,8 @@ const FREE_COLUMN = 'w-[52px]';
 const PREMIUM_COLUMN = 'w-[86px]';
 /** 줄 높이는 `tr`이 아니라 셀에 건다 — `tr`의 height는 내용 높이에 밀려 무시된다 */
 const ROW_HEIGHT = 'h-[30px] short:h-5';
+/** 머리글 두 칸을 배지 높이(18px) 상자에 담아 가운데 맞춘다 — 베이스라인에 맡기면 작은 "무료"가 위로 뜬다 */
+const HEADER_LABEL = 'flex h-[18px] items-center justify-center';
 
 /**
  * 기능 이름 왼쪽, 무료·프리미엄 두 열. 프리미엄 열만 연한 주황 기둥으로 띄운다.
@@ -32,14 +34,17 @@ export const BenefitComparison = () => (
         <thead>
           <tr>
             <th scope="col" className="h-9 short:h-[23px]" />
-            <th
-              scope="col"
-              className={`${FREE_COLUMN} text-center text-[13px] leading-none font-bold text-muted-foreground`}
-            >
-              무료
+            <th scope="col" className={FREE_COLUMN}>
+              <span
+                className={`${HEADER_LABEL} text-[13px] leading-none font-bold text-muted-foreground`}
+              >
+                무료
+              </span>
             </th>
-            <th scope="col" className={`${PREMIUM_COLUMN} text-center`}>
-              <PremiumPill size="sm" />
+            <th scope="col" className={PREMIUM_COLUMN}>
+              <span className={HEADER_LABEL}>
+                <PremiumPill size="sm" />
+              </span>
             </th>
           </tr>
         </thead>
@@ -52,12 +57,13 @@ export const BenefitComparison = () => (
               >
                 {text}
               </th>
+              {/* 세 마크 모두 align-middle — 기본 베이스라인 정렬이면 크기가 다른 체크끼리 줄이 어긋난다 */}
               <td className="text-center">
                 {free ? (
                   <CheckIcon
                     size={18}
                     strokeWidth={2.5}
-                    className="inline-block text-muted-foreground"
+                    className="inline-block align-middle text-muted-foreground"
                   />
                 ) : (
                   <span className="inline-block h-0.5 w-3 rounded-full bg-border align-middle" />
@@ -68,7 +74,7 @@ export const BenefitComparison = () => (
               </td>
               <td className="text-center">
                 <span
-                  className="animate-check-in inline-block"
+                  className="animate-check-in inline-block align-middle"
                   style={{ '--i': index } as CSSProperties}
                 >
                   <CheckIcon
