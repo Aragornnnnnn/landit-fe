@@ -17,7 +17,7 @@ import {
 } from '@/features/subscription/model/plans';
 import { useOfferings } from '@/features/subscription/model/useOfferings';
 import { usePurchase } from '@/features/subscription/model/usePurchase';
-import { BenefitList } from '@/features/subscription/ui/BenefitList';
+import { BenefitComparison } from '@/features/subscription/ui/BenefitComparison';
 import { track } from '@/shared/analytics';
 import { homePath } from '@/shared/lib/last-tab';
 import { Button } from '@/shared/ui/Button';
@@ -77,12 +77,12 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
         restoreDisabled={busy}
       />
 
-      <BenefitList />
+      <BenefitComparison />
 
       {/* 남는 높이는 여기로 — 큰 폰에선 숨을 쉬고 작은 폰에선 0이 된다 */}
       <div className="min-h-0 flex-1" />
 
-      <section className="flex gap-2.5 px-5 pt-[22px] short:pt-3">
+      <section className="flex gap-2.5 px-5 pt-[22px] short:pt-2">
         {PLAN_ORDER.map((id) => (
           <PlanCard
             key={id}

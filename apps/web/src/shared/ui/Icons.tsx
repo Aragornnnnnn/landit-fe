@@ -360,6 +360,27 @@ export const SparklesIcon = ({ size = 22, ...props }: IconProps) => (
   </svg>
 );
 
+export const ListChecksIcon = ({ size = 22, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="m3 17 2 2 4-4" />
+    <path d="m3 7 2 2 4-4" />
+    <path d="M13 6h8" />
+    <path d="M13 12h8" />
+    <path d="M13 18h8" />
+  </svg>
+);
+
 export const MessageSquareIcon = ({ size = 22, ...props }: IconProps) => (
   <svg
     width={size}
