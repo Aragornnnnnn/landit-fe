@@ -31,8 +31,7 @@ export const SurveyDone = ({ onGoHome }: { onGoHome: () => void }) => {
         </h1>
         <p className="mt-4 text-lg leading-snug font-bold break-keep text-muted-foreground">
           들려주신 이야기는
-          <br />
-          다음 랜딧을 만드는 데 쓸게요
+          <br />더 나은 랜딧을 만드는 데 쓸게요
         </p>
       </div>
 
