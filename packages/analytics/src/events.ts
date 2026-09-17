@@ -274,7 +274,7 @@ export type EventProps = {
     path: string;
     return_reason?: HomeReturnReason;
     scenario_id?: number;
-    // 스몰톡에서 갈라져 나온 화면들만 — 지난 스몰톡 기록과 거기서 만든 표현
+    // 세션이 주인인 화면들만 — 지난 스몰톡 기록과 거기서 만든 표현, 시나리오 대화 피드백
     session_id?: number;
     expression_id?: number;
     // 밖에서 들어온 유입(알림·위젯 탭)의 첫 화면에만 — 어느 경로로 들어왔든 붙는다. 딥링크 URL의 utm_campaign·utm_content에서
