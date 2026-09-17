@@ -41,6 +41,13 @@ export const FeedbackContent = ({
     setStep('detail');
   }
 
+  // 결제하고 돌아와 저절로 열린 상세도 클릭으로 연 것과 같이 남긴다 — 안 남기면 결제한 사람만 지표에서 빠진다
+  useEffect(() => {
+    if (!detailOpened) return;
+    track(EVENTS.FEEDBACK_DETAIL_OPENED, { session_id: feedback.sessionId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 한 번 열리면 되돌지 않는다
+  }, [detailOpened]);
+
   useEffect(() => {
     track(EVENTS.FEEDBACK_VIEWED, {
       session_id: feedback.sessionId,

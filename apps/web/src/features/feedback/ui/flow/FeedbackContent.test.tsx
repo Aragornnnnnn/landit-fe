@@ -148,8 +148,30 @@ describe('FeedbackContent', () => {
       />,
     );
 
-    // Then 그제야 상세로 들어간다 — 마운트 때 값으로 총평에 갇히지 않는다
+    // Then 그제야 상세로 들어가고, 클릭으로 연 것과 같이 계측에 남는다
     expect(screen.getByText('상세 화면')).toBeInTheDocument();
+    expect(mocks.track).toHaveBeenCalledWith('Feedback Detail Opened', {
+      session_id: 7,
+    });
+  });
+
+  it('총평에 머무는 동안에는 상세를 열었다고 남기지 않는다', () => {
+    // Given 결제하고 돌아왔지만 응답이 아직 잠겨 있을 때
+    render(
+      <FeedbackContent
+        feedback={feedback({ detailFeedbackLocked: true })}
+        title="카페"
+        openDetail
+        onExit={vi.fn()}
+        onDetailLocked={vi.fn()}
+      />,
+    );
+
+    // Then 상세를 연 적이 없으니 계측도 없다
+    expect(mocks.track).not.toHaveBeenCalledWith(
+      'Feedback Detail Opened',
+      expect.anything(),
+    );
   });
 
   it('돌아왔는데 끝내 잠겨 있으면(서버 반영 지연) 총평에 머문다', () => {

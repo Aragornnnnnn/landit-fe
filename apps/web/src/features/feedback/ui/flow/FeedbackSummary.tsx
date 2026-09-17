@@ -88,7 +88,16 @@ export const FeedbackSummary = ({
           className="mt-auto pt-8"
           style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
         >
-          <Button onClick={onDetail} loading={detailLocked && refreshing}>
+          <Button
+            onClick={onDetail}
+            loading={detailLocked && refreshing}
+            // 자물쇠는 장식이라 읽어 주지 않는다 — 잠겼다는 것과 어디로 가는지를 이름에 담는다
+            aria-label={
+              detailLocked
+                ? '상세 피드백 보기. 결제 화면으로 갑니다'
+                : undefined
+            }
+          >
             {detailLocked ? (
               <>
                 <LockIcon size={18} />
