@@ -12,6 +12,8 @@ interface SentenceListenBlockProps {
   // 음원이 없는 표현(발음 자산 미준비)은 스피커 없이 문장만 보여준다
   onPlay?: () => void;
   playing: boolean;
+  // 녹음 중 — 스피커 소리가 마이크로 들어가지 않게 듣기를 막는다 (설명 화면은 녹음이 없어 안 넘긴다)
+  disabled?: boolean;
   // 재생 진행률 0~1 — 글자가 순서대로 물든다
   progress: number;
 }
@@ -22,6 +24,7 @@ export const SentenceListenBlock = ({
   highlight,
   onPlay,
   playing,
+  disabled,
   progress,
 }: SentenceListenBlockProps) => (
   <div>
@@ -38,6 +41,7 @@ export const SentenceListenBlock = ({
         <ListenButton
           playing={playing}
           onClick={onPlay}
+          disabled={disabled}
           ariaLabel="예문 발음 듣기"
         />
       )}

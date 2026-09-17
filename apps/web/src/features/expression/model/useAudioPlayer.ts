@@ -2,6 +2,8 @@
 // 지금 뭐가 재생 중인지(playingId)를 노출해 듣기 버튼들이 같은 문법으로 상태를 그린다
 import { useEffect, useRef, useState } from 'react';
 
+import { getSpeechRate } from '@/shared/lib/speech-rate';
+
 /**
  * 오디오 재생 훅 — 전체 또는 ms 구간 재생. 새 재생이 이전 재생을 멈추고 재생은 한 번에 하나다.
  *
@@ -43,6 +45,7 @@ export const useAudioPlayer = () => {
     audioRef.current?.pause();
     cancelAnimationFrame(progressRafRef.current);
     const audio = new Audio(src);
+    audio.playbackRate = getSpeechRate();
     audioRef.current = audio;
     const id = options?.id ?? src;
 

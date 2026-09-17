@@ -34,6 +34,13 @@ export interface ConversationTurn {
   isUserOpening: boolean;
 }
 
+/** 다시 듣기 조작 — enabled는 지금 누를 수 있는 구간인지, playing은 지금 다시 듣는 중인지다 */
+export interface ReplayControl {
+  toggle: () => void;
+  playing: boolean;
+  enabled: boolean;
+}
+
 // 제출 결과의 다음 발화 — 분리 재생 소스(맞장구·고정 질문 음원)가 실려 오면 재생 훅에 그대로 전달된다
 export interface TurnNextMessage extends NextMessage, SpeechSource {}
 
@@ -104,6 +111,9 @@ export const useConversationTurns = ({
       nextConversationState(prev, event, completedRef.current),
     );
 
+  // 다시 듣기는 내 차례와 대화가 끝난 뒤에만 — 상대가 말할 때는 소리가 겹치고, 내가 말할 때는 녹음에 섞이고, 생각 중·속마음은 오버레이 뒤라 안 보인다
+  const replayAllowed = state.phase === 'USER_READY' || state.phase === 'DONE';
+
   // AI 발화 재생 — 끝나면 상태기계에 알린다 (오프닝 오디오·TTS 합성·타이머 폴백은 훅 안에)
   const aiSpeech = useAiSpeech({
     playing: state.phase === 'AI_SPEAKING' && currentMessage != null,
@@ -112,6 +122,7 @@ export const useConversationTurns = ({
     voice,
     openingSrc: openingAudioSrc,
     onSpeechEnd: () => send('AI_SPEAKING_DONE'),
+    replayAllowed,
   });
 
   // 유저 입력 — 마이크/키보드 전환과 STT 배선은 훅 안에, 여기서는 상태 전이와 제출만 잇는다
@@ -126,6 +137,25 @@ export const useConversationTurns = ({
     onContent: (content, inputType, utteranceDurationMs) =>
       void submitContent(content, inputType, utteranceDurationMs),
   });
+
+  // 방금 들은 상대 발화를 한 번 더(재생 중이면 멈춤) — 재생만 다시 할 뿐 턴은 그대로다. 멈추려고 누른 건 세지 않는다
+  const toggleReplay = () => {
+    if (aiSpeech.replay())
+      track(EVENTS.SPEECH_REPLAYED, {
+        session_id: sessionId ?? undefined,
+        turn_index: state.turnIndex,
+      });
+  };
+
+  // 다시 들을 소리가 없으면(음성 미배정 대화, 아직 상대 발화가 없는 선발화 안내) 버튼 자체를 두지 않는다
+  const replay: ReplayControl | undefined =
+    voice && currentMessage
+      ? {
+          toggle: toggleReplay,
+          playing: aiSpeech.replaying,
+          enabled: replayAllowed,
+        }
+      : undefined;
 
   // 다음 질문을 화면에 올리고 턴을 넘긴다 — 속마음 노출을 마쳤을 때와 건너뛸 때가 공유한다
   const startNextTurn = (
@@ -261,6 +291,7 @@ export const useConversationTurns = ({
     finishedThought,
     // 지금 소리 나는 발화 — 캐릭터가 입모양을 맞추는 데 쓴다 (음성이 없으면 null)
     speech: aiSpeech.speech,
+    replay,
     // 입력은 하위 훅 결과를 통째로 — 낱개 중계를 안 해야 input의 반환 형태에 flow가 결합하지 않는다
     input,
     abandon,

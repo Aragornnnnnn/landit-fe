@@ -1,4 +1,4 @@
-// QuestionCard — 해석 펼쳐보기의 기본 접힘·토글·질문 전환 계약을 검증한다
+// QuestionCard — 해석 펼쳐보기와 다시 듣기 버튼의 기본 접힘·토글·질문 전환 계약을 검증한다
 import {
   cleanup,
   fireEvent,
@@ -101,19 +101,87 @@ describe('QuestionCard', () => {
     expect(onTranslationToggled.mock.calls).toEqual([[true], [false]]);
   });
 
-  it('선발화 안내 카드에는 해석 자리를 두지 않는다', () => {
+  it('선발화 안내 카드에는 해석·다시 듣기 자리를 두지 않는다', () => {
+    // 선발화 안내는 상대 발화가 아니다 — 해석·다시 듣기를 줘도 카드가 자리를 내주지 않는다
     render(
       <QuestionCard
         question="먼저 인사를 건네보세요"
         translation="Say hello first"
         speaking={false}
         instruction
+        replay={{ toggle: vi.fn(), playing: false, enabled: true }}
       />,
     );
 
     expect(
       screen.queryByRole('button', { name: '해석 보기' }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: '다시 듣기' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('다시 듣기를 누르면 그 발화를 다시 재생한다', () => {
+    const toggle = vi.fn();
+    render(
+      <QuestionCard
+        question="How was your day?"
+        translation="오늘 하루 어땠어요?"
+        speaking={false}
+        replay={{ toggle, playing: false, enabled: true }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '다시 듣기' }));
+
+    expect(toggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('내 차례가 아니면 다시 듣기 버튼은 눌리지 않는다', () => {
+    // Given 상대 발화·내 녹음처럼 enabled가 꺼진 구간 — 버튼은 자리만 지킨다
+    const toggle = vi.fn();
+    render(
+      <QuestionCard
+        question="How was your day?"
+        translation="오늘 하루 어땠어요?"
+        speaking={false}
+        replay={{ toggle, playing: false, enabled: false }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '다시 듣기' }));
+
+    expect(toggle).not.toHaveBeenCalled();
+  });
+
+  it('다시 듣기가 없는 카드에는 버튼도 두지 않는다', () => {
+    render(
+      <QuestionCard
+        question="How was your day?"
+        translation="오늘 하루 어땠어요?"
+        speaking={false}
+      />,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: '다시 듣기' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('해석이 없는 발화도 다시 듣기는 누를 수 있다', () => {
+    const toggle = vi.fn();
+    render(
+      <QuestionCard
+        question="How was your day?"
+        translation={null}
+        speaking={false}
+        replay={{ toggle, playing: false, enabled: true }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '다시 듣기' }));
+
+    expect(toggle).toHaveBeenCalledTimes(1);
   });
 
   it('발화 중에는 아직 나오지 않은 글자 끝이 아니라 지금 말하는 줄로 스크롤한다', async () => {
