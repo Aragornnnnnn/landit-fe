@@ -12,6 +12,7 @@ import {
   type StorePlatform,
 } from '@/features/subscription/model/store-links';
 import {
+  canCancelAtStore,
   summarizeSubscription,
   type PaidSubscriptionSummary,
 } from '@/features/subscription/model/subscription-summary';
@@ -53,12 +54,12 @@ const STORE_ROW: Record<
   canceled: { action: 'resubscribe', title: '해지 취소하기' },
 };
 
-// 스토어에서 손댈 구독이 있는 상태만 — 갱신되는 구독과 해지 예약.
+// 스토어에서 손댈 구독이 있는 상태만 — 해지할 구독(판정은 해지 사유 화면과 공유)과 해지 예약.
 // 갱신이 없는 기간(대시보드 프로모션·선결제)은 스토어에 구독이 없어 보내면 빈 화면이 뜬다
-const toStoreRow = (summary: PaidSubscriptionSummary) =>
-  summary.renews || summary.kind === 'canceled'
-    ? STORE_ROW[summary.kind]
-    : null;
+const toStoreRow = (summary: PaidSubscriptionSummary) => {
+  if (summary.kind === 'canceled') return STORE_ROW.canceled;
+  return canCancelAtStore(summary) ? STORE_ROW[summary.kind] : null;
+};
 
 const CardRowItem = ({ row }: { row: CardRow }) => (
   <div className="flex justify-between gap-3">
@@ -86,6 +87,7 @@ const PaidSubscription = ({ summary, platform }: PaidSubscriptionProps) => {
     (row) => row !== null,
   );
   const storeRow = toStoreRow(summary);
+  const storeIcon = platform === 'ios' ? <AppStoreIcon /> : <GooglePlayIcon />;
 
   return (
     <>
@@ -123,14 +125,14 @@ const PaidSubscription = ({ summary, platform }: PaidSubscriptionProps) => {
           // 해지는 바로 스토어로 보내지 않는다 — 사유를 묻고 사유별 화면을 거친 뒤 그 안의 링크로 나간다
           <MenuLink
             href={SUBSCRIPTION_CANCEL_PATH}
-            icon={platform === 'ios' ? <AppStoreIcon /> : <GooglePlayIcon />}
+            icon={storeIcon}
             title={storeRow.title}
           />
         )}
         {storeRow?.action === 'resubscribe' && (
           <MenuLink
             href={store.manageUrl}
-            icon={platform === 'ios' ? <AppStoreIcon /> : <GooglePlayIcon />}
+            icon={storeIcon}
             title={storeRow.title}
             onClick={() =>
               track(EVENTS.STORE_SUBSCRIPTION_TAPPED, {
