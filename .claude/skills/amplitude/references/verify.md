@@ -14,8 +14,10 @@
 
    ```bash
    git fetch -q origin develop
-   git show origin/develop:packages/analytics/src/events.ts | grep -E "^\s*'[A-Z][^']+':\s*(\{|undefined)" | sed -E "s/^\s*'([^']+)'.*/\1/"
+   git show origin/develop:packages/analytics/src/events.ts | grep -E "^[[:space:]]*[A-Z][A-Z0-9_]*:[[:space:]]*'[^']+'" | sed -E "s/^[[:space:]]*[A-Z][A-Z0-9_]*:[[:space:]]*'([^']+)'.*/\1/"
    ```
+
+   `EVENTS` 상수(식별자: 문자열)에서 뽑는다. `EventProps` 키로 뽑으면 `ExpressionSource & {…}`처럼 타입 별칭으로 시작하는 이벤트 5개가 빠진다. 정규식은 `[[:space:]]`로 쓴다 — macOS sed는 `\s`를 모른다.
 
    속성 계약은 같은 파일의 그 이벤트 줄과 `docs/analytics.md` 표에 있다.
 
