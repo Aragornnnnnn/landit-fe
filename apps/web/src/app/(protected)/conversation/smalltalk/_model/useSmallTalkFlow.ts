@@ -19,7 +19,7 @@ import {
   type SmallTalkSessionStartResponse,
 } from '@/features/small-talk/api/small-talk';
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
-import { POSE_IMAGE_SOURCES } from '@/features/small-talk/model/randi-pose';
+import { SUMMARY_IMAGE_SOURCES } from '@/features/small-talk/model/randi-pose';
 import { prefetchSmallTalkSummary } from '@/features/small-talk/model/useSmallTalkSummaryQuery';
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
 import { track } from '@/shared/analytics';
@@ -163,7 +163,7 @@ export const useSmallTalkFlow = ({
         markTalkCompleted('smalltalk');
         // 다음 화면(오늘의 스몰톡)이 작별 인사 동안 준비되게 — 요약과 래디 그림을 미리 받는다
         void prefetchSmallTalkSummary(queryClient, userId, session.sessionId);
-        for (const src of POSE_IMAGE_SOURCES) preload(src, { as: 'image' });
+        for (const src of SUMMARY_IMAGE_SOURCES) preload(src, { as: 'image' });
       }
 
       return {

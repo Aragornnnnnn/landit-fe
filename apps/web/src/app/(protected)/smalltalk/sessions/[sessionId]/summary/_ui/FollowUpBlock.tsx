@@ -1,5 +1,6 @@
 // 다음 스몰톡에서 — 장기기억으로 만든 후속 질문. 여기서 던진 질문을 다음 대화의 첫 마디에서 상대가 실제로 꺼낸다
 import type { SmallTalkSummaryFollowUp } from '@/features/small-talk/api/small-talk';
+import { FOLLOW_UP_IMAGE } from '@/features/small-talk/model/randi-pose';
 
 export const FollowUpBlock = ({
   followUp,
@@ -11,7 +12,7 @@ export const FollowUpBlock = ({
     <div className="mt-2 flex items-end gap-2">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/images/character/landy-peek.webp"
+        src={FOLLOW_UP_IMAGE}
         alt=""
         className="shrink-0 object-contain"
         // 원본 282×480 비율. 스켈레톤 자리에 뒤늦게 서는 블록이라 그림이 오기 전에도 폭을 잡아 둔다
