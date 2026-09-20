@@ -1,4 +1,5 @@
 // 대화 보기 — 조회 중엔 스켈레톤이 서고, 내 말풍선 아래엔 교정 카드와 배운 표현 태그가 조건에 따라 붙는다
+import { EVENTS } from '@landit/analytics';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -18,6 +19,8 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/features/small-talk/model/useSmallTalkSessionQuery', () => ({
   useSmallTalkSessionQuery: vi.fn(),
 }));
+const track = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/analytics', () => ({ track }));
 
 const sessionQuery = vi.mocked(useSmallTalkSessionQuery);
 
@@ -433,4 +436,30 @@ describe('SmallTalkTranscript 종료 흐름', () => {
       screen.queryByRole('button', { name: /표현 배우러 가기/ }),
     ).not.toBeInTheDocument();
   });
+});
+
+describe('SmallTalkTranscript 계측', () => {
+  it.each([
+    ['종료 흐름에서 왔으면', true, 'summary'],
+    ['기록에서 열었으면', false, 'history'],
+  ])(
+    '%s 그 길과 교정 개수를 노출에 남긴다',
+    (_, continueToLearning, source) => {
+      renderTranscript(
+        [
+          messageOf({
+            correctionStatus: 'COMPLETED',
+            correction: correctionOf('Better.'),
+          }),
+        ],
+        { continueToLearning },
+      );
+
+      expect(track).toHaveBeenCalledWith(EVENTS.SMALL_TALK_FEEDBACK_VIEWED, {
+        session_id: 7,
+        source,
+        correction_count: 1,
+      });
+    },
+  );
 });

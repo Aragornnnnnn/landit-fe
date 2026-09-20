@@ -1,4 +1,5 @@
 // 오늘의 스몰톡 — 말풍선·비교 카드는 늘 있고 첫 스몰톡이면 건너뛸 길이 없다. 조건 블록 셋은 상태에 따라 카드·스켈레톤·없음으로 갈린다
+import { EVENTS } from '@landit/analytics';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -15,6 +16,8 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/features/small-talk/model/useSmallTalkSummaryQuery', () => ({
   useSmallTalkSummaryQuery: vi.fn(),
 }));
+const track = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/analytics', () => ({ track }));
 
 const summaryQuery = vi.mocked(useSmallTalkSummaryQuery);
 
@@ -395,5 +398,60 @@ describe('SmallTalkSummary 다음 스몰톡에서', () => {
     });
 
     expect(screen.queryByText('다음 스몰톡에서')).not.toBeInTheDocument();
+  });
+});
+
+describe('SmallTalkSummary 계측', () => {
+  it('요약이 그려지면 어떤 블록이 섰는지와 함께 노출을 한 번 남긴다', () => {
+    renderSummary({
+      ...summaryOf(),
+      growth,
+      reusedExpressions: {
+        pending: false,
+        items: [reusedItem(1, 'grab a coffee')],
+      },
+    });
+
+    expect(track).toHaveBeenCalledWith(EVENTS.SMALL_TALK_SUMMARY_VIEWED, {
+      session_id: 7,
+      first_session: false,
+      has_growth: true,
+      reused_expression_count: 1,
+      follow_up_trigger: 'NONE',
+      correction_count: 3,
+    });
+    expect(
+      track.mock.calls.filter(
+        ([name]) => name === EVENTS.SMALL_TALK_SUMMARY_VIEWED,
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('상세 피드백 보러가기를 누르면 교정 개수와 함께 남긴다', async () => {
+    renderSummary(summaryOf());
+
+    await userEvent.click(
+      screen.getByRole('button', { name: '상세 피드백 보러가기' }),
+    );
+
+    expect(track).toHaveBeenCalledWith(EVENTS.SMALL_TALK_FEEDBACK_OPENED, {
+      session_id: 7,
+      correction_count: 3,
+    });
+  });
+
+  it.each([
+    ['닫기', 'close'],
+    ['다음에 볼게요', 'skip_link'],
+  ])('%s로 건너뛰면 어느 길이었는지 남긴다', async (name, trigger) => {
+    renderSummary(summaryOf());
+
+    await userEvent.click(screen.getByRole('button', { name }));
+
+    expect(track).toHaveBeenCalledWith(EVENTS.SMALL_TALK_FEEDBACK_SKIPPED, {
+      session_id: 7,
+      trigger,
+      correction_count: 3,
+    });
   });
 });

@@ -507,10 +507,11 @@ export type EventProps = {
     session_id: number;
     correction_count: number;
   };
-  // 상세 피드백을 건너뛰고 표현 학습으로 — 닫기(X)인지 「다음에 볼게요」인지
+  // 상세 피드백을 건너뛰고 표현 학습으로 — 닫기(X)인지, 요약을 못 받아 나간 것인지.
+  // 못 받은 채 나갔으면 교정 개수도 모른다
   'Small Talk Feedback Skipped': {
     session_id: number;
-    trigger: 'close' | 'skip_link';
+    trigger: 'close' | 'unavailable';
     correction_count: number | null;
   };
   // 대화 보기(교정 카드)가 그려짐 — 요약에서 왔는지 기록에서 왔는지

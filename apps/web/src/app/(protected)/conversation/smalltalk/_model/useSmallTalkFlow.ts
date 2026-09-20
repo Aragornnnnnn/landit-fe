@@ -6,6 +6,7 @@
 import { useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
+import { preload } from 'react-dom';
 
 import type { Partner } from '@/features/conversation/model/character-look';
 import { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
@@ -18,6 +19,8 @@ import {
   type SmallTalkSessionStartResponse,
 } from '@/features/small-talk/api/small-talk';
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
+import { POSE_IMAGE_SOURCES } from '@/features/small-talk/model/randi-pose';
+import { prefetchSmallTalkSummary } from '@/features/small-talk/model/useSmallTalkSummaryQuery';
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
@@ -158,6 +161,9 @@ export const useSmallTalkFlow = ({
         // 축하 화면이 열자마자 새 숫자를 그리도록 미리 받아 둔다 (시나리오 대화와 같은 처리)
         refreshStreakAfterCompletion(queryClient);
         markTalkCompleted('smalltalk');
+        // 다음 화면(오늘의 스몰톡)이 작별 인사 동안 준비되게 — 요약과 래디 그림을 미리 받는다
+        void prefetchSmallTalkSummary(queryClient, userId, session.sessionId);
+        for (const src of POSE_IMAGE_SOURCES) preload(src, { as: 'image' });
       }
 
       return {
