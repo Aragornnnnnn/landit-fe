@@ -122,6 +122,20 @@ describe('SmallTalkSummary', () => {
     );
   });
 
+  it('연타해도 떠나는 길은 한 번만 기록된다', async () => {
+    renderSummary(summaryOf());
+    const cta = screen.getByRole('button', { name: '상세 피드백 보러갈게요' });
+
+    await userEvent.click(cta);
+    await userEvent.click(cta);
+
+    expect(
+      track.mock.calls.filter(
+        ([name]) => name === EVENTS.SMALL_TALK_FEEDBACK_OPENED,
+      ),
+    ).toHaveLength(1);
+  });
+
   it('닫기를 누르면 상세 피드백을 건너뛰고 축하를 켠 표현 화면으로 간다', async () => {
     renderSummary(summaryOf());
 

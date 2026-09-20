@@ -4,7 +4,7 @@
 // 래디 말풍선과 지난번과 비교 카드는 늘 서고, 그 아래 조건 블록(실수 기억·배운 표현 재사용·다음 스몰톡에서)이
 // 있을 때만 쌓인다 — 어느 블록을 어떻게 그릴지는 summary-blocks가 정한다.
 // 여기서 나가는 길은 둘 — 상세 피드백(대화 보기)을 거쳐 표현 학습으로, 또는 바로 표현 학습으로
-import { useEffect, useEffectEvent } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
@@ -59,24 +59,34 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
     if (shown) trackViewed();
   }, [shown, sessionId]);
 
+  // 이 화면을 떠나는 길은 한 번만 간다 — 다음 화면이 뜨기 전에 또 누르면 지표가 두 번 쌓인다.
+  // 떠나기 시작하면 두 출구를 다 잠근다 (마이페이지 탈퇴 시트와 같은 처리)
+  const [leaving, setLeaving] = useState(false);
+  const leaveOnce = (to: string, record: () => void) => {
+    if (leaving) return;
+    setLeaving(true);
+    record();
+    router.replace(to);
+  };
+
   // 상세 피드백을 건너뛰고 표현 학습으로 — 닫기(X)와 요약을 못 받았을 때의 출구가 여기로 간다.
   // 요약을 못 받은 채 나갈 수 있어 교정 개수는 null일 수 있다
-  const skipDetail = (trigger: 'close' | 'unavailable') => {
-    track(EVENTS.SMALL_TALK_FEEDBACK_SKIPPED, {
-      session_id: sessionId,
-      trigger,
-      correction_count: summary?.correctionCount ?? null,
-    });
-    router.replace(sessionExpressionBranchPath(sessionId, { celebrate: true }));
-  };
+  const skipDetail = (trigger: 'close' | 'unavailable') =>
+    leaveOnce(sessionExpressionBranchPath(sessionId, { celebrate: true }), () =>
+      track(EVENTS.SMALL_TALK_FEEDBACK_SKIPPED, {
+        session_id: sessionId,
+        trigger,
+        correction_count: summary?.correctionCount ?? null,
+      }),
+    );
   // 상세 피드백(대화 보기)으로 — 그 화면이 표현 학습으로 이어 준다. 요약이 선 뒤에만 누를 수 있다
-  const openDetail = (shownSummary: SmallTalkSummaryResponse) => {
-    track(EVENTS.SMALL_TALK_FEEDBACK_OPENED, {
-      session_id: sessionId,
-      correction_count: shownSummary.correctionCount,
-    });
-    router.replace(smallTalkTranscriptPath(sessionId, { next: 'learning' }));
-  };
+  const openDetail = (shownSummary: SmallTalkSummaryResponse) =>
+    leaveOnce(smallTalkTranscriptPath(sessionId, { next: 'learning' }), () =>
+      track(EVENTS.SMALL_TALK_FEEDBACK_OPENED, {
+        session_id: sessionId,
+        correction_count: shownSummary.correctionCount,
+      }),
+    );
 
   return (
     <main
@@ -86,6 +96,7 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
       <header className="relative flex h-14 flex-none items-center justify-center">
         <button
           onClick={() => skipDetail('close')}
+          disabled={leaving}
           className="absolute left-3 flex size-10 items-center justify-center text-foreground"
           aria-label="닫기"
         >
@@ -113,7 +124,7 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
           {/* 나가는 길은 이 버튼 하나 — 건너뛰는 링크를 따로 두지 않는다.
               상세 피드백을 보고 나면 그 화면이 표현 학습으로 이어 준다 */}
           <footer className="flex-none px-5 pt-3 pb-[max(env(safe-area-inset-bottom),16px)]">
-            <Button onClick={() => openDetail(summary)}>
+            <Button onClick={() => openDetail(summary)} disabled={leaving}>
               상세 피드백 보러갈게요
             </Button>
           </footer>
