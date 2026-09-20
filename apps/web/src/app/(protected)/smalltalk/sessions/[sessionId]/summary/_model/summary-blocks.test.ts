@@ -107,6 +107,25 @@ describe('toSummaryBlocks — 배운 표현 재사용', () => {
   });
 });
 
+describe('toSummaryBlocks — 상한이 지나도', () => {
+  it('이미 온 블록은 그리고 아직인 블록만 숨긴다', () => {
+    const summary = summaryOf({
+      reusedExpressions: { pending: false, items: [item] },
+      followUp: {
+        pending: true,
+        triggerType: 'NONE',
+        question: '',
+        invite: '',
+      },
+    });
+
+    const blocks = toSummaryBlocks(summary, true);
+
+    expect(blocks.reusedExpressions).toEqual({ kind: 'ready', data: [item] });
+    expect(blocks.followUp).toEqual({ kind: 'hidden' });
+  });
+});
+
 describe('toSummaryBlocks — 다음 스몰톡에서', () => {
   it('아직 만드는 중이면 스켈레톤이다', () => {
     const summary = summaryOf({

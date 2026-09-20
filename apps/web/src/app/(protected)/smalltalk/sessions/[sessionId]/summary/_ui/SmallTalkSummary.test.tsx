@@ -279,6 +279,21 @@ describe('SmallTalkSummary 배운 표현 재사용', () => {
     expect(screen.getByText('grab a coffee의 뜻')).toBeInTheDocument();
   });
 
+  it('딱 2개면 다 펼치고 더 보기가 없다', () => {
+    renderSummary({
+      ...summaryOf(),
+      reusedExpressions: {
+        pending: false,
+        items: [reusedItem(1, 'grab a coffee'), reusedItem(2, 'be down for')],
+      },
+    });
+
+    expect(screen.getByText('be down for')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /더 보기/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it('3개 이상이면 2개만 펼치고, 더 보기를 누르면 그 자리에서 나머지가 펼쳐진다', async () => {
     renderSummary({
       ...summaryOf(),
