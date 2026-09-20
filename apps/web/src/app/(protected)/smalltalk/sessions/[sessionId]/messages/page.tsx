@@ -1,4 +1,4 @@
-// 그날 주고받은 말 다시 보기 — 상세와 같은 응답을 쓰므로 새로 받아오지 않는다
+// 그날 주고받은 말 다시 보기 — 상세와 같은 응답(캐시)을 이어 쓰되, 교정이 준비될 때까지는 다시 묻는다
 import { use } from 'react';
 import { notFound } from 'next/navigation';
 
