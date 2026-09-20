@@ -19,7 +19,7 @@ description: landit 앰플리튜드(제품 분석) 작업 — 계측 검증(이�
 
 - 조직 `twilight-wind-527959`(id 449674), 플랜 `starter_v4`(무료).
 - 프로젝트 — **production `841657`**, **develop `841482`**. 로컬·프리뷰·develop 배포는 dev 키를 쓰므로 배포 전 검증은 develop, 실사용자 수치는 production이다.
-- 계약 정본은 레포다. `packages/analytics/src/events.ts`(이벤트·속성 타입), `docs/analytics.md`(이벤트 표·유저 속성·시점), `docs/analytics-utm.md`(유입 딱지 어휘). **항상 `origin/develop` 기준으로 읽는다** — `git fetch -q origin develop && git show origin/develop:docs/analytics.md`. 작업 브랜치의 사본은 낡아 있을 수 있다(결제 이벤트가 없는 브랜치에서 결제 지표를 찾은 적이 있다).
+- 계약 정본은 레포다. `packages/analytics/src/events.ts`(이벤트·속성 타입), `docs/analytics.md`(이벤트 표·유저 속성·시점), `docs/analytics-utm.md`(유입 딱지 어휘). **작업 브랜치의 사본이 아니라 원격 ref로 읽는다** — 지표 설계·develop 검증은 `origin/develop`, production 검증은 배포된 `origin/main`. `git fetch -q origin develop main && git show origin/develop:docs/analytics.md`. 작업 브랜치의 사본은 낡아 있을 수 있다(결제 이벤트가 없는 브랜치에서 결제 지표를 찾은 적이 있다).
 - 이벤트·속성 이름은 절대 추측하지 않는다. 계약 파일이나 `get_amp_taxonomy`로 철자를 확인한 뒤 쓴다. 틀린 이름은 에러가 아니라 빈 차트로 돌아온다.
 
 ## 표준 조건

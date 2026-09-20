@@ -13,9 +13,12 @@
 1. **대상 이벤트를 계약에서 뽑는다.** 이번 이슈가 더하거나 바꾼 이벤트만. 전체 목록이 필요하면 아래로.
 
    ```bash
-   git fetch -q origin develop
-   git show origin/develop:packages/analytics/src/events.ts | grep -E "^[[:space:]]*[A-Z][A-Z0-9_]*:[[:space:]]*'[^']+'" | sed -E "s/^[[:space:]]*[A-Z][A-Z0-9_]*:[[:space:]]*'([^']+)'.*/\1/"
+   REF=origin/develop   # develop 프로젝트 검증. production 프로젝트를 볼 때는 origin/main(배포된 커밋)
+   git fetch -q origin develop main
+   git show "$REF:packages/analytics/src/events.ts" | grep -E "^[[:space:]]*[A-Z][A-Z0-9_]*:[[:space:]]*'[^']+'" | sed -E "s/^[[:space:]]*[A-Z][A-Z0-9_]*:[[:space:]]*'([^']+)'.*/\1/"
    ```
+
+   계약을 읽는 ref는 대상 프로젝트에 맞춘다. develop 프로젝트는 `origin/develop`, production 프로젝트는 `origin/main`. develop이 출시보다 앞서 있으면 아직 안 나간 이벤트가 목록에 섞여 `firstSeen` 없음을 계측 누락으로 오판한다.
 
    `EVENTS` 상수(식별자: 문자열)에서 뽑는다. `EventProps` 키로 뽑으면 `ExpressionSource & {…}`처럼 타입 별칭으로 시작하는 이벤트 5개가 빠진다. 정규식은 `[[:space:]]`로 쓴다 — macOS sed는 `\s`를 모른다.
 
