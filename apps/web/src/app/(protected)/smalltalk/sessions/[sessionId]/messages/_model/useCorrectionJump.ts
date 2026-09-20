@@ -29,10 +29,10 @@ export const useCorrectionJump = (messages: SmallTalkHistoryMessage[]) => {
     if (cursorId !== null) scrollToMessage(cursorId);
   }, [cursorId]);
 
-  const nextId =
-    cursorId === null
-      ? undefined
-      : correctedIds[correctedIds.indexOf(cursorId) + 1];
+  // 서 있던 교정이 목록에서 사라졌으면(재조회로 내용이 바뀐 경우) 다음 자리를 셀 기준이 없다 —
+  // indexOf가 -1이라 첫 교정으로 되돌아가 버리므로 그때는 칩을 접는다
+  const cursorAt = cursorId === null ? -1 : correctedIds.indexOf(cursorId);
+  const nextId = cursorAt < 0 ? undefined : correctedIds[cursorAt + 1];
 
   return {
     // 아직 안 간 교정이 남았는가 — 칩은 이때만 선다
