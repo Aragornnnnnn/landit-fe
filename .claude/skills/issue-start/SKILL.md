@@ -58,8 +58,11 @@ cp ~/Developer/landit-fe/apps/web/.env.local apps/web/.env.local
 같은 영역을 전에 건드렸으면 결정이 메모리에 있다. 특히 **"재론 금지"**로 표시된 결정은 다시 열지 않는다. 사용자가 이미 정한 것이다.
 
 ```bash
-grep -i "키워드" ~/.claude/projects/-Users-junseo-Developer-landit-fe/memory/MEMORY.md
+ROOT=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")   # 워크트리여도 메인 체크아웃 경로
+grep -i "키워드" ~/.claude/projects/$(echo "$ROOT" | tr '/' '-')/memory/MEMORY.md
 ```
+
+메모리 폴더 이름은 메인 체크아웃 경로의 `/`를 `-`로 바꾼 것이다. 워크트리에서는 경로가 다르므로 공통 git 디렉토리에서 메인 경로를 구한다.
 
 키워드는 이슈의 영역 이름(페이월, 발음, 위젯, 스트릭 …)과 파일 이름. 걸린 메모리 파일을 열어 "How to apply"와 잔여 항목을 읽는다. 지난 이슈의 "잔여"가 이번 이슈일 때가 많다.
 
