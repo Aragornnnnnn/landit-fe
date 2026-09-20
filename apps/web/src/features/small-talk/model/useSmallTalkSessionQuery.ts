@@ -51,7 +51,7 @@ export const useSmallTalkSessionQuery = (
   const revivalTriedRef = useRef(false);
   const [revivalSettled, setRevivalSettled] = useState(false);
 
-  const { data, error, isPending, refetch } = useQuery({
+  const { data, error, isFetching, refetch } = useQuery({
     queryKey,
     queryFn: () => getSmallTalkSession(sessionId),
     // 아직 만드는 중이면 1초 뒤 다시 조회한다.
@@ -84,10 +84,14 @@ export const useSmallTalkSessionQuery = (
       .finally(() => setRevivalSettled(true));
   }, [failed, sessionId, refetch]);
 
+  // 이미 받아 둔 대화가 있으면 실패를 화면에 올리지 않는다 — 폴링 한 번 끊겼다고 읽던 대화가 사라지면 안 된다.
+  // 받아 둔 게 없어도 다시 받아오는 중이면 기다리는 화면을 보여준다
+  const settledError = data || isFetching ? null : error;
+
   return {
     session: data ?? null,
-    error,
-    isLoading: isPending,
+    error: settledError,
+    isLoading: !data && settledError === null,
     // 더 기다려도 소용없는 상태 — 다시 걸어 봐도 실패했거나, 상한까지 기다렸는데도 표현이 안 끝났거나.
     // 붙잡아 두지 않고 "나중에 만들어 둘게요"로 보낸다 — 만들어지면 기록에 남는다.
     // 표현은 준비됐는데 교정만 늦은 경우는 여기 안 든다 — 표현을 이미 편 화면을 뒤집을 이유가 없다

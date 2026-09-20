@@ -155,6 +155,31 @@ describe('useSmallTalkSessionQuery', () => {
     });
   });
 
+  it('폴링이 한 번 실패해도 이미 받아 둔 대화는 사라지지 않는다', async () => {
+    // Given 대화는 받아 뒀고, 그 뒤 폴링 한 번이 끊긴 상황
+    getSmallTalkSession.mockResolvedValueOnce(sessionOf('PREPARING'));
+    getSmallTalkSession.mockRejectedValue(new Error('네트워크가 끊겼어요'));
+    const { result } = renderSession();
+    await waitFor(() => expect(result.current.session).not.toBeNull());
+
+    // When 다음 폴링이 실패하면
+    await waitFor(() =>
+      expect(getSmallTalkSession.mock.calls.length).toBeGreaterThan(1),
+    );
+
+    // Then 읽고 있던 대화는 그대로 있고 실패는 화면에 올라가지 않는다
+    expect(result.current.session).not.toBeNull();
+    expect(result.current.error).toBeNull();
+  });
+
+  it('받아 둔 것 없이 실패하면 그때는 실패를 알린다', async () => {
+    getSmallTalkSession.mockRejectedValue(new Error('불러오지 못했어요'));
+    const { result } = renderSession();
+
+    await waitFor(() => expect(result.current.error).not.toBeNull());
+    expect(result.current.isLoading).toBe(false);
+  });
+
   it('준비가 끝나면 그만 묻는다', async () => {
     getSmallTalkSession.mockResolvedValue(sessionOf('READY'));
     const { result } = renderSession();
