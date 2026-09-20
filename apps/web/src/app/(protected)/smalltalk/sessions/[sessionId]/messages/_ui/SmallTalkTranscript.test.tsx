@@ -306,6 +306,57 @@ describe('SmallTalkTranscript 교정 사이 이동', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('교정이 뒤늦게 도착하면 읽던 자리를 뺏지 않고 칩으로만 알린다', () => {
+    // 종료 흐름에서는 교정이 PREPARING으로 시작해 폴링으로 온다 —
+    // 그때 화면을 끌면 위에서부터 읽고 있던 사람의 자리를 뺏는다
+    const preparing = twoCorrections().map((message) =>
+      message.role === 'USER'
+        ? {
+            ...message,
+            correctionStatus: 'PREPARING' as const,
+            correction: null,
+          }
+        : message,
+    );
+    const { rerender } = renderTranscript(preparing);
+    expect(scrollIntoView).not.toHaveBeenCalled();
+
+    sessionQuery.mockReturnValue({
+      ...sessionQuery.mock.results[0]!.value,
+      session: sessionOf(twoCorrections()),
+    });
+    rerender(<SmallTalkTranscript sessionId={7} continueToLearning={false} />);
+
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('button', { name: /다음 자연스러운 말/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('뒤늦게 온 교정도 칩을 누르면 첫 교정부터 데려간다', async () => {
+    const preparing = twoCorrections().map((message) =>
+      message.role === 'USER'
+        ? {
+            ...message,
+            correctionStatus: 'PREPARING' as const,
+            correction: null,
+          }
+        : message,
+    );
+    const { rerender } = renderTranscript(preparing);
+    sessionQuery.mockReturnValue({
+      ...sessionQuery.mock.results[0]!.value,
+      session: sessionOf(twoCorrections()),
+    });
+    rerender(<SmallTalkTranscript sessionId={7} continueToLearning={false} />);
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /다음 자연스러운 말/ }),
+    );
+
+    expect(scrolledTo('I went to the gym.')).toBe(true);
+  });
+
   it('폴링으로 응답이 갱신돼도 첫 교정으로 다시 가지 않는다', () => {
     const { rerender } = renderTranscript(twoCorrections());
 
