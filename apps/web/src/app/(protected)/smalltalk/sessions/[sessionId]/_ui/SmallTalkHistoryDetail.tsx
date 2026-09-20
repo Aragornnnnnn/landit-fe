@@ -39,6 +39,9 @@ export const SmallTalkHistoryDetail = ({
   const expressions = session
     ? toExpressionListItems(session.expressions)
     : null;
+  // 더 자연스러운 말이 하나라도 있는가 — 대화 보기 아이콘의 뱃지와 읽어 주는 이름이 같이 본다
+  const correctionCount = session?.correctionCount ?? 0;
+  const hasCorrections = correctionCount > 0;
 
   const goExpression = (expressionId: number) => {
     track(EVENTS.EXPRESSION_SELECTED, {
@@ -68,14 +71,27 @@ export const SmallTalkHistoryDetail = ({
         <h1 className="truncate px-14 text-[17px] font-bold text-foreground">
           {session ? toSessionTitle(session.title, session.completedAt) : ''}
         </h1>
-        {/* 그날 나눈 말은 세로 공간을 먹지 않게 헤더에 둔다 — 표현 다섯 개가 스크롤 없이 서야 한다 */}
+        {/* 그날 나눈 말은 세로 공간을 먹지 않게 헤더에 둔다 — 표현 다섯 개가 스크롤 없이 서야 한다.
+            더 자연스러운 말이 있으면 그 개수를 뱃지로 달아 대화 보기에 볼 것이 있음을 알린다 */}
         {session && session.messages.length > 0 && (
           <button
             onClick={() => router.push(smallTalkTranscriptPath(sessionId))}
             className="absolute right-3 flex size-10 items-center justify-center text-foreground active:opacity-60"
-            aria-label="대화 다시 보기"
+            aria-label={
+              hasCorrections
+                ? `대화 다시 보기, 더 자연스러운 말 ${correctionCount}개`
+                : '대화 다시 보기'
+            }
           >
             <ChatHistoryIcon size={22} />
+            {hasCorrections && (
+              <span
+                aria-hidden="true"
+                className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] leading-none font-bold text-white"
+              >
+                {correctionCount}
+              </span>
+            )}
           </button>
         )}
       </header>
