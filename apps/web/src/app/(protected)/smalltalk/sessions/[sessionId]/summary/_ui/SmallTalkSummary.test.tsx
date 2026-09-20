@@ -402,6 +402,30 @@ describe('SmallTalkSummary 다음 스몰톡에서', () => {
 });
 
 describe('SmallTalkSummary 계측', () => {
+  it('블록이 아직 만들어지는 중이면 0건이 아니라 아직이라고 남긴다', () => {
+    // 요약을 대화 끝에 미리 받아 둬서, 잡이 늦으면 이 상태로 화면이 선다.
+    // 여기서 pending을 안 실으면 지표가 "재사용 표현 0건"으로 굳는다
+    renderSummary({
+      ...summaryOf(),
+      reusedExpressions: { pending: true, items: [] },
+      followUp: {
+        pending: true,
+        triggerType: 'NONE',
+        question: '',
+        invite: '',
+      },
+    });
+
+    expect(track).toHaveBeenCalledWith(
+      EVENTS.SMALL_TALK_SUMMARY_VIEWED,
+      expect.objectContaining({
+        reused_expression_count: 0,
+        reused_expressions_pending: true,
+        follow_up_pending: true,
+      }),
+    );
+  });
+
   it('요약이 그려지면 어떤 블록이 섰는지와 함께 노출을 한 번 남긴다', () => {
     renderSummary({
       ...summaryOf(),
@@ -417,7 +441,9 @@ describe('SmallTalkSummary 계측', () => {
       first_session: false,
       has_growth: true,
       reused_expression_count: 1,
+      reused_expressions_pending: false,
       follow_up_trigger: 'NONE',
+      follow_up_pending: false,
       correction_count: 3,
     });
     expect(

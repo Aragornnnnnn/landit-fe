@@ -37,8 +37,10 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
   // 총평은 이 세션의 교정이 다 끝나야 계산된다 — 보통 수 초지만, 상한까지 안 오면 붙잡아 두지 않는다
   const summaryStuck = summary !== null && summary.pending && waitExpired;
 
-  // 요약이 실제로 그려진 순간을 노출로 기록한다 — 어떤 블록이 섰는지가 함께 실린다.
-  // 이벤트로 감싸 폴링으로 요약이 갱신돼도 다시 찍지 않는다. 처음 선 그 순간이 노출이다
+  // 요약이 실제로 그려진 순간을 노출로 기록한다 — 그 순간 어떤 블록이 서 있었는지가 함께 실린다.
+  // 이벤트로 감싸 폴링으로 요약이 갱신돼도 다시 찍지 않는다. 처음 선 그 순간이 노출이다.
+  // 미리 받아 둔 요약으로 화면이 바로 서는 경우가 많아 표현·후속 질문은 아직 없을 때가 잦다 —
+  // 그 "아직 없음"을 0건으로 세지 않도록 pending을 같이 싣는다
   const shown = summary !== null;
   const trackViewed = useEffectEvent(() => {
     if (!summary) return;
@@ -47,7 +49,9 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
       first_session: summary.firstSession,
       has_growth: summary.growth !== null,
       reused_expression_count: summary.reusedExpressions.items.length,
+      reused_expressions_pending: summary.reusedExpressions.pending,
       follow_up_trigger: summary.followUp.triggerType,
+      follow_up_pending: summary.followUp.pending,
       correction_count: summary.correctionCount,
     });
   });

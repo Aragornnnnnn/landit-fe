@@ -492,14 +492,18 @@ export type EventProps = {
     partner: TalkPartner;
     turn_index: number;
   };
-  // 오늘의 스몰톡이 그려짐 — 어떤 블록이 섰는지(첫 스몰톡·실수 기억·재사용 표현 수·후속 질문 종류)
+  // 오늘의 스몰톡이 그려짐 — 그 순간 어떤 블록이 서 있었는지(첫 스몰톡·실수 기억·재사용 표현 수·후속 질문 종류).
+  // 표현 재사용·후속 질문은 종료 후 잡이라 화면이 뜰 때 아직 없을 수 있다 — 그때는 pending이 true이고
+  // 개수·트리거는 "아직 없음"을 뜻한다. 0건과 구분하려면 반드시 pending을 함께 걸러야 한다
   'Small Talk Summary Viewed': {
     session_id: number;
     first_session: boolean;
     has_growth: boolean;
     reused_expression_count: number;
+    reused_expressions_pending: boolean;
     // 서버 트리거 코드 그대로 (CUT_OFF·PAST_EVENT·CONCERN·GOAL·MOOD·HOBBY·NONE)
     follow_up_trigger: string;
+    follow_up_pending: boolean;
     correction_count: number;
   };
   // 「상세 피드백 보러가기」 — 요약이 선 뒤에만 누를 수 있다

@@ -193,6 +193,8 @@
 
 스몰톡은 탭도 목적도 달라 대화 이벤트를 따로 둔다 — 시나리오는 오늘의 과제를 끝냈는지, 스몰톡은 누구와 얼마나 얘기했는지를 본다. 상대(`partner`)는 시나리오에 없는 축이라 전 이벤트에 싣는다.
 
+`Summary Viewed`의 표현 재사용·후속 질문은 종료 후 잡이라 화면이 뜰 때 아직 없을 수 있다. 요약을 대화 끝에 미리 받아 두기 때문에 실제로 그런 노출이 잦다 — `reused_expression_count`를 볼 때는 `reused_expressions_pending = false`로, 후속 질문 종류를 볼 때는 `follow_up_pending = false`로 걸러야 "아직 없음"이 0건으로 섞이지 않는다.
+
 종료 후 넷은 요약(오늘의 스몰톡) → 상세 피드백(대화 보기) → 표현 학습 흐름의 갈림길이다. 이 넷은 응답에 상대가 없어 `partner`를 싣지 않는다 — `session_id`로 `Started`와 조인한다. 첫 스몰톡은 건너뛸 길이 없어 `Skipped`가 `close`로만 찍힌다. `Feedback Viewed`의 `source`로 요약을 거쳐 온 사람과 기록에서 다시 연 사람이 갈린다.
 
 탭의 네 이벤트는 대화 시작 전 갈림길이다. 기본 상대로 그냥 시작하면 `Partner Selected`는 안 찍히고 `Started`의 `partner`로 본다. 주제 모달 열림은 안 찍는다 — `Started`의 `topic_id` 유무로 "주제로 시작" 비율이 나온다.
