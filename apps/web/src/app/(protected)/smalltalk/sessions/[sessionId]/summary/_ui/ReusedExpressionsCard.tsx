@@ -26,8 +26,9 @@ export const ReusedExpressionsCard = ({
         랜딧에서 배운 표현을 실제로 사용했어요
       </h2>
       <ul className="mt-1 flex flex-col divide-y divide-border">
+        {/* 같은 표현을 두 메시지에서 썼으면 표현 id만으로는 겹친다 — 쓴 자리까지 합쳐 가른다 */}
         {visible.map((item) => (
-          <li key={item.expressionId} className="py-3">
+          <li key={`${item.messageId}-${item.expressionId}`} className="py-3">
             <ReusedExpression item={item} />
           </li>
         ))}
