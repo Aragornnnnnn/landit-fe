@@ -1,7 +1,7 @@
 // 세션 상세 조회 훅 검증 — 맞춤 표현은 대화가 끝난 뒤 서버가 만들어서, 준비될 때까지 다시 물어야 한다
 import { createElement, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, renderHook, waitFor } from '@testing-library/react';
+import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type {
@@ -9,7 +9,10 @@ import type {
   SmallTalkSessionDetailResponse,
 } from '../api/small-talk';
 import * as smallTalkApi from '../api/small-talk';
-import { useSmallTalkSessionQuery } from './useSmallTalkSessionQuery';
+import {
+  useSmallTalkSessionQuery,
+  WAIT_LIMIT_MS,
+} from './useSmallTalkSessionQuery';
 
 vi.mock('../api/small-talk', () => ({
   getSmallTalkSession: vi.fn(),
@@ -40,6 +43,7 @@ const sessionOf = (
   expressionGenerationStatus,
   expressionLearningStatus: 'NOT_STARTED',
   expressions: [],
+  correctionCount: 0,
 });
 
 const renderSession = () => {
@@ -59,6 +63,7 @@ beforeEach(() => {
 afterEach(() => {
   // 폴링이 도는 채로 다음 테스트에 넘어가면 조회 횟수가 섞인다
   cleanup();
+  vi.useRealTimers();
 });
 
 describe('useSmallTalkSessionQuery', () => {
@@ -74,6 +79,80 @@ describe('useSmallTalkSessionQuery', () => {
       () => expect(getSmallTalkSession.mock.calls.length).toBeGreaterThan(1),
       { timeout: 3_000 },
     );
+  });
+
+  describe('교정 대기', () => {
+    // 표현은 다 만들었지만 사용자 메시지 하나의 교정이 아직인 세션
+    const readyButCorrecting = (): SmallTalkSessionDetailResponse => ({
+      ...sessionOf('READY'),
+      messages: [
+        {
+          messageId: 1,
+          turnNumber: 1,
+          messageSequence: 1,
+          role: 'USER',
+          content: 'Hi.',
+          translatedContent: null,
+          emotion: null,
+          innerThought: null,
+          innerThoughtType: null,
+          correctionStatus: 'PREPARING',
+          correction: null,
+        },
+      ],
+    });
+
+    const renderAwaitingCorrections = () => {
+      const client = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+      return renderHook(
+        () => useSmallTalkSessionQuery(7, { awaitCorrections: true }),
+        {
+          wrapper: ({ children }: { children: ReactNode }) =>
+            createElement(QueryClientProvider, { client }, children),
+        },
+      );
+    };
+
+    it('교정을 기다리기로 했으면 표현이 준비됐어도 교정이 끝날 때까지 다시 묻는다', async () => {
+      getSmallTalkSession.mockResolvedValue(readyButCorrecting());
+      const { result } = renderAwaitingCorrections();
+      await waitFor(() => expect(result.current.session).not.toBeNull());
+
+      await waitFor(
+        () => expect(getSmallTalkSession.mock.calls.length).toBeGreaterThan(1),
+        { timeout: 3_000 },
+      );
+    });
+
+    it('교정을 기다리지 않는 화면은 교정이 남아 있어도 표현이 준비되면 그만 묻는다', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      getSmallTalkSession.mockResolvedValue(readyButCorrecting());
+      const { result } = renderSession();
+      await waitFor(() => expect(result.current.session).not.toBeNull());
+
+      const callsAfterFirstLoad = getSmallTalkSession.mock.calls.length;
+      await act(() => vi.advanceTimersByTimeAsync(3_000));
+
+      expect(getSmallTalkSession).toHaveBeenCalledTimes(callsAfterFirstLoad);
+    });
+
+    it('교정만 늦어 상한을 넘겨도 표현이 준비됐으면 소용없다고 하지 않는다', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      getSmallTalkSession.mockResolvedValue(readyButCorrecting());
+      const { result } = renderAwaitingCorrections();
+      await waitFor(() => expect(result.current.session).not.toBeNull());
+
+      await act(() => vi.advanceTimersByTimeAsync(WAIT_LIMIT_MS + 1_000));
+
+      // 상한이 실제로 걸렸다 — 폴링은 멈추되, 표현은 준비됐으니 소용없다고 하지 않는다
+      const callsAtLimit = getSmallTalkSession.mock.calls.length;
+      await act(() => vi.advanceTimersByTimeAsync(3_000));
+      expect(getSmallTalkSession).toHaveBeenCalledTimes(callsAtLimit);
+      expect(result.current.waitExpired).toBe(true);
+      expect(result.current.generationStuck).toBe(false);
+    });
   });
 
   it('준비가 끝나면 그만 묻는다', async () => {

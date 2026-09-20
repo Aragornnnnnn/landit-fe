@@ -32,6 +32,7 @@ describe('SmallTalkHistoryDetail', () => {
       error: null,
       isLoading: true,
       generationStuck: false,
+      waitExpired: false,
       retry: vi.fn(),
       regenerate: vi.fn(),
     });
