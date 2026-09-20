@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { SmallTalkSummaryResponse } from '../api/small-talk';
 import * as smallTalkApi from '../api/small-talk';
+import { smallTalkKeys } from './keys';
 import {
   SUMMARY_WAIT_LIMIT_MS,
   useSmallTalkSummaryQuery,
@@ -91,6 +92,58 @@ describe('useSmallTalkSummaryQuery', () => {
     await act(() => vi.advanceTimersByTimeAsync(3_000));
 
     expect(getSmallTalkSummary).toHaveBeenCalledTimes(callsAfterFirstLoad);
+  });
+
+  it('폴링이 한 번 실패해도 이미 받아 둔 요약은 사라지지 않는다', async () => {
+    // Given 요약은 받아 뒀고, 그 뒤 폴링 한 번이 끊긴 상황
+    getSmallTalkSummary.mockResolvedValueOnce(
+      summaryOf({ expressionsPending: true }),
+    );
+    getSmallTalkSummary.mockRejectedValue(new Error('네트워크가 끊겼어요'));
+    const { result } = renderSummary();
+    await waitFor(() => expect(result.current.summary).not.toBeNull());
+
+    await waitFor(() =>
+      expect(getSmallTalkSummary.mock.calls.length).toBeGreaterThan(1),
+    );
+
+    // Then 보고 있던 요약은 그대로 있고 실패는 화면에 올라가지 않는다
+    expect(result.current.summary).not.toBeNull();
+    expect(result.current.error).toBeNull();
+  });
+
+  it('미리 받아 두기가 실패한 뒤 도착하면, 다시 받아오는 동안은 실패 대신 기다린다', async () => {
+    // Given 대화 끝에 건 프리페치가 실패해 캐시에 실패만 남은 상태 — 화면은 그 뒤에 열린다
+    getSmallTalkSummary.mockRejectedValueOnce(new Error('네트워크가 끊겼어요'));
+    getSmallTalkSummary.mockResolvedValue(summaryOf());
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    await client
+      .prefetchQuery({
+        queryKey: smallTalkKeys.summary(42, 7),
+        queryFn: () => smallTalkApi.getSmallTalkSummary(7),
+      })
+      .catch(() => {});
+
+    // When 요약 화면이 열리면
+    const { result } = renderHook(() => useSmallTalkSummaryQuery(7), {
+      wrapper: ({ children }: { children: ReactNode }) =>
+        createElement(QueryClientProvider, { client }, children),
+    });
+
+    // Then 실패 화면 대신 기다리는 화면을 보여주다가 요약이 도착한다
+    expect(result.current.error).toBeNull();
+    expect(result.current.isLoading).toBe(true);
+    await waitFor(() => expect(result.current.summary).not.toBeNull());
+  });
+
+  it('받아 둔 것 없이 실패하면 그때는 실패를 알린다', async () => {
+    getSmallTalkSummary.mockRejectedValue(new Error('불러오지 못했어요'));
+    const { result } = renderSummary();
+
+    await waitFor(() => expect(result.current.error).not.toBeNull());
+    expect(result.current.isLoading).toBe(false);
   });
 
   it('상한까지 기다려도 안 오면 그만 묻고, 기다림이 끝났다고 알린다', async () => {
