@@ -241,3 +241,108 @@ export const decideSmallTalkExit = (
     `/api/v1/free-talk/sessions/${sessionId}/exit-decision`,
     body,
   );
+
+// 오늘의 스몰톡 — 끝난 대화의 요약. 점수·별점 없이 지난번과의 비교와 기억·재사용의 순간을 돌려준다.
+// growth만 없을 수 있고(null), reusedExpressions·followUp은 늘 오되 아직 만드는 중이면 pending이다
+export interface SmallTalkSummaryResponse {
+  sessionId: number;
+  title: string;
+  // 첫 스몰톡이면 comparison.previous는 전부 0, growth는 null
+  firstSession: boolean;
+  headline: SmallTalkSummaryHeadline;
+  comparison: SmallTalkSummaryComparison;
+  // 실수 기억 카드. 직전 세션에 교정받은 패턴이 이번에 다시 나왔을 때만. 여러 패턴이어도 하나
+  growth: SmallTalkSummaryGrowth | null;
+  reusedExpressions: SmallTalkSummaryReusedExpressions;
+  followUp: SmallTalkSummaryFollowUp;
+  // 교정이 붙은 사용자 메시지 수 (세션 상세의 correctionCount와 같은 값)
+  correctionCount: number;
+}
+
+// 래디 포즈 — POINT(기본), NORMAL(반복 실수), WAVE_SMILE(첫 스몰톡). 서버 문자열 그대로 받는다
+export type SmallTalkSummaryPose = string;
+
+export interface SmallTalkSummaryHeadline {
+  // 첫 문장(사실 + 숫자). 닉네임이 들어갈 수 있어 길이 제한 없음
+  text: string;
+  // 둘째 문장(의미 한 마디)
+  subline: string;
+  pose: SmallTalkSummaryPose;
+}
+
+export interface SmallTalkSummaryMetrics {
+  // 사용자 발화 시간 합(ms)
+  speakingMs: number;
+  // 사용자 턴 수
+  turnCount: number;
+  // 한 턴 최대 단어 수
+  maxWordsInTurn: number;
+}
+
+export interface SmallTalkSummaryComparison {
+  // 직전 완료 세션. 첫 스몰톡이면 둘 다 null
+  previousSessionId: number | null;
+  // yyyy-MM-dd
+  previousDate: string | null;
+  current: SmallTalkSummaryMetrics;
+  // 첫 스몰톡이면 모두 0
+  previous: SmallTalkSummaryMetrics;
+}
+
+export interface SmallTalkSummaryGrowth {
+  // 실수 패턴 코드(PAST_TENSE, ARTICLE, …). 화면엔 patternLabel만 쓴다
+  pattern: string;
+  // 화면용 한국어 이름 (과거형)
+  patternLabel: string;
+  // true = 오늘은 맞음(성공), false = 오늘도 틀림(반복)
+  succeeded: boolean;
+  previousDate: string;
+  previousSentence: string;
+  // 직전 문장에서 빨강 취소선 처리할 구절
+  previousWrongSpan: string;
+  currentSentence: string;
+  // 이번 문장에서 강조할 구절. 성공이면 초록, 반복이면 빨강
+  currentSpan: string;
+  previousCount: number;
+  // 성공이면 0
+  currentCount: number;
+}
+
+export interface SmallTalkSummaryReusedExpressions {
+  // true면 종료 후 잡 미완료. items는 빈 배열이며 준비될 때까지 다시 묻는다
+  pending: boolean;
+  // 전부 내려준다. 화면은 2개까지 펼치고 나머지는 접는다
+  items: SmallTalkSummaryReusedExpression[];
+}
+
+export interface SmallTalkSummaryReusedExpression {
+  expressionId: number;
+  // 표현(칩)
+  text: string;
+  // 대표 뜻 하나
+  meaning: string;
+  // 배운 곳. 프리톡이면 "M월 D일 「제목」", 시나리오면 "시나리오 「제목」"
+  sourceLabel: string;
+  messageId: number;
+  // 이 표현을 쓴 사용자 메시지 원문
+  quotedSentence: string;
+  // 원문 안에서 굵게 처리할 구절
+  matchedText: string;
+}
+
+export interface SmallTalkSummaryFollowUp {
+  // true면 장기기억 잡 미완료. 준비될 때까지 다시 묻는다
+  pending: boolean;
+  // CUT_OFF, PAST_EVENT, CONCERN, GOAL, MOOD, HOBBY, NONE. NONE이어도 블록은 그린다
+  triggerType: string;
+  // 굵게 나갈 질문(반말). NONE이면 기본 문구
+  question: string;
+  // 회색으로 나갈 초대 한 줄
+  invite: string;
+}
+
+// 오늘의 스몰톡 요약 — 완료(COMPLETED)된 세션만 준다. 진행 중이거나 종료 확인 대기면 409
+export const getSmallTalkSummary = (sessionId: number) =>
+  api.get<SmallTalkSummaryResponse>(
+    `/api/v1/free-talk/sessions/${sessionId}/summary`,
+  );
