@@ -10,6 +10,9 @@ import { ChevronDownIcon } from '@/shared/ui/Icons';
 
 // 처음에 펼쳐 두는 개수
 const VISIBLE_COUNT = 2;
+// 이만큼은 접혀야 접는다 — 한 줄 보자고 한 번 누르게 하는 건 누르는 값이 없다.
+// 표현이 셋이면 그냥 셋 다 편다
+const MIN_FOLDED = 2;
 
 export const ReusedExpressionsCard = ({
   items,
@@ -17,7 +20,8 @@ export const ReusedExpressionsCard = ({
   items: SmallTalkSummaryReusedExpression[];
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? items : items.slice(0, VISIBLE_COUNT);
+  const folded = !expanded && items.length - VISIBLE_COUNT >= MIN_FOLDED;
+  const visible = folded ? items.slice(0, VISIBLE_COUNT) : items;
   const hiddenCount = items.length - visible.length;
 
   return (
@@ -27,17 +31,25 @@ export const ReusedExpressionsCard = ({
       </h2>
       <ul className="mt-1 flex flex-col divide-y divide-border">
         {/* 같은 표현을 두 메시지에서 썼으면 표현 id만으로는 겹친다 — 쓴 자리까지 합쳐 가른다 */}
-        {visible.map((item) => (
-          <li key={`${item.messageId}-${item.expressionId}`} className="py-3">
+        {visible.map((item, index) => (
+          <li
+            key={`${item.messageId}-${item.expressionId}`}
+            // 펼쳐서 새로 나온 줄만 떠오르게 한다 — 처음부터 있던 둘은 가만히 둔다
+            className={`py-3 ${expanded && index >= VISIBLE_COUNT ? 'animate-fade-up' : ''}`}
+            style={
+              expanded && index >= VISIBLE_COUNT
+                ? { animationDelay: `${(index - VISIBLE_COUNT) * 70}ms` }
+                : undefined
+            }
+          >
             <ReusedExpression item={item} />
           </li>
         ))}
       </ul>
       {hiddenCount > 0 && (
-        // 목록의 마지막 한 줄처럼 — 위에 구분선을 두고 표현들과 같은 왼쪽 선에 맞춘다
         <button
           onClick={() => setExpanded(true)}
-          className="flex w-full items-center gap-1 border-t border-border py-3 text-[13px] font-semibold text-muted-foreground active:opacity-70"
+          className="flex w-full items-center justify-center gap-1 pt-3 text-[13px] font-semibold text-muted-foreground active:opacity-70"
         >
           +{hiddenCount}개 더 보기
           <ChevronDownIcon size={14} />

@@ -294,7 +294,7 @@ describe('SmallTalkSummary 배운 표현 재사용', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('3개 이상이면 2개만 펼치고, 더 보기를 누르면 그 자리에서 나머지가 펼쳐진다', async () => {
+  it('셋이면 다 펼친다 — 한 줄 보자고 한 번 누르게 하지 않는다', () => {
     renderSummary({
       ...summaryOf(),
       reusedExpressions: {
@@ -307,10 +307,31 @@ describe('SmallTalkSummary 배운 표현 재사용', () => {
       },
     });
 
+    expect(screen.getByText('stop by')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /더 보기/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('넷부터는 2개만 펼치고, 더 보기를 누르면 그 자리에서 나머지가 펼쳐진다', async () => {
+    renderSummary({
+      ...summaryOf(),
+      reusedExpressions: {
+        pending: false,
+        items: [
+          reusedItem(1, 'grab a coffee'),
+          reusedItem(2, 'be down for'),
+          reusedItem(3, 'stop by'),
+          reusedItem(4, 'my go-to'),
+        ],
+      },
+    });
+
     expect(screen.queryByText('stop by')).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: '+1개 더 보기' }));
+    await userEvent.click(screen.getByRole('button', { name: '+2개 더 보기' }));
 
     expect(screen.getByText('stop by')).toBeInTheDocument();
+    expect(screen.getByText('my go-to')).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /더 보기/ }),
     ).not.toBeInTheDocument();
