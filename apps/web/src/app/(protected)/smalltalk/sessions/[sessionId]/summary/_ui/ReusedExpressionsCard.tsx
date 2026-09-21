@@ -34,9 +34,10 @@ export const ReusedExpressionsCard = ({
         ))}
       </ul>
       {hiddenCount > 0 && (
+        // 목록의 마지막 한 줄처럼 — 위에 구분선을 두고 표현들과 같은 왼쪽 선에 맞춘다
         <button
           onClick={() => setExpanded(true)}
-          className="flex w-full items-center justify-center gap-1 pt-1 text-[13px] font-semibold text-muted-foreground active:opacity-70"
+          className="flex w-full items-center gap-1 border-t border-border py-3 text-[13px] font-semibold text-muted-foreground active:opacity-70"
         >
           +{hiddenCount}개 더 보기
           <ChevronDownIcon size={14} />
