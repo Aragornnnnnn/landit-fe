@@ -15,7 +15,7 @@ import { splitMatchedText } from '@/features/small-talk/model/message-feedback';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
 import { smallTalkHistoryPath } from '@/shared/lib/routes';
 import { Emoji } from '@/shared/ui/emoji';
-import { CheckIcon, ChevronLeftIcon } from '@/shared/ui/Icons';
+import { CheckIcon, ChevronLeftIcon, SparkleIcon } from '@/shared/ui/Icons';
 
 import { SmallTalkTranscriptSkeleton } from './SmallTalkTranscriptSkeleton';
 
@@ -158,8 +158,9 @@ const CorrectionCard = ({
   correction: SmallTalkCorrection;
 }) => (
   <section className="max-w-[88%] rounded-2xl bg-success/10 px-4 py-3">
-    <p className="text-[12px] font-semibold text-success">
-      <Emoji>✨</Emoji> 이렇게 말하면 더 자연스러워요
+    <p className="flex items-center gap-1 text-[12px] font-semibold text-success">
+      <SparkleIcon size={13} />
+      이렇게 말하면 더 자연스러워요
     </p>
     <p className="mt-1.5 text-[15px] leading-6 font-bold text-success">
       {correction.betterSentence}
