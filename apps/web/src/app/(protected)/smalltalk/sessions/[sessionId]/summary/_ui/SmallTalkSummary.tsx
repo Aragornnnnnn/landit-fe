@@ -25,7 +25,7 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
   const { summary, error, isLoading, retry } =
     useSmallTalkSummaryQuery(sessionId);
 
-  // 상세 피드백을 건너뛰고 표현 학습으로 — 닫기와 「다음에 볼게요」가 같은 곳으로 간다
+  // 상세 피드백을 건너뛰고 표현 학습으로 — 닫기(X)와 요약을 못 받았을 때의 출구가 여기로 간다
   const goLearning = () =>
     router.replace(sessionExpressionBranchPath(sessionId, { celebrate: true }));
   // 상세 피드백(대화 보기)으로 — 그 화면이 표현 학습으로 이어 준다
@@ -63,17 +63,10 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
             <ComparisonCard comparison={summary.comparison} />
           </div>
 
-          <footer className="flex flex-none flex-col items-center gap-1 px-5 pt-3 pb-[max(env(safe-area-inset-bottom),16px)]">
-            <Button onClick={goDetail}>상세 피드백 보러가기</Button>
-            {/* 첫 스몰톡은 상세 피드백을 반드시 거친다 — 건너뛸 길을 두지 않는다 */}
-            {!summary.firstSession && (
-              <button
-                onClick={goLearning}
-                className="py-2 text-sm font-semibold text-muted-foreground active:opacity-70"
-              >
-                다음에 볼게요
-              </button>
-            )}
+          {/* 나가는 길은 이 버튼 하나 — 건너뛰는 링크를 따로 두지 않는다.
+              상세 피드백을 보고 나면 그 화면이 표현 학습으로 이어 준다 */}
+          <footer className="flex-none px-5 pt-3 pb-[max(env(safe-area-inset-bottom),16px)]">
+            <Button onClick={goDetail}>상세 피드백 보러갈게요</Button>
           </footer>
         </>
       )}

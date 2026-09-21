@@ -78,8 +78,16 @@ describe('SmallTalkSummary', () => {
     expect(screen.getByText('9월 10일 → 오늘')).toBeInTheDocument();
     expect(screen.getByText('2분 41초')).toBeInTheDocument();
     expect(screen.getByText('4분 5초')).toBeInTheDocument();
+  });
+
+  it('나가는 길은 상세 피드백 하나뿐이다 — 건너뛰는 링크를 두지 않는다', () => {
+    renderSummary(summaryOf());
+
     expect(
-      screen.getByRole('button', { name: '다음에 볼게요' }),
+      screen.queryByRole('button', { name: /볼게요/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '상세 피드백 보러갈게요' }),
     ).toBeInTheDocument();
   });
 
@@ -96,16 +104,13 @@ describe('SmallTalkSummary', () => {
     });
 
     expect(screen.getByText('첫 기록 · 오늘')).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: '다음에 볼게요' }),
-    ).not.toBeInTheDocument();
   });
 
   it('상세 피드백 보러가기를 누르면 종료 흐름 표식을 달고 대화 보기로 간다', async () => {
     renderSummary(summaryOf());
 
     await userEvent.click(
-      screen.getByRole('button', { name: '상세 피드백 보러가기' }),
+      screen.getByRole('button', { name: '상세 피드백 보러갈게요' }),
     );
 
     expect(replace).toHaveBeenCalledWith(
@@ -113,18 +118,15 @@ describe('SmallTalkSummary', () => {
     );
   });
 
-  it.each([['다음에 볼게요'], ['닫기']])(
-    '%s를 누르면 상세 피드백을 건너뛰고 축하를 켠 표현 화면으로 간다',
-    async (name) => {
-      renderSummary(summaryOf());
+  it('닫기를 누르면 상세 피드백을 건너뛰고 축하를 켠 표현 화면으로 간다', async () => {
+    renderSummary(summaryOf());
 
-      await userEvent.click(screen.getByRole('button', { name }));
+    await userEvent.click(screen.getByRole('button', { name: '닫기' }));
 
-      expect(replace).toHaveBeenCalledWith(
-        '/expressions/session/7/branch?celebrate=1',
-      );
-    },
-  );
+    expect(replace).toHaveBeenCalledWith(
+      '/expressions/session/7/branch?celebrate=1',
+    );
+  });
 
   it('조회 중이면 글자 대신 스켈레톤이 선다', () => {
     renderSummary(null, { isLoading: true });
