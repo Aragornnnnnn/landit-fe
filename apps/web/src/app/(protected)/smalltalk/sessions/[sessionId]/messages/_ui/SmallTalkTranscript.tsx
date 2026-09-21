@@ -142,20 +142,22 @@ const ReusedExpressionTag = ({
 }: {
   expression: SmallTalkReusedExpression;
 }) => (
-  <p className="flex items-center gap-1 rounded-lg bg-success/10 px-2.5 py-1 text-[12px] font-semibold text-success">
+  <p className="flex items-center gap-1 rounded-full bg-success/10 px-3 py-1.5 text-[12px] font-semibold text-success">
     <CheckIcon size={12} strokeWidth={3} />
     배운 표현 「{expression.text}」을 썼어요
   </p>
 );
 
 // 더 자연스러운 말 — 고친 문장은 초록 굵게, 이유는 회색.
+// 말풍선 가족과 같은 모양을 쓴다(같은 둥글기·여백, 테두리 없이 채움만) — 테두리를 두면 이 카드만 따로 논다.
+// 내 말풍선보다 조금 넓게 잡아 고친 문장이 덜 접히게 한다.
 // 장기기억을 근거로 고쳤으면 그 근거를 날짜 태그로 보여준다
 const CorrectionCard = ({
   correction,
 }: {
   correction: SmallTalkCorrection;
 }) => (
-  <section className="max-w-[85%] rounded-2xl border border-success/20 bg-success/10 px-4 py-3">
+  <section className="max-w-[88%] rounded-2xl bg-success/10 px-4 py-3">
     <p className="text-[12px] font-semibold text-success">
       <Emoji>✨</Emoji> 이렇게 말하면 더 자연스러워요
     </p>
@@ -166,7 +168,7 @@ const CorrectionCard = ({
       {correction.reason}
     </p>
     {correction.memoryTag && (
-      <p className="mt-2 inline-block rounded-md bg-card px-2 py-0.5 text-[12px] text-muted-foreground">
+      <p className="mt-2 inline-block rounded-full bg-card px-2.5 py-1 text-[12px] text-muted-foreground">
         <Emoji>🗓️</Emoji> {correction.memoryTag}
       </p>
     )}
