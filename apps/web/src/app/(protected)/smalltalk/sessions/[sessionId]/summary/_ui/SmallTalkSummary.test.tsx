@@ -471,7 +471,7 @@ describe('SmallTalkSummary 계측', () => {
     renderSummary(summaryOf());
 
     await userEvent.click(
-      screen.getByRole('button', { name: '상세 피드백 보러가기' }),
+      screen.getByRole('button', { name: '상세 피드백 보러갈게요' }),
     );
 
     expect(track).toHaveBeenCalledWith(EVENTS.SMALL_TALK_FEEDBACK_OPENED, {
@@ -480,18 +480,29 @@ describe('SmallTalkSummary 계측', () => {
     });
   });
 
-  it.each([
-    ['닫기', 'close'],
-    ['다음에 볼게요', 'skip_link'],
-  ])('%s로 건너뛰면 어느 길이었는지 남긴다', async (name, trigger) => {
+  it('닫기로 건너뛰면 어느 길이었는지 남긴다', async () => {
     renderSummary(summaryOf());
 
-    await userEvent.click(screen.getByRole('button', { name }));
+    await userEvent.click(screen.getByRole('button', { name: '닫기' }));
 
     expect(track).toHaveBeenCalledWith(EVENTS.SMALL_TALK_FEEDBACK_SKIPPED, {
       session_id: 7,
-      trigger,
+      trigger: 'close',
       correction_count: 3,
+    });
+  });
+
+  it('요약을 못 받은 채 나가면 교정 개수 없이 남긴다', async () => {
+    renderSummary(null, { error: new Error('완료되지 않은 세션입니다.') });
+
+    await userEvent.click(
+      screen.getByRole('button', { name: '표현 배우러 가기' }),
+    );
+
+    expect(track).toHaveBeenCalledWith(EVENTS.SMALL_TALK_FEEDBACK_SKIPPED, {
+      session_id: 7,
+      trigger: 'unavailable',
+      correction_count: null,
     });
   });
 });
