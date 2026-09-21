@@ -19,6 +19,7 @@ import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-st
 import { track } from '@/shared/analytics';
 
 import { submitScenarioTalkMessage } from '../_api/scenario-session';
+import { toTalkGauge } from './talk-gauge';
 import { useScenarioTalkSession } from './useScenarioTalkSession';
 
 export const useScenarioTalkFlow = (scenario: Scenario) => {
@@ -109,6 +110,12 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
     ...engine,
     partner,
     leave,
+    // 게이지는 화면에 떠 있는 카드를 따른다 — 답한 횟수를 따로 세면 카드보다 먼저 움직인다
+    gauge: toTalkGauge({
+      turnIndex: engine.turnIndex,
+      firstSpeaker: scenario.firstSpeaker,
+      totalQuestionCount: session.totalQuestionCount,
+    }),
     // DONE 시점엔 세션이 확보돼 있다 — 피드백 생성에 쓴다 (없으면 세션 시작이 실패한 경우)
     sessionId: session.sessionId,
   };

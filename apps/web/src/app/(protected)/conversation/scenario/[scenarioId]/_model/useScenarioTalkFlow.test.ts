@@ -237,6 +237,15 @@ const splitSubmitResponse = () =>
     },
   });
 
+// AI 선발화로 렌더하고 오프닝 발화까지 끝내 마이크 대기로 보낸다 (턴 진행·게이지 검증용)
+const renderAiFirstReady = async () => {
+  startScenarioTalkSession.mockResolvedValue(startResponse());
+  const hook = renderHook(() => useScenarioTalkFlow(scenario));
+  await act(async () => {});
+  await act(async () => ttsMock.state.onEnd?.());
+  return hook;
+};
+
 // USER 선발화로 렌더하고 백그라운드 세션을 flush한다 (제출에 sessionId 필요)
 const renderUserFirst = async () => {
   startScenarioTalkSession.mockResolvedValue(startResponse());
@@ -335,6 +344,46 @@ describe('useScenarioTalkFlow', async () => {
 
     expect(submitScenarioTalkMessage).not.toHaveBeenCalled();
     expect(result.current.phase).toBe('USER_READY');
+  });
+
+  it('질문이 넘어가면 게이지가 찬다 — 답을 낸 순간이 아니라 다음 질문이 뜬 순간이다', async () => {
+    // Given 총 3문항 시나리오의 첫 질문에서
+    const { result } = await renderAiFirstReady();
+    const atFirstQuestion = result.current.gauge.ratio;
+
+    // When 답을 내면 — 속마음이 도는 동안은 아직 첫 질문 카드다
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+    await speakAndSubmit(result, 'First answer.');
+    expect(result.current.gauge.ratio).toBe(atFirstQuestion);
+
+    // Then 다음 질문이 뜨는 순간 함께 찬다
+    act(() => {
+      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+    });
+    expect(result.current.gauge.ratio).toBeGreaterThan(atFirstQuestion);
+  });
+
+  it('마지막 질문 머리말은 그 질문이 화면에 뜬 뒤에 붙는다 — 답을 낸 직후 이전 질문 위에 먼저 뜨지 않는다', async () => {
+    // Given 총 3문항 시나리오에서 두 번째 질문까지 받은 상태
+    const { result } = await renderAiFirstReady();
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+    await speakAndSubmit(result, 'First answer.');
+    act(() => {
+      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+    });
+    await act(async () => ttsMock.state.onEnd?.());
+
+    // When 두 번째 답을 제출해 속마음이 도는 동안 (카드는 아직 두 번째 질문이다)
+    await speakAndSubmit(result, 'Second answer.');
+
+    // Then 머리말은 아직 붙지 않는다
+    expect(result.current.gauge.lastQuestion).toBe(false);
+
+    // 세 번째 질문이 화면에 뜨면 그때 붙는다
+    act(() => {
+      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+    });
+    expect(result.current.gauge.lastQuestion).toBe(true);
   });
 
   it('제출하면 응답이 오기 전까지 대기(생각 중) 상태가 된다', async () => {
