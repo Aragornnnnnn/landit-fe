@@ -41,9 +41,15 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
   // 이벤트로 감싸 폴링으로 요약이 갱신돼도 다시 찍지 않는다. 처음 선 그 순간이 노출이다.
   // 미리 받아 둔 요약으로 화면이 바로 서는 경우가 많아 표현·후속 질문은 아직 없을 때가 잦다 —
   // 그 "아직 없음"을 0건으로 세지 않도록 pending을 같이 싣는다
-  const shown = summary !== null;
+  // 교정을 기다리는 스켈레톤은 노출이 아니다 — 총평이 실제로 선 순간만 센다
+  const shown = summary !== null && !summary.pending;
   const trackViewed = useEffectEvent(() => {
-    if (!summary) return;
+    if (
+      !summary ||
+      summary.firstSession === null ||
+      summary.correctionCount === null
+    )
+      return;
     track(EVENTS.SMALL_TALK_SUMMARY_VIEWED, {
       session_id: sessionId,
       first_session: summary.firstSession,

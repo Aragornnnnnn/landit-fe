@@ -186,7 +186,7 @@
 | Small Talk Turn Completed     | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms         | 발화 제출 성공                                          |
 | Small Talk Completed          | session_id, partner, turn_count, speaking_duration_ms, end_reason(user_ended\|time_limit)           | 서버가 완료 판정                                        |
 | Small Talk Abandoned          | session_id, partner, turn_index                                                                     | 중도 이탈 확정                                          |
-| Small Talk Summary Viewed     | session_id, first_session, has_growth, reused_expression_count, follow_up_trigger, correction_count | 오늘의 스몰톡(요약)이 그려짐                            |
+| Small Talk Summary Viewed     | session_id, first_session, has_growth, reused_expression_count, follow_up_trigger, correction_count | 오늘의 스몰톡(요약)에 총평이 그려짐                     |
 | Small Talk Feedback Opened    | session_id, correction_count                                                                        | 요약에서 「상세 피드백 보러가기」                       |
 | Small Talk Feedback Skipped   | session_id, trigger(close\|unavailable), correction_count?                                          | 요약에서 상세 피드백을 건너뛰고 표현 학습으로           |
 | Small Talk Feedback Viewed    | session_id, source(summary\|history), correction_count                                              | 대화 보기(교정 카드)가 그려짐                           |

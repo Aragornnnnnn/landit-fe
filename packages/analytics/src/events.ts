@@ -492,7 +492,8 @@ export type EventProps = {
     partner: TalkPartner;
     turn_index: number;
   };
-  // 오늘의 스몰톡이 그려짐 — 그 순간 어떤 블록이 서 있었는지(첫 스몰톡·실수 기억·재사용 표현 수·후속 질문 종류).
+  // 오늘의 스몰톡이 그려짐 — 총평이 실제로 선 순간만 남긴다(교정을 기다리는 스켈레톤은 노출이 아니다).
+  // 그 순간 어떤 블록이 서 있었는지(첫 스몰톡·실수 기억·재사용 표현 수·후속 질문 종류)를 함께 싣는다.
   // 표현 재사용·후속 질문은 종료 후 잡이라 화면이 뜰 때 아직 없을 수 있다 — 그때는 pending이 true이고
   // 개수·트리거는 "아직 없음"을 뜻한다. 0건과 구분하려면 반드시 pending을 함께 걸러야 한다
   'Small Talk Summary Viewed': {
@@ -501,15 +502,16 @@ export type EventProps = {
     has_growth: boolean;
     reused_expression_count: number;
     reused_expressions_pending: boolean;
-    // 서버 트리거 코드 그대로 (CUT_OFF·PAST_EVENT·CONCERN·GOAL·MOOD·HOBBY·NONE)
-    follow_up_trigger: string;
+    // 서버 트리거 코드 그대로 (CUT_OFF·PAST_EVENT·CONCERN·GOAL·MOOD·HOBBY·NONE). 물어볼 기억이 없었으면 null
+    follow_up_trigger: string | null;
     follow_up_pending: boolean;
     correction_count: number;
   };
-  // 「상세 피드백 보러가기」 — 요약이 선 뒤에만 누를 수 있다
+  // 「상세 피드백 보러가기」 — 총평이 선 뒤에만 누를 수 있어 개수는 사실상 늘 있다.
+  // 건너뛰기와 같은 모양으로 두어 둘을 한 판에서 비교할 수 있게 한다
   'Small Talk Feedback Opened': {
     session_id: number;
-    correction_count: number;
+    correction_count: number | null;
   };
   // 상세 피드백을 건너뛰고 표현 학습으로 — 닫기(X)인지, 요약을 못 받아 나간 것인지.
   // 못 받은 채 나갔으면 교정 개수도 모른다

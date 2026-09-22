@@ -440,6 +440,24 @@ describe('SmallTalkSummary 계측', () => {
     );
   });
 
+  it('총평을 기다리는 스켈레톤은 노출로 세지 않는다', () => {
+    // Given 표현·후속 질문은 왔지만 총평이 아직이라 스켈레톤만 선 상태
+    renderSummary({
+      ...summaryOf(),
+      pending: true,
+      firstSession: null,
+      headline: null,
+      comparison: null,
+      growth: null,
+      correctionCount: null,
+    });
+
+    expect(track).not.toHaveBeenCalledWith(
+      'Small Talk Summary Viewed',
+      expect.anything(),
+    );
+  });
+
   it('요약이 그려지면 어떤 블록이 섰는지와 함께 노출을 한 번 남긴다', () => {
     renderSummary({
       ...summaryOf(),
@@ -456,7 +474,7 @@ describe('SmallTalkSummary 계측', () => {
       has_growth: true,
       reused_expression_count: 1,
       reused_expressions_pending: false,
-      follow_up_trigger: 'NONE',
+      follow_up_trigger: 'CONCERN',
       follow_up_pending: false,
       correction_count: 3,
     });
