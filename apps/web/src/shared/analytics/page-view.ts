@@ -230,6 +230,11 @@ const resolvePage = (
     };
   }
 
+  // 푸시 복습 — 알림으로만 들어오는 화면. 어느 복습인지는 UUID라 이름·속성에 싣지 않는다
+  if (seg[0] === 'reviews' && seg[1]) {
+    return { page_name: 'review', path: pathname };
+  }
+
   const nested = NESTED_PAGES[pathname];
   if (nested) return { page_name: nested, path: pathname };
 

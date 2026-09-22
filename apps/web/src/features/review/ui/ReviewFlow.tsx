@@ -1,0 +1,210 @@
+'use client';
+
+// 푸시 복습 플로우 — 알림으로 들어와 시작 안내 → 문제 → 완료. 큐 순서·채점·완료 판정은 모두 서버 상태를 따른다.
+// 학습 안의 복습(ReviewStep)과 화면은 같지만, 그쪽은 문제 큐를 브라우저가 들고 여기선 서버가 든다
+import { useEffect, useRef, useState } from 'react';
+import { EVENTS, type PushReviewStep } from '@landit/analytics';
+import { useRouter } from 'next/navigation';
+
+import { pickDistinctPartners } from '@/features/expression/model/quiz-partner';
+import { retryGuideOf } from '@/features/expression/model/review-queue';
+import { fromWritingSentence } from '@/features/expression/model/sentence-quiz';
+import { QuizStep } from '@/features/expression/ui/learning/QuizStep';
+import { track } from '@/shared/analytics';
+import { ApiError } from '@/shared/api/api-error';
+import { SCENARIO_PATH } from '@/shared/lib/routes';
+
+import type { Review } from '../api/review';
+import {
+  currentQuestionOf,
+  isFinished,
+  isSolved,
+  MAX_ATTEMPTS,
+  pendingQuestionsOf,
+  progressRangeOf,
+} from '../model/review-progress';
+import { useReviewAnswerMutation } from '../model/useReviewAnswerMutation';
+import { useReviewQuery } from '../model/useReviewQuery';
+import { useStartReviewMutation } from '../model/useStartReviewMutation';
+import { ReviewComplete } from './ReviewComplete';
+import { ReviewIntro } from './ReviewIntro';
+import { ReviewNotice } from './ReviewNotice';
+
+// 다시 시도가 의미 있는 실패인가 — 기한·권한·없는 복습(4xx)은 눌러도 같은 답이 온다
+const isRetriable = (error: Error) =>
+  !(error instanceof ApiError) || error.status >= 500;
+
+export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
+  const router = useRouter();
+  const {
+    review: fetched,
+    error,
+    isLoading,
+    refetch,
+  } = useReviewQuery(reviewId);
+  // 서버가 준 최신 상태 — 결과 시트를 넘길 때 반영한다. 채점 직후 바로 갈아치우면 시트가 뜬 채로 문제가 바뀐다
+  const [applied, setApplied] = useState<Review | null>(null);
+  // 판정을 받아 둔 다음 상태 — 시트의 CTA에서 applied로 옮긴다
+  const graded = useRef<Review | null>(null);
+  // 틀려서 같은 문제가 다시 나와도 퀴즈를 새로 세우는 key
+  const [round, setRound] = useState(0);
+  // 문제마다 다른 얼굴이 묻는다 — 문제 수와 무관하게 세 명을 뽑아 두고 출제 순서로 고른다(같은 문제는 같은 얼굴)
+  const [partners] = useState(() => pickDistinctPartners(3));
+  // 결과 화면에 도달한 순간 — 서버가 완료로 바꿨든, 문제마다 두 번씩 풀어 결판이 났든 같은 끝점이다
+  const finishedNow = applied !== null && isFinished(applied);
+
+  useEffect(() => {
+    if (!applied || !finishedNow) return;
+
+    const solved = applied.questions.filter(isSolved).length;
+    track(EVENTS.PUSH_REVIEW_FINISHED, {
+      question_count: applied.questions.length,
+      solved_count: solved,
+      perfect: solved === applied.questions.length,
+    });
+    // 끝나는 건 한 번뿐이라 도달 시점에만 찍는다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finishedNow]);
+
+  const start = useStartReviewMutation(reviewId);
+  const answer = useReviewAnswerMutation(reviewId);
+
+  // 복습은 기록을 남기지 않는다 — 나가면 홈으로. replace로 히스토리에서 지워 뒤로가기로 되돌아오지 않게 한다
+  const goHome = () => router.replace(SCENARIO_PATH);
+
+  // 계측 분모 — 서버가 문제를 고정해 주므로 문제 수와 맞힌 수로 어디까지 갔는지 본다
+  const counts = (state: Review | null) => ({
+    question_count: state?.questions.length ?? 0,
+    solved_count: state?.questions.filter(isSolved).length ?? 0,
+  });
+
+  // 결과를 보기 전에 나간 경우 — 어느 자리에서 닫았는지 남기고 홈으로
+  const abandon = (step: PushReviewStep) => {
+    track(EVENTS.PUSH_REVIEW_ABANDONED, {
+      step,
+      ...counts(applied ?? fetched),
+    });
+    goHome();
+  };
+
+  const review = applied ?? fetched;
+  if (!review) {
+    if (isLoading) return <ReviewLoading />;
+    return (
+      <ReviewNotice
+        message={error?.message ?? '복습을 불러오지 못했어요.'}
+        onHome={goHome}
+        onRetry={error && isRetriable(error) ? () => void refetch() : undefined}
+      />
+    );
+  }
+
+  if (review.status === 'READY') {
+    return (
+      <ReviewIntro
+        starting={start.isPending}
+        onStart={() =>
+          start.mutate(undefined, {
+            onSuccess: (started) => {
+              track(EVENTS.PUSH_REVIEW_STARTED, {
+                question_count: started.questions.length,
+              });
+              setApplied(started);
+            },
+          })
+        }
+        onClose={() => abandon('intro')}
+      />
+    );
+  }
+
+  // 서버는 전부 맞혀야 완료로 보지만, 우리는 문제마다 두 번까지만 낸다 — 두 번 틀린 문제는 놓친 것으로 두고 끝낸다
+  if (review.status !== 'EXPIRED' && isFinished(review)) {
+    return (
+      <ReviewComplete
+        questions={review.questions}
+        // applied는 이 화면에서 받은 응답만 담는다 — 있으면 방금 끝낸 것이다
+        justFinished={applied !== null}
+        onHome={goHome}
+      />
+    );
+  }
+
+  const question = currentQuestionOf(review);
+  // 서버가 이미 놓친 문제를 가리키는 경우는 남은 문제가 없을 때뿐이라 위에서 걸러진다
+  if (review.status === 'EXPIRED' || !question) {
+    return (
+      <ReviewNotice
+        message="복습할 수 있는 기간이 지났어요. 다음 알림에서 다시 만나요."
+        onHome={goHome}
+      />
+    );
+  }
+
+  // 판정은 서버가 한다 — 한국어 문제는 복수 정답이라 단어 순서만으로는 맞는지 알 수 없다
+  const judge = async (words: string[]) => {
+    try {
+      const result = await answer.mutateAsync({
+        questionId: question.questionId,
+        words,
+      });
+      graded.current = result.review;
+      return result.correct ? ('correct' as const) : ('wrong' as const);
+    } catch (thrown) {
+      // 기한이 지났으면 더 풀 수 없다 — 안내 화면으로 넘긴다 (GET도 같은 상태를 준다)
+      if (thrown instanceof ApiError && thrown.code === 'REVIEW_EXPIRED') {
+        setApplied({ ...review, status: 'EXPIRED', currentQuestionId: null });
+      }
+      // 다시 던져 QuizStep이 결과 시트 없이 재시도를 받게 한다 (실패 안내는 뮤테이션이 띄운다)
+      throw thrown;
+    }
+  };
+
+  // 기회가 남은 마지막 문제인가 — 이걸 결판내면 결과 화면으로 넘어간다
+  const last = pendingQuestionsOf(review).length === 1;
+  // 이번에 틀리면 이 문제는 놓친 것으로 끝난다 — 오답 CTA가 "다시 풀어볼게요"인지 여기서 갈린다
+  const lastAttempt = question.wrongCount + 1 >= MAX_ATTEMPTS;
+  // 재도전 지시문만 쓴다 — 정답 공개는 세 번째 시도용이라 두 번에서 끝나는 여기선 뜨지 않는다
+  const { instruction } = retryGuideOf(question.wrongCount);
+
+  return (
+    <QuizStep
+      step="push_review"
+      // 다음 문제(또는 같은 문제의 재도전)마다 고른 칩·판정을 통째로 리셋한다
+      key={`${question.questionId}#${round}`}
+      quiz={fromWritingSentence(question.quiz)}
+      partner={partners[question.displayOrder % partners.length]}
+      expressionId={question.expressionId}
+      leftAction="close"
+      onBack={() => abandon('quiz')}
+      instruction={instruction}
+      judge={judge}
+      // 틀린 문제는 곧 다시 나온다 — 시트에서 정답을 알려주면 재도전이 무의미하다
+      hideWrongAnswer
+      onNext={() => {
+        if (graded.current) setApplied(graded.current);
+        graded.current = null;
+        setRound((current) => current + 1);
+      }}
+      nextLabel={last ? '결과 볼게요' : '다음 문제'}
+      wrongLabel={
+        last && lastAttempt
+          ? '결과 볼게요'
+          : last
+            ? '다시 풀어볼게요'
+            : '다음 문제'
+      }
+      progressRange={progressRangeOf(review)}
+    />
+  );
+};
+
+// 첫 조회 동안 — 진행바만 있는 빈 화면으로 다음 화면의 자리를 잡아 둔다
+const ReviewLoading = () => (
+  <div
+    className="mx-auto h-dvh max-w-[430px] bg-background"
+    style={{ paddingTop: 'env(safe-area-inset-top)' }}
+  >
+    <div className="h-1 w-full bg-secondary" />
+  </div>
+);
