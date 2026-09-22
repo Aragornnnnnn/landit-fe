@@ -21,22 +21,20 @@ const full = [
 ];
 
 describe('buildPromoSheet', () => {
-  it('할인 연간의 월 환산과 정가 대비 할인율을 낸다', () => {
+  it('할인 연간의 월 환산과, 월간으로 1년 쓸 때 대비 할인율을 낸다', () => {
     const sheet = buildPromoSheet(tiers(...full));
 
     expect(sheet).toMatchObject({
       yearly: {
         price: 58_500,
-        listPrice: 94_800,
         monthlyPrice: 4_900,
-        monthlyListPrice: 7_900,
-        discountRate: 38,
+        discountRate: 67,
         packageId: 'annual_discount',
       },
     });
   });
 
-  it('월간은 할인이 없어 정가 그대로 팔고, 연 환산을 같이 낸다 — 연간과 같은 자로 비교되게', () => {
+  it('월간은 할인이 없어 정가 그대로 팔고, 연 환산과 차액을 같이 낸다', () => {
     const sheet = buildPromoSheet(tiers(...full));
 
     expect(sheet?.monthly).toMatchObject({
@@ -44,6 +42,7 @@ describe('buildPromoSheet', () => {
       yearlyEquivalent: 178_800,
       packageId: '$rc_monthly',
     });
+    expect(sheet?.savings).toBe(120_300);
   });
 
   it('할인 패키지가 없으면 시트를 만들지 않는다 — 화면이 이걸 보고 띄우지 않는다', () => {
@@ -52,17 +51,46 @@ describe('buildPromoSheet', () => {
     ).toBeNull();
   });
 
-  it('정가 연간을 못 받았으면 시트를 만들지 않는다 — 스토어에 없는 정가로 할인율을 지어내지 않는다', () => {
-    expect(
-      buildPromoSheet(tiers(pkg('annual_discount', 'yearly', 58_500))),
-    ).toBeNull();
-  });
-
-  it('정가와 같으면 시트를 만들지 않는다 — 정가 인상 전에 오퍼링에 먼저 넣어 둬도 아무 일이 없다', () => {
+  it('정가 연간을 못 받았으면 시트를 만들지 않는다 — 인상 여부를 확인할 길이 없다', () => {
     expect(
       buildPromoSheet(
         tiers(
+          pkg('$rc_monthly', 'monthly', 14_900),
+          pkg('annual_discount', 'yearly', 58_500),
+        ),
+      ),
+    ).toBeNull();
+  });
+
+  it('정가 연간이 할인가와 같으면 시트를 만들지 않는다 — 정가 인상 전에 오퍼링에 먼저 넣어 둬도 아무 일이 없다', () => {
+    expect(
+      buildPromoSheet(
+        tiers(
+          pkg('$rc_monthly', 'monthly', 14_900),
           pkg('$rc_annual', 'yearly', 58_500),
+          pkg('annual_discount', 'yearly', 58_500),
+        ),
+      ),
+    ).toBeNull();
+  });
+
+  it('월간을 못 받았으면 시트를 만들지 않는다 — 비교할 자가 없으면 할인율도 없다', () => {
+    expect(
+      buildPromoSheet(
+        tiers(
+          pkg('$rc_annual', 'yearly', 94_800),
+          pkg('annual_discount', 'yearly', 58_500),
+        ),
+      ),
+    ).toBeNull();
+  });
+
+  it('월간이 할인 연간보다 싸면 시트를 만들지 않는다 — 할인이 아닌 것을 할인이라 부르지 않는다', () => {
+    expect(
+      buildPromoSheet(
+        tiers(
+          pkg('$rc_monthly', 'monthly', 4_000),
+          pkg('$rc_annual', 'yearly', 94_800),
           pkg('annual_discount', 'yearly', 58_500),
         ),
       ),
@@ -73,21 +101,13 @@ describe('buildPromoSheet', () => {
     const usd = { ...pkg('annual_discount', 'yearly', 39.99), currency: 'USD' };
 
     expect(
-      buildPromoSheet(tiers(pkg('$rc_annual', 'yearly', 94_800), usd)),
-    ).toBeNull();
-  });
-
-  it('월간을 못 받았으면 등록값과 표준 패키지로 판다', () => {
-    const sheet = buildPromoSheet(
-      tiers(
-        pkg('$rc_annual', 'yearly', 94_800),
-        pkg('annual_discount', 'yearly', 58_500),
+      buildPromoSheet(
+        tiers(
+          pkg('$rc_monthly', 'monthly', 14_900),
+          pkg('$rc_annual', 'yearly', 94_800),
+          usd,
+        ),
       ),
-    );
-
-    expect(sheet?.monthly).toMatchObject({
-      price: 14_900,
-      packageId: '$rc_monthly',
-    });
+    ).toBeNull();
   });
 });

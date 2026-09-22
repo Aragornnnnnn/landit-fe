@@ -65,13 +65,12 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('PromoSheet', () => {
-  it('할인가와 정가 비교선, 할인율, 남은 시간을 보여준다', () => {
+  it('할인가와 할인율, 남은 시간을 보여준다', () => {
     open();
 
     expect(screen.getByText('월 4,900원')).toBeInTheDocument();
-    expect(screen.getByText('94,800원')).toBeInTheDocument();
     expect(screen.getByText('58,500원 /년')).toBeInTheDocument();
-    expect(screen.getByText('38% 할인')).toBeInTheDocument();
+    expect(screen.getByText('67% 할인')).toBeInTheDocument();
     // 자리마다 따로 그려 글자가 쪼개진다 — 합친 문자열로 본다
     expect(document.body.textContent).toContain('02:45 후 종료');
   });
@@ -83,10 +82,11 @@ describe('PromoSheet', () => {
     expect(screen.getByText('178,800원 /년')).toBeInTheDocument();
   });
 
-  it('신규 유저에게만 웰컴 특가 라벨을 붙인다', () => {
+  it('월간으로 1년 쓸 때와의 차액을 적는다 — 월 단위 숫자만으로는 한 해에 얼마가 남는지 읽히지 않는다', () => {
     open();
 
-    expect(screen.getByText('웰컴 특가')).toBeInTheDocument();
+    expect(screen.getByText('월간으로 1년 쓰면 178,800원')).toBeInTheDocument();
+    expect(screen.getByText('120,300원 아껴요')).toBeInTheDocument();
   });
 
   it('체험 포함 여부를 카드마다 밝힌다 — 월간에는 체험이 없다', () => {
@@ -159,7 +159,7 @@ describe('PromoSheet', () => {
     expect(screen.queryByText(/월 4,900원/)).toBeNull();
   });
 
-  it('월간을 고르면 CTA와 결제 안내가 월간용으로 바뀐다 — 할인은 연간에만 있다', () => {
+  it('월간을 고르면 CTA가 월간용으로 바뀐다 — 할인은 연간에만 있다', () => {
     open();
 
     fireEvent.click(screen.getByRole('button', { name: '월간 플랜' }));
@@ -168,9 +168,8 @@ describe('PromoSheet', () => {
       screen.getByRole('button', { name: '월 14,900원으로 시작하기' }),
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /할인 받고/ })).toBeNull();
-    expect(
-      screen.getByText('매월 14,900원 정기 결제 · 언제든 해지 가능'),
-    ).toBeInTheDocument();
+    // 방금 고른 것을 깎는 말이 된다
+    expect(screen.queryByText(/아껴요/)).toBeNull();
   });
 
   it('만료되면 스스로 닫는다 — 끝난 할인을 띄워 두지 않는다', () => {
@@ -188,12 +187,9 @@ describe('PromoSheet', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('결제할 수 있는 화면이라 해지 안내와 약관 링크를 단다', () => {
+  it('결제할 수 있는 화면이라 약관 링크를 단다', () => {
     open();
 
-    expect(
-      screen.getByText('체험 종료 24시간 전까지 해지하면 청구되지 않아요'),
-    ).toBeInTheDocument();
     expect(screen.getByText('이용약관')).toBeInTheDocument();
     expect(screen.getByText('개인정보 처리방침')).toBeInTheDocument();
   });

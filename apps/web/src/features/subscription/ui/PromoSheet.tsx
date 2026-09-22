@@ -19,6 +19,7 @@ import { buildPromoSheet } from '../model/promo-sheet';
 import { usePurchase } from '../model/usePurchase';
 import { GOLD_GRADIENT, PremiumPill } from './premium-brand';
 import { PromoClock } from './PromoClock';
+import { PromoGlow } from './PromoGlow';
 
 interface PromoSheetProps {
   /** 화면에 적을 할인. 끝났으면 남은 시간이 0으로 온다 */
@@ -77,7 +78,7 @@ export const PromoSheet = ({
     if (!busy) onClose();
   };
 
-  const { yearly, monthly } = sheet;
+  const { yearly, monthly, savings } = sheet;
   const isYearly = selectedPlan === 'yearly';
   // 할인은 연간에만 있다 — 월간을 고른 채 "할인 받고 시작하기"를 띄우면 거짓말이 된다.
   // 월간 문구는 페이월 CTA와 같은 말을 쓴다
@@ -98,6 +99,8 @@ export const PromoSheet = ({
 
   return (
     <BottomSheet open onClose={closeIfIdle}>
+      <PromoGlow />
+
       {/* 딤을 눌러 닫을 수 있지만 눈에 보이는 길도 둔다. 결제 중에는 여기도 잠긴다 */}
       <button
         type="button"
@@ -108,19 +111,12 @@ export const PromoSheet = ({
         <CloseIcon size={24} />
       </button>
 
-      <header className="flex flex-col items-center text-center">
-        <div className="flex items-center gap-2">
-          <PremiumPill />
-          {promo.newUser && (
-            <span className="text-[13px] leading-[1.3] font-medium text-muted-foreground">
-              웰컴 특가
-            </span>
-          )}
-        </div>
-        <h2 className="mt-2.5 text-[22px] leading-[1.35] font-bold text-foreground">
+      <header className="relative flex flex-col items-center text-center">
+        <PremiumPill />
+        <h2 className="mt-2.5 text-[26px] leading-[1.3] font-bold text-foreground">
           지금 화면에서만
           <br />
-          구독 {yearly.discountRate}% 할인
+          구독 <span className="text-[30px]">{yearly.discountRate}%</span> 할인
         </h2>
         {/* 금색은 맨 위 PREMIUM과 할인율 배지 둘만 — 남은 시간은 배경 없이 빨간 글자로 */}
         <p className="mt-2.5 flex items-center gap-1 text-[15px] leading-[1.3] font-bold text-destructive">
@@ -128,7 +124,7 @@ export const PromoSheet = ({
         </p>
       </header>
 
-      <section className="mt-5 flex flex-col gap-2.5">
+      <section className="relative mt-5 flex flex-col gap-2.5">
         <PlanRow
           title="연간 플랜"
           selected={isYearly}
@@ -137,7 +133,6 @@ export const PromoSheet = ({
           trial="7일 무료 체험 포함"
           price={`월 ${formatWon(yearly.monthlyPrice)}`}
           yearPrice={`${formatWon(yearly.price)} /년`}
-          yearListPrice={yearly.listPrice ? formatWon(yearly.listPrice) : null}
         />
         <PlanRow
           title="월간 플랜"
@@ -147,25 +142,26 @@ export const PromoSheet = ({
           trial={null}
           price={`월 ${formatWon(monthly.price)}`}
           yearPrice={`${formatWon(monthly.yearlyEquivalent)} /년`}
-          yearListPrice={null}
         />
       </section>
 
-      <footer className="mt-6">
+      {/* 같은 기간으로 맞춰 보여 준다 — 월 단위 숫자만으로는 한 해에 얼마가 남는지 읽히지 않는다.
+          월간을 고른 사람에게는 걷는다. 방금 고른 것을 깎는 말이 된다 */}
+      {isYearly && (
+        <p className="relative mt-3 flex items-center justify-center gap-1.5 text-[13px] leading-[1.3]">
+          <span className="text-muted-foreground">
+            월간으로 1년 쓰면 {formatWon(monthly.yearlyEquivalent)}
+          </span>
+          <span className="font-bold text-primary">
+            {formatWon(savings)} 아껴요
+          </span>
+        </p>
+      )}
+
+      <footer className="relative mt-6">
         <Button onClick={startPurchase} loading={busy}>
           {ctaLabel}
         </Button>
-        {/* 결제할 수 있는 화면이라 자동 갱신 금액과 해지 방법을 여기서도 밝힌다 (스토어 심사 항목) */}
-        <p className="mt-3 text-center text-[11px] leading-[1.35] text-muted-foreground">
-          {isYearly
-            ? `7일 무료 체험 후 연 ${formatWon(yearly.price)} 정기 결제 · 언제든 해지 가능`
-            : `매월 ${formatWon(monthly.price)} 정기 결제 · 언제든 해지 가능`}
-        </p>
-        <p className="mt-1 text-center text-[11px] leading-[1.35] text-muted-foreground">
-          {isYearly
-            ? '체험 종료 24시간 전까지 해지하면 청구되지 않아요'
-            : '결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요'}
-        </p>
         <nav className="mt-3 flex justify-center gap-3 text-[10px] leading-[1.3] font-medium text-muted-foreground underline">
           <Link href="/terms">이용약관</Link>
           <Link href="/privacy">개인정보 처리방침</Link>
@@ -187,8 +183,6 @@ interface PlanRowProps {
   price: string;
   /** 1년치 금액. 두 카드를 같은 자로 재야 얼마나 싼지 읽힌다 */
   yearPrice: string;
-  /** 지워서 보여줄 1년치 정가. 비교할 정가가 없으면 null */
-  yearListPrice: string | null;
 }
 
 const PlanRow = ({
@@ -199,7 +193,6 @@ const PlanRow = ({
   trial,
   price,
   yearPrice,
-  yearListPrice,
 }: PlanRowProps) => (
   <button
     type="button"
@@ -237,10 +230,7 @@ const PlanRow = ({
       <span className="text-[19px] leading-[1.3] font-bold text-foreground">
         {price}
       </span>
-      <span className="flex items-center gap-1.5 text-[12px] leading-[1.3] text-muted-foreground">
-        {yearListPrice && (
-          <span className="text-[#9ca3af] line-through">{yearListPrice}</span>
-        )}
+      <span className="text-[12px] leading-[1.3] text-muted-foreground">
         {yearPrice}
       </span>
     </span>
