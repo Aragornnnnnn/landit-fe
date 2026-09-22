@@ -70,9 +70,41 @@ describe('PromoSheet', () => {
     open();
 
     expect(screen.getByText('월 4,900원')).toBeInTheDocument();
-    expect(screen.getByText('월 7,900원')).toBeInTheDocument();
+    expect(screen.getByText('94,800원')).toBeInTheDocument();
+    expect(screen.getByText('58,500원 /년')).toBeInTheDocument();
     expect(screen.getByText('38% 할인')).toBeInTheDocument();
     expect(screen.getByText('02:45 후 종료')).toBeInTheDocument();
+  });
+
+  it('월간도 1년치로 보여준다 — 같은 자로 재야 연간이 얼마나 싼지 읽힌다', () => {
+    open();
+
+    expect(screen.getByText('월 14,900원')).toBeInTheDocument();
+    expect(screen.getByText('178,800원 /년')).toBeInTheDocument();
+  });
+
+  it('체험 포함 여부를 카드마다 밝힌다 — 월간에는 체험이 없다', () => {
+    open();
+
+    expect(screen.getByText('7일 무료 체험 포함')).toBeInTheDocument();
+    expect(screen.getByText('무료 체험 미포함')).toBeInTheDocument();
+  });
+
+  it('닫기 버튼으로도 나갈 수 있다 — 딤 말고 눈에 보이는 길', () => {
+    const onClose = vi.fn();
+    render(
+      <PromoSheet
+        promo={promo}
+        expired={false}
+        tiers={tiers}
+        onClose={onClose}
+        onUnlocked={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+
+    expect(onClose).toHaveBeenCalled();
   });
 
   it('연간은 할인 패키지로, 월간은 정가 패키지로 결제가 간다', () => {

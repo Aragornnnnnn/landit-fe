@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { track } from '@/shared/analytics';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
+import { CloseIcon } from '@/shared/ui/Icons';
 
 import type { PaywallPromo } from '../api/subscription';
 import type { OfferingTiers } from '../model/offerings';
@@ -91,17 +92,29 @@ export const PromoSheet = ({
 
   return (
     <BottomSheet open onClose={closeIfIdle}>
-      <header className="text-center">
-        <PremiumPill />
-        {promo.newUser && (
-          <p className="mt-2.5 text-[12px] leading-[1.3] font-medium text-muted-foreground">
-            신규 유저 혜택
-          </p>
-        )}
+      {/* 딤을 눌러 닫을 수 있지만 눈에 보이는 길도 둔다. 결제 중에는 여기도 잠긴다 */}
+      <button
+        type="button"
+        aria-label="닫기"
+        onClick={closeIfIdle}
+        className="absolute top-4 right-4 text-muted-foreground"
+      >
+        <CloseIcon size={24} />
+      </button>
+
+      <header className="flex flex-col items-center text-center">
+        <div className="flex items-center gap-2">
+          <PremiumPill />
+          {promo.newUser && (
+            <span className="text-[13px] leading-[1.3] font-medium text-muted-foreground">
+              신규 유저 혜택
+            </span>
+          )}
+        </div>
         <h2 className="mt-2.5 text-[22px] leading-[1.35] font-bold text-foreground">
           지금 화면에서만
           <br />
-          구독 {yearly.discountRate ? `${yearly.discountRate}% ` : ''}할인
+          구독 {yearly.discountRate}% 할인
         </h2>
         {/* 금색은 맨 위 PREMIUM과 할인율 배지 둘만 — 남은 시간은 배경 없이 빨간 글자로 */}
         <p className="mt-2.5 text-[15px] leading-[1.3] font-bold text-destructive tabular-nums">
@@ -114,23 +127,21 @@ export const PromoSheet = ({
           title="연간 플랜"
           selected={isYearly}
           onSelect={() => selectPlan('yearly')}
-          badge={yearly.discountRate ? `${yearly.discountRate}% 할인` : null}
+          badge={`${yearly.discountRate}% 할인`}
+          trial="7일 무료 체험 포함"
           price={`월 ${formatWon(yearly.monthlyPrice)}`}
-          listPrice={
-            yearly.monthlyListPrice
-              ? `월 ${formatWon(yearly.monthlyListPrice)}`
-              : null
-          }
-          note={`연 ${formatWon(yearly.price)} · 7일 무료 체험`}
+          yearPrice={`${formatWon(yearly.price)} /년`}
+          yearListPrice={yearly.listPrice ? formatWon(yearly.listPrice) : null}
         />
         <PlanRow
           title="월간 플랜"
           selected={!isYearly}
           onSelect={() => selectPlan('monthly')}
           badge={null}
+          trial={null}
           price={`월 ${formatWon(monthly.price)}`}
-          listPrice={null}
-          note="매달 결제 · 언제든 해지"
+          yearPrice={`${formatWon(monthly.yearlyEquivalent)} /년`}
+          yearListPrice={null}
         />
       </section>
 
@@ -164,10 +175,14 @@ interface PlanRowProps {
   onSelect: () => void;
   /** 카드 위 테두리에 걸치는 문구. 할인을 강조하는 카드만 */
   badge: string | null;
+  /** 무료 체험 포함 여부. 없는 플랜은 null이라 줄이 비지 않는다 */
+  trial: string | null;
+  /** 큰 숫자 — 월 기준 금액 */
   price: string;
-  /** 지워서 보여줄 비교가. 비교할 정가가 없으면 null */
-  listPrice: string | null;
-  note: string;
+  /** 1년치 금액. 두 카드를 같은 자로 재야 얼마나 싼지 읽힌다 */
+  yearPrice: string;
+  /** 지워서 보여줄 1년치 정가. 비교할 정가가 없으면 null */
+  yearListPrice: string | null;
 }
 
 const PlanRow = ({
@@ -175,38 +190,53 @@ const PlanRow = ({
   selected,
   onSelect,
   badge,
+  trial,
   price,
-  listPrice,
-  note,
+  yearPrice,
+  yearListPrice,
 }: PlanRowProps) => (
   <button
     type="button"
     aria-label={title}
     aria-pressed={selected}
     onClick={onSelect}
-    className={`relative flex items-center justify-between rounded-2xl border bg-card px-4 py-3.5 text-left ${
-      selected ? 'border-2 border-primary' : 'border-border'
+    // 선택은 테두리와 바탕색만으로 말한다 — 페이월 카드와 같은 문법이라 체크 표시를 두지 않는다
+    className={`relative flex items-center justify-between rounded-2xl px-4 py-4 text-left ${
+      selected
+        ? 'border-2 border-primary bg-[#fffcf8]'
+        : 'border border-border bg-card'
     }`}
   >
     {badge && (
       <span
-        className="absolute -top-2.5 left-4 rounded-full px-2.5 py-[3px] text-[11px] leading-[1.3] font-bold text-[#4a2f00]"
+        className="absolute -top-2.5 right-4 rounded-full px-2.5 py-[3px] text-[11px] leading-[1.3] font-bold text-[#4a2f00]"
         style={{ background: GOLD_GRADIENT }}
       >
         {badge}
       </span>
     )}
-    <span className="flex flex-col">
-      <span className="text-[15px] font-bold text-foreground">{title}</span>
-      <span className="text-[12px] text-muted-foreground">{note}</span>
+    <span className="flex flex-col gap-0.5">
+      <span className="text-[17px] leading-[1.3] font-bold text-foreground">
+        {title}
+      </span>
+      <span
+        className={`text-[12px] leading-[1.3] ${
+          trial ? 'text-primary' : 'text-muted-foreground'
+        }`}
+      >
+        {trial ?? '무료 체험 미포함'}
+      </span>
     </span>
-    <span className="flex flex-col items-end">
-      <span className="text-[17px] font-bold text-foreground">{price}</span>
-      {listPrice && (
-        <span className="text-[12px] text-muted-foreground line-through">
-          {listPrice}
-        </span>
-      )}
+    <span className="flex flex-col items-end gap-0.5">
+      <span className="text-[19px] leading-[1.3] font-bold text-foreground">
+        {price}
+      </span>
+      <span className="flex items-center gap-1.5 text-[12px] leading-[1.3] text-muted-foreground">
+        {yearListPrice && (
+          <span className="text-[#9ca3af] line-through">{yearListPrice}</span>
+        )}
+        {yearPrice}
+      </span>
     </span>
   </button>
 );
