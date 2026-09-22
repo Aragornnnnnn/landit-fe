@@ -174,7 +174,7 @@ export const useSmallTalkFlow = ({
   const budget = useSpeakingBudget({
     initialMs: remainingSpeakingTimeMs,
     // 타이핑은 말한 게 아니다 — 같은 단계(USER_SPEAKING)여도 눈금은 멈춰 있다
-    speaking: engine.phase === 'USER_SPEAKING' && !engine.input.keyboardMode,
+    speaking: engine.phase === 'USER_SPEAKING' && !engine.typing,
     waiting: engine.phase === 'USER_READY',
   });
 

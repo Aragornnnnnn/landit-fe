@@ -57,6 +57,7 @@ export const SmallTalkConversation = ({
   const [introDismissed, setIntroDismissed] = useState(false);
   const {
     phase,
+    typing,
     turnIndex,
     turn,
     finishedThought,
@@ -77,7 +78,6 @@ export const SmallTalkConversation = ({
   const {
     transcript,
     setTranscript,
-    keyboardMode,
     pressMic,
     pressKeyboard,
     cancelInput,
@@ -88,8 +88,7 @@ export const SmallTalkConversation = ({
   } = input;
 
   const ended = phase === 'DONE';
-  // 키보드 입력 중 — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
-  const typing = keyboardMode && phase === 'USER_SPEAKING';
+  // 타이핑 중(engine.typing)에는 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
   const keyboardInset = useKeyboardInset();
   const showUserFirstIntro =
     turn.isUserOpening && phase === 'USER_READY' && !introDismissed;

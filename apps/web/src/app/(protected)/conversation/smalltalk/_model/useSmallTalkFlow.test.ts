@@ -280,6 +280,19 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
     expect(result.current.remainingMs).toBe(20_000);
   });
 
+  it('타이핑 제출이 실패해도 쓴 글은 남는다', async () => {
+    // 실패하면 화면은 말하기 대기로 돌아가는데, 엔진이 초안을 비우면 전문을 다시 쳐야 한다
+    submitSmallTalkMessage.mockRejectedValueOnce(new Error('503'));
+    const { result } = renderFlow(20_000);
+
+    await typeAndSubmit(result, 'Hello there.');
+    expect(result.current.phase).toBe('USER_READY');
+
+    act(() => result.current.input.pressKeyboard()); // 다시 쓰러 들어간다
+
+    expect(result.current.input.transcript).toBe('Hello there.');
+  });
+
   it('제출이 성공하면 서버가 정산한 값으로 맞춘다', async () => {
     // 화면의 1초 눈금은 어림값이다 — 정본은 서버가 준 잔량이다
     submitSmallTalkMessage.mockResolvedValueOnce(submitResponse());
