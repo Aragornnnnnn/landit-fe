@@ -17,6 +17,7 @@ const active = (
   renews: true,
   plan: 'monthly',
   price: null,
+  productId: null,
   ...overrides,
 });
 

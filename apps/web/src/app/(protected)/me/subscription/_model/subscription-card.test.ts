@@ -13,6 +13,7 @@ const active = (
   renews: true,
   plan: null,
   price: null,
+  productId: null,
   ...overrides,
 });
 
@@ -86,6 +87,18 @@ describe('toAmountRow', () => {
       value: '47,000원',
       listPrice: '178,800원',
     });
+  });
+
+  it('체험 중이라 결제액이 없으면 그 상품의 등록값으로 그린다 — 할인가 체험자에게 정가를 보여주지 않는다', () => {
+    expect(
+      toAmountRow(
+        active({
+          kind: 'trial',
+          plan: 'yearly',
+          productId: 'com.saynow.app.premium.yearly.discount',
+        }),
+      ),
+    ).toMatchObject({ label: '첫 결제 금액', value: '58,500원' });
   });
 
   it('체험은 첫 결제 금액이고, 플랜을 모르거나 갱신이 안 되면 행이 없다', () => {

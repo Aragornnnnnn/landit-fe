@@ -5,7 +5,12 @@ import type {
   MySubscription,
   SubscriptionPeriodType,
 } from '../api/subscription';
-import { findPlan, planFromProductId, type PlanId } from './plans';
+import {
+  findPlan,
+  planFromProductId,
+  priceFromProductId,
+  type PlanId,
+} from './plans';
 
 export type SubscriptionSummary =
   | { kind: 'none' }
@@ -19,6 +24,8 @@ export type SubscriptionSummary =
       plan: PlanId | null;
       /** 앞으로 청구될 원화 금액. 청구가 없거나(프로모션·선결제) 외화면 null — 화면은 `resolveChargedPrice`로 읽는다 */
       price: number | null;
+      /** BE가 준 상품 식별자. 같은 연간이라도 정가·할인이 갈려 금액 폴백에 쓴다 */
+      productId: string | null;
     };
 
 /** 유료인 경우만 — 상태와 날짜가 있다 */
@@ -57,8 +64,16 @@ export const summarizeSubscription = (
   const { subscriptionStatus, periodType, expiresAt } = subscription;
   const plan = planFromProductId(subscription.productId);
   const price = toKrwPrice(subscription);
+  const productId = subscription.productId ?? null;
   if (subscriptionStatus === 'CANCELED') {
-    return { kind: 'canceled', expiresAt, renews: false, plan, price };
+    return {
+      kind: 'canceled',
+      expiresAt,
+      renews: false,
+      plan,
+      price,
+      productId,
+    };
   }
   return {
     kind: periodType === 'TRIAL' ? 'trial' : 'active',
@@ -66,6 +81,7 @@ export const summarizeSubscription = (
     renews: periodType !== null && RENEWING_PERIODS.has(periodType),
     plan,
     price,
+    productId,
   };
 };
 
