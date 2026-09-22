@@ -95,6 +95,7 @@ const question = (
     writingQuestionTranslation: '어땠어?',
     writingSentenceWords: text.split(' '),
     writingSentenceWordChoices: text.split(' '),
+    writingSentenceAcceptedAnswers: [text.split(' ')],
   },
   displayOrder: 0,
   queueOrder: 0,

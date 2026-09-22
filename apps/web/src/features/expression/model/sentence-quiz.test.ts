@@ -54,6 +54,9 @@ describe('fromLearning', () => {
         'Gyeongbokgung',
         'amazing',
       ],
+      acceptedAnswers: [
+        ['Gyeongbokgung', 'Palace', 'will', 'blow', 'your', 'mind'],
+      ],
     });
   });
 
@@ -86,6 +89,9 @@ describe('fromWritingSentence', () => {
       'effects',
       'amazing',
     ],
+    writingSentenceAcceptedAnswers: [
+      ['The', 'special', 'effects', 'blew', 'my', 'mind'],
+    ],
   };
 
   it('영어 문제(EN)는 해석을 보여주고 영어 문장을 조립한다', () => {
@@ -104,6 +110,7 @@ describe('fromWritingSentence', () => {
         'effects',
         'amazing',
       ],
+      acceptedAnswers: [['The', 'special', 'effects', 'blew', 'my', 'mind']],
     });
   });
 
@@ -114,6 +121,10 @@ describe('fromWritingSentence', () => {
       quizLanguage: 'KR',
       writingSentenceWords: ['특수효과가', '끝내줬어'],
       writingSentenceWordChoices: ['별로였어', '특수효과가', '끝내줬어'],
+      writingSentenceAcceptedAnswers: [
+        ['특수효과가', '끝내줬어'],
+        ['끝내줬어', '특수효과가'],
+      ],
     };
 
     const quiz = fromWritingSentence(korean);
@@ -122,5 +133,18 @@ describe('fromWritingSentence', () => {
     expect(quiz.answerText).toBe('특수효과가 끝내줬어.');
     expect(quiz.answerWords).toEqual(['특수효과가', '끝내줬어']);
     expect(quiz.shuffledWords).toEqual(['별로였어', '특수효과가', '끝내줬어']);
+    // 어순이 다른 정답도 그대로 실린다 — 화면이 이 배열로 판정·힌트를 한다
+    expect(quiz.acceptedAnswers).toEqual([
+      ['특수효과가', '끝내줬어'],
+      ['끝내줬어', '특수효과가'],
+    ]);
+  });
+
+  it('허용 정답을 못 받은 응답은 정답 하나로 본다', () => {
+    const { writingSentenceAcceptedAnswers, ...legacy } = writing;
+
+    expect(
+      fromWritingSentence(legacy as WritingSentence).acceptedAnswers,
+    ).toEqual([['The', 'special', 'effects', 'blew', 'my', 'mind']]);
   });
 });

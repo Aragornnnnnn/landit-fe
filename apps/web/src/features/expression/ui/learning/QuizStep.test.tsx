@@ -21,6 +21,7 @@ const quiz: SentenceQuiz = {
   promptText: '내가 이겨',
   answerWords: ['I', 'win'],
   shuffledWords: ['win', 'I'],
+  acceptedAnswers: [['I', 'win']],
 };
 
 const pickCorrectAnswer = async (user: ReturnType<typeof userEvent.setup>) => {
@@ -430,5 +431,38 @@ describe('QuizStep', () => {
 
     expect(screen.getByText('아쉬워요')).toBeInTheDocument();
     expect(screen.queryByText('정답')).not.toBeInTheDocument();
+  });
+  it('어순이 다른 허용 정답으로 맞춰도 정답으로 본다 (한국어 문제)', async () => {
+    const user = userEvent.setup();
+    // given — 서버가 두 어순을 모두 정답으로 주는 한국어 문제
+    const korean: SentenceQuiz = {
+      writingQuestion: '어땠어?',
+      writingQuestionTranslation: 'How was it?',
+      answerText: '나도 완전 콜이야',
+      promptText: "I'm down for it",
+      answerWords: ['나도', '완전', '콜이야'],
+      shuffledWords: ['완전', '나도', '콜이야'],
+      acceptedAnswers: [
+        ['나도', '완전', '콜이야'],
+        ['완전', '콜이야', '나도'],
+      ],
+    };
+    render(
+      <QuizStep
+        step="review"
+        quiz={korean}
+        partner="chloe"
+        expressionId={1}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    for (const word of ['완전', '콜이야', '나도']) {
+      await user.click(screen.getByRole('button', { name: word }));
+    }
+    await user.click(screen.getByRole('button', { name: '확인할게요' }));
+
+    expect(screen.getByText('정답이에요!')).toBeInTheDocument();
   });
 });
