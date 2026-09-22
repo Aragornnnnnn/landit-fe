@@ -368,4 +368,67 @@ describe('QuizStep', () => {
       },
     );
   });
+  it('판정을 밖에서 받으면(judge) 고른 단어와 무관하게 그 판정을 따른다', async () => {
+    const user = userEvent.setup();
+    // given — 서버가 오답이라고 답하는 상황(정답 순서를 골라도 오답이다)
+    render(
+      <QuizStep
+        step="review"
+        quiz={quiz}
+        partner="chloe"
+        expressionId={1}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+        judge={() => Promise.resolve('wrong' as const)}
+      />,
+    );
+
+    await pickCorrectAnswer(user);
+    await user.click(screen.getByRole('button', { name: '확인할게요' }));
+
+    expect(screen.getByText('아쉬워요')).toBeInTheDocument();
+  });
+
+  it('판정을 받아오지 못하면 결과 시트 없이 다시 확인할 수 있다', async () => {
+    const user = userEvent.setup();
+    render(
+      <QuizStep
+        step="review"
+        quiz={quiz}
+        partner="chloe"
+        expressionId={1}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+        judge={() => Promise.reject(new Error('네트워크 실패'))}
+      />,
+    );
+
+    await pickCorrectAnswer(user);
+    await user.click(screen.getByRole('button', { name: '확인할게요' }));
+
+    expect(screen.queryByText('정답이에요!')).not.toBeInTheDocument();
+    expect(screen.queryByText('아쉬워요')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '확인할게요' })).toBeEnabled();
+  });
+
+  it('오답 정답 감추기(hideWrongAnswer)면 결과 시트에 정답 문장을 싣지 않는다', async () => {
+    const user = userEvent.setup();
+    render(
+      <QuizStep
+        step="review"
+        quiz={quiz}
+        partner="chloe"
+        expressionId={1}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+        hideWrongAnswer
+      />,
+    );
+
+    await pickWrongAnswer(user);
+    await user.click(screen.getByRole('button', { name: '확인할게요' }));
+
+    expect(screen.getByText('아쉬워요')).toBeInTheDocument();
+    expect(screen.queryByText('정답')).not.toBeInTheDocument();
+  });
 });

@@ -233,6 +233,12 @@ const resolvePage = (
     };
   }
 
+  // 알림으로 받는 복습 — 어느 복습인지는 UUID라 이름·속성에 싣지 않는다.
+  // 이름은 BE의 알림 종류·유입 캠페인과 같은 말(expression_review)을 쓴다
+  if (seg[0] === 'reviews' && seg[1]) {
+    return { page_name: 'expression_review', path: pathname };
+  }
+
   const nested = NESTED_PAGES[pathname];
   if (nested) return { page_name: nested, path: pathname };
 
