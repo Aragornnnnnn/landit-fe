@@ -174,14 +174,15 @@ export const SmallTalkConversation = ({
 
       <footer className="flex-none pb-[max(env(safe-area-inset-bottom),16px)]">
         {ended ? (
-          // 오늘의 스몰톡(지난번과 비교) → 상세 피드백 → 축하·맞춤 표현으로 이어진다
+          // 오늘의 스몰톡(지난번과 비교) → 상세 피드백 → 축하·맞춤 표현으로 이어진다.
+          // 버튼은 끝내는 말이 아니라 다음에 볼 것으로 부른다 — 여기서 대화는 이미 끝났다
           <div className="flex h-36 items-end px-5 pb-3">
             <Button
               onClick={() =>
                 router.replace(smallTalkSummaryPath(session.sessionId))
               }
             >
-              대화 종료하기
+              피드백 보러가기
               <ArrowRightIcon size={16} />
             </Button>
           </div>
