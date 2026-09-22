@@ -174,7 +174,7 @@ const PartnerMessage = ({ message }: { message: SmallTalkHistoryMessage }) => (
 
 // 내 말은 오른쪽에 원문만 — 내가 한 말은 번역이 필요 없다.
 // 그 아래에 배운 표현 태그 → (교정을 아직 만드는 중이면 찾는 중 한 줄) → 교정 카드 순으로 붙는다.
-// 고칠 게 없는 말풍선엔 아무것도 없다
+// 고칠 게 없었으면 교정 카드 자리에 잘했어요 한 줄이 선다
 const MyMessage = ({
   message,
   waitExpired,
@@ -203,11 +203,14 @@ const MyMessage = ({
         더 자연스러운 말을 찾는 중…
       </p>
     )}
-    {message.correction && (
+    {message.correction ? (
       <CorrectionCard
         correction={message.correction}
         className={lateCorrection ? 'animate-fade-up' : ''}
       />
+    ) : (
+      // 실패(FAILED)나 준비 중(PREPARING)도 교정이 없다 — 다 만들고 고칠 게 없었을 때만 칭찬한다
+      message.correctionStatus === 'COMPLETED' && <GoodJobTag />
     )}
   </div>
 );
@@ -241,6 +244,14 @@ const ReusedExpressionTag = ({
   <p className="flex items-center gap-1 rounded-full bg-success/10 px-3 py-1.5 text-[12px] font-semibold text-success">
     <CheckIcon size={12} strokeWidth={3} />
     배운 표현 「{expression.text}」을 썼어요
+  </p>
+);
+
+// 고칠 게 없던 말 — 배운 표현 태그와 같은 알약, 색만 파랑(잘한 것을 파랑으로 쓰는 피드백 상세와 같은 토큰)
+const GoodJobTag = () => (
+  <p className="flex items-center gap-1 rounded-full bg-good/10 px-3 py-1.5 text-[12px] font-semibold text-good">
+    <CheckIcon size={12} strokeWidth={3} />
+    잘했어요!
   </p>
 );
 
