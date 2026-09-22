@@ -3,7 +3,7 @@
 // 그날 주고받은 말 — 대화였으니 대화처럼 보여야 그때가 떠오른다.
 // 대화 화면의 말풍선은 TTS·마이크가 얽혀 있어 여기서는 읽기 전용으로 새로 그린다.
 // 대화 중엔 교정을 보여주지 않는 대신, 여기서 내 말풍선 아래에 더 자연스러운 말과 배운 표현 재사용을 붙인다
-import { useEffect, useEffectEvent } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
@@ -30,6 +30,7 @@ import {
   SparkleIcon,
 } from '@/shared/ui/Icons';
 
+import { waitedCorrectionIds } from '../_model/late-corrections';
 import {
   messageAnchorId,
   useCorrectionJump,
@@ -43,6 +44,9 @@ interface SmallTalkTranscriptProps {
   continueToLearning: boolean;
 }
 
+// 아직 아무것도 안 기다린 상태 — 렌더마다 새 집합을 만들지 않게 하나를 돌려 쓴다
+const EMPTY_WAITED: ReadonlySet<number> = new Set();
+
 export const SmallTalkTranscript = ({
   sessionId,
   continueToLearning,
@@ -55,6 +59,11 @@ export const SmallTalkTranscript = ({
   );
   // 들어오면 첫 교정으로, 칩을 누르면 다음 교정으로
   const { hasNext, jumpNext } = useCorrectionJump(session?.messages ?? []);
+
+  // 폴링으로 뒤늦게 온 교정만 떠오르게 한다 — 들어올 때 이미 있던 카드는 그냥 그린다
+  const [waited, setWaited] = useState<ReadonlySet<number>>(EMPTY_WAITED);
+  const seenWaited = waitedCorrectionIds(waited, session?.messages ?? []);
+  if (seenWaited !== waited) setWaited(seenWaited);
 
   // 대화가 실제로 그려진 순간을 노출로 기록한다 — 어느 길로 왔고 볼 교정이 몇 개인지가 실린다.
   // 이벤트로 감싸 폴링으로 응답이 갱신돼도 다시 찍지 않는다
@@ -104,7 +113,11 @@ export const SmallTalkTranscript = ({
                 id={messageAnchorId(message.messageId)}
               >
                 {message.role === 'USER' ? (
-                  <MyMessage message={message} waitExpired={waitExpired} />
+                  <MyMessage
+                    message={message}
+                    waitExpired={waitExpired}
+                    lateCorrection={seenWaited.has(message.messageId)}
+                  />
                 ) : (
                   <PartnerMessage message={message} />
                 )}
@@ -115,7 +128,7 @@ export const SmallTalkTranscript = ({
           {hasNext && (
             <button
               onClick={jumpNext}
-              className="absolute right-5 bottom-4 flex items-center gap-1 rounded-full bg-foreground px-3.5 py-2 text-[13px] font-semibold text-background shadow-md active:opacity-80"
+              className="animate-fade-up absolute right-5 bottom-4 flex items-center gap-1 rounded-full bg-foreground px-3.5 py-2 text-[13px] font-semibold text-background shadow-md active:opacity-80"
             >
               다음 자연스러운 말
               <ChevronDownIcon size={14} strokeWidth={2.5} />
@@ -165,10 +178,13 @@ const PartnerMessage = ({ message }: { message: SmallTalkHistoryMessage }) => (
 const MyMessage = ({
   message,
   waitExpired,
+  lateCorrection,
 }: {
   message: SmallTalkHistoryMessage;
   // 상한까지 기다려 더는 묻지 않는 상태 — 찾는 중 표시를 거둔다. 만들어지면 다음에 들어올 때 보인다
   waitExpired: boolean;
+  // 이 말풍선의 교정이 폴링으로 뒤늦게 왔는가 — 그때만 카드를 떠오르게 한다
+  lateCorrection: boolean;
 }) => (
   <div className="flex flex-col items-end gap-1.5">
     <div className="max-w-[78%] rounded-2xl bg-primary px-4 py-3 text-white">
@@ -187,7 +203,12 @@ const MyMessage = ({
         더 자연스러운 말을 찾는 중…
       </p>
     )}
-    {message.correction && <CorrectionCard correction={message.correction} />}
+    {message.correction && (
+      <CorrectionCard
+        correction={message.correction}
+        className={lateCorrection ? 'animate-fade-up' : ''}
+      />
+    )}
   </div>
 );
 
@@ -229,10 +250,14 @@ const ReusedExpressionTag = ({
 // 장기기억을 근거로 고쳤으면 그 근거를 날짜 태그로 보여준다
 const CorrectionCard = ({
   correction,
+  className = '',
 }: {
   correction: SmallTalkCorrection;
+  className?: string;
 }) => (
-  <section className="max-w-[88%] rounded-2xl bg-success/10 px-4 py-3">
+  <section
+    className={`max-w-[88%] rounded-2xl bg-success/10 px-4 py-3 ${className}`}
+  >
     <p className="flex items-center gap-1 text-[12px] font-semibold text-success">
       <SparkleIcon size={13} />
       이렇게 말하면 더 자연스러워요

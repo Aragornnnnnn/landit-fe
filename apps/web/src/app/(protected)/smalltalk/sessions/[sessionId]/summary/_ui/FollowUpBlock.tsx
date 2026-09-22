@@ -4,10 +4,12 @@ import { FOLLOW_UP_IMAGE } from '@/features/small-talk/model/randi-pose';
 
 export const FollowUpBlock = ({
   followUp,
+  className = '',
 }: {
   followUp: SmallTalkSummaryFollowUp;
+  className?: string;
 }) => (
-  <section>
+  <section className={className}>
     <h2 className="text-[13px] font-bold text-foreground">다음 스몰톡에서</h2>
     <div className="mt-2 flex items-end gap-2">
       {/* eslint-disable-next-line @next/next/no-img-element */}

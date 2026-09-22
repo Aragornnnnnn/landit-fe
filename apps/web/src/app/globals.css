@@ -308,6 +308,17 @@
 }
 
 /* 로딩 문구 전체를 훑는 하이라이트 — 문구가 멈춰 있어도 진행 중임이 보인다 */
+/* 지난번과 비교 막대 — 0에서 목표 길이까지 차오른다. 길이는 --bar-width로 받는다.
+ * motion(rAF) 대신 CSS — rAF가 멎은 웹뷰에서도 끝까지 간다 (LAN-375 교훈) */
+@keyframes bar-fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--bar-width, 0%);
+  }
+}
+
 @keyframes text-shimmer {
   from {
     background-position: 100% 0;
@@ -357,6 +368,19 @@
   @media (prefers-reduced-motion: reduce) {
     .animate-check-in {
       animation: none;
+    }
+  }
+
+  /* --i가 막대 번호 — 지난번·오늘이 한 쌍씩, 위 줄부터 차례로 찬다. 여섯 개가 1초 안에 끝난다 */
+  .animate-bar-fill {
+    animation: bar-fill 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(120ms + var(--i, 0) * 90ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-bar-fill {
+      animation: none;
+      width: var(--bar-width, 0%);
     }
   }
 
