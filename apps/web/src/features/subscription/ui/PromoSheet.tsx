@@ -113,7 +113,7 @@ export const PromoSheet = ({
           <PremiumPill />
           {promo.newUser && (
             <span className="text-[13px] leading-[1.3] font-medium text-muted-foreground">
-              신규 유저 혜택
+              웰컴 특가
             </span>
           )}
         </div>

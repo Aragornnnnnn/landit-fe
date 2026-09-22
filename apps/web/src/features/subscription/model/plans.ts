@@ -85,28 +85,19 @@ export const findPlan = (id: PlanId): PaywallPlan => buildPaywallPlans()[id];
 // 월간으로 1년을 낼 때 금액 — 연간 결제액의 비교 기준. 스토어에 없는 정가를 지어내지 않고 실제 월간 금액으로 잰다
 export const YEARLY_LIST_PRICE = MONTHLY_PRICE * 12;
 
-/**
- * 스토어 상품별 등록값 (docs/subscription.md 「상품과 가격」).
- *
- * 같은 연간이라도 상품이 둘이라 플랜만으로는 금액을 알 수 없다 — 할인가로 구독한 사람에게
- * 정가를 보여주게 된다. BE가 실제 결제액을 주기 전(무료 체험 중)에 쓰는 폴백이다.
- *
- * 정가를 올릴 때 바꾸는 줄은 `yearly` 하나뿐이고, 할인 상품 줄은 흔들리지 않는다.
- */
-const PRODUCTS: Record<string, { plan: PlanId; price: number }> = {
-  'com.saynow.app.premium.monthly': { plan: 'monthly', price: MONTHLY_PRICE },
-  'com.saynow.app.premium.yearly': { plan: 'yearly', price: YEARLY_PRICE },
-  'com.saynow.app.premium.yearly.discount': { plan: 'yearly', price: 58_500 },
+// 스토어 상품 식별자 → 플랜 (docs/subscription.md 「상품과 가격」).
+// 연간은 정가와 이탈 할인 둘이라 같은 플랜을 가리키는 id가 두 개다
+const PRODUCT_PLANS: Record<string, PlanId> = {
+  'com.saynow.app.premium.monthly': 'monthly',
+  'com.saynow.app.premium.yearly': 'yearly',
+  'com.saynow.app.premium.yearly.discount': 'yearly',
 };
 
-// Play는 RevenueCat이 `상품ID:베이스플랜ID`로 주므로 콜론 앞만 본다
-const findProduct = (productId: string | null | undefined) =>
-  PRODUCTS[(productId ?? '').split(':')[0]];
-
-/** BE가 준 상품 식별자를 플랜으로. 모르는 값(프로모션·옛 상품)은 null */
+/**
+ * BE가 준 상품 식별자를 플랜으로.
+ *
+ * Play는 RevenueCat이 `상품ID:베이스플랜ID`로 주므로 콜론 앞만 본다.
+ * 모르는 값(프로모션·옛 상품)은 null이고, 그러면 화면이 플랜을 말하지 않는다.
+ */
 export const planFromProductId = (productId: string | null | undefined) =>
-  findProduct(productId)?.plan ?? null;
-
-/** 그 상품의 스토어 등록값. 모르는 상품이면 null */
-export const priceFromProductId = (productId: string | null | undefined) =>
-  findProduct(productId)?.price ?? null;
+  PRODUCT_PLANS[(productId ?? '').split(':')[0]] ?? null;

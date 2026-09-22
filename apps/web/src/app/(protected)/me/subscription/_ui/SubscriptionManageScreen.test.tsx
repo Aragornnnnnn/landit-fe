@@ -184,6 +184,8 @@ describe('SubscriptionManageScreen', () => {
     mocks.query.subscription = {
       ...mocks.query.subscription!,
       productId: 'com.saynow.app.premium.yearly',
+      price: 58_500,
+      currency: 'KRW',
     };
     render(<SubscriptionManageScreen />);
 
@@ -197,6 +199,8 @@ describe('SubscriptionManageScreen', () => {
     mocks.query.subscription = {
       ...mocks.query.subscription!,
       productId: 'com.saynow.app.premium.monthly',
+      price: 14_900,
+      currency: 'KRW',
     };
     render(<SubscriptionManageScreen />);
 
@@ -235,5 +239,17 @@ describe('SubscriptionManageScreen', () => {
     vi.spyOn(window.history, 'length', 'get').mockReturnValue(2);
     fireEvent.click(screen.getByRole('button', { name: '뒤로 가기' }));
     expect(mocks.back).toHaveBeenCalledTimes(1);
+  });
+
+  it('무료 체험 중이면 결제 금액 행이 없다 — 결제 이력이 없어 실제 금액을 모른다', () => {
+    mocks.query.subscription = {
+      ...mocks.query.subscription!,
+      productId: 'com.saynow.app.premium.yearly',
+      periodType: 'TRIAL',
+      price: null,
+    };
+    render(<SubscriptionManageScreen />);
+
+    expect(screen.queryByText('첫 결제 금액')).not.toBeInTheDocument();
   });
 });

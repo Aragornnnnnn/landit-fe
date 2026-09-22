@@ -71,7 +71,8 @@ export const PremiumHeaderEntry = () => {
           className={PILL_CLASS}
           style={{ background: GOLD_GRADIENT }}
         >
-          <span className="tracking-[0.1em]">PREMIUM</span>
+          {/* 할인 중에는 PREMIUM 대신 무엇이 끝나는지를 적는다 — 숫자만 줄어들면 맥락이 없다 */}
+          <span>웰컴 특가</span>
           <PromoClock seconds={live.remainingSeconds} />
         </button>
       ) : (

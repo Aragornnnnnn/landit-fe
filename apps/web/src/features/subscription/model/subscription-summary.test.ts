@@ -35,7 +35,6 @@ describe('summarizeSubscription', () => {
       renews: true,
       plan: null,
       price: null,
-      productId: null,
     });
     expect(
       summarizeSubscription(premium({ periodType: 'INTRO' })),
@@ -49,7 +48,6 @@ describe('summarizeSubscription', () => {
       renews: true,
       plan: null,
       price: null,
-      productId: null,
     });
   });
 
@@ -64,7 +62,6 @@ describe('summarizeSubscription', () => {
       renews: false,
       plan: null,
       price: null,
-      productId: null,
     });
   });
 
@@ -127,17 +124,11 @@ describe('결제 금액', () => {
     ).toMatchObject({ price: null });
   });
 
-  it('무료 체험 중이면 상품별 등록값으로 떨어진다 — 할인가로 체험 중인 사람에게 정가를 보여주지 않는다', () => {
-    const summary = summarizeSubscription(
-      premium({
-        periodType: 'TRIAL',
-        productId: 'com.saynow.app.premium.yearly.discount',
-      }),
-    );
-
-    expect(summary).toMatchObject({
-      price: null,
-      productId: 'com.saynow.app.premium.yearly.discount',
-    });
+  it('할인 상품도 연간으로 읽는다 — 같은 플랜을 가리키는 상품이 둘이다', () => {
+    expect(
+      summarizeSubscription(
+        premium({ productId: 'com.saynow.app.premium.yearly.discount' }),
+      ),
+    ).toMatchObject({ plan: 'yearly' });
   });
 });

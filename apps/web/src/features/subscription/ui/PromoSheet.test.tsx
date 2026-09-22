@@ -83,6 +83,12 @@ describe('PromoSheet', () => {
     expect(screen.getByText('178,800원 /년')).toBeInTheDocument();
   });
 
+  it('신규 유저에게만 웰컴 특가 라벨을 붙인다', () => {
+    open();
+
+    expect(screen.getByText('웰컴 특가')).toBeInTheDocument();
+  });
+
   it('체험 포함 여부를 카드마다 밝힌다 — 월간에는 체험이 없다', () => {
     open();
 

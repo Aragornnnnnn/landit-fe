@@ -5,12 +5,7 @@ import type {
   MySubscription,
   SubscriptionPeriodType,
 } from '../api/subscription';
-import {
-  findPlan,
-  planFromProductId,
-  priceFromProductId,
-  type PlanId,
-} from './plans';
+import { planFromProductId, type PlanId } from './plans';
 
 export type SubscriptionSummary =
   | { kind: 'none' }
@@ -22,10 +17,11 @@ export type SubscriptionSummary =
       renews: boolean;
       /** 월간·연간. BE가 상품 식별자를 안 주거나 모르는 상품이면 null */
       plan: PlanId | null;
-      /** 앞으로 청구될 원화 금액. 청구가 없거나(프로모션·선결제) 외화면 null — 화면은 `resolveChargedPrice`로 읽는다 */
+      /**
+       * 실제로 낸 원화 금액. 결제 이력이 없거나(무료 체험) 외화면 null.
+       * null이면 화면은 금액을 말하지 않는다 — 등록값으로 추측하면 할인·가격 인상 때 남의 금액을 보여준다
+       */
       price: number | null;
-      /** BE가 준 상품 식별자. 같은 연간이라도 정가·할인이 갈려 금액 폴백에 쓴다 */
-      productId: string | null;
     };
 
 /** 유료인 경우만 — 상태와 날짜가 있다 */
@@ -64,7 +60,6 @@ export const summarizeSubscription = (
   const { subscriptionStatus, periodType, expiresAt } = subscription;
   const plan = planFromProductId(subscription.productId);
   const price = toKrwPrice(subscription);
-  const productId = subscription.productId ?? null;
   if (subscriptionStatus === 'CANCELED') {
     return {
       kind: 'canceled',
@@ -72,7 +67,6 @@ export const summarizeSubscription = (
       renews: false,
       plan,
       price,
-      productId,
     };
   }
   return {
@@ -81,7 +75,6 @@ export const summarizeSubscription = (
     renews: periodType !== null && RENEWING_PERIODS.has(periodType),
     plan,
     price,
-    productId,
   };
 };
 
@@ -94,17 +87,3 @@ export const canCancelAtStore = (
   summary: SubscriptionSummary,
 ): summary is PaidSubscriptionSummary =>
   summary.kind !== 'none' && summary.kind !== 'canceled' && summary.renews;
-
-/**
- * 화면에 적을 결제 금액 — 이 구독에 적용되는 금액이 먼저고 없으면 스토어 등록값이다.
- *
- * 같은 상품을 서로 다른 금액으로 구독 중인 사람이 있어(가격 인상 시 기존 구독자는 현재 가격 유지)
- * 등록값만으로 그리면 남의 금액을 보여주게 된다. 구독 카드와 해지 사유 화면이 같은 값을 말하도록 여기 하나만 둔다.
- *
- * @param plan 요약의 플랜. 호출부가 이미 null을 걸렀다
- * @returns 원화 금액
- */
-export const resolveChargedPrice = (
-  summary: PaidSubscriptionSummary,
-  plan: PlanId,
-) => summary.price ?? findPlan(plan).price;
