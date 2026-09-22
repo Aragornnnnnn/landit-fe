@@ -1,6 +1,6 @@
 // 스몰톡 대화 화면 — 세션이 열린 뒤의 본편. 시나리오 대화와 같은 무대·카드·마이크를 쓰되,
 // 오늘 남은 발화 시간을 머리 위에 두고, 끝나면 점수 대신 "얼마나 얘기했는지"를 보여준다.
-// 답은 말로만 한다 — 타이핑은 발화 시간을 안 쓰므로 하루 1분이라는 규칙이 무의미해진다
+// 답은 말로도 타이핑으로도 한다 — 타이핑 동안엔 발화 시간이 흐르지 않는다
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -27,6 +27,7 @@ import {
   sessionExpressionBranchPath,
   SMALLTALK_PATH,
 } from '@/shared/lib/routes';
+import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
@@ -56,6 +57,7 @@ export const SmallTalkConversation = ({
   const [introDismissed, setIntroDismissed] = useState(false);
   const {
     phase,
+    typing,
     turnIndex,
     turn,
     finishedThought,
@@ -75,14 +77,19 @@ export const SmallTalkConversation = ({
   });
   const {
     transcript,
+    setTranscript,
     pressMic,
+    pressKeyboard,
     cancelInput,
     finishListening,
+    submitText,
     micPermissionDenied,
     dismissMicPermissionNotice,
   } = input;
 
   const ended = phase === 'DONE';
+  // 타이핑 중(engine.typing)에는 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
+  const keyboardInset = useKeyboardInset();
   const showUserFirstIntro =
     turn.isUserOpening && phase === 'USER_READY' && !introDismissed;
   useEffect(() => {
@@ -102,7 +109,13 @@ export const SmallTalkConversation = ({
   const characterLook = toCharacterLook(phase, finishedThought);
 
   return (
-    <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
+    <main
+      className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
+      // iOS WKWebView는 키보드가 떠도 레이아웃이 안 줄어든다 — 가려진 높이만큼 올려 입력 박스를 보이게 한다
+      style={
+        typing && keyboardInset ? { paddingBottom: keyboardInset } : undefined
+      }
+    >
       <header
         className="absolute inset-x-0 top-0 z-20 flex items-center px-3"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 8px)' }}
@@ -146,7 +159,14 @@ export const SmallTalkConversation = ({
             <div className="flex-1" />
           </>
         ) : (
-          <UserTranscript text={transcript} phase={phase} />
+          <UserTranscript
+            text={transcript}
+            phase={phase}
+            editing={typing}
+            onChange={setTranscript}
+            onSubmit={submitText}
+            onCancel={cancelInput}
+          />
         )}
       </section>
 
@@ -167,7 +187,7 @@ export const SmallTalkConversation = ({
               <ArrowRightIcon size={16} />
             </Button>
           </div>
-        ) : (
+        ) : typing ? null : (
           <>
             {/* 남은 시간은 말하기 직전에 보여야 하는 값이라 마이크 바로 위에 둔다.
                 0이 돼도 하던 말은 끊지 않고, 그 발화를 끝으로 상대가 대화를 마무리한다.
@@ -183,6 +203,7 @@ export const SmallTalkConversation = ({
             <MicControl
               phase={phase}
               onPress={pressMic}
+              onKeyboard={pressKeyboard}
               onCancel={cancelInput}
               onDone={finishListening}
               remainingRatio={unlimited ? undefined : speakingRatio}

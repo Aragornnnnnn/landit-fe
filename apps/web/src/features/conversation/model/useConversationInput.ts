@@ -100,6 +100,12 @@ export const useConversationInput = ({
     onError: recoverFromSttError,
   });
 
+  // 기본 입력 수단(마이크)으로 — 쓰다 만 초안을 버리는 자리는 여기 하나다
+  const resetToVoiceInput = () => {
+    setKeyboardMode(false);
+    setTranscript('');
+  };
+
   // 마이크로 말하기 — 듣기 시작을 알리고 STT를 켠다
   const pressMic = () => {
     if (!canStart) return;
@@ -114,7 +120,7 @@ export const useConversationInput = ({
       session_id: sessionId ?? undefined,
       turn_index: turnIndex,
     });
-    setKeyboardMode(false);
+    resetToVoiceInput();
     spokeFromRef.current = Date.now();
     onInputStart();
     void stt.start();
@@ -123,12 +129,14 @@ export const useConversationInput = ({
   // 키보드로 입력 — 듣기를 시작하되 마이크는 켜지 않고 타이핑 입력창을 연다
   const pressKeyboard = () => {
     if (!canStart) return;
-    track(EVENTS.INPUT_MODE_SWITCHED, {
-      session_id: trackContext().sessionId ?? undefined,
-      mode: 'text',
-    });
+    // 이미 타이핑 중이었다면(제출이 실패해 돌아왔다) 전환이 아니다
+    if (!keyboardMode) {
+      track(EVENTS.INPUT_MODE_SWITCHED, {
+        session_id: trackContext().sessionId ?? undefined,
+        mode: 'text',
+      });
+    }
     setKeyboardMode(true);
-    setTranscript('');
     onInputStart();
   };
 
@@ -147,8 +155,7 @@ export const useConversationInput = ({
         mode: 'voice',
       });
     }
-    setKeyboardMode(false);
-    setTranscript('');
+    resetToVoiceInput();
     onInputCancel();
   };
 
@@ -170,12 +177,6 @@ export const useConversationInput = ({
     onContent(content, 'TEXT', 0);
   };
 
-  // 다음 턴 준비 — 미리보기를 비우고 기본 입력 수단(마이크)부터 다시 시작한다
-  const resetForNextTurn = () => {
-    setTranscript('');
-    setKeyboardMode(false);
-  };
-
   return {
     transcript,
     setTranscript,
@@ -185,7 +186,8 @@ export const useConversationInput = ({
     cancelInput,
     finishListening,
     submitText,
-    resetForNextTurn,
+    // 다음 턴 준비 — 미리보기를 비우고 기본 입력 수단(마이크)부터 다시 시작한다
+    resetForNextTurn: resetToVoiceInput,
     micPermissionDenied,
     dismissMicPermissionNotice: () => setMicPermissionDenied(false),
   };

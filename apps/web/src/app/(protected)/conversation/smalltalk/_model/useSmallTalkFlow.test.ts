@@ -159,6 +159,16 @@ const renderFlow = (remainingSpeakingTimeMs = 20_000) =>
     }),
   );
 
+// 키보드로 답을 써서 보낸다 — 말한 시간이 없는 발화다
+const typeAndSubmit = async (
+  result: { current: ReturnType<typeof useSmallTalkFlow> },
+  text: string,
+) => {
+  act(() => result.current.input.pressKeyboard());
+  act(() => result.current.input.setTranscript(text));
+  await act(async () => result.current.input.submitText());
+};
+
 // 마이크를 켜고 seconds초 동안 말한다 (눈금은 1초에 한 칸씩 깎인다)
 const speakFor = (
   result: { current: ReturnType<typeof useSmallTalkFlow> },
@@ -209,6 +219,32 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
     expect(result.current.speakingRatio).toBe(0);
   });
 
+  it('타이핑하는 동안에는 눈금이 줄지 않는다', () => {
+    // 타이핑은 말한 게 아니라 쓴 것이다 — 말하기와 같은 단계라고 깎으면 쓰지도 않은 시간이 사라진다
+    const { result } = renderFlow(20_000);
+
+    act(() => result.current.input.pressKeyboard());
+    act(() => vi.advanceTimersByTime(5_000));
+
+    expect(result.current.remainingMs).toBe(20_000);
+  });
+
+  it('타이핑한 답변은 말한 시간 0으로 제출한다', async () => {
+    submitSmallTalkMessage.mockResolvedValueOnce(submitResponse());
+    const { result } = renderFlow(20_000);
+
+    await typeAndSubmit(result, 'Hello there.');
+
+    expect(submitSmallTalkMessage).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({
+        content: 'Hello there.',
+        inputType: 'TEXT',
+        utteranceDurationMs: 0,
+      }),
+    );
+  });
+
   it('말하다 취소하면 말하기 전 값으로 되돌아온다', () => {
     // 보낸 말이 없으면 서버도 안 깎는다 — 화면만 깎인 채로 두면 다음 제출에서 시간이 되살아난다
     const { result } = renderFlow(20_000);
@@ -242,6 +278,19 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
     });
 
     expect(result.current.remainingMs).toBe(20_000);
+  });
+
+  it('타이핑 제출이 실패해도 쓴 글은 남는다', async () => {
+    // 실패하면 화면은 말하기 대기로 돌아가는데, 엔진이 초안을 비우면 전문을 다시 쳐야 한다
+    submitSmallTalkMessage.mockRejectedValueOnce(new Error('503'));
+    const { result } = renderFlow(20_000);
+
+    await typeAndSubmit(result, 'Hello there.');
+    expect(result.current.phase).toBe('USER_READY');
+
+    act(() => result.current.input.pressKeyboard()); // 다시 쓰러 들어간다
+
+    expect(result.current.input.transcript).toBe('Hello there.');
   });
 
   it('제출이 성공하면 서버가 정산한 값으로 맞춘다', async () => {
