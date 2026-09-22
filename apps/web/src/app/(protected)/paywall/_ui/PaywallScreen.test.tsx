@@ -34,6 +34,10 @@ vi.mock('@/shared/auth/auth-store', () => ({
     selector({ member: { userId: 1 } }),
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
+vi.mock('@/features/subscription/model/payment-flag', () => ({
+  PROMO_ENABLED: true,
+  PAYMENT_ENABLED: true,
+}));
 vi.mock('@/features/subscription/api/subscription', () => ({
   dismissPaywall: () => mocks.dismiss(),
 }));

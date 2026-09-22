@@ -143,10 +143,10 @@ describe('PromoSheet', () => {
     expect(screen.getByText('개인정보 처리방침')).toBeInTheDocument();
   });
 
-  it('정가 연간을 못 받았으면 비교선과 할인율을 뺀다 — 지어낸 정가를 보여주지 않는다', () => {
+  it('정가 연간을 못 받았으면 아무것도 그리지 않는다 — 지어낸 정가로 할인이라 부르지 않는다', () => {
     open({ list: { monthly: tiers.list.monthly } });
 
-    expect(screen.getByText('월 4,900원')).toBeInTheDocument();
-    expect(screen.queryByText(/% 할인/)).not.toBeInTheDocument();
+    expect(screen.queryByText('월 4,900원')).toBeNull();
+    expect(screen.queryByRole('button', { name: /시작하기/ })).toBeNull();
   });
 });

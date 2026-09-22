@@ -14,6 +14,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
+vi.mock('../model/payment-flag', () => ({
+  PROMO_ENABLED: true,
+  PAYMENT_ENABLED: true,
+}));
 vi.mock('./PromoSheetHost', () => ({
   PromoSheetHost: () => <div data-testid="promo-sheet-host" />,
 }));

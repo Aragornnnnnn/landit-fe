@@ -11,6 +11,7 @@ import { paywallPath, SCENARIO_PATH } from '@/shared/lib/routes';
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
 import type { PaywallPromo } from '../api/subscription';
+import { PROMO_ENABLED } from '../model/payment-flag';
 import { formatPromoClock } from '../model/promo-clock';
 import {
   clearPromoHandoff,
@@ -38,7 +39,9 @@ export const PremiumHeaderEntry = () => {
   const { subscription, isPending, isError } = useSubscriptionQuery({
     enabled: paymentLive,
   });
-  const live = usePromoOffer(subscription?.promo ?? null);
+  const live = usePromoOffer(
+    PROMO_ENABLED ? (subscription?.promo ?? null) : null,
+  );
   // 시트는 열 때의 할인을 스냅샷해 들고 간다 — 구독 쿼리가 다시 조회돼 promo가 비어도
   // 열린 시트가 걷히면 안 된다. 걷히는 순간 진행 중인 결제의 결과를 받을 곳이 사라진다
   // 배지를 눌러 연 할인과, 페이월에서 넘어온 할인. 둘 다 열 때의 값을 그대로 들고 간다 —

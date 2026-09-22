@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import { dismissPaywall } from '@/features/subscription/api/subscription';
 import { subscriptionKeys } from '@/features/subscription/model/keys';
 import { toKrwPrices } from '@/features/subscription/model/offerings';
+import { PROMO_ENABLED } from '@/features/subscription/model/payment-flag';
 import {
   buildPaywallPlans,
   DEFAULT_PLAN_ID,
@@ -60,8 +61,8 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
   // 학습 진입에서 밀려 올라온 화면이라 온 곳으로 되돌리면 다시 페이월에 걸린다 (docs/subscription.md)
   const close = async () => {
     if (closing) return;
-    // 할인 패키지를 못 받았으면 알리지도 않는다. 서버가 찍은 5분은 한 번뿐이라, 못 보여줄 할인을 태우면 안 된다
-    if (!tiers.promo.yearly) {
+    // 할인을 못 보여줄 상황이면 알리지도 않는다. 서버가 찍은 5분은 한 번뿐이라 태우면 돌려받지 못한다
+    if (!PROMO_ENABLED || !tiers.promo.yearly) {
       goHome();
       return;
     }
