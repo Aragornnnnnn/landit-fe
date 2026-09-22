@@ -577,8 +577,9 @@ export type EventProps = {
 
   // /download를 거치지 않고 스토어 앱을 바로 연 경우만 (앱 업데이트 유도 UI)
   'App Update Store Opened': { store: 'play_store' | 'app_store' };
-  'Paywall Plan Selected': { plan: SubscriptionPlan };
-  'Purchase Started': { plan: SubscriptionPlan };
+  // promo_campaign은 이탈 할인 시트에서 고르고 결제할 때만 붙는다 — 정가 결제와 할인 결제를 갈라 본다
+  'Paywall Plan Selected': { plan: SubscriptionPlan; promo_campaign?: string };
+  'Purchase Started': { plan: SubscriptionPlan; promo_campaign?: string };
   'Purchase Restore Tapped': undefined;
   'Paywall Gate Locked': { source: PaywallGateSource };
   'Level Result Viewed': {
@@ -624,13 +625,15 @@ export type EventProps = {
     unlocked: boolean;
     price?: number;
     currency?: string;
+    promo_campaign?: string;
   };
-  'Purchase Canceled': { plan: SubscriptionPlan };
+  'Purchase Canceled': { plan: SubscriptionPlan; promo_campaign?: string };
   // plan은 복원이 막혔을 때 없다. message는 shell_error일 때 셸이 준 문구
   'Purchase Failed': {
     plan?: SubscriptionPlan;
     reason: PurchaseFailureReason;
     message?: string;
+    promo_campaign?: string;
   };
   'Purchase Restored': { succeeded: boolean };
 
