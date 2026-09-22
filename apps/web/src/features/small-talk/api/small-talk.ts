@@ -140,6 +140,32 @@ export interface SmallTalkSessionDetailResponse {
   expressionLearningStatus: ExpressionLearningStatus;
   // 이 대화에서 만들어진 표현. 생성이 끝나기 전(PREPARING)에는 비어 있다
   expressions: SmallTalkSessionExpression[];
+  // 교정(더 자연스러운 말)이 붙은 사용자 메시지 수. 기록 상세의 채팅 아이콘 뱃지가 이 수를 쓴다(뱃지는 후속 PR)
+  correctionCount: number;
+}
+
+// 교정은 대화가 끝난 뒤 서버가 사용자 메시지마다 만든다 — 준비될 때까지 PREPARING이다
+export type CorrectionStatus = 'COMPLETED' | 'PREPARING' | 'FAILED';
+
+// 더 자연스러운 말 — 그 턴에서 고른 한 문장을 어떻게 고치면 좋은지
+export interface SmallTalkCorrection {
+  originalSentence: string;
+  betterSentence: string;
+  // 한국어 이유 한 줄
+  reason: string;
+  // 실수 패턴 코드. 화면엔 안 보이고 참고용이다
+  mistakePattern: string;
+  // 장기기억을 근거로 고친 경우의 근거 문구("9/13 스몰톡에서 말한 헬스장"). 아니면 null
+  memoryTag: string | null;
+}
+
+// 배운 표현을 이 메시지에서 실제로 썼다
+export interface SmallTalkReusedExpression {
+  expressionId: number;
+  // 표현 원형
+  text: string;
+  // 원문(content) 안에서 밑줄 그을 구절
+  matchedText: string;
 }
 
 export interface SmallTalkHistoryMessage {
@@ -152,6 +178,11 @@ export interface SmallTalkHistoryMessage {
   emotion: string | null;
   innerThought: string | null;
   innerThoughtType: string | null;
+  // 아래 셋은 사용자 메시지에만 온다 — AI 메시지엔 필드 자체가 없다
+  correctionStatus?: CorrectionStatus;
+  // 고칠 게 없거나(COMPLETED) 만들다 실패했으면(FAILED) null
+  correction?: SmallTalkCorrection | null;
+  reusedExpression?: SmallTalkReusedExpression | null;
 }
 
 export interface SmallTalkSessionExpression {
