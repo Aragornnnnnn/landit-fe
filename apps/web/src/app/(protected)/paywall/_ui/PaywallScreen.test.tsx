@@ -30,7 +30,7 @@ vi.mock('@/features/subscription/model/usePurchase', () => ({
   },
 }));
 vi.mock('@/features/subscription/model/useOfferings', () => ({
-  useOfferings: () => mocks.pricing,
+  useOfferings: () => ({ list: mocks.pricing, promo: {} }),
 }));
 // next/link는 next 밑의 다른 react 복사본을 잡아 훅이 깨진다 — 순수 a 태그로 치환한다
 vi.mock('next/link', () => ({

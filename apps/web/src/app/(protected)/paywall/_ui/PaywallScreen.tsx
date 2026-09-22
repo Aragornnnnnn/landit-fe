@@ -39,8 +39,9 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<PlanId>(DEFAULT_PLAN_ID);
 
-  // 셸이 스토어 가격을 주면 카드 숫자를 그 값으로 다시 만든다 — 못 받으면 등록값 그대로
-  const pricing = useOfferings();
+  // 셸이 스토어 가격을 주면 카드 숫자를 그 값으로 다시 만든다 — 못 받으면 등록값 그대로.
+  // 본 화면은 늘 정가다. 할인은 닫을 때 뜨는 시트에만 있다
+  const { list: pricing } = useOfferings();
   const plans = buildPaywallPlans(toKrwPrices(pricing));
   const selectedPlan = plans[selectedId];
 
