@@ -17,7 +17,7 @@ export type SubscriptionSummary =
       renews: boolean;
       /** 월간·연간. BE가 상품 식별자를 안 주거나 모르는 상품이면 null */
       plan: PlanId | null;
-      /** 앞으로 청구될 원화 금액. 청구가 없거나(프로모션·선결제) 외화면 null — 화면은 `chargedPrice`로 읽는다 */
+      /** 앞으로 청구될 원화 금액. 청구가 없거나(프로모션·선결제) 외화면 null — 화면은 `resolveChargedPrice`로 읽는다 */
       price: number | null;
     };
 
@@ -88,5 +88,7 @@ export const canCancelAtStore = (
  * @param plan 요약의 플랜. 호출부가 이미 null을 걸렀다
  * @returns 원화 금액
  */
-export const chargedPrice = (summary: PaidSubscriptionSummary, plan: PlanId) =>
-  summary.price ?? findPlan(plan).price;
+export const resolveChargedPrice = (
+  summary: PaidSubscriptionSummary,
+  plan: PlanId,
+) => summary.price ?? findPlan(plan).price;

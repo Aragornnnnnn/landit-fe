@@ -50,14 +50,29 @@ describe('usePromoOffer', () => {
     expect(result.current?.remainingSeconds).toBe(200);
   });
 
-  it('받은 값이 바뀌면 그 값으로 다시 잰다 — 시트를 다시 열어 새로 받았을 때', () => {
+  it('같은 만료 시각이면 다시 받아도 5분이 늘어나지 않는다 — 화면을 오가며 마운트될 때', () => {
     const { result, rerender } = renderHook(
       ({ next }: { next: PaywallPromo | null }) => usePromoOffer(next),
       { initialProps: { next: promo(300) } },
     );
 
     act(() => void vi.advanceTimersByTime(5000));
-    rerender({ next: promo(120) });
+    // 서버가 같은 할인을 다시 줬다 — 만료 시각이 같으므로 이어서 센다
+    rerender({ next: promo(300) });
+
+    expect(result.current?.remainingSeconds).toBe(295);
+  });
+
+  it('만료 시각이 바뀌면 그 값으로 다시 잰다 — 다른 할인이다', () => {
+    const { result, rerender } = renderHook(
+      ({ next }: { next: PaywallPromo | null }) => usePromoOffer(next),
+      { initialProps: { next: promo(300) } },
+    );
+
+    act(() => void vi.advanceTimersByTime(5000));
+    rerender({
+      next: { ...promo(120), expiresAt: '2026-09-22T15:00:00' },
+    });
 
     expect(result.current?.remainingSeconds).toBe(120);
   });

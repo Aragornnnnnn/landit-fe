@@ -6,7 +6,7 @@ import {
   YEARLY_LIST_PRICE,
 } from '@/features/subscription/model/plans';
 import {
-  chargedPrice,
+  resolveChargedPrice,
   type PaidSubscriptionSummary,
 } from '@/features/subscription/model/subscription-summary';
 
@@ -57,7 +57,7 @@ export const toAmountRow = (
   if (!plan || !summary.renews) return null;
   return {
     label: summary.kind === 'trial' ? '첫 결제 금액' : '다음 결제 금액',
-    value: formatWon(chargedPrice(summary, plan)),
+    value: formatWon(resolveChargedPrice(summary, plan)),
     listPrice: plan === 'yearly' ? formatWon(YEARLY_LIST_PRICE) : undefined,
   };
 };

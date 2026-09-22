@@ -20,17 +20,19 @@ const TICK_MS = 1000;
 export const usePromoOffer = (
   promo: PaywallPromo | null,
 ): PaywallPromo | null => {
-  // 받은 값이 바뀌면 처음부터 다시 잰다 — 조회할 때마다 새 객체가 와도 값이 같으면 이어서 센다
-  const key = promo ? `${promo.expiresAt}/${promo.remainingSeconds}` : '';
+  // 기준은 서버가 준 만료 시각이다 — 같은 할인을 다시 받아도 끝나는 때가 같아,
+  // 화면을 오가며 다시 마운트해도 5분이 늘어나지 않는다
+  const expiresAt = promo?.expiresAt ?? '';
   const [progress, setProgress] = useState({ key: '', elapsed: 0 });
 
   useEffect(() => {
-    if (!key) return;
-    // 기준은 서버 값을 받은 순간이다. 시각 계산은 렌더 밖에서만 한다
+    if (!expiresAt) return;
+    // 서버 시각과 기기 시계가 다를 수 있어 절대 시각을 그대로 믿지 않는다.
+    // 받은 순간을 0으로 두고 흘러간 만큼만 뺀다. 시각 계산은 렌더 밖에서만 한다
     const startedAt = Date.now();
     const sync = () =>
       setProgress({
-        key,
+        key: expiresAt,
         elapsed: Math.floor((Date.now() - startedAt) / TICK_MS),
       });
     const timer = setInterval(sync, TICK_MS);
@@ -40,11 +42,11 @@ export const usePromoOffer = (
       clearInterval(timer);
       document.removeEventListener('visibilitychange', sync);
     };
-  }, [key]);
+  }, [expiresAt]);
 
   if (!promo) return null;
   // 값이 막 바뀐 렌더에서는 아직 한 톨도 안 흘렀다 — 0으로 봐야 갓 받은 할인이 만료로 보이지 않는다
-  const elapsed = progress.key === key ? progress.elapsed : 0;
+  const elapsed = progress.key === expiresAt ? progress.elapsed : 0;
   const remaining = Math.max(0, promo.remainingSeconds - elapsed);
   return remaining > 0 ? { ...promo, remainingSeconds: remaining } : null;
 };
