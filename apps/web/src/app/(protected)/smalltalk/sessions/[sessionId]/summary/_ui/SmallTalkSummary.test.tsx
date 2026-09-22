@@ -1,4 +1,5 @@
 // 오늘의 스몰톡 — 말풍선·비교 카드는 늘 있고 첫 스몰톡이면 건너뛸 길이 없다. 조건 블록 셋은 상태에 따라 카드·스켈레톤·없음으로 갈린다
+import { EVENTS } from '@landit/analytics';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -15,6 +16,8 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/features/small-talk/model/useSmallTalkSummaryQuery', () => ({
   useSmallTalkSummaryQuery: vi.fn(),
 }));
+const track = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/analytics', () => ({ track }));
 
 const summaryQuery = vi.mocked(useSmallTalkSummaryQuery);
 
@@ -117,6 +120,20 @@ describe('SmallTalkSummary', () => {
     expect(replace).toHaveBeenCalledWith(
       '/smalltalk/sessions/7/messages?next=learning',
     );
+  });
+
+  it('연타해도 떠나는 길은 한 번만 기록된다', async () => {
+    renderSummary(summaryOf());
+    const cta = screen.getByRole('button', { name: '상세 피드백 보러갈게요' });
+
+    await userEvent.click(cta);
+    await userEvent.click(cta);
+
+    expect(
+      track.mock.calls.filter(
+        ([name]) => name === EVENTS.SMALL_TALK_FEEDBACK_OPENED,
+      ),
+    ).toHaveLength(1);
   });
 
   it('닫기를 누르면 상세 피드백을 건너뛰고 축하를 켠 표현 화면으로 간다', async () => {
@@ -395,5 +412,115 @@ describe('SmallTalkSummary 다음 스몰톡에서', () => {
     });
 
     expect(screen.queryByText('다음 스몰톡에서')).not.toBeInTheDocument();
+  });
+});
+
+describe('SmallTalkSummary 계측', () => {
+  it('블록이 아직 만들어지는 중이면 0건이 아니라 아직이라고 남긴다', () => {
+    // 요약을 대화 끝에 미리 받아 둬서, 잡이 늦으면 이 상태로 화면이 선다.
+    // 여기서 pending을 안 실으면 지표가 "재사용 표현 0건"으로 굳는다
+    renderSummary({
+      ...summaryOf(),
+      reusedExpressions: { pending: true, items: [] },
+      followUp: {
+        pending: true,
+        triggerType: 'NONE',
+        question: '',
+        invite: '',
+      },
+    });
+
+    expect(track).toHaveBeenCalledWith(
+      EVENTS.SMALL_TALK_SUMMARY_VIEWED,
+      expect.objectContaining({
+        reused_expression_count: 0,
+        reused_expressions_pending: true,
+        follow_up_pending: true,
+      }),
+    );
+  });
+
+  it('총평을 기다리는 스켈레톤은 노출로 세지 않는다', () => {
+    // Given 표현·후속 질문은 왔지만 총평이 아직이라 스켈레톤만 선 상태
+    renderSummary({
+      ...summaryOf(),
+      pending: true,
+      firstSession: null,
+      headline: null,
+      comparison: null,
+      growth: null,
+      correctionCount: null,
+    });
+
+    expect(track).not.toHaveBeenCalledWith(
+      'Small Talk Summary Viewed',
+      expect.anything(),
+    );
+  });
+
+  it('요약이 그려지면 어떤 블록이 섰는지와 함께 노출을 한 번 남긴다', () => {
+    renderSummary({
+      ...summaryOf(),
+      growth,
+      reusedExpressions: {
+        pending: false,
+        items: [reusedItem(1, 'grab a coffee')],
+      },
+    });
+
+    expect(track).toHaveBeenCalledWith(EVENTS.SMALL_TALK_SUMMARY_VIEWED, {
+      session_id: 7,
+      first_session: false,
+      has_growth: true,
+      reused_expression_count: 1,
+      reused_expressions_pending: false,
+      follow_up_trigger: 'CONCERN',
+      follow_up_pending: false,
+      correction_count: 3,
+    });
+    expect(
+      track.mock.calls.filter(
+        ([name]) => name === EVENTS.SMALL_TALK_SUMMARY_VIEWED,
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('상세 피드백 보러가기를 누르면 교정 개수와 함께 남긴다', async () => {
+    renderSummary(summaryOf());
+
+    await userEvent.click(
+      screen.getByRole('button', { name: '상세 피드백 보러갈게요' }),
+    );
+
+    expect(track).toHaveBeenCalledWith(EVENTS.SMALL_TALK_FEEDBACK_OPENED, {
+      session_id: 7,
+      correction_count: 3,
+    });
+  });
+
+  it('닫기로 건너뛰면 어느 길이었는지 남긴다', async () => {
+    renderSummary(summaryOf());
+
+    await userEvent.click(screen.getByRole('button', { name: '닫기' }));
+
+    expect(track).toHaveBeenCalledWith(EVENTS.SMALL_TALK_FEEDBACK_SKIPPED, {
+      session_id: 7,
+      trigger: 'close',
+      correction_count: 3,
+    });
+  });
+
+  it('요약을 못 받은 채 나가면 교정 개수 없이 남긴다', async () => {
+    renderSummary(null, { error: new Error('완료되지 않은 세션입니다.') });
+
+    await userEvent.click(
+      screen.getByRole('button', { name: '표현 배우러 가기' }),
+    );
+
+    expect(track).toHaveBeenCalledWith(EVENTS.SMALL_TALK_FEEDBACK_SKIPPED, {
+      session_id: 7,
+      trigger: 'unavailable',
+      correction_count: null,
+    });
   });
 });

@@ -23,10 +23,7 @@ import type { SmallTalkSessionStartResponse } from '@/features/small-talk/api/sm
 import { toCountdownLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSpeakingLimit } from '@/features/small-talk/model/useSpeakingLimit';
 import { track } from '@/shared/analytics';
-import {
-  sessionExpressionBranchPath,
-  SMALLTALK_PATH,
-} from '@/shared/lib/routes';
+import { SMALLTALK_PATH, smallTalkSummaryPath } from '@/shared/lib/routes';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
@@ -90,6 +87,11 @@ export const SmallTalkConversation = ({
   const ended = phase === 'DONE';
   // 타이핑 중(engine.typing)에는 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
   const keyboardInset = useKeyboardInset();
+  // 작별 인사가 끝나면 오늘의 스몰톡 라우트를 미리 받아 둔다 — CTA가 버튼이라 링크 자동 프리페치가 안 걸리고,
+  // 누르는 순간 받으면 늦다 (요약 데이터·래디 그림은 흐름 훅이 완료 턴에서 미리 받는다)
+  useEffect(() => {
+    if (ended) router.prefetch(smallTalkSummaryPath(session.sessionId));
+  }, [ended, router, session.sessionId]);
   const showUserFirstIntro =
     turn.isUserOpening && phase === 'USER_READY' && !introDismissed;
   useEffect(() => {
@@ -172,15 +174,11 @@ export const SmallTalkConversation = ({
 
       <footer className="flex-none pb-[max(env(safe-area-inset-bottom),16px)]">
         {ended ? (
-          // 축하 → 맞춤 표현으로 이어진다. 표현은 서버가 지금 만들고 있어 그 화면이 기다린다
+          // 오늘의 스몰톡(지난번과 비교) → 상세 피드백 → 축하·맞춤 표현으로 이어진다
           <div className="flex h-36 items-end px-5 pb-3">
             <Button
               onClick={() =>
-                router.replace(
-                  sessionExpressionBranchPath(session.sessionId, {
-                    celebrate: true,
-                  }),
-                )
+                router.replace(smallTalkSummaryPath(session.sessionId))
               }
             >
               대화 종료하기

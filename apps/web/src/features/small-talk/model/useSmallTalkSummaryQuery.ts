@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type QueryClient } from '@tanstack/react-query';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
 
@@ -23,6 +23,17 @@ const isStillPreparing = (summary: SmallTalkSummaryResponse | undefined) =>
   (summary.pending ||
     summary.reusedExpressions.pending ||
     summary.followUp.pending);
+
+// 대화가 끝나는 자리에서 미리 받아 둔다 — 작별 인사를 듣는 동안 요약이 도착하면 다음 화면이 스켈레톤 없이 선다
+export const prefetchSmallTalkSummary = (
+  queryClient: QueryClient,
+  userId: number | null,
+  sessionId: number,
+) =>
+  queryClient.prefetchQuery({
+    queryKey: smallTalkKeys.summary(userId, sessionId),
+    queryFn: () => getSmallTalkSummary(sessionId),
+  });
 
 export const useSmallTalkSummaryQuery = (sessionId: number) => {
   const userId = useAuthStore((state) => state.member?.userId ?? null);

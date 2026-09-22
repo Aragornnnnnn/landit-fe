@@ -81,6 +81,11 @@ export const EVENTS = {
   SMALL_TALK_TURN_COMPLETED: 'Small Talk Turn Completed',
   SMALL_TALK_COMPLETED: 'Small Talk Completed',
   SMALL_TALK_ABANDONED: 'Small Talk Abandoned',
+  // 종료 후 — 오늘의 스몰톡(요약)에서 상세 피드백(대화 보기)으로 가거나 건너뛴다
+  SMALL_TALK_SUMMARY_VIEWED: 'Small Talk Summary Viewed',
+  SMALL_TALK_FEEDBACK_OPENED: 'Small Talk Feedback Opened',
+  SMALL_TALK_FEEDBACK_SKIPPED: 'Small Talk Feedback Skipped',
+  SMALL_TALK_FEEDBACK_VIEWED: 'Small Talk Feedback Viewed',
 
   // 분석 피드백
   FEEDBACK_VIEWED: 'Feedback Viewed',
@@ -250,6 +255,7 @@ export type ConfirmSheetKind =
 export type RetryScreen =
   | 'scenario'
   | 'smalltalk'
+  | 'smalltalk_summary'
   | 'conversation'
   | 'card_back'
   | 'expression_list'
@@ -449,7 +455,8 @@ export type EventProps = {
     turn_index: number;
   };
 
-  // 스몰톡 — 상대(partner)는 시나리오에 없는 축이라 전 이벤트에 싣는다. 누구와 얘기하는지로 다 갈린다
+  // 스몰톡 — 상대(partner)는 시나리오에 없는 축이라 대화 이벤트 전부에 싣는다. 누구와 얘기하는지로 다 갈린다.
+  // 종료 후 넷(요약·피드백)은 응답에 상대가 없어 싣지 않는다 — session_id로 Started와 조인한다
   'Small Talk Partner Selected': { partner: TalkPartner };
   'Small Talk Topic Selected': { partner: TalkPartner; topic_id: number };
   'Small Talk Intro Guide Closed': undefined;
@@ -484,6 +491,40 @@ export type EventProps = {
     session_id: number;
     partner: TalkPartner;
     turn_index: number;
+  };
+  // 오늘의 스몰톡이 그려짐 — 총평이 실제로 선 순간만 남긴다(교정을 기다리는 스켈레톤은 노출이 아니다).
+  // 그 순간 어떤 블록이 서 있었는지(첫 스몰톡·실수 기억·재사용 표현 수·후속 질문 종류)를 함께 싣는다.
+  // 표현 재사용·후속 질문은 종료 후 잡이라 화면이 뜰 때 아직 없을 수 있다 — 그때는 pending이 true이고
+  // 개수·트리거는 "아직 없음"을 뜻한다. 0건과 구분하려면 반드시 pending을 함께 걸러야 한다
+  'Small Talk Summary Viewed': {
+    session_id: number;
+    first_session: boolean;
+    has_growth: boolean;
+    reused_expression_count: number;
+    reused_expressions_pending: boolean;
+    // 서버 트리거 코드 그대로 (CUT_OFF·PAST_EVENT·CONCERN·GOAL·MOOD·HOBBY·NONE). 물어볼 기억이 없었으면 null
+    follow_up_trigger: string | null;
+    follow_up_pending: boolean;
+    correction_count: number;
+  };
+  // 「상세 피드백 보러가기」 — 총평이 선 뒤에만 누를 수 있어 개수는 사실상 늘 있다.
+  // 건너뛰기와 같은 모양으로 두어 둘을 한 판에서 비교할 수 있게 한다
+  'Small Talk Feedback Opened': {
+    session_id: number;
+    correction_count: number | null;
+  };
+  // 상세 피드백을 건너뛰고 표현 학습으로 — 닫기(X)인지, 요약을 못 받아 나간 것인지.
+  // 못 받은 채 나갔으면 교정 개수도 모른다
+  'Small Talk Feedback Skipped': {
+    session_id: number;
+    trigger: 'close' | 'unavailable';
+    correction_count: number | null;
+  };
+  // 대화 보기(교정 카드)가 그려짐 — 요약에서 왔는지 기록에서 왔는지
+  'Small Talk Feedback Viewed': {
+    session_id: number;
+    source: 'summary' | 'history';
+    correction_count: number;
   };
 
   // 피드백 응답에는 scenario_id가 없다 — session_id로 서버에서 조인한다
