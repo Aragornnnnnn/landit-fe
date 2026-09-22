@@ -14,8 +14,6 @@ const growth: SmallTalkSummaryResponse['growth'] = {
   previousWrongSpan: 'go',
   currentSentence: 'I went to the gym with my friend.',
   currentSpan: 'went',
-  previousCount: 2,
-  currentCount: 0,
 };
 
 const item = {
@@ -32,6 +30,7 @@ const summaryOf = (
   overrides: Partial<SmallTalkSummaryResponse>,
 ): SmallTalkSummaryResponse => ({
   sessionId: 7,
+  pending: false,
   title: '카페 얘기',
   firstSession: false,
   headline: { text: 'a', subline: 'b', pose: 'POINT' },
@@ -45,7 +44,7 @@ const summaryOf = (
   reusedExpressions: { pending: false, items: [] },
   followUp: {
     pending: false,
-    triggerType: 'NONE',
+    triggerType: 'CONCERN',
     question: '다음엔 요즘 빠져 있는 거 얘기해줘.',
     invite: '기억해둘게.',
   },
@@ -113,9 +112,9 @@ describe('toSummaryBlocks — 상한이 지나도', () => {
       reusedExpressions: { pending: false, items: [item] },
       followUp: {
         pending: true,
-        triggerType: 'NONE',
-        question: '',
-        invite: '',
+        triggerType: null,
+        question: null,
+        invite: null,
       },
     });
 
@@ -131,9 +130,9 @@ describe('toSummaryBlocks — 다음 스몰톡에서', () => {
     const summary = summaryOf({
       followUp: {
         pending: true,
-        triggerType: 'NONE',
-        question: '',
-        invite: '',
+        triggerType: null,
+        question: null,
+        invite: null,
       },
     });
 
@@ -146,21 +145,36 @@ describe('toSummaryBlocks — 다음 스몰톡에서', () => {
     const summary = summaryOf({
       followUp: {
         pending: true,
-        triggerType: 'NONE',
-        question: '',
-        invite: '',
+        triggerType: null,
+        question: null,
+        invite: null,
       },
     });
 
     expect(toSummaryBlocks(summary, true).followUp).toEqual({ kind: 'hidden' });
   });
 
-  it('기억이 없어(NONE) 기본 문구여도 그린다', () => {
+  it('질문이 있으면 그린다', () => {
     const summary = summaryOf({});
 
     expect(toSummaryBlocks(summary, false).followUp).toEqual({
       kind: 'ready',
       data: summary.followUp,
+    });
+  });
+
+  it('작업은 끝났는데 물어볼 기억이 없었으면 숨긴다', () => {
+    const summary = summaryOf({
+      followUp: {
+        pending: false,
+        triggerType: null,
+        question: null,
+        invite: null,
+      },
+    });
+
+    expect(toSummaryBlocks(summary, false).followUp).toEqual({
+      kind: 'hidden',
     });
   });
 });

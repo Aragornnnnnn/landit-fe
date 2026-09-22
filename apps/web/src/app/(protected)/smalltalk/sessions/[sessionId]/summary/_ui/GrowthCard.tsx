@@ -39,8 +39,8 @@ export const GrowthCard = ({ growth }: { growth: SmallTalkSummaryGrowth }) => (
     </dl>
     <p className="mt-3 text-[13px] leading-5 text-muted-foreground">
       {growth.succeeded
-        ? `지난번엔 ${growth.previousCount}번 헷갈렸는데, 오늘은 다 맞았어요.`
-        : `지난번에 이어 오늘도 ${growth.currentCount}번 헷갈렸어요. 상세 피드백에서 다시 볼 수 있어요.`}
+        ? '지난번엔 헷갈렸는데, 오늘은 맞았어요.'
+        : '지난번에 이어 오늘도 헷갈렸어요. 상세 피드백에서 다시 볼 수 있어요.'}
     </p>
   </section>
 );
@@ -52,10 +52,11 @@ const Highlighted = ({
   className,
 }: {
   sentence: string;
-  span: string;
+  // 서버가 구절을 특정하지 못했으면 null — 그때는 문장만 보여준다
+  span: string | null;
   className: string;
 }) => {
-  const split = splitMatchedText(sentence, span);
+  const split = splitMatchedText(sentence, span ?? undefined);
   if (!split) return sentence;
 
   return (

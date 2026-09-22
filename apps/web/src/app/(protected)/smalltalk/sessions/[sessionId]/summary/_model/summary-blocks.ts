@@ -45,9 +45,13 @@ export const toSummaryBlocks = (
         ? { kind: 'ready', data: summary.reusedExpressions.items }
         : { kind: 'hidden' },
   ),
-  // 기억이 없어(NONE) 기본 문구여도 그린다
-  followUp: awaiting(summary.followUp.pending, waitExpired, () => ({
-    kind: 'ready',
-    data: summary.followUp,
-  })),
+  // 작업이 끝났는데도 물어볼 기억이 없었으면 질문이 null로 온다 — 그때는 블록을 그리지 않는다
+  followUp: awaiting<SmallTalkSummaryFollowUp>(
+    summary.followUp.pending,
+    waitExpired,
+    () =>
+      summary.followUp.question
+        ? { kind: 'ready', data: summary.followUp }
+        : { kind: 'hidden' },
+  ),
 });

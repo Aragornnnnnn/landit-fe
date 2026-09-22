@@ -199,8 +199,6 @@ const growth = {
   previousWrongSpan: 'go',
   currentSentence: 'I went to the gym with my friend.',
   currentSpan: 'went',
-  previousCount: 2,
-  currentCount: 0,
 };
 
 // 인용문 속 구절은 칩(원형)과 다른 모양으로 둔다 — 화면에서 둘이 따로 보이는지 구분해 세려고
@@ -223,7 +221,7 @@ describe('SmallTalkSummary 실수 기억 카드', () => {
     expect(screen.getByText('go')).toBeInTheDocument();
     expect(screen.getByText('went')).toBeInTheDocument();
     expect(
-      screen.getByText('지난번엔 2번 헷갈렸는데, 오늘은 다 맞았어요.'),
+      screen.getByText('지난번엔 헷갈렸는데, 오늘은 맞았어요.'),
     ).toBeInTheDocument();
   });
 
@@ -235,13 +233,12 @@ describe('SmallTalkSummary 실수 기억 카드', () => {
         succeeded: false,
         currentSentence: 'Yesterday I go to the gym.',
         currentSpan: 'go',
-        currentCount: 2,
       },
     });
 
     expect(screen.getByText('아직 헷갈리는 과거형')).toBeInTheDocument();
     expect(
-      screen.getByText(/지난번에 이어 오늘도 2번 헷갈렸어요/),
+      screen.getByText(/지난번에 이어 오늘도 헷갈렸어요/),
     ).toBeInTheDocument();
   });
 
@@ -374,14 +371,29 @@ describe('SmallTalkSummary 다음 스몰톡에서', () => {
       ...summaryOf(),
       followUp: {
         pending: true,
-        triggerType: 'NONE',
-        question: '',
-        invite: '',
+        triggerType: null,
+        question: null,
+        invite: null,
       },
     });
 
     expect(
       screen.getByRole('status', { name: '다음 스몰톡 질문을 찾는 중' }),
     ).toBeInTheDocument();
+  });
+
+  it('물어볼 기억이 없어 질문이 안 나왔으면 블록을 그리지 않는다', () => {
+    // Given 장기기억 작업은 끝났지만(pending false) 내려줄 질문이 없는 응답
+    renderSummary({
+      ...summaryOf(),
+      followUp: {
+        pending: false,
+        triggerType: null,
+        question: null,
+        invite: null,
+      },
+    });
+
+    expect(screen.queryByText('다음 스몰톡에서')).not.toBeInTheDocument();
   });
 });
