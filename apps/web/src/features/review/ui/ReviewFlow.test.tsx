@@ -296,7 +296,7 @@ describe('ReviewFlow', () => {
 
     await user.click(screen.getByRole('button', { name: '복습 시작할게요' }));
 
-    expect(track).toHaveBeenCalledWith('Push Review Started', {
+    expect(track).toHaveBeenCalledWith('Expression Review Started', {
       question_count: 2,
     });
   });
@@ -329,7 +329,7 @@ describe('ReviewFlow', () => {
     await user.click(screen.getByRole('button', { name: '제출' }));
     await user.click(screen.getByRole('button', { name: '넘기기' }));
 
-    expect(track).toHaveBeenCalledWith('Push Review Finished', {
+    expect(track).toHaveBeenCalledWith('Expression Review Finished', {
       question_count: 2,
       solved_count: 2,
       perfect: true,
@@ -343,7 +343,7 @@ describe('ReviewFlow', () => {
 
     await user.click(screen.getByRole('button', { name: '나가기' }));
 
-    expect(track).toHaveBeenCalledWith('Push Review Abandoned', {
+    expect(track).toHaveBeenCalledWith('Expression Review Abandoned', {
       step: 'quiz',
       question_count: 2,
       solved_count: 0,

@@ -3,7 +3,7 @@
 // 푸시 복습 플로우 — 알림으로 들어와 시작 안내 → 문제 → 완료. 큐 순서·채점·완료 판정은 모두 서버 상태를 따른다.
 // 학습 안의 복습(ReviewStep)과 화면은 같지만, 그쪽은 문제 큐를 브라우저가 들고 여기선 서버가 든다
 import { useEffect, useRef, useState } from 'react';
-import { EVENTS, type PushReviewStep } from '@landit/analytics';
+import { EVENTS, type ExpressionReviewStep } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
@@ -65,7 +65,7 @@ export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
     if (!applied || !finishedNow) return;
 
     const solved = applied.questions.filter(isSolved).length;
-    track(EVENTS.PUSH_REVIEW_FINISHED, {
+    track(EVENTS.EXPRESSION_REVIEW_FINISHED, {
       question_count: applied.questions.length,
       solved_count: solved,
       perfect: solved === applied.questions.length,
@@ -87,8 +87,8 @@ export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
   });
 
   // 결과를 보기 전에 나간 경우 — 어느 자리에서 닫았는지 남기고 홈으로
-  const abandon = (step: PushReviewStep) => {
-    track(EVENTS.PUSH_REVIEW_ABANDONED, {
+  const abandon = (step: ExpressionReviewStep) => {
+    track(EVENTS.EXPRESSION_REVIEW_ABANDONED, {
       step,
       ...countsOf(applied ?? fetched),
     });
@@ -119,7 +119,7 @@ export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
         onStart={() =>
           start.mutate(undefined, {
             onSuccess: (started) => {
-              track(EVENTS.PUSH_REVIEW_STARTED, {
+              track(EVENTS.EXPRESSION_REVIEW_STARTED, {
                 question_count: started.questions.length,
               });
               setApplied(started);
@@ -190,7 +190,7 @@ export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
 
   return (
     <QuizStep
-      step="push_review"
+      step="expression_review"
       // 다음 문제(또는 같은 문제의 재도전)마다 고른 칩·판정을 통째로 리셋한다
       key={`${question.questionId}#${round}`}
       quiz={fromWritingSentence(question.quiz)}

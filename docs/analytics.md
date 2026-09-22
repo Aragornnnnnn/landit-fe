@@ -235,18 +235,18 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 
 표현 학습 화면은 시나리오 대화와 스몰톡이 같이 쓴다. 어디서 온 표현인지는 출처 속성으로 갈린다 — 시나리오 표현이면 `scenario_id`, 스몰톡 표현이면 `session_id`가 실린다.
 
-### 푸시 복습
+### 알림 복습 (Expression Review)
 
-알림으로만 들어오는 흐름이라 학습 안의 복습(`Review Answer Submitted`)과 이벤트를 나눈다. 노출은 `Page Viewed`(page_name=push_review)가 잡는다. 어느 복습인지는 UUID라 속성에 싣지 않고, 문제 수를 분모로 쓴다.
+알림으로만 들어오는 흐름이라 학습 안의 복습 스텝(`Review Answer Submitted`)과 이벤트를 나눈다. 이름은 BE의 알림 종류(`EXPRESSION_REVIEW`)·유입 캠페인(`utm_campaign=expression_review`)과 같은 말을 써서, 유입에서 완료까지 한 단어로 이어 본다. 노출은 `Page Viewed`(page_name=expression_review)가 잡는다. 어느 복습인지는 UUID라 속성에 싣지 않고, 문제 수를 분모로 쓴다.
 
-| 이벤트                       | 속성                                            | 시점                                                      |
-| ---------------------------- | ----------------------------------------------- | --------------------------------------------------------- |
-| Push Review Started          | question_count                                  | 시작 안내에서 시작 요청 성공 (서버가 문제를 열어 준 시점) |
-| Push Review Answer Submitted | expression_id, is_correct, hint_level           | 문제 확인 — 판정은 서버 응답을 따른다                     |
-| Push Review Finished         | question_count, solved_count, perfect           | 결과 화면 도달 (전부 맞혀 완료됐거나 두 번씩 풀어 결판남) |
-| Push Review Abandoned        | step(intro\|quiz), question_count, solved_count | 결과를 보기 전에 X로 나감                                 |
+| 이벤트                             | 속성                                            | 시점                                                      |
+| ---------------------------------- | ----------------------------------------------- | --------------------------------------------------------- |
+| Push Review Started                | question_count                                  | 시작 안내에서 시작 요청 성공 (서버가 문제를 열어 준 시점) |
+| Expression Review Answer Submitted | expression_id, is_correct, hint_level           | 문제 확인 — 판정은 서버 응답을 따른다                     |
+| Push Review Finished               | question_count, solved_count, perfect           | 결과 화면 도달 (전부 맞혀 완료됐거나 두 번씩 풀어 결판남) |
+| Push Review Abandoned              | step(intro\|quiz), question_count, solved_count | 결과를 보기 전에 X로 나감                                 |
 
-문제마다 기회는 두 번이다. `solved_count < question_count`로 끝난 복습은 서버에선 아직 진행 중이라, 같은 알림을 다시 눌러 들어오면 `Push Review Started` 없이 이어서 푼다.
+문제마다 기회는 두 번이다. `solved_count < question_count`로 끝난 복습은 서버에선 아직 진행 중이라, 같은 알림을 다시 눌러 들어오면 `Expression Review Started` 없이 이어서 푼다.
 
 ### 편지함
 

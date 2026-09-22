@@ -107,12 +107,13 @@ export const EVENTS = {
   EXPRESSION_COMPLETED: 'Expression Completed',
   EXPRESSION_ABANDONED: 'Expression Abandoned',
 
-  // 푸시 복습 — 알림으로만 들어오는 별도 흐름이라 학습 안의 복습과 이벤트를 나눈다.
-  // 노출은 Page Viewed(page_name=review)가 잡고, 여기선 시작·제출·끝·이탈만 찍는다
-  PUSH_REVIEW_STARTED: 'Push Review Started',
-  PUSH_REVIEW_ANSWER_SUBMITTED: 'Push Review Answer Submitted',
-  PUSH_REVIEW_FINISHED: 'Push Review Finished',
-  PUSH_REVIEW_ABANDONED: 'Push Review Abandoned',
+  // 알림으로 받는 복습 — 학습 안의 복습 스텝(Review Answer Submitted)과 섞이면 안 돼 이벤트를 나눈다.
+  // 이름은 BE의 알림 종류(EXPRESSION_REVIEW)·유입 캠페인(expression_review)과 같은 말을 쓴다.
+  // 노출은 Page Viewed(page_name=expression_review)가 잡고, 여기선 시작·제출·끝·이탈만 찍는다
+  EXPRESSION_REVIEW_STARTED: 'Expression Review Started',
+  EXPRESSION_REVIEW_ANSWER_SUBMITTED: 'Expression Review Answer Submitted',
+  EXPRESSION_REVIEW_FINISHED: 'Expression Review Finished',
+  EXPRESSION_REVIEW_ABANDONED: 'Expression Review Abandoned',
 
   // 편지함
   MAILBOX_TAB_SWITCHED: 'Mailbox Tab Switched',
@@ -209,10 +210,10 @@ export type ExpressionStep =
 export type TurnInputType = 'voice' | 'text';
 // 스몰톡 대화 상대 — 홈에서 고른 캐릭터. 시나리오엔 없는 축이라 스몰톡 이벤트에만 붙는다
 export type TalkPartner = 'chloe' | 'marco' | 'teddy';
-// 단어 퀴즈 화면은 퀴즈 스텝·복습 스텝·푸시 복습이 같이 쓴다 — 제출·힌트 이벤트가 이 값으로 갈린다
-export type QuizStepKind = 'quiz' | 'review' | 'push_review';
-// 푸시 복습에서 나간 자리 — 시작 전 안내(intro)인지 문제 푸는 중(quiz)인지
-export type PushReviewStep = 'intro' | 'quiz';
+// 단어 퀴즈 화면은 퀴즈 스텝·학습 안의 복습·알림 복습이 같이 쓴다 — 제출·힌트 이벤트가 이 값으로 갈린다
+export type QuizStepKind = 'quiz' | 'review' | 'expression_review';
+// 알림 복습에서 나간 자리 — 시작 전 안내(intro)인지 문제 푸는 중(quiz)인지
+export type ExpressionReviewStep = 'intro' | 'quiz';
 export type HintSource = QuizStepKind;
 // 홈 복귀 신호 — 앱 안에서 돌아온 이유. 밖에서 들어온 유입(알림·위젯)은 entry_campaign이 맡는다
 export type HomeReturnReason = 'just' | 'flip' | 'card';
@@ -563,22 +564,22 @@ export type EventProps = {
   'Expression Completed': ExpressionSource & { expression_id: number };
   'Expression Abandoned': { expression_id: number; step: ExpressionStep };
 
-  // 푸시 복습 — 서버가 문제를 고정해 주므로 문제 수(question_count)가 흐름의 분모다
-  'Push Review Started': { question_count: number };
-  'Push Review Answer Submitted': {
+  // 알림 복습 — 서버가 문제를 고정해 주므로 문제 수(question_count)가 흐름의 분모다
+  'Expression Review Started': { question_count: number };
+  'Expression Review Answer Submitted': {
     expression_id: number;
     is_correct: boolean;
     hint_level: number;
   };
   // 끝난 지점 — 서버가 완료로 바꿨든, 문제마다 두 번씩 풀어 결판이 났든 결과 화면에 도달한 순간
-  'Push Review Finished': {
+  'Expression Review Finished': {
     question_count: number;
     solved_count: number;
     perfect: boolean;
   };
   // 결과 화면 전에 나간 경우 — 시작 안내에서 닫았는지, 문제를 풀다 닫았는지
-  'Push Review Abandoned': {
-    step: PushReviewStep;
+  'Expression Review Abandoned': {
+    step: ExpressionReviewStep;
     question_count: number;
     solved_count: number;
   };

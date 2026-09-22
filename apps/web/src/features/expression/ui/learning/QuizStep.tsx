@@ -29,8 +29,8 @@ import { ResultSheet } from './ResultSheet';
 const SUBMIT_EVENT = {
   quiz: EVENTS.QUIZ_ANSWER_SUBMITTED,
   review: EVENTS.REVIEW_ANSWER_SUBMITTED,
-  // 알림으로 들어오는 푸시 복습은 학습 안의 복습과 섞이면 안 된다
-  push_review: EVENTS.PUSH_REVIEW_ANSWER_SUBMITTED,
+  // 알림으로 받는 복습은 학습 안의 복습과 섞이면 안 된다
+  expression_review: EVENTS.EXPRESSION_REVIEW_ANSWER_SUBMITTED,
 } as const;
 
 interface QuizStepProps {
