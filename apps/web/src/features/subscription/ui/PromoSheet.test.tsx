@@ -51,7 +51,6 @@ const tiers: OfferingTiers = {
 const open = (override: Partial<OfferingTiers> = {}, expired = false) =>
   render(
     <PromoSheet
-      open
       promo={expired ? { ...promo, remainingSeconds: 0 } : promo}
       expired={expired}
       tiers={{ ...tiers, ...override }}
@@ -111,19 +110,27 @@ describe('PromoSheet', () => {
     fireEvent.click(screen.getByRole('button', { name: '월간 플랜' }));
 
     expect(
-      screen.getByRole('button', { name: '할인 받고 시작하기' }),
+      screen.getByRole('button', { name: '월 14,900원으로 시작하기' }),
     ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /할인 받고/ })).toBeNull();
     expect(
       screen.getByText('매월 14,900원 정기 결제 · 언제든 해지 가능'),
     ).toBeInTheDocument();
   });
 
-  it('만료되면 더 팔지 않고 닫을 길만 남긴다 — 결제 중이었어도 결과를 받아야 해서 시트는 남는다', () => {
-    open({}, true);
+  it('만료되면 스스로 닫는다 — 끝난 할인을 띄워 두지 않는다', () => {
+    const onClose = vi.fn();
+    render(
+      <PromoSheet
+        promo={{ ...promo, remainingSeconds: 0 }}
+        expired
+        tiers={tiers}
+        onClose={onClose}
+        onUnlocked={vi.fn()}
+      />,
+    );
 
-    expect(screen.getByText('할인이 끝났어요')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '닫기' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /시작하기/ })).toBeNull();
+    expect(onClose).toHaveBeenCalled();
   });
 
   it('결제할 수 있는 화면이라 해지 안내와 약관 링크를 단다', () => {

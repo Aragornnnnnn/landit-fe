@@ -1,12 +1,18 @@
 'use client';
 
 // 할인 시트를 스토어 가격과 함께 띄운다 — 가격표를 이미 들고 있지 않은 자리(헤더 배지)가 쓴다.
-// 이 컴포넌트가 붙는 순간 오퍼링을 묻기 때문에, 시트를 열 때만 매달아야 왕복이 낭비되지 않는다
+// 배지가 보이는 동안 매달아 두면 가격을 미리 받아 두게 돼, 눌렀을 때 기다리지 않는다
+import { useEffect } from 'react';
+
+import { showToast } from '@/shared/ui/toast';
+
 import type { PaywallPromo } from '../api/subscription';
 import { useOfferings } from '../model/useOfferings';
 import { PromoSheet } from './PromoSheet';
 
 interface PromoSheetHostProps {
+  /** 시트를 펼칠지. 닫혀 있어도 붙어 있으면서 스토어 가격을 미리 받아 둔다 */
+  open: boolean;
   promo: PaywallPromo;
   expired: boolean;
   onClose: () => void;
@@ -14,16 +20,29 @@ interface PromoSheetHostProps {
 }
 
 export const PromoSheetHost = ({
+  open,
   promo,
   expired,
   onClose,
   onUnlocked,
 }: PromoSheetHostProps) => {
   const tiers = useOfferings();
+  const ready = Boolean(tiers.promo.yearly);
+
+  // 펼치라는데 할인 가격표가 없으면 죽은 버튼이 된다 — 못 연다고 알리고 되돌린다
+  useEffect(() => {
+    if (!open || ready) return;
+    const timer = setTimeout(() => {
+      showToast('지금은 할인을 열 수 없어요');
+      onClose();
+    }, OPEN_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [open, ready, onClose]);
+
+  if (!open || !ready) return null;
 
   return (
     <PromoSheet
-      open
       promo={promo}
       expired={expired}
       tiers={tiers}
@@ -32,3 +51,6 @@ export const PromoSheetHost = ({
     />
   );
 };
+
+// 셸 오퍼링 왕복이 8초까지 걸린다. 그보다 조금 더 기다렸다 포기한다
+const OPEN_TIMEOUT_MS = 9000;

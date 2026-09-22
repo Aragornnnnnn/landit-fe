@@ -2,7 +2,7 @@
 
 // 탭 헤더 왼쪽 자리 — 무료 사용자에게는 프리미엄 진입 알약, 한시 할인 중에는 남은 시간을 보여준다.
 // 팔 것이 없거나 아직 모를 때는 로고를 그려, 이 자리가 비거나 깜빡이지 않게 한다
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
 
@@ -10,9 +10,15 @@ import { track } from '@/shared/analytics';
 import { paywallPath, SCENARIO_PATH } from '@/shared/lib/routes';
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
+import type { PaywallPromo } from '../api/subscription';
 import { formatPromoClock } from '../model/promo-clock';
+import {
+  clearPromoHandoff,
+  setPromoSheetOpen,
+  useHandedPromo,
+} from '../model/promo-handoff';
 import { usePaymentLive } from '../model/usePaymentLive';
-import { usePromoOffer } from '../model/usePromoOffer';
+import { resolvePromoDisplay, usePromoOffer } from '../model/usePromoOffer';
 import { useSubscriptionQuery } from '../model/useSubscriptionQuery';
 import { GOLD_GRADIENT } from './premium-brand';
 import { PromoSheetHost } from './PromoSheetHost';
@@ -32,9 +38,26 @@ export const PremiumHeaderEntry = () => {
   const { subscription, isPending, isError } = useSubscriptionQuery({
     enabled: paymentLive,
   });
-  const granted = subscription?.promo ?? null;
-  const live = usePromoOffer(granted);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const live = usePromoOffer(subscription?.promo ?? null);
+  // 시트는 열 때의 할인을 스냅샷해 들고 간다 — 구독 쿼리가 다시 조회돼 promo가 비어도
+  // 열린 시트가 걷히면 안 된다. 걷히는 순간 진행 중인 결제의 결과를 받을 곳이 사라진다
+  // 배지를 눌러 연 할인과, 페이월에서 넘어온 할인. 둘 다 열 때의 값을 그대로 들고 간다 —
+  // 구독 쿼리가 다시 조회돼 promo가 비어도 열린 시트가 걷히면 안 된다
+  const [tappedPromo, setTappedPromo] = useState<PaywallPromo | null>(null);
+  const handedPromo = useHandedPromo();
+  const openedPromo = tappedPromo ?? handedPromo;
+  const display = resolvePromoDisplay(openedPromo, live);
+
+  // 홈의 다른 시트가 겹쳐 뜨지 않게 알린다 — 5분짜리라 이쪽이 먼저다
+  useEffect(() => {
+    setPromoSheetOpen(openedPromo !== null);
+    return () => setPromoSheetOpen(false);
+  }, [openedPromo]);
+
+  const closeSheet = () => {
+    setTappedPromo(null);
+    clearPromoHandoff();
+  };
 
   // 팔 것이 없거나(유료·결제 불가) 아직 모를 때는 로고를 둔다 — 결제한 사람에게 업셀이 잠깐이라도 보이면 안 된다
   if (!paymentLive || isPending || isError || subscription?.premium) {
@@ -42,11 +65,10 @@ export const PremiumHeaderEntry = () => {
   }
 
   const openSheet = () => {
+    if (!live) return;
     track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'header' });
-    if (live) {
-      track(EVENTS.PROMO_SHEET_VIEWED, { promo_campaign: live.campaignKey });
-    }
-    setSheetOpen(true);
+    track(EVENTS.PROMO_SHEET_VIEWED, { promo_campaign: live.campaignKey });
+    setTappedPromo(live);
   };
 
   return (
@@ -77,14 +99,13 @@ export const PremiumHeaderEntry = () => {
         </Link>
       )}
 
-      {/* 시트를 열 때만 매단다 — 매다는 순간 스토어 가격을 물으므로 평소에는 왕복이 없다.
-          만료돼도 걷지 않는다: 결제 시트가 떠 있는 동안 5분이 지나도 결과를 받아야 한다 */}
-      {sheetOpen && granted && (
+      {/* 배지가 보이는 동안 매달아 둔다 — 스토어 가격을 미리 받아 두면 눌렀을 때 기다리지 않는다 */}
+      {display && (
         <PromoSheetHost
-          promo={live ?? { ...granted, remainingSeconds: 0 }}
-          expired={live === null}
-          onClose={() => setSheetOpen(false)}
-          onUnlocked={() => setSheetOpen(false)}
+          open={openedPromo !== null}
+          {...display}
+          onClose={closeSheet}
+          onUnlocked={closeSheet}
         />
       )}
     </>

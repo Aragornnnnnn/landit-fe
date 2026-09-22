@@ -19,11 +19,19 @@ const mocks = vi.hoisted(() => ({
   pricing: {} as Record<string, unknown>,
   promoPricing: {} as Record<string, unknown>,
   dismiss: vi.fn(),
+  setQueryData: vi.fn(),
   purchaseOptions: null as { pricing: unknown; onUnlocked: () => void } | null,
 }));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace }),
+}));
+vi.mock('@tanstack/react-query', () => ({
+  useQueryClient: () => ({ setQueryData: mocks.setQueryData }),
+}));
+vi.mock('@/shared/auth/auth-store', () => ({
+  useAuthStore: (selector: (state: unknown) => unknown) =>
+    selector({ member: { userId: 1 } }),
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 vi.mock('@/features/subscription/api/subscription', () => ({
@@ -72,8 +80,16 @@ beforeEach(() => {
   mocks.promoPricing = {};
   mocks.purchaseOptions = null;
   mocks.dismiss = vi.fn().mockResolvedValue({ promo: null });
+  mocks.setQueryData = vi.fn();
+  // 할인 패키지가 있어야 닫기가 서버에 알린다 — 없으면 5분을 태우지 않고 바로 홈으로 간다
+  mocks.promoPricing = {
+    yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
+  };
 });
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 describe('PaywallScreen', () => {
   it('처음엔 연간이 선택돼 있어 CTA가 무료 체험 문구다', () => {
@@ -198,62 +214,34 @@ describe('PaywallScreen', () => {
       campaignKey: 'exit-5min-2026-09',
     };
 
-    it('할인을 받으면 홈으로 가지 않고 시트로 붙잡는다', async () => {
-      mocks.dismiss = vi.fn().mockResolvedValue({ promo });
-      mocks.promoPricing = {
-        yearly: {
-          packageId: 'annual_discount',
-          price: 58_500,
-          currency: 'KRW',
-        },
-      };
-      render(<PaywallScreen />);
-
-      fireEvent.click(screen.getByRole('button', { name: '닫기' }));
-      await screen.findByText(/후 종료/);
-
-      expect(mocks.replace).not.toHaveBeenCalled();
-    });
-
-    it('자격이 없으면 홈으로 간다', async () => {
-      render(<PaywallScreen />);
-
-      fireEvent.click(screen.getByRole('button', { name: '닫기' }));
-      await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
-    });
-
-    it('할인을 받아도 할인 패키지가 없으면 시트를 띄우지 않고 홈으로 간다', async () => {
+    it('할인을 받으면 구독 캐시에 얹고 홈으로 보낸다 — 시트는 홈에서 뜬다', async () => {
       mocks.dismiss = vi.fn().mockResolvedValue({ promo });
       render(<PaywallScreen />);
 
       fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+
       await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
+      expect(mocks.setQueryData).toHaveBeenCalled();
     });
 
-    it('할인이 끝나도 닫기가 살아 있다 — 시트를 켜 둔 채 5분이 지나면 나갈 길이 없으면 안 된다', async () => {
-      vi.useFakeTimers({ shouldAdvanceTime: true });
-      mocks.dismiss = vi
-        .fn()
-        .mockResolvedValue({ promo: { ...promo, remainingSeconds: 1 } });
-      mocks.promoPricing = {
-        yearly: {
-          packageId: 'annual_discount',
-          price: 58_500,
-          currency: 'KRW',
-        },
-      };
+    it('자격이 없으면 그냥 홈으로 간다', async () => {
       render(<PaywallScreen />);
 
       fireEvent.click(screen.getByRole('button', { name: '닫기' }));
-      await screen.findByText(/후 종료/);
-      await act(async () => void vi.advanceTimersByTime(2000));
-      expect(screen.getByText('할인이 끝났어요')).toBeInTheDocument();
-      // 시트가 사라지지 않고 닫을 길을 남긴다 — 결제 중이었다면 그 결과도 여기로 돌아온다
-      const closers = screen.getAllByRole('button', { name: '닫기' });
-      fireEvent.click(closers[closers.length - 1]);
 
       await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
-      vi.useRealTimers();
+      expect(mocks.setQueryData).not.toHaveBeenCalled();
+    });
+
+    it('할인 패키지가 없으면 서버에 알리지도 않는다 — 못 보여줄 할인에 5분을 태우지 않는다', async () => {
+      mocks.promoPricing = {};
+      mocks.dismiss = vi.fn().mockResolvedValue({ promo });
+      render(<PaywallScreen />);
+
+      fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+
+      await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
+      expect(mocks.dismiss).not.toHaveBeenCalled();
     });
 
     it('기록이 실패해도 닫히는 것을 막지 않는다', async () => {
@@ -261,6 +249,7 @@ describe('PaywallScreen', () => {
       render(<PaywallScreen />);
 
       fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+
       await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
     });
   });

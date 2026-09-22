@@ -4,13 +4,12 @@
 // 결제·복원은 features/subscription의 usePurchase가 지휘하고, 여기서는 어느 플랜을 골랐는지와 버튼 상태만 안다
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import {
-  dismissPaywall,
-  type PaywallPromo,
-} from '@/features/subscription/api/subscription';
+import { dismissPaywall } from '@/features/subscription/api/subscription';
+import { subscriptionKeys } from '@/features/subscription/model/keys';
 import { toKrwPrices } from '@/features/subscription/model/offerings';
 import {
   buildPaywallPlans,
@@ -19,12 +18,12 @@ import {
   type PaywallPlan,
   type PlanId,
 } from '@/features/subscription/model/plans';
+import { handOffPromo } from '@/features/subscription/model/promo-handoff';
 import { useOfferings } from '@/features/subscription/model/useOfferings';
-import { usePromoOffer } from '@/features/subscription/model/usePromoOffer';
 import { usePurchase } from '@/features/subscription/model/usePurchase';
 import { BenefitComparison } from '@/features/subscription/ui/BenefitComparison';
-import { PromoSheet } from '@/features/subscription/ui/PromoSheet';
 import { track } from '@/shared/analytics';
+import { useAuthStore } from '@/shared/auth/auth-store';
 import { homePath } from '@/shared/lib/last-tab';
 import { Button } from '@/shared/ui/Button';
 
@@ -43,45 +42,46 @@ interface PaywallScreenProps {
 
 export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const userId = useAuthStore((state) => state.member?.userId ?? null);
   const [selectedId, setSelectedId] = useState<PlanId>(DEFAULT_PLAN_ID);
 
   // 셸이 스토어 가격을 주면 카드 숫자를 그 값으로 다시 만든다 — 못 받으면 등록값 그대로.
   // 본 화면은 늘 정가다. 할인은 닫을 때 뜨는 시트에만 있다
   const tiers = useOfferings();
   const { list: pricing } = tiers;
-  // 닫을 때 서버가 준 할인(원본)과, 남은 시간이 반영된 값. 만료되면 live가 null이 된다
-  const [granted, setGranted] = useState<PaywallPromo | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
   // 서버에 알리는 동안 닫기를 잠근다 — 연타하면 요청이 쌓이고 화면은 그대로다
   const [closing, setClosing] = useState(false);
-  const live = usePromoOffer(granted);
   const plans = buildPaywallPlans(toKrwPrices(pricing));
   const selectedPlan = plans[selectedId];
 
   const goHome = () => router.replace(homePath());
-  // 닫으면 서버에 알리고, 할인을 받으면 시트로 붙잡는다. 자격이 없거나 할인 패키지가 없으면 그대로 홈으로 —
+  // 닫으면 서버에 알리고, 할인을 받으면 시트로 붙잡는다 —
   // 학습 진입에서 밀려 올라온 화면이라 온 곳으로 되돌리면 다시 페이월에 걸린다 (docs/subscription.md)
   const close = async () => {
-    if (sheetOpen || closing) return;
-    // 이미 받아 둔 할인이 있으면 다시 알리지 않는다. 시트를 닫았다가 다시 닫기를 누른 경우다
-    if (granted) {
-      setSheetOpen(true);
+    if (closing) return;
+    // 할인 패키지를 못 받았으면 알리지도 않는다. 서버가 찍은 5분은 한 번뿐이라, 못 보여줄 할인을 태우면 안 된다
+    if (!tiers.promo.yearly) {
+      goHome();
       return;
     }
     setClosing(true);
     // 기록에 실패해도 닫히는 것을 막지 않는다. 할인을 못 받을 뿐이다
     const result = await dismissPaywall().catch(() => null);
     setClosing(false);
-    if (result?.promo && tiers.promo.yearly) {
-      setGranted(result.promo);
-      setSheetOpen(true);
-      track(EVENTS.PROMO_SHEET_VIEWED, {
-        promo_campaign: result.promo.campaignKey,
-      });
+    if (!result?.promo) {
+      goHome();
       return;
     }
+    // 헤더 배지와 시트는 구독 응답의 promo를 본다 — 캐시에 얹어야 홈에 닿자마자 뜬다
+    queryClient.setQueryData(subscriptionKeys.mine(userId), (previous) =>
+      previous ? { ...previous, promo: result.promo } : previous,
+    );
+    // 시트는 페이월 위가 아니라 홈에서 뜬다 — 나가려는 사람을 붙잡아 두지 않고 보내 준 뒤 한 번 더 권한다
+    handOffPromo(result.promo);
     goHome();
   };
+
   // 유료가 되면 원래 가려던 곳으로 — 게이트가 붙인 ?from=. 캐시가 이미 유료라 다시 막히지 않는다
   const unlock = () => router.replace(returnTo ?? homePath());
   const { busy, purchase, restore } = usePurchase({
@@ -128,18 +128,6 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
           />
         ))}
       </section>
-
-      {/* 만료돼도 시트를 걷지 않는다 — 결제 시트가 떠 있는 동안 5분이 지나도 결과를 받아야 한다 */}
-      {sheetOpen && granted && (
-        <PromoSheet
-          open
-          promo={live ?? { ...granted, remainingSeconds: 0 }}
-          expired={live === null}
-          tiers={tiers}
-          onClose={goHome}
-          onUnlocked={unlock}
-        />
-      )}
 
       <footer className="px-5 pt-3 pb-[max(env(safe-area-inset-bottom),24px)] short:pb-[max(env(safe-area-inset-bottom),8px)]">
         <Button onClick={startPurchase} loading={busy}>

@@ -60,7 +60,7 @@ export const usePurchase = ({
   promoCampaign,
 }: UsePurchaseOptions) => {
   // 결제 이벤트마다 같은 꼬리를 붙인다 — 정가 결제와 할인 결제를 나눠 보려면 전 구간에 있어야 한다
-  const promo = promoCampaign ? { promo_campaign: promoCampaign } : {};
+  const promoTag = promoCampaign ? { promo_campaign: promoCampaign } : {};
   const [busy, setBusy] = useState(false);
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.member?.userId ?? null);
@@ -93,7 +93,7 @@ export const usePurchase = ({
       track(EVENTS.PURCHASE_FAILED, {
         plan,
         reason: unsupported.reason,
-        ...promo,
+        ...promoTag,
       });
       showToast(unsupported.message);
       return;
@@ -112,13 +112,13 @@ export const usePurchase = ({
         track(EVENTS.PURCHASE_FAILED, {
           plan,
           reason: 'no_response',
-          ...promo,
+          ...promoTag,
         });
         showToast('결제 응답이 없어요. 잠시 후 다시 시도해 주세요');
         return;
       }
       if (result.status === 'cancelled') {
-        track(EVENTS.PURCHASE_CANCELED, { plan, ...promo });
+        track(EVENTS.PURCHASE_CANCELED, { plan, ...promoTag });
         return;
       }
       if (result.status === 'error') {
@@ -126,7 +126,7 @@ export const usePurchase = ({
           plan,
           reason: 'shell_error',
           message: result.message,
-          ...promo,
+          ...promoTag,
         });
         showToast(
           result.message ?? '결제에 실패했어요. 잠시 후 다시 시도해 주세요',
@@ -141,7 +141,7 @@ export const usePurchase = ({
         plan,
         unlocked,
         ...(paid && { price: paid.price, currency: paid.currency }),
-        ...promo,
+        ...promoTag,
       });
       // 기다리는 사이 화면을 떠났으면 안내와 이동은 하지 않는다 — 캐시 반영은 위에서 이미 끝났다
       if (signal?.aborted) return;

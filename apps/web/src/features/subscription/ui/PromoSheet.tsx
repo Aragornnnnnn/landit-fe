@@ -2,7 +2,7 @@
 
 // 페이월을 닫을 때 뜨는 한시 할인 시트 — 남은 시간, 할인 연간과 정가 월간, 결제 CTA.
 // 홈 헤더 배지에서도 같은 시트를 연다
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EVENTS, type SubscriptionPlan } from '@landit/analytics';
 import Link from 'next/link';
 
@@ -19,7 +19,6 @@ import { usePurchase } from '../model/usePurchase';
 import { GOLD_GRADIENT, PremiumPill } from './premium-brand';
 
 interface PromoSheetProps {
-  open: boolean;
   /** 화면에 적을 할인. 끝났으면 남은 시간이 0으로 온다 */
   promo: PaywallPromo;
   /** 5분이 지났는가. 지났으면 더 팔지 않고 닫을 길만 남긴다 */
@@ -33,11 +32,10 @@ interface PromoSheetProps {
 /**
  * 한시 할인 바텀시트.
  *
- * 만료돼도 시트를 걷지 않는다 — 결제 시트가 떠 있는 동안 5분이 지나면 결제는 그대로 나가는데,
- * 컴포넌트가 사라지면 그 결과를 아무도 받지 못한다. 대신 더 팔지 않고 닫을 길만 남긴다.
+ * 5분이 지나면 스스로 닫힌다. 단 결제가 진행 중이면 남는다 — 스토어 결제 시트를 띄운 채
+ * 만료되는 일이 흔한데, 여기서 걷히면 이미 나간 결제의 결과를 받을 곳이 사라진다.
  */
 export const PromoSheet = ({
-  open,
   promo,
   expired,
   tiers,
@@ -53,14 +51,26 @@ export const PromoSheet = ({
     promoCampaign: promo.campaignKey,
   });
 
+  // 5분이 지나면 스스로 닫는다 — 끝난 할인을 띄워 두지 않는다. 결제 중이면 결과를 받을 때까지 남는다
+  useEffect(() => {
+    if (expired && !busy) onClose();
+  }, [expired, busy, onClose]);
+
   // 할인 패키지를 못 받았으면 시트를 열지 않는다. 할인가를 보여 놓고 정가로 결제되는 일이 없어야 한다
   if (!sheet) return null;
 
+  // 결제 시트가 떠 있는 동안에는 닫히지 않는다 — 여기서 걷히면 스토어 결제 결과를 받을 곳이 사라진다
+  const closeIfIdle = () => {
+    if (!busy) onClose();
+  };
+
   const { yearly, monthly } = sheet;
   const isYearly = selectedPlan === 'yearly';
-  // 할인율은 연간에만 붙는다 — 월간 카드를 고른 채 "38% 할인 받고 시작하기"를 띄우면 거짓말이 된다
-  const discountLabel =
-    isYearly && yearly.discountRate ? `${yearly.discountRate}% ` : '';
+  // 할인은 연간에만 있다 — 월간을 고른 채 "할인 받고 시작하기"를 띄우면 거짓말이 된다.
+  // 월간 문구는 페이월 CTA와 같은 말을 쓴다
+  const ctaLabel = isYearly
+    ? `${yearly.discountRate ? `${yearly.discountRate}% ` : ''}할인 받고 시작하기`
+    : `월 ${formatWon(monthly.price)}으로 시작하기`;
 
   const selectPlan = (plan: SubscriptionPlan) => {
     if (plan === selectedPlan) return;
@@ -80,27 +90,22 @@ export const PromoSheet = ({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose}>
+    <BottomSheet open onClose={closeIfIdle}>
       <header className="text-center">
         <PremiumPill />
-        <h2 className="mt-3 text-[22px] leading-[1.35] font-bold text-foreground">
-          {expired ? (
-            '할인이 끝났어요'
-          ) : (
-            <>
-              {promo.newUser ? '첫 방문 특별 혜택' : '지금만 특별 혜택'}
-              <br />
-              연간 {yearly.discountRate ? `${yearly.discountRate}% ` : ''}할인
-            </>
-          )}
+        {promo.newUser && (
+          <p className="mt-2.5 text-[12px] leading-[1.3] font-medium text-muted-foreground">
+            신규 유저 혜택
+          </p>
+        )}
+        <h2 className="mt-2.5 text-[22px] leading-[1.35] font-bold text-foreground">
+          지금 화면에서만
+          <br />
+          구독 {yearly.discountRate ? `${yearly.discountRate}% ` : ''}할인
         </h2>
-        <p
-          className="mt-3 inline-block rounded-full px-4 py-1.5 text-[15px] font-bold text-[#4a2f00] tabular-nums"
-          style={{ background: GOLD_GRADIENT }}
-        >
-          {expired
-            ? '다음 기회에 만나요'
-            : `${formatPromoClock(promo.remainingSeconds)} 후 종료`}
+        {/* 금색은 맨 위 PREMIUM과 할인율 배지 둘만 — 남은 시간은 배경 없이 빨간 글자로 */}
+        <p className="mt-2.5 text-[15px] leading-[1.3] font-bold text-destructive tabular-nums">
+          {formatPromoClock(promo.remainingSeconds)} 후 종료
         </p>
       </header>
 
@@ -108,7 +113,6 @@ export const PromoSheet = ({
         <PlanRow
           title="연간 플랜"
           selected={isYearly}
-          disabled={expired}
           onSelect={() => selectPlan('yearly')}
           badge={yearly.discountRate ? `${yearly.discountRate}% 할인` : null}
           price={`월 ${formatWon(yearly.monthlyPrice)}`}
@@ -122,7 +126,6 @@ export const PromoSheet = ({
         <PlanRow
           title="월간 플랜"
           selected={!isYearly}
-          disabled={expired}
           onSelect={() => selectPlan('monthly')}
           badge={null}
           price={`월 ${formatWon(monthly.price)}`}
@@ -132,13 +135,9 @@ export const PromoSheet = ({
       </section>
 
       <footer className="mt-6">
-        {expired ? (
-          <Button onClick={onClose}>닫기</Button>
-        ) : (
-          <Button onClick={startPurchase} loading={busy}>
-            {discountLabel}할인 받고 시작하기
-          </Button>
-        )}
+        <Button onClick={startPurchase} loading={busy}>
+          {ctaLabel}
+        </Button>
         {/* 결제할 수 있는 화면이라 자동 갱신 금액과 해지 방법을 여기서도 밝힌다 (스토어 심사 항목) */}
         <p className="mt-3 text-center text-[11px] leading-[1.35] text-muted-foreground">
           {isYearly
@@ -162,7 +161,6 @@ export const PromoSheet = ({
 interface PlanRowProps {
   title: string;
   selected: boolean;
-  disabled: boolean;
   onSelect: () => void;
   /** 카드 위 테두리에 걸치는 문구. 할인을 강조하는 카드만 */
   badge: string | null;
@@ -175,7 +173,6 @@ interface PlanRowProps {
 const PlanRow = ({
   title,
   selected,
-  disabled,
   onSelect,
   badge,
   price,
@@ -186,9 +183,8 @@ const PlanRow = ({
     type="button"
     aria-label={title}
     aria-pressed={selected}
-    disabled={disabled}
     onClick={onSelect}
-    className={`relative flex items-center justify-between rounded-2xl border bg-card px-4 py-3.5 text-left disabled:opacity-50 ${
+    className={`relative flex items-center justify-between rounded-2xl border bg-card px-4 py-3.5 text-left ${
       selected ? 'border-2 border-primary' : 'border-border'
     }`}
   >

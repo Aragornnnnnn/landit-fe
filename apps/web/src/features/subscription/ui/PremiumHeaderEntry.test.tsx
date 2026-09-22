@@ -3,6 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { MySubscription } from '../api/subscription';
+import { clearPromoHandoff, handOffPromo } from '../model/promo-handoff';
 import { PremiumHeaderEntry } from './PremiumHeaderEntry';
 
 const mocks = vi.hoisted(() => ({
@@ -13,6 +14,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
+vi.mock('./PromoSheetHost', () => ({
+  PromoSheetHost: () => <div data-testid="promo-sheet-host" />,
+}));
 vi.mock('../model/usePaymentLive', () => ({
   usePaymentLive: () => mocks.paymentLive,
 }));
@@ -48,6 +52,7 @@ beforeEach(() => {
   mocks.subscription = free();
   mocks.isPending = false;
   mocks.isError = false;
+  clearPromoHandoff();
 });
 afterEach(() => cleanup());
 
@@ -98,5 +103,23 @@ describe('PremiumHeaderEntry', () => {
     render(<PremiumHeaderEntry />);
 
     expect(screen.getByLabelText('홈으로')).toBeInTheDocument();
+  });
+
+  it('페이월에서 넘겨받으면 시트가 저절로 열린다 — 닫고 홈으로 보낸 뒤 한 번 더 권하는 자리다', () => {
+    mocks.subscription = free({
+      remainingSeconds: 300,
+      expiresAt: '2026-09-22T14:35:00',
+      newUser: true,
+      campaignKey: 'exit-5min-2026-09',
+    });
+    handOffPromo({
+      remainingSeconds: 300,
+      expiresAt: '2026-09-22T14:35:00',
+      newUser: true,
+      campaignKey: 'exit-5min-2026-09',
+    });
+    render(<PremiumHeaderEntry />);
+
+    expect(screen.getByTestId('promo-sheet-host')).toBeInTheDocument();
   });
 });
