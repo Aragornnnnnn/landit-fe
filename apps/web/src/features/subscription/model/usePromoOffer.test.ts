@@ -6,13 +6,21 @@ import type { PaywallPromo } from '@/features/subscription/api/subscription';
 
 import { usePromoOffer } from './usePromoOffer';
 
+// 끝나는 때는 할인마다 한 번만 정해지고 모듈에 남는다 — 테스트끼리 같은 할인을 쓰지 않게 매번 다른 시각을 준다
+let expiresAt = '';
+let serial = 0;
+
 const promo = (remainingSeconds: number): PaywallPromo => ({
   remainingSeconds,
-  expiresAt: '2026-09-22T14:35:00',
+  expiresAt,
   newUser: true,
 });
 
-beforeEach(() => vi.useFakeTimers());
+beforeEach(() => {
+  serial += 1;
+  expiresAt = `2026-09-22T14:35:${String(serial).padStart(2, '0')}`;
+  vi.useFakeTimers();
+});
 afterEach(() => vi.useRealTimers());
 
 describe('usePromoOffer', () => {
@@ -61,6 +69,17 @@ describe('usePromoOffer', () => {
     rerender({ next: promo(300) });
 
     expect(result.current?.remainingSeconds).toBe(295);
+  });
+
+  it('화면을 떠나 마운트가 끊겼다 돌아와도 5분이 다시 시작되지 않는다', () => {
+    const first = renderHook(() => usePromoOffer(promo(300)));
+    act(() => void vi.advanceTimersByTime(60_000));
+    first.unmount();
+
+    // 구독 캐시에는 받았을 때의 300초가 그대로 담겨 있다
+    const { result } = renderHook(() => usePromoOffer(promo(300)));
+
+    expect(result.current?.remainingSeconds).toBe(240);
   });
 
   it('만료 시각이 바뀌면 그 값으로 다시 잰다 — 다른 할인이다', () => {

@@ -1,6 +1,6 @@
 'use client';
 
-// 한시 할인 카운트다운 — 서버가 준 남은 초를 받은 순간 기준으로 재고, 0이 되면 끈다.
+// 한시 할인 카운트다운 — 처음 받은 순간에 끝나는 때를 정해 두고 1초마다 재며, 0이 되면 끈다.
 // 홈 헤더 배지와 할인 시트가 같이 쓴다
 import { useEffect, useState } from 'react';
 
@@ -8,10 +8,23 @@ import type { PaywallPromo } from '../api/subscription';
 
 const TICK_MS = 1000;
 
+// 할인마다 끝나는 때를 기기 시계로 한 번만 정해 둔다.
+// 이걸 두지 않으면 화면을 나갔다 들어올 때마다 캐시에 담긴 남은 초부터 다시 세어 5분이 늘어난다.
+// 서버 시각을 그대로 쓰지 않는 건 기기 시계가 틀어져 있어도 맞아야 하기 때문이다
+let deadline: { expiresAt: string; at: number } | null = null;
+
+const deadlineFor = (expiresAt: string, remainingSeconds: number) => {
+  if (deadline?.expiresAt !== expiresAt) {
+    deadline = { expiresAt, at: Date.now() + remainingSeconds * TICK_MS };
+  }
+  return deadline.at;
+};
+
 /**
  * 할인이 끝날 때까지 남은 시간을 1초마다 새로 센다.
  *
- * 기준은 서버가 준 `remainingSeconds`를 받은 순간이다 — 기기 시계가 틀어져 있어도 맞는다.
+ * 끝나는 때는 이 할인을 처음 받은 순간에 한 번 정해진다 — 화면을 오가며 다시 마운트해도
+ * 5분이 늘어나지 않고, 기기 시계가 서버와 달라도 맞는다.
  * 웹뷰가 백그라운드로 가면 타이머가 멈춰 그동안 흘러간 시간을 놓치므로, 돌아올 때 다시 잰다.
  *
  * @param promo 서버가 준 할인. 없거나 끝났으면 null
@@ -20,21 +33,20 @@ const TICK_MS = 1000;
 export const usePromoOffer = (
   promo: PaywallPromo | null,
 ): PaywallPromo | null => {
-  // 기준은 서버가 준 만료 시각이다 — 같은 할인을 다시 받아도 끝나는 때가 같아,
-  // 화면을 오가며 다시 마운트해도 5분이 늘어나지 않는다
   const expiresAt = promo?.expiresAt ?? '';
-  const [progress, setProgress] = useState({ key: '', elapsed: 0 });
+  const granted = promo?.remainingSeconds ?? 0;
+  const [counted, setCounted] = useState({ key: '', remaining: 0 });
 
   useEffect(() => {
     if (!expiresAt) return;
-    // 서버 시각과 기기 시계가 다를 수 있어 절대 시각을 그대로 믿지 않는다.
-    // 받은 순간을 0으로 두고 흘러간 만큼만 뺀다. 시각 계산은 렌더 밖에서만 한다
-    const startedAt = Date.now();
+    const endsAt = deadlineFor(expiresAt, granted);
+    // 시각 계산은 렌더 밖에서만 한다
     const sync = () =>
-      setProgress({
+      setCounted({
         key: expiresAt,
-        elapsed: Math.floor((Date.now() - startedAt) / TICK_MS),
+        remaining: Math.max(0, Math.round((endsAt - Date.now()) / TICK_MS)),
       });
+    sync();
     const timer = setInterval(sync, TICK_MS);
     // 웹뷰가 백그라운드에 다녀오면 그동안 타이머가 멈춰 있었다. 돌아올 때 흘러간 만큼 따라잡는다
     document.addEventListener('visibilitychange', sync);
@@ -42,12 +54,12 @@ export const usePromoOffer = (
       clearInterval(timer);
       document.removeEventListener('visibilitychange', sync);
     };
-  }, [expiresAt]);
+  }, [expiresAt, granted]);
 
   if (!promo) return null;
-  // 값이 막 바뀐 렌더에서는 아직 한 톨도 안 흘렀다 — 0으로 봐야 갓 받은 할인이 만료로 보이지 않는다
-  const elapsed = progress.key === expiresAt ? progress.elapsed : 0;
-  const remaining = Math.max(0, promo.remainingSeconds - elapsed);
+  // 아직 한 번도 세지 않은 렌더에서는 서버가 준 값을 그대로 쓴다
+  const remaining =
+    counted.key === expiresAt ? counted.remaining : promo.remainingSeconds;
   return remaining > 0 ? { ...promo, remainingSeconds: remaining } : null;
 };
 
