@@ -11,4 +11,7 @@ export const smallTalkKeys = {
   // 지난 스몰톡 목록
   sessions: (userId: number | null) =>
     [...smallTalkKeys.all, userId, 'sessions'] as const,
+  // 끝난 대화 한 건의 요약(오늘의 스몰톡) — 상세와 응답이 달라 캐시도 따로 둔다
+  summary: (userId: number | null, sessionId: number) =>
+    [...smallTalkKeys.all, userId, 'summary', sessionId] as const,
 };

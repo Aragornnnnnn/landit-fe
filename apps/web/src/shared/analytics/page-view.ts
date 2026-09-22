@@ -156,14 +156,17 @@ const resolvePage = (
     return { page_name: 'conversation_smalltalk', path: pathname };
   }
 
-  // 지난 스몰톡 — 목록과 그 대화 한 건. 어느 대화인지는 세션 id로 남긴다
+  // 지난 스몰톡 — 목록과 그 대화 한 건. 어느 대화인지는 세션 id로 남긴다.
+  // 오늘의 스몰톡(요약)은 대화를 막 끝낸 자리라 기록 상세와 따로 센다
   if (seg[0] === 'smalltalk' && seg[1] === 'sessions') {
     if (!seg[2]) return { page_name: 'smalltalk_history', path: pathname };
+    const byTail = {
+      messages: 'smalltalk_history_transcript',
+      summary: 'smalltalk_summary',
+    } as const;
     return {
       page_name:
-        seg[3] === 'messages'
-          ? 'smalltalk_history_transcript'
-          : 'smalltalk_history_detail',
+        byTail[seg[3] as keyof typeof byTail] ?? 'smalltalk_history_detail',
       path: pathname,
       session_id: toId(seg[2]),
     };

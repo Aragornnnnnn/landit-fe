@@ -13,6 +13,7 @@ import {
   sessionExpressionBranchPath,
   sessionExpressionPath,
   smallTalkPath,
+  smallTalkSummaryPath,
   smallTalkTranscriptPath,
 } from './routes';
 
@@ -247,5 +248,11 @@ describe('smallTalkTranscriptPath', () => {
     expect(smallTalkTranscriptPath(7, { next: 'learning' })).toBe(
       '/smalltalk/sessions/7/messages?next=learning',
     );
+  });
+});
+
+describe('smallTalkSummaryPath', () => {
+  it('오늘의 스몰톡은 그 세션의 기록 주소 아래에 선다', () => {
+    expect(smallTalkSummaryPath(7)).toBe('/smalltalk/sessions/7/summary');
   });
 });
