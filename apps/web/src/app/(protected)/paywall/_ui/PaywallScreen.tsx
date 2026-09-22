@@ -7,6 +7,10 @@ import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+import {
+  dismissPaywall,
+  type PaywallPromo,
+} from '@/features/subscription/api/subscription';
 import { toKrwPrices } from '@/features/subscription/model/offerings';
 import {
   buildPaywallPlans,
@@ -16,8 +20,10 @@ import {
   type PlanId,
 } from '@/features/subscription/model/plans';
 import { useOfferings } from '@/features/subscription/model/useOfferings';
+import { usePromoOffer } from '@/features/subscription/model/usePromoOffer';
 import { usePurchase } from '@/features/subscription/model/usePurchase';
 import { BenefitComparison } from '@/features/subscription/ui/BenefitComparison';
+import { PromoSheet } from '@/features/subscription/ui/PromoSheet';
 import { track } from '@/shared/analytics';
 import { homePath } from '@/shared/lib/last-tab';
 import { Button } from '@/shared/ui/Button';
@@ -41,12 +47,27 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
 
   // 셸이 스토어 가격을 주면 카드 숫자를 그 값으로 다시 만든다 — 못 받으면 등록값 그대로.
   // 본 화면은 늘 정가다. 할인은 닫을 때 뜨는 시트에만 있다
-  const { list: pricing } = useOfferings();
+  const tiers = useOfferings();
+  const { list: pricing } = tiers;
+  // 닫을 때 서버가 준 할인. 남은 시간이 0이 되면 usePromoOffer가 null로 바꿔 시트가 사라진다
+  const [granted, setGranted] = useState<PaywallPromo | null>(null);
+  const promo = usePromoOffer(granted);
   const plans = buildPaywallPlans(toKrwPrices(pricing));
   const selectedPlan = plans[selectedId];
 
-  // 닫으면 홈으로 — 학습 진입에서 밀려 올라온 화면이라 온 곳으로 되돌리면 다시 페이월에 걸린다 (docs/subscription.md)
-  const close = () => router.replace(homePath());
+  const goHome = () => router.replace(homePath());
+  // 닫으면 서버에 알리고, 할인을 받으면 시트로 붙잡는다. 자격이 없거나 할인 패키지가 없으면 그대로 홈으로 —
+  // 학습 진입에서 밀려 올라온 화면이라 온 곳으로 되돌리면 다시 페이월에 걸린다 (docs/subscription.md)
+  const close = async () => {
+    if (granted) return;
+    // 기록에 실패해도 닫히는 것을 막지 않는다. 할인을 못 받을 뿐이다
+    const result = await dismissPaywall().catch(() => null);
+    if (result?.promo && tiers.promo.yearly) {
+      setGranted(result.promo);
+      return;
+    }
+    goHome();
+  };
   // 유료가 되면 원래 가려던 곳으로 — 게이트가 붙인 ?from=. 캐시가 이미 유료라 다시 막히지 않는다
   const unlock = () => router.replace(returnTo ?? homePath());
   const { busy, purchase, restore } = usePurchase({
@@ -73,7 +94,7 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background">
       <PaywallHero
-        onClose={close}
+        onClose={() => void close()}
         onRestore={startRestore}
         restoreDisabled={busy}
       />
@@ -93,6 +114,17 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
           />
         ))}
       </section>
+
+      {/* 할인을 받았을 때만 매단다 — 남은 시간이 0이 되면 promo가 null이 돼 시트가 사라진다 */}
+      {promo && (
+        <PromoSheet
+          open
+          promo={promo}
+          tiers={tiers}
+          onClose={goHome}
+          onUnlocked={unlock}
+        />
+      )}
 
       <footer className="px-5 pt-3 pb-[max(env(safe-area-inset-bottom),24px)] short:pb-[max(env(safe-area-inset-bottom),8px)]">
         <Button onClick={startPurchase} loading={busy}>

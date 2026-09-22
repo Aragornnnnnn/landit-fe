@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   restore: vi.fn(),
   busy: false,
   pricing: {} as Record<string, unknown>,
+  promoPricing: {} as Record<string, unknown>,
+  dismiss: vi.fn(),
   purchaseOptions: null as { pricing: unknown; onUnlocked: () => void } | null,
 }));
 
@@ -18,6 +20,9 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace }),
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
+vi.mock('@/features/subscription/api/subscription', () => ({
+  dismissPaywall: () => mocks.dismiss(),
+}));
 // 결제 지휘는 features/subscription 몫 — 여기선 무엇을 넘기고 어떤 인자로 부르는지, 버튼 상태만 본다
 vi.mock('@/features/subscription/model/usePurchase', () => ({
   usePurchase: (options: { pricing: unknown; onUnlocked: () => void }) => {
@@ -30,7 +35,7 @@ vi.mock('@/features/subscription/model/usePurchase', () => ({
   },
 }));
 vi.mock('@/features/subscription/model/useOfferings', () => ({
-  useOfferings: () => ({ list: mocks.pricing, promo: {} }),
+  useOfferings: () => ({ list: mocks.pricing, promo: mocks.promoPricing }),
 }));
 // next/link는 next 밑의 다른 react 복사본을 잡아 훅이 깨진다 — 순수 a 태그로 치환한다
 vi.mock('next/link', () => ({
@@ -58,7 +63,9 @@ vi.mock('next/image', () => ({
 beforeEach(() => {
   mocks.busy = false;
   mocks.pricing = {};
+  mocks.promoPricing = {};
   mocks.purchaseOptions = null;
+  mocks.dismiss = vi.fn().mockResolvedValue({ promo: null });
 });
 afterEach(() => cleanup());
 
@@ -167,11 +174,62 @@ describe('PaywallScreen', () => {
     expect(mocks.replace).toHaveBeenCalledWith('/scenario');
   });
 
-  it('닫기를 누르면 홈으로 돌아간다', () => {
+  it('닫기를 누르면 홈으로 돌아간다 — 서버에 알린 뒤다', async () => {
     render(<PaywallScreen />);
 
     fireEvent.click(screen.getByRole('button', { name: '닫기' }));
 
-    expect(mocks.replace).toHaveBeenCalledWith('/scenario');
+    await vi.waitFor(() =>
+      expect(mocks.replace).toHaveBeenCalledWith('/scenario'),
+    );
+  });
+
+  describe('닫기', () => {
+    const promo = {
+      remainingSeconds: 300,
+      expiresAt: '2026-09-22T14:35:00',
+      newUser: true,
+      campaignKey: 'exit-5min-2026-09',
+    };
+
+    it('할인을 받으면 홈으로 가지 않고 시트로 붙잡는다', async () => {
+      mocks.dismiss = vi.fn().mockResolvedValue({ promo });
+      mocks.promoPricing = {
+        yearly: {
+          packageId: 'annual_discount',
+          price: 58_500,
+          currency: 'KRW',
+        },
+      };
+      render(<PaywallScreen />);
+
+      fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+      await screen.findByText(/후 종료/);
+
+      expect(mocks.replace).not.toHaveBeenCalled();
+    });
+
+    it('자격이 없으면 홈으로 간다', async () => {
+      render(<PaywallScreen />);
+
+      fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+      await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
+    });
+
+    it('할인을 받아도 할인 패키지가 없으면 시트를 띄우지 않고 홈으로 간다', async () => {
+      mocks.dismiss = vi.fn().mockResolvedValue({ promo });
+      render(<PaywallScreen />);
+
+      fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+      await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
+    });
+
+    it('기록이 실패해도 닫히는 것을 막지 않는다', async () => {
+      mocks.dismiss = vi.fn().mockRejectedValue(new Error('네트워크'));
+      render(<PaywallScreen />);
+
+      fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+      await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
+    });
   });
 });
