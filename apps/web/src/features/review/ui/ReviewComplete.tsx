@@ -37,6 +37,7 @@ export const ReviewComplete = ({
   onHome,
 }: ReviewCompleteProps) => {
   const reduced = useReducedMotion() ?? false;
+  // 끝난 문제 전부가 맞힘일 때만 만점이다 — 두 번 틀려 끝난 문제는 맞힘이 아니다
   const solved = questions.filter(isSolved).length;
   const perfect = solved === questions.length;
   // 폭죽은 마지막 카드까지 칠해진 뒤에 터진다 — 먼저 터지면 결과를 읽기 전에 시선을 빼앗는다

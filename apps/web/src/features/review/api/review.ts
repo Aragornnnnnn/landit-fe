@@ -3,7 +3,7 @@
 import type { WritingSentence } from '@/features/expression/api/practice';
 import { api } from '@/shared/api/client';
 
-// READY=시작 전, IN_PROGRESS=진행 중, COMPLETED=전부 맞힘, EXPIRED=기한 지남
+// READY=시작 전, IN_PROGRESS=진행 중, COMPLETED=모든 문제가 끝남(맞힌 개수와 무관), EXPIRED=기한 지남
 export type ReviewStatus = 'READY' | 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED';
 
 export interface ReviewQuestion {
@@ -16,7 +16,8 @@ export interface ReviewQuestion {
   displayOrder: number;
   queueOrder: number;
   wrongCount: number;
-  // 이 문제를 맞힌 시각 — 아직 못 맞혔으면 null
+  // 이 문제가 끝난 시각 — 정답 또는 두 번째 오답에서 찍힌다. 맞혔다는 뜻이 아니라
+  // 끝났다는 뜻이고, 맞혔는지는 wrongCount가 가른다 (review-progress의 isSolved)
   completedAt: string | null;
 }
 
@@ -27,7 +28,7 @@ export interface Review {
   // 시작 후 진행 기한 — 시작 전에는 null
   expiresAt: string | null;
   completedAt: string | null;
-  // 지금 풀 문제 — 시작 전·완료·만료면 null. 오답은 큐 뒤로 가므로 서버가 순서를 정한다
+  // 지금 풀 문제 — 시작 전·완료·만료면 null. 끝난 문제를 빼고 서버가 순서를 정한다
   currentQuestionId: string | null;
   // 최초 출제 순서 고정. 시작 전·만료면 빈 배열
   questions: ReviewQuestion[];

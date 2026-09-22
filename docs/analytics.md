@@ -246,7 +246,7 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 | Expression Review Finished         | question_count, solved_count, perfect           | 결과 화면 도달 (전부 맞혀 완료됐거나 두 번씩 풀어 결판남) |
 | Expression Review Abandoned        | step(intro\|quiz), question_count, solved_count | 결과를 보기 전에 X로 나감                                 |
 
-문제마다 기회는 두 번이다. `solved_count < question_count`로 끝난 복습은 서버에선 아직 진행 중이라, 같은 알림을 다시 눌러 들어오면 `Expression Review Started` 없이 이어서 푼다.
+문제마다 기회는 두 번이고, 정답 또는 두 번째 오답에서 그 문제가 끝난다. 전부 끝나면 서버가 복습을 완료로 바꾸므로 `solved_count < question_count`여도 끝난 복습이다. 진행 중에 나갔다가 같은 알림을 다시 누르면 `Expression Review Started` 없이 이어서 푼다.
 
 ### 편지함
 

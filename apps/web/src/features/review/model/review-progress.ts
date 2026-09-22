@@ -1,42 +1,45 @@
-// 서버가 준 복습 상태에서 화면이 쓸 값을 뽑는다 — 큐 순서·채점은 서버가 정하고, 여기선 읽기만 한다.
-// 다만 "언제 끝내는가"는 FE 규칙이다 — 서버는 전부 맞혀야 완료로 보지만, 우리는 문제마다 두 번까지만 낸다
+// 서버가 준 복습 상태에서 화면이 쓸 값을 뽑는다 — 채점·큐 순서·종료 판정은 모두 서버가 하고 여기선 읽기만 한다.
+// 문제는 정답 또는 두 번째 오답에서 끝난다. 그래서 completedAt은 "끝난 시각"이지 "맞힌 시각"이 아니다
 import type { Review, ReviewQuestion } from '../api/review';
 
-// 한 문제에 주는 기회 — 처음 한 번과 큐 뒤에서 다시 만났을 때 한 번
+// 서버가 문제를 끝내는 오답 횟수 — 두 번째 오답이면 그 문제는 놓친 채로 끝난다
 export const MAX_ATTEMPTS = 2;
 
-export const isSolved = (question: ReviewQuestion) =>
+// 끝난 문제인가 — 맞혔든 두 번 틀렸든 서버가 종료 시각을 찍는다
+export const isResolved = (question: ReviewQuestion) =>
   question.completedAt !== null;
 
-// 두 번 다 틀린 문제 — 더 내지 않고 결과 화면에서 놓친 표현으로 보여준다
-export const isFailed = (question: ReviewQuestion) =>
-  !isSolved(question) && question.wrongCount >= MAX_ATTEMPTS;
+/**
+ * 맞혀서 끝났는가. 끝난 문제 중 오답이 상한에 못 미친 것만 맞힘으로 본다.
+ *
+ * 한계 — 과거 정책(두 번 이상 틀린 뒤에도 정답을 낼 수 있던 때)으로 쌓인 기록은
+ * `completedAt`과 `wrongCount`만으로 새 정책의 놓침과 구분할 수 없어 놓침으로 보인다.
+ * 정확히 가르려면 BE에 문제별 정답 여부 필드가 필요하다 (지금 계약에는 없다).
+ */
+export const isSolved = (question: ReviewQuestion) =>
+  isResolved(question) && question.wrongCount < MAX_ATTEMPTS;
 
-// 아직 기회가 남은 문제들
+// 두 번 틀려 놓친 채 끝난 문제
+export const isFailed = (question: ReviewQuestion) =>
+  isResolved(question) && question.wrongCount >= MAX_ATTEMPTS;
+
+// 아직 끝나지 않은 문제들 — 서버가 이 중에서 현재 문제를 고른다
 export const pendingQuestionsOf = (review: Review) =>
-  review.questions.filter(
-    (question) => !isSolved(question) && !isFailed(question),
-  );
+  review.questions.filter((question) => !isResolved(question));
 
 export const currentQuestionOf = (review: Review): ReviewQuestion | null =>
   review.questions.find(
     (question) => question.questionId === review.currentQuestionId,
   ) ?? null;
 
-/**
- * 더 낼 문제가 없는가. 서버가 완료로 바꾸는 건 전부 맞혔을 때뿐이라,
- * 두 번씩 풀어 실패로 끝난 복습은 여기서 끝난 것으로 본다.
- */
-export const isFinished = (review: Review) =>
-  review.status === 'COMPLETED' ||
-  (review.questions.length > 0 && pendingQuestionsOf(review).length === 0);
+// 복습 전체가 끝났는가 — 서버가 모든 문제의 종료를 보고 status를 바꾼다(맞힌 개수와 무관하다)
+export const isFinished = (review: Review) => review.status === 'COMPLETED';
 
-// 진행바는 결판난 문제 수(맞힘·놓침)만큼 찬다 — 같은 문제를 다시 풀 땐 제자리다
+// 진행바는 끝난 문제 수만큼 찬다 — 맞히든 놓치든 한 칸이고, 첫 오답으로 다시 낼 문제는 제자리다
 export const progressRangeOf = (review: Review): [number, number] => {
   const total = review.questions.length;
   if (total === 0) return [0, 1];
 
-  const resolved = total - pendingQuestionsOf(review).length;
-  // 전부 결판났으면 더 갈 곳이 없다 — 1을 넘는 구간을 돌려주지 않는다
+  const resolved = review.questions.filter(isResolved).length;
   return [resolved / total, Math.min(resolved + 1, total) / total];
 };

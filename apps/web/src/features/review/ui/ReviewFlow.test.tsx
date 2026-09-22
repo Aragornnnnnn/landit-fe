@@ -184,7 +184,7 @@ describe('ReviewFlow', () => {
     expect(screen.getByText('question:You win')).toBeInTheDocument();
   });
 
-  it('결판난 문제 수만큼 진행 구간이 앞으로 간다', () => {
+  it('끝난 문제 수만큼 진행 구간이 앞으로 간다', () => {
     wire({
       fetched: review({
         currentQuestionId: 'q2',
@@ -233,7 +233,7 @@ describe('ReviewFlow', () => {
     expect(screen.getByText('표현 q2')).toBeInTheDocument();
   });
 
-  it('기회가 남은 문제가 하나뿐이면 CTA가 결과로 넘기는 문구가 된다', () => {
+  it('끝나지 않은 문제가 하나뿐이면 CTA가 결과로 넘기는 문구가 된다', () => {
     wire({
       fetched: review({
         currentQuestionId: 'q2',
@@ -248,9 +248,9 @@ describe('ReviewFlow', () => {
     expect(screen.getByText('label:결과 볼게요')).toBeInTheDocument();
   });
 
-  it('두 번 틀린 문제는 더 내지 않고 놓친 표현으로 결과 화면에 남는다', async () => {
+  it('두 번째 오답도 문제를 끝낸다 — 놓친 표현으로 결과 화면에 남는다', async () => {
     const user = userEvent.setup();
-    // given — 한 번 틀린 마지막 문제. 여기서 또 틀리면 기회가 끝난다
+    // given — 한 번 틀린 마지막 문제. 여기서 또 틀리면 서버가 그 문제를 끝내고 복습을 완료로 바꾼다
     wire({
       fetched: review({
         currentQuestionId: 'q2',
@@ -263,10 +263,11 @@ describe('ReviewFlow', () => {
         Promise.resolve({
           correct: false,
           review: review({
-            currentQuestionId: 'q2',
+            status: 'COMPLETED',
+            currentQuestionId: null,
             questions: [
               question('q1', 'I win', '2026-09-22T10:00'),
-              question('q2', 'You win', null, 2),
+              question('q2', 'You win', '2026-09-22T10:05', 2),
             ],
           }),
         }),
@@ -280,6 +281,44 @@ describe('ReviewFlow', () => {
     expect(
       screen.getByText('놓친 표현은 다음에 다시 만나요.'),
     ).toBeInTheDocument();
+  });
+
+  it('전부 두 번씩 틀려도 서버가 완료로 바꾸면 결과 화면을 보여준다', async () => {
+    const user = userEvent.setup();
+    wire({
+      fetched: review({
+        currentQuestionId: 'q1',
+        questions: [
+          question('q1', 'I win', null, 1),
+          question('q2', 'You win', '2026-09-22T10:00', 2),
+        ],
+      }),
+      answered: () =>
+        Promise.resolve({
+          correct: false,
+          review: review({
+            status: 'COMPLETED',
+            currentQuestionId: null,
+            questions: [
+              question('q1', 'I win', '2026-09-22T10:05', 2),
+              question('q2', 'You win', '2026-09-22T10:00', 2),
+            ],
+          }),
+        }),
+    });
+    show();
+
+    await user.click(screen.getByRole('button', { name: '제출' }));
+    await user.click(screen.getByRole('button', { name: '넘기기' }));
+
+    expect(
+      screen.getByText('괜찮아요. 놓친 표현은 다음에 다시 만나요.'),
+    ).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith('Expression Review Finished', {
+      question_count: 2,
+      solved_count: 0,
+      perfect: false,
+    });
   });
 
   it('시작하면 문제 수와 함께 시작을 남긴다', async () => {
@@ -411,6 +450,25 @@ describe('ReviewFlow', () => {
     await user.click(screen.getByRole('button', { name: '제출' }));
 
     expect(screen.getByText('question:You win')).toBeInTheDocument();
+  });
+
+  it('끝난 복습으로 다시 들어오면 같은 결과를 보여준다', () => {
+    wire({
+      fetched: review({
+        status: 'COMPLETED',
+        currentQuestionId: null,
+        questions: [
+          question('q1', 'I win', '2026-09-22T10:00'),
+          question('q2', 'You win', '2026-09-22T10:05', 2),
+        ],
+      }),
+    });
+    show();
+
+    expect(screen.getByText('복습 완료!')).toBeInTheDocument();
+    expect(
+      screen.getByText('놓친 표현은 다음에 다시 만나요.'),
+    ).toBeInTheDocument();
   });
 
   it('기한이 지난 복습으로 들어오면 안내와 홈 버튼만 보여준다', () => {

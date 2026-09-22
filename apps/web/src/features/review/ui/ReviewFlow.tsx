@@ -1,6 +1,6 @@
 'use client';
 
-// 푸시 복습 플로우 — 알림으로 들어와 시작 안내 → 문제 → 완료. 큐 순서·채점·완료 판정은 모두 서버 상태를 따른다.
+// 알림 복습 플로우 — 알림으로 들어와 시작 안내 → 문제 → 결과. 큐 순서·채점·종료 판정은 모두 서버 상태를 따른다.
 // 학습 안의 복습(ReviewStep)과 화면은 같지만, 그쪽은 문제 큐를 브라우저가 들고 여기선 서버가 든다
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS, type ExpressionReviewStep } from '@landit/analytics';
@@ -80,7 +80,8 @@ export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
   // 복습은 기록을 남기지 않는다 — 나가면 홈으로. replace로 히스토리에서 지워 뒤로가기로 되돌아오지 않게 한다
   const goHome = () => router.replace(SCENARIO_PATH);
 
-  // 계측 분모 — 서버가 문제를 고정해 주므로 문제 수와 맞힌 수로 어디까지 갔는지 본다
+  // 계측 분모 — 서버가 문제를 고정해 주므로 문제 수와 맞힌 수로 어디까지 갔는지 본다.
+  // 맞힘은 "끝났고 오답이 상한에 못 미친" 문제다 (끝났다 ≠ 맞혔다)
   const countsOf = (state: Review | null) => ({
     question_count: state?.questions.length ?? 0,
     solved_count: state?.questions.filter(isSolved).length ?? 0,
@@ -131,9 +132,8 @@ export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
     );
   }
 
-  // 서버는 전부 맞혀야 완료로 보지만, 우리는 문제마다 두 번까지만 낸다 — 두 번 틀린 문제는 놓친 것으로 두고 끝낸다.
-  // 기한이 지난 상태라도 이번에 푼 결과가 손에 있으면 안내 문구로 덮지 않는다
-  if (isFinished(review) && (review.status !== 'EXPIRED' || applied !== null)) {
+  // 문제는 정답 또는 두 번째 오답에서 끝나고, 전부 끝나면 서버가 완료로 바꾼다 — 그 판정을 그대로 따른다
+  if (isFinished(review)) {
     return (
       <ReviewComplete
         questions={review.questions}
@@ -180,9 +180,9 @@ export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
     }
   };
 
-  // 기회가 남은 마지막 문제인가 — 이걸 결판내면 결과 화면으로 넘어간다
+  // 아직 끝나지 않은 마지막 문제인가 — 이걸 끝내면 결과 화면으로 넘어간다
   const last = pendingQuestionsOf(review).length === 1;
-  // 이번에 틀리면 이 문제는 놓친 것으로 끝난다 — 오답 CTA가 "다시 풀어볼게요"인지 여기서 갈린다
+  // 이번에 틀리면 이 문제는 놓친 채로 끝난다 — 오답 CTA가 "다시 풀어볼게요"인지 여기서 갈린다
   const lastAttempt = question.wrongCount + 1 >= MAX_ATTEMPTS;
   // 재도전 지시문은 학습 안의 복습과 같은 문구를 쓴다. 정답 공개는 여기선 하지 않는다 —
   // 기회가 두 번뿐이라 답을 보여주면 남은 한 번이 베껴 쓰기가 된다 (학습 안의 복습은 세 번째부터 공개한다)
