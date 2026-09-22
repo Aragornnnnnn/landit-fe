@@ -204,6 +204,7 @@ const twoWritingSentences: ExpressionPractice['writingSentence'] = [
     writingQuestionTranslation: '',
     writingSentenceWords: ['I', 'get', 'it', 'now'],
     writingSentenceWordChoices: ['now', 'I', 'it', 'get'],
+    writingSentenceAcceptedAnswers: [['I', 'get', 'it', 'now']],
   },
   {
     quizLanguage: 'KR',
@@ -213,6 +214,7 @@ const twoWritingSentences: ExpressionPractice['writingSentence'] = [
     writingQuestionTranslation: '',
     writingSentenceWords: ['이해돼?'],
     writingSentenceWordChoices: ['이해돼?', '몰라'],
+    writingSentenceAcceptedAnswers: [['이해돼?']],
   },
 ];
 

@@ -13,6 +13,8 @@ export interface SentenceQuiz {
   // answerWords는 정답 순서, shuffledWords는 정답+오답이 BE에서 이미 섞인 뱅크
   answerWords: string[];
   shuffledWords: string[];
+  // 정답으로 인정하는 배치들 — 첫 배열이 answerWords다. 한국어는 어순이 다른 정답이 여럿이다
+  acceptedAnswers: string[][];
 }
 
 // 대표 질문은 BE에서 null일 수 있어(질문형 구성 불가 시) 빈 문자열로 채운다.
@@ -23,6 +25,8 @@ export const fromLearning = (learning: ExpressionLearning): SentenceQuiz => ({
   answerText: learning.representativeSentenceText,
   answerWords: learning.representativeSentenceWords,
   shuffledWords: learning.representativeSentenceWordChoices,
+  // 대표 예문은 영어 조립이라 정답이 하나다 (learning-start에는 허용 정답 목록이 없다)
+  acceptedAnswers: [learning.representativeSentenceWords],
 });
 
 // 복습 영작 문제(practice.writingSentence)를 단어 선택 퀴즈 형태로 변환한다.
@@ -40,5 +44,9 @@ export const fromWritingSentence = (writing: WritingSentence): SentenceQuiz => {
       : writing.writingSentenceTranslation,
     answerWords: writing.writingSentenceWords,
     shuffledWords: writing.writingSentenceWordChoices,
+    // 허용 정답을 못 받은 응답(구버전 서버)은 정답 하나로 본다 — 예전 동작 그대로다
+    acceptedAnswers: writing.writingSentenceAcceptedAnswers?.length
+      ? writing.writingSentenceAcceptedAnswers
+      : [writing.writingSentenceWords],
   };
 };

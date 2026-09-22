@@ -25,6 +25,9 @@ export interface WritingSentence {
   // 담긴 언어는 quizLanguage를 따른다
   writingSentenceWords: string[];
   writingSentenceWordChoices: string[];
+  // 허용 정답 목록 — 첫 배열은 writingSentenceWords와 같다.
+  // 한국어는 어순이 다른 정답이 여럿이고 영어는 하나뿐이다
+  writingSentenceAcceptedAnswers: string[][];
 }
 
 export interface ExpressionPractice {

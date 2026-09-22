@@ -17,8 +17,10 @@ import type { QuizResult } from '../../model/review-queue';
 import type { SentenceQuiz } from '../../model/sentence-quiz';
 import { useChipReorder } from '../../model/useChipReorder';
 import {
+  bestMatchingAnswer,
   chipsFromWords,
-  isWordsCorrect,
+  matchesAnyAnswer,
+  maxAnswerLength,
   type WordChip,
 } from '../../model/word-bank';
 import { QuizPrompt } from '../common/QuizPrompt';
@@ -104,7 +106,8 @@ export const QuizStep = ({
   hideWrongAnswer = false,
   correctSlot,
 }: QuizStepProps) => {
-  const answer = quiz.answerWords;
+  // 정답으로 인정하는 배치들 — 한국어는 어순이 다른 정답이 여럿이라 하나만 보면 맞는 답을 틀렸다고 한다
+  const answers = quiz.acceptedAnswers;
   const reduced = useReducedMotion() ?? false;
 
   // 뱅크는 BE가 섞어준 shuffledWords 그대로. 선택은 칩 id의 순서 배열로 관리한다(중복 단어 안전).
@@ -128,9 +131,12 @@ export const QuizStep = ({
   }, [selected]);
 
   const usedIds = new Set(selected);
-  const full = selected.length === answer.length;
+  // 정답마다 길이가 다를 수 있다 — 가장 긴 정답까지는 올릴 수 있어야 한다
+  const full = selected.length === maxAnswerLength(answers);
   const wordOf = (id: number) =>
     bank.find((chip) => chip.id === id)?.word ?? '';
+  // 힌트가 기준으로 삼을 정답 — 지금 배치와 앞에서부터 가장 많이 맞는 것
+  const answer = bestMatchingAnswer(selected.map(wordOf), answers);
 
   const showHint = () => {
     track(EVENTS.HINT_USED, { source: step, level: 1 });
@@ -200,7 +206,7 @@ export const QuizStep = ({
 
   // 판정 주체 — 밖에서 받아오거나(서버 채점) 고른 단어 순서로 그 자리에서 정한다
   const judgeWords = async (words: string[]): Promise<QuizResult | null> => {
-    if (!judge) return isWordsCorrect(words, answer) ? 'correct' : 'wrong';
+    if (!judge) return matchesAnyAnswer(words, answers) ? 'correct' : 'wrong';
 
     setJudging(true);
     try {
