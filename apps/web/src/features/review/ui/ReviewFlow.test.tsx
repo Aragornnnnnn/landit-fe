@@ -1,4 +1,5 @@
 // 푸시 복습 플로우 — 상태별 화면 분기, 서버 판정을 받은 뒤 다음 문제로 넘어가는 진행, 완료·만료 처리
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -15,11 +16,19 @@ import { ReviewFlow } from './ReviewFlow';
 const replace = vi.fn();
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
-// next/image는 next 밑의 react 복사본을 잡아 훅 dispatcher가 null이 된다
-vi.mock('next/image', () => ({ default: () => <span /> }));
+// next/image는 next 밑의 react 복사본을 잡아 훅 dispatcher가 null이 된다.
+// 시작 화면 그림을 미리 받는 preloadImages가 getImageProps를 쓰므로 같이 세운다
+vi.mock('next/image', () => ({
+  default: () => <span />,
+  getImageProps: ({ src }: { src: string }) => ({ props: { src } }),
+}));
 // jsdom엔 캔버스가 없어 콘페티가 프레임에서 터진다
 vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
-vi.mock('../model/useReviewQuery', () => ({ useReviewQuery: vi.fn() }));
+// 조회만 목한다 — 재시도 판정은 실물을 그대로 쓴다(화면과 쿼리가 같은 술어를 본다는 게 계약이다)
+vi.mock('../model/useReviewQuery', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../model/useReviewQuery')>()),
+  useReviewQuery: vi.fn(),
+}));
 vi.mock('../model/useStartReviewMutation', () => ({
   useStartReviewMutation: vi.fn(),
 }));
@@ -59,6 +68,14 @@ vi.mock('@/features/expression/ui/learning/QuizStep', () => ({
 }));
 
 afterEach(cleanup);
+
+// 플로우가 진행 상태를 캐시에도 써 넣는다 — 테스트마다 빈 클라이언트를 준다
+const show = (reviewId = 'r1') =>
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <ReviewFlow reviewId={reviewId} />
+    </QueryClientProvider>,
+  );
 
 const question = (
   questionId: string,
@@ -135,7 +152,7 @@ describe('ReviewFlow', () => {
       }),
       started: review({}),
     });
-    render(<ReviewFlow reviewId="r1" />);
+    show();
 
     await user.click(screen.getByRole('button', { name: '복습 시작할게요' }));
 
@@ -159,7 +176,7 @@ describe('ReviewFlow', () => {
           }),
         }),
     });
-    render(<ReviewFlow reviewId="r1" />);
+    show();
 
     await user.click(screen.getByRole('button', { name: '제출' }));
     await user.click(screen.getByRole('button', { name: '넘기기' }));
@@ -177,7 +194,7 @@ describe('ReviewFlow', () => {
         ],
       }),
     });
-    render(<ReviewFlow reviewId="r1" />);
+    show();
 
     expect(screen.getByText('progress:0.5~1')).toBeInTheDocument();
   });
@@ -206,7 +223,7 @@ describe('ReviewFlow', () => {
           }),
         }),
     });
-    render(<ReviewFlow reviewId="r1" />);
+    show();
 
     await user.click(screen.getByRole('button', { name: '제출' }));
     await user.click(screen.getByRole('button', { name: '넘기기' }));
@@ -226,7 +243,7 @@ describe('ReviewFlow', () => {
         ],
       }),
     });
-    render(<ReviewFlow reviewId="r1" />);
+    show();
 
     expect(screen.getByText('label:결과 볼게요')).toBeInTheDocument();
   });
@@ -254,7 +271,7 @@ describe('ReviewFlow', () => {
           }),
         }),
     });
-    render(<ReviewFlow reviewId="r1" />);
+    show();
 
     await user.click(screen.getByRole('button', { name: '제출' }));
     await user.click(screen.getByRole('button', { name: '넘기기' }));
@@ -275,7 +292,7 @@ describe('ReviewFlow', () => {
       }),
       started: review({}),
     });
-    render(<ReviewFlow reviewId="r1" />);
+    show();
 
     await user.click(screen.getByRole('button', { name: '복습 시작할게요' }));
 
@@ -307,7 +324,7 @@ describe('ReviewFlow', () => {
           }),
         }),
     });
-    render(<ReviewFlow reviewId="r1" />);
+    show();
 
     await user.click(screen.getByRole('button', { name: '제출' }));
     await user.click(screen.getByRole('button', { name: '넘기기' }));
@@ -322,7 +339,7 @@ describe('ReviewFlow', () => {
   it('문제를 풀다 나가면 어느 자리에서 나갔는지 남긴다', async () => {
     const user = userEvent.setup();
     wire({ fetched: review({}) });
-    render(<ReviewFlow reviewId="r1" />);
+    show();
 
     await user.click(screen.getByRole('button', { name: '나가기' }));
 
@@ -347,13 +364,53 @@ describe('ReviewFlow', () => {
           ),
         ),
     });
-    render(<ReviewFlow reviewId="r1" />);
+    show();
 
     await user.click(screen.getByRole('button', { name: '제출' }));
 
     expect(
       screen.getByText(/복습할 수 있는 기간이 지났어요/),
     ).toBeInTheDocument();
+  });
+
+  it('제출이 순서 어긋남(409)으로 거절되면 서버 상태를 다시 받아 화면을 맞춘다', async () => {
+    const user = userEvent.setup();
+    // given — 서버는 이미 q2를 내고 있는데 화면은 q1을 쥐고 있다
+    const refetch = vi.fn().mockResolvedValue({
+      data: review({
+        currentQuestionId: 'q2',
+        questions: [
+          question('q1', 'I win', '2026-09-22T10:00'),
+          question('q2', 'You win'),
+        ],
+      }),
+    });
+    vi.mocked(useReviewQuery).mockReturnValue({
+      review: review({}),
+      error: undefined,
+      isLoading: false,
+      refetch,
+    } as unknown as ReturnType<typeof useReviewQuery>);
+    vi.mocked(useStartReviewMutation).mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    } as unknown as ReturnType<typeof useStartReviewMutation>);
+    vi.mocked(useReviewAnswerMutation).mockReturnValue({
+      mutateAsync: () =>
+        Promise.reject(
+          new ApiError(
+            '복습을 먼저 시작해 주세요.',
+            409,
+            '/api/v1/reviews/r1/answers',
+            'REVIEW_NOT_STARTED',
+          ),
+        ),
+    } as unknown as ReturnType<typeof useReviewAnswerMutation>);
+    show();
+
+    await user.click(screen.getByRole('button', { name: '제출' }));
+
+    expect(screen.getByText('question:You win')).toBeInTheDocument();
   });
 
   it('기한이 지난 복습으로 들어오면 안내와 홈 버튼만 보여준다', () => {
@@ -364,7 +421,7 @@ describe('ReviewFlow', () => {
         questions: [],
       }),
     });
-    render(<ReviewFlow reviewId="r1" />);
+    show();
 
     expect(
       screen.getByText(/복습할 수 있는 기간이 지났어요/),
@@ -384,7 +441,7 @@ describe('ReviewFlow', () => {
         'NOT_FOUND',
       ),
     });
-    render(<ReviewFlow reviewId="r1" />);
+    show();
 
     expect(screen.getByText('복습을 찾을 수 없습니다.')).toBeInTheDocument();
     expect(
@@ -401,7 +458,7 @@ describe('ReviewFlow', () => {
         '/api/v1/reviews/r1',
       ),
     });
-    render(<ReviewFlow reviewId="r1" />);
+    show();
 
     expect(
       screen.getByRole('button', { name: '다시 시도' }),

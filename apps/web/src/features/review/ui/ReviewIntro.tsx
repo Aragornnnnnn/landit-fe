@@ -4,8 +4,16 @@
 // 문제 수는 시작해야 서버가 열어 주므로(시작 전 questions는 빈 배열) 개수는 말하지 않는다
 import Image from 'next/image';
 
+import type { PreloadableImage } from '@/shared/lib/preload-next-images';
 import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
+
+/** 시작 안내의 그림 — 조회 중에 미리 받아 두려고 밖에서도 같은 주소를 쓴다 */
+export const LANDY_QUIZ: PreloadableImage = {
+  src: '/images/character/landy-quiz.webp',
+  width: 200,
+  height: 200,
+};
 
 interface ReviewIntroProps {
   onStart: () => void;
@@ -41,10 +49,8 @@ export const ReviewIntro = ({
 
     <div className="flex flex-1 items-center justify-center">
       <Image
-        src="/images/character/landy-quiz.webp"
+        {...LANDY_QUIZ}
         alt=""
-        width={200}
-        height={200}
         priority
         className="h-[200px] w-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.12)]"
       />

@@ -2,6 +2,7 @@
 import { useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 
+import { reportError } from '@/shared/monitoring/report';
 import { showToast } from '@/shared/ui/toast';
 
 import { submitReviewAnswer } from '../api/review';
@@ -26,6 +27,9 @@ export const useReviewAnswerMutation = (reviewId: string) => {
     onSuccess: () => {
       pending.current = null;
     },
-    onError: (error) => showToast(error.message),
+    onError: (error) => {
+      reportError(error);
+      showToast(error.message);
+    },
   });
 };

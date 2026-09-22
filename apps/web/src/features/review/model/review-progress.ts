@@ -37,5 +37,6 @@ export const progressRangeOf = (review: Review): [number, number] => {
   if (total === 0) return [0, 1];
 
   const resolved = total - pendingQuestionsOf(review).length;
-  return [resolved / total, (resolved + 1) / total];
+  // 전부 결판났으면 더 갈 곳이 없다 — 1을 넘는 구간을 돌려주지 않는다
+  return [resolved / total, Math.min(resolved + 1, total) / total];
 };

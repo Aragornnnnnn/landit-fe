@@ -230,9 +230,10 @@ const resolvePage = (
     };
   }
 
-  // 푸시 복습 — 알림으로만 들어오는 화면. 어느 복습인지는 UUID라 이름·속성에 싣지 않는다
+  // 푸시 복습 — 알림으로만 들어오는 화면. 어느 복습인지는 UUID라 이름·속성에 싣지 않는다.
+  // 학습 안의 복습 스텝(step=review)과 한 단어를 나눠 쓰지 않게 이벤트 어휘(Push Review)를 따른다
   if (seg[0] === 'reviews' && seg[1]) {
-    return { page_name: 'review', path: pathname };
+    return { page_name: 'push_review', path: pathname };
   }
 
   const nested = NESTED_PAGES[pathname];

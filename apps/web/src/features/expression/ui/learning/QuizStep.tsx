@@ -147,9 +147,12 @@ export const QuizStep = ({
   const { drag, rowRef, bindChip, pressChip, swallowDragClick } =
     useChipReorder(selected, reorderChips);
 
+  // 판정을 받아오는 중에도 답변 줄을 잠근다 — 보낸 단어열과 화면이 어긋난 채로 결과가 뜨면 안 된다
+  const locked = checked !== 'idle' || judging;
+
   const pick = (chip: WordChip) => {
     // 끌고 있는 중엔 뱅크를 받지 않는다 — 드래그가 들고 있는 순서를 덮어쓰기 때문
-    if (checked !== 'idle' || usedIds.has(chip.id) || full || drag) return;
+    if (locked || usedIds.has(chip.id) || full || drag) return;
     track(EVENTS.QUIZ_WORD_PICKED, {
       expression_id: expressionId,
       picked_count: selected.length + 1,
@@ -159,7 +162,7 @@ export const QuizStep = ({
   };
 
   const removeAt = (index: number) => {
-    if (checked !== 'idle') return;
+    if (locked) return;
     track(EVENTS.QUIZ_WORD_REMOVED, {
       expression_id: expressionId,
       picked_count: selected.length - 1,
@@ -168,9 +171,9 @@ export const QuizStep = ({
     setSelected((current) => current.filter((_, i) => i !== index));
   };
 
-  // 판정을 마친 뒤엔 답변 줄을 건드리지 않는다 — pick·removeAt과 같은 자리에서 막는다
+  // 판정을 마친(또는 기다리는) 뒤엔 답변 줄을 건드리지 않는다 — pick·removeAt과 같은 자리에서 막는다
   const dragChip = (id: number) => (event: React.PointerEvent) => {
-    if (checked !== 'idle') return;
+    if (locked) return;
     pressChip(id)(event);
   };
 
@@ -308,7 +311,7 @@ export const QuizStep = ({
           <button
             type="button"
             onClick={showHint}
-            disabled={hintActive}
+            disabled={hintActive || judging}
             className="text-sm font-semibold text-muted-foreground underline underline-offset-4 transition-colors active:text-foreground disabled:opacity-60"
           >
             <Emoji className="mr-1">💡</Emoji>힌트 보기
@@ -324,7 +327,7 @@ export const QuizStep = ({
             <button
               key={chip.id}
               onClick={() => pick(chip)}
-              disabled={used || checked !== 'idle'}
+              disabled={used || locked}
               className={
                 used
                   ? `inline-flex min-w-[44px] items-center justify-center border border-transparent px-3.5 py-2.5 text-base font-semibold text-transparent ${CHIP_SLAB}`
