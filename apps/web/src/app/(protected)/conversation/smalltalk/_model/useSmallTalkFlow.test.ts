@@ -159,6 +159,16 @@ const renderFlow = (remainingSpeakingTimeMs = 20_000) =>
     }),
   );
 
+// 키보드로 답을 써서 보낸다 — 말한 시간이 없는 발화다
+const typeAndSubmit = async (
+  result: { current: ReturnType<typeof useSmallTalkFlow> },
+  text: string,
+) => {
+  act(() => result.current.input.pressKeyboard());
+  act(() => result.current.input.setTranscript(text));
+  await act(async () => result.current.input.submitText());
+};
+
 // 마이크를 켜고 seconds초 동안 말한다 (눈금은 1초에 한 칸씩 깎인다)
 const speakFor = (
   result: { current: ReturnType<typeof useSmallTalkFlow> },
@@ -207,6 +217,32 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
     act(() => result.current.input.pressMic());
 
     expect(result.current.speakingRatio).toBe(0);
+  });
+
+  it('타이핑하는 동안에는 눈금이 줄지 않는다', () => {
+    // 타이핑은 말한 게 아니라 쓴 것이다 — 말하기와 같은 단계라고 깎으면 쓰지도 않은 시간이 사라진다
+    const { result } = renderFlow(20_000);
+
+    act(() => result.current.input.pressKeyboard());
+    act(() => vi.advanceTimersByTime(5_000));
+
+    expect(result.current.remainingMs).toBe(20_000);
+  });
+
+  it('타이핑한 답변은 말한 시간 0으로 제출한다', async () => {
+    submitSmallTalkMessage.mockResolvedValueOnce(submitResponse());
+    const { result } = renderFlow(20_000);
+
+    await typeAndSubmit(result, 'Hello there.');
+
+    expect(submitSmallTalkMessage).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({
+        content: 'Hello there.',
+        inputType: 'TEXT',
+        utteranceDurationMs: 0,
+      }),
+    );
   });
 
   it('말하다 취소하면 말하기 전 값으로 되돌아온다', () => {
