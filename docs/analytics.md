@@ -241,10 +241,10 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 
 | 이벤트                             | 속성                                            | 시점                                                      |
 | ---------------------------------- | ----------------------------------------------- | --------------------------------------------------------- |
-| Push Review Started                | question_count                                  | 시작 안내에서 시작 요청 성공 (서버가 문제를 열어 준 시점) |
+| Expression Review Started          | question_count                                  | 시작 안내에서 시작 요청 성공 (서버가 문제를 열어 준 시점) |
 | Expression Review Answer Submitted | expression_id, is_correct, hint_level           | 문제 확인 — 판정은 서버 응답을 따른다                     |
-| Push Review Finished               | question_count, solved_count, perfect           | 결과 화면 도달 (전부 맞혀 완료됐거나 두 번씩 풀어 결판남) |
-| Push Review Abandoned              | step(intro\|quiz), question_count, solved_count | 결과를 보기 전에 X로 나감                                 |
+| Expression Review Finished         | question_count, solved_count, perfect           | 결과 화면 도달 (전부 맞혀 완료됐거나 두 번씩 풀어 결판남) |
+| Expression Review Abandoned        | step(intro\|quiz), question_count, solved_count | 결과를 보기 전에 X로 나감                                 |
 
 문제마다 기회는 두 번이다. `solved_count < question_count`로 끝난 복습은 서버에선 아직 진행 중이라, 같은 알림을 다시 눌러 들어오면 `Expression Review Started` 없이 이어서 푼다.
 
