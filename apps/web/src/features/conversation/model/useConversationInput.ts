@@ -128,7 +128,8 @@ export const useConversationInput = ({
       mode: 'text',
     });
     setKeyboardMode(true);
-    setTranscript('');
+    // 마이크에서 넘어올 때만 비운다 — 이미 타이핑 중이었다면 제출이 실패해 돌아온 것이라 초안을 지킨다
+    if (!keyboardMode) setTranscript('');
     onInputStart();
   };
 

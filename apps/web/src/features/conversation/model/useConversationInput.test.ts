@@ -174,6 +174,19 @@ describe('useConversationInput', () => {
     expect(onContent).toHaveBeenCalledWith('Hello there.', 'TEXT', 0);
   });
 
+  it('제출이 실패해 돌아와도 쓰던 글은 남는다', () => {
+    // 전송이 실패하면 화면은 마이크 대기로 돌아간다 — 거기서 다시 키보드를 눌렀을 때
+    // 초안을 비우면 방금 쓴 답변을 전부 다시 쳐야 한다
+    const { result } = renderInput();
+
+    act(() => result.current.pressKeyboard());
+    act(() => result.current.setTranscript('Hello there.'));
+    act(() => result.current.submitText()); // 제출 실패 — 화면만 대기로 돌아간다
+    act(() => result.current.pressKeyboard());
+
+    expect(result.current.transcript).toBe('Hello there.');
+  });
+
   it('빈 타이핑은 전달하지 않는다', () => {
     const { result, onContent, onInputCancel } = renderInput();
 
