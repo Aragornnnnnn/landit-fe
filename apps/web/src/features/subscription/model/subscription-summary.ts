@@ -1,11 +1,11 @@
-// 마이페이지 구독 카드가 보여줄 상태 — BE 구독 응답을 체험 중·구독 중·해지 예정·없음 넷으로 접는다 (docs/subscription.md 「마이페이지와 법적 문서」)
+// 마이페이지 구독 카드가 보여줄 상태 — BE 구독 응답을 체험 중·구독 중·해지 예정·없음 넷으로 접고, 화면에 적을 금액을 정한다 (docs/subscription.md 「마이페이지와 법적 문서」)
 import type { SubscriptionState } from '@landit/analytics';
 
 import type {
   MySubscription,
   SubscriptionPeriodType,
 } from '../api/subscription';
-import { planFromProductId, type PlanId } from './plans';
+import { findPlan, planFromProductId, type PlanId } from './plans';
 
 export type SubscriptionSummary =
   | { kind: 'none' }
@@ -17,6 +17,8 @@ export type SubscriptionSummary =
       renews: boolean;
       /** 월간·연간. BE가 상품 식별자를 안 주거나 모르는 상품이면 null */
       plan: PlanId | null;
+      /** 앞으로 청구될 원화 금액. 청구가 없거나(프로모션·선결제) 외화면 null — 화면은 `chargedPrice`로 읽는다 */
+      price: number | null;
     };
 
 /** 유료인 경우만 — 상태와 날짜가 있다 */
@@ -24,6 +26,17 @@ export type PaidSubscriptionSummary = Extract<
   SubscriptionSummary,
   { kind: SubscriptionState }
 >;
+
+/**
+ * 화면에 그릴 수 있는 원화 결제액만 남긴다.
+ *
+ * 0은 청구가 없다는 뜻이고(프로모션 부여·선결제), 외화는 하루 환산과 「원」 표기가 맞지 않아 버린다.
+ * 통화가 안 오면 원화로 보는 건 결제 이력(`subscription-events.ts`)과 같은 규칙이다 — 한국 스토어만 열려 있다.
+ *
+ * @returns 원화 결제액. 그릴 수 없으면 null
+ */
+const toKrwPrice = ({ price, currency }: MySubscription) =>
+  price && price > 0 && (!currency || currency === 'KRW') ? price : null;
 
 // 만료일에 스토어가 다시 결제하는 기간 종류 — 무료 체험도 끝나면 첫 결제가 된다
 const RENEWING_PERIODS = new Set<SubscriptionPeriodType>([
@@ -43,14 +56,16 @@ export const summarizeSubscription = (
 
   const { subscriptionStatus, periodType, expiresAt } = subscription;
   const plan = planFromProductId(subscription.productId);
+  const price = toKrwPrice(subscription);
   if (subscriptionStatus === 'CANCELED') {
-    return { kind: 'canceled', expiresAt, renews: false, plan };
+    return { kind: 'canceled', expiresAt, renews: false, plan, price };
   }
   return {
     kind: periodType === 'TRIAL' ? 'trial' : 'active',
     expiresAt,
     renews: periodType !== null && RENEWING_PERIODS.has(periodType),
     plan,
+    price,
   };
 };
 
@@ -63,3 +78,15 @@ export const canCancelAtStore = (
   summary: SubscriptionSummary,
 ): summary is PaidSubscriptionSummary =>
   summary.kind !== 'none' && summary.kind !== 'canceled' && summary.renews;
+
+/**
+ * 화면에 적을 결제 금액 — 이 구독에 적용되는 금액이 먼저고 없으면 스토어 등록값이다.
+ *
+ * 같은 상품을 서로 다른 금액으로 구독 중인 사람이 있어(가격 인상 시 기존 구독자는 현재 가격 유지)
+ * 등록값만으로 그리면 남의 금액을 보여주게 된다. 구독 카드와 해지 사유 화면이 같은 값을 말하도록 여기 하나만 둔다.
+ *
+ * @param plan 요약의 플랜. 호출부가 이미 null을 걸렀다
+ * @returns 원화 금액
+ */
+export const chargedPrice = (summary: PaidSubscriptionSummary, plan: PlanId) =>
+  summary.price ?? findPlan(plan).price;
