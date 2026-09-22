@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { showToast } from '@/shared/ui/toast';
 
 import type { PaywallPromo } from '../api/subscription';
+import { setPromoSheetOpen } from '../model/promo-handoff';
 import { canShowPromo } from '../model/promo-sheet';
 import { useOfferings } from '../model/useOfferings';
 import { PromoSheet } from './PromoSheet';
@@ -29,6 +30,13 @@ export const PromoSheetHost = ({
 }: PromoSheetHostProps) => {
   const tiers = useOfferings();
   const ready = canShowPromo(tiers);
+
+  // 열라는 말을 들은 순간부터 자리를 맡는다 — 가격을 기다리는 동안 소감·알림 시트가 먼저 떠 버리면 겹친다
+  useEffect(() => {
+    if (!open) return;
+    setPromoSheetOpen(true);
+    return () => setPromoSheetOpen(false);
+  }, [open]);
 
   // 펼치라는데 할인 가격표가 없으면 죽은 버튼이 된다 — 못 연다고 알리고 되돌린다
   useEffect(() => {

@@ -14,7 +14,6 @@ import { CloseIcon } from '@/shared/ui/Icons';
 import type { PaywallPromo } from '../api/subscription';
 import type { OfferingTiers } from '../model/offerings';
 import { formatWon } from '../model/plans';
-import { setPromoSheetOpen } from '../model/promo-handoff';
 import { buildPromoSheet } from '../model/promo-sheet';
 import { usePurchase } from '../model/usePurchase';
 import { GOLD_GRADIENT, PremiumPill } from './premium-brand';
@@ -60,14 +59,12 @@ export const PromoSheet = ({
     if (expired && !busy) onClose();
   }, [expired, busy, onClose]);
 
-  // 떠 있다는 사실과 본 횟수는 여기서 낸다 — 실제로 그려지는 유일한 자리라 화면과 어긋날 수 없다.
+  // 본 횟수는 여기서 낸다 — 실제로 그려지는 유일한 자리라 화면과 어긋날 수 없다.
   // 부르는 쪽에서 내면 "열려고 했지만 못 그린" 경우까지 세어 전환율 분모가 부푼다
   const shown = sheet !== null;
   useEffect(() => {
     if (!shown) return;
     track(EVENTS.PROMO_SHEET_VIEWED, { new_user: newUser });
-    setPromoSheetOpen(true);
-    return () => setPromoSheetOpen(false);
   }, [shown, newUser]);
 
   // 할인 패키지를 못 받았으면 시트를 열지 않는다. 할인가를 보여 놓고 정가로 결제되는 일이 없어야 한다
