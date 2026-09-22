@@ -70,6 +70,27 @@ describe('useScenarioTalkSession', () => {
     expect(result.current.sessionId).toBe(7);
   });
 
+  it('고정 질문 개수는 시작 응답이 와야 알 수 있다 — 그 전과 시작 실패 때는 모른다', async () => {
+    // Given 아직 시작 응답이 오지 않은 동안에는 모른다
+    const { result } = renderSession();
+    expect(result.current.totalQuestionCount).toBeNull();
+
+    // When 시작 응답이 도착하면
+    await act(async () => {});
+
+    // Then 응답이 준 개수를 노출한다
+    expect(result.current.totalQuestionCount).toBe(3);
+  });
+
+  it('세션 시작이 실패하면 고정 질문 개수는 모르는 채로 남는다', async () => {
+    startScenarioTalkSession.mockRejectedValue(new Error('down'));
+
+    const { result } = renderSession();
+    await act(async () => {});
+
+    expect(result.current.totalQuestionCount).toBeNull();
+  });
+
   it('StrictMode 재마운트에도 세션은 한 번만 만든다', async () => {
     renderHook(
       () => useScenarioTalkSession(scenario, { onOpeningMessage: () => {} }),

@@ -27,6 +27,10 @@ export const useScenarioTalkSession = (
   const [sessionId, setSessionId] = useState<number | null>(null);
   const sessionIdRef = useRef<number | null>(null);
   const promiseRef = useRef<Promise<number | null> | null>(null);
+  // 진행 게이지가 칸을 나눌 고정 질문 개수 — 시작 응답이 알려준다 (그 전엔 모른다)
+  const [totalQuestionCount, setTotalQuestionCount] = useState<number | null>(
+    null,
+  );
   const startedRef = useRef(false);
 
   // 시작 effect는 한 번만 도는데 응답은 나중에 온다 — 콜백 최신값을 ref로 잡아 stale closure 방지
@@ -51,6 +55,7 @@ export const useScenarioTalkSession = (
           first_speaker: scenario.firstSpeaker,
           is_retry: scenario.completed,
         });
+        setTotalQuestionCount(res.progress.totalQuestionCount);
         if (res.currentMessage) {
           onOpeningMessageRef.current({
             content: res.currentMessage.content,
@@ -79,5 +84,5 @@ export const useScenarioTalkSession = (
     });
   };
 
-  return { sessionId, ensure, end };
+  return { sessionId, totalQuestionCount, ensure, end };
 };

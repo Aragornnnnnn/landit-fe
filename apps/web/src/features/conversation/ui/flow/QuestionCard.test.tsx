@@ -13,6 +13,31 @@ import { QuestionCard } from './QuestionCard';
 afterEach(() => cleanup());
 
 describe('QuestionCard', () => {
+  it('마지막 질문이면 질문 위에 머리말이 보인다', () => {
+    render(
+      <QuestionCard
+        question="Anything else?"
+        translation={null}
+        speaking={false}
+        lastQuestion
+      />,
+    );
+
+    expect(screen.getByText('마지막 질문이에요')).toBeInTheDocument();
+  });
+
+  it('마지막 질문이 아니면 머리말이 없다', () => {
+    render(
+      <QuestionCard
+        question="How was your day?"
+        translation={null}
+        speaking={false}
+      />,
+    );
+
+    expect(screen.queryByText('마지막 질문이에요')).not.toBeInTheDocument();
+  });
+
   it('발화가 끝나도 해석은 접힌 채로 시작한다', () => {
     // Given 해석이 있는 발화가 끝난 상태에서
     render(

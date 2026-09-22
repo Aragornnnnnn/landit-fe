@@ -4,6 +4,7 @@
 import { useState } from 'react';
 
 import { ChevronLeftIcon, CloseIcon } from '@/shared/ui/Icons';
+import { ProgressBar, type ProgressTone } from '@/shared/ui/ProgressBar';
 
 interface StepScaffoldProps {
   title?: string; // 없으면 헤더에 제목 없이 좌상단 버튼만
@@ -16,7 +17,7 @@ interface StepScaffoldProps {
   footerBleed?: boolean; // 키보드처럼 하단을 좌우 끝까지 채울 때
   bottomInset?: number; // 네이티브 키보드가 가린 높이(px) — 하단 footer를 그만큼 위로 올린다
   // 진행바 색 — 기본 primary, 학습을 마친 성공 연출 중엔 success(초록)로
-  progressTone?: 'primary' | 'success';
+  progressTone?: ProgressTone;
   // 헤더를 본문 위에 띄운다 — 히어로 이미지가 진행바 바로 아래부터 차는 화면용 (버튼에 반투명 원 배경)
   headerOverlay?: boolean;
 }
@@ -44,14 +45,11 @@ export const StepScaffold = ({
         ...(bottomInset ? { paddingBottom: bottomInset } : {}),
       }}
     >
-      <div className="h-1 w-full bg-secondary">
-        <div
-          className={`h-full transition-[width,background-color] duration-300 ${
-            progressTone === 'success' ? 'bg-success' : 'bg-primary'
-          }`}
-          style={{ width: `${progress * 100}%` }}
-        />
-      </div>
+      <ProgressBar
+        progress={progress}
+        tone={progressTone}
+        label="학습 진행도"
+      />
 
       <div className={headerOverlay ? 'relative min-h-0 flex-1' : 'contents'}>
         <header

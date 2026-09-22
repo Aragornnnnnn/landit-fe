@@ -22,6 +22,7 @@ import { scenarioFeedbackPath, scenarioReturnPath } from '@/shared/lib/routes';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
+import { ProgressBar } from '@/shared/ui/ProgressBar';
 
 import { useScenarioTalkFlow } from '../_model/useScenarioTalkFlow';
 
@@ -53,6 +54,7 @@ export const ScenarioTalkFlow = ({
     input,
     leave,
     sessionId,
+    gauge,
   } = useScenarioTalkFlow(scenario);
   const {
     transcript,
@@ -118,6 +120,18 @@ export const ScenarioTalkFlow = ({
         typing && keyboardInset ? { paddingBottom: keyboardInset } : undefined
       }
     >
+      {/* 진행 게이지 — 표현 학습 스텝과 같은 자리(상태바 바로 아래)·같은 모양이라 무대 위에 띄운다 */}
+      <div
+        className="absolute inset-x-0 z-20"
+        style={{ top: 'env(safe-area-inset-top)' }}
+      >
+        <ProgressBar
+          progress={gauge.ratio}
+          tone={gauge.tone}
+          label="대화 진행도"
+        />
+      </div>
+
       {/* 무대가 상태바 밑까지 이어지고, X만 safe area 아래에 뜬다 — 플레인 아이콘(마이페이지와 통일) */}
       <header
         className="absolute inset-x-0 top-0 z-20 flex items-center px-3"
@@ -147,6 +161,7 @@ export const ScenarioTalkFlow = ({
             translation={turn.aiTranslation}
             speaking={phase === 'AI_SPEAKING'}
             instruction={turn.isUserOpening}
+            lastQuestion={gauge.lastQuestion}
             onTranslationToggled={(opened) =>
               track(EVENTS.TRANSLATION_TOGGLED, {
                 session_id: sessionId ?? undefined,

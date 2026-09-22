@@ -28,6 +28,8 @@ interface QuestionCardProps {
   onTranslationToggled?: (opened: boolean) => void;
   // 다시 듣기 — 주면 스피커 버튼이 붙는다
   replay?: ReplayControl;
+  // 마지막 질문 — 질문 위에 머리말을 붙여 끝이 보이게 한다
+  lastQuestion?: boolean;
 }
 
 /**
@@ -66,6 +68,7 @@ export const QuestionCard = ({
   instruction = false,
   onTranslationToggled,
   replay,
+  lastQuestion = false,
 }: QuestionCardProps) => {
   // 진행값이 어느 질문 것인지 함께 저장한다 — 질문이 바뀐 첫 프레임에 이전 값이 새어 나오지 않도록
   const [typed, setTyped] = useState({ question, count: 0 });
@@ -195,6 +198,12 @@ export const QuestionCard = ({
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className="flex max-h-full w-full flex-col rounded-[28px] rounded-tl-md bg-card px-5 py-5 shadow-lg shadow-black/5"
     >
+      {/* 카드 맨 위에 붙박이 — 긴 질문이 안쪽에서 스크롤돼도 머리말은 늘 보인다 (아래 버튼 줄과 같은 규칙) */}
+      {lastQuestion && (
+        <p className="mb-1.5 flex-none text-xs font-bold text-primary">
+          마지막 질문이에요
+        </p>
+      )}
       <div
         ref={scrollRef}
         onScroll={syncEdges}
