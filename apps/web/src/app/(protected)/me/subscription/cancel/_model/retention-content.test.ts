@@ -16,6 +16,7 @@ const active = (
   expiresAt: '2026-10-04T12:00:00',
   renews: true,
   plan: 'monthly',
+  price: null,
   ...overrides,
 });
 
@@ -60,6 +61,18 @@ describe('retentionContent — 가격 부담', () => {
       label: '지금 · 연간',
       sublabel: '연 58,500원',
       value: '하루 160원',
+    });
+  });
+
+  it('적용되는 금액이 있으면 그 금액으로 하루 요금을 잰다', () => {
+    const content = retentionContent(
+      'price',
+      context(active({ plan: 'yearly', price: 94800 })),
+    );
+
+    expect(content.cards[0]).toMatchObject({
+      sublabel: '연 94,800원',
+      value: '하루 260원',
     });
   });
 

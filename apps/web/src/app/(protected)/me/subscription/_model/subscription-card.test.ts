@@ -12,6 +12,7 @@ const active = (
   expiresAt: '2026-10-04T12:00:00',
   renews: true,
   plan: null,
+  price: null,
   ...overrides,
 });
 
@@ -66,7 +67,7 @@ describe('toDateRow', () => {
 });
 
 describe('toAmountRow', () => {
-  it('연간은 월간 1년치를 비교가로, 월간은 금액만', () => {
+  it('BE 금액이 없으면 등록값으로 그린다 — 금액 행이 사라지지 않게', () => {
     expect(toAmountRow(active({ plan: 'yearly' }))).toEqual({
       label: '다음 결제 금액',
       value: '58,500원',
@@ -76,6 +77,14 @@ describe('toAmountRow', () => {
       label: '다음 결제 금액',
       value: '14,900원',
       listPrice: undefined,
+    });
+  });
+
+  it('적용되는 금액이 있으면 그 금액을 보여주고, 비교가는 월간 12개월치 그대로다', () => {
+    expect(toAmountRow(active({ plan: 'yearly', price: 47000 }))).toEqual({
+      label: '다음 결제 금액',
+      value: '47,000원',
+      listPrice: '178,800원',
     });
   });
 
