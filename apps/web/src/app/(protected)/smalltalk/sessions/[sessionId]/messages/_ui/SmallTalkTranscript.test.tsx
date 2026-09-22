@@ -166,13 +166,43 @@ describe('SmallTalkTranscript 교정 카드', () => {
   it.each([
     ['교정이 없으면', 'COMPLETED' as const],
     ['교정에 실패했으면', 'FAILED' as const],
-  ])('%s 말풍선 아래에 아무것도 붙지 않는다', (_, correctionStatus) => {
+  ])('%s 말풍선 아래에 교정 카드가 붙지 않는다', (_, correctionStatus) => {
     renderTranscript([messageOf({ correctionStatus, correction: null })]);
 
     expect(
       screen.queryByText('이렇게 말하면 더 자연스러워요', { exact: false }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText(/찾는 중/)).not.toBeInTheDocument();
+  });
+
+  it('고칠 게 없었으면 말풍선 아래에 잘했어요가 보인다', () => {
+    // 아무것도 안 붙이면 잘 말한 것인지 아직 분석이 안 끝난 것인지 구분되지 않는다
+    renderTranscript([
+      messageOf({ correctionStatus: 'COMPLETED', correction: null }),
+    ]);
+
+    expect(screen.getByText('잘했어요!')).toBeInTheDocument();
+  });
+
+  it.each([
+    ['교정에 실패했으면', 'FAILED' as const],
+    ['아직 만드는 중이면', 'PREPARING' as const],
+  ])('%s 잘했어요가 뜨지 않는다', (_, correctionStatus) => {
+    // 교정이 null인 건 같지만 "고칠 게 없었다"는 뜻이 아니다
+    renderTranscript([messageOf({ correctionStatus, correction: null })]);
+
+    expect(screen.queryByText('잘했어요!')).not.toBeInTheDocument();
+  });
+
+  it('교정이 붙은 말풍선에는 잘했어요가 뜨지 않는다', () => {
+    renderTranscript([
+      messageOf({
+        correctionStatus: 'COMPLETED',
+        correction: correctionOf("I'm at the gym right now."),
+      }),
+    ]);
+
+    expect(screen.queryByText('잘했어요!')).not.toBeInTheDocument();
   });
 
   it('교정을 아직 만드는 중이면 말풍선 아래에 기다리는 표시가 보인다', () => {
