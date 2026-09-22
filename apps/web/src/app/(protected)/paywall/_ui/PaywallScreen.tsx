@@ -49,9 +49,12 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
   // 본 화면은 늘 정가다. 할인은 닫을 때 뜨는 시트에만 있다
   const tiers = useOfferings();
   const { list: pricing } = tiers;
-  // 닫을 때 서버가 준 할인. 남은 시간이 0이 되면 usePromoOffer가 null로 바꿔 시트가 사라진다
+  // 닫을 때 서버가 준 할인(원본)과, 남은 시간이 반영된 값. 만료되면 live가 null이 된다
   const [granted, setGranted] = useState<PaywallPromo | null>(null);
-  const promo = usePromoOffer(granted);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // 서버에 알리는 동안 닫기를 잠근다 — 연타하면 요청이 쌓이고 화면은 그대로다
+  const [closing, setClosing] = useState(false);
+  const live = usePromoOffer(granted);
   const plans = buildPaywallPlans(toKrwPrices(pricing));
   const selectedPlan = plans[selectedId];
 
@@ -59,11 +62,22 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
   // 닫으면 서버에 알리고, 할인을 받으면 시트로 붙잡는다. 자격이 없거나 할인 패키지가 없으면 그대로 홈으로 —
   // 학습 진입에서 밀려 올라온 화면이라 온 곳으로 되돌리면 다시 페이월에 걸린다 (docs/subscription.md)
   const close = async () => {
-    if (granted) return;
+    if (sheetOpen || closing) return;
+    // 이미 받아 둔 할인이 있으면 다시 알리지 않는다. 시트를 닫았다가 다시 닫기를 누른 경우다
+    if (granted) {
+      setSheetOpen(true);
+      return;
+    }
+    setClosing(true);
     // 기록에 실패해도 닫히는 것을 막지 않는다. 할인을 못 받을 뿐이다
     const result = await dismissPaywall().catch(() => null);
+    setClosing(false);
     if (result?.promo && tiers.promo.yearly) {
       setGranted(result.promo);
+      setSheetOpen(true);
+      track(EVENTS.PROMO_SHEET_VIEWED, {
+        promo_campaign: result.promo.campaignKey,
+      });
       return;
     }
     goHome();
@@ -115,11 +129,12 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
         ))}
       </section>
 
-      {/* 할인을 받았을 때만 매단다 — 남은 시간이 0이 되면 promo가 null이 돼 시트가 사라진다 */}
-      {promo && (
+      {/* 만료돼도 시트를 걷지 않는다 — 결제 시트가 떠 있는 동안 5분이 지나도 결과를 받아야 한다 */}
+      {sheetOpen && granted && (
         <PromoSheet
           open
-          promo={promo}
+          promo={live ?? { ...granted, remainingSeconds: 0 }}
+          expired={live === null}
           tiers={tiers}
           onClose={goHome}
           onUnlocked={unlock}

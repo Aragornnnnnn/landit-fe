@@ -1,5 +1,11 @@
 // 페이월 화면 동작 — 플랜을 바꾸면 CTA·안내가 따라 바뀌고, 결제·복원·닫기가 제자리로 간다
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PaywallScreen } from './PaywallScreen';
@@ -222,6 +228,32 @@ describe('PaywallScreen', () => {
 
       fireEvent.click(screen.getByRole('button', { name: '닫기' }));
       await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
+    });
+
+    it('할인이 끝나도 닫기가 살아 있다 — 시트를 켜 둔 채 5분이 지나면 나갈 길이 없으면 안 된다', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      mocks.dismiss = vi
+        .fn()
+        .mockResolvedValue({ promo: { ...promo, remainingSeconds: 1 } });
+      mocks.promoPricing = {
+        yearly: {
+          packageId: 'annual_discount',
+          price: 58_500,
+          currency: 'KRW',
+        },
+      };
+      render(<PaywallScreen />);
+
+      fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+      await screen.findByText(/후 종료/);
+      await act(async () => void vi.advanceTimersByTime(2000));
+      expect(screen.getByText('할인이 끝났어요')).toBeInTheDocument();
+      // 시트가 사라지지 않고 닫을 길을 남긴다 — 결제 중이었다면 그 결과도 여기로 돌아온다
+      const closers = screen.getAllByRole('button', { name: '닫기' });
+      fireEvent.click(closers[closers.length - 1]);
+
+      await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
+      vi.useRealTimers();
     });
 
     it('기록이 실패해도 닫히는 것을 막지 않는다', async () => {

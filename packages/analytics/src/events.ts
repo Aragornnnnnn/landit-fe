@@ -159,6 +159,7 @@ export const EVENTS = {
   // 마이페이지 — 유료 사용자가 구독 관리로 들어갔다 / 무료 사용자가 페이월로 들어갔다 / 진동 토글 / 말하기 속도 변경
   SUBSCRIPTION_MANAGE_TAPPED: 'Subscription Manage Tapped',
   PAYWALL_ENTRY_TAPPED: 'Paywall Entry Tapped',
+  PROMO_SHEET_VIEWED: 'Promo Sheet Viewed',
   HAPTICS_TOGGLED: 'Haptics Toggled',
   SPEECH_RATE_CHANGED: 'Speech Rate Changed',
   // 구독 관리 화면 — 결제 내역으로 들어갔다 / 스토어 구독 화면으로 나갔다
@@ -220,7 +221,8 @@ export type SubscriptionState = 'trial' | 'active' | 'canceled';
 // unknown은 로그인 직후 구독 조회가 끝나기 전 구간이다. 값이 아예 빠진 것과 구분하려고 명시적으로 남긴다
 export type SubscriptionProfileState = SubscriptionState | 'none' | 'unknown';
 // 게이트가 아닌 자리에서 페이월로 들어간 곳 — 지금은 마이페이지(me)뿐. 알림 동의의 source와 같은 이름을 쓴다
-export type PaywallEntrySource = 'me';
+// me는 마이페이지 골드 카드, header는 탭 헤더 왼쪽의 프리미엄 알약
+export type PaywallEntrySource = 'me' | 'header';
 // 페이월에 어디서 왔는가 — 게이트에 막혀 왔으면 막힌 자리, 스스로 들어왔으면 마이페이지.
 // 노출(Page Viewed)에 실어 진입 경로별 전환율을 가른다
 export type PaywallSource = PaywallGateSource | PaywallEntrySource;
@@ -591,6 +593,8 @@ export type EventProps = {
   'Prepared Learning Continued': { scenario_id: number };
   'Subscription Manage Tapped': { status: SubscriptionState };
   'Paywall Entry Tapped': { source: PaywallEntrySource };
+  // 이탈 할인 시트가 떠서 사용자가 본 순간 — 이 수와 결제 수로 할인의 전환을 잰다
+  'Promo Sheet Viewed': { promo_campaign: string };
   'Haptics Toggled': { enabled: boolean };
   // 고른 배속 그대로 — 0.75 · 1 · 1.25 · 1.5
   'Speech Rate Changed': { rate: number };

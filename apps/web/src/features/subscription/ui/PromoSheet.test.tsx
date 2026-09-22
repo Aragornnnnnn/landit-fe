@@ -13,6 +13,17 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
+vi.mock('next/link', () => ({
+  default: ({
+    href,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
 vi.mock('../model/usePurchase', () => ({
   usePurchase: (options: { pricing: unknown }) => {
     mocks.purchaseOptions = options;
@@ -37,11 +48,12 @@ const tiers: OfferingTiers = {
   },
 };
 
-const open = (override: Partial<OfferingTiers> = {}) =>
+const open = (override: Partial<OfferingTiers> = {}, expired = false) =>
   render(
     <PromoSheet
       open
-      promo={promo}
+      promo={expired ? { ...promo, remainingSeconds: 0 } : promo}
+      expired={expired}
       tiers={{ ...tiers, ...override }}
       onClose={vi.fn()}
       onUnlocked={vi.fn()}
@@ -89,6 +101,39 @@ describe('PromoSheet', () => {
     open({ promo: {} });
 
     expect(screen.queryByText(/후 종료/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /시작하기/ })).toBeNull();
+    expect(screen.queryByText(/월 4,900원/)).toBeNull();
+  });
+
+  it('월간을 고르면 CTA와 결제 안내가 월간용으로 바뀐다 — 할인은 연간에만 있다', () => {
+    open();
+
+    fireEvent.click(screen.getByRole('button', { name: '월간 플랜' }));
+
+    expect(
+      screen.getByRole('button', { name: '할인 받고 시작하기' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('매월 14,900원 정기 결제 · 언제든 해지 가능'),
+    ).toBeInTheDocument();
+  });
+
+  it('만료되면 더 팔지 않고 닫을 길만 남긴다 — 결제 중이었어도 결과를 받아야 해서 시트는 남는다', () => {
+    open({}, true);
+
+    expect(screen.getByText('할인이 끝났어요')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '닫기' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /시작하기/ })).toBeNull();
+  });
+
+  it('결제할 수 있는 화면이라 해지 안내와 약관 링크를 단다', () => {
+    open();
+
+    expect(
+      screen.getByText('체험 종료 24시간 전까지 해지하면 청구되지 않아요'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('이용약관')).toBeInTheDocument();
+    expect(screen.getByText('개인정보 처리방침')).toBeInTheDocument();
   });
 
   it('정가 연간을 못 받았으면 비교선과 할인율을 뺀다 — 지어낸 정가를 보여주지 않는다', () => {

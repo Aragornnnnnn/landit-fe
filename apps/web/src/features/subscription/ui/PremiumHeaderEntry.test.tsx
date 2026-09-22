@@ -8,6 +8,8 @@ import { PremiumHeaderEntry } from './PremiumHeaderEntry';
 const mocks = vi.hoisted(() => ({
   paymentLive: true,
   subscription: null as MySubscription | null,
+  isPending: false,
+  isError: false,
 }));
 
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
@@ -15,10 +17,11 @@ vi.mock('../model/usePaymentLive', () => ({
   usePaymentLive: () => mocks.paymentLive,
 }));
 vi.mock('../model/useSubscriptionQuery', () => ({
-  useSubscriptionQuery: () => ({ subscription: mocks.subscription }),
-}));
-vi.mock('../model/useOfferings', () => ({
-  useOfferings: () => ({ list: {}, promo: {} }),
+  useSubscriptionQuery: () => ({
+    subscription: mocks.subscription,
+    isPending: mocks.isPending,
+    isError: mocks.isError,
+  }),
 }));
 vi.mock('next/link', () => ({
   default: ({
@@ -43,6 +46,8 @@ const free = (promo: MySubscription['promo'] = null): MySubscription => ({
 beforeEach(() => {
   mocks.paymentLive = true;
   mocks.subscription = free();
+  mocks.isPending = false;
+  mocks.isError = false;
 });
 afterEach(() => cleanup());
 
@@ -74,6 +79,22 @@ describe('PremiumHeaderEntry', () => {
 
   it('결제를 시킬 수 없는 환경에서도 로고를 그린다 — 눌러도 살 수 없다', () => {
     mocks.paymentLive = false;
+    render(<PremiumHeaderEntry />);
+
+    expect(screen.getByLabelText('홈으로')).toBeInTheDocument();
+  });
+
+  it('구독 상태를 받는 중이면 로고를 그린다 — 결제한 사람에게 업셀이 잠깐이라도 보이면 안 된다', () => {
+    mocks.subscription = null;
+    mocks.isPending = true;
+    render(<PremiumHeaderEntry />);
+
+    expect(screen.getByLabelText('홈으로')).toBeInTheDocument();
+  });
+
+  it('구독 조회가 실패해도 로고를 그린다 — 유료인지 모르는 채로 팔지 않는다', () => {
+    mocks.subscription = null;
+    mocks.isError = true;
     render(<PremiumHeaderEntry />);
 
     expect(screen.getByLabelText('홈으로')).toBeInTheDocument();
