@@ -22,6 +22,11 @@ import {
 import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
+import {
+  FRESH_ARRIVALS,
+  trackArrivals,
+  type Arrivals,
+} from '../_model/late-blocks';
 import { toSummaryBlocks, type SummaryBlocks } from '../_model/summary-blocks';
 import { BlockSkeleton } from './BlockSkeleton';
 import { ComparisonCard } from './ComparisonCard';
@@ -36,6 +41,13 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
     useSmallTalkSummaryQuery(sessionId);
   // 총평은 이 세션의 교정이 다 끝나야 계산된다 — 보통 수 초지만, 상한까지 안 오면 붙잡아 두지 않는다
   const summaryStuck = summary !== null && summary.pending && waitExpired;
+
+  // 화면이 실제로 선 뒤에만 블록의 도착을 센다 — 총평을 기다리는 동안은 전체가 스켈레톤이라 셀 것이 없다
+  const blocks =
+    summary && !summary.pending ? toSummaryBlocks(summary, waitExpired) : null;
+  const [arrivals, setArrivals] = useState<Arrivals>(FRESH_ARRIVALS);
+  const seenArrivals = blocks ? trackArrivals(arrivals, blocks) : arrivals;
+  if (seenArrivals !== arrivals) setArrivals(seenArrivals);
 
   // 요약이 실제로 그려진 순간을 노출로 기록한다 — 그 순간 어떤 블록이 서 있었는지가 함께 실린다.
   // 이벤트로 감싸 폴링으로 요약이 갱신돼도 다시 찍지 않는다. 처음 선 그 순간이 노출이다.
@@ -124,7 +136,9 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pt-1 pb-6">
             <Headline headline={summary.headline} />
             <ComparisonCard comparison={summary.comparison} />
-            <ConditionalBlocks blocks={toSummaryBlocks(summary, waitExpired)} />
+            {blocks && (
+              <ConditionalBlocks blocks={blocks} arrivals={seenArrivals} />
+            )}
           </div>
 
           {/* 나가는 길은 이 버튼 하나 — 건너뛰는 링크를 따로 두지 않는다.
@@ -162,19 +176,38 @@ const Headline = ({ headline }: { headline: SmallTalkSummaryHeadline }) => (
 );
 
 // 조건 블록 셋 — 상태별로 카드·스켈레톤·없음. 순서는 실수 기억 → 배운 표현 → 다음 스몰톡
-const ConditionalBlocks = ({ blocks }: { blocks: SummaryBlocks }) => (
+// 스켈레톤을 거쳐 온 블록만 떠오르게 한다 — 처음부터 서 있던 블록은 그냥 그린다
+const risingIn = (arrival: Arrivals[keyof Arrivals]) =>
+  arrival === 'late' ? 'animate-fade-up' : '';
+
+const ConditionalBlocks = ({
+  blocks,
+  arrivals,
+}: {
+  blocks: SummaryBlocks;
+  arrivals: Arrivals;
+}) => (
   <>
     {blocks.growth.kind === 'ready' && (
-      <GrowthCard growth={blocks.growth.data} />
+      <GrowthCard
+        growth={blocks.growth.data}
+        className={risingIn(arrivals.growth)}
+      />
     )}
     {blocks.reusedExpressions.kind === 'ready' && (
-      <ReusedExpressionsCard items={blocks.reusedExpressions.data} />
+      <ReusedExpressionsCard
+        items={blocks.reusedExpressions.data}
+        className={risingIn(arrivals.reusedExpressions)}
+      />
     )}
     {blocks.reusedExpressions.kind === 'loading' && (
       <BlockSkeleton label="배운 표현 재사용을 찾는 중" />
     )}
     {blocks.followUp.kind === 'ready' && (
-      <FollowUpBlock followUp={blocks.followUp.data} />
+      <FollowUpBlock
+        followUp={blocks.followUp.data}
+        className={risingIn(arrivals.followUp)}
+      />
     )}
     {blocks.followUp.kind === 'loading' && (
       <BlockSkeleton label="다음 스몰톡 질문을 찾는 중" />

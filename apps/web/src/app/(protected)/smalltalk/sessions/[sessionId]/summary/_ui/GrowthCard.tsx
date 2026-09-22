@@ -4,8 +4,14 @@ import type { SmallTalkSummaryGrowth } from '@/features/small-talk/api/small-tal
 import { toDayLabel } from '@/features/small-talk/lib/session-summary';
 import { splitMatchedText } from '@/features/small-talk/model/message-feedback';
 
-export const GrowthCard = ({ growth }: { growth: SmallTalkSummaryGrowth }) => (
-  <section className="rounded-2xl bg-card px-5 py-4 shadow-sm">
+export const GrowthCard = ({
+  growth,
+  className = '',
+}: {
+  growth: SmallTalkSummaryGrowth;
+  className?: string;
+}) => (
+  <section className={`rounded-2xl bg-card px-5 py-4 shadow-sm ${className}`}>
     <h2 className="text-[14px] font-extrabold text-primary">
       {growth.succeeded
         ? `지난번엔 헷갈렸던 ${growth.patternLabel}`

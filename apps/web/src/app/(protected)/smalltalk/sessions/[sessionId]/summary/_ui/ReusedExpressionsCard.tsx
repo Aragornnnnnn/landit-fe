@@ -16,8 +16,10 @@ const MIN_FOLDED = 2;
 
 export const ReusedExpressionsCard = ({
   items,
+  className = '',
 }: {
   items: SmallTalkSummaryReusedExpression[];
+  className?: string;
 }) => {
   const [expanded, setExpanded] = useState(false);
   const folded = !expanded && items.length - VISIBLE_COUNT >= MIN_FOLDED;
@@ -25,7 +27,7 @@ export const ReusedExpressionsCard = ({
   const hiddenCount = items.length - visible.length;
 
   return (
-    <section className="rounded-2xl bg-card px-5 py-4 shadow-sm">
+    <section className={`rounded-2xl bg-card px-5 py-4 shadow-sm ${className}`}>
       <h2 className="text-[14px] font-extrabold text-primary">
         랜딧에서 배운 표현을 실제로 사용했어요
       </h2>
