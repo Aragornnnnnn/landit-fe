@@ -1,4 +1,4 @@
-// 오늘의 스몰톡 요약 조회 — 표현 재사용·후속 질문은 대화가 끝난 뒤 따로 만들어져서, 준비될 때까지(pending) 다시 묻는다
+// 오늘의 스몰톡 요약 조회 — 총평·표현 재사용·후속 질문이 저마다 대화가 끝난 뒤 만들어져서, 준비될 때까지(pending) 다시 묻는다
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -17,10 +17,12 @@ const POLL_MS = 1_000;
 // 기다림의 상한. 이만큼 기다려도 안 오면 그 블록은 비운 채로 둔다 — 다시 들어오면 처음부터 묻는다
 export const SUMMARY_WAIT_LIMIT_MS = 60_000;
 
-// 아직 만드는 중인 블록이 있는가
+// 아직 만드는 중인 것이 있는가 — 총평은 교정이 끝나길, 나머지 둘은 종료 후 잡을 기다린다
 const isStillPreparing = (summary: SmallTalkSummaryResponse | undefined) =>
   summary !== undefined &&
-  (summary.reusedExpressions.pending || summary.followUp.pending);
+  (summary.pending ||
+    summary.reusedExpressions.pending ||
+    summary.followUp.pending);
 
 export const useSmallTalkSummaryQuery = (sessionId: number) => {
   const userId = useAuthStore((state) => state.member?.userId ?? null);

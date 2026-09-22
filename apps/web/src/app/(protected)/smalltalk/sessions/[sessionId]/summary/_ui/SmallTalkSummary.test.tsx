@@ -21,6 +21,7 @@ const summaryQuery = vi.mocked(useSmallTalkSummaryQuery);
 const summaryOf = (): SmallTalkSummaryResponse => ({
   sessionId: 7,
   title: '카페 얘기',
+  pending: false,
   firstSession: false,
   headline: {
     text: '지난번보다 1분 24초 더 말했어요!',
@@ -37,7 +38,7 @@ const summaryOf = (): SmallTalkSummaryResponse => ({
   reusedExpressions: { pending: false, items: [] },
   followUp: {
     pending: false,
-    triggerType: 'NONE',
+    triggerType: 'CONCERN',
     question: '다음엔 요즘 빠져 있는 거 얘기해줘.',
     invite: '기억해둘게.',
   },
@@ -46,13 +47,13 @@ const summaryOf = (): SmallTalkSummaryResponse => ({
 
 const renderSummary = (
   summary: SmallTalkSummaryResponse | null,
-  { error = null as Error | null, isLoading = false } = {},
+  { error = null as Error | null, isLoading = false, waitExpired = false } = {},
 ) => {
   summaryQuery.mockReturnValue({
     summary,
     error,
     isLoading,
-    waitExpired: false,
+    waitExpired,
     retry: vi.fn(),
   });
   render(<SmallTalkSummary sessionId={7} />);
@@ -133,6 +134,42 @@ describe('SmallTalkSummary', () => {
 
     expect(
       screen.getByRole('status', { name: '오늘의 스몰톡을 불러오는 중' }),
+    ).toBeInTheDocument();
+  });
+
+  it('총평을 아직 계산 중이면 말풍선 자리에 스켈레톤이 선다', () => {
+    // Given 표현 재사용·후속 질문은 왔지만 총평은 아직인 응답 (교정이 끝나길 기다리는 중)
+    renderSummary({
+      ...summaryOf(),
+      pending: true,
+      firstSession: null,
+      headline: null,
+      comparison: null,
+      growth: null,
+      correctionCount: null,
+    });
+
+    expect(
+      screen.getByRole('status', { name: '오늘의 스몰톡을 불러오는 중' }),
+    ).toBeInTheDocument();
+  });
+
+  it('상한까지 기다려도 총평이 안 오면 붙잡지 않고 나갈 길을 준다', () => {
+    renderSummary(
+      {
+        ...summaryOf(),
+        pending: true,
+        firstSession: null,
+        headline: null,
+        comparison: null,
+        growth: null,
+        correctionCount: null,
+      },
+      { waitExpired: true },
+    );
+
+    expect(
+      screen.getByRole('button', { name: '표현 배우러 가기' }),
     ).toBeInTheDocument();
   });
 

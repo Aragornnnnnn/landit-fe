@@ -246,17 +246,21 @@ export const decideSmallTalkExit = (
 // growth만 없을 수 있고(null), reusedExpressions·followUp은 늘 오되 아직 만드는 중이면 pending이다
 export interface SmallTalkSummaryResponse {
   sessionId: number;
-  title: string;
+  // 제목이 없는 세션이면 null
+  title: string | null;
+  // 총평(래디 말풍선·비교·실수 기억 카드·교정 개수)을 아직 계산하지 않았으면 true.
+  // 이 세션의 턴 교정이 끝나기를 기다리는 중이며, 그동안 아래 넷과 correctionCount는 null이다
+  pending: boolean;
   // 첫 스몰톡이면 comparison.previous는 전부 0, growth는 null
-  firstSession: boolean;
-  headline: SmallTalkSummaryHeadline;
-  comparison: SmallTalkSummaryComparison;
+  firstSession: boolean | null;
+  headline: SmallTalkSummaryHeadline | null;
+  comparison: SmallTalkSummaryComparison | null;
   // 실수 기억 카드. 직전 세션에 교정받은 패턴이 이번에 다시 나왔을 때만. 여러 패턴이어도 하나
   growth: SmallTalkSummaryGrowth | null;
   reusedExpressions: SmallTalkSummaryReusedExpressions;
   followUp: SmallTalkSummaryFollowUp;
   // 교정이 붙은 사용자 메시지 수 (세션 상세의 correctionCount와 같은 값)
-  correctionCount: number;
+  correctionCount: number | null;
 }
 
 // 래디 포즈 — POINT(기본), NORMAL(반복 실수), WAVE_SMILE(첫 스몰톡). 서버 문자열 그대로 받는다
@@ -298,14 +302,11 @@ export interface SmallTalkSummaryGrowth {
   succeeded: boolean;
   previousDate: string;
   previousSentence: string;
-  // 직전 문장에서 빨강 취소선 처리할 구절
-  previousWrongSpan: string;
+  // 직전 문장에서 빨강 취소선 처리할 구절. 구절을 특정하지 못했으면 null이고 문장만 보여준다
+  previousWrongSpan: string | null;
   currentSentence: string;
-  // 이번 문장에서 강조할 구절. 성공이면 초록, 반복이면 빨강
-  currentSpan: string;
-  previousCount: number;
-  // 성공이면 0
-  currentCount: number;
+  // 이번 문장에서 강조할 구절. 성공이면 초록, 반복이면 빨강. 특정하지 못했으면 null
+  currentSpan: string | null;
 }
 
 export interface SmallTalkSummaryReusedExpressions {
@@ -333,12 +334,12 @@ export interface SmallTalkSummaryReusedExpression {
 export interface SmallTalkSummaryFollowUp {
   // true면 장기기억 잡 미완료. 준비될 때까지 다시 묻는다
   pending: boolean;
-  // CUT_OFF, PAST_EVENT, CONCERN, GOAL, MOOD, HOBBY, NONE. NONE이어도 블록은 그린다
-  triggerType: string;
-  // 굵게 나갈 질문(반말). NONE이면 기본 문구
-  question: string;
+  // CUT_OFF, PAST_EVENT, CONCERN, GOAL, MOOD, HOBBY, NONE. 질문이 없으면 셋 다 null이고 블록을 그리지 않는다
+  triggerType: string | null;
+  // 굵게 나갈 질문(반말)
+  question: string | null;
   // 회색으로 나갈 초대 한 줄
-  invite: string;
+  invite: string | null;
 }
 
 // 오늘의 스몰톡 요약 — 완료(COMPLETED)된 세션만 준다. 진행 중이거나 종료 확인 대기면 409

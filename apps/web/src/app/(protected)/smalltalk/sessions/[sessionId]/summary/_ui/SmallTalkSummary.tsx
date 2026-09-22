@@ -22,8 +22,10 @@ import { SmallTalkSummarySkeleton } from './SmallTalkSummarySkeleton';
 
 export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
   const router = useRouter();
-  const { summary, error, isLoading, retry } =
+  const { summary, error, isLoading, waitExpired, retry } =
     useSmallTalkSummaryQuery(sessionId);
+  // 총평은 이 세션의 교정이 다 끝나야 계산된다 — 보통 수 초지만, 상한까지 안 오면 붙잡아 두지 않는다
+  const summaryStuck = summary !== null && summary.pending && waitExpired;
 
   // 상세 피드백을 건너뛰고 표현 학습으로 — 닫기(X)와 요약을 못 받았을 때의 출구가 여기로 간다
   const goLearning = () =>
@@ -48,13 +50,13 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
         <h1 className="text-[17px] font-bold text-foreground">오늘의 스몰톡</h1>
       </header>
 
-      {error ? (
+      {error || summaryStuck ? (
         <SummaryUnavailable
-          message={error.message}
+          message={error?.message ?? '오늘의 스몰톡을 정리하지 못했어요.'}
           onRetry={retry}
           onSkip={goLearning}
         />
-      ) : isLoading || !summary ? (
+      ) : isLoading || !summary || !summary.headline || !summary.comparison ? (
         <SmallTalkSummarySkeleton />
       ) : (
         <>

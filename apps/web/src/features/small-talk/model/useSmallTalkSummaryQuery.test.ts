@@ -24,11 +24,13 @@ vi.mock('@/shared/auth/auth-store', () => ({
 const getSmallTalkSummary = vi.mocked(smallTalkApi.getSmallTalkSummary);
 
 const summaryOf = ({
+  summaryPending = false,
   expressionsPending = false,
   followUpPending = false,
 } = {}): SmallTalkSummaryResponse => ({
   sessionId: 7,
   title: '카페 얘기',
+  pending: summaryPending,
   firstSession: false,
   headline: {
     text: '지난번보다 1분 24초 더 말했어요!',
@@ -45,7 +47,7 @@ const summaryOf = ({
   reusedExpressions: { pending: expressionsPending, items: [] },
   followUp: {
     pending: followUpPending,
-    triggerType: 'NONE',
+    triggerType: 'CONCERN',
     question: '다음엔 요즘 빠져 있는 거 얘기해줘.',
     invite: '기억해둘게.',
   },
@@ -69,6 +71,7 @@ afterEach(() => {
 
 describe('useSmallTalkSummaryQuery', () => {
   it.each([
+    ['총평이', { summaryPending: true }],
     ['표현 재사용이', { expressionsPending: true }],
     ['후속 질문이', { followUpPending: true }],
   ])('%s 아직이면 다시 묻는다', async (_, pending) => {
