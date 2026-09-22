@@ -73,7 +73,8 @@ describe('PromoSheet', () => {
     expect(screen.getByText('94,800원')).toBeInTheDocument();
     expect(screen.getByText('58,500원 /년')).toBeInTheDocument();
     expect(screen.getByText('38% 할인')).toBeInTheDocument();
-    expect(screen.getByText('02:45 후 종료')).toBeInTheDocument();
+    // 자리마다 따로 그려 글자가 쪼개진다 — 합친 문자열로 본다
+    expect(document.body.textContent).toContain('02:45 후 종료');
   });
 
   it('월간도 1년치로 보여준다 — 같은 자로 재야 연간이 얼마나 싼지 읽힌다', () => {

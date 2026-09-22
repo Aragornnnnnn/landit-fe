@@ -14,11 +14,11 @@ import { CloseIcon } from '@/shared/ui/Icons';
 import type { PaywallPromo } from '../api/subscription';
 import type { OfferingTiers } from '../model/offerings';
 import { formatWon } from '../model/plans';
-import { formatPromoClock } from '../model/promo-clock';
 import { setPromoSheetOpen } from '../model/promo-handoff';
 import { buildPromoSheet } from '../model/promo-sheet';
 import { usePurchase } from '../model/usePurchase';
 import { GOLD_GRADIENT, PremiumPill } from './premium-brand';
+import { PromoClock } from './PromoClock';
 
 interface PromoSheetProps {
   /** 화면에 적을 할인. 끝났으면 남은 시간이 0으로 온다 */
@@ -129,8 +129,8 @@ export const PromoSheet = ({
           구독 {yearly.discountRate}% 할인
         </h2>
         {/* 금색은 맨 위 PREMIUM과 할인율 배지 둘만 — 남은 시간은 배경 없이 빨간 글자로 */}
-        <p className="mt-2.5 text-[15px] leading-[1.3] font-bold text-destructive tabular-nums">
-          {formatPromoClock(promo.remainingSeconds)} 후 종료
+        <p className="mt-2.5 flex items-center gap-1 text-[15px] leading-[1.3] font-bold text-destructive">
+          <PromoClock seconds={promo.remainingSeconds} /> 후 종료
         </p>
       </header>
 

@@ -12,12 +12,12 @@ import { LanditLogo } from '@/shared/ui/LanditLogo';
 
 import type { PaywallPromo } from '../api/subscription';
 import { PROMO_ENABLED } from '../model/payment-flag';
-import { formatPromoClock } from '../model/promo-clock';
 import { clearPromoHandoff, useHandedPromo } from '../model/promo-handoff';
 import { usePaymentLive } from '../model/usePaymentLive';
 import { resolvePromoDisplay, usePromoOffer } from '../model/usePromoOffer';
 import { useSubscriptionQuery } from '../model/useSubscriptionQuery';
 import { GOLD_GRADIENT } from './premium-brand';
+import { PromoClock } from './PromoClock';
 import { PromoSheetHost } from './PromoSheetHost';
 
 /** 알약 한 벌 — 진입 링크와 할인 배지가 같은 모양이라 한 곳에 둔다 */
@@ -72,9 +72,7 @@ export const PremiumHeaderEntry = () => {
           style={{ background: GOLD_GRADIENT }}
         >
           <span className="tracking-[0.1em]">PREMIUM</span>
-          <span className="tabular-nums">
-            {formatPromoClock(live.remainingSeconds)}
-          </span>
+          <PromoClock seconds={live.remainingSeconds} />
         </button>
       ) : (
         <Link

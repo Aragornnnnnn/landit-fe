@@ -78,7 +78,8 @@ describe('PremiumHeaderEntry', () => {
     });
     render(<PremiumHeaderEntry />);
 
-    expect(screen.getByText('02:45')).toBeInTheDocument();
+    // 자리마다 따로 그려 글자가 쪼개진다 — 합친 문자열로 본다
+    expect(document.body.textContent).toContain('02:45');
   });
 
   it('유료 사용자에게는 로고를 그린다 — 팔 것이 없다', () => {
