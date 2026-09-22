@@ -1,7 +1,8 @@
 'use client';
 
 // 오늘의 스몰톡 — 대화를 막 끝낸 자리에서 지난번과 무엇이 달라졌는지 보여준다. 점수도 별점도 없다.
-// 래디 말풍선과 지난번과 비교 카드가 선다.
+// 래디 말풍선과 지난번과 비교 카드는 늘 서고, 그 아래 조건 블록(실수 기억·배운 표현 재사용·다음 스몰톡에서)이
+// 있을 때만 쌓인다 — 어느 블록을 어떻게 그릴지는 summary-blocks가 정한다.
 // 여기서 나가는 길은 둘 — 상세 피드백(대화 보기)을 거쳐 표현 학습으로, 또는 바로 표현 학습으로
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
@@ -17,7 +18,12 @@ import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
 import { toPoseImage } from '../_model/randi-pose';
+import { toSummaryBlocks, type SummaryBlocks } from '../_model/summary-blocks';
+import { BlockSkeleton } from './BlockSkeleton';
 import { ComparisonCard } from './ComparisonCard';
+import { FollowUpBlock } from './FollowUpBlock';
+import { GrowthCard } from './GrowthCard';
+import { ReusedExpressionsCard } from './ReusedExpressionsCard';
 import { SmallTalkSummarySkeleton } from './SmallTalkSummarySkeleton';
 
 export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
@@ -63,6 +69,7 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pt-1 pb-6">
             <Headline headline={summary.headline} />
             <ComparisonCard comparison={summary.comparison} />
+            <ConditionalBlocks blocks={toSummaryBlocks(summary, waitExpired)} />
           </div>
 
           {/* 나가는 길은 이 버튼 하나 — 건너뛰는 링크를 따로 두지 않는다.
@@ -95,6 +102,27 @@ const Headline = ({ headline }: { headline: SmallTalkSummaryHeadline }) => (
       </p>
     </div>
   </div>
+);
+
+// 조건 블록 셋 — 상태별로 카드·스켈레톤·없음. 순서는 실수 기억 → 배운 표현 → 다음 스몰톡
+const ConditionalBlocks = ({ blocks }: { blocks: SummaryBlocks }) => (
+  <>
+    {blocks.growth.kind === 'ready' && (
+      <GrowthCard growth={blocks.growth.data} />
+    )}
+    {blocks.reusedExpressions.kind === 'ready' && (
+      <ReusedExpressionsCard items={blocks.reusedExpressions.data} />
+    )}
+    {blocks.reusedExpressions.kind === 'loading' && (
+      <BlockSkeleton label="배운 표현 재사용을 찾는 중" />
+    )}
+    {blocks.followUp.kind === 'ready' && (
+      <FollowUpBlock followUp={blocks.followUp.data} />
+    )}
+    {blocks.followUp.kind === 'loading' && (
+      <BlockSkeleton label="다음 스몰톡 질문을 찾는 중" />
+    )}
+  </>
 );
 
 // 요약을 못 받았을 때 — 다시 물어보거나, 요약 없이 표현 학습으로 넘어간다 (대화는 이미 끝났다)

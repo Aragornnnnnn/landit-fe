@@ -1,4 +1,4 @@
-// 오늘의 스몰톡 — 말풍선·비교 카드는 늘 있고, 첫 스몰톡이면 건너뛸 길이 없다
+// 오늘의 스몰톡 — 말풍선·비교 카드는 늘 있고 첫 스몰톡이면 건너뛸 길이 없다. 조건 블록 셋은 상태에 따라 카드·스켈레톤·없음으로 갈린다
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -187,5 +187,213 @@ describe('SmallTalkSummary', () => {
     expect(replace).toHaveBeenCalledWith(
       '/expressions/session/7/branch?celebrate=1',
     );
+  });
+});
+
+const growth = {
+  pattern: 'PAST_TENSE',
+  patternLabel: '과거형',
+  succeeded: true,
+  previousDate: '2026-09-10',
+  previousSentence: 'I go to gym with my friend.',
+  previousWrongSpan: 'go',
+  currentSentence: 'I went to the gym with my friend.',
+  currentSpan: 'went',
+};
+
+// 인용문 속 구절은 칩(원형)과 다른 모양으로 둔다 — 화면에서 둘이 따로 보이는지 구분해 세려고
+const reusedItem = (expressionId: number, text: string) => ({
+  expressionId,
+  text,
+  meaning: `${text}의 뜻`,
+  sourceLabel: '9월 10일 「주말 계획」',
+  messageId: 55000 + expressionId,
+  quotedSentence: `I said ${text.toUpperCase()} today.`,
+  matchedText: text.toUpperCase(),
+});
+
+describe('SmallTalkSummary 실수 기억 카드', () => {
+  it('오늘 맞았으면 지난번엔 헷갈렸던 것으로 부르고, 두 문장을 그때·오늘로 보여준다', () => {
+    renderSummary({ ...summaryOf(), growth });
+
+    expect(screen.getByText('지난번엔 헷갈렸던 과거형')).toBeInTheDocument();
+    expect(screen.getByText('9월 10일')).toBeInTheDocument();
+    expect(screen.getByText('go')).toBeInTheDocument();
+    expect(screen.getByText('went')).toBeInTheDocument();
+    expect(
+      screen.getByText('지난번엔 헷갈렸는데, 오늘은 맞았어요.'),
+    ).toBeInTheDocument();
+  });
+
+  it('오늘도 틀렸으면 아직 헷갈리는 것으로 부른다', () => {
+    renderSummary({
+      ...summaryOf(),
+      growth: {
+        ...growth,
+        succeeded: false,
+        currentSentence: 'Yesterday I go to the gym.',
+        currentSpan: 'go',
+      },
+    });
+
+    expect(screen.getByText('아직 헷갈리는 과거형')).toBeInTheDocument();
+    expect(
+      screen.getByText(/지난번에 이어 오늘도 헷갈렸어요/),
+    ).toBeInTheDocument();
+  });
+
+  it('실수 기억이 없으면 카드가 없다', () => {
+    renderSummary(summaryOf());
+
+    expect(screen.queryByText(/헷갈/)).not.toBeInTheDocument();
+  });
+});
+
+describe('SmallTalkSummary 배운 표현 재사용', () => {
+  it('쓴 표현이 없으면 카드가 없다', () => {
+    renderSummary(summaryOf());
+
+    expect(
+      screen.queryByText('랜딧에서 배운 표현을 실제로 사용했어요'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('쓴 표현은 칩·출처·인용문·뜻으로 보인다', () => {
+    renderSummary({
+      ...summaryOf(),
+      reusedExpressions: {
+        pending: false,
+        items: [reusedItem(1, 'grab a coffee')],
+      },
+    });
+
+    expect(
+      screen.getByText('랜딧에서 배운 표현을 실제로 사용했어요'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('grab a coffee')).toBeInTheDocument();
+    expect(screen.getByText('9월 10일 「주말 계획」')).toBeInTheDocument();
+    expect(screen.getByText('GRAB A COFFEE')).toBeInTheDocument();
+    expect(screen.getByText('grab a coffee의 뜻')).toBeInTheDocument();
+  });
+
+  it('딱 2개면 다 펼치고 더 보기가 없다', () => {
+    renderSummary({
+      ...summaryOf(),
+      reusedExpressions: {
+        pending: false,
+        items: [reusedItem(1, 'grab a coffee'), reusedItem(2, 'be down for')],
+      },
+    });
+
+    expect(screen.getByText('be down for')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /더 보기/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('셋이면 다 펼친다 — 한 줄 보자고 한 번 누르게 하지 않는다', () => {
+    renderSummary({
+      ...summaryOf(),
+      reusedExpressions: {
+        pending: false,
+        items: [
+          reusedItem(1, 'grab a coffee'),
+          reusedItem(2, 'be down for'),
+          reusedItem(3, 'stop by'),
+        ],
+      },
+    });
+
+    expect(screen.getByText('stop by')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /더 보기/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('넷부터는 2개만 펼치고, 더 보기를 누르면 그 자리에서 나머지가 펼쳐진다', async () => {
+    renderSummary({
+      ...summaryOf(),
+      reusedExpressions: {
+        pending: false,
+        items: [
+          reusedItem(1, 'grab a coffee'),
+          reusedItem(2, 'be down for'),
+          reusedItem(3, 'stop by'),
+          reusedItem(4, 'my go-to'),
+        ],
+      },
+    });
+
+    expect(screen.queryByText('stop by')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: '+2개 더 보기' }));
+
+    expect(screen.getByText('stop by')).toBeInTheDocument();
+    expect(screen.getByText('my go-to')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /더 보기/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('아직 만드는 중이면 그 자리에 스켈레톤이 선다', () => {
+    renderSummary({
+      ...summaryOf(),
+      reusedExpressions: { pending: true, items: [] },
+    });
+
+    expect(
+      screen.getByRole('status', { name: '배운 표현 재사용을 찾는 중' }),
+    ).toBeInTheDocument();
+  });
+
+  it('상한까지 기다려도 안 오면 스켈레톤도 카드도 없다', () => {
+    renderSummary(
+      { ...summaryOf(), reusedExpressions: { pending: true, items: [] } },
+      { waitExpired: true },
+    );
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+});
+
+describe('SmallTalkSummary 다음 스몰톡에서', () => {
+  it('질문과 초대가 보인다 — 기억이 없어 기본 문구여도 그린다', () => {
+    renderSummary(summaryOf());
+
+    expect(screen.getByText('다음 스몰톡에서')).toBeInTheDocument();
+    expect(
+      screen.getByText('다음엔 요즘 빠져 있는 거 얘기해줘.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('기억해둘게.')).toBeInTheDocument();
+  });
+
+  it('아직 만드는 중이면 그 자리에 스켈레톤이 선다', () => {
+    renderSummary({
+      ...summaryOf(),
+      followUp: {
+        pending: true,
+        triggerType: null,
+        question: null,
+        invite: null,
+      },
+    });
+
+    expect(
+      screen.getByRole('status', { name: '다음 스몰톡 질문을 찾는 중' }),
+    ).toBeInTheDocument();
+  });
+
+  it('물어볼 기억이 없어 질문이 안 나왔으면 블록을 그리지 않는다', () => {
+    // Given 장기기억 작업은 끝났지만(pending false) 내려줄 질문이 없는 응답
+    renderSummary({
+      ...summaryOf(),
+      followUp: {
+        pending: false,
+        triggerType: null,
+        question: null,
+        invite: null,
+      },
+    });
+
+    expect(screen.queryByText('다음 스몰톡에서')).not.toBeInTheDocument();
   });
 });
