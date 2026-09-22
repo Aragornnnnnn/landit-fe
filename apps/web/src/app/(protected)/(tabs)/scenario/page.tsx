@@ -133,7 +133,7 @@ function ScenarioContent() {
       {settled && !promoOpen && satisfaction.sheet === 'review' && (
         <SatisfactionGate moment="review" />
       )}
-      {promptTurn && <NotificationConsentGate />}
+      {promptTurn && !promoOpen && <NotificationConsentGate />}
 
       {/* 브리핑을 다 보여주면 대화로 넘어간다 — push라 뒤로가기는 이 화면(카드)으로 돌아온다 */}
       {briefingScenario && (

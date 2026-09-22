@@ -19,7 +19,9 @@ vi.mock('../model/payment-flag', () => ({
   PAYMENT_ENABLED: true,
 }));
 vi.mock('./PromoSheetHost', () => ({
-  PromoSheetHost: () => <div data-testid="promo-sheet-host" />,
+  PromoSheetHost: ({ open }: { open: boolean }) => (
+    <div data-testid="promo-sheet-host" data-open={String(open)} />
+  ),
 }));
 vi.mock('../model/usePaymentLive', () => ({
   usePaymentLive: () => mocks.paymentLive,
@@ -124,6 +126,24 @@ describe('PremiumHeaderEntry', () => {
     });
     render(<PremiumHeaderEntry />);
 
-    expect(screen.getByTestId('promo-sheet-host')).toBeInTheDocument();
+    expect(screen.getByTestId('promo-sheet-host')).toHaveAttribute(
+      'data-open',
+      'true',
+    );
+  });
+
+  it('넘겨받은 게 없으면 시트는 닫힌 채로 붙어만 있다 — 스토어 가격을 미리 받아 둔다', () => {
+    mocks.subscription = free({
+      remainingSeconds: 300,
+      expiresAt: '2026-09-22T14:35:00',
+      newUser: true,
+      campaignKey: 'exit-5min-2026-09',
+    });
+    render(<PremiumHeaderEntry />);
+
+    expect(screen.getByTestId('promo-sheet-host')).toHaveAttribute(
+      'data-open',
+      'false',
+    );
   });
 });

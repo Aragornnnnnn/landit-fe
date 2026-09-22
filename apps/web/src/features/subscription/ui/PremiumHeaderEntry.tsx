@@ -2,7 +2,7 @@
 
 // 탭 헤더 왼쪽 자리 — 무료 사용자에게는 프리미엄 진입 알약, 한시 할인 중에는 남은 시간을 보여준다.
 // 팔 것이 없거나 아직 모를 때는 로고를 그려, 이 자리가 비거나 깜빡이지 않게 한다
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
 
@@ -13,11 +13,7 @@ import { LanditLogo } from '@/shared/ui/LanditLogo';
 import type { PaywallPromo } from '../api/subscription';
 import { PROMO_ENABLED } from '../model/payment-flag';
 import { formatPromoClock } from '../model/promo-clock';
-import {
-  clearPromoHandoff,
-  setPromoSheetOpen,
-  useHandedPromo,
-} from '../model/promo-handoff';
+import { clearPromoHandoff, useHandedPromo } from '../model/promo-handoff';
 import { usePaymentLive } from '../model/usePaymentLive';
 import { resolvePromoDisplay, usePromoOffer } from '../model/usePromoOffer';
 import { useSubscriptionQuery } from '../model/useSubscriptionQuery';
@@ -44,18 +40,12 @@ export const PremiumHeaderEntry = () => {
   );
   // 시트는 열 때의 할인을 스냅샷해 들고 간다 — 구독 쿼리가 다시 조회돼 promo가 비어도
   // 열린 시트가 걷히면 안 된다. 걷히는 순간 진행 중인 결제의 결과를 받을 곳이 사라진다
-  // 배지를 눌러 연 할인과, 페이월에서 넘어온 할인. 둘 다 열 때의 값을 그대로 들고 간다 —
+  // 배지를 눌러 연 할인과, 페이월에서 넘어온 할인.
   // 구독 쿼리가 다시 조회돼 promo가 비어도 열린 시트가 걷히면 안 된다
   const [tappedPromo, setTappedPromo] = useState<PaywallPromo | null>(null);
   const handedPromo = useHandedPromo();
   const openedPromo = tappedPromo ?? handedPromo;
   const display = resolvePromoDisplay(openedPromo, live);
-
-  // 홈의 다른 시트가 겹쳐 뜨지 않게 알린다 — 5분짜리라 이쪽이 먼저다
-  useEffect(() => {
-    setPromoSheetOpen(openedPromo !== null);
-    return () => setPromoSheetOpen(false);
-  }, [openedPromo]);
 
   const closeSheet = () => {
     setTappedPromo(null);
@@ -67,11 +57,9 @@ export const PremiumHeaderEntry = () => {
     return <HomeLogo />;
   }
 
+  // 노출 계측은 시트가 실제로 그려질 때 시트 쪽에서 낸다 — 여기서 내면 못 그린 경우까지 센다
   const openSheet = () => {
-    if (!live) return;
-    track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'header' });
-    track(EVENTS.PROMO_SHEET_VIEWED, { promo_campaign: live.campaignKey });
-    setTappedPromo(live);
+    if (live) setTappedPromo(live);
   };
 
   return (

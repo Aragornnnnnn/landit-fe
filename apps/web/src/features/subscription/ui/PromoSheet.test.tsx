@@ -90,6 +90,23 @@ describe('PromoSheet', () => {
     expect(screen.getByText('무료 체험 미포함')).toBeInTheDocument();
   });
 
+  it('그려질 때만 노출을 계측한다 — 열려다 못 그린 경우까지 세면 전환율 분모가 부푼다', () => {
+    open();
+
+    expect(mocks.track).toHaveBeenCalledWith('Promo Sheet Viewed', {
+      promo_campaign: 'exit-5min-2026-09',
+    });
+  });
+
+  it('할인을 못 그리면 노출로 세지 않는다', () => {
+    open({ promo: {} });
+
+    expect(mocks.track).not.toHaveBeenCalledWith(
+      'Promo Sheet Viewed',
+      expect.anything(),
+    );
+  });
+
   it('닫기 버튼으로도 나갈 수 있다 — 딤 말고 눈에 보이는 길', () => {
     const onClose = vi.fn();
     render(

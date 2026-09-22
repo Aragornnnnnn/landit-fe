@@ -8,7 +8,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { dismissPaywall } from '@/features/subscription/api/subscription';
+import {
+  dismissPaywall,
+  type MySubscription,
+} from '@/features/subscription/api/subscription';
 import { subscriptionKeys } from '@/features/subscription/model/keys';
 import { toKrwPrices } from '@/features/subscription/model/offerings';
 import { PROMO_ENABLED } from '@/features/subscription/model/payment-flag';
@@ -20,6 +23,7 @@ import {
   type PlanId,
 } from '@/features/subscription/model/plans';
 import { handOffPromo } from '@/features/subscription/model/promo-handoff';
+import { canShowPromo } from '@/features/subscription/model/promo-sheet';
 import { useOfferings } from '@/features/subscription/model/useOfferings';
 import { usePurchase } from '@/features/subscription/model/usePurchase';
 import { BenefitComparison } from '@/features/subscription/ui/BenefitComparison';
@@ -35,6 +39,9 @@ import {
 } from '../_model/paywall-copy';
 import { PaywallHero } from './PaywallHero';
 import { PlanCard } from './PlanCard';
+
+// 닫기가 서버 회신을 기다리는 상한 — 넘으면 할인을 포기하고 보내 준다
+const DISMISS_TIMEOUT_MS = 3000;
 
 interface PaywallScreenProps {
   /** 결제·복원이 끝난 뒤 돌아갈 내부 경로. 학습 진입에서 막혀 왔을 때만 있고, 없으면 홈으로 간다 */
@@ -62,21 +69,28 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
   const close = async () => {
     if (closing) return;
     // 할인을 못 보여줄 상황이면 알리지도 않는다. 서버가 찍은 5분은 한 번뿐이라 태우면 돌려받지 못한다
-    if (!PROMO_ENABLED || !tiers.promo.yearly) {
+    if (!PROMO_ENABLED || !canShowPromo(tiers)) {
       goHome();
       return;
     }
     setClosing(true);
-    // 기록에 실패해도 닫히는 것을 막지 않는다. 할인을 못 받을 뿐이다
-    const result = await dismissPaywall().catch(() => null);
+    // 기록에 실패하거나 늦어도 닫히는 것을 막지 않는다 — 돈 내라는 화면에서 나가는 길이 먹통이면 안 된다
+    const result = await Promise.race([
+      dismissPaywall().catch(() => null),
+      new Promise<null>((resolve) =>
+        setTimeout(() => resolve(null), DISMISS_TIMEOUT_MS),
+      ),
+    ]);
     setClosing(false);
     if (!result?.promo) {
       goHome();
       return;
     }
     // 헤더 배지와 시트는 구독 응답의 promo를 본다 — 캐시에 얹어야 홈에 닿자마자 뜬다
-    queryClient.setQueryData(subscriptionKeys.mine(userId), (previous) =>
-      previous ? { ...previous, promo: result.promo } : previous,
+    queryClient.setQueryData<MySubscription>(
+      subscriptionKeys.mine(userId),
+      (previous) =>
+        previous ? { ...previous, promo: result.promo } : previous,
     );
     // 시트는 페이월 위가 아니라 홈에서 뜬다 — 나가려는 사람을 붙잡아 두지 않고 보내 준 뒤 한 번 더 권한다
     handOffPromo(result.promo);

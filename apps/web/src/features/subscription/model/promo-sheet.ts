@@ -95,3 +95,12 @@ export const buildPromoSheet = ({
     },
   };
 };
+
+/**
+ * 지금 이 사용자에게 할인을 보여줄 수 있는가.
+ *
+ * 페이월(이탈을 알릴지)·헤더(시트를 열지)·시트(그릴지)가 **같은 답**을 써야 한다.
+ * 어긋나면 서버가 5분을 찍었는데 화면엔 아무것도 없는 상태가 생기고, 그 5분은 돌려받지 못한다.
+ */
+export const canShowPromo = (tiers: OfferingTiers) =>
+  buildPromoSheet(tiers) !== null;

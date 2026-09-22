@@ -1,11 +1,5 @@
 // 페이월 화면 동작 — 플랜을 바꾸면 CTA·안내가 따라 바뀌고, 결제·복원·닫기가 제자리로 간다
-import {
-  act,
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-} from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PaywallScreen } from './PaywallScreen';
@@ -85,15 +79,16 @@ beforeEach(() => {
   mocks.purchaseOptions = null;
   mocks.dismiss = vi.fn().mockResolvedValue({ promo: null });
   mocks.setQueryData = vi.fn();
-  // 할인 패키지가 있어야 닫기가 서버에 알린다 — 없으면 5분을 태우지 않고 바로 홈으로 간다
+  // 할인을 실제로 보여줄 수 있어야 닫기가 서버에 알린다 — 정가와 할인가가 둘 다 있어야 할인율이 나온다
+  mocks.pricing = {
+    yearly: { packageId: '$rc_annual', price: 94_800, currency: 'KRW' },
+    monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
+  };
   mocks.promoPricing = {
     yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
   };
 });
-afterEach(() => {
-  cleanup();
-  vi.useRealTimers();
-});
+afterEach(() => cleanup());
 
 describe('PaywallScreen', () => {
   it('처음엔 연간이 선택돼 있어 CTA가 무료 체험 문구다', () => {
@@ -225,7 +220,22 @@ describe('PaywallScreen', () => {
       fireEvent.click(screen.getByRole('button', { name: '닫기' }));
 
       await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
-      expect(mocks.setQueryData).toHaveBeenCalled();
+      // 헤더가 읽는 자리에 넣어야 홈에 닿자마자 시트가 뜬다
+      const [, updater] = mocks.setQueryData.mock.calls[0];
+      expect(updater({ premium: false })).toMatchObject({ promo });
+    });
+
+    it('할인율이 0이면 알리지 않는다 — 정가 인상 전에 오퍼링에 먼저 넣어 둬도 5분이 타지 않는다', async () => {
+      mocks.pricing = {
+        yearly: { packageId: '$rc_annual', price: 58_500, currency: 'KRW' },
+      };
+      mocks.dismiss = vi.fn().mockResolvedValue({ promo });
+      render(<PaywallScreen />);
+
+      fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+
+      await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
+      expect(mocks.dismiss).not.toHaveBeenCalled();
     });
 
     it('자격이 없으면 그냥 홈으로 간다', async () => {
