@@ -184,9 +184,9 @@ export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
   const last = pendingQuestionsOf(review).length === 1;
   // 이번에 틀리면 이 문제는 놓친 것으로 끝난다 — 오답 CTA가 "다시 풀어볼게요"인지 여기서 갈린다
   const lastAttempt = question.wrongCount + 1 >= MAX_ATTEMPTS;
-  // 재도전 안내는 학습 안의 복습과 같은 규칙을 쓴다. 기회가 두 번뿐인 지금은 정답 공개(세 번째 시도용)가
-  // 뜨지 않지만, 상한이 늘면 규칙이 따라오도록 받은 값을 그대로 넘긴다
-  const { revealAnswer, instruction } = retryGuideOf(question.wrongCount);
+  // 재도전 지시문은 학습 안의 복습과 같은 문구를 쓴다. 정답 공개는 여기선 하지 않는다 —
+  // 기회가 두 번뿐이라 답을 보여주면 남은 한 번이 베껴 쓰기가 된다 (학습 안의 복습은 세 번째부터 공개한다)
+  const { instruction } = retryGuideOf(question.wrongCount);
 
   return (
     <QuizStep
@@ -199,7 +199,7 @@ export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
       leftAction="close"
       onBack={() => abandon('quiz')}
       instruction={instruction}
-      revealAnswer={revealAnswer}
+      revealAnswer={false}
       judge={askServer}
       // 틀린 문제는 곧 다시 나온다 — 시트에서 정답을 알려주면 재도전이 무의미하다
       hideWrongAnswer
