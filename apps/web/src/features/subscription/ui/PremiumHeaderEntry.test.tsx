@@ -74,7 +74,6 @@ describe('PremiumHeaderEntry', () => {
       remainingSeconds: 165,
       expiresAt: '2026-09-22T14:35:00',
       newUser: true,
-      campaignKey: 'exit-5min-2026-09',
     });
     render(<PremiumHeaderEntry />);
 
@@ -117,13 +116,11 @@ describe('PremiumHeaderEntry', () => {
       remainingSeconds: 300,
       expiresAt: '2026-09-22T14:35:00',
       newUser: true,
-      campaignKey: 'exit-5min-2026-09',
     });
     handOffPromo({
       remainingSeconds: 300,
       expiresAt: '2026-09-22T14:35:00',
       newUser: true,
-      campaignKey: 'exit-5min-2026-09',
     });
     render(<PremiumHeaderEntry />);
 
@@ -138,7 +135,6 @@ describe('PremiumHeaderEntry', () => {
       remainingSeconds: 300,
       expiresAt: '2026-09-22T14:35:00',
       newUser: true,
-      campaignKey: 'exit-5min-2026-09',
     });
     render(<PremiumHeaderEntry />);
 

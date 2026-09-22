@@ -579,9 +579,9 @@ export type EventProps = {
 
   // /download를 거치지 않고 스토어 앱을 바로 연 경우만 (앱 업데이트 유도 UI)
   'App Update Store Opened': { store: 'play_store' | 'app_store' };
-  // promo_campaign은 이탈 할인 시트에서 고르고 결제할 때만 붙는다 — 정가 결제와 할인 결제를 갈라 본다
-  'Paywall Plan Selected': { plan: SubscriptionPlan; promo_campaign?: string };
-  'Purchase Started': { plan: SubscriptionPlan; promo_campaign?: string };
+  // promo는 이탈 할인 시트에서 고르고 결제할 때만 true — 정가 결제와 할인 결제를 갈라 본다
+  'Paywall Plan Selected': { plan: SubscriptionPlan; promo?: boolean };
+  'Purchase Started': { plan: SubscriptionPlan; promo?: boolean };
   'Purchase Restore Tapped': undefined;
   'Paywall Gate Locked': { source: PaywallGateSource };
   'Level Result Viewed': {
@@ -593,8 +593,8 @@ export type EventProps = {
   'Prepared Learning Continued': { scenario_id: number };
   'Subscription Manage Tapped': { status: SubscriptionState };
   'Paywall Entry Tapped': { source: PaywallEntrySource };
-  // 이탈 할인 시트가 떠서 사용자가 본 순간 — 이 수와 결제 수로 할인의 전환을 잰다
-  'Promo Sheet Viewed': { promo_campaign: string };
+  // 이탈 할인 시트가 떠서 사용자가 본 순간 — 이 수와 할인 결제 수로 전환을 잰다
+  'Promo Sheet Viewed': { new_user: boolean };
   'Haptics Toggled': { enabled: boolean };
   // 고른 배속 그대로 — 0.75 · 1 · 1.25 · 1.5
   'Speech Rate Changed': { rate: number };
@@ -629,15 +629,15 @@ export type EventProps = {
     unlocked: boolean;
     price?: number;
     currency?: string;
-    promo_campaign?: string;
+    promo?: boolean;
   };
-  'Purchase Canceled': { plan: SubscriptionPlan; promo_campaign?: string };
+  'Purchase Canceled': { plan: SubscriptionPlan; promo?: boolean };
   // plan은 복원이 막혔을 때 없다. message는 shell_error일 때 셸이 준 문구
   'Purchase Failed': {
     plan?: SubscriptionPlan;
     reason: PurchaseFailureReason;
     message?: string;
-    promo_campaign?: string;
+    promo?: boolean;
   };
   'Purchase Restored': { succeeded: boolean };
 

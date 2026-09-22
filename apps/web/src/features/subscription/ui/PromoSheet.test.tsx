@@ -35,7 +35,6 @@ const promo: PaywallPromo = {
   remainingSeconds: 165,
   expiresAt: '2026-09-22T14:35:00',
   newUser: true,
-  campaignKey: 'exit-5min-2026-09',
 };
 
 const tiers: OfferingTiers = {
@@ -95,7 +94,7 @@ describe('PromoSheet', () => {
     open();
 
     expect(mocks.track).toHaveBeenCalledWith('Promo Sheet Viewed', {
-      promo_campaign: 'exit-5min-2026-09',
+      new_user: true,
     });
   });
 
@@ -142,7 +141,7 @@ describe('PromoSheet', () => {
     expect(mocks.purchase).toHaveBeenCalledWith('yearly');
     expect(mocks.track).toHaveBeenCalledWith('Purchase Started', {
       plan: 'yearly',
-      promo_campaign: 'exit-5min-2026-09',
+      promo: true,
     });
   });
 

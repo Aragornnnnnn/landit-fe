@@ -24,10 +24,8 @@ export interface PaywallPromo {
   remainingSeconds: number;
   /** 만료 시각 (BE LocalDateTime). 표시·디버깅용 */
   expiresAt: string;
-  /** 시트에 "첫 방문 특별 혜택" 라벨을 붙일지. 부여 시점에 정해져 할인에 붙어 다닌다 */
+  /** 부여 시점에 가입 후 7일 미만이었는지. 시트에 "신규 유저 혜택" 라벨을 붙일지 정한다 */
   newUser: boolean;
-  /** 어느 이벤트로 부여된 할인인지. 화면은 판단에 쓰지 않고 계측에만 싣는다 */
-  campaignKey: string;
 }
 
 export interface MySubscription {

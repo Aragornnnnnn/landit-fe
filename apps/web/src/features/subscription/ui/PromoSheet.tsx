@@ -46,12 +46,12 @@ export const PromoSheet = ({
 }: PromoSheetProps) => {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('yearly');
   const sheet = buildPromoSheet(tiers);
-  const campaignKey = promo.campaignKey;
+  const newUser = promo.newUser;
   // 결제는 고른 카드가 가리키는 패키지로 간다 — 연간은 할인, 월간은 정가
   const { busy, purchase } = usePurchase({
     pricing: { yearly: tiers.promo.yearly, monthly: tiers.list.monthly },
     onUnlocked,
-    promoCampaign: promo.campaignKey,
+    promo: true,
   });
 
   // 5분이 지나면 스스로 닫는다 — 끝난 할인을 띄워 두지 않는다. 결제 중이면 결과를 받을 때까지 남는다
@@ -64,10 +64,10 @@ export const PromoSheet = ({
   const shown = sheet !== null;
   useEffect(() => {
     if (!shown) return;
-    track(EVENTS.PROMO_SHEET_VIEWED, { promo_campaign: campaignKey });
+    track(EVENTS.PROMO_SHEET_VIEWED, { new_user: newUser });
     setPromoSheetOpen(true);
     return () => setPromoSheetOpen(false);
-  }, [shown, campaignKey]);
+  }, [shown, newUser]);
 
   // 할인 패키지를 못 받았으면 시트를 열지 않는다. 할인가를 보여 놓고 정가로 결제되는 일이 없어야 한다
   if (!sheet) return null;
@@ -88,17 +88,11 @@ export const PromoSheet = ({
   const selectPlan = (plan: SubscriptionPlan) => {
     if (plan === selectedPlan) return;
     setSelectedPlan(plan);
-    track(EVENTS.PAYWALL_PLAN_SELECTED, {
-      plan,
-      promo_campaign: promo.campaignKey,
-    });
+    track(EVENTS.PAYWALL_PLAN_SELECTED, { plan, promo: true });
   };
 
   const startPurchase = () => {
-    track(EVENTS.PURCHASE_STARTED, {
-      plan: selectedPlan,
-      promo_campaign: promo.campaignKey,
-    });
+    track(EVENTS.PURCHASE_STARTED, { plan: selectedPlan, promo: true });
     void purchase(selectedPlan);
   };
 

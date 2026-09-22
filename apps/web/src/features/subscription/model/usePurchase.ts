@@ -27,8 +27,8 @@ interface UsePurchaseOptions {
   pricing: PlanPricingMap;
   /** 유료가 확인됐거나, 결제는 끝났는데 서버 반영이 늦을 때(안내 뒤) 불린다 — 보통 페이월을 닫는다 */
   onUnlocked: () => void;
-  /** 이탈 할인 시트에서 부를 때만 — 결제 이벤트에 어느 할인이었는지 남긴다 */
-  promoCampaign?: string;
+  /** 이탈 할인 시트에서 부를 때 true — 결제 이벤트에 할인 결제였음을 남긴다 */
+  promo?: boolean;
 }
 
 // 결제를 시킬 수 없는 환경별 계측 사유와 안내 문구
@@ -57,10 +57,10 @@ const findUnsupported = () => {
 export const usePurchase = ({
   pricing,
   onUnlocked,
-  promoCampaign,
+  promo,
 }: UsePurchaseOptions) => {
   // 결제 이벤트마다 같은 꼬리를 붙인다 — 정가 결제와 할인 결제를 나눠 보려면 전 구간에 있어야 한다
-  const promoTag = promoCampaign ? { promo_campaign: promoCampaign } : {};
+  const promoTag = promo ? { promo: true } : {};
   const [busy, setBusy] = useState(false);
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.member?.userId ?? null);

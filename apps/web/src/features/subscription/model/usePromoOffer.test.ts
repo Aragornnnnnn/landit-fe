@@ -10,7 +10,6 @@ const promo = (remainingSeconds: number): PaywallPromo => ({
   remainingSeconds,
   expiresAt: '2026-09-22T14:35:00',
   newUser: true,
-  campaignKey: 'exit-5min-2026-09',
 });
 
 beforeEach(() => vi.useFakeTimers());
@@ -68,7 +67,6 @@ describe('usePromoOffer', () => {
 
     expect(result.current).toMatchObject({
       newUser: true,
-      campaignKey: 'exit-5min-2026-09',
     });
   });
 });

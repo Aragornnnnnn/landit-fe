@@ -210,7 +210,6 @@ describe('PaywallScreen', () => {
       remainingSeconds: 300,
       expiresAt: '2026-09-22T14:35:00',
       newUser: true,
-      campaignKey: 'exit-5min-2026-09',
     };
 
     it('할인을 받으면 구독 캐시에 얹고 홈으로 보낸다 — 시트는 홈에서 뜬다', async () => {
