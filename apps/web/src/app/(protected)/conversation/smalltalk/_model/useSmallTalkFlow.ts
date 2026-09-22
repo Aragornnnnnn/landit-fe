@@ -179,8 +179,7 @@ export const useSmallTalkFlow = ({
   // 서버도 예약 차감이라 초과분을 받아 주고(잔량은 0에서 멈춘다), 그 턴을 작별 인사로 닫는다
   const budget = useSpeakingBudget({
     initialMs: remainingSpeakingTimeMs,
-    // 타이핑은 말한 게 아니다 — 같은 단계(USER_SPEAKING)여도 눈금은 멈춰 있다
-    speaking: engine.phase === 'USER_SPEAKING' && !engine.typing,
+    speaking: engine.phase === 'USER_SPEAKING',
     waiting: engine.phase === 'USER_READY',
   });
 
