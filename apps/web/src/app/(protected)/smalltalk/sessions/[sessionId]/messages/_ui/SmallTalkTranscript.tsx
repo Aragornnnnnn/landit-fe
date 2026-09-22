@@ -13,19 +13,45 @@ import type {
 import { toSessionTitle } from '@/features/small-talk/lib/session-summary';
 import { splitMatchedText } from '@/features/small-talk/model/message-feedback';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
-import { smallTalkHistoryPath } from '@/shared/lib/routes';
+import {
+  sessionExpressionBranchPath,
+  smallTalkHistoryPath,
+} from '@/shared/lib/routes';
+import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
-import { CheckIcon, ChevronLeftIcon, SparkleIcon } from '@/shared/ui/Icons';
+import {
+  ArrowRightIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  SparkleIcon,
+} from '@/shared/ui/Icons';
 
+import {
+  messageAnchorId,
+  useCorrectionJump,
+} from '../_model/useCorrectionJump';
 import { SmallTalkTranscriptSkeleton } from './SmallTalkTranscriptSkeleton';
 
-export const SmallTalkTranscript = ({ sessionId }: { sessionId: number }) => {
+interface SmallTalkTranscriptProps {
+  sessionId: number;
+  // 대화 종료 흐름(오늘의 스몰톡 → 상세 피드백)에서 왔는가 — 그러면 다음은 표현 학습이라 하단에 그 버튼이 선다.
+  // 기록에서 열었으면 버튼 없이 뒤로가기뿐이다
+  continueToLearning: boolean;
+}
+
+export const SmallTalkTranscript = ({
+  sessionId,
+  continueToLearning,
+}: SmallTalkTranscriptProps) => {
   const router = useRouter();
   // 교정은 대화가 끝난 뒤 따로 만들어진다 — 이 화면이 그걸 그리므로 준비될 때까지 기다린다
   const { session, error, isLoading, waitExpired } = useSmallTalkSessionQuery(
     sessionId,
     { awaitCorrections: true },
   );
+  // 들어오면 첫 교정으로, 칩을 누르면 다음 교정으로
+  const { hasNext, jumpNext } = useCorrectionJump(session?.messages ?? []);
 
   return (
     <main
@@ -52,17 +78,48 @@ export const SmallTalkTranscript = ({ sessionId }: { sessionId: number }) => {
       ) : isLoading ? (
         <SmallTalkTranscriptSkeleton />
       ) : (
-        <ul className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 pt-2 pb-8">
-          {session?.messages.map((message) => (
-            <li key={message.messageId}>
-              {message.role === 'USER' ? (
-                <MyMessage message={message} waitExpired={waitExpired} />
-              ) : (
-                <PartnerMessage message={message} />
-              )}
-            </li>
-          ))}
-        </ul>
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          <ul className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 pt-2 pb-8">
+            {session?.messages.map((message) => (
+              <li
+                key={message.messageId}
+                id={messageAnchorId(message.messageId)}
+              >
+                {message.role === 'USER' ? (
+                  <MyMessage message={message} waitExpired={waitExpired} />
+                ) : (
+                  <PartnerMessage message={message} />
+                )}
+              </li>
+            ))}
+          </ul>
+          {/* 진행바 대신 칩 하나 — 아직 안 본 교정이 남았을 때만 떠서 다음 카드로 데려간다 */}
+          {hasNext && (
+            <button
+              onClick={jumpNext}
+              className="absolute right-5 bottom-4 flex items-center gap-1 rounded-full bg-foreground px-3.5 py-2 text-[13px] font-semibold text-background shadow-md active:opacity-80"
+            >
+              다음 자연스러운 말
+              <ChevronDownIcon size={14} strokeWidth={2.5} />
+            </button>
+          )}
+        </div>
+      )}
+
+      {continueToLearning && (
+        // 종료 흐름의 다음 단계 — 축하·표현 생성으로. 대화 화면의 「대화 종료하기」가 가던 바로 그 자리다
+        <footer className="flex-none px-5 pt-3 pb-[max(env(safe-area-inset-bottom),16px)]">
+          <Button
+            onClick={() =>
+              router.replace(
+                sessionExpressionBranchPath(sessionId, { celebrate: true }),
+              )
+            }
+          >
+            표현 배우러 가기
+            <ArrowRightIcon size={16} />
+          </Button>
+        </footer>
       )}
     </main>
   );

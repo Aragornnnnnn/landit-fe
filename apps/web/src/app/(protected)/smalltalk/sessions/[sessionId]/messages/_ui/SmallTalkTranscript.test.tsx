@@ -1,6 +1,7 @@
 // 대화 보기 — 조회 중엔 스켈레톤이 서고, 내 말풍선 아래엔 교정 카드와 배운 표현 태그가 조건에 따라 붙는다
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type {
   SmallTalkHistoryMessage,
@@ -10,8 +11,9 @@ import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTa
 
 import { SmallTalkTranscript } from './SmallTalkTranscript';
 
+const replace = vi.hoisted(() => vi.fn());
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  useRouter: () => ({ replace, push: vi.fn() }),
 }));
 vi.mock('@/features/small-talk/model/useSmallTalkSessionQuery', () => ({
   useSmallTalkSessionQuery: vi.fn(),
@@ -51,7 +53,7 @@ const sessionOf = (
 
 const renderTranscript = (
   messages: SmallTalkHistoryMessage[],
-  { waitExpired = false } = {},
+  { waitExpired = false, continueToLearning = false } = {},
 ) => {
   sessionQuery.mockReturnValue({
     session: sessionOf(messages),
@@ -62,10 +64,35 @@ const renderTranscript = (
     retry: vi.fn(),
     regenerate: vi.fn(),
   });
-  render(<SmallTalkTranscript sessionId={7} />);
+  return render(
+    <SmallTalkTranscript
+      sessionId={7}
+      continueToLearning={continueToLearning}
+    />,
+  );
 };
 
+// jsdom엔 scrollIntoView가 없다 — 어느 말풍선으로 갔는지만 본다
+const scrollIntoView = vi.fn();
+beforeEach(() => {
+  Element.prototype.scrollIntoView = scrollIntoView;
+});
+
 afterEach(cleanup);
+
+const correctionOf = (betterSentence: string) => ({
+  originalSentence: 'x',
+  betterSentence,
+  reason: '이유',
+  mistakePattern: 'OTHER',
+  memoryTag: null,
+});
+
+// 스크롤이 간 요소가 그 문장을 품고 있는가
+const scrolledTo = (text: string) =>
+  scrollIntoView.mock.contexts.some((element) =>
+    (element as unknown as HTMLElement).textContent?.includes(text),
+  );
 
 describe('SmallTalkTranscript', () => {
   it('조회 중이면 텍스트 대신 스켈레톤이 뜬다', () => {
@@ -81,7 +108,7 @@ describe('SmallTalkTranscript', () => {
     });
 
     // when
-    render(<SmallTalkTranscript sessionId={362} />);
+    render(<SmallTalkTranscript sessionId={362} continueToLearning={false} />);
 
     // then
     expect(
@@ -215,5 +242,195 @@ describe('SmallTalkTranscript 상대 말풍선', () => {
       screen.getByText('What kind of workout are you doing today?'),
     ).toBeInTheDocument();
     expect(screen.getByText('오늘은 어떤 운동 하고 있어?')).toBeInTheDocument();
+  });
+});
+
+describe('SmallTalkTranscript 교정 사이 이동', () => {
+  const twoCorrections = () => [
+    messageOf({
+      messageId: 1,
+      content: 'Hi.',
+      correctionStatus: 'COMPLETED',
+      correction: null,
+    }),
+    messageOf({
+      messageId: 2,
+      content: 'I go to gym.',
+      correctionStatus: 'COMPLETED',
+      correction: correctionOf('I went to the gym.'),
+    }),
+    messageOf({ messageId: 3, role: 'AI', content: 'Nice.' }),
+    messageOf({
+      messageId: 4,
+      content: 'I am doing stairs at a gym.',
+      correctionStatus: 'COMPLETED',
+      correction: correctionOf("Today it's just stairs at the gym."),
+    }),
+  ];
+
+  it('들어오면 첫 교정 메시지로 스크롤한다', () => {
+    renderTranscript(twoCorrections());
+
+    expect(scrolledTo('I went to the gym.')).toBe(true);
+    expect(scrolledTo("Today it's just stairs at the gym.")).toBe(false);
+  });
+
+  it('남은 교정이 있으면 다음 자연스러운 말 칩이 보이고, 누르면 다음 교정으로 간다', async () => {
+    renderTranscript(twoCorrections());
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /다음 자연스러운 말/ }),
+    );
+
+    expect(scrolledTo("Today it's just stairs at the gym.")).toBe(true);
+  });
+
+  it('마지막 교정까지 가면 칩이 사라진다', async () => {
+    renderTranscript(twoCorrections());
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /다음 자연스러운 말/ }),
+    );
+
+    expect(
+      screen.queryByRole('button', { name: /다음 자연스러운 말/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('교정이 하나뿐이면 첫 교정으로 간 뒤 칩이 없다', () => {
+    renderTranscript(twoCorrections().slice(0, 3));
+
+    expect(scrolledTo('I went to the gym.')).toBe(true);
+    expect(
+      screen.queryByRole('button', { name: /다음 자연스러운 말/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('교정이 뒤늦게 도착하면 읽던 자리를 뺏지 않고 칩으로만 알린다', () => {
+    // 종료 흐름에서는 교정이 PREPARING으로 시작해 폴링으로 온다 —
+    // 그때 화면을 끌면 위에서부터 읽고 있던 사람의 자리를 뺏는다
+    const preparing = twoCorrections().map((message) =>
+      message.role === 'USER'
+        ? {
+            ...message,
+            correctionStatus: 'PREPARING' as const,
+            correction: null,
+          }
+        : message,
+    );
+    const { rerender } = renderTranscript(preparing);
+    expect(scrollIntoView).not.toHaveBeenCalled();
+
+    sessionQuery.mockReturnValue({
+      ...sessionQuery.mock.results[0]!.value,
+      session: sessionOf(twoCorrections()),
+    });
+    rerender(<SmallTalkTranscript sessionId={7} continueToLearning={false} />);
+
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('button', { name: /다음 자연스러운 말/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('뒤늦게 온 교정도 칩을 누르면 첫 교정부터 데려간다', async () => {
+    const preparing = twoCorrections().map((message) =>
+      message.role === 'USER'
+        ? {
+            ...message,
+            correctionStatus: 'PREPARING' as const,
+            correction: null,
+          }
+        : message,
+    );
+    const { rerender } = renderTranscript(preparing);
+    sessionQuery.mockReturnValue({
+      ...sessionQuery.mock.results[0]!.value,
+      session: sessionOf(twoCorrections()),
+    });
+    rerender(<SmallTalkTranscript sessionId={7} continueToLearning={false} />);
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /다음 자연스러운 말/ }),
+    );
+
+    expect(scrolledTo('I went to the gym.')).toBe(true);
+  });
+
+  it('폴링으로 응답이 갱신돼도 첫 교정으로 다시 가지 않는다', () => {
+    const { rerender } = renderTranscript(twoCorrections());
+
+    // 서버가 같은 내용을 새 객체로 다시 준 상황
+    sessionQuery.mockReturnValue({
+      ...sessionQuery.mock.results[0]!.value,
+      session: sessionOf(twoCorrections()),
+    });
+    rerender(<SmallTalkTranscript sessionId={7} continueToLearning={false} />);
+
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+  });
+
+  it('도착한 뒤 더 앞 메시지에 교정이 뒤늦게 생겨도 도착 자리를 지킨다', () => {
+    // 4번 메시지 교정만 먼저 온 상태로 들어왔다
+    const late = twoCorrections();
+    const { rerender } = renderTranscript([
+      late[0]!,
+      { ...late[1]!, correction: null },
+      late[2]!,
+      late[3]!,
+    ]);
+    expect(scrolledTo("Today it's just stairs at the gym.")).toBe(true);
+
+    // 폴링으로 2번 메시지 교정이 뒤늦게 왔다
+    sessionQuery.mockReturnValue({
+      ...sessionQuery.mock.results[0]!.value,
+      session: sessionOf(late),
+    });
+    rerender(<SmallTalkTranscript sessionId={7} continueToLearning={false} />);
+
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(
+      screen.queryByRole('button', { name: /다음 자연스러운 말/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('교정이 없으면 스크롤도 칩도 없다', () => {
+    renderTranscript([
+      messageOf({ correctionStatus: 'COMPLETED', correction: null }),
+    ]);
+
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole('button', { name: /다음 자연스러운 말/ }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe('SmallTalkTranscript 종료 흐름', () => {
+  it('대화 종료 흐름에서 왔으면 표현 배우러 가기 버튼이 있고, 누르면 축하를 켠 표현 화면으로 간다', async () => {
+    renderTranscript(
+      [messageOf({ correctionStatus: 'COMPLETED', correction: null })],
+      {
+        continueToLearning: true,
+      },
+    );
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /표현 배우러 가기/ }),
+    );
+
+    expect(replace).toHaveBeenCalledWith(
+      '/expressions/session/7/branch?celebrate=1',
+    );
+  });
+
+  it('기록에서 열었으면 표현 배우러 가기 버튼이 없다', () => {
+    renderTranscript([
+      messageOf({ correctionStatus: 'COMPLETED', correction: null }),
+    ]);
+
+    expect(
+      screen.queryByRole('button', { name: /표현 배우러 가기/ }),
+    ).not.toBeInTheDocument();
   });
 });

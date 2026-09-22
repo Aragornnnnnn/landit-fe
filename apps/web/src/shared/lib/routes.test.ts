@@ -13,6 +13,7 @@ import {
   sessionExpressionBranchPath,
   sessionExpressionPath,
   smallTalkPath,
+  smallTalkTranscriptPath,
 } from './routes';
 
 describe('scenarioReturnPath', () => {
@@ -233,5 +234,18 @@ describe('readReturnParam', () => {
     ['배열', ['/a', '/b']],
   ])('%s은 버린다', (_label, from) => {
     expect(readReturnParam(from)).toBeUndefined();
+  });
+});
+
+describe('smallTalkTranscriptPath', () => {
+  it('기록에서 열면 세션의 대화 보기 주소 그대로다', () => {
+    expect(smallTalkTranscriptPath(7)).toBe('/smalltalk/sessions/7/messages');
+  });
+
+  it('대화 종료 흐름에서 열면 다음이 표현 학습이라는 표식을 싣는다', () => {
+    // 이 표식이 있어야 대화 보기가 하단에 표현 배우러 가기 버튼을 세운다
+    expect(smallTalkTranscriptPath(7, { next: 'learning' })).toBe(
+      '/smalltalk/sessions/7/messages?next=learning',
+    );
   });
 });
