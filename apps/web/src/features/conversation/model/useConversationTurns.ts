@@ -287,8 +287,6 @@ export const useConversationTurns = ({
   return {
     phase: state.phase,
     turnIndex: state.turnIndex,
-    // 타이핑으로 답하는 중 — 말하기와 같은 단계라 단계만으로는 갈라지지 않는다
-    typing: state.phase === 'USER_SPEAKING' && input.keyboardMode,
     turn,
     finishedThought,
     // 지금 소리 나는 발화 — 캐릭터가 입모양을 맞추는 데 쓴다 (음성이 없으면 null)
