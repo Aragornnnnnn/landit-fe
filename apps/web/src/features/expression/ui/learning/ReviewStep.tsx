@@ -4,13 +4,14 @@
 import { useState } from 'react';
 
 import { pickDistinctPartners } from '../../model/quiz-partner';
-import { settleReviewQueue, type QuizResult } from '../../model/review-queue';
+import {
+  retryGuideOf,
+  settleReviewQueue,
+  type QuizResult,
+} from '../../model/review-queue';
 import type { SentenceQuiz } from '../../model/sentence-quiz';
 import { ReviewSuccess } from '../practice/ReviewSuccess';
 import { QuizStep } from './QuizStep';
-
-// 이만큼 틀리면 정답을 보여준다 — 1회 오답까지는 같은 문제 그대로, 2회부터는 정답을 보고 만든다
-const REVEAL_AFTER_WRONGS = 2;
 
 interface ReviewStepProps {
   // 풀 문제 목록 — 목록이 바뀌면(폴백→실제 문제 도착) 호출부가 key로 새로 세운다. 큐 인덱스가 이 목록에 묶여 있어서다
@@ -62,14 +63,8 @@ export const ReviewStep = ({
     setPending(settleReviewQueue(pending, result));
     setRound((current) => current + 1);
   };
-  // 재도전 라벨 — 두 번째 틀린 뒤엔 정답을 보여주고 그대로 만들게 한다
-  const revealAnswer = wrongCount >= REVEAL_AFTER_WRONGS;
-  const instruction =
-    wrongCount === 0
-      ? undefined
-      : revealAnswer
-        ? '정답을 보고 그대로 만들어보세요'
-        : '다시 한번 해보세요';
+  // 재도전 안내 — 두 번째 틀린 뒤엔 정답을 보여주고 그대로 만들게 한다
+  const { revealAnswer, instruction } = retryGuideOf(wrongCount);
   // 진행바는 푼 문제 수만큼 시작점에서 1까지 나눠 찬다
   const progressAt = (solved: number) =>
     progressStart + (1 - progressStart) * (solved / quizzes.length);

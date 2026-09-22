@@ -29,6 +29,8 @@ import { ResultSheet } from './ResultSheet';
 const SUBMIT_EVENT = {
   quiz: EVENTS.QUIZ_ANSWER_SUBMITTED,
   review: EVENTS.REVIEW_ANSWER_SUBMITTED,
+  // 알림으로 들어오는 푸시 복습은 학습 안의 복습과 섞이면 안 된다
+  push_review: EVENTS.PUSH_REVIEW_ANSWER_SUBMITTED,
 } as const;
 
 interface QuizStepProps {
@@ -55,6 +57,11 @@ interface QuizStepProps {
   instruction?: string;
   // 정답 공개 — 내 말풍선에 정답을 위에, 옮길 문장을 아래에 보여준다(복습에서 두 번 틀렸을 때)
   revealAnswer?: boolean;
+  // 판정을 밖에서 받아온다 — 서버가 채점하는 푸시 복습에서 쓴다.
+  // 없으면 고른 단어 순서로 그 자리에서 판정한다(표현학습). 받아오지 못하면 고른 칩을 그대로 두고 다시 누를 수 있다
+  judge?: (words: string[]) => Promise<QuizResult>;
+  // 오답 시트에서 정답 문장을 감춘다 — 틀린 문제를 곧 다시 내는 복습에서 답을 미리 알려주지 않게
+  hideWrongAnswer?: boolean;
   // 정답일 때 결과 시트 자리에 대신 띄울 연출(없으면 기본 ResultSheet) — 복습의 획득 연출(콘페티+카드)에 쓴다.
   // 오답은 이 슬롯을 타지 않고 항상 기본 ResultSheet를 보여준다. onNext는 호출부가 이미 쥐고 있으니 다시 넘기지 않는다.
   correctSlot?: () => React.ReactNode;
@@ -93,6 +100,8 @@ export const QuizStep = ({
   onSelectedChange,
   instruction,
   revealAnswer = false,
+  judge,
+  hideWrongAnswer = false,
   correctSlot,
 }: QuizStepProps) => {
   const answer = quiz.answerWords;
@@ -108,6 +117,8 @@ export const QuizStep = ({
   const [hintActive, setHintActive] = useState(false);
   // 제출 계측용 — 이 퀴즈에서 힌트를 한 번이라도 썼는가
   const [hintUsed, setHintUsed] = useState(false);
+  // 밖에 판정을 물어보는 중 — 확인 버튼을 로딩으로 잠가 같은 답을 두 번 보내지 않는다
+  const [judging, setJudging] = useState(false);
 
   // 부모에 선택을 보고한다 — 설명 스텝을 다녀와도 고른 칩이 유지되게(복습에서 사용)
   useEffect(() => {
@@ -169,10 +180,12 @@ export const QuizStep = ({
     removeAt(index);
   };
 
-  const check = () => {
-    const tone = isWordsCorrect(selected.map(wordOf), answer)
-      ? 'correct'
-      : 'wrong';
+  const check = async () => {
+    const words = selected.map(wordOf);
+    const tone = await judgeWords(words);
+    // 판정을 받지 못했다 — 고른 칩을 그대로 두고 다시 누를 수 있게 한다(안내는 호출부가 띄운다)
+    if (!tone) return;
+
     track(SUBMIT_EVENT[step], {
       expression_id: expressionId,
       is_correct: tone === 'correct',
@@ -180,6 +193,20 @@ export const QuizStep = ({
     });
     haptic(tone === 'correct' ? 'success' : 'error');
     setChecked(tone);
+  };
+
+  // 판정 주체 — 밖에서 받아오거나(서버 채점) 고른 단어 순서로 그 자리에서 정한다
+  const judgeWords = async (words: string[]): Promise<QuizResult | null> => {
+    if (!judge) return isWordsCorrect(words, answer) ? 'correct' : 'wrong';
+
+    setJudging(true);
+    try {
+      return await judge(words);
+    } catch {
+      return null;
+    } finally {
+      setJudging(false);
+    }
   };
 
   // 게이지는 맞혀야 구간 끝값이 찬다 — 틀리면 시작값 그대로. 복습은 틀린 문제를 다시 내므로 찼다가 되돌아가면 안 된다
@@ -211,7 +238,12 @@ export const QuizStep = ({
       leftAction={leftAction}
       footer={
         checked === 'idle' ? (
-          <Button size="md" disabled={selected.length === 0} onClick={check}>
+          <Button
+            size="md"
+            disabled={selected.length === 0}
+            loading={judging}
+            onClick={check}
+          >
             확인할게요
           </Button>
         ) : undefined
@@ -313,7 +345,11 @@ export const QuizStep = ({
         ) : (
           <ResultSheet
             tone={checked}
-            answer={quiz.answerText}
+            answer={
+              checked === 'wrong' && hideWrongAnswer
+                ? undefined
+                : quiz.answerText
+            }
             onNext={() => onNext(checked)}
             nextLabel={checked === 'correct' ? nextLabel : wrongLabel}
           />
