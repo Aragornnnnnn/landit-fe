@@ -53,6 +53,20 @@ describe('TopicPickerModal', () => {
     expect(onRefresh).not.toHaveBeenCalled();
   });
 
+  it('받아온 직후에도 아이콘이 한 바퀴 다 돌 때까지는 다시 누를 수 없다', async () => {
+    // given — 연달아 누르면 읽기도 전에 주제가 갈린다
+    const onRefresh = vi.fn();
+    renderModal({ onRefresh });
+    const button = screen.getByRole('button', { name: '다른 주제 보기' });
+
+    // when — 한 번 누르고 곧바로 또 누른다
+    await userEvent.click(button);
+    await userEvent.click(button);
+
+    // then — 두 번째는 먹지 않는다
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
+
   it('받아오는 동안에도 보던 주제는 그대로 있다', () => {
     renderModal({ refreshing: true });
 

@@ -2,11 +2,14 @@
 // 보여주는 몇 개는 주제 풀에서 무작위로 뽑힌 것이라, 마음에 드는 게 없으면 다시 받아 볼 수 있다
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
 import { RefreshIcon } from '@/shared/ui/Icons';
 import { Modal } from '@/shared/ui/Modal';
+
+// 아이콘이 한 바퀴 도는 시간 (globals.css의 animate-spin-turn과 같은 값)
+const SPIN_MS = 550;
 
 interface TopicPickerModalProps {
   open: boolean;
@@ -32,8 +35,21 @@ export const TopicPickerModal = ({
   // 누른 횟수 — 아이콘을 새로 마운트해 한 바퀴 애니메이션을 다시 태운다.
   // 응답이 빨라도 늦어도 "눌렀다"는 것은 똑같이 한 바퀴로 보인다
   const [spins, setSpins] = useState(0);
+  // 한 바퀴가 끝나기 전에는 다시 못 누른다 — 연달아 누르면 주제가 읽기도 전에 갈리고,
+  // 줄 수가 바뀌며 모달 높이가 튀어 방금 누른 버튼이 손 밑에서 움직인다
+  const [cooling, setCooling] = useState(false);
+  const coolingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (coolingTimer.current) clearTimeout(coolingTimer.current);
+    },
+    [],
+  );
+
   const requestRefresh = () => {
     setSpins((count) => count + 1);
+    setCooling(true);
+    coolingTimer.current = setTimeout(() => setCooling(false), SPIN_MS);
     onRefresh();
   };
 
@@ -71,7 +87,7 @@ export const TopicPickerModal = ({
       <div className="mt-4 flex justify-center">
         <button
           type="button"
-          disabled={refreshing}
+          disabled={refreshing || cooling}
           onClick={requestRefresh}
           className="flex items-center gap-1.5 px-2 py-1 text-[13px] font-semibold text-muted-foreground active:opacity-60 disabled:opacity-40"
         >
