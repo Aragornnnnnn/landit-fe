@@ -32,7 +32,8 @@ export const Toaster = () => {
 
   return (
     // 센터링은 바깥 div가 맡는다 — motion이 주입하는 transform(y)이 -translate-x-1/2를 덮어쓰지 않게
-    <div className="pointer-events-none fixed bottom-[max(env(safe-area-inset-bottom),24px)] left-1/2 z-50 -translate-x-1/2">
+    // 모달·시트(z-50)보다 위에 — 같은 층이면 나중에 붙는 포털에 가려 딤 뒤로 가라앉는다
+    <div className="pointer-events-none fixed bottom-[max(env(safe-area-inset-bottom),24px)] left-1/2 z-[60] -translate-x-1/2">
       <AnimatePresence>
         {toast && (
           <motion.div
