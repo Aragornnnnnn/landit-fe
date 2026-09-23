@@ -28,8 +28,6 @@ export interface PromoMonthly {
 export interface PromoSheet {
   yearly: PromoYearly;
   monthly: PromoMonthly;
-  /** 월간으로 1년 쓸 때와의 차액 */
-  savings: number;
 }
 
 // 원화 가격만 다룬다 — 화면 숫자가 「원」 표기와 100원 단위 환산을 전제로 짜여 있다.
@@ -62,8 +60,6 @@ export const buildPromoSheet = ({
   const discountRate = calculateDiscountRate(listMonthly.price, monthlyPrice);
   if (discountRate <= 0) return null;
 
-  const yearlyEquivalent = listMonthly.price * MONTHS_IN_YEAR;
-
   return {
     yearly: {
       packageId: discounted.packageId,
@@ -74,9 +70,8 @@ export const buildPromoSheet = ({
     monthly: {
       packageId: listMonthly.packageId,
       price: listMonthly.price,
-      yearlyEquivalent,
+      yearlyEquivalent: listMonthly.price * MONTHS_IN_YEAR,
     },
-    savings: yearlyEquivalent - discounted.price,
   };
 };
 

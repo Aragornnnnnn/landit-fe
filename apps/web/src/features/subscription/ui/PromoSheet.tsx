@@ -75,7 +75,7 @@ export const PromoSheet = ({
     if (!busy) onClose();
   };
 
-  const { yearly, monthly, savings } = sheet;
+  const { yearly, monthly } = sheet;
   const isYearly = selectedPlan === 'yearly';
   // 할인은 연간에만 있다 — 월간을 고른 채 "할인 받고 시작하기"를 띄우면 거짓말이 된다.
   // 월간 문구는 페이월 CTA와 같은 말을 쓴다
@@ -130,6 +130,7 @@ export const PromoSheet = ({
           trial="7일 무료 체험 포함"
           price={`월 ${formatWon(yearly.monthlyPrice)}`}
           yearPrice={`${formatWon(yearly.price)} /년`}
+          yearListPrice={formatWon(monthly.yearlyEquivalent)}
         />
         <PlanRow
           title="월간 플랜"
@@ -139,21 +140,9 @@ export const PromoSheet = ({
           trial={null}
           price={`월 ${formatWon(monthly.price)}`}
           yearPrice={`${formatWon(monthly.yearlyEquivalent)} /년`}
+          yearListPrice={null}
         />
       </section>
-
-      {/* 같은 기간으로 맞춰 보여 준다 — 월 단위 숫자만으로는 한 해에 얼마가 남는지 읽히지 않는다.
-          월간을 고른 사람에게는 걷는다. 방금 고른 것을 깎는 말이 된다 */}
-      {isYearly && (
-        <p className="relative mt-3 flex items-center justify-center gap-1.5 text-[13px] leading-[1.3]">
-          <span className="text-muted-foreground">
-            월간으로 1년 쓰면 {formatWon(monthly.yearlyEquivalent)}
-          </span>
-          <span className="font-bold text-primary">
-            {formatWon(savings)} 아껴요
-          </span>
-        </p>
-      )}
 
       <footer className="relative mt-6">
         <Button onClick={startPurchase} loading={busy}>
@@ -180,6 +169,8 @@ interface PlanRowProps {
   price: string;
   /** 1년치 금액. 두 카드를 같은 자로 재야 얼마나 싼지 읽힌다 */
   yearPrice: string;
+  /** 지워서 보여줄 비교선 — 월간으로 1년 쓸 때의 금액. 비교가 필요 없는 카드는 null */
+  yearListPrice: string | null;
 }
 
 const PlanRow = ({
@@ -190,6 +181,7 @@ const PlanRow = ({
   trial,
   price,
   yearPrice,
+  yearListPrice,
 }: PlanRowProps) => (
   <button
     type="button"
@@ -227,7 +219,10 @@ const PlanRow = ({
       <span className="text-[19px] leading-[1.3] font-bold text-foreground">
         {price}
       </span>
-      <span className="text-[12px] leading-[1.3] text-muted-foreground">
+      <span className="flex items-center gap-1.5 text-[12px] leading-[1.3] text-muted-foreground">
+        {yearListPrice && (
+          <span className="text-[#9ca3af] line-through">{yearListPrice}</span>
+        )}
         {yearPrice}
       </span>
     </span>

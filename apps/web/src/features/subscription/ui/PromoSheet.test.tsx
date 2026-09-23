@@ -82,11 +82,10 @@ describe('PromoSheet', () => {
     expect(screen.getByText('178,800원 /년')).toBeInTheDocument();
   });
 
-  it('월간으로 1년 쓸 때와의 차액을 적는다 — 월 단위 숫자만으로는 한 해에 얼마가 남는지 읽히지 않는다', () => {
+  it('연간 카드에 월간으로 1년 쓸 때의 금액을 지워 보여준다 — 같은 자로 재야 얼마나 싼지 읽힌다', () => {
     open();
 
-    expect(screen.getByText('월간으로 1년 쓰면 178,800원')).toBeInTheDocument();
-    expect(screen.getByText('120,300원 아껴요')).toBeInTheDocument();
+    expect(screen.getByText('178,800원')).toBeInTheDocument();
   });
 
   it('체험 포함 여부를 카드마다 밝힌다 — 월간에는 체험이 없다', () => {
@@ -168,8 +167,6 @@ describe('PromoSheet', () => {
       screen.getByRole('button', { name: '월 14,900원으로 시작하기' }),
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /할인 받고/ })).toBeNull();
-    // 방금 고른 것을 깎는 말이 된다
-    expect(screen.queryByText(/아껴요/)).toBeNull();
   });
 
   it('만료되면 스스로 닫는다 — 끝난 할인을 띄워 두지 않는다', () => {

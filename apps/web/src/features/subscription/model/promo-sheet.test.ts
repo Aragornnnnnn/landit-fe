@@ -34,7 +34,7 @@ describe('buildPromoSheet', () => {
     });
   });
 
-  it('월간은 할인이 없어 정가 그대로 팔고, 연 환산과 차액을 같이 낸다', () => {
+  it('월간은 할인이 없어 정가 그대로 팔고, 연 환산을 같이 낸다 — 연간 카드의 비교선도 이 값이다', () => {
     const sheet = buildPromoSheet(tiers(...full));
 
     expect(sheet?.monthly).toMatchObject({
@@ -42,7 +42,6 @@ describe('buildPromoSheet', () => {
       yearlyEquivalent: 178_800,
       packageId: '$rc_monthly',
     });
-    expect(sheet?.savings).toBe(120_300);
   });
 
   it('할인 패키지가 없으면 시트를 만들지 않는다 — 화면이 이걸 보고 띄우지 않는다', () => {
