@@ -128,7 +128,7 @@ export const PromoSheet = ({
           onSelect={() => selectPlan('yearly')}
           badge={`${yearly.discountRate}% 할인`}
           trial="7일 무료 체험 포함"
-          price={`월 ${formatWon(yearly.monthlyPrice)}`}
+          price={`${formatWon(yearly.monthlyPrice)} /월`}
           yearPrice={`${formatWon(yearly.price)} /년`}
           yearListPrice={formatWon(monthly.yearlyEquivalent)}
         />
@@ -138,7 +138,7 @@ export const PromoSheet = ({
           onSelect={() => selectPlan('monthly')}
           badge={null}
           trial={null}
-          price={`월 ${formatWon(monthly.price)}`}
+          price={`${formatWon(monthly.price)} /월`}
           yearPrice={`${formatWon(monthly.yearlyEquivalent)} /년`}
           yearListPrice={null}
         />
@@ -171,7 +171,7 @@ interface PlanRowProps {
   badge: string | null;
   /** 무료 체험 포함 여부. 없는 플랜은 null이라 줄이 비지 않는다 */
   trial: string | null;
-  /** 큰 숫자 — 월 기준 금액 */
+  /** 큰 숫자 — 월 기준 금액. 아래 1년치와 단위 표기를 맞춰 눈이 단위만 견주게 한다 */
   price: string;
   /** 1년치 금액. 두 카드를 같은 자로 재야 얼마나 싼지 읽힌다 */
   yearPrice: string;
