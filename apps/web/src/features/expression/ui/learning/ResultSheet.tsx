@@ -1,6 +1,6 @@
 'use client';
 
-// 퀴즈/복습 공용 하단 슬라이드업 결과 시트 — 정답(초록)/오답(빨강) 모두 정답 문장을 보여주고 CTA로 다음 스텝으로 넘어간다
+// 퀴즈/복습 공용 하단 슬라이드업 결과 시트 — 정답(초록)/오답(빨강)을 알리고 CTA로 다음 스텝으로 넘어간다
 import { motion } from 'motion/react';
 
 import { Button } from '@/shared/ui/Button';
@@ -8,7 +8,8 @@ import { CheckIcon, CloseIcon } from '@/shared/ui/Icons';
 
 interface ResultSheetProps {
   tone: 'correct' | 'wrong';
-  answer: string;
+  // 정답 문장 — 없으면 시트에 답을 싣지 않는다(곧 같은 문제를 다시 내는 복습의 오답)
+  answer?: string;
   onNext: () => void;
   nextLabel: string;
 }
@@ -52,13 +53,19 @@ export const ResultSheet = ({
           </p>
         </div>
 
-        {/* 정답 문장 — 정답·오답 동일하게 노출 */}
-        <p
-          className={`text-xs font-bold ${correct ? 'text-success' : 'text-destructive'}`}
-        >
-          정답
-        </p>
-        <p className="-mt-2 text-base font-bold text-foreground">{answer}</p>
+        {/* 정답 문장 — 답을 감추는 호출부에선 아예 빠진다 */}
+        {answer && (
+          <>
+            <p
+              className={`text-xs font-bold ${correct ? 'text-success' : 'text-destructive'}`}
+            >
+              정답
+            </p>
+            <p className="-mt-2 text-base font-bold text-foreground">
+              {answer}
+            </p>
+          </>
+        )}
 
         <Button
           size="md"

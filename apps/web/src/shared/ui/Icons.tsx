@@ -72,6 +72,59 @@ export const ChevronRightIcon = ({ size = 22, ...props }: IconProps) => (
   </svg>
 );
 
+export const RefreshIcon = ({ size = 22, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+    <path d="M21 3v5h-5" />
+    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+    <path d="M8 16H3v5" />
+  </svg>
+);
+
+// AI가 다듬어 준 것을 가리키는 반짝임 — 네 꼭짓점 별 하나와 작은 별 하나.
+// 반짝임 이모지는 플랫폼 그림이라 글자 옆에서 색과 크기가 따로 논다. 이건 글자색을 그대로 따라간다
+export const SparkleIcon = ({ size = 22, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="M10 3q1 8.2 9 9-8 .8-9 9-1-8.2-9-9 8-.8 9-9Z" />
+    <path d="M19 14q.4 3.2 3.5 3.5Q19.4 17.9 19 21q-.4-3.2-3.5-3.5Q18.6 17.1 19 14Z" />
+  </svg>
+);
+
+export const ChevronDownIcon = ({ size = 22, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="m6 9 6 6 6-6" />
+  </svg>
+);
+
 export const ArrowRightIcon = ({ size = 22, ...props }: IconProps) => (
   <svg
     width={size}

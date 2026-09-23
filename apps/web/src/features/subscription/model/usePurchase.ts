@@ -27,6 +27,8 @@ interface UsePurchaseOptions {
   pricing: PlanPricingMap;
   /** 유료가 확인됐거나, 결제는 끝났는데 서버 반영이 늦을 때(안내 뒤) 불린다 — 보통 페이월을 닫는다 */
   onUnlocked: () => void;
+  /** 이탈 할인 시트에서 부를 때 true — 결제 이벤트에 할인 결제였음을 남긴다 */
+  promo?: boolean;
 }
 
 // 결제를 시킬 수 없는 환경별 계측 사유와 안내 문구
@@ -52,7 +54,13 @@ const findUnsupported = () => {
  *
  * @returns `busy`는 셸 왕복이나 서버 확인이 진행 중인지, `purchase(plan)`·`restore()`는 각각 결제·복원을 시작한다
  */
-export const usePurchase = ({ pricing, onUnlocked }: UsePurchaseOptions) => {
+export const usePurchase = ({
+  pricing,
+  onUnlocked,
+  promo,
+}: UsePurchaseOptions) => {
+  // 결제 이벤트마다 같은 꼬리를 붙인다 — 정가 결제와 할인 결제를 나눠 보려면 전 구간에 있어야 한다
+  const promoTag = promo ? { promo: true } : {};
   const [busy, setBusy] = useState(false);
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.member?.userId ?? null);
@@ -82,7 +90,11 @@ export const usePurchase = ({ pricing, onUnlocked }: UsePurchaseOptions) => {
     if (busy) return;
     const unsupported = findUnsupported();
     if (unsupported) {
-      track(EVENTS.PURCHASE_FAILED, { plan, reason: unsupported.reason });
+      track(EVENTS.PURCHASE_FAILED, {
+        plan,
+        reason: unsupported.reason,
+        ...promoTag,
+      });
       showToast(unsupported.message);
       return;
     }
@@ -97,12 +109,16 @@ export const usePurchase = ({ pricing, onUnlocked }: UsePurchaseOptions) => {
       if (signal?.aborted) return;
 
       if (!result) {
-        track(EVENTS.PURCHASE_FAILED, { plan, reason: 'no_response' });
+        track(EVENTS.PURCHASE_FAILED, {
+          plan,
+          reason: 'no_response',
+          ...promoTag,
+        });
         showToast('결제 응답이 없어요. 잠시 후 다시 시도해 주세요');
         return;
       }
       if (result.status === 'cancelled') {
-        track(EVENTS.PURCHASE_CANCELED, { plan });
+        track(EVENTS.PURCHASE_CANCELED, { plan, ...promoTag });
         return;
       }
       if (result.status === 'error') {
@@ -110,6 +126,7 @@ export const usePurchase = ({ pricing, onUnlocked }: UsePurchaseOptions) => {
           plan,
           reason: 'shell_error',
           message: result.message,
+          ...promoTag,
         });
         showToast(
           result.message ?? '결제에 실패했어요. 잠시 후 다시 시도해 주세요',
@@ -124,6 +141,7 @@ export const usePurchase = ({ pricing, onUnlocked }: UsePurchaseOptions) => {
         plan,
         unlocked,
         ...(paid && { price: paid.price, currency: paid.currency }),
+        ...promoTag,
       });
       // 기다리는 사이 화면을 떠났으면 안내와 이동은 하지 않는다 — 캐시 반영은 위에서 이미 끝났다
       if (signal?.aborted) return;

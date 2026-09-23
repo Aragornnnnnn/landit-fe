@@ -21,6 +21,7 @@ const quiz: SentenceQuiz = {
   promptText: '내가 이겨',
   answerWords: ['I', 'win'],
   shuffledWords: ['win', 'I'],
+  acceptedAnswers: [['I', 'win']],
 };
 
 const pickCorrectAnswer = async (user: ReturnType<typeof userEvent.setup>) => {
@@ -367,5 +368,101 @@ describe('QuizStep', () => {
         });
       },
     );
+  });
+  it('판정을 밖에서 받으면(judge) 고른 단어와 무관하게 그 판정을 따른다', async () => {
+    const user = userEvent.setup();
+    // given — 서버가 오답이라고 답하는 상황(정답 순서를 골라도 오답이다)
+    render(
+      <QuizStep
+        step="review"
+        quiz={quiz}
+        partner="chloe"
+        expressionId={1}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+        judge={() => Promise.resolve('wrong' as const)}
+      />,
+    );
+
+    await pickCorrectAnswer(user);
+    await user.click(screen.getByRole('button', { name: '확인할게요' }));
+
+    expect(screen.getByText('아쉬워요')).toBeInTheDocument();
+  });
+
+  it('판정을 받아오지 못하면 결과 시트 없이 다시 확인할 수 있다', async () => {
+    const user = userEvent.setup();
+    render(
+      <QuizStep
+        step="review"
+        quiz={quiz}
+        partner="chloe"
+        expressionId={1}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+        judge={() => Promise.reject(new Error('네트워크 실패'))}
+      />,
+    );
+
+    await pickCorrectAnswer(user);
+    await user.click(screen.getByRole('button', { name: '확인할게요' }));
+
+    expect(screen.queryByText('정답이에요!')).not.toBeInTheDocument();
+    expect(screen.queryByText('아쉬워요')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '확인할게요' })).toBeEnabled();
+  });
+
+  it('오답 정답 감추기(hideWrongAnswer)면 결과 시트에 정답 문장을 싣지 않는다', async () => {
+    const user = userEvent.setup();
+    render(
+      <QuizStep
+        step="review"
+        quiz={quiz}
+        partner="chloe"
+        expressionId={1}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+        hideWrongAnswer
+      />,
+    );
+
+    await pickWrongAnswer(user);
+    await user.click(screen.getByRole('button', { name: '확인할게요' }));
+
+    expect(screen.getByText('아쉬워요')).toBeInTheDocument();
+    expect(screen.queryByText('정답')).not.toBeInTheDocument();
+  });
+  it('어순이 다른 허용 정답으로 맞춰도 정답으로 본다 (한국어 문제)', async () => {
+    const user = userEvent.setup();
+    // given — 서버가 두 어순을 모두 정답으로 주는 한국어 문제
+    const korean: SentenceQuiz = {
+      writingQuestion: '어땠어?',
+      writingQuestionTranslation: 'How was it?',
+      answerText: '나도 완전 콜이야',
+      promptText: "I'm down for it",
+      answerWords: ['나도', '완전', '콜이야'],
+      shuffledWords: ['완전', '나도', '콜이야'],
+      acceptedAnswers: [
+        ['나도', '완전', '콜이야'],
+        ['완전', '콜이야', '나도'],
+      ],
+    };
+    render(
+      <QuizStep
+        step="review"
+        quiz={korean}
+        partner="chloe"
+        expressionId={1}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    for (const word of ['완전', '콜이야', '나도']) {
+      await user.click(screen.getByRole('button', { name: word }));
+    }
+    await user.click(screen.getByRole('button', { name: '확인할게요' }));
+
+    expect(screen.getByText('정답이에요!')).toBeInTheDocument();
   });
 });

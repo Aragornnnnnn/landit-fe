@@ -174,6 +174,41 @@ describe('useConversationInput', () => {
     expect(onContent).toHaveBeenCalledWith('Hello there.', 'TEXT', 0);
   });
 
+  it('타이핑하다 키보드를 다시 눌러도 쓰던 글은 남는다', () => {
+    // 전송이 실패하면 화면은 마이크 대기로 돌아간다 — 거기서 다시 키보드를 눌렀을 때
+    // 초안을 비우면 방금 쓴 답변을 전부 다시 쳐야 한다
+    const { result } = renderInput();
+
+    act(() => result.current.pressKeyboard());
+    act(() => result.current.setTranscript('Hello there.'));
+    act(() => result.current.pressKeyboard());
+
+    expect(result.current.transcript).toBe('Hello there.');
+  });
+
+  it('말한 내용이 남아 있을 때 키보드를 누르면 그 글부터 고쳐 쓴다', () => {
+    // 음성 제출이 실패해 돌아온 자리 — 인식된 문장을 지우면 처음부터 다시 말해야 한다
+    const { result } = renderInput();
+
+    act(() => result.current.pressMic());
+    act(() => sttMock.callbacks.onInterim?.('Hello there.'));
+    act(() => result.current.pressKeyboard());
+
+    expect(result.current.transcript).toBe('Hello there.');
+  });
+
+  it('마이크로 시작하면 쓰던 초안을 지운다', () => {
+    // 말하기는 인식 결과로 처음부터 채운다 — 쓰다 만 글이 남아 있으면 말하지도 않은 문장이
+    // 인식된 것처럼 보인다
+    const { result } = renderInput();
+
+    act(() => result.current.pressKeyboard());
+    act(() => result.current.setTranscript('Hello there.'));
+    act(() => result.current.pressMic());
+
+    expect(result.current.transcript).toBe('');
+  });
+
   it('빈 타이핑은 전달하지 않는다', () => {
     const { result, onContent, onInputCancel } = renderInput();
 

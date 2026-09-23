@@ -45,15 +45,17 @@ export const toDateRow = (summary: PaidSubscriptionSummary): CardRow | null => {
   return { label: '이용 만료일', value: `${date}${suffix}` };
 };
 
-// 갱신되는 구독만, 플랜을 알 때만. 연간은 월간으로 1년 낼 때 금액을 지운 옆에 혜택가로 보여준다
+// 갱신되는 구독이고 실제 결제액을 알 때만. 무료 체험 중이면 결제 이력이 없어 이 행이 없다 —
+// 등록값으로 추측하면 할인가나 옛 가격으로 묶인 사람에게 남의 금액을 보여준다.
+// 연간의 비교 기준은 내 결제액이 아니라 월간 12개월치라, 실제 금액이 와도 취소선 숫자는 그대로다
 export const toAmountRow = (
   summary: PaidSubscriptionSummary,
 ): CardRow | null => {
-  if (!summary.plan || !summary.renews) return null;
+  const { plan, price } = summary;
+  if (!plan || !summary.renews || price === null) return null;
   return {
     label: summary.kind === 'trial' ? '첫 결제 금액' : '다음 결제 금액',
-    value: formatWon(findPlan(summary.plan).price),
-    listPrice:
-      summary.plan === 'yearly' ? formatWon(YEARLY_LIST_PRICE) : undefined,
+    value: formatWon(price),
+    listPrice: plan === 'yearly' ? formatWon(YEARLY_LIST_PRICE) : undefined,
   };
 };

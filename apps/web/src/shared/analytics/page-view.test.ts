@@ -221,6 +221,18 @@ describe('toPageView', () => {
     });
   });
 
+  it.each([
+    ['/smalltalk/sessions/7', 'smalltalk_history_detail'],
+    ['/smalltalk/sessions/7/messages', 'smalltalk_history_transcript'],
+    ['/smalltalk/sessions/7/summary', 'smalltalk_summary'],
+  ])('지난 스몰톡 %s는 %s로 갈라져 남는다', (path, pageName) => {
+    expect(pv(path)).toEqual({
+      page_name: pageName,
+      path,
+      session_id: 7,
+    });
+  });
+
   it('스몰톡 대화는 id 없이 page_name conversation_smalltalk으로 남는다', () => {
     // 주소의 상대·시작 방식(mode/partner)은 여기 싣지 않는다 — Conversation Started가 이미 남긴다
     expect(

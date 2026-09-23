@@ -80,7 +80,11 @@ vi.mock('@/features/streak/model/refresh-streak', () => ({
   refreshStreakAfterCompletion: refreshStreak,
 }));
 
-const queryClientMock = vi.hoisted(() => ({ invalidateQueries: vi.fn() }));
+const queryClientMock = vi.hoisted(() => ({
+  invalidateQueries: vi.fn(),
+  // 완료 턴이 다음 화면(오늘의 스몰톡) 요약을 미리 받아 둔다 — 받았는지만 본다
+  prefetchQuery: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock('@tanstack/react-query', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@tanstack/react-query')>()),
   useQueryClient: () => queryClientMock,
@@ -401,6 +405,10 @@ describe('useSmallTalkFlow — 종료 확인', () => {
     expect(result.current.phase).not.toBe('USER_READY');
     // 축하 화면이 옛 숫자를 그리지 않게 스트릭을 미리 받아 둔다
     expect(refreshStreak).toHaveBeenCalled();
+    // 작별 인사를 듣는 동안 오늘의 스몰톡 요약이 도착하게 미리 받아 둔다
+    expect(queryClientMock.prefetchQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: smallTalkKeys.summary(39, 7) }),
+    );
   });
 
   it('그 답을 보내지 못하면 대화를 나가는 것으로 정리한다', async () => {

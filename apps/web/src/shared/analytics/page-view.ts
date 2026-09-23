@@ -51,6 +51,7 @@ const PAYWALL_SOURCES: Record<PaywallSource, true> = {
   conversation_finished: true,
   feedback_detail: true,
   me: true,
+  header: true,
 };
 
 const readPaywallSource = (raw: string | null): PaywallSource | undefined =>
@@ -156,14 +157,17 @@ const resolvePage = (
     return { page_name: 'conversation_smalltalk', path: pathname };
   }
 
-  // 지난 스몰톡 — 목록과 그 대화 한 건. 어느 대화인지는 세션 id로 남긴다
+  // 지난 스몰톡 — 목록과 그 대화 한 건. 어느 대화인지는 세션 id로 남긴다.
+  // 오늘의 스몰톡(요약)은 대화를 막 끝낸 자리라 기록 상세와 따로 센다
   if (seg[0] === 'smalltalk' && seg[1] === 'sessions') {
     if (!seg[2]) return { page_name: 'smalltalk_history', path: pathname };
+    const byTail = {
+      messages: 'smalltalk_history_transcript',
+      summary: 'smalltalk_summary',
+    } as const;
     return {
       page_name:
-        seg[3] === 'messages'
-          ? 'smalltalk_history_transcript'
-          : 'smalltalk_history_detail',
+        byTail[seg[3] as keyof typeof byTail] ?? 'smalltalk_history_detail',
       path: pathname,
       session_id: toId(seg[2]),
     };
@@ -228,6 +232,12 @@ const resolvePage = (
       path: pathname,
       ...(source && { paywall_source: source }),
     };
+  }
+
+  // 알림으로 받는 복습 — 어느 복습인지는 UUID라 이름·속성에 싣지 않는다.
+  // 이름은 BE의 알림 종류·유입 캠페인과 같은 말(expression_review)을 쓴다
+  if (seg[0] === 'reviews' && seg[1]) {
+    return { page_name: 'expression_review', path: pathname };
   }
 
   const nested = NESTED_PAGES[pathname];

@@ -69,9 +69,9 @@ const PLAN_TREAT = {
 } as const;
 
 const priceContent = (summary: PaidSubscriptionSummary): RetentionContent => {
-  const { plan } = summary;
-  // 어느 플랜인지 모르면 숫자를 지어내지 않는다 — 문구도 카드도 플랜 없이
-  if (!plan) {
+  const { plan, price } = summary;
+  // 플랜이나 실제 결제액을 모르면 숫자를 지어내지 않는다 — 문구도 카드도 없이
+  if (!plan || price === null) {
     return {
       emoji: '💸',
       title: '가격이 부담되셨군요',
@@ -80,7 +80,7 @@ const priceContent = (summary: PaidSubscriptionSummary): RetentionContent => {
       primary: STAY,
     };
   }
-  const { price, title } = findPlan(plan);
+  const { title } = findPlan(plan);
   const daily = `하루 ${formatWon(dailyWon(price, PLAN_DAYS[plan]))}`;
   const firstCharge = firstChargeRow(summary);
   return {

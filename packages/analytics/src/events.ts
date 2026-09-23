@@ -75,12 +75,18 @@ export const EVENTS = {
   // 앞의 넷은 탭에서 대화를 시작하기 전 갈림길(상대·주제·안내·인사)이다
   SMALL_TALK_PARTNER_SELECTED: 'Small Talk Partner Selected',
   SMALL_TALK_TOPIC_SELECTED: 'Small Talk Topic Selected',
+  SMALL_TALK_TOPICS_REFRESHED: 'Small Talk Topics Refreshed',
   SMALL_TALK_INTRO_GUIDE_CLOSED: 'Small Talk Intro Guide Closed',
   SMALL_TALK_GREETING_TAPPED: 'Small Talk Greeting Tapped',
   SMALL_TALK_STARTED: 'Small Talk Started',
   SMALL_TALK_TURN_COMPLETED: 'Small Talk Turn Completed',
   SMALL_TALK_COMPLETED: 'Small Talk Completed',
   SMALL_TALK_ABANDONED: 'Small Talk Abandoned',
+  // 종료 후 — 오늘의 스몰톡(요약)에서 상세 피드백(대화 보기)으로 가거나 건너뛴다
+  SMALL_TALK_SUMMARY_VIEWED: 'Small Talk Summary Viewed',
+  SMALL_TALK_FEEDBACK_OPENED: 'Small Talk Feedback Opened',
+  SMALL_TALK_FEEDBACK_SKIPPED: 'Small Talk Feedback Skipped',
+  SMALL_TALK_FEEDBACK_VIEWED: 'Small Talk Feedback Viewed',
 
   // 분석 피드백
   FEEDBACK_VIEWED: 'Feedback Viewed',
@@ -106,6 +112,14 @@ export const EVENTS = {
   REVIEW_ANSWER_SUBMITTED: 'Review Answer Submitted',
   EXPRESSION_COMPLETED: 'Expression Completed',
   EXPRESSION_ABANDONED: 'Expression Abandoned',
+
+  // 알림으로 받는 복습 — 학습 안의 복습 스텝(Review Answer Submitted)과 섞이면 안 돼 이벤트를 나눈다.
+  // 이름은 BE의 알림 종류(EXPRESSION_REVIEW)·유입 캠페인(expression_review)과 같은 말을 쓴다.
+  // 노출은 Page Viewed(page_name=expression_review)가 잡고, 여기선 시작·제출·끝·이탈만 찍는다
+  EXPRESSION_REVIEW_STARTED: 'Expression Review Started',
+  EXPRESSION_REVIEW_ANSWER_SUBMITTED: 'Expression Review Answer Submitted',
+  EXPRESSION_REVIEW_FINISHED: 'Expression Review Finished',
+  EXPRESSION_REVIEW_ABANDONED: 'Expression Review Abandoned',
 
   // 편지함
   MAILBOX_TAB_SWITCHED: 'Mailbox Tab Switched',
@@ -159,6 +173,7 @@ export const EVENTS = {
   // 마이페이지 — 유료 사용자가 구독 관리로 들어갔다 / 무료 사용자가 페이월로 들어갔다 / 진동 토글 / 말하기 속도 변경
   SUBSCRIPTION_MANAGE_TAPPED: 'Subscription Manage Tapped',
   PAYWALL_ENTRY_TAPPED: 'Paywall Entry Tapped',
+  PROMO_SHEET_VIEWED: 'Promo Sheet Viewed',
   HAPTICS_TOGGLED: 'Haptics Toggled',
   SPEECH_RATE_CHANGED: 'Speech Rate Changed',
   // 구독 관리 화면 — 결제 내역으로 들어갔다 / 스토어 구독 화면으로 나갔다
@@ -202,8 +217,10 @@ export type ExpressionStep =
 export type TurnInputType = 'voice' | 'text';
 // 스몰톡 대화 상대 — 홈에서 고른 캐릭터. 시나리오엔 없는 축이라 스몰톡 이벤트에만 붙는다
 export type TalkPartner = 'chloe' | 'marco' | 'teddy';
-// 단어 퀴즈 화면은 퀴즈 스텝과 복습 스텝이 같이 쓴다 — 제출·힌트 이벤트가 이 값으로 갈린다
-export type QuizStepKind = 'quiz' | 'review';
+// 단어 퀴즈 화면은 퀴즈 스텝·학습 안의 복습·알림 복습이 같이 쓴다 — 제출·힌트 이벤트가 이 값으로 갈린다
+export type QuizStepKind = 'quiz' | 'review' | 'expression_review';
+// 알림 복습에서 나간 자리 — 시작 전 안내(intro)인지 문제 푸는 중(quiz)인지
+export type ExpressionReviewStep = 'intro' | 'quiz';
 export type HintSource = QuizStepKind;
 // 홈 복귀 신호 — 앱 안에서 돌아온 이유. 밖에서 들어온 유입(알림·위젯)은 entry_campaign이 맡는다
 export type HomeReturnReason = 'just' | 'flip' | 'card';
@@ -220,7 +237,8 @@ export type SubscriptionState = 'trial' | 'active' | 'canceled';
 // unknown은 로그인 직후 구독 조회가 끝나기 전 구간이다. 값이 아예 빠진 것과 구분하려고 명시적으로 남긴다
 export type SubscriptionProfileState = SubscriptionState | 'none' | 'unknown';
 // 게이트가 아닌 자리에서 페이월로 들어간 곳 — 지금은 마이페이지(me)뿐. 알림 동의의 source와 같은 이름을 쓴다
-export type PaywallEntrySource = 'me';
+// me는 마이페이지 골드 카드, header는 탭 헤더 왼쪽의 프리미엄 알약
+export type PaywallEntrySource = 'me' | 'header';
 // 페이월에 어디서 왔는가 — 게이트에 막혀 왔으면 막힌 자리, 스스로 들어왔으면 마이페이지.
 // 노출(Page Viewed)에 실어 진입 경로별 전환율을 가른다
 export type PaywallSource = PaywallGateSource | PaywallEntrySource;
@@ -250,6 +268,7 @@ export type ConfirmSheetKind =
 export type RetryScreen =
   | 'scenario'
   | 'smalltalk'
+  | 'smalltalk_summary'
   | 'conversation'
   | 'card_back'
   | 'expression_list'
@@ -449,9 +468,12 @@ export type EventProps = {
     turn_index: number;
   };
 
-  // 스몰톡 — 상대(partner)는 시나리오에 없는 축이라 전 이벤트에 싣는다. 누구와 얘기하는지로 다 갈린다
+  // 스몰톡 — 상대(partner)는 시나리오에 없는 축이라 대화 이벤트 전부에 싣는다. 누구와 얘기하는지로 다 갈린다.
+  // 종료 후 넷(요약·피드백)은 응답에 상대가 없어 싣지 않는다 — session_id로 Started와 조인한다
   'Small Talk Partner Selected': { partner: TalkPartner };
   'Small Talk Topic Selected': { partner: TalkPartner; topic_id: number };
+  // 보여준 주제가 마음에 안 들어 다른 주제를 받았다 (열 때 자동으로 받는 것은 세지 않는다)
+  'Small Talk Topics Refreshed': { partner: TalkPartner };
   'Small Talk Intro Guide Closed': undefined;
   // coached = 코치마크가 켜진 채로 눌렀는지 (코치마크가 시킨 첫 탭)
   'Small Talk Greeting Tapped': { partner: TalkPartner; coached: boolean };
@@ -484,6 +506,40 @@ export type EventProps = {
     session_id: number;
     partner: TalkPartner;
     turn_index: number;
+  };
+  // 오늘의 스몰톡이 그려짐 — 총평이 실제로 선 순간만 남긴다(교정을 기다리는 스켈레톤은 노출이 아니다).
+  // 그 순간 어떤 블록이 서 있었는지(첫 스몰톡·실수 기억·재사용 표현 수·후속 질문 종류)를 함께 싣는다.
+  // 표현 재사용·후속 질문은 종료 후 잡이라 화면이 뜰 때 아직 없을 수 있다 — 그때는 pending이 true이고
+  // 개수·트리거는 "아직 없음"을 뜻한다. 0건과 구분하려면 반드시 pending을 함께 걸러야 한다
+  'Small Talk Summary Viewed': {
+    session_id: number;
+    first_session: boolean;
+    has_growth: boolean;
+    reused_expression_count: number;
+    reused_expressions_pending: boolean;
+    // 서버 트리거 코드 그대로 (CUT_OFF·PAST_EVENT·CONCERN·GOAL·MOOD·HOBBY·NONE). 물어볼 기억이 없었으면 null
+    follow_up_trigger: string | null;
+    follow_up_pending: boolean;
+    correction_count: number;
+  };
+  // 「상세 피드백 보러가기」 — 총평이 선 뒤에만 누를 수 있어 개수는 사실상 늘 있다.
+  // 건너뛰기와 같은 모양으로 두어 둘을 한 판에서 비교할 수 있게 한다
+  'Small Talk Feedback Opened': {
+    session_id: number;
+    correction_count: number | null;
+  };
+  // 상세 피드백을 건너뛰고 표현 학습으로 — 닫기(X)인지, 요약을 못 받아 나간 것인지.
+  // 못 받은 채 나갔으면 교정 개수도 모른다
+  'Small Talk Feedback Skipped': {
+    session_id: number;
+    trigger: 'close' | 'unavailable';
+    correction_count: number | null;
+  };
+  // 대화 보기(교정 카드)가 그려짐 — 요약에서 왔는지 기록에서 왔는지
+  'Small Talk Feedback Viewed': {
+    session_id: number;
+    source: 'summary' | 'history';
+    correction_count: number;
   };
 
   // 피드백 응답에는 scenario_id가 없다 — session_id로 서버에서 조인한다
@@ -554,6 +610,26 @@ export type EventProps = {
   'Expression Completed': ExpressionSource & { expression_id: number };
   'Expression Abandoned': { expression_id: number; step: ExpressionStep };
 
+  // 알림 복습 — 서버가 문제를 고정해 주므로 문제 수(question_count)가 흐름의 분모다
+  'Expression Review Started': { question_count: number };
+  'Expression Review Answer Submitted': {
+    expression_id: number;
+    is_correct: boolean;
+    hint_level: number;
+  };
+  // 끝난 지점 — 서버가 완료로 바꿨든, 문제마다 두 번씩 풀어 결판이 났든 결과 화면에 도달한 순간
+  'Expression Review Finished': {
+    question_count: number;
+    solved_count: number;
+    perfect: boolean;
+  };
+  // 결과 화면 전에 나간 경우 — 시작 안내에서 닫았는지, 문제를 풀다 닫았는지
+  'Expression Review Abandoned': {
+    step: ExpressionReviewStep;
+    question_count: number;
+    solved_count: number;
+  };
+
   'Notification Consent Viewed': { source: NotificationConsentSource };
   // 수락 = OS 권한창 요청까지 이어짐. 실제 허용/거부는 OS 팝업 결과라 별도 (권한 상태로 세그먼트)
   'Notification Consent Accepted': { source: NotificationConsentSource };
@@ -577,8 +653,9 @@ export type EventProps = {
 
   // /download를 거치지 않고 스토어 앱을 바로 연 경우만 (앱 업데이트 유도 UI)
   'App Update Store Opened': { store: 'play_store' | 'app_store' };
-  'Paywall Plan Selected': { plan: SubscriptionPlan };
-  'Purchase Started': { plan: SubscriptionPlan };
+  // promo는 이탈 할인 시트에서 고르고 결제할 때만 true — 정가 결제와 할인 결제를 갈라 본다
+  'Paywall Plan Selected': { plan: SubscriptionPlan; promo?: boolean };
+  'Purchase Started': { plan: SubscriptionPlan; promo?: boolean };
   'Purchase Restore Tapped': undefined;
   'Paywall Gate Locked': { source: PaywallGateSource };
   'Level Result Viewed': {
@@ -590,6 +667,8 @@ export type EventProps = {
   'Prepared Learning Continued': { scenario_id: number };
   'Subscription Manage Tapped': { status: SubscriptionState };
   'Paywall Entry Tapped': { source: PaywallEntrySource };
+  // 이탈 할인 시트가 떠서 사용자가 본 순간 — 이 수와 할인 결제 수로 전환을 잰다
+  'Promo Sheet Viewed': { new_user: boolean };
   'Haptics Toggled': { enabled: boolean };
   // 고른 배속 그대로 — 0.75 · 1 · 1.25 · 1.5
   'Speech Rate Changed': { rate: number };
@@ -624,13 +703,15 @@ export type EventProps = {
     unlocked: boolean;
     price?: number;
     currency?: string;
+    promo?: boolean;
   };
-  'Purchase Canceled': { plan: SubscriptionPlan };
+  'Purchase Canceled': { plan: SubscriptionPlan; promo?: boolean };
   // plan은 복원이 막혔을 때 없다. message는 shell_error일 때 셸이 준 문구
   'Purchase Failed': {
     plan?: SubscriptionPlan;
     reason: PurchaseFailureReason;
     message?: string;
+    promo?: boolean;
   };
   'Purchase Restored': { succeeded: boolean };
 

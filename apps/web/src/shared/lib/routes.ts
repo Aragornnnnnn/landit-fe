@@ -94,9 +94,17 @@ export const SMALLTALK_HISTORY_PATH = `${SMALLTALK_PATH}/sessions`;
 export const smallTalkHistoryPath = (sessionId: number) =>
   `${SMALLTALK_HISTORY_PATH}/${sessionId}`;
 
-// 그날 주고받은 말 다시 보기
-export const smallTalkTranscriptPath = (sessionId: number) =>
-  `${smallTalkHistoryPath(sessionId)}/messages`;
+// 오늘의 스몰톡 — 대화를 끝낸 직후 보는 요약. 세션이 주인이라 기록 주소 아래에 산다
+export const smallTalkSummaryPath = (sessionId: number) =>
+  `${smallTalkHistoryPath(sessionId)}/summary`;
+
+// 그날 주고받은 말 다시 보기. 기록에서도 열고 대화 종료 흐름(오늘의 스몰톡 → 상세 피드백)에서도 온다.
+// 종료 흐름에서 왔을 때만 next를 달아, 화면이 하단에 표현 학습으로 이어지는 버튼을 세운다
+export const smallTalkTranscriptPath = (
+  sessionId: number,
+  { next }: { next?: 'learning' } = {},
+) =>
+  `${smallTalkHistoryPath(sessionId)}/messages${next ? `?next=${next}` : ''}`;
 
 // 표현 학습은 /expressions 아래 한자리에 모으고, 둘째 칸에 출처를 세운다.
 // 표현의 주인이 대화 종류마다 다르기 때문이다 — 시나리오 표현은 콘텐츠에 붙어 있어 몇 번을 대화해도 같고,

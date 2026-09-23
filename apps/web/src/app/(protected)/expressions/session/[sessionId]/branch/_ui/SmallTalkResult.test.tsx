@@ -67,6 +67,7 @@ const setup = ({
     error,
     isLoading: false,
     generationStuck,
+    waitExpired: false,
     retry: vi.fn(),
     regenerate: vi.fn(),
   });
@@ -103,6 +104,7 @@ describe('SmallTalkResult', () => {
       error: null,
       isLoading: false,
       generationStuck: false,
+      waitExpired: false,
       retry: vi.fn(),
       regenerate: vi.fn(),
     });

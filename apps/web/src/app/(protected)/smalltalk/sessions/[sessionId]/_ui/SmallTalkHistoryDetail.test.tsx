@@ -2,6 +2,10 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type {
+  SmallTalkHistoryMessage,
+  SmallTalkSessionDetailResponse,
+} from '@/features/small-talk/api/small-talk';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
 
 import { SmallTalkHistoryDetail } from './SmallTalkHistoryDetail';
@@ -32,6 +36,7 @@ describe('SmallTalkHistoryDetail', () => {
       error: null,
       isLoading: true,
       generationStuck: false,
+      waitExpired: false,
       retry: vi.fn(),
       regenerate: vi.fn(),
     });
@@ -44,5 +49,64 @@ describe('SmallTalkHistoryDetail', () => {
       screen.getByRole('status', { name: '표현을 불러오는 중' }),
     ).toBeInTheDocument();
     expect(screen.queryByText('표현을 불러오는 중이에요')).toBeNull();
+  });
+});
+
+describe('SmallTalkHistoryDetail 더 자연스러운 말 뱃지', () => {
+  const message: SmallTalkHistoryMessage = {
+    messageId: 1,
+    turnNumber: 1,
+    messageSequence: 1,
+    role: 'USER',
+    content: 'Hi.',
+    translatedContent: null,
+    emotion: null,
+    innerThought: null,
+    innerThoughtType: null,
+  };
+
+  const renderWithCorrections = (correctionCount: number) => {
+    const session: SmallTalkSessionDetailResponse = {
+      sessionId: 362,
+      title: 'Cardio workout',
+      startedAt: '2026-09-10T09:50:00',
+      completedAt: '2026-09-10T10:00:00',
+      userSpeakingDurationMs: 52_000,
+      messages: [message],
+      expressionGenerationStatus: 'READY',
+      expressionLearningStatus: 'NOT_STARTED',
+      expressions: [],
+      correctionCount,
+    };
+    sessionQuery.mockReturnValue({
+      session,
+      error: null,
+      isLoading: false,
+      generationStuck: false,
+      waitExpired: false,
+      retry: vi.fn(),
+      regenerate: vi.fn(),
+    });
+    render(<SmallTalkHistoryDetail sessionId={362} />);
+  };
+
+  it('교정이 있으면 대화 다시 보기 아이콘에 그 개수가 뱃지로 보인다', () => {
+    renderWithCorrections(2);
+
+    expect(
+      screen.getByRole('button', {
+        name: '대화 다시 보기, 더 자연스러운 말 2개',
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+  });
+
+  it('교정이 없으면 뱃지가 없다', () => {
+    renderWithCorrections(0);
+
+    expect(
+      screen.getByRole('button', { name: '대화 다시 보기' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('0')).not.toBeInTheDocument();
   });
 });

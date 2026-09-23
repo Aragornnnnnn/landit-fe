@@ -41,9 +41,9 @@ const setup = ({
   });
   mainMock.mockReturnValue({
     main: main as SmallTalkMainResponse | null,
-    error: mainError ?? null,
+    fatalError: mainError ?? null,
     isLoading: false,
-    retry: vi.fn(),
+    refresh: vi.fn(),
   });
   render(<SmallTalkFlow startMode="USER_FIRST" partner="chloe" />);
 };

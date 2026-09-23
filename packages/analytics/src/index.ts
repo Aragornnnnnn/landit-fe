@@ -13,6 +13,7 @@ export {
   type TurnInputType,
   type TalkPartner,
   type QuizStepKind,
+  type ExpressionReviewStep,
   type HintSource,
   type HomeReturnReason,
   type RetryScreen,

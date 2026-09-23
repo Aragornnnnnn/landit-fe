@@ -1,7 +1,6 @@
 'use client';
 
 // 스몰톡 탭 — 대화 상대를 고르고, 내가 먼저 걸거나 상대가 주제로 먼저 걸게 한다. 정답도 점수도 없는 대화다
-import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
@@ -12,6 +11,7 @@ import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
 import { useSpeakingLimit } from '@/features/small-talk/model/useSpeakingLimit';
+import { usePromoSheetOpen } from '@/features/subscription/model/promo-handoff';
 import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
 import { track } from '@/shared/analytics';
 import {
@@ -25,6 +25,7 @@ import { ArrowRightIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
 import { useGreetingCoach } from './_model/useGreetingCoach';
 import { usePartnerGreeting } from './_model/usePartnerGreeting';
+import { useTopicPicker } from './_model/useTopicPicker';
 import { CoachBubble, CoachDim } from './_ui/GreetingCoach';
 import { IntroGuide } from './_ui/IntroGuide';
 import { PartnerIntroCard } from './_ui/PartnerIntroCard';
@@ -33,20 +34,23 @@ import { TopicPickerModal } from './_ui/TopicPickerModal';
 
 export default function SmallTalkPage() {
   const router = useRouter();
-  const { main, error, isLoading, retry } = useSmallTalkMainQuery();
+  const { main, fatalError, isLoading, refresh } = useSmallTalkMainQuery();
   // 오늘 예산을 다 썼는지는 서버(canStart)가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
   const exhausted = main !== null && !main.canStart;
   // 무료 구간을 다 쓴 무료 사용자는 스몰톡 시작 대신 페이월로 보낸다
   const gate = usePaywallGate();
   // 결제가 열리면 하루 한도가 없다 — 알약에 잔량 대신 무제한을 쓴다
   const { unlimited } = useSpeakingLimit();
-  const [topicOpen, setTopicOpen] = useState(false);
   const { partner, look, speech, greet, selectPartner } = usePartnerGreeting();
+  // 주제는 서버가 매번 무작위로 뽑아 준다 — 열 때마다, 새로고침할 때마다 다시 받는다
+  const picker = useTopicPicker({ partner: partner.id, refresh });
   // 처음 들어온 사람에겐 래디 안내부터, 닫으면 캐릭터를 눌러 보라는 코치마크 — 둘 다 기기당 한 번이다
   const { guideOpen, coaching, closeGuide, tapPartner, partnerRef, trapFocus } =
     useGreetingCoach({ onTap: greet });
   // 이번 방문에 띄울 시트 하나 — 첫 스몰톡 소감 → 리뷰 요청
   const satisfaction = useSatisfactionSheet('smalltalk');
+  // 할인 시트가 떠 있으면 소감은 미룬다 — 할인은 5분뿐이고 소감은 다음에 또 물을 수 있다
+  const promoOpen = usePromoSheetOpen();
 
   // 캐릭터 탭 인사 — 코치마크가 켜진 채로 눌렀는지도 함께 남긴다 (코치마크가 시킨 첫 탭인지)
   const tapGreeting = () => {
@@ -70,7 +74,7 @@ export default function SmallTalkPage() {
       partner: partner.id,
       topic_id: topic.topicId,
     });
-    setTopicOpen(false);
+    picker.closePicker();
     gate.guard(
       () =>
         router.push(
@@ -84,17 +88,17 @@ export default function SmallTalkPage() {
     );
   };
 
-  if (error) {
+  if (fatalError) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="text-muted-foreground">{error.message}</p>
+        <p className="text-muted-foreground">{fatalError.message}</p>
         <Button
           variant="secondary"
           size="sm"
           className="w-auto px-6"
           onClick={() => {
             track(EVENTS.ERROR_RETRIED, { screen: 'smalltalk' });
-            retry();
+            void refresh();
           }}
         >
           다시 시도
@@ -197,7 +201,7 @@ export default function SmallTalkPage() {
                   variant="ghost"
                   size="md"
                   disabled={isLoading}
-                  onClick={() => setTopicOpen(true)}
+                  onClick={() => void picker.openPicker()}
                 >
                   {partner.koreanName}가 먼저 말 걸기
                   <ArrowRightIcon size={16} />
@@ -211,15 +215,21 @@ export default function SmallTalkPage() {
       {guideOpen && <IntroGuide onClose={closeGuide} />}
       <AnimatePresence>{coaching && <CoachDim />}</AnimatePresence>
       {/* 스몰톡을 마치고 돌아온 사람에게 한 번 — 안내·코치마크는 첫 진입 때 이미 끝난 뒤라 겹치지 않는다 */}
-      {satisfaction.sheet === 'talk' && <SatisfactionGate moment="smalltalk" />}
-      {satisfaction.sheet === 'review' && <SatisfactionGate moment="review" />}
+      {!promoOpen && satisfaction.sheet === 'talk' && (
+        <SatisfactionGate moment="smalltalk" />
+      )}
+      {!promoOpen && satisfaction.sheet === 'review' && (
+        <SatisfactionGate moment="review" />
+      )}
 
       <TopicPickerModal
-        open={topicOpen}
+        open={picker.isOpen}
         partnerName={partner.koreanName}
         topics={main?.topics ?? []}
+        refreshing={picker.refreshing}
+        onRefresh={() => void picker.refreshTopics()}
         onSelect={startWithTopic}
-        onClose={() => setTopicOpen(false)}
+        onClose={picker.closePicker}
       />
     </div>
   );

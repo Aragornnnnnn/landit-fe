@@ -51,6 +51,8 @@ const premium = (overrides: Partial<MySubscription> = {}): MySubscription => ({
   expiresAt: '2026-10-04T12:00:00',
   conversationCompletedSinceLaunch: true,
   productId: 'com.saynow.app.premium.monthly',
+  price: 14_900,
+  currency: 'KRW',
   ...overrides,
 });
 

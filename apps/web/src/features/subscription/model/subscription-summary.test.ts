@@ -34,6 +34,7 @@ describe('summarizeSubscription', () => {
       expiresAt: '2026-10-04T12:00:00',
       renews: true,
       plan: null,
+      price: null,
     });
     expect(
       summarizeSubscription(premium({ periodType: 'INTRO' })),
@@ -46,6 +47,7 @@ describe('summarizeSubscription', () => {
       expiresAt: '2026-10-04T12:00:00',
       renews: true,
       plan: null,
+      price: null,
     });
   });
 
@@ -59,6 +61,7 @@ describe('summarizeSubscription', () => {
       expiresAt: '2026-10-04T12:00:00',
       renews: false,
       plan: null,
+      price: null,
     });
   });
 
@@ -89,5 +92,43 @@ describe('summarizeSubscription', () => {
         expiresAt: null,
       }),
     ).toMatchObject({ plan: null });
+  });
+});
+
+describe('결제 금액', () => {
+  it('실제로 낸 원화 금액을 싣는다 — 상품 id로 금액을 추측하지 않는다', () => {
+    expect(
+      summarizeSubscription(premium({ price: 47000, currency: 'KRW' })),
+    ).toMatchObject({ price: 47000 });
+  });
+
+  it('금액이 없으면 null이다 — 무료 체험이라 결제 이력이 없거나 웹훅이 늦을 때', () => {
+    expect(summarizeSubscription(premium())).toMatchObject({ price: null });
+  });
+
+  it('통화가 안 와도 원화로 본다 — 한국 스토어만 열려 있다', () => {
+    expect(summarizeSubscription(premium({ price: 47000 }))).toMatchObject({
+      price: 47000,
+    });
+  });
+
+  it('0원은 청구가 없다는 뜻이라 null이다 — "다음 결제 금액 0원"을 보여주지 않는다', () => {
+    expect(
+      summarizeSubscription(premium({ price: 0, currency: 'KRW' })),
+    ).toMatchObject({ price: null });
+  });
+
+  it('외화는 null이다 — 하루 환산·비교가 산식이 원화 기준이라 등록값을 쓴다', () => {
+    expect(
+      summarizeSubscription(premium({ price: 59.99, currency: 'USD' })),
+    ).toMatchObject({ price: null });
+  });
+
+  it('할인 상품도 연간으로 읽는다 — 같은 플랜을 가리키는 상품이 둘이다', () => {
+    expect(
+      summarizeSubscription(
+        premium({ productId: 'com.saynow.app.premium.yearly.discount' }),
+      ),
+    ).toMatchObject({ plan: 'yearly' });
   });
 });

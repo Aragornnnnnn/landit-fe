@@ -13,6 +13,7 @@ import { CalendarStrip } from '@/features/scenario/ui/CalendarStrip';
 import { ScenarioBriefing } from '@/features/scenario/ui/ScenarioBriefing';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
 import { TodayCard } from '@/features/scenario/ui/TodayCard';
+import { usePromoSheetOpen } from '@/features/subscription/model/promo-handoff';
 import { track } from '@/shared/analytics';
 import {
   readDateParam,
@@ -49,6 +50,8 @@ function ScenarioContent() {
   const [summonClosed, setSummonClosed] = useState(false);
   // 이번 방문에 띄울 시트 하나 — 소감·리뷰가 없을 때만 알림 동의를 청한다
   const satisfaction = useSatisfactionSheet('scenario');
+  // 할인 시트가 떠 있으면 소감은 미룬다 — 할인은 5분뿐이고 소감은 다음에 또 물을 수 있다
+  const promoOpen = usePromoSheetOpen();
   // 대화 시작을 눌렀다 — 바로 이동하지 않고 브리핑 카드를 잠깐 보여준 뒤 대화로 들어간다
   const [briefingScenario, setBriefingScenario] = useState<Scenario | null>(
     null,
@@ -124,13 +127,13 @@ function ScenarioContent() {
         />
       )}
 
-      {settled && satisfaction.sheet === 'talk' && (
+      {settled && !promoOpen && satisfaction.sheet === 'talk' && (
         <SatisfactionGate moment="scenario" />
       )}
-      {settled && satisfaction.sheet === 'review' && (
+      {settled && !promoOpen && satisfaction.sheet === 'review' && (
         <SatisfactionGate moment="review" />
       )}
-      {promptTurn && <NotificationConsentGate />}
+      {promptTurn && !promoOpen && <NotificationConsentGate />}
 
       {/* 브리핑을 다 보여주면 대화로 넘어간다 — push라 뒤로가기는 이 화면(카드)으로 돌아온다 */}
       {briefingScenario && (

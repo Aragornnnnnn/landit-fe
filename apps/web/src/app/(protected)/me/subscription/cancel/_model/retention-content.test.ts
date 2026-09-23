@@ -16,6 +16,7 @@ const active = (
   expiresAt: '2026-10-04T12:00:00',
   renews: true,
   plan: 'monthly',
+  price: 14_900,
   ...overrides,
 });
 
@@ -52,7 +53,7 @@ describe('retentionContent — 가격 부담', () => {
   it('연간이면 사탕 하나 값 문구와 연 요금 보조 문구가 붙는다', () => {
     const content = retentionContent(
       'price',
-      context(active({ plan: 'yearly' })),
+      context(active({ plan: 'yearly', price: 58_500 })),
     );
 
     expect(content.body[1]).toContain('사탕 하나 값');
@@ -60,6 +61,18 @@ describe('retentionContent — 가격 부담', () => {
       label: '지금 · 연간',
       sublabel: '연 58,500원',
       value: '하루 160원',
+    });
+  });
+
+  it('적용되는 금액이 있으면 그 금액으로 하루 요금을 잰다', () => {
+    const content = retentionContent(
+      'price',
+      context(active({ plan: 'yearly', price: 94_800 })),
+    );
+
+    expect(content.cards[0]).toMatchObject({
+      sublabel: '연 94,800원',
+      value: '하루 260원',
     });
   });
 

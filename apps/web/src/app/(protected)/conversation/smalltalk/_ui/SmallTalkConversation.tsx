@@ -1,6 +1,6 @@
 // 스몰톡 대화 화면 — 세션이 열린 뒤의 본편. 시나리오 대화와 같은 무대·카드·마이크를 쓰되,
 // 오늘 남은 발화 시간을 머리 위에 두고, 끝나면 점수 대신 "얼마나 얘기했는지"를 보여준다.
-// 답은 말로만 한다 — 타이핑은 발화 시간을 안 쓰므로 하루 1분이라는 규칙이 무의미해진다
+// 답은 말로만 한다 — 타이핑한 대화는 "말한 시간"이 0초로 남아 이 화면의 기록이 뜻을 잃는다
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -23,10 +23,7 @@ import type { SmallTalkSessionStartResponse } from '@/features/small-talk/api/sm
 import { toCountdownLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSpeakingLimit } from '@/features/small-talk/model/useSpeakingLimit';
 import { track } from '@/shared/analytics';
-import {
-  sessionExpressionBranchPath,
-  SMALLTALK_PATH,
-} from '@/shared/lib/routes';
+import { SMALLTALK_PATH, smallTalkSummaryPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
@@ -83,6 +80,11 @@ export const SmallTalkConversation = ({
   } = input;
 
   const ended = phase === 'DONE';
+  // 작별 인사가 끝나면 오늘의 스몰톡 라우트를 미리 받아 둔다 — CTA가 버튼이라 링크 자동 프리페치가 안 걸리고,
+  // 누르는 순간 받으면 늦다 (요약 데이터·래디 그림은 흐름 훅이 완료 턴에서 미리 받는다)
+  useEffect(() => {
+    if (ended) router.prefetch(smallTalkSummaryPath(session.sessionId));
+  }, [ended, router, session.sessionId]);
   const showUserFirstIntro =
     turn.isUserOpening && phase === 'USER_READY' && !introDismissed;
   useEffect(() => {
@@ -152,18 +154,15 @@ export const SmallTalkConversation = ({
 
       <footer className="flex-none pb-[max(env(safe-area-inset-bottom),16px)]">
         {ended ? (
-          // 축하 → 맞춤 표현으로 이어진다. 표현은 서버가 지금 만들고 있어 그 화면이 기다린다
+          // 오늘의 스몰톡(지난번과 비교) → 상세 피드백 → 축하·맞춤 표현으로 이어진다.
+          // 버튼은 끝내는 말이 아니라 다음에 볼 것으로 부른다 — 여기서 대화는 이미 끝났다
           <div className="flex h-36 items-end px-5 pb-3">
             <Button
               onClick={() =>
-                router.replace(
-                  sessionExpressionBranchPath(session.sessionId, {
-                    celebrate: true,
-                  }),
-                )
+                router.replace(smallTalkSummaryPath(session.sessionId))
               }
             >
-              대화 종료하기
+              피드백 보러가기
               <ArrowRightIcon size={16} />
             </Button>
           </div>
