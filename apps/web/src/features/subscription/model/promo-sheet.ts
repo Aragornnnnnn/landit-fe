@@ -25,6 +25,7 @@ export interface PromoMonthly {
   yearlyEquivalent: number;
 }
 
+/** 시트가 그릴 값 한 벌 — 두 카드를 같은 기간(1년)으로 놓아야 얼마나 싼지 읽힌다 */
 export interface PromoSheet {
   yearly: PromoYearly;
   monthly: PromoMonthly;

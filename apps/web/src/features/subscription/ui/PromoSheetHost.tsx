@@ -21,6 +21,12 @@ interface PromoSheetHostProps {
   onUnlocked: () => void;
 }
 
+/**
+ * 가격표를 들고 있지 않은 자리에서 할인 시트를 띄운다.
+ *
+ * 스토어 오퍼링이 닿기 전에는 시트를 그릴 수 없으므로, 그동안에도 자리를 맡아
+ * 소감·알림 시트가 먼저 떠 버리지 않게 한다. 9초까지 못 받으면 못 연다고 알리고 되돌린다.
+ */
 export const PromoSheetHost = ({
   open,
   promo,

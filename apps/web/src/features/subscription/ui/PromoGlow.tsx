@@ -7,6 +7,11 @@ import { motion, useReducedMotion } from 'motion/react';
 /** 한 번 부풀었다 가라앉기까지. 맥박처럼 읽힐 만큼만 빠르게 */
 const BREATH_SECONDS = 2.8;
 
+/**
+ * 시트 머리 뒤에 깔리는 빛.
+ *
+ * 읽을 것이 없는 장식이라 `aria-hidden`이고, 동작 줄이기를 켠 사람에게는 숨만 멈추고 빛은 남는다.
+ */
 export const PromoGlow = () => {
   const reduced = useReducedMotion() ?? false;
 
