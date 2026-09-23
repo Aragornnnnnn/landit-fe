@@ -1,7 +1,6 @@
 'use client';
 
 // 스몰톡 탭 — 대화 상대를 고르고, 내가 먼저 걸거나 상대가 주제로 먼저 걸게 한다. 정답도 점수도 없는 대화다
-import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
@@ -26,6 +25,7 @@ import { ArrowRightIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
 import { useGreetingCoach } from './_model/useGreetingCoach';
 import { usePartnerGreeting } from './_model/usePartnerGreeting';
+import { useTopicPicker } from './_model/useTopicPicker';
 import { CoachBubble, CoachDim } from './_ui/GreetingCoach';
 import { IntroGuide } from './_ui/IntroGuide';
 import { PartnerIntroCard } from './_ui/PartnerIntroCard';
@@ -34,15 +34,16 @@ import { TopicPickerModal } from './_ui/TopicPickerModal';
 
 export default function SmallTalkPage() {
   const router = useRouter();
-  const { main, error, isLoading, retry } = useSmallTalkMainQuery();
+  const { main, fatalError, isLoading, refresh } = useSmallTalkMainQuery();
   // 오늘 예산을 다 썼는지는 서버(canStart)가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
   const exhausted = main !== null && !main.canStart;
   // 무료 구간을 다 쓴 무료 사용자는 스몰톡 시작 대신 페이월로 보낸다
   const gate = usePaywallGate();
   // 결제가 열리면 하루 한도가 없다 — 알약에 잔량 대신 무제한을 쓴다
   const { unlimited } = useSpeakingLimit();
-  const [topicOpen, setTopicOpen] = useState(false);
   const { partner, look, speech, greet, selectPartner } = usePartnerGreeting();
+  // 주제는 서버가 매번 무작위로 뽑아 준다 — 열 때마다, 새로고침할 때마다 다시 받는다
+  const picker = useTopicPicker({ partner: partner.id, refresh });
   // 처음 들어온 사람에겐 래디 안내부터, 닫으면 캐릭터를 눌러 보라는 코치마크 — 둘 다 기기당 한 번이다
   const { guideOpen, coaching, closeGuide, tapPartner, partnerRef, trapFocus } =
     useGreetingCoach({ onTap: greet });
@@ -73,7 +74,7 @@ export default function SmallTalkPage() {
       partner: partner.id,
       topic_id: topic.topicId,
     });
-    setTopicOpen(false);
+    picker.closePicker();
     gate.guard(
       () =>
         router.push(
@@ -87,17 +88,17 @@ export default function SmallTalkPage() {
     );
   };
 
-  if (error) {
+  if (fatalError) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="text-muted-foreground">{error.message}</p>
+        <p className="text-muted-foreground">{fatalError.message}</p>
         <Button
           variant="secondary"
           size="sm"
           className="w-auto px-6"
           onClick={() => {
             track(EVENTS.ERROR_RETRIED, { screen: 'smalltalk' });
-            retry();
+            void refresh();
           }}
         >
           다시 시도
@@ -200,7 +201,7 @@ export default function SmallTalkPage() {
                   variant="ghost"
                   size="md"
                   disabled={isLoading}
-                  onClick={() => setTopicOpen(true)}
+                  onClick={() => void picker.openPicker()}
                 >
                   {partner.koreanName}가 먼저 말 걸기
                   <ArrowRightIcon size={16} />
@@ -222,11 +223,13 @@ export default function SmallTalkPage() {
       )}
 
       <TopicPickerModal
-        open={topicOpen}
+        open={picker.isOpen}
         partnerName={partner.koreanName}
         topics={main?.topics ?? []}
+        refreshing={picker.refreshing}
+        onRefresh={() => void picker.refreshTopics()}
         onSelect={startWithTopic}
-        onClose={() => setTopicOpen(false)}
+        onClose={picker.closePicker}
       />
     </div>
   );
