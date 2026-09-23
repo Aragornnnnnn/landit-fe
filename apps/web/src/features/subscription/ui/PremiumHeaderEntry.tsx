@@ -72,8 +72,8 @@ export const PremiumHeaderEntry = () => {
           style={{ background: GOLD_GRADIENT }}
         >
           <span className="tracking-[0.1em]">PREMIUM</span>
-          {/* 숫자만 줄어들면 무엇이 끝나는지 알 수 없어 이름을 함께 적는다 */}
-          <span>웰컴 특가</span>
+          {/* 숫자만 줄어들면 무엇이 끝나는지 알 수 없다. 눌러서 열리는 시트와 같은 말로 부른다 */}
+          <span>할인</span>
           <PromoClock seconds={live.remainingSeconds} />
         </button>
       ) : (
