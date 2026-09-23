@@ -63,7 +63,7 @@ export const usePromoOffer = (
   return remaining > 0 ? { ...promo, remainingSeconds: remaining } : null;
 };
 
-/** 시트가 그릴 할인 한 벌 — 끝났어도 남은 시간 0으로 계속 그린다 */
+/** 시트에 넘길 할인과 만료 여부 — 만료돼도 남은 시간 0으로 계속 그린다 */
 export interface PromoDisplay {
   promo: PaywallPromo;
   expired: boolean;
@@ -72,8 +72,9 @@ export interface PromoDisplay {
 /**
  * 시트에 넘길 값을 정한다.
  *
- * 만료돼도 걷지 않는 게 핵심이다 — 결제 시트가 떠 있는 동안 5분이 지나도 결과를 받아야 하므로,
- * 살아 있는 값이 사라지면 부여받은 원본을 0초로 만들어 자리를 지킨다.
+ * 5분이 지나 `live`가 null이 돼도 시트를 닫지 않는다. 스토어 결제 시트를 띄운 채 만료되는
+ * 일이 흔한데, 여기서 닫으면 결제 결과를 받을 화면이 사라진다. 그래서 `granted`를
+ * `expired: true`로 대신 내보낸다.
  *
  * @param granted 부여받은 원본. 시트를 여는 쪽이 스냅샷해 둔 값이다
  * @param live 남은 시간이 반영된 값. 끝났으면 null

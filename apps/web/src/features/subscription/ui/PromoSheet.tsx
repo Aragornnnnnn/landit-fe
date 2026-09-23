@@ -34,8 +34,8 @@ interface PromoSheetProps {
 /**
  * 한시 할인 바텀시트.
  *
- * 5분이 지나면 스스로 닫힌다. 단 결제가 진행 중이면 남는다 — 스토어 결제 시트를 띄운 채
- * 만료되는 일이 흔한데, 여기서 걷히면 이미 나간 결제의 결과를 받을 곳이 사라진다.
+ * 5분이 지나면 스스로 닫는다. 단 결제가 진행 중이면 남겨 둔다 — 스토어 결제 시트를 띄운 채
+ * 만료되는 일이 흔한데, 여기서 닫으면 이미 나간 결제의 결과를 받을 화면이 사라진다.
  */
 export const PromoSheet = ({
   promo,
@@ -70,15 +70,14 @@ export const PromoSheet = ({
   // 할인 패키지를 못 받았으면 시트를 열지 않는다. 할인가를 보여 놓고 정가로 결제되는 일이 없어야 한다
   if (!sheet) return null;
 
-  // 결제 시트가 떠 있는 동안에는 닫히지 않는다 — 여기서 걷히면 스토어 결제 결과를 받을 곳이 사라진다
+  // 결제가 진행 중이면 닫지 않는다 — 닫으면 스토어 결제 결과를 받을 화면이 사라진다
   const closeIfIdle = () => {
     if (!busy) onClose();
   };
 
   const { yearly, monthly } = sheet;
   const isYearly = selectedPlan === 'yearly';
-  // 할인은 연간에만 있다 — 월간을 고른 채 "할인 받고 시작하기"를 띄우면 거짓말이 된다.
-  // 월간 문구는 페이월 CTA와 같은 말을 쓴다
+  // 할인은 연간에만 있으므로 월간을 고르면 할인율을 적지 않고, 페이월 CTA와 같은 문구를 쓴다
   const ctaLabel = isYearly
     ? `${yearly.discountRate}% 할인 받고 시작하기`
     : `월 ${formatWon(monthly.price)}으로 시작하기`;
@@ -194,7 +193,7 @@ const PlanRow = ({
     aria-label={title}
     aria-pressed={selected}
     onClick={onSelect}
-    // 선택은 테두리와 바탕색만으로 말한다 — 페이월 카드와 같은 문법이라 체크 표시를 두지 않는다
+    // 선택 표시는 테두리와 바탕색만 쓴다 — 페이월 플랜 카드와 같은 규칙이라 체크 아이콘은 두지 않는다
     className={`relative flex items-center justify-between rounded-2xl px-4 py-4 text-left ${
       selected
         ? 'border-2 border-primary bg-[#fffcf8]'

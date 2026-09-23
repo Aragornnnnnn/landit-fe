@@ -32,8 +32,8 @@ export const clearPromoHandoff = () => {
 /**
  * 페이월에서 넘겨받은 할인.
  *
- * 같은 객체를 계속 돌려주므로 시트가 이 값에 기대도 안전하다 — 5분이 지나 서버가 promo를 비워도
- * 열린 시트가 걷히지 않는다. 걷히는 순간 진행 중인 결제의 결과를 받을 곳이 사라진다
+ * 같은 객체를 계속 돌려준다. 그래서 5분이 지나 서버 응답의 promo가 비어도 열려 있던 시트가
+ * 닫히지 않는다 — 닫히면 진행 중인 스토어 결제의 결과를 받을 화면이 사라진다.
  */
 export const useHandedPromo = () =>
   useSyncExternalStore(
@@ -49,7 +49,7 @@ export const setPromoSheetOpen = (open: boolean) => {
   notify();
 };
 
-/** 지금 할인 시트가 떠 있는가. 5분짜리라 다른 시트보다 먼저 자리를 잡는다 */
+/** 지금 할인 시트가 떠 있는가 — 홈의 소감·알림 동의 시트가 이 값을 보고 자신을 미룬다 */
 export const usePromoSheetOpen = () =>
   useSyncExternalStore(
     subscribe,

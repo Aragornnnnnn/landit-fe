@@ -38,10 +38,8 @@ export const PremiumHeaderEntry = () => {
   const live = usePromoOffer(
     PROMO_ENABLED ? (subscription?.promo ?? null) : null,
   );
-  // 시트는 열 때의 할인을 스냅샷해 들고 간다 — 구독 쿼리가 다시 조회돼 promo가 비어도
-  // 열린 시트가 걷히면 안 된다. 걷히는 순간 진행 중인 결제의 결과를 받을 곳이 사라진다
-  // 배지를 눌러 연 할인과, 페이월에서 넘어온 할인.
-  // 구독 쿼리가 다시 조회돼 promo가 비어도 열린 시트가 걷히면 안 된다
+  // 배지를 눌러 연 할인과 페이월에서 넘어온 할인. 둘 다 열 때의 값을 복사해 들고 있는다 —
+  // 구독 쿼리가 다시 조회돼 promo가 비어도 열려 있던 시트가 닫히면 안 된다
   const [tappedPromo, setTappedPromo] = useState<PaywallPromo | null>(null);
   const handedPromo = useHandedPromo();
   const openedPromo = tappedPromo ?? handedPromo;
@@ -52,7 +50,7 @@ export const PremiumHeaderEntry = () => {
     clearPromoHandoff();
   };
 
-  // 팔 것이 없거나(유료·결제 불가) 아직 모를 때는 로고를 둔다 — 결제한 사람에게 업셀이 잠깐이라도 보이면 안 된다
+  // 이미 유료거나 결제할 수 없는 환경이거나 구독 상태를 아직 모를 때는 로고를 둔다 — 결제한 사람에게 구독 권유가 잠깐이라도 보이면 안 된다
   if (!paymentLive || isPending || isError || subscription?.premium) {
     return <HomeLogo />;
   }

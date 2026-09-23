@@ -21,11 +21,11 @@ export interface PromoMonthly {
   packageId: string;
   /** 월 결제액 */
   price: number;
-  /** 1년치 환산액. 연간 카드와 같은 자로 재야 얼마나 싼지 읽힌다 */
+  /** 월 결제액 × 12. 연간과 같은 1년 기준이어야 두 카드를 비교할 수 있다 */
   yearlyEquivalent: number;
 }
 
-/** 시트가 그릴 값 한 벌 — 두 카드를 같은 기간(1년)으로 놓아야 얼마나 싼지 읽힌다 */
+/** 시트에 그릴 카드 두 장 */
 export interface PromoSheet {
   yearly: PromoYearly;
   monthly: PromoMonthly;
@@ -39,11 +39,11 @@ const krwPrice = (pricing?: PlanPricing) =>
 /**
  * 시트에 그릴 값을 만든다.
  *
- * 비교 기준은 **월간으로 1년 쓸 때의 금액**이다. 두 카드가 같은 기간으로 놓여야
- * 얼마나 싼지가 읽히고, 화면에 적히는 할인율도 그 한 자에서 나온다.
+ * 할인율은 월간을 1년 쓸 때의 금액(월 결제액 × 12)과 견줘 계산한다. 연간 정가와 견주면
+ * 정가 인상 전에는 할인율이 0이 나온다.
  *
- * null이면 화면은 시트를 아예 띄우지 않는다. 할인 패키지나 비교할 가격을 못 받았거나,
- * 원화가 아니거나, 깎이는 게 없을 때다. 할인이 아닌 것을 할인이라 부르지 않는다.
+ * @returns 시트에 그릴 값. null이면 시트를 띄우지 않는다 — 할인 패키지나 비교할 월간
+ *   가격을 못 받았을 때, 원화가 아닐 때, 계산한 할인율이 0 이하일 때다
  */
 export const buildPromoSheet = ({
   list,

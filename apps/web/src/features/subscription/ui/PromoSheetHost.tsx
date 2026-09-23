@@ -1,7 +1,7 @@
 'use client';
 
-// 할인 시트를 스토어 가격과 함께 띄운다 — 가격표를 이미 들고 있지 않은 자리(헤더 배지)가 쓴다.
-// 배지가 보이는 동안 매달아 두면 가격을 미리 받아 두게 돼, 눌렀을 때 기다리지 않는다
+// 헤더 배지에서 할인 시트를 열 때 거치는 껍데기 — 스토어 가격을 직접 받아 시트에 넘긴다.
+// 배지가 떠 있는 동안 계속 붙어 있어서, 누르기 전에 가격을 미리 받아 둔다
 import { useEffect } from 'react';
 
 import { showToast } from '@/shared/ui/toast';
@@ -13,7 +13,7 @@ import { useOfferings } from '../model/useOfferings';
 import { PromoSheet } from './PromoSheet';
 
 interface PromoSheetHostProps {
-  /** 시트를 펼칠지. 닫혀 있어도 붙어 있으면서 스토어 가격을 미리 받아 둔다 */
+  /** 시트를 펼칠지. false여도 이 컴포넌트는 붙어 있으면서 스토어 가격을 미리 받아 둔다 */
   open: boolean;
   promo: PaywallPromo;
   expired: boolean;
@@ -22,10 +22,11 @@ interface PromoSheetHostProps {
 }
 
 /**
- * 가격표를 들고 있지 않은 자리에서 할인 시트를 띄운다.
+ * 스토어 가격을 받아 할인 시트에 넘긴다.
  *
- * 스토어 오퍼링이 닿기 전에는 시트를 그릴 수 없으므로, 그동안에도 자리를 맡아
- * 소감·알림 시트가 먼저 떠 버리지 않게 한다. 9초까지 못 받으면 못 연다고 알리고 되돌린다.
+ * 페이월은 가격을 이미 들고 있어 `PromoSheet`를 바로 그리지만, 헤더 배지는 없어서 이걸 거친다.
+ * 가격이 오기 전에는 시트를 그릴 수 없으므로, 그동안 소감·알림 동의 시트가 대신 떠 버리지 않게
+ * `setPromoSheetOpen(true)`를 먼저 호출해 둔다. 9초 안에 못 받으면 토스트를 띄우고 닫는다.
  */
 export const PromoSheetHost = ({
   open,
@@ -37,14 +38,14 @@ export const PromoSheetHost = ({
   const tiers = useOfferings();
   const ready = canShowPromo(tiers);
 
-  // 열라는 말을 들은 순간부터 자리를 맡는다 — 가격을 기다리는 동안 소감·알림 시트가 먼저 떠 버리면 겹친다
+  // open이 켜지는 즉시 알린다 — 가격을 기다리는 동안 소감·알림 동의 시트가 먼저 떠 버리면 겹친다
   useEffect(() => {
     if (!open) return;
     setPromoSheetOpen(true);
     return () => setPromoSheetOpen(false);
   }, [open]);
 
-  // 펼치라는데 할인 가격표가 없으면 죽은 버튼이 된다 — 못 연다고 알리고 되돌린다
+  // 9초가 지나도 가격이 없으면 배지가 눌리지 않는 버튼처럼 보인다 — 못 연다고 알리고 닫는다
   useEffect(() => {
     if (!open || ready) return;
     const timer = setTimeout(() => {
