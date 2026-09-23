@@ -145,7 +145,13 @@ export const PromoSheet = ({
       </section>
 
       <footer className="relative mt-6">
-        <Button onClick={startPurchase} loading={busy}>
+        {/* 높이만 한 단계 낮춘다 — 글자는 큰 버튼 그대로 둬야 눌러야 할 것으로 읽힌다 */}
+        <Button
+          size="md"
+          className="text-base font-bold"
+          onClick={startPurchase}
+          loading={busy}
+        >
           {ctaLabel}
         </Button>
         <nav className="mt-3 flex justify-center gap-3 text-[10px] leading-[1.3] font-medium text-muted-foreground underline">
