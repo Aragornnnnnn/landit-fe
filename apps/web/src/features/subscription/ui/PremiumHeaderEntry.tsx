@@ -20,9 +20,11 @@ import { GOLD_GRADIENT } from './premium-brand';
 import { PromoClock } from './PromoClock';
 import { PromoSheetHost } from './PromoSheetHost';
 
-/** 알약 한 벌 — 진입 링크와 할인 배지가 같은 모양이라 한 곳에 둔다 */
+// 진입 링크와 할인 배지가 같은 모양이라 한 곳에 둔다.
+// rounded-full을 쓰면 스몰톡 주제 칩과 같은 계열로 읽힌다 — 칩은 여럿 중 하나를 고르는 자리이고
+// 이건 결제로 넘어가는 진입점이라, 마이페이지 프리미엄 카드와 같은 버튼 쪽 곡률을 쓴다
 const PILL_CLASS =
-  'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] leading-[1.2] font-bold text-[#4a2f00]';
+  'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] leading-[1.2] font-bold text-[#4a2f00]';
 
 const HomeLogo = () => (
   <Link href={SCENARIO_PATH} aria-label="홈으로">
