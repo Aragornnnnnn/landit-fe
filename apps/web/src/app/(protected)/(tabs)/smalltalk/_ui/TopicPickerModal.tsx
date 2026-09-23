@@ -12,6 +12,9 @@ import { Modal } from '@/shared/ui/Modal';
 // CSS에는 --spin-ms로 내려보낸다 (두 곳에 적어 두면 어긋나는 순간 잠금과 회전이 따로 논다)
 const SPIN_MS = 550;
 
+// 주제를 기다리는 동안 자리를 지키는 빈 알약 — 주제 이름 길이가 제각각이라 폭도 섞어 둔다
+const PLACEHOLDER_WIDTHS = ['w-24', 'w-32', 'w-20', 'w-28', 'w-16'];
+
 interface TopicPickerModalProps {
   open: boolean;
   // 누구와 얘기할지는 이미 골랐다 — 이름을 불러 어느 상대의 주제인지 이어 준다
@@ -71,6 +74,11 @@ const TopicPicker = ({
     [],
   );
 
+  // 아직 한 번도 안 누른 채 받는 중이면, 열면서 받는 중이다 — 지난번 주제를 잠깐 비췄다
+  // 갈아치우면 읽을 새도 없이 글자가 한 번 지나갈 뿐이라, 그 자리를 빈 알약으로 둔다.
+  // 눌러서 받을 때는 반대로 보던 주제를 남긴다 (사용자가 방금 그걸 보고 누른 것이다)
+  const awaitingTopics = refreshing && spins === 0;
+
   const requestRefresh = () => {
     setSpins((count) => count + 1);
     setCooling(true);
@@ -89,20 +97,28 @@ const TopicPicker = ({
           받아오는 동안에도 칩을 비우지 않는다 — 비우면 모달 높이가 접혔다 펴진다.
           주제가 갈리면 줄째로 새로 마운트돼(key) 칩이 차례로 올라온다 */}
       <div
-        key={topics.map((topic) => topic.topicId).join()}
+        key={awaitingTopics ? 'awaiting' : topics.map((t) => t.topicId).join()}
         className="mt-5 flex flex-wrap justify-center gap-2"
       >
-        {topics.map((topic, index) => (
-          <button
-            key={topic.topicId}
-            type="button"
-            onClick={() => onSelect(topic)}
-            style={{ '--i': index } as React.CSSProperties}
-            className="animate-chip-in rounded-full bg-secondary px-4 py-2.5 text-sm font-semibold text-secondary-foreground transition-transform active:scale-95"
-          >
-            {topic.displayName}
-          </button>
-        ))}
+        {awaitingTopics
+          ? PLACEHOLDER_WIDTHS.map((width) => (
+              <span
+                key={width}
+                aria-hidden="true"
+                className={`h-[42px] animate-pulse rounded-full bg-secondary ${width}`}
+              />
+            ))
+          : topics.map((topic, index) => (
+              <button
+                key={topic.topicId}
+                type="button"
+                onClick={() => onSelect(topic)}
+                style={{ '--i': index } as React.CSSProperties}
+                className="animate-chip-in rounded-full bg-secondary px-4 py-2.5 text-sm font-semibold text-secondary-foreground transition-transform active:scale-95"
+              >
+                {topic.displayName}
+              </button>
+            ))}
       </div>
       {/* 주제를 바꾸는 길 — 칩을 고르는 것이 주 행동이라 그 아래 잔글씨로 둔다 */}
       <div className="mt-4 flex justify-center">
