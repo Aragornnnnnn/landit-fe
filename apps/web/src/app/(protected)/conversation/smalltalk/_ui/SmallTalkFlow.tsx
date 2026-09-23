@@ -38,8 +38,9 @@ export const SmallTalkFlow = ({
   const { main, error: mainError } = useSmallTalkMainQuery();
 
   // 세션을 못 열었거나 오늘 남은 시간을 못 받았거나 — 어느 쪽이든 대화를 열 수 없다.
+  // 받아 둔 잔량이 있으면 그것으로 연다 — 홈에서 주제를 새로 받다 실패한 것까지 대화를 막을 이유는 없다.
   // 잔량 조회가 실패한 경우엔 세션이 이미 열려 있을 수 있어 돌아가면서 정리한다(안 열렸으면 end는 아무 일도 안 한다)
-  if (error || mainError) {
+  if (error || (mainError && !main)) {
     return (
       <main className="mx-auto flex h-dvh max-w-[430px] flex-col items-center justify-center gap-4 bg-background px-6 text-center">
         <p className="break-keep text-muted-foreground">
