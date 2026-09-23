@@ -1,7 +1,11 @@
-// 주제 고르기 — 상대가 먼저 말을 걸려면 무슨 얘기로 열지 정해야 한다
+// 주제 고르기 — 상대가 먼저 말을 걸려면 무슨 얘기로 열지 정해야 한다.
+// 보여주는 몇 개는 주제 풀에서 무작위로 뽑힌 것이라, 마음에 드는 게 없으면 다시 받아 볼 수 있다
 'use client';
 
+import { useState } from 'react';
+
 import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
+import { RefreshIcon } from '@/shared/ui/Icons';
 import { Modal } from '@/shared/ui/Modal';
 
 interface TopicPickerModalProps {
@@ -9,6 +13,9 @@ interface TopicPickerModalProps {
   // 누구와 얘기할지는 이미 골랐다 — 이름을 불러 어느 상대의 주제인지 이어 준다
   partnerName: string;
   topics: SmallTalkTopic[];
+  // 새 주제를 받아오는 중 — 보고 있던 칩은 그대로 고를 수 있고, 새로고침만 잠긴다
+  refreshing: boolean;
+  onRefresh: () => void;
   onSelect: (topic: SmallTalkTopic) => void;
   onClose: () => void;
 }
@@ -17,31 +24,65 @@ export const TopicPickerModal = ({
   open,
   partnerName,
   topics,
+  refreshing,
+  onRefresh,
   onSelect,
   onClose,
-}: TopicPickerModalProps) => (
-  <Modal
-    open={open}
-    onClose={onClose}
-    label={`${partnerName}와 어떤 주제로 대화할까요?`}
-  >
-    {/* 왼쪽 제목 ↔ 오른쪽 닫기로 한 줄을 잡는다. 오른쪽 여백은 X 자리를 비켜 준다.
-        색은 검정 — 눌러야 할 건 칩이라 주황은 그쪽에 양보한다 */}
-    <h2 className="pr-8 text-[17px] font-bold text-foreground">
-      {partnerName}와 어떤 주제로 대화할까요?
-    </h2>
-    {/* 칩 길이가 제각각이라 줄바꿈에 맡기고 가운데로 모은다 */}
-    <div className="mt-5 flex flex-wrap justify-center gap-2">
-      {topics.map((topic) => (
+}: TopicPickerModalProps) => {
+  // 누른 횟수 — 아이콘을 새로 마운트해 한 바퀴 애니메이션을 다시 태운다.
+  // 응답이 빨라도 늦어도 "눌렀다"는 것은 똑같이 한 바퀴로 보인다
+  const [spins, setSpins] = useState(0);
+  const requestRefresh = () => {
+    setSpins((count) => count + 1);
+    onRefresh();
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      label={`${partnerName}와 어떤 주제로 대화할까요?`}
+    >
+      {/* 왼쪽 제목 ↔ 오른쪽 닫기로 한 줄을 잡는다. 오른쪽 여백은 X 자리를 비켜 준다.
+          색은 검정 — 눌러야 할 건 칩이라 주황은 그쪽에 양보한다 */}
+      <h2 className="pr-8 text-[17px] font-bold text-foreground">
+        {partnerName}와 어떤 주제로 대화할까요?
+      </h2>
+      {/* 칩 길이가 제각각이라 줄바꿈에 맡기고 가운데로 모은다.
+          받아오는 동안에도 칩을 비우지 않는다 — 비우면 모달 높이가 접혔다 펴진다.
+          주제가 갈리면 줄째로 새로 마운트돼(key) 칩이 차례로 올라온다 */}
+      <div
+        key={topics.map((topic) => topic.topicId).join()}
+        className="mt-5 flex flex-wrap justify-center gap-2"
+      >
+        {topics.map((topic, index) => (
+          <button
+            key={topic.topicId}
+            type="button"
+            onClick={() => onSelect(topic)}
+            style={{ '--i': index } as React.CSSProperties}
+            className="animate-chip-in rounded-full bg-secondary px-4 py-2.5 text-sm font-semibold text-secondary-foreground transition-transform active:scale-95"
+          >
+            {topic.displayName}
+          </button>
+        ))}
+      </div>
+      {/* 주제를 바꾸는 길 — 칩을 고르는 것이 주 행동이라 그 아래 잔글씨로 둔다 */}
+      <div className="mt-4 flex justify-center">
         <button
-          key={topic.topicId}
           type="button"
-          onClick={() => onSelect(topic)}
-          className="rounded-full bg-secondary px-4 py-2.5 text-sm font-semibold text-secondary-foreground transition-transform active:scale-95"
+          disabled={refreshing}
+          onClick={requestRefresh}
+          className="flex items-center gap-1.5 px-2 py-1 text-[13px] font-semibold text-muted-foreground active:opacity-60 disabled:opacity-40"
         >
-          {topic.displayName}
+          <RefreshIcon
+            key={spins}
+            size={14}
+            className={spins > 0 ? 'animate-spin-turn' : undefined}
+          />
+          다른 주제 보기
         </button>
-      ))}
-    </div>
-  </Modal>
-);
+      </div>
+    </Modal>
+  );
+};

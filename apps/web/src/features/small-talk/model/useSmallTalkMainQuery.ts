@@ -20,6 +20,11 @@ export const useSmallTalkMainQuery = () => {
     main: data ?? null,
     error,
     isLoading: isPending,
-    retry: () => void refetch(),
+    // 다시 받아오기 — 서버는 주제를 요청마다 무작위로 다시 뽑으므로 부를 때마다 다른 주제가 온다.
+    // 실패해도 이미 받아 둔 것은 캐시에 그대로 남는다 — 부른 쪽이 결과를 보고 알린다
+    refresh: async () => {
+      const { isError } = await refetch();
+      return { isError };
+    },
   };
 };

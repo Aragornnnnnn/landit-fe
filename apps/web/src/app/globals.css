@@ -358,6 +358,15 @@
   }
 }
 
+@keyframes spin-turn {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @layer utilities {
   /* --i가 줄 번호 — 90ms 간격으로 계단처럼. 여섯 줄이 0.8초 안에 끝난다 */
   .animate-check-in {
@@ -429,5 +438,24 @@
 
   .animate-pop {
     animation: pop 0.45s ease;
+  }
+
+  /* 새로고침 아이콘 한 바퀴 — 응답이 아무리 빨라도 누른 것이 눈에 보이게 한 바퀴는 돈다 */
+  .animate-spin-turn {
+    animation: spin-turn 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* 새로 받은 주제가 차례로 올라온다 — --i가 칩 번호.
+     다섯 개가 0.4초 안에 다 서도록 짧게 — 길면 빈 줄을 보고 있는 시간이 된다 */
+  .animate-chip-in {
+    animation: fade-up 0.26s ease-out both;
+    animation-delay: calc(var(--i, 0) * 35ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-spin-turn,
+    .animate-chip-in {
+      animation: none;
+    }
   }
 }

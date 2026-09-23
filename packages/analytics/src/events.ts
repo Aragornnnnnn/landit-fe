@@ -75,6 +75,7 @@ export const EVENTS = {
   // 앞의 넷은 탭에서 대화를 시작하기 전 갈림길(상대·주제·안내·인사)이다
   SMALL_TALK_PARTNER_SELECTED: 'Small Talk Partner Selected',
   SMALL_TALK_TOPIC_SELECTED: 'Small Talk Topic Selected',
+  SMALL_TALK_TOPICS_REFRESHED: 'Small Talk Topics Refreshed',
   SMALL_TALK_INTRO_GUIDE_CLOSED: 'Small Talk Intro Guide Closed',
   SMALL_TALK_GREETING_TAPPED: 'Small Talk Greeting Tapped',
   SMALL_TALK_STARTED: 'Small Talk Started',
@@ -469,6 +470,8 @@ export type EventProps = {
   // 종료 후 넷(요약·피드백)은 응답에 상대가 없어 싣지 않는다 — session_id로 Started와 조인한다
   'Small Talk Partner Selected': { partner: TalkPartner };
   'Small Talk Topic Selected': { partner: TalkPartner; topic_id: number };
+  // 보여준 주제가 마음에 안 들어 다른 주제를 받았다 (열 때 자동으로 받는 것은 세지 않는다)
+  'Small Talk Topics Refreshed': { partner: TalkPartner };
   'Small Talk Intro Guide Closed': undefined;
   // coached = 코치마크가 켜진 채로 눌렀는지 (코치마크가 시킨 첫 탭)
   'Small Talk Greeting Tapped': { partner: TalkPartner; coached: boolean };
