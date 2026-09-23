@@ -67,9 +67,35 @@ describe('TopicPickerModal', () => {
     expect(onRefresh).toHaveBeenCalledTimes(1);
   });
 
-  it('받아오는 동안에도 보던 주제는 그대로 있다', () => {
+  it('눌러서 받아오는 동안에는 보던 주제가 그대로 있다', async () => {
+    // given — 주제를 보다가 새로고침을 눌렀다
+    const { rerender } = renderModal();
+    await userEvent.click(
+      screen.getByRole('button', { name: '다른 주제 보기' }),
+    );
+
+    // when — 받아오는 중이 된다
+    rerender(
+      <TopicPickerModal
+        open
+        partnerName="클로이"
+        topics={TOPICS}
+        refreshing
+        onRefresh={vi.fn()}
+        onSelect={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    // then
+    expect(screen.getByText('주말 계획')).toBeInTheDocument();
+  });
+
+  it('열자마자 받는 중이면 지난번 주제를 보여주지 않는다', () => {
+    // given + when — 열 때마다 새로 받으므로, 열린 순간 이미 받는 중이다
     renderModal({ refreshing: true });
 
-    expect(screen.getByText('주말 계획')).toBeInTheDocument();
+    // then — 곧 갈릴 주제를 비추는 대신 빈 자리로 기다린다
+    expect(screen.queryByText('주말 계획')).not.toBeInTheDocument();
   });
 });
