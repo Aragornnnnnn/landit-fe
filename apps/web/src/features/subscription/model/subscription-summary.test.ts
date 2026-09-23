@@ -96,13 +96,13 @@ describe('summarizeSubscription', () => {
 });
 
 describe('결제 금액', () => {
-  it('앞으로 청구될 원화 금액을 싣는다 — 상품 id로 금액을 추측하지 않는다', () => {
+  it('실제로 낸 원화 금액을 싣는다 — 상품 id로 금액을 추측하지 않는다', () => {
     expect(
       summarizeSubscription(premium({ price: 47000, currency: 'KRW' })),
     ).toMatchObject({ price: 47000 });
   });
 
-  it('금액이 없으면 null이다 — 웹훅이 늦거나 청구가 예정되지 않았을 때', () => {
+  it('금액이 없으면 null이다 — 무료 체험이라 결제 이력이 없거나 웹훅이 늦을 때', () => {
     expect(summarizeSubscription(premium())).toMatchObject({ price: null });
   });
 

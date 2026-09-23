@@ -39,8 +39,8 @@ export interface MySubscription {
   productId?: string | null;
   // 결제한 스토어 — 구독 관리 링크를 셸 플랫폼 대신 이걸로 고른다. 프리미엄이 꺼져 있으면 null
   store?: SubscriptionStore | null;
-  // 이 구독에 적용되는 금액과 통화 — 지난 영수증이 아니라 앞으로 청구될 금액이다(체험 중이면 체험 후 청구액).
-  // 같은 상품 id로 서로 다른 금액을 내는 구독자가 있어 상품으로는 알 수 없다. 청구가 예정되지 않았으면 null
+  // 가장 최근 실제 결제의 금액과 ISO 4217 통화 — 앞으로 청구될 금액이 아니라 결제 이력이다.
+  // 같은 상품 id로 서로 다른 금액을 내는 구독자가 있어 상품으로는 알 수 없다. 결제 이력이 없으면(무료 체험) null
   price?: number | null;
   currency?: string | null;
   // 진행 중인 한시 할인. 없거나 끝났으면 null — 홈 배지와 할인 시트가 이걸 보고 그린다
