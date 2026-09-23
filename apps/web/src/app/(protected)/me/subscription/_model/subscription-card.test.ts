@@ -67,13 +67,13 @@ describe('toDateRow', () => {
 });
 
 describe('toAmountRow', () => {
-  it('BE 금액이 없으면 등록값으로 그린다 — 금액 행이 사라지지 않게', () => {
-    expect(toAmountRow(active({ plan: 'yearly' }))).toEqual({
+  it('연간은 월간 1년치를 비교가로, 월간은 금액만', () => {
+    expect(toAmountRow(active({ plan: 'yearly', price: 58_500 }))).toEqual({
       label: '다음 결제 금액',
       value: '58,500원',
       listPrice: '178,800원',
     });
-    expect(toAmountRow(active({ plan: 'monthly' }))).toEqual({
+    expect(toAmountRow(active({ plan: 'monthly', price: 14_900 }))).toEqual({
       label: '다음 결제 금액',
       value: '14,900원',
       listPrice: undefined,
@@ -88,10 +88,15 @@ describe('toAmountRow', () => {
     });
   });
 
+  it('실제 결제액을 모르면 금액 행이 없다 — 무료 체험 중엔 결제 이력이 없어 등록값으로 추측하지 않는다', () => {
+    expect(toAmountRow(active({ kind: 'trial', plan: 'yearly' }))).toBeNull();
+  });
+
   it('체험은 첫 결제 금액이고, 플랜을 모르거나 갱신이 안 되면 행이 없다', () => {
-    expect(toAmountRow(active({ kind: 'trial', plan: 'yearly' }))?.label).toBe(
-      '첫 결제 금액',
-    );
+    expect(
+      toAmountRow(active({ kind: 'trial', plan: 'yearly', price: 58_500 }))
+        ?.label,
+    ).toBe('첫 결제 금액');
     expect(toAmountRow(active())).toBeNull();
     expect(
       toAmountRow(active({ kind: 'canceled', renews: false, plan: 'yearly' })),

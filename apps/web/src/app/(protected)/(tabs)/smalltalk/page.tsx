@@ -12,6 +12,7 @@ import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
 import { useSpeakingLimit } from '@/features/small-talk/model/useSpeakingLimit';
+import { usePromoSheetOpen } from '@/features/subscription/model/promo-handoff';
 import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
 import { track } from '@/shared/analytics';
 import {
@@ -47,6 +48,8 @@ export default function SmallTalkPage() {
     useGreetingCoach({ onTap: greet });
   // 이번 방문에 띄울 시트 하나 — 첫 스몰톡 소감 → 리뷰 요청
   const satisfaction = useSatisfactionSheet('smalltalk');
+  // 할인 시트가 떠 있으면 소감은 미룬다 — 할인은 5분뿐이고 소감은 다음에 또 물을 수 있다
+  const promoOpen = usePromoSheetOpen();
 
   // 캐릭터 탭 인사 — 코치마크가 켜진 채로 눌렀는지도 함께 남긴다 (코치마크가 시킨 첫 탭인지)
   const tapGreeting = () => {
@@ -211,8 +214,12 @@ export default function SmallTalkPage() {
       {guideOpen && <IntroGuide onClose={closeGuide} />}
       <AnimatePresence>{coaching && <CoachDim />}</AnimatePresence>
       {/* 스몰톡을 마치고 돌아온 사람에게 한 번 — 안내·코치마크는 첫 진입 때 이미 끝난 뒤라 겹치지 않는다 */}
-      {satisfaction.sheet === 'talk' && <SatisfactionGate moment="smalltalk" />}
-      {satisfaction.sheet === 'review' && <SatisfactionGate moment="review" />}
+      {!promoOpen && satisfaction.sheet === 'talk' && (
+        <SatisfactionGate moment="smalltalk" />
+      )}
+      {!promoOpen && satisfaction.sheet === 'review' && (
+        <SatisfactionGate moment="review" />
+      )}
 
       <TopicPickerModal
         open={topicOpen}

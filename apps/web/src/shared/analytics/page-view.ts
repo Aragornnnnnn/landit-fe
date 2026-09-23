@@ -51,6 +51,7 @@ const PAYWALL_SOURCES: Record<PaywallSource, true> = {
   conversation_finished: true,
   feedback_detail: true,
   me: true,
+  header: true,
 };
 
 const readPaywallSource = (raw: string | null): PaywallSource | undefined =>
