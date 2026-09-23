@@ -32,7 +32,31 @@ export const TopicPickerModal = ({
   onRefresh,
   onSelect,
   onClose,
-}: TopicPickerModalProps) => {
+}: TopicPickerModalProps) => (
+  <Modal
+    open={open}
+    onClose={onClose}
+    label={`${partnerName}와 어떤 주제로 대화할까요?`}
+  >
+    <TopicPicker
+      partnerName={partnerName}
+      topics={topics}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      onSelect={onSelect}
+    />
+  </Modal>
+);
+
+// 모달 안쪽 — 닫히면 Modal이 이 안을 통째로 걷어낸다. 회전·잠금 같은 한 번의 연출 상태를
+// 여기 두어야 다음에 열 때 따라오지 않는다 (바깥은 닫혀도 계속 마운트돼 있다)
+const TopicPicker = ({
+  partnerName,
+  topics,
+  refreshing,
+  onRefresh,
+  onSelect,
+}: Omit<TopicPickerModalProps, 'open' | 'onClose'>) => {
   // 누른 횟수 — 아이콘을 새로 마운트해 한 바퀴 애니메이션을 다시 태운다.
   // 응답이 빨라도 늦어도 "눌렀다"는 것은 똑같이 한 바퀴로 보인다
   const [spins, setSpins] = useState(0);
@@ -55,11 +79,7 @@ export const TopicPickerModal = ({
   };
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      label={`${partnerName}와 어떤 주제로 대화할까요?`}
-    >
+    <>
       {/* 왼쪽 제목 ↔ 오른쪽 닫기로 한 줄을 잡는다. 오른쪽 여백은 X 자리를 비켜 준다.
           색은 검정 — 눌러야 할 건 칩이라 주황은 그쪽에 양보한다 */}
       <h2 className="pr-8 text-[17px] font-bold text-foreground">
@@ -101,6 +121,6 @@ export const TopicPickerModal = ({
           다른 주제 보기
         </button>
       </div>
-    </Modal>
+    </>
   );
 };

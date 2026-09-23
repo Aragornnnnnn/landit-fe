@@ -14,6 +14,10 @@ export const useSmallTalkMainQuery = () => {
     queryFn: getSmallTalkTopics,
     // 로그아웃 직후 리다이렉트 전 한 프레임에 userId 없는 키로 fetch가 나가는 것을 막는다
     enabled: userId !== null,
+    // 앱으로 돌아올 때 자동으로 다시 받지 않는다 — 서버가 주제를 매번 새로 뽑아 주기 때문에,
+    // 주제 고르기를 열어 둔 채 복귀하면 누르지도 않았는데 읽던 주제가 갈린다.
+    // 잔량은 대화를 마칠 때 무효화하고 화면에 들어올 때 다시 받는다
+    refetchOnWindowFocus: false,
   });
 
   return {
