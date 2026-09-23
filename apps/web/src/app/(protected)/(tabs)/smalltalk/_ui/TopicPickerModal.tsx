@@ -8,7 +8,8 @@ import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
 import { RefreshIcon } from '@/shared/ui/Icons';
 import { Modal } from '@/shared/ui/Modal';
 
-// 아이콘이 한 바퀴 도는 시간 (globals.css의 animate-spin-turn과 같은 값)
+// 아이콘이 한 바퀴 도는 시간 — 이 값이 애니메이션 길이이자 버튼이 잠기는 시간이다.
+// CSS에는 --spin-ms로 내려보낸다 (두 곳에 적어 두면 어긋나는 순간 잠금과 회전이 따로 논다)
 const SPIN_MS = 550;
 
 interface TopicPickerModalProps {
@@ -94,6 +95,7 @@ export const TopicPickerModal = ({
           <RefreshIcon
             key={spins}
             size={14}
+            style={{ '--spin-ms': `${SPIN_MS}ms` } as React.CSSProperties}
             className={spins > 0 ? 'animate-spin-turn' : undefined}
           />
           다른 주제 보기

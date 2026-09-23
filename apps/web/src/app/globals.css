@@ -440,9 +440,10 @@
     animation: pop 0.45s ease;
   }
 
-  /* 새로고침 아이콘 한 바퀴 — 응답이 아무리 빨라도 누른 것이 눈에 보이게 한 바퀴는 돈다 */
+  /* 새로고침 아이콘 한 바퀴 — 응답이 아무리 빨라도 누른 것이 눈에 보이게 한 바퀴는 돈다.
+     도는 시간은 쓰는 쪽이 --spin-ms로 정한다 (버튼 잠금 시간과 같은 값을 둘이 나눠 갖지 않게) */
   .animate-spin-turn {
-    animation: spin-turn 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    animation: spin-turn var(--spin-ms, 550ms) cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   /* 새로 받은 주제가 차례로 올라온다 — --i가 칩 번호.

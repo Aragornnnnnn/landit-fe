@@ -41,7 +41,7 @@ const setup = ({
   });
   mainMock.mockReturnValue({
     main: main as SmallTalkMainResponse | null,
-    error: mainError ?? null,
+    fatalError: mainError ?? null,
     isLoading: false,
     refresh: vi.fn(),
   });

@@ -33,7 +33,7 @@ import { TopicPickerModal } from './_ui/TopicPickerModal';
 
 export default function SmallTalkPage() {
   const router = useRouter();
-  const { main, error, isLoading, refresh } = useSmallTalkMainQuery();
+  const { main, fatalError, isLoading, refresh } = useSmallTalkMainQuery();
   // 오늘 예산을 다 썼는지는 서버(canStart)가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
   const exhausted = main !== null && !main.canStart;
   // 무료 구간을 다 쓴 무료 사용자는 스몰톡 시작 대신 페이월로 보낸다
@@ -85,11 +85,10 @@ export default function SmallTalkPage() {
     );
   };
 
-  // 새로고침이 실패해도 이미 받아 둔 주제와 잔량은 그대로 쓸 수 있다 — 화면을 통째로 에러로 덮지 않는다
-  if (error && !main) {
+  if (fatalError) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="text-muted-foreground">{error.message}</p>
+        <p className="text-muted-foreground">{fatalError.message}</p>
         <Button
           variant="secondary"
           size="sm"
@@ -220,7 +219,7 @@ export default function SmallTalkPage() {
         open={picker.isOpen}
         partnerName={partner.koreanName}
         topics={main?.topics ?? []}
-        refreshing={picker.isLoading}
+        refreshing={picker.refreshing}
         onRefresh={() => void picker.refreshTopics()}
         onSelect={startWithTopic}
         onClose={picker.closePicker}

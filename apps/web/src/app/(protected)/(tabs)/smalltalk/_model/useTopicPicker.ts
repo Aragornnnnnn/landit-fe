@@ -20,7 +20,7 @@ export const useTopicPicker = ({ partner, refresh }: TopicPickerOptions) => {
   const [isOpen, setIsOpen] = useState(false);
   // 이 모달이 시킨 조회만 센다 — 홈 조회는 대화 후 갱신·앱 복귀로도 도는데,
   // 그때까지 새로고침이 도는 것처럼 보이면 누르지 않은 일이 화면에 나타난다
-  const [isLoading, setIsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   // 실패는 재시도를 다 쓰고 나서야 돌아온다 — 그새 닫았거나 대화로 들어갔는지 알아야
   // 관심 없는 안내가 다른 화면 위에 뜨지 않는다 (상태가 아니라 콜백이 읽을 값이라 ref)
   const isOpenRef = useRef(false);
@@ -32,15 +32,15 @@ export const useTopicPicker = ({ partner, refresh }: TopicPickerOptions) => {
   );
 
   const loadTopics = async () => {
-    setIsLoading(true);
+    setRefreshing(true);
     const { isError } = await refresh();
-    setIsLoading(false);
+    setRefreshing(false);
     if (isError && isOpenRef.current) showToast('주제를 받아오지 못했어요');
   };
 
   return {
     isOpen,
-    isLoading,
+    refreshing,
     // 열 때도 다시 받는다 — 캐시에 남은 주제를 다시 보여주면 어제 본 다섯 개가 또 나온다
     openPicker: () => {
       isOpenRef.current = true;
