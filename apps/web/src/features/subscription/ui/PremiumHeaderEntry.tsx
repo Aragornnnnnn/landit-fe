@@ -16,13 +16,14 @@ import { clearPromoHandoff, useHandedPromo } from '../model/promo-handoff';
 import { usePaymentLive } from '../model/usePaymentLive';
 import { resolvePromoDisplay, usePromoOffer } from '../model/usePromoOffer';
 import { useSubscriptionQuery } from '../model/useSubscriptionQuery';
-import { GOLD_GRADIENT } from './premium-brand';
 import { PromoClock } from './PromoClock';
 import { PromoSheetHost } from './PromoSheetHost';
 
-/** 알약 한 벌 — 진입 링크와 할인 배지가 같은 모양이라 한 곳에 둔다 */
+// 진입 링크와 할인 배지가 같은 모양이라 한 곳에 둔다.
+// rounded-full을 쓰면 스몰톡 주제 칩과 같은 계열로 읽힌다 — 칩은 여럿 중 하나를 고르는 자리이고
+// 이건 결제로 넘어가는 진입점이라, 마이페이지 프리미엄 카드와 같은 버튼 쪽 곡률을 쓴다
 const PILL_CLASS =
-  'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] leading-[1.2] font-bold text-[#4a2f00]';
+  'flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-[13px] leading-[1.2] font-bold text-[#4a2f00]';
 
 const HomeLogo = () => (
   <Link href={SCENARIO_PATH} aria-label="홈으로">
@@ -66,8 +67,7 @@ export const PremiumHeaderEntry = () => {
         <button
           type="button"
           onClick={openSheet}
-          className={PILL_CLASS}
-          style={{ background: GOLD_GRADIENT }}
+          className={`${PILL_CLASS} animate-gold-flow`}
         >
           <span className="tracking-[0.1em]">PREMIUM</span>
           {/* 숫자만 줄어들면 무엇이 끝나는지 알 수 없다. 눌러서 열리는 시트와 같은 말로 부른다 */}
@@ -80,8 +80,7 @@ export const PremiumHeaderEntry = () => {
           onClick={() =>
             track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'header' })
           }
-          className={PILL_CLASS}
-          style={{ background: GOLD_GRADIENT }}
+          className={`${PILL_CLASS} animate-gold-flow animate-gold-sheen`}
         >
           <span className="tracking-[0.1em]">PREMIUM</span>
           <span>시작하기</span>
