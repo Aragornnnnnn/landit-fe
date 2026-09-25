@@ -64,14 +64,18 @@ export const widgetChangeSchema = z.enum(['added', 'removed']);
 export const subscriptionPlanSchema = z.enum(['monthly', 'yearly']);
 
 // 스토어 오퍼링의 패키지 하나 — 셸이 RevenueCat 패키지를 웹이 그릴 수 있는 모양으로 옮긴 것.
-// plan은 셸이 packageType(MONTHLY/ANNUAL)으로 판단해 붙인다 — 웹이 identifier 규칙에 기대지 않게
+// 셸은 거르지 않고 그대로 넘긴다. `plan`은 셸이 예약 식별자로 알아본 값이고(웹도 이걸 먼저 믿는다),
+// `period`는 그러지 못한 패키지를 웹이 판정하는 데 쓴다 — 새 상품을 붙일 때 앱을 다시 내지 않으려는 것이다
 export const offeringPackageSchema = z.object({
   // RevenueCat 패키지 identifier (예: $rc_monthly). PURCHASE가 이 값을 되돌려 보낸다
   id: z.string().min(1),
-  plan: subscriptionPlanSchema,
+  // 셸이 예약 식별자($rc_monthly·$rc_annual)로 알아본 플랜. 커스텀 이름이면 null이고 웹이 period로 정한다
+  plan: subscriptionPlanSchema.nullable().default(null),
   // 숫자 가격과 통화(ISO 4217) — 웹은 KRW일 때만 이 숫자로 카드를 다시 계산한다
   price: z.number().nonnegative(),
   currency: z.string().length(3),
+  // 구독 주기 ISO 8601 원문(P1M·P1Y…). 이 필드를 보내지 않는 구버전 셸이 있어 없을 수 있다
+  period: z.string().nullable().default(null),
 });
 
 // 결제 결과 — 사용자가 시트를 닫은 취소는 실패가 아니다. 복원엔 취소가 없다
