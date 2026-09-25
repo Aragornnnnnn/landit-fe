@@ -52,7 +52,9 @@ export const toPlanPricing = (packages: OfferingPackage[]): PlanPricingMap => {
     }
   };
   fill(reservedPlan);
-  fill(periodPlan);
+  // 예약 식별자로 이미 자리를 잡은 패키지는 주기 판정에서 뺀다 — 셸이 말한 플랜과 주기가
+  // 어긋난 패키지(월간 칸에 1년 상품)가 두 자리를 다 차지하면 두 플랜이 같은 상품을 결제한다
+  fill((pkg) => (reservedPlan(pkg) ? undefined : periodPlan(pkg)));
   return map;
 };
 

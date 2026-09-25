@@ -75,6 +75,15 @@ describe('toPlanPricing', () => {
     });
   });
 
+  it('예약 식별자로 자리를 잡은 패키지는 주기로 다른 자리까지 차지하지 않는다', () => {
+    // 월간 칸에 1년 상품이 물린 오설정 — 그대로 두면 월간·연간이 같은 상품을 결제한다
+    const mismatched = { ...monthly, period: 'P1Y' };
+
+    expect(toPlanPricing([mismatched])).toEqual({
+      monthly: { packageId: '$rc_monthly', price: 9900, currency: 'KRW' },
+    });
+  });
+
   it('예약 식별자가 없으면 그 자리는 주기로 정해진 패키지가 채운다', () => {
     const impostor = { ...yearlyDiscount, id: 'annual_promo', price: 39000 };
 
