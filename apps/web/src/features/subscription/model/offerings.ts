@@ -19,32 +19,51 @@ const PLAN_BY_PERIOD: Partial<Record<string, SubscriptionPlan>> = {
   P1Y: 'yearly',
 };
 
-/**
- * 패키지가 어느 플랜인지 — 셸이 알아본 값이 먼저, 없으면 구독 주기로 정한다.
- *
- * @returns 월간·연간이면 그 플랜, 아직 팔지 않는 주기이거나 주기를 모르면 undefined
- */
-const resolvePlan = (pkg: OfferingPackage): SubscriptionPlan | undefined =>
-  pkg.plan ?? PLAN_BY_PERIOD[pkg.period ?? ''];
+/** 셸이 예약 식별자($rc_monthly·$rc_annual)로 알아본 플랜 */
+const reservedPlan = (pkg: OfferingPackage) => pkg.plan ?? undefined;
+
+/** 상품의 구독 주기로 본 플랜 — 커스텀 이름이라 셸이 판단하지 못한 패키지가 여기로 온다 */
+const periodPlan = (pkg: OfferingPackage) =>
+  pkg.period ? PLAN_BY_PERIOD[pkg.period] : undefined;
 
 /**
  * 셸 패키지 목록을 플랜별 가격표로 접는다.
  *
- * 같은 플랜이 둘이면 앞의 것 — 오퍼링 순서가 곧 우선순위다. 플랜을 못 정한 패키지는 건너뛴다.
+ * 예약 식별자가 먼저 자리를 잡고 남은 자리만 구독 주기로 채운다. 커스텀 이름 패키지가
+ * 오퍼링 앞쪽에 놓여도 정가 자리를 가져가지 못하게 하려는 것이다 — 그 자리를 뺏기면
+ * 화면이 그 가격을 그리고 그 패키지로 결제한다.
+ *
+ * 같은 방식으로 정해진 패키지가 둘이면 앞의 것 — 오퍼링 순서가 곧 우선순위다.
+ * 어느 쪽으로도 못 정한 패키지는 건너뛴다 (`unclassifiablePackages`가 그걸 알린다).
  */
 export const toPlanPricing = (packages: OfferingPackage[]): PlanPricingMap => {
   const map: PlanPricingMap = {};
-  for (const pkg of packages) {
-    const plan = resolvePlan(pkg);
-    if (!plan || map[plan]) continue;
-    map[plan] = {
-      packageId: pkg.id,
-      price: pkg.price,
-      currency: pkg.currency,
-    };
-  }
+  const fill = (
+    resolve: (pkg: OfferingPackage) => SubscriptionPlan | undefined,
+  ) => {
+    for (const pkg of packages) {
+      const plan = resolve(pkg);
+      if (!plan || map[plan]) continue;
+      map[plan] = {
+        packageId: pkg.id,
+        price: pkg.price,
+        currency: pkg.currency,
+      };
+    }
+  };
+  fill(reservedPlan);
+  fill(periodPlan);
   return map;
 };
+
+/**
+ * 월간·연간 어느 쪽으로도 볼 수 없는 패키지들.
+ *
+ * 이런 패키지는 가격표에서 조용히 빠지고, 할인 패키지가 그렇게 되면 시트가 뜨지 않는 채로
+ * 아무 흔적도 남지 않는다. 스토어 설정이 어긋났다는 신호라 부르는 쪽이 보고한다.
+ */
+export const unclassifiablePackages = (packages: OfferingPackage[]) =>
+  packages.filter((pkg) => !reservedPlan(pkg) && !periodPlan(pkg));
 
 /** 플랜별 가격표 두 벌 — 페이월이 쓰는 정가와 이탈 할인 시트가 쓰는 할인가 */
 export interface OfferingTiers {

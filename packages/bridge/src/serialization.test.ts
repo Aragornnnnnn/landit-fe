@@ -475,7 +475,7 @@ describe('parseNativeToWebMessage — 결제', () => {
     );
   });
 
-  it('plan·period를 보내지 않는 구버전 셸의 응답은 null로 채워 받는다', () => {
+  it('period를 보내지 않는 구버전 셸의 응답은 period를 null로 채워 받는다', () => {
     const legacy = JSON.stringify({
       type: 'OFFERINGS',
       packages: [

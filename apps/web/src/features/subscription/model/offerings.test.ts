@@ -6,6 +6,7 @@ import {
   toKrwPrices,
   toOfferingTiers,
   toPlanPricing,
+  unclassifiablePackages,
 } from './offerings';
 
 const monthly = {
@@ -63,6 +64,23 @@ describe('toPlanPricing', () => {
     });
   });
 
+  it('커스텀 이름이 앞에 와도 예약 식별자가 그 플랜 자리를 가진다', () => {
+    const impostor = { ...yearlyDiscount, id: 'annual_promo', price: 39000 };
+
+    // 오퍼링 순서상 커스텀 패키지가 먼저다 — 그대로 두면 정가 자리를 뺏고 그 가격으로 결제된다
+    expect(toPlanPricing([impostor, yearly]).yearly).toEqual({
+      packageId: '$rc_annual',
+      price: 59900,
+      currency: 'KRW',
+    });
+  });
+
+  it('예약 식별자가 없으면 그 자리는 주기로 정해진 패키지가 채운다', () => {
+    const impostor = { ...yearlyDiscount, id: 'annual_promo', price: 39000 };
+
+    expect(toPlanPricing([impostor]).yearly?.packageId).toBe('annual_promo');
+  });
+
   it('같은 플랜이 두 번 오면 먼저 온 것을 쓴다', () => {
     const duplicate = { ...yearly, id: '$rc_annual_promo', price: 1 };
 
@@ -72,14 +90,25 @@ describe('toPlanPricing', () => {
   });
 });
 
+describe('unclassifiablePackages', () => {
+  it('월간·연간 어느 쪽으로도 못 보는 패키지만 골라낸다 — 스토어 설정이 어긋났다는 신호다', () => {
+    const noPeriod = { ...yearlyDiscount, id: 'broken', period: null };
+    const halfYear = { ...yearlyDiscount, id: 'half_year', period: 'P6M' };
+
+    expect(
+      unclassifiablePackages([
+        monthly,
+        yearly,
+        yearlyDiscount,
+        noPeriod,
+        halfYear,
+      ]),
+    ).toEqual([noPeriod, halfYear]);
+  });
+});
+
 describe('toOfferingTiers', () => {
-  const discount = {
-    id: 'annual_discount',
-    plan: 'yearly' as const,
-    price: 58500,
-    currency: 'KRW',
-    period: 'P1Y',
-  };
+  const discount = yearlyDiscount;
 
   it('할인 패키지를 정가와 갈라 두 벌로 만든다 — 같은 연간이 둘이라 한 표에는 못 담는다', () => {
     const { list, promo } = toOfferingTiers([monthly, yearly, discount]);

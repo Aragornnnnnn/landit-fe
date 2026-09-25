@@ -175,7 +175,7 @@ describe('identifyUser', () => {
 });
 
 describe('toOfferingPackages', () => {
-  it('오퍼링의 패키지를 하나도 버리지 않고 옮긴다 — 플랜 판정은 웹이 한다', () => {
+  it('오퍼링의 패키지를 하나도 버리지 않고 옮긴다 — 예약 식별자에만 plan을 붙인다', () => {
     const packages = toOfferingPackages(
       offeringsWith([monthly, weekly, annual, annualDiscount]),
     );

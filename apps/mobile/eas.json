@@ -18,7 +18,10 @@
   "submit": {
     "production": {
       "ios": {
-        "ascAppId": "6787414201"
+        "ascAppId": "6787414201",
+        "ascApiKeyPath": "/Users/junseo/Downloads/AuthKey_Z34WRS8UL9.p8",
+        "ascApiKeyId": "Z34WRS8UL9",
+        "ascApiKeyIssuerId": "f3d9f0ee-bb32-447f-9518-a10a3e086322"
       }
     }
   }

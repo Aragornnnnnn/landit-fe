@@ -64,7 +64,8 @@ export const widgetChangeSchema = z.enum(['added', 'removed']);
 export const subscriptionPlanSchema = z.enum(['monthly', 'yearly']);
 
 // 스토어 오퍼링의 패키지 하나 — 셸이 RevenueCat 패키지를 웹이 그릴 수 있는 모양으로 옮긴 것.
-// 셸은 거르지 않고 그대로 넘기고, 어느 플랜인지는 웹이 정한다 — 새 상품을 붙일 때 앱을 다시 내지 않으려는 것이다
+// 셸은 거르지 않고 그대로 넘긴다. `plan`은 셸이 예약 식별자로 알아본 값이고(웹도 이걸 먼저 믿는다),
+// `period`는 그러지 못한 패키지를 웹이 판정하는 데 쓴다 — 새 상품을 붙일 때 앱을 다시 내지 않으려는 것이다
 export const offeringPackageSchema = z.object({
   // RevenueCat 패키지 identifier (예: $rc_monthly). PURCHASE가 이 값을 되돌려 보낸다
   id: z.string().min(1),

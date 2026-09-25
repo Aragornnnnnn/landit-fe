@@ -94,7 +94,8 @@ const PLAN_BY_PACKAGE_TYPE: Partial<Record<string, OfferingPackage['plan']>> = {
  *
  * 예약 식별자는 오퍼링당 하나씩뿐이라(`$rc_annual`), 같은 주기의 둘째 상품(할인 연간)은
  * 커스텀 이름을 쓸 수밖에 없고 RevenueCat이 CUSTOM 타입을 준다. 여기서 걸러 내면 그런 상품을
- * 붙일 때마다 앱을 다시 내야 하므로, 판단은 웹에 맡기고 셸은 주기 원문까지 그대로 넘긴다.
+ * 붙일 때마다 앱을 다시 내야 하므로, 아는 것만 `plan`에 담고 모르면 null로 넘긴다.
+ * 주기 원문(`period`)도 함께 실어 웹이 최종 판정을 할 수 있게 한다.
  */
 export const toOfferingPackages = (
   offerings: PurchasesOfferings,
