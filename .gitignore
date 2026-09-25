@@ -18,3 +18,6 @@ node_modules/
 # Expo 네이티브 프로젝트 생성물 — prebuild/run으로 재생성되므로 커밋하지 않음 (네이티브 설정은 app.json으로 관리)
 apps/mobile/android/
 apps/mobile/ios/
+
+# 로컬 빌드 산출물 (eas build --local --output)
+apps/mobile/out/
