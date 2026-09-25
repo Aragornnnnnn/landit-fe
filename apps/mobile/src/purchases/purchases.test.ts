@@ -26,7 +26,12 @@ jest.mock('react-native-purchases', () => ({
     purchasePackage: jest.fn(),
     restorePurchases: jest.fn(() => Promise.resolve({})),
   },
-  PACKAGE_TYPE: { MONTHLY: 'MONTHLY', ANNUAL: 'ANNUAL', WEEKLY: 'WEEKLY' },
+  PACKAGE_TYPE: {
+    MONTHLY: 'MONTHLY',
+    ANNUAL: 'ANNUAL',
+    WEEKLY: 'WEEKLY',
+    CUSTOM: 'CUSTOM',
+  },
   LOG_LEVEL: { DEBUG: 'DEBUG', INFO: 'INFO' },
   // 오류 코드는 순수 TS 패키지의 실제 값 — 문구 표가 진짜 코드에 걸리는지 본다
   PURCHASES_ERROR_CODE: jest.requireActual(
@@ -44,17 +49,24 @@ const mockPurchases = Purchases as jest.Mocked<typeof Purchases>;
 const monthly = {
   identifier: '$rc_monthly',
   packageType: PACKAGE_TYPE.MONTHLY,
-  product: { price: 9900, currencyCode: 'KRW' },
+  product: { price: 9900, currencyCode: 'KRW', subscriptionPeriod: 'P1M' },
 };
 const annual = {
   identifier: '$rc_annual',
   packageType: PACKAGE_TYPE.ANNUAL,
-  product: { price: 59900, currencyCode: 'KRW' },
+  product: { price: 59900, currencyCode: 'KRW', subscriptionPeriod: 'P1Y' },
 };
 const weekly = {
   identifier: '$rc_weekly',
   packageType: PACKAGE_TYPE.WEEKLY,
-  product: { price: 3000, currencyCode: 'KRW' },
+  product: { price: 3000, currencyCode: 'KRW', subscriptionPeriod: 'P1W' },
+};
+
+// 예약 식별자는 오퍼링당 하나뿐이라, 둘째 연간 상품(할인)은 커스텀 이름을 쓰고 CUSTOM 타입으로 온다
+const annualDiscount = {
+  identifier: 'annual_discount',
+  packageType: PACKAGE_TYPE.CUSTOM,
+  product: { price: 58500, currencyCode: 'KRW', subscriptionPeriod: 'P1Y' },
 };
 
 // 체인으로 이어진 식별이 실제 SDK 호출까지 가도록 마이크로태스크를 비운다
@@ -163,14 +175,40 @@ describe('identifyUser', () => {
 });
 
 describe('toOfferingPackages', () => {
-  it('월간·연간 패키지만 plan을 붙여 옮기고 그 밖의 주기는 버린다', () => {
+  it('오퍼링의 패키지를 하나도 버리지 않고 옮긴다 — 예약 식별자에만 plan을 붙인다', () => {
     const packages = toOfferingPackages(
-      offeringsWith([monthly, weekly, annual]),
+      offeringsWith([monthly, weekly, annual, annualDiscount]),
     );
 
     expect(packages).toEqual([
-      { id: '$rc_monthly', plan: 'monthly', price: 9900, currency: 'KRW' },
-      { id: '$rc_annual', plan: 'yearly', price: 59900, currency: 'KRW' },
+      {
+        id: '$rc_monthly',
+        plan: 'monthly',
+        price: 9900,
+        currency: 'KRW',
+        period: 'P1M',
+      },
+      {
+        id: '$rc_weekly',
+        plan: null,
+        price: 3000,
+        currency: 'KRW',
+        period: 'P1W',
+      },
+      {
+        id: '$rc_annual',
+        plan: 'yearly',
+        price: 59900,
+        currency: 'KRW',
+        period: 'P1Y',
+      },
+      {
+        id: 'annual_discount',
+        plan: null,
+        price: 58500,
+        currency: 'KRW',
+        period: 'P1Y',
+      },
     ]);
   });
 

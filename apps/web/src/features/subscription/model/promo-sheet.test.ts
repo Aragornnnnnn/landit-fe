@@ -4,11 +4,14 @@ import { describe, expect, it } from 'vitest';
 import { toOfferingTiers } from './offerings';
 import { buildPromoSheet } from './promo-sheet';
 
+// 예약 식별자 패키지는 셸이 plan을 붙여 주고, 커스텀 이름(할인)은 못 붙여 null로 온다 —
+// 웹이 period로 판정하는 그 경로를 시트 테스트도 그대로 타게 한다
 const pkg = (id: string, plan: 'monthly' | 'yearly', price: number) => ({
   id,
-  plan,
+  plan: id.startsWith('$rc_') ? plan : null,
   price,
   currency: 'KRW',
+  period: plan === 'monthly' ? 'P1M' : 'P1Y',
 });
 
 const tiers = (...packages: ReturnType<typeof pkg>[]) =>

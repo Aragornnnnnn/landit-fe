@@ -12,19 +12,60 @@ export interface PlanPricing {
 /** 플랜별 가격표. 오퍼링에 없는 플랜은 비어 있다 */
 export type PlanPricingMap = Partial<Record<SubscriptionPlan, PlanPricing>>;
 
-/** 셸 패키지 목록을 플랜별 가격표로 접는다. 같은 플랜이 둘이면 앞의 것 — 오퍼링 순서가 곧 우선순위다 */
+// 구독 주기(ISO 8601) → 플랜. 셸이 예약 식별자로 알아보지 못한 패키지는 여기서 갈린다.
+// 새 주기를 팔기로 하면 이 표만 늘리면 되고 앱은 다시 내지 않아도 된다
+const PLAN_BY_PERIOD: Partial<Record<string, SubscriptionPlan>> = {
+  P1M: 'monthly',
+  P1Y: 'yearly',
+};
+
+/** 셸이 예약 식별자($rc_monthly·$rc_annual)로 알아본 플랜 */
+const reservedPlan = (pkg: OfferingPackage) => pkg.plan ?? undefined;
+
+/** 상품의 구독 주기로 본 플랜 — 커스텀 이름이라 셸이 판단하지 못한 패키지가 여기로 온다 */
+const periodPlan = (pkg: OfferingPackage) =>
+  pkg.period ? PLAN_BY_PERIOD[pkg.period] : undefined;
+
+/**
+ * 셸 패키지 목록을 플랜별 가격표로 접는다.
+ *
+ * 예약 식별자가 먼저 자리를 잡고 남은 자리만 구독 주기로 채운다. 커스텀 이름 패키지가
+ * 오퍼링 앞쪽에 놓여도 정가 자리를 가져가지 못하게 하려는 것이다 — 그 자리를 뺏기면
+ * 화면이 그 가격을 그리고 그 패키지로 결제한다.
+ *
+ * 같은 방식으로 정해진 패키지가 둘이면 앞의 것 — 오퍼링 순서가 곧 우선순위다.
+ * 어느 쪽으로도 못 정한 패키지는 건너뛴다 (`unclassifiablePackages`가 그걸 알린다).
+ */
 export const toPlanPricing = (packages: OfferingPackage[]): PlanPricingMap => {
   const map: PlanPricingMap = {};
-  for (const pkg of packages) {
-    if (map[pkg.plan]) continue;
-    map[pkg.plan] = {
-      packageId: pkg.id,
-      price: pkg.price,
-      currency: pkg.currency,
-    };
-  }
+  const fill = (
+    resolve: (pkg: OfferingPackage) => SubscriptionPlan | undefined,
+  ) => {
+    for (const pkg of packages) {
+      const plan = resolve(pkg);
+      if (!plan || map[plan]) continue;
+      map[plan] = {
+        packageId: pkg.id,
+        price: pkg.price,
+        currency: pkg.currency,
+      };
+    }
+  };
+  fill(reservedPlan);
+  // 예약 식별자로 이미 자리를 잡은 패키지는 주기 판정에서 뺀다 — 셸이 말한 플랜과 주기가
+  // 어긋난 패키지(월간 칸에 1년 상품)가 두 자리를 다 차지하면 두 플랜이 같은 상품을 결제한다
+  fill((pkg) => (reservedPlan(pkg) ? undefined : periodPlan(pkg)));
   return map;
 };
+
+/**
+ * 월간·연간 어느 쪽으로도 볼 수 없는 패키지들.
+ *
+ * 이런 패키지는 가격표에서 조용히 빠지고, 할인 패키지가 그렇게 되면 시트가 뜨지 않는 채로
+ * 아무 흔적도 남지 않는다. 스토어 설정이 어긋났다는 신호라 부르는 쪽이 보고한다.
+ */
+export const unclassifiablePackages = (packages: OfferingPackage[]) =>
+  packages.filter((pkg) => !reservedPlan(pkg) && !periodPlan(pkg));
 
 /** 플랜별 가격표 두 벌 — 페이월이 쓰는 정가와 이탈 할인 시트가 쓰는 할인가 */
 export interface OfferingTiers {
