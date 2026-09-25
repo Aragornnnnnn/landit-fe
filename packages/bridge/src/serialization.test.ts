@@ -453,14 +453,48 @@ describe('parseNativeToWebMessage — 결제', () => {
     const message: NativeToWebMessage = {
       type: 'OFFERINGS',
       packages: [
-        { id: '$rc_monthly', plan: 'monthly', price: 9900, currency: 'KRW' },
-        { id: '$rc_annual', plan: 'yearly', price: 59900, currency: 'KRW' },
+        {
+          id: '$rc_monthly',
+          plan: 'monthly',
+          price: 9900,
+          currency: 'KRW',
+          period: 'P1M',
+        },
+        {
+          id: 'annual_discount',
+          plan: null,
+          price: 58500,
+          currency: 'KRW',
+          period: 'P1Y',
+        },
       ],
     };
 
     expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
       message,
     );
+  });
+
+  it('plan·period를 보내지 않는 구버전 셸의 응답은 null로 채워 받는다', () => {
+    const legacy = JSON.stringify({
+      type: 'OFFERINGS',
+      packages: [
+        { id: '$rc_annual', plan: 'yearly', price: 59900, currency: 'KRW' },
+      ],
+    });
+
+    expect(parseNativeToWebMessage(legacy)).toEqual({
+      type: 'OFFERINGS',
+      packages: [
+        {
+          id: '$rc_annual',
+          plan: 'yearly',
+          price: 59900,
+          currency: 'KRW',
+          period: null,
+        },
+      ],
+    });
   });
 
   it('패키지의 plan이 월간·연간 밖이거나 가격이 음수면 버린다', () => {

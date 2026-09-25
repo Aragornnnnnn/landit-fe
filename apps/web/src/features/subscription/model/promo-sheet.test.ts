@@ -9,6 +9,7 @@ const pkg = (id: string, plan: 'monthly' | 'yearly', price: number) => ({
   plan,
   price,
   currency: 'KRW',
+  period: plan === 'monthly' ? 'P1M' : 'P1Y',
 });
 
 const tiers = (...packages: ReturnType<typeof pkg>[]) =>

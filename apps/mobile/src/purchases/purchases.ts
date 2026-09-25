@@ -89,22 +89,23 @@ const PLAN_BY_PACKAGE_TYPE: Partial<Record<string, OfferingPackage['plan']>> = {
   [PACKAGE_TYPE.ANNUAL]: 'yearly',
 };
 
-/** RevenueCat 오퍼링을 웹 메시지 모양으로 — 월간·연간만 싣고 그 밖의 주기는 버린다 */
+/**
+ * RevenueCat 오퍼링을 웹 메시지 모양으로 — 거르지 않고 전부 옮긴다.
+ *
+ * 예약 식별자는 오퍼링당 하나씩뿐이라(`$rc_annual`), 같은 주기의 둘째 상품(할인 연간)은
+ * 커스텀 이름을 쓸 수밖에 없고 RevenueCat이 CUSTOM 타입을 준다. 여기서 걸러 내면 그런 상품을
+ * 붙일 때마다 앱을 다시 내야 하므로, 판단은 웹에 맡기고 셸은 주기 원문까지 그대로 넘긴다.
+ */
 export const toOfferingPackages = (
   offerings: PurchasesOfferings,
 ): OfferingPackage[] =>
-  (offerings.current?.availablePackages ?? []).flatMap((pkg) => {
-    const plan = PLAN_BY_PACKAGE_TYPE[pkg.packageType];
-    if (!plan) return [];
-    return [
-      {
-        id: pkg.identifier,
-        plan,
-        price: pkg.product.price,
-        currency: pkg.product.currencyCode,
-      },
-    ];
-  });
+  (offerings.current?.availablePackages ?? []).map((pkg) => ({
+    id: pkg.identifier,
+    plan: PLAN_BY_PACKAGE_TYPE[pkg.packageType] ?? null,
+    price: pkg.product.price,
+    currency: pkg.product.currencyCode,
+    period: pkg.product.subscriptionPeriod,
+  }));
 
 /** 현재 오퍼링의 패키지 목록. 조회 실패는 빈 목록 — 웹은 등록값 표시를 그대로 쓴다 */
 export const fetchOfferingPackages = async (): Promise<OfferingPackage[]> => {

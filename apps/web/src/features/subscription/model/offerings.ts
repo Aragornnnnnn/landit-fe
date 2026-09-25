@@ -12,12 +12,32 @@ export interface PlanPricing {
 /** 플랜별 가격표. 오퍼링에 없는 플랜은 비어 있다 */
 export type PlanPricingMap = Partial<Record<SubscriptionPlan, PlanPricing>>;
 
-/** 셸 패키지 목록을 플랜별 가격표로 접는다. 같은 플랜이 둘이면 앞의 것 — 오퍼링 순서가 곧 우선순위다 */
+// 구독 주기(ISO 8601) → 플랜. 셸이 예약 식별자로 알아보지 못한 패키지는 여기서 갈린다.
+// 새 주기를 팔기로 하면 이 표만 늘리면 되고 앱은 다시 내지 않아도 된다
+const PLAN_BY_PERIOD: Partial<Record<string, SubscriptionPlan>> = {
+  P1M: 'monthly',
+  P1Y: 'yearly',
+};
+
+/**
+ * 패키지가 어느 플랜인지 — 셸이 알아본 값이 먼저, 없으면 구독 주기로 정한다.
+ *
+ * @returns 월간·연간이면 그 플랜, 아직 팔지 않는 주기이거나 주기를 모르면 undefined
+ */
+const resolvePlan = (pkg: OfferingPackage): SubscriptionPlan | undefined =>
+  pkg.plan ?? PLAN_BY_PERIOD[pkg.period ?? ''];
+
+/**
+ * 셸 패키지 목록을 플랜별 가격표로 접는다.
+ *
+ * 같은 플랜이 둘이면 앞의 것 — 오퍼링 순서가 곧 우선순위다. 플랜을 못 정한 패키지는 건너뛴다.
+ */
 export const toPlanPricing = (packages: OfferingPackage[]): PlanPricingMap => {
   const map: PlanPricingMap = {};
   for (const pkg of packages) {
-    if (map[pkg.plan]) continue;
-    map[pkg.plan] = {
+    const plan = resolvePlan(pkg);
+    if (!plan || map[plan]) continue;
+    map[plan] = {
       packageId: pkg.id,
       price: pkg.price,
       currency: pkg.currency,

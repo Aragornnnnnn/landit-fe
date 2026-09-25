@@ -13,15 +13,43 @@ const monthly = {
   plan: 'monthly' as const,
   price: 9900,
   currency: 'KRW',
+  period: 'P1M',
 };
 const yearly = {
   id: '$rc_annual',
   plan: 'yearly' as const,
   price: 59900,
   currency: 'KRW',
+  period: 'P1Y',
+};
+// 예약 식별자는 오퍼링당 하나뿐이라 둘째 연간 상품은 커스텀 이름을 쓴다 — 셸은 플랜을 모른 채 넘긴다
+const yearlyDiscount = {
+  id: 'annual_discount',
+  plan: null,
+  price: 58500,
+  currency: 'KRW',
+  period: 'P1Y',
 };
 
 describe('toPlanPricing', () => {
+  it('셸이 플랜을 모르면 구독 주기로 정한다 — 커스텀 이름의 할인 상품이 여기로 온다', () => {
+    expect(toPlanPricing([yearlyDiscount])).toEqual({
+      yearly: { packageId: 'annual_discount', price: 58500, currency: 'KRW' },
+    });
+  });
+
+  it('아직 팔지 않는 주기는 건너뛴다', () => {
+    expect(
+      toPlanPricing([{ ...yearlyDiscount, id: 'half_year', period: 'P6M' }]),
+    ).toEqual({});
+  });
+
+  it('주기를 모르는 패키지도 건너뛴다 — 플랜을 찍지 않는다', () => {
+    expect(
+      toPlanPricing([{ ...yearlyDiscount, id: 'unknown', period: null }]),
+    ).toEqual({});
+  });
+
   it('플랜별로 패키지 id와 가격을 묶는다', () => {
     expect(toPlanPricing([monthly, yearly])).toEqual({
       monthly: { packageId: '$rc_monthly', price: 9900, currency: 'KRW' },
@@ -50,6 +78,7 @@ describe('toOfferingTiers', () => {
     plan: 'yearly' as const,
     price: 58500,
     currency: 'KRW',
+    period: 'P1Y',
   };
 
   it('할인 패키지를 정가와 갈라 두 벌로 만든다 — 같은 연간이 둘이라 한 표에는 못 담는다', () => {
