@@ -67,11 +67,11 @@ describe('retentionContent — 가격 부담', () => {
   it('적용되는 금액이 있으면 그 금액으로 하루 요금을 잰다', () => {
     const content = retentionContent(
       'price',
-      context(active({ plan: 'yearly', price: 94_800 })),
+      context(active({ plan: 'yearly', price: 94_500 })),
     );
 
     expect(content.cards[0]).toMatchObject({
-      sublabel: '연 94,800원',
+      sublabel: '연 94,500원',
       value: '하루 260원',
     });
   });

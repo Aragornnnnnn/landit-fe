@@ -19,7 +19,7 @@ const tiers = (...packages: ReturnType<typeof pkg>[]) =>
 
 const full = [
   pkg('$rc_monthly', 'monthly', 14_900),
-  pkg('$rc_annual', 'yearly', 94_800),
+  pkg('$rc_annual', 'yearly', 94_500),
   pkg('annual_discount', 'yearly', 58_500),
 ];
 
@@ -49,7 +49,7 @@ describe('buildPromoSheet', () => {
 
   it('할인 패키지가 없으면 시트를 만들지 않는다 — 화면이 이걸 보고 띄우지 않는다', () => {
     expect(
-      buildPromoSheet(tiers(pkg('$rc_annual', 'yearly', 94_800))),
+      buildPromoSheet(tiers(pkg('$rc_annual', 'yearly', 94_500))),
     ).toBeNull();
   });
 
@@ -80,7 +80,7 @@ describe('buildPromoSheet', () => {
     expect(
       buildPromoSheet(
         tiers(
-          pkg('$rc_annual', 'yearly', 94_800),
+          pkg('$rc_annual', 'yearly', 94_500),
           pkg('annual_discount', 'yearly', 58_500),
         ),
       ),
@@ -92,7 +92,7 @@ describe('buildPromoSheet', () => {
       buildPromoSheet(
         tiers(
           pkg('$rc_monthly', 'monthly', 4_000),
-          pkg('$rc_annual', 'yearly', 94_800),
+          pkg('$rc_annual', 'yearly', 94_500),
           pkg('annual_discount', 'yearly', 58_500),
         ),
       ),
@@ -106,7 +106,7 @@ describe('buildPromoSheet', () => {
       buildPromoSheet(
         tiers(
           pkg('$rc_monthly', 'monthly', 14_900),
-          pkg('$rc_annual', 'yearly', 94_800),
+          pkg('$rc_annual', 'yearly', 94_500),
           usd,
         ),
       ),
