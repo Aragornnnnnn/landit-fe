@@ -81,7 +81,7 @@ beforeEach(() => {
   mocks.setQueryData = vi.fn();
   // 할인을 실제로 보여줄 수 있어야 닫기가 서버에 알린다 — 정가와 할인가가 둘 다 있어야 할인율이 나온다
   mocks.pricing = {
-    yearly: { packageId: '$rc_annual', price: 94_800, currency: 'KRW' },
+    yearly: { packageId: '$rc_annual', price: 94_500, currency: 'KRW' },
     monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
   };
   mocks.promoPricing = {

@@ -67,12 +67,13 @@ describe('retentionContent — 가격 부담', () => {
   it('적용되는 금액이 있으면 그 금액으로 하루 요금을 잰다', () => {
     const content = retentionContent(
       'price',
-      context(active({ plan: 'yearly', price: 94_800 })),
+      // 서버 결제액은 등록값 폴백(YEARLY_PRICE)과 다른 값이어야 폴백을 쓰는 회귀가 잡힌다
+      context(active({ plan: 'yearly', price: 99_000 })),
     );
 
     expect(content.cards[0]).toMatchObject({
-      sublabel: '연 94,800원',
-      value: '하루 260원',
+      sublabel: '연 99,000원',
+      value: '하루 270원',
     });
   });
 
