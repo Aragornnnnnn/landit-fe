@@ -26,7 +26,7 @@ describe('getCtaLabel', () => {
 describe('getBillingNotice', () => {
   it('연간은 체험 뒤 청구될 연 결제액과 해지 가능을 알린다', () => {
     expect(getBillingNotice(yearly)).toBe(
-      '7일 무료 체험 후 연 58,500원 정기 결제 · 언제든 해지 가능',
+      '7일 무료 체험 후 연 94,500원 정기 결제 · 언제든 해지 가능',
     );
   });
 

@@ -24,9 +24,10 @@ export const PLAN_ORDER: readonly PlanId[] = ['monthly', 'yearly'];
 
 export const DEFAULT_PLAN_ID: PlanId = 'yearly';
 
-// 스토어 등록값 (2026-09-07 재설정). 월간은 할인 없는 기본가라 비교선도 배지도 없다
+// 스토어 등록값 — 오퍼링을 못 받았을 때 페이월이 쓰는 폴백. 월간은 할인 없는 기본가라 비교선도 배지도 없다.
+// 할인 연간(58,500)은 여기 없다 — 오퍼링으로만 오고, 못 받으면 시트를 띄우지 않으므로 폴백이 필요 없다
 const MONTHLY_PRICE = 14_900;
-const YEARLY_PRICE = 58_500;
+const YEARLY_PRICE = 94_500;
 
 /** 비교가 대비 판매가의 할인율. 정수 퍼센트로 반올림한다 */
 export const calculateDiscountRate = (listPrice: number, price: number) =>

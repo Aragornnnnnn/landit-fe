@@ -40,7 +40,7 @@ const promo: PaywallPromo = {
 const tiers: OfferingTiers = {
   list: {
     monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
-    yearly: { packageId: '$rc_annual', price: 94_800, currency: 'KRW' },
+    yearly: { packageId: '$rc_annual', price: 94_500, currency: 'KRW' },
   },
   promo: {
     yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
