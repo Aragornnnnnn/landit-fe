@@ -7,12 +7,10 @@ import { EVENTS, type PaywallGateSource } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
-import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
 import { paywallPath } from '@/shared/lib/routes';
-import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
-import { PAYMENT_ENABLED } from './payment-flag';
-import { canLockPaywall, decidePaywallGate } from './paywall-gate';
+import { decidePaywallGate } from './paywall-gate';
+import { usePaymentLive } from './usePaymentLive';
 import { useSubscriptionQuery } from './useSubscriptionQuery';
 
 interface GuardOptions {
@@ -32,15 +30,10 @@ interface GuardOptions {
  */
 export const usePaywallGate = () => {
   const router = useRouter();
-  // 셸 컨텍스트는 클라이언트에서만 — 서버 렌더와 첫 렌더를 맞추려고 그때까지는 브라우저로 본다
-  const context = useClientOnlyValue(getNativeContextSnapshot, null);
-  const environment = {
-    paymentEnabled: PAYMENT_ENABLED,
-    appVersion: context?.appVersion ?? null,
-  };
+  const lockable = usePaymentLive();
   // 잠글 수 없는 환경(플래그 꺼짐·브라우저·구버전 셸)에서는 구독을 묻지 않는다 — 어차피 열린다
   const { subscription, isError } = useSubscriptionQuery({
-    enabled: canLockPaywall(environment),
+    enabled: lockable,
   });
 
   // 구독 조회 실패(구독 API 미배포 포함)는 잠그지 않는다 — 잘못 막는 쪽이 더 나쁘다.
@@ -48,7 +41,7 @@ export const usePaywallGate = () => {
   const decision = isError
     ? 'open'
     : decidePaywallGate({
-        ...environment,
+        lockable,
         premium: subscription?.premium ?? null,
       });
   const locked = decision === 'locked';
