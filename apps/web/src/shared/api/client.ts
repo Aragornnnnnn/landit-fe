@@ -24,7 +24,11 @@ async function request<T>(
   path: string,
   body?: unknown,
 ): Promise<T> {
-  const { accessToken, refreshToken } = useAuthStore.getState();
+  const { refreshToken } = useAuthStore.getState();
+  // 앱을 켠 직후엔 accessToken이 메모리에 없다 — 401을 맞고 재발급하는 대신 재발급부터 받아 한 번에 보낸다
+  const accessToken =
+    useAuthStore.getState().accessToken ??
+    (refreshToken ? await refreshAccessToken() : null);
   // FormData면 Content-Type을 안 붙인다 — 브라우저가 multipart boundary까지 직접 정한다
   const headers = new Headers(
     body instanceof FormData ? {} : { 'Content-Type': 'application/json' },
