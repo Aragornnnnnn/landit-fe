@@ -1,6 +1,6 @@
 'use client';
 
-// 결제가 열린 환경인가 — 결제 플래그가 켜져 있고 결제 브릿지가 실린 셸(1.3.0 이상)일 때.
+// 결제가 열린 환경인가 — 결제 플래그가 켜져 있고 앱 안일 때.
 // 페이월이 걸리는 환경(canLockPaywall)과 같은 기준이라, 결제 오픈에 맞춰 바뀌는 표시(스몰톡 무제한)가 페이월과 어긋나지 않는다
 import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
@@ -13,6 +13,6 @@ export const usePaymentLive = (): boolean => {
   const context = useClientOnlyValue(getNativeContextSnapshot, null);
   return canLockPaywall({
     paymentEnabled: PAYMENT_ENABLED,
-    appVersion: context?.appVersion ?? null,
+    inApp: context !== null,
   });
 };

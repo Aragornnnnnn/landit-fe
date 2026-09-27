@@ -8,28 +8,16 @@ import {
 } from './paywall-gate';
 
 describe('canLockPaywall', () => {
-  it('결제 플래그가 켜져 있고 1.3.0 이상 앱이면 잠글 수 있다', () => {
-    expect(canLockPaywall({ paymentEnabled: true, appVersion: '1.3.0' })).toBe(
-      true,
-    );
+  it('결제 플래그가 켜져 있고 앱 안이면 잠글 수 있다', () => {
+    expect(canLockPaywall({ paymentEnabled: true, inApp: true })).toBe(true);
   });
 
-  it('결제 플래그가 꺼져 있으면 잠그지 않는다 — 심사 뒤 오픈 전까지의 상태', () => {
-    expect(canLockPaywall({ paymentEnabled: false, appVersion: '1.3.0' })).toBe(
-      false,
-    );
+  it('결제 플래그가 꺼져 있으면 잠그지 않는다 — 결제를 막아 둔 동안은 학습 문도 열어 둔다', () => {
+    expect(canLockPaywall({ paymentEnabled: false, inApp: true })).toBe(false);
   });
 
-  it('브라우저(앱 버전 없음)는 잠그지 않는다 — 결제할 수 없는 곳에서 막으면 갈 데가 없다', () => {
-    expect(canLockPaywall({ paymentEnabled: true, appVersion: null })).toBe(
-      false,
-    );
-  });
-
-  it('1.3.0 미만 앱은 브릿지 버전과 무관하게 잠그지 않는다', () => {
-    expect(canLockPaywall({ paymentEnabled: true, appVersion: '1.2.5' })).toBe(
-      false,
-    );
+  it('브라우저는 잠그지 않는다 — 결제할 수 없는 곳에서 막으면 갈 데가 없다', () => {
+    expect(canLockPaywall({ paymentEnabled: true, inApp: false })).toBe(false);
   });
 });
 

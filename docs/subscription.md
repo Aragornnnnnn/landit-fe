@@ -103,13 +103,11 @@ Google Play도 같은 세 제품 ID로 등록돼 있다. 할인 연간은 기존
 
 세 조건이 전부 참일 때만 결제 UI를 보여준다.
 
-1. `window.__LANDIT_NATIVE__.appVersion >= 1.3.0` — 1.2.x 셸에는 SDK도 브릿지 핸들러도 없다. 브라우저 단독 접속은 값이 없어서 자연히 안 뜬다. 비교는 `shared/bridge/app-version.ts`의 `isAppVersionAtLeast`(자리별 정수, 못 읽는 버전은 낮은 것으로). 위젯 설치 안내의 버전 판정도 같은 함수다.
-2. `NEXT_PUBLIC_PAYMENT_ENABLED` — 오픈 시점을 잡는 플래그(`features/subscription/model/payment-flag.ts`, 값 `true`일 때만 켜짐). Vercel 환경변수라 바꾸면 재배포가 필요하다 (`NEXT_PUBLIC_`은 빌드 시점에 박힌다).
+1. 앱 안이다(`window.__LANDIT_NATIVE__`가 있다). 브라우저 단독 접속은 결제할 수 없어서 안 뜬다. 1.3.0 미만 셸은 결제 브릿지가 없지만, 운영 최소 지원 버전이 1.3.1이라 강제 업데이트에 막혀 들어오지 않는다. 결제 직전에는 `resolvePurchaseSupport`가 브릿지 버전을 한 번 더 본다.
+2. `NEXT_PUBLIC_PAYMENT_ENABLED` — 결제를 막아야 할 때 끄는 스위치(`features/subscription/model/payment-flag.ts`, 값 `true`일 때만 켜짐). Vercel 환경변수라 바꾸면 재배포가 필요하다 (`NEXT_PUBLIC_`은 빌드 시점에 박힌다).
 3. BE `premium`이 `false` — 이미 구독 중이면 안 보여준다.
 
-이 세 조건은 페이월 노출뿐 아니라 위 절의 잠금 게이트에도 같이 걸린다(`canLockPaywall`). 1.2.x 유저는 결제를 못 하니 잠기면 안 되고, 잠글 수 없는 환경에서는 구독 조회도 하지 않는다.
-
-버전 게이트만으로도 "누가 보느냐"는 제어된다. 플래그를 따로 두는 이유는 1.3.0 출시일과 결제 오픈일을 분리하고, BE 샌드박스 설정 전환(아래 절)과 시점을 맞추기 위해서다.
+1·2는 페이월 노출뿐 아니라 위 절의 잠금 게이트에도 같이 걸린다(`canLockPaywall`, 훅은 `usePaymentLive`). 결제할 수 없는 곳에서 잠그면 갈 데가 없으니, 잠글 수 없는 환경에서는 구독 조회도 하지 않는다.
 
 로그인 전에는 결제 버튼을 아예 보여주지 않는다. BE가 웹훅의 `app_user_id`를 숫자 유저 id로 풀기 때문에 익명 상태 결제는 매핑이 안 된다.
 
