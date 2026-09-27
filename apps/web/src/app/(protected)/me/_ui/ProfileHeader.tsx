@@ -11,15 +11,12 @@ import {
 } from '@/features/feedback/model/level-assessment';
 import { toEnglishLevel } from '@/features/onboarding/model/english-level';
 import { useLearningLevelQuery } from '@/features/onboarding/model/useLearningLevelQuery';
-import { PAYMENT_ENABLED } from '@/features/subscription/model/payment-flag';
-import { canLockPaywall } from '@/features/subscription/model/paywall-gate';
+import { usePaymentLive } from '@/features/subscription/model/usePaymentLive';
 import { useAuthStore } from '@/shared/auth/auth-store';
-import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
 import {
   preloadImages,
   type PreloadableImage,
 } from '@/shared/lib/preload-next-images';
-import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { AppleIcon, GoogleIcon, KakaoIcon } from '@/shared/ui/SocialIcons';
 
 const DEFAULT_IMAGE: PreloadableImage = {
@@ -53,11 +50,7 @@ export const ProfileHeader = () => {
   }, []);
   const badge = member?.provider ? PROVIDER_BADGE[member.provider] : undefined;
   // 프리미엄 카드와 같은 조건 — 결제 브릿지가 실린 셸에서 플래그가 켜져 있을 때
-  const context = useClientOnlyValue(getNativeContextSnapshot, null);
-  const levelVisible = canLockPaywall({
-    paymentEnabled: PAYMENT_ENABLED,
-    appVersion: context?.appVersion ?? null,
-  });
+  const levelVisible = usePaymentLive();
 
   return (
     <div className="flex items-center justify-between px-1.5 pt-2 pb-1">
