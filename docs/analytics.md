@@ -44,6 +44,7 @@
 | App Exited              | trigger(back_button)                                                                                                                                                                    | 네이티브 뒤로가기로 앱 종료 (셸에서만)                                              |
 | Download Link Visited   | store(play_store\|app_store), utm_source?, utm_medium?, utm_campaign?                                                                                                                   | /download 스토어 리다이렉트 진입 (서버 발화, 익명). utm_*은 링크에 딱지가 있을 때만 |
 | App Update Store Opened | store(play_store\|app_store)                                                                                                                                                            | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화)                       |
+| App Share Tapped        | method(native_sheet\|web_share\|copy)                                                                                                                                                   | 마이페이지 친구에게 공유하기 — 공유 시트를 열었거나 링크를 복사함                   |
 
 `return_reason`은 앱 안에서 홈으로 돌아온 이유(`flip` 표현 완료 복귀 / `card` 대화 이탈 복귀 / `just` 해금 직후). 확인 시트의 확정은 각각 `Conversation Abandoned` / `Expression Abandoned` / `Account Deleted`로 찍힌다.
 

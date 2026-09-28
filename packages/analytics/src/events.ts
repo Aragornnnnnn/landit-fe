@@ -144,6 +144,9 @@ export const EVENTS = {
   // 앱 업데이트 유도 UI에서 스토어 앱을 직접 연다
   APP_UPDATE_STORE_OPENED: 'App Update Store Opened',
 
+  // 친구에게 공유하기 — 마이페이지 행을 눌러 공유 시트를 열었거나 링크를 복사했다 (LAN-578)
+  APP_SHARE_TAPPED: 'App Share Tapped',
+
   // 위젯 설치 안내 — 온보딩 끝 유도 화면과 iOS 안내 3장.
   // 변형(어느 답·어느 스텝·어느 플랫폼)은 이벤트명이 아니라 속성으로 가른다 (정책 2-1)
   WIDGET_INSTALL_INVITE_VIEWED: 'Widget Install Invite Viewed',
@@ -659,6 +662,8 @@ export type EventProps = {
 
   // /download를 거치지 않고 스토어 앱을 바로 연 경우만 (앱 업데이트 유도 UI)
   'App Update Store Opened': { store: 'play_store' | 'app_store' };
+  // method — 셸 OS 공유 시트 / 브라우저 웹 공유 시트 / 둘 다 못 써서 링크 복사
+  'App Share Tapped': { method: 'native_sheet' | 'web_share' | 'copy' };
   // promo는 이탈 할인 시트에서 고르고 결제할 때만 true — 정가 결제와 할인 결제를 갈라 본다
   'Paywall Plan Selected': { plan: SubscriptionPlan; promo?: boolean };
   'Purchase Started': { plan: SubscriptionPlan; promo?: boolean };
