@@ -111,6 +111,26 @@ describe('앱을 켠 직후 (메모리에 accessToken 없음)', () => {
     expect(refreshCalls).toHaveLength(1);
   });
 
+  it('선발급이 실패하면 401에서 재발급을 다시 보내지 않고 세션을 끝낸다', async () => {
+    useAuthStore.setState({
+      accessToken: null,
+      refreshToken: 'expired-refresh',
+      member,
+    });
+    const fetchMock = vi.fn<
+      (path: string, init: RequestInit) => Promise<Response>
+    >(() => Promise.resolve(new Response(null, { status: 401 })));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(api.get('/api/v1/test')).rejects.toThrow('세션이 만료됐어요');
+
+    const refreshCalls = fetchMock.mock.calls.filter(
+      ([path]) => path === REFRESH_PATH,
+    );
+    expect(refreshCalls).toHaveLength(1);
+    expect(useAuthStore.getState().refreshToken).toBeNull();
+  });
+
   it('refreshToken도 없으면(비로그인) 재발급 없이 토큰 없이 보낸다', async () => {
     const fetchMock = fakeFetch();
     vi.stubGlobal('fetch', fetchMock);
