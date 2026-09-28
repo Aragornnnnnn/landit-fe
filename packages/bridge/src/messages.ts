@@ -143,6 +143,11 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   }),
   // 이전 구매를 복원한다 — 응답은 RESTORE_RESULT
   z.object({ type: z.literal('RESTORE_PURCHASES') }),
+  // OS 공유 시트를 연다 — 링크까지 담은 문구 한 덩어리. 안드로이드 공유는 url 칸이 없어 문구에 합쳐 보낸다 (단방향)
+  z.object({
+    type: z.literal('SHARE'),
+    message: z.string().min(1),
+  }),
 ]);
 
 // 네이티브 → 웹으로 보낼 수 있는 메시지 목록
