@@ -24,19 +24,18 @@ async function request<T>(
   path: string,
   body?: unknown,
 ): Promise<T> {
-  const { accessToken: storedToken, refreshToken } = useAuthStore.getState();
-  // 앱을 켠 직후엔 accessToken이 메모리에 없다 — 401을 맞고 재발급하는 대신 재발급부터 받아 한 번에 보낸다
-  const accessToken =
-    storedToken ?? (refreshToken ? await refreshAccessToken() : null);
-  // 선발급까지 실패했으면 401에서 재발급을 또 시도하지 않는다 — 재발급 기회는 요청당 한 번
-  const preRefreshFailed =
-    !storedToken && Boolean(refreshToken) && !accessToken;
+  const { accessToken, refreshToken } = useAuthStore.getState();
+  // 앱을 켠 직후엔 붙일 토큰 없이 재발급 토큰만 있다 — 보내기 전에 재발급부터 받는다
+  const hasOnlyRefreshToken = !accessToken && refreshToken !== null;
+  const tokenToSend = hasOnlyRefreshToken
+    ? await refreshAccessToken()
+    : accessToken;
   // FormData면 Content-Type을 안 붙인다 — 브라우저가 multipart boundary까지 직접 정한다
   const headers = new Headers(
     body instanceof FormData ? {} : { 'Content-Type': 'application/json' },
   );
-  if (accessToken) {
-    headers.set('Authorization', `Bearer ${accessToken}`);
+  if (tokenToSend) {
+    headers.set('Authorization', `Bearer ${tokenToSend}`);
   }
 
   // body가 undefined면 JSON.stringify도 undefined라 GET/DELETE에선 body가 안 실린다
@@ -50,7 +49,8 @@ async function request<T>(
 
   // 토큰이 만료됐으면(401) 새로 발급받아 다시 시도한다
   if (response.status === 401 && refreshToken && path !== REFRESH_PATH) {
-    const newToken = preRefreshFailed ? null : await refreshAccessToken();
+    // 재발급은 요청당 한 번 — 보내기 전에 이미 받았으면 다시 시도하지 않는다
+    const newToken = hasOnlyRefreshToken ? null : await refreshAccessToken();
     if (newToken) {
       headers.set('Authorization', `Bearer ${newToken}`);
       return parseApiResponse<T>(await send());
