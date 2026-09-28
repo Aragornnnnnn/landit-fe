@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GET } from './route';
 
-function downloadRequest(userAgent?: string): Request {
-  return new Request('http://localhost/download', {
+function downloadRequest(userAgent?: string, query = ''): Request {
+  return new Request(`http://localhost/download${query}`, {
     headers: userAgent ? { 'user-agent': userAgent } : {},
   });
 }
@@ -127,6 +127,33 @@ describe('GET /download 앰플리튜드 계측', () => {
     expect(sentBody().events[0]).toMatchObject({
       event_type: 'Download Link Visited',
       event_properties: { store: 'app_store' },
+    });
+  });
+
+  it('링크에 붙은 UTM 딱지를 함께 기록한다', async () => {
+    await GET(
+      downloadRequest(
+        ANDROID_UA,
+        '?utm_source=share&utm_medium=referral&utm_campaign=friend_invite',
+      ),
+    );
+
+    expect(sentBody().events[0].event_properties).toEqual({
+      store: 'play_store',
+      utm_source: 'share',
+      utm_medium: 'referral',
+      utm_campaign: 'friend_invite',
+    });
+  });
+
+  it.each([
+    ['없으면', ''],
+    ['비어 있으면', '?utm_source=&utm_campaign='],
+  ])('UTM 딱지가 %s store만 기록한다', async (_, query) => {
+    await GET(downloadRequest(IPHONE_UA, query));
+
+    expect(sentBody().events[0].event_properties).toEqual({
+      store: 'app_store',
     });
   });
 

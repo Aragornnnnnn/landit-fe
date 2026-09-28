@@ -36,9 +36,18 @@ const trackDownloadVisit = async (props: VisitProps) => {
 
 export async function GET(request: Request): Promise<NextResponse> {
   const userAgent = request.headers.get('user-agent') ?? '';
+  const url = new URL(request.url);
+
   const isAndroid = /android/i.test(userAgent);
 
-  await trackDownloadVisit({ store: isAndroid ? 'play_store' : 'app_store' });
+  // 딱지 없는(빈 값 포함) 방문은 undefined라 전송 본문에서 빠지고 store만 남는다
+  const query = url.searchParams;
+  await trackDownloadVisit({
+    store: isAndroid ? 'play_store' : 'app_store',
+    utm_source: query.get('utm_source') || undefined,
+    utm_medium: query.get('utm_medium') || undefined,
+    utm_campaign: query.get('utm_campaign') || undefined,
+  });
 
   if (isAndroid) {
     return NextResponse.redirect(PLAY_STORE_URL);

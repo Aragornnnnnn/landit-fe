@@ -649,7 +649,13 @@ export type EventProps = {
 
   // 서버 발화라 세션·리플레이·공통 속성 없음. device_id 랜덤 — 방문 횟수 집계용.
   // /download 링크 자체를 방문한 경우만 (외부 링크·인스타 등)
-  'Download Link Visited': { store: 'play_store' | 'app_store' };
+  // utm_* — 링크에 딱지가 붙어 있을 때만 (친구 공유 등). 어느 공유 링크로 들어왔는지 가른다
+  'Download Link Visited': {
+    store: 'play_store' | 'app_store';
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+  };
 
   // /download를 거치지 않고 스토어 앱을 바로 연 경우만 (앱 업데이트 유도 UI)
   'App Update Store Opened': { store: 'play_store' | 'app_store' };
