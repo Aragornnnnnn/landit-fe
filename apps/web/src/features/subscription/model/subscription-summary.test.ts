@@ -106,7 +106,7 @@ describe('결제 금액', () => {
     expect(summarizeSubscription(premium())).toMatchObject({ price: null });
   });
 
-  it('통화가 안 와도 원화로 본다 — 한국 스토어만 열려 있다', () => {
+  it('통화가 안 와도 원화로 본다', () => {
     expect(summarizeSubscription(premium({ price: 47000 }))).toMatchObject({
       price: 47000,
     });
