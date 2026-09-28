@@ -3,7 +3,7 @@
 import type { CancelStayDestination, StudyMethod } from '@landit/analytics';
 
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
-import { findPlan, formatWon } from '@/features/subscription/model/plans';
+import { formatWon, PLAN_TITLE } from '@/features/subscription/model/plans';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/subscription-summary';
 
 import type { RetentionReason } from './cancel-flow';
@@ -80,7 +80,7 @@ const priceContent = (summary: PaidSubscriptionSummary): RetentionContent => {
       primary: STAY,
     };
   }
-  const { title } = findPlan(plan);
+  const title = PLAN_TITLE[plan];
   const daily = `하루 ${formatWon(dailyWon(price, PLAN_DAYS[plan]))}`;
   const firstCharge = firstChargeRow(summary);
   return {
