@@ -85,6 +85,53 @@ describe('GET /download', () => {
   });
 });
 
+const KAKAO_SCRAP_UA = 'kakaotalk-scrap/1.0; +https://devtalk.kakao.com/';
+// iMessage 링크 미리보기가 보내는 UA
+const IMESSAGE_PREVIEW_UA =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0';
+
+describe('GET /download 링크 미리보기', () => {
+  beforeEach(() => {
+    vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', '');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it.each([
+    ['카카오톡', KAKAO_SCRAP_UA],
+    ['iMessage', IMESSAGE_PREVIEW_UA],
+  ])(
+    '%s 미리보기 봇이면 스토어로 보내지 않고 랜딧 미리보기를 준다',
+    async (_, userAgent) => {
+      const res = await GET(downloadRequest(userAgent));
+      const html = await res.text();
+
+      expect(res.status).toBe(200);
+      expect(res.headers.get('content-type')).toContain('text/html');
+      expect(html).toContain(
+        '<meta property="og:title" content="랜딧(Landit): 영어회화·스픽·스피킹·표현·리스닝 앱"',
+      );
+      expect(html).toContain(
+        '<meta property="og:image" content="http://localhost/og/share.jpg"',
+      );
+    },
+  );
+
+  it.each([
+    ['카카오톡', `${IPHONE_UA} KAKAOTALK 10.8.0`],
+    ['라인', `${IPHONE_UA} Safari Line/13.20.0`],
+  ])(
+    '%s 인앱 브라우저로 연 사람은 봇이 아니라 스토어로 보낸다',
+    async (_, userAgent) => {
+      const res = await GET(downloadRequest(userAgent));
+
+      expect(res.status).toBe(307);
+    },
+  );
+});
+
 describe('GET /download 앰플리튜드 계측', () => {
   const fetchMock = vi.fn();
 
@@ -155,6 +202,12 @@ describe('GET /download 앰플리튜드 계측', () => {
     expect(sentBody().events[0].event_properties).toEqual({
       store: 'app_store',
     });
+  });
+
+  it('미리보기 봇의 방문은 기록하지 않는다', async () => {
+    await GET(downloadRequest(KAKAO_SCRAP_UA));
+
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('API 키가 없으면 이벤트를 보내지 않고 리다이렉트만 한다', async () => {

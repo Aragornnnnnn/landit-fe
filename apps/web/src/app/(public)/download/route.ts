@@ -4,6 +4,8 @@ import { NextResponse } from 'next/server';
 
 import { APP_STORE_URL, PLAY_STORE_URL } from '@/shared/lib/store-listing';
 
+import { buildLinkPreviewHtml, isLinkPreviewBot } from './_lib/link-preview';
+
 const AMPLITUDE_HTTP_API = 'https://api2.amplitude.com/2/httpapi';
 
 type VisitProps = EventProps['Download Link Visited'];
@@ -37,6 +39,13 @@ const trackDownloadVisit = async (props: VisitProps) => {
 export async function GET(request: Request): Promise<NextResponse> {
   const userAgent = request.headers.get('user-agent') ?? '';
   const url = new URL(request.url);
+
+  // 미리보기 봇을 스토어로 보내면 스토어 페이지 카드가 뜬다 — 랜딧 카드를 주고, 방문으로 세지 않는다
+  if (isLinkPreviewBot(userAgent)) {
+    return new NextResponse(buildLinkPreviewHtml(url.origin), {
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    });
+  }
 
   const isAndroid = /android/i.test(userAgent);
 
