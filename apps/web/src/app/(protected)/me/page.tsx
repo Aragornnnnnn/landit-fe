@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
-import { disablePushToken } from '@/features/notification/model/push-token-registration';
+import { disablePushDevice } from '@/features/notification/model/push-device';
 import { track } from '@/shared/analytics';
 import { logout as requestLogout } from '@/shared/auth/api/logout';
 import { withdraw } from '@/shared/auth/api/withdraw';
@@ -59,7 +59,7 @@ export default function MyPage() {
     setIsLoggingOut(true);
     try {
       // 푸시 해제가 먼저다 — 토큰을 폐기한 뒤엔 인증이 필요한 이 요청을 보낼 수 없다
-      await disablePushToken();
+      await disablePushDevice();
       if (refreshToken) await requestLogout(refreshToken);
     } catch (error) {
       console.warn('[Auth] logout failed:', error);
@@ -80,8 +80,8 @@ export default function MyPage() {
     try {
       // 탈퇴 전에 이 기기로 가는 푸시를 끊는다 — 계정이 사라진 뒤엔 해제할 방법이 없다.
       // 부가 정리라 실패해도 탈퇴 자체는 막지 않는다
-      await disablePushToken().catch((error: unknown) => {
-        console.warn('[push-token] 해제 실패:', error);
+      await disablePushDevice().catch((error: unknown) => {
+        console.warn('[push-device] 해제 실패:', error);
         reportWarning(error);
       });
       await withdraw();

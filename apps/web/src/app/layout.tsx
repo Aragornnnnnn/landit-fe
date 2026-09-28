@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from 'next';
 
 import { AppUpdateGate } from '@/features/app-update/ui/AppUpdateGate';
 import { LegacyReminderCleanup } from '@/features/notification/ui/LegacyReminderCleanup';
-import { PushTokenSync } from '@/features/notification/ui/PushTokenSync';
+import { PushDeviceSync } from '@/features/notification/ui/PushDeviceSync';
 import { ProfilePropertiesSync } from '@/features/onboarding/ui/ProfilePropertiesSync';
 import { IdentifySync } from '@/features/subscription/ui/IdentifySync';
 import { SubscriptionPropertiesSync } from '@/features/subscription/ui/SubscriptionPropertiesSync';
@@ -50,7 +50,7 @@ export default function RootLayout({
           {children}
           <AppUpdateGate />
           <LegacyReminderCleanup />
-          <PushTokenSync />
+          <PushDeviceSync />
           <WidgetDataSync />
           <WidgetChangeSync />
           <IdentifySync />
