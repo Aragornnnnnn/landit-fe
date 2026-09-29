@@ -144,6 +144,9 @@ describe('QuestionCard', () => {
     expect(
       screen.queryByRole('button', { name: '다시 듣기' }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: '영어 문장 가리기' }),
+    ).not.toBeInTheDocument();
   });
 
   it('다시 듣기를 누르면 그 발화를 다시 재생한다', () => {
@@ -216,7 +219,6 @@ describe('QuestionCard', () => {
         translation={null}
         speaking={false}
         textHidden
-        onTextHiddenChange={vi.fn()}
       />,
     );
 
@@ -226,45 +228,28 @@ describe('QuestionCard', () => {
     );
   });
 
-  it('눈 아이콘을 누르면 대화 전체의 글자 가림을 바꾸라고 알린다', () => {
-    const onTextHiddenChange = vi.fn();
-    render(
-      <QuestionCard
-        question="How was your day?"
-        translation={null}
-        speaking={false}
-        textHidden
-        onTextHiddenChange={onTextHiddenChange}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: '영어 문장 보기' }));
-
-    expect(onTextHiddenChange).toHaveBeenCalledWith(false);
-  });
-
-  it('흐린 영어를 누르면 그 카드만 글자가 보인다', () => {
-    // Given 글자를 가린 대화에서
-    const onTextHiddenChange = vi.fn();
+  it('흐린 문장이나 눈 버튼을 누르면 그 카드만 보이고, 다음 카드는 다시 가려진다', () => {
+    // Given 글자를 가린 카드에서
+    const onTextToggled = vi.fn();
     const { rerender } = render(
       <QuestionCard
         question="How was your day?"
         translation={null}
         speaking={false}
         textHidden
-        onTextHiddenChange={onTextHiddenChange}
+        onTextToggled={onTextToggled}
       />,
     );
 
-    // When 흐린 문장을 누르면
-    fireEvent.click(screen.getByText('How was your day?'));
+    // When 눈 버튼을 누르면
+    fireEvent.click(screen.getByRole('button', { name: '영어 문장 보기' }));
 
-    // Then 이 카드는 보이고, 대화 전체 설정은 그대로다
+    // Then 이 카드는 보이고 그 사실을 바깥에 알린다
     expect(screen.getByText('How was your day?')).toHaveAttribute(
       'data-hidden',
       'false',
     );
-    expect(onTextHiddenChange).not.toHaveBeenCalled();
+    expect(onTextToggled).toHaveBeenCalledWith(true);
 
     // When 다음 질문이 오면 Then 다시 가려진다
     rerender(
@@ -273,10 +258,56 @@ describe('QuestionCard', () => {
         translation={null}
         speaking={false}
         textHidden
-        onTextHiddenChange={onTextHiddenChange}
+        onTextToggled={onTextToggled}
       />,
     );
     expect(screen.getByText('What did you eat?')).toHaveAttribute(
+      'data-hidden',
+      'true',
+    );
+
+    // When 흐린 문장을 눌러도 Then 그 카드가 보인다
+    fireEvent.click(screen.getByText('What did you eat?'));
+    expect(screen.getByText('What did you eat?')).toHaveAttribute(
+      'data-hidden',
+      'false',
+    );
+  });
+
+  it('보이는 카드에서 눈 버튼을 누르면 그 카드만 다시 가려진다', () => {
+    const onTextToggled = vi.fn();
+    render(
+      <QuestionCard
+        question="How was your day?"
+        translation={null}
+        speaking={false}
+        textHidden
+        onTextToggled={onTextToggled}
+      />,
+    );
+    fireEvent.click(screen.getByText('How was your day?'));
+
+    fireEvent.click(screen.getByRole('button', { name: '영어 문장 가리기' }));
+
+    expect(screen.getByText('How was your day?')).toHaveAttribute(
+      'data-hidden',
+      'true',
+    );
+    expect(onTextToggled.mock.calls).toEqual([[true], [false]]);
+  });
+
+  it('글자를 늘 보이게 둔 대화도 눈 버튼으로 그 카드만 가릴 수 있다', () => {
+    render(
+      <QuestionCard
+        question="How was your day?"
+        translation={null}
+        speaking={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '영어 문장 가리기' }));
+
+    expect(screen.getByText('How was your day?')).toHaveAttribute(
       'data-hidden',
       'true',
     );
@@ -289,7 +320,6 @@ describe('QuestionCard', () => {
         translation="오늘 하루 어땠어요?"
         speaking
         textHidden
-        onTextHiddenChange={vi.fn()}
       />,
     );
 
@@ -325,23 +355,6 @@ describe('QuestionCard', () => {
 
     // Then 그 카드의 해석이 펼쳐진다
     expect(screen.getByText('오늘 하루 어땠어요?')).toBeInTheDocument();
-  });
-
-  it('눈 아이콘을 주지 않으면 글자 가림 버튼이 없다', () => {
-    render(
-      <QuestionCard
-        question="How was your day?"
-        translation={null}
-        speaking={false}
-      />,
-    );
-
-    expect(
-      screen.queryByRole('button', { name: '영어 문장 보기' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: '영어 문장 가리기' }),
-    ).not.toBeInTheDocument();
   });
 
   it('해석을 펼쳐 두기로 하면 새 질문마다 해석이 펼쳐진 채로 나온다', () => {

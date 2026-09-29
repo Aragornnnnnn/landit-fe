@@ -1,5 +1,5 @@
-// 대화 한 번의 표시 상태 — 마이페이지 기본값으로 시작하고, 눈 아이콘으로 바꾼 값은 이 대화에서만 산다
-import { useState, useSyncExternalStore } from 'react';
+// 대화 카드의 표시 기본값 — 마이페이지 설정을 따른다. 카드에서 바꾼 값은 그 카드에만 산다
+import { useSyncExternalStore } from 'react';
 
 import {
   getDefaultDisplaySetting,
@@ -19,12 +19,6 @@ export const useDisplaySetting = (key: DisplaySettingKey) =>
 export const useTalkDisplay = () => {
   const alwaysShowText = useDisplaySetting('alwaysShowText');
   const translationDefaultOpen = useDisplaySetting('alwaysShowTranslation');
-  // 눈 아이콘을 누르기 전엔 null — 그동안은 기본값을 따른다
-  const [textHiddenOverride, setTextHidden] = useState<boolean | null>(null);
 
-  return {
-    textHidden: textHiddenOverride ?? !alwaysShowText,
-    setTextHidden,
-    translationDefaultOpen,
-  };
+  return { textHidden: !alwaysShowText, translationDefaultOpen };
 };

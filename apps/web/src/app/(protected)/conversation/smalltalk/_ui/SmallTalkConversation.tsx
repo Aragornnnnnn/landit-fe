@@ -143,14 +143,13 @@ export const SmallTalkConversation = ({
             }
             replay={replay}
             textHidden={display.textHidden}
-            onTextHiddenChange={(hidden) => {
-              display.setTextHidden(hidden);
+            onTextToggled={(visible) =>
               track(EVENTS.ENGLISH_TEXT_TOGGLED, {
                 session_id: session.sessionId,
                 turn_index: turnIndex,
-                hidden,
-              });
-            }}
+                hidden: !visible,
+              })
+            }
             translationDefaultOpen={display.translationDefaultOpen}
           />
         </div>

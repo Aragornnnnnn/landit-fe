@@ -443,7 +443,7 @@ export type EventProps = {
     turn_index: number;
     opened: boolean;
   };
-  // 대화 중 눈 아이콘으로 영어 문장을 가리거나 다시 보인 순간 — 듣기만으로 대화하는 사람이 얼마나 되는지 본다
+  // 대화 카드에서 영어 문장을 보이거나 가린 순간(흐린 문장 탭·눈 버튼) — 듣기만으로 버티는 사람이 얼마나 되는지 본다
   'English Text Toggled': {
     session_id?: number;
     turn_index: number;

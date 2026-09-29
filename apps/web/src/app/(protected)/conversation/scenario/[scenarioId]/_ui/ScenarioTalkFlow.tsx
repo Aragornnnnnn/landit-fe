@@ -173,14 +173,13 @@ export const ScenarioTalkFlow = ({
             }
             replay={replay}
             textHidden={display.textHidden}
-            onTextHiddenChange={(hidden) => {
-              display.setTextHidden(hidden);
+            onTextToggled={(visible) =>
               track(EVENTS.ENGLISH_TEXT_TOGGLED, {
                 session_id: sessionId ?? undefined,
                 turn_index: turnIndex,
-                hidden,
-              });
-            }}
+                hidden: !visible,
+              })
+            }
             translationDefaultOpen={display.translationDefaultOpen}
           />
         </div>
