@@ -183,6 +183,7 @@ Layer 3  컴포넌트                                ← 오직 시맨틱 토큰
 - 모든 상/하단 고정 요소는 `var(--safe-area-inset-top)`·`var(--safe-area-inset-bottom)`으로 노치/홈바/안드로이드 내비게이션 바 대응 (좌우가 필요하면 `globals.css`에 먼저 정의한다)
 - 패턴: 헤더 `paddingTop: max(var(--safe-area-inset-top), 16px)`, 하단 시트 `max(var(--safe-area-inset-bottom), 24px)`
 - `env(safe-area-inset-*)`를 직접 쓰지 않는다 — 변수는 `globals.css`에서 정의한다. 값은 Android 셸이 잰 inset(`--native-inset-*`)이 있으면 그것, 없으면 `env()`다 (구형 Android WebView는 `env()`를 0으로 준다). 예외는 `globals.css` 없이 그려지는 `global-error.tsx` 하나다
+- Android 셸(`<html data-platform="android">`)은 하단 inset 위에 틈(`--safe-area-bottom-gap`, 12px)을 더한다 — 내비게이션 바는 영역 전체가 바라서 inset만큼만 띄우면 버튼이 바에 붙는다. iOS와 브라우저는 더하지 않는다
 
 ### Spacing
 
