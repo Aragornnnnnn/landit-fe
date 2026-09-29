@@ -54,8 +54,7 @@ export const TalkDisplayMenuEntry = () => {
           className="mt-1 mb-4 text-[14px] leading-6"
           style={{ color: '#666' }}
         >
-          새 대화를 시작할 때 영어 글자와 해석을 어떻게 보여줄지 정해요. 대화
-          중에는 눈 버튼으로 그 대화에서만 바꿀 수 있어요
+          대화마다 영어 글자와 해석을 어떻게 보여줄지 정해요
         </p>
         <MenuGroup>
           <MenuToggle
