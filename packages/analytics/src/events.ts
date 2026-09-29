@@ -397,8 +397,12 @@ export type EventProps = {
   'Mailbox Tab Switched': { box: 'received' | 'sent' };
   // 유형 선택 화면에서 하나를 고른다 — 무슨 말을 하고 싶어 들어오는지의 분포
   'Feedback Type Selected': { feedback_type: FeedbackType };
-  // 실제로 보냈다. 원문은 PII 위험이 있어 길이만 남긴다
-  'Feedback Submitted': { feedback_type: FeedbackType; length: number };
+  // 실제로 보냈다. 원문은 PII 위험이 있어 길이만 남긴다. image_count는 붙인 사진 수
+  'Feedback Submitted': {
+    feedback_type: FeedbackType;
+    length: number;
+    image_count: number;
+  };
   'Streak Month Changed': {
     direction: 'prev' | 'next';
     year: number;
