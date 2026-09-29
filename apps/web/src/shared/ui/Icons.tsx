@@ -334,6 +334,25 @@ export const TranslateIcon = ({ size = 22, ...props }: IconProps) => (
   </svg>
 );
 
+// 눈 — 대화 카드의 영어 문장 보기 버튼용
+export const EyeIcon = ({ size = 22, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0" />
+    <path d="M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+  </svg>
+);
+
 // 다시하기 — 대화 재도전 버튼용 (반시계 회전 화살표)
 export const ReplayIcon = ({ size = 22, ...props }: IconProps) => (
   <svg

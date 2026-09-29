@@ -95,6 +95,22 @@ describe('parseWebToNativeMessage', () => {
     );
   });
 
+  it('공유 요청을 그대로 되돌린다 (round-trip)', () => {
+    const message: WebToNativeMessage = {
+      type: 'SHARE',
+      message: '같이 해요\nhttps://example.com/download',
+    };
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('공유 문구가 비어 있으면 거른다 — 빈 공유 시트가 뜨지 않게', () => {
+    expect(
+      parseWebToNativeMessage(JSON.stringify({ type: 'SHARE', message: '' })),
+    ).toBeNull();
+  });
+
   it('알림 권한 조회 요청을 그대로 되돌린다 (round-trip)', () => {
     const message = { type: 'GET_NOTIFICATION_PERMISSION' } as const;
 

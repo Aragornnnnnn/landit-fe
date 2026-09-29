@@ -19,6 +19,7 @@ import { generateNonce } from '@/auth/nonce';
 import { requestSocialIdToken, toSocialLoginFailure } from '@/auth/socialLogin';
 import { runHaptic } from '@/bridge/haptics';
 import { nativeContextScript } from '@/bridge/nativeContext';
+import { openShareSheet } from '@/bridge/share';
 import { useNativeBridge } from '@/bridge/useNativeBridge';
 import { WEB_URL } from '@/config/webUrl';
 import { reportWarning, setMonitoringUser } from '@/monitoring/report';
@@ -97,6 +98,8 @@ const ShellScreen = () => {
     HAPTIC: ({ pattern }) => void runHaptic(pattern),
     // 마이크 권한이 차단된 상태 — OS 앱 설정 화면을 연다 (iOS·Android 공통)
     OPEN_SETTINGS: () => void Linking.openSettings(),
+    // 친구에게 공유하기 — OS 공유 시트를 연다. 보냈는지·닫았는지는 안드로이드가 알려주지 않아 회신하지 않는다
+    SHARE: ({ message }) => openShareSheet(message),
     // 홈 위젯 데이터를 기록하고 iOS 위젯 타임라인을 새로 예약한다.
     // 저장을 먼저 끝낸다 — 저장이 실패하면 다음 실행이 낡은 데이터로 위젯을 되돌려 놓는다
     SYNC_WIDGET_DATA: async ({ data }) => {

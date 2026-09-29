@@ -149,6 +149,11 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   }),
   // 이전 구매를 복원한다 — 응답은 RESTORE_RESULT
   z.object({ type: z.literal('RESTORE_PURCHASES') }),
+  // OS 공유 시트를 연다 — 링크까지 담은 문구 한 덩어리. 안드로이드 공유는 url 칸이 없어 문구에 합쳐 보낸다 (단방향)
+  z.object({
+    type: z.literal('SHARE'),
+    message: z.string().min(1),
+  }),
   // 사진 보관함에서 사진을 고른다 — 카메라 없이 보관함만 연다. limit은 이번에 더 담을 수 있는 장수. 응답은 PHOTOS_PICKED
   z.object({
     type: z.literal('PICK_PHOTOS'),
