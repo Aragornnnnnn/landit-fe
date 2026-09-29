@@ -16,13 +16,19 @@ export const api = {
   put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
   patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, body),
   delete: <T>(path: string) => request<T>('DELETE', path),
+  // 봉투 없이 바이트를 주는 응답(인증이 필요한 첨부 이미지 등) — 실패일 때만 봉투를 읽어 ApiError로 던진다
+  getBlob: (path: string) => request('GET', path, undefined, readBlob),
 };
+
+const readBlob = async (response: Response): Promise<Blob> =>
+  response.ok ? response.blob() : parseApiResponse<Blob>(response);
 
 // 모든 메서드가 공유하는 엔진 — 토큰이 없으면 먼저 발급받아 붙이고, 401이면 새로 발급받아 딱 한 번 재시도한다
 async function request<T>(
   method: string,
   path: string,
   body?: unknown,
+  read: (response: Response) => Promise<T> = parseApiResponse<T>,
 ): Promise<T> {
   const { accessToken, refreshToken } = useAuthStore.getState();
   // 앱을 켠 직후엔 붙일 토큰 없이 재발급 토큰만 있다 — 보내기 전에 재발급부터 받는다
@@ -53,7 +59,7 @@ async function request<T>(
     const newToken = hasOnlyRefreshToken ? null : await refreshAccessToken();
     if (newToken) {
       headers.set('Authorization', `Bearer ${newToken}`);
-      return parseApiResponse<T>(await send());
+      return read(await send());
     }
     // refresh까지 실패 = 세션 끝. 정리하고 로그인 화면으로 보낸다
     clearSession();
@@ -61,5 +67,5 @@ async function request<T>(
     throw new Error('세션이 만료됐어요. 다시 로그인해 주세요.');
   }
 
-  return parseApiResponse<T>(response);
+  return read(response);
 }
