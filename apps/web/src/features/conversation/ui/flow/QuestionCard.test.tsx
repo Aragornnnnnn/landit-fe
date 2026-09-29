@@ -302,6 +302,31 @@ describe('QuestionCard', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('해석 펼침 기본값이 늦게 들어와도 아직 손대지 않은 카드엔 반영된다', () => {
+    // Given 저장값을 읽기 전(서버 렌더 값)으로 먼저 그려진 카드
+    const { rerender } = render(
+      <QuestionCard
+        question="How was your day?"
+        translation="오늘 하루 어땠어요?"
+        speaking={false}
+        translationDefaultOpen={false}
+      />,
+    );
+
+    // When 저장된 기본값(펼침)이 들어오면
+    rerender(
+      <QuestionCard
+        question="How was your day?"
+        translation="오늘 하루 어땠어요?"
+        speaking={false}
+        translationDefaultOpen
+      />,
+    );
+
+    // Then 그 카드의 해석이 펼쳐진다
+    expect(screen.getByText('오늘 하루 어땠어요?')).toBeInTheDocument();
+  });
+
   it('눈 아이콘을 주지 않으면 글자 가림 버튼이 없다', () => {
     render(
       <QuestionCard

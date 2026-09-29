@@ -83,13 +83,14 @@ export const QuestionCard = ({
   // 진행값이 어느 질문 것인지 함께 저장한다 — 질문이 바뀐 첫 프레임에 이전 값이 새어 나오지 않도록
   const [typed, setTyped] = useState({ question, count: 0 });
   const count = typed.question === question ? typed.count : 0;
-  // 펼침도 어느 질문 것인지 함께 저장한다 — 다음 질문은 다시 기본값으로 시작한다
-  const [opened, setOpened] = useState({
-    question,
-    on: translationDefaultOpen,
-  });
+  // 펼침은 이 카드에서 직접 누른 값만 질문과 함께 저장한다 — 누르기 전엔 기본값을 따르므로,
+  // 저장된 기본값이 첫 렌더 뒤에 들어와도 반영된다. 다음 질문은 다시 기본값으로 시작한다
+  const [opened, setOpened] = useState<{
+    question: string;
+    on: boolean;
+  } | null>(null);
   const translationOpen =
-    opened.question === question ? opened.on : translationDefaultOpen;
+    opened?.question === question ? opened.on : translationDefaultOpen;
   // 흐린 영어를 눌러 이 카드만 본 질문 — 다음 질문은 다시 가려진다
   const [peekedQuestion, setPeekedQuestion] = useState<string | null>(null);
   const blurred = textHidden && peekedQuestion !== question;
