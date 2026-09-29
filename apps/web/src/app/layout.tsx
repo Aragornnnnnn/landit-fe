@@ -3,7 +3,6 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
 
 import { AppUpdateGate } from '@/features/app-update/ui/AppUpdateGate';
-import { LegacyReminderCleanup } from '@/features/notification/ui/LegacyReminderCleanup';
 import { PushTokenSync } from '@/features/notification/ui/PushTokenSync';
 import { ProfilePropertiesSync } from '@/features/onboarding/ui/ProfilePropertiesSync';
 import { IdentifySync } from '@/features/subscription/ui/IdentifySync';
@@ -49,7 +48,6 @@ export default function RootLayout({
         <Providers>
           {children}
           <AppUpdateGate />
-          <LegacyReminderCleanup />
           <PushTokenSync />
           <WidgetDataSync />
           <WidgetChangeSync />
