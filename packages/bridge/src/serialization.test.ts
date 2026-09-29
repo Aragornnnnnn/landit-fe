@@ -551,3 +551,27 @@ describe('parseNativeToWebMessage — 결제', () => {
     ).toBeNull();
   });
 });
+
+describe('사진 고르기 (PICK_PHOTOS ↔ PHOTOS_PICKED)', () => {
+  it('한 번에 3장을 넘게 달라는 요청은 버린다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({ type: 'PICK_PHOTOS', limit: 4 }),
+      ),
+    ).toBeNull();
+  });
+
+  it('3장을 넘게 실은 회신은 버린다', () => {
+    const photo = { base64: 'AAAA', mimeType: 'image/jpeg' };
+
+    expect(
+      parseNativeToWebMessage(
+        JSON.stringify({
+          type: 'PHOTOS_PICKED',
+          status: 'success',
+          photos: [photo, photo, photo, photo],
+        }),
+      ),
+    ).toBeNull();
+  });
+});
