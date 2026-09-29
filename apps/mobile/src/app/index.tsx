@@ -30,6 +30,7 @@ import {
 import { getExpoPushToken } from '@/notifications/push-token';
 import { initializeNotifications } from '@/notifications/setup';
 import { useNotificationDeepLink } from '@/notifications/useNotificationDeepLink';
+import { pickPhotos } from '@/photos/pick-photos';
 import {
   configurePurchases,
   fetchOfferingPackages,
@@ -138,6 +139,11 @@ const ShellScreen = () => {
     RESTORE_PURCHASES: async () => {
       const result = await restorePurchases();
       postToWeb({ type: 'RESTORE_RESULT', ...result });
+    },
+    // 사진 보관함만 연다(카메라 없음) — 고른 사진을 줄인 JPEG로 회신한다
+    PICK_PHOTOS: async ({ limit }) => {
+      const result = await pickPhotos(limit);
+      postToWeb({ type: 'PHOTOS_PICKED', ...result });
     },
     // 웹의 로그인 요청을 받아 provider SDK로 idToken을 발급받고, nonce와 함께 웹으로 돌려준다
     SOCIAL_LOGIN_REQUEST: async ({ provider }) => {
