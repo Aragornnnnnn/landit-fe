@@ -73,6 +73,8 @@ export const ScenarioTalkFlow = ({
   // 키보드 입력 중 — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
   const typing = keyboardMode && phase === 'USER_SPEAKING';
   const keyboardInset = useKeyboardInset();
+  // 키보드가 입력 박스를 밀어 올린 상태 — 하단 inset 영역은 키보드가 덮는다
+  const keyboardLifted = typing && keyboardInset > 0;
   // 선발화 안내는 대기(USER_READY) 동안만 — 사용자가 말하기 시작하거나 속마음이 오면 즉시 비켜준다
   const showUserFirstIntro =
     turn.isUserOpening && phase === 'USER_READY' && !introDismissed;
@@ -116,9 +118,7 @@ export const ScenarioTalkFlow = ({
     <main
       className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
       // iOS WKWebView는 키보드가 떠도 레이아웃이 안 줄어든다 — 가려진 높이만큼 올려 입력 박스를 보이게 한다
-      style={
-        typing && keyboardInset ? { paddingBottom: keyboardInset } : undefined
-      }
+      style={keyboardLifted ? { paddingBottom: keyboardInset } : undefined}
     >
       {/* 진행 게이지 — 표현 학습 스텝과 같은 자리(상태바 바로 아래)·같은 모양이라 무대 위에 띄운다 */}
       <div
@@ -185,7 +185,9 @@ export const ScenarioTalkFlow = ({
         )}
       </section>
 
-      <footer className="flex-none pb-[max(var(--safe-area-inset-bottom),16px)]">
+      <footer
+        className={`flex-none ${keyboardLifted ? 'pb-4' : 'pb-[max(var(--safe-area-inset-bottom),16px)]'}`}
+      >
         {ended ? (
           // 대화 종료 — 마지막 AI 발화만 남기고 마이크 대신 분석으로 가는 CTA를 아래쪽에 보여준다
           <div className="flex h-36 items-end px-5 pb-3">
