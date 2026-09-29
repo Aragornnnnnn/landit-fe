@@ -1,5 +1,5 @@
 // useSmallTalkFlow — 스몰톡에만 있는 두 가지를 검증한다.
-// (1) 남은 말하기 시간을 언제 깎고 언제 되돌리는가 (2) 종료 확인 응답 처리
+// (1) 남은 말하기 시간을 언제 깎고 언제 되돌리는가 (2) 종료 확인 응답 처리 (3) 종료 버튼으로 직접 완료
 // (턴 전이·속마음 같은 엔진 공통 동작은 useScenarioTalkFlow 테스트가 맡는다)
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -30,6 +30,7 @@ vi.mock('@/features/conversation/api/session', () => ({
 vi.mock('@/features/small-talk/api/small-talk', () => ({
   submitSmallTalkMessage: vi.fn(),
   decideSmallTalkExit: vi.fn(),
+  completeSmallTalkSession: vi.fn(),
 }));
 
 // TTS·STT는 경계라 목으로 둔다 — 재생 종료와 인식 결과만 흉내 낸다
@@ -92,6 +93,9 @@ vi.mock('@tanstack/react-query', async (importOriginal) => ({
 
 const submitSmallTalkMessage = vi.mocked(smallTalkApi.submitSmallTalkMessage);
 const decideSmallTalkExit = vi.mocked(smallTalkApi.decideSmallTalkExit);
+const completeSmallTalkSession = vi.mocked(
+  smallTalkApi.completeSmallTalkSession,
+);
 const getInnerThought = vi.mocked(sessionApi.getInnerThought);
 
 // 세션이 내려준 목소리 — 파트너 프로필 값과 다르게 둬서 어느 쪽을 쓰는지 구분한다
@@ -151,15 +155,17 @@ const submitResponse = (
   }) as SmallTalkMessageSubmitResponse;
 
 const goHome = vi.fn();
+const showSummary = vi.fn();
 
-const renderFlow = (remainingSpeakingTimeMs = 20_000) =>
+const renderFlow = (remainingSpeakingTimeMs = 20_000, endSession = vi.fn()) =>
   renderHook(() =>
     useSmallTalkFlow({
       session,
       partner: 'chloe',
       remainingSpeakingTimeMs,
-      endSession: vi.fn(),
+      endSession,
       goHome,
+      showSummary,
     }),
   );
 
@@ -184,6 +190,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.clearAllMocks();
 });
 
 describe('useSmallTalkFlow — 남은 말하기 시간', () => {
@@ -361,6 +368,7 @@ describe('useSmallTalkFlow — 중도 이탈', () => {
         remainingSpeakingTimeMs: 20_000,
         endSession,
         goHome,
+        showSummary,
       }),
     );
 
@@ -423,6 +431,7 @@ describe('useSmallTalkFlow — 종료 확인', () => {
         remainingSpeakingTimeMs: 20_000,
         endSession,
         goHome,
+        showSummary,
       }),
     );
 
@@ -434,5 +443,93 @@ describe('useSmallTalkFlow — 종료 확인', () => {
 
     expect(endSession).toHaveBeenCalled();
     expect(goHome).toHaveBeenCalled();
+  });
+});
+
+describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
+  // 한 마디를 주고받아 서버가 발화를 받아 둔 상태로 만든다
+  const exchangeOnce = async (result: {
+    current: ReturnType<typeof useSmallTalkFlow>;
+  }) => {
+    submitSmallTalkMessage.mockResolvedValueOnce(submitResponse());
+    speakFor(result, 3);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Hello there.');
+    });
+  };
+
+  it('주고받은 말이 있으면 완료를 요청하고 오늘의 스몰톡으로 보낸다', async () => {
+    completeSmallTalkSession.mockResolvedValueOnce(undefined);
+    const endSession = vi.fn();
+    const { result } = renderFlow(20_000, endSession);
+    await exchangeOnce(result);
+
+    await act(async () => result.current.completeTalk());
+
+    expect(completeSmallTalkSession).toHaveBeenCalledWith(7);
+    expect(showSummary).toHaveBeenCalled();
+    // 중도 종료가 아니다 — 세션을 INTERRUPTED로 끝내면 요약을 못 본다
+    expect(endSession).not.toHaveBeenCalled();
+    // 작별 완료와 같은 후속 — 스트릭·요약을 미리 받고 소감 차례를 남긴다
+    expect(refreshStreak).toHaveBeenCalled();
+    expect(queryClientMock.prefetchQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: smallTalkKeys.summary(39, 7) }),
+    );
+    expect(shouldAskSatisfaction('smalltalk')).toBe(true);
+  });
+
+  it('아직 주고받은 말이 없으면 완료하지 않고 중도 종료로 나간다', async () => {
+    // 첫 답 전에 나간 대화는 시나리오처럼 기록·스트릭에 남기지 않는다
+    const endSession = vi.fn();
+    const { result } = renderFlow(20_000, endSession);
+
+    await act(async () => result.current.completeTalk());
+
+    expect(completeSmallTalkSession).not.toHaveBeenCalled();
+    expect(endSession).toHaveBeenCalled();
+    expect(goHome).toHaveBeenCalled();
+    expect(showSummary).not.toHaveBeenCalled();
+  });
+
+  it('완료 요청이 실패하면 중도 종료로 정리하고 홈으로 간다', async () => {
+    completeSmallTalkSession.mockRejectedValueOnce(new Error('500'));
+    const endSession = vi.fn();
+    const { result } = renderFlow(20_000, endSession);
+    await exchangeOnce(result);
+
+    await act(async () => result.current.completeTalk());
+
+    expect(monitoringMock.reportError).toHaveBeenCalled();
+    expect(endSession).toHaveBeenCalled();
+    expect(goHome).toHaveBeenCalled();
+    expect(showSummary).not.toHaveBeenCalled();
+  });
+
+  it('완료한 뒤 늦게 도착한 발화 결과로 완료 후속을 다시 하지 않는다', async () => {
+    // 서버는 직접 완료 뒤 도착한 발화에 COMPLETED를 돌려줄 수 있다 — 완료가 두 번 세지면 안 된다
+    completeSmallTalkSession.mockResolvedValueOnce(undefined);
+    const { result } = renderFlow(20_000);
+    await exchangeOnce(result);
+    let resolveLate!: (res: SmallTalkMessageSubmitResponse) => void;
+    submitSmallTalkMessage.mockReturnValueOnce(
+      new Promise((resolve) => (resolveLate = resolve)),
+    );
+    act(() => ttsMock.state.onEnd?.()); // 상대 발화가 끝나 다시 말할 차례
+    speakFor(result, 2);
+    act(() => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('And you?');
+    });
+
+    await act(async () => result.current.completeTalk());
+    refreshStreak.mockClear();
+    await act(async () =>
+      resolveLate(
+        submitResponse({ turnStatus: 'COMPLETED', nextMessage: null }),
+      ),
+    );
+
+    expect(refreshStreak).not.toHaveBeenCalled();
   });
 });

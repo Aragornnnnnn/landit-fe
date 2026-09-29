@@ -1,6 +1,7 @@
 // 스몰톡 대화 흐름 훅 — 대화 엔진에 스몰톡 세션·제출 API를 배선하고, 스몰톡에만 있는 두 가지를 맡는다.
 // (1) 발화 응답이 종료 확인(EXIT_CONFIRMATION_REQUIRED)이면 END로 답해 대화를 닫는다
 // (2) 오늘 남은 발화 시간을 들고 있다가, 말하는 동안 줄이고 제출 후 서버 값으로 정정한다
+// (3) 종료 버튼 — 작별 인사 없이 지금 대화를 완료하고 오늘의 스몰톡으로 보낸다
 'use client';
 
 import { useRef, useState } from 'react';
@@ -13,6 +14,7 @@ import { useConversationTurns } from '@/features/conversation/model/useConversat
 // 첫 완료 뒤 스몰톡 탭에서 소감을 묻는다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { markTalkCompleted } from '@/features/satisfaction/model/prompt-record';
 import {
+  completeSmallTalkSession,
   decideSmallTalkExit,
   submitSmallTalkMessage,
   type SmallTalkProgress,
@@ -43,6 +45,8 @@ interface SmallTalkFlowOptions {
   endSession: () => void;
   // 대화를 접고 홈으로 — 종료 확인을 못 보내 대화가 멈춰 버렸을 때 이 길로 빠져나간다
   goHome: () => void;
+  // 완료 뒤 오늘의 스몰톡으로 — 종료 버튼으로 끝냈을 때 작별 인사 화면을 건너뛰고 바로 간다
+  showSummary: () => void;
 }
 
 export const useSmallTalkFlow = ({
@@ -51,11 +55,14 @@ export const useSmallTalkFlow = ({
   remainingSpeakingTimeMs,
   endSession,
   goHome,
+  showSummary,
 }: SmallTalkFlowOptions) => {
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.member?.userId ?? null);
   // 마지막 제출이 알려준 진행 상태 — 종료 화면의 "얘기한 시간"이 여기서 나온다
   const [progress, setProgress] = useState<SmallTalkProgress | null>(null);
+  // 서버가 받아 준 내 발화 수 — 0이면 아직 나눈 대화가 없어 종료해도 남길 기록이 없다
+  const [answeredTurns, setAnsweredTurns] = useState(0);
   // 주고받은 말의 수 — 서버가 매기는 메시지 순번이 곧 그 수다
   const [exchangeCount, setExchangeCount] = useState(
     session.currentMessage ? 1 : 0,
@@ -63,6 +70,8 @@ export const useSmallTalkFlow = ({
   // 턴마다 하나씩 붙이는 발화 식별자 — 실패 후 다시 보낼 때 같은 값을 써야
   // 서버가 재전송으로 알아보고 이미 접수한 발화를 두 번 세지 않는다
   const clientMessageIdsRef = useRef(new Map<number, string>());
+  // 종료 버튼으로 완료를 보냈는가 — 그 뒤에 도착한 제출 응답은 버린다 (서버가 COMPLETED로 돌려줄 수 있어 완료가 두 번 세진다)
+  const completedDirectlyRef = useRef(false);
   const clientMessageIdFor = (turnIndex: number) => {
     const issued = clientMessageIdsRef.current.get(turnIndex);
     if (issued) return issued;
@@ -128,8 +137,11 @@ export const useSmallTalkFlow = ({
         if (!decided) return null; // 전송 실패로 나가는 중 — 엔진도 손을 뗀다
         result = decided;
       }
+      // 기다리는 사이 종료 버튼으로 이미 완료했다 — 화면은 요약으로 떠났고 완료 후속도 끝났다
+      if (completedDirectlyRef.current) return null;
 
       setProgress(result.progress);
+      setAnsweredTurns(turnIndex + 1);
       budget.settle(result.progress.remainingSpeakingTimeMs);
       setExchangeCount(
         result.nextMessage?.messageSequence ??
@@ -146,24 +158,15 @@ export const useSmallTalkFlow = ({
 
       const completed = result.turnStatus === 'COMPLETED';
       if (completed) {
-        track(EVENTS.SMALL_TALK_COMPLETED, {
-          session_id: session.sessionId,
-          partner,
-          turn_count: turnIndex + 1,
-          speaking_duration_ms: result.progress.accumulatedSpeakingDurationMs,
+        settleCompletion({
+          turnCount: turnIndex + 1,
+          speakingDurationMs: result.progress.accumulatedSpeakingDurationMs,
           // 예산이 0이 된 턴은 서버가 스스로 닫은 것 — 사용자가 인사로 끝낸 것과 구분한다
-          end_reason:
+          endReason:
             result.progress.remainingSpeakingTimeMs === 0
               ? 'time_limit'
               : 'user_ended',
         });
-        refreshHome();
-        // 축하 화면이 열자마자 새 숫자를 그리도록 미리 받아 둔다 (시나리오 대화와 같은 처리)
-        refreshStreakAfterCompletion(queryClient);
-        markTalkCompleted('smalltalk');
-        // 다음 화면(오늘의 스몰톡)이 작별 인사 동안 준비되게 — 요약과 래디 그림을 미리 받는다
-        void prefetchSmallTalkSummary(queryClient, userId, session.sessionId);
-        for (const src of SUMMARY_IMAGE_SOURCES) preload(src, { as: 'image' });
       }
 
       return {
@@ -183,6 +186,32 @@ export const useSmallTalkFlow = ({
     waiting: engine.phase === 'USER_READY',
   });
 
+  // 대화가 완료됐다 — 작별 인사·시간 소진·종료 버튼 어느 길이든 같은 후속을 한다
+  const settleCompletion = ({
+    turnCount,
+    speakingDurationMs,
+    endReason,
+  }: {
+    turnCount: number;
+    speakingDurationMs: number;
+    endReason: 'user_ended' | 'time_limit' | 'direct_end';
+  }) => {
+    track(EVENTS.SMALL_TALK_COMPLETED, {
+      session_id: session.sessionId,
+      partner,
+      turn_count: turnCount,
+      speaking_duration_ms: speakingDurationMs,
+      end_reason: endReason,
+    });
+    refreshHome();
+    // 축하 화면이 열자마자 새 숫자를 그리도록 미리 받아 둔다 (시나리오 대화와 같은 처리)
+    refreshStreakAfterCompletion(queryClient);
+    markTalkCompleted('smalltalk');
+    // 다음 화면(오늘의 스몰톡)이 준비되게 — 요약과 래디 그림을 미리 받는다
+    void prefetchSmallTalkSummary(queryClient, userId, session.sessionId);
+    for (const src of SUMMARY_IMAGE_SOURCES) preload(src, { as: 'image' });
+  };
+
   // 중도 이탈 (정상 완료는 서버가 판정한다)
   const leave = () => {
     track(EVENTS.SMALL_TALK_ABANDONED, {
@@ -196,9 +225,41 @@ export const useSmallTalkFlow = ({
     refreshHome();
   };
 
+  // 종료 버튼 — 작별 인사 없이 지금 완료한다. 나눈 대화가 없으면 남길 것도 없어 중도 종료로 나간다
+  // (시나리오도 첫 답 전에 나가면 기록·스트릭이 없다)
+  const completeTalk = async () => {
+    if (completedDirectlyRef.current) return; // 연타 — 이미 보냈다
+    if (answeredTurns === 0) {
+      leave();
+      goHome();
+      return;
+    }
+    completedDirectlyRef.current = true;
+    engine.abandon();
+    try {
+      await completeSmallTalkSession(session.sessionId);
+    } catch (cause) {
+      console.warn('[smalltalk] 직접 완료 전송 실패', cause);
+      reportError(cause);
+      showToast('연결에 문제가 생겨 대화를 마무리하지 못했어요');
+      leave();
+      goHome();
+      return;
+    }
+    settleCompletion({
+      turnCount: answeredTurns,
+      speakingDurationMs: progress?.accumulatedSpeakingDurationMs ?? 0,
+      endReason: 'direct_end',
+    });
+    showSummary();
+  };
+
   return {
     ...engine,
     leave,
+    completeTalk,
+    // 서버가 받아 준 내 발화가 있는가 — 없으면 X로 확인 없이 바로 나간다
+    hasExchanged: answeredTurns > 0,
     remainingMs: budget.remainingMs,
     // 이번 발화에서 남은 몫(0~1) — 마이크 둘레의 타이머 링이 그린다
     speakingRatio: budget.ratio,
