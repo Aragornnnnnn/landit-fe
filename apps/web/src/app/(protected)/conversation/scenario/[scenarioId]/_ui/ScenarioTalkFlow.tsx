@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { toCharacterLook } from '@/features/conversation/model/character-look';
 import { userIntroHoldMs } from '@/features/conversation/model/pacing';
 import type { FloatingThought } from '@/features/conversation/model/thought';
+import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
 import { ExitConfirmSheet } from '@/features/conversation/ui/flow/ExitConfirmSheet';
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
@@ -36,6 +37,7 @@ export const ScenarioTalkFlow = ({
 }) => {
   const router = useRouter();
   const [showExitModal, setShowExitModal] = useState(false);
+  const display = useTalkDisplay();
   // 진입 시점의 완료 여부(재대화 판별) — 세션이 끝나면 시나리오 리스트가 invalidate돼
   // scenario.completed가 뒤늦게 true로 바뀌므로, 첫 완료와 구분하려면 진입 값으로 고정해야 한다.
   // 피드백 화면은 이 값을 다시 구할 수 없어 주소로 넘긴다
@@ -170,6 +172,15 @@ export const ScenarioTalkFlow = ({
               })
             }
             replay={replay}
+            textHidden={display.textHidden}
+            onTextToggled={(visible) =>
+              track(EVENTS.ENGLISH_TEXT_TOGGLED, {
+                session_id: sessionId ?? undefined,
+                turn_index: turnIndex,
+                hidden: !visible,
+              })
+            }
+            translationDefaultOpen={display.translationDefaultOpen}
           />
         </div>
         {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다 */}

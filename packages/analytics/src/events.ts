@@ -63,6 +63,7 @@ export const EVENTS = {
   TURN_FAILED: 'Turn Failed',
   INNER_THOUGHT_VIEWED: 'Inner Thought Viewed',
   TRANSLATION_TOGGLED: 'Translation Toggled',
+  ENGLISH_TEXT_TOGGLED: 'English Text Toggled',
   SPEECH_REPLAYED: 'Speech Replayed',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
   SPEECH_PLAYBACK_FAILED: 'Speech Playback Failed',
@@ -144,6 +145,9 @@ export const EVENTS = {
   // 앱 업데이트 유도 UI에서 스토어 앱을 직접 연다
   APP_UPDATE_STORE_OPENED: 'App Update Store Opened',
 
+  // 친구에게 공유하기 — 마이페이지 행을 눌러 공유 시트를 열었거나 링크를 복사했다 (LAN-578)
+  APP_SHARE_TAPPED: 'App Share Tapped',
+
   // 위젯 설치 안내 — 온보딩 끝 유도 화면과 iOS 안내 3장.
   // 변형(어느 답·어느 스텝·어느 플랫폼)은 이벤트명이 아니라 속성으로 가른다 (정책 2-1)
   WIDGET_INSTALL_INVITE_VIEWED: 'Widget Install Invite Viewed',
@@ -176,6 +180,7 @@ export const EVENTS = {
   PROMO_SHEET_VIEWED: 'Promo Sheet Viewed',
   HAPTICS_TOGGLED: 'Haptics Toggled',
   SPEECH_RATE_CHANGED: 'Speech Rate Changed',
+  TALK_DISPLAY_CHANGED: 'Talk Display Changed',
   // 구독 관리 화면 — 결제 내역으로 들어갔다 / 스토어 구독 화면으로 나갔다
   SUBSCRIPTION_HISTORY_TAPPED: 'Subscription History Tapped',
   STORE_SUBSCRIPTION_TAPPED: 'Store Subscription Tapped',
@@ -441,6 +446,12 @@ export type EventProps = {
     turn_index: number;
     opened: boolean;
   };
+  // 대화 카드에서 영어 문장을 보이거나 가린 순간(흐린 문장 탭·눈 버튼) — 듣기만으로 버티는 사람이 얼마나 되는지 본다
+  'English Text Toggled': {
+    session_id?: number;
+    turn_index: number;
+    hidden: boolean;
+  };
   // 상대 발화를 다시 들은 순간 — 어느 턴에서 못 알아들어 되감는지 본다. 멈추려고 누른 건 세지 않는다
   'Speech Replayed': {
     session_id?: number;
@@ -649,10 +660,18 @@ export type EventProps = {
 
   // 서버 발화라 세션·리플레이·공통 속성 없음. device_id 랜덤 — 방문 횟수 집계용.
   // /download 링크 자체를 방문한 경우만 (외부 링크·인스타 등)
-  'Download Link Visited': { store: 'play_store' | 'app_store' };
+  // utm_* — 링크에 딱지가 붙어 있을 때만 (친구 공유 등). 어느 공유 링크로 들어왔는지 가른다
+  'Download Link Visited': {
+    store: 'play_store' | 'app_store';
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+  };
 
   // /download를 거치지 않고 스토어 앱을 바로 연 경우만 (앱 업데이트 유도 UI)
   'App Update Store Opened': { store: 'play_store' | 'app_store' };
+  // method — 셸 OS 공유 시트 / 브라우저 웹 공유 시트 / 둘 다 못 써서 링크 복사
+  'App Share Tapped': { method: 'native_sheet' | 'web_share' | 'copy' };
   // promo는 이탈 할인 시트에서 고르고 결제할 때만 true — 정가 결제와 할인 결제를 갈라 본다
   'Paywall Plan Selected': { plan: SubscriptionPlan; promo?: boolean };
   'Purchase Started': { plan: SubscriptionPlan; promo?: boolean };
@@ -672,6 +691,11 @@ export type EventProps = {
   'Haptics Toggled': { enabled: boolean };
   // 고른 배속 그대로 — 0.75 · 1 · 1.25 · 1.5
   'Speech Rate Changed': { rate: number };
+  // 마이페이지 대화 설정 — 대화를 시작할 때의 상대 말 글자·해석을 처음부터 보일지
+  'Talk Display Changed': {
+    setting: 'always_show_text' | 'always_show_translation';
+    enabled: boolean;
+  };
   'Subscription History Tapped': { status: SubscriptionState };
   'Store Subscription Tapped': {
     status: SubscriptionState;

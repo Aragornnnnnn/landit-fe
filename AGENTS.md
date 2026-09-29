@@ -12,7 +12,7 @@ landit 프론트엔드 모노레포. 웹(Next.js)과 모바일(Expo/React Native
 ## 명령어
 
 ```bash
-pnpm install                # 루트에서 한 번 (Node 20.9+, pnpm 10)
+pnpm install                # 루트에서 한 번 (Node 20.19+ 또는 22.12+, pnpm 10)
 pnpm --filter web dev       # 웹 dev 서버
 pnpm --filter mobile start  # Expo dev 서버
 pnpm lint / typecheck / test / build / format   # 루트에서 turbo 경유 전체 실행

@@ -144,6 +144,9 @@ describe('QuestionCard', () => {
     expect(
       screen.queryByRole('button', { name: '다시 듣기' }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: '영어 문장 가리기' }),
+    ).not.toBeInTheDocument();
   });
 
   it('다시 듣기를 누르면 그 발화를 다시 재생한다', () => {
@@ -207,6 +210,177 @@ describe('QuestionCard', () => {
     fireEvent.click(screen.getByRole('button', { name: '다시 듣기' }));
 
     expect(toggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('글자를 가린 카드는 영어 문장을 흐리게 가리고, 화면 낭독기에도 읽히지 않게 한다', () => {
+    render(
+      <QuestionCard
+        question="How was your day?"
+        translation={null}
+        speaking={false}
+        textHidden
+      />,
+    );
+    const sentence = screen.getByText('How was your day?');
+
+    expect(sentence).toHaveAttribute('data-hidden', 'true');
+    expect(sentence).toHaveAttribute('aria-hidden', 'true');
+
+    // 눈 버튼으로 보이면 다시 읽힌다
+    fireEvent.click(screen.getByRole('button', { name: '영어 문장 보기' }));
+    expect(sentence).not.toHaveAttribute('aria-hidden');
+  });
+
+  it('흐린 문장이나 눈 버튼을 누르면 그 카드만 보이고, 다음 카드는 다시 가려진다', () => {
+    // Given 글자를 가린 카드에서
+    const onTextToggled = vi.fn();
+    const { rerender } = render(
+      <QuestionCard
+        question="How was your day?"
+        translation={null}
+        speaking={false}
+        textHidden
+        onTextToggled={onTextToggled}
+      />,
+    );
+
+    // When 눈 버튼을 누르면
+    fireEvent.click(screen.getByRole('button', { name: '영어 문장 보기' }));
+
+    // Then 이 카드는 보이고 그 사실을 바깥에 알린다
+    expect(screen.getByText('How was your day?')).toHaveAttribute(
+      'data-hidden',
+      'false',
+    );
+    expect(onTextToggled).toHaveBeenCalledWith(true);
+
+    // When 다음 질문이 오면 Then 다시 가려진다
+    rerender(
+      <QuestionCard
+        question="What did you eat?"
+        translation={null}
+        speaking={false}
+        textHidden
+        onTextToggled={onTextToggled}
+      />,
+    );
+    expect(screen.getByText('What did you eat?')).toHaveAttribute(
+      'data-hidden',
+      'true',
+    );
+
+    // When 흐린 문장을 눌러도 Then 그 카드가 보인다
+    fireEvent.click(screen.getByText('What did you eat?'));
+    expect(screen.getByText('What did you eat?')).toHaveAttribute(
+      'data-hidden',
+      'false',
+    );
+  });
+
+  it('보이는 카드에서 눈 버튼을 누르면 그 카드만 다시 가려진다', () => {
+    const onTextToggled = vi.fn();
+    render(
+      <QuestionCard
+        question="How was your day?"
+        translation={null}
+        speaking={false}
+        textHidden
+        onTextToggled={onTextToggled}
+      />,
+    );
+    fireEvent.click(screen.getByText('How was your day?'));
+
+    fireEvent.click(screen.getByRole('button', { name: '영어 문장 가리기' }));
+
+    expect(screen.getByText('How was your day?')).toHaveAttribute(
+      'data-hidden',
+      'true',
+    );
+    expect(onTextToggled.mock.calls).toEqual([[true], [false]]);
+  });
+
+  it('글자를 늘 보이게 둔 대화도 눈 버튼으로 그 카드만 가릴 수 있다', () => {
+    render(
+      <QuestionCard
+        question="How was your day?"
+        translation={null}
+        speaking={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '영어 문장 가리기' }));
+
+    expect(screen.getByText('How was your day?')).toHaveAttribute(
+      'data-hidden',
+      'true',
+    );
+  });
+
+  it('가린 채 발화 중이면 전문을 흐리게 두고, 해석 버튼은 발화가 끝나야 나온다', () => {
+    render(
+      <QuestionCard
+        question="How was your day?"
+        translation="오늘 하루 어땠어요?"
+        speaking
+        textHidden
+      />,
+    );
+
+    expect(screen.getByText('How was your day?')).toHaveAttribute(
+      'data-hidden',
+      'true',
+    );
+    expect(
+      screen.queryByRole('button', { name: '해석 보기' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('해석 펼침 기본값이 늦게 들어와도 아직 손대지 않은 카드엔 반영된다', () => {
+    // Given 저장값을 읽기 전(서버 렌더 값)으로 먼저 그려진 카드
+    const { rerender } = render(
+      <QuestionCard
+        question="How was your day?"
+        translation="오늘 하루 어땠어요?"
+        speaking={false}
+        translationDefaultOpen={false}
+      />,
+    );
+
+    // When 저장된 기본값(펼침)이 들어오면
+    rerender(
+      <QuestionCard
+        question="How was your day?"
+        translation="오늘 하루 어땠어요?"
+        speaking={false}
+        translationDefaultOpen
+      />,
+    );
+
+    // Then 그 카드의 해석이 펼쳐진다
+    expect(screen.getByText('오늘 하루 어땠어요?')).toBeInTheDocument();
+  });
+
+  it('해석을 펼쳐 두기로 하면 새 질문마다 해석이 펼쳐진 채로 나온다', () => {
+    const { rerender } = render(
+      <QuestionCard
+        question="How was your day?"
+        translation="오늘 하루 어땠어요?"
+        speaking={false}
+        translationDefaultOpen
+      />,
+    );
+    expect(screen.getByText('오늘 하루 어땠어요?')).toBeInTheDocument();
+
+    rerender(
+      <QuestionCard
+        question="What did you eat?"
+        translation="뭘 드셨어요?"
+        speaking={false}
+        translationDefaultOpen
+      />,
+    );
+
+    expect(screen.getByText('뭘 드셨어요?')).toBeInTheDocument();
   });
 
   it('발화 중에는 아직 나오지 않은 글자 끝이 아니라 지금 말하는 줄로 스크롤한다', async () => {
