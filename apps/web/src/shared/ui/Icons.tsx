@@ -334,7 +334,7 @@ export const TranslateIcon = ({ size = 22, ...props }: IconProps) => (
   </svg>
 );
 
-// 빗금 친 눈 — 대화 카드의 영어 글자 가리기 버튼용
+// 빗금 친 눈 — 대화 카드의 영어 문장 가리기 버튼용
 export const EyeOffIcon = ({ size = 22, ...props }: IconProps) => (
   <svg
     width={size}

@@ -26,21 +26,23 @@ const openSheet = () => {
 };
 
 describe('TalkDisplayMenuEntry', () => {
-  it('기본은 영어 글자 보기 켬, 해석 항상 보기 끔이다', () => {
+  it('기본은 상대 말 글자로 보기 켬, 해석 항상 보기 끔이다', () => {
     openSheet();
 
     expect(
-      screen.getByRole('switch', { name: '영어 글자 보기' }),
+      screen.getByRole('switch', { name: '상대 말 글자로 보기' }),
     ).toHaveAttribute('aria-checked', 'true');
     expect(
       screen.getByRole('switch', { name: '해석 항상 보기' }),
     ).toHaveAttribute('aria-checked', 'false');
   });
 
-  it('영어 글자 보기를 끄면 저장값과 계측에 남는다', () => {
+  it('상대 말 글자로 보기를 끄면 저장값과 계측에 남는다', () => {
     openSheet();
 
-    fireEvent.click(screen.getByRole('switch', { name: '영어 글자 보기' }));
+    fireEvent.click(
+      screen.getByRole('switch', { name: '상대 말 글자로 보기' }),
+    );
 
     expect(getDisplaySetting('showText')).toBe(false);
     expect(mocks.track).toHaveBeenCalledWith('Talk Display Changed', {
@@ -66,7 +68,7 @@ describe('TalkDisplayMenuEntry', () => {
     openSheet();
 
     expect(
-      screen.getByRole('switch', { name: '영어 글자 보기' }),
+      screen.getByRole('switch', { name: '상대 말 글자로 보기' }),
     ).toHaveAttribute('aria-checked', 'false');
   });
 });

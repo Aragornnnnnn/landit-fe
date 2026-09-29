@@ -1,4 +1,4 @@
-// 대화 표시 설정 — 영어 글자 보기(기본 켬)·해석 항상 보기(기본 끔)의 기본값·저장·알림 계약을 검증한다
+// 대화 표시 설정 — 상대 말 글자로 보기(기본 켬)·해석 항상 보기(기본 끔)의 기본값·저장·알림 계약을 검증한다
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -10,7 +10,7 @@ import {
 beforeEach(() => localStorage.clear());
 
 describe('대화 표시 설정', () => {
-  it('아무것도 저장돼 있지 않으면 영어 글자는 보이고 해석은 접혀 있다', () => {
+  it('아무것도 저장돼 있지 않으면 영어 문장은 보이고 해석은 접혀 있다', () => {
     expect(getDisplaySetting('showText')).toBe(true);
     expect(getDisplaySetting('alwaysShowTranslation')).toBe(false);
   });

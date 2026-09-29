@@ -238,7 +238,7 @@ describe('QuestionCard', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '영어 글자 보기' }));
+    fireEvent.click(screen.getByRole('button', { name: '영어 문장 보기' }));
 
     expect(onTextHiddenChange).toHaveBeenCalledWith(false);
   });
@@ -337,10 +337,10 @@ describe('QuestionCard', () => {
     );
 
     expect(
-      screen.queryByRole('button', { name: '영어 글자 보기' }),
+      screen.queryByRole('button', { name: '영어 문장 보기' }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: '영어 글자 가리기' }),
+      screen.queryByRole('button', { name: '영어 문장 가리기' }),
     ).not.toBeInTheDocument();
   });
 

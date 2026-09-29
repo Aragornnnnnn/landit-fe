@@ -3,7 +3,7 @@
 // 크기는 발화가 시작될 때 한 번에 잡는다 — 글자가 나타나는 내내 커지면 화면이 계속 달라져 산만하다.
 // 남은 자리를 다 쓰는 긴 발화만 안쪽 글자가 스크롤된다.
 // 해석은 접어 두는 게 기본이다 — 늘 펼쳐 두면 카드가 그만큼 길어져 작은 화면에서 발화가 잘린다
-// 영어 글자를 가리면 흐리게 덮어 듣기만으로 연습하게 한다. 흐린 글자를 누르면 그 카드만 보인다
+// 영어 문장을 가리면 흐리게 덮어 듣기만으로 연습하게 한다. 흐린 글자를 누르면 그 카드만 보인다
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -33,7 +33,7 @@ interface QuestionCardProps {
   lastQuestion?: boolean;
   // 해석을 펼친 채로 시작할지 — 새 질문마다 이 값으로 돌아간다
   translationDefaultOpen?: boolean;
-  // 영어 글자를 가릴지 — 대화 전체 상태라 화면이 들고 있다
+  // 영어 문장을 가릴지 — 대화 전체 상태라 화면이 들고 있다
   textHidden?: boolean;
   // 눈 아이콘을 누른 순간 — 주면 눈 버튼이 붙는다
   onTextHiddenChange?: (hidden: boolean) => void;
@@ -313,7 +313,7 @@ export const QuestionCard = ({
               // 글자 가리기 모드 스위치 — 다른 버튼처럼 켜지면(가림) 칠하고, 아이콘은 하나로 둔다
               <CardIconButton
                 on={textHidden}
-                label={textHidden ? '영어 글자 보기' : '영어 글자 가리기'}
+                label={textHidden ? '영어 문장 보기' : '영어 문장 가리기'}
                 onClick={() => onTextHiddenChange(!textHidden)}
               >
                 <EyeOffIcon size={14} />

@@ -1,6 +1,6 @@
 'use client';
 
-// 마이페이지 "대화" 행 — 눌러 들어간 시트에서 대화를 시작할 때 영어 글자·해석을 어떻게 보일지 고른다. 값은 이 기기의 localStorage에만 산다
+// 마이페이지 "대화" 행 — 눌러 들어간 시트에서 대화를 시작할 때 상대 말을 글자·해석으로 어떻게 보일지 고른다. 값은 이 기기의 localStorage에만 산다
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
@@ -54,11 +54,11 @@ export const TalkDisplayMenuEntry = () => {
           className="mt-1 mb-4 text-[14px] leading-6"
           style={{ color: '#666' }}
         >
-          대화마다 영어 글자와 해석을 어떻게 보여줄지 정해요
+          대화에서 상대가 한 말을 어떻게 보여줄지 정해요
         </p>
         <MenuGroup>
           <MenuToggle
-            title="영어 글자 보기"
+            title="상대 말 글자로 보기"
             checked={showText}
             onChange={(next) => change('showText', next)}
           />
