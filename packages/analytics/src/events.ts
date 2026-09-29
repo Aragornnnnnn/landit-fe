@@ -498,9 +498,9 @@ export type EventProps = {
     session_id: number;
     partner: TalkPartner;
     turn_count: number;
-    // 이 대화에서 말한 시간과, 시간을 다 써서 끝났는지
+    // 이 대화에서 말한 시간과, 어떻게 끝났는지(작별 인사·시간 소진·종료 버튼)
     speaking_duration_ms: number;
-    end_reason: 'user_ended' | 'time_limit';
+    end_reason: 'user_ended' | 'time_limit' | 'direct_end';
   };
   'Small Talk Abandoned': {
     session_id: number;
