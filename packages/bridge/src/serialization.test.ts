@@ -541,6 +541,8 @@ describe('사진 고르기 (PICK_PHOTOS ↔ PHOTOS_PICKED)', () => {
           type: 'PHOTOS_PICKED',
           status: 'success',
           photos: [photo, photo, photo, photo],
+          failedCount: 0,
+          overflowed: false,
         }),
       ),
     ).toBeNull();

@@ -1,8 +1,8 @@
-// 사진 보관함 고르기 — 취소·일부 실패·축소 기준을 웹에 돌려줄 결과로 옮기는지 확인한다
+// 사진 보관함 고르기 — 취소·일부 실패·넘침·축소 기준을 웹에 돌려줄 결과로 옮기는지 확인한다
 import * as ImagePicker from 'expo-image-picker';
 
 import { reportError } from '../monitoring/report';
-import { pickPhotos } from './pick-photos';
+import { MAX_PHOTO_BYTES, pickPhotos } from './pick-photos';
 
 const mockResize = jest.fn();
 const mockSaveAsync = jest.fn();
@@ -42,6 +42,8 @@ describe('pickPhotos', () => {
     await expect(pickPhotos(3)).resolves.toEqual({
       status: 'cancelled',
       photos: [],
+      failedCount: 0,
+      overflowed: false,
     });
   });
 
@@ -70,6 +72,8 @@ describe('pickPhotos', () => {
     expect(result).toEqual({
       status: 'success',
       photos: [{ base64: 'B', mimeType: 'image/jpeg' }],
+      failedCount: 1,
+      overflowed: false,
     });
     expect(reportError).toHaveBeenCalled();
   });
@@ -81,6 +85,8 @@ describe('pickPhotos', () => {
     await expect(pickPhotos(3)).resolves.toEqual({
       status: 'error',
       photos: [],
+      failedCount: 1,
+      overflowed: false,
     });
   });
 
@@ -93,6 +99,7 @@ describe('pickPhotos', () => {
     const result = await pickPhotos(2);
 
     expect(result.photos).toHaveLength(2);
+    expect(result.overflowed).toBe(true);
   });
 
   it('선택창을 못 열면 error를 돌려준다', async () => {
@@ -101,6 +108,29 @@ describe('pickPhotos', () => {
     await expect(pickPhotos(3)).resolves.toEqual({
       status: 'error',
       photos: [],
+      failedCount: 0,
+      overflowed: false,
     });
+  });
+
+  it('장당 한도를 넘으면 해상도를 낮춰 한 번 더 굽는다', async () => {
+    // given — 첫 굽기는 한도를 넘고 두 번째는 안에 든다 (base64 4글자 = 3바이트)
+    launch.mockResolvedValue({
+      canceled: false,
+      assets: [asset('wide', 4032, 3024)],
+    });
+    mockSaveAsync
+      .mockResolvedValueOnce({ base64: 'A'.repeat(MAX_PHOTO_BYTES * 2) })
+      .mockResolvedValueOnce({ base64: 'SMALL' });
+
+    const result = await pickPhotos(1);
+
+    expect(mockResize.mock.calls).toEqual([
+      [{ width: 2048 }],
+      [{ width: 1600 }],
+    ]);
+    expect(result.photos).toEqual([
+      { base64: 'SMALL', mimeType: 'image/jpeg' },
+    ]);
   });
 });

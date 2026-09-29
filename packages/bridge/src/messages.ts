@@ -214,11 +214,16 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     status: restoreStatusSchema,
     message: z.string().optional(),
   }),
-  // PICK_PHOTOS 응답 — success일 때만 photos가 차 있다. 셸이 못 구운 사진은 빼고 보낸다
+  // PICK_PHOTOS 응답 — success일 때만 photos가 차 있다. 셸이 못 구운 사진은 빼고 보낸다.
+  // failedCount·overflowed는 웹이 사용자에게 무엇이 빠졌는지 알리는 데 쓴다
   z.object({
     type: z.literal('PHOTOS_PICKED'),
     status: photoPickStatusSchema,
     photos: z.array(pickedPhotoSchema).max(MAX_PICK_PHOTOS),
+    // 골랐지만 못 구워 뺀 장수
+    failedCount: z.number().int().min(0),
+    // limit보다 많이 골라 뒤를 잘랐는가 — 선택창이 장수를 막지 못하는 구형 Android 대비
+    overflowed: z.boolean(),
   }),
 ]);
 
