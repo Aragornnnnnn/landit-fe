@@ -17,13 +17,13 @@ export const useDisplaySetting = (key: DisplaySettingKey) =>
   );
 
 export const useTalkDisplay = () => {
-  const hideText = useDisplaySetting('hideText');
+  const alwaysShowText = useDisplaySetting('alwaysShowText');
   const translationDefaultOpen = useDisplaySetting('alwaysShowTranslation');
   // 눈 아이콘을 누르기 전엔 null — 그동안은 기본값을 따른다
   const [textHiddenOverride, setTextHidden] = useState<boolean | null>(null);
 
   return {
-    textHidden: textHiddenOverride ?? hideText,
+    textHidden: textHiddenOverride ?? !alwaysShowText,
     setTextHidden,
     translationDefaultOpen,
   };

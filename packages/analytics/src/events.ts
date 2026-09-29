@@ -680,9 +680,9 @@ export type EventProps = {
   'Haptics Toggled': { enabled: boolean };
   // 고른 배속 그대로 — 0.75 · 1 · 1.25 · 1.5
   'Speech Rate Changed': { rate: number };
-  // 마이페이지 대화 설정 — 대화를 시작할 때의 상대 말 글자 가리기·해석 펼침 기본값
+  // 마이페이지 대화 설정 — 대화를 시작할 때의 상대 말 글자·해석을 처음부터 보일지
   'Talk Display Changed': {
-    setting: 'hide_text' | 'always_show_translation';
+    setting: 'always_show_text' | 'always_show_translation';
     enabled: boolean;
   };
   'Subscription History Tapped': { status: SubscriptionState };

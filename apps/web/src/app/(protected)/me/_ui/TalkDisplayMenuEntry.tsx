@@ -19,15 +19,15 @@ import { MenuButton, MenuGroup, MenuToggle } from './Menu';
 // 계측 속성 값은 스네이크 케이스로 남긴다
 const SETTING_NAME: Record<
   DisplaySettingKey,
-  'hide_text' | 'always_show_translation'
+  'always_show_text' | 'always_show_translation'
 > = {
-  hideText: 'hide_text',
+  alwaysShowText: 'always_show_text',
   alwaysShowTranslation: 'always_show_translation',
 };
 
 export const TalkDisplayMenuEntry = () => {
   const [open, setOpen] = useState(false);
-  const hideText = useDisplaySetting('hideText');
+  const alwaysShowText = useDisplaySetting('alwaysShowText');
   const alwaysShowTranslation = useDisplaySetting('alwaysShowTranslation');
 
   const change = (key: DisplaySettingKey, next: boolean) => {
@@ -58,9 +58,9 @@ export const TalkDisplayMenuEntry = () => {
         </p>
         <MenuGroup>
           <MenuToggle
-            title="상대 말 글자 가리기"
-            checked={hideText}
-            onChange={(next) => change('hideText', next)}
+            title="상대 말 글자 항상 보기"
+            checked={alwaysShowText}
+            onChange={(next) => change('alwaysShowText', next)}
           />
           <MenuToggle
             title="해석 항상 보기"
