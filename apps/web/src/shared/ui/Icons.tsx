@@ -472,3 +472,38 @@ export const MessageSquareIcon = ({ size = 22, ...props }: IconProps) => (
     <path d="M7 7h8" />
   </svg>
 );
+
+export const PlusIcon = ({ size = 22, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="M5 12h14" />
+    <path d="M12 5v14" />
+  </svg>
+);
+
+export const MinusIcon = ({ size = 22, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="M5 12h14" />
+  </svg>
+);

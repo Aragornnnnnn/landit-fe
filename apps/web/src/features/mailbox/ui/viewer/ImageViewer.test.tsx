@@ -1,0 +1,96 @@
+// 확대 보기 — 여는 법·닫는 법·배율 버튼 끝·여러 장 넘기기를 사용자 조작으로 확인한다
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { closeTopSheet } from '@/shared/ui/bottom-sheet-back';
+
+import { ImageViewer } from './ImageViewer';
+import { ZoomableImage } from './ZoomableImage';
+
+afterEach(cleanup);
+
+const images = [
+  { src: 'blob:1', alt: '첨부 사진 1' },
+  { src: 'blob:2', alt: '첨부 사진 2' },
+  { src: 'blob:3', alt: '첨부 사진 3' },
+];
+
+describe('ZoomableImage', () => {
+  it('누르면 그 한 장을 몇 번째 표시 없이 크게 연다', () => {
+    render(<ZoomableImage src="https://img.landit.im/a.png" alt="공지 그림" />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '공지 그림 크게 보기' }),
+    );
+
+    expect(screen.getByRole('dialog', { name: '사진 크게 보기' })).toBeTruthy();
+    expect(screen.queryByText('1 / 1')).toBeNull();
+  });
+
+  it('안드로이드 뒤로가기는 확대 보기만 닫는다', () => {
+    render(<ZoomableImage src="https://img.landit.im/a.png" alt="공지 그림" />);
+    fireEvent.click(
+      screen.getByRole('button', { name: '공지 그림 크게 보기' }),
+    );
+
+    let consumed = false;
+    act(() => {
+      consumed = closeTopSheet();
+    });
+
+    expect(consumed).toBe(true);
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
+
+describe('ImageViewer', () => {
+  it('여러 장이면 누른 사진부터 몇 번째인지 보여준다', () => {
+    render(<ImageViewer images={images} startIndex={1} onClose={vi.fn()} />);
+
+    expect(screen.getByText('2 / 3')).toBeTruthy();
+  });
+
+  it('처음엔 원래 크기라 축소를 누를 수 없다', () => {
+    render(<ImageViewer images={images} startIndex={0} onClose={vi.fn()} />);
+
+    expect(
+      (screen.getByRole('button', { name: '축소' }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+  });
+
+  it('3배까지 키우면 확대를 더 누를 수 없다', () => {
+    render(<ImageViewer images={images} startIndex={0} onClose={vi.fn()} />);
+    const zoomIn = screen.getByRole('button', {
+      name: '확대',
+    }) as HTMLButtonElement;
+
+    fireEvent.click(zoomIn);
+    fireEvent.click(zoomIn);
+
+    expect(zoomIn.disabled).toBe(true);
+  });
+
+  it('닫기를 누르면 닫는다', () => {
+    const onClose = vi.fn();
+    render(<ImageViewer images={images} startIndex={0} onClose={onClose} />);
+
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('사진을 불러오지 못하면 그 자리에 알려준다', () => {
+    render(<ImageViewer images={images} startIndex={0} onClose={vi.fn()} />);
+
+    fireEvent.error(screen.getByAltText('첨부 사진 1'));
+
+    expect(screen.getByText('사진을 불러오지 못했어요')).toBeTruthy();
+  });
+});
