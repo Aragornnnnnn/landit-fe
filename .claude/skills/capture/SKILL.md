@@ -65,7 +65,7 @@ node <스킬 경로>/scripts/capture.mjs --url "file://$PWD/diagram.html" --out 
 ## 자주 걸리는 것
 
 - **`networkidle`을 기다린다** — Next dev는 HMR 소켓 때문에 안 온다. 스크립트는 `load`까지만 기다린다. 나머지는 `--wait`·`--delay`.
-- **온보딩·코치마크가 뜬다** — `--auth`가 온보딩 완료 플래그를 넣는다. 스몰톡 안내·탭 코치마크는 `landit-smalltalk-intro-guide-seen`·`landit-smalltalk-tap-greeting-seen`을 `setup`의 `addInitScript`에서 넣는다. 반대로 그 화면을 찍으려면 지운다.
+- **온보딩·코치마크가 뜬다** — `--auth`가 온보딩 완료 플래그를 넣는다. 스몰톡 안내·탭 코치마크는 `landit-smalltalk-intro-guide-seen-v2`·`landit-smalltalk-tap-greeting-seen`을 `setup`의 `addInitScript`에서 넣는다. 반대로 그 화면을 찍으려면 지운다.
 - **`member.provider`가 없다** — 프로필 게이트가 다시 묻는다. 스크립트의 가짜 세션에는 들어 있다.
 - **데스크톱 뷰포트로 찍혔다** — 사용자 크롬으로 찍을 때 모바일 프리셋을 안 걸면 여백까지 찍혀 종횡비가 깨진다. 이 스크립트는 뷰포트를 고정하니 해당 없다.
 - **스토어 캡처에 dev 시드 콘텐츠** — 반려된다. 스토어·마케팅용은 프로덕션 콘텐츠(실제 표현·시나리오 텍스트와 이미지)를 목 데이터에 옮겨 찍는다.
