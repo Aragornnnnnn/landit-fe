@@ -9,7 +9,7 @@ import { EVENTS } from '@landit/analytics';
 import { track } from '@/shared/analytics';
 
 import { tapGreetingSeen } from '../../_model/tap-greeting-seen';
-import { introGuideSeen } from './intro-guide-seen';
+import { clearOldIntroGuideSeen, introGuideSeen } from './intro-guide-seen';
 
 /** onTap — 캐릭터를 눌렀을 때 할 일(인사 시작). 코치마크 여부와 상관없이 늘 부른다 */
 export const useGreetingCoach = ({ onTap }: { onTap: () => void }) => {
@@ -27,6 +27,7 @@ export const useGreetingCoach = ({ onTap }: { onTap: () => void }) => {
   const closeGuide = () => {
     track(EVENTS.SMALL_TALK_INTRO_GUIDE_CLOSED);
     introGuideSeen.mark();
+    clearOldIntroGuideSeen();
     setGuideOpen(false);
   };
 
