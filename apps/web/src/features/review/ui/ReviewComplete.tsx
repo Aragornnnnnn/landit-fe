@@ -1,13 +1,16 @@
 'use client';
 
-// 복습 결과 — 표현 카드가 하나씩 칠해진다(맞힘 초록·놓침 회색). 전부 맞히면 마지막 칠 뒤에 폭죽.
+// 복습 결과 — 래디가 결과를 알리고 표현 카드가 하나씩 칠해진다(맞힘 초록·놓침 빨강). 전부 맞히면 마지막 칠 뒤에 폭죽.
 // 기록은 남기지 않고 홈으로 돌려보낸다 (복습은 알림으로만 들어오는 별도 흐름)
 import { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { motion, useReducedMotion } from 'motion/react';
+import Image from 'next/image';
 
+import type { PreloadableImage } from '@/shared/lib/preload-next-images';
 import { EASE_STANDARD } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
+import { Emoji } from '@/shared/ui/emoji';
 import { CheckIcon, CloseIcon } from '@/shared/ui/Icons';
 
 import type { ReviewQuestion } from '../api/review';
@@ -24,11 +27,33 @@ interface ReviewCompleteProps {
 const PAINT_DELAY = 0.18;
 const PAINT_DURATION = 0.45;
 
-// 맞힌 개수는 아래 카드 색이 이미 보여준다 — 부제는 세지 않고 다음 말만 건넨다
-const subtitleOf = (solved: number, total: number) => {
-  if (solved === total) return '전부 맞혔어요. 대화에서 적극 활용해 보세요.';
-  if (solved === 0) return '괜찮아요. 놓친 표현은 다음에 다시 만나요.';
-  return '놓친 표현은 다음에 다시 만나요.';
+/** 결과 그림 — 문제를 푸는 동안 미리 받아 두려고 밖에서도 같은 주소를 쓴다 */
+export const LANDY_REVIEW_PERFECT: PreloadableImage = {
+  src: '/images/character/landy-review-perfect.webp',
+  width: 230,
+  height: 230,
+};
+export const LANDY_REVIEW_STUDY: PreloadableImage = {
+  src: '/images/character/landy-review-study.webp',
+  width: 230,
+  height: 230,
+};
+
+// 결과 한 컷(제목·이모지·부제·그림)을 한 곳에서 고른다 — 몇 개 맞혔는지는 아래 카드가 보여 준다
+const resultOf = (perfect: boolean, solved: number) => {
+  if (perfect)
+    return {
+      title: '완벽해요!',
+      emoji: '🎉',
+      subtitle: '전부 맞혔어요. 대화에서 적극 활용해 보세요.',
+      image: LANDY_REVIEW_PERFECT,
+    };
+  const missed = {
+    subtitle: '틀린 표현은 다음 복습에서 다시 익혀 봐요.',
+    image: LANDY_REVIEW_STUDY,
+  };
+  if (solved === 0) return { title: '괜찮아요!', emoji: '💪', ...missed };
+  return { title: '잘했어요!', emoji: '👏', ...missed };
 };
 
 export const ReviewComplete = ({
@@ -40,6 +65,7 @@ export const ReviewComplete = ({
   // 끝난 문제 전부가 맞힘일 때만 만점이다 — 두 번 틀려 끝난 문제는 맞힘이 아니다
   const solved = questions.filter(isSolved).length;
   const perfect = solved === questions.length;
+  const result = resultOf(perfect, solved);
   // 폭죽은 마지막 카드까지 칠해진 뒤에 터진다 — 먼저 터지면 결과를 읽기 전에 시선을 빼앗는다
   const paintedMs =
     ((questions.length - 1) * PAINT_DELAY + PAINT_DURATION) * 1000;
@@ -75,26 +101,45 @@ export const ReviewComplete = ({
   return (
     <main
       className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background px-6"
-      style={{ paddingTop: 'calc(env(safe-area-inset-top) + 64px)' }}
+      style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}
     >
-      <h1 className="text-[26px] font-black text-foreground">복습 완료!</h1>
-      <p className="mt-2 text-sm leading-relaxed font-medium break-keep text-muted-foreground">
-        {subtitleOf(solved, questions.length)}
+      <motion.div
+        className="mx-auto"
+        initial={justFinished && !reduced ? { scale: 0.6, opacity: 0 } : false}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 16 }}
+      >
+        {/* 작은 폰에서도 카드가 밀려나지 않게 화면 높이에 맞춰 줄어든다 */}
+        <Image
+          {...result.image}
+          alt=""
+          priority
+          className="h-[min(230px,30dvh)] w-auto"
+        />
+      </motion.div>
+
+      <h1 className="mt-1 text-center text-[30px] font-black text-foreground">
+        {result.title}
+        <Emoji className="ml-1.5 align-[-0.1em]">{result.emoji}</Emoji>
+      </h1>
+      <p className="mt-2 text-center text-sm leading-relaxed font-medium break-keep text-muted-foreground">
+        {result.subtitle}
       </p>
 
-      <ul className="mt-8 flex flex-col gap-3 overflow-y-auto">
+      {/* 스크롤 영역이 카드 그림자를 자르지 않게 안쪽 여백을 둔다 */}
+      <ul className="-mx-2 mt-5 flex flex-col gap-2 overflow-y-auto px-2 pt-2 pb-4">
         {questions.map((question, index) => {
           const correct = isSolved(question);
           return (
             <li
               key={question.questionId}
-              className="relative overflow-hidden rounded-2xl bg-card"
+              className="relative overflow-hidden rounded-[22px] bg-card"
             >
               {/* 칠 — 왼쪽에서 오른쪽으로 카드 전체가 색으로 덮인다 */}
               <motion.span
                 aria-hidden
                 className={`absolute inset-0 origin-left ${
-                  correct ? 'bg-success/12' : 'bg-secondary'
+                  correct ? 'bg-success/12' : 'bg-destructive/10'
                 }`}
                 initial={justFinished && !reduced ? { scaleX: 0 } : false}
                 animate={{ scaleX: 1 }}
@@ -108,26 +153,26 @@ export const ReviewComplete = ({
               <div className="relative flex items-center gap-4 px-5 py-4">
                 <span className="flex min-w-0 flex-col">
                   <span
-                    className={`truncate text-[17px] font-extrabold ${
-                      correct ? 'text-success' : 'text-muted-foreground'
+                    className={`truncate text-lg font-bold ${
+                      correct ? 'text-success' : 'text-destructive'
                     }`}
                   >
                     {question.targetExpressionText}
                   </span>
-                  <span className="mt-0.5 truncate text-[13px] font-semibold text-muted-foreground">
+                  <span className="mt-0.5 truncate text-[13px] font-medium text-foreground/80">
                     {question.baseExpressionMeaningText}
                   </span>
                 </span>
-                {/* 색만으로 갈리지 않게 표시를 남긴다 — 칠이 주인공이라 테두리 없이 작게 */}
+                {/* 색만으로 갈리지 않게 표시를 남긴다 */}
                 <span
-                  className={`ml-auto shrink-0 ${
-                    correct ? 'text-success' : 'text-muted-foreground'
+                  className={`ml-auto flex size-7 shrink-0 items-center justify-center rounded-full text-white ${
+                    correct ? 'bg-success' : 'bg-destructive'
                   }`}
                 >
                   {correct ? (
-                    <CheckIcon size={22} strokeWidth={3} />
+                    <CheckIcon size={16} strokeWidth={3} />
                   ) : (
-                    <CloseIcon size={22} strokeWidth={3} />
+                    <CloseIcon size={16} strokeWidth={3} />
                   )}
                 </span>
                 <span className="sr-only">{correct ? '맞힘' : '놓침'}</span>

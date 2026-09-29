@@ -7,6 +7,10 @@ import { ReviewComplete } from './ReviewComplete';
 
 vi.mock('motion/react', () => import('@/shared/motion/test-double'));
 vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
+// next/image는 next 밑의 react 복사본을 잡아 훅 dispatcher가 null이 된다 — 어느 그림인지만 src로 남긴다
+vi.mock('next/image', () => ({
+  default: ({ src }: { src: string }) => <span data-src={src} />,
+}));
 
 afterEach(cleanup);
 
@@ -30,33 +34,46 @@ const show = (questions: ReviewQuestion[]) =>
   );
 
 describe('ReviewComplete', () => {
-  it('전부 맞히면 대화에서 써 보라고 한다', () => {
+  it('전부 맞히면 완벽하다고 축하하고 대화에서 써 보라고 한다', () => {
     show([question('q1', true), question('q2', true)]);
 
+    expect(screen.getByText('완벽해요!')).toBeInTheDocument();
     expect(
       screen.getByText('전부 맞혔어요. 대화에서 적극 활용해 보세요.'),
     ).toBeInTheDocument();
   });
 
-  it('일부만 맞히면 개수를 세지 않고 다음을 기약한다', () => {
-    show([question('q1', true), question('q2', false)]);
+  it('일부만 맞히면 칭찬하고 다음 복습을 기약한다', () => {
+    show([question('q1', true), question('q2', true), question('q3', false)]);
 
+    expect(screen.getByText('잘했어요!')).toBeInTheDocument();
     expect(
-      screen.getByText('놓친 표현은 다음에 다시 만나요.'),
+      screen.getByText('틀린 표현은 다음 복습에서 다시 익혀 봐요.'),
     ).toBeInTheDocument();
   });
 
-  it('하나도 못 맞히면 먼저 달래고 같은 말을 건넨다', () => {
+  it('하나도 못 맞히면 달래고 다음 복습을 기약한다', () => {
     show([question('q1', false), question('q2', false)]);
 
+    expect(screen.getByText('괜찮아요!')).toBeInTheDocument();
     expect(
-      screen.getByText('괜찮아요. 놓친 표현은 다음에 다시 만나요.'),
+      screen.getByText('틀린 표현은 다음 복습에서 다시 익혀 봐요.'),
     ).toBeInTheDocument();
   });
 
-  it('제목은 결과와 무관하게 복습 완료다', () => {
-    show([question('q1', false)]);
+  it('만점이면 100점 래디가 나온다', () => {
+    const { container } = show([question('q1', true)]);
 
-    expect(screen.getByText('복습 완료!')).toBeInTheDocument();
+    expect(
+      container.querySelector('[data-src]')?.getAttribute('data-src'),
+    ).toContain('landy-review-perfect');
+  });
+
+  it('하나라도 놓치면 공부하는 래디가 나온다', () => {
+    const { container } = show([question('q1', true), question('q2', false)]);
+
+    expect(
+      container.querySelector('[data-src]')?.getAttribute('data-src'),
+    ).toContain('landy-review-study');
   });
 });
