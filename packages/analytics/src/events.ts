@@ -177,6 +177,7 @@ export const EVENTS = {
   PROMO_SHEET_VIEWED: 'Promo Sheet Viewed',
   HAPTICS_TOGGLED: 'Haptics Toggled',
   SPEECH_RATE_CHANGED: 'Speech Rate Changed',
+  TALK_DISPLAY_CHANGED: 'Talk Display Changed',
   // 구독 관리 화면 — 결제 내역으로 들어갔다 / 스토어 구독 화면으로 나갔다
   SUBSCRIPTION_HISTORY_TAPPED: 'Subscription History Tapped',
   STORE_SUBSCRIPTION_TAPPED: 'Store Subscription Tapped',
@@ -679,6 +680,11 @@ export type EventProps = {
   'Haptics Toggled': { enabled: boolean };
   // 고른 배속 그대로 — 0.75 · 1 · 1.25 · 1.5
   'Speech Rate Changed': { rate: number };
+  // 마이페이지 대화 설정 — 대화를 시작할 때의 영어 글자 보기·해석 펼침 기본값
+  'Talk Display Changed': {
+    setting: 'show_text' | 'always_show_translation';
+    enabled: boolean;
+  };
   'Subscription History Tapped': { status: SubscriptionState };
   'Store Subscription Tapped': {
     status: SubscriptionState;
