@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { SmallTalkSessionStartResponse } from '@/features/small-talk/api/small-talk';
 
+import { GOODBYE_PHRASES } from '../_model/goodbye-phrase';
 import { SmallTalkConversation } from './SmallTalkConversation';
 
 const mocks = vi.hoisted(() => ({
@@ -34,8 +35,18 @@ vi.mock('@/features/conversation/ui/flow/MicPermissionSheet', () => ({
 }));
 // 시트는 열렸는지만 본다
 vi.mock('./SmallTalkExitSheet', () => ({
-  SmallTalkExitSheet: ({ open }: { open: boolean }) =>
-    open ? <div role="dialog" aria-label="종료 시트" /> : null,
+  SmallTalkExitSheet: ({
+    open,
+    goodbyePhrase,
+  }: {
+    open: boolean;
+    goodbyePhrase: string;
+  }) =>
+    open ? (
+      <div role="dialog" aria-label="종료 시트">
+        {goodbyePhrase}
+      </div>
+    ) : null,
 }));
 // 말하는 중인 대화 — 잔량은 15초, 이번 발화에서 3/4가 남았다
 vi.mock('../_model/useSmallTalkFlow', () => ({
@@ -127,6 +138,15 @@ describe('SmallTalkConversation — 대화 나가기', () => {
       screen.getByRole('dialog', { name: '종료 시트' }),
     ).toBeInTheDocument();
     expect(mocks.leave).not.toHaveBeenCalled();
+  });
+
+  it('시트는 작별 인사 목록 중 하나를 예시로 보여 준다', () => {
+    renderScreen();
+
+    fireEvent.click(screen.getByRole('button', { name: '대화 나가기' }));
+
+    const sheet = screen.getByRole('dialog', { name: '종료 시트' });
+    expect(GOODBYE_PHRASES).toContain(sheet.textContent);
   });
 
   it('나눈 대화가 없으면 X로 확인 없이 바로 나간다', () => {

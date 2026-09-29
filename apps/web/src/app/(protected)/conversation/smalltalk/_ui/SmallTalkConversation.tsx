@@ -27,6 +27,7 @@ import { SMALLTALK_PATH, smallTalkSummaryPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
+import { GOODBYE_PHRASES, pickGoodbyePhrase } from '../_model/goodbye-phrase';
 import { useSmallTalkFlow } from '../_model/useSmallTalkFlow';
 import { SmallTalkExitSheet } from './SmallTalkExitSheet';
 import { TalkSummary } from './TalkSummary';
@@ -47,6 +48,10 @@ export const SmallTalkConversation = ({
   const router = useRouter();
   const goHome = () => router.replace(SMALLTALK_PATH);
   const [showExitSheet, setShowExitSheet] = useState(false);
+  // 시트를 열 때마다 다른 작별 인사를 보여 준다 — 열려 있는 동안은 바뀌지 않게 여는 순간에 고른다
+  const [goodbyePhrase, setGoodbyePhrase] = useState<string>(
+    GOODBYE_PHRASES[0],
+  );
   // 결제가 열리면 하루 한도가 없다 — 남은 시간과 타이머 링을 그리지 않는다 (잔량 계산은 뒤에서 그대로 돈다)
   const { unlimited } = useSpeakingLimit();
   // 내가 먼저 거는 대화의 진입 안내 — 랜디가 먼저 말을 걸어보라고 알려주고 잠시 후 사라진다
@@ -121,6 +126,7 @@ export const SmallTalkConversation = ({
               return;
             }
             track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'conversation_exit' });
+            setGoodbyePhrase(pickGoodbyePhrase());
             setShowExitSheet(true);
           }}
           className="flex size-10 items-center justify-center text-foreground transition-transform active:scale-90"
@@ -207,6 +213,7 @@ export const SmallTalkConversation = ({
 
       <SmallTalkExitSheet
         open={showExitSheet}
+        goodbyePhrase={goodbyePhrase}
         onComplete={() => void completeTalk()}
         onClose={() => {
           track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'conversation_exit' });

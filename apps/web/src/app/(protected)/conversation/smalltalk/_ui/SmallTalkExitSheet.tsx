@@ -10,6 +10,8 @@ import { Button } from '@/shared/ui/Button';
 
 interface SmallTalkExitSheetProps {
   open: boolean;
+  // 따라 말해 볼 작별 인사 예시
+  goodbyePhrase: string;
   // 대화 종료하기 — 지금 완료하고 오늘의 스몰톡으로 간다
   onComplete: () => void;
   // 직접 대화 마무리하기 — 시트를 닫고 작별 인사를 하러 대화로 돌아간다
@@ -18,6 +20,7 @@ interface SmallTalkExitSheetProps {
 
 export const SmallTalkExitSheet = ({
   open,
+  goodbyePhrase,
   onComplete,
   onClose,
 }: SmallTalkExitSheetProps) => (
@@ -36,7 +39,9 @@ export const SmallTalkExitSheet = ({
     </div>
     <div className="mt-4 rounded-2xl bg-selected px-4 py-3 text-left">
       <p className="text-[13px] font-semibold text-accent">직접 끝내볼래요?</p>
-      <p className="mt-1 text-sm font-medium text-foreground">“Bye!”</p>
+      <p className="mt-1 text-sm font-medium text-foreground">
+        “{goodbyePhrase}”
+      </p>
     </div>
     <Button className="mt-5" onClick={onClose}>
       직접 대화 마무리하기
