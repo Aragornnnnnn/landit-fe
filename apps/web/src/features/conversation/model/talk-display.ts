@@ -1,6 +1,6 @@
 // 대화 표시 설정 — 마이페이지에서 고르고, 대화를 시작할 때 첫 상태로 읽는다. 기본값과 다를 때만 기기에 남는다
 const DEFAULTS = {
-  showText: true,
+  hideText: false,
   alwaysShowTranslation: false,
 };
 
@@ -8,7 +8,7 @@ export type DisplaySettingKey = keyof typeof DEFAULTS;
 
 // 저장 키는 다른 기기 설정과 같은 소문자·하이픈 형식으로 둔다
 const STORAGE_KEYS: Record<DisplaySettingKey, string> = {
-  showText: 'landit-talk-show-text',
+  hideText: 'landit-talk-hide-text',
   alwaysShowTranslation: 'landit-talk-always-show-translation',
 };
 const storageKey = (key: DisplaySettingKey) => STORAGE_KEYS[key];

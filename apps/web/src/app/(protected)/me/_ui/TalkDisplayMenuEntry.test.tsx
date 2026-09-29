@@ -26,28 +26,28 @@ const openSheet = () => {
 };
 
 describe('TalkDisplayMenuEntry', () => {
-  it('기본은 상대 말 글자로 보기 켬, 해석 항상 보기 끔이다', () => {
+  it('기본은 상대 말 글자 가리기·해석 항상 보기 모두 끔이다', () => {
     openSheet();
 
     expect(
-      screen.getByRole('switch', { name: '상대 말 글자로 보기' }),
-    ).toHaveAttribute('aria-checked', 'true');
+      screen.getByRole('switch', { name: '상대 말 글자 가리기' }),
+    ).toHaveAttribute('aria-checked', 'false');
     expect(
       screen.getByRole('switch', { name: '해석 항상 보기' }),
     ).toHaveAttribute('aria-checked', 'false');
   });
 
-  it('상대 말 글자로 보기를 끄면 저장값과 계측에 남는다', () => {
+  it('상대 말 글자 가리기를 켜면 저장값과 계측에 남는다', () => {
     openSheet();
 
     fireEvent.click(
-      screen.getByRole('switch', { name: '상대 말 글자로 보기' }),
+      screen.getByRole('switch', { name: '상대 말 글자 가리기' }),
     );
 
-    expect(getDisplaySetting('showText')).toBe(false);
+    expect(getDisplaySetting('hideText')).toBe(true);
     expect(mocks.track).toHaveBeenCalledWith('Talk Display Changed', {
-      setting: 'show_text',
-      enabled: false,
+      setting: 'hide_text',
+      enabled: true,
     });
   });
 
@@ -64,11 +64,11 @@ describe('TalkDisplayMenuEntry', () => {
   });
 
   it('바꿔 둔 기기에서는 바꾼 값으로 열린다', () => {
-    setDisplaySetting('showText', false);
+    setDisplaySetting('hideText', true);
     openSheet();
 
     expect(
-      screen.getByRole('switch', { name: '상대 말 글자로 보기' }),
-    ).toHaveAttribute('aria-checked', 'false');
+      screen.getByRole('switch', { name: '상대 말 글자 가리기' }),
+    ).toHaveAttribute('aria-checked', 'true');
   });
 });
