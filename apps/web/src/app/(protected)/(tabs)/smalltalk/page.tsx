@@ -45,8 +45,15 @@ export default function SmallTalkPage() {
   // 주제는 서버가 매번 무작위로 뽑아 준다 — 열 때마다, 새로고침할 때마다 다시 받는다
   const picker = useTopicPicker({ partner: partner.id, refresh });
   // 처음 들어온 사람에겐 래디 안내부터, 닫으면 캐릭터를 눌러 보라는 코치마크 — 둘 다 기기당 한 번이다
-  const { guideOpen, coaching, closeGuide, tapPartner, partnerRef, trapFocus } =
-    useGreetingCoach({ onTap: greet });
+  const {
+    guideOpen,
+    guideRenewed,
+    coaching,
+    closeGuide,
+    tapPartner,
+    partnerRef,
+    trapFocus,
+  } = useGreetingCoach({ onTap: greet });
   // 이번 방문에 띄울 시트 하나 — 첫 스몰톡 소감 → 리뷰 요청
   const satisfaction = useSatisfactionSheet('smalltalk');
   // 할인 시트가 떠 있으면 소감은 미룬다 — 할인은 5분뿐이고 소감은 다음에 또 물을 수 있다
@@ -212,7 +219,7 @@ export default function SmallTalkPage() {
         </>
       )}
 
-      {guideOpen && <IntroGuide onClose={closeGuide} />}
+      {guideOpen && <IntroGuide renewed={guideRenewed} onClose={closeGuide} />}
       <AnimatePresence>{coaching && <CoachDim />}</AnimatePresence>
       {/* 스몰톡을 마치고 돌아온 사람에게 한 번 — 안내·코치마크는 첫 진입 때 이미 끝난 뒤라 겹치지 않는다 */}
       {!promoOpen && satisfaction.sheet === 'talk' && (

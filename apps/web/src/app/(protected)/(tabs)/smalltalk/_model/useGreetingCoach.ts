@@ -9,12 +9,13 @@ import { EVENTS } from '@landit/analytics';
 import { track } from '@/shared/analytics';
 
 import { tapGreetingSeen } from '../../_model/tap-greeting-seen';
-import { introGuideSeen } from './intro-guide-seen';
+import { introGuideSeen, oldIntroGuideSeen } from './intro-guide-seen';
 
 /** onTap — 캐릭터를 눌렀을 때 할 일(인사 시작). 코치마크 여부와 상관없이 늘 부른다 */
 export const useGreetingCoach = ({ onTap }: { onTap: () => void }) => {
   // 서버 렌더엔 localStorage가 없어 안 본 것으로 두고, 하이드레이션 뒤 첫 상태 계산에서 본 기록이 반영된다
   const [guideOpen, setGuideOpen] = useState(() => !introGuideSeen.has());
+  const [guideRenewed] = useState(() => oldIntroGuideSeen.has());
   const [coachOpen, setCoachOpen] = useState(() => !tapGreetingSeen.has());
   const coaching = !guideOpen && coachOpen;
 
@@ -43,5 +44,13 @@ export const useGreetingCoach = ({ onTap }: { onTap: () => void }) => {
     if (coaching && event.key === 'Tab') event.preventDefault();
   };
 
-  return { guideOpen, coaching, closeGuide, tapPartner, partnerRef, trapFocus };
+  return {
+    guideOpen,
+    guideRenewed,
+    coaching,
+    closeGuide,
+    tapPartner,
+    partnerRef,
+    trapFocus,
+  };
 };
