@@ -212,7 +212,7 @@ describe('QuestionCard', () => {
     expect(toggle).toHaveBeenCalledTimes(1);
   });
 
-  it('글자를 가린 카드는 영어 문장을 흐리게 가린다', () => {
+  it('글자를 가린 카드는 영어 문장을 흐리게 가리고, 화면 낭독기에도 읽히지 않게 한다', () => {
     render(
       <QuestionCard
         question="How was your day?"
@@ -221,11 +221,14 @@ describe('QuestionCard', () => {
         textHidden
       />,
     );
+    const sentence = screen.getByText('How was your day?');
 
-    expect(screen.getByText('How was your day?')).toHaveAttribute(
-      'data-hidden',
-      'true',
-    );
+    expect(sentence).toHaveAttribute('data-hidden', 'true');
+    expect(sentence).toHaveAttribute('aria-hidden', 'true');
+
+    // 눈 버튼으로 보이면 다시 읽힌다
+    fireEvent.click(screen.getByRole('button', { name: '영어 문장 보기' }));
+    expect(sentence).not.toHaveAttribute('aria-hidden');
   });
 
   it('흐린 문장이나 눈 버튼을 누르면 그 카드만 보이고, 다음 카드는 다시 가려진다', () => {

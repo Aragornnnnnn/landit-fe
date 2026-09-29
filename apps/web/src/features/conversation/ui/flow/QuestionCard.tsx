@@ -256,6 +256,8 @@ export const QuestionCard = ({
         ) : (
           <p
             data-hidden={blurred}
+            // 가린 동안엔 화면 낭독기도 읽지 않는다 — 눈 버튼("영어 문장 보기")으로 같은 동작을 할 수 있다
+            aria-hidden={blurred || undefined}
             onClick={blurred ? toggleText : undefined}
             className={`${questionSize} leading-snug font-bold text-foreground transition-[filter] duration-200 ${
               blurred ? 'cursor-pointer blur-[7px] select-none' : ''
