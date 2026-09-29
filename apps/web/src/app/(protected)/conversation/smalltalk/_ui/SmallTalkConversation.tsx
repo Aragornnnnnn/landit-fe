@@ -13,6 +13,7 @@ import {
 } from '@/features/conversation/model/character-look';
 import { userIntroHoldMs } from '@/features/conversation/model/pacing';
 import type { FloatingThought } from '@/features/conversation/model/thought';
+import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
@@ -47,6 +48,7 @@ export const SmallTalkConversation = ({
   const router = useRouter();
   const goHome = () => router.replace(SMALLTALK_PATH);
   const [showExitSheet, setShowExitSheet] = useState(false);
+  const display = useTalkDisplay();
   // 결제가 열리면 하루 한도가 없다 — 남은 시간과 타이머 링을 그리지 않는다 (잔량 계산은 뒤에서 그대로 돈다)
   const { unlimited } = useSpeakingLimit();
   // 내가 먼저 거는 대화의 진입 안내 — 랜디가 먼저 말을 걸어보라고 알려주고 잠시 후 사라진다
@@ -140,6 +142,16 @@ export const SmallTalkConversation = ({
               })
             }
             replay={replay}
+            textHidden={display.textHidden}
+            onTextHiddenChange={(hidden) => {
+              display.setTextHidden(hidden);
+              track(EVENTS.ENGLISH_TEXT_TOGGLED, {
+                session_id: session.sessionId,
+                turn_index: turnIndex,
+                hidden,
+              });
+            }}
+            translationDefaultOpen={display.translationDefaultOpen}
           />
         </div>
         {ended ? (

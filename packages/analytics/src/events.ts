@@ -63,6 +63,7 @@ export const EVENTS = {
   TURN_FAILED: 'Turn Failed',
   INNER_THOUGHT_VIEWED: 'Inner Thought Viewed',
   TRANSLATION_TOGGLED: 'Translation Toggled',
+  ENGLISH_TEXT_TOGGLED: 'English Text Toggled',
   SPEECH_REPLAYED: 'Speech Replayed',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
   SPEECH_PLAYBACK_FAILED: 'Speech Playback Failed',
@@ -440,6 +441,12 @@ export type EventProps = {
     session_id?: number;
     turn_index: number;
     opened: boolean;
+  };
+  // 대화 중 눈 아이콘으로 영어 글자를 가리거나 다시 보인 순간 — 듣기만으로 대화하는 사람이 얼마나 되는지 본다
+  'English Text Toggled': {
+    session_id?: number;
+    turn_index: number;
+    hidden: boolean;
   };
   // 상대 발화를 다시 들은 순간 — 어느 턴에서 못 알아들어 되감는지 본다. 멈추려고 누른 건 세지 않는다
   'Speech Replayed': {
