@@ -12,6 +12,11 @@ import { BackHeader } from '@/shared/ui/BackHeader';
 import { showToast } from '@/shared/ui/toast';
 
 import type { FeedbackType } from '../api/mailbox';
+import {
+  exceedsSendLimit,
+  sendFailureMessage,
+  TOO_LARGE,
+} from '../model/attachment';
 import { mailboxPath } from '../model/box';
 import { FEEDBACK_TYPE_FACES } from '../model/feedback-type';
 import { resolvePhotoSource } from '../model/shell-photos';
@@ -43,16 +48,23 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
 
     // 이 콜백들은 화면이 사라지면 불리지 않는다(React Query) — 느린 회선에서 보내는 동안 뒤로 나가도
     // 뒤늦게 도착한 응답이 유저가 고른 자리에서 보낸 편지함으로 끌고 가지 않는다
+    const images = attachments.map(({ file }) => file);
+    // 앞단 프록시가 큰 요청을 끊기 전에 막는다 — 보내 봐야 실패할 것을 기다리게 하지 않는다
+    if (exceedsSendLimit(images)) {
+      showToast(TOO_LARGE);
+      return;
+    }
+
     send(
-      { content: trimmed, images: attachments.map(({ file }) => file) },
+      { content: trimmed, images },
       {
         onSuccess: () => {
           showToast('소중한 의견 고마워요!');
           // 방금 보낸 편지가 보이는 자리로 데려간다. replace라 뒤로가기가 작성 화면으로 되돌지 않는다
           router.replace(mailboxPath('sent'));
         },
-        onError: () =>
-          showToast('보내지 못했어요. 잠시 후 다시 시도해 주세요.'),
+        // 사진 때문에 거부됐으면 다시 시도해도 같다 — 무엇을 바꾸면 되는지 알려준다
+        onError: (error) => showToast(sendFailureMessage(error, images.length)),
       },
     );
   };

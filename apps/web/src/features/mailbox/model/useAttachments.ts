@@ -82,7 +82,14 @@ export const useAttachments = () => {
       leave.current?.signal,
     );
     if (!isMounted.current) return;
-    if (reply?.status === 'error') showToast('사진을 불러오지 못했어요');
+    // 토스트는 한 번에 하나만 보이니 가장 중요한 것 하나만 말한다 — 전부 실패 > 일부 실패 > 넘침
+    if (reply?.status === 'error') {
+      showToast('사진을 불러오지 못했어요');
+    } else if (reply && reply.failedCount > 0) {
+      showToast('불러올 수 없는 사진은 빼고 담았어요');
+    } else if (reply?.overflowed) {
+      showToast(`사진은 ${MAX_ATTACHMENTS}장까지 보낼 수 있어요`);
+    }
     if (reply?.status === 'success') add(reply.photos.map(toPickedFile));
     setIsAttaching(false);
   };
