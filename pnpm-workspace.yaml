@@ -5,6 +5,3 @@ packages:
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
-
-patchedDependencies:
-  '@sentry/nextjs@10.68.0': patches/@sentry__nextjs@10.68.0.patch

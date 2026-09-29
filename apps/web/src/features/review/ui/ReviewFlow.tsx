@@ -30,7 +30,11 @@ import {
 import { useReviewAnswerMutation } from '../model/useReviewAnswerMutation';
 import { isRetriableFailure, useReviewQuery } from '../model/useReviewQuery';
 import { useStartReviewMutation } from '../model/useStartReviewMutation';
-import { ReviewComplete } from './ReviewComplete';
+import {
+  LANDY_REVIEW_PERFECT,
+  LANDY_REVIEW_STUDY,
+  ReviewComplete,
+} from './ReviewComplete';
 import { LANDY_QUIZ, ReviewIntro } from './ReviewIntro';
 import { ReviewNotice } from './ReviewNotice';
 
@@ -154,6 +158,10 @@ export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
       />
     );
   }
+
+  // 결과 그림은 문제를 푸는 동안 받아 둔다 — 시작 안내 그림과 대역폭을 나누지 않고,
+  // 끝난 복습을 다시 열 때는 결과 화면이 보여 줄 한 장만 받는다
+  preloadImages([LANDY_REVIEW_PERFECT, LANDY_REVIEW_STUDY]);
 
   // 판정은 서버가 한다 — 한국어 문제는 복수 정답이라 단어 순서만으로는 맞는지 알 수 없다
   const askServer = async (words: string[]) => {
