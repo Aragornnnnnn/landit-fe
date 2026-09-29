@@ -334,8 +334,8 @@ export const TranslateIcon = ({ size = 22, ...props }: IconProps) => (
   </svg>
 );
 
-// 빗금 친 눈 — 대화 카드의 영어 문장 가리기 버튼용
-export const EyeOffIcon = ({ size = 22, ...props }: IconProps) => (
+// 눈 — 대화 카드의 영어 문장 보기 버튼용
+export const EyeIcon = ({ size = 22, ...props }: IconProps) => (
   <svg
     width={size}
     height={size}
@@ -348,10 +348,8 @@ export const EyeOffIcon = ({ size = 22, ...props }: IconProps) => (
     aria-hidden="true"
     {...props}
   >
-    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c4.8 0 8.4 3 9.94 6.65a1 1 0 0 1 0 .7 10.75 10.75 0 0 1-1.44 2.49" />
-    <path d="M14.08 14.16a3 3 0 0 1-4.24-4.24" />
-    <path d="M17.48 17.5a10.75 10.75 0 0 1-15.42-5.15 1 1 0 0 1 0-.7 10.75 10.75 0 0 1 4.45-5.14" />
-    <path d="m2 2 20 20" />
+    <path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0" />
+    <path d="M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
   </svg>
 );
 

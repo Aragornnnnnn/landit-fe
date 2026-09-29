@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
 import { getSpeechRate } from '@/shared/lib/speech-rate';
-import { EyeOffIcon, SpeakerIcon, TranslateIcon } from '@/shared/ui/Icons';
+import { EyeIcon, SpeakerIcon, TranslateIcon } from '@/shared/ui/Icons';
 
 import { speechTypingMs } from '../../model/pacing';
 import type { ReplayControl } from '../../model/useConversationTurns';
@@ -310,13 +310,13 @@ export const QuestionCard = ({
             )}
             {/* 글자를 가린 동안에도 늘 누를 수 있어야 해서 발화가 끝나길 기다리지 않는다 */}
             {onTextHiddenChange && (
-              // 글자 가리기 모드 스위치 — 다른 버튼처럼 켜지면(가림) 칠하고, 아이콘은 하나로 둔다
+              // 글자 보기 스위치 — 기본이 가림이라 누르는 쪽이 보기다. 다른 버튼처럼 켜지면(보임) 칠하고, 아이콘은 하나로 둔다
               <CardIconButton
-                on={textHidden}
+                on={!textHidden}
                 label={textHidden ? '영어 문장 보기' : '영어 문장 가리기'}
                 onClick={() => onTextHiddenChange(!textHidden)}
               >
-                <EyeOffIcon size={14} />
+                <EyeIcon size={14} />
               </CardIconButton>
             )}
           </div>
