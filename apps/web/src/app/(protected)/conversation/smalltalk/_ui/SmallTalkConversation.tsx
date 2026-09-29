@@ -107,7 +107,7 @@ export const SmallTalkConversation = ({
     <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
       <header
         className="absolute inset-x-0 top-0 z-20 flex items-center px-3"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 8px)' }}
+        style={{ paddingTop: 'max(var(--safe-area-inset-top), 8px)' }}
       >
         <button
           onClick={() => {
@@ -152,7 +152,7 @@ export const SmallTalkConversation = ({
         )}
       </section>
 
-      <footer className="flex-none pb-[max(env(safe-area-inset-bottom),16px)]">
+      <footer className="flex-none pb-[max(var(--safe-area-inset-bottom),16px)]">
         {ended ? (
           // 오늘의 스몰톡(지난번과 비교) → 상세 피드백 → 축하·맞춤 표현으로 이어진다.
           // 버튼은 끝내는 말이 아니라 다음에 볼 것으로 부른다 — 여기서 대화는 이미 끝났다

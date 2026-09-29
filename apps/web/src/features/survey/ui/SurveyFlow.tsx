@@ -123,8 +123,8 @@ export const SurveyFlow = () => {
         direction={direction}
         className="flex min-h-0 flex-1 flex-col px-6"
         style={{
-          paddingTop: 'calc(max(env(safe-area-inset-top), 18px) + 58px)',
-          paddingBottom: 'max(env(safe-area-inset-bottom), 20px)',
+          paddingTop: 'calc(max(var(--safe-area-inset-top), 18px) + 58px)',
+          paddingBottom: 'max(var(--safe-area-inset-bottom), 20px)',
         }}
       >
         {step === 'intro' && <SurveyIntro onStart={start} />}

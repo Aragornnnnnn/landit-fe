@@ -105,7 +105,7 @@ export default function MyPage() {
       <header
         className="relative flex items-center border-b border-border px-4 transition-shadow duration-200"
         style={{
-          paddingTop: 'max(env(safe-area-inset-top), 16px)',
+          paddingTop: 'max(var(--safe-area-inset-top), 16px)',
           paddingBottom: 8,
           boxShadow: hasShadow ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
         }}

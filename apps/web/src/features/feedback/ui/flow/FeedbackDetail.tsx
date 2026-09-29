@@ -45,7 +45,7 @@ export const FeedbackDetail = ({
     <div className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
       <header
         className="flex shrink-0 flex-col gap-3 px-4 pt-4 pb-3.5"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 16px)' }}
+        style={{ paddingTop: 'max(var(--safe-area-inset-top), 16px)' }}
       >
         <div className="flex items-center">
           <button
@@ -78,7 +78,7 @@ export const FeedbackDetail = ({
 
       <div
         className="shrink-0 border-t border-border px-5 pt-3"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
+        style={{ paddingBottom: 'max(var(--safe-area-inset-bottom), 20px)' }}
       >
         <Button onClick={goNext}>
           {isLast ? '분석 다 봤어요' : '다음 분석 볼게요'}

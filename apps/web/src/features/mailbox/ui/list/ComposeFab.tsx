@@ -11,7 +11,7 @@ export const ComposeFab = () => (
   <Link
     replace
     href={MAILBOX_COMPOSE_PATH}
-    className="absolute right-5 bottom-[max(env(safe-area-inset-bottom),20px)] flex h-12 items-center gap-1.5 rounded-full bg-primary pr-5 pl-4 text-sm font-bold text-primary-foreground shadow-lg transition-transform active:scale-95"
+    className="absolute right-5 bottom-[max(var(--safe-area-inset-bottom),20px)] flex h-12 items-center gap-1.5 rounded-full bg-primary pr-5 pl-4 text-sm font-bold text-primary-foreground shadow-lg transition-transform active:scale-95"
   >
     <span aria-hidden className="text-lg leading-none">
       +

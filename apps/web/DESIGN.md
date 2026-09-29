@@ -180,8 +180,9 @@ Layer 3  컴포넌트                                ← 오직 시맨틱 토큰
 
 ### Safe Area
 
-- 모든 상/하단 고정 요소는 `env(safe-area-inset-*)`로 노치/홈바 대응
-- 패턴: 헤더 `paddingTop: max(env(safe-area-inset-top), 16px)`, 하단 시트 `max(env(safe-area-inset-bottom), 24px)`
+- 모든 상/하단 고정 요소는 `var(--safe-area-inset-top)`·`var(--safe-area-inset-bottom)`으로 노치/홈바/안드로이드 내비게이션 바 대응 (좌우가 필요하면 `globals.css`에 먼저 정의한다)
+- 패턴: 헤더 `paddingTop: max(var(--safe-area-inset-top), 16px)`, 하단 시트 `max(var(--safe-area-inset-bottom), 24px)`
+- `env(safe-area-inset-*)`를 직접 쓰지 않는다 — 변수는 `globals.css`에서 정의한다. 값은 Android 셸이 잰 inset(`--native-inset-*`)이 있으면 그것, 없으면 `env()`다 (구형 Android WebView는 `env()`를 0으로 준다). 예외는 `globals.css` 없이 그려지는 `global-error.tsx` 하나다
 
 ### Spacing
 
@@ -215,7 +216,7 @@ Layer 3  컴포넌트                                ← 오직 시맨틱 토큰
 - 주요 버튼은 항상 3D 그림자 패턴을 쓴다
 - 브랜드 액센트는 테라코타 `#e07a3a` 하나로 통일한다
 - 이모지는 `.tossface` 클래스로 렌더해 플랫폼 간 일관성을 지킨다
-- 고정 요소엔 `env(safe-area-inset-*)`를 반드시 적용한다
+- 고정 요소엔 `var(--safe-area-inset-top)`·`var(--safe-area-inset-bottom)`을 반드시 적용한다
 - 색은 `--primary`, `--foreground` 등 CSS 변수/시맨틱 토큰으로 참조한다
 - 헤드라인은 사이즈보다 weight(extrabold/black)로 위계를 만든다
 - 등장 애니메이션은 `fade + y:10, 0.25s easeOut` 패턴을 따른다

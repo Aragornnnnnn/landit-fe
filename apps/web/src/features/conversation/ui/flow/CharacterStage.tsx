@@ -29,7 +29,7 @@ export const CharacterStage = ({
   <div
     className="relative flex w-full flex-none items-end justify-center overflow-hidden rounded-b-3xl border-b border-border bg-background shadow-lg shadow-black/5"
     style={{
-      height: 'calc(min(17rem, 34dvh) + max(env(safe-area-inset-top), 8px))',
+      height: 'calc(min(17rem, 34dvh) + max(var(--safe-area-inset-top), 8px))',
     }}
   >
     <motion.div

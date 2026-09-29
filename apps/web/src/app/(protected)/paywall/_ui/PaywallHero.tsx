@@ -18,7 +18,7 @@ export const PaywallHero = ({
   onRestore,
   restoreDisabled,
 }: PaywallHeroProps) => (
-  <section className="shrink-0 bg-[linear-gradient(180deg,#fdf1e8,#fff8f2)] pt-[max(env(safe-area-inset-top),8px)]">
+  <section className="shrink-0 bg-[linear-gradient(180deg,#fdf1e8,#fff8f2)] pt-[max(var(--safe-area-inset-top),8px)]">
     <div className="flex h-10 items-center justify-between pr-5 pl-4 short:h-8">
       <button
         type="button"

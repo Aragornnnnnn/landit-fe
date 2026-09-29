@@ -123,7 +123,7 @@ export const ScenarioTalkFlow = ({
       {/* 진행 게이지 — 표현 학습 스텝과 같은 자리(상태바 바로 아래)·같은 모양이라 무대 위에 띄운다 */}
       <div
         className="absolute inset-x-0 z-20"
-        style={{ top: 'env(safe-area-inset-top)' }}
+        style={{ top: 'var(--safe-area-inset-top)' }}
       >
         <ProgressBar
           progress={gauge.ratio}
@@ -135,7 +135,7 @@ export const ScenarioTalkFlow = ({
       {/* 무대가 상태바 밑까지 이어지고, X만 safe area 아래에 뜬다 — 플레인 아이콘(마이페이지와 통일) */}
       <header
         className="absolute inset-x-0 top-0 z-20 flex items-center px-3"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 8px)' }}
+        style={{ paddingTop: 'max(var(--safe-area-inset-top), 8px)' }}
       >
         <button
           onClick={() => {
@@ -185,7 +185,7 @@ export const ScenarioTalkFlow = ({
         )}
       </section>
 
-      <footer className="flex-none pb-[max(env(safe-area-inset-bottom),16px)]">
+      <footer className="flex-none pb-[max(var(--safe-area-inset-bottom),16px)]">
         {ended ? (
           // 대화 종료 — 마지막 AI 발화만 남기고 마이크 대신 분석으로 가는 CTA를 아래쪽에 보여준다
           <div className="flex h-36 items-end px-5 pb-3">

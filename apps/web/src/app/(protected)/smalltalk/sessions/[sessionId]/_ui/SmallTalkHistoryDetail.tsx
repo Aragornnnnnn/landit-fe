@@ -58,7 +58,7 @@ export const SmallTalkHistoryDetail = ({
   return (
     <main
       className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      style={{ paddingTop: 'var(--safe-area-inset-top)' }}
     >
       <header className="relative flex h-14 flex-none items-center justify-center">
         <button
