@@ -63,6 +63,7 @@ export const EVENTS = {
   TURN_FAILED: 'Turn Failed',
   INNER_THOUGHT_VIEWED: 'Inner Thought Viewed',
   TRANSLATION_TOGGLED: 'Translation Toggled',
+  ENGLISH_TEXT_TOGGLED: 'English Text Toggled',
   SPEECH_REPLAYED: 'Speech Replayed',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
   SPEECH_PLAYBACK_FAILED: 'Speech Playback Failed',
@@ -179,6 +180,7 @@ export const EVENTS = {
   PROMO_SHEET_VIEWED: 'Promo Sheet Viewed',
   HAPTICS_TOGGLED: 'Haptics Toggled',
   SPEECH_RATE_CHANGED: 'Speech Rate Changed',
+  TALK_DISPLAY_CHANGED: 'Talk Display Changed',
   // 구독 관리 화면 — 결제 내역으로 들어갔다 / 스토어 구독 화면으로 나갔다
   SUBSCRIPTION_HISTORY_TAPPED: 'Subscription History Tapped',
   STORE_SUBSCRIPTION_TAPPED: 'Store Subscription Tapped',
@@ -444,6 +446,12 @@ export type EventProps = {
     turn_index: number;
     opened: boolean;
   };
+  // 대화 카드에서 영어 문장을 보이거나 가린 순간(흐린 문장 탭·눈 버튼) — 듣기만으로 버티는 사람이 얼마나 되는지 본다
+  'English Text Toggled': {
+    session_id?: number;
+    turn_index: number;
+    hidden: boolean;
+  };
   // 상대 발화를 다시 들은 순간 — 어느 턴에서 못 알아들어 되감는지 본다. 멈추려고 누른 건 세지 않는다
   'Speech Replayed': {
     session_id?: number;
@@ -683,6 +691,11 @@ export type EventProps = {
   'Haptics Toggled': { enabled: boolean };
   // 고른 배속 그대로 — 0.75 · 1 · 1.25 · 1.5
   'Speech Rate Changed': { rate: number };
+  // 마이페이지 대화 설정 — 대화를 시작할 때의 상대 말 글자·해석을 처음부터 보일지
+  'Talk Display Changed': {
+    setting: 'always_show_text' | 'always_show_translation';
+    enabled: boolean;
+  };
   'Subscription History Tapped': { status: SubscriptionState };
   'Store Subscription Tapped': {
     status: SubscriptionState;

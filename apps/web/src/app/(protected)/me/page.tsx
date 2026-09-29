@@ -27,6 +27,7 @@ import { PremiumEntry } from './_ui/PremiumEntry';
 import { ProfileHeader } from './_ui/ProfileHeader';
 import { ShareMenuEntry } from './_ui/ShareMenuEntry';
 import { SpeechRateMenuEntry } from './_ui/SpeechRateMenuEntry';
+import { TalkDisplayMenuEntry } from './_ui/TalkDisplayMenuEntry';
 import { WidgetMenuEntry } from './_ui/WidgetMenuEntry';
 import { WithdrawSheet } from './_ui/WithdrawSheet';
 
@@ -141,7 +142,8 @@ export default function MyPage() {
           </MenuSection>
 
           <MenuSection title="설정">
-            {/* 알림은 권한 체계가 있는 셸에서만, 위젯은 위젯이 실린 셸에서만 보인다 — 브라우저에선 음성과 진동만 남는다 */}
+            {/* 알림은 권한 체계가 있는 셸에서만, 위젯은 위젯이 실린 셸에서만 보인다 — 브라우저에선 대화·음성·진동만 남는다 */}
+            <TalkDisplayMenuEntry />
             <SpeechRateMenuEntry />
             <NotificationMenuEntry />
             <HapticMenuEntry />
