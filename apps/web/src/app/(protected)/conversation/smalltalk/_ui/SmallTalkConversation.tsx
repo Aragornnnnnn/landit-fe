@@ -60,6 +60,8 @@ export const SmallTalkConversation = ({
     replay,
     input,
     leave,
+    completeTalk,
+    hasExchanged,
     remainingMs,
     speakingRatio,
     summary,
@@ -69,6 +71,7 @@ export const SmallTalkConversation = ({
     remainingSpeakingTimeMs,
     endSession,
     goHome,
+    showSummary: () => router.replace(smallTalkSummaryPath(session.sessionId)),
   });
   const {
     transcript,
@@ -111,6 +114,12 @@ export const SmallTalkConversation = ({
       >
         <button
           onClick={() => {
+            // 나눈 대화가 없으면 마무리할 것도 없다 — 확인 없이 바로 나간다
+            if (!hasExchanged) {
+              leave();
+              goHome();
+              return;
+            }
             track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'conversation_exit' });
             setShowExitSheet(true);
           }}
@@ -198,10 +207,7 @@ export const SmallTalkConversation = ({
 
       <SmallTalkExitSheet
         open={showExitSheet}
-        onConfirm={() => {
-          leave();
-          goHome();
-        }}
+        onComplete={() => void completeTalk()}
         onClose={() => {
           track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'conversation_exit' });
           setShowExitSheet(false);
