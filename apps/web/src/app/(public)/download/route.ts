@@ -4,6 +4,8 @@ import { NextResponse } from 'next/server';
 
 import { APP_STORE_URL, PLAY_STORE_URL } from '@/shared/lib/store-listing';
 
+import { buildLinkPreviewHtml, isLinkPreviewBot } from './_lib/link-preview';
+
 const AMPLITUDE_HTTP_API = 'https://api2.amplitude.com/2/httpapi';
 
 type VisitProps = EventProps['Download Link Visited'];
@@ -36,9 +38,25 @@ const trackDownloadVisit = async (props: VisitProps) => {
 
 export async function GET(request: Request): Promise<NextResponse> {
   const userAgent = request.headers.get('user-agent') ?? '';
+  const url = new URL(request.url);
+
+  // 미리보기 봇을 스토어로 보내면 스토어 페이지 카드가 뜬다 — 랜딧 카드를 주고, 방문으로 세지 않는다
+  if (isLinkPreviewBot(userAgent)) {
+    return new NextResponse(buildLinkPreviewHtml(url.origin), {
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    });
+  }
+
   const isAndroid = /android/i.test(userAgent);
 
-  await trackDownloadVisit({ store: isAndroid ? 'play_store' : 'app_store' });
+  // 딱지 없는(빈 값 포함) 방문은 undefined라 전송 본문에서 빠지고 store만 남는다
+  const query = url.searchParams;
+  await trackDownloadVisit({
+    store: isAndroid ? 'play_store' : 'app_store',
+    utm_source: query.get('utm_source') || undefined,
+    utm_medium: query.get('utm_medium') || undefined,
+    utm_campaign: query.get('utm_campaign') || undefined,
+  });
 
   if (isAndroid) {
     return NextResponse.redirect(PLAY_STORE_URL);
