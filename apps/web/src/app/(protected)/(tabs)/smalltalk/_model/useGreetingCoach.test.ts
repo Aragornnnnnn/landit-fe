@@ -30,6 +30,17 @@ describe('useGreetingCoach', () => {
     expect(track).toHaveBeenCalledWith('Small Talk Intro Guide Closed');
   });
 
+  it('안내를 닫으면 바뀌기 전 안내를 본 기록을 지운다', () => {
+    localStorage.setItem('landit-smalltalk-intro-guide-seen', '1');
+    const { result } = renderHook(() => useGreetingCoach({ onTap: vi.fn() }));
+
+    act(() => result.current.closeGuide());
+
+    expect(
+      localStorage.getItem('landit-smalltalk-intro-guide-seen'),
+    ).toBeNull();
+  });
+
   it('안내는 봤지만 아직 안 눌러 본 기기면 들어오자마자 코치마크가 켜진다', () => {
     introGuideSeen.mark();
 
