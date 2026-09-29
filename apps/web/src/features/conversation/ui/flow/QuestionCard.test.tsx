@@ -209,6 +209,139 @@ describe('QuestionCard', () => {
     expect(toggle).toHaveBeenCalledTimes(1);
   });
 
+  it('글자를 가린 카드는 영어 문장을 흐리게 가린다', () => {
+    render(
+      <QuestionCard
+        question="How was your day?"
+        translation={null}
+        speaking={false}
+        textHidden
+        onTextHiddenChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('How was your day?')).toHaveAttribute(
+      'data-hidden',
+      'true',
+    );
+  });
+
+  it('눈 아이콘을 누르면 대화 전체의 글자 가림을 바꾸라고 알린다', () => {
+    const onTextHiddenChange = vi.fn();
+    render(
+      <QuestionCard
+        question="How was your day?"
+        translation={null}
+        speaking={false}
+        textHidden
+        onTextHiddenChange={onTextHiddenChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '영어 글자 보기' }));
+
+    expect(onTextHiddenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('흐린 영어를 누르면 그 카드만 글자가 보인다', () => {
+    // Given 글자를 가린 대화에서
+    const onTextHiddenChange = vi.fn();
+    const { rerender } = render(
+      <QuestionCard
+        question="How was your day?"
+        translation={null}
+        speaking={false}
+        textHidden
+        onTextHiddenChange={onTextHiddenChange}
+      />,
+    );
+
+    // When 흐린 문장을 누르면
+    fireEvent.click(screen.getByText('How was your day?'));
+
+    // Then 이 카드는 보이고, 대화 전체 설정은 그대로다
+    expect(screen.getByText('How was your day?')).toHaveAttribute(
+      'data-hidden',
+      'false',
+    );
+    expect(onTextHiddenChange).not.toHaveBeenCalled();
+
+    // When 다음 질문이 오면 Then 다시 가려진다
+    rerender(
+      <QuestionCard
+        question="What did you eat?"
+        translation={null}
+        speaking={false}
+        textHidden
+        onTextHiddenChange={onTextHiddenChange}
+      />,
+    );
+    expect(screen.getByText('What did you eat?')).toHaveAttribute(
+      'data-hidden',
+      'true',
+    );
+  });
+
+  it('가린 채 발화 중이면 전문을 흐리게 두고, 해석 버튼은 발화가 끝나야 나온다', () => {
+    render(
+      <QuestionCard
+        question="How was your day?"
+        translation="오늘 하루 어땠어요?"
+        speaking
+        textHidden
+        onTextHiddenChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('How was your day?')).toHaveAttribute(
+      'data-hidden',
+      'true',
+    );
+    expect(
+      screen.queryByRole('button', { name: '해석 보기' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('눈 아이콘을 주지 않으면 글자 가림 버튼이 없다', () => {
+    render(
+      <QuestionCard
+        question="How was your day?"
+        translation={null}
+        speaking={false}
+      />,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: '영어 글자 보기' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: '영어 글자 가리기' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('해석을 펼쳐 두기로 하면 새 질문마다 해석이 펼쳐진 채로 나온다', () => {
+    const { rerender } = render(
+      <QuestionCard
+        question="How was your day?"
+        translation="오늘 하루 어땠어요?"
+        speaking={false}
+        translationDefaultOpen
+      />,
+    );
+    expect(screen.getByText('오늘 하루 어땠어요?')).toBeInTheDocument();
+
+    rerender(
+      <QuestionCard
+        question="What did you eat?"
+        translation="뭘 드셨어요?"
+        speaking={false}
+        translationDefaultOpen
+      />,
+    );
+
+    expect(screen.getByText('뭘 드셨어요?')).toBeInTheDocument();
+  });
+
   it('발화 중에는 아직 나오지 않은 글자 끝이 아니라 지금 말하는 줄로 스크롤한다', async () => {
     // Given 카드를 넘치는 긴 발화 — jsdom엔 레이아웃이 없어 카드·커서의 위치를 심어 준다.
     // 카드 아래끝은 200, 커서는 그보다 80 아래, 안 나온 글자까지 합친 전체 높이는 1000이다

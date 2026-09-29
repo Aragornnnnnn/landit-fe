@@ -3,13 +3,14 @@
 // 크기는 발화가 시작될 때 한 번에 잡는다 — 글자가 나타나는 내내 커지면 화면이 계속 달라져 산만하다.
 // 남은 자리를 다 쓰는 긴 발화만 안쪽 글자가 스크롤된다.
 // 해석은 접어 두는 게 기본이다 — 늘 펼쳐 두면 카드가 그만큼 길어져 작은 화면에서 발화가 잘린다
+// 영어 글자를 가리면 흐리게 덮어 듣기만으로 연습하게 한다. 흐린 글자를 누르면 그 카드만 보인다
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
 import { getSpeechRate } from '@/shared/lib/speech-rate';
-import { SpeakerIcon, TranslateIcon } from '@/shared/ui/Icons';
+import { EyeOffIcon, SpeakerIcon, TranslateIcon } from '@/shared/ui/Icons';
 
 import { speechTypingMs } from '../../model/pacing';
 import type { ReplayControl } from '../../model/useConversationTurns';
@@ -30,6 +31,12 @@ interface QuestionCardProps {
   replay?: ReplayControl;
   // 마지막 질문 — 질문 위에 머리말을 붙여 끝이 보이게 한다
   lastQuestion?: boolean;
+  // 해석을 펼친 채로 시작할지 — 새 질문마다 이 값으로 돌아간다
+  translationDefaultOpen?: boolean;
+  // 영어 글자를 가릴지 — 대화 전체 상태라 화면이 들고 있다
+  textHidden?: boolean;
+  // 눈 아이콘을 누른 순간 — 주면 눈 버튼이 붙는다
+  onTextHiddenChange?: (hidden: boolean) => void;
 }
 
 /**
@@ -69,13 +76,23 @@ export const QuestionCard = ({
   onTranslationToggled,
   replay,
   lastQuestion = false,
+  translationDefaultOpen = false,
+  textHidden = false,
+  onTextHiddenChange,
 }: QuestionCardProps) => {
   // 진행값이 어느 질문 것인지 함께 저장한다 — 질문이 바뀐 첫 프레임에 이전 값이 새어 나오지 않도록
   const [typed, setTyped] = useState({ question, count: 0 });
   const count = typed.question === question ? typed.count : 0;
-  // 펼침도 어느 질문 것인지 함께 저장한다 — 다음 질문은 다시 접힌 채로 시작한다
-  const [opened, setOpened] = useState({ question, on: false });
-  const translationOpen = opened.question === question && opened.on;
+  // 펼침도 어느 질문 것인지 함께 저장한다 — 다음 질문은 다시 기본값으로 시작한다
+  const [opened, setOpened] = useState({
+    question,
+    on: translationDefaultOpen,
+  });
+  const translationOpen =
+    opened.question === question ? opened.on : translationDefaultOpen;
+  // 흐린 영어를 눌러 이 카드만 본 질문 — 다음 질문은 다시 가려진다
+  const [peekedQuestion, setPeekedQuestion] = useState<string | null>(null);
+  const blurred = textHidden && peekedQuestion !== question;
   // 가려진 글이 위·아래에 있는지 — 있는 쪽 변을 흐려 "더 있다"를 알린다. 질문이 바뀌면 처음으로 돌아간다
   const [edges, setEdges] = useState({ question, above: false, below: false });
   const hasMoreAbove = edges.question === question && edges.above;
@@ -168,9 +185,12 @@ export const QuestionCard = ({
   }, [speaking, question]);
 
   // 발화 중이 아니면 무조건 전문 — 유저 선발화 안내 카드, 그리고 rAF가 끊긴 채(백그라운드 탭) 발화가 끝난 경우의 복구
-  const visibleCount = speaking ? count : question.length;
+  const spokenCount = speaking ? count : question.length;
+  // 버튼이 나오는 때는 가림과 상관없이 발화를 따른다
+  const done = spokenCount >= question.length;
+  // 가린 동안엔 글자가 나타나는 모습이 안 보이니 전문을 한 번에 흐리게 둔다 — 흐림을 매 프레임 다시 그리지 않게
+  const visibleCount = blurred ? question.length : spokenCount;
   const typing = speaking && visibleCount < question.length;
-  const done = visibleCount >= question.length;
 
   // 가려진 쪽 변만 투명하게 시작·끝나는 그라데이션. 양쪽 다 보이면 마스크를 걸지 않는다
   const fade =
@@ -209,7 +229,11 @@ export const QuestionCard = ({
         onScroll={syncEdges}
         // 가려진 쪽만 흐린다 — 클래스로는 calc이 섞인 이 그라데이션을 조건부로 못 만든다
         style={{ maskImage: fade, WebkitMaskImage: fade }}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        // 카드 여백 쪽으로 넓히고 같은 만큼 안쪽을 비운다 — 글자 자리는 그대로, 가린 글자의 흐림이 경계에 잘려 네모나게 보이지 않는다.
+        // 위아래는 머리말·버튼 줄과 겹치므로 가렸을 때만 넓힌다 — 안 가린 긴 발화가 스크롤되며 그 위로 비치지 않게
+        className={`-mx-4 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 ${
+          blurred ? '-my-3 py-3' : ''
+        }`}
       >
         {instruction ? (
           // 선발화 안내 — 상대 발화처럼 크게 꽂지 않고, 라벨 + 차분한 크기의 상황 설명으로 정리한다
@@ -223,7 +247,11 @@ export const QuestionCard = ({
           </>
         ) : (
           <p
-            className={`${questionSize} leading-snug font-bold text-foreground`}
+            data-hidden={blurred}
+            onClick={blurred ? () => setPeekedQuestion(question) : undefined}
+            className={`${questionSize} leading-snug font-bold text-foreground transition-[filter] duration-200 ${
+              blurred ? 'cursor-pointer blur-[7px] select-none' : ''
+            }`}
           >
             {question.slice(0, visibleCount)}
             {typing && <TypingCursor ref={cursorRef} />}
@@ -257,29 +285,41 @@ export const QuestionCard = ({
         </AnimatePresence>
       </div>
       {/* 카드 오른쪽 아래에 붙박이 — 글이 길어 안쪽이 스크롤돼도 이 버튼들은 늘 같은 자리에 있다 */}
-      {!instruction && done && (replay || translation) && (
-        <div className="-mr-1 -mb-2 flex flex-none justify-end gap-1.5 pt-2">
-          {replay && (
-            <CardIconButton
-              on={replay.playing}
-              disabled={!replay.enabled}
-              label={replay.playing ? '다시 듣기 멈추기' : '다시 듣기'}
-              onClick={replay.toggle}
-            >
-              <SpeakerIcon size={14} />
-            </CardIconButton>
-          )}
-          {translation && (
-            <CardIconButton
-              on={translationOpen}
-              label={translationOpen ? '해석 접기' : '해석 보기'}
-              onClick={toggleTranslation}
-            >
-              <TranslateIcon size={14} />
-            </CardIconButton>
-          )}
-        </div>
-      )}
+      {!instruction &&
+        (onTextHiddenChange || (done && (replay || translation))) && (
+          <div className="-mr-1 -mb-2 flex flex-none justify-end gap-1.5 pt-2">
+            {done && replay && (
+              <CardIconButton
+                on={replay.playing}
+                disabled={!replay.enabled}
+                label={replay.playing ? '다시 듣기 멈추기' : '다시 듣기'}
+                onClick={replay.toggle}
+              >
+                <SpeakerIcon size={14} />
+              </CardIconButton>
+            )}
+            {done && translation && (
+              <CardIconButton
+                on={translationOpen}
+                label={translationOpen ? '해석 접기' : '해석 보기'}
+                onClick={toggleTranslation}
+              >
+                <TranslateIcon size={14} />
+              </CardIconButton>
+            )}
+            {/* 글자를 가린 동안에도 늘 누를 수 있어야 해서 발화가 끝나길 기다리지 않는다 */}
+            {onTextHiddenChange && (
+              // 글자 가리기 모드 스위치 — 다른 버튼처럼 켜지면(가림) 칠하고, 아이콘은 하나로 둔다
+              <CardIconButton
+                on={textHidden}
+                label={textHidden ? '영어 글자 보기' : '영어 글자 가리기'}
+                onClick={() => onTextHiddenChange(!textHidden)}
+              >
+                <EyeOffIcon size={14} />
+              </CardIconButton>
+            )}
+          </div>
+        )}
     </motion.div>
   );
 };
