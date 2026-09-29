@@ -7,6 +7,7 @@ import { updatePushDevice } from '../api/push-device';
 import {
   disablePushDevice,
   getOrCreateInstallationId,
+  readInstallationId,
   syncPushDevice,
 } from './push-device';
 
@@ -52,6 +53,19 @@ describe('getOrCreateInstallationId', () => {
 
     expect(getOrCreateInstallationId()).toBeNull();
     expect(localStorage.length).toBe(0);
+  });
+});
+
+describe('readInstallationId', () => {
+  it('만든 적이 없으면 null이고 새로 만들지 않는다 — 로그아웃은 서버가 모르는 ID를 보낼 이유가 없다', () => {
+    expect(readInstallationId()).toBeNull();
+    expect(localStorage.length).toBe(0);
+  });
+
+  it('만들어 둔 설치 ID를 그대로 돌려준다', () => {
+    const created = getOrCreateInstallationId();
+
+    expect(readInstallationId()).toBe(created);
   });
 });
 

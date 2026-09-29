@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import {
   disablePushDevice,
-  getOrCreateInstallationId,
+  readInstallationId,
 } from '@/features/notification/model/push-device';
 import { track } from '@/shared/analytics';
 import { logout as requestLogout } from '@/shared/auth/api/logout';
@@ -65,7 +65,7 @@ export default function MyPage() {
     try {
       // 설치 ID를 실어 보내면 서버가 이 설치의 푸시도 함께 끊는다
       if (refreshToken) {
-        await requestLogout(refreshToken, getOrCreateInstallationId());
+        await requestLogout(refreshToken, readInstallationId());
       }
     } catch (error) {
       console.warn('[Auth] logout failed:', error);

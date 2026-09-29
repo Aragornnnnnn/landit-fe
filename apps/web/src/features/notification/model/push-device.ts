@@ -21,11 +21,15 @@ const createUuid = () =>
     '$1-$2-$3-$4-$5',
   );
 
+// 만들어 둔 설치 ID만 읽는다 — 로그아웃처럼 새로 만들 이유가 없는 곳에서 쓴다(동기화 전이면 서버도 모르는 ID다)
+export const readInstallationId = (): string | null =>
+  getNativeContext() ? localStorage.getItem(INSTALLATION_ID_KEY) : null;
+
 // 셸 안에서만 설치가 있다(브라우저면 null). 처음 부를 때 만들어 두고 이후엔 같은 값을 쓴다
 export const getOrCreateInstallationId = (): string | null => {
   if (!getNativeContext()) return null;
 
-  const saved = localStorage.getItem(INSTALLATION_ID_KEY);
+  const saved = readInstallationId();
   if (saved) return saved;
 
   const created = createUuid();
