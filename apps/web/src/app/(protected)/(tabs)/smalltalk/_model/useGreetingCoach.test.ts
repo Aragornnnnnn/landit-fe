@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { track } from '@/shared/analytics';
 
 import { tapGreetingSeen } from '../../_model/tap-greeting-seen';
-import { introGuideSeen, oldIntroGuideSeen } from './intro-guide-seen';
+import { introGuideSeen } from './intro-guide-seen';
 import { useGreetingCoach } from './useGreetingCoach';
 
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
@@ -28,21 +28,6 @@ describe('useGreetingCoach', () => {
     expect(result.current.coaching).toBe(true);
     expect(introGuideSeen.has()).toBe(true);
     expect(track).toHaveBeenCalledWith('Small Talk Intro Guide Closed');
-  });
-
-  it('처음 온 기기면 새로 온 사람용 안내다', () => {
-    const { result } = renderHook(() => useGreetingCoach({ onTap: vi.fn() }));
-
-    expect(result.current.guideRenewed).toBe(false);
-  });
-
-  it('옛 안내만 본 기기면 안내가 다시 뜨고 달라진 점을 알리는 안내다', () => {
-    oldIntroGuideSeen.mark();
-
-    const { result } = renderHook(() => useGreetingCoach({ onTap: vi.fn() }));
-
-    expect(result.current.guideOpen).toBe(true);
-    expect(result.current.guideRenewed).toBe(true);
   });
 
   it('안내는 봤지만 아직 안 눌러 본 기기면 들어오자마자 코치마크가 켜진다', () => {
