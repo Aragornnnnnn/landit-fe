@@ -67,10 +67,13 @@ export const IntroGuide = ({
           <p className="text-center text-base leading-relaxed font-bold break-keep text-primary">
             {title}
           </p>
+          {/* 영어 예시는 중간에서 갈리면 예시로 안 읽혀 한 덩어리로 묶는다 */}
           <p className="mt-2 text-center text-sm leading-relaxed font-medium break-keep text-muted-foreground">
             세 명의 캐릭터 중 마음에 드는 친구와 얘기해봐요.
             <br />
-            “Bye!”라고 인사하면 대화가 끝나요.
+            <span className="whitespace-nowrap">“Bye!”</span>,{' '}
+            <span className="whitespace-nowrap">“Talk to you later”</span> 같은
+            마무리 인사를 하면 대화가 끝나요.
           </p>
           <div className="mt-4">
             <Button size="md" onClick={onClose}>
