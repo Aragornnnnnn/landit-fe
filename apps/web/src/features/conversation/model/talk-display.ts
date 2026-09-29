@@ -1,6 +1,6 @@
 // 대화 표시 설정 — 마이페이지에서 고르고, 대화를 시작할 때 첫 상태로 읽는다. 기본값과 다를 때만 기기에 남는다
 const DEFAULTS = {
-  hideText: false,
+  hideText: true,
   alwaysShowTranslation: false,
 };
 
