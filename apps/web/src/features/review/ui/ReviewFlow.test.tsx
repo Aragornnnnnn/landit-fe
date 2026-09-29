@@ -280,7 +280,7 @@ describe('ReviewFlow', () => {
 
     expect(screen.getByText('잘했어요!')).toBeInTheDocument();
     expect(
-      screen.getByText('틀린 표현은 다음 복습에서 마스터해봐요.'),
+      screen.getByText('틀린 표현은 다음 복습에서 다시 익혀 봐요.'),
     ).toBeInTheDocument();
   });
 
@@ -313,7 +313,7 @@ describe('ReviewFlow', () => {
     await user.click(screen.getByRole('button', { name: '넘기기' }));
 
     expect(
-      screen.getByText('틀린 표현은 다음 복습에서 마스터해봐요.'),
+      screen.getByText('틀린 표현은 다음 복습에서 다시 익혀 봐요.'),
     ).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith('Expression Review Finished', {
       question_count: 2,
@@ -468,7 +468,7 @@ describe('ReviewFlow', () => {
 
     expect(screen.getByText('잘했어요!')).toBeInTheDocument();
     expect(
-      screen.getByText('틀린 표현은 다음 복습에서 마스터해봐요.'),
+      screen.getByText('틀린 표현은 다음 복습에서 다시 익혀 봐요.'),
     ).toBeInTheDocument();
   });
 

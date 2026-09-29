@@ -49,7 +49,7 @@ const resultOf = (perfect: boolean, solved: number) => {
       image: LANDY_REVIEW_PERFECT,
     };
   const missed = {
-    subtitle: '틀린 표현은 다음 복습에서 마스터해봐요.',
+    subtitle: '틀린 표현은 다음 복습에서 다시 익혀 봐요.',
     image: LANDY_REVIEW_STUDY,
   };
   if (solved === 0) return { title: '괜찮아요!', emoji: '💪', ...missed };

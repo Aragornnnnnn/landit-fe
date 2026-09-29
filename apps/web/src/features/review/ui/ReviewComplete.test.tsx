@@ -48,7 +48,7 @@ describe('ReviewComplete', () => {
 
     expect(screen.getByText('잘했어요!')).toBeInTheDocument();
     expect(
-      screen.getByText('틀린 표현은 다음 복습에서 마스터해봐요.'),
+      screen.getByText('틀린 표현은 다음 복습에서 다시 익혀 봐요.'),
     ).toBeInTheDocument();
   });
 
@@ -57,7 +57,7 @@ describe('ReviewComplete', () => {
 
     expect(screen.getByText('괜찮아요!')).toBeInTheDocument();
     expect(
-      screen.getByText('틀린 표현은 다음 복습에서 마스터해봐요.'),
+      screen.getByText('틀린 표현은 다음 복습에서 다시 익혀 봐요.'),
     ).toBeInTheDocument();
   });
 
