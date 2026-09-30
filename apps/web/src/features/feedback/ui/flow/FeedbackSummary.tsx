@@ -139,8 +139,8 @@ const GrowthSection = ({
   if (growth === undefined) return null;
   if (growth) return <GrowthCard growth={growth} />;
   return (
-    // TODO: 제품 확정 카피로 교체. 비교할 패턴이 없어 시안의 「과거형」 자리를 일반 이름으로 둔다
-    <SummaryCard title="지난번엔 헷갈렸던 실수">
+    // 비교할 패턴이 없어도 시안 제목 그대로 둔다 (2026-09-30 확정)
+    <SummaryCard title="지난번엔 헷갈렸던 과거형">
       <EmptyText>아직 지난 기록이 없어요</EmptyText>
     </SummaryCard>
   );

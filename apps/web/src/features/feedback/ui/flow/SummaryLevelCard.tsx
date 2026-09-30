@@ -72,7 +72,6 @@ export const SummaryLevelCardSkeleton = () => (
   </div>
 );
 
-// TODO: 제품 확정 카피로 교체.
 const SCORE_INFO_TEXT =
   '이번 대화 한 번을 영역별로 살펴본 점수예요. 100점에 가까울수록 원어민처럼 자연스럽게 말했어요.';
 
