@@ -90,9 +90,9 @@ export const InstallGuide = ({
           // 안내 3장은 헤더(뒤로가기·진행점)를 피해 제목을 아래로 내린다
           paddingTop:
             guideIndex >= 0
-              ? 'calc(max(env(safe-area-inset-top), 18px) + 48px)'
-              : 'max(env(safe-area-inset-top), 18px)',
-          paddingBottom: 'max(env(safe-area-inset-bottom), 20px)',
+              ? 'calc(max(var(--safe-area-inset-top), 18px) + 48px)'
+              : 'max(var(--safe-area-inset-top), 18px)',
+          paddingBottom: 'max(var(--safe-area-inset-bottom), 20px)',
         }}
       >
         {step === 'invite' && <InviteStep onAdd={add} onLater={later} />}

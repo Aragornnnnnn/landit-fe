@@ -17,7 +17,7 @@ const replace = vi.fn();
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
 // next/image는 next 밑의 react 복사본을 잡아 훅 dispatcher가 null이 된다.
-// 시작 화면 그림을 미리 받는 preloadImages가 getImageProps를 쓰므로 같이 세운다
+// 화면 그림을 미리 받는 preloadImages가 getImageProps를 쓰므로 같이 세운다
 vi.mock('next/image', () => ({
   default: () => <span />,
   getImageProps: ({ src }: { src: string }) => ({ props: { src } }),
@@ -229,7 +229,7 @@ describe('ReviewFlow', () => {
     await user.click(screen.getByRole('button', { name: '제출' }));
     await user.click(screen.getByRole('button', { name: '넘기기' }));
 
-    expect(screen.getByText('복습 완료!')).toBeInTheDocument();
+    expect(screen.getByText('완벽해요!')).toBeInTheDocument();
     expect(screen.getByText('표현 q1')).toBeInTheDocument();
     expect(screen.getByText('표현 q2')).toBeInTheDocument();
   });
@@ -278,9 +278,9 @@ describe('ReviewFlow', () => {
     await user.click(screen.getByRole('button', { name: '제출' }));
     await user.click(screen.getByRole('button', { name: '넘기기' }));
 
-    expect(screen.getByText('복습 완료!')).toBeInTheDocument();
+    expect(screen.getByText('잘했어요!')).toBeInTheDocument();
     expect(
-      screen.getByText('놓친 표현은 다음에 다시 만나요.'),
+      screen.getByText('틀린 표현은 다음 복습에서 다시 익혀 봐요.'),
     ).toBeInTheDocument();
   });
 
@@ -313,7 +313,7 @@ describe('ReviewFlow', () => {
     await user.click(screen.getByRole('button', { name: '넘기기' }));
 
     expect(
-      screen.getByText('괜찮아요. 놓친 표현은 다음에 다시 만나요.'),
+      screen.getByText('틀린 표현은 다음 복습에서 다시 익혀 봐요.'),
     ).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith('Expression Review Finished', {
       question_count: 2,
@@ -466,9 +466,9 @@ describe('ReviewFlow', () => {
     });
     show();
 
-    expect(screen.getByText('복습 완료!')).toBeInTheDocument();
+    expect(screen.getByText('잘했어요!')).toBeInTheDocument();
     expect(
-      screen.getByText('놓친 표현은 다음에 다시 만나요.'),
+      screen.getByText('틀린 표현은 다음 복습에서 다시 익혀 봐요.'),
     ).toBeInTheDocument();
   });
 

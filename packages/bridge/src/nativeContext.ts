@@ -5,7 +5,8 @@ import { z } from 'zod';
 // 3: REQUEST_WIDGET_PIN 추가 (위젯 설치 안내 노출 자체는 위젯이 실린 릴리즈 여부라 appVersion으로 게이트한다)
 // 4: REQUEST_WIDGET_CHANGES / WIDGET_CHANGED 추가 (위젯 설치·삭제 계측)
 // 5: IDENTIFY / GET_OFFERINGS / PURCHASE / RESTORE_PURCHASES ↔ OFFERINGS / PURCHASE_RESULT / RESTORE_RESULT (인앱 결제, LAN-447)
-export const NATIVE_BRIDGE_VERSION = 5;
+// 6: SHARE 추가 (친구에게 공유하기, LAN-578)
+export const NATIVE_BRIDGE_VERSION = 6;
 
 // 셸이 주입하고 웹이 읽는 전역 키
 export const NATIVE_CONTEXT_GLOBAL = '__LANDIT_NATIVE__';
