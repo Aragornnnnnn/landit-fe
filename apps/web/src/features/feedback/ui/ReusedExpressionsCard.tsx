@@ -1,12 +1,13 @@
 'use client';
 
 // 랜딧에서 배운 표현을 실제로 사용했어요 — 표현마다 칩·출처·그때 내가 한 말·뜻.
-// 둘까지 펼치고 셋째부터는 접어 둔다. 더 보기를 누르면 그 자리에서 펼친다
+// 둘까지 펼치고 셋째부터는 접어 둔다. 더 보기를 누르면 그 자리에서 펼친다. 스몰톡 요약과 시나리오 총평이 같이 쓴다
 import { useState } from 'react';
 
-import type { SmallTalkSummaryReusedExpression } from '@/features/small-talk/api/small-talk';
 import { splitMatchedText } from '@/shared/lib/matched-text';
 import { ChevronDownIcon } from '@/shared/ui/Icons';
+
+import type { ScenarioExpressionReuseItem } from '../api/session-feedback';
 
 // 처음에 펼쳐 두는 개수
 const VISIBLE_COUNT = 2;
@@ -18,7 +19,7 @@ export const ReusedExpressionsCard = ({
   items,
   className = '',
 }: {
-  items: SmallTalkSummaryReusedExpression[];
+  items: ScenarioExpressionReuseItem[];
   className?: string;
 }) => {
   const [expanded, setExpanded] = useState(false);
@@ -61,11 +62,7 @@ export const ReusedExpressionsCard = ({
   );
 };
 
-const ReusedExpression = ({
-  item,
-}: {
-  item: SmallTalkSummaryReusedExpression;
-}) => (
+const ReusedExpression = ({ item }: { item: ScenarioExpressionReuseItem }) => (
   <div className="flex flex-col gap-2">
     <div className="flex items-center gap-2.5">
       <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[15px] font-bold text-primary">
@@ -83,11 +80,7 @@ const ReusedExpression = ({
 );
 
 // 그때 내가 한 말 — 그 표현 구절만 굵게. 못 찾으면 문장 그대로
-const QuotedSentence = ({
-  item,
-}: {
-  item: SmallTalkSummaryReusedExpression;
-}) => {
+const QuotedSentence = ({ item }: { item: ScenarioExpressionReuseItem }) => {
   const split = splitMatchedText(item.quotedSentence, item.matchedText);
   if (!split) return item.quotedSentence;
 
