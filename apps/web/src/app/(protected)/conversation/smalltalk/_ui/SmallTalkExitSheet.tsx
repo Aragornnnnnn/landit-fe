@@ -27,18 +27,21 @@ export const SmallTalkExitSheet = ({
   <BottomSheet open={open} onClose={onClose}>
     <div className="flex flex-col items-center text-center">
       <Image
-        src="/images/character/landy-crying.webp"
+        src="/images/character/landy-goodbye-card.webp"
         alt=""
         width={96}
         height={96}
         className="size-24"
       />
       <h2 className="mt-1 text-[17px] font-bold break-keep text-foreground">
-        대화를 잘 마무리하는 것까지가 영어 실력!
+        이대로 끝내려고요?
       </h2>
+      <p className="mt-2 text-sm leading-6 break-keep text-muted-foreground">
+        대화를 잘 마무리하는 것까지가 실력!
+      </p>
     </div>
     <div className="mt-4 rounded-2xl bg-selected px-4 py-3 text-left">
-      <p className="text-[13px] font-semibold text-accent">직접 끝내볼래요?</p>
+      <p className="text-[13px] font-semibold text-accent">직접 끝내볼래요</p>
       <p className="mt-1 text-sm font-medium text-foreground">
         “{goodbyePhrase}”
       </p>
