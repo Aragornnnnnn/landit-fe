@@ -68,9 +68,8 @@ export const SmallTalkConversation = ({
     speech,
     replay,
     input,
-    leave,
     completeTalk,
-    hasAnswered,
+    pressClose,
     completing,
     remainingMs,
     speakingRatio,
@@ -124,19 +123,10 @@ export const SmallTalkConversation = ({
       >
         <button
           onClick={() => {
-            // 이미 끝난 대화 — 물을 것 없이 다음 화면(오늘의 스몰톡)으로 간다
-            if (ended) {
-              showSummary();
-              return;
-            }
-            // 나눈 대화가 없으면 마무리할 것도 없다 — 확인 없이 바로 나간다
-            if (!hasAnswered) {
-              leave();
-              goHome();
-              return;
-            }
+            // 끝난 대화·나눈 대화 없음은 흐름 훅이 알아서 보낸다 — 물어볼 때만 시트를 연다
+            if (!pressClose()) return;
             track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'conversation_exit' });
-            // 「대화 종료하기」면 완료 응답 뒤 바로 요약으로 간다 — 라우트를 그 응답과 나란히 받아 둔다
+            // 동적 페이지라 받는 건 라우트 뼈대뿐이지만, 완료 응답을 기다리는 동안 먼저 받아 둔다
             router.prefetch(summaryPath);
             setGoodbyePhrase(pickGoodbyePhrase());
             setShowExitSheet(true);

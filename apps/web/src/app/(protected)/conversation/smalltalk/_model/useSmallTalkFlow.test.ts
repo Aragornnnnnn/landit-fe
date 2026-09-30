@@ -517,7 +517,7 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
     );
     await untilUserReady(result);
     speakFor(result, 2);
-    act(() => {
+    await act(async () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('And you?');
     });
@@ -557,6 +557,7 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
     completeSmallTalkSession.mockResolvedValueOnce(undefined);
     const { result } = renderFlow(20_000);
     await exchangeOnce(result);
+    // 첫 턴 뒤 한 번, 종료 확인을 받을 둘째 턴을 위해 한 번 더 말할 차례로 넘긴다
     await untilUserReady(result);
     await untilUserReady(result);
     speakFor(result, 2);
@@ -613,6 +614,89 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
 
     expect(showSummary).toHaveBeenCalled();
     expect(goHome).not.toHaveBeenCalled();
+    expect(endSession).not.toHaveBeenCalled();
+  });
+
+  it('완료 요청 뒤 발화 제출이 실패해도 전송 실패로 알리지 않는다', async () => {
+    completeSmallTalkSession.mockResolvedValueOnce(undefined);
+    const { result } = renderFlow(20_000);
+    await exchangeOnce(result);
+    await untilUserReady(result);
+    let rejectSubmit!: (cause: Error) => void;
+    submitSmallTalkMessage.mockReturnValueOnce(
+      new Promise((_, reject) => (rejectSubmit = reject)),
+    );
+    speakFor(result, 2);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('And you?');
+    });
+    expect(submitSmallTalkMessage).toHaveBeenCalledTimes(2);
+    monitoringMock.reportError.mockClear();
+
+    await act(async () => result.current.completeTalk());
+    await act(async () => rejectSubmit(new Error('409')));
+
+    expect(monitoringMock.reportError).not.toHaveBeenCalled();
+  });
+});
+
+describe('useSmallTalkFlow — X 누르기', () => {
+  it('아직 주고받은 말이 없으면 확인 없이 한 번만 나간다', () => {
+    // 빠르게 두 번 눌러도 중도 종료는 한 번만 보낸다
+    const endSession = vi.fn();
+    const { result } = renderFlow(20_000, endSession);
+
+    let confirm: boolean | undefined;
+    act(() => {
+      confirm = result.current.pressClose();
+      result.current.pressClose();
+    });
+
+    expect(confirm).toBe(false);
+    expect(endSession).toHaveBeenCalledTimes(1);
+    expect(goHome).toHaveBeenCalledTimes(1);
+  });
+
+  it('주고받은 말이 있으면 종료 시트로 물어본다', async () => {
+    const endSession = vi.fn();
+    const { result } = renderFlow(20_000, endSession);
+    submitSmallTalkMessage.mockResolvedValueOnce(submitResponse());
+    speakFor(result, 3);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Hello there.');
+    });
+
+    let confirm: boolean | undefined;
+    act(() => {
+      confirm = result.current.pressClose();
+    });
+
+    expect(confirm).toBe(true);
+    expect(endSession).not.toHaveBeenCalled();
+  });
+
+  it('작별 인사로 이미 끝났으면 인사가 끝나기 전이어도 묻지 않고 오늘의 스몰톡으로 간다', async () => {
+    // 끝난 대화에 "직접 끝내볼래요"를 권할 이유가 없다
+    submitSmallTalkMessage.mockResolvedValueOnce(
+      submitResponse({ turnStatus: 'COMPLETED' }),
+    );
+    const endSession = vi.fn();
+    const { result } = renderFlow(20_000, endSession);
+    speakFor(result, 3);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Bye!');
+    });
+
+    let confirm: boolean | undefined;
+    act(() => {
+      confirm = result.current.pressClose();
+    });
+
+    expect(confirm).toBe(false);
+    expect(showSummary).toHaveBeenCalled();
     expect(endSession).not.toHaveBeenCalled();
   });
 });

@@ -17,6 +17,7 @@ import {
   completeSmallTalkSession,
   decideSmallTalkExit,
   submitSmallTalkMessage,
+  type SmallTalkMessageSubmitResponse,
   type SmallTalkProgress,
   type SmallTalkSessionStartResponse,
 } from '@/features/small-talk/api/small-talk';
@@ -61,7 +62,7 @@ export const useSmallTalkFlow = ({
   const userId = useAuthStore((state) => state.member?.userId ?? null);
   // 마지막 제출이 알려준 진행 상태 — 종료 화면의 "얘기한 시간"이 여기서 나온다
   const [progress, setProgress] = useState<SmallTalkProgress | null>(null);
-  // 서버가 받아 준 내 발화 수 — 0이면 아직 나눈 대화가 없어 종료해도 남길 기록이 없다 (화면이 X에서 가른다)
+  // 서버가 받아 준 내 발화 수 — 0이면 아직 나눈 대화가 없어 종료해도 남길 기록이 없다
   const [answeredTurns, setAnsweredTurns] = useState(0);
   // 주고받은 말의 수 — 서버가 매기는 메시지 순번이 곧 그 수다
   const [exchangeCount, setExchangeCount] = useState(
@@ -70,12 +71,13 @@ export const useSmallTalkFlow = ({
   // 턴마다 하나씩 붙이는 발화 식별자 — 실패 후 다시 보낼 때 같은 값을 써야
   // 서버가 재전송으로 알아보고 이미 접수한 발화를 두 번 세지 않는다
   const clientMessageIdsRef = useRef(new Map<number, string>());
-  // 종료 버튼으로 완료를 보냈는가 — 그 뒤의 발화는 보내지 않고, 늦게 도착한 응답·실패도 버린다
-  // (서버가 COMPLETED로 돌려주거나 종료 확인을 에러로 돌려줄 수 있어 완료가 두 번 세지거나 홈으로 튕긴다)
-  const completedDirectlyRef = useRef(false);
+  // 종료 버튼이 완료를 맡았는가 — 켜지면 이후 발화는 보내지 않고, 늦게 온 응답·실패도 버린다
+  const directEndStartedRef = useRef(false);
   // 완료 후속을 이미 했는가 — 작별 인사로 끝난 뒤 종료 버튼이 와도 두 번 하지 않는다
   const settledRef = useRef(false);
-  // 완료 요청을 기다리는 중 — 시트가 이 동안 닫히지 않고 버튼을 막는다
+  // 중도 종료를 이미 보냈는가 — X 연타에도 한 번만 나간다
+  const leftRef = useRef(false);
+  // 완료 요청을 기다리는 중 — 시트 버튼을 막고, 끝나면 화면을 떠나므로 되돌리지 않는다
   const [completing, setCompleting] = useState(false);
   const clientMessageIdFor = (turnIndex: number) => {
     const issued = clientMessageIdsRef.current.get(turnIndex);
@@ -101,7 +103,7 @@ export const useSmallTalkFlow = ({
         decision: 'END',
       });
     } catch (cause) {
-      if (completedDirectlyRef.current) return null; // 종료 버튼으로 이미 끝냈다 — 이 실패는 볼 일이 없다
+      if (directEndStartedRef.current) return null; // 종료 버튼이 완료를 맡았다 — 이 실패는 볼 일이 없다
       console.warn('[smalltalk] 종료 확인 전송 실패', cause);
       reportError(cause);
       showToast('연결에 문제가 생겨 대화를 이어가지 못했어요');
@@ -126,15 +128,21 @@ export const useSmallTalkFlow = ({
     sessionId: session.sessionId,
     ensureSession: async () => session.sessionId,
     submit: async ({ content, inputType, turnIndex, utteranceDurationMs }) => {
-      if (completedDirectlyRef.current) return null; // 끝내기로 한 대화 — 더 보내지 않는다
-      let result = await submitSmallTalkMessage(session.sessionId, {
-        clientMessageId: clientMessageIdFor(turnIndex),
-        content,
-        inputType,
-        utteranceDurationMs,
-        // 시간이 다 돼서 우리가 말을 끊었는가 (서버는 참고만 하고 자기 잔량으로 판단한다)
-        timeLimitReached: budget.remainingMs === 0,
-      });
+      if (directEndStartedRef.current) return null; // 끝내기로 한 대화 — 더 보내지 않는다
+      let result: SmallTalkMessageSubmitResponse;
+      try {
+        result = await submitSmallTalkMessage(session.sessionId, {
+          clientMessageId: clientMessageIdFor(turnIndex),
+          content,
+          inputType,
+          utteranceDurationMs,
+          // 시간이 다 돼서 우리가 말을 끊었는가 (서버는 참고만 하고 자기 잔량으로 판단한다)
+          timeLimitReached: budget.remainingMs === 0,
+        });
+      } catch (cause) {
+        if (directEndStartedRef.current) return null; // 종료 버튼이 완료를 맡았다 — 이 실패는 볼 일이 없다
+        throw cause;
+      }
 
       // 종료 확인 — 이 응답에는 다음 발화도 속마음도 없다. 답을 보내야 그 자리가 채워진다
       if (result.turnStatus === 'EXIT_CONFIRMATION_REQUIRED') {
@@ -144,8 +152,8 @@ export const useSmallTalkFlow = ({
         if (!decided) return null; // 전송 실패로 나가는 중 — 엔진도 손을 뗀다
         result = decided;
       }
-      // 기다리는 사이 종료 버튼으로 이미 완료했다 — 화면은 요약으로 떠났고 완료 후속도 끝났다
-      if (completedDirectlyRef.current) return null;
+      // 기다리는 사이 종료 버튼이 완료를 맡았다 — 완료 후속은 그쪽이 한다
+      if (directEndStartedRef.current) return null;
 
       setProgress(result.progress);
       setAnsweredTurns(turnIndex + 1);
@@ -222,6 +230,8 @@ export const useSmallTalkFlow = ({
 
   // 중도 이탈 (정상 완료는 서버가 판정한다)
   const leave = () => {
+    if (leftRef.current) return;
+    leftRef.current = true;
     track(EVENTS.SMALL_TALK_ABANDONED, {
       session_id: session.sessionId,
       partner,
@@ -233,14 +243,30 @@ export const useSmallTalkFlow = ({
     refreshHome();
   };
 
-  // 종료 버튼 — 작별 인사 없이 지금 완료한다. 이미 끝난 대화면 요약으로만 보낸다
+  // X — 끝난 대화면 요약으로, 나눈 대화가 없으면 바로 나가고, 그 밖엔 종료 시트로 물어보라고 답한다
+  const pressClose = () => {
+    if (settledRef.current) {
+      showSummary();
+      return false;
+    }
+    if (answeredTurns === 0) {
+      if (!leftRef.current) {
+        leave();
+        goHome();
+      }
+      return false;
+    }
+    return true;
+  };
+
+  // 종료 버튼 — 작별 인사 없이 지금 완료하고, 이미 끝난 대화면 요약으로만 보낸다
   const completeTalk = async () => {
     if (settledRef.current) {
       showSummary();
       return;
     }
-    if (completedDirectlyRef.current) return; // 연타 — 이미 보냈다
-    completedDirectlyRef.current = true;
+    if (directEndStartedRef.current) return; // 연타 — 이미 보냈다
+    directEndStartedRef.current = true;
     setCompleting(true);
     // 하던 말은 버린다 — 보내지 않은 발화라 깎인 시간도 되돌아온다
     if (engine.phase === 'USER_SPEAKING') engine.input.cancelInput();
@@ -267,9 +293,8 @@ export const useSmallTalkFlow = ({
     ...engine,
     leave,
     completeTalk,
+    pressClose,
     completing,
-    // 서버가 받아 준 내 발화가 있는가 — 없으면 X로 확인 없이 바로 나간다
-    hasAnswered: answeredTurns > 0,
     remainingMs: budget.remainingMs,
     // 이번 발화에서 남은 몫(0~1) — 마이크 둘레의 타이머 링이 그린다
     speakingRatio: budget.ratio,

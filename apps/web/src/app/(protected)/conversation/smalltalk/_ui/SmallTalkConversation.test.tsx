@@ -1,6 +1,6 @@
 // 스몰톡 대화 화면 — 남은 말하기 시간 표시는 한도가 있을 때만 그린다.
 // 무제한이면 마이크 위 카운트다운도, 마이크 둘레 타이머 링도 없다 (잔량 계산은 뒤에서 그대로 돈다)
-// X는 나눈 대화가 있을 때만 종료 시트를 연다 — 없으면 확인 없이 바로 나간다
+// X는 흐름 훅이 물어보라고 할 때만 종료 시트를 연다
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -11,8 +11,7 @@ import { SmallTalkConversation } from './SmallTalkConversation';
 
 const mocks = vi.hoisted(() => ({
   unlimited: false,
-  hasAnswered: true,
-  leave: vi.fn(),
+  confirmClose: true,
   replace: vi.fn(),
   prefetch: vi.fn(),
   phase: 'USER_SPEAKING',
@@ -76,10 +75,9 @@ vi.mock('../_model/useSmallTalkFlow', () => ({
       micPermissionDenied: false,
       dismissMicPermissionNotice: vi.fn(),
     },
-    leave: mocks.leave,
     completeTalk: vi.fn(),
     completing: false,
-    hasAnswered: mocks.hasAnswered,
+    pressClose: () => mocks.confirmClose,
     remainingMs: 15_000,
     speakingRatio: 0.75,
     summary: { speakingDurationMs: 0, exchangeCount: 1 },
@@ -109,7 +107,7 @@ const ringCircles = (container: HTMLElement) =>
 afterEach(() => {
   cleanup();
   mocks.unlimited = false;
-  mocks.hasAnswered = true;
+  mocks.confirmClose = true;
   mocks.phase = 'USER_SPEAKING';
   vi.clearAllMocks();
 });
@@ -137,7 +135,7 @@ describe('SmallTalkConversation — 남은 말하기 시간', () => {
 });
 
 describe('SmallTalkConversation — 대화 나가기', () => {
-  it('나눈 대화가 있으면 X가 종료 시트를 연다', () => {
+  it('흐름 훅이 물어보라고 하면 X가 종료 시트를 연다', () => {
     renderScreen();
 
     fireEvent.click(screen.getByRole('button', { name: '대화 나가기' }));
@@ -145,7 +143,6 @@ describe('SmallTalkConversation — 대화 나가기', () => {
     expect(
       screen.getByRole('dialog', { name: '종료 시트' }),
     ).toBeInTheDocument();
-    expect(mocks.leave).not.toHaveBeenCalled();
     // 「대화 종료하기」 뒤 바로 갈 요약 라우트를 미리 받는다
     expect(mocks.prefetch).toHaveBeenCalledWith(
       '/smalltalk/sessions/7/summary',
@@ -161,27 +158,14 @@ describe('SmallTalkConversation — 대화 나가기', () => {
     expect(GOODBYE_PHRASES).toContain(sheet.textContent);
   });
 
-  it('나눈 대화가 없으면 X로 확인 없이 바로 나간다', () => {
-    // 마무리할 대화가 없는데 "직접 마무리해 보라"고 권할 이유가 없다
-    mocks.hasAnswered = false;
+  it('흐름 훅이 묻지 말라고 하면 시트를 열지 않는다', () => {
+    // 끝난 대화·나눈 대화 없음 — 어디로 갈지는 흐름 훅이 정한다
+    mocks.confirmClose = false;
     renderScreen();
 
     fireEvent.click(screen.getByRole('button', { name: '대화 나가기' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(mocks.leave).toHaveBeenCalled();
-    expect(mocks.replace).toHaveBeenCalledWith('/smalltalk');
-  });
-
-  it('이미 끝난 대화면 X가 시트 없이 오늘의 스몰톡으로 보낸다', () => {
-    // 작별 인사로 끝난 화면에서 "끝내려고요?"를 묻거나 중도 종료를 보낼 이유가 없다
-    mocks.phase = 'DONE';
-    renderScreen();
-
-    fireEvent.click(screen.getByRole('button', { name: '대화 나가기' }));
-
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(mocks.leave).not.toHaveBeenCalled();
-    expect(mocks.replace).toHaveBeenCalledWith('/smalltalk/sessions/7/summary');
+    expect(mocks.prefetch).not.toHaveBeenCalled();
   });
 });
