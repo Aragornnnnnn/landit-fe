@@ -13,11 +13,12 @@ const NOT_REQUESTED_GRACE_POLLS = 3;
 /** pending: 기다리는 중 / ready: 결과 도착 / unavailable: 실패·조회 실패라 결과 없이 진행한다 */
 export type LevelAssessmentOutcome = 'pending' | 'ready' | 'unavailable';
 
-const resolveOutcome = (
+// 실패가 캐시에 남아 있어도 다시 받는 중이면 기다린다 — 총평이 먼저 물었다 실패한 키를 레벨 분석 화면이 이어받는다
+export const resolveOutcome = (
   status: LevelAssessmentProcessingStatus | undefined,
-  failed: boolean,
+  { failed, fetching }: { failed: boolean; fetching: boolean },
 ): LevelAssessmentOutcome => {
-  if (failed || status === 'FAILED') return 'unavailable';
+  if (status === 'FAILED' || (failed && !fetching)) return 'unavailable';
   if (status === 'COMPLETED') return 'ready';
   return 'pending';
 };
@@ -28,7 +29,7 @@ const resolveOutcome = (
  * @returns `outcome`이 ready일 때만 `levelAssessment`가 의미 있다. 기다림의 상한은 화면이 따로 둔다
  */
 export const useLevelAssessmentQuery = (sessionId: number | null) => {
-  const { data, isError } = useQuery({
+  const { data, isError, isFetching } = useQuery({
     queryKey: ['level-assessment', sessionId],
     queryFn: () => getLevelAssessment(sessionId as number),
     enabled: sessionId !== null,
@@ -47,7 +48,10 @@ export const useLevelAssessmentQuery = (sessionId: number | null) => {
   });
 
   return {
-    outcome: resolveOutcome(data?.processingStatus, isError),
+    outcome: resolveOutcome(data?.processingStatus, {
+      failed: isError,
+      fetching: isFetching,
+    }),
     levelAssessment: data?.levelAssessment ?? null,
   };
 };
