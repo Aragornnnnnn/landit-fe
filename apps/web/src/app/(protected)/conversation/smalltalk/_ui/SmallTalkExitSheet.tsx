@@ -40,7 +40,7 @@ export const SmallTalkExitSheet = ({
         이대로 끝내려고요?
       </h2>
       <p className="mt-2 text-sm leading-6 break-keep text-muted-foreground">
-        대화를 잘 마무리하는 것까지가 실력!
+        대화를 잘 마무리하는 것까지가 영어 실력!
       </p>
     </div>
     <div className="mt-4 rounded-2xl bg-selected px-4 py-3 text-left">
