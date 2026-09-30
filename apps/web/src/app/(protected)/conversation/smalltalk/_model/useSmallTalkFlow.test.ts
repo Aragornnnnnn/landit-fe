@@ -191,6 +191,10 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   vi.clearAllMocks();
+  // 한 번만 쓰라고 걸어 둔 응답이 남으면 다음 테스트로 샌다 — API 목은 통째로 비운다
+  submitSmallTalkMessage.mockReset();
+  decideSmallTalkExit.mockReset();
+  completeSmallTalkSession.mockReset();
 });
 
 describe('useSmallTalkFlow — 남은 말하기 시간', () => {
@@ -459,6 +463,15 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
     });
   };
 
+  // 속마음과 상대 발화가 끝나 다시 말할 차례(USER_READY)가 될 때까지 넘긴다
+  const untilUserReady = async (result: {
+    current: ReturnType<typeof useSmallTalkFlow>;
+  }) => {
+    await act(async () => vi.advanceTimersByTime(10_000));
+    await act(async () => ttsMock.state.onEnd?.());
+    await act(async () => vi.advanceTimersByTime(3_000));
+  };
+
   it('주고받은 말이 있으면 완료를 요청하고 오늘의 스몰톡으로 보낸다', async () => {
     completeSmallTalkSession.mockResolvedValueOnce(undefined);
     const endSession = vi.fn();
@@ -477,19 +490,6 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
       expect.objectContaining({ queryKey: smallTalkKeys.summary(39, 7) }),
     );
     expect(shouldAskSatisfaction('smalltalk')).toBe(true);
-  });
-
-  it('아직 주고받은 말이 없으면 완료하지 않고 중도 종료로 나간다', async () => {
-    // 첫 답 전에 나간 대화는 시나리오처럼 기록·스트릭에 남기지 않는다
-    const endSession = vi.fn();
-    const { result } = renderFlow(20_000, endSession);
-
-    await act(async () => result.current.completeTalk());
-
-    expect(completeSmallTalkSession).not.toHaveBeenCalled();
-    expect(endSession).toHaveBeenCalled();
-    expect(goHome).toHaveBeenCalled();
-    expect(showSummary).not.toHaveBeenCalled();
   });
 
   it('완료 요청이 실패하면 중도 종료로 정리하고 홈으로 간다', async () => {
@@ -515,7 +515,7 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
     submitSmallTalkMessage.mockReturnValueOnce(
       new Promise((resolve) => (resolveLate = resolve)),
     );
-    act(() => ttsMock.state.onEnd?.()); // 상대 발화가 끝나 다시 말할 차례
+    await untilUserReady(result);
     speakFor(result, 2);
     act(() => {
       result.current.input.finishListening();
@@ -531,5 +531,88 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
     );
 
     expect(refreshStreak).not.toHaveBeenCalled();
+  });
+
+  it('작별 인사로 이미 끝난 대화면 완료를 다시 보내지 않고 오늘의 스몰톡으로 간다', async () => {
+    // 끝난 화면에서 X로 들어와도 완료가 두 번 세지면 안 된다
+    submitSmallTalkMessage.mockResolvedValueOnce(
+      submitResponse({ turnStatus: 'COMPLETED' }),
+    );
+    const { result } = renderFlow(20_000);
+    speakFor(result, 3);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Bye!');
+    });
+    refreshStreak.mockClear();
+
+    await act(async () => result.current.completeTalk());
+
+    expect(completeSmallTalkSession).not.toHaveBeenCalled();
+    expect(refreshStreak).not.toHaveBeenCalled();
+    expect(showSummary).toHaveBeenCalled();
+  });
+
+  it('말하는 중에 종료하면 녹음을 취소한다', async () => {
+    completeSmallTalkSession.mockResolvedValueOnce(undefined);
+    const { result } = renderFlow(20_000);
+    await exchangeOnce(result);
+    await untilUserReady(result);
+    await untilUserReady(result);
+    speakFor(result, 2);
+    expect(result.current.phase).toBe('USER_SPEAKING');
+
+    await act(async () => result.current.completeTalk());
+
+    expect(sttMock.abort).toHaveBeenCalled();
+  });
+
+  it('완료 요청을 기다리는 동안에는 새 발화를 서버에 보내지 않는다', async () => {
+    // 시트를 닫고 다시 말해도 이미 끝내기로 한 대화다
+    completeSmallTalkSession.mockReturnValueOnce(new Promise(() => {}));
+    const { result } = renderFlow(20_000);
+    await exchangeOnce(result);
+    await untilUserReady(result);
+    submitSmallTalkMessage.mockClear();
+
+    act(() => void result.current.completeTalk());
+    speakFor(result, 2);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Wait, one more thing.');
+    });
+
+    expect(submitSmallTalkMessage).not.toHaveBeenCalled();
+  });
+
+  it('완료한 뒤 종료 확인 답이 늦게 실패해도 홈으로 되돌리지 않는다', async () => {
+    // 서버는 이미 완료한 세션의 종료 확인을 에러로 돌려준다 — 요약에 간 사람을 홈으로 튕기면 안 된다
+    completeSmallTalkSession.mockResolvedValueOnce(undefined);
+    const endSession = vi.fn();
+    const { result } = renderFlow(20_000, endSession);
+    await exchangeOnce(result);
+    await untilUserReady(result);
+    submitSmallTalkMessage.mockResolvedValueOnce(
+      submitResponse({
+        turnStatus: 'EXIT_CONFIRMATION_REQUIRED',
+        nextMessage: null,
+      }),
+    );
+    let rejectDecision!: (cause: Error) => void;
+    decideSmallTalkExit.mockReturnValueOnce(
+      new Promise((_, reject) => (rejectDecision = reject)),
+    );
+    speakFor(result, 2);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('I should get going.');
+    });
+
+    await act(async () => result.current.completeTalk());
+    await act(async () => rejectDecision(new Error('409')));
+
+    expect(showSummary).toHaveBeenCalled();
+    expect(goHome).not.toHaveBeenCalled();
+    expect(endSession).not.toHaveBeenCalled();
   });
 });

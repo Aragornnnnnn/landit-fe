@@ -5,7 +5,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type EventProps } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 import { preload } from 'react-dom';
 
@@ -61,7 +61,7 @@ export const useSmallTalkFlow = ({
   const userId = useAuthStore((state) => state.member?.userId ?? null);
   // 마지막 제출이 알려준 진행 상태 — 종료 화면의 "얘기한 시간"이 여기서 나온다
   const [progress, setProgress] = useState<SmallTalkProgress | null>(null);
-  // 서버가 받아 준 내 발화 수 — 0이면 아직 나눈 대화가 없어 종료해도 남길 기록이 없다
+  // 서버가 받아 준 내 발화 수 — 0이면 아직 나눈 대화가 없어 종료해도 남길 기록이 없다 (화면이 X에서 가른다)
   const [answeredTurns, setAnsweredTurns] = useState(0);
   // 주고받은 말의 수 — 서버가 매기는 메시지 순번이 곧 그 수다
   const [exchangeCount, setExchangeCount] = useState(
@@ -70,8 +70,13 @@ export const useSmallTalkFlow = ({
   // 턴마다 하나씩 붙이는 발화 식별자 — 실패 후 다시 보낼 때 같은 값을 써야
   // 서버가 재전송으로 알아보고 이미 접수한 발화를 두 번 세지 않는다
   const clientMessageIdsRef = useRef(new Map<number, string>());
-  // 종료 버튼으로 완료를 보냈는가 — 그 뒤에 도착한 제출 응답은 버린다 (서버가 COMPLETED로 돌려줄 수 있어 완료가 두 번 세진다)
+  // 종료 버튼으로 완료를 보냈는가 — 그 뒤의 발화는 보내지 않고, 늦게 도착한 응답·실패도 버린다
+  // (서버가 COMPLETED로 돌려주거나 종료 확인을 에러로 돌려줄 수 있어 완료가 두 번 세지거나 홈으로 튕긴다)
   const completedDirectlyRef = useRef(false);
+  // 완료 후속을 이미 했는가 — 작별 인사로 끝난 뒤 종료 버튼이 와도 두 번 하지 않는다
+  const settledRef = useRef(false);
+  // 완료 요청을 기다리는 중 — 시트가 이 동안 닫히지 않고 버튼을 막는다
+  const [completing, setCompleting] = useState(false);
   const clientMessageIdFor = (turnIndex: number) => {
     const issued = clientMessageIdsRef.current.get(turnIndex);
     if (issued) return issued;
@@ -96,6 +101,7 @@ export const useSmallTalkFlow = ({
         decision: 'END',
       });
     } catch (cause) {
+      if (completedDirectlyRef.current) return null; // 종료 버튼으로 이미 끝냈다 — 이 실패는 볼 일이 없다
       console.warn('[smalltalk] 종료 확인 전송 실패', cause);
       reportError(cause);
       showToast('연결에 문제가 생겨 대화를 이어가지 못했어요');
@@ -120,6 +126,7 @@ export const useSmallTalkFlow = ({
     sessionId: session.sessionId,
     ensureSession: async () => session.sessionId,
     submit: async ({ content, inputType, turnIndex, utteranceDurationMs }) => {
+      if (completedDirectlyRef.current) return null; // 끝내기로 한 대화 — 더 보내지 않는다
       let result = await submitSmallTalkMessage(session.sessionId, {
         clientMessageId: clientMessageIdFor(turnIndex),
         content,
@@ -194,8 +201,9 @@ export const useSmallTalkFlow = ({
   }: {
     turnCount: number;
     speakingDurationMs: number;
-    endReason: 'user_ended' | 'time_limit' | 'direct_end';
+    endReason: EventProps['Small Talk Completed']['end_reason'];
   }) => {
+    settledRef.current = true;
     track(EVENTS.SMALL_TALK_COMPLETED, {
       session_id: session.sessionId,
       partner,
@@ -225,16 +233,17 @@ export const useSmallTalkFlow = ({
     refreshHome();
   };
 
-  // 종료 버튼 — 작별 인사 없이 지금 완료한다. 나눈 대화가 없으면 남길 것도 없어 중도 종료로 나간다
-  // (시나리오도 첫 답 전에 나가면 기록·스트릭이 없다)
+  // 종료 버튼 — 작별 인사 없이 지금 완료한다. 이미 끝난 대화면 요약으로만 보낸다
   const completeTalk = async () => {
-    if (completedDirectlyRef.current) return; // 연타 — 이미 보냈다
-    if (answeredTurns === 0) {
-      leave();
-      goHome();
+    if (settledRef.current) {
+      showSummary();
       return;
     }
+    if (completedDirectlyRef.current) return; // 연타 — 이미 보냈다
     completedDirectlyRef.current = true;
+    setCompleting(true);
+    // 하던 말은 버린다 — 보내지 않은 발화라 깎인 시간도 되돌아온다
+    if (engine.phase === 'USER_SPEAKING') engine.input.cancelInput();
     engine.abandon();
     try {
       await completeSmallTalkSession(session.sessionId);
@@ -258,8 +267,9 @@ export const useSmallTalkFlow = ({
     ...engine,
     leave,
     completeTalk,
+    completing,
     // 서버가 받아 준 내 발화가 있는가 — 없으면 X로 확인 없이 바로 나간다
-    hasExchanged: answeredTurns > 0,
+    hasAnswered: answeredTurns > 0,
     remainingMs: budget.remainingMs,
     // 이번 발화에서 남은 몫(0~1) — 마이크 둘레의 타이머 링이 그린다
     speakingRatio: budget.ratio,

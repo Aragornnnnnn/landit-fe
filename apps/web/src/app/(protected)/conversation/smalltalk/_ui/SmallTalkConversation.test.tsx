@@ -11,13 +11,19 @@ import { SmallTalkConversation } from './SmallTalkConversation';
 
 const mocks = vi.hoisted(() => ({
   unlimited: false,
-  hasExchanged: true,
+  hasAnswered: true,
   leave: vi.fn(),
   replace: vi.fn(),
+  prefetch: vi.fn(),
+  phase: 'USER_SPEAKING',
 }));
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: mocks.replace, push: vi.fn() }),
+  useRouter: () => ({
+    replace: mocks.replace,
+    push: vi.fn(),
+    prefetch: mocks.prefetch,
+  }),
 }));
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 vi.mock('@/features/small-talk/model/useSpeakingLimit', () => ({
@@ -51,7 +57,7 @@ vi.mock('./SmallTalkExitSheet', () => ({
 // 말하는 중인 대화 — 잔량은 15초, 이번 발화에서 3/4가 남았다
 vi.mock('../_model/useSmallTalkFlow', () => ({
   useSmallTalkFlow: () => ({
-    phase: 'USER_SPEAKING',
+    phase: mocks.phase,
     turnIndex: 0,
     turn: {
       aiMessage: 'How was your day?',
@@ -72,7 +78,8 @@ vi.mock('../_model/useSmallTalkFlow', () => ({
     },
     leave: mocks.leave,
     completeTalk: vi.fn(),
-    hasExchanged: mocks.hasExchanged,
+    completing: false,
+    hasAnswered: mocks.hasAnswered,
     remainingMs: 15_000,
     speakingRatio: 0.75,
     summary: { speakingDurationMs: 0, exchangeCount: 1 },
@@ -102,7 +109,8 @@ const ringCircles = (container: HTMLElement) =>
 afterEach(() => {
   cleanup();
   mocks.unlimited = false;
-  mocks.hasExchanged = true;
+  mocks.hasAnswered = true;
+  mocks.phase = 'USER_SPEAKING';
   vi.clearAllMocks();
 });
 
@@ -138,6 +146,10 @@ describe('SmallTalkConversation — 대화 나가기', () => {
       screen.getByRole('dialog', { name: '종료 시트' }),
     ).toBeInTheDocument();
     expect(mocks.leave).not.toHaveBeenCalled();
+    // 「대화 종료하기」 뒤 바로 갈 요약 라우트를 미리 받는다
+    expect(mocks.prefetch).toHaveBeenCalledWith(
+      '/smalltalk/sessions/7/summary',
+    );
   });
 
   it('시트는 작별 인사 목록 중 하나를 예시로 보여 준다', () => {
@@ -151,7 +163,7 @@ describe('SmallTalkConversation — 대화 나가기', () => {
 
   it('나눈 대화가 없으면 X로 확인 없이 바로 나간다', () => {
     // 마무리할 대화가 없는데 "직접 마무리해 보라"고 권할 이유가 없다
-    mocks.hasExchanged = false;
+    mocks.hasAnswered = false;
     renderScreen();
 
     fireEvent.click(screen.getByRole('button', { name: '대화 나가기' }));
@@ -159,5 +171,17 @@ describe('SmallTalkConversation — 대화 나가기', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(mocks.leave).toHaveBeenCalled();
     expect(mocks.replace).toHaveBeenCalledWith('/smalltalk');
+  });
+
+  it('이미 끝난 대화면 X가 시트 없이 오늘의 스몰톡으로 보낸다', () => {
+    // 작별 인사로 끝난 화면에서 "끝내려고요?"를 묻거나 중도 종료를 보낼 이유가 없다
+    mocks.phase = 'DONE';
+    renderScreen();
+
+    fireEvent.click(screen.getByRole('button', { name: '대화 나가기' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(mocks.leave).not.toHaveBeenCalled();
+    expect(mocks.replace).toHaveBeenCalledWith('/smalltalk/sessions/7/summary');
   });
 });

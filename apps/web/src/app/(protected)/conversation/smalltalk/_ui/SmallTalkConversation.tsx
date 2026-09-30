@@ -48,6 +48,8 @@ export const SmallTalkConversation = ({
 }: SmallTalkConversationProps) => {
   const router = useRouter();
   const goHome = () => router.replace(SMALLTALK_PATH);
+  const summaryPath = smallTalkSummaryPath(session.sessionId);
+  const showSummary = () => router.replace(summaryPath);
   const [showExitSheet, setShowExitSheet] = useState(false);
   // 시트를 열 때마다 다른 작별 인사를 보여 준다 — 열려 있는 동안은 바뀌지 않게 여는 순간에 고른다
   const [goodbyePhrase, setGoodbyePhrase] = useState<string>(
@@ -68,7 +70,8 @@ export const SmallTalkConversation = ({
     input,
     leave,
     completeTalk,
-    hasExchanged,
+    hasAnswered,
+    completing,
     remainingMs,
     speakingRatio,
     summary,
@@ -78,7 +81,7 @@ export const SmallTalkConversation = ({
     remainingSpeakingTimeMs,
     endSession,
     goHome,
-    showSummary: () => router.replace(smallTalkSummaryPath(session.sessionId)),
+    showSummary,
   });
   const {
     transcript,
@@ -93,8 +96,8 @@ export const SmallTalkConversation = ({
   // 작별 인사가 끝나면 오늘의 스몰톡 라우트를 미리 받아 둔다 — CTA가 버튼이라 링크 자동 프리페치가 안 걸리고,
   // 누르는 순간 받으면 늦다 (요약 데이터·래디 그림은 흐름 훅이 완료 턴에서 미리 받는다)
   useEffect(() => {
-    if (ended) router.prefetch(smallTalkSummaryPath(session.sessionId));
-  }, [ended, router, session.sessionId]);
+    if (ended) router.prefetch(summaryPath);
+  }, [ended, router, summaryPath]);
   const showUserFirstIntro =
     turn.isUserOpening && phase === 'USER_READY' && !introDismissed;
   useEffect(() => {
@@ -121,13 +124,20 @@ export const SmallTalkConversation = ({
       >
         <button
           onClick={() => {
+            // 이미 끝난 대화 — 물을 것 없이 다음 화면(오늘의 스몰톡)으로 간다
+            if (ended) {
+              showSummary();
+              return;
+            }
             // 나눈 대화가 없으면 마무리할 것도 없다 — 확인 없이 바로 나간다
-            if (!hasExchanged) {
+            if (!hasAnswered) {
               leave();
               goHome();
               return;
             }
             track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'conversation_exit' });
+            // 「대화 종료하기」면 완료 응답 뒤 바로 요약으로 간다 — 라우트를 그 응답과 나란히 받아 둔다
+            router.prefetch(summaryPath);
             setGoodbyePhrase(pickGoodbyePhrase());
             setShowExitSheet(true);
           }}
@@ -183,11 +193,7 @@ export const SmallTalkConversation = ({
           // 오늘의 스몰톡(지난번과 비교) → 상세 피드백 → 축하·맞춤 표현으로 이어진다.
           // 버튼은 끝내는 말이 아니라 다음에 볼 것으로 부른다 — 여기서 대화는 이미 끝났다
           <div className="flex h-36 items-end px-5 pb-3">
-            <Button
-              onClick={() =>
-                router.replace(smallTalkSummaryPath(session.sessionId))
-              }
-            >
+            <Button onClick={showSummary}>
               피드백 보러가기
               <ArrowRightIcon size={16} />
             </Button>
@@ -225,8 +231,11 @@ export const SmallTalkConversation = ({
       <SmallTalkExitSheet
         open={showExitSheet}
         goodbyePhrase={goodbyePhrase}
+        completing={completing}
         onComplete={() => void completeTalk()}
         onClose={() => {
+          // 완료 요청 중에는 닫지 않는다 — 닫으면 끝내기로 한 대화가 이어지는 것처럼 보인다
+          if (completing) return;
           track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'conversation_exit' });
           setShowExitSheet(false);
         }}

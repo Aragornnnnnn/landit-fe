@@ -12,6 +12,8 @@ interface SmallTalkExitSheetProps {
   open: boolean;
   // 따라 말해 볼 작별 인사 예시
   goodbyePhrase: string;
+  // 완료 요청을 기다리는 중 — 두 버튼을 막는다
+  completing: boolean;
   // 대화 종료하기 — 지금 완료하고 오늘의 스몰톡으로 간다
   onComplete: () => void;
   // 직접 대화 마무리하기 — 시트를 닫고 작별 인사를 하러 대화로 돌아간다
@@ -21,6 +23,7 @@ interface SmallTalkExitSheetProps {
 export const SmallTalkExitSheet = ({
   open,
   goodbyePhrase,
+  completing,
   onComplete,
   onClose,
 }: SmallTalkExitSheetProps) => (
@@ -46,12 +49,13 @@ export const SmallTalkExitSheet = ({
         “{goodbyePhrase}”
       </p>
     </div>
-    <Button className="mt-5" onClick={onClose}>
+    <Button className="mt-5" disabled={completing} onClick={onClose}>
       직접 대화 마무리하기
     </Button>
     <button
+      disabled={completing}
       onClick={onComplete}
-      className="mx-auto mt-3 block px-4 py-2 text-sm font-medium text-muted-foreground underline underline-offset-4"
+      className="mx-auto mt-3 block px-4 py-2 text-sm font-medium text-muted-foreground underline underline-offset-4 disabled:opacity-45"
     >
       대화 종료하기
     </button>
