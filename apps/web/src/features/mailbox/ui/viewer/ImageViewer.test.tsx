@@ -86,6 +86,21 @@ describe('ImageViewer', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('핀치 뒤 손가락을 하나씩 떼도 거의 원래 크기면 원래 크기로 맞춘다', () => {
+    HTMLElement.prototype.setPointerCapture = vi.fn();
+    render(<ImageViewer images={images} startIndex={0} onClose={vi.fn()} />);
+    const photo = screen.getByAltText('첨부 사진 1');
+    const frame = photo.parentElement!;
+
+    fireEvent.pointerDown(frame, { pointerId: 1, clientX: 100, clientY: 400 });
+    fireEvent.pointerDown(frame, { pointerId: 2, clientX: 200, clientY: 400 });
+    fireEvent.pointerMove(frame, { pointerId: 2, clientX: 202, clientY: 400 });
+    fireEvent.pointerUp(frame, { pointerId: 1, clientX: 100, clientY: 400 });
+    fireEvent.pointerUp(frame, { pointerId: 2, clientX: 202, clientY: 400 });
+
+    expect(photo.style.transform).toContain('scale(1)');
+  });
+
   it('사진을 불러오지 못하면 그 자리에 알려준다', () => {
     render(<ImageViewer images={images} startIndex={0} onClose={vi.fn()} />);
 

@@ -185,12 +185,17 @@ export const ImageViewer = ({
     });
   };
 
+  // 거의 원래 크기로 돌아왔으면 딱 맞춘다 — 1.02배 같은 어중간한 상태로 넘기기가 막히지 않게
+  const settlePinch = () =>
+    zoomTo(scale < MIN_SCALE + 0.05 ? MIN_SCALE : scale);
+
   const endGesture = (event: PointerEvent<HTMLDivElement>) => {
     const current = gesture.current;
     const point = pointers.current.get(event.pointerId);
     pointers.current.delete(event.pointerId);
     if (pointers.current.size > 0) {
-      // 핀치에서 한 손가락이 먼저 떨어졌다 — 남은 손가락으로 이어서 옮기게 한다
+      // 핀치에서 한 손가락이 먼저 떨어졌다 — 배율을 정리하고 남은 손가락으로 이어서 옮기게 한다
+      if (current?.kind === 'pinch') settlePinch();
       const [rest] = pointers.current.values();
       gesture.current = { kind: 'drag', start: rest, pan, moved: true };
       return;
@@ -201,9 +206,7 @@ export const ImageViewer = ({
     if (!current || !point) return;
 
     if (current.kind === 'pinch') {
-      // 거의 원래 크기로 돌아왔으면 딱 맞춘다 — 1.02배 같은 어중간한 상태로 넘기기가 막히지 않게
-      if (scale < MIN_SCALE + 0.05) zoomTo(MIN_SCALE);
-      else zoomTo(scale);
+      settlePinch();
       return;
     }
     if (!current.moved) {
