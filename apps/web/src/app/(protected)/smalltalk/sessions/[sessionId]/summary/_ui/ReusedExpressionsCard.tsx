@@ -5,7 +5,7 @@
 import { useState } from 'react';
 
 import type { SmallTalkSummaryReusedExpression } from '@/features/small-talk/api/small-talk';
-import { splitMatchedText } from '@/features/small-talk/model/message-feedback';
+import { splitMatchedText } from '@/shared/lib/matched-text';
 import { ChevronDownIcon } from '@/shared/ui/Icons';
 
 // 처음에 펼쳐 두는 개수

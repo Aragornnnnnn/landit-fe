@@ -2,7 +2,7 @@
 // 오늘 맞았으면 초록, 또 틀렸으면 빨강. 여러 패턴이어도 서버가 하나만 고른다
 import type { SmallTalkSummaryGrowth } from '@/features/small-talk/api/small-talk';
 import { toDayLabel } from '@/features/small-talk/lib/session-summary';
-import { splitMatchedText } from '@/features/small-talk/model/message-feedback';
+import { splitMatchedText } from '@/shared/lib/matched-text';
 
 export const GrowthCard = ({
   growth,

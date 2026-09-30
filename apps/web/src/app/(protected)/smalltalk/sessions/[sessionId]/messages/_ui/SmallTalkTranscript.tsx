@@ -13,9 +13,9 @@ import type {
   SmallTalkReusedExpression,
 } from '@/features/small-talk/api/small-talk';
 import { toSessionTitle } from '@/features/small-talk/lib/session-summary';
-import { splitMatchedText } from '@/features/small-talk/model/message-feedback';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
 import { track } from '@/shared/analytics';
+import { splitMatchedText } from '@/shared/lib/matched-text';
 import {
   sessionExpressionBranchPath,
   smallTalkHistoryPath,
