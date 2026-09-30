@@ -21,14 +21,14 @@ export const useAttachmentImagesQuery = (
     queries: attachments.map((attachment) => ({
       queryKey: mailboxKeys.attachment(userId, attachment.attachmentId),
       // 인증이 필요해 주소를 <img>에 바로 못 넣는다 — 받은 바이트로 이 문서 전용 주소를 만든다.
-      // 사진은 바뀌지 않아 한 번 받으면 세션 동안 쓴다(한 통 최대 3장, 장당 1.5MB 안) — 그래서 주소도 돌려주지 않는다
+      // 사진은 바뀌지 않아 다시 받지 않고, 화면을 떠나 캐시에서 빠질 때 주소를 해제한다(query-client)
       queryFn: async () =>
         URL.createObjectURL(
           await getFeedbackAttachment(attachment.downloadUrl),
         ),
       enabled: userId !== null,
       staleTime: Infinity,
-      gcTime: Infinity,
+      meta: { objectUrl: true },
       retry: retryUnlessClientError,
     })),
     combine: (results) =>
