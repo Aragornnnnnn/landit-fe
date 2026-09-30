@@ -15,6 +15,10 @@ const VISIBLE_COUNT = 2;
 // 표현이 셋이면 그냥 셋 다 편다
 const MIN_FOLDED = 2;
 
+// 표현이 없을 때 총평이 그리는 빈 카드도 같은 제목을 쓴다
+export const REUSED_EXPRESSIONS_TITLE =
+  '랜딧에서 배운 표현을 실제로 사용했어요';
+
 export const ReusedExpressionsCard = ({
   items,
   className = '',
@@ -30,7 +34,7 @@ export const ReusedExpressionsCard = ({
   return (
     <section className={`rounded-2xl bg-card px-5 py-4 shadow-sm ${className}`}>
       <h2 className="text-[14px] font-extrabold text-primary">
-        랜딧에서 배운 표현을 실제로 사용했어요
+        {REUSED_EXPRESSIONS_TITLE}
       </h2>
       <ul className="mt-1 flex flex-col divide-y divide-border">
         {/* 같은 표현을 두 메시지에서 썼으면 표현 id만으로는 겹친다 — 쓴 자리까지 합쳐 가른다 */}
