@@ -37,10 +37,9 @@ export const AttachmentGallery = ({
             className="aspect-square overflow-hidden rounded-lg bg-secondary"
           >
             {image.status === 'pending' && (
-              <div
-                aria-label={`첨부 사진 ${index + 1} 불러오는 중`}
-                className="size-full animate-pulse"
-              />
+              <div role="status" className="size-full animate-pulse">
+                <span className="sr-only">{`첨부 사진 ${index + 1} 불러오는 중`}</span>
+              </div>
             )}
             {image.status === 'error' && (
               <button

@@ -110,6 +110,15 @@ describe('AttachmentGallery', () => {
     expect(screen.getByText('3 / 3')).toBeTruthy();
   });
 
+  it('받는 중인 칸은 불러오는 중이라고 읽어 준다', () => {
+    fetchAttachment.mockReturnValue(new Promise(() => {}));
+    renderGallery([1]);
+
+    expect(screen.getByRole('status').textContent).toBe(
+      '첨부 사진 1 불러오는 중',
+    );
+  });
+
   it('연 뒤에 앞 사진이 늦게 도착해도 누른 사진을 계속 보여준다', async () => {
     let arriveFirst: (blob: Blob) => void = () => {};
     fetchAttachment.mockImplementation((url) =>
