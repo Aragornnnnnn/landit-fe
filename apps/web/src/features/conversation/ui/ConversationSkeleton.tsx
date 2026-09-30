@@ -7,7 +7,8 @@ export const ConversationSkeleton = () => (
     <div
       className="w-full flex-none animate-pulse rounded-b-3xl border-b border-border bg-muted/40"
       style={{
-        height: 'calc(min(17rem, 34dvh) + max(env(safe-area-inset-top), 8px))',
+        height:
+          'calc(min(17rem, 34dvh) + max(var(--safe-area-inset-top), 8px))',
       }}
     />
 
@@ -22,7 +23,7 @@ export const ConversationSkeleton = () => (
     </section>
 
     {/* 마이크 자리 */}
-    <footer className="flex-none pb-[max(env(safe-area-inset-bottom),16px)]">
+    <footer className="flex-none pb-[max(var(--safe-area-inset-bottom),16px)]">
       <div className="flex h-36 flex-col items-center justify-center">
         <div className="size-20 animate-pulse rounded-full bg-muted" />
       </div>

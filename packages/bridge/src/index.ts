@@ -36,3 +36,5 @@ export {
   readNativeContext,
   type NativeContext,
 } from './nativeContext';
+
+export { NATIVE_INSET_VARS, buildNativeInsetsScript } from './nativeInsets';

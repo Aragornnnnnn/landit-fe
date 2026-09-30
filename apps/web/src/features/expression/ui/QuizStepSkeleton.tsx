@@ -6,7 +6,7 @@
 export const QuizStepSkeleton = () => (
   <div
     className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
-    style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    style={{ paddingTop: 'var(--safe-area-inset-top)' }}
   >
     {/* 진행바 자리 */}
     <div className="h-1 w-full bg-secondary" />
@@ -50,7 +50,7 @@ export const QuizStepSkeleton = () => (
     </div>
 
     {/* 하단 CTA 자리 */}
-    <div className="flex-none px-5 pt-3 pb-[max(env(safe-area-inset-bottom),24px)]">
+    <div className="flex-none px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),24px)]">
       <div className="h-14 w-full animate-pulse rounded-2xl bg-muted" />
     </div>
   </div>

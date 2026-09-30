@@ -14,7 +14,7 @@ export const BackHeader = ({
   hasShadow = false,
 }: BackHeaderProps) => (
   <header
-    className="relative flex shrink-0 items-center bg-background px-4 pt-[max(env(safe-area-inset-top),16px)] pb-2 transition-shadow duration-200"
+    className="relative flex shrink-0 items-center bg-background px-4 pt-[max(var(--safe-area-inset-top),16px)] pb-2 transition-shadow duration-200"
     style={{ boxShadow: hasShadow ? '0 2px 8px rgba(0,0,0,0.06)' : 'none' }}
   >
     <button

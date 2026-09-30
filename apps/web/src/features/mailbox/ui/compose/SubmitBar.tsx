@@ -25,7 +25,7 @@ export const SubmitBar = ({
     onClick={onClick}
     style={{
       height: BAR_HEIGHT,
-      paddingBottom: keyboardOpen ? 0 : 'env(safe-area-inset-bottom)',
+      paddingBottom: keyboardOpen ? 0 : 'var(--safe-area-inset-bottom)',
     }}
     className={`box-content w-full shrink-0 text-[15px] font-bold transition-colors ${
       disabled
