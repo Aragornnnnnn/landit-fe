@@ -9,6 +9,7 @@ import type { SessionFeedbackResponse } from '../../api/session-feedback';
 import {
   detailCtaLabel,
   LOCKED_DETAIL_CTA_LABEL,
+  summaryHeadline,
 } from '../../model/feedback-view';
 import { useSummaryLevelCard } from '../../model/useSummaryLevelCard';
 import { GrowthCard } from '../GrowthCard';
@@ -67,7 +68,7 @@ export const FeedbackSummary = ({
         <div className="flex flex-col gap-[7px]">
           <StarRating rating={feedback.starRating} size={32} animate />
           <p className="text-[23px] leading-[1.28] font-bold break-keep text-foreground">
-            {feedback.highlightMessage}
+            {summaryHeadline(feedback.highlightMessage)}
           </p>
         </div>
 

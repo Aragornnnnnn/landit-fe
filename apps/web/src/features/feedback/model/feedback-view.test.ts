@@ -1,10 +1,11 @@
-// 피드백 표시용 순수 함수 검증 — 평가 맥락 라벨, CTA 문구
+// 피드백 표시용 순수 함수 검증 — 평가 맥락 라벨, 총평 헤드라인, CTA 문구
 import { describe, expect, it } from 'vitest';
 
 import {
   detailCtaLabel,
   evaluationContextLabel,
   LOCKED_DETAIL_CTA_LABEL,
+  summaryHeadline,
 } from './feedback-view';
 
 describe('evaluationContextLabel', () => {
@@ -15,6 +16,26 @@ describe('evaluationContextLabel', () => {
   it('시나리오 오프닝 지시문은 상황으로 라벨링한다', () => {
     expect(evaluationContextLabel('SCENARIO_OPENING_INSTRUCTION')).toBe('상황');
   });
+});
+
+describe('summaryHeadline', () => {
+  it('서버가 준 별점 문구를 그대로 쓴다', () => {
+    expect(summaryHeadline('앞으로 혼자서도 유심을 살 수 있어요!')).toBe(
+      '앞으로 혼자서도 유심을 살 수 있어요!',
+    );
+  });
+
+  it.each([
+    ['비어 있으면', ''],
+    ['공백뿐이면', '  '],
+  ])(
+    '문구가 %s BE 기본 문구로 대신한다 — 별점 문구 BE보다 먼저 배포돼도 헤드라인이 비지 않게',
+    (_, message) => {
+      expect(summaryHeadline(message)).toBe(
+        '오늘도 시나리오를 잘 마무리했어요',
+      );
+    },
+  );
 });
 
 describe('detailCtaLabel', () => {
