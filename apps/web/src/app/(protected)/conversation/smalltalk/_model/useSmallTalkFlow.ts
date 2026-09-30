@@ -1,4 +1,4 @@
-// 스몰톡 대화 흐름 훅 — 대화 엔진에 스몰톡 세션·제출 API를 배선하고, 스몰톡에만 있는 두 가지를 맡는다.
+// 스몰톡 대화 흐름 훅 — 대화 엔진에 스몰톡 세션·제출 API를 배선하고, 스몰톡에만 있는 세 가지를 맡는다.
 // (1) 발화 응답이 종료 확인(EXIT_CONFIRMATION_REQUIRED)이면 END로 답해 대화를 닫는다
 // (2) 오늘 남은 발화 시간을 들고 있다가, 말하는 동안 줄이고 제출 후 서버 값으로 정정한다
 // (3) 종료 버튼 — 작별 인사 없이 지금 대화를 완료하고 오늘의 스몰톡으로 보낸다
@@ -77,6 +77,8 @@ export const useSmallTalkFlow = ({
   const settledRef = useRef(false);
   // 중도 종료를 이미 보냈는가 — X 연타에도 한 번만 나간다
   const leftRef = useRef(false);
+  // 이 화면이 대화에서 손을 뗐는가(종료 버튼·중도 종료) — 그 뒤의 발화 전송·늦은 응답·실패는 버린다
+  const talkClosed = () => directEndStartedRef.current || leftRef.current;
   // 완료 요청을 기다리는 중 — 시트 버튼을 막고, 끝나면 화면을 떠나므로 되돌리지 않는다
   const [completing, setCompleting] = useState(false);
   const clientMessageIdFor = (turnIndex: number) => {
@@ -103,7 +105,7 @@ export const useSmallTalkFlow = ({
         decision: 'END',
       });
     } catch (cause) {
-      if (directEndStartedRef.current) return null; // 종료 버튼이 완료를 맡았다 — 이 실패는 볼 일이 없다
+      if (talkClosed()) return null; // 이미 손을 뗀 대화 — 이 실패는 볼 일이 없다
       console.warn('[smalltalk] 종료 확인 전송 실패', cause);
       reportError(cause);
       showToast('연결에 문제가 생겨 대화를 이어가지 못했어요');
@@ -128,7 +130,7 @@ export const useSmallTalkFlow = ({
     sessionId: session.sessionId,
     ensureSession: async () => session.sessionId,
     submit: async ({ content, inputType, turnIndex, utteranceDurationMs }) => {
-      if (directEndStartedRef.current) return null; // 끝내기로 한 대화 — 더 보내지 않는다
+      if (talkClosed()) return null; // 끝냈거나 나간 대화 — 더 보내지 않는다
       let result: SmallTalkMessageSubmitResponse;
       try {
         result = await submitSmallTalkMessage(session.sessionId, {
@@ -140,9 +142,10 @@ export const useSmallTalkFlow = ({
           timeLimitReached: budget.remainingMs === 0,
         });
       } catch (cause) {
-        if (directEndStartedRef.current) return null; // 종료 버튼이 완료를 맡았다 — 이 실패는 볼 일이 없다
+        if (talkClosed()) return null; // 이미 손을 뗀 대화 — 이 실패는 볼 일이 없다
         throw cause;
       }
+      if (talkClosed()) return null; // 응답을 기다리는 사이 손을 뗐다 — 종료 확인도 보내지 않는다
 
       // 종료 확인 — 이 응답에는 다음 발화도 속마음도 없다. 답을 보내야 그 자리가 채워진다
       if (result.turnStatus === 'EXIT_CONFIRMATION_REQUIRED') {
@@ -152,8 +155,8 @@ export const useSmallTalkFlow = ({
         if (!decided) return null; // 전송 실패로 나가는 중 — 엔진도 손을 뗀다
         result = decided;
       }
-      // 기다리는 사이 종료 버튼이 완료를 맡았다 — 완료 후속은 그쪽이 한다
-      if (directEndStartedRef.current) return null;
+      // 기다리는 사이 종료 버튼이 완료를 맡았거나 나갔다 — 이 응답으로 대화를 잇지 않는다
+      if (talkClosed()) return null;
 
       setProgress(result.progress);
       setAnsweredTurns(turnIndex + 1);

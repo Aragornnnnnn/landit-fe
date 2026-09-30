@@ -699,4 +699,31 @@ describe('useSmallTalkFlow — X 누르기', () => {
     expect(showSummary).toHaveBeenCalled();
     expect(endSession).not.toHaveBeenCalled();
   });
+
+  it('첫 발화 응답을 기다리다 나갔으면 늦게 온 응답으로 대화를 이어가지 않는다', async () => {
+    // 나간 뒤 종료 확인·완료 계측이 따라 나가면 이탈과 완료가 둘 다 남는다
+    let resolveFirst!: (res: SmallTalkMessageSubmitResponse) => void;
+    submitSmallTalkMessage.mockReturnValueOnce(
+      new Promise((resolve) => (resolveFirst = resolve)),
+    );
+    const { result } = renderFlow(20_000);
+    speakFor(result, 3);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Bye!');
+    });
+
+    act(() => void result.current.pressClose());
+    await act(async () =>
+      resolveFirst(
+        submitResponse({
+          turnStatus: 'EXIT_CONFIRMATION_REQUIRED',
+          nextMessage: null,
+        }),
+      ),
+    );
+
+    expect(decideSmallTalkExit).not.toHaveBeenCalled();
+    expect(refreshStreak).not.toHaveBeenCalled();
+  });
 });
