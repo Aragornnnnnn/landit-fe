@@ -22,7 +22,11 @@ export const AttachmentGallery = ({
       ? [{ src: image.src, alt: `첨부 사진 ${index + 1}` }]
       : [],
   );
-  const [openAt, setOpenAt] = useState<number | null>(null);
+  // 열 때의 목록을 붙잡아 둔다 — 연 뒤 앞 사진이 도착해 목록이 늘어도 누른 사진이 그대로 보이게
+  const [opened, setOpened] = useState<{
+    images: ViewerImage[];
+    index: number;
+  } | null>(null);
 
   return (
     <>
@@ -53,7 +57,10 @@ export const AttachmentGallery = ({
               <button
                 type="button"
                 onClick={() =>
-                  setOpenAt(loaded.findIndex(({ src }) => src === image.src))
+                  setOpened({
+                    images: loaded,
+                    index: loaded.findIndex(({ src }) => src === image.src),
+                  })
                 }
                 aria-label={`첨부 사진 ${index + 1} 크게 보기`}
                 className="size-full active:opacity-80"
@@ -70,11 +77,11 @@ export const AttachmentGallery = ({
           </li>
         ))}
       </ul>
-      {openAt !== null && (
+      {opened && (
         <ImageViewer
-          images={loaded}
-          startIndex={openAt}
-          onClose={() => setOpenAt(null)}
+          images={opened.images}
+          startIndex={opened.index}
+          onClose={() => setOpened(null)}
         />
       )}
     </>

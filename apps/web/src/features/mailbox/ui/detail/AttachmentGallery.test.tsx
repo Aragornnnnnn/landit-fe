@@ -6,6 +6,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -107,5 +108,28 @@ describe('AttachmentGallery', () => {
     );
 
     expect(screen.getByText('3 / 3')).toBeTruthy();
+  });
+
+  it('연 뒤에 앞 사진이 늦게 도착해도 누른 사진을 계속 보여준다', async () => {
+    let arriveFirst: (blob: Blob) => void = () => {};
+    fetchAttachment.mockImplementation((url) =>
+      url.endsWith('/1')
+        ? new Promise((resolve) => {
+            arriveFirst = resolve;
+          })
+        : Promise.resolve(new Blob(['jpeg'])),
+    );
+    renderGallery([1, 2, 3]);
+    fireEvent.click(
+      await screen.findByRole('button', { name: '첨부 사진 3 크게 보기' }),
+    );
+
+    arriveFirst(new Blob(['late']));
+    await screen.findByRole('button', { name: '첨부 사진 1 크게 보기' });
+
+    const viewer = screen.getByRole('dialog');
+    expect(within(viewer).getByRole('img').getAttribute('alt')).toBe(
+      '첨부 사진 3',
+    );
   });
 });
