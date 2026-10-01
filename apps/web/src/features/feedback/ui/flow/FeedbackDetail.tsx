@@ -2,7 +2,7 @@
 
 // 피드백 상세 — 턴별로 질문/상황·내 답변과 GOOD/개선 분석을 한 장씩 넘겨 본다
 import { useEffect, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type FeedbackSource } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
@@ -14,11 +14,13 @@ import { evaluationContextLabel } from '../../model/feedback-view';
 
 export const FeedbackDetail = ({
   sessionId,
+  source,
   turns,
   onBack,
   onDone,
 }: {
   sessionId: number;
+  source: FeedbackSource;
   turns: MessageFeedbackResponse[];
   onBack: () => void;
   onDone: () => void;
@@ -32,6 +34,7 @@ export const FeedbackDetail = ({
     if (!turn) return;
     track(EVENTS.FEEDBACK_TURN_VIEWED, {
       session_id: sessionId,
+      source,
       turn_index: index,
       feedback_type: turn.feedbackType,
     });

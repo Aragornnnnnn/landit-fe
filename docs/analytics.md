@@ -204,13 +204,15 @@
 
 ### 분석 피드백
 
-| 이벤트                 | 속성                                                                           | 시점                                                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| Feedback Viewed        | session_id, detail_locked, good_count, turn_count, native_score?, star_rating? | 총평 노출. detail_locked면 서버가 상세를 비워 보낸 세션이라 good_count·turn_count가 0 — 평균낼 때 걸러야 한다 |
-| Feedback Skipped       | session_id                                                                     | 총평만 보고 상세 없이 나감 (Completed와 배타)                                                                 |
-| Feedback Detail Opened | session_id                                                                     | 상세 분석 진입                                                                                                |
-| Feedback Turn Viewed   | session_id, turn_index, feedback_type                                          | 턴별 분석 노출                                                                                                |
-| Feedback Completed     | session_id                                                                     | 분석 다 봤어요                                                                                                |
+| 이벤트                 | 속성                                                                                                               | 시점                                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| Feedback Viewed        | session_id, source(post_conversation\|history), detail_locked, good_count, turn_count, native_score?, star_rating? | 총평 노출. detail_locked면 서버가 상세를 비워 보낸 세션이라 good_count·turn_count가 0 — 평균낼 때 걸러야 한다 |
+| Feedback Skipped       | session_id, source                                                                                                 | 총평만 보고 상세 없이 나감 (Completed와 배타)                                                                 |
+| Feedback Detail Opened | session_id, source                                                                                                 | 상세 분석 진입                                                                                                |
+| Feedback Turn Viewed   | session_id, source, turn_index, feedback_type                                                                      | 턴별 분석 노출                                                                                                |
+| Feedback Completed     | session_id, source                                                                                                 | 분석 다 봤어요                                                                                                |
+
+`source`는 어디서 열었는지다. `post_conversation`은 대화 직후 흐름, `history`는 시나리오 기록(`/scenario/{id}/sessions/{sessionId}`)에서 다시 연 것이다. 대화 직후 퍼널을 볼 때는 `post_conversation`만 거른다.
 
 ### 소감 시트
 

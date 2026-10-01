@@ -46,6 +46,7 @@ export const FeedbackFlow = ({
     <FeedbackContent
       feedback={feedback}
       title={title}
+      source="post_conversation"
       openDetail={openDetail}
       refreshing={isRefreshing}
       onExit={onExit}
