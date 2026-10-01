@@ -47,7 +47,9 @@ export const LevelResultScreen = ({
   return (
     <main
       className="mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background px-6"
-      style={{ paddingTop: 'calc(max(env(safe-area-inset-top), 18px) + 28px)' }}
+      style={{
+        paddingTop: 'calc(max(var(--safe-area-inset-top), 18px) + 28px)',
+      }}
     >
       {/* 캐릭터가 주인공 — 가운데 위에 크게, 이름과 레벨은 그 아래 중앙 정렬 */}
       <section className="flex flex-col items-center text-center">
@@ -81,7 +83,7 @@ export const LevelResultScreen = ({
         </div>
       </section>
 
-      <div className="pt-4 pb-[max(env(safe-area-inset-bottom),24px)]">
+      <div className="pt-4 pb-[max(var(--safe-area-inset-bottom),24px)]">
         <Button onClick={onContinue}>나에게 맞는 학습지 받기</Button>
       </div>
     </main>

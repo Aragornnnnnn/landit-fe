@@ -3,7 +3,7 @@ export const FeedbackSkeleton = () => (
   <div className="mx-auto flex h-dvh max-w-[430px] animate-pulse flex-col bg-background">
     <header
       className="flex items-center gap-2 border-b border-border px-4 pt-4 pb-3"
-      style={{ paddingTop: 'max(env(safe-area-inset-top), 16px)' }}
+      style={{ paddingTop: 'max(var(--safe-area-inset-top), 16px)' }}
     >
       <div className="h-6 w-[21px] rounded bg-secondary" />
       <div className="mx-auto h-6 w-32 rounded-lg bg-secondary" />
@@ -35,7 +35,7 @@ export const FeedbackSkeleton = () => (
       {/* CTA */}
       <div
         className="mt-auto pt-8"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
+        style={{ paddingBottom: 'max(var(--safe-area-inset-bottom), 8px)' }}
       >
         <div className="h-14 w-full rounded-xl bg-secondary" />
       </div>

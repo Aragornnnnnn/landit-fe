@@ -4,16 +4,26 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
 import { MAILBOX_COMPOSE_PATH } from '@/shared/lib/routes';
+import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { BackHeader } from '@/shared/ui/BackHeader';
-import { Emoji } from '@/shared/ui/emoji';
 import { showToast } from '@/shared/ui/toast';
 
 import type { FeedbackType } from '../api/mailbox';
+import {
+  exceedsSendLimit,
+  sendFailureMessage,
+  TOO_LARGE,
+} from '../model/attachment';
 import { mailboxPath } from '../model/box';
 import { FEEDBACK_TYPE_FACES } from '../model/feedback-type';
+import { resolvePhotoSource } from '../model/shell-photos';
+import { useAttachments } from '../model/useAttachments';
 import { useSendFeedbackMutation } from '../model/useSendFeedbackMutation';
+import { AttachmentThumbnails } from './compose/AttachmentThumbnails';
+import { AttachPhotoButton } from './compose/AttachPhotoButton';
 import { SubmitBar } from './compose/SubmitBar';
 
 // 한 통에 담을 수 있는 길이. 넘겨 쓰게 두면 읽는 쪽도 보내는 쪽도 지친다
@@ -24,24 +34,39 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
   const keyboardInset = useKeyboardInset();
   const [content, setContent] = useState('');
   const { mutate: send, isPending: isSending } = useSendFeedbackMutation(type);
+  const { attachments, isAttaching, isFull, attach, attachFromShell, detach } =
+    useAttachments();
+  const photoSource = resolvePhotoSource(
+    useClientOnlyValue(getNativeContextSnapshot, null),
+  );
 
-  const { question, placeholder, assurance, assuranceEmoji } =
-    FEEDBACK_TYPE_FACES[type];
+  const { question, placeholder } = FEEDBACK_TYPE_FACES[type];
   const trimmed = content.trim();
 
   const submit = () => {
-    if (!trimmed || isSending) return;
+    if (!trimmed || isSending || isAttaching) return;
 
     // 이 콜백들은 화면이 사라지면 불리지 않는다(React Query) — 느린 회선에서 보내는 동안 뒤로 나가도
     // 뒤늦게 도착한 응답이 유저가 고른 자리에서 보낸 편지함으로 끌고 가지 않는다
-    send(trimmed, {
-      onSuccess: () => {
-        showToast('소중한 의견 고마워요!');
-        // 방금 보낸 편지가 보이는 자리로 데려간다. replace라 뒤로가기가 작성 화면으로 되돌지 않는다
-        router.replace(mailboxPath('sent'));
+    const images = attachments.map(({ file }) => file);
+    // 앞단 프록시가 큰 요청을 끊기 전에 막는다 — 보내 봐야 실패할 것을 기다리게 하지 않는다
+    if (exceedsSendLimit(images)) {
+      showToast(TOO_LARGE);
+      return;
+    }
+
+    send(
+      { content: trimmed, images },
+      {
+        onSuccess: () => {
+          showToast('소중한 의견 고마워요!');
+          // 방금 보낸 편지가 보이는 자리로 데려간다. replace라 뒤로가기가 작성 화면으로 되돌지 않는다
+          router.replace(mailboxPath('sent'));
+        },
+        // 사진 때문에 거부됐으면 다시 시도해도 같다 — 무엇을 바꾸면 되는지 알려준다
+        onError: (error) => showToast(sendFailureMessage(error, images.length)),
       },
-      onError: () => showToast('보내지 못했어요. 잠시 후 다시 시도해 주세요.'),
-    });
+    );
   };
 
   return (
@@ -53,7 +78,20 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
       className="mx-auto flex max-w-[430px] flex-col bg-background"
     >
       {/* 유형을 다시 고르러 간다 — 한 층이라 되짚지 않고 갈아끼운다 */}
-      <BackHeader onBack={() => router.replace(MAILBOX_COMPOSE_PATH)} />
+      <BackHeader
+        onBack={() => router.replace(MAILBOX_COMPOSE_PATH)}
+        trailing={
+          // 구 셸은 버튼을 숨긴다 — 파일 입력의 "사진 찍기"가 카메라 권한 문구 없는 앱을 끌 수 있다
+          photoSource !== 'unavailable' && (
+            <AttachPhotoButton
+              source={photoSource}
+              disabled={isFull || isSending || isAttaching}
+              onPickFiles={(files) => void attach(files)}
+              onPickFromShell={() => void attachFromShell()}
+            />
+          )
+        }
+      />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-4">
         <h1 className="mt-3 shrink-0 text-[22px] leading-snug font-bold whitespace-pre-line text-foreground">
@@ -70,14 +108,16 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
           className="mt-6 h-[180px] w-full shrink-0 resize-none rounded-2xl border border-border bg-card p-4 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
         />
 
-        <p className="mt-3 shrink-0 text-xs text-muted-foreground">
-          {assurance} <Emoji>{assuranceEmoji}</Emoji>
-        </p>
+        <AttachmentThumbnails
+          attachments={attachments}
+          locked={isSending}
+          onDetach={detach}
+        />
       </div>
 
       <SubmitBar
         disabled={!trimmed}
-        loading={isSending}
+        loading={isSending || isAttaching}
         keyboardOpen={keyboardInset > 0}
         onClick={submit}
       />

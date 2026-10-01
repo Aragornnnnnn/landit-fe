@@ -147,6 +147,22 @@ export const getFeedbackAttachment = (downloadUrl: string) =>
 export const getUnreadCount = () =>
   api.get<{ unreadCount: number }>('/api/v1/mailbox/unread-count');
 
-/** 피드백 등록. 201에 본문이 없다 — 보낸 뒤 보낸 편지함을 다시 부르면 새 편지가 따라온다 */
-export const submitFeedback = (body: FeedbackSubmitRequest) =>
-  api.post<void>('/api/v1/mailbox/feedbacks', body);
+/**
+ * 피드백 등록. 201에 본문이 없다 — 보낸 뒤 보낸 편지함을 다시 부르면 새 편지가 따라온다.
+ * 사진이 있으면 multipart(`feedback` JSON 파트 + `images`)로, 없으면 JSON으로 보낸다
+ */
+export const submitFeedback = (
+  body: FeedbackSubmitRequest,
+  images: File[] = [],
+) => {
+  if (images.length === 0) {
+    return api.post<void>('/api/v1/mailbox/feedbacks', body);
+  }
+  const form = new FormData();
+  form.append(
+    'feedback',
+    new Blob([JSON.stringify(body)], { type: 'application/json' }),
+  );
+  for (const image of images) form.append('images', image);
+  return api.post<void>('/api/v1/mailbox/feedbacks', form);
+};

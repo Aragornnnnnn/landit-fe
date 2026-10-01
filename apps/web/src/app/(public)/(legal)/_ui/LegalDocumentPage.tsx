@@ -43,7 +43,7 @@ export const LegalDocumentPage = ({ document }: LegalDocumentPageProps) => {
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-muted">
-      <header className="relative flex shrink-0 items-center border-b border-border bg-background px-4 pt-[max(env(safe-area-inset-top),16px)] pb-2">
+      <header className="relative flex shrink-0 items-center border-b border-border bg-background px-4 pt-[max(var(--safe-area-inset-top),16px)] pb-2">
         <button
           type="button"
           onClick={() => backOrReplace(router, '/')}
@@ -58,7 +58,7 @@ export const LegalDocumentPage = ({ document }: LegalDocumentPageProps) => {
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="px-5 pb-[max(env(safe-area-inset-bottom),64px)]">
+        <div className="px-5 pb-[max(var(--safe-area-inset-bottom),64px)]">
           {/* 시행일·버전 메타 정보 */}
           <div className="mt-4 mb-6 overflow-hidden rounded-xl bg-card">
             <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
