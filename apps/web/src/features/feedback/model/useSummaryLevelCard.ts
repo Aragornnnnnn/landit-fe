@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 
 import type { SessionFeedbackResponse } from '../api/session-feedback';
-import { decideSummaryLevelCard } from './summary-level-card';
+import { decideSummaryLevelCard, isAwaitingLevel } from './summary-level-card';
 import { useLevelAssessmentQuery } from './useLevelAssessmentQuery';
 
 // 이 시간 안에 결과가 안 오면 카드를 거둔다 (BE 자체 만료는 120초)
@@ -10,8 +10,7 @@ const LEVEL_WAIT_MS = 20_000;
 
 export const useSummaryLevelCard = (feedback: SessionFeedbackResponse) => {
   const inline = feedback.userLevelAssessment;
-  // 응답 때 분석 중이었을 때만 다시 묻는다 — NOT_REQUESTED는 기다려도 오지 않는다
-  const waiting = inline?.processingStatus === 'PREPARING';
+  const waiting = isAwaitingLevel(inline);
   const [timedOut, setTimedOut] = useState(false);
   // 상한이 지나면 더 묻지 않는다 — 카드는 이미 거뒀다
   const polled = useLevelAssessmentQuery(

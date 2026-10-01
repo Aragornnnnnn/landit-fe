@@ -61,6 +61,14 @@ export type SummaryLevelCard =
 
 const HIDDEN: SummaryLevelCard = { kind: 'hidden' };
 
+/**
+ * 총평 응답 때 분석 중이라 결과를 다시 물어 기다릴 평가인가 — PREPARING만이다.
+ * NOT_REQUESTED는 처리 상태가 기록되지 않은 과거 세션이라 기다려도 오지 않는다. 다시 묻는 훅과 카드 판정이 이 한 곳을 같이 쓴다
+ */
+export const isAwaitingLevel = (
+  inline: SessionLevelAssessmentResponse | null | undefined,
+) => inline?.processingStatus === 'PREPARING';
+
 const toReadyCard = (assessment: SessionLevelAssessment): SummaryLevelCard => {
   // FALLBACK·근거 부족은 기본값으로 채운 점수라 보여주면 거짓이 된다
   if (!isUsableAssessment(assessment)) return HIDDEN;
@@ -91,19 +99,13 @@ export const decideSummaryLevelCard = ({
   /** 다시 물으며 기다린 시간이 상한을 넘었는가 */
   timedOut: boolean;
 }): SummaryLevelCard => {
-  // NOT_REQUESTED는 처리 상태가 기록되지 않은 과거 세션이라 기다려도 결과가 오지 않는다
-  if (
-    !inline ||
-    inline.processingStatus === 'FAILED' ||
-    inline.processingStatus === 'NOT_REQUESTED'
-  ) {
-    return HIDDEN;
-  }
-  if (inline.processingStatus === 'COMPLETED') {
+  if (inline?.processingStatus === 'COMPLETED') {
     return inline.levelAssessment
       ? toReadyCard(inline.levelAssessment)
       : HIDDEN;
   }
+  // 평가 비활성(null)·구버전(undefined)·실패·예약 안 됨은 기다릴 결과가 없다
+  if (!isAwaitingLevel(inline)) return HIDDEN;
   // 상한이 지나 거둔 카드는 늦게 온 결과로 되살리지 않는다 — 보던 아래 카드가 밀린다
   if (timedOut) return HIDDEN;
   if (polled.outcome === 'ready') {
