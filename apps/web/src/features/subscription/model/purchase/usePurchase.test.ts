@@ -107,7 +107,7 @@ describe('usePurchase — 결제', () => {
     });
   });
 
-  it('가격표에 있는 패키지로 결제하고, 없으면 표준 identifier로 결제한다', async () => {
+  it('플랜별 패키지에 있는 패키지로 결제하고, 없으면 표준 identifier로 결제한다', async () => {
     mocks.purchaseViaBridge.mockResolvedValue({
       type: 'PURCHASE_RESULT',
       status: 'success',
@@ -197,7 +197,7 @@ describe('usePurchase — 결제', () => {
     expect(mocks.showToast).not.toHaveBeenCalled();
   });
 
-  it('가격표가 있으면 결제 금액과 통화를 완료에 함께 남긴다 — 매출 집계용', async () => {
+  it('패키지가 있으면 결제 금액과 통화를 완료에 함께 남긴다 — 매출 집계용', async () => {
     mocks.purchaseViaBridge.mockResolvedValue({
       type: 'PURCHASE_RESULT',
       status: 'success',

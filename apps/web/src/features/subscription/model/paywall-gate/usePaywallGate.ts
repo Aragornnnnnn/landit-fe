@@ -31,7 +31,7 @@ interface GuardOptions {
 export const usePaywallGate = () => {
   const router = useRouter();
   const lockable = usePaymentLive();
-  // 잠글 수 없는 환경(플래그 꺼짐·브라우저·구버전 셸)에서는 구독을 묻지 않는다 — 어차피 열린다
+  // 잠글 수 없는 환경(플래그 꺼짐·브라우저)에서는 구독을 묻지 않는다 — 어차피 열린다
   const { subscription, isError } = useSubscriptionQuery({
     enabled: lockable,
   });
