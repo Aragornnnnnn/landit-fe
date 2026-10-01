@@ -125,14 +125,13 @@ export const scenarioExpressionPath = (
   date?: string | null,
 ) => withDate(`${expressionsOf('scenario', scenarioId)}/${expressionId}`, date);
 
-// 시나리오 기록 — 그 시나리오를 완료한 회차들. 카드에서 들어오니 보던 날을 달고 가서, 나올 때 그 날 카드로 돌아간다.
-// 회차는 BE가 부르는 대로 세션이다 (스몰톡 기록 /smalltalk/sessions와 같은 모양)
+// 시나리오 기록 — 회차는 BE 이름대로 세션이다. 보던 날을 달고 가서 나올 때 그 날 카드로 돌아간다
 export const scenarioSessionsPath = (
   scenarioId: number,
   date?: string | null,
 ) => withDate(`${SCENARIO_PATH}/${scenarioId}/sessions`, date);
 
-// detail은 잠긴 상세를 결제하러 갔다가 돌아올 길 — 돌아오면 총평을 건너뛰고 상세부터 연다 (대화 직후 피드백의 detail과 같다)
+// detail은 결제하고 돌아온 길 — 총평을 건너뛰고 상세부터 연다
 export const scenarioSessionPath = (
   scenarioId: number,
   sessionId: number,
