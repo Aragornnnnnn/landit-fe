@@ -6,13 +6,11 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import type { SmallTalkSessionSummary } from '@/features/small-talk/api/small-talk';
-import {
-  toDayLabel,
-  toSessionTitle,
-} from '@/features/small-talk/lib/session-summary';
+import { toSessionTitle } from '@/features/small-talk/lib/session-summary';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkSessionsQuery } from '@/features/small-talk/model/useSmallTalkSessionsQuery';
 import { track } from '@/shared/analytics';
+import { toDayLabel } from '@/shared/lib/day-label';
 import { SMALLTALK_PATH, smallTalkHistoryPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';

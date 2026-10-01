@@ -1,9 +1,11 @@
 'use client';
 
-// 점수 트랙 — 원어민 이해도 %를 세며 캐릭터가 그만큼 달려가 바를 채운다 (한국어식 → 원어민 착지)
+// 점수 트랙 — 원어민 이해도 %를 세며 마법사 래디가 그만큼 날아가 바를 채운다
 // 숫자·바·캐릭터를 하나의 모션 값으로 굴려 이동 속도와 카운트업을 완전히 동기화한다.
 import { useEffect, useState } from 'react';
 import { animate, motion, useMotionValue, useTransform } from 'motion/react';
+
+import { TRACK_CHARACTER_SRC } from '../../lib/track-character';
 
 const DELAY = 0.3;
 const DURATION = 1.6;
@@ -50,7 +52,7 @@ export const ScoreTrack = ({ score }: { score: number }) => {
         <motion.div className="absolute top-0 left-0 h-full" style={{ width }}>
           <motion.div
             className="absolute bottom-full"
-            style={{ right: -40 }}
+            style={{ right: -26 }}
             animate={{ y: [0, -4, 0] }}
             transition={{
               duration: 1.2,
@@ -61,18 +63,13 @@ export const ScoreTrack = ({ score }: { score: number }) => {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/images/character/runner.webp"
-              alt="달려가는 캐릭터"
+              src={TRACK_CHARACTER_SRC}
+              alt="날아가는 래디"
               className="object-contain"
-              style={{ width: 80, height: 56 }}
+              style={{ width: 52, height: 47 }}
             />
           </motion.div>
         </motion.div>
-      </div>
-
-      <div className="mt-2.5 flex justify-between text-[15px] font-semibold text-foreground/70">
-        <span>아직 한국어식</span>
-        <span>원어민 착지</span>
       </div>
     </div>
   );

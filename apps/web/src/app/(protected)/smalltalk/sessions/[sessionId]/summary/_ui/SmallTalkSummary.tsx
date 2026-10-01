@@ -8,6 +8,8 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { GrowthCard } from '@/features/feedback/ui/GrowthCard';
+import { ReusedExpressionsCard } from '@/features/feedback/ui/ReusedExpressionsCard';
 import type {
   SmallTalkSummaryHeadline,
   SmallTalkSummaryResponse,
@@ -31,8 +33,6 @@ import { toSummaryBlocks, type SummaryBlocks } from '../_model/summary-blocks';
 import { BlockSkeleton } from './BlockSkeleton';
 import { ComparisonCard } from './ComparisonCard';
 import { FollowUpBlock } from './FollowUpBlock';
-import { GrowthCard } from './GrowthCard';
-import { ReusedExpressionsCard } from './ReusedExpressionsCard';
 import { SmallTalkSummarySkeleton } from './SmallTalkSummarySkeleton';
 
 export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {

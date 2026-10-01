@@ -31,6 +31,15 @@ const base: UsableAssessment = {
 };
 
 describe('toPercentScore', () => {
+  it('100점 척도(scoreMax=100) 평가는 그대로 쓴다 — 새 평가(text-score-v2.0)는 1~100으로 온다', () => {
+    expect(toPercentScore(60, 100)).toBe(60);
+    expect(toPercentScore(83.6, 100)).toBe(84);
+  });
+
+  it('척도를 모르면 예전 5점 척도로 본다 — scoreMax가 없는 구버전 응답', () => {
+    expect(toPercentScore(4.1, undefined)).toBe(82);
+  });
+
   it('1~5 척도를 100점으로 환산해 반올림한다 — 4.1은 82, 2.7은 54', () => {
     expect(toPercentScore(4.1)).toBe(82);
     expect(toPercentScore(2.7)).toBe(54);
@@ -75,6 +84,20 @@ describe('toLevelResult', () => {
       '대화 구성',
       '상호 작용',
     ]);
+    expect(result.rows.map((row) => row.score)).toEqual([82, 54, 71, 66, 58]);
+  });
+
+  it('100점 척도 평가는 영역 점수를 환산하지 않는다', () => {
+    const result = toLevelResult({
+      ...base,
+      scoreMax: 100,
+      situationPerformance: domain(82),
+      grammar: domain(54),
+      vocabulary: domain(71),
+      discourse: domain(66),
+      interactionPragmatics: domain(58),
+    });
+
     expect(result.rows.map((row) => row.score)).toEqual([82, 54, 71, 66, 58]);
   });
 
