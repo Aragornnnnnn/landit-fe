@@ -10,12 +10,14 @@ const FALLBACK_HEADLINE = '오늘도 시나리오를 잘 마무리했어요';
 export const summaryHeadline = (highlightMessage: string): string =>
   highlightMessage.trim() || FALLBACK_HEADLINE;
 
-// 유료인데 잠긴 응답을 들고 있다 — 무료일 때 받아 둔 옛 응답이라 한 번 다시 받아야 한다.
-// 결제하고 돌아온 길, 복원, 다른 기기에서 결제한 뒤 앱을 켠 길이 전부 여기로 모인다. 대화 직후 피드백과 시나리오 기록이 같은 판정을 쓴다
+// 유료인데 잠긴 응답을 들고 있다 — 무료일 때 받아 둔 옛 응답이라 한 번 다시 받아야 한다 (대화 직후 피드백과 시나리오 기록이 같이 쓴다)
 export const isStaleLockedFeedback = (
   premium: boolean | undefined,
   feedback: { detailFeedbackLocked?: boolean } | null | undefined,
 ) => premium === true && feedback?.detailFeedbackLocked === true;
+
+// 피드백 화면 헤더의 대체 제목 — 그 날 카드가 이 시나리오가 아닐 때(자정을 넘겨 끝낸 대화). 대화 직후 피드백과 시나리오 기록 회차가 같이 쓴다
+export const FEEDBACK_FALLBACK_TITLE = '대화 피드백';
 
 // 남은 개선 턴 수에 따라 상세로 넘어가는 CTA 문구를 고른다.
 export const detailCtaLabel = (improvementCount: number): string =>
