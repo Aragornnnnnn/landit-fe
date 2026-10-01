@@ -1,4 +1,4 @@
-// 총평 영역 점수 카드의 상태 계약 — 응답에 실린 평가, 다시 물어 온 평가, 기다림 상한으로 로딩·표시·숨김을 가른다
+// 총평 영역 점수 카드의 상태 계약 — 응답에 실린 평가, 다시 물어 온 평가, 기다림을 그만뒀는지로 로딩·표시·숨김을 가른다
 import { describe, expect, it } from 'vitest';
 
 import type {
@@ -43,7 +43,7 @@ describe('decideSummaryLevelCard', () => {
     const card = decideSummaryLevelCard({
       inline: inline('COMPLETED', assessment),
       polled: notPolled,
-      timedOut: false,
+      gaveUp: false,
     });
 
     expect(card).toEqual({
@@ -68,7 +68,7 @@ describe('decideSummaryLevelCard', () => {
         vocabulary: domain(18),
       }),
       polled: notPolled,
-      timedOut: false,
+      gaveUp: false,
     });
 
     expect(card.kind === 'ready' && card.rows.slice(0, 2)).toEqual([
@@ -85,7 +85,7 @@ describe('decideSummaryLevelCard', () => {
         details: null,
       }),
       polled: notPolled,
-      timedOut: false,
+      gaveUp: false,
     });
 
     expect(card.kind === 'ready' && card.rows.map((row) => row.key)).toEqual([
@@ -101,7 +101,7 @@ describe('decideSummaryLevelCard', () => {
     const card = decideSummaryLevelCard({
       inline: inline('PREPARING'),
       polled: notPolled,
-      timedOut: false,
+      gaveUp: false,
     });
 
     expect(card).toEqual({ kind: 'loading' });
@@ -111,27 +111,27 @@ describe('decideSummaryLevelCard', () => {
     const card = decideSummaryLevelCard({
       inline: inline('PREPARING'),
       polled: { outcome: 'ready', levelAssessment: assessment },
-      timedOut: false,
+      gaveUp: false,
     });
 
     expect(card.kind).toBe('ready');
   });
 
-  it('기다림 상한을 넘기면 로딩을 거두고 카드를 숨긴다', () => {
+  it('기다림을 그만두면(상한·조회 실패) 로딩을 거두고 카드를 숨긴다', () => {
     const card = decideSummaryLevelCard({
       inline: inline('PREPARING'),
       polled: notPolled,
-      timedOut: true,
+      gaveUp: true,
     });
 
     expect(card).toEqual({ kind: 'hidden' });
   });
 
-  it('상한이 지난 뒤 늦게 온 결과는 카드를 다시 끼워 넣지 않는다 — 보던 아래 카드가 밀리지 않게', () => {
+  it('그만둔 뒤 늦게 온 결과는 카드를 다시 끼워 넣지 않는다 — 보던 아래 카드가 밀리지 않게', () => {
     const card = decideSummaryLevelCard({
       inline: inline('PREPARING'),
       polled: { outcome: 'ready', levelAssessment: assessment },
-      timedOut: true,
+      gaveUp: true,
     });
 
     expect(card).toEqual({ kind: 'hidden' });
@@ -147,7 +147,7 @@ describe('decideSummaryLevelCard', () => {
     const card = decideSummaryLevelCard({
       inline: value,
       polled: notPolled,
-      timedOut: false,
+      gaveUp: false,
     });
 
     expect(card).toEqual({ kind: 'hidden' });
@@ -157,7 +157,7 @@ describe('decideSummaryLevelCard', () => {
     const card = decideSummaryLevelCard({
       inline: inline('PREPARING'),
       polled: { outcome: 'unavailable', levelAssessment: null },
-      timedOut: false,
+      gaveUp: false,
     });
 
     expect(card).toEqual({ kind: 'hidden' });
@@ -167,12 +167,12 @@ describe('decideSummaryLevelCard', () => {
     const fallback = decideSummaryLevelCard({
       inline: inline('COMPLETED', { ...assessment, source: 'FALLBACK' }),
       polled: notPolled,
-      timedOut: false,
+      gaveUp: false,
     });
     const thin = decideSummaryLevelCard({
       inline: inline('COMPLETED', { ...assessment, sufficientEvidence: false }),
       polled: notPolled,
-      timedOut: false,
+      gaveUp: false,
     });
 
     expect(fallback).toEqual({ kind: 'hidden' });

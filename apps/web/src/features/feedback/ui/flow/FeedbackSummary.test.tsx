@@ -219,6 +219,31 @@ describe('FeedbackSummary', () => {
     vi.useRealTimers();
   });
 
+  it('분석 중 다시 묻다 조회가 실패하면 카드를 거두고, 그 뒤로 로딩이 되살아나거나 계속 묻지 않는다', async () => {
+    // Given 다시 물으면 처음엔 아직 분석 중이고, 그다음부터 조회가 실패한다
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    mocks.getLevelAssessment
+      .mockResolvedValueOnce(levelResponse('PREPARING'))
+      .mockRejectedValue(new Error('500'));
+    renderSummary(
+      feedback({ userLevelAssessment: levelResponse('PREPARING') }),
+    );
+
+    // When 폴링과 재시도가 몇 바퀴 돈다
+    await act(() => vi.advanceTimersByTimeAsync(8_000));
+    const callsAfterGiveUp = mocks.getLevelAssessment.mock.calls.length;
+    await act(() => vi.advanceTimersByTimeAsync(8_000));
+
+    // Then 카드는 거둔 채로 남고, 더 묻지 않는다
+    expect(
+      screen.queryByRole('status', {
+        name: '이번 대화 점수를 분석하고 있어요',
+      }),
+    ).not.toBeInTheDocument();
+    expect(mocks.getLevelAssessment).toHaveBeenCalledTimes(callsAfterGiveUp);
+    vi.useRealTimers();
+  });
+
   it('평가 비활성 세션이면 영역 점수 카드를 그리지 않는다', () => {
     renderSummary(feedback({ userLevelAssessment: null }));
 

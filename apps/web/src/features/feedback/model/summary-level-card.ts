@@ -87,7 +87,7 @@ const toReadyCard = (assessment: SessionLevelAssessment): SummaryLevelCard => {
 export const decideSummaryLevelCard = ({
   inline,
   polled,
-  timedOut,
+  gaveUp,
 }: {
   /** 총평 응답에 실린 평가. 평가 비활성 세션이면 null, 구버전 응답이면 undefined */
   inline: SessionLevelAssessmentResponse | null | undefined;
@@ -96,8 +96,8 @@ export const decideSummaryLevelCard = ({
     outcome: LevelAssessmentOutcome;
     levelAssessment: SessionLevelAssessment | null;
   };
-  /** 다시 물으며 기다린 시간이 상한을 넘었는가 */
-  timedOut: boolean;
+  /** 기다림을 그만뒀는가 — 상한이 지났거나 다시 묻다 실패했다 */
+  gaveUp: boolean;
 }): SummaryLevelCard => {
   if (inline?.processingStatus === 'COMPLETED') {
     return inline.levelAssessment
@@ -106,8 +106,8 @@ export const decideSummaryLevelCard = ({
   }
   // 평가 비활성(null)·구버전(undefined)·실패·예약 안 됨은 기다릴 결과가 없다
   if (!isAwaitingLevel(inline)) return HIDDEN;
-  // 상한이 지나 거둔 카드는 늦게 온 결과로 되살리지 않는다 — 보던 아래 카드가 밀린다
-  if (timedOut) return HIDDEN;
+  // 그만둔 뒤 늦게 온 결과로 카드를 되살리지 않는다 — 보던 아래 카드가 밀린다
+  if (gaveUp) return HIDDEN;
   if (polled.outcome === 'ready') {
     return polled.levelAssessment
       ? toReadyCard(polled.levelAssessment)
