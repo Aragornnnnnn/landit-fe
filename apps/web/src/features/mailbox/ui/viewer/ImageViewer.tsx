@@ -195,7 +195,11 @@ export const ImageViewer = ({
   const settlePinch = () =>
     zoomTo(scale < MIN_SCALE + 0.05 ? MIN_SCALE : scale);
 
-  const endGesture = (event: PointerEvent<HTMLDivElement>) => {
+  /** @param cancelled 브라우저가 입력을 가로챘다(화면 회전·시스템 제스처) — 정리만 하고 탭·넘기기·닫기로 읽지 않는다 */
+  const endGesture = (
+    event: PointerEvent<HTMLDivElement>,
+    cancelled = false,
+  ) => {
     const current = gesture.current;
     const point = pointers.current.get(event.pointerId);
     pointers.current.delete(event.pointerId);
@@ -215,6 +219,7 @@ export const ImageViewer = ({
       settlePinch();
       return;
     }
+    if (cancelled) return;
     if (!current.moved) {
       readTap(point);
       return;
@@ -255,7 +260,7 @@ export const ImageViewer = ({
         onPointerDown={startGesture}
         onPointerMove={moveGesture}
         onPointerUp={endGesture}
-        onPointerCancel={endGesture}
+        onPointerCancel={(event) => endGesture(event, true)}
         className="relative flex-1 touch-none overflow-hidden select-none"
       >
         {failed ? (

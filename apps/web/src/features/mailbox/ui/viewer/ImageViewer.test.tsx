@@ -134,6 +134,31 @@ describe('ImageViewer', () => {
     expect(screen.queryByRole('button', { name: '다음 사진' })).toBeNull();
   });
 
+  it('취소된 손가락 입력은 넘기기나 닫기로 받지 않는다', () => {
+    HTMLElement.prototype.setPointerCapture = vi.fn();
+    const onClose = vi.fn();
+    render(<ImageViewer images={images} startIndex={0} onClose={onClose} />);
+    const frame = screen.getByAltText('첨부 사진 1').parentElement!;
+
+    fireEvent.pointerDown(frame, { pointerId: 1, clientX: 300, clientY: 400 });
+    fireEvent.pointerMove(frame, { pointerId: 1, clientX: 100, clientY: 400 });
+    fireEvent.pointerCancel(frame, {
+      pointerId: 1,
+      clientX: 100,
+      clientY: 400,
+    });
+    fireEvent.pointerDown(frame, { pointerId: 2, clientX: 200, clientY: 300 });
+    fireEvent.pointerMove(frame, { pointerId: 2, clientX: 200, clientY: 600 });
+    fireEvent.pointerCancel(frame, {
+      pointerId: 2,
+      clientX: 200,
+      clientY: 600,
+    });
+
+    expect(screen.getByText('1 / 3')).toBeTruthy();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it('사진을 불러오지 못하면 그 자리에 알려준다', () => {
     render(<ImageViewer images={images} startIndex={0} onClose={vi.fn()} />);
 
