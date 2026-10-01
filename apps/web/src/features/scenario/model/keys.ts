@@ -15,4 +15,7 @@ export const scenarioKeys = {
     date: string | null,
   ) =>
     [...scenarioKeys.all, userId, 'calendar', type, date ?? 'today'] as const,
+  // 한 시나리오의 완료 회차 기록 — 대화를 마치면 all 무효화로 함께 새로 받는다
+  history: (userId: number | null, scenarioId: number) =>
+    [...scenarioKeys.all, userId, 'history', scenarioId] as const,
 };
