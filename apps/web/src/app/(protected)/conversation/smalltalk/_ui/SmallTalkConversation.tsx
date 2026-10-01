@@ -28,6 +28,7 @@ import { SMALLTALK_PATH, smallTalkSummaryPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
+import { GOODBYE_PHRASES, pickGoodbyePhrase } from '../_model/goodbye-phrase';
 import { useSmallTalkFlow } from '../_model/useSmallTalkFlow';
 import { SmallTalkExitSheet } from './SmallTalkExitSheet';
 import { TalkSummary } from './TalkSummary';
@@ -47,7 +48,13 @@ export const SmallTalkConversation = ({
 }: SmallTalkConversationProps) => {
   const router = useRouter();
   const goHome = () => router.replace(SMALLTALK_PATH);
+  const summaryPath = smallTalkSummaryPath(session.sessionId);
+  const showSummary = () => router.replace(summaryPath);
   const [showExitSheet, setShowExitSheet] = useState(false);
+  // 시트를 열 때마다 다른 작별 인사를 보여 준다 — 열려 있는 동안은 바뀌지 않게 여는 순간에 고른다
+  const [goodbyePhrase, setGoodbyePhrase] = useState<string>(
+    GOODBYE_PHRASES[0],
+  );
   const display = useTalkDisplay();
   // 결제가 열리면 하루 한도가 없다 — 남은 시간과 타이머 링을 그리지 않는다 (잔량 계산은 뒤에서 그대로 돈다)
   const { unlimited } = useSpeakingLimit();
@@ -61,7 +68,9 @@ export const SmallTalkConversation = ({
     speech,
     replay,
     input,
-    leave,
+    completeTalk,
+    pressClose,
+    completing,
     remainingMs,
     speakingRatio,
     summary,
@@ -71,6 +80,7 @@ export const SmallTalkConversation = ({
     remainingSpeakingTimeMs,
     endSession,
     goHome,
+    showSummary,
   });
   const {
     transcript,
@@ -85,8 +95,8 @@ export const SmallTalkConversation = ({
   // 작별 인사가 끝나면 오늘의 스몰톡 라우트를 미리 받아 둔다 — CTA가 버튼이라 링크 자동 프리페치가 안 걸리고,
   // 누르는 순간 받으면 늦다 (요약 데이터·래디 그림은 흐름 훅이 완료 턴에서 미리 받는다)
   useEffect(() => {
-    if (ended) router.prefetch(smallTalkSummaryPath(session.sessionId));
-  }, [ended, router, session.sessionId]);
+    if (ended) router.prefetch(summaryPath);
+  }, [ended, router, summaryPath]);
   const showUserFirstIntro =
     turn.isUserOpening && phase === 'USER_READY' && !introDismissed;
   useEffect(() => {
@@ -113,7 +123,12 @@ export const SmallTalkConversation = ({
       >
         <button
           onClick={() => {
+            // 끝난 대화·나눈 대화 없음은 흐름 훅이 알아서 보낸다 — 물어볼 때만 시트를 연다
+            if (!pressClose()) return;
             track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'conversation_exit' });
+            // 동적 페이지라 받는 건 라우트 뼈대뿐이지만, 완료 응답을 기다리는 동안 먼저 받아 둔다
+            router.prefetch(summaryPath);
+            setGoodbyePhrase(pickGoodbyePhrase());
             setShowExitSheet(true);
           }}
           className="flex size-10 items-center justify-center text-foreground transition-transform active:scale-90"
@@ -168,11 +183,7 @@ export const SmallTalkConversation = ({
           // 오늘의 스몰톡(지난번과 비교) → 상세 피드백 → 축하·맞춤 표현으로 이어진다.
           // 버튼은 끝내는 말이 아니라 다음에 볼 것으로 부른다 — 여기서 대화는 이미 끝났다
           <div className="flex h-36 items-end px-5 pb-3">
-            <Button
-              onClick={() =>
-                router.replace(smallTalkSummaryPath(session.sessionId))
-              }
-            >
+            <Button onClick={showSummary}>
               피드백 보러가기
               <ArrowRightIcon size={16} />
             </Button>
@@ -209,11 +220,12 @@ export const SmallTalkConversation = ({
 
       <SmallTalkExitSheet
         open={showExitSheet}
-        onConfirm={() => {
-          leave();
-          goHome();
-        }}
+        goodbyePhrase={goodbyePhrase}
+        completing={completing}
+        onComplete={() => void completeTalk()}
         onClose={() => {
+          // 완료 요청 중에는 닫지 않는다 — 닫으면 끝내기로 한 대화가 이어지는 것처럼 보인다
+          if (completing) return;
           track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'conversation_exit' });
           setShowExitSheet(false);
         }}
