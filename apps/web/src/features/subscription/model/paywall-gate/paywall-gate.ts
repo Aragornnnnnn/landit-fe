@@ -1,4 +1,4 @@
-// 페이월 게이트 판정 — 잠글 수 없는 환경과 유료 여부를 한 곳에서 가른다.
+// 페이월 게이트 판정 — 결제가 열린 환경인지와 유료 여부를 한 곳에서 가른다.
 // 잠금은 학습 진입 지점에서만 건다. 화면 전체를 막지 않는다 (docs/subscription.md)
 
 export interface PaymentEnvironment {
@@ -9,8 +9,8 @@ export interface PaymentEnvironment {
 }
 
 export interface PaywallGateInput {
-  /** 잠글 수 있는 환경인가 — {@link canLockPaywall}의 결과 */
-  lockable: boolean;
+  /** 결제가 열린 환경인가 — {@link isPaymentLive}의 결과. 열리지 않았으면 잠그지 않는다 */
+  paymentLive: boolean;
   /** 유료인가. 아직 못 받았으면 null — 모르는 채로 잠그지 않는다 */
   premium: boolean | null;
 }
@@ -19,21 +19,21 @@ export interface PaywallGateInput {
 export type PaywallGateDecision = 'open' | 'locked' | 'unknown';
 
 /**
- * 잠글 수 있는 환경인가 — 결제 플래그가 켜져 있고 앱 안일 때만.
- * 브라우저에서 막으면 사용자가 갈 데가 없다.
+ * 결제가 열린 환경인가 — 결제 플래그가 켜져 있고 앱 안일 때만.
+ * 열리지 않은 곳(브라우저)에서는 페이월로 막지 않는다. 결제할 수 없는 곳에서 막으면 사용자가 갈 데가 없다.
  */
-export const canLockPaywall = ({ paymentEnabled, inApp }: PaymentEnvironment) =>
+export const isPaymentLive = ({ paymentEnabled, inApp }: PaymentEnvironment) =>
   paymentEnabled && inApp;
 
 /**
- * 학습 진입(표현 학습·카드 뒤집기·스몰톡 시작)을 열지 잠글지 정한다. 잠글 수 없는 환경이 먼저고, 유료가 그다음.
+ * 학습 진입(표현 학습·카드 뒤집기·스몰톡 시작)을 열지 잠글지 정한다. 결제가 열린 환경인지가 먼저고, 유료가 그다음.
  * 시나리오 대화는 문이 아니다 — 구독과 관계없이 열려 있고, 상세 피드백 잠금은 서버가 피드백 응답에서 정한다
  */
 export const decidePaywallGate = ({
-  lockable,
+  paymentLive,
   premium,
 }: PaywallGateInput): PaywallGateDecision => {
-  if (!lockable) return 'open';
+  if (!paymentLive) return 'open';
   if (premium === null) return 'unknown';
   return premium ? 'open' : 'locked';
 };
