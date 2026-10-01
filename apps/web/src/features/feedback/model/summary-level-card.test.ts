@@ -59,6 +59,24 @@ describe('decideSummaryLevelCard', () => {
     });
   });
 
+  it('100점 척도 평가는 점수를 그대로 보인다', () => {
+    const card = decideSummaryLevelCard({
+      inline: inline('COMPLETED', {
+        ...assessment,
+        scoreMax: 100,
+        situationPerformance: domain(100),
+        vocabulary: domain(18),
+      }),
+      polled: notPolled,
+      timedOut: false,
+    });
+
+    expect(card.kind === 'ready' && card.rows.slice(0, 2)).toEqual([
+      { key: 'situationPerformance', label: '상황 대처 능력', score: 100 },
+      { key: 'vocabulary', label: '어휘력', score: 18 },
+    ]);
+  });
+
   it('관찰이 없는 영역은 줄에서 빼고, 개선할 점이 없으면 null로 둔다', () => {
     const card = decideSummaryLevelCard({
       inline: inline('COMPLETED', {

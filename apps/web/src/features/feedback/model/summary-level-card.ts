@@ -66,7 +66,9 @@ const toReadyCard = (assessment: SessionLevelAssessment): SummaryLevelCard => {
   if (!isUsableAssessment(assessment)) return HIDDEN;
   const rows = SUMMARY_DOMAINS.flatMap(({ key, label }) => {
     const { score } = assessment[key];
-    return score === null ? [] : [{ key, label, score: toPercentScore(score) }];
+    return score === null
+      ? []
+      : [{ key, label, score: toPercentScore(score, assessment.scoreMax) }];
   });
   if (rows.length === 0) return HIDDEN;
   return {
