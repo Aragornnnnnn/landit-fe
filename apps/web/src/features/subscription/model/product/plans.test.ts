@@ -1,13 +1,12 @@
 // 페이월 플랜 표시값 계약 — 화면에 박히는 할인율·환산가가 실제 가격 산식과 어긋나지 않게 지킨다
 import { describe, expect, it } from 'vitest';
 
+import { formatWon } from '../../lib/won';
 import {
   buildPaywallPlans,
   calculateDiscountRate,
   calculateMonthlyEquivalent,
   DEFAULT_PLAN_ID,
-  formatWon,
-  isWonCurrency,
   PLAN_ORDER,
   planFromProductId,
 } from './plans';
@@ -33,25 +32,6 @@ describe('calculateMonthlyEquivalent', () => {
 
   it('실제보다 낮게 보이지 않게 올린다 — 59,900원이면 월 4,990원이 아니라 5,000원', () => {
     expect(calculateMonthlyEquivalent(59_900)).toBe(5_000);
-  });
-});
-
-describe('formatWon', () => {
-  it('천 단위 쉼표와 원을 붙인다', () => {
-    expect(formatWon(58_500)).toBe('58,500원');
-  });
-});
-
-describe('isWonCurrency', () => {
-  it('KRW이거나 통화가 비어 있으면 원화로 본다', () => {
-    expect(isWonCurrency('KRW')).toBe(true);
-    expect(isWonCurrency(null)).toBe(true);
-    expect(isWonCurrency(undefined)).toBe(true);
-    expect(isWonCurrency('')).toBe(true);
-  });
-
-  it('다른 통화는 원화가 아니다', () => {
-    expect(isWonCurrency('USD')).toBe(false);
   });
 });
 

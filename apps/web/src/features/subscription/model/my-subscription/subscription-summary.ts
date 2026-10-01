@@ -5,7 +5,8 @@ import type {
   MySubscription,
   SubscriptionPeriodType,
 } from '../../api/subscription';
-import { isWonCurrency, planFromProductId } from '../product/plans';
+import { isWonCurrency } from '../../lib/won';
+import { planFromProductId } from '../product/plans';
 
 export type SubscriptionSummary =
   | { kind: 'none' }

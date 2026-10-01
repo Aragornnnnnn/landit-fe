@@ -12,8 +12,8 @@ import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
 import type { PaywallPromo } from '../../api/subscription';
+import { formatWon } from '../../lib/won';
 import type { PromoSheet as PromoSheetValues } from '../../model/exit-promo/promo-sheet';
-import { formatWon } from '../../model/product/plans';
 import { usePurchase } from '../../model/purchase/usePurchase';
 import { GOLD_GRADIENT, PremiumPill } from '../premium-brand';
 import { PromoClock } from './PromoClock';

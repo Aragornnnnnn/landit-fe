@@ -3,11 +3,9 @@
 import type { CancelStayDestination, StudyMethod } from '@landit/analytics';
 
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
+import { formatWon } from '@/features/subscription/lib/won';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
-import {
-  formatWon,
-  PLAN_TITLE,
-} from '@/features/subscription/model/product/plans';
+import { PLAN_TITLE } from '@/features/subscription/model/product/plans';
 
 import type { RetentionReason } from './cancel-flow';
 
