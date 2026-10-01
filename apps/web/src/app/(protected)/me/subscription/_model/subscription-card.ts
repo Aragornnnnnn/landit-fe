@@ -1,11 +1,11 @@
 // 구독 관리 골드 카드의 문구 규칙 — 상태·플랜으로 제목을, 상태로 날짜 행을, 플랜으로 결제 금액 행을 만든다
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
+import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
 import {
   formatWon,
   PLAN_TITLE,
   YEARLY_LIST_PRICE,
-} from '@/features/subscription/model/plans';
-import type { PaidSubscriptionSummary } from '@/features/subscription/model/subscription-summary';
+} from '@/features/subscription/model/product/plans';
 
 const STATUS_TITLE: Record<PaidSubscriptionSummary['kind'], string> = {
   trial: '무료 체험 중이에요',

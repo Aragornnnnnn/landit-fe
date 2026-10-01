@@ -22,15 +22,18 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace, push: mocks.push }),
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
-vi.mock('@/features/subscription/model/usePaywallGate', () => ({
+vi.mock('@/features/subscription/model/paywall-gate/usePaywallGate', () => ({
   usePaywallGate: () => ({ guard: mocks.guard, locked: mocks.locked }),
 }));
-vi.mock('@/features/subscription/model/useSubscriptionQuery', () => ({
-  useSubscriptionQuery: () => ({
-    subscription: { premium: mocks.premium },
-    isError: false,
+vi.mock(
+  '@/features/subscription/model/my-subscription/useSubscriptionQuery',
+  () => ({
+    useSubscriptionQuery: () => ({
+      subscription: { premium: mocks.premium },
+      isError: false,
+    }),
   }),
-}));
+);
 vi.mock('@/features/feedback/model/useSessionFeedbackQuery', () => ({
   sessionFeedbackKey: (sessionId: number | null) => [
     'session-feedback',

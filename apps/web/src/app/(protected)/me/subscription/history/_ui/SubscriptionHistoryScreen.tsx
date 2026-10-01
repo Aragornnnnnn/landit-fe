@@ -4,8 +4,8 @@
 import { useRouter } from 'next/navigation';
 
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
-import { summarizeSubscriptionEvent } from '@/features/subscription/model/subscription-events';
-import { useSubscriptionEventsQuery } from '@/features/subscription/model/useSubscriptionEventsQuery';
+import { summarizeSubscriptionEvent } from '@/features/subscription/model/my-subscription/subscription-events';
+import { useSubscriptionEventsQuery } from '@/features/subscription/model/my-subscription/useSubscriptionEventsQuery';
 import { backOrReplace, SUBSCRIPTION_MANAGE_PATH } from '@/shared/lib/routes';
 import { BackHeader } from '@/shared/ui/BackHeader';
 

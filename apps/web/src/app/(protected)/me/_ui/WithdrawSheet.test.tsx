@@ -17,9 +17,12 @@ const mocks = vi.hoisted(() => ({
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mocks.push, replace: vi.fn(), back: vi.fn() }),
 }));
-vi.mock('@/features/subscription/model/useSubscriptionQuery', () => ({
-  useSubscriptionQuery: () => mocks.query,
-}));
+vi.mock(
+  '@/features/subscription/model/my-subscription/useSubscriptionQuery',
+  () => ({
+    useSubscriptionQuery: () => mocks.query,
+  }),
+);
 vi.mock('motion/react', () => import('@/shared/motion/test-double'));
 
 const premium = (overrides: Partial<MySubscription> = {}): MySubscription => ({

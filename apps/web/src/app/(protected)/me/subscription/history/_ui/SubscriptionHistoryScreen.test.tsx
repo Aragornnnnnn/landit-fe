@@ -18,9 +18,12 @@ const mocks = vi.hoisted(() => ({
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace, back: mocks.back }),
 }));
-vi.mock('@/features/subscription/model/useSubscriptionEventsQuery', () => ({
-  useSubscriptionEventsQuery: () => mocks.query,
-}));
+vi.mock(
+  '@/features/subscription/model/my-subscription/useSubscriptionEventsQuery',
+  () => ({
+    useSubscriptionEventsQuery: () => mocks.query,
+  }),
+);
 
 const event = (overrides: Partial<SubscriptionEvent>): SubscriptionEvent => ({
   eventId: 'e',

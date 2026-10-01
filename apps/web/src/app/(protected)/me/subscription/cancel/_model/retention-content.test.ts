@@ -1,7 +1,7 @@
 // 사유별 화면 문구·카드 — 플랜·체험·기록 유무로 갈리는 자리만 본다
 import { describe, expect, it } from 'vitest';
 
-import type { PaidSubscriptionSummary } from '@/features/subscription/model/subscription-summary';
+import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
 
 import {
   dailyWon,
