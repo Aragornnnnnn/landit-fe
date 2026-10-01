@@ -5,9 +5,9 @@ import { Suspense, use } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import { FeedbackSkeleton } from '@/features/feedback/ui/flow/FeedbackSkeleton';
+import { useScenarioTitle } from '@/features/scenario/model/useScenarioTitle';
 import { readScenarioFeedbackParams } from '@/shared/lib/routes';
 
-import { useFeedbackTitle } from './_model/useFeedbackTitle';
 import { ScenarioFeedbackFlow } from './_ui/ScenarioFeedbackFlow';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
@@ -32,7 +32,8 @@ function ScenarioFeedbackContent({
   const id = Number(scenarioId);
   const { session, date, replay, detail } =
     readScenarioFeedbackParams(useSearchParams());
-  const title = useFeedbackTitle(id, date);
+  // 그 날 카드가 이 시나리오가 아니면(자정을 넘겨 끝낸 대화) 일반 이름으로
+  const title = useScenarioTitle(id, date, '대화 피드백');
 
   return (
     <ScenarioFeedbackFlow
