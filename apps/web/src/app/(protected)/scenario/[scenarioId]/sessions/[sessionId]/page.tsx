@@ -32,9 +32,13 @@ function ScenarioSessionContent({
   const sessionId = Number(raw.sessionId);
   // 손으로 고친 주소가 그대로 조회로 흘러가면 백엔드가 400을 준다
   if (
-    ![scenarioId, sessionId].every((id) => Number.isSafeInteger(id) && id > 0)
-  )
+    !Number.isSafeInteger(scenarioId) ||
+    scenarioId <= 0 ||
+    !Number.isSafeInteger(sessionId) ||
+    sessionId <= 0
+  ) {
     notFound();
+  }
   const { date, detail } = readScenarioSessionParams(useSearchParams());
 
   return (
