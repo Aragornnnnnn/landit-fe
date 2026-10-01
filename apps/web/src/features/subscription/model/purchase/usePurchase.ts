@@ -11,15 +11,15 @@ import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { showToast } from '@/shared/ui/toast';
 
-import { getMySubscription } from '../../api/subscription';
-import { subscriptionKeys } from '../my-subscription/keys';
-import { packageIdFor, type PlanPackages } from '../product/offering';
 import {
   purchaseViaBridge,
   resolvePurchaseSupport,
   restoreViaBridge,
   type PurchaseSupport,
-} from './shell-purchases';
+} from '../../api/shell-purchases';
+import { getMySubscription } from '../../api/subscription';
+import { subscriptionKeys } from '../my-subscription/keys';
+import { packageIdFor, type PlanPackages } from '../product/offering';
 import { PREMIUM_WAIT, waitForPremium } from './wait-for-premium';
 
 interface UsePurchaseOptions {

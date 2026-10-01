@@ -10,7 +10,7 @@ import {
   identifyViaBridge,
   resolvePurchaseSupport,
   toRevenueCatUserId,
-} from '../../model/purchase/shell-purchases';
+} from '../../api/shell-purchases';
 
 /** 회원이 바뀔 때만 셸에 IDENTIFY를 보낸다. 결제 메시지를 모르는 셸·브라우저에는 보내지 않는다 */
 export const IdentifySync = () => {

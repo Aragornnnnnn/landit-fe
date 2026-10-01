@@ -30,8 +30,9 @@ vi.mock('@/shared/bridge/native-context', () => ({
   getNativeContext: mocks.getNativeContext,
 }));
 // 환경 판정은 진짜를 쓰고 셸 왕복만 대역으로
-vi.mock('./shell-purchases', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./shell-purchases')>();
+vi.mock('../../api/shell-purchases', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('../../api/shell-purchases')>();
   return {
     ...actual,
     purchaseViaBridge: mocks.purchaseViaBridge,
