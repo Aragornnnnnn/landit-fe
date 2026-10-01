@@ -90,21 +90,21 @@ export interface LevelResult {
   rows: DomainRow[];
 }
 
+/** 한 영역의 100점 환산 점수 — 관찰이 없으면 null. 레벨 결과와 총평 카드가 같은 환산을 쓴다 */
+export const toDomainPercent = (
+  assessment: SessionLevelAssessment,
+  key: DomainKey,
+): number | null => {
+  const { score } = assessment[key];
+  return score === null ? null : toPercentScore(score, assessment.scoreMax);
+};
+
 /** 쓸 만한 결과를 레벨 결과 화면의 값으로 바꾼다 */
 export const toLevelResult = (assessment: UsableAssessment): LevelResult => ({
   level: assessment.assessedLevel,
   name: LEVEL_NAMES[assessment.assessedLevel],
   rows: DOMAINS.flatMap(({ key, label, shortLabel }) => {
-    const { score } = assessment[key];
-    return score === null
-      ? []
-      : [
-          {
-            key,
-            label,
-            shortLabel,
-            score: toPercentScore(score, assessment.scoreMax),
-          },
-        ];
+    const score = toDomainPercent(assessment, key);
+    return score === null ? [] : [{ key, label, shortLabel, score }];
   }),
 });

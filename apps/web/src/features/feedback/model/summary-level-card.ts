@@ -5,7 +5,7 @@ import type {
 } from '../api/level-assessment';
 import {
   isUsableAssessment,
-  toPercentScore,
+  toDomainPercent,
   type DomainKey,
 } from './level-assessment';
 import type { LevelAssessmentOutcome } from './useLevelAssessmentQuery';
@@ -65,10 +65,8 @@ const toReadyCard = (assessment: SessionLevelAssessment): SummaryLevelCard => {
   // FALLBACK·근거 부족은 기본값으로 채운 점수라 보여주면 거짓이 된다
   if (!isUsableAssessment(assessment)) return HIDDEN;
   const rows = SUMMARY_DOMAINS.flatMap(({ key, label }) => {
-    const { score } = assessment[key];
-    return score === null
-      ? []
-      : [{ key, label, score: toPercentScore(score, assessment.scoreMax) }];
+    const score = toDomainPercent(assessment, key);
+    return score === null ? [] : [{ key, label, score }];
   });
   if (rows.length === 0) return HIDDEN;
   return {
