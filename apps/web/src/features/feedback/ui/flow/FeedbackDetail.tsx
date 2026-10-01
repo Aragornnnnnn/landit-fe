@@ -101,11 +101,14 @@ const TurnCard = ({ turn }: { turn: MessageFeedbackResponse }) => {
         {isGood ? '잘 통했어요' : '한 단계 더 업그레이드해봐요'}
       </p>
 
-      <Bubble
-        label={evaluationContextLabel(turn.evaluationContext.type)}
-        text={turn.evaluationContext.content}
-        sub={turn.evaluationContext.translatedContent}
-      />
+      {/* 과거 회차는 당시 문맥을 복원하지 못해 비어 올 수 있다 — 그때는 내 답변만 보인다 */}
+      {turn.evaluationContext && (
+        <Bubble
+          label={evaluationContextLabel(turn.evaluationContext.type)}
+          text={turn.evaluationContext.content}
+          sub={turn.evaluationContext.translatedContent}
+        />
+      )}
       <Bubble label="내 답변" text={turn.userMessage} align="right" />
 
       <div className="h-px w-full bg-border" />
@@ -168,7 +171,7 @@ const Bubble = ({
 }: {
   label: string;
   text: string;
-  sub?: string;
+  sub?: string | null;
   align?: 'left' | 'right';
 }) => (
   <div
