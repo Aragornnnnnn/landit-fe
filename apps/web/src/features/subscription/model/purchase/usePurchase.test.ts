@@ -20,9 +20,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/shared/auth/auth-store', () => {
   const state = { member: { userId: 42 } };
   const useAuthStore = (selector: (s: unknown) => unknown) => selector(state);
-  // 확인 뒤 계정이 바뀌었는지 볼 때 getState로 읽는다
-  useAuthStore.getState = () => state;
-  return { useAuthStore };
+  // 확인 뒤 계정이 바뀌었는지 볼 때 getCurrentUserId로 읽는다
+  return { useAuthStore, getCurrentUserId: () => state.member.userId };
 });
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 vi.mock('@/shared/ui/toast', () => ({ showToast: mocks.showToast }));

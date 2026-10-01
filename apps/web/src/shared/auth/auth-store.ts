@@ -40,3 +40,7 @@ export const useAuthStore = create<AuthState>()(
     },
   ),
 );
+
+/** 지금 로그인한 회원 id. 로그아웃 상태면 null — 렌더 밖(비동기 콜백·이벤트 핸들러)에서 읽을 때 쓴다 */
+export const getCurrentUserId = () =>
+  useAuthStore.getState().member?.userId ?? null;
