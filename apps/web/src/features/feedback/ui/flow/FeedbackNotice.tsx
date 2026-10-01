@@ -1,4 +1,4 @@
-// 보여 줄 피드백이 없을 때의 한 장 — 무엇이 없는지 말하고 나갈 길을 하나 준다. 대화 직후 피드백과 시나리오 기록이 같이 쓴다
+// 보여 줄 피드백이 없을 때의 한 장 — 무엇이 없는지 말하고 나갈 길을 하나 준다
 import { Button } from '@/shared/ui/Button';
 
 export const FeedbackNotice = ({

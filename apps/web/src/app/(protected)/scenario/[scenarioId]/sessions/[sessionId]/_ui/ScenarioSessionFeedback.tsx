@@ -1,7 +1,6 @@
 'use client';
 
-// 시나리오 기록의 한 회차 — 그때 받은 총평·상세를 다시 본다. 대화 직후 흐름(표현 분기·페이월·레벨 분석)으로 이어지지 않고,
-// 나가면 기록 목록으로 돌아간다. 잠긴 상세는 페이월로, 결제하면 이 회차의 상세로 돌아온다
+// 시나리오 기록의 한 회차 — 그때 받은 총평·상세를 다시 보고, 대화 직후 흐름 없이 기록 목록으로 돌아간다
 import { useEffect, useRef } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
@@ -59,8 +58,7 @@ export const ScenarioSessionFeedback = ({
     retry();
   }, [staleLocked, retry]);
 
-  // 잠긴 상세를 보려 했다 — 페이월로, 결제하면 이 회차의 상세로 돌아온다.
-  // 잠긴 대상(상세 피드백)이 대화 직후와 같아 페이월 source도 같은 값이다 — 어디서 열었는지는 피드백 이벤트의 source가 가른다
+  // 잠긴 상세는 페이월로, 결제하면 이 회차의 상세로 돌아온다 (source를 대화 직후와 같게 둔 이유는 docs/analytics.md)
   const openPaywallForDetail = () => {
     track(EVENTS.PAYWALL_GATE_LOCKED, { source: 'feedback_detail' });
     router.push(

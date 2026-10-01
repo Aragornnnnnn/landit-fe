@@ -1,6 +1,6 @@
 'use client';
 
-// 화면 헤더에 쓸 시나리오 제목 — 그 날 카드에서 찾고, 카드가 이 시나리오가 아니면 화면이 준 대체 문구를 쓴다. 대화 직후 피드백과 시나리오 기록이 같이 쓴다
+// 화면 헤더에 쓸 시나리오 제목 — 그 날 카드에서 찾고, 카드가 이 시나리오가 아니면 화면이 준 대체 문구를 쓴다
 import type { DailyScenario } from '../api/daily';
 import { useDailyScenarioQuery } from './useDailyScenarioQuery';
 
