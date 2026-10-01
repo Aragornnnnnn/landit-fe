@@ -726,4 +726,31 @@ describe('useSmallTalkFlow — X 누르기', () => {
     expect(decideSmallTalkExit).not.toHaveBeenCalled();
     expect(refreshStreak).not.toHaveBeenCalled();
   });
+
+  it('발화를 서버가 받았으면 종료 확인 답을 기다리는 중에도 종료 시트로 물어본다', async () => {
+    // 서버가 받아 준 발화는 응답이 온 순간 센다 — 종료 확인까지 기다리면 그 사이 대화가 없는 것처럼 보인다
+    submitSmallTalkMessage.mockResolvedValueOnce(
+      submitResponse({
+        turnStatus: 'EXIT_CONFIRMATION_REQUIRED',
+        nextMessage: null,
+      }),
+    );
+    decideSmallTalkExit.mockReturnValueOnce(new Promise(() => {}));
+    const endSession = vi.fn();
+    const { result } = renderFlow(20_000, endSession);
+    speakFor(result, 3);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Bye!');
+    });
+    expect(decideSmallTalkExit).toHaveBeenCalled();
+
+    let confirm: boolean | undefined;
+    act(() => {
+      confirm = result.current.pressClose();
+    });
+
+    expect(confirm).toBe(true);
+    expect(endSession).not.toHaveBeenCalled();
+  });
 });

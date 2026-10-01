@@ -146,6 +146,8 @@ export const useSmallTalkFlow = ({
         throw cause;
       }
       if (talkClosed()) return null; // 응답을 기다리는 사이 손을 뗐다 — 종료 확인도 보내지 않는다
+      // 응답이 왔으면 서버가 이 발화를 받은 것이다 — 종료 확인을 기다리는 동안에도 나눈 대화로 센다
+      setAnsweredTurns(turnIndex + 1);
 
       // 종료 확인 — 이 응답에는 다음 발화도 속마음도 없다. 답을 보내야 그 자리가 채워진다
       if (result.turnStatus === 'EXIT_CONFIRMATION_REQUIRED') {
@@ -159,7 +161,6 @@ export const useSmallTalkFlow = ({
       if (talkClosed()) return null;
 
       setProgress(result.progress);
-      setAnsweredTurns(turnIndex + 1);
       budget.settle(result.progress.remainingSpeakingTimeMs);
       setExchangeCount(
         result.nextMessage?.messageSequence ??
