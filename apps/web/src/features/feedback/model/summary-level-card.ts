@@ -85,7 +85,7 @@ export const decideSummaryLevelCard = ({
 }: {
   /** 총평 응답에 실린 평가. 평가 비활성 세션이면 null, 구버전 응답이면 undefined */
   inline: SessionLevelAssessmentResponse | null | undefined;
-  /** 응답 때 분석 중이었을 때 다시 물어 온 결과 */
+  /** 응답 때 분석 중(PREPARING)이었을 때 다시 물어 온 결과 */
   polled: {
     outcome: LevelAssessmentOutcome;
     levelAssessment: SessionLevelAssessment | null;
@@ -93,7 +93,14 @@ export const decideSummaryLevelCard = ({
   /** 다시 물으며 기다린 시간이 상한을 넘었는가 */
   timedOut: boolean;
 }): SummaryLevelCard => {
-  if (!inline || inline.processingStatus === 'FAILED') return HIDDEN;
+  // NOT_REQUESTED는 처리 상태가 기록되지 않은 과거 세션이라 기다려도 결과가 오지 않는다
+  if (
+    !inline ||
+    inline.processingStatus === 'FAILED' ||
+    inline.processingStatus === 'NOT_REQUESTED'
+  ) {
+    return HIDDEN;
+  }
   if (inline.processingStatus === 'COMPLETED') {
     return inline.levelAssessment
       ? toReadyCard(inline.levelAssessment)

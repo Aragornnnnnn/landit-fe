@@ -119,7 +119,7 @@ describe('decideSummaryLevelCard', () => {
 
   it('기다림 상한을 넘기면 로딩을 거두고 카드를 숨긴다', () => {
     const card = decideSummaryLevelCard({
-      inline: inline('NOT_REQUESTED'),
+      inline: inline('PREPARING'),
       polled: notPolled,
       timedOut: true,
     });
@@ -141,6 +141,8 @@ describe('decideSummaryLevelCard', () => {
     ['평가 비활성 세션(null)', null],
     ['필드가 없는 구버전 응답', undefined],
     ['평가 실패', inline('FAILED')],
+    // 처리 상태가 기록되지 않은 과거 세션 — 기다려도 결과가 오지 않는다 (BE SessionLevelAssessmentResponse)
+    ['평가를 예약하지 않은 세션(NOT_REQUESTED)', inline('NOT_REQUESTED')],
   ])('%s이면 카드를 숨긴다', (_, value) => {
     const card = decideSummaryLevelCard({
       inline: value,

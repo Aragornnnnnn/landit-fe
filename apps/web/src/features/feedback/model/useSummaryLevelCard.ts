@@ -10,9 +10,8 @@ const LEVEL_WAIT_MS = 20_000;
 
 export const useSummaryLevelCard = (feedback: SessionFeedbackResponse) => {
   const inline = feedback.userLevelAssessment;
-  const waiting =
-    inline?.processingStatus === 'PREPARING' ||
-    inline?.processingStatus === 'NOT_REQUESTED';
+  // 응답 때 분석 중이었을 때만 다시 묻는다 — NOT_REQUESTED는 기다려도 오지 않는다
+  const waiting = inline?.processingStatus === 'PREPARING';
   const [timedOut, setTimedOut] = useState(false);
   // 상한이 지나면 더 묻지 않는다 — 카드는 이미 거뒀다
   const polled = useLevelAssessmentQuery(
