@@ -6,14 +6,13 @@ import type { ScenarioHistorySession } from '../_api/scenario-history';
 import { ScenarioSessionList } from './ScenarioSessionList';
 
 const mocks = vi.hoisted(() => ({
-  push: vi.fn(),
   replace: vi.fn(),
   retry: vi.fn(),
   sessions: null as ScenarioHistorySession[] | null,
   error: null as Error | null,
 }));
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mocks.push, replace: mocks.replace }),
+  useRouter: () => ({ replace: mocks.replace }),
 }));
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 // next/link는 next 밑의 react 복사본을 잡아 훅 dispatcher가 null이 된다 — 주소만 보면 되니 평범한 앵커로 대체한다
