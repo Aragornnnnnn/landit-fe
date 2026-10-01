@@ -16,6 +16,14 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mocks.push, replace: mocks.replace }),
 }));
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
+// next/link는 next 밑의 react 복사본을 잡아 훅 dispatcher가 null이 된다 — 주소만 보면 되니 평범한 앵커로 대체한다
+vi.mock('next/link', () => ({
+  default: ({ href, children, ...rest }: React.ComponentProps<'a'>) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+}));
 vi.mock('@/shared/ui/StarRating', () => ({
   StarRating: ({ rating }: { rating: number }) => <span>별 {rating}</span>,
 }));
@@ -53,21 +61,20 @@ afterEach(() => {
 });
 
 describe('ScenarioSessionList', () => {
-  it('회차를 최신순으로 몇 번째 대화인지와 함께 세우고, 누르면 보던 날을 달고 그 회차로 간다', () => {
+  it('회차를 최신순으로 몇 번째 대화인지와 함께 세우고, 보던 날을 달고 그 회차로 잇는다', () => {
     mocks.sessions = [
       session(30, '2026-09-30T21:00:00'),
       session(10, '2026-09-20T10:00:00'),
     ];
     render(<ScenarioSessionList scenarioId={12} date="2026-09-30" />);
 
-    const rows = screen.getAllByRole('button', { name: /번째 대화/ });
+    const rows = screen.getAllByRole('link', { name: /번째 대화/ });
     expect(rows.map((row) => row.textContent)).toEqual([
       expect.stringContaining('2번째 대화'),
       expect.stringContaining('1번째 대화'),
     ]);
-
-    fireEvent.click(rows[0]);
-    expect(mocks.push).toHaveBeenCalledWith(
+    expect(rows[0]).toHaveAttribute(
+      'href',
       '/scenario/12/sessions/30?date=2026-09-30',
     );
   });
@@ -101,7 +108,7 @@ describe('ScenarioSessionList', () => {
     render(<ScenarioSessionList scenarioId={12} />);
 
     expect(
-      screen.getByRole('button', { name: /1번째 대화/ }),
+      screen.getByRole('link', { name: /1번째 대화/ }),
     ).toBeInTheDocument();
   });
 

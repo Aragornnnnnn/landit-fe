@@ -1,17 +1,17 @@
 'use client';
 
 // 시나리오 기록 — 그 시나리오를 완료한 회차가 최신순으로 선다. 누르면 그때 받은 피드백을 다시 본다
-import { EVENTS } from '@landit/analytics';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { useScenarioTitle } from '@/features/scenario/model/useScenarioTitle';
-import { track } from '@/shared/analytics';
+import { toDayLabel } from '@/shared/lib/day-label';
 import { scenarioReturnPath, scenarioSessionPath } from '@/shared/lib/routes';
-import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
+import { RetryNotice } from '@/shared/ui/RetryNotice';
 import { StarRating } from '@/shared/ui/StarRating';
 
-import { toSessionRows, type SessionRow } from '../_model/session-rows';
+import type { ScenarioHistorySession } from '../_api/scenario-history';
 import { useScenarioHistoryQuery } from '../_model/useScenarioHistoryQuery';
 
 export const ScenarioSessionList = ({
@@ -46,22 +46,11 @@ export const ScenarioSessionList = ({
 
       {/* 받아 둔 기록이 있으면 다시 받다 실패해도 목록을 그대로 둔다 */}
       {sessions === null && error ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            {error.message || '지난 대화를 불러오지 못했어요.'}
-          </p>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="w-auto px-6"
-            onClick={() => {
-              track(EVENTS.ERROR_RETRIED, { screen: 'scenario_history' });
-              retry();
-            }}
-          >
-            다시 시도
-          </Button>
-        </div>
+        <RetryNotice
+          screen="scenario_history"
+          message={error.message || '지난 대화를 불러오지 못했어요.'}
+          onRetry={retry}
+        />
       ) : sessions === null ? (
         <SessionListSkeleton />
       ) : sessions.length === 0 ? (
@@ -74,15 +63,15 @@ export const ScenarioSessionList = ({
             대화를 누르면 그때 받은 피드백을 다시 볼 수 있어요.
           </p>
           <ul className="flex flex-col gap-2">
-            {toSessionRows(sessions).map((row) => (
-              <li key={row.sessionId}>
-                <SessionRowButton
-                  row={row}
-                  onSelect={() =>
-                    router.push(
-                      scenarioSessionPath(scenarioId, row.sessionId, { date }),
-                    )
-                  }
+            {sessions.map((session, index) => (
+              <li key={session.sessionId}>
+                <SessionRow
+                  session={session}
+                  // BE가 최신순으로 주니 가장 먼저 마친 회차가 1번째다
+                  ordinal={sessions.length - index}
+                  href={scenarioSessionPath(scenarioId, session.sessionId, {
+                    date,
+                  })}
                 />
               </li>
             ))}
@@ -93,36 +82,37 @@ export const ScenarioSessionList = ({
   );
 };
 
-// 한 줄에 담기는 건 셋 — 몇 번째 대화였는지, 언제였는지, 그때 점수
-const SessionRowButton = ({
-  row,
-  onSelect,
+// 한 줄에 담기는 건 셋 — 몇 번째 대화였는지, 언제였는지, 그때 점수. 회차 화면 코드를 미리 받게 링크로 둔다
+const SessionRow = ({
+  session,
+  ordinal,
+  href,
 }: {
-  row: SessionRow;
-  onSelect: () => void;
+  session: ScenarioHistorySession;
+  ordinal: number;
+  href: string;
 }) => (
-  <button
-    onClick={onSelect}
+  <Link
+    href={href}
     className="flex w-full items-center gap-3 rounded-2xl bg-card px-4.5 py-4 text-left shadow-sm transition-colors active:bg-secondary/40"
   >
     <div className="min-w-0 flex-1">
-      <p className="text-base font-bold text-foreground">
-        {row.ordinal}번째 대화
-      </p>
+      <p className="text-base font-bold text-foreground">{ordinal}번째 대화</p>
       <p className="mt-1.5 text-[13px] font-medium text-muted-foreground">
-        {row.dayLabel}
-        {row.score && ` · 원어민 이해도 ${row.score.nativeScore}%`}
+        {toDayLabel(session.endedAt)}
+        {session.feedback &&
+          ` · 원어민 이해도 ${session.feedback.nativeScore}%`}
       </p>
     </div>
-    {row.score ? (
-      <StarRating rating={row.score.starRating} size={16} />
+    {session.feedback ? (
+      <StarRating rating={session.feedback.starRating} size={16} />
     ) : (
       <span className="shrink-0 text-[13px] font-semibold text-muted-foreground">
         피드백 없음
       </span>
     )}
     <ChevronRightIcon size={16} className="text-muted-foreground/60" />
-  </button>
+  </Link>
 );
 
 // 조회 중 — 빈 화면만 두면 목록이 비었는지 아직인지 알 수 없다
