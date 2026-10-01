@@ -274,6 +274,7 @@ export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
   | 'scenario'
+  | 'scenario_history'
   | 'smalltalk'
   | 'smalltalk_summary'
   | 'conversation'
