@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
 import { decideBack } from '@/shared/bridge/back-navigation';
+import { runScreenBack } from '@/shared/bridge/screen-back-handler';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { closeTopSheet } from '@/shared/ui/bottom-sheet-back';
 import { showToast, TOAST_MS } from '@/shared/ui/toast';
@@ -36,6 +37,11 @@ export const BridgeListener = () => {
     const routeBackPress = () => {
       // 바텀시트가 열려 있으면 뒤로가기는 시트 닫기 — 안드로이드 관례. 종료 대기도 푼다
       if (closeTopSheet()) {
+        disarm();
+        return;
+      }
+      // 나가기 전에 정리할 것이 있는 화면(대화 등)은 X를 누른 것과 같은 길로 보낸다
+      if (runScreenBack()) {
         disarm();
         return;
       }

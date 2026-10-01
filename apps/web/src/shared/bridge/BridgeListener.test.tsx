@@ -1,10 +1,11 @@
-// 전역 뒤로가기 리스너 검증 — 시트 우선 닫기, 홈 이중탭 종료, 무장 해제 분기
+// 전역 뒤로가기 리스너 검증 — 시트 우선 닫기, 화면이 맡은 뒤로가기, 홈 이중탭 종료, 무장 해제 분기
 import { act, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { registerOpenSheet } from '@/shared/ui/bottom-sheet-back';
 
 import { BridgeListener } from './BridgeListener';
+import { registerScreenBack } from './screen-back-handler';
 
 const mocks = vi.hoisted(() => ({
   postToNative: vi.fn(),
@@ -187,5 +188,52 @@ describe('BridgeListener', () => {
 
     expect(mocks.postToNative).not.toHaveBeenCalled();
     expect(mocks.showToast).not.toHaveBeenCalled();
+  });
+
+  it('화면이 뒤로가기를 맡았으면 히스토리를 되돌리지 않고 그 처리를 부른다', () => {
+    // 대화 화면처럼 나가기 전에 정리할 것이 있는 화면 — X를 누른 것과 같은 길로 보낸다
+    mocks.pathname = '/conversation/smalltalk';
+    setNavigation(true);
+    const back = vi.spyOn(window.history, 'back').mockImplementation(() => {});
+    render(<BridgeListener />);
+    const handle = vi.fn();
+    const unregister = registerScreenBack(handle);
+
+    pressBack();
+
+    expect(handle).toHaveBeenCalledTimes(1);
+    expect(back).not.toHaveBeenCalled();
+    unregister();
+    back.mockRestore();
+  });
+
+  it('시트가 열려 있으면 화면이 맡은 뒤로가기보다 시트 닫기가 먼저다', () => {
+    render(<BridgeListener />);
+    const handle = vi.fn();
+    const unregisterScreen = registerScreenBack(handle);
+    const close = vi.fn();
+    const unregisterSheet = registerOpenSheet(close);
+
+    pressBack();
+
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(handle).not.toHaveBeenCalled();
+    unregisterSheet();
+    unregisterScreen();
+  });
+
+  it('화면이 떠나며 해제하면 뒤로가기는 원래대로 히스토리를 되돌린다', () => {
+    mocks.pathname = '/me';
+    setNavigation(true);
+    const back = vi.spyOn(window.history, 'back').mockImplementation(() => {});
+    render(<BridgeListener />);
+    const handle = vi.fn();
+    registerScreenBack(handle)();
+
+    pressBack();
+
+    expect(handle).not.toHaveBeenCalled();
+    expect(back).toHaveBeenCalledTimes(1);
+    back.mockRestore();
   });
 });
