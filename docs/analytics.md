@@ -77,6 +77,8 @@
 | Prepared Learning Viewed    | scenario_id                                                                                      | 대화 직후 학습 준비 화면(흐린 학습 4개, 내용 없음)이 떴을 때                                                                                                                                                                                                                     |
 | Prepared Learning Continued | scenario_id                                                                                      | 그 화면에서 학습 시작하기를 눌렀을 때 (무료 사용자는 이어서 Paywall Gate Locked)                                                                                                                                                                                                 |
 
+`feedback_detail`은 대화 직후 총평과 시나리오 기록 회차(`/scenario/{id}/sessions/{sessionId}`)에서 똑같이 나간다. 잠긴 대상이 같은 상세 피드백이라 값을 나누지 않았다 — 어디서 열었는지는 `Feedback Viewed`의 `source`가 가른다.
+
 페이월 노출은 별도 이벤트 없이 `Page Viewed`(page_name=paywall)로 본다. 어느 문으로 왔는지는 같은 이벤트의 `paywall_source`가 남긴다 — 게이트에 막혀 왔으면 막힌 자리(`Paywall Gate Locked`의 source와 같은 값), 마이페이지에서 스스로 들어왔으면 `me`. 값은 `paywallPath`가 주소에 실어 보내고 주소를 손으로 고쳐도 모르는 값은 버린다. 노출과 전환이 한 이벤트에 묶여 있어야 진입 경로별 결제 전환율이 바로 나온다.
 
 ### 인증

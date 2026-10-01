@@ -9,11 +9,6 @@ import { readScenarioSessionParams } from '@/shared/lib/routes';
 
 import { ScenarioSessionFeedback } from './_ui/ScenarioSessionFeedback';
 
-const toId = (value: string) => {
-  const id = Number(value);
-  return Number.isSafeInteger(id) && id > 0 ? id : null;
-};
-
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
 export default function ScenarioSessionPage({
   params,
@@ -32,16 +27,20 @@ function ScenarioSessionContent({
 }: {
   params: Promise<{ scenarioId: string; sessionId: string }>;
 }) {
-  const { scenarioId, sessionId } = use(params);
-  const ids = { scenario: toId(scenarioId), session: toId(sessionId) };
+  const raw = use(params);
+  const scenarioId = Number(raw.scenarioId);
+  const sessionId = Number(raw.sessionId);
   // 손으로 고친 주소가 그대로 조회로 흘러가면 백엔드가 400을 준다
-  if (ids.scenario === null || ids.session === null) notFound();
+  if (
+    ![scenarioId, sessionId].every((id) => Number.isSafeInteger(id) && id > 0)
+  )
+    notFound();
   const { date, detail } = readScenarioSessionParams(useSearchParams());
 
   return (
     <ScenarioSessionFeedback
-      scenarioId={ids.scenario}
-      sessionId={ids.session}
+      scenarioId={scenarioId}
+      sessionId={sessionId}
       date={date}
       openDetail={detail}
     />

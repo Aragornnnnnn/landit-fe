@@ -37,13 +37,11 @@ vi.mock('@/features/feedback/ui/flow/FeedbackContent', () => ({
   FeedbackContent: ({
     title,
     source,
-    openDetail,
     onExit,
     onDetailLocked,
   }: {
     title: string;
     source: string;
-    openDetail: boolean;
     onExit: () => void;
     onDetailLocked: () => void;
   }) => (
@@ -51,7 +49,6 @@ vi.mock('@/features/feedback/ui/flow/FeedbackContent', () => ({
       <p>
         {title} {source}
       </p>
-      {openDetail && <p>상세부터 연다</p>}
       <button onClick={onExit}>피드백 나가기</button>
       <button onClick={onDetailLocked}>잠긴 상세 보기</button>
     </>
@@ -160,15 +157,6 @@ describe('ScenarioSessionFeedback', () => {
     );
 
     expect(mocks.retry).toHaveBeenCalledTimes(1);
-  });
-
-  it('결제하고 돌아온 길이면 상세부터 열라고 넘긴다', () => {
-    mocks.sessions = [session(30)];
-    render(
-      <ScenarioSessionFeedback scenarioId={12} sessionId={30} openDetail />,
-    );
-
-    expect(screen.getByText('상세부터 연다')).toBeInTheDocument();
   });
 
   it('받아 둔 기록이 있으면 다시 받다 실패해도 보던 피드백을 그대로 둔다 — 결제 뒤 다시 받기가 실패한 경우', () => {
