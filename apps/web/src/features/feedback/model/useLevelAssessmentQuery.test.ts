@@ -22,6 +22,12 @@ describe('resolveOutcome', () => {
     );
   });
 
+  it('받아 둔 결과가 끝났으면 뒤이은 재조회가 실패해도 결과가 도착한 것이다 — 보던 점수 카드가 앱 복귀 재조회 실패로 사라지지 않게', () => {
+    expect(resolveOutcome('COMPLETED', { failed: true, fetching: false })).toBe(
+      'ready',
+    );
+  });
+
   it('끝났으면 결과가 도착한 것이다', () => {
     expect(
       resolveOutcome('COMPLETED', { failed: false, fetching: false }),
