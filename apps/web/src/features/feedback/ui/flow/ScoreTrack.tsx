@@ -5,8 +5,7 @@
 import { useEffect, useState } from 'react';
 import { animate, motion, useMotionValue, useTransform } from 'motion/react';
 
-// 트랙 위를 나는 래디 — 대화가 끝나는 순간 미리 받아 두려고 주소를 밖에 연다
-export const TRACK_CHARACTER_SRC = '/images/character/track-wizard.webp';
+import { TRACK_CHARACTER_SRC } from '../../lib/track-character';
 
 const DELAY = 0.3;
 const DURATION = 1.6;
