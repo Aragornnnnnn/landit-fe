@@ -14,7 +14,7 @@ import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 import {
   ArrowRightIcon,
-  ChatHistoryIcon,
+  ChevronRightIcon,
   LockIcon,
   ReplayIcon,
 } from '@/shared/ui/Icons';
@@ -135,15 +135,16 @@ export const ScenarioCard = ({
                 <StarRating rating={scenario.starRating ?? 0} size={24} />
               </div>
             )}
-            {/* 완료한 시나리오는 지난 회차를 다시 볼 수 있다 — 별점 배지와 같은 이유로 뒤집힌 동안에는 그리지 않는다 */}
+            {/* 완료한 시나리오는 지난 회차를 다시 볼 수 있다 — 어두운 별점 배지와 갈리게 밝은 알약에 스몰톡과 같은 「기록 ›」.
+              세로 중심은 별점 배지(top-3·h-10)와 맞추고, 별점 배지와 같은 이유로 뒤집힌 동안에는 그리지 않는다 */}
             {completed && !flipped && (
               <Link
                 href={scenarioSessionsPath(scenario.scenarioId, date)}
                 aria-label="대화 기록"
-                className="absolute top-3 right-3 flex h-10 items-center gap-1 rounded-full bg-black/45 px-3 text-sm font-bold text-white shadow-sm backdrop-blur-sm active:opacity-70"
+                className="absolute top-[15px] right-3 flex h-[34px] items-center gap-0.5 rounded-full bg-white/90 pr-2.5 pl-3 text-[13px] font-semibold text-foreground shadow-sm backdrop-blur-sm active:opacity-70"
               >
-                <ChatHistoryIcon size={16} />
                 기록
+                <ChevronRightIcon size={14} />
               </Link>
             )}
           </div>
