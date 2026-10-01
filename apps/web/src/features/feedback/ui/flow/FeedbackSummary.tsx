@@ -157,9 +157,7 @@ const ReuseSection = ({
     return <ReusedExpressionsCard items={reuse.items} />;
   return (
     <SummaryCard title={REUSED_EXPRESSIONS_TITLE}>
-      <EmptyText className="border-t border-border pt-3">
-        아직 배운 표현이 없어요
-      </EmptyText>
+      <EmptyText>아직 배운 표현이 없어요</EmptyText>
     </SummaryCard>
   );
 };
@@ -178,12 +176,6 @@ const SummaryCard = ({
   </section>
 );
 
-const EmptyText = ({
-  className = '',
-  children,
-}: {
-  className?: string;
-  children: React.ReactNode;
-}) => (
-  <p className={`text-[15px] text-muted-foreground ${className}`}>{children}</p>
+const EmptyText = ({ children }: { children: React.ReactNode }) => (
+  <p className="text-[15px] text-muted-foreground">{children}</p>
 );
