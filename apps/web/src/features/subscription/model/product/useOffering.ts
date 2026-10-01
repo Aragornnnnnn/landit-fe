@@ -10,7 +10,7 @@ import { reportWarning } from '@/shared/monitoring/report';
 import {
   fetchOfferingsViaBridge,
   resolvePurchaseSupport,
-} from '../purchase/shell-purchases';
+} from '../../api/shell-purchases';
 import { toOffering, unclassifiablePackages, type Offering } from './offering';
 
 const EMPTY: Offering = { regular: {}, promo: {} };
