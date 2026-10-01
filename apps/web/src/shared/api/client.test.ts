@@ -142,3 +142,60 @@ describe('앱을 켠 직후 (메모리에 accessToken 없음)', () => {
     expect(authHeader(fetchMock.mock.calls[0][1])).toBeNull();
   });
 });
+
+describe('api.getBlob', () => {
+  it('성공하면 JSON으로 풀지 않고 받은 바이트를 그대로 준다', async () => {
+    useAuthStore.setState({
+      accessToken: 'access',
+      refreshToken: null,
+      member,
+    });
+    const fetchMock = vi.fn<
+      (path: string, init: RequestInit) => Promise<Response>
+    >(() =>
+      Promise.resolve(
+        new Response('jpeg', {
+          status: 200,
+          headers: { 'Content-Type': 'image/jpeg' },
+        }),
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const blob = await api.getBlob('/api/v1/mailbox/feedbacks/1/attachments/2');
+
+    expect(blob.type).toBe('image/jpeg');
+    expect(await blob.text()).toBe('jpeg');
+    expect(authHeader(fetchMock.mock.calls[0][1])).toBe('Bearer access');
+  });
+
+  it('실패하면 서버가 준 상태로 ApiError를 던진다', async () => {
+    useAuthStore.setState({
+      accessToken: 'access',
+      refreshToken: null,
+      member,
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => {
+        const response = new Response(
+          JSON.stringify({
+            success: false,
+            error: { code: 'NOT_FOUND', message: '첨부를 찾을 수 없습니다.' },
+          }),
+          { status: 404 },
+        );
+        // 실제 응답처럼 주소를 달아 둔다 — 실패 파싱이 endpoint를 읽는다
+        Object.defineProperty(response, 'url', {
+          value: 'https://landit.im/api/v1/x',
+        });
+        return Promise.resolve(response);
+      }),
+    );
+
+    await expect(api.getBlob('/api/v1/x')).rejects.toMatchObject({
+      status: 404,
+      code: 'NOT_FOUND',
+    });
+  });
+});

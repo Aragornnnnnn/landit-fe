@@ -55,12 +55,20 @@ describe('MarkdownBody', () => {
     expect(todo.checked).toBe(false);
   });
 
-  it('![설명](주소)를 이미지로 그린다', () => {
+  it('![설명](주소)를 누르면 크게 볼 수 있는 이미지로 그린다', () => {
     render(<MarkdownBody text="![캡처](https://img.landit.im/a.png)" />);
 
-    expect(screen.getByRole('img', { name: '캡처' }).getAttribute('src')).toBe(
-      'https://img.landit.im/a.png',
-    );
+    expect(
+      screen
+        .getByRole('button', { name: '캡처 크게 보기' })
+        .getAttribute('src'),
+    ).toBe('https://img.landit.im/a.png');
+  });
+
+  it('주소가 빈 이미지 문법은 그리지 않는다', () => {
+    render(<MarkdownBody text="![빈 그림]()" />);
+
+    expect(screen.queryByRole('button')).toBeNull();
   });
 
   it('javascript: 주소는 링크로 만들지 않는다', () => {

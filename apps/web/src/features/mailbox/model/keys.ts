@@ -15,4 +15,7 @@ export const mailboxKeys = {
   // 받은 편지와 보낸 피드백은 아이디 공간이 달라 칸까지 키에 넣는다
   letter: (userId: number | null, box: MailboxBox, id: number) =>
     [...mailboxKeys.all, userId, 'letter', box, id] as const,
+  // 첨부 사진 바이트 — 한 번 받으면 바뀌지 않는다
+  attachment: (userId: number | null, attachmentId: number) =>
+    [...mailboxKeys.all, userId, 'attachment', attachmentId] as const,
 };

@@ -74,6 +74,15 @@ export interface FeedbackReply {
   sentAt: string;
 }
 
+/** 보낸 피드백에 붙인 사진 한 장. 주소는 S3가 아니라 인증을 붙여 불러야 하는 API 경로다 */
+export interface FeedbackAttachment {
+  attachmentId: number;
+  contentType: string;
+  fileSize: number;
+  /** Bearer 인증을 붙여 이미지 바이트를 받는 API 상대 경로 */
+  downloadUrl: string;
+}
+
 /**
  * 내가 보낸 피드백 한 통 (`GET /mailbox/sent/{feedbackId}`).
  * 답장이 도착했으면 replies가 채워진다
@@ -90,6 +99,8 @@ export interface SentFeedbackDetail {
   createdAt: string;
   updatedAt: string;
   replies: FeedbackReply[];
+  /** 붙인 사진. 없으면 빈 배열 */
+  attachments: FeedbackAttachment[];
 }
 
 /** 피드백 등록 요청 (`POST /mailbox/feedbacks`) */
@@ -127,6 +138,10 @@ export const getReceivedLetterDetail = (letterId: number) =>
 /** 보낸 피드백 한 통 */
 export const getSentFeedbackDetail = (feedbackId: number) =>
   api.get<SentFeedbackDetail>(`/api/v1/mailbox/sent/${feedbackId}`);
+
+/** 보낸 피드백에 붙인 사진 한 장의 바이트 — 인증이 필요해 <img src>에 주소를 바로 넣을 수 없다 */
+export const getFeedbackAttachment = (downloadUrl: string) =>
+  api.getBlob(downloadUrl);
 
 /** 안 읽은 편지 개수 — 헤더의 점을 켤지 정한다. 목록 전체를 받아 세는 대신 개수만 묻는다 */
 export const getUnreadCount = () =>

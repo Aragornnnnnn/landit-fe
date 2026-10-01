@@ -11,7 +11,7 @@ import { mailboxKeys } from './keys';
 // 4xx는 다시 물어도 답이 같다(없는 편지·권한 없음) — 기본 재시도(3회 지수 백오프)에 걸리면
 // 못 찾았다는 사실을 알기까지 7초를 스켈레톤만 본다. 5xx만 두 번까지 다시 묻는다
 const DETAIL_MAX_RETRIES = 2;
-const retryUnlessClientError = (failureCount: number, error: Error) => {
+export const retryUnlessClientError = (failureCount: number, error: Error) => {
   if (error instanceof ApiError && error.status < 500) return false;
   return failureCount < DETAIL_MAX_RETRIES;
 };

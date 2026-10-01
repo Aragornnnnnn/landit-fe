@@ -18,6 +18,7 @@ const pending: SentFeedbackDetail = {
   createdAt: '2026-08-08T18:20:00',
   updatedAt: '2026-08-08T18:20:00',
   replies: [],
+  attachments: [],
 };
 
 describe('SentBody', () => {
