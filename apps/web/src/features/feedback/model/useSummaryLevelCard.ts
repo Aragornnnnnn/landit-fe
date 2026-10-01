@@ -11,7 +11,8 @@ const LEVEL_WAIT_MS = 20_000;
 export const useSummaryLevelCard = (feedback: SessionFeedbackResponse) => {
   const inline = feedback.userLevelAssessment;
   const waiting = isAwaitingLevel(inline);
-  // 한 번 그만두면 되돌리지 않는다 — 실패 뒤 다음 폴링이 로딩을 되살려 카드가 깜빡이지 않게
+  // 한 번 그만두면 되돌리지 않는다 — 실패 뒤 다음 폴링이 로딩을 되살려 카드가 깜빡이지 않게.
+  // 상세에 갔다 돌아와 다시 마운트되면 처음부터 다시 기다린다 — 로딩이 처음부터 자리를 잡아 보던 카드가 밀리지 않고, 그 사이 끝났으면 보여 준다
   const [gaveUp, setGaveUp] = useState(false);
   const polled = useLevelAssessmentQuery(
     waiting && !gaveUp ? feedback.sessionId : null,

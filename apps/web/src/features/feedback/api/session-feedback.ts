@@ -15,10 +15,10 @@ export interface SessionFeedbackResponse {
   // 무료 사용자에게 상세 피드백이 잠겼는가 — 첫 시나리오의 첫 완료 세션만 열린다. 결제 뒤 다시 부르면 false와 함께 전부 온다.
   // BE landit-be#192부터 온다. 없는 구버전 응답은 열린 것으로 본다 (그 BE는 대화 자체를 하나로 막는다)
   detailFeedbackLocked?: boolean;
-  // 아래 셋은 landit-be#228부터 온다. 필드가 없는(undefined) 구버전 응답은 그 카드를 그리지 않는다 — null은 「근거 없음」이라 빈 문구를 띄우므로 둘을 합치지 않는다
+  // 아래 셋은 landit-be#228부터 온다
   // 수준 평가 상태와 결과. 평가 비활성 세션이면 null
   userLevelAssessment?: SessionLevelAssessmentResponse | null;
-  // 직전 완료 시나리오의 실수 비교. 비교할 근거가 없으면 null
+  // 직전 완료 시나리오의 실수 비교. 비교할 근거가 없으면 null(빈 문구를 띄운다), 필드가 없는(undefined) 구버전 응답은 카드를 그리지 않는다 — 둘을 합치지 않는다
   growthFeedback?: ScenarioGrowthCard | null;
   // 배운 표현 재사용. 결과가 없으면 items가 빈 배열
   expressionReuse?: ScenarioExpressionReuseSummary | null;
