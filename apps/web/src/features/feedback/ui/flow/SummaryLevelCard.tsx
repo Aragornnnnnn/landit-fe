@@ -5,7 +5,10 @@ import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
 
 import { InfoIcon } from '@/shared/ui/Icons';
 
-import type { SummaryDomainRow } from '../../model/summary-level-card';
+import {
+  SUMMARY_DOMAINS,
+  type SummaryDomainRow,
+} from '../../model/summary-level-card';
 
 // 점수 글자가 설 자리를 뺀 나머지를 100점 막대의 전체 길이로 쓴다
 const SCORE_LABEL_SPACE = '3.5rem';
@@ -75,6 +78,21 @@ export const SummaryLevelCardSkeleton = () => (
 const SCORE_INFO_TEXT =
   '이번 대화 한 번을 영역별로 살펴본 점수예요. 100점에 가까울수록 원어민처럼 자연스럽게 말했어요.';
 
+// 툴팁 본문 — 점수가 무엇인지 한 줄, 그 아래 영역마다 무엇을 봤는지
+const ScoreGuide = () => (
+  <>
+    <p>{SCORE_INFO_TEXT}</p>
+    <dl className="mt-2 flex flex-col gap-1.5 border-t border-background/20 pt-2">
+      {SUMMARY_DOMAINS.map(({ key, label, description }) => (
+        <div key={key}>
+          <dt className="font-bold">{label}</dt>
+          <dd className="text-background/80">{description}</dd>
+        </div>
+      ))}
+    </dl>
+  </>
+);
+
 // (i) — 누르면 설명이 뜨고, 다시 누르거나 바깥을 누르면 닫힌다
 const ScoreInfo = () => {
   const [open, setOpen] = useState(false);
@@ -103,13 +121,13 @@ const ScoreInfo = () => {
         <InfoIcon size={16} />
       </button>
       {open && (
-        <p
+        <div
           id={tooltipId}
           role="tooltip"
-          className="animate-fade-up absolute top-full right-0 z-10 mt-1 w-64 rounded-xl bg-foreground px-3.5 py-2.5 text-[13px] leading-5 text-background shadow-lg"
+          className="animate-fade-up absolute top-full right-0 z-10 mt-1 w-72 rounded-xl bg-foreground px-3.5 py-3 text-[13px] leading-5 text-background shadow-lg"
         >
-          {SCORE_INFO_TEXT}
-        </p>
+          <ScoreGuide />
+        </div>
       )}
     </div>
   );

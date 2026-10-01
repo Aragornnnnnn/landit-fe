@@ -168,7 +168,7 @@ describe('FeedbackSummary', () => {
     ).toBeInTheDocument();
   });
 
-  it('(i)를 누르면 점수 설명이 뜬다', () => {
+  it('(i)를 누르면 영역별 설명이 담긴 점수 설명이 뜬다', () => {
     renderSummary(
       feedback({
         userLevelAssessment: levelResponse('COMPLETED', assessment),
@@ -177,7 +177,10 @@ describe('FeedbackSummary', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '점수 설명' }));
 
-    expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    // Then 영역마다 무엇을 봤는지 함께 읽힌다
+    expect(screen.getByRole('tooltip')).toHaveTextContent(
+      '대화 매너상대 말에 반응하며 자연스럽게 주고받았는지',
+    );
   });
 
   it('응답 때 분석 중이었으면 로딩을 보이다가 다시 물어 온 결과로 채운다', async () => {
