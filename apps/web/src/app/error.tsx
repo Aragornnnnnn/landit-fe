@@ -35,7 +35,7 @@ export default function Error({
           </p>
         </div>
       </div>
-      <div className="flex-none px-5 pt-3 pb-[max(env(safe-area-inset-bottom),24px)]">
+      <div className="flex-none px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),24px)]">
         <Button onClick={reset}>다시 시도할게요</Button>
       </div>
     </main>

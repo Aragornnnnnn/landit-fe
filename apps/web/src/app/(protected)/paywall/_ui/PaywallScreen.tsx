@@ -108,7 +108,7 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
         ))}
       </section>
 
-      <footer className="px-5 pt-3 pb-[max(env(safe-area-inset-bottom),24px)] short:pb-[max(env(safe-area-inset-bottom),8px)]">
+      <footer className="px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),24px)] short:pb-[max(var(--safe-area-inset-bottom),8px)]">
         <Button onClick={startPurchase} loading={busy}>
           {getCtaLabel(selectedPlan)}
         </Button>

@@ -5,7 +5,7 @@ import {
   detailCtaLabel,
   evaluationContextLabel,
   LOCKED_DETAIL_CTA_LABEL,
-  scoreHeadline,
+  summaryHeadline,
 } from './feedback-view';
 
 describe('evaluationContextLabel', () => {
@@ -18,17 +18,24 @@ describe('evaluationContextLabel', () => {
   });
 });
 
-describe('scoreHeadline', () => {
-  it('점수 구간마다 다른 헤드라인을 돌려준다', () => {
-    expect(scoreHeadline(95)).not.toBe(scoreHeadline(85));
-    expect(scoreHeadline(85)).toBe('거의 원어민처럼 착지했어요');
-    expect(scoreHeadline(20)).toBe('아직 착지까지 연습이 필요해요');
+describe('summaryHeadline', () => {
+  it('서버가 준 별점 문구를 그대로 쓴다', () => {
+    expect(summaryHeadline('앞으로 혼자서도 유심을 살 수 있어요!')).toBe(
+      '앞으로 혼자서도 유심을 살 수 있어요!',
+    );
   });
 
-  it('구간 경계값은 위쪽 구간에 포함된다', () => {
-    expect(scoreHeadline(80)).toBe(scoreHeadline(89));
-    expect(scoreHeadline(79)).not.toBe(scoreHeadline(80));
-  });
+  it.each([
+    ['비어 있으면', ''],
+    ['공백뿐이면', '  '],
+  ])(
+    '문구가 %s BE 기본 문구로 대신한다 — 별점 문구 BE보다 먼저 배포돼도 헤드라인이 비지 않게',
+    (_, message) => {
+      expect(summaryHeadline(message)).toBe(
+        '오늘도 시나리오를 잘 마무리했어요',
+      );
+    },
+  );
 });
 
 describe('detailCtaLabel', () => {

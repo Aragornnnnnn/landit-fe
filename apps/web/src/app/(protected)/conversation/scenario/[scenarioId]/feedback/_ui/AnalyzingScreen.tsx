@@ -47,7 +47,7 @@ interface AnalyzingScreenProps {
 export const AnalyzingView = () => (
   <main
     className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background px-6"
-    style={{ paddingTop: 'calc(max(env(safe-area-inset-top), 18px) + 58px)' }}
+    style={{ paddingTop: 'calc(max(var(--safe-area-inset-top), 18px) + 58px)' }}
   >
     <h1 className="text-[26px] leading-[1.3] font-black break-keep">
       방금 대화를 바탕으로

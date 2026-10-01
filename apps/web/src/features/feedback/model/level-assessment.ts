@@ -51,8 +51,12 @@ export const DOMAINS: { key: DomainKey; label: string; shortLabel: string }[] =
     },
   ];
 
-/** BE 점수는 1~5 척도라 화면의 100점으로 환산한다 — 5점 만점 비율 그대로 반올림 (2026-09-09 확정) */
-export const toPercentScore = (score: number) => Math.round((score / 5) * 100);
+// scoreMax가 없는 구버전 응답의 척도
+const LEGACY_SCORE_MAX = 5;
+
+/** BE 점수를 화면의 100점으로 환산한다 — scoreMax 만점 비율 그대로 반올림. 새 평가는 이미 100점 척도다 (2026-09-09 확정, 10-01 scoreMax 반영) */
+export const toPercentScore = (score: number, scoreMax = LEGACY_SCORE_MAX) =>
+  Math.round((score / scoreMax) * 100);
 
 /** 확정 문장("OO님의 레벨은 ~")을 써도 되는 결과 — 모델 결과이고 근거가 충분하며 수준이 1~5로 매겨진 것 */
 export type UsableAssessment = SessionLevelAssessment & {
@@ -86,14 +90,21 @@ export interface LevelResult {
   rows: DomainRow[];
 }
 
+/** 한 영역의 100점 환산 점수 — 관찰이 없으면 null. 레벨 결과와 총평 카드가 같은 환산을 쓴다 */
+export const toDomainPercent = (
+  assessment: SessionLevelAssessment,
+  key: DomainKey,
+): number | null => {
+  const { score } = assessment[key];
+  return score === null ? null : toPercentScore(score, assessment.scoreMax);
+};
+
 /** 쓸 만한 결과를 레벨 결과 화면의 값으로 바꾼다 */
 export const toLevelResult = (assessment: UsableAssessment): LevelResult => ({
   level: assessment.assessedLevel,
   name: LEVEL_NAMES[assessment.assessedLevel],
   rows: DOMAINS.flatMap(({ key, label, shortLabel }) => {
-    const { score } = assessment[key];
-    return score === null
-      ? []
-      : [{ key, label, shortLabel, score: toPercentScore(score) }];
+    const score = toDomainPercent(assessment, key);
+    return score === null ? [] : [{ key, label, shortLabel, score }];
   }),
 });

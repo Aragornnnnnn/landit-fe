@@ -82,6 +82,18 @@ export const offeringPackageSchema = z.object({
 export const purchaseStatusSchema = z.enum(['success', 'cancelled', 'error']);
 export const restoreStatusSchema = z.enum(['success', 'error']);
 
+// 사진 고르기 결과 — 사용자가 선택창을 닫은 취소는 실패가 아니다
+export const photoPickStatusSchema = z.enum(['success', 'cancelled', 'error']);
+
+// 셸이 고른 사진 한 장 — 셸이 긴 변을 줄여 JPEG로 다시 구운 base64다(메시지는 문자열만 오간다)
+export const pickedPhotoSchema = z.object({
+  base64: z.string().min(1),
+  mimeType: z.literal('image/jpeg'),
+});
+
+// 한 번에 고를 수 있는 사진 수 상한 — 피드백 첨부 서버 제한(3장)과 같다
+export const MAX_PICK_PHOTOS = 3;
+
 // 로그인 전·로그아웃 후에 쓰는 빈 값 — 웹이 이걸 보내 셸에 남은 이전 사용자 기록을 지운다.
 // 완료 이력이 없으므로(null) 위젯은 몰락 연출 없이 0일 시간표만 그린다
 export const EMPTY_WIDGET_DATA = {
@@ -108,12 +120,6 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   }),
   // 마이크 등 OS 권한이 차단된 상태 — 네이티브가 앱 설정 화면을 연다 (iOS·Android 공통, 단방향)
   z.object({ type: z.literal('OPEN_SETTINGS') }),
-  // [한시] 구 셸(로컬 리마인더 시절)에 남은 예약을 지우는 정리 신호 — 빈 배열만 허용한다.
-  // 구 셸은 "전부 해제"로 처리하고, 새 셸은 핸들러가 없어 무시한다. 구 바이너리가 소멸하면 웹 발신과 함께 제거한다
-  z.object({
-    type: z.literal('SYNC_REMINDERS'),
-    reminders: z.array(z.never()),
-  }),
   // 알림 권한 상태 조회 — 다이얼로그를 띄우지 않는다. 응답은 NOTIFICATION_PERMISSION
   z.object({ type: z.literal('GET_NOTIFICATION_PERMISSION') }),
   // 알림 권한 능동 요청 — OS 권한창을 띄울 수 있다. 응답은 NOTIFICATION_PERMISSION
@@ -143,6 +149,16 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   }),
   // 이전 구매를 복원한다 — 응답은 RESTORE_RESULT
   z.object({ type: z.literal('RESTORE_PURCHASES') }),
+  // OS 공유 시트를 연다 — 링크까지 담은 문구 한 덩어리. 안드로이드 공유는 url 칸이 없어 문구에 합쳐 보낸다 (단방향)
+  z.object({
+    type: z.literal('SHARE'),
+    message: z.string().min(1),
+  }),
+  // 사진 보관함에서 사진을 고른다 — 카메라 없이 보관함만 연다. limit은 이번에 더 담을 수 있는 장수. 응답은 PHOTOS_PICKED
+  z.object({
+    type: z.literal('PICK_PHOTOS'),
+    limit: z.number().int().min(1).max(MAX_PICK_PHOTOS),
+  }),
 ]);
 
 // 네이티브 → 웹으로 보낼 수 있는 메시지 목록
@@ -203,6 +219,17 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     status: restoreStatusSchema,
     message: z.string().optional(),
   }),
+  // PICK_PHOTOS 응답 — success일 때만 photos가 차 있다. 셸이 못 구운 사진은 빼고 보낸다.
+  // failedCount·overflowed는 웹이 사용자에게 무엇이 빠졌는지 알리는 데 쓴다
+  z.object({
+    type: z.literal('PHOTOS_PICKED'),
+    status: photoPickStatusSchema,
+    photos: z.array(pickedPhotoSchema).max(MAX_PICK_PHOTOS),
+    // 골랐지만 못 구워 뺀 장수
+    failedCount: z.number().int().min(0),
+    // limit보다 많이 골라 뒤를 잘랐는가 — 선택창이 장수를 막지 못하는 구형 Android 대비
+    overflowed: z.boolean(),
+  }),
 ]);
 
 // 위 스키마에서 자동으로 뽑아낸 타입 — 스키마를 고치면 타입도 같이 바뀐다
@@ -214,6 +241,8 @@ export type SubscriptionPlan = z.infer<typeof subscriptionPlanSchema>;
 export type OfferingPackage = z.infer<typeof offeringPackageSchema>;
 export type PurchaseStatus = z.infer<typeof purchaseStatusSchema>;
 export type RestoreStatus = z.infer<typeof restoreStatusSchema>;
+export type PhotoPickStatus = z.infer<typeof photoPickStatusSchema>;
+export type PickedPhoto = z.infer<typeof pickedPhotoSchema>;
 export type NotificationPermissionStatus = z.infer<
   typeof notificationPermissionStatusSchema
 >;

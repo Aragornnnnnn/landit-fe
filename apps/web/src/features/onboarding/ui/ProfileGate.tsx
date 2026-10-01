@@ -56,8 +56,8 @@ export const ProfileGate = () => {
       tabIndex={-1}
       className="fixed inset-0 z-50 mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background px-6 text-foreground outline-none"
       style={{
-        paddingTop: 'max(env(safe-area-inset-top), 24px)',
-        paddingBottom: 'max(env(safe-area-inset-bottom), 20px)',
+        paddingTop: 'max(var(--safe-area-inset-top), 24px)',
+        paddingBottom: 'max(var(--safe-area-inset-bottom), 20px)',
       }}
     >
       <AccentStep onNext={answerAccent} />

@@ -6,13 +6,11 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import type { SmallTalkSessionSummary } from '@/features/small-talk/api/small-talk';
-import {
-  toDayLabel,
-  toSessionTitle,
-} from '@/features/small-talk/lib/session-summary';
+import { toSessionTitle } from '@/features/small-talk/lib/session-summary';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkSessionsQuery } from '@/features/small-talk/model/useSmallTalkSessionsQuery';
 import { track } from '@/shared/analytics';
+import { toDayLabel } from '@/shared/lib/day-label';
 import { SMALLTALK_PATH, smallTalkHistoryPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
@@ -27,7 +25,7 @@ export const SmallTalkHistory = () => {
   return (
     <main
       className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      style={{ paddingTop: 'var(--safe-area-inset-top)' }}
     >
       <header className="relative flex h-14 flex-none items-center justify-center">
         <button

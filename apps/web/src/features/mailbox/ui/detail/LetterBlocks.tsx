@@ -1,5 +1,6 @@
 // 공지·업데이트 본문 렌더러 — 블록 배열을 타입별로 나눠 그리고, 문단 블록은 마크다운이라 블록 하나에 링크·이미지·목록을 담을 수 있다
 import type { LetterBlock } from '../../model/letter-blocks';
+import { ZoomableImage } from '../viewer/ZoomableImage';
 import { MarkdownBody } from './MarkdownBody';
 
 export const LetterBlocks = ({ blocks }: { blocks: LetterBlock[] }) => (
@@ -47,8 +48,8 @@ const LetterImage = ({
   caption?: string | null;
 }) =>
   url !== '' ? (
-    // eslint-disable-next-line @next/next/no-img-element -- 편지 이미지 도메인이 미정이라 next/image 원격 허용 목록을 아직 못 만든다 (시나리오 썸네일과 같은 사정)
-    <img
+    // 누르면 그 한 장을 크게 본다. 그림이 없는 자리는 누를 게 없어 아래 빈 틀 그대로다
+    <ZoomableImage
       src={url}
       alt={caption ?? ''}
       className="w-full rounded-2xl object-cover"

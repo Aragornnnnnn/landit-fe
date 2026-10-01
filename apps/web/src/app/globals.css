@@ -168,6 +168,22 @@
  */
 
 @layer base {
+  /* safe-area는 이 변수로만 읽는다 — 셸이 잰 값(--native-inset-*, @landit/bridge NATIVE_INSET_VARS)이 있으면 그것, 없으면 env() */
+  :root {
+    --safe-area-bottom-gap: 0px;
+    --safe-area-inset-top: var(
+      --native-inset-top,
+      env(safe-area-inset-top, 0px)
+    );
+    --safe-area-inset-bottom: calc(
+      var(--native-inset-bottom, env(safe-area-inset-bottom, 0px)) +
+        var(--safe-area-bottom-gap)
+    );
+  }
+  /* Android 셸은 내비게이션 바에 버튼이 붙지 않게 하단에 틈을 더한다 (iOS 홈 인디케이터는 얇은 선이라 불필요) */
+  :root[data-platform='android'] {
+    --safe-area-bottom-gap: 12px;
+  }
   /* 네이티브 앱 느낌 유지 — 스크롤바 전역 숨김 */
   * {
     scrollbar-width: none;

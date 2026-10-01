@@ -101,7 +101,7 @@ export const ExpressionBranch = ({
   return (
     <main
       className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      style={{ paddingTop: 'var(--safe-area-inset-top)' }}
     >
       <header className="relative flex h-14 flex-none items-center px-3">
         <button
@@ -140,7 +140,7 @@ export const ExpressionBranch = ({
         </div>
       ) : (
         // 찾는 중엔 좌측 위 타이틀 + 가운데 구슬 랜디 → 찾은 뒤엔 타이틀 대신 결과 문구 + 인라인 리스트
-        <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(env(safe-area-inset-bottom),24px)]">
+        <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(var(--safe-area-inset-bottom),24px)]">
           <AnimatePresence mode="wait">
             {celebrating ? (
               <CelebrateStage key="celebrate" />

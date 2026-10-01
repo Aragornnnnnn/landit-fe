@@ -149,7 +149,7 @@ export const LampSummon = ({
           type="button"
           onClick={() => leave('closing', onClose)}
           aria-label="나가기"
-          className="absolute top-[max(env(safe-area-inset-top),16px)] left-3 z-10 flex size-11 items-center justify-center rounded-xl text-white transition-transform active:scale-90"
+          className="absolute top-[max(var(--safe-area-inset-top),16px)] left-3 z-10 flex size-11 items-center justify-center rounded-xl text-white transition-transform active:scale-90"
           {...(phase === 'summon'
             ? { initial: false, animate: { opacity: 1 } }
             : phase === 'closing'

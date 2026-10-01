@@ -8,6 +8,9 @@ export {
   offeringPackageSchema,
   purchaseStatusSchema,
   restoreStatusSchema,
+  photoPickStatusSchema,
+  pickedPhotoSchema,
+  MAX_PICK_PHOTOS,
   EMPTY_WIDGET_DATA,
   type WebToNativeMessage,
   type NativeToWebMessage,
@@ -20,6 +23,8 @@ export {
   type OfferingPackage,
   type PurchaseStatus,
   type RestoreStatus,
+  type PhotoPickStatus,
+  type PickedPhoto,
 } from './messages';
 
 export {
@@ -36,3 +41,5 @@ export {
   readNativeContext,
   type NativeContext,
 } from './nativeContext';
+
+export { NATIVE_INSET_VARS, buildNativeInsetsScript } from './nativeInsets';

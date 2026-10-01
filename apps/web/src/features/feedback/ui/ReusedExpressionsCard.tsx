@@ -1,12 +1,13 @@
 'use client';
 
 // 랜딧에서 배운 표현을 실제로 사용했어요 — 표현마다 칩·출처·그때 내가 한 말·뜻.
-// 둘까지 펼치고 셋째부터는 접어 둔다. 더 보기를 누르면 그 자리에서 펼친다
+// 둘까지 펼치고 셋째부터는 접어 둔다. 더 보기를 누르면 그 자리에서 펼친다. 스몰톡 요약과 시나리오 총평이 같이 쓴다
 import { useState } from 'react';
 
-import type { SmallTalkSummaryReusedExpression } from '@/features/small-talk/api/small-talk';
-import { splitMatchedText } from '@/features/small-talk/model/message-feedback';
+import { splitMatchedText } from '@/shared/lib/matched-text';
 import { ChevronDownIcon } from '@/shared/ui/Icons';
+
+import type { ScenarioExpressionReuseItem } from '../api/session-feedback';
 
 // 처음에 펼쳐 두는 개수
 const VISIBLE_COUNT = 2;
@@ -14,11 +15,15 @@ const VISIBLE_COUNT = 2;
 // 표현이 셋이면 그냥 셋 다 편다
 const MIN_FOLDED = 2;
 
+// 표현이 없을 때 총평이 그리는 빈 카드도 같은 제목을 쓴다
+export const REUSED_EXPRESSIONS_TITLE =
+  '랜딧에서 배운 표현을 실제로 사용했어요';
+
 export const ReusedExpressionsCard = ({
   items,
   className = '',
 }: {
-  items: SmallTalkSummaryReusedExpression[];
+  items: ScenarioExpressionReuseItem[];
   className?: string;
 }) => {
   const [expanded, setExpanded] = useState(false);
@@ -29,7 +34,7 @@ export const ReusedExpressionsCard = ({
   return (
     <section className={`rounded-2xl bg-card px-5 py-4 shadow-sm ${className}`}>
       <h2 className="text-[14px] font-extrabold text-primary">
-        랜딧에서 배운 표현을 실제로 사용했어요
+        {REUSED_EXPRESSIONS_TITLE}
       </h2>
       <ul className="mt-1 flex flex-col divide-y divide-border">
         {/* 같은 표현을 두 메시지에서 썼으면 표현 id만으로는 겹친다 — 쓴 자리까지 합쳐 가른다 */}
@@ -61,11 +66,7 @@ export const ReusedExpressionsCard = ({
   );
 };
 
-const ReusedExpression = ({
-  item,
-}: {
-  item: SmallTalkSummaryReusedExpression;
-}) => (
+const ReusedExpression = ({ item }: { item: ScenarioExpressionReuseItem }) => (
   <div className="flex flex-col gap-2">
     <div className="flex items-center gap-2.5">
       <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[15px] font-bold text-primary">
@@ -83,11 +84,7 @@ const ReusedExpression = ({
 );
 
 // 그때 내가 한 말 — 그 표현 구절만 굵게. 못 찾으면 문장 그대로
-const QuotedSentence = ({
-  item,
-}: {
-  item: SmallTalkSummaryReusedExpression;
-}) => {
+const QuotedSentence = ({ item }: { item: ScenarioExpressionReuseItem }) => {
   const split = splitMatchedText(item.quotedSentence, item.matchedText);
   if (!split) return item.quotedSentence;
 

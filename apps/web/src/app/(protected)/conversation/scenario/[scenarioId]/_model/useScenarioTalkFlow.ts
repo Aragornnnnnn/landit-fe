@@ -9,7 +9,7 @@ import { EVENTS } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
-import { prefetchSessionFeedback } from '@/features/feedback/model/useSessionFeedbackQuery';
+import { prepareFeedbackSummary } from '@/features/feedback/model/useSessionFeedbackQuery';
 // 첫 완료 뒤 홈에서 소감을 묻는다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { markTalkCompleted } from '@/features/satisfaction/model/prompt-record';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
@@ -50,7 +50,7 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
   // 오늘 열매가 채워진 것도 이 순간이라, 스트릭은 새 값을 미리 받아 둔다 —
   // 버리기만 하면 홈으로 돌아왔을 때 옛 숫자를 먼저 그리고 응답이 온 뒤 번쩍인다.
   const prepareFeedbackAndUnlock = (finishedSessionId: number) => {
-    void prefetchSessionFeedback(queryClient, finishedSessionId);
+    void prepareFeedbackSummary(queryClient, finishedSessionId);
     void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
     refreshStreakAfterCompletion(queryClient);
   };

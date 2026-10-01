@@ -95,32 +95,19 @@ describe('parseWebToNativeMessage', () => {
     );
   });
 
-  it('구 셸 예약 정리 신호(SYNC_REMINDERS 빈 배열)를 그대로 되돌린다 (round-trip)', () => {
+  it('공유 요청을 그대로 되돌린다 (round-trip)', () => {
     const message: WebToNativeMessage = {
-      type: 'SYNC_REMINDERS',
-      reminders: [],
+      type: 'SHARE',
+      message: '같이 해요\nhttps://example.com/download',
     };
-
     expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
       message,
     );
   });
 
-  it('예약을 만들려는 SYNC_REMINDERS(빈 배열 아님)는 버린다 — 정리 신호 전용이다', () => {
+  it('공유 문구가 비어 있으면 거른다 — 빈 공유 시트가 뜨지 않게', () => {
     expect(
-      parseWebToNativeMessage(
-        JSON.stringify({
-          type: 'SYNC_REMINDERS',
-          reminders: [
-            {
-              notifyAt: '2026-09-02T20:00:00+09:00',
-              title: '제목',
-              body: '본문',
-              url: '/scenario',
-            },
-          ],
-        }),
-      ),
+      parseWebToNativeMessage(JSON.stringify({ type: 'SHARE', message: '' })),
     ).toBeNull();
   });
 
@@ -547,6 +534,32 @@ describe('parseNativeToWebMessage — 결제', () => {
     expect(
       parseNativeToWebMessage(
         JSON.stringify({ type: 'RESTORE_RESULT', status: 'cancelled' }),
+      ),
+    ).toBeNull();
+  });
+});
+
+describe('사진 고르기 (PICK_PHOTOS ↔ PHOTOS_PICKED)', () => {
+  it('한 번에 3장을 넘게 달라는 요청은 버린다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({ type: 'PICK_PHOTOS', limit: 4 }),
+      ),
+    ).toBeNull();
+  });
+
+  it('3장을 넘게 실은 회신은 버린다', () => {
+    const photo = { base64: 'AAAA', mimeType: 'image/jpeg' };
+
+    expect(
+      parseNativeToWebMessage(
+        JSON.stringify({
+          type: 'PHOTOS_PICKED',
+          status: 'success',
+          photos: [photo, photo, photo, photo],
+          failedCount: 0,
+          overflowed: false,
+        }),
       ),
     ).toBeNull();
   });

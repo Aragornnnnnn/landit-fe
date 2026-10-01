@@ -46,7 +46,9 @@ export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
           />
           <motion.div
             className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 rounded-t-3xl bg-white px-6 pt-6"
-            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}
+            style={{
+              paddingBottom: 'max(var(--safe-area-inset-bottom), 24px)',
+            }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}

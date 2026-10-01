@@ -1,7 +1,8 @@
-// 보낸 피드백의 본문 — 내가 쓴 글이 먼저고, 답장이 도착했으면 그 아래에 붙는다.
+// 보낸 피드백의 본문 — 내가 쓴 글과 붙인 사진이 먼저고, 답장이 도착했으면 그 아래에 붙는다.
 // "읽고 있어요"는 replies가 아니라 status로 정한다 — 묶음 답장은 replies 없이 COMPLETED가 될 수 있다
 import type { SentFeedbackDetail } from '../../api/mailbox';
 import { formatLetterDateTime } from '../../lib/letter-date';
+import { AttachmentGallery } from './AttachmentGallery';
 import { MarkdownBody } from './MarkdownBody';
 import { WaitingNotice } from './WaitingNotice';
 
@@ -11,6 +12,9 @@ export const SentBody = ({ feedback }: { feedback: SentFeedbackDetail }) => (
       text={feedback.content}
       className="text-[15px] text-foreground"
     />
+    {feedback.attachments.length > 0 && (
+      <AttachmentGallery attachments={feedback.attachments} />
+    )}
     {feedback.replies.map((reply) => (
       <ReplySection
         key={reply.letterId}

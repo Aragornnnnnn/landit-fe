@@ -1,8 +1,8 @@
 // React Query 클라이언트 싱글턴 — React 밖(세션 정리 등)에서도 같은 캐시에 접근할 수 있게 모듈 레벨에서 관리한다
 import { isServer, QueryClient } from '@tanstack/react-query';
 
-const makeQueryClient = () =>
-  new QueryClient({
+const makeQueryClient = () => {
+  const client = new QueryClient({
     defaultOptions: {
       queries: {
         // 시나리오 목록처럼 "유저 행동으로만 바뀌는" 데이터 기준의 시작값 — 30초 내 화면 이동은 캐시로, 그 뒤엔 백그라운드 갱신.
@@ -15,6 +15,18 @@ const makeQueryClient = () =>
       },
     },
   });
+  // 객체 URL은 해제하기 전까지 원본 바이트를 붙잡는다 — meta.objectUrl 쿼리가 캐시에서 빠질 때 함께 해제한다
+  client.getQueryCache().subscribe((event) => {
+    const { meta, state } = event.query;
+    if (
+      event.type === 'removed' &&
+      meta?.objectUrl &&
+      typeof state.data === 'string'
+    )
+      URL.revokeObjectURL(state.data);
+  });
+  return client;
+};
 
 let browserQueryClient: QueryClient | undefined;
 

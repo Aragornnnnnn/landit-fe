@@ -44,6 +44,14 @@ description: landit 모바일 앱(Expo, apps/mobile)을 빌드해 실기기·Tes
 
 ## iOS
 
+### Xcode 버전
+
+빌드한 Xcode(SDK)에 따라 같은 코드도 다르게 동작한다. 앱스토어에서 설치한 `/Applications/Xcode.app`은 **자동 업데이트로 조용히 바뀐다**. 1.3.1은 이렇게 Xcode 27로 빌드돼 iOS 27에서 실행 즉시 종료됐다(LAN-588).
+
+- 빌드 전에 `xcodebuild -version`으로 어느 Xcode인지 본다. 다른 버전으로 빌드하려면 `DEVELOPER_DIR=/Applications/Xcode-<버전>.app/Contents/Developer`를 앞에 붙인다.
+- **직전 스토어 빌드와 Xcode 메이저 버전이 다르면**, 제출 전에 그 Xcode로 Release 시뮬레이터 빌드를 만들어 최신 iOS 시뮬레이터에서 켜 본다(`xcodebuild -sdk iphonesimulator -configuration Release` → `simctl install`·`launch`).
+- iOS 27 SDK부터 앱은 Scene 생명주기로 시작해야 한다. `app.json`의 `expo-build-properties.ios.enableSceneSupport`가 그 스위치다. 끄면 Xcode 27 이상 빌드가 iOS 27에서 죽는다.
+
 ### 로컬 EAS 빌드 (기본 경로)
 
 Apple ID 로그인 없이 ASC API 키로 서명한다. 새 팀(Team ID `X9YVD48N8N`)의 키를 환경변수로 넘긴다. 값은 `apple-account-transfer` 메모와 로컬 eas.json에 있다. 여기 적지 않는다.
@@ -68,6 +76,12 @@ mkdir -p /tmp/ipa && unzip -oq out/<파일>.ipa -d /tmp/ipa
 ```
 
 `grep`이 `rg` 별칭이라 바이너리를 건너뛴다. `/usr/bin/grep -a`를 써야 한다. qa면 develop.landit.im, production이면 www.landit.im 하나만 나와야 한다.
+
+빌드한 Xcode도 확인한다. 의도한 버전과 다르면 올리지 않는다.
+
+```bash
+/usr/libexec/PlistBuddy -c 'Print :DTXcode' -c 'Print :DTSDKName' /tmp/ipa/Payload/*.app/Info.plist   # 예: 2660 / iphoneos26.5
+```
 
 ### TestFlight 제출
 
@@ -138,3 +152,4 @@ EAS 로컬 빌드는 매번 깨끗이 prebuild하므로 이 문제가 없다.
 - **네이티브 변경인데 `version`을 안 올린다.** OTA로 옛 바이너리가 죽는다.
 - **`eas update --channel production`을 돌린다.** 실유저에게 즉시 나가는 배포다. 로컬 빌드 바이너리도 production 채널을 본다. 사용자 지시 없이 절대 하지 않는다.
 - **검증을 건너뛴다.** 번들의 도메인 grep은 1분이다. 잘못 나간 바이너리는 심사 한 바퀴다.
+- **Xcode가 바뀐 줄 모르고 빌드한다.** 앱스토어 자동 업데이트가 바꾼다. 시작 단계 크래시는 Sentry에 안 잡히고 ASC 충돌 지표·Xcode Organizer에만 나온다.
