@@ -146,8 +146,9 @@ export const useSmallTalkFlow = ({
         throw cause;
       }
       if (talkClosed()) return null; // 응답을 기다리는 사이 손을 뗐다 — 종료 확인도 보내지 않는다
-      // 응답이 왔으면 서버가 이 발화를 받은 것이다 — 종료 확인을 기다리는 동안에도 나눈 대화로 센다
+      // 응답이 왔으면 서버가 이 발화를 받은 것이다 — 종료 확인을 기다리는 동안에도 나눈 대화와 말한 시간으로 센다
       setAnsweredTurns(turnIndex + 1);
+      setProgress(result.progress);
 
       // 종료 확인 — 이 응답에는 다음 발화도 속마음도 없다. 답을 보내야 그 자리가 채워진다
       if (result.turnStatus === 'EXIT_CONFIRMATION_REQUIRED') {
@@ -249,15 +250,16 @@ export const useSmallTalkFlow = ({
 
   // X — 끝난 대화면 요약으로, 나눈 대화가 없으면 바로 나가고, 그 밖엔 종료 시트로 물어보라고 답한다
   const pressClose = () => {
+    if (leftRef.current) return false; // 이미 나가는 중
     if (settledRef.current) {
       showSummary();
       return false;
     }
     if (answeredTurns === 0) {
-      if (!leftRef.current) {
-        leave();
-        goHome();
-      }
+      // 하던 말은 버린다 — 나간 뒤 인식 결과가 도착해 홈 위에 토스트를 띄우지 않게
+      if (engine.phase === 'USER_SPEAKING') engine.input.cancelInput();
+      leave();
+      goHome();
       return false;
     }
     return true;
@@ -269,7 +271,7 @@ export const useSmallTalkFlow = ({
       showSummary();
       return;
     }
-    if (directEndStartedRef.current) return; // 연타 — 이미 보냈다
+    if (talkClosed()) return; // 연타이거나 이미 나간 대화
     directEndStartedRef.current = true;
     setCompleting(true);
     // 하던 말은 버린다 — 보내지 않은 발화라 깎인 시간도 되돌아온다

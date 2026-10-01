@@ -753,4 +753,65 @@ describe('useSmallTalkFlow — X 누르기', () => {
     expect(confirm).toBe(true);
     expect(endSession).not.toHaveBeenCalled();
   });
+
+  it('나눈 대화 없이 말하는 중에 나가면 녹음을 먼저 취소한다', () => {
+    // 인식 결과가 나간 뒤에 도착하면 홈 위에 "인식되지 않았어요" 토스트가 뜬다
+    const { result } = renderFlow(20_000);
+    act(() => result.current.input.pressMic());
+
+    act(() => void result.current.pressClose());
+
+    expect(sttMock.abort).toHaveBeenCalled();
+  });
+
+  it('이미 나간 대화면 X도 종료 버튼도 아무것도 하지 않는다', async () => {
+    // 종료 확인 실패로 나간 뒤 — 이미 중도 종료한 세션에 완료를 보내면 409와 토스트가 한 번 더 난다
+    const endSession = vi.fn();
+    const { result } = renderFlow(20_000, endSession);
+    submitSmallTalkMessage.mockResolvedValueOnce(
+      submitResponse({
+        turnStatus: 'EXIT_CONFIRMATION_REQUIRED',
+        nextMessage: null,
+      }),
+    );
+    decideSmallTalkExit.mockRejectedValueOnce(new Error('500'));
+    speakFor(result, 3);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Bye!');
+    });
+    expect(endSession).toHaveBeenCalledTimes(1);
+    goHome.mockClear();
+
+    let confirm: boolean | undefined;
+    act(() => {
+      confirm = result.current.pressClose();
+    });
+    await act(async () => result.current.completeTalk());
+
+    expect(confirm).toBe(false);
+    expect(completeSmallTalkSession).not.toHaveBeenCalled();
+    expect(goHome).not.toHaveBeenCalled();
+  });
+
+  it('종료 확인을 기다리는 동안 끝내도 그 발화의 말한 시간까지 함께 남긴다', async () => {
+    // 나눈 횟수와 말한 시간은 같은 시점의 값이어야 한다
+    completeSmallTalkSession.mockResolvedValueOnce(undefined);
+    submitSmallTalkMessage.mockResolvedValueOnce(
+      submitResponse({
+        turnStatus: 'EXIT_CONFIRMATION_REQUIRED',
+        nextMessage: null,
+        progress: { ...progress(12_000), accumulatedSpeakingDurationMs: 7_000 },
+      }),
+    );
+    decideSmallTalkExit.mockReturnValueOnce(new Promise(() => {}));
+    const { result } = renderFlow(20_000);
+    speakFor(result, 3);
+    await act(async () => {
+      result.current.input.finishListening();
+      sttMock.callbacks.onFinal?.('Bye!');
+    });
+
+    expect(result.current.summary.speakingDurationMs).toBe(7_000);
+  });
 });
