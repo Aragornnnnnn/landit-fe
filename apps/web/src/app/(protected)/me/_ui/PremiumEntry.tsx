@@ -35,7 +35,7 @@ export const PremiumEntry = () => {
 
   const summary = summarizeSubscription(subscription);
 
-  // 앱 안에서 플래그가 켜져 있을 때만 — 게이트가 잠글 수 있는 환경과 같은 조건이다
+  // 결제가 열린 환경(앱 안·플래그 켜짐)일 때만 — 게이트와 같은 조건이다
   if (summary.kind === 'none' && !paymentLive) return null;
 
   const entry =
