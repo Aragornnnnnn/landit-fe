@@ -125,6 +125,27 @@ export const scenarioExpressionPath = (
   date?: string | null,
 ) => withDate(`${expressionsOf('scenario', scenarioId)}/${expressionId}`, date);
 
+// 시나리오 기록 — 그 시나리오를 완료한 회차들. 카드에서 들어오니 보던 날을 달고 가서, 나올 때 그 날 카드로 돌아간다.
+// 회차는 BE가 부르는 대로 세션이다 (스몰톡 기록 /smalltalk/sessions와 같은 모양)
+export const scenarioSessionsPath = (
+  scenarioId: number,
+  date?: string | null,
+) => withDate(`${SCENARIO_PATH}/${scenarioId}/sessions`, date);
+
+// detail은 잠긴 상세를 결제하러 갔다가 돌아올 길 — 돌아오면 총평을 건너뛰고 상세부터 연다 (대화 직후 피드백의 detail과 같다)
+export const scenarioSessionPath = (
+  scenarioId: number,
+  sessionId: number,
+  { date, detail = false }: { date?: string | null; detail?: boolean } = {},
+) => {
+  const query = new URLSearchParams();
+  if (date) query.set('date', date);
+  if (detail) query.set('detail', '1');
+  const search = query.toString();
+  const path = `${SCENARIO_PATH}/${scenarioId}/sessions/${sessionId}`;
+  return search ? `${path}?${search}` : path;
+};
+
 // 스몰톡은 "어느 날 카드"라는 개념이 없어 날짜를 달지 않는다.
 // 대화를 막 끝내고 왔을 때만 축하를 켠다 — 표현 학습을 마치고 돌아올 때마다 또 축하할 일은 아니다
 export const sessionExpressionBranchPath = (
@@ -146,6 +167,12 @@ export const readDateParam = (searchParams: URLSearchParams) => {
   const date = searchParams.get('date');
   return date && DATE_PATTERN.test(date) ? date : undefined;
 };
+
+// scenarioSessionPath가 실은 것을 되읽는다 — 쓰는 쪽과 짝이라 한쪽을 바꾸면 여기도 같이 바꾼다
+export const readScenarioSessionParams = (searchParams: URLSearchParams) => ({
+  date: readDateParam(searchParams),
+  detail: searchParams.get('detail') === '1',
+});
 
 // scenarioFeedbackPath가 실은 것을 되읽는다 — 쓰는 쪽과 짝이라 한쪽을 바꾸면 여기도 같이 바꾼다.
 // 세션은 양의 정수가 아니면 없는 것으로 본다. 피드백 화면은 세션이 없으면 못 불러왔다고 알린다
