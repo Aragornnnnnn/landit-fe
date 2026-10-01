@@ -70,7 +70,8 @@ export const ScenarioSessionFeedback = ({
     );
   };
 
-  if (error) {
+  // 받아 둔 기록이 있으면 다시 받다 실패해도 보던 피드백을 그대로 둔다
+  if (sessions === null && error) {
     return (
       <SessionNotice message={error.message || '기록을 불러오지 못했어요.'}>
         <Button

@@ -44,7 +44,8 @@ export const ScenarioSessionList = ({
         </h1>
       </header>
 
-      {error ? (
+      {/* 받아 둔 기록이 있으면 다시 받다 실패해도 목록을 그대로 둔다 */}
+      {sessions === null && error ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
           <p className="text-sm text-muted-foreground">
             {error.message || '지난 대화를 불러오지 못했어요.'}

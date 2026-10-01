@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   retry: vi.fn(),
   premium: false,
   sessions: null as ScenarioHistorySession[] | null,
+  error: null as Error | null,
 }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mocks.push, replace: mocks.replace }),
@@ -26,7 +27,7 @@ vi.mock('@/features/scenario/model/useScenarioTitle', () => ({
 vi.mock('../../_model/useScenarioHistoryQuery', () => ({
   useScenarioHistoryQuery: () => ({
     sessions: mocks.sessions,
-    error: null,
+    error: mocks.error,
     retry: mocks.retry,
     isRefreshing: false,
   }),
@@ -75,6 +76,7 @@ afterEach(() => {
   cleanup();
   mocks.sessions = null;
   mocks.premium = false;
+  mocks.error = null;
   vi.clearAllMocks();
 });
 
@@ -167,5 +169,19 @@ describe('ScenarioSessionFeedback', () => {
     );
 
     expect(screen.getByText('상세부터 연다')).toBeInTheDocument();
+  });
+
+  it('받아 둔 기록이 있으면 다시 받다 실패해도 보던 피드백을 그대로 둔다 — 결제 뒤 다시 받기가 실패한 경우', () => {
+    mocks.sessions = [session(30)];
+    mocks.error = new Error('네트워크 오류');
+    render(
+      <ScenarioSessionFeedback
+        scenarioId={12}
+        sessionId={30}
+        openDetail={false}
+      />,
+    );
+
+    expect(screen.getByText('카페에서 주문하기 history')).toBeInTheDocument();
   });
 });

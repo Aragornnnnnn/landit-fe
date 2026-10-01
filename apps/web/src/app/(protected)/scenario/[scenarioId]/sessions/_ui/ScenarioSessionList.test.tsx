@@ -95,6 +95,16 @@ describe('ScenarioSessionList', () => {
     expect(mocks.replace).toHaveBeenCalledWith('/scenario?date=2026-09-30');
   });
 
+  it('받아 둔 기록이 있으면 다시 받다 실패해도 목록을 그대로 둔다', () => {
+    mocks.sessions = [session(30, '2026-09-30T21:00:00')];
+    mocks.error = new Error('네트워크 오류');
+    render(<ScenarioSessionList scenarioId={12} />);
+
+    expect(
+      screen.getByRole('button', { name: /1번째 대화/ }),
+    ).toBeInTheDocument();
+  });
+
   it('불러오지 못하면 다시 시도할 수 있다', () => {
     mocks.error = new Error('기록을 불러오지 못했어요.');
     render(<ScenarioSessionList scenarioId={12} />);
