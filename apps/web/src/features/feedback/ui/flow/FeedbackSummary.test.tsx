@@ -1,6 +1,7 @@
 // 총평 화면 구성 — 헤드라인·성공률·총평, 영역 점수 카드, 성장·배운 표현 카드의 있음·없음·분석 중, 잠긴 세션의 CTA
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -197,6 +198,25 @@ describe('FeedbackSummary', () => {
       screen.getByRole('status', { name: '이번 대화 점수를 분석하고 있어요' }),
     ).toBeInTheDocument();
     expect(await screen.findByText('상황 대처 능력')).toBeInTheDocument();
+  });
+
+  it('분석 중이던 평가가 상한 전에 도착하면, 상한이 지나도 카드를 거두지 않는다', async () => {
+    // Given 총평을 만들 때는 분석 중이었고, 다시 물으면 끝나 있다
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    mocks.getLevelAssessment.mockResolvedValue(
+      levelResponse('COMPLETED', assessment),
+    );
+    renderSummary(
+      feedback({ userLevelAssessment: levelResponse('PREPARING') }),
+    );
+    expect(await screen.findByText('상황 대처 능력')).toBeInTheDocument();
+
+    // When 20초 상한이 지난다
+    await act(() => vi.advanceTimersByTimeAsync(21_000));
+
+    // Then 이미 보여 준 점수 카드는 그대로다
+    expect(screen.getByText('상황 대처 능력')).toBeInTheDocument();
+    vi.useRealTimers();
   });
 
   it('평가 비활성 세션이면 영역 점수 카드를 그리지 않는다', () => {

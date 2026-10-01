@@ -17,12 +17,14 @@ export const useSummaryLevelCard = (feedback: SessionFeedbackResponse) => {
   const polled = useLevelAssessmentQuery(
     waiting && !timedOut ? feedback.sessionId : null,
   );
+  // 결과가 오면(ready·unavailable) 타이머를 끊는다 — 상한이 이미 보여 준 카드를 거두지 않게
+  const stillWaiting = waiting && polled.outcome === 'pending';
 
   useEffect(() => {
-    if (!waiting) return;
+    if (!stillWaiting) return;
     const timer = setTimeout(() => setTimedOut(true), LEVEL_WAIT_MS);
     return () => clearTimeout(timer);
-  }, [waiting]);
+  }, [stillWaiting]);
 
   return decideSummaryLevelCard({ inline, polled, timedOut });
 };
