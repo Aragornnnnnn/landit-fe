@@ -1,7 +1,7 @@
 // 이탈 할인 시트의 숫자 — 스토어가 준 값으로 할인율·월 환산·결제할 패키지를 정한다
 import { describe, expect, it } from 'vitest';
 
-import { toOfferingTiers } from './offerings';
+import { toOffering } from './offering';
 import { buildPromoSheet } from './promo-sheet';
 
 // 예약 식별자 패키지는 셸이 plan을 붙여 주고, 커스텀 이름(할인)은 못 붙여 null로 온다 —
@@ -14,8 +14,8 @@ const pkg = (id: string, plan: 'monthly' | 'yearly', price: number) => ({
   period: plan === 'monthly' ? 'P1M' : 'P1Y',
 });
 
-const tiers = (...packages: ReturnType<typeof pkg>[]) =>
-  toOfferingTiers(packages);
+const offering = (...packages: ReturnType<typeof pkg>[]) =>
+  toOffering(packages);
 
 const full = [
   pkg('$rc_monthly', 'monthly', 14_900),
@@ -25,7 +25,7 @@ const full = [
 
 describe('buildPromoSheet', () => {
   it('할인 연간의 월 환산과, 월간으로 1년 쓸 때 대비 할인율을 낸다', () => {
-    const sheet = buildPromoSheet(tiers(...full));
+    const sheet = buildPromoSheet(offering(...full));
 
     expect(sheet).toMatchObject({
       yearly: {
@@ -37,7 +37,7 @@ describe('buildPromoSheet', () => {
   });
 
   it('월간은 할인이 없어 정가 그대로 팔고, 연 환산을 같이 낸다 — 연간 카드의 비교선도 이 값이다', () => {
-    const sheet = buildPromoSheet(tiers(...full));
+    const sheet = buildPromoSheet(offering(...full));
 
     expect(sheet?.monthly).toMatchObject({
       price: 14_900,
@@ -46,9 +46,9 @@ describe('buildPromoSheet', () => {
   });
 
   it('결제는 연간이 할인 패키지로, 월간이 정가 패키지로 간다', () => {
-    const sheet = buildPromoSheet(tiers(...full));
+    const sheet = buildPromoSheet(offering(...full));
 
-    expect(sheet?.pricing).toEqual({
+    expect(sheet?.packages).toEqual({
       yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
       monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
     });
@@ -56,14 +56,14 @@ describe('buildPromoSheet', () => {
 
   it('할인 패키지가 없으면 시트를 만들지 않는다 — 화면이 이걸 보고 띄우지 않는다', () => {
     expect(
-      buildPromoSheet(tiers(pkg('$rc_annual', 'yearly', 94_500))),
+      buildPromoSheet(offering(pkg('$rc_annual', 'yearly', 94_500))),
     ).toBeNull();
   });
 
   it('정가 연간을 못 받았으면 시트를 만들지 않는다 — 인상 여부를 확인할 길이 없다', () => {
     expect(
       buildPromoSheet(
-        tiers(
+        offering(
           pkg('$rc_monthly', 'monthly', 14_900),
           pkg('annual_discount', 'yearly', 58_500),
         ),
@@ -74,7 +74,7 @@ describe('buildPromoSheet', () => {
   it('정가 연간이 할인가와 같으면 시트를 만들지 않는다 — 정가 인상 전에 오퍼링에 먼저 넣어 둬도 아무 일이 없다', () => {
     expect(
       buildPromoSheet(
-        tiers(
+        offering(
           pkg('$rc_monthly', 'monthly', 14_900),
           pkg('$rc_annual', 'yearly', 58_500),
           pkg('annual_discount', 'yearly', 58_500),
@@ -86,7 +86,7 @@ describe('buildPromoSheet', () => {
   it('월간을 못 받았으면 시트를 만들지 않는다 — 비교할 자가 없으면 할인율도 없다', () => {
     expect(
       buildPromoSheet(
-        tiers(
+        offering(
           pkg('$rc_annual', 'yearly', 94_500),
           pkg('annual_discount', 'yearly', 58_500),
         ),
@@ -97,7 +97,7 @@ describe('buildPromoSheet', () => {
   it('월간이 할인 연간보다 싸면 시트를 만들지 않는다 — 할인이 아닌 것을 할인이라 부르지 않는다', () => {
     expect(
       buildPromoSheet(
-        tiers(
+        offering(
           pkg('$rc_monthly', 'monthly', 4_000),
           pkg('$rc_annual', 'yearly', 94_500),
           pkg('annual_discount', 'yearly', 58_500),
@@ -111,7 +111,7 @@ describe('buildPromoSheet', () => {
 
     expect(
       buildPromoSheet(
-        tiers(
+        offering(
           pkg('$rc_monthly', 'monthly', 14_900),
           pkg('$rc_annual', 'yearly', 94_500),
           usd,
