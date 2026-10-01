@@ -1,6 +1,6 @@
 'use client';
 
-// 점수 트랙 — 원어민 이해도 %를 세며 마법사 래디가 그만큼 날아가 바를 채운다 (한국어식 → 원어민 착지)
+// 점수 트랙 — 원어민 이해도 %를 세며 마법사 래디가 그만큼 날아가 바를 채운다
 // 숫자·바·캐릭터를 하나의 모션 값으로 굴려 이동 속도와 카운트업을 완전히 동기화한다.
 import { useEffect, useState } from 'react';
 import { animate, motion, useMotionValue, useTransform } from 'motion/react';
@@ -68,11 +68,6 @@ export const ScoreTrack = ({ score }: { score: number }) => {
             />
           </motion.div>
         </motion.div>
-      </div>
-
-      <div className="mt-2.5 flex justify-between text-[15px] font-semibold text-foreground/70">
-        <span>아직 한국어식</span>
-        <span>원어민 착지</span>
       </div>
     </div>
   );
