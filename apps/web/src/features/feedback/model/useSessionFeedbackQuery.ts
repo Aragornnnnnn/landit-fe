@@ -1,4 +1,4 @@
-// 세션 피드백 생성·조회 상태 — 대화 종료 후 총평/상세 화면에 쓴다
+// 세션 피드백 생성·조회 상태와 대화 완료 시점의 총평 준비(미리 만들기·트랙 그림 미리 받기) — 대화 종료 후 총평/상세 화면에 쓴다
 import { useQuery, type QueryClient } from '@tanstack/react-query';
 import { preload } from 'react-dom';
 
