@@ -1,13 +1,16 @@
 // 이탈 할인 시트가 그릴 숫자 — 스토어가 준 가격으로 할인율·월 환산·결제할 패키지를 정한다.
 // 등록값 상수를 섞지 않는다. 화면에 보인 금액과 청구 금액이 어긋나면 안 되는 자리다
-import { krwPricing, type OfferingTiers } from './offerings';
+import {
+  krwPricing,
+  type OfferingTiers,
+  type PlanPricingMap,
+} from './offerings';
 import { calculateDiscountRate, calculateMonthlyEquivalent } from './plans';
 
 const MONTHS_IN_YEAR = 12;
 
 /** 시트의 연간 카드 — 할인가와 월 환산 */
 export interface PromoYearly {
-  packageId: string;
   /** 연 결제액 */
   price: number;
   /** 월 환산 할인가 */
@@ -18,7 +21,6 @@ export interface PromoYearly {
 
 /** 시트의 월간 카드 — 할인이 없어 정가 그대로다 */
 export interface PromoMonthly {
-  packageId: string;
   /** 월 결제액 */
   price: number;
   /** 월 결제액 × 12. 연간과 같은 1년 기준이어야 두 카드를 비교할 수 있다 */
@@ -29,6 +31,8 @@ export interface PromoMonthly {
 export interface PromoSheet {
   yearly: PromoYearly;
   monthly: PromoMonthly;
+  /** 결제할 패키지 — 연간은 할인, 월간은 정가 */
+  pricing: PlanPricingMap;
 }
 
 /**
@@ -58,16 +62,15 @@ export const buildPromoSheet = ({
 
   return {
     yearly: {
-      packageId: discounted.packageId,
       price: discounted.price,
       monthlyPrice,
       discountRate,
     },
     monthly: {
-      packageId: listMonthly.packageId,
       price: listMonthly.price,
       yearlyEquivalent: listMonthly.price * MONTHS_IN_YEAR,
     },
+    pricing: { yearly: discounted, monthly: listMonthly },
   };
 };
 

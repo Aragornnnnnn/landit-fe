@@ -32,7 +32,6 @@ describe('buildPromoSheet', () => {
         price: 58_500,
         monthlyPrice: 4_900,
         discountRate: 67,
-        packageId: 'annual_discount',
       },
     });
   });
@@ -43,7 +42,15 @@ describe('buildPromoSheet', () => {
     expect(sheet?.monthly).toMatchObject({
       price: 14_900,
       yearlyEquivalent: 178_800,
-      packageId: '$rc_monthly',
+    });
+  });
+
+  it('결제는 연간이 할인 패키지로, 월간이 정가 패키지로 간다', () => {
+    const sheet = buildPromoSheet(tiers(...full));
+
+    expect(sheet?.pricing).toEqual({
+      yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
+      monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
     });
   });
 
