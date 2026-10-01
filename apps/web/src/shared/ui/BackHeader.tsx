@@ -1,17 +1,22 @@
-// 밀려 올라온 화면의 머리 — 왼쪽 뒤로가기, 필요하면 가운데 제목
+// 밀려 올라온 화면의 머리 — 왼쪽 뒤로가기, 필요하면 가운데 제목과 오른쪽 동작
 // 스크롤이 시작되면 그림자를 켜서 머리와 본문의 경계를 만든다 (useScrollShadow와 짝)
+import type { ReactNode } from 'react';
+
 import { ChevronLeftIcon } from './Icons';
 
 interface BackHeaderProps {
   onBack: () => void;
   title?: string;
   hasShadow?: boolean;
+  // 오른쪽 끝에 붙는 동작 — 뒤로가기와 대칭이 되게 호출부가 같은 36px 버튼을 넣는다
+  trailing?: ReactNode;
 }
 
 export const BackHeader = ({
   onBack,
   title,
   hasShadow = false,
+  trailing,
 }: BackHeaderProps) => (
   <header
     className="relative flex shrink-0 items-center bg-background px-4 pt-[max(var(--safe-area-inset-top),16px)] pb-2 transition-shadow duration-200"
@@ -30,5 +35,6 @@ export const BackHeader = ({
         {title}
       </h1>
     )}
+    {trailing && <div className="-mr-1 ml-auto">{trailing}</div>}
   </header>
 );

@@ -82,6 +82,18 @@ export const offeringPackageSchema = z.object({
 export const purchaseStatusSchema = z.enum(['success', 'cancelled', 'error']);
 export const restoreStatusSchema = z.enum(['success', 'error']);
 
+// 사진 고르기 결과 — 사용자가 선택창을 닫은 취소는 실패가 아니다
+export const photoPickStatusSchema = z.enum(['success', 'cancelled', 'error']);
+
+// 셸이 고른 사진 한 장 — 셸이 긴 변을 줄여 JPEG로 다시 구운 base64다(메시지는 문자열만 오간다)
+export const pickedPhotoSchema = z.object({
+  base64: z.string().min(1),
+  mimeType: z.literal('image/jpeg'),
+});
+
+// 한 번에 고를 수 있는 사진 수 상한 — 피드백 첨부 서버 제한(3장)과 같다
+export const MAX_PICK_PHOTOS = 3;
+
 // 로그인 전·로그아웃 후에 쓰는 빈 값 — 웹이 이걸 보내 셸에 남은 이전 사용자 기록을 지운다.
 // 완료 이력이 없으므로(null) 위젯은 몰락 연출 없이 0일 시간표만 그린다
 export const EMPTY_WIDGET_DATA = {
@@ -141,6 +153,11 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('SHARE'),
     message: z.string().min(1),
+  }),
+  // 사진 보관함에서 사진을 고른다 — 카메라 없이 보관함만 연다. limit은 이번에 더 담을 수 있는 장수. 응답은 PHOTOS_PICKED
+  z.object({
+    type: z.literal('PICK_PHOTOS'),
+    limit: z.number().int().min(1).max(MAX_PICK_PHOTOS),
   }),
 ]);
 
@@ -202,6 +219,17 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     status: restoreStatusSchema,
     message: z.string().optional(),
   }),
+  // PICK_PHOTOS 응답 — success일 때만 photos가 차 있다. 셸이 못 구운 사진은 빼고 보낸다.
+  // failedCount·overflowed는 웹이 사용자에게 무엇이 빠졌는지 알리는 데 쓴다
+  z.object({
+    type: z.literal('PHOTOS_PICKED'),
+    status: photoPickStatusSchema,
+    photos: z.array(pickedPhotoSchema).max(MAX_PICK_PHOTOS),
+    // 골랐지만 못 구워 뺀 장수
+    failedCount: z.number().int().min(0),
+    // limit보다 많이 골라 뒤를 잘랐는가 — 선택창이 장수를 막지 못하는 구형 Android 대비
+    overflowed: z.boolean(),
+  }),
 ]);
 
 // 위 스키마에서 자동으로 뽑아낸 타입 — 스키마를 고치면 타입도 같이 바뀐다
@@ -213,6 +241,8 @@ export type SubscriptionPlan = z.infer<typeof subscriptionPlanSchema>;
 export type OfferingPackage = z.infer<typeof offeringPackageSchema>;
 export type PurchaseStatus = z.infer<typeof purchaseStatusSchema>;
 export type RestoreStatus = z.infer<typeof restoreStatusSchema>;
+export type PhotoPickStatus = z.infer<typeof photoPickStatusSchema>;
+export type PickedPhoto = z.infer<typeof pickedPhotoSchema>;
 export type NotificationPermissionStatus = z.infer<
   typeof notificationPermissionStatusSchema
 >;
