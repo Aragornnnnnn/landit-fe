@@ -9,19 +9,19 @@ import { useRouter } from 'next/navigation';
 import {
   STORE,
   type StorePlatform,
-} from '@/features/subscription/model/store-links';
+} from '@/features/subscription/model/my-subscription/store-links';
 import {
   canCancelAtStore,
   summarizeSubscription,
   type PaidSubscriptionSummary,
-} from '@/features/subscription/model/subscription-summary';
-import { useStorePlatform } from '@/features/subscription/model/useStorePlatform';
-import { useSubscriptionQuery } from '@/features/subscription/model/useSubscriptionQuery';
-import { BenefitList } from '@/features/subscription/ui/BenefitList';
+} from '@/features/subscription/model/my-subscription/subscription-summary';
+import { useStorePlatform } from '@/features/subscription/model/my-subscription/useStorePlatform';
+import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
 import {
   GOLD_GRADIENT,
   PremiumBadge,
 } from '@/features/subscription/ui/premium-brand';
+import { BenefitList } from '@/features/subscription/ui/product/BenefitList';
 import { track } from '@/shared/analytics';
 import {
   backToMyPage,

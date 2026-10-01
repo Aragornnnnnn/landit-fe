@@ -5,9 +5,9 @@
 import { EVENTS, type SubscriptionState } from '@landit/analytics';
 import Link from 'next/link';
 
-import { summarizeSubscription } from '@/features/subscription/model/subscription-summary';
-import { usePaymentLive } from '@/features/subscription/model/usePaymentLive';
-import { useSubscriptionQuery } from '@/features/subscription/model/useSubscriptionQuery';
+import { summarizeSubscription } from '@/features/subscription/model/my-subscription/subscription-summary';
+import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
+import { usePaymentLive } from '@/features/subscription/model/paywall-gate/usePaymentLive';
 import {
   GOLD_GRADIENT,
   PremiumBadge,

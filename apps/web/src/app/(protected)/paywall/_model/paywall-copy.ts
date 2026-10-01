@@ -2,7 +2,7 @@
 import {
   formatWon,
   type PaywallPlan,
-} from '@/features/subscription/model/plans';
+} from '@/features/subscription/model/product/plans';
 
 /** CTA 문구. 연간은 무료 체험을, 월간은 월 결제액을 앞세운다 */
 export const getCtaLabel = (plan: PaywallPlan) =>

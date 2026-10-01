@@ -20,11 +20,11 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 // 닫기의 서버 알림·할인 전달은 usePaywallDismiss 몫 — 여기선 닫기가 그걸 부른 뒤 홈으로 가는지만 본다
-vi.mock('@/features/subscription/model/usePaywallDismiss', () => ({
+vi.mock('@/features/subscription/model/exit-promo/usePaywallDismiss', () => ({
   usePaywallDismiss: () => mocks.dismiss,
 }));
 // 결제 지휘는 features/subscription 몫 — 여기선 무엇을 넘기고 어떤 인자로 부르는지, 버튼 상태만 본다
-vi.mock('@/features/subscription/model/usePurchase', () => ({
+vi.mock('@/features/subscription/model/purchase/usePurchase', () => ({
   usePurchase: (options: { packages: unknown; onUnlocked: () => void }) => {
     mocks.purchaseOptions = options;
     return {
@@ -34,7 +34,7 @@ vi.mock('@/features/subscription/model/usePurchase', () => ({
     };
   },
 }));
-vi.mock('@/features/subscription/model/useOffering', () => ({
+vi.mock('@/features/subscription/model/product/useOffering', () => ({
   useOffering: () => ({ regular: mocks.packages, promo: {} }),
 }));
 // next/link는 next 밑의 다른 react 복사본을 잡아 훅이 깨진다 — 순수 a 태그로 치환한다

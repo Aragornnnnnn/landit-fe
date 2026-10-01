@@ -8,7 +8,7 @@ import { AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
 // 가로 import 사유: 학습 진입 문마다 같은 페이월 게이트를 걸어야 한다 (docs/subscription.md)
-import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
+import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import {

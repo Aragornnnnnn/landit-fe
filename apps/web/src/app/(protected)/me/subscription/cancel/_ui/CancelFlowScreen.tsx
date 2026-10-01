@@ -11,14 +11,14 @@ import { toEnglishLevel } from '@/features/onboarding/model/english-level';
 import { useLearningLevelQuery } from '@/features/onboarding/model/useLearningLevelQuery';
 import { useStreakCalendarQuery } from '@/features/streak/model/useStreakCalendarQuery';
 import type { MySubscription } from '@/features/subscription/api/subscription';
-import { STORE } from '@/features/subscription/model/store-links';
+import { STORE } from '@/features/subscription/model/my-subscription/store-links';
 import {
   canCancelAtStore,
   summarizeSubscription,
   type PaidSubscriptionSummary,
-} from '@/features/subscription/model/subscription-summary';
-import { useStorePlatform } from '@/features/subscription/model/useStorePlatform';
-import { useSubscriptionQuery } from '@/features/subscription/model/useSubscriptionQuery';
+} from '@/features/subscription/model/my-subscription/subscription-summary';
+import { useStorePlatform } from '@/features/subscription/model/my-subscription/useStorePlatform';
+import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import {
