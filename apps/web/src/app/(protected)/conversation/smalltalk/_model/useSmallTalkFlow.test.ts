@@ -464,9 +464,7 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
   };
 
   // 속마음과 상대 발화가 끝나 다시 말할 차례(USER_READY)가 될 때까지 넘긴다
-  const untilUserReady = async (result: {
-    current: ReturnType<typeof useSmallTalkFlow>;
-  }) => {
+  const untilUserReady = async () => {
     await act(async () => vi.advanceTimersByTime(10_000));
     await act(async () => ttsMock.state.onEnd?.());
     await act(async () => vi.advanceTimersByTime(3_000));
@@ -515,7 +513,7 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
     submitSmallTalkMessage.mockReturnValueOnce(
       new Promise((resolve) => (resolveLate = resolve)),
     );
-    await untilUserReady(result);
+    await untilUserReady();
     speakFor(result, 2);
     await act(async () => {
       result.current.input.finishListening();
@@ -558,8 +556,8 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
     const { result } = renderFlow(20_000);
     await exchangeOnce(result);
     // 첫 턴 뒤 한 번, 종료 확인을 받을 둘째 턴을 위해 한 번 더 말할 차례로 넘긴다
-    await untilUserReady(result);
-    await untilUserReady(result);
+    await untilUserReady();
+    await untilUserReady();
     speakFor(result, 2);
     expect(result.current.phase).toBe('USER_SPEAKING');
 
@@ -573,7 +571,7 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
     completeSmallTalkSession.mockReturnValueOnce(new Promise(() => {}));
     const { result } = renderFlow(20_000);
     await exchangeOnce(result);
-    await untilUserReady(result);
+    await untilUserReady();
     submitSmallTalkMessage.mockClear();
 
     act(() => void result.current.completeTalk());
@@ -592,7 +590,7 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
     const endSession = vi.fn();
     const { result } = renderFlow(20_000, endSession);
     await exchangeOnce(result);
-    await untilUserReady(result);
+    await untilUserReady();
     submitSmallTalkMessage.mockResolvedValueOnce(
       submitResponse({
         turnStatus: 'EXIT_CONFIRMATION_REQUIRED',
@@ -621,7 +619,7 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
     completeSmallTalkSession.mockResolvedValueOnce(undefined);
     const { result } = renderFlow(20_000);
     await exchangeOnce(result);
-    await untilUserReady(result);
+    await untilUserReady();
     let rejectSubmit!: (cause: Error) => void;
     submitSmallTalkMessage.mockReturnValueOnce(
       new Promise((_, reject) => (rejectSubmit = reject)),

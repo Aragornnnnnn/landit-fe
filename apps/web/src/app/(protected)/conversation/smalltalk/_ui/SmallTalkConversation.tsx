@@ -3,7 +3,7 @@
 // 답은 말로만 한다 — 타이핑한 대화는 "말한 시간"이 0초로 남아 이 화면의 기록이 뜻을 잃는다
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
@@ -24,6 +24,7 @@ import type { SmallTalkSessionStartResponse } from '@/features/small-talk/api/sm
 import { toCountdownLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSpeakingLimit } from '@/features/small-talk/model/useSpeakingLimit';
 import { track } from '@/shared/analytics';
+import { registerScreenBack } from '@/shared/bridge/screen-back-handler';
 import { SMALLTALK_PATH, smallTalkSummaryPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
@@ -115,6 +116,23 @@ export const SmallTalkConversation = ({
   const overlayThought = resolveOverlayThought();
   const characterLook = toCharacterLook(phase, finishedThought);
 
+  // X·안드로이드 뒤로가기 — 끝난 대화·나눈 대화 없음은 흐름 훅이 알아서 보내고, 물어볼 때만 시트를 연다
+  const closeTalk = () => {
+    if (!pressClose()) return;
+    track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'conversation_exit' });
+    // 동적 페이지라 받는 건 라우트 뼈대뿐이지만, 완료 응답을 기다리는 동안 먼저 받아 둔다
+    router.prefetch(summaryPath);
+    setGoodbyePhrase(pickGoodbyePhrase());
+    setShowExitSheet(true);
+  };
+  // 뒤로가기가 히스토리로 바로 빠지면 중도 종료도 이탈 기록도 남지 않는다 — 떠날 때까지 X와 같은 길로 받는다.
+  // closeTalk는 렌더마다 바뀌므로 ref로 최신 것을 읽어, 다시 등록하며 시트와의 순서가 뒤집히지 않게 한다
+  const closeTalkRef = useRef(closeTalk);
+  useEffect(() => {
+    closeTalkRef.current = closeTalk;
+  });
+  useEffect(() => registerScreenBack(() => closeTalkRef.current()), []);
+
   return (
     <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
       <header
@@ -122,15 +140,7 @@ export const SmallTalkConversation = ({
         style={{ paddingTop: 'max(var(--safe-area-inset-top), 8px)' }}
       >
         <button
-          onClick={() => {
-            // 끝난 대화·나눈 대화 없음은 흐름 훅이 알아서 보낸다 — 물어볼 때만 시트를 연다
-            if (!pressClose()) return;
-            track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'conversation_exit' });
-            // 동적 페이지라 받는 건 라우트 뼈대뿐이지만, 완료 응답을 기다리는 동안 먼저 받아 둔다
-            router.prefetch(summaryPath);
-            setGoodbyePhrase(pickGoodbyePhrase());
-            setShowExitSheet(true);
-          }}
+          onClick={closeTalk}
           className="flex size-10 items-center justify-center text-foreground transition-transform active:scale-90"
           aria-label="대화 나가기"
         >

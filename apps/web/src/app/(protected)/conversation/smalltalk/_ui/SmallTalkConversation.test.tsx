@@ -1,10 +1,17 @@
 // 스몰톡 대화 화면 — 남은 말하기 시간 표시는 한도가 있을 때만 그린다.
 // 무제한이면 마이크 위 카운트다운도, 마이크 둘레 타이머 링도 없다 (잔량 계산은 뒤에서 그대로 돈다)
 // X는 흐름 훅이 물어보라고 할 때만 종료 시트를 연다
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { SmallTalkSessionStartResponse } from '@/features/small-talk/api/small-talk';
+import { runScreenBack } from '@/shared/bridge/screen-back-handler';
 
 import { GOODBYE_PHRASES } from '../_model/goodbye-phrase';
 import { SmallTalkConversation } from './SmallTalkConversation';
@@ -167,5 +174,26 @@ describe('SmallTalkConversation — 대화 나가기', () => {
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(mocks.prefetch).not.toHaveBeenCalled();
+  });
+
+  it('안드로이드 뒤로가기도 X와 같은 길로 간다', () => {
+    // 히스토리로 바로 빠지면 중도 종료도 이탈 기록도 남지 않는다
+    renderScreen();
+
+    act(() => {
+      runScreenBack();
+    });
+
+    expect(
+      screen.getByRole('dialog', { name: '종료 시트' }),
+    ).toBeInTheDocument();
+  });
+
+  it('화면을 떠나면 뒤로가기를 놓아 준다', () => {
+    const { unmount } = renderScreen();
+
+    unmount();
+
+    expect(runScreenBack()).toBe(false);
   });
 });
