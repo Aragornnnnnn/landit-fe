@@ -2,6 +2,8 @@
 // 기본값은 스토어 등록값이고, 셸이 준 원화 가격이 있으면 buildPaywallPlans가 그 값으로 전부 다시 계산한다
 import type { SubscriptionPlan } from '@landit/analytics';
 
+import { formatWon } from '../../lib/won';
+
 /** 카드 한 장에 그릴 값 전부. 두 카드는 같은 자로 재도록 월 기준 숫자를 쓴다 */
 export interface PaywallPlan {
   id: SubscriptionPlan;
@@ -43,14 +45,6 @@ export const calculateDiscountRate = (listPrice: number, price: number) =>
  */
 export const calculateMonthlyEquivalent = (yearlyPrice: number) =>
   Math.ceil(yearlyPrice / 12 / 100) * 100;
-
-/** 서버 금액이 원화인가 — 통화가 안 오면 원화로 본다 */
-export const isWonCurrency = (currency?: string | null) =>
-  !currency || currency === 'KRW';
-
-/** 천 단위 쉼표와 '원' — 14900 → 14,900원 */
-export const formatWon = (amount: number) =>
-  `${amount.toLocaleString('ko-KR')}원`;
 
 /** 플랜별 실제 청구액. 비어 있는 플랜은 스토어 등록값을 쓴다 */
 export type PlanPrices = Partial<Record<SubscriptionPlan, number>>;
