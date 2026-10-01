@@ -1,4 +1,4 @@
-// 원화 표기와 판정 — 페이월·할인 시트·구독 관리·결제 내역이 금액을 같은 모양으로 쓴다
+// 원화 표기와 판정 — 표기(formatWon)는 모든 화면이 같이 쓰고, 판정(isWonCurrency)은 서버 금액용이다. 셸 가격 판정은 product/offering의 krwPackage
 
 /** 서버 금액이 원화인가 — 통화가 안 오면 원화로 본다 */
 export const isWonCurrency = (currency?: string | null) =>
