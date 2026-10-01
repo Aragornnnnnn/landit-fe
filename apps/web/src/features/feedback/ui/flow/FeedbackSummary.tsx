@@ -6,12 +6,12 @@ import { ChevronLeftIcon, LockIcon } from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
 
 import type { SessionFeedbackResponse } from '../../api/session-feedback';
+import { useMoreBelow } from '../../lib/useMoreBelow';
 import {
   detailCtaLabel,
   LOCKED_DETAIL_CTA_LABEL,
   summaryHeadline,
 } from '../../model/feedback-view';
-import { useMoreBelow } from '../../model/useMoreBelow';
 import { useSummaryLevelCard } from '../../model/useSummaryLevelCard';
 import { GrowthCard } from '../GrowthCard';
 import {
