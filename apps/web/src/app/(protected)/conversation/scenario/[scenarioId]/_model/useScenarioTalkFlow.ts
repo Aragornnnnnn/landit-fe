@@ -7,9 +7,11 @@
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
+import { preload } from 'react-dom';
 
 import { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { prefetchSessionFeedback } from '@/features/feedback/model/useSessionFeedbackQuery';
+import { TRACK_CHARACTER_SRC } from '@/features/feedback/ui/flow/ScoreTrack';
 // 첫 완료 뒤 홈에서 소감을 묻는다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { markTalkCompleted } from '@/features/satisfaction/model/prompt-record';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
@@ -51,6 +53,8 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
   // 버리기만 하면 홈으로 돌아왔을 때 옛 숫자를 먼저 그리고 응답이 온 뒤 번쩍인다.
   const prepareFeedbackAndUnlock = (finishedSessionId: number) => {
     void prefetchSessionFeedback(queryClient, finishedSessionId);
+    // 총평 첫 화면의 트랙 래디도 같이 받아 둔다 — 총평이 뜬 뒤 그림이 늦게 붙지 않게
+    preload(TRACK_CHARACTER_SRC, { as: 'image' });
     void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
     refreshStreakAfterCompletion(queryClient);
   };

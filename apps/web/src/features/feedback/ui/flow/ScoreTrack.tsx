@@ -5,6 +5,9 @@
 import { useEffect, useState } from 'react';
 import { animate, motion, useMotionValue, useTransform } from 'motion/react';
 
+// 트랙 위를 나는 래디 — 대화가 끝나는 순간 미리 받아 두려고 주소를 밖에 연다
+export const TRACK_CHARACTER_SRC = '/images/character/track-wizard.webp';
+
 const DELAY = 0.3;
 const DURATION = 1.6;
 const EASE = [0.25, 0.46, 0.45, 0.94] as const;
@@ -61,7 +64,7 @@ export const ScoreTrack = ({ score }: { score: number }) => {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/images/character/track-wizard.webp"
+              src={TRACK_CHARACTER_SRC}
               alt="날아가는 래디"
               className="object-contain"
               style={{ width: 52, height: 47 }}
