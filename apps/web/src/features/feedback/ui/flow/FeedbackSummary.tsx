@@ -11,6 +11,7 @@ import {
   LOCKED_DETAIL_CTA_LABEL,
   summaryHeadline,
 } from '../../model/feedback-view';
+import { useMoreBelow } from '../../model/useMoreBelow';
 import { useSummaryLevelCard } from '../../model/useSummaryLevelCard';
 import { GrowthCard } from '../GrowthCard';
 import {
@@ -38,6 +39,7 @@ export const FeedbackSummary = ({
   onDetail: () => void;
 }) => {
   const levelCard = useSummaryLevelCard(feedback);
+  const { ref: scrollRef, onScroll, moreBelow } = useMoreBelow();
   const goodCount = feedback.messageFeedbacks.filter(
     (item) => item.feedbackType === 'GOOD',
   ).length;
@@ -63,44 +65,58 @@ export const FeedbackSummary = ({
         <span className="w-7" />
       </header>
 
-      <div className="flex-1 overflow-y-auto px-6 pt-[18px] pb-6">
-        {/* 별점 → 헤드라인(시나리오×별점 문구) → 원어민 이해도 % */}
-        <div className="flex flex-col gap-[7px]">
-          <StarRating rating={feedback.starRating} size={32} animate />
-          <p className="text-[23px] leading-[1.28] font-bold break-keep text-foreground">
-            {summaryHeadline(feedback.highlightMessage)}
-          </p>
-        </div>
-
-        <div className="mt-[18px]">
-          <ScoreTrack score={feedback.nativeScore} />
-        </div>
-
-        {!detailLocked && (
-          <p className="mt-5 text-base font-semibold text-foreground">
-            {total}번 중 <span className="text-primary">{goodCount}번</span>{' '}
-            원어민처럼 말했어요
-          </p>
-        )}
-
-        <div className="mt-6 flex flex-col gap-3">
-          <SummaryCard title="총평">
-            <p className="text-[15px] leading-[1.6] text-foreground">
-              {feedback.summaryMessage}
+      <div className="relative min-h-0 flex-1">
+        <div
+          ref={scrollRef}
+          onScroll={onScroll}
+          className="h-full overflow-y-auto px-6 pt-[18px] pb-6"
+        >
+          {/* 별점 → 헤드라인(시나리오×별점 문구) → 원어민 이해도 % */}
+          <div className="flex flex-col gap-[7px]">
+            <StarRating rating={feedback.starRating} size={32} animate />
+            <p className="text-[23px] leading-[1.28] font-bold break-keep text-foreground">
+              {summaryHeadline(feedback.highlightMessage)}
             </p>
-          </SummaryCard>
+          </div>
 
-          {levelCard.kind === 'loading' && <SummaryLevelCardSkeleton />}
-          {levelCard.kind === 'ready' && (
-            <SummaryLevelCard
-              rows={levelCard.rows}
-              improvement={levelCard.improvement}
-            />
+          <div className="mt-[18px]">
+            <ScoreTrack score={feedback.nativeScore} />
+          </div>
+
+          {!detailLocked && (
+            <p className="mt-5 text-base font-semibold text-foreground">
+              {total}번 중 <span className="text-primary">{goodCount}번</span>{' '}
+              원어민처럼 말했어요
+            </p>
           )}
 
-          <GrowthSection growth={feedback.growthFeedback} />
-          <ReuseSection reuse={feedback.expressionReuse} />
+          <div className="mt-6 flex flex-col gap-3">
+            <SummaryCard title="총평">
+              <p className="text-[15px] leading-[1.6] text-foreground">
+                {feedback.summaryMessage}
+              </p>
+            </SummaryCard>
+
+            {levelCard.kind === 'loading' && <SummaryLevelCardSkeleton />}
+            {levelCard.kind === 'ready' && (
+              <SummaryLevelCard
+                rows={levelCard.rows}
+                improvement={levelCard.improvement}
+              />
+            )}
+
+            <GrowthSection growth={feedback.growthFeedback} />
+            <ReuseSection reuse={feedback.expressionReuse} />
+          </div>
         </div>
+        {/* 버튼 위로 가려진 카드가 더 있으면 아래 가장자리를 흐린다 — 끝까지 내리면 걷힌다 */}
+        <div
+          aria-hidden
+          className={`pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-b from-transparent to-background backdrop-blur-[3px] transition-opacity duration-200 ${moreBelow ? 'opacity-100' : 'opacity-0'}`}
+          style={{
+            maskImage: 'linear-gradient(to bottom, transparent, black)',
+          }}
+        />
       </div>
 
       {/* 카드가 길어져도 CTA는 늘 아래에 선다 */}
