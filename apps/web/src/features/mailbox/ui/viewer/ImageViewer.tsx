@@ -276,13 +276,13 @@ export const ImageViewer = ({
       <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/45 to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/45 to-transparent" />
 
-      <div className="absolute inset-x-0 top-0 flex items-center justify-center px-4 pt-[max(env(safe-area-inset-top),16px)]">
+      <div className="absolute inset-x-0 top-0 flex items-center justify-center px-4 pt-[max(var(--safe-area-inset-top),16px)]">
         <button
           type="button"
           onClick={onClose}
           aria-label="닫기"
           className="absolute left-4 flex size-11 items-center justify-center rounded-full bg-black/50 text-white active:scale-90"
-          style={{ top: 'max(env(safe-area-inset-top), 16px)' }}
+          style={{ top: 'max(var(--safe-area-inset-top), 16px)' }}
         >
           <CloseIcon size={24} />
         </button>
@@ -296,7 +296,7 @@ export const ImageViewer = ({
         )}
       </div>
 
-      <div className="absolute right-4 bottom-[max(env(safe-area-inset-bottom),24px)] flex flex-col items-center rounded-full bg-black/50 text-white">
+      <div className="absolute right-4 bottom-[max(var(--safe-area-inset-bottom),24px)] flex flex-col items-center rounded-full bg-black/50 text-white">
         <button
           type="button"
           onClick={() => zoomTo(stepScale(scale, 1))}
