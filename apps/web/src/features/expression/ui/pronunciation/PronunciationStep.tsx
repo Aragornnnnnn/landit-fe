@@ -264,7 +264,7 @@ export const PronunciationStep = ({
           phase === 'recording' ? (
             // 녹음 모드 띠 — 경계선과 옅은 배경으로 피드백 열람과 구분한다.
             // 단어만 말하면 된다는 오해 방지 — 재녹음은 문장 전체가 계약이다
-            <div className="-mx-5 -mb-[max(env(safe-area-inset-bottom),24px)] border-t border-border bg-secondary/40 px-5 pt-3 pb-[max(env(safe-area-inset-bottom),16px)]">
+            <div className="-mx-5 -mb-[max(var(--safe-area-inset-bottom),24px)] border-t border-border bg-secondary/40 px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),16px)]">
               <p className="text-center text-sm font-medium text-muted-foreground">
                 <span className="font-bold text-foreground">문장 전체</span>를
                 처음부터 다시 말해보세요

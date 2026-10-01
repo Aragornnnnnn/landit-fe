@@ -83,7 +83,7 @@ export const SmallTalkTranscript = ({
   return (
     <main
       className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      style={{ paddingTop: 'var(--safe-area-inset-top)' }}
     >
       <header className="relative flex h-14 flex-none items-center justify-center">
         <button
@@ -139,7 +139,7 @@ export const SmallTalkTranscript = ({
 
       {continueToLearning && (
         // 요약 → 대화 보기를 거친 뒤의 마지막 단계 — 축하·표현 생성으로
-        <footer className="flex-none px-5 pt-3 pb-[max(env(safe-area-inset-bottom),16px)]">
+        <footer className="flex-none px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),16px)]">
           <Button
             onClick={() =>
               router.replace(

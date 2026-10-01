@@ -7,7 +7,7 @@ import { UserIcon } from '@/shared/ui/Icons';
 
 export const AppHeader = () => (
   // 글자 라벨이 빠지면서 아래 여백을 줄여도 답답하지 않다 — 높이는 이제 아이콘 칸(44px)이 정한다
-  <header className="flex shrink-0 items-center justify-between bg-background px-5 pt-[max(env(safe-area-inset-top),10px)] pb-1">
+  <header className="flex shrink-0 items-center justify-between bg-background px-5 pt-[max(var(--safe-area-inset-top),10px)] pb-1">
     {/* 무료 사용자에게는 프리미엄 진입 알약, 그 밖에는 로고. 로고는 홈으로 돌아가는 길이기도 하다 */}
     <PremiumHeaderEntry />
     {/* 아이콘(18px)이 44px 터치 칸 가운데 앉아 양옆에 13px씩 남는다. 그만큼 당겨야

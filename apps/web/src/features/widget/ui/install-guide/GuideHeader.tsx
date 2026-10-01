@@ -15,7 +15,7 @@ export const GuideHeader = <Step extends string>({
 }) => (
   <header
     className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5"
-    style={{ paddingTop: 'max(env(safe-area-inset-top), 18px)' }}
+    style={{ paddingTop: 'max(var(--safe-area-inset-top), 18px)' }}
   >
     <button
       type="button"

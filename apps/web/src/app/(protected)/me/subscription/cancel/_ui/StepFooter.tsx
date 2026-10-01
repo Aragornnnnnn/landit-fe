@@ -5,7 +5,7 @@ interface StepFooterProps {
 }
 
 export const StepFooter = ({ primary, link }: StepFooterProps) => (
-  <div className="shrink-0 px-5 pt-2 pb-8">
+  <div className="shrink-0 px-5 pt-2 pb-[max(var(--safe-area-inset-bottom),32px)]">
     {primary}
     <p className="mt-3.5 text-center text-[13px] text-muted-foreground">
       {link}
