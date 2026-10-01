@@ -1,10 +1,6 @@
 // 이탈 할인 시트가 그릴 숫자 — 스토어가 준 가격으로 할인율·월 환산·결제할 패키지를 정한다.
 // 등록값 상수를 섞지 않는다. 화면에 보인 금액과 청구 금액이 어긋나면 안 되는 자리다
-import {
-  krwPricing,
-  type OfferingTiers,
-  type PlanPricingMap,
-} from './offerings';
+import { krwPackage, type Offering, type PlanPackages } from './offering';
 import { calculateDiscountRate, calculateMonthlyEquivalent } from './plans';
 
 const MONTHS_IN_YEAR = 12;
@@ -32,7 +28,7 @@ export interface PromoSheet {
   yearly: PromoYearly;
   monthly: PromoMonthly;
   /** 결제할 패키지 — 연간은 할인, 월간은 정가 */
-  pricing: PlanPricingMap;
+  packages: PlanPackages;
 }
 
 /**
@@ -45,19 +41,22 @@ export interface PromoSheet {
  *   가격을 못 받았을 때, 원화가 아닐 때, 계산한 할인율이 0 이하일 때다
  */
 export const buildPromoSheet = ({
-  list,
+  regular,
   promo,
-}: OfferingTiers): PromoSheet | null => {
-  const discounted = krwPricing(promo.yearly);
-  const listYearly = krwPricing(list.yearly);
-  const listMonthly = krwPricing(list.monthly);
-  if (!discounted || !listMonthly) return null;
+}: Offering): PromoSheet | null => {
+  const discounted = krwPackage(promo.yearly);
+  const regularYearly = krwPackage(regular.yearly);
+  const regularMonthly = krwPackage(regular.monthly);
+  if (!discounted || !regularMonthly) return null;
 
   // 정가 연간이 아직 할인가와 같다면 인상 전이다 — 오퍼링에 먼저 넣어 둬도 아무 일이 없다
-  if (!listYearly || listYearly.price <= discounted.price) return null;
+  if (!regularYearly || regularYearly.price <= discounted.price) return null;
 
   const monthlyPrice = calculateMonthlyEquivalent(discounted.price);
-  const discountRate = calculateDiscountRate(listMonthly.price, monthlyPrice);
+  const discountRate = calculateDiscountRate(
+    regularMonthly.price,
+    monthlyPrice,
+  );
   if (discountRate <= 0) return null;
 
   return {
@@ -67,10 +66,10 @@ export const buildPromoSheet = ({
       discountRate,
     },
     monthly: {
-      price: listMonthly.price,
-      yearlyEquivalent: listMonthly.price * MONTHS_IN_YEAR,
+      price: regularMonthly.price,
+      yearlyEquivalent: regularMonthly.price * MONTHS_IN_YEAR,
     },
-    pricing: { yearly: discounted, monthly: listMonthly },
+    packages: { yearly: discounted, monthly: regularMonthly },
   };
 };
 
@@ -80,5 +79,5 @@ export const buildPromoSheet = ({
  * 페이월(이탈을 알릴지)·헤더(시트를 열지)·시트(그릴지)가 **같은 답**을 써야 한다.
  * 어긋나면 서버가 5분을 찍었는데 화면엔 아무것도 없는 상태가 생기고, 그 5분은 돌려받지 못한다.
  */
-export const canShowPromo = (tiers: OfferingTiers) =>
-  buildPromoSheet(tiers) !== null;
+export const canShowPromo = (offering: Offering) =>
+  buildPromoSheet(offering) !== null;

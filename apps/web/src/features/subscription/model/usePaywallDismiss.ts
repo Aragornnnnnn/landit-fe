@@ -11,7 +11,7 @@ import {
   type PaywallPromo,
 } from '../api/subscription';
 import { subscriptionKeys } from './keys';
-import type { OfferingTiers } from './offerings';
+import type { Offering } from './offering';
 import { PROMO_ENABLED } from './payment-flag';
 import { handOffPromo } from './promo-handoff';
 import { canShowPromo } from './promo-sheet';
@@ -25,9 +25,9 @@ const DISMISS_TIMEOUT_MS = 3000;
  * 할인을 보여줄 수 없으면 서버에 알리지도 않는다. 서버가 찍은 5분은 계정당 한 번뿐이라 태우면 돌려받지 못한다.
  * 회신은 3초까지만 기다리고, 그보다 늦게 와도 받아서 넘긴다. 기록에 실패해도 에러 없이 끝난다.
  *
- * @param tiers 스토어 가격표 — 할인 시트를 그릴 수 있는지 판정한다
+ * @param offering 현재 오퍼링 — 할인 시트를 그릴 수 있는지 판정한다
  */
-export const usePaywallDismiss = (tiers: OfferingTiers) => {
+export const usePaywallDismiss = (offering: Offering) => {
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.member?.userId ?? null);
 
@@ -45,7 +45,7 @@ export const usePaywallDismiss = (tiers: OfferingTiers) => {
   };
 
   return async () => {
-    if (!PROMO_ENABLED || !canShowPromo(tiers)) return;
+    if (!PROMO_ENABLED || !canShowPromo(offering)) return;
 
     const dismissal = dismissPaywall().catch(() => null);
     const result = await Promise.race([

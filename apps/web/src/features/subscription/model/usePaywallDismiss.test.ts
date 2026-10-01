@@ -2,7 +2,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { OfferingTiers } from './offerings';
+import type { Offering } from './offering';
 import { usePaywallDismiss } from './usePaywallDismiss';
 
 const mocks = vi.hoisted(() => ({
@@ -27,8 +27,8 @@ vi.mock('../api/subscription', () => ({
 vi.mock('./payment-flag', () => ({ PROMO_ENABLED: true }));
 vi.mock('./promo-handoff', () => ({ handOffPromo: mocks.handOffPromo }));
 
-const tiers: OfferingTiers = {
-  list: {
+const offering: Offering = {
+  regular: {
     monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
     yearly: { packageId: '$rc_annual', price: 94_500, currency: 'KRW' },
   },
@@ -53,7 +53,7 @@ afterEach(() => vi.useRealTimers());
 describe('usePaywallDismiss', () => {
   it('할인을 받으면 구독 캐시에 얹고 홈으로 넘긴다', async () => {
     mocks.dismiss = vi.fn().mockResolvedValue({ promo });
-    const { result } = renderHook(() => usePaywallDismiss(tiers));
+    const { result } = renderHook(() => usePaywallDismiss(offering));
 
     await act(() => result.current());
 
@@ -63,7 +63,7 @@ describe('usePaywallDismiss', () => {
 
   it('할인을 보여줄 수 없으면 서버에 알리지 않는다 — 못 보여줄 할인에 5분을 태우지 않는다', async () => {
     const { result } = renderHook(() =>
-      usePaywallDismiss({ ...tiers, promo: {} }),
+      usePaywallDismiss({ ...offering, promo: {} }),
     );
 
     await act(() => result.current());
@@ -74,9 +74,9 @@ describe('usePaywallDismiss', () => {
   it('할인율이 0이면 알리지 않는다 — 정가 인상 전에 오퍼링에 먼저 넣어 둬도 5분이 타지 않는다', async () => {
     const { result } = renderHook(() =>
       usePaywallDismiss({
-        ...tiers,
-        list: {
-          ...tiers.list,
+        ...offering,
+        regular: {
+          ...offering.regular,
           yearly: { packageId: '$rc_annual', price: 58_500, currency: 'KRW' },
         },
       }),
@@ -91,7 +91,7 @@ describe('usePaywallDismiss', () => {
     vi.useFakeTimers();
     let respond = (_: unknown) => {};
     mocks.dismiss = vi.fn(() => new Promise((resolve) => (respond = resolve)));
-    const { result } = renderHook(() => usePaywallDismiss(tiers));
+    const { result } = renderHook(() => usePaywallDismiss(offering));
 
     const done = result.current();
     await act(() => vi.advanceTimersByTimeAsync(3000));
@@ -106,7 +106,7 @@ describe('usePaywallDismiss', () => {
     vi.useFakeTimers();
     let respond = (_: unknown) => {};
     mocks.dismiss = vi.fn(() => new Promise((resolve) => (respond = resolve)));
-    const { result } = renderHook(() => usePaywallDismiss(tiers));
+    const { result } = renderHook(() => usePaywallDismiss(offering));
 
     const done = result.current();
     await act(() => vi.advanceTimersByTimeAsync(3000));
@@ -121,7 +121,7 @@ describe('usePaywallDismiss', () => {
 
   it('기록이 실패해도 에러 없이 끝난다 — 닫히는 것을 막지 않는다', async () => {
     mocks.dismiss = vi.fn().mockRejectedValue(new Error('네트워크'));
-    const { result } = renderHook(() => usePaywallDismiss(tiers));
+    const { result } = renderHook(() => usePaywallDismiss(offering));
 
     await expect(act(() => result.current())).resolves.not.toThrow();
     expect(mocks.handOffPromo).not.toHaveBeenCalled();

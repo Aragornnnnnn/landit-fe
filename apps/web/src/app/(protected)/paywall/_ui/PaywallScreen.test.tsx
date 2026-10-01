@@ -10,9 +10,9 @@ const mocks = vi.hoisted(() => ({
   purchase: vi.fn(),
   restore: vi.fn(),
   busy: false,
-  pricing: {} as Record<string, unknown>,
+  packages: {} as Record<string, unknown>,
   dismiss: vi.fn(),
-  purchaseOptions: null as { pricing: unknown; onUnlocked: () => void } | null,
+  purchaseOptions: null as { packages: unknown; onUnlocked: () => void } | null,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -25,7 +25,7 @@ vi.mock('@/features/subscription/model/usePaywallDismiss', () => ({
 }));
 // 결제 지휘는 features/subscription 몫 — 여기선 무엇을 넘기고 어떤 인자로 부르는지, 버튼 상태만 본다
 vi.mock('@/features/subscription/model/usePurchase', () => ({
-  usePurchase: (options: { pricing: unknown; onUnlocked: () => void }) => {
+  usePurchase: (options: { packages: unknown; onUnlocked: () => void }) => {
     mocks.purchaseOptions = options;
     return {
       busy: mocks.busy,
@@ -34,8 +34,8 @@ vi.mock('@/features/subscription/model/usePurchase', () => ({
     };
   },
 }));
-vi.mock('@/features/subscription/model/useOfferings', () => ({
-  useOfferings: () => ({ list: mocks.pricing, promo: {} }),
+vi.mock('@/features/subscription/model/useOffering', () => ({
+  useOffering: () => ({ regular: mocks.packages, promo: {} }),
 }));
 // next/link는 next 밑의 다른 react 복사본을 잡아 훅이 깨진다 — 순수 a 태그로 치환한다
 vi.mock('next/link', () => ({
@@ -64,7 +64,7 @@ beforeEach(() => {
   mocks.busy = false;
   mocks.purchaseOptions = null;
   mocks.dismiss = vi.fn().mockResolvedValue(undefined);
-  mocks.pricing = {
+  mocks.packages = {
     yearly: { packageId: '$rc_annual', price: 94_500, currency: 'KRW' },
     monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
   };
@@ -127,7 +127,7 @@ describe('PaywallScreen', () => {
   });
 
   it('셸이 준 가격표는 표시에 쓰고 결제 훅에도 그대로 넘긴다', () => {
-    mocks.pricing = {
+    mocks.packages = {
       yearly: { packageId: '$rc_annual_kr', price: 49_900, currency: 'KRW' },
     };
     render(<PaywallScreen />);
@@ -137,7 +137,7 @@ describe('PaywallScreen', () => {
         '7일 무료 체험 후 연 49,900원 정기 결제 · 언제든 해지 가능',
       ),
     ).toBeInTheDocument();
-    expect(mocks.purchaseOptions?.pricing).toBe(mocks.pricing);
+    expect(mocks.purchaseOptions?.packages).toBe(mocks.packages);
   });
 
   it('결제가 진행 중이면 CTA와 복원이 잠긴다', () => {

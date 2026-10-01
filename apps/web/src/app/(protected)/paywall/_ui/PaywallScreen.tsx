@@ -3,19 +3,18 @@
 // 프리미엄 페이월 화면 — 히어로·혜택·플랜 선택·CTA를 한 화면(스크롤 없음)에 담는다.
 // 결제·복원은 features/subscription의 usePurchase가 지휘하고, 여기서는 어느 플랜을 골랐는지와 버튼 상태만 안다
 import { useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type SubscriptionPlan } from '@landit/analytics';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { toKrwPrices } from '@/features/subscription/model/offerings';
+import { toKrwPrices } from '@/features/subscription/model/offering';
 import {
   buildPaywallPlans,
   DEFAULT_PLAN_ID,
   PLAN_ORDER,
   type PaywallPlan,
-  type PlanId,
 } from '@/features/subscription/model/plans';
-import { useOfferings } from '@/features/subscription/model/useOfferings';
+import { useOffering } from '@/features/subscription/model/useOffering';
 import { usePaywallDismiss } from '@/features/subscription/model/usePaywallDismiss';
 import { usePurchase } from '@/features/subscription/model/usePurchase';
 import { BenefitComparison } from '@/features/subscription/ui/BenefitComparison';
@@ -38,19 +37,20 @@ interface PaywallScreenProps {
 
 export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
   const router = useRouter();
-  const [selectedId, setSelectedId] = useState<PlanId>(DEFAULT_PLAN_ID);
+  const [selectedId, setSelectedId] =
+    useState<SubscriptionPlan>(DEFAULT_PLAN_ID);
 
   // 셸이 스토어 가격을 주면 카드 숫자를 그 값으로 다시 만든다 — 못 받으면 등록값 그대로.
   // 본 화면은 늘 정가다. 할인은 닫을 때 뜨는 시트에만 있다
-  const tiers = useOfferings();
-  const { list: pricing } = tiers;
+  const offering = useOffering();
+  const packages = offering.regular;
   // 서버에 알리는 동안 닫기를 잠근다 — 연타하면 요청이 쌓이고 화면은 그대로다
   const [closing, setClosing] = useState(false);
-  const plans = buildPaywallPlans(toKrwPrices(pricing));
+  const plans = buildPaywallPlans(toKrwPrices(packages));
   const selectedPlan = plans[selectedId];
 
   const goHome = () => router.replace(homePath());
-  const dismiss = usePaywallDismiss(tiers);
+  const dismiss = usePaywallDismiss(offering);
   // 닫으면 서버에 알린 뒤 홈으로 — 할인을 받았으면 시트는 홈에서 뜬다.
   // 학습 진입에서 밀려 올라온 화면이라 온 곳으로 되돌리면 다시 페이월에 걸린다 (docs/subscription.md)
   const close = async () => {
@@ -64,7 +64,7 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
   // 유료가 되면 원래 가려던 곳으로 — 게이트가 붙인 ?from=. 캐시가 이미 유료라 다시 막히지 않는다
   const unlock = () => router.replace(returnTo ?? homePath());
   const { busy, purchase, restore } = usePurchase({
-    pricing,
+    packages,
     onUnlocked: unlock,
   });
 
