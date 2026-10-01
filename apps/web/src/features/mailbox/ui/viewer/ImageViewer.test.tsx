@@ -101,6 +101,39 @@ describe('ImageViewer', () => {
     expect(photo.style.transform).toContain('scale(1)');
   });
 
+  it('키보드 방향키로 사진을 넘긴다', () => {
+    render(<ImageViewer images={images} startIndex={0} onClose={vi.fn()} />);
+
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'ArrowRight' });
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'ArrowRight' });
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'ArrowLeft' });
+
+    expect(screen.getByText('2 / 3')).toBeTruthy();
+  });
+
+  it('스크린 리더용 이전·다음 버튼으로 넘기고, 끝에서는 그쪽 버튼을 막는다', () => {
+    render(<ImageViewer images={images} startIndex={0} onClose={vi.fn()} />);
+    const previous = screen.getByRole('button', {
+      name: '이전 사진',
+    }) as HTMLButtonElement;
+
+    expect(previous.disabled).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: '다음 사진' }));
+    expect(screen.getByText('2 / 3')).toBeTruthy();
+  });
+
+  it('한 장이면 이전·다음 버튼을 두지 않는다', () => {
+    render(
+      <ImageViewer
+        images={images.slice(0, 1)}
+        startIndex={0}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: '다음 사진' })).toBeNull();
+  });
+
   it('사진을 불러오지 못하면 그 자리에 알려준다', () => {
     render(<ImageViewer images={images} startIndex={0} onClose={vi.fn()} />);
 

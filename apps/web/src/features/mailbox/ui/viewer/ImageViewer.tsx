@@ -2,7 +2,13 @@
 
 // 편지함 사진 확대 보기 — 검은 전체 화면에 사진을 맞춰 띄우고, 버튼·더블탭·핀치로 키우고, 넘기고, 쓸어 닫는다.
 // 받은 편지 이미지는 한 장, 보낸 편지 첨부는 여러 장을 넘겨 본다. 배율·이동·손가락 판정 규칙은 model/image-zoom
-import { useEffect, useRef, useState, type PointerEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react';
 import { createPortal } from 'react-dom';
 
 import { useFocusTrap } from '@/shared/lib/useFocusTrap';
@@ -222,6 +228,12 @@ export const ImageViewer = ({
     if (action === 'prev') goTo(index - 1);
   };
 
+  // 손가락 대신 방향키로도 넘긴다 — 포커스는 확대 보기 안에 갇혀 있어 여기서 받는다
+  const goByKey = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'ArrowRight') goTo(index + 1);
+    if (event.key === 'ArrowLeft') goTo(index - 1);
+  };
+
   const image = images[index];
   const isSingle = images.length === 1;
   // 아래로 끌수록 흐려져 닫힌다는 걸 미리 보여준다
@@ -234,6 +246,7 @@ export const ImageViewer = ({
       aria-modal="true"
       aria-label="사진 크게 보기"
       tabIndex={-1}
+      onKeyDown={goByKey}
       className="fixed inset-0 z-50 flex flex-col outline-none"
       style={{ backgroundColor: `rgba(0,0,0,${backdropOpacity})` }}
     >
@@ -286,6 +299,25 @@ export const ImageViewer = ({
         >
           <CloseIcon size={24} />
         </button>
+        {!isSingle && (
+          // 넘기기 손짓을 못 쓰는 스크린 리더용 — 화면 모양은 바꾸지 않는다
+          <div className="sr-only">
+            <button
+              type="button"
+              onClick={() => goTo(index - 1)}
+              disabled={index === 0}
+            >
+              이전 사진
+            </button>
+            <button
+              type="button"
+              onClick={() => goTo(index + 1)}
+              disabled={index === images.length - 1}
+            >
+              다음 사진
+            </button>
+          </div>
+        )}
         {!isSingle && (
           <p
             aria-live="polite"
