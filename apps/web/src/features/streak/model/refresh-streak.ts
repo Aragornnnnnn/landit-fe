@@ -3,7 +3,7 @@
 // 늘어난 값을 프론트가 계산하지는 않는다 — 하루 1개가 며칠인지는 서버가 정하는 규칙이라 여기서 또 세면 두 곳이 어긋난다
 import type { QueryClient } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { getCurrentUserId } from '@/shared/auth/auth-store';
 
 import {
   getCurrentStreak,
@@ -15,7 +15,7 @@ import { streakKeys } from './keys';
 
 export const refreshStreakAfterCompletion = (queryClient: QueryClient) => {
   // 캐시 키가 userId를 물고 있다는 건 스트릭 사정이라 부르는 쪽이 알 필요 없다
-  const userId = useAuthStore.getState().member?.userId ?? null;
+  const userId = getCurrentUserId();
   if (userId === null) return;
 
   // 버리기 전에 집어둔다 — 여기 남아 있는 게 곧 대화에 들어갈 때 알던 값이고,

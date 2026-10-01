@@ -8,7 +8,7 @@ import type { SubscriptionPlan } from '@landit/bridge';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { track } from '@/shared/analytics';
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { getCurrentUserId, useAuthStore } from '@/shared/auth/auth-store';
 import { showToast } from '@/shared/ui/toast';
 
 import {
@@ -78,8 +78,7 @@ export const usePurchase = ({
   // 기다리는 사이 계정이 바뀌었으면(로그아웃 뒤 다른 로그인) 그 응답은 다른 사람 것이라 캐시에 넣지 않는다
   const confirmPremium = async () => {
     const subscription = await waitForPremium(getMySubscription, PREMIUM_WAIT);
-    const sameUser =
-      (useAuthStore.getState().member?.userId ?? null) === userId;
+    const sameUser = getCurrentUserId() === userId;
     if (subscription && sameUser) {
       queryClient.setQueryData(subscriptionKeys.mine(userId), subscription);
     }

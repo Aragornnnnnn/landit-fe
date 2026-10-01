@@ -15,8 +15,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/shared/auth/auth-store', () => {
   const useAuthStore = (selector: (s: unknown) => unknown) =>
     selector(mocks.state);
-  useAuthStore.getState = () => mocks.state;
-  return { useAuthStore };
+  return {
+    useAuthStore,
+    getCurrentUserId: () => mocks.state.member?.userId ?? null,
+  };
 });
 vi.mock('@tanstack/react-query', () => ({
   useQueryClient: () => ({ setQueryData: mocks.setQueryData }),
