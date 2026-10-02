@@ -132,7 +132,11 @@ describe('track', () => {
     };
     const { track } = await loadWrapper();
 
-    track('Feedback Submitted', { feedback_type: 'BUG_REPORT', length: 12 });
+    track('Feedback Submitted', {
+      feedback_type: 'BUG_REPORT',
+      length: 12,
+      image_count: 0,
+    });
 
     expect(amplitudeMock.track).toHaveBeenCalledWith('Feedback Submitted', {
       surface: 'app',
@@ -141,6 +145,7 @@ describe('track', () => {
       build_number: '42',
       feedback_type: 'BUG_REPORT',
       length: 12,
+      image_count: 0,
     });
   });
 

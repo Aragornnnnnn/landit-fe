@@ -1,17 +1,23 @@
 'use client';
 
-// 시나리오 카드 — 앞면(썸네일·제목·브리핑·CTA), 완료 시 뒤집으면 뒷면에 표현 학습 리스트
+// 시나리오 카드 — 앞면(썸네일·제목·브리핑·CTA, 완료 시 기록 버튼), 완료 시 뒤집으면 뒷면에 표현 학습 리스트
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import Link from 'next/link';
 
 // 가로 import 사유: 완료 카드를 뒤집어 표현을 보는 것도 학습 진입이라 같은 페이월 게이트를 건다 (docs/subscription.md)
 import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
-import { scenarioReturnPath } from '@/shared/lib/routes';
+import { scenarioReturnPath, scenarioSessionsPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
-import { ArrowRightIcon, LockIcon, ReplayIcon } from '@/shared/ui/Icons';
+import {
+  ArrowRightIcon,
+  ChevronRightIcon,
+  LockIcon,
+  ReplayIcon,
+} from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
 
 import type { Scenario } from '../../lib/to-scenario';
@@ -128,6 +134,18 @@ export const ScenarioCard = ({
               <div className="absolute top-3 left-3 rounded-full bg-black/45 px-3 py-2 shadow-sm backdrop-blur-sm">
                 <StarRating rating={scenario.starRating ?? 0} size={24} />
               </div>
+            )}
+            {/* 완료한 시나리오는 지난 회차를 다시 볼 수 있다 — 어두운 별점 배지와 갈리게 밝은 알약에 스몰톡과 같은 「기록 ›」.
+              세로 중심은 별점 배지(top-3·h-10)와 맞추고, 별점 배지와 같은 이유로 뒤집힌 동안에는 그리지 않는다 */}
+            {completed && !flipped && (
+              <Link
+                href={scenarioSessionsPath(scenario.scenarioId, date)}
+                aria-label="대화 기록"
+                className="absolute top-[15px] right-3 flex h-[34px] items-center gap-0.5 rounded-full bg-white/90 pr-2.5 pl-3 text-[13px] font-semibold text-foreground shadow-sm backdrop-blur-sm active:opacity-70"
+              >
+                기록
+                <ChevronRightIcon size={14} />
+              </Link>
             )}
           </div>
 

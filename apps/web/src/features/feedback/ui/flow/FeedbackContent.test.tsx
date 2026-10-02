@@ -51,6 +51,7 @@ describe('FeedbackContent', () => {
           messageFeedbacks: [turn],
         })}
         title="카페"
+        source="post_conversation"
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
       />,
@@ -61,6 +62,7 @@ describe('FeedbackContent', () => {
     expect(screen.getByText('상세 화면')).toBeInTheDocument();
     expect(mocks.track).toHaveBeenCalledWith('Feedback Detail Opened', {
       session_id: 7,
+      source: 'post_conversation',
     });
   });
 
@@ -71,6 +73,7 @@ describe('FeedbackContent', () => {
       <FeedbackContent
         feedback={feedback({ detailFeedbackLocked: true })}
         title="카페"
+        source="post_conversation"
         onExit={vi.fn()}
         onDetailLocked={onDetailLocked}
       />,
@@ -93,6 +96,7 @@ describe('FeedbackContent', () => {
       <FeedbackContent
         feedback={feedback({ detailFeedbackLocked: true })}
         title="카페"
+        source="post_conversation"
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
       />,
@@ -104,6 +108,23 @@ describe('FeedbackContent', () => {
     );
   });
 
+  it('기록에서 다시 연 총평은 어디서 열었는지 history로 남긴다 — 대화 직후 퍼널에 섞이지 않게', () => {
+    render(
+      <FeedbackContent
+        feedback={feedback({ detailFeedbackLocked: false })}
+        title="카페"
+        source="history"
+        onExit={vi.fn()}
+        onDetailLocked={vi.fn()}
+      />,
+    );
+
+    expect(mocks.track).toHaveBeenCalledWith(
+      'Feedback Viewed',
+      expect.objectContaining({ source: 'history' }),
+    );
+  });
+
   it('결제하고 돌아온 길이면 총평을 건너뛰고 상세부터 연다', () => {
     render(
       <FeedbackContent
@@ -112,6 +133,7 @@ describe('FeedbackContent', () => {
           messageFeedbacks: [turn],
         })}
         title="카페"
+        source="post_conversation"
         openDetail
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
@@ -127,6 +149,7 @@ describe('FeedbackContent', () => {
       <FeedbackContent
         feedback={feedback({ detailFeedbackLocked: true })}
         title="카페"
+        source="post_conversation"
         openDetail
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
@@ -142,6 +165,7 @@ describe('FeedbackContent', () => {
           messageFeedbacks: [turn],
         })}
         title="카페"
+        source="post_conversation"
         openDetail
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
@@ -152,6 +176,7 @@ describe('FeedbackContent', () => {
     expect(screen.getByText('상세 화면')).toBeInTheDocument();
     expect(mocks.track).toHaveBeenCalledWith('Feedback Detail Opened', {
       session_id: 7,
+      source: 'post_conversation',
     });
   });
 
@@ -161,6 +186,7 @@ describe('FeedbackContent', () => {
       <FeedbackContent
         feedback={feedback({ detailFeedbackLocked: true })}
         title="카페"
+        source="post_conversation"
         openDetail
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
@@ -179,6 +205,7 @@ describe('FeedbackContent', () => {
       <FeedbackContent
         feedback={feedback({ detailFeedbackLocked: true })}
         title="카페"
+        source="post_conversation"
         openDetail
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
@@ -194,6 +221,7 @@ describe('FeedbackContent', () => {
       <FeedbackContent
         feedback={feedback({ detailFeedbackLocked: true })}
         title="카페"
+        source="post_conversation"
         refreshing
         onExit={vi.fn()}
         onDetailLocked={onDetailLocked}
@@ -211,6 +239,7 @@ describe('FeedbackContent', () => {
       <FeedbackContent
         feedback={feedback({ detailFeedbackLocked: false })}
         title="카페"
+        source="post_conversation"
         onExit={onExit}
         onDetailLocked={vi.fn()}
       />,
@@ -227,6 +256,7 @@ describe('FeedbackContent', () => {
       <FeedbackContent
         feedback={feedback({ messageFeedbacks: [turn] })}
         title="카페"
+        source="post_conversation"
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
       />,

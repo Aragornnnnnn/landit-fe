@@ -4,7 +4,7 @@ import { api } from '@/shared/api/client';
 export type LevelAssessmentProcessingStatus =
   'NOT_REQUESTED' | 'PREPARING' | 'COMPLETED' | 'FAILED';
 
-// score는 1~5 척도(소수 둘째 자리), 관찰이 없으면 null. confidence는 근거 충족 비율
+// score는 상위 scoreMax 척도(새 평가 1~100, 과거 평가 1~5), 관찰이 없으면 null. confidence는 근거 충족 비율
 export interface DomainScore {
   score: number | null;
   confidence: number;
@@ -20,6 +20,8 @@ export interface SessionLevelAssessment {
   discourse: DomainScore;
   interactionPragmatics: DomainScore;
   assessedScore: number | null;
+  // 영역·종합 점수의 상한 — 새 평가(text-score-v2.0)는 100, 과거 평가는 5. 이 필드가 없는 구버전 BE는 5다
+  scoreMax?: 5 | 100;
   assessedLevel: number | null;
   sufficientEvidence: boolean;
   source: 'MODEL' | 'FALLBACK';

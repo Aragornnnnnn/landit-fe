@@ -177,7 +177,9 @@ export const PreparedLearningView = ({
   return (
     <main
       className="mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background px-6"
-      style={{ paddingTop: 'calc(max(env(safe-area-inset-top), 18px) + 44px)' }}
+      style={{
+        paddingTop: 'calc(max(var(--safe-area-inset-top), 18px) + 44px)',
+      }}
     >
       {/* 줄은 강제로 끊지 않는다 — 22px에서 첫 문장이 한 줄에 안 들어가 "있도록"만 남는 줄이 생겼다 */}
       <h1 className="text-[22px] leading-[1.35] font-black break-keep">
@@ -258,7 +260,7 @@ export const PreparedLearningView = ({
       </section>
 
       <div className="flex-1" />
-      <div className="pt-4 pb-[max(env(safe-area-inset-bottom),24px)]">
+      <div className="pt-4 pb-[max(var(--safe-area-inset-bottom),24px)]">
         <Button onClick={proceed}>학습 시작하기</Button>
       </div>
     </main>

@@ -5,10 +5,13 @@ import {
   readDateParam,
   readReturnParam,
   readScenarioFeedbackParams,
+  readScenarioSessionParams,
   scenarioExpressionBranchPath,
   scenarioExpressionPath,
   scenarioFeedbackPath,
   scenarioReturnPath,
+  scenarioSessionPath,
+  scenarioSessionsPath,
   scenarioTalkPath,
   sessionExpressionBranchPath,
   sessionExpressionPath,
@@ -113,6 +116,51 @@ describe('scenarioExpressionPath', () => {
     expect(scenarioExpressionPath(12, 34, '2026-07-29')).toBe(
       '/expressions/scenario/12/34?date=2026-07-29',
     );
+  });
+});
+
+describe('scenarioSessionsPath', () => {
+  it('오늘 카드에서 들어가면 날짜를 달지 않는다', () => {
+    expect(scenarioSessionsPath(12)).toBe('/scenario/12/sessions');
+  });
+
+  it('지난 날 카드에서 들어가면 그 날짜를 달고 간다 — 기록에서 나올 때 그 날 카드로 돌아가야 한다', () => {
+    expect(scenarioSessionsPath(12, '2026-07-29')).toBe(
+      '/scenario/12/sessions?date=2026-07-29',
+    );
+  });
+});
+
+describe('scenarioSessionPath', () => {
+  it('회차는 기록 주소 아래 세션 id로 가리키고, 보던 날을 이어 단다', () => {
+    expect(scenarioSessionPath(12, 345)).toBe('/scenario/12/sessions/345');
+    expect(scenarioSessionPath(12, 345, { date: '2026-07-29' })).toBe(
+      '/scenario/12/sessions/345?date=2026-07-29',
+    );
+  });
+
+  it('결제하고 돌아올 길이면 상세부터 열라는 표시를 단다', () => {
+    expect(
+      scenarioSessionPath(12, 345, { date: '2026-07-29', detail: true }),
+    ).toBe('/scenario/12/sessions/345?date=2026-07-29&detail=1');
+  });
+});
+
+describe('readScenarioSessionParams', () => {
+  it('scenarioSessionPath가 실은 날짜와 상세 표시를 되읽는다', () => {
+    const search = new URLSearchParams('date=2026-07-29&detail=1');
+
+    expect(readScenarioSessionParams(search)).toEqual({
+      date: '2026-07-29',
+      detail: true,
+    });
+  });
+
+  it('아무것도 없으면 오늘 카드이고 총평부터 연다', () => {
+    expect(readScenarioSessionParams(new URLSearchParams())).toEqual({
+      date: undefined,
+      detail: false,
+    });
   });
 });
 

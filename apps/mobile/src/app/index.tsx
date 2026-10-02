@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 
 import { initMetaSdk } from '@/analytics/meta';
@@ -19,6 +20,7 @@ import { generateNonce } from '@/auth/nonce';
 import { requestSocialIdToken, toSocialLoginFailure } from '@/auth/socialLogin';
 import { runHaptic } from '@/bridge/haptics';
 import { nativeContextScript } from '@/bridge/nativeContext';
+import { getNativeInsetsScript } from '@/bridge/nativeInsets';
 import { openShareSheet } from '@/bridge/share';
 import { useNativeBridge } from '@/bridge/useNativeBridge';
 import { WEB_URL } from '@/config/webUrl';
@@ -31,6 +33,7 @@ import {
 import { getExpoPushToken } from '@/notifications/push-token';
 import { initializeNotifications } from '@/notifications/setup';
 import { useNotificationDeepLink } from '@/notifications/useNotificationDeepLink';
+import { pickPhotos } from '@/photos/pick-photos';
 import {
   configurePurchases,
   fetchOfferingPackages,
@@ -91,6 +94,11 @@ const ShellScreen = () => {
     if (token) postToWeb({ type: 'PUSH_TOKEN', token });
   };
 
+  // Android 시스템 바 inset을 웹에 넘기는 스크립트 (iOS는 null)
+  const insets = useSafeAreaInsets();
+  const nativeInsetsScript = getNativeInsetsScript(insets);
+  const beforeContentLoadedScript = `${nativeContextScript} ${nativeInsetsScript ?? ''}`;
+
   const { onMessage, postToWeb } = useNativeBridge(webviewRef, {
     EXIT_APP: () => BackHandler.exitApp(),
     // 웹이 인터랙션 시점에 보낸 진동 요청을 expo-haptics로 실행한다
@@ -141,6 +149,11 @@ const ShellScreen = () => {
     RESTORE_PURCHASES: async () => {
       const result = await restorePurchases();
       postToWeb({ type: 'RESTORE_RESULT', ...result });
+    },
+    // 사진 보관함만 연다(카메라 없음) — 고른 사진을 줄인 JPEG로 회신한다
+    PICK_PHOTOS: async ({ limit }) => {
+      const result = await pickPhotos(limit);
+      postToWeb({ type: 'PHOTOS_PICKED', ...result });
     },
     // 웹의 로그인 요청을 받아 provider SDK로 idToken을 발급받고, nonce와 함께 웹으로 돌려준다
     SOCIAL_LOGIN_REQUEST: async ({ provider }) => {
@@ -207,6 +220,12 @@ const ShellScreen = () => {
     }
   }, [isWebReady, loadFailed]);
 
+  // 로드된 웹에서 inset이 바뀌면(내비 방식 전환 등) 다시 넣는다 — 첫 로드엔 injectedJavaScript와 겹치지만 같은 값이라 무해하다
+  useEffect(() => {
+    if (!isWebReady || !nativeInsetsScript) return;
+    webviewRef.current?.injectJavaScript(nativeInsetsScript);
+  }, [isWebReady, nativeInsetsScript]);
+
   // 웹이 로드 완료됐을 때만 Android 뒤로가기를 위임한다 — 그 전엔 위임해도 웹이 응답 못 해 영구 먹통이 된다
   useEffect(() => {
     if (!isWebReady || loadFailed) return;
@@ -265,8 +284,10 @@ const ShellScreen = () => {
       source={{
         uri: `${WEB_URL}${coldStart.path ?? widgetEntry.path ?? '/'}`,
       }}
-      // 콘텐츠 로드 전 네이티브 컨텍스트(플랫폼·앱 버전)를 window에 주입 — 웹 계측이 첫 렌더에서 바로 읽는다
-      injectedJavaScriptBeforeContentLoaded={nativeContextScript}
+      // 콘텐츠 로드 전 네이티브 컨텍스트(플랫폼·앱 버전)를 window에, Android면 시스템 바 inset을 CSS 변수에 주입한다
+      injectedJavaScriptBeforeContentLoaded={beforeContentLoadedScript}
+      // Android의 로드 전 주입은 비동기라 새 문서에 못 닿을 수 있어, 매 로드 끝에도 inset을 넣는다
+      injectedJavaScript={nativeInsetsScript ?? undefined}
       onMessage={onMessage}
       // 웹 도메인 밖으로 나가는 이동(스토어 등)은 WebView 대신 OS가 연다 —
       // 스토어가 웹뷰 안에서 로그인 페이지로 열리는 문제 방지

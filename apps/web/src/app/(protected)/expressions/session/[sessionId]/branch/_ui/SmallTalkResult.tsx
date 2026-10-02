@@ -101,7 +101,7 @@ export const SmallTalkResult = ({
   return (
     <main
       className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      style={{ paddingTop: 'var(--safe-area-inset-top)' }}
     >
       <header className="relative flex h-14 flex-none items-center px-3">
         <button
@@ -113,7 +113,7 @@ export const SmallTalkResult = ({
         </button>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(env(safe-area-inset-bottom),24px)]">
+      <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(var(--safe-area-inset-bottom),24px)]">
         <AnimatePresence mode="wait">
           {celebrating ? (
             <CelebrateStage key="celebrate" />

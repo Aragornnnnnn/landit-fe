@@ -229,6 +229,8 @@ export type ExpressionReviewStep = 'intro' | 'quiz';
 export type HintSource = QuizStepKind;
 // 홈 복귀 신호 — 앱 안에서 돌아온 이유. 밖에서 들어온 유입(알림·위젯)은 entry_campaign이 맡는다
 export type HomeReturnReason = 'just' | 'flip' | 'card';
+// 시나리오 피드백을 어디서 열었는지 — 대화 직후 흐름과 시나리오 기록에서 다시 연 것을 가른다
+export type FeedbackSource = 'post_conversation' | 'history';
 
 // 구독 플랜 — 페이월 카드와 스토어 상품(monthly/yearly)이 같은 이름을 쓴다. 브릿지의 subscriptionPlanSchema와 같은 값이다
 export type SubscriptionPlan = 'monthly' | 'yearly';
@@ -272,6 +274,7 @@ export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
   | 'scenario'
+  | 'scenario_history'
   | 'smalltalk'
   | 'smalltalk_summary'
   | 'conversation'
@@ -402,8 +405,12 @@ export type EventProps = {
   'Mailbox Tab Switched': { box: 'received' | 'sent' };
   // 유형 선택 화면에서 하나를 고른다 — 무슨 말을 하고 싶어 들어오는지의 분포
   'Feedback Type Selected': { feedback_type: FeedbackType };
-  // 실제로 보냈다. 원문은 PII 위험이 있어 길이만 남긴다
-  'Feedback Submitted': { feedback_type: FeedbackType; length: number };
+  // 실제로 보냈다. 원문은 PII 위험이 있어 길이만 남긴다. image_count는 붙인 사진 수
+  'Feedback Submitted': {
+    feedback_type: FeedbackType;
+    length: number;
+    image_count: number;
+  };
   'Streak Month Changed': {
     direction: 'prev' | 'next';
     year: number;
@@ -509,9 +516,9 @@ export type EventProps = {
     session_id: number;
     partner: TalkPartner;
     turn_count: number;
-    // 이 대화에서 말한 시간과, 시간을 다 써서 끝났는지
+    // 이 대화에서 말한 시간과, 어떻게 끝났는지(작별 인사·시간 소진·종료 버튼)
     speaking_duration_ms: number;
-    end_reason: 'user_ended' | 'time_limit';
+    end_reason: 'user_ended' | 'time_limit' | 'direct_end';
   };
   'Small Talk Abandoned': {
     session_id: number;
@@ -556,6 +563,7 @@ export type EventProps = {
   // 피드백 응답에는 scenario_id가 없다 — session_id로 서버에서 조인한다
   'Feedback Viewed': {
     session_id: number;
+    source: FeedbackSource;
     // 서버가 상세를 잠근 세션이면 true — 그때 good_count·turn_count는 0이라 잠금과 같이 읽어야 한다
     detail_locked: boolean;
     good_count: number;
@@ -564,14 +572,15 @@ export type EventProps = {
     star_rating?: number;
   };
   // 총평만 보고 상세 없이 나감 — Feedback Completed와 상호 배타
-  'Feedback Skipped': { session_id: number };
-  'Feedback Detail Opened': { session_id: number };
+  'Feedback Skipped': { session_id: number; source: FeedbackSource };
+  'Feedback Detail Opened': { session_id: number; source: FeedbackSource };
   'Feedback Turn Viewed': {
     session_id: number;
+    source: FeedbackSource;
     turn_index: number;
     feedback_type: string;
   };
-  'Feedback Completed': { session_id: number };
+  'Feedback Completed': { session_id: number; source: FeedbackSource };
 
   // 표현 학습은 시나리오 대화와 스몰톡이 같은 화면·같은 API를 쓴다 — 이벤트도 하나로 두고
   // 어디서 온 표현인지만 출처로 싣는다 (둘 중 하나만 온다)

@@ -101,7 +101,7 @@ export const ReviewComplete = ({
   return (
     <main
       className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background px-6"
-      style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}
+      style={{ paddingTop: 'calc(var(--safe-area-inset-top) + 8px)' }}
     >
       <motion.div
         className="mx-auto"
@@ -183,7 +183,7 @@ export const ReviewComplete = ({
       </ul>
 
       <div className="flex-1" />
-      <div className="pt-4 pb-[max(env(safe-area-inset-bottom),24px)]">
+      <div className="pt-4 pb-[max(var(--safe-area-inset-bottom),24px)]">
         <Button variant={perfect ? 'success' : 'primary'} onClick={onHome}>
           홈으로 갈게요
         </Button>
