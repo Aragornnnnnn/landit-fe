@@ -1,8 +1,12 @@
-// BE 시각을 서울 벽시계로 읽는다 — 편지 날짜와 구독 날짜가 같은 규칙을 쓴다.
+// BE 시각을 서울 기준으로 읽는다 — 편지·구독 날짜와 시나리오 기록이 같은 규칙을 쓴다.
 // 백엔드가 LocalDateTime으로 내려 `2026-08-09T11:30:00`처럼 오프셋이 빠진다. 그대로 Date에 넘기면
 // 기기 시간대로 해석돼 해외에서 하루가 밀리므로, 오프셋이 없으면 서울(+09:00)로 못 박는다
 
 const HAS_OFFSET = /(Z|[+-]\d{2}:?\d{2})$/;
+
+/** BE 시각을 순간(ms)으로 읽는다. 오프셋이 없으면 서울로 보고, 읽을 수 없으면 NaN */
+export const toSeoulInstant = (dateTime: string) =>
+  Date.parse(HAS_OFFSET.test(dateTime) ? dateTime : `${dateTime}+09:00`);
 
 export type SeoulDateParts = Partial<
   Record<Intl.DateTimeFormatPartTypes, string>
@@ -18,9 +22,7 @@ export const readSeoulDateParts = (
   dateTime: string,
   options: Intl.DateTimeFormatOptions,
 ): SeoulDateParts | null => {
-  const instant = new Date(
-    HAS_OFFSET.test(dateTime) ? dateTime : `${dateTime}+09:00`,
-  );
+  const instant = new Date(toSeoulInstant(dateTime));
   if (Number.isNaN(instant.getTime())) return null;
 
   // 시간대만 Intl에 맡기고 문구는 호출부가 조립한다 — 로케일 데이터가 얇은 런타임에서

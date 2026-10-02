@@ -4,10 +4,11 @@
 import { Suspense, use } from 'react';
 import { useSearchParams } from 'next/navigation';
 
+import { FEEDBACK_FALLBACK_TITLE } from '@/features/feedback/model/feedback-view';
 import { FeedbackSkeleton } from '@/features/feedback/ui/flow/FeedbackSkeleton';
+import { useScenarioTitle } from '@/features/scenario/model/useScenarioTitle';
 import { readScenarioFeedbackParams } from '@/shared/lib/routes';
 
-import { useFeedbackTitle } from './_model/useFeedbackTitle';
 import { ScenarioFeedbackFlow } from './_ui/ScenarioFeedbackFlow';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
@@ -32,7 +33,7 @@ function ScenarioFeedbackContent({
   const id = Number(scenarioId);
   const { session, date, replay, detail } =
     readScenarioFeedbackParams(useSearchParams());
-  const title = useFeedbackTitle(id, date);
+  const title = useScenarioTitle(id, date, FEEDBACK_FALLBACK_TITLE);
 
   return (
     <ScenarioFeedbackFlow

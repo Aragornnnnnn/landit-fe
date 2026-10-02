@@ -132,6 +132,23 @@ const resolvePage = (
     return base;
   }
 
+  // 시나리오 기록 — 목록과 그 회차 하나. 어느 시나리오의 몇 번째 세션인지 id로 남긴다
+  if (seg[0] === 'scenario' && seg[1] && seg[2] === 'sessions') {
+    if (!seg[3]) {
+      return {
+        page_name: 'scenario_history',
+        path: pathname,
+        scenario_id: toId(seg[1]),
+      };
+    }
+    return {
+      page_name: 'scenario_history_detail',
+      path: pathname,
+      scenario_id: toId(seg[1]),
+      session_id: toId(seg[3]),
+    };
+  }
+
   // 대화 화면은 /conversation 아래에 종류별로 있다 — 시나리오는 어느 카드인지 id가 붙는다
   if (seg[0] === 'conversation' && seg[1] === 'scenario' && seg[2]) {
     // 대화 피드백은 대화 주소 아래 자기 화면이다 — 어느 세션의 피드백인지는 주소의 session이 안다
