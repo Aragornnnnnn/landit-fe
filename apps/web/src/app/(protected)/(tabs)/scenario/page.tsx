@@ -112,6 +112,8 @@ function ScenarioContent() {
         <EmptyDay isToday={date === undefined} />
       ) : (
         <TodayCard
+          // 날마다 새 카드다 — 같은 자리라고 앞 날의 뒤집힘 상태를 물려받지 않게
+          key={date ?? 'today'}
           daily={daily.scenario}
           playable={daily.playable}
           date={date}
