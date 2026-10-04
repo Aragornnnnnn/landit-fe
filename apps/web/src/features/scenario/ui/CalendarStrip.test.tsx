@@ -6,6 +6,7 @@ import {
   fireEvent,
   render,
   screen,
+  within,
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -237,10 +238,13 @@ describe('CalendarStrip 선택 표시', () => {
   });
 
   it('주소에 날짜가 없으면 오늘을 선택해 둔다', () => {
+    // Given 주소에 날짜가 없으면
     givenCalendars(MONTH);
 
+    // When 스트립을 그리면
     render(<CalendarStrip onSelect={vi.fn()} />);
 
+    // Then 응답이 준 오늘이 선택돼 있다
     expect(
       screen.getByRole('button', { name: '8월 6일 오늘' }),
     ).toHaveAttribute('aria-current', 'date');
@@ -253,9 +257,9 @@ describe('CalendarStrip 선택 표시', () => {
     render(<CalendarStrip onSelect={onSelect} />);
     fireEvent.click(screen.getByRole('button', { name: '월' }));
 
-    // When 8월 6일(오늘)을 고르면
+    // When 달 격자에서 8월 6일(오늘)을 고르면
     fireEvent.click(
-      screen.getAllByRole('button', { name: '8월 6일 오늘' }).at(-1)!,
+      within(monthPanel()).getByRole('button', { name: '8월 6일 오늘' }),
     );
 
     // Then 오늘을 알리고 주 보기로 접힌다
@@ -265,4 +269,87 @@ describe('CalendarStrip 선택 표시', () => {
       'true',
     );
   });
+
+  it('월 패널에서 다른 주의 날을 고르면 주소가 따라오기 전에 주 스트립을 그 주로 옮긴다', () => {
+    // Given 20일을 완료한 달이 펼쳐진 상태에서
+    givenCalendars(MONTH_WITH_COMPLETED);
+    render(<CalendarStrip onSelect={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: '월' }));
+
+    // When 20일을 고르면 (주소는 아직 그대로)
+    fireEvent.click(
+      within(monthPanel()).getByRole('button', { name: '8월 20일 완료' }),
+    );
+
+    // Then 주 조회가 오늘 주로 돌아가지 않고 20일이 든 주를 묻는다
+    const weekCalls = mockQuery.mock.calls.filter(([type]) => type === 'WEEK');
+    expect(weekCalls.at(-1)?.[1]).toBe('2026-08-20');
+  });
+
+  it('월 패널에서 날을 골라 접힐 때는 주 전환으로 기록하지 않는다 — 사용자가 고른 건 날짜다', () => {
+    // Given 월 패널이 펼쳐진 상태에서
+    givenCalendars(MONTH_WITH_COMPLETED);
+    render(<CalendarStrip onSelect={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: '월' }));
+    trackMock.mockClear();
+
+    // When 날을 골라 패널이 접히면
+    fireEvent.click(
+      within(monthPanel()).getByRole('button', { name: '8월 20일 완료' }),
+    );
+
+    // Then 날짜 선택만 남기고 주 전환은 남기지 않는다
+    expect(trackMock).toHaveBeenCalledWith(EVENTS.CALENDAR_DATE_SELECTED, {
+      is_today: false,
+    });
+    expect(trackMock).not.toHaveBeenCalledWith(
+      EVENTS.CALENDAR_VIEW_SWITCHED,
+      expect.anything(),
+    );
+  });
 });
+
+describe('CalendarStrip 창 따라가기', () => {
+  const lastWeekQuery = () =>
+    mockQuery.mock.calls.filter(([type]) => type === 'WEEK').at(-1)?.[1];
+
+  it('월 패널에서 오늘을 고르면 오늘 창을 날짜 없이 묻는다 — 같은 주를 키 두 개로 받지 않게', () => {
+    // Given 월 패널이 펼쳐진 상태에서
+    givenCalendars(MONTH);
+    render(<CalendarStrip onSelect={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: '월' }));
+
+    // When 달 격자에서 오늘을 고르면
+    fireEvent.click(
+      within(monthPanel()).getByRole('button', { name: '8월 6일 오늘' }),
+    );
+
+    // Then 주 조회는 날짜 없는 오늘 창이다
+    expect(lastWeekQuery()).toBeUndefined();
+  });
+
+  it('화살표로 다른 주를 보던 중 주소 날짜가 바뀌면 주소의 주로 돌아간다', () => {
+    // Given 이전 주로 넘겨 둔 상태에서
+    givenCalendars(MONTH);
+    const { rerender } = render(<CalendarStrip onSelect={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: '이전' }));
+
+    // When 주소가 8월 20일로 바뀌면
+    rerender(<CalendarStrip date="2026-08-20" onSelect={vi.fn()} />);
+
+    // Then 훑던 주를 내려놓고 20일의 주를 묻는다
+    expect(lastWeekQuery()).toBe('2026-08-20');
+  });
+});
+
+// 20일을 완료한 달 — 주 스트립(2~8일) 밖의 날을 고르는 경우
+const MONTH_WITH_COMPLETED: ScenarioCalendarResponse = {
+  ...MONTH,
+  days: MONTH.days.map((item) =>
+    item.date === '2026-08-20' ? { ...item, completed: true } : item,
+  ),
+};
+
+// 달 격자 — 주 스트립과 같은 이름의 칸이 있어 패널 안으로 좁혀 찾는다
+const monthPanel = () =>
+  screen.getByRole('button', { name: '8월 31일' }).parentElement!;

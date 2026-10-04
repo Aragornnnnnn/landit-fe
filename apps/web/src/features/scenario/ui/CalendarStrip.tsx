@@ -1,7 +1,7 @@
 'use client';
 
 // 날짜 스트립 — 접으면 한 주, 펼치면 한 달. 누르면 그날 카드로 간다
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
@@ -39,9 +39,13 @@ export const CalendarStrip = ({
   const [expanded, setExpanded] = useState(false);
   // 창은 보고 있는 날과 따로 움직인다 — 지난 주를 훑어보다 아무 날도 안 고를 수 있다
   const [movedTo, setMovedTo] = useState<string | undefined>(undefined);
+  // 주소가 바뀌면 훑어보던 창은 내려놓고 주소를 따른다
+  const [seenRoute, setSeenRoute] = useState(routeDate);
+  if (seenRoute !== routeDate) {
+    setSeenRoute(routeDate);
+    setMovedTo(undefined);
+  }
   const windowDate = movedTo ?? routeDate;
-  // 펼치는 동안 날을 골랐는지. 접을 때 어디로 돌아갈지 판단한다
-  const picked = useRef(false);
   // 펼치기 직전 창 — 펼친 동안 주 조회를 여기에 묶어 두고, 안 고르고 접으면 여기로 돌아간다.
   // 조회 키가 되므로 ref가 아니라 상태여야 한다
   const [collapsedFrom, setCollapsedFrom] = useState<string | undefined>(
@@ -54,7 +58,7 @@ export const CalendarStrip = ({
     return registerOpenSheet(() => {
       // 접는 길이 셋(토글·바깥 탭·뒤로가기)이라 여기도 전환으로 남긴다 — 빼면 주 전환 수만 준다
       track(EVENTS.CALENDAR_VIEW_SWITCHED, { view: 'week' });
-      setMovedTo(picked.current ? undefined : collapsedFrom);
+      setMovedTo(collapsedFrom);
       setExpanded(false);
     });
   }, [expanded, collapsedFrom]);
@@ -107,21 +111,21 @@ export const CalendarStrip = ({
     });
     if (next === 'MONTH') {
       setCollapsedFrom(windowDate);
-      picked.current = false;
     } else {
-      // 달에서 날을 골랐으면 주소가 이미 그 날이라 창을 비워 따라가게 두고,
-      // 아무것도 안 골랐으면 펼치기 전 주로 되돌린다
-      setMovedTo(picked.current ? undefined : collapsedFrom);
+      // 날을 고르지 않고 접었으니 펼치기 전 주로 되돌린다
+      setMovedTo(collapsedFrom);
     }
     setExpanded(next === 'MONTH');
   };
 
   const selectDay = (day: string) => {
     track(EVENTS.CALENDAR_DATE_SELECTED, { is_today: day === today });
-    picked.current = true;
     onSelect(day === today ? null : day);
-    // 골랐으면 패널은 할 일을 다 했다 — 열어 두면 아래 카드가 바뀌는 걸 가린다
-    if (expanded) toggle('WEEK');
+    // 골랐으면 패널을 접고 창을 주소보다 먼저 고른 날로 옮긴다(오늘은 날짜 없는 창이 정본)
+    if (expanded) {
+      setMovedTo(day === today ? undefined : day);
+      setExpanded(false);
+    }
   };
 
   return (
