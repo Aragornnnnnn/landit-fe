@@ -61,6 +61,8 @@ export const ScenarioCard = ({
   }
 
   const filterClass = locked ? 'brightness-70 grayscale' : '';
+  // 등장 연출은 마운트 때 한 번 정한다 — 뒷면으로 펴지며 마운트되면 건너뛰고, 나중에 flip 신호가 빠져도 뒷면 아래서 다시 돌지 않게(iOS에서 비친다)
+  const [cardIn] = useState(autoFlip && completed ? '' : 'animate-card-in');
 
   // autoFlip으로 처음부터 뒤집힌 채 마운트된 경우도 노출로 기록한다
   useEffect(() => {
@@ -111,7 +113,10 @@ export const ScenarioCard = ({
         {/* 앞면 */}
         <div className="absolute inset-0 flex flex-col overflow-hidden rounded-2xl bg-card shadow-md [-webkit-backface-visibility:hidden] [backface-visibility:hidden]">
           {/* 썸네일 — 텍스트 영역을 제외한 카드 전체를 채운다 */}
-          <div className="relative min-h-0 w-full flex-1 overflow-hidden bg-foreground">
+          <div
+            className={`relative min-h-0 w-full flex-1 overflow-hidden bg-foreground ${cardIn}`}
+            style={{ '--i': 0 } as React.CSSProperties}
+          >
             {scenario.thumbnailUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- 백엔드 썸네일 도메인이 미정이라 next/image 원격 허용 목록을 아직 못 만든다
               <img
@@ -156,7 +161,7 @@ export const ScenarioCard = ({
               !locked && completed ? 'pb-1' : 'pb-5'
             }`}
           >
-            <div>
+            <div className={cardIn} style={{ '--i': 1 } as React.CSSProperties}>
               <p
                 className={`text-xl leading-snug font-extrabold ${
                   locked ? 'text-muted-foreground' : 'text-foreground'
@@ -172,13 +177,19 @@ export const ScenarioCard = ({
             </div>
 
             {locked ? (
-              <div className="flex h-14 w-full items-center justify-center gap-1.5 rounded-xl bg-secondary text-base font-bold text-muted-foreground">
+              <div
+                className={`flex h-14 w-full items-center justify-center gap-1.5 rounded-xl bg-secondary text-base font-bold text-muted-foreground ${cardIn}`}
+                style={{ '--i': 2 } as React.CSSProperties}
+              >
                 잠겨있어요 <LockIcon size={16} />
               </div>
             ) : completed ? (
               // 완료 카드 — 메인은 표현 학습(뒤집기), 다시 해보기는 아래 고스트로.
               // 할 일이 남았으면 주황, 다 했으면 초록이다 — 남은 일이 눈에 띄어야 한다
-              <div className="flex flex-col gap-1">
+              <div
+                className={`flex flex-col gap-1 ${cardIn}`}
+                style={{ '--i': 2 } as React.CSSProperties}
+              >
                 <ExpressionProgress
                   completed={expressions.completed}
                   total={expressions.total}
