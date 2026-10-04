@@ -72,7 +72,7 @@ describe('CalendarStrip 월 패널', () => {
   it('월 응답이 오기 전에는 스켈레톤을 그린다 — 주 7일을 달 격자에 그리지 않는다', () => {
     // Given 월 조회가 아직 응답하지 않은 상태에서
     givenCalendars(null);
-    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+    render(<CalendarStrip onSelect={vi.fn()} />);
 
     // When 월 토글을 누르면
     fireEvent.click(screen.getByRole('button', { name: '월' }));
@@ -90,7 +90,7 @@ describe('CalendarStrip 월 패널', () => {
   it('월 응답이 오면 그 달 전체를 그린다', () => {
     // Given 월 조회가 이미 응답한 상태에서
     givenCalendars(MONTH);
-    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+    render(<CalendarStrip onSelect={vi.fn()} />);
 
     // When 월 토글을 누르면
     fireEvent.click(screen.getByRole('button', { name: '월' }));
@@ -109,7 +109,7 @@ describe('CalendarStrip 월 패널 — 뒤로가기·스크롤', () => {
   it('펼친 동안 네이티브 뒤로가기를 누르면 주 보기로 접힌다', () => {
     // Given 월 패널이 펼쳐진 상태에서
     givenCalendars(MONTH);
-    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+    render(<CalendarStrip onSelect={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: '월' }));
 
     // When 네이티브 뒤로가기가 오면
@@ -128,7 +128,7 @@ describe('CalendarStrip 월 패널 — 뒤로가기·스크롤', () => {
 
   it('펼친 동안 배경 스크롤을 막고, 접히면 되돌린다', () => {
     givenCalendars(MONTH);
-    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+    render(<CalendarStrip onSelect={vi.fn()} />);
 
     // When 월 패널을 펼치면
     fireEvent.click(screen.getByRole('button', { name: '월' }));
@@ -158,7 +158,7 @@ describe('CalendarStrip 계측', () => {
 
   it('완료한 지난 날을 누르면 오늘이 아니라고 기록한다', () => {
     givenCompletedWeek();
-    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+    render(<CalendarStrip onSelect={vi.fn()} />);
 
     fireEvent.click(screen.getByRole('button', { name: '8월 5일 완료' }));
 
@@ -169,7 +169,7 @@ describe('CalendarStrip 계측', () => {
 
   it('오늘 칸을 누르면 오늘이라고 기록한다', () => {
     givenCompletedWeek();
-    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+    render(<CalendarStrip onSelect={vi.fn()} />);
 
     fireEvent.click(screen.getByRole('button', { name: '8월 6일 오늘' }));
 
@@ -180,7 +180,7 @@ describe('CalendarStrip 계측', () => {
 
   it('월로 펼치고 주로 접는 전환을 각각 기록한다', () => {
     givenCalendars(MONTH);
-    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+    render(<CalendarStrip onSelect={vi.fn()} />);
 
     fireEvent.click(screen.getByRole('button', { name: '월' }));
     expect(trackMock).toHaveBeenCalledWith(EVENTS.CALENDAR_VIEW_SWITCHED, {
@@ -195,7 +195,7 @@ describe('CalendarStrip 계측', () => {
 
   it('네이티브 뒤로가기로 접혀도 주 전환으로 기록한다', () => {
     givenCalendars(MONTH);
-    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+    render(<CalendarStrip onSelect={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: '월' }));
 
     act(() => {
@@ -209,7 +209,7 @@ describe('CalendarStrip 계측', () => {
 
   it('이전 주로 넘기면 넘김을 기록한다', () => {
     givenCalendars(MONTH);
-    render(<CalendarStrip selected={null} onSelect={vi.fn()} />);
+    render(<CalendarStrip onSelect={vi.fn()} />);
 
     fireEvent.click(screen.getByRole('button', { name: '이전' }));
 
@@ -217,5 +217,52 @@ describe('CalendarStrip 계측', () => {
       direction: 'prev',
       view: 'week',
     });
+  });
+});
+
+describe('CalendarStrip 선택 표시', () => {
+  it('주소에 날짜가 있으면 응답을 기다리지 않고 그 날을 선택해 둔다', () => {
+    // Given 주소가 8월 5일을 가리키면
+    mockQuery.mockImplementation((type) => ({
+      calendar: type === 'WEEK' ? WEEK_WITH_COMPLETED : MONTH,
+    }));
+
+    // When 스트립을 그리면
+    render(<CalendarStrip date="2026-08-05" onSelect={vi.fn()} />);
+
+    // Then 그 날이 선택돼 있다
+    expect(
+      screen.getByRole('button', { name: '8월 5일 완료' }),
+    ).toHaveAttribute('aria-current', 'date');
+  });
+
+  it('주소에 날짜가 없으면 오늘을 선택해 둔다', () => {
+    givenCalendars(MONTH);
+
+    render(<CalendarStrip onSelect={vi.fn()} />);
+
+    expect(
+      screen.getByRole('button', { name: '8월 6일 오늘' }),
+    ).toHaveAttribute('aria-current', 'date');
+  });
+
+  it('월 패널에서 날을 고르면 그 날을 알리고 패널을 접는다', () => {
+    // Given 월 패널이 펼쳐진 상태에서
+    givenCalendars(MONTH);
+    const onSelect = vi.fn();
+    render(<CalendarStrip onSelect={onSelect} />);
+    fireEvent.click(screen.getByRole('button', { name: '월' }));
+
+    // When 8월 6일(오늘)을 고르면
+    fireEvent.click(
+      screen.getAllByRole('button', { name: '8월 6일 오늘' }).at(-1)!,
+    );
+
+    // Then 오늘을 알리고 주 보기로 접힌다
+    expect(onSelect).toHaveBeenCalledWith(null);
+    expect(screen.getByRole('button', { name: '주' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 });

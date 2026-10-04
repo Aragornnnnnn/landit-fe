@@ -25,17 +25,14 @@ import { CalendarDay } from './calendar/CalendarDay';
 const leadingBlanks = (firstDate: string) => weekdayIndexOf(firstDate);
 
 interface CalendarStripProps {
-  // 주소가 정한 창. 없으면 서버가 오늘이 든 창을 준다
-  windowDate?: string;
-  // 지금 카드로 보고 있는 날. 응답 전이면 null
-  selected: string | null;
+  // 주소가 가리키는 보고 있는 날. 창도 이 날을 따른다. 없으면 오늘이다
+  date?: string;
   // 오늘을 고르면 null을 준다 — 오늘은 날짜로 지목하는 날이 아니라 기본값이다
   onSelect: (date: string | null) => void;
 }
 
 export const CalendarStrip = ({
-  windowDate: routeDate,
-  selected,
+  date: routeDate,
   onSelect,
 }: CalendarStripProps) => {
   const reduced = useReducedMotion() ?? false;
@@ -93,6 +90,8 @@ export const CalendarStrip = ({
   const { today, startedAt } = shown;
   const type: ScenarioCalendarType = expanded ? 'MONTH' : 'WEEK';
   const anchor = windowDate ?? today;
+  // 선택은 응답이 아니라 주소를 따른다 — 누르자마자 옮겨져야 눌린 줄 안다
+  const selected = routeDate ?? today;
 
   const move = (direction: -1 | 1) => {
     track(EVENTS.CALENDAR_PERIOD_MOVED, {
@@ -121,6 +120,8 @@ export const CalendarStrip = ({
     track(EVENTS.CALENDAR_DATE_SELECTED, { is_today: day === today });
     picked.current = true;
     onSelect(day === today ? null : day);
+    // 골랐으면 패널은 할 일을 다 했다 — 열어 두면 아래 카드가 바뀌는 걸 가린다
+    if (expanded) toggle('WEEK');
   };
 
   return (
