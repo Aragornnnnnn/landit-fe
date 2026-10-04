@@ -15,12 +15,12 @@ const mockGet = vi.mocked(getDailyScenario);
 const response = (date: string) =>
   ({ date, playable: true, scenario: null }) as DailyScenarioResponse;
 
+const client = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <QueryClientProvider
-    client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
-  >
-    {children}
-  </QueryClientProvider>
+  <QueryClientProvider client={client}>{children}</QueryClientProvider>
 );
 
 beforeEach(() => {
@@ -31,6 +31,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  client.clear();
   useAuthStore.setState({ member: null });
 });
 
