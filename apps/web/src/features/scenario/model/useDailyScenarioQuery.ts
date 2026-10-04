@@ -1,5 +1,5 @@
 // 날짜별 시나리오 조회 상태 — 오늘 카드와 지난 날 카드가 같은 훅을 쓴다
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
 
@@ -13,8 +13,7 @@ export const useDailyScenarioQuery = (date?: string) => {
   const { data, error, isPending, refetch } = useQuery({
     queryKey: scenarioKeys.daily(userId, date ?? null),
     queryFn: () => getDailyScenario(date),
-    // 날짜를 옮기는 동안 이전 카드를 그대로 둔다 — 비우면 스켈레톤이 한 번 깜빡인다
-    placeholderData: keepPreviousData,
+    // 이전 날 카드를 붙들지 않는다(keepPreviousData 금지) — 날짜를 옮기면 그 자리에 바로 로딩이 떠야 눌린 줄 안다
     // 로그아웃 직후 리다이렉트 전 한 프레임에 userId 없는 키로 fetch가 나가는 것을 막는다
     enabled: userId !== null,
   });
