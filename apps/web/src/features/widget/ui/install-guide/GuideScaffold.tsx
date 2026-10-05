@@ -1,9 +1,12 @@
 // 설치 안내 화면 공통 뼈대 — 온보딩과 같은 결의 제목·목업·CTA 배치
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 
 import { Button } from '@/shared/ui/Button';
+
+import { fitScale } from './fitScale';
 
 export const GuideScaffold = ({
   title,
@@ -22,14 +25,14 @@ export const GuideScaffold = ({
   children: React.ReactNode;
 }) => (
   <>
-    <div className="flex flex-1 flex-col pt-7">
+    <div className="flex min-h-0 flex-1 flex-col pt-7">
       <h1 className="text-3xl leading-[1.18] font-black tracking-normal">
         {title}
       </h1>
       <p className="mt-4 text-xl font-bold text-muted-foreground">{subtitle}</p>
 
-      <div className="flex flex-1 items-center justify-center py-6">
-        {children}
+      <div className="flex min-h-0 flex-1 flex-col py-6">
+        <FitToHeight>{children}</FitToHeight>
       </div>
     </div>
 
@@ -46,7 +49,38 @@ export const GuideScaffold = ({
   </>
 );
 
-// 하늘색 폰 목업 틀 — 안내 화면들이 같은 틀 위에 각자의 장면을 그린다
+// 남는 높이보다 큰 목업은 통째로 줄인다 — 장면이 px 좌표로 그려져 있어 크기 대신 배율을 바꾼다.
+// 세로가 짧은 화면(iPhone SE·iPad 호환 모드)에서 목업이 CTA를 화면 밖으로 밀어내지 않게 한다
+const FitToHeight = ({ children }: { children: React.ReactNode }) => {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const box = boxRef.current;
+    const content = contentRef.current;
+    if (!box || !content) return;
+    const observer = new ResizeObserver(() =>
+      setScale(fitScale(box.clientHeight, content.offsetHeight)),
+    );
+    observer.observe(box);
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={boxRef}
+      className="flex min-h-0 flex-1 items-center justify-center overflow-hidden"
+    >
+      <div ref={contentRef} style={{ transform: `scale(${scale})` }}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
+// 하늘색 폰 목업 틀 —안내 화면들이 같은 틀 위에 각자의 장면을 그린다
 export const PhoneMockup = ({ children }: { children: React.ReactNode }) => (
   <div className="relative h-[430px] w-[262px] overflow-hidden rounded-[28px] bg-gradient-to-b from-[#dceefb] to-[#f4f9ff]">
     {children}
