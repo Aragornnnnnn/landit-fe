@@ -8,6 +8,7 @@ import { EVENTS } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
+import { isStaleLockedFeedback } from '@/features/feedback/model/feedback-view';
 import {
   sessionFeedbackKey,
   useSessionFeedbackQuery,
@@ -60,8 +61,7 @@ export const ScenarioFeedbackFlow = ({
   // 한 번만이다 — 다시 받아도 잠겨 있으면(웹훅 지연) 그대로 두고, CTA는 페이월(구매 복원)로 이어진다
   const { subscription } = useSubscriptionQuery();
   const queryClient = useQueryClient();
-  const staleLocked =
-    subscription?.premium === true && feedback?.detailFeedbackLocked === true;
+  const staleLocked = isStaleLockedFeedback(subscription?.premium, feedback);
   const refreshed = useRef(false);
   useEffect(() => {
     if (!staleLocked || refreshed.current || sessionId === null) return;

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
+import { scenarioReturnPath } from '@/shared/lib/routes';
 
 import type { ExpressionLearning } from '../api/learning';
 import type { ExpressionPractice } from '../api/practice';
@@ -11,7 +12,10 @@ import { useExpressionLearningQuery } from '../model/useExpressionLearningQuery'
 import { useExpressionPracticeQuery } from '../model/useExpressionPracticeQuery';
 import { ExpressionFlow } from './ExpressionFlow';
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+const routerMocks = vi.hoisted(() => ({ replace: vi.fn() }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: routerMocks.replace }),
+}));
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 vi.mock('../model/useExpressionLearningQuery', () => ({
   useExpressionLearningQuery: vi.fn(),
@@ -913,5 +917,36 @@ describe('ExpressionFlow 예문 스텝', () => {
       expression_id: 7,
       step: 'examples',
     });
+  });
+});
+
+describe('ExpressionFlow 조회 실패', () => {
+  it('표현을 못 불러오면 안내와 함께 표현이 있던 목록으로 돌아갈 길을 준다 — 알림으로 들어온 남의 표현·없는 표현', async () => {
+    const user = userEvent.setup();
+    learningMock.mockReturnValue({
+      learning: null,
+      error: new Error('접근할 수 없는 표현이에요.'),
+      isLoading: false,
+    });
+    practiceMock.mockReturnValue({
+      practice: null,
+      error: null,
+      isLoading: false,
+    });
+    render(
+      <ExpressionFlow
+        origin={{ kind: 'scenario', scenarioId: 3 }}
+        expressionId={7}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: '돌아갈게요' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      '접근할 수 없는 표현이에요.',
+    );
+    expect(routerMocks.replace).toHaveBeenCalledWith(
+      scenarioReturnPath({ flip: 3 }),
+    );
   });
 });

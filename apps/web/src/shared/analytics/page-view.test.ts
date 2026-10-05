@@ -221,6 +221,23 @@ describe('toPageView', () => {
     });
   });
 
+  it('시나리오 기록 목록은 어느 시나리오인지 id를 단다', () => {
+    expect(pv('/scenario/12/sessions')).toEqual({
+      page_name: 'scenario_history',
+      path: '/scenario/12/sessions',
+      scenario_id: 12,
+    });
+  });
+
+  it('시나리오 기록의 한 회차는 시나리오와 세션 id를 함께 단다', () => {
+    expect(pv('/scenario/12/sessions/7')).toEqual({
+      page_name: 'scenario_history_detail',
+      path: '/scenario/12/sessions/7',
+      scenario_id: 12,
+      session_id: 7,
+    });
+  });
+
   it.each([
     ['/smalltalk/sessions/7', 'smalltalk_history_detail'],
     ['/smalltalk/sessions/7/messages', 'smalltalk_history_transcript'],

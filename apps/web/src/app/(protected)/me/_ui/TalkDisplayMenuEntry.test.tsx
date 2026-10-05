@@ -26,22 +26,22 @@ const openSheet = () => {
 };
 
 describe('TalkDisplayMenuEntry', () => {
-  it('기본은 상대 말 글자 항상 보기·해석 항상 보기 모두 끔이다', () => {
+  it('기본은 상대 영어 문장 항상 보기·해석 항상 보기 모두 끔이다', () => {
     openSheet();
 
     expect(
-      screen.getByRole('switch', { name: '상대 말 글자 항상 보기' }),
+      screen.getByRole('switch', { name: '상대 영어 문장 항상 보기' }),
     ).toHaveAttribute('aria-checked', 'false');
     expect(
       screen.getByRole('switch', { name: '해석 항상 보기' }),
     ).toHaveAttribute('aria-checked', 'false');
   });
 
-  it('상대 말 글자 항상 보기를 켜면 저장값과 계측에 남는다', () => {
+  it('상대 영어 문장 항상 보기를 켜면 저장값과 계측에 남는다', () => {
     openSheet();
 
     fireEvent.click(
-      screen.getByRole('switch', { name: '상대 말 글자 항상 보기' }),
+      screen.getByRole('switch', { name: '상대 영어 문장 항상 보기' }),
     );
 
     expect(getDisplaySetting('alwaysShowText')).toBe(true);
@@ -68,7 +68,7 @@ describe('TalkDisplayMenuEntry', () => {
     openSheet();
 
     expect(
-      screen.getByRole('switch', { name: '상대 말 글자 항상 보기' }),
+      screen.getByRole('switch', { name: '상대 영어 문장 항상 보기' }),
     ).toHaveAttribute('aria-checked', 'true');
   });
 });

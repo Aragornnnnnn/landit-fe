@@ -16,6 +16,7 @@ export {
   type ExpressionReviewStep,
   type HintSource,
   type HomeReturnReason,
+  type FeedbackSource,
   type RetryScreen,
   type FeedbackType,
   type HomeTab,

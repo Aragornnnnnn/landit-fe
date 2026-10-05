@@ -8,6 +8,7 @@ import { preload } from 'react-dom';
 
 import { track } from '@/shared/analytics';
 import { scenarioReturnPath, smallTalkHistoryPath } from '@/shared/lib/routes';
+import { Button } from '@/shared/ui/Button';
 
 import type { ExpressionLearning } from '../api/learning';
 import type { ExpressionPractice } from '../api/practice';
@@ -51,6 +52,13 @@ const STEP_PROP: Record<Step, ExpressionStep> = {
   REVIEW: 'review',
 };
 
+// 학습을 나가면 그 표현이 서 있던 목록으로 돌아간다 — 시나리오는 홈 카드를 뒤집어(뒷면=표현 리스트),
+// 스몰톡은 그 대화의 기록으로 (대화 직후 결과 화면은 축하가 붙은 1회용이라 돌아갈 자리가 아니다)
+const listPathOf = (origin: ExpressionOrigin) =>
+  origin.kind === 'scenario'
+    ? scenarioReturnPath({ flip: origin.scenarioId, date: origin.date })
+    : smallTalkHistoryPath(origin.sessionId);
+
 // 진행바 배치 — 예문이 멈추는 지점. 복습이 여기서 1까지 이어받아 채운다
 const EXAMPLES_PROGRESS = 0.7;
 // 앞쪽 구간 배치 — 퀴즈(0~0.3)→설명(0.45)→발음(0.6)→예문→복습. 발음 없는 표현은 0.6 자리를 비우고 같은 좌표를 쓴다
@@ -64,6 +72,7 @@ export const ExpressionFlow = ({
   origin,
   expressionId,
 }: ExpressionFlowProps) => {
+  const router = useRouter();
   // 플로우 전체(퀴즈·설명·복습)는 대표 예문(learning-start)만으로 굴러간다.
   // 추가 예문(practice)은 설명 스텝의 "이렇게도 써요"에만 쓰는 보강 데이터라, 없거나 실패해도 플로우를 막지 않는다.
   const {
@@ -91,9 +100,15 @@ export const ExpressionFlow = ({
     );
   }
   if (learningLoading) return <QuizStepSkeleton />;
+  // 알림으로 들어온 남의 표현·없는 표현은 뒤로 갈 히스토리도 없다 — 목록으로 돌아갈 길을 준다
   return (
     <FlowStatus>
-      {learningError?.message ?? '표현을 불러오지 못했어요.'}
+      <p role="alert">
+        {learningError?.message ?? '표현을 불러오지 못했어요.'}
+      </p>
+      <Button onClick={() => router.replace(listPathOf(origin))}>
+        돌아갈게요
+      </Button>
     </FlowStatus>
   );
 };
@@ -191,12 +206,7 @@ const LoadedExpressionFlow = ({
     preload(url, { as: 'image' });
   }
 
-  // 학습을 나가면 그 표현이 서 있던 목록으로 돌아간다 — 시나리오는 홈 카드를 뒤집어(뒷면=표현 리스트),
-  // 스몰톡은 그 대화의 기록으로 (대화 직후 결과 화면은 축하가 붙은 1회용이라 돌아갈 자리가 아니다)
-  const listPath =
-    origin.kind === 'scenario'
-      ? scenarioReturnPath({ flip: origin.scenarioId, date: origin.date })
-      : smallTalkHistoryPath(origin.sessionId);
+  const listPath = listPathOf(origin);
   // 중도 이탈(그만두기·뒤로가기)은 곧장 목록으로. replace로 표현학습을 히스토리에서 지워 뒤로가기로 퀴즈에 재진입하지 않게 한다
   const backToList = () => router.replace(listPath);
 
@@ -380,7 +390,7 @@ const LoadedExpressionFlow = ({
 };
 
 const FlowStatus = ({ children }: { children: React.ReactNode }) => (
-  <div className="mx-auto flex h-dvh max-w-[430px] items-center justify-center bg-background px-6 text-center text-sm font-medium text-muted-foreground">
+  <div className="mx-auto flex h-dvh max-w-[430px] flex-col items-center justify-center gap-5 bg-background px-6 text-center text-sm font-medium text-muted-foreground">
     {children}
   </div>
 );

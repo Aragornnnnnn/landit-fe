@@ -3,7 +3,7 @@
 // 피드백 본편 — 로딩 분기(Flow)가 끝난 뒤 총평 ↔ 상세 두 단계를 전환한다.
 // 서버가 상세를 잠근 세션이면 상세로 넘어가지 않고 호출부(페이월)에 맡긴다
 import { useEffect, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type FeedbackSource } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
 
@@ -14,6 +14,7 @@ import { FeedbackSummary } from './FeedbackSummary';
 export const FeedbackContent = ({
   feedback,
   title,
+  source,
   openDetail = false,
   refreshing = false,
   onExit,
@@ -21,6 +22,8 @@ export const FeedbackContent = ({
 }: {
   feedback: SessionFeedbackResponse;
   title: string;
+  /** 어디서 열었는지 — 대화 직후 흐름과 기록 열람을 계측에서 가른다 */
+  source: FeedbackSource;
   /** 총평을 건너뛰고 상세부터 — 결제하고 돌아온 길. 잠금이 풀린 응답이 오는 순간 한 번 연다 */
   openDetail?: boolean;
   /** 받아 둔 응답을 다시 받는 중 — 그동안 잠긴 CTA를 눌러도 페이월로 보내지 않는다 */
@@ -44,13 +47,17 @@ export const FeedbackContent = ({
   // 결제하고 돌아와 저절로 열린 상세도 클릭으로 연 것과 같이 남긴다 — 안 남기면 결제한 사람만 지표에서 빠진다
   useEffect(() => {
     if (!detailOpened) return;
-    track(EVENTS.FEEDBACK_DETAIL_OPENED, { session_id: feedback.sessionId });
+    track(EVENTS.FEEDBACK_DETAIL_OPENED, {
+      session_id: feedback.sessionId,
+      source,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 한 번 열리면 되돌지 않는다
   }, [detailOpened]);
 
   useEffect(() => {
     track(EVENTS.FEEDBACK_VIEWED, {
       session_id: feedback.sessionId,
+      source,
       detail_locked: detailLocked,
       good_count: feedback.messageFeedbacks.filter(
         (turn) => turn.feedbackType === 'GOOD',
@@ -66,10 +73,14 @@ export const FeedbackContent = ({
     return (
       <FeedbackDetail
         sessionId={feedback.sessionId}
+        source={source}
         turns={feedback.messageFeedbacks}
         onBack={() => setStep('summary')}
         onDone={() => {
-          track(EVENTS.FEEDBACK_COMPLETED, { session_id: feedback.sessionId });
+          track(EVENTS.FEEDBACK_COMPLETED, {
+            session_id: feedback.sessionId,
+            source,
+          });
           onExit();
         }}
       />
@@ -87,7 +98,10 @@ export const FeedbackContent = ({
       onExit();
       return;
     }
-    track(EVENTS.FEEDBACK_DETAIL_OPENED, { session_id: feedback.sessionId });
+    track(EVENTS.FEEDBACK_DETAIL_OPENED, {
+      session_id: feedback.sessionId,
+      source,
+    });
     setStep('detail');
   };
 
@@ -99,7 +113,10 @@ export const FeedbackContent = ({
       refreshing={refreshing}
       // 총평만 보고 상세 없이 나감 — Feedback Completed와 배타적인 이탈 신호
       onBack={() => {
-        track(EVENTS.FEEDBACK_SKIPPED, { session_id: feedback.sessionId });
+        track(EVENTS.FEEDBACK_SKIPPED, {
+          session_id: feedback.sessionId,
+          source,
+        });
         onExit();
       }}
       onDetail={openDetailStep}

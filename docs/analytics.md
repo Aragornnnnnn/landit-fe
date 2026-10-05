@@ -40,7 +40,7 @@
 | Page Viewed             | page_name, path, return_reason?, scenario_id?, session_id?, expression_id?, completed_date?, letter_id?, feedback_id?, feedback_type?, paywall_source?, entry_campaign?, entry_content? | 라우트 변경                                                                                                           |
 | Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete)                                                                                                                               | 이탈·탈퇴 확인 시트 열림                                                                                              |
 | Confirm Sheet Dismissed | sheet                                                                                                                                                                                   | 확인 시트에서 계속하기/닫기                                                                                           |
-| Error Retried           | screen(scenario\|smalltalk\|smalltalk_summary\|conversation\|card_back\|expression_list\|streak\|mailbox)                                                                               | 에러 화면 "다시 시도"                                                                                                 |
+| Error Retried           | screen(scenario\|scenario_history\|smalltalk\|smalltalk_summary\|conversation\|card_back\|expression_list\|streak\|mailbox)                                                             | 에러 화면 "다시 시도"                                                                                                 |
 | App Exited              | trigger(back_button)                                                                                                                                                                    | 네이티브 뒤로가기로 앱 종료 (셸에서만)                                                                                |
 | Download Link Visited   | store(play_store\|app_store), utm_source?, utm_medium?, utm_campaign?                                                                                                                   | /download 스토어 리다이렉트 진입 (서버 발화, 익명). utm_*은 링크에 딱지가 있을 때만. 메신저 미리보기 봇은 세지 않는다 |
 | App Update Store Opened | store(play_store\|app_store)                                                                                                                                                            | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화)                                                         |
@@ -76,6 +76,8 @@
 | Level Result Viewed         | scenario_id, level, change_type                                                                  | 무료 사용자가 첫 시나리오(서버가 상세를 열어 준 세션) 직후 레벨 결과 화면이 떴을 때. 쓸 수 있는 평가(MODEL·근거 충분)일 때만                                                                                                                                                     |
 | Prepared Learning Viewed    | scenario_id                                                                                      | 대화 직후 학습 준비 화면(흐린 학습 4개, 내용 없음)이 떴을 때                                                                                                                                                                                                                     |
 | Prepared Learning Continued | scenario_id                                                                                      | 그 화면에서 학습 시작하기를 눌렀을 때 (무료 사용자는 이어서 Paywall Gate Locked)                                                                                                                                                                                                 |
+
+`feedback_detail`은 대화 직후 총평과 시나리오 기록 회차(`/scenario/{id}/sessions/{sessionId}`)에서 똑같이 나간다. 잠긴 대상이 같은 상세 피드백이라 값을 나누지 않았다 — 어디서 열었는지는 `Feedback Viewed`의 `source`가 가른다.
 
 페이월 노출은 별도 이벤트 없이 `Page Viewed`(page_name=paywall)로 본다. 어느 문으로 왔는지는 같은 이벤트의 `paywall_source`가 남긴다 — 게이트에 막혀 왔으면 막힌 자리(`Paywall Gate Locked`의 source와 같은 값), 마이페이지에서 스스로 들어왔으면 `me`. 값은 `paywallPath`가 주소에 실어 보내고 주소를 손으로 고쳐도 모르는 값은 버린다. 노출과 전환이 한 이벤트에 묶여 있어야 진입 경로별 결제 전환율이 바로 나온다.
 
@@ -204,13 +206,15 @@
 
 ### 분석 피드백
 
-| 이벤트                 | 속성                                                                           | 시점                                                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| Feedback Viewed        | session_id, detail_locked, good_count, turn_count, native_score?, star_rating? | 총평 노출. detail_locked면 서버가 상세를 비워 보낸 세션이라 good_count·turn_count가 0 — 평균낼 때 걸러야 한다 |
-| Feedback Skipped       | session_id                                                                     | 총평만 보고 상세 없이 나감 (Completed와 배타)                                                                 |
-| Feedback Detail Opened | session_id                                                                     | 상세 분석 진입                                                                                                |
-| Feedback Turn Viewed   | session_id, turn_index, feedback_type                                          | 턴별 분석 노출                                                                                                |
-| Feedback Completed     | session_id                                                                     | 분석 다 봤어요                                                                                                |
+| 이벤트                 | 속성                                                                                                               | 시점                                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| Feedback Viewed        | session_id, source(post_conversation\|history), detail_locked, good_count, turn_count, native_score?, star_rating? | 총평 노출. detail_locked면 서버가 상세를 비워 보낸 세션이라 good_count·turn_count가 0 — 평균낼 때 걸러야 한다 |
+| Feedback Skipped       | session_id, source                                                                                                 | 총평만 보고 상세 없이 나감 (Completed와 배타)                                                                 |
+| Feedback Detail Opened | session_id, source                                                                                                 | 상세 분석 진입                                                                                                |
+| Feedback Turn Viewed   | session_id, source, turn_index, feedback_type                                                                      | 턴별 분석 노출                                                                                                |
+| Feedback Completed     | session_id, source                                                                                                 | 분석 다 봤어요                                                                                                |
+
+`source`는 어디서 열었는지다. `post_conversation`은 대화 직후 흐름, `history`는 시나리오 기록(`/scenario/{id}/sessions/{sessionId}`)에서 다시 연 것이다. 대화 직후 퍼널을 볼 때는 `post_conversation`만 거른다.
 
 ### 소감 시트
 
