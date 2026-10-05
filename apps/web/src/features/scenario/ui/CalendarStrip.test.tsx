@@ -89,6 +89,31 @@ describe('CalendarStrip 월 패널', () => {
     );
   });
 
+  it('월 응답 전 스켈레톤에도 그 달의 날짜 숫자는 보인다 — 숫자는 응답 없이도 정해진다', () => {
+    // Given 월 조회가 아직 응답하지 않은 상태에서
+    givenCalendars(null);
+    render(<CalendarStrip onSelect={vi.fn()} />);
+
+    // When 월 토글을 누르면
+    fireEvent.click(screen.getByRole('button', { name: '월' }));
+
+    // Then 스켈레톤 안에 8월의 말일 숫자가 있다
+    const skeleton = screen.getByRole('status', { name: '달력 불러오는 중' });
+    expect(within(skeleton).getByText('31')).toBeInTheDocument();
+  });
+
+  it('월 응답 전에는 주 이름표를 달 이름표 자리에 그대로 두지 않는다', () => {
+    // Given 월 조회가 아직 응답하지 않은 상태에서
+    givenCalendars(null);
+    render(<CalendarStrip onSelect={vi.fn()} />);
+
+    // When 월 토글을 누르면
+    fireEvent.click(screen.getByRole('button', { name: '월' }));
+
+    // Then 주 이름표가 보이지 않는다
+    expect(screen.queryByText('2026년 8월 1주차')).toBeNull();
+  });
+
   it('월 응답이 오면 그 달 전체를 그린다', () => {
     // Given 월 조회가 이미 응답한 상태에서
     givenCalendars(MONTH);

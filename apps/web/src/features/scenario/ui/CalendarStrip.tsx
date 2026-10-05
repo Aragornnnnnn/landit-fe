@@ -14,10 +14,12 @@ import type { ScenarioCalendarType } from '../api/calendar';
 import {
   canGoBack,
   canGoForward,
+  datesOfMonth,
   shiftWindow,
   WEEKDAY_LABELS,
   weekdayIndexOf,
 } from '../lib/calendar-window';
+import { dayStateOf } from '../lib/day-state';
 import { useScenarioCalendarQuery } from '../model/useScenarioCalendarQuery';
 import { CalendarDay } from './calendar/CalendarDay';
 
@@ -90,6 +92,8 @@ export const CalendarStrip = ({
   const shown = expanded ? (month ?? week) : week;
   // 새 주로 옮겨 응답을 기다리는 중 — 직전 주를 보이면 고른 날이 없는 엉뚱한 주가 떠 있다
   const loadingWeek = weekLoading && !expanded;
+  // 이름표도 지금 보는 단위의 응답이 와야 정해진다 — 달을 펼쳤는데 주 이름표가 남아 있으면 엉뚱하다
+  const loadingLabel = expanded ? !month : loadingWeek;
   const { today, startedAt } = shown;
   const type: ScenarioCalendarType = expanded ? 'MONTH' : 'WEEK';
   const anchor = windowDate ?? today;
@@ -138,7 +142,7 @@ export const CalendarStrip = ({
             onClick={() => move(-1)}
           />
           <span className="text-base font-extrabold text-foreground">
-            {loadingWeek ? <LabelSkeleton /> : shown.label}
+            {loadingLabel ? <LabelSkeleton /> : shown.label}
           </span>
           <ArrowButton
             direction={1}
@@ -231,7 +235,11 @@ export const CalendarStrip = ({
                       ))}
                     </div>
                   ) : (
-                    <MonthSkeleton />
+                    <MonthSkeleton
+                      date={anchor}
+                      today={today}
+                      startedAt={startedAt}
+                    />
                   )}
                 </div>
               </motion.div>
@@ -243,24 +251,59 @@ export const CalendarStrip = ({
   );
 };
 
-// 달 격자와 같은 골격의 5주 스켈레톤 — 응답이 와도 높이가 안 튀게 칸 치수를 CalendarDay에 맞춘다
-const MonthSkeleton = () => (
-  <div
-    role="status"
-    aria-label="달력 불러오는 중"
-    className="grid animate-pulse grid-cols-7 gap-y-0.5"
-  >
-    {Array.from({ length: 35 }).map((_, index) => (
-      <span
-        key={index}
-        className="flex w-full flex-col items-center gap-1 border-2 border-transparent pt-1.5 pb-1"
-      >
-        <span className="size-10 rounded-full bg-secondary min-[390px]:size-11" />
-        <span className="h-[15px] w-4 rounded bg-secondary" />
-      </span>
-    ))}
-  </div>
-);
+// 달 격자 자리표시 — 날짜 숫자와 1일의 요일은 응답 없이도 정해지니 그대로 쓰고 동그라미만 비운다.
+// 칸 수가 실제 격자와 같아 응답이 와도 줄 수가 안 바뀐다. 칸 치수는 CalendarDay에 맞춘다
+const MonthSkeleton = ({
+  date,
+  today,
+  startedAt,
+}: {
+  date: string;
+  today: string;
+  startedAt: string | null;
+}) => {
+  const dates = datesOfMonth(date);
+  // 칸 상태 규칙은 실제 칸과 같은 곳에서 가져온다 — 완료 여부는 몰라도 '그릴 게 없는 날'은 정해진다
+  const isBlank = (day: string) =>
+    dayStateOf(
+      { date: day, completed: false, scenarioId: null, thumbnailUrl: null },
+      { today, startedAt },
+    ) === 'blank';
+  return (
+    <div
+      role="status"
+      aria-label="달력 불러오는 중"
+      className="grid grid-cols-7 gap-y-0.5"
+    >
+      {Array.from({ length: leadingBlanks(dates[0]) }).map((_, index) => (
+        <span key={`blank-${index}`} />
+      ))}
+      {dates.map((day) => (
+        <span
+          key={day}
+          aria-hidden
+          className="flex w-full flex-col items-center gap-1 border-2 border-transparent pt-1.5 pb-1"
+        >
+          {/* 오늘 뒤·시작 전 날은 실제 격자에서도 동그라미가 없다 — 자리만 지킨다 */}
+          <span
+            className={`size-10 rounded-full min-[390px]:size-11 ${
+              isBlank(day) ? '' : 'animate-skeleton-flow'
+            }`}
+          />
+          <span
+            className={`text-[13px] leading-[1.15] ${
+              isBlank(day)
+                ? 'text-muted-foreground/40'
+                : 'text-muted-foreground'
+            }`}
+          >
+            {Number(day.slice(8))}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
+};
 
 const ArrowButton = ({
   direction,
