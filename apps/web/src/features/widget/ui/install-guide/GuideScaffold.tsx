@@ -46,9 +46,10 @@ export const GuideScaffold = ({
   </>
 );
 
-// 하늘색 폰 목업 틀 — 안내 화면들이 같은 틀 위에 각자의 장면을 그린다
+// 하늘색 폰 목업 틀 — 안내 화면들이 같은 틀 위에 각자의 장면을 그린다.
+// 세로가 짧은 화면(iPhone SE·iPad 호환 모드 667)에선 0.8배로 줄여 CTA가 화면 밖으로 밀리지 않게 한다
 export const PhoneMockup = ({ children }: { children: React.ReactNode }) => (
-  <div className="relative h-[430px] w-[262px] overflow-hidden rounded-[28px] bg-gradient-to-b from-[#dceefb] to-[#f4f9ff]">
+  <div className="relative h-[430px] w-[262px] overflow-hidden rounded-[28px] bg-gradient-to-b from-[#dceefb] to-[#f4f9ff] [@media(max-height:760px)]:[zoom:0.8]">
     {children}
   </div>
 );
