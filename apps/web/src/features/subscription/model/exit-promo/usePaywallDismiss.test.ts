@@ -26,7 +26,7 @@ vi.mock('@tanstack/react-query', () => ({
 vi.mock('../../api/subscription', () => ({
   dismissPaywall: () => mocks.dismiss(),
 }));
-vi.mock('../paywall-gate/payment-flag', () => ({ PROMO_ENABLED: true }));
+vi.mock('./promo-flag', () => ({ PROMO_ENABLED: true }));
 vi.mock('./promo-handoff', () => ({ handOffPromo: mocks.handOffPromo }));
 
 const offering: Offering = {

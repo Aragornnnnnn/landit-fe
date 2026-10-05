@@ -11,6 +11,7 @@ import { paywallPath, SCENARIO_PATH } from '@/shared/lib/routes';
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
 import type { PaywallPromo } from '../api/subscription';
+import { PROMO_ENABLED } from '../model/exit-promo/promo-flag';
 import {
   clearPromoHandoff,
   useHandedPromo,
@@ -20,7 +21,6 @@ import {
   usePromoOffer,
 } from '../model/exit-promo/usePromoOffer';
 import { useSubscriptionQuery } from '../model/my-subscription/useSubscriptionQuery';
-import { PROMO_ENABLED } from '../model/paywall-gate/payment-flag';
 import { usePaymentLive } from '../model/paywall-gate/usePaymentLive';
 import { PromoClock } from './exit-promo/PromoClock';
 import { PromoSheet } from './exit-promo/PromoSheet';
