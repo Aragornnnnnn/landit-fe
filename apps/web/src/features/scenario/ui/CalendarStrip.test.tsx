@@ -151,12 +151,12 @@ const WEEK_WITH_COMPLETED: ScenarioCalendarResponse = {
   ),
 };
 
-describe('CalendarStrip 계측', () => {
-  const givenCompletedWeek = () =>
-    mockQuery.mockImplementation((type) => ({
-      calendar: type === 'WEEK' ? WEEK_WITH_COMPLETED : MONTH,
-    }));
+const givenCompletedWeek = () =>
+  mockQuery.mockImplementation((type) => ({
+    calendar: type === 'WEEK' ? WEEK_WITH_COMPLETED : MONTH,
+  }));
 
+describe('CalendarStrip 계측', () => {
   it('완료한 지난 날을 누르면 오늘이 아니라고 기록한다', () => {
     givenCompletedWeek();
     render(<CalendarStrip onSelect={vi.fn()} />);
@@ -221,12 +221,22 @@ describe('CalendarStrip 계측', () => {
   });
 });
 
+// 20일을 완료한 달 — 주 스트립(2~8일) 밖의 날을 고르는 경우
+const MONTH_WITH_COMPLETED: ScenarioCalendarResponse = {
+  ...MONTH,
+  days: MONTH.days.map((item) =>
+    item.date === '2026-08-20' ? { ...item, completed: true } : item,
+  ),
+};
+
+// 달 격자 — 주 스트립과 같은 이름의 칸이 있어 패널 안으로 좁혀 찾는다
+const monthPanel = () =>
+  screen.getByRole('button', { name: '8월 31일' }).parentElement!;
+
 describe('CalendarStrip 선택 표시', () => {
-  it('주소에 날짜가 있으면 응답을 기다리지 않고 그 날을 선택해 둔다', () => {
-    // Given 주소가 8월 5일을 가리키면
-    mockQuery.mockImplementation((type) => ({
-      calendar: type === 'WEEK' ? WEEK_WITH_COMPLETED : MONTH,
-    }));
+  it('URL에 date가 있으면 응답을 기다리지 않고 그 날을 선택해 둔다', () => {
+    // Given URL의 date가 8월 5일을 가리키면
+    givenCompletedWeek();
 
     // When 스트립을 그리면
     render(<CalendarStrip date="2026-08-05" onSelect={vi.fn()} />);
@@ -237,8 +247,8 @@ describe('CalendarStrip 선택 표시', () => {
     ).toHaveAttribute('aria-current', 'date');
   });
 
-  it('주소에 날짜가 없으면 오늘을 선택해 둔다', () => {
-    // Given 주소에 날짜가 없으면
+  it('URL에 date가 없으면 오늘을 선택해 둔다', () => {
+    // Given URL에 date가 없으면
     givenCalendars(MONTH);
 
     // When 스트립을 그리면
@@ -268,22 +278,6 @@ describe('CalendarStrip 선택 표시', () => {
       'aria-pressed',
       'true',
     );
-  });
-
-  it('월 패널에서 다른 주의 날을 고르면 주소가 따라오기 전에 주 스트립을 그 주로 옮긴다', () => {
-    // Given 20일을 완료한 달이 펼쳐진 상태에서
-    givenCalendars(MONTH_WITH_COMPLETED);
-    render(<CalendarStrip onSelect={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: '월' }));
-
-    // When 20일을 고르면 (주소는 아직 그대로)
-    fireEvent.click(
-      within(monthPanel()).getByRole('button', { name: '8월 20일 완료' }),
-    );
-
-    // Then 주 조회가 오늘 주로 돌아가지 않고 20일이 든 주를 묻는다
-    const weekCalls = mockQuery.mock.calls.filter(([type]) => type === 'WEEK');
-    expect(weekCalls.at(-1)?.[1]).toBe('2026-08-20');
   });
 
   it('월 패널에서 날을 골라 접힐 때는 주 전환으로 기록하지 않는다 — 사용자가 고른 건 날짜다', () => {
@@ -328,28 +322,31 @@ describe('CalendarStrip 창 따라가기', () => {
     expect(lastWeekQuery()).toBeUndefined();
   });
 
-  it('화살표로 다른 주를 보던 중 주소 날짜가 바뀌면 주소의 주로 돌아간다', () => {
+  it('월 패널에서 다른 주의 날을 고르면 URL이 따라오기 전에 주 스트립을 그 주로 옮긴다', () => {
+    // Given 20일을 완료한 달이 펼쳐진 상태에서
+    givenCalendars(MONTH_WITH_COMPLETED);
+    render(<CalendarStrip onSelect={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: '월' }));
+
+    // When 20일을 고르면 (URL은 아직 그대로)
+    fireEvent.click(
+      within(monthPanel()).getByRole('button', { name: '8월 20일 완료' }),
+    );
+
+    // Then 주 조회가 오늘 주로 돌아가지 않고 20일이 든 주를 묻는다
+    expect(lastWeekQuery()).toBe('2026-08-20');
+  });
+
+  it('화살표로 다른 주를 보던 중 URL의 date가 바뀌면 그 주로 돌아간다', () => {
     // Given 이전 주로 넘겨 둔 상태에서
     givenCalendars(MONTH);
     const { rerender } = render(<CalendarStrip onSelect={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: '이전' }));
 
-    // When 주소가 8월 20일로 바뀌면
+    // When URL의 date가 8월 20일로 바뀌면
     rerender(<CalendarStrip date="2026-08-20" onSelect={vi.fn()} />);
 
     // Then 훑던 주를 내려놓고 20일의 주를 묻는다
     expect(lastWeekQuery()).toBe('2026-08-20');
   });
 });
-
-// 20일을 완료한 달 — 주 스트립(2~8일) 밖의 날을 고르는 경우
-const MONTH_WITH_COMPLETED: ScenarioCalendarResponse = {
-  ...MONTH,
-  days: MONTH.days.map((item) =>
-    item.date === '2026-08-20' ? { ...item, completed: true } : item,
-  ),
-};
-
-// 달 격자 — 주 스트립과 같은 이름의 칸이 있어 패널 안으로 좁혀 찾는다
-const monthPanel = () =>
-  screen.getByRole('button', { name: '8월 31일' }).parentElement!;
