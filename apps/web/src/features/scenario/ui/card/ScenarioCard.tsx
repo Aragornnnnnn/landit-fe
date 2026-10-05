@@ -110,7 +110,7 @@ export const ScenarioCard = ({
           flipped ? '[transform:rotateY(-180deg)]' : ''
         }`}
       >
-        {/* 앞면 */}
+        {/* 앞면 — 자리·크기를 바꾸면 ScenarioCardSkeleton도 같이 맞춘다 */}
         <div className="absolute inset-0 flex flex-col overflow-hidden rounded-2xl bg-card shadow-md [-webkit-backface-visibility:hidden] [backface-visibility:hidden]">
           {/* 썸네일 — 텍스트 영역을 제외한 카드 전체를 채운다 */}
           <div

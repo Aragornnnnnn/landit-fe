@@ -101,7 +101,7 @@ function ScenarioContent() {
 
   return (
     <>
-      {/* 창과 선택은 주소가 정한다 — 응답을 기다렸다 정하면 누른 뒤 1초 넘게 그대로라 안 눌린 줄 안다 */}
+      {/* 창과 선택은 URL의 date가 정한다 — 응답을 기다렸다 정하면 누른 뒤 1초 넘게 그대로라 안 눌린 줄 안다 */}
       <CalendarStrip date={date} onSelect={selectDate} />
 
       {!daily ? (

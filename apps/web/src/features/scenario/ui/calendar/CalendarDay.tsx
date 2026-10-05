@@ -31,7 +31,7 @@ interface CalendarDayProps {
   today: string;
   // 처음 완료한 날. 그 앞은 기록 자체가 없어 자리만 비워 둔다
   startedAt: string | null;
-  // 주소가 가리키는 날 — 카드는 아직 불러오는 중일 수 있다
+  // 보고 있는 날(URL의 date, 없으면 오늘) — 카드는 아직 불러오는 중일 수 있다
   selected: boolean;
   onSelect: (date: string) => void;
   // 월 패널에 덮여 안 보이는 칸은 빛 쓸기를 돌리지 않는다

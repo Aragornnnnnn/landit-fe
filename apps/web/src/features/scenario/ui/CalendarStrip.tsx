@@ -25,7 +25,7 @@ import { CalendarDay } from './calendar/CalendarDay';
 const leadingBlanks = (firstDate: string) => weekdayIndexOf(firstDate);
 
 interface CalendarStripProps {
-  // 주소가 가리키는 보고 있는 날. 창도 이 날을 따른다. 없으면 오늘이다
+  // URL의 date가 가리키는 보고 있는 날. 창도 이 날을 따른다. 없으면 오늘이다
   date?: string;
   // 오늘을 고르면 null을 준다 — 오늘은 날짜로 지목하는 날이 아니라 기본값이다
   onSelect: (date: string | null) => void;
@@ -39,7 +39,7 @@ export const CalendarStrip = ({
   const [expanded, setExpanded] = useState(false);
   // 창은 보고 있는 날과 따로 움직인다 — 지난 주를 훑어보다 아무 날도 안 고를 수 있다
   const [movedTo, setMovedTo] = useState<string | undefined>(undefined);
-  // 주소가 바뀌면 훑어보던 창은 내려놓고 주소를 따른다
+  // URL의 date가 바뀌면 훑어보던 창은 내려놓고 URL을 따른다
   const [seenRoute, setSeenRoute] = useState(routeDate);
   if (seenRoute !== routeDate) {
     setSeenRoute(routeDate);
@@ -94,7 +94,7 @@ export const CalendarStrip = ({
   const { today, startedAt } = shown;
   const type: ScenarioCalendarType = expanded ? 'MONTH' : 'WEEK';
   const anchor = windowDate ?? today;
-  // 선택은 응답이 아니라 주소를 따른다 — 누르자마자 옮겨져야 눌린 줄 안다
+  // 선택은 응답이 아니라 URL의 date를 따른다 — 누르자마자 옮겨져야 눌린 줄 안다
   const selected = routeDate ?? today;
 
   const move = (direction: -1 | 1) => {
@@ -121,7 +121,7 @@ export const CalendarStrip = ({
   const selectDay = (day: string) => {
     track(EVENTS.CALENDAR_DATE_SELECTED, { is_today: day === today });
     onSelect(day === today ? null : day);
-    // 골랐으면 패널을 접고 창을 주소보다 먼저 고른 날로 옮긴다(오늘은 날짜 없는 창이 정본)
+    // 골랐으면 패널을 접고 창을 URL보다 먼저 고른 날로 옮긴다(오늘은 날짜 없는 창이 정본)
     if (expanded) {
       setMovedTo(day === today ? undefined : day);
       setExpanded(false);
