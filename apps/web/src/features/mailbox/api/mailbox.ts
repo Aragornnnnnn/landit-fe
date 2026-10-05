@@ -74,6 +74,15 @@ export interface FeedbackReply {
   sentAt: string;
 }
 
+/** 보낸 피드백에 붙인 사진 한 장. 주소는 S3가 아니라 인증을 붙여 불러야 하는 API 경로다 */
+export interface FeedbackAttachment {
+  attachmentId: number;
+  contentType: string;
+  fileSize: number;
+  /** Bearer 인증을 붙여 이미지 바이트를 받는 API 상대 경로 */
+  downloadUrl: string;
+}
+
 /**
  * 내가 보낸 피드백 한 통 (`GET /mailbox/sent/{feedbackId}`).
  * 답장이 도착했으면 replies가 채워진다
@@ -90,6 +99,8 @@ export interface SentFeedbackDetail {
   createdAt: string;
   updatedAt: string;
   replies: FeedbackReply[];
+  /** 붙인 사진. 없으면 빈 배열 */
+  attachments: FeedbackAttachment[];
 }
 
 /** 피드백 등록 요청 (`POST /mailbox/feedbacks`) */
@@ -128,10 +139,30 @@ export const getReceivedLetterDetail = (letterId: number) =>
 export const getSentFeedbackDetail = (feedbackId: number) =>
   api.get<SentFeedbackDetail>(`/api/v1/mailbox/sent/${feedbackId}`);
 
+/** 보낸 피드백에 붙인 사진 한 장의 바이트 — 인증이 필요해 <img src>에 주소를 바로 넣을 수 없다 */
+export const getFeedbackAttachment = (downloadUrl: string) =>
+  api.getBlob(downloadUrl);
+
 /** 안 읽은 편지 개수 — 헤더의 점을 켤지 정한다. 목록 전체를 받아 세는 대신 개수만 묻는다 */
 export const getUnreadCount = () =>
   api.get<{ unreadCount: number }>('/api/v1/mailbox/unread-count');
 
-/** 피드백 등록. 201에 본문이 없다 — 보낸 뒤 보낸 편지함을 다시 부르면 새 편지가 따라온다 */
-export const submitFeedback = (body: FeedbackSubmitRequest) =>
-  api.post<void>('/api/v1/mailbox/feedbacks', body);
+/**
+ * 피드백 등록. 201에 본문이 없다 — 보낸 뒤 보낸 편지함을 다시 부르면 새 편지가 따라온다.
+ * 사진이 있으면 multipart(`feedback` JSON 파트 + `images`)로, 없으면 JSON으로 보낸다
+ */
+export const submitFeedback = (
+  body: FeedbackSubmitRequest,
+  images: File[] = [],
+) => {
+  if (images.length === 0) {
+    return api.post<void>('/api/v1/mailbox/feedbacks', body);
+  }
+  const form = new FormData();
+  form.append(
+    'feedback',
+    new Blob([JSON.stringify(body)], { type: 'application/json' }),
+  );
+  for (const image of images) form.append('images', image);
+  return api.post<void>('/api/v1/mailbox/feedbacks', form);
+};

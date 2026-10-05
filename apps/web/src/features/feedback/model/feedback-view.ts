@@ -1,20 +1,23 @@
-// 피드백 표시용 순수 함수 — 평가 맥락 라벨, 점수대별 총평 헤드라인, CTA 문구 (별점은 shared/ui/StarRating 재사용)
+// 피드백 표시용 값과 순수 함수 — 평가 맥락 라벨, 대체 제목, 총평 헤드라인, 잠긴 옛 응답 판정, CTA 문구 (별점은 shared/ui/StarRating 재사용)
 import type { EvaluationContextType } from '../api/session-feedback';
 
 // 상세 카드 상단이 AI 질문인지, 유저가 먼저 말하는 시나리오 지시문인지 구분한다.
 export const evaluationContextLabel = (type: EvaluationContextType): string =>
   type === 'AI_MESSAGE' ? '질문' : '상황';
 
-// 총평 헤드라인 — 점수대별 하드코딩 문구. (전달력 본문은 API summaryMessage에서 온다)
-// TODO: 제품 확정 카피로 교체.
-export const scoreHeadline = (score: number): string => {
-  if (score >= 90) return '완벽하게 원어민 옆에 착지했어요';
-  if (score >= 80) return '거의 원어민처럼 착지했어요';
-  if (score >= 70) return '원어민 근처에 사뿐히 착지했어요';
-  if (score >= 60) return '살짝 빗나갔지만 잘 착지했어요';
-  if (score >= 40) return '착지가 조금 흔들렸어요';
-  return '아직 착지까지 연습이 필요해요';
-};
+// 총평 헤드라인 — 서버가 시나리오×별점마다 정해 둔 문구(landit-be#229). 비어 오면 BE가 문구를 못 찾았을 때 쓰는 기본 문구로 대신한다
+const FALLBACK_HEADLINE = '오늘도 시나리오를 잘 마무리했어요';
+export const summaryHeadline = (highlightMessage: string): string =>
+  highlightMessage.trim() || FALLBACK_HEADLINE;
+
+// 유료인데 잠긴 응답을 들고 있다 — 무료일 때 받아 둔 옛 응답이라 한 번 다시 받아야 한다
+export const isStaleLockedFeedback = (
+  premium: boolean | undefined,
+  feedback: { detailFeedbackLocked?: boolean } | null | undefined,
+) => premium === true && feedback?.detailFeedbackLocked === true;
+
+// 피드백 화면 헤더의 대체 제목 — 그 날 카드가 이 시나리오가 아닐 때(자정을 넘겨 끝낸 대화)
+export const FEEDBACK_FALLBACK_TITLE = '대화 피드백';
 
 // 남은 개선 턴 수에 따라 상세로 넘어가는 CTA 문구를 고른다.
 export const detailCtaLabel = (improvementCount: number): string =>

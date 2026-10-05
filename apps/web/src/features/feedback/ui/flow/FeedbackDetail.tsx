@@ -2,7 +2,7 @@
 
 // 피드백 상세 — 턴별로 질문/상황·내 답변과 GOOD/개선 분석을 한 장씩 넘겨 본다
 import { useEffect, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type FeedbackSource } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
@@ -14,11 +14,13 @@ import { evaluationContextLabel } from '../../model/feedback-view';
 
 export const FeedbackDetail = ({
   sessionId,
+  source,
   turns,
   onBack,
   onDone,
 }: {
   sessionId: number;
+  source: FeedbackSource;
   turns: MessageFeedbackResponse[];
   onBack: () => void;
   onDone: () => void;
@@ -32,6 +34,7 @@ export const FeedbackDetail = ({
     if (!turn) return;
     track(EVENTS.FEEDBACK_TURN_VIEWED, {
       session_id: sessionId,
+      source,
       turn_index: index,
       feedback_type: turn.feedbackType,
     });
@@ -45,7 +48,7 @@ export const FeedbackDetail = ({
     <div className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
       <header
         className="flex shrink-0 flex-col gap-3 px-4 pt-4 pb-3.5"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 16px)' }}
+        style={{ paddingTop: 'max(var(--safe-area-inset-top), 16px)' }}
       >
         <div className="flex items-center">
           <button
@@ -78,7 +81,7 @@ export const FeedbackDetail = ({
 
       <div
         className="shrink-0 border-t border-border px-5 pt-3"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
+        style={{ paddingBottom: 'max(var(--safe-area-inset-bottom), 20px)' }}
       >
         <Button onClick={goNext}>
           {isLast ? '분석 다 봤어요' : '다음 분석 볼게요'}
@@ -98,11 +101,14 @@ const TurnCard = ({ turn }: { turn: MessageFeedbackResponse }) => {
         {isGood ? '잘 통했어요' : '한 단계 더 업그레이드해봐요'}
       </p>
 
-      <Bubble
-        label={evaluationContextLabel(turn.evaluationContext.type)}
-        text={turn.evaluationContext.content}
-        sub={turn.evaluationContext.translatedContent}
-      />
+      {/* 과거 회차는 당시 문맥을 복원하지 못해 비어 올 수 있다 — 그때는 내 답변만 보인다 */}
+      {turn.evaluationContext && (
+        <Bubble
+          label={evaluationContextLabel(turn.evaluationContext.type)}
+          text={turn.evaluationContext.content}
+          sub={turn.evaluationContext.translatedContent}
+        />
+      )}
       <Bubble label="내 답변" text={turn.userMessage} align="right" />
 
       <div className="h-px w-full bg-border" />
@@ -165,7 +171,7 @@ const Bubble = ({
 }: {
   label: string;
   text: string;
-  sub?: string;
+  sub?: string | null;
   align?: 'left' | 'right';
 }) => (
   <div

@@ -231,7 +231,7 @@ export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
 const ReviewLoading = () => (
   <div
     className="mx-auto h-dvh max-w-[430px] bg-background"
-    style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    style={{ paddingTop: 'var(--safe-area-inset-top)' }}
   >
     <div className="h-1 w-full bg-secondary" />
   </div>

@@ -58,7 +58,7 @@ export const TalkDisplayMenuEntry = () => {
         </p>
         <MenuGroup>
           <MenuToggle
-            title="상대 말 글자 항상 보기"
+            title="상대 영어 문장 항상 보기"
             checked={alwaysShowText}
             onChange={(next) => change('alwaysShowText', next)}
           />

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Landit",
     "slug": "saynow",
-    "version": "1.3.2",
+    "version": "1.3.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": [
@@ -22,7 +22,7 @@
       }
     },
     "ios": {
-      "buildNumber": "11",
+      "buildNumber": "12",
       "bundleIdentifier": "com.saynow.app",
       "usesAppleSignIn": true,
       "infoPlist": {
@@ -64,7 +64,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.saynow.app",
-      "versionCode": 26,
+      "versionCode": 27,
       "intentFilters": [
         {
           "action": "VIEW",
@@ -211,7 +211,15 @@
       "expo-image",
       "expo-status-bar",
       "expo-web-browser",
-      ["@sentry/react-native/expo", { "organization": "saynow" }]
+      ["@sentry/react-native/expo", { "organization": "saynow" }],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "피드백에 첨부할 사진을 고르는 데 사진 보관함을 사용합니다.",
+          "cameraPermission": false,
+          "microphonePermission": "음성 인식(말하기) 기능에 마이크를 사용합니다."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

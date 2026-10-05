@@ -8,6 +8,8 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { GrowthCard } from '@/features/feedback/ui/GrowthCard';
+import { ReusedExpressionsCard } from '@/features/feedback/ui/ReusedExpressionsCard';
 import type {
   SmallTalkSummaryHeadline,
   SmallTalkSummaryResponse,
@@ -31,8 +33,6 @@ import { toSummaryBlocks, type SummaryBlocks } from '../_model/summary-blocks';
 import { BlockSkeleton } from './BlockSkeleton';
 import { ComparisonCard } from './ComparisonCard';
 import { FollowUpBlock } from './FollowUpBlock';
-import { GrowthCard } from './GrowthCard';
-import { ReusedExpressionsCard } from './ReusedExpressionsCard';
 import { SmallTalkSummarySkeleton } from './SmallTalkSummarySkeleton';
 
 export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
@@ -109,7 +109,7 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
   return (
     <main
       className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      style={{ paddingTop: 'var(--safe-area-inset-top)' }}
     >
       <header className="relative flex h-14 flex-none items-center justify-center">
         <button
@@ -143,7 +143,7 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
 
           {/* 나가는 길은 이 버튼 하나 — 건너뛰는 링크를 따로 두지 않는다.
               상세 피드백을 보고 나면 그 화면이 표현 학습으로 이어 준다 */}
-          <footer className="flex-none px-5 pt-3 pb-[max(env(safe-area-inset-bottom),16px)]">
+          <footer className="flex-none px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),16px)]">
             <Button onClick={() => openDetail(summary)} disabled={leaving}>
               상세 피드백 보러갈게요
             </Button>

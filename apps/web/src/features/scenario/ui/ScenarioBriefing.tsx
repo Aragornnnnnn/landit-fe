@@ -46,8 +46,8 @@ export const ScenarioBriefing = ({
       animate={{ opacity: 1 }}
       transition={{ duration: DURATION.base, ease: EASE_STANDARD }}
       style={{
-        paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingTop: 'var(--safe-area-inset-top)',
+        paddingBottom: 'var(--safe-area-inset-bottom)',
       }}
     >
       <div className="mx-auto flex min-h-0 w-full max-w-[430px] flex-1 items-center justify-center px-6 py-10">

@@ -1,12 +1,30 @@
-// 피드백 표시용 순수 함수 검증 — 평가 맥락 라벨, 총평 헤드라인, CTA 문구
+// 피드백 표시용 순수 함수 검증 — 평가 맥락 라벨, 총평 헤드라인, 잠긴 옛 응답 판정, CTA 문구
 import { describe, expect, it } from 'vitest';
 
 import {
   detailCtaLabel,
   evaluationContextLabel,
+  isStaleLockedFeedback,
   LOCKED_DETAIL_CTA_LABEL,
-  scoreHeadline,
+  summaryHeadline,
 } from './feedback-view';
+
+describe('isStaleLockedFeedback', () => {
+  it('유료인데 잠긴 응답을 들고 있으면 무료일 때 받아 둔 옛 응답이다 — 다시 받아야 한다', () => {
+    expect(isStaleLockedFeedback(true, { detailFeedbackLocked: true })).toBe(
+      true,
+    );
+  });
+
+  it.each([
+    ['무료 사용자', false, { detailFeedbackLocked: true }],
+    ['열린 응답', true, { detailFeedbackLocked: false }],
+    ['응답이 아직 없음', true, null],
+    ['구독 상태를 아직 모름', undefined, { detailFeedbackLocked: true }],
+  ])('%s이면 다시 받지 않는다', (_, premium, feedback) => {
+    expect(isStaleLockedFeedback(premium, feedback)).toBe(false);
+  });
+});
 
 describe('evaluationContextLabel', () => {
   it('AI 발화 맥락은 질문으로 라벨링한다', () => {
@@ -18,17 +36,24 @@ describe('evaluationContextLabel', () => {
   });
 });
 
-describe('scoreHeadline', () => {
-  it('점수 구간마다 다른 헤드라인을 돌려준다', () => {
-    expect(scoreHeadline(95)).not.toBe(scoreHeadline(85));
-    expect(scoreHeadline(85)).toBe('거의 원어민처럼 착지했어요');
-    expect(scoreHeadline(20)).toBe('아직 착지까지 연습이 필요해요');
+describe('summaryHeadline', () => {
+  it('서버가 준 별점 문구를 그대로 쓴다', () => {
+    expect(summaryHeadline('앞으로 혼자서도 유심을 살 수 있어요!')).toBe(
+      '앞으로 혼자서도 유심을 살 수 있어요!',
+    );
   });
 
-  it('구간 경계값은 위쪽 구간에 포함된다', () => {
-    expect(scoreHeadline(80)).toBe(scoreHeadline(89));
-    expect(scoreHeadline(79)).not.toBe(scoreHeadline(80));
-  });
+  it.each([
+    ['비어 있으면', ''],
+    ['공백뿐이면', '  '],
+  ])(
+    '문구가 %s BE 기본 문구로 대신한다 — 별점 문구 BE보다 먼저 배포돼도 헤드라인이 비지 않게',
+    (_, message) => {
+      expect(summaryHeadline(message)).toBe(
+        '오늘도 시나리오를 잘 마무리했어요',
+      );
+    },
+  );
 });
 
 describe('detailCtaLabel', () => {

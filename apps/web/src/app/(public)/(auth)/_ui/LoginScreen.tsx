@@ -35,7 +35,7 @@ export const LoginScreen = ({
     </div>
 
     <div
-      className={`${styles.content} flex flex-col px-6 pt-[calc(env(safe-area-inset-top)+258px)] pb-[max(env(safe-area-inset-bottom),24px)]`}
+      className={`${styles.content} flex flex-col px-6 pt-[calc(var(--safe-area-inset-top)+258px)] pb-[max(var(--safe-area-inset-bottom),24px)]`}
     >
       <p
         className={`${styles.tagline} text-center text-[17px] leading-relaxed font-semibold text-muted-foreground`}

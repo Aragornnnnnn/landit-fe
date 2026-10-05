@@ -242,6 +242,11 @@ export const decideSmallTalkExit = (
     body,
   );
 
+// 작별 인사 없이 지금 대화를 완료한다 — 마무리 발화는 없고, 교정·요약 같은 완료 후속은 작별 완료와 같다.
+// 이미 완료된 세션이면 그대로 200, 중도 종료된 세션이면 409다
+export const completeSmallTalkSession = (sessionId: number) =>
+  api.post<void>(`/api/v1/free-talk/sessions/${sessionId}/complete`);
+
 // 오늘의 스몰톡 — 끝난 대화의 요약. 점수·별점 없이 지난번과의 비교와 기억·재사용의 순간을 돌려준다.
 // growth만 없을 수 있고(null), reusedExpressions·followUp은 늘 오되 아직 만드는 중이면 pending이다
 export interface SmallTalkSummaryResponse {

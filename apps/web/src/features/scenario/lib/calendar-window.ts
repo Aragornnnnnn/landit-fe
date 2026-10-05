@@ -65,3 +65,17 @@ const lastDayOfWindow = (date: string, type: ScenarioCalendarType) => {
   }
   return format(value);
 };
+
+// 그 날이 든 달의 1일부터 말일까지 — 응답 전에도 달 격자의 칸 수와 날짜 숫자를 정할 수 있다
+export const datesOfMonth = (date: string) => {
+  const first = parse(firstDayOfWindow(date, 'MONTH'));
+  const month = first.getUTCMonth();
+  const dates: string[] = [];
+  for (
+    const day = first;
+    day.getUTCMonth() === month;
+    day.setUTCDate(day.getUTCDate() + 1)
+  )
+    dates.push(format(day));
+  return dates;
+};

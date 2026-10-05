@@ -6,7 +6,8 @@ import { z } from 'zod';
 // 4: REQUEST_WIDGET_CHANGES / WIDGET_CHANGED 추가 (위젯 설치·삭제 계측)
 // 5: IDENTIFY / GET_OFFERINGS / PURCHASE / RESTORE_PURCHASES ↔ OFFERINGS / PURCHASE_RESULT / RESTORE_RESULT (인앱 결제, LAN-447)
 // 6: SHARE 추가 (친구에게 공유하기, LAN-578)
-export const NATIVE_BRIDGE_VERSION = 6;
+// 7: PICK_PHOTOS ↔ PHOTOS_PICKED (피드백 사진 첨부, 카메라 없이 사진 보관함만, LAN-595)
+export const NATIVE_BRIDGE_VERSION = 7;
 
 // 셸이 주입하고 웹이 읽는 전역 키
 export const NATIVE_CONTEXT_GLOBAL = '__LANDIT_NATIVE__';

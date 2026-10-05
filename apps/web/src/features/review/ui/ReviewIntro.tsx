@@ -28,7 +28,7 @@ export const ReviewIntro = ({
 }: ReviewIntroProps) => (
   <main
     className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background px-6"
-    style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    style={{ paddingTop: 'var(--safe-area-inset-top)' }}
   >
     <header className="flex h-14 flex-none items-center">
       <button
@@ -56,7 +56,7 @@ export const ReviewIntro = ({
       />
     </div>
 
-    <div className="pt-4 pb-[max(env(safe-area-inset-bottom),24px)]">
+    <div className="pt-4 pb-[max(var(--safe-area-inset-bottom),24px)]">
       <Button loading={starting} onClick={onStart}>
         복습 시작할게요
       </Button>

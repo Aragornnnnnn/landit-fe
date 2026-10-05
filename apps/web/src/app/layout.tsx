@@ -3,7 +3,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
 
 import { AppUpdateGate } from '@/features/app-update/ui/AppUpdateGate';
-import { PushTokenSync } from '@/features/notification/ui/PushTokenSync';
+import { PushDeviceSync } from '@/features/notification/ui/PushDeviceSync';
 import { ProfilePropertiesSync } from '@/features/onboarding/ui/ProfilePropertiesSync';
 import { IdentifySync } from '@/features/subscription/ui/IdentifySync';
 import { SubscriptionPropertiesSync } from '@/features/subscription/ui/SubscriptionPropertiesSync';
@@ -11,6 +11,8 @@ import { WidgetChangeSync } from '@/features/widget/ui/WidgetChangeSync';
 import { WidgetDataSync } from '@/features/widget/ui/WidgetDataSync';
 import { AnalyticsBootstrap, PageViewTracker } from '@/shared/analytics';
 import { BridgeListener } from '@/shared/bridge/BridgeListener';
+import { platformMarkerScript } from '@/shared/bridge/platform-marker';
+import { PlatformMarkerSync } from '@/shared/bridge/PlatformMarkerSync';
 import { GlobalHaptics } from '@/shared/haptics';
 import { MonitoringBootstrap } from '@/shared/monitoring/MonitoringBootstrap';
 import { Toaster } from '@/shared/ui/toast';
@@ -40,6 +42,9 @@ export default function RootLayout({
   return (
     <html lang="ko" className="antialiased" suppressHydrationWarning>
       <body>
+        {/* 첫 페인트 전에 플랫폼을 찍는다 — 하이드레이션 뒤에 찍으면 Android 하단 여백이 한 번 점프한다 */}
+        <script dangerouslySetInnerHTML={{ __html: platformMarkerScript }} />
+        <PlatformMarkerSync />
         <AnalyticsBootstrap />
         <MonitoringBootstrap />
         <PageViewTracker />
@@ -48,7 +53,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <AppUpdateGate />
-          <PushTokenSync />
+          <PushDeviceSync />
           <WidgetDataSync />
           <WidgetChangeSync />
           <IdentifySync />
