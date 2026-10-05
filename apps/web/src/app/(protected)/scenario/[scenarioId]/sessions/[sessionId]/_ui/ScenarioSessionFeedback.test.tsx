@@ -18,9 +18,12 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mocks.push, replace: mocks.replace }),
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
-vi.mock('@/features/subscription/model/useSubscriptionQuery', () => ({
-  useSubscriptionQuery: () => ({ subscription: { premium: mocks.premium } }),
-}));
+vi.mock(
+  '@/features/subscription/model/my-subscription/useSubscriptionQuery',
+  () => ({
+    useSubscriptionQuery: () => ({ subscription: { premium: mocks.premium } }),
+  }),
+);
 vi.mock('@/features/scenario/model/useScenarioTitle', () => ({
   useScenarioTitle: () => '카페에서 주문하기',
 }));
