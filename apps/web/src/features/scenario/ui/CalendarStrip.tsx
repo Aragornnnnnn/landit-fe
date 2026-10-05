@@ -75,10 +75,8 @@ export const CalendarStrip = ({
   // 스트립과 패널은 서로 다른 창을 본다. 조회 하나를 돌려 쓰면 펼치는 순간
   // 주 스트립이 그릴 것을 잃어 번쩍인다.
   // 펼친 동안 주 조회는 그 자리에 묶어 둔다 — 달을 넘길 때마다 가려진 주를 새로 받게 된다
-  const { calendar: week } = useScenarioCalendarQuery(
-    'WEEK',
-    expanded ? collapsedFrom : windowDate,
-  );
+  const { calendar: week, isPlaceholderData: weekLoading } =
+    useScenarioCalendarQuery('WEEK', expanded ? collapsedFrom : windowDate);
   const { calendar: month } = useScenarioCalendarQuery(
     'MONTH',
     windowDate,
@@ -91,6 +89,8 @@ export const CalendarStrip = ({
 
   // 라벨과 이동 한계는 지금 보고 있는 단위에서 가져온다
   const shown = expanded ? (month ?? week) : week;
+  // 새 주로 옮겨 응답을 기다리는 중 — 직전 주를 보이면 고른 날이 없는 엉뚱한 주가 떠 있다
+  const loadingWeek = weekLoading && !expanded;
   const { today, startedAt } = shown;
   const type: ScenarioCalendarType = expanded ? 'MONTH' : 'WEEK';
   const anchor = windowDate ?? today;
@@ -139,7 +139,17 @@ export const CalendarStrip = ({
             onClick={() => move(-1)}
           />
           <span className="text-base font-extrabold text-foreground">
-            {shown.label}
+            {loadingWeek ? (
+              // 이름표는 서버가 정한다 — 응답 전에는 직전 주 이름표 대신 비슷한 길이의 자리만 잡는다
+              <span
+                aria-hidden
+                className="animate-skeleton-flow rounded-md text-transparent select-none"
+              >
+                0000년 00월 0주차
+              </span>
+            ) : (
+              shown.label
+            )}
           </span>
           <ArrowButton
             direction={1}
@@ -154,20 +164,24 @@ export const CalendarStrip = ({
       {/* 주 스트립은 달을 펼쳐도 지우지 않는다 — 지우면 이 영역 높이가 줄어
           아래 붙은 패널이 위로 점프한다. 달 패널이 이 위를 덮으며 펼쳐진다 */}
       <div className="relative mt-1.5 min-h-[72px]">
-        <div className="grid grid-cols-7">
-          {week.days.map((day) => (
-            <CalendarDay
-              key={day.date}
-              day={day}
-              today={today}
-              startedAt={startedAt}
-              selected={day.date === selected}
-              onSelect={selectDay}
-              animated={!expanded}
-              label="weekday"
-            />
-          ))}
-        </div>
+        {loadingWeek ? (
+          <WeekSkeleton />
+        ) : (
+          <div className="grid grid-cols-7">
+            {week.days.map((day) => (
+              <CalendarDay
+                key={day.date}
+                day={day}
+                today={today}
+                startedAt={startedAt}
+                selected={day.date === selected}
+                onSelect={selectDay}
+                animated={!expanded}
+                label="weekday"
+              />
+            ))}
+          </div>
+        )}
 
         <AnimatePresence>
           {expanded && (
@@ -311,6 +325,24 @@ const TypeToggle = ({
       >
         {option.label}
       </button>
+    ))}
+  </div>
+);
+
+// 주 스트립 자리표시 — 요일은 고정이라 그대로 쓰고 날짜 칸만 비운다. 크기는 CalendarDay와 맞춘다
+const WeekSkeleton = () => (
+  <div role="status" aria-label="주 불러오는 중" className="grid grid-cols-7">
+    {WEEKDAY_LABELS.map((weekday) => (
+      <div
+        key={weekday}
+        aria-hidden
+        className="flex w-full flex-col items-center gap-1 border-2 border-transparent pt-1.5 pb-1"
+      >
+        <span className="animate-skeleton-flow size-10 rounded-full min-[390px]:size-11" />
+        <span className="text-[13px] leading-[1.15] text-muted-foreground">
+          {weekday}
+        </span>
+      </div>
     ))}
   </div>
 );

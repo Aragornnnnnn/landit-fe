@@ -21,7 +21,7 @@ export const useScenarioCalendarQuery = (
   // 창의 첫날로 맞춰 묻는다 — 안 맞추면 같은 주를 8월 3일치·8월 5일치로 따로 받는다
   const window = date ? firstDayOfWindow(date, type) : undefined;
 
-  const { data } = useQuery({
+  const { data, isPlaceholderData } = useQuery({
     queryKey: scenarioKeys.calendar(userId, type, window ?? null),
     queryFn: () => getScenarioCalendar(type, window),
     // 창을 옮기는 동안 이전 창을 그대로 둔다 — 비우면 스트립이 사라졌다 다시 그려져 깜빡인다
@@ -30,6 +30,7 @@ export const useScenarioCalendarQuery = (
     enabled: enabled && userId !== null,
   });
 
-  // 실패해도 화면을 막지 않는다 — 달력이 비어도 오늘 카드는 그대로 쓸 수 있다
-  return { calendar: data ?? null };
+  // 실패해도 화면을 막지 않는다 — 달력이 비어도 오늘 카드는 그대로 쓸 수 있다.
+  // isPlaceholderData면 calendar는 새 창이 아니라 직전 창이다
+  return { calendar: data ?? null, isPlaceholderData };
 };

@@ -64,6 +64,7 @@ const MONTH: ScenarioCalendarResponse = {
 const givenCalendars = (month: ScenarioCalendarResponse | null) =>
   mockQuery.mockImplementation((type) => ({
     calendar: type === 'WEEK' ? WEEK : month,
+    isPlaceholderData: false,
   }));
 
 beforeEach(() => trackMock.mockReset());
@@ -154,6 +155,7 @@ const WEEK_WITH_COMPLETED: ScenarioCalendarResponse = {
 const givenCompletedWeek = () =>
   mockQuery.mockImplementation((type) => ({
     calendar: type === 'WEEK' ? WEEK_WITH_COMPLETED : MONTH,
+    isPlaceholderData: false,
   }));
 
 describe('CalendarStrip 계측', () => {
@@ -300,6 +302,36 @@ describe('CalendarStrip 선택 표시', () => {
       EVENTS.CALENDAR_VIEW_SWITCHED,
       expect.anything(),
     );
+  });
+});
+
+describe('CalendarStrip 주 로딩', () => {
+  it('새 주 응답 전에는 이전 주 대신 스켈레톤을 그린다 — 옮긴 뒤에 엉뚱한 주가 보이지 않게', () => {
+    // Given 주 조회가 새 주를 받는 중이라 이전 주를 임시로 들고 있으면
+    mockQuery.mockImplementation((type) => ({
+      calendar: type === 'WEEK' ? WEEK : MONTH,
+      isPlaceholderData: type === 'WEEK',
+    }));
+
+    // When 스트립을 그리면
+    render(<CalendarStrip date="2026-08-20" onSelect={vi.fn()} />);
+
+    // Then 이전 주의 날짜와 이름표 대신 불러오는 중임을 보인다
+    expect(screen.getByRole('status', { name: '주 불러오는 중' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: '8월 5일' })).toBeNull();
+    expect(screen.queryByText('2026년 8월 1주차')).toBeNull();
+  });
+
+  it('새 주 응답이 오면 그 주의 날짜를 그린다', () => {
+    // Given 주 조회가 응답을 받았으면
+    givenCalendars(MONTH);
+
+    // When 스트립을 그리면
+    render(<CalendarStrip onSelect={vi.fn()} />);
+
+    // Then 스켈레톤 없이 날짜와 이름표를 그린다
+    expect(screen.queryByRole('status', { name: '주 불러오는 중' })).toBeNull();
+    expect(screen.getByText('2026년 8월 1주차')).toBeTruthy();
   });
 });
 
