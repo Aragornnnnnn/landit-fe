@@ -83,9 +83,8 @@ export const CalendarStrip = ({
     expanded,
   );
 
-  // 실제 스트립 높이와 같아야 응답이 와도 화면이 안 튄다 — 390px 경계는 날짜 원 크기를 따라간다
-  if (!week)
-    return <div className="h-[111px] shrink-0 min-[390px]:h-[115px]" />;
+  // 처음 들어와 응답이 없을 때도 같은 틀에 자리표시를 그린다 — 빈 자리였다가 스트립이 나타나면 튀어 보인다
+  if (!week) return <StripSkeleton />;
 
   // 라벨과 이동 한계는 지금 보고 있는 단위에서 가져온다
   const shown = expanded ? (month ?? week) : week;
@@ -139,17 +138,7 @@ export const CalendarStrip = ({
             onClick={() => move(-1)}
           />
           <span className="text-base font-extrabold text-foreground">
-            {loadingWeek ? (
-              // 이름표는 서버가 정한다 — 응답 전에는 직전 주 이름표 대신 비슷한 길이의 자리만 잡는다
-              <span
-                aria-hidden
-                className="animate-skeleton-flow rounded-md text-transparent select-none"
-              >
-                0000년 00월 0주차
-              </span>
-            ) : (
-              shown.label
-            )}
+            {loadingWeek ? <LabelSkeleton /> : shown.label}
           </span>
           <ArrowButton
             direction={1}
@@ -326,6 +315,37 @@ const TypeToggle = ({
         {option.label}
       </button>
     ))}
+  </div>
+);
+
+// 이름표는 서버가 정한다 — 응답 전에는 직전 주 이름표 대신 비슷한 길이의 자리만 잡는다
+const LabelSkeleton = () => (
+  <span
+    aria-hidden
+    className="animate-skeleton-flow rounded-md text-transparent select-none"
+  >
+    0000년 00월 0주차
+  </span>
+);
+
+// 첫 응답 전 스트립 — 실제 스트립과 같은 틀에 화살표·토글은 누를 수 없게 두고 이름표와 날짜 칸만 비운다
+const StripSkeleton = () => (
+  <div className="relative z-20 shrink-0 bg-background px-5 pb-1">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-1">
+        <ArrowButton direction={-1} disabled onClick={() => {}} />
+        <span className="text-base font-extrabold">
+          <LabelSkeleton />
+        </span>
+        <ArrowButton direction={1} disabled onClick={() => {}} />
+      </div>
+      <div aria-hidden className="pointer-events-none">
+        <TypeToggle value="WEEK" onChange={() => {}} />
+      </div>
+    </div>
+    <div className="relative mt-1.5 min-h-[72px]">
+      <WeekSkeleton />
+    </div>
   </div>
 );
 

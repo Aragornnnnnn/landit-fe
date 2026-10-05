@@ -322,6 +322,20 @@ describe('CalendarStrip 주 로딩', () => {
     expect(screen.queryByText('2026년 8월 1주차')).toBeNull();
   });
 
+  it('처음 들어와 주 응답이 없을 때도 빈 자리 대신 스켈레톤을 그린다', () => {
+    // Given 주 조회가 아직 아무 응답도 없으면
+    mockQuery.mockImplementation(() => ({
+      calendar: null,
+      isPlaceholderData: false,
+    }));
+
+    // When 스트립을 그리면
+    render(<CalendarStrip onSelect={vi.fn()} />);
+
+    // Then 불러오는 중임을 보인다
+    expect(screen.getByRole('status', { name: '주 불러오는 중' })).toBeTruthy();
+  });
+
   it('새 주 응답이 오면 그 주의 날짜를 그린다', () => {
     // Given 주 조회가 응답을 받았으면
     givenCalendars(MONTH);
