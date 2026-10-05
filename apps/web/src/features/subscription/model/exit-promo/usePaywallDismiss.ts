@@ -11,8 +11,8 @@ import {
   type PaywallPromo,
 } from '../../api/subscription';
 import { subscriptionKeys } from '../my-subscription/keys';
-import { PROMO_ENABLED } from '../paywall-gate/payment-flag';
 import type { Offering } from '../product/offering';
+import { PROMO_ENABLED } from './promo-flag';
 import { handOffPromo } from './promo-handoff';
 import { canShowPromo } from './promo-sheet';
 
