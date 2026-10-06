@@ -1,4 +1,5 @@
 // 세션 상세 조회 훅 검증 — 맞춤 표현은 대화가 끝난 뒤 서버가 만들어서, 준비될 때까지 다시 물어야 한다
+// @vitest-environment jsdom
 import { createElement, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';

@@ -1,4 +1,5 @@
 // 친구에게 공유하기 — 셸 공유 시트·웹 공유·링크 복사 중 어느 길로 가는지와 공유 문구 검증
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { shareApp } from './share-app';

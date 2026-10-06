@@ -1,4 +1,5 @@
 // useStt 훅 — 권한 거부·폴백 전환·턴 종료 상태 전이 갈림길 검증
+// @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

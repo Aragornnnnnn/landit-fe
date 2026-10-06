@@ -1,4 +1,5 @@
 // 유저 입력 훅 검증 — 마이크/키보드 전환, STT 배선, 최종 발화 전달과 권한 안내
+// @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

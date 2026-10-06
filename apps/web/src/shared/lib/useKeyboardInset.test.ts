@@ -1,4 +1,5 @@
 // 키보드가 가린 높이 계산 — 뷰포트가 줄면 그만큼, iOS가 innerHeight를 잠깐 줄였다 소리 없이 되돌리면 잠시 뒤 다시 잰다
+// @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
