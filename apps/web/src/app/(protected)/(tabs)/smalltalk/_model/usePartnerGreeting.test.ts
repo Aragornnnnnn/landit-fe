@@ -1,6 +1,6 @@
 // usePartnerGreeting — 인사는 저절로 시작되지 않고 캐릭터를 눌러야 시작된다. 상대를 바꾸면 인사는 멈춘다.
-// @vitest-environment jsdom
 // TTS는 경계라 목으로 둔다 — 미리 만든 음원(speakSrc) 재생과 그 종료만 흉내 낸다
+// @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

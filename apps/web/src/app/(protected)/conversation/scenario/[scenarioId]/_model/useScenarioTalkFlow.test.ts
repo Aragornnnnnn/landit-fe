@@ -1,7 +1,7 @@
 // useScenarioTalkFlow — 오프닝은 openingPreview로 즉시 시드, 세션은 백그라운드.
-// @vitest-environment jsdom
 // 발화 제출 뒤 대기·속마음·다음질문·종료 전이와 입력·재생 훅 배선을 검증한다.
 // (재생 폴백·입력 전환 세부는 useAiSpeech·useConversationInput 테스트가 맡는다)
+// @vitest-environment jsdom
 import { StrictMode } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
