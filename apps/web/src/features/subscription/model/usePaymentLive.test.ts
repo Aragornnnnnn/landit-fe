@@ -1,4 +1,5 @@
 // 결제가 열린 환경 판정 — 플래그와 셸 버전을 같이 본다. 페이월이 걸리는 환경과 같은 기준이다
+// @vitest-environment jsdom
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

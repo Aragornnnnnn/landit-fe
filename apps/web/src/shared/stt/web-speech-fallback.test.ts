@@ -1,4 +1,5 @@
 // 브라우저 SpeechRecognition 폴백 — 미지원·에러 분류·턴 종료 갈림길 검증
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MicPermissionDeniedError } from './errors';

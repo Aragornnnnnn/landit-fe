@@ -1,4 +1,5 @@
 // 첫 페인트 전 <html data-platform> 표시 — Android 셸에서만 찍고, 브라우저에서는 찍지 않는다
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { markNativePlatform, platformMarkerScript } from './platform-marker';

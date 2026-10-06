@@ -1,6 +1,7 @@
 // useSmallTalkFlow — 스몰톡에만 있는 두 가지를 검증한다.
 // (1) 남은 말하기 시간을 언제 깎고 언제 되돌리는가 (2) 종료 확인 응답 처리 (3) 종료 버튼으로 직접 완료
 // (턴 전이·속마음 같은 엔진 공통 동작은 useScenarioTalkFlow 테스트가 맡는다)
+// @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

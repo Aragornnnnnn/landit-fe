@@ -1,4 +1,5 @@
 // 스몰톡 하루 말하기 한도 — 결제가 열린 환경에서는 한도 없이 말한다
+// @vitest-environment jsdom
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
