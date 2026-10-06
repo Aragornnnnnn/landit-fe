@@ -127,9 +127,10 @@ export const PromoSheet = ({
           onSelect={() => selectPlan('yearly')}
           badge={`${yearly.discountRate}% 할인`}
           trial="7일 무료 체험 포함"
-          price={formatWon(yearly.monthlyPrice)}
-          yearPrice={`${formatWon(yearly.price)} /년`}
-          yearListPrice={formatWon(monthly.yearlyEquivalent)}
+          price={formatWon(yearly.price)}
+          unit="/년"
+          listPrice={formatWon(monthly.yearlyEquivalent)}
+          note={`월 ${formatWon(yearly.monthlyPrice)}꼴`}
         />
         <PlanRow
           title="월간 플랜"
@@ -138,8 +139,9 @@ export const PromoSheet = ({
           badge={null}
           trial={null}
           price={formatWon(monthly.price)}
-          yearPrice={`${formatWon(monthly.yearlyEquivalent)} /년`}
-          yearListPrice={null}
+          unit="/월"
+          listPrice={null}
+          note={`1년 ${formatWon(monthly.yearlyEquivalent)}`}
         />
       </section>
 
@@ -170,12 +172,14 @@ interface PlanRowProps {
   badge: string | null;
   /** 무료 체험 포함 여부. 없는 플랜은 null이라 줄이 비지 않는다 */
   trial: string | null;
-  /** 큰 숫자 — 월 기준 금액. 단위는 카드가 붙인다 */
+  /** 큰 숫자 — 실제 청구액. 월 환산가가 더 눈에 띄면 스토어 심사 3.1.2(c)에서 반려된다 */
   price: string;
-  /** 1년치 금액. 두 카드를 같은 자로 재야 얼마나 싼지 읽힌다 */
-  yearPrice: string;
-  /** 지워서 보여줄 비교선 — 월간으로 1년 쓸 때의 금액. 비교가 필요 없는 카드는 null */
-  yearListPrice: string | null;
+  /** 청구 주기 — 큰 숫자 뒤에 한 급 낮춰 붙는다 */
+  unit: string;
+  /** 큰 숫자 옆에 지워서 보여줄 비교선 — 월간으로 1년 쓸 때의 금액. 비교가 필요 없는 카드는 null */
+  listPrice: string | null;
+  /** 큰 숫자 아래 작은 줄 — 다른 주기로 환산한 금액 */
+  note: string;
 }
 
 const PlanRow = ({
@@ -185,8 +189,9 @@ const PlanRow = ({
   badge,
   trial,
   price,
-  yearPrice,
-  yearListPrice,
+  unit,
+  listPrice,
+  note,
 }: PlanRowProps) => (
   <button
     type="button"
@@ -221,16 +226,20 @@ const PlanRow = ({
       </span>
     </span>
     <span className="flex flex-col items-end gap-0.5">
-      {/* 단위는 한 급 낮춰 붙인다 — 견줄 것은 금액이고 「/월」은 아래 「/년」과 짝만 맞으면 된다 */}
-      <span className="text-[19px] leading-[1.3] font-bold text-foreground">
-        {price}
-        <span className="text-[15px]"> /월</span>
-      </span>
-      <span className="flex items-center gap-1.5 text-[12px] leading-[1.3] text-muted-foreground">
-        {yearListPrice && (
-          <span className="text-[#9ca3af] line-through">{yearListPrice}</span>
+      <span className="flex items-baseline gap-1.5">
+        {listPrice && (
+          <span className="text-[12px] leading-[1.3] text-[#9ca3af] line-through">
+            {listPrice}
+          </span>
         )}
-        {yearPrice}
+        {/* 단위는 한 급 낮춰 붙인다 — 견줄 것은 금액이다 */}
+        <span className="text-[19px] leading-[1.3] font-bold text-foreground">
+          {price}
+          <span className="text-[15px]"> {unit}</span>
+        </span>
+      </span>
+      <span className="text-[12px] leading-[1.3] text-muted-foreground">
+        {note}
       </span>
     </span>
   </button>
