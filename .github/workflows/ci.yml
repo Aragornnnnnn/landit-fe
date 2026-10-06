@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
+      # 하나가 실패해도 나머지를 끝까지 돌려 한 번에 모든 결과를 본다
+      fail-fast: false
       matrix:
         task: [format:check, lint, typecheck, test, build]
     steps:
@@ -33,18 +35,20 @@ jobs:
           cache: pnpm
 
       # 터보 캐시를 실행 간에 이어 준다 — 없으면 매번 전부 cache miss라 터보가 CI에서 아무것도 건너뛰지 못한다.
-      # 키는 커밋이 아니라 파일 내용(git tree 해시)으로 잡는다 — release PR·main 머지는 develop과 내용이 같아도
-      # 커밋이 새로 생기므로, 내용 기준이어야 develop이 남긴 캐시를 찾는다. 내용이 다르면 가장 최근 캐시에서
-      # 복원하고, 터보가 파일 해시로 바뀐 작업만 다시 돌린다
+      # 키는 커밋이 아니라 파일 내용(git tree 해시)이다. release PR·main 머지는 develop과 내용이 같아도 커밋이
+      # 새로 생기므로, 내용 기준이어야 develop이 남긴 캐시를 찾는다. 내용이 다를 때 최근 캐시로 대신 복원하지
+      # 않는다 — 터보는 캐시를 지우지 않아서, 복원한 위에 쌓아 저장하면 실행마다 캐시가 불어난다.
+      # format:check는 터보를 거치지 않아 캐시가 없다
       - name: 파일 내용 해시
+        if: matrix.task != 'format:check'
         id: tree
         run: echo "hash=$(git rev-parse HEAD^{tree})" >> "$GITHUB_OUTPUT"
 
       - uses: actions/cache@v4
+        if: matrix.task != 'format:check'
         with:
           path: .turbo/cache
           key: turbo-${{ matrix.task }}-${{ steps.tree.outputs.hash }}
-          restore-keys: turbo-${{ matrix.task }}-
 
       - name: 의존성 설치
         run: pnpm install --frozen-lockfile
