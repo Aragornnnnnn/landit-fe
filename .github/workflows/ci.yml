@@ -13,9 +13,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # 검사마다 별도 잡으로 동시에 돌린다 — 순서대로 돌면 전체 시간이 합이 되고, 병렬이면 가장 느린 검사(테스트) 하나로 줄어든다
   ci:
+    name: ${{ matrix.task }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      matrix:
+        task: [format:check, lint, typecheck, test, build]
     steps:
       - uses: actions/checkout@v4
 
@@ -27,20 +32,22 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
 
+      # 터보 캐시를 실행 간에 이어 준다 — 없으면 매번 전부 cache miss라 터보가 CI에서 아무것도 건너뛰지 못한다.
+      # 키는 커밋이 아니라 파일 내용(git tree 해시)으로 잡는다 — release PR·main 머지는 develop과 내용이 같아도
+      # 커밋이 새로 생기므로, 내용 기준이어야 develop이 남긴 캐시를 찾는다. 내용이 다르면 가장 최근 캐시에서
+      # 복원하고, 터보가 파일 해시로 바뀐 작업만 다시 돌린다
+      - name: 파일 내용 해시
+        id: tree
+        run: echo "hash=$(git rev-parse HEAD^{tree})" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: .turbo/cache
+          key: turbo-${{ matrix.task }}-${{ steps.tree.outputs.hash }}
+          restore-keys: turbo-${{ matrix.task }}-
+
       - name: 의존성 설치
         run: pnpm install --frozen-lockfile
 
-      - name: 포맷 검사 (Prettier)
-        run: pnpm format:check
-
-      - name: 린트
-        run: pnpm lint
-
-      - name: 타입체크
-        run: pnpm typecheck
-
-      - name: 테스트
-        run: pnpm test
-
-      - name: 빌드
-        run: pnpm build
+      - name: ${{ matrix.task }}
+        run: pnpm ${{ matrix.task }}
