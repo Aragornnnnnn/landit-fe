@@ -1,4 +1,5 @@
 // api 클라이언트 분기 검증 — 본문 직렬화(FormData·JSON)와 앱을 켠 직후의 토큰 선발급
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { REFRESH_PATH } from '@/shared/auth/api/refresh';

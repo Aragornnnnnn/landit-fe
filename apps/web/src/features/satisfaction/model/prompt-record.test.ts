@@ -1,4 +1,5 @@
 // prompt-record — 대화 종류별로 "물을 차례"와 "답한 기록"을 기기에 남기는 계약 검증
+// @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {

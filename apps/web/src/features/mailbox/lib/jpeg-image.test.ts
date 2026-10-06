@@ -1,4 +1,5 @@
 // 첨부 사진 재인코딩 — 긴 변을 줄이는 계산과 못 읽는 파일의 실패 신호
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {

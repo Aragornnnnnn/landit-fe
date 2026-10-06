@@ -1,4 +1,5 @@
 // 결제 지휘 훅의 갈림길 — 환경 차단, 취소·실패·성공, 서버 반영 대기, 복원 결과, 화면이 사라진 뒤의 회신
+// @vitest-environment jsdom
 import { createElement, StrictMode, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
