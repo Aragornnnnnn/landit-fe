@@ -9,7 +9,7 @@ import { showToast } from '@/shared/ui/toast';
 import type { PaywallPromo } from '../api/subscription';
 import { setPromoSheetOpen } from '../model/promo-handoff';
 import { buildPromoSheet } from '../model/promo-sheet';
-import { useOfferings } from '../model/useOfferings';
+import { useOffering } from '../model/useOffering';
 import { PromoSheet } from './PromoSheet';
 
 interface PromoSheetHostProps {
@@ -34,7 +34,7 @@ export const PromoSheetHost = ({
   onClose,
   onUnlocked,
 }: PromoSheetHostProps) => {
-  const sheet = buildPromoSheet(useOfferings());
+  const sheet = buildPromoSheet(useOffering());
   const ready = sheet !== null;
 
   // open이 켜지는 즉시 알린다 — 가격을 기다리는 동안 소감·알림 동의 시트가 먼저 떠 버리면 겹친다

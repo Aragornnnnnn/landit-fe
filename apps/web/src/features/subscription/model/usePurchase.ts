@@ -13,7 +13,7 @@ import { showToast } from '@/shared/ui/toast';
 
 import { getMySubscription } from '../api/subscription';
 import { subscriptionKeys } from './keys';
-import { packageIdFor, type PlanPricingMap } from './offerings';
+import { packageIdFor, type PlanPackages } from './offering';
 import {
   purchaseViaBridge,
   resolvePurchaseSupport,
@@ -23,8 +23,8 @@ import {
 import { PREMIUM_WAIT, waitForPremium } from './wait-for-premium';
 
 interface UsePurchaseOptions {
-  /** 셸이 준 가격표 — 결제할 패키지 id를 여기서 고른다. 비어 있으면 표준 identifier로 결제한다 */
-  pricing: PlanPricingMap;
+  /** 플랜별 패키지 — 결제할 패키지 id를 여기서 고른다. 비어 있으면 표준 identifier로 결제한다 */
+  packages: PlanPackages;
   /** 유료가 확인됐거나, 결제는 끝났는데 서버 반영이 늦을 때(안내 뒤) 불린다 — 보통 페이월을 닫는다 */
   onUnlocked: () => void;
   /** 이탈 할인 시트에서 부를 때 true — 결제 이벤트에 할인 결제였음을 남긴다 */
@@ -55,7 +55,7 @@ const findUnsupported = () => {
  * @returns `busy`는 셸 왕복이나 서버 확인이 진행 중인지, `purchase(plan)`·`restore()`는 각각 결제·복원을 시작한다
  */
 export const usePurchase = ({
-  pricing,
+  packages,
   onUnlocked,
   promo,
 }: UsePurchaseOptions) => {
@@ -103,7 +103,7 @@ export const usePurchase = ({
     setBusy(true);
     try {
       const result = await purchaseViaBridge(
-        packageIdFor(plan, pricing),
+        packageIdFor(plan, packages),
         signal,
       );
       if (signal?.aborted) return;
@@ -134,19 +134,22 @@ export const usePurchase = ({
         return;
       }
 
-      const unlocked = await confirmPremium();
+      const premiumConfirmed = await confirmPremium();
       // 금액은 셸이 준 스토어 가격 그대로 — 오퍼링을 못 받아 표준 패키지로 결제했으면 없다
-      const paid = pricing[plan];
+      const paidPackage = packages[plan];
       track(EVENTS.PURCHASE_COMPLETED, {
         plan,
-        unlocked,
-        ...(paid && { price: paid.price, currency: paid.currency }),
+        unlocked: premiumConfirmed,
+        ...(paidPackage && {
+          price: paidPackage.price,
+          currency: paidPackage.currency,
+        }),
         ...promoTag,
       });
       // 기다리는 사이 화면을 떠났으면 안내와 이동은 하지 않는다 — 캐시 반영은 위에서 이미 끝났다
       if (signal?.aborted) return;
       // 스토어 결제는 끝났다 — 웹훅이 늦어도 사용자를 페이월에 붙잡아 두지 않는다
-      if (!unlocked) {
+      if (!premiumConfirmed) {
         showToast('결제가 확인되는 중이에요. 잠시 후 다시 열어 주세요');
       }
       onUnlocked();
@@ -179,10 +182,10 @@ export const usePurchase = ({
         return;
       }
 
-      const unlocked = await confirmPremium();
-      track(EVENTS.PURCHASE_RESTORED, { succeeded: unlocked });
+      const premiumConfirmed = await confirmPremium();
+      track(EVENTS.PURCHASE_RESTORED, { succeeded: premiumConfirmed });
       if (signal?.aborted) return;
-      if (unlocked) onUnlocked();
+      if (premiumConfirmed) onUnlocked();
       else showToast('복원할 구매 내역이 없어요');
     } finally {
       setBusy(false);

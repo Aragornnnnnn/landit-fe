@@ -3,14 +3,14 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PaywallPromo } from '../api/subscription';
-import type { OfferingTiers } from '../model/offerings';
+import type { Offering } from '../model/offering';
 import { buildPromoSheet } from '../model/promo-sheet';
 import { PromoSheet } from './PromoSheet';
 
 const mocks = vi.hoisted(() => ({
   purchase: vi.fn(),
   track: vi.fn(),
-  purchaseOptions: null as { pricing: unknown } | null,
+  purchaseOptions: null as { packages: unknown } | null,
 }));
 
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
@@ -26,7 +26,7 @@ vi.mock('next/link', () => ({
   ),
 }));
 vi.mock('../model/usePurchase', () => ({
-  usePurchase: (options: { pricing: unknown }) => {
+  usePurchase: (options: { packages: unknown }) => {
     mocks.purchaseOptions = options;
     return { busy: false, purchase: mocks.purchase, restore: vi.fn() };
   },
@@ -38,8 +38,8 @@ const promo: PaywallPromo = {
   newUser: true,
 };
 
-const tiers: OfferingTiers = {
-  list: {
+const offering: Offering = {
+  regular: {
     monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
     yearly: { packageId: '$rc_annual', price: 94_500, currency: 'KRW' },
   },
@@ -48,7 +48,7 @@ const tiers: OfferingTiers = {
   },
 };
 
-const sheet = buildPromoSheet(tiers)!;
+const sheet = buildPromoSheet(offering)!;
 
 const open = (expired = false) =>
   render(
@@ -126,9 +126,9 @@ describe('PromoSheet', () => {
   it('연간은 할인 패키지로, 월간은 정가 패키지로 결제가 간다', () => {
     open();
 
-    expect(mocks.purchaseOptions?.pricing).toEqual({
-      yearly: tiers.promo.yearly,
-      monthly: tiers.list.monthly,
+    expect(mocks.purchaseOptions?.packages).toEqual({
+      yearly: offering.promo.yearly,
+      monthly: offering.regular.monthly,
     });
   });
 

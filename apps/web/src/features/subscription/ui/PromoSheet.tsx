@@ -47,7 +47,7 @@ export const PromoSheet = ({
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('yearly');
   const newUser = promo.newUser;
   const { busy, purchase } = usePurchase({
-    pricing: sheet.pricing,
+    packages: sheet.packages,
     onUnlocked,
     promo: true,
   });

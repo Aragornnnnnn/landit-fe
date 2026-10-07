@@ -2,11 +2,9 @@
 // 기본값은 스토어 등록값이고, 셸이 준 원화 가격이 있으면 buildPaywallPlans가 그 값으로 전부 다시 계산한다
 import type { SubscriptionPlan } from '@landit/analytics';
 
-export type PlanId = SubscriptionPlan;
-
 /** 카드 한 장에 그릴 값 전부. 큰 숫자는 실제 청구액이다 — 월 환산가가 더 눈에 띄면 스토어 심사 3.1.2(c)에서 반려된다 */
 export interface PaywallPlan {
-  id: PlanId;
+  id: SubscriptionPlan;
   title: string;
   /** 청구 주기 — 큰 숫자 앞에 붙는다 */
   period: '월' | '연';
@@ -22,12 +20,12 @@ export interface PaywallPlan {
 }
 
 /** 카드가 놓이는 순서 — 왼쪽 월간, 오른쪽 연간 */
-export const PLAN_ORDER: readonly PlanId[] = ['monthly', 'yearly'];
+export const PLAN_ORDER: readonly SubscriptionPlan[] = ['monthly', 'yearly'];
 
-export const DEFAULT_PLAN_ID: PlanId = 'yearly';
+export const DEFAULT_PLAN_ID: SubscriptionPlan = 'yearly';
 
 /** 플랜 이름 — 페이월 카드 제목과 구독 관리·결제 내역·해지 화면의 플랜 표기가 같이 쓴다 */
-export const PLAN_TITLE: Record<PlanId, string> = {
+export const PLAN_TITLE: Record<SubscriptionPlan, string> = {
   monthly: '월간',
   yearly: '연간',
 };
@@ -57,7 +55,7 @@ export const formatWon = (amount: number) =>
   `${amount.toLocaleString('ko-KR')}원`;
 
 /** 플랜별 실제 청구액. 비어 있는 플랜은 스토어 등록값을 쓴다 */
-export type PlanPrices = Partial<Record<PlanId, number>>;
+export type PlanPrices = Partial<Record<SubscriptionPlan, number>>;
 
 /**
  * 실제 청구액 두 개로 카드 표시값 전부를 만든다 — 할인율·월 환산·부제가 한 산식에서 나와 서로 어긋나지 않는다.
@@ -66,7 +64,7 @@ export type PlanPrices = Partial<Record<PlanId, number>>;
  */
 export const buildPaywallPlans = (
   prices: PlanPrices = {},
-): Record<PlanId, PaywallPlan> => {
+): Record<SubscriptionPlan, PaywallPlan> => {
   const monthlyPrice = prices.monthly ?? MONTHLY_PRICE;
   const yearlyPrice = prices.yearly ?? YEARLY_PRICE;
   const yearlyMonthly = calculateMonthlyEquivalent(yearlyPrice);
@@ -99,7 +97,7 @@ export const YEARLY_LIST_PRICE = MONTHLY_PRICE * 12;
 
 // 스토어 상품 식별자 → 플랜 (docs/subscription.md 「상품과 가격」).
 // 연간은 정가와 이탈 할인 둘이라 같은 플랜을 가리키는 id가 두 개다
-const PRODUCT_PLANS: Record<string, PlanId> = {
+const PRODUCT_PLANS: Record<string, SubscriptionPlan> = {
   'com.saynow.app.premium.monthly': 'monthly',
   'com.saynow.app.premium.yearly': 'yearly',
   'com.saynow.app.premium.yearly.discount': 'yearly',

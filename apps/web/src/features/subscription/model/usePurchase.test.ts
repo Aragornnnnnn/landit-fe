@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { PlanPricingMap } from './offerings';
+import type { PlanPackages } from './offering';
 import { usePurchase } from './usePurchase';
 
 const mocks = vi.hoisted(() => ({
@@ -65,9 +65,9 @@ const wrapper = ({ children }: { children: ReactNode }) =>
 const strictWrapper = ({ children }: { children: ReactNode }) =>
   createElement(StrictMode, null, wrapper({ children }));
 
-const renderPurchase = (pricing: PlanPricingMap = {}, strict = false) => {
+const renderPurchase = (packages: PlanPackages = {}, strict = false) => {
   const onUnlocked = vi.fn();
-  const hook = renderHook(() => usePurchase({ pricing, onUnlocked }), {
+  const hook = renderHook(() => usePurchase({ packages, onUnlocked }), {
     wrapper: strict ? strictWrapper : wrapper,
   });
   return { ...hook, onUnlocked };

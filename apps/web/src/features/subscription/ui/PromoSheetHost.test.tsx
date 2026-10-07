@@ -3,11 +3,11 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PaywallPromo } from '../api/subscription';
-import type { OfferingTiers } from '../model/offerings';
+import type { Offering } from '../model/offering';
 import { PromoSheetHost } from './PromoSheetHost';
 
 const mocks = vi.hoisted(() => ({
-  tiers: { list: {}, promo: {} } as OfferingTiers,
+  offering: { regular: {}, promo: {} } as Offering,
   track: vi.fn(),
 }));
 
@@ -21,8 +21,8 @@ vi.mock('next/link', () => ({
     children: React.ReactNode;
   }) => <a href={href}>{children}</a>,
 }));
-vi.mock('../model/useOfferings', () => ({
-  useOfferings: () => mocks.tiers,
+vi.mock('../model/useOffering', () => ({
+  useOffering: () => mocks.offering,
 }));
 vi.mock('../model/usePurchase', () => ({
   usePurchase: () => ({ busy: false, purchase: vi.fn(), restore: vi.fn() }),
@@ -34,8 +34,8 @@ const promo: PaywallPromo = {
   newUser: true,
 };
 
-const full: OfferingTiers = {
-  list: {
+const full: Offering = {
+  regular: {
     monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
     yearly: { packageId: '$rc_annual', price: 94_500, currency: 'KRW' },
   },
@@ -57,7 +57,7 @@ const open = () =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.tiers = full;
+  mocks.offering = full;
 });
 afterEach(() => cleanup());
 
@@ -74,7 +74,7 @@ describe('PromoSheetHost', () => {
   });
 
   it('할인 패키지가 없으면 그리지도 세지도 않는다 — 할인가를 보여 놓고 정가로 결제되면 안 된다', () => {
-    mocks.tiers = { ...full, promo: {} };
+    mocks.offering = { ...full, promo: {} };
     open();
 
     expect(screen.queryByRole('button', { name: /시작하기/ })).toBeNull();
@@ -85,7 +85,7 @@ describe('PromoSheetHost', () => {
   });
 
   it('정가 연간을 못 받았으면 그리지 않는다 — 지어낸 정가로 할인이라 부르지 않는다', () => {
-    mocks.tiers = { ...full, list: { monthly: full.list.monthly } };
+    mocks.offering = { ...full, regular: { monthly: full.regular.monthly } };
     open();
 
     expect(screen.queryByRole('button', { name: /시작하기/ })).toBeNull();
