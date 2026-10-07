@@ -7,17 +7,17 @@ import { EVENTS, type SubscriptionPlan } from '@landit/analytics';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { toKrwPrices } from '@/features/subscription/model/offering';
+import { usePaywallDismiss } from '@/features/subscription/model/exit-promo/usePaywallDismiss';
+import { toKrwPrices } from '@/features/subscription/model/product/offering';
 import {
   buildPaywallPlans,
   DEFAULT_PLAN_ID,
   PLAN_ORDER,
   type PaywallPlan,
-} from '@/features/subscription/model/plans';
-import { useOffering } from '@/features/subscription/model/useOffering';
-import { usePaywallDismiss } from '@/features/subscription/model/usePaywallDismiss';
-import { usePurchase } from '@/features/subscription/model/usePurchase';
-import { BenefitComparison } from '@/features/subscription/ui/BenefitComparison';
+} from '@/features/subscription/model/product/plans';
+import { useOffering } from '@/features/subscription/model/product/useOffering';
+import { usePurchase } from '@/features/subscription/model/purchase/usePurchase';
+import { BenefitComparison } from '@/features/subscription/ui/product/BenefitComparison';
 import { track } from '@/shared/analytics';
 import { homePath } from '@/shared/lib/last-tab';
 import { Button } from '@/shared/ui/Button';

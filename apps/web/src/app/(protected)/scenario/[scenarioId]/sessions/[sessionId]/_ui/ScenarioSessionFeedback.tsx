@@ -14,7 +14,7 @@ import { FeedbackNotice } from '@/features/feedback/ui/flow/FeedbackNotice';
 import { FeedbackSkeleton } from '@/features/feedback/ui/flow/FeedbackSkeleton';
 import { useScenarioTitle } from '@/features/scenario/model/useScenarioTitle';
 // 가로 import 사유: 결제하고 돌아온 사람에게 잠긴 옛 기록을 다시 받아 풀린 상세를 보여 준다
-import { useSubscriptionQuery } from '@/features/subscription/model/useSubscriptionQuery';
+import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
 import { track } from '@/shared/analytics';
 import {
   paywallPath,

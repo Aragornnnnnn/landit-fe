@@ -30,9 +30,12 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/shared/bridge/native-context', () => ({
   getNativeContextSnapshot: () => null,
 }));
-vi.mock('@/features/subscription/model/useSubscriptionQuery', () => ({
-  useSubscriptionQuery: () => mocks.query,
-}));
+vi.mock(
+  '@/features/subscription/model/my-subscription/useSubscriptionQuery',
+  () => ({
+    useSubscriptionQuery: () => mocks.query,
+  }),
+);
 vi.mock('@/features/onboarding/model/useLearningLevelQuery', () => ({
   useLearningLevelQuery: () => mocks.learningLevel,
 }));

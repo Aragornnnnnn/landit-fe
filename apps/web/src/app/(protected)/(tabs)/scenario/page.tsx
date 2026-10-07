@@ -13,7 +13,7 @@ import { CalendarStrip } from '@/features/scenario/ui/CalendarStrip';
 import { ScenarioBriefing } from '@/features/scenario/ui/ScenarioBriefing';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
 import { TodayCard } from '@/features/scenario/ui/TodayCard';
-import { usePromoSheetOpen } from '@/features/subscription/model/promo-handoff';
+import { usePromoSheetOpen } from '@/features/subscription/model/exit-promo/promo-handoff';
 import { track } from '@/shared/analytics';
 import {
   readDateParam,
