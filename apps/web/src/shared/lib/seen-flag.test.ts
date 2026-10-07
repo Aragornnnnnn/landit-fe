@@ -1,4 +1,5 @@
 // seenFlag — "이 기기에서 본 적 있는가"를 localStorage 한 키로 기록하는 계약. 저장소가 없으면 안 본 것으로 친다
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { seenFlag } from './seen-flag';

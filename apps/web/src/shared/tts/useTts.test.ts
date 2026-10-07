@@ -1,4 +1,5 @@
 // useTts — voice 없음 스킵, OpenRouter 프록시 요청 계약, 실패·중단 처리 검증
+// @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

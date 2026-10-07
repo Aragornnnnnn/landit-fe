@@ -1,4 +1,5 @@
 // 페이월 닫기 — 서버에 알리고 받은 할인을 홈으로 넘긴다. 늦게 온 할인은 같은 계정일 때만 받는다
+// @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

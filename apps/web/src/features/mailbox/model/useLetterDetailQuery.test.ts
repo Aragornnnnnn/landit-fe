@@ -1,4 +1,5 @@
 // 상세 조회 훅 검증 — 받은 편지는 조회가 읽음 처리라, 받고 나면 목록과 미읽음 개수를 낡은 것으로 표시해야 한다
+// @vitest-environment jsdom
 import { createElement, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';

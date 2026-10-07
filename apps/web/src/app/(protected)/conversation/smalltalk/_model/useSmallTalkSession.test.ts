@@ -1,5 +1,6 @@
 // useSmallTalkSession — 세션 시작 요청이 서버와 맺은 약속을 지키는지 검증한다.
 // 상대를 안 실으면 서버가 요청을 거절하는데, 화면만 봐서는 드러나지 않아 테스트가 대신 지킨다
+// @vitest-environment jsdom
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 

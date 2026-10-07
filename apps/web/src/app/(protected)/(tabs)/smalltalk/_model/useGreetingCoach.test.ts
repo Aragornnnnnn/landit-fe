@@ -1,4 +1,5 @@
 // useGreetingCoach — 첫 안내 다음에 딱 한 번, 캐릭터를 눌러 인사를 들을 때까지 코치마크를 띄운다
+// @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

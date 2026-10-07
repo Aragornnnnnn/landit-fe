@@ -68,21 +68,21 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('PromoSheetContent', () => {
-  it('할인가와 할인율, 남은 시간을 보여준다', () => {
+  it('할인가와 할인율, 남은 시간을 보여준다 — 큰 숫자는 실제 청구액, 월 환산은 아래 작은 줄이다', () => {
     open();
 
-    expect(document.body.textContent).toContain('4,900원 /월');
-    expect(screen.getByText('58,500원 /년')).toBeInTheDocument();
+    expect(document.body.textContent).toContain('58,500원 /년');
+    expect(screen.getByText('월 4,900원꼴')).toBeInTheDocument();
     expect(screen.getByText('67% 할인')).toBeInTheDocument();
     // 자리마다 따로 그려 글자가 쪼개진다 — 합친 문자열로 본다
     expect(document.body.textContent).toContain('02:45 후 종료');
   });
 
-  it('월간도 1년치로 보여준다 — 같은 자로 재야 연간이 얼마나 싼지 읽힌다', () => {
+  it('월간은 달마다 청구액을 크게, 1년치를 아래 작게 보여준다 — 같은 자로 재야 연간이 얼마나 싼지 읽힌다', () => {
     open();
 
     expect(document.body.textContent).toContain('14,900원 /월');
-    expect(screen.getByText('178,800원 /년')).toBeInTheDocument();
+    expect(screen.getByText('1년 178,800원')).toBeInTheDocument();
   });
 
   it('연간 카드에 월간으로 1년 쓸 때의 금액을 지워 보여준다 — 같은 자로 재야 얼마나 싼지 읽힌다', () => {

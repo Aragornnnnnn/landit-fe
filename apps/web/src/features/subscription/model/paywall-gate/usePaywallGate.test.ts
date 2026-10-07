@@ -1,4 +1,5 @@
 // 게이트 훅의 갈림길 — 잠기면 페이월로 보내며 계측하고, 열리거나 재료가 없으면 원래 이동을 그대로 한다
+// @vitest-environment jsdom
 import { createElement, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';

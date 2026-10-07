@@ -1,4 +1,5 @@
 // 소환 게이트 검증 — 등장 애니메이션은 그날 처음이거나 알림으로 들어왔을 때만 나온다
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { decideSummon, markSummoned, readLastSummoned } from './lamp-gate';

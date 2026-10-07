@@ -1,4 +1,5 @@
 // 진동 설정 — 기본 켬, 끈 것만 기기에 남고, 바뀌면 구독자에게 알린다
+// @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
