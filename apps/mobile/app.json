@@ -64,7 +64,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.saynow.app",
-      "versionCode": 27,
+      "versionCode": 29,
       "intentFilters": [
         {
           "action": "VIEW",
