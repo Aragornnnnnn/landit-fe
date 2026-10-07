@@ -1,4 +1,5 @@
 // 대화 세션 수명 훅 검증 — 백그라운드 1회 시작, 확보 대기(ensure), 오프닝 폴백, 중도 종료
+// @vitest-environment jsdom
 import { StrictMode } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';

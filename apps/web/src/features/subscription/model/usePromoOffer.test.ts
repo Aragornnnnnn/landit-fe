@@ -1,4 +1,5 @@
 // 한시 할인 카운트다운 — 받은 순간을 기준으로 재고, 화면을 떠났다 돌아와도 맞아야 한다
+// @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

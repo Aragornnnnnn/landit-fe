@@ -1,4 +1,5 @@
 // 앰플리튜드 래퍼 계약 — 키 유무에 따른 no-op 전환, 공통 속성 병합, 유저 식별을 검증한다
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const amplitudeMock = vi.hoisted(() => {

@@ -1,4 +1,5 @@
 // 말하기 속도 설정 — 기본 1배, 목록에 없는 값은 안 믿고, 바뀌면 구독자에게 알린다
+// @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {

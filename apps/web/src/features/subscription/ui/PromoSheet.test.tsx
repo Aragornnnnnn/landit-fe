@@ -65,21 +65,21 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('PromoSheet', () => {
-  it('할인가와 할인율, 남은 시간을 보여준다', () => {
+  it('할인가와 할인율, 남은 시간을 보여준다 — 큰 숫자는 실제 청구액, 월 환산은 아래 작은 줄이다', () => {
     open();
 
-    expect(document.body.textContent).toContain('4,900원 /월');
-    expect(screen.getByText('58,500원 /년')).toBeInTheDocument();
+    expect(document.body.textContent).toContain('58,500원 /년');
+    expect(screen.getByText('월 4,900원꼴')).toBeInTheDocument();
     expect(screen.getByText('67% 할인')).toBeInTheDocument();
     // 자리마다 따로 그려 글자가 쪼개진다 — 합친 문자열로 본다
     expect(document.body.textContent).toContain('02:45 후 종료');
   });
 
-  it('월간도 1년치로 보여준다 — 같은 자로 재야 연간이 얼마나 싼지 읽힌다', () => {
+  it('월간은 달마다 청구액을 크게, 1년치를 아래 작게 보여준다 — 같은 자로 재야 연간이 얼마나 싼지 읽힌다', () => {
     open();
 
     expect(document.body.textContent).toContain('14,900원 /월');
-    expect(screen.getByText('178,800원 /년')).toBeInTheDocument();
+    expect(screen.getByText('1년 178,800원')).toBeInTheDocument();
   });
 
   it('연간 카드에 월간으로 1년 쓸 때의 금액을 지워 보여준다 — 같은 자로 재야 얼마나 싼지 읽힌다', () => {
@@ -155,7 +155,7 @@ describe('PromoSheet', () => {
 
     expect(screen.queryByText(/후 종료/)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /시작하기/ })).toBeNull();
-    expect(document.body.textContent).not.toContain('4,900원 /월');
+    expect(document.body.textContent).not.toContain('58,500원 /년');
   });
 
   it('월간을 고르면 CTA가 월간용으로 바뀐다 — 할인은 연간에만 있다', () => {
@@ -194,7 +194,7 @@ describe('PromoSheet', () => {
   it('정가 연간을 못 받았으면 아무것도 그리지 않는다 — 지어낸 정가로 할인이라 부르지 않는다', () => {
     open({ list: { monthly: tiers.list.monthly } });
 
-    expect(document.body.textContent).not.toContain('4,900원 /월');
+    expect(document.body.textContent).not.toContain('58,500원 /년');
     expect(screen.queryByRole('button', { name: /시작하기/ })).toBeNull();
   });
 });
