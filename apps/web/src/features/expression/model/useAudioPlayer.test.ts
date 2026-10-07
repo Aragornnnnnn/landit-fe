@@ -1,4 +1,5 @@
 // 오디오 재생 훅 검증 — 구간 재생의 시작 위치 이동 시점(iOS가 로드 전 seek를 버리는 버그 재현)
+// @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

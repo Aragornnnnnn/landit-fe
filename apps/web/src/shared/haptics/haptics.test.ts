@@ -1,4 +1,5 @@
 // haptic — WebView면 브릿지로 보내고, 밖이면 Vibration API로 폴백하며, 연타는 스로틀한다
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { postToNative } from '@/shared/bridge/web-bridge';
@@ -77,6 +78,7 @@ describe('haptic', () => {
 
 describe('haptic 설정', () => {
   it('마이페이지에서 진동을 껐으면 브릿지로도 브라우저로도 아무 것도 보내지 않는다', () => {
+    advanceTime();
     setHapticsEnabled(false);
     try {
       haptic('success');

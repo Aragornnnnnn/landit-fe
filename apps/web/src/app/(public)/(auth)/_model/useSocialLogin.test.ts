@@ -1,4 +1,5 @@
 // 애플 개발자 계정 이전 중 애플 로그인만 잠시 막는 점검 가드를 검증한다
+// @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

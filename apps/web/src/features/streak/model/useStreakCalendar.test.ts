@@ -1,4 +1,5 @@
 // 달력 훅 검증 — 첫 조회는 서버가 달을 정하고, 월 이동은 그 응답이 준 달에서 출발한다
+// @vitest-environment jsdom
 import { createElement, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
