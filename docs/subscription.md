@@ -103,21 +103,19 @@ Google Play도 같은 세 제품 ID로 등록돼 있다. 할인 연간은 기존
 
 세 조건이 전부 참일 때만 결제 UI를 보여준다.
 
-1. `window.__LANDIT_NATIVE__.appVersion >= 1.3.0` — 1.2.x 셸에는 SDK도 브릿지 핸들러도 없다. 브라우저 단독 접속은 값이 없어서 자연히 안 뜬다. 비교는 `shared/bridge/app-version.ts`의 `isAppVersionAtLeast`(자리별 정수, 못 읽는 버전은 낮은 것으로). 위젯 설치 안내의 버전 판정도 같은 함수다.
-2. `NEXT_PUBLIC_PAYMENT_ENABLED` — 오픈 시점을 잡는 플래그(`features/subscription/model/payment-flag.ts`, 값 `true`일 때만 켜짐). Vercel 환경변수라 바꾸면 재배포가 필요하다 (`NEXT_PUBLIC_`은 빌드 시점에 박힌다).
+1. 앱 안이다(`window.__LANDIT_NATIVE__`가 있다). 브라우저 단독 접속은 결제할 수 없어서 안 뜬다. 1.3.0 미만 셸은 결제 브릿지가 없지만, 운영 최소 지원 버전이 1.3.1이라 강제 업데이트에 막혀 들어오지 않는다. 결제 직전에는 `resolvePurchaseSupport`가 브릿지 버전을 한 번 더 본다.
+2. `NEXT_PUBLIC_PAYMENT_ENABLED` — 결제를 막아야 할 때 끄는 스위치(`features/subscription/model/payment-flag.ts`, 값 `true`일 때만 켜짐). Vercel 환경변수라 바꾸면 재배포가 필요하다 (`NEXT_PUBLIC_`은 빌드 시점에 박힌다).
 3. BE `premium`이 `false` — 이미 구독 중이면 안 보여준다.
 
-이 세 조건은 페이월 노출뿐 아니라 위 절의 잠금 게이트에도 같이 걸린다(`canLockPaywall`). 1.2.x 유저는 결제를 못 하니 잠기면 안 되고, 잠글 수 없는 환경에서는 구독 조회도 하지 않는다.
-
-버전 게이트만으로도 "누가 보느냐"는 제어된다. 플래그를 따로 두는 이유는 1.3.0 출시일과 결제 오픈일을 분리하고, BE 샌드박스 설정 전환(아래 절)과 시점을 맞추기 위해서다.
+1·2는 페이월 노출뿐 아니라 위 절의 잠금 게이트에도 같이 걸린다(`canLockPaywall`, 훅은 `usePaymentLive`). 결제할 수 없는 곳에서 잠그면 갈 데가 없으니, 잠글 수 없는 환경에서는 구독 조회도 하지 않는다.
 
 로그인 전에는 결제 버튼을 아예 보여주지 않는다. BE가 웹훅의 `app_user_id`를 숫자 유저 id로 풀기 때문에 익명 상태 결제는 매핑이 안 된다.
 
 ## 스몰톡 말하기 한도
 
-결제가 열리면 스몰톡의 하루 말하기 한도(`remainingSpeakingTimeMs`) 표시를 치운다 (LAN-480, 2026-09-11 확정). 홈 알약("오늘 남은 말하기")은 잔량 대신 "무제한"을 쓰고, 대화 화면은 마이크 위 카운트다운과 완료 버튼 둘레의 타이머 링을 그리지 않는다(`MicControl`에 `remainingRatio`를 안 넘기면 기존 펄스가 나온다).
+스몰톡의 하루 말하기 한도(`remainingSpeakingTimeMs`) 표시를 치운다 (LAN-480, 2026-09-11 확정). 홈 알약("오늘 남은 말하기")은 잔량 대신 "무제한"을 쓰고, 대화 화면은 마이크 위 카운트다운과 완료 버튼 둘레의 타이머 링을 그리지 않는다(`MicControl`에 `remainingRatio`를 안 넘기면 기존 펄스가 나온다).
 
-판정은 `useSpeakingLimit`(`features/small-talk/model`) 한 곳이다. 지금은 결제가 열린 환경(`usePaymentLive` = `canLockPaywall`, 플래그 + 셸 1.3.0 이상)이면 무제한이라, 지금 머지해도 플래그가 꺼진 동안은 기존 표시가 나오고 결제 오픈 재배포 때 같이 바뀐다. 브라우저 미리보기는 셸 버전이 없어 기존 표시다. 버전 게이트도 같이 보는 이유는 페이월과 같은 기준을 쓰기 위해서다(1.2.x는 1.3.0 출시 시 강제 업데이트 대상이라 실제로는 만나지 않는다). 무료 사용자 한도가 다시 생기면 이 훅에 구독 여부를 더한다.
+판정은 `useSpeakingLimit`(`features/small-talk/model`) 한 곳이다. 결제 오픈에 맞춰 바뀌도록 결제 판정(`usePaymentLive`)에 묶여 있었지만, 결제가 자리 잡은 뒤로는 결제 환경과 상관없이 늘 무제한이다(LAN-574). 무료 사용자 한도가 다시 생기면 이 훅에 구독 여부를 더한다.
 
 표시만 가린다. 말하는 동안 잔량을 깎는 `useSpeakingBudget`와 제출 시 보내는 `timeLimitReached`는 그대로 돌아, 한도가 되살아나면 표시만 다시 켜면 된다. BE가 프리미엄 사용자의 잔량을 깎지 않고 `canStart`를 늘 `true`로 주는지는 확인이 필요하다 — 깎는다면 표시 없이 대화가 끊긴다. "오늘의 1분 스몰톡을 다 했어요"(`canStart` false일 때)와 온보딩 안내의 "매일 1분" 문구는 그대로 남아 있다.
 
