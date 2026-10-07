@@ -2,15 +2,17 @@
 // 기본값은 스토어 등록값이고, 셸이 준 원화 가격이 있으면 buildPaywallPlans가 그 값으로 전부 다시 계산한다
 import type { SubscriptionPlan } from '@landit/analytics';
 
-/** 카드 한 장에 그릴 값 전부. 두 카드는 같은 자로 재도록 월 기준 숫자를 쓴다 */
+/** 카드 한 장에 그릴 값 전부. 큰 숫자는 실제 청구액이다 — 월 환산가가 더 눈에 띄면 스토어 심사 3.1.2(c)에서 반려된다 */
 export interface PaywallPlan {
   id: SubscriptionPlan;
   title: string;
-  /** 취소선으로 보여줄 월 기준 비교가. 비교 기준이 없는 카드(월간)는 비워 둔다 */
-  monthlyListPrice?: number;
-  /** 큰 숫자 — 월 기준 금액. 연간은 연 결제액을 달로 나눈 환산값 */
+  /** 청구 주기 — 큰 숫자 앞에 붙는다 */
+  period: '월' | '연';
+  /** 취소선으로 보여줄 비교가. 청구액과 같은 주기다. 비교 기준이 없는 카드(월간)는 비워 둔다 */
+  listPrice?: number;
+  /** 월 기준 금액. 연간은 연 결제액을 달로 나눈 환산값으로, 배지와 부제에만 쓴다 */
   monthlyPrice: number;
-  /** 실제 청구액 — 스토어 등록값과 같아야 한다 (월간은 달마다, 연간은 해마다) */
+  /** 큰 숫자 — 실제 청구액. 스토어 등록값과 같아야 한다 (월간은 달마다, 연간은 해마다) */
   price: number;
   /** 카드 위 테두리에 걸치는 배지 문구. 할인을 강조하는 카드에만 단다 */
   badge?: string;
@@ -71,6 +73,7 @@ export const buildPaywallPlans = (
     monthly: {
       id: 'monthly',
       title: PLAN_TITLE.monthly,
+      period: '월',
       monthlyPrice,
       price: monthlyPrice,
       subtitle: '매달 결제 · 언제든 해지',
@@ -78,12 +81,13 @@ export const buildPaywallPlans = (
     yearly: {
       id: 'yearly',
       title: PLAN_TITLE.yearly,
-      // 연간의 비교 기준은 스토어에 없는 정가가 아니라 월간으로 낼 때의 실제 월 금액이다
-      monthlyListPrice: monthlyPrice,
+      period: '연',
+      // 연간의 비교 기준은 스토어에 없는 정가가 아니라 월간으로 1년 낼 때의 실제 금액이다
+      listPrice: monthlyPrice * 12,
       monthlyPrice: yearlyMonthly,
       price: yearlyPrice,
       badge: `월간보다 ${calculateDiscountRate(monthlyPrice, yearlyMonthly)}% 저렴`,
-      subtitle: `연 ${formatWon(yearlyPrice)} · 7일 무료 체험`,
+      subtitle: `월 ${formatWon(yearlyMonthly)}꼴 · 7일 무료 체험`,
     },
   };
 };

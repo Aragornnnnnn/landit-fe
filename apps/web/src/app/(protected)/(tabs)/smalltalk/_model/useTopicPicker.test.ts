@@ -1,4 +1,5 @@
 // useTopicPicker — 주제 고르기를 열 때와 새로고침할 때 주제를 다시 받아오고, 못 받으면 알린다
+// @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 

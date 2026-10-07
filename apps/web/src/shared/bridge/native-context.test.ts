@@ -1,4 +1,5 @@
 // 네이티브 컨텍스트 리더 — 셸 안이면 주입값을 읽고, 브라우저면 null/browser로 떨어진다
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { getNativeContext, getSurface } from './native-context';

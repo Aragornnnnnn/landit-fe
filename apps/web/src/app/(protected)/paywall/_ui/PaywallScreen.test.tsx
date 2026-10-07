@@ -140,6 +140,19 @@ describe('PaywallScreen', () => {
     expect(mocks.purchaseOptions?.packages).toBe(mocks.packages);
   });
 
+  it('카드의 큰 숫자는 실제 청구액이고 월 환산가는 부제로만 쓴다 — 스토어 심사 3.1.2(c)', () => {
+    mocks.pricing = {
+      yearly: { packageId: '$rc_annual_kr', price: 58_500, currency: 'KRW' },
+    };
+    render(<PaywallScreen />);
+
+    expect(screen.getByText('연 58,500원')).toBeInTheDocument();
+    expect(
+      screen.getByText('월 4,900원꼴 · 7일 무료 체험'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('월 4,900원')).not.toBeInTheDocument();
+  });
+
   it('결제가 진행 중이면 CTA와 복원이 잠긴다', () => {
     mocks.busy = true;
     render(<PaywallScreen />);

@@ -1,4 +1,5 @@
 // useSatisfactionSheet — 홈 탭에 돌아왔을 때 어느 시트를 하나만 띄울지 고르는 규칙 검증
+// @vitest-environment jsdom
 import { createElement, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';

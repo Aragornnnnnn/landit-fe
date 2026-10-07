@@ -65,16 +65,18 @@ describe('buildPaywallPlans — 등록값', () => {
 
   it('월간 카드는 할인 강조가 없다 — 배지도 비교 취소선도 두지 않는다', () => {
     expect(monthly.badge).toBeUndefined();
-    expect(monthly.monthlyListPrice).toBeUndefined();
+    expect(monthly.listPrice).toBeUndefined();
   });
 
-  it('월간 카드의 월 금액은 실제 청구액과 같다', () => {
+  it('월간 카드는 달마다 청구액을 그대로 큰 숫자로 쓴다', () => {
+    expect(monthly.period).toBe('월');
     expect(monthly.monthlyPrice).toBe(monthly.price);
   });
 
-  it('연간 카드의 큰 숫자는 연 결제액을 달로 나눈 값이고, 취소선은 월간 실제 판매가다', () => {
+  it('연간 카드의 큰 숫자는 실제 청구되는 연 결제액이고, 취소선은 월간으로 1년 낼 때의 금액이다', () => {
+    expect(yearly.period).toBe('연');
     expect(yearly.monthlyPrice).toBe(calculateMonthlyEquivalent(yearly.price));
-    expect(yearly.monthlyListPrice).toBe(monthly.price);
+    expect(yearly.listPrice).toBe(monthly.price * 12);
   });
 
   it('연간 배지의 퍼센트는 월간 판매가 대비 월 환산가 산식과 같다', () => {
@@ -83,9 +85,9 @@ describe('buildPaywallPlans — 등록값', () => {
     expect(yearly.badge).toBe(`월간보다 ${rate}% 저렴`);
   });
 
-  it('연간 부제에는 실제 청구되는 연 결제액이 들어간다', () => {
+  it('연간 부제에는 월 환산가가 작게 들어간다 — 청구액보다 눈에 띄면 스토어 심사(3.1.2)에서 반려된다', () => {
     expect(yearly.subtitle).toBe(
-      `연 ${formatWon(yearly.price)} · 7일 무료 체험`,
+      `월 ${formatWon(yearly.monthlyPrice)}꼴 · 7일 무료 체험`,
     );
   });
 });
@@ -99,10 +101,10 @@ describe('buildPaywallPlans — 스토어 가격', () => {
 
     expect(monthly.price).toBe(11_000);
     expect(monthly.badge).toBeUndefined();
-    expect(yearly.monthlyListPrice).toBe(11_000);
+    expect(yearly.listPrice).toBe(132_000);
     expect(yearly.monthlyPrice).toBe(5_500);
     expect(yearly.badge).toBe('월간보다 50% 저렴');
-    expect(yearly.subtitle).toBe('연 66,000원 · 7일 무료 체험');
+    expect(yearly.subtitle).toBe('월 5,500원꼴 · 7일 무료 체험');
   });
 
   it('한 플랜만 주면 나머지는 등록값을 쓴다', () => {

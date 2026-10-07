@@ -1,4 +1,5 @@
 // clearAccountLocalState — 램프·시트·깃발 기록은 지우고 기기 것은 남긴다. 실제 저장 키로 검사한다
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { tapGreetingSeen } from '@/app/(protected)/(tabs)/_model/tap-greeting-seen';

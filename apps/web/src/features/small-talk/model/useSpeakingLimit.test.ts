@@ -1,4 +1,5 @@
 // 스몰톡 하루 말하기 한도 — 지금은 누구에게나 한도 없이 말한다
+// @vitest-environment jsdom
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 

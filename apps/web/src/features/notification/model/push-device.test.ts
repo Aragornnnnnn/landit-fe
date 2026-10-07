@@ -1,4 +1,5 @@
 // push-device — 설치 ID 보관과 권한·토큰에 따른 설치 동기화 계약 검증
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getNativeContext } from '@/shared/bridge/native-context';

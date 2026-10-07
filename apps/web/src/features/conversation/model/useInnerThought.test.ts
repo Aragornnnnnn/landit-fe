@@ -1,4 +1,5 @@
 // 속마음 폴링 훅 검증 — 제출 응답에 속마음이 비어 온 경우의 폴백
+// @vitest-environment jsdom
 import { renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
