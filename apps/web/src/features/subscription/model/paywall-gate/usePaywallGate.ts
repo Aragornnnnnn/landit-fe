@@ -30,10 +30,10 @@ interface GuardOptions {
  */
 export const usePaywallGate = () => {
   const router = useRouter();
-  const lockable = usePaymentLive();
-  // 잠글 수 없는 환경(플래그 꺼짐·브라우저·구버전 셸)에서는 구독을 묻지 않는다 — 어차피 열린다
+  const paymentLive = usePaymentLive();
+  // 결제가 열리지 않은 환경(플래그 꺼짐·브라우저)에서는 구독을 묻지 않는다 — 어차피 열린다
   const { subscription, isError } = useSubscriptionQuery({
-    enabled: lockable,
+    enabled: paymentLive,
   });
 
   // 구독 조회 실패(구독 API 미배포 포함)는 잠그지 않는다 — 잘못 막는 쪽이 더 나쁘다.
@@ -41,7 +41,7 @@ export const usePaywallGate = () => {
   const decision = isError
     ? 'open'
     : decidePaywallGate({
-        lockable,
+        paymentLive,
         premium: subscription?.premium ?? null,
       });
   const locked = decision === 'locked';

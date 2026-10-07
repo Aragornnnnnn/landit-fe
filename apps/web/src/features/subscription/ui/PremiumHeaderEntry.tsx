@@ -11,6 +11,7 @@ import { paywallPath, SCENARIO_PATH } from '@/shared/lib/routes';
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
 import type { PaywallPromo } from '../api/subscription';
+import { PROMO_ENABLED } from '../model/exit-promo/promo-flag';
 import {
   clearPromoHandoff,
   useHandedPromo,
@@ -20,10 +21,9 @@ import {
   usePromoOffer,
 } from '../model/exit-promo/usePromoOffer';
 import { useSubscriptionQuery } from '../model/my-subscription/useSubscriptionQuery';
-import { PROMO_ENABLED } from '../model/paywall-gate/payment-flag';
 import { usePaymentLive } from '../model/paywall-gate/usePaymentLive';
 import { PromoClock } from './exit-promo/PromoClock';
-import { PromoSheetHost } from './exit-promo/PromoSheetHost';
+import { PromoSheet } from './exit-promo/PromoSheet';
 
 // 진입 링크와 할인 배지가 같은 모양이라 한 곳에 둔다.
 // rounded-full을 쓰면 스몰톡 주제 칩과 같은 계열로 읽힌다 — 칩은 여럿 중 하나를 고르는 자리이고
@@ -95,7 +95,7 @@ export const PremiumHeaderEntry = () => {
 
       {/* 배지가 보이는 동안 매달아 둔다 — 스토어 가격을 미리 받아 두면 눌렀을 때 기다리지 않는다 */}
       {display && (
-        <PromoSheetHost
+        <PromoSheet
           open={openedPromo !== null}
           {...display}
           onClose={closeSheet}

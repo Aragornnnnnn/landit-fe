@@ -21,9 +21,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/shared/auth/auth-store', () => {
   const state = { member: { userId: 42 } };
   const useAuthStore = (selector: (s: unknown) => unknown) => selector(state);
-  // 확인 뒤 계정이 바뀌었는지 볼 때 getState로 읽는다
-  useAuthStore.getState = () => state;
-  return { useAuthStore };
+  // 확인 뒤 계정이 바뀌었는지 볼 때 getCurrentUserId로 읽는다
+  return { useAuthStore, getCurrentUserId: () => state.member.userId };
 });
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 vi.mock('@/shared/ui/toast', () => ({ showToast: mocks.showToast }));
@@ -109,7 +108,7 @@ describe('usePurchase — 결제', () => {
     });
   });
 
-  it('가격표에 있는 패키지로 결제하고, 없으면 표준 identifier로 결제한다', async () => {
+  it('플랜별 패키지에 있는 패키지로 결제하고, 없으면 표준 identifier로 결제한다', async () => {
     mocks.purchaseViaBridge.mockResolvedValue({
       type: 'PURCHASE_RESULT',
       status: 'success',
@@ -199,7 +198,7 @@ describe('usePurchase — 결제', () => {
     expect(mocks.showToast).not.toHaveBeenCalled();
   });
 
-  it('가격표가 있으면 결제 금액과 통화를 완료에 함께 남긴다 — 매출 집계용', async () => {
+  it('패키지가 있으면 결제 금액과 통화를 완료에 함께 남긴다 — 매출 집계용', async () => {
     mocks.purchaseViaBridge.mockResolvedValue({
       type: 'PURCHASE_RESULT',
       status: 'success',

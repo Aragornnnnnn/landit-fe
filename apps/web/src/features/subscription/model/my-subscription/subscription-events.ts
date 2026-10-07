@@ -1,11 +1,7 @@
 // 결제 이력 한 건을 화면 한 줄로 접는다 — 무슨 일이었는지, 어느 플랜인지, 얼마였는지 (docs/subscription.md 「마이페이지와 법적 문서」)
 import type { SubscriptionEvent } from '../../api/subscription';
-import {
-  formatWon,
-  isWonCurrency,
-  PLAN_TITLE,
-  planFromProductId,
-} from '../product/plans';
+import { formatWon, isWonCurrency } from '../../lib/won';
+import { PLAN_TITLE, planFromProductId } from '../product/plans';
 
 export interface SubscriptionEventSummary {
   title: string;

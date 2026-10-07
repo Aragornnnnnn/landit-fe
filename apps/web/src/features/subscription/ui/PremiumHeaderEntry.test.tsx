@@ -17,13 +17,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
-vi.mock('../model/paywall-gate/payment-flag', () => ({
-  PROMO_ENABLED: true,
-  PAYMENT_ENABLED: true,
-}));
-vi.mock('./exit-promo/PromoSheetHost', () => ({
-  PromoSheetHost: ({ open }: { open: boolean }) => (
-    <div data-testid="promo-sheet-host" data-open={String(open)} />
+vi.mock('../model/exit-promo/promo-flag', () => ({ PROMO_ENABLED: true }));
+vi.mock('./exit-promo/PromoSheet', () => ({
+  PromoSheet: ({ open }: { open: boolean }) => (
+    <div data-testid="promo-sheet" data-open={String(open)} />
   ),
 }));
 vi.mock('../model/paywall-gate/usePaymentLive', () => ({
@@ -127,7 +124,7 @@ describe('PremiumHeaderEntry', () => {
     });
     render(<PremiumHeaderEntry />);
 
-    expect(screen.getByTestId('promo-sheet-host')).toHaveAttribute(
+    expect(screen.getByTestId('promo-sheet')).toHaveAttribute(
       'data-open',
       'true',
     );
@@ -141,7 +138,7 @@ describe('PremiumHeaderEntry', () => {
     });
     render(<PremiumHeaderEntry />);
 
-    expect(screen.getByTestId('promo-sheet-host')).toHaveAttribute(
+    expect(screen.getByTestId('promo-sheet')).toHaveAttribute(
       'data-open',
       'false',
     );

@@ -126,7 +126,7 @@ describe('PaywallScreen', () => {
     expect(mocks.purchase).toHaveBeenCalledWith('yearly');
   });
 
-  it('셸이 준 가격표는 표시에 쓰고 결제 훅에도 그대로 넘긴다', () => {
+  it('셸이 준 플랜별 패키지는 표시에 쓰고 결제 훅에도 그대로 넘긴다', () => {
     mocks.packages = {
       yearly: { packageId: '$rc_annual_kr', price: 49_900, currency: 'KRW' },
     };

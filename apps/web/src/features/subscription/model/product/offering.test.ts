@@ -140,13 +140,13 @@ describe('toOffering', () => {
 });
 
 describe('krwPackage', () => {
-  it('원화 가격표는 그대로 돌려준다', () => {
+  it('원화 패키지는 그대로 돌려준다', () => {
     const pkg = { packageId: '$rc_monthly', price: 9900, currency: 'KRW' };
 
     expect(krwPackage(pkg)).toBe(pkg);
   });
 
-  it('다른 통화이거나 가격표가 없으면 비운다', () => {
+  it('다른 통화이거나 패키지가 없으면 비운다', () => {
     expect(
       krwPackage({ packageId: '$rc_annual', price: 39.99, currency: 'USD' }),
     ).toBeUndefined();
@@ -166,7 +166,7 @@ describe('toKrwPrices', () => {
 });
 
 describe('packageIdFor', () => {
-  it('가격표에 있으면 그 패키지, 없으면 RevenueCat 표준 identifier로 결제한다', () => {
+  it('플랜별 패키지에 있으면 그 패키지, 없으면 RevenueCat 표준 identifier로 결제한다', () => {
     const packages = toPlanPackages([{ ...yearly, id: '$rc_annual_kr' }]);
 
     expect(packageIdFor('yearly', packages)).toBe('$rc_annual_kr');

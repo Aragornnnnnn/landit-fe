@@ -1,7 +1,7 @@
 'use client';
 
 // 마이페이지 프리미엄 카드 — 골드 한 줄. 무료면 페이월로, 유료면 구독 관리로 간다.
-// 결제할 수 없는 환경(브라우저·구버전 셸·플래그 꺼짐)의 무료 사용자에겐 그리지 않는다 (docs/subscription.md 「마이페이지와 법적 문서」)
+// 결제할 수 없는 환경(브라우저·플래그 꺼짐)의 무료 사용자에겐 그리지 않는다 (docs/subscription.md 「마이페이지와 법적 문서」)
 import { EVENTS, type SubscriptionState } from '@landit/analytics';
 import Link from 'next/link';
 
@@ -35,7 +35,7 @@ export const PremiumEntry = () => {
 
   const summary = summarizeSubscription(subscription);
 
-  // 결제 브릿지가 실린 셸에서 플래그가 켜져 있을 때만 — 게이트가 잠글 수 있는 환경과 같은 조건이다
+  // 결제가 열린 환경(앱 안·플래그 켜짐)일 때만 — 게이트와 같은 조건이다
   if (summary.kind === 'none' && !paymentLive) return null;
 
   const entry =

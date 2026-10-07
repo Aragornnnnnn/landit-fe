@@ -31,7 +31,7 @@ export interface PromoMonthly {
 }
 
 /** 시트에 그릴 카드 두 장 */
-export interface PromoSheet {
+export interface PromoSheetValues {
   yearly: PromoYearly;
   monthly: PromoMonthly;
   /** 결제할 패키지 — 연간은 할인, 월간은 정가 */
@@ -50,7 +50,7 @@ export interface PromoSheet {
 export const buildPromoSheet = ({
   regular,
   promo,
-}: Offering): PromoSheet | null => {
+}: Offering): PromoSheetValues | null => {
   const discounted = krwPackage(promo.yearly);
   const regularYearly = krwPackage(regular.yearly);
   const regularMonthly = krwPackage(regular.monthly);
