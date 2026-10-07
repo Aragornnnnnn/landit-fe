@@ -19,18 +19,15 @@ export const resolveStorePlatform = (
 };
 
 export interface StoreInfo {
-  name: string;
   /** 구독을 해지하거나 해지를 취소하는 스토어 화면 */
   manageUrl: string;
 }
 
 export const STORE: Record<StorePlatform, StoreInfo> = {
   ios: {
-    name: 'App Store',
     manageUrl: 'https://apps.apple.com/account/subscriptions',
   },
   android: {
-    name: 'Google Play',
     manageUrl: 'https://play.google.com/store/account/subscriptions',
   },
 };

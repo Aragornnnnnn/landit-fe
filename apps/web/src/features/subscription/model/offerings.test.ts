@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  krwPricing,
   packageIdFor,
   toKrwPrices,
   toOfferingTiers,
@@ -135,6 +136,21 @@ describe('toOfferingTiers', () => {
     const { promo } = toOfferingTiers([monthly, discount]);
 
     expect(promo.monthly).toBeUndefined();
+  });
+});
+
+describe('krwPricing', () => {
+  it('원화 가격표는 그대로 돌려준다', () => {
+    const pricing = { packageId: '$rc_monthly', price: 9900, currency: 'KRW' };
+
+    expect(krwPricing(pricing)).toBe(pricing);
+  });
+
+  it('다른 통화이거나 가격표가 없으면 비운다', () => {
+    expect(
+      krwPricing({ packageId: '$rc_annual', price: 39.99, currency: 'USD' }),
+    ).toBeUndefined();
+    expect(krwPricing(undefined)).toBeUndefined();
   });
 });
 

@@ -5,7 +5,7 @@ import type {
   MySubscription,
   SubscriptionPeriodType,
 } from '../api/subscription';
-import { planFromProductId, type PlanId } from './plans';
+import { isWonCurrency, planFromProductId, type PlanId } from './plans';
 
 export type SubscriptionSummary =
   | { kind: 'none' }
@@ -34,12 +34,11 @@ export type PaidSubscriptionSummary = Extract<
  * 화면에 그릴 수 있는 원화 결제액만 남긴다.
  *
  * 0은 청구가 없다는 뜻이고(프로모션 부여·선결제), 외화는 하루 환산과 「원」 표기가 맞지 않아 버린다.
- * 통화가 안 오면 원화로 보는 건 결제 이력(`subscription-events.ts`)과 같은 규칙이다 — 한국 스토어만 열려 있다.
  *
  * @returns 원화 결제액. 그릴 수 없으면 null
  */
 const toKrwPrice = ({ price, currency }: MySubscription) =>
-  price && price > 0 && (!currency || currency === 'KRW') ? price : null;
+  price && price > 0 && isWonCurrency(currency) ? price : null;
 
 // 만료일에 스토어가 다시 결제하는 기간 종류 — 무료 체험도 끝나면 첫 결제가 된다
 const RENEWING_PERIODS = new Set<SubscriptionPeriodType>([

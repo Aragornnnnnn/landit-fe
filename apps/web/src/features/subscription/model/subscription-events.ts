@@ -1,6 +1,11 @@
 // 결제 이력 한 건을 화면 한 줄로 접는다 — 무슨 일이었는지, 어느 플랜인지, 얼마였는지 (docs/subscription.md 「마이페이지와 법적 문서」)
 import type { SubscriptionEvent } from '../api/subscription';
-import { findPlan, formatWon, planFromProductId } from './plans';
+import {
+  formatWon,
+  isWonCurrency,
+  PLAN_TITLE,
+  planFromProductId,
+} from './plans';
 
 export interface SubscriptionEventSummary {
   title: string;
@@ -43,9 +48,7 @@ const toTitle = (event: SubscriptionEvent) => {
 
 const toAmount = (event: SubscriptionEvent) => {
   if (event.price === null || event.price <= 0) return null;
-  // 통화가 안 오면 원화로 본다 — 한국 스토어만 열려 있고, 원화만 "원"으로 붙인다
-  const isWon = !event.currency || event.currency === 'KRW';
-  if (isWon) return formatWon(event.price);
+  if (isWonCurrency(event.currency)) return formatWon(event.price);
   return `${event.price.toLocaleString('ko-KR')} ${event.currency}`;
 };
 
@@ -55,7 +58,7 @@ export const summarizeSubscriptionEvent = (
   const planId = planFromProductId(event.productId);
   return {
     title: toTitle(event),
-    plan: planId ? `${findPlan(planId).title} 플랜` : null,
+    plan: planId ? `${PLAN_TITLE[planId]} 플랜` : null,
     amount: toAmount(event),
     sandbox: event.environment === 'SANDBOX',
   };

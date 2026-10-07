@@ -11,29 +11,17 @@ const mocks = vi.hoisted(() => ({
   restore: vi.fn(),
   busy: false,
   pricing: {} as Record<string, unknown>,
-  promoPricing: {} as Record<string, unknown>,
   dismiss: vi.fn(),
-  setQueryData: vi.fn(),
   purchaseOptions: null as { pricing: unknown; onUnlocked: () => void } | null,
 }));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace }),
 }));
-vi.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({ setQueryData: mocks.setQueryData }),
-}));
-vi.mock('@/shared/auth/auth-store', () => ({
-  useAuthStore: (selector: (state: unknown) => unknown) =>
-    selector({ member: { userId: 1 } }),
-}));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
-vi.mock('@/features/subscription/model/payment-flag', () => ({
-  PROMO_ENABLED: true,
-  PAYMENT_ENABLED: true,
-}));
-vi.mock('@/features/subscription/api/subscription', () => ({
-  dismissPaywall: () => mocks.dismiss(),
+// 닫기의 서버 알림·할인 전달은 usePaywallDismiss 몫 — 여기선 닫기가 그걸 부른 뒤 홈으로 가는지만 본다
+vi.mock('@/features/subscription/model/usePaywallDismiss', () => ({
+  usePaywallDismiss: () => mocks.dismiss,
 }));
 // 결제 지휘는 features/subscription 몫 — 여기선 무엇을 넘기고 어떤 인자로 부르는지, 버튼 상태만 본다
 vi.mock('@/features/subscription/model/usePurchase', () => ({
@@ -47,7 +35,7 @@ vi.mock('@/features/subscription/model/usePurchase', () => ({
   },
 }));
 vi.mock('@/features/subscription/model/useOfferings', () => ({
-  useOfferings: () => ({ list: mocks.pricing, promo: mocks.promoPricing }),
+  useOfferings: () => ({ list: mocks.pricing, promo: {} }),
 }));
 // next/link는 next 밑의 다른 react 복사본을 잡아 훅이 깨진다 — 순수 a 태그로 치환한다
 vi.mock('next/link', () => ({
@@ -74,18 +62,11 @@ vi.mock('next/image', () => ({
 
 beforeEach(() => {
   mocks.busy = false;
-  mocks.pricing = {};
-  mocks.promoPricing = {};
   mocks.purchaseOptions = null;
-  mocks.dismiss = vi.fn().mockResolvedValue({ promo: null });
-  mocks.setQueryData = vi.fn();
-  // 할인을 실제로 보여줄 수 있어야 닫기가 서버에 알린다 — 정가와 할인가가 둘 다 있어야 할인율이 나온다
+  mocks.dismiss = vi.fn().mockResolvedValue(undefined);
   mocks.pricing = {
     yearly: { packageId: '$rc_annual', price: 94_500, currency: 'KRW' },
     monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
-  };
-  mocks.promoPricing = {
-    yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
   };
 });
 afterEach(() => cleanup());
@@ -208,75 +189,20 @@ describe('PaywallScreen', () => {
     expect(mocks.replace).toHaveBeenCalledWith('/scenario');
   });
 
-  it('닫기를 누르면 홈으로 돌아간다 — 서버에 알린 뒤다', async () => {
+  it('닫기를 누르면 서버에 알린 뒤 홈으로 돌아간다', async () => {
+    let finish = () => {};
+    mocks.dismiss = vi.fn(
+      () => new Promise<void>((resolve) => (finish = resolve)),
+    );
     render(<PaywallScreen />);
 
     fireEvent.click(screen.getByRole('button', { name: '닫기' }));
 
+    expect(mocks.dismiss).toHaveBeenCalledTimes(1);
+    expect(mocks.replace).not.toHaveBeenCalled();
+    finish();
     await vi.waitFor(() =>
       expect(mocks.replace).toHaveBeenCalledWith('/scenario'),
     );
-  });
-
-  describe('닫기', () => {
-    const promo = {
-      remainingSeconds: 300,
-      expiresAt: '2026-09-22T14:35:00',
-      newUser: true,
-    };
-
-    it('할인을 받으면 구독 캐시에 얹고 홈으로 보낸다 — 시트는 홈에서 뜬다', async () => {
-      mocks.dismiss = vi.fn().mockResolvedValue({ promo });
-      render(<PaywallScreen />);
-
-      fireEvent.click(screen.getByRole('button', { name: '닫기' }));
-
-      await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
-      // 헤더가 읽는 자리에 넣어야 홈에 닿자마자 시트가 뜬다
-      const [, updater] = mocks.setQueryData.mock.calls[0];
-      expect(updater({ premium: false })).toMatchObject({ promo });
-    });
-
-    it('할인율이 0이면 알리지 않는다 — 정가 인상 전에 오퍼링에 먼저 넣어 둬도 5분이 타지 않는다', async () => {
-      mocks.pricing = {
-        yearly: { packageId: '$rc_annual', price: 58_500, currency: 'KRW' },
-      };
-      mocks.dismiss = vi.fn().mockResolvedValue({ promo });
-      render(<PaywallScreen />);
-
-      fireEvent.click(screen.getByRole('button', { name: '닫기' }));
-
-      await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
-      expect(mocks.dismiss).not.toHaveBeenCalled();
-    });
-
-    it('자격이 없으면 그냥 홈으로 간다', async () => {
-      render(<PaywallScreen />);
-
-      fireEvent.click(screen.getByRole('button', { name: '닫기' }));
-
-      await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
-      expect(mocks.setQueryData).not.toHaveBeenCalled();
-    });
-
-    it('할인 패키지가 없으면 서버에 알리지도 않는다 — 못 보여줄 할인에 5분을 태우지 않는다', async () => {
-      mocks.promoPricing = {};
-      mocks.dismiss = vi.fn().mockResolvedValue({ promo });
-      render(<PaywallScreen />);
-
-      fireEvent.click(screen.getByRole('button', { name: '닫기' }));
-
-      await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
-      expect(mocks.dismiss).not.toHaveBeenCalled();
-    });
-
-    it('기록이 실패해도 닫히는 것을 막지 않는다', async () => {
-      mocks.dismiss = vi.fn().mockRejectedValue(new Error('네트워크'));
-      render(<PaywallScreen />);
-
-      fireEvent.click(screen.getByRole('button', { name: '닫기' }));
-
-      await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
-    });
   });
 });

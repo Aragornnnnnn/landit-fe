@@ -1,8 +1,8 @@
 // 구독 관리 골드 카드의 문구 규칙 — 상태·플랜으로 제목을, 상태로 날짜 행을, 플랜으로 결제 금액 행을 만든다
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
 import {
-  findPlan,
   formatWon,
+  PLAN_TITLE,
   YEARLY_LIST_PRICE,
 } from '@/features/subscription/model/plans';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/subscription-summary';
@@ -28,7 +28,7 @@ const isGranted = (summary: PaidSubscriptionSummary) =>
 export const toCardTitle = (summary: PaidSubscriptionSummary) => {
   if (isGranted(summary)) return STATUS_TITLE.trial;
   return summary.kind === 'active' && summary.plan
-    ? `${findPlan(summary.plan).title} ${STATUS_TITLE.active}`
+    ? `${PLAN_TITLE[summary.plan]} ${STATUS_TITLE.active}`
     : STATUS_TITLE[summary.kind];
 };
 

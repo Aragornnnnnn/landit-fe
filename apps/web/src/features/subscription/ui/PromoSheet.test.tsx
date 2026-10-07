@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PaywallPromo } from '../api/subscription';
 import type { OfferingTiers } from '../model/offerings';
+import { buildPromoSheet } from '../model/promo-sheet';
 import { PromoSheet } from './PromoSheet';
 
 const mocks = vi.hoisted(() => ({
@@ -47,12 +48,14 @@ const tiers: OfferingTiers = {
   },
 };
 
-const open = (override: Partial<OfferingTiers> = {}, expired = false) =>
+const sheet = buildPromoSheet(tiers)!;
+
+const open = (expired = false) =>
   render(
     <PromoSheet
       promo={expired ? { ...promo, remainingSeconds: 0 } : promo}
       expired={expired}
-      tiers={{ ...tiers, ...override }}
+      sheet={sheet}
       onClose={vi.fn()}
       onUnlocked={vi.fn()}
     />,
@@ -103,22 +106,13 @@ describe('PromoSheet', () => {
     });
   });
 
-  it('할인을 못 그리면 노출로 세지 않는다', () => {
-    open({ promo: {} });
-
-    expect(mocks.track).not.toHaveBeenCalledWith(
-      'Promo Sheet Viewed',
-      expect.anything(),
-    );
-  });
-
   it('닫기 버튼으로도 나갈 수 있다 — 딤 말고 눈에 보이는 길', () => {
     const onClose = vi.fn();
     render(
       <PromoSheet
         promo={promo}
         expired={false}
-        tiers={tiers}
+        sheet={sheet}
         onClose={onClose}
         onUnlocked={vi.fn()}
       />,
@@ -150,14 +144,6 @@ describe('PromoSheet', () => {
     });
   });
 
-  it('할인 패키지가 없으면 아무것도 그리지 않는다 — 할인가를 보여 놓고 정가로 결제되면 안 된다', () => {
-    open({ promo: {} });
-
-    expect(screen.queryByText(/후 종료/)).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /시작하기/ })).toBeNull();
-    expect(document.body.textContent).not.toContain('58,500원 /년');
-  });
-
   it('월간을 고르면 CTA가 월간용으로 바뀐다 — 할인은 연간에만 있다', () => {
     open();
 
@@ -175,7 +161,7 @@ describe('PromoSheet', () => {
       <PromoSheet
         promo={{ ...promo, remainingSeconds: 0 }}
         expired
-        tiers={tiers}
+        sheet={sheet}
         onClose={onClose}
         onUnlocked={vi.fn()}
       />,
@@ -189,12 +175,5 @@ describe('PromoSheet', () => {
 
     expect(screen.getByText('이용약관')).toBeInTheDocument();
     expect(screen.getByText('개인정보 처리방침')).toBeInTheDocument();
-  });
-
-  it('정가 연간을 못 받았으면 아무것도 그리지 않는다 — 지어낸 정가로 할인이라 부르지 않는다', () => {
-    open({ list: { monthly: tiers.list.monthly } });
-
-    expect(document.body.textContent).not.toContain('58,500원 /년');
-    expect(screen.queryByRole('button', { name: /시작하기/ })).toBeNull();
   });
 });

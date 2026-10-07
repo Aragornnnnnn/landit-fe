@@ -8,7 +8,7 @@ import { showToast } from '@/shared/ui/toast';
 
 import type { PaywallPromo } from '../api/subscription';
 import { setPromoSheetOpen } from '../model/promo-handoff';
-import { canShowPromo } from '../model/promo-sheet';
+import { buildPromoSheet } from '../model/promo-sheet';
 import { useOfferings } from '../model/useOfferings';
 import { PromoSheet } from './PromoSheet';
 
@@ -22,9 +22,8 @@ interface PromoSheetHostProps {
 }
 
 /**
- * 스토어 가격을 받아 할인 시트에 넘긴다.
+ * 스토어 가격을 받아 시트에 그릴 값을 만들고, 만들 수 있을 때만 할인 시트를 그린다.
  *
- * 페이월은 가격을 이미 들고 있어 `PromoSheet`를 바로 그리지만, 헤더 배지는 없어서 이걸 거친다.
  * 가격이 오기 전에는 시트를 그릴 수 없으므로, 그동안 소감·알림 동의 시트가 대신 떠 버리지 않게
  * `setPromoSheetOpen(true)`를 먼저 호출해 둔다. 9초 안에 못 받으면 토스트를 띄우고 닫는다.
  */
@@ -35,8 +34,8 @@ export const PromoSheetHost = ({
   onClose,
   onUnlocked,
 }: PromoSheetHostProps) => {
-  const tiers = useOfferings();
-  const ready = canShowPromo(tiers);
+  const sheet = buildPromoSheet(useOfferings());
+  const ready = sheet !== null;
 
   // open이 켜지는 즉시 알린다 — 가격을 기다리는 동안 소감·알림 동의 시트가 먼저 떠 버리면 겹친다
   useEffect(() => {
@@ -55,13 +54,13 @@ export const PromoSheetHost = ({
     return () => clearTimeout(timer);
   }, [open, ready, onClose]);
 
-  if (!open || !ready) return null;
+  if (!open || !sheet) return null;
 
   return (
     <PromoSheet
       promo={promo}
       expired={expired}
-      tiers={tiers}
+      sheet={sheet}
       onClose={onClose}
       onUnlocked={onUnlocked}
     />

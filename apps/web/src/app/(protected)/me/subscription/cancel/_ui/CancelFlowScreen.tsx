@@ -11,25 +11,21 @@ import { toEnglishLevel } from '@/features/onboarding/model/english-level';
 import { useLearningLevelQuery } from '@/features/onboarding/model/useLearningLevelQuery';
 import { useStreakCalendarQuery } from '@/features/streak/model/useStreakCalendarQuery';
 import type { MySubscription } from '@/features/subscription/api/subscription';
-import {
-  resolveStorePlatform,
-  STORE,
-} from '@/features/subscription/model/store-links';
+import { STORE } from '@/features/subscription/model/store-links';
 import {
   canCancelAtStore,
   summarizeSubscription,
   type PaidSubscriptionSummary,
 } from '@/features/subscription/model/subscription-summary';
+import { useStorePlatform } from '@/features/subscription/model/useStorePlatform';
 import { useSubscriptionQuery } from '@/features/subscription/model/useSubscriptionQuery';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
-import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
 import {
   backOrReplace,
   MAILBOX_COMPOSE_PATH,
   SUBSCRIPTION_MANAGE_PATH,
 } from '@/shared/lib/routes';
-import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { BackHeader } from '@/shared/ui/BackHeader';
 
 import {
@@ -51,7 +47,7 @@ import { RetentionStep } from './RetentionStep';
 
 interface FlowProps {
   summary: PaidSubscriptionSummary;
-  /** BE가 준 결제 스토어 — 셸 플랫폼보다 우선한다 (구독 관리와 같은 규칙) */
+  /** BE가 준 결제 스토어 — 셸 플랫폼보다 우선한다 ({@link useStorePlatform}) */
   paidStore: MySubscription['store'];
 }
 
@@ -60,8 +56,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
   const [step, setStep] = useState<CancelStep>({ kind: 'reason' });
   const [draft, setDraft] = useState<CancelDraft>(EMPTY_DRAFT);
 
-  const context = useClientOnlyValue(getNativeContextSnapshot, null);
-  const store = STORE[resolveStorePlatform(paidStore, context?.platform)];
+  const store = STORE[useStorePlatform(paidStore)];
   const nickname = useAuthStore(
     (state) => state.member?.nickname?.trim() || '게스트',
   );

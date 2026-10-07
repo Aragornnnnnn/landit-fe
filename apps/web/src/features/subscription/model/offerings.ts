@@ -92,8 +92,13 @@ export const toOfferingTiers = (
 
 const isDiscount = (pkg: OfferingPackage) => pkg.id.endsWith(DISCOUNT_SUFFIX);
 
-const krwPrice = (pricing?: PlanPricing) =>
-  pricing?.currency === 'KRW' ? pricing.price : undefined;
+/**
+ * 원화 가격표만 남긴다. 셸 가격은 통화가 늘 오므로 KRW일 때만 원화다.
+ *
+ * 화면 숫자가 「원」 표기와 100원 단위 환산을 전제로 짜여 있어, 다른 통화는 그대로 그리면 "월 100원" 같은 값이 나온다 (해외 스토어프런트는 다음 이슈).
+ */
+export const krwPricing = (pricing?: PlanPricing) =>
+  pricing?.currency === 'KRW' ? pricing : undefined;
 
 /**
  * 스토어 가격 중 원화만 숫자로 뽑는다.
@@ -103,8 +108,8 @@ const krwPrice = (pricing?: PlanPricing) =>
 export const toKrwPrices = (
   pricing: PlanPricingMap,
 ): Partial<Record<SubscriptionPlan, number>> => ({
-  monthly: krwPrice(pricing.monthly),
-  yearly: krwPrice(pricing.yearly),
+  monthly: krwPricing(pricing.monthly)?.price,
+  yearly: krwPricing(pricing.yearly)?.price,
 });
 
 /** 오퍼링을 못 받았을 때 결제에 쓸 RevenueCat 표준 패키지 identifier — 셸이 identifier로 패키지를 찾는다 */

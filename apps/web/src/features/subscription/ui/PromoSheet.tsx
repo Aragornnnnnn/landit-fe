@@ -12,9 +12,8 @@ import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
 import type { PaywallPromo } from '../api/subscription';
-import type { OfferingTiers } from '../model/offerings';
 import { formatWon } from '../model/plans';
-import { buildPromoSheet } from '../model/promo-sheet';
+import type { PromoSheet as PromoSheetValues } from '../model/promo-sheet';
 import { usePurchase } from '../model/usePurchase';
 import { GOLD_GRADIENT, PremiumPill } from './premium-brand';
 import { PromoClock } from './PromoClock';
@@ -25,7 +24,8 @@ interface PromoSheetProps {
   promo: PaywallPromo;
   /** 5분이 지났는가. 지났으면 더 팔지 않고 닫을 길만 남긴다 */
   expired: boolean;
-  tiers: OfferingTiers;
+  /** 그릴 숫자와 결제할 패키지 */
+  sheet: PromoSheetValues;
   onClose: () => void;
   /** 유료가 되면 — 보통 시트를 닫고 원래 가려던 곳으로 보낸다 */
   onUnlocked: () => void;
@@ -40,16 +40,14 @@ interface PromoSheetProps {
 export const PromoSheet = ({
   promo,
   expired,
-  tiers,
+  sheet,
   onClose,
   onUnlocked,
 }: PromoSheetProps) => {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('yearly');
-  const sheet = buildPromoSheet(tiers);
   const newUser = promo.newUser;
-  // 결제는 고른 카드가 가리키는 패키지로 간다 — 연간은 할인, 월간은 정가
   const { busy, purchase } = usePurchase({
-    pricing: { yearly: tiers.promo.yearly, monthly: tiers.list.monthly },
+    pricing: sheet.pricing,
     onUnlocked,
     promo: true,
   });
@@ -61,14 +59,9 @@ export const PromoSheet = ({
 
   // 본 횟수는 여기서 낸다 — 실제로 그려지는 유일한 자리라 화면과 어긋날 수 없다.
   // 부르는 쪽에서 내면 "열려고 했지만 못 그린" 경우까지 세어 전환율 분모가 부푼다
-  const shown = sheet !== null;
   useEffect(() => {
-    if (!shown) return;
     track(EVENTS.PROMO_SHEET_VIEWED, { new_user: newUser });
-  }, [shown, newUser]);
-
-  // 할인 패키지를 못 받았으면 시트를 열지 않는다. 할인가를 보여 놓고 정가로 결제되는 일이 없어야 한다
-  if (!sheet) return null;
+  }, [newUser]);
 
   // 결제가 진행 중이면 닫지 않는다 — 닫으면 스토어 결제 결과를 받을 화면이 사라진다
   const closeIfIdle = () => {

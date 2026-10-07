@@ -26,6 +26,12 @@ export const PLAN_ORDER: readonly PlanId[] = ['monthly', 'yearly'];
 
 export const DEFAULT_PLAN_ID: PlanId = 'yearly';
 
+/** 플랜 이름 — 페이월 카드 제목과 구독 관리·결제 내역·해지 화면의 플랜 표기가 같이 쓴다 */
+export const PLAN_TITLE: Record<PlanId, string> = {
+  monthly: '월간',
+  yearly: '연간',
+};
+
 // 스토어 등록값 — 오퍼링을 못 받았을 때 페이월이 쓰는 폴백. 월간은 할인 없는 기본가라 비교선도 배지도 없다.
 // 할인 연간(58,500)은 여기 없다 — 오퍼링으로만 오고, 못 받으면 시트를 띄우지 않으므로 폴백이 필요 없다
 const MONTHLY_PRICE = 14_900;
@@ -41,6 +47,10 @@ export const calculateDiscountRate = (listPrice: number, price: number) =>
  */
 export const calculateMonthlyEquivalent = (yearlyPrice: number) =>
   Math.ceil(yearlyPrice / 12 / 100) * 100;
+
+/** 서버 금액이 원화인가 — 통화가 안 오면 원화로 본다 */
+export const isWonCurrency = (currency?: string | null) =>
+  !currency || currency === 'KRW';
 
 /** 천 단위 쉼표와 '원' — 14900 → 14,900원 */
 export const formatWon = (amount: number) =>
@@ -64,7 +74,7 @@ export const buildPaywallPlans = (
   return {
     monthly: {
       id: 'monthly',
-      title: '월간',
+      title: PLAN_TITLE.monthly,
       period: '월',
       monthlyPrice,
       price: monthlyPrice,
@@ -72,7 +82,7 @@ export const buildPaywallPlans = (
     },
     yearly: {
       id: 'yearly',
-      title: '연간',
+      title: PLAN_TITLE.yearly,
       period: '연',
       // 연간의 비교 기준은 스토어에 없는 정가가 아니라 월간으로 1년 낼 때의 실제 금액이다
       listPrice: monthlyPrice * 12,
@@ -83,9 +93,6 @@ export const buildPaywallPlans = (
     },
   };
 };
-
-// 등록값 기준 플랜 하나 — 구독 관리처럼 스토어 가격 없이 그리는 곳. 페이월은 buildPaywallPlans(스토어 가격)를 쓴다
-export const findPlan = (id: PlanId): PaywallPlan => buildPaywallPlans()[id];
 
 // 월간으로 1년을 낼 때 금액 — 연간 결제액의 비교 기준. 스토어에 없는 정가를 지어내지 않고 실제 월간 금액으로 잰다
 export const YEARLY_LIST_PRICE = MONTHLY_PRICE * 12;
