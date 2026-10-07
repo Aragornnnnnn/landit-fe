@@ -1,4 +1,5 @@
 // 구독 관리 링크를 열 스토어 — 결제 스토어가 우선이고, 없으면 셸 플랫폼, 브라우저는 iOS
+// @vitest-environment jsdom
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

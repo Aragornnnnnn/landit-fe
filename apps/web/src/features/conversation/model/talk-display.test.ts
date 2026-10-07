@@ -1,4 +1,5 @@
 // 대화 표시 설정 — 상대 말 글자 항상 보기(기본 끔)·해석 항상 보기(기본 끔)의 기본값·저장·알림 계약을 검증한다
+// @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {

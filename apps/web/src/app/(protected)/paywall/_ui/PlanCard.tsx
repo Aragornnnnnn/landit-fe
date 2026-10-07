@@ -64,14 +64,14 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
       </span>
       {/* 비교 기준이 없는 카드는 그 줄을 비워 두 카드의 큰 숫자 높이를 맞춘다 — 빈칸에 취소선이 그어지지 않게 클래스도 뗀다 */}
       <span
-        className={`text-[12px] leading-[1.3] text-muted-foreground ${plan.monthlyListPrice ? 'line-through' : ''}`}
+        className={`text-[12px] leading-[1.3] text-muted-foreground ${plan.listPrice ? 'line-through' : ''}`}
       >
-        {plan.monthlyListPrice
-          ? `월 ${formatWon(plan.monthlyListPrice)}`
+        {plan.listPrice
+          ? `${plan.period} ${formatWon(plan.listPrice)}`
           : '\u00a0'}
       </span>
       <span className="text-[22px] leading-[1.2] font-bold text-foreground">
-        월 {formatWon(plan.monthlyPrice)}
+        {plan.period} {formatWon(plan.price)}
       </span>
       <span
         className={`text-[11px] leading-[1.3] transition-colors ${selected ? 'text-[#c4601f]' : 'text-muted-foreground'}`}

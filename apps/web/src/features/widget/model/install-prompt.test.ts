@@ -1,4 +1,5 @@
 // install-prompt — 위젯 설치 안내를 누구에게, 언제, 몇 번 보여줄지의 계약 검증
+// @vitest-environment jsdom
 import type { NativeContext } from '@landit/bridge';
 import { beforeEach, describe, expect, it } from 'vitest';
 
