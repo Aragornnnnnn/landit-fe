@@ -141,7 +141,7 @@ describe('PaywallScreen', () => {
   });
 
   it('카드의 큰 숫자는 실제 청구액이고 월 환산가는 부제로만 쓴다 — 스토어 심사 3.1.2(c)', () => {
-    mocks.pricing = {
+    mocks.packages = {
       yearly: { packageId: '$rc_annual_kr', price: 58_500, currency: 'KRW' },
     };
     render(<PaywallScreen />);
