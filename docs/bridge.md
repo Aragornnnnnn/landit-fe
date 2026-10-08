@@ -48,6 +48,12 @@ landit 앱은 네이티브 UI 없이 웹(Next.js)을 WebView로 감싸는 셸이
 | `RESTORE_RESULT`                  | 앱→웹 | `status`, `message?`                            | `success`/`error`                                                                                                                     | 구독 기능 훅 (LAN-447)   |
 | `PICK_PHOTOS`                     | 웹→앱 | `limit` (1~3)                                   | 사진 보관함만 연다(카메라 없음). 응답은 `PHOTOS_PICKED`                                                                               | `index.tsx`의 핸들러     |
 | `PHOTOS_PICKED`                   | 앱→웹 | `status`, `photos`, `failedCount`, `overflowed` | `success`/`cancelled`/`error`. `photos`는 셸이 장당 1.5MB 안으로 줄인 JPEG base64. 못 구운 장수와 한도 초과 여부를 실어 웹이 안내한다 | 편지함 첨부 훅 (LAN-595) |
+| `GET_ALARM_STATUS`                | 웹→앱 | 없음                                            | 알람 권한·걸린 매일 알람 조회 (다이얼로그 없음). 응답은 `ALARM_STATUS`                                                                | `index.tsx`의 핸들러     |
+| `REQUEST_ALARM_PERMISSION`        | 웹→앱 | 없음                                            | 알람 권한 요청 — iOS는 AlarmKit 권한창, Android는 정확한 알람 설정 화면. 응답은 `ALARM_STATUS`                                        | `index.tsx`의 핸들러     |
+| `OPEN_ALARM_SETTINGS`             | 웹→앱 | `target`                                        | Android 설정 화면(정확한 알람·전체 화면 알림)을 연다. 단방향 — 돌아오면 웹이 다시 묻는다                                              | `index.tsx`의 핸들러     |
+| `SET_ALARM`                       | 웹→앱 | `key`, `alarm` (null이면 끄기)                  | 그 종류의 반복 알람만 지우고 다시 건다. 요일별 시각은 `slots`. 응답은 `ALARM_STATUS`                                                  | `index.tsx`의 핸들러     |
+| `SKIP_ALARM_TODAY`                | 웹→앱 | `key`                                           | 그 종류의 반복 알람을 오늘만 울리지 않게 한다(내일부터 그대로). 응답은 `ALARM_STATUS`                                                 | `index.tsx`의 핸들러     |
+| `ALARM_STATUS`                    | 앱→웹 | 권한 5칸, `repeatingAlarms`                     | 알람 요청들의 공통 응답 — 권한과 종류별 반복 알람(울림 칸·건너뛴 날)                                                                  | 알람 기능 (LAN-461)      |
 
 STT·TTS·인증 등 기능 메시지는 각 기능 이슈에서 추가한다.
 

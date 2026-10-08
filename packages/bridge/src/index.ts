@@ -10,6 +10,13 @@ export {
   restoreStatusSchema,
   photoPickStatusSchema,
   pickedPhotoSchema,
+  alarmKeySchema,
+  alarmTimeSchema,
+  alarmSlotSchema,
+  repeatingAlarmSchema,
+  repeatingAlarmStateSchema,
+  alarmSettingsTargetSchema,
+  alarmStatusSchema,
   MAX_PICK_PHOTOS,
   EMPTY_WIDGET_DATA,
   type WebToNativeMessage,
@@ -25,6 +32,13 @@ export {
   type RestoreStatus,
   type PhotoPickStatus,
   type PickedPhoto,
+  type AlarmKey,
+  type AlarmTime,
+  type AlarmSlot,
+  type RepeatingAlarm,
+  type RepeatingAlarmState,
+  type AlarmSettingsTarget,
+  type AlarmStatus,
 } from './messages';
 
 export {

@@ -564,3 +564,162 @@ describe('사진 고르기 (PICK_PHOTOS ↔ PHOTOS_PICKED)', () => {
     ).toBeNull();
   });
 });
+
+describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·OPEN_ALARM_SETTINGS ↔ ALARM_STATUS)', () => {
+  const EVERY_DAY = [1, 2, 3, 4, 5, 6, 7];
+  const alarm = {
+    title: '오늘의 시나리오 할 시간!',
+    slots: [{ hour: 19, minute: 0, weekdays: EVERY_DAY }],
+  };
+  const status: Extract<NativeToWebMessage, { type: 'ALARM_STATUS' }> = {
+    type: 'ALARM_STATUS',
+    supported: true,
+    permission: 'granted',
+    exactAlarm: true,
+    fullScreen: true,
+    notifications: true,
+    repeatingAlarms: [],
+  };
+  const parseSet = (body: object) =>
+    parseWebToNativeMessage(JSON.stringify({ type: 'SET_ALARM', ...body }));
+
+  it('매일 같은 시각에 울리는 알람 요청을 그대로 되돌린다', () => {
+    const message: WebToNativeMessage = {
+      type: 'SET_ALARM',
+      key: 'scenario',
+      alarm,
+    };
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('요일마다 시각이 다른 알람 요청도 받는다 — 나중에 요일별 시각을 열어도 계약은 그대로', () => {
+    const message: WebToNativeMessage = {
+      type: 'SET_ALARM',
+      key: 'scenario',
+      alarm: {
+        ...alarm,
+        slots: [
+          { hour: 7, minute: 0, weekdays: [1, 2, 3, 4, 5] },
+          { hour: 10, minute: 30, weekdays: [6, 7] },
+        ],
+      },
+    };
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it.each([
+    ['오늘 회차를 빼고', { ...alarm, skipToday: true }],
+    ['소리 없이', { ...alarm, silent: true }],
+  ])('%s 거는 알람 요청을 그대로 되돌린다', (_, payload) => {
+    const message: WebToNativeMessage = {
+      type: 'SET_ALARM',
+      key: 'scenario',
+      alarm: payload,
+    };
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('alarm이 null이면 그 종류의 알람을 끄는 요청으로 받는다', () => {
+    expect(parseSet({ key: 'scenario', alarm: null })).toEqual({
+      type: 'SET_ALARM',
+      key: 'scenario',
+      alarm: null,
+    });
+  });
+
+  it.each([
+    [
+      '시가 24',
+      { ...alarm, slots: [{ hour: 24, minute: 0, weekdays: EVERY_DAY }] },
+    ],
+    [
+      '분이 60',
+      { ...alarm, slots: [{ hour: 7, minute: 60, weekdays: EVERY_DAY }] },
+    ],
+    ['요일이 0', { ...alarm, slots: [{ hour: 7, minute: 0, weekdays: [0] }] }],
+    [
+      '요일이 비어 있음',
+      { ...alarm, slots: [{ hour: 7, minute: 0, weekdays: [] }] },
+    ],
+    ['울릴 칸이 없음', { ...alarm, slots: [] }],
+    [
+      '두 칸의 요일이 겹침',
+      {
+        ...alarm,
+        slots: [
+          { hour: 7, minute: 0, weekdays: [1, 2] },
+          { hour: 9, minute: 0, weekdays: [2, 3] },
+        ],
+      },
+    ],
+    ['제목이 빈 문자열', { ...alarm, title: '' }],
+  ])('%s인 알람 요청은 버린다', (_, bad) => {
+    expect(parseSet({ key: 'scenario', alarm: bad })).toBeNull();
+  });
+
+  it('모르는 종류의 알람 요청은 버린다', () => {
+    expect(parseSet({ key: 'review', alarm })).toBeNull();
+  });
+
+  it('오늘 건너뛰기는 알람의 종류를 실어야 받는다', () => {
+    const parse = (body: object) =>
+      parseWebToNativeMessage(
+        JSON.stringify({ type: 'SKIP_ALARM_TODAY', ...body }),
+      );
+
+    expect(parse({ key: 'scenario' })).not.toBeNull();
+    expect(parse({})).toBeNull();
+  });
+
+  it('설정 화면 바로 가기는 정확한 알람·전체 화면 알림 둘만 받는다', () => {
+    const parse = (target: string) =>
+      parseWebToNativeMessage(
+        JSON.stringify({ type: 'OPEN_ALARM_SETTINGS', target }),
+      );
+
+    expect(parse('exactAlarm')).not.toBeNull();
+    expect(parse('fullScreen')).not.toBeNull();
+    expect(parse('battery')).toBeNull();
+  });
+
+  it('알람을 못 쓰는 기기의 상태 회신도 받는다', () => {
+    const message: NativeToWebMessage = {
+      ...status,
+      supported: false,
+      permission: 'denied',
+      exactAlarm: false,
+      fullScreen: false,
+      notifications: false,
+    };
+
+    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('걸린 알람을 종류별 울림 칸·건너뛴 날짜와 함께 싣는다 — 웹이 같은 날 또 건너뛰라고 보내지 않게', () => {
+    const message: NativeToWebMessage = {
+      ...status,
+      repeatingAlarms: [
+        {
+          key: 'scenario',
+          slots: [{ hour: 7, minute: 30, weekdays: EVERY_DAY }],
+          skipDate: '2026-10-07',
+        },
+      ],
+    };
+
+    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+});
