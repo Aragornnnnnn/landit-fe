@@ -1,8 +1,10 @@
-// 고른 플랜에 따라 갈리는 문구 — 연간에만 무료 체험이 있어 CTA와 결제 안내가 달라진다
+// 고른 플랜에 따라 갈리는 문구 — 지금 플랜은 연간에만 무료 체험이 있어 CTA와 결제 안내가 달라지고, 환급 챌린지가 켜지면 환급 플랜 문구를 쓴다
 import {
   formatWon,
   type PaywallPlan,
 } from '@/features/subscription/model/plans';
+
+import { getMaxRefund, REFUND_PLANS } from './paywall-content';
 
 /** CTA 문구. 연간은 무료 체험을, 월간은 월 결제액을 앞세운다 */
 export const getCtaLabel = (plan: PaywallPlan) =>
@@ -21,3 +23,15 @@ export const getCancelNotice = (plan: PaywallPlan) =>
   plan.id === 'yearly'
     ? '체험 종료 24시간 전까지 해지하면 청구되지 않아요'
     : '결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요';
+
+/** 환급 챌린지 CTA 문구 — 고른 환급 플랜의 기간과 환급률. 100%는 「전액」으로 말한다 */
+export const getRefundCtaLabel = (plan: PaywallPlan) => {
+  const { months, refundRate } = REFUND_PLANS[plan.id];
+  return `${months}개월 ${refundRate === 100 ? '전액' : `${refundRate}%`} 환급 도전하기`;
+};
+
+/** 환급 챌린지 결제 안내 — 고른 환급 플랜의 결제 금액과 챌린지 성공 시 최대 환급액 */
+export const getRefundBillingNotice = (plan: PaywallPlan) => {
+  const { months, price } = REFUND_PLANS[plan.id];
+  return `${months}개월 ${formatWon(price)} 결제 · 챌린지 성공하면 최대 ${formatWon(getMaxRefund(plan.id))} 환급`;
+};

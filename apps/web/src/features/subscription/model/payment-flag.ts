@@ -6,3 +6,7 @@ export const PAYMENT_ENABLED =
 // 이탈 할인 스위치 — 스토어 설정과 무관하게 웹에서 끄고 켠다. 정가 인상 시점과 노출 시점을 맞추거나,
 // 문제가 생겼을 때 오퍼링을 건드리지 않고 되돌리는 데 쓴다. 꺼져 있으면 이탈을 서버에 알리지도 않는다
 export const PROMO_ENABLED = process.env.NEXT_PUBLIC_PROMO_ENABLED === 'true';
+
+// 환급 챌린지 스위치 — 3·6개월 환급 상품이 심사를 통과하면 켠다. 꺼져 있으면 롱 페이월이 환급 무대·환급 플랜 없이 지금 플랜(월간·연간)으로 보인다
+export const REFUND_CHALLENGE_ENABLED =
+  process.env.NEXT_PUBLIC_REFUND_CHALLENGE === 'true';

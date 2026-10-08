@@ -31,6 +31,8 @@ vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 vi.mock('@/features/subscription/model/payment-flag', () => ({
   PROMO_ENABLED: true,
   PAYMENT_ENABLED: true,
+  // 기본은 꺼짐 — 켠 화면은 refundChallenge로 따로 확인한다
+  REFUND_CHALLENGE_ENABLED: false,
 }));
 vi.mock('@/features/subscription/api/subscription', () => ({
   dismissPaywall: () => mocks.dismiss(),
@@ -60,6 +62,10 @@ vi.mock('next/link', () => ({
       {children}
     </a>
   ),
+}));
+// 데모 속 캐릭터는 깜빡임·입모양을 WAAPI(element.animate)로 쏘는데 jsdom엔 없다 — 결제 흐름 테스트라 그림은 비운다
+vi.mock('@/features/conversation/ui/character/PartnerCharacter', () => ({
+  PartnerCharacter: () => null,
 }));
 // next/image는 최적화 로더가 필요해 순수 img로 치환한다
 vi.mock('next/image', () => ({
@@ -145,6 +151,64 @@ describe('PaywallScreen', () => {
     expect(mocks.purchase).toHaveBeenCalledWith('yearly');
   });
 
+  it('플랜 칸이 화면에 다 보이지 않으면 CTA는 결제 대신 맨 아래로 내려 준다', () => {
+    const scrollTo = vi.fn();
+    Element.prototype.scrollTo = scrollTo;
+    const rect = vi
+      .spyOn(Element.prototype, 'getBoundingClientRect')
+      .mockImplementation(function (this: Element) {
+        const box = this.hasAttribute('data-plan-section')
+          ? { top: 1200, bottom: 1700, height: 500 }
+          : { top: 0, bottom: 800, height: 800 };
+        return { ...box, left: 0, right: 0, width: 0, x: 0, y: 0 } as DOMRect;
+      });
+    render(<PaywallScreen />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+    );
+
+    expect(scrollTo).toHaveBeenCalled();
+    expect(mocks.purchase).not.toHaveBeenCalled();
+    rect.mockRestore();
+  });
+
+  it('환급 챌린지가 꺼져 있으면 환급 문구 없이 지금 플랜 카드를 보여 준다', () => {
+    render(<PaywallScreen />);
+
+    expect(screen.queryByText('전액 환급')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: '6개월 100% 환급 플랜' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('환급 챌린지가 꺼져 있으면 「~에서만」 없이 프리미엄으로 배우는 법이라고 말한다 — 시나리오 대화는 무료에도 있다', () => {
+    render(<PaywallScreen />);
+
+    expect(
+      screen.getByRole('heading', { name: /이렇게 배워요/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('구매 복원은 맨 위와 약관 옆 두 곳에 있다 — 스크롤해 내려가도 찾을 수 있다', () => {
+    render(<PaywallScreen />);
+
+    expect(screen.getAllByRole('button', { name: '구매 복원' })).toHaveLength(
+      2,
+    );
+  });
+
+  it('스크롤해 내려가면 닫기 버튼이 따로 떠 있다 — 언제든 닫을 수 있다', () => {
+    const { container } = render(<PaywallScreen />);
+    const root = container.querySelector('[data-scroll-root]')!;
+
+    expect(screen.getAllByRole('button', { name: '닫기' })).toHaveLength(1);
+    root.scrollTop = 600;
+    fireEvent.scroll(root);
+
+    expect(screen.getAllByRole('button', { name: '닫기' })).toHaveLength(2);
+  });
+
   it('셸이 준 가격표는 표시에 쓰고 결제 훅에도 그대로 넘긴다', () => {
     mocks.pricing = {
       yearly: { packageId: '$rc_annual_kr', price: 49_900, currency: 'KRW' },
@@ -163,15 +227,16 @@ describe('PaywallScreen', () => {
     mocks.busy = true;
     render(<PaywallScreen />);
 
-    expect(screen.getByRole('button', { name: '구매 복원' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: '구매 복원' }));
+    for (const restore of screen.getAllByRole('button', { name: '구매 복원' }))
+      expect(restore).toBeDisabled();
+    fireEvent.click(screen.getAllByRole('button', { name: '구매 복원' })[0]);
     expect(mocks.restore).not.toHaveBeenCalled();
   });
 
   it('구매 복원을 누르면 복원 이벤트를 찍고 복원을 요청한다', () => {
     render(<PaywallScreen />);
 
-    fireEvent.click(screen.getByRole('button', { name: '구매 복원' }));
+    fireEvent.click(screen.getAllByRole('button', { name: '구매 복원' })[0]);
 
     expect(mocks.track).toHaveBeenCalledWith('Purchase Restore Tapped');
     expect(mocks.restore).toHaveBeenCalledTimes(1);
@@ -265,5 +330,53 @@ describe('PaywallScreen', () => {
 
       await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalled());
     });
+  });
+});
+
+describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
+  it('머리 제목은 「프리미엄에서만 할 수 있는 것들」이다', () => {
+    render(<PaywallScreen refundChallenge />);
+
+    expect(
+      screen.getByRole('heading', { name: /할 수 있는 것들/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('처음엔 6개월(연간)이 선택돼 있어 CTA가 전액 환급 문구다', () => {
+    render(<PaywallScreen refundChallenge />);
+
+    expect(
+      screen.getByRole('button', { name: '6개월 100% 환급 플랜' }),
+    ).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      screen.getByRole('button', { name: '6개월 전액 환급 도전하기' }),
+    ).toBeInTheDocument();
+  });
+
+  it('3개월(월간) 카드를 누르면 CTA와 결제 안내가 3개월용으로 바뀐다', () => {
+    render(<PaywallScreen refundChallenge />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '3개월 80% 환급 플랜' }),
+    );
+
+    expect(
+      screen.getByRole('button', { name: '3개월 80% 환급 도전하기' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        '3개월 39,900원 결제 · 챌린지 성공하면 최대 31,920원 환급',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('CTA를 누르면 고른 플랜으로 결제를 요청한다', () => {
+    render(<PaywallScreen refundChallenge />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '6개월 전액 환급 도전하기' }),
+    );
+
+    expect(mocks.purchase).toHaveBeenCalledWith('yearly');
   });
 });

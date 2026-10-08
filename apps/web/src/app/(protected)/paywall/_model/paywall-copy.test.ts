@@ -3,7 +3,13 @@ import { describe, expect, it } from 'vitest';
 
 import { buildPaywallPlans } from '@/features/subscription/model/plans';
 
-import { getBillingNotice, getCancelNotice, getCtaLabel } from './paywall-copy';
+import {
+  getBillingNotice,
+  getCancelNotice,
+  getCtaLabel,
+  getRefundBillingNotice,
+  getRefundCtaLabel,
+} from './paywall-copy';
 
 const { monthly, yearly } = buildPaywallPlans();
 
@@ -44,6 +50,27 @@ describe('getCancelNotice', () => {
     );
     expect(getCancelNotice(monthly)).toBe(
       '결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요',
+    );
+  });
+});
+
+describe('getRefundCtaLabel — 환급 챌린지가 켜졌을 때', () => {
+  it('6개월(전액 환급)을 고르면 전액 환급에 도전한다고 말한다', () => {
+    expect(getRefundCtaLabel(yearly)).toBe('6개월 전액 환급 도전하기');
+  });
+
+  it('3개월을 고르면 환급률을 붙여 도전한다고 말한다', () => {
+    expect(getRefundCtaLabel(monthly)).toBe('3개월 80% 환급 도전하기');
+  });
+});
+
+describe('getRefundBillingNotice — 환급 챌린지가 켜졌을 때', () => {
+  it('고른 환급 플랜의 결제 금액과 최대 환급액을 한 줄로 알린다', () => {
+    expect(getRefundBillingNotice(yearly)).toBe(
+      '6개월 59,900원 결제 · 챌린지 성공하면 최대 59,900원 환급',
+    );
+    expect(getRefundBillingNotice(monthly)).toBe(
+      '3개월 39,900원 결제 · 챌린지 성공하면 최대 31,920원 환급',
     );
   });
 });
