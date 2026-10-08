@@ -4,9 +4,27 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}'],
+    // DOM 환경은 파일마다 새로 띄워서 비싸다(전체 시간의 대부분) — 컴포넌트 테스트(.tsx)만 jsdom,
+    // 순수 로직(.ts)은 node로 돌린다. DOM이 필요한 .ts는 파일 머리에 `// @vitest-environment jsdom`
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'dom',
+          environment: 'jsdom',
+          include: ['src/**/*.test.tsx'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'node',
+          environment: 'node',
+          include: ['src/**/*.test.ts'],
+        },
+      },
+    ],
     // 목·스파이를 테스트마다 자동 리셋 — 한 테스트의 목 상태가 다음 테스트로 새지 않게 (docs/testing.md)
     clearMocks: true,
     restoreMocks: true,

@@ -1,8 +1,6 @@
 // 고른 플랜에 따라 갈리는 문구 — 지금 플랜은 연간에만 무료 체험이 있어 CTA와 결제 안내가 달라지고, 환급 챌린지가 켜지면 환급 플랜 문구를 쓴다
-import {
-  formatWon,
-  type PaywallPlan,
-} from '@/features/subscription/model/plans';
+import { formatWon } from '@/features/subscription/lib/won';
+import { type PaywallPlan } from '@/features/subscription/model/product/plans';
 
 import { getMaxRefund, REFUND_PLANS } from './paywall-content';
 

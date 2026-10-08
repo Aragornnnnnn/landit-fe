@@ -1,4 +1,5 @@
 // 알림 진입 판정 — BE 푸시의 UTM을 알아보고, 어떤 유입이든 주소에서 UTM을 지운다
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { consumeReminderEntry } from './reminder-entry';

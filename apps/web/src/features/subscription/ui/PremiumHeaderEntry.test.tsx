@@ -3,7 +3,10 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { MySubscription } from '../api/subscription';
-import { clearPromoHandoff, handOffPromo } from '../model/promo-handoff';
+import {
+  clearPromoHandoff,
+  handOffPromo,
+} from '../model/exit-promo/promo-handoff';
 import { PremiumHeaderEntry } from './PremiumHeaderEntry';
 
 const mocks = vi.hoisted(() => ({
@@ -14,19 +17,16 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
-vi.mock('../model/payment-flag', () => ({
-  PROMO_ENABLED: true,
-  PAYMENT_ENABLED: true,
-}));
-vi.mock('./PromoSheetHost', () => ({
-  PromoSheetHost: ({ open }: { open: boolean }) => (
-    <div data-testid="promo-sheet-host" data-open={String(open)} />
+vi.mock('../model/exit-promo/promo-flag', () => ({ PROMO_ENABLED: true }));
+vi.mock('./exit-promo/PromoSheet', () => ({
+  PromoSheet: ({ open }: { open: boolean }) => (
+    <div data-testid="promo-sheet" data-open={String(open)} />
   ),
 }));
-vi.mock('../model/usePaymentLive', () => ({
+vi.mock('../model/paywall-gate/usePaymentLive', () => ({
   usePaymentLive: () => mocks.paymentLive,
 }));
-vi.mock('../model/useSubscriptionQuery', () => ({
+vi.mock('../model/my-subscription/useSubscriptionQuery', () => ({
   useSubscriptionQuery: () => ({
     subscription: mocks.subscription,
     isPending: mocks.isPending,
@@ -124,7 +124,7 @@ describe('PremiumHeaderEntry', () => {
     });
     render(<PremiumHeaderEntry />);
 
-    expect(screen.getByTestId('promo-sheet-host')).toHaveAttribute(
+    expect(screen.getByTestId('promo-sheet')).toHaveAttribute(
       'data-open',
       'true',
     );
@@ -138,7 +138,7 @@ describe('PremiumHeaderEntry', () => {
     });
     render(<PremiumHeaderEntry />);
 
-    expect(screen.getByTestId('promo-sheet-host')).toHaveAttribute(
+    expect(screen.getByTestId('promo-sheet')).toHaveAttribute(
       'data-open',
       'false',
     );

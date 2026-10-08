@@ -1,7 +1,7 @@
 // 골드 카드 문구 규칙 — 제목의 플랜, 상태별 날짜 라벨, 결제 금액과 비교가
 import { describe, expect, it } from 'vitest';
 
-import type { PaidSubscriptionSummary } from '@/features/subscription/model/subscription-summary';
+import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
 
 import { toAmountRow, toCardTitle, toDateRow } from './subscription-card';
 

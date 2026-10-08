@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 // 숫자 카운트업 — 시작 전엔 최종값을 보여 주고, 시작하면 0부터 올라가 최종값에서 멈춘다
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

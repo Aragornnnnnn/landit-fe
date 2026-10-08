@@ -6,7 +6,7 @@
 // 히어로(data-inview가 처음부터 켜진 섹션) 안에 놓여 마운트하자마자 연출된다. 애니메이션이 안 돌아도 돈주머니·문구는 그대로 보인다
 import type { CSSProperties } from 'react';
 
-import { formatWon } from '@/features/subscription/model/plans';
+import { formatWon } from '@/features/subscription/lib/won';
 import { Emoji } from '@/shared/ui/emoji';
 
 import { useCountUp } from '../_lib/useCountUp';

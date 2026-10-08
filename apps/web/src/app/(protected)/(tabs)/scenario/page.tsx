@@ -13,7 +13,7 @@ import { CalendarStrip } from '@/features/scenario/ui/CalendarStrip';
 import { ScenarioBriefing } from '@/features/scenario/ui/ScenarioBriefing';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
 import { TodayCard } from '@/features/scenario/ui/TodayCard';
-import { usePromoSheetOpen } from '@/features/subscription/model/promo-handoff';
+import { usePromoSheetOpen } from '@/features/subscription/model/exit-promo/promo-handoff';
 import { track } from '@/shared/analytics';
 import {
   readDateParam,
@@ -101,13 +101,8 @@ function ScenarioContent() {
 
   return (
     <>
-      {/* 창은 주소가 정한다 — 응답을 기다렸다 정하면 오늘 창을 한 번 받고 버리게 된다.
-          선택 표시만 응답이 준 날짜를 따른다 */}
-      <CalendarStrip
-        windowDate={date}
-        selected={daily?.date ?? null}
-        onSelect={selectDate}
-      />
+      {/* 창과 선택은 URL의 date가 정한다 — 응답을 기다렸다 정하면 누른 뒤 1초 넘게 그대로라 안 눌린 줄 안다 */}
+      <CalendarStrip date={date} onSelect={selectDate} />
 
       {!daily ? (
         <ScenarioCardSkeleton />
@@ -117,6 +112,8 @@ function ScenarioContent() {
         <EmptyDay isToday={date === undefined} />
       ) : (
         <TodayCard
+          // 날마다 새 카드다 — 같은 자리라고 앞 날의 뒤집힘 상태를 물려받지 않게
+          key={date ?? 'today'}
           daily={daily.scenario}
           playable={daily.playable}
           date={date}

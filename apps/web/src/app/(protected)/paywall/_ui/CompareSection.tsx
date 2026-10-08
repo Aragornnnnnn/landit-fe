@@ -1,7 +1,7 @@
 // 「무료 vs 프리미엄」 — 기존 비교표를 카드에 담는다. 프리미엄 열 체크는 카드가 보일 때 위에서부터 켜진다
 import Image from 'next/image';
 
-import { BenefitComparison } from '@/features/subscription/ui/BenefitComparison';
+import { BenefitComparison } from '@/features/subscription/ui/product/BenefitComparison';
 
 import { RANDY } from '../_model/paywall-content';
 import { RevealSection } from './RevealSection';

@@ -8,14 +8,15 @@ import { EVENTS } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
+import { isStaleLockedFeedback } from '@/features/feedback/model/feedback-view';
 import {
   sessionFeedbackKey,
   useSessionFeedbackQuery,
 } from '@/features/feedback/model/useSessionFeedbackQuery';
 import { FeedbackFlow } from '@/features/feedback/ui/FeedbackFlow';
+import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
 // 가로 import 사유: 피드백이 끝나는 자리가 무료 구간이 끝나는 자리라 여기서 페이월 게이트를 건다
-import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
-import { useSubscriptionQuery } from '@/features/subscription/model/useSubscriptionQuery';
+import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import {
   paywallPath,
@@ -60,8 +61,7 @@ export const ScenarioFeedbackFlow = ({
   // 한 번만이다 — 다시 받아도 잠겨 있으면(웹훅 지연) 그대로 두고, CTA는 페이월(구매 복원)로 이어진다
   const { subscription } = useSubscriptionQuery();
   const queryClient = useQueryClient();
-  const staleLocked =
-    subscription?.premium === true && feedback?.detailFeedbackLocked === true;
+  const staleLocked = isStaleLockedFeedback(subscription?.premium, feedback);
   const refreshed = useRef(false);
   useEffect(() => {
     if (!staleLocked || refreshed.current || sessionId === null) return;

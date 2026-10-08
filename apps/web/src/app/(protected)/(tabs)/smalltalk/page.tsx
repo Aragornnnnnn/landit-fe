@@ -11,8 +11,8 @@ import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
 import { useSpeakingLimit } from '@/features/small-talk/model/useSpeakingLimit';
-import { usePromoSheetOpen } from '@/features/subscription/model/promo-handoff';
-import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
+import { usePromoSheetOpen } from '@/features/subscription/model/exit-promo/promo-handoff';
+import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import {
   SMALLTALK_HISTORY_PATH,

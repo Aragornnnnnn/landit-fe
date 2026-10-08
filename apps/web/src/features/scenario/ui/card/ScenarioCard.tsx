@@ -1,17 +1,23 @@
 'use client';
 
-// 시나리오 카드 — 앞면(썸네일·제목·브리핑·CTA), 완료 시 뒤집으면 뒷면에 표현 학습 리스트
+// 시나리오 카드 — 앞면(썸네일·제목·브리핑·CTA, 완료 시 기록 버튼), 완료 시 뒤집으면 뒷면에 표현 학습 리스트
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import Link from 'next/link';
 
 // 가로 import 사유: 완료 카드를 뒤집어 표현을 보는 것도 학습 진입이라 같은 페이월 게이트를 건다 (docs/subscription.md)
-import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
+import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
-import { scenarioReturnPath } from '@/shared/lib/routes';
+import { scenarioReturnPath, scenarioSessionsPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
-import { ArrowRightIcon, LockIcon, ReplayIcon } from '@/shared/ui/Icons';
+import {
+  ArrowRightIcon,
+  ChevronRightIcon,
+  LockIcon,
+  ReplayIcon,
+} from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
 
 import type { Scenario } from '../../lib/to-scenario';
@@ -55,6 +61,10 @@ export const ScenarioCard = ({
   }
 
   const filterClass = locked ? 'brightness-70 grayscale' : '';
+  // 등장 연출은 마운트 때 한 번 정한다 — 뒷면으로 펴지며 마운트되면 건너뛰고, 나중에 flip 신호가 빠져도 뒷면 아래서 다시 돌지 않게(iOS에서 비친다)
+  const [cardInClass] = useState(
+    autoFlip && completed ? '' : 'animate-card-in',
+  );
 
   // autoFlip으로 처음부터 뒤집힌 채 마운트된 경우도 노출로 기록한다
   useEffect(() => {
@@ -102,10 +112,13 @@ export const ScenarioCard = ({
           flipped ? '[transform:rotateY(-180deg)]' : ''
         }`}
       >
-        {/* 앞면 */}
+        {/* 앞면 — 사진·제목 자리를 바꾸면 ScenarioCardSkeleton도 같이 맞춘다 */}
         <div className="absolute inset-0 flex flex-col overflow-hidden rounded-2xl bg-card shadow-md [-webkit-backface-visibility:hidden] [backface-visibility:hidden]">
           {/* 썸네일 — 텍스트 영역을 제외한 카드 전체를 채운다 */}
-          <div className="relative min-h-0 w-full flex-1 overflow-hidden bg-foreground">
+          <div
+            className={`relative min-h-0 w-full flex-1 overflow-hidden bg-foreground ${cardInClass}`}
+            style={{ '--i': 0 } as React.CSSProperties}
+          >
             {scenario.thumbnailUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- 백엔드 썸네일 도메인이 미정이라 next/image 원격 허용 목록을 아직 못 만든다
               <img
@@ -129,6 +142,18 @@ export const ScenarioCard = ({
                 <StarRating rating={scenario.starRating ?? 0} size={24} />
               </div>
             )}
+            {/* 완료한 시나리오는 지난 회차를 다시 볼 수 있다 — 어두운 별점 배지와 갈리게 밝은 알약에 스몰톡과 같은 「기록 ›」.
+              세로 중심은 별점 배지(top-3·h-10)와 맞추고, 별점 배지와 같은 이유로 뒤집힌 동안에는 그리지 않는다 */}
+            {completed && !flipped && (
+              <Link
+                href={scenarioSessionsPath(scenario.scenarioId, date)}
+                aria-label="대화 기록"
+                className="absolute top-[15px] right-3 flex h-[34px] items-center gap-0.5 rounded-full bg-white/90 pr-2.5 pl-3 text-[13px] font-semibold text-foreground shadow-sm backdrop-blur-sm active:opacity-70"
+              >
+                기록
+                <ChevronRightIcon size={14} />
+              </Link>
+            )}
           </div>
 
           {/* 텍스트 + CTA — 완료 카드는 맨 아래가 고스트 버튼이라 하단 패딩을 줄여
@@ -138,7 +163,10 @@ export const ScenarioCard = ({
               !locked && completed ? 'pb-1' : 'pb-5'
             }`}
           >
-            <div>
+            <div
+              className={cardInClass}
+              style={{ '--i': 1 } as React.CSSProperties}
+            >
               <p
                 className={`text-xl leading-snug font-extrabold ${
                   locked ? 'text-muted-foreground' : 'text-foreground'
@@ -154,13 +182,19 @@ export const ScenarioCard = ({
             </div>
 
             {locked ? (
-              <div className="flex h-14 w-full items-center justify-center gap-1.5 rounded-xl bg-secondary text-base font-bold text-muted-foreground">
+              <div
+                className={`flex h-14 w-full items-center justify-center gap-1.5 rounded-xl bg-secondary text-base font-bold text-muted-foreground ${cardInClass}`}
+                style={{ '--i': 2 } as React.CSSProperties}
+              >
                 잠겨있어요 <LockIcon size={16} />
               </div>
             ) : completed ? (
               // 완료 카드 — 메인은 표현 학습(뒤집기), 다시 해보기는 아래 고스트로.
               // 할 일이 남았으면 주황, 다 했으면 초록이다 — 남은 일이 눈에 띄어야 한다
-              <div className="flex flex-col gap-1">
+              <div
+                className={`flex flex-col gap-1 ${cardInClass}`}
+                style={{ '--i': 2 } as React.CSSProperties}
+              >
                 <ExpressionProgress
                   completed={expressions.completed}
                   total={expressions.total}

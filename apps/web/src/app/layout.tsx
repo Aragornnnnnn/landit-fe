@@ -3,10 +3,10 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
 
 import { AppUpdateGate } from '@/features/app-update/ui/AppUpdateGate';
-import { PushTokenSync } from '@/features/notification/ui/PushTokenSync';
+import { PushDeviceSync } from '@/features/notification/ui/PushDeviceSync';
 import { ProfilePropertiesSync } from '@/features/onboarding/ui/ProfilePropertiesSync';
-import { IdentifySync } from '@/features/subscription/ui/IdentifySync';
-import { SubscriptionPropertiesSync } from '@/features/subscription/ui/SubscriptionPropertiesSync';
+import { SubscriptionPropertiesSync } from '@/features/subscription/ui/my-subscription/SubscriptionPropertiesSync';
+import { IdentifySync } from '@/features/subscription/ui/purchase/IdentifySync';
 import { WidgetChangeSync } from '@/features/widget/ui/WidgetChangeSync';
 import { WidgetDataSync } from '@/features/widget/ui/WidgetDataSync';
 import { AnalyticsBootstrap, PageViewTracker } from '@/shared/analytics';
@@ -53,7 +53,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <AppUpdateGate />
-          <PushTokenSync />
+          <PushDeviceSync />
           <WidgetDataSync />
           <WidgetChangeSync />
           <IdentifySync />

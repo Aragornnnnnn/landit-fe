@@ -1,21 +1,20 @@
-// 「플랜을 선택하세요」 — 플랜 카드 두 장과 약관 링크·구매 복원. 환급 챌린지가 켜지면 환급률을 앞세운 세로 카드, 꺼져 있으면 지금 플랜(월간·연간) 카드와 해지 안내. 결제 안내 첫 줄은 하단 고정 CTA 밑에 있다
+// 「플랜을 선택하세요」 — 플랜 카드 두 장과 약관 링크·구매 복원. 환급 챌린지가 켜지면 환급률을 앞세운 세로 카드, 꺼져 있으면 지금 플랜(월간·연간) 카드. 결제·해지 안내는 하단 고정 CTA 밑에 있다
+import type { SubscriptionPlan } from '@landit/analytics';
 import Link from 'next/link';
 
 import {
   PLAN_ORDER,
   type PaywallPlan,
-  type PlanId,
-} from '@/features/subscription/model/plans';
+} from '@/features/subscription/model/product/plans';
 
-import { getCancelNotice } from '../_model/paywall-copy';
 import { PlanCard } from './PlanCard';
 import { RefundPlanCard } from './RefundPlanCard';
 import { RevealSection } from './RevealSection';
 import { Highlight, SectionHeading } from './SectionHeading';
 
 interface PlanSectionProps {
-  plans: Record<PlanId, PaywallPlan>;
-  selectedId: PlanId;
+  plans: Record<SubscriptionPlan, PaywallPlan>;
+  selectedId: SubscriptionPlan;
   onSelect: (plan: PaywallPlan) => void;
   /** 환급 챌린지가 켜졌는가 */
   refundChallenge: boolean;
@@ -74,9 +73,6 @@ export const PlanSection = ({
             />
           ))}
         </div>
-        <p className="mt-4 text-center text-[11px] leading-[1.35] text-muted-foreground">
-          {getCancelNotice(plans[selectedId])}
-        </p>
       </>
     )}
     <nav className="mt-5 flex justify-center gap-3 text-[10px] leading-[1.3] font-medium text-muted-foreground underline">

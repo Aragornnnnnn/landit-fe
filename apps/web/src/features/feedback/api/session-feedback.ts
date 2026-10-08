@@ -64,7 +64,8 @@ export interface MessageFeedbackResponse {
   messageId: number;
   turnNumber: number;
   userMessage: string;
-  evaluationContext: EvaluationContextResponse;
+  // 기록(landit-be ScenarioHistory)에서 당시 문맥을 복원하지 못한 과거 회차면 null
+  evaluationContext: EvaluationContextResponse | null;
   feedbackType: FeedbackType;
   // 아래 상세 필드는 스웨거상 nullable 미선언이나, GOOD/개선 타입에 따라
   // 한쪽만 채워져 오는 게 실제 동작이라 null 허용으로 둔다.
@@ -79,7 +80,8 @@ export interface MessageFeedbackResponse {
 export interface EvaluationContextResponse {
   type: EvaluationContextType;
   content: string;
-  translatedContent: string;
+  // 시작 안내(SCENARIO_OPENING_INSTRUCTION)를 기록에서 복원하면 번역이 없어 null
+  translatedContent: string | null;
 }
 
 export type FeedbackType = 'GOOD' | 'NEEDS_IMPROVEMENT';

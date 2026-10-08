@@ -5,7 +5,7 @@ import { cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ProfilePropertiesSync } from '@/features/onboarding/ui/ProfilePropertiesSync';
-import { SubscriptionPropertiesSync } from '@/features/subscription/ui/SubscriptionPropertiesSync';
+import { SubscriptionPropertiesSync } from '@/features/subscription/ui/my-subscription/SubscriptionPropertiesSync';
 import { useAuthStore } from '@/shared/auth/auth-store';
 
 import { AnalyticsBootstrap } from './AnalyticsBootstrap';

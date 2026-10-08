@@ -335,6 +335,15 @@
   }
 }
 
+@keyframes skeleton-flow {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
 @keyframes text-shimmer {
   from {
     background-position: 100% 0;
@@ -482,6 +491,41 @@
 
   .animate-fade-up {
     animation: fade-up 0.45s ease-out both;
+  }
+
+  /* 카드 내용이 제자리에서 살며시 떠오른다 — --i가 순서. 사진·제목·버튼이 60ms 간격으로 차례로.
+     backwards라 끝나면 transform을 남기지 않는다 — 남으면 iOS가 별도 레이어로 올려 뒤집은 카드 뒷면 위에 비친다 */
+  .animate-card-in {
+    animation: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: calc(var(--i, 0) * 60ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-card-in {
+      animation: none;
+    }
+  }
+
+  /* 스켈레톤 — 대비 낮은 넓은 빛이 천천히 흐른다. 화면 좌표(fixed)에 깔아 블록 여럿이 한 줄기 빛을 나눠 받는다
+     (iOS WebKit은 fixed를 무시해 블록마다 따로 흐른다 — 모양만 다를 뿐 동작은 같다) */
+  .animate-skeleton-flow {
+    background-color: var(--color-secondary);
+    background-image: linear-gradient(
+      90deg,
+      transparent 35%,
+      color-mix(in srgb, var(--color-card) 75%, transparent) 50%,
+      transparent 65%
+    );
+    background-size: 250% 100%;
+    background-attachment: fixed;
+    animation: skeleton-flow 1.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-skeleton-flow {
+      animation: none;
+      background-image: none;
+    }
   }
 
   /* 글자에 그라데이션을 클리핑해 밝은 띠가 좌→우로 흐른다 (rAF 없이 CSS만) */

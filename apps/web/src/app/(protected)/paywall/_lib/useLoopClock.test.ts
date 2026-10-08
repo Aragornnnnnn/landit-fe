@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 // 데모 장면 시계 — 멈춰 있으면 마지막 장면, 돌면 장면마다 정해진 시간만큼 머물고 끝나면 처음으로 돌아간다
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

@@ -1,4 +1,5 @@
 // 쿼리 캐시 — 객체 URL을 데이터로 쥔 쿼리가 캐시에서 빠지면 그 주소도 해제한다
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { getQueryClient } from './query-client';

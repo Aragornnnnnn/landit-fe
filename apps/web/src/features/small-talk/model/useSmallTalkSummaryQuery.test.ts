@@ -1,4 +1,5 @@
 // 오늘의 스몰톡 요약 조회 훅 — 표현 재사용·후속 질문은 종료 후 잡이 만들어서, 준비될 때까지 다시 물어야 한다
+// @vitest-environment jsdom
 import { createElement, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';

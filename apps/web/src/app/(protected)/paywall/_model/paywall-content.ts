@@ -1,5 +1,5 @@
 // 롱 페이월의 고정 문구와 그림 — 학습 단계 카드, 대화 카드, 데이터 수치, 리뷰. 피그마 「페이월 v2」(2640:8041) 기준
-import type { PlanId } from '@/features/subscription/model/plans';
+import type { SubscriptionPlan } from '@landit/analytics';
 
 const IMAGE_DIR = '/images/paywall';
 
@@ -243,7 +243,7 @@ export const OUTCOME_AS_OF = '2026.10.06';
 
 /** 환급 플랜 — 기간·환급률·결제 금액. 결제는 아직 기존 상품(월간·연간)에 이어 둔다(3개월→월간, 6개월→연간) */
 export const REFUND_PLANS: Record<
-  PlanId,
+  SubscriptionPlan,
   { months: number; refundRate: number; price: number }
 > = {
   monthly: { months: 3, refundRate: 80, price: 39_900 },
@@ -251,7 +251,7 @@ export const REFUND_PLANS: Record<
 };
 
 /** 최대 환급액 — 결제 금액 × 환급률(원 단위 반올림) */
-export const getMaxRefund = (planId: PlanId) => {
+export const getMaxRefund = (planId: SubscriptionPlan) => {
   const { price, refundRate } = REFUND_PLANS[planId];
   return Math.round((price * refundRate) / 100);
 };

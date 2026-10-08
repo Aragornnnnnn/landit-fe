@@ -1,9 +1,7 @@
 // 환급 플랜 카드 한 장(가로로 긴 줄) — 왼쪽은 사는 것(프리미엄 기간·결제 금액, 진한 글자), 오른쪽은 돌려받는 것(「최대 환급액」 라벨과 + 를 붙인 금액).
 // 고른 카드는 주황 테두리로 켜지고, 연한 주황 아래 줄이 챌린지에 성공하면 내는 「실제 부담」을 말한다. 색·글자는 디자인 시스템 토큰만 쓴다
-import {
-  formatWon,
-  type PaywallPlan,
-} from '@/features/subscription/model/plans';
+import { formatWon } from '@/features/subscription/lib/won';
+import type { PaywallPlan } from '@/features/subscription/model/product/plans';
 import { GOLD_GRADIENT } from '@/features/subscription/ui/premium-brand';
 
 import { getMaxRefund, REFUND_PLANS } from '../_model/paywall-content';

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   canGoBack,
   canGoForward,
+  datesOfMonth,
   firstDayOfWindow,
   shiftWindow,
 } from './calendar-window';
@@ -61,5 +62,19 @@ describe('canGoBack', () => {
   it('완료 이력이 아예 없으면 뒤로 갈 곳이 없다', () => {
     // 신규 사용자는 startedAt이 null이다 — 볼 완료 기록이 없으니 뒤로 갈 이유도 없다
     expect(canGoBack('2026-08-02', 'WEEK', null)).toBe(false);
+  });
+});
+
+describe('datesOfMonth', () => {
+  it('그 날이 든 달의 1일부터 말일까지를 돌려준다', () => {
+    // 2월은 28일, 응답 없이도 달 격자의 칸 수를 정할 수 있어야 한다
+    const dates = datesOfMonth('2026-02-17');
+    expect(dates).toHaveLength(28);
+    expect(dates[0]).toBe('2026-02-01');
+    expect(dates.at(-1)).toBe('2026-02-28');
+  });
+
+  it('31일까지 있는 달은 31일을 돌려준다', () => {
+    expect(datesOfMonth('2026-08-01')).toHaveLength(31);
   });
 });

@@ -70,6 +70,7 @@ expect(onSubmit).toHaveBeenCalledWith('I love you');
 
 - 요소는 사용자가 인식하는 방식으로 찾는다 — `getByRole`, `getByText`. `getByTestId`는 최후 수단.
 - "안 보인다"는 `queryBy...`로 확인한다 — `expect(screen.queryByText('탈퇴')).not.toBeInTheDocument()`.
+- 테스트 환경은 확장자로 갈린다 — `.tsx`는 jsdom, `.ts`는 node(DOM 없음, 훨씬 빠름). `.ts`인데 `renderHook`·`window`·`localStorage`가 필요하면 파일 머리 주석 아래에 `// @vitest-environment jsdom`을 적는다.
 
 ## 목킹
 

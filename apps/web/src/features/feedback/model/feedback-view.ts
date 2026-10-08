@@ -1,4 +1,4 @@
-// 피드백 표시용 순수 함수 — 평가 맥락 라벨, 총평 헤드라인, CTA 문구 (별점은 shared/ui/StarRating 재사용)
+// 피드백 표시용 값과 순수 함수 — 평가 맥락 라벨, 대체 제목, 총평 헤드라인, 잠긴 옛 응답 판정, CTA 문구 (별점은 shared/ui/StarRating 재사용)
 import type { EvaluationContextType } from '../api/session-feedback';
 
 // 상세 카드 상단이 AI 질문인지, 유저가 먼저 말하는 시나리오 지시문인지 구분한다.
@@ -9,6 +9,15 @@ export const evaluationContextLabel = (type: EvaluationContextType): string =>
 const FALLBACK_HEADLINE = '오늘도 시나리오를 잘 마무리했어요';
 export const summaryHeadline = (highlightMessage: string): string =>
   highlightMessage.trim() || FALLBACK_HEADLINE;
+
+// 유료인데 잠긴 응답을 들고 있다 — 무료일 때 받아 둔 옛 응답이라 한 번 다시 받아야 한다
+export const isStaleLockedFeedback = (
+  premium: boolean | undefined,
+  feedback: { detailFeedbackLocked?: boolean } | null | undefined,
+) => premium === true && feedback?.detailFeedbackLocked === true;
+
+// 피드백 화면 헤더의 대체 제목 — 그 날 카드가 이 시나리오가 아닐 때(자정을 넘겨 끝낸 대화)
+export const FEEDBACK_FALLBACK_TITLE = '대화 피드백';
 
 // 남은 개선 턴 수에 따라 상세로 넘어가는 CTA 문구를 고른다.
 export const detailCtaLabel = (improvementCount: number): string =>
