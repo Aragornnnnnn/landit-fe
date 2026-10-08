@@ -106,24 +106,24 @@ export const alarmTimeSchema = z.object({
 // 요일 — 1(월)~7(일)
 const weekdaySchema = z.number().int().min(1).max(7);
 
-// 이 요일들에 이 시각에 울린다 — 매일 같은 시각이면 7요일짜리 하나, 요일마다 시각이 다르면 여러 개
-export const alarmSlotSchema = alarmTimeSchema.extend({
+// 언제 울리는지 — 이 요일들의 이 시각. 매일 같은 시각이면 7요일짜리 하나, 요일마다 시각이 다르면 여러 개
+export const alarmScheduleSchema = alarmTimeSchema.extend({
   weekdays: z.array(weekdaySchema).min(1),
 });
 
-// 한 요일이 두 칸에 들어 있으면 그날 두 번 울린다 — 칸끼리 요일이 겹치면 받지 않는다
-const alarmSlotsSchema = z
-  .array(alarmSlotSchema)
+// 한 요일이 두 스케줄에 들어 있으면 그날 두 번 울린다 — 스케줄끼리 요일이 겹치면 받지 않는다
+const alarmSchedulesSchema = z
+  .array(alarmScheduleSchema)
   .min(1)
-  .refine((slots) => {
-    const days = slots.flatMap((slot) => slot.weekdays);
+  .refine((schedules) => {
+    const days = schedules.flatMap((schedule) => schedule.weekdays);
     return new Set(days).size === days.length;
   }, '요일이 겹친다');
 
-// SET_ALARM이 싣는 반복 알람 — 언제 울릴지(slots)와 잠금화면 제목
+// SET_ALARM이 싣는 반복 알람 — 언제 울릴지(schedules)와 잠금화면 제목
 export const repeatingAlarmSchema = z.object({
   title: z.string().min(1),
-  slots: alarmSlotsSchema,
+  schedules: alarmSchedulesSchema,
   // 오늘 회차는 빼고 건다 — 걸고 나서 건너뛰면 그 사이 틈이 생긴다
   skipToday: z.boolean().optional(),
   // 소리 없이 화면으로만 울린다 — 소리를 원치 않는 사람을 위한 설정 자리(아직 화면에 안 드러냄)
@@ -133,7 +133,7 @@ export const repeatingAlarmSchema = z.object({
 // 셸에 걸려 있는 반복 알람 하나 — ALARM_STATUS가 종류별로 싣는다
 export const repeatingAlarmStateSchema = z.object({
   alarmType: alarmTypeSchema,
-  slots: z.array(alarmSlotSchema),
+  schedules: z.array(alarmScheduleSchema),
   // 오늘 회차를 건너뛴 날(기기 현지 "YYYY-MM-DD") — 건너뛴 적 없거나 날이 지나 되돌렸으면 null
   skipDate: z.string().nullable(),
 });
@@ -351,7 +351,7 @@ export type PhotoPickStatus = z.infer<typeof photoPickStatusSchema>;
 export type PickedPhoto = z.infer<typeof pickedPhotoSchema>;
 export type AlarmType = z.infer<typeof alarmTypeSchema>;
 export type AlarmTime = z.infer<typeof alarmTimeSchema>;
-export type AlarmSlot = z.infer<typeof alarmSlotSchema>;
+export type AlarmSchedule = z.infer<typeof alarmScheduleSchema>;
 export type RepeatingAlarm = z.infer<typeof repeatingAlarmSchema>;
 export type RepeatingAlarmState = z.infer<typeof repeatingAlarmStateSchema>;
 export type AlarmSettingsTarget = z.infer<typeof alarmSettingsTargetSchema>;

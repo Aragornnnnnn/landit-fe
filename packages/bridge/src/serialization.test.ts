@@ -569,7 +569,7 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
   const EVERY_DAY = [1, 2, 3, 4, 5, 6, 7];
   const alarm = {
     title: '오늘의 시나리오 할 시간!',
-    slots: [{ hour: 19, minute: 0, weekdays: EVERY_DAY }],
+    schedules: [{ hour: 19, minute: 0, weekdays: EVERY_DAY }],
   };
   const status: Extract<NativeToWebMessage, { type: 'ALARM_STATUS' }> = {
     type: 'ALARM_STATUS',
@@ -601,7 +601,7 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
       alarmType: 'scenario',
       alarm: {
         ...alarm,
-        slots: [
+        schedules: [
           { hour: 7, minute: 0, weekdays: [1, 2, 3, 4, 5] },
           { hour: 10, minute: 30, weekdays: [6, 7] },
         ],
@@ -639,23 +639,26 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
   it.each([
     [
       '시가 24',
-      { ...alarm, slots: [{ hour: 24, minute: 0, weekdays: EVERY_DAY }] },
+      { ...alarm, schedules: [{ hour: 24, minute: 0, weekdays: EVERY_DAY }] },
     ],
     [
       '분이 60',
-      { ...alarm, slots: [{ hour: 7, minute: 60, weekdays: EVERY_DAY }] },
+      { ...alarm, schedules: [{ hour: 7, minute: 60, weekdays: EVERY_DAY }] },
     ],
-    ['요일이 0', { ...alarm, slots: [{ hour: 7, minute: 0, weekdays: [0] }] }],
+    [
+      '요일이 0',
+      { ...alarm, schedules: [{ hour: 7, minute: 0, weekdays: [0] }] },
+    ],
     [
       '요일이 비어 있음',
-      { ...alarm, slots: [{ hour: 7, minute: 0, weekdays: [] }] },
+      { ...alarm, schedules: [{ hour: 7, minute: 0, weekdays: [] }] },
     ],
-    ['울릴 칸이 없음', { ...alarm, slots: [] }],
+    ['스케줄이 없음', { ...alarm, schedules: [] }],
     [
-      '두 칸의 요일이 겹침',
+      '두 스케줄의 요일이 겹침',
       {
         ...alarm,
-        slots: [
+        schedules: [
           { hour: 7, minute: 0, weekdays: [1, 2] },
           { hour: 9, minute: 0, weekdays: [2, 3] },
         ],
@@ -717,13 +720,13 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
     );
   });
 
-  it('걸린 알람을 종류별 울림 칸·건너뛴 날짜와 함께 싣는다 — 웹이 같은 날 또 건너뛰라고 보내지 않게', () => {
+  it('걸린 알람을 종류별 스케줄·건너뛴 날짜와 함께 싣는다 — 웹이 같은 날 또 건너뛰라고 보내지 않게', () => {
     const message: NativeToWebMessage = {
       ...status,
       repeatingAlarms: [
         {
           alarmType: 'scenario',
-          slots: [{ hour: 7, minute: 30, weekdays: EVERY_DAY }],
+          schedules: [{ hour: 7, minute: 30, weekdays: EVERY_DAY }],
           skipDate: '2026-10-07',
         },
       ],
