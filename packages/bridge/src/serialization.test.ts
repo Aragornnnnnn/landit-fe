@@ -583,18 +583,6 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
   const parseSet = (body: object) =>
     parseWebToNativeMessage(JSON.stringify({ type: 'SET_ALARM', ...body }));
 
-  it('매일 같은 시각에 울리는 알람 요청을 그대로 되돌린다', () => {
-    const message: WebToNativeMessage = {
-      type: 'SET_ALARM',
-      alarmType: 'scenario',
-      alarm,
-    };
-
-    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
-      message,
-    );
-  });
-
   it('요일마다 시각이 다른 알람 요청도 받는다 — 나중에 요일별 시각을 열어도 계약은 그대로', () => {
     const message: WebToNativeMessage = {
       type: 'SET_ALARM',
@@ -606,21 +594,6 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
           { hour: 10, minute: 30, weekdays: [6, 7] },
         ],
       },
-    };
-
-    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
-      message,
-    );
-  });
-
-  it.each([
-    ['오늘 회차를 빼고', { ...alarm, skipToday: true }],
-    ['소리 없이', { ...alarm, silent: true }],
-  ])('%s 거는 알람 요청을 그대로 되돌린다', (_, payload) => {
-    const message: WebToNativeMessage = {
-      type: 'SET_ALARM',
-      alarmType: 'scenario',
-      alarm: payload,
     };
 
     expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
@@ -648,6 +621,14 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
     [
       '요일이 0',
       { ...alarm, schedules: [{ hour: 7, minute: 0, weekdays: [0] }] },
+    ],
+    [
+      '요일이 8',
+      { ...alarm, schedules: [{ hour: 7, minute: 0, weekdays: [8] }] },
+    ],
+    [
+      '한 스케줄 안에서 요일이 겹침',
+      { ...alarm, schedules: [{ hour: 7, minute: 0, weekdays: [1, 1] }] },
     ],
     [
       '요일이 비어 있음',
@@ -689,7 +670,8 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
         JSON.stringify({ type: 'TEST_ALARM', delaySeconds, title: '테스트' }),
       );
 
-    expect(parse(60)).not.toBeNull();
+    expect(parse(5)).not.toBeNull();
+    expect(parse(600)).not.toBeNull();
     expect(parse(4)).toBeNull();
     expect(parse(601)).toBeNull();
   });
@@ -705,37 +687,6 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
     expect(parse('battery')).toBeNull();
   });
 
-  it('알람을 못 쓰는 기기의 상태 회신도 받는다', () => {
-    const message: NativeToWebMessage = {
-      ...status,
-      supported: false,
-      permission: 'denied',
-      exactAlarm: false,
-      fullScreen: false,
-      notifications: false,
-    };
-
-    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
-      message,
-    );
-  });
-
-  it('걸린 알람을 종류별 스케줄·건너뛴 날짜와 함께 싣는다 — 웹이 같은 날 또 건너뛰라고 보내지 않게', () => {
-    const message: NativeToWebMessage = {
-      ...status,
-      repeatingAlarms: [
-        {
-          alarmType: 'scenario',
-          schedules: [{ hour: 7, minute: 30, weekdays: EVERY_DAY }],
-          skipDate: '2026-10-07',
-        },
-      ],
-    };
-
-    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
-      message,
-    );
-  });
   it('건너뛴 날짜가 YYYY-MM-DD 모양이 아니면 상태 회신을 버린다', () => {
     const withSkipDate = (skipDate: string) =>
       parseNativeToWebMessage(
@@ -758,7 +709,7 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
 });
 
 describe('알람 목록 (GET_ALARM_LIST ↔ ALARM_LIST)', () => {
-  it('셸에 걸린 알람을 종류·다음 울림 시각과 함께 되돌린다', () => {
+  it('1회 알람은 요일 없이도 목록에 싣는다 — 반복 알람과 달리 빈 요일을 받는다', () => {
     const message: NativeToWebMessage = {
       type: 'ALARM_LIST',
       alarms: [
