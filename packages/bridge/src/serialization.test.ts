@@ -565,7 +565,7 @@ describe('사진 고르기 (PICK_PHOTOS ↔ PHOTOS_PICKED)', () => {
   });
 });
 
-describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·OPEN_ALARM_SETTINGS ↔ ALARM_STATUS)', () => {
+describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS ↔ ALARM_STATUS)', () => {
   const EVERY_DAY = [1, 2, 3, 4, 5, 6, 7];
   const alarm = {
     title: '오늘의 시나리오 할 시간!',
@@ -680,6 +680,17 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·OPEN_ALARM_SETTINGS ↔ ALARM_STA
     expect(parse({})).toBeNull();
   });
 
+  it('테스트 알람은 5초~10분 뒤만 받는다', () => {
+    const parse = (delaySeconds: number) =>
+      parseWebToNativeMessage(
+        JSON.stringify({ type: 'TEST_ALARM', delaySeconds, title: '테스트' }),
+      );
+
+    expect(parse(60)).not.toBeNull();
+    expect(parse(4)).toBeNull();
+    expect(parse(601)).toBeNull();
+  });
+
   it('설정 화면 바로 가기는 정확한 알람·전체 화면 알림 둘만 받는다', () => {
     const parse = (target: string) =>
       parseWebToNativeMessage(
@@ -714,6 +725,38 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·OPEN_ALARM_SETTINGS ↔ ALARM_STA
           key: 'scenario',
           slots: [{ hour: 7, minute: 30, weekdays: EVERY_DAY }],
           skipDate: '2026-10-07',
+        },
+      ],
+    };
+
+    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+});
+
+describe('알람 목록 (GET_ALARM_LIST ↔ ALARM_LIST)', () => {
+  it('셸에 걸린 알람을 종류·다음 울림 시각과 함께 되돌린다', () => {
+    const message: NativeToWebMessage = {
+      type: 'ALARM_LIST',
+      alarms: [
+        {
+          id: 'a',
+          key: 'scenario',
+          hour: 7,
+          minute: 30,
+          weekdays: [1, 2, 4, 5, 6, 7],
+          nextAt: 1791447000000,
+          skipDate: '2026-10-07',
+        },
+        {
+          id: 'b',
+          key: null,
+          hour: 23,
+          minute: 41,
+          weekdays: [],
+          nextAt: null,
+          skipDate: null,
         },
       ],
     };

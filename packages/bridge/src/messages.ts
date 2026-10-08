@@ -141,6 +141,20 @@ export const repeatingAlarmStateSchema = z.object({
 // 셸이 띄울 수 있는 알람 설정 화면 — Android 14+에서 사용자가 직접 켜야 하는 두 권한
 export const alarmSettingsTargetSchema = z.enum(['exactAlarm', 'fullScreen']);
 
+// 셸에 걸린 알람 하나 — 개발자 화면이 목록으로 보여 준다
+export const scheduledAlarmSchema = z.object({
+  id: z.string(),
+  // 반복 알람의 종류. 테스트 알람은 null
+  key: alarmKeySchema.nullable(),
+  hour: z.number().int().min(0).max(23),
+  minute: z.number().int().min(0).max(59),
+  // 울리는 요일. 1회 알람이면 빈 배열
+  weekdays: z.array(weekdaySchema),
+  // 다음 울림(ms). 이미 울린 1회 알람이면 null
+  nextAt: z.number().nullable(),
+  skipDate: z.string().nullable(),
+});
+
 // 알람 권한과 셸에 실제로 걸린 반복 알람 — 알람 메시지는 전부 이걸로 답한다.
 // supported=false는 알람을 못 쓰는 기기(iOS 25 이하)다. iOS의 exactAlarm은 AlarmKit 권한을 받았는지와 같고, fullScreen은 늘 true다
 export const alarmStatusSchema = z.object({
@@ -235,6 +249,15 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   }),
   // 이 종류의 반복 알람을 오늘만 울리지 않게 한다(내일부터 그대로). 응답은 ALARM_STATUS
   z.object({ type: z.literal('SKIP_ALARM_TODAY'), key: alarmKeySchema }),
+  // 개발자 화면용 — 셸에 걸린 알람 전부를 묻는다. 응답은 ALARM_LIST
+  z.object({ type: z.literal('GET_ALARM_LIST') }),
+  // 개발자 섹션용 — 지금부터 delaySeconds 뒤에 한 번 울린다. 실제 예약은 건드리지 않는다. 응답은 ALARM_STATUS
+  z.object({
+    type: z.literal('TEST_ALARM'),
+    delaySeconds: z.number().int().min(5).max(600),
+    title: z.string().min(1),
+    silent: z.boolean().optional(),
+  }),
 ]);
 
 // 네이티브 → 웹으로 보낼 수 있는 메시지 목록
@@ -306,8 +329,13 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     // limit보다 많이 골라 뒤를 잘랐는가 — 선택창이 장수를 막지 못하는 구형 Android 대비
     overflowed: z.boolean(),
   }),
-  // GET_ALARM_STATUS·REQUEST_ALARM_PERMISSION·SET_ALARM·SKIP_ALARM_TODAY 응답 — 지금 권한과 셸에 실제로 걸린 반복 알람
+  // GET_ALARM_STATUS·REQUEST_ALARM_PERMISSION·SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM 응답 — 지금 권한과 셸에 실제로 걸린 반복 알람
   alarmStatusSchema.extend({ type: z.literal('ALARM_STATUS') }),
+  // GET_ALARM_LIST 응답 — 반복·테스트 알람 전부
+  z.object({
+    type: z.literal('ALARM_LIST'),
+    alarms: z.array(scheduledAlarmSchema),
+  }),
 ]);
 
 // 위 스키마에서 자동으로 뽑아낸 타입 — 스키마를 고치면 타입도 같이 바뀐다
@@ -328,6 +356,7 @@ export type RepeatingAlarm = z.infer<typeof repeatingAlarmSchema>;
 export type RepeatingAlarmState = z.infer<typeof repeatingAlarmStateSchema>;
 export type AlarmSettingsTarget = z.infer<typeof alarmSettingsTargetSchema>;
 export type AlarmStatus = z.infer<typeof alarmStatusSchema>;
+export type ScheduledAlarm = z.infer<typeof scheduledAlarmSchema>;
 export type NotificationPermissionStatus = z.infer<
   typeof notificationPermissionStatusSchema
 >;

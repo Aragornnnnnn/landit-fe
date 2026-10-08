@@ -17,6 +17,7 @@ export {
   repeatingAlarmStateSchema,
   alarmSettingsTargetSchema,
   alarmStatusSchema,
+  scheduledAlarmSchema,
   MAX_PICK_PHOTOS,
   EMPTY_WIDGET_DATA,
   type WebToNativeMessage,
@@ -39,6 +40,7 @@ export {
   type RepeatingAlarmState,
   type AlarmSettingsTarget,
   type AlarmStatus,
+  type ScheduledAlarm,
 } from './messages';
 
 export {
