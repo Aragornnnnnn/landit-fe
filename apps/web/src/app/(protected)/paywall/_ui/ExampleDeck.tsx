@@ -29,6 +29,8 @@ const GAP = 6;
  * 멈추는 장은 마지막 바퀴 안에 있어 뒤로도 몇 장이 남는다
  */
 const REPEAT = 2;
+/** 그림을 미리 받기 시작하는 거리 — 화면 한 장만큼 아래에서. 출발(-25%)까지 넉넉히 남아 느린 망에서도 빈칸이 스치지 않는다 */
+const NEAR_MARGIN = '0px 0px 100% 0px';
 const TILES = Array.from({ length: REPEAT }, () => EXAMPLE_CARDS).flat();
 const LANDING_TILE =
   (REPEAT - 1) * EXAMPLE_CARDS.length + EXAMPLE_LANDING_INDEX;
@@ -36,7 +38,7 @@ const LANDING_TILE =
 export const ExampleDeck = () => {
   const { ref, inView: started } = useInView<HTMLDivElement>(START_MARGIN);
   // 빠르게 스쳐 갈 때 아직 안 받은 그림이 빈칸으로 번쩍이지 않게, 덱이 다가오면 그림을 한꺼번에 받아 둔다
-  const { ref: nearRef, inView: near } = useInView<HTMLDivElement>();
+  const { ref: nearRef, inView: near } = useInView<HTMLDivElement>(NEAR_MARGIN);
   // 동작 줄이기를 켠 기기에선 달리지 않고 처음부터 멈춘 모습이다
   const [reduced] = useState(prefersReducedMotion);
   const [arrived, setArrived] = useState(false);

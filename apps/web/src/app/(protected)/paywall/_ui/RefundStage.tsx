@@ -1,7 +1,7 @@
 'use client';
 
-// 페이월 맨 위 메인 — 「6개월 영어 공부하면 / 전액 환급」. 돈과 「전액 환급」 한 마디가 주인공이다.
-// 흰 배경 위로 바로 돈이 쏟아진다 — 가운데 큰 돈주머니가 통통 튀다 팡 터지며 돈이 사방으로 3D로 돌며 튀고, 뒤로는 지폐·돈주머니가 계속 떨어진다.
+// 환급 무대의 본문(PaywallHero의 어두운 무대 안) — 「6개월 영어 공부하면 / 전액 환급」. 돈과 「전액 환급」 한 마디가 주인공이다.
+// 무대 위로 돈이 쏟아진다 — 가운데 큰 돈주머니가 통통 튀다 팡 터지며 돈이 사방으로 3D로 돌며 튀고, 뒤로는 지폐·돈주머니가 계속 떨어진다.
 // 세 줄 아래엔 「6개월 동안 꾸준히 하면」 평균 습득 표현·대화 시간 카드(숫자가 0부터 오른다), 그 아래 아이폰 알림처럼 입금 알림이 떨어지고 「전액 환급」 라벨과 받는 조건(매일 학습)이 붙는 카드가 있다.
 // 히어로(data-inview가 처음부터 켜진 섹션) 안에 놓여 마운트하자마자 연출된다. 애니메이션이 안 돌아도 돈주머니·문구는 그대로 보인다
 import type { CSSProperties } from 'react';
@@ -12,6 +12,7 @@ import { Emoji } from '@/shared/ui/emoji';
 import { useCountUp } from '../_lib/useCountUp';
 import {
   AVERAGE_TALK_MINUTES,
+  FULL_REFUND_PLAN,
   LEARNABLE_EXPRESSION_COUNT,
   OUTCOME_AS_OF,
   REFUND_CHALLENGE_PERIOD,
@@ -21,8 +22,8 @@ import { Text3D } from './Text3D';
 import { Ticker } from './Ticker';
 
 /** 무대 띠 문구 — 위는 성과, 아래는 환급 */
-const A_TOP_TICKER = `${REFUND_CHALLENGE_PERIOD} 꾸준히 하면 전액 환급 ✦ 평균 표현 ${LEARNABLE_EXPRESSION_COUNT}개 ✦ 평균 대화 ${AVERAGE_TALK_MINUTES}분 ✦ `;
-const A_BOTTOM_TICKER = '공부하면 돌려받는 영어 ✦ 결제 금액 그대로 환급 ✦ ';
+const TOP_TICKER = `${REFUND_CHALLENGE_PERIOD} 꾸준히 하면 전액 환급 ✦ 평균 표현 ${LEARNABLE_EXPRESSION_COUNT}개 ✦ 평균 대화 ${AVERAGE_TALK_MINUTES}분 ✦ `;
+const BOTTOM_TICKER = '공부하면 돌려받는 영어 ✦ 결제 금액 그대로 환급 ✦ ';
 
 /** 주머니가 터질 때 사방으로 튀는 돈 — 날아갈 방향(px)과 돌아가는 각도 */
 const BURST = [
@@ -100,7 +101,7 @@ const Deposit = () => (
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
             <p className="text-[19px] leading-tight font-bold tracking-[-0.02em] text-white">
-              입금 {formatWon(REFUND_PLANS.yearly.price)}
+              입금 {formatWon(REFUND_PLANS[FULL_REFUND_PLAN].price)}
             </p>
             <span className="shrink-0 text-[13px] text-white/55">지금</span>
           </div>
@@ -123,7 +124,7 @@ const Deposit = () => (
   </div>
 );
 
-export const RefundSection = () => (
+export const RefundStage = () => (
   <div className="relative [perspective:500px]">
     {/* 화면 전체로 쏟아지는 돈 — 글자 뒤로 지나간다 */}
     <div
@@ -149,7 +150,7 @@ export const RefundSection = () => (
     </div>
 
     <div className="relative z-10 mt-4">
-      <Ticker text={A_TOP_TICKER} />
+      <Ticker text={TOP_TICKER} />
     </div>
 
     {/* 가운데 큰 돈주머니 — 통통 튀다 팡 터지고, 터질 때마다 돈이 사방으로 튄다 */}
@@ -194,7 +195,7 @@ export const RefundSection = () => (
     </h1>
 
     <div className="relative z-10 mt-6">
-      <Ticker text={A_BOTTOM_TICKER} reverse />
+      <Ticker text={BOTTOM_TICKER} reverse />
     </div>
 
     {/* 6개월 동안 꾸준히 했을 때 오는 것 — 평균 습득 표현과 대화 시간 */}

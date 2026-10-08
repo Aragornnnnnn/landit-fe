@@ -5,20 +5,14 @@ import type { ComponentProps } from 'react';
 
 import { useInView } from '../_lib/useInView';
 
-type RevealSectionProps = Omit<
-  ComponentProps<'section'>,
-  'ref' | 'children'
-> & {
-  /** 연출이 켜졌는지를 자식이 알아야 할 때(카운트업 등) — 렌더 함수로 받는다 */
-  children: React.ReactNode | ((inView: boolean) => React.ReactNode);
-};
+type RevealSectionProps = Omit<ComponentProps<'section'>, 'ref'>;
 
 export const RevealSection = ({ children, ...props }: RevealSectionProps) => {
   const { ref, inView } = useInView<HTMLElement>();
 
   return (
     <section ref={ref} data-inview={inView} {...props}>
-      {typeof children === 'function' ? children(inView) : children}
+      {children}
     </section>
   );
 };

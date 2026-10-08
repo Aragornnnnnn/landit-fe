@@ -71,4 +71,18 @@ describe('useInView', () => {
 
     expect(observers[0].options.rootMargin).toBe('-45% 0px -45% 0px');
   });
+
+  it('once를 끄면 나갈 때 다시 false가 되고 관찰을 이어 간다 — 화면을 떠나면 멈춰야 하는 반복 연출에 쓴다', () => {
+    const hook = renderHook(() =>
+      useInView<HTMLDivElement>(undefined, { once: false }),
+    );
+    act(() => hook.result.current.ref(document.createElement('div')));
+
+    act(() => observers[0].callback([{ isIntersecting: true }]));
+    expect(hook.result.current.inView).toBe(true);
+
+    act(() => observers.at(-1)!.callback([{ isIntersecting: false }]));
+    expect(hook.result.current.inView).toBe(false);
+    expect(observers.at(-1)!.disconnect).not.toHaveBeenCalled();
+  });
 });

@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { SpeakerIcon } from '@/shared/ui/Icons';
 
 import { RANDY, SCENE_IMAGES } from '../_model/paywall-content';
-import { DemoScreen, type DemoProps } from './DemoScreen';
+import { appear, DemoScreen, type DemoProps } from './DemoScreen';
 
 const EXAMPLE_SCENE = {
   image: 0,
@@ -16,8 +16,6 @@ const EXAMPLE_SCENE = {
   sentence: 2,
   nuance: 3,
 } as const;
-/** 장면마다 머무는 시간 — 카드가 시계를 돌리고 장면 번호를 내려 준다 */
-export const EXAMPLE_DURATIONS = [900, 1700, 1800, 2800] as const;
 
 /** 앱의 발음 듣기 버튼과 같은 모양 — 대기는 회색 배경, 재생 중엔 진한 배경에 흰 아이콘 */
 const Speaker = ({ playing }: { playing: boolean }) => (
@@ -30,18 +28,10 @@ const Speaker = ({ playing }: { playing: boolean }) => (
   </span>
 );
 
-/** 장면이 오면 아래에서 떠오르고, 다음 바퀴엔 바로 사라진다 */
-const appear = (shown: boolean) =>
-  shown
-    ? 'translate-y-0 opacity-100 transition-[opacity,translate] duration-500'
-    : 'translate-y-4 opacity-0';
-
-export const ExampleDemo = ({ step, loop = 0, width }: DemoProps) => (
+export const ExampleDemo = ({ step, width }: DemoProps) => (
   <DemoScreen width={width}>
     <div className="relative h-[290px] overflow-hidden">
       <Image
-        // 바퀴마다 새로 마운트해 다시 다가오게 한다
-        key={loop}
         src={SCENE_IMAGES.city}
         alt=""
         fill

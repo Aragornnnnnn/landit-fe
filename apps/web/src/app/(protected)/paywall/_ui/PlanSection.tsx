@@ -7,6 +7,7 @@ import {
   type PaywallPlan,
 } from '@/features/subscription/model/product/plans';
 
+import { FULL_REFUND_PLAN } from '../_model/paywall-content';
 import { PlanCard } from './PlanCard';
 import { RefundPlanCard } from './RefundPlanCard';
 import { RevealSection } from './RevealSection';
@@ -48,14 +49,14 @@ export const PlanSection = ({
           결제한 돈도 돌려받아 보세요
         </p>
         <div className="mt-5 flex flex-col gap-3 px-5">
-          {/* 전액 환급(6개월)을 위에 — 가장 센 제안이 먼저 눈에 든다 */}
+          {/* 전액 환급 플랜을 위에 — 가장 센 제안이 먼저 눈에 든다 */}
           {[...PLAN_ORDER].reverse().map((id) => (
             <RefundPlanCard
               key={id}
               plan={plans[id]}
               selected={id === selectedId}
               onSelect={onSelect}
-              featured={id === 'yearly'}
+              featured={id === FULL_REFUND_PLAN}
             />
           ))}
         </div>

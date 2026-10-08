@@ -9,8 +9,6 @@ import { QUIZ_VIEWBOX } from '@/features/expression/model/quiz-partner';
 import { DemoScreen, type DemoProps } from './DemoScreen';
 
 const QUIZ_SCENE = { ask: 0, build: 1, correct: 2 } as const;
-/** 장면마다 머무는 시간 — 카드가 시계를 돌리고 장면 번호를 내려 준다 */
-export const QUIZ_DURATIONS = [1500, 2500, 2600] as const;
 const ANSWER = [
   'Honestly',
   "I'm",

@@ -19,7 +19,8 @@ export const DemoScreen = ({ width, children }: DemoScreenProps) => (
 );
 
 /**
- * 데모 속 화면 한 장 — 장면이 바뀌면 서로 겹쳐 사르르 바뀐다.
+ * 데모 속 화면 한 장 — 지금 장면이 아니면 그리지 않는다. 카드마다 장면 하나만 보이니,
+ * 숨은 장면의 캐릭터(깜빡임·입모양 타이머)와 그림 타일이 보이지도 않는데 도는 일이 없다.
  * 카드 속 작은 폰은 위쪽 540px쯤만 보이니, 화면마다 그 안에 다 들어가게 짠다
  */
 export const DemoSlide = ({
@@ -28,17 +29,19 @@ export const DemoSlide = ({
 }: {
   shown: boolean;
   children: React.ReactNode;
-}) => (
-  <div
-    className={`absolute inset-0 bg-background transition-opacity duration-500 ${shown ? 'opacity-100' : 'opacity-0'}`}
-  >
-    {children}
-  </div>
-);
+}) =>
+  shown ? (
+    <div className="absolute inset-0 bg-background">{children}</div>
+  ) : null;
 
-/** 데모가 받는 것 — 지금 장면 번호와 몇 번째 바퀴인지, 폰 화면 폭. 시계는 카드가 돌린다 */
+/** 장면이 오면 아래에서 떠오르고, 다음 바퀴엔 바로 사라진다 */
+export const appear = (shown: boolean) =>
+  shown
+    ? 'translate-y-0 opacity-100 transition-[opacity,translate] duration-500'
+    : 'translate-y-4 opacity-0';
+
+/** 데모가 받는 것 — 지금 장면 번호와 폰 화면 폭 */
 export interface DemoProps {
   step: number;
-  loop?: number;
   width: number;
 }

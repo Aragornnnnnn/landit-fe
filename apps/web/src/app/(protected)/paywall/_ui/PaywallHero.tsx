@@ -1,4 +1,4 @@
-// 페이월 첫 화면 — 환급 챌린지가 켜지면 어두운 무대 위에 로고와 PREMIUM 배지, 노란 스포트라이트와 반짝이 아래 돈·메인 문구와 6개월 성과 카드(RefundSection).
+// 페이월 첫 화면 — 환급 챌린지가 켜지면 어두운 무대 위에 로고와 PREMIUM 배지, 노란 스포트라이트와 반짝이 아래 돈·메인 문구와 6개월 성과 카드(RefundStage).
 // 꺼져 있으면 무대 없이 밝은 바탕에 로고, 「프리미엄으로 이렇게 배워요」, 캐릭터 단체샷. 켜져 있으면 무대 아래 「프리미엄에서만 할 수 있는 것들」이 본문을 연다.
 // 처음부터 화면에 있으니 관찰 없이 마운트하자마자 animate-reveal-up으로 차례로 떠오른다
 import type { CSSProperties } from 'react';
@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { PAYWALL_HERO } from '@/features/subscription/ui/paywall-hero-image';
 import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
 
-import { RefundSection } from './RefundSection';
+import { RefundStage } from './RefundStage';
 
 /** 무대 반짝이 — 위치·크기·깜빡이는 시점 */
 const SPARKLES = [
@@ -21,9 +21,9 @@ const SPARKLES = [
   { top: 680, left: '45%', size: 3, delay: 1.0 },
 ];
 
-const Badge = ({ onDark }: { onDark: boolean }) => (
+const Badge = ({ dark }: { dark: boolean }) => (
   <div
-    className={`animate-reveal-up relative mt-1.5 flex justify-center ${onDark ? '[&_svg]:text-white' : ''}`}
+    className={`animate-reveal-up relative mt-1.5 flex justify-center ${dark ? '[&_svg]:text-white' : ''}`}
     style={{ '--i': 0 } as CSSProperties}
   >
     <PremiumBadge />
@@ -70,13 +70,13 @@ export const PaywallHero = ({
           />
         ))}
 
-        <Badge onDark />
+        <Badge dark />
 
-        <RefundSection />
+        <RefundStage />
       </div>
     ) : (
       <div className="bg-[linear-gradient(180deg,#fdf1e8,var(--color-background))] pt-[calc(max(var(--safe-area-inset-top),8px)+40px)]">
-        <Badge onDark={false} />
+        <Badge dark={false} />
       </div>
     )}
 

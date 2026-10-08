@@ -1,6 +1,6 @@
 'use client';
 
-// 발음 평가 데모 — 폰 화면 속에서 실제 발음 피드백이 진행되는 모습을 반복한다.
+// 발음 평가 데모 — 폰 화면 속 실제 발음 피드백 화면. 장면은 카드가 정해 넘긴다.
 // 듣는 중 → 점수 게이지가 차오름 → 단어마다 판정 → 틀린 음절을 짚는 카드.
 // 멈춰 있으면(관찰 전·동작 줄이기) 마지막 장면이라 연출이 안 돌아도 완성된 화면이 보인다
 import type { CSSProperties } from 'react';
@@ -14,9 +14,6 @@ const PRONUNCIATION_SCENE = {
   words: 2,
   detail: 3,
 } as const;
-/** 장면마다 머무는 시간(ms). 한 바퀴 약 6.7초 */
-/** 장면마다 머무는 시간 — 카드가 시계를 돌리고 장면 번호를 내려 준다 */
-export const PRONUNCIATION_DURATIONS = [1300, 1500, 1300, 2600] as const;
 
 const SCORE = 63;
 /** 게이지 호 — 아래가 열린 220° 원호. pathLength를 100으로 둬 점수를 그대로 길이로 쓴다 */
@@ -58,7 +55,7 @@ const Score = ({ counting }: { counting: boolean }) => {
   );
 };
 
-const Gauge = ({ step, loop }: { step: number; loop: number }) => {
+const Gauge = ({ step }: { step: number }) => {
   const filled = step >= PRONUNCIATION_SCENE.scoring;
   return (
     <div className="relative mx-auto h-[200px] w-[260px]">
@@ -96,8 +93,7 @@ const Gauge = ({ step, loop }: { step: number; loop: number }) => {
         {step === PRONUNCIATION_SCENE.listening ? (
           <Listening />
         ) : (
-          // 바퀴마다 새로 마운트해 0부터 다시 센다
-          <Score key={loop} counting={filled} />
+          <Score counting={filled} />
         )}
         <span
           // 게이지가 다 찬 뒤에 통통 튀며 붙는다. 다음 바퀴로 넘어갈 땐 바로 사라진다
@@ -185,7 +181,7 @@ const DetailCard = ({ step }: { step: number }) => {
   );
 };
 
-export const PronunciationDemo = ({ step, loop = 0, width }: DemoProps) => {
+export const PronunciationDemo = ({ step, width }: DemoProps) => {
   return (
     <DemoScreen width={width}>
       <div className="flex items-center px-5 py-4">
@@ -196,7 +192,7 @@ export const PronunciationDemo = ({ step, loop = 0, width }: DemoProps) => {
         <span className="w-6" />
       </div>
 
-      <Gauge step={step} loop={loop} />
+      <Gauge step={step} />
       <WordChips step={step} />
       <DetailCard step={step} />
     </DemoScreen>

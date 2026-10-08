@@ -173,7 +173,13 @@ describe('PaywallScreen', () => {
           : { top: 0, bottom: 800, height: 800 };
         return { ...box, left: 0, right: 0, width: 0, x: 0, y: 0 } as DOMRect;
       });
-    render(<PaywallScreen />);
+    const { container } = render(<PaywallScreen />);
+    // 아직 위쪽에 있다 — 더 내려갈 곳이 남아 있다
+    Object.defineProperty(
+      container.querySelector('[data-scroll-root]')!,
+      'scrollHeight',
+      { value: 4000 },
+    );
 
     fireEvent.click(
       screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
@@ -181,6 +187,29 @@ describe('PaywallScreen', () => {
 
     expect(scrollTo).toHaveBeenCalled();
     expect(mocks.purchase).not.toHaveBeenCalled();
+    rect.mockRestore();
+  });
+
+  it('이미 맨 아래까지 내려왔으면 판정과 상관없이 CTA가 결제를 시작한다 — 버튼이 먹통이 되지 않게', () => {
+    const scrollTo = vi.fn();
+    Element.prototype.scrollTo = scrollTo;
+    const rect = vi
+      .spyOn(Element.prototype, 'getBoundingClientRect')
+      .mockImplementation(function (this: Element) {
+        // 칸이 화면보다 커서 위가 잘린 채 바닥에 닿아 있다(글자를 키운 기기)
+        const box = this.hasAttribute('data-plan-section')
+          ? { top: -200, bottom: 900, height: 1100 }
+          : { top: 0, bottom: 800, height: 800 };
+        return { ...box, left: 0, right: 0, width: 0, x: 0, y: 0 } as DOMRect;
+      });
+    render(<PaywallScreen />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+    );
+
+    expect(scrollTo).not.toHaveBeenCalled();
+    expect(mocks.purchase).toHaveBeenCalledWith('yearly');
     rect.mockRestore();
   });
 

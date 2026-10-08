@@ -7,9 +7,6 @@ import Image from 'next/image';
 import { USAGE_EXPRESSION } from '../_model/paywall-content';
 import { DemoScreen, type DemoProps } from './DemoScreen';
 
-/** 예문 한 장에 머무는 시간 — 넷을 다 보고 처음으로 돌아간다 */
-export const USAGE_DURATIONS = USAGE_EXPRESSION.examples.map(() => 1700);
-
 /** 카드 폭 + 간격 — 한 장 넘길 때 움직이는 거리 */
 const CARD = 300;
 const GAP = 14;

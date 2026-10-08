@@ -7,13 +7,11 @@ import type { CSSProperties } from 'react';
 
 import { SparklesIcon } from '@/shared/ui/Icons';
 
-import { DemoScreen, type DemoProps } from './DemoScreen';
+import { appear, DemoScreen, type DemoProps } from './DemoScreen';
 
 /** 장면 둘 — 먼저 나오는 것, 이어서 나오는 것 */
 const FIRST = 0;
 const NEXT = 1;
-export const ANALYSIS_DURATIONS = [2200, 2600] as const;
-export const MISTAKE_DURATIONS = [2200, 3000] as const;
 
 /** 시나리오 총평 「이번 대화에서」 — 영역 이름은 실제 총평 카드와 같다 */
 const AREAS = [
@@ -23,12 +21,6 @@ const AREAS = [
   { label: '문장 완성도', score: 71 },
   { label: '대화 매너', score: 90 },
 ];
-
-/** 장면이 오면 아래에서 떠오른다 */
-const appear = (shown: boolean) =>
-  shown
-    ? 'translate-y-0 opacity-100 transition-[opacity,translate] duration-500'
-    : 'translate-y-4 opacity-0';
 
 const Card = ({
   title,

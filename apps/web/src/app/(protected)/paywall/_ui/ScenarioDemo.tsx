@@ -11,8 +11,6 @@ import { SCENARIOS } from '../_model/paywall-content';
 import { DemoScreen, DemoSlide, type DemoProps } from './DemoScreen';
 
 const SCENARIO_SCENE = { grid: 0, pick: 1, picked: 2, talk: 3 } as const;
-/** 카드 더미를 보여 주고, 한 장이 뽑혀 빛난 뒤, 그 한 장이 커져 놓이고, 대화로 넘어간다 */
-export const SCENARIO_DURATIONS = [900, 900, 1600, 3600] as const;
 
 /** 9열 × 11행 = 99장. 한가운데 한 장(49번)이 뽑힌다 */
 const COLUMNS = 9;

@@ -232,9 +232,7 @@ export const maskName = (name: string) => {
   );
 };
 
-/** 환급 챌린지 기간 — 이 기간 동안 영어 공부를 이어 가면 결제 금액을 전액 돌려준다 */
-export const REFUND_CHALLENGE_PERIOD = '6개월';
-/** 그 기간 꾸준히 한 유저의 평균 습득 표현 수 */
+/** 환급 챌린지 기간 꾸준히 한 유저의 평균 습득 표현 수 */
 export const LEARNABLE_EXPRESSION_COUNT = 726;
 /** 그 기간 꾸준히 한 유저의 평균 대화 시간(분) */
 export const AVERAGE_TALK_MINUTES = 1278;
@@ -249,6 +247,12 @@ export const REFUND_PLANS: Record<
   monthly: { months: 3, refundRate: 80, price: 39_900 },
   yearly: { months: 6, refundRate: 100, price: 59_900 },
 };
+
+/** 전액 환급 플랜 — 맨 위 무대·입금 알림·강조 카드가 모두 이 플랜을 말한다 */
+export const FULL_REFUND_PLAN: SubscriptionPlan = 'yearly';
+
+/** 환급 챌린지 기간 문구 — 이 기간 동안 영어 공부를 이어 가면 결제 금액을 전액 돌려준다 */
+export const REFUND_CHALLENGE_PERIOD = `${REFUND_PLANS[FULL_REFUND_PLAN].months}개월`;
 
 /** 최대 환급액 — 결제 금액 × 환급률(원 단위 반올림) */
 export const getMaxRefund = (planId: SubscriptionPlan) => {

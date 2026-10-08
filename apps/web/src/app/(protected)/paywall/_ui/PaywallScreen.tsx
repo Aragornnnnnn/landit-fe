@@ -102,6 +102,7 @@ export const PaywallScreen = ({
         root.getBoundingClientRect(),
         // 아래 여백이 곧 하단 고정 CTA가 가리는 높이다
         parseFloat(getComputedStyle(root).paddingBottom) || 0,
+        root.scrollTop + root.clientHeight >= root.scrollHeight - 1,
       )
     ) {
       root.scrollTo({ top: root.scrollHeight, behavior: 'smooth' });
@@ -126,7 +127,7 @@ export const PaywallScreen = ({
       >
         {/* 닫기·구매 복원 — 고정하지 않고 머리와 함께 올라간다 */}
         <PaywallHeader
-          onDark={refundChallenge}
+          dark={refundChallenge}
           onClose={() => void close()}
           onRestore={startRestore}
           restoreDisabled={busy}

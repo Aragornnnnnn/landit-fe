@@ -17,8 +17,6 @@ const SMALLTALK_SCENE = {
   teddy: 2,
   talk: 3,
 } as const;
-/** 고르는 칸이 한 명씩 옮겨 가다(짧게) 테디에 머물고, 대화로 넘어간다 */
-export const SMALLTALK_DURATIONS = [700, 700, 1400, 3600] as const;
 
 /** 스몰톡 친구 — 사는 곳과 억양은 실제 스몰톡 소개와 같다 */
 const FRIENDS: { id: Partner; name: string; accent: string; flag: string }[] = [
