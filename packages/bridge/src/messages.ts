@@ -95,7 +95,7 @@ export const pickedPhotoSchema = z.object({
 export const MAX_PICK_PHOTOS = 3;
 
 // 반복 알람의 종류 — 종류마다 알람은 하나다. 새 알람(스몰톡·표현 학습 등)이 생기면 여기에 값을 더한다(메시지 모양은 그대로)
-export const alarmKeySchema = z.enum(['scenario']);
+export const alarmTypeSchema = z.enum(['scenario']);
 
 // 알람 시각 — 기기 현지 시각
 export const alarmTimeSchema = z.object({
@@ -132,7 +132,7 @@ export const repeatingAlarmSchema = z.object({
 
 // 셸에 걸려 있는 반복 알람 하나 — ALARM_STATUS가 종류별로 싣는다
 export const repeatingAlarmStateSchema = z.object({
-  key: alarmKeySchema,
+  alarmType: alarmTypeSchema,
   slots: z.array(alarmSlotSchema),
   // 오늘 회차를 건너뛴 날(기기 현지 "YYYY-MM-DD") — 건너뛴 적 없거나 날이 지나 되돌렸으면 null
   skipDate: z.string().nullable(),
@@ -145,7 +145,7 @@ export const alarmSettingsTargetSchema = z.enum(['exactAlarm', 'fullScreen']);
 export const scheduledAlarmSchema = z.object({
   id: z.string(),
   // 반복 알람의 종류. 테스트 알람은 null
-  key: alarmKeySchema.nullable(),
+  alarmType: alarmTypeSchema.nullable(),
   hour: z.number().int().min(0).max(23),
   minute: z.number().int().min(0).max(59),
   // 울리는 요일. 1회 알람이면 빈 배열
@@ -244,11 +244,11 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   // 이 종류의 반복 알람을 다시 건다 — 같은 종류의 기존 예약만 지운다. null이면 끈다. 응답은 ALARM_STATUS
   z.object({
     type: z.literal('SET_ALARM'),
-    key: alarmKeySchema,
+    alarmType: alarmTypeSchema,
     alarm: repeatingAlarmSchema.nullable(),
   }),
   // 이 종류의 반복 알람을 오늘만 울리지 않게 한다(내일부터 그대로). 응답은 ALARM_STATUS
-  z.object({ type: z.literal('SKIP_ALARM_TODAY'), key: alarmKeySchema }),
+  z.object({ type: z.literal('SKIP_ALARM_TODAY'), alarmType: alarmTypeSchema }),
   // 개발자 화면용 — 셸에 걸린 알람 전부를 묻는다. 응답은 ALARM_LIST
   z.object({ type: z.literal('GET_ALARM_LIST') }),
   // 개발자 섹션용 — 지금부터 delaySeconds 뒤에 한 번 울린다. 실제 예약은 건드리지 않는다. 응답은 ALARM_STATUS
@@ -349,7 +349,7 @@ export type PurchaseStatus = z.infer<typeof purchaseStatusSchema>;
 export type RestoreStatus = z.infer<typeof restoreStatusSchema>;
 export type PhotoPickStatus = z.infer<typeof photoPickStatusSchema>;
 export type PickedPhoto = z.infer<typeof pickedPhotoSchema>;
-export type AlarmKey = z.infer<typeof alarmKeySchema>;
+export type AlarmType = z.infer<typeof alarmTypeSchema>;
 export type AlarmTime = z.infer<typeof alarmTimeSchema>;
 export type AlarmSlot = z.infer<typeof alarmSlotSchema>;
 export type RepeatingAlarm = z.infer<typeof repeatingAlarmSchema>;

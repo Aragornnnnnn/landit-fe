@@ -586,7 +586,7 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
   it('매일 같은 시각에 울리는 알람 요청을 그대로 되돌린다', () => {
     const message: WebToNativeMessage = {
       type: 'SET_ALARM',
-      key: 'scenario',
+      alarmType: 'scenario',
       alarm,
     };
 
@@ -598,7 +598,7 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
   it('요일마다 시각이 다른 알람 요청도 받는다 — 나중에 요일별 시각을 열어도 계약은 그대로', () => {
     const message: WebToNativeMessage = {
       type: 'SET_ALARM',
-      key: 'scenario',
+      alarmType: 'scenario',
       alarm: {
         ...alarm,
         slots: [
@@ -619,7 +619,7 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
   ])('%s 거는 알람 요청을 그대로 되돌린다', (_, payload) => {
     const message: WebToNativeMessage = {
       type: 'SET_ALARM',
-      key: 'scenario',
+      alarmType: 'scenario',
       alarm: payload,
     };
 
@@ -629,9 +629,9 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
   });
 
   it('alarm이 null이면 그 종류의 알람을 끄는 요청으로 받는다', () => {
-    expect(parseSet({ key: 'scenario', alarm: null })).toEqual({
+    expect(parseSet({ alarmType: 'scenario', alarm: null })).toEqual({
       type: 'SET_ALARM',
-      key: 'scenario',
+      alarmType: 'scenario',
       alarm: null,
     });
   });
@@ -663,11 +663,11 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
     ],
     ['제목이 빈 문자열', { ...alarm, title: '' }],
   ])('%s인 알람 요청은 버린다', (_, bad) => {
-    expect(parseSet({ key: 'scenario', alarm: bad })).toBeNull();
+    expect(parseSet({ alarmType: 'scenario', alarm: bad })).toBeNull();
   });
 
   it('모르는 종류의 알람 요청은 버린다', () => {
-    expect(parseSet({ key: 'review', alarm })).toBeNull();
+    expect(parseSet({ alarmType: 'review', alarm })).toBeNull();
   });
 
   it('오늘 건너뛰기는 알람의 종류를 실어야 받는다', () => {
@@ -676,7 +676,7 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
         JSON.stringify({ type: 'SKIP_ALARM_TODAY', ...body }),
       );
 
-    expect(parse({ key: 'scenario' })).not.toBeNull();
+    expect(parse({ alarmType: 'scenario' })).not.toBeNull();
     expect(parse({})).toBeNull();
   });
 
@@ -722,7 +722,7 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
       ...status,
       repeatingAlarms: [
         {
-          key: 'scenario',
+          alarmType: 'scenario',
           slots: [{ hour: 7, minute: 30, weekdays: EVERY_DAY }],
           skipDate: '2026-10-07',
         },
@@ -742,7 +742,7 @@ describe('알람 목록 (GET_ALARM_LIST ↔ ALARM_LIST)', () => {
       alarms: [
         {
           id: 'a',
-          key: 'scenario',
+          alarmType: 'scenario',
           hour: 7,
           minute: 30,
           weekdays: [1, 2, 4, 5, 6, 7],
@@ -751,7 +751,7 @@ describe('알람 목록 (GET_ALARM_LIST ↔ ALARM_LIST)', () => {
         },
         {
           id: 'b',
-          key: null,
+          alarmType: null,
           hour: 23,
           minute: 41,
           weekdays: [],
