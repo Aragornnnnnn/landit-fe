@@ -539,3 +539,399 @@
     }
   }
 }
+
+/* 롱 페이월 — 섹션이 화면에 들어오면 조각들이 연출된다.
+ * 방아쇠는 섹션의 data-inview(IntersectionObserver)이고, 연출은 전부 CSS다 — rAF가 멎은 웹뷰에서도 끝까지 간다 (LAN-375).
+ * 방아쇠가 당겨지기 전에는 애니메이션이 아예 없어 내용이 그대로 보인다. 관찰이 안 돌아도 빈 화면이 되지 않는다 */
+/* 완전히 투명하게 두지 않는다 — 시작 직후 프레임이 멎어도 내용이 비어 보이면 안 된다 (check-in과 같은 규칙) */
+@keyframes reveal-up {
+  from {
+    transform: translateY(18px);
+    opacity: 0.2;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 형광펜이 왼쪽에서 오른쪽으로 그어진다 */
+@keyframes highlight-sweep {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* 래디가 둥실 떠 있다 — 제자리 위아래 4px */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* 래디가 뿅 하고 나타난다 */
+@keyframes mascot-pop {
+  from {
+    transform: scale(0.6) rotate(-8deg);
+    opacity: 0.2;
+  }
+  60% {
+    transform: scale(1.08) rotate(3deg);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
+@layer utilities {
+  /* --i가 조각 번호 — 90ms 간격으로 차례로 */
+  /* 히어로처럼 처음부터 화면에 있는 조각은 관찰 없이 마운트하자마자 돈다 */
+  .animate-reveal-up,
+  [data-inview='true'] .reveal-up {
+    animation: reveal-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i, 0) * 90ms);
+  }
+
+  .reveal-highlight {
+    transform-origin: left center;
+  }
+
+  [data-inview='true'] .reveal-highlight {
+    animation: highlight-sweep 0.5s cubic-bezier(0.65, 0, 0.35, 1) 0.25s both;
+  }
+
+  [data-inview='true'] .reveal-mascot {
+    animation: mascot-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+  }
+
+  /* 화면에 들어온 뒤에만 — 안 보이는 래디까지 계속 움직이면 페이지가 쉬지를 못한다 */
+  [data-inview='true'] .animate-float {
+    animation: float 3.2s ease-in-out infinite;
+  }
+
+  /* 비교표 체크·스몰톡 막대는 원래 마운트하자마자 돈다. 롱 페이월에선 아래에 있어 안 보일 때 끝나 버리니 보일 때까지 미룬다 */
+  [data-inview='false'] .animate-check-in,
+  [data-inview='false'] .animate-bar-fill {
+    animation: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-reveal-up,
+    [data-inview='true'] .reveal-up,
+    [data-inview='true'] .reveal-highlight,
+    [data-inview='true'] .reveal-mascot,
+    [data-inview='true'] .animate-float {
+      animation: none;
+    }
+  }
+}
+
+/* 페이월 발음 데모 — 듣는 중 음파 막대가 위아래로 출렁인다 */
+@keyframes wave-bar {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* 페이월 발음 데모 — 짚어 주는 단어 칩 둘레에 빨간 물결이 퍼진다 */
+@keyframes ring-pulse {
+  from {
+    box-shadow: 0 0 0 0 rgb(229 83 75 / 0.45);
+  }
+  to {
+    box-shadow: 0 0 0 14px rgb(229 83 75 / 0);
+  }
+}
+
+@layer utilities {
+  /* --i가 막대 번호 — 서로 엇갈려 출렁여야 소리처럼 보인다 */
+  .animate-wave-bar {
+    animation: wave-bar 0.7s ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * -120ms);
+  }
+
+  .animate-ring-pulse {
+    animation: ring-pulse 1.1s ease-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-wave-bar,
+    .animate-ring-pulse {
+      animation: none;
+    }
+  }
+}
+
+/* 페이월 예문 데모 — 상황 그림이 천천히 다가온다(켄 번스) */
+@keyframes ken-burns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
+@layer utilities {
+  .animate-ken-burns {
+    animation: ken-burns 7s ease-out both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-ken-burns {
+      animation: none;
+    }
+  }
+}
+
+/* 페이월 예문 더미 — 가장 빠르게 스쳐 갈 때만 살짝 번지고, 느려지면서 또렷해진다 */
+@keyframes streak {
+  from {
+    filter: blur(3px);
+  }
+  55% {
+    filter: blur(1.5px);
+  }
+  to {
+    filter: blur(0);
+  }
+}
+
+@layer utilities {
+  .animate-streak {
+    animation: streak 1.6s ease-out both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-streak {
+      animation: none;
+    }
+  }
+}
+
+/* 페이월 비교표 래디 — 카드 뒤에서 고개를 쏙 내민다 */
+@keyframes peek-up {
+  from {
+    transform: translateY(70%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@layer utilities {
+  [data-inview='true'] .reveal-peek {
+    animation: peek-up 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-inview='true'] .reveal-peek {
+      animation: none;
+    }
+  }
+}
+
+/* 페이월 메인 환급 — 돈주머니가 통통 튀다 팡 터지고(2.4초 주기), 돈이 3D로 돌며 쏟아진다 */
+
+/* 세로축으로 돌아 옆면이 얇아졌다 넓어졌다 하며 3D로 보인다 */
+@keyframes money-rain {
+  from {
+    transform: translateY(-60px) rotateY(0) rotateZ(-15deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  to {
+    transform: translateY(270px) rotateY(900deg) rotateZ(25deg);
+    opacity: 0;
+  }
+}
+
+@keyframes money-bag {
+  0%,
+  60% {
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    transform: translateY(-8px) scale(1);
+  }
+  68% {
+    transform: translateY(6px) scale(1.16, 0.84);
+  }
+  74% {
+    transform: translateY(-20px) scale(0.88, 1.2);
+  }
+  84% {
+    transform: translateY(0) scale(1.05, 0.95);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes money-burst {
+  0%,
+  72% {
+    transform: translate(0, 0) scale(0.3);
+    opacity: 0;
+  }
+  75% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) rotateY(720deg)
+      rotateZ(var(--spin)) scale(1.1);
+    opacity: 0;
+  }
+}
+
+@layer utilities {
+  [data-inview='true'] .reveal-money-rain {
+    animation: money-rain var(--duration, 3s) linear var(--delay, 0s) infinite;
+  }
+
+  /* 먼저 튀어나온 뒤 2.4초마다 통통 튀다 터진다 — 터지는 돈·빛과 같은 주기 */
+  [data-inview='true'] .reveal-money-bag {
+    animation:
+      mascot-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both,
+      money-bag 2.4s ease-in-out 0.6s infinite;
+  }
+
+  [data-inview='true'] .reveal-money-burst {
+    animation: money-burst 2.4s cubic-bezier(0.2, 0.7, 0.3, 1) 0.6s infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-inview='true'] .reveal-money-rain,
+    [data-inview='true'] .reveal-money-bag,
+    [data-inview='true'] .reveal-money-burst {
+      animation: none;
+    }
+  }
+}
+
+/* 페이월 환급 입금 — 카드가 떠오른 뒤 입금 알림이 툭 떨어져 흔들리고, 빨간 「전액 환급」 라벨이 붙는다 */
+@keyframes deposit-in {
+  from {
+    transform: translateY(-36px) scale(0.92);
+    opacity: 0;
+  }
+  55% {
+    transform: translateY(5px) scale(1.03);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(0) rotate(-2.5deg);
+  }
+  82% {
+    transform: rotate(2deg);
+  }
+  92% {
+    transform: rotate(-1deg);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@layer utilities {
+  [data-inview='true'] .reveal-deposit {
+    animation: deposit-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 1s both;
+  }
+
+  /* 알림이 내려앉은 뒤 빨간 라벨이 톡 붙는다 */
+  [data-inview='true'] .reveal-refund-label {
+    animation: mascot-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) 1.45s both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-inview='true'] .reveal-deposit,
+    [data-inview='true'] .reveal-refund-label {
+      animation: none;
+    }
+  }
+}
+
+/* 페이월 다크 무대 — 띠가 끝없이 흐르고, 반짝이가 깜빡인다 */
+@keyframes ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: rotate(45deg) scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: rotate(45deg) scale(1.2);
+  }
+}
+
+@layer utilities {
+  .animate-twinkle {
+    animation: twinkle 1.6s ease-in-out infinite;
+  }
+
+  .animate-ticker {
+    animation: ticker 9s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-twinkle,
+    .animate-ticker {
+      animation: none;
+    }
+  }
+}
+
+@layer utilities {
+  @media (prefers-reduced-motion: reduce) {
+  }
+}
+
+/* 페이월 6개월 카드 강조 — 최대 환급액 글자 위로 빛이 쓸고 지나간다 */
+@keyframes text-shine {
+  0%,
+  40% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+@layer utilities {
+  .animate-text-shine {
+    animation: text-shine 2.4s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-text-shine {
+      animation: none;
+    }
+  }
+}
