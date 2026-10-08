@@ -736,6 +736,25 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
       message,
     );
   });
+  it('건너뛴 날짜가 YYYY-MM-DD 모양이 아니면 상태 회신을 버린다', () => {
+    const withSkipDate = (skipDate: string) =>
+      parseNativeToWebMessage(
+        JSON.stringify({
+          ...status,
+          repeatingAlarms: [
+            {
+              alarmType: 'scenario',
+              schedules: [{ hour: 7, minute: 30, weekdays: EVERY_DAY }],
+              skipDate,
+            },
+          ],
+        }),
+      );
+
+    expect(withSkipDate('2026-10-07')).not.toBeNull();
+    expect(withSkipDate('invalid')).toBeNull();
+    expect(withSkipDate('2026-10-7')).toBeNull();
+  });
 });
 
 describe('알람 목록 (GET_ALARM_LIST ↔ ALARM_LIST)', () => {

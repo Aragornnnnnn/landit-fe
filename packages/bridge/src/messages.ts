@@ -106,6 +106,9 @@ export const alarmTimeSchema = z.object({
 // 요일 — 1(월)~7(일)
 const weekdaySchema = z.number().int().min(1).max(7);
 
+// 기기 현지 날짜 "YYYY-MM-DD"
+const localDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
 // 언제 울리는지 — 이 요일들의 이 시각. 매일 같은 시각이면 7요일짜리 하나, 요일마다 시각이 다르면 여러 개
 export const alarmScheduleSchema = alarmTimeSchema.extend({
   weekdays: z.array(weekdaySchema).min(1),
@@ -134,25 +137,23 @@ export const repeatingAlarmSchema = z.object({
 export const repeatingAlarmStateSchema = z.object({
   alarmType: alarmTypeSchema,
   schedules: z.array(alarmScheduleSchema),
-  // 오늘 회차를 건너뛴 날(기기 현지 "YYYY-MM-DD") — 건너뛴 적 없거나 날이 지나 되돌렸으면 null
-  skipDate: z.string().nullable(),
+  // 오늘 회차를 건너뛴 날 — 건너뛴 적 없거나 날이 지나 되돌렸으면 null
+  skipDate: localDateSchema.nullable(),
 });
 
 // 셸이 띄울 수 있는 알람 설정 화면 — Android 14+에서 사용자가 직접 켜야 하는 두 권한
 export const alarmSettingsTargetSchema = z.enum(['exactAlarm', 'fullScreen']);
 
 // 셸에 걸린 알람 하나 — 개발자 화면이 목록으로 보여 준다
-export const scheduledAlarmSchema = z.object({
+export const scheduledAlarmSchema = alarmTimeSchema.extend({
   id: z.string(),
   // 반복 알람의 종류. 테스트 알람은 null
   alarmType: alarmTypeSchema.nullable(),
-  hour: z.number().int().min(0).max(23),
-  minute: z.number().int().min(0).max(59),
   // 울리는 요일. 1회 알람이면 빈 배열
   weekdays: z.array(weekdaySchema),
   // 다음 울림(ms). 이미 울린 1회 알람이면 null
   nextAt: z.number().nullable(),
-  skipDate: z.string().nullable(),
+  skipDate: localDateSchema.nullable(),
 });
 
 // 알람 권한과 셸에 실제로 걸린 반복 알람 — 알람 메시지는 전부 이걸로 답한다.
