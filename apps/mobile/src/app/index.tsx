@@ -23,6 +23,7 @@ import {
   setAlarm,
   skipAlarmToday,
 } from '@/alarm/alarm';
+import { cancelAlarm, listAlarms, scheduleTestAlarm } from '@/alarm/dev-alarm';
 import { useAlarmOpen } from '@/alarm/useAlarmOpen';
 import { initMetaSdk } from '@/analytics/meta';
 import { generateNonce } from '@/auth/nonce';
@@ -186,6 +187,20 @@ const ShellScreen = () => {
       replyAlarmStatusAfter(() => setAlarm(alarmType, alarm)),
     SKIP_ALARM_TODAY: ({ alarmType }) =>
       replyAlarmStatusAfter(() => skipAlarmToday(alarmType)),
+    GET_ALARM_LIST: async () => {
+      postToWeb({ type: 'ALARM_LIST', alarms: await listAlarms() });
+    },
+    CANCEL_ALARM: async ({ id }) => {
+      try {
+        await cancelAlarm(id);
+      } finally {
+        postToWeb({ type: 'ALARM_LIST', alarms: await listAlarms() });
+      }
+    },
+    TEST_ALARM: ({ delaySeconds, title, silent }) =>
+      replyAlarmStatusAfter(() =>
+        scheduleTestAlarm(delaySeconds, title, { silent }),
+      ),
     // 웹의 로그인 요청을 받아 provider SDK로 idToken을 발급받고, nonce와 함께 웹으로 돌려준다
     SOCIAL_LOGIN_REQUEST: async ({ provider }) => {
       try {
