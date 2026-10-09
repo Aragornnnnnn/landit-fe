@@ -1,5 +1,5 @@
 // 환급 플랜 카드 한 장(가로로 긴 줄) — 왼쪽은 사는 것(프리미엄 기간·결제 금액, 진한 글자), 오른쪽은 돌려받는 것(「최대 환급액」 라벨과 + 를 붙인 금액).
-// 고른 카드는 주황 테두리로 켜지고, 연한 주황 아래 줄이 챌린지에 성공하면 내는 「실제 부담」을 말한다. 색·글자는 디자인 시스템 토큰만 쓴다
+// 고른 카드는 주황 테두리로 켜지고, 아래 회색 줄이 챌린지에 성공하면 내는 「실제 부담」을 말한다. 주황은 선택 표시와 환급액에만 쓴다. 색·글자는 디자인 시스템 토큰만 쓴다
 import { formatWon } from '@/features/subscription/lib/won';
 import { GOLD_GRADIENT } from '@/features/subscription/ui/premium-brand';
 
@@ -69,10 +69,9 @@ export const RefundPlanCard = ({
 
           {/* 돌려받는 것 — 가격과 헷갈리지 않게 라벨과 + 를 붙인다 */}
           <div className="shrink-0 text-right">
-            <p
-              className={`text-xs font-bold ${selected ? 'text-accent' : 'text-muted-foreground'}`}
-            >
-              최대 환급액 · {refundRate}%
+            {/* 전액 환급은 알약이 이미 말하므로 환급률을 붙이지 않는다 */}
+            <p className="text-xs font-bold text-muted-foreground">
+              최대 환급액{featured ? '' : ` · ${refundRate}%`}
             </p>
             <p
               className={`mt-0.5 text-2xl font-bold tracking-tight tabular-nums ${
@@ -88,23 +87,13 @@ export const RefundPlanCard = ({
           </div>
         </div>
 
-        {/* 챌린지에 성공하면 실제로 내는 돈 */}
-        <div
-          className={`flex items-center justify-between px-4 py-3 transition-colors ${
-            selected ? 'bg-selected' : 'bg-secondary'
-          }`}
-        >
-          <span
-            className={`text-sm font-bold ${selected ? 'text-accent' : 'text-muted-foreground'}`}
-          >
+        {/* 챌린지에 성공하면 실제로 내는 돈 — 선택과 상관없이 무채색이라 주황은 선택 표시와 환급액에만 남는다 */}
+        <div className="flex items-center justify-between bg-secondary px-4 py-2">
+          <span className="text-sm font-bold text-muted-foreground">
             챌린지 성공하면 실제 부담
           </span>
-          <span className="tabular-nums">
-            <span
-              className={`text-xl font-bold ${selected ? 'text-primary' : 'text-foreground'}`}
-            >
-              {formatWon(netCost)}
-            </span>
+          <span className="text-lg font-bold text-foreground tabular-nums">
+            {formatWon(netCost)}
           </span>
         </div>
       </button>
