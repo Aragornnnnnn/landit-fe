@@ -65,7 +65,8 @@ enum AlarmSchedulerMetadataValue: Codable, Hashable, Sendable {
 struct AlarmSchedulerStopIntent: LiveActivityIntent {
   static var title: LocalizedStringResource = "Stop Alarm"
   static var authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
-  static var supportedModes: IntentModes { .foreground(.immediate) }
+  // landit: 끄기는 앱을 열지 않는다. 시계 앱처럼 소리만 멈춘다
+  static var supportedModes: IntentModes { .background }
 
   @Parameter(title: "Alarm ID")
   var alarmId: String

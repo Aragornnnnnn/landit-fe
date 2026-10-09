@@ -25,7 +25,8 @@ const withAlarmScheduler = (config, props = {}) => {
   const iosAlarmSounds = normalizeIosAlarmSounds(props.iosAlarmSounds);
 
   config = withAndroidManifest(config, (modConfig) => {
-    const manifest = modConfig.modResults.manifest;
+    // landit: Expo 57의 addPermission은 manifest 노드가 아니라 modResults 전체를 받는다 (원본 이슈 #22)
+    const manifest = modConfig.modResults;
     if (addExactAlarmPermission) {
       AndroidConfig.Permissions.addPermission(manifest, 'android.permission.SCHEDULE_EXACT_ALARM');
     }

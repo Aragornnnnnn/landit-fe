@@ -203,7 +203,8 @@ extension AlarmSchedulerModule {
         AlarmButton(
           text: LocalizedStringResource(stringLiteral: $0),
           textColor: .white,
-          systemImageName: "app.badge"
+          // landit: 배너에서는 글자 없이 아이콘만 보여서 "대화하러 가기"가 바로 읽히는 말풍선으로 바꿨다
+          systemImageName: "bubble.left.and.bubble.right.fill"
         )
       }
       let alertPresentation = makeAlertPresentation(
@@ -234,7 +235,7 @@ extension AlarmSchedulerModule {
           title: title,
           values: alarmKitMetadataValues(metadata)
         ),
-        tintColor: Color.accentColor
+        tintColor: Color(red: 224 / 255, green: 122 / 255, blue: 58 / 255) // landit: 브랜드 주황 — accentColor는 시스템이 그릴 때 파랑으로 풀린다
       )
       do {
         _ = try await AlarmManager.shared.schedule(
