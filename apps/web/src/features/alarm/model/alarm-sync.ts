@@ -136,7 +136,8 @@ export const createAlarmDecider = () => {
       : scheduled === null;
 
     if (!matches) {
-      // 같은 요청은 권한이 바뀌기 전까지 한 번만 보낸다 — 셸이 못 걸면 상태가 그대로라 끝없이 보내게 된다
+      // 보낸 직후 답이 여전히 다르면 이번엔 보내지 않고 기억만 지운다 — 바로 다시 보내면 보내기와 답이 끝없이 반복된다.
+      // 기억을 지워 두면 다음 상태(앱으로 돌아올 때 등)에 한 번 더 시도한다. 셸이 걸기에 실패한 경우를 위해서다
       const key = JSON.stringify([
         desired,
         status.permission,
@@ -144,7 +145,10 @@ export const createAlarmDecider = () => {
         status.fullScreen,
         status.notifications,
       ]);
-      if (key === lastSent) return null;
+      if (key === lastSent) {
+        lastSent = null;
+        return null;
+      }
       lastSent = key;
       // 오늘 끝낸 날이면 처음부터 오늘 회차를 빼고 건다 — 걸고 나서 건너뛰면 그 사이 틈이 생긴다
       const skipToday = desired !== null && doneOn !== null;
@@ -153,10 +157,15 @@ export const createAlarmDecider = () => {
     }
     lastSent = null;
 
-    // 걸린 뒤에 오늘 시나리오를 끝냈으면 오늘 회차를 건너뛴다. 같은 날엔 한 번만 —
-    // 울릴 시각이 이미 지나 셸이 건너뛰지 않으면 상태의 skipDate가 안 바뀐다
+    // 걸린 뒤에 오늘 시나리오를 끝냈으면 오늘 회차를 건너뛴다
     if (!desired || !doneOn) return null;
-    if (scheduled?.skipDate === doneOn || lastSkipped === doneOn) return null;
+    if (scheduled?.skipDate === doneOn) return null;
+    // 보낸 직후 답에 건너뛴 날이 없어도 이번엔 보내지 않고 기억만 지운다 — 다음 상태에 한 번 더 시도한다.
+    // 울릴 시각이 이미 지난 날엔 셸이 건너뛸 게 없어 skipDate를 남기지 않아서, 바로 다시 보내면 끝없이 반복된다
+    if (lastSkipped === doneOn) {
+      lastSkipped = null;
+      return null;
+    }
     lastSkipped = doneOn;
     return { kind: 'skip' };
   };

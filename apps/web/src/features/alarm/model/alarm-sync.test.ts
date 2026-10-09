@@ -172,11 +172,22 @@ describe('createAlarmDecider', () => {
     });
   });
 
-  it('같은 요청을 이미 보냈으면 또 보내지 않는다 — 셸이 못 건 경우 끝없이 보내지 않게', () => {
+  it('보낸 직후 답이 여전히 다르면 이번엔 보내지 않는다 — 보내기와 답이 끝없이 반복되지 않게', () => {
     const decide = createAlarmDecider();
-    decide(alarm, status(null, { exactAlarm: false }), null);
+    decide(alarm, status(null), null);
 
-    expect(decide(alarm, status(null, { exactAlarm: false }), null)).toBeNull();
+    expect(decide(alarm, status(null), null)).toBeNull();
+  });
+
+  it('그다음 상태에서도 여전히 다르면 한 번 더 보낸다 — 셸이 걸기에 실패했어도 다시 시도한다', () => {
+    const decide = createAlarmDecider();
+    decide(alarm, status(null), null);
+    decide(alarm, status(null), null);
+
+    expect(decide(alarm, status(null), null)).toMatchObject({
+      kind: 'set',
+      alarm,
+    });
   });
 
   it('권한이 꺼져 있다 켜지면 한 번 다시 보낸다 — 꺼진 동안 보낸 요청은 셸이 걸지 않았다', () => {
@@ -224,11 +235,19 @@ describe('createAlarmDecider', () => {
       expect(decide(alarm, status(alarm, {}, TODAY), TODAY)).toBeNull();
     });
 
-    it('같은 날엔 한 번만 보낸다 — 울릴 시각이 지나 셸이 건너뛰지 않아도 계속 보내지 않게', () => {
+    it('보낸 직후 답에 건너뛴 날이 없어도 이번엔 보내지 않는다 — 울릴 시각이 지난 날 끝없이 보내지 않게', () => {
       const decide = createAlarmDecider();
       decide(alarm, status(alarm), TODAY);
 
       expect(decide(alarm, status(alarm), TODAY)).toBeNull();
+    });
+
+    it('그다음 상태에서도 건너뛴 날이 없으면 한 번 더 보낸다 — 권한이 꺼져 셸이 못 했어도 다시 시도한다', () => {
+      const decide = createAlarmDecider();
+      decide(alarm, status(alarm), TODAY);
+      decide(alarm, status(alarm), TODAY);
+
+      expect(decide(alarm, status(alarm), TODAY)).toEqual({ kind: 'skip' });
     });
 
     it('다시 걸어야 하면 처음부터 오늘 회차를 빼고 건다 — 걸고 나서 건너뛰면 그 사이 틈이 생긴다', () => {
