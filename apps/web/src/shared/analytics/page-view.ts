@@ -6,6 +6,8 @@ import type {
 } from '@landit/analytics';
 
 import {
+  ALARM_EDIT_PATH,
+  ALARM_SETTINGS_PATH,
   PAYWALL_PATH,
   readScenarioFeedbackParams,
   SUBSCRIPTION_CANCEL_PATH,
@@ -42,6 +44,8 @@ const NESTED_PAGES: Record<string, string> = {
   [SUBSCRIPTION_HISTORY_PATH]: 'subscription_history',
   [SUBSCRIPTION_CANCEL_PATH]: 'subscription_cancel',
   [WIDGET_GUIDE_PATH]: 'widget_guide',
+  [ALARM_SETTINGS_PATH]: 'alarm_settings',
+  [ALARM_EDIT_PATH]: 'alarm_edit',
 };
 
 // 페이월로 보낸 문 — 주소에 실려 온 값만 받는다. 문이 늘었는데 여기를 빠뜨리면 빌드가 깨진다
