@@ -7,6 +7,7 @@ import type {
 } from '@landit/bridge';
 
 import type { UserAlarmResponse } from '../api/alarm';
+import { canUseAlarm } from './alarm-access';
 import { parseAlarmTime } from './alarm-time';
 import { ALARM_PATH, ALARM_TITLE, ALARM_TYPE } from './shell-alarm';
 
@@ -45,13 +46,13 @@ export const desiredAlarm = (
   };
 };
 
-// 걸 알람이 있을 사람인가 — 알람을 켰고 유료이거나 ADMIN(결제 없이 실제 흐름을 시험하려고)
+// 걸 알람이 있을 사람인가 — 알람을 켰고 알람 대상(유료·ADMIN)이다
 export const wantsAlarm = ({
   setting,
   subscription,
   isAdmin,
 }: Pick<AlarmInputs, 'setting' | 'subscription' | 'isAdmin'>) =>
-  setting?.enabled === true && (subscription?.premium === true || isAdmin);
+  setting?.enabled === true && canUseAlarm({ subscription, isAdmin });
 
 /**
  * 셸에 걸려 있어야 할 알람과 오늘 끝낸 날짜를 정한다. 아직 정할 수 없으면 'wait'.
