@@ -15,6 +15,18 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 
+import {
+  getAlarmStatus,
+  openAlarmSettings,
+  requestAlarmPermission,
+  restoreSkippedDay,
+  setAlarm,
+  skipAlarmToday,
+} from '@/alarm/alarm';
+import {
+  onAlarmButtonPressed,
+  stopRingingIfOpenedByAlarm,
+} from '@/alarm/stop-ringing';
 import { initMetaSdk } from '@/analytics/meta';
 import { generateNonce } from '@/auth/nonce';
 import { requestSocialIdToken, toSocialLoginFailure } from '@/auth/socialLogin';
@@ -99,6 +111,18 @@ const ShellScreen = () => {
   const nativeInsetsScript = getNativeInsetsScript(insets);
   const beforeContentLoadedScript = `${nativeContextScript} ${nativeInsetsScript ?? ''}`;
 
+  const replyAlarmStatus = async () =>
+    postToWeb({ type: 'ALARM_STATUS', ...(await getAlarmStatus()) });
+
+  // 알람 쪽지는 처리가 실패해도 늘 지금 실제 상태로 답한다
+  const replyAlarmStatusAfter = async (task: () => Promise<unknown>) => {
+    try {
+      await task();
+    } finally {
+      await replyAlarmStatus();
+    }
+  };
+
   const { onMessage, postToWeb } = useNativeBridge(webviewRef, {
     EXIT_APP: () => BackHandler.exitApp(),
     // 웹이 인터랙션 시점에 보낸 진동 요청을 expo-haptics로 실행한다
@@ -155,6 +179,16 @@ const ShellScreen = () => {
       const result = await pickPhotos(limit);
       postToWeb({ type: 'PHOTOS_PICKED', ...result });
     },
+    GET_ALARM_STATUS: () => replyAlarmStatus(),
+    REQUEST_ALARM_PERMISSION: async () => {
+      postToWeb({ type: 'ALARM_STATUS', ...(await requestAlarmPermission()) });
+    },
+    // 돌아오면 웹이 상태를 다시 묻는다
+    OPEN_ALARM_SETTINGS: ({ target }) => openAlarmSettings(target),
+    SET_ALARM: ({ alarmType, alarm }) =>
+      replyAlarmStatusAfter(() => setAlarm(alarmType, alarm)),
+    SKIP_ALARM_TODAY: ({ alarmType }) =>
+      replyAlarmStatusAfter(() => skipAlarmToday(alarmType)),
     // 웹의 로그인 요청을 받아 provider SDK로 idToken을 발급받고, nonce와 함께 웹으로 돌려준다
     SOCIAL_LOGIN_REQUEST: async ({ provider }) => {
       try {
@@ -201,6 +235,28 @@ const ShellScreen = () => {
       if (state === 'active') void syncWidgetInventory();
     });
     return () => subscription.remove();
+  }, []);
+
+  // 앱이 열리거나 돌아올 때 알람을 정리한다
+  // 알람 버튼으로 열렸으면 울림을 끄고, 어제 건너뛴 요일이 빠져 있으면 되돌린다
+  // 실패해도 울림이 조금 더 가거나 다음에 다시 되돌릴 뿐이라 warning으로 남긴다
+  useEffect(() => {
+    const stopRinging = () => {
+      void stopRingingIfOpenedByAlarm().catch(reportWarning);
+    };
+    const tidyUpAlarms = () => {
+      stopRinging();
+      void restoreSkippedDay().catch(reportWarning);
+    };
+    tidyUpAlarms();
+    const appState = AppState.addEventListener('change', (state) => {
+      if (state === 'active') tidyUpAlarms();
+    });
+    const button = onAlarmButtonPressed(stopRinging);
+    return () => {
+      appState.remove();
+      button.remove();
+    };
   }, []);
 
   // Meta SDK 초기화와 iOS ATT 동의 요청 — 앱 첫 진입에 1회 (광고 설치 어트리뷰션)

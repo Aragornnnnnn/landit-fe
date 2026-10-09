@@ -146,6 +146,12 @@
       ],
       "expo-notifications",
       [
+        "./modules/alarm-scheduler/app.plugin.js",
+        {
+          "alarmKitUsageDescription": "고른 시각에 오늘의 시나리오를 잊지 않게 알람으로 알려드려요."
+        }
+      ],
+      [
         "react-native-android-widget",
         {
           "widgets": [
