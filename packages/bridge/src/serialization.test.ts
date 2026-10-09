@@ -732,7 +732,7 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
   });
 });
 
-describe('알람 목록 (GET_ALARM_LIST ↔ ALARM_LIST)', () => {
+describe('알람 목록 (GET_ALARM_LIST·CANCEL_ALARM ↔ ALARM_LIST)', () => {
   it('1회 알람은 요일 없이도 목록에 싣는다 — 반복 알람과 달리 빈 요일을 받는다', () => {
     const message: NativeToWebMessage = {
       type: 'ALARM_LIST',
@@ -761,5 +761,16 @@ describe('알람 목록 (GET_ALARM_LIST ↔ ALARM_LIST)', () => {
     expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
       message,
     );
+  });
+
+  it('알람 하나 지우기는 지울 알람 id를 실어야 받는다', () => {
+    const parse = (body: object) =>
+      parseWebToNativeMessage(
+        JSON.stringify({ type: 'CANCEL_ALARM', ...body }),
+      );
+
+    expect(parse({ id: 'a' })).toEqual({ type: 'CANCEL_ALARM', id: 'a' });
+    expect(parse({ id: '' })).toBeNull();
+    expect(parse({})).toBeNull();
   });
 });

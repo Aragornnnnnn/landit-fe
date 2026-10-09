@@ -259,6 +259,8 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('SKIP_ALARM_TODAY'), alarmType: alarmTypeSchema }),
   // 개발자 화면용 — 셸에 걸린 알람 전부를 묻는다. 응답은 ALARM_LIST
   z.object({ type: z.literal('GET_ALARM_LIST') }),
+  // 개발자 화면용 — 걸린 알람 하나를 id로 지운다(테스트·반복 모두). 응답은 ALARM_LIST
+  z.object({ type: z.literal('CANCEL_ALARM'), id: z.string().min(1) }),
   // 개발자 섹션용 — 지금부터 delaySeconds 뒤에 한 번 울린다. 실제 예약은 건드리지 않는다. 응답은 ALARM_STATUS
   z.object({
     type: z.literal('TEST_ALARM'),
