@@ -1,11 +1,11 @@
 'use client';
 
-// 알람 화면 — 등록 전이면 등록 흐름(결제 직후 온보딩과 같은 화면), 등록됐으면 시간 카드 하나. 카드를 누르면 알람 수정으로 간다.
+// 알람 화면 — 등록 전이면 등록 흐름(프리미엄 온보딩과 같은 화면), 등록됐으면 시간 카드 하나. 카드를 누르면 알람 수정으로 간다.
 // 권한이 꺼져 안 울리면 카드 위에 한 줄 배너를 띄운다
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { ALARM_COPY } from '@/features/alarm/model/alarm-copy';
+import { alarmCopy } from '@/features/alarm/model/alarm-copy';
 import {
   formatAlarmTime,
   parseAlarmTime,
@@ -35,6 +35,9 @@ export const AlarmScreen = () => {
   const [inSetup, setInSetup] = useState(false);
   // 설정을 못 읽었을 때는 등록 전으로 넘겨짚지 않는다 — 등록한 사람에게 등록 흐름을 보여 덮어쓰게 된다
   if (!isPending && !isError && !registered && !inSetup) setInSetup(true);
+
+  // 환급 참여 여부는 아직 받지 않는다 — 백엔드 보상 조회가 붙으면 여기와 등록 흐름의 refund를 채운다
+  const refund = false;
 
   const leave = () => backToMyPage(router);
 
@@ -66,6 +69,7 @@ export const AlarmScreen = () => {
         initialTime={parseAlarmTime(setting?.time ?? null)}
         onBack={leave}
         onDone={leave}
+        refund={refund}
       />
     );
   }
@@ -78,7 +82,7 @@ export const AlarmScreen = () => {
         <div className="px-2 pb-3">
           <h1 className="text-[28px] font-black text-foreground">알람</h1>
           <p className="mt-1.5 text-[15px] font-medium text-muted-foreground">
-            {ALARM_COPY.settingsDescription}
+            {alarmCopy(refund).settingsDescription}
           </p>
         </div>
 

@@ -8,7 +8,7 @@ import { BackHeader } from '@/shared/ui/BackHeader';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 
-import { ALARM_COPY } from '../model/alarm-copy';
+import { useAlarmCopy } from '../model/alarm-copy';
 import styles from './AlarmIntro.module.css';
 import {
   INTRO_PREVIEW_WIDTH,
@@ -26,6 +26,7 @@ export const AlarmIntro = ({
   onSkip?: () => void;
 }) => {
   const reduced = useReducedMotion();
+  const copy = useAlarmCopy();
   const { ratio, buttonTop } = useLockScreenPreview();
 
   return (
@@ -36,7 +37,7 @@ export const AlarmIntro = ({
         <div className="pt-[max(var(--safe-area-inset-top),16px)]" />
       )}
       <h1 className="px-6 pt-4 text-[25px] leading-tight font-black whitespace-pre-line text-foreground">
-        {ALARM_COPY.introTitle}
+        {copy.introTitle}
       </h1>
 
       <div className="flex min-h-0 flex-1 items-center justify-center py-3">
