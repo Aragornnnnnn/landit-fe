@@ -70,6 +70,7 @@ export const AlarmScreen = () => {
         onBack={leave}
         onDone={leave}
         refund={refund}
+        source="me"
       />
     );
   }

@@ -287,6 +287,15 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 
 온보딩의 알림 스텝은 시트 없이 바로 OS 권한창을 띄워 Consent 이벤트가 없고, 결과는 `Notification Permission Decided(source: onboarding)`로 남는다. 이미 거부한 상태에서 내 정보의 "OS 설정 열기"는 안 찍는다 — 결과를 알 수 없다.
 
+### 알람
+
+| 이벤트              | 속성                                 | 시점                                                     |
+| ------------------- | ------------------------------------ | -------------------------------------------------------- |
+| Alarm Registered    | source(me\|premium_onboarding), time | 다짐이 서버에 저장된 순간. time은 `HH:mm`                |
+| Alarm Setup Skipped | source                               | 소개 화면의 「다음에 할게요」 (프리미엄 온보딩에만 있다) |
+
+뒤로 가기로 흐름을 떠난 건 건너뜀으로 세지 않는다 — 등록률은 프리미엄 온보딩 페이지뷰 대비 `Alarm Registered(source: premium_onboarding)`로 본다.
+
 ### 위젯 설치 안내
 
 | 이벤트                           | 속성                         | 시점                                                                   |
