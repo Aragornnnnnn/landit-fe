@@ -16,10 +16,14 @@ import {
   type PaywallPlan,
 } from '@/features/subscription/model/product/plans';
 import { useOffering } from '@/features/subscription/model/product/useOffering';
-import { usePurchase } from '@/features/subscription/model/purchase/usePurchase';
+import {
+  usePurchase,
+  type UnlockReason,
+} from '@/features/subscription/model/purchase/usePurchase';
 import { BenefitComparison } from '@/features/subscription/ui/product/BenefitComparison';
 import { track } from '@/shared/analytics';
 import { homePath } from '@/shared/lib/last-tab';
+import { premiumOnboardingPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 
 import {
@@ -61,8 +65,13 @@ export const PaywallScreen = ({ returnTo }: PaywallScreenProps) => {
     goHome();
   };
 
-  // 유료가 되면 원래 가려던 곳으로 — 게이트가 붙인 ?from=. 캐시가 이미 유료라 다시 막히지 않는다
-  const unlock = () => router.replace(returnTo ?? homePath());
+  // 유료가 되면 원래 가려던 곳(게이트가 붙인 ?from=)으로 가되, 결제 직후면 프리미엄 온보딩을 거친다 — 캐시가 이미 유료라 다시 막히지 않는다
+  const unlock = (reason: UnlockReason) => {
+    const destination = returnTo ?? homePath();
+    router.replace(
+      reason === 'purchase' ? premiumOnboardingPath(destination) : destination,
+    );
+  };
   const { busy, purchase, restore } = usePurchase({
     packages,
     onUnlocked: unlock,

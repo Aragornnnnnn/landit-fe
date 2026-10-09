@@ -12,7 +12,10 @@ const mocks = vi.hoisted(() => ({
   busy: false,
   packages: {} as Record<string, unknown>,
   dismiss: vi.fn(),
-  purchaseOptions: null as { packages: unknown; onUnlocked: () => void } | null,
+  purchaseOptions: null as {
+    packages: unknown;
+    onUnlocked: (reason: 'purchase' | 'restore') => void;
+  } | null,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -25,7 +28,10 @@ vi.mock('@/features/subscription/model/exit-promo/usePaywallDismiss', () => ({
 }));
 // 결제 지휘는 features/subscription 몫 — 여기선 무엇을 넘기고 어떤 인자로 부르는지, 버튼 상태만 본다
 vi.mock('@/features/subscription/model/purchase/usePurchase', () => ({
-  usePurchase: (options: { packages: unknown; onUnlocked: () => void }) => {
+  usePurchase: (options: {
+    packages: unknown;
+    onUnlocked: (reason: 'purchase' | 'restore') => void;
+  }) => {
     mocks.purchaseOptions = options;
     return {
       busy: mocks.busy,
@@ -171,20 +177,40 @@ describe('PaywallScreen', () => {
     expect(mocks.restore).toHaveBeenCalledTimes(1);
   });
 
-  it('유료가 확인되면 게이트가 붙여 준 곳으로 돌아간다', () => {
+  it('결제로 유료가 되면 게이트가 붙여 준 곳을 들고 프리미엄 온보딩으로 간다', () => {
     render(<PaywallScreen returnTo="/conversation/scenario/7/expressions" />);
 
-    mocks.purchaseOptions?.onUnlocked();
+    mocks.purchaseOptions?.onUnlocked('purchase');
+
+    expect(mocks.replace).toHaveBeenCalledWith(
+      '/premium/onboarding?from=%2Fconversation%2Fscenario%2F7%2Fexpressions',
+    );
+  });
+
+  it('복원으로 유료가 되면 환영 없이 게이트가 붙여 준 곳으로 바로 돌아간다', () => {
+    render(<PaywallScreen returnTo="/conversation/scenario/7/expressions" />);
+
+    mocks.purchaseOptions?.onUnlocked('restore');
 
     expect(mocks.replace).toHaveBeenCalledWith(
       '/conversation/scenario/7/expressions',
     );
   });
 
-  it('돌아갈 곳이 없으면 유료가 돼도 홈으로 간다', () => {
+  it('돌아갈 곳이 없으면 결제 뒤 프리미엄 온보딩을 거쳐 홈으로 간다', () => {
     render(<PaywallScreen />);
 
-    mocks.purchaseOptions?.onUnlocked();
+    mocks.purchaseOptions?.onUnlocked('purchase');
+
+    expect(mocks.replace).toHaveBeenCalledWith(
+      '/premium/onboarding?from=%2Fscenario',
+    );
+  });
+
+  it('돌아갈 곳 없이 복원하면 홈으로 간다', () => {
+    render(<PaywallScreen />);
+
+    mocks.purchaseOptions?.onUnlocked('restore');
 
     expect(mocks.replace).toHaveBeenCalledWith('/scenario');
   });
