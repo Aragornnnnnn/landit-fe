@@ -109,8 +109,9 @@ const weekdaySchema = z.number().int().min(1).max(7);
 // 기기 현지 날짜 "YYYY-MM-DD"
 const localDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
-// 알람으로 앱이 열리면 갈 웹 화면 — 앱 안 경로만 받는다(/scenario 등). //로 시작하면 바깥 주소라 받지 않는다
-const alarmPathSchema = z.string().regex(/^\/(?!\/)/);
+// 알람으로 앱이 열리면 갈 웹 화면 — 앱 안 경로만 받는다(/scenario 등).
+// //나 /\로 시작하면 바깥 주소다(브라우저는 백슬래시를 슬래시로 읽는다)
+const alarmPathSchema = z.string().regex(/^\/(?![/\\])/);
 
 // 언제 울리는지 — 이 요일들의 이 시각. 매일 같은 시각이면 7요일짜리 하나, 요일마다 시각이 다르면 여러 개
 export const alarmScheduleSchema = alarmTimeSchema.extend({

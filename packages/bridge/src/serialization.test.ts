@@ -650,6 +650,7 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
     ['열 화면이 없음', { ...alarm, path: undefined }],
     ['열 화면이 바깥 주소', { ...alarm, path: 'https://example.com' }],
     ['열 화면이 //로 시작', { ...alarm, path: '//example.com' }],
+    ['열 화면이 /\\로 시작', { ...alarm, path: '/\\example.com' }],
     ['열 화면이 /로 시작하지 않음', { ...alarm, path: 'scenario' }],
   ])('%s인 알람 요청은 버린다', (_, bad) => {
     expect(parseSet({ alarmType: 'scenario', alarm: bad })).toBeNull();
@@ -726,6 +727,8 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
     });
     expect(parse('https://example.com')).toBeNull();
     expect(parse('//example.com')).toBeNull();
+    // 브라우저는 백슬래시를 슬래시로 읽어 //example.com이 된다
+    expect(parse('/\\example.com')).toBeNull();
   });
 });
 
