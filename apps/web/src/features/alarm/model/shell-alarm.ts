@@ -20,3 +20,7 @@ export const isAlarmShell = () => {
   const context = getNativeContext();
   return context !== null && context.bridgeVersion >= ALARM_BRIDGE_VERSION;
 };
+
+// 권한 체계가 플랫폼마다 달라 안내도 갈린다 — 셸 밖(브라우저)은 iOS로 본다
+export const alarmPlatform = (): 'ios' | 'android' =>
+  getNativeContext()?.platform === 'android' ? 'android' : 'ios';

@@ -6,7 +6,10 @@ import type { AlarmStatus } from '@landit/bridge';
 
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
 
-import { isAlarmShell } from './shell-alarm';
+import { alarmPlatform, isAlarmShell } from './shell-alarm';
+
+// 마지막으로 본 알림 권한 — 화면의 훅이 여럿이어도 바뀔 때 한 번만 다시 묻는다
+let lastNotification: string | null = null;
 
 export const useAlarmStatus = () => {
   const [status, setStatus] = useState<AlarmStatus | null>(null);
@@ -15,6 +18,16 @@ export const useAlarmStatus = () => {
     if (!isAlarmShell()) return;
 
     const unsubscribe = subscribeFromNative((message) => {
+      // Android는 알림이 꺼지면 알람을 못 건다 — 알림 권한이 실제로 바뀌었을 때만 알람 상태를 다시 묻는다.
+      // 알림 회신은 모든 구독자에게 가므로, 바뀐 걸 처음 본 훅 하나만 묻게 모듈에 기억해 둔다
+      if (message.type === 'NOTIFICATION_PERMISSION') {
+        if (alarmPlatform() !== 'android') return;
+        const changed =
+          lastNotification !== null && lastNotification !== message.status;
+        lastNotification = message.status;
+        if (changed) postToNative({ type: 'GET_ALARM_STATUS' });
+        return;
+      }
       if (message.type !== 'ALARM_STATUS') return;
       const { type: _, ...next } = message;
       setStatus(next);
