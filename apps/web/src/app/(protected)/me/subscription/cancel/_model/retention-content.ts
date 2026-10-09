@@ -1,6 +1,10 @@
 // 사유별 화면(②·③)의 문구와 카드 — 피그마 확정 플로우(정리 섹션 2373:329) 그대로.
 // 화면은 여기서 돌려준 모양만 그린다. 플랜·체험·이름·기록 같은 분기는 전부 여기서 끝낸다
-import type { CancelStayDestination, StudyMethod } from '@landit/analytics';
+import type {
+  CancelStayDestination,
+  StudyMethod,
+  SubscriptionPlan,
+} from '@landit/analytics';
 
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
 import { formatWon } from '@/features/subscription/lib/won';
@@ -13,7 +17,7 @@ import type { RetentionReason } from './cancel-flow';
 export interface RowCard {
   kind: 'row';
   label: string;
-  /** 라벨 아래 작은 보조 문구 — 연간의 "연 58,500원" */
+  /** 라벨 아래 작은 보조 문구 — 연간의 "연 58,500원", 6개월의 "6개월 59,900원" */
   sublabel?: string;
   value: string;
 }
@@ -63,11 +67,26 @@ interface RetentionContext {
 export const dailyWon = (price: number, days: number) =>
   Math.round(price / days / 10) * 10;
 
-const PLAN_DAYS = { monthly: 30, yearly: 365 } as const;
-const PLAN_TREAT = {
+const PLAN_DAYS: Record<SubscriptionPlan, number> = {
+  monthly: 30,
+  quarterly: 90,
+  halfyear: 180,
+  yearly: 365,
+};
+// 하루 요금을 빗댄 것 — 월간 500원·3개월 440원은 껌, 6개월 330원은 사탕 두 개, 연간 160원은 사탕 하나
+const PLAN_TREAT: Record<SubscriptionPlan, string> = {
   monthly: '껌 한 통 값',
+  quarterly: '껌 한 통 값',
+  halfyear: '사탕 두 개 값',
   yearly: '사탕 하나 값',
-} as const;
+};
+// 결제 금액 앞에 붙는 주기 — 월간은 하루 요금 행만으로 충분해 보조 문구를 달지 않는다
+const PLAN_PRICE_PREFIX: Record<SubscriptionPlan, string | null> = {
+  monthly: null,
+  quarterly: '3개월',
+  halfyear: '6개월',
+  yearly: '연',
+};
 
 const priceContent = (summary: PaidSubscriptionSummary): RetentionContent => {
   const { plan, price } = summary;
@@ -88,14 +107,16 @@ const priceContent = (summary: PaidSubscriptionSummary): RetentionContent => {
     emoji: '💸',
     title: '가격이 부담되셨군요',
     body: [
-      `${plan === 'monthly' ? '지금' : '연간'} 요금은 ${daily}이에요.`,
+      `${plan === 'monthly' ? '지금' : title} 요금은 ${daily}이에요.`,
       `매일 ${PLAN_TREAT[plan]}으로 영어 회화를 연습하고 있어요.`,
     ],
     cards: [
       {
         kind: 'row',
         label: `지금 · ${title}`,
-        sublabel: plan === 'yearly' ? `연 ${formatWon(price)}` : undefined,
+        sublabel: PLAN_PRICE_PREFIX[plan]
+          ? `${PLAN_PRICE_PREFIX[plan]} ${formatWon(price)}`
+          : undefined,
         value: daily,
       },
       ...(firstCharge ? [firstCharge] : []),

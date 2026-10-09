@@ -64,6 +64,34 @@ describe('retentionContent — 가격 부담', () => {
     });
   });
 
+  it('6개월이면 180일로 나눈 하루 요금과 6개월 요금 보조 문구가 붙는다', () => {
+    const content = retentionContent(
+      'price',
+      context(active({ plan: 'halfyear', price: 59_900 })),
+    );
+
+    expect(content.body[0]).toBe('6개월 요금은 하루 330원이에요.');
+    expect(content.cards[0]).toMatchObject({
+      label: '지금 · 6개월',
+      sublabel: '6개월 59,900원',
+      value: '하루 330원',
+    });
+  });
+
+  it('3개월이면 90일로 나눈 하루 요금과 3개월 요금 보조 문구가 붙는다', () => {
+    const content = retentionContent(
+      'price',
+      context(active({ plan: 'quarterly', price: 39_900 })),
+    );
+
+    expect(content.body[0]).toBe('3개월 요금은 하루 440원이에요.');
+    expect(content.cards[0]).toMatchObject({
+      label: '지금 · 3개월',
+      sublabel: '3개월 39,900원',
+      value: '하루 440원',
+    });
+  });
+
   it('적용되는 금액이 있으면 그 금액으로 하루 요금을 잰다', () => {
     const content = retentionContent(
       'price',

@@ -110,6 +110,15 @@ describe('planFromProductId', () => {
     ).toBe('monthly');
   });
 
+  it('환급 챌린지 상품(3·6개월)도 플랜으로 바꾼다', () => {
+    expect(planFromProductId('com.saynow.app.premium.quarterly')).toBe(
+      'quarterly',
+    );
+    expect(planFromProductId('com.saynow.app.premium.halfyear:halfyear')).toBe(
+      'halfyear',
+    );
+  });
+
   it('모르는 값이나 빈 값은 null이다', () => {
     expect(planFromProductId('com.saynow.app.premium.promo')).toBeNull();
     expect(planFromProductId(null)).toBeNull();
