@@ -8,6 +8,7 @@ import {
   type AlarmWeekday,
 } from '../../modules/alarm-scheduler';
 import {
+  alarmEntryOf,
   getAlarmStatus,
   restoreSkippedDay,
   setAlarm,
@@ -192,7 +193,7 @@ describe('setAlarm', () => {
     });
   });
 
-  it('눌렀을 때 갈 화면을 메모에 적는다', async () => {
+  it('눌렀을 때 갈 화면을 메모에 적고, Android는 버튼이 알람 링크로 앱을 열게 한다', async () => {
     await setAlarm('scenario', {
       ...everyDayAt(7),
       path: '/scenario?from=alarm',
@@ -200,7 +201,10 @@ describe('setAlarm', () => {
 
     expect(scheduled()).toMatchObject({
       ios: { metadata: { path: '/scenario?from=alarm' } },
-      android: { metadata: { path: '/scenario?from=alarm' } },
+      android: {
+        metadata: { path: '/scenario?from=alarm' },
+        launchUri: 'landit://alarm?alarmId={alarmId}',
+      },
     });
   });
 
@@ -462,5 +466,27 @@ describe('폰에 걸린 알람 읽기', () => {
     ]);
 
     expect((await getAlarmStatus()).repeatingAlarms[0].path).toBe('/');
+  });
+});
+
+describe('alarmEntryOf', () => {
+  it('버튼으로 연 알람의 종류와 갈 화면을 찾는다', async () => {
+    scheduler.getScheduledAlarmsAsync.mockResolvedValue([
+      scenario('d', { memo: { path: '/scenario?from=alarm' } }),
+    ]);
+
+    expect(await alarmEntryOf('d')).toEqual({
+      alarmType: 'scenario',
+      path: '/scenario?from=alarm',
+    });
+  });
+
+  it.each([
+    ['테스트 알람', [testAlarm('d')]],
+    ['이미 지워진 알람', []],
+  ])('%s이면 null이다 — 갈 화면이 없다', async (_, alarms) => {
+    scheduler.getScheduledAlarmsAsync.mockResolvedValue(alarms);
+
+    expect(await alarmEntryOf('d')).toBeNull();
   });
 });

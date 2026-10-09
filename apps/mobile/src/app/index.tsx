@@ -23,10 +23,7 @@ import {
   setAlarm,
   skipAlarmToday,
 } from '@/alarm/alarm';
-import {
-  onAlarmButtonPressed,
-  stopRingingIfOpenedByAlarm,
-} from '@/alarm/stop-ringing';
+import { useAlarmOpen } from '@/alarm/useAlarmOpen';
 import { initMetaSdk } from '@/analytics/meta';
 import { generateNonce } from '@/auth/nonce';
 import { requestSocialIdToken, toSocialLoginFailure } from '@/auth/socialLogin';
@@ -237,26 +234,20 @@ const ShellScreen = () => {
     return () => subscription.remove();
   }, []);
 
-  // 앱이 열리거나 돌아올 때 알람을 정리한다
-  // 알람 버튼으로 열렸으면 울림을 끄고, 어제 건너뛴 요일이 빠져 있으면 되돌린다
-  // 실패해도 울림이 조금 더 가거나 다음에 다시 되돌릴 뿐이라 warning으로 남긴다
+  // 알람으로 열렸으면 울림을 끄고, "대화하러 가기"로 열렸으면 그 알람이 갈 화면으로 보낸다.
+  // 앱이 떠 있을 땐 웹에 알리기만 한다 — 대화·표현학습 중이면 그대로 둘지는 지금 화면을 아는 웹이 정한다
+  const alarmEntry = useAlarmOpen((entry) =>
+    postToWeb({ type: 'ALARM_OPENED', ...entry }),
+  );
+
+  // 앱이 열리거나 돌아올 때 어제 건너뛴 요일이 빠져 있으면 되돌린다
+  // 실패해도 다음에 다시 되돌릴 뿐이라 warning으로 남긴다
   useEffect(() => {
-    const stopRinging = () => {
-      void stopRingingIfOpenedByAlarm().catch(reportWarning);
-    };
-    const tidyUpAlarms = () => {
-      stopRinging();
-      void restoreSkippedDay().catch(reportWarning);
-    };
-    tidyUpAlarms();
+    void restoreSkippedDay().catch(reportWarning);
     const appState = AppState.addEventListener('change', (state) => {
-      if (state === 'active') tidyUpAlarms();
+      if (state === 'active') void restoreSkippedDay().catch(reportWarning);
     });
-    const button = onAlarmButtonPressed(stopRinging);
-    return () => {
-      appState.remove();
-      button.remove();
-    };
+    return () => appState.remove();
   }, []);
 
   // Meta SDK 초기화와 iOS ATT 동의 요청 — 앱 첫 진입에 1회 (광고 설치 어트리뷰션)
@@ -327,8 +318,12 @@ const ShellScreen = () => {
     );
   }
 
-  // 콜드 스타트 조회(알림·위젯)가 끝나야 초기 URI가 정해진다 — 그때까지 마운트 보류 (수 ms, 스플래시가 가린다)
-  if (coldStart.status === 'loading' || widgetEntry.status === 'loading') {
+  // 콜드 스타트 조회(알림·위젯·알람)가 끝나야 초기 URI가 정해진다 — 그때까지 마운트 보류 (수 ms, 스플래시가 가린다)
+  if (
+    coldStart.status === 'loading' ||
+    widgetEntry.status === 'loading' ||
+    alarmEntry.status === 'loading'
+  ) {
     return null;
   }
 
@@ -336,9 +331,9 @@ const ShellScreen = () => {
     <WebView
       key={loadAttempt}
       ref={webviewRef}
-      // 진입점은 루트, 알림 콜드 스타트면 페이로드의 경로, 위젯 탭이면 위젯 진입 경로 — 로그인 여부는 웹의 인증 가드가 판단한다
+      // 진입점은 루트, 알림 콜드 스타트면 페이로드의 경로, 위젯 탭이면 위젯 진입 경로, 알람 버튼이면 그 알람이 갈 화면 — 로그인 여부는 웹의 인증 가드가 판단한다
       source={{
-        uri: `${WEB_URL}${coldStart.path ?? widgetEntry.path ?? '/'}`,
+        uri: `${WEB_URL}${coldStart.path ?? widgetEntry.path ?? alarmEntry.path ?? '/'}`,
       }}
       // 콘텐츠 로드 전 네이티브 컨텍스트(플랫폼·앱 버전)를 window에, Android면 시스템 바 inset을 CSS 변수에 주입한다
       injectedJavaScriptBeforeContentLoaded={beforeContentLoadedScript}

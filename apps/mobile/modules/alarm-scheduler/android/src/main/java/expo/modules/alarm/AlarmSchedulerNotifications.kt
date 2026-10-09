@@ -269,6 +269,8 @@ internal object AlarmSchedulerNotifications {
         "$template${separator}alarmId=${Uri.encode(alarmId)}"
       }
       intent.data = runCatching { Uri.parse(uri) }.getOrNull()
+      // landit: 링크를 실었으면 "링크 열기"로 보낸다 — 리액트 네이티브는 VIEW일 때만 링크를 JS에 넘긴다(MAIN이면 무시)
+      if (intent.data != null) intent.action = Intent.ACTION_VIEW
     }
     return intent
       .putExtra(AlarmSchedulerRingService.EXTRA_ALARM_ID, alarmId)

@@ -37,7 +37,7 @@ describe('stopRingingIfOpenedByAlarm', () => {
       pressed('secondaryOpen'),
     );
 
-    expect(await stopRingingIfOpenedByAlarm()).toBe(true);
+    expect(await stopRingingIfOpenedByAlarm()).toBe('d');
     expect(scheduler.resolveAlarmOccurrenceAsync).toHaveBeenCalledWith('o', {
       outcome: 'completed',
     });
@@ -56,13 +56,24 @@ describe('stopRingingIfOpenedByAlarm', () => {
     expect(scheduler.completeNativeAlarmAsync).toHaveBeenCalledWith('d');
   });
 
+  it('Android가 울리기 시작하며 남긴 기록이면 끄기만 하고 버튼으로 연 걸로 보지 않는다 — 아이콘으로 열었을 수도 있다', async () => {
+    Platform.OS = 'android';
+    scheduler.getPendingNativeAlarmHandoffAsync.mockResolvedValue({
+      ...pressed('secondaryOpen'),
+      trigger: true,
+    });
+
+    expect(await stopRingingIfOpenedByAlarm()).toBeNull();
+    expect(scheduler.completeNativeAlarmAsync).toHaveBeenCalledWith('d');
+  });
+
   it('"끄기"로 이미 멈춘 알람이면 기록만 지운다', async () => {
     Platform.OS = 'ios';
     scheduler.getPendingNativeAlarmHandoffAsync.mockResolvedValue(
       pressed('nativeStop'),
     );
 
-    await stopRingingIfOpenedByAlarm();
+    expect(await stopRingingIfOpenedByAlarm()).toBeNull();
 
     expect(scheduler.resolveAlarmOccurrenceAsync).not.toHaveBeenCalled();
     expect(scheduler.completeNativeAlarmAsync).not.toHaveBeenCalled();
@@ -72,7 +83,7 @@ describe('stopRingingIfOpenedByAlarm', () => {
   it('알람으로 들어온 게 아니면 아무것도 안 한다', async () => {
     scheduler.getPendingNativeAlarmHandoffAsync.mockResolvedValue(null);
 
-    expect(await stopRingingIfOpenedByAlarm()).toBe(false);
+    expect(await stopRingingIfOpenedByAlarm()).toBeNull();
     expect(scheduler.completeNativeAlarmAsync).not.toHaveBeenCalled();
   });
 

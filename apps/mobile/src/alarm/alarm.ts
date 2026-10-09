@@ -19,6 +19,7 @@ import {
   type AlarmWeekday,
   type ScheduledAlarm,
 } from '../../modules/alarm-scheduler';
+import { ALARM_LAUNCH_URI } from './alarm-link';
 
 /* 웹 쪽지를 처리하는 함수들. index.tsx가 부른다 */
 
@@ -59,6 +60,14 @@ export const requestAlarmPermission = () =>
 export const openAlarmSettings = async (target: AlarmSettingsTarget) => {
   if (target === 'exactAlarm') await AlarmScheduler.openAlarmSettingsAsync();
   else await AlarmScheduler.openFullScreenIntentSettingsAsync();
+};
+
+// "대화하러 가기"로 연 알람의 종류와 갈 화면 — 테스트 알람이거나 이미 지워졌으면 null
+export const alarmEntryOf = async (alarmId: string) => {
+  const alarms = await AlarmScheduler.getScheduledAlarmsAsync();
+  const alarm = alarms.find(({ id }) => id === alarmId);
+  const memo = alarm ? readMemo(alarm) : null;
+  return memo ? { alarmType: memo.alarmType, path: memo.path } : null;
 };
 
 /* 알람 걸기·지우기 */
@@ -336,6 +345,8 @@ export const androidRingOptions = (memo: Memo, silent: boolean) => ({
   enforceVolume: false,
   // 비우면 라이브러리가 영어 "Alarm"을 넣는다
   alertBody: '지금 바로 대화하러 가요',
+  // "대화하러 가기"가 이 링크로 앱을 연다 — 셸이 버튼으로 열린 걸 알아채고 갈 화면을 찾는다
+  launchUri: ALARM_LAUNCH_URI,
 });
 
 /* 날짜 계산 */

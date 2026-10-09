@@ -23,17 +23,19 @@ const stop = async (pressed: AlarmAction) => {
   });
 };
 
-// 알람 버튼으로 앱이 열렸으면 울림을 끈다
+// 알람으로 앱이 열렸으면 울림을 끈다. "대화하러 가기"로 열렸으면 그 알람 id를, 아니면 null을 돌려준다.
+// Android가 울리기 시작할 때 남긴 기록(trigger)은 버튼으로 연 건지 알 수 없어 null이다 — 버튼은 알람 링크로 따로 알린다
 export const stopRingingIfOpenedByAlarm = async () => {
   const pressed = await AlarmScheduler.getPendingNativeAlarmHandoffAsync();
-  if (!pressed) return false;
+  if (!pressed) return null;
   try {
     await stop(pressed);
   } finally {
     // 끄기가 실패해도 기록은 지운다 (남겨 두면 열 때마다 같은 오류가 난다)
     await AlarmScheduler.clearPendingNativeAlarmHandoffAsync();
   }
-  return true;
+  const openedByButton = pressed.action === 'secondaryOpen' && !pressed.trigger;
+  return openedByButton ? pressed.alarmId : null;
 };
 
 // 앱이 떠 있는 채로 "대화하러 가기"를 누르면 앱이 새로 열리지 않아서 버튼 이벤트로 받는다
