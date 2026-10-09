@@ -1,7 +1,7 @@
 'use client';
 
-// 마이페이지 상단 — 이름과 로그인 계정, 오른쪽에 학습 수준의 마법사 래디와 레벨 이름. 수준을 아직 모르면 기본 래디만 선다.
-import { useEffect } from 'react';
+// 마이페이지 상단 — 이름(눌러서 바꾸기)과 로그인 계정, 오른쪽에 학습 수준의 마법사 래디와 레벨 이름. 수준을 아직 모르면 기본 래디만 선다.
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 import {
@@ -15,7 +15,10 @@ import {
   preloadImages,
   type PreloadableImage,
 } from '@/shared/lib/preload-next-images';
+import { PencilIcon } from '@/shared/ui/Icons';
 import { AppleIcon, GoogleIcon, KakaoIcon } from '@/shared/ui/SocialIcons';
+
+import { NicknameSheet } from './NicknameSheet';
 
 const DEFAULT_IMAGE: PreloadableImage = {
   src: '/images/character/landy-normal.webp',
@@ -47,16 +50,26 @@ export const ProfileHeader = () => {
     preloadImages([...Object.values(LEVEL_IMAGES), DEFAULT_IMAGE]);
   }, []);
   const badge = member?.provider ? PROVIDER_BADGE[member.provider] : undefined;
+  const nickname = member?.nickname?.trim() ?? '';
+  const [nicknameSheetOpen, setNicknameSheetOpen] = useState(false);
 
   return (
     <div className="flex items-center justify-between px-1.5 pt-2 pb-1">
       <div className="min-w-0">
-        <p
-          className="text-[22px] leading-tight font-bold"
-          style={{ color: '#111' }}
+        <button
+          type="button"
+          onClick={() => setNicknameSheetOpen(true)}
+          className="-mx-1 flex max-w-full items-center gap-1.5 rounded-lg px-1 text-left transition-transform active:scale-[0.97]"
+          aria-label="닉네임 바꾸기"
         >
-          {member?.nickname?.trim() || '게스트'}
-        </p>
+          <span
+            className="truncate text-[22px] leading-tight font-bold"
+            style={{ color: '#111' }}
+          >
+            {nickname || '게스트'}
+          </span>
+          <PencilIcon size={16} className="shrink-0 text-muted-foreground" />
+        </button>
         {member?.email && (
           <p
             className="mt-2 flex items-center gap-2 text-[12.5px]"
@@ -98,6 +111,11 @@ export const ProfileHeader = () => {
           </p>
         )}
       </div>
+      <NicknameSheet
+        open={nicknameSheetOpen}
+        current={nickname}
+        onClose={() => setNicknameSheetOpen(false)}
+      />
     </div>
   );
 };
