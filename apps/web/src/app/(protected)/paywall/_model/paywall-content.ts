@@ -265,6 +265,9 @@ export const FULL_REFUND_PLAN: RefundPlanId = 'halfyear';
 /** 환급 챌린지 기간 문구 — 이 기간 동안 영어 공부를 이어 가면 결제 금액을 전액 돌려준다 */
 export const REFUND_CHALLENGE_PERIOD = `${REFUND_PLANS[FULL_REFUND_PLAN].months}개월`;
 
+/** 챌린지 날짜 계산의 한 달 — 하루 환급금 상한을 나누는 기준 */
+const DAYS_PER_MONTH = 30;
+
 export const isRefundPlan = (plan: SubscriptionPlan): plan is RefundPlanId =>
   plan in REFUND_PLANS;
 
@@ -275,6 +278,8 @@ export interface RefundPlan {
   refundRate: number;
   price: number;
   maxRefund: number;
+  /** 하루에 받을 수 있는 최대 환급금 — 그날 학습을 모두 하면 이만큼 쌓인다. 최대 환급액을 기간 일수로 나눈 반올림 값 */
+  dailyRefund: number;
 }
 
 /**
@@ -288,12 +293,14 @@ export const buildRefundPlans = (
   const build = (id: RefundPlanId): RefundPlan => {
     const { months, refundRate } = REFUND_PLANS[id];
     const price = prices[id] ?? REFUND_PLANS[id].price;
+    const maxRefund = Math.round((price * refundRate) / 100);
     return {
       id,
       months,
       refundRate,
       price,
-      maxRefund: Math.round((price * refundRate) / 100),
+      maxRefund,
+      dailyRefund: Math.round(maxRefund / (months * DAYS_PER_MONTH)),
     };
   };
   return { quarterly: build('quarterly'), halfyear: build('halfyear') };

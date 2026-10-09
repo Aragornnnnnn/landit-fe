@@ -2,7 +2,7 @@
 
 // 환급 무대의 본문(PaywallHero의 어두운 무대 안) — 「6개월 영어 공부하면 / 전액 환급」. 돈과 「전액 환급」 한 마디가 주인공이다.
 // 무대 위로 돈이 쏟아진다 — 가운데 큰 돈주머니가 통통 튀다 팡 터지며 돈이 사방으로 3D로 돌며 튀고, 뒤로는 지폐·돈주머니가 계속 떨어진다.
-// 세 줄 아래엔 「6개월 동안 꾸준히 하면」 평균 습득 표현·대화 시간 카드(숫자가 0부터 오른다), 그 아래 아이폰 알림처럼 입금 알림이 떨어지고 「전액 환급」 라벨과 받는 조건(매일 학습)이 붙는 카드가 있다.
+// 세 줄 아래엔 「6개월 동안 꾸준히 하면」 평균 습득 표현·대화 시간 카드(숫자가 0부터 오른다), 그 아래 「환급 챌린지」 카드 — 아이폰 알림처럼 입금 알림이 떨어지고 환급 라벨과 돌려받는 방법 세 걸음이 붙는다. 이 카드만 고른 플랜을 따라 바뀐다.
 // 히어로(data-inview가 처음부터 켜진 섹션) 안에 놓여 마운트하자마자 연출된다. 애니메이션이 안 돌아도 돈주머니·문구는 그대로 보인다
 import type { CSSProperties } from 'react';
 
@@ -12,11 +12,10 @@ import { Emoji } from '@/shared/ui/emoji';
 import { useCountUp } from '../_lib/useCountUp';
 import {
   AVERAGE_TALK_MINUTES,
-  FULL_REFUND_PLAN,
   LEARNABLE_EXPRESSION_COUNT,
   OUTCOME_AS_OF,
   REFUND_CHALLENGE_PERIOD,
-  REFUND_PLANS,
+  type RefundPlan,
 } from '../_model/paywall-content';
 import { Text3D } from './Text3D';
 import { Ticker } from './Ticker';
@@ -77,10 +76,38 @@ const Outcome = ({
   );
 };
 
-/** 입금 알림 카드 — 다크 잠금화면 위로 아이폰 리퀴드 글래스 알림이 툭 떨어지고 빨간 「전액 환급」 라벨이 붙는다. 아래엔 받는 조건 */
-const Deposit = () => (
+/** 환급률 문구 — 100%는 「전액」으로 말한다 */
+const refundLabel = ({ refundRate }: RefundPlan) =>
+  refundRate === 100 ? '전액 환급' : `${refundRate}% 환급`;
+
+/** 돌려받는 방법 세 걸음 — ① 매일 대화 하나는 필수 ② 하루 몫이 매일 쌓임 ③ 끝나면 돌려줌. 고른 플랜의 숫자로 말하고, 문장은 끝까지 맺어 조건이 애매하게 읽히지 않게 한다 */
+const challengeSteps = (plan: RefundPlan) => [
+  {
+    emoji: '💬',
+    title: '매일 시나리오나 스몰톡을 꼭 해야 해요',
+    // 실패하면 모은 돈이 전부 사라진다 — 결제 전에 알아야 할 가장 큰 조건이라 맨 위에 둔다
+    body: '하루라도 빠지면 실패하고, 모은 환급금도 사라져요',
+  },
+  {
+    emoji: '💰',
+    title: `하루 최대 ${formatWon(plan.dailyRefund)}씩 쌓여요`,
+    body: '그날 학습을 모두 하면 하루 몫을 다 받아요',
+  },
+  {
+    emoji: '🎉',
+    title: `${plan.months}개월 뒤 최대 ${formatWon(plan.maxRefund)}을 돌려받아요`,
+    body: `결제 금액의 ${plan.refundRate}%예요`,
+  },
+];
+
+/**
+ * 환급 챌린지 카드 — 맨 위 다크 잠금화면 위로 아이폰 리퀴드 글래스 알림이 툭 떨어지고 빨간 환급 라벨이 붙는다.
+ * 그 아래 한 줄 요약과 돌려받는 방법 세 걸음. 카드 안에 또 상자를 두지 않으려고 걸음은 테두리 없는 줄로 놓는다.
+ * 잘못 알고 결제했다는 말이 없게 결제 전에 말하고, 자세한 규칙은 결제 후 안내한다
+ */
+const ChallengeCard = ({ plan }: { plan: RefundPlan }) => (
   <div
-    className="animate-reveal-up relative mx-5 mt-3 rounded-3xl border border-[#ebe7e1] bg-card p-4 pb-5 shadow-[0_6px_20px_rgba(51,38,26,0.08)]"
+    className="animate-reveal-up relative mx-5 mt-6 rounded-3xl border border-[#ebe7e1] bg-card p-4 pb-2 shadow-[0_6px_20px_rgba(51,38,26,0.08)]"
     style={{ '--i': 5 } as CSSProperties}
   >
     {/* 잠금화면 배경 — 다크 모드. 무지개빛을 어둡게 눌러 유리 알림 뒤로 은은히 비친다 */}
@@ -101,7 +128,7 @@ const Deposit = () => (
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
             <p className="text-[19px] leading-tight font-bold tracking-[-0.02em] text-white">
-              입금 {formatWon(REFUND_PLANS[FULL_REFUND_PLAN].price)}
+              입금 {formatWon(plan.maxRefund)}
             </p>
             <span className="shrink-0 text-[13px] text-white/55">지금</span>
           </div>
@@ -111,20 +138,37 @@ const Deposit = () => (
         </div>
       </div>
       <span className="reveal-refund-label absolute top-2 right-3 rotate-6 rounded-full bg-[#f04438] px-3 py-1 text-sm font-black text-white shadow-[0_6px_14px_rgba(240,68,56,0.35)]">
-        전액 환급
+        {refundLabel(plan)}
       </span>
     </div>
-    {/* 받는 조건 — 매일 공부하면 결제 금액을 그대로 돌려받는다 */}
-    <p className="mt-4 text-center text-[15px] leading-[1.55] text-muted-foreground">
-      {REFUND_CHALLENGE_PERIOD} 동안{' '}
-      <b className="font-bold text-foreground">하루도 빠짐없이</b> 학습하면
-      <br />
-      결제한 금액을 그대로 돌려드려요
+    {/* 입금 그림이 무엇의 결과인지 바로 아래에서 한 줄로 말한다 */}
+    <p className="mt-4 text-center text-[16px] font-bold break-keep text-foreground">
+      영어 습관도 만들고, 결제한 금액도 돌려받으세요
     </p>
+    <ol className="mt-3 divide-y divide-[#f1ede8] text-left">
+      {challengeSteps(plan).map((step) => (
+        <li key={step.emoji} className="flex items-start gap-3 px-1 py-3.5">
+          <Emoji className="mt-0.5 size-6 shrink-0">{step.emoji}</Emoji>
+          <div className="min-w-0">
+            <p className="text-[15px] leading-snug font-bold break-keep text-foreground">
+              {step.title}
+            </p>
+            <p className="mt-1 text-[13px] leading-[1.45] break-keep text-muted-foreground">
+              {step.body}
+            </p>
+          </div>
+        </li>
+      ))}
+    </ol>
   </div>
 );
 
-export const RefundStage = () => (
+export const RefundStage = ({
+  plan,
+}: {
+  /** 고른 환급 플랜 — 환급 챌린지 카드의 입금 금액·세 걸음이 이 플랜으로 바뀐다. 위 제목·띠·성과는 6개월 기준 그대로다 */
+  plan: RefundPlan;
+}) => (
   <div className="relative [perspective:500px]">
     {/* 화면 전체로 쏟아지는 돈 — 글자 뒤로 지나간다 */}
     <div
@@ -226,6 +270,6 @@ export const RefundStage = () => (
       </p>
     </div>
 
-    <Deposit />
+    <ChallengeCard plan={plan} />
   </div>
 );

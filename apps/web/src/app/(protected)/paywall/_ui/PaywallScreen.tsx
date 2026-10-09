@@ -156,7 +156,14 @@ export const PaywallScreen = ({
           onRestore={startRestore}
           restoreDisabled={busy}
         />
-        <PaywallHero refundChallenge={refundChallenge} />
+        <PaywallHero
+          refundChallenge={refundChallenge}
+          refundPlan={
+            refundPlans[
+              isRefundPlan(selectedId) ? selectedId : FULL_REFUND_PLAN
+            ]
+          }
+        />
         <PremiumOnlySection />
         <DataSection />
         <ReviewSection />

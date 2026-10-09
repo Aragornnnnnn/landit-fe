@@ -60,6 +60,13 @@ describe('buildRefundPlans', () => {
     });
   });
 
+  it('하루에 받을 수 있는 최대 환급금은 최대 환급액을 기간(한 달 30일)으로 나눈 값이다', () => {
+    const { halfyear, quarterly } = buildRefundPlans();
+
+    expect(halfyear.dailyRefund).toBe(333);
+    expect(quarterly.dailyRefund).toBe(355);
+  });
+
   it('셸이 준 원화 가격이 있으면 결제 금액과 최대 환급액을 그 값으로 다시 계산한다', () => {
     const { halfyear, quarterly } = buildRefundPlans({
       halfyear: 49_900,

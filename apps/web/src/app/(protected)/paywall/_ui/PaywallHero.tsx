@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { PAYWALL_HERO } from '@/features/subscription/ui/paywall-hero-image';
 import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
 
+import type { RefundPlan } from '../_model/paywall-content';
 import { RefundStage } from './RefundStage';
 
 /** 무대 반짝이 — 위치·크기·깜빡이는 시점 */
@@ -32,9 +33,12 @@ const Badge = ({ dark }: { dark: boolean }) => (
 
 export const PaywallHero = ({
   refundChallenge,
+  refundPlan,
 }: {
   /** 환급 챌린지가 켜졌는가 — 켜지면 어두운 환급 무대, 꺼지면 밝은 머리 */
   refundChallenge: boolean;
+  /** 고른 환급 플랜 — 무대의 환급 챌린지 카드가 이 플랜으로 말한다 */
+  refundPlan: RefundPlan;
 }) => (
   // 위 여백 40px은 겹쳐 떠 있는 PaywallHeader의 줄 높이(h-10)다.
   // data-inview를 처음부터 켜 둬야 헤드라인 형광펜이 그어진다
@@ -72,7 +76,7 @@ export const PaywallHero = ({
 
         <Badge dark />
 
-        <RefundStage />
+        <RefundStage plan={refundPlan} />
       </div>
     ) : (
       <div className="bg-[linear-gradient(180deg,#fdf1e8,var(--color-background))] pt-[calc(max(var(--safe-area-inset-top),8px)+40px)]">

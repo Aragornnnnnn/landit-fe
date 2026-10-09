@@ -345,6 +345,19 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     });
   });
 
+  it('고른 플랜에 따라 맨 위 무대의 입금 금액·환급 문구가 바뀐다', () => {
+    render(<PaywallScreen refundChallenge />);
+
+    expect(screen.getByText('입금 59,900원')).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '3개월 80% 환급 플랜' }),
+    );
+
+    expect(screen.getByText('입금 31,920원')).toBeInTheDocument();
+    expect(screen.getByText(/하루 최대 355원/)).toBeInTheDocument();
+  });
+
   it('CTA를 누르면 고른 환급 플랜(3·6개월 상품)으로 결제를 요청한다', () => {
     render(<PaywallScreen refundChallenge />);
 
