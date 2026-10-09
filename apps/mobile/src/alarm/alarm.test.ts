@@ -193,7 +193,7 @@ describe('setAlarm', () => {
     });
   });
 
-  it('눌렀을 때 갈 화면을 메모에 적고, Android는 버튼이 알람 링크로 앱을 열게 한다', async () => {
+  it('눌렀을 때 갈 화면을 메모에 적고, Android는 버튼이 종류·갈 화면을 실은 링크로 앱을 열게 한다', async () => {
     await setAlarm('scenario', {
       ...everyDayAt(7),
       path: '/scenario?from=alarm',
@@ -203,7 +203,8 @@ describe('setAlarm', () => {
       ios: { metadata: { path: '/scenario?from=alarm' } },
       android: {
         metadata: { path: '/scenario?from=alarm' },
-        launchUri: 'landit://alarm?alarmId={alarmId}',
+        launchUri:
+          'landit://alarm?type=scenario&path=%2Fscenario%3Ffrom%3Dalarm',
       },
     });
   });

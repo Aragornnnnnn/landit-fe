@@ -1,12 +1,12 @@
-// 알람으로 앱이 열렸을 때 — 울림을 끄고, "대화하러 가기"로 열렸으면 그 알람이 갈 화면을 알려 준다 (알림·위젯 딥링크 훅과 같은 모양)
+// 앱이 열리거나 돌아올 때 알람 정리 — 울림 끄기, "대화하러 가기"로 열렸으면 갈 화면 알리기, 지난 건너뛰기 되돌리기
 import { useEffect, useRef, useState } from 'react';
 import { AppState, Linking } from 'react-native';
 import type { AlarmType } from '@landit/bridge';
 
 import { reportWarning } from '@/monitoring/report';
 
-import { alarmEntryOf } from './alarm';
-import { alarmIdFromLink } from './alarm-link';
+import { alarmEntryOf, restoreSkippedDay } from './alarm';
+import { alarmEntryFromLink } from './alarm-link';
 import {
   onAlarmButtonPressed,
   stopRingingIfOpenedByAlarm,
@@ -14,25 +14,33 @@ import {
 
 type AlarmEntry = { alarmType: AlarmType; path: string };
 
-// loading: 콜드 스타트 조회 전이라 WebView 마운트를 보류, ready: 첫 주소 확정 (null이면 알람 버튼으로 연 게 아니다)
-export type AlarmColdStart =
+// loading: 첫 주소를 정하는 중이라 WebView를 띄우지 않는다. ready: path가 null이면 알람 버튼으로 연 게 아니다
+export type AlarmEntryState =
   { status: 'loading' } | { status: 'ready'; path: string | null };
 
-// 앱을 연 URL은 프로세스가 사는 동안 같은 값을 계속 돌려준다 — 셸이 다시 마운트돼도 한 번만 쓴다
+// 울림 끄기 → (iOS 버튼이면) 갈 화면 찾기 → 지난 건너뛰기 되돌리기, 이 순서를 지킨다.
+// 되돌리기는 알람을 다시 걸어 id가 바뀌므로 id로 찾는 일을 먼저 끝낸다
+export const tidyUpOnOpen = async (): Promise<AlarmEntry | null> => {
+  try {
+    const pressedId = await stopRingingIfOpenedByAlarm();
+    return pressedId ? await alarmEntryOf(pressedId) : null;
+  } finally {
+    await restoreSkippedDay().catch(reportWarning);
+  }
+};
+
+// 앱을 연 링크는 앱이 꺼질 때까지 같은 값으로 남는다 — 화면이 다시 마운트돼도 한 번만 쓴다
 let coldStartConsumed = false;
 
-const entryOf = async (alarmId: string | null) =>
-  alarmId ? alarmEntryOf(alarmId) : null;
-
-// 콜드 스타트는 첫 주소로 연다(웹이 아직 없어 메시지를 못 받는다).
-// 앱이 떠 있을 땐 onWarmOpen으로 알리기만 한다 — 대화·표현학습 중이면 그대로 둘지는 지금 화면을 아는 웹이 정한다
+// 앱이 꺼져 있었으면 첫 주소를 갈 화면으로 연다 — 아직 웹이 없어 메시지를 못 받는다.
+// 앱이 떠 있었으면 onWarmOpen으로 알리기만 한다 — 학습 중이면 그대로 둘지는 웹이 정한다
 export const useAlarmOpen = (
   onWarmOpen: (entry: AlarmEntry) => void,
-): AlarmColdStart => {
-  const [coldStart, setColdStart] = useState<AlarmColdStart>(() =>
+): AlarmEntryState => {
+  const [entryState, setEntryState] = useState<AlarmEntryState>(() =>
     coldStartConsumed ? { status: 'ready', path: null } : { status: 'loading' },
   );
-  // 콜백은 렌더마다 새로 만들어져도 구독은 유지한 채 최신 것을 부른다
+  // 콜백이 렌더마다 바뀌어도 구독은 그대로 두고 최신 콜백을 부른다
   const onWarmOpenRef = useRef(onWarmOpen);
 
   useEffect(() => {
@@ -42,50 +50,48 @@ export const useAlarmOpen = (
   useEffect(() => {
     let cancelled = false;
 
-    // 울림을 끄고, iOS 버튼으로 열렸으면 그 알람 id를 돌려준다.
-    // 앱 복귀와 iOS 버튼 이벤트가 겹쳐 오면 같은 기록을 두 번 읽어 두 번 알리니 차례로 처리한다
+    // 앱 복귀와 버튼 이벤트가 겹쳐 오면 같은 기록을 두 번 읽으니 차례로 처리한다
     let queue: Promise<unknown> = Promise.resolve();
-    const stopRinging = () => {
-      const run = queue.then(stopRingingIfOpenedByAlarm);
+    const tidyUp = () => {
+      const run = queue.then(tidyUpOnOpen);
       queue = run.catch(() => undefined);
       return run;
     };
-    const openWarm = (alarmId: Promise<string | null> | string | null) =>
-      void Promise.resolve(alarmId)
-        .then(entryOf)
-        .then((entry) => {
-          if (entry && !cancelled) onWarmOpenRef.current(entry);
-        })
-        .catch(reportWarning);
+    const openWarm = (entry: AlarmEntry | null) => {
+      if (entry && !cancelled) onWarmOpenRef.current(entry);
+    };
 
-    // 콜드 스타트 — iOS는 버튼 기록으로, Android는 앱을 연 알람 링크로 어느 알람인지 안다
+    // 앱이 꺼져 있었을 때 — Android는 링크에 갈 화면이 있고, iOS는 버튼 기록으로 찾는다
     if (!coldStartConsumed) {
-      Promise.all([stopRinging(), Linking.getInitialURL()])
-        .then(([pressedId, url]) => entryOf(pressedId ?? alarmIdFromLink(url)))
-        .then((entry) => {
-          // 다시 마운트되며 버려진 조회면 표시하지 않는다 — 새 조회가 다시 확인한다
+      Promise.all([tidyUp(), Linking.getInitialURL()])
+        .then(([pressed, url]) => {
+          // 다시 마운트돼 버려진 조회면 무시한다 — 새 조회가 다시 한다
           if (cancelled) return;
           coldStartConsumed = true;
-          setColdStart({ status: 'ready', path: entry?.path ?? null });
+          const entry = alarmEntryFromLink(url) ?? pressed;
+          setEntryState({ status: 'ready', path: entry?.path ?? null });
         })
-        // 조회가 실패해도 "알람 진입 아님"으로 열어준다 — ready가 안 오면 WebView가 영영 마운트되지 않는다
+        // 실패해도 첫 화면으로 연다 — ready가 안 오면 WebView가 영영 안 뜬다
         .catch((error) => {
           reportWarning(error);
-          if (!cancelled) setColdStart({ status: 'ready', path: null });
+          if (!cancelled) setEntryState({ status: 'ready', path: null });
         });
     }
 
-    // 웜 — 앱으로 돌아왔거나 iOS 버튼 이벤트가 왔다
+    // 앱이 떠 있었을 때 — 앱으로 돌아왔거나 iOS 버튼 이벤트가 왔다
+    const warm = () => {
+      tidyUp().then(openWarm).catch(reportWarning);
+    };
     const appState = AppState.addEventListener('change', (state) => {
-      if (state === 'active') openWarm(stopRinging());
+      if (state === 'active') warm();
     });
-    const button = onAlarmButtonPressed(() => openWarm(stopRinging()));
-    // 웜 — Android 버튼은 알람 링크로 연다. 앱이 맨 앞이어도 링크는 도착한다
+    const button = onAlarmButtonPressed(warm);
+    // 앱이 떠 있었을 때 — Android 버튼은 링크로 연다. 맨 앞이어도 링크가 오고, 갈 화면은 링크에 있다
     const link = Linking.addEventListener('url', ({ url }) => {
-      const alarmId = alarmIdFromLink(url);
-      if (!alarmId) return;
-      void stopRinging().catch(reportWarning);
-      openWarm(alarmId);
+      const entry = alarmEntryFromLink(url);
+      if (!entry) return;
+      tidyUp().catch(reportWarning);
+      openWarm(entry);
     });
 
     return () => {
@@ -96,5 +102,5 @@ export const useAlarmOpen = (
     };
   }, []);
 
-  return coldStart;
+  return entryState;
 };

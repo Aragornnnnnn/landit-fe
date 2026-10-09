@@ -92,7 +92,7 @@ internal object AlarmSchedulerNotifications {
       // landit: 브랜드 주황
       .setColor(Color.rgb(0xE0, 0x7A, 0x3A))
 
-    // landit: 랜딧이 맨 앞이면 전체 화면 표시를 붙이지 않는다 — 붙이면 시스템이 위쪽 카드를 띄우지 않는다(실험 중)
+    // landit: 랜딧이 맨 앞이면 전체 화면 표시를 붙이지 않는다 — 붙이면 시스템이 위쪽 카드를 띄우지 않는다
     if (options.fullScreen && !isLanditInFront(context)) {
       builder.setFullScreenIntent(contentIntent, true)
     }

@@ -19,7 +19,6 @@ import {
   getAlarmStatus,
   openAlarmSettings,
   requestAlarmPermission,
-  restoreSkippedDay,
   setAlarm,
   skipAlarmToday,
 } from '@/alarm/alarm';
@@ -112,7 +111,7 @@ const ShellScreen = () => {
   const replyAlarmStatus = async () =>
     postToWeb({ type: 'ALARM_STATUS', ...(await getAlarmStatus()) });
 
-  // 알람 쪽지는 처리가 실패해도 늘 지금 실제 상태로 답한다
+  // 알람 요청은 처리가 실패해도 지금 실제 상태로 답한다
   const replyAlarmStatusAfter = async (task: () => Promise<unknown>) => {
     try {
       await task();
@@ -249,21 +248,11 @@ const ShellScreen = () => {
     return () => subscription.remove();
   }, []);
 
-  // 알람으로 열렸으면 울림을 끄고, "대화하러 가기"로 열렸으면 그 알람이 갈 화면으로 보낸다.
-  // 앱이 떠 있을 땐 웹에 알리기만 한다 — 대화·표현학습 중이면 그대로 둘지는 지금 화면을 아는 웹이 정한다
+  // 앱이 열리거나 돌아올 때 알람 정리 — 울림 끄기, 갈 화면으로 보내기, 지난 건너뛰기 되돌리기.
+  // 앱이 떠 있었으면 웹에 알리기만 한다 — 학습 중이면 그대로 둘지는 웹이 정한다
   const alarmEntry = useAlarmOpen((entry) =>
     postToWeb({ type: 'ALARM_OPENED', ...entry }),
   );
-
-  // 앱이 열리거나 돌아올 때 어제 건너뛴 요일이 빠져 있으면 되돌린다
-  // 실패해도 다음에 다시 되돌릴 뿐이라 warning으로 남긴다
-  useEffect(() => {
-    void restoreSkippedDay().catch(reportWarning);
-    const appState = AppState.addEventListener('change', (state) => {
-      if (state === 'active') void restoreSkippedDay().catch(reportWarning);
-    });
-    return () => appState.remove();
-  }, []);
 
   // Meta SDK 초기화와 iOS ATT 동의 요청 — 앱 첫 진입에 1회 (광고 설치 어트리뷰션)
   useEffect(() => {

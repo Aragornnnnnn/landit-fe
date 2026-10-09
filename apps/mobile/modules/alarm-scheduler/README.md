@@ -27,6 +27,13 @@
 - `android/.../AlarmSchedulerRingActivity.kt`: 전체 화면을 랜딧 디자인으로 다시 그렸다. 잠금 위에 띄우기만 하고, 잠금 해제는 "대화하러 가기"를 눌렀을 때만 요청한 뒤 화면이 직접 앱을 연다.
 - `package.json`: 이름을 `@landit/alarm-scheduler`로 바꾸고 배포용 설정을 지웠다. 입구는 `index.ts`다.
 
+## 여러 곳에 같은 값이 있는 곳
+
+원본과의 차이를 줄이려고 한곳에 모으지 않았다. 바꿀 때는 아래를 같이 바꾼다.
+
+- 브랜드 주황 `#E07A3A`: `AlarmSchedulerNotifications.kt`(알림 색), `AlarmSchedulerRingActivity.kt`(배경 빛·버튼 2곳), `res/drawable/landit_alarm_button_primary.xml`, iOS `+Scheduling.swift`·`+Occurrences.swift`의 `tintColor`
+- 램프 그림 이름 `landit_alarm_lamp`: `apps/mobile/plugins/withAlarmLampDrawable.js`(넣는 곳), `AlarmSchedulerNotifications.kt`·`AlarmSchedulerRingActivity.kt`(찾는 곳)
+
 ## 원본을 다시 가져올 때
 
 원본 새 버전의 변경을 읽고 필요한 부분만 옮긴다. 통째로 덮어쓰면 위의 수정이 사라진다.
