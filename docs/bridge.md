@@ -51,11 +51,11 @@ landit 앱은 네이티브 UI 없이 웹(Next.js)을 WebView로 감싸는 셸이
 | `GET_ALARM_STATUS`                | 웹→앱 | 없음                                            | 알람 권한·걸린 매일 알람 조회 (다이얼로그 없음). 응답은 `ALARM_STATUS`                                                                | `index.tsx`의 핸들러     |
 | `REQUEST_ALARM_PERMISSION`        | 웹→앱 | 없음                                            | 알람 권한 요청 — iOS는 AlarmKit 권한창, Android는 정확한 알람 설정 화면. 응답은 `ALARM_STATUS`                                        | `index.tsx`의 핸들러     |
 | `OPEN_ALARM_SETTINGS`             | 웹→앱 | `target`                                        | Android 설정 화면(정확한 알람·전체 화면 알림)을 연다. 단방향 — 돌아오면 웹이 다시 묻는다                                              | `index.tsx`의 핸들러     |
-| `SET_ALARM`                       | 웹→앱 | `alarmType`, `alarm` (null이면 끄기)            | 그 종류의 반복 알람만 지우고 다시 건다. 요일별 시각은 `schedules`. 응답은 `ALARM_STATUS`                                              | `index.tsx`의 핸들러     |
+| `SET_ALARM`                       | 웹→앱 | `alarmType`, `alarm` (null이면 끄기)            | 그 종류의 반복 알람만 지우고 다시 건다. 눌렀을 때 갈 화면은 `path`. 응답은 `ALARM_STATUS`                                             | `index.tsx`의 핸들러     |
 | `SKIP_ALARM_TODAY`                | 웹→앱 | `alarmType`                                     | 그 종류의 반복 알람을 오늘만 울리지 않게 한다(내일부터 그대로). 응답은 `ALARM_STATUS`                                                 | `index.tsx`의 핸들러     |
 | `TEST_ALARM`                      | 웹→앱 | `delaySeconds`, `title`, `silent?`              | 개발자 화면용 1회 알람(5초~10분 뒤). 반복 알람은 건드리지 않는다. 응답은 `ALARM_STATUS`                                               | `index.tsx`의 핸들러     |
 | `GET_ALARM_LIST`                  | 웹→앱 | 없음                                            | 개발자 화면용 — 셸에 걸린 알람 전부 조회. 응답은 `ALARM_LIST`                                                                         | `index.tsx`의 핸들러     |
-| `ALARM_STATUS`                    | 앱→웹 | 권한 5칸, `repeatingAlarms`                     | 알람 요청들의 공통 응답 — 권한과 종류별 반복 알람(스케줄·건너뛴 날)                                                                   | 알람 기능 (LAN-461)      |
+| `ALARM_STATUS`                    | 앱→웹 | 권한 5칸, `repeatingAlarms`                     | 알람 요청들의 공통 응답 — 권한과 종류별 반복 알람(스케줄·화면·건너뛴 날)                                                              | 알람 기능 (LAN-461)      |
 | `ALARM_LIST`                      | 앱→웹 | `alarms`                                        | `GET_ALARM_LIST` 응답 — 종류(테스트는 null)·시각·요일·다음 울림·건너뛴 날                                                             | 알람 점검 (LAN-461)      |
 
 STT·TTS·인증 등 기능 메시지는 각 기능 이슈에서 추가한다.

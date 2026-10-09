@@ -109,6 +109,9 @@ const weekdaySchema = z.number().int().min(1).max(7);
 // 기기 현지 날짜 "YYYY-MM-DD"
 const localDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
+// 알람으로 앱이 열리면 갈 웹 화면 — 앱 안 경로만 받는다(/scenario 등). //로 시작하면 바깥 주소라 받지 않는다
+const alarmPathSchema = z.string().regex(/^\/(?!\/)/);
+
 // 언제 울리는지 — 이 요일들의 이 시각. 매일 같은 시각이면 7요일짜리 하나, 요일마다 시각이 다르면 여러 개
 export const alarmScheduleSchema = alarmTimeSchema.extend({
   weekdays: z.array(weekdaySchema).min(1),
@@ -123,10 +126,11 @@ const alarmSchedulesSchema = z
     return new Set(days).size === days.length;
   }, '요일이 겹친다');
 
-// SET_ALARM이 싣는 반복 알람 — 언제 울릴지(schedules)와 잠금화면 제목
+// SET_ALARM이 싣는 반복 알람 — 언제 울릴지(schedules), 잠금화면 제목, 눌렀을 때 갈 화면(path)
 export const repeatingAlarmSchema = z.object({
   title: z.string().min(1),
   schedules: alarmSchedulesSchema,
+  path: alarmPathSchema,
   // 오늘 회차는 빼고 건다 — 걸고 나서 건너뛰면 그 사이 틈이 생긴다
   skipToday: z.boolean().optional(),
   // 소리 없이 화면으로만 울린다 — 소리를 원치 않는 사람을 위한 설정 자리(아직 화면에 안 드러냄)
@@ -137,6 +141,8 @@ export const repeatingAlarmSchema = z.object({
 export const repeatingAlarmStateSchema = z.object({
   alarmType: alarmTypeSchema,
   schedules: z.array(alarmScheduleSchema),
+  // 이 알람에 저장된 갈 화면 — 웹이 바꾼 경로와 다르면 다시 건다
+  path: alarmPathSchema,
   // 오늘 회차를 건너뛴 날 — 건너뛴 적 없거나 날이 지나 되돌렸으면 null
   skipDate: localDateSchema.nullable(),
 });

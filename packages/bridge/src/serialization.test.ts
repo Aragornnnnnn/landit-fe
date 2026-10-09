@@ -570,6 +570,7 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
   const alarm = {
     title: '오늘의 시나리오 할 시간!',
     schedules: [{ hour: 19, minute: 0, weekdays: EVERY_DAY }],
+    path: '/scenario',
   };
   const status: Extract<NativeToWebMessage, { type: 'ALARM_STATUS' }> = {
     type: 'ALARM_STATUS',
@@ -646,6 +647,10 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
       },
     ],
     ['제목이 빈 문자열', { ...alarm, title: '' }],
+    ['열 화면이 없음', { ...alarm, path: undefined }],
+    ['열 화면이 바깥 주소', { ...alarm, path: 'https://example.com' }],
+    ['열 화면이 //로 시작', { ...alarm, path: '//example.com' }],
+    ['열 화면이 /로 시작하지 않음', { ...alarm, path: 'scenario' }],
   ])('%s인 알람 요청은 버린다', (_, bad) => {
     expect(parseSet({ alarmType: 'scenario', alarm: bad })).toBeNull();
   });
@@ -696,6 +701,7 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
             {
               alarmType: 'scenario',
               schedules: [{ hour: 7, minute: 30, weekdays: EVERY_DAY }],
+              path: '/scenario',
               skipDate,
             },
           ],
