@@ -14,7 +14,10 @@ import { CloseIcon } from '@/shared/ui/Icons';
 import type { PaywallPromo } from '../../api/subscription';
 import { formatWon } from '../../lib/won';
 import type { PromoSheetValues } from '../../model/exit-promo/promo-sheet';
-import { usePurchase } from '../../model/purchase/usePurchase';
+import {
+  usePurchase,
+  type UnlockReason,
+} from '../../model/purchase/usePurchase';
 import { GOLD_GRADIENT, PremiumPill } from '../premium-brand';
 import { PromoClock } from './PromoClock';
 import { PromoGlow } from './PromoGlow';
@@ -28,7 +31,7 @@ interface PromoSheetContentProps {
   sheet: PromoSheetValues;
   onClose: () => void;
   /** 유료가 되면 — 보통 시트를 닫고 원래 가려던 곳으로 보낸다 */
-  onUnlocked: () => void;
+  onUnlocked: (reason: UnlockReason) => void;
 }
 
 /**
