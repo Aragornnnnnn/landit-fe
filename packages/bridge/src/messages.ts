@@ -94,7 +94,8 @@ export const pickedPhotoSchema = z.object({
 // 한 번에 고를 수 있는 사진 수 상한 — 피드백 첨부 서버 제한(3장)과 같다
 export const MAX_PICK_PHOTOS = 3;
 
-// 반복 알람의 종류 — 종류마다 알람은 하나다. 새 알람(스몰톡·표현 학습 등)이 생기면 여기에 값을 더한다(메시지 모양은 그대로)
+// 반복 알람의 종류 — 종류마다 알람은 하나다.
+// 새 종류를 더하면 옛 앱은 모르는 값이라 요청을 버린다 — 브릿지 버전을 올리고, 웹은 그 버전 이상에만 보낸다
 export const alarmTypeSchema = z.enum(['scenario']);
 
 // 알람 시각 — 기기 현지 시각
