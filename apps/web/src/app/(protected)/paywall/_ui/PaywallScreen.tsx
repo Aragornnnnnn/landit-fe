@@ -13,7 +13,6 @@ import { toKrwPrices } from '@/features/subscription/model/product/offering';
 import {
   buildPaywallPlans,
   DEFAULT_PLAN_ID,
-  type PaywallPlan,
 } from '@/features/subscription/model/product/plans';
 import { useOffering } from '@/features/subscription/model/product/useOffering';
 import { usePurchase } from '@/features/subscription/model/purchase/usePurchase';
@@ -24,11 +23,17 @@ import { CloseIcon } from '@/shared/ui/Icons';
 
 import { needsScrollToPlans } from '../_lib/plans-below-fold';
 import {
+  buildRefundPlans,
+  FULL_REFUND_PLAN,
+  isRefundPlan,
+} from '../_model/paywall-content';
+import {
   getBillingNotice,
   getCancelNotice,
   getCtaLabel,
   getRefundBillingNotice,
   getRefundCtaLabel,
+  getRefundNotice,
 } from '../_model/paywall-copy';
 import { CompareSection } from './CompareSection';
 import { DataSection } from './DataSection';
@@ -50,8 +55,10 @@ export const PaywallScreen = ({
   refundChallenge = REFUND_CHALLENGE_ENABLED,
 }: PaywallScreenProps) => {
   const router = useRouter();
-  const [selectedId, setSelectedId] =
-    useState<SubscriptionPlan>(DEFAULT_PLAN_ID);
+  // 스위치에 따라 처음 고른 플랜이 다르다 — 켜지면 6개월(전액 환급), 꺼지면 연간
+  const [selectedId, setSelectedId] = useState<SubscriptionPlan>(
+    refundChallenge ? FULL_REFUND_PLAN : DEFAULT_PLAN_ID,
+  );
   // 맨 위 줄이 스크롤로 올라가면 닫기만 따로 띄운다
   const [scrolled, setScrolled] = useState(false);
   const plansRef = useRef<HTMLDivElement>(null);
@@ -62,8 +69,25 @@ export const PaywallScreen = ({
   const packages = offering.regular;
   // 서버에 알리는 동안 닫기를 잠근다 — 연타하면 요청이 쌓이고 화면은 그대로다
   const [closing, setClosing] = useState(false);
-  const plans = buildPaywallPlans(toKrwPrices(packages));
-  const selectedPlan = plans[selectedId];
+  const prices = toKrwPrices(packages);
+  const plans = buildPaywallPlans(prices);
+  const refundPlans = buildRefundPlans(prices);
+  // CTA와 그 밑 안내 두 줄 — 지금 플랜은 결제·해지 안내, 환급 플랜은 결제 안내와 최대 환급액
+  const footer = isRefundPlan(selectedId)
+    ? {
+        label: getRefundCtaLabel(refundPlans[selectedId]),
+        notices: [
+          getRefundBillingNotice(refundPlans[selectedId]),
+          getRefundNotice(refundPlans[selectedId]),
+        ],
+      }
+    : {
+        label: getCtaLabel(plans[selectedId]),
+        notices: [
+          getBillingNotice(plans[selectedId]),
+          getCancelNotice(plans[selectedId]),
+        ],
+      };
 
   const goHome = () => router.replace(homePath());
   const dismiss = usePaywallDismiss(offering);
@@ -84,10 +108,10 @@ export const PaywallScreen = ({
     onUnlocked: unlock,
   });
 
-  const selectPlan = (plan: PaywallPlan) => {
-    if (plan.id === selectedId) return;
-    setSelectedId(plan.id);
-    track(EVENTS.PAYWALL_PLAN_SELECTED, { plan: plan.id });
+  const selectPlan = (id: SubscriptionPlan) => {
+    if (id === selectedId) return;
+    setSelectedId(id);
+    track(EVENTS.PAYWALL_PLAN_SELECTED, { plan: id });
   };
 
   const startPurchase = () => {
@@ -140,6 +164,7 @@ export const PaywallScreen = ({
         <div ref={plansRef} data-plan-section>
           <PlanSection
             plans={plans}
+            refundPlans={refundPlans}
             selectedId={selectedId}
             onSelect={selectPlan}
             refundChallenge={refundChallenge}
@@ -165,20 +190,16 @@ export const PaywallScreen = ({
           결제 안내는 버튼 바로 밑에 둔다 — 청구액·갱신·해지는 스토어 심사(3.1.2)가 결제 버튼 곁에서 확인한다 */}
       <footer className="absolute inset-x-0 bottom-0 z-20 bg-[linear-gradient(to_bottom,transparent,var(--color-background)_28px)] px-5 pt-9 pb-[max(var(--safe-area-inset-bottom),12px)]">
         <Button onClick={startPurchase} loading={busy}>
-          {refundChallenge
-            ? getRefundCtaLabel(selectedPlan)
-            : getCtaLabel(selectedPlan)}
+          {footer.label}
         </Button>
-        <p className="mt-3 text-center text-[11px] leading-[1.35] text-muted-foreground">
-          {refundChallenge
-            ? getRefundBillingNotice(selectedPlan)
-            : getBillingNotice(selectedPlan)}
-        </p>
-        {!refundChallenge && (
-          <p className="mt-1 text-center text-[11px] leading-[1.35] text-muted-foreground">
-            {getCancelNotice(selectedPlan)}
+        {footer.notices.map((notice, index) => (
+          <p
+            key={notice}
+            className={`${index === 0 ? 'mt-3' : 'mt-1'} text-center text-[11px] leading-[1.35] text-muted-foreground`}
+          >
+            {notice}
           </p>
-        )}
+        ))}
       </footer>
     </main>
   );

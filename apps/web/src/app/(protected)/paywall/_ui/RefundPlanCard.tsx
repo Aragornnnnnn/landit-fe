@@ -1,15 +1,14 @@
 // 환급 플랜 카드 한 장(가로로 긴 줄) — 왼쪽은 사는 것(프리미엄 기간·결제 금액, 진한 글자), 오른쪽은 돌려받는 것(「최대 환급액」 라벨과 + 를 붙인 금액).
 // 고른 카드는 주황 테두리로 켜지고, 연한 주황 아래 줄이 챌린지에 성공하면 내는 「실제 부담」을 말한다. 색·글자는 디자인 시스템 토큰만 쓴다
 import { formatWon } from '@/features/subscription/lib/won';
-import type { PaywallPlan } from '@/features/subscription/model/product/plans';
 import { GOLD_GRADIENT } from '@/features/subscription/ui/premium-brand';
 
-import { getMaxRefund, REFUND_PLANS } from '../_model/paywall-content';
+import type { RefundPlan, RefundPlanId } from '../_model/paywall-content';
 
 interface RefundPlanCardProps {
-  plan: PaywallPlan;
+  plan: RefundPlan;
   selected: boolean;
-  onSelect: (plan: PaywallPlan) => void;
+  onSelect: (id: RefundPlanId) => void;
   /** 돋보이게 할 카드 — 금색 「전액 환급」 알약을 걸고 최대 환급액 위로 빛이 쓸고 지나간다. 전액 환급(6개월) 카드에만 켠다 */
   featured?: boolean;
 }
@@ -20,8 +19,7 @@ export const RefundPlanCard = ({
   onSelect,
   featured = false,
 }: RefundPlanCardProps) => {
-  const { months, refundRate, price } = REFUND_PLANS[plan.id];
-  const maxRefund = getMaxRefund(plan.id);
+  const { months, refundRate, price, maxRefund } = plan;
   const netCost = price - maxRefund;
 
   return (
@@ -39,7 +37,7 @@ export const RefundPlanCard = ({
         type="button"
         aria-label={`${months}개월 ${refundRate}% 환급 플랜`}
         aria-pressed={selected}
-        onClick={() => onSelect(plan)}
+        onClick={() => onSelect(plan.id)}
         className={`relative w-full overflow-hidden rounded-2xl border-2 text-left transition-colors ${
           selected
             ? 'border-primary bg-card shadow-[0_6px_18px_rgba(0,0,0,0.08)]'

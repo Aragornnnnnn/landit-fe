@@ -232,8 +232,8 @@ export type HomeReturnReason = 'just' | 'flip' | 'card';
 // 시나리오 피드백을 어디서 열었는지 — 대화 직후 흐름과 시나리오 기록에서 다시 연 것을 가른다
 export type FeedbackSource = 'post_conversation' | 'history';
 
-// 구독 플랜 — 페이월 카드와 스토어 상품(monthly/yearly)이 같은 이름을 쓴다. 브릿지의 subscriptionPlanSchema와 같은 값이다
-export type SubscriptionPlan = 'monthly' | 'yearly';
+// 구독 플랜 — 페이월 카드와 스토어 상품이 같은 이름을 쓴다. quarterly·halfyear는 환급 챌린지 플랜(3·6개월)이다. 브릿지의 subscriptionPlanSchema와 같은 값이다
+export type SubscriptionPlan = 'monthly' | 'yearly' | 'quarterly' | 'halfyear';
 
 // 수준 평가가 적용 수준을 어떻게 바꿨는가 — BE LearningLevelPolicy.ChangeType과 같은 값
 export type LevelChangeType =

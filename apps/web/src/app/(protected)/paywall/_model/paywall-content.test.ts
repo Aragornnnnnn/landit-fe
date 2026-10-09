@@ -2,8 +2,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildRefundPlans,
   EXAMPLE_CARDS,
   EXAMPLE_LANDING_INDEX,
+  isRefundPlan,
   maskName,
 } from './paywall-content';
 
@@ -39,5 +41,41 @@ describe('maskName', () => {
 
   it('한 글자 이름도 가려진 자리가 하나는 생긴다', () => {
     expect(maskName('김')).toBe('김*');
+  });
+});
+
+describe('buildRefundPlans', () => {
+  it('스토어 가격이 없으면 등록값으로 결제 금액과 최대 환급액을 정한다', () => {
+    const { halfyear, quarterly } = buildRefundPlans();
+
+    expect(halfyear).toMatchObject({
+      months: 6,
+      price: 59_900,
+      maxRefund: 59_900,
+    });
+    expect(quarterly).toMatchObject({
+      months: 3,
+      price: 39_900,
+      maxRefund: 31_920,
+    });
+  });
+
+  it('셸이 준 원화 가격이 있으면 결제 금액과 최대 환급액을 그 값으로 다시 계산한다', () => {
+    const { halfyear, quarterly } = buildRefundPlans({
+      halfyear: 49_900,
+      quarterly: 29_900,
+    });
+
+    expect(halfyear).toMatchObject({ price: 49_900, maxRefund: 49_900 });
+    expect(quarterly).toMatchObject({ price: 29_900, maxRefund: 23_920 });
+  });
+});
+
+describe('isRefundPlan', () => {
+  it('3개월·6개월만 환급 플랜이다', () => {
+    expect(isRefundPlan('halfyear')).toBe(true);
+    expect(isRefundPlan('quarterly')).toBe(true);
+    expect(isRefundPlan('yearly')).toBe(false);
+    expect(isRefundPlan('monthly')).toBe(false);
   });
 });

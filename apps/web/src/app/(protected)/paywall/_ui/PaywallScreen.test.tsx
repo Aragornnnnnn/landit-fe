@@ -313,7 +313,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     ).toBeInTheDocument();
   });
 
-  it('처음엔 6개월(연간)이 선택돼 있어 CTA가 전액 환급 문구다', () => {
+  it('처음엔 6개월이 선택돼 있어 CTA가 전액 환급 문구다', () => {
     render(<PaywallScreen refundChallenge />);
 
     expect(
@@ -324,7 +324,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     ).toBeInTheDocument();
   });
 
-  it('3개월(월간) 카드를 누르면 CTA와 결제 안내가 3개월용으로 바뀐다', () => {
+  it('3개월 카드를 누르면 CTA와 결제 안내가 3개월용으로 바뀌고 선택 이벤트를 찍는다', () => {
     render(<PaywallScreen refundChallenge />);
 
     fireEvent.click(
@@ -335,19 +335,35 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
       screen.getByRole('button', { name: '3개월 80% 환급 도전하기' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
-        '3개월 39,900원 결제 · 챌린지 성공하면 최대 31,920원 환급',
-      ),
+      screen.getByText('3개월마다 39,900원 정기 결제 · 언제든 해지 가능'),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText('챌린지 성공하면 최대 31,920원 환급'),
+    ).toBeInTheDocument();
+    expect(mocks.track).toHaveBeenCalledWith('Paywall Plan Selected', {
+      plan: 'quarterly',
+    });
   });
 
-  it('CTA를 누르면 고른 플랜으로 결제를 요청한다', () => {
+  it('CTA를 누르면 고른 환급 플랜(3·6개월 상품)으로 결제를 요청한다', () => {
     render(<PaywallScreen refundChallenge />);
 
     fireEvent.click(
       screen.getByRole('button', { name: '6개월 전액 환급 도전하기' }),
     );
 
-    expect(mocks.purchase).toHaveBeenCalledWith('yearly');
+    expect(mocks.purchase).toHaveBeenCalledWith('halfyear');
+  });
+
+  it('셸이 준 6개월 원화 가격으로 카드와 결제 안내를 그린다', () => {
+    mocks.packages = {
+      halfyear: { packageId: '$rc_six_month', price: 49_900, currency: 'KRW' },
+    };
+    render(<PaywallScreen refundChallenge />);
+
+    expect(
+      screen.getByText('6개월마다 49,900원 정기 결제 · 언제든 해지 가능'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('+49,900원')).toBeInTheDocument();
   });
 });

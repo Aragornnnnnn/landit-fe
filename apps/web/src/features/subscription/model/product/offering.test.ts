@@ -24,6 +24,21 @@ const yearly = {
   currency: 'KRW',
   period: 'P1Y',
 };
+// 환급 플랜 — 셸은 MONTHLY·ANNUAL만 알아봐 플랜 없이 넘기고, 웹이 주기로 정한다
+const quarterly = {
+  id: '$rc_three_month',
+  plan: null,
+  price: 39900,
+  currency: 'KRW',
+  period: 'P3M',
+};
+const halfyear = {
+  id: '$rc_six_month',
+  plan: null,
+  price: 59900,
+  currency: 'KRW',
+  period: 'P6M',
+};
 // 예약 식별자는 오퍼링당 하나뿐이라 둘째 연간 상품은 커스텀 이름을 쓴다 — 셸은 플랜을 모른 채 넘긴다
 const yearlyDiscount = {
   id: 'annual_discount',
@@ -40,9 +55,20 @@ describe('toPlanPackages', () => {
     });
   });
 
+  it('환급 플랜의 3개월·6개월 주기도 플랜으로 정한다 — 셸은 예약 식별자 밖이라 플랜을 모른 채 넘긴다', () => {
+    expect(toPlanPackages([quarterly, halfyear])).toEqual({
+      quarterly: {
+        packageId: '$rc_three_month',
+        price: 39900,
+        currency: 'KRW',
+      },
+      halfyear: { packageId: '$rc_six_month', price: 59900, currency: 'KRW' },
+    });
+  });
+
   it('아직 팔지 않는 주기는 건너뛴다', () => {
     expect(
-      toPlanPackages([{ ...yearlyDiscount, id: 'half_year', period: 'P6M' }]),
+      toPlanPackages([{ ...yearlyDiscount, id: 'weekly', period: 'P1W' }]),
     ).toEqual({});
   });
 
@@ -101,19 +127,21 @@ describe('toPlanPackages', () => {
 });
 
 describe('unclassifiablePackages', () => {
-  it('월간·연간 어느 쪽으로도 못 보는 패키지만 골라낸다 — 스토어 설정이 어긋났다는 신호다', () => {
+  it('어느 플랜으로도 못 보는 패키지만 골라낸다 — 스토어 설정이 어긋났다는 신호다', () => {
     const noPeriod = { ...yearlyDiscount, id: 'broken', period: null };
-    const halfYear = { ...yearlyDiscount, id: 'half_year', period: 'P6M' };
+    const weekly = { ...yearlyDiscount, id: 'weekly', period: 'P1W' };
 
     expect(
       unclassifiablePackages([
         monthly,
         yearly,
         yearlyDiscount,
+        quarterly,
+        halfyear,
         noPeriod,
-        halfYear,
+        weekly,
       ]),
-    ).toEqual([noPeriod, halfYear]);
+    ).toEqual([noPeriod, weekly]);
   });
 });
 
@@ -161,7 +189,19 @@ describe('toKrwPrices', () => {
       { ...yearly, price: 39.99, currency: 'USD' },
     ]);
 
-    expect(toKrwPrices(packages)).toEqual({ monthly: 9900, yearly: undefined });
+    expect(toKrwPrices(packages)).toMatchObject({
+      monthly: 9900,
+      yearly: undefined,
+    });
+  });
+
+  it('환급 플랜 가격도 넘긴다', () => {
+    const packages = toPlanPackages([quarterly, halfyear]);
+
+    expect(toKrwPrices(packages)).toMatchObject({
+      quarterly: 39900,
+      halfyear: 59900,
+    });
   });
 });
 
@@ -171,5 +211,10 @@ describe('packageIdFor', () => {
 
     expect(packageIdFor('yearly', packages)).toBe('$rc_annual_kr');
     expect(packageIdFor('monthly', packages)).toBe('$rc_monthly');
+  });
+
+  it('환급 플랜의 표준 identifier는 3개월·6개월 예약 식별자다', () => {
+    expect(packageIdFor('quarterly', {})).toBe('$rc_three_month');
+    expect(packageIdFor('halfyear', {})).toBe('$rc_six_month');
   });
 });

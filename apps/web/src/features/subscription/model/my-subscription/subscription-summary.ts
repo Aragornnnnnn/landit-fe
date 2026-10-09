@@ -1,12 +1,12 @@
 // 마이페이지 구독 카드가 보여줄 상태 — BE 구독 응답을 체험 중·구독 중·해지 예정·없음 넷으로 접고, 화면에 적을 금액을 정한다 (docs/subscription.md 「마이페이지와 법적 문서」)
-import type { SubscriptionPlan, SubscriptionState } from '@landit/analytics';
+import type { SubscriptionState } from '@landit/analytics';
 
 import type {
   MySubscription,
   SubscriptionPeriodType,
 } from '../../api/subscription';
 import { isWonCurrency } from '../../lib/won';
-import { planFromProductId } from '../product/plans';
+import { planFromProductId, type RegularPlan } from '../product/plans';
 
 export type SubscriptionSummary =
   | { kind: 'none' }
@@ -17,7 +17,7 @@ export type SubscriptionSummary =
       /** 그날 결제가 이어지는가 — 해지 예약·선결제·프로모션은 그날로 끝난다 */
       renews: boolean;
       /** 월간·연간. BE가 상품 식별자를 안 주거나 모르는 상품이면 null */
-      plan: SubscriptionPlan | null;
+      plan: RegularPlan | null;
       /**
        * 실제로 낸 원화 금액. 결제 이력이 없거나(무료 체험) 외화면 null.
        * null이면 화면은 금액을 말하지 않는다 — 등록값으로 추측하면 할인·가격 인상 때 남의 금액을 보여준다

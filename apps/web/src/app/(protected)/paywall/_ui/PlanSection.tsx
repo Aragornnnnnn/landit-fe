@@ -5,18 +5,26 @@ import Link from 'next/link';
 import {
   PLAN_ORDER,
   type PaywallPlan,
+  type RegularPlan,
 } from '@/features/subscription/model/product/plans';
 
-import { FULL_REFUND_PLAN } from '../_model/paywall-content';
+import {
+  FULL_REFUND_PLAN,
+  REFUND_PLAN_ORDER,
+  type RefundPlan,
+  type RefundPlanId,
+} from '../_model/paywall-content';
 import { PlanCard } from './PlanCard';
 import { RefundPlanCard } from './RefundPlanCard';
 import { RevealSection } from './RevealSection';
 import { Highlight, SectionHeading } from './SectionHeading';
 
 interface PlanSectionProps {
-  plans: Record<SubscriptionPlan, PaywallPlan>;
+  plans: Record<RegularPlan, PaywallPlan>;
+  /** 환급 플랜(3·6개월) 카드 값 — 환급 챌린지가 켜졌을 때만 그린다 */
+  refundPlans: Record<RefundPlanId, RefundPlan>;
   selectedId: SubscriptionPlan;
-  onSelect: (plan: PaywallPlan) => void;
+  onSelect: (id: SubscriptionPlan) => void;
   /** 환급 챌린지가 켜졌는가 */
   refundChallenge: boolean;
   /** 약관 옆 구매 복원 — 맨 위 줄은 스크롤로 올라가니 여기에도 둔다 */
@@ -26,6 +34,7 @@ interface PlanSectionProps {
 
 export const PlanSection = ({
   plans,
+  refundPlans,
   selectedId,
   onSelect,
   refundChallenge,
@@ -49,11 +58,10 @@ export const PlanSection = ({
           결제한 돈도 돌려받아 보세요
         </p>
         <div className="mt-5 flex flex-col gap-3 px-5">
-          {/* 전액 환급 플랜을 위에 — 가장 센 제안이 먼저 눈에 든다 */}
-          {[...PLAN_ORDER].reverse().map((id) => (
+          {REFUND_PLAN_ORDER.map((id) => (
             <RefundPlanCard
               key={id}
-              plan={plans[id]}
+              plan={refundPlans[id]}
               selected={id === selectedId}
               onSelect={onSelect}
               featured={id === FULL_REFUND_PLAN}
@@ -70,7 +78,7 @@ export const PlanSection = ({
               key={id}
               plan={plans[id]}
               selected={id === selectedId}
-              onSelect={onSelect}
+              onSelect={(plan) => onSelect(plan.id)}
             />
           ))}
         </div>

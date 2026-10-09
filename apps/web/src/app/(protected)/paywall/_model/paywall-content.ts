@@ -1,6 +1,8 @@
 // 롱 페이월의 고정 문구와 그림 — 학습 단계 카드, 대화 카드, 데이터 수치, 리뷰. 피그마 「페이월 v2」(2640:8041) 기준
 import type { SubscriptionPlan } from '@landit/analytics';
 
+import type { PlanPrices } from '@/features/subscription/model/product/plans';
+
 const IMAGE_DIR = '/images/paywall';
 
 /** 래디 표정 — 섹션 제목 옆에 하나씩 앉는다. 480px 정사각 */
@@ -239,23 +241,60 @@ export const AVERAGE_TALK_MINUTES = 1278;
 /** 위 두 평균을 낸 날 */
 export const OUTCOME_AS_OF = '2026.10.06';
 
-/** 환급 플랜 — 기간·환급률·결제 금액. 결제는 아직 기존 상품(월간·연간)에 이어 둔다(3개월→월간, 6개월→연간) */
+/** 환급 챌린지 플랜 — 3개월·6개월 스토어 상품 */
+export type RefundPlanId = Extract<SubscriptionPlan, 'quarterly' | 'halfyear'>;
+
+/** 환급 플랜 — 기간·환급률과 결제 금액의 스토어 등록값. 셸이 원화 가격을 주면 buildRefundPlans가 그 값으로 바꾼다 */
 export const REFUND_PLANS: Record<
-  SubscriptionPlan,
+  RefundPlanId,
   { months: number; refundRate: number; price: number }
 > = {
-  monthly: { months: 3, refundRate: 80, price: 39_900 },
-  yearly: { months: 6, refundRate: 100, price: 59_900 },
+  quarterly: { months: 3, refundRate: 80, price: 39_900 },
+  halfyear: { months: 6, refundRate: 100, price: 59_900 },
 };
 
-/** 전액 환급 플랜 — 맨 위 무대·입금 알림·강조 카드가 모두 이 플랜을 말한다 */
-export const FULL_REFUND_PLAN: SubscriptionPlan = 'yearly';
+/** 카드가 위에서부터 놓이는 순서 — 전액 환급을 위에 둬 가장 센 제안이 먼저 눈에 든다 */
+export const REFUND_PLAN_ORDER: readonly RefundPlanId[] = [
+  'halfyear',
+  'quarterly',
+];
+
+/** 전액 환급 플랜 — 맨 위 무대·입금 알림·강조 카드가 모두 이 플랜을 말하고, 처음 선택돼 있다 */
+export const FULL_REFUND_PLAN: RefundPlanId = 'halfyear';
 
 /** 환급 챌린지 기간 문구 — 이 기간 동안 영어 공부를 이어 가면 결제 금액을 전액 돌려준다 */
 export const REFUND_CHALLENGE_PERIOD = `${REFUND_PLANS[FULL_REFUND_PLAN].months}개월`;
 
-/** 최대 환급액 — 결제 금액 × 환급률(원 단위 반올림) */
-export const getMaxRefund = (planId: SubscriptionPlan) => {
-  const { price, refundRate } = REFUND_PLANS[planId];
-  return Math.round((price * refundRate) / 100);
+export const isRefundPlan = (plan: SubscriptionPlan): plan is RefundPlanId =>
+  plan in REFUND_PLANS;
+
+/** 환급 카드 한 장에 그릴 값 — 최대 환급액은 결제 금액 × 환급률(원 단위 반올림) */
+export interface RefundPlan {
+  id: RefundPlanId;
+  months: number;
+  refundRate: number;
+  price: number;
+  maxRefund: number;
+}
+
+/**
+ * 결제 금액으로 환급 카드 값을 만든다 — 최대 환급액이 실제 청구액에서 나와 둘이 어긋나지 않는다.
+ *
+ * @param prices 셸이 준 원화 가격. 없는 플랜은 스토어 등록값
+ */
+export const buildRefundPlans = (
+  prices: PlanPrices = {},
+): Record<RefundPlanId, RefundPlan> => {
+  const build = (id: RefundPlanId): RefundPlan => {
+    const { months, refundRate } = REFUND_PLANS[id];
+    const price = prices[id] ?? REFUND_PLANS[id].price;
+    return {
+      id,
+      months,
+      refundRate,
+      price,
+      maxRefund: Math.round((price * refundRate) / 100),
+    };
+  };
+  return { quarterly: build('quarterly'), halfyear: build('halfyear') };
 };
