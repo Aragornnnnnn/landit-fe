@@ -74,6 +74,13 @@ export const AlarmPledge = ({
   };
   useEffect(() => clearTimers, []);
 
+  const pledge = () => {
+    setPhase('done');
+    haptic('success');
+    // 다 차는 순간 바로 넘긴다 — 저장하는 동안 "다짐했어요!"가 보인다
+    onPledge(wheelRef.current?.read() ?? initialTime);
+  };
+
   const press = () => {
     if (phase !== 'idle') return;
     setPhase('holding');
@@ -82,12 +89,7 @@ export const AlarmPledge = ({
     timers.current = [
       setTimeout(() => haptic('light'), 1000),
       setTimeout(() => haptic('light'), 2000),
-      setTimeout(() => {
-        setPhase('done');
-        haptic('success');
-        // 다 차는 순간 바로 넘긴다 — 저장하는 동안 "다짐했어요!"가 보인다
-        onPledge(wheelRef.current?.read() ?? initialTime);
-      }, HOLD_MS),
+      setTimeout(pledge, HOLD_MS),
     ];
   };
 
@@ -133,6 +135,10 @@ export const AlarmPledge = ({
           onPointerUp={release}
           onPointerLeave={release}
           onPointerCancel={release}
+          // 키보드·스크린 리더가 보낸 클릭(detail 0)은 길게 누를 수 없으니 바로 다짐한다. 손가락 탭은 detail이 1 이상이다
+          onClick={(event) => {
+            if (event.detail === 0 && phase === 'idle') pledge();
+          }}
           onContextMenu={(event) => event.preventDefault()}
           className="relative size-24 touch-none select-none [-webkit-touch-callout:none]"
         >
