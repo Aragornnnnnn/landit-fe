@@ -16,6 +16,8 @@ interface AuthState {
     member: AuthMember,
   ) => void;
   clearAuth: () => void;
+  // 닉네임 변경 API가 돌려준 값으로 바꾼다 — 회원 정보는 로그인 응답 말고는 다시 받는 곳이 없다
+  setNickname: (nickname: string) => void;
 }
 
 // localStorage는 동기라 클라이언트에서 컴포넌트가 마운트된 시점엔 복원이 끝나 있다.
@@ -30,6 +32,10 @@ export const useAuthStore = create<AuthState>()(
         set({ accessToken, refreshToken, member }),
       clearAuth: () =>
         set({ accessToken: null, refreshToken: null, member: null }),
+      setNickname: (nickname) =>
+        set((state) =>
+          state.member ? { member: { ...state.member, nickname } } : {},
+        ),
     }),
     {
       name: 'landit-auth',
