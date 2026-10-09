@@ -90,6 +90,7 @@
     "plugins": [
       "./plugins/withGradleJvmArgs.js",
       "./plugins/withAndroidxWorkAlignment.js",
+      "./plugins/withAlarmLampDrawable.js",
       "expo-router",
       "expo-apple-authentication",
       [

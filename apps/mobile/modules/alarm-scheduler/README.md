@@ -22,6 +22,9 @@
 - `app.plugin.js`: Expo 57에서 Android 권한을 넣다가 빌드가 멈추는 문제를 고쳤다 (원본 이슈 #22).
 - `ios/AlarmScheduler/AlarmSchedulerAlarmKitSupport.swift`: "끄기"가 앱을 열지 않고 소리만 멈추게 했다.
 - `ios/AlarmScheduler/AlarmSchedulerModule+Scheduling.swift`, `+Occurrences.swift`: 폰을 쓰는 중에 뜨는 배너의 "대화하러 가기" 아이콘을 말풍선으로, 색을 랜딧 주황으로 바꿨다.
+- `android/.../AlarmSchedulerNotifications.kt`, `res/layout/landit_alarm_*.xml`: 폰을 쓰는 중에 뜨는 카드를 직접 그렸다(버튼이 처음부터 보이고, 펼치면 램프 그림이 크게). 알림을 밀어 지우면 끄기와 똑같이 멈춘다. 알림이 10초 늦게 뜨지 않게 바로 띄우고, "대화하러 가기"는 서비스를 거치지 않고 앱을 바로 연다.
+- `android/.../AlarmSchedulerRingService.kt`, `AlarmScheduler.kt`: 폰을 쓰는 중이면 전체 화면을 띄우지 않고 카드만 띄운다.
+- `android/.../AlarmSchedulerRingActivity.kt`: 전체 화면을 랜딧 디자인으로 다시 그렸다. 잠금 위에 띄우기만 하고, 잠금 해제는 "대화하러 가기"를 눌렀을 때만 요청한 뒤 화면이 직접 앱을 연다.
 - `package.json`: 이름을 `@landit/alarm-scheduler`로 바꾸고 배포용 설정을 지웠다. 입구는 `index.ts`다.
 
 ## 원본을 다시 가져올 때

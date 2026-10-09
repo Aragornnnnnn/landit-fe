@@ -401,6 +401,10 @@ class AlarmSchedulerRingService : Service() {
     if (!options.fullScreen) {
       return
     }
+    // landit: 폰을 쓰는 중이면 화면을 덮지 않고 위쪽 알람 카드만 띄운다. 큰 화면은 잠금 상태에서만
+    if (AlarmSchedulerNotifications.isDeviceInUse(this)) {
+      return
+    }
     val intent = if (options.fullScreenTarget == FULL_SCREEN_TARGET_APP) {
       AlarmSchedulerNotifications.appIntent(this, id, options)
     } else {

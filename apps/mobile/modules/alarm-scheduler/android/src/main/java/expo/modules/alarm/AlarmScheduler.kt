@@ -194,7 +194,8 @@ internal object AlarmSchedulerScheduler {
    */
   private fun presentWithoutService(context: Context, id: String, options: AlarmSchedulerOptions) {
     AlarmSchedulerNotifications.postFallbackNotification(context, id, options)
-    if (!options.fullScreen) {
+    // landit: 폰을 쓰는 중이면 화면을 덮지 않고 위쪽 알람 카드만 띄운다
+    if (!options.fullScreen || AlarmSchedulerNotifications.isDeviceInUse(context)) {
       return
     }
     val intent = if (options.fullScreenTarget == FULL_SCREEN_TARGET_APP) {

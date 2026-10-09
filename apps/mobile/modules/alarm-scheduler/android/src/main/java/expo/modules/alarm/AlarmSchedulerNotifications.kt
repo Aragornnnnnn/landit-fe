@@ -1,16 +1,21 @@
 package expo.modules.alarm
 
+import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.KeyguardManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.drawable.Icon
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
+import android.widget.RemoteViews
 
 /**
  * Notification plumbing shared by the ringing service and the no-service fallback.
@@ -43,6 +48,21 @@ internal object AlarmSchedulerNotifications {
     runCatching { manager.notify(FALLBACK_NOTIFICATION_ID, notification) }
   }
 
+  // landit: 화면이 켜져 있고 잠금이 풀려 있으면 사용자가 폰을 쓰는 중이다
+  fun isDeviceInUse(context: Context): Boolean {
+    val power = context.getSystemService(PowerManager::class.java) ?: return false
+    val keyguard = context.getSystemService(KeyguardManager::class.java) ?: return false
+    return power.isInteractive && !keyguard.isKeyguardLocked
+  }
+
+  // landit: 폰을 쓰는 중이고 맨 앞 화면이 랜딧이다 — 우리 앱 화면이 떠 있으면 프로세스 중요도가 FOREGROUND다 (서비스만 돌면 FOREGROUND_SERVICE)
+  fun isLanditInFront(context: Context): Boolean {
+    if (!isDeviceInUse(context)) return false
+    val process = ActivityManager.RunningAppProcessInfo()
+    ActivityManager.getMyMemoryState(process)
+    return process.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+  }
+
   private fun build(
     context: Context,
     alarmId: String,
@@ -65,10 +85,15 @@ internal object AlarmSchedulerNotifications {
       .setCategory(Notification.CATEGORY_ALARM)
       .setVisibility(Notification.VISIBILITY_PUBLIC)
       .setOngoing(ongoing)
+      // landit: 서비스 알림은 Android 12+에서 10초까지 늦게 뜰 수 있다. 소리와 함께 바로 띄운다
+      .apply { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE) }
       .setAutoCancel(false)
       .setContentIntent(contentIntent)
+      // landit: 브랜드 주황
+      .setColor(Color.rgb(0xE0, 0x7A, 0x3A))
 
-    if (options.fullScreen) {
+    // landit: 랜딧이 맨 앞이면 전체 화면 표시를 붙이지 않는다 — 붙이면 시스템이 위쪽 카드를 띄우지 않는다(실험 중)
+    if (options.fullScreen && !isLanditInFront(context)) {
       builder.setFullScreenIntent(contentIntent, true)
     }
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O && !ongoing) {
@@ -76,16 +101,54 @@ internal object AlarmSchedulerNotifications {
       builder.setSound(fallbackSoundUri(context, options))
     }
 
-    builder.addAction(
-      action(options.secondaryButtonTitle, servicePendingIntent(context, AlarmSchedulerRingService.ACTION_OPEN, alarmId, "open"))
-    )
-    if (options.alertActionMode != ALERT_ACTION_MODE_OPEN_APP_ONLY) {
-      builder.addAction(
-        action(options.stopButtonTitle, servicePendingIntent(context, AlarmSchedulerRingService.ACTION_STOP, alarmId, "stop"))
-      )
+    // landit: "대화하러 가기"는 앱을 바로 연다. 서비스를 거쳐 열면 Android 12+가 알림 트램펄린으로 막는다.
+    // 울림은 앱이 열리면서 끈다(completeNativeAlarmAsync)
+    val openIntent = appPendingIntent(context, alarmId, options) ?: servicePendingIntent(context, AlarmSchedulerRingService.ACTION_OPEN, alarmId, "open")
+    val stopIntent = servicePendingIntent(context, AlarmSchedulerRingService.ACTION_STOP, alarmId, "stop")
+    val canStop = options.alertActionMode != ALERT_ACTION_MODE_OPEN_APP_ONLY
+    // landit: Android 14부터 울리는 중인 알림도 밀어서 지울 수 있다. 지우면 소리만 남지 않게 끄기와 똑같이 멈춘다
+    if (canStop) builder.setDeleteIntent(stopIntent)
+    // landit: 폰을 쓰는 중에 뜨는 위쪽 카드와 펼친 알림은 우리가 그린 화면을 쓴다.
+    // 기본 알림은 접힌 채로 떠서 버튼을 보려면 눌러 펼쳐야 했다. 버튼은 카드 안에 있어서 기본 버튼은 붙이지 않는다
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      val stop = stopIntent.takeIf { canStop }
+      builder
+        .setStyle(Notification.DecoratedCustomViewStyle())
+        .setCustomHeadsUpContentView(landitCard(context, R.layout.landit_alarm_heads_up, options, openIntent, stop))
+        .setCustomBigContentView(landitCard(context, R.layout.landit_alarm_expanded, options, openIntent, stop))
+    } else {
+      builder.addAction(action(options.secondaryButtonTitle, openIntent))
+      if (canStop) builder.addAction(action(options.stopButtonTitle, stopIntent))
     }
 
     return builder.build()
+  }
+
+  // landit: 알람 카드 — 위쪽 카드는 제목과 버튼만, 펼친 카드는 램프 그림을 위에 크게 얹는다.
+  // 램프 그림은 호스트 앱이 drawable/landit_alarm_lamp로 넣어 둔다
+  private fun landitCard(
+    context: Context,
+    layout: Int,
+    options: AlarmSchedulerOptions,
+    openIntent: PendingIntent,
+    stopIntent: PendingIntent?
+  ): RemoteViews {
+    val card = RemoteViews(context.packageName, layout)
+    val lampId = context.resources.getIdentifier("landit_alarm_lamp", "drawable", context.packageName)
+    if (layout == R.layout.landit_alarm_expanded && lampId != 0) {
+      card.setImageViewResource(R.id.landit_alarm_lamp, lampId)
+    }
+    card.setTextViewText(R.id.landit_alarm_title, options.alertTitle)
+    card.setTextViewText(R.id.landit_alarm_body, options.alertBody)
+    card.setTextViewText(R.id.landit_alarm_open, options.secondaryButtonTitle)
+    card.setOnClickPendingIntent(R.id.landit_alarm_open, openIntent)
+    if (stopIntent != null) {
+      card.setTextViewText(R.id.landit_alarm_stop, options.stopButtonTitle)
+      card.setOnClickPendingIntent(R.id.landit_alarm_stop, stopIntent)
+    } else {
+      card.setViewVisibility(R.id.landit_alarm_stop, android.view.View.GONE)
+    }
+    return card
   }
 
   private fun action(title: String, intent: PendingIntent): Notification.Action {
@@ -181,6 +244,17 @@ internal object AlarmSchedulerNotifications {
       context,
       AlarmSchedulerScheduler.requestCode("ring-$alarmId"),
       AlarmSchedulerRingActivity.intent(context, alarmId),
+      AlarmSchedulerScheduler.pendingFlags()
+    )
+  }
+
+  // landit: 알림 버튼에서 앱을 바로 여는 PendingIntent
+  private fun appPendingIntent(context: Context, alarmId: String, options: AlarmSchedulerOptions): PendingIntent? {
+    val intent = appIntent(context, alarmId, options) ?: return null
+    return PendingIntent.getActivity(
+      context,
+      AlarmSchedulerScheduler.requestCode("open-app-$alarmId"),
+      intent,
       AlarmSchedulerScheduler.pendingFlags()
     )
   }
