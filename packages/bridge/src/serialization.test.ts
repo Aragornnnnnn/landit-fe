@@ -712,6 +712,21 @@ describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS �
     expect(withSkipDate('invalid')).toBeNull();
     expect(withSkipDate('2026-10-7')).toBeNull();
   });
+
+  it('알람 버튼으로 열렸다는 신호는 앱 안 경로만 받는다 — 웹이 지금 화면을 보고 이동할지 정한다', () => {
+    const parse = (path: string) =>
+      parseNativeToWebMessage(
+        JSON.stringify({ type: 'ALARM_OPENED', alarmType: 'scenario', path }),
+      );
+
+    expect(parse('/scenario')).toEqual({
+      type: 'ALARM_OPENED',
+      alarmType: 'scenario',
+      path: '/scenario',
+    });
+    expect(parse('https://example.com')).toBeNull();
+    expect(parse('//example.com')).toBeNull();
+  });
 });
 
 describe('알람 목록 (GET_ALARM_LIST ↔ ALARM_LIST)', () => {

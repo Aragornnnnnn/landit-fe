@@ -57,6 +57,7 @@ landit 앱은 네이티브 UI 없이 웹(Next.js)을 WebView로 감싸는 셸이
 | `GET_ALARM_LIST`                  | 웹→앱 | 없음                                            | 개발자 화면용 — 셸에 걸린 알람 전부 조회. 응답은 `ALARM_LIST`                                                                         | `index.tsx`의 핸들러     |
 | `ALARM_STATUS`                    | 앱→웹 | 권한 5칸, `repeatingAlarms`                     | 알람 요청들의 공통 응답 — 권한과 종류별 반복 알람(스케줄·화면·건너뛴 날)                                                              | 알람 기능 (LAN-461)      |
 | `ALARM_LIST`                      | 앱→웹 | `alarms`                                        | `GET_ALARM_LIST` 응답 — 종류(테스트는 null)·시각·요일·다음 울림·건너뛴 날                                                             | 알람 점검 (LAN-461)      |
+| `ALARM_OPENED`                    | 앱→웹 | `alarmType`, `path`                             | 앱이 떠 있을 때 알람의 "대화하러 가기" — 웹이 지금 화면을 보고 `path`로 갈지 정한다(학습 중이면 그대로)                               | 알람 기능 (LAN-461)      |
 
 STT·TTS·인증 등 기능 메시지는 각 기능 이슈에서 추가한다.
 

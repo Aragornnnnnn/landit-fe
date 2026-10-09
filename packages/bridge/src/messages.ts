@@ -343,6 +343,13 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     type: z.literal('ALARM_LIST'),
     alarms: z.array(scheduledAlarmSchema),
   }),
+  // 앱이 떠 있을 때 알람의 "대화하러 가기"를 눌렀다 — 웹이 지금 화면을 보고 path로 갈지 정한다(학습 중이면 그대로).
+  // 앱이 꺼져 있었으면 이 메시지 대신 WebView 첫 주소가 path다
+  z.object({
+    type: z.literal('ALARM_OPENED'),
+    alarmType: alarmTypeSchema,
+    path: alarmPathSchema,
+  }),
 ]);
 
 // 위 스키마에서 자동으로 뽑아낸 타입 — 스키마를 고치면 타입도 같이 바뀐다
