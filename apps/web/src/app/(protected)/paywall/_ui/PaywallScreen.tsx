@@ -92,11 +92,12 @@ export const PaywallScreen = ({
   const goHome = () => router.replace(homePath());
   const dismiss = usePaywallDismiss(offering);
   // 닫으면 서버에 알린 뒤 홈으로 — 할인을 받았으면 시트는 홈에서 뜬다.
+  // 환급 페이월은 알리지 않는다 — 이탈 할인은 연간 상품용이라 환급 플랜 화면에서 권하지 않는다.
   // 학습 진입에서 밀려 올라온 화면이라 온 곳으로 되돌리면 다시 페이월에 걸린다 (docs/subscription.md)
   const close = async () => {
     if (closing) return;
     setClosing(true);
-    await dismiss();
+    if (!refundChallenge) await dismiss();
     setClosing(false);
     goHome();
   };

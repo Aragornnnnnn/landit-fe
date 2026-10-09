@@ -358,6 +358,17 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     expect(screen.getByText(/하루 최대 355원/)).toBeInTheDocument();
   });
 
+  it('닫아도 이탈 할인을 받지 않고 바로 홈으로 간다 — 환급 페이월엔 연간 할인 시트가 없다', async () => {
+    render(<PaywallScreen refundChallenge />);
+
+    fireEvent.click(screen.getAllByRole('button', { name: '닫기' })[0]);
+
+    await vi.waitFor(() =>
+      expect(mocks.replace).toHaveBeenCalledWith('/scenario'),
+    );
+    expect(mocks.dismiss).not.toHaveBeenCalled();
+  });
+
   it('CTA를 누르면 고른 환급 플랜(3·6개월 상품)으로 결제를 요청한다', () => {
     render(<PaywallScreen refundChallenge />);
 
