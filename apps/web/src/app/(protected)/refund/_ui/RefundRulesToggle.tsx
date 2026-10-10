@@ -1,6 +1,6 @@
 'use client';
 
-// 내역 머리줄 — 왼쪽에 "내역" 제목, 오른쪽 끝에 접어 둔 환급 규칙. 매일 보는 화면이라 규칙은 접어 두고, 누르면 그 자리에서 아래로 펼쳐진다
+// 내역 위 오른쪽 끝의 작은 글자 한 줄 — 매일 보는 화면이라 규칙은 접어 두고, 누르면 그 자리에서 아래로 펼쳐진다
 import { useId, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
@@ -17,10 +17,9 @@ export const RefundRulesToggle = () => {
   const opened = reduced ? { opacity: 1 } : { height: 'auto', opacity: 1 };
 
   return (
-    <div className="mx-5 mt-5">
+    <div className="mx-5 mt-3">
       {/* 규칙을 오른쪽 끝에 붙여 내역의 금액 열과 줄을 맞춘다 — 가운데에 떠 있으면 위 칸의 것인지 아래 내역의 것인지 알 수 없다 */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-[15px] font-black text-foreground">내역</h3>
+      <div className="flex justify-end">
         <button
           type="button"
           aria-expanded={open}
