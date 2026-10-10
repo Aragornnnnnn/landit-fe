@@ -409,7 +409,7 @@ describe('PremiumOnboardingScreen', () => {
       // 쉬면 0원이 된다는 걸 알람보다 먼저 말한다
       expect(
         screen.getByText(
-          '위 3가지를 하나도 안 한 날이 생기면 쌓인 금액이 0원으로 돌아가요',
+          '3가지 학습 기록이 하나도 없는 날이 생기면 쌓인 금액이 0원으로 돌아가요',
         ),
       ).toBeVisible();
     });
