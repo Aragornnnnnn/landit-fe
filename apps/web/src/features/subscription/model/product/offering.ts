@@ -16,13 +16,15 @@ export type PlanPackages = Partial<Record<SubscriptionPlan, PlanPackage>>;
 // 새 주기를 팔기로 하면 이 표만 늘리면 되고 앱은 다시 내지 않아도 된다
 const PLAN_BY_PERIOD: Partial<Record<string, SubscriptionPlan>> = {
   P1M: 'monthly',
+  P3M: 'quarterly',
+  P6M: 'halfyear',
   P1Y: 'yearly',
 };
 
 /** 셸이 예약 식별자($rc_monthly·$rc_annual)로 알아본 플랜 */
 const reservedPlan = (pkg: OfferingPackage) => pkg.plan ?? undefined;
 
-/** 상품의 구독 주기로 본 플랜 — 커스텀 이름이라 셸이 판단하지 못한 패키지가 여기로 온다 */
+/** 상품의 구독 주기로 본 플랜 — 커스텀 이름이거나 셸이 모르는 주기(3·6개월)라 판단하지 못한 패키지가 여기로 온다 */
 const periodPlan = (pkg: OfferingPackage) =>
   pkg.period ? PLAN_BY_PERIOD[pkg.period] : undefined;
 
@@ -59,7 +61,7 @@ export const toPlanPackages = (packages: OfferingPackage[]): PlanPackages => {
 };
 
 /**
- * 월간·연간 어느 쪽으로도 볼 수 없는 패키지들.
+ * 어느 플랜으로도 볼 수 없는 패키지들.
  *
  * 이런 패키지는 플랜별 패키지에서 조용히 빠지고, 할인 패키지가 그렇게 되면 시트가 뜨지 않는 채로
  * 아무 흔적도 남지 않는다. 스토어 설정이 어긋났다는 신호라 부르는 쪽이 보고한다.
@@ -108,12 +110,17 @@ export const toKrwPrices = (
 ): Partial<Record<SubscriptionPlan, number>> => ({
   monthly: krwPackage(packages.monthly)?.price,
   yearly: krwPackage(packages.yearly)?.price,
+  quarterly: krwPackage(packages.quarterly)?.price,
+  halfyear: krwPackage(packages.halfyear)?.price,
 });
 
-/** 오퍼링을 못 받았을 때 결제에 쓸 RevenueCat 표준 패키지 identifier — 셸이 identifier로 패키지를 찾는다 */
+/** 오퍼링을 못 받았을 때 결제에 쓸 RevenueCat 표준 패키지 identifier — 셸이 identifier로 패키지를 찾는다.
+ * 환급 플랜도 대시보드 오퍼링에 이 예약 식별자로 넣어야 한다 */
 export const DEFAULT_PACKAGE_IDS: Record<SubscriptionPlan, string> = {
   monthly: '$rc_monthly',
   yearly: '$rc_annual',
+  quarterly: '$rc_three_month',
+  halfyear: '$rc_six_month',
 };
 
 /** 결제에 쓸 패키지 id — 플랜별 패키지에 있으면 그 패키지, 없으면 표준 identifier */

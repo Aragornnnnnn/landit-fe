@@ -3,9 +3,18 @@ import { describe, expect, it } from 'vitest';
 
 import { buildPaywallPlans } from '@/features/subscription/model/product/plans';
 
-import { getBillingNotice, getCancelNotice, getCtaLabel } from './paywall-copy';
+import { buildRefundPlans } from './paywall-content';
+import {
+  getBillingNotice,
+  getCancelNotice,
+  getCtaLabel,
+  getRefundBillingNotice,
+  getRefundCtaLabel,
+  getRefundNotice,
+} from './paywall-copy';
 
 const { monthly, yearly } = buildPaywallPlans();
+const { halfyear, quarterly } = buildRefundPlans();
 
 describe('getCtaLabel', () => {
   it('연간을 고르면 무료 체험으로 시작한다고 말한다', () => {
@@ -44,6 +53,38 @@ describe('getCancelNotice', () => {
     );
     expect(getCancelNotice(monthly)).toBe(
       '결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요',
+    );
+  });
+});
+
+describe('getRefundCtaLabel — 환급 챌린지가 켜졌을 때', () => {
+  it('6개월(전액 환급)을 고르면 전액 환급에 도전한다고 말한다', () => {
+    expect(getRefundCtaLabel(halfyear)).toBe('6개월 전액 환급 도전하기');
+  });
+
+  it('3개월을 고르면 환급률을 붙여 도전한다고 말한다', () => {
+    expect(getRefundCtaLabel(quarterly)).toBe('3개월 80% 환급 도전하기');
+  });
+});
+
+describe('getRefundBillingNotice — 환급 챌린지가 켜졌을 때', () => {
+  it('기간마다 자동 갱신되는 결제 금액과 해지 가능을 알린다 — 실제 상품이 자동 갱신 구독이다', () => {
+    expect(getRefundBillingNotice(halfyear)).toBe(
+      '6개월마다 59,900원 정기 결제 · 언제든 해지 가능',
+    );
+    expect(getRefundBillingNotice(quarterly)).toBe(
+      '3개월마다 39,900원 정기 결제 · 언제든 해지 가능',
+    );
+  });
+});
+
+describe('getRefundNotice — 환급 챌린지가 켜졌을 때', () => {
+  it('챌린지에 성공하면 돌려받는 최대 금액을 알린다', () => {
+    expect(getRefundNotice(halfyear)).toBe(
+      '챌린지 성공하면 최대 59,900원 환급',
+    );
+    expect(getRefundNotice(quarterly)).toBe(
+      '챌린지 성공하면 최대 31,920원 환급',
     );
   });
 });
