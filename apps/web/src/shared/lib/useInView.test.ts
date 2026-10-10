@@ -1,5 +1,5 @@
+// 요소가 화면에 들어왔는지 알려 주는 관찰 훅 — 등장 연출의 방아쇠이자 목록 끝에서 더 받는 신호
 // @vitest-environment jsdom
-// 한 번 화면에 들어오면 true로 굳는 관찰 훅 — 페이월 섹션 등장 연출의 방아쇠
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
