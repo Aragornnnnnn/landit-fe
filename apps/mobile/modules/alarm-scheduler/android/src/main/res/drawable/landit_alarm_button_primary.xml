@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- landit: 위쪽 알람 카드의 "대화하러 가기" 버튼 바탕 (브랜드 주황) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+  <solid android:color="#E07A3A" />
+  <corners android:radius="12dp" />
+</shape>
