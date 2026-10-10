@@ -2,7 +2,7 @@
 
 // 받은 동전이 화면 가운데에 크게 떴다가 헤더 알약으로 빨려 들어가는 연출 — 학습을 끝내고 홈에 돌아온 순간 한 번 돈다.
 // 주변을 어둡게 눌러 동전과 알약만 남긴다. 큰 동전과 금액이 먼저 뜨고(무엇을 받았는지), 잔동전들이 줄지어 날아가(어디에 쌓이는지) 숫자가 오른다.
-// 화면 어디를 눌러도 바로 끝난다 — 그 안내(「눌러서 바로 받기」)는 금액 바로 아래에 둔다
+// 화면 어디를 눌러도 바로 끝난다 — 그 안내는 금액과 떨어진 구석에 작게 둔다
 import { useEffect, useEffectEvent } from 'react';
 import { motion } from 'motion/react';
 import { createPortal } from 'react-dom';
@@ -28,14 +28,15 @@ const TOTAL = LAND + 1.5;
 const TRAIL_FLIGHT = 0.62;
 const TRAIL_STAGGER = 0.06;
 
+const SKIP_LABEL = '건너뛰기 ›';
+
 const BIG = 120;
 const SMALL = 28;
 // 큰 동전이 튀어 오르기 전에 내려가 있는 높이
 const POP_RISE = 30;
-// 받은 금액과 안내 글자의 폭, 큰 동전 아래로 떨어진 거리
+// 받은 금액 글자의 폭과, 큰 동전 아래로 떨어진 거리
 const CAPTION_WIDTH = 260;
 const AMOUNT_GAP = 16;
-const HINT_GAP = 74;
 // 잔동전이 흩어져 나오는 자리(큰 동전 중심 기준)와 휘어지는 정도. 받은 금액이 클수록 앞에서부터 더 많이 쓴다
 const TRAIL = [
   { dx: -46, dy: -18, bend: -70 },
@@ -220,18 +221,12 @@ export const CoinShower = ({
         );
       })}
 
-      {/* 시선이 머무는 가운데, 금액 바로 아래에 둔다 — 화면 어디를 눌러도 끝나지만 그걸 알려 주는 글자는 눈앞에 있어야 한다 */}
+      {/* 금액과 떨어진 구석에 둔다 — 가까이 두면 받은 돈을 건너뛰는 것처럼 읽힌다. 누르면 바깥의 어둠이 끝낸다 */}
       <button
         type="button"
-        // 누르면 바깥의 어둠이 끝낸다 — 여기서 또 끝내면 두 번 불린다
-        className="absolute text-center text-[13px] font-medium text-white/70"
-        style={{
-          width: CAPTION_WIDTH,
-          left: captionLeft,
-          top: captionTop + HINT_GAP,
-        }}
+        className="absolute right-5 bottom-[max(var(--safe-area-inset-bottom),28px)] px-2 py-2 text-[14px] font-bold tracking-wide text-white/80"
       >
-        눌러서 바로 받기
+        {SKIP_LABEL}
       </button>
     </motion.div>,
     document.body,
