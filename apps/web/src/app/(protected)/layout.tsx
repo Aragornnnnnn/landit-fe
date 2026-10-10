@@ -4,6 +4,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { EarnedPop } from '@/features/reward/ui/EarnedPop';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { LanditLogo } from '@/shared/ui/LanditLogo';
@@ -31,5 +32,11 @@ export default function ProtectedLayout({
 
   // 판단 전이거나 리다이렉트 대기 중엔 스플래시를 유지한다 — 흰 화면 깜빡임 없이 로그인/홈 어느 쪽으로든 이어진다
   if (!hydrated || !isAuthed) return <AuthSplash />;
-  return children;
+  return (
+    <>
+      {children}
+      {/* 받은 환급액 알림 — 표현을 끝내고 다음 화면으로 넘어가도 이어서 떠 있도록 여기 둔다 */}
+      <EarnedPop />
+    </>
+  );
 }
