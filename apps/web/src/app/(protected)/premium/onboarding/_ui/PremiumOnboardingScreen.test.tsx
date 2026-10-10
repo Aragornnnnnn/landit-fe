@@ -176,4 +176,19 @@ describe('PremiumOnboardingScreen', () => {
     // then
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/me'));
   });
+
+  it('알람 단계에 들어온 뒤 셸이 알람을 못 쓴다고 답하면 원래 가던 곳으로 간다', () => {
+    // given — 셸이 아직 답하지 않은 채 알람 단계에 들어왔다
+    mocks.status = null;
+    const { rerender } = render(<PremiumOnboardingScreen returnTo="/me" />);
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+    expect(mocks.replace).not.toHaveBeenCalled();
+
+    // when — 뒤늦게 지원하지 않는다는 답이 온다
+    mocks.status = { supported: false };
+    rerender(<PremiumOnboardingScreen returnTo="/me" />);
+
+    // then
+    expect(mocks.replace).toHaveBeenCalledWith('/me');
+  });
 });

@@ -50,6 +50,12 @@ export const PremiumOnboardingScreen = ({
     else leave();
   };
 
+  // 셸의 답보다 먼저 알람 단계에 들어왔는데 뒤늦게 못 쓴다는 답이 오면 흐름을 접는다 — 걸 수 없는 알람을 등록시키지 않는다
+  const unsupportedInAlarm = step === 'alarm' && status?.supported === false;
+  useEffect(() => {
+    if (unsupportedInAlarm) router.replace(returnTo ?? homePath());
+  }, [unsupportedInAlarm, router, returnTo]);
+
   // 환영 연출이 도는 동안 알람 소개의 폰 그림을 받아 둔다 — 튀어 오르는 폰이 빈 자리로 오르지 않게
   const mayShowAlarmSetup = alarmCapable && setting?.enabled !== true;
   useEffect(() => {
