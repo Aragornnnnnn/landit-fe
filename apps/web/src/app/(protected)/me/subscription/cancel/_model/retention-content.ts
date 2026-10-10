@@ -1,7 +1,12 @@
 // 사유별 화면(②·③)의 문구와 카드 — 피그마 확정 플로우(정리 섹션 2373:329) 그대로.
 // 화면은 여기서 돌려준 모양만 그린다. 플랜·체험·이름·기록 같은 분기는 전부 여기서 끝낸다
-import type { CancelStayDestination, StudyMethod } from '@landit/analytics';
+import type {
+  CancelStayDestination,
+  StudyMethod,
+  SubscriptionPlan,
+} from '@landit/analytics';
 
+import type { RewardView } from '@/features/reward/api/reward';
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
 import { formatWon } from '@/features/subscription/lib/won';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
@@ -13,7 +18,7 @@ import type { RetentionReason } from './cancel-flow';
 export interface RowCard {
   kind: 'row';
   label: string;
-  /** 라벨 아래 작은 보조 문구 — 연간의 "연 58,500원" */
+  /** 라벨 아래 작은 보조 문구 — 연간의 "연 58,500원", 6개월의 "6개월 59,900원" */
   sublabel?: string;
   value: string;
 }
@@ -48,8 +53,25 @@ export const DAILY_REMINDER_LABEL = '매일 오후 9:00';
 
 const STAY = { label: '조금 더 써볼게요', to: 'manage' as const };
 
+/** 환급을 쌓는 중인 사람이 걸어 둔 것 — 지금까지 쌓인 금액과 끝까지 채우면 받는 금액 */
+export interface RefundStake {
+  balanceWon: number;
+  maximumWon: number;
+}
+
+/** 쌓는 중일 때만 — 끝났거나 결제를 확인하는 중이면 돌려받는 금액을 내세울 수 없다 */
+export const refundStakeOf = (reward: RewardView | null): RefundStake | null =>
+  reward?.state === 'ACTIVE' && reward.current
+    ? {
+        balanceWon: reward.current.balanceWon,
+        maximumWon: reward.current.maximumWon,
+      }
+    : null;
+
 interface RetentionContext {
   summary: PaidSubscriptionSummary;
+  /** 환급을 쌓는 중이 아니면 null */
+  stake: RefundStake | null;
   /** 마이페이지가 쓰는 이름 — 없으면 "게스트" */
   nickname: string;
   /** 스트릭 달력의 누적 학습일. 아직 못 받았으면 null */
@@ -63,13 +85,52 @@ interface RetentionContext {
 export const dailyWon = (price: number, days: number) =>
   Math.round(price / days / 10) * 10;
 
-const PLAN_DAYS = { monthly: 30, yearly: 365 } as const;
-const PLAN_TREAT = {
-  monthly: '껌 한 통 값',
-  yearly: '사탕 하나 값',
-} as const;
+// 환급을 쌓는 중이면 하루 요금보다 돌려받는 금액이 가격 이야기의 답이다
+const refundPriceContent = (stake: RefundStake): RetentionContent => ({
+  emoji: '💸',
+  title: '가격이 부담되셨군요',
+  body: [
+    // 최대액은 살 때 정해진 값이다 — 쉰 날이 있으면 다 못 받으니 "매일 하면 받는다"고 약속하지 않는다
+    `최대 ${formatWon(stake.maximumWon)}까지 돌려받는 플랜이에요.`,
+    '돌려받는 만큼 실제로 내는 금액이 줄어들어요.',
+  ],
+  cards: [
+    {
+      kind: 'row',
+      label: '지금까지 쌓인 환급액',
+      value: formatWon(stake.balanceWon),
+    },
+    { kind: 'row', label: '최대 환급액', value: formatWon(stake.maximumWon) },
+  ],
+  primary: STAY,
+});
 
-const priceContent = (summary: PaidSubscriptionSummary): RetentionContent => {
+const PLAN_DAYS: Record<SubscriptionPlan, number> = {
+  monthly: 30,
+  quarterly: 90,
+  halfyear: 180,
+  yearly: 365,
+};
+// 하루 요금을 빗댄 것 — 월간 500원·3개월 440원은 껌, 6개월 330원은 사탕 두 개, 연간 160원은 사탕 하나
+const PLAN_TREAT: Record<SubscriptionPlan, string> = {
+  monthly: '껌 한 통 값',
+  quarterly: '껌 한 통 값',
+  halfyear: '사탕 두 개 값',
+  yearly: '사탕 하나 값',
+};
+// 결제 금액 앞에 붙는 주기 — 월간은 하루 요금 행만으로 충분해 보조 문구를 달지 않는다
+const PLAN_PRICE_PREFIX: Record<SubscriptionPlan, string | null> = {
+  monthly: null,
+  quarterly: '3개월',
+  halfyear: '6개월',
+  yearly: '연',
+};
+
+const priceContent = (
+  summary: PaidSubscriptionSummary,
+  stake: RefundStake | null,
+): RetentionContent => {
+  if (stake) return refundPriceContent(stake);
   const { plan, price } = summary;
   // 플랜이나 실제 결제액을 모르면 숫자를 지어내지 않는다 — 문구도 카드도 없이
   if (!plan || price === null) {
@@ -88,14 +149,16 @@ const priceContent = (summary: PaidSubscriptionSummary): RetentionContent => {
     emoji: '💸',
     title: '가격이 부담되셨군요',
     body: [
-      `${plan === 'monthly' ? '지금' : '연간'} 요금은 ${daily}이에요.`,
+      `${plan === 'monthly' ? '지금' : title} 요금은 ${daily}이에요.`,
       `매일 ${PLAN_TREAT[plan]}으로 영어 회화를 연습하고 있어요.`,
     ],
     cards: [
       {
         kind: 'row',
         label: `지금 · ${title}`,
-        sublabel: plan === 'yearly' ? `연 ${formatWon(price)}` : undefined,
+        sublabel: PLAN_PRICE_PREFIX[plan]
+          ? `${PLAN_PRICE_PREFIX[plan]} ${formatWon(price)}`
+          : undefined,
         value: daily,
       },
       ...(firstCharge ? [firstCharge] : []),
@@ -205,7 +268,7 @@ export const retentionContent = (
 ): RetentionContent => {
   switch (reason) {
     case 'price':
-      return priceContent(context.summary);
+      return priceContent(context.summary, context.stake);
     case 'progress':
       return progressContent(context);
     case 'other':

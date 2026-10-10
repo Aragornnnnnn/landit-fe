@@ -1,12 +1,18 @@
 // 사유별 화면 문구·카드 — 플랜·체험·기록 유무로 갈리는 자리만 본다
 import { describe, expect, it } from 'vitest';
 
+import {
+  endedRewardView,
+  rewardView,
+} from '@/features/reward/model/reward.fixture';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
 
 import {
   dailyWon,
   methodRetentionContent,
+  refundStakeOf,
   retentionContent,
+  type RefundStake,
 } from './retention-content';
 
 const active = (
@@ -20,8 +26,12 @@ const active = (
   ...overrides,
 });
 
-const context = (summary: PaidSubscriptionSummary) => ({
+const context = (
+  summary: PaidSubscriptionSummary,
+  stake: RefundStake | null = null,
+) => ({
   summary,
+  stake,
   nickname: '준서',
   totalActiveDays: 12,
   levelLabel: '견습 마법사 Lv.3',
@@ -61,6 +71,34 @@ describe('retentionContent — 가격 부담', () => {
       label: '지금 · 연간',
       sublabel: '연 58,500원',
       value: '하루 160원',
+    });
+  });
+
+  it('6개월이면 180일로 나눈 하루 요금과 6개월 요금 보조 문구가 붙는다', () => {
+    const content = retentionContent(
+      'price',
+      context(active({ plan: 'halfyear', price: 59_900 })),
+    );
+
+    expect(content.body[0]).toBe('6개월 요금은 하루 330원이에요.');
+    expect(content.cards[0]).toMatchObject({
+      label: '지금 · 6개월',
+      sublabel: '6개월 59,900원',
+      value: '하루 330원',
+    });
+  });
+
+  it('3개월이면 90일로 나눈 하루 요금과 3개월 요금 보조 문구가 붙는다', () => {
+    const content = retentionContent(
+      'price',
+      context(active({ plan: 'quarterly', price: 39_900 })),
+    );
+
+    expect(content.body[0]).toBe('3개월 요금은 하루 440원이에요.');
+    expect(content.cards[0]).toMatchObject({
+      label: '지금 · 3개월',
+      sublabel: '3개월 39,900원',
+      value: '하루 440원',
     });
   });
 
@@ -151,5 +189,33 @@ describe('methodRetentionContent', () => {
 
     expect(new Set(titles).size).toBe(4);
     expect(methodRetentionContent('academy').cards).toEqual([]);
+  });
+});
+
+describe('환급을 쌓는 중인 사람', () => {
+  const stake = { balanceWon: 2015, maximumWon: 59_900 };
+
+  it('쌓는 중일 때만 걸어 둔 금액이 있다', () => {
+    expect(refundStakeOf(rewardView())).toEqual({
+      balanceWon: rewardView().current!.balanceWon,
+      maximumWon: rewardView().current!.maximumWon,
+    });
+    expect(refundStakeOf(endedRewardView(31_920))).toBeNull();
+    expect(refundStakeOf(null)).toBeNull();
+    // 도는 회차를 가진 채 검토로 넘어갈 수 있다
+    expect(refundStakeOf(rewardView({ state: 'REVIEW' }))).toBeNull();
+  });
+
+  it('가격 부담에는 하루 요금 대신 돌려받는 금액으로 답한다', () => {
+    const content = retentionContent(
+      'price',
+      context(active({ plan: 'halfyear', price: 59_900 }), stake),
+    );
+
+    expect(content.body[0]).toBe('최대 59,900원까지 돌려받는 플랜이에요.');
+    expect(content.cards).toEqual([
+      { kind: 'row', label: '지금까지 쌓인 환급액', value: '2,015원' },
+      { kind: 'row', label: '최대 환급액', value: '59,900원' },
+    ]);
   });
 });

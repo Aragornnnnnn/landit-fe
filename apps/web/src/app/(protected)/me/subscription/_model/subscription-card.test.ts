@@ -21,6 +21,9 @@ describe('toCardTitle', () => {
     expect(toCardTitle(active({ plan: 'yearly' }))).toBe(
       '연간 프리미엄을 쓰고 있어요',
     );
+    expect(toCardTitle(active({ plan: 'halfyear' }))).toBe(
+      '6개월 프리미엄을 쓰고 있어요',
+    );
     expect(toCardTitle(active())).toBe('프리미엄을 쓰고 있어요');
   });
 
@@ -76,6 +79,14 @@ describe('toAmountRow', () => {
     expect(toAmountRow(active({ plan: 'monthly', price: 14_900 }))).toEqual({
       label: '다음 결제 금액',
       value: '14,900원',
+      listPrice: undefined,
+    });
+  });
+
+  it('3·6개월은 비교가 없이 다음 결제 금액만 보여 준다', () => {
+    expect(toAmountRow(active({ plan: 'halfyear', price: 59_900 }))).toEqual({
+      label: '다음 결제 금액',
+      value: '59,900원',
       listPrice: undefined,
     });
   });

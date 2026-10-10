@@ -95,12 +95,13 @@ export const buildPaywallPlans = (
 export const YEARLY_LIST_PRICE = MONTHLY_PRICE * 12;
 
 // 스토어 상품 식별자 → 플랜 (docs/subscription.md 「상품과 가격」).
-// 연간은 정가와 이탈 할인 둘이라 같은 플랜을 가리키는 id가 두 개다.
-// 환급 플랜(3·6개월) 상품은 아직 없다 — 구독 관리 화면이 월간·연간 금액 규칙만 알아서, 모르는 상품처럼 플랜 없이 보여준다
-const PRODUCT_PLANS: Record<string, RegularPlan> = {
+// 연간은 정가와 이탈 할인 둘이라 같은 플랜을 가리키는 id가 두 개다. 3·6개월은 환급 챌린지 상품이다
+const PRODUCT_PLANS: Record<string, SubscriptionPlan> = {
   'com.saynow.app.premium.monthly': 'monthly',
   'com.saynow.app.premium.yearly': 'yearly',
   'com.saynow.app.premium.yearly.discount': 'yearly',
+  'com.saynow.app.premium.quarterly': 'quarterly',
+  'com.saynow.app.premium.halfyear': 'halfyear',
 };
 
 /**
@@ -111,4 +112,5 @@ const PRODUCT_PLANS: Record<string, RegularPlan> = {
  */
 export const planFromProductId = (
   productId: string | null | undefined,
-): RegularPlan | null => PRODUCT_PLANS[(productId ?? '').split(':')[0]] ?? null;
+): SubscriptionPlan | null =>
+  PRODUCT_PLANS[(productId ?? '').split(':')[0]] ?? null;

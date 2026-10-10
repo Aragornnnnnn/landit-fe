@@ -31,6 +31,14 @@ describe('summarizeSubscriptionEvent', () => {
     });
   });
 
+  it('6개월 상품 결제는 6개월 플랜이라고 말한다', () => {
+    expect(
+      summarizeSubscriptionEvent(
+        event({ productId: 'com.saynow.app.premium.halfyear', price: 59900 }),
+      ).plan,
+    ).toBe('6개월 플랜');
+  });
+
   it('첫 결제는 체험이면 "무료 체험 시작", 금액 0이면 금액이 없다', () => {
     expect(
       summarizeSubscriptionEvent(

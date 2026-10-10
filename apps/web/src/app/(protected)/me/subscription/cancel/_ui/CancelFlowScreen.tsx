@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { LEVEL_NAMES } from '@/features/feedback/model/level-assessment';
 import { toEnglishLevel } from '@/features/onboarding/model/english-level';
 import { useLearningLevelQuery } from '@/features/onboarding/model/useLearningLevelQuery';
+import { useRewardQuery } from '@/features/reward/model/useRewardQuery';
 import { useStreakCalendarQuery } from '@/features/streak/model/useStreakCalendarQuery';
 import type { MySubscription } from '@/features/subscription/api/subscription';
 import { STORE } from '@/features/subscription/model/my-subscription/store-links';
@@ -19,6 +20,7 @@ import {
 } from '@/features/subscription/model/my-subscription/subscription-summary';
 import { useStorePlatform } from '@/features/subscription/model/my-subscription/useStorePlatform';
 import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
+import { REFUND_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import {
@@ -39,6 +41,7 @@ import {
 } from '../_model/cancel-flow';
 import {
   methodRetentionContent,
+  refundStakeOf,
   retentionContent,
 } from '../_model/retention-content';
 import { MethodStep } from './MethodStep';
@@ -64,6 +67,8 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
   const { calendar } = useStreakCalendarQuery({ enabled: true });
   const { data: profile } = useLearningLevelQuery();
   const level = toEnglishLevel(profile?.learningLevel ?? null);
+  // 가격 부담 화면이 환급을 쌓는 중인 사람에게 다른 답을 한다 — 스위치가 꺼져 있으면 묻지 않는다
+  const { reward } = useRewardQuery({ enabled: REFUND_CHALLENGE_ENABLED });
 
   const leaveToManage = () => backOrReplace(router, SUBSCRIPTION_MANAGE_PATH);
 
@@ -150,6 +155,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
       case 'retention': {
         const content = retentionContent(step.reason, {
           summary,
+          stake: refundStakeOf(reward),
           nickname,
           totalActiveDays: calendar?.totalActiveDays ?? null,
           levelLabel: level ? `${LEVEL_NAMES[level]} Lv.${level}` : null,

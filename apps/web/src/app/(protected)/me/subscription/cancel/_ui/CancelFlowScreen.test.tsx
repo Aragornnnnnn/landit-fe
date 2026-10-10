@@ -3,6 +3,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { RewardView } from '@/features/reward/api/reward';
+import { rewardView } from '@/features/reward/model/reward.fixture';
 import type { MySubscription } from '@/features/subscription/api/subscription';
 
 import { CancelFlowScreen } from './CancelFlowScreen';
@@ -18,8 +20,12 @@ const mocks = vi.hoisted(() => ({
     isError: false,
   },
   learningLevel: { data: { learningLevel: 3 } },
+  reward: { reward: null as RewardView | null },
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
+vi.mock('@/features/reward/model/useRewardQuery', () => ({
+  useRewardQuery: () => mocks.reward,
+}));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     replace: mocks.replace,
@@ -77,6 +83,7 @@ beforeEach(() => {
   mocks.track.mockClear();
   mocks.replace.mockClear();
   mocks.push.mockClear();
+  mocks.reward = { reward: null };
 });
 afterEach(cleanup);
 
@@ -248,6 +255,21 @@ describe('다른 방법 → ③', () => {
     fireEvent.click(screen.getByRole('button', { name: '뒤로 가기' }));
     expect(
       screen.getByRole('heading', { name: /이유를 알려주세요/ }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe('환급을 쌓는 중인 사람', () => {
+  it('가격 부담을 고르면 하루 요금 대신 돌려받는 금액으로 답한다', () => {
+    mocks.reward = { reward: rewardView() };
+    renderScreen(
+      premium({ productId: 'com.saynow.app.premium.halfyear', price: 59_900 }),
+    );
+
+    chooseReason('가격이 부담돼요');
+
+    expect(
+      screen.getByText('최대 59,900원까지 돌려받는 플랜이에요.'),
     ).toBeInTheDocument();
   });
 });
