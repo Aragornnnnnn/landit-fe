@@ -234,7 +234,8 @@ const AlarmCheck = () => {
   return (
     <>
       <MenuSection title="테스트 알람 — 누르면 아래 시각에 한 번 울려요">
-        <StatusList>
+        {/* 테스트 알람은 갈 화면 없이 걸린다 — 이동까지 보려면 매일 알람이어야 한다 */}
+        <StatusList note="울릴 때 「대화하러 가기」를 눌러도 앱만 열리고 화면은 옮기지 않아요. 시나리오로 가는 건 매일 알람으로 확인해요">
           {pendingTests.length === 0 ? (
             <StatusItem label="예약한 테스트 알람" value="없음" />
           ) : (
