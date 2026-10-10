@@ -27,6 +27,7 @@ import { AlarmMenuEntry } from './_ui/AlarmMenuEntry';
 import { DeveloperMenuSection } from './_ui/DeveloperMenuSection';
 import { HapticMenuEntry } from './_ui/HapticMenuEntry';
 import { MenuButton, MenuLink, MenuSection } from './_ui/Menu';
+import { MyProgressTiles } from './_ui/MyProgressTiles';
 import { NotificationMenuEntry } from './_ui/NotificationMenuEntry';
 import { PremiumEntry } from './_ui/PremiumEntry';
 import { ProfileHeader } from './_ui/ProfileHeader';
@@ -142,6 +143,7 @@ export default function MyPage() {
         <div className="space-y-5 px-4 pt-3 pb-8">
           <ProfileHeader />
           <PremiumEntry />
+          <MyProgressTiles />
 
           <MenuSection title="학습">
             <AccentMenuEntry />

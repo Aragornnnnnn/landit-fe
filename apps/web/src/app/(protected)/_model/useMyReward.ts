@@ -21,6 +21,7 @@ export const useMyReward = () => {
     premium: subscription?.premium,
     subscriptionFailed,
     rewardLoaded: query.loaded,
+    rewardFailed: query.fetched && !query.loaded,
     participant: query.reward !== null,
   });
 

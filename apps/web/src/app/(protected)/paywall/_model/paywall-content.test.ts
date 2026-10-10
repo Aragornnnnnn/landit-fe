@@ -1,12 +1,16 @@
 // 롱 페이월 고정 콘텐츠의 계약 — 예문 카드는 짚을 표현이 문장 안에 그대로 있어야 주황 강조가 제자리에 앉는다
 import { describe, expect, it } from 'vitest';
 
+import { MAX_REFUND_WON } from '@/features/reward/model/refund-offer';
+
 import {
   buildRefundPlans,
   EXAMPLE_CARDS,
   EXAMPLE_LANDING_INDEX,
+  FULL_REFUND_PLAN,
   isRefundPlan,
   maskName,
+  REFUND_PLANS,
 } from './paywall-content';
 
 describe('EXAMPLE_CARDS', () => {
@@ -84,5 +88,13 @@ describe('isRefundPlan', () => {
     expect(isRefundPlan('quarterly')).toBe(true);
     expect(isRefundPlan('yearly')).toBe(false);
     expect(isRefundPlan('monthly')).toBe(false);
+  });
+});
+
+describe('MAX_REFUND_WON', () => {
+  it('환급 소개가 말하는 최대 금액은 전액 환급 플랜의 환급액과 같다', () => {
+    const { price, refundRate } = REFUND_PLANS[FULL_REFUND_PLAN];
+
+    expect(MAX_REFUND_WON).toBe((price * refundRate) / 100);
   });
 });

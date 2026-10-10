@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   track: vi.fn(),
   purchase: vi.fn(),
   restore: vi.fn(),
+  refreshReward: vi.fn(),
   busy: false,
   packages: {} as Record<string, unknown>,
   dismiss: vi.fn(),
@@ -22,6 +23,11 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace }),
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
+// 조회 캐시는 이 화면이 직접 쓰지 않는다 — 결제 뒤 환급을 새로 받으라고 넘겨주기만 한다
+vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => 'client' }));
+vi.mock('@/features/reward/model/refresh-reward', () => ({
+  refreshReward: mocks.refreshReward,
+}));
 // 닫기의 서버 알림·할인 전달은 usePaywallDismiss 몫 — 여기선 닫기가 그걸 부른 뒤 홈으로 가는지만 본다
 vi.mock('@/features/subscription/model/exit-promo/usePaywallDismiss', () => ({
   usePaywallDismiss: () => mocks.dismiss,
@@ -78,6 +84,7 @@ vi.mock('next/image', () => ({
 beforeEach(() => {
   mocks.busy = false;
   mocks.purchaseOptions = null;
+  mocks.refreshReward.mockClear();
   mocks.dismiss = vi.fn().mockResolvedValue(undefined);
   mocks.packages = {
     yearly: { packageId: '$rc_annual', price: 94_500, currency: 'KRW' },
@@ -283,6 +290,18 @@ describe('PaywallScreen', () => {
       '/premium/onboarding?from=%2Fconversation%2Fscenario%2F7%2Fexpressions',
     );
   });
+
+  it.each(['purchase', 'restore'] as const)(
+    '%s로 유료가 되면 환급을 새로 받는다',
+    (reason) => {
+      // given — 결제 전에 받아 둔 환급 답은 "상관없음"이다
+      render(<PaywallScreen returnTo="/refund" />);
+
+      mocks.purchaseOptions?.onUnlocked(reason);
+
+      expect(mocks.refreshReward).toHaveBeenCalledWith('client');
+    },
+  );
 
   it('복원으로 유료가 되면 환영 없이 게이트가 붙여 준 곳으로 바로 돌아간다', () => {
     render(<PaywallScreen returnTo="/conversation/scenario/7/expressions" />);

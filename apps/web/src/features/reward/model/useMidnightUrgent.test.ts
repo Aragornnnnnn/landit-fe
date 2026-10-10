@@ -47,6 +47,19 @@ describe('useMidnightUrgent', () => {
     expect(result.current).toBe(true);
   });
 
+  it('앱이 뒤에 가 있던 동안 경계를 넘겼으면 돌아온 순간 바로잡는다', () => {
+    // given — 타이머가 멈춘 채 시각만 흘렀다
+    vi.setSystemTime(kst(17));
+    const { result } = renderHook(() => useMidnightUrgent(true));
+    vi.setSystemTime(kst(19));
+
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    expect(result.current).toBe(true);
+  });
+
   it('꺼 둔 동안은 급한 시각이어도 false다', () => {
     vi.setSystemTime(kst(20));
 

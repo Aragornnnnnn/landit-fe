@@ -46,6 +46,17 @@ describe('potStageOf', () => {
     expect(potStageOf(endedRewardView(0))).toBe('empty');
   });
 
+  it('기간을 마친 뒤 검토 중이면 보관된 금액이 있어 지킨 그림이다', () => {
+    const view = rewardView({
+      state: 'REVIEW',
+      current: null,
+      today: null,
+      heldRefundWon: 31920,
+    });
+
+    expect(potStageOf(view)).toBe('kept');
+  });
+
   it('검토 중에는 쌓인 금액이 그대로라 지킨 그림이다', () => {
     expect(potStageOf(rewardView({ state: 'REVIEW', today: null }))).toBe(
       'kept',

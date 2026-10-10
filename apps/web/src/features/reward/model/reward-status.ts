@@ -91,6 +91,53 @@ export const rewardHeroOf = (view: RewardView): RewardHeroMessage => {
   };
 };
 
+// 헤더 알약이나 내 정보 타일처럼 좁은 자리에 놓는 요약 — 꼬리표와 금액은 환급 화면의 큰 글자와 같다
+export interface RewardBadge {
+  label: string;
+  // 아직 모르면 null (결제 확인 중)
+  amountWon: number | null;
+  // 금액 아래 한 줄
+  note: string;
+  // atRisk는 쌓인 게 있는데 오늘 아직, idle은 오늘 아직이지만 걸린 것도 없음, 그 밖에는 kept
+  mood: 'kept' | 'idle' | 'atRisk';
+}
+
+// 좁은 자리에 적는 금액 글자 — 결제를 확인하는 동안에는 금액을 모른다
+export const badgeAmountOf = (badge: RewardBadge) =>
+  badge.amountWon === null ? '확인 중' : formatWon(badge.amountWon);
+
+// 쌓는 중인 사람의 오늘 — 기분과 그 아래 한 줄을 같이 정한다
+const activeBadgeOf = (
+  view: RewardView,
+): Pick<RewardBadge, 'mood' | 'note'> => {
+  if (atRiskOf(view)) return { mood: 'atRisk', note: '오늘 아직 안 했어요' };
+  return (view.today?.earnedWon ?? 0) > 0
+    ? { mood: 'kept', note: '오늘도 지켰어요' }
+    : { mood: 'idle', note: '오늘 대화로 쌓기 시작해요' };
+};
+
+// 쌓는 중이 아닌 국면의 한 줄 — 여기 없으면 쌓는 중이다
+const SETTLED_NOTE: Partial<Record<RewardState, string>> = {
+  ENDED: '곧 환급 신청할 수 있어요',
+  PENDING: '결제를 확인하고 있어요',
+  REVIEW: '결제 내역을 확인하고 있어요',
+};
+
+// 끝났고 돌려받을 금액도 없으면 null — 알릴 것이 없으니 그 자리는 원래 모습으로 돌아간다
+export const rewardBadgeOf = (view: RewardView): RewardBadge | null => {
+  if (view.state === 'ENDED' && view.pendingRefundWon === 0) return null;
+
+  const { label, amountWon } = rewardHeroOf(view);
+  const settledNote = SETTLED_NOTE[view.state];
+  return {
+    label: label ?? '환급',
+    amountWon,
+    ...(settledNote
+      ? { mood: 'kept', note: settledNote }
+      : activeBadgeOf(view)),
+  };
+};
+
 // 오늘 세 칸 — 화면에 놓이는 순서는 학습 순서(시나리오 → 표현 → 스몰톡)다
 const SLOT_ORDER: RewardActivity['activityType'][] = [
   'SCENARIO',

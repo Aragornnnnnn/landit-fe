@@ -1,6 +1,14 @@
 // 헤더 왼쪽 자리 — 언제 알약이고 언제 로고인지, 할인 중에는 무엇을 보여주는지
-import { act, cleanup, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { track } from '@/shared/analytics';
 
 import type { MySubscription } from '../api/subscription';
 import {
@@ -72,6 +80,7 @@ beforeEach(() => {
   mocks.isPending = false;
   mocks.isError = false;
   mocks.push.mockClear();
+  vi.mocked(track).mockClear();
   mocks.onUnlocked = null;
   clearPromoHandoff();
 });
@@ -124,6 +133,58 @@ describe('PremiumHeaderEntry', () => {
     render(<PremiumHeaderEntry />);
 
     expect(screen.getByLabelText('홈으로')).toBeInTheDocument();
+  });
+
+  it('부르는 쪽이 무엇을 놓을지 아직 모르면 로고로 기다린다', () => {
+    render(<PremiumHeaderEntry holding />);
+
+    expect(screen.getByLabelText('홈으로')).toBeInTheDocument();
+    expect(screen.queryByText('시작하기')).not.toBeInTheDocument();
+  });
+
+  it('진입을 다른 곳으로 돌리면 그 주소와 글자로 알약을 그린다', () => {
+    render(
+      <PremiumHeaderEntry invite={{ href: '/refund', label: '환급받기' }} />,
+    );
+
+    expect(screen.getByText('환급받기').closest('a')).toHaveAttribute(
+      'href',
+      '/refund',
+    );
+  });
+
+  it('할인 중에는 진입을 돌려도 할인 배지가 먼저다', () => {
+    mocks.subscription = free({
+      remainingSeconds: 165,
+      expiresAt: '2026-09-22T14:35:00',
+      newUser: true,
+    });
+
+    render(
+      <PremiumHeaderEntry invite={{ href: '/refund', label: '환급받기' }} />,
+    );
+
+    expect(screen.queryByText('환급받기')).not.toBeInTheDocument();
+  });
+
+  it('돌린 진입을 눌러도 페이월 진입으로 세지 않는다', () => {
+    render(
+      <PremiumHeaderEntry invite={{ href: '/refund', label: '환급받기' }} />,
+    );
+
+    fireEvent.click(screen.getByText('환급받기'));
+
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('페이월로 가는 진입을 누르면 진입으로 센다', () => {
+    render(<PremiumHeaderEntry />);
+
+    fireEvent.click(screen.getByText('시작하기'));
+
+    expect(track).toHaveBeenCalledWith(expect.any(String), {
+      source: 'header',
+    });
   });
 
   it('페이월에서 넘겨받으면 시트가 저절로 열린다 — 닫고 홈으로 보낸 뒤 한 번 더 권하는 자리다', () => {

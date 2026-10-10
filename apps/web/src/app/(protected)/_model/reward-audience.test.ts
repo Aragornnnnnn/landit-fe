@@ -10,6 +10,7 @@ const base = {
   premium: false as boolean | undefined,
   subscriptionFailed: false,
   rewardLoaded: true,
+  rewardFailed: false,
   participant: false,
 };
 
@@ -54,6 +55,17 @@ describe('rewardAudienceOf', () => {
       invited: false,
       settled: false,
     });
+  });
+
+  it('환급 조회가 실패하면 권하지 않은 채로 마무리한다', () => {
+    // given — 환급을 못 받아도 원래의 프리미엄 진입은 떠야 한다
+    const audience = rewardAudienceOf({
+      ...base,
+      rewardLoaded: false,
+      rewardFailed: true,
+    });
+
+    expect(audience).toEqual({ invited: false, settled: true });
   });
 
   it('구독을 아직 모르면 단정하지 않는다', () => {

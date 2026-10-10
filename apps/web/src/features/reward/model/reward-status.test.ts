@@ -4,8 +4,10 @@ import { describe, expect, it } from 'vitest';
 import type { RewardView } from '../api/reward';
 import {
   atRiskOf,
+  badgeAmountOf,
   balanceOf,
   participantOf,
+  rewardBadgeOf,
   rewardHeroOf,
   todaySlotsOf,
 } from './reward-status';
@@ -180,6 +182,91 @@ describe('rewardHeroOf — 그 밖의 국면', () => {
       label: '확인 중인 금액',
       amountWon: 31920,
     });
+  });
+});
+
+describe('rewardBadgeOf', () => {
+  it('쌓인 게 있는데 오늘이 아직이면 걸려 있다고 알린다', () => {
+    expect(rewardBadgeOf(rewardView())).toEqual({
+      label: '쌓인 환급액',
+      amountWon: 12300,
+      note: '오늘 아직 안 했어요',
+      mood: 'atRisk',
+    });
+  });
+
+  it('오늘 하나라도 했으면 지켰다고 말한다', () => {
+    const view = rewardView({ today: rewardToday({ earnedWon: 111 }) });
+
+    expect(rewardBadgeOf(view)).toMatchObject({
+      note: '오늘도 지켰어요',
+      mood: 'kept',
+    });
+  });
+
+  it('쌓인 게 없고 오늘도 아직이면 걸린 것 없이 시작을 권한다', () => {
+    const view = rewardView({ current: rewardCycle({ balanceWon: 0 }) });
+
+    expect(rewardBadgeOf(view)).toMatchObject({
+      amountWon: 0,
+      note: '오늘 대화로 쌓기 시작해요',
+      mood: 'idle',
+    });
+  });
+
+  it('기간을 마쳤으면 돌려받을 금액과 곧 신청할 수 있음을 말한다', () => {
+    expect(rewardBadgeOf(endedRewardView(31920))).toEqual({
+      label: '돌려받을 금액',
+      amountWon: 31920,
+      note: '곧 환급 신청할 수 있어요',
+      mood: 'kept',
+    });
+  });
+
+  it('끝났고 돌려받을 금액도 없으면 알릴 것이 없다', () => {
+    expect(rewardBadgeOf(endedRewardView(0))).toBe(null);
+  });
+
+  it('결제를 확인하는 동안에는 금액 없이 확인 중이라고 말한다', () => {
+    const view = rewardView({
+      state: 'PENDING',
+      current: null,
+      today: null,
+      remainingDays: null,
+    });
+
+    expect(rewardBadgeOf(view)).toEqual({
+      label: '환급',
+      amountWon: null,
+      note: '결제를 확인하고 있어요',
+      mood: 'kept',
+    });
+  });
+
+  it('검토 중에는 금액을 그대로 두고 확인 중이라고 말한다', () => {
+    const view = rewardView({ state: 'REVIEW', today: null });
+
+    expect(rewardBadgeOf(view)).toMatchObject({
+      amountWon: 12300,
+      note: '결제 내역을 확인하고 있어요',
+      mood: 'kept',
+    });
+  });
+});
+
+describe('badgeAmountOf', () => {
+  it('금액을 원화로 적는다', () => {
+    const badge = rewardBadgeOf(rewardView());
+
+    expect(badge && badgeAmountOf(badge)).toBe('12,300원');
+  });
+
+  it('금액을 모르면 확인 중이라고 적는다', () => {
+    const badge = rewardBadgeOf(
+      rewardView({ state: 'PENDING', current: null, today: null }),
+    );
+
+    expect(badge && badgeAmountOf(badge)).toBe('확인 중');
   });
 });
 

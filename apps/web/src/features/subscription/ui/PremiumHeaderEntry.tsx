@@ -43,7 +43,17 @@ const HomeLogo = () => (
   </Link>
 );
 
-export const PremiumHeaderEntry = () => {
+interface PremiumHeaderEntryProps {
+  // 무료 사용자의 진입을 페이월 대신 다른 곳으로 돌린다 — 환급 소개처럼, 구독이 모르는 화면을 라우트가 끼운다. 할인 중에는 할인 배지가 먼저다
+  invite?: { href: string; label: React.ReactNode };
+  // 부르는 쪽이 이 자리에 무엇을 놓을지 아직 모른다 — 그동안은 로고로 기다린다
+  holding?: boolean;
+}
+
+export const PremiumHeaderEntry = ({
+  invite,
+  holding = false,
+}: PremiumHeaderEntryProps) => {
   const paymentLive = usePaymentLive();
   const { subscription, isPending, isError } = useSubscriptionQuery({
     enabled: paymentLive,
@@ -84,7 +94,13 @@ export const PremiumHeaderEntry = () => {
 
   // 이미 유료거나 결제할 수 없는 환경이거나 구독 상태를 아직 모를 때는 로고를 둔다 — 결제한 사람에게 구독 권유가 잠깐이라도 보이면 안 된다.
   // 다만 결제하는 사이 다른 조회로 유료가 먼저 들어와도 열린 시트는 남긴다 — 사라지면 결제 결과를 받지 못해 프리미엄 온보딩으로 못 간다
-  if (!paymentLive || isPending || isError || subscription?.premium) {
+  if (
+    holding ||
+    !paymentLive ||
+    isPending ||
+    isError ||
+    subscription?.premium
+  ) {
     return (
       <>
         <HomeLogo />
@@ -113,14 +129,21 @@ export const PremiumHeaderEntry = () => {
         </button>
       ) : (
         <Link
-          href={paywallPath({ source: 'header' })}
-          onClick={() =>
-            track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'header' })
+          href={invite?.href ?? paywallPath({ source: 'header' })}
+          // 페이월로 가는 진입일 때만 센다 — 돌린 곳의 노출은 그 화면이 따로 센다
+          onClick={
+            invite
+              ? undefined
+              : () => track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'header' })
           }
           className={`${PILL_CLASS} animate-gold-flow animate-gold-sheen`}
         >
-          <span className="tracking-[0.1em]">PREMIUM</span>
-          <span>시작하기</span>
+          {invite?.label ?? (
+            <>
+              <span className="tracking-[0.1em]">PREMIUM</span>
+              <span>시작하기</span>
+            </>
+          )}
         </Link>
       )}
 

@@ -3,14 +3,16 @@
 // 환급을 아직 시작하지 않은 사람이 보는 환급 화면 — 무엇을 하면 얼마를 돌려받는지 보여 주고 페이월로 보낸다
 import { useRouter } from 'next/navigation';
 
+import { MAX_REFUND_WON } from '@/features/reward/model/refund-offer';
 import { RefundGuide } from '@/features/reward/ui/RefundGuide';
 import { paywallPath, REFUND_PATH } from '@/shared/lib/routes';
+import { formatWon } from '@/shared/lib/won';
 import { Button } from '@/shared/ui/Button';
 
 export const RefundIntro = () => (
   <div className="pb-8">
     <RefundGuide
-      amount="최대 59,900원"
+      amount={`최대 ${formatWon(MAX_REFUND_WON)}`}
       caption="6개월은 낸 금액 전부, 3개월은 80%를 돌려받아요"
     />
   </div>

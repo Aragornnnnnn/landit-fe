@@ -5,8 +5,10 @@
 // 여기서는 어느 플랜을 골랐는지와 버튼 상태만 안다
 import { useRef, useState } from 'react';
 import { EVENTS, type SubscriptionPlan } from '@landit/analytics';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
+import { refreshReward } from '@/features/reward/model/refresh-reward';
 import { usePaywallDismiss } from '@/features/subscription/model/exit-promo/usePaywallDismiss';
 import { REFUND_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
 import { toKrwPrices } from '@/features/subscription/model/product/offering';
@@ -107,7 +109,10 @@ export const PaywallScreen = ({
   };
 
   // 유료가 되면 원래 가려던 곳(게이트가 붙인 ?from=)으로 가되, 결제 직후면 프리미엄 온보딩을 거친다 — 캐시가 이미 유료라 다시 막히지 않는다
+  const queryClient = useQueryClient();
   const unlock = (reason: UnlockReason) => {
+    // 환급 상품을 샀으면 참여자가 된다 — 결제 전에 받아 둔 "환급과 상관없음"으로 다음 화면이 갈리지 않게 새로 받는다
+    refreshReward(queryClient);
     const destination = returnTo ?? homePath();
     router.replace(
       reason === 'purchase' ? premiumOnboardingPath(destination) : destination,
