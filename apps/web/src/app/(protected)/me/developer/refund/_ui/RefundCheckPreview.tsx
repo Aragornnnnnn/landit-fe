@@ -131,7 +131,11 @@ export const RefundCheckPreview = ({
     return <RecordPreview {...RECORD_CASES[name]} onBack={onBack} />;
   if (name === 'intro')
     return (
-      <RefundFrame onBack={onBack} footer={<RefundStartButton />}>
+      <RefundFrame
+        onBack={onBack}
+        footer={<RefundStartButton />}
+        fadeAboveFooter
+      >
         <RefundIntro />
       </RefundFrame>
     );

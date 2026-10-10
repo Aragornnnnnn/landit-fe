@@ -7,11 +7,14 @@ import { BackHeader } from '@/shared/ui/BackHeader';
 export const RefundFrame = ({
   onBack,
   footer,
+  fadeAboveFooter = false,
   children,
 }: {
   onBack: () => void;
   // 아래 버튼 — 없으면 자리도 두지 않는다
   footer?: React.ReactNode;
+  // 버튼 위를 구분선 대신 서서히 덮는다 — 한 번 읽고 지나가는 소개 화면처럼, 아래에 더 있다는 걸 알려야 할 때
+  fadeAboveFooter?: boolean;
   children: React.ReactNode;
 }) => {
   const { ref: scrollRef, onScroll, hasShadow } = useScrollShadow();
@@ -27,12 +30,15 @@ export const RefundFrame = ({
         {children}
       </div>
       {footer && (
-        <footer className="relative flex-none px-5 pt-1 pb-[max(var(--safe-area-inset-bottom),16px)]">
-          {/* 구분선 대신 위쪽을 배경색으로 서서히 덮는다 — 선에서 딱 끊기면 아래에 내용이 더 있는지 알 수 없다 */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-full h-10 bg-linear-to-t from-background to-transparent"
-          />
+        <footer
+          className={`relative flex-none px-5 pb-[max(var(--safe-area-inset-bottom),16px)] ${fadeAboveFooter ? 'pt-1' : 'border-t border-border pt-3'}`}
+        >
+          {fadeAboveFooter && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 bottom-full h-10 bg-linear-to-t from-background to-transparent"
+            />
+          )}
           {footer}
         </footer>
       )}
