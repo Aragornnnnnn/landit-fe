@@ -5,6 +5,7 @@
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { AppleIcon, GoogleIcon, KakaoIcon } from '@/shared/ui/SocialIcons';
 
+import { readLastLoginProvider } from '../_model/last-login-provider';
 import { useSocialLogin, type SocialProvider } from '../_model/useSocialLogin';
 import styles from './login-motion.module.css';
 import { LoginButton } from './LoginButton';
@@ -26,6 +27,7 @@ export const SocialLoginButtons = ({
     () => /Android/i.test(navigator.userAgent),
     false,
   );
+  const recent = useClientOnlyValue(readLastLoginProvider, null);
 
   return (
     <div className={`${styles.buttons} flex flex-col gap-3`}>
@@ -41,6 +43,7 @@ export const SocialLoginButtons = ({
         onClick={() => login('kakao')}
         disabled={busy}
         loading={pending === 'kakao'}
+        recent={recent === 'kakao'}
       />
       <LoginButton
         label="구글로 로그인하기"
@@ -49,6 +52,7 @@ export const SocialLoginButtons = ({
         onClick={() => login('google')}
         disabled={busy}
         loading={pending === 'google'}
+        recent={recent === 'google'}
       />
       {!isAndroid && (
         <LoginButton
@@ -58,6 +62,7 @@ export const SocialLoginButtons = ({
           onClick={() => login('apple')}
           disabled={busy}
           loading={pending === 'apple'}
+          recent={recent === 'apple'}
         />
       )}
     </div>
