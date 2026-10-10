@@ -10,6 +10,8 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { prepareFeedbackSummary } from '@/features/feedback/model/useSessionFeedbackQuery';
+// 대화 완료가 환급액도 늘린다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
+import { refreshRewardAfterCompletion } from '@/features/reward/model/refresh-reward';
 // 첫 완료 뒤 홈에서 소감을 묻는다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { markTalkCompleted } from '@/features/satisfaction/model/prompt-record';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
@@ -53,6 +55,8 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
     void prepareFeedbackSummary(queryClient, finishedSessionId);
     void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
     refreshStreakAfterCompletion(queryClient);
+    // 환급 참여자는 이 완료로 금액이 쌓인다 — 홈에 돌아왔을 때 새 금액이 서 있도록 미리 받는다
+    refreshRewardAfterCompletion(queryClient);
   };
 
   const engine = useConversationTurns({

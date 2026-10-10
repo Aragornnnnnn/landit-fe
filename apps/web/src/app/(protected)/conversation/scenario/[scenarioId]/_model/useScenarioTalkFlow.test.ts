@@ -106,6 +106,11 @@ const queryClientMock = vi.hoisted(() => ({
   prefetchQuery: vi.fn(),
   invalidateQueries: vi.fn(),
 }));
+// 환급 미리받기는 다른 기능의 후속이라 목으로 둔다 — 여기서는 완료 때 부르는지만 본다
+const refreshRewardAfterCompletion = vi.hoisted(() => vi.fn());
+vi.mock('@/features/reward/model/refresh-reward', () => ({
+  refreshRewardAfterCompletion,
+}));
 vi.mock('@tanstack/react-query', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@tanstack/react-query')>()),
   useQueryClient: () => queryClientMock,
@@ -523,6 +528,8 @@ describe('useScenarioTalkFlow', async () => {
     expect(queryClientMock.invalidateQueries).toHaveBeenCalledWith({
       queryKey: ['scenarios'],
     });
+    // 홈에 돌아왔을 때 새 환급액이 서 있게 미리 받아 둔다
+    expect(refreshRewardAfterCompletion).toHaveBeenCalledWith(queryClientMock);
     // 홈에 돌아가면 소감을 물을 차례라고 남긴다
     expect(shouldAskSatisfaction('scenario')).toBe(true);
   });
