@@ -4,7 +4,10 @@
 import { useEffect, useEffectEvent } from 'react';
 
 import type { HistoryRow } from '@/features/reward/model/reward-history';
-import { useRewardHistoryQuery } from '@/features/reward/model/useRewardHistoryQuery';
+import {
+  useRewardHistoryQuery,
+  type RewardHistoryFeed,
+} from '@/features/reward/model/useRewardHistoryQuery';
 import {
   HistoryPlaceholderLines,
   RefundHistory,
@@ -14,17 +17,21 @@ import { useInView } from '@/shared/lib/useInView';
 const NOTICE_CLASS =
   'py-6 text-center text-[13px] font-medium text-muted-foreground';
 
-export const RefundHistoryFeed = () => {
-  const {
-    rows,
-    error,
-    retry,
-    hasMore,
-    fetching,
-    loadingMore,
-    moreFailed,
-    loadMore,
-  } = useRewardHistoryQuery();
+export const RefundHistoryFeed = () => (
+  <RefundHistoryList {...useRewardHistoryQuery()} />
+);
+
+// 그리는 쪽 — 어디서 받아 왔는지는 모른다
+export const RefundHistoryList = ({
+  rows,
+  error,
+  retry,
+  hasMore,
+  fetching,
+  loadingMore,
+  moreFailed,
+  loadMore,
+}: RewardHistoryFeed) => {
   const { ref: nearEndRef, inView: nearEnd } = useInView<HTMLDivElement>(
     undefined,
     { once: false },

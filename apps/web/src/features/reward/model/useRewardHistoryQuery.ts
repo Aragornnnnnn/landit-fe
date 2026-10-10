@@ -7,14 +7,30 @@ import { useAuthStore } from '@/shared/auth/auth-store';
 
 import { getRewardHistory, type RewardHistoryPage } from '../api/reward';
 import { rewardKeys } from './keys';
-import { historyRowsOf, nextHistoryCursor } from './reward-history';
+import {
+  historyRowsOf,
+  nextHistoryCursor,
+  type HistoryRow,
+} from './reward-history';
 
 // 캐시에는 백엔드 응답을 그대로 담고 줄로 바꾸는 건 여기서 한다 — 장을 넘어 날짜 꼬리표와 중복을 한 번에 본다.
 // 훅 밖에 둬야 같은 함수로 남아, 받은 장이 그대로면 다시 계산하지 않는다
 const rowsOf = (history: InfiniteData<RewardHistoryPage>) =>
   historyRowsOf(history.pages.flatMap((page) => page.items));
 
-export const useRewardHistoryQuery = () => {
+// 내역 영역이 그리는 데 쓰는 값 — 조회 훅이 채우고, 환급 점검 화면은 가짜로 채운다
+export interface RewardHistoryFeed {
+  rows: HistoryRow[] | null;
+  error: Error | null;
+  retry: () => void;
+  hasMore: boolean;
+  fetching: boolean;
+  loadingMore: boolean;
+  moreFailed: boolean;
+  loadMore: () => void;
+}
+
+export const useRewardHistoryQuery = (): RewardHistoryFeed => {
   const userId = useAuthStore((state) => state.member?.userId ?? null);
 
   const {
