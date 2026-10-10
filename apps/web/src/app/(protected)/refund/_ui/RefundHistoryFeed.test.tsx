@@ -66,6 +66,21 @@ describe('RefundHistoryFeed', () => {
     expect(screen.getByText('표현학습 완료')).toBeInTheDocument();
   });
 
+  it('받은 금액에는 +를, 사라진 금액에는 -를 붙이고 잔액에는 붙이지 않는다', () => {
+    given({
+      rows: [
+        row('2', { amountWon: -1550, balanceWon: 0 }),
+        row('1', { amountWon: 111, balanceWon: 1550 }),
+      ],
+    });
+
+    render(<RefundHistoryFeed />);
+
+    expect(screen.getByText('+111원')).toBeInTheDocument();
+    expect(screen.getByText('-1,550원')).toBeInTheDocument();
+    expect(screen.getByText('1,550원')).toBeInTheDocument();
+  });
+
   it('첫 장을 받는 동안에는 줄이 놓일 자리를 보여 준다', () => {
     given({ rows: null, fetching: true });
 
