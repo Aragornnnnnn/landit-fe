@@ -16,11 +16,11 @@ export type PotStage =
 
 export const potStageOf = (view: RewardView): PotStage => {
   const current = view.current;
-  // 도는 회차가 없다 — 기간을 마쳐 돌려받을 금액이 있으면 가득 찬 통, 그 밖에는 빈 통
-  if (current === null)
-    return view.state === 'ENDED' && view.pendingRefundWon > 0
-      ? 'complete'
-      : 'empty';
+  // 도는 회차가 없다 — 기간을 마쳐 돌려받을 금액이 있으면 가득 찬 통, 검토 중이라 보관된 금액이 있으면 지킨 그림
+  if (current === null) {
+    if (view.state === 'ENDED' && view.pendingRefundWon > 0) return 'complete';
+    return view.heldRefundWon > 0 ? 'kept' : 'empty';
+  }
   if (current.balanceWon >= current.maximumWon) return 'complete';
   if (atRiskOf(view)) return 'waiting';
   // 오늘 했거나, 검토 중이라 오늘이 없다 — 쌓인 금액은 그대로 있다
