@@ -96,8 +96,9 @@ export const RefundGuide = ({
   caption: string;
 }) => (
   <>
-    <section className="flex flex-col items-center px-5 pt-4">
-      <div className="h-[180px] w-[240px]">
+    <section className="flex flex-col items-center px-5 pt-2">
+      {/* 그림은 낮게 — 작은 폰에서도 규칙 카드 아래 "하루를 다 채우면…"이 첫 화면에 걸려야 더 있는 줄 안다 */}
+      <div className="h-[132px] w-[176px]">
         <Image
           src={potComplete}
           alt=""
