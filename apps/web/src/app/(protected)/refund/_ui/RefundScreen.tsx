@@ -30,6 +30,7 @@ export const RefundScreen = () => {
   return (
     <RefundFrame
       onBack={() => router.replace(homePath())}
+      fadeAboveFooter={view.kind === 'intro'}
       footer={
         view.kind === 'intro' ? (
           <RefundStartButton />

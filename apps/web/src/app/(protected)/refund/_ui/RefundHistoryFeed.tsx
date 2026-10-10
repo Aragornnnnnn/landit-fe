@@ -45,8 +45,7 @@ export const RefundHistoryList = ({
   }, [shouldLoadMore]);
 
   return (
-    <section className="relative mt-3 px-5">
-      <h3 className="sr-only">환급 내역</h3>
+    <section aria-label="환급 내역" className="relative mt-3 px-5">
       <HistoryBody
         rows={rows}
         hasMore={hasMore}
