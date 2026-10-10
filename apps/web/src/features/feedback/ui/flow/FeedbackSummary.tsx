@@ -157,7 +157,7 @@ const GrowthSection = ({
   return (
     // 비교할 패턴이 없어도 시안 제목 그대로 둔다 (2026-09-30 확정)
     <SummaryCard title="지난번엔 헷갈렸던 과거형">
-      <EmptyText>아직 지난 기록이 없어요</EmptyText>
+      <EmptyText>아직 지난 기록이 없어요.</EmptyText>
     </SummaryCard>
   );
 };
@@ -173,7 +173,7 @@ const ReuseSection = ({
     return <ReusedExpressionsCard items={reuse.items} />;
   return (
     <SummaryCard title={REUSED_EXPRESSIONS_TITLE}>
-      <EmptyText>아직 배운 표현이 없어요</EmptyText>
+      <EmptyText>아직 배운 표현이 없어요.</EmptyText>
     </SummaryCard>
   );
 };
