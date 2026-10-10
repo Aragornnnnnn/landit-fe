@@ -221,6 +221,10 @@ export const SUBSCRIPTION_HISTORY_PATH = '/me/subscription/history';
 export const SUBSCRIPTION_CANCEL_PATH = '/me/subscription/cancel';
 // 홈 화면 위젯 설치 안내 — 온보딩에서 미뤘던 사람이 마이페이지에서 다시 연다
 export const WIDGET_GUIDE_PATH = '/me/widget';
+// 오늘의 시나리오 알람 — 마이페이지 설정 묶음의 "알람" 행에서 들어온다. 등록됐으면 시간 카드, 아니면 등록 흐름
+export const ALARM_SETTINGS_PATH = '/me/alarm';
+// 알람 수정 — 알람 화면의 시간 카드를 누르면 들어온다
+export const ALARM_EDIT_PATH = '/me/alarm/edit';
 
 /**
  * 마이페이지 아래 화면에서 돌아가기. 마이페이지에서 밀고 들어왔으면 한 칸 뒤로 —

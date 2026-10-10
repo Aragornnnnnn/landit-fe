@@ -281,7 +281,8 @@ export type RetryScreen =
   | 'card_back'
   | 'expression_list'
   | 'streak'
-  | 'mailbox';
+  | 'mailbox'
+  | 'alarm';
 // 피드백 유형 — 작성 화면에서 고르는 넷. 값은 서버 enum 그대로다 (지표와 데이터가 같은 말을 쓰도록)
 export type FeedbackType =
   'BUG_REPORT' | 'FEATURE_REQUEST' | 'QUESTION' | 'CHEER';
