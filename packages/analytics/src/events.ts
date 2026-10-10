@@ -247,9 +247,9 @@ export type SubscriptionState = 'trial' | 'active' | 'canceled';
 // 유저 속성이 쓰는 구독 상태 — 위 셋에 "구독 없음"과 "아직 모름"을 더한다.
 // unknown은 로그인 직후 구독 조회가 끝나기 전 구간이다. 값이 아예 빠진 것과 구분하려고 명시적으로 남긴다
 export type SubscriptionProfileState = SubscriptionState | 'none' | 'unknown';
-// 게이트가 아닌 자리에서 페이월로 들어간 곳 — 지금은 마이페이지(me)뿐. 알림 동의의 source와 같은 이름을 쓴다
-// me는 마이페이지 골드 카드, header는 탭 헤더 왼쪽의 프리미엄 알약
-export type PaywallEntrySource = 'me' | 'header';
+// 게이트가 아닌 자리에서 페이월로 들어간 곳. 알림 동의의 source와 같은 이름을 쓴다
+// me는 마이페이지 골드 카드, header는 탭 헤더 왼쪽의 프리미엄 알약, refund는 환급 화면(소개의 시작 버튼·끝난 뒤 다시 시작)
+export type PaywallEntrySource = 'me' | 'header' | 'refund';
 // 페이월에 어디서 왔는가 — 게이트에 막혀 왔으면 막힌 자리, 스스로 들어왔으면 마이페이지.
 // 노출(Page Viewed)에 실어 진입 경로별 전환율을 가른다
 export type PaywallSource = PaywallGateSource | PaywallEntrySource;
@@ -277,6 +277,7 @@ export type PurchaseFailureReason =
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete';
 export type RetryScreen =
+  | 'refund'
   | 'scenario'
   | 'scenario_history'
   | 'smalltalk'
