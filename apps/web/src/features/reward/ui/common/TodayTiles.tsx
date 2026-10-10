@@ -1,10 +1,8 @@
 // 오늘 세 칸 — 안 한 것은 회색 동전과 더 받을 금액, 한 것은 금색 동전과 받은 금액. 환급 화면과 완료 화면이 같이 쓴다
-import Image from 'next/image';
-
 import { formatWon } from '@/shared/lib/won';
 
-import coinImage from '../../assets/coin.png';
 import type { TodaySlot } from '../../model/reward-status';
+import { Coin } from './Coin';
 
 export const TodayTiles = ({ slots }: { slots: TodaySlot[] }) => (
   <ul
@@ -21,13 +19,7 @@ export const TodayTiles = ({ slots }: { slots: TodaySlot[] }) => (
             done ? 'border-primary/30 bg-streak-band' : 'border-border bg-card'
           }`}
         >
-          <Image
-            src={coinImage}
-            alt=""
-            width={30}
-            height={30}
-            className={done ? '' : 'opacity-30 grayscale'}
-          />
+          <Coin size={30} className={done ? '' : 'opacity-30 grayscale'} />
           <span className="mt-1.5 text-[13px] font-bold text-foreground">
             {slot.label}
             {slot.countLabel && !done && (

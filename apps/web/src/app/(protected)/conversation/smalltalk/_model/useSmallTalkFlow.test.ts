@@ -82,6 +82,12 @@ vi.mock('@/features/streak/model/refresh-streak', () => ({
   refreshStreakAfterCompletion: refreshStreak,
 }));
 
+// 환급 미리받기도 다른 기능의 후속이라 목으로 둔다 — 완료 때 부르는지만 본다
+const refreshRewardAfterCompletion = vi.hoisted(() => vi.fn());
+vi.mock('@/features/reward/model/refresh-reward', () => ({
+  refreshRewardAfterCompletion,
+}));
+
 const queryClientMock = vi.hoisted(() => ({
   invalidateQueries: vi.fn(),
   // 완료 턴이 다음 화면(오늘의 스몰톡) 요약을 미리 받아 둔다 — 받았는지만 본다
@@ -418,6 +424,8 @@ describe('useSmallTalkFlow — 종료 확인', () => {
     expect(result.current.phase).not.toBe('USER_READY');
     // 축하 화면이 옛 숫자를 그리지 않게 스트릭을 미리 받아 둔다
     expect(refreshStreak).toHaveBeenCalled();
+    // 홈에 돌아왔을 때 새 환급액이 서 있게 미리 받아 둔다
+    expect(refreshRewardAfterCompletion).toHaveBeenCalledWith(queryClientMock);
     // 작별 인사를 듣는 동안 오늘의 스몰톡 요약이 도착하게 미리 받아 둔다
     expect(queryClientMock.prefetchQuery).toHaveBeenCalledWith(
       expect.objectContaining({ queryKey: smallTalkKeys.summary(39, 7) }),

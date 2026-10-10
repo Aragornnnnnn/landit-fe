@@ -1,13 +1,12 @@
 // 내 정보 맨 위의 타일 — 환급(쌓인 금액 또는 소개)과 연속 학습 기록을 나란히 놓는다
-import Image from 'next/image';
 import Link from 'next/link';
 
-import coinImage from '@/features/reward/assets/coin.png';
 import { MAX_REFUND_WON } from '@/features/reward/model/refund-offer';
 import {
   badgeAmountOf,
   type RewardBadge,
 } from '@/features/reward/model/reward-status';
+import { Coin } from '@/features/reward/ui/common/Coin';
 import { StreakFruit } from '@/features/streak/ui/common/StreakFruit';
 import { REFUND_PATH, STREAK_PATH } from '@/shared/lib/routes';
 import { ChevronRightIcon } from '@/shared/ui/Icons';
@@ -76,11 +75,8 @@ export const ProgressTiles = ({
         href={REFUND_PATH}
         label={refund.label}
         icon={
-          <Image
-            src={coinImage}
-            alt=""
-            width={22}
-            height={22}
+          <Coin
+            size={22}
             // 오늘 아직이면 동전도 식는다
             className={refund.mood === 'kept' ? '' : 'opacity-50 grayscale'}
           />

@@ -11,6 +11,8 @@ import { preload } from 'react-dom';
 
 import type { Partner } from '@/features/conversation/model/character-look';
 import { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
+// 대화 완료가 환급액도 늘린다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
+import { refreshRewardAfterCompletion } from '@/features/reward/model/refresh-reward';
 // 첫 완료 뒤 스몰톡 탭에서 소감을 묻는다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { markTalkCompleted } from '@/features/satisfaction/model/prompt-record';
 import {
@@ -227,6 +229,8 @@ export const useSmallTalkFlow = ({
     refreshHome();
     // 축하 화면이 열자마자 새 숫자를 그리도록 미리 받아 둔다 (시나리오 대화와 같은 처리)
     refreshStreakAfterCompletion(queryClient);
+    // 환급 참여자는 이 완료로 금액이 쌓인다 — 홈에 돌아왔을 때 새 금액이 서 있도록 미리 받는다
+    refreshRewardAfterCompletion(queryClient);
     markTalkCompleted('smalltalk');
     // 다음 화면(오늘의 스몰톡)이 준비되게 — 요약과 래디 그림을 미리 받는다
     void prefetchSmallTalkSummary(queryClient, userId, session.sessionId);

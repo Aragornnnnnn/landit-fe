@@ -22,6 +22,7 @@ import {
 } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 
+import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
@@ -52,6 +53,9 @@ function ScenarioContent() {
   const satisfaction = useSatisfactionSheet('scenario');
   // 할인 시트가 떠 있으면 소감은 미룬다 — 할인은 5분뿐이고 소감은 다음에 또 물을 수 있다
   const promoOpen = usePromoSheetOpen();
+  // 돌아온 순간의 환급 동전 연출이 끝날 때까지도 미룬다 — 어둠 아래에서 시트가 같이 올라오면 둘이 겹친다
+  const showerHold = useEarnShowerHold();
+  const sheetsHeld = promoOpen || showerHold;
   // 대화 시작을 눌렀다 — 바로 이동하지 않고 브리핑 카드를 잠깐 보여준 뒤 대화로 들어간다
   const [briefingScenario, setBriefingScenario] = useState<Scenario | null>(
     null,
@@ -124,13 +128,13 @@ function ScenarioContent() {
         />
       )}
 
-      {settled && !promoOpen && satisfaction.sheet === 'talk' && (
+      {settled && !sheetsHeld && satisfaction.sheet === 'talk' && (
         <SatisfactionGate moment="scenario" />
       )}
-      {settled && !promoOpen && satisfaction.sheet === 'review' && (
+      {settled && !sheetsHeld && satisfaction.sheet === 'review' && (
         <SatisfactionGate moment="review" />
       )}
-      {promptTurn && !promoOpen && <NotificationConsentGate />}
+      {promptTurn && !sheetsHeld && <NotificationConsentGate />}
 
       {/* 브리핑을 다 보여주면 대화로 넘어간다 — push라 뒤로가기는 이 화면(카드)으로 돌아온다 */}
       {briefingScenario && (

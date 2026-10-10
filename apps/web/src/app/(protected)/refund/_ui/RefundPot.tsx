@@ -4,8 +4,8 @@
 import { motion, useReducedMotion } from 'motion/react';
 import Image, { type StaticImageData } from 'next/image';
 
-import coinImage from '@/features/reward/assets/coin.png';
 import potComplete from '@/features/reward/assets/refund-pot-complete.png';
+import { Coin } from '@/features/reward/ui/common/Coin';
 
 import potEmpty from '../_assets/pot-empty.png';
 import potKept from '../_assets/pot-kept.png';
@@ -74,7 +74,7 @@ export const RefundPot = ({
               opacity: { times: [0, 0.15, 0.85, 1] },
             }}
           >
-            <Image src={coinImage} alt="" width={28} height={28} />
+            <Coin size={28} />
           </motion.span>
         ))}
     </div>
