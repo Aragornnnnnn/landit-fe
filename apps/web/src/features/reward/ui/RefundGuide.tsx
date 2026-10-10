@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { preloadImages } from '@/shared/lib/preload-next-images';
 import { Emoji } from '@/shared/ui/emoji';
 
-import potComplete from '../assets/refund-pot-complete.png';
+import potComplete from '../assets/refund-pot-complete.webp';
 import type { HistoryRow } from '../model/reward-history';
 import { KST_OFFSET_MS } from '../model/time-left';
 import { RefundHistory } from './RefundHistory';
