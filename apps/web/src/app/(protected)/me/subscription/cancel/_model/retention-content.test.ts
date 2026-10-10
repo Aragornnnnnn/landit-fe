@@ -205,17 +205,21 @@ describe('환급을 쌓는 중인 사람', () => {
     expect(refundStakeOf(null)).toBeNull();
   });
 
-  it('사유를 묻기 전에 쌓인 금액과, 해지해도 기간 끝까지 쌓인다는 것을 알린다', () => {
+  it('사유를 묻기 전에 쌓인 금액과, 해지하면 다음 회차 환급이 없다는 것을 알린다', () => {
     const content = refundNoticeContent(stake);
 
-    expect(content.title).toBe('해지해도 환급은 계속 쌓여요');
-    expect(content.body).toContain(
-      '다만 갱신하지 않으면 다음 회차 환급은 없어요.',
-    );
+    expect(content.title).toBe('지금까지 2,015원을 쌓았어요');
+    expect(content.body).toContain('해지하면 다음 회차부터는 환급이 없어요.');
     expect(content.cards).toEqual([
       { kind: 'row', label: '지금까지 쌓인 환급액', value: '2,015원' },
       { kind: 'row', label: '끝까지 채우면 받는 금액', value: '59,900원' },
     ]);
+  });
+
+  it('쌓인 게 없으면 0원 대신 받을 수 있는 금액을 제목으로 쓴다', () => {
+    const content = refundNoticeContent({ balanceWon: 0, maximumWon: 59_900 });
+
+    expect(content.title).toBe('끝까지 채우면 59,900원을 돌려받아요');
   });
 
   it('가격 부담에는 하루 요금 대신 돌려받는 금액으로 답한다', () => {

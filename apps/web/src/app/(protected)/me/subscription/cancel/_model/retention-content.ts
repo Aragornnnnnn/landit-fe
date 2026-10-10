@@ -119,13 +119,20 @@ const stakeCards = (refund: RefundStake): RetentionCard[] => [
   },
 ];
 
-/** ⓪ 화면 — 환급을 쌓는 중인 사람이 사유를 고르기 전에 본다 */
+/**
+ * ⓪ 화면 — 환급을 쌓는 중인 사람이 사유를 고르기 전에 본다.
+ * 해지해도 이번 기간은 끝까지 쌓이지만 그 말을 앞세우지 않는다 — 마음 놓고 해지하라는 말로 읽힌다. 잃는 것(다음 회차)만 사실대로 적는다
+ */
 export const refundNoticeContent = (refund: RefundStake): RetentionContent => ({
   emoji: '💰',
-  title: '해지해도 환급은 계속 쌓여요',
+  // 쌓인 게 없으면 0원을 내세우지 않고 받을 수 있는 금액으로 말한다
+  title:
+    refund.balanceWon > 0
+      ? `지금까지 ${formatWon(refund.balanceWon)}을 쌓았어요`
+      : `끝까지 채우면 ${formatWon(refund.maximumWon)}을 돌려받아요`,
   body: [
-    '기간이 끝날 때까지는 지금처럼 쌓을 수 있어요.',
-    '다만 갱신하지 않으면 다음 회차 환급은 없어요.',
+    '매일 하는 만큼 돌려받고 있어요.',
+    '해지하면 다음 회차부터는 환급이 없어요.',
   ],
   cards: stakeCards(refund),
   primary: STAY,

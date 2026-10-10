@@ -274,7 +274,9 @@ describe('환급을 쌓는 중인 사람', () => {
     mocks.reward = { reward: rewardView(), fetched: true };
     renderScreen(halfyear());
 
-    expect(screen.getByText('해지해도 환급은 계속 쌓여요')).toBeInTheDocument();
+    expect(
+      screen.getByText('지금까지 12,300원을 쌓았어요'),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: '해지 계속하기' }));
@@ -297,7 +299,7 @@ describe('환급을 쌓는 중인 사람', () => {
 
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
     expect(
-      screen.queryByText('해지해도 환급은 계속 쌓여요'),
+      screen.queryByText('지금까지 12,300원을 쌓았어요'),
     ).not.toBeInTheDocument();
   });
 });
