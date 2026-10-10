@@ -1,4 +1,6 @@
-// 환급 화면 로딩 스켈레톤 — 그림·금액·오늘 세 칸 자리를 먼저 잡아, 도착 후 화면이 튀지 않게 한다
+// 환급 화면 로딩 스켈레톤 — 그림·금액·오늘 세 칸·내역 자리를 먼저 잡아, 도착 후 화면이 튀지 않게 한다
+import { HistoryPlaceholderLines } from '@/features/reward/ui/RefundHistory';
+
 export const RefundSkeleton = () => (
   <div
     role="status"
@@ -19,6 +21,13 @@ export const RefundSkeleton = () => (
       {[0, 1, 2].map((tile) => (
         <div key={tile} className="h-[104px] rounded-2xl bg-secondary" />
       ))}
+    </div>
+
+    {/* 접어 둔 규칙 한 줄 자리 */}
+    <div className="mt-3 h-[30px]" />
+    {/* 내역 섹션과 같은 여백 */}
+    <div className="mt-3">
+      <HistoryPlaceholderLines />
     </div>
   </div>
 );

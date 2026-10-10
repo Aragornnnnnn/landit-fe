@@ -114,7 +114,7 @@ export const RefundGuide = ({
     <p className="mt-6 px-5 text-[13px] font-bold text-muted-foreground">
       하루를 다 채우면 이렇게 쌓여요
     </p>
-    <div className="opacity-60">
+    <div className="mt-3 px-5 opacity-60">
       <RefundHistory history={sampleOf()} />
     </div>
   </>
