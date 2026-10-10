@@ -15,13 +15,17 @@ import { preloadIntroPreview } from '@/features/alarm/ui/LockScreenPreview';
 import { subscriptionKeys } from '@/features/subscription/model/my-subscription/keys';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { homePath } from '@/shared/lib/last-tab';
+import type { PremiumOnboardingPreview } from '@/shared/lib/routes';
 
 import { PremiumWelcome } from './PremiumWelcome';
 
 export const PremiumOnboardingScreen = ({
   returnTo,
+  preview,
 }: {
   returnTo?: string;
+  /** 개발자 묶음의 미리보기 — ADMIN에게만 통한다 */
+  preview?: PremiumOnboardingPreview;
 }) => {
   const router = useRouter();
   const status = useAlarmStatus();
@@ -29,6 +33,9 @@ export const PremiumOnboardingScreen = ({
   const [step, setStep] = useState<'welcome' | 'alarm'>('welcome');
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const isAdmin = useAuthStore((state) => state.member?.role === 'ADMIN');
+  // 주소의 미리보기 값은 ADMIN일 때만 받는다 — 아니면 실제 상태대로 간다
+  const forced = isAdmin ? preview : undefined;
 
   // 결제는 끝났는데 서버 반영이 늦어 구독 캐시가 아직 무료일 수 있다 — 다시 받아야 알람 예약(AlarmSync)이 유료로 본다
   useEffect(() => {
@@ -44,6 +51,8 @@ export const PremiumOnboardingScreen = ({
 
   // 알람 설정을 아직 모르면 받을 때까지 기다린다. 등록해 둔 재구독자나 끝내 못 읽은 경우는 등록 흐름을 보이지 않는다 — 다시 거치면 기존 시각을 덮어쓴다
   const next = async () => {
+    if (forced === 'welcome') return leave();
+    if (forced) return setStep('alarm');
     if (!alarmCapable) return leave();
     const known = setting ?? (await refetch({ cancelRefetch: false })).data;
     if (known?.enabled === false) setStep('alarm');
@@ -73,8 +82,8 @@ export const PremiumOnboardingScreen = ({
       onSkip={leave}
       onDone={leave}
       source="premium_onboarding"
-      // 환급 참여 여부는 아직 받지 않는다 — 결제한 상품(3·6개월)으로 정하게 되면 여기를 채운다
-      refund={false}
+      // 환급 참여 여부는 아직 받지 않는다 — 결제한 상품(3·6개월)으로 정하게 되면 여기를 채운다. 지금은 미리보기로만 켠다
+      refund={forced === 'refund'}
     />
   );
 };
