@@ -25,8 +25,8 @@ export const RefundSkeleton = () => (
     </div>
 
     {/* 접어 둔 규칙 한 줄 자리 */}
-    <div className="mt-3 h-[30px]" />
-    <div>
+    <div className="mt-1.5 h-[44px]" />
+    <div className="mt-1.5">
       <HistoryPlaceholderLines />
     </div>
   </div>
