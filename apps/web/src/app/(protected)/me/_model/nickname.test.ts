@@ -28,8 +28,8 @@ describe('validateNickname', () => {
     ['밑줄', 'landit_fan'],
     ['마침표', 'jun.seo'],
     ['줄바꿈', '랜\n딧'],
-    ['폭 없는 공백', '랜​딧'],
-    ['한글 채움 문자', 'ㅤ'],
+    ['폭 없는 공백', '랜\u200B딧'],
+    ['한글 채움 문자', '\u3164'],
   ])('%s이 섞이면 거절한다', (_, input) => {
     expect(validateNickname(input)).toEqual({
       ok: false,
