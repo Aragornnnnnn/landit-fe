@@ -24,9 +24,9 @@ export const RefundSkeleton = () => (
       ))}
     </div>
 
-    {/* 접어 둔 규칙 한 줄 자리 */}
-    <div className="mt-1.5 h-[44px]" />
-    <div className="mt-1.5">
+    {/* 접어 둔 규칙 카드 자리 */}
+    <div className={`mt-3 h-[52px] rounded-[20px] ${BLOCK_CLASS}`} />
+    <div className="mt-3">
       <HistoryPlaceholderLines />
     </div>
   </div>

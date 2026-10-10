@@ -1,6 +1,6 @@
 'use client';
 
-// 내역 위 가운데의 작은 글자 한 줄 — 매일 보는 화면이라 규칙은 접어 두고, 누르면 그 자리에서 아래로 펼쳐진다
+// 내역 위의 환급 규칙 카드 — 매일 보는 화면이라 접어 두고 제목 줄만 보인다. 누르면 같은 카드가 아래로 늘어난다
 import { useId, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
@@ -17,19 +17,20 @@ export const RefundRulesToggle = () => {
   const opened = reduced ? { opacity: 1 } : { height: 'auto', opacity: 1 };
 
   return (
-    <div className="mx-5 mt-1.5">
-      {/* 글자는 작아도 줄 전체가 눌린다 — 처음 온 사람이 규칙을 찾아 누르기 쉬워야 한다 */}
+    // 상자는 늘 있고 펼치면 그 안이 늘어난다 — 누를 때 상자가 생겼다 사라지면 다른 것이 끼어든 것처럼 보인다
+    <div className="mx-5 mt-3 rounded-[20px] border border-border bg-card">
+      {/* 제목 줄 전체가 눌린다 — 처음 온 사람이 규칙을 찾아 누르기 쉬워야 한다 */}
       <button
         type="button"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-center gap-0.5 py-3 text-[13px] font-medium text-muted-foreground"
+        className="flex w-full items-center justify-between px-4 py-3.5 text-[15px] font-black text-foreground"
       >
         환급 규칙
         <ChevronDownIcon
-          size={14}
-          className={`transition-transform ${open ? 'rotate-180' : ''}`}
+          size={16}
+          className={`text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`}
         />
       </button>
       <AnimatePresence initial={false}>
@@ -42,11 +43,8 @@ export const RefundRulesToggle = () => {
             exit={closed}
             transition={{ duration: DURATION.base, ease: EASE_STANDARD }}
           >
-            {/* 소개 화면의 규칙 카드와 같은 상자에 담는다 — 맨바닥에 펼치면 아래 내역 줄과 섞여 보인다 */}
-            <div className="pb-1">
-              <div className="rounded-[20px] border border-border bg-card px-4 py-4">
-                <RefundRuleList />
-              </div>
+            <div className="px-4 pb-4">
+              <RefundRuleList />
             </div>
           </motion.div>
         )}
