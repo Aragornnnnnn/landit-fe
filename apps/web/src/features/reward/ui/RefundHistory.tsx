@@ -48,18 +48,14 @@ export const RefundHistory = ({ history }: { history: HistoryRow[] }) => (
   </ul>
 );
 
-// 내역 줄이 놓일 자리 — 날짜, 제목과 시각, 금액과 잔액. 깜빡임과 낭독은 감싸는 쪽이 정한다
+// 내역을 받는 동안의 자리 — 줄마다 한 덩어리로, 실제 줄과 같은 높이를 잡는다
 export const HistoryPlaceholderLines = () => (
   <div className="mt-1">
     {[0, 1, 2].map((line) => (
-      <div key={line} className="flex items-start gap-3 pt-5">
-        <div className="h-4 w-9 shrink-0 rounded bg-secondary" />
-        <div className="min-w-0 flex-1">
-          <div className="h-5 w-1/2 rounded bg-secondary" />
-          <div className="mt-1.5 h-4 w-12 rounded bg-secondary" />
-        </div>
-        <div className="h-5 w-14 shrink-0 rounded bg-secondary" />
-      </div>
+      <div
+        key={line}
+        className="animate-skeleton-flow mt-4 h-[46px] rounded-xl bg-border!"
+      />
     ))}
   </div>
 );

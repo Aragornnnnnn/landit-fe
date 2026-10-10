@@ -95,11 +95,7 @@ const HistoryBody = ({
     return <RetryLine message="내역을 불러오지 못했어요" onRetry={onRetry} />;
   // 첫 장을 받는 중 — 줄이 놓일 자리를 먼저 잡는다
   return (
-    <div
-      role="status"
-      aria-label="환급 내역을 불러오는 중"
-      className="animate-pulse"
-    >
+    <div role="status" aria-label="환급 내역을 불러오는 중">
       <HistoryPlaceholderLines />
     </div>
   );
