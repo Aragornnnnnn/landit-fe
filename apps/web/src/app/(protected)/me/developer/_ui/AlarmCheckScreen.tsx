@@ -5,12 +5,7 @@ import { useEffect, useState } from 'react';
 import type { ScheduledAlarm } from '@landit/bridge';
 import { useRouter } from 'next/navigation';
 
-import {
-  DEFAULT_ALARM_TIME,
-  formatClock,
-  parseAlarmTime,
-  toServerTime,
-} from '@/features/alarm/model/alarm-time';
+import { formatClock, parseAlarmTime } from '@/features/alarm/model/alarm-time';
 import {
   ALARM_TITLE,
   ALARM_TYPE,
@@ -31,7 +26,9 @@ import { showToast } from '@/shared/ui/toast';
 import { describeNextRing, testAlarmChoices } from '../_model/alarm-check';
 import { useAlarmList } from '../_model/useAlarmList';
 import { compareWithServer } from '../../_model/alarm-comparison';
-import { MenuButton, MenuSection, ROW_CLASS, ROW_STYLE } from '../../_ui/Menu';
+import { MenuButton, MenuSection } from '../../_ui/Menu';
+import { DailyTimeRow } from './DailyTimeRow';
+import { StatusItem, StatusList } from './StatusList';
 
 const PERMISSION_LABEL = {
   granted: '허용됨',
@@ -51,46 +48,6 @@ const useNow = () => {
   }, []);
   return now;
 };
-
-const TONE_CLASS = {
-  default: 'text-foreground',
-  danger: 'font-bold text-destructive',
-  good: 'font-bold text-primary',
-} as const;
-
-// 상태 목록 — 눌리지 않는 "라벨: 값" 글자다. 메뉴 줄과 섞이지 않게 카드 안 옅은 상자에 구분선 없이 촘촘히 적는다
-const StatusList = ({
-  note,
-  children,
-}: {
-  /** 값이 아니라 설명인 한마디 — 목록 아래에 작게 적는다 */
-  note?: string;
-  children: React.ReactNode;
-}) => (
-  <div className="m-3 rounded-lg bg-muted/70 px-3.5 py-3">
-    <dl className="space-y-1.5 text-[13px] leading-snug">{children}</dl>
-    {note && (
-      <p className="mt-2 text-[12px] leading-snug text-muted-foreground">
-        {note}
-      </p>
-    )}
-  </div>
-);
-
-const StatusItem = ({
-  label,
-  value,
-  tone = 'default',
-}: {
-  label: string;
-  value: React.ReactNode;
-  tone?: keyof typeof TONE_CLASS;
-}) => (
-  <div className="flex items-center justify-between gap-4">
-    <dt className="shrink-0 text-muted-foreground">{label}</dt>
-    <dd className={`text-right ${TONE_CLASS[tone]}`}>{value}</dd>
-  </div>
-);
 
 const Notice = ({ children }: { children: React.ReactNode }) => (
   <p className="rounded-xl bg-card px-4 py-4 text-sm text-muted-foreground">
@@ -115,52 +72,6 @@ const CancelTestButton = ({ alarm }: { alarm: ScheduledAlarm }) => (
     취소
   </button>
 );
-
-// 매일 알람 시각을 바로 정해 저장한다 — 다짐(지문 3초) 없이 폰 기본 시각 선택기로 고른다
-const DailyTimeRow = ({
-  serverTime,
-  enabled,
-  disabled,
-  onSave,
-}: {
-  /** 서버에 저장된 시각 "HH:mm". 없으면 기본 시각에서 시작한다 */
-  serverTime: string | null;
-  /** 서버 알람이 켜져 있는가 — 꺼져 있으면 같은 시각이어도 저장하면 켜진다 */
-  enabled: boolean;
-  disabled: boolean;
-  onSave: (time: string) => void;
-}) => {
-  const [draft, setDraft] = useState<string | null>(null);
-  const time = draft ?? serverTime ?? toServerTime(DEFAULT_ALARM_TIME);
-  // 이미 켜져 있고 시각도 그대로면 저장할 것이 없다
-  const unchanged = enabled && time === serverTime;
-  return (
-    <div className={`${ROW_CLASS} active:bg-transparent`} style={ROW_STYLE}>
-      <Emoji>⏰</Emoji>
-      <label
-        htmlFor="daily-alarm-time"
-        className="flex-1 text-[15px] whitespace-nowrap text-foreground"
-      >
-        시각 정하기
-      </label>
-      <input
-        id="daily-alarm-time"
-        type="time"
-        value={time}
-        onChange={(event) => setDraft(event.target.value)}
-        className="rounded-lg bg-muted px-2.5 py-1.5 text-[15px] font-bold text-foreground tabular-nums"
-      />
-      <button
-        type="button"
-        disabled={disabled || time === '' || unchanged}
-        onClick={() => onSave(time)}
-        className="shrink-0 rounded-full bg-primary px-3.5 py-1.5 text-[13px] font-bold text-primary-foreground active:scale-95 disabled:bg-muted disabled:text-muted-foreground disabled:active:scale-100"
-      >
-        저장
-      </button>
-    </div>
-  );
-};
 
 // 점검 본문 — 셸에 묻고 1초마다 다시 그리므로 ADMIN일 때만 올린다
 const AlarmCheck = () => {
@@ -194,11 +105,16 @@ const AlarmCheck = () => {
       time: { hour: dailySoon.getHours(), minute: dailySoon.getMinutes() },
       enabled: true,
     });
-  const saveDailyAt = (time: string) =>
+  const saveDailyAt = (time: string) => {
+    const next = parseAlarmTime(time);
     saveAlarm(
-      { time: parseAlarmTime(time), enabled: true },
-      { onSuccess: () => showToast(`매일 ${time}로 저장했어요`) },
+      { time: next, enabled: true },
+      {
+        onSuccess: () =>
+          showToast(`매일 ${formatClock(next)}에 울리게 저장했어요`),
+      },
     );
+  };
   const turnOffDaily = () => {
     if (setting) {
       saveAlarm({ time: parseAlarmTime(setting.time), enabled: false });
@@ -302,8 +218,9 @@ const AlarmCheck = () => {
         <DailyTimeRow
           key={setting?.time ?? 'unset'}
           serverTime={setting?.time ?? null}
-          enabled={setting?.enabled === true}
-          disabled={saving}
+          alarmOn={setting?.enabled === true}
+          // 서버 설정을 받기 전에는 저장을 막는다 — 기본 시각으로 실제 알람을 덮지 않게
+          saving={saving || !setting}
           onSave={saveDailyAt}
         />
         <MenuButton
