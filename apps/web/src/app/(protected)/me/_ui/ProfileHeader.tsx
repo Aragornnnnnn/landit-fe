@@ -59,16 +59,20 @@ export const ProfileHeader = () => {
         <button
           type="button"
           onClick={() => setNicknameSheetOpen(true)}
-          className="-mx-1 flex max-w-full items-center gap-1.5 rounded-lg px-1 text-left transition-transform active:scale-[0.97]"
+          className="-mx-1 max-w-full rounded-lg px-1 text-left transition-transform active:scale-[0.97]"
           aria-label="닉네임 바꾸기"
         >
+          {/* 긴 이름은 자르지 않고 줄을 넘긴다 — 연필은 마지막 글자 뒤에 붙는다 */}
           <span
-            className="truncate text-[22px] leading-tight font-bold"
+            className="text-[22px] leading-tight font-bold break-words"
             style={{ color: '#111' }}
           >
             {nickname || '게스트'}
           </span>
-          <PencilIcon size={16} className="shrink-0 text-muted-foreground" />
+          <PencilIcon
+            size={16}
+            className="ml-1.5 inline-block align-baseline text-muted-foreground"
+          />
         </button>
         {member?.email && (
           <p
