@@ -37,10 +37,10 @@ describe('NicknameSheet', () => {
     expect(saveButton()).toBeDisabled();
   });
 
-  it('가입 때 받은 이름이 20자를 넘으면 열자마자 줄이라고 알려준다', () => {
-    renderSheet('가'.repeat(21));
+  it('가입 때 받은 이름이 10자를 넘으면 열자마자 줄이라고 알려준다', () => {
+    renderSheet('가'.repeat(11));
 
-    expect(screen.getByText('20자까지 쓸 수 있어요')).toBeInTheDocument();
+    expect(screen.getByText('10자까지 쓸 수 있어요')).toBeInTheDocument();
     expect(saveButton()).toBeDisabled();
   });
 

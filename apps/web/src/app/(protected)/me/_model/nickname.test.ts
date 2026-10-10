@@ -19,7 +19,7 @@ describe('validateNickname', () => {
     expect(validateNickname('   ')).toEqual({ ok: false, reason: 'empty' });
   });
 
-  it('글자 수는 눈에 보이는 글자 기준으로 20자까지 받는다', () => {
+  it('글자 수는 눈에 보이는 글자 기준으로 10자까지 받는다', () => {
     expect(validateNickname('가'.repeat(NICKNAME_MAX_LENGTH)).ok).toBe(true);
     expect(validateNickname('가'.repeat(NICKNAME_MAX_LENGTH + 1))).toEqual({
       ok: false,
@@ -50,12 +50,12 @@ describe('nicknameDisplaySize', () => {
   });
 
   it('큰 글자로 한 줄에 안 들어가면 한 단계 줄여 한 줄을 지킨다', () => {
-    expect(nicknameDisplaySize('가나다라마바사아자차')).toBe('md');
+    expect(nicknameDisplaySize('가'.repeat(NICKNAME_MAX_LENGTH))).toBe('md');
     expect(nicknameDisplaySize('Alexander Hamilton')).toBe('md');
   });
 
-  it('그래도 넘치는 긴 이름은 가장 작은 글자로 줄을 넘긴다', () => {
-    expect(nicknameDisplaySize('가'.repeat(NICKNAME_MAX_LENGTH))).toBe('sm');
+  it('가입 때 받은 긴 이름은 가장 작은 글자로 줄을 넘긴다', () => {
+    expect(nicknameDisplaySize('가'.repeat(20))).toBe('sm');
     expect(nicknameDisplaySize('Kim Junseo From Google Account')).toBe('sm');
   });
 });
