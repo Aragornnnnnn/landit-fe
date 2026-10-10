@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { LEVEL_NAMES } from '@/features/feedback/model/level-assessment';
 import { toEnglishLevel } from '@/features/onboarding/model/english-level';
 import { useLearningLevelQuery } from '@/features/onboarding/model/useLearningLevelQuery';
+import { useRewardQuery } from '@/features/reward/model/useRewardQuery';
 import { useStreakCalendarQuery } from '@/features/streak/model/useStreakCalendarQuery';
 import type { MySubscription } from '@/features/subscription/api/subscription';
 import { STORE } from '@/features/subscription/model/my-subscription/store-links';
@@ -19,6 +20,7 @@ import {
 } from '@/features/subscription/model/my-subscription/subscription-summary';
 import { useStorePlatform } from '@/features/subscription/model/my-subscription/useStorePlatform';
 import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
+import { REFUND_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import {
@@ -30,6 +32,7 @@ import { BackHeader } from '@/shared/ui/BackHeader';
 
 import {
   EMPTY_DRAFT,
+  firstStep,
   stepAfterMethod,
   stepAfterReason,
   stepBefore,
@@ -39,7 +42,10 @@ import {
 } from '../_model/cancel-flow';
 import {
   methodRetentionContent,
+  refundNoticeContent,
+  refundStakeOf,
   retentionContent,
+  type RefundStake,
 } from '../_model/retention-content';
 import { MethodStep } from './MethodStep';
 import { ReasonStep } from './ReasonStep';
@@ -49,11 +55,14 @@ interface FlowProps {
   summary: PaidSubscriptionSummary;
   /** BE가 준 결제 스토어 — 셸 플랫폼보다 우선한다 ({@link useStorePlatform}) */
   paidStore: MySubscription['store'];
+  /** 환급을 쌓는 중이 아니면 null */
+  refund: RefundStake | null;
 }
 
-const Flow = ({ summary, paidStore }: FlowProps) => {
+const Flow = ({ summary, paidStore, refund }: FlowProps) => {
   const router = useRouter();
-  const [step, setStep] = useState<CancelStep>({ kind: 'reason' });
+  const hasRefund = refund !== null;
+  const [step, setStep] = useState<CancelStep>(() => firstStep(hasRefund));
   const [draft, setDraft] = useState<CancelDraft>(EMPTY_DRAFT);
 
   const store = STORE[useStorePlatform(paidStore)];
@@ -104,7 +113,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
   };
 
   const back = () => {
-    const previous = stepBefore(step);
+    const previous = stepBefore(step, hasRefund);
     if (previous) setStep(previous);
     else leaveToManage();
   };
@@ -128,6 +137,24 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
 
   const body = () => {
     switch (step.kind) {
+      case 'refund_notice':
+        // 쌓는 중일 때만 이 스텝으로 온다
+        if (!refund) return null;
+        return (
+          <RetentionStep
+            content={refundNoticeContent(refund)}
+            onPrimary={leaveToManage}
+            leaveLink={
+              <button
+                type="button"
+                className="underline"
+                onClick={() => setStep({ kind: 'reason' })}
+              >
+                해지 계속하기
+              </button>
+            }
+          />
+        );
       case 'reason':
         return (
           <ReasonStep
@@ -151,6 +178,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
         const content = retentionContent(step.reason, {
           summary,
           nickname,
+          refund,
           totalActiveDays: calendar?.totalActiveDays ?? null,
           levelLabel: level ? `${LEVEL_NAMES[level]} Lv.${level}` : null,
           otherText: draft.otherText,
@@ -189,13 +217,16 @@ export const CancelFlowScreen = () => {
   const { subscription, isPending, isError } = useSubscriptionQuery();
   const summary = summarizeSubscription(subscription);
   const eligible = canCancelAtStore(summary);
+  // 첫 스텝이 환급을 쌓는 중인지에 달려 있어 답을 듣고 연다 — 스위치가 꺼져 있으면 묻지 않는다
+  const reward = useRewardQuery({ enabled: REFUND_CHALLENGE_ENABLED });
+  const awaitingReward = REFUND_CHALLENGE_ENABLED && !reward.fetched;
 
   // 여기서 해지할 구독이 없으면 구독 관리로 — 그쪽이 상태에 맞는 행(해지 취소·페이월)을 보여준다
   useEffect(() => {
     if (!isPending && !eligible) router.replace(SUBSCRIPTION_MANAGE_PATH);
   }, [isPending, eligible, router]);
 
-  if (isPending || isError || !eligible) {
+  if (isPending || isError || !eligible || awaitingReward) {
     return (
       <main className="flex h-dvh flex-col bg-background">
         <BackHeader
@@ -205,5 +236,11 @@ export const CancelFlowScreen = () => {
       </main>
     );
   }
-  return <Flow summary={summary} paidStore={subscription?.store} />;
+  return (
+    <Flow
+      summary={summary}
+      paidStore={subscription?.store}
+      refund={refundStakeOf(reward.reward)}
+    />
+  );
 };

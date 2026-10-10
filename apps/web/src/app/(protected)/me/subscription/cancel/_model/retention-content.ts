@@ -6,6 +6,7 @@ import type {
   SubscriptionPlan,
 } from '@landit/analytics';
 
+import type { RewardView } from '@/features/reward/api/reward';
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
 import { formatWon } from '@/features/subscription/lib/won';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
@@ -52,8 +53,25 @@ export const DAILY_REMINDER_LABEL = '매일 오후 9:00';
 
 const STAY = { label: '조금 더 써볼게요', to: 'manage' as const };
 
+/** 환급을 쌓는 중인 사람이 걸어 둔 것 — 지금까지 쌓인 금액과 끝까지 채우면 받는 금액 */
+export interface RefundStake {
+  balanceWon: number;
+  maximumWon: number;
+}
+
+/** 쌓는 중일 때만 — 끝났거나 결제를 확인하는 중이면 해지가 바꾸는 것이 없어 알릴 것도 없다 */
+export const refundStakeOf = (reward: RewardView | null): RefundStake | null =>
+  reward?.state === 'ACTIVE' && reward.current
+    ? {
+        balanceWon: reward.current.balanceWon,
+        maximumWon: reward.current.maximumWon,
+      }
+    : null;
+
 interface RetentionContext {
   summary: PaidSubscriptionSummary;
+  /** 환급을 쌓는 중이 아니면 null */
+  refund: RefundStake | null;
   /** 마이페이지가 쓰는 이름 — 없으면 "게스트" */
   nickname: string;
   /** 스트릭 달력의 누적 학습일. 아직 못 받았으면 null */
@@ -88,7 +106,48 @@ const PLAN_PRICE_PREFIX: Record<SubscriptionPlan, string | null> = {
   yearly: '연',
 };
 
-const priceContent = (summary: PaidSubscriptionSummary): RetentionContent => {
+const stakeCards = (refund: RefundStake): RetentionCard[] => [
+  {
+    kind: 'row',
+    label: '지금까지 쌓인 환급액',
+    value: formatWon(refund.balanceWon),
+  },
+  {
+    kind: 'row',
+    label: '끝까지 채우면 받는 금액',
+    value: formatWon(refund.maximumWon),
+  },
+];
+
+/** ⓪ 화면 — 환급을 쌓는 중인 사람이 사유를 고르기 전에 본다 */
+export const refundNoticeContent = (refund: RefundStake): RetentionContent => ({
+  emoji: '💰',
+  title: '해지해도 환급은 계속 쌓여요',
+  body: [
+    '기간이 끝날 때까지는 지금처럼 쌓을 수 있어요.',
+    '다만 갱신하지 않으면 다음 회차 환급은 없어요.',
+  ],
+  cards: stakeCards(refund),
+  primary: STAY,
+});
+
+// 환급을 쌓는 중이면 하루 요금보다 돌려받는 금액이 가격 이야기의 답이다
+const refundPriceContent = (refund: RefundStake): RetentionContent => ({
+  emoji: '💸',
+  title: '가격이 부담되셨군요',
+  body: [
+    `매일 하면 최대 ${formatWon(refund.maximumWon)}을 돌려받아요.`,
+    '돌려받는 만큼 실제로 내는 금액이 줄어들어요.',
+  ],
+  cards: stakeCards(refund),
+  primary: STAY,
+});
+
+const priceContent = (
+  summary: PaidSubscriptionSummary,
+  refund: RefundStake | null,
+): RetentionContent => {
+  if (refund) return refundPriceContent(refund);
   const { plan, price } = summary;
   // 플랜이나 실제 결제액을 모르면 숫자를 지어내지 않는다 — 문구도 카드도 없이
   if (!plan || price === null) {
@@ -226,7 +285,7 @@ export const retentionContent = (
 ): RetentionContent => {
   switch (reason) {
     case 'price':
-      return priceContent(context.summary);
+      return priceContent(context.summary, context.refund);
     case 'progress':
       return progressContent(context);
     case 'other':

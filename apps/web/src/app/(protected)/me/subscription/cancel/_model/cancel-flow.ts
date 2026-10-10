@@ -1,4 +1,5 @@
 // 해지 사유 플로우의 스텝 규칙 — ① 사유 → ② 사유별 화면. "다른 방법"만 방법 라디오를 거쳐 ③으로 간다.
+// 환급을 쌓는 중인 사람은 ① 앞에 환급 안내를 한 장 먼저 본다.
 // 화면은 이 함수들이 돌려준 상태만 그린다. 어디로 갈 수 있는지·돌아가면 어디인지는 전부 여기서 정한다
 import type { CancelReason, StudyMethod } from '@landit/analytics';
 
@@ -6,6 +7,7 @@ import type { CancelReason, StudyMethod } from '@landit/analytics';
 export type RetentionReason = Exclude<CancelReason, 'other_method'>;
 
 export type CancelStep =
+  | { kind: 'refund_notice' }
   | { kind: 'reason' }
   | { kind: 'retention'; reason: RetentionReason }
   | { kind: 'method' }
@@ -22,6 +24,10 @@ export const EMPTY_DRAFT: CancelDraft = {
   otherText: '',
   method: null,
 };
+
+/** 처음 보는 스텝 — 환급을 쌓는 중이면 해지가 환급에 어떤 뜻인지부터 알린다 */
+export const firstStep = (hasRefund: boolean): CancelStep =>
+  hasRefund ? { kind: 'refund_notice' } : { kind: 'reason' };
 
 /** 기타를 골랐으면 적은 글이 있어야 넘어간다. 빈칸·공백만은 안 적은 것이다 */
 export const canProceedFromReason = (draft: CancelDraft) => {
@@ -42,11 +48,16 @@ export const stepAfterMethod = (method: StudyMethod): CancelStep => ({
   method,
 });
 
-/** 뒤로가기 — 한 칸 앞 스텝, ①에서는 null(플로우 밖으로) */
-export const stepBefore = (step: CancelStep): CancelStep | null => {
+/** 뒤로가기 — 한 칸 앞 스텝, 처음 본 스텝에서는 null(플로우 밖으로) */
+export const stepBefore = (
+  step: CancelStep,
+  hasRefund: boolean,
+): CancelStep | null => {
   switch (step.kind) {
-    case 'reason':
+    case 'refund_notice':
       return null;
+    case 'reason':
+      return hasRefund ? { kind: 'refund_notice' } : null;
     case 'retention':
     case 'method':
       return { kind: 'reason' };
@@ -60,6 +71,7 @@ export const stepContext = (
   step: CancelStep,
 ): { reason?: CancelReason; method?: StudyMethod } => {
   switch (step.kind) {
+    case 'refund_notice':
     case 'reason':
       return {};
     case 'retention':

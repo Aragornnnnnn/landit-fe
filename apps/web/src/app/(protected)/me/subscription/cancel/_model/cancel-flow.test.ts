@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   canProceedFromReason,
   EMPTY_DRAFT,
+  firstStep,
   stepAfterMethod,
   stepAfterReason,
   stepBefore,
@@ -54,17 +55,35 @@ describe('stepAfterReason', () => {
 
 describe('stepBefore', () => {
   it('①에서는 돌아갈 스텝이 없다', () => {
-    expect(stepBefore({ kind: 'reason' })).toBeNull();
+    expect(stepBefore({ kind: 'reason' }, false)).toBeNull();
   });
 
   it('사유별 화면과 방법 라디오에서는 ①로 돌아간다', () => {
-    expect(stepBefore({ kind: 'retention', reason: 'bug' })).toEqual({
+    expect(stepBefore({ kind: 'retention', reason: 'bug' }, false)).toEqual({
       kind: 'reason',
     });
-    expect(stepBefore({ kind: 'method' })).toEqual({ kind: 'reason' });
+    expect(stepBefore({ kind: 'method' }, false)).toEqual({
+      kind: 'reason',
+    });
   });
 
   it('③에서는 방법 라디오로 돌아간다', () => {
-    expect(stepBefore(stepAfterMethod('youtube'))).toEqual({ kind: 'method' });
+    expect(stepBefore(stepAfterMethod('youtube'), false)).toEqual({
+      kind: 'method',
+    });
+  });
+
+  it('환급을 쌓는 중이면 ①에서 환급 안내로 돌아가고, 환급 안내에서는 돌아갈 스텝이 없다', () => {
+    expect(stepBefore({ kind: 'reason' }, true)).toEqual({
+      kind: 'refund_notice',
+    });
+    expect(stepBefore({ kind: 'refund_notice' }, true)).toBeNull();
+  });
+});
+
+describe('firstStep', () => {
+  it('환급을 쌓는 중이면 환급 안내부터, 아니면 사유부터 본다', () => {
+    expect(firstStep(true)).toEqual({ kind: 'refund_notice' });
+    expect(firstStep(false)).toEqual({ kind: 'reason' });
   });
 });

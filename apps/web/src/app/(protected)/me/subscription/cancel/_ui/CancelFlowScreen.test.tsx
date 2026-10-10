@@ -3,6 +3,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { RewardView } from '@/features/reward/api/reward';
+import { rewardView } from '@/features/reward/model/reward.fixture';
 import type { MySubscription } from '@/features/subscription/api/subscription';
 
 import { CancelFlowScreen } from './CancelFlowScreen';
@@ -18,8 +20,19 @@ const mocks = vi.hoisted(() => ({
     isError: false,
   },
   learningLevel: { data: { learningLevel: 3 } },
+  reward: { reward: null as RewardView | null, fetched: true },
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
+vi.mock('@/features/reward/model/useRewardQuery', () => ({
+  useRewardQuery: () => mocks.reward,
+}));
+vi.mock(
+  '@/features/subscription/model/paywall-gate/payment-flag',
+  async (original) => ({
+    ...(await original<object>()),
+    REFUND_CHALLENGE_ENABLED: true,
+  }),
+);
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     replace: mocks.replace,
@@ -77,6 +90,7 @@ beforeEach(() => {
   mocks.track.mockClear();
   mocks.replace.mockClear();
   mocks.push.mockClear();
+  mocks.reward = { reward: null, fetched: true };
 });
 afterEach(cleanup);
 
@@ -249,5 +263,41 @@ describe('다른 방법 → ③', () => {
     expect(
       screen.getByRole('heading', { name: /이유를 알려주세요/ }),
     ).toBeInTheDocument();
+  });
+});
+
+describe('환급을 쌓는 중인 사람', () => {
+  const halfyear = () =>
+    premium({ productId: 'com.saynow.app.premium.halfyear', price: 59_900 });
+
+  it('사유를 묻기 전에 환급 안내를 먼저 보고, 해지를 계속하면 사유로 넘어간다', () => {
+    mocks.reward = { reward: rewardView(), fetched: true };
+    renderScreen(halfyear());
+
+    expect(screen.getByText('해지해도 환급은 계속 쌓여요')).toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '해지 계속하기' }));
+
+    expect(screen.getAllByRole('radio')).toHaveLength(7);
+  });
+
+  it('환급 안내에서 남기로 하면 구독 관리로 돌아간다', () => {
+    mocks.reward = { reward: rewardView(), fetched: true };
+    renderScreen(halfyear());
+
+    fireEvent.click(screen.getByRole('button', { name: '조금 더 써볼게요' }));
+
+    expect(mocks.replace).toHaveBeenCalledWith('/me/subscription');
+  });
+
+  it('환급 답을 듣기 전에는 사유도 안내도 열지 않는다 — 어느 쪽이 첫 화면인지 모른다', () => {
+    mocks.reward = { reward: null, fetched: false };
+    renderScreen(halfyear());
+
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('해지해도 환급은 계속 쌓여요'),
+    ).not.toBeInTheDocument();
   });
 });

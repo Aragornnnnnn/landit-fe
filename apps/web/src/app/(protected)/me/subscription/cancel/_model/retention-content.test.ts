@@ -1,12 +1,19 @@
 // 사유별 화면 문구·카드 — 플랜·체험·기록 유무로 갈리는 자리만 본다
 import { describe, expect, it } from 'vitest';
 
+import {
+  endedRewardView,
+  rewardView,
+} from '@/features/reward/model/reward.fixture';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
 
 import {
   dailyWon,
   methodRetentionContent,
+  refundNoticeContent,
+  refundStakeOf,
   retentionContent,
+  type RefundStake,
 } from './retention-content';
 
 const active = (
@@ -20,8 +27,12 @@ const active = (
   ...overrides,
 });
 
-const context = (summary: PaidSubscriptionSummary) => ({
+const context = (
+  summary: PaidSubscriptionSummary,
+  refund: RefundStake | null = null,
+) => ({
   summary,
+  refund,
   nickname: '준서',
   totalActiveDays: 12,
   levelLabel: '견습 마법사 Lv.3',
@@ -179,5 +190,50 @@ describe('methodRetentionContent', () => {
 
     expect(new Set(titles).size).toBe(4);
     expect(methodRetentionContent('academy').cards).toEqual([]);
+  });
+});
+
+describe('환급을 쌓는 중인 사람', () => {
+  const stake = { balanceWon: 2015, maximumWon: 59_900 };
+
+  it('쌓는 중일 때만 걸어 둔 금액이 있다', () => {
+    expect(refundStakeOf(rewardView())).toEqual({
+      balanceWon: rewardView().current!.balanceWon,
+      maximumWon: rewardView().current!.maximumWon,
+    });
+    expect(refundStakeOf(endedRewardView(31_920))).toBeNull();
+    expect(refundStakeOf(null)).toBeNull();
+  });
+
+  it('사유를 묻기 전에 쌓인 금액과, 해지해도 기간 끝까지 쌓인다는 것을 알린다', () => {
+    const content = refundNoticeContent(stake);
+
+    expect(content.title).toBe('해지해도 환급은 계속 쌓여요');
+    expect(content.body).toContain(
+      '다만 갱신하지 않으면 다음 회차 환급은 없어요.',
+    );
+    expect(content.cards).toEqual([
+      { kind: 'row', label: '지금까지 쌓인 환급액', value: '2,015원' },
+      { kind: 'row', label: '끝까지 채우면 받는 금액', value: '59,900원' },
+    ]);
+  });
+
+  it('가격 부담에는 하루 요금 대신 돌려받는 금액으로 답한다', () => {
+    const content = retentionContent(
+      'price',
+      context(active({ plan: 'halfyear', price: 59_900 }), stake),
+    );
+
+    expect(content.body[0]).toBe('매일 하면 최대 59,900원을 돌려받아요.');
+    expect(content.cards).toHaveLength(2);
+  });
+
+  it('3·6개월이어도 쌓는 중이 아니면 하루 요금으로 답한다', () => {
+    const content = retentionContent(
+      'price',
+      context(active({ plan: 'halfyear', price: 59_900 })),
+    );
+
+    expect(content.body[0]).toContain('하루');
   });
 });
