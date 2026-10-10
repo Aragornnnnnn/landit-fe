@@ -15,6 +15,15 @@ import { Emoji } from '@/shared/ui/emoji';
 
 import { MenuLink, MenuSection } from '../../../_ui/Menu';
 
+// 케이스 목록으로 못 여는 두 경우 — [궁금한 것, 보는 법]
+const NOTES = [
+  [
+    '권한을 거절한 화면을 보려면',
+    '폰 설정에서 알람 권한을 끄고 ‘처음 결제한 사람’을 열어요',
+  ],
+  ['결제 뒤 원래 화면으로 돌아가는지 보려면', '실제로 결제해야 해요'],
+] as const;
+
 // 케이스 목록 — 알람 설정을 읽으므로 ADMIN일 때만 올린다
 const OnboardingCases = () => {
   const { data: setting } = useAlarmSettingQuery();
@@ -58,17 +67,20 @@ const OnboardingCases = () => {
         />
       </MenuSection>
 
-      <div className="rounded-xl bg-card px-4 py-4 text-[13px] leading-relaxed text-foreground">
-        <p>
-          · 권한을 거절한 경우(“거의 다 됐어요”)는 폰 설정에서 알람 권한을 끄고
-          ‘처음 결제한 사람’을 열면 보여요
-        </p>
-        <p>· 「다음에 할게요」는 알람 소개 화면 아래에 있어요</p>
-        <p>
-          · 페이월에서 이어지는 이동(결제 뒤 원래 화면으로)은 실제 결제로만
-          확인돼요
-        </p>
-      </div>
+      <MenuSection title="참고">
+        <dl className="space-y-3 px-4 py-4">
+          {NOTES.map(([question, answer]) => (
+            <div key={question}>
+              <dt className="text-[14px] font-bold text-foreground">
+                {question}
+              </dt>
+              <dd className="mt-0.5 text-[13px] leading-snug text-muted-foreground">
+                {answer}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </MenuSection>
     </>
   );
 };
