@@ -23,7 +23,7 @@ import { useSubscriptionQuery } from '@/features/subscription/model/my-subscript
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { postToNative } from '@/shared/bridge/web-bridge';
-import { ALARM_SETTINGS_PATH, backToMyPage } from '@/shared/lib/routes';
+import { backToMyPage } from '@/shared/lib/routes';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { Emoji } from '@/shared/ui/emoji';
 import { showToast } from '@/shared/ui/toast';
@@ -31,13 +31,7 @@ import { showToast } from '@/shared/ui/toast';
 import { describeNextRing, testAlarmChoices } from '../_model/alarm-check';
 import { useAlarmList } from '../_model/useAlarmList';
 import { compareWithServer } from '../../_model/alarm-comparison';
-import {
-  MenuButton,
-  MenuLink,
-  MenuSection,
-  ROW_CLASS,
-  ROW_STYLE,
-} from '../../_ui/Menu';
+import { MenuButton, MenuSection, ROW_CLASS, ROW_STYLE } from '../../_ui/Menu';
 
 const PERMISSION_LABEL = {
   granted: '허용됨',
@@ -125,16 +119,21 @@ const CancelTestButton = ({ alarm }: { alarm: ScheduledAlarm }) => (
 // 매일 알람 시각을 바로 정해 저장한다 — 다짐(지문 3초) 없이 폰 기본 시각 선택기로 고른다
 const DailyTimeRow = ({
   serverTime,
+  enabled,
   disabled,
   onSave,
 }: {
   /** 서버에 저장된 시각 "HH:mm". 없으면 기본 시각에서 시작한다 */
   serverTime: string | null;
+  /** 서버 알람이 켜져 있는가 — 꺼져 있으면 같은 시각이어도 저장하면 켜진다 */
+  enabled: boolean;
   disabled: boolean;
   onSave: (time: string) => void;
 }) => {
   const [draft, setDraft] = useState<string | null>(null);
   const time = draft ?? serverTime ?? toServerTime(DEFAULT_ALARM_TIME);
+  // 이미 켜져 있고 시각도 그대로면 저장할 것이 없다
+  const unchanged = enabled && time === serverTime;
   return (
     <div className={`${ROW_CLASS} active:bg-transparent`} style={ROW_STYLE}>
       <Emoji>⏰</Emoji>
@@ -153,9 +152,9 @@ const DailyTimeRow = ({
       />
       <button
         type="button"
-        disabled={disabled || time === ''}
+        disabled={disabled || time === '' || unchanged}
         onClick={() => onSave(time)}
-        className="shrink-0 rounded-full bg-primary px-3.5 py-1.5 text-[13px] font-bold text-primary-foreground active:scale-95 disabled:opacity-50"
+        className="shrink-0 rounded-full bg-primary px-3.5 py-1.5 text-[13px] font-bold text-primary-foreground active:scale-95 disabled:bg-muted disabled:text-muted-foreground disabled:active:scale-100"
       >
         저장
       </button>
@@ -302,15 +301,9 @@ const AlarmCheck = () => {
         <DailyTimeRow
           key={setting?.time ?? 'unset'}
           serverTime={setting?.time ?? null}
+          enabled={setting?.enabled === true}
           disabled={saving}
           onSave={saveDailyAt}
-        />
-        {/* 실제 사용자와 같은 길(소개 → 다짐 → 권한)을 확인할 때는 등록·수정 화면을 탄다 */}
-        <MenuLink
-          href={ALARM_SETTINGS_PATH}
-          icon={<Emoji>🤝</Emoji>}
-          title="실제 등록·수정 화면으로 가기"
-          description="처음 등록이면 소개와 3초 다짐을 거쳐요"
         />
         <MenuButton
           title={`1분 뒤로 바꾸기 (${clock(dailySoon)})`}
