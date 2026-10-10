@@ -8,6 +8,8 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useAuthStore } from '@/shared/auth/auth-store';
+
 import { PremiumOnboardingScreen } from './PremiumOnboardingScreen';
 
 const mocks = vi.hoisted(() => ({
@@ -51,11 +53,14 @@ vi.mock('@/features/alarm/ui/AlarmSetupFlow', () => ({
   AlarmSetupFlow: ({
     onSkip,
     onDone,
+    refund,
   }: {
     onSkip: () => void;
     onDone: () => void;
+    refund: boolean;
   }) => (
     <>
+      <p>{refund ? '환급 문구' : '기본 문구'}</p>
       <button type="button" onClick={onSkip}>
         다음에 할게요
       </button>
@@ -74,7 +79,19 @@ beforeEach(() => {
   mocks.invalidateQueries.mockClear();
   mocks.refetch.mockReset();
 });
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  useAuthStore.getState().clearAuth();
+});
+
+const signIn = (role: 'USER' | 'ADMIN') =>
+  useAuthStore.getState().setAuth('access', 'refresh', {
+    userId: 1,
+    nickname: '준서',
+    email: null,
+    provider: 'kakao',
+    role,
+  });
 
 describe('PremiumOnboardingScreen', () => {
   it('알람을 쓸 수 있는 셸이면 「다음」 뒤 알람 등록으로 이어진다', () => {
@@ -190,5 +207,46 @@ describe('PremiumOnboardingScreen', () => {
 
     // then
     expect(mocks.replace).toHaveBeenCalledWith('/me');
+  });
+
+  describe('미리보기 — 개발자 묶음에서 ADMIN이 케이스를 골라 연다', () => {
+    it('알람 등록까지 보기: 이미 등록한 계정이어도 알람 등록으로 이어진다', () => {
+      signIn('ADMIN');
+      mocks.setting = { time: '07:30', enabled: true };
+      render(<PremiumOnboardingScreen returnTo="/me" preview="alarm" />);
+
+      fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+      expect(screen.getByText('기본 문구')).toBeVisible();
+      expect(mocks.replace).not.toHaveBeenCalled();
+    });
+
+    it('환급 문구로 보기: 알람 등록이 환급 문구로 나온다', () => {
+      signIn('ADMIN');
+      render(<PremiumOnboardingScreen returnTo="/me" preview="refund" />);
+
+      fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+      expect(screen.getByText('환급 문구')).toBeVisible();
+    });
+
+    it('환영만 보기: 등록 전 계정이어도 알람 등록 없이 돌아간다', () => {
+      signIn('ADMIN');
+      render(<PremiumOnboardingScreen returnTo="/me" preview="welcome" />);
+
+      fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+      expect(mocks.replace).toHaveBeenCalledWith('/me');
+    });
+
+    it('ADMIN이 아니면 미리보기를 무시한다 — 주소를 고쳐도 실제 상태대로 간다', () => {
+      signIn('USER');
+      mocks.setting = { time: '07:30', enabled: true };
+      render(<PremiumOnboardingScreen returnTo="/me" preview="refund" />);
+
+      fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+      expect(mocks.replace).toHaveBeenCalledWith('/me');
+    });
   });
 });

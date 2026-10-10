@@ -6,9 +6,11 @@ import type {
 } from '@landit/analytics';
 
 import {
+  ALARM_CHECK_PATH,
   ALARM_EDIT_PATH,
   ALARM_SETTINGS_PATH,
   PAYWALL_PATH,
+  PREMIUM_ONBOARDING_CHECK_PATH,
   PREMIUM_ONBOARDING_PATH,
   readScenarioFeedbackParams,
   SUBSCRIPTION_CANCEL_PATH,
@@ -47,6 +49,8 @@ const NESTED_PAGES: Record<string, string> = {
   [WIDGET_GUIDE_PATH]: 'widget_guide',
   [ALARM_SETTINGS_PATH]: 'alarm_settings',
   [ALARM_EDIT_PATH]: 'alarm_edit',
+  [ALARM_CHECK_PATH]: 'alarm_check',
+  [PREMIUM_ONBOARDING_CHECK_PATH]: 'premium_onboarding_check',
   [PREMIUM_ONBOARDING_PATH]: 'premium_onboarding',
 };
 
