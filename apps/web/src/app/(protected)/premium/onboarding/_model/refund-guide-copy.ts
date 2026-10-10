@@ -3,6 +3,8 @@ import type { RewardView } from '@/features/reward/api/reward';
 import { formatWon } from '@/shared/lib/won';
 
 export interface RefundGuideCopy {
+  // 큰 글자 위 한 줄
+  eyebrow: string;
   // 큰 글자
   amount: string;
   // 그 아래 한 줄
@@ -16,16 +18,18 @@ export const refundGuideCopyOf = (
   // 결제는 끝났는데 환급 쪽 반영이 늦다 — 어느 상품인지 모르니 금액을 단정하지 않고 두 상품을 같이 말한다
   if (reward?.state === 'PENDING')
     return {
+      eyebrow: '매일 공부하면 수강료를 돌려받아요',
       amount: '환급 챌린지 시작',
       caption: '6개월은 낸 금액 전부, 3개월은 80%를 돌려받아요',
     };
   if (reward?.state !== 'ACTIVE' || reward.current === null) return null;
 
   return {
+    eyebrow: '오늘부터 챌린지 시작!',
     amount: `최대 ${formatWon(reward.current.maximumWon)}`,
     caption:
       reward.remainingDays === null
-        ? '매일 하면 돌려받아요'
-        : `${reward.remainingDays}일 동안 매일 하면 돌려받아요`,
+        ? '매일 공부하면 구독료를 돌려받아요'
+        : `${reward.remainingDays}일 동안 매일 공부하면 구독료를 돌려받아요`,
   };
 };

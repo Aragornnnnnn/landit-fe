@@ -288,7 +288,9 @@ describe('PremiumOnboardingScreen', () => {
       tapNext();
 
       expect(await screen.findByText('최대 31,920원')).toBeVisible();
-      expect(screen.getByText('92일 동안 매일 하면 돌려받아요')).toBeVisible();
+      expect(
+        screen.getByText('92일 동안 매일 공부하면 구독료를 돌려받아요'),
+      ).toBeVisible();
     });
 
     it('환급 안내를 넘기면 알람 등록이 환급 문구로 나온다', async () => {

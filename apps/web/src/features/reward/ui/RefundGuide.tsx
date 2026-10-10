@@ -77,9 +77,12 @@ export const RefundRuleList = () => (
 );
 
 export const RefundGuide = ({
+  eyebrow,
   amount,
   caption,
 }: {
+  // 큰 글자 위 한 줄
+  eyebrow: string;
   // 큰 글자 ("최대 59,900원")
   amount: string;
   // 그 아래 한 줄
@@ -95,9 +98,7 @@ export const RefundGuide = ({
           priority
         />
       </div>
-      <p className="mt-2 text-[14px] font-bold text-primary">
-        매일 공부하면 수강료를 돌려받아요
-      </p>
+      <p className="mt-2 text-[14px] font-bold text-primary">{eyebrow}</p>
       <h2 className="mt-0.5 text-[36px] leading-tight font-black text-foreground">
         {amount}
       </h2>
