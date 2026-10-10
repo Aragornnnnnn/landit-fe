@@ -1,4 +1,4 @@
-// 환급이 바뀌는 순간(학습 완료, 결제) 서버에서 미리 받아 둔다 — 다음 화면이 열렸을 때 이미 새 값이어야 한다.
+// 환급이 바뀌는 순간(학습 완료, 결제) 서버에서 미리 받아 두거나, 지금 값을 기다려 받는다 — 다음 화면이 열렸을 때 이미 새 값이어야 한다.
 // 버리기만 하면 화면이 다시 붙은 뒤에야 조회가 시작돼, 옛 값을 먼저 그리고 뒤늦게 바뀐다
 import type { QueryClient } from '@tanstack/react-query';
 
@@ -36,4 +36,27 @@ export const refreshRewardAfterCompletion = (queryClient: QueryClient) => {
   const cached = cachedReward(queryClient, userId);
   if (cached === undefined || participantOf(cached) === null) return;
   refetch(queryClient, userId);
+};
+
+// 결제 직후처럼 지금 값이 꼭 필요한 순간 — 받는 중이면 끝날 때까지 기다린다. 환급과 상관없거나 받지 못하면 null.
+// 받아 둔 답이 아직 신선하면 그대로 준다 — 결제 전의 답을 버리려면 refreshRewardAfterPurchase가 먼저 불려 있어야 한다
+export const fetchLatestReward = async (
+  queryClient: QueryClient,
+  // 받아 둔 답이 신선해도 새로 받는다 — 서버 반영이 늦었을지 모를 때
+  { fresh = false }: { fresh?: boolean } = {},
+) => {
+  const userId = getCurrentUserId();
+  if (userId === null) return null;
+  try {
+    return participantOf(
+      await queryClient.fetchQuery({
+        queryKey: rewardKeys.summary(userId),
+        queryFn: getMyRewards,
+        ...(fresh && { staleTime: 0 }),
+      }),
+    );
+  } catch {
+    // 환급을 못 받았다고 결제 직후의 흐름을 막지 않는다
+    return null;
+  }
 };

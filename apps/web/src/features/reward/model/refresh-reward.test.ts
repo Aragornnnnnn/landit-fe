@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as rewardApi from '../api/reward';
 import { rewardKeys } from './keys';
 import {
+  fetchLatestReward,
   refreshRewardAfterCompletion,
   refreshRewardAfterPurchase,
 } from './refresh-reward';
@@ -20,7 +21,10 @@ const next = rewardView({ current: rewardCycle({ balanceWon: 12411 }) });
 
 // 받아 둔 환급이 이것인 캐시
 const cacheWith = (cached?: ReturnType<typeof rewardView>) => {
-  const queryClient = new QueryClient();
+  // 앱과 같은 신선 시간 — 받은 지 30초 안의 답은 다시 묻지 않는다
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { staleTime: 30_000 } },
+  });
   if (cached) queryClient.setQueryData(key, cached);
   return queryClient;
 };
@@ -67,5 +71,51 @@ describe('refreshRewardAfterPurchase', () => {
     refreshRewardAfterPurchase(cacheWith());
 
     expect(getMyRewards).not.toHaveBeenCalled();
+  });
+});
+
+describe('fetchLatestReward', () => {
+  it('참여자의 지금 환급을 받아 준다', async () => {
+    expect(await fetchLatestReward(cacheWith())).toEqual(next);
+  });
+
+  it('결제 전에 받아 둔 답이 있어도 새로 받은 값을 준다', async () => {
+    // given — 결제 직후. 받아 둔 답은 "환급과 상관없음"이고, 결제 뒤 미리받기가 막 출발했다
+    const queryClient = cacheWith(outsider);
+    refreshRewardAfterPurchase(queryClient);
+
+    const latest = await fetchLatestReward(queryClient);
+
+    expect(latest).toEqual(next);
+    // 도는 요청에 합류한다 — 두 번 묻지 않는다
+    expect(getMyRewards).toHaveBeenCalledTimes(1);
+  });
+
+  it('받아 둔 답이 신선하면 다시 묻지 않는다', async () => {
+    const queryClient = cacheWith(rewardView());
+
+    await fetchLatestReward(queryClient);
+
+    expect(getMyRewards).not.toHaveBeenCalled();
+  });
+
+  it('새로 받으라고 하면 받아 둔 답이 신선해도 다시 묻는다', async () => {
+    // given — 결제 직후 받은 답이 "환급과 상관없음"이었다. 서버 반영이 늦었을 수 있다
+    const queryClient = cacheWith(outsider);
+
+    expect(await fetchLatestReward(queryClient, { fresh: true })).toEqual(next);
+  });
+
+  it('환급과 상관없는 사람이면 null이다', async () => {
+    getMyRewards.mockResolvedValue(outsider);
+
+    expect(await fetchLatestReward(cacheWith())).toBe(null);
+  });
+
+  it('받지 못해도 던지지 않고 null을 준다', async () => {
+    // given — 결제 직후의 흐름이 환급 조회 실패로 막히면 안 된다
+    getMyRewards.mockRejectedValue(new Error('네트워크 오류'));
+
+    expect(await fetchLatestReward(cacheWith())).toBe(null);
   });
 });
