@@ -18,7 +18,7 @@ import { useSubscriptionQuery } from '@/features/subscription/model/my-subscript
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { postToNative } from '@/shared/bridge/web-bridge';
-import { backToMyPage } from '@/shared/lib/routes';
+import { ALARM_SETTINGS_PATH, backToMyPage } from '@/shared/lib/routes';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { Emoji } from '@/shared/ui/emoji';
 import { showToast } from '@/shared/ui/toast';
@@ -26,7 +26,7 @@ import { showToast } from '@/shared/ui/toast';
 import { describeNextRing, testAlarmChoices } from '../_model/alarm-check';
 import { useAlarmList } from '../_model/useAlarmList';
 import { compareWithServer } from '../../_model/alarm-comparison';
-import { MenuButton, MenuSection, ROW_CLASS, ROW_STYLE } from '../../_ui/Menu';
+import { MenuButton, MenuLink, MenuSection } from '../../_ui/Menu';
 
 const PERMISSION_LABEL = {
   granted: '허용됨',
@@ -47,28 +47,43 @@ const useNow = () => {
   return now;
 };
 
-const InfoRow = ({
+const TONE_CLASS = {
+  default: 'text-foreground',
+  danger: 'font-bold text-destructive',
+  good: 'font-bold text-primary',
+} as const;
+
+// 상태 목록 — 눌리지 않는 "라벨: 값" 글자다. 메뉴 줄과 섞이지 않게 카드 안 옅은 상자에 구분선 없이 촘촘히 적는다
+const StatusList = ({
+  note,
+  children,
+}: {
+  /** 값이 아니라 설명인 한마디 — 목록 아래에 작게 적는다 */
+  note?: string;
+  children: React.ReactNode;
+}) => (
+  <div className="m-3 rounded-lg bg-muted/70 px-3.5 py-3">
+    <dl className="space-y-1.5 text-[13px] leading-snug">{children}</dl>
+    {note && (
+      <p className="mt-2 text-[12px] leading-snug text-muted-foreground">
+        {note}
+      </p>
+    )}
+  </div>
+);
+
+const StatusItem = ({
   label,
   value,
   tone = 'default',
 }: {
   label: string;
-  value: string;
-  tone?: 'default' | 'danger' | 'good';
+  value: React.ReactNode;
+  tone?: keyof typeof TONE_CLASS;
 }) => (
-  <div className={`${ROW_CLASS} justify-between`} style={ROW_STYLE}>
-    <span className="text-[14.5px] text-foreground">{label}</span>
-    <span
-      className={`text-[14px] ${
-        tone === 'danger'
-          ? 'font-bold text-destructive'
-          : tone === 'good'
-            ? 'font-bold text-primary'
-            : 'text-muted-foreground'
-      }`}
-    >
-      {value}
-    </span>
+  <div className="flex items-center justify-between gap-4">
+    <dt className="shrink-0 text-muted-foreground">{label}</dt>
+    <dd className={`text-right ${TONE_CLASS[tone]}`}>{value}</dd>
   </div>
 );
 
@@ -85,26 +100,15 @@ const remaining = (at: number, now: Date) => {
     : `${seconds}초`;
 };
 
-// 예약한 테스트 알람 한 줄 — 울릴 시각과 남은 시간, 그리고 취소. 테스트 알람은 폰에만 있어 지우면 그대로 사라진다
-const TestAlarmRow = ({ alarm, now }: { alarm: ScheduledAlarm; now: Date }) => (
-  <div
-    className={`${ROW_CLASS} justify-between bg-primary/5`}
-    style={ROW_STYLE}
+// 예약한 테스트 알람의 취소 — 테스트 알람은 폰에만 있어 지우면 그대로 사라진다
+const CancelTestButton = ({ alarm }: { alarm: ScheduledAlarm }) => (
+  <button
+    type="button"
+    onClick={() => postToNative({ type: 'CANCEL_ALARM', id: alarm.id })}
+    className="ml-2 rounded-full bg-card px-2.5 py-1 text-[12px] font-bold text-foreground ring-1 ring-border active:scale-95"
   >
-    <span className="text-[14.5px] font-bold text-primary">
-      {formatClock(alarm)}
-      <span className="ml-2 text-[13px] font-medium">
-        {alarm.nextAt === null ? '' : `${remaining(alarm.nextAt, now)} 남음`}
-      </span>
-    </span>
-    <button
-      type="button"
-      onClick={() => postToNative({ type: 'CANCEL_ALARM', id: alarm.id })}
-      className="shrink-0 rounded-full bg-card px-3 py-1.5 text-[13px] font-bold text-foreground ring-1 ring-border active:scale-95"
-    >
-      취소
-    </button>
-  </div>
+    취소
+  </button>
 );
 
 // 점검 본문 — 셸에 묻고 1초마다 다시 그리므로 ADMIN일 때만 올린다
@@ -174,6 +178,26 @@ const AlarmCheck = () => {
   return (
     <>
       <MenuSection title="테스트 알람 — 누르면 아래 시각에 한 번 울려요">
+        <StatusList>
+          {pendingTests.length === 0 ? (
+            <StatusItem label="예약한 테스트 알람" value="없음" />
+          ) : (
+            pendingTests.map((alarm) => (
+              <StatusItem
+                key={alarm.id}
+                label={`${formatClock(alarm)}에 울려요`}
+                tone="good"
+                value={
+                  <>
+                    {alarm.nextAt !== null &&
+                      `${remaining(alarm.nextAt, now)} 남음`}
+                    <CancelTestButton alarm={alarm} />
+                  </>
+                }
+              />
+            ))
+          )}
+        </StatusList>
         {testAlarmChoices(now).map(({ at, delaySeconds }, index) => (
           <MenuButton
             key={at.getTime()}
@@ -183,41 +207,46 @@ const AlarmCheck = () => {
             onClick={() => scheduleTest(delaySeconds)}
           />
         ))}
-        {pendingTests.map((alarm) => (
-          <TestAlarmRow key={alarm.id} alarm={alarm} now={now} />
-        ))}
       </MenuSection>
 
       {/* 매일 알람은 서버가 정한다 — 폰에서 지워도 앱이 서버에 맞춰 다시 걸므로, 끄는 길은 서버 설정을 끄는 것 하나다 */}
       <MenuSection title="매일 알람 — 서버 설정대로 걸려요. 아래 버튼은 실제 알람을 바꿔요">
-        <InfoRow label="서버에 저장된 알람" value={sync.server} />
-        <InfoRow
-          label="이 폰에 걸린 알람"
-          value={sync.phone}
-          tone={sync.differs ? 'danger' : 'default'}
+        <StatusList
+          note={
+            subscription?.premium === false
+              ? '결제 유저가 아니지만 ADMIN이라 매일 알람이 걸려요'
+              : undefined
+          }
+        >
+          <StatusItem label="서버에 저장된 알람" value={sync.server} />
+          <StatusItem
+            label="이 폰에 걸린 알람"
+            value={sync.phone}
+            tone={sync.differs ? 'danger' : 'default'}
+          />
+          {/* 서버 설정을 받기 전에는 맞다고도 다르다고도 하지 않는다 */}
+          {setting && (
+            <StatusItem
+              label="서버와 폰"
+              value={sync.differs ? '달라요 — 곧 다시 걸려요' : '서로 맞아요 ✓'}
+              tone={sync.differs ? 'danger' : 'good'}
+            />
+          )}
+          {daily && (
+            <StatusItem
+              label="다음 울림"
+              value={`${describeNextRing(daily.nextAt, now)}${
+                daily.skipDate ? ` · ${daily.skipDate} 건너뜀` : ''
+              }`}
+            />
+          )}
+        </StatusList>
+        {/* 시각은 여기서 따로 고르지 않는다 — 실제 사용자와 같은 등록·수정 화면을 탄다 */}
+        <MenuLink
+          href={ALARM_SETTINGS_PATH}
+          icon={<Emoji>🤝</Emoji>}
+          title="매일 알람 등록·수정하러 가기"
         />
-        {/* 서버 설정을 받기 전에는 맞다고도 다르다고도 하지 않는다 */}
-        {setting && (
-          <InfoRow
-            label={sync.differs ? '시각이 달라요' : '서로 맞아요'}
-            value={sync.differs ? '곧 다시 걸려요' : '✓'}
-            tone={sync.differs ? 'danger' : 'good'}
-          />
-        )}
-        {daily && (
-          <InfoRow
-            label="다음 울림"
-            value={`${describeNextRing(daily.nextAt, now)}${
-              daily.skipDate ? ` · ${daily.skipDate} 건너뜀` : ''
-            }`}
-          />
-        )}
-        {subscription?.premium === false && (
-          <InfoRow
-            label="결제 유저 아님 — ADMIN이라 매일 알람이 걸려요"
-            value=""
-          />
-        )}
         <MenuButton
           title={`1분 뒤로 바꾸기 (${clock(dailySoon)})`}
           icon={<Emoji>🗓️</Emoji>}
@@ -246,39 +275,40 @@ const AlarmCheck = () => {
       </div>
 
       <MenuSection title="권한">
-        {/* Android의 권한 값은 정확한 시각과 같은 값이라 아래 줄로 대신한다 */}
-        {!isAndroid && (
-          <InfoRow
-            label="알람 권한"
-            value={
-              status.supported
-                ? PERMISSION_LABEL[status.permission]
-                : '이 기기는 못 써요'
-            }
-            tone={status.permission === 'granted' ? 'default' : 'danger'}
-          />
-        )}
-        {isAndroid && (
-          <>
-            <InfoRow
-              label="알림"
+        <StatusList>
+          {/* Android의 권한 값은 정확한 시각과 같은 값이라 아래 줄로 대신한다 */}
+          {isAndroid ? (
+            <>
+              <StatusItem
+                label="알림"
+                value={
+                  status.notifications ? '허용됨' : '꺼짐 — 알람이 안 걸려요'
+                }
+                tone={status.notifications ? 'default' : 'danger'}
+              />
+              <StatusItem
+                label="정확한 시각"
+                value={status.exactAlarm ? '켜짐' : '꺼짐'}
+                tone={status.exactAlarm ? 'default' : 'danger'}
+              />
+              <StatusItem
+                label="잠금화면 전체 화면"
+                value={status.fullScreen ? '켜짐' : '꺼짐'}
+                tone={status.fullScreen ? 'default' : 'danger'}
+              />
+            </>
+          ) : (
+            <StatusItem
+              label="알람 권한"
               value={
-                status.notifications ? '허용됨' : '꺼짐 — 알람이 안 걸려요'
+                status.supported
+                  ? PERMISSION_LABEL[status.permission]
+                  : '이 기기는 못 써요'
               }
-              tone={status.notifications ? 'default' : 'danger'}
+              tone={status.permission === 'granted' ? 'default' : 'danger'}
             />
-            <InfoRow
-              label="정확한 시각"
-              value={status.exactAlarm ? '켜짐' : '꺼짐'}
-              tone={status.exactAlarm ? 'default' : 'danger'}
-            />
-            <InfoRow
-              label="잠금화면 전체 화면"
-              value={status.fullScreen ? '켜짐' : '꺼짐'}
-              tone={status.fullScreen ? 'default' : 'danger'}
-            />
-          </>
-        )}
+          )}
+        </StatusList>
         {/* iOS는 한 번 거부하면 앱이 다시 물을 수 없다 — 그때는 설정 앱으로 보낸다 */}
         <MenuButton
           title={
@@ -323,19 +353,19 @@ const AlarmCheck = () => {
       </MenuSection>
 
       <MenuSection title="그 밖">
+        <StatusList>
+          <StatusItem label="환경" value={environment} />
+        </StatusList>
         <MenuButton
           title="오늘 회차 건너뛰기"
           icon={<Emoji>✅</Emoji>}
           chevron={false}
           onClick={() =>
-            postToNative({
-              type: 'SKIP_ALARM_TODAY',
-              alarmType: ALARM_TYPE,
-            })
+            postToNative({ type: 'SKIP_ALARM_TODAY', alarmType: ALARM_TYPE })
           }
         />
         <MenuButton
-          title={environment}
+          title="환경 정보 복사"
           icon={<Emoji>📄</Emoji>}
           chevron={false}
           onClick={() => void copyEnvironment()}
