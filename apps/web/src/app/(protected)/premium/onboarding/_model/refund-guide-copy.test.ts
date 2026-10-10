@@ -14,7 +14,11 @@ const offCycle = { current: null, today: null, remainingDays: null };
 describe('refundGuideCopyOf', () => {
   it('환급 상품을 산 사람에게는 그 상품이 돌려주는 금액과 기간을 말한다', () => {
     const view = rewardView({
-      current: rewardCycle({ maximumWon: 31920, balanceWon: 0 }),
+      current: rewardCycle({
+        maximumWon: 31920,
+        balanceWon: 0,
+        eligibleDays: 92,
+      }),
       remainingDays: 92,
     });
 
@@ -25,11 +29,14 @@ describe('refundGuideCopyOf', () => {
     });
   });
 
-  it('남은 날을 모르면 기간 없이 말한다', () => {
-    const view = rewardView({ remainingDays: null });
+  it('며칠 지나 남은 날이 줄어도 상품의 전체 기간으로 말한다', () => {
+    const view = rewardView({
+      current: rewardCycle({ eligibleDays: 92 }),
+      remainingDays: 80,
+    });
 
     expect(refundGuideCopyOf(view)?.caption).toBe(
-      '매일 공부하면 구독료를 돌려받아요',
+      '92일 동안 매일 공부하면 구독료를 돌려받아요',
     );
   });
 

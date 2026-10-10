@@ -135,7 +135,11 @@ const signIn = (role: 'USER' | 'ADMIN') =>
 // 3개월 환급 상품을 막 산 사람의 환급
 const bought = () =>
   rewardView({
-    current: rewardCycle({ maximumWon: 31920, balanceWon: 0 }),
+    current: rewardCycle({
+      maximumWon: 31920,
+      balanceWon: 0,
+      eligibleDays: 92,
+    }),
     remainingDays: 92,
   });
 

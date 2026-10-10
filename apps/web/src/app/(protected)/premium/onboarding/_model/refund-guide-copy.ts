@@ -27,9 +27,7 @@ export const refundGuideCopyOf = (
   return {
     eyebrow: '오늘부터 챌린지 시작!',
     amount: `최대 ${formatWon(reward.current.maximumWon)}`,
-    caption:
-      reward.remainingDays === null
-        ? '매일 공부하면 구독료를 돌려받아요'
-        : `${reward.remainingDays}일 동안 매일 공부하면 구독료를 돌려받아요`,
+    // 남은 날이 아니라 상품의 전체 기간이다 — 며칠 뒤에 봐도 같은 말을 한다
+    caption: `${reward.current.eligibleDays}일 동안 매일 공부하면 구독료를 돌려받아요`,
   };
 };
