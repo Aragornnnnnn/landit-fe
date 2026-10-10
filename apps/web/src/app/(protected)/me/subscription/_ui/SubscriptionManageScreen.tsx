@@ -7,11 +7,6 @@ import { EVENTS, type StoreSubscriptionAction } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import {
-  badgeAmountOf,
-  rewardBadgeOf,
-} from '@/features/reward/model/reward-status';
-import { useRewardQuery } from '@/features/reward/model/useRewardQuery';
-import {
   STORE,
   type StorePlatform,
 } from '@/features/subscription/model/my-subscription/store-links';
@@ -22,7 +17,6 @@ import {
 } from '@/features/subscription/model/my-subscription/subscription-summary';
 import { useStorePlatform } from '@/features/subscription/model/my-subscription/useStorePlatform';
 import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
-import { REFUND_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
 import {
   GOLD_GRADIENT,
   PremiumBadge,
@@ -33,7 +27,6 @@ import {
   backToMyPage,
   MY_PAGE_PATH,
   paywallPath,
-  REFUND_PATH,
   SUBSCRIPTION_CANCEL_PATH,
   SUBSCRIPTION_HISTORY_PATH,
 } from '@/shared/lib/routes';
@@ -64,32 +57,6 @@ const STORE_ROW: Record<
 const toStoreRow = (summary: PaidSubscriptionSummary) => {
   if (summary.kind === 'canceled') return STORE_ROW.canceled;
   return canCancelAtStore(summary) ? STORE_ROW[summary.kind] : null;
-};
-
-// 환급에 참여한 사람에게만 — 쌓인 금액을 보여 주고 환급 화면으로 잇는다. 스위치가 꺼져 있으면 묻지도 않는다
-const RefundRow = ({ canceled }: { canceled: boolean }) => {
-  const { reward } = useRewardQuery({ enabled: REFUND_CHALLENGE_ENABLED });
-  const badge = reward && rewardBadgeOf(reward);
-  if (!badge) return null;
-
-  return (
-    <MenuLink
-      href={REFUND_PATH}
-      icon={<Emoji>💰</Emoji>}
-      title="환급 챌린지"
-      // 해지를 예약한 사람이 이미 끝난 줄 알고 멈추지 않게 — 쌓는 중이면 기간 끝까지 이어진다
-      description={
-        canceled && reward.state === 'ACTIVE'
-          ? '기간이 끝날 때까지 계속 쌓을 수 있어요'
-          : badge.note
-      }
-      value={
-        <span className="text-[14px] font-semibold text-foreground">
-          {badgeAmountOf(badge)}
-        </span>
-      }
-    />
-  );
 };
 
 const CardRowItem = ({ row }: { row: CardRow }) => (
@@ -144,7 +111,6 @@ const PaidSubscription = ({ summary, platform }: PaidSubscriptionProps) => {
       </MenuSection>
 
       <MenuSection title="구독">
-        <RefundRow canceled={summary.kind === 'canceled'} />
         <MenuLink
           href={SUBSCRIPTION_HISTORY_PATH}
           icon={<Emoji>🧾</Emoji>}

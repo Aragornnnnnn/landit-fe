@@ -2,11 +2,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { RewardView } from '@/features/reward/api/reward';
-import {
-  endedRewardView,
-  rewardView,
-} from '@/features/reward/model/reward.fixture';
 import type { MySubscription } from '@/features/subscription/api/subscription';
 
 import { SubscriptionManageScreen } from './SubscriptionManageScreen';
@@ -21,12 +16,8 @@ const mocks = vi.hoisted(() => ({
     isPending: false,
     isError: false,
   },
-  reward: { reward: null as RewardView | null },
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
-vi.mock('@/features/reward/model/useRewardQuery', () => ({
-  useRewardQuery: () => mocks.reward,
-}));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace, back: mocks.back }),
 }));
@@ -74,7 +65,6 @@ const setSubscription = (subscription: MySubscription | null) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.reward = { reward: null };
   mocks.getNativeContext.mockReturnValue({
     platform: 'ios',
     appVersion: '1.3.0',
@@ -264,50 +254,5 @@ describe('SubscriptionManageScreen', () => {
     render(<SubscriptionManageScreen />);
 
     expect(screen.queryByText('첫 결제 금액')).not.toBeInTheDocument();
-  });
-
-  it('환급에 참여한 사람에게는 쌓인 금액과 함께 환급 화면으로 가는 행이 보인다', () => {
-    mocks.reward = { reward: rewardView() };
-    setSubscription(premium());
-
-    render(<SubscriptionManageScreen />);
-
-    const row = screen.getByText('환급 챌린지').closest('a');
-    expect(row).toHaveAttribute('href', '/refund');
-    expect(row).toHaveTextContent('12,300원');
-  });
-
-  it('해지를 예약했어도 쌓는 중이면 기간 끝까지 쌓을 수 있다고 알린다', () => {
-    mocks.reward = { reward: rewardView() };
-    setSubscription(premium({ subscriptionStatus: 'CANCELED' }));
-
-    render(<SubscriptionManageScreen />);
-
-    expect(screen.getByText('환급 챌린지').closest('a')).toHaveTextContent(
-      '기간이 끝날 때까지 계속 쌓을 수 있어요',
-    );
-  });
-
-  it('해지를 예약하지 않았으면 그 안내 대신 오늘의 한 줄이 나온다', () => {
-    mocks.reward = { reward: rewardView() };
-    setSubscription(premium());
-
-    render(<SubscriptionManageScreen />);
-
-    expect(
-      screen.queryByText('기간이 끝날 때까지 계속 쌓을 수 있어요'),
-    ).not.toBeInTheDocument();
-  });
-
-  it.each([
-    ['참여한 적이 없으면', null],
-    ['끝났고 돌려받을 금액도 없으면', endedRewardView(0)],
-  ])('%s 환급 행이 없다', (_case, reward) => {
-    mocks.reward = { reward };
-    setSubscription(premium());
-
-    render(<SubscriptionManageScreen />);
-
-    expect(screen.queryByText('환급 챌린지')).not.toBeInTheDocument();
   });
 });
