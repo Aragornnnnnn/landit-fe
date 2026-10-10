@@ -9,6 +9,7 @@ const base = {
   reward: null,
   error: null,
   loaded: false,
+  fetching: false,
   invited: false,
   settled: false,
 };
@@ -69,6 +70,18 @@ describe('refundViewOf', () => {
     expect(refundViewOf({ ...base, loaded: true, settled: true }).kind).toBe(
       'outsider',
     );
+  });
+
+  it('환급을 다시 받는 중이면 상관없는 사람으로 단정하지 않고 기다린다', () => {
+    // given — 방금 결제했다. 받아 둔 답은 결제 전의 것이다
+    const view = refundViewOf({
+      ...base,
+      loaded: true,
+      settled: true,
+      fetching: true,
+    });
+
+    expect(view.kind).toBe('loading');
   });
 
   it('아직 모르면 기다린다', () => {

@@ -18,13 +18,14 @@ export const useRewardQuery = ({ enabled }: { enabled: boolean }) => {
   const queryClient = useQueryClient();
   const asks = enabled && userId !== null;
 
-  const { data, dataUpdatedAt, error, isFetched, refetch } = useQuery({
-    queryKey: rewardKeys.summary(userId),
-    queryFn: getMyRewards,
-    enabled: asks,
-    // 헤더가 오래 비지 않게 한 번만 다시 묻는다
-    retry: 1,
-  });
+  const { data, dataUpdatedAt, error, isFetched, isFetching, refetch } =
+    useQuery({
+      queryKey: rewardKeys.summary(userId),
+      queryFn: getMyRewards,
+      enabled: asks,
+      // 헤더가 오래 비지 않게 한 번만 다시 묻는다
+      retry: 1,
+    });
 
   // 화면을 켠 채 자정을 넘기면 오늘과 쌓인 금액이 어제 것으로 남는다 — 하루가 마감되면 다시 받고, 받을 때마다 다음 자정으로 다시 건다
   useEffect(() => {
@@ -43,6 +44,8 @@ export const useRewardQuery = ({ enabled }: { enabled: boolean }) => {
     loaded: data !== undefined,
     // 성공이든 실패든 한 번은 답을 들었는지 — 다시 받는 동안에도 유지된다
     fetched: isFetched,
+    // 지금 받는 중인지 — 받아 둔 답이 곧 바뀔 수 있다
+    fetching: isFetching,
     error,
     retry: () => void refetch(),
   };
