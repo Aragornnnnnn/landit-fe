@@ -1,5 +1,11 @@
 // 프리미엄 온보딩 — 환영 뒤 알람 등록으로 이어지는지, 어느 길로 끝나든 원래 가던 곳으로 replace하는지
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PremiumOnboardingScreen } from './PremiumOnboardingScreen';
@@ -10,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   status: null as { supported: boolean } | null,
   setting: undefined as { time: string; enabled: boolean } | undefined,
   invalidateQueries: vi.fn(),
+  refetch: vi.fn(),
 }));
 
 vi.mock('@tanstack/react-query', () => ({
@@ -27,7 +34,7 @@ vi.mock('@/features/alarm/model/useAlarmStatus', () => ({
   useAlarmStatus: () => mocks.status,
 }));
 vi.mock('@/features/alarm/model/useAlarmSettingQuery', () => ({
-  useAlarmSettingQuery: () => ({ data: mocks.setting }),
+  useAlarmSettingQuery: () => ({ data: mocks.setting, refetch: mocks.refetch }),
 }));
 vi.mock('@/features/alarm/ui/LockScreenPreview', () => ({
   preloadIntroPreview: vi.fn(),
@@ -63,8 +70,9 @@ beforeEach(() => {
   mocks.replace.mockClear();
   mocks.alarmShell = true;
   mocks.status = { supported: true };
-  mocks.setting = undefined;
+  mocks.setting = { time: '19:00', enabled: false };
   mocks.invalidateQueries.mockClear();
+  mocks.refetch.mockReset();
 });
 afterEach(() => cleanup());
 
@@ -136,5 +144,36 @@ describe('PremiumOnboardingScreen', () => {
     render(<PremiumOnboardingScreen returnTo="/me" />);
 
     expect(mocks.invalidateQueries).toHaveBeenCalledTimes(1);
+  });
+
+  it('알람 설정을 아직 못 받았으면 받을 때까지 기다렸다가 알람 등록으로 이어진다', async () => {
+    // given — 조회가 아직 안 끝났고, 끝나면 등록 전이다
+    mocks.setting = undefined;
+    mocks.refetch.mockResolvedValue({ data: { time: null, enabled: false } });
+    render(<PremiumOnboardingScreen returnTo="/me" />);
+
+    // when
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    // then
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: '다음에 할게요' }),
+      ).toBeVisible(),
+    );
+    expect(mocks.replace).not.toHaveBeenCalled();
+  });
+
+  it('알람 설정을 끝내 못 받으면 등록 흐름 없이 원래 가던 곳으로 간다 — 등록해 둔 시각을 덮어쓸 수 있어서', async () => {
+    // given — 조회가 실패했다
+    mocks.setting = undefined;
+    mocks.refetch.mockResolvedValue({ data: undefined });
+    render(<PremiumOnboardingScreen returnTo="/me" />);
+
+    // when
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    // then
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/me'));
   });
 });

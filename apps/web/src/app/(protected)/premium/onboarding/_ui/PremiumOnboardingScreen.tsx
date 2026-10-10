@@ -25,7 +25,7 @@ export const PremiumOnboardingScreen = ({
 }) => {
   const router = useRouter();
   const status = useAlarmStatus();
-  const { data: setting } = useAlarmSettingQuery();
+  const { data: setting, refetch } = useAlarmSettingQuery();
   const [step, setStep] = useState<'welcome' | 'alarm'>('welcome');
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.member?.userId ?? null);
@@ -39,21 +39,26 @@ export const PremiumOnboardingScreen = ({
 
   const leave = () => router.replace(returnTo ?? homePath());
 
-  // 셸이 알람을 못 쓴다고 답했으면(지원 안 하는 OS) 알람 단계를 건너뛴다. 아직 답이 없으면 쓸 수 있다고 본다.
-  // 예전에 등록해 둔 재구독자는 등록 흐름을 다시 보이지 않는다 — 다시 거치면 기존 시각을 덮어쓴다
-  const showsAlarmSetup =
-    isAlarmShell() && status?.supported !== false && setting?.enabled !== true;
-  const next = () => {
-    if (showsAlarmSetup) setStep('alarm');
+  // 셸이 알람을 못 쓴다고 답했으면(지원 안 하는 OS) 알람 단계를 건너뛴다. 아직 답이 없으면 쓸 수 있다고 본다
+  const alarmCapable = isAlarmShell() && status?.supported !== false;
+
+  // 알람 설정을 아직 모르면 받을 때까지 기다린다. 등록해 둔 재구독자나 끝내 못 읽은 경우는 등록 흐름을 보이지 않는다 — 다시 거치면 기존 시각을 덮어쓴다
+  const next = async () => {
+    if (!alarmCapable) return leave();
+    const known = setting ?? (await refetch({ cancelRefetch: false })).data;
+    if (known?.enabled === false) setStep('alarm');
     else leave();
   };
 
   // 환영 연출이 도는 동안 알람 소개의 폰 그림을 받아 둔다 — 튀어 오르는 폰이 빈 자리로 오르지 않게
+  const mayShowAlarmSetup = alarmCapable && setting?.enabled !== true;
   useEffect(() => {
-    if (showsAlarmSetup) preloadIntroPreview();
-  }, [showsAlarmSetup]);
+    if (mayShowAlarmSetup) preloadIntroPreview();
+  }, [mayShowAlarmSetup]);
 
-  if (step === 'welcome') return <PremiumWelcome onNext={next} />;
+  if (step === 'welcome') {
+    return <PremiumWelcome onNext={() => void next()} />;
+  }
 
   return (
     <AlarmSetupFlow
