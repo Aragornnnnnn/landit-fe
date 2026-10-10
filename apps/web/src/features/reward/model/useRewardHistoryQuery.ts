@@ -19,7 +19,7 @@ const rowsOf = (history: InfiniteData<RewardHistoryPage>) =>
   historyRowsOf(history.pages.flatMap((page) => page.items));
 
 // 내역 영역이 그리는 데 쓰는 값 — 조회 훅이 채우고, 환급 점검 화면은 가짜로 채운다
-export interface RewardHistoryFeed {
+export interface RewardHistoryState {
   rows: HistoryRow[] | null;
   error: Error | null;
   retry: () => void;
@@ -30,7 +30,7 @@ export interface RewardHistoryFeed {
   loadMore: () => void;
 }
 
-export const useRewardHistoryQuery = (): RewardHistoryFeed => {
+export const useRewardHistoryQuery = (): RewardHistoryState => {
   const userId = useAuthStore((state) => state.member?.userId ?? null);
 
   const {

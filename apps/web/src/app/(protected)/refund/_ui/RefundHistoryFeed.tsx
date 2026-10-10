@@ -6,7 +6,7 @@ import { useEffect, useEffectEvent } from 'react';
 import type { HistoryRow } from '@/features/reward/model/reward-history';
 import {
   useRewardHistoryQuery,
-  type RewardHistoryFeed,
+  type RewardHistoryState,
 } from '@/features/reward/model/useRewardHistoryQuery';
 import {
   HistoryPlaceholderLines,
@@ -31,7 +31,7 @@ export const RefundHistoryList = ({
   loadingMore,
   moreFailed,
   loadMore,
-}: RewardHistoryFeed) => {
+}: RewardHistoryState) => {
   const { ref: nearEndRef, inView: nearEnd } = useInView<HTMLDivElement>(
     undefined,
     { once: false },
