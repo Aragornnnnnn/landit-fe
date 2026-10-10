@@ -18,7 +18,7 @@ export const useRewardQuery = ({ enabled }: { enabled: boolean }) => {
   const queryClient = useQueryClient();
   const asks = enabled && userId !== null;
 
-  const { data, dataUpdatedAt, error, refetch } = useQuery({
+  const { data, dataUpdatedAt, error, isFetched, refetch } = useQuery({
     queryKey: rewardKeys.summary(userId),
     queryFn: getMyRewards,
     enabled: asks,
@@ -41,6 +41,8 @@ export const useRewardQuery = ({ enabled }: { enabled: boolean }) => {
     reward: data ? participantOf(data) : null,
     // 응답을 받았는지 — 받았는데 reward가 null이면 참여자가 아니다
     loaded: data !== undefined,
+    // 성공이든 실패든 한 번은 답을 들었는지 — 다시 받는 동안에도 유지된다
+    fetched: isFetched,
     error,
     retry: () => void refetch(),
   };

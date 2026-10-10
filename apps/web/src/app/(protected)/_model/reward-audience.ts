@@ -12,6 +12,7 @@ export const rewardAudienceOf = ({
   premium,
   subscriptionFailed,
   rewardLoaded,
+  rewardFailed,
   participant,
 }: {
   // 환급 챌린지 출시 스위치
@@ -21,6 +22,8 @@ export const rewardAudienceOf = ({
   premium: boolean | undefined;
   subscriptionFailed: boolean;
   rewardLoaded: boolean;
+  // 한 번도 받지 못한 채 실패했다 — 기다려도 오지 않는다
+  rewardFailed: boolean;
   // 환급 응답이 참여자라고 말했는가 — 구독이 끝난 뒤에도 돌려받을 금액이 남을 수 있다
   participant: boolean;
 }): RewardAudience => {
@@ -32,6 +35,6 @@ export const rewardAudienceOf = ({
     !paymentLive || premium !== undefined || subscriptionFailed;
   return {
     invited: rewardLoaded && !participant && paymentLive && premium === false,
-    settled: rewardLoaded && subscriptionSettled,
+    settled: (rewardLoaded || rewardFailed) && subscriptionSettled,
   };
 };
