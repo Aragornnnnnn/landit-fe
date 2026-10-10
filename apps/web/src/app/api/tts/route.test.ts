@@ -78,6 +78,24 @@ describe('POST /api/tts', () => {
     expect(res.status).toBe(200);
   });
 
+  it('Kokoro 모델(hexgrad/kokoro-82m)도 허용한다', async () => {
+    vi.stubEnv('OPENROUTER_API_KEY', 'real-key');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('mp3-bytes', { status: 200 })),
+    );
+
+    const res = await POST(
+      ttsRequest({
+        input: 'Hello',
+        model: 'hexgrad/kokoro-82m',
+        voice: 'af_heart',
+      }),
+    );
+
+    expect(res.status).toBe(200);
+  });
+
   it('허용 목록에 없는 model이면 400을 돌려주고 합성을 부르지 않는다', async () => {
     vi.stubEnv('OPENROUTER_API_KEY', 'real-key');
     const fetchMock = vi.fn();
@@ -124,5 +142,31 @@ describe('POST /api/tts', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('Content-Type')).toBe('audio/mpeg');
     expect(await res.text()).toBe('mp3-bytes');
+  });
+
+  it('문장별로 이어 붙은 MP3가 오면 길이 정보가 맞는 한 스트림으로 합쳐 돌려준다', async () => {
+    // given — 정보 프레임이 둘 붙은 업스트림 응답
+    vi.stubEnv('OPENROUTER_API_KEY', 'real-key');
+    const frame = (tag: string) => {
+      const bytes = new Uint8Array(192);
+      bytes.set([0xff, 0xf3, 0x84, 0xc0]);
+      bytes.set(new TextEncoder().encode(tag), 13);
+      return bytes;
+    };
+    const upstream = new Uint8Array(192 * 4);
+    upstream.set(frame('Xing'), 0);
+    upstream.set(frame(''), 192);
+    upstream.set(frame('Xing'), 384);
+    upstream.set(frame(''), 576);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(upstream, { status: 200 })),
+    );
+
+    // when
+    const res = await POST(ttsRequest(validBody));
+
+    // then — 뒤 정보 프레임 하나가 빠진다
+    expect((await res.arrayBuffer()).byteLength).toBe(192 * 3);
   });
 });

@@ -1,7 +1,9 @@
-// OpenRouter TTS 합성을 중계하는 프록시 라우트 — API 키를 서버에만 두고 mp3 스트림을 그대로 전달
+// OpenRouter TTS 합성을 중계하는 프록시 라우트 — API 키를 서버에만 두고 mp3를 전달
 import { NextResponse } from 'next/server';
 
 import { reportError } from '@/shared/monitoring/report';
+
+import { mergeConcatenatedMp3 } from './mp3';
 
 const SPEECH_URL = 'https://openrouter.ai/api/v1/audio/speech';
 
@@ -9,7 +11,11 @@ const SPEECH_URL = 'https://openrouter.ai/api/v1/audio/speech';
 // 제대로 된 세션 인증은 런칭 전 별도 이슈(LAN-118 후속)로 다룬다
 const MAX_INPUT_LENGTH = 1000;
 // 우리 키로 임의 모델을 부르지 못하게 TTS 모델만 허용 (백엔드 시드 model과 일치)
-const ALLOWED_MODELS = ['microsoft/mai-voice-2', 'deepgram/aura-2'];
+const ALLOWED_MODELS = [
+  'microsoft/mai-voice-2',
+  'deepgram/aura-2',
+  'hexgrad/kokoro-82m',
+];
 
 export async function POST(request: Request) {
   const apiKey = process.env.OPENROUTER_API_KEY;
@@ -63,7 +69,9 @@ export async function POST(request: Request) {
     );
   }
 
-  return new Response(res.body, {
+  // 문장별로 이어 붙은 MP3(현재 Kokoro)는 길이 정보가 첫 문장 몫만 적혀 고쳐서 넘긴다 — 한 스트림이면 그대로 나간다
+  const audio = mergeConcatenatedMp3(new Uint8Array(await res.arrayBuffer()));
+  return new Response(audio, {
     headers: { 'Content-Type': 'audio/mpeg' },
   });
 }
