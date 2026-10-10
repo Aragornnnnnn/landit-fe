@@ -14,6 +14,8 @@ import { startWebSocialLogin } from '@/shared/auth/web-social-login';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { SCENARIO_PATH } from '@/shared/lib/routes';
 
+import { rememberLoginProvider } from './last-login-provider';
+
 export type SocialProvider = 'kakao' | 'google' | 'apple';
 
 // 애플 개발자 계정 이전 중에는 애플이 주는 sub가 바뀌어 기존 사용자가 신규 계정으로 갈린다.
@@ -63,6 +65,7 @@ export function useSocialLogin() {
           // newUser는 로그인 시점 분기용이라 전역 상태에는 빼고 저장한다
           const { newUser, ...member } = user;
           setAuth(accessToken, refreshToken, member);
+          rememberLoginProvider(message.provider);
           track(EVENTS.LOGIN_COMPLETED, {
             provider: message.provider,
             method: 'native',

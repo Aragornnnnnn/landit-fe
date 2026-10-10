@@ -1,8 +1,10 @@
 // LoginButton — 렌더와 클릭·비활성 동작 검증 (RTL 파이프라인 확인용 예시)
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { LoginButton } from './LoginButton';
+
+afterEach(cleanup);
 
 describe('LoginButton', () => {
   it('라벨을 렌더하고 클릭하면 onClick이 호출된다', () => {
@@ -56,5 +58,24 @@ describe('LoginButton', () => {
     expect(onClick).not.toHaveBeenCalled();
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute('aria-busy', 'true');
+  });
+
+  it('recent면 「최근 로그인」이 버튼 설명으로 붙고 버튼 이름은 그대로다', () => {
+    // given — 지난번에 이 방법으로 로그인한 기기
+    render(<LoginButton label="구글로 로그인하기" icon={<svg />} recent />);
+
+    // then — 보조기기에는 설명으로 읽히고 버튼을 찾는 이름에는 섞이지 않는다
+    expect(
+      screen.getByRole('button', {
+        name: '구글로 로그인하기',
+        description: '최근 로그인',
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('recent가 아니면 표시가 없다', () => {
+    render(<LoginButton label="구글로 로그인하기" icon={<svg />} />);
+
+    expect(screen.queryByText('최근 로그인')).toBeNull();
   });
 });
