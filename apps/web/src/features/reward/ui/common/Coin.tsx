@@ -1,7 +1,7 @@
 // 환급 동전 그림 — 크기가 달라도 같은 파일 하나를 쓴다
 import Image from 'next/image';
 
-import coinImage from '../../assets/coin.png';
+import coinImage from '../../assets/coin.webp';
 
 export const Coin = ({
   size,

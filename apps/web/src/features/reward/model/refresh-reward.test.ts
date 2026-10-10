@@ -43,6 +43,16 @@ describe('refreshRewardAfterCompletion', () => {
     await vi.waitFor(() => expect(queryClient.getQueryData(key)).toEqual(next));
   });
 
+  it('받아 둔 내역은 버린다 — 다음에 열 때 첫 장부터 새로 받게', () => {
+    const queryClient = cacheWith(rewardView());
+    const historyKey = rewardKeys.history(42);
+    queryClient.setQueryData(historyKey, { pages: [], pageParams: [] });
+
+    refreshRewardAfterCompletion(queryClient);
+
+    expect(queryClient.getQueryData(historyKey)).toBeUndefined();
+  });
+
   it('환급과 상관없는 사람은 학습을 끝내도 묻지 않는다', () => {
     refreshRewardAfterCompletion(cacheWith(outsider));
 

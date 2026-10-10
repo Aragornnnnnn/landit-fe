@@ -12,9 +12,14 @@ import { participantOf } from './reward-status';
 const cachedReward = (queryClient: QueryClient, userId: number) =>
   queryClient.getQueryData<RewardView>(rewardKeys.summary(userId));
 
-const refetch = (queryClient: QueryClient, userId: number) => {
+// 요약은 새로 받고 내역은 버린다
+const renewReward = (queryClient: QueryClient, userId: number) => {
+  // 내역은 낡은 것으로만 두면 다음에 열 때 받아 둔 장 수만큼 차례로 다시 받고, 그동안 맨 윗줄 잔액이 위의 금액과 어긋난다
+  queryClient.removeQueries({ queryKey: rewardKeys.history(userId) });
   // 받아 둔 것을 먼저 낡은 것으로 표시해야 아래 미리받기가 실제로 나간다
-  void queryClient.invalidateQueries({ queryKey: rewardKeys.all });
+  void queryClient.invalidateQueries({
+    queryKey: rewardKeys.summary(userId),
+  });
   void queryClient.prefetchQuery({
     queryKey: rewardKeys.summary(userId),
     queryFn: getMyRewards,
@@ -26,7 +31,7 @@ export const refreshRewardAfterPurchase = (queryClient: QueryClient) => {
   const userId = getCurrentUserId();
   if (userId === null || cachedReward(queryClient, userId) === undefined)
     return;
-  refetch(queryClient, userId);
+  renewReward(queryClient, userId);
 };
 
 // 학습을 끝낸 순간 — 금액이 쌓이는 건 참여자뿐이라, 환급과 상관없는 사람은 묻지 않는다
@@ -35,7 +40,7 @@ export const refreshRewardAfterCompletion = (queryClient: QueryClient) => {
   if (userId === null) return;
   const cached = cachedReward(queryClient, userId);
   if (cached === undefined || participantOf(cached) === null) return;
-  refetch(queryClient, userId);
+  renewReward(queryClient, userId);
 };
 
 // 결제 직후처럼 지금 값이 꼭 필요한 순간 — 받는 중이면 끝날 때까지 기다린다. 환급과 상관없거나 받지 못하면 null.

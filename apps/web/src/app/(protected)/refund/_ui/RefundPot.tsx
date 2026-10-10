@@ -4,13 +4,13 @@
 import { motion, useReducedMotion } from 'motion/react';
 import Image, { type StaticImageData } from 'next/image';
 
-import potComplete from '@/features/reward/assets/refund-pot-complete.png';
+import potComplete from '@/features/reward/assets/refund-pot-complete.webp';
 import { Coin } from '@/features/reward/ui/common/Coin';
 
-import potEmpty from '../_assets/pot-empty.png';
-import potKept from '../_assets/pot-kept.png';
-import potLost from '../_assets/pot-lost.png';
-import potWaiting from '../_assets/pot-waiting.png';
+import potEmpty from '../_assets/pot-empty.webp';
+import potKept from '../_assets/pot-kept.webp';
+import potLost from '../_assets/pot-lost.webp';
+import potWaiting from '../_assets/pot-waiting.webp';
 import type { PotArt } from '../_model/pot-stage';
 
 const ART: Record<PotArt, StaticImageData | string> = {

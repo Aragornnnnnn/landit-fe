@@ -1,7 +1,11 @@
 // 환급 내역을 통장 한 줄씩으로 바꾸는 규칙 — 무엇을 끝냈는지, 언제, 얼마가 들고 났는지
 import { readSeoulDateParts } from '@/shared/lib/seoul-date';
 
-import type { RewardActivity, RewardHistoryItem } from '../api/reward';
+import type {
+  RewardActivity,
+  RewardHistoryItem,
+  RewardHistoryPage,
+} from '../api/reward';
 
 export interface HistoryRow {
   id: string;
@@ -83,3 +87,13 @@ export const historyRowsOf = (items: RewardHistoryItem[]): HistoryRow[] => {
   }
   return rows;
 };
+
+// 다음 장을 물을 커서. 더 없으면 undefined — 서버는 끝에서 null을 주지만, 빈 커서나 이미 물은 커서를 되돌려 줘도 끝으로 친다.
+// 빈 커서로 부르면 첫 장을 또 받고, 물었던 커서로 부르면 받은 장을 또 받아 끝이 보이는 내내 요청이 이어진다
+export const nextHistoryCursor = (
+  last: RewardHistoryPage,
+  asked: readonly (string | null)[],
+) =>
+  last.nextCursor && !asked.includes(last.nextCursor)
+    ? last.nextCursor
+    : undefined;

@@ -2,7 +2,8 @@
 
 // 시리즈 첫 카드의 오늘의 시나리오 — 카드가 화면에 있는 동안 시나리오 100장 → 한 장 뽑힘 → 커져 놓임을 되풀이한다.
 // 시나리오가 많다는 게 이 카드의 요점이라 이것만 움직이고, 대화 장면은 다음 카드가 보여 준다. 멈춰 있으면 뽑힌 한 장에 머문다
-import { useInView } from '../_lib/useInView';
+import { useInView } from '@/shared/lib/useInView';
+
 import { useLoopClock } from '../_lib/useLoopClock';
 import { ScenarioDemo } from './ScenarioDemo';
 

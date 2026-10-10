@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { RewardHistoryItem } from '../api/reward';
-import { historyRowsOf } from './reward-history';
+import { historyRowsOf, nextHistoryCursor } from './reward-history';
 
 const item = (patch: Partial<RewardHistoryItem> = {}): RewardHistoryItem => ({
   id: '2:00000000000000000812',
@@ -151,5 +151,41 @@ describe('historyRowsOf', () => {
     ]);
 
     expect(rows[0].dateLabel).toBe('10.10');
+  });
+});
+
+describe('nextHistoryCursor', () => {
+  it('서버가 준 커서로 다음 장을 묻는다', () => {
+    expect(
+      nextHistoryCursor({ items: [item()], nextCursor: 'p2' }, [null]),
+    ).toBe('p2');
+  });
+
+  it('더 없으면 묻지 않는다', () => {
+    expect(
+      nextHistoryCursor({ items: [item()], nextCursor: null }, [null, 'p2']),
+    ).toBeUndefined();
+  });
+
+  it('빈 커서는 끝으로 친다 — 빈 커서로 부르면 첫 장을 또 받는다', () => {
+    expect(
+      nextHistoryCursor({ items: [item()], nextCursor: '' }, [null, 'p2']),
+    ).toBeUndefined();
+  });
+
+  it('방금 물은 커서를 그대로 되돌려 주면 끝으로 친다 — 같은 장을 끝없이 받게 된다', () => {
+    expect(
+      nextHistoryCursor({ items: [item()], nextCursor: 'p2' }, [null, 'p2']),
+    ).toBeUndefined();
+  });
+
+  it('앞서 물은 커서로 되돌아가도 끝으로 친다 — 두 장을 끝없이 오간다', () => {
+    expect(
+      nextHistoryCursor({ items: [item()], nextCursor: 'p2' }, [
+        null,
+        'p2',
+        'p3',
+      ]),
+    ).toBeUndefined();
   });
 });
