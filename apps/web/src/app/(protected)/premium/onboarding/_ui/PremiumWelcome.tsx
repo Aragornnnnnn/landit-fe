@@ -53,7 +53,12 @@ const LOCK_MOTION: Record<Phase, TargetAndTransition> = {
 };
 
 const Padlock = ({ open }: { open: boolean }) => (
-  <svg viewBox="0 -6 56 70" className="h-[70px] w-14" aria-hidden>
+  // 고리가 스프링으로 튀며 그림 영역 위로 잠깐 넘친다 — 잘리지 않게 영역 밖도 그린다
+  <svg
+    viewBox="0 -6 56 70"
+    className="h-[70px] w-14 overflow-visible"
+    aria-hidden
+  >
     {/* 풀리면 고리가 솟아 오른쪽 다리가 몸통에서 빠진다 — 왼쪽 다리는 몸통에 꽂힌 채로 */}
     <motion.path
       fill="none"
