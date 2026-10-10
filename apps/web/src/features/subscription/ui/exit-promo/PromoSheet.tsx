@@ -10,6 +10,7 @@ import type { PaywallPromo } from '../../api/subscription';
 import { setPromoSheetOpen } from '../../model/exit-promo/promo-handoff';
 import { buildPromoSheet } from '../../model/exit-promo/promo-sheet';
 import { useOffering } from '../../model/product/useOffering';
+import type { UnlockReason } from '../../model/purchase/usePurchase';
 import { PromoSheetContent } from './PromoSheetContent';
 
 interface PromoSheetProps {
@@ -18,7 +19,7 @@ interface PromoSheetProps {
   promo: PaywallPromo;
   expired: boolean;
   onClose: () => void;
-  onUnlocked: () => void;
+  onUnlocked: (reason: UnlockReason) => void;
 }
 
 /**

@@ -213,6 +213,25 @@ export const paywallPath = ({
   return suffix ? `${PAYWALL_PATH}?${suffix}` : PAYWALL_PATH;
 };
 
+// 프리미엄 온보딩 — 혜택이 열리는 걸 보여 주고 알람 등록으로 잇는다. from은 다 본 뒤 갈 곳(페이월이 가려던 곳)
+export const PREMIUM_ONBOARDING_PATH = '/premium/onboarding';
+
+// 개발자 묶음에서 ADMIN이 골라 여는 미리보기 — 알람 등록까지 / 환급 문구로 / 환영만
+const PREMIUM_ONBOARDING_PREVIEWS = ['alarm', 'refund', 'welcome'] as const;
+export type PremiumOnboardingPreview =
+  (typeof PREMIUM_ONBOARDING_PREVIEWS)[number];
+
+export const premiumOnboardingPath = (
+  from: string,
+  preview?: PremiumOnboardingPreview,
+) =>
+  `${PREMIUM_ONBOARDING_PATH}?${new URLSearchParams({ from, ...(preview && { preview }) })}`;
+
+export const readPremiumOnboardingPreview = (
+  value: unknown,
+): PremiumOnboardingPreview | undefined =>
+  PREMIUM_ONBOARDING_PREVIEWS.find((preview) => preview === value);
+
 // 마이페이지와 그 아래 화면. 구독 관리는 유료 사용자가 들어오는 자리이고, 아니면 페이월로 안내한다
 export const MY_PAGE_PATH = '/me';
 export const SUBSCRIPTION_MANAGE_PATH = '/me/subscription';
@@ -221,6 +240,14 @@ export const SUBSCRIPTION_HISTORY_PATH = '/me/subscription/history';
 export const SUBSCRIPTION_CANCEL_PATH = '/me/subscription/cancel';
 // 홈 화면 위젯 설치 안내 — 온보딩에서 미뤘던 사람이 마이페이지에서 다시 연다
 export const WIDGET_GUIDE_PATH = '/me/widget';
+// 오늘의 시나리오 알람 — 마이페이지 설정 묶음의 "알람" 행에서 들어온다. 등록됐으면 시간 카드, 아니면 등록 흐름
+export const ALARM_SETTINGS_PATH = '/me/alarm';
+// 알람 수정 — 알람 화면의 시간 카드를 누르면 들어온다
+export const ALARM_EDIT_PATH = '/me/alarm/edit';
+// 알람 점검 — ADMIN에게만 보이는 개발자 묶음에서 들어온다
+export const ALARM_CHECK_PATH = '/me/developer';
+// 프리미엄 온보딩 점검 — 결제 없이 케이스를 골라 연다 (ADMIN)
+export const PREMIUM_ONBOARDING_CHECK_PATH = '/me/developer/premium-onboarding';
 
 /**
  * 마이페이지 아래 화면에서 돌아가기. 마이페이지에서 밀고 들어왔으면 한 칸 뒤로 —

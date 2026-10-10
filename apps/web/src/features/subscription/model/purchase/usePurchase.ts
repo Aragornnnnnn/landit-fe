@@ -22,11 +22,14 @@ import { subscriptionKeys } from '../my-subscription/keys';
 import { packageIdFor, type PlanPackages } from '../product/offering';
 import { PREMIUM_WAIT, waitForPremium } from './wait-for-premium';
 
+// 무엇으로 유료가 풀렸나 — 결제 직후에만 프리미엄 온보딩을 보이고, 복원은 원래 가던 곳으로 바로 보낸다
+export type UnlockReason = 'purchase' | 'restore';
+
 interface UsePurchaseOptions {
   /** 플랜별 패키지 — 결제할 패키지 id를 여기서 고른다. 비어 있으면 표준 identifier로 결제한다 */
   packages: PlanPackages;
   /** 유료가 확인됐거나, 결제는 끝났는데 서버 반영이 늦을 때(안내 뒤) 불린다 — 보통 페이월을 닫는다 */
-  onUnlocked: () => void;
+  onUnlocked: (reason: UnlockReason) => void;
   /** 이탈 할인 시트에서 부를 때 true — 결제 이벤트에 할인 결제였음을 남긴다 */
   promo?: boolean;
 }
@@ -151,7 +154,7 @@ export const usePurchase = ({
       if (!premiumConfirmed) {
         showToast('결제가 확인되는 중이에요. 잠시 후 다시 열어 주세요');
       }
-      onUnlocked();
+      onUnlocked('purchase');
     } finally {
       setBusy(false);
     }
@@ -184,7 +187,7 @@ export const usePurchase = ({
       const premiumConfirmed = await confirmPremium();
       track(EVENTS.PURCHASE_RESTORED, { succeeded: premiumConfirmed });
       if (signal?.aborted) return;
-      if (premiumConfirmed) onUnlocked();
+      if (premiumConfirmed) onUnlocked('restore');
       else showToast('복원할 구매 내역이 없어요');
     } finally {
       setBusy(false);

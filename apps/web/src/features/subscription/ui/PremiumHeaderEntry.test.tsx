@@ -1,5 +1,5 @@
 // 헤더 왼쪽 자리 — 언제 알약이고 언제 로고인지, 할인 중에는 무엇을 보여주는지
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { MySubscription } from '../api/subscription';
@@ -14,14 +14,27 @@ const mocks = vi.hoisted(() => ({
   subscription: null as MySubscription | null,
   isPending: false,
   isError: false,
+  push: vi.fn(),
+  onUnlocked: null as ((reason: 'purchase' | 'restore') => void) | null,
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: mocks.push }),
 }));
 
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 vi.mock('../model/exit-promo/promo-flag', () => ({ PROMO_ENABLED: true }));
 vi.mock('./exit-promo/PromoSheet', () => ({
-  PromoSheet: ({ open }: { open: boolean }) => (
-    <div data-testid="promo-sheet" data-open={String(open)} />
-  ),
+  PromoSheet: ({
+    open,
+    onUnlocked,
+  }: {
+    open: boolean;
+    onUnlocked: (reason: 'purchase' | 'restore') => void;
+  }) => {
+    mocks.onUnlocked = onUnlocked;
+    return <div data-testid="promo-sheet" data-open={String(open)} />;
+  },
 }));
 vi.mock('../model/paywall-gate/usePaymentLive', () => ({
   usePaymentLive: () => mocks.paymentLive,
@@ -58,6 +71,8 @@ beforeEach(() => {
   mocks.subscription = free();
   mocks.isPending = false;
   mocks.isError = false;
+  mocks.push.mockClear();
+  mocks.onUnlocked = null;
   clearPromoHandoff();
 });
 afterEach(() => cleanup());
@@ -141,6 +156,74 @@ describe('PremiumHeaderEntry', () => {
     expect(screen.getByTestId('promo-sheet')).toHaveAttribute(
       'data-open',
       'false',
+    );
+  });
+
+  it('할인 시트에서 결제하면 시트를 닫고 보던 화면을 쿼리까지 들고 프리미엄 온보딩으로 간다', () => {
+    window.history.replaceState(null, '', '/scenario?date=2026-10-08');
+    const promo = {
+      remainingSeconds: 300,
+      expiresAt: '2026-09-22T14:35:00',
+      newUser: true,
+    };
+    mocks.subscription = free(promo);
+    handOffPromo(promo);
+    render(<PremiumHeaderEntry />);
+
+    act(() => mocks.onUnlocked?.('purchase'));
+
+    expect(mocks.push).toHaveBeenCalledWith(
+      '/premium/onboarding?from=%2Fscenario%3Fdate%3D2026-10-08',
+    );
+    expect(screen.getByTestId('promo-sheet')).toHaveAttribute(
+      'data-open',
+      'false',
+    );
+  });
+
+  it('할인 시트에서 복원하면 시트만 닫고 이동하지 않는다', () => {
+    const promo = {
+      remainingSeconds: 300,
+      expiresAt: '2026-09-22T14:35:00',
+      newUser: true,
+    };
+    mocks.subscription = free(promo);
+    handOffPromo(promo);
+    render(<PremiumHeaderEntry />);
+
+    act(() => mocks.onUnlocked?.('restore'));
+
+    expect(mocks.push).not.toHaveBeenCalled();
+    expect(screen.getByTestId('promo-sheet')).toHaveAttribute(
+      'data-open',
+      'false',
+    );
+  });
+
+  it('결제하는 사이 다른 조회로 유료가 먼저 들어와도 열린 시트는 남는다 — 결제 결과를 받아 프리미엄 온보딩으로 가야 한다', () => {
+    // given — 할인 시트가 열린 채 결제 중
+    const promo = {
+      remainingSeconds: 300,
+      expiresAt: '2026-09-22T14:35:00',
+      newUser: true,
+    };
+    mocks.subscription = free(promo);
+    handOffPromo(promo);
+    const { rerender } = render(<PremiumHeaderEntry />);
+
+    // when — 포커스 복귀 재조회 등으로 구독이 먼저 유료가 된다
+    mocks.subscription = {
+      ...free(),
+      premium: true,
+      subscriptionStatus: 'ACTIVE',
+    };
+    rerender(<PremiumHeaderEntry />);
+
+    // then — 로고로 바뀌어도 시트는 그대로 열려 있다
+    expect(screen.getByLabelText('홈으로')).toBeInTheDocument();
+    expect(screen.getByTestId('promo-sheet')).toHaveAttribute(
+      'data-open',
+      'true',
     );
   });
 });

@@ -564,3 +564,213 @@ describe('사진 고르기 (PICK_PHOTOS ↔ PHOTOS_PICKED)', () => {
     ).toBeNull();
   });
 });
+
+describe('알람 (SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM·OPEN_ALARM_SETTINGS ↔ ALARM_STATUS)', () => {
+  const EVERY_DAY = [1, 2, 3, 4, 5, 6, 7];
+  const alarm = {
+    title: '오늘의 시나리오 할 시간!',
+    schedules: [{ hour: 19, minute: 0, weekdays: EVERY_DAY }],
+    path: '/scenario',
+  };
+  const status: Extract<NativeToWebMessage, { type: 'ALARM_STATUS' }> = {
+    type: 'ALARM_STATUS',
+    supported: true,
+    permission: 'granted',
+    exactAlarm: true,
+    fullScreen: true,
+    notifications: true,
+    repeatingAlarms: [],
+  };
+  const parseSet = (body: object) =>
+    parseWebToNativeMessage(JSON.stringify({ type: 'SET_ALARM', ...body }));
+
+  it('요일마다 시각이 다른 알람 요청도 받는다 — 나중에 요일별 시각을 열어도 계약은 그대로', () => {
+    const message: WebToNativeMessage = {
+      type: 'SET_ALARM',
+      alarmType: 'scenario',
+      alarm: {
+        ...alarm,
+        schedules: [
+          { hour: 7, minute: 0, weekdays: [1, 2, 3, 4, 5] },
+          { hour: 10, minute: 30, weekdays: [6, 7] },
+        ],
+      },
+    };
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('alarm이 null이면 그 종류의 알람을 끄는 요청으로 받는다', () => {
+    expect(parseSet({ alarmType: 'scenario', alarm: null })).toEqual({
+      type: 'SET_ALARM',
+      alarmType: 'scenario',
+      alarm: null,
+    });
+  });
+
+  it.each([
+    [
+      '시가 24',
+      { ...alarm, schedules: [{ hour: 24, minute: 0, weekdays: EVERY_DAY }] },
+    ],
+    [
+      '분이 60',
+      { ...alarm, schedules: [{ hour: 7, minute: 60, weekdays: EVERY_DAY }] },
+    ],
+    [
+      '요일이 0',
+      { ...alarm, schedules: [{ hour: 7, minute: 0, weekdays: [0] }] },
+    ],
+    [
+      '요일이 8',
+      { ...alarm, schedules: [{ hour: 7, minute: 0, weekdays: [8] }] },
+    ],
+    [
+      '한 스케줄 안에서 요일이 겹침',
+      { ...alarm, schedules: [{ hour: 7, minute: 0, weekdays: [1, 1] }] },
+    ],
+    [
+      '요일이 비어 있음',
+      { ...alarm, schedules: [{ hour: 7, minute: 0, weekdays: [] }] },
+    ],
+    ['스케줄이 없음', { ...alarm, schedules: [] }],
+    [
+      '두 스케줄의 요일이 겹침',
+      {
+        ...alarm,
+        schedules: [
+          { hour: 7, minute: 0, weekdays: [1, 2] },
+          { hour: 9, minute: 0, weekdays: [2, 3] },
+        ],
+      },
+    ],
+    ['제목이 빈 문자열', { ...alarm, title: '' }],
+    ['열 화면이 없음', { ...alarm, path: undefined }],
+    ['열 화면이 바깥 주소', { ...alarm, path: 'https://example.com' }],
+    ['열 화면이 //로 시작', { ...alarm, path: '//example.com' }],
+    ['열 화면이 /\\로 시작', { ...alarm, path: '/\\example.com' }],
+    ['열 화면이 /로 시작하지 않음', { ...alarm, path: 'scenario' }],
+  ])('%s인 알람 요청은 버린다', (_, bad) => {
+    expect(parseSet({ alarmType: 'scenario', alarm: bad })).toBeNull();
+  });
+
+  it('모르는 종류의 알람 요청은 버린다', () => {
+    expect(parseSet({ alarmType: 'review', alarm })).toBeNull();
+  });
+
+  it('오늘 건너뛰기는 알람의 종류를 실어야 받는다', () => {
+    const parse = (body: object) =>
+      parseWebToNativeMessage(
+        JSON.stringify({ type: 'SKIP_ALARM_TODAY', ...body }),
+      );
+
+    expect(parse({ alarmType: 'scenario' })).not.toBeNull();
+    expect(parse({})).toBeNull();
+  });
+
+  it('테스트 알람은 5초~10분 뒤만 받는다', () => {
+    const parse = (delaySeconds: number) =>
+      parseWebToNativeMessage(
+        JSON.stringify({ type: 'TEST_ALARM', delaySeconds, title: '테스트' }),
+      );
+
+    expect(parse(5)).not.toBeNull();
+    expect(parse(600)).not.toBeNull();
+    expect(parse(4)).toBeNull();
+    expect(parse(601)).toBeNull();
+  });
+
+  it('설정 화면 바로 가기는 정확한 알람·전체 화면 알림 둘만 받는다', () => {
+    const parse = (target: string) =>
+      parseWebToNativeMessage(
+        JSON.stringify({ type: 'OPEN_ALARM_SETTINGS', target }),
+      );
+
+    expect(parse('exactAlarm')).not.toBeNull();
+    expect(parse('fullScreen')).not.toBeNull();
+    expect(parse('battery')).toBeNull();
+  });
+
+  it('건너뛴 날짜가 YYYY-MM-DD 모양이 아니면 상태 회신을 버린다', () => {
+    const withSkipDate = (skipDate: string) =>
+      parseNativeToWebMessage(
+        JSON.stringify({
+          ...status,
+          repeatingAlarms: [
+            {
+              alarmType: 'scenario',
+              schedules: [{ hour: 7, minute: 30, weekdays: EVERY_DAY }],
+              path: '/scenario',
+              skipDate,
+            },
+          ],
+        }),
+      );
+
+    expect(withSkipDate('2026-10-07')).not.toBeNull();
+    expect(withSkipDate('invalid')).toBeNull();
+    expect(withSkipDate('2026-10-7')).toBeNull();
+  });
+
+  it('알람 버튼으로 열렸다는 신호는 앱 안 경로만 받는다 — 웹이 지금 화면을 보고 이동할지 정한다', () => {
+    const parse = (path: string) =>
+      parseNativeToWebMessage(
+        JSON.stringify({ type: 'ALARM_OPENED', alarmType: 'scenario', path }),
+      );
+
+    expect(parse('/scenario')).toEqual({
+      type: 'ALARM_OPENED',
+      alarmType: 'scenario',
+      path: '/scenario',
+    });
+    expect(parse('https://example.com')).toBeNull();
+    expect(parse('//example.com')).toBeNull();
+    // 브라우저는 백슬래시를 슬래시로 읽어 //example.com이 된다
+    expect(parse('/\\example.com')).toBeNull();
+  });
+});
+
+describe('알람 목록 (GET_ALARM_LIST·CANCEL_ALARM ↔ ALARM_LIST)', () => {
+  it('1회 알람은 요일 없이도 목록에 싣는다 — 반복 알람과 달리 빈 요일을 받는다', () => {
+    const message: NativeToWebMessage = {
+      type: 'ALARM_LIST',
+      alarms: [
+        {
+          id: 'a',
+          alarmType: 'scenario',
+          hour: 7,
+          minute: 30,
+          weekdays: [1, 2, 4, 5, 6, 7],
+          nextAt: 1791447000000,
+          skipDate: '2026-10-07',
+        },
+        {
+          id: 'b',
+          alarmType: null,
+          hour: 23,
+          minute: 41,
+          weekdays: [],
+          nextAt: null,
+          skipDate: null,
+        },
+      ],
+    };
+
+    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('알람 하나 지우기는 지울 알람 id를 실어야 받는다', () => {
+    const parse = (body: object) =>
+      parseWebToNativeMessage(
+        JSON.stringify({ type: 'CANCEL_ALARM', ...body }),
+      );
+
+    expect(parse({ id: 'a' })).toEqual({ type: 'CANCEL_ALARM', id: 'a' });
+    expect(parse({ id: '' })).toBeNull();
+    expect(parse({})).toBeNull();
+  });
+});

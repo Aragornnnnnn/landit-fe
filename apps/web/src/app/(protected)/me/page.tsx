@@ -23,6 +23,8 @@ import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import { clearAccountLocalState } from './_model/account-local-state';
 import { AccentMenuEntry } from './_ui/AccentMenuEntry';
+import { AlarmMenuEntry } from './_ui/AlarmMenuEntry';
+import { DeveloperMenuSection } from './_ui/DeveloperMenuSection';
 import { HapticMenuEntry } from './_ui/HapticMenuEntry';
 import { MenuButton, MenuLink, MenuSection } from './_ui/Menu';
 import { NotificationMenuEntry } from './_ui/NotificationMenuEntry';
@@ -146,7 +148,9 @@ export default function MyPage() {
           </MenuSection>
 
           <MenuSection title="설정">
-            {/* 알림은 권한 체계가 있는 셸에서만, 위젯은 위젯이 실린 셸에서만 보인다 — 브라우저에선 대화·음성·진동만 남는다 */}
+            {/* 알림은 권한 체계가 있는 셸에서만, 위젯은 위젯이 실린 셸에서만 보인다 — 브라우저에선 대화·음성·진동만 남는다.
+                알람은 결제 유저가 알람을 아는 셸에서만 맨 위에 보인다 */}
+            <AlarmMenuEntry />
             <TalkDisplayMenuEntry />
             <SpeechRateMenuEntry />
             <NotificationMenuEntry />
@@ -198,6 +202,8 @@ export default function MyPage() {
               }}
             />
           </MenuSection>
+
+          <DeveloperMenuSection />
         </div>
       </div>
 

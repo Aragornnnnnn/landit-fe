@@ -15,6 +15,15 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 
+import {
+  getAlarmStatus,
+  openAlarmSettings,
+  requestAlarmPermission,
+  setAlarm,
+  skipAlarmToday,
+} from '@/alarm/alarm';
+import { cancelAlarm, listAlarms, scheduleTestAlarm } from '@/alarm/dev-alarm';
+import { useAlarmOpen } from '@/alarm/useAlarmOpen';
 import { initMetaSdk } from '@/analytics/meta';
 import { generateNonce } from '@/auth/nonce';
 import { requestSocialIdToken, toSocialLoginFailure } from '@/auth/socialLogin';
@@ -99,6 +108,18 @@ const ShellScreen = () => {
   const nativeInsetsScript = getNativeInsetsScript(insets);
   const beforeContentLoadedScript = `${nativeContextScript} ${nativeInsetsScript ?? ''}`;
 
+  const replyAlarmStatus = async () =>
+    postToWeb({ type: 'ALARM_STATUS', ...(await getAlarmStatus()) });
+
+  // 알람 요청은 처리가 실패해도 지금 실제 상태로 답한다
+  const replyAlarmStatusAfter = async (task: () => Promise<unknown>) => {
+    try {
+      await task();
+    } finally {
+      await replyAlarmStatus();
+    }
+  };
+
   const { onMessage, postToWeb } = useNativeBridge(webviewRef, {
     EXIT_APP: () => BackHandler.exitApp(),
     // 웹이 인터랙션 시점에 보낸 진동 요청을 expo-haptics로 실행한다
@@ -155,6 +176,30 @@ const ShellScreen = () => {
       const result = await pickPhotos(limit);
       postToWeb({ type: 'PHOTOS_PICKED', ...result });
     },
+    GET_ALARM_STATUS: () => replyAlarmStatus(),
+    REQUEST_ALARM_PERMISSION: async () => {
+      postToWeb({ type: 'ALARM_STATUS', ...(await requestAlarmPermission()) });
+    },
+    // 돌아오면 웹이 상태를 다시 묻는다
+    OPEN_ALARM_SETTINGS: ({ target }) => openAlarmSettings(target),
+    SET_ALARM: ({ alarmType, alarm }) =>
+      replyAlarmStatusAfter(() => setAlarm(alarmType, alarm)),
+    SKIP_ALARM_TODAY: ({ alarmType }) =>
+      replyAlarmStatusAfter(() => skipAlarmToday(alarmType)),
+    GET_ALARM_LIST: async () => {
+      postToWeb({ type: 'ALARM_LIST', alarms: await listAlarms() });
+    },
+    CANCEL_ALARM: async ({ id }) => {
+      try {
+        await cancelAlarm(id);
+      } finally {
+        postToWeb({ type: 'ALARM_LIST', alarms: await listAlarms() });
+      }
+    },
+    TEST_ALARM: ({ delaySeconds, title, silent }) =>
+      replyAlarmStatusAfter(() =>
+        scheduleTestAlarm(delaySeconds, title, { silent }),
+      ),
     // 웹의 로그인 요청을 받아 provider SDK로 idToken을 발급받고, nonce와 함께 웹으로 돌려준다
     SOCIAL_LOGIN_REQUEST: async ({ provider }) => {
       try {
@@ -202,6 +247,12 @@ const ShellScreen = () => {
     });
     return () => subscription.remove();
   }, []);
+
+  // 앱이 열리거나 돌아올 때 알람 정리 — 울림 끄기, 갈 화면으로 보내기, 지난 건너뛰기 되돌리기.
+  // 앱이 떠 있었으면 웹에 알리기만 한다 — 학습 중이면 그대로 둘지는 웹이 정한다
+  const alarmEntry = useAlarmOpen((entry) =>
+    postToWeb({ type: 'ALARM_OPENED', ...entry }),
+  );
 
   // Meta SDK 초기화와 iOS ATT 동의 요청 — 앱 첫 진입에 1회 (광고 설치 어트리뷰션)
   useEffect(() => {
@@ -271,8 +322,12 @@ const ShellScreen = () => {
     );
   }
 
-  // 콜드 스타트 조회(알림·위젯)가 끝나야 초기 URI가 정해진다 — 그때까지 마운트 보류 (수 ms, 스플래시가 가린다)
-  if (coldStart.status === 'loading' || widgetEntry.status === 'loading') {
+  // 콜드 스타트 조회(알림·위젯·알람)가 끝나야 초기 URI가 정해진다 — 그때까지 마운트 보류 (수 ms, 스플래시가 가린다)
+  if (
+    coldStart.status === 'loading' ||
+    widgetEntry.status === 'loading' ||
+    alarmEntry.status === 'loading'
+  ) {
     return null;
   }
 
@@ -280,9 +335,9 @@ const ShellScreen = () => {
     <WebView
       key={loadAttempt}
       ref={webviewRef}
-      // 진입점은 루트, 알림 콜드 스타트면 페이로드의 경로, 위젯 탭이면 위젯 진입 경로 — 로그인 여부는 웹의 인증 가드가 판단한다
+      // 진입점은 루트, 알림 콜드 스타트면 페이로드의 경로, 위젯 탭이면 위젯 진입 경로, 알람 버튼이면 그 알람이 갈 화면 — 로그인 여부는 웹의 인증 가드가 판단한다
       source={{
-        uri: `${WEB_URL}${coldStart.path ?? widgetEntry.path ?? '/'}`,
+        uri: `${WEB_URL}${coldStart.path ?? widgetEntry.path ?? alarmEntry.path ?? '/'}`,
       }}
       // 콘텐츠 로드 전 네이티브 컨텍스트(플랫폼·앱 버전)를 window에, Android면 시스템 바 inset을 CSS 변수에 주입한다
       injectedJavaScriptBeforeContentLoaded={beforeContentLoadedScript}

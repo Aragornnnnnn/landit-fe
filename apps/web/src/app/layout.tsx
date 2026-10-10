@@ -2,6 +2,7 @@
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
 
+import { AlarmSync } from '@/features/alarm/ui/AlarmSync';
 import { AppUpdateGate } from '@/features/app-update/ui/AppUpdateGate';
 import { PushDeviceSync } from '@/features/notification/ui/PushDeviceSync';
 import { ProfilePropertiesSync } from '@/features/onboarding/ui/ProfilePropertiesSync';
@@ -56,6 +57,7 @@ export default function RootLayout({
           <PushDeviceSync />
           <WidgetDataSync />
           <WidgetChangeSync />
+          <AlarmSync />
           <IdentifySync />
           <SubscriptionPropertiesSync />
           <ProfilePropertiesSync />

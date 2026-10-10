@@ -133,6 +133,10 @@ export const EVENTS = {
   NOTIFICATION_CONSENT_DISMISSED: 'Notification Consent Dismissed',
   NOTIFICATION_PERMISSION_DECIDED: 'Notification Permission Decided',
 
+  // 오늘의 시나리오 알람 — 등록 흐름(소개 → 다짐)은 내 정보와 프리미엄 온보딩이 같이 쓴다
+  ALARM_REGISTERED: 'Alarm Registered',
+  ALARM_SETUP_SKIPPED: 'Alarm Setup Skipped',
+
   // 소감 시트 — 첫 시나리오 대화·첫 스몰톡·다른 날 두 번째 대화(랜딧 소감)를 마치고 홈에 돌아왔을 때 한 번 묻는다
   SATISFACTION_PROMPT_VIEWED: 'Satisfaction Prompt Viewed',
   SATISFACTION_PROMPT_ANSWERED: 'Satisfaction Prompt Answered',
@@ -281,13 +285,16 @@ export type RetryScreen =
   | 'card_back'
   | 'expression_list'
   | 'streak'
-  | 'mailbox';
+  | 'mailbox'
+  | 'alarm';
 // 피드백 유형 — 작성 화면에서 고르는 넷. 값은 서버 enum 그대로다 (지표와 데이터가 같은 말을 쓰도록)
 export type FeedbackType =
   'BUG_REPORT' | 'FEATURE_REQUEST' | 'QUESTION' | 'CHEER';
 // 알림 동의를 청한 지면 — 온보딩 스텝은 기존 온보딩 계측이 커버해서 없다.
 // 키는 source — surface는 baseProps의 전역 속성(app·browser)이라 겹치면 덮어쓴다
 export type NotificationConsentSource = 'scenario' | 'me';
+// 알람 등록 흐름을 연 곳 — 내 정보 알람 화면, 프리미엄 온보딩
+export type AlarmSetupSource = 'me' | 'premium_onboarding';
 // OS 알림 권한창을 띄운 지면 — 안내 시트 둘에 온보딩 스텝이 더해진다
 export type NotificationPermissionSource =
   'onboarding' | NotificationConsentSource;
@@ -649,6 +656,11 @@ export type EventProps = {
     question_count: number;
     solved_count: number;
   };
+
+  // 다짐이 서버에 저장된 순간. time은 "HH:mm" — 몇 시에 많이 거는지 본다
+  'Alarm Registered': { source: AlarmSetupSource; time: string };
+  // 소개 화면에서 「다음에 할게요」 — 프리미엄 온보딩에만 있다
+  'Alarm Setup Skipped': { source: AlarmSetupSource };
 
   'Notification Consent Viewed': { source: NotificationConsentSource };
   // 수락 = OS 권한창 요청까지 이어짐. 실제 허용/거부는 OS 팝업 결과라 별도 (권한 상태로 세그먼트)

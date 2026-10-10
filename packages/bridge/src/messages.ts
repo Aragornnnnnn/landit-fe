@@ -17,7 +17,7 @@ export const hapticPatternSchema = z.enum([
   'error',
 ]);
 
-// 알림 권한 상태 — expo-notifications의 PermissionStatus와 대응
+// 알림 권한 상태 — expo-notifications의 PermissionStatus와 대응. 알람(AlarmKit) 권한도 같은 세 상태로 알린다
 export const notificationPermissionStatusSchema = z.enum([
   'granted',
   'denied',
@@ -99,6 +99,88 @@ export const pickedPhotoSchema = z.object({
 // 한 번에 고를 수 있는 사진 수 상한 — 피드백 첨부 서버 제한(3장)과 같다
 export const MAX_PICK_PHOTOS = 3;
 
+// 반복 알람의 종류 — 종류마다 알람은 하나다.
+// 새 종류를 더하면 옛 앱은 모르는 값이라 요청을 버린다 — 브릿지 버전을 올리고, 웹은 그 버전 이상에만 보낸다
+export const alarmTypeSchema = z.enum(['scenario']);
+
+// 알람 시각 — 기기 현지 시각
+export const alarmTimeSchema = z.object({
+  hour: z.number().int().min(0).max(23),
+  minute: z.number().int().min(0).max(59),
+});
+
+// 요일 — 1(월)~7(일)
+const weekdaySchema = z.number().int().min(1).max(7);
+
+// 기기 현지 날짜 "YYYY-MM-DD"
+const localDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+// 알람으로 앱이 열리면 갈 웹 화면 — 앱 안 경로만 받는다(/scenario 등).
+// //나 /\로 시작하면 바깥 주소다(브라우저는 백슬래시를 슬래시로 읽는다)
+const alarmPathSchema = z.string().regex(/^\/(?![/\\])/);
+
+// 언제 울리는지 — 이 요일들의 이 시각. 매일 같은 시각이면 7요일짜리 하나, 요일마다 시각이 다르면 여러 개
+export const alarmScheduleSchema = alarmTimeSchema.extend({
+  weekdays: z.array(weekdaySchema).min(1),
+});
+
+// 한 요일이 두 스케줄에 들어 있으면 그날 두 번 울린다 — 스케줄끼리 요일이 겹치면 받지 않는다
+const alarmSchedulesSchema = z
+  .array(alarmScheduleSchema)
+  .min(1)
+  .refine((schedules) => {
+    const days = schedules.flatMap((schedule) => schedule.weekdays);
+    return new Set(days).size === days.length;
+  }, '요일이 겹친다');
+
+// SET_ALARM이 싣는 반복 알람 — 언제 울릴지(schedules), 잠금화면 제목, 눌렀을 때 갈 화면(path)
+export const repeatingAlarmSchema = z.object({
+  title: z.string().min(1),
+  schedules: alarmSchedulesSchema,
+  path: alarmPathSchema,
+  // 오늘 회차는 빼고 건다 — 걸고 나서 건너뛰면 그 사이 틈이 생긴다
+  skipToday: z.boolean().optional(),
+  // 소리 없이 화면으로만 울린다 — 소리를 원치 않는 사람을 위한 설정 자리(아직 화면에 안 드러냄)
+  silent: z.boolean().optional(),
+});
+
+// 셸에 걸려 있는 반복 알람 하나 — ALARM_STATUS가 종류별로 싣는다
+export const repeatingAlarmStateSchema = z.object({
+  alarmType: alarmTypeSchema,
+  schedules: z.array(alarmScheduleSchema),
+  // 이 알람에 저장된 갈 화면 — 웹이 바꾼 경로와 다르면 다시 건다
+  path: alarmPathSchema,
+  // 오늘 회차를 건너뛴 날 — 건너뛴 적 없거나 날이 지나 되돌렸으면 null
+  skipDate: localDateSchema.nullable(),
+});
+
+// 셸이 띄울 수 있는 알람 설정 화면 — Android 14+에서 사용자가 직접 켜야 하는 두 권한
+export const alarmSettingsTargetSchema = z.enum(['exactAlarm', 'fullScreen']);
+
+// 셸에 걸린 알람 하나 — 개발자 화면이 목록으로 보여 준다
+export const scheduledAlarmSchema = alarmTimeSchema.extend({
+  id: z.string(),
+  // 반복 알람의 종류. 테스트 알람은 null
+  alarmType: alarmTypeSchema.nullable(),
+  // 울리는 요일. 1회 알람이면 빈 배열
+  weekdays: z.array(weekdaySchema),
+  // 다음 울림(ms). 이미 울린 1회 알람이면 null
+  nextAt: z.number().nullable(),
+  skipDate: localDateSchema.nullable(),
+});
+
+// 알람 권한과 셸에 실제로 걸린 반복 알람 — 알람 메시지는 전부 이걸로 답한다.
+// supported=false는 알람을 못 쓰는 기기(iOS 25 이하)다. iOS의 exactAlarm은 AlarmKit 권한을 받았는지와 같고, fullScreen은 늘 true다
+export const alarmStatusSchema = z.object({
+  supported: z.boolean(),
+  permission: notificationPermissionStatusSchema,
+  exactAlarm: z.boolean(),
+  fullScreen: z.boolean(),
+  // 알림을 보낼 수 있는가 — Android는 꺼져 있으면 알람이 화면도 알림도 없이 소리만 나서 셸이 걸지 않는다. iOS는 늘 true
+  notifications: z.boolean(),
+  repeatingAlarms: z.array(repeatingAlarmStateSchema),
+});
+
 // 로그인 전·로그아웃 후에 쓰는 빈 값 — 웹이 이걸 보내 셸에 남은 이전 사용자 기록을 지운다.
 // 완료 이력이 없으므로(null) 위젯은 몰락 연출 없이 0일 시간표만 그린다
 export const EMPTY_WIDGET_DATA = {
@@ -163,6 +245,34 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('PICK_PHOTOS'),
     limit: z.number().int().min(1).max(MAX_PICK_PHOTOS),
+  }),
+  // 알람 권한·예약 상태 조회 — 다이얼로그를 띄우지 않는다. 응답은 ALARM_STATUS
+  z.object({ type: z.literal('GET_ALARM_STATUS') }),
+  // 알람 권한 요청 — iOS는 AlarmKit 권한창, Android는 정확한 알람 설정 화면이 뜬다. 응답은 ALARM_STATUS
+  z.object({ type: z.literal('REQUEST_ALARM_PERMISSION') }),
+  // Android 알람 권한 설정 화면을 연다 (단방향 — 돌아오면 웹이 GET_ALARM_STATUS로 다시 묻는다)
+  z.object({
+    type: z.literal('OPEN_ALARM_SETTINGS'),
+    target: alarmSettingsTargetSchema,
+  }),
+  // 이 종류의 반복 알람을 다시 건다 — 같은 종류의 기존 예약만 지운다. null이면 끈다. 응답은 ALARM_STATUS
+  z.object({
+    type: z.literal('SET_ALARM'),
+    alarmType: alarmTypeSchema,
+    alarm: repeatingAlarmSchema.nullable(),
+  }),
+  // 이 종류의 반복 알람을 오늘만 울리지 않게 한다(내일부터 그대로). 응답은 ALARM_STATUS
+  z.object({ type: z.literal('SKIP_ALARM_TODAY'), alarmType: alarmTypeSchema }),
+  // 개발자 화면용 — 셸에 걸린 알람 전부를 묻는다. 응답은 ALARM_LIST
+  z.object({ type: z.literal('GET_ALARM_LIST') }),
+  // 개발자 화면용 — 걸린 알람 하나를 id로 지운다(테스트·반복 모두). 응답은 ALARM_LIST
+  z.object({ type: z.literal('CANCEL_ALARM'), id: z.string().min(1) }),
+  // 개발자 섹션용 — 지금부터 delaySeconds 뒤에 한 번 울린다. 실제 예약은 건드리지 않는다. 응답은 ALARM_STATUS
+  z.object({
+    type: z.literal('TEST_ALARM'),
+    delaySeconds: z.number().int().min(5).max(600),
+    title: z.string().min(1),
+    silent: z.boolean().optional(),
   }),
 ]);
 
@@ -235,6 +345,20 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     // limit보다 많이 골라 뒤를 잘랐는가 — 선택창이 장수를 막지 못하는 구형 Android 대비
     overflowed: z.boolean(),
   }),
+  // GET_ALARM_STATUS·REQUEST_ALARM_PERMISSION·SET_ALARM·SKIP_ALARM_TODAY·TEST_ALARM 응답 — 지금 권한과 셸에 실제로 걸린 반복 알람
+  alarmStatusSchema.extend({ type: z.literal('ALARM_STATUS') }),
+  // GET_ALARM_LIST 응답 — 반복·테스트 알람 전부
+  z.object({
+    type: z.literal('ALARM_LIST'),
+    alarms: z.array(scheduledAlarmSchema),
+  }),
+  // 앱이 떠 있을 때 알람의 "대화하러 가기"를 눌렀다 — 웹이 지금 화면을 보고 path로 갈지 정한다(학습 중이면 그대로).
+  // 앱이 꺼져 있었으면 이 메시지 대신 WebView 첫 주소가 path다
+  z.object({
+    type: z.literal('ALARM_OPENED'),
+    alarmType: alarmTypeSchema,
+    path: alarmPathSchema,
+  }),
 ]);
 
 // 위 스키마에서 자동으로 뽑아낸 타입 — 스키마를 고치면 타입도 같이 바뀐다
@@ -248,6 +372,14 @@ export type PurchaseStatus = z.infer<typeof purchaseStatusSchema>;
 export type RestoreStatus = z.infer<typeof restoreStatusSchema>;
 export type PhotoPickStatus = z.infer<typeof photoPickStatusSchema>;
 export type PickedPhoto = z.infer<typeof pickedPhotoSchema>;
+export type AlarmType = z.infer<typeof alarmTypeSchema>;
+export type AlarmTime = z.infer<typeof alarmTimeSchema>;
+export type AlarmSchedule = z.infer<typeof alarmScheduleSchema>;
+export type RepeatingAlarm = z.infer<typeof repeatingAlarmSchema>;
+export type RepeatingAlarmState = z.infer<typeof repeatingAlarmStateSchema>;
+export type AlarmSettingsTarget = z.infer<typeof alarmSettingsTargetSchema>;
+export type AlarmStatus = z.infer<typeof alarmStatusSchema>;
+export type ScheduledAlarm = z.infer<typeof scheduledAlarmSchema>;
 export type NotificationPermissionStatus = z.infer<
   typeof notificationPermissionStatusSchema
 >;
