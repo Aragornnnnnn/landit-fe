@@ -1,5 +1,5 @@
 // ProfileHeader — 이름·로그인 계정과 학습 수준의 마법사 래디를 보여주고, 수준을 모르면 기본 래디만 세운다
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ProfileHeader } from './ProfileHeader';
@@ -22,6 +22,11 @@ vi.mock('@/features/onboarding/model/useLearningLevelQuery', () => ({
     data: { learningLevel: mocks.learningLevel },
     isPending: mocks.pending,
   }),
+}));
+// 시트 내용은 자기 테스트가 있다 — 여기선 이름을 누르면 지금 이름으로 열리는지만 본다
+vi.mock('./NicknameSheet', () => ({
+  NicknameSheet: ({ open, current }: { open: boolean; current: string }) =>
+    open ? <div>닉네임 시트: {current}</div> : null,
 }));
 // 그림 미리 받기는 자기 테스트가 있다 — 여기선 화면 계약만 본다
 vi.mock('@/shared/lib/preload-next-images', () => ({ preloadImages: vi.fn() }));
@@ -56,8 +61,11 @@ describe('ProfileHeader', () => {
   });
 
   it('로그인한 곳을 로그인 버튼과 같은 심볼 배지로 이메일 앞에 두고, 모르는 방식이면 배지가 없다', () => {
+    // 이메일 줄 안만 본다 — 이름 옆 연필 아이콘도 svg다
+    const accountLine = () =>
+      screen.getByText('junseo@example.com').parentElement!;
     const { unmount } = render(<ProfileHeader />);
-    expect(document.querySelector('svg')).not.toBeNull();
+    expect(accountLine().querySelector('svg')).not.toBeNull();
     unmount();
 
     mocks.member = {
@@ -66,8 +74,7 @@ describe('ProfileHeader', () => {
       provider: 'NAVER',
     };
     render(<ProfileHeader />);
-    expect(screen.getByText('junseo@example.com')).toBeInTheDocument();
-    expect(document.querySelector('svg')).toBeNull();
+    expect(accountLine().querySelector('svg')).toBeNull();
   });
 
   it('학습 수준을 아직 모르면 레벨 글자 없이 기본 래디만 선다', () => {
@@ -105,5 +112,12 @@ describe('ProfileHeader', () => {
 
     expect(screen.getByText('게스트')).toBeInTheDocument();
     expect(screen.queryByText(/@/)).not.toBeInTheDocument();
+  });
+
+  it('이름을 누르면 지금 이름을 채운 닉네임 시트가 열린다', () => {
+    render(<ProfileHeader />);
+    fireEvent.click(screen.getByRole('button', { name: '닉네임 바꾸기' }));
+
+    expect(screen.getByText('닉네임 시트: 준서')).toBeInTheDocument();
   });
 });

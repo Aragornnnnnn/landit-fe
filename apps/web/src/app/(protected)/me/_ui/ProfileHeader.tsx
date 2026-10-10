@@ -1,7 +1,7 @@
 'use client';
 
-// 마이페이지 상단 — 이름과 로그인 계정, 오른쪽에 학습 수준의 마법사 래디와 레벨 이름. 수준을 아직 모르면 기본 래디만 선다.
-import { useEffect } from 'react';
+// 마이페이지 상단 — 이름(눌러서 바꾸기)과 로그인 계정, 오른쪽에 학습 수준의 마법사 래디와 레벨 이름. 수준을 아직 모르면 기본 래디만 선다.
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 import {
@@ -15,7 +15,14 @@ import {
   preloadImages,
   type PreloadableImage,
 } from '@/shared/lib/preload-next-images';
+import { PencilIcon } from '@/shared/ui/Icons';
 import { AppleIcon, GoogleIcon, KakaoIcon } from '@/shared/ui/SocialIcons';
+
+import {
+  nicknameDisplaySize,
+  type NicknameDisplaySize,
+} from '../_model/nickname';
+import { NicknameSheet } from './NicknameSheet';
 
 const DEFAULT_IMAGE: PreloadableImage = {
   src: '/images/character/landy-normal.webp',
@@ -37,6 +44,13 @@ const PROVIDER_BADGE: Record<
   APPLE: { icon: <AppleIcon size={11} />, background: '#000' },
 };
 
+// 이름이 길수록 글자를 줄여 줄바꿈을 줄인다 — 가장 작은 크기에서만 두 줄이 된다
+const NAME_SIZE_CLASS: Record<NicknameDisplaySize, string> = {
+  lg: 'text-[22px]',
+  md: 'text-[18px]',
+  sm: 'text-[16px]',
+};
+
 export const ProfileHeader = () => {
   const member = useAuthStore((state) => state.member);
   const { data, isPending } = useLearningLevelQuery();
@@ -47,16 +61,35 @@ export const ProfileHeader = () => {
     preloadImages([...Object.values(LEVEL_IMAGES), DEFAULT_IMAGE]);
   }, []);
   const badge = member?.provider ? PROVIDER_BADGE[member.provider] : undefined;
+  const nickname = member?.nickname?.trim() ?? '';
+  const [nicknameSheetOpen, setNicknameSheetOpen] = useState(false);
 
   return (
     <div className="flex items-center justify-between px-1.5 pt-2 pb-1">
-      <div className="min-w-0">
-        <p
-          className="text-[22px] leading-tight font-bold"
-          style={{ color: '#111' }}
+      {/* 남는 너비를 이름 칸이 다 쓴다 — 내용만큼만 잡으면 이메일 줄 너비에서 이름이 일찍 꺾인다 */}
+      <div className="min-w-0 flex-1 pr-2">
+        <button
+          type="button"
+          onClick={() => setNicknameSheetOpen(true)}
+          className="-mx-1 rounded-lg px-1 text-left transition-transform active:scale-[0.97]"
+          aria-label="닉네임 바꾸기"
         >
-          {member?.nickname?.trim() || '게스트'}
-        </p>
+          {/* 긴 이름은 자르지 않는다 — 크기를 줄이고도 넘치면 줄을 넘긴다 */}
+          <span
+            className={`${NAME_SIZE_CLASS[nicknameDisplaySize(nickname)]} leading-tight font-bold break-words`}
+            style={{ color: '#111' }}
+          >
+            {nickname || '게스트'}
+          </span>
+          {/* 연필만 다음 줄로 떨어지지 않게 마지막 글자에 붙인다 — 단어 결합자(U+2060)가 그 사이 줄바꿈을 막는다 */}
+          <span className="whitespace-nowrap" aria-hidden="true">
+            {'\u2060'}
+            <PencilIcon
+              size={16}
+              className="ml-1.5 inline-block align-baseline text-muted-foreground"
+            />
+          </span>
+        </button>
         {member?.email && (
           <p
             className="mt-2 flex items-center gap-2 text-[12.5px]"
@@ -98,6 +131,11 @@ export const ProfileHeader = () => {
           </p>
         )}
       </div>
+      <NicknameSheet
+        open={nicknameSheetOpen}
+        current={nickname}
+        onClose={() => setNicknameSheetOpen(false)}
+      />
     </div>
   );
 };
