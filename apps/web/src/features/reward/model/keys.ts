@@ -4,4 +4,6 @@ export const rewardKeys = {
   // 내역 키가 같은 사용자 아래에 따로 붙을 수 있게 끝에 이름을 둔다
   summary: (userId: number | null) =>
     [...rewardKeys.all, userId, 'summary'] as const,
+  history: (userId: number | null) =>
+    [...rewardKeys.all, userId, 'history'] as const,
 };

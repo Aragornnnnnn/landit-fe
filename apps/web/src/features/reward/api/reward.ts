@@ -151,3 +151,14 @@ export interface RewardHistoryPage {
 }
 
 export const getMyRewards = () => api.get<RewardView>('/api/v1/me/rewards');
+
+// 한 번에 받는 줄 수 — 하루를 다 채우면 여섯 줄이라 일주일쯤이 한 장이다
+const HISTORY_PAGE_SIZE = 40;
+
+// cursor는 앞 장이 준 nextCursor를 그대로 돌려보낸다 — 첫 장은 null
+export const getRewardHistory = (cursor: string | null) =>
+  api.get<RewardHistoryPage>(
+    `/api/v1/me/rewards/history?limit=${HISTORY_PAGE_SIZE}${
+      cursor === null ? '' : `&cursor=${encodeURIComponent(cursor)}`
+    }`,
+  );
