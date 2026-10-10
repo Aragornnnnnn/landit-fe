@@ -84,7 +84,7 @@ describe('historyRowsOf', () => {
     expect(row).toMatchObject({
       dateLabel: '10.9',
       title: '연속 학습 끊김',
-      note: '연속 학습이 끊겨서 누적 환급액이 초기화됐어요',
+      note: '누적 환급액이 초기화됐어요',
       amountWon: -1550,
       balanceWon: 0,
     });
