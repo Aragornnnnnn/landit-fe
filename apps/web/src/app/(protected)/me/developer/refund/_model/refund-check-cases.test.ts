@@ -71,6 +71,8 @@ describe('fakeHistoryItems', () => {
       balanceWon: 0,
     });
     expect(next.balanceWon).toBe(reward.lostYesterdayWon);
+    // 쉰 날에는 적립 줄이 없다
+    expect(next.date).not.toBe(top.date);
   });
 
   it('기간이 끝났으면 맨 위에 넘어간 금액을 알리는 줄을 둔다', () => {

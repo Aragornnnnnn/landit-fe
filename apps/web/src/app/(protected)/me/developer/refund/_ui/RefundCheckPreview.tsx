@@ -34,8 +34,7 @@ const RecordPreview = ({
   history: mode,
   onBack,
 }: RecordCase & { onBack: () => void }) => {
-  const [items] = useState(() => fakeHistoryItems(reward));
-  const history = useFakeHistory(items, mode);
+  const history = useFakeHistory(fakeHistoryItems(reward), mode);
 
   return (
     <RefundFrame onBack={onBack} footer={<RefundApplyButton reward={reward} />}>
@@ -138,6 +137,8 @@ export const RefundCheckPreview = ({
     );
   if (name === 'coin') return <CoinPreview onBack={onBack} />;
   if (name === 'pop') return <PopPreview onBack={onBack} />;
+  // 케이스를 더하고 여기에 갈래를 안 만들면 빌드가 깨진다
+  name satisfies 'loading';
   return (
     <RefundFrame onBack={onBack}>
       <RefundSkeleton />

@@ -13,7 +13,7 @@ import {
   rewardView,
 } from '@/features/reward/model/reward.fixture';
 
-// 가짜 내역이 서버를 흉내 내는 방식 — 세 장 이어 받기 / 둘째 장에서 한 번 실패 / 한 줄도 없음
+// 가짜 내역이 서버를 흉내 내는 방식 — 이어 받기(많아야 세 장) / 둘째 장에서 한 번 실패 / 한 줄도 없음
 export type HistoryMode = 'pages' | 'failOnce' | 'empty';
 
 export interface RecordCase {
@@ -101,7 +101,7 @@ export const RECORD_CASES = {
 
 // 열 수 있는 케이스 — 환급 화면 케이스에 소개·불러오는 중·받는 순간을 더한 것
 const OTHER_CASES = ['intro', 'loading', 'coin', 'pop'] as const;
-export type RecordCaseName = keyof typeof RECORD_CASES;
+type RecordCaseName = keyof typeof RECORD_CASES;
 export type CheckCase = RecordCaseName | (typeof OTHER_CASES)[number];
 
 export const isRecordCase = (name: CheckCase): name is RecordCaseName =>
@@ -124,7 +124,7 @@ const FULL_DAY_LATEST_FIRST = [
 ] as const;
 const FULL_DAY_WON = 332;
 
-// 가짜 내역 한 장의 줄 수와, 세 장으로 나눠 받을 만큼의 전체 줄 수
+// 가짜 내역 한 장의 줄 수와 전체 줄 수의 상한 — 잔액이 먼저 바닥나면 세 장보다 적다
 export const FAKE_PAGE_SIZE = 16;
 const MAX_ROWS = FAKE_PAGE_SIZE * 3;
 const TODAY_MS = Date.UTC(2026, 9, 10);
@@ -155,8 +155,8 @@ export const fakeHistoryItems = (reward: RewardView) => {
   let balanceWon = reward.current?.balanceWon ?? reward.pendingRefundWon;
   // 오늘 줄은 위의 오늘 칸이 말하는 금액만큼만 — 아침에 한 것부터 채워진 것으로 본다
   let todayLeftWon = FULL_DAY_WON - (reward.today?.earnedWon ?? 0);
-  // 적립 줄이 시작되는 날 — 오늘이 없는 사람(끝남·확인 중)은 어제부터다
-  let firstDay = reward.today ? 0 : 1;
+  // 적립 줄이 시작되는 날. 오늘이 없는 사람(끝남·확인 중)은 오늘 줄을 전부 건너뛰어 어제부터 쌓인다
+  let firstDay = 0;
 
   // 어제 쉬었으면 그 줄이 맨 위고, 그 앞은 사라진 금액까지 쌓아 온 날들이다
   if (reward.lostYesterdayWon > 0) {
