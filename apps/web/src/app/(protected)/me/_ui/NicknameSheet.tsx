@@ -11,7 +11,11 @@ import { Button } from '@/shared/ui/Button';
 import { showToast } from '@/shared/ui/toast';
 
 import { updateNickname } from '../_api/nickname';
-import { NICKNAME_MAX_LENGTH, validateNickname } from '../_model/nickname';
+import {
+  countNicknameLength,
+  NICKNAME_MAX_LENGTH,
+  validateNickname,
+} from '../_model/nickname';
 
 const ERROR_MESSAGES = {
   too_long: `${NICKNAME_MAX_LENGTH}자까지 쓸 수 있어요`,
@@ -28,24 +32,39 @@ export const NicknameSheet = ({
   open,
   current,
   onClose,
-}: NicknameSheetProps) => (
-  <BottomSheet open={open} onClose={onClose}>
-    {/* 닫힘 동안 언마운트 — 다시 열면 그때의 이름으로 새로 채워진다 */}
-    {open && <NicknameForm current={current} onDone={onClose} />}
-  </BottomSheet>
-);
+}: NicknameSheetProps) => {
+  const [saving, setSaving] = useState(false);
+
+  return (
+    // 저장하는 동안에는 닫지 않는다 — 닫고 다시 연 시트를 늦게 온 응답이 닫아 버리지 않게
+    <BottomSheet open={open} onClose={saving ? () => {} : onClose}>
+      {/* 닫힘 동안 언마운트 — 다시 열면 그때의 이름으로 새로 채워진다 */}
+      {open && (
+        <NicknameForm
+          current={current}
+          saving={saving}
+          onSavingChange={setSaving}
+          onDone={onClose}
+        />
+      )}
+    </BottomSheet>
+  );
+};
 
 const NicknameForm = ({
   current,
+  saving,
+  onSavingChange,
   onDone,
 }: {
   current: string;
+  saving: boolean;
+  onSavingChange: (saving: boolean) => void;
   onDone: () => void;
 }) => {
   const setNickname = useAuthStore((state) => state.setNickname);
   const keyboardInset = useKeyboardInset();
   const [input, setInput] = useState(current);
-  const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
 
   const result = validateNickname(input);
@@ -55,11 +74,12 @@ const NicknameForm = ({
       ? ERROR_MESSAGES[result.reason]
       : null;
   const unchanged = result.ok && result.value === current.trim();
-  const length = [...input.trim()].length;
+  const length = countNicknameLength(input);
+  const tooLong = !result.ok && result.reason === 'too_long';
 
   const save = async () => {
     if (!result.ok || saving) return;
-    setSaving(true);
+    onSavingChange(true);
     setSaveFailed(false);
     try {
       const { nickname } = await updateNickname(result.value);
@@ -69,7 +89,8 @@ const NicknameForm = ({
     } catch (error) {
       reportWarning(error);
       setSaveFailed(true);
-      setSaving(false);
+    } finally {
+      onSavingChange(false);
     }
   };
 
@@ -113,9 +134,7 @@ const NicknameForm = ({
         />
         <span
           className={`shrink-0 text-[13px] tabular-nums ${
-            length > NICKNAME_MAX_LENGTH
-              ? 'text-destructive'
-              : 'text-muted-foreground'
+            tooLong ? 'text-destructive' : 'text-muted-foreground'
           }`}
         >
           {length}/{NICKNAME_MAX_LENGTH}

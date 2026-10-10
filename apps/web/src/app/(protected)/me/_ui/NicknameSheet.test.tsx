@@ -77,4 +77,22 @@ describe('NicknameSheet', () => {
     expect(onClose).not.toHaveBeenCalled();
     expect(mocks.setNickname).not.toHaveBeenCalled();
   });
+
+  it('저장하는 동안에는 바깥을 눌러도 닫히지 않는다 — 늦게 온 응답이 다시 연 시트를 닫지 않게', async () => {
+    let finish: (value: { nickname: string }) => void = () => {};
+    mocks.updateNickname.mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    renderSheet('준서');
+    fireEvent.change(input(), { target: { value: '래디' } });
+    fireEvent.click(saveButton());
+    fireEvent.click(screen.getByTestId('bottom-sheet-dim'));
+
+    expect(onClose).not.toHaveBeenCalled();
+
+    finish({ nickname: '래디' });
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+  });
 });
