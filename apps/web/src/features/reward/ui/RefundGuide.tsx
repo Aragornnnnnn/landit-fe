@@ -2,6 +2,7 @@
 // 결제 전의 환급 소개 화면과 결제 직후(알람 바로 앞) 화면이 같은 모습으로 쓴다
 import Image from 'next/image';
 
+import { preloadImages } from '@/shared/lib/preload-next-images';
 import { Emoji } from '@/shared/ui/emoji';
 
 import potComplete from '../assets/refund-pot-complete.png';
@@ -49,6 +50,16 @@ const RULES = [
   ['📘', '지난 시나리오와 표현학습은 다시 해도 쌓이지 않아요'],
   ['📅', '기간을 마치면 한 번에 환급 신청해요'],
 ] as const;
+
+/** 환급 안내에 들어가기 전에 맨 위 그림을 받아 둔다 — 화면이 열린 뒤에야 받으면 그림 자리가 잠깐 비어 보인다 */
+export const preloadRefundGuide = () =>
+  preloadImages([
+    {
+      src: potComplete.src,
+      width: potComplete.width,
+      height: potComplete.height,
+    },
+  ]);
 
 export const RefundRuleList = () => (
   <ul className="flex flex-col gap-3">

@@ -1,5 +1,6 @@
-// 프리미엄 온보딩 — 환영 뒤 알람 등록으로 이어지는지, 어느 길로 끝나든 원래 가던 곳으로 replace하는지
+// 프리미엄 온보딩 — 환영 뒤 (환급 상품이면 환급 안내를 거쳐) 알람 등록으로 이어지는지, 어느 길로 끝나든 원래 가던 곳으로 replace하는지
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -8,6 +9,11 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  endedRewardView,
+  rewardCycle,
+  rewardView,
+} from '@/features/reward/model/reward.fixture';
 import { useAuthStore } from '@/shared/auth/auth-store';
 
 import { PremiumOnboardingScreen } from './PremiumOnboardingScreen';
@@ -19,12 +25,34 @@ const mocks = vi.hoisted(() => ({
   setting: undefined as { time: string; enabled: boolean } | undefined,
   invalidateQueries: vi.fn(),
   refetch: vi.fn(),
+  reward: null as unknown,
+  launched: false,
+  refreshReward: vi.fn(),
+  fetchLatest: vi.fn(),
 }));
 
 vi.mock('@tanstack/react-query', () => ({
   useQueryClient: () => ({ invalidateQueries: mocks.invalidateQueries }),
 }));
 
+// 환급 조회는 다른 기능의 일이라 목으로 둔다 — 여기서는 무엇을 받았을 때 어느 길로 가는지만 본다
+vi.mock('@/features/reward/model/refresh-reward', () => ({
+  refreshRewardAfterPurchase: mocks.refreshReward,
+  fetchLatestReward: mocks.fetchLatest,
+}));
+vi.mock('@/features/subscription/model/paywall-gate/payment-flag', () => ({
+  get REFUND_CHALLENGE_ENABLED() {
+    return mocks.launched;
+  },
+}));
+// 규칙 화면의 돈통 그림 — 이미지 최적화 부품은 jsdom에서 돌지 않는다
+vi.mock('next/image', () => ({ default: () => <span /> }));
+vi.mock('@/features/reward/ui/RefundGuide', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@/features/reward/ui/RefundGuide')
+  >()),
+  preloadRefundGuide: vi.fn(),
+}));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace }),
 }));
@@ -43,8 +71,14 @@ vi.mock('@/features/alarm/ui/LockScreenPreview', () => ({
 }));
 // 환영 연출과 등록 흐름은 갈 길만 보이는 버튼으로 바꾼다 — 여기선 넘어가는 길만 본다
 vi.mock('./PremiumWelcome', () => ({
-  PremiumWelcome: ({ onNext }: { onNext: () => void }) => (
-    <button type="button" onClick={onNext}>
+  PremiumWelcome: ({
+    onNext,
+    pending,
+  }: {
+    onNext: () => void;
+    pending?: boolean;
+  }) => (
+    <button type="button" onClick={onNext} disabled={pending}>
       다음
     </button>
   ),
@@ -78,6 +112,11 @@ beforeEach(() => {
   mocks.setting = { time: '19:00', enabled: false };
   mocks.invalidateQueries.mockClear();
   mocks.refetch.mockReset();
+  mocks.reward = null;
+  mocks.launched = false;
+  mocks.refreshReward.mockClear();
+  mocks.fetchLatest.mockReset();
+  mocks.fetchLatest.mockImplementation(() => Promise.resolve(mocks.reward));
 });
 afterEach(() => {
   cleanup();
@@ -91,6 +130,13 @@ const signIn = (role: 'USER' | 'ADMIN') =>
     email: null,
     provider: 'kakao',
     role,
+  });
+
+// 3개월 환급 상품을 막 산 사람의 환급
+const bought = () =>
+  rewardView({
+    current: rewardCycle({ maximumWon: 31920, balanceWon: 0 }),
+    remainingDays: 92,
   });
 
 describe('PremiumOnboardingScreen', () => {
@@ -163,6 +209,15 @@ describe('PremiumOnboardingScreen', () => {
     expect(mocks.invalidateQueries).toHaveBeenCalledTimes(1);
   });
 
+  it('환급이 열리기 전에는 들어와서 「다음」을 눌러도 환급을 묻지 않는다', () => {
+    render(<PremiumOnboardingScreen returnTo="/me" />);
+
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    expect(mocks.fetchLatest).not.toHaveBeenCalled();
+    expect(mocks.refreshReward).not.toHaveBeenCalled();
+  });
+
   it('알람 설정을 아직 못 받았으면 받을 때까지 기다렸다가 알람 등록으로 이어진다', async () => {
     // given — 조회가 아직 안 끝났고, 끝나면 등록 전이다
     mocks.setting = undefined;
@@ -209,6 +264,125 @@ describe('PremiumOnboardingScreen', () => {
     expect(mocks.replace).toHaveBeenCalledWith('/me');
   });
 
+  it('환급이 열리기 전에는 환급 상품을 산 사람이어도 안내를 끼우지 않는다', async () => {
+    mocks.reward = bought();
+    render(<PremiumOnboardingScreen returnTo="/me" />);
+
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    expect(await screen.findByText('기본 문구')).toBeVisible();
+  });
+
+  describe('환급이 열린 뒤', () => {
+    beforeEach(() => {
+      mocks.launched = true;
+    });
+
+    const tapNext = () =>
+      fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    it('환영 다음에 산 상품의 금액으로 환급 안내를 본다', async () => {
+      mocks.reward = bought();
+      render(<PremiumOnboardingScreen returnTo="/me" />);
+
+      tapNext();
+
+      expect(await screen.findByText('최대 31,920원')).toBeVisible();
+      expect(screen.getByText('92일 동안 매일 하면 돌려받아요')).toBeVisible();
+    });
+
+    it('환급 안내를 넘기면 알람 등록이 환급 문구로 나온다', async () => {
+      mocks.reward = bought();
+      render(<PremiumOnboardingScreen returnTo="/me" />);
+      tapNext();
+      await screen.findByText('최대 31,920원');
+
+      tapNext();
+
+      expect(await screen.findByText('환급 문구')).toBeVisible();
+    });
+
+    it('알람을 못 쓰는 셸이어도 환급 안내는 보고 나간다', async () => {
+      mocks.alarmShell = false;
+      mocks.reward = bought();
+      render(<PremiumOnboardingScreen returnTo="/me" />);
+      tapNext();
+      await screen.findByText('최대 31,920원');
+
+      tapNext();
+
+      await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/me'));
+    });
+
+    it('환급과 상관없는 상품을 샀으면 환급 안내 없이 알람 등록으로 간다', async () => {
+      render(<PremiumOnboardingScreen returnTo="/me" />);
+
+      tapNext();
+
+      expect(await screen.findByText('기본 문구')).toBeVisible();
+    });
+
+    it('들어오자마자 환급을 미리 받는다 — 「다음」을 눌렀을 때 기다리지 않게', () => {
+      render(<PremiumOnboardingScreen returnTo="/me" />);
+
+      expect(mocks.fetchLatest).toHaveBeenCalledTimes(1);
+    });
+
+    it('환급과 상관없다는 답이면 한 번 더 물어본다 — 서버 반영이 늦었을 수 있다', async () => {
+      // given — 처음 답은 "상관없음", 다시 물으니 방금 산 상품이 잡힌다
+      mocks.fetchLatest.mockImplementation((_, options?: { fresh: boolean }) =>
+        Promise.resolve(options?.fresh ? bought() : null),
+      );
+      render(<PremiumOnboardingScreen returnTo="/me" />);
+
+      tapNext();
+
+      expect(await screen.findByText('최대 31,920원')).toBeVisible();
+    });
+
+    it('들어오면 결제 전에 받아 둔 환급을 새로 받는다', () => {
+      render(<PremiumOnboardingScreen returnTo="/me" />);
+
+      expect(mocks.refreshReward).toHaveBeenCalledTimes(1);
+    });
+
+    it('지난 회차만 남은 사람이 다시 샀을 때도 한 번 더 물어 안내를 보여 준다', async () => {
+      // given — 처음 답은 "끝남", 다시 물으니 방금 산 상품이 잡힌다
+      mocks.fetchLatest.mockImplementation((_, options?: { fresh: boolean }) =>
+        Promise.resolve(options?.fresh ? bought() : endedRewardView(31920)),
+      );
+      render(<PremiumOnboardingScreen returnTo="/me" />);
+
+      tapNext();
+
+      expect(await screen.findByText('최대 31,920원')).toBeVisible();
+    });
+
+    it('환급 응답이 끝내 오지 않으면 안내 없이 알람 등록으로 넘어간다', async () => {
+      // given — 응답이 오지 않는 연결. 결제 직후의 화면이 멈춰 있으면 안 된다
+      vi.useFakeTimers();
+      mocks.fetchLatest.mockImplementation(() => new Promise(() => {}));
+      render(<PremiumOnboardingScreen returnTo="/me" />);
+      tapNext();
+
+      await act(() => vi.advanceTimersByTimeAsync(5000));
+
+      expect(screen.getByText('기본 문구')).toBeVisible();
+      vi.useRealTimers();
+    });
+
+    it('환급을 받는 동안에는 「다음」이 다시 눌리지 않는다', async () => {
+      // given — 겹쳐 눌린 탭이 안내의 「다음」에 떨어지면 안내를 읽지 못하고 넘어간다
+      mocks.reward = bought();
+      render(<PremiumOnboardingScreen returnTo="/me" />);
+
+      tapNext();
+
+      expect(screen.getByRole('button', { name: '다음' })).toBeDisabled();
+      expect(await screen.findByText('최대 31,920원')).toBeVisible();
+    });
+  });
+
   describe('미리보기 — 개발자 묶음에서 ADMIN이 케이스를 골라 연다', () => {
     it('알람 등록까지 보기: 이미 등록한 계정이어도 알람 등록으로 이어진다', () => {
       signIn('ADMIN');
@@ -221,10 +395,23 @@ describe('PremiumOnboardingScreen', () => {
       expect(mocks.replace).not.toHaveBeenCalled();
     });
 
-    it('환급 문구로 보기: 알람 등록이 환급 문구로 나온다', () => {
+    it('환급 문구로 보기: 환영 다음에 환급 규칙이 먼저 나온다', () => {
       signIn('ADMIN');
       render(<PremiumOnboardingScreen returnTo="/me" preview="refund" />);
 
+      fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+      // 쉬면 0원이 된다는 걸 알람보다 먼저 말한다
+      expect(
+        screen.getByText('하루를 통째로 쉬면 쌓인 금액이 0원이 돼요'),
+      ).toBeVisible();
+    });
+
+    it('환급 문구로 보기: 규칙을 넘기면 알람 등록이 환급 문구로 나온다', () => {
+      signIn('ADMIN');
+      render(<PremiumOnboardingScreen returnTo="/me" preview="refund" />);
+
+      fireEvent.click(screen.getByRole('button', { name: '다음' }));
       fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
       expect(screen.getByText('환급 문구')).toBeVisible();

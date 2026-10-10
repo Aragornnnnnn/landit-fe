@@ -116,7 +116,14 @@ const burst = () => {
   });
 };
 
-export const PremiumWelcome = ({ onNext }: { onNext: () => void }) => {
+export const PremiumWelcome = ({
+  onNext,
+  pending = false,
+}: {
+  onNext: () => void;
+  // 다음 화면을 정하느라 기다리는 중 — 버튼이 돌아가며 다시 눌리지 않는다
+  pending?: boolean;
+}) => {
   const reduced = useReducedMotion();
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
   const [phase, setPhase] = useState<Phase>(reduced ? 'open' : 'locked');
@@ -227,7 +234,9 @@ export const PremiumWelcome = ({ onNext }: { onNext: () => void }) => {
         transition={{ duration: 0.35, ease: 'easeOut' }}
         className={`pt-4 ${phase === 'open' ? '' : 'pointer-events-none'}`}
       >
-        <Button onClick={onNext}>다음</Button>
+        <Button onClick={onNext} loading={pending}>
+          다음
+        </Button>
       </motion.div>
     </main>
   );
