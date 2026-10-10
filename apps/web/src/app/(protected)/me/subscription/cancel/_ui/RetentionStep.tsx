@@ -1,6 +1,6 @@
 'use client';
 
-// 환급 안내(⓪)와 사유별 화면(②·③) — 이모지 → 제목 → 본문 → 카드 → 주 버튼 → 작은 링크. 내용은 전부 _model/retention-content가 준다
+// 사유별 화면(②·③) — 이모지 → 제목 → 본문 → 카드 → 주 버튼 → 작은 해지 링크. 내용은 전부 _model/retention-content가 준다
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 
@@ -59,13 +59,13 @@ const Card = ({ card }: { card: RetentionCard }) => {
 interface RetentionStepProps {
   content: RetentionContent;
   onPrimary: () => void;
-  link: React.ReactNode;
+  leaveLink: React.ReactNode;
 }
 
 export const RetentionStep = ({
   content,
   onPrimary,
-  link,
+  leaveLink,
 }: RetentionStepProps) => (
   <>
     <div className="flex flex-1 flex-col items-center overflow-y-auto px-5 pt-9 pb-4 text-center">
@@ -90,7 +90,7 @@ export const RetentionStep = ({
     </div>
     <StepFooter
       primary={<Button onClick={onPrimary}>{content.primary.label}</Button>}
-      link={link}
+      link={leaveLink}
     />
   </>
 );

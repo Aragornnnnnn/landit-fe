@@ -10,7 +10,6 @@ import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-s
 import {
   dailyWon,
   methodRetentionContent,
-  refundNoticeContent,
   refundStakeOf,
   retentionContent,
   type RefundStake,
@@ -207,23 +206,6 @@ describe('환급을 쌓는 중인 사람', () => {
     expect(refundStakeOf(rewardView({ state: 'REVIEW' }))).toBeNull();
   });
 
-  it('사유를 묻기 전에 쌓인 금액과, 해지하면 다음 회차 환급이 없다는 것을 알린다', () => {
-    const content = refundNoticeContent(stake);
-
-    expect(content.title).toBe('지금까지 2,015원을 쌓았어요');
-    expect(content.body).toContain('해지하면 다음 회차부터는 환급이 없어요.');
-    expect(content.cards).toEqual([
-      { kind: 'row', label: '지금까지 쌓인 환급액', value: '2,015원' },
-      { kind: 'row', label: '최대 환급액', value: '59,900원' },
-    ]);
-  });
-
-  it('쌓인 게 없으면 0원을 제목으로 내세우지 않는다', () => {
-    const content = refundNoticeContent({ balanceWon: 0, maximumWon: 59_900 });
-
-    expect(content.title).toBe('오늘부터 다시 쌓을 수 있어요');
-  });
-
   it('가격 부담에는 하루 요금 대신 돌려받는 금액으로 답한다', () => {
     const content = retentionContent(
       'price',
@@ -231,6 +213,9 @@ describe('환급을 쌓는 중인 사람', () => {
     );
 
     expect(content.body[0]).toBe('최대 59,900원까지 돌려받는 플랜이에요.');
-    expect(content.cards).toHaveLength(2);
+    expect(content.cards).toEqual([
+      { kind: 'row', label: '지금까지 쌓인 환급액', value: '2,015원' },
+      { kind: 'row', label: '최대 환급액', value: '59,900원' },
+    ]);
   });
 });

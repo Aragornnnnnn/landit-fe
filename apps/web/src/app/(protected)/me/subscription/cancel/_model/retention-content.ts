@@ -1,4 +1,4 @@
-// 환급 안내(⓪)와 사유별 화면(②·③)의 문구와 카드 — 피그마 확정 플로우(정리 섹션 2373:329) 그대로.
+// 사유별 화면(②·③)의 문구와 카드 — 피그마 확정 플로우(정리 섹션 2373:329) 그대로.
 // 화면은 여기서 돌려준 모양만 그린다. 플랜·체험·이름·기록 같은 분기는 전부 여기서 끝낸다
 import type {
   CancelStayDestination,
@@ -59,7 +59,7 @@ export interface RefundStake {
   maximumWon: number;
 }
 
-/** 쌓는 중일 때만 — 끝났거나 결제를 확인하는 중이면 해지가 바꾸는 것이 없어 알릴 것도 없다 */
+/** 쌓는 중일 때만 — 끝났거나 결제를 확인하는 중이면 돌려받는 금액을 내세울 수 없다 */
 export const refundStakeOf = (reward: RewardView | null): RefundStake | null =>
   reward?.state === 'ACTIVE' && reward.current
     ? {
@@ -85,38 +85,6 @@ interface RetentionContext {
 export const dailyWon = (price: number, days: number) =>
   Math.round(price / days / 10) * 10;
 
-const stakeCards = (stake: RefundStake): RetentionCard[] => [
-  {
-    kind: 'row',
-    label: '지금까지 쌓인 환급액',
-    value: formatWon(stake.balanceWon),
-  },
-  {
-    kind: 'row',
-    label: '최대 환급액',
-    value: formatWon(stake.maximumWon),
-  },
-];
-
-/**
- * ⓪ 화면 — 환급을 쌓는 중인 사람이 사유를 고르기 전에 본다.
- * 해지해도 이번 기간은 끝까지 쌓이지만 그 말을 앞세우지 않는다 — 마음 놓고 해지하라는 말로 읽힌다. 잃는 것(다음 회차)만 사실대로 적는다
- */
-export const refundNoticeContent = (stake: RefundStake): RetentionContent => ({
-  emoji: '💰',
-  // 쌓인 게 없으면 0원을 내세우지 않는다
-  title:
-    stake.balanceWon > 0
-      ? `지금까지 ${formatWon(stake.balanceWon)}을 쌓았어요`
-      : '오늘부터 다시 쌓을 수 있어요',
-  body: [
-    '매일 하는 만큼 돌려받고 있어요.',
-    '해지하면 다음 회차부터는 환급이 없어요.',
-  ],
-  cards: stakeCards(stake),
-  primary: STAY,
-});
-
 // 환급을 쌓는 중이면 하루 요금보다 돌려받는 금액이 가격 이야기의 답이다
 const refundPriceContent = (stake: RefundStake): RetentionContent => ({
   emoji: '💸',
@@ -126,7 +94,14 @@ const refundPriceContent = (stake: RefundStake): RetentionContent => ({
     `최대 ${formatWon(stake.maximumWon)}까지 돌려받는 플랜이에요.`,
     '돌려받는 만큼 실제로 내는 금액이 줄어들어요.',
   ],
-  cards: stakeCards(stake),
+  cards: [
+    {
+      kind: 'row',
+      label: '지금까지 쌓인 환급액',
+      value: formatWon(stake.balanceWon),
+    },
+    { kind: 'row', label: '최대 환급액', value: formatWon(stake.maximumWon) },
+  ],
   primary: STAY,
 });
 

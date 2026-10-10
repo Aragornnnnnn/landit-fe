@@ -13,7 +13,7 @@ interface MethodStepProps {
   method: StudyMethod | null;
   onMethod: (method: StudyMethod) => void;
   onNext: () => void;
-  link: React.ReactNode;
+  leaveLink: React.ReactNode;
 }
 
 const TITLE_ID = 'cancel-method-title';
@@ -22,7 +22,7 @@ export const MethodStep = ({
   method,
   onMethod,
   onNext,
-  link,
+  leaveLink,
 }: MethodStepProps) => (
   <>
     <div className="flex-1 overflow-y-auto px-5 pt-3 pb-4">
@@ -56,7 +56,7 @@ export const MethodStep = ({
           다음
         </Button>
       }
-      link={link}
+      link={leaveLink}
     />
   </>
 );

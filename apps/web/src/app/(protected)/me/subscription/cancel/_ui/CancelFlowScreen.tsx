@@ -1,6 +1,6 @@
 'use client';
 
-// 구독 해지 사유 플로우 — 구독 관리의 "구독 해지하기"가 여기로 온다. 스토어로 나가기 전에 사유를 묻고(①) 사유별 화면(②·③)을 거친다. 환급을 쌓는 중이면 그 앞에 환급 안내(⓪)를 먼저 본다.
+// 구독 해지 사유 플로우 — 구독 관리의 "구독 해지하기"가 여기로 온다. 스토어로 나가기 전에 사유를 묻고(①) 사유별 화면(②·③)을 거친다.
 // 갱신되는 구독(체험·구독 중)에만 열린다. 해지 예약·프로모션 부여·유료 아님은 구독 관리로 돌려보낸다
 import { useEffect, useState } from 'react';
 import { EVENTS, type CancelStayDestination } from '@landit/analytics';
@@ -32,7 +32,6 @@ import { BackHeader } from '@/shared/ui/BackHeader';
 
 import {
   EMPTY_DRAFT,
-  firstStep,
   stepAfterMethod,
   stepAfterReason,
   stepBefore,
@@ -42,32 +41,22 @@ import {
 } from '../_model/cancel-flow';
 import {
   methodRetentionContent,
-  refundNoticeContent,
   refundStakeOf,
   retentionContent,
-  type RefundStake,
 } from '../_model/retention-content';
 import { MethodStep } from './MethodStep';
 import { ReasonStep } from './ReasonStep';
 import { RetentionStep } from './RetentionStep';
 
-// 환급 답을 기다려 주는 한도
-const REWARD_WAIT_MS = 3_000;
-
 interface FlowProps {
   summary: PaidSubscriptionSummary;
   /** BE가 준 결제 스토어 — 셸 플랫폼보다 우선한다 ({@link useStorePlatform}) */
   paidStore: MySubscription['store'];
-  /** 환급을 쌓는 중이 아니면 null */
-  stake: RefundStake | null;
 }
 
-const Flow = ({ summary, paidStore, stake: stakeAtEntry }: FlowProps) => {
+const Flow = ({ summary, paidStore }: FlowProps) => {
   const router = useRouter();
-  // 들어올 때 값으로 붙잡는다 — 도중에 다시 받아져 바뀌면 지나온 스텝과 문구가 어긋난다
-  const [stake] = useState(stakeAtEntry);
-  const hasStake = stake !== null;
-  const [step, setStep] = useState<CancelStep>(() => firstStep(hasStake));
+  const [step, setStep] = useState<CancelStep>({ kind: 'reason' });
   const [draft, setDraft] = useState<CancelDraft>(EMPTY_DRAFT);
 
   const store = STORE[useStorePlatform(paidStore)];
@@ -78,6 +67,8 @@ const Flow = ({ summary, paidStore, stake: stakeAtEntry }: FlowProps) => {
   const { calendar } = useStreakCalendarQuery({ enabled: true });
   const { data: profile } = useLearningLevelQuery();
   const level = toEnglishLevel(profile?.learningLevel ?? null);
+  // 가격 부담 화면이 환급을 쌓는 중인 사람에게 다른 답을 한다 — 스위치가 꺼져 있으면 묻지 않는다
+  const { reward } = useRewardQuery({ enabled: REFUND_CHALLENGE_ENABLED });
 
   const leaveToManage = () => backOrReplace(router, SUBSCRIPTION_MANAGE_PATH);
 
@@ -118,7 +109,7 @@ const Flow = ({ summary, paidStore, stake: stakeAtEntry }: FlowProps) => {
   };
 
   const back = () => {
-    const previous = stepBefore(step, hasStake);
+    const previous = stepBefore(step);
     if (previous) setStep(previous);
     else leaveToManage();
   };
@@ -142,24 +133,6 @@ const Flow = ({ summary, paidStore, stake: stakeAtEntry }: FlowProps) => {
 
   const body = () => {
     switch (step.kind) {
-      case 'refund_notice':
-        // 쌓는 중일 때만 이 스텝으로 온다 — 타입을 좁히려는 것뿐이다
-        if (!stake) return null;
-        return (
-          <RetentionStep
-            content={refundNoticeContent(stake)}
-            onPrimary={leaveToManage}
-            link={
-              <button
-                type="button"
-                className="underline"
-                onClick={() => setStep({ kind: 'reason' })}
-              >
-                해지 계속하기
-              </button>
-            }
-          />
-        );
       case 'reason':
         return (
           <ReasonStep
@@ -176,14 +149,14 @@ const Flow = ({ summary, paidStore, stake: stakeAtEntry }: FlowProps) => {
             method={draft.method}
             onMethod={(method) => setDraft({ ...draft, method })}
             onNext={proceedFromMethod}
-            link={leaveLink}
+            leaveLink={leaveLink}
           />
         );
       case 'retention': {
         const content = retentionContent(step.reason, {
           summary,
+          stake: refundStakeOf(reward),
           nickname,
-          stake,
           totalActiveDays: calendar?.totalActiveDays ?? null,
           levelLabel: level ? `${LEVEL_NAMES[level]} Lv.${level}` : null,
           otherText: draft.otherText,
@@ -192,7 +165,7 @@ const Flow = ({ summary, paidStore, stake: stakeAtEntry }: FlowProps) => {
           <RetentionStep
             content={content}
             onPrimary={() => stay(content.primary.to)}
-            link={leaveLink}
+            leaveLink={leaveLink}
           />
         );
       }
@@ -202,7 +175,7 @@ const Flow = ({ summary, paidStore, stake: stakeAtEntry }: FlowProps) => {
           <RetentionStep
             content={content}
             onPrimary={() => stay(content.primary.to)}
-            link={leaveLink}
+            leaveLink={leaveLink}
           />
         );
       }
@@ -222,26 +195,13 @@ export const CancelFlowScreen = () => {
   const { subscription, isPending, isError } = useSubscriptionQuery();
   const summary = summarizeSubscription(subscription);
   const eligible = canCancelAtStore(summary);
-  // 첫 스텝이 환급을 쌓는 중인지에 달려 있어 답을 듣고 연다 — 스위치가 꺼져 있으면 묻지 않는다
-  const reward = useRewardQuery({ enabled: REFUND_CHALLENGE_ENABLED });
-  // 받아 둔 답 없이 다시 받는 중이어도 기다린다 — 직전 화면에서 한 번 실패했을 수 있다
-  const awaitingReward =
-    REFUND_CHALLENGE_ENABLED &&
-    (!reward.fetched || (reward.fetching && !reward.loaded));
-  // 답이 오지 않아도 해지는 막지 않는다
-  const [gaveUp, setGaveUp] = useState(false);
-  useEffect(() => {
-    if (!awaitingReward) return;
-    const timer = setTimeout(() => setGaveUp(true), REWARD_WAIT_MS);
-    return () => clearTimeout(timer);
-  }, [awaitingReward]);
 
   // 여기서 해지할 구독이 없으면 구독 관리로 — 그쪽이 상태에 맞는 행(해지 취소·페이월)을 보여준다
   useEffect(() => {
     if (!isPending && !eligible) router.replace(SUBSCRIPTION_MANAGE_PATH);
   }, [isPending, eligible, router]);
 
-  if (isPending || isError || !eligible || (awaitingReward && !gaveUp)) {
+  if (isPending || isError || !eligible) {
     return (
       <main className="flex h-dvh flex-col bg-background">
         <BackHeader
@@ -251,11 +211,5 @@ export const CancelFlowScreen = () => {
       </main>
     );
   }
-  return (
-    <Flow
-      summary={summary}
-      paidStore={subscription?.store}
-      stake={refundStakeOf(reward.reward)}
-    />
-  );
+  return <Flow summary={summary} paidStore={subscription?.store} />;
 };
