@@ -1,4 +1,4 @@
-// 사유별 화면(②·③)의 문구와 카드 — 피그마 확정 플로우(정리 섹션 2373:329) 그대로.
+// 환급 안내(⓪)와 사유별 화면(②·③)의 문구와 카드 — 피그마 확정 플로우(정리 섹션 2373:329) 그대로.
 // 화면은 여기서 돌려준 모양만 그린다. 플랜·체험·이름·기록 같은 분기는 전부 여기서 끝낸다
 import type {
   CancelStayDestination,
@@ -61,7 +61,8 @@ export interface RefundStake {
 
 /** 쌓는 중일 때만 — 끝났거나 결제를 확인하는 중이면 해지가 바꾸는 것이 없어 알릴 것도 없다 */
 export const refundStakeOf = (reward: RewardView | null): RefundStake | null =>
-  reward?.state === 'ACTIVE' && reward.current
+  // 받을 금액이 0인 회차는 걸어 둔 것이 없다 — "최대 0원"을 말하지 않는다
+  reward?.state === 'ACTIVE' && reward.current && reward.current.maximumWon > 0
     ? {
         balanceWon: reward.current.balanceWon,
         maximumWon: reward.current.maximumWon,
@@ -71,7 +72,7 @@ export const refundStakeOf = (reward: RewardView | null): RefundStake | null =>
 interface RetentionContext {
   summary: PaidSubscriptionSummary;
   /** 환급을 쌓는 중이 아니면 null */
-  refund: RefundStake | null;
+  stake: RefundStake | null;
   /** 마이페이지가 쓰는 이름 — 없으면 "게스트" */
   nickname: string;
   /** 스트릭 달력의 누적 학습일. 아직 못 받았으면 null */
@@ -84,6 +85,50 @@ interface RetentionContext {
 /** 하루 환산 요금 — 10원 단위로 반올림한다 (월 14,900 → 500, 연 58,500 → 160) */
 export const dailyWon = (price: number, days: number) =>
   Math.round(price / days / 10) * 10;
+
+const stakeCards = (stake: RefundStake): RetentionCard[] => [
+  {
+    kind: 'row',
+    label: '지금까지 쌓인 환급액',
+    value: formatWon(stake.balanceWon),
+  },
+  {
+    kind: 'row',
+    label: '최대 환급액',
+    value: formatWon(stake.maximumWon),
+  },
+];
+
+/**
+ * ⓪ 화면 — 환급을 쌓는 중인 사람이 사유를 고르기 전에 본다.
+ * 해지해도 이번 기간은 끝까지 쌓이지만 그 말을 앞세우지 않는다 — 마음 놓고 해지하라는 말로 읽힌다. 잃는 것(다음 회차)만 사실대로 적는다
+ */
+export const refundNoticeContent = (stake: RefundStake): RetentionContent => ({
+  emoji: '💰',
+  // 쌓인 게 없으면 0원을 내세우지 않는다
+  title:
+    stake.balanceWon > 0
+      ? `지금까지 ${formatWon(stake.balanceWon)}을 쌓았어요`
+      : '오늘부터 다시 쌓을 수 있어요',
+  body: [
+    '매일 하는 만큼 돌려받고 있어요.',
+    '해지하면 다음 회차부터는 환급이 없어요.',
+  ],
+  cards: stakeCards(stake),
+  primary: STAY,
+});
+
+// 환급을 쌓는 중이면 하루 요금보다 돌려받는 금액이 가격 이야기의 답이다
+const refundPriceContent = (stake: RefundStake): RetentionContent => ({
+  emoji: '💸',
+  title: '가격이 부담되셨군요',
+  body: [
+    `매일 하면 최대 ${formatWon(stake.maximumWon)}을 돌려받아요.`,
+    '돌려받는 만큼 실제로 내는 금액이 줄어들어요.',
+  ],
+  cards: stakeCards(stake),
+  primary: STAY,
+});
 
 const PLAN_DAYS: Record<SubscriptionPlan, number> = {
   monthly: 30,
@@ -106,55 +151,11 @@ const PLAN_PRICE_PREFIX: Record<SubscriptionPlan, string | null> = {
   yearly: '연',
 };
 
-const stakeCards = (refund: RefundStake): RetentionCard[] => [
-  {
-    kind: 'row',
-    label: '지금까지 쌓인 환급액',
-    value: formatWon(refund.balanceWon),
-  },
-  {
-    kind: 'row',
-    label: '끝까지 채우면 받는 금액',
-    value: formatWon(refund.maximumWon),
-  },
-];
-
-/**
- * ⓪ 화면 — 환급을 쌓는 중인 사람이 사유를 고르기 전에 본다.
- * 해지해도 이번 기간은 끝까지 쌓이지만 그 말을 앞세우지 않는다 — 마음 놓고 해지하라는 말로 읽힌다. 잃는 것(다음 회차)만 사실대로 적는다
- */
-export const refundNoticeContent = (refund: RefundStake): RetentionContent => ({
-  emoji: '💰',
-  // 쌓인 게 없으면 0원을 내세우지 않고 받을 수 있는 금액으로 말한다
-  title:
-    refund.balanceWon > 0
-      ? `지금까지 ${formatWon(refund.balanceWon)}을 쌓았어요`
-      : `끝까지 채우면 ${formatWon(refund.maximumWon)}을 돌려받아요`,
-  body: [
-    '매일 하는 만큼 돌려받고 있어요.',
-    '해지하면 다음 회차부터는 환급이 없어요.',
-  ],
-  cards: stakeCards(refund),
-  primary: STAY,
-});
-
-// 환급을 쌓는 중이면 하루 요금보다 돌려받는 금액이 가격 이야기의 답이다
-const refundPriceContent = (refund: RefundStake): RetentionContent => ({
-  emoji: '💸',
-  title: '가격이 부담되셨군요',
-  body: [
-    `매일 하면 최대 ${formatWon(refund.maximumWon)}을 돌려받아요.`,
-    '돌려받는 만큼 실제로 내는 금액이 줄어들어요.',
-  ],
-  cards: stakeCards(refund),
-  primary: STAY,
-});
-
 const priceContent = (
   summary: PaidSubscriptionSummary,
-  refund: RefundStake | null,
+  stake: RefundStake | null,
 ): RetentionContent => {
-  if (refund) return refundPriceContent(refund);
+  if (stake) return refundPriceContent(stake);
   const { plan, price } = summary;
   // 플랜이나 실제 결제액을 모르면 숫자를 지어내지 않는다 — 문구도 카드도 없이
   if (!plan || price === null) {
@@ -292,7 +293,7 @@ export const retentionContent = (
 ): RetentionContent => {
   switch (reason) {
     case 'price':
-      return priceContent(context.summary, context.refund);
+      return priceContent(context.summary, context.stake);
     case 'progress':
       return progressContent(context);
     case 'other':

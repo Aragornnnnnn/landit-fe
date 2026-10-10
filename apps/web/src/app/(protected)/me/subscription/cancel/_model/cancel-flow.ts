@@ -26,8 +26,8 @@ export const EMPTY_DRAFT: CancelDraft = {
 };
 
 /** 처음 보는 스텝 — 환급을 쌓는 중이면 해지가 환급에 어떤 뜻인지부터 알린다 */
-export const firstStep = (hasRefund: boolean): CancelStep =>
-  hasRefund ? { kind: 'refund_notice' } : { kind: 'reason' };
+export const firstStep = (hasStake: boolean): CancelStep =>
+  hasStake ? { kind: 'refund_notice' } : { kind: 'reason' };
 
 /** 기타를 골랐으면 적은 글이 있어야 넘어간다. 빈칸·공백만은 안 적은 것이다 */
 export const canProceedFromReason = (draft: CancelDraft) => {
@@ -51,13 +51,13 @@ export const stepAfterMethod = (method: StudyMethod): CancelStep => ({
 /** 뒤로가기 — 한 칸 앞 스텝, 처음 본 스텝에서는 null(플로우 밖으로) */
 export const stepBefore = (
   step: CancelStep,
-  hasRefund: boolean,
+  hasStake: boolean,
 ): CancelStep | null => {
   switch (step.kind) {
     case 'refund_notice':
       return null;
     case 'reason':
-      return hasRefund ? { kind: 'refund_notice' } : null;
+      return hasStake ? { kind: 'refund_notice' } : null;
     case 'retention':
     case 'method':
       return { kind: 'reason' };

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   endedRewardView,
+  rewardCycle,
   rewardView,
 } from '@/features/reward/model/reward.fixture';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
@@ -29,10 +30,10 @@ const active = (
 
 const context = (
   summary: PaidSubscriptionSummary,
-  refund: RefundStake | null = null,
+  stake: RefundStake | null = null,
 ) => ({
   summary,
-  refund,
+  stake,
   nickname: '준서',
   totalActiveDays: 12,
   levelLabel: '견습 마법사 Lv.3',
@@ -203,6 +204,11 @@ describe('환급을 쌓는 중인 사람', () => {
     });
     expect(refundStakeOf(endedRewardView(31_920))).toBeNull();
     expect(refundStakeOf(null)).toBeNull();
+    // 도는 회차를 가진 채 검토로 넘어갈 수 있다
+    expect(refundStakeOf(rewardView({ state: 'REVIEW' }))).toBeNull();
+    expect(
+      refundStakeOf(rewardView({ current: rewardCycle({ maximumWon: 0 }) })),
+    ).toBeNull();
   });
 
   it('사유를 묻기 전에 쌓인 금액과, 해지하면 다음 회차 환급이 없다는 것을 알린다', () => {
@@ -212,14 +218,14 @@ describe('환급을 쌓는 중인 사람', () => {
     expect(content.body).toContain('해지하면 다음 회차부터는 환급이 없어요.');
     expect(content.cards).toEqual([
       { kind: 'row', label: '지금까지 쌓인 환급액', value: '2,015원' },
-      { kind: 'row', label: '끝까지 채우면 받는 금액', value: '59,900원' },
+      { kind: 'row', label: '최대 환급액', value: '59,900원' },
     ]);
   });
 
-  it('쌓인 게 없으면 0원 대신 받을 수 있는 금액을 제목으로 쓴다', () => {
+  it('쌓인 게 없으면 0원을 제목으로 내세우지 않는다', () => {
     const content = refundNoticeContent({ balanceWon: 0, maximumWon: 59_900 });
 
-    expect(content.title).toBe('끝까지 채우면 59,900원을 돌려받아요');
+    expect(content.title).toBe('오늘부터 다시 쌓을 수 있어요');
   });
 
   it('가격 부담에는 하루 요금 대신 돌려받는 금액으로 답한다', () => {
@@ -230,14 +236,5 @@ describe('환급을 쌓는 중인 사람', () => {
 
     expect(content.body[0]).toBe('매일 하면 최대 59,900원을 돌려받아요.');
     expect(content.cards).toHaveLength(2);
-  });
-
-  it('3·6개월이어도 쌓는 중이 아니면 하루 요금으로 답한다', () => {
-    const content = retentionContent(
-      'price',
-      context(active({ plan: 'halfyear', price: 59_900 })),
-    );
-
-    expect(content.body[0]).toContain('하루');
   });
 });

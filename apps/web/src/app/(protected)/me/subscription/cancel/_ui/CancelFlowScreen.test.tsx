@@ -1,6 +1,12 @@
 // CancelFlowScreen — 해지할 구독이 있을 때만 열리고, ①→②(→③)를 거치며 이벤트가 한 번씩 나간다
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { RewardView } from '@/features/reward/api/reward';
@@ -20,7 +26,13 @@ const mocks = vi.hoisted(() => ({
     isError: false,
   },
   learningLevel: { data: { learningLevel: 3 } },
-  reward: { reward: null as RewardView | null, fetched: true },
+  reward: {
+    reward: null as RewardView | null,
+    loaded: true,
+    fetched: true,
+    fetching: false,
+  },
+  refundEnabled: true,
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 vi.mock('@/features/reward/model/useRewardQuery', () => ({
@@ -30,7 +42,9 @@ vi.mock(
   '@/features/subscription/model/paywall-gate/payment-flag',
   async (original) => ({
     ...(await original<object>()),
-    REFUND_CHALLENGE_ENABLED: true,
+    get REFUND_CHALLENGE_ENABLED() {
+      return mocks.refundEnabled;
+    },
   }),
 );
 vi.mock('next/navigation', () => ({
@@ -81,6 +95,14 @@ const renderScreen = (subscription: MySubscription | null) => {
   );
 };
 
+// 환급 답을 들은 상태 — 참여자가 아니면 null
+const answered = (reward: RewardView | null) => ({
+  reward,
+  loaded: true,
+  fetched: true,
+  fetching: false,
+});
+
 const chooseReason = (label: string) => {
   fireEvent.click(screen.getByRole('radio', { name: label }));
   fireEvent.click(screen.getByRole('button', { name: '다음' }));
@@ -90,7 +112,8 @@ beforeEach(() => {
   mocks.track.mockClear();
   mocks.replace.mockClear();
   mocks.push.mockClear();
-  mocks.reward = { reward: null, fetched: true };
+  mocks.reward = answered(null);
+  mocks.refundEnabled = true;
 });
 afterEach(cleanup);
 
@@ -271,7 +294,7 @@ describe('환급을 쌓는 중인 사람', () => {
     premium({ productId: 'com.saynow.app.premium.halfyear', price: 59_900 });
 
   it('사유를 묻기 전에 환급 안내를 먼저 보고, 해지를 계속하면 사유로 넘어간다', () => {
-    mocks.reward = { reward: rewardView(), fetched: true };
+    mocks.reward = answered(rewardView());
     renderScreen(halfyear());
 
     expect(
@@ -285,7 +308,7 @@ describe('환급을 쌓는 중인 사람', () => {
   });
 
   it('환급 안내에서 남기로 하면 구독 관리로 돌아간다', () => {
-    mocks.reward = { reward: rewardView(), fetched: true };
+    mocks.reward = answered(rewardView());
     renderScreen(halfyear());
 
     fireEvent.click(screen.getByRole('button', { name: '조금 더 써볼게요' }));
@@ -294,12 +317,55 @@ describe('환급을 쌓는 중인 사람', () => {
   });
 
   it('환급 답을 듣기 전에는 사유도 안내도 열지 않는다 — 어느 쪽이 첫 화면인지 모른다', () => {
-    mocks.reward = { reward: null, fetched: false };
+    mocks.reward = { ...answered(null), loaded: false, fetched: false };
     renderScreen(halfyear());
 
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
     expect(
       screen.queryByText('지금까지 12,300원을 쌓았어요'),
     ).not.toBeInTheDocument();
+  });
+
+  it('한 번 실패한 뒤 다시 받는 중에도 기다린다 — 답 없이 열면 환급 안내가 빠진다', () => {
+    mocks.reward = { ...answered(null), loaded: false, fetching: true };
+    renderScreen(halfyear());
+
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
+  });
+
+  it('답이 오지 않아도 잠시 뒤에는 사유부터 연다 — 해지를 막지 않는다', () => {
+    vi.useFakeTimers();
+    mocks.reward = { ...answered(null), loaded: false, fetched: false };
+    renderScreen(halfyear());
+
+    act(() => {
+      vi.advanceTimersByTime(3_000);
+    });
+
+    expect(screen.getAllByRole('radio')).toHaveLength(7);
+    vi.useRealTimers();
+  });
+
+  it('스위치가 꺼져 있으면 환급 답을 기다리지 않고 사유부터 연다', () => {
+    mocks.refundEnabled = false;
+    mocks.reward = { ...answered(null), loaded: false, fetched: false };
+    renderScreen(halfyear());
+
+    expect(screen.getAllByRole('radio')).toHaveLength(7);
+  });
+
+  it('보는 도중 환급이 다시 받아져 바뀌어도 들어올 때 본 흐름을 지킨다', () => {
+    const { rerender } = renderScreen(halfyear());
+    expect(screen.getAllByRole('radio')).toHaveLength(7);
+
+    mocks.reward = answered(rewardView());
+    rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <CancelFlowScreen />
+      </QueryClientProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: '뒤로 가기' }));
+
+    expect(screen.queryByText(/쌓았어요/)).not.toBeInTheDocument();
   });
 });
