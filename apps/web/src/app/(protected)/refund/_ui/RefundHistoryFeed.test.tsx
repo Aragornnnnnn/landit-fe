@@ -191,4 +191,16 @@ describe('RefundHistoryFeed', () => {
     ).not.toBeInTheDocument();
     expect(screen.getByText('내역을 불러오고 있어요')).toBeInTheDocument();
   });
+
+  it('이어 받기 알림 자리는 받기 전부터 있고, 받는 동안 그 안에 글자가 들어온다', () => {
+    given({ hasMore: true });
+    const { rerender } = render(<RefundHistoryFeed />);
+    const notice = screen.getByRole('status');
+    expect(notice).toBeEmptyDOMElement();
+
+    given({ hasMore: true, fetching: true, loadingMore: true });
+    rerender(<RefundHistoryFeed />);
+
+    expect(notice).toHaveTextContent('내역을 불러오고 있어요');
+  });
 });

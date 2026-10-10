@@ -48,15 +48,17 @@ export const RefundHistoryFeed = () => {
         onRetry={retry}
       />
 
-      {loadingMore && (
-        <p
-          role="status"
-          className={`flex items-center justify-center gap-2 ${NOTICE_CLASS}`}
-        >
-          <span className="size-4 animate-spin rounded-full border-2 border-border border-t-primary" />
-          내역을 불러오고 있어요
-        </p>
-      )}
+      {/* 알림 자리는 늘 두고 안의 글자만 바꾼다 — 새로 생긴 알림 자리는 읽어 주지 않는 낭독기가 있다 */}
+      <div role="status" aria-live="polite">
+        {loadingMore && (
+          <p
+            className={`flex items-center justify-center gap-2 ${NOTICE_CLASS}`}
+          >
+            <span className="size-4 animate-spin rounded-full border-2 border-border border-t-primary" />
+            내역을 불러오고 있어요
+          </p>
+        )}
+      </div>
       {moreFailed && !loadingMore && (
         <RetryLine message="이전 내역을 불러오지 못했어요" onRetry={loadMore} />
       )}
