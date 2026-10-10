@@ -181,7 +181,7 @@ describe('usePurchase — 결제', () => {
     });
   });
 
-  it('결제가 성공하고 서버가 유료로 바뀌면 완료를 남기고 다음 화면으로 넘긴다', async () => {
+  it('결제가 성공하고 서버가 유료로 바뀌면 완료를 남기고 결제로 풀렸다고 넘긴다', async () => {
     mocks.purchaseViaBridge.mockResolvedValue({
       type: 'PURCHASE_RESULT',
       status: 'success',
@@ -191,6 +191,7 @@ describe('usePurchase — 결제', () => {
     await act(() => result.current.purchase('yearly'));
 
     await waitFor(() => expect(onUnlocked).toHaveBeenCalledTimes(1));
+    expect(onUnlocked).toHaveBeenCalledWith('purchase');
     expect(mocks.track).toHaveBeenCalledWith('Purchase Completed', {
       plan: 'yearly',
       unlocked: true,
@@ -322,7 +323,7 @@ describe('usePurchase — 복원', () => {
     });
   });
 
-  it('복원이 되고 서버가 유료면 다음 화면으로 넘긴다', async () => {
+  it('복원이 되고 서버가 유료면 복원으로 풀렸다고 넘긴다', async () => {
     mocks.restoreViaBridge.mockResolvedValue({
       type: 'RESTORE_RESULT',
       status: 'success',
@@ -332,6 +333,7 @@ describe('usePurchase — 복원', () => {
     await act(() => result.current.restore());
 
     await waitFor(() => expect(onUnlocked).toHaveBeenCalledTimes(1));
+    expect(onUnlocked).toHaveBeenCalledWith('restore');
     expect(mocks.track).toHaveBeenCalledWith('Purchase Restored', {
       succeeded: true,
     });

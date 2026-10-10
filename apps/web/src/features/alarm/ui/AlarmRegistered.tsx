@@ -11,7 +11,7 @@ import { haptic } from '@/shared/haptics';
 import { EASE_STANDARD } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
 
-import { ALARM_COPY } from '../model/alarm-copy';
+import { useAlarmCopy } from '../model/alarm-copy';
 import { formatAlarmTime } from '../model/alarm-time';
 import { PledgeSentence, TimeChip } from './PledgeSentence';
 
@@ -59,6 +59,7 @@ const Completed = ({
   onDone: () => void;
 }) => {
   const reduced = useReducedMotion();
+  const copy = useAlarmCopy();
   const [phase, setPhase] = useState<Phase>(reduced ? 'confirmed' : 'pledge');
   // 부모가 다시 그려져(알람 상태 회신 등) onDone이 바뀌어도 넘어갈 시계를 처음부터 다시 재지 않는다
   const onDoneRef = useRef(onDone);
@@ -141,7 +142,7 @@ const Completed = ({
                 transition: { duration: 0.22, ease: 'easeIn' },
               }}
             >
-              {swapped ? '알려드릴게요!' : ALARM_COPY.pledgeClosing}
+              {swapped ? '알려드릴게요!' : copy.pledgeClosing}
             </motion.span>
           </AnimatePresence>
         </p>

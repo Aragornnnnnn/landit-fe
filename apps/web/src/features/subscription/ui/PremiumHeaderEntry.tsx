@@ -5,9 +5,14 @@
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
-import { paywallPath, SCENARIO_PATH } from '@/shared/lib/routes';
+import {
+  paywallPath,
+  premiumOnboardingPath,
+  SCENARIO_PATH,
+} from '@/shared/lib/routes';
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
 import type { PaywallPromo } from '../api/subscription';
@@ -22,6 +27,7 @@ import {
 } from '../model/exit-promo/usePromoOffer';
 import { useSubscriptionQuery } from '../model/my-subscription/useSubscriptionQuery';
 import { usePaymentLive } from '../model/paywall-gate/usePaymentLive';
+import type { UnlockReason } from '../model/purchase/usePurchase';
 import { PromoClock } from './exit-promo/PromoClock';
 import { PromoSheet } from './exit-promo/PromoSheet';
 
@@ -57,9 +63,34 @@ export const PremiumHeaderEntry = () => {
     clearPromoHandoff();
   };
 
-  // 이미 유료거나 결제할 수 없는 환경이거나 구독 상태를 아직 모를 때는 로고를 둔다 — 결제한 사람에게 구독 권유가 잠깐이라도 보이면 안 된다
+  // 할인 시트는 지금 화면 위에서 결제한다 — 결제면 프리미엄 온보딩을 거쳐 보던 화면(쿼리까지)으로 돌아오고, 복원은 시트만 닫는다
+  const router = useRouter();
+  const unlock = (reason: UnlockReason) => {
+    closeSheet();
+    if (reason === 'purchase') {
+      router.push(premiumOnboardingPath(location.pathname + location.search));
+    }
+  };
+
+  // 배지가 보이는 동안 매달아 둔다 — 스토어 가격을 미리 받아 두면 눌렀을 때 기다리지 않는다
+  const sheet = display && (
+    <PromoSheet
+      open={openedPromo !== null}
+      {...display}
+      onClose={closeSheet}
+      onUnlocked={unlock}
+    />
+  );
+
+  // 이미 유료거나 결제할 수 없는 환경이거나 구독 상태를 아직 모를 때는 로고를 둔다 — 결제한 사람에게 구독 권유가 잠깐이라도 보이면 안 된다.
+  // 다만 결제하는 사이 다른 조회로 유료가 먼저 들어와도 열린 시트는 남긴다 — 사라지면 결제 결과를 받지 못해 프리미엄 온보딩으로 못 간다
   if (!paymentLive || isPending || isError || subscription?.premium) {
-    return <HomeLogo />;
+    return (
+      <>
+        <HomeLogo />
+        {openedPromo !== null && sheet}
+      </>
+    );
   }
 
   // 노출 계측은 시트가 실제로 그려질 때 시트 쪽에서 낸다 — 여기서 내면 못 그린 경우까지 센다
@@ -93,15 +124,7 @@ export const PremiumHeaderEntry = () => {
         </Link>
       )}
 
-      {/* 배지가 보이는 동안 매달아 둔다 — 스토어 가격을 미리 받아 두면 눌렀을 때 기다리지 않는다 */}
-      {display && (
-        <PromoSheet
-          open={openedPromo !== null}
-          {...display}
-          onClose={closeSheet}
-          onUnlocked={closeSheet}
-        />
-      )}
+      {sheet}
     </>
   );
 };

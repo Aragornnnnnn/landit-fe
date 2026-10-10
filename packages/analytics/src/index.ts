@@ -21,6 +21,7 @@ export {
   type FeedbackType,
   type HomeTab,
   type NotificationPermissionSource,
+  type AlarmSetupSource,
   type SatisfactionTalk,
   type SatisfactionMoment,
   type SatisfactionAnswer,

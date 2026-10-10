@@ -1,10 +1,15 @@
 'use client';
 
 // 알람 등록 흐름 — 알람 소개 → 시간 정하고 3초 다짐(여기서 저장) → 권한 → 등록 완료.
-// 마이페이지(뒤로 가기)와 결제 직후 온보딩(「다음에 할게요」)이 같이 쓴다. 권한을 거절해도 다짐은 저장돼 있고, 완료 화면이 한 번 더 켜게 권한다
+// 마이페이지(뒤로 가기)와 프리미엄 온보딩(「다음에 할게요」)이 같이 쓴다. 권한을 거절해도 다짐은 저장돼 있고, 완료 화면이 한 번 더 켜게 권한다
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS, type AlarmSetupSource } from '@landit/analytics';
 import type { AlarmStatus, AlarmTime } from '@landit/bridge';
 
+import { track } from '@/shared/analytics';
+
+import { alarmCopy, AlarmCopyContext } from '../model/alarm-copy';
+import { toServerTime } from '../model/alarm-time';
 import { useAlarmUnblock } from '../model/useAlarmUnblock';
 import { useSaveAlarmMutation } from '../model/useSaveAlarmMutation';
 import { AlarmIntro } from './AlarmIntro';
@@ -23,15 +28,21 @@ export const AlarmSetupFlow = ({
   onBack,
   onSkip,
   onDone,
+  refund,
+  source,
 }: {
   /** 셸 알람 상태 — 화면이 이미 묻고 있는 것을 받아 같은 조회를 두 번 하지 않는다 */
   status: AlarmStatus | null;
   initialTime: AlarmTime;
   /** 소개 화면에서 뒤로 — 마이페이지 */
   onBack?: () => void;
-  /** 소개 화면에서 「다음에 할게요」 — 결제 직후 온보딩 */
+  /** 소개 화면에서 「다음에 할게요」 — 프리미엄 온보딩 */
   onSkip?: () => void;
   onDone: () => void;
+  /** 환급 참여자인가 — 소개 제목과 다짐 문장이 환급 톤이 된다 */
+  refund: boolean;
+  /** 흐름을 연 곳 — 등록·건너뜀 계측에 싣는다 */
+  source: AlarmSetupSource;
 }) => {
   const { blocker, setupStep, unblock, sheet, closeSheet } =
     useAlarmUnblock(status);
@@ -70,6 +81,7 @@ export const AlarmSetupFlow = ({
       { time: next, enabled: true },
       {
         onSuccess: () => {
+          track(EVENTS.ALARM_REGISTERED, { source, time: toServerTime(next) });
           const wait = Math.max(0, PLEDGED_MIN_MS - (Date.now() - startedAt));
           permissionTimer.current = setTimeout(
             () => void askPermission(),
@@ -82,18 +94,29 @@ export const AlarmSetupFlow = ({
     );
   };
 
+  const copy = alarmCopy(refund);
+  // 「다음에 할게요」 — 프리미엄 온보딩에만 있다
+  const skip =
+    onSkip &&
+    (() => {
+      track(EVENTS.ALARM_SETUP_SKIPPED, { source });
+      onSkip();
+    });
+
   if (step === 'intro') {
     return (
-      <AlarmIntro
-        onNext={() => setStep('pledge')}
-        onBack={onBack}
-        onSkip={onSkip}
-      />
+      <AlarmCopyContext value={copy}>
+        <AlarmIntro
+          onNext={() => setStep('pledge')}
+          onBack={onBack}
+          onSkip={skip}
+        />
+      </AlarmCopyContext>
     );
   }
 
   return (
-    <>
+    <AlarmCopyContext value={copy}>
       {step === 'registered' ? (
         <AlarmRegistered
           time={time}
@@ -118,6 +141,6 @@ export const AlarmSetupFlow = ({
           if (closed === 'android-settings') setStep('registered');
         }}
       />
-    </>
+    </AlarmCopyContext>
   );
 };

@@ -213,6 +213,12 @@ export const paywallPath = ({
   return suffix ? `${PAYWALL_PATH}?${suffix}` : PAYWALL_PATH;
 };
 
+// 프리미엄 온보딩 — 혜택이 열리는 걸 보여 주고 알람 등록으로 잇는다. from은 다 본 뒤 갈 곳(페이월이 가려던 곳)
+export const PREMIUM_ONBOARDING_PATH = '/premium/onboarding';
+
+export const premiumOnboardingPath = (from: string) =>
+  `${PREMIUM_ONBOARDING_PATH}?${new URLSearchParams({ from })}`;
+
 // 마이페이지와 그 아래 화면. 구독 관리는 유료 사용자가 들어오는 자리이고, 아니면 페이월로 안내한다
 export const MY_PAGE_PATH = '/me';
 export const SUBSCRIPTION_MANAGE_PATH = '/me/subscription';
