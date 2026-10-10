@@ -60,14 +60,16 @@ describe('LoginButton', () => {
     expect(button).toHaveAttribute('aria-busy', 'true');
   });
 
-  it('recent면 버튼 위에 「최근 로그인」이 붙고 버튼 이름은 그대로다', () => {
+  it('recent면 「최근 로그인」이 버튼 설명으로 붙고 버튼 이름은 그대로다', () => {
     // given — 지난번에 이 방법으로 로그인한 기기
     render(<LoginButton label="구글로 로그인하기" icon={<svg />} recent />);
 
-    // then — 표시는 보이지만 버튼을 찾는 이름에는 섞이지 않는다
-    expect(screen.getByText('최근 로그인')).toBeInTheDocument();
+    // then — 보조기기에는 설명으로 읽히고 버튼을 찾는 이름에는 섞이지 않는다
     expect(
-      screen.getByRole('button', { name: '구글로 로그인하기' }),
+      screen.getByRole('button', {
+        name: '구글로 로그인하기',
+        description: '최근 로그인',
+      }),
     ).toBeInTheDocument();
   });
 

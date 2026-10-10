@@ -27,12 +27,14 @@ export const SocialLoginButtons = ({
     () => /Android/i.test(navigator.userAgent),
     false,
   );
-  const recent = useClientOnlyValue(readLastLoginProvider, null);
+  // 로그인이 진행 중이면 표시를 내린다 — 다른 방법으로 들어가는 중에 지난 방법을 가리키지 않게
+  const lastProvider = useClientOnlyValue(readLastLoginProvider, null);
+  const recent = busy ? null : lastProvider;
 
   return (
     <div className={`${styles.buttons} flex flex-col gap-3`}>
       {error && (
-        <p className="text-center text-sm font-medium text-destructive">
+        <p className="mb-2 text-center text-sm font-medium text-destructive">
           {error}
         </p>
       )}

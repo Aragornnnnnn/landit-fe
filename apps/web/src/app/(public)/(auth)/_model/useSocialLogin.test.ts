@@ -3,6 +3,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { readLastLoginProvider } from './last-login-provider';
 import { useSocialLogin } from './useSocialLogin';
 
 vi.mock('next/navigation', () => ({
@@ -105,7 +106,7 @@ describe('useSocialLogin — 로그인한 방법 남기기', () => {
     });
 
     // then
-    expect(localStorage.getItem('landit-last-login-provider')).toBe('google');
+    expect(readLastLoginProvider()).toBe('google');
   });
 
   it('백엔드 로그인이 실패하면 남기지 않는다', async () => {
@@ -119,6 +120,6 @@ describe('useSocialLogin — 로그인한 방법 남기기', () => {
     });
 
     // then
-    expect(localStorage.getItem('landit-last-login-provider')).toBeNull();
+    expect(readLastLoginProvider()).toBeNull();
   });
 });

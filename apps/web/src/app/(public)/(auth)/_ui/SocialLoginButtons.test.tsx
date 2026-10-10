@@ -1,5 +1,5 @@
 // 로그인 버튼 묶음 — 마지막으로 로그인한 방법의 버튼에만 「최근 로그인」이 붙는지 검증한다
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { SocialLoginButtons } from './SocialLoginButtons';
@@ -21,16 +21,11 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-// 「최근 로그인」이 붙은 버튼의 라벨들
+// 「최근 로그인」이 설명으로 붙은 버튼의 라벨들
 const recentLabels = () =>
   screen
-    .getAllByText('최근 로그인')
-    .map(
-      (badge) =>
-        within(badge.closest('[data-recent]') as HTMLElement).getByRole(
-          'button',
-        ).textContent,
-    );
+    .getAllByRole('button', { description: '최근 로그인' })
+    .map((button) => button.textContent);
 
 describe('SocialLoginButtons — 최근 로그인 표시', () => {
   it('마지막으로 로그인한 방법의 버튼에만 표시가 붙는다', () => {
@@ -64,6 +59,19 @@ describe('SocialLoginButtons — 최근 로그인 표시', () => {
     expect(screen.queryByText('최근 로그인')).toBeNull();
     expect(
       screen.queryByRole('button', { name: /애플로 로그인하기/ }),
+    ).toBeNull();
+  });
+
+  it('로그인이 진행 중이면 표시를 내린다', () => {
+    // given — 지난번엔 구글이었는데 이번엔 카카오로 들어가는 중
+    localStorage.setItem(STORAGE_KEY, 'google');
+
+    // when
+    render(<SocialLoginButtons pending="kakao" />);
+
+    // then
+    expect(
+      screen.queryByRole('button', { description: '최근 로그인' }),
     ).toBeNull();
   });
 });

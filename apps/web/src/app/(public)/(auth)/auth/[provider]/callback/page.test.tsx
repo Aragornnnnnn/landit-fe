@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { readLastLoginProvider } from '../../../_model/last-login-provider';
 import SocialLoginCallbackPage from './page';
 
 vi.mock('next/navigation', () => ({
@@ -96,7 +97,7 @@ describe('SocialLoginCallbackPage', () => {
     }));
 
     // then
-    expect(localStorage.getItem('landit-last-login-provider')).toBe('kakao');
+    expect(readLastLoginProvider()).toBe('kakao');
   });
 
   it('로그인에 실패하면 로그인한 방법을 남기지 않는다', async () => {
@@ -108,6 +109,6 @@ describe('SocialLoginCallbackPage', () => {
     await screen.findByText('토큰 교환에 실패했어요.');
 
     // then
-    expect(localStorage.getItem('landit-last-login-provider')).toBeNull();
+    expect(readLastLoginProvider()).toBeNull();
   });
 });
