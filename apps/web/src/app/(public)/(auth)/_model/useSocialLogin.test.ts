@@ -19,7 +19,7 @@ vi.mock('@/shared/auth/auth-store', () => ({
 const { postToNative, native, socialLogin } = vi.hoisted(() => ({
   postToNative: vi.fn<(message: unknown) => boolean>(() => true),
   // 네이티브가 웹으로 보내는 메시지를 테스트가 대신 흘려보낸다
-  native: { emit: (_message: unknown): unknown => undefined },
+  native: { emit: (() => undefined) as (message: unknown) => unknown },
   socialLogin: vi.fn(),
 }));
 vi.mock('@/shared/bridge/web-bridge', () => ({
