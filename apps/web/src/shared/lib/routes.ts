@@ -213,6 +213,9 @@ export const paywallPath = ({
   return suffix ? `${PAYWALL_PATH}?${suffix}` : PAYWALL_PATH;
 };
 
+// 환급 화면 — 쌓인 환급액을 보거나 환급 소개를 본다
+export const REFUND_PATH = '/refund';
+
 // 프리미엄 온보딩 — 혜택이 열리는 걸 보여 주고 알람 등록으로 잇는다. from은 다 본 뒤 갈 곳(페이월이 가려던 곳)
 export const PREMIUM_ONBOARDING_PATH = '/premium/onboarding';
 

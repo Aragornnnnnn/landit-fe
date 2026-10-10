@@ -13,6 +13,7 @@ import {
   PREMIUM_ONBOARDING_CHECK_PATH,
   PREMIUM_ONBOARDING_PATH,
   readScenarioFeedbackParams,
+  REFUND_PATH,
   SUBSCRIPTION_CANCEL_PATH,
   SUBSCRIPTION_HISTORY_PATH,
   SUBSCRIPTION_MANAGE_PATH,
@@ -52,6 +53,7 @@ const NESTED_PAGES: Record<string, string> = {
   [ALARM_CHECK_PATH]: 'alarm_check',
   [PREMIUM_ONBOARDING_CHECK_PATH]: 'premium_onboarding_check',
   [PREMIUM_ONBOARDING_PATH]: 'premium_onboarding',
+  [REFUND_PATH]: 'refund',
 };
 
 // 페이월로 보낸 문 — 주소에 실려 온 값만 받는다. 문이 늘었는데 여기를 빠뜨리면 빌드가 깨진다
@@ -62,6 +64,7 @@ const PAYWALL_SOURCES: Record<PaywallSource, true> = {
   feedback_detail: true,
   me: true,
   header: true,
+  refund: true,
 };
 
 const readPaywallSource = (raw: string | null): PaywallSource | undefined =>

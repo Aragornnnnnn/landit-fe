@@ -5,6 +5,7 @@ import {
   clockLabel,
   isUrgent,
   msUntilKstMidnight,
+  msUntilUrgentChange,
   shortClockLabel,
 } from './time-left';
 
@@ -21,6 +22,19 @@ describe('msUntilKstMidnight', () => {
     const now = Date.UTC(2026, 9, 10, 15, 0, 1);
 
     expect(msUntilKstMidnight(now)).toBe(24 * 60 * 60 * 1000 - 1000);
+  });
+});
+
+describe('msUntilUrgentChange', () => {
+  const HOUR = 60 * 60 * 1000;
+
+  it('낮에는 급해지는 순간까지 남은 시간을 준다', () => {
+    // given — 자정까지 열 시간. 네 시간 뒤에 급해진다
+    expect(msUntilUrgentChange(10 * HOUR)).toBe(4 * HOUR);
+  });
+
+  it('급할 때는 자정까지 남은 시간을 준다', () => {
+    expect(msUntilUrgentChange(2 * HOUR)).toBe(2 * HOUR);
   });
 });
 

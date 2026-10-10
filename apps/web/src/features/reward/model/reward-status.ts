@@ -62,7 +62,7 @@ export const rewardHeroOf = (view: RewardView): RewardHeroMessage => {
       title: null,
       guide:
         view.pendingRefundWon > 0
-          ? '기간을 끝까지 마쳤어요\n환급 신청하면 계좌로 보내 드려요'
+          ? '기간을 끝까지 마쳤어요\n곧 환급 신청할 수 있어요'
           : '기간이 끝났어요\n다시 시작하면 처음부터 쌓을 수 있어요',
     };
 

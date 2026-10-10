@@ -10,6 +10,10 @@ const URGENT_WINDOW_MS = 6 * 60 * 60 * 1000;
 
 export const isUrgent = (msLeft: number) => msLeft <= URGENT_WINDOW_MS;
 
+// 급함이 바뀌기까지 남은 시간 — 낮에는 급해지는 순간(자정 여섯 시간 전)까지, 급할 때는 풀리는 자정까지
+export const msUntilUrgentChange = (msLeft: number) =>
+  isUrgent(msLeft) ? msLeft : msLeft - URGENT_WINDOW_MS;
+
 // 초까지 줄어드는 시계 글자 (08:50:12) — 자릿수를 고정해 숫자가 바뀌어도 폭이 흔들리지 않는다
 export const clockLabel = (ms: number) => {
   const total = Math.max(Math.ceil(ms / 1000), 0);
