@@ -57,7 +57,7 @@ const OnboardingCases = () => {
           href={premiumOnboardingPath(PREMIUM_ONBOARDING_CHECK_PATH, 'refund')}
           icon={<Emoji>💸</Emoji>}
           title="환급 참여자"
-          description="알람 소개와 다짐이 환급 문구로 나와요"
+          description="환영 다음에 환급 안내가 먼저 나오고, 알람 소개와 다짐이 환급 문구로 나와요"
         />
         <MenuLink
           href={premiumOnboardingPath(PREMIUM_ONBOARDING_CHECK_PATH, 'welcome')}
