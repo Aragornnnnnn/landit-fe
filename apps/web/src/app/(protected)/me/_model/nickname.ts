@@ -23,3 +23,23 @@ export const validateNickname = (input: string): NicknameValidation => {
   }
   return { ok: true, value };
 };
+
+export type NicknameDisplaySize = 'lg' | 'md' | 'sm';
+
+// 한글·한자처럼 폭이 넓은 글자는 1칸, 영문·숫자·띄어쓰기는 대략 0.6칸
+const WIDE_CHAR =
+  /[\u1100-\u11FF\u2E80-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFF00-\uFFEF]/u;
+const widthUnitsOf = (name: string) =>
+  [...name].reduce((sum, char) => sum + (WIDE_CHAR.test(char) ? 1 : 0.6), 0);
+
+// 가장 좁은 폰(375) 헤더 이름 칸에 한 줄로 들어가는 칸 수 — 큰 글자 8.5칸, 한 단계 줄이면 11칸
+const LG_UNITS = 8.5;
+const MD_UNITS = 11;
+
+/** 마이페이지 헤더에서 이름을 보여줄 글자 크기. 줄바꿈을 줄이려고 길수록 작게 쓴다 */
+export const nicknameDisplaySize = (name: string): NicknameDisplaySize => {
+  const units = widthUnitsOf(name.trim());
+  if (units <= LG_UNITS) return 'lg';
+  if (units <= MD_UNITS) return 'md';
+  return 'sm';
+};

@@ -18,6 +18,10 @@ import {
 import { PencilIcon } from '@/shared/ui/Icons';
 import { AppleIcon, GoogleIcon, KakaoIcon } from '@/shared/ui/SocialIcons';
 
+import {
+  nicknameDisplaySize,
+  type NicknameDisplaySize,
+} from '../_model/nickname';
 import { NicknameSheet } from './NicknameSheet';
 
 const DEFAULT_IMAGE: PreloadableImage = {
@@ -40,6 +44,13 @@ const PROVIDER_BADGE: Record<
   APPLE: { icon: <AppleIcon size={11} />, background: '#000' },
 };
 
+// 이름이 길수록 글자를 줄여 줄바꿈을 줄인다 — 가장 작은 크기에서만 두 줄이 된다
+const NAME_SIZE_CLASS: Record<NicknameDisplaySize, string> = {
+  lg: 'text-[22px]',
+  md: 'text-[18px]',
+  sm: 'text-[16px]',
+};
+
 export const ProfileHeader = () => {
   const member = useAuthStore((state) => state.member);
   const { data, isPending } = useLearningLevelQuery();
@@ -55,24 +66,29 @@ export const ProfileHeader = () => {
 
   return (
     <div className="flex items-center justify-between px-1.5 pt-2 pb-1">
-      <div className="min-w-0">
+      {/* 남는 너비를 이름 칸이 다 쓴다 — 내용만큼만 잡으면 이메일 줄 너비에서 이름이 일찍 꺾인다 */}
+      <div className="min-w-0 flex-1 pr-2">
         <button
           type="button"
           onClick={() => setNicknameSheetOpen(true)}
-          className="-mx-1 max-w-full rounded-lg px-1 text-left transition-transform active:scale-[0.97]"
+          className="-mx-1 rounded-lg px-1 text-left transition-transform active:scale-[0.97]"
           aria-label="닉네임 바꾸기"
         >
-          {/* 긴 이름은 자르지 않고 줄을 넘긴다 — 연필은 마지막 글자 뒤에 붙는다 */}
+          {/* 긴 이름은 자르지 않는다 — 크기를 줄이고도 넘치면 줄을 넘긴다 */}
           <span
-            className="text-[22px] leading-tight font-bold break-words"
+            className={`${NAME_SIZE_CLASS[nicknameDisplaySize(nickname)]} leading-tight font-bold break-words`}
             style={{ color: '#111' }}
           >
             {nickname || '게스트'}
           </span>
-          <PencilIcon
-            size={16}
-            className="ml-1.5 inline-block align-baseline text-muted-foreground"
-          />
+          {/* 연필만 다음 줄로 떨어지지 않게 마지막 글자에 붙인다 — 단어 결합자(U+2060)가 그 사이 줄바꿈을 막는다 */}
+          <span className="whitespace-nowrap" aria-hidden="true">
+            {'\u2060'}
+            <PencilIcon
+              size={16}
+              className="ml-1.5 inline-block align-baseline text-muted-foreground"
+            />
+          </span>
         </button>
         {member?.email && (
           <p

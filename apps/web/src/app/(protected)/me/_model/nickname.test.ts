@@ -1,7 +1,11 @@
 // 닉네임 입력 검증 — 백엔드 NicknameValidator와 같은 규칙으로 저장 전에 거른다
 import { describe, expect, it } from 'vitest';
 
-import { NICKNAME_MAX_LENGTH, validateNickname } from './nickname';
+import {
+  NICKNAME_MAX_LENGTH,
+  nicknameDisplaySize,
+  validateNickname,
+} from './nickname';
 
 describe('validateNickname', () => {
   it('앞뒤 공백을 떼고 한글·영문·숫자·단어 사이 공백을 받는다', () => {
@@ -35,5 +39,23 @@ describe('validateNickname', () => {
       ok: false,
       reason: 'invalid_char',
     });
+  });
+});
+
+describe('nicknameDisplaySize', () => {
+  it('짧은 이름은 큰 글자로 보여준다', () => {
+    expect(nicknameDisplaySize('준서')).toBe('lg');
+    expect(nicknameDisplaySize('가나다라마바사아')).toBe('lg');
+    expect(nicknameDisplaySize('Kim Junseo')).toBe('lg');
+  });
+
+  it('큰 글자로 한 줄에 안 들어가면 한 단계 줄여 한 줄을 지킨다', () => {
+    expect(nicknameDisplaySize('가나다라마바사아자차')).toBe('md');
+    expect(nicknameDisplaySize('Alexander Hamilton')).toBe('md');
+  });
+
+  it('그래도 넘치는 긴 이름은 가장 작은 글자로 줄을 넘긴다', () => {
+    expect(nicknameDisplaySize('가'.repeat(NICKNAME_MAX_LENGTH))).toBe('sm');
+    expect(nicknameDisplaySize('Kim Junseo From Google Account')).toBe('sm');
   });
 });
