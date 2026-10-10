@@ -25,8 +25,8 @@ export const RefundRulesToggle = () => {
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         onClick={() => setOpen(!open)}
-        // 접혀 있을 때는 내역보다 눈에 덜 띄게 옅게, 펼치면 소개 화면의 라벨처럼 진하게
-        className={`flex w-full items-center justify-between px-4 py-3.5 text-[15px] transition-colors ${open ? 'font-black text-foreground' : 'font-bold text-muted-foreground'}`}
+        // 접혀 있든 펼쳐져 있든 같은 옅은 글자다 — 누를 때 라벨이 바뀌면 다른 것이 된 것처럼 보인다
+        className="flex w-full items-center justify-between px-4 py-3.5 text-[15px] font-bold text-muted-foreground"
       >
         환급 규칙
         <ChevronDownIcon
