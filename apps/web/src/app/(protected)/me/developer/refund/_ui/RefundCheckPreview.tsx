@@ -3,50 +3,31 @@
 // 환급 점검에서 고른 케이스 한 장 — 실제 화면이 쓰는 부품에 가짜 값을 넣어 그린다
 import { useState } from 'react';
 
+// 점검은 실제 부품을 그대로 그려야 해서 환급 라우트의 비공개 폴더를 가져온다
 import { RefundApplyButton } from '@/app/(protected)/refund/_ui/RefundApplyButton';
-import { RefundHero } from '@/app/(protected)/refund/_ui/RefundHero';
+import { RefundFrame } from '@/app/(protected)/refund/_ui/RefundFrame';
 import { RefundHistoryList } from '@/app/(protected)/refund/_ui/RefundHistoryFeed';
 import {
   RefundIntro,
   RefundStartButton,
 } from '@/app/(protected)/refund/_ui/RefundIntro';
-import { RefundRulesToggle } from '@/app/(protected)/refund/_ui/RefundRulesToggle';
+import { RefundRecord } from '@/app/(protected)/refund/_ui/RefundRecord';
 import { RefundSkeleton } from '@/app/(protected)/refund/_ui/RefundSkeleton';
 import { useEarnedPop } from '@/features/reward/model/earned-pop';
 import { rewardBadgeOf } from '@/features/reward/model/reward-status';
 import { rewardReceipt } from '@/features/reward/model/reward.fixture';
 import type { BalanceGain } from '@/features/reward/model/seen-balance';
 import { HeaderRefund } from '@/features/reward/ui/HeaderRefund';
-import { BackHeader } from '@/shared/ui/BackHeader';
 import { Button } from '@/shared/ui/Button';
 
 import {
   fakeHistoryItems,
   isRecordCase,
   RECORD_CASES,
+  type CheckCase,
   type RecordCase,
 } from '../_model/refund-check-cases';
 import { useFakeHistory } from '../_model/useFakeHistory';
-
-const FOOTER_CLASS =
-  'flex-none border-t border-border px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),16px)]';
-
-// 환급 화면과 같은 틀 — 헤더, 스크롤 영역, 아래 버튼
-const Frame = ({
-  onBack,
-  footer,
-  children,
-}: {
-  onBack: () => void;
-  footer?: React.ReactNode;
-  children: React.ReactNode;
-}) => (
-  <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
-    <BackHeader title="환급" onBack={onBack} />
-    <div className="flex-1 overflow-y-auto">{children}</div>
-    {footer && <footer className={FOOTER_CLASS}>{footer}</footer>}
-  </main>
-);
 
 const RecordPreview = ({
   reward,
@@ -57,13 +38,12 @@ const RecordPreview = ({
   const history = useFakeHistory(items, mode);
 
   return (
-    <Frame onBack={onBack} footer={<RefundApplyButton reward={reward} />}>
-      <div className="pb-8">
-        <RefundHero reward={reward} />
-        <RefundRulesToggle />
-        <RefundHistoryList {...history} />
-      </div>
-    </Frame>
+    <RefundFrame onBack={onBack} footer={<RefundApplyButton reward={reward} />}>
+      <RefundRecord
+        reward={reward}
+        history={<RefundHistoryList {...history} />}
+      />
+    </RefundFrame>
   );
 };
 
@@ -93,6 +73,8 @@ const CoinPreview = ({ onBack }: { onBack: () => void }) => {
           <Button
             key={gainWon}
             variant="secondary"
+            // 도는 연출의 금액이 중간에 바뀌지 않게 한다
+            disabled={gain !== null}
             onClick={() => {
               setGain({ fromWon: balanceWon, toWon: balanceWon + gainWon });
               setBalanceWon(balanceWon + gainWon);
@@ -117,7 +99,7 @@ const PopPreview = ({ onBack }: { onBack: () => void }) => {
   const [count, setCount] = useState(0);
 
   return (
-    <Frame onBack={onBack}>
+    <RefundFrame onBack={onBack}>
       <div className="flex h-full flex-col justify-center gap-3 px-5">
         <Button
           onClick={() => {
@@ -135,7 +117,7 @@ const PopPreview = ({ onBack }: { onBack: () => void }) => {
           표현 하나 끝내기
         </Button>
       </div>
-    </Frame>
+    </RefundFrame>
   );
 };
 
@@ -143,23 +125,22 @@ export const RefundCheckPreview = ({
   name,
   onBack,
 }: {
-  name: string;
+  name: CheckCase;
   onBack: () => void;
 }) => {
   if (isRecordCase(name))
     return <RecordPreview {...RECORD_CASES[name]} onBack={onBack} />;
   if (name === 'intro')
     return (
-      <Frame onBack={onBack} footer={<RefundStartButton />}>
+      <RefundFrame onBack={onBack} footer={<RefundStartButton />}>
         <RefundIntro />
-      </Frame>
+      </RefundFrame>
     );
   if (name === 'coin') return <CoinPreview onBack={onBack} />;
   if (name === 'pop') return <PopPreview onBack={onBack} />;
-  // 모르는 케이스는 불러오는 중으로 본다 — 'loading'도 여기로 온다
   return (
-    <Frame onBack={onBack}>
+    <RefundFrame onBack={onBack}>
       <RefundSkeleton />
-    </Frame>
+    </RefundFrame>
   );
 };

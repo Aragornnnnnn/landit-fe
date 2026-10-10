@@ -3,18 +3,17 @@ import { useRef, useState } from 'react';
 
 import type { RewardHistoryItem } from '@/features/reward/api/reward';
 import { historyRowsOf } from '@/features/reward/model/reward-history';
-import type { RewardHistoryFeed } from '@/features/reward/model/useRewardHistoryQuery';
+import type { RewardHistoryState } from '@/features/reward/model/useRewardHistoryQuery';
 
-import type { HistoryMode } from './refund-check-cases';
+import { FAKE_PAGE_SIZE, type HistoryMode } from './refund-check-cases';
 
-const PAGE_SIZE = 16;
 // 서버가 답하는 데 걸리는 시간을 흉내 낸다
 const RESPONSE_MS = 900;
 
 export const useFakeHistory = (
   items: RewardHistoryItem[],
   mode: HistoryMode,
-): RewardHistoryFeed => {
+): RewardHistoryState => {
   const [pages, setPages] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreFailed, setMoreFailed] = useState(false);
@@ -38,10 +37,10 @@ export const useFakeHistory = (
   };
 
   return {
-    rows: historyRowsOf(all.slice(0, pages * PAGE_SIZE)),
+    rows: historyRowsOf(all.slice(0, pages * FAKE_PAGE_SIZE)),
     error: null,
     retry: () => {},
-    hasMore: pages * PAGE_SIZE < all.length,
+    hasMore: pages * FAKE_PAGE_SIZE < all.length,
     fetching: loadingMore,
     loadingMore,
     moreFailed,

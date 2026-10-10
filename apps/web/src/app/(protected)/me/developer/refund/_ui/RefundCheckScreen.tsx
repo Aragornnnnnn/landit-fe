@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
 import {
+  backOrReplace,
   backToMyPage,
   PREMIUM_ONBOARDING_CHECK_PATH,
   premiumOnboardingPath,
@@ -13,6 +14,7 @@ import {
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { Emoji } from '@/shared/ui/emoji';
 
+import { readCheckCase, type CheckCase } from '../_model/refund-check-cases';
 import { MenuLink, MenuSection } from '../../../_ui/Menu';
 import { RefundCheckPreview } from './RefundCheckPreview';
 
@@ -25,9 +27,9 @@ const CASE_GROUPS = [
       ['full', '👑', '오늘 다 채움', '세 칸이 모두 받음이에요'],
       ['yet', '⏰', '오늘 아직', '저녁 6시 뒤에 열면 남은 시간이 경고로 떠요'],
       ['reset', '🥹', '어제 쉬어서 0원', '내역 맨 위에 하루 쉼이 나와요'],
-      ['ended', '🧾', '기간이 끝남', '돌려받을 금액만 남아요'],
+      ['ended', '🧾', '기간이 끝남', '다시 시작을 누르면 실제 페이월로 가요'],
       ['review', '👀', '결제 내역 확인 중', '오늘 칸 없이 금액만 보여요'],
-      ['intro', '👋', '환급 소개', '참여 전인 사람이 보는 화면이에요'],
+      ['intro', '👋', '환급 소개', '시작 버튼은 실제 페이월로 가요'],
     ],
   ],
   [
@@ -41,11 +43,19 @@ const CASE_GROUPS = [
   [
     '받는 순간',
     [
-      ['coin', '🤑', '동전 연출', '11원 · 111원 · 332원을 골라서 봐요'],
+      [
+        'coin',
+        '🤑',
+        '동전 연출',
+        '금액을 골라요 · 알약은 실제 환급 화면으로 가요',
+      ],
       ['pop', '🔔', '표현 하나마다 알림', '위에서 받은 금액이 떨어져요'],
     ],
   ],
-] as const;
+] as const satisfies readonly (readonly [
+  string,
+  readonly (readonly [CheckCase, string, string, string])[],
+])[];
 
 const CaseList = () => (
   <>
@@ -62,7 +72,7 @@ const CaseList = () => (
         ))}
       </MenuSection>
     ))}
-    <MenuSection title="결제 직후 안내">
+    <MenuSection title="결제 직후 안내 — 여기부터는 실제 화면으로 넘어가요">
       <MenuLink
         href={premiumOnboardingPath(PREMIUM_ONBOARDING_CHECK_PATH, 'refund')}
         icon={<Emoji>🎉</Emoji>}
@@ -76,10 +86,18 @@ const CaseList = () => (
 export const RefundCheckScreen = () => {
   const router = useRouter();
   const isAdmin = useAuthStore((state) => state.member?.role === 'ADMIN');
-  const name = useSearchParams().get('case');
+  const name = readCheckCase(useSearchParams().get('case'));
 
   if (isAdmin && name !== null)
-    return <RefundCheckPreview name={name} onBack={() => router.back()} />;
+    return (
+      <RefundCheckPreview
+        // 케이스가 바뀌면 받아 둔 가짜 내역과 연출 상태를 버린다
+        key={name}
+        name={name}
+        // 주소로 바로 들어왔으면 돌아갈 칸이 없다 — 그때는 목록으로 보낸다
+        onBack={() => backOrReplace(router, REFUND_CHECK_PATH)}
+      />
+    );
 
   return (
     <main className="flex h-dvh flex-col bg-muted">

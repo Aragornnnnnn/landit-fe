@@ -99,20 +99,34 @@ export const RECORD_CASES = {
   },
 } satisfies Record<string, RecordCase>;
 
-export const isRecordCase = (name: string): name is keyof typeof RECORD_CASES =>
-  name in RECORD_CASES;
+// 열 수 있는 케이스 — 환급 화면 케이스에 소개·불러오는 중·받는 순간을 더한 것
+const OTHER_CASES = ['intro', 'loading', 'coin', 'pop'] as const;
+export type RecordCaseName = keyof typeof RECORD_CASES;
+export type CheckCase = RecordCaseName | (typeof OTHER_CASES)[number];
 
-// 하루를 다 채웠을 때 쌓이는 여섯 줄 — [무엇을, 금액, 시각]
-const FULL_DAY = [
-  ['SCENARIO', 111, '08:12'],
-  ['EXPRESSION', 11, '08:21'],
-  ['EXPRESSION', 11, '08:24'],
-  ['EXPRESSION', 11, '08:27'],
-  ['EXPRESSION', 77, '08:31'],
+export const isRecordCase = (name: CheckCase): name is RecordCaseName =>
+  Object.hasOwn(RECORD_CASES, name);
+
+// 주소에 실려 온 케이스. 없거나 모르는 값이면 null — 그때는 목록을 보여 준다
+export const readCheckCase = (raw: string | null): CheckCase | null =>
+  [...Object.keys(RECORD_CASES), ...OTHER_CASES].find(
+    (name): name is CheckCase => name === raw,
+  ) ?? null;
+
+// 하루를 다 채웠을 때 쌓이는 여섯 줄을 늦은 것부터 — [무엇을, 금액, 시각]
+const FULL_DAY_LATEST_FIRST = [
   ['SMALLTALK', 111, '21:40'],
+  ['EXPRESSION', 77, '08:31'],
+  ['EXPRESSION', 11, '08:27'],
+  ['EXPRESSION', 11, '08:24'],
+  ['EXPRESSION', 11, '08:21'],
+  ['SCENARIO', 111, '08:12'],
 ] as const;
-// 세 장으로 나눠 받을 만큼만 만든다
-const MAX_ROWS = 48;
+const FULL_DAY_WON = 332;
+
+// 가짜 내역 한 장의 줄 수와, 세 장으로 나눠 받을 만큼의 전체 줄 수
+export const FAKE_PAGE_SIZE = 16;
+const MAX_ROWS = FAKE_PAGE_SIZE * 3;
 const TODAY_MS = Date.UTC(2026, 9, 10);
 const DAY_MS = 24 * 60 * 60 * 1000;
 const dateOf = (daysAgo: number) =>
@@ -123,35 +137,56 @@ export const fakeHistoryItems = (reward: RewardView) => {
   const items: RewardHistoryItem[] = [];
   const push = (item: Omit<RewardHistoryItem, 'id' | 'cycleId'>) =>
     items.push({ ...item, id: String(MAX_ROWS - items.length), cycleId: 7 });
-
-  let balanceWon = reward.current?.balanceWon ?? reward.pendingRefundWon;
-  // 어제 쉬었으면 그 줄이 맨 위고, 그 앞은 사라진 금액까지 쌓아 온 날들이다
-  if (reward.lostYesterdayWon > 0) {
+  const closing = (
+    type: 'RESET' | 'CYCLE_END',
+    amountWon: number,
+    balanceWon: number,
+  ) =>
     push({
-      type: 'RESET',
+      type,
       activityType: null,
       date: dateOf(1),
       occurredAt: `${dateOf(0)}T00:00:00+09:00`,
-      amountWon: -reward.lostYesterdayWon,
-      balanceWon: 0,
+      amountWon,
+      balanceWon,
       completionId: null,
     });
-    balanceWon = reward.lostYesterdayWon;
-  }
 
-  for (let day = reward.lostYesterdayWon > 0 ? 2 : 0; ; day += 1) {
-    for (const [activityType, amountWon, time] of FULL_DAY.toReversed()) {
-      if (items.length >= MAX_ROWS || balanceWon < amountWon) return items;
-      push({
-        type: 'EARN',
-        activityType,
-        date: dateOf(day),
-        occurredAt: `${dateOf(day)}T${time}:00+09:00`,
-        amountWon,
-        balanceWon,
-        completionId: MAX_ROWS - items.length,
-      });
-      balanceWon -= amountWon;
-    }
+  let balanceWon = reward.current?.balanceWon ?? reward.pendingRefundWon;
+  // 오늘 줄은 위의 오늘 칸이 말하는 금액만큼만 — 아침에 한 것부터 채워진 것으로 본다
+  let todayLeftWon = FULL_DAY_WON - (reward.today?.earnedWon ?? 0);
+  // 적립 줄이 시작되는 날 — 오늘이 없는 사람(끝남·확인 중)은 어제부터다
+  let firstDay = reward.today ? 0 : 1;
+
+  // 어제 쉬었으면 그 줄이 맨 위고, 그 앞은 사라진 금액까지 쌓아 온 날들이다
+  if (reward.lostYesterdayWon > 0) {
+    closing('RESET', -reward.lostYesterdayWon, 0);
+    balanceWon = reward.lostYesterdayWon;
+    firstDay = 2;
   }
+  // 기간이 끝났으면 넘어간 금액을 알리는 줄이 맨 위다
+  if (reward.state === 'ENDED') closing('CYCLE_END', 0, balanceWon);
+
+  for (let step = 0; items.length < MAX_ROWS; step += 1) {
+    const day = firstDay + Math.floor(step / FULL_DAY_LATEST_FIRST.length);
+    const [activityType, amountWon, time] =
+      FULL_DAY_LATEST_FIRST[step % FULL_DAY_LATEST_FIRST.length];
+    // 오늘 아직 하지 않은 것은 건너뛴다
+    if (day === 0 && todayLeftWon > 0) {
+      todayLeftWon -= amountWon;
+      continue;
+    }
+    if (balanceWon < amountWon) break;
+    push({
+      type: 'EARN',
+      activityType,
+      date: dateOf(day),
+      occurredAt: `${dateOf(day)}T${time}:00+09:00`,
+      amountWon,
+      balanceWon,
+      completionId: MAX_ROWS - items.length,
+    });
+    balanceWon -= amountWon;
+  }
+  return items;
 };

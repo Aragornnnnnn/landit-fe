@@ -61,6 +61,15 @@ describe('RefundCheckScreen', () => {
     expect(screen.getByText('미리보기 coin')).toBeInTheDocument();
   });
 
+  it('주소의 케이스가 모르는 값이면 목록을 보여 준다', () => {
+    signIn('ADMIN');
+    mocks.caseName = '없는-케이스';
+
+    render(<RefundCheckScreen />);
+
+    expect(screen.getByText('오늘 다 채움')).toBeInTheDocument();
+  });
+
   it.each([['USER' as const], [undefined]])(
     'role이 %s이면 주소에 케이스가 있어도 열지 않는다',
     (role) => {

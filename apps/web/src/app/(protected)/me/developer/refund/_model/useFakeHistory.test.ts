@@ -25,15 +25,19 @@ const loadOnePage = (result: {
 };
 
 describe('useFakeHistory', () => {
-  it('첫 장만 보여 주고, 이어 받으면 잠시 뒤 줄이 늘어난다', () => {
+  it('이어 받는 동안에는 받는 중이라고 한다', () => {
+    const { result } = renderHook(() => useFakeHistory(ITEMS, 'pages'));
+
+    act(() => result.current.loadMore());
+
+    expect(result.current.loadingMore).toBe(true);
+  });
+
+  it('이어 받으면 잠시 뒤 줄이 늘어난다', () => {
     const { result } = renderHook(() => useFakeHistory(ITEMS, 'pages'));
     const firstPage = result.current.rows!.length;
 
-    act(() => result.current.loadMore());
-    expect(result.current.loadingMore).toBe(true);
-    act(() => {
-      vi.runAllTimers();
-    });
+    loadOnePage(result);
 
     expect(result.current.loadingMore).toBe(false);
     expect(result.current.rows!.length).toBeGreaterThan(firstPage);
@@ -49,15 +53,23 @@ describe('useFakeHistory', () => {
     expect(result.current.hasMore).toBe(false);
   });
 
-  it('실패 케이스는 처음 한 번만 실패하고, 다시 받으면 이어진다', () => {
+  it('실패 케이스는 처음 이어 받을 때 실패하고 보던 줄은 그대로 둔다', () => {
     const { result } = renderHook(() => useFakeHistory(ITEMS, 'failOnce'));
     const firstPage = result.current.rows!.length;
 
     loadOnePage(result);
+
     expect(result.current.moreFailed).toBe(true);
     expect(result.current.rows).toHaveLength(firstPage);
+  });
+
+  it('실패한 뒤 다시 받으면 이어진다', () => {
+    const { result } = renderHook(() => useFakeHistory(ITEMS, 'failOnce'));
+    const firstPage = result.current.rows!.length;
+    loadOnePage(result);
 
     loadOnePage(result);
+
     expect(result.current.moreFailed).toBe(false);
     expect(result.current.rows!.length).toBeGreaterThan(firstPage);
   });
