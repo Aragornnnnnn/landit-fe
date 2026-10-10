@@ -61,8 +61,7 @@ export interface RefundStake {
 
 /** 쌓는 중일 때만 — 끝났거나 결제를 확인하는 중이면 해지가 바꾸는 것이 없어 알릴 것도 없다 */
 export const refundStakeOf = (reward: RewardView | null): RefundStake | null =>
-  // 받을 금액이 0인 회차는 걸어 둔 것이 없다 — "최대 0원"을 말하지 않는다
-  reward?.state === 'ACTIVE' && reward.current && reward.current.maximumWon > 0
+  reward?.state === 'ACTIVE' && reward.current
     ? {
         balanceWon: reward.current.balanceWon,
         maximumWon: reward.current.maximumWon,
@@ -123,7 +122,8 @@ const refundPriceContent = (stake: RefundStake): RetentionContent => ({
   emoji: '💸',
   title: '가격이 부담되셨군요',
   body: [
-    `매일 하면 최대 ${formatWon(stake.maximumWon)}을 돌려받아요.`,
+    // 최대액은 살 때 정해진 값이다 — 쉰 날이 있으면 다 못 받으니 "매일 하면 받는다"고 약속하지 않는다
+    `최대 ${formatWon(stake.maximumWon)}까지 돌려받는 플랜이에요.`,
     '돌려받는 만큼 실제로 내는 금액이 줄어들어요.',
   ],
   cards: stakeCards(stake),

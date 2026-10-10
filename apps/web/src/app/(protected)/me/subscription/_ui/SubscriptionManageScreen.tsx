@@ -67,7 +67,7 @@ const toStoreRow = (summary: PaidSubscriptionSummary) => {
 };
 
 // 환급에 참여한 사람에게만 — 쌓인 금액을 보여 주고 환급 화면으로 잇는다. 스위치가 꺼져 있으면 묻지도 않는다
-const RefundRow = () => {
+const RefundRow = ({ canceled }: { canceled: boolean }) => {
   const { reward } = useRewardQuery({ enabled: REFUND_CHALLENGE_ENABLED });
   const badge = reward && rewardBadgeOf(reward);
   if (!badge) return null;
@@ -77,7 +77,12 @@ const RefundRow = () => {
       href={REFUND_PATH}
       icon={<Emoji>💰</Emoji>}
       title="환급 챌린지"
-      description={badge.note}
+      // 해지를 예약한 사람이 이미 끝난 줄 알고 멈추지 않게 — 쌓는 중이면 기간 끝까지 이어진다
+      description={
+        canceled && reward.state === 'ACTIVE'
+          ? '기간이 끝날 때까지 계속 쌓을 수 있어요'
+          : badge.note
+      }
       value={
         <span className="text-[14px] font-semibold text-foreground">
           {badgeAmountOf(badge)}
@@ -139,7 +144,7 @@ const PaidSubscription = ({ summary, platform }: PaidSubscriptionProps) => {
       </MenuSection>
 
       <MenuSection title="구독">
-        <RefundRow />
+        <RefundRow canceled={summary.kind === 'canceled'} />
         <MenuLink
           href={SUBSCRIPTION_HISTORY_PATH}
           icon={<Emoji>🧾</Emoji>}

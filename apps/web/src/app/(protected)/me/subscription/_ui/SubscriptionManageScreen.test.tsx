@@ -277,6 +277,28 @@ describe('SubscriptionManageScreen', () => {
     expect(row).toHaveTextContent('12,300원');
   });
 
+  it('해지를 예약했어도 쌓는 중이면 기간 끝까지 쌓을 수 있다고 알린다', () => {
+    mocks.reward = { reward: rewardView() };
+    setSubscription(premium({ subscriptionStatus: 'CANCELED' }));
+
+    render(<SubscriptionManageScreen />);
+
+    expect(screen.getByText('환급 챌린지').closest('a')).toHaveTextContent(
+      '기간이 끝날 때까지 계속 쌓을 수 있어요',
+    );
+  });
+
+  it('해지를 예약하지 않았으면 그 안내 대신 오늘의 한 줄이 나온다', () => {
+    mocks.reward = { reward: rewardView() };
+    setSubscription(premium());
+
+    render(<SubscriptionManageScreen />);
+
+    expect(
+      screen.queryByText('기간이 끝날 때까지 계속 쌓을 수 있어요'),
+    ).not.toBeInTheDocument();
+  });
+
   it.each([
     ['참여한 적이 없으면', null],
     ['끝났고 돌려받을 금액도 없으면', endedRewardView(0)],

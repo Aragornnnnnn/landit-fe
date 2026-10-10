@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 
 import {
   endedRewardView,
-  rewardCycle,
   rewardView,
 } from '@/features/reward/model/reward.fixture';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
@@ -206,9 +205,6 @@ describe('환급을 쌓는 중인 사람', () => {
     expect(refundStakeOf(null)).toBeNull();
     // 도는 회차를 가진 채 검토로 넘어갈 수 있다
     expect(refundStakeOf(rewardView({ state: 'REVIEW' }))).toBeNull();
-    expect(
-      refundStakeOf(rewardView({ current: rewardCycle({ maximumWon: 0 }) })),
-    ).toBeNull();
   });
 
   it('사유를 묻기 전에 쌓인 금액과, 해지하면 다음 회차 환급이 없다는 것을 알린다', () => {
@@ -234,7 +230,7 @@ describe('환급을 쌓는 중인 사람', () => {
       context(active({ plan: 'halfyear', price: 59_900 }), stake),
     );
 
-    expect(content.body[0]).toBe('매일 하면 최대 59,900원을 돌려받아요.');
+    expect(content.body[0]).toBe('최대 59,900원까지 돌려받는 플랜이에요.');
     expect(content.cards).toHaveLength(2);
   });
 });
