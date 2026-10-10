@@ -44,6 +44,10 @@ describe('DeveloperMenuSection', () => {
       'href',
       '/me/developer',
     );
+    expect(screen.getByText('환급 점검').closest('a')).toHaveAttribute(
+      'href',
+      '/me/developer/refund',
+    );
   });
 
   it.each([['USER' as const], [undefined]])(

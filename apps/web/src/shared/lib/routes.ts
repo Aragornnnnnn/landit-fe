@@ -251,6 +251,8 @@ export const ALARM_EDIT_PATH = '/me/alarm/edit';
 export const ALARM_CHECK_PATH = '/me/developer';
 // 프리미엄 온보딩 점검 — 결제 없이 케이스를 골라 연다 (ADMIN)
 export const PREMIUM_ONBOARDING_CHECK_PATH = '/me/developer/premium-onboarding';
+// 환급 점검 — 가짜 값으로 환급 화면을 케이스별로 연다 (ADMIN)
+export const REFUND_CHECK_PATH = '/me/developer/refund';
 
 /**
  * 마이페이지 아래 화면에서 돌아가기. 마이페이지에서 밀고 들어왔으면 한 칸 뒤로 —

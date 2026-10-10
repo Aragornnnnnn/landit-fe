@@ -1,12 +1,13 @@
 'use client';
 
-// 내 정보 "개발자" 묶음 — ADMIN 계정에만 보인다. 알람 점검과 프리미엄 온보딩 점검으로 들어가고, 서버와 폰의 알람이 어긋났으면 여기서 바로 보인다
+// 내 정보 "개발자" 묶음 — ADMIN 계정에만 보인다. 알람 점검·프리미엄 온보딩 점검·환급 점검으로 들어가고, 서버와 폰의 알람이 어긋났으면 여기서 바로 보인다
 import { useAlarmSettingQuery } from '@/features/alarm/model/useAlarmSettingQuery';
 import { useAlarmStatus } from '@/features/alarm/model/useAlarmStatus';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import {
   ALARM_CHECK_PATH,
   PREMIUM_ONBOARDING_CHECK_PATH,
+  REFUND_CHECK_PATH,
 } from '@/shared/lib/routes';
 import { Emoji } from '@/shared/ui/emoji';
 
@@ -47,6 +48,12 @@ export const DeveloperMenuSection = () => {
         icon={<Emoji>🎉</Emoji>}
         title="프리미엄 온보딩 점검"
         description="결제 없이 케이스별로 열어요"
+      />
+      <MenuLink
+        href={REFUND_CHECK_PATH}
+        icon={<Emoji>💰</Emoji>}
+        title="환급 점검"
+        description="가짜 값으로 환급 화면과 동전 연출을 열어요"
       />
     </MenuSection>
   );
