@@ -27,7 +27,12 @@ export const RefundFrame = ({
         {children}
       </div>
       {footer && (
-        <footer className="flex-none border-t border-border px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),16px)]">
+        <footer className="relative flex-none px-5 pt-1 pb-[max(var(--safe-area-inset-bottom),16px)]">
+          {/* 구분선 대신 위쪽을 배경색으로 서서히 덮는다 — 선에서 딱 끊기면 아래에 내용이 더 있는지 알 수 없다 */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-full h-10 bg-linear-to-t from-background to-transparent"
+          />
           {footer}
         </footer>
       )}
