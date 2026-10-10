@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   showToast: vi.fn(),
   routerPush: vi.fn(),
   nativeListener: null as
-    ((message: { type: string; url?: string }) => void) | null,
+    ((message: { type: string; url?: string; path?: string }) => void) | null,
   pathname: '/scenario',
 }));
 
@@ -176,6 +176,42 @@ describe('BridgeListener', () => {
     });
 
     expect(mocks.routerPush).toHaveBeenCalledWith('/expressions');
+  });
+
+  describe('알람 "대화하러 가기" (ALARM_OPENED)', () => {
+    const openAlarm = () =>
+      act(() => {
+        mocks.nativeListener?.({
+          type: 'ALARM_OPENED',
+          alarmType: 'scenario',
+          path: '/scenario',
+        } as never);
+      });
+
+    it('학습 중이 아니면 알람이 정한 화면으로 이동한다', () => {
+      mocks.pathname = '/me';
+      render(<BridgeListener />);
+
+      openAlarm();
+
+      expect(mocks.routerPush).toHaveBeenCalledWith('/scenario');
+    });
+
+    it.each([
+      ['시나리오 대화', '/conversation/scenario/3'],
+      ['스몰톡 대화', '/conversation/smalltalk'],
+      ['표현학습', '/expressions/scenario/3/branch'],
+      ['복습 퀴즈', '/reviews/12'],
+      ['설문', '/survey'],
+      ['온보딩', '/onboarding'],
+    ])('%s 중이면 이동하지 않는다 — 하던 걸 잃지 않게', (_, pathname) => {
+      mocks.pathname = pathname;
+      render(<BridgeListener />);
+
+      openAlarm();
+
+      expect(mocks.routerPush).not.toHaveBeenCalled();
+    });
   });
 
   it('NAVIGATE는 뒤로가기 처리에 영향을 주지 않는다', () => {
