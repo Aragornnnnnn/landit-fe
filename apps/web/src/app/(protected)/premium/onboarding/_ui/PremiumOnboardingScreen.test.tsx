@@ -405,7 +405,9 @@ describe('PremiumOnboardingScreen', () => {
 
       // 쉬면 0원이 된다는 걸 알람보다 먼저 말한다
       expect(
-        screen.getByText('하루를 통째로 쉬면 쌓인 금액이 0원이 돼요'),
+        screen.getByText(
+          '학습 기록이 하나도 없는 날이 생기면 쌓인 금액이 0원으로 돌아가요',
+        ),
       ).toBeVisible();
     });
 
