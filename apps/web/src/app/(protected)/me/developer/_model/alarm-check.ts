@@ -31,14 +31,14 @@ const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 const dayKey = (date: Date) =>
   `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 
-/** 걸린 알람의 다음 울림 — "오늘 오후 7:30에 울려요". 이미 울린 1회 알람이면 "이미 울렸어요" */
+/** 걸린 알람의 다음 울림 — "오늘 오후 7:30". 이미 울린 1회 알람이면 "이미 울렸어요" */
 export const describeNextRing = (nextAt: number | null, now: Date) => {
   if (nextAt === null) return '이미 울렸어요';
   const at = new Date(nextAt);
   const time = formatClock({ hour: at.getHours(), minute: at.getMinutes() });
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
-  if (dayKey(at) === dayKey(now)) return `오늘 ${time}에 울려요`;
-  if (dayKey(at) === dayKey(tomorrow)) return `내일 ${time}에 울려요`;
-  return `${at.getMonth() + 1}월 ${at.getDate()}일(${DAY_NAMES[at.getDay()]}) ${time}에 울려요`;
+  if (dayKey(at) === dayKey(now)) return `오늘 ${time}`;
+  if (dayKey(at) === dayKey(tomorrow)) return `내일 ${time}`;
+  return `${at.getMonth() + 1}월 ${at.getDate()}일(${DAY_NAMES[at.getDay()]}) ${time}`;
 };

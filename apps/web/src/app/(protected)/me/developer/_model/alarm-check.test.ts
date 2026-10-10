@@ -26,12 +26,9 @@ describe('describeNextRing', () => {
   const now = at('10:00:00');
 
   it.each([
-    [at('19:30:00').getTime(), '오늘 오후 7:30에 울려요'],
-    [new Date('2026-10-08T07:05:00').getTime(), '내일 오전 7:05에 울려요'],
-    [
-      new Date('2026-10-10T19:30:00').getTime(),
-      '10월 10일(토) 오후 7:30에 울려요',
-    ],
+    [at('19:30:00').getTime(), '오늘 오후 7:30'],
+    [new Date('2026-10-08T07:05:00').getTime(), '내일 오전 7:05'],
+    [new Date('2026-10-10T19:30:00').getTime(), '10월 10일(토) 오후 7:30'],
     [null, '이미 울렸어요'],
   ])('%s → %s', (nextAt, text) => {
     expect(describeNextRing(nextAt, now)).toBe(text);

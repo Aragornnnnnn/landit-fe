@@ -5,7 +5,12 @@ import { useEffect, useState } from 'react';
 import type { ScheduledAlarm } from '@landit/bridge';
 import { useRouter } from 'next/navigation';
 
-import { formatClock, parseAlarmTime } from '@/features/alarm/model/alarm-time';
+import {
+  DEFAULT_ALARM_TIME,
+  formatClock,
+  parseAlarmTime,
+  toServerTime,
+} from '@/features/alarm/model/alarm-time';
 import {
   ALARM_TITLE,
   ALARM_TYPE,
@@ -26,7 +31,13 @@ import { showToast } from '@/shared/ui/toast';
 import { describeNextRing, testAlarmChoices } from '../_model/alarm-check';
 import { useAlarmList } from '../_model/useAlarmList';
 import { compareWithServer } from '../../_model/alarm-comparison';
-import { MenuButton, MenuLink, MenuSection } from '../../_ui/Menu';
+import {
+  MenuButton,
+  MenuLink,
+  MenuSection,
+  ROW_CLASS,
+  ROW_STYLE,
+} from '../../_ui/Menu';
 
 const PERMISSION_LABEL = {
   granted: '허용됨',
@@ -111,6 +122,47 @@ const CancelTestButton = ({ alarm }: { alarm: ScheduledAlarm }) => (
   </button>
 );
 
+// 매일 알람 시각을 바로 정해 저장한다 — 다짐(지문 3초) 없이 폰 기본 시각 선택기로 고른다
+const DailyTimeRow = ({
+  serverTime,
+  disabled,
+  onSave,
+}: {
+  /** 서버에 저장된 시각 "HH:mm". 없으면 기본 시각에서 시작한다 */
+  serverTime: string | null;
+  disabled: boolean;
+  onSave: (time: string) => void;
+}) => {
+  const [draft, setDraft] = useState<string | null>(null);
+  const time = draft ?? serverTime ?? toServerTime(DEFAULT_ALARM_TIME);
+  return (
+    <div className={`${ROW_CLASS} active:bg-transparent`} style={ROW_STYLE}>
+      <Emoji>⏰</Emoji>
+      <label
+        htmlFor="daily-alarm-time"
+        className="flex-1 text-[15px] whitespace-nowrap text-foreground"
+      >
+        시각 정하기
+      </label>
+      <input
+        id="daily-alarm-time"
+        type="time"
+        value={time}
+        onChange={(event) => setDraft(event.target.value)}
+        className="rounded-lg bg-muted px-2.5 py-1.5 text-[15px] font-bold text-foreground tabular-nums"
+      />
+      <button
+        type="button"
+        disabled={disabled || time === ''}
+        onClick={() => onSave(time)}
+        className="shrink-0 rounded-full bg-primary px-3.5 py-1.5 text-[13px] font-bold text-primary-foreground active:scale-95 disabled:opacity-50"
+      >
+        저장
+      </button>
+    </div>
+  );
+};
+
 // 점검 본문 — 셸에 묻고 1초마다 다시 그리므로 ADMIN일 때만 올린다
 const AlarmCheck = () => {
   const member = useAuthStore((state) => state.member);
@@ -143,6 +195,11 @@ const AlarmCheck = () => {
       time: { hour: dailySoon.getHours(), minute: dailySoon.getMinutes() },
       enabled: true,
     });
+  const saveDailyAt = (time: string) =>
+    saveAlarm(
+      { time: parseAlarmTime(time), enabled: true },
+      { onSuccess: () => showToast(`매일 ${time}로 저장했어요`) },
+    );
   const turnOffDaily = () => {
     if (setting) {
       saveAlarm({ time: parseAlarmTime(setting.time), enabled: false });
@@ -235,17 +292,25 @@ const AlarmCheck = () => {
           {daily && (
             <StatusItem
               label="다음 울림"
-              value={`${describeNextRing(daily.nextAt, now)}${
-                daily.skipDate ? ` · ${daily.skipDate} 건너뜀` : ''
-              }`}
+              value={describeNextRing(daily.nextAt, now)}
             />
           )}
+          {daily?.skipDate && (
+            <StatusItem label="건너뛴 회차" value={daily.skipDate} />
+          )}
         </StatusList>
-        {/* 시각은 여기서 따로 고르지 않는다 — 실제 사용자와 같은 등록·수정 화면을 탄다 */}
+        <DailyTimeRow
+          key={setting?.time ?? 'unset'}
+          serverTime={setting?.time ?? null}
+          disabled={saving}
+          onSave={saveDailyAt}
+        />
+        {/* 실제 사용자와 같은 길(소개 → 다짐 → 권한)을 확인할 때는 등록·수정 화면을 탄다 */}
         <MenuLink
           href={ALARM_SETTINGS_PATH}
           icon={<Emoji>🤝</Emoji>}
-          title="매일 알람 등록·수정하러 가기"
+          title="실제 등록·수정 화면으로 가기"
+          description="처음 등록이면 소개와 3초 다짐을 거쳐요"
         />
         <MenuButton
           title={`1분 뒤로 바꾸기 (${clock(dailySoon)})`}
@@ -255,6 +320,14 @@ const AlarmCheck = () => {
           onClick={scheduleDailySoon}
         />
         <MenuButton
+          title="오늘 회차 건너뛰기"
+          icon={<Emoji>✅</Emoji>}
+          chevron={false}
+          onClick={() =>
+            postToNative({ type: 'SKIP_ALARM_TODAY', alarmType: ALARM_TYPE })
+          }
+        />
+        <MenuButton
           title="매일 알람 끄기 (등록 전으로)"
           icon={<Emoji>🗑️</Emoji>}
           chevron={false}
@@ -262,17 +335,6 @@ const AlarmCheck = () => {
           onClick={turnOffDaily}
         />
       </MenuSection>
-
-      <div className="rounded-xl bg-card px-4 py-4 text-[13px] leading-relaxed text-foreground">
-        <p>1. 누르고 바로 화면을 잠가요. 켜 둔 채면 위쪽 배너로만 떠요</p>
-        <p>2. 앱을 완전히 꺼도(위로 쓸어 올려 닫기) 울려야 정상이에요</p>
-        <p>3. 울리면 대화하러 가기 → 앱이 열리고 소리가 멈추는지 봐요</p>
-        <p>4. 한 번은 끄기(밀어서 중단)로도 꺼 봐요</p>
-        <p>
-          5. 매일 알람은 울리고 나서 ‘다음 울림’이 내일 같은 시각이면 반복이
-          살아 있는 거예요
-        </p>
-      </div>
 
       <MenuSection title="권한">
         <StatusList>
@@ -352,18 +414,10 @@ const AlarmCheck = () => {
         )}
       </MenuSection>
 
-      <MenuSection title="그 밖">
+      <MenuSection title="환경">
         <StatusList>
           <StatusItem label="환경" value={environment} />
         </StatusList>
-        <MenuButton
-          title="오늘 회차 건너뛰기"
-          icon={<Emoji>✅</Emoji>}
-          chevron={false}
-          onClick={() =>
-            postToNative({ type: 'SKIP_ALARM_TODAY', alarmType: ALARM_TYPE })
-          }
-        />
         <MenuButton
           title="환경 정보 복사"
           icon={<Emoji>📄</Emoji>}
