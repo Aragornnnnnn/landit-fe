@@ -14,20 +14,29 @@ const offCycle = { current: null, today: null, remainingDays: null };
 describe('refundGuideCopyOf', () => {
   it('환급 상품을 산 사람에게는 그 상품이 돌려주는 금액과 기간을 말한다', () => {
     const view = rewardView({
-      current: rewardCycle({ maximumWon: 31920, balanceWon: 0 }),
-      remainingDays: 92,
+      current: rewardCycle({
+        maximumWon: 31920,
+        balanceWon: 0,
+        eligibleDays: 92,
+      }),
     });
 
     expect(refundGuideCopyOf(view)).toEqual({
+      eyebrow: '오늘부터 챌린지 시작!',
       amount: '최대 31,920원',
-      caption: '92일 동안 매일 하면 돌려받아요',
+      caption: '92일 동안 매일 공부하면 구독료를 돌려받아요',
     });
   });
 
-  it('남은 날을 모르면 기간 없이 말한다', () => {
-    const view = rewardView({ remainingDays: null });
+  it('며칠 지나 남은 날이 줄어도 상품의 전체 기간으로 말한다', () => {
+    const view = rewardView({
+      current: rewardCycle({ eligibleDays: 92 }),
+      remainingDays: 80,
+    });
 
-    expect(refundGuideCopyOf(view)?.caption).toBe('매일 하면 돌려받아요');
+    expect(refundGuideCopyOf(view)?.caption).toBe(
+      '92일 동안 매일 공부하면 구독료를 돌려받아요',
+    );
   });
 
   it('결제를 확인하는 중이면 금액을 단정하지 않고 두 상품을 같이 말한다', () => {
@@ -35,6 +44,7 @@ describe('refundGuideCopyOf', () => {
     const view = rewardView({ state: 'PENDING', ...offCycle });
 
     expect(refundGuideCopyOf(view)).toEqual({
+      eyebrow: '매일 공부하면 수강료를 돌려받아요',
       amount: '환급 챌린지 시작',
       caption: '6개월은 낸 금액 전부, 3개월은 80%를 돌려받아요',
     });

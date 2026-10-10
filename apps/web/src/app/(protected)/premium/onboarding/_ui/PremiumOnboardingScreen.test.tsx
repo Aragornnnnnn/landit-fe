@@ -135,8 +135,11 @@ const signIn = (role: 'USER' | 'ADMIN') =>
 // 3개월 환급 상품을 막 산 사람의 환급
 const bought = () =>
   rewardView({
-    current: rewardCycle({ maximumWon: 31920, balanceWon: 0 }),
-    remainingDays: 92,
+    current: rewardCycle({
+      maximumWon: 31920,
+      balanceWon: 0,
+      eligibleDays: 92,
+    }),
   });
 
 describe('PremiumOnboardingScreen', () => {
@@ -288,7 +291,9 @@ describe('PremiumOnboardingScreen', () => {
       tapNext();
 
       expect(await screen.findByText('최대 31,920원')).toBeVisible();
-      expect(screen.getByText('92일 동안 매일 하면 돌려받아요')).toBeVisible();
+      expect(
+        screen.getByText('92일 동안 매일 공부하면 구독료를 돌려받아요'),
+      ).toBeVisible();
     });
 
     it('환급 안내를 넘기면 알람 등록이 환급 문구로 나온다', async () => {
@@ -403,7 +408,9 @@ describe('PremiumOnboardingScreen', () => {
 
       // 쉬면 0원이 된다는 걸 알람보다 먼저 말한다
       expect(
-        screen.getByText('하루를 통째로 쉬면 쌓인 금액이 0원이 돼요'),
+        screen.getByText(
+          '위 3가지 학습 기록이 하나도 없는 날이 생기면 쌓인 금액이 0원으로 돌아가요',
+        ),
       ).toBeVisible();
     });
 

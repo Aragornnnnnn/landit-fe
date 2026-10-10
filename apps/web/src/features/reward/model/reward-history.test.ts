@@ -67,7 +67,7 @@ describe('historyRowsOf', () => {
     expect(rows.map((row) => row.dateLabel)).toEqual(['10.10', null, '10.9']);
   });
 
-  it('하루 쉼은 시각 대신 사라졌다고 말하고 금액은 음수 그대로 둔다', () => {
+  it('연속 학습 끊김은 시각 대신 초기화됐다고 말하고 금액은 음수 그대로 둔다', () => {
     // given — 초기화는 다음 날 0시에 일어나지만 쉰 날에 붙는다
     const [row] = historyRowsOf([
       item({
@@ -83,8 +83,8 @@ describe('historyRowsOf', () => {
 
     expect(row).toMatchObject({
       dateLabel: '10.9',
-      title: '하루 쉼',
-      note: '쌓인 금액이 사라졌어요',
+      title: '연속 학습 끊김',
+      note: '누적 환급액이 초기화됐어요',
       amountWon: -1550,
       balanceWon: 0,
     });

@@ -14,7 +14,11 @@ export const RefundGuideStep = ({
   <main className="flex h-dvh flex-col bg-background">
     <div className="pt-[max(var(--safe-area-inset-top),16px)]" />
     <div className="min-h-0 flex-1 overflow-y-auto pb-6">
-      <RefundGuide amount={copy.amount} caption={copy.caption} />
+      <RefundGuide
+        eyebrow={copy.eyebrow}
+        amount={copy.amount}
+        caption={copy.caption}
+      />
     </div>
     <footer className="flex-none border-t border-border px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),16px)]">
       <Button onClick={onNext}>다음</Button>

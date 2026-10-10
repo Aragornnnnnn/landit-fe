@@ -54,8 +54,8 @@ const bodyOf = (
     };
   if (item.type === 'RESET')
     return {
-      title: '하루 쉼',
-      note: '쌓인 금액이 사라졌어요',
+      title: '연속 학습 끊김',
+      note: '누적 환급액이 초기화됐어요',
       amountWon: item.amountWon,
     };
   if (item.type === 'CYCLE_END')

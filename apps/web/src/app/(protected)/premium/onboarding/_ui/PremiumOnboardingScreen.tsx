@@ -34,8 +34,9 @@ import { RefundGuideStep } from './RefundGuideStep';
 
 // 개발자 묶음의 「환급 문구로 보기」가 보여 주는 견본 — 6개월 상품을 막 산 사람
 const PREVIEW_REFUND_COPY: RefundGuideCopy = {
+  eyebrow: '오늘부터 챌린지 시작!',
   amount: `최대 ${formatWon(MAX_REFUND_WON)}`,
-  caption: '183일 동안 매일 하면 돌려받아요',
+  caption: '183일 동안 매일 공부하면 구독료를 돌려받아요',
 };
 
 // 안내에 적을 글자를 찾는다. 쌓는 중이 아니라는 답이면 한 번 더 받아 본다 —

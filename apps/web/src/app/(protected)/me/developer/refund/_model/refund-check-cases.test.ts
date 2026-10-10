@@ -60,7 +60,7 @@ describe('fakeHistoryItems', () => {
     expect(oldest.balanceWon - oldest.amountWon).toBeGreaterThanOrEqual(0);
   });
 
-  it('어제 쉬었으면 맨 위에 사라진 금액만큼의 하루 쉼 줄을 둔다', () => {
+  it('어제 쉬었으면 맨 위에 사라진 금액만큼의 연속 학습 끊김 줄을 둔다', () => {
     const { reward } = RECORD_CASES.reset;
 
     const [top, next] = fakeHistoryItems(reward);

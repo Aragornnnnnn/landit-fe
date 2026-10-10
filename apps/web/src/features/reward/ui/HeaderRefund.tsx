@@ -107,7 +107,6 @@ const HeaderClock = () => {
 export const RefundInviteLabel = () => (
   <>
     <Coin size={16} />
-    <span className="tracking-[0.1em]">PREMIUM</span>
-    <span>환급받기</span>
+    <span>환급 챌린지 시작</span>
   </>
 );

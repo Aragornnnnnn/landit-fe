@@ -12,6 +12,7 @@ import { Button } from '@/shared/ui/Button';
 export const RefundIntro = () => (
   <div className="pb-8">
     <RefundGuide
+      eyebrow="매일 공부하면 수강료를 돌려받아요"
       amount={`최대 ${formatWon(MAX_REFUND_WON)}`}
       caption="6개월은 낸 금액 전부, 3개월은 80%를 돌려받아요"
     />
