@@ -54,13 +54,7 @@ export const RefundScreen = () => {
       {(view.kind === 'intro' || view.kind === 'record') && (
         <footer className="flex-none border-t border-border px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),16px)]">
           {view.kind === 'intro' && <RefundStartButton />}
-          {view.kind === 'record' && (
-            <RefundApplyButton
-              reward={view.reward}
-              // 신청 방법이 정해지면 잇는다
-              onApply={() => {}}
-            />
-          )}
+          {view.kind === 'record' && <RefundApplyButton reward={view.reward} />}
         </footer>
       )}
     </main>
