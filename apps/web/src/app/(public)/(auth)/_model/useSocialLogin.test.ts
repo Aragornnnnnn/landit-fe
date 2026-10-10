@@ -1,4 +1,4 @@
-// 애플 개발자 계정 이전 중 애플 로그인만 잠시 막는 점검 가드를 검증한다
+// 소셜 로그인 훅 — 애플 로그인 점검 가드와, 성공한 로그인 방법을 기기에 남기는지 검증한다
 // @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -15,16 +15,25 @@ vi.mock('@/shared/auth/auth-store', () => ({
 }));
 
 // 네이티브 셸 안이다 — 브릿지가 요청을 받아간다
-const { postToNative } = vi.hoisted(() => ({
+const { postToNative, native, socialLogin } = vi.hoisted(() => ({
   postToNative: vi.fn<(message: unknown) => boolean>(() => true),
+  // 네이티브가 웹으로 보내는 메시지를 테스트가 대신 흘려보낸다
+  native: { emit: (_message: unknown): unknown => undefined },
+  socialLogin: vi.fn(),
 }));
 vi.mock('@/shared/bridge/web-bridge', () => ({
   postToNative,
-  subscribeFromNative: () => () => {},
+  subscribeFromNative: (listener: (message: unknown) => unknown) => {
+    native.emit = listener;
+    return () => {};
+  },
 }));
+vi.mock('@/shared/auth/api/social-login', () => ({ socialLogin }));
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.clearAllMocks();
+  localStorage.clear();
 });
 
 describe('useSocialLogin — 애플 로그인 점검 가드', () => {
@@ -70,5 +79,46 @@ describe('useSocialLogin — 애플 로그인 점검 가드', () => {
       provider: 'apple',
     });
     expect(result.current.error).toBeNull();
+  });
+});
+
+describe('useSocialLogin — 로그인한 방법 남기기', () => {
+  const nativeSuccess = {
+    type: 'SOCIAL_LOGIN_SUCCESS',
+    provider: 'google',
+    idToken: 'id',
+    nonce: 'n',
+  };
+
+  it('네이티브 로그인이 백엔드 로그인까지 성공하면 그 방법을 남긴다', async () => {
+    // given
+    socialLogin.mockResolvedValue({
+      accessToken: 'a',
+      refreshToken: 'r',
+      user: { userId: 1, provider: 'GOOGLE', newUser: false },
+    });
+    renderHook(() => useSocialLogin());
+
+    // when
+    await act(async () => {
+      await native.emit(nativeSuccess);
+    });
+
+    // then
+    expect(localStorage.getItem('landit-last-login-provider')).toBe('google');
+  });
+
+  it('백엔드 로그인이 실패하면 남기지 않는다', async () => {
+    // given
+    socialLogin.mockRejectedValue(new Error('401'));
+    renderHook(() => useSocialLogin());
+
+    // when
+    await act(async () => {
+      await native.emit(nativeSuccess);
+    });
+
+    // then
+    expect(localStorage.getItem('landit-last-login-provider')).toBeNull();
   });
 });

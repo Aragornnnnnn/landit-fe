@@ -24,13 +24,23 @@ vi.mock('@/shared/auth/web-social-login', () => ({
   clearPendingSocialLogin: vi.fn(),
   startWebSocialLogin: vi.fn(),
 }));
+vi.mock('@/shared/auth/api/social-login', () => ({
+  socialLogin: vi.fn(async () => ({
+    accessToken: 'a',
+    refreshToken: 'r',
+    user: { userId: 1, provider: 'KAKAO', newUser: false },
+  })),
+}));
 // 셸 밖(일반 브라우저)이다 — 네이티브 브릿지는 없다
 vi.mock('@/shared/bridge/web-bridge', () => ({
   postToNative: () => false,
   subscribeFromNative: () => () => {},
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  localStorage.clear();
+});
 
 const renderCallback = async (fetchImpl: () => Promise<unknown>) => {
   vi.stubGlobal('fetch', vi.fn(fetchImpl));
@@ -76,5 +86,28 @@ describe('SocialLoginCallbackPage', () => {
     expect(
       screen.getByRole('button', { name: /카카오로 로그인하기/ }),
     ).toBeEnabled();
+  });
+
+  it('로그인에 성공하면 다음 방문에 알려줄 수 있게 로그인한 방법을 남긴다', async () => {
+    // when — 토큰 교환과 백엔드 로그인이 모두 끝났다
+    await renderCallback(async () => ({
+      ok: true,
+      json: async () => ({ idToken: 'id' }),
+    }));
+
+    // then
+    expect(localStorage.getItem('landit-last-login-provider')).toBe('kakao');
+  });
+
+  it('로그인에 실패하면 로그인한 방법을 남기지 않는다', async () => {
+    // when
+    await renderCallback(async () => ({
+      ok: false,
+      json: async () => ({ error: '토큰 교환에 실패했어요.' }),
+    }));
+    await screen.findByText('토큰 교환에 실패했어요.');
+
+    // then
+    expect(localStorage.getItem('landit-last-login-provider')).toBeNull();
   });
 });
