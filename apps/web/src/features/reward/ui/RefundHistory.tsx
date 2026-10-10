@@ -19,7 +19,7 @@ const HistoryLine = ({ row }: { row: HistoryRow }) => (
       <span className="block text-[16px] font-bold text-foreground">
         {row.title}
       </span>
-      <span className="mt-0.5 block text-[13px] font-medium text-muted-foreground">
+      <span className="mt-0.5 block text-[13px] font-medium break-keep text-muted-foreground">
         {row.note}
       </span>
     </span>
