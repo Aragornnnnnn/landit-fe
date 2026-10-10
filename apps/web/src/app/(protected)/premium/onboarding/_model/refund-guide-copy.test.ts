@@ -19,7 +19,6 @@ describe('refundGuideCopyOf', () => {
         balanceWon: 0,
         eligibleDays: 92,
       }),
-      remainingDays: 92,
     });
 
     expect(refundGuideCopyOf(view)).toEqual({
