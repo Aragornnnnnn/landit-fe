@@ -13,8 +13,8 @@
 5개 파라미터의 역할을 고정한다. 값은 전부 소문자 스네이크 케이스.
 **source·medium·campaign 3개는 필수 세트**(어느 유입이든 함께 단다), content·term은 선택이다. 자리는 BE 서버 푸시가 다는 값을 기준으로 맞췄다.
 
-- `utm_source` (필수) — **유입 수단.** 우리가 보내는 서버 푸시는 `push`, 홈 화면 위젯은 `widget`, 소셜이라면 어느 플랫폼인가(`kakao`/`instagram`), 이메일이면 발송 도구(`stibee`). GA 계열 도구는 source가 없으면 유입 자체를 인식하지 못한다
-- `utm_medium` (필수) — **채널 종류.** 고정 어휘만 쓴다: `notification`(알림) `widget` `social` `email` `cpc`(유료 광고) `referral`
+- `utm_source` (필수) — **유입 수단.** 우리가 보내는 서버 푸시는 `push`, 홈 화면 위젯은 `widget`, 잠금화면 알람은 `alarm`, 소셜이라면 어느 플랫폼인가(`kakao`/`instagram`), 이메일이면 발송 도구(`stibee`). GA 계열 도구는 source가 없으면 유입 자체를 인식하지 못한다
+- `utm_medium` (필수) — **채널 종류.** 고정 어휘만 쓴다: `notification`(알림) `widget` `alarm`(잠금화면 알람) `social` `email` `cpc`(유료 광고) `referral`
 - `utm_campaign` (필수) — **발송/캠페인의 목적 이름.** `daily_scenario_reminder` `mailbox_reply` `launch_event` 같은 식으로 짓는다
 - `utm_content` (선택) — **같은 캠페인 안의 변형 구분.** 문구 A/B, 소재 구분. 변형이 없으면 생략
 - `utm_term` (선택) — 유료 검색 키워드용. 우리는 쓰지 않는다
@@ -38,7 +38,7 @@
 
 홈 화면 위젯 탭은 셸이 단다 — `/scenario?utm_source=widget&utm_medium=widget&utm_campaign=streak_widget` (`apps/mobile/src/widgets/widget-link.ts`). 웹은 `Page Viewed { entry_campaign: 'streak_widget' }`로 파생한다. iOS·Android 위젯 모두 `landit://widget` 딥링크로 앱을 열고, 셸이 그 URL을 알아보고 이 경로로 웹을 띄운다(콜드 스타트는 초기 URI, 앱이 떠 있으면 NAVIGATE 브릿지).
 
-잠금화면 알람의 「대화하러 가기」는 웹이 단다 — `/scenario?utm_source=alarm&utm_medium=alarm&utm_campaign=scenario_alarm`. 알람을 걸 때 셸에 넘기는 갈 주소(`ALARM_PATH`, `apps/web/src/features/alarm/model/shell-alarm.ts`)에 달아 두므로 셸은 그대로다. 웹은 `Page Viewed { entry_campaign: 'scenario_alarm' }`로 파생한다. 앱이 꺼져 있었으면 첫 주소로, 떠 있었으면 `ALARM_OPENED` 브릿지로 들어온다 — 학습 중이라 화면을 옮기지 않은 경우는 유입으로 잡히지 않는다. 주소가 바뀌면 이미 걸린 알람은 앱을 한 번 열 때 다시 걸리므로, 그 전에 울린 알람은 딱지 없이 들어온다.
+잠금화면 알람의 「대화하러 가기」는 웹이 단다 — `/scenario?utm_source=alarm&utm_medium=alarm&utm_campaign=scenario_alarm`. 알람을 걸 때 셸에 넘기는 갈 주소(`ALARM_PATH`, `apps/web/src/features/alarm/model/shell-alarm.ts`)에 달아 두므로 셸은 그대로다. 웹은 `Page Viewed { entry_campaign: 'scenario_alarm' }`로 파생한다. 앱이 꺼져 있었으면 첫 주소로, 떠 있었으면 `ALARM_OPENED` 브릿지로 들어온다 — 학습 중이라 화면을 옮기지 않은 경우는 유입으로 잡히지 않는다. 주소가 바뀌면 이미 걸린 알람은 앱을 한 번 열 때 다시 걸리므로, 그 전에 울린 알람은 딱지 없이 들어온다. 알람을 쓰는 사람은 거의 매일 이 주소로 앱을 열어 유저 속성 `utm_*`가 `alarm`으로 덮이므로, 유입은 유저 속성이 아니라 `Page Viewed.entry_campaign`으로 본다.
 
 웹은 `utm_medium`이 `notification`(서버 푸시) 또는 `push`(1.1.0 셸이 예약해 둔 구 로컬 알림, `utm_source=landit`)면 알림 유입으로 읽는다. 어휘는 `apps/web/src/shared/analytics/utm.ts`에 있다.
 
