@@ -16,6 +16,8 @@ interface SocialLoginResponse {
     email: string | null;
     provider: string;
     newUser: boolean;
+    // 이 필드가 생기기 전에 로그인해 저장된 회원엔 없다 (다시 로그인하면 생긴다)
+    role?: 'USER' | 'ADMIN';
   };
 }
 

@@ -261,7 +261,7 @@ describe('FeedbackSummary', () => {
   it('비교할 지난 기록이 없으면 성장 카드 자리에 빈 문구를 보인다', () => {
     renderSummary(feedback({ growthFeedback: null }));
 
-    expect(screen.getByText('아직 지난 기록이 없어요')).toBeInTheDocument();
+    expect(screen.getByText('아직 지난 기록이 없어요.')).toBeInTheDocument();
   });
 
   it('다시 쓴 배운 표현이 있으면 목록을 보인다', () => {
@@ -290,7 +290,7 @@ describe('FeedbackSummary', () => {
   it('다시 쓴 배운 표현이 없으면 빈 문구를 보인다', () => {
     renderSummary(feedback({ expressionReuse: { pending: false, items: [] } }));
 
-    expect(screen.getByText('아직 배운 표현이 없어요')).toBeInTheDocument();
+    expect(screen.getByText('아직 배운 표현이 없어요.')).toBeInTheDocument();
   });
 
   it('필드가 없는 구버전 응답이면 성장·배운 표현 카드를 그리지 않는다 — 빈 문구가 거짓이 된다', () => {
@@ -303,10 +303,10 @@ describe('FeedbackSummary', () => {
     renderSummary(legacy);
 
     expect(
-      screen.queryByText('아직 지난 기록이 없어요'),
+      screen.queryByText('아직 지난 기록이 없어요.'),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByText('아직 배운 표현이 없어요'),
+      screen.queryByText('아직 배운 표현이 없어요.'),
     ).not.toBeInTheDocument();
   });
 

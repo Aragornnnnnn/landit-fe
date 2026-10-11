@@ -20,12 +20,15 @@ vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 vi.mock('@/shared/bridge/native-context', () => ({
   getNativeContextSnapshot: mocks.getNativeContext,
 }));
-vi.mock('@/features/subscription/model/payment-flag', () => ({
+vi.mock('@/features/subscription/model/paywall-gate/payment-flag', () => ({
   PAYMENT_ENABLED: true,
 }));
-vi.mock('@/features/subscription/model/useSubscriptionQuery', () => ({
-  useSubscriptionQuery: () => mocks.query,
-}));
+vi.mock(
+  '@/features/subscription/model/my-subscription/useSubscriptionQuery',
+  () => ({
+    useSubscriptionQuery: () => mocks.query,
+  }),
+);
 // next/link는 next 밑의 react 복사본을 잡아 훅 dispatcher가 null이 된다 — 주소·클릭만 보면 되니 평범한 앵커로 대체한다
 vi.mock('next/link', () => ({
   default: ({

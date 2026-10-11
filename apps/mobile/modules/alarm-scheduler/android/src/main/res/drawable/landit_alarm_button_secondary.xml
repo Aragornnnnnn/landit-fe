@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- landit: 위쪽 알람 카드의 "끄기" 버튼 바탕 (옅은 회색) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+  <solid android:color="#33808080" />
+  <corners android:radius="12dp" />
+</shape>

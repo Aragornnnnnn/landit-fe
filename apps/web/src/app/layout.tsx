@@ -2,11 +2,15 @@
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
 
+import { AlarmPropertiesSync } from '@/features/alarm/ui/AlarmPropertiesSync';
+import { AlarmSync } from '@/features/alarm/ui/AlarmSync';
 import { AppUpdateGate } from '@/features/app-update/ui/AppUpdateGate';
 import { PushDeviceSync } from '@/features/notification/ui/PushDeviceSync';
 import { ProfilePropertiesSync } from '@/features/onboarding/ui/ProfilePropertiesSync';
-import { IdentifySync } from '@/features/subscription/ui/IdentifySync';
-import { SubscriptionPropertiesSync } from '@/features/subscription/ui/SubscriptionPropertiesSync';
+import { RewardPropertiesSync } from '@/features/reward/ui/RewardPropertiesSync';
+import { REWARD_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
+import { SubscriptionPropertiesSync } from '@/features/subscription/ui/my-subscription/SubscriptionPropertiesSync';
+import { IdentifySync } from '@/features/subscription/ui/purchase/IdentifySync';
 import { WidgetChangeSync } from '@/features/widget/ui/WidgetChangeSync';
 import { WidgetDataSync } from '@/features/widget/ui/WidgetDataSync';
 import { AnalyticsBootstrap, PageViewTracker } from '@/shared/analytics';
@@ -56,9 +60,12 @@ export default function RootLayout({
           <PushDeviceSync />
           <WidgetDataSync />
           <WidgetChangeSync />
+          <AlarmSync />
           <IdentifySync />
           <SubscriptionPropertiesSync />
           <ProfilePropertiesSync />
+          <RewardPropertiesSync enabled={REWARD_CHALLENGE_ENABLED} />
+          <AlarmPropertiesSync />
         </Providers>
         <Toaster />
         <SpeedInsights />

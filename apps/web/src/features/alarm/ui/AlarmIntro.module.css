@@ -1,0 +1,37 @@
+/* 알람 소개 폰 그림의 떨림 — 2.95초마다 앞 0.55초 동안 알람처럼 흔들린다. 컴포지터에서 돌도록 CSS로 둔다 */
+@keyframes ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  3% {
+    transform: rotate(-2.5deg);
+  }
+  6% {
+    transform: rotate(2.5deg);
+  }
+  9% {
+    transform: rotate(-2deg);
+  }
+  12% {
+    transform: rotate(2deg);
+  }
+  15.5% {
+    transform: rotate(-1deg);
+  }
+  18.6%,
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.ringing {
+  /* 튀어 오르며 바로 울리기 시작한다 */
+  animation: ring 2.95s ease-in-out 0.25s infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ringing {
+    animation: none;
+  }
+}

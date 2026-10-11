@@ -9,27 +9,25 @@ import { useRouter } from 'next/navigation';
 import { LEVEL_NAMES } from '@/features/feedback/model/level-assessment';
 import { toEnglishLevel } from '@/features/onboarding/model/english-level';
 import { useLearningLevelQuery } from '@/features/onboarding/model/useLearningLevelQuery';
+import { useRewardQuery } from '@/features/reward/model/useRewardQuery';
 import { useStreakCalendarQuery } from '@/features/streak/model/useStreakCalendarQuery';
 import type { MySubscription } from '@/features/subscription/api/subscription';
-import {
-  resolveStorePlatform,
-  STORE,
-} from '@/features/subscription/model/store-links';
+import { STORE } from '@/features/subscription/model/my-subscription/store-links';
 import {
   canCancelAtStore,
   summarizeSubscription,
   type PaidSubscriptionSummary,
-} from '@/features/subscription/model/subscription-summary';
-import { useSubscriptionQuery } from '@/features/subscription/model/useSubscriptionQuery';
+} from '@/features/subscription/model/my-subscription/subscription-summary';
+import { useStorePlatform } from '@/features/subscription/model/my-subscription/useStorePlatform';
+import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
+import { REWARD_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
-import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
 import {
   backOrReplace,
   MAILBOX_COMPOSE_PATH,
   SUBSCRIPTION_MANAGE_PATH,
 } from '@/shared/lib/routes';
-import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { BackHeader } from '@/shared/ui/BackHeader';
 
 import {
@@ -43,6 +41,7 @@ import {
 } from '../_model/cancel-flow';
 import {
   methodRetentionContent,
+  refundStakeOf,
   retentionContent,
 } from '../_model/retention-content';
 import { MethodStep } from './MethodStep';
@@ -51,7 +50,7 @@ import { RetentionStep } from './RetentionStep';
 
 interface FlowProps {
   summary: PaidSubscriptionSummary;
-  /** BE가 준 결제 스토어 — 셸 플랫폼보다 우선한다 (구독 관리와 같은 규칙) */
+  /** BE가 준 결제 스토어 — 셸 플랫폼보다 우선한다 ({@link useStorePlatform}) */
   paidStore: MySubscription['store'];
 }
 
@@ -60,8 +59,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
   const [step, setStep] = useState<CancelStep>({ kind: 'reason' });
   const [draft, setDraft] = useState<CancelDraft>(EMPTY_DRAFT);
 
-  const context = useClientOnlyValue(getNativeContextSnapshot, null);
-  const store = STORE[resolveStorePlatform(paidStore, context?.platform)];
+  const store = STORE[useStorePlatform(paidStore)];
   const nickname = useAuthStore(
     (state) => state.member?.nickname?.trim() || '게스트',
   );
@@ -69,6 +67,9 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
   const { calendar } = useStreakCalendarQuery({ enabled: true });
   const { data: profile } = useLearningLevelQuery();
   const level = toEnglishLevel(profile?.learningLevel ?? null);
+  // 가격 부담 화면이 환급을 쌓는 중인 사람에게 다른 답을 한다 — 스위치가 꺼져 있으면 묻지 않는다
+  const { reward } = useRewardQuery({ enabled: REWARD_CHALLENGE_ENABLED });
+  const stake = refundStakeOf(reward);
 
   const leaveToManage = () => backOrReplace(router, SUBSCRIPTION_MANAGE_PATH);
 
@@ -84,6 +85,9 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
       track(EVENTS.CANCEL_RETENTION_VIEWED, {
         reason,
         ...(reason === 'price' && summary.plan && { plan: summary.plan }),
+        // 환급이 열린 뒤의 가격 화면에만 — 그 전에는 환급 문구가 나올 수 없다
+        ...(reason === 'price' &&
+          REWARD_CHALLENGE_ENABLED && { reward: stake !== null }),
       });
     }
     setStep(next);
@@ -155,6 +159,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
       case 'retention': {
         const content = retentionContent(step.reason, {
           summary,
+          stake,
           nickname,
           totalActiveDays: calendar?.totalActiveDays ?? null,
           levelLabel: level ? `${LEVEL_NAMES[level]} Lv.${level}` : null,

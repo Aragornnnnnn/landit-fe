@@ -9,3 +9,6 @@ pnpm-lock.yaml
 # 툴이 자동 생성하는 파일 — 재생성 시 diff가 생기지 않도록 원본 그대로 유지
 next-env.d.ts
 expo-env.d.ts
+
+# 외부에서 가져온 코드 — 원본과 비교하기 쉽게 원본 서식 그대로 둔다
+apps/mobile/modules/alarm-scheduler/

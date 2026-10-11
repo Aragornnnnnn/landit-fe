@@ -10,7 +10,7 @@ import { toSessionTitle } from '@/features/small-talk/lib/session-summary';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { toExpressionListItems } from '@/features/small-talk/model/session-expressions';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
-import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
+import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { toDayLabel } from '@/shared/lib/day-label';
 import {

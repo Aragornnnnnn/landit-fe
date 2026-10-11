@@ -14,9 +14,9 @@ import {
   useSessionFeedbackQuery,
 } from '@/features/feedback/model/useSessionFeedbackQuery';
 import { FeedbackFlow } from '@/features/feedback/ui/FeedbackFlow';
+import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
 // 가로 import 사유: 피드백이 끝나는 자리가 무료 구간이 끝나는 자리라 여기서 페이월 게이트를 건다
-import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
-import { useSubscriptionQuery } from '@/features/subscription/model/useSubscriptionQuery';
+import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import {
   paywallPath,

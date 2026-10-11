@@ -3,6 +3,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { RewardView } from '@/features/reward/api/reward';
+import { rewardView } from '@/features/reward/model/reward.fixture';
 import type { MySubscription } from '@/features/subscription/api/subscription';
 
 import { CancelFlowScreen } from './CancelFlowScreen';
@@ -18,8 +20,22 @@ const mocks = vi.hoisted(() => ({
     isError: false,
   },
   learningLevel: { data: { learningLevel: 3 } },
+  reward: { reward: null as RewardView | null },
+  rewardLaunched: true,
 }));
+vi.mock(
+  '@/features/subscription/model/paywall-gate/payment-flag',
+  async (original) => ({
+    ...(await original<object>()),
+    get REWARD_CHALLENGE_ENABLED() {
+      return mocks.rewardLaunched;
+    },
+  }),
+);
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
+vi.mock('@/features/reward/model/useRewardQuery', () => ({
+  useRewardQuery: () => mocks.reward,
+}));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     replace: mocks.replace,
@@ -30,9 +46,12 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/shared/bridge/native-context', () => ({
   getNativeContextSnapshot: () => null,
 }));
-vi.mock('@/features/subscription/model/useSubscriptionQuery', () => ({
-  useSubscriptionQuery: () => mocks.query,
-}));
+vi.mock(
+  '@/features/subscription/model/my-subscription/useSubscriptionQuery',
+  () => ({
+    useSubscriptionQuery: () => mocks.query,
+  }),
+);
 vi.mock('@/features/onboarding/model/useLearningLevelQuery', () => ({
   useLearningLevelQuery: () => mocks.learningLevel,
 }));
@@ -74,6 +93,8 @@ beforeEach(() => {
   mocks.track.mockClear();
   mocks.replace.mockClear();
   mocks.push.mockClear();
+  mocks.reward = { reward: null };
+  mocks.rewardLaunched = true;
 });
 afterEach(cleanup);
 
@@ -138,6 +159,7 @@ describe('② 사유별 화면', () => {
     expect(mocks.track).toHaveBeenCalledWith('Cancel Retention Viewed', {
       reason: 'price',
       plan: 'monthly',
+      reward: false,
     });
   });
 
@@ -246,5 +268,61 @@ describe('다른 방법 → ③', () => {
     expect(
       screen.getByRole('heading', { name: /이유를 알려주세요/ }),
     ).toBeInTheDocument();
+  });
+});
+
+describe('환급을 쌓는 중인 사람', () => {
+  it('가격 부담을 고르면 하루 요금 대신 돌려받는 금액으로 답한다', () => {
+    mocks.reward = { reward: rewardView() };
+    renderScreen(
+      premium({ productId: 'com.saynow.app.premium.halfyear', price: 59_900 }),
+    );
+
+    chooseReason('가격이 부담돼요');
+
+    expect(
+      screen.getByText('최대 59,900원까지 돌려받는 플랜이에요.'),
+    ).toBeInTheDocument();
+  });
+});
+
+describe('가격 화면 노출의 환급 여부', () => {
+  const halfyear = () =>
+    premium({ productId: 'com.saynow.app.premium.halfyear', price: 59_900 });
+
+  it('환급을 쌓는 중이면 환급 문구를 봤다고 싣는다', () => {
+    mocks.reward = { reward: rewardView() };
+    renderScreen(halfyear());
+
+    chooseReason('가격이 부담돼요');
+
+    expect(mocks.track).toHaveBeenCalledWith('Cancel Retention Viewed', {
+      reason: 'price',
+      plan: 'halfyear',
+      reward: true,
+    });
+  });
+
+  it('환급이 열리기 전에는 환급 여부를 싣지 않는다', () => {
+    mocks.rewardLaunched = false;
+    renderScreen(premium());
+
+    chooseReason('가격이 부담돼요');
+
+    expect(mocks.track).toHaveBeenCalledWith('Cancel Retention Viewed', {
+      reason: 'price',
+      plan: 'monthly',
+    });
+  });
+
+  it('가격이 아닌 사유에는 싣지 않는다', () => {
+    mocks.reward = { reward: rewardView() };
+    renderScreen(halfyear());
+
+    chooseReason('쓸 시간이 없어요');
+
+    expect(mocks.track).toHaveBeenCalledWith('Cancel Retention Viewed', {
+      reason: 'time',
+    });
   });
 });

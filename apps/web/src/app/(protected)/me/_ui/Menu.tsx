@@ -94,12 +94,15 @@ export function MenuLink({
   title,
   description,
   icon,
+  value,
   onClick,
 }: {
   href: string;
   title: string;
   description?: string;
   icon?: React.ReactNode;
+  /** 화살표 앞에 붙는 지금 값 — "매일 오후 7시"처럼 */
+  value?: React.ReactNode;
   /** 계측용 — 이동은 링크가 한다 */
   onClick?: () => void;
 }) {
@@ -109,7 +112,12 @@ export function MenuLink({
         icon={icon}
         title={title}
         description={description}
-        trailing={<Chevron />}
+        trailing={
+          <>
+            {value}
+            <Chevron />
+          </>
+        }
       />
     </Link>
   );

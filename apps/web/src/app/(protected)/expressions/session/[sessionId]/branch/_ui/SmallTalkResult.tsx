@@ -14,7 +14,7 @@ import {
 } from '@/features/expression/ui/ExpressionStages';
 import { toExpressionListItems } from '@/features/small-talk/model/session-expressions';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
-import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
+import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import {

@@ -11,6 +11,10 @@ import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { closeTopSheet } from '@/shared/ui/bottom-sheet-back';
 import { showToast, TOAST_MS } from '@/shared/ui/toast';
 
+// 알람의 "대화하러 가기"가 와도 이동하지 않는 화면 — 대화·표현학습·복습 퀴즈·설문·온보딩, 하던 걸 잃지 않게
+const ALARM_BLOCKED_PATH =
+  /^\/(conversation|expressions|reviews|survey|onboarding)(\/|$)/;
+
 export const BridgeListener = () => {
   const pathname = usePathname();
   const router = useRouter();
@@ -81,6 +85,13 @@ export const BridgeListener = () => {
         pathnameRef.current !== '/onboarding'
       ) {
         router.push(message.url);
+      }
+      // 알람의 "대화하러 가기" — 알람이 정한 화면으로 간다
+      if (
+        message.type === 'ALARM_OPENED' &&
+        !ALARM_BLOCKED_PATH.test(pathnameRef.current)
+      ) {
+        router.push(message.path);
       }
     });
     // router는 App Router에서 안정된 객체라 재구독이 일어나지 않는다

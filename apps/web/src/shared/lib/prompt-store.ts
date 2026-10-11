@@ -44,9 +44,3 @@ export const clearPromptRecords = () => {
     // 못 지우면 시트가 한 번 덜 보일 뿐이다
   }
 };
-
-export const getDeviceToday = () => {
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-};

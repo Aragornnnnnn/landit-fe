@@ -7,23 +7,22 @@ import { EVENTS, type StoreSubscriptionAction } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import {
-  resolveStorePlatform,
   STORE,
   type StorePlatform,
-} from '@/features/subscription/model/store-links';
+} from '@/features/subscription/model/my-subscription/store-links';
 import {
   canCancelAtStore,
   summarizeSubscription,
   type PaidSubscriptionSummary,
-} from '@/features/subscription/model/subscription-summary';
-import { useSubscriptionQuery } from '@/features/subscription/model/useSubscriptionQuery';
-import { BenefitList } from '@/features/subscription/ui/BenefitList';
+} from '@/features/subscription/model/my-subscription/subscription-summary';
+import { useStorePlatform } from '@/features/subscription/model/my-subscription/useStorePlatform';
+import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
 import {
   GOLD_GRADIENT,
   PremiumBadge,
 } from '@/features/subscription/ui/premium-brand';
+import { BenefitList } from '@/features/subscription/ui/product/BenefitList';
 import { track } from '@/shared/analytics';
-import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
 import {
   backToMyPage,
   MY_PAGE_PATH,
@@ -31,7 +30,6 @@ import {
   SUBSCRIPTION_CANCEL_PATH,
   SUBSCRIPTION_HISTORY_PATH,
 } from '@/shared/lib/routes';
-import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { Emoji } from '@/shared/ui/emoji';
 import { AppStoreIcon, GooglePlayIcon } from '@/shared/ui/StoreIcons';
@@ -160,9 +158,8 @@ const NoSubscription = () => (
 export const SubscriptionManageScreen = () => {
   const router = useRouter();
   const { subscription, isPending, isError } = useSubscriptionQuery();
-  const context = useClientOnlyValue(getNativeContextSnapshot, null);
-  // 결제한 스토어(BE)가 우선, 없으면 셸 플랫폼, 브라우저는 iOS — 애플 구독 페이지는 웹에서도 열린다
-  const platform = resolveStorePlatform(subscription?.store, context?.platform);
+  // 브라우저는 iOS — 애플 구독 페이지는 웹에서도 열린다
+  const platform = useStorePlatform(subscription?.store);
   const summary = summarizeSubscription(subscription);
 
   const body = () => {

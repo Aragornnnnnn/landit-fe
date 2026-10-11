@@ -5,11 +5,8 @@ import type {
   SatisfactionTalk,
 } from '@landit/analytics';
 
-import {
-  getDeviceToday,
-  readPromptEntry,
-  updatePromptEntry,
-} from '@/shared/lib/prompt-store';
+import { getDeviceToday } from '@/shared/lib/device-today';
+import { readPromptEntry, updatePromptEntry } from '@/shared/lib/prompt-store';
 
 // 기록은 공용 프롬프트 버킷(landit-prompts)에 satisfaction: 네임스페이스로 남긴다
 export { PROMPT_RECORD_KEY } from '@/shared/lib/prompt-store';

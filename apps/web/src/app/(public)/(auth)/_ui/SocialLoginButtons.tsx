@@ -5,6 +5,7 @@
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { AppleIcon, GoogleIcon, KakaoIcon } from '@/shared/ui/SocialIcons';
 
+import { readLastLoginProvider } from '../_model/last-login-provider';
 import { useSocialLogin, type SocialProvider } from '../_model/useSocialLogin';
 import styles from './login-motion.module.css';
 import { LoginButton } from './LoginButton';
@@ -26,11 +27,14 @@ export const SocialLoginButtons = ({
     () => /Android/i.test(navigator.userAgent),
     false,
   );
+  // 로그인이 진행 중이면 표시를 내린다 — 다른 방법으로 들어가는 중에 지난 방법을 가리키지 않게
+  const lastProvider = useClientOnlyValue(readLastLoginProvider, null);
+  const recent = busy ? null : lastProvider;
 
   return (
     <div className={`${styles.buttons} flex flex-col gap-3`}>
       {error && (
-        <p className="text-center text-sm font-medium text-destructive">
+        <p className="mb-2 text-center text-sm font-medium text-destructive">
           {error}
         </p>
       )}
@@ -41,6 +45,7 @@ export const SocialLoginButtons = ({
         onClick={() => login('kakao')}
         disabled={busy}
         loading={pending === 'kakao'}
+        recent={recent === 'kakao'}
       />
       <LoginButton
         label="구글로 로그인하기"
@@ -49,6 +54,7 @@ export const SocialLoginButtons = ({
         onClick={() => login('google')}
         disabled={busy}
         loading={pending === 'google'}
+        recent={recent === 'google'}
       />
       {!isAndroid && (
         <LoginButton
@@ -58,6 +64,7 @@ export const SocialLoginButtons = ({
           onClick={() => login('apple')}
           disabled={busy}
           loading={pending === 'apple'}
+          recent={recent === 'apple'}
         />
       )}
     </div>

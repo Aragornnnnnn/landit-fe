@@ -1,7 +1,7 @@
 // 골드 카드 문구 규칙 — 제목의 플랜, 상태별 날짜 라벨, 결제 금액과 비교가
 import { describe, expect, it } from 'vitest';
 
-import type { PaidSubscriptionSummary } from '@/features/subscription/model/subscription-summary';
+import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
 
 import { toAmountRow, toCardTitle, toDateRow } from './subscription-card';
 
@@ -20,6 +20,9 @@ describe('toCardTitle', () => {
   it('구독 중이고 플랜을 알면 플랜을 앞에 붙이고, 모르면 상태만 말한다', () => {
     expect(toCardTitle(active({ plan: 'yearly' }))).toBe(
       '연간 프리미엄을 쓰고 있어요',
+    );
+    expect(toCardTitle(active({ plan: 'halfyear' }))).toBe(
+      '6개월 프리미엄을 쓰고 있어요',
     );
     expect(toCardTitle(active())).toBe('프리미엄을 쓰고 있어요');
   });
@@ -76,6 +79,14 @@ describe('toAmountRow', () => {
     expect(toAmountRow(active({ plan: 'monthly', price: 14_900 }))).toEqual({
       label: '다음 결제 금액',
       value: '14,900원',
+      listPrice: undefined,
+    });
+  });
+
+  it('3·6개월은 비교가 없이 다음 결제 금액만 보여 준다', () => {
+    expect(toAmountRow(active({ plan: 'halfyear', price: 59_900 }))).toEqual({
+      label: '다음 결제 금액',
+      value: '59,900원',
       listPrice: undefined,
     });
   });

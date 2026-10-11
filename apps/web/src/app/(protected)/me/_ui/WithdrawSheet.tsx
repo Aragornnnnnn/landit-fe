@@ -4,8 +4,8 @@
 // 탈퇴해도 스토어 구독은 안 끊겨 돈만 계속 나가기 때문이다. 해지 예약(자동 갱신 꺼짐)은 남은 기간만 버리는 거라 막지 않는다
 import { useRouter } from 'next/navigation';
 
-import { summarizeSubscription } from '@/features/subscription/model/subscription-summary';
-import { useSubscriptionQuery } from '@/features/subscription/model/useSubscriptionQuery';
+import { summarizeSubscription } from '@/features/subscription/model/my-subscription/subscription-summary';
+import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
 import { SUBSCRIPTION_MANAGE_PATH } from '@/shared/lib/routes';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';

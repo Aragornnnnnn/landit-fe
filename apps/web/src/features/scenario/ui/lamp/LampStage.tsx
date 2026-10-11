@@ -105,9 +105,10 @@ export const LampStage = ({
 
   // 자동 소환 — 그날 처음이거나 알림으로 들어왔을 때만. 그 외엔 카드에 담겨 있다
   useEffect(() => {
+    // 소환할 수 없는 카드여도 딱지는 뗀다 — 남으면 뒤로 돌아올 때 유입이 또 세어진다
+    const fromReminder = consumeReminderEntry();
     if (!today || !onStart) return;
 
-    const fromReminder = consumeReminderEntry();
     if (!decideSummon({ lastSeen: readLastSummoned(), today, fromReminder }))
       return;
 

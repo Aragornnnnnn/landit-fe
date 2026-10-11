@@ -9,7 +9,7 @@ import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQ
 import { ScenarioCardBack } from './ScenarioCardBack';
 
 // 페이월 게이트는 구독·스트릭 조회를 끌고 온다 — 이 화면 테스트에선 항상 열린 문으로 치환한다
-vi.mock('@/features/subscription/model/usePaywallGate', () => ({
+vi.mock('@/features/subscription/model/paywall-gate/usePaywallGate', () => ({
   usePaywallGate: () => ({
     decision: 'open',
     guard: (go: () => void) => go(),

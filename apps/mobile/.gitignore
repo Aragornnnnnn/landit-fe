@@ -41,3 +41,6 @@ example
 # generated native folders
 /ios
 /android
+
+# 앱 안 모듈의 Gradle 빌드 산출물
+modules/*/android/build/

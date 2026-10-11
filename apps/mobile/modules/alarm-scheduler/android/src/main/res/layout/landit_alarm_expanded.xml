@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- landit: 알림을 펼쳤을 때 — 램프 그림을 가운데 크게 보여 주고 그 아래 제목과 버튼 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+  android:paddingTop="4dp"
+  android:paddingBottom="4dp">
+
+  <ImageView
+    android:id="@+id/landit_alarm_lamp"
+    android:layout_width="match_parent"
+    android:layout_height="120dp"
+    android:layout_marginBottom="8dp"
+    android:scaleType="fitCenter" />
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <LinearLayout
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+      android:orientation="vertical">
+
+      <TextView
+        android:id="@+id/landit_alarm_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textAppearance="@android:style/TextAppearance.Material.Notification.Title"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+      <TextView
+        android:id="@+id/landit_alarm_body"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textAppearance="@android:style/TextAppearance.Material.Notification" />
+    </LinearLayout>
+  </LinearLayout>
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="10dp"
+    android:orientation="horizontal">
+
+    <TextView
+      android:id="@+id/landit_alarm_stop"
+      android:layout_width="0dp"
+      android:layout_height="40dp"
+      android:layout_weight="1"
+      android:background="@drawable/landit_alarm_button_secondary"
+      android:gravity="center"
+      android:textAppearance="@android:style/TextAppearance.Material.Notification.Title"
+      android:textSize="15sp" />
+
+    <TextView
+      android:id="@+id/landit_alarm_open"
+      android:layout_width="0dp"
+      android:layout_height="40dp"
+      android:layout_marginStart="8dp"
+      android:layout_weight="2"
+      android:background="@drawable/landit_alarm_button_primary"
+      android:gravity="center"
+      android:textColor="#FFFFFF"
+      android:textSize="15sp"
+      android:textStyle="bold" />
+  </LinearLayout>
+</LinearLayout>

@@ -43,7 +43,10 @@ async function doRefresh(): Promise<string | null> {
     });
     const data = await parseApiResponse<RefreshTokenResponse>(response);
 
-    setAuth(data.accessToken, data.refreshToken, member);
+    // 재발급을 기다리는 사이 닉네임이 바뀌었을 수 있다 — 요청 전에 꺼낸 값 말고 지금 값을 다시 읽는다
+    const currentMember = useAuthStore.getState().member;
+    if (!currentMember) return null;
+    setAuth(data.accessToken, data.refreshToken, currentMember);
     return data.accessToken;
   } catch (error) {
     console.debug('[auth] refresh 실패:', error);

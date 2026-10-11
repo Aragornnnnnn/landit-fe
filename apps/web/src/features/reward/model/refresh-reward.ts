@@ -1,0 +1,87 @@
+// 환급이 바뀌는 순간(학습 완료, 결제) 서버에서 미리 받아 두거나, 지금 값을 기다려 받는다 — 다음 화면이 열렸을 때 이미 새 값이어야 한다.
+// 버리기만 하면 화면이 다시 붙은 뒤에야 조회가 시작돼, 옛 값을 먼저 그리고 뒤늦게 바뀐다
+import type { QueryClient } from '@tanstack/react-query';
+
+import { getCurrentUserId } from '@/shared/auth/auth-store';
+
+import { getMyRewards, type RewardView } from '../api/reward';
+import { earnBaseOf, type ConversationActivity } from './completion-earn';
+import { REWARD_GC_MS, rewardKeys } from './keys';
+import { participantOf } from './reward-status';
+
+// 받아 둔 환급. 받아 본 적이 없으면(출시 전이거나 아직 묻지 않았다) undefined
+const cachedReward = (queryClient: QueryClient, userId: number) =>
+  queryClient.getQueryData<RewardView>(rewardKeys.summary(userId));
+
+// 요약은 새로 받고 내역은 버린다
+const renewReward = (queryClient: QueryClient, userId: number) => {
+  // 내역은 낡은 것으로만 두면 다음에 열 때 받아 둔 장 수만큼 차례로 다시 받고, 그동안 맨 윗줄 잔액이 위의 금액과 어긋난다
+  queryClient.removeQueries({ queryKey: rewardKeys.history(userId) });
+  // 받아 둔 것을 먼저 낡은 것으로 표시해야 아래 미리받기가 실제로 나간다
+  void queryClient.invalidateQueries({
+    queryKey: rewardKeys.summary(userId),
+  });
+  void queryClient.prefetchQuery({
+    queryKey: rewardKeys.summary(userId),
+    queryFn: getMyRewards,
+  });
+};
+
+// 결제처럼 참여 여부가 바뀔 수 있는 순간 — 환급과 상관없던 사람도 새로 받는다
+export const refreshRewardAfterPurchase = (queryClient: QueryClient) => {
+  const userId = getCurrentUserId();
+  if (userId === null || cachedReward(queryClient, userId) === undefined)
+    return;
+  renewReward(queryClient, userId);
+};
+
+/**
+ * 학습을 끝낸 순간 — 금액이 쌓이는 건 참여자뿐이라, 환급과 상관없는 사람은 묻지 않는다.
+ *
+ * @param conversation 끝낸 것이 대화면 그 종류. 축하 화면이 받은 금액을 보여 줄지 정하도록 완료 전 상태를 적어 둔다
+ */
+export const refreshRewardAfterCompletion = (
+  queryClient: QueryClient,
+  conversation?: ConversationActivity,
+) => {
+  const userId = getCurrentUserId();
+  if (userId === null) return;
+  const cached = cachedReward(queryClient, userId);
+  const participant = cached === undefined ? null : participantOf(cached);
+  // 새로 받기 전에 적는다 — 받아 둔 것이 곧 대화에 들어갈 때 알던 값이다. 받을 것이 없으면 전에 적어 둔 것을 지운다
+  if (conversation) {
+    const key = rewardKeys.earnBase(userId);
+    // 보는 화면이 없는 값이라 기본 보관 시간(5분)이면 축하 화면 전에 지워질 수 있다 — 스몰톡은 요약 화면을 거쳐 간다.
+    // 보관 시간은 캐시에 처음 놓일 때 정해지므로 적기 전에 건다
+    queryClient.setQueryDefaults(key, { gcTime: REWARD_GC_MS });
+    queryClient.setQueryData(
+      key,
+      participant ? earnBaseOf(participant, conversation) : null,
+    );
+  }
+  if (participant === null) return;
+  renewReward(queryClient, userId);
+};
+
+// 결제 직후처럼 지금 값이 꼭 필요한 순간 — 받는 중이면 끝날 때까지 기다린다. 환급과 상관없거나 받지 못하면 null.
+// 받아 둔 답이 아직 신선하면 그대로 준다 — 결제 전의 답을 버리려면 refreshRewardAfterPurchase가 먼저 불려 있어야 한다
+export const fetchLatestReward = async (
+  queryClient: QueryClient,
+  // 받아 둔 답이 신선해도 새로 받는다 — 서버 반영이 늦었을지 모를 때
+  { fresh = false }: { fresh?: boolean } = {},
+) => {
+  const userId = getCurrentUserId();
+  if (userId === null) return null;
+  try {
+    return participantOf(
+      await queryClient.fetchQuery({
+        queryKey: rewardKeys.summary(userId),
+        queryFn: getMyRewards,
+        ...(fresh && { staleTime: 0 }),
+      }),
+    );
+  } catch {
+    // 환급을 못 받았다고 결제 직후의 흐름을 막지 않는다
+    return null;
+  }
+};

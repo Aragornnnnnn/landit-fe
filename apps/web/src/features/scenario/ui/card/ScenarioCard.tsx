@@ -6,7 +6,7 @@ import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
 
 // 가로 import 사유: 완료 카드를 뒤집어 표현을 보는 것도 학습 진입이라 같은 페이월 게이트를 건다 (docs/subscription.md)
-import { usePaywallGate } from '@/features/subscription/model/usePaywallGate';
+import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { scenarioReturnPath, scenarioSessionsPath } from '@/shared/lib/routes';

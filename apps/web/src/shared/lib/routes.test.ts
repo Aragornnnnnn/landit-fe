@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  premiumOnboardingPath,
   readDateParam,
   readReturnParam,
   readScenarioFeedbackParams,
@@ -302,5 +303,20 @@ describe('smallTalkTranscriptPath', () => {
 describe('smallTalkSummaryPath', () => {
   it('오늘의 스몰톡은 그 세션의 기록 주소 아래에 선다', () => {
     expect(smallTalkSummaryPath(7)).toBe('/smalltalk/sessions/7/summary');
+  });
+});
+
+describe('premiumOnboardingPath', () => {
+  it('갈 곳에 쿼리가 붙어 있어도 프리미엄 온보딩을 지나 그대로 돌아온다', () => {
+    // given — 피드백 상세처럼 쿼리까지 있어야 같은 화면이 열리는 곳
+    const destination = '/conversation/scenario/7/feedback?session=3&detail=1';
+
+    // when — 프리미엄 온보딩 주소를 만들고, 프리미엄 온보딩이 읽듯 from을 꺼낸다
+    const welcome = new URL(premiumOnboardingPath(destination), 'https://x');
+    const from = readReturnParam(welcome.searchParams.get('from'));
+
+    // then
+    expect(welcome.pathname).toBe('/premium/onboarding');
+    expect(from).toBe(destination);
   });
 });

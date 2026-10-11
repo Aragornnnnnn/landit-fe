@@ -5,19 +5,31 @@
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
-import { paywallPath, SCENARIO_PATH } from '@/shared/lib/routes';
+import {
+  paywallPath,
+  premiumOnboardingPath,
+  SCENARIO_PATH,
+} from '@/shared/lib/routes';
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
 import type { PaywallPromo } from '../api/subscription';
-import { PROMO_ENABLED } from '../model/payment-flag';
-import { clearPromoHandoff, useHandedPromo } from '../model/promo-handoff';
-import { usePaymentLive } from '../model/usePaymentLive';
-import { resolvePromoDisplay, usePromoOffer } from '../model/usePromoOffer';
-import { useSubscriptionQuery } from '../model/useSubscriptionQuery';
-import { PromoClock } from './PromoClock';
-import { PromoSheetHost } from './PromoSheetHost';
+import { PROMO_ENABLED } from '../model/exit-promo/promo-flag';
+import {
+  clearPromoHandoff,
+  useHandedPromo,
+} from '../model/exit-promo/promo-handoff';
+import {
+  resolvePromoDisplay,
+  usePromoOffer,
+} from '../model/exit-promo/usePromoOffer';
+import { useSubscriptionQuery } from '../model/my-subscription/useSubscriptionQuery';
+import { usePaymentLive } from '../model/paywall-gate/usePaymentLive';
+import type { UnlockReason } from '../model/purchase/usePurchase';
+import { PromoClock } from './exit-promo/PromoClock';
+import { PromoSheet } from './exit-promo/PromoSheet';
 
 // 진입 링크와 할인 배지가 같은 모양이라 한 곳에 둔다.
 // rounded-full을 쓰면 스몰톡 주제 칩과 같은 계열로 읽힌다 — 칩은 여럿 중 하나를 고르는 자리이고
@@ -31,7 +43,22 @@ const HomeLogo = () => (
   </Link>
 );
 
-export const PremiumHeaderEntry = () => {
+interface PremiumHeaderEntryProps {
+  // 무료 사용자의 진입을 페이월 대신 다른 곳으로 돌린다 — 환급 소개처럼, 구독이 모르는 화면을 라우트가 끼운다. 할인 중에는 할인 배지가 먼저다
+  invite?: {
+    href: string;
+    label: React.ReactNode;
+    // 계측용 — 돌린 곳으로 들어가는 탭은 그 화면을 끼운 쪽이 센다
+    onClick?: () => void;
+  };
+  // 부르는 쪽이 이 자리에 무엇을 놓을지 아직 모른다 — 그동안은 로고로 기다린다
+  holding?: boolean;
+}
+
+export const PremiumHeaderEntry = ({
+  invite,
+  holding = false,
+}: PremiumHeaderEntryProps) => {
   const paymentLive = usePaymentLive();
   const { subscription, isPending, isError } = useSubscriptionQuery({
     enabled: paymentLive,
@@ -51,9 +78,40 @@ export const PremiumHeaderEntry = () => {
     clearPromoHandoff();
   };
 
-  // 이미 유료거나 결제할 수 없는 환경이거나 구독 상태를 아직 모를 때는 로고를 둔다 — 결제한 사람에게 구독 권유가 잠깐이라도 보이면 안 된다
-  if (!paymentLive || isPending || isError || subscription?.premium) {
-    return <HomeLogo />;
+  // 할인 시트는 지금 화면 위에서 결제한다 — 결제면 프리미엄 온보딩을 거쳐 보던 화면(쿼리까지)으로 돌아오고, 복원은 시트만 닫는다
+  const router = useRouter();
+  const unlock = (reason: UnlockReason) => {
+    closeSheet();
+    if (reason === 'purchase') {
+      router.push(premiumOnboardingPath(location.pathname + location.search));
+    }
+  };
+
+  // 배지가 보이는 동안 매달아 둔다 — 스토어 가격을 미리 받아 두면 눌렀을 때 기다리지 않는다
+  const sheet = display && (
+    <PromoSheet
+      open={openedPromo !== null}
+      {...display}
+      onClose={closeSheet}
+      onUnlocked={unlock}
+    />
+  );
+
+  // 이미 유료거나 결제할 수 없는 환경이거나 구독 상태를 아직 모를 때는 로고를 둔다 — 결제한 사람에게 구독 권유가 잠깐이라도 보이면 안 된다.
+  // 다만 결제하는 사이 다른 조회로 유료가 먼저 들어와도 열린 시트는 남긴다 — 사라지면 결제 결과를 받지 못해 프리미엄 온보딩으로 못 간다
+  if (
+    holding ||
+    !paymentLive ||
+    isPending ||
+    isError ||
+    subscription?.premium
+  ) {
+    return (
+      <>
+        <HomeLogo />
+        {openedPromo !== null && sheet}
+      </>
+    );
   }
 
   // 노출 계측은 시트가 실제로 그려질 때 시트 쪽에서 낸다 — 여기서 내면 못 그린 경우까지 센다
@@ -76,26 +134,25 @@ export const PremiumHeaderEntry = () => {
         </button>
       ) : (
         <Link
-          href={paywallPath({ source: 'header' })}
-          onClick={() =>
-            track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'header' })
+          href={invite?.href ?? paywallPath({ source: 'header' })}
+          // 페이월로 가는 진입은 여기서 세고, 돌린 곳으로 가는 진입은 돌린 쪽이 준 것으로 센다
+          onClick={
+            invite
+              ? invite.onClick
+              : () => track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'header' })
           }
           className={`${PILL_CLASS} animate-gold-flow animate-gold-sheen`}
         >
-          <span className="tracking-[0.1em]">PREMIUM</span>
-          <span>시작하기</span>
+          {invite?.label ?? (
+            <>
+              <span className="tracking-[0.1em]">PREMIUM</span>
+              <span>시작하기</span>
+            </>
+          )}
         </Link>
       )}
 
-      {/* 배지가 보이는 동안 매달아 둔다 — 스토어 가격을 미리 받아 두면 눌렀을 때 기다리지 않는다 */}
-      {display && (
-        <PromoSheetHost
-          open={openedPromo !== null}
-          {...display}
-          onClose={closeSheet}
-          onUnlocked={closeSheet}
-        />
-      )}
+      {sheet}
     </>
   );
 };

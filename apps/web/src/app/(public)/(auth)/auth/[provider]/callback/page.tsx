@@ -16,6 +16,7 @@ import {
 } from '@/shared/auth/web-social-login';
 import { SCENARIO_PATH } from '@/shared/lib/routes';
 
+import { rememberLoginProvider } from '../../../_model/last-login-provider';
 import { LoginScreen } from '../../../_ui/LoginScreen';
 
 const WEB_PROVIDERS: WebSocialProvider[] = ['kakao', 'google'];
@@ -119,6 +120,7 @@ export default function SocialLoginCallbackPage({
         // newUser는 로그인 시점 분기용이라 전역 상태에는 빼고 저장한다
         const { newUser, ...member } = user;
         setAuth(accessToken, refreshToken, member);
+        rememberLoginProvider(provider);
         track(EVENTS.LOGIN_COMPLETED, {
           provider,
           method: 'web',

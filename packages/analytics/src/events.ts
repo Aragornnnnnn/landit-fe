@@ -133,6 +133,30 @@ export const EVENTS = {
   NOTIFICATION_CONSENT_DISMISSED: 'Notification Consent Dismissed',
   NOTIFICATION_PERMISSION_DECIDED: 'Notification Permission Decided',
 
+  // 오늘의 시나리오 알람 — 등록 흐름(소개 → 다짐)은 내 정보와 프리미엄 온보딩이 같이 쓴다
+  ALARM_REGISTERED: 'Alarm Registered',
+  ALARM_SETUP_SKIPPED: 'Alarm Setup Skipped',
+  // 등록 흐름의 화면마다 — 어디서 빠지는지 본다
+  ALARM_SETUP_STEP_VIEWED: 'Alarm Setup Step Viewed',
+  // 등록한 뒤 — 시각을 바꾸거나 지운다
+  ALARM_TIME_CHANGED: 'Alarm Time Changed',
+  ALARM_REMOVED: 'Alarm Removed',
+  // 권한이 막혀 알람이 안 울리는 사람에게 뜨는 배너와, 풀러 가는 「지금 켜기」
+  ALARM_PERMISSION_BANNER_VIEWED: 'Alarm Permission Banner Viewed',
+  ALARM_UNBLOCK_TAPPED: 'Alarm Unblock Tapped',
+  // 알람 권한을 켜러 OS 설정으로 나간다
+  ALARM_SETTINGS_OPENED: 'Alarm Settings Opened',
+
+  // 환급 챌린지 — 화면 노출은 상태를 실어 따로 찍는다 (Page Viewed는 주소만 알아 어떤 상태로 봤는지 모른다)
+  REWARD_VIEWED: 'Reward Viewed',
+  REWARD_ENTRY_TAPPED: 'Reward Entry Tapped',
+  REWARD_RULES_OPENED: 'Reward Rules Opened',
+  // 학습을 끝내고 홈에 돌아왔을 때 헤더 알약으로 동전이 날아드는 연출
+  REWARD_COIN_SHOWER_VIEWED: 'Reward Coin Shower Viewed',
+  REWARD_COIN_SHOWER_SKIPPED: 'Reward Coin Shower Skipped',
+  // 환급 상품을 산 직후, 환영과 알람 사이의 환급 안내
+  REWARD_GUIDE_VIEWED: 'Reward Guide Viewed',
+
   // 소감 시트 — 첫 시나리오 대화·첫 스몰톡·다른 날 두 번째 대화(랜딧 소감)를 마치고 홈에 돌아왔을 때 한 번 묻는다
   SATISFACTION_PROMPT_VIEWED: 'Satisfaction Prompt Viewed',
   SATISFACTION_PROMPT_ANSWERED: 'Satisfaction Prompt Answered',
@@ -232,8 +256,8 @@ export type HomeReturnReason = 'just' | 'flip' | 'card';
 // 시나리오 피드백을 어디서 열었는지 — 대화 직후 흐름과 시나리오 기록에서 다시 연 것을 가른다
 export type FeedbackSource = 'post_conversation' | 'history';
 
-// 구독 플랜 — 페이월 카드와 스토어 상품(monthly/yearly)이 같은 이름을 쓴다. 브릿지의 subscriptionPlanSchema와 같은 값이다
-export type SubscriptionPlan = 'monthly' | 'yearly';
+// 구독 플랜 — 페이월 카드와 스토어 상품이 같은 이름을 쓴다. quarterly·halfyear는 환급 챌린지 플랜(3·6개월)이다. 브릿지의 subscriptionPlanSchema와 같은 값이다
+export type SubscriptionPlan = 'monthly' | 'yearly' | 'quarterly' | 'halfyear';
 
 // 수준 평가가 적용 수준을 어떻게 바꿨는가 — BE LearningLevelPolicy.ChangeType과 같은 값
 export type LevelChangeType =
@@ -243,9 +267,9 @@ export type SubscriptionState = 'trial' | 'active' | 'canceled';
 // 유저 속성이 쓰는 구독 상태 — 위 셋에 "구독 없음"과 "아직 모름"을 더한다.
 // unknown은 로그인 직후 구독 조회가 끝나기 전 구간이다. 값이 아예 빠진 것과 구분하려고 명시적으로 남긴다
 export type SubscriptionProfileState = SubscriptionState | 'none' | 'unknown';
-// 게이트가 아닌 자리에서 페이월로 들어간 곳 — 지금은 마이페이지(me)뿐. 알림 동의의 source와 같은 이름을 쓴다
-// me는 마이페이지 골드 카드, header는 탭 헤더 왼쪽의 프리미엄 알약
-export type PaywallEntrySource = 'me' | 'header';
+// 게이트가 아닌 자리에서 페이월로 들어간 곳. 알림 동의의 source와 같은 이름을 쓴다
+// me는 마이페이지 골드 카드, header는 탭 헤더 왼쪽의 프리미엄 알약, reward는 환급 화면(소개의 시작 버튼·끝난 뒤 다시 시작)
+export type PaywallEntrySource = 'me' | 'header' | 'reward';
 // 페이월에 어디서 왔는가 — 게이트에 막혀 왔으면 막힌 자리, 스스로 들어왔으면 마이페이지.
 // 노출(Page Viewed)에 실어 진입 경로별 전환율을 가른다
 export type PaywallSource = PaywallGateSource | PaywallEntrySource;
@@ -271,8 +295,11 @@ export type PaywallGateSource =
 export type PurchaseFailureReason =
   'browser' | 'outdated_shell' | 'no_response' | 'shell_error';
 export type ConfirmSheetKind =
-  'conversation_exit' | 'expression_exit' | 'account_delete';
+  'conversation_exit' | 'expression_exit' | 'account_delete' | 'alarm_delete';
 export type RetryScreen =
+  | 'reward'
+  // 환급 화면은 떠 있고 내역 줄만 받지 못했다
+  | 'reward_history'
   | 'scenario'
   | 'scenario_history'
   | 'smalltalk'
@@ -281,13 +308,42 @@ export type RetryScreen =
   | 'card_back'
   | 'expression_list'
   | 'streak'
-  | 'mailbox';
+  | 'mailbox'
+  | 'alarm';
 // 피드백 유형 — 작성 화면에서 고르는 넷. 값은 서버 enum 그대로다 (지표와 데이터가 같은 말을 쓰도록)
 export type FeedbackType =
   'BUG_REPORT' | 'FEATURE_REQUEST' | 'QUESTION' | 'CHEER';
 // 알림 동의를 청한 지면 — 온보딩 스텝은 기존 온보딩 계측이 커버해서 없다.
 // 키는 source — surface는 baseProps의 전역 속성(app·browser)이라 겹치면 덮어쓴다
 export type NotificationConsentSource = 'scenario' | 'me';
+// 알람 등록 흐름을 연 곳 — 내 정보 알람 화면, 프리미엄 온보딩
+export type AlarmSetupSource = 'me' | 'premium_onboarding';
+// 알람 등록 흐름의 화면 — 소개 → 시간 정하고 다짐 → 등록 완료.
+// 권한이 막혀 등록 완료 대신 「지금 켜기」를 권하는 화면은 permission_needed로 따로 센다
+export type AlarmSetupStep =
+  'intro' | 'pledge' | 'permission_needed' | 'registered';
+// 알람을 막고 있는 권한 — iOS는 아직 안 물음·거절함, Android는 알림 꺼짐·정확한 알람이나 전체 화면 꺼짐
+export type AlarmBlockerKind =
+  'ios_ask' | 'ios_settings' | 'android_notifications' | 'android_settings';
+// 「지금 켜기」가 놓인 곳 — 알람 설정의 배너, 등록 흐름의 완료 화면. 키는 source다(surface는 전역 속성과 겹친다)
+export type AlarmUnblockSource = 'banner' | 'setup';
+// 알람 권한을 켜러 나가는 OS 설정 — 앱 설정(iOS·Android 알림), Android의 정확한 알람·전체 화면 알림
+export type AlarmSettingsDestination = 'app' | 'exact_alarm' | 'full_screen';
+// 환급 화면을 본 상태 — 참여 전 소개, 쌓는 중(오늘 받음·오늘 아직인데 걸린 금액 없음·오늘 아직이라 위험·어제 쉬어 0원), 기간 끝남, 결제 확인 중, 검토 중
+export type RewardViewStatus =
+  | 'intro'
+  | 'kept'
+  | 'idle'
+  | 'at_risk'
+  | 'reset'
+  | 'ended'
+  | 'pending'
+  | 'review';
+// 환급 화면으로 들어온 곳 — 탭 헤더의 알약, 내 정보의 타일
+export type RewardEntrySource = 'header' | 'me';
+// 프로필에 붙는 환급 상태 — 참여한 적 없으면 none
+export type RewardProfileState =
+  'none' | 'active' | 'ended' | 'pending' | 'review';
 // OS 알림 권한창을 띄운 지면 — 안내 시트 둘에 온보딩 스텝이 더해진다
 export type NotificationPermissionSource =
   'onboarding' | NotificationConsentSource;
@@ -650,6 +706,34 @@ export type EventProps = {
     solved_count: number;
   };
 
+  // 다짐이 서버에 저장된 순간. time은 "HH:mm" — 몇 시에 많이 거는지 본다
+  'Alarm Registered': { source: AlarmSetupSource; time: string };
+  // 소개 화면에서 「다음에 할게요」 — 프리미엄 온보딩에만 있다
+  'Alarm Setup Skipped': { source: AlarmSetupSource };
+  'Alarm Setup Step Viewed': { source: AlarmSetupSource; step: AlarmSetupStep };
+  // 이미 등록한 알람의 시각을 바꿔 저장한 순간. 처음 등록은 Alarm Registered다
+  'Alarm Time Changed': { time: string };
+  'Alarm Removed': undefined;
+  'Alarm Permission Banner Viewed': { blocker: AlarmBlockerKind };
+  'Alarm Unblock Tapped': {
+    blocker: AlarmBlockerKind;
+    source: AlarmUnblockSource;
+  };
+  'Alarm Settings Opened': { target: AlarmSettingsDestination };
+
+  // 환급 화면에 볼 것이 그려진 순간 — 쌓인 금액은 도는 회차가 있을 때만, 돌려받을 금액은 기간이 끝났을 때만 싣는다
+  'Reward Viewed': {
+    status: RewardViewStatus;
+    balance_won?: number;
+    pending_refund_won?: number;
+  };
+  'Reward Entry Tapped': { source: RewardEntrySource };
+  'Reward Rules Opened': undefined;
+  'Reward Coin Shower Viewed': { gain_won: number };
+  'Reward Coin Shower Skipped': { gain_won: number };
+  // confirmed가 거짓이면 결제 확인이 늦어 금액 없이 보여 준 안내다
+  'Reward Guide Viewed': { confirmed: boolean };
+
   'Notification Consent Viewed': { source: NotificationConsentSource };
   // 수락 = OS 권한창 요청까지 이어짐. 실제 허용/거부는 OS 팝업 결과라 별도 (권한 상태로 세그먼트)
   'Notification Consent Accepted': { source: NotificationConsentSource };
@@ -719,6 +803,8 @@ export type EventProps = {
   'Cancel Retention Viewed': {
     reason: CancelReason;
     plan?: SubscriptionPlan;
+    // 가격 화면일 때만 — 환급을 쌓는 중이라 돌려받는 금액으로 답했는가
+    reward?: boolean;
     method?: StudyMethod;
   };
   // 다른 방법 라디오에서 "다음"
@@ -782,6 +868,8 @@ export interface UserProperties {
   plan: SubscriptionPlan | null;
   learning_level: EnglishLevel | null;
   accent_locale: AccentLocale | null;
+  reward_state: RewardProfileState;
+  has_alarm: boolean;
 }
 
 // 한 번에 갱신할 속성들 — null은 "이 사람에게는 값이 없다"라는 뜻으로 프로필에서 그 속성을 지운다
@@ -805,3 +893,12 @@ type _PropKeysAreSnakeCase = AssertNever<NonSnakeCaseKeys<EventProps>>;
 type _UserPropKeysAreSnakeCase = AssertNever<
   NonSnakeCaseKeys<{ user: UserProperties }>
 >;
+// 컴파일 타임 검증 ④ 모든 이벤트에 붙는 전역 속성과 같은 키를 쓰지 않는다 — 겹치면 그 이벤트만 전역 값이 덮인다.
+// platform은 뜻이 같은 기존 이벤트가 있어 여기서 막지 않는다
+type GlobalPropKey = 'surface' | 'app_version' | 'build_number';
+type KeysShadowingGlobals = {
+  [E in keyof EventProps]: EventProps[E] extends undefined
+    ? never
+    : keyof EventProps[E] & GlobalPropKey;
+}[keyof EventProps];
+type _PropKeysDoNotShadowGlobals = AssertNever<KeysShadowingGlobals>;
