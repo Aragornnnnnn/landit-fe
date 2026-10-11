@@ -3,6 +3,7 @@
 // 알람 수정 — 알려주는 방식(잠금화면 알람 그림), 약속 시간(반복 매일·시각), 알람 삭제, 저장하기.
 // 시각은 바텀시트 휠에서 고르고 「저장하기」를 눌러야 서버에 저장된다. 삭제는 켜짐을 끄는 저장이다
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import type { AlarmTime } from '@landit/bridge';
 import { useRouter } from 'next/navigation';
 
@@ -16,6 +17,7 @@ import { useAlarmSettingQuery } from '@/features/alarm/model/useAlarmSettingQuer
 import { useSaveAlarmMutation } from '@/features/alarm/model/useSaveAlarmMutation';
 import { LockScreenPreview } from '@/features/alarm/ui/LockScreenPreview';
 import { TimeWheel, type TimeWheelHandle } from '@/features/alarm/ui/TimeWheel';
+import { track } from '@/shared/analytics';
 import {
   ALARM_SETTINGS_PATH,
   backOrReplace,
@@ -67,6 +69,11 @@ const AlarmEditForm = ({
     setPicking(true);
   };
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  // 지우지 않고 닫았다 — 「취소」든 바깥을 눌렀든 같다. 확정은 Alarm Removed가 센다
+  const cancelDelete = () => {
+    track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'alarm_delete' });
+    setConfirmingDelete(false);
+  };
 
   const back = () => backOrReplace(router, ALARM_SETTINGS_PATH);
 
@@ -78,7 +85,12 @@ const AlarmEditForm = ({
     save(
       { time, enabled: true },
       // 실패 토스트는 저장 훅이 띄운다
-      { onSuccess: back },
+      {
+        onSuccess: () => {
+          track(EVENTS.ALARM_TIME_CHANGED, { time: toServerTime(time) });
+          back();
+        },
+      },
     );
   };
 
@@ -89,6 +101,7 @@ const AlarmEditForm = ({
       { time: saved, enabled: false },
       {
         onSuccess: () => {
+          track(EVENTS.ALARM_REMOVED);
           onDeleted();
           leaveToMyPageAfterDelete(router);
         },
@@ -142,7 +155,10 @@ const AlarmEditForm = ({
 
         <button
           type="button"
-          onClick={() => setConfirmingDelete(true)}
+          onClick={() => {
+            track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'alarm_delete' });
+            setConfirmingDelete(true);
+          }}
           // 저장이 진행 중이면 삭제를 막는다 — 둘 다 끝나면 저장의 뒤로 가기와 삭제의 두 칸 뒤로 가기가 겹친다
           disabled={isPending}
           className="shrink-0 rounded-[20px] bg-card py-4 text-[16px] font-medium text-destructive active:bg-muted disabled:opacity-40"
@@ -180,10 +196,7 @@ const AlarmEditForm = ({
       </BottomSheet>
 
       {/* 확인은 왼쪽 「취소」, 오른쪽 빨간 「삭제」 — 지우는 버튼이 무엇인지 그대로 보이게 */}
-      <BottomSheet
-        open={confirmingDelete}
-        onClose={() => setConfirmingDelete(false)}
-      >
+      <BottomSheet open={confirmingDelete} onClose={cancelDelete}>
         <h2 className="text-[17px] font-bold text-foreground">
           알람을 삭제할까요?
         </h2>
@@ -191,11 +204,7 @@ const AlarmEditForm = ({
           다시 만들려면 약속을 새로 해야 해요
         </p>
         <div className="mt-5 grid grid-cols-2 gap-2">
-          <Button
-            variant="ghost"
-            size="md"
-            onClick={() => setConfirmingDelete(false)}
-          >
+          <Button variant="ghost" size="md" onClick={cancelDelete}>
             취소
           </Button>
           <Button variant="danger" size="md" onClick={remove}>

@@ -1,4 +1,4 @@
-// 유입 딱지 어휘 — 붙이는 곳(BE 푸시 페이로드·셸 위젯 진입)과 읽는 곳(페이지뷰 계측, 램프 등장 게이트)이 같은 값을 봐야 한다.
+// 유입 딱지 어휘 — 붙이는 곳(BE 푸시 페이로드·셸 위젯 진입·웹이 거는 알람)과 읽는 곳(페이지뷰 계측, 램프 등장 게이트)이 같은 값을 봐야 한다.
 // 자리 규칙과 전체 어휘는 docs/analytics-utm.md가 정본이다
 
 // BE 서버 푸시가 딥링크에 다는 값 — ScheduledNotificationContent.campaign()·PushQueueMessageHandler와 같다
@@ -33,6 +33,31 @@ export const WIDGET_UTM_MEDIUM = 'widget';
 export const isWidgetEntry = (params: URLSearchParams) =>
   params.get('utm_medium') === WIDGET_UTM_MEDIUM;
 
-// 밖에서 들어온 유입인가 — 알림·위젯 어느 쪽이든. 어느 채널인지는 캠페인 이름이 가른다
+// 잠금화면 알람의 "대화하러 가기" — 웹이 알람을 걸 때 갈 주소(ALARM_PATH)에 달아 둔다
+export const ALARM_UTM_MEDIUM = 'alarm';
+// 오늘의 시나리오 알람
+export const SCENARIO_ALARM_CAMPAIGN = 'scenario_alarm';
+export const SCENARIO_ALARM_UTM = `utm_source=${ALARM_UTM_MEDIUM}&utm_medium=${ALARM_UTM_MEDIUM}&utm_campaign=${SCENARIO_ALARM_CAMPAIGN}`;
+
+export const isAlarmEntry = (params: URLSearchParams) =>
+  params.get('utm_medium') === ALARM_UTM_MEDIUM;
+
+// 밖에서 들어온 유입인가 — 알림·위젯·알람 어느 쪽이든. 어느 채널인지는 캠페인 이름이 가른다
 export const isExternalEntry = (params: URLSearchParams) =>
-  isNotificationEntry(params) || isWidgetEntry(params);
+  isNotificationEntry(params) || isWidgetEntry(params) || isAlarmEntry(params);
+
+// 주소에서 유입 딱지(utm_*)만 뗀다 — 다른 쿼리는 남긴다. 남겨 두면 뒤로 가기로 이 주소에 돌아올 때마다 유입이 다시 세어진다.
+// replaceState여도 라우터가 주소 변화를 알아채 같은 화면을 다시 그린다 — 그 재렌더는 PageViewTracker가 걸러 페이지뷰를 안 쏜다
+export const stripEntryFromAddress = () => {
+  const params = new URLSearchParams(window.location.search);
+  const utmKeys = [...params.keys()].filter((key) => key.startsWith('utm_'));
+  if (utmKeys.length === 0) return;
+
+  utmKeys.forEach((key) => params.delete(key));
+  const search = params.toString();
+  window.history.replaceState(
+    null,
+    '',
+    window.location.pathname + (search ? `?${search}` : ''),
+  );
+};

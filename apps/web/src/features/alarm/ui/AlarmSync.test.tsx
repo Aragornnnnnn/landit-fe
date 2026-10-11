@@ -26,7 +26,7 @@ vi.mock('../model/useAlarmStatus');
 const SEVEN_THIRTY = {
   title: '오늘의 시나리오 할 시간!',
   schedules: [{ hour: 7, minute: 30, weekdays: [1, 2, 3, 4, 5, 6, 7] }],
-  path: '/scenario',
+  path: '/scenario?utm_source=alarm&utm_medium=alarm&utm_campaign=scenario_alarm',
 };
 
 // 셸 상태 — scheduled면 7:30 시나리오 알람이 걸려 있다

@@ -1,6 +1,9 @@
 'use client';
 
 // iOS 알람 설정 안내 — 한 번 거절하면 팝업을 다시 못 띄운다. 설정 앱의 랜딧 페이지에서 무엇을 켜면 되는지 먼저 보여 주고 보낸다
+import { EVENTS } from '@landit/analytics';
+
+import { track } from '@/shared/analytics';
 import { postToNative } from '@/shared/bridge/web-bridge';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
@@ -25,6 +28,7 @@ export const IosAlarmSettingsSheet = ({
   onClose: () => void;
 }) => {
   const openSettings = () => {
+    track(EVENTS.ALARM_SETTINGS_OPENED, { target: 'app' });
     // iOS 셸은 대상과 상관없이 설정 앱의 랜딧 페이지를 연다
     postToNative({ type: 'OPEN_ALARM_SETTINGS', target: 'exactAlarm' });
     onClose();

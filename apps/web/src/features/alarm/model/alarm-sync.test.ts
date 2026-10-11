@@ -8,11 +8,11 @@ const EVERY_DAY = [1, 2, 3, 4, 5, 6, 7];
 const TODAY = '2026-10-07';
 
 describe('desiredAlarm', () => {
-  it('켜져 있으면 매일 그 시각에 울리고 시나리오 홈으로 가는 알람을 만든다', () => {
+  it('켜져 있으면 매일 그 시각에 울리고, 알람 유입 딱지를 단 시나리오 홈으로 가는 알람을 만든다', () => {
     expect(desiredAlarm({ time: '07:30', enabled: true })).toEqual({
       title: '오늘의 시나리오 할 시간!',
       schedules: [{ hour: 7, minute: 30, weekdays: EVERY_DAY }],
-      path: '/scenario',
+      path: '/scenario?utm_source=alarm&utm_medium=alarm&utm_campaign=scenario_alarm',
     });
   });
 

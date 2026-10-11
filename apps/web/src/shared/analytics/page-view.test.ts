@@ -169,6 +169,19 @@ describe('toPageView', () => {
     });
   });
 
+  it('알람의 "대화하러 가기" 유입(utm_medium=alarm)도 캠페인으로 남긴다', () => {
+    expect(
+      pv(
+        '/scenario',
+        'utm_source=alarm&utm_medium=alarm&utm_campaign=scenario_alarm',
+      ),
+    ).toEqual({
+      page_name: 'scenario',
+      path: '/scenario',
+      entry_campaign: 'scenario_alarm',
+    });
+  });
+
   it('알림·위젯이 아닌 유입(소셜)이나 캠페인만 있는 주소는 유입 속성을 남기지 않는다', () => {
     expect(
       pv('/scenario', 'utm_medium=social&utm_campaign=launch_event'),

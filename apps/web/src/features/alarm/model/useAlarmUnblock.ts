@@ -3,10 +3,12 @@
 // 알람을 막는 권한을 푸는 배선 — 무엇이 막혔는지(alarmBlocker)와 풀 동작(unblockAction)은 alarm-permission.ts의 규칙이 정하고,
 // 여기서는 셸에 요청을 보내거나 안내 시트를 연다. 회신 상태는 useAlarmStatus가 받아 화면에 반영한다
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import type { AlarmStatus } from '@landit/bridge';
 
 // Android는 알림이 꺼지면 알람을 못 건다 — 알림 권한을 다시 물을 수 있는지(팝업)와 없는지(앱 설정)를 알림 슬라이스의 권한 상태로 가른다
 import { useNotificationPermission } from '@/features/notification/model/useNotificationPermission';
+import { track } from '@/shared/analytics';
 import { requestFromNative } from '@/shared/bridge/request';
 import { postToNative } from '@/shared/bridge/web-bridge';
 
@@ -62,6 +64,8 @@ export const useAlarmUnblock = (status: AlarmStatus | null) => {
         });
         return;
       case 'open-app-settings':
+        // 시트 없이 바로 OS 설정으로 나간다 — 시트의 「설정 열기」와 같은 이벤트로 센다
+        track(EVENTS.ALARM_SETTINGS_OPENED, { target: 'app' });
         postToNative({ type: 'OPEN_SETTINGS' });
         return;
       case 'ios-settings-sheet':
