@@ -14,11 +14,11 @@ import { formatWon } from '@/shared/lib/won';
 import { Coin } from './Coin';
 import { CountUpWon } from './CountUpWon';
 import {
-  REFUND_PILL_CLASS,
-  REFUND_PILL_COIN,
-  REFUND_PILL_COIN_CENTER_X,
-  REFUND_PILL_GOLD,
-} from './refund-pill';
+  REWARD_PILL_CLASS,
+  REWARD_PILL_COIN,
+  REWARD_PILL_COIN_CENTER_X,
+  REWARD_PILL_GOLD,
+} from './reward-pill';
 
 // 큰 동전이 뜨고, 날아가기 시작하고, 첫 동전이 알약에 닿는 때(초)
 const POP = 0.05;
@@ -99,7 +99,7 @@ export const CoinShower = ({
   const from = { x: window.innerWidth / 2, y: window.innerHeight * 0.4 };
   // 동전이 빨려 들어갈 자리 — 알약 속 동전
   const to = {
-    x: pill.left + REFUND_PILL_COIN_CENTER_X,
+    x: pill.left + REWARD_PILL_COIN_CENTER_X,
     y: pill.top + pill.height / 2,
   };
   const captionLeft = from.x - CAPTION_WIDTH / 2;
@@ -124,7 +124,7 @@ export const CoinShower = ({
       {/* 어둠 위에 다시 그린 알약 — 숫자는 동전이 닿는 때부터 오른다 */}
       <motion.span
         aria-hidden
-        className={`${REFUND_PILL_CLASS} ${REFUND_PILL_GOLD} absolute whitespace-nowrap shadow-[0_0_0_6px_rgba(255,255,255,0.22),0_0_28px_rgba(255,200,80,0.7)]`}
+        className={`${REWARD_PILL_CLASS} ${REWARD_PILL_GOLD} absolute whitespace-nowrap shadow-[0_0_0_6px_rgba(255,255,255,0.22),0_0_28px_rgba(255,200,80,0.7)]`}
         style={{ left: pill.left, top: pill.top, minWidth: pill.width }}
         animate={{ scale: [1, 1, 1.14, 1, 1.1, 1, 1.08, 1] }}
         transition={{
@@ -133,7 +133,7 @@ export const CoinShower = ({
           times: [0, 0.05, 0.2, 0.35, 0.5, 0.65, 0.8, 1],
         }}
       >
-        <Coin size={REFUND_PILL_COIN} />
+        <Coin size={REWARD_PILL_COIN} />
         <CountUpWon from={fromWon} to={toWon} delay={LAND} />
       </motion.span>
 

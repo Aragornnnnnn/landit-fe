@@ -1,4 +1,4 @@
-// 페이월 첫 화면 — 환급 챌린지가 켜지면 어두운 무대 위에 로고와 PREMIUM 배지, 노란 스포트라이트와 반짝이 아래 돈·메인 문구와 6개월 성과 카드(RefundStage).
+// 페이월 첫 화면 — 환급 챌린지가 켜지면 어두운 무대 위에 로고와 PREMIUM 배지, 노란 스포트라이트와 반짝이 아래 돈·메인 문구와 6개월 성과 카드(RewardStage).
 // 꺼져 있으면 무대 없이 밝은 바탕에 로고, 「프리미엄으로 이렇게 배워요」, 캐릭터 단체샷. 켜져 있으면 무대 아래 「프리미엄에서만 할 수 있는 것들」이 본문을 연다.
 // 처음부터 화면에 있으니 관찰 없이 마운트하자마자 animate-reveal-up으로 차례로 떠오른다
 import type { CSSProperties } from 'react';
@@ -7,8 +7,8 @@ import Image from 'next/image';
 import { PAYWALL_HERO } from '@/features/subscription/ui/paywall-hero-image';
 import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
 
-import type { RefundPlan } from '../_model/paywall-content';
-import { RefundStage } from './RefundStage';
+import type { RewardPlan } from '../_model/paywall-content';
+import { RewardStage } from './RewardStage';
 
 /** 무대 반짝이 — 위치·크기·깜빡이는 시점 */
 const SPARKLES = [
@@ -32,19 +32,19 @@ const Badge = ({ dark }: { dark: boolean }) => (
 );
 
 export const PaywallHero = ({
-  refundChallenge,
-  refundPlan,
+  rewardChallenge,
+  rewardPlan,
 }: {
   /** 환급 챌린지가 켜졌는가 — 켜지면 어두운 환급 무대, 꺼지면 밝은 머리 */
-  refundChallenge: boolean;
+  rewardChallenge: boolean;
   /** 고른 환급 플랜 — 무대의 환급 챌린지 카드가 이 플랜으로 말한다 */
-  refundPlan: RefundPlan;
+  rewardPlan: RewardPlan;
 }) => (
   // 위 여백 40px은 겹쳐 떠 있는 PaywallHeader의 줄 높이(h-10)다.
   // data-inview를 처음부터 켜 둬야 헤드라인 형광펜이 그어진다
   <section data-inview="true" className="text-center">
     {/* 환급 무대 — 가장자리로 갈수록 더 어두워진다. 겹쳐 뜬 헤더 밑까지 깔린다 */}
-    {refundChallenge ? (
+    {rewardChallenge ? (
       <div className="relative overflow-hidden bg-[radial-gradient(110%_75%_at_50%_28%,#2b2112_0%,#17120c_50%,#0c0a08_100%)] pt-[calc(max(var(--safe-area-inset-top),8px)+40px)] pb-8">
         {/* 스포트라이트 — 위 가운데에서 노란 빛줄기가 아래로 넓게 퍼져 돈과 메인 문구를 비춘다.
             빛줄기는 안쪽에서 모양을 자르고 바깥에서 흐려야 가장자리가 부드럽다(한 요소면 흐린 뒤 잘려 각진다) */}
@@ -76,7 +76,7 @@ export const PaywallHero = ({
 
         <Badge dark />
 
-        <RefundStage plan={refundPlan} />
+        <RewardStage plan={rewardPlan} />
       </div>
     ) : (
       <div className="bg-[linear-gradient(180deg,#fdf1e8,var(--color-background))] pt-[calc(max(var(--safe-area-inset-top),8px)+40px)]">
@@ -85,23 +85,23 @@ export const PaywallHero = ({
     )}
 
     <h2
-      className={`animate-reveal-up px-6 text-[28px] leading-[38px] font-black tracking-[-0.025em] text-foreground ${refundChallenge ? 'mt-14' : 'mt-5'}`}
-      style={{ '--i': refundChallenge ? 5 : 1 } as CSSProperties}
+      className={`animate-reveal-up px-6 text-[28px] leading-[38px] font-black tracking-[-0.025em] text-foreground ${rewardChallenge ? 'mt-14' : 'mt-5'}`}
+      style={{ '--i': rewardChallenge ? 5 : 1 } as CSSProperties}
     >
       <span className="relative isolate inline-block">
         <span
           aria-hidden="true"
           className="reveal-highlight absolute inset-x-[-3px] bottom-[4px] -z-10 h-[18px] rounded-[3px] bg-[#f9c99a]/70"
         />
-        {refundChallenge ? '프리미엄에서만' : '프리미엄으로'}
+        {rewardChallenge ? '프리미엄에서만' : '프리미엄으로'}
       </span>
       <br />
       {/* 시나리오 대화는 무료에도 있어, 환급 무대가 없는 화면에선 「~에서만」을 쓰지 않는다 */}
-      {refundChallenge ? '할 수 있는 것들' : '이렇게 배워요'}
+      {rewardChallenge ? '할 수 있는 것들' : '이렇게 배워요'}
     </h2>
 
     {/* 캐릭터 단체샷 — 환급 무대가 없을 때만. 슬롯 높이가 곧 크롭선이라 허리쯤에서 잘린다(피그마 '빼꼼 컷') */}
-    {!refundChallenge && (
+    {!rewardChallenge && (
       <div className="relative mt-4 h-[194px] overflow-hidden">
         <Image
           {...PAYWALL_HERO}

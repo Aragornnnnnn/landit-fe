@@ -86,7 +86,7 @@ export const dailyWon = (price: number, days: number) =>
   Math.round(price / days / 10) * 10;
 
 // 환급을 쌓는 중이면 하루 요금보다 돌려받는 금액이 가격 이야기의 답이다
-const refundPriceContent = (stake: RefundStake): RetentionContent => ({
+const rewardPriceContent = (stake: RefundStake): RetentionContent => ({
   emoji: '💸',
   title: '가격이 부담되셨군요',
   body: [
@@ -130,7 +130,7 @@ const priceContent = (
   summary: PaidSubscriptionSummary,
   stake: RefundStake | null,
 ): RetentionContent => {
-  if (stake) return refundPriceContent(stake);
+  if (stake) return rewardPriceContent(stake);
   const { plan, price } = summary;
   // 플랜이나 실제 결제액을 모르면 숫자를 지어내지 않는다 — 문구도 카드도 없이
   if (!plan || price === null) {

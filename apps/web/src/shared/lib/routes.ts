@@ -214,13 +214,13 @@ export const paywallPath = ({
 };
 
 // 환급 화면 — 쌓인 환급액을 보거나 환급 소개를 본다
-export const REFUND_PATH = '/refund';
+export const REWARD_PATH = '/reward';
 
 // 프리미엄 온보딩 — 혜택이 열리는 걸 보여 주고 알람 등록으로 잇는다. from은 다 본 뒤 갈 곳(페이월이 가려던 곳)
 export const PREMIUM_ONBOARDING_PATH = '/premium/onboarding';
 
 // 개발자 묶음에서 ADMIN이 골라 여는 미리보기 — 알람 등록까지 / 환급 문구로 / 환영만
-const PREMIUM_ONBOARDING_PREVIEWS = ['alarm', 'refund', 'welcome'] as const;
+const PREMIUM_ONBOARDING_PREVIEWS = ['alarm', 'reward', 'welcome'] as const;
 export type PremiumOnboardingPreview =
   (typeof PREMIUM_ONBOARDING_PREVIEWS)[number];
 
@@ -252,7 +252,7 @@ export const ALARM_CHECK_PATH = '/me/developer';
 // 프리미엄 온보딩 점검 — 결제 없이 케이스를 골라 연다 (ADMIN)
 export const PREMIUM_ONBOARDING_CHECK_PATH = '/me/developer/premium-onboarding';
 // 환급 점검 — 가짜 값으로 환급 화면을 케이스별로 연다 (ADMIN)
-export const REFUND_CHECK_PATH = '/me/developer/refund';
+export const REWARD_CHECK_PATH = '/me/developer/reward';
 
 /**
  * 마이페이지 아래 화면에서 돌아가기. 마이페이지에서 밀고 들어왔으면 한 칸 뒤로 —

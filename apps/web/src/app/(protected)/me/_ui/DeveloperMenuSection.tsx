@@ -7,7 +7,7 @@ import { useAuthStore } from '@/shared/auth/auth-store';
 import {
   ALARM_CHECK_PATH,
   PREMIUM_ONBOARDING_CHECK_PATH,
-  REFUND_CHECK_PATH,
+  REWARD_CHECK_PATH,
 } from '@/shared/lib/routes';
 import { Emoji } from '@/shared/ui/emoji';
 
@@ -50,7 +50,7 @@ export const DeveloperMenuSection = () => {
         description="결제 없이 케이스별로 열어요"
       />
       <MenuLink
-        href={REFUND_CHECK_PATH}
+        href={REWARD_CHECK_PATH}
         icon={<Emoji>💰</Emoji>}
         title="환급 점검"
         description="가짜 값으로 환급 화면과 동전 연출을 열어요"

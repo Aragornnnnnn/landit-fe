@@ -4,13 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { MAX_REFUND_WON } from '@/features/reward/model/refund-offer';
 
 import {
-  buildRefundPlans,
+  buildRewardPlans,
   EXAMPLE_CARDS,
   EXAMPLE_LANDING_INDEX,
   FULL_REFUND_PLAN,
-  isRefundPlan,
+  isRewardPlan,
   maskName,
-  REFUND_PLANS,
+  REWARD_PLANS,
 } from './paywall-content';
 
 describe('EXAMPLE_CARDS', () => {
@@ -48,9 +48,9 @@ describe('maskName', () => {
   });
 });
 
-describe('buildRefundPlans', () => {
+describe('buildRewardPlans', () => {
   it('스토어 가격이 없으면 등록값으로 결제 금액과 최대 환급액을 정한다', () => {
-    const { halfyear, quarterly } = buildRefundPlans();
+    const { halfyear, quarterly } = buildRewardPlans();
 
     expect(halfyear).toMatchObject({
       months: 6,
@@ -65,14 +65,14 @@ describe('buildRefundPlans', () => {
   });
 
   it('하루에 받을 수 있는 최대 환급금은 최대 환급액을 기간(한 달 30일)으로 나눈 값이다', () => {
-    const { halfyear, quarterly } = buildRefundPlans();
+    const { halfyear, quarterly } = buildRewardPlans();
 
     expect(halfyear.dailyRefund).toBe(333);
     expect(quarterly.dailyRefund).toBe(355);
   });
 
   it('셸이 준 원화 가격이 있으면 결제 금액과 최대 환급액을 그 값으로 다시 계산한다', () => {
-    const { halfyear, quarterly } = buildRefundPlans({
+    const { halfyear, quarterly } = buildRewardPlans({
       halfyear: 49_900,
       quarterly: 29_900,
     });
@@ -82,18 +82,18 @@ describe('buildRefundPlans', () => {
   });
 });
 
-describe('isRefundPlan', () => {
+describe('isRewardPlan', () => {
   it('3개월·6개월만 환급 플랜이다', () => {
-    expect(isRefundPlan('halfyear')).toBe(true);
-    expect(isRefundPlan('quarterly')).toBe(true);
-    expect(isRefundPlan('yearly')).toBe(false);
-    expect(isRefundPlan('monthly')).toBe(false);
+    expect(isRewardPlan('halfyear')).toBe(true);
+    expect(isRewardPlan('quarterly')).toBe(true);
+    expect(isRewardPlan('yearly')).toBe(false);
+    expect(isRewardPlan('monthly')).toBe(false);
   });
 });
 
 describe('MAX_REFUND_WON', () => {
   it('환급 소개가 말하는 최대 금액은 전액 환급 플랜의 환급액과 같다', () => {
-    const { price, refundRate } = REFUND_PLANS[FULL_REFUND_PLAN];
+    const { price, refundRate } = REWARD_PLANS[FULL_REFUND_PLAN];
 
     expect(MAX_REFUND_WON).toBe((price * refundRate) / 100);
   });

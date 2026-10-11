@@ -7,8 +7,8 @@ import { AlarmSync } from '@/features/alarm/ui/AlarmSync';
 import { AppUpdateGate } from '@/features/app-update/ui/AppUpdateGate';
 import { PushDeviceSync } from '@/features/notification/ui/PushDeviceSync';
 import { ProfilePropertiesSync } from '@/features/onboarding/ui/ProfilePropertiesSync';
-import { RefundPropertiesSync } from '@/features/reward/ui/RefundPropertiesSync';
-import { REFUND_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
+import { RewardPropertiesSync } from '@/features/reward/ui/RewardPropertiesSync';
+import { REWARD_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
 import { SubscriptionPropertiesSync } from '@/features/subscription/ui/my-subscription/SubscriptionPropertiesSync';
 import { IdentifySync } from '@/features/subscription/ui/purchase/IdentifySync';
 import { WidgetChangeSync } from '@/features/widget/ui/WidgetChangeSync';
@@ -64,7 +64,7 @@ export default function RootLayout({
           <IdentifySync />
           <SubscriptionPropertiesSync />
           <ProfilePropertiesSync />
-          <RefundPropertiesSync enabled={REFUND_CHALLENGE_ENABLED} />
+          <RewardPropertiesSync enabled={REWARD_CHALLENGE_ENABLED} />
           <AlarmPropertiesSync />
         </Providers>
         <Toaster />

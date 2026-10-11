@@ -21,14 +21,14 @@ const mocks = vi.hoisted(() => ({
   },
   learningLevel: { data: { learningLevel: 3 } },
   reward: { reward: null as RewardView | null },
-  refundLaunched: true,
+  rewardLaunched: true,
 }));
 vi.mock(
   '@/features/subscription/model/paywall-gate/payment-flag',
   async (original) => ({
     ...(await original<object>()),
-    get REFUND_CHALLENGE_ENABLED() {
-      return mocks.refundLaunched;
+    get REWARD_CHALLENGE_ENABLED() {
+      return mocks.rewardLaunched;
     },
   }),
 );
@@ -94,7 +94,7 @@ beforeEach(() => {
   mocks.replace.mockClear();
   mocks.push.mockClear();
   mocks.reward = { reward: null };
-  mocks.refundLaunched = true;
+  mocks.rewardLaunched = true;
 });
 afterEach(cleanup);
 
@@ -304,7 +304,7 @@ describe('가격 화면 노출의 환급 여부', () => {
   });
 
   it('환급이 열리기 전에는 환급 여부를 싣지 않는다', () => {
-    mocks.refundLaunched = false;
+    mocks.rewardLaunched = false;
     renderScreen(premium());
 
     chooseReason('가격이 부담돼요');

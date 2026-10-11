@@ -41,7 +41,7 @@ vi.mock('@/features/reward/model/refresh-reward', () => ({
   fetchLatestReward: mocks.fetchLatest,
 }));
 vi.mock('@/features/subscription/model/paywall-gate/payment-flag', () => ({
-  get REFUND_CHALLENGE_ENABLED() {
+  get REWARD_CHALLENGE_ENABLED() {
     return mocks.launched;
   },
 }));
@@ -49,11 +49,11 @@ vi.mock('@/features/subscription/model/paywall-gate/payment-flag', () => ({
 vi.mock('next/image', () => ({ default: () => <span /> }));
 const analytics = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/shared/analytics', () => ({ track: analytics.track }));
-vi.mock('@/features/reward/ui/RefundGuide', async (importOriginal) => ({
+vi.mock('@/features/reward/ui/RewardGuide', async (importOriginal) => ({
   ...(await importOriginal<
-    typeof import('@/features/reward/ui/RefundGuide')
+    typeof import('@/features/reward/ui/RewardGuide')
   >()),
-  preloadRefundGuide: vi.fn(),
+  preloadRewardGuide: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace }),
@@ -89,14 +89,14 @@ vi.mock('@/features/alarm/ui/AlarmSetupFlow', () => ({
   AlarmSetupFlow: ({
     onSkip,
     onDone,
-    refund,
+    rewardParticipant,
   }: {
     onSkip: () => void;
     onDone: () => void;
-    refund: boolean;
+    rewardParticipant: boolean;
   }) => (
     <>
-      <p>{refund ? '환급 문구' : '기본 문구'}</p>
+      <p>{rewardParticipant ? '환급 문구' : '기본 문구'}</p>
       <button type="button" onClick={onSkip}>
         다음에 할게요
       </button>
@@ -433,7 +433,7 @@ describe('PremiumOnboardingScreen', () => {
 
     it('환급 문구로 보기: 환영 다음에 환급 규칙이 먼저 나온다', () => {
       signIn('ADMIN');
-      render(<PremiumOnboardingScreen returnTo="/me" preview="refund" />);
+      render(<PremiumOnboardingScreen returnTo="/me" preview="reward" />);
 
       fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
@@ -447,7 +447,7 @@ describe('PremiumOnboardingScreen', () => {
 
     it('환급 문구로 보기: 규칙을 넘기면 알람 등록이 환급 문구로 나온다', () => {
       signIn('ADMIN');
-      render(<PremiumOnboardingScreen returnTo="/me" preview="refund" />);
+      render(<PremiumOnboardingScreen returnTo="/me" preview="reward" />);
 
       fireEvent.click(screen.getByRole('button', { name: '다음' }));
       fireEvent.click(screen.getByRole('button', { name: '다음' }));
@@ -467,7 +467,7 @@ describe('PremiumOnboardingScreen', () => {
     it('ADMIN이 아니면 미리보기를 무시한다 — 주소를 고쳐도 실제 상태대로 간다', () => {
       signIn('USER');
       mocks.setting = { time: '07:30', enabled: true };
-      render(<PremiumOnboardingScreen returnTo="/me" preview="refund" />);
+      render(<PremiumOnboardingScreen returnTo="/me" preview="reward" />);
 
       fireEvent.click(screen.getByRole('button', { name: '다음' }));
 

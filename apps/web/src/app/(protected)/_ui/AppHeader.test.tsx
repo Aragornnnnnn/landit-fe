@@ -29,11 +29,11 @@ vi.mock('@/features/subscription/ui/PremiumHeaderEntry', () => ({
     return <span data-testid="premium-entry" />;
   },
 }));
-vi.mock('@/features/reward/ui/HeaderRefund', () => ({
-  HeaderRefund: ({ badge }: { badge: { label: string } }) => (
-    <span data-testid="refund-pill">{badge.label}</span>
+vi.mock('@/features/reward/ui/HeaderReward', () => ({
+  HeaderReward: ({ badge }: { badge: { label: string } }) => (
+    <span data-testid="reward-pill">{badge.label}</span>
   ),
-  RefundInviteLabel: () => null,
+  RewardInviteLabel: () => null,
 }));
 vi.mock('@/features/streak/ui/HeaderStreak', () => ({
   HeaderStreak: () => null,
@@ -55,7 +55,7 @@ describe('AppHeader', () => {
 
     render(<AppHeader />);
 
-    expect(screen.getByTestId('refund-pill')).toHaveTextContent('쌓인 환급액');
+    expect(screen.getByTestId('reward-pill')).toHaveTextContent('쌓인 환급액');
     expect(screen.queryByTestId('premium-entry')).not.toBeInTheDocument();
   });
 
@@ -72,7 +72,7 @@ describe('AppHeader', () => {
 
     render(<AppHeader />);
 
-    expect(mocks.entry?.invite?.href).toBe('/refund');
+    expect(mocks.entry?.invite?.href).toBe('/reward');
   });
 
   it('권할 사람이 그 진입을 누르면 헤더에서 환급으로 들어갔다고 찍는다', () => {

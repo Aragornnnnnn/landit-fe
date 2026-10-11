@@ -904,13 +904,13 @@
   }
 
   /* 알림이 내려앉은 뒤 빨간 라벨이 톡 붙는다 */
-  [data-inview='true'] .reveal-refund-label {
+  [data-inview='true'] .reveal-refund-rate-label {
     animation: mascot-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) 1.45s both;
   }
 
   @media (prefers-reduced-motion: reduce) {
     [data-inview='true'] .reveal-deposit,
-    [data-inview='true'] .reveal-refund-label {
+    [data-inview='true'] .reveal-refund-rate-label {
       animation: none;
     }
   }

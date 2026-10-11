@@ -144,12 +144,12 @@ describe('PremiumHeaderEntry', () => {
 
   it('진입을 다른 곳으로 돌리면 그 주소와 글자로 알약을 그린다', () => {
     render(
-      <PremiumHeaderEntry invite={{ href: '/refund', label: '환급받기' }} />,
+      <PremiumHeaderEntry invite={{ href: '/reward', label: '환급받기' }} />,
     );
 
     expect(screen.getByText('환급받기').closest('a')).toHaveAttribute(
       'href',
-      '/refund',
+      '/reward',
     );
   });
 
@@ -161,7 +161,7 @@ describe('PremiumHeaderEntry', () => {
     });
 
     render(
-      <PremiumHeaderEntry invite={{ href: '/refund', label: '환급받기' }} />,
+      <PremiumHeaderEntry invite={{ href: '/reward', label: '환급받기' }} />,
     );
 
     expect(screen.queryByText('환급받기')).not.toBeInTheDocument();
@@ -169,7 +169,7 @@ describe('PremiumHeaderEntry', () => {
 
   it('돌린 진입을 눌러도 페이월 진입으로 세지 않는다', () => {
     render(
-      <PremiumHeaderEntry invite={{ href: '/refund', label: '환급받기' }} />,
+      <PremiumHeaderEntry invite={{ href: '/reward', label: '환급받기' }} />,
     );
 
     fireEvent.click(screen.getByText('환급받기'));

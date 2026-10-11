@@ -10,23 +10,23 @@ import {
 
 import {
   FULL_REFUND_PLAN,
-  REFUND_PLAN_ORDER,
-  type RefundPlan,
-  type RefundPlanId,
+  REWARD_PLAN_ORDER,
+  type RewardPlan,
+  type RewardPlanId,
 } from '../_model/paywall-content';
 import { PlanCard } from './PlanCard';
-import { RefundPlanCard } from './RefundPlanCard';
 import { RevealSection } from './RevealSection';
+import { RewardPlanCard } from './RewardPlanCard';
 import { Highlight, SectionHeading } from './SectionHeading';
 
 interface PlanSectionProps {
   plans: Record<RegularPlan, PaywallPlan>;
   /** 환급 플랜(3·6개월) 카드 값 — 환급 챌린지가 켜졌을 때만 그린다 */
-  refundPlans: Record<RefundPlanId, RefundPlan>;
+  rewardPlans: Record<RewardPlanId, RewardPlan>;
   selectedId: SubscriptionPlan;
   onSelect: (id: SubscriptionPlan) => void;
   /** 환급 챌린지가 켜졌는가 */
-  refundChallenge: boolean;
+  rewardChallenge: boolean;
   /** 약관 옆 구매 복원 — 맨 위 줄은 스크롤로 올라가니 여기에도 둔다 */
   onRestore: () => void;
   restoreDisabled: boolean;
@@ -34,10 +34,10 @@ interface PlanSectionProps {
 
 export const PlanSection = ({
   plans,
-  refundPlans,
+  rewardPlans,
   selectedId,
   onSelect,
-  refundChallenge,
+  rewardChallenge,
   onRestore,
   restoreDisabled,
 }: PlanSectionProps) => (
@@ -50,7 +50,7 @@ export const PlanSection = ({
       }
     />
     {/* 결제가 걸린 조작부라 등장 연출을 걸지 않는다 — 연출이 멎어 흐린 채로 눌리면 안 된다 */}
-    {refundChallenge ? (
+    {rewardChallenge ? (
       <>
         <p className="mt-2 px-6 text-[15px] text-muted-foreground">
           프리미엄과 함께 매일 챌린지에 도전하고,
@@ -58,10 +58,10 @@ export const PlanSection = ({
           결제한 돈도 돌려받아 보세요
         </p>
         <div className="mt-5 flex flex-col gap-3 px-5">
-          {REFUND_PLAN_ORDER.map((id) => (
-            <RefundPlanCard
+          {REWARD_PLAN_ORDER.map((id) => (
+            <RewardPlanCard
               key={id}
-              plan={refundPlans[id]}
+              plan={rewardPlans[id]}
               selected={id === selectedId}
               onSelect={onSelect}
               featured={id === FULL_REFUND_PLAN}
