@@ -45,7 +45,12 @@ const HomeLogo = () => (
 
 interface PremiumHeaderEntryProps {
   // 무료 사용자의 진입을 페이월 대신 다른 곳으로 돌린다 — 환급 소개처럼, 구독이 모르는 화면을 라우트가 끼운다. 할인 중에는 할인 배지가 먼저다
-  invite?: { href: string; label: React.ReactNode };
+  invite?: {
+    href: string;
+    label: React.ReactNode;
+    // 계측용 — 돌린 곳으로 들어가는 탭은 그 화면을 끼운 쪽이 센다
+    onClick?: () => void;
+  };
   // 부르는 쪽이 이 자리에 무엇을 놓을지 아직 모른다 — 그동안은 로고로 기다린다
   holding?: boolean;
 }
@@ -130,10 +135,10 @@ export const PremiumHeaderEntry = ({
       ) : (
         <Link
           href={invite?.href ?? paywallPath({ source: 'header' })}
-          // 페이월로 가는 진입일 때만 센다 — 돌린 곳의 노출은 그 화면이 따로 센다
+          // 페이월로 가는 진입은 여기서 세고, 돌린 곳으로 가는 진입은 돌린 쪽이 준 것으로 센다
           onClick={
             invite
-              ? undefined
+              ? invite.onClick
               : () => track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'header' })
           }
           className={`${PILL_CLASS} animate-gold-flow animate-gold-sheen`}

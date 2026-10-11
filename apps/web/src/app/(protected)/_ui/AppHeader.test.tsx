@@ -11,14 +11,19 @@ import { AppHeader } from './AppHeader';
 
 const mocks = vi.hoisted(() => ({
   my: { reward: null as unknown, invited: false, settled: true },
-  entry: null as { holding?: boolean; invite?: { href: string } } | null,
+  entry: null as {
+    holding?: boolean;
+    invite?: { href: string; onClick?: () => void };
+  } | null,
 }));
+const analytics = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/analytics', () => ({ track: analytics.track }));
 
 vi.mock('../_model/useMyReward', () => ({ useMyReward: () => mocks.my }));
 vi.mock('@/features/subscription/ui/PremiumHeaderEntry', () => ({
   PremiumHeaderEntry: (props: {
     holding?: boolean;
-    invite?: { href: string };
+    invite?: { href: string; onClick?: () => void };
   }) => {
     mocks.entry = props;
     return <span data-testid="premium-entry" />;
@@ -68,6 +73,17 @@ describe('AppHeader', () => {
     render(<AppHeader />);
 
     expect(mocks.entry?.invite?.href).toBe('/refund');
+  });
+
+  it('권할 사람이 그 진입을 누르면 헤더에서 환급으로 들어갔다고 찍는다', () => {
+    mocks.my = { reward: null, invited: true, settled: true };
+    render(<AppHeader />);
+
+    mocks.entry?.invite?.onClick?.();
+
+    expect(analytics.track.mock.calls).toEqual([
+      ['Reward Entry Tapped', { source: 'header' }],
+    ]);
   });
 
   it('누구인지 아직 모르면 진입을 붙들어 둔다', () => {

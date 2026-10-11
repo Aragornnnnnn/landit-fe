@@ -69,6 +69,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
   const level = toEnglishLevel(profile?.learningLevel ?? null);
   // 가격 부담 화면이 환급을 쌓는 중인 사람에게 다른 답을 한다 — 스위치가 꺼져 있으면 묻지 않는다
   const { reward } = useRewardQuery({ enabled: REFUND_CHALLENGE_ENABLED });
+  const stake = refundStakeOf(reward);
 
   const leaveToManage = () => backOrReplace(router, SUBSCRIPTION_MANAGE_PATH);
 
@@ -84,6 +85,9 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
       track(EVENTS.CANCEL_RETENTION_VIEWED, {
         reason,
         ...(reason === 'price' && summary.plan && { plan: summary.plan }),
+        // 환급이 열린 뒤의 가격 화면에만 — 그 전에는 환급 문구가 나올 수 없다
+        ...(reason === 'price' &&
+          REFUND_CHALLENGE_ENABLED && { reward: stake !== null }),
       });
     }
     setStep(next);
@@ -155,7 +159,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
       case 'retention': {
         const content = retentionContent(step.reason, {
           summary,
-          stake: refundStakeOf(reward),
+          stake,
           nickname,
           totalActiveDays: calendar?.totalActiveDays ?? null,
           levelLabel: level ? `${LEVEL_NAMES[level]} Lv.${level}` : null,

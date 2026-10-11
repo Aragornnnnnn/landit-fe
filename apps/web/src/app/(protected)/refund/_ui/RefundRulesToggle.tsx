@@ -2,9 +2,11 @@
 
 // 내역 위의 환급 규칙 카드 — 매일 보는 화면이라 접어 두고 제목 줄만 보인다. 누르면 같은 카드가 아래로 늘어난다
 import { useId, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
 import { RefundRuleList } from '@/features/reward/ui/RefundGuide';
+import { track } from '@/shared/analytics';
 import { DURATION, EASE_STANDARD } from '@/shared/motion';
 import { ChevronDownIcon } from '@/shared/ui/Icons';
 
@@ -24,7 +26,11 @@ export const RefundRulesToggle = () => {
         type="button"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          // 펼칠 때만 센다 — 접는 건 다 읽었다는 뜻일 뿐이다
+          if (!open) track(EVENTS.REWARD_RULES_OPENED);
+          setOpen(!open);
+        }}
         // 접혀 있을 때는 내역보다 눈에 덜 띄게 옅게, 펼치면 소개 화면의 라벨처럼 진하게
         className={`flex w-full items-center justify-between px-4 py-3.5 text-[15px] transition-colors ${open ? 'font-black text-foreground' : 'font-bold text-muted-foreground'}`}
       >

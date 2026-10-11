@@ -1,6 +1,8 @@
 'use client';
 
 // 앱 헤더 — 왼쪽은 환급 참여자면 쌓인 금액, 그 밖에는 프리미엄 진입(또는 로고), 오른쪽은 열매·편지함·내 정보
+import { EVENTS } from '@landit/analytics';
+
 import { MailboxButton } from '@/features/mailbox/ui/MailboxButton';
 import {
   balanceOf,
@@ -13,6 +15,7 @@ import {
 } from '@/features/reward/ui/HeaderRefund';
 import { HeaderStreak } from '@/features/streak/ui/HeaderStreak';
 import { PremiumHeaderEntry } from '@/features/subscription/ui/PremiumHeaderEntry';
+import { track } from '@/shared/analytics';
 import { REFUND_PATH } from '@/shared/lib/routes';
 import { HeaderAction } from '@/shared/ui/HeaderAction';
 import { UserIcon } from '@/shared/ui/Icons';
@@ -41,7 +44,14 @@ export const AppHeader = () => {
           // 환급을 권할 사람에게만 진입을 환급 소개로 돌린다 — 그 밖에는 지금의 프리미엄 진입 그대로다
           invite={
             invited
-              ? { href: REFUND_PATH, label: <RefundInviteLabel /> }
+              ? {
+                  href: REFUND_PATH,
+                  label: <RefundInviteLabel />,
+                  onClick: () =>
+                    track(EVENTS.REWARD_ENTRY_TAPPED, {
+                      source: 'header',
+                    }),
+                }
               : undefined
           }
         />

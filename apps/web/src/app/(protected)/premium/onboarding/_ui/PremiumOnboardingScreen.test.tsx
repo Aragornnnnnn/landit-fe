@@ -47,6 +47,8 @@ vi.mock('@/features/subscription/model/paywall-gate/payment-flag', () => ({
 }));
 // 규칙 화면의 돈통 그림 — 이미지 최적화 부품은 jsdom에서 돌지 않는다
 vi.mock('next/image', () => ({ default: () => <span /> }));
+const analytics = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/analytics', () => ({ track: analytics.track }));
 vi.mock('@/features/reward/ui/RefundGuide', async (importOriginal) => ({
   ...(await importOriginal<
     typeof import('@/features/reward/ui/RefundGuide')
@@ -294,6 +296,35 @@ describe('PremiumOnboardingScreen', () => {
       expect(
         screen.getByText('92일 동안 매일 공부하면 구독료를 돌려받아요'),
       ).toBeVisible();
+    });
+
+    it('환급 안내를 보여 줄 때 금액을 아는 안내라고 한 번 찍는다', async () => {
+      mocks.reward = bought();
+      render(<PremiumOnboardingScreen returnTo="/me" />);
+
+      tapNext();
+      await screen.findByText('최대 31,920원');
+
+      expect(analytics.track.mock.calls).toEqual([
+        ['Reward Guide Viewed', { confirmed: true }],
+      ]);
+    });
+
+    it('결제 확인이 늦어 금액 없이 보여 준 안내는 confirmed가 거짓이다', async () => {
+      mocks.reward = rewardView({
+        state: 'PENDING',
+        current: null,
+        today: null,
+        remainingDays: null,
+      });
+      render(<PremiumOnboardingScreen returnTo="/me" />);
+
+      tapNext();
+      await screen.findByText('환급 챌린지 시작');
+
+      expect(analytics.track.mock.calls).toEqual([
+        ['Reward Guide Viewed', { confirmed: false }],
+      ]);
     });
 
     it('환급 안내를 넘기면 알람 등록이 환급 문구로 나온다', async () => {

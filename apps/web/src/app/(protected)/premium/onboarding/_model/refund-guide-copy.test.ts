@@ -25,6 +25,7 @@ describe('refundGuideCopyOf', () => {
       eyebrow: '오늘부터 챌린지 시작!',
       amount: '최대 31,920원',
       caption: '92일 동안 매일 공부하면 구독료를 돌려받아요',
+      confirmed: true,
     });
   });
 
@@ -47,6 +48,7 @@ describe('refundGuideCopyOf', () => {
       eyebrow: '매일 공부하면 수강료를 돌려받아요',
       amount: '환급 챌린지 시작',
       caption: '6개월은 낸 금액 전부, 3개월은 80%를 돌려받아요',
+      confirmed: false,
     });
   });
 

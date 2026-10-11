@@ -3,6 +3,7 @@
 // 프리미엄 온보딩 — 결제 직후 환영 → (환급 상품이면 환급 안내) → 알람 등록 → 원래 가던 곳. 알람을 모르는 셸(브라우저·구 셸)이면 환영만 보고 바로 간다.
 // 이동은 전부 replace — 끝난 뒤 뒤로 가기로 환영·페이월에 돌아오지 않게
 import { useEffect, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
@@ -20,6 +21,7 @@ import { MAX_REFUND_WON } from '@/features/reward/model/refund-offer';
 import { preloadRefundGuide } from '@/features/reward/ui/RefundGuide';
 import { subscriptionKeys } from '@/features/subscription/model/my-subscription/keys';
 import { REFUND_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
+import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { homePath } from '@/shared/lib/last-tab';
 import type { PremiumOnboardingPreview } from '@/shared/lib/routes';
@@ -37,6 +39,7 @@ const PREVIEW_REFUND_COPY: RefundGuideCopy = {
   eyebrow: '오늘부터 챌린지 시작!',
   amount: `최대 ${formatWon(MAX_REFUND_WON)}`,
   caption: '183일 동안 매일 공부하면 구독료를 돌려받아요',
+  confirmed: true,
 };
 
 // 안내에 적을 글자를 찾는다. 쌓는 중이 아니라는 답이면 한 번 더 받아 본다 —
@@ -141,6 +144,16 @@ export const PremiumOnboardingScreen = ({
     if (copy) showGuide(copy);
     else void next();
   };
+
+  // 안내가 실제로 그려졌을 때 센다 — 기다리는 사이 화면을 떠났으면 본 것이 아니다. 미리보기는 세지 않는다
+  const guideShown = step === 'guide' && refundCopy !== null && !forced;
+  const guideConfirmed = refundCopy?.confirmed ?? false;
+  useEffect(() => {
+    if (guideShown)
+      track(EVENTS.REWARD_GUIDE_VIEWED, {
+        confirmed: guideConfirmed,
+      });
+  }, [guideShown, guideConfirmed]);
 
   if (step === 'welcome') {
     return (

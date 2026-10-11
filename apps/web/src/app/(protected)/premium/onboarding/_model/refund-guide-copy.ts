@@ -9,6 +9,8 @@ export interface RefundGuideCopy {
   amount: string;
   // 그 아래 한 줄
   caption: string;
+  // 어느 상품인지 알고 금액을 적은 안내인가 — 결제 확인이 늦으면 거짓
+  confirmed: boolean;
 }
 
 // 쌓는 중도 결제 확인 중도 아니면 null — 환급과 상관없는 상품을 샀거나, 지난 회차만 남아 있다
@@ -21,6 +23,7 @@ export const refundGuideCopyOf = (
       eyebrow: '매일 공부하면 수강료를 돌려받아요',
       amount: '환급 챌린지 시작',
       caption: '6개월은 낸 금액 전부, 3개월은 80%를 돌려받아요',
+      confirmed: false,
     };
   if (reward?.state !== 'ACTIVE' || reward.current === null) return null;
 
@@ -29,5 +32,6 @@ export const refundGuideCopyOf = (
     amount: `최대 ${formatWon(reward.current.maximumWon)}`,
     // 남은 날이 아니라 상품의 전체 기간이다 — 며칠 뒤에 봐도 같은 말을 한다
     caption: `${reward.current.eligibleDays}일 동안 매일 공부하면 구독료를 돌려받아요`,
+    confirmed: true,
   };
 };

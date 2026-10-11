@@ -2,8 +2,10 @@
 
 // 헤더 왼쪽의 환급 알약 — 참여자에게는 쌓인 금액을, 아직 시작하지 않은 사람에게는 진입 글자를 놓고, 늘어난 금액이 있으면 동전 연출을 얹는다
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
 
+import { track } from '@/shared/analytics';
 import { REFUND_PATH } from '@/shared/lib/routes';
 import { formatWon } from '@/shared/lib/won';
 
@@ -62,6 +64,7 @@ export const HeaderRefund = ({
       <Link
         ref={pillRef}
         href={REFUND_PATH}
+        onClick={() => track(EVENTS.REWARD_ENTRY_TAPPED, { source: 'header' })}
         aria-label={`${badge.label} ${amount}, ${badge.note}, 환급 보기`}
         className={`${REFUND_PILL_CLASS} transition-colors active:scale-95 ${TONE[tone]}`}
       >

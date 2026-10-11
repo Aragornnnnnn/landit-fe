@@ -21,7 +21,17 @@ const mocks = vi.hoisted(() => ({
   },
   learningLevel: { data: { learningLevel: 3 } },
   reward: { reward: null as RewardView | null },
+  refundLaunched: true,
 }));
+vi.mock(
+  '@/features/subscription/model/paywall-gate/payment-flag',
+  async (original) => ({
+    ...(await original<object>()),
+    get REFUND_CHALLENGE_ENABLED() {
+      return mocks.refundLaunched;
+    },
+  }),
+);
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 vi.mock('@/features/reward/model/useRewardQuery', () => ({
   useRewardQuery: () => mocks.reward,
@@ -84,6 +94,7 @@ beforeEach(() => {
   mocks.replace.mockClear();
   mocks.push.mockClear();
   mocks.reward = { reward: null };
+  mocks.refundLaunched = true;
 });
 afterEach(cleanup);
 
@@ -148,6 +159,7 @@ describe('② 사유별 화면', () => {
     expect(mocks.track).toHaveBeenCalledWith('Cancel Retention Viewed', {
       reason: 'price',
       plan: 'monthly',
+      reward: false,
     });
   });
 
@@ -271,5 +283,46 @@ describe('환급을 쌓는 중인 사람', () => {
     expect(
       screen.getByText('최대 59,900원까지 돌려받는 플랜이에요.'),
     ).toBeInTheDocument();
+  });
+});
+
+describe('가격 화면 노출의 환급 여부', () => {
+  const halfyear = () =>
+    premium({ productId: 'com.saynow.app.premium.halfyear', price: 59_900 });
+
+  it('환급을 쌓는 중이면 환급 문구를 봤다고 싣는다', () => {
+    mocks.reward = { reward: rewardView() };
+    renderScreen(halfyear());
+
+    chooseReason('가격이 부담돼요');
+
+    expect(mocks.track).toHaveBeenCalledWith('Cancel Retention Viewed', {
+      reason: 'price',
+      plan: 'halfyear',
+      reward: true,
+    });
+  });
+
+  it('환급이 열리기 전에는 환급 여부를 싣지 않는다', () => {
+    mocks.refundLaunched = false;
+    renderScreen(premium());
+
+    chooseReason('가격이 부담돼요');
+
+    expect(mocks.track).toHaveBeenCalledWith('Cancel Retention Viewed', {
+      reason: 'price',
+      plan: 'monthly',
+    });
+  });
+
+  it('가격이 아닌 사유에는 싣지 않는다', () => {
+    mocks.reward = { reward: rewardView() };
+    renderScreen(halfyear());
+
+    chooseReason('쓸 시간이 없어요');
+
+    expect(mocks.track).toHaveBeenCalledWith('Cancel Retention Viewed', {
+      reason: 'time',
+    });
   });
 });
