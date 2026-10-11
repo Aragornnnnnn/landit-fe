@@ -10,3 +10,6 @@ export const rewardKeys = {
   earnBase: (userId: number | null) =>
     [...rewardKeys.all, userId, 'earnBase'] as const,
 };
+
+// 환급 캐시를 보는 화면이 없어도 붙들어 두는 시간 — 대화가 길어도, 완료 뒤 다른 화면에 머물러도 받아 둔 것이 남아야 한다
+export const REWARD_GC_MS = 30 * 60 * 1000;
