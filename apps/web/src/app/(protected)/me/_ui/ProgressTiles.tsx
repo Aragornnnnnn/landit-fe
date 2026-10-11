@@ -12,7 +12,7 @@ import {
 import { Coin } from '@/features/reward/ui/common/Coin';
 import { StreakFruit } from '@/features/streak/ui/common/StreakFruit';
 import { track } from '@/shared/analytics';
-import { REFUND_PATH, STREAK_PATH } from '@/shared/lib/routes';
+import { REWARD_PATH, STREAK_PATH } from '@/shared/lib/routes';
 import { ChevronRightIcon } from '@/shared/ui/Icons';
 
 // 아직 시작하지 않은 무료 유저에게 보이는 환급 타일 — 꾸미지 않고 다른 타일과 같은 모양으로 둔다
@@ -70,29 +70,29 @@ const Tile = ({
 );
 
 export const ProgressTiles = ({
-  refund,
+  reward,
   streakDays,
 }: {
   // 환급과 상관없으면 null — 그때는 연속 학습 하나만 길게 놓인다
-  refund: RewardBadge | null;
+  reward: RewardBadge | null;
   streakDays: number;
 }) => (
   <div className="flex gap-2.5">
-    {refund && (
+    {reward && (
       <Tile
-        href={REFUND_PATH}
+        href={REWARD_PATH}
         onClick={() => track(EVENTS.REWARD_ENTRY_TAPPED, { source: 'me' })}
-        label={refund.label}
+        label={reward.label}
         icon={
           <Coin
             size={22}
             // 오늘 아직이면 동전도 식는다
-            className={refund.mood === 'kept' ? '' : 'opacity-50 grayscale'}
+            className={reward.mood === 'kept' ? '' : 'opacity-50 grayscale'}
           />
         }
-        value={badgeAmountOf(refund)}
-        note={refund.note}
-        warning={refund.mood === 'atRisk'}
+        value={badgeAmountOf(reward)}
+        note={reward.note}
+        warning={reward.mood === 'atRisk'}
       />
     )}
     <Tile

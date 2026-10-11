@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/features/subscription/model/paywall-gate/payment-flag', () => ({
-  get REFUND_CHALLENGE_ENABLED() {
+  get REWARD_CHALLENGE_ENABLED() {
     return mocks.launched;
   },
 }));
@@ -66,7 +66,7 @@ describe('MyProgressTiles', () => {
 
     render(<MyProgressTiles />);
 
-    expect(links()).toEqual(['/refund', '/streak']);
+    expect(links()).toEqual(['/reward', '/streak']);
     expect(screen.getByText('12,300원')).toBeInTheDocument();
   });
 
@@ -99,7 +99,7 @@ describe('MyProgressTiles', () => {
 
     render(<MyProgressTiles />);
 
-    expect(links()).toEqual(['/refund', '/streak']);
+    expect(links()).toEqual(['/reward', '/streak']);
     expect(screen.getByText('0일')).toBeInTheDocument();
   });
 });
@@ -115,7 +115,7 @@ describe('MyProgressTiles 계측', () => {
     fireEvent.click(
       screen
         .getAllByRole('link')
-        .find((link) => link.getAttribute('href') === '/refund')!,
+        .find((link) => link.getAttribute('href') === '/reward')!,
     );
 
     expect(analytics.track.mock.calls).toEqual([
@@ -130,7 +130,7 @@ describe('MyProgressTiles 계측', () => {
     fireEvent.click(
       screen
         .getAllByRole('link')
-        .find((link) => link.getAttribute('href') !== '/refund')!,
+        .find((link) => link.getAttribute('href') !== '/reward')!,
     );
 
     expect(analytics.track).not.toHaveBeenCalled();

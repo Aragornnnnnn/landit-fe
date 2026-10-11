@@ -13,8 +13,8 @@ import {
   PREMIUM_ONBOARDING_CHECK_PATH,
   PREMIUM_ONBOARDING_PATH,
   readScenarioFeedbackParams,
-  REFUND_CHECK_PATH,
-  REFUND_PATH,
+  REWARD_CHECK_PATH,
+  REWARD_PATH,
   SUBSCRIPTION_CANCEL_PATH,
   SUBSCRIPTION_HISTORY_PATH,
   SUBSCRIPTION_MANAGE_PATH,
@@ -54,8 +54,8 @@ const NESTED_PAGES: Record<string, string> = {
   [ALARM_CHECK_PATH]: 'alarm_check',
   [PREMIUM_ONBOARDING_CHECK_PATH]: 'premium_onboarding_check',
   [PREMIUM_ONBOARDING_PATH]: 'premium_onboarding',
-  [REFUND_PATH]: 'reward',
-  [REFUND_CHECK_PATH]: 'reward_check',
+  [REWARD_PATH]: 'reward',
+  [REWARD_CHECK_PATH]: 'reward_check',
 };
 
 // 페이월로 보낸 문 — 주소에 실려 온 값만 받는다. 문이 늘었는데 여기를 빠뜨리면 빌드가 깨진다

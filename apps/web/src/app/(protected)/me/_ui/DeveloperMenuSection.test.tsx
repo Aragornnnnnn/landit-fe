@@ -46,7 +46,7 @@ describe('DeveloperMenuSection', () => {
     );
     expect(screen.getByText('환급 점검').closest('a')).toHaveAttribute(
       'href',
-      '/me/developer/refund',
+      '/me/developer/reward',
     );
   });
 

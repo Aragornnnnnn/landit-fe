@@ -36,8 +36,8 @@ export const AlarmScreen = () => {
   // 설정을 못 읽었을 때는 등록 전으로 넘겨짚지 않는다 — 등록한 사람에게 등록 흐름을 보여 덮어쓰게 된다
   if (!isPending && !isError && !registered && !inSetup) setInSetup(true);
 
-  // 환급 참여 여부는 아직 받지 않는다 — 백엔드 보상 조회가 붙으면 여기와 등록 흐름의 refund를 채운다
-  const refund = false;
+  // 환급 참여 여부는 아직 받지 않는다 — 백엔드 보상 조회가 붙으면 여기와 등록 흐름의 reward를 채운다
+  const reward = false;
 
   const leave = () => backToMyPage(router);
 
@@ -69,7 +69,7 @@ export const AlarmScreen = () => {
         initialTime={parseAlarmTime(setting?.time ?? null)}
         onBack={leave}
         onDone={leave}
-        refund={refund}
+        reward={reward}
         source="me"
       />
     );
@@ -83,7 +83,7 @@ export const AlarmScreen = () => {
         <div className="px-2 pb-3">
           <h1 className="text-[28px] font-black text-foreground">알람</h1>
           <p className="mt-1.5 text-[15px] font-medium text-muted-foreground">
-            {alarmCopy(refund).settingsDescription}
+            {alarmCopy(reward).settingsDescription}
           </p>
         </div>
 

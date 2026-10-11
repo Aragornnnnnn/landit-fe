@@ -373,7 +373,7 @@ OS 권한 팝업의 답 자체는 따로 찍지 않는다 — 위 두 step의 �
 
 이름은 백엔드 필드(`learningLevel`, `accentLocale`)에 맞춘다 — 이벤트 속성 쪽이 `level`·`accent`·`status`로 짧은 것과 어긋나 보이지만, 이미 쌓이고 있는 이벤트 속성을 바꾸면 과거 데이터가 갈라진다. 유저 속성은 서버 데이터와 같은 말을 쓰는 쪽을 택했다.
 
-계약은 `packages/analytics`의 `UserProperties`에 있고, 발화는 `setUserProperties`(값이 `null`이면 속성을 지운다) 하나를 지나간다. 올리는 자리는 루트 레이아웃에 마운트한 무렌더 컴포넌트 넷이다 — 구독은 `SubscriptionPropertiesSync`, 수준·배울 영어는 `ProfilePropertiesSync`, 환급은 `RefundPropertiesSync`, 알람은 `AlarmPropertiesSync`. 표의 위 두 줄은 이 통로를 지나지 않는다 — `provider`는 로그인 식별(`identifyUser`)이, 네이티브 컨텍스트 넷은 초기화(`initAnalytics`)가 각각 따로 올린다.
+계약은 `packages/analytics`의 `UserProperties`에 있고, 발화는 `setUserProperties`(값이 `null`이면 속성을 지운다) 하나를 지나간다. 올리는 자리는 루트 레이아웃에 마운트한 무렌더 컴포넌트 넷이다 — 구독은 `SubscriptionPropertiesSync`, 수준·배울 영어는 `ProfilePropertiesSync`, 환급은 `RewardPropertiesSync`, 알람은 `AlarmPropertiesSync`. 표의 위 두 줄은 이 통로를 지나지 않는다 — `provider`는 로그인 식별(`identifyUser`)이, 네이티브 컨텍스트 넷은 초기화(`initAnalytics`)가 각각 따로 올린다.
 
 `subscription_state`의 `unknown`은 구독을 한 번도 받지 못한 동안이다 — 로그인 직후 첫 조회가 끝나기 전, 그리고 그 첫 조회가 실패한 동안. 그 구간에는 `is_premium`·`plan`을 지워 지난 세션 값이 남지 않게 한다. "유료 여부를 몰라서 빈 것"과 "속성을 아예 안 쓰던 시절이라 빈 것"을 나중에 구분할 수 있게. 앱을 켜자마자 나가는 홈 `Page Viewed`가 여기 걸린다.
 

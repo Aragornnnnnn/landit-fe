@@ -10,13 +10,13 @@ import {
 } from '@/features/reward/model/reward-status';
 import { useBalanceGain } from '@/features/reward/model/useBalanceGain';
 import {
-  HeaderRefund,
-  RefundInviteLabel,
-} from '@/features/reward/ui/HeaderRefund';
+  HeaderReward,
+  RewardInviteLabel,
+} from '@/features/reward/ui/HeaderReward';
 import { HeaderStreak } from '@/features/streak/ui/HeaderStreak';
 import { PremiumHeaderEntry } from '@/features/subscription/ui/PremiumHeaderEntry';
 import { track } from '@/shared/analytics';
-import { REFUND_PATH } from '@/shared/lib/routes';
+import { REWARD_PATH } from '@/shared/lib/routes';
 import { HeaderAction } from '@/shared/ui/HeaderAction';
 import { UserIcon } from '@/shared/ui/Icons';
 
@@ -36,7 +36,7 @@ export const AppHeader = () => {
     // 글자 라벨이 빠지면서 아래 여백을 줄여도 답답하지 않다 — 높이는 이제 아이콘 칸(44px)이 정한다
     <header className="flex shrink-0 items-center justify-between bg-background px-5 pt-[max(var(--safe-area-inset-top),10px)] pb-1">
       {badge ? (
-        <HeaderRefund badge={badge} gain={gain} onGainEnd={endGain} />
+        <HeaderReward badge={badge} gain={gain} onGainEnd={endGain} />
       ) : (
         <PremiumHeaderEntry
           // 환급 참여자인지 아직 모르면 로고로 기다린다 — 진입 알약이 비쳤다 금액으로 바뀌지 않게
@@ -45,8 +45,8 @@ export const AppHeader = () => {
           invite={
             invited
               ? {
-                  href: REFUND_PATH,
-                  label: <RefundInviteLabel />,
+                  href: REWARD_PATH,
+                  label: <RewardInviteLabel />,
                   onClick: () =>
                     track(EVENTS.REWARD_ENTRY_TAPPED, {
                       source: 'header',

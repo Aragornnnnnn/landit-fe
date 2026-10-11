@@ -61,10 +61,10 @@ vi.mock('next/link', () => ({
     </a>
   ),
 }));
-// 환급 챌린지는 기본 꺼짐 — 켠 화면은 refundChallenge로 따로 확인한다
+// 환급 챌린지는 기본 꺼짐 — 켠 화면은 rewardChallenge로 따로 확인한다
 vi.mock('@/features/subscription/model/paywall-gate/payment-flag', () => ({
   PAYMENT_ENABLED: true,
-  REFUND_CHALLENGE_ENABLED: false,
+  REWARD_CHALLENGE_ENABLED: false,
 }));
 // 데모 속 캐릭터는 깜빡임·입모양을 WAAPI(element.animate)로 쏘는데 jsdom엔 없다 — 결제 흐름 테스트라 그림은 비운다
 vi.mock('@/features/conversation/ui/character/PartnerCharacter', () => ({
@@ -295,7 +295,7 @@ describe('PaywallScreen', () => {
     '%s로 유료가 되면 환급을 새로 받는다',
     (reason) => {
       // given — 결제 전에 받아 둔 환급 답은 "상관없음"이다
-      render(<PaywallScreen returnTo="/refund" />);
+      render(<PaywallScreen returnTo="/reward" />);
 
       mocks.purchaseOptions?.onUnlocked(reason);
 
@@ -351,7 +351,7 @@ describe('PaywallScreen', () => {
 
 describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
   it('머리 제목은 「프리미엄에서만 할 수 있는 것들」이다', () => {
-    render(<PaywallScreen refundChallenge />);
+    render(<PaywallScreen rewardChallenge />);
 
     expect(
       screen.getByRole('heading', { name: /할 수 있는 것들/ }),
@@ -359,7 +359,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
   });
 
   it('처음엔 6개월이 선택돼 있어 CTA가 전액 환급 문구다', () => {
-    render(<PaywallScreen refundChallenge />);
+    render(<PaywallScreen rewardChallenge />);
 
     expect(
       screen.getByRole('button', { name: '6개월 100% 환급 플랜' }),
@@ -370,7 +370,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
   });
 
   it('3개월 카드를 누르면 CTA와 결제 안내가 3개월용으로 바뀌고 선택 이벤트를 찍는다', () => {
-    render(<PaywallScreen refundChallenge />);
+    render(<PaywallScreen rewardChallenge />);
 
     fireEvent.click(
       screen.getByRole('button', { name: '3개월 80% 환급 플랜' }),
@@ -391,7 +391,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
   });
 
   it('고른 플랜에 따라 맨 위 무대의 입금 금액·환급 문구가 바뀐다', () => {
-    render(<PaywallScreen refundChallenge />);
+    render(<PaywallScreen rewardChallenge />);
 
     expect(screen.getByText('입금 59,900원')).toBeInTheDocument();
 
@@ -404,7 +404,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
   });
 
   it('닫아도 이탈 할인을 받지 않고 바로 홈으로 간다 — 환급 페이월엔 연간 할인 시트가 없다', async () => {
-    render(<PaywallScreen refundChallenge />);
+    render(<PaywallScreen rewardChallenge />);
 
     fireEvent.click(screen.getAllByRole('button', { name: '닫기' })[0]);
 
@@ -415,7 +415,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
   });
 
   it('CTA를 누르면 고른 환급 플랜(3·6개월 상품)으로 결제를 요청한다', () => {
-    render(<PaywallScreen refundChallenge />);
+    render(<PaywallScreen rewardChallenge />);
 
     fireEvent.click(
       screen.getByRole('button', { name: '6개월 전액 환급 도전하기' }),
@@ -428,7 +428,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     mocks.packages = {
       halfyear: { packageId: '$rc_six_month', price: 49_900, currency: 'KRW' },
     };
-    render(<PaywallScreen refundChallenge />);
+    render(<PaywallScreen rewardChallenge />);
 
     expect(
       screen.getByText('6개월마다 49,900원 정기 결제 · 언제든 해지 가능'),

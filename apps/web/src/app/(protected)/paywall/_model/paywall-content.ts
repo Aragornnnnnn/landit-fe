@@ -242,11 +242,11 @@ export const AVERAGE_TALK_MINUTES = 1278;
 export const OUTCOME_AS_OF = '2026.10.06';
 
 /** 환급 챌린지 플랜 — 3개월·6개월 스토어 상품 */
-export type RefundPlanId = Extract<SubscriptionPlan, 'quarterly' | 'halfyear'>;
+export type RewardPlanId = Extract<SubscriptionPlan, 'quarterly' | 'halfyear'>;
 
-/** 환급 플랜 — 기간·환급률과 결제 금액의 스토어 등록값. 셸이 원화 가격을 주면 buildRefundPlans가 그 값으로 바꾼다 */
-export const REFUND_PLANS: Record<
-  RefundPlanId,
+/** 환급 플랜 — 기간·환급률과 결제 금액의 스토어 등록값. 셸이 원화 가격을 주면 buildRewardPlans가 그 값으로 바꾼다 */
+export const REWARD_PLANS: Record<
+  RewardPlanId,
   { months: number; refundRate: number; price: number }
 > = {
   quarterly: { months: 3, refundRate: 80, price: 39_900 },
@@ -254,26 +254,26 @@ export const REFUND_PLANS: Record<
 };
 
 /** 카드가 위에서부터 놓이는 순서 — 전액 환급을 위에 둬 가장 센 제안이 먼저 눈에 든다 */
-export const REFUND_PLAN_ORDER: readonly RefundPlanId[] = [
+export const REWARD_PLAN_ORDER: readonly RewardPlanId[] = [
   'halfyear',
   'quarterly',
 ];
 
 /** 전액 환급 플랜 — 맨 위 무대·입금 알림·강조 카드가 모두 이 플랜을 말하고, 처음 선택돼 있다 */
-export const FULL_REFUND_PLAN: RefundPlanId = 'halfyear';
+export const FULL_REFUND_PLAN: RewardPlanId = 'halfyear';
 
 /** 환급 챌린지 기간 문구 — 이 기간 동안 영어 공부를 이어 가면 결제 금액을 전액 돌려준다 */
-export const REFUND_CHALLENGE_PERIOD = `${REFUND_PLANS[FULL_REFUND_PLAN].months}개월`;
+export const REWARD_CHALLENGE_PERIOD = `${REWARD_PLANS[FULL_REFUND_PLAN].months}개월`;
 
 /** 챌린지 날짜 계산의 한 달 — 하루 환급금 상한을 나누는 기준 */
 const DAYS_PER_MONTH = 30;
 
-export const isRefundPlan = (plan: SubscriptionPlan): plan is RefundPlanId =>
-  plan in REFUND_PLANS;
+export const isRewardPlan = (plan: SubscriptionPlan): plan is RewardPlanId =>
+  plan in REWARD_PLANS;
 
 /** 환급 카드 한 장에 그릴 값 — 최대 환급액은 결제 금액 × 환급률(원 단위 반올림) */
-export interface RefundPlan {
-  id: RefundPlanId;
+export interface RewardPlan {
+  id: RewardPlanId;
   months: number;
   refundRate: number;
   price: number;
@@ -287,12 +287,12 @@ export interface RefundPlan {
  *
  * @param prices 셸이 준 원화 가격. 없는 플랜은 스토어 등록값
  */
-export const buildRefundPlans = (
+export const buildRewardPlans = (
   prices: PlanPrices = {},
-): Record<RefundPlanId, RefundPlan> => {
-  const build = (id: RefundPlanId): RefundPlan => {
-    const { months, refundRate } = REFUND_PLANS[id];
-    const price = prices[id] ?? REFUND_PLANS[id].price;
+): Record<RewardPlanId, RewardPlan> => {
+  const build = (id: RewardPlanId): RewardPlan => {
+    const { months, refundRate } = REWARD_PLANS[id];
+    const price = prices[id] ?? REWARD_PLANS[id].price;
     const maxRefund = Math.round((price * refundRate) / 100);
     return {
       id,

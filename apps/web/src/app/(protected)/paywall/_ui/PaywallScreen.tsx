@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 
 import { refreshRewardAfterPurchase } from '@/features/reward/model/refresh-reward';
 import { usePaywallDismiss } from '@/features/subscription/model/exit-promo/usePaywallDismiss';
-import { REFUND_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
+import { REWARD_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
 import { toKrwPrices } from '@/features/subscription/model/product/offering';
 import {
   buildPaywallPlans,
@@ -29,17 +29,17 @@ import { CloseIcon } from '@/shared/ui/Icons';
 
 import { needsScrollToPlans } from '../_lib/plans-below-fold';
 import {
-  buildRefundPlans,
+  buildRewardPlans,
   FULL_REFUND_PLAN,
-  isRefundPlan,
+  isRewardPlan,
 } from '../_model/paywall-content';
 import {
   getBillingNotice,
   getCancelNotice,
   getCtaLabel,
-  getRefundBillingNotice,
-  getRefundCtaLabel,
-  getRefundNotice,
+  getRewardBillingNotice,
+  getRewardCtaLabel,
+  getRewardNotice,
 } from '../_model/paywall-copy';
 import { CompareSection } from './CompareSection';
 import { DataSection } from './DataSection';
@@ -53,17 +53,17 @@ interface PaywallScreenProps {
   /** 결제·복원이 끝난 뒤 돌아갈 내부 경로. 학습 진입에서 막혀 왔을 때만 있고, 없으면 홈으로 간다 */
   returnTo?: string;
   /** 환급 챌린지를 켤지 — 기본은 배포 스위치(NEXT_PUBLIC_REFUND_CHALLENGE). 테스트와 미리보기만 넘긴다 */
-  refundChallenge?: boolean;
+  rewardChallenge?: boolean;
 }
 
 export const PaywallScreen = ({
   returnTo,
-  refundChallenge = REFUND_CHALLENGE_ENABLED,
+  rewardChallenge = REWARD_CHALLENGE_ENABLED,
 }: PaywallScreenProps) => {
   const router = useRouter();
   // 스위치에 따라 처음 고른 플랜이 다르다 — 켜지면 6개월(전액 환급), 꺼지면 연간
   const [selectedId, setSelectedId] = useState<SubscriptionPlan>(
-    refundChallenge ? FULL_REFUND_PLAN : DEFAULT_PLAN_ID,
+    rewardChallenge ? FULL_REFUND_PLAN : DEFAULT_PLAN_ID,
   );
   // 맨 위 줄이 스크롤로 올라가면 닫기만 따로 띄운다
   const [scrolled, setScrolled] = useState(false);
@@ -77,14 +77,14 @@ export const PaywallScreen = ({
   const [closing, setClosing] = useState(false);
   const prices = toKrwPrices(packages);
   const plans = buildPaywallPlans(prices);
-  const refundPlans = buildRefundPlans(prices);
+  const rewardPlans = buildRewardPlans(prices);
   // CTA와 그 밑 안내 두 줄 — 지금 플랜은 결제·해지 안내, 환급 플랜은 결제 안내와 최대 환급액
-  const footer = isRefundPlan(selectedId)
+  const footer = isRewardPlan(selectedId)
     ? {
-        label: getRefundCtaLabel(refundPlans[selectedId]),
+        label: getRewardCtaLabel(rewardPlans[selectedId]),
         notices: [
-          getRefundBillingNotice(refundPlans[selectedId]),
-          getRefundNotice(refundPlans[selectedId]),
+          getRewardBillingNotice(rewardPlans[selectedId]),
+          getRewardNotice(rewardPlans[selectedId]),
         ],
       }
     : {
@@ -103,7 +103,7 @@ export const PaywallScreen = ({
   const close = async () => {
     if (closing) return;
     setClosing(true);
-    if (!refundChallenge) await dismiss();
+    if (!rewardChallenge) await dismiss();
     setClosing(false);
     goHome();
   };
@@ -166,16 +166,16 @@ export const PaywallScreen = ({
       >
         {/* 닫기·구매 복원 — 고정하지 않고 머리와 함께 올라간다 */}
         <PaywallHeader
-          dark={refundChallenge}
+          dark={rewardChallenge}
           onClose={() => void close()}
           onRestore={startRestore}
           restoreDisabled={busy}
         />
         <PaywallHero
-          refundChallenge={refundChallenge}
-          refundPlan={
-            refundPlans[
-              isRefundPlan(selectedId) ? selectedId : FULL_REFUND_PLAN
+          rewardChallenge={rewardChallenge}
+          rewardPlan={
+            rewardPlans[
+              isRewardPlan(selectedId) ? selectedId : FULL_REFUND_PLAN
             ]
           }
         />
@@ -186,10 +186,10 @@ export const PaywallScreen = ({
         <div ref={plansRef} data-plan-section>
           <PlanSection
             plans={plans}
-            refundPlans={refundPlans}
+            rewardPlans={rewardPlans}
             selectedId={selectedId}
             onSelect={selectPlan}
-            refundChallenge={refundChallenge}
+            rewardChallenge={rewardChallenge}
             onRestore={startRestore}
             restoreDisabled={busy}
           />

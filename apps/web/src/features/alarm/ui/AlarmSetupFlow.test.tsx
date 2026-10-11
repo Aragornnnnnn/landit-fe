@@ -67,7 +67,7 @@ const flow = () => (
     status={{ supported: true } as AlarmStatus}
     initialTime={{ hour: 19, minute: 0 }}
     onDone={() => {}}
-    refund={false}
+    reward={false}
     source="premium_onboarding"
   />
 );
