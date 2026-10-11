@@ -38,6 +38,8 @@
 
 홈 화면 위젯 탭은 셸이 단다 — `/scenario?utm_source=widget&utm_medium=widget&utm_campaign=streak_widget` (`apps/mobile/src/widgets/widget-link.ts`). 웹은 `Page Viewed { entry_campaign: 'streak_widget' }`로 파생한다. iOS·Android 위젯 모두 `landit://widget` 딥링크로 앱을 열고, 셸이 그 URL을 알아보고 이 경로로 웹을 띄운다(콜드 스타트는 초기 URI, 앱이 떠 있으면 NAVIGATE 브릿지).
 
+잠금화면 알람의 「대화하러 가기」는 웹이 단다 — `/scenario?utm_source=alarm&utm_medium=alarm&utm_campaign=scenario_alarm`. 알람을 걸 때 셸에 넘기는 갈 주소(`ALARM_PATH`, `apps/web/src/features/alarm/model/shell-alarm.ts`)에 달아 두므로 셸은 그대로다. 웹은 `Page Viewed { entry_campaign: 'scenario_alarm' }`로 파생한다. 앱이 꺼져 있었으면 첫 주소로, 떠 있었으면 `ALARM_OPENED` 브릿지로 들어온다 — 학습 중이라 화면을 옮기지 않은 경우는 유입으로 잡히지 않는다. 주소가 바뀌면 이미 걸린 알람은 앱을 한 번 열 때 다시 걸리므로, 그 전에 울린 알람은 딱지 없이 들어온다.
+
 웹은 `utm_medium`이 `notification`(서버 푸시) 또는 `push`(1.1.0 셸이 예약해 둔 구 로컬 알림, `utm_source=landit`)면 알림 유입으로 읽는다. 어휘는 `apps/web/src/shared/analytics/utm.ts`에 있다.
 
 문구 변형(시나리오 A1~~A4·R0~~R6, 표현·스몰톡 dynamic/generic)은 BE가 유저·날짜로 결정적으로 고르지만 **URL에는 실리지 않는다**. 문구별 성과를 보려면 BE가 `utm_content`에 변형 이름을 달아야 한다 — 그러면 웹은 코드 변경 없이 `entry_content`로 파생한다. 구 로컬 알림의 슬러그(`today_only` `white_bird` `give_up` `come_back` `marco_dm` `landy_letter` `flame_deadline`)는 남은 예약을 탭한 경우에만 들어온다.
@@ -56,7 +58,7 @@
 ## 수집 파이프라인
 
 1. **자동 수집 (기본)** — `apps/web/src/shared/analytics/amplitude.ts`의 attribution 오토캡처가 URL의 `utm_*`를 유저 프로퍼티로 담는다. 새 채널은 URL에 딱지만 달면 끝. 단 콜드 스타트(앱이 꺼진 상태에서 탭)만 잡는다 — 웜 딥링크는 SPA 내부 이동이라 어트리뷰션이 못 본다.
-2. **이벤트 프로퍼티 파생** — 알림·위젯 유입은 `apps/web/src/shared/analytics/page-view.ts`가 어느 경로든 첫 `Page Viewed`에 `entry_campaign`(+ `entry_content`)을 싣는다. 웜 딥링크 유실을 막는 장치라 외부 유입엔 항상 붙는다. 어느 채널인지는 캠페인 이름이 가른다.
+2. **이벤트 프로퍼티 파생** — 알림·위젯·알람 유입은 `apps/web/src/shared/analytics/page-view.ts`가 어느 경로든 첫 `Page Viewed`에 `entry_campaign`(+ `entry_content`)을 싣는다. 웜 딥링크 유실을 막는 장치라 외부 유입엔 항상 붙는다. 어느 채널인지는 캠페인 이름이 가른다.
 
 ## 새 캠페인 추가 절차
 

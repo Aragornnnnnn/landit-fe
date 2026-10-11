@@ -304,7 +304,7 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 
 다짐 뒤 권한이 막혀 있으면 완료 대신 「지금 켜기」를 권하는 화면이 뜨고 step은 `permission_needed`다. 거기서 권한이 풀리면 `registered`가 이어서 찍힌다 — `permission_needed`만 있고 `registered`가 없으면 등록은 했지만 알람이 안 울리는 채로 떠난 사람이다. 그런 사람은 다음에 알람 설정을 열 때 `Alarm Permission Banner Viewed`로 다시 드러난다.
 
-OS 권한 팝업의 답 자체는 따로 찍지 않는다 — 위 두 step의 차로 본다. 설정 앱에서 한 일과 알람을 눌러 앱에 들어온 것은 셸만 알아서 여기 없다. 알람 삭제 확인 시트는 `Confirm Sheet Opened/Dismissed(sheet: alarm_delete)`이고 확정은 `Alarm Removed`다.
+OS 권한 팝업의 답 자체는 따로 찍지 않는다 — 위 두 step의 차로 본다. 설정 앱에서 한 일은 셸만 알아서 여기 없다. 알람의 「대화하러 가기」로 들어온 것은 이벤트가 아니라 유입 딱지로 본다 — 첫 `Page Viewed`의 `entry_campaign = scenario_alarm`(`docs/analytics-utm.md`). 알람이 울렸는데 누르지 않은 것은 알 수 없어, 분모는 `has_alarm`인 사람 수로 대신한다. 알람 삭제 확인 시트는 `Confirm Sheet Opened/Dismissed(sheet: alarm_delete)`이고 확정은 `Alarm Removed`다.
 
 ### 위젯 설치 안내
 

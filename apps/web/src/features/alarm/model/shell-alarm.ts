@@ -1,6 +1,7 @@
 'use client';
 
 // 셸 알람 공통 값 — 알람 메시지를 알아듣는 셸인지, 시나리오 알람의 제목과 갈 화면
+import { SCENARIO_ALARM_UTM } from '@/shared/analytics/utm';
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { SCENARIO_PATH } from '@/shared/lib/routes';
 
@@ -13,8 +14,9 @@ export const ALARM_TYPE = 'scenario';
 // 잠금 화면 알람 제목 — 걸린 알람은 건 순간의 제목을 들고 있어서 바뀌는 값을 넣지 않는다
 export const ALARM_TITLE = '오늘의 시나리오 할 시간!';
 
-// "대화하러 가기"를 누르면 갈 화면
-export const ALARM_PATH = SCENARIO_PATH;
+// "대화하러 가기"를 누르면 갈 화면 — 유입 딱지를 달아 알람으로 들어온 것을 첫 페이지뷰가 알아본다.
+// 값이 바뀌면 이미 걸린 알람은 앱을 열 때 새 주소로 다시 걸린다
+export const ALARM_PATH = `${SCENARIO_PATH}?${SCENARIO_ALARM_UTM}`;
 
 export const isAlarmShell = () => {
   const context = getNativeContext();
