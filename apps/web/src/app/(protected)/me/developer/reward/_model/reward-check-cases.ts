@@ -9,6 +9,7 @@ import {
   endedRewardView,
   rewardActivity,
   rewardCycle,
+  rewardReceipt,
   rewardToday,
   rewardView,
 } from '@/features/reward/model/reward.fixture';
@@ -99,8 +100,47 @@ export const RECORD_CASES = {
   },
 } satisfies Record<string, RecordCase>;
 
+// 대화를 막 끝낸 순간의 환급 — 시나리오만 끝냈을 때와, 스몰톡까지 끝내 오늘을 다 채웠을 때
+export const EARNED_CASES = {
+  earned: {
+    reward: active(1993, {
+      earnedWon: 111,
+      activities: [
+        activity('SCENARIO', 1, 111, 0),
+        activity('EXPRESSION', 0, 0, 110),
+        activity('SMALLTALK', 0, 0, 111),
+      ],
+    }),
+    activityType: 'SCENARIO',
+  },
+  'earned-full': {
+    reward: RECORD_CASES.full.reward,
+    activityType: 'SMALLTALK',
+  },
+} as const;
+
+// 시나리오를 끝낸 뒤 오늘 표현까지 다 끝낸 순간의 영수증 — 마지막 표현에 큰 몫이 온다
+export const EXPRESSIONS_RECEIPT = rewardReceipt({
+  activityType: 'EXPRESSION',
+  earnedWon: 77,
+  todayEarnedWon: 221,
+  activities: [
+    activity('SCENARIO', 1, 111, 0),
+    activity('EXPRESSION', 4, 110, 0),
+    activity('SMALLTALK', 0, 0, 111),
+  ],
+});
+
 // 열 수 있는 케이스 — 환급 화면 케이스에 소개·불러오는 중·받는 순간을 더한 것
-const OTHER_CASES = ['intro', 'loading', 'coin', 'pop'] as const;
+const OTHER_CASES = [
+  'intro',
+  'loading',
+  'coin',
+  'pop',
+  'earned',
+  'earned-expressions',
+  'earned-full',
+] as const;
 type RecordCaseName = keyof typeof RECORD_CASES;
 export type CheckCase = RecordCaseName | (typeof OTHER_CASES)[number];
 
