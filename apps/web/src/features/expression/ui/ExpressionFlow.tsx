@@ -6,6 +6,11 @@ import { EVENTS, type ExpressionStep } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
 
+// 가로 import 사유: 표현 완료가 환급액도 늘린다 — 완료 응답의 영수증을 읽는 규칙은 환급 쪽에 있다
+import {
+  expressionsEarnOf,
+  type ExpressionsEarn,
+} from '@/features/reward/model/completion-earn';
 import { track } from '@/shared/analytics';
 import { scenarioReturnPath, smallTalkHistoryPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
@@ -20,6 +25,7 @@ import { useExpressionLearningQuery } from '../model/useExpressionLearningQuery'
 import { useExpressionPracticeQuery } from '../model/useExpressionPracticeQuery';
 import { useFinishExpressionMutation } from '../model/useFinishExpressionMutation';
 import { ExpressionExitSheet } from './common/ExpressionExitSheet';
+import { ExpressionsEarned } from './ExpressionsEarned';
 import { ExamplesStep } from './learning/ExamplesStep';
 import { ExpressionIntroStep } from './learning/ExpressionIntroStep';
 import { QuizStep } from './learning/QuizStep';
@@ -154,6 +160,9 @@ const LoadedExpressionFlow = ({
   // 예문에서 복습으로 넘어간 적이 있는지 — 그 뒤 예문을 다시 보러 나가도 복습 스텝을 숨김 유지해 고른 칩과 큐를 잃지 않는다
   const [reviewVisited, setReviewVisited] = useState(false);
 
+  // 이번 완료로 오늘 표현 몫을 다 받았을 때만 선다 — 서면 학습 화면 대신 받은 금액 화면을 그린다
+  const [earned, setEarned] = useState<ExpressionsEarn | null>(null);
+
   // 스몰톡 표현은 완료 요청에 세션 ID를 실어야 서버가 기록한다
   const finish = useFinishExpressionMutation(
     expressionId,
@@ -250,12 +259,19 @@ const LoadedExpressionFlow = ({
 
   const finishFlow = () =>
     finish.mutate(undefined, {
-      onSuccess: () => {
+      onSuccess: (response) => {
         track(EVENTS.EXPRESSION_COMPLETED, {
           expression_id: expressionId,
           ...originProps,
         });
-        router.replace(listPath);
+        // 오늘 표현을 다 끝내 받았으면 받은 금액을 먼저 보여 준다.
+        // 이미 끝낸 표현을 다시 한 완료는 서버가 처음 영수증을 그대로 준다 — 그걸 또 받은 것처럼 보이면 안 된다
+        const earn =
+          response?.reward && !learning.completed
+            ? expressionsEarnOf(response.reward)
+            : null;
+        if (earn) setEarned(earn);
+        else router.replace(listPath);
       },
     });
 
@@ -302,6 +318,14 @@ const LoadedExpressionFlow = ({
   ) : (
     <QuizStepSkeleton />
   );
+
+  if (earned)
+    return (
+      <ExpressionsEarned
+        earn={earned}
+        onConfirm={() => router.replace(listPath)}
+      />
+    );
 
   if (step === 'QUIZ') {
     return (

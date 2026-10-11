@@ -1,8 +1,12 @@
 // 예문 프리페치 배선 검증 + 발음 스텝 게이트 검증
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  rewardActivity,
+  rewardReceipt,
+} from '@/features/reward/model/reward.fixture';
 import { track } from '@/shared/analytics';
 import { scenarioReturnPath } from '@/shared/lib/routes';
 
@@ -23,8 +27,24 @@ vi.mock('../model/useExpressionLearningQuery', () => ({
 vi.mock('../model/useExpressionPracticeQuery', () => ({
   useExpressionPracticeQuery: vi.fn(),
 }));
+const finishMocks = vi.hoisted(() => ({ mutate: vi.fn() }));
 vi.mock('../model/useFinishExpressionMutation', () => ({
-  useFinishExpressionMutation: () => ({ mutate: vi.fn(), isPending: false }),
+  useFinishExpressionMutation: () => ({
+    mutate: finishMocks.mutate,
+    isPending: false,
+  }),
+}));
+// 마지막 정답의 획득 연출 — 완료 버튼만 남긴다
+vi.mock('./practice/ReviewSuccess', () => ({
+  ReviewSuccess: ({ onFinish }: { onFinish: () => void }) => (
+    <button onClick={onFinish}>review-finish</button>
+  ),
+}));
+// 받은 금액 화면의 가운데는 환급 쪽 부품이라 금액만 노출한다
+vi.mock('@/features/reward/ui/EarnedStamp', () => ({
+  EarnedStamp: ({ earn }: { earn: { earnedWon: number } }) => (
+    <p>earned:{earn.earnedWon}</p>
+  ),
 }));
 // 스텝 UI는 이 테스트 관심사가 아니라 스텁으로 대체(무거운 하위 의존 회피).
 // 전환 검증용으로 onNext·onSkip만 버튼으로 노출한다
@@ -68,6 +88,7 @@ vi.mock('./learning/QuizStep', async () => {
             labels:{nextLabel}/{wrongLabel ?? nextLabel}
           </p>
           <p>last:{correctSlot ? 'y' : 'n'}</p>
+          {correctSlot?.()}
           <p>instruction:{instruction ?? '-'}</p>
           <p>reveal:{revealAnswer ? 'y' : 'n'}</p>
           <button onClick={() => onNext('correct')}>quiz-next</button>
@@ -746,6 +767,70 @@ describe('ExpressionFlow 복습 큐', () => {
 
     expect(screen.getByText('question:I get it')).toBeInTheDocument();
     expect(screen.getByText('last:y')).toBeInTheDocument();
+  });
+});
+
+describe('ExpressionFlow 완료', () => {
+  // 복습 마지막 문제를 맞히고 완료를 눌러, 서버가 이 응답을 준 것으로 한다
+  const finishWith = async (
+    user: ReturnType<typeof userEvent.setup>,
+    response: unknown,
+  ) => {
+    await renderAtReview(user, []);
+    await user.click(screen.getByText('review-finish'));
+    const [, options] = finishMocks.mutate.mock.calls[0];
+    act(() => options.onSuccess(response));
+  };
+  // 오늘 표현을 다 끝내 마지막 몫을 받은 영수증
+  const lastReceipt = rewardReceipt({
+    activityType: 'EXPRESSION',
+    earnedWon: 77,
+    activities: [
+      rewardActivity('EXPRESSION', {
+        earnedWon: 110,
+        completed: true,
+        completedCount: 4,
+        remainingWon: 0,
+      }),
+    ],
+  });
+
+  it('오늘 표현을 다 끝내 환급액을 받았으면 받은 금액을 보여 주고, 확인을 눌러야 목록으로 간다', async () => {
+    const user = userEvent.setup();
+
+    await finishWith(user, { reward: lastReceipt });
+
+    expect(screen.getByText(/표현 4개를/)).toBeInTheDocument();
+    expect(screen.getByText('earned:77')).toBeInTheDocument();
+    expect(routerMocks.replace).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: '확인' }));
+
+    expect(routerMocks.replace).toHaveBeenCalledWith(
+      scenarioReturnPath({ flip: 1 }),
+    );
+  });
+
+  it('표현이 아직 남았으면 곧장 목록으로 간다', async () => {
+    const user = userEvent.setup();
+
+    await finishWith(user, {
+      reward: rewardReceipt({ activityType: 'EXPRESSION', earnedWon: 11 }),
+    });
+
+    expect(routerMocks.replace).toHaveBeenCalledWith(
+      scenarioReturnPath({ flip: 1 }),
+    );
+  });
+
+  it('환급과 상관없는 사람은 곧장 목록으로 간다', async () => {
+    const user = userEvent.setup();
+
+    await finishWith(user, {});
+
+    expect(routerMocks.replace).toHaveBeenCalledWith(
+      scenarioReturnPath({ flip: 1 }),
+    );
   });
 });
 

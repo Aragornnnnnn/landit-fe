@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 // 표현 완료가 환급액도 늘린다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
+import { expressionsEarnOf } from '@/features/reward/model/completion-earn';
 import { useEarnedPop } from '@/features/reward/model/earned-pop';
 import { refreshRewardAfterCompletion } from '@/features/reward/model/refresh-reward';
 import { scenarioKeys } from '@/features/scenario/model/keys';
@@ -22,7 +23,9 @@ export const useFinishExpressionMutation = (
     onSuccess: (response) => {
       // 환급 참여자는 표현 하나마다 받은 금액이 화면 위에 잠깐 뜬다 — 학습은 멈추지 않는다
       // 응답 몸통이 비어 와도 완료 후속은 돌아야 한다
-      if (response?.reward) useEarnedPop.getState().show(response.reward);
+      // 오늘 표현을 다 끝낸 완료는 받은 금액 화면이 대신 알린다 (ExpressionFlow)
+      if (response?.reward && !expressionsEarnOf(response.reward))
+        useEarnedPop.getState().show(response.reward);
       // 전역 staleTime(30s)이 있어 명시적 무효화가 없으면 stale locked가 남는다
       void queryClient.invalidateQueries({ queryKey: expressionKeys.all });
       void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });

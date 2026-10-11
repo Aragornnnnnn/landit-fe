@@ -6,7 +6,10 @@ import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useEarnedPop } from '@/features/reward/model/earned-pop';
-import { rewardReceipt } from '@/features/reward/model/reward.fixture';
+import {
+  rewardActivity,
+  rewardReceipt,
+} from '@/features/reward/model/reward.fixture';
 
 import * as finishApi from '../api/finish';
 import { useFinishExpressionMutation } from './useFinishExpressionMutation';
@@ -49,6 +52,23 @@ describe('useFinishExpressionMutation', () => {
       completionId: 9,
       earnedWon: 11,
     });
+  });
+
+  it('오늘 표현을 다 끝낸 완료는 알림을 띄우지 않는다 — 받은 금액 화면이 대신 알린다', async () => {
+    finishExpression.mockResolvedValue({
+      reward: rewardReceipt({
+        activityType: 'EXPRESSION',
+        completionId: 9,
+        earnedWon: 77,
+        activities: [
+          rewardActivity('EXPRESSION', { completed: true, completedCount: 4 }),
+        ],
+      }),
+    });
+
+    await finish();
+
+    expect(useEarnedPop.getState().shown).toBeNull();
   });
 
   it('환급과 상관없는 사람에게는 아무것도 알리지 않는다', async () => {
