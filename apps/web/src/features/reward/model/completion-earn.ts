@@ -1,5 +1,5 @@
 // 대화를 끝낸 순간 받은 금액을 보여 줄지 정하는 규칙 — 완료 응답에는 금액이 실려 오지 않아, 완료 전에 적어 둔 것과 새로 받은 환급을 맞춰 본다
-import type { RewardActivity, RewardReceipt, RewardView } from '../api/reward';
+import type { RewardActivity, RewardView } from '../api/reward';
 import { earnedGuideOf, todaySlotsOf, type TodaySlot } from './reward-status';
 
 // 끝내면 축하 화면이 뜨는 활동 — 표현은 하나마다 알림으로 따로 알린다
@@ -29,8 +29,8 @@ export const earnBaseOf = (
 };
 
 export interface CompletionEarn {
-  // 방금 끝낸 활동 — 그 칸이 이 순간에 찬다
-  activityType: RewardActivity['activityType'];
+  // 방금 끝낸 대화 — 그 칸이 이 순간에 찬다
+  activityType: ConversationActivity;
   earnedWon: number;
   // 오늘 더 받을 수 있는 금액을 말하는 한 줄
   guide: string;
@@ -60,34 +60,5 @@ export const completionEarnOf = (
     earnedWon,
     guide: earnedGuideOf(view.today),
     slots: todaySlotsOf(view.today.activities),
-  };
-};
-
-// 오늘 표현을 다 끝낸 순간 — 대화와 달리 완료 응답에 영수증이 실려 온다
-export interface ExpressionsEarn extends CompletionEarn {
-  // 오늘 끝낸 표현 개수
-  expressionCount: number;
-}
-
-/** @returns 표현이 아직 남았거나 이번 완료로 받은 금액이 없으면 null */
-export const expressionsEarnOf = (
-  receipt: RewardReceipt,
-): ExpressionsEarn | null => {
-  const expressions = receipt.activities.find(
-    (item) => item.activityType === 'EXPRESSION',
-  );
-  if (receipt.status !== 'EARNED' || !receipt.earnedWon) return null;
-  if (!expressions?.completed) return null;
-
-  return {
-    activityType: 'EXPRESSION',
-    earnedWon: receipt.earnedWon,
-    expressionCount: expressions.targetCount,
-    guide: earnedGuideOf({
-      fullyAchieved: receipt.todayFullyAchieved,
-      earnedWon: receipt.todayEarnedWon,
-      maximumWon: receipt.todayMaximumWon,
-    }),
-    slots: todaySlotsOf(receipt.activities),
   };
 };

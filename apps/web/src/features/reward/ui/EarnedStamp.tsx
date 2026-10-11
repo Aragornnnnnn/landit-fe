@@ -1,6 +1,6 @@
 'use client';
 
-// 학습을 끝낸 순간 — 환급 참여자에게 방금 받은 금액과 오늘 남은 몫을 보여 준다.
+// 대화를 끝낸 순간 — 환급 참여자에게 방금 받은 금액과 오늘 남은 몫을 보여 준다.
 // 순서가 곧 의미다. 동전이 떨어져 닿고, 금액이 올라가고, 오늘 칸들이 선 뒤 방금 끝낸 칸이 찬다
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';

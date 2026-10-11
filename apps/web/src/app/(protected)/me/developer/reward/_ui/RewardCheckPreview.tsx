@@ -13,12 +13,8 @@ import {
 } from '@/app/(protected)/reward/_ui/RewardIntro';
 import { RewardRecord } from '@/app/(protected)/reward/_ui/RewardRecord';
 import { RewardSkeleton } from '@/app/(protected)/reward/_ui/RewardSkeleton';
-import { ExpressionsEarned } from '@/features/expression/ui/ExpressionsEarned';
 import { TITLE_CLASS } from '@/features/expression/ui/ExpressionStages';
-import {
-  completionEarnOf,
-  expressionsEarnOf,
-} from '@/features/reward/model/completion-earn';
+import { completionEarnOf } from '@/features/reward/model/completion-earn';
 import { useEarnedPop } from '@/features/reward/model/earned-pop';
 import { rewardBadgeOf } from '@/features/reward/model/reward-status';
 import { rewardReceipt } from '@/features/reward/model/reward.fixture';
@@ -29,7 +25,6 @@ import { Button } from '@/shared/ui/Button';
 
 import {
   EARNED_CASES,
-  EXPRESSIONS_RECEIPT,
   fakeHistoryItems,
   isRecordCase,
   RECORD_CASES,
@@ -174,10 +169,6 @@ export const RewardCheckPreview = ({
     );
   if (name === 'coin') return <CoinPreview onBack={onBack} />;
   if (name === 'pop') return <PopPreview onBack={onBack} />;
-  if (name === 'earned-expressions') {
-    const earn = expressionsEarnOf(EXPRESSIONS_RECEIPT);
-    return earn && <ExpressionsEarned earn={earn} onConfirm={onBack} />;
-  }
   if (name === 'earned' || name === 'earned-full')
     return <EarnedPreview name={name} onBack={onBack} />;
   // 케이스를 더하고 여기에 갈래를 안 만들면 빌드가 깨진다

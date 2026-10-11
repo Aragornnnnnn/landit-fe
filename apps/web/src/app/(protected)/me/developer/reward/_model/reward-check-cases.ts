@@ -9,7 +9,6 @@ import {
   endedRewardView,
   rewardActivity,
   rewardCycle,
-  rewardReceipt,
   rewardToday,
   rewardView,
 } from '@/features/reward/model/reward.fixture';
@@ -119,18 +118,6 @@ export const EARNED_CASES = {
   },
 } as const;
 
-// 시나리오를 끝낸 뒤 오늘 표현까지 다 끝낸 순간의 영수증 — 마지막 표현에 큰 몫이 온다
-export const EXPRESSIONS_RECEIPT = rewardReceipt({
-  activityType: 'EXPRESSION',
-  earnedWon: 77,
-  todayEarnedWon: 221,
-  activities: [
-    activity('SCENARIO', 1, 111, 0),
-    activity('EXPRESSION', 4, 110, 0),
-    activity('SMALLTALK', 0, 0, 111),
-  ],
-});
-
 // 열 수 있는 케이스 — 환급 화면 케이스에 소개·불러오는 중·받는 순간을 더한 것
 const OTHER_CASES = [
   'intro',
@@ -138,7 +125,6 @@ const OTHER_CASES = [
   'coin',
   'pop',
   'earned',
-  'earned-expressions',
   'earned-full',
 ] as const;
 type RecordCaseName = keyof typeof RECORD_CASES;

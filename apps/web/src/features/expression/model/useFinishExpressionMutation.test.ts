@@ -6,10 +6,7 @@ import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useEarnedPop } from '@/features/reward/model/earned-pop';
-import {
-  rewardActivity,
-  rewardReceipt,
-} from '@/features/reward/model/reward.fixture';
+import { rewardReceipt } from '@/features/reward/model/reward.fixture';
 
 import * as finishApi from '../api/finish';
 import { useFinishExpressionMutation } from './useFinishExpressionMutation';
@@ -23,27 +20,16 @@ vi.mock('@/features/reward/model/refresh-reward', () => ({
 
 const finishExpression = vi.mocked(finishApi.finishExpression);
 
-const finish = async ({ repeated = false } = {}) => {
+const finish = async () => {
   const queryClient = new QueryClient();
   const wrapper = ({ children }: { children: ReactNode }) =>
     createElement(QueryClientProvider, { client: queryClient }, children);
-  const { result } = renderHook(
-    () => useFinishExpressionMutation(7, { repeated }),
-    { wrapper },
-  );
-  const outcome = await act(() => result.current.mutateAsync());
-  return { queryClient, outcome };
+  const { result } = renderHook(() => useFinishExpressionMutation(7), {
+    wrapper,
+  });
+  await act(() => result.current.mutateAsync());
+  return queryClient;
 };
-
-// 오늘 표현을 다 끝내 마지막 몫을 받은 영수증
-const lastReceipt = rewardReceipt({
-  activityType: 'EXPRESSION',
-  completionId: 9,
-  earnedWon: 77,
-  activities: [
-    rewardActivity('EXPRESSION', { completed: true, completedCount: 4 }),
-  ],
-});
 
 beforeEach(() => {
   finishExpression.mockReset();
@@ -65,24 +51,6 @@ describe('useFinishExpressionMutation', () => {
     });
   });
 
-  it('오늘 표현을 다 끝낸 완료는 화면 위 표시 대신, 화면이 보여 줄 금액을 돌려준다', async () => {
-    finishExpression.mockResolvedValue({ reward: lastReceipt });
-
-    const { outcome } = await finish();
-
-    expect(outcome.earned).toMatchObject({ earnedWon: 77, expressionCount: 4 });
-    expect(useEarnedPop.getState().shown).toBeNull();
-  });
-
-  it('이미 끝낸 표현을 다시 한 완료는 어느 쪽으로도 알리지 않는다 — 서버가 처음 영수증을 그대로 준다', async () => {
-    finishExpression.mockResolvedValue({ reward: lastReceipt });
-
-    const { outcome } = await finish({ repeated: true });
-
-    expect(outcome.earned).toBeNull();
-    expect(useEarnedPop.getState().shown).toBeNull();
-  });
-
   it('환급과 상관없는 사람에게는 아무것도 알리지 않는다', async () => {
     finishExpression.mockResolvedValue({});
 
@@ -94,7 +62,7 @@ describe('useFinishExpressionMutation', () => {
   it('표현을 끝내면 새 환급액을 미리 받아 둔다', async () => {
     finishExpression.mockResolvedValue({});
 
-    const { queryClient } = await finish();
+    const queryClient = await finish();
 
     expect(refreshRewardAfterCompletion).toHaveBeenCalledWith(queryClient);
   });

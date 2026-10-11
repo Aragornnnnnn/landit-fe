@@ -1,17 +1,8 @@
 // 대화를 끝낸 순간 받은 금액을 보여 줄지 정하는 규칙의 계약 테스트
 import { describe, expect, it } from 'vitest';
 
-import {
-  completionEarnOf,
-  earnBaseOf,
-  expressionsEarnOf,
-} from './completion-earn';
-import {
-  rewardActivity,
-  rewardReceipt,
-  rewardToday,
-  rewardView,
-} from './reward.fixture';
+import { completionEarnOf, earnBaseOf } from './completion-earn';
+import { rewardActivity, rewardToday, rewardView } from './reward.fixture';
 
 const done = (activityType: 'SCENARIO' | 'SMALLTALK') =>
   rewardActivity(activityType, {
@@ -105,64 +96,5 @@ describe('completionEarnOf', () => {
     expect(
       completionEarnOf(afterScenario, { ...base, date: '2026-10-09' }),
     ).toBeNull();
-  });
-});
-
-describe('expressionsEarnOf', () => {
-  const expressions = (completedCount: number, earnedWon: number) =>
-    rewardActivity('EXPRESSION', {
-      earnedWon,
-      completedCount,
-      completed: completedCount === 4,
-      remainingWon: 110 - earnedWon,
-    });
-  // 시나리오를 끝낸 뒤 마지막 표현까지 끝낸 영수증
-  const last = rewardReceipt({
-    activityType: 'EXPRESSION',
-    earnedWon: 77,
-    todayEarnedWon: 221,
-    activities: [
-      done('SCENARIO'),
-      expressions(4, 110),
-      rewardActivity('SMALLTALK'),
-    ],
-  });
-
-  it('마지막 표현을 끝내 받았으면 그 금액과 표현 개수, 오늘 남은 몫을 알려 준다', () => {
-    const earn = expressionsEarnOf(last);
-
-    expect(earn?.activityType).toBe('EXPRESSION');
-    expect(earn?.earnedWon).toBe(77);
-    expect(earn?.expressionCount).toBe(4);
-    expect(earn?.guide).toBe('오늘 111원 더 받을 수 있어요');
-    expect(earn?.slots.map((slot) => slot.progress)).toEqual([1, 1, 0]);
-  });
-
-  it('표현이 아직 남았으면 보여 줄 것이 없다 — 하나마다 뜨는 알림이 알린다', () => {
-    expect(
-      expressionsEarnOf(
-        rewardReceipt({
-          activityType: 'EXPRESSION',
-          earnedWon: 11,
-          activities: [expressions(2, 22)],
-        }),
-      ),
-    ).toBeNull();
-  });
-
-  it('받은 금액이 없으면 보여 줄 것이 없다', () => {
-    expect(
-      expressionsEarnOf({
-        ...last,
-        status: 'NO_ADDITIONAL_REWARD',
-        earnedWon: 0,
-      }),
-    ).toBeNull();
-  });
-
-  it('오늘 받을 수 있는 금액을 모르면 얼마인지는 말하지 않는다', () => {
-    expect(expressionsEarnOf({ ...last, todayMaximumWon: null })?.guide).toBe(
-      '오늘 더 받을 수 있어요',
-    );
   });
 });

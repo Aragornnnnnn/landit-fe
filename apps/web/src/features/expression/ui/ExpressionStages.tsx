@@ -14,7 +14,7 @@ import { ArrowRightIcon } from '@/shared/ui/Icons';
 
 import { ExpressionList } from './ExpressionList';
 
-// 세 장면이 같은 타이틀 타이포를 공유해야 전환 순간 글자가 튀지 않는다. 표현을 다 끝낸 순간의 화면도 같은 자리에 같은 글자로 선다
+// 세 장면이 같은 타이틀 타이포를 공유해야 전환 순간 글자가 튀지 않는다. 환급 점검의 미리보기도 같은 글자로 그린다
 export const TITLE_CLASS =
   'pt-1 text-3xl leading-[1.22] font-black tracking-normal whitespace-pre-line text-foreground';
 

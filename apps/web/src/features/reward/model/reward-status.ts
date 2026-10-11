@@ -35,15 +35,14 @@ export interface RewardHeroMessage {
   guide: string;
 }
 
-// 오늘 받은 것이 있는 사람에게 남은 몫을 말한다 — 환급 화면과 학습을 끝낸 순간의 화면이 같은 말을 쓴다
+// 오늘 받은 것이 있는 사람에게 남은 몫을 말한다 — 환급 화면과 대화를 끝낸 순간의 화면이 같은 말을 쓴다
 export const earnedGuideOf = (today: {
   fullyAchieved: boolean;
-  // 아직 모르면 null
-  earnedWon: number | null;
+  earnedWon: number;
   maximumWon: number | null;
 }) => {
   if (today.fullyAchieved) return '오늘 몫을 다 채웠어요';
-  return today.earnedWon === null || today.maximumWon === null
+  return today.maximumWon === null
     ? '오늘 더 받을 수 있어요'
     : `오늘 ${formatWon(today.maximumWon - today.earnedWon)} 더 받을 수 있어요`;
 };
