@@ -256,12 +256,26 @@ describe('setAlarm', () => {
       'Android 전체 화면 알림이 꺼져 있으면',
       { ...androidPermission, canUseFullScreenIntent: false },
     ],
-  ])('%s 걸지 않는다', async (_, permission) => {
-    scheduler.getPermissionsAsync.mockResolvedValue(permission);
+  ])(
+    '%s 걸지 않고, 걸려 있던 알람도 지우지 않는다 — 지웠다가 못 걸면 알람이 사라진다',
+    async (_, permission) => {
+      scheduler.getPermissionsAsync.mockResolvedValue(permission);
+      scheduler.getScheduledAlarmsAsync.mockResolvedValue([scenario('old')]);
 
-    await setAlarm('scenario', everyDayAt(7));
+      await setAlarm('scenario', everyDayAt(7));
 
-    expect(scheduler.scheduleAlarmAsync).not.toHaveBeenCalled();
+      expect(scheduler.scheduleAlarmAsync).not.toHaveBeenCalled();
+      expect(scheduler.cancelAlarmAsync).not.toHaveBeenCalled();
+    },
+  );
+
+  it('권한이 없어도 지우라는 요청(null)은 지운다', async () => {
+    scheduler.getPermissionsAsync.mockResolvedValue(iosDenied);
+    scheduler.getScheduledAlarmsAsync.mockResolvedValue([scenario('old')]);
+
+    await setAlarm('scenario', null);
+
+    expect(scheduler.cancelAlarmAsync).toHaveBeenCalledWith('old');
   });
 
   it('Android는 세 권한이 다 켜져 있으면 건다 — 라이브러리 status가 denied여도 상관없다', async () => {

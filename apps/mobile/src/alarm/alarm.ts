@@ -35,7 +35,7 @@ export const skipAlarmToday = (alarmType: AlarmType) =>
     const hasLaterToday = alarms.some((alarm) =>
       ringsLaterToday(scheduleOf(alarm), now),
     );
-    if (hasLaterToday) await rescheduleIfAllowed(alarmType, alarms, true);
+    if (hasLaterToday) await replace(alarmType, toRequest(alarms), true);
   });
 
 // 건너뛴 날이 지났으면 원래대로 다시 건다 — 앱이 열리거나 돌아올 때 부른다
@@ -80,29 +80,21 @@ const inOrder = <T>(task: () => Promise<T>) => {
   return run;
 };
 
-// 이 종류의 알람을 모두 지우고, 새 값이 있고 권한이 있으면 다시 건다
+// 이 종류의 알람을 모두 지우고 새 값으로 다시 건다. null이면 지우기만 한다.
+// 걸 값이 있는데 권한이 없으면 손대지 않는다 — 지웠다가 못 걸면 울리던 알람이 사라진다
 const replace = async (
   alarmType: AlarmType,
   alarm: RepeatingAlarm | null,
   skipToday: boolean,
 ) => {
+  if (alarm && !(await allowedNow())) return;
   for (const { id } of await alarmsOf(alarmType)) {
     await AlarmScheduler.cancelAlarmAsync(id);
   }
-  if (!alarm || !(await allowedNow())) return;
+  if (!alarm) return;
   for (const schedule of alarm.schedules) {
     await scheduleOne(alarmType, alarm, schedule, skipToday);
   }
-};
-
-// 걸린 알람을 그대로 다시 건다. 권한이 없으면 지웠다가 못 거니 손대지 않는다
-const rescheduleIfAllowed = async (
-  alarmType: AlarmType,
-  alarms: ScheduledAlarm[],
-  skipToday: boolean,
-) => {
-  if (!(await allowedNow())) return;
-  await replace(alarmType, toRequest(alarms), skipToday);
 };
 
 const restoreIfSkipPassed = async () => {
@@ -110,7 +102,7 @@ const restoreIfSkipPassed = async () => {
   for (const [alarmType, alarms] of await groupByType()) {
     const skipDate = skipDateOf(alarms);
     if (skipDate && skipDate !== today) {
-      await rescheduleIfAllowed(alarmType, alarms, false);
+      await replace(alarmType, toRequest(alarms), false);
     }
   }
 };
