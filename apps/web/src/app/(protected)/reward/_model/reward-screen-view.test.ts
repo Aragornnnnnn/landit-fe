@@ -9,7 +9,7 @@ import {
   rewardView,
 } from '@/features/reward/model/reward.fixture';
 
-import { rewardScreenViewOf, rewardViewedPropsOf } from './reward-view';
+import { rewardScreenViewOf, rewardViewedPropsOf } from './reward-screen-view';
 
 const base = {
   reward: null,

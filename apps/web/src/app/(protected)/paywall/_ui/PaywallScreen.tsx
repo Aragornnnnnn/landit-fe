@@ -37,9 +37,9 @@ import {
   getBillingNotice,
   getCancelNotice,
   getCtaLabel,
+  getMaxRefundNotice,
   getRewardBillingNotice,
   getRewardCtaLabel,
-  getRewardNotice,
 } from '../_model/paywall-copy';
 import { CompareSection } from './CompareSection';
 import { DataSection } from './DataSection';
@@ -84,7 +84,7 @@ export const PaywallScreen = ({
         label: getRewardCtaLabel(rewardPlans[selectedId]),
         notices: [
           getRewardBillingNotice(rewardPlans[selectedId]),
-          getRewardNotice(rewardPlans[selectedId]),
+          getMaxRefundNotice(rewardPlans[selectedId]),
         ],
       }
     : {

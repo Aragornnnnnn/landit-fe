@@ -8,9 +8,9 @@ import {
   getBillingNotice,
   getCancelNotice,
   getCtaLabel,
+  getMaxRefundNotice,
   getRewardBillingNotice,
   getRewardCtaLabel,
-  getRewardNotice,
 } from './paywall-copy';
 
 const { monthly, yearly } = buildPaywallPlans();
@@ -78,12 +78,12 @@ describe('getRewardBillingNotice — 환급 챌린지가 켜졌을 때', () => {
   });
 });
 
-describe('getRewardNotice — 환급 챌린지가 켜졌을 때', () => {
+describe('getMaxRefundNotice — 환급 챌린지가 켜졌을 때', () => {
   it('챌린지에 성공하면 돌려받는 최대 금액을 알린다', () => {
-    expect(getRewardNotice(halfyear)).toBe(
+    expect(getMaxRefundNotice(halfyear)).toBe(
       '챌린지 성공하면 최대 59,900원 환급',
     );
-    expect(getRewardNotice(quarterly)).toBe(
+    expect(getMaxRefundNotice(quarterly)).toBe(
       '챌린지 성공하면 최대 31,920원 환급',
     );
   });

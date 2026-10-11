@@ -70,29 +70,31 @@ const Tile = ({
 );
 
 export const ProgressTiles = ({
-  reward,
+  rewardBadge,
   streakDays,
 }: {
   // 환급과 상관없으면 null — 그때는 연속 학습 하나만 길게 놓인다
-  reward: RewardBadge | null;
+  rewardBadge: RewardBadge | null;
   streakDays: number;
 }) => (
   <div className="flex gap-2.5">
-    {reward && (
+    {rewardBadge && (
       <Tile
         href={REWARD_PATH}
         onClick={() => track(EVENTS.REWARD_ENTRY_TAPPED, { source: 'me' })}
-        label={reward.label}
+        label={rewardBadge.label}
         icon={
           <Coin
             size={22}
             // 오늘 아직이면 동전도 식는다
-            className={reward.mood === 'kept' ? '' : 'opacity-50 grayscale'}
+            className={
+              rewardBadge.mood === 'kept' ? '' : 'opacity-50 grayscale'
+            }
           />
         }
-        value={badgeAmountOf(reward)}
-        note={reward.note}
-        warning={reward.mood === 'atRisk'}
+        value={badgeAmountOf(rewardBadge)}
+        note={rewardBadge.note}
+        warning={rewardBadge.mood === 'atRisk'}
       />
     )}
     <Tile

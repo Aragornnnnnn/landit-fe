@@ -77,7 +77,7 @@ const Outcome = ({
 };
 
 /** 환급률 문구 — 100%는 「전액」으로 말한다 */
-const rewardLabel = ({ refundRate }: RewardPlan) =>
+const refundRateLabel = ({ refundRate }: RewardPlan) =>
   refundRate === 100 ? '전액 환급' : `${refundRate}% 환급`;
 
 /** 돌려받는 방법 세 걸음 — ① 매일 하나는 필수(쉬면 0원부터 다시) ② 하루 몫이 매일 쌓임 ③ 끝나면 돌려줌. 고른 플랜의 숫자로 말하고, 문장은 끝까지 맺어 조건이 애매하게 읽히지 않게 한다 */
@@ -140,8 +140,8 @@ const ChallengeCard = ({ plan }: { plan: RewardPlan }) => (
           </p>
         </div>
       </div>
-      <span className="reveal-reward-label absolute top-2 right-3 rotate-6 rounded-full bg-[#f04438] px-3 py-1 text-sm font-black text-white shadow-[0_6px_14px_rgba(240,68,56,0.35)]">
-        {rewardLabel(plan)}
+      <span className="reveal-refund-rate-label absolute top-2 right-3 rotate-6 rounded-full bg-[#f04438] px-3 py-1 text-sm font-black text-white shadow-[0_6px_14px_rgba(240,68,56,0.35)]">
+        {refundRateLabel(plan)}
       </span>
     </div>
     {/* 입금 그림이 무엇의 결과인지 바로 아래에서 한 줄로 말한다 */}

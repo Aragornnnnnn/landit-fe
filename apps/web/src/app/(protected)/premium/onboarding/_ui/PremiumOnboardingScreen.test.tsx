@@ -89,14 +89,14 @@ vi.mock('@/features/alarm/ui/AlarmSetupFlow', () => ({
   AlarmSetupFlow: ({
     onSkip,
     onDone,
-    reward,
+    rewardParticipant,
   }: {
     onSkip: () => void;
     onDone: () => void;
-    reward: boolean;
+    rewardParticipant: boolean;
   }) => (
     <>
-      <p>{reward ? '환급 문구' : '기본 문구'}</p>
+      <p>{rewardParticipant ? '환급 문구' : '기본 문구'}</p>
       <button type="button" onClick={onSkip}>
         다음에 할게요
       </button>

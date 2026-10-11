@@ -9,7 +9,10 @@ import { track } from '@/shared/analytics';
 import { homePath } from '@/shared/lib/last-tab';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
-import { rewardScreenViewOf, rewardViewedPropsOf } from '../_model/reward-view';
+import {
+  rewardScreenViewOf,
+  rewardViewedPropsOf,
+} from '../_model/reward-screen-view';
 import { useMyReward } from '../../_model/useMyReward';
 import { RefundApplyButton } from './RefundApplyButton';
 import { RewardFrame } from './RewardFrame';

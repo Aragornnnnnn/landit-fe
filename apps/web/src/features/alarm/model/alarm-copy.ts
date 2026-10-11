@@ -21,8 +21,8 @@ const REWARD_COPY: AlarmCopy = {
   settingsDescription: '환급을 놓치지 않도록 약속한 시간에 알려드릴게요',
 };
 
-export const alarmCopy = (reward: boolean) =>
-  reward ? REWARD_COPY : DEFAULT_COPY;
+export const alarmCopy = (rewardParticipant: boolean) =>
+  rewardParticipant ? REWARD_COPY : DEFAULT_COPY;
 
 export const AlarmCopyContext = createContext<AlarmCopy>(DEFAULT_COPY);
 

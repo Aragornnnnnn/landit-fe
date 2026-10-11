@@ -33,7 +33,7 @@ export const AlarmSetupFlow = ({
   onBack,
   onSkip,
   onDone,
-  reward,
+  rewardParticipant,
   source,
 }: {
   /** 셸 알람 상태 — 화면이 이미 묻고 있는 것을 받아 같은 조회를 두 번 하지 않는다 */
@@ -45,7 +45,7 @@ export const AlarmSetupFlow = ({
   onSkip?: () => void;
   onDone: () => void;
   /** 환급 참여자인가 — 소개 제목과 다짐 문장이 환급 톤이 된다 */
-  reward: boolean;
+  rewardParticipant: boolean;
   /** 흐름을 연 곳 — 등록·건너뜀 계측에 싣는다 */
   source: AlarmSetupSource;
 }) => {
@@ -107,7 +107,7 @@ export const AlarmSetupFlow = ({
     );
   };
 
-  const copy = alarmCopy(reward);
+  const copy = alarmCopy(rewardParticipant);
   // 「다음에 할게요」 — 프리미엄 온보딩에만 있다
   const skip =
     onSkip &&

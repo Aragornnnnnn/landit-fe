@@ -175,7 +175,7 @@ export const PremiumOnboardingScreen = ({
       onSkip={leave}
       onDone={leave}
       source="premium_onboarding"
-      reward={rewardCopy !== null}
+      rewardParticipant={rewardCopy !== null}
     />
   );
 };

@@ -22,7 +22,7 @@ const LiveProgressTiles = () => {
   const badge = reward && rewardBadgeOf(reward);
   return (
     <ProgressTiles
-      reward={badge ?? (invited ? INVITE_BADGE : null)}
+      rewardBadge={badge ?? (invited ? INVITE_BADGE : null)}
       // 스트릭을 받지 못해도 환급 타일은 보여야 한다 — 헤더의 열매와 같이 0일로 둔다
       streakDays={streak?.currentStreakDays ?? 0}
     />

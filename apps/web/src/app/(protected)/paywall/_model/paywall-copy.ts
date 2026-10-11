@@ -31,5 +31,5 @@ export const getRewardBillingNotice = ({ months, price }: RewardPlan) =>
   `${months}개월마다 ${formatWon(price)} 정기 결제 · 언제든 해지 가능`;
 
 /** 환급 챌린지 둘째 줄 — 챌린지에 성공하면 돌려받는 최대 금액 */
-export const getRewardNotice = ({ maxRefund }: RewardPlan) =>
+export const getMaxRefundNotice = ({ maxRefund }: RewardPlan) =>
   `챌린지 성공하면 최대 ${formatWon(maxRefund)} 환급`;
