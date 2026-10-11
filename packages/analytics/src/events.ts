@@ -136,6 +136,16 @@ export const EVENTS = {
   // 오늘의 시나리오 알람 — 등록 흐름(소개 → 다짐)은 내 정보와 프리미엄 온보딩이 같이 쓴다
   ALARM_REGISTERED: 'Alarm Registered',
   ALARM_SETUP_SKIPPED: 'Alarm Setup Skipped',
+  // 등록 흐름의 화면마다 — 어디서 빠지는지 본다
+  ALARM_SETUP_STEP_VIEWED: 'Alarm Setup Step Viewed',
+  // 등록한 뒤 — 시각을 바꾸거나 지운다
+  ALARM_TIME_CHANGED: 'Alarm Time Changed',
+  ALARM_REMOVED: 'Alarm Removed',
+  // 권한이 막혀 알람이 안 울리는 사람에게 뜨는 배너와, 풀러 가는 「지금 켜기」
+  ALARM_PERMISSION_BANNER_VIEWED: 'Alarm Permission Banner Viewed',
+  ALARM_UNBLOCK_TAPPED: 'Alarm Unblock Tapped',
+  // 알람 권한을 켜러 OS 설정으로 나간다
+  ALARM_SETTINGS_OPENED: 'Alarm Settings Opened',
 
   // 소감 시트 — 첫 시나리오 대화·첫 스몰톡·다른 날 두 번째 대화(랜딧 소감)를 마치고 홈에 돌아왔을 때 한 번 묻는다
   SATISFACTION_PROMPT_VIEWED: 'Satisfaction Prompt Viewed',
@@ -275,7 +285,7 @@ export type PaywallGateSource =
 export type PurchaseFailureReason =
   'browser' | 'outdated_shell' | 'no_response' | 'shell_error';
 export type ConfirmSheetKind =
-  'conversation_exit' | 'expression_exit' | 'account_delete';
+  'conversation_exit' | 'expression_exit' | 'account_delete' | 'alarm_delete';
 export type RetryScreen =
   | 'refund'
   | 'scenario'
@@ -296,6 +306,17 @@ export type FeedbackType =
 export type NotificationConsentSource = 'scenario' | 'me';
 // 알람 등록 흐름을 연 곳 — 내 정보 알람 화면, 프리미엄 온보딩
 export type AlarmSetupSource = 'me' | 'premium_onboarding';
+// 알람 등록 흐름의 화면 — 소개 → 시간 정하고 다짐 → 등록 완료.
+// 권한이 막혀 등록 완료 대신 「지금 켜기」를 권하는 화면은 permission_needed로 따로 센다
+export type AlarmSetupStep =
+  'intro' | 'pledge' | 'permission_needed' | 'registered';
+// 알람을 막고 있는 권한 — iOS는 아직 안 물음·거절함, Android는 알림 꺼짐·정확한 알람이나 전체 화면 꺼짐
+export type AlarmBlockerKind =
+  'ios_ask' | 'ios_settings' | 'android_notifications' | 'android_settings';
+// 「지금 켜기」가 놓인 곳 — 알람 설정의 배너, 등록 흐름의 완료 화면. 키는 source다(surface는 전역 속성과 겹친다)
+export type AlarmUnblockSource = 'banner' | 'setup';
+// 알람 권한을 켜러 나가는 OS 설정 — 앱 설정(iOS·Android 알림), Android의 정확한 알람·전체 화면 알림
+export type AlarmSettingsDestination = 'app' | 'exact_alarm' | 'full_screen';
 // OS 알림 권한창을 띄운 지면 — 안내 시트 둘에 온보딩 스텝이 더해진다
 export type NotificationPermissionSource =
   'onboarding' | NotificationConsentSource;
@@ -662,6 +683,16 @@ export type EventProps = {
   'Alarm Registered': { source: AlarmSetupSource; time: string };
   // 소개 화면에서 「다음에 할게요」 — 프리미엄 온보딩에만 있다
   'Alarm Setup Skipped': { source: AlarmSetupSource };
+  'Alarm Setup Step Viewed': { source: AlarmSetupSource; step: AlarmSetupStep };
+  // 이미 등록한 알람의 시각을 바꿔 저장한 순간. 처음 등록은 Alarm Registered다
+  'Alarm Time Changed': { time: string };
+  'Alarm Removed': undefined;
+  'Alarm Permission Banner Viewed': { blocker: AlarmBlockerKind };
+  'Alarm Unblock Tapped': {
+    blocker: AlarmBlockerKind;
+    source: AlarmUnblockSource;
+  };
+  'Alarm Settings Opened': { target: AlarmSettingsDestination };
 
   'Notification Consent Viewed': { source: NotificationConsentSource };
   // 수락 = OS 권한창 요청까지 이어짐. 실제 허용/거부는 OS 팝업 결과라 별도 (권한 상태로 세그먼트)
@@ -795,6 +826,7 @@ export interface UserProperties {
   plan: SubscriptionPlan | null;
   learning_level: EnglishLevel | null;
   accent_locale: AccentLocale | null;
+  has_alarm: boolean;
 }
 
 // 한 번에 갱신할 속성들 — null은 "이 사람에게는 값이 없다"라는 뜻으로 프로필에서 그 속성을 지운다
@@ -818,3 +850,12 @@ type _PropKeysAreSnakeCase = AssertNever<NonSnakeCaseKeys<EventProps>>;
 type _UserPropKeysAreSnakeCase = AssertNever<
   NonSnakeCaseKeys<{ user: UserProperties }>
 >;
+// 컴파일 타임 검증 ④ 모든 이벤트에 붙는 전역 속성과 같은 키를 쓰지 않는다 — 겹치면 그 이벤트만 전역 값이 덮인다.
+// platform은 뜻이 같은 기존 이벤트가 있어 여기서 막지 않는다
+type GlobalPropKey = 'surface' | 'app_version' | 'build_number';
+type KeysShadowingGlobals = {
+  [E in keyof EventProps]: EventProps[E] extends undefined
+    ? never
+    : keyof EventProps[E] & GlobalPropKey;
+}[keyof EventProps];
+type _PropKeysDoNotShadowGlobals = AssertNever<KeysShadowingGlobals>;

@@ -35,16 +35,16 @@
 
 ### 공통
 
-| 이벤트                  | 속성                                                                                                                                                                                    | 시점                                                                                                                  |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Page Viewed             | page_name, path, return_reason?, scenario_id?, session_id?, expression_id?, completed_date?, letter_id?, feedback_id?, feedback_type?, paywall_source?, entry_campaign?, entry_content? | 라우트 변경                                                                                                           |
-| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete)                                                                                                                               | 이탈·탈퇴 확인 시트 열림                                                                                              |
-| Confirm Sheet Dismissed | sheet                                                                                                                                                                                   | 확인 시트에서 계속하기/닫기                                                                                           |
-| Error Retried           | screen(scenario\|scenario_history\|smalltalk\|smalltalk_summary\|conversation\|card_back\|expression_list\|streak\|mailbox)                                                             | 에러 화면 "다시 시도"                                                                                                 |
-| App Exited              | trigger(back_button)                                                                                                                                                                    | 네이티브 뒤로가기로 앱 종료 (셸에서만)                                                                                |
-| Download Link Visited   | store(play_store\|app_store), utm_source?, utm_medium?, utm_campaign?                                                                                                                   | /download 스토어 리다이렉트 진입 (서버 발화, 익명). utm_*은 링크에 딱지가 있을 때만. 메신저 미리보기 봇은 세지 않는다 |
-| App Update Store Opened | store(play_store\|app_store)                                                                                                                                                            | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화)                                                         |
-| App Share Tapped        | method(native_sheet\|web_share\|copy)                                                                                                                                                   | 마이페이지 친구에게 공유하기 — 공유 시트를 열었거나 링크를 복사함                                                     |
+| 이벤트                  | 속성                                                                                                                                                                                    | 시점                                                                                                                                        |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Page Viewed             | page_name, path, return_reason?, scenario_id?, session_id?, expression_id?, completed_date?, letter_id?, feedback_id?, feedback_type?, paywall_source?, entry_campaign?, entry_content? | 라우트 변경                                                                                                                                 |
+| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete\|alarm_delete)                                                                                                                 | expression_exit\|account_delete)                                                                                                            | 이탈·탈퇴 확인 시트 열림                                                                                   |
+| Confirm Sheet Dismissed | sheet                                                                                                                                                                                   | 확인 시트에서 계속하기/닫기                                                                                                                 |
+| Error Retried           | screen(refund\|scenario\|scenario_history\|smalltalk\|smalltalk_summary\|conversation\|card_back\|expression_list\|streak\|mailbox\|alarm)                                              | reward_history\|scenario\|scenario_history\|smalltalk\|smalltalk_summary\|conversation\|card_back\|expression_list\|streak\|mailbox\|alarm) | scenario_history\|smalltalk\|smalltalk_summary\|conversation\|card_back\|expression_list\|streak\|mailbox) | 에러 화면 "다시 시도" |
+| App Exited              | trigger(back_button)                                                                                                                                                                    | 네이티브 뒤로가기로 앱 종료 (셸에서만)                                                                                                      |
+| Download Link Visited   | store(play_store\|app_store), utm_source?, utm_medium?, utm_campaign?                                                                                                                   | /download 스토어 리다이렉트 진입 (서버 발화, 익명). utm_*은 링크에 딱지가 있을 때만. 메신저 미리보기 봇은 세지 않는다                       |
+| App Update Store Opened | store(play_store\|app_store)                                                                                                                                                            | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화)                                                                               |
+| App Share Tapped        | method(native_sheet\|web_share\|copy)                                                                                                                                                   | 마이페이지 친구에게 공유하기 — 공유 시트를 열었거나 링크를 복사함                                                                           |
 
 `return_reason`은 앱 안에서 홈으로 돌아온 이유(`flip` 표현 완료 복귀 / `card` 대화 이탈 복귀 / `just` 해금 직후). 확인 시트의 확정은 각각 `Conversation Abandoned` / `Expression Abandoned` / `Account Deleted`로 찍힌다.
 
@@ -289,12 +289,22 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 
 ### 알람
 
-| 이벤트              | 속성                                 | 시점                                                     |
-| ------------------- | ------------------------------------ | -------------------------------------------------------- |
-| Alarm Registered    | source(me\|premium_onboarding), time | 다짐이 서버에 저장된 순간. time은 `HH:mm`                |
-| Alarm Setup Skipped | source                               | 소개 화면의 「다음에 할게요」 (프리미엄 온보딩에만 있다) |
+| 이벤트                         | 속성                                                                    | 시점                                                                                                                                                                           |
+| ------------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Alarm Registered               | source(me\|premium_onboarding), time                                    | 다짐이 서버에 저장된 순간. time은 `HH:mm`                                                                                                                                      |
+| Alarm Setup Skipped            | source                                                                  | 소개 화면의 「다음에 할게요」 (프리미엄 온보딩에만 있다)                                                                                                                       |
+| Alarm Setup Step Viewed        | source, step(intro\|pledge\|permission_needed\|registered)              | 등록 흐름의 화면이 뜰 때마다. 다짐에서 소개로 되돌아가면 소개를 다시 찍는다                                                                                                    |
+| Alarm Time Changed             | time                                                                    | 등록해 둔 알람의 시각을 바꿔 저장한 순간. time은 `HH:mm`. 시각이 그대로면 저장도 계측도 없다                                                                                   |
+| Alarm Removed                  | -                                                                       | 알람 수정에서 삭제를 확인해 저장된 순간                                                                                                                                        |
+| Alarm Permission Banner Viewed | blocker(ios_ask\|ios_settings\|android_notifications\|android_settings) | 알람 설정 화면에 권한 배너가 뜬 순간. 막힌 권한이 바뀌면 다시 찍는다                                                                                                           |
+| Alarm Unblock Tapped           | blocker, source(banner\|setup)                                          | 「지금 켜기」 — 알람 설정의 배너, 등록 흐름의 권한 필요 화면                                                                                                                   |
+| Alarm Settings Opened          | target(app\|exact_alarm\|full_screen)                                   | 알람 권한을 켜러 OS 설정으로 나간 순간. 안내 시트의 버튼(iOS는 app, Android는 켤 것마다)과, Android에서 알림을 다시 물을 수 없어 「지금 켜기」가 바로 앱 설정을 여는 경우(app) |
 
-뒤로 가기로 흐름을 떠난 건 건너뜀으로 세지 않는다 — 등록률은 프리미엄 온보딩 페이지뷰 대비 `Alarm Registered(source: premium_onboarding)`로 본다.
+뒤로 가기로 흐름을 떠난 건 건너뜀으로 세지 않는다 — 어디서 빠졌는지는 `Alarm Setup Step Viewed`의 step 퍼널(intro → pledge → registered)로 본다. 등록 자체는 `Alarm Registered`가 기준이다(다짐이 저장된 순간이라 registered 화면보다 조금 앞선다).
+
+다짐 뒤 권한이 막혀 있으면 완료 대신 「지금 켜기」를 권하는 화면이 뜨고 step은 `permission_needed`다. 거기서 권한이 풀리면 `registered`가 이어서 찍힌다 — `permission_needed`만 있고 `registered`가 없으면 등록은 했지만 알람이 안 울리는 채로 떠난 사람이다. 그런 사람은 다음에 알람 설정을 열 때 `Alarm Permission Banner Viewed`로 다시 드러난다.
+
+OS 권한 팝업의 답 자체는 따로 찍지 않는다 — 위 두 step의 차로 본다. 설정 앱에서 한 일과 알람을 눌러 앱에 들어온 것은 셸만 알아서 여기 없다. 알람 삭제 확인 시트는 `Confirm Sheet Opened/Dismissed(sheet: alarm_delete)`이고 확정은 `Alarm Removed`다.
 
 ### 위젯 설치 안내
 
@@ -328,25 +338,28 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 
 사람에 붙는 값이다. 설정한 뒤에 찍힌 이벤트부터 따라붙고, 이미 쌓인 과거 이벤트에는 소급되지 않는다 — 무료였던 시절 이벤트가 `is_premium=false`로 남아야 전환 퍼널이 맞게 나오므로 이게 맞는 동작이다.
 
-| 속성                                            | 값                                             | 시점                        |
-| ----------------------------------------------- | ---------------------------------------------- | --------------------------- |
-| provider                                        | kakao \| google \| apple                       | 로그인 식별 시              |
-| surface / platform / app_version / build_number | 네이티브 컨텍스트                              | 초기화 시                   |
-| is_premium                                      | 참·거짓 (모르는 동안은 지움)                   | 구독 조회 결과가 바뀔 때    |
-| subscription_state                              | unknown \| none \| trial \| active \| canceled | 구독 조회 결과가 바뀔 때    |
-| plan                                            | monthly \| yearly (유료가 아니면 지움)         | 구독 조회 결과가 바뀔 때    |
-| learning_level                                  | 1~5 (아직 없으면 지움)                         | 학습 수준·배울 영어 도착 시 |
-| accent_locale                                   | EN_US \| EN_GB \| EN_AU (아직 없으면 지움)     | 학습 수준·배울 영어 도착 시 |
+| 속성                                            | 값                                             | 시점                                             |
+| ----------------------------------------------- | ---------------------------------------------- | ------------------------------------------------ |
+| provider                                        | kakao \| google \| apple                       | 로그인 식별 시                                   |
+| surface / platform / app_version / build_number | 네이티브 컨텍스트                              | 초기화 시                                        |
+| is_premium                                      | 참·거짓 (모르는 동안은 지움)                   | 구독 조회 결과가 바뀔 때                         |
+| subscription_state                              | unknown \| none \| trial \| active \| canceled | 구독 조회 결과가 바뀔 때                         |
+| plan                                            | monthly \| yearly (유료가 아니면 지움)         | 구독 조회 결과가 바뀔 때                         |
+| learning_level                                  | 1~5 (아직 없으면 지움)                         | 학습 수준·배울 영어 도착 시                      |
+| accent_locale                                   | EN_US \| EN_GB \| EN_AU (아직 없으면 지움)     | 학습 수준·배울 영어 도착 시                      |
+| has_alarm                                       | 참·거짓                                        | 알람 설정 도착 시·바뀔 때 (알람을 아는 셸에서만) |
 
 이름은 백엔드 필드(`learningLevel`, `accentLocale`)에 맞춘다 — 이벤트 속성 쪽이 `level`·`accent`·`status`로 짧은 것과 어긋나 보이지만, 이미 쌓이고 있는 이벤트 속성을 바꾸면 과거 데이터가 갈라진다. 유저 속성은 서버 데이터와 같은 말을 쓰는 쪽을 택했다.
 
-계약은 `packages/analytics`의 `UserProperties`에 있고, 발화는 `setUserProperties`(값이 `null`이면 속성을 지운다) 하나를 지나간다. 올리는 자리는 루트 레이아웃에 마운트한 무렌더 컴포넌트 둘이다 — 구독은 `SubscriptionPropertiesSync`, 수준·배울 영어는 `ProfilePropertiesSync`. 표의 위 두 줄은 이 통로를 지나지 않는다 — `provider`는 로그인 식별(`identifyUser`)이, 네이티브 컨텍스트 넷은 초기화(`initAnalytics`)가 각각 따로 올린다.
+계약은 `packages/analytics`의 `UserProperties`에 있고, 발화는 `setUserProperties`(값이 `null`이면 속성을 지운다) 하나를 지나간다. 올리는 자리는 루트 레이아웃에 마운트한 무렌더 컴포넌트 셋이다 — 구독은 `SubscriptionPropertiesSync`, 수준·배울 영어는 `ProfilePropertiesSync`, 알람은 `AlarmPropertiesSync`. 표의 위 두 줄은 이 통로를 지나지 않는다 — `provider`는 로그인 식별(`identifyUser`)이, 네이티브 컨텍스트 넷은 초기화(`initAnalytics`)가 각각 따로 올린다.
 
 `subscription_state`의 `unknown`은 구독을 한 번도 받지 못한 동안이다 — 로그인 직후 첫 조회가 끝나기 전, 그리고 그 첫 조회가 실패한 동안. 그 구간에는 `is_premium`·`plan`을 지워 지난 세션 값이 남지 않게 한다. "유료 여부를 몰라서 빈 것"과 "속성을 아예 안 쓰던 시절이라 빈 것"을 나중에 구분할 수 있게. 앱을 켜자마자 나가는 홈 `Page Viewed`가 여기 걸린다.
 
 한 번 받아 둔 뒤에는 재조회가 실패해도 마지막 값을 유지한다. 포그라운드로 돌아올 때마다 구독을 다시 묻는데(전역 `staleTime` 30초 + 포커스 재조회), 그중 한 번이 실패했다고 유료 사용자의 유료 표시가 사라지면 안 된다. 페이월·게이트 이벤트는 구독 조회가 끝나야 잠금 판정이 서므로 항상 확정된 값을 달고 간다.
 
 로그인하지 않은 구간의 이벤트에는 이 속성들이 `unknown`도 아니고 아예 없다. 코호트를 짤 때 "속성 없음"은 익명이거나 계약 도입 전 이벤트다.
+
+`has_alarm`은 설정을 받은 뒤에만 올린다 — 받기 전에 거짓을 올리면 등록자의 이벤트가 잠깐 미등록으로 찍힌다. 그래서 알람을 모르는 환경(브라우저·구 셸)의 사람에게는 속성이 아예 없다. 서버에 저장된 등록 여부이고 폰의 권한 상태가 아니다 — 등록했지만 권한이 막혀 안 울리는 사람도 참이다.
 
 ### 계측하지 않는 것 (의도적 제외 — 전수 감사로 확정)
 
