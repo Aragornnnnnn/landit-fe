@@ -147,6 +147,16 @@ export const EVENTS = {
   // 알람 권한을 켜러 OS 설정으로 나간다
   ALARM_SETTINGS_OPENED: 'Alarm Settings Opened',
 
+  // 환급 챌린지 — 화면 노출은 상태를 실어 따로 찍는다 (Page Viewed는 주소만 알아 어떤 상태로 봤는지 모른다)
+  REWARD_VIEWED: 'Reward Viewed',
+  REWARD_ENTRY_TAPPED: 'Reward Entry Tapped',
+  REWARD_RULES_OPENED: 'Reward Rules Opened',
+  // 학습을 끝내고 홈에 돌아왔을 때 헤더 알약으로 동전이 날아드는 연출
+  REWARD_COIN_SHOWER_VIEWED: 'Reward Coin Shower Viewed',
+  REWARD_COIN_SHOWER_SKIPPED: 'Reward Coin Shower Skipped',
+  // 환급 상품을 산 직후, 환영과 알람 사이의 환급 안내
+  REWARD_GUIDE_VIEWED: 'Reward Guide Viewed',
+
   // 소감 시트 — 첫 시나리오 대화·첫 스몰톡·다른 날 두 번째 대화(랜딧 소감)를 마치고 홈에 돌아왔을 때 한 번 묻는다
   SATISFACTION_PROMPT_VIEWED: 'Satisfaction Prompt Viewed',
   SATISFACTION_PROMPT_ANSWERED: 'Satisfaction Prompt Answered',
@@ -258,8 +268,8 @@ export type SubscriptionState = 'trial' | 'active' | 'canceled';
 // unknown은 로그인 직후 구독 조회가 끝나기 전 구간이다. 값이 아예 빠진 것과 구분하려고 명시적으로 남긴다
 export type SubscriptionProfileState = SubscriptionState | 'none' | 'unknown';
 // 게이트가 아닌 자리에서 페이월로 들어간 곳. 알림 동의의 source와 같은 이름을 쓴다
-// me는 마이페이지 골드 카드, header는 탭 헤더 왼쪽의 프리미엄 알약, refund는 환급 화면(소개의 시작 버튼·끝난 뒤 다시 시작)
-export type PaywallEntrySource = 'me' | 'header' | 'refund';
+// me는 마이페이지 골드 카드, header는 탭 헤더 왼쪽의 프리미엄 알약, reward는 환급 화면(소개의 시작 버튼·끝난 뒤 다시 시작)
+export type PaywallEntrySource = 'me' | 'header' | 'reward';
 // 페이월에 어디서 왔는가 — 게이트에 막혀 왔으면 막힌 자리, 스스로 들어왔으면 마이페이지.
 // 노출(Page Viewed)에 실어 진입 경로별 전환율을 가른다
 export type PaywallSource = PaywallGateSource | PaywallEntrySource;
@@ -287,7 +297,9 @@ export type PurchaseFailureReason =
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete' | 'alarm_delete';
 export type RetryScreen =
-  | 'refund'
+  | 'reward'
+  // 환급 화면은 떠 있고 내역 줄만 받지 못했다
+  | 'reward_history'
   | 'scenario'
   | 'scenario_history'
   | 'smalltalk'
@@ -317,6 +329,21 @@ export type AlarmBlockerKind =
 export type AlarmUnblockSource = 'banner' | 'setup';
 // 알람 권한을 켜러 나가는 OS 설정 — 앱 설정(iOS·Android 알림), Android의 정확한 알람·전체 화면 알림
 export type AlarmSettingsDestination = 'app' | 'exact_alarm' | 'full_screen';
+// 환급 화면을 본 상태 — 참여 전 소개, 쌓는 중(오늘 받음·오늘 아직인데 걸린 금액 없음·오늘 아직이라 위험·어제 쉬어 0원), 기간 끝남, 결제 확인 중, 검토 중
+export type RewardViewStatus =
+  | 'intro'
+  | 'kept'
+  | 'idle'
+  | 'at_risk'
+  | 'reset'
+  | 'ended'
+  | 'pending'
+  | 'review';
+// 환급 화면으로 들어온 곳 — 탭 헤더의 알약, 내 정보의 타일
+export type RewardEntrySource = 'header' | 'me';
+// 프로필에 붙는 환급 상태 — 참여한 적 없으면 none
+export type RewardProfileState =
+  'none' | 'active' | 'ended' | 'pending' | 'review';
 // OS 알림 권한창을 띄운 지면 — 안내 시트 둘에 온보딩 스텝이 더해진다
 export type NotificationPermissionSource =
   'onboarding' | NotificationConsentSource;
@@ -694,6 +721,19 @@ export type EventProps = {
   };
   'Alarm Settings Opened': { target: AlarmSettingsDestination };
 
+  // 환급 화면에 볼 것이 그려진 순간 — 쌓인 금액은 도는 회차가 있을 때만, 돌려받을 금액은 기간이 끝났을 때만 싣는다
+  'Reward Viewed': {
+    status: RewardViewStatus;
+    balance_won?: number;
+    pending_refund_won?: number;
+  };
+  'Reward Entry Tapped': { source: RewardEntrySource };
+  'Reward Rules Opened': undefined;
+  'Reward Coin Shower Viewed': { gain_won: number };
+  'Reward Coin Shower Skipped': { gain_won: number };
+  // confirmed가 거짓이면 결제 확인이 늦어 금액 없이 보여 준 안내다
+  'Reward Guide Viewed': { confirmed: boolean };
+
   'Notification Consent Viewed': { source: NotificationConsentSource };
   // 수락 = OS 권한창 요청까지 이어짐. 실제 허용/거부는 OS 팝업 결과라 별도 (권한 상태로 세그먼트)
   'Notification Consent Accepted': { source: NotificationConsentSource };
@@ -763,6 +803,8 @@ export type EventProps = {
   'Cancel Retention Viewed': {
     reason: CancelReason;
     plan?: SubscriptionPlan;
+    // 가격 화면일 때만 — 환급을 쌓는 중이라 돌려받는 금액으로 답했는가
+    reward?: boolean;
     method?: StudyMethod;
   };
   // 다른 방법 라디오에서 "다음"
@@ -826,6 +868,7 @@ export interface UserProperties {
   plan: SubscriptionPlan | null;
   learning_level: EnglishLevel | null;
   accent_locale: AccentLocale | null;
+  reward_state: RewardProfileState;
   has_alarm: boolean;
 }
 
