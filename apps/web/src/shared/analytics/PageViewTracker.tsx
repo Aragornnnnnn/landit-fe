@@ -7,6 +7,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 
 import { track } from './amplitude';
 import { toPageView } from './page-view';
+import { stripEntryFromAddress } from './utm';
 
 // 직전 페이지뷰 속성에서 유입 딱지만 뺀 서명 — 유입 딱지만 사라진 재렌더를 알아보는 데 쓴다
 const withoutEntry = (signature: string | null) => {
@@ -42,9 +43,15 @@ const Tracker = () => {
       lastPropsRef.current = signature;
       return;
     }
+    // 보던 화면에 유입 딱지만 붙었는가(웜 딥링크) — 화면이 새로 뜨지 않아 딱지를 읽고 뗄 곳이 없다
+    const attachedToCurrent =
+      lastPropsRef.current !== null &&
+      withoutEntry(signature) === lastPropsRef.current;
     lastPropsRef.current = signature;
 
     track(EVENTS.PAGE_VIEWED, props);
+    // 그래서 여기서 뗀다. 새로 뜨는 화면의 딱지는 그 화면이 읽고 뗀다(오늘의 시나리오 램프)
+    if (attachedToCurrent) stripEntryFromAddress();
   }, [pathname, searchParams]);
 
   return null;

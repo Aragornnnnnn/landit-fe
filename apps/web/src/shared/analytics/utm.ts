@@ -45,3 +45,19 @@ export const isAlarmEntry = (params: URLSearchParams) =>
 // 밖에서 들어온 유입인가 — 알림·위젯·알람 어느 쪽이든. 어느 채널인지는 캠페인 이름이 가른다
 export const isExternalEntry = (params: URLSearchParams) =>
   isNotificationEntry(params) || isWidgetEntry(params) || isAlarmEntry(params);
+
+// 주소에서 유입 딱지(utm_*)만 뗀다 — 다른 쿼리는 남긴다. 남겨 두면 뒤로 가기로 이 주소에 돌아올 때마다 유입이 다시 세어진다.
+// replaceState여도 라우터가 주소 변화를 알아채 같은 화면을 다시 그린다 — 그 재렌더는 PageViewTracker가 걸러 페이지뷰를 안 쏜다
+export const stripEntryFromAddress = () => {
+  const params = new URLSearchParams(window.location.search);
+  const utmKeys = [...params.keys()].filter((key) => key.startsWith('utm_'));
+  if (utmKeys.length === 0) return;
+
+  utmKeys.forEach((key) => params.delete(key));
+  const search = params.toString();
+  window.history.replaceState(
+    null,
+    '',
+    window.location.pathname + (search ? `?${search}` : ''),
+  );
+};

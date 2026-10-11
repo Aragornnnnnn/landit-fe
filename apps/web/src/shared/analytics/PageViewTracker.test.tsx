@@ -27,6 +27,7 @@ const visit = (pathname: string, search: string) => {
 describe('PageViewTracker', () => {
   beforeEach(() => {
     mocks.track.mockClear();
+    window.history.replaceState(null, '', '/');
   });
 
   it('편지함에서 칸만 바꾸면 페이지뷰를 다시 쏘지 않는다', () => {
@@ -88,6 +89,31 @@ describe('PageViewTracker', () => {
     rerender(<PageViewTracker />);
 
     expect(mocks.track).toHaveBeenCalledTimes(2);
+  });
+
+  it('보고 있던 화면에 붙은 유입 딱지는 쏜 뒤 주소에서 지운다 — 그 화면으로 뒤로 돌아와도 유입이 또 세어지지 않게', () => {
+    const { rerender } = visit('/scenario', 'date=2026-08-01');
+    const utm = 'utm_source=alarm&utm_medium=alarm&utm_campaign=scenario_alarm';
+    window.history.replaceState(null, '', `/scenario?date=2026-08-01&${utm}`);
+    mocks.search = `date=2026-08-01&${utm}`;
+
+    rerender(<PageViewTracker />);
+
+    expect(mocks.track).toHaveBeenLastCalledWith(
+      'Page Viewed',
+      expect.objectContaining({ entry_campaign: 'scenario_alarm' }),
+    );
+    expect(window.location.search).toBe('?date=2026-08-01');
+  });
+
+  it('처음 들어온 화면의 유입 딱지는 지우지 않는다 — 화면(램프)이 읽고 지운다', () => {
+    const utm =
+      'utm_source=push&utm_medium=notification&utm_campaign=daily_scenario_reminder';
+    window.history.replaceState(null, '', `/scenario?${utm}`);
+
+    visit('/scenario', utm);
+
+    expect(window.location.search).toBe(`?${utm}`);
   });
 
   it('같은 화면이라도 속성이 달라지는 주소 변화는 쏜다', () => {
