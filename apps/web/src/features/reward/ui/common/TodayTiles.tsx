@@ -15,11 +15,15 @@ export const TodayTiles = ({ slots }: { slots: TodaySlot[] }) => (
       return (
         <li
           key={slot.type}
-          className={`flex flex-col items-center rounded-2xl border px-2 py-3 ${
+          // 완료 화면에서는 방금 끝낸 칸이 눈앞에서 찬다 — 색이 한 번에 튀지 않게 넘긴다
+          className={`flex flex-col items-center rounded-2xl border px-2 py-3 transition-colors duration-300 ${
             done ? 'border-primary/30 bg-streak-band' : 'border-border bg-card'
           }`}
         >
-          <Coin size={30} className={done ? '' : 'opacity-30 grayscale'} />
+          <Coin
+            size={30}
+            className={`transition-[filter,opacity] duration-300 ${done ? '' : 'opacity-30 grayscale'}`}
+          />
           <span className="mt-1.5 text-[13px] font-bold text-foreground">
             {slot.label}
             {slot.countLabel && !done && (
@@ -29,7 +33,7 @@ export const TodayTiles = ({ slots }: { slots: TodaySlot[] }) => (
             )}
           </span>
           <span
-            className={`mt-0.5 text-[13px] font-black tabular-nums ${
+            className={`mt-0.5 text-[13px] font-black tabular-nums transition-colors duration-300 ${
               done ? 'text-primary' : 'text-muted-foreground'
             }`}
           >

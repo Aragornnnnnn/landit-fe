@@ -5,6 +5,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { getCurrentUserId } from '@/shared/auth/auth-store';
 
 import { getMyRewards, type RewardView } from '../api/reward';
+import { earnBaseOf, type ConversationActivity } from './completion-earn';
 import { rewardKeys } from './keys';
 import { participantOf } from './reward-status';
 
@@ -34,12 +35,26 @@ export const refreshRewardAfterPurchase = (queryClient: QueryClient) => {
   renewReward(queryClient, userId);
 };
 
-// 학습을 끝낸 순간 — 금액이 쌓이는 건 참여자뿐이라, 환급과 상관없는 사람은 묻지 않는다
-export const refreshRewardAfterCompletion = (queryClient: QueryClient) => {
+/**
+ * 학습을 끝낸 순간 — 금액이 쌓이는 건 참여자뿐이라, 환급과 상관없는 사람은 묻지 않는다.
+ *
+ * @param conversation 끝낸 것이 대화면 그 종류. 축하 화면이 받은 금액을 보여 줄지 정하도록 완료 전 상태를 적어 둔다
+ */
+export const refreshRewardAfterCompletion = (
+  queryClient: QueryClient,
+  conversation?: ConversationActivity,
+) => {
   const userId = getCurrentUserId();
   if (userId === null) return;
   const cached = cachedReward(queryClient, userId);
-  if (cached === undefined || participantOf(cached) === null) return;
+  const participant = cached === undefined ? null : participantOf(cached);
+  // 새로 받기 전에 적는다 — 받아 둔 것이 곧 대화에 들어갈 때 알던 값이다. 받을 것이 없으면 전에 적어 둔 것을 지운다
+  if (conversation)
+    queryClient.setQueryData(
+      rewardKeys.earnBase(userId),
+      participant ? earnBaseOf(participant, conversation) : null,
+    );
+  if (participant === null) return;
   renewReward(queryClient, userId);
 };
 

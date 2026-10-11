@@ -6,30 +6,43 @@
 import { motion } from 'motion/react';
 
 // 완료 축하를 이 화면이 띄운다 — 완료 직후를 여는 자리가 여기뿐이라 가로 import를 둔다 (widgets 후보)
+import { useCompletionEarn } from '@/features/reward/model/useCompletionEarn';
+import { EarnedStamp } from '@/features/reward/ui/EarnedStamp';
 import { StreakStamp } from '@/features/streak/ui/StreakStamp';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon } from '@/shared/ui/Icons';
 
 import { ExpressionList } from './ExpressionList';
 
-// 세 장면이 같은 타이틀 타이포를 공유해야 전환 순간 글자가 튀지 않는다
-const TITLE_CLASS =
+// 세 장면이 같은 타이틀 타이포를 공유해야 전환 순간 글자가 튀지 않는다. 표현을 다 끝낸 순간의 화면도 같은 자리에 같은 글자로 선다
+export const TITLE_CLASS =
   'pt-1 text-3xl leading-[1.22] font-black tracking-normal whitespace-pre-line text-foreground';
 
 // 대화 완료 축하 — 만드는 중 화면과 같은 골격(좌상단 타이틀 + 가운데)으로 그려 전환이 매끄럽다.
-// 가운데는 오늘 열매가 찍히는 순간이 채운다 — 완료를 매번 같은 폭죽으로 갚으면 며칠째든 감흥이 없다
-export const CelebrateStage = () => (
-  <motion.div
-    className="flex min-h-0 flex-1 flex-col"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0, scale: 0.96 }}
-    transition={{ duration: 0.25 }}
-  >
-    <h1 className={TITLE_CLASS}>{'대화 하나를\n잘 완료했어요!'}</h1>
-    <StreakStamp />
-  </motion.div>
-);
+// 가운데는 오늘 열매가 찍히는 순간이 채운다 — 완료를 매번 같은 폭죽으로 갚으면 며칠째든 감흥이 없다.
+// 이번 완료로 환급액을 받은 사람에게는 열매 대신 받은 금액과 오늘 남은 몫을 보여 준다
+export const CelebrateStage = () => {
+  const { earn, pending } = useCompletionEarn();
+
+  return (
+    <motion.div
+      className="flex min-h-0 flex-1 flex-col"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      transition={{ duration: 0.25 }}
+    >
+      <h1 className={TITLE_CLASS}>{'대화 하나를\n잘 완료했어요!'}</h1>
+      {pending ? (
+        <div className="flex-1" />
+      ) : earn ? (
+        <EarnedStamp earn={earn} />
+      ) : (
+        <StreakStamp />
+      )}
+    </motion.div>
+  );
+};
 
 // 만드는 중 — 고정 문구 + 가운데 구슬 랜디만 (타이핑 없이 읽을 시간만 준다). 랜디는 톡 튀어 나타나 둥실둥실 떠 있는다
 export const AnalyzeStage = () => (

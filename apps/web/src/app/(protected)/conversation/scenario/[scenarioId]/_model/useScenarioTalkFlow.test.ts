@@ -529,7 +529,10 @@ describe('useScenarioTalkFlow', async () => {
       queryKey: ['scenarios'],
     });
     // 홈에 돌아왔을 때 새 환급액이 서 있게 미리 받아 둔다
-    expect(refreshRewardAfterCompletion).toHaveBeenCalledWith(queryClientMock);
+    expect(refreshRewardAfterCompletion).toHaveBeenCalledWith(
+      queryClientMock,
+      'SCENARIO',
+    );
     // 홈에 돌아가면 소감을 물을 차례라고 남긴다
     expect(shouldAskSatisfaction('scenario')).toBe(true);
   });
