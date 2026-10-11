@@ -6,4 +6,10 @@ export const rewardKeys = {
     [...rewardKeys.all, userId, 'summary'] as const,
   history: (userId: number | null) =>
     [...rewardKeys.all, userId, 'history'] as const,
+  // 조회 결과가 아니라 완료 직전에 적어 두는 값 — 계정 스코프와 로그아웃 정리를 물려받으려고 캐시에 둔다
+  earnBase: (userId: number | null) =>
+    [...rewardKeys.all, userId, 'earnBase'] as const,
 };
+
+// 환급 캐시를 보는 화면이 없어도 붙들어 두는 시간 — 대화가 길어도, 완료 뒤 다른 화면에 머물러도 받아 둔 것이 남아야 한다
+export const REWARD_GC_MS = 30 * 60 * 1000;

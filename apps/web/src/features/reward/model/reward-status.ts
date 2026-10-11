@@ -35,16 +35,22 @@ export interface RewardHeroMessage {
   guide: string;
 }
 
+// 오늘 받은 것이 있는 사람에게 남은 몫을 말한다 — 환급 화면과 대화를 끝낸 순간의 화면이 같은 말을 쓴다
+export const earnedGuideOf = (today: {
+  fullyAchieved: boolean;
+  earnedWon: number;
+  maximumWon: number | null;
+}) => {
+  if (today.fullyAchieved) return '오늘 몫을 다 채웠어요';
+  return today.maximumWon === null
+    ? '오늘 더 받을 수 있어요'
+    : `오늘 ${formatWon(today.maximumWon - today.earnedWon)} 더 받을 수 있어요`;
+};
+
 // 쌓는 중인 사람에게 오늘 무엇을 말할지 — 오늘 한 만큼, 걸려 있는 금액, 어제 잃은 금액 순으로 본다
 const todayGuideOf = (view: RewardView, balance: number) => {
-  const earned = view.today?.earnedWon ?? 0;
-  if (view.today?.fullyAchieved) return '오늘 몫을 다 채웠어요';
-  if (earned > 0) {
-    const maximum = view.today?.maximumWon ?? null;
-    return maximum === null
-      ? '오늘 더 받을 수 있어요'
-      : `오늘 ${formatWon(maximum - earned)} 더 받을 수 있어요`;
-  }
+  if (view.today && (view.today.fullyAchieved || view.today.earnedWon > 0))
+    return earnedGuideOf(view.today);
   if (balance > 0)
     return `오늘 하나도 안 하면 ${formatWon(balance)}이 사라져요`;
   if (view.lostYesterdayWon > 0)

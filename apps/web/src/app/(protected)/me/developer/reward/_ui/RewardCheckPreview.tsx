@@ -13,14 +13,18 @@ import {
 } from '@/app/(protected)/reward/_ui/RewardIntro';
 import { RewardRecord } from '@/app/(protected)/reward/_ui/RewardRecord';
 import { RewardSkeleton } from '@/app/(protected)/reward/_ui/RewardSkeleton';
+import { TITLE_CLASS } from '@/features/expression/ui/ExpressionStages';
+import { completionEarnOf } from '@/features/reward/model/completion-earn';
 import { useEarnedPop } from '@/features/reward/model/earned-pop';
 import { rewardBadgeOf } from '@/features/reward/model/reward-status';
 import { rewardReceipt } from '@/features/reward/model/reward.fixture';
 import type { BalanceGain } from '@/features/reward/model/seen-balance';
+import { EarnedStamp } from '@/features/reward/ui/EarnedStamp';
 import { HeaderReward } from '@/features/reward/ui/HeaderReward';
 import { Button } from '@/shared/ui/Button';
 
 import {
+  EARNED_CASES,
   fakeHistoryItems,
   isRecordCase,
   RECORD_CASES,
@@ -120,6 +124,30 @@ const PopPreview = ({ onBack }: { onBack: () => void }) => {
   );
 };
 
+// 대화를 끝낸 순간의 축하 — 제목 아래 가운데만 실제 부품이다
+const EarnedPreview = ({
+  name,
+  onBack,
+}: {
+  name: keyof typeof EARNED_CASES;
+  onBack: () => void;
+}) => {
+  const { reward, activityType } = EARNED_CASES[name];
+  const earn = completionEarnOf(reward, {
+    date: reward.today?.date ?? '',
+    activityType,
+  });
+
+  return (
+    <RewardFrame onBack={onBack}>
+      <div className="flex h-full flex-col px-6 pb-6">
+        <h1 className={TITLE_CLASS}>{'대화 하나를\n잘 완료했어요!'}</h1>
+        {earn && <EarnedStamp earn={earn} />}
+      </div>
+    </RewardFrame>
+  );
+};
+
 export const RewardCheckPreview = ({
   name,
   onBack,
@@ -141,6 +169,8 @@ export const RewardCheckPreview = ({
     );
   if (name === 'coin') return <CoinPreview onBack={onBack} />;
   if (name === 'pop') return <PopPreview onBack={onBack} />;
+  if (name === 'earned' || name === 'earned-full')
+    return <EarnedPreview name={name} onBack={onBack} />;
   // 케이스를 더하고 여기에 갈래를 안 만들면 빌드가 깨진다
   name satisfies 'loading';
   return (

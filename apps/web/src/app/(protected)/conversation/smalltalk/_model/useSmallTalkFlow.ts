@@ -230,7 +230,7 @@ export const useSmallTalkFlow = ({
     // 축하 화면이 열자마자 새 숫자를 그리도록 미리 받아 둔다 (시나리오 대화와 같은 처리)
     refreshStreakAfterCompletion(queryClient);
     // 환급 참여자는 이 완료로 금액이 쌓인다 — 홈에 돌아왔을 때 새 금액이 서 있도록 미리 받는다
-    refreshRewardAfterCompletion(queryClient);
+    refreshRewardAfterCompletion(queryClient, 'SMALLTALK');
     markTalkCompleted('smalltalk');
     // 다음 화면(오늘의 스몰톡)이 준비되게 — 요약과 래디 그림을 미리 받는다
     void prefetchSmallTalkSummary(queryClient, userId, session.sessionId);

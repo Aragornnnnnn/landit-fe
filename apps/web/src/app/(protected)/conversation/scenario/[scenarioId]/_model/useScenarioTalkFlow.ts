@@ -56,7 +56,7 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
     void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
     refreshStreakAfterCompletion(queryClient);
     // 환급 참여자는 이 완료로 금액이 쌓인다 — 홈에 돌아왔을 때 새 금액이 서 있도록 미리 받는다
-    refreshRewardAfterCompletion(queryClient);
+    refreshRewardAfterCompletion(queryClient, 'SCENARIO');
   };
 
   const engine = useConversationTurns({

@@ -59,6 +59,29 @@ describe('refreshRewardAfterCompletion', () => {
     expect(getMyRewards).not.toHaveBeenCalled();
   });
 
+  it('대화를 끝냈으면 그 대화가 오늘 아직이었다는 걸 적어 둔다 — 축하 화면이 받은 금액을 보여 줄지 정한다', () => {
+    const queryClient = cacheWith(rewardView());
+
+    refreshRewardAfterCompletion(queryClient, 'SCENARIO');
+
+    expect(queryClient.getQueryData(rewardKeys.earnBase(42))).toEqual({
+      date: '2026-10-10',
+      activityType: 'SCENARIO',
+    });
+  });
+
+  it('환급과 상관없는 사람이 대화를 끝내면 전에 적어 둔 것을 지운다', () => {
+    const queryClient = cacheWith(outsider);
+    queryClient.setQueryData(rewardKeys.earnBase(42), {
+      date: '2026-10-10',
+      activityType: 'SCENARIO',
+    });
+
+    refreshRewardAfterCompletion(queryClient, 'SCENARIO');
+
+    expect(queryClient.getQueryData(rewardKeys.earnBase(42))).toBeNull();
+  });
+
   it('환급을 받아 본 적이 없으면 새로 묻지 않는다', () => {
     // given — 출시 전이라 환급 조회가 꺼져 있다
     refreshRewardAfterCompletion(cacheWith());

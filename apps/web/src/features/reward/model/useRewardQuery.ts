@@ -5,11 +5,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/shared/auth/auth-store';
 
 import { getMyRewards } from '../api/reward';
-import { rewardKeys } from './keys';
+import { REWARD_GC_MS, rewardKeys } from './keys';
 import { participantOf } from './reward-status';
 import { msUntilKstMidnight } from './time-left';
-
-const REWARD_GC_MS = 30 * 60 * 1000;
 
 // 서버가 하루를 마감할 틈 — 자정 정각에 물으면 어제 값을 받을 수 있다
 const MIDNIGHT_SETTLE_MS = 2_000;
