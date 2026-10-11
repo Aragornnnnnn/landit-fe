@@ -1,10 +1,12 @@
 'use client';
 
 // 환급을 아직 시작하지 않은 사람이 보는 환급 화면 — 무엇을 하면 얼마를 돌려받는지 보여 주고 페이월로 보낸다
+import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { MAX_REFUND_WON } from '@/features/reward/model/refund-offer';
 import { RefundGuide } from '@/features/reward/ui/RefundGuide';
+import { track } from '@/shared/analytics';
 import { paywallPath, REFUND_PATH } from '@/shared/lib/routes';
 import { formatWon } from '@/shared/lib/won';
 import { Button } from '@/shared/ui/Button';
@@ -25,10 +27,11 @@ export const RefundStartButton = () => {
 
   return (
     <Button
-      onClick={() =>
+      onClick={() => {
+        track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'reward' });
         // 결제하고 돌아오면 이 화면이 다시 열린다 — 기록에 같은 화면이 두 번 쌓이지 않게 갈아 끼운다
-        router.replace(paywallPath({ source: 'refund', from: REFUND_PATH }))
-      }
+        router.replace(paywallPath({ source: 'reward', from: REFUND_PATH }));
+      }}
     >
       프리미엄 시작하고 환급받기
     </Button>

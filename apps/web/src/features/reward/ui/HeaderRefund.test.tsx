@@ -23,6 +23,8 @@ vi.mock('next/link', () => ({
   ),
 }));
 vi.mock('next/image', () => ({ default: () => <span /> }));
+const analytics = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/analytics', () => ({ track: analytics.track }));
 // 동전 연출은 그림이라 자리만 채운다 — 여기서는 언제 뜨는지와 그동안 알약이 무엇을 적는지만 본다
 vi.mock('./common/CoinShower', () => ({
   CoinShower: ({ onEnd }: { onEnd: () => void }) => (
@@ -136,5 +138,17 @@ describe('HeaderRefund', () => {
     fireEvent.click(screen.getByText('동전 연출'));
 
     expect(onLinkClick).not.toHaveBeenCalled();
+  });
+});
+
+describe('HeaderRefund 계측', () => {
+  it('알약을 누르면 헤더에서 환급으로 들어갔다고 찍는다', () => {
+    renderPill();
+
+    fireEvent.click(pill());
+
+    expect(analytics.track.mock.calls).toEqual([
+      ['Reward Entry Tapped', { source: 'header' }],
+    ]);
   });
 });

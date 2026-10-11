@@ -27,7 +27,7 @@ export const useRewardQuery = ({ enabled }: { enabled: boolean }) => {
       enabled: asks,
       // 헤더가 오래 비지 않게 한 번만 다시 묻는다
       retry: 1,
-      // 대화가 길어도 받아 둔 답을 버리지 않는다 — 학습 화면에는 이 조회를 보는 곳이 없어, 버리면 완료 뒤 미리받기가 나가지 않는다
+      // 대화가 길어도 받아 둔 답을 버리지 않는다 — 버리면 완료 뒤 미리받기가 나가지 않는다
       gcTime: REWARD_GC_MS,
     });
 

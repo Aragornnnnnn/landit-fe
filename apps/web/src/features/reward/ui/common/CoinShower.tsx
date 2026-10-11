@@ -4,9 +4,11 @@
 // 주변을 어둡게 눌러 동전과 알약만 남긴다. 큰 동전과 금액이 먼저 뜨고(무엇을 받았는지), 잔동전들이 줄지어 날아가(어디에 쌓이는지) 숫자가 오른다.
 // 화면 어디를 눌러도 바로 끝난다 — 그 안내는 금액과 떨어진 구석에 작게 둔다
 import { useEffect, useEffectEvent } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { motion } from 'motion/react';
 import { createPortal } from 'react-dom';
 
+import { track } from '@/shared/analytics';
 import { formatWon } from '@/shared/lib/won';
 
 import { Coin } from './Coin';
@@ -84,7 +86,12 @@ export const CoinShower = ({
 }) => {
   // 부르는 쪽이 다시 그려져도 타이머를 다시 걸지 않는다 — 걷힌 어둠이 화면을 막은 채 남으면 안 된다
   const end = useEffectEvent(onEnd);
+  const amountWon = toWon - fromWon;
+  const reportViewed = useEffectEvent(() =>
+    track(EVENTS.REWARD_COIN_SHOWER_VIEWED, { gain_won: amountWon }),
+  );
   useEffect(() => {
+    reportViewed();
     const timer = setTimeout(end, TOTAL * 1000);
     return () => clearTimeout(timer);
   }, []);
@@ -97,12 +104,17 @@ export const CoinShower = ({
   };
   const captionLeft = from.x - CAPTION_WIDTH / 2;
   const captionTop = from.y + BIG / 2;
-  const amountWon = toWon - fromWon;
 
   return createPortal(
     <motion.div
       className="fixed inset-0 z-[70] overflow-hidden"
-      onClick={onEnd}
+      // 다 돌기 전에 누른 것만 건너뛰기다 — 다 돌면 타이머가 끝낸다
+      onClick={() => {
+        track(EVENTS.REWARD_COIN_SHOWER_SKIPPED, {
+          gain_won: amountWon,
+        });
+        onEnd();
+      }}
       initial={{ opacity: 0 }}
       animate={{ opacity: [0, 1, 1, 0] }}
       transition={{ duration: TOTAL, times: [0, 0.04, 0.9, 1] }}

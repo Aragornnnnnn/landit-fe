@@ -16,6 +16,8 @@ const mocks = vi.hoisted(() => ({
   retry: vi.fn(),
 }));
 
+const analytics = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/analytics', () => ({ track: analytics.track }));
 vi.mock('@/features/reward/model/useRewardHistoryQuery', () => ({
   useRewardHistoryQuery: () => mocks.history,
 }));
@@ -106,6 +108,17 @@ describe('RefundHistoryFeed', () => {
     fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
 
     expect(mocks.retry).toHaveBeenCalledTimes(1);
+  });
+
+  it('다시 시도를 누르면 내역에서 다시 시도했다고 찍는다', () => {
+    given({ rows: null, error: new Error('네트워크 오류') });
+    render(<RefundHistoryFeed />);
+
+    fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
+
+    expect(analytics.track.mock.calls).toEqual([
+      ['Error Retried', { screen: 'reward_history' }],
+    ]);
   });
 
   it('첫 장을 다시 받는 동안에는 실패 문구 대신 줄이 놓일 자리를 보여 준다', () => {

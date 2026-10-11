@@ -1,4 +1,7 @@
+'use client';
+
 // 내 정보 맨 위의 타일 — 환급(쌓인 금액 또는 소개)과 연속 학습 기록을 나란히 놓는다
+import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
 
 import { MAX_REFUND_WON } from '@/features/reward/model/refund-offer';
@@ -8,6 +11,7 @@ import {
 } from '@/features/reward/model/reward-status';
 import { Coin } from '@/features/reward/ui/common/Coin';
 import { StreakFruit } from '@/features/streak/ui/common/StreakFruit';
+import { track } from '@/shared/analytics';
 import { REFUND_PATH, STREAK_PATH } from '@/shared/lib/routes';
 import { ChevronRightIcon } from '@/shared/ui/Icons';
 
@@ -26,6 +30,7 @@ const Tile = ({
   value,
   note,
   warning = false,
+  onClick,
 }: {
   href: string;
   label: string;
@@ -34,9 +39,12 @@ const Tile = ({
   note: string;
   // 아래 한 줄을 붉게 — 오늘 안 하면 잃는 것이 있다
   warning?: boolean;
+  // 계측용 — 이동은 링크가 한다
+  onClick?: () => void;
 }) => (
   <Link
     href={href}
+    onClick={onClick}
     className="flex flex-1 flex-col rounded-2xl bg-white px-4 py-3.5 transition-transform active:scale-[0.98]"
   >
     <span className="flex items-center justify-between text-[12px] font-bold text-muted-foreground">
@@ -73,6 +81,7 @@ export const ProgressTiles = ({
     {refund && (
       <Tile
         href={REFUND_PATH}
+        onClick={() => track(EVENTS.REWARD_ENTRY_TAPPED, { source: 'me' })}
         label={refund.label}
         icon={
           <Coin

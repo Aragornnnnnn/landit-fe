@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { coinCountOf, CoinShower } from './CoinShower';
 
 vi.mock('next/image', () => ({ default: () => <span /> }));
+const analytics = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/analytics', () => ({ track: analytics.track }));
 
 const PILL = { left: 20, top: 12, width: 96, height: 32 };
 const renderShower = (onEnd = vi.fn()) => {
@@ -13,7 +15,10 @@ const renderShower = (onEnd = vi.fn()) => {
 };
 const skip = () => screen.getByRole('button', { name: '건너뛰기 ›' });
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 describe('coinCountOf', () => {
   it.each([
@@ -54,5 +59,38 @@ describe('CoinShower', () => {
     fireEvent.click(screen.getByText('+332원'));
 
     expect(onEnd).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('CoinShower 계측', () => {
+  it('뜨는 순간 받은 금액과 함께 노출을 한 번 찍는다', () => {
+    renderShower();
+
+    expect(analytics.track.mock.calls).toEqual([
+      ['Reward Coin Shower Viewed', { gain_won: 332 }],
+    ]);
+  });
+
+  it('다 돌기 전에 누르면 건너뛰기를 찍는다', () => {
+    renderShower();
+
+    fireEvent.click(skip());
+
+    expect(analytics.track).toHaveBeenCalledWith('Reward Coin Shower Skipped', {
+      gain_won: 332,
+    });
+  });
+
+  it('끝까지 다 돌아 끝나면 건너뛰기를 찍지 않는다', () => {
+    vi.useFakeTimers();
+    const onEnd = renderShower();
+
+    vi.runAllTimers();
+
+    expect(onEnd).toHaveBeenCalledTimes(1);
+    expect(analytics.track).not.toHaveBeenCalledWith(
+      'Reward Coin Shower Skipped',
+      expect.anything(),
+    );
   });
 });

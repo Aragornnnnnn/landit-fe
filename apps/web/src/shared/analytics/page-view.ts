@@ -54,8 +54,8 @@ const NESTED_PAGES: Record<string, string> = {
   [ALARM_CHECK_PATH]: 'alarm_check',
   [PREMIUM_ONBOARDING_CHECK_PATH]: 'premium_onboarding_check',
   [PREMIUM_ONBOARDING_PATH]: 'premium_onboarding',
-  [REFUND_PATH]: 'refund',
-  [REFUND_CHECK_PATH]: 'refund_check',
+  [REFUND_PATH]: 'reward',
+  [REFUND_CHECK_PATH]: 'reward_check',
 };
 
 // 페이월로 보낸 문 — 주소에 실려 온 값만 받는다. 문이 늘었는데 여기를 빠뜨리면 빌드가 깨진다
@@ -66,7 +66,7 @@ const PAYWALL_SOURCES: Record<PaywallSource, true> = {
   feedback_detail: true,
   me: true,
   header: true,
-  refund: true,
+  reward: true,
 };
 
 const readPaywallSource = (raw: string | null): PaywallSource | undefined =>

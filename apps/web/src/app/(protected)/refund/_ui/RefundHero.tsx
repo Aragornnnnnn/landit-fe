@@ -1,6 +1,7 @@
 'use client';
 
 // 환급 화면의 히어로 — 돈통 그림과 쌓인 금액, 그 아래 오늘 세 칸
+import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
 
 import type { RewardView } from '@/features/reward/api/reward';
@@ -11,6 +12,7 @@ import {
 import { useMidnightUrgent } from '@/features/reward/model/useMidnightUrgent';
 import { CountUpWon } from '@/features/reward/ui/common/CountUpWon';
 import { TodayTiles } from '@/features/reward/ui/common/TodayTiles';
+import { track } from '@/shared/analytics';
 import { paywallPath, REFUND_PATH } from '@/shared/lib/routes';
 
 import { potArtOf, potStageOf, type PotStage } from '../_model/pot-stage';
@@ -82,7 +84,10 @@ export const RefundHero = ({ reward }: { reward: RewardView }) => {
         <Link
           // 결제하고 돌아오면 이 화면이 다시 열린다 — 기록에 같은 화면이 두 번 쌓이지 않게 갈아 끼운다
           replace
-          href={paywallPath({ source: 'refund', from: REFUND_PATH })}
+          href={paywallPath({ source: 'reward', from: REFUND_PATH })}
+          onClick={() =>
+            track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'reward' })
+          }
           className="mt-4 text-[14px] font-bold text-primary"
         >
           다시 시작하고 또 환급받기 ›

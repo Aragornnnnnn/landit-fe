@@ -2,6 +2,7 @@
 
 // 내 환급 내역 — 늦은 것부터 보여 주고, 끝까지 내리면 이전 내역을 이어 받는다
 import { useEffect, useEffectEvent } from 'react';
+import { EVENTS } from '@landit/analytics';
 
 import type { HistoryRow } from '@/features/reward/model/reward-history';
 import {
@@ -12,6 +13,7 @@ import {
   HistoryPlaceholderLines,
   RefundHistory,
 } from '@/features/reward/ui/RefundHistory';
+import { track } from '@/shared/analytics';
 import { useInView } from '@/shared/lib/useInView';
 
 const NOTICE_CLASS =
@@ -121,7 +123,10 @@ const RetryLine = ({
     {message}
     <button
       type="button"
-      onClick={onRetry}
+      onClick={() => {
+        track(EVENTS.ERROR_RETRIED, { screen: 'reward_history' });
+        onRetry();
+      }}
       className="ml-2 font-bold text-primary underline underline-offset-4"
     >
       다시 시도

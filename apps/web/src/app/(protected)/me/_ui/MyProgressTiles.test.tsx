@@ -1,5 +1,5 @@
 // 내 정보 맨 위 타일 검증 — 환급이 열리기 전에는 자리가 없고, 열린 뒤에는 사람에 따라 환급 타일이 갈린다
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { rewardView } from '@/features/reward/model/reward.fixture';
@@ -37,6 +37,8 @@ vi.mock('next/link', () => ({
   ),
 }));
 vi.mock('next/image', () => ({ default: () => <span /> }));
+const analytics = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/analytics', () => ({ track: analytics.track }));
 
 const links = () =>
   screen.queryAllByRole('link').map((link) => link.getAttribute('href'));
@@ -99,5 +101,38 @@ describe('MyProgressTiles', () => {
 
     expect(links()).toEqual(['/refund', '/streak']);
     expect(screen.getByText('0일')).toBeInTheDocument();
+  });
+});
+
+describe('MyProgressTiles 계측', () => {
+  it.each([
+    ['참여자의 환급 타일', { reward: rewardView(), invited: false }],
+    ['권할 사람의 환급 타일', { reward: null, invited: true }],
+  ])('%s을 누르면 내 정보에서 환급으로 들어갔다고 찍는다', (_case, my) => {
+    mocks.my = { ...my, settled: true };
+    render(<MyProgressTiles />);
+
+    fireEvent.click(
+      screen
+        .getAllByRole('link')
+        .find((link) => link.getAttribute('href') === '/refund')!,
+    );
+
+    expect(analytics.track.mock.calls).toEqual([
+      ['Reward Entry Tapped', { source: 'me' }],
+    ]);
+  });
+
+  it('연속 학습 타일은 환급 진입으로 찍지 않는다', () => {
+    mocks.my = { reward: rewardView(), invited: false, settled: true };
+    render(<MyProgressTiles />);
+
+    fireEvent.click(
+      screen
+        .getAllByRole('link')
+        .find((link) => link.getAttribute('href') !== '/refund')!,
+    );
+
+    expect(analytics.track).not.toHaveBeenCalled();
   });
 });
