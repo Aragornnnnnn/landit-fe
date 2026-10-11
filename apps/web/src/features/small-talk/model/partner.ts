@@ -39,8 +39,8 @@ export const PARTNERS: PartnerProfile[] = [
     portraitViewBox: '185 50 650 630',
     voice: {
       provider: 'OPENROUTER',
-      model: 'hexgrad/kokoro-82m',
-      providerVoiceId: 'af_heart',
+      model: 'deepgram/aura-2',
+      providerVoiceId: 'aura-2-luna-en',
       gender: 'FEMALE',
     },
   },
@@ -58,8 +58,8 @@ export const PARTNERS: PartnerProfile[] = [
     portraitViewBox: '180 55 640 620',
     voice: {
       provider: 'OPENROUTER',
-      model: 'hexgrad/kokoro-82m',
-      providerVoiceId: 'am_onyx',
+      model: 'deepgram/aura-2',
+      providerVoiceId: 'aura-2-hyperion-en',
       gender: 'MALE',
     },
   },
@@ -77,8 +77,8 @@ export const PARTNERS: PartnerProfile[] = [
     portraitViewBox: '34 52 840 904',
     voice: {
       provider: 'OPENROUTER',
-      model: 'hexgrad/kokoro-82m',
-      providerVoiceId: 'bm_daniel',
+      model: 'deepgram/aura-2',
+      providerVoiceId: 'aura-2-draco-en',
       gender: 'MALE',
     },
   },
