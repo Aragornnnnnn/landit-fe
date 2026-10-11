@@ -3,10 +3,6 @@ import { act, cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  rewardActivity,
-  rewardReceipt,
-} from '@/features/reward/model/reward.fixture';
 import { track } from '@/shared/analytics';
 import { scenarioReturnPath } from '@/shared/lib/routes';
 
@@ -771,34 +767,21 @@ describe('ExpressionFlow 복습 큐', () => {
 });
 
 describe('ExpressionFlow 완료', () => {
-  // 복습 마지막 문제를 맞히고 완료를 눌러, 서버가 이 응답을 준 것으로 한다
+  // 복습 마지막 문제를 맞히고 완료를 눌러, 완료가 이 결과로 끝난 것으로 한다
   const finishWith = async (
     user: ReturnType<typeof userEvent.setup>,
-    response: unknown,
+    earned: unknown,
   ) => {
     await renderAtReview(user, []);
     await user.click(screen.getByText('review-finish'));
     const [, options] = finishMocks.mutate.mock.calls[0];
-    act(() => options.onSuccess(response));
+    act(() => options.onSuccess({ receipt: null, earned }));
   };
-  // 오늘 표현을 다 끝내 마지막 몫을 받은 영수증
-  const lastReceipt = rewardReceipt({
-    activityType: 'EXPRESSION',
-    earnedWon: 77,
-    activities: [
-      rewardActivity('EXPRESSION', {
-        earnedWon: 110,
-        completed: true,
-        completedCount: 4,
-        remainingWon: 0,
-      }),
-    ],
-  });
 
   it('오늘 표현을 다 끝내 환급액을 받았으면 받은 금액을 보여 주고, 확인을 눌러야 목록으로 간다', async () => {
     const user = userEvent.setup();
 
-    await finishWith(user, { reward: lastReceipt });
+    await finishWith(user, { earnedWon: 77, expressionCount: 4 });
 
     expect(screen.getByText(/표현 4개를/)).toBeInTheDocument();
     expect(screen.getByText('earned:77')).toBeInTheDocument();
@@ -811,22 +794,10 @@ describe('ExpressionFlow 완료', () => {
     );
   });
 
-  it('표현이 아직 남았으면 곧장 목록으로 간다', async () => {
+  it('보여 줄 금액이 없으면 곧장 목록으로 간다', async () => {
     const user = userEvent.setup();
 
-    await finishWith(user, {
-      reward: rewardReceipt({ activityType: 'EXPRESSION', earnedWon: 11 }),
-    });
-
-    expect(routerMocks.replace).toHaveBeenCalledWith(
-      scenarioReturnPath({ flip: 1 }),
-    );
-  });
-
-  it('환급과 상관없는 사람은 곧장 목록으로 간다', async () => {
-    const user = userEvent.setup();
-
-    await finishWith(user, {});
+    await finishWith(user, null);
 
     expect(routerMocks.replace).toHaveBeenCalledWith(
       scenarioReturnPath({ flip: 1 }),

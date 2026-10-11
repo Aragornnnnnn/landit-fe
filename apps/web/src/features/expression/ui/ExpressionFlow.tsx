@@ -6,11 +6,8 @@ import { EVENTS, type ExpressionStep } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
 
-// 가로 import 사유: 표현 완료가 환급액도 늘린다 — 완료 응답의 영수증을 읽는 규칙은 환급 쪽에 있다
-import {
-  expressionsEarnOf,
-  type ExpressionsEarn,
-} from '@/features/reward/model/completion-earn';
+// 가로 import 사유: 표현 완료가 환급액도 늘린다 — 받은 금액의 모양은 환급 쪽이 정한다
+import type { ExpressionsEarn } from '@/features/reward/model/completion-earn';
 import { track } from '@/shared/analytics';
 import { scenarioReturnPath, smallTalkHistoryPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
@@ -164,10 +161,10 @@ const LoadedExpressionFlow = ({
   const [earned, setEarned] = useState<ExpressionsEarn | null>(null);
 
   // 스몰톡 표현은 완료 요청에 세션 ID를 실어야 서버가 기록한다
-  const finish = useFinishExpressionMutation(
-    expressionId,
-    origin.kind === 'session' ? origin.sessionId : undefined,
-  );
+  const finish = useFinishExpressionMutation(expressionId, {
+    freeTalkSessionId: origin.kind === 'session' ? origin.sessionId : undefined,
+    repeated: learning.completed,
+  });
   // 설명 화면(B안)의 소리 배선 — 자동재생·스피커 토글·진행률·계측 (자세한 규칙은 훅 참고)
   const introAudio = useExpressionIntroStepAudio({
     active: step === 'EXPLAIN',
@@ -259,18 +256,13 @@ const LoadedExpressionFlow = ({
 
   const finishFlow = () =>
     finish.mutate(undefined, {
-      onSuccess: (response) => {
+      onSuccess: ({ earned }) => {
         track(EVENTS.EXPRESSION_COMPLETED, {
           expression_id: expressionId,
           ...originProps,
         });
-        // 오늘 표현을 다 끝내 받았으면 받은 금액을 먼저 보여 준다.
-        // 이미 끝낸 표현을 다시 한 완료는 서버가 처음 영수증을 그대로 준다 — 그걸 또 받은 것처럼 보이면 안 된다
-        const earn =
-          response?.reward && !learning.completed
-            ? expressionsEarnOf(response.reward)
-            : null;
-        if (earn) setEarned(earn);
+        // 오늘 표현을 다 끝내 받았으면 받은 금액을 먼저 보여 준다
+        if (earned) setEarned(earned);
         else router.replace(listPath);
       },
     });
