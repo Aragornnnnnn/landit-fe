@@ -3,12 +3,17 @@
 // 알람 등록 흐름 — 알람 소개 → 시간 정하고 3초 다짐(여기서 저장) → 권한 → 등록 완료.
 // 마이페이지(뒤로 가기)와 프리미엄 온보딩(「다음에 할게요」)이 같이 쓴다. 권한을 거절해도 다짐은 저장돼 있고, 완료 화면이 한 번 더 켜게 권한다
 import { useEffect, useRef, useState } from 'react';
-import { EVENTS, type AlarmSetupSource } from '@landit/analytics';
+import {
+  EVENTS,
+  type AlarmSetupSource,
+  type AlarmSetupStep,
+} from '@landit/analytics';
 import type { AlarmStatus, AlarmTime } from '@landit/bridge';
 
 import { track } from '@/shared/analytics';
 
 import { alarmCopy, AlarmCopyContext } from '../model/alarm-copy';
+import { toBlockerKind } from '../model/alarm-permission';
 import { toServerTime } from '../model/alarm-time';
 import { useAlarmUnblock } from '../model/useAlarmUnblock';
 import { useSaveAlarmMutation } from '../model/useSaveAlarmMutation';
@@ -51,6 +56,14 @@ export const AlarmSetupFlow = ({
   const [time, setTime] = useState(initialTime);
   // 저장이 실패하면 다짐 화면을 새로 그려 지문을 비운다
   const [attempt, setAttempt] = useState(0);
+
+  // 화면마다 한 번 — 어디서 빠지는지 본다. 다짐에서 소개로 되돌아가면 소개를 다시 본 것으로 센다.
+  // 완료 자리에서 권한이 막혀 있으면 「지금 켜기」를 권하는 화면이라 따로 세고, 켜서 풀리면 그때 완료를 센다
+  const viewedStep: AlarmSetupStep =
+    step === 'registered' && blocker ? 'permission_needed' : step;
+  useEffect(() => {
+    track(EVENTS.ALARM_SETUP_STEP_VIEWED, { source, step: viewedStep });
+  }, [source, viewedStep]);
 
   const askPermission = async () => {
     switch (setupStep()) {
@@ -121,7 +134,14 @@ export const AlarmSetupFlow = ({
         <AlarmRegistered
           time={time}
           blocked={blocker !== null}
-          onUnblock={() => void unblock()}
+          onUnblock={() => {
+            if (blocker)
+              track(EVENTS.ALARM_UNBLOCK_TAPPED, {
+                blocker: toBlockerKind(blocker),
+                source: 'setup',
+              });
+            void unblock();
+          }}
           onDone={onDone}
         />
       ) : (

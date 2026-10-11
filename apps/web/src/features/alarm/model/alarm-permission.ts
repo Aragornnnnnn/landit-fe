@@ -1,4 +1,5 @@
 // 알람 권한 — 셸 상태에서 무엇이 막혀 알람이 안 울리는지 가른다. 막힌 것마다 풀어 주는 길이 다르다
+import type { AlarmBlockerKind } from '@landit/analytics';
 import type { AlarmStatus, NotificationPermissionStatus } from '@landit/bridge';
 
 export type AlarmBlocker =
@@ -10,6 +11,15 @@ export type AlarmBlocker =
   | 'android-notifications'
   // Android: 정확한 알람·전체 화면 중 꺼진 것 → 설정 안내 시트
   | 'android-settings';
+
+// 계측에 싣는 이름 — 이벤트 속성 값은 snake_case다
+const BLOCKER_KIND: Record<AlarmBlocker, AlarmBlockerKind> = {
+  'ios-ask': 'ios_ask',
+  'ios-settings': 'ios_settings',
+  'android-notifications': 'android_notifications',
+  'android-settings': 'android_settings',
+};
+export const toBlockerKind = (blocker: AlarmBlocker) => BLOCKER_KIND[blocker];
 
 export const alarmBlocker = (
   status: AlarmStatus,
