@@ -14,7 +14,7 @@ const todayWon = (name: keyof typeof RECORD_CASES) =>
     .reduce((sum, item) => sum + item.amountWon, 0);
 
 describe('readCheckCase', () => {
-  it.each([['partly'], ['intro'], ['loading'], ['coin'], ['pop']])(
+  it.each([['kept'], ['intro'], ['loading'], ['coin'], ['earned']])(
     '아는 케이스 %s는 그대로 읽는다',
     (name) => {
       expect(readCheckCase(name)).toBe(name);
@@ -35,7 +35,7 @@ describe('readCheckCase', () => {
 
 describe('fakeHistoryItems', () => {
   it('맨 윗줄 잔액이 화면 위의 쌓인 금액과 같다', () => {
-    const { reward } = RECORD_CASES.partly;
+    const { reward } = RECORD_CASES.kept;
 
     const [top] = fakeHistoryItems(reward);
 
@@ -44,36 +44,30 @@ describe('fakeHistoryItems', () => {
 
   it.each([
     ['yet' as const, 0],
-    ['partly' as const, 133],
-    ['full' as const, 332],
-  ])(
-    '%s 케이스의 오늘 줄 합이 오늘 칸의 받은 금액과 같다',
-    (name, earnedWon) => {
-      expect(todayWon(name)).toBe(earnedWon);
-    },
-  );
+    ['kept' as const, 500],
+  ])('%s 케이스의 오늘 줄 합이 오늘 받은 금액과 같다', (name, earnedWon) => {
+    expect(todayWon(name)).toBe(earnedWon);
+  });
+
+  it('하루에 한 줄만 쌓인다 — 오늘의 시나리오는 하루 한 번이다', () => {
+    const items = fakeHistoryItems(RECORD_CASES.kept.reward);
+
+    expect(new Set(items.map((item) => item.date)).size).toBe(items.length);
+  });
 
   it('잔액이 바닥나는 데서 멈춘다 — 잔액이 음수인 줄을 만들지 않는다', () => {
-    const items = fakeHistoryItems(RECORD_CASES.partly.reward);
+    const items = fakeHistoryItems(RECORD_CASES.kept.reward);
 
     const oldest = items.at(-1)!;
     expect(oldest.balanceWon - oldest.amountWon).toBeGreaterThanOrEqual(0);
   });
 
-  it('어제 쉬었으면 맨 위에 사라진 금액만큼의 연속 학습 끊김 줄을 둔다', () => {
-    const { reward } = RECORD_CASES.reset;
-
-    const [top, next] = fakeHistoryItems(reward);
-
-    expect(top).toMatchObject({
-      type: 'RESET',
-      amountWon: -reward.lostYesterdayWon,
-      balanceWon: 0,
-    });
-    expect(next.balanceWon).toBe(reward.lostYesterdayWon);
-    // 쉰 날에는 적립 줄이 없다
-    expect(next.date).not.toBe(top.date);
-  });
+  it.each([['first' as const], ['pending' as const]])(
+    '쌓인 게 없는 %s 케이스는 한 줄도 만들지 않는다',
+    (name) => {
+      expect(fakeHistoryItems(RECORD_CASES[name].reward)).toEqual([]);
+    },
+  );
 
   it('기간이 끝났으면 맨 위에 넘어간 금액을 알리는 줄을 둔다', () => {
     const { reward } = RECORD_CASES.ended;

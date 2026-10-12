@@ -1,8 +1,7 @@
-// 참여자가 보는 환급 화면의 본문 — 히어로, 접어 둔 규칙, 그 아래 내역
+// 참여자가 보는 환급 화면의 본문 — 히어로와 그 아래 내역. 규칙은 헤더의 안내 버튼이 연다
 import type { RewardView } from '@/features/reward/api/reward';
 
 import { RewardHero } from './RewardHero';
-import { RewardRulesToggle } from './RewardRulesToggle';
 
 export const RewardRecord = ({
   reward,
@@ -14,7 +13,6 @@ export const RewardRecord = ({
 }) => (
   <div className="pb-8">
     <RewardHero reward={reward} />
-    <RewardRulesToggle />
     {history}
   </div>
 );

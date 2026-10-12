@@ -1,18 +1,19 @@
 // 「100일 꾸준히 하면 이만큼 할 수 있어요」 — 6개월 평균 습득 표현·대화 시간을 챌린지 기간으로 환산해 백 단위로 내려 말한다. 환급과는 먼 이야기라 환급 무대 밖, 「그림으로 배우면」 아래에 다른 섹션과 같은 모양으로 둔다
+import { CHALLENGE_DAYS } from '@/features/reward/model/refund-offer';
+
 import {
   AVERAGE_TALK_MINUTES,
   LEARNABLE_EXPRESSION_COUNT,
   OUTCOME_AS_OF,
   OUTCOME_DAYS,
   REWARD_CHALLENGE_PERIOD,
-  REWARD_DAYS,
 } from '../_model/paywall-content';
 import { RevealSection } from './RevealSection';
 import { Highlight, SectionHeading } from './SectionHeading';
 
 /** 6개월 평균을 챌린지 기간으로 환산해 백 단위로 내린다 — 「300개」처럼 딱 떨어지게, 실제보다 부풀리지 않게 */
 const forChallenge = (value: number) =>
-  Math.floor((value * REWARD_DAYS) / OUTCOME_DAYS / 100) * 100;
+  Math.floor((value * CHALLENGE_DAYS) / OUTCOME_DAYS / 100) * 100;
 
 // 한 문장으로 읽히게 숫자를 문장 가운데에 둔다 — 「원어민 표현을 300개 배울 수 있어요」
 const OUTCOMES = [

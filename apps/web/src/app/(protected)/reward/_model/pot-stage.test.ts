@@ -2,40 +2,32 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  earnedRewardToday,
   endedRewardView,
   rewardCycle,
-  rewardToday,
   rewardView,
 } from '@/features/reward/model/reward.fixture';
 
-import { potArtOf, potStageOf } from './pot-stage';
+import { potStageOf } from './pot-stage';
 
 const withBalance = (balanceWon: number) =>
   rewardView({ current: rewardCycle({ balanceWon }) });
 
 describe('potStageOf', () => {
-  it('쌓인 게 있는데 오늘이 아직이면 기다린다', () => {
+  it('쌓인 게 있는데 오늘의 시나리오가 아직이면 기다린다', () => {
     expect(potStageOf(rewardView())).toBe('waiting');
   });
 
-  it('오늘 하나라도 했으면 지킨 그림이다', () => {
-    expect(
-      potStageOf(rewardView({ today: rewardToday({ earnedWon: 111 }) })),
-    ).toBe('kept');
+  it('오늘 몫을 받았으면 지킨 그림이다', () => {
+    expect(potStageOf(rewardView({ today: earnedRewardToday() }))).toBe('kept');
   });
 
-  it('어제 쉬어서 0원이 됐으면 잃은 그림이다', () => {
-    expect(potStageOf({ ...withBalance(0), lostYesterdayWon: 1107 })).toBe(
-      'lost',
-    );
-  });
-
-  it('처음이라 0원이면 빈 통이다', () => {
+  it('쌓인 게 없으면 오늘이 아직이어도 빈 통이다', () => {
     expect(potStageOf(withBalance(0))).toBe('empty');
   });
 
   it('더 받을 몫 없이 다 모았으면 완주 그림이다', () => {
-    expect(potStageOf(withBalance(59900))).toBe('complete');
+    expect(potStageOf(withBalance(50000))).toBe('complete');
   });
 
   it('기간을 마쳐 돌려받을 금액이 있으면 완주 그림이다', () => {
@@ -61,19 +53,5 @@ describe('potStageOf', () => {
     expect(potStageOf(rewardView({ state: 'REVIEW', today: null }))).toBe(
       'kept',
     );
-  });
-});
-
-describe('potArtOf', () => {
-  it('오늘이 아직이어도 낮에는 잠자는 그림이다', () => {
-    expect(potArtOf('waiting', false)).toBe('sleeping');
-  });
-
-  it('자정이 가까우면 다급한 그림이다', () => {
-    expect(potArtOf('waiting', true)).toBe('waiting');
-  });
-
-  it('그 밖에는 고른 그림 그대로다', () => {
-    expect(potArtOf('kept', false)).toBe('kept');
   });
 });

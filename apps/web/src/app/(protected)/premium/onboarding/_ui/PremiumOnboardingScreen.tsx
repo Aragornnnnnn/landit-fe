@@ -17,10 +17,11 @@ import {
   fetchLatestReward,
   refreshRewardAfterPurchase,
 } from '@/features/reward/model/refresh-reward';
-import { MAX_REFUND_WON } from '@/features/reward/model/refund-offer';
+import { rewardOfferOf } from '@/features/reward/model/refund-offer';
 import { preloadRewardGuide } from '@/features/reward/ui/RewardGuide';
 import { subscriptionKeys } from '@/features/subscription/model/my-subscription/keys';
 import { REWARD_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
+import { PASS_FALLBACK_PRICE } from '@/features/subscription/model/product/offering';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { homePath } from '@/shared/lib/last-tab';
@@ -34,11 +35,13 @@ import {
 import { PremiumWelcome } from './PremiumWelcome';
 import { RewardGuideStep } from './RewardGuideStep';
 
-// 개발자 묶음의 「환급 문구로 보기」가 보여 주는 견본 — 6개월 상품을 막 산 사람
+// 개발자 묶음의 「환급 문구로 보기」가 보여 주는 견본 — 5만 원 이용권을 막 산 사람
+const PREVIEW_OFFER = rewardOfferOf(PASS_FALLBACK_PRICE);
 const PREVIEW_REWARD_COPY: RewardGuideCopy = {
   eyebrow: '오늘부터 챌린지 시작!',
-  amount: `최대 ${formatWon(MAX_REFUND_WON)}`,
-  caption: '183일 동안 매일 공부하면 구독료를 돌려받아요',
+  amount: `최대 ${formatWon(PREVIEW_OFFER.maximumWon)}`,
+  caption: `${PREVIEW_OFFER.days}일 동안 모은 만큼 돌려받아요`,
+  dailyWon: PREVIEW_OFFER.dailyWon,
   confirmed: true,
 };
 

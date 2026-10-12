@@ -1,7 +1,7 @@
-// 환급 화면이 무엇을 말할지 정하는 규칙 — 쌓인 금액과 오늘 할 일을 국면에 맞춰 말로 바꾼다
+// 환급 화면이 무엇을 말할지 정하는 규칙 — 쌓인 금액과 오늘 몫을 받았는지를 국면에 맞춰 말로 바꾼다
 import { formatWon } from '@/shared/lib/won';
 
-import type { RewardActivity, RewardState, RewardView } from '../api/reward';
+import type { RewardState, RewardView } from '../api/reward';
 
 // 서버가 모르는 값을 줘도 물어볼 수 있게 string으로 넓혀 둔다
 const PARTICIPANT_STATES: readonly string[] = [
@@ -19,12 +19,11 @@ export const participantOf = (view: RewardView) =>
 // 도는 회차에 쌓인 금액. 도는 회차가 없으면(끝났거나 결제 확인 중) null
 export const balanceOf = (view: RewardView) => view.current?.balanceWon ?? null;
 
-// 쌓인 게 있는데 오늘이 아직인가 — 자정에 사라질 금액이 걸려 있다.
-// 오늘은 쌓는 중일 때만 오니, 오지 않은 걸 "오늘 0원"으로 읽지 않는다
-export const atRiskOf = (view: RewardView) =>
-  view.state === 'ACTIVE' &&
-  view.today?.earnedWon === 0 &&
-  (balanceOf(view) ?? 0) > 0;
+// 도는 회차의 하루 몫 — 다 채우면 받는 금액을 대상 날짜 수로 나눈 값. 도는 회차가 없으면 null
+export const dailyWonOf = (view: RewardView) =>
+  view.current
+    ? Math.floor(view.current.maximumWon / view.current.eligibleDays)
+    : null;
 
 export interface RewardHeroMessage {
   // 큰 글자 위의 꼬리표 — 이 숫자가 무엇인지. 숫자가 없으면 null
@@ -35,27 +34,11 @@ export interface RewardHeroMessage {
   guide: string;
 }
 
-// 오늘 받은 것이 있는 사람에게 남은 몫을 말한다 — 환급 화면과 대화를 끝낸 순간의 화면이 같은 말을 쓴다
-export const earnedGuideOf = (today: {
-  fullyAchieved: boolean;
-  earnedWon: number;
-  maximumWon: number | null;
-}) => {
-  if (today.fullyAchieved) return '오늘 몫을 다 채웠어요';
-  return today.maximumWon === null
-    ? '오늘 더 받을 수 있어요'
-    : `오늘 ${formatWon(today.maximumWon - today.earnedWon)} 더 받을 수 있어요`;
-};
-
-// 쌓는 중인 사람에게 오늘 무엇을 말할지 — 오늘 한 만큼, 걸려 있는 금액, 어제 잃은 금액 순으로 본다
-const todayGuideOf = (view: RewardView, balance: number) => {
-  if (view.today && (view.today.fullyAchieved || view.today.earnedWon > 0))
-    return earnedGuideOf(view.today);
-  if (balance > 0)
-    return `오늘 하나도 안 하면 ${formatWon(balance)}이 사라져요`;
-  if (view.lostYesterdayWon > 0)
-    return `어제 쉬어서 ${formatWon(view.lostYesterdayWon)}이 사라졌어요\n오늘부터 다시 쌓을 수 있어요`;
-  return '오늘 대화 하나로 쌓기 시작해요';
+// 쌓는 중인 사람에게 오늘 무엇을 말할지 — 오늘 몫을 받았는지, 아직인지 둘뿐이다. 쉰 날에도 모은 금액은 그대로라 잃는 말은 하지 않는다
+const todayGuideOf = (view: RewardView) => {
+  if ((view.today?.earnedWon ?? 0) > 0)
+    return `오늘 ${formatWon(view.today?.earnedWon ?? 0)}을 받았어요`;
+  return `오늘의 시나리오를 하면 ${formatWon(view.today?.maximumWon ?? view.todayMaximumWon)}을 받아요`;
 };
 
 export const rewardHeroOf = (view: RewardView): RewardHeroMessage => {
@@ -93,7 +76,7 @@ export const rewardHeroOf = (view: RewardView): RewardHeroMessage => {
     label: '쌓인 환급액',
     amountWon: balance ?? 0,
     title: null,
-    guide: todayGuideOf(view, balance ?? 0),
+    guide: todayGuideOf(view),
   };
 };
 
@@ -104,8 +87,8 @@ export interface RewardBadge {
   amountWon: number | null;
   // 금액 아래 한 줄
   note: string;
-  // atRisk는 쌓인 게 있는데 오늘 아직, idle은 오늘 아직이지만 걸린 것도 없음, 그 밖에는 kept
-  mood: 'kept' | 'idle' | 'atRisk';
+  // 쌓는 중인데 오늘의 시나리오가 아직이면 idle, 그 밖에는 kept
+  mood: 'kept' | 'idle';
 }
 
 // 좁은 자리에 적는 금액 글자 — 결제를 확인하는 동안에는 금액을 모른다
@@ -113,14 +96,10 @@ export const badgeAmountOf = (badge: RewardBadge) =>
   badge.amountWon === null ? '확인 중' : formatWon(badge.amountWon);
 
 // 쌓는 중인 사람의 오늘 — 기분과 그 아래 한 줄을 같이 정한다
-const activeBadgeOf = (
-  view: RewardView,
-): Pick<RewardBadge, 'mood' | 'note'> => {
-  if (atRiskOf(view)) return { mood: 'atRisk', note: '오늘 아직 안 했어요' };
-  return (view.today?.earnedWon ?? 0) > 0
-    ? { mood: 'kept', note: '오늘도 지켰어요' }
-    : { mood: 'idle', note: '오늘 대화로 쌓기 시작해요' };
-};
+const activeBadgeOf = (view: RewardView): Pick<RewardBadge, 'mood' | 'note'> =>
+  (view.today?.earnedWon ?? 0) > 0
+    ? { mood: 'kept', note: '오늘 몫을 받았어요' }
+    : { mood: 'idle', note: '오늘의 시나리오가 남았어요' };
 
 // 쌓는 중이 아닌 국면의 한 줄 — 여기 없으면 쌓는 중이다
 const SETTLED_NOTE: Partial<Record<RewardState, string>> = {
@@ -143,50 +122,3 @@ export const rewardBadgeOf = (view: RewardView): RewardBadge | null => {
       : activeBadgeOf(view)),
   };
 };
-
-// 오늘 세 칸 — 화면에 놓이는 순서는 학습 순서(시나리오 → 표현 → 스몰톡)다
-const SLOT_ORDER: RewardActivity['activityType'][] = [
-  'SCENARIO',
-  'EXPRESSION',
-  'SMALLTALK',
-];
-const SLOT_LABEL: Record<RewardActivity['activityType'], string> = {
-  SCENARIO: '시나리오',
-  EXPRESSION: '표현',
-  SMALLTALK: '스몰톡',
-};
-
-export interface TodaySlot {
-  type: RewardActivity['activityType'];
-  label: string;
-  // 0~1. 표현은 끝낸 개수만큼 찬다
-  progress: number;
-  // 이 활동으로 오늘 받은 금액
-  earnedWon: number;
-  // 이 활동에서 오늘 더 받을 수 있는 금액 전부. 다 채웠으면 0, 아직 정해지지 않았으면 null
-  remainingWon: number | null;
-  // 표현처럼 여러 개를 끝내야 하는 활동의 진행 ("2/4"). 하나짜리는 null
-  countLabel: string | null;
-}
-
-export const todaySlotsOf = (activities: RewardActivity[]): TodaySlot[] =>
-  SLOT_ORDER.flatMap((type) => {
-    const activity = activities.find((item) => item.activityType === type);
-    // 그날 대상이 없는 활동은 칸을 만들지 않는다 — 배정된 표현이 없는 날 서버는 표현 몫을 두 대화에 나눠 준다
-    if (!activity || activity.targetCount === 0) return [];
-    return [
-      {
-        type,
-        label: SLOT_LABEL[type],
-        progress: activity.completed
-          ? 1
-          : activity.completedCount / activity.targetCount,
-        earnedWon: activity.earnedWon,
-        remainingWon: activity.remainingWon,
-        countLabel:
-          activity.targetCount > 1
-            ? `${activity.completedCount}/${activity.targetCount}`
-            : null,
-      },
-    ];
-  });

@@ -3,9 +3,6 @@ import { formatWon } from '@/shared/lib/won';
 
 import type { HistoryRow } from '../model/reward-history';
 
-const signedWon = (amountWon: number) =>
-  amountWon < 0 ? `-${formatWon(-amountWon)}` : `+${formatWon(amountWon)}`;
-
 // 줄 하나 — 따로 떼어 두면 다음 장이 붙어도, 그대로인 줄은 같은 결과를 다시 쓴다
 const HistoryLine = ({ row }: { row: HistoryRow }) => (
   <li
@@ -25,12 +22,8 @@ const HistoryLine = ({ row }: { row: HistoryRow }) => (
     </span>
     <span className="shrink-0 text-right">
       {row.amountWon !== null && (
-        <span
-          className={`block text-[16px] font-black tabular-nums ${
-            row.amountWon < 0 ? 'text-foreground' : 'text-primary'
-          }`}
-        >
-          {signedWon(row.amountWon)}
+        <span className="block text-[16px] font-black text-primary tabular-nums">
+          +{formatWon(row.amountWon)}
         </span>
       )}
       <span className="mt-0.5 block text-[13px] font-medium text-muted-foreground tabular-nums">

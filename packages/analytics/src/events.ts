@@ -335,7 +335,8 @@ export type AlarmBlockerKind =
 export type AlarmUnblockSource = 'banner' | 'setup';
 // 알람 권한을 켜러 나가는 OS 설정 — 앱 설정(iOS·Android 알림), Android의 정확한 알람·전체 화면 알림
 export type AlarmSettingsDestination = 'app' | 'exact_alarm' | 'full_screen';
-// 환급 화면을 본 상태 — 참여 전 소개, 쌓는 중(오늘 받음·오늘 아직인데 걸린 금액 없음·오늘 아직이라 위험·어제 쉬어 0원), 기간 끝남, 결제 확인 중, 검토 중
+// 환급 화면을 본 상태 — 참여 전 소개, 쌓는 중(오늘 받음 kept·오늘 아직 idle), 기간 끝남, 결제 확인 중, 검토 중.
+// at_risk·reset은 쉬면 사라지던 옛 정책의 값이다 — 과거 데이터와 맞추려고 남겨 두고 웹은 더 보내지 않는다
 export type RewardViewStatus =
   | 'intro'
   | 'kept'

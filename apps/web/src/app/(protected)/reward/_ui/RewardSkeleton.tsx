@@ -1,4 +1,4 @@
-// 환급 화면 로딩 스켈레톤 — 그림·금액·오늘 세 칸·내역 자리를 덩어리로 먼저 잡아, 도착 후 화면이 튀지 않게 한다
+// 환급 화면 로딩 스켈레톤 — 그림·금액·내역 자리를 덩어리로 먼저 잡아, 도착 후 화면이 튀지 않게 한다
 import { HistoryPlaceholderLines } from '@/features/reward/ui/RewardHistory';
 
 // 흰 카드 없이 배경 위에 바로 놓여 기본 색으로는 묻힌다 — 한 단계 진한 바탕에 빛을 흘린다
@@ -17,17 +17,6 @@ export const RewardSkeleton = () => (
       <div className={`mt-4 h-[90px] w-56 rounded-2xl ${BLOCK_CLASS}`} />
     </div>
 
-    {/* 오늘 세 칸 자리 */}
-    <div className="mt-5 grid grid-cols-3 gap-2">
-      {[0, 1, 2].map((tile) => (
-        <div key={tile} className={`h-[104px] rounded-2xl ${BLOCK_CLASS}`} />
-      ))}
-    </div>
-
-    {/* 접어 둔 규칙 카드 자리 */}
-    <div className={`mt-3 h-[52px] rounded-[20px] ${BLOCK_CLASS}`} />
-    <div className="mt-3">
-      <HistoryPlaceholderLines />
-    </div>
+    <HistoryPlaceholderLines />
   </div>
 );

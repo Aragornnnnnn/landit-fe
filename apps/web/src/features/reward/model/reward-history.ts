@@ -1,4 +1,4 @@
-// 환급 내역을 통장 한 줄씩으로 바꾸는 규칙 — 무엇을 끝냈는지, 언제, 얼마가 들고 났는지
+// 환급 내역을 통장 한 줄씩으로 바꾸는 규칙 — 무엇을 끝냈는지, 언제, 얼마를 받았는지
 import { readSeoulDateParts } from '@/shared/lib/seoul-date';
 
 import type {
@@ -6,6 +6,7 @@ import type {
   RewardHistoryItem,
   RewardHistoryPage,
 } from '../api/reward';
+import { KST_OFFSET_MS } from './time-left';
 
 export interface HistoryRow {
   id: string;
@@ -14,7 +15,7 @@ export interface HistoryRow {
   title: string;
   // 제목 아래 작은 글자 — 적립은 끝낸 시각
   note: string;
-  // 받았으면 양수, 사라졌으면 음수. 들고 난 금액이 없는 줄은 null
+  // 받은 금액. 들고 난 금액이 없는 줄(기간 종료)은 null
   amountWon: number | null;
   // 이 줄까지 반영한 잔액
   balanceWon: number;
@@ -22,8 +23,12 @@ export interface HistoryRow {
 
 const EARN_TITLE: Record<RewardActivity['activityType'], string> = {
   SCENARIO: '시나리오 대화 완료',
-  EXPRESSION: '표현학습 완료',
-  SMALLTALK: '스몰톡 완료',
+};
+
+// 오늘부터 며칠 뒤의 날짜 글자 ("10.12") — 실제 내역이 없는 보기 줄이 같은 모양으로 적는다. 보기라서 폰 시계로 센다
+export const dateLabelAhead = (ahead: number) => {
+  const day = new Date(Date.now() + KST_OFFSET_MS + ahead * 86_400_000);
+  return `${day.getUTCMonth() + 1}.${day.getUTCDate()}`;
 };
 
 const dateLabelOf = (date: string) =>
@@ -50,12 +55,6 @@ const bodyOf = (
       title:
         (item.activityType && EARN_TITLE[item.activityType]) ?? '학습 완료',
       note: kstClockOf(item.occurredAt),
-      amountWon: item.amountWon,
-    };
-  if (item.type === 'RESET')
-    return {
-      title: '연속 학습 끊김',
-      note: '누적 환급액이 초기화됐어요',
       amountWon: item.amountWon,
     };
   if (item.type === 'CYCLE_END')

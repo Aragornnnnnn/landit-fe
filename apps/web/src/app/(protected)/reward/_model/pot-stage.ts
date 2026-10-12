@@ -1,15 +1,12 @@
-// 돈통 그림을 고르는 규칙 — 쌓인 금액과 오늘 한 일로 한 장을 정한다
+// 돈통 그림을 고르는 규칙 — 쌓인 금액과 오늘 몫을 받았는지로 한 장을 정한다
 import type { RewardView } from '@/features/reward/api/reward';
-import { atRiskOf } from '@/features/reward/model/reward-status';
 
 export type PotStage =
   // 쌓인 게 없다
   | 'empty'
-  // 어제 쉬어서 사라졌다
-  | 'lost'
-  // 쌓인 게 있는데 오늘은 아직
+  // 쌓인 게 있는데 오늘의 시나리오는 아직 — 쉬어도 그대로라 잠자는 래디를 그린다
   | 'waiting'
-  // 오늘 하나라도 해서 지켰다
+  // 쌓인 금액이 있고 오늘 몫도 받았다
   | 'kept'
   // 더 받을 몫 없이 다 모았다
   | 'complete';
@@ -22,14 +19,9 @@ export const potStageOf = (view: RewardView): PotStage => {
     return view.heldRefundWon > 0 ? 'kept' : 'empty';
   }
   if (current.balanceWon >= current.maximumWon) return 'complete';
-  if (atRiskOf(view)) return 'waiting';
-  // 오늘 했거나, 검토 중이라 오늘이 없다 — 쌓인 금액은 그대로 있다
-  if (current.balanceWon > 0) return 'kept';
-  return view.lostYesterdayWon > 0 ? 'lost' : 'empty';
+  if (current.balanceWon === 0) return 'empty';
+  // 오늘은 쌓는 중일 때만 온다 — 검토 중이라 오지 않은 걸 "오늘 아직"으로 읽지 않는다
+  return view.state === 'ACTIVE' && view.today?.earnedWon === 0
+    ? 'waiting'
+    : 'kept';
 };
-
-export type PotArt = PotStage | 'sleeping';
-
-// 오늘이 아직이어도 낮에는 잠자는 래디를 쓴다 — 다급한 그림은 자정이 가까울 때만
-export const potArtOf = (stage: PotStage, urgent: boolean): PotArt =>
-  stage === 'waiting' && !urgent ? 'sleeping' : stage;

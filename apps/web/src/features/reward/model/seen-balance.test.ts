@@ -45,7 +45,7 @@ describe('balanceGainOf', () => {
     expect(balanceGainOf(2015, 2015)).toBe(null);
   });
 
-  it('자정에 초기화돼 줄었으면 연출하지 않는다', () => {
+  it('새 챌린지가 시작돼 줄었으면 연출하지 않는다', () => {
     expect(balanceGainOf(2015, 0)).toBe(null);
   });
 

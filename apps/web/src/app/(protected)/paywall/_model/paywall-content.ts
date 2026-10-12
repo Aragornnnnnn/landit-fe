@@ -1,6 +1,10 @@
 // 롱 페이월의 고정 문구와 그림 — 학습 단계 카드, 대화 카드, 데이터 수치, 리뷰. 아래쪽에 환급 챌린지 값(기간·가격으로 하루 몫과 최대 환급액 계산)도 있다. 피그마 「페이월 v2」(2640:8041) 기준
 import type { SubscriptionPlan } from '@landit/analytics';
 
+import {
+  CHALLENGE_DAYS,
+  rewardOfferOf,
+} from '@/features/reward/model/refund-offer';
 import { PASS_FALLBACK_PRICE } from '@/features/subscription/model/product/offering';
 
 const IMAGE_DIR = '/images/paywall';
@@ -246,11 +250,8 @@ export const OUTCOME_DAYS = 183;
 /** 환급 챌린지로 파는 상품 — 100일 이용권 하나(한 번 결제하는 단건 상품) */
 export const REWARD_PLAN_ID = 'pass' satisfies SubscriptionPlan;
 
-/** 이용권 기간(일). 스토어 상품에는 기간 정보가 없어, 권한을 주는 서버와 같은 값을 여기 적는다 */
-export const REWARD_DAYS = 100;
-
 /** 환급 챌린지 기간 문구 */
-export const REWARD_CHALLENGE_PERIOD = `${REWARD_DAYS}일`;
+export const REWARD_CHALLENGE_PERIOD = `${CHALLENGE_DAYS}일`;
 
 /** 환급 챌린지 화면에 그릴 값 */
 export interface RewardPlan {
@@ -272,12 +273,6 @@ export interface RewardPlan {
 export const buildRewardPlan = (
   price: number = PASS_FALLBACK_PRICE,
 ): RewardPlan => {
-  const dailyRefund = Math.floor(price / REWARD_DAYS);
-  return {
-    days: REWARD_DAYS,
-    price,
-    dailyRefund,
-    // 하루 몫을 날마다 다 받은 합 — 일수로 나눠떨어지지 않는 가격에서도 화면의 숫자끼리 어긋나지 않는다
-    maxRefund: dailyRefund * REWARD_DAYS,
-  };
+  const { days, dailyWon, maximumWon } = rewardOfferOf(price);
+  return { days, price, dailyRefund: dailyWon, maxRefund: maximumWon };
 };

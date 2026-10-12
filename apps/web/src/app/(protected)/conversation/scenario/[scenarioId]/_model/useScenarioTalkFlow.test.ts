@@ -105,6 +105,8 @@ vi.mock('@/shared/stt/useStt', () => ({
 const queryClientMock = vi.hoisted(() => ({
   prefetchQuery: vi.fn(),
   invalidateQueries: vi.fn(),
+  // 받아 둔 오늘의 시나리오 — 기본은 받아 둔 적 없음
+  getQueryData: vi.fn(),
 }));
 // 환급 미리받기는 다른 기능의 후속이라 목으로 둔다 — 여기서는 완료 때 부르는지만 본다
 const refreshRewardAfterCompletion = vi.hoisted(() => vi.fn());
@@ -312,6 +314,7 @@ beforeEach(() => {
   sttMock.abort.mockClear();
   queryClientMock.prefetchQuery.mockClear();
   queryClientMock.invalidateQueries.mockClear();
+  queryClientMock.getQueryData.mockReset();
   vi.unstubAllEnvs();
   startScenarioTalkSession.mockResolvedValue(startResponse());
   getInnerThought.mockReset();
@@ -529,10 +532,10 @@ describe('useScenarioTalkFlow', async () => {
       queryKey: ['scenarios'],
     });
     // 홈에 돌아왔을 때 새 환급액이 서 있게 미리 받아 둔다
-    expect(refreshRewardAfterCompletion).toHaveBeenCalledWith(
-      queryClientMock,
-      'SCENARIO',
-    );
+    expect(refreshRewardAfterCompletion).toHaveBeenCalledWith(queryClientMock, {
+      // 오늘의 시나리오가 무엇인지 받아 둔 적이 없으면 오늘 것으로 치지 않는다
+      todaysFirst: false,
+    });
     // 홈에 돌아가면 소감을 물을 차례라고 남긴다
     expect(shouldAskSatisfaction('scenario')).toBe(true);
   });

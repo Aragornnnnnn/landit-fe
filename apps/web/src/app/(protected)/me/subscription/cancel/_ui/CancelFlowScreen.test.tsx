@@ -281,7 +281,7 @@ describe('환급을 쌓는 중인 사람', () => {
     chooseReason('가격이 부담돼요');
 
     expect(
-      screen.getByText('최대 59,900원까지 돌려받는 플랜이에요.'),
+      screen.getByText('최대 50,000원까지 돌려받는 플랜이에요.'),
     ).toBeInTheDocument();
   });
 });

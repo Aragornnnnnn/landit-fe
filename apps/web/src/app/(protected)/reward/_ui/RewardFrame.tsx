@@ -6,11 +6,14 @@ import { BackHeader } from '@/shared/ui/BackHeader';
 
 export const RewardFrame = ({
   onBack,
+  trailing,
   footer,
   fadeAboveFooter = false,
   children,
 }: {
   onBack: () => void;
+  // 헤더 오른쪽 동작 — 참여자 화면의 규칙 안내 버튼
+  trailing?: React.ReactNode;
   // 아래 버튼 — 없으면 자리도 두지 않는다
   footer?: React.ReactNode;
   // 버튼 위를 구분선 대신 서서히 덮는다 — 한 번 읽고 지나가는 소개 화면처럼, 아래에 더 있다는 걸 알려야 할 때
@@ -21,7 +24,12 @@ export const RewardFrame = ({
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
-      <BackHeader title="환급" hasShadow={hasShadow} onBack={onBack} />
+      <BackHeader
+        title="환급"
+        hasShadow={hasShadow}
+        onBack={onBack}
+        trailing={trailing}
+      />
       <div
         ref={scrollRef}
         onScroll={onScroll}

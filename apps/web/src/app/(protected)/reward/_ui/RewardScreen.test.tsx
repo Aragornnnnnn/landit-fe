@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => ({
   track: vi.fn(),
   replace: vi.fn(),
   my: null as unknown,
+  daily: null as { scenario: { completed: boolean } | null } | null,
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 vi.mock('next/navigation', () => ({
@@ -31,13 +32,22 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('@/shared/lib/last-tab', () => ({ homePath: () => '/scenario' }));
 vi.mock('../../_model/useMyReward', () => ({ useMyReward: () => mocks.my }));
+// 소개 화면의 금액과 오늘 대화 여부 — 셸과 서버를 부르지 않게 고정한다
+vi.mock('../../_model/useRewardOffer', () => ({
+  useRewardOffer: () => ({ days: 100, dailyWon: 500, maximumWon: 50_000 }),
+}));
+vi.mock('@/features/scenario/model/useDailyScenarioQuery', () => ({
+  useDailyScenarioQuery: () => ({ daily: mocks.daily }),
+}));
 // 그림은 보지 않는다 — 무엇을 찍는지만 본다
 vi.mock('./RewardRecord', () => ({ RewardRecord: () => <p>기록</p> }));
 vi.mock('./RewardHistoryFeed', () => ({ RewardHistoryFeed: () => null }));
 vi.mock('./RefundApplyButton', () => ({ RefundApplyButton: () => null }));
 vi.mock('./RewardSkeleton', () => ({ RewardSkeleton: () => <p>받는 중</p> }));
+vi.mock('./RewardPot', () => ({ RewardPot: () => null }));
 vi.mock('@/features/reward/ui/RewardGuide', () => ({
   RewardGuide: () => <p>소개</p>,
+  RewardRuleList: () => <p>규칙</p>,
 }));
 
 const kept = () =>
@@ -50,6 +60,7 @@ const viewed = () =>
 
 beforeEach(() => {
   mocks.my = base;
+  mocks.daily = null;
 });
 afterEach(cleanup);
 
@@ -129,7 +140,7 @@ describe('RewardScreen 계측', () => {
 
     expect(viewed().at(-1)).toEqual([
       'Reward Viewed',
-      { status: 'at_risk', balance_won: 2126 },
+      { status: 'idle', balance_won: 2126 },
     ]);
   });
 
@@ -139,11 +150,23 @@ describe('RewardScreen 계측', () => {
     mocks.track.mockClear();
 
     fireEvent.click(
-      screen.getByRole('button', { name: '프리미엄 시작하고 환급받기' }),
+      screen.getByRole('button', { name: '100일 환급 챌린지 시작하기' }),
     );
 
     expect(mocks.track.mock.calls).toEqual([
       ['Paywall Entry Tapped', { source: 'reward' }],
     ]);
+  });
+
+  it('오늘의 시나리오를 이미 끝낸 사람의 소개는 오늘 대화로 쌓인 금액을 말한다', () => {
+    mocks.my = { ...base, invited: true };
+    mocks.daily = { scenario: { completed: true } };
+
+    render(<RewardScreen />);
+
+    expect(screen.getByText('오늘 대화로 쌓인 환급액')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '100일 환급 챌린지 시작하기' }),
+    ).toBeInTheDocument();
   });
 });
