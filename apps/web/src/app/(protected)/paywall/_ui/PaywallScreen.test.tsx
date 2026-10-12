@@ -279,7 +279,7 @@ describe('PaywallScreen', () => {
     fireEvent.click(
       screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
     );
-    expect(mocks.purchase).not.toHaveBeenCalledWith('pass');
+    expect(mocks.purchase).toHaveBeenCalledWith('yearly');
   });
 
   it('구매 복원은 맨 위와 약관 옆 두 곳에 있다 — 스크롤해 내려가도 찾을 수 있다', () => {
