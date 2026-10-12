@@ -21,6 +21,6 @@ export const NotificationStep = ({ onNext }: { onNext: () => void }) => (
       </div>
     </div>
 
-    <Button onClick={onNext}>계속할게요</Button>
+    <Button onClick={onNext}>알림 받을게요!</Button>
   </>
 );
