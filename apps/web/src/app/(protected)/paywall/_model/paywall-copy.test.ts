@@ -68,6 +68,10 @@ describe('환급 챌린지 문구', () => {
     expect(earning).toBe('매일 오늘의 시나리오를 할 때마다 300원이 쌓여요');
   });
 
+  it('무대 띠는 결제 금액이 아니라 모은 만큼 돌려받는다고 말한다', () => {
+    expect(getRewardTickers(pass).bottom).toContain('모은 만큼 100% 환급');
+  });
+
   it('무대 띠도 하루 몫을 가격에서 읽는다', () => {
     expect(getRewardTickers(buildRewardPlan(30_000)).top).toContain(
       '하루 300원',

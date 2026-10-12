@@ -39,5 +39,6 @@ export const getRewardSteps = ({ dailyRefund }: RewardPlan) =>
 /** 무대 띠 문구 — 제목 위아래 두 줄 */
 export const getRewardTickers = ({ days, dailyRefund }: RewardPlan) => ({
   top: `${days}일 환급 챌린지 ✦ 오늘의 시나리오 하면 하루 ${formatWon(dailyRefund)} ✦ `,
-  bottom: '공부하면 돌려받는 영어 ✦ 결제 금액 그대로 환급 ✦ ',
+  // 「결제 금액 그대로」라고 하지 않는다 — 돌려받는 것은 모은 금액이다
+  bottom: '공부하면 돌려받는 영어 ✦ 모은 만큼 100% 환급 ✦ ',
 });
