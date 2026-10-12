@@ -3,18 +3,18 @@ import { describe, expect, it } from 'vitest';
 
 import { buildPaywallPlans } from '@/features/subscription/model/product/plans';
 
-import { buildRewardPlans } from './paywall-content';
+import { buildRewardPlan } from './paywall-content';
 import {
   getBillingNotice,
   getCancelNotice,
   getCtaLabel,
-  getMaxRefundNotice,
-  getRewardBillingNotice,
   getRewardCtaLabel,
+  getRewardSteps,
+  getRewardTickers,
 } from './paywall-copy';
 
 const { monthly, yearly } = buildPaywallPlans();
-const { halfyear, quarterly } = buildRewardPlans();
+const pass = buildRewardPlan();
 
 describe('getCtaLabel', () => {
   it('연간을 고르면 무료 체험으로 시작한다고 말한다', () => {
@@ -57,34 +57,20 @@ describe('getCancelNotice', () => {
   });
 });
 
-describe('getRewardCtaLabel — 환급 챌린지가 켜졌을 때', () => {
-  it('6개월(전액 환급)을 고르면 전액 환급에 도전한다고 말한다', () => {
-    expect(getRewardCtaLabel(halfyear)).toBe('6개월 전액 환급 도전하기');
+describe('환급 챌린지 문구', () => {
+  it('CTA는 챌린지 기간을 말한다', () => {
+    expect(getRewardCtaLabel(pass)).toBe('100일 환급 챌린지 시작하기');
   });
 
-  it('3개월을 고르면 환급률을 붙여 도전한다고 말한다', () => {
-    expect(getRewardCtaLabel(quarterly)).toBe('3개월 80% 환급 도전하기');
-  });
-});
+  it('안내 첫 줄은 하루 몫을 가격에서 읽는다', () => {
+    const [[, earning]] = getRewardSteps(buildRewardPlan(30_000));
 
-describe('getRewardBillingNotice — 환급 챌린지가 켜졌을 때', () => {
-  it('기간마다 자동 갱신되는 결제 금액과 해지 가능을 알린다 — 실제 상품이 자동 갱신 구독이다', () => {
-    expect(getRewardBillingNotice(halfyear)).toBe(
-      '6개월마다 59,900원 정기 결제 · 언제든 해지 가능',
-    );
-    expect(getRewardBillingNotice(quarterly)).toBe(
-      '3개월마다 39,900원 정기 결제 · 언제든 해지 가능',
-    );
+    expect(earning).toBe('매일 오늘의 시나리오를 할 때마다 300원이 쌓여요');
   });
-});
 
-describe('getMaxRefundNotice — 환급 챌린지가 켜졌을 때', () => {
-  it('챌린지에 성공하면 돌려받는 최대 금액을 알린다', () => {
-    expect(getMaxRefundNotice(halfyear)).toBe(
-      '챌린지 성공하면 최대 59,900원 환급',
-    );
-    expect(getMaxRefundNotice(quarterly)).toBe(
-      '챌린지 성공하면 최대 31,920원 환급',
+  it('무대 띠도 하루 몫을 가격에서 읽는다', () => {
+    expect(getRewardTickers(buildRewardPlan(30_000)).top).toContain(
+      '하루 300원',
     );
   });
 });

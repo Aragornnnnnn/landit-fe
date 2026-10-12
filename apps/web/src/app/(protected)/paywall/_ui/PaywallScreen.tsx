@@ -1,6 +1,6 @@
 'use client';
 
-// 프리미엄 페이월 화면 — 길게 내려 보는 한 장(머리 → 프리미엄 시리즈 → 그림 학습 → 리뷰 → 비교표 → 플랜)과 아래 고정 CTA.
+// 프리미엄 페이월 화면 — 길게 내려 보는 한 장(머리 → 프리미엄 시리즈 → 그림 학습 → 환급 챌린지일 때 100일 성과 → 리뷰 → 비교표 → 플랜)과 아래 고정 CTA.
 // 환급 챌린지 스위치가 켜지면 머리·플랜·CTA 문구가 환급용으로 바뀐다. 결제·복원은 usePurchase, 닫기는 usePaywallDismiss가 지휘하고,
 // 여기서는 어느 플랜을 골랐는지와 버튼 상태만 안다
 import { useRef, useState } from 'react';
@@ -28,21 +28,16 @@ import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
 import { needsScrollToPlans } from '../_lib/plans-below-fold';
-import {
-  buildRewardPlans,
-  FULL_REFUND_PLAN,
-  isRewardPlan,
-} from '../_model/paywall-content';
+import { buildRewardPlan, REWARD_PLAN_ID } from '../_model/paywall-content';
 import {
   getBillingNotice,
   getCancelNotice,
   getCtaLabel,
-  getMaxRefundNotice,
-  getRewardBillingNotice,
   getRewardCtaLabel,
 } from '../_model/paywall-copy';
 import { CompareSection } from './CompareSection';
 import { DataSection } from './DataSection';
+import { OutcomeSection } from './OutcomeSection';
 import { PaywallHeader } from './PaywallHeader';
 import { PaywallHero } from './PaywallHero';
 import { PlanSection } from './PlanSection';
@@ -61,9 +56,9 @@ export const PaywallScreen = ({
   rewardChallenge = REWARD_CHALLENGE_ENABLED,
 }: PaywallScreenProps) => {
   const router = useRouter();
-  // 스위치에 따라 처음 고른 플랜이 다르다 — 켜지면 6개월(전액 환급), 꺼지면 연간
+  // 스위치에 따라 사는 상품이 다르다 — 켜지면 100일 이용권 하나, 꺼지면 월간·연간 가운데 고른다(처음엔 연간)
   const [selectedId, setSelectedId] = useState<SubscriptionPlan>(
-    rewardChallenge ? FULL_REFUND_PLAN : DEFAULT_PLAN_ID,
+    rewardChallenge ? REWARD_PLAN_ID : DEFAULT_PLAN_ID,
   );
   // 맨 위 줄이 스크롤로 올라가면 닫기만 따로 띄운다
   const [scrolled, setScrolled] = useState(false);
@@ -77,22 +72,19 @@ export const PaywallScreen = ({
   const [closing, setClosing] = useState(false);
   const prices = toKrwPrices(packages);
   const plans = buildPaywallPlans(prices);
-  const rewardPlans = buildRewardPlans(prices);
-  // CTA와 그 밑 안내 두 줄 — 지금 플랜은 결제·해지 안내, 환급 플랜은 결제 안내와 최대 환급액
-  const footer = isRewardPlan(selectedId)
+  const rewardPlan = buildRewardPlan(prices.pass);
+  // 스위치가 꺼져 있으면 고른 것은 월간·연간 가운데 하나다
+  const regularPlan = plans[selectedId === 'monthly' ? 'monthly' : 'yearly'];
+  // CTA와 그 밑 안내 — 지금 플랜은 결제·해지 안내 두 줄, 환급 챌린지는 버튼만
+  const footer = rewardChallenge
     ? {
-        label: getRewardCtaLabel(rewardPlans[selectedId]),
-        notices: [
-          getRewardBillingNotice(rewardPlans[selectedId]),
-          getMaxRefundNotice(rewardPlans[selectedId]),
-        ],
+        label: getRewardCtaLabel(rewardPlan),
+        // 한 번 내는 단건 결제라 갱신·해지 안내가 없다
+        notices: [],
       }
     : {
-        label: getCtaLabel(plans[selectedId]),
-        notices: [
-          getBillingNotice(plans[selectedId]),
-          getCancelNotice(plans[selectedId]),
-        ],
+        label: getCtaLabel(regularPlan),
+        notices: [getBillingNotice(regularPlan), getCancelNotice(regularPlan)],
       };
 
   const goHome = () => router.replace(homePath());
@@ -158,10 +150,11 @@ export const PaywallScreen = ({
 
   return (
     <main className="relative mx-auto h-dvh max-w-[430px] overflow-hidden bg-background">
-      {/* 아래 여백은 하단 고정 CTA(버튼+안내 두 줄) 높이만큼 — 마지막 링크가 버튼 뒤에 깔리지 않게 */}
+      {/* 아래 여백은 하단 고정 CTA(버튼+안내) 높이만큼 — 마지막 링크가 버튼 뒤에 깔리지 않게 */}
       <div
         data-scroll-root
-        className="relative h-full overflow-y-auto pb-[calc(max(var(--safe-area-inset-bottom),12px)+142px)]"
+        // 환급 챌린지는 버튼 밑 안내가 없어 그만큼 낮다
+        className={`relative h-full overflow-y-auto ${rewardChallenge ? 'pb-[calc(max(var(--safe-area-inset-bottom),12px)+100px)]' : 'pb-[calc(max(var(--safe-area-inset-bottom),12px)+142px)]'}`}
         onScroll={(event) => setScrolled(event.currentTarget.scrollTop > 48)}
       >
         {/* 닫기·구매 복원 — 고정하지 않고 머리와 함께 올라간다 */}
@@ -173,22 +166,19 @@ export const PaywallScreen = ({
         />
         <PaywallHero
           rewardChallenge={rewardChallenge}
-          rewardPlan={
-            rewardPlans[
-              isRewardPlan(selectedId) ? selectedId : FULL_REFUND_PLAN
-            ]
-          }
+          rewardPlan={rewardPlan}
         />
-        <PremiumOnlySection />
+        <PremiumOnlySection scenarioFirst={rewardChallenge} />
         <DataSection />
-        <ReviewSection />
+        {rewardChallenge && <OutcomeSection />}
+        <ReviewSection rewardChallenge={rewardChallenge} />
         <CompareSection />
         <div ref={plansRef} data-plan-section>
           <PlanSection
             plans={plans}
-            rewardPlans={rewardPlans}
             selectedId={selectedId}
             onSelect={selectPlan}
+            rewardPlan={rewardPlan}
             rewardChallenge={rewardChallenge}
             onRestore={startRestore}
             restoreDisabled={busy}

@@ -1,4 +1,4 @@
-// 「먼저 시작한 유저들의 이야기」 — 스토어 평점과 실제 리뷰를 옆으로 넘겨 본다
+// 「먼저 시작한 유저들의 이야기」 — 스토어 평점과 실제 리뷰를 옆으로 넘겨 본다. 환급 챌린지에서는 제목을 다른 섹션처럼 ~해요체로 쓴다
 import type { CSSProperties } from 'react';
 import Image from 'next/image';
 
@@ -18,14 +18,26 @@ const Stars = ({ className }: { className: string }) => (
   </span>
 );
 
-export const ReviewSection = () => (
+export const ReviewSection = ({
+  rewardChallenge,
+}: {
+  /** 환급 챌린지가 켜졌는가 — 제목 문체만 갈린다 */
+  rewardChallenge: boolean;
+}) => (
   <div className="pt-14">
     <RevealSection>
       <SectionHeading
         title={
-          <>
-            <Highlight>먼저 시작한 유저들</Highlight>의 이야기
-          </>
+          rewardChallenge ? (
+            <>
+              {'먼저 시작한 유저들은\n'}
+              <Highlight>이렇게 말해요</Highlight>
+            </>
+          ) : (
+            <>
+              <Highlight>먼저 시작한 유저들</Highlight>의 이야기
+            </>
+          )
         }
       />
       <div className="relative mt-5 flex items-center gap-2.5 px-6">
@@ -64,11 +76,12 @@ export const ReviewSection = () => (
           >
             <Stars className="text-xs tracking-[0.06em]" />
             {review.title && (
-              <p className="text-sm leading-[22px] font-bold tracking-[-0.01em] text-foreground">
+              <p className="text-sm leading-[22px] font-bold tracking-[-0.01em] break-keep text-foreground">
                 {review.title}
               </p>
             )}
-            <p className="line-clamp-5 text-[13.5px] leading-[21px] tracking-[-0.01em] text-[#3d3d3f]">
+            {/* 낱말 가운데에서 끊기지 않게 어절 단위로 줄을 바꾼다 */}
+            <p className="line-clamp-5 text-[13.5px] leading-[21px] tracking-[-0.01em] break-keep text-[#3d3d3f]">
               {review.body}
             </p>
             <p className="mt-auto text-xs text-muted-foreground">

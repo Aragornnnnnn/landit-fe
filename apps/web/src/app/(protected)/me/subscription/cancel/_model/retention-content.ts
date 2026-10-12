@@ -110,6 +110,8 @@ const PLAN_DAYS: Record<SubscriptionPlan, number> = {
   quarterly: 90,
   halfyear: 180,
   yearly: 365,
+  // 이용권은 해지할 것이 없어 이 화면에 오지 않는다 — 아래 세 표의 pass는 타입을 채우는 값이다
+  pass: 100,
 };
 // 하루 요금을 빗댄 것 — 월간 500원·3개월 440원은 껌, 6개월 330원은 사탕 두 개, 연간 160원은 사탕 하나
 const PLAN_TREAT: Record<SubscriptionPlan, string> = {
@@ -117,6 +119,7 @@ const PLAN_TREAT: Record<SubscriptionPlan, string> = {
   quarterly: '껌 한 통 값',
   halfyear: '사탕 두 개 값',
   yearly: '사탕 하나 값',
+  pass: '껌 한 통 값',
 };
 // 결제 금액 앞에 붙는 주기 — 월간은 하루 요금 행만으로 충분해 보조 문구를 달지 않는다
 const PLAN_PRICE_PREFIX: Record<SubscriptionPlan, string | null> = {
@@ -124,6 +127,7 @@ const PLAN_PRICE_PREFIX: Record<SubscriptionPlan, string | null> = {
   quarterly: '3개월',
   halfyear: '6개월',
   yearly: '연',
+  pass: '100일',
 };
 
 const priceContent = (

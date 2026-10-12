@@ -1,16 +1,11 @@
-// 롱 페이월 고정 콘텐츠의 계약 — 예문 카드는 짚을 표현이 문장 안에 그대로 있어야 주황 강조가 제자리에 앉는다
+// 롱 페이월 고정 콘텐츠와 환급 챌린지 값의 계약 — 예문 카드는 짚을 표현이 문장 안에 그대로 있어야 주황 강조가 제자리에 앉는다
 import { describe, expect, it } from 'vitest';
 
-import { MAX_REFUND_WON } from '@/features/reward/model/refund-offer';
-
 import {
-  buildRewardPlans,
+  buildRewardPlan,
   EXAMPLE_CARDS,
   EXAMPLE_LANDING_INDEX,
-  FULL_REFUND_PLAN,
-  isRewardPlan,
   maskName,
-  REWARD_PLANS,
 } from './paywall-content';
 
 describe('EXAMPLE_CARDS', () => {
@@ -48,53 +43,35 @@ describe('maskName', () => {
   });
 });
 
-describe('buildRewardPlans', () => {
-  it('스토어 가격이 없으면 등록값으로 결제 금액과 최대 환급액을 정한다', () => {
-    const { halfyear, quarterly } = buildRewardPlans();
-
-    expect(halfyear).toMatchObject({
-      months: 6,
-      price: 59_900,
-      maxRefund: 59_900,
-    });
-    expect(quarterly).toMatchObject({
-      months: 3,
-      price: 39_900,
-      maxRefund: 31_920,
+describe('buildRewardPlan', () => {
+  it('스토어 가격이 없으면 5만 원 이용권 등록값으로 100일·하루 500원을 정한다', () => {
+    expect(buildRewardPlan()).toEqual({
+      days: 100,
+      price: 50_000,
+      dailyRefund: 500,
+      maxRefund: 50_000,
     });
   });
 
-  it('하루에 받을 수 있는 최대 환급금은 최대 환급액을 기간(한 달 30일)으로 나눈 값이다', () => {
-    const { halfyear, quarterly } = buildRewardPlans();
+  it.each([
+    [30_000, 300],
+    [100_000, 1_000],
+    [200_000, 2_000],
+  ])(
+    '셸이 준 가격이 %i원이면 다 채웠을 때 그 금액을 돌려받고 하루 몫은 %i원이다 — 가격만 다른 이용권을 올려도 화면이 따라온다',
+    (price, dailyRefund) => {
+      expect(buildRewardPlan(price)).toMatchObject({
+        price,
+        dailyRefund,
+        maxRefund: price,
+      });
+    },
+  );
 
-    expect(halfyear.dailyRefund).toBe(333);
-    expect(quarterly.dailyRefund).toBe(355);
-  });
-
-  it('셸이 준 원화 가격이 있으면 결제 금액과 최대 환급액을 그 값으로 다시 계산한다', () => {
-    const { halfyear, quarterly } = buildRewardPlans({
-      halfyear: 49_900,
-      quarterly: 29_900,
+  it('일수로 나눠떨어지지 않는 가격이면 하루 몫을 내리고, 최대 환급액은 그 합이다 — 하루 몫 × 일수와 어긋나지 않는다', () => {
+    expect(buildRewardPlan(55_550)).toMatchObject({
+      dailyRefund: 555,
+      maxRefund: 55_500,
     });
-
-    expect(halfyear).toMatchObject({ price: 49_900, maxRefund: 49_900 });
-    expect(quarterly).toMatchObject({ price: 29_900, maxRefund: 23_920 });
-  });
-});
-
-describe('isRewardPlan', () => {
-  it('3개월·6개월만 환급 플랜이다', () => {
-    expect(isRewardPlan('halfyear')).toBe(true);
-    expect(isRewardPlan('quarterly')).toBe(true);
-    expect(isRewardPlan('yearly')).toBe(false);
-    expect(isRewardPlan('monthly')).toBe(false);
-  });
-});
-
-describe('MAX_REFUND_WON', () => {
-  it('환급 소개가 말하는 최대 금액은 전액 환급 플랜의 환급액과 같다', () => {
-    const { price, refundRate } = REWARD_PLANS[FULL_REFUND_PLAN];
-
-    expect(MAX_REFUND_WON).toBe((price * refundRate) / 100);
   });
 });

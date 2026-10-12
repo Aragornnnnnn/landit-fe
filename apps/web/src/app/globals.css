@@ -788,7 +788,7 @@
   }
 }
 
-/* 페이월 메인 환급 — 돈주머니가 통통 튀다 팡 터지고(2.4초 주기), 돈이 3D로 돌며 쏟아진다 */
+/* 페이월 환급 무대 — 돈이 3D로 돌며 계속 떨어진다 */
 
 /* 세로축으로 돌아 옆면이 얇아졌다 넓어졌다 하며 3D로 보인다 */
 @keyframes money-rain {
@@ -808,109 +808,13 @@
   }
 }
 
-@keyframes money-bag {
-  0%,
-  60% {
-    transform: translateY(0) scale(1);
-  }
-  30% {
-    transform: translateY(-8px) scale(1);
-  }
-  68% {
-    transform: translateY(6px) scale(1.16, 0.84);
-  }
-  74% {
-    transform: translateY(-20px) scale(0.88, 1.2);
-  }
-  84% {
-    transform: translateY(0) scale(1.05, 0.95);
-  }
-  100% {
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes money-burst {
-  0%,
-  72% {
-    transform: translate(0, 0) scale(0.3);
-    opacity: 0;
-  }
-  75% {
-    opacity: 1;
-  }
-  88% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(var(--dx), var(--dy)) rotateY(720deg)
-      rotateZ(var(--spin)) scale(1.1);
-    opacity: 0;
-  }
-}
-
 @layer utilities {
   [data-inview='true'] .reveal-money-rain {
     animation: money-rain var(--duration, 3s) linear var(--delay, 0s) infinite;
   }
 
-  /* 먼저 튀어나온 뒤 2.4초마다 통통 튀다 터진다 — 터지는 돈·빛과 같은 주기 */
-  [data-inview='true'] .reveal-money-bag {
-    animation:
-      mascot-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both,
-      money-bag 2.4s ease-in-out 0.6s infinite;
-  }
-
-  [data-inview='true'] .reveal-money-burst {
-    animation: money-burst 2.4s cubic-bezier(0.2, 0.7, 0.3, 1) 0.6s infinite;
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    [data-inview='true'] .reveal-money-rain,
-    [data-inview='true'] .reveal-money-bag,
-    [data-inview='true'] .reveal-money-burst {
-      animation: none;
-    }
-  }
-}
-
-/* 페이월 환급 입금 — 카드가 떠오른 뒤 입금 알림이 툭 떨어져 흔들리고, 빨간 「전액 환급」 라벨이 붙는다 */
-@keyframes deposit-in {
-  from {
-    transform: translateY(-36px) scale(0.92);
-    opacity: 0;
-  }
-  55% {
-    transform: translateY(5px) scale(1.03);
-    opacity: 1;
-  }
-  70% {
-    transform: translateY(0) rotate(-2.5deg);
-  }
-  82% {
-    transform: rotate(2deg);
-  }
-  92% {
-    transform: rotate(-1deg);
-  }
-  to {
-    transform: none;
-  }
-}
-
-@layer utilities {
-  [data-inview='true'] .reveal-deposit {
-    animation: deposit-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 1s both;
-  }
-
-  /* 알림이 내려앉은 뒤 빨간 라벨이 톡 붙는다 */
-  [data-inview='true'] .reveal-refund-rate-label {
-    animation: mascot-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) 1.45s both;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    [data-inview='true'] .reveal-deposit,
-    [data-inview='true'] .reveal-refund-rate-label {
+    [data-inview='true'] .reveal-money-rain {
       animation: none;
     }
   }

@@ -22,14 +22,22 @@ export const getCancelNotice = (plan: PaywallPlan) =>
     ? '체험 종료 24시간 전까지 해지하면 청구되지 않아요'
     : '결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요';
 
-/** 환급 챌린지 CTA 문구 — 고른 환급 플랜의 기간과 환급률. 100%는 「전액」으로 말한다 */
-export const getRewardCtaLabel = ({ months, refundRate }: RewardPlan) =>
-  `${months}개월 ${refundRate === 100 ? '전액' : `${refundRate}%`} 환급 도전하기`;
+/** 환급 챌린지 CTA 문구 */
+export const getRewardCtaLabel = ({ days }: RewardPlan) =>
+  `${days}일 환급 챌린지 시작하기`;
 
-/** 환급 챌린지 결제 안내 — 기간마다 자동 갱신되는 구독이라 지금 플랜처럼 갱신 금액과 해지 가능을 붙인다(스토어 심사 3.1.2) */
-export const getRewardBillingNotice = ({ months, price }: RewardPlan) =>
-  `${months}개월마다 ${formatWon(price)} 정기 결제 · 언제든 해지 가능`;
+/** 환급 안내 두 줄 — 쌓이는 법과 돌려받는 법. 이모지와 문장 */
+export const getRewardSteps = ({ dailyRefund }: RewardPlan) =>
+  [
+    [
+      '💰',
+      `매일 오늘의 시나리오를 할 때마다 ${formatWon(dailyRefund)}이 쌓여요`,
+    ],
+    ['📅', '챌린지 기간이 끝나면 내가 모은 만큼 돈을 돌려받아요'],
+  ] as const;
 
-/** 환급 챌린지 둘째 줄 — 챌린지에 성공하면 돌려받는 최대 금액 */
-export const getMaxRefundNotice = ({ maxRefund }: RewardPlan) =>
-  `챌린지 성공하면 최대 ${formatWon(maxRefund)} 환급`;
+/** 무대 띠 문구 — 제목 위아래 두 줄 */
+export const getRewardTickers = ({ days, dailyRefund }: RewardPlan) => ({
+  top: `${days}일 환급 챌린지 ✦ 오늘의 시나리오 하면 하루 ${formatWon(dailyRefund)} ✦ `,
+  bottom: '공부하면 돌려받는 영어 ✦ 결제 금액 그대로 환급 ✦ ',
+});
