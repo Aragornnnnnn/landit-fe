@@ -1,7 +1,7 @@
-// 롱 페이월의 고정 문구와 그림 — 학습 단계 카드, 대화 카드, 데이터 수치, 리뷰. 피그마 「페이월 v2」(2640:8041) 기준
+// 롱 페이월의 고정 문구와 그림 — 학습 단계 카드, 대화 카드, 데이터 수치, 리뷰. 아래쪽에 환급 챌린지 값(기간·가격으로 하루 몫과 최대 환급액 계산)도 있다. 피그마 「페이월 v2」(2640:8041) 기준
 import type { SubscriptionPlan } from '@landit/analytics';
 
-import type { PlanPrices } from '@/features/subscription/model/product/plans';
+import { PASS_FALLBACK_PRICE } from '@/features/subscription/model/product/offering';
 
 const IMAGE_DIR = '/images/paywall';
 
@@ -234,74 +234,50 @@ export const maskName = (name: string) => {
   );
 };
 
-/** 환급 챌린지 기간 꾸준히 한 유저의 평균 습득 표현 수 */
+/** 6개월 꾸준히 한 유저의 평균 습득 표현 수 */
 export const LEARNABLE_EXPRESSION_COUNT = 726;
 /** 그 기간 꾸준히 한 유저의 평균 대화 시간(분) */
 export const AVERAGE_TALK_MINUTES = 1278;
-/** 위 두 평균을 낸 날 */
-export const OUTCOME_AS_OF = '2026.10.06';
+/** 위 두 평균을 낸 때 */
+export const OUTCOME_AS_OF = '2026년 10월';
+/** 두 평균을 잰 기간(6개월)의 날짜 수 — 챌린지 기간으로 환산할 때 나눈다 */
+export const OUTCOME_DAYS = 183;
 
-/** 환급 챌린지 플랜 — 3개월·6개월 스토어 상품 */
-export type RewardPlanId = Extract<SubscriptionPlan, 'quarterly' | 'halfyear'>;
+/** 환급 챌린지로 파는 상품 — 100일 이용권 하나(한 번 결제하는 단건 상품) */
+export const REWARD_PLAN_ID = 'pass' satisfies SubscriptionPlan;
 
-/** 환급 플랜 — 기간·환급률과 결제 금액의 스토어 등록값. 셸이 원화 가격을 주면 buildRewardPlans가 그 값으로 바꾼다 */
-export const REWARD_PLANS: Record<
-  RewardPlanId,
-  { months: number; refundRate: number; price: number }
-> = {
-  quarterly: { months: 3, refundRate: 80, price: 39_900 },
-  halfyear: { months: 6, refundRate: 100, price: 59_900 },
-};
+/** 이용권 기간(일). 스토어 상품에는 기간 정보가 없어, 권한을 주는 서버와 같은 값을 여기 적는다 */
+export const REWARD_DAYS = 100;
 
-/** 카드가 위에서부터 놓이는 순서 — 전액 환급을 위에 둬 가장 센 제안이 먼저 눈에 든다 */
-export const REWARD_PLAN_ORDER: readonly RewardPlanId[] = [
-  'halfyear',
-  'quarterly',
-];
+/** 환급 챌린지 기간 문구 */
+export const REWARD_CHALLENGE_PERIOD = `${REWARD_DAYS}일`;
 
-/** 전액 환급 플랜 — 맨 위 무대·입금 알림·강조 카드가 모두 이 플랜을 말하고, 처음 선택돼 있다 */
-export const FULL_REFUND_PLAN: RewardPlanId = 'halfyear';
-
-/** 환급 챌린지 기간 문구 — 이 기간 동안 영어 공부를 이어 가면 결제 금액을 전액 돌려준다 */
-export const REWARD_CHALLENGE_PERIOD = `${REWARD_PLANS[FULL_REFUND_PLAN].months}개월`;
-
-/** 챌린지 날짜 계산의 한 달 — 하루 환급금 상한을 나누는 기준 */
-const DAYS_PER_MONTH = 30;
-
-export const isRewardPlan = (plan: SubscriptionPlan): plan is RewardPlanId =>
-  plan in REWARD_PLANS;
-
-/** 환급 카드 한 장에 그릴 값 — 최대 환급액은 결제 금액 × 환급률(원 단위 반올림) */
+/** 환급 챌린지 화면에 그릴 값 */
 export interface RewardPlan {
-  id: RewardPlanId;
-  months: number;
-  refundRate: number;
+  days: number;
+  /** 결제 금액 */
   price: number;
-  maxRefund: number;
-  /** 하루에 받을 수 있는 최대 환급금 — 그날 학습을 모두 하면 이만큼 쌓인다. 최대 환급액을 기간 일수로 나눈 반올림 값 */
+  /** 오늘의 시나리오를 끝낸 날 쌓이는 금액 */
   dailyRefund: number;
+  /** 하루도 빠짐없이 채웠을 때 돌려받는 금액 */
+  maxRefund: number;
 }
 
 /**
- * 결제 금액으로 환급 카드 값을 만든다 — 최대 환급액이 실제 청구액에서 나와 둘이 어긋나지 않는다.
+ * 결제 금액으로 환급 챌린지 값을 만든다 — 하루 몫은 결제 금액을 일수로 나눈 값(원 단위 내림)이고, 다 채우면 그 합을 돌려받는다.
+ * 금액을 여기 박아 두지 않아, 가격이 다른 이용권을 오퍼링에 올리기만 하면 화면이 따라온다(가격 실험).
  *
- * @param prices 셸이 준 원화 가격. 없는 플랜은 스토어 등록값
+ * @param price 셸이 준 원화 가격. 없으면 등록값
  */
-export const buildRewardPlans = (
-  prices: PlanPrices = {},
-): Record<RewardPlanId, RewardPlan> => {
-  const build = (id: RewardPlanId): RewardPlan => {
-    const { months, refundRate } = REWARD_PLANS[id];
-    const price = prices[id] ?? REWARD_PLANS[id].price;
-    const maxRefund = Math.round((price * refundRate) / 100);
-    return {
-      id,
-      months,
-      refundRate,
-      price,
-      maxRefund,
-      dailyRefund: Math.round(maxRefund / (months * DAYS_PER_MONTH)),
-    };
+export const buildRewardPlan = (
+  price: number = PASS_FALLBACK_PRICE,
+): RewardPlan => {
+  const dailyRefund = Math.floor(price / REWARD_DAYS);
+  return {
+    days: REWARD_DAYS,
+    price,
+    dailyRefund,
+    // 하루 몫을 날마다 다 받은 합 — 일수로 나눠떨어지지 않는 가격에서도 화면의 숫자끼리 어긋나지 않는다
+    maxRefund: dailyRefund * REWARD_DAYS,
   };
-  return { quarterly: build('quarterly'), halfyear: build('halfyear') };
 };

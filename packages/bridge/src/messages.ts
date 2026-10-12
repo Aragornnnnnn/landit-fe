@@ -60,12 +60,14 @@ export const widgetFamilySchema = z.enum(['small', 'medium', 'large']);
 // 홈 화면에 위젯이 실제로 놓였는가·치워졌는가 — Android 위젯 프로바이더 콜백에서 온다 (iOS는 콜백이 없어 못 보낸다)
 export const widgetChangeSchema = z.enum(['added', 'removed']);
 
-// 구독 플랜 — 페이월 카드·스토어 상품·계측 속성이 같은 이름을 쓴다. quarterly·halfyear는 환급 챌린지 플랜(3·6개월)이다
+// 구독 플랜 — 페이월 카드·스토어 상품·계측 속성이 같은 이름을 쓴다. quarterly·halfyear는 옛 환급 챌린지 플랜(3·6개월), pass는 100일 이용권이다
 export const subscriptionPlanSchema = z.enum([
   'monthly',
   'yearly',
   'quarterly',
   'halfyear',
+  // 100일 이용권 — 셸은 이 값을 보내지 않는다. 웹이 패키지 이름으로 알아보고 같은 표에 담으려고 둔다
+  'pass',
 ]);
 
 // 스토어 오퍼링의 패키지 하나 — 셸이 RevenueCat 패키지를 웹이 그릴 수 있는 모양으로 옮긴 것.

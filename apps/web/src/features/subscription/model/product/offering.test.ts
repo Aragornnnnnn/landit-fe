@@ -24,7 +24,7 @@ const yearly = {
   currency: 'KRW',
   period: 'P1Y',
 };
-// 환급 플랜 — 셸은 MONTHLY·ANNUAL만 알아봐 플랜 없이 넘기고, 웹이 주기로 정한다
+// 옛 3·6개월 플랜 — 셸은 MONTHLY·ANNUAL만 알아봐 플랜 없이 넘기고, 웹이 주기로 정한다
 const quarterly = {
   id: '$rc_three_month',
   plan: null,
@@ -38,6 +38,14 @@ const halfyear = {
   price: 59900,
   currency: 'KRW',
   period: 'P6M',
+};
+// 100일 이용권 — 구독이 아니라 주기가 없고, 셸은 플랜을 모른 채 넘긴다. 웹이 이름으로 알아본다
+const pass = {
+  id: 'pass_100d',
+  plan: null,
+  price: 50000,
+  currency: 'KRW',
+  period: null,
 };
 // 예약 식별자는 오퍼링당 하나뿐이라 둘째 연간 상품은 커스텀 이름을 쓴다 — 셸은 플랜을 모른 채 넘긴다
 const yearlyDiscount = {
@@ -55,7 +63,7 @@ describe('toPlanPackages', () => {
     });
   });
 
-  it('환급 플랜의 3개월·6개월 주기도 플랜으로 정한다 — 셸은 예약 식별자 밖이라 플랜을 모른 채 넘긴다', () => {
+  it('옛 환급 플랜의 3개월·6개월 주기도 플랜으로 정한다 — 셸은 예약 식별자 밖이라 플랜을 모른 채 넘긴다', () => {
     expect(toPlanPackages([quarterly, halfyear])).toEqual({
       quarterly: {
         packageId: '$rc_three_month',
@@ -123,6 +131,36 @@ describe('toPlanPackages', () => {
     expect(toPlanPackages([yearly, duplicate]).yearly?.packageId).toBe(
       '$rc_annual',
     );
+  });
+});
+
+describe('toPlanPackages — 100일 이용권', () => {
+  it('주기가 없어도 이름으로 이용권 자리에 담는다', () => {
+    expect(toPlanPackages([monthly, yearly, pass]).pass).toEqual({
+      packageId: 'pass_100d',
+      price: 50000,
+      currency: 'KRW',
+    });
+  });
+
+  it('가격이 다른 이용권이 여럿이면 오퍼링 맨 앞의 것을 판다 — 가격 실험은 오퍼링 순서로 정한다', () => {
+    const cheaper = { ...pass, id: 'pass_100d_test', price: 30000 };
+
+    expect(toPlanPackages([cheaper, pass]).pass?.packageId).toBe(
+      'pass_100d_test',
+    );
+  });
+
+  it('이용권은 못 알아본 패키지로 보고되지 않는다', () => {
+    expect(unclassifiablePackages([pass])).toEqual([]);
+  });
+
+  it('원화 가격을 화면에 넘긴다', () => {
+    expect(toKrwPrices(toPlanPackages([pass])).pass).toBe(50000);
+  });
+
+  it('오퍼링을 못 받았으면 대시보드의 이용권 패키지 이름으로 결제한다', () => {
+    expect(packageIdFor('pass', {})).toBe('pass_100d');
   });
 });
 
@@ -195,7 +233,7 @@ describe('toKrwPrices', () => {
     });
   });
 
-  it('환급 플랜 가격도 넘긴다', () => {
+  it('옛 3·6개월 플랜 가격도 넘긴다', () => {
     const packages = toPlanPackages([quarterly, halfyear]);
 
     expect(toKrwPrices(packages)).toMatchObject({
@@ -213,7 +251,7 @@ describe('packageIdFor', () => {
     expect(packageIdFor('monthly', packages)).toBe('$rc_monthly');
   });
 
-  it('환급 플랜의 표준 identifier는 3개월·6개월 예약 식별자다', () => {
+  it('옛 3·6개월 플랜의 표준 identifier는 3개월·6개월 예약 식별자다', () => {
     expect(packageIdFor('quarterly', {})).toBe('$rc_three_month');
     expect(packageIdFor('halfyear', {})).toBe('$rc_six_month');
   });

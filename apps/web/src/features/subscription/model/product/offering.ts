@@ -21,6 +21,14 @@ const PLAN_BY_PERIOD: Partial<Record<string, SubscriptionPlan>> = {
   P1Y: 'yearly',
 };
 
+// 100일 이용권 패키지를 가리는 이름 규칙. 이용권은 구독이 아니라 주기가 없어 이름으로만 알아볼 수 있다.
+// 가격이 다른 이용권(가격 실험)도 같은 규칙을 따르고, 오퍼링에 놓인 맨 앞의 것을 판다
+const PASS_PREFIX = 'pass';
+
+/** 이름으로 본 100일 이용권 */
+const passPlan = (pkg: OfferingPackage): SubscriptionPlan | undefined =>
+  pkg.id.startsWith(PASS_PREFIX) ? 'pass' : undefined;
+
 /** 셸이 예약 식별자($rc_monthly·$rc_annual)로 알아본 플랜 */
 const reservedPlan = (pkg: OfferingPackage) => pkg.plan ?? undefined;
 
@@ -31,7 +39,7 @@ const periodPlan = (pkg: OfferingPackage) =>
 /**
  * 셸 패키지 목록을 플랜별 패키지로 접는다.
  *
- * 예약 식별자가 먼저 자리를 잡고 남은 자리만 구독 주기로 채운다. 커스텀 이름 패키지가
+ * 예약 식별자가 먼저 자리를 잡고, 이용권은 이름으로, 남은 자리만 구독 주기로 채운다. 커스텀 이름 패키지가
  * 오퍼링 앞쪽에 놓여도 정가 자리를 가져가지 못하게 하려는 것이다 — 그 자리를 뺏기면
  * 화면이 그 가격을 그리고 그 패키지로 결제한다.
  *
@@ -54,9 +62,12 @@ export const toPlanPackages = (packages: OfferingPackage[]): PlanPackages => {
     }
   };
   fill(reservedPlan);
+  fill(passPlan);
   // 예약 식별자로 이미 자리를 잡은 패키지는 주기 판정에서 뺀다 — 셸이 말한 플랜과 주기가
   // 어긋난 패키지(월간 칸에 1년 상품)가 두 자리를 다 차지하면 두 플랜이 같은 상품을 결제한다
-  fill((pkg) => (reservedPlan(pkg) ? undefined : periodPlan(pkg)));
+  fill((pkg) =>
+    reservedPlan(pkg) || passPlan(pkg) ? undefined : periodPlan(pkg),
+  );
   return map;
 };
 
@@ -67,7 +78,9 @@ export const toPlanPackages = (packages: OfferingPackage[]): PlanPackages => {
  * 아무 흔적도 남지 않는다. 스토어 설정이 어긋났다는 신호라 부르는 쪽이 보고한다.
  */
 export const unclassifiablePackages = (packages: OfferingPackage[]) =>
-  packages.filter((pkg) => !reservedPlan(pkg) && !periodPlan(pkg));
+  packages.filter(
+    (pkg) => !reservedPlan(pkg) && !passPlan(pkg) && !periodPlan(pkg),
+  );
 
 /** 현재 오퍼링을 정가·할인으로 가른 것 — 페이월은 정가를, 이탈 할인 시트는 할인을 쓴다 */
 export interface Offering {
@@ -112,16 +125,22 @@ export const toKrwPrices = (
   yearly: krwPackage(packages.yearly)?.price,
   quarterly: krwPackage(packages.quarterly)?.price,
   halfyear: krwPackage(packages.halfyear)?.price,
+  pass: krwPackage(packages.pass)?.price,
 });
 
 /** 오퍼링을 못 받았을 때 결제에 쓸 RevenueCat 표준 패키지 identifier — 셸이 identifier로 패키지를 찾는다.
- * 환급 플랜도 대시보드 오퍼링에 이 예약 식별자로 넣어야 한다 */
+ * 옛 3·6개월 플랜은 예약 식별자, 이용권은 커스텀 이름이다 */
 export const DEFAULT_PACKAGE_IDS: Record<SubscriptionPlan, string> = {
   monthly: '$rc_monthly',
   yearly: '$rc_annual',
   quarterly: '$rc_three_month',
   halfyear: '$rc_six_month',
+  // 대시보드에서 이용권 패키지에 붙이는 이름. 가격을 이름에 넣지 않아, 가격이 다른 상품으로 바꿔 끼워도 이름은 그대로다
+  pass: 'pass_100d',
 };
+
+/** 오퍼링을 못 받았을 때 화면이 쓰는 이용권 가격 — 구버전 셸은 이용권 패키지를 웹에 넘기지 않아 늘 이 값으로 그린다. 실제로 파는 가격과 같아야 한다 */
+export const PASS_FALLBACK_PRICE = 50_000;
 
 /** 결제에 쓸 패키지 id — 플랜별 패키지에 있으면 그 패키지, 없으면 표준 identifier */
 export const packageIdFor = (plan: SubscriptionPlan, packages: PlanPackages) =>

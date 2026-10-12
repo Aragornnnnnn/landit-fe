@@ -4,7 +4,7 @@ import type { SubscriptionPlan } from '@landit/analytics';
 
 import { formatWon } from '../../lib/won';
 
-/** 지금 플랜 — 월간·연간. 환급 챌린지 플랜(3·6개월)은 페이월이 따로 그린다 */
+/** 지금 플랜 — 월간·연간. 환급 챌린지의 100일 이용권은 페이월이 따로 그린다 */
 export type RegularPlan = Extract<SubscriptionPlan, 'monthly' | 'yearly'>;
 
 /** 카드 한 장에 그릴 값 전부. 큰 숫자는 실제 청구액이다 — 월 환산가가 더 눈에 띄면 스토어 심사 3.1.2(c)에서 반려된다 */
@@ -35,6 +35,7 @@ export const PLAN_TITLE: Record<SubscriptionPlan, string> = {
   yearly: '연간',
   quarterly: '3개월',
   halfyear: '6개월',
+  pass: '100일 이용권',
 };
 
 // 스토어 등록값 — 오퍼링을 못 받았을 때 페이월이 쓰는 폴백. 월간은 할인 없는 기본가라 비교선도 배지도 없다.
@@ -95,13 +96,18 @@ export const buildPaywallPlans = (
 export const YEARLY_LIST_PRICE = MONTHLY_PRICE * 12;
 
 // 스토어 상품 식별자 → 플랜 (docs/subscription.md 「상품과 가격」).
-// 연간은 정가와 이탈 할인 둘이라 같은 플랜을 가리키는 id가 두 개다. 3·6개월은 환급 챌린지 상품이다
+// 연간은 정가와 이탈 할인 둘이라 같은 플랜을 가리키는 id가 두 개다. 3·6개월은 옛 환급 챌린지 상품이다
 const PRODUCT_PLANS: Record<string, SubscriptionPlan> = {
   'com.saynow.app.premium.monthly': 'monthly',
   'com.saynow.app.premium.yearly': 'yearly',
   'com.saynow.app.premium.yearly.discount': 'yearly',
   'com.saynow.app.premium.quarterly': 'quarterly',
   'com.saynow.app.premium.halfyear': 'halfyear',
+  // 100일 이용권 — 기간은 같고 가격만 다르다(가격 실험용)
+  'com.saynow.app.pass.30000': 'pass',
+  'com.saynow.app.pass.50000': 'pass',
+  'com.saynow.app.pass.100000': 'pass',
+  'com.saynow.app.pass.200000': 'pass',
 };
 
 /**
