@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 
 import { refreshRewardAfterPurchase } from '@/features/reward/model/refresh-reward';
 import { usePaywallDismiss } from '@/features/subscription/model/exit-promo/usePaywallDismiss';
-import { REWARD_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
+import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
 import { toKrwPrices } from '@/features/subscription/model/product/offering';
 import {
   buildPaywallPlans,
@@ -47,19 +47,22 @@ import { ReviewSection } from './ReviewSection';
 interface PaywallScreenProps {
   /** 결제·복원이 끝난 뒤 돌아갈 내부 경로. 학습 진입에서 막혀 왔을 때만 있고, 없으면 홈으로 간다 */
   returnTo?: string;
-  /** 환급 챌린지를 켤지 — 기본은 배포 스위치(NEXT_PUBLIC_REFUND_CHALLENGE). 테스트와 미리보기만 넘긴다 */
+  /** 환급 챌린지를 켤지 — 기본은 환급이 열린 환경인지(useRewardChallengeLive). 테스트와 미리보기만 넘긴다 */
   rewardChallenge?: boolean;
 }
 
 export const PaywallScreen = ({
   returnTo,
-  rewardChallenge = REWARD_CHALLENGE_ENABLED,
+  rewardChallenge: forcedRewardChallenge,
 }: PaywallScreenProps) => {
   const router = useRouter();
-  // 스위치에 따라 사는 상품이 다르다 — 켜지면 100일 이용권 하나, 꺼지면 월간·연간 가운데 고른다(처음엔 연간)
-  const [selectedId, setSelectedId] = useState<SubscriptionPlan>(
-    rewardChallenge ? REWARD_PLAN_ID : DEFAULT_PLAN_ID,
-  );
+  const rewardLive = useRewardChallengeLive();
+  const rewardChallenge = forcedRewardChallenge ?? rewardLive;
+  // 스위치에 따라 사는 상품이 다르다 — 켜지면 100일 이용권 하나, 꺼지면 월간·연간 가운데 고른다(처음엔 연간).
+  // 셸 컨텍스트는 첫 렌더 뒤에 읽혀서 기본값을 상태에 굳히지 않고 매번 계산한다
+  const [pickedId, setSelectedId] = useState<SubscriptionPlan | null>(null);
+  const selectedId =
+    pickedId ?? (rewardChallenge ? REWARD_PLAN_ID : DEFAULT_PLAN_ID);
   // 맨 위 줄이 스크롤로 올라가면 닫기만 따로 띄운다
   const [scrolled, setScrolled] = useState(false);
   const plansRef = useRef<HTMLDivElement>(null);

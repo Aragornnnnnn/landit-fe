@@ -12,7 +12,12 @@ const mocks = vi.hoisted(() => ({
   setUserProperties: vi.fn(),
   asked: [] as boolean[],
   query: { reward: null as RewardView | null, loaded: false },
+  live: true,
 }));
+vi.mock(
+  '@/features/subscription/model/paywall-gate/useRewardChallengeLive',
+  () => ({ useRewardChallengeLive: () => mocks.live }),
+);
 vi.mock('@/shared/analytics', () => ({
   setUserProperties: mocks.setUserProperties,
 }));
@@ -34,6 +39,7 @@ const signIn = () =>
 beforeEach(() => {
   mocks.asked = [];
   mocks.query = { reward: null, loaded: false };
+  mocks.live = true;
 });
 afterEach(() => {
   cleanup();
@@ -45,7 +51,7 @@ describe('RewardPropertiesSync', () => {
     signIn();
     mocks.query = { reward: rewardView(), loaded: true };
 
-    render(<RewardPropertiesSync enabled />);
+    render(<RewardPropertiesSync />);
 
     expect(mocks.setUserProperties).toHaveBeenCalledWith({
       reward_state: 'active',
@@ -55,10 +61,10 @@ describe('RewardPropertiesSync', () => {
   it('다시 받아 금액만 바뀌면 다시 올리지 않는다', () => {
     signIn();
     mocks.query = { reward: rewardView(), loaded: true };
-    const { rerender } = render(<RewardPropertiesSync enabled />);
+    const { rerender } = render(<RewardPropertiesSync />);
 
     mocks.query = { reward: rewardView({ todayAchieved: true }), loaded: true };
-    rerender(<RewardPropertiesSync enabled />);
+    rerender(<RewardPropertiesSync />);
 
     expect(mocks.setUserProperties).toHaveBeenCalledTimes(1);
   });
@@ -67,7 +73,7 @@ describe('RewardPropertiesSync', () => {
     signIn();
     mocks.query = { reward: null, loaded: true };
 
-    render(<RewardPropertiesSync enabled />);
+    render(<RewardPropertiesSync />);
 
     expect(mocks.setUserProperties).toHaveBeenCalledWith({
       reward_state: 'none',
@@ -77,15 +83,16 @@ describe('RewardPropertiesSync', () => {
   it('답을 받기 전에는 올리지 않는다 — 참여자가 잠깐 비참여자로 찍히면 안 된다', () => {
     signIn();
 
-    render(<RewardPropertiesSync enabled />);
+    render(<RewardPropertiesSync />);
 
     expect(mocks.setUserProperties).not.toHaveBeenCalled();
   });
 
   it('환급이 열리기 전에는 묻지도 올리지도 않는다', () => {
     signIn();
+    mocks.live = false;
 
-    render(<RewardPropertiesSync enabled={false} />);
+    render(<RewardPropertiesSync />);
 
     expect(mocks.asked).toEqual([false]);
     expect(mocks.setUserProperties).not.toHaveBeenCalled();
@@ -94,7 +101,7 @@ describe('RewardPropertiesSync', () => {
   it('로그인 전에는 올리지 않는다', () => {
     mocks.query = { reward: null, loaded: true };
 
-    render(<RewardPropertiesSync enabled />);
+    render(<RewardPropertiesSync />);
 
     expect(mocks.setUserProperties).not.toHaveBeenCalled();
   });

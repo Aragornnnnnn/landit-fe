@@ -4,8 +4,8 @@
 // 환급은 구독과 따로 묻는다 — 구독이 끝난 사람에게도 돌려받을 금액이 남아 있을 수 있다
 import { useRewardQuery } from '@/features/reward/model/useRewardQuery';
 import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
-import { REWARD_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
 import { usePaymentLive } from '@/features/subscription/model/paywall-gate/usePaymentLive';
+import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
 
 import { rewardAudienceOf } from './reward-audience';
 
@@ -14,9 +14,10 @@ export const useMyReward = () => {
   const { subscription, isError: subscriptionFailed } = useSubscriptionQuery({
     enabled: paymentLive,
   });
-  const query = useRewardQuery({ enabled: REWARD_CHALLENGE_ENABLED });
+  const launched = useRewardChallengeLive();
+  const query = useRewardQuery({ enabled: launched });
   const audience = rewardAudienceOf({
-    launched: REWARD_CHALLENGE_ENABLED,
+    launched,
     paymentLive,
     premium: subscription?.premium,
     subscriptionFailed,
