@@ -5,7 +5,11 @@ import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
 
 import type { RewardView } from '@/features/reward/api/reward';
-import { rewardHeroOf } from '@/features/reward/model/reward-status';
+import {
+  earnedTodayWonOf,
+  rewardHeroOf,
+  todayLeftWonOf,
+} from '@/features/reward/model/reward-status';
 import { useMidnightUrgent } from '@/features/reward/model/useMidnightUrgent';
 import { CountUpWon } from '@/features/reward/ui/common/CountUpWon';
 import { track } from '@/shared/analytics';
@@ -19,12 +23,8 @@ import { RewardPot } from './RewardPot';
 
 export const RewardHero = ({ reward }: { reward: RewardView }) => {
   const { label, amountWon, title, guide } = rewardHeroOf(reward);
-  const earnedToday = (reward.today?.earnedWon ?? 0) > 0;
-  // 오늘 받을 몫 — 쌓는 중인데 오늘의 시나리오가 아직일 때만 걸려 있다
-  const todayLeftWon =
-    reward.state === 'ACTIVE' && !earnedToday
-      ? (reward.today?.maximumWon ?? reward.todayMaximumWon)
-      : 0;
+  const earnedToday = earnedTodayWonOf(reward) > 0;
+  const todayLeftWon = todayLeftWonOf(reward);
   const urgent = useMidnightUrgent(todayLeftWon > 0);
   const stage = potStageOf(reward, { urgent });
 
@@ -46,7 +46,7 @@ export const RewardHero = ({ reward }: { reward: RewardView }) => {
         ) : (
           <CountUpWon
             // 오늘 받은 만큼이 방금 더해진 것처럼 오른다 — 오늘이 없으면 움직이지 않는다
-            from={amountWon - (reward.today?.earnedWon ?? 0)}
+            from={amountWon - earnedTodayWonOf(reward)}
             to={amountWon}
           />
         )}

@@ -83,14 +83,26 @@ describe('potStageOf — 오늘이 아직인 날의 표정', () => {
     expect(potStageOf(rewardView(), { urgent: true })).toBe('urgent');
   });
 
-  it('쌓인 게 없는 첫날에도 자정이 가까우면 재촉한다', () => {
-    const view = rewardView({ current: rewardCycle({ balanceWon: 0 }) });
+  it('쌓인 게 없으면 자정이 가까워도, 며칠 쉬었어도 빈 통이다', () => {
+    const view = rewardView({
+      current: rewardCycle({
+        balanceWon: 0,
+        days: [closedRewardDay('2026-10-08'), closedRewardDay('2026-10-09')],
+      }),
+    });
 
-    expect(potStageOf(view, { urgent: true })).toBe('urgent');
+    expect(potStageOf(view, { urgent: true })).toBe('empty');
+    expect(potStageOf(view)).toBe('empty');
+  });
+
+  it('오늘이 오지 않았으면 자정이 가까워도 재촉하지 않는다', () => {
+    const view = rewardView({ today: null });
+
+    expect(potStageOf(view, { urgent: true })).toBe('kept');
   });
 
   it('이틀 넘게 쉬고 있으면 시무룩하다', () => {
-    expect(potStageOf(restedTwoDays)).toBe('missed');
+    expect(potStageOf(restedTwoDays)).toBe('rested');
   });
 
   it('하루 쉰 것은 아직 잠자는 그림이다', () => {
@@ -113,6 +125,6 @@ describe('potStageOf — 오늘이 아직인 날의 표정', () => {
 
   it('재촉과 시무룩은 차분한 빛이다', () => {
     expect(glowOf('urgent')).toBe('calm');
-    expect(glowOf('missed')).toBe('calm');
+    expect(glowOf('rested')).toBe('calm');
   });
 });

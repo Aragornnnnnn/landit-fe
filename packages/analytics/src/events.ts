@@ -151,7 +151,7 @@ export const EVENTS = {
   REWARD_VIEWED: 'Reward Viewed',
   REWARD_ENTRY_TAPPED: 'Reward Entry Tapped',
   REWARD_RULES_OPENED: 'Reward Rules Opened',
-  // 학습을 끝내고 홈에 돌아왔을 때 헤더 알약으로 동전이 날아드는 연출
+  // 오늘의 시나리오를 끝내고 홈에 돌아왔을 때 헤더 알약으로 동전이 날아드는 연출
   REWARD_COIN_SHOWER_VIEWED: 'Reward Coin Shower Viewed',
   REWARD_COIN_SHOWER_SKIPPED: 'Reward Coin Shower Skipped',
   // 환급 상품을 산 직후, 환영과 알람 사이의 환급 안내

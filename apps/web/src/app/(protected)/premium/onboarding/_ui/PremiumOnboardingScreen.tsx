@@ -124,7 +124,7 @@ export const PremiumOnboardingScreen = ({
     if (mayShowAlarmSetup) preloadIntroPreview();
   }, [mayShowAlarmSetup]);
 
-  // 방금 산 상품이 환급 상품이면 알람보다 먼저 환급 안내를 보여 준다 — 쉬면 0원이 된다는 걸 알고 알람을 맞추게.
+  // 방금 산 상품이 환급 상품이면 알람보다 먼저 환급 안내를 보여 준다 — 매일 해야 쌓인다는 걸 알고 알람을 맞추게.
   // 결제 직후라 환급을 아직 받는 중일 수 있어, 「다음」을 누른 순간의 값을 기다려서 본다
   const [rewardCopy, setRewardCopy] = useState<RewardGuideCopy | null>(null);
   const showGuide = (copy: RewardGuideCopy) => {

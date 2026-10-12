@@ -21,12 +21,22 @@ export const balanceOf = (view: RewardView) => view.current?.balanceWon ?? null;
 
 // 도는 회차의 하루 몫 — 다 채우면 받는 금액을 대상 날짜 수로 나눈 값. 도는 회차가 없으면 null
 export const dailyWonOf = (view: RewardView) =>
-  view.current
+  view.current && view.current.eligibleDays > 0
     ? Math.floor(view.current.maximumWon / view.current.eligibleDays)
     : null;
 
+// 오늘 받은 금액 — 쌓는 중이 아니면(오늘이 오지 않으면) 0
+export const earnedTodayWonOf = (view: RewardView) =>
+  view.today?.earnedWon ?? 0;
+
+// 오늘 아직 받을 수 있는 금액 — 쌓는 중인데 오늘의 시나리오가 아직일 때만 있다. 그림·시계·문구가 이 한 판정을 같이 본다
+export const todayLeftWonOf = (view: RewardView) =>
+  view.state === 'ACTIVE' && view.today != null && view.today.earnedWon === 0
+    ? (view.today.maximumWon ?? view.todayMaximumWon)
+    : 0;
+
 // 가장 최근에 마감된 날부터 거슬러, 오늘의 시나리오를 하지 않고 넘긴 날이 며칠 이어졌는지. 오늘은 아직 마감 전이라 세지 않는다
-export const missedDaysOf = (view: RewardView) => {
+export const restDaysOf = (view: RewardView) => {
   const closed = (view.current?.days ?? [])
     .filter((day) => day.closed)
     .sort((a, b) => b.date.localeCompare(a.date));
@@ -51,9 +61,9 @@ const todayGuideOf = (view: RewardView) => {
   if ((view.today?.earnedWon ?? 0) > 0)
     return `오늘 ${formatWon(view.today?.earnedWon ?? 0)}을 받았어요`;
   const invite = `오늘의 시나리오를 하면 ${formatWon(view.today?.maximumWon ?? view.todayMaximumWon)}을 받아요`;
-  const missed = missedDaysOf(view);
-  return missed >= LONG_REST_DAYS
-    ? `${missed}일째 쉬고 있어요\n${invite}`
+  const rested = restDaysOf(view);
+  return rested >= LONG_REST_DAYS
+    ? `${rested}일째 쉬고 있어요\n${invite}`
     : invite;
 };
 

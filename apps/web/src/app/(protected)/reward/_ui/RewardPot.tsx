@@ -9,7 +9,7 @@ import { Coin } from '@/features/reward/ui/common/Coin';
 
 import potEmpty from '../_assets/pot-empty.webp';
 import potKept from '../_assets/pot-kept.webp';
-import potMissed from '../_assets/pot-missed.webp';
+import potRested from '../_assets/pot-rested.webp';
 import potUrgent from '../_assets/pot-urgent.webp';
 import type { PotStage } from '../_model/pot-stage';
 
@@ -18,7 +18,7 @@ const ART: Record<PotStage, StaticImageData | string> = {
   // 홈의 램프가 쓰는 잠자는 래디와 같은 그림이다
   waiting: '/images/character/landy-lamp-sleeping.webp',
   urgent: potUrgent,
-  missed: potMissed,
+  rested: potRested,
   kept: potKept,
   complete: potComplete,
 };

@@ -317,7 +317,7 @@ OS 권한 팝업의 답 자체는 따로 찍지 않는다 — 위 두 step의 �
 | Reward Viewed              | status(intro\|kept\|idle\|at_risk\|reset\|ended\|pending\|review), balance_won?, pending_refund_won? | 환급 화면에 볼 것이 그려진 순간 한 번. 보는 중에 status가 바뀌면 다시 찍는다            |
 | Reward Entry Tapped        | source(header\|me)                                                                                   | 탭 헤더의 환급 알약(참여자의 금액 알약·권할 사람의 진입 알약), 내 정보의 환급 타일      |
 | Reward Rules Opened        | -                                                                                                    | 환급 화면·환급 소개 헤더의 규칙 안내(ⓘ)를 연 순간. 닫는 건 찍지 않는다                  |
-| Reward Coin Shower Viewed  | gain_won                                                                                             | 학습을 끝내고 홈에 돌아와 동전 연출이 뜬 순간. gain_won은 그사이 늘어난 금액            |
+| Reward Coin Shower Viewed  | gain_won                                                                                             | 오늘의 시나리오를 끝내고 홈에 돌아와 동전 연출이 뜬 순간. gain_won은 그사이 늘어난 금액 |
 | Reward Coin Shower Skipped | gain_won                                                                                             | 연출이 다 돌기 전에 눌러 끝낸 순간                                                      |
 | Reward Guide Viewed        | confirmed                                                                                            | 환급 상품을 산 직후의 환급 안내. 결제 확인이 늦어 금액 없이 보여 줬으면 confirmed=false |
 
@@ -325,7 +325,7 @@ OS 권한 팝업의 답 자체는 따로 찍지 않는다 — 위 두 step의 �
 
 환급 소개의 「100일 환급 챌린지 시작하기」와 기간이 끝난 화면의 「100일 챌린지 다시 시작하기」 카드는 새 이벤트가 아니라 `Paywall Entry Tapped(source: reward)`다. 해지 가격 화면에서 환급 문구를 봤는지는 `Cancel Retention Viewed`의 `reward`로 본다.
 
-내역 줄만 받지 못했을 때의 「다시 시도」는 `Error Retried(screen: reward_history)`다. 내역을 이어 받는 스크롤은 찍지 않는다 — 볼 질문이 없다. 무료 사용자가 오늘의 시나리오를 끝내고 홈에 왔을 때의 동전 연출과 말풍선도 찍지 않는다 — 그 뒤 알약을 눌렀는지(`Reward Entry Tapped`)와 소개에서 페이월로 갔는지로 본다.
+내역 줄만 받지 못했을 때의 「다시 시도」는 `Error Retried(screen: reward_history)`다. 내역을 이어 받는 스크롤은 찍지 않는다 — 볼 질문이 없다. 무료 사용자가 오늘의 시나리오를 끝내고 홈에 왔을 때의 동전 연출과 말풍선도 찍지 않는다 — 지금 계약으로는 연출을 본 사람과 아닌 사람을 가를 수 없다(`Reward Entry Tapped`와 `Reward Viewed(status: intro)`에 그 속성이 없다). 연출의 효과를 재려면 속성을 더해야 한다.
 
 ### 위젯 설치 안내
 

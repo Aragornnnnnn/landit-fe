@@ -134,7 +134,7 @@ const signIn = (role: 'USER' | 'ADMIN') =>
     role,
   });
 
-// 3개월 환급 상품을 막 산 사람의 환급
+// 100일 이용권을 막 산 사람의 환급
 const bought = () =>
   rewardView({
     current: rewardCycle({

@@ -10,6 +10,12 @@ import {
 
 import { useEarnShowerHold } from './useEarnShowerHold';
 
+const missed = vi.hoisted(() => ({ on: false, reduced: false }));
+vi.mock('@/features/reward/model/useMissedEarn', () => ({
+  useMissedEarn: () => missed.on,
+}));
+vi.mock('motion/react', () => ({ useReducedMotion: () => missed.reduced }));
+
 const mocks = vi.hoisted(() => ({
   my: { reward: null as unknown, fetching: false },
   gain: null as { fromWon: number; toWon: number } | null,
@@ -25,6 +31,8 @@ const GAIN = { fromWon: 2015, toWon: 2347 };
 beforeEach(() => {
   mocks.my = { reward: rewardView(), fetching: false };
   mocks.gain = null;
+  missed.on = false;
+  missed.reduced = false;
 });
 
 describe('useEarnShowerHold', () => {
@@ -49,6 +57,21 @@ describe('useEarnShowerHold', () => {
 
   it('환급과 상관없는 사람은 받는 중이어도 붙잡지 않는다', () => {
     mocks.my = { reward: null, fetching: true };
+
+    expect(renderHook(() => useEarnShowerHold()).result.current).toBe(false);
+  });
+
+  it('환급을 권할 사람이 오늘의 시나리오를 끝내고 왔으면 그 연출 동안 붙잡는다', () => {
+    mocks.my = { reward: null, fetching: false, invited: true } as never;
+    missed.on = true;
+
+    expect(renderHook(() => useEarnShowerHold()).result.current).toBe(true);
+  });
+
+  it('동작 줄이기를 켰으면 그 연출을 틀지 않으니 붙잡지 않는다', () => {
+    mocks.my = { reward: null, fetching: false, invited: true } as never;
+    missed.on = true;
+    missed.reduced = true;
 
     expect(renderHook(() => useEarnShowerHold()).result.current).toBe(false);
   });

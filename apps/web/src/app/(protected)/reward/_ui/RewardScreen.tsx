@@ -33,8 +33,12 @@ export const RewardScreen = () => {
   const view = rewardScreenViewOf(my);
   const intro = view.kind === 'intro';
   // 소개 화면의 글자는 지금 파는 챌린지의 값과, 오늘의 시나리오를 이미 했는지로 정한다 — 무료 사용자는 환급 응답에 오늘이 없어 오늘의 시나리오 응답으로 본다
-  const offer = useRewardOffer();
-  const { daily } = useDailyScenarioQuery(undefined, { enabled: intro });
+  const offer = useRewardOffer({ enabled: intro });
+  const { daily, isLoading: dailyLoading } = useDailyScenarioQuery(undefined, {
+    enabled: intro,
+  });
+  // 오늘 대화를 했는지 알기 전에는 소개를 그리지 않는다 — 대화 전 판이 비쳤다가 대화 후 판으로 바뀌면 그림과 금액이 다시 시작한다
+  const introReady = intro && !dailyLoading;
   const talkedToday = daily?.scenario?.completed === true;
   const introCopy = rewardIntroCopyOf(offer, talkedToday);
 
@@ -42,7 +46,7 @@ export const RewardScreen = () => {
   const glow =
     view.kind === 'record'
       ? glowOf(potStageOf(view.reward))
-      : intro && talkedToday
+      : introReady && talkedToday
         ? 'gold'
         : null;
 
@@ -67,22 +71,24 @@ export const RewardScreen = () => {
       trailing={
         view.kind === 'record' ? (
           <RewardRulesButton dailyWon={dailyWonOf(view.reward)} />
-        ) : intro ? (
+        ) : introReady ? (
           <RewardRulesButton dailyWon={offer.dailyWon} />
         ) : undefined
       }
-      fadeAboveFooter={intro}
+      fadeAboveFooter={introReady}
       glow={glow}
       footer={
-        intro ? (
+        introReady ? (
           <RewardStartButton label={introCopy.cta} />
         ) : view.kind === 'record' ? (
           <RefundApplyButton reward={view.reward} />
         ) : null
       }
     >
-      {view.kind === 'loading' && <RewardSkeleton />}
-      {intro && (
+      {(view.kind === 'loading' || (intro && !introReady)) && (
+        <RewardSkeleton />
+      )}
+      {introReady && (
         <RewardIntro
           copy={introCopy}
           dailyWon={offer.dailyWon}

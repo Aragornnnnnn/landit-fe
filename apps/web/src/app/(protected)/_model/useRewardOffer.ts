@@ -9,8 +9,13 @@ import {
 } from '@/features/subscription/model/product/offering';
 import { useOffering } from '@/features/subscription/model/product/useOffering';
 
-export const useRewardOffer = () => {
-  const offering = useOffering();
+/**
+ * @param enabled 꺼 두면 셸에 가격을 묻지 않고 등록값으로 말한다 — 환급을 권할 사람이 아니면 물을 까닭이 없다
+ */
+export const useRewardOffer = ({
+  enabled = true,
+}: { enabled?: boolean } = {}) => {
+  const offering = useOffering({ enabled });
   // 가격을 못 받았으면(브라우저·구버전 셸) 등록값으로 말한다
   return rewardOfferOf(
     toKrwPrices(offering.regular).pass ?? PASS_FALLBACK_PRICE,

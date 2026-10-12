@@ -28,13 +28,16 @@ const reportUnclassifiable = (packages: OfferingPackage[]) => {
 /**
  * 페이월이 뜰 때 셸에 오퍼링을 한 번 묻는다.
  *
+ * @param enabled 꺼 두면 묻지 않는다 — 가격을 쓸 사람에게만 왕복을 건다
  * @returns 정가·할인으로 가른 오퍼링. 브라우저·구버전 셸이거나 아직 못 받았으면 둘 다 빈 객체
  */
-export const useOffering = (): Offering => {
+export const useOffering = ({
+  enabled = true,
+}: { enabled?: boolean } = {}): Offering => {
   const [offering, setOffering] = useState<Offering>(EMPTY);
 
   useEffect(() => {
-    if (resolvePurchaseSupport() !== 'ready') return;
+    if (!enabled || resolvePurchaseSupport() !== 'ready') return;
     const controller = new AbortController();
     void fetchOfferingsViaBridge(controller.signal).then((reply) => {
       if (!reply) return;
@@ -43,7 +46,7 @@ export const useOffering = (): Offering => {
     });
     // 화면이 사라지면 끊는다 — 끊긴 왕복은 null로 끝나 setState가 일어나지 않는다
     return () => controller.abort();
-  }, []);
+  }, [enabled]);
 
   return offering;
 };

@@ -5,10 +5,11 @@ import type { RewardView } from '../api/reward';
 import {
   badgeAmountOf,
   balanceOf,
-  missedDaysOf,
   participantOf,
+  restDaysOf,
   rewardBadgeOf,
   rewardHeroOf,
+  todayLeftWonOf,
 } from './reward-status';
 import {
   closedRewardDay,
@@ -228,7 +229,7 @@ describe('badgeAmountOf', () => {
   });
 });
 
-describe('missedDaysOf', () => {
+describe('restDaysOf', () => {
   const withDays = (...days: [string, boolean][]) =>
     rewardView({
       current: rewardCycle({
@@ -244,24 +245,24 @@ describe('missedDaysOf', () => {
       ['2026-10-09', false],
     );
 
-    expect(missedDaysOf(view)).toBe(2);
+    expect(restDaysOf(view)).toBe(2);
   });
 
   it('어제 했으면 0이다', () => {
     expect(
-      missedDaysOf(withDays(['2026-10-08', false], ['2026-10-09', true])),
+      restDaysOf(withDays(['2026-10-08', false], ['2026-10-09', true])),
     ).toBe(0);
   });
 
   it('날짜가 뒤섞여 와도 날짜순으로 센다', () => {
     expect(
-      missedDaysOf(withDays(['2026-10-09', false], ['2026-10-08', true])),
+      restDaysOf(withDays(['2026-10-09', false], ['2026-10-08', true])),
     ).toBe(1);
   });
 
   it('지난 날이 없거나 도는 회차가 없으면 0이다', () => {
-    expect(missedDaysOf(rewardView())).toBe(0);
-    expect(missedDaysOf(endedRewardView(31_920))).toBe(0);
+    expect(restDaysOf(rewardView())).toBe(0);
+    expect(restDaysOf(endedRewardView(31_920))).toBe(0);
   });
 
   it('며칠째 쉬고 있으면 안내가 그 날수를 먼저 말한다', () => {
@@ -270,5 +271,20 @@ describe('missedDaysOf', () => {
     expect(rewardHeroOf(view).guide).toBe(
       '2일째 쉬고 있어요\n오늘의 시나리오를 하면 500원을 받아요',
     );
+  });
+});
+
+describe('todayLeftWonOf', () => {
+  it('쌓는 중인데 오늘의 시나리오가 아직이면 오늘 몫이다', () => {
+    expect(todayLeftWonOf(rewardView({ todayMaximumWon: 500 }))).toBe(500);
+  });
+
+  it('오늘 몫을 받았으면 0이다', () => {
+    expect(todayLeftWonOf(rewardView({ today: earnedRewardToday() }))).toBe(0);
+  });
+
+  it('쌓는 중이 아니거나 오늘이 오지 않았으면 0이다', () => {
+    expect(todayLeftWonOf(endedRewardView(31_920))).toBe(0);
+    expect(todayLeftWonOf(rewardView({ today: null }))).toBe(0);
   });
 });

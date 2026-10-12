@@ -16,7 +16,7 @@ import { useRewardOffer } from './useRewardOffer';
  * @param invited 환급을 권할 사람인가 — 그 밖의 사람에게는 아무것도 하지 않는다
  */
 export const useMissedEarnInvite = (invited: boolean) => {
-  const { dailyWon } = useRewardOffer();
+  const { dailyWon } = useRewardOffer({ enabled: invited });
   const pending = useMissedEarn() && invited;
   const reduced = useReducedMotion();
   // 동전이 닿은 뒤로 이 방문 동안 알약이 금액을 말한다
@@ -29,8 +29,18 @@ export const useMissedEarnInvite = (invited: boolean) => {
   const pill =
     entry && (pending || bubble) ? entry.getBoundingClientRect() : null;
 
-  // 헤더가 떠나면 표시를 지운다 — 연출 도중 다른 화면으로 가도 다음에 돌아와 다시 틀지 않는다
-  useEffect(() => clearMissedEarn, []);
+  // 헤더가 떠나면 표시를 지운다 — 연출 도중 다른 화면으로 가도 다음에 돌아와 다시 틀지 않는다.
+  // 붙자마자 떼였다 다시 붙는 경우(개발 모드의 이중 마운트)에는 지우지 않는다 — 그러면 연출이 뜨기도 전에 표시가 사라진다
+  useEffect(() => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      settled = true;
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      if (settled) clearMissedEarn();
+    };
+  }, []);
 
   const land = () => {
     setClaimed(true);
