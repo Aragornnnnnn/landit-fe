@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   decidePaywallGate,
   isPaymentLive,
+  isRewardChallengeLive,
   type PaywallGateInput,
 } from './paywall-gate';
 
@@ -18,6 +19,54 @@ describe('isPaymentLive', () => {
 
   it('브라우저는 잠그지 않는다 — 결제할 수 없는 곳에서 막으면 갈 데가 없다', () => {
     expect(isPaymentLive({ paymentEnabled: true, inApp: false })).toBe(false);
+  });
+});
+
+describe('isRewardChallengeLive', () => {
+  const shell = (platform: 'ios' | 'android', appVersion: string) => ({
+    platform,
+    appVersion,
+    buildNumber: '18',
+    bridgeVersion: 8,
+  });
+
+  it.each(['ios', 'android'] as const)(
+    '스위치가 켜져 있고 환급 상품이 실린 %s 버전이면 환급이 열린다',
+    (platform) => {
+      expect(
+        isRewardChallengeLive({
+          rewardEnabled: true,
+          context: shell(platform, '1.4.0'),
+        }),
+      ).toBe(true);
+    },
+  );
+
+  it.each(['ios', 'android'] as const)(
+    '그보다 낮은 %s 버전에는 열지 않는다 — 심사 전 상품이 기존 사용자에게 보이면 결제가 실패한다',
+    (platform) => {
+      expect(
+        isRewardChallengeLive({
+          rewardEnabled: true,
+          context: shell(platform, '1.3.3'),
+        }),
+      ).toBe(false);
+    },
+  );
+
+  it('브라우저에는 열지 않는다', () => {
+    expect(isRewardChallengeLive({ rewardEnabled: true, context: null })).toBe(
+      false,
+    );
+  });
+
+  it('스위치가 꺼져 있으면 어느 앱에도 열지 않는다', () => {
+    expect(
+      isRewardChallengeLive({
+        rewardEnabled: false,
+        context: shell('ios', '1.4.0'),
+      }),
+    ).toBe(false);
   });
 });
 

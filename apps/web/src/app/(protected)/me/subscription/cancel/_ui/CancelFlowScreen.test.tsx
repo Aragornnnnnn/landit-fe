@@ -24,13 +24,8 @@ const mocks = vi.hoisted(() => ({
   rewardLaunched: true,
 }));
 vi.mock(
-  '@/features/subscription/model/paywall-gate/payment-flag',
-  async (original) => ({
-    ...(await original<object>()),
-    get REWARD_CHALLENGE_ENABLED() {
-      return mocks.rewardLaunched;
-    },
-  }),
+  '@/features/subscription/model/paywall-gate/useRewardChallengeLive',
+  () => ({ useRewardChallengeLive: () => mocks.rewardLaunched }),
 );
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 vi.mock('@/features/reward/model/useRewardQuery', () => ({

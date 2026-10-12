@@ -64,8 +64,11 @@ vi.mock('next/link', () => ({
 // 환급 챌린지는 기본 꺼짐 — 켠 화면은 rewardChallenge로 따로 확인한다
 vi.mock('@/features/subscription/model/paywall-gate/payment-flag', () => ({
   PAYMENT_ENABLED: true,
-  REWARD_CHALLENGE_ENABLED: false,
 }));
+vi.mock(
+  '@/features/subscription/model/paywall-gate/useRewardChallengeLive',
+  () => ({ useRewardChallengeLive: () => false }),
+);
 // 데모 속 캐릭터는 깜빡임·입모양을 WAAPI(element.animate)로 쏘는데 jsdom엔 없다 — 결제 흐름 테스트라 그림은 비운다
 vi.mock('@/features/conversation/ui/character/PartnerCharacter', () => ({
   PartnerCharacter: () => null,

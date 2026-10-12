@@ -20,7 +20,7 @@ import {
 import { rewardOfferOf } from '@/features/reward/model/refund-offer';
 import { preloadRewardGuide } from '@/features/reward/ui/RewardGuide';
 import { subscriptionKeys } from '@/features/subscription/model/my-subscription/keys';
-import { REWARD_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
+import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
 import { PASS_FALLBACK_PRICE } from '@/features/subscription/model/product/offering';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
@@ -90,12 +90,13 @@ export const PremiumOnboardingScreen = ({
   }, [queryClient, userId]);
 
   // 환급 상품을 샀으면 참여자가 된다 — 결제 전에 받아 둔 답으로 환급 안내를 건너뛰지 않게, 환영 연출이 도는 동안 환급과 안내의 그림을 미리 받는다
+  const rewardLive = useRewardChallengeLive();
   useEffect(() => {
-    if (!REWARD_CHALLENGE_ENABLED) return;
+    if (!rewardLive) return;
     refreshRewardAfterPurchase(queryClient);
     void fetchLatestReward(queryClient);
     preloadRewardGuide();
-  }, [queryClient, userId]);
+  }, [queryClient, userId, rewardLive]);
 
   const leave = () => router.replace(returnTo ?? homePath());
 
@@ -138,7 +139,7 @@ export const PremiumOnboardingScreen = ({
     // 미리보기는 고른 케이스대로만 간다 — 「환급 문구로 보기」만 안내를 보여 준다
     if (forced === 'reward') return showGuide(PREVIEW_REWARD_COPY);
     // 환급이 열리기 전에는 묻지 않는다 — 조회 없이 바로 다음 단계로 간다
-    if (forced || !REWARD_CHALLENGE_ENABLED) return void next();
+    if (forced || !rewardLive) return void next();
     setAwaitingReward(true);
     const copy = await settleWithin(
       findRewardCopy(queryClient),
