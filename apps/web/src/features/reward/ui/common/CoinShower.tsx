@@ -55,7 +55,7 @@ const TRAIL = [
   { dx: 44, dy: 52, bend: 70 },
 ];
 
-// 잔동전 하나가 대신하는 금액과 최소 개수 — 대화 하나(약 110원)면 여섯 개, 하루를 다 채우면(약 330원) 열두 개
+// 잔동전 하나가 대신하는 금액과 최소 개수 — 하루 몫(500원)이면 가장 많은 열두 개가 날아간다
 const WON_PER_COIN = 28;
 const MIN_COINS = 4;
 export const coinCountOf = (amountWon: number) =>

@@ -24,13 +24,8 @@ const mocks = vi.hoisted(() => ({
   rewardLaunched: true,
 }));
 vi.mock(
-  '@/features/subscription/model/paywall-gate/payment-flag',
-  async (original) => ({
-    ...(await original<object>()),
-    get REWARD_CHALLENGE_ENABLED() {
-      return mocks.rewardLaunched;
-    },
-  }),
+  '@/features/subscription/model/paywall-gate/useRewardChallengeLive',
+  () => ({ useRewardChallengeLive: () => mocks.rewardLaunched }),
 );
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 vi.mock('@/features/reward/model/useRewardQuery', () => ({
@@ -281,7 +276,7 @@ describe('환급을 쌓는 중인 사람', () => {
     chooseReason('가격이 부담돼요');
 
     expect(
-      screen.getByText('최대 59,900원까지 돌려받는 플랜이에요.'),
+      screen.getByText('최대 50,000원까지 돌려받는 플랜이에요.'),
     ).toBeInTheDocument();
   });
 });

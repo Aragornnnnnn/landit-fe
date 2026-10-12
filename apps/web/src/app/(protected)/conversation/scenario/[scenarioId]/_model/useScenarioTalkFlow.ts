@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 
 import { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { prepareFeedbackSummary } from '@/features/feedback/model/useSessionFeedbackQuery';
@@ -14,15 +14,31 @@ import { prepareFeedbackSummary } from '@/features/feedback/model/useSessionFeed
 import { refreshRewardAfterCompletion } from '@/features/reward/model/refresh-reward';
 // 첫 완료 뒤 홈에서 소감을 묻는다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { markTalkCompleted } from '@/features/satisfaction/model/prompt-record';
+import type { DailyScenarioResponse } from '@/features/scenario/api/daily';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { scenarioKeys } from '@/features/scenario/model/keys';
 // 대화 완료가 스트릭도 늘린다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
 import { track } from '@/shared/analytics';
+import { getCurrentUserId } from '@/shared/auth/auth-store';
 
 import { submitScenarioTalkMessage } from '../_api/scenario-session';
 import { toTalkGauge } from './talk-gauge';
 import { useScenarioTalkSession } from './useScenarioTalkSession';
+
+// 오늘의 시나리오를 처음 끝내는 것인가 — 환급은 그 대화에만 쌓인다. 오늘 것이 무엇인지 받아 둔 적이 없으면(바로 들어온 링크) 아니라고 본다.
+// 캐시를 버리기 전에 물어야 한다 — 버린 뒤에는 끝내기 전의 값이 남아 있다는 보장이 없다
+const isTodaysFirstCompletion = (
+  queryClient: QueryClient,
+  scenario: Scenario,
+) => {
+  const today = queryClient.getQueryData<DailyScenarioResponse>(
+    scenarioKeys.daily(getCurrentUserId(), null),
+  );
+  return (
+    !scenario.completed && today?.scenario?.scenarioId === scenario.scenarioId
+  );
+};
 
 export const useScenarioTalkFlow = (scenario: Scenario) => {
   const preview = scenario.openingPreview;
@@ -52,11 +68,13 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
   // 오늘 열매가 채워진 것도 이 순간이라, 스트릭은 새 값을 미리 받아 둔다 —
   // 버리기만 하면 홈으로 돌아왔을 때 옛 숫자를 먼저 그리고 응답이 온 뒤 번쩍인다.
   const prepareFeedbackAndUnlock = (finishedSessionId: number) => {
+    // 오늘 것을 처음 끝낸 것인지는 시나리오 캐시를 버리기 전에 묻는다
+    const todaysFirst = isTodaysFirstCompletion(queryClient, scenario);
     void prepareFeedbackSummary(queryClient, finishedSessionId);
     void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
     refreshStreakAfterCompletion(queryClient);
     // 환급 참여자는 이 완료로 금액이 쌓인다 — 홈에 돌아왔을 때 새 금액이 서 있도록 미리 받는다
-    refreshRewardAfterCompletion(queryClient, 'SCENARIO');
+    refreshRewardAfterCompletion(queryClient, { todaysFirst });
   };
 
   const engine = useConversationTurns({

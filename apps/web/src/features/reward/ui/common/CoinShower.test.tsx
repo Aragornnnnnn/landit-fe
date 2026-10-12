@@ -22,9 +22,9 @@ afterEach(() => {
 
 describe('coinCountOf', () => {
   it.each([
-    ['표현 하나', 11, 4],
-    ['대화 하나', 111, 6],
-    ['하루를 다 채움', 332, 12],
+    ['아주 적은 금액', 11, 4],
+    ['조금 큰 금액', 111, 6],
+    ['하루 몫', 500, 12],
     ['그보다 많아도', 5000, 12],
   ])('%s(%i원)면 %i개가 날아간다', (_, amountWon, coins) => {
     expect(coinCountOf(amountWon)).toBe(coins);

@@ -6,7 +6,6 @@ import {
   isUrgent,
   msUntilKstMidnight,
   msUntilUrgentChange,
-  shortClockLabel,
 } from './time-left';
 
 describe('msUntilKstMidnight', () => {
@@ -59,15 +58,5 @@ describe('clockLabel', () => {
 
   it('지났으면 0에서 멈춘다', () => {
     expect(clockLabel(-5000)).toBe('00:00:00');
-  });
-});
-
-describe('shortClockLabel', () => {
-  it('초는 빼고 분은 올려 적는다', () => {
-    expect(shortClockLabel(((2 * 60 + 41) * 60 + 54) * 1000)).toBe('2:42');
-  });
-
-  it('한 시간이 안 남으면 0시로 적는다', () => {
-    expect(shortClockLabel(25 * 60_000)).toBe('0:25');
   });
 });

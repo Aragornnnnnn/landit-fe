@@ -10,6 +10,8 @@ interface BackHeaderProps {
   hasShadow?: boolean;
   // 오른쪽 끝에 붙는 동작 — 뒤로가기와 대칭이 되게 호출부가 같은 36px 버튼을 넣는다
   trailing?: ReactNode;
+  // 화면 배경이 헤더 뒤까지 이어지는 화면 — 헤더가 제 바탕을 칠하지 않는다
+  transparent?: boolean;
 }
 
 export const BackHeader = ({
@@ -17,9 +19,10 @@ export const BackHeader = ({
   title,
   hasShadow = false,
   trailing,
+  transparent = false,
 }: BackHeaderProps) => (
   <header
-    className="relative flex shrink-0 items-center bg-background px-4 pt-[max(var(--safe-area-inset-top),16px)] pb-2 transition-shadow duration-200"
+    className={`relative flex shrink-0 items-center px-4 pt-[max(var(--safe-area-inset-top),16px)] pb-2 transition-shadow duration-200 ${transparent ? '' : 'bg-background'}`}
     style={{ boxShadow: hasShadow ? '0 2px 8px rgba(0,0,0,0.06)' : 'none' }}
   >
     <button

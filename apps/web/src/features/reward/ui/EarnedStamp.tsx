@@ -1,45 +1,19 @@
 'use client';
 
-// 대화를 끝낸 순간 — 환급 참여자에게 방금 받은 금액과 오늘 남은 몫을 보여 준다.
-// 순서가 곧 의미다. 동전이 떨어져 닿고, 금액이 올라가고, 오늘 칸들이 선 뒤 방금 끝낸 칸이 찬다
-import { useEffect, useState } from 'react';
+// 시나리오 대화를 끝낸 순간 — 환급 참여자에게 방금 받은 금액을 보여 준다.
+// 순서가 곧 의미다. 동전이 떨어져 닿고, 금액이 올라간다
 import { motion, useReducedMotion } from 'motion/react';
-
-import { EASE_STANDARD } from '@/shared/motion';
 
 import type { CompletionEarn } from '../model/completion-earn';
 import { Coin } from './common/Coin';
 import { CountUpWon } from './common/CountUpWon';
-import { TodayTiles } from './common/TodayTiles';
 
-// 동전이 닿은 뒤에 금액이 서고, 오늘 칸이 서고, 방금 끝낸 칸이 찬다
+// 동전이 닿은 뒤에 금액이 선다
 const DROP_DELAY = 0.15;
 const AMOUNT_DELAY = 0.5;
-const TILES_DELAY = 0.7;
-const FILL_DELAY = 1.25;
 
 export const EarnedStamp = ({ earn }: { earn: CompletionEarn }) => {
   const animated = !useReducedMotion();
-  // 뒤늦게 차는 칸은 하나뿐이라 타이머도 여기 하나만 둔다
-  const [filled, setFilled] = useState(!animated);
-  useEffect(() => {
-    if (!animated) return;
-    const timer = setTimeout(() => setFilled(true), FILL_DELAY * 1000);
-    return () => clearTimeout(timer);
-  }, [animated]);
-  // 차기 전의 그 칸은 아직 안 한 모습이다 — 회색 동전과, 이번에 받을 금액
-  const slots = filled
-    ? earn.slots
-    : earn.slots.map((slot) =>
-        slot.type === earn.activityType
-          ? {
-              ...slot,
-              progress: 0,
-              remainingWon: earn.earnedWon,
-              countLabel: null,
-            }
-          : slot,
-      );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
@@ -75,17 +49,8 @@ export const EarnedStamp = ({ earn }: { earn: CompletionEarn }) => {
           <CountUpWon from={0} to={earn.earnedWon} delay={AMOUNT_DELAY} />
         </p>
         <p className="mt-3 text-center text-sm font-medium text-muted-foreground">
-          {earn.guide}
+          오늘 몫을 받았어요
         </p>
-      </motion.div>
-
-      <motion.div
-        className="mt-9 w-full"
-        initial={animated ? { opacity: 0, y: 12 } : false}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: TILES_DELAY, duration: 0.35, ease: EASE_STANDARD }}
-      >
-        <TodayTiles slots={slots} />
       </motion.div>
     </div>
   );

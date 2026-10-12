@@ -64,8 +64,11 @@ vi.mock('next/link', () => ({
 // 환급 챌린지는 기본 꺼짐 — 켠 화면은 rewardChallenge로 따로 확인한다
 vi.mock('@/features/subscription/model/paywall-gate/payment-flag', () => ({
   PAYMENT_ENABLED: true,
-  REWARD_CHALLENGE_ENABLED: false,
 }));
+vi.mock(
+  '@/features/subscription/model/paywall-gate/useRewardChallengeLive',
+  () => ({ useRewardChallengeLive: () => false }),
+);
 // 데모 속 캐릭터는 깜빡임·입모양을 WAAPI(element.animate)로 쏘는데 jsdom엔 없다 — 결제 흐름 테스트라 그림은 비운다
 vi.mock('@/features/conversation/ui/character/PartnerCharacter', () => ({
   PartnerCharacter: () => null,
@@ -80,6 +83,16 @@ vi.mock('next/image', () => ({
     <img alt="" {...props} />
   ),
 }));
+
+// 시리즈 두 줄이 화면에 놓인 순서 — 줄 이름표의 문서 위치로 본다
+const seriesOrder = () => {
+  const expression = screen.getByText('맞춤형 원어민 표현 제공');
+  const scenario = screen.getByText('시나리오');
+  const expressionFirst =
+    expression.compareDocumentPosition(scenario) &
+    Node.DOCUMENT_POSITION_FOLLOWING;
+  return expressionFirst ? ['표현', '시나리오'] : ['시나리오', '표현'];
+};
 
 beforeEach(() => {
   mocks.busy = false;
@@ -229,18 +242,47 @@ describe('PaywallScreen', () => {
   it('환급 챌린지가 꺼져 있으면 환급 문구 없이 지금 플랜 카드를 보여 준다', () => {
     render(<PaywallScreen />);
 
-    expect(screen.queryByText('전액 환급')).not.toBeInTheDocument();
+    expect(screen.queryByText(/환급 챌린지/)).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: '6개월 100% 환급 플랜' }),
-    ).not.toBeInTheDocument();
+      screen.getByRole('button', { name: '연간 플랜' }),
+    ).toBeInTheDocument();
+  });
+
+  it('환급 챌린지가 꺼져 있으면 리뷰 제목은 「먼저 시작한 유저들의 이야기」다', () => {
+    render(<PaywallScreen />);
+
+    expect(
+      screen.getByRole('heading', { name: /먼저 시작한 유저들의 이야기/ }),
+    ).toBeInTheDocument();
   });
 
   it('환급 챌린지가 꺼져 있으면 「~에서만」 없이 프리미엄으로 배우는 법이라고 말한다 — 시나리오 대화는 무료에도 있다', () => {
     render(<PaywallScreen />);
 
     expect(
-      screen.getByRole('heading', { name: /이렇게 배워요/ }),
+      screen.getByRole('heading', { name: /프리미엄으로/ }),
     ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /에서만/ })).toBeNull();
+  });
+
+  it('환급 챌린지가 꺼져 있으면 시리즈는 표현 학습이 시나리오보다 먼저다', () => {
+    render(<PaywallScreen />);
+
+    expect(seriesOrder()).toEqual(['표현', '시나리오']);
+  });
+
+  it('환급 챌린지가 꺼져 있으면 오퍼링에 이용권이 섞여 와도 월간·연간만 판다', () => {
+    mocks.packages = {
+      ...mocks.packages,
+      pass: { packageId: 'pass_100d', price: 50_000, currency: 'KRW' },
+    };
+    render(<PaywallScreen />);
+
+    expect(screen.queryByText(/환급 챌린지/)).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+    );
+    expect(mocks.purchase).toHaveBeenCalledWith('yearly');
   });
 
   it('구매 복원은 맨 위와 약관 옆 두 곳에 있다 — 스크롤해 내려가도 찾을 수 있다', () => {
@@ -350,57 +392,42 @@ describe('PaywallScreen', () => {
 });
 
 describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
-  it('머리 제목은 「프리미엄에서만 할 수 있는 것들」이다', () => {
+  it('머리 제목은 「프리미엄에서만 이렇게 배워요」다', () => {
     render(<PaywallScreen rewardChallenge />);
 
     expect(
-      screen.getByRole('heading', { name: /할 수 있는 것들/ }),
+      screen.getByRole('heading', { name: /프리미엄에서만/ }),
     ).toBeInTheDocument();
   });
 
-  it('처음엔 6개월이 선택돼 있어 CTA가 전액 환급 문구다', () => {
+  it('고를 플랜 없이 100일 이용권 요약 한 장을 보여 준다', () => {
     render(<PaywallScreen rewardChallenge />);
 
     expect(
-      screen.getByRole('button', { name: '6개월 100% 환급 플랜' }),
-    ).toHaveAttribute('aria-pressed', 'true');
-    expect(
-      screen.getByRole('button', { name: '6개월 전액 환급 도전하기' }),
+      screen.getByRole('heading', { name: /모은 만큼 돌려받아요/ }),
     ).toBeInTheDocument();
+    expect(screen.getByText('프리미엄 100일')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /플랜/ })).toBeNull();
   });
 
-  it('3개월 카드를 누르면 CTA와 결제 안내가 3개월용으로 바뀌고 선택 이벤트를 찍는다', () => {
+  it('버튼 밑에 정기 결제 안내가 없다 — 한 번 내는 단건 결제다', () => {
     render(<PaywallScreen rewardChallenge />);
 
-    fireEvent.click(
-      screen.getByRole('button', { name: '3개월 80% 환급 플랜' }),
+    expect(screen.queryByText(/정기 결제/)).toBeNull();
+  });
+
+  it('시리즈는 시나리오가 표현 학습보다 먼저다 — 환급은 오늘의 시나리오로 쌓인다', () => {
+    render(<PaywallScreen rewardChallenge />);
+
+    expect(seriesOrder()).toEqual(['시나리오', '표현']);
+  });
+
+  it('구매 복원은 맨 위에만 있다 — 구독이 아니라 아래 링크를 두지 않는다', () => {
+    render(<PaywallScreen rewardChallenge />);
+
+    expect(screen.getAllByRole('button', { name: '구매 복원' })).toHaveLength(
+      1,
     );
-
-    expect(
-      screen.getByRole('button', { name: '3개월 80% 환급 도전하기' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('3개월마다 39,900원 정기 결제 · 언제든 해지 가능'),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('챌린지 성공하면 최대 31,920원 환급'),
-    ).toBeInTheDocument();
-    expect(mocks.track).toHaveBeenCalledWith('Paywall Plan Selected', {
-      plan: 'quarterly',
-    });
-  });
-
-  it('고른 플랜에 따라 맨 위 무대의 입금 금액·환급 문구가 바뀐다', () => {
-    render(<PaywallScreen rewardChallenge />);
-
-    expect(screen.getByText('입금 59,900원')).toBeInTheDocument();
-
-    fireEvent.click(
-      screen.getByRole('button', { name: '3개월 80% 환급 플랜' }),
-    );
-
-    expect(screen.getByText('입금 31,920원')).toBeInTheDocument();
-    expect(screen.getByText(/하루 최대 약 355원/)).toBeInTheDocument();
   });
 
   it('닫아도 이탈 할인을 받지 않고 바로 홈으로 간다 — 환급 페이월엔 연간 할인 시트가 없다', async () => {
@@ -414,25 +441,26 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     expect(mocks.dismiss).not.toHaveBeenCalled();
   });
 
-  it('CTA를 누르면 고른 환급 플랜(3·6개월 상품)으로 결제를 요청한다', () => {
+  it('CTA를 누르면 100일 이용권으로 결제를 요청한다', () => {
     render(<PaywallScreen rewardChallenge />);
 
     fireEvent.click(
-      screen.getByRole('button', { name: '6개월 전액 환급 도전하기' }),
+      screen.getByRole('button', { name: '100일 환급 챌린지 시작하기' }),
     );
 
-    expect(mocks.purchase).toHaveBeenCalledWith('halfyear');
+    expect(mocks.purchase).toHaveBeenCalledWith('pass');
   });
 
-  it('셸이 준 6개월 원화 가격으로 카드와 결제 안내를 그린다', () => {
+  it('셸이 준 이용권 가격으로 금액과 하루 몫을 그린다 — 가격만 다른 이용권을 올려도 화면이 따라온다', () => {
     mocks.packages = {
-      halfyear: { packageId: '$rc_six_month', price: 49_900, currency: 'KRW' },
+      pass: { packageId: 'pass_100d', price: 30_000, currency: 'KRW' },
     };
     render(<PaywallScreen rewardChallenge />);
 
+    expect(screen.getByText('− 30,000원')).toBeInTheDocument();
+    expect(screen.getByText('(100일 × 300원)')).toBeInTheDocument();
     expect(
-      screen.getByText('6개월마다 49,900원 정기 결제 · 언제든 해지 가능'),
+      screen.getByText('매일 오늘의 시나리오를 할 때마다 300원이 쌓여요'),
     ).toBeInTheDocument();
-    expect(screen.getByText('+49,900원')).toBeInTheDocument();
   });
 });

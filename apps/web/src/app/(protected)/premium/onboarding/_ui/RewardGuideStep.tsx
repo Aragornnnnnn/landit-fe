@@ -18,6 +18,7 @@ export const RewardGuideStep = ({
         eyebrow={copy.eyebrow}
         amount={copy.amount}
         caption={copy.caption}
+        dailyWon={copy.dailyWon}
       />
     </div>
     <footer className="flex-none border-t border-border px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),16px)]">

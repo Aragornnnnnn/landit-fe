@@ -1,5 +1,5 @@
-// 페이월 첫 화면 — 환급 챌린지가 켜지면 어두운 무대 위에 로고와 PREMIUM 배지, 노란 스포트라이트와 반짝이 아래 돈·메인 문구와 6개월 성과 카드(RewardStage).
-// 꺼져 있으면 무대 없이 밝은 바탕에 로고, 「프리미엄으로 이렇게 배워요」, 캐릭터 단체샷. 켜져 있으면 무대 아래 「프리미엄에서만 할 수 있는 것들」이 본문을 연다.
+// 페이월 첫 화면 — 환급 챌린지가 켜지면 어두운 무대 위에 로고와 PREMIUM 배지, 노란 스포트라이트와 반짝이 아래 떨어지는 돈·메인 문구·환급 안내(RewardStage).
+// 꺼져 있으면 무대 없이 밝은 바탕에 로고, 「프리미엄으로 이렇게 배워요」, 캐릭터 단체샷. 켜져 있으면 무대 아래 「프리미엄에서만 이렇게 배워요」가 본문을 연다.
 // 처음부터 화면에 있으니 관찰 없이 마운트하자마자 animate-reveal-up으로 차례로 떠오른다
 import type { CSSProperties } from 'react';
 import Image from 'next/image';
@@ -10,16 +10,16 @@ import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
 import type { RewardPlan } from '../_model/paywall-content';
 import { RewardStage } from './RewardStage';
 
-/** 무대 반짝이 — 위치·크기·깜빡이는 시점 */
+/** 무대 반짝이 — 위치·크기·깜빡이는 시점. 글자 뒤에서 번쩍이지 않게 가장자리에만, 빛은 약하게 둔다 */
 const SPARKLES = [
-  { top: 92, left: '12%', size: 5, delay: 0 },
-  { top: 150, left: '86%', size: 6, delay: 0.5 },
-  { top: 330, left: '8%', size: 4, delay: 1.1 },
-  { top: 410, left: '90%', size: 5, delay: 0.3 },
-  { top: 520, left: '18%', size: 6, delay: 0.8 },
-  { top: 600, left: '80%', size: 4, delay: 1.4 },
-  { top: 250, left: '72%', size: 3, delay: 0.2 },
-  { top: 680, left: '45%', size: 3, delay: 1.0 },
+  { top: 92, left: '10%', size: 4, delay: 0 },
+  { top: 150, left: '90%', size: 5, delay: 0.5 },
+  { top: 330, left: '4%', size: 3, delay: 1.1 },
+  { top: 410, left: '94%', size: 4, delay: 0.3 },
+  { top: 560, left: '3%', size: 4, delay: 0.8 },
+  { top: 640, left: '95%', size: 3, delay: 1.4 },
+  { top: 250, left: '93%', size: 3, delay: 0.2 },
+  { top: 760, left: '5%', size: 3, delay: 1.0 },
 ];
 
 const Badge = ({ dark }: { dark: boolean }) => (
@@ -37,7 +37,7 @@ export const PaywallHero = ({
 }: {
   /** 환급 챌린지가 켜졌는가 — 켜지면 어두운 환급 무대, 꺼지면 밝은 머리 */
   rewardChallenge: boolean;
-  /** 고른 환급 플랜 — 무대의 환급 챌린지 카드가 이 플랜으로 말한다 */
+  /** 환급 챌린지 값 — 무대의 문구와 폰 데모가 이 값으로 말한다 */
   rewardPlan: RewardPlan;
 }) => (
   // 위 여백 40px은 겹쳐 떠 있는 PaywallHeader의 줄 높이(h-10)다.
@@ -63,7 +63,7 @@ export const PaywallHero = ({
           <span
             key={index}
             aria-hidden="true"
-            className="animate-twinkle pointer-events-none absolute rounded-[1px] bg-white shadow-[0_0_10px_3px_rgba(255,255,255,0.8)]"
+            className="animate-twinkle pointer-events-none absolute rounded-[1px] bg-white/70 shadow-[0_0_6px_1px_rgba(255,255,255,0.35)]"
             style={{
               top: sparkle.top,
               left: sparkle.left,
@@ -93,11 +93,11 @@ export const PaywallHero = ({
           aria-hidden="true"
           className="reveal-highlight absolute inset-x-[-3px] bottom-[4px] -z-10 h-[18px] rounded-[3px] bg-[#f9c99a]/70"
         />
+        {/* 시나리오 대화는 무료에도 있어, 환급 무대가 없는 화면에선 「~에서만」을 쓰지 않는다 */}
         {rewardChallenge ? '프리미엄에서만' : '프리미엄으로'}
       </span>
       <br />
-      {/* 시나리오 대화는 무료에도 있어, 환급 무대가 없는 화면에선 「~에서만」을 쓰지 않는다 */}
-      {rewardChallenge ? '할 수 있는 것들' : '이렇게 배워요'}
+      이렇게 배워요
     </h2>
 
     {/* 캐릭터 단체샷 — 환급 무대가 없을 때만. 슬롯 높이가 곧 크롭선이라 허리쯤에서 잘린다(피그마 '빼꼼 컷') */}

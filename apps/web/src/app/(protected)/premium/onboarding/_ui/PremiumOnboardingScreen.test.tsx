@@ -40,11 +40,10 @@ vi.mock('@/features/reward/model/refresh-reward', () => ({
   refreshRewardAfterPurchase: mocks.refreshReward,
   fetchLatestReward: mocks.fetchLatest,
 }));
-vi.mock('@/features/subscription/model/paywall-gate/payment-flag', () => ({
-  get REWARD_CHALLENGE_ENABLED() {
-    return mocks.launched;
-  },
-}));
+vi.mock(
+  '@/features/subscription/model/paywall-gate/useRewardChallengeLive',
+  () => ({ useRewardChallengeLive: () => mocks.launched }),
+);
 // 규칙 화면의 돈통 그림 — 이미지 최적화 부품은 jsdom에서 돌지 않는다
 vi.mock('next/image', () => ({ default: () => <span /> }));
 const analytics = vi.hoisted(() => ({ track: vi.fn() }));
@@ -134,13 +133,13 @@ const signIn = (role: 'USER' | 'ADMIN') =>
     role,
   });
 
-// 3개월 환급 상품을 막 산 사람의 환급
+// 100일 이용권을 막 산 사람의 환급
 const bought = () =>
   rewardView({
     current: rewardCycle({
-      maximumWon: 31920,
+      maximumWon: 30_000,
       balanceWon: 0,
-      eligibleDays: 92,
+      eligibleDays: 100,
     }),
   });
 
@@ -292,10 +291,8 @@ describe('PremiumOnboardingScreen', () => {
 
       tapNext();
 
-      expect(await screen.findByText('최대 31,920원')).toBeVisible();
-      expect(
-        screen.getByText('92일 동안 매일 공부하면 구독료를 돌려받아요'),
-      ).toBeVisible();
+      expect(await screen.findByText('최대 30,000원')).toBeVisible();
+      expect(screen.getByText('100일 동안 모은 만큼 돌려받아요')).toBeVisible();
     });
 
     it('환급 안내를 보여 줄 때 금액을 아는 안내라고 한 번 찍는다', async () => {
@@ -303,7 +300,7 @@ describe('PremiumOnboardingScreen', () => {
       render(<PremiumOnboardingScreen returnTo="/me" />);
 
       tapNext();
-      await screen.findByText('최대 31,920원');
+      await screen.findByText('최대 30,000원');
 
       expect(analytics.track.mock.calls).toEqual([
         ['Reward Guide Viewed', { confirmed: true }],
@@ -320,7 +317,7 @@ describe('PremiumOnboardingScreen', () => {
       render(<PremiumOnboardingScreen returnTo="/me" />);
 
       tapNext();
-      await screen.findByText('환급 챌린지 시작');
+      await screen.findByText('환급 챌린지');
 
       expect(analytics.track.mock.calls).toEqual([
         ['Reward Guide Viewed', { confirmed: false }],
@@ -331,7 +328,7 @@ describe('PremiumOnboardingScreen', () => {
       mocks.reward = bought();
       render(<PremiumOnboardingScreen returnTo="/me" />);
       tapNext();
-      await screen.findByText('최대 31,920원');
+      await screen.findByText('최대 30,000원');
 
       tapNext();
 
@@ -343,7 +340,7 @@ describe('PremiumOnboardingScreen', () => {
       mocks.reward = bought();
       render(<PremiumOnboardingScreen returnTo="/me" />);
       tapNext();
-      await screen.findByText('최대 31,920원');
+      await screen.findByText('최대 30,000원');
 
       tapNext();
 
@@ -373,7 +370,7 @@ describe('PremiumOnboardingScreen', () => {
 
       tapNext();
 
-      expect(await screen.findByText('최대 31,920원')).toBeVisible();
+      expect(await screen.findByText('최대 30,000원')).toBeVisible();
     });
 
     it('들어오면 결제 전에 받아 둔 환급을 새로 받는다', () => {
@@ -391,7 +388,7 @@ describe('PremiumOnboardingScreen', () => {
 
       tapNext();
 
-      expect(await screen.findByText('최대 31,920원')).toBeVisible();
+      expect(await screen.findByText('최대 30,000원')).toBeVisible();
     });
 
     it('환급 응답이 끝내 오지 않으면 안내 없이 알람 등록으로 넘어간다', async () => {
@@ -415,7 +412,7 @@ describe('PremiumOnboardingScreen', () => {
       tapNext();
 
       expect(screen.getByRole('button', { name: '다음' })).toBeDisabled();
-      expect(await screen.findByText('최대 31,920원')).toBeVisible();
+      expect(await screen.findByText('최대 30,000원')).toBeVisible();
     });
   });
 
@@ -437,11 +434,9 @@ describe('PremiumOnboardingScreen', () => {
 
       fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
-      // 쉬면 0원이 된다는 걸 알람보다 먼저 말한다
+      // 모은 만큼 돌려받는다는 걸 알람보다 먼저 말한다
       expect(
-        screen.getByText(
-          '위 3가지 학습 기록이 하나도 없는 날이 생기면 쌓인 금액이 0원으로 돌아가요',
-        ),
+        screen.getByText('챌린지 기간이 끝나면 내가 모은 만큼 돈을 돌려받아요'),
       ).toBeVisible();
     });
 

@@ -31,7 +31,7 @@ export interface BalanceGain {
   toWon: number;
 }
 
-// 마지막으로 본 금액보다 늘었으면 그만큼이 방금 받은 것이다. 본 적이 없거나 줄었으면(자정 초기화) 연출할 것이 없다
+// 마지막으로 본 금액보다 늘었으면 그만큼이 방금 받은 것이다. 본 적이 없거나 줄었으면(새 챌린지가 0원에서 시작됐다) 연출할 것이 없다
 export const balanceGainOf = (
   seenWon: number | null,
   balanceWon: number | null,

@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 
 import {
   endedRewardView,
-  rewardActivity,
   rewardCycle,
   rewardToday,
   rewardView,
@@ -98,18 +97,10 @@ describe('rewardScreenViewOf', () => {
 describe('rewardViewedPropsOf', () => {
   const record = (reward: ReturnType<typeof rewardView>) =>
     rewardViewedPropsOf({ kind: 'record', reward });
-  const active = (
-    balanceWon: number,
-    earnedWon: number,
-    patch: Parameters<typeof rewardView>[0] = {},
-  ) =>
+  const active = (balanceWon: number, earnedWon: number) =>
     rewardView({
       current: rewardCycle({ balanceWon }),
-      today: rewardToday({
-        earnedWon,
-        activities: [rewardActivity('SCENARIO')],
-      }),
-      ...patch,
+      today: rewardToday({ earnedWon }),
     });
 
   it('환급 소개는 금액 없이 intro로 찍는다', () => {
@@ -124,35 +115,22 @@ describe('rewardViewedPropsOf', () => {
     expect(rewardViewedPropsOf(view)).toBeNull();
   });
 
-  it('오늘 받은 게 있으면 kept다', () => {
-    expect(record(active(2015, 133))).toEqual({
+  it('오늘 몫을 받았으면 kept다', () => {
+    expect(record(active(5000, 500))).toEqual({
       status: 'kept',
-      balance_won: 2015,
+      balance_won: 5000,
     });
   });
 
-  it('쌓인 게 있는데 오늘이 아직이면 at_risk다', () => {
-    expect(record(active(1882, 0))).toEqual({
-      status: 'at_risk',
-      balance_won: 1882,
+  it('쌓인 게 있어도 오늘이 아직이면 idle이다 — 쉬어도 잃지 않아 at_risk는 더 보내지 않는다', () => {
+    expect(record(active(4500, 0))).toEqual({
+      status: 'idle',
+      balance_won: 4500,
     });
   });
 
   it('쌓인 것도 오늘 받은 것도 없으면 idle이다', () => {
     expect(record(active(0, 0))).toEqual({ status: 'idle', balance_won: 0 });
-  });
-
-  it('어제 쉬어 0원이 됐고 오늘이 아직이면 reset이다', () => {
-    expect(record(active(0, 0, { lostYesterdayWon: 1550 }))).toEqual({
-      status: 'reset',
-      balance_won: 0,
-    });
-  });
-
-  it('어제 쉬었어도 오늘 다시 받았으면 kept다', () => {
-    expect(record(active(111, 111, { lostYesterdayWon: 1550 }))?.status).toBe(
-      'kept',
-    );
   });
 
   it('기간이 끝났으면 쌓는 금액 대신 돌려받을 금액과 함께 ended다', () => {

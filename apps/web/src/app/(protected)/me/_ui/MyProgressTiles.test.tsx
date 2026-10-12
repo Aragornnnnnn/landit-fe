@@ -16,11 +16,10 @@ const mocks = vi.hoisted(() => ({
   streakAsked: 0,
 }));
 
-vi.mock('@/features/subscription/model/paywall-gate/payment-flag', () => ({
-  get REWARD_CHALLENGE_ENABLED() {
-    return mocks.launched;
-  },
-}));
+vi.mock(
+  '@/features/subscription/model/paywall-gate/useRewardChallengeLive',
+  () => ({ useRewardChallengeLive: () => mocks.launched }),
+);
 vi.mock('@/features/streak/model/useStreakQuery', () => ({
   useStreakQuery: () => {
     mocks.streakAsked += 1;
@@ -67,7 +66,7 @@ describe('MyProgressTiles', () => {
     render(<MyProgressTiles />);
 
     expect(links()).toEqual(['/reward', '/streak']);
-    expect(screen.getByText('12,300원')).toBeInTheDocument();
+    expect(screen.getByText('4,500원')).toBeInTheDocument();
   });
 
   it('권할 사람에게는 최대 금액으로 환급을 소개한다', () => {
@@ -76,7 +75,7 @@ describe('MyProgressTiles', () => {
     render(<MyProgressTiles />);
 
     expect(screen.getByText('환급 최대')).toBeInTheDocument();
-    expect(screen.getByText('59,900원')).toBeInTheDocument();
+    expect(screen.getByText('50,000원')).toBeInTheDocument();
   });
 
   it('환급과 상관없는 사람에게는 연속 학습만 놓는다', () => {

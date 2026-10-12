@@ -4,13 +4,14 @@
 import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
 
-import { MAX_REFUND_WON } from '@/features/reward/model/refund-offer';
+import { rewardOfferOf } from '@/features/reward/model/refund-offer';
 import {
   badgeAmountOf,
   type RewardBadge,
 } from '@/features/reward/model/reward-status';
 import { Coin } from '@/features/reward/ui/common/Coin';
 import { StreakFruit } from '@/features/streak/ui/common/StreakFruit';
+import { PASS_FALLBACK_PRICE } from '@/features/subscription/model/product/offering';
 import { track } from '@/shared/analytics';
 import { REWARD_PATH, STREAK_PATH } from '@/shared/lib/routes';
 import { ChevronRightIcon } from '@/shared/ui/Icons';
@@ -18,7 +19,8 @@ import { ChevronRightIcon } from '@/shared/ui/Icons';
 // 아직 시작하지 않은 무료 유저에게 보이는 환급 타일 — 꾸미지 않고 다른 타일과 같은 모양으로 둔다
 export const INVITE_BADGE: RewardBadge = {
   label: '환급 최대',
-  amountWon: MAX_REFUND_WON,
+  // 노출하는 이용권의 등록값 기준 — 다 채우면 돌려받는 금액
+  amountWon: rewardOfferOf(PASS_FALLBACK_PRICE).maximumWon,
   note: '매일 하면 돌려받아요',
   mood: 'kept',
 };
@@ -29,7 +31,6 @@ const Tile = ({
   icon,
   value,
   note,
-  warning = false,
   onClick,
 }: {
   href: string;
@@ -37,8 +38,6 @@ const Tile = ({
   icon: React.ReactNode;
   value: string;
   note: string;
-  // 아래 한 줄을 붉게 — 오늘 안 하면 잃는 것이 있다
-  warning?: boolean;
   // 계측용 — 이동은 링크가 한다
   onClick?: () => void;
 }) => (
@@ -57,13 +56,7 @@ const Tile = ({
         {value}
       </span>
     </span>
-    <span
-      className={`mt-1.5 text-[12px] ${
-        warning
-          ? 'font-bold text-destructive'
-          : 'font-medium text-muted-foreground'
-      }`}
-    >
+    <span className="mt-1.5 text-[12px] font-medium text-muted-foreground">
       {note}
     </span>
   </Link>
@@ -94,7 +87,6 @@ export const ProgressTiles = ({
         }
         value={badgeAmountOf(rewardBadge)}
         note={rewardBadge.note}
-        warning={rewardBadge.mood === 'atRisk'}
       />
     )}
     <Tile

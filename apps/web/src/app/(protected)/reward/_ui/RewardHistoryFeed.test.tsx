@@ -29,9 +29,9 @@ vi.mock('@/shared/lib/useInView', () => ({
 const row = (id: string, patch: Partial<HistoryRow> = {}): HistoryRow => ({
   id,
   dateLabel: '10.10',
-  title: '표현학습 완료',
+  title: '시나리오 대화 완료',
   note: '08:24',
-  amountWon: 11,
+  amountWon: 500,
   balanceWon: 2015,
   ...patch,
 });
@@ -60,27 +60,21 @@ afterEach(cleanup);
 
 describe('RewardHistoryFeed', () => {
   it('받은 내역을 한 줄씩 보여 준다', () => {
-    given({ rows: [row('2', { title: '스몰톡 완료' }), row('1')] });
+    given({ rows: [row('2', { title: '기간 종료' }), row('1')] });
 
     render(<RewardHistoryFeed />);
 
-    expect(screen.getByText('스몰톡 완료')).toBeInTheDocument();
-    expect(screen.getByText('표현학습 완료')).toBeInTheDocument();
+    expect(screen.getByText('기간 종료')).toBeInTheDocument();
+    expect(screen.getByText('시나리오 대화 완료')).toBeInTheDocument();
   });
 
-  it('받은 금액에는 +를, 사라진 금액에는 -를 붙이고 잔액에는 붙이지 않는다', () => {
-    given({
-      rows: [
-        row('2', { amountWon: -1550, balanceWon: 0 }),
-        row('1', { amountWon: 111, balanceWon: 1550 }),
-      ],
-    });
+  it('받은 금액에는 +를 붙이고 잔액에는 붙이지 않는다', () => {
+    given({ rows: [row('1', { amountWon: 500, balanceWon: 4500 })] });
 
     render(<RewardHistoryFeed />);
 
-    expect(screen.getByText('+111원')).toBeInTheDocument();
-    expect(screen.getByText('-1,550원')).toBeInTheDocument();
-    expect(screen.getByText('1,550원')).toBeInTheDocument();
+    expect(screen.getByText('+500원')).toBeInTheDocument();
+    expect(screen.getByText('4,500원')).toBeInTheDocument();
   });
 
   it('첫 장을 받는 동안에는 줄이 놓일 자리를 보여 준다', () => {
@@ -191,7 +185,7 @@ describe('RewardHistoryFeed', () => {
     render(<RewardHistoryFeed />);
 
     expect(mocks.loadMore).not.toHaveBeenCalled();
-    expect(screen.getByText('표현학습 완료')).toBeInTheDocument();
+    expect(screen.getByText('시나리오 대화 완료')).toBeInTheDocument();
   });
 
   it('이어 받기가 실패한 뒤 다시 시도를 누르면 이어 받는다', () => {

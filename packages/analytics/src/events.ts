@@ -151,7 +151,7 @@ export const EVENTS = {
   REWARD_VIEWED: 'Reward Viewed',
   REWARD_ENTRY_TAPPED: 'Reward Entry Tapped',
   REWARD_RULES_OPENED: 'Reward Rules Opened',
-  // 학습을 끝내고 홈에 돌아왔을 때 헤더 알약으로 동전이 날아드는 연출
+  // 오늘의 시나리오를 끝내고 홈에 돌아왔을 때 헤더 알약으로 동전이 날아드는 연출
   REWARD_COIN_SHOWER_VIEWED: 'Reward Coin Shower Viewed',
   REWARD_COIN_SHOWER_SKIPPED: 'Reward Coin Shower Skipped',
   // 환급 상품을 산 직후, 환영과 알람 사이의 환급 안내
@@ -256,8 +256,14 @@ export type HomeReturnReason = 'just' | 'flip' | 'card';
 // 시나리오 피드백을 어디서 열었는지 — 대화 직후 흐름과 시나리오 기록에서 다시 연 것을 가른다
 export type FeedbackSource = 'post_conversation' | 'history';
 
-// 구독 플랜 — 페이월 카드와 스토어 상품이 같은 이름을 쓴다. quarterly·halfyear는 환급 챌린지 플랜(3·6개월)이다. 브릿지의 subscriptionPlanSchema와 같은 값이다
-export type SubscriptionPlan = 'monthly' | 'yearly' | 'quarterly' | 'halfyear';
+// 구독 플랜 — 페이월 카드와 스토어 상품이 같은 이름을 쓴다. quarterly·halfyear는 옛 환급 챌린지 플랜(3·6개월), pass는 100일 이용권이다. 브릿지의 subscriptionPlanSchema와 같은 값이다
+export type SubscriptionPlan =
+  | 'monthly'
+  | 'yearly'
+  | 'quarterly'
+  | 'halfyear'
+  // 100일 이용권 — 한 번 결제하는 단건 상품
+  | 'pass';
 
 // 수준 평가가 적용 수준을 어떻게 바꿨는가 — BE LearningLevelPolicy.ChangeType과 같은 값
 export type LevelChangeType =
@@ -329,7 +335,8 @@ export type AlarmBlockerKind =
 export type AlarmUnblockSource = 'banner' | 'setup';
 // 알람 권한을 켜러 나가는 OS 설정 — 앱 설정(iOS·Android 알림), Android의 정확한 알람·전체 화면 알림
 export type AlarmSettingsDestination = 'app' | 'exact_alarm' | 'full_screen';
-// 환급 화면을 본 상태 — 참여 전 소개, 쌓는 중(오늘 받음·오늘 아직인데 걸린 금액 없음·오늘 아직이라 위험·어제 쉬어 0원), 기간 끝남, 결제 확인 중, 검토 중
+// 환급 화면을 본 상태 — 참여 전 소개, 쌓는 중(오늘 받음 kept·오늘 아직 idle), 기간 끝남, 결제 확인 중, 검토 중.
+// at_risk·reset은 쉬면 사라지던 옛 정책의 값이다 — 과거 데이터와 맞추려고 남겨 두고 웹은 더 보내지 않는다
 export type RewardViewStatus =
   | 'intro'
   | 'kept'

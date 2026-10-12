@@ -20,7 +20,7 @@ import {
 } from '@/features/subscription/model/my-subscription/subscription-summary';
 import { useStorePlatform } from '@/features/subscription/model/my-subscription/useStorePlatform';
 import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
-import { REWARD_CHALLENGE_ENABLED } from '@/features/subscription/model/paywall-gate/payment-flag';
+import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import {
@@ -68,7 +68,8 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
   const { data: profile } = useLearningLevelQuery();
   const level = toEnglishLevel(profile?.learningLevel ?? null);
   // 가격 부담 화면이 환급을 쌓는 중인 사람에게 다른 답을 한다 — 스위치가 꺼져 있으면 묻지 않는다
-  const { reward } = useRewardQuery({ enabled: REWARD_CHALLENGE_ENABLED });
+  const rewardLive = useRewardChallengeLive();
+  const { reward } = useRewardQuery({ enabled: rewardLive });
   const stake = refundStakeOf(reward);
 
   const leaveToManage = () => backOrReplace(router, SUBSCRIPTION_MANAGE_PATH);
@@ -86,8 +87,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
         reason,
         ...(reason === 'price' && summary.plan && { plan: summary.plan }),
         // 환급이 열린 뒤의 가격 화면에만 — 그 전에는 환급 문구가 나올 수 없다
-        ...(reason === 'price' &&
-          REWARD_CHALLENGE_ENABLED && { reward: stake !== null }),
+        ...(reason === 'price' && rewardLive && { reward: stake !== null }),
       });
     }
     setStep(next);
