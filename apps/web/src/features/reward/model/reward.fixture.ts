@@ -2,6 +2,7 @@
 import type {
   RewardActivity,
   RewardCycle,
+  RewardCycleDay,
   RewardToday,
   RewardView,
 } from '../api/reward';
@@ -44,6 +45,24 @@ export const earnedRewardToday = (): RewardToday =>
       }),
     ],
   });
+
+// 마감된 지난 하루 — 기본은 오늘의 시나리오를 하지 않고 넘긴 날
+export const closedRewardDay = (
+  date: string,
+  achieved = false,
+): RewardCycleDay => ({
+  date,
+  startsAt: `${date}T00:00:00+09:00`,
+  endsAt: `${date}T24:00:00+09:00`,
+  achieved,
+  closed: true,
+  changeWon: achieved ? 500 : 0,
+  balanceWon: 4500,
+  earnedWon: achieved ? 500 : 0,
+  maximumWon: 500,
+  fullyAchieved: achieved,
+  activities: [],
+});
 
 export const rewardCycle = (patch: Partial<RewardCycle> = {}): RewardCycle => ({
   id: 7,

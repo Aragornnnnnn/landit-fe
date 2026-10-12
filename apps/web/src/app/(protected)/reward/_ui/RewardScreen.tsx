@@ -11,6 +11,7 @@ import { track } from '@/shared/analytics';
 import { homePath } from '@/shared/lib/last-tab';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
+import { glowOf, potStageOf } from '../_model/pot-stage';
 import { rewardIntroCopyOf } from '../_model/reward-intro-copy';
 import {
   rewardScreenViewOf,
@@ -36,6 +37,14 @@ export const RewardScreen = () => {
   const { daily } = useDailyScenarioQuery(undefined, { enabled: intro });
   const talkedToday = daily?.scenario?.completed === true;
   const introCopy = rewardIntroCopyOf(offer, talkedToday);
+
+  // 위쪽 빛은 그림을 따른다 — 오늘 대화를 한 사람의 소개는 오늘 받은 환급 화면과 같은 금빛이다
+  const glow =
+    view.kind === 'record'
+      ? glowOf(potStageOf(view.reward))
+      : intro && talkedToday
+        ? 'gold'
+        : null;
 
   // 기존 월간·연간 유저처럼 환급과 상관없는 사람 — 보여 줄 것이 없다
   const outsider = view.kind === 'outsider';
@@ -63,6 +72,7 @@ export const RewardScreen = () => {
         ) : undefined
       }
       fadeAboveFooter={intro}
+      glow={glow}
       footer={
         intro ? (
           <RewardStartButton label={introCopy.cta} />

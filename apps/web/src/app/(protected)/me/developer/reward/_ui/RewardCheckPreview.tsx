@@ -3,6 +3,7 @@
 // 환급 점검에서 고른 케이스 한 장 — 실제 화면이 쓰는 부품에 가짜 값을 넣어 그린다
 import { useState } from 'react';
 
+import { glowOf, potStageOf } from '@/app/(protected)/reward/_model/pot-stage';
 import { rewardIntroCopyOf } from '@/app/(protected)/reward/_model/reward-intro-copy';
 // 점검은 실제 부품을 그대로 그려야 해서 환급 라우트의 비공개 폴더를 가져온다
 import { RefundApplyButton } from '@/app/(protected)/reward/_ui/RefundApplyButton';
@@ -46,7 +47,11 @@ const RecordPreview = ({
   const history = useFakeHistory(fakeHistoryItems(reward), mode);
 
   return (
-    <RewardFrame onBack={onBack} footer={<RefundApplyButton reward={reward} />}>
+    <RewardFrame
+      onBack={onBack}
+      glow={glowOf(potStageOf(reward))}
+      footer={<RefundApplyButton reward={reward} />}
+    >
       <RewardRecord
         reward={reward}
         history={<RewardHistoryList {...history} />}
@@ -130,6 +135,7 @@ export const RewardCheckPreview = ({
         trailing={<RewardRulesButton dailyWon={PREVIEW_OFFER.dailyWon} />}
         footer={<RewardStartButton label={copy.cta} />}
         fadeAboveFooter
+        glow={name === 'introTalked' ? 'gold' : null}
       >
         <RewardIntro
           copy={copy}

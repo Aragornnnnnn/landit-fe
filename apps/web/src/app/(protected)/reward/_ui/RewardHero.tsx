@@ -13,33 +13,23 @@ import { paywallPath, REWARD_PATH } from '@/shared/lib/routes';
 import { Emoji } from '@/shared/ui/emoji';
 import { ChevronRightIcon } from '@/shared/ui/Icons';
 
-import { potStageOf, type PotStage } from '../_model/pot-stage';
+import { potStageOf } from '../_model/pot-stage';
 import { MidnightCountdown } from './MidnightCountdown';
 import { RewardPot } from './RewardPot';
-
-const GOLD_TINT = 'bg-linear-to-b from-[#ffc850]/25 to-transparent';
-// 그림에 맞춰 화면 위쪽에 은은하게 감도는 빛
-const TINT: Record<PotStage, string> = {
-  empty: '',
-  // 오늘이 아직이면 차분한 살구빛
-  waiting: 'bg-linear-to-b from-primary/8 to-transparent',
-  kept: GOLD_TINT,
-  complete: GOLD_TINT,
-};
 
 export const RewardHero = ({ reward }: { reward: RewardView }) => {
   const { label, amountWon, title, guide } = rewardHeroOf(reward);
   const earnedToday = (reward.today?.earnedWon ?? 0) > 0;
-  const stage = potStageOf(reward);
   // 오늘 받을 몫 — 쌓는 중인데 오늘의 시나리오가 아직일 때만 걸려 있다
   const todayLeftWon =
     reward.state === 'ACTIVE' && !earnedToday
       ? (reward.today?.maximumWon ?? reward.todayMaximumWon)
       : 0;
   const urgent = useMidnightUrgent(todayLeftWon > 0);
+  const stage = potStageOf(reward, { urgent });
 
   return (
-    <section className={`flex flex-col items-center px-5 pt-4 ${TINT[stage]}`}>
+    <section className="flex flex-col items-center px-5 pt-4">
       {urgent && <MidnightCountdown amountWon={todayLeftWon} />}
       <RewardPot stage={stage} dropsCoin={earnedToday} />
 

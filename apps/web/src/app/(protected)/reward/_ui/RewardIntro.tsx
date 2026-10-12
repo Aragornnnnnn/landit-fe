@@ -62,7 +62,7 @@ const EarnedToday = ({
 
   return (
     <>
-      <section className="flex flex-col items-center bg-linear-to-b from-[#ffc850]/25 to-transparent px-5 pt-4">
+      <section className="flex flex-col items-center px-5 pt-4">
         {urgent && <MidnightCountdown amountWon={dailyWon} />}
         <RewardPot stage="kept" dropsCoin />
         <p className="mt-2 text-[13px] font-bold text-primary">

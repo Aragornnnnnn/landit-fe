@@ -4,11 +4,20 @@
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { BackHeader } from '@/shared/ui/BackHeader';
 
+import type { RewardGlow } from '../_model/pot-stage';
+
+// 화면 맨 위(헤더 뒤)부터 내려오며 옅어지는 빛
+const GLOW: Record<RewardGlow, string> = {
+  gold: 'bg-[linear-gradient(to_bottom,rgb(255_200_80/0.25),transparent_430px)]',
+  calm: 'bg-[linear-gradient(to_bottom,color-mix(in_oklab,var(--primary)_8%,transparent),transparent_430px)]',
+};
+
 export const RewardFrame = ({
   onBack,
   trailing,
   footer,
   fadeAboveFooter = false,
+  glow = null,
   children,
 }: {
   onBack: () => void;
@@ -18,17 +27,22 @@ export const RewardFrame = ({
   footer?: React.ReactNode;
   // 버튼 위를 구분선 대신 서서히 덮는다 — 한 번 읽고 지나가는 소개 화면처럼, 아래에 더 있다는 걸 알려야 할 때
   fadeAboveFooter?: boolean;
+  // 화면 위쪽의 빛 — 헤더 뒤까지 이어진다. 없으면 흰 바탕
+  glow?: RewardGlow | null;
   children: React.ReactNode;
 }) => {
   const { ref: scrollRef, onScroll, hasShadow } = useScrollShadow();
 
   return (
-    <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
+    <main
+      className={`mx-auto flex h-dvh max-w-[430px] flex-col bg-background ${glow ? GLOW[glow] : ''}`}
+    >
       <BackHeader
         title="환급"
         hasShadow={hasShadow}
         onBack={onBack}
         trailing={trailing}
+        transparent={glow !== null}
       />
       <div
         ref={scrollRef}

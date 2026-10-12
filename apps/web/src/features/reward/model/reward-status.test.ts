@@ -5,11 +5,13 @@ import type { RewardView } from '../api/reward';
 import {
   badgeAmountOf,
   balanceOf,
+  missedDaysOf,
   participantOf,
   rewardBadgeOf,
   rewardHeroOf,
 } from './reward-status';
 import {
+  closedRewardDay,
   earnedRewardToday,
   endedRewardView,
   rewardCycle,
@@ -223,5 +225,50 @@ describe('badgeAmountOf', () => {
     );
 
     expect(badge && badgeAmountOf(badge)).toBe('확인 중');
+  });
+});
+
+describe('missedDaysOf', () => {
+  const withDays = (...days: [string, boolean][]) =>
+    rewardView({
+      current: rewardCycle({
+        days: days.map(([date, achieved]) => closedRewardDay(date, achieved)),
+      }),
+    });
+
+  it('가장 최근에 마감된 날부터 거슬러 쉰 날을 센다', () => {
+    const view = withDays(
+      ['2026-10-06', false],
+      ['2026-10-07', true],
+      ['2026-10-08', false],
+      ['2026-10-09', false],
+    );
+
+    expect(missedDaysOf(view)).toBe(2);
+  });
+
+  it('어제 했으면 0이다', () => {
+    expect(
+      missedDaysOf(withDays(['2026-10-08', false], ['2026-10-09', true])),
+    ).toBe(0);
+  });
+
+  it('날짜가 뒤섞여 와도 날짜순으로 센다', () => {
+    expect(
+      missedDaysOf(withDays(['2026-10-09', false], ['2026-10-08', true])),
+    ).toBe(1);
+  });
+
+  it('지난 날이 없거나 도는 회차가 없으면 0이다', () => {
+    expect(missedDaysOf(rewardView())).toBe(0);
+    expect(missedDaysOf(endedRewardView(31_920))).toBe(0);
+  });
+
+  it('며칠째 쉬고 있으면 안내가 그 날수를 먼저 말한다', () => {
+    const view = withDays(['2026-10-08', false], ['2026-10-09', false]);
+
+    expect(rewardHeroOf(view).guide).toBe(
+      '2일째 쉬고 있어요\n오늘의 시나리오를 하면 500원을 받아요',
+    );
   });
 });

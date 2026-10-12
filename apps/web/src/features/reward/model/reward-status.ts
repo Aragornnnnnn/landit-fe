@@ -25,6 +25,18 @@ export const dailyWonOf = (view: RewardView) =>
     ? Math.floor(view.current.maximumWon / view.current.eligibleDays)
     : null;
 
+// 가장 최근에 마감된 날부터 거슬러, 오늘의 시나리오를 하지 않고 넘긴 날이 며칠 이어졌는지. 오늘은 아직 마감 전이라 세지 않는다
+export const missedDaysOf = (view: RewardView) => {
+  const closed = (view.current?.days ?? [])
+    .filter((day) => day.closed)
+    .sort((a, b) => b.date.localeCompare(a.date));
+  const lastDone = closed.findIndex((day) => day.achieved);
+  return lastDone === -1 ? closed.length : lastDone;
+};
+
+// 이만큼 쉬면 말과 그림이 달라진다 — 하루는 누구나 쉰다
+export const LONG_REST_DAYS = 2;
+
 export interface RewardHeroMessage {
   // 큰 글자 위의 꼬리표 — 이 숫자가 무엇인지. 숫자가 없으면 null
   label: string | null;
@@ -38,7 +50,11 @@ export interface RewardHeroMessage {
 const todayGuideOf = (view: RewardView) => {
   if ((view.today?.earnedWon ?? 0) > 0)
     return `오늘 ${formatWon(view.today?.earnedWon ?? 0)}을 받았어요`;
-  return `오늘의 시나리오를 하면 ${formatWon(view.today?.maximumWon ?? view.todayMaximumWon)}을 받아요`;
+  const invite = `오늘의 시나리오를 하면 ${formatWon(view.today?.maximumWon ?? view.todayMaximumWon)}을 받아요`;
+  const missed = missedDaysOf(view);
+  return missed >= LONG_REST_DAYS
+    ? `${missed}일째 쉬고 있어요\n${invite}`
+    : invite;
 };
 
 export const rewardHeroOf = (view: RewardView): RewardHeroMessage => {
