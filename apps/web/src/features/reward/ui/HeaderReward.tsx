@@ -11,9 +11,6 @@ import { formatWon } from '@/shared/lib/won';
 
 import { badgeAmountOf, type RewardBadge } from '../model/reward-status';
 import type { BalanceGain } from '../model/seen-balance';
-import { shortClockLabel } from '../model/time-left';
-import { useMidnightLeft } from '../model/useMidnightLeft';
-import { useMidnightUrgent } from '../model/useMidnightUrgent';
 import { Coin } from './common/Coin';
 import { CoinShower } from './common/CoinShower';
 import {
@@ -22,16 +19,10 @@ import {
   REWARD_PILL_GOLD,
 } from './common/reward-pill';
 
-// 평소에는 금빛, 오늘이 아직이면 회색으로 식고, 걸린 금액이 있는데 자정이 가까우면 빨갛게 남은 시간을 같이 말한다
-const TONE = {
-  gold: REWARD_PILL_GOLD,
-  cool: 'bg-secondary text-muted-foreground',
-  urgent: 'bg-destructive text-destructive-foreground',
-};
-
-const toneOf = (mood: RewardBadge['mood'], urgent: boolean) => {
-  if (urgent) return 'urgent';
-  return mood === 'kept' ? 'gold' : 'cool';
+// 오늘 몫을 받았으면 금빛, 아직이면 회색 — 쉬어도 잃는 게 없어 급한 색은 없다
+const TONE: Record<RewardBadge['mood'], string> = {
+  kept: REWARD_PILL_GOLD,
+  idle: 'bg-secondary text-muted-foreground',
 };
 
 export const HeaderReward = ({
@@ -45,9 +36,6 @@ export const HeaderReward = ({
   // 연출이 다 돌았거나 건너뛰었다
   onGainEnd: () => void;
 }) => {
-  // 걸린 금액이 있을 때만 급해진다 — 쌓인 게 없으면 오늘이 아직이어도 회색에 머문다
-  const urgent = useMidnightUrgent(badge.mood === 'atRisk');
-  const tone = toneOf(badge.mood, urgent);
   const amount = badgeAmountOf(badge);
 
   const showering = gain !== null;
@@ -66,18 +54,17 @@ export const HeaderReward = ({
         href={REWARD_PATH}
         onClick={() => track(EVENTS.REWARD_ENTRY_TAPPED, { source: 'header' })}
         aria-label={`${badge.label} ${amount}, ${badge.note}, 환급 보기`}
-        className={`${REWARD_PILL_CLASS} transition-colors active:scale-95 ${TONE[tone]}`}
+        className={`${REWARD_PILL_CLASS} transition-colors active:scale-95 ${TONE[badge.mood]}`}
       >
         <Coin
           size={REWARD_PILL_COIN}
           // 회색일 때는 동전도 식는다
-          className={tone === 'cool' ? 'opacity-50 grayscale' : ''}
+          className={badge.mood === 'idle' ? 'opacity-50 grayscale' : ''}
         />
         {/* 연출이 도는 동안은 어둠 아래에서 예전 금액으로 기다린다 — 걷히면 새 금액이 서 있다 */}
         <span className="tabular-nums">
           {showering ? formatWon(gain.fromWon) : amount}
         </span>
-        {urgent && <HeaderClock />}
       </Link>
       {/* 알약 밖에 둔다 — 안에 두면 어둠을 누른 것이 알약을 누른 것으로 올라가 환급 화면으로 넘어간다 */}
       {showering && pill && (
@@ -92,24 +79,23 @@ export const HeaderReward = ({
   );
 };
 
-// 0원이 되기까지 남은 시간 — 줄어드는 숫자가 알약 전체를 다시 그리지 않게 따로 둔다
-const HeaderClock = () => {
-  const left = useMidnightLeft();
-
-  return (
-    <span
-      aria-hidden
-      className="ml-0.5 border-l border-destructive-foreground/40 pl-2 tabular-nums"
-    >
-      {shortClockLabel(left)}
-    </span>
-  );
-};
-
-// 아직 환급을 시작하지 않은 사람의 진입 글자 — 프리미엄 진입 알약 안에 놓인다
-export const RewardInviteLabel = () => (
+// 아직 환급을 시작하지 않은 사람의 진입 글자 — 프리미엄 진입 알약 안에 놓인다.
+// 오늘의 시나리오를 끝내고 막 돌아온 사람에게는 그 대화로 받을 수 있는 금액을 말한다
+export const RewardInviteLabel = ({
+  claimWon = null,
+}: {
+  // 받으러 갈 금액. 평소에는 null
+  claimWon?: number | null;
+}) => (
   <>
     <Coin size={16} />
-    <span>환급 챌린지 시작</span>
+    {claimWon === null ? (
+      <span>환급 챌린지 시작</span>
+    ) : (
+      <>
+        <span className="tabular-nums">{formatWon(claimWon)}</span>
+        <span className="font-medium">받으러 가기</span>
+      </>
+    )}
   </>
 );

@@ -1,62 +1,43 @@
-// 환급이 무엇인지 알려 주는 한 덩어리 — 동전 더미 그림, 돌려받는 최대 금액, 규칙 다섯 줄, 하루를 다 채웠을 때의 보기 내역.
+// 환급이 무엇인지 알려 주는 한 덩어리 — 동전 더미 그림, 큰 금액, 규칙 두 줄, 처음 사흘의 보기 내역.
 // 결제 전의 환급 소개 화면과 결제 직후(알람 바로 앞) 화면이 같은 모습으로 쓴다
 import Image from 'next/image';
 
 import { preloadImages } from '@/shared/lib/preload-next-images';
+import { formatWon } from '@/shared/lib/won';
 import { Emoji } from '@/shared/ui/emoji';
 
 import potComplete from '../assets/reward-pot-complete.webp';
-import type { HistoryRow } from '../model/reward-history';
-import { KST_OFFSET_MS } from '../model/time-left';
+import { dateLabelAhead, type HistoryRow } from '../model/reward-history';
 import { RewardHistory } from './RewardHistory';
 
-// 하루를 다 채웠을 때 — 실제 내역이 아니라 "이렇게 쌓인다"는 보기다.
-// 오늘 날짜로 적어, 지금 시작하면 오늘부터 이렇게 찍힌다는 걸 보여 준다
-const sampleOf = (): HistoryRow[] => {
-  const today = new Date(Date.now() + KST_OFFSET_MS);
-  return [
-    {
-      id: 'sample-3',
-      dateLabel: `${today.getUTCMonth() + 1}.${today.getUTCDate()}`,
-      title: '스몰톡 완료',
-      note: '21:40',
-      amountWon: 111,
-      balanceWon: 332,
-    },
-    {
-      id: 'sample-2',
-      dateLabel: null,
-      title: '표현학습 4개 완료',
-      note: '08:31',
-      amountWon: 110,
-      balanceWon: 221,
-    },
-    {
-      id: 'sample-1',
-      dateLabel: null,
+// 처음 사흘 — 실제 내역이 아니라 "이렇게 쌓인다"는 보기다. 오늘 시작한 것으로 치고 하루에 한 줄, 늦은 날이 위에 온다
+const SAMPLE_DAYS = 3;
+const sampleOf = (dailyWon: number): HistoryRow[] =>
+  Array.from({ length: SAMPLE_DAYS }, (_, index) => {
+    const day = SAMPLE_DAYS - index;
+    return {
+      id: `sample-${day}`,
+      dateLabel: dateLabelAhead(day - 1),
       title: '시나리오 대화 완료',
-      note: '08:12',
-      amountWon: 111,
-      balanceWon: 111,
-    },
-  ];
-};
+      note: `${day}일째`,
+      amountWon: dailyWon,
+      balanceWon: dailyWon * day,
+    };
+  });
 
-// 쌓이는 건 오늘 것뿐이다 — 지난 시나리오와 그 표현은 다시 해도 쌓이지 않고, 그것만 한 날은 쉰 날로 친다.
-// 둘째·셋째 줄의 "위 3가지"는 첫 줄을 가리킨다 — 순서를 바꾸지 않는다
-const RULES = [
+/**
+ * 환급 규칙 두 줄 — 환급 화면의 안내 시트, 환급 소개, 결제 직후 안내가 같은 말을 쓴다.
+ *
+ * @param dailyWon 하루 몫. 아직 모르면(결제 확인 중, 지난 회차만 남음) null — 금액 없이 말한다
+ */
+export const rewardRulesOf = (dailyWon: number | null) =>
   [
-    '💰',
-    '오늘의 시나리오, 그 시나리오의 표현 학습, 스몰톡을 끝낼 때마다 환급액이 쌓여요',
-  ],
-  ['🛡️', '매일 위 3가지 중 하나만 해도 쌓인 금액을 지킬 수 있어요'],
-  [
-    '⚠️',
-    '위 3가지 학습 기록이 하나도 없는 날이 생기면 쌓인 금액이 0원으로 돌아가요',
-  ],
-  ['📘', '지난 시나리오와 표현 학습을 다시 해도 금액이 쌓이지 않아요'],
-  ['📅', '챌린지 기간이 끝나면 앱에서 환급을 신청해요'],
-] as const;
+    [
+      '💰',
+      `매일 오늘의 시나리오를 할 때마다 ${dailyWon === null ? '환급액' : formatWon(dailyWon)}이 쌓여요`,
+    ],
+    ['💸', '챌린지 기간이 끝나면 내가 모은 만큼 돈을 돌려받아요'],
+  ] as const;
 
 /** 환급 안내에 들어가기 전에 맨 위 그림을 받아 둔다 — 화면이 열린 뒤에야 받으면 그림 자리가 잠깐 비어 보인다 */
 export const preloadRewardGuide = () =>
@@ -68,9 +49,9 @@ export const preloadRewardGuide = () =>
     },
   ]);
 
-export const RewardRuleList = () => (
+export const RewardRuleList = ({ dailyWon }: { dailyWon: number | null }) => (
   <ul className="flex flex-col gap-3">
-    {RULES.map(([emoji, text]) => (
+    {rewardRulesOf(dailyWon).map(([emoji, text]) => (
       <li
         key={text}
         className="flex items-start gap-2.5 text-[14px] leading-[22px] font-medium break-keep text-foreground"
@@ -87,17 +68,23 @@ export const RewardGuide = ({
   eyebrow,
   amount,
   caption,
+  dailyWon,
+  rulesInHeader = false,
 }: {
   // 큰 글자 위 한 줄
   eyebrow: string;
-  // 큰 글자 ("최대 59,900원")
+  // 큰 글자 ("500원")
   amount: string;
   // 그 아래 한 줄
   caption: string;
+  // 하루 몫 — 규칙과 보기 내역이 이 금액으로 말한다. 아직 모르면 null이고 보기 내역은 그리지 않는다
+  dailyWon: number | null;
+  // 규칙을 헤더의 안내 버튼이 여는 화면 — 본문에는 규칙 카드를 그리지 않는다
+  rulesInHeader?: boolean;
 }) => (
   <>
     <section className="flex flex-col items-center px-5 pt-2">
-      {/* 그림은 낮게 — 작은 폰에서도 규칙 카드 아래 "하루를 다 채우면…"이 첫 화면에 걸려야 더 있는 줄 안다 */}
+      {/* 그림은 낮게 — 작은 폰에서도 규칙 카드 아래 "매일 이렇게 쌓여요"가 첫 화면에 걸려야 더 있는 줄 안다 */}
       <div className="h-[132px] w-[176px]">
         <Image
           src={potComplete}
@@ -115,16 +102,24 @@ export const RewardGuide = ({
       </p>
     </section>
 
-    <section className="mx-5 mt-4 rounded-[20px] border border-border bg-card px-4 py-4">
-      <h3 className="mb-3 text-[15px] font-black text-foreground">환급 규칙</h3>
-      <RewardRuleList />
-    </section>
+    {!rulesInHeader && (
+      <section className="mx-5 mt-4 rounded-[20px] border border-border bg-card px-4 py-4">
+        <h3 className="mb-3 text-[15px] font-black text-foreground">
+          환급 규칙
+        </h3>
+        <RewardRuleList dailyWon={dailyWon} />
+      </section>
+    )}
 
-    <p className="mt-6 px-5 text-[13px] font-bold text-muted-foreground">
-      하루를 다 채우면 이렇게 쌓여요
-    </p>
-    <div className="mt-3 px-5 opacity-60">
-      <RewardHistory history={sampleOf()} />
-    </div>
+    {dailyWon !== null && (
+      <>
+        <p className="mt-6 px-5 text-[13px] font-bold text-muted-foreground">
+          매일 이렇게 쌓여요
+        </p>
+        <div className="mt-3 px-5 opacity-60">
+          <RewardHistory history={sampleOf(dailyWon)} />
+        </div>
+      </>
+    )}
   </>
 );

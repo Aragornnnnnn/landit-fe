@@ -1,7 +1,7 @@
 'use client';
 
 // 대화가 끝나고 표현이 나오기까지의 세 장면 — 축하 → 만드는 중 → 표현 리스트.
-// 시나리오 대화와 스몰톡이 같은 장면을 쓴다. 다른 건 언제 다음 장면으로 넘어가는지뿐이다:
+// 시나리오 대화와 스몰톡이 같은 장면을 쓴다. 다른 건 언제 다음 장면으로 넘어가는지와, 축하에 받은 환급액이 서는지다:
 // 시나리오는 표현이 콘텐츠에 이미 있어 정해둔 시간만큼 보여주고, 스몰톡은 서버가 다 만들 때까지 기다린다
 import { motion } from 'motion/react';
 
@@ -20,9 +20,14 @@ export const TITLE_CLASS =
 
 // 대화 완료 축하 — 만드는 중 화면과 같은 골격(좌상단 타이틀 + 가운데)으로 그려 전환이 매끄럽다.
 // 가운데는 오늘 열매가 찍히는 순간이 채운다 — 완료를 매번 같은 폭죽으로 갚으면 며칠째든 감흥이 없다.
-// 이번 완료로 환급액을 받은 사람에게는 열매 대신 받은 금액과 오늘 남은 몫을 보여 준다
-export const CelebrateStage = () => {
-  const { earn, pending } = useCompletionEarn();
+// 이번 완료로 환급액을 받은 사람에게는 열매 대신 받은 금액을 보여 준다
+export const CelebrateStage = ({
+  earns = false,
+}: {
+  // 방금 끝낸 것이 환급이 쌓이는 대화인가 — 시나리오뿐이다
+  earns?: boolean;
+}) => {
+  const { earn, pending } = useCompletionEarn({ enabled: earns });
 
   return (
     <motion.div

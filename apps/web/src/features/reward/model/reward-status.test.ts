@@ -1,19 +1,20 @@
-// 환급 히어로 문구와 오늘 세 칸의 계약 테스트
+// 환급 히어로 문구와 좁은 자리 요약의 계약 테스트
 import { describe, expect, it } from 'vitest';
 
 import type { RewardView } from '../api/reward';
 import {
-  atRiskOf,
   badgeAmountOf,
   balanceOf,
   participantOf,
+  restDaysOf,
   rewardBadgeOf,
   rewardHeroOf,
-  todaySlotsOf,
+  todayLeftWonOf,
 } from './reward-status';
 import {
+  closedRewardDay,
+  earnedRewardToday,
   endedRewardView,
-  rewardActivity,
   rewardCycle,
   rewardToday,
   rewardView,
@@ -45,7 +46,7 @@ describe('participantOf', () => {
 
 describe('balanceOf', () => {
   it('도는 회차에 쌓인 금액을 준다', () => {
-    expect(balanceOf(rewardView())).toBe(12300);
+    expect(balanceOf(rewardView())).toBe(4500);
   });
 
   it('도는 회차가 없으면 금액이 없다', () => {
@@ -53,82 +54,44 @@ describe('balanceOf', () => {
   });
 });
 
-describe('atRiskOf', () => {
-  it('쌓인 게 있는데 오늘이 아직이면 걸려 있다', () => {
-    expect(atRiskOf(rewardView())).toBe(true);
-  });
-
-  it('오늘 하나라도 했으면 지켜졌다', () => {
-    const view = rewardView({ today: rewardToday({ earnedWon: 11 }) });
-
-    expect(atRiskOf(view)).toBe(false);
-  });
-
-  it('쌓인 게 없으면 잃을 것도 없다', () => {
-    const view = rewardView({ current: rewardCycle({ balanceWon: 0 }) });
-
-    expect(atRiskOf(view)).toBe(false);
-  });
-
-  it('검토 중에는 오늘이 오지 않아도 걸려 있다고 보지 않는다', () => {
-    const view = rewardView({ state: 'REVIEW', today: null });
-
-    expect(atRiskOf(view)).toBe(false);
-  });
-});
-
 describe('rewardHeroOf — 쌓는 중', () => {
   it('쌓인 금액을 꼬리표와 함께 말한다', () => {
     expect(rewardHeroOf(rewardView())).toMatchObject({
       label: '쌓인 환급액',
-      amountWon: 12300,
+      amountWon: 4500,
       title: null,
     });
   });
 
-  it('오늘이 아직이면 안 하면 사라진다는 걸 숨기지 않는다', () => {
+  it('오늘의 시나리오가 아직이면 하면 받을 금액을 말한다', () => {
     expect(rewardHeroOf(rewardView()).guide).toBe(
-      '오늘 하나도 안 하면 12,300원이 사라져요',
+      '오늘의 시나리오를 하면 500원을 받아요',
     );
   });
 
-  it('쌓인 게 없고 오늘도 아직이면 시작을 권한다', () => {
-    const view = rewardView({ current: rewardCycle({ balanceWon: 0 }) });
+  it('쌓인 금액이 있는데 오늘이 아직이어도 잃는다는 말은 하지 않는다', () => {
+    // given — 쉰 날은 그날 몫만 없고 모은 금액은 그대로다
+    const { guide } = rewardHeroOf(rewardView());
 
-    expect(rewardHeroOf(view).guide).toBe('오늘 대화 하나로 쌓기 시작해요');
+    expect(guide).not.toContain('사라');
+    expect(guide).not.toContain('4,500원');
   });
 
-  it('어제 쉬어서 사라졌으면 얼마가 사라졌는지 숨기지 않는다', () => {
+  it('오늘 몫을 받았으면 받은 금액을 말한다', () => {
+    const view = rewardView({ today: earnedRewardToday() });
+
+    expect(rewardHeroOf(view).guide).toBe('오늘 500원을 받았어요');
+  });
+
+  it('오늘 한도가 오늘 값에 없으면 요약의 오늘 금액으로 말한다', () => {
     const view = rewardView({
-      current: rewardCycle({ balanceWon: 0 }),
-      lostYesterdayWon: 1107,
+      todayMaximumWon: 500,
+      today: rewardToday({ maximumWon: null }),
     });
 
     expect(rewardHeroOf(view).guide).toBe(
-      '어제 쉬어서 1,107원이 사라졌어요\n오늘부터 다시 쌓을 수 있어요',
+      '오늘의 시나리오를 하면 500원을 받아요',
     );
-  });
-
-  it('오늘 일부를 채웠으면 남은 금액을 말한다', () => {
-    const view = rewardView({ today: rewardToday({ earnedWon: 111 }) });
-
-    expect(rewardHeroOf(view).guide).toBe('오늘 221원 더 받을 수 있어요');
-  });
-
-  it('오늘 한도를 모르면 남은 금액을 지어내지 않는다', () => {
-    const view = rewardView({
-      today: rewardToday({ earnedWon: 111, maximumWon: null }),
-    });
-
-    expect(rewardHeroOf(view).guide).toBe('오늘 더 받을 수 있어요');
-  });
-
-  it('오늘을 다 채웠으면 그렇게 말한다', () => {
-    const view = rewardView({
-      today: rewardToday({ earnedWon: 332, fullyAchieved: true }),
-    });
-
-    expect(rewardHeroOf(view).guide).toBe('오늘 몫을 다 채웠어요');
   });
 });
 
@@ -165,7 +128,7 @@ describe('rewardHeroOf — 그 밖의 국면', () => {
   it('검토 중에도 쌓인 금액은 그대로 보여 준다', () => {
     const hero = rewardHeroOf(rewardView({ state: 'REVIEW', today: null }));
 
-    expect(hero).toMatchObject({ label: '쌓인 환급액', amountWon: 12300 });
+    expect(hero).toMatchObject({ label: '쌓인 환급액', amountWon: 4500 });
     expect(hero.guide).toContain('쌓인 금액은 그대로 보관돼요');
   });
 
@@ -186,32 +149,28 @@ describe('rewardHeroOf — 그 밖의 국면', () => {
 });
 
 describe('rewardBadgeOf', () => {
-  it('쌓인 게 있는데 오늘이 아직이면 걸려 있다고 알린다', () => {
+  it('쌓인 게 있어도 오늘의 시나리오가 아직이면 급하지 않게 남았다고만 알린다', () => {
     expect(rewardBadgeOf(rewardView())).toEqual({
       label: '쌓인 환급액',
-      amountWon: 12300,
-      note: '오늘 아직 안 했어요',
-      mood: 'atRisk',
+      amountWon: 4500,
+      note: '오늘의 시나리오가 남았어요',
+      mood: 'idle',
     });
   });
 
-  it('오늘 하나라도 했으면 지켰다고 말한다', () => {
-    const view = rewardView({ today: rewardToday({ earnedWon: 111 }) });
+  it('오늘 몫을 받았으면 받았다고 말한다', () => {
+    const view = rewardView({ today: earnedRewardToday() });
 
     expect(rewardBadgeOf(view)).toMatchObject({
-      note: '오늘도 지켰어요',
+      note: '오늘 몫을 받았어요',
       mood: 'kept',
     });
   });
 
-  it('쌓인 게 없고 오늘도 아직이면 걸린 것 없이 시작을 권한다', () => {
+  it('쌓인 게 없고 오늘도 아직이면 0원으로 같은 말을 한다', () => {
     const view = rewardView({ current: rewardCycle({ balanceWon: 0 }) });
 
-    expect(rewardBadgeOf(view)).toMatchObject({
-      amountWon: 0,
-      note: '오늘 대화로 쌓기 시작해요',
-      mood: 'idle',
-    });
+    expect(rewardBadgeOf(view)).toMatchObject({ amountWon: 0, mood: 'idle' });
   });
 
   it('기간을 마쳤으면 돌려받을 금액과 곧 신청할 수 있음을 말한다', () => {
@@ -247,7 +206,7 @@ describe('rewardBadgeOf', () => {
     const view = rewardView({ state: 'REVIEW', today: null });
 
     expect(rewardBadgeOf(view)).toMatchObject({
-      amountWon: 12300,
+      amountWon: 4500,
       note: '결제 내역을 확인하고 있어요',
       mood: 'kept',
     });
@@ -258,7 +217,7 @@ describe('badgeAmountOf', () => {
   it('금액을 원화로 적는다', () => {
     const badge = rewardBadgeOf(rewardView());
 
-    expect(badge && badgeAmountOf(badge)).toBe('12,300원');
+    expect(badge && badgeAmountOf(badge)).toBe('4,500원');
   });
 
   it('금액을 모르면 확인 중이라고 적는다', () => {
@@ -270,67 +229,62 @@ describe('badgeAmountOf', () => {
   });
 });
 
-describe('todaySlotsOf', () => {
-  it('학습 순서대로 놓고 표현은 끝낸 개수만큼 채운다', () => {
-    // given — 서버는 순서를 약속하지 않는다
-    const slots = todaySlotsOf([
-      rewardActivity('SMALLTALK'),
-      rewardActivity('EXPRESSION', {
-        earnedWon: 22,
-        completedCount: 2,
-        remainingWon: 88,
+describe('restDaysOf', () => {
+  const withDays = (...days: [string, boolean][]) =>
+    rewardView({
+      current: rewardCycle({
+        days: days.map(([date, achieved]) => closedRewardDay(date, achieved)),
       }),
-      rewardActivity('SCENARIO', {
-        earnedWon: 111,
-        completed: true,
-        completedCount: 1,
-        remainingWon: 0,
-      }),
-    ]);
-
-    expect(slots.map((slot) => [slot.label, slot.progress])).toEqual([
-      ['시나리오', 1],
-      ['표현', 0.5],
-      ['스몰톡', 0],
-    ]);
-  });
-
-  it('더 받을 금액은 서버가 준 값을 그대로 쓴다', () => {
-    // given — 표현의 다음 한 개 몫은 11원이지만 다 끝내면 88원을 더 받는다
-    const [slot] = todaySlotsOf([
-      rewardActivity('EXPRESSION', {
-        earnedWon: 22,
-        completedCount: 2,
-        nextEarnableWon: 11,
-        remainingWon: 88,
-      }),
-    ]);
-
-    expect(slot).toMatchObject({
-      earnedWon: 22,
-      remainingWon: 88,
-      countLabel: '2/4',
     });
+
+  it('가장 최근에 마감된 날부터 거슬러 쉰 날을 센다', () => {
+    const view = withDays(
+      ['2026-10-06', false],
+      ['2026-10-07', true],
+      ['2026-10-08', false],
+      ['2026-10-09', false],
+    );
+
+    expect(restDaysOf(view)).toBe(2);
   });
 
-  it('하나짜리 활동은 개수를 말하지 않는다', () => {
-    const [slot] = todaySlotsOf([rewardActivity('SMALLTALK')]);
-
-    expect(slot.countLabel).toBe(null);
+  it('어제 했으면 0이다', () => {
+    expect(
+      restDaysOf(withDays(['2026-10-08', false], ['2026-10-09', true])),
+    ).toBe(0);
   });
 
-  it('그날 대상이 없는 활동은 칸을 만들지 않는다', () => {
-    // given — 배정된 표현이 없는 날. 표현 몫은 두 대화가 나눠 갖는다
-    const slots = todaySlotsOf([
-      rewardActivity('SCENARIO', { remainingWon: 166 }),
-      rewardActivity('EXPRESSION', {
-        completed: true,
-        targetCount: 0,
-        remainingWon: 0,
-      }),
-      rewardActivity('SMALLTALK', { remainingWon: 166 }),
-    ]);
+  it('날짜가 뒤섞여 와도 날짜순으로 센다', () => {
+    expect(
+      restDaysOf(withDays(['2026-10-09', false], ['2026-10-08', true])),
+    ).toBe(1);
+  });
 
-    expect(slots.map((slot) => slot.label)).toEqual(['시나리오', '스몰톡']);
+  it('지난 날이 없거나 도는 회차가 없으면 0이다', () => {
+    expect(restDaysOf(rewardView())).toBe(0);
+    expect(restDaysOf(endedRewardView(31_920))).toBe(0);
+  });
+
+  it('며칠째 쉬고 있으면 안내가 그 날수를 먼저 말한다', () => {
+    const view = withDays(['2026-10-08', false], ['2026-10-09', false]);
+
+    expect(rewardHeroOf(view).guide).toBe(
+      '2일째 쉬고 있어요\n오늘의 시나리오를 하면 500원을 받아요',
+    );
+  });
+});
+
+describe('todayLeftWonOf', () => {
+  it('쌓는 중인데 오늘의 시나리오가 아직이면 오늘 몫이다', () => {
+    expect(todayLeftWonOf(rewardView({ todayMaximumWon: 500 }))).toBe(500);
+  });
+
+  it('오늘 몫을 받았으면 0이다', () => {
+    expect(todayLeftWonOf(rewardView({ today: earnedRewardToday() }))).toBe(0);
+  });
+
+  it('쌓는 중이 아니거나 오늘이 오지 않았으면 0이다', () => {
+    expect(todayLeftWonOf(endedRewardView(31_920))).toBe(0);
+    expect(todayLeftWonOf(rewardView({ today: null }))).toBe(0);
   });
 });

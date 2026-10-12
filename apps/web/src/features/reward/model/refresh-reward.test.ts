@@ -1,15 +1,16 @@
 // 환급 미리받기의 계약 테스트
 import { QueryClient } from '@tanstack/react-query';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as rewardApi from '../api/reward';
 import { rewardKeys } from './keys';
+import { clearMissedEarn, hasMissedEarn } from './missed-earn';
 import {
   fetchLatestReward,
   refreshRewardAfterCompletion,
   refreshRewardAfterPurchase,
 } from './refresh-reward';
-import { rewardCycle, rewardView } from './reward.fixture';
+import { earnedRewardToday, rewardCycle, rewardView } from './reward.fixture';
 
 vi.mock('../api/reward', () => ({ getMyRewards: vi.fn() }));
 vi.mock('@/shared/auth/auth-store', () => ({ getCurrentUserId: () => 42 }));
@@ -17,7 +18,7 @@ vi.mock('@/shared/auth/auth-store', () => ({ getCurrentUserId: () => 42 }));
 const getMyRewards = vi.mocked(rewardApi.getMyRewards);
 const key = rewardKeys.summary(42);
 const outsider = rewardView({ state: 'NONE', current: null, today: null });
-const next = rewardView({ current: rewardCycle({ balanceWon: 12411 }) });
+const next = rewardView({ current: rewardCycle({ balanceWon: 5000 }) });
 
 // 받아 둔 환급이 이것인 캐시
 const cacheWith = (cached?: ReturnType<typeof rewardView>) => {
@@ -34,11 +35,14 @@ beforeEach(() => {
   getMyRewards.mockResolvedValue(next);
 });
 
+// 오늘의 시나리오를 처음 끝낸 완료 — 적립 대상이다
+const FIRST = { todaysFirst: true };
+
 describe('refreshRewardAfterCompletion', () => {
-  it('참여자가 학습을 끝내면 새 금액을 미리 받아 둔다', async () => {
+  it('참여자가 시나리오를 끝내면 새 금액을 미리 받아 둔다', async () => {
     const queryClient = cacheWith(rewardView());
 
-    refreshRewardAfterCompletion(queryClient);
+    refreshRewardAfterCompletion(queryClient, FIRST);
 
     await vi.waitFor(() => expect(queryClient.getQueryData(key)).toEqual(next));
   });
@@ -48,43 +52,48 @@ describe('refreshRewardAfterCompletion', () => {
     const historyKey = rewardKeys.history(42);
     queryClient.setQueryData(historyKey, { pages: [], pageParams: [] });
 
-    refreshRewardAfterCompletion(queryClient);
+    refreshRewardAfterCompletion(queryClient, FIRST);
 
     expect(queryClient.getQueryData(historyKey)).toBeUndefined();
   });
 
-  it('환급과 상관없는 사람은 학습을 끝내도 묻지 않는다', () => {
-    refreshRewardAfterCompletion(cacheWith(outsider));
+  it('환급과 상관없는 사람은 시나리오를 끝내도 묻지 않는다', () => {
+    refreshRewardAfterCompletion(cacheWith(outsider), FIRST);
 
     expect(getMyRewards).not.toHaveBeenCalled();
   });
 
-  it('대화를 끝냈으면 그 대화가 오늘 아직이었다는 걸 적어 둔다 — 축하 화면이 받은 금액을 보여 줄지 정한다', () => {
+  it('오늘 몫이 아직이었다는 걸 적어 둔다 — 축하 화면이 받은 금액을 보여 줄지 정한다', () => {
     const queryClient = cacheWith(rewardView());
 
-    refreshRewardAfterCompletion(queryClient, 'SCENARIO');
+    refreshRewardAfterCompletion(queryClient, FIRST);
 
     expect(queryClient.getQueryData(rewardKeys.earnBase(42))).toEqual({
       date: '2026-10-10',
-      activityType: 'SCENARIO',
     });
+  });
+
+  it('오늘 몫을 이미 받은 사람이 시나리오를 또 끝내면 전에 적어 둔 것을 지운다', () => {
+    const queryClient = cacheWith(rewardView({ today: earnedRewardToday() }));
+    queryClient.setQueryData(rewardKeys.earnBase(42), { date: '2026-10-10' });
+
+    refreshRewardAfterCompletion(queryClient, FIRST);
+
+    expect(queryClient.getQueryData(rewardKeys.earnBase(42))).toBeNull();
   });
 
   it('환급과 상관없는 사람이 대화를 끝내면 전에 적어 둔 것을 지운다', () => {
     const queryClient = cacheWith(outsider);
-    queryClient.setQueryData(rewardKeys.earnBase(42), {
-      date: '2026-10-10',
-      activityType: 'SCENARIO',
-    });
+    queryClient.setQueryData(rewardKeys.earnBase(42), { date: '2026-10-10' });
 
-    refreshRewardAfterCompletion(queryClient, 'SCENARIO');
+    refreshRewardAfterCompletion(queryClient, FIRST);
 
     expect(queryClient.getQueryData(rewardKeys.earnBase(42))).toBeNull();
   });
 
   it('환급을 받아 본 적이 없으면 새로 묻지 않는다', () => {
     // given — 출시 전이라 환급 조회가 꺼져 있다
-    refreshRewardAfterCompletion(cacheWith());
+    refreshRewardAfterCompletion(cacheWith(), FIRST);
 
     expect(getMyRewards).not.toHaveBeenCalled();
   });
@@ -150,5 +159,33 @@ describe('fetchLatestReward', () => {
     getMyRewards.mockRejectedValue(new Error('네트워크 오류'));
 
     expect(await fetchLatestReward(cacheWith())).toBe(null);
+  });
+});
+
+describe('refreshRewardAfterCompletion — 환급을 시작하지 않은 사람', () => {
+  afterEach(clearMissedEarn);
+
+  it('오늘의 시나리오를 처음 끝냈으면 받을 수 있었던 몫이 있다고 적어 둔다 — 홈이 그걸 한 번 보여 준다', () => {
+    refreshRewardAfterCompletion(cacheWith(outsider), FIRST);
+
+    expect(hasMissedEarn(42)).toBe(true);
+  });
+
+  it('지난 시나리오를 끝냈거나 오늘 것을 다시 한 것이면 적지 않는다 — 적립 대상이 아니다', () => {
+    refreshRewardAfterCompletion(cacheWith(outsider), { todaysFirst: false });
+
+    expect(hasMissedEarn(42)).toBe(false);
+  });
+
+  it('참여자는 적지 않는다 — 그 사람의 몫은 실제로 쌓인다', () => {
+    refreshRewardAfterCompletion(cacheWith(rewardView()), FIRST);
+
+    expect(hasMissedEarn(42)).toBe(false);
+  });
+
+  it('환급을 받아 본 적이 없으면(출시 전) 적지 않는다', () => {
+    refreshRewardAfterCompletion(cacheWith(), FIRST);
+
+    expect(hasMissedEarn(42)).toBe(false);
   });
 });

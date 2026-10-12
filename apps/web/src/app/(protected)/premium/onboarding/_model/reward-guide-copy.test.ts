@@ -12,42 +12,44 @@ import { rewardGuideCopyOf } from './reward-guide-copy';
 const offCycle = { current: null, today: null, remainingDays: null };
 
 describe('rewardGuideCopyOf', () => {
-  it('환급 상품을 산 사람에게는 그 상품이 돌려주는 금액과 기간을 말한다', () => {
+  it('챌린지를 산 사람에게는 그 상품이 돌려주는 금액·기간과 하루 몫을 말한다', () => {
     const view = rewardView({
       current: rewardCycle({
-        maximumWon: 31920,
+        maximumWon: 30_000,
         balanceWon: 0,
-        eligibleDays: 92,
+        eligibleDays: 100,
       }),
     });
 
     expect(rewardGuideCopyOf(view)).toEqual({
       eyebrow: '오늘부터 챌린지 시작!',
-      amount: '최대 31,920원',
-      caption: '92일 동안 매일 공부하면 구독료를 돌려받아요',
+      amount: '최대 30,000원',
+      caption: '100일 동안 모은 만큼 돌려받아요',
+      dailyWon: 300,
       confirmed: true,
     });
   });
 
   it('며칠 지나 남은 날이 줄어도 상품의 전체 기간으로 말한다', () => {
     const view = rewardView({
-      current: rewardCycle({ eligibleDays: 92 }),
+      current: rewardCycle({ eligibleDays: 100 }),
       remainingDays: 80,
     });
 
     expect(rewardGuideCopyOf(view)?.caption).toBe(
-      '92일 동안 매일 공부하면 구독료를 돌려받아요',
+      '100일 동안 모은 만큼 돌려받아요',
     );
   });
 
-  it('결제를 확인하는 중이면 금액을 단정하지 않고 두 상품을 같이 말한다', () => {
-    // given — 결제는 끝났는데 환급 쪽 반영이 늦다. 어느 상품인지 아직 모른다
+  it('결제를 확인하는 중이면 금액을 단정하지 않고 규칙만 말한다', () => {
+    // given — 결제는 끝났는데 환급 쪽 반영이 늦다. 얼마짜리를 샀는지 아직 모른다
     const view = rewardView({ state: 'PENDING', ...offCycle });
 
     expect(rewardGuideCopyOf(view)).toEqual({
-      eyebrow: '매일 공부하면 수강료를 돌려받아요',
-      amount: '환급 챌린지 시작',
-      caption: '6개월은 낸 금액 전부, 3개월은 80%를 돌려받아요',
+      eyebrow: '오늘부터 챌린지 시작!',
+      amount: '환급 챌린지',
+      caption: '오늘의 시나리오를 한 날마다 쌓이고, 모은 만큼 돌려받아요',
+      dailyWon: null,
       confirmed: false,
     });
   });

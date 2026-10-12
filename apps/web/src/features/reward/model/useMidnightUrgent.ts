@@ -32,7 +32,7 @@ const subscribe = (onChange: () => void) => {
   };
 };
 
-// 꺼 둔 동안은 늘 false — 걸린 금액이 없으면 급할 일도 없다
+// 꺼 둔 동안은 늘 false — 오늘 받을 몫이 남아 있을 때만 급하다
 export const useMidnightUrgent = (enabled: boolean) => {
   const urgent = useSyncExternalStore(subscribe, urgentNow, () => false);
   return enabled && urgent;

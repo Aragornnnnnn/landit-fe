@@ -1,12 +1,13 @@
-// 환급이 바뀌는 순간(학습 완료, 결제) 서버에서 미리 받아 두거나, 지금 값을 기다려 받는다 — 다음 화면이 열렸을 때 이미 새 값이어야 한다.
+// 환급이 바뀌는 순간(시나리오 완료, 결제) 서버에서 미리 받아 두거나, 지금 값을 기다려 받는다 — 다음 화면이 열렸을 때 이미 새 값이어야 한다.
 // 버리기만 하면 화면이 다시 붙은 뒤에야 조회가 시작돼, 옛 값을 먼저 그리고 뒤늦게 바뀐다
 import type { QueryClient } from '@tanstack/react-query';
 
 import { getCurrentUserId } from '@/shared/auth/auth-store';
 
 import { getMyRewards, type RewardView } from '../api/reward';
-import { earnBaseOf, type ConversationActivity } from './completion-earn';
+import { earnBaseOf } from './completion-earn';
 import { REWARD_GC_MS, rewardKeys } from './keys';
+import { markMissedEarn } from './missed-earn';
 import { participantOf } from './reward-status';
 
 // 받아 둔 환급. 받아 본 적이 없으면(출시 전이거나 아직 묻지 않았다) undefined
@@ -36,30 +37,30 @@ export const refreshRewardAfterPurchase = (queryClient: QueryClient) => {
 };
 
 /**
- * 학습을 끝낸 순간 — 금액이 쌓이는 건 참여자뿐이라, 환급과 상관없는 사람은 묻지 않는다.
+ * 시나리오 대화를 끝낸 순간 — 금액이 쌓이는 건 참여자뿐이라, 환급과 상관없는 사람은 묻지 않는다.
  *
- * @param conversation 끝낸 것이 대화면 그 종류. 축하 화면이 받은 금액을 보여 줄지 정하도록 완료 전 상태를 적어 둔다
+ * @param todaysFirst 오늘의 시나리오를 처음 끝낸 것인가 — 그 대화만 적립 대상이다
  */
 export const refreshRewardAfterCompletion = (
   queryClient: QueryClient,
-  conversation?: ConversationActivity,
+  { todaysFirst }: { todaysFirst: boolean },
 ) => {
   const userId = getCurrentUserId();
   if (userId === null) return;
   const cached = cachedReward(queryClient, userId);
   const participant = cached === undefined ? null : participantOf(cached);
   // 새로 받기 전에 적는다 — 받아 둔 것이 곧 대화에 들어갈 때 알던 값이다. 받을 것이 없으면 전에 적어 둔 것을 지운다
-  if (conversation) {
-    const key = rewardKeys.earnBase(userId);
-    // 보는 화면이 없는 값이라 기본 보관 시간(5분)이면 축하 화면 전에 지워질 수 있다 — 스몰톡은 요약 화면을 거쳐 간다.
-    // 보관 시간은 캐시에 처음 놓일 때 정해지므로 적기 전에 건다
-    queryClient.setQueryDefaults(key, { gcTime: REWARD_GC_MS });
-    queryClient.setQueryData(
-      key,
-      participant ? earnBaseOf(participant, conversation) : null,
-    );
+  const key = rewardKeys.earnBase(userId);
+  // 보는 화면이 없는 값이라 기본 보관 시간(5분)이면 축하 화면 전에 지워질 수 있다 — 축하는 피드백 화면을 거쳐 간다.
+  // 보관 시간은 캐시에 처음 놓일 때 정해지므로 적기 전에 건다
+  queryClient.setQueryDefaults(key, { gcTime: REWARD_GC_MS });
+  queryClient.setQueryData(key, participant ? earnBaseOf(participant) : null);
+  if (participant === null) {
+    // 환급을 받아 본 적이 있고(출시됨) 참여자가 아니면, 이 대화는 챌린지였다면 받았을 몫이다 — 홈이 그걸 한 번 보여 준다.
+    // 권할 사람인지(무료·결제 가능)는 보여 주는 쪽이 가린다
+    if (cached !== undefined && todaysFirst) markMissedEarn(userId);
+    return;
   }
-  if (participant === null) return;
   renewReward(queryClient, userId);
 };
 

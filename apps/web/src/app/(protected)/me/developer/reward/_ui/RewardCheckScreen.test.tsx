@@ -46,9 +46,9 @@ describe('RewardCheckScreen', () => {
 
     render(<RewardCheckScreen />);
 
-    expect(screen.getByText('오늘 다 채움').closest('a')).toHaveAttribute(
+    expect(screen.getByText('오늘 받음').closest('a')).toHaveAttribute(
       'href',
-      '/me/developer/reward?case=full',
+      '/me/developer/reward?case=kept',
     );
   });
 
@@ -67,7 +67,7 @@ describe('RewardCheckScreen', () => {
 
     render(<RewardCheckScreen />);
 
-    expect(screen.getByText('오늘 다 채움')).toBeInTheDocument();
+    expect(screen.getByText('오늘 받음')).toBeInTheDocument();
   });
 
   it.each([['USER' as const], [undefined]])(

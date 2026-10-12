@@ -40,12 +40,10 @@ export const rewardScreenViewOf = ({
   return { kind: settled && !fetching ? 'outsider' : 'loading' };
 };
 
-// 쌓는 중인 사람이 화면에서 본 오늘 — 히어로 아래 문구(todayGuideOf)와 같은 순서로 가른다
-const activeStatusOf = (reward: RewardView): RewardViewStatus => {
-  if ((reward.today?.earnedWon ?? 0) > 0) return 'kept';
-  if ((balanceOf(reward) ?? 0) > 0) return 'at_risk';
-  return reward.lostYesterdayWon > 0 ? 'reset' : 'idle';
-};
+// 쌓는 중인 사람이 화면에서 본 오늘 — 오늘 몫을 받았는지 아직인지 둘뿐이다.
+// 타입에 남아 있는 at_risk·reset은 쉬면 사라지던 옛 정책의 값이라 더는 보내지 않는다
+const activeStatusOf = (reward: RewardView): RewardViewStatus =>
+  (reward.today?.earnedWon ?? 0) > 0 ? 'kept' : 'idle';
 
 const SETTLED_STATUS: Partial<Record<RewardState, RewardViewStatus>> = {
   ENDED: 'ended',

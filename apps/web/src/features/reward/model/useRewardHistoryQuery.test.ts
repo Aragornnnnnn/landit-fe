@@ -20,7 +20,7 @@ const getRewardHistory = vi.mocked(rewardApi.getRewardHistory);
 const item = (id: string): RewardHistoryItem => ({
   id,
   type: 'EARN',
-  activityType: 'EXPRESSION',
+  activityType: 'SCENARIO',
   date: '2026-10-10',
   occurredAt: '2026-10-10T08:24:11+09:00',
   amountWon: 11,
