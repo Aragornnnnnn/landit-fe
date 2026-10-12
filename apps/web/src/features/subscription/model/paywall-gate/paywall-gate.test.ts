@@ -30,32 +30,29 @@ describe('isRewardChallengeLive', () => {
     bridgeVersion: 8,
   });
 
-  it('스위치가 켜져 있고 환급 상품이 실린 iOS 버전이면 환급이 열린다', () => {
-    expect(
-      isRewardChallengeLive({
-        rewardEnabled: true,
-        context: shell('ios', '1.4.0'),
-      }),
-    ).toBe(true);
-  });
+  it.each(['ios', 'android'] as const)(
+    '스위치가 켜져 있고 환급 상품이 실린 %s 버전이면 환급이 열린다',
+    (platform) => {
+      expect(
+        isRewardChallengeLive({
+          rewardEnabled: true,
+          context: shell(platform, '1.4.0'),
+        }),
+      ).toBe(true);
+    },
+  );
 
-  it('그보다 낮은 iOS 버전에는 열지 않는다 — 심사 전 상품이 기존 사용자에게 보이면 결제가 실패한다', () => {
-    expect(
-      isRewardChallengeLive({
-        rewardEnabled: true,
-        context: shell('ios', '1.3.3'),
-      }),
-    ).toBe(false);
-  });
-
-  it('최소 버전을 적지 않은 플랫폼에는 버전이 높아도 열지 않는다', () => {
-    expect(
-      isRewardChallengeLive({
-        rewardEnabled: true,
-        context: shell('android', '1.4.0'),
-      }),
-    ).toBe(false);
-  });
+  it.each(['ios', 'android'] as const)(
+    '그보다 낮은 %s 버전에는 열지 않는다 — 심사 전 상품이 기존 사용자에게 보이면 결제가 실패한다',
+    (platform) => {
+      expect(
+        isRewardChallengeLive({
+          rewardEnabled: true,
+          context: shell(platform, '1.3.3'),
+        }),
+      ).toBe(false);
+    },
+  );
 
   it('브라우저에는 열지 않는다', () => {
     expect(isRewardChallengeLive({ rewardEnabled: true, context: null })).toBe(

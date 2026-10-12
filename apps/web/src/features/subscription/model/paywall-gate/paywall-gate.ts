@@ -25,10 +25,11 @@ export interface RewardEnvironment {
   context: NativeContext | null;
 }
 
-// 환급 상품이 실린 앱 버전 — 스토어 심사가 플랫폼마다 따로라 따로 적는다. 적지 않은 플랫폼은 아직 열지 않았다
-const REWARD_MIN_APP_VERSION: Partial<
-  Record<NativeContext['platform'], string>
-> = { ios: '1.4.0' };
+// 환급 상품이 실린 앱 버전 — 스토어 심사가 플랫폼마다 따로라 따로 적는다
+const REWARD_MIN_APP_VERSION: Record<NativeContext['platform'], string> = {
+  ios: '1.4.0',
+  android: '1.4.0',
+};
 
 /** open: 그냥 들어간다 / locked: 페이월로 보낸다 / unknown: 판단 재료가 오는 중이라 잠시 보류 */
 export type PaywallGateDecision = 'open' | 'locked' | 'unknown';
@@ -49,9 +50,9 @@ export const isRewardChallengeLive = ({
   context,
 }: RewardEnvironment) => {
   if (!rewardEnabled || context === null) return false;
-  const minimum = REWARD_MIN_APP_VERSION[context.platform];
-  return (
-    minimum !== undefined && isAppVersionAtLeast(context.appVersion, minimum)
+  return isAppVersionAtLeast(
+    context.appVersion,
+    REWARD_MIN_APP_VERSION[context.platform],
   );
 };
 
