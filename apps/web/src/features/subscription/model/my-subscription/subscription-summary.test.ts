@@ -41,6 +41,31 @@ describe('summarizeSubscription', () => {
     ).toMatchObject({ renews: true });
   });
 
+  it.each([
+    ['정가 기간으로 와도', {}],
+    ['체험 기간으로 와도', { periodType: 'TRIAL' }],
+    ['해지 예약으로 와도', { subscriptionStatus: 'CANCELED' }],
+  ] satisfies [string, Partial<MySubscription>][])(
+    '100일 이용권은 %s 그날로 끝나는 이용 중이다 — 한 번 결제하는 상품이라 다음 결제도 예약할 해지도 없다',
+    (_case, overrides) => {
+      expect(
+        summarizeSubscription(
+          premium({
+            productId: 'com.saynow.app.pass.50000',
+            price: 50_000,
+            ...overrides,
+          }),
+        ),
+      ).toEqual({
+        kind: 'active',
+        expiresAt: '2026-10-04T12:00:00',
+        renews: false,
+        plan: 'pass',
+        price: 50_000,
+      });
+    },
+  );
+
   it('무료 체험 중이면 "체험 중"이고 체험이 끝나는 날 첫 결제가 된다', () => {
     expect(summarizeSubscription(premium({ periodType: 'TRIAL' }))).toEqual({
       kind: 'trial',
