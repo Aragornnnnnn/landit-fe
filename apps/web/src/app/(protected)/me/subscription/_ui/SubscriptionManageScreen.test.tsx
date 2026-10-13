@@ -133,6 +133,29 @@ describe('SubscriptionManageScreen', () => {
     expect(screen.getByRole('link', { name: '결제 내역' })).toBeInTheDocument();
   });
 
+  it('100일 이용권은 이용권 관리 화면으로 열리고 만료일만 말한다 — 한 번 결제하는 상품이라 다음 결제도 해지 행도 없다', () => {
+    setSubscription(
+      premium({
+        productId: 'com.saynow.app.pass.50000',
+        price: 50_000,
+        currency: 'KRW',
+      }),
+    );
+    render(<SubscriptionManageScreen />);
+
+    expect(screen.getByText('이용권 관리')).toBeInTheDocument();
+    expect(screen.queryByText('구독 관리')).not.toBeInTheDocument();
+    expect(screen.getByText('100일 이용권을 쓰고 있어요')).toBeInTheDocument();
+    expect(screen.getByText('이용 만료일')).toBeInTheDocument();
+    expect(screen.getByText('2026년 10월 4일')).toBeInTheDocument();
+    expect(screen.queryByText(/다음 결제/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/자동 갱신/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /해지/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '결제 내역' })).toBeInTheDocument();
+  });
+
   it('결제 내역 행이 결제 내역 화면으로 잇고 계측을 남긴다', () => {
     render(<SubscriptionManageScreen />);
 

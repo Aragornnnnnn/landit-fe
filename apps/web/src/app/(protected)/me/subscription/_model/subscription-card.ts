@@ -20,12 +20,16 @@ export interface CardRow {
   listPrice?: string;
 }
 
-// 갱신이 없는데 프리미엄이면 무료로 받은 기간이다 — 우리 상품엔 선결제가 없어 대시보드 프로모션 부여뿐이다
+// 갱신이 없는데 프리미엄이면 무료로 받은 기간이다 — 돈을 내고 산 100일 이용권만 빼면 대시보드 프로모션 부여뿐이다
 const isGranted = (summary: PaidSubscriptionSummary) =>
-  summary.kind === 'active' && !summary.renews;
+  summary.kind === 'active' && !summary.renews && summary.plan !== 'pass';
+
+const PASS_TITLE = `${PLAN_TITLE.pass}을 쓰고 있어요`;
 
 // 구독 중이고 플랜을 알면 "월간 프리미엄"처럼 플랜을 앞에 붙인다. 받은 기간은 체험과 같은 말로 부른다
 export const toCardTitle = (summary: PaidSubscriptionSummary) => {
+  // 이용권은 이름이 곧 상품이라 "프리미엄"을 덧붙이지 않는다
+  if (summary.plan === 'pass') return PASS_TITLE;
   if (isGranted(summary)) return STATUS_TITLE.trial;
   return summary.kind === 'active' && summary.plan
     ? `${PLAN_TITLE[summary.plan]} ${STATUS_TITLE.active}`

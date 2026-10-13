@@ -60,6 +60,10 @@ export const summarizeSubscription = (
   const { subscriptionStatus, periodType, expiresAt } = subscription;
   const plan = planFromProductId(subscription.productId);
   const price = toKrwPrice(subscription);
+  // 100일 이용권은 한 번 결제하는 상품이라 상태·기간 종류가 무엇으로 오든 그날로 끝나는 이용 중이다 — 예약할 해지도 다음 결제도 없다
+  if (plan === 'pass') {
+    return { kind: 'active', expiresAt, renews: false, plan, price };
+  }
   if (subscriptionStatus === 'CANCELED') {
     return {
       kind: 'canceled',
