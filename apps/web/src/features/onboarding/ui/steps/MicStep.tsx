@@ -29,7 +29,7 @@ export const MicStep = ({ onNext }: { onNext: () => void }) => {
       </div>
 
       <Button onClick={requestMicPermission} loading={requesting}>
-        확인했어요
+        계속할게요
       </Button>
     </>
   );
