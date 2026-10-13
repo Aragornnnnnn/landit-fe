@@ -297,9 +297,16 @@ export type PaywallGateSource =
   | 'conversation_finished'
   // 총평에서 상세 피드백 보기를 눌렀는데 서버가 잠근 세션 — 두 번째 시나리오부터 페이월이 처음 뜨는 곳
   | 'feedback_detail';
-// 결제가 실패한 갈래 — 환경 문제 셋과 셸이 회신한 실패. 셸의 문구는 message에 따로 싣는다
+// 결제가 실패한 갈래 — 환경 문제 셋, 셸이 회신한 실패, 이용권을 결제 전에 막은 둘. 셸의 문구는 message에 따로 싣는다
 export type PurchaseFailureReason =
-  'browser' | 'outdated_shell' | 'no_response' | 'shell_error';
+  | 'browser'
+  | 'outdated_shell'
+  | 'no_response'
+  | 'shell_error'
+  // 100일 이용권을 지금 살 수 없다 — 도는 챌린지가 있거나 결제를 검토 중
+  | 'pass_unavailable'
+  // 이용권을 살 수 있는지 확인하지 못했다 — 조회 실패·시간 초과
+  | 'pass_check_failed';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete' | 'alarm_delete';
 export type RetryScreen =

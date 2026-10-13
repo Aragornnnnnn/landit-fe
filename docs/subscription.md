@@ -240,7 +240,7 @@ RevenueCat 대시보드에서 직접 부여한 무료 이용 기간(설문 참�
 셸과 주고받는 코드는 `features/subscription/api/shell-purchases.ts` 한 파일이다. 결제를 시킬 수 있는 환경인지(브라우저·구버전 셸·준비된 셸)와 왕복 네 가지, 제한 시간이 여기 있다. 왕복 자체는 `shared/bridge/request.ts`의 `requestFromNative`가 맡는다 — 회신 구독을 먼저 걸고 요청을 보낸 뒤 기다리던 종류의 회신 하나로 끝내며, 화면이 사라지면 `AbortSignal`로 끊어 5분짜리 결제 대기가 남지 않게 한다.
 
 1. 페이월 진입 시 `useOffering`이 `GET_OFFERINGS`로 현재 오퍼링을 받는다. 원화면 카드 숫자를 그 값으로 다시 계산하고, 못 받으면 등록값 그대로다.
-2. CTA → `usePurchase().purchase(plan)`. 훅이 플랜별 패키지에서 패키지 id를 고르고(없으면 `$rc_monthly`/`$rc_annual`) `PURCHASE`를 보낸다. 복원 버튼 → `restore()` → `RESTORE_PURCHASES`.
+2. CTA → `usePurchase().purchase(plan)`. 훅이 플랜별 패키지에서 패키지 id를 고르고(없으면 `$rc_monthly`/`$rc_annual`) `PURCHASE`를 보낸다. 복원 버튼 → `restore()` → `RESTORE_PURCHASES`. 100일 이용권은 `PURCHASE`를 보내기 직전에 `GET /api/v1/me/rewards`를 새로 받아 `purchaseAvailable`이 참일 때만 진행한다(LAN-668) — 스토어는 이용 기간이 남아 있어도 같은 이용권을 다시 팔고, 서버는 중복 결제를 자동 환불하지 않는다. 거짓이면 "지금은 결제할 수 없어요", 조회 실패·8초 초과·값 누락이면 "다시 시도" 안내로 막고 `Purchase Failed{reason: pass_unavailable | pass_check_failed}`를 남긴다. 묻는 사이 화면을 떠났거나 계정이 바뀌면 결제하지 않는다. 확인 함수(`paywall/_model/pass-availability.ts`)는 이용권을 파는 화면이 `usePurchase`에 넘기고, 넘기지 않으면 이용권 결제가 막힌다. 월간·연간과 복원은 묻지 않는다.
 3. `success`를 받으면 구독 조회를 최대 5회×2초 반복해 `premium=true`를 기다린다. 웹훅이 BE에 닿기까지 몇 초 걸린다. 확인되면 그 응답을 구독 쿼리 캐시에 바로 넣어 게이트가 다시 조회하지 않게 한다. 그동안 CTA는 로딩이다.
 4. 확인되면 페이월을 닫고 게이트가 붙여 준 `?from=`(그 대화의 표현 분기)으로 돌아간다. `from`이 없거나 내부 경로가 아니면 홈이다. 끝까지 무료면 "확인 중" 안내를 띄우고도 같은 곳으로 간다 — 스토어 결제는 끝났으니 사용자를 붙잡아 두지 않는다. 취소는 토스트 없이 버튼만 복구한다.
 
