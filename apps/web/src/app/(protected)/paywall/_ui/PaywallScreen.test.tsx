@@ -13,9 +13,11 @@ const mocks = vi.hoisted(() => ({
   busy: false,
   packages: {} as Record<string, unknown>,
   dismiss: vi.fn(),
+  checkPassAvailability: vi.fn(),
   purchaseOptions: null as {
     packages: unknown;
     onUnlocked: (reason: 'purchase' | 'restore') => void;
+    checkPassAvailability?: unknown;
   } | null,
 }));
 
@@ -25,6 +27,9 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 // 조회 캐시는 이 화면이 직접 쓰지 않는다 — 결제 뒤 환급을 새로 받으라고 넘겨주기만 한다
 vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => 'client' }));
+vi.mock('../_model/pass-availability', () => ({
+  checkPassAvailability: mocks.checkPassAvailability,
+}));
 vi.mock('@/features/reward/model/refresh-reward', () => ({
   refreshRewardAfterPurchase: mocks.refreshRewardAfterPurchase,
 }));
@@ -37,6 +42,7 @@ vi.mock('@/features/subscription/model/purchase/usePurchase', () => ({
   usePurchase: (options: {
     packages: unknown;
     onUnlocked: (reason: 'purchase' | 'restore') => void;
+    checkPassAvailability?: unknown;
   }) => {
     mocks.purchaseOptions = options;
     return {
@@ -107,6 +113,14 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('PaywallScreen', () => {
+  it('결제 지휘에 이용권 구매 가능 확인을 넘긴다 — 넘기지 않으면 이용권 결제가 막힌다', () => {
+    render(<PaywallScreen />);
+
+    expect(mocks.purchaseOptions?.checkPassAvailability).toBe(
+      mocks.checkPassAvailability,
+    );
+  });
+
   it('처음엔 연간이 선택돼 있어 CTA가 무료 체험 문구다', () => {
     render(<PaywallScreen />);
 

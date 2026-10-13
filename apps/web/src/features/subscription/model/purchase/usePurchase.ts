@@ -1,6 +1,6 @@
 'use client';
 
-// 결제·복원 지휘 훅 — 환경 판정 → 셸에 요청 → 회신 분기 → 서버 유료 반영 확인 순으로 위에서 아래로 읽힌다.
+// 결제·복원 지휘 훅 — 환경 판정 → (이용권이면 구매 가능 확인) → 셸에 요청 → 회신 분기 → 서버 유료 반영 확인 순으로 위에서 아래로 읽힌다.
 // 화면은 busy로 버튼만 잠그고, 유료가 확인되면(또는 결제는 끝났는데 반영이 늦으면) onUnlocked로 다음 화면을 정한다
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS, type PurchaseFailureReason } from '@landit/analytics';
@@ -25,6 +25,9 @@ import { PREMIUM_WAIT, waitForPremium } from './wait-for-premium';
 // 무엇으로 유료가 풀렸나 — 결제 직후에만 프리미엄 온보딩을 보이고, 복원은 원래 가던 곳으로 바로 보낸다
 export type UnlockReason = 'purchase' | 'restore';
 
+/** 100일 이용권을 지금 살 수 있는가 — 살 수 있음 · 살 수 없음 · 알 수 없음(조회 실패·시간 초과) */
+export type PassAvailability = 'available' | 'unavailable' | 'unknown';
+
 interface UsePurchaseOptions {
   /** 플랜별 패키지 — 결제할 패키지 id를 여기서 고른다. 비어 있으면 표준 identifier로 결제한다 */
   packages: PlanPackages;
@@ -32,7 +35,27 @@ interface UsePurchaseOptions {
   onUnlocked: (reason: UnlockReason) => void;
   /** 이탈 할인 시트에서 부를 때 true — 결제 이벤트에 할인 결제였음을 남긴다 */
   promo?: boolean;
+  /**
+   * 이용권을 지금 살 수 있는지 서버에 새로 묻는다 — 이용권을 파는 화면이 넘긴다.
+   * 구매 가능 여부는 환급 도메인이 알아서 주입받는다. 받지 못했으면 이용권은 결제하지 않는다
+   */
+  checkPassAvailability?: () => Promise<PassAvailability>;
 }
+
+// 이용권을 살 수 없을 때의 계측 사유와 안내 문구
+const PASS_BLOCKED: Record<
+  Exclude<PassAvailability, 'available'>,
+  { reason: PurchaseFailureReason; message: string }
+> = {
+  unavailable: {
+    reason: 'pass_unavailable',
+    message: '진행 중이거나 확인 중인 챌린지가 있어 지금은 결제할 수 없어요',
+  },
+  unknown: {
+    reason: 'pass_check_failed',
+    message: '구매할 수 있는지 확인하지 못했어요. 잠시 후 다시 시도해 주세요',
+  },
+};
 
 // 결제를 시킬 수 없는 환경별 계측 사유와 안내 문구
 const UNSUPPORTED: Record<
@@ -61,6 +84,7 @@ export const usePurchase = ({
   packages,
   onUnlocked,
   promo,
+  checkPassAvailability,
 }: UsePurchaseOptions) => {
   // 결제 이벤트마다 같은 꼬리를 붙인다 — 정가 결제와 할인 결제를 나눠 보려면 전 구간에 있어야 한다
   const promoTag = promo ? { promo: true } : {};
@@ -88,6 +112,15 @@ export const usePurchase = ({
     return subscription !== null;
   };
 
+  // 스토어는 이용 기간이 남아 있어도 같은 이용권을 다시 판다 — 돈만 나가고 이용권은 늘지 않으니 살 수 있다는 답을 들었을 때만 연다
+  const findPassBlock = async () => {
+    // 확인할 방법을 받지 못했거나 확인이 던지면 알 수 없는 것으로 친다 — 넘겨짚어 결제하지 않는다
+    const availability: PassAvailability = checkPassAvailability
+      ? await checkPassAvailability().catch(() => 'unknown' as const)
+      : 'unknown';
+    return availability === 'available' ? null : PASS_BLOCKED[availability];
+  };
+
   const purchase = async (plan: SubscriptionPlan) => {
     if (busy) return;
     const unsupported = findUnsupported();
@@ -104,6 +137,21 @@ export const usePurchase = ({
     const signal = lifetime.current?.signal;
     setBusy(true);
     try {
+      if (plan === 'pass') {
+        const blocked = await findPassBlock();
+        // 묻는 사이 화면을 떠났거나 계정이 바뀌었으면 그 답으로 결제하지 않는다
+        if (signal?.aborted || getCurrentUserId() !== userId) return;
+        if (blocked) {
+          track(EVENTS.PURCHASE_FAILED, {
+            plan,
+            reason: blocked.reason,
+            ...promoTag,
+          });
+          showToast(blocked.message);
+          return;
+        }
+      }
+
       const result = await purchaseViaBridge(
         packageIdFor(plan, packages),
         signal,

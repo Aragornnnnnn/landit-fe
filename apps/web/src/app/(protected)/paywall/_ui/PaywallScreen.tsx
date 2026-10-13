@@ -28,6 +28,7 @@ import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
 import { needsScrollToPlans } from '../_lib/plans-below-fold';
+import { checkPassAvailability } from '../_model/pass-availability';
 import { buildRewardPlan, REWARD_PLAN_ID } from '../_model/paywall-content';
 import {
   getBillingNotice,
@@ -116,6 +117,7 @@ export const PaywallScreen = ({
   const { busy, purchase, restore } = usePurchase({
     packages,
     onUnlocked: unlock,
+    checkPassAvailability,
   });
 
   const selectPlan = (id: SubscriptionPlan) => {

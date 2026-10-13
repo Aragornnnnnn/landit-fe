@@ -1,4 +1,4 @@
-// 결제 지휘 훅의 갈림길 — 환경 차단, 취소·실패·성공, 서버 반영 대기, 복원 결과, 화면이 사라진 뒤의 회신
+// 결제 지휘 훅의 갈림길 — 환경 차단, 이용권 구매 가능 확인, 취소·실패·성공, 서버 반영 대기, 복원 결과, 화면이 사라진 뒤의 회신
 // @vitest-environment jsdom
 import { createElement, StrictMode, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -6,7 +6,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlanPackages } from '../product/offering';
-import { usePurchase } from './usePurchase';
+import { usePurchase, type PassAvailability } from './usePurchase';
 
 const mocks = vi.hoisted(() => ({
   track: vi.fn(),
@@ -18,11 +18,11 @@ const mocks = vi.hoisted(() => ({
 }));
 
 // zustand 훅은 자기 밑 react 복사본을 잡아 렌더러와 어긋난다 — 선택자만 흉내 낸다 (useSatisfactionSheet.test 선례)
+const auth = vi.hoisted(() => ({ member: { userId: 42 } }));
 vi.mock('@/shared/auth/auth-store', () => {
-  const state = { member: { userId: 42 } };
-  const useAuthStore = (selector: (s: unknown) => unknown) => selector(state);
+  const useAuthStore = (selector: (s: unknown) => unknown) => selector(auth);
   // 확인 뒤 계정이 바뀌었는지 볼 때 getCurrentUserId로 읽는다
-  return { useAuthStore, getCurrentUserId: () => state.member.userId };
+  return { useAuthStore, getCurrentUserId: () => auth.member.userId };
 });
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 vi.mock('@/shared/ui/toast', () => ({ showToast: mocks.showToast }));
@@ -65,15 +65,24 @@ const wrapper = ({ children }: { children: ReactNode }) =>
 const strictWrapper = ({ children }: { children: ReactNode }) =>
   createElement(StrictMode, null, wrapper({ children }));
 
-const renderPurchase = (packages: PlanPackages = {}, strict = false) => {
+const renderPurchase = (
+  packages: PlanPackages = {},
+  strict = false,
+  checkPassAvailability?: () => Promise<PassAvailability>,
+) => {
   const onUnlocked = vi.fn();
-  const hook = renderHook(() => usePurchase({ packages, onUnlocked }), {
-    wrapper: strict ? strictWrapper : wrapper,
-  });
+  const hook = renderHook(
+    () => usePurchase({ packages, onUnlocked, checkPassAvailability }),
+    { wrapper: strict ? strictWrapper : wrapper },
+  );
   return { ...hook, onUnlocked };
 };
 
+const success = { type: 'PURCHASE_RESULT', status: 'success' };
+
 beforeEach(() => {
+  vi.clearAllMocks();
+  auth.member.userId = 42;
   mocks.getNativeContext.mockReturnValue(readyShell);
   mocks.getMySubscription.mockResolvedValue(premium);
 });
@@ -275,6 +284,158 @@ describe('usePurchase — 결제', () => {
     expect(mocks.getMySubscription).not.toHaveBeenCalled();
     expect(mocks.showToast).not.toHaveBeenCalled();
     expect(onUnlocked).not.toHaveBeenCalled();
+  });
+});
+
+describe('usePurchase — 100일 이용권 구매 가능 확인', () => {
+  it('살 수 있다는 답을 들은 뒤에야 스토어 결제를 요청한다', async () => {
+    mocks.purchaseViaBridge.mockResolvedValue(success);
+    const check = vi.fn<() => Promise<PassAvailability>>(async () => {
+      expect(mocks.purchaseViaBridge).not.toHaveBeenCalled();
+      return 'available';
+    });
+    const { result, onUnlocked } = renderPurchase({}, false, check);
+
+    await act(() => result.current.purchase('pass'));
+
+    expect(check).toHaveBeenCalledTimes(1);
+    expect(mocks.purchaseViaBridge).toHaveBeenCalledTimes(1);
+    expect(onUnlocked).toHaveBeenCalledWith('purchase');
+  });
+
+  it('살 수 없으면 스토어 결제를 요청하지 않고 지금은 살 수 없다고 안내한다', async () => {
+    const { result, onUnlocked } = renderPurchase(
+      {},
+      false,
+      async () => 'unavailable',
+    );
+
+    await act(() => result.current.purchase('pass'));
+
+    expect(mocks.purchaseViaBridge).not.toHaveBeenCalled();
+    expect(mocks.showToast).toHaveBeenCalledWith(
+      '진행 중이거나 확인 중인 챌린지가 있어 지금은 결제할 수 없어요',
+    );
+    expect(mocks.track).toHaveBeenCalledWith('Purchase Failed', {
+      plan: 'pass',
+      reason: 'pass_unavailable',
+    });
+    expect(onUnlocked).not.toHaveBeenCalled();
+    expect(result.current.busy).toBe(false);
+  });
+
+  it('확인하지 못했으면 결제를 막고 다시 시도하라고 안내한다', async () => {
+    const { result } = renderPurchase({}, false, async () => 'unknown');
+
+    await act(() => result.current.purchase('pass'));
+
+    expect(mocks.purchaseViaBridge).not.toHaveBeenCalled();
+    expect(mocks.showToast).toHaveBeenCalledWith(
+      '구매할 수 있는지 확인하지 못했어요. 잠시 후 다시 시도해 주세요',
+    );
+    expect(mocks.track).toHaveBeenCalledWith('Purchase Failed', {
+      plan: 'pass',
+      reason: 'pass_check_failed',
+    });
+  });
+
+  it('확인이 던져도 결제를 막는다', async () => {
+    const { result } = renderPurchase({}, false, () =>
+      Promise.reject(new Error('boom')),
+    );
+
+    await act(() => result.current.purchase('pass'));
+
+    expect(mocks.purchaseViaBridge).not.toHaveBeenCalled();
+    expect(mocks.track).toHaveBeenCalledWith('Purchase Failed', {
+      plan: 'pass',
+      reason: 'pass_check_failed',
+    });
+    expect(result.current.busy).toBe(false);
+  });
+
+  it('확인할 방법을 받지 못했으면 이용권은 결제하지 않는다', async () => {
+    const { result } = renderPurchase();
+
+    await act(() => result.current.purchase('pass'));
+
+    expect(mocks.purchaseViaBridge).not.toHaveBeenCalled();
+    expect(mocks.track).toHaveBeenCalledWith('Purchase Failed', {
+      plan: 'pass',
+      reason: 'pass_check_failed',
+    });
+  });
+
+  it('확인하는 동안 다시 눌러도 확인과 결제는 한 번만 나간다', async () => {
+    mocks.purchaseViaBridge.mockResolvedValue(success);
+    let answer!: (availability: PassAvailability) => void;
+    const check = vi.fn(
+      () => new Promise<PassAvailability>((resolve) => (answer = resolve)),
+    );
+    const { result } = renderPurchase({}, false, check);
+
+    let first!: Promise<void>;
+    act(() => {
+      first = result.current.purchase('pass');
+    });
+    await waitFor(() => expect(result.current.busy).toBe(true));
+    await act(() => result.current.purchase('pass'));
+    await act(async () => {
+      answer('available');
+      await first;
+    });
+
+    expect(check).toHaveBeenCalledTimes(1);
+    expect(mocks.purchaseViaBridge).toHaveBeenCalledTimes(1);
+  });
+
+  it('확인을 기다리는 사이 화면이 사라지면 결제를 요청하지 않는다', async () => {
+    let answer!: (availability: PassAvailability) => void;
+    const check = () =>
+      new Promise<PassAvailability>((resolve) => (answer = resolve));
+    const { result, unmount } = renderPurchase({}, false, check);
+
+    let pending!: Promise<void>;
+    act(() => {
+      pending = result.current.purchase('pass');
+    });
+    unmount();
+    answer('available');
+    await pending;
+
+    expect(mocks.purchaseViaBridge).not.toHaveBeenCalled();
+    expect(mocks.showToast).not.toHaveBeenCalled();
+  });
+
+  it('확인을 기다리는 사이 계정이 바뀌면 결제를 요청하지 않는다', async () => {
+    let answer!: (availability: PassAvailability) => void;
+    const check = () =>
+      new Promise<PassAvailability>((resolve) => (answer = resolve));
+    const { result } = renderPurchase({}, false, check);
+
+    let pending!: Promise<void>;
+    act(() => {
+      pending = result.current.purchase('pass');
+    });
+    auth.member.userId = 77;
+    await act(async () => {
+      answer('available');
+      await pending;
+    });
+
+    expect(mocks.purchaseViaBridge).not.toHaveBeenCalled();
+    expect(result.current.busy).toBe(false);
+  });
+
+  it('월간·연간은 확인 없이 바로 결제한다', async () => {
+    mocks.purchaseViaBridge.mockResolvedValue(success);
+    const check = vi.fn<() => Promise<PassAvailability>>();
+    const { result } = renderPurchase({}, false, check);
+
+    await act(() => result.current.purchase('yearly'));
+
+    expect(check).not.toHaveBeenCalled();
+    expect(mocks.purchaseViaBridge).toHaveBeenCalledTimes(1);
   });
 });
 
