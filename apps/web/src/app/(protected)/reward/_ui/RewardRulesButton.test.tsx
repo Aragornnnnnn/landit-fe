@@ -19,7 +19,7 @@ describe('RewardRulesButton', () => {
     fireEvent.click(screen.getByRole('button', { name: '환급 규칙' }));
 
     expect(
-      screen.getByText('매일 오늘의 시나리오를 할 때마다 최대 500원이 쌓여요'),
+      screen.getByText('매일 오늘의 시나리오를 하면 최대 500원이 쌓여요'),
     ).toBeInTheDocument();
     expect(analytics.track.mock.calls).toEqual([['Reward Rules Opened']]);
   });

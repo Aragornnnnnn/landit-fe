@@ -474,7 +474,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     expect(screen.getByText('− 30,000원')).toBeInTheDocument();
     expect(screen.getByText('(100일 × 300원)')).toBeInTheDocument();
     expect(
-      screen.getByText('매일 오늘의 시나리오를 할 때마다 300원이 쌓여요'),
+      screen.getByText('매일 오늘의 시나리오를 하면 최대 300원이 쌓여요'),
     ).toBeInTheDocument();
   });
 });
