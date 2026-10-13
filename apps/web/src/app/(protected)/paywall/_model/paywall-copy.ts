@@ -31,7 +31,7 @@ export const getRewardSteps = ({ dailyRefund }: RewardPlan) =>
   [
     [
       '💰',
-      `매일 오늘의 시나리오를 하면 최대 ${formatWon(dailyRefund)}이 쌓여요`,
+      `매일 오늘의 시나리오를 할 때마다 ${formatWon(dailyRefund)}이 쌓여요`,
     ],
     ['📅', '챌린지 기간이 끝나면 내가 모은 만큼 돈을 돌려받아요'],
   ] as const;

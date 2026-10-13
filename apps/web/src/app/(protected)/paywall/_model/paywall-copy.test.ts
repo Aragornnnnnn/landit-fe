@@ -65,7 +65,7 @@ describe('환급 챌린지 문구', () => {
   it('안내 첫 줄은 하루 몫을 가격에서 읽는다', () => {
     const [[, earning]] = getRewardSteps(buildRewardPlan(30_000));
 
-    expect(earning).toBe('매일 오늘의 시나리오를 하면 최대 300원이 쌓여요');
+    expect(earning).toBe('매일 오늘의 시나리오를 할 때마다 300원이 쌓여요');
   });
 
   it('무대 띠는 결제 금액이 아니라 모은 만큼 돌려받는다고 말한다', () => {
