@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { width: 1240px; padding: 40px; background: #fff; color: #1c1c1e;
+    font-family: -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+  h1 { font-size: 24px; font-weight: 800; }
+  .sub { margin-top: 6px; font-size: 15px; color: #6b6b70; }
+  .cols { display: grid; grid-template-columns: 400px 1fr; gap: 28px; margin-top: 28px; }
+  .col { border: 1.5px solid #e4e4e7; border-radius: 16px; padding: 24px; }
+  .tag { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 800; }
+  .before .tag { background: #f1f1f3; color: #55555b; }
+  .after .tag { background: #fff0e6; color: #c2540a; }
+  .lead { margin-top: 10px; font-size: 15px; font-weight: 700; }
+  .flow { display: flex; flex-direction: column; align-items: center; margin-top: 22px; }
+  .box { width: 100%; border: 1.5px solid #d4d4d8; border-radius: 12px; padding: 14px 16px;
+    text-align: center; font-size: 15px; font-weight: 700; background: #fff; }
+  .box small { display: block; margin-top: 4px; font-size: 13px; font-weight: 500; color: #6b6b70; }
+  .new { border-color: #e8792b; background: #fff7f0; }
+  .ok { border-color: #2f9e62; background: #f0faf4; }
+  .bad { border-color: #d9423a; background: #fdf1f0; }
+  .bad small { color: #a5332d; }
+  .arrow { height: 30px; width: 2px; background: #a1a1aa; position: relative; margin: 2px 0 8px; }
+  .arrow::after { content: ""; position: absolute; bottom: -6px; left: -5px;
+    border: 6px solid transparent; border-top-color: #a1a1aa; border-bottom: 0; }
+  .branches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; width: 100%; }
+  .branch { display: flex; flex-direction: column; align-items: center; }
+  .cond { font-size: 13px; font-weight: 800; padding: 3px 10px; border-radius: 999px; margin-bottom: 4px; }
+  .cond.g { background: #e3f5ea; color: #1f7a48; }
+  .cond.r { background: #fbe4e2; color: #a5332d; }
+  .cond.y { background: #fdf0d2; color: #8a6100; }
+  .warn { border-color: #d9a520; background: #fffaeb; }
+  .warn small { color: #7a5800; }
+  .note { margin-top: 20px; padding: 12px 16px; border-radius: 12px; background: #f6f6f7;
+    font-size: 14px; line-height: 1.6; color: #3f3f46; }
+  .note b { color: #1c1c1e; }
+</style>
+</head>
+<body>
+  <h1>100일 이용권 결제 흐름</h1>
+  <p class="sub">스토어는 이용 기간이 남아 있어도 같은 이용권을 다시 팝니다. 결제창을 띄우기 전에 우리가 먼저 확인합니다.</p>
+
+  <div class="cols">
+    <section class="col before">
+      <span class="tag">BEFORE</span>
+      <p class="lead">확인 없이 바로 결제창</p>
+      <div class="flow">
+        <div class="box">결제 버튼 누름</div>
+        <div class="arrow"></div>
+        <div class="box">스토어 결제창</div>
+        <div class="arrow"></div>
+        <div class="box">결제 완료</div>
+        <div class="arrow"></div>
+        <div class="box bad">진행 중인 챌린지가 있었다면
+          <small>돈은 한 번 더 나가고 이용권은 늘지 않음<br>서버는 검토 상태로 남기고 자동 환불하지 않음</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="col after">
+      <span class="tag">AFTER</span>
+      <p class="lead">결제창 전에 "지금 살 수 있나"를 서버에 새로 묻기</p>
+      <div class="flow">
+        <div class="box">결제 버튼 누름</div>
+        <div class="arrow"></div>
+        <div class="box new">구매 가능 여부 새로 조회
+          <small>받아 둔 값은 쓰지 않음 · 조회하는 동안 버튼 잠금</small>
+        </div>
+        <div class="arrow"></div>
+        <div class="branches">
+          <div class="branch">
+            <span class="cond g">살 수 있음</span>
+            <div class="arrow"></div>
+            <div class="box ok">스토어 결제창
+              <small>기존 결제 흐름 그대로</small>
+            </div>
+          </div>
+          <div class="branch">
+            <span class="cond r">살 수 없음</span>
+            <div class="arrow"></div>
+            <div class="box bad">결제 차단
+              <small>"진행 중이거나 확인 중인 챌린지가 있어 지금은 결제할 수 없어요"</small>
+            </div>
+          </div>
+          <div class="branch">
+            <span class="cond y">확인 실패</span>
+            <div class="arrow"></div>
+            <div class="box warn">결제 차단
+              <small>오류 · 8초 초과 · 값 누락<br>"잠시 후 다시 시도해 주세요"</small>
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          <b>기다리는 사이 화면을 떠나거나 계정이 바뀌면</b> 답이 와도 결제하지 않습니다.<br>
+          <b>월간·연간 결제와 구매 복원</b>은 이 확인을 거치지 않고 그대로입니다.
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
