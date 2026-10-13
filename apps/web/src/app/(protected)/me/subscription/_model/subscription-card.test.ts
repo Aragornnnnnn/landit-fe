@@ -31,6 +31,12 @@ describe('toCardTitle', () => {
     expect(toCardTitle(active({ renews: false }))).toBe('무료 체험 중이에요');
   });
 
+  it('100일 이용권은 받은 기간이 아니라 산 기간이라 이용권으로 부른다', () => {
+    expect(toCardTitle(active({ renews: false, plan: 'pass' }))).toBe(
+      '100일 이용권을 쓰고 있어요',
+    );
+  });
+
   it('체험·해지 예정은 플랜을 알아도 상태만 말한다', () => {
     expect(toCardTitle(active({ kind: 'trial', plan: 'yearly' }))).toBe(
       '무료 체험 중이에요',
