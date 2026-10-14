@@ -6,6 +6,8 @@ import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 // LAN-428 설문(임시) — features 간 가로 import. 설문이 끝나면 이 import와 아래 CTA 한 줄을 지운다
+// 편지 혜택가 — features 간 가로 import. 결제는 구독 슬라이스가 들고, 편지함은 어느 편지인지만 넘긴다
+import { LetterOfferCta } from '@/features/subscription/ui/letter-offer/LetterOfferCta';
 import { SurveyLetterCta } from '@/features/survey/ui/SurveyLetterCta';
 import { backOrReplace } from '@/shared/lib/routes';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
@@ -40,6 +42,7 @@ export const ReceivedLetterFlow = ({ letterId }: { letterId: number }) => {
     >
       {letter && <ReceivedBody letter={letter} />}
       {letter && <SurveyLetterCta letterId={letter.letterId} />}
+      {letter && <LetterOfferCta letterId={letter.letterId} />}
     </LetterShell>
   );
 };
