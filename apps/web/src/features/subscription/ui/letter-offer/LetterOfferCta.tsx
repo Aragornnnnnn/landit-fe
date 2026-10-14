@@ -49,7 +49,7 @@ export const LetterOfferCta = ({ letterId }: { letterId: number }) => {
     <>
       {eligible && (
         <Button className="mt-8" onClick={() => openSheet(eligible)}>
-          <Emoji>💌</Emoji> 혜택 확인하기
+          <Emoji>💌</Emoji> 프리미엄 혜택가 확인하기
         </Button>
       )}
       {sheetOffer && (

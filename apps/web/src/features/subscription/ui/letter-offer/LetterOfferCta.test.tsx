@@ -52,7 +52,7 @@ const full: Offering = {
   },
 };
 
-const ctaName = /혜택 확인하기/;
+const ctaName = /프리미엄 혜택가 확인하기/;
 
 const member = (nickname: string | null) => ({
   userId: 42,
