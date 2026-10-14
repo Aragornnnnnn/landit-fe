@@ -115,6 +115,18 @@ describe('LetterOfferCta', () => {
     expect(mocks.purchase).toHaveBeenCalledWith('yearly');
   });
 
+  it('결제 중 구독이 유료로 바뀌어도 시트를 내리지 않는다 — 내리면 결제 결과를 받을 화면이 사라진다', async () => {
+    const { rerender } = render(<LetterOfferCta letterId={7} />);
+    await userEvent.click(screen.getByRole('button', { name: ctaName }));
+
+    mocks.premium = true;
+    rerender(<LetterOfferCta letterId={7} />);
+
+    expect(
+      screen.getByRole('button', { name: /프리미엄 시작하기/ }),
+    ).toBeInTheDocument();
+  });
+
   it('시트 라벨에 정가 연간 대비 할인율을 적는다', async () => {
     render(<LetterOfferCta letterId={7} />);
 

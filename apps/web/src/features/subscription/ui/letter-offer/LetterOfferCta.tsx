@@ -13,6 +13,7 @@ import { Emoji } from '@/shared/ui/emoji';
 import {
   buildLetterOffer,
   isOfferLetter,
+  type LetterOffer,
 } from '../../model/letter-offer/letter-offer';
 import { useSubscriptionQuery } from '../../model/my-subscription/useSubscriptionQuery';
 import { useOffering } from '../../model/product/useOffering';
@@ -24,10 +25,19 @@ export const LetterOfferCta = ({ letterId }: { letterId: number }) => {
   const offer = buildLetterOffer(useOffering({ enabled: target }));
   const { subscription } = useSubscriptionQuery({ enabled: target });
   const [open, setOpen] = useState(false);
+  // 처음 연 순간의 오퍼를 붙잡아 시트를 계속 붙여 둔다 — 결제 중 구독이 유료로 바뀌어 버튼이 사라져도
+  // 시트까지 내리면 진행 중인 결제가 끊겨 결제 뒤 이동이 사라진다
+  const [sheetOffer, setSheetOffer] = useState<LetterOffer | null>(null);
   const router = useRouter();
 
-  // 구독 상태를 모르면 그리지 않는다 — 이미 유료인 사람에게 결제를 권하지 않게
-  if (!target || !offer || !subscription || subscription.premium) return null;
+  // 구독 상태를 모르면 버튼을 그리지 않는다 — 이미 유료인 사람에게 결제를 권하지 않게
+  const eligible =
+    target && offer && subscription && !subscription.premium ? offer : null;
+
+  const openSheet = (current: LetterOffer) => {
+    setSheetOffer(current);
+    setOpen(true);
+  };
 
   // 결제가 끝나면 페이월과 같이 프리미엄 온보딩을 거쳐 홈으로 간다
   const unlock = () => {
@@ -37,15 +47,19 @@ export const LetterOfferCta = ({ letterId }: { letterId: number }) => {
 
   return (
     <>
-      <Button className="mt-8" onClick={() => setOpen(true)}>
-        <Emoji>💌</Emoji> 혜택 확인하기
-      </Button>
-      <LetterOfferSheet
-        open={open}
-        offer={offer}
-        onClose={() => setOpen(false)}
-        onUnlocked={unlock}
-      />
+      {eligible && (
+        <Button className="mt-8" onClick={() => openSheet(eligible)}>
+          <Emoji>💌</Emoji> 혜택 확인하기
+        </Button>
+      )}
+      {sheetOffer && (
+        <LetterOfferSheet
+          open={open}
+          offer={sheetOffer}
+          onClose={() => setOpen(false)}
+          onUnlocked={unlock}
+        />
+      )}
     </>
   );
 };
