@@ -37,13 +37,14 @@ describe('isOfferLetter', () => {
 });
 
 describe('buildLetterOffer', () => {
-  it('할인 연간 가격과 월 환산, 정가 연간을 비교가로 낸다', () => {
+  it('정가 연간을 비교가로, 그 대비 할인율을 낸다 — 취소선 금액과 라벨이 같은 기준이어야 한다', () => {
     const offer = buildLetterOffer(full);
 
     expect(offer).toMatchObject({
       price: 58_500,
       monthlyPrice: 4_900,
       listPrice: 94_500,
+      discountRate: 38,
       packages: { yearly: full.promo.yearly },
     });
   });
@@ -77,7 +78,7 @@ describe('buildLetterOffer', () => {
       },
     });
 
-    expect(offer?.listPrice).toBeNull();
+    expect(offer).toMatchObject({ listPrice: null, discountRate: null });
   });
 
   it('정가 연간을 못 받았으면 비교가를 뺀다', () => {

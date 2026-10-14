@@ -115,6 +115,14 @@ describe('LetterOfferCta', () => {
     expect(mocks.purchase).toHaveBeenCalledWith('yearly');
   });
 
+  it('시트 라벨에 정가 연간 대비 할인율을 적는다', async () => {
+    render(<LetterOfferCta letterId={7} />);
+
+    await userEvent.click(screen.getByRole('button', { name: ctaName }));
+
+    expect(screen.getByText('38% 혜택가')).toBeInTheDocument();
+  });
+
   it('시트 제목에 닉네임을 넣는다', async () => {
     useAuthStore.setState({ member: member('준서') });
     render(<LetterOfferCta letterId={7} />);

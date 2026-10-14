@@ -81,7 +81,7 @@ export const LetterOfferSheet = ({
             className="absolute -top-2.5 right-4 rounded-full px-2.5 py-[3px] text-[11px] leading-[1.3] font-bold text-[#4a2f00]"
             style={{ background: GOLD_GRADIENT }}
           >
-            혜택가
+            {offer.discountRate ? `${offer.discountRate}% 혜택가` : '혜택가'}
           </span>
           <span className="flex flex-col gap-0.5">
             <span className="text-[17px] leading-[1.3] font-bold text-foreground">

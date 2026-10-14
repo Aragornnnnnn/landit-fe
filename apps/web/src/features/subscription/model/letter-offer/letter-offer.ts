@@ -4,7 +4,10 @@ import {
   type Offering,
   type PlanPackage,
 } from '../product/offering';
-import { calculateMonthlyEquivalent } from '../product/plans';
+import {
+  calculateDiscountRate,
+  calculateMonthlyEquivalent,
+} from '../product/plans';
 
 /**
  * 혜택가를 보여줄 편지인가.
@@ -32,6 +35,8 @@ export interface LetterOffer {
   monthlyPrice: number;
   /** 취소선으로 보여줄 정가 연간. 못 받았거나 할인가보다 비싸지 않으면 null */
   listPrice: number | null;
+  /** 정가 연간 대비 할인율(%). 비교가가 없으면 null */
+  discountRate: number | null;
   /** 결제할 패키지 — 할인 연간 하나뿐이다 */
   packages: { yearly: PlanPackage };
 }
@@ -50,13 +55,18 @@ export const buildLetterOffer = ({
   if (!discounted) return null;
 
   const regularYearly = krwPackage(regular.yearly);
+  const listPrice =
+    regularYearly && regularYearly.price > discounted.price
+      ? regularYearly.price
+      : null;
   return {
     price: discounted.price,
     monthlyPrice: calculateMonthlyEquivalent(discounted.price),
-    listPrice:
-      regularYearly && regularYearly.price > discounted.price
-        ? regularYearly.price
-        : null,
+    listPrice,
+    discountRate:
+      listPrice === null
+        ? null
+        : calculateDiscountRate(listPrice, discounted.price),
     packages: { yearly: discounted },
   };
 };
