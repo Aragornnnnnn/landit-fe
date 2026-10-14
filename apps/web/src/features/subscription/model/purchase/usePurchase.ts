@@ -33,7 +33,7 @@ interface UsePurchaseOptions {
   packages: PlanPackages;
   /** 유료가 확인됐거나, 결제는 끝났는데 서버 반영이 늦을 때(안내 뒤) 불린다 — 보통 페이월을 닫는다 */
   onUnlocked: (reason: UnlockReason) => void;
-  /** 이탈 할인 시트에서 부를 때 true — 결제 이벤트에 할인 결제였음을 남긴다 */
+  /** 할인 패키지로 결제할 때 true(이탈 할인 시트·편지 혜택가) — 결제 이벤트에 할인 결제였음을 남긴다 */
   promo?: boolean;
   /**
    * 이용권을 지금 살 수 있는지 서버에 새로 묻는다 — 이용권을 파는 화면이 넘긴다.
