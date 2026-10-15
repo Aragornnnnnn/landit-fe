@@ -1,5 +1,5 @@
 // safe-area는 globals.css의 변수로만 읽는지 — env()를 직접 쓰면 Android 셸이 주입한 inset을 못 받아 구형 WebView에서 내비게이션 바에 가려진다
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { NATIVE_INSET_VARS } from '@landit/bridge';
 import { describe, expect, it } from 'vitest';
@@ -67,6 +67,16 @@ describe('safe-area inset 변수', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('예외 목록의 화면은 지금도 있는 전체 화면이다', () => {
+    // 옮기거나 지운 화면이 목록에 남으면 예외 이유가 실제와 어긋난 채 남는다
+    const stale = [...FULL_SCREEN_EXCEPTIONS].filter((path) => {
+      const full = join(SRC_DIR, path);
+      return !existsSync(full) || !/\bh-dvh\b/.test(readFileSync(full, 'utf8'));
+    });
+
+    expect(stale).toEqual([]);
+  });
 });
 
 // 하단 safe-area를 직접 안 읽어도 되는 전체 화면 — 내용이 가운데 있거나, 바닥은 자식 화면이 맡는다
@@ -76,7 +86,6 @@ const FULL_SCREEN_EXCEPTIONS = new Set([
   'app/(protected)/conversation/smalltalk/_ui/SmallTalkFlow.tsx',
   'app/(protected)/conversation/scenario/[scenarioId]/page.tsx',
   'app/(protected)/conversation/scenario/[scenarioId]/feedback/_ui/AnalyzingScreen.tsx',
-  'app/(protected)/scenario/[scenarioId]/sessions/[sessionId]/_ui/ScenarioSessionFeedback.tsx',
   'features/feedback/ui/flow/FeedbackNotice.tsx',
   'features/review/ui/ReviewNotice.tsx',
   'features/review/ui/ReviewFlow.tsx',
@@ -88,6 +97,7 @@ const FULL_SCREEN_EXCEPTIONS = new Set([
   'app/(protected)/mailbox/page.tsx',
   'app/(protected)/me/widget/_ui/WidgetGuideScreen.tsx',
   'app/(protected)/me/subscription/cancel/_ui/CancelFlowScreen.tsx',
+  'app/(protected)/scenario/[scenarioId]/sessions/[sessionId]/_ui/ScenarioSessionFeedback.tsx',
   // 개발자 전용
   'app/(protected)/me/developer/_ui/AlarmCheckScreen.tsx',
   'app/(protected)/me/developer/reward/_ui/RewardCheckPreview.tsx',
