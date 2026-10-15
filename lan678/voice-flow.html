@@ -7,33 +7,44 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root {
-    --bg: #f6f7f9; --card: #fff; --ink: #16181d; --sub: #5b616e; --line: #d9dde4;
-    --be: #2f6fed; --be-soft: #eaf1ff;
-    --route: #0f8a6b; --route-soft: #e5f6f0;
-    --dg: #101010; --dg-accent: #13ef93;
-    --cdn: #b46a00; --cdn-soft: #fff3e0;
+    --bg: #ffffff;
+    --ink: #191f28;
+    --sub: #8b95a1;
+    --line: #d1d6db;
+    --tile: #f2f4f6;
+    --icon: #4e5968;
+    --dg: #101010;
+    --dg-accent: #13ef93;
     --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font-family: Pretendard, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
-  .page { width: 960px; padding: 28px 30px 20px; margin: 0 auto; }
-  h1 { font-size: 22px; margin: 0 0 16px; letter-spacing: -0.02em; }
+  .page { width: 980px; padding: 40px 44px 36px; margin: 0 auto; background: var(--bg); }
+  h1 { font-size: 24px; font-weight: 700; margin: 0 0 36px; letter-spacing: -0.03em; }
 
-  .lane { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
-  .lane-h { font-size: 16px; font-weight: 800; margin-bottom: 10px; }
-  .row { display: grid; grid-template-columns: 250px 34px 170px 34px 1fr; align-items: center; }
-  .row + .row { margin-top: 8px; }
-  .box { border-radius: 10px; padding: 11px 14px; font-size: 15px; font-weight: 700; border: 1px solid transparent; }
-  .box small { display: block; font-family: var(--mono); font-size: 11.5px; font-weight: 500; color: var(--sub); margin-top: 2px; }
-  .be { background: var(--be-soft); border-color: #cfdcfb; color: var(--be); }
-  .route { background: var(--route-soft); border-color: #bfe6d8; color: var(--route); }
-  .cdn { background: var(--cdn-soft); border-color: #f4d8ac; color: var(--cdn); }
-  .dg { background: var(--dg); color: #fff; display: flex; align-items: center; gap: 8px; font-size: 16px; }
-  .dg svg { width: 18px; height: 18px; fill: var(--dg-accent); }
-  .arrow { display: flex; justify-content: center; color: #9aa1ad; }
-  .arrow svg { width: 22px; height: 12px; }
-  .bypass { grid-column: 3 / 5; display: flex; align-items: center; gap: 6px; color: var(--cdn); font-size: 12.5px; font-weight: 700; padding-right: 8px; }
-  .bypass i { flex: 1; border-top: 2px dashed #e8c48a; }
+  .lane + .lane { margin-top: 40px; padding-top: 32px; border-top: 1px solid #f2f4f6; }
+  .lane-h { font-size: 15px; font-weight: 600; color: var(--sub); margin-bottom: 20px; }
+
+  .row { display: grid; grid-template-columns: 110px 1fr 110px 1fr 110px 1fr 110px; align-items: start; }
+  .sub-row { margin-top: 18px; }
+
+  .actor { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .logo { width: 72px; height: 72px; border-radius: 22px; background: var(--tile); display: flex; align-items: center; justify-content: center; }
+  .logo svg { width: 34px; height: 34px; }
+  .logo .stroke { stroke: var(--icon); fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .logo.black { background: #000; }
+  .name { font-size: 15px; font-weight: 700; margin-top: 10px; letter-spacing: -0.02em; }
+  .desc { font-size: 12.5px; color: var(--sub); margin-top: 2px; }
+
+  /* 화살표 위에 무엇이 오가는지 */
+  .link { height: 72px; display: flex; flex-direction: column; justify-content: center; padding: 0 10px; }
+  .link .what { font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 6px; letter-spacing: -0.01em; }
+  .link .line { position: relative; border-top: 1.5px solid var(--line); }
+  .link .line::after { content: ""; position: absolute; right: -1px; top: -5px; width: 8px; height: 8px; border-top: 1.5px solid var(--line); border-right: 1.5px solid var(--line); transform: rotate(45deg); }
+  .link .url { font-family: var(--mono); font-size: 11.5px; color: var(--sub); text-align: center; margin-top: 6px; }
+  .link.dash .line { border-top-style: dashed; }
+
+  .note { margin-top: 14px; font-size: 13px; color: var(--sub); }
 </style>
 </head>
 <body>
@@ -43,28 +54,90 @@
   <div class="lane">
     <div class="lane-h">시나리오</div>
     <div class="row">
-      <div class="box be">맞장구 문장<small>ttsText</small></div>
-      <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-      <div class="box route">웹 서버 /api/tts</div>
-      <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-      <div class="box dg"><svg viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</div>
+      <div class="actor">
+        <div class="logo"><svg viewBox="0 0 24 24"><g class="stroke"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></g></svg></div>
+        <div class="name">백엔드</div>
+      </div>
+      <div class="link">
+        <div class="what">맞장구 문장</div>
+        <div class="line"></div>
+        <div class="url">ttsText</div>
+      </div>
+      <div class="actor">
+        <div class="logo"><svg viewBox="0 0 24 24"><g class="stroke"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></g></svg></div>
+        <div class="name">앱</div>
+      </div>
+      <div class="link">
+        <div class="what">합성 요청</div>
+        <div class="line"></div>
+        <div class="url">/api/tts</div>
+      </div>
+      <div class="actor">
+        <div class="logo black"><svg viewBox="0 0 24 24"><path d="M12 2.5L23 21.5H1z" fill="#fff"/></svg></div>
+        <div class="name">Vercel</div>
+        <div class="desc">웹 서버</div>
+      </div>
+      <div class="link">
+        <div class="what">문장 → mp3</div>
+        <div class="line"></div>
+        <div class="url">/v1/speak</div>
+      </div>
+      <div class="actor">
+        <div class="logo black"><svg viewBox="0 0 24 24"><path fill="#13ef93" d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg></div>
+        <div class="name">Deepgram</div>
+      </div>
     </div>
-    <div class="row">
-      <div class="box be">질문 mp3 주소<small>questionAudioUrl</small></div>
-      <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-      <div class="bypass"><i></i>합성 없이</div>
-      <div class="box cdn">미리 만든 mp3 재생</div>
+    <div class="row sub-row">
+      <div></div><div></div>
+      <div></div>
+      <div class="link dash">
+        <div class="what">다음 질문은 합성 없이</div>
+        <div class="line"></div>
+        <div class="url">questionAudioUrl</div>
+      </div>
+      <div class="actor">
+        <div class="logo"><svg viewBox="0 0 24 24"><g class="stroke"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></g></svg></div>
+        <div class="name">미리 만든 mp3</div>
+        <div class="desc">CDN</div>
+      </div>
     </div>
   </div>
 
   <div class="lane">
     <div class="lane-h">스몰톡</div>
     <div class="row">
-      <div class="box be">상대가 하는 말 전체<small>content</small></div>
-      <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-      <div class="box route">웹 서버 /api/tts</div>
-      <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-      <div class="box dg"><svg viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</div>
+      <div class="actor">
+        <div class="logo"><svg viewBox="0 0 24 24"><g class="stroke"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></g></svg></div>
+        <div class="name">백엔드</div>
+      </div>
+      <div class="link">
+        <div class="what">상대가 하는 말 전체</div>
+        <div class="line"></div>
+        <div class="url">content</div>
+      </div>
+      <div class="actor">
+        <div class="logo"><svg viewBox="0 0 24 24"><g class="stroke"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></g></svg></div>
+        <div class="name">앱</div>
+      </div>
+      <div class="link">
+        <div class="what">합성 요청</div>
+        <div class="line"></div>
+        <div class="url">/api/tts</div>
+      </div>
+      <div class="actor">
+        <div class="logo black"><svg viewBox="0 0 24 24"><path d="M12 2.5L23 21.5H1z" fill="#fff"/></svg></div>
+        <div class="name">Vercel</div>
+        <div class="desc">웹 서버</div>
+      </div>
+      <div class="link">
+        <div class="what">문장 → mp3</div>
+        <div class="line"></div>
+        <div class="url">/v1/speak</div>
+      </div>
+      <div class="actor">
+        <div class="logo black"><svg viewBox="0 0 24 24"><path fill="#13ef93" d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg></div>
+        <div class="name">Deepgram</div>
+      </div>
     </div>
   </div>
 </div>
