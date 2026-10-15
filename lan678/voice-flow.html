@@ -9,7 +9,6 @@
   :root {
     --bg: #f6f7f9; --card: #fff; --ink: #16181d; --sub: #5b616e; --line: #d9dde4;
     --be: #2f6fed; --be-soft: #eaf1ff;
-    --web: #7a4cf0; --web-soft: #f1ecff;
     --route: #0f8a6b; --route-soft: #e5f6f0;
     --dg: #101010; --dg-accent: #13ef93;
     --cdn: #b46a00; --cdn-soft: #fff3e0;
@@ -17,97 +16,55 @@
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font-family: Pretendard, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
-  .page { width: 1120px; padding: 30px 32px 22px; margin: 0 auto; }
-  h1 { font-size: 23px; margin: 0 0 18px; letter-spacing: -0.02em; }
-  code { font-family: var(--mono); font-size: 0.86em; background: #eef0f4; padding: 1px 5px; border-radius: 4px; }
-  .dglogo { width: 1em; height: 1em; fill: var(--dg-accent); flex: none; }
+  .page { width: 960px; padding: 28px 30px 20px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 16px; letter-spacing: -0.02em; }
 
-  .stage { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
-  .stage-h { font-size: 15px; font-weight: 800; margin-bottom: 10px; }
-  .stage-h span { font-weight: 500; color: var(--sub); font-size: 13.5px; margin-left: 6px; }
-
-  .row { display: grid; grid-template-columns: 270px 26px 190px 26px 190px 26px 1fr; }
+  .lane { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+  .lane-h { font-size: 16px; font-weight: 800; margin-bottom: 10px; }
+  .row { display: grid; grid-template-columns: 250px 34px 170px 34px 1fr; align-items: center; }
   .row + .row { margin-top: 8px; }
-  .box { border-radius: 10px; padding: 9px 12px; font-size: 13px; line-height: 1.5; border: 1px solid transparent; }
-  .role { font-size: 11px; font-weight: 800; margin-bottom: 2px; }
-  .t { font-weight: 700; font-size: 14px; }
-  .f { font-family: var(--mono); font-size: 12px; color: var(--sub); line-height: 1.6; margin-top: 2px; }
-  .f em { font-style: normal; color: var(--ink); font-weight: 700; }
-  .be { background: var(--be-soft); border-color: #cfdcfb; } .be .role, .be .t { color: var(--be); }
-  .web { background: var(--web-soft); border-color: #ddd0fb; } .web .role, .web .t { color: var(--web); }
-  .route { background: var(--route-soft); border-color: #bfe6d8; } .route .role, .route .t { color: var(--route); }
-  .cdn { background: var(--cdn-soft); border-color: #f4d8ac; } .cdn .role, .cdn .t { color: var(--cdn); }
-  .dg { background: var(--dg); } .dg .role { color: var(--dg-accent); }
-  .dg .t { color: #fff; display: flex; align-items: center; gap: 7px; font-size: 15px; }
-
-  .arrow { display: flex; align-items: center; justify-content: center; color: #9aa1ad; }
-  .arrow svg { width: 20px; height: 12px; }
-  .bypass { grid-column: 4 / 7; display: flex; align-items: center; gap: 8px; padding: 0 6px; color: var(--cdn); font-size: 12.5px; font-weight: 700; }
+  .box { border-radius: 10px; padding: 11px 14px; font-size: 15px; font-weight: 700; border: 1px solid transparent; }
+  .box small { display: block; font-family: var(--mono); font-size: 11.5px; font-weight: 500; color: var(--sub); margin-top: 2px; }
+  .be { background: var(--be-soft); border-color: #cfdcfb; color: var(--be); }
+  .route { background: var(--route-soft); border-color: #bfe6d8; color: var(--route); }
+  .cdn { background: var(--cdn-soft); border-color: #f4d8ac; color: var(--cdn); }
+  .dg { background: var(--dg); color: #fff; display: flex; align-items: center; gap: 8px; font-size: 16px; }
+  .dg svg { width: 18px; height: 18px; fill: var(--dg-accent); }
+  .arrow { display: flex; justify-content: center; color: #9aa1ad; }
+  .arrow svg { width: 22px; height: 12px; }
+  .bypass { grid-column: 3 / 5; display: flex; align-items: center; gap: 6px; color: var(--cdn); font-size: 12.5px; font-weight: 700; padding-right: 8px; }
   .bypass i { flex: 1; border-top: 2px dashed #e8c48a; }
-
-  .when { margin-top: 10px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--sub); }
-  .when .k { flex: none; display: inline-flex; align-items: center; gap: 4px; background: var(--dg); color: #fff; font-size: 11px; font-weight: 800; border-radius: 6px; padding: 2px 7px; }
-  .when .k .dglogo { width: 11px; height: 11px; }
 </style>
 </head>
 <body>
 <div class="page">
-  <h1>대화 상대의 목소리는 어디서 오나</h1>
+  <h1>상대 목소리는 어디서 만들어지나</h1>
 
-  <div class="stage">
-    <div class="stage-h">시나리오 · 첫 질문<span>미리 만든 mp3를 바로 튼다</span></div>
+  <div class="lane">
+    <div class="lane-h">시나리오</div>
     <div class="row">
-      <div class="box be">
-        <div class="role">백엔드 응답</div>
-        <div class="t">GET /scenarios/daily</div>
-        <div class="f">openingPreview.<em>questionAudioUrl</em></div>
-      </div>
-      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-      <div class="box web"><div class="role">브라우저</div><div class="t">mp3 바로 재생</div></div>
-      <div class="bypass"><i></i>합성 없이 바로 &gt;</div>
-      <div class="box cdn"><div class="role">소리 출처</div><div class="t">CDN mp3</div></div>
+      <div class="box be">맞장구 문장<small>ttsText</small></div>
+      <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box route">웹 서버 /api/tts</div>
+      <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box dg"><svg viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</div>
     </div>
-    <div class="when"><span class="k"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</span>mp3가 없거나 재생에 실패하면 첫 질문 전체를 합성</div>
+    <div class="row">
+      <div class="box be">질문 mp3 주소<small>questionAudioUrl</small></div>
+      <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="bypass"><i></i>합성 없이</div>
+      <div class="box cdn">미리 만든 mp3 재생</div>
+    </div>
   </div>
 
-  <div class="stage">
-    <div class="stage-h">시나리오 · 내가 말한 뒤<span>맞장구만 합성하고, 다음 질문은 mp3로 이어 튼다</span></div>
+  <div class="lane">
+    <div class="lane-h">스몰톡</div>
     <div class="row">
-      <div class="box be">
-        <div class="role">백엔드 응답</div>
-        <div class="t">POST /sessions/{id}/messages</div>
-        <div class="f">nextMessage.<em>ttsText</em> ← 맞장구<br>nextMessage.<em>questionAudioUrl</em></div>
-      </div>
-      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-      <div class="box web"><div class="role">브라우저</div><div class="t">① 맞장구 합성 요청</div></div>
-      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-      <div class="box route"><div class="role">웹 서버</div><div class="t">/api/tts</div></div>
-      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-      <div class="box dg"><div class="role">소리 출처</div><div class="t"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</div></div>
-    </div>
-    <div class="row">
-      <div></div>
-      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-      <div class="box web"><div class="role">브라우저</div><div class="t">② 질문 mp3 이어 재생</div></div>
-      <div class="bypass"><i></i>합성 없이 바로 &gt;</div>
-      <div class="box cdn"><div class="role">소리 출처</div><div class="t">CDN mp3</div></div>
-    </div>
-    <div class="when"><span class="k"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</span>마지막 인사처럼 질문 mp3가 없는 발화는 문장 전체(<code>content</code>)를 합성</div>
-  </div>
-
-  <div class="stage">
-    <div class="stage-h">스몰톡 · 상대가 하는 모든 말<span>첫 마디·다음 말·작별 인사 모두 문장 전체를 합성한다</span></div>
-    <div class="row">
-      <div class="box be">
-        <div class="role">백엔드 응답</div>
-        <div class="f" style="margin-top:0">POST /free-talk/sessions<br>&nbsp;→ currentMessage.<em>content</em><br>POST …/messages, …/exit-decision<br>&nbsp;→ nextMessage.<em>content</em></div>
-      </div>
-      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-      <div class="box web"><div class="role">브라우저</div><div class="t">문장 전체 합성 요청</div></div>
-      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-      <div class="box route"><div class="role">웹 서버</div><div class="t">/api/tts</div></div>
-      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-      <div class="box dg"><div class="role">소리 출처</div><div class="t"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</div></div>
+      <div class="box be">상대가 하는 말 전체<small>content</small></div>
+      <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box route">웹 서버 /api/tts</div>
+      <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box dg"><svg viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</div>
     </div>
   </div>
 </div>
