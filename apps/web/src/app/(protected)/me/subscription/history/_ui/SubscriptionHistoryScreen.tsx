@@ -28,7 +28,7 @@ export const SubscriptionHistoryScreen = () => {
         onBack={() => backOrReplace(router, SUBSCRIPTION_MANAGE_PATH)}
       />
 
-      <div className="flex-1 overflow-y-auto bg-muted px-4 pt-4 pb-8">
+      <div className="flex-1 overflow-y-auto bg-muted px-4 pt-4 pb-[max(var(--safe-area-inset-bottom),32px)]">
         {isPending ? null : isError ? (
           <Notice>결제 내역을 불러오지 못했어요</Notice>
         ) : events.length === 0 ? (
