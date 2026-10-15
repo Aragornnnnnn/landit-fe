@@ -14,8 +14,8 @@ describe('POST /api/stt/token', () => {
     vi.unstubAllEnvs();
   });
 
-  it('DEEPGRAM_API_KEY가 없으면 500을 돌려준다', async () => {
-    vi.stubEnv('DEEPGRAM_API_KEY', '');
+  it('DEEPGRAM_STT_API_KEY가 없으면 500을 돌려준다', async () => {
+    vi.stubEnv('DEEPGRAM_STT_API_KEY', '');
 
     const res = await POST();
 
@@ -23,7 +23,7 @@ describe('POST /api/stt/token', () => {
   });
 
   it('Deepgram grant가 실패하면 502를 돌려주고 Sentry에 보고한다', async () => {
-    vi.stubEnv('DEEPGRAM_API_KEY', 'real-key');
+    vi.stubEnv('DEEPGRAM_STT_API_KEY', 'real-key');
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => ({ ok: false, text: async () => 'unauthorized' })),
@@ -39,7 +39,7 @@ describe('POST /api/stt/token', () => {
   });
 
   it('grant가 성공하면 임시 토큰만 돌려주고 원본 키는 응답에 없다', async () => {
-    vi.stubEnv('DEEPGRAM_API_KEY', 'real-key');
+    vi.stubEnv('DEEPGRAM_STT_API_KEY', 'real-key');
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => ({
