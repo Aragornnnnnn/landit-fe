@@ -45,19 +45,23 @@ describe('missedCopyOf', () => {
     today: '2026-10-15',
   };
 
-  it('놓친 날수와 금액을 말하고, 오늘 아직이면 오늘부터 받으라고 권한다', () => {
+  it('놓친 날수와 금액을 말하고, 오늘 아직이면 챌린지를 시작해 첫 몫을 받으라고 권한다', () => {
     expect(missedCopyOf({ ...missed, talkedToday: false })).toEqual({
       eyebrow: '32일 동안 놓친 환급액',
       amount: '16,000원',
-      box: { lead: '오늘부터 하면 하루 ', strong: '500원', tail: '씩 받아요' },
+      box: {
+        lead: '챌린지를 시작하고 첫 ',
+        strong: '500원',
+        tail: '을 받아봐요',
+      },
     });
   });
 
-  it('오늘 했으면 오늘 몫은 아직 받을 수 있다고 말한다', () => {
+  it('오늘 했으면 지금 시작해 첫 몫을 받으라고 권한다', () => {
     expect(missedCopyOf({ ...missed, talkedToday: true }).box).toEqual({
-      lead: '오늘 ',
+      lead: '지금 시작하면 첫 ',
       strong: '500원',
-      tail: '은 아직 안 늦었어요',
+      tail: '이 쌓여요',
     });
   });
 });
