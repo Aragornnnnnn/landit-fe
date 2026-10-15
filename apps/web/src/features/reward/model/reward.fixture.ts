@@ -88,6 +88,8 @@ export const rewardView = (patch: Partial<RewardView> = {}): RewardView => ({
   todayMaximumWon: 500,
   todayAchieved: false,
   computedAt: '2026-10-10T03:00:00Z',
+  // 참여자는 무료 미리보기를 받지 않는다
+  preview: null,
   current: rewardCycle(),
   pendingRefundWon: 0,
   heldRefundWon: 0,

@@ -102,6 +102,22 @@ export interface RewardView {
   purchaseAvailable: boolean;
   // 도는 챌린지가 끝나는 시각. 그 뒤에 다시 살 수 있다. 챌린지가 없으면 null
   purchaseAvailableAt: string | null;
+  // 무료로 한 대화를 챌린지였다면 받았을 금액. 무료 대상이 아니거나 챌린지를 산 적이 있으면 null
+  preview: RewardPreview | null;
+}
+
+// 결제했으면 받을 수 있었던 금액 — 표시용이라 결제해도 적립금으로 바뀌지 않는다
+export interface RewardPreview {
+  // 기간 제한 없이 쌓인 금액. 출금·환급 대상이 아니다
+  balanceWon: number;
+  // 쌓인 KST 날짜 수 — 오늘을 했으면 오늘도 들어 있다
+  completedDays: number;
+  // 오늘 무료로 쌓인 금액
+  todayEarnedWon: number;
+  // 하루 몫
+  dailyAmountWon: number;
+  // 지금 무료라서 쌓이는 중인가
+  accruing: boolean;
 }
 
 // 환급 내역 한 줄 — 통장처럼 완료 하나가 한 줄이다
@@ -135,10 +151,32 @@ export const getMyRewards = () => api.get<RewardView>('/api/v1/me/rewards');
 // 한 번에 받는 줄 수 — 하루에 한 줄이라 한 달 남짓이 한 장이다
 const HISTORY_PAGE_SIZE = 40;
 
+const pageQueryOf = (cursor: string | null) =>
+  `limit=${HISTORY_PAGE_SIZE}${
+    cursor === null ? '' : `&cursor=${encodeURIComponent(cursor)}`
+  }`;
+
 // cursor는 앞 장이 준 nextCursor를 그대로 돌려보낸다 — 첫 장은 null
 export const getRewardHistory = (cursor: string | null) =>
   api.get<RewardHistoryPage>(
-    `/api/v1/me/rewards/history?limit=${HISTORY_PAGE_SIZE}${
-      cursor === null ? '' : `&cursor=${encodeURIComponent(cursor)}`
-    }`,
+    `/api/v1/me/rewards/history?${pageQueryOf(cursor)}`,
+  );
+
+// 무료 적립 기록 한 줄 — 하루에 한 줄이다. 지난 기록을 한꺼번에 채운 줄은 시각이 없어 날짜만 온다
+export interface RewardPreviewHistoryItem {
+  // KST 날짜 (yyyy-MM-dd)
+  date: string;
+  amountWon: number;
+}
+
+export interface RewardPreviewHistoryPage {
+  items: RewardPreviewHistoryItem[];
+  // 마지막 줄의 날짜. 더 없으면 null
+  nextCursor: string | null;
+}
+
+// 최신 날짜부터. 무료 대상이 아니면 빈 목록이 온다
+export const getRewardPreviewHistory = (cursor: string | null) =>
+  api.get<RewardPreviewHistoryPage>(
+    `/api/v1/me/rewards/preview/history?${pageQueryOf(cursor)}`,
   );
