@@ -88,7 +88,7 @@ const LetterShell = ({ fallbackHref, ...content }: LetterShellProps) => {
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="flex-1 overflow-y-auto px-5 pb-10"
+        className="flex-1 overflow-y-auto px-5 pb-[max(var(--safe-area-inset-bottom),40px)]"
       >
         <LetterContent {...content} />
       </div>

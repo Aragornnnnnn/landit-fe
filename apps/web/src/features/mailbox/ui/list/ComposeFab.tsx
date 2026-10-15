@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { MAILBOX_COMPOSE_PATH } from '@/shared/lib/routes';
 
 // 목록이 FAB 뒤로 숨지 않으려면 이만큼 띄워야 한다 — 아래 높이(h-12)와 바닥 여백의 합
-export const COMPOSE_FAB_CLEARANCE = 'pb-28';
+export const COMPOSE_FAB_CLEARANCE =
+  'pb-[calc(max(var(--safe-area-inset-bottom),20px)+92px)]';
 
 export const ComposeFab = () => (
   <Link
