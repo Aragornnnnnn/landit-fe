@@ -41,7 +41,7 @@ export const RewardIntro = ({
 // 헤더 안내 버튼이 여는 규칙을 금액 바로 아래에도 적는다 — 처음 보는 사람은 버튼을 누르기 전에 규칙부터 읽어야 한다
 const RuleLines = ({ dailyWon }: { dailyWon: number }) => (
   <ul className="flex flex-col items-center gap-1">
-    {rewardRulesOf(dailyWon, { upTo: false }).map(([emoji, text]) => (
+    {rewardRulesOf(dailyWon).map(([emoji, text]) => (
       <li key={text} className="flex items-center gap-1.5 break-keep">
         <Emoji className="size-4 shrink-0">{emoji}</Emoji>
         {text}

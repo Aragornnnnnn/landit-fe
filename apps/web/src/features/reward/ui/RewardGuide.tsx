@@ -29,16 +29,12 @@ const sampleOf = (dailyWon: number): HistoryRow[] =>
  * 환급 규칙 두 줄 — 환급 화면의 안내 시트, 환급 소개, 결제 직후 안내가 같은 말을 쓴다.
  *
  * @param dailyWon 하루 몫. 아직 모르면(결제 확인 중, 지난 회차만 남음) null — 금액 없이 말한다
- * @param upTo 하루 몫 앞에 「최대」를 붙인다. 소개 화면의 금액 아래 줄은 위의 「최대 50,000원」과 겹쳐 뺀다
  */
-export const rewardRulesOf = (
-  dailyWon: number | null,
-  { upTo = true }: { upTo?: boolean } = {},
-) =>
+export const rewardRulesOf = (dailyWon: number | null) =>
   [
     [
       '💰',
-      `매일 오늘의 시나리오를 하면 ${dailyWon === null ? '환급액' : `${upTo ? '최대 ' : ''}${formatWon(dailyWon)}`}이 쌓여요`,
+      `매일 오늘의 시나리오를 하면 ${dailyWon === null ? '환급액' : `최대 ${formatWon(dailyWon)}`}이 쌓여요`,
     ],
     ['💸', '챌린지 기간이 끝나면 내가 모은 만큼 돈을 돌려받아요'],
   ] as const;
