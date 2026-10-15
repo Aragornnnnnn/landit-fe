@@ -5,7 +5,7 @@ export const SmallTalkHistoryDetailSkeleton = () => (
   <div
     role="status"
     aria-label="표현을 불러오는 중"
-    className="min-h-0 flex-1 overflow-hidden pb-6"
+    className="min-h-0 flex-1 overflow-hidden pb-[max(var(--safe-area-inset-bottom),24px)]"
   >
     {/* 통계 카드 자리 — 라벨 위, 값 아래 세 칸 */}
     <div className="px-5 pt-1 pb-4">
