@@ -10,6 +10,8 @@ import type { RewardGlow } from '../_model/pot-stage';
 const GLOW: Record<RewardGlow, string> = {
   gold: 'bg-[linear-gradient(to_bottom,rgb(255_200_80/0.25),transparent_430px)]',
   calm: 'bg-[linear-gradient(to_bottom,color-mix(in_oklab,var(--primary)_8%,transparent),transparent_430px)]',
+  missed:
+    'bg-[linear-gradient(to_bottom,color-mix(in_oklab,var(--destructive)_12%,transparent),transparent_430px)]',
 };
 
 export const RewardFrame = ({

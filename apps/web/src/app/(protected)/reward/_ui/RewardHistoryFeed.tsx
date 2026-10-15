@@ -4,7 +4,6 @@
 import { useEffect, useEffectEvent } from 'react';
 import { EVENTS } from '@landit/analytics';
 
-import type { HistoryRow } from '@/features/reward/model/reward-history';
 import {
   useRewardHistoryQuery,
   type RewardHistoryState,
@@ -24,7 +23,15 @@ export const RewardHistoryFeed = () => (
 );
 
 // 그리는 쪽 — 어디서 받아 왔는지는 모른다
-export const RewardHistoryList = ({
+export const RewardHistoryList = (props: RewardHistoryState) => (
+  <HistoryFeedList
+    {...props}
+    renderRows={(rows) => <RewardHistory history={rows} />}
+  />
+);
+
+// 이어 받기·재시도·자리 잡기는 같고 줄 모양만 다른 목록이 같이 쓴다 (무료로 한 날의 기록)
+export const HistoryFeedList = <Row,>({
   rows,
   error,
   retry,
@@ -33,7 +40,10 @@ export const RewardHistoryList = ({
   loadingMore,
   moreFailed,
   loadMore,
-}: RewardHistoryState) => {
+  renderRows,
+}: RewardHistoryState<Row> & {
+  renderRows: (rows: Row[]) => React.ReactNode;
+}) => {
   const { ref: nearEndRef, inView: nearEnd } = useInView<HTMLDivElement>(
     undefined,
     { once: false },
@@ -50,6 +60,7 @@ export const RewardHistoryList = ({
     <section aria-label="환급 내역" className="relative mt-3 px-5">
       <HistoryBody
         rows={rows}
+        renderRows={renderRows}
         hasMore={hasMore}
         // 다시 받는 동안에는 실패 문구를 걷는다 — 눌렀는데 그대로면 안 눌린 줄 안다
         failed={error !== null && !fetching}
@@ -83,14 +94,16 @@ export const RewardHistoryList = ({
   );
 };
 
-const HistoryBody = ({
+const HistoryBody = <Row,>({
   rows,
+  renderRows,
   hasMore,
   failed,
   onRetry,
 }: {
   // 첫 장을 아직 못 받았으면 null
-  rows: HistoryRow[] | null;
+  rows: Row[] | null;
+  renderRows: (rows: Row[]) => React.ReactNode;
   hasMore: boolean;
   failed: boolean;
   onRetry: () => void;
@@ -99,7 +112,7 @@ const HistoryBody = ({
     // 줄이 없어도 받을 장이 남았으면 비었다고 말하지 않는다 — 받은 장이 전부 걸러졌을 뿐이다
     if (rows.length === 0 && !hasMore)
       return <p className={NOTICE_CLASS}>아직 내역이 없어요</p>;
-    return <RewardHistory history={rows} />;
+    return renderRows(rows);
   }
   if (failed)
     return <RetryLine message="내역을 불러오지 못했어요" onRetry={onRetry} />;

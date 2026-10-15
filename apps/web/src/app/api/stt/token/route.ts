@@ -8,10 +8,10 @@ const GRANT_URL = 'https://api.deepgram.com/v1/auth/grant';
 const TOKEN_TTL_SECONDS = 60;
 
 export async function POST() {
-  const apiKey = process.env.DEEPGRAM_API_KEY;
+  const apiKey = process.env.DEEPGRAM_STT_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: 'DEEPGRAM_API_KEY가 설정되지 않았습니다.' },
+      { error: 'DEEPGRAM_STT_API_KEY가 설정되지 않았습니다.' },
       { status: 500 },
     );
   }

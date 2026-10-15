@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { RewardBadge } from '../model/reward-status';
-import { HeaderReward } from './HeaderReward';
+import { HeaderReward, RewardInviteLabel } from './HeaderReward';
 
 // next/link·next/image는 next 밑의 react 복사본을 잡아 훅 dispatcher가 null이 된다 (HeaderStreak 테스트와 같은 이유)
 vi.mock('next/link', () => ({
@@ -123,5 +123,20 @@ describe('HeaderReward 계측', () => {
     expect(analytics.track.mock.calls).toEqual([
       ['Reward Entry Tapped', { source: 'header' }],
     ]);
+  });
+});
+
+describe('RewardInviteLabel', () => {
+  it('받을 금액이면 「받으러 가기」로 말한다', () => {
+    render(<RewardInviteLabel amountWon={500} />);
+
+    expect(screen.getByText('받으러 가기')).toBeInTheDocument();
+  });
+
+  it('놓친 금액이면 「놓쳤어요」로 말한다', () => {
+    render(<RewardInviteLabel amountWon={15_500} missed />);
+
+    expect(screen.getByText('15,500원')).toBeInTheDocument();
+    expect(screen.getByText('놓쳤어요')).toBeInTheDocument();
   });
 });

@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { RewardView } from '@/features/reward/api/reward';
+import type { RewardPreview, RewardView } from '@/features/reward/api/reward';
 import {
   rewardCycle,
   rewardToday,
@@ -13,6 +13,8 @@ import { RewardScreen } from './RewardScreen';
 
 const base = {
   reward: null as RewardView | null,
+  preview: null as RewardPreview | null,
+  computedAt: '2026-10-15T03:00:00Z' as string | null,
   error: null,
   loaded: true,
   fetching: false,
@@ -45,11 +47,24 @@ vi.mock('./RewardHistoryFeed', () => ({ RewardHistoryFeed: () => null }));
 vi.mock('./RefundApplyButton', () => ({ RefundApplyButton: () => null }));
 vi.mock('./RewardSkeleton', () => ({ RewardSkeleton: () => <p>받는 중</p> }));
 vi.mock('./RewardPot', () => ({ RewardPot: () => null }));
+vi.mock('./MissedRewardIntro', () => ({
+  MissedRewardIntro: ({ missed }: { missed: { pastDays: number } }) => (
+    <p>놓친 {missed.pastDays}일</p>
+  ),
+}));
 vi.mock('@/features/reward/ui/RewardGuide', () => ({
   RewardGuide: () => <p>소개</p>,
   RewardRuleList: () => <p>규칙</p>,
 }));
 
+const preview = (patch: Partial<RewardPreview> = {}): RewardPreview => ({
+  balanceWon: 1000,
+  completedDays: 2,
+  todayEarnedWon: 0,
+  dailyAmountWon: 500,
+  accruing: true,
+  ...patch,
+});
 const kept = () =>
   rewardView({
     current: rewardCycle({ balanceWon: 2015 }),
@@ -158,15 +173,37 @@ describe('RewardScreen 계측', () => {
     ]);
   });
 
-  it('오늘의 시나리오를 이미 끝낸 사람의 소개는 오늘 대화로 쌓인 금액을 말한다', () => {
-    mocks.my = { ...base, invited: true };
-    mocks.daily = { scenario: { completed: true } };
+  it('무료로 지난 이틀을 한 사람은 소개 대신 놓친 환급액을 보고, 지난 일수를 찍는다', () => {
+    // given — 지난 이틀에 오늘까지 했다
+    mocks.my = {
+      ...base,
+      invited: true,
+      preview: preview({
+        balanceWon: 1500,
+        completedDays: 3,
+        todayEarnedWon: 500,
+      }),
+    };
 
     render(<RewardScreen />);
 
-    expect(screen.getByText('오늘 대화로 쌓인 환급액')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: '100일 환급 챌린지 시작하기' }),
-    ).toBeInTheDocument();
+    expect(screen.getByText('놓친 2일')).toBeInTheDocument();
+    expect(viewed().at(-1)).toEqual([
+      'Reward Viewed',
+      { status: 'intro', past_days: 2 },
+    ]);
+  });
+
+  it('지난 날이 하루뿐이면 처음 보는 소개를 그대로 본다', () => {
+    mocks.my = {
+      ...base,
+      invited: true,
+      preview: preview({ completedDays: 2, todayEarnedWon: 500 }),
+    };
+
+    render(<RewardScreen />);
+
+    expect(screen.getByText('소개')).toBeInTheDocument();
+    expect(screen.queryByText(/^놓친/)).not.toBeInTheDocument();
   });
 });

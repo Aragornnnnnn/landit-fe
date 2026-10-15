@@ -80,21 +80,26 @@ export const HeaderReward = ({
 };
 
 // 아직 환급을 시작하지 않은 사람의 진입 글자 — 프리미엄 진입 알약 안에 놓인다.
-// 오늘의 시나리오를 끝내고 막 돌아온 사람에게는 그 대화로 받을 수 있는 금액을 말한다
+// 오늘의 시나리오를 끝내고 막 돌아온 사람에게는 그 대화로 받을 수 있는 금액을, 무료로 며칠 해 온 사람에게는 놓친 금액을 말한다
 export const RewardInviteLabel = ({
-  claimWon = null,
+  amountWon = null,
+  missed = false,
 }: {
-  // 받으러 갈 금액. 평소에는 null
-  claimWon?: number | null;
+  // 알약이 말할 금액. 평소에는 null
+  amountWon?: number | null;
+  // 금액이 놓친 환급액인가
+  missed?: boolean;
 }) => (
   <>
     <Coin size={16} />
-    {claimWon === null ? (
+    {amountWon === null ? (
       <span>환급 챌린지 시작</span>
     ) : (
       <>
-        <span className="tabular-nums">{formatWon(claimWon)}</span>
-        <span className="font-medium">받으러 가기</span>
+        <span className="tabular-nums">{formatWon(amountWon)}</span>
+        <span className="font-medium">
+          {missed ? '놓쳤어요' : '받으러 가기'}
+        </span>
       </>
     )}
   </>

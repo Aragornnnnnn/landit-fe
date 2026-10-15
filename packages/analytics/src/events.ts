@@ -740,6 +740,8 @@ export type EventProps = {
     status: RewardViewStatus;
     balance_won?: number;
     pending_refund_won?: number;
+    // 환급 소개에서만 — 무료로 대화한 날 중 오늘을 뺀 날수. 이 일수 구간별로 결제 전환을 본다
+    past_days?: number;
   };
   'Reward Entry Tapped': { source: RewardEntrySource };
   'Reward Rules Opened': undefined;

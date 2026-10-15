@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
   missed: {
     entryRef: () => {},
     dailyWon: 500,
-    claimWon: null as number | null,
+    pillWon: null as number | null,
     shower: null as { pill: DOMRect; onLand: () => void } | null,
     endShower: () => {},
     bubble: null as { pill: DOMRect; onClose: () => void } | null,
@@ -52,8 +52,8 @@ vi.mock('@/features/reward/ui/HeaderReward', () => ({
   HeaderReward: ({ badge }: { badge: { label: string } }) => (
     <span data-testid="reward-pill">{badge.label}</span>
   ),
-  RewardInviteLabel: ({ claimWon }: { claimWon?: number | null }) => (
-    <span data-testid="invite-label">{claimWon ?? '평소'}</span>
+  RewardInviteLabel: ({ amountWon }: { amountWon?: number | null }) => (
+    <span data-testid="invite-label">{amountWon ?? '평소'}</span>
   ),
 }));
 vi.mock('@/features/streak/ui/HeaderStreak', () => ({
@@ -69,7 +69,7 @@ beforeEach(() => {
   mocks.entry = null;
   mocks.missed = {
     ...mocks.missed,
-    claimWon: null,
+    pillWon: null,
     shower: null,
     bubble: null,
   };
@@ -134,7 +134,7 @@ describe('AppHeader', () => {
     mocks.my = { reward: null, invited: true, settled: true };
     mocks.missed = {
       ...mocks.missed,
-      claimWon: 500,
+      pillWon: 500,
       shower: { pill: new DOMRect(), onLand: () => {} },
     };
 

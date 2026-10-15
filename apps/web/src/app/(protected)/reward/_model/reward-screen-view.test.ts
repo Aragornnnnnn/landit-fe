@@ -107,6 +107,13 @@ describe('rewardViewedPropsOf', () => {
     expect(rewardViewedPropsOf({ kind: 'intro' })).toEqual({ status: 'intro' });
   });
 
+  it('무료로 한 날이 있으면 환급 소개에 지난 일수를 싣는다', () => {
+    expect(rewardViewedPropsOf({ kind: 'intro' }, 32)).toEqual({
+      status: 'intro',
+      past_days: 32,
+    });
+  });
+
   it.each([
     ['받는 중', { kind: 'loading' } as const],
     ['내보내는 중', { kind: 'outsider' } as const],

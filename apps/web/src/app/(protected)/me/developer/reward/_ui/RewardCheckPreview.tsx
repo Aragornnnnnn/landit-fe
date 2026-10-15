@@ -135,13 +135,8 @@ export const RewardCheckPreview = ({
         trailing={<RewardRulesButton dailyWon={PREVIEW_OFFER.dailyWon} />}
         footer={<RewardStartButton label={copy.cta} />}
         fadeAboveFooter
-        glow={name === 'introTalked' ? 'gold' : null}
       >
-        <RewardIntro
-          copy={copy}
-          dailyWon={PREVIEW_OFFER.dailyWon}
-          talkedToday={name === 'introTalked'}
-        />
+        <RewardIntro copy={copy} dailyWon={PREVIEW_OFFER.dailyWon} />
       </RewardFrame>
     );
   }
