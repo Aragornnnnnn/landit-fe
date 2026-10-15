@@ -34,7 +34,7 @@ export const AppHeader = () => {
     useMyReward();
   const badge = reward && rewardBadgeOf(reward);
   // 환급을 권할 사람이 오늘의 시나리오를 끝내고 돌아왔으면, 받을 수 있었던 동전이 진입 알약으로 날아간다.
-  // 무료로 지난 이틀 이상 해 온 사람에게는 알약이 놓친 금액을 말한다 — 환급 소개와 같은 판정이다
+  // 놓친 환급액을 보여 줄 만큼 무료로 해 온 사람에게는 알약이 놓친 금액을 말한다 — 환급 소개와 같은 판정이다
   const {
     entryRef,
     dailyWon,
@@ -44,10 +44,7 @@ export const AppHeader = () => {
     shower,
     endShower,
     bubble,
-  } = useMissedEarnInvite(
-    invited,
-    computedAt ? missedRewardOf(preview, computedAt) : null,
-  );
+  } = useMissedEarnInvite(invited, missedRewardOf(preview, computedAt));
   // 학습을 끝내고 돌아왔으면 그사이 늘어난 만큼 동전이 알약으로 날아든다
   const { gain, endGain } = useBalanceGain(
     // 알약이 없으면 연출을 틀 자리도 없다 — 끝나지 않는 연출을 기다리며 홈의 시트가 막히지 않게 금액도 없는 것으로 넘긴다

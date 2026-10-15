@@ -2,7 +2,7 @@
 
 // 환급을 권할 사람이 오늘의 시나리오를 끝내고 홈에 돌아온 순간의 연출을 지휘한다 —
 // 동전이 알약으로 날아가고(shower), 닿으면 알약이 그 금액을 말하고(pillWon), 처음 한 번은 말풍선이 뜬다(bubble).
-// 무료로 지난 이틀 이상 해 온 사람에게는 알약이 놓친 금액을, 말풍선이 오늘 몫을 말한다(missed).
+// 놓친 환급액을 보여 줄 만큼 무료로 해 온 사람에게는 알약이 놓친 금액을, 말풍선이 오늘 몫을 말한다(missed).
 // 알약의 금액은 이 방문에서만 남는다. 헤더가 다시 붙으면 평소 글자로 돌아간다
 import { useEffect, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
@@ -16,7 +16,7 @@ import { useRewardOffer } from './useRewardOffer';
 
 /**
  * @param invited 환급을 권할 사람인가 — 그 밖의 사람에게는 아무것도 하지 않는다
- * @param missedReward 무료로 지난 이틀 이상 해 온 사람의 놓친 환급액. 아니면 null
+ * @param missedReward 놓친 환급액을 보여 줄 만큼 무료로 해 온 사람의 놓친 환급액. 아니면 null
  */
 export const useMissedEarnInvite = (
   invited: boolean,
