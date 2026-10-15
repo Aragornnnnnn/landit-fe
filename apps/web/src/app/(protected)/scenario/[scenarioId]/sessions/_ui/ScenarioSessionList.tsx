@@ -58,7 +58,7 @@ export const ScenarioSessionList = ({
           {'아직 마친 대화가 없어요.\n대화를 마치면 여기 쌓여요.'}
         </p>
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-[max(var(--safe-area-inset-bottom),24px)]">
           <p className="pt-2 pb-4 text-sm text-muted-foreground">
             대화를 누르면 그때 받은 피드백을 다시 볼 수 있어요.
           </p>
@@ -120,7 +120,7 @@ const SessionListSkeleton = () => (
   <div
     role="status"
     aria-label="지난 대화를 불러오는 중"
-    className="min-h-0 flex-1 animate-pulse overflow-hidden px-5 pb-6"
+    className="min-h-0 flex-1 animate-pulse overflow-hidden px-5 pb-[max(var(--safe-area-inset-bottom),24px)]"
   >
     <div className="mt-2 mb-4 h-5 w-3/4 rounded bg-secondary" />
     <div className="flex flex-col gap-2">
