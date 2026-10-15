@@ -29,12 +29,16 @@ const sampleOf = (dailyWon: number): HistoryRow[] =>
  * 환급 규칙 두 줄 — 환급 화면의 안내 시트, 환급 소개, 결제 직후 안내가 같은 말을 쓴다.
  *
  * @param dailyWon 하루 몫. 아직 모르면(결제 확인 중, 지난 회차만 남음) null — 금액 없이 말한다
+ * @param upTo 하루 몫 앞에 「최대」를 붙인다. 소개 화면의 금액 아래 줄은 위의 「최대 50,000원」과 겹쳐 뺀다
  */
-export const rewardRulesOf = (dailyWon: number | null) =>
+export const rewardRulesOf = (
+  dailyWon: number | null,
+  { upTo = true }: { upTo?: boolean } = {},
+) =>
   [
     [
       '💰',
-      `매일 오늘의 시나리오를 하면 ${dailyWon === null ? '환급액' : `최대 ${formatWon(dailyWon)}`}이 쌓여요`,
+      `매일 오늘의 시나리오를 하면 ${dailyWon === null ? '환급액' : `${upTo ? '최대 ' : ''}${formatWon(dailyWon)}`}이 쌓여요`,
     ],
     ['💸', '챌린지 기간이 끝나면 내가 모은 만큼 돈을 돌려받아요'],
   ] as const;
@@ -75,8 +79,8 @@ export const RewardGuide = ({
   eyebrow: string;
   // 큰 글자 ("500원")
   amount: string;
-  // 그 아래 한 줄
-  caption: string;
+  // 그 아래 한 줄 — 낱말을 띄우거나 규칙 줄을 넣을 수 있게 요소로 받는다
+  caption: React.ReactNode;
   // 하루 몫 — 규칙과 보기 내역이 이 금액으로 말한다. 아직 모르면 null이고 보기 내역은 그리지 않는다
   dailyWon: number | null;
   // 규칙을 헤더의 안내 버튼이 여는 화면 — 본문에는 규칙 카드를 그리지 않는다
@@ -97,9 +101,9 @@ export const RewardGuide = ({
       <h2 className="mt-0.5 text-[36px] leading-tight font-black text-foreground">
         {amount}
       </h2>
-      <p className="mt-1.5 text-center text-[14px] font-medium text-muted-foreground">
+      <div className="mt-1.5 text-center text-[14px] font-medium text-muted-foreground">
         {caption}
-      </p>
+      </div>
     </section>
 
     {!rulesInHeader && (

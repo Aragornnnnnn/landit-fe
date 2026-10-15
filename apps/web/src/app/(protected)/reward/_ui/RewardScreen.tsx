@@ -5,6 +5,10 @@ import { useEffect, useEffectEvent } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import {
+  missedRewardOf,
+  pastDaysOf,
+} from '@/features/reward/model/missed-reward';
 import { dailyWonOf } from '@/features/reward/model/reward-status';
 import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { track } from '@/shared/analytics';
@@ -19,6 +23,7 @@ import {
 } from '../_model/reward-screen-view';
 import { useMyReward } from '../../_model/useMyReward';
 import { useRewardOffer } from '../../_model/useRewardOffer';
+import { MissedRewardIntro } from './MissedRewardIntro';
 import { RefundApplyButton } from './RefundApplyButton';
 import { RewardFrame } from './RewardFrame';
 import { RewardHistoryFeed } from './RewardHistoryFeed';
@@ -32,22 +37,25 @@ export const RewardScreen = () => {
   const { retry, ...my } = useMyReward();
   const view = rewardScreenViewOf(my);
   const intro = view.kind === 'intro';
-  // 소개 화면의 글자는 지금 파는 챌린지의 값과, 오늘의 시나리오를 이미 했는지로 정한다 — 무료 사용자는 환급 응답에 오늘이 없어 오늘의 시나리오 응답으로 본다
+  // 무료로 며칠 해 온 사람은 소개 대신 놓친 환급액을 본다 — 오늘 했는지도 같은 응답에 들어 있다
+  const missed =
+    intro && my.computedAt ? missedRewardOf(my.preview, my.computedAt) : null;
+  // 처음 보는 소개의 글자는 지금 파는 챌린지의 값과, 오늘의 시나리오를 이미 했는지로 정한다 — 미리보기가 없을 수 있어(구 서버) 오늘은 오늘의 시나리오 응답으로 본다
   const offer = useRewardOffer({ enabled: intro });
   const { daily, isLoading: dailyLoading } = useDailyScenarioQuery(undefined, {
-    enabled: intro,
+    enabled: intro && missed === null,
   });
-  // 오늘 대화를 했는지 알기 전에는 소개를 그리지 않는다 — 대화 전 판이 비쳤다가 대화 후 판으로 바뀌면 그림과 금액이 다시 시작한다
-  const introReady = intro && !dailyLoading;
+  // 오늘 대화를 했는지 알기 전에는 소개를 그리지 않는다 — 대화 전 판이 비쳤다가 대화 후 판으로 바뀌면 글자가 바뀐다
+  const introReady = intro && (missed !== null || !dailyLoading);
   const talkedToday = daily?.scenario?.completed === true;
   const introCopy = rewardIntroCopyOf(offer, talkedToday);
 
-  // 위쪽 빛은 그림을 따른다 — 오늘 대화를 한 사람의 소개는 오늘 받은 환급 화면과 같은 금빛이다
+  // 위쪽 빛은 그림을 따른다 — 놓친 환급액은 빨갛게, 처음 보는 소개는 흰 바탕
   const glow =
     view.kind === 'record'
       ? glowOf(potStageOf(view.reward))
-      : introReady && talkedToday
-        ? 'gold'
+      : introReady && missed
+        ? 'missed'
         : null;
 
   // 기존 월간·연간 유저처럼 환급과 상관없는 사람 — 보여 줄 것이 없다
@@ -57,7 +65,10 @@ export const RewardScreen = () => {
   }, [outsider, router]);
 
   // 어떤 상태로 봤는지 — 볼 것이 정해진 순간 한 번, 보는 중에 상태가 바뀌면(자정을 넘겨 오늘이 다시 아직이 되는 등) 다시 찍는다
-  const viewed = rewardViewedPropsOf(view);
+  const viewed = rewardViewedPropsOf(
+    view,
+    my.preview ? pastDaysOf(my.preview) : undefined,
+  );
   const reportViewed = useEffectEvent(() => {
     if (viewed) track(EVENTS.REWARD_VIEWED, viewed);
   });
@@ -88,13 +99,12 @@ export const RewardScreen = () => {
       {(view.kind === 'loading' || (intro && !introReady)) && (
         <RewardSkeleton />
       )}
-      {introReady && (
-        <RewardIntro
-          copy={introCopy}
-          dailyWon={offer.dailyWon}
-          talkedToday={talkedToday}
-        />
-      )}
+      {introReady &&
+        (missed ? (
+          <MissedRewardIntro missed={missed} />
+        ) : (
+          <RewardIntro copy={introCopy} dailyWon={offer.dailyWon} />
+        ))}
       {view.kind === 'record' && (
         <RewardRecord reward={view.reward} history={<RewardHistoryFeed />} />
       )}
