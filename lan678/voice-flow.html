@@ -7,263 +7,109 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root {
-    --bg: #f6f7f9;
-    --card: #ffffff;
-    --ink: #16181d;
-    --sub: #5b616e;
-    --line: #d9dde4;
-    --be: #2f6fed;
-    --be-soft: #eaf1ff;
-    --web: #7a4cf0;
-    --web-soft: #f1ecff;
-    --route: #0f8a6b;
-    --route-soft: #e5f6f0;
-    --dg: #101010;
-    --dg-accent: #13ef93;
-    --cdn: #b46a00;
-    --cdn-soft: #fff3e0;
+    --bg: #f6f7f9; --card: #fff; --ink: #16181d; --sub: #5b616e; --line: #d9dde4;
+    --be: #2f6fed; --be-soft: #eaf1ff;
+    --web: #7a4cf0; --web-soft: #f1ecff;
+    --route: #0f8a6b; --route-soft: #e5f6f0;
+    --dg: #101010; --dg-accent: #13ef93;
+    --cdn: #b46a00; --cdn-soft: #fff3e0;
     --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font-family: Pretendard, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
-  .page { width: 1200px; padding: 36px 40px 40px; margin: 0 auto; }
-  h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -0.02em; }
-  .lead { color: var(--sub); font-size: 15px; margin: 0 0 24px; line-height: 1.6; }
+  .page { width: 1120px; padding: 30px 32px 22px; margin: 0 auto; }
+  h1 { font-size: 23px; margin: 0 0 18px; letter-spacing: -0.02em; }
   code { font-family: var(--mono); font-size: 0.86em; background: #eef0f4; padding: 1px 5px; border-radius: 4px; }
   .dglogo { width: 1em; height: 1em; fill: var(--dg-accent); flex: none; }
 
-  section { margin-bottom: 26px; }
-  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
-  .sec-h h2 { margin: 0; font-size: 21px; letter-spacing: -0.02em; }
-  .sec-h span { color: var(--sub); font-size: 14px; }
+  .stage { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+  .stage-h { font-size: 15px; font-weight: 800; margin-bottom: 10px; }
+  .stage-h span { font-weight: 500; color: var(--sub); font-size: 13.5px; margin-left: 6px; }
 
-  /* 단계 하나 = 카드 하나. 제목·흐름·조건이 한 카드 안에 붙어 있다 */
-  .stage { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; margin-bottom: 12px; }
-  .stage-h { font-size: 15px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.01em; }
-  .stage-d { font-size: 13.5px; color: var(--sub); margin-bottom: 12px; }
-
-  .row { display: grid; grid-template-columns: 290px 30px 220px 30px 230px 30px 1fr; align-items: stretch; }
-  .row + .row { margin-top: 10px; }
-  .box { border-radius: 12px; padding: 10px 13px 11px; font-size: 13px; line-height: 1.5; border: 1px solid transparent; }
-  .role { font-size: 11px; font-weight: 800; letter-spacing: 0.02em; margin-bottom: 3px; }
-  .box .t { font-weight: 700; font-size: 14px; margin-bottom: 3px; }
-  .box .f { font-family: var(--mono); font-size: 12px; color: var(--sub); line-height: 1.65; }
-  .box .f em { font-style: normal; color: var(--ink); font-weight: 700; }
-  .box .d { color: var(--sub); }
+  .row { display: grid; grid-template-columns: 270px 26px 190px 26px 190px 26px 1fr; }
+  .row + .row { margin-top: 8px; }
+  .box { border-radius: 10px; padding: 9px 12px; font-size: 13px; line-height: 1.5; border: 1px solid transparent; }
+  .role { font-size: 11px; font-weight: 800; margin-bottom: 2px; }
+  .t { font-weight: 700; font-size: 14px; }
+  .f { font-family: var(--mono); font-size: 12px; color: var(--sub); line-height: 1.6; margin-top: 2px; }
+  .f em { font-style: normal; color: var(--ink); font-weight: 700; }
   .be { background: var(--be-soft); border-color: #cfdcfb; } .be .role, .be .t { color: var(--be); }
   .web { background: var(--web-soft); border-color: #ddd0fb; } .web .role, .web .t { color: var(--web); }
   .route { background: var(--route-soft); border-color: #bfe6d8; } .route .role, .route .t { color: var(--route); }
   .cdn { background: var(--cdn-soft); border-color: #f4d8ac; } .cdn .role, .cdn .t { color: var(--cdn); }
   .dg { background: var(--dg); } .dg .role { color: var(--dg-accent); }
   .dg .t { color: #fff; display: flex; align-items: center; gap: 7px; font-size: 15px; }
-  .dg .f { color: #b9bdc4; }
-  .ghost { border: 1px dashed var(--line); background: transparent; color: #a3a9b4; }
-  .ghost .role { color: #a3a9b4; }
 
   .arrow { display: flex; align-items: center; justify-content: center; color: #9aa1ad; }
-  .arrow svg { width: 22px; height: 12px; }
-  /* 합성을 건너뛰는 줄 — 빈 칸 대신 긴 화살표 하나 */
+  .arrow svg { width: 20px; height: 12px; }
   .bypass { grid-column: 4 / 7; display: flex; align-items: center; gap: 8px; padding: 0 6px; color: var(--cdn); font-size: 12.5px; font-weight: 700; }
   .bypass i { flex: 1; border-top: 2px dashed #e8c48a; }
-  .bypass svg { width: 12px; height: 12px; flex: none; }
 
-  /* 이 단계에서 Deepgram으로 넘어가는 조건 — 같은 카드 맨 아래에 붙는다 */
-  .when { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
-  .when div { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.5; background: #f3f4f6; border-radius: 10px; padding: 8px 11px; }
-  .when .k { flex: none; display: inline-flex; align-items: center; gap: 4px; background: var(--dg); color: #fff; font-size: 11px; font-weight: 800; border-radius: 6px; padding: 2px 7px; margin-top: 1px; }
+  .when { margin-top: 10px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--sub); }
+  .when .k { flex: none; display: inline-flex; align-items: center; gap: 4px; background: var(--dg); color: #fff; font-size: 11px; font-weight: 800; border-radius: 6px; padding: 2px 7px; }
   .when .k .dglogo { width: 11px; height: 11px; }
-  .when .k.skip { background: #9aa1ad; }
 </style>
 </head>
 <body>
 <div class="page">
   <h1>대화 상대의 목소리는 어디서 오나</h1>
-  <p class="lead">
-    목소리(<code>ttsVoice</code>)와 말할 문장은 <b>백엔드 응답</b>에 실려 온다. 미리 만든 mp3가 있으면 그대로 틀고, 없으면 웹 서버 <code>/api/tts</code>가 <b>Deepgram에 직접</b> 합성을 맡긴다.
-  </p>
 
-  <!-- 시나리오 -->
-  <section>
-    <div class="sec-h"><h2>시나리오</h2><span>정해진 질문은 미리 만든 mp3, 그때그때 달라지는 맞장구만 Deepgram</span></div>
-
-    <div class="stage">
-      <div class="stage-h">① 첫 질문</div>
-      <div class="stage-d">화면에 들어오자마자 상대가 먼저 묻는다. 합성 없이 mp3를 바로 튼다.</div>
-      <div class="row">
-        <div class="box be">
-          <div class="role">백엔드 응답</div>
-          <div class="t">GET /scenarios/daily</div>
-          <div class="f">openingPreview<br>├ character.<em>ttsVoice</em> ← 목소리<br>└ <em>questionAudioUrl</em> ← 첫 질문 mp3</div>
-        </div>
-        <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="box web">
-          <div class="role">브라우저</div>
-          <div class="t">mp3 주소로 바로 재생</div>
-        </div>
-        <div class="bypass"><i></i>합성 없이 바로<svg viewBox="0 0 12 12"><path d="M2 2l6 4-6 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="box cdn">
-          <div class="role">소리 출처</div>
-          <div class="t">CDN mp3</div>
-          <div class="d">백엔드가 미리 만든 질문 음원</div>
-        </div>
+  <div class="stage">
+    <div class="stage-h">시나리오 · 첫 질문<span>미리 만든 mp3를 바로 튼다</span></div>
+    <div class="row">
+      <div class="box be">
+        <div class="role">백엔드 응답</div>
+        <div class="t">GET /scenarios/daily</div>
+        <div class="f">openingPreview.<em>questionAudioUrl</em></div>
       </div>
-      <div class="when">
-        <div><span class="k"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</span><span>mp3 주소가 비어 있거나 재생에 실패하면 첫 질문 문장(<code>aiOpeningMessage</code>) 전체를 Deepgram으로 합성한다.</span></div>
-      </div>
+      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box web"><div class="role">브라우저</div><div class="t">mp3 바로 재생</div></div>
+      <div class="bypass"><i></i>합성 없이 바로 &gt;</div>
+      <div class="box cdn"><div class="role">소리 출처</div><div class="t">CDN mp3</div></div>
     </div>
+    <div class="when"><span class="k"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</span>mp3가 없거나 재생에 실패하면 첫 질문 전체를 합성</div>
+  </div>
 
-    <div class="stage">
-      <div class="stage-h">② 내가 말한 뒤 — 맞장구 + 다음 질문</div>
-      <div class="stage-d">짧은 맞장구만 Deepgram으로 만들고, 끝나면 정해진 다음 질문 mp3를 이어 튼다.</div>
-      <div class="row">
-        <div class="box be">
-          <div class="role">백엔드 응답</div>
-          <div class="t">POST /sessions/{id}/messages</div>
-          <div class="f">nextMessage<br>├ <em>ttsText</em> ← 맞장구 문장<br>│ &nbsp;"Oh nice, sounds fun."<br>├ <em>questionAudioUrl</em> ← 다음 질문 mp3<br>└ fixedQuestionText ← 입모양용</div>
-        </div>
-        <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="box web">
-          <div class="role">브라우저</div>
-          <div class="t">1. 맞장구 합성 요청</div>
-          <div class="f">input = ttsText<br>voice = providerVoiceId</div>
-        </div>
-        <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="box route">
-          <div class="role">웹 서버 · 키 보관</div>
-          <div class="t">/api/tts</div>
-          <div class="d"><code>deepgram/aura-2</code>면 Deepgram, 아니면 OpenRouter</div>
-        </div>
-        <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="box dg">
-          <div class="role">소리 출처</div>
-          <div class="t"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</div>
-          <div class="f">POST /v1/speak<br>model=aura-2-luna-en → mp3</div>
-        </div>
+  <div class="stage">
+    <div class="stage-h">시나리오 · 내가 말한 뒤<span>맞장구만 합성하고, 다음 질문은 mp3로 이어 튼다</span></div>
+    <div class="row">
+      <div class="box be">
+        <div class="role">백엔드 응답</div>
+        <div class="t">POST /sessions/{id}/messages</div>
+        <div class="f">nextMessage.<em>ttsText</em> ← 맞장구<br>nextMessage.<em>questionAudioUrl</em></div>
       </div>
-      <div class="row">
-        <div></div>
-        <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="box web">
-          <div class="role">브라우저</div>
-          <div class="t">2. 이어서 질문 mp3 재생</div>
-        </div>
-        <div class="bypass"><i></i>합성 없이 바로<svg viewBox="0 0 12 12"><path d="M2 2l6 4-6 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="box cdn">
-          <div class="role">소리 출처</div>
-          <div class="t">CDN mp3</div>
-          <div class="d">미리 만든 다음 질문 음원</div>
-        </div>
-      </div>
-      <div class="when">
-        <div><span class="k"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</span><span>마지막 인사처럼 정해진 질문이 없는 발화는 <code>ttsText</code>·<code>questionAudioUrl</code>이 비어 온다. 이때는 나누지 않고 <code>content</code> 전체를 Deepgram으로 합성한다.</span></div>
-        <div><span class="k skip">mp3 실패</span><span>질문 mp3 재생에 실패하면 대신 합성하지 않고 그 발화를 끝낸다. 질문 글자는 화면에 그대로 남는다.</span></div>
-      </div>
+      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box web"><div class="role">브라우저</div><div class="t">① 맞장구 합성 요청</div></div>
+      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box route"><div class="role">웹 서버</div><div class="t">/api/tts</div></div>
+      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box dg"><div class="role">소리 출처</div><div class="t"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</div></div>
     </div>
-  </section>
-
-  <!-- 스몰톡 -->
-  <section>
-    <div class="sec-h"><h2>스몰톡</h2><span>매번 다른 대화라 미리 만든 음원 없이, 상대가 하는 말은 전부 Deepgram</span></div>
-
-    <div class="stage">
-      <div class="stage-h">⓪ 홈 자기소개</div>
-      <div class="stage-d">상대를 고를 때 나오는 인사. 문구가 고정이라 웹에 넣어 둔 mp3를 튼다. 백엔드 응답은 쓰지 않는다.</div>
-      <div class="row">
-        <div class="box ghost">
-          <div class="role">백엔드 응답</div>
-          <div>없음. 문구·음원·목소리 모두 웹 고정값</div>
-        </div>
-        <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="box web">
-          <div class="role">브라우저</div>
-          <div class="t">웹에 든 mp3 재생</div>
-        </div>
-        <div class="bypass"><i></i>합성 없이 바로<svg viewBox="0 0 12 12"><path d="M2 2l6 4-6 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="box cdn">
-          <div class="role">소리 출처</div>
-          <div class="t">웹 정적 파일</div>
-          <div class="f">/audio/smalltalk-intro-*.mp3</div>
-        </div>
-      </div>
-      <div class="when">
-        <div><span class="k"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</span><span>mp3 재생에 실패하면 자기소개 문장을 웹에 적힌 목소리(<code>partner.ts</code>)로 Deepgram 합성한다.</span></div>
-      </div>
+    <div class="row">
+      <div></div>
+      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box web"><div class="role">브라우저</div><div class="t">② 질문 mp3 이어 재생</div></div>
+      <div class="bypass"><i></i>합성 없이 바로 &gt;</div>
+      <div class="box cdn"><div class="role">소리 출처</div><div class="t">CDN mp3</div></div>
     </div>
+    <div class="when"><span class="k"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</span>마지막 인사처럼 질문 mp3가 없는 발화는 문장 전체(<code>content</code>)를 합성</div>
+  </div>
 
-    <div class="stage">
-      <div class="stage-h">① 첫 마디</div>
-      <div class="stage-d">고른 상대로 대화를 열면, 상대가 먼저 건네는 첫 마디를 통째로 Deepgram으로 만든다.</div>
-      <div class="row">
-        <div class="box be">
-          <div class="role">백엔드 응답</div>
-          <div class="t">POST /free-talk/sessions</div>
-          <div class="f">요청 characterId (고른 상대)<br>├ character.<em>ttsVoice</em> ← 목소리<br>└ currentMessage.<em>content</em> ← 첫 마디</div>
-        </div>
-        <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="box web">
-          <div class="role">브라우저</div>
-          <div class="t">문장 전체 합성 요청</div>
-          <div class="f">input = content</div>
-        </div>
-        <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="box route">
-          <div class="role">웹 서버 · 키 보관</div>
-          <div class="t">/api/tts</div>
-          <div class="d">시나리오와 같은 경로</div>
-        </div>
-        <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="box dg">
-          <div class="role">소리 출처</div>
-          <div class="t"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</div>
-          <div class="f">POST /v1/speak → mp3</div>
-        </div>
+  <div class="stage">
+    <div class="stage-h">스몰톡 · 상대가 하는 모든 말<span>첫 마디·다음 말·작별 인사 모두 문장 전체를 합성한다</span></div>
+    <div class="row">
+      <div class="box be">
+        <div class="role">백엔드 응답</div>
+        <div class="f" style="margin-top:0">POST /free-talk/sessions<br>&nbsp;→ currentMessage.<em>content</em><br>POST …/messages, …/exit-decision<br>&nbsp;→ nextMessage.<em>content</em></div>
       </div>
+      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box web"><div class="role">브라우저</div><div class="t">문장 전체 합성 요청</div></div>
+      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box route"><div class="role">웹 서버</div><div class="t">/api/tts</div></div>
+      <div class="arrow"><svg viewBox="0 0 20 12"><path d="M0 6h16M12 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box dg"><div class="role">소리 출처</div><div class="t"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</div></div>
     </div>
-
-    <div class="stage">
-      <div class="stage-h">② 내가 말한 뒤 — 상대의 다음 말</div>
-      <div class="stage-d">반응과 질문이 한 문장으로 오므로 통째로 Deepgram으로 만든다. 응답을 받자마자 미리 합성해 둔다.</div>
-      <div class="row">
-        <div class="box be">
-          <div class="role">백엔드 응답</div>
-          <div class="t">POST /free-talk/sessions/{id}/messages</div>
-          <div class="f">nextMessage.<em>content</em> ← 다음 말 전체</div>
-        </div>
-        <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="box web">
-          <div class="role">브라우저</div>
-          <div class="t">문장 전체 합성 요청</div>
-          <div class="f">input = content</div>
-        </div>
-        <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="box route">
-          <div class="role">웹 서버 · 키 보관</div>
-          <div class="t">/api/tts</div>
-          <div class="d">시나리오와 같은 경로</div>
-        </div>
-        <div class="arrow"><svg viewBox="0 0 22 12"><path d="M0 6h18M14 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
-        <div class="box dg">
-          <div class="role">소리 출처</div>
-          <div class="t"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</div>
-          <div class="f">POST /v1/speak → mp3</div>
-        </div>
-      </div>
-      <div class="when">
-        <div><span class="k"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</span><span>내가 작별 인사를 하면 종료 확인(<code>/exit-decision</code>)을 보내고, 그 응답의 <code>nextMessage.content</code>(상대의 마무리 인사)도 같은 길로 합성한다.</span></div>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <div class="sec-h"><h2>모든 단계 공통</h2></div>
-    <div class="stage">
-      <div class="when" style="margin-top:0">
-        <div><span class="k skip">부르지 않음</span><span><code>ttsVoice</code>가 <code>null</code>로 오면 합성하지 않고, 말하는 시간만큼 기다린 뒤 대화를 잇는다.</span></div>
-        <div><span class="k skip">부르지 않음</span><span>다시 듣기는 방금 받은 소리를 그대로 다시 튼다.</span></div>
-        <div><span class="k skip">키</span><span>Deepgram TTS 키(<code>DEEPGRAM_TTS_API_KEY</code>)는 웹 서버에만 있다. 브라우저는 <code>/api/tts</code>만 부른다. STT 키와는 별개다.</span></div>
-      </div>
-    </div>
-  </section>
+  </div>
 </div>
 </body>
 </html>
