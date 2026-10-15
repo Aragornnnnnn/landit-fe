@@ -64,7 +64,7 @@ export const missedCopyOf = ({
     amount: formatWon(missedWon),
     // 지난 날은 돌아오지 않지만 오늘 몫은 결제 당일 결제 전 대화도 인정돼 아직 받을 수 있다
     box: talkedToday
-      ? { lead: '오늘 ', strong: daily, tail: '은 아직 안 늦었어요' }
-      : { lead: '오늘부터 하면 하루 ', strong: daily, tail: '씩 받아요' },
+      ? { lead: '지금 시작하면 첫 ', strong: daily, tail: '이 쌓여요' }
+      : { lead: '챌린지를 시작하고 첫 ', strong: daily, tail: '을 받아봐요' },
   };
 };
