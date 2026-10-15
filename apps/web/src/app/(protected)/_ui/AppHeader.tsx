@@ -4,6 +4,7 @@
 import { EVENTS } from '@landit/analytics';
 
 import { MailboxButton } from '@/features/mailbox/ui/MailboxButton';
+import { missedRewardOf } from '@/features/reward/model/missed-reward';
 import {
   balanceOf,
   rewardBadgeOf,
@@ -29,11 +30,24 @@ import { useMissedEarnInvite } from '../_model/useMissedEarnInvite';
 import { useMyReward } from '../_model/useMyReward';
 
 export const AppHeader = () => {
-  const { reward, loaded, invited, settled } = useMyReward();
+  const { reward, loaded, invited, settled, preview, computedAt } =
+    useMyReward();
   const badge = reward && rewardBadgeOf(reward);
-  // 환급을 권할 사람이 오늘의 시나리오를 끝내고 돌아왔으면, 받을 수 있었던 동전이 진입 알약으로 날아간다
-  const { entryRef, dailyWon, claimWon, shower, endShower, bubble } =
-    useMissedEarnInvite(invited);
+  // 환급을 권할 사람이 오늘의 시나리오를 끝내고 돌아왔으면, 받을 수 있었던 동전이 진입 알약으로 날아간다.
+  // 무료로 지난 이틀 이상 해 온 사람에게는 알약이 놓친 금액을 말한다 — 환급 소개와 같은 판정이다
+  const {
+    entryRef,
+    dailyWon,
+    pillWon,
+    landWon,
+    missed,
+    shower,
+    endShower,
+    bubble,
+  } = useMissedEarnInvite(
+    invited,
+    computedAt ? missedRewardOf(preview, computedAt) : null,
+  );
   // 학습을 끝내고 돌아왔으면 그사이 늘어난 만큼 동전이 알약으로 날아든다
   const { gain, endGain } = useBalanceGain(
     // 알약이 없으면 연출을 틀 자리도 없다 — 끝나지 않는 연출을 기다리며 홈의 시트가 막히지 않게 금액도 없는 것으로 넘긴다
@@ -57,7 +71,9 @@ export const AppHeader = () => {
               invited
                 ? {
                     href: REWARD_PATH,
-                    label: <RewardInviteLabel claimWon={claimWon} />,
+                    label: (
+                      <RewardInviteLabel amountWon={pillWon} missed={missed} />
+                    ),
                     onClick: () =>
                       track(EVENTS.REWARD_ENTRY_TAPPED, {
                         source: 'header',
@@ -76,7 +92,10 @@ export const AppHeader = () => {
             <span
               className={`${PREMIUM_ENTRY_PILL_CLASS} animate-gold-flow whitespace-nowrap`}
             >
-              <RewardInviteLabel claimWon={landed ? dailyWon : null} />
+              <RewardInviteLabel
+                amountWon={landed ? landWon : null}
+                missed={missed}
+              />
             </span>
           )}
           onLand={shower.onLand}
@@ -87,6 +106,7 @@ export const AppHeader = () => {
         <RewardInviteBubble
           pill={bubble.pill}
           amountWon={dailyWon}
+          missed={missed}
           onClose={bubble.onClose}
         />
       )}
