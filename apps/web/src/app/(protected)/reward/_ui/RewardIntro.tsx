@@ -40,9 +40,10 @@ export const RewardIntro = ({
 
 // 헤더 안내 버튼이 여는 규칙을 금액 바로 아래에도 적는다 — 처음 보는 사람은 버튼을 누르기 전에 규칙부터 읽어야 한다
 const RuleLines = ({ dailyWon }: { dailyWon: number }) => (
-  <ul className="flex flex-col items-center gap-1">
+  // 두 줄을 한 덩어리로 가운데 두고 안에서는 왼쪽에 맞춘다 — 줄마다 가운데면 이모지가 들쭉날쭉하다
+  <ul className="mt-2 inline-flex flex-col items-start gap-2 text-left">
     {rewardRulesOf(dailyWon).map(([emoji, text]) => (
-      <li key={text} className="flex items-center gap-1.5 break-keep">
+      <li key={text} className="flex items-center gap-2 break-keep">
         <Emoji className="size-4 shrink-0">{emoji}</Emoji>
         {text}
       </li>
