@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>상대 음성 한눈에</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --ink: #16181d;
+    --sub: #5b616e;
+    --line: #d9dde4;
+    --be: #2f6fed;
+    --be-soft: #eaf1ff;
+    --web: #7a4cf0;
+    --web-soft: #f1ecff;
+    --route: #0f8a6b;
+    --route-soft: #e5f6f0;
+    --dg: #101010;
+    --dg-accent: #13ef93;
+    --cdn: #b46a00;
+    --cdn-soft: #fff3e0;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: Pretendard, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+  .shot { width: 1200px; padding: 36px 40px 40px; margin: 0 auto; background: var(--bg); }
+  h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -0.02em; }
+  .lead { color: var(--sub); font-size: 15px; margin: 0 0 26px; line-height: 1.6; }
+  code { font-family: var(--mono); font-size: 0.86em; background: #eef0f4; padding: 1px 5px; border-radius: 4px; }
+  .dglogo { width: 1em; height: 1em; fill: var(--dg-accent); flex: none; }
+
+  /* 한눈에 보기 */
+  .flow { display: grid; grid-template-columns: 1fr 44px 1fr 44px 1fr 44px 1.05fr; align-items: stretch; }
+  .node { border-radius: 16px; padding: 18px 18px 16px; border: 1px solid transparent; }
+  .node .who { font-size: 12.5px; font-weight: 700; letter-spacing: 0.02em; margin-bottom: 6px; }
+  .node .name { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .node .what { font-size: 14px; line-height: 1.55; color: var(--sub); }
+  .n-be { background: var(--be-soft); border-color: #cfdcfb; } .n-be .who { color: var(--be); }
+  .n-web { background: var(--web-soft); border-color: #ddd0fb; } .n-web .who { color: var(--web); }
+  .n-route { background: var(--route-soft); border-color: #bfe6d8; } .n-route .who { color: var(--route); }
+  .n-dg { background: var(--dg); } .n-dg .who { color: var(--dg-accent); } .n-dg .name { color: #fff; font-size: 22px; } .n-dg .what { color: #c4c8cf; }
+  .link { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #9aa1ad; }
+  .num { width: 24px; height: 24px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .link svg { width: 30px; height: 14px; }
+  .side { display: grid; grid-template-columns: 1fr 44px 1fr 44px 1fr 44px 1.05fr; margin-top: 14px; }
+  .side .cdn { grid-column: 3 / 8; background: var(--cdn-soft); border: 1px dashed #e8c48a; border-radius: 12px; padding: 11px 16px; font-size: 13.5px; color: #7a4a00; display: flex; align-items: center; gap: 10px; }
+  .steps { margin-top: 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .steps div { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.55; display: flex; gap: 10px; }
+  .steps .num { flex: none; margin-top: 1px; }
+
+  /* Deepgram을 부르는 순간 */
+  .group { margin-bottom: 18px; }
+  .group-h { display: flex; align-items: baseline; gap: 10px; margin: 0 0 10px; }
+  .group-h h2 { margin: 0; font-size: 19px; letter-spacing: -0.02em; }
+  .group-h span { color: var(--sub); font-size: 13.5px; }
+  .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .case { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: grid; grid-template-rows: auto auto 1fr; gap: 10px; }
+  .case-h { display: flex; align-items: center; gap: 10px; }
+  .case-h .k { font-size: 12px; font-weight: 800; color: #fff; background: var(--dg); border-radius: 6px; padding: 3px 7px; display: flex; align-items: center; gap: 5px; }
+  .case-h .k .dglogo { width: 12px; height: 12px; }
+  .case-h .k.warn { background: #6b7280; }
+  .case-h b { font-size: 16px; letter-spacing: -0.01em; }
+  .case .when { font-size: 13.5px; color: var(--sub); line-height: 1.55; }
+  .pipe { display: flex; align-items: stretch; gap: 8px; font-size: 12.5px; }
+  .pipe > div { border-radius: 10px; padding: 8px 10px; line-height: 1.5; }
+  .pipe .src { background: var(--be-soft); flex: 1.15; }
+  .pipe .src .l { color: var(--be); font-weight: 700; }
+  .pipe .say { background: var(--dg); color: #fff; flex: 1; }
+  .pipe .say .l { color: var(--dg-accent); font-weight: 700; }
+  .pipe .l { font-size: 11.5px; margin-bottom: 2px; }
+  .pipe .f { font-family: var(--mono); font-size: 12px; word-break: break-all; }
+  .pipe .ex { font-style: italic; color: #e6e8eb; }
+  .pipe .ar { display: flex; align-items: center; color: #9aa1ad; padding: 0; }
+  .pipe .ar svg { width: 18px; height: 12px; }
+
+  .not { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  .not h3 { margin: 0 0 10px; font-size: 16px; }
+  .not ul { margin: 0; padding-left: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 28px; font-size: 13.5px; line-height: 1.55; color: var(--sub); }
+  .not li b { color: var(--ink); }
+  .timing { margin-top: 12px; background: var(--route-soft); border: 1px solid #bfe6d8; border-radius: 14px; padding: 14px 18px; font-size: 13.5px; line-height: 1.6; }
+  .timing b { color: var(--route); }
+</style>
+</head>
+<body>
+
+<!-- 1. 한눈에 보기 -->
+<div class="shot" id="overview">
+  <h1>상대 목소리, 한눈에 보기</h1>
+  <p class="lead">백엔드가 <b>무엇을 어떤 목소리로</b> 말할지 정해 주면, 웹이 그 문장을 Deepgram에 보내 소리로 바꿔 받아 온다.</p>
+
+  <div class="flow">
+    <div class="node n-be">
+      <div class="who">백엔드</div>
+      <div class="name">대화 API 응답</div>
+      <div class="what">상대가 할 말(문장)과 목소리 이름을 담아 준다.</div>
+    </div>
+    <div class="link"><span class="num">1</span><svg viewBox="0 0 30 14"><path d="M0 7h26M21 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+    <div class="node n-web">
+      <div class="who">브라우저</div>
+      <div class="name">재생 결정</div>
+      <div class="what">미리 만든 mp3가 없는 문장만 골라 합성을 요청한다.</div>
+    </div>
+    <div class="link"><span class="num">2</span><svg viewBox="0 0 30 14"><path d="M0 7h26M21 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+    <div class="node n-route">
+      <div class="who">웹 서버</div>
+      <div class="name">/api/tts</div>
+      <div class="what">Deepgram 키를 붙여 대신 요청한다. 키는 브라우저에 가지 않는다.</div>
+    </div>
+    <div class="link"><span class="num">3</span><svg viewBox="0 0 30 14"><path d="M0 7h26M21 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+    <div class="node n-dg">
+      <div class="who">합성</div>
+      <div class="name"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram</div>
+      <div class="what">문장을 mp3로 바꿔 돌려준다. 같은 문장 기준 약 1초.</div>
+    </div>
+  </div>
+  <div class="side">
+    <div class="cdn">↳ 시나리오의 정해진 질문처럼 <b>미리 만든 mp3</b>가 있으면 2·3을 건너뛰고 CDN에서 바로 받아 튼다.</div>
+  </div>
+
+  <div class="steps">
+    <div><span class="num">1</span><span>응답에 <code>ttsVoice</code>(목소리)와 말할 문장이 실려 온다. 목소리를 정하는 건 백엔드다.</span></div>
+    <div><span class="num">2</span><span>브라우저는 합성할 문장과 목소리 이름만 <code>/api/tts</code>로 보낸다.</span></div>
+    <div><span class="num">3</span><span><code>deepgram/aura-2</code> 목소리면 Deepgram에 직접, 그 밖의 목소리는 OpenRouter로 보낸다.</span></div>
+  </div>
+</div>
+
+<!-- 2. Deepgram을 부르는 순간 -->
+<div class="shot" id="cases">
+  <h1>Deepgram에서 소리를 받아 오는 순간</h1>
+  <p class="lead">아래 경우마다 브라우저가 <code>/api/tts</code>를 거쳐 Deepgram에 문장 하나를 보낸다. 왼쪽이 그 문장이 들어 있는 응답, 오른쪽이 실제로 합성하는 문장이다.</p>
+
+  <div class="group">
+    <div class="group-h"><h2>시나리오</h2><span>정해진 질문은 mp3, 나머지만 Deepgram</span></div>
+    <div class="cards">
+
+      <div class="case">
+        <div class="case-h"><span class="k"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>매 턴</span><b>맞장구</b></div>
+        <div class="when">내가 말한 뒤 상대의 짧은 반응. 뒤에 붙는 질문은 mp3로 이어 튼다.</div>
+        <div class="pipe">
+          <div class="src"><div class="l">발화 제출 응답</div><div class="f">nextMessage.ttsText</div></div>
+          <div class="ar"><svg viewBox="0 0 18 12"><path d="M0 6h14M10 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+          <div class="say"><div class="l">합성하는 문장 (예시)</div><div class="ex">"Oh nice, sounds fun."</div></div>
+        </div>
+      </div>
+
+      <div class="case">
+        <div class="case-h"><span class="k"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>마지막</span><b>마무리 인사</b></div>
+        <div class="when">정해진 질문이 없는 발화. 맞장구·질문 mp3가 비어 와서 문장 전체를 합성한다.</div>
+        <div class="pipe">
+          <div class="src"><div class="l">마지막 발화 제출 응답</div><div class="f">nextMessage.content</div></div>
+          <div class="ar"><svg viewBox="0 0 18 12"><path d="M0 6h14M10 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+          <div class="say"><div class="l">합성하는 문장 (예시)</div><div class="ex">"Great chatting with you. See you!"</div></div>
+        </div>
+      </div>
+
+      <div class="case">
+        <div class="case-h"><span class="k warn">대체</span><b>첫 질문 mp3를 못 틀 때</b></div>
+        <div class="when">첫 질문 mp3 주소가 비어 있거나 재생에 실패하면 첫 질문 전체를 합성한다.</div>
+        <div class="pipe">
+          <div class="src"><div class="l">오늘의 시나리오 응답</div><div class="f">openingPreview.aiOpeningMessage</div></div>
+          <div class="ar"><svg viewBox="0 0 18 12"><path d="M0 6h14M10 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+          <div class="say"><div class="l">합성하는 문장</div><div class="ex">첫 질문 문장 전체</div></div>
+        </div>
+      </div>
+
+      <div class="case">
+        <div class="case-h"><span class="k warn">대체</span><b>질문 mp3가 안 온 턴</b></div>
+        <div class="when">맞장구(<code>ttsText</code>)나 질문 mp3 주소 중 하나라도 비면 나누지 않고 문장 전체를 합성한다.</div>
+        <div class="pipe">
+          <div class="src"><div class="l">발화 제출 응답</div><div class="f">nextMessage.content</div></div>
+          <div class="ar"><svg viewBox="0 0 18 12"><path d="M0 6h14M10 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+          <div class="say"><div class="l">합성하는 문장</div><div class="ex">맞장구 + 질문 전체</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-h"><h2>스몰톡</h2><span>매번 다른 대화라 상대가 하는 말은 전부 Deepgram</span></div>
+    <div class="cards">
+
+      <div class="case">
+        <div class="case-h"><span class="k"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>시작</span><b>첫 마디</b></div>
+        <div class="when">상대가 먼저 말을 걸 때. 고른 상대(<code>characterId</code>)로 세션을 열면 목소리와 첫 마디가 온다.</div>
+        <div class="pipe">
+          <div class="src"><div class="l">세션 시작 응답</div><div class="f">currentMessage.content</div></div>
+          <div class="ar"><svg viewBox="0 0 18 12"><path d="M0 6h14M10 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+          <div class="say"><div class="l">합성하는 문장 (예시)</div><div class="ex">"Hey! How was your day?"</div></div>
+        </div>
+      </div>
+
+      <div class="case">
+        <div class="case-h"><span class="k"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>매 턴</span><b>상대의 다음 말</b></div>
+        <div class="when">내가 말한 뒤 상대의 대답. 반응과 질문이 한 문장으로 와서 통째로 합성한다.</div>
+        <div class="pipe">
+          <div class="src"><div class="l">발화 제출 응답</div><div class="f">nextMessage.content</div></div>
+          <div class="ar"><svg viewBox="0 0 18 12"><path d="M0 6h14M10 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+          <div class="say"><div class="l">합성하는 문장 (예시)</div><div class="ex">"No way! What did you eat there?"</div></div>
+        </div>
+      </div>
+
+      <div class="case">
+        <div class="case-h"><span class="k"><svg class="dglogo" viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>마지막</span><b>작별 인사</b></div>
+        <div class="when">내가 작별 인사를 하면 종료 확인을 보내고, 그 응답에 실려 온 상대의 마무리 인사를 합성한다.</div>
+        <div class="pipe">
+          <div class="src"><div class="l">종료 확인 응답</div><div class="f">nextMessage.content</div></div>
+          <div class="ar"><svg viewBox="0 0 18 12"><path d="M0 6h14M10 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+          <div class="say"><div class="l">합성하는 문장 (예시)</div><div class="ex">"Bye! Talk soon."</div></div>
+        </div>
+      </div>
+
+      <div class="case">
+        <div class="case-h"><span class="k warn">대체</span><b>홈 자기소개 mp3를 못 틀 때</b></div>
+        <div class="when">상대를 고를 때 나오는 자기소개는 웹에 든 mp3다. 재생에 실패하면 웹에 적힌 목소리로 합성한다.</div>
+        <div class="pipe">
+          <div class="src"><div class="l">웹 고정값 (응답 아님)</div><div class="f">partner.intro</div></div>
+          <div class="ar"><svg viewBox="0 0 18 12"><path d="M0 6h14M10 2l5 4-5 4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+          <div class="say"><div class="l">합성하는 문장 (예시)</div><div class="ex">"Hi! I'm Chloe from LA. …"</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="not">
+    <h3>Deepgram을 부르지 않는 경우</h3>
+    <ul>
+      <li><b>미리 만든 mp3를 틀 때</b> — 시나리오 첫 질문·다음 질문, 스몰톡 홈 자기소개.</li>
+      <li><b>다시 듣기</b> — 방금 받은 소리를 그대로 다시 튼다.</li>
+      <li><b>목소리가 비어 올 때</b> — <code>ttsVoice</code>가 <code>null</code>이면 소리 없이 말하는 시간만큼 기다린다.</li>
+      <li><b>Deepgram 목소리가 아닐 때</b> — 그 밖의 목소리 모델은 OpenRouter로 합성한다.</li>
+    </ul>
+  </div>
+  <div class="timing"><b>언제 요청하나</b> — 발화 제출 응답을 받자마자 다음 말을 미리 합성해 둔다. 상대 차례가 오면 기다림 없이 바로 튼다.</div>
+</div>
+
+</body>
+</html>
