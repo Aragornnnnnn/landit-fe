@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>상대 음성 흐름</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --ink: #16181d;
+    --sub: #5b616e;
+    --line: #d9dde4;
+    --be: #2f6fed;
+    --be-soft: #eaf1ff;
+    --web: #7a4cf0;
+    --web-soft: #f1ecff;
+    --route: #0f8a6b;
+    --route-soft: #e5f6f0;
+    --dg: #101010;
+    --dg-accent: #13ef93;
+    --cdn: #b46a00;
+    --cdn-soft: #fff3e0;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Pretendard, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { width: 1240px; padding: 40px 44px 48px; margin: 0 auto; }
+  h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -0.02em; }
+  .lead { color: var(--sub); font-size: 15px; margin: 0 0 28px; line-height: 1.6; }
+  code { font-family: var(--mono); font-size: 0.88em; background: #eef0f4; padding: 1px 5px; border-radius: 4px; }
+
+  /* 열 머리 */
+  .cols, .row { display: grid; grid-template-columns: 282px 34px 214px 34px 232px 34px 254px; align-items: stretch; }
+  .cols { margin-bottom: 10px; }
+  .col-h { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--sub); padding-left: 2px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px 22px 14px; margin-bottom: 22px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+  .sec-h h2 { margin: 0; font-size: 20px; letter-spacing: -0.02em; }
+  .sec-h span { color: var(--sub); font-size: 14px; }
+
+  .row { margin-bottom: 12px; }
+  .step { grid-column: 1 / -1; font-size: 13px; font-weight: 700; color: var(--sub); margin: 6px 0 8px; }
+  .step b { color: var(--ink); }
+
+  .box { border-radius: 12px; padding: 12px 14px; font-size: 13.5px; line-height: 1.55; border: 1px solid transparent; }
+  .box .t { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .box .f { font-family: var(--mono); font-size: 12px; color: var(--sub); line-height: 1.7; }
+  .box .f em { font-style: normal; color: var(--ink); font-weight: 600; }
+  .be { background: var(--be-soft); border-color: #cfdcfb; }
+  .be .t { color: var(--be); }
+  .web { background: var(--web-soft); border-color: #ddd0fb; }
+  .web .t { color: var(--web); }
+  .route { background: var(--route-soft); border-color: #bfe6d8; }
+  .route .t { color: var(--route); }
+  .cdn { background: var(--cdn-soft); border-color: #f4d8ac; }
+  .cdn .t { color: var(--cdn); }
+  .dg { background: var(--dg); color: #fff; display: flex; flex-direction: column; justify-content: center; }
+  .dg .t { color: #fff; display: flex; align-items: center; gap: 8px; }
+  .dg .f { color: #b9bdc4; }
+  .dg svg { width: 20px; height: 20px; fill: var(--dg-accent); flex: none; }
+  .empty { border: 1px dashed var(--line); background: transparent; color: #a3a9b4; display: flex; align-items: center; justify-content: center; font-size: 12.5px; }
+
+  .arrow { display: flex; align-items: center; justify-content: center; color: #9aa1ad; }
+  .arrow svg { width: 26px; height: 14px; }
+  .arrow.skip { opacity: 0; }
+
+  .note { font-size: 12.5px; color: var(--sub); margin: 2px 0 10px; padding-left: 2px; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-left: 6px; vertical-align: 1px; }
+  .tag.new { background: var(--dg); color: var(--dg-accent); }
+  .tag.none { background: #eef0f4; color: var(--sub); }
+
+  /* 하단 요약 */
+  .foot { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .foot .box { background: var(--card); border-color: var(--line); }
+  .foot .t { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>대화 상대의 목소리는 어디서 오나</h1>
+  <p class="lead">
+    목소리 종류(<code>ttsVoice</code>)와 미리 만든 음원 주소는 <b>백엔드 응답</b>에 실려 온다.
+    문장을 소리로 바꾸는 합성은 웹 서버의 <code>/api/tts</code>가 맡고, Deepgram 목소리(<code>deepgram/aura-2</code>)면 <b>Deepgram에 직접</b> 보낸다.
+  </p>
+
+  <div class="cols">
+    <div class="col-h"><i class="dot" style="background:var(--be)"></i>백엔드 응답 (무엇을 말할지)</div><div></div>
+    <div class="col-h"><i class="dot" style="background:var(--web)"></i>브라우저 (재생 결정)</div><div></div>
+    <div class="col-h"><i class="dot" style="background:var(--route)"></i>웹 서버 /api/tts (키 보관)</div><div></div>
+    <div class="col-h"><i class="dot" style="background:var(--dg)"></i>소리 출처</div>
+  </div>
+
+  <!-- 시나리오 -->
+  <section>
+    <div class="sec-h"><h2>시나리오</h2><span>정해진 질문은 미리 만든 mp3, 그때그때 달라지는 맞장구만 합성</span></div>
+
+    <div class="row">
+      <div class="step"><b>① 첫 질문</b> · 화면에 들어오자마자</div>
+      <div class="box be">
+        <div class="t">GET /scenarios/daily</div>
+        <div class="f">openingPreview<br>├ character.<em>ttsVoice</em> ← 목소리<br>└ <em>questionAudioUrl</em> ← 첫 질문 mp3</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 26 14"><path d="M0 7h22M17 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box web">
+        <div class="t">mp3 바로 재생</div>
+        <div>합성 없이 음원 주소를 튼다. 재생에 실패하면 문장 전체를 합성한다.</div>
+      </div>
+      <div class="arrow skip"><svg viewBox="0 0 26 14"></svg></div>
+      <div class="box empty">거치지 않고 바로 받음</div>
+      <div class="arrow"><svg viewBox="0 0 26 14"><path d="M0 7h22M17 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box cdn">
+        <div class="t">CDN (CloudFront)</div>
+        <div>백엔드가 미리 만들어 둔 질문 음원</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="step"><b>② 내가 말한 뒤</b> · 맞장구 + 다음 질문</div>
+      <div class="box be">
+        <div class="t">POST /sessions/{id}/messages</div>
+        <div class="f">nextMessage<br>├ <em>ttsText</em> ← 맞장구 문장<br>│ &nbsp;"Oh nice, sounds fun."<br>├ <em>questionAudioUrl</em> ← 다음 질문 mp3<br>└ fixedQuestionText ← 입모양용</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 26 14"><path d="M0 7h22M17 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box web">
+        <div class="t">1. 맞장구 합성 요청</div>
+        <div class="f">input = ttsText<br>voice = providerVoiceId</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 26 14"><path d="M0 7h22M17 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box route">
+        <div class="t">/api/tts</div>
+        <div><code>deepgram/aura-2</code>면 Deepgram으로, 아니면 OpenRouter로</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 26 14"><path d="M0 7h22M17 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box dg">
+        <div class="t"><svg viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram<span class="tag new">이번 PR</span></div>
+        <div class="f">POST /v1/speak<br>model=aura-2-luna-en → mp3</div>
+      </div>
+    </div>
+    <div class="row">
+      <div></div><div></div>
+      <div class="box web">
+        <div class="t">2. 이어서 질문 mp3 재생</div>
+        <div>맞장구가 끝나면 바로 이어 튼다.</div>
+      </div>
+      <div class="arrow skip"><svg viewBox="0 0 26 14"></svg></div>
+      <div class="box empty">거치지 않고 바로 받음</div>
+      <div class="arrow"><svg viewBox="0 0 26 14"><path d="M0 7h22M17 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box cdn">
+        <div class="t">CDN (CloudFront)</div>
+        <div>미리 만든 다음 질문 음원</div>
+      </div>
+    </div>
+    <p class="note">마지막 인사처럼 정해진 질문이 없는 발화는 <code>ttsText</code>·<code>questionAudioUrl</code>이 비어 오고, 이때는 <code>content</code> 전체를 Deepgram으로 합성한다.</p>
+  </section>
+
+  <!-- 스몰톡 -->
+  <section>
+    <div class="sec-h"><h2>스몰톡</h2><span>매번 다른 대화라 미리 만든 음원 없이, 상대 말은 전부 합성</span></div>
+
+    <div class="row">
+      <div class="step"><b>⓪ 홈 자기소개</b> · 상대를 고를 때</div>
+      <div class="box empty" style="justify-content:flex-start; padding-left:14px">백엔드 응답 없음 (문구·음원이 앱 고정값)</div>
+      <div class="arrow skip"><svg viewBox="0 0 26 14"></svg></div>
+      <div class="box web">
+        <div class="t">앱에 든 mp3 재생</div>
+        <div>재생에 실패하면 앱에 적힌 목소리로 합성한다.</div>
+      </div>
+      <div class="arrow skip"><svg viewBox="0 0 26 14"></svg></div>
+      <div class="box empty">거치지 않고 바로 받음</div>
+      <div class="arrow"><svg viewBox="0 0 26 14"><path d="M0 7h22M17 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box cdn">
+        <div class="t">웹 정적 파일</div>
+        <div class="f">/audio/smalltalk-intro-*.mp3</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="step"><b>① 첫 마디</b> · 대화 시작</div>
+      <div class="box be">
+        <div class="t">POST /free-talk/sessions</div>
+        <div class="f">요청 characterId (고른 상대)<br>├ character.<em>ttsVoice</em> ← 상대 목소리<br>└ currentMessage.<em>content</em> ← 첫 마디</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 26 14"><path d="M0 7h22M17 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box web">
+        <div class="t">문장 전체 합성 요청</div>
+        <div class="f">input = content<br>voice = providerVoiceId</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 26 14"><path d="M0 7h22M17 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box route">
+        <div class="t">/api/tts</div>
+        <div>시나리오와 같은 경로</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 26 14"><path d="M0 7h22M17 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box dg">
+        <div class="t"><svg viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram<span class="tag new">이번 PR</span></div>
+        <div class="f">POST /v1/speak → mp3</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="step"><b>② 내가 말한 뒤</b> · 상대의 다음 말</div>
+      <div class="box be">
+        <div class="t">POST /free-talk/sessions/{id}/messages</div>
+        <div class="f">nextMessage.<em>content</em> ← 다음 말 전체</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 26 14"><path d="M0 7h22M17 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box web">
+        <div class="t">문장 전체 합성 요청</div>
+        <div>응답을 받자마자 미리 합성해 둔다.</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 26 14"><path d="M0 7h22M17 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box route">
+        <div class="t">/api/tts</div>
+        <div>시나리오와 같은 경로</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 26 14"><path d="M0 7h22M17 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+      <div class="box dg">
+        <div class="t"><svg viewBox="0 0 24 24"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg>Deepgram<span class="tag new">이번 PR</span></div>
+        <div class="f">POST /v1/speak → mp3</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <div class="box">
+      <div class="t">목소리는 백엔드가 정한다</div>
+      <div>합성에 쓰는 목소리 이름은 응답의 <code>ttsVoice.providerVoiceId</code>(예: <code>aura-2-luna-en</code>)를 그대로 넘긴다. Deepgram에서는 이 이름이 곧 모델 이름이다.</div>
+    </div>
+    <div class="box">
+      <div class="t">키는 웹 서버에만 있다</div>
+      <div>브라우저는 <code>/api/tts</code>만 부르고, Deepgram TTS 키(<code>DEEPGRAM_TTS_API_KEY</code>)는 웹 서버 환경변수에 둔다. STT 키와는 별개다.</div>
+    </div>
+    <div class="box">
+      <div class="t">목소리가 비어 오면</div>
+      <div><code>ttsVoice</code>가 <code>null</code>이면 합성하지 않고, 말하는 시간만큼 기다린 뒤 대화를 이어 간다.</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
