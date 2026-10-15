@@ -206,7 +206,7 @@ export const SubscriptionManageScreen = () => {
         title={pass ? '이용권 관리' : '구독 관리'}
         onBack={() => backToMyPage(router)}
       />
-      <div className="flex-1 space-y-4 overflow-y-auto bg-muted px-4 pt-4 pb-8">
+      <div className="flex-1 space-y-4 overflow-y-auto bg-muted px-4 pt-4 pb-[max(var(--safe-area-inset-bottom),32px)]">
         {body()}
       </div>
     </main>

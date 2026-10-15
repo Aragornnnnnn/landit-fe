@@ -112,7 +112,7 @@ export default function SmallTalkPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden pb-4">
+    <div className="flex flex-1 flex-col overflow-hidden pb-[max(var(--safe-area-inset-bottom),16px)]">
       {/* 기록은 오늘 대화를 시작하는 길과 섞이면 안 된다 — 화면 안쪽 오른쪽 위에 잔글씨로 둔다.
           상대 줄과 수직 중앙을 맞추면 네 번째 상대처럼 읽혀서, 그 줄보다 위에 걸쳐 둔다 */}
       <div className="relative">

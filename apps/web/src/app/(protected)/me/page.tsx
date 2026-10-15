@@ -140,7 +140,7 @@ export default function MyPage() {
         onScroll={onScroll}
         className="flex-1 overflow-y-auto bg-muted"
       >
-        <div className="space-y-5 px-4 pt-3 pb-8">
+        <div className="space-y-5 px-4 pt-3 pb-[max(var(--safe-area-inset-bottom),32px)]">
           <ProfileHeader />
           <PremiumEntry />
           <MyProgressTiles />

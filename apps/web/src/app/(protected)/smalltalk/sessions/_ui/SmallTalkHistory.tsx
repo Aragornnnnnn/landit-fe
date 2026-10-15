@@ -63,7 +63,7 @@ export const SmallTalkHistory = () => {
           {'아직 나눈 대화가 없어요.\n오늘 한 대화부터 여기 쌓여요.'}
         </p>
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-[max(var(--safe-area-inset-bottom),24px)]">
           <p className="pt-2 pb-4 text-sm text-muted-foreground">
             대화를 누르면 그때 만든 표현을 다시 볼 수 있어요.
           </p>

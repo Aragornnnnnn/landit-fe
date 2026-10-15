@@ -27,7 +27,7 @@ export const FeedbackTypeFlow = () => {
       {/* 한 층이라 되짚으면 편지함 밖으로 나간다 — 목록으로 갈아끼운다 */}
       <BackHeader onBack={() => router.replace(MAILBOX_PATH)} />
 
-      <div className="flex-1 overflow-y-auto px-5">
+      <div className="flex-1 overflow-y-auto px-5 pb-[var(--safe-area-inset-bottom)]">
         <h1 className="mt-4 text-[22px] leading-snug font-bold text-foreground">
           어떤 피드백을
           <br />

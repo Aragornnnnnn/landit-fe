@@ -114,7 +114,7 @@ export const SmallTalkHistoryDetail = ({
       ) : isLoading ? (
         <SmallTalkHistoryDetailSkeleton />
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto pb-6">
+        <div className="min-h-0 flex-1 overflow-y-auto pb-[max(var(--safe-area-inset-bottom),24px)]">
           {/* 언제 얼마나 얘기했는지 — 표현보다 먼저 읽히는 맥락이다.
               대화 종료 화면의 통계 카드와 같은 언어로 맞춘다 (라벨 위, 값 아래) */}
           {session && (
