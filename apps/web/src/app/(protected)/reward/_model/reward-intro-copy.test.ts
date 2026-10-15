@@ -17,14 +17,14 @@ describe('rewardIntroCopyOf', () => {
     });
   });
 
-  it('오늘의 시나리오를 이미 했어도 최대 금액을 크게 말하고 오늘 대화도 들어간다고 덧붙인다', () => {
+  it('오늘의 시나리오를 이미 했어도 최대 금액을 크게 말하고 지금 시작하면 오늘 몫이 바로 적립된다고 덧붙인다', () => {
     expect(rewardIntroCopyOf(offer, true)).toEqual({
       eyebrow: '100일 동안 매일 대화하면',
       amount: '최대 50,000원',
       caption: {
-        lead: '오늘 한 대화도 ',
+        lead: '지금 시작하면 바로 ',
         strong: '500원',
-        tail: '으로 들어가요',
+        tail: '이 쌓여요',
       },
       cta: '100일 환급 챌린지 시작하기',
     });

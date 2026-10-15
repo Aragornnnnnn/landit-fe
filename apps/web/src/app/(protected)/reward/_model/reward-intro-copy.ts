@@ -34,11 +34,12 @@ export const rewardIntroCopyOf = (
   // 첫날은 오늘 몫보다 큰 약속을 먼저 보여 준다 — 500원은 작아서 시시해 보인다
   eyebrow: `${offer.days}일 동안 매일 대화하면`,
   amount: `최대 ${formatWon(offer.maximumWon)}`,
+  // 오늘 끝낸 대화는 결제 당일 결제 전이어도 인정된다 — 지금 시작하면 오늘 몫이 바로 들어온다
   caption: talkedToday
     ? {
-        lead: '오늘 한 대화도 ',
+        lead: '지금 시작하면 바로 ',
         strong: formatWon(offer.dailyWon),
-        tail: '으로 들어가요',
+        tail: '이 쌓여요',
       }
     : null,
 });
