@@ -38,8 +38,7 @@ export const RewardScreen = () => {
   const view = rewardScreenViewOf(my);
   const intro = view.kind === 'intro';
   // 무료로 며칠 해 온 사람은 소개 대신 놓친 환급액을 본다 — 오늘 했는지도 같은 응답에 들어 있다
-  const missed =
-    intro && my.computedAt ? missedRewardOf(my.preview, my.computedAt) : null;
+  const missed = intro ? missedRewardOf(my.preview, my.computedAt) : null;
   // 처음 보는 소개의 글자는 지금 파는 챌린지의 값과, 오늘의 시나리오를 이미 했는지로 정한다 — 미리보기가 없을 수 있어(구 서버) 오늘은 오늘의 시나리오 응답으로 본다
   const offer = useRewardOffer({ enabled: intro });
   const { daily, isLoading: dailyLoading } = useDailyScenarioQuery(undefined, {

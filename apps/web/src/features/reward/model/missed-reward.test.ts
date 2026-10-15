@@ -78,15 +78,15 @@ describe('missedRowsOf', () => {
 
   it('기록에 오늘이 없으면 모든 줄이 못 받은 날이다', () => {
     expect(missedRowsOf(items, '2026-10-15')).toEqual([
-      { id: '2026-10-14', dateLabel: '10.14', amountWon: 500, today: false },
-      { id: '2026-10-13', dateLabel: '10.13', amountWon: 500, today: false },
+      { id: '2026-10-14', dateLabel: '10.14', amountWon: 500, isToday: false },
+      { id: '2026-10-13', dateLabel: '10.13', amountWon: 500, isToday: false },
     ]);
   });
 
   it('서버가 정한 오늘과 날짜가 같은 줄만 오늘로 적는다', () => {
     const rows = missedRowsOf(items, '2026-10-14');
 
-    expect(rows.map((row) => [row.dateLabel, row.today])).toEqual([
+    expect(rows.map((row) => [row.dateLabel, row.isToday])).toEqual([
       ['오늘', true],
       ['10.13', false],
     ]);
@@ -95,7 +95,7 @@ describe('missedRowsOf', () => {
   it('오늘을 모르면 어느 줄도 오늘로 적지 않는다', () => {
     const rows = missedRowsOf(items, null);
 
-    expect(rows.some((row) => row.today)).toBe(false);
+    expect(rows.some((row) => row.isToday)).toBe(false);
   });
 
   it('이어 받는 사이 같은 날이 두 번 오면 한 줄만 남긴다', () => {

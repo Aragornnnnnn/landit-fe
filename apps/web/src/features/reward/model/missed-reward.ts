@@ -4,7 +4,7 @@ import { readSeoulDateParts } from '@/shared/lib/seoul-date';
 import type { RewardPreview, RewardPreviewHistoryItem } from '../api/reward';
 
 // 이 날수부터 놓친 환급액을 보여 준다 — 하루치는 금액이 작아 오히려 시시해 보인다
-export const MISSED_MIN_DAYS = 2;
+const MISSED_MIN_DAYS = 2;
 
 export interface MissedReward {
   // 오늘을 뺀, 무료로 대화한 날 수
@@ -35,13 +35,13 @@ const seoulDateOf = (dateTime: string) => {
 };
 
 /**
- * @param computedAt 환급 요약을 서버가 계산한 시각 — 이 날짜가 오늘이다
+ * @param computedAt 환급 요약을 서버가 계산한 시각 — 이 날짜가 오늘이다. 요약을 아직 못 받았으면 null
  */
 export const missedRewardOf = (
   preview: RewardPreview | null,
-  computedAt: string,
+  computedAt: string | null,
 ): MissedReward | null => {
-  if (!preview) return null;
+  if (!preview || !computedAt) return null;
   const pastDays = pastDaysOf(preview);
   if (pastDays < MISSED_MIN_DAYS) return null;
   return {
@@ -59,7 +59,7 @@ export interface MissedRow {
   dateLabel: string;
   amountWon: number;
   // 오늘 줄만 아직 받을 수 있다
-  today: boolean;
+  isToday: boolean;
 }
 
 const dateLabelOf = (date: string) =>
@@ -84,7 +84,7 @@ export const missedRowsOf = (
         id: item.date,
         dateLabel: isToday ? '오늘' : dateLabelOf(item.date),
         amountWon: item.amountWon,
-        today: isToday,
+        isToday,
       };
     });
 };

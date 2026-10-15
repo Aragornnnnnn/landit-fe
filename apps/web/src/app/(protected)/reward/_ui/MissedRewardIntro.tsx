@@ -61,24 +61,24 @@ export const MissedRewardIntro = ({ missed }: { missed: MissedReward }) => {
 const MissedLine = ({ row }: { row: MissedRow }) => (
   <li className="flex items-center gap-3 pt-4">
     <span
-      className={`w-9 shrink-0 text-[13px] font-medium tabular-nums ${row.today ? 'text-primary' : 'text-muted-foreground'}`}
+      className={`w-9 shrink-0 text-[13px] font-medium tabular-nums ${row.isToday ? 'text-primary' : 'text-muted-foreground'}`}
     >
       {row.dateLabel}
     </span>
     <span
-      className={`min-w-0 flex-1 text-[16px] font-bold ${row.today ? 'text-foreground' : 'text-muted-foreground'}`}
+      className={`min-w-0 flex-1 text-[16px] font-bold ${row.isToday ? 'text-foreground' : 'text-muted-foreground'}`}
     >
       시나리오 대화 완료
     </span>
     <span
-      className={`shrink-0 text-right ${row.today ? 'text-primary' : 'text-muted-foreground'}`}
+      className={`shrink-0 text-right ${row.isToday ? 'text-primary' : 'text-muted-foreground'}`}
     >
       <span className="block text-[16px] font-black tabular-nums">
-        {row.today ? '+' : ''}
+        {row.isToday ? '+' : ''}
         {formatWon(row.amountWon)}
       </span>
       <span className="mt-0.5 block text-[13px] font-medium">
-        {row.today ? '받을 수 있어요' : '못 받았어요'}
+        {row.isToday ? '받을 수 있어요' : '못 받았어요'}
       </span>
     </span>
   </li>
