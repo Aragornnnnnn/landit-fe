@@ -5,6 +5,7 @@ import type {
   RewardActivity,
   RewardHistoryItem,
   RewardHistoryPage,
+  RewardPreviewHistoryPage,
 } from '../api/reward';
 import { KST_OFFSET_MS } from './time-left';
 
@@ -90,7 +91,7 @@ export const historyRowsOf = (items: RewardHistoryItem[]): HistoryRow[] => {
 // 다음 장을 물을 커서. 더 없으면 undefined — 서버는 끝에서 null을 주지만, 빈 커서나 이미 물은 커서를 되돌려 줘도 끝으로 친다.
 // 빈 커서로 부르면 첫 장을 또 받고, 물었던 커서로 부르면 받은 장을 또 받아 끝이 보이는 내내 요청이 이어진다
 export const nextHistoryCursor = (
-  last: RewardHistoryPage,
+  last: RewardHistoryPage | RewardPreviewHistoryPage,
   asked: readonly (string | null)[],
 ) =>
   last.nextCursor && !asked.includes(last.nextCursor)

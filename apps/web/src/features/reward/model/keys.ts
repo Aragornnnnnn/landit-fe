@@ -6,6 +6,9 @@ export const rewardKeys = {
     [...rewardKeys.all, userId, 'summary'] as const,
   history: (userId: number | null) =>
     [...rewardKeys.all, userId, 'history'] as const,
+  // 무료로 한 날의 기록 — 결제한 사람의 내역과 따로 받는다
+  previewHistory: (userId: number | null) =>
+    [...rewardKeys.all, userId, 'previewHistory'] as const,
   // 조회 결과가 아니라 완료 직전에 적어 두는 값 — 계정 스코프와 로그아웃 정리를 물려받으려고 캐시에 둔다
   earnBase: (userId: number | null) =>
     [...rewardKeys.all, userId, 'earnBase'] as const,
