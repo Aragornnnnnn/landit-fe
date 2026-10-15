@@ -51,11 +51,20 @@ const SETTLED_STATUS: Partial<Record<RewardState, RewardViewStatus>> = {
   REVIEW: 'review',
 };
 
-/** 환급 화면 노출에 실을 값. 볼 것이 아직 없으면(받는 중·오류·내보내는 중) null */
+/**
+ * 환급 화면 노출에 실을 값. 볼 것이 아직 없으면(받는 중·오류·내보내는 중) null
+ *
+ * @param pastDays 무료로 대화한 날 중 오늘을 뺀 날수. 무료 대상이 아니면 없다
+ */
 export const rewardViewedPropsOf = (
   view: RewardScreenView,
+  pastDays?: number,
 ): EventProps['Reward Viewed'] | null => {
-  if (view.kind === 'intro') return { status: 'intro' };
+  if (view.kind === 'intro')
+    return {
+      status: 'intro',
+      ...(pastDays !== undefined && { past_days: pastDays }),
+    };
   if (view.kind !== 'record') return null;
 
   const { reward } = view;
