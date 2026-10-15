@@ -188,4 +188,25 @@ describe('refreshRewardAfterCompletion — 환급을 시작하지 않은 사람'
 
     expect(hasMissedEarn(42)).toBe(false);
   });
+  it('무료로 쌓는 사람이 오늘의 시나리오를 처음 끝내면 놓친 금액을 새로 받고 무료 기록은 버린다', async () => {
+    // given — 무료 미리보기를 받아 둔 사람. 무료 기록도 받아 둔 장이 있다
+    const free = rewardView({
+      ...outsider,
+      preview: {
+        balanceWon: 1000,
+        completedDays: 2,
+        todayEarnedWon: 0,
+        dailyAmountWon: 500,
+        accruing: true,
+      },
+    });
+    const queryClient = cacheWith(free);
+    const previewHistoryKey = rewardKeys.previewHistory(42);
+    queryClient.setQueryData(previewHistoryKey, { pages: [], pageParams: [] });
+
+    refreshRewardAfterCompletion(queryClient, FIRST);
+
+    expect(queryClient.getQueryData(previewHistoryKey)).toBeUndefined();
+    await vi.waitFor(() => expect(getMyRewards).toHaveBeenCalled());
+  });
 });

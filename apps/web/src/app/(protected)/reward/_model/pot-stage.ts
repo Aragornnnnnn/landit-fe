@@ -42,7 +42,8 @@ export const potStageOf = (
 };
 
 // 화면 위쪽에 감도는 빛 — 그림에 맞춘다. 헤더 뒤부터 내려와야 헤더와 본문이 한 장으로 보인다
-export type RewardGlow = 'gold' | 'calm';
+// missed는 그림이 아니라 무료로 한 날을 놓쳤다는 걸 알리는 빛이다
+export type RewardGlow = 'gold' | 'calm' | 'missed';
 
 const GLOW: Record<PotStage, RewardGlow | null> = {
   empty: null,

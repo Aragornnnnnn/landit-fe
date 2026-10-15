@@ -42,6 +42,10 @@ export const useRewardQuery = ({ enabled }: { enabled: boolean }) => {
   return {
     // 환급에 참여한 적이 없으면 null
     reward: data ? participantOf(data) : null,
+    // 무료로 한 대화가 챌린지였다면 받았을 금액 — 무료 대상이 아니면 null. 이 값을 모르는 서버는 필드를 안 보낸다
+    preview: data?.preview ?? null,
+    // 서버가 이 요약을 계산한 시각 — 서버가 정한 오늘을 여기서 읽는다
+    computedAt: data?.computedAt ?? null,
     // 응답을 받았는지 — 받았는데 reward가 null이면 참여자가 아니다
     loaded: data !== undefined,
     // 성공이든 실패든 한 번은 답을 들었는지 — 다시 받는 동안에도 유지된다

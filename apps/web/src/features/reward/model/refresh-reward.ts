@@ -18,6 +18,7 @@ const cachedReward = (queryClient: QueryClient, userId: number) =>
 const renewReward = (queryClient: QueryClient, userId: number) => {
   // 내역은 낡은 것으로만 두면 다음에 열 때 받아 둔 장 수만큼 차례로 다시 받고, 그동안 맨 윗줄 잔액이 위의 금액과 어긋난다
   queryClient.removeQueries({ queryKey: rewardKeys.history(userId) });
+  queryClient.removeQueries({ queryKey: rewardKeys.previewHistory(userId) });
   // 받아 둔 것을 먼저 낡은 것으로 표시해야 아래 미리받기가 실제로 나간다
   void queryClient.invalidateQueries({
     queryKey: rewardKeys.summary(userId),
@@ -37,7 +38,7 @@ export const refreshRewardAfterPurchase = (queryClient: QueryClient) => {
 };
 
 /**
- * 시나리오 대화를 끝낸 순간 — 금액이 쌓이는 건 참여자뿐이라, 환급과 상관없는 사람은 묻지 않는다.
+ * 시나리오 대화를 끝낸 순간 — 금액이 쌓이는 건 참여자와 무료 미리보기뿐이라, 환급과 상관없는 사람은 묻지 않는다.
  *
  * @param todaysFirst 오늘의 시나리오를 처음 끝낸 것인가 — 그 대화만 적립 대상이다
  */
@@ -59,6 +60,8 @@ export const refreshRewardAfterCompletion = (
     // 환급을 받아 본 적이 있고(출시됨) 참여자가 아니면, 이 대화는 챌린지였다면 받았을 몫이다 — 홈이 그걸 한 번 보여 준다.
     // 권할 사람인지(무료·결제 가능)는 보여 주는 쪽이 가린다
     if (cached !== undefined && todaysFirst) markMissedEarn(userId);
+    // 무료로 쌓는 사람은 놓친 금액과 오늘 했는지가 이 대화로 바뀐다 — 환급 화면이 옛 값으로 「오늘부터」를 말하지 않게 새로 받는다
+    if (cached?.preview && todaysFirst) renewReward(queryClient, userId);
     return;
   }
   renewReward(queryClient, userId);

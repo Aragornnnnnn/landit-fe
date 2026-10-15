@@ -75,8 +75,8 @@ export const RewardGuide = ({
   eyebrow: string;
   // 큰 글자 ("500원")
   amount: string;
-  // 그 아래 한 줄
-  caption: string;
+  // 그 아래 한 줄 — 낱말을 띄우거나 규칙 줄을 넣을 수 있게 요소로 받는다
+  caption: React.ReactNode;
   // 하루 몫 — 규칙과 보기 내역이 이 금액으로 말한다. 아직 모르면 null이고 보기 내역은 그리지 않는다
   dailyWon: number | null;
   // 규칙을 헤더의 안내 버튼이 여는 화면 — 본문에는 규칙 카드를 그리지 않는다
@@ -97,9 +97,9 @@ export const RewardGuide = ({
       <h2 className="mt-0.5 text-[36px] leading-tight font-black text-foreground">
         {amount}
       </h2>
-      <p className="mt-1.5 text-center text-[14px] font-medium text-muted-foreground">
+      <div className="mt-1.5 text-center text-[14px] font-medium text-muted-foreground">
         {caption}
-      </p>
+      </div>
     </section>
 
     {!rulesInHeader && (
