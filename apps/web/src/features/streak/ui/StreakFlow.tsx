@@ -81,7 +81,7 @@ export const StreakFlow = () => {
 };
 
 const LoadedRecord = (props: StreakCalendarProps) => (
-  <div className="pb-8">
+  <div className="pb-[max(var(--safe-area-inset-bottom),32px)]">
     <StreakHero
       currentStreakDays={props.calendar.currentStreakDays}
       activeToday={props.calendar.activeToday}

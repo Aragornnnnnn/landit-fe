@@ -1,6 +1,6 @@
 // 카드가 놓이는 자리 — 바깥 여백과 바닥 그림자. 스켈레톤과 실제 카드가 같은 자리를 써야 바뀌는 순간 튀지 않는다
 export const CardStage = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex min-h-0 flex-1 items-center justify-center px-6 pt-2 pb-4">
+  <div className="flex min-h-0 flex-1 items-center justify-center px-6 pt-2 pb-[max(var(--safe-area-inset-bottom),16px)]">
     <div className="relative h-full w-full">{children}</div>
   </div>
 );

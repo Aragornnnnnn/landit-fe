@@ -51,4 +51,46 @@ describe('safe-area inset 변수', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('전체 화면은 하단 safe-area를 읽는다', () => {
+    const offenders = collectSourceFiles(SRC_DIR)
+      .filter((path) => !/\.test\.tsx?$/.test(path))
+      .filter((path) => {
+        const source = readFileSync(path, 'utf8');
+        return (
+          /\bh-dvh\b/.test(source) &&
+          !source.includes('--safe-area-inset-bottom')
+        );
+      })
+      .map((path) => relative(SRC_DIR, path))
+      .filter((path) => !FULL_SCREEN_EXCEPTIONS.has(path));
+
+    expect(offenders).toEqual([]);
+  });
 });
+
+// 하단 safe-area를 직접 안 읽어도 되는 전체 화면 — 내용이 가운데 있거나, 바닥은 자식 화면이 맡는다
+const FULL_SCREEN_EXCEPTIONS = new Set([
+  // 가운데 정렬 — 바닥에 닿는 내용이 없다
+  'app/(protected)/layout.tsx',
+  'app/(protected)/conversation/smalltalk/_ui/SmallTalkFlow.tsx',
+  'app/(protected)/conversation/scenario/[scenarioId]/page.tsx',
+  'app/(protected)/conversation/scenario/[scenarioId]/feedback/_ui/AnalyzingScreen.tsx',
+  'app/(protected)/scenario/[scenarioId]/sessions/[sessionId]/_ui/ScenarioSessionFeedback.tsx',
+  'features/feedback/ui/flow/FeedbackNotice.tsx',
+  'features/review/ui/ReviewNotice.tsx',
+  'features/review/ui/ReviewFlow.tsx',
+  'features/expression/ui/ExpressionFlow.tsx',
+  // 위에서부터 짧게 쌓여 바닥까지 안 내려온다
+  'app/(protected)/me/alarm/_ui/AlarmScreen.tsx',
+  // 껍데기 — 바닥은 자식이 맡는다
+  'app/(protected)/(tabs)/layout.tsx',
+  'app/(protected)/mailbox/page.tsx',
+  'app/(protected)/me/widget/_ui/WidgetGuideScreen.tsx',
+  'app/(protected)/me/subscription/cancel/_ui/CancelFlowScreen.tsx',
+  // 개발자 전용
+  'app/(protected)/me/developer/_ui/AlarmCheckScreen.tsx',
+  'app/(protected)/me/developer/reward/_ui/RewardCheckPreview.tsx',
+  'app/(protected)/me/developer/reward/_ui/RewardCheckScreen.tsx',
+  'app/(protected)/me/developer/premium-onboarding/_ui/PremiumOnboardingCheckScreen.tsx',
+]);
