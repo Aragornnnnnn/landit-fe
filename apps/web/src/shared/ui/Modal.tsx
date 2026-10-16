@@ -33,18 +33,10 @@ export function Modal({
   // onClose는 대개 인라인 함수라 렌더마다 참조가 바뀐다 — 등록은 열릴 때 한 번, 부를 땐 최신 것을 쓴다
   const close = useEffectEvent(onClose);
 
+  // 열려 있는 동안 전역 스택에 등록 — 네이티브 뒤로가기와 Escape가 맨 위 하나만 닫는다
   useEffect(() => {
     if (!open || !dismissible) return;
     return registerOpenSheet(() => close());
-  }, [open, dismissible]);
-
-  useEffect(() => {
-    if (!open || !dismissible) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close();
-    };
-    window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
   }, [open, dismissible]);
 
   // 포커스를 다이얼로그 안에 가두고, 닫히면 이전 포커스로 되돌린다.

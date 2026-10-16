@@ -1,5 +1,5 @@
-// 공통 바텀 시트 검증 — 뒤로가기는 그때의 최신 onClose를, 겹쳐 열렸으면 위 시트부터 닫는다
-import { cleanup, render } from '@testing-library/react';
+// 공통 바텀 시트 검증 — 뒤로가기·Escape는 그때의 최신 onClose를, 겹쳐 열렸으면 위 시트부터 닫는다
+import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { closeTopSheet } from './bottom-sheet-back';
@@ -48,6 +48,52 @@ describe('BottomSheet', () => {
     rerender(renderBoth(() => closeBelow()));
 
     closeTopSheet();
+
+    expect(closeAbove).toHaveBeenCalledTimes(1);
+    expect(closeBelow).not.toHaveBeenCalled();
+  });
+
+  it('Escape를 누르면 닫힌다', () => {
+    const onClose = vi.fn();
+    render(
+      <BottomSheet open onClose={onClose}>
+        내용
+      </BottomSheet>,
+    );
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('한글 조합 중에 Escape를 누르면 닫지 않는다', () => {
+    const onClose = vi.fn();
+    render(
+      <BottomSheet open onClose={onClose}>
+        내용
+      </BottomSheet>,
+    );
+
+    fireEvent.keyDown(window, { key: 'Escape', isComposing: true });
+
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('두 시트가 겹쳐 열려 있으면 Escape 한 번에 위 시트만 닫는다', () => {
+    const closeBelow = vi.fn();
+    const closeAbove = vi.fn();
+    render(
+      <>
+        <BottomSheet open onClose={closeBelow}>
+          아래
+        </BottomSheet>
+        <BottomSheet open onClose={closeAbove}>
+          위
+        </BottomSheet>
+      </>,
+    );
+
+    fireEvent.keyDown(window, { key: 'Escape' });
 
     expect(closeAbove).toHaveBeenCalledTimes(1);
     expect(closeBelow).not.toHaveBeenCalled();
