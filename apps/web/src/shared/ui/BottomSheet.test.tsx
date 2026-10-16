@@ -1,5 +1,5 @@
-// 공통 바텀 시트 검증 — 뒤로가기·Escape는 그때의 최신 onClose를, 겹쳐 열렸으면 위 시트부터 닫는다
-import { cleanup, fireEvent, render } from '@testing-library/react';
+// 공통 바텀 시트 검증 — 닫는 길(뒤로가기·Escape·배경), 겹친 시트 순서, 스크린 리더 이름과 포커스
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { closeTopSheet } from './bottom-sheet-back';
@@ -53,6 +53,18 @@ describe('BottomSheet', () => {
     expect(closeBelow).not.toHaveBeenCalled();
   });
 
+  it('제목을 이름으로 하는 대화 상자로 읽힌다', () => {
+    render(
+      <BottomSheet open onClose={vi.fn()}>
+        <BottomSheet.Title>말하기 속도</BottomSheet.Title>
+      </BottomSheet>,
+    );
+
+    const sheet = screen.getByRole('dialog', { name: '말하기 속도' });
+
+    expect(sheet).toHaveAttribute('aria-modal', 'true');
+  });
+
   it('Escape를 누르면 닫힌다', () => {
     const onClose = vi.fn();
     render(
@@ -66,6 +78,56 @@ describe('BottomSheet', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('배경을 누르면 닫힌다', () => {
+    const onClose = vi.fn();
+    render(
+      <BottomSheet open onClose={onClose}>
+        내용
+      </BottomSheet>,
+    );
+
+    fireEvent.click(screen.getByTestId('bottom-sheet-dim'));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('열리면 포커스가 시트로 옮겨 간다', () => {
+    render(
+      <BottomSheet open onClose={vi.fn()}>
+        <BottomSheet.Title>진동</BottomSheet.Title>
+      </BottomSheet>,
+    );
+
+    expect(document.activeElement).toBe(screen.getByRole('dialog'));
+  });
+
+  it('열릴 때 안에서 먼저 포커스를 받은 입력칸은 그대로 둔다', () => {
+    render(
+      <BottomSheet open onClose={vi.fn()}>
+        <BottomSheet.Title>뭐라고 불러드릴까요?</BottomSheet.Title>
+        <input aria-label="닉네임" autoFocus />
+      </BottomSheet>,
+    );
+
+    expect(document.activeElement).toBe(screen.getByLabelText('닉네임'));
+  });
+
+  it('열려 있는 동안 Tab으로 마지막 버튼 다음에서 첫 버튼으로 돈다', () => {
+    render(
+      <BottomSheet open onClose={vi.fn()}>
+        <button type="button">첫째</button>
+        <button type="button">둘째</button>
+      </BottomSheet>,
+    );
+    screen.getByRole('button', { name: '둘째' }).focus();
+
+    fireEvent.keyDown(window, { key: 'Tab' });
+
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: '첫째' }),
+    );
+  });
+
   it('한글 조합 중에 Escape를 누르면 닫지 않는다', () => {
     const onClose = vi.fn();
     render(
@@ -77,6 +139,26 @@ describe('BottomSheet', () => {
     fireEvent.keyDown(window, { key: 'Escape', isComposing: true });
 
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('닫히면 열기 전에 포커스했던 요소로 돌아간다', () => {
+    const opener = document.createElement('button');
+    document.body.appendChild(opener);
+    opener.focus();
+    const { rerender } = render(
+      <BottomSheet open onClose={vi.fn()}>
+        내용
+      </BottomSheet>,
+    );
+
+    rerender(
+      <BottomSheet open={false} onClose={vi.fn()}>
+        내용
+      </BottomSheet>,
+    );
+
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
   });
 
   it('두 시트가 겹쳐 열려 있으면 Escape 한 번에 위 시트만 닫는다', () => {

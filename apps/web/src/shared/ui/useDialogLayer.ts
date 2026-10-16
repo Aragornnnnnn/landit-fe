@@ -1,6 +1,6 @@
 'use client';
 
-// 모달·사진 크게 보기가 같이 쓰는 대화 상자 동작 — 열려 있는 동안 뒤로가기·Escape로 맨 위 하나를 닫고, 포커스를 안에 가둔다
+// 모달·바텀시트·사진 크게 보기가 같이 쓰는 대화 상자 동작 — 열려 있는 동안 뒤로가기·Escape로 맨 위 하나를 닫고, 포커스를 안에 가둔다
 import { useEffect, useEffectEvent, useRef } from 'react';
 
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
