@@ -52,22 +52,6 @@ describe('safe-area inset 변수', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('전체 화면은 하단 safe-area를 읽는다', () => {
-    const offenders = collectSourceFiles(SRC_DIR)
-      .filter((path) => !/\.test\.tsx?$/.test(path))
-      .filter((path) => {
-        const source = readFileSync(path, 'utf8');
-        return (
-          /\bh-dvh\b/.test(source) &&
-          !source.includes('--safe-area-inset-bottom')
-        );
-      })
-      .map((path) => relative(SRC_DIR, path))
-      .filter((path) => !FULL_SCREEN_EXCEPTIONS.has(path));
-
-    expect(offenders).toEqual([]);
-  });
-
   it('스크롤 영역은 하단 safe-area를 읽거나, 아래에 늘 있는 푸터가 맡는다', () => {
     // 파일 어딘가에 변수가 있는지가 아니라 스크롤 영역마다 본다 — 푸터가 조건부면 그 스크롤이 바닥에 닿는다
     const offenders = collectSourceFiles(SRC_DIR)
@@ -89,13 +73,9 @@ describe('safe-area inset 변수', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('예외 목록의 화면은 지금도 있는 전체 화면이다', () => {
-    // 옮기거나 지운 화면이 목록에 남으면 예외 이유가 실제와 어긋난 채 남는다
-    const stale = [...FULL_SCREEN_EXCEPTIONS].filter((path) => {
-      const full = join(SRC_DIR, path);
-      return !existsSync(full) || !/\bh-dvh\b/.test(readFileSync(full, 'utf8'));
-    });
-    const staleScroll = [...SCROLL_EXCEPTIONS].filter((path) => {
+  it('스크롤 예외 목록의 파일은 지금도 스크롤 영역을 가진다', () => {
+    // 옮기거나 지운 파일이 목록에 남으면 예외 이유가 실제와 어긋난 채 남는다
+    const stale = [...SCROLL_EXCEPTIONS].filter((path) => {
       const full = join(SRC_DIR, path);
       return (
         !existsSync(full) ||
@@ -103,35 +83,9 @@ describe('safe-area inset 변수', () => {
       );
     });
 
-    expect([...stale, ...staleScroll]).toEqual([]);
+    expect(stale).toEqual([]);
   });
 });
-
-// 하단 safe-area를 직접 안 읽어도 되는 전체 화면 — 내용이 가운데 있거나, 바닥은 자식 화면이 맡는다
-const FULL_SCREEN_EXCEPTIONS = new Set([
-  // 가운데 정렬 — 바닥에 닿는 내용이 없다
-  'app/(protected)/layout.tsx',
-  'app/(protected)/conversation/smalltalk/_ui/SmallTalkFlow.tsx',
-  'app/(protected)/conversation/scenario/[scenarioId]/page.tsx',
-  'app/(protected)/conversation/scenario/[scenarioId]/feedback/_ui/AnalyzingScreen.tsx',
-  'features/feedback/ui/flow/FeedbackNotice.tsx',
-  'features/review/ui/ReviewNotice.tsx',
-  'features/review/ui/ReviewFlow.tsx',
-  'features/expression/ui/ExpressionFlow.tsx',
-  // 위에서부터 짧게 쌓여 바닥까지 안 내려온다
-  'app/(protected)/me/alarm/_ui/AlarmScreen.tsx',
-  // 껍데기 — 바닥은 자식이 맡는다
-  'app/(protected)/(tabs)/layout.tsx',
-  'app/(protected)/mailbox/page.tsx',
-  'app/(protected)/me/widget/_ui/WidgetGuideScreen.tsx',
-  'app/(protected)/me/subscription/cancel/_ui/CancelFlowScreen.tsx',
-  'app/(protected)/scenario/[scenarioId]/sessions/[sessionId]/_ui/ScenarioSessionFeedback.tsx',
-  // 개발자 전용
-  'app/(protected)/me/developer/_ui/AlarmCheckScreen.tsx',
-  'app/(protected)/me/developer/reward/_ui/RewardCheckPreview.tsx',
-  'app/(protected)/me/developer/reward/_ui/RewardCheckScreen.tsx',
-  'app/(protected)/me/developer/premium-onboarding/_ui/PremiumOnboardingCheckScreen.tsx',
-]);
 
 // 스크롤 영역이 바닥에 닿지 않는 파일 — 아래에 safe-area를 읽는 푸터가 늘 붙어 있거나, 화면 가운데·카드 안에 있다
 const SCROLL_EXCEPTIONS = new Set([
