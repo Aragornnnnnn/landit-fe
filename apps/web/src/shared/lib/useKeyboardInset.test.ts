@@ -1,6 +1,8 @@
 // 키보드가 가린 높이 계산 — 뷰포트가 줄면 그만큼, iOS가 innerHeight를 잠깐 줄였다 소리 없이 되돌리면 잠시 뒤 다시 잰다
 // @vitest-environment jsdom
+import { createElement } from 'react';
 import { act, renderHook } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useKeyboardInset } from './useKeyboardInset';
@@ -82,5 +84,38 @@ describe('useKeyboardInset', () => {
     });
 
     expect(result.current).toBe(0);
+  });
+
+  it('키보드가 이미 떠 있으면 첫 그림부터 그 높이로 그린다', () => {
+    viewport.height = 806;
+    const drawn: number[] = [];
+
+    renderHook(() => {
+      const inset = useKeyboardInset();
+      drawn.push(inset);
+      return inset;
+    });
+
+    expect(drawn).toEqual([68]);
+  });
+
+  it('visualViewport가 없는 브라우저에서는 0을 돌려준다', () => {
+    Object.defineProperty(window, 'visualViewport', {
+      configurable: true,
+      value: null,
+    });
+
+    const { result } = renderHook(() => useKeyboardInset());
+
+    expect(result.current).toBe(0);
+  });
+
+  it('서버에서 그릴 때는 키보드가 없다고 보고 0으로 그린다', () => {
+    viewport.height = 806;
+    const Probe = () => String(useKeyboardInset());
+
+    const html = renderToString(createElement(Probe));
+
+    expect(html).toBe('0');
   });
 });
