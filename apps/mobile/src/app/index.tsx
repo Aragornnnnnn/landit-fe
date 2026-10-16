@@ -44,6 +44,7 @@ import { initializeNotifications } from '@/notifications/setup';
 import { useNotificationDeepLink } from '@/notifications/useNotificationDeepLink';
 import { pickPhotos } from '@/photos/pick-photos';
 import {
+  attachMetaAttribution,
   configurePurchases,
   fetchOfferingPackages,
   identifyUser,
@@ -254,9 +255,10 @@ const ShellScreen = () => {
     postToWeb({ type: 'ALARM_OPENED', ...entry }),
   );
 
-  // Meta SDK 초기화와 iOS ATT 동의 요청 — 앱 첫 진입에 1회 (광고 설치 어트리뷰션)
+  // Meta SDK 초기화와 iOS ATT 동의 요청 — 앱 첫 진입에 1회 (광고 설치 어트리뷰션).
+  // 끝나면 메타 식별자를 RevenueCat에 붙여, 결제 이벤트가 광고와 이어지게 한다
   useEffect(() => {
-    void initMetaSdk();
+    void initMetaSdk().then(attachMetaAttribution);
   }, []);
 
   // 알림 표시 정책·Android 채널 등록 — 권한 요청은 웹이 브릿지로 시점을 정한다
