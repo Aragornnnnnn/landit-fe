@@ -4,6 +4,7 @@
 // 받은 편지 이미지는 한 장, 보낸 편지 첨부는 여러 장을 넘겨 본다. 배율·이동·손가락 판정 규칙은 model/image-zoom
 import {
   useEffect,
+  useEffectEvent,
   useRef,
   useState,
   type PointerEvent,
@@ -80,17 +81,14 @@ export const ImageViewer = ({
   const lastTap = useRef<{ at: number; point: Point } | null>(null);
 
   // onClose는 대개 인라인 함수라 렌더마다 바뀐다 — 등록은 한 번만 하고 최신 것을 읽는다
-  const onCloseRef = useRef(onClose);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
+  const close = useEffectEvent(onClose);
 
   // 안드로이드 뒤로가기는 편지 화면을 떠나지 않고 확대 보기만 닫는다 — 열린 시트와 같은 스택을 쓴다
-  useEffect(() => registerOpenSheet(() => onCloseRef.current()), []);
+  useEffect(() => registerOpenSheet(() => close()), []);
 
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onCloseRef.current();
+      if (event.key === 'Escape') close();
     };
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);

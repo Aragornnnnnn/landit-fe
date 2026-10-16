@@ -86,6 +86,22 @@ describe('ImageViewer', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('다시 그려져 onClose가 바뀌면 뒤로가기는 새 onClose를 부른다', () => {
+    const first = vi.fn();
+    const next = vi.fn();
+    const { rerender } = render(
+      <ImageViewer images={images} startIndex={0} onClose={first} />,
+    );
+    rerender(<ImageViewer images={images} startIndex={0} onClose={next} />);
+
+    act(() => {
+      closeTopSheet();
+    });
+
+    expect(first).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
   it('핀치 뒤 손가락을 하나씩 떼도 거의 원래 크기면 원래 크기로 맞춘다', () => {
     HTMLElement.prototype.setPointerCapture = vi.fn();
     render(<ImageViewer images={images} startIndex={0} onClose={vi.fn()} />);
