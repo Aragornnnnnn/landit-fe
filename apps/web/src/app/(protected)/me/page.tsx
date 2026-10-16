@@ -22,8 +22,8 @@ import {
 } from '@/shared/lib/routes';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { reportWarning } from '@/shared/monitoring/report';
+import { BackHeader } from '@/shared/ui/BackHeader';
 import { Emoji } from '@/shared/ui/emoji';
-import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import { clearAccountLocalState } from './_model/account-local-state';
 import { AccentMenuEntry } from './_ui/AccentMenuEntry';
@@ -113,31 +113,11 @@ export default function MyPage() {
 
   return (
     <main className="flex h-dvh flex-col bg-background">
-      {/* 헤더 */}
-      <header
-        className="relative flex items-center border-b border-border px-4 transition-shadow duration-200"
-        style={{
-          paddingTop: 'max(var(--safe-area-inset-top), 16px)',
-          paddingBottom: 8,
-          boxShadow: hasShadow ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => router.replace(homePath())}
-          className="flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90 active:bg-zinc-200"
-          style={{ color: '#444', marginLeft: -4 }}
-          aria-label="뒤로 가기"
-        >
-          <ChevronLeftIcon />
-        </button>
-        <h1
-          className="absolute left-1/2 -translate-x-1/2 text-[17px] font-semibold"
-          style={{ color: '#111' }}
-        >
-          내 정보
-        </h1>
-      </header>
+      <BackHeader
+        title="내 정보"
+        hasShadow={hasShadow}
+        onBack={() => router.replace(homePath())}
+      />
 
       <div
         ref={scrollRef}
