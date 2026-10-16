@@ -68,14 +68,42 @@ describe('safe-area inset 변수', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('스크롤 영역은 하단 safe-area를 읽거나, 아래에 늘 있는 푸터가 맡는다', () => {
+    // 파일 어딘가에 변수가 있는지가 아니라 스크롤 영역마다 본다 — 푸터가 조건부면 그 스크롤이 바닥에 닿는다
+    const offenders = collectSourceFiles(SRC_DIR)
+      .filter((path) => path.endsWith('.tsx') && !/\.test\.tsx$/.test(path))
+      .flatMap((path) => {
+        const file = relative(SRC_DIR, path);
+        if (SCROLL_EXCEPTIONS.has(file)) return [];
+        return readFileSync(path, 'utf8')
+          .split('\n')
+          .map((line, i) => ({ line, at: `${file}:${i + 1}` }))
+          .filter(
+            ({ line }) =>
+              /overflow-y-(auto|scroll)/.test(line) &&
+              !line.includes('--safe-area-inset-bottom'),
+          )
+          .map(({ at }) => at);
+      });
+
+    expect(offenders).toEqual([]);
+  });
+
   it('예외 목록의 화면은 지금도 있는 전체 화면이다', () => {
     // 옮기거나 지운 화면이 목록에 남으면 예외 이유가 실제와 어긋난 채 남는다
     const stale = [...FULL_SCREEN_EXCEPTIONS].filter((path) => {
       const full = join(SRC_DIR, path);
       return !existsSync(full) || !/\bh-dvh\b/.test(readFileSync(full, 'utf8'));
     });
+    const staleScroll = [...SCROLL_EXCEPTIONS].filter((path) => {
+      const full = join(SRC_DIR, path);
+      return (
+        !existsSync(full) ||
+        !/overflow-y-(auto|scroll)/.test(readFileSync(full, 'utf8'))
+      );
+    });
 
-    expect(stale).toEqual([]);
+    expect([...stale, ...staleScroll]).toEqual([]);
   });
 });
 
@@ -101,6 +129,42 @@ const FULL_SCREEN_EXCEPTIONS = new Set([
   // 개발자 전용
   'app/(protected)/me/developer/_ui/AlarmCheckScreen.tsx',
   'app/(protected)/me/developer/reward/_ui/RewardCheckPreview.tsx',
+  'app/(protected)/me/developer/reward/_ui/RewardCheckScreen.tsx',
+  'app/(protected)/me/developer/premium-onboarding/_ui/PremiumOnboardingCheckScreen.tsx',
+]);
+
+// 스크롤 영역이 바닥에 닿지 않는 파일 — 아래에 safe-area를 읽는 푸터가 늘 붙어 있거나, 화면 가운데·카드 안에 있다
+const SCROLL_EXCEPTIONS = new Set([
+  // 아래에 늘 있는 푸터가 safe-area를 맡는다
+  'app/(protected)/smalltalk/sessions/[sessionId]/summary/_ui/SmallTalkSummary.tsx',
+  'app/(protected)/me/subscription/cancel/_ui/ReasonStep.tsx',
+  'app/(protected)/me/subscription/cancel/_ui/MethodStep.tsx',
+  'app/(protected)/me/subscription/cancel/_ui/RetentionStep.tsx',
+  'app/(protected)/premium/onboarding/_ui/RewardGuideStep.tsx',
+  'app/(protected)/conversation/scenario/[scenarioId]/feedback/_ui/LevelResultScreen.tsx',
+  'features/mailbox/ui/FeedbackComposeFlow.tsx',
+  'features/feedback/ui/flow/FeedbackSummary.tsx',
+  'features/feedback/ui/flow/FeedbackDetail.tsx',
+  'features/review/ui/ReviewComplete.tsx',
+  'features/expression/ui/QuizStepSkeleton.tsx',
+  'features/expression/ui/common/StepScaffold.tsx',
+  'features/expression/ui/ExpressionStages.tsx',
+  'features/survey/ui/steps/MultiChoiceStep.tsx',
+  'features/survey/ui/steps/SingleChoiceStep.tsx',
+  'features/survey/ui/steps/TextStep.tsx',
+  'features/onboarding/ui/common/AccentForm.tsx',
+  'features/conversation/ui/flow/QuestionCard.tsx',
+  // 바깥 스크롤 상자 — 안쪽 내용이 safe-area 여백을 맡는다
+  'app/(protected)/me/page.tsx',
+  'app/(public)/(legal)/_ui/LegalDocumentPage.tsx',
+  'features/streak/ui/StreakFlow.tsx',
+  'features/mailbox/ui/MailboxFlow.tsx',
+  // 로그인은 화면 전체가 스크롤이고 안쪽 버튼 영역이 safe-area를 맡는다
+  'app/(public)/(auth)/_ui/LoginScreen.tsx',
+  // 카드 뒷면 안쪽 스크롤 — 바닥에 닿지 않는다
+  'features/scenario/ui/card/ScenarioCardBack.tsx',
+  // 개발자 전용
+  'app/(protected)/me/developer/_ui/AlarmCheckScreen.tsx',
   'app/(protected)/me/developer/reward/_ui/RewardCheckScreen.tsx',
   'app/(protected)/me/developer/premium-onboarding/_ui/PremiumOnboardingCheckScreen.tsx',
 ]);
