@@ -76,8 +76,6 @@ RevenueCat 대시보드 → Integrations → Meta Ads에서 아래처럼 넣고 
 3. 고객 화면 Customer history의 결제 줄에서 View Details를 열고, Integrations 표에 `Meta App Events API`가 `Sent`로 찍히는지 본다. 웹훅보다 몇 분 늦게 찍힌다.
 4. 테스트 앱의 이벤트 관리자에서 구매 이벤트가 들어오는지 본다. 메타 화면에는 최대 하루 늦게 보일 수 있다.
 
-![테스트 앱 이벤트 관리자에 구매가 앱 이벤트 API로 들어온 모습](images/meta-test-app-5-purchase-received.jpg)
-
 셸 코드가 없는 빌드로 확인해야 하면, 결제 전에 RevenueCat 고객 화면 Attributes → New로 `$fbAnonId`를 손으로 붙여도 된다. iOS는 그 사용자의 ATT Consent가 Authorized여야 한다.
 
 ## 운영으로 바꾸는 날
