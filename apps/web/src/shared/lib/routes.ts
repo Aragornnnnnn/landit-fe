@@ -5,6 +5,8 @@ import type { PaywallSource } from '@landit/analytics';
 export const SCENARIO_PATH = '/scenario';
 export const SMALLTALK_PATH = '/smalltalk';
 export const STREAK_PATH = '/streak';
+export const LOGIN_PATH = '/login';
+export const ONBOARDING_PATH = '/onboarding';
 // 편지함 진입점. 편지 종류·피드백 유형이 붙는 그 아래 주소들은 features/mailbox가 만든다
 export const MAILBOX_PATH = '/mailbox';
 // 피드백 작성 진입(유형 선택) — 편지함 밖(소감 시트)에서도 보내는 주소라 여기 둔다.

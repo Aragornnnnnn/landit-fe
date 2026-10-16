@@ -11,7 +11,7 @@ import { useAuthStore } from '@/shared/auth/auth-store';
 import { generateRandomHex } from '@/shared/auth/crypto';
 import { startWebSocialLogin } from '@/shared/auth/web-social-login';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
-import { SCENARIO_PATH } from '@/shared/lib/routes';
+import { ONBOARDING_PATH, SCENARIO_PATH } from '@/shared/lib/routes';
 
 import { rememberLoginProvider } from './last-login-provider';
 
@@ -70,7 +70,7 @@ export function useSocialLogin() {
             method: 'native',
             is_new_user: newUser,
           });
-          router.replace(newUser ? '/onboarding' : SCENARIO_PATH);
+          router.replace(newUser ? ONBOARDING_PATH : SCENARIO_PATH);
         } catch (error) {
           track(EVENTS.LOGIN_FAILED, {
             provider: message.provider,

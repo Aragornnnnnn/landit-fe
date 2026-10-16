@@ -15,7 +15,11 @@ import { withdraw } from '@/shared/auth/api/withdraw';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { clearSession } from '@/shared/auth/clear-session';
 import { homePath } from '@/shared/lib/last-tab';
-import { MAILBOX_COMPOSE_PATH, SURVEY_PATH } from '@/shared/lib/routes';
+import {
+  LOGIN_PATH,
+  MAILBOX_COMPOSE_PATH,
+  SURVEY_PATH,
+} from '@/shared/lib/routes';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { reportWarning } from '@/shared/monitoring/report';
 import { Emoji } from '@/shared/ui/emoji';
@@ -58,7 +62,7 @@ export default function MyPage() {
   // 인증 상태와 쿼리 캐시를 함께 비운다 — 캐시가 남으면 다음 계정에 이전 계정 데이터가 노출된다
   function finishSignedOut() {
     clearSession();
-    router.replace('/login');
+    router.replace(LOGIN_PATH);
   }
 
   // 서버 폐기가 실패해도 로컬 세션은 지우고 로그인으로 보낸다 — 사용자를 로그인 상태에 가둘 이유가 없다
