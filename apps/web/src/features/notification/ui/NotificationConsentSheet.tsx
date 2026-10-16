@@ -15,9 +15,9 @@ export const NotificationConsentSheet = ({
 }) => (
   <BottomSheet open onClose={onDismiss}>
     <LockScreenMockup />
-    <h2 className="mt-5 text-center text-lg font-bold text-foreground">
+    <BottomSheet.Title className="mt-5 text-center text-lg font-bold text-foreground">
       알림으로 도와드릴게요
-    </h2>
+    </BottomSheet.Title>
     <p className="mt-1 text-center text-sm leading-6 text-muted-foreground">
       오늘의 대화를 잊고 있다면 알려드려요
     </p>

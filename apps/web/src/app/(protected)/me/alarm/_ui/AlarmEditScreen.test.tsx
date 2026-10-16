@@ -47,13 +47,11 @@ vi.mock('@/features/alarm/ui/TimeWheel', () => ({
   },
 }));
 vi.mock('@/shared/ui/BottomSheet', () => ({
-  BottomSheet: ({
-    open,
-    children,
-  }: {
-    open: boolean;
-    children: React.ReactNode;
-  }) => (open ? <div>{children}</div> : null),
+  BottomSheet: Object.assign(
+    ({ open, children }: { open: boolean; children: React.ReactNode }) =>
+      open ? <div>{children}</div> : null,
+    { Title: (props: React.ComponentProps<'h2'>) => <h2 {...props} /> },
+  ),
 }));
 
 const pickTime = (time: { hour: number; minute: number }) => {

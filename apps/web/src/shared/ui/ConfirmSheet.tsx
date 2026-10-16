@@ -32,11 +32,11 @@ export const ConfirmSheet = ({
   <BottomSheet open={open} onClose={onClose}>
     <div className={top ? 'flex flex-col items-center text-center' : undefined}>
       {top}
-      <h2
+      <BottomSheet.Title
         className={`text-[17px] font-bold text-foreground ${top ? 'mt-1' : ''}`}
       >
         {title}
-      </h2>
+      </BottomSheet.Title>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
         {description}
       </p>

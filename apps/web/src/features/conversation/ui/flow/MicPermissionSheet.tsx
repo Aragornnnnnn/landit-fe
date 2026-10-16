@@ -36,9 +36,9 @@ export const MicPermissionSheet = ({
 
   return (
     <BottomSheet open={open} onClose={onClose}>
-      <h2 className="text-[17px] font-bold text-foreground">
+      <BottomSheet.Title className="text-[17px] font-bold text-foreground">
         마이크를 켜야 대화할 수 있어요
-      </h2>
+      </BottomSheet.Title>
 
       {isApp ? (
         <ol className="mt-4 space-y-2.5 rounded-2xl bg-muted px-4 py-4">

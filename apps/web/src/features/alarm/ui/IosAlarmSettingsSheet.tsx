@@ -36,9 +36,9 @@ export const IosAlarmSettingsSheet = ({
 
   return (
     <BottomSheet open={open} onClose={onClose}>
-      <h2 className="text-[20px] font-bold text-foreground">
+      <BottomSheet.Title className="text-[20px] font-bold text-foreground">
         설정에서 이것 하나만 켜 주세요
-      </h2>
+      </BottomSheet.Title>
 
       <ol className="mt-4 space-y-2.5">
         <Step number={1}>아래 「설정 열기」를 눌러요</Step>
