@@ -219,12 +219,29 @@ describe('attachMetaAttribution', () => {
     await attachMetaAttribution('fb-anon');
 
     await identifyUser('42');
+    await flushMicrotasks();
 
     expect(mockPurchases.logIn).toHaveBeenCalledWith('42');
     expect(mockPurchases.setFBAnonymousID).toHaveBeenCalledTimes(2);
     expect(
       mockPurchases.setFBAnonymousID.mock.invocationCallOrder[1],
     ).toBeGreaterThan(mockPurchases.logIn.mock.invocationCallOrder[0]);
+  });
+
+  it('로그인 뒤 다시 붙이는 일이 끝나지 않아도 결제는 기다리지 않는다', async () => {
+    configurePurchases('key');
+    await attachMetaAttribution('fb-anon');
+    mockPurchases.collectDeviceIdentifiers.mockReturnValueOnce(
+      new Promise(() => {}),
+    );
+    mockPurchases.getOfferings.mockResolvedValue(offeringsWith([annual]));
+    mockPurchases.purchasePackage.mockResolvedValueOnce({} as never);
+
+    void identifyUser('42');
+
+    await expect(purchasePackage('$rc_annual')).resolves.toEqual({
+      status: 'success',
+    });
   });
 });
 

@@ -81,8 +81,9 @@ export const identifyUser = async (userId: string | null): Promise<void> => {
   if (!configured) return;
   const next = async () => {
     await (userId ? Purchases.logIn(userId) : Purchases.logOut());
-    // 로그인 전 익명 사용자에 붙인 값이 옮겨지는지 문서에 없어 다시 붙인다. 바뀐 값만 전송된다
-    if (metaAttached) await sendMetaAttribution();
+    // 로그인 전 익명 사용자에 붙인 값이 옮겨지는지 문서에 없어 다시 붙인다. 바뀐 값만 전송된다.
+    // 결제는 식별을 기다리므로 이 전송은 기다리지 않는다
+    if (metaAttached) void sendMetaAttribution();
   };
   identifying = identifying.catch(() => undefined).then(next);
   await identifying;
