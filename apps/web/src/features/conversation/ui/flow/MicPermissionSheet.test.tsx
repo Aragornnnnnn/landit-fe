@@ -18,13 +18,11 @@ vi.mock('@/shared/bridge/web-bridge', () => ({
 // BottomSheet는 framer-motion(모노레포 다중 react 사본)을 끌어와 렌더가 깨진다 —
 // 시트의 관심사가 아니므로 열렸을 때 children만 그리는 패스스루로 대체한다
 vi.mock('@/shared/ui/BottomSheet', () => ({
-  BottomSheet: ({
-    open,
-    children,
-  }: {
-    open: boolean;
-    children: React.ReactNode;
-  }) => (open ? <div>{children}</div> : null),
+  BottomSheet: Object.assign(
+    ({ open, children }: { open: boolean; children: React.ReactNode }) =>
+      open ? <div>{children}</div> : null,
+    { Title: (props: React.ComponentProps<'h2'>) => <h2 {...props} /> },
+  ),
 }));
 
 const getSurfaceMock = vi.mocked(getSurface);

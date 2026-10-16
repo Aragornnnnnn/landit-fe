@@ -34,9 +34,12 @@ export const AccentMenuEntry = () => {
 
       <BottomSheet open={open} onClose={() => setOpen(false)}>
         <div className="flex max-h-[75dvh] flex-col">
-          <h2 className="text-[17px] font-bold" style={{ color: '#111' }}>
+          <BottomSheet.Title
+            className="text-[17px] font-bold"
+            style={{ color: '#111' }}
+          >
             어떤 영어로 배우고 싶으세요?
-          </h2>
+          </BottomSheet.Title>
           <p
             className="mt-1 mb-5 text-[14px] leading-6"
             style={{ color: '#666' }}

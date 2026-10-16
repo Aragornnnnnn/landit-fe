@@ -103,9 +103,9 @@ const NicknameForm = ({
       // 키보드가 시트 아래를 가리지 않게 그만큼 띄운다
       style={{ paddingBottom: keyboardInset }}
     >
-      <h2 className="text-[17px] font-bold text-foreground">
+      <BottomSheet.Title className="text-[17px] font-bold text-foreground">
         뭐라고 불러드릴까요?
-      </h2>
+      </BottomSheet.Title>
       <p className="mt-1 text-[14px] leading-6 text-muted-foreground">
         언제든 다시 바꿀 수 있어요
       </p>

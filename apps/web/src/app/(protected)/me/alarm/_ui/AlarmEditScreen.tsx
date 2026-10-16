@@ -174,7 +174,9 @@ const AlarmEditForm = ({
       </div>
 
       <BottomSheet open={picking} onClose={() => setPicking(false)}>
-        <h2 className="text-[20px] font-bold text-foreground">시각</h2>
+        <BottomSheet.Title className="text-[20px] font-bold text-foreground">
+          시각
+        </BottomSheet.Title>
         <div className="mt-2">
           {/* 열 때마다 그때 시각에서 시작한다 — 닫히는 중에 다시 열어도 새로 그린다 */}
           <TimeWheel
@@ -197,9 +199,9 @@ const AlarmEditForm = ({
 
       {/* 확인은 왼쪽 「취소」, 오른쪽 빨간 「삭제」 — 지우는 버튼이 무엇인지 그대로 보이게 */}
       <BottomSheet open={confirmingDelete} onClose={cancelDelete}>
-        <h2 className="text-[17px] font-bold text-foreground">
+        <BottomSheet.Title className="text-[17px] font-bold text-foreground">
           알람을 삭제할까요?
-        </h2>
+        </BottomSheet.Title>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
           다시 만들려면 약속을 새로 해야 해요
         </p>

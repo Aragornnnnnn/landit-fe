@@ -33,7 +33,9 @@ export const WithdrawSheet = ({
 
   return (
     <BottomSheet open={open} onClose={onClose}>
-      <h2 className="text-[17px] font-bold text-foreground">회원탈퇴</h2>
+      <BottomSheet.Title className="text-[17px] font-bold text-foreground">
+        회원탈퇴
+      </BottomSheet.Title>
       {mustCancelFirst ? (
         <>
           {/* 세 문장을 한 줄씩 — 왜 안 되는지, 그래서 뭘 해야 하는지가 한눈에 읽히게 */}

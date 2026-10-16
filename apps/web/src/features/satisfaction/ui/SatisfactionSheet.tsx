@@ -101,11 +101,11 @@ export const SatisfactionSheet = ({
           className="object-contain"
           style={{ width: 160, height: 160 }}
         />
-        <h2
+        <BottomSheet.Title
           className={`${view === 'thanks' ? 'mt-5' : 'mt-4'} text-xl font-bold text-foreground`}
         >
           {face.title}
-        </h2>
+        </BottomSheet.Title>
         <p className="mt-2 text-[15px] leading-6 whitespace-pre-line text-muted-foreground">
           {face.body}
         </p>

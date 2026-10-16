@@ -105,11 +105,11 @@ export const PromoSheetContent = ({
 
       <header className="relative flex flex-col items-center text-center">
         <PremiumPill />
-        <h2 className="mt-2.5 text-[26px] leading-[1.3] font-bold text-foreground">
+        <BottomSheet.Title className="mt-2.5 text-[26px] leading-[1.3] font-bold text-foreground">
           지금 화면에서만
           <br />
           구독 <span className="text-[30px]">{yearly.discountRate}%</span> 할인
-        </h2>
+        </BottomSheet.Title>
         {/* 금색은 맨 위 PREMIUM과 할인율 배지 둘만 — 남은 시간은 배경 없이 빨간 글자로 */}
         <p className="mt-2.5 flex items-center gap-1 text-[15px] leading-[1.3] font-bold text-destructive">
           <PromoClock seconds={promo.remainingSeconds} /> 후 종료

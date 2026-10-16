@@ -65,11 +65,11 @@ export const LetterOfferSheet = ({
 
       <header className="relative flex flex-col items-center text-center">
         <PremiumPill />
-        <h2 className="mt-2.5 text-[26px] leading-[1.3] font-bold text-foreground">
+        <BottomSheet.Title className="mt-2.5 text-[26px] leading-[1.3] font-bold text-foreground">
           {name}님께만 드리는
           <br />
           프리미엄 혜택가
-        </h2>
+        </BottomSheet.Title>
         <p className="mt-2 text-[15px] leading-[1.4] text-muted-foreground">
           찾아 주셔서 고마운 마음을 담았어요
         </p>

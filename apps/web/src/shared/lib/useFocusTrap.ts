@@ -1,7 +1,7 @@
 'use client';
 
 // 열려 있는 동안 Tab 포커스를 패널 안에 가두고, 닫히면 이전 포커스로 되돌린다.
-// 화면을 시각적으로만 덮으면 키보드는 뒤 내용에 그대로 닿는다 — 공통 모달과 기존 유저 게이트가 함께 쓴다
+// 화면을 시각적으로만 덮으면 키보드는 뒤 내용에 그대로 닿는다 — 대화 상자(모달·바텀시트·사진 크게 보기)와 기존 유저 게이트가 함께 쓴다
 import { useEffect, type RefObject } from 'react';
 
 const FOCUSABLE_SELECTOR =
@@ -14,8 +14,12 @@ export function useFocusTrap(
   // 열리면 포커스를 패널로 옮기고, 닫히면 이전 포커스로 되돌린다
   useEffect(() => {
     if (!open) return;
+    // 안에서 먼저 포커스를 받은 요소(autoFocus 입력칸)는 그대로 둔다 — 옮기면 모바일 키보드가 닫힌다.
+    // 이때는 열기 전 포커스를 알 수 없어 닫혀도 되돌리지 않는다
+    if (panelRef.current?.contains(document.activeElement)) return;
     const previouslyFocused = document.activeElement as HTMLElement | null;
-    panelRef.current?.focus();
+    // 바텀시트는 이 순간 아직 화면 밖에서 올라오는 중이다 — 포커스 때문에 문서가 밀리지 않게 한다
+    panelRef.current?.focus({ preventScroll: true });
     return () => previouslyFocused?.focus();
   }, [open, panelRef]);
 

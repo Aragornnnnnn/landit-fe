@@ -36,9 +36,9 @@ export const SmallTalkExitSheet = ({
         height={96}
         className="size-24"
       />
-      <h2 className="mt-1 text-[17px] font-bold break-keep text-foreground">
+      <BottomSheet.Title className="mt-1 text-[17px] font-bold break-keep text-foreground">
         이대로 끝내려고요?
-      </h2>
+      </BottomSheet.Title>
       <p className="mt-2 text-sm leading-6 break-keep text-muted-foreground">
         대화를 잘 마무리하는 것까지가 영어 실력!
       </p>

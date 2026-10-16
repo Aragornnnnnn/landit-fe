@@ -96,9 +96,12 @@ export const SpeechRateMenuEntry = () => {
       <BottomSheet open={open} onClose={close}>
         {/* 들어보기는 헤더 우측 보조 동작 — 본문 세로 흐름(세그먼트·축 라벨·닫기)에 버튼을 하나 더 쌓지 않는다 */}
         <div className="flex items-center justify-between">
-          <h2 className="text-[17px] font-bold" style={{ color: '#111' }}>
+          <BottomSheet.Title
+            className="text-[17px] font-bold"
+            style={{ color: '#111' }}
+          >
             음성
-          </h2>
+          </BottomSheet.Title>
           <button
             type="button"
             onClick={togglePreview}
