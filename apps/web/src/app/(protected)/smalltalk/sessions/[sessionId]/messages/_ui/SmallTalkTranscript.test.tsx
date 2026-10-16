@@ -121,6 +121,29 @@ describe('SmallTalkTranscript', () => {
   });
 });
 
+describe('SmallTalkTranscript 하단 여백', () => {
+  // 아래 버튼이 없으면 목록이 화면 바닥에 닿는다 — 안드로이드 내비게이션 바·iOS 홈 인디케이터 위로 띄운다
+  it('기록에서 들어와 아래 버튼이 없으면 목록이 하단 safe-area만큼 띄워진다', () => {
+    // given
+    renderTranscript([messageOf({})], { continueToLearning: false });
+
+    // then
+    expect(screen.getByRole('list').className).toContain(
+      '--safe-area-inset-bottom',
+    );
+  });
+
+  it('대화를 마친 직후라 아래 버튼이 있으면 그 버튼이 바닥을 맡는다', () => {
+    // given
+    renderTranscript([messageOf({})], { continueToLearning: true });
+
+    // then
+    expect(screen.getByRole('list').className).not.toContain(
+      '--safe-area-inset-bottom',
+    );
+  });
+});
+
 describe('SmallTalkTranscript 교정 카드', () => {
   it('교정이 있으면 말풍선 아래에 더 자연스러운 문장과 이유가 보인다', () => {
     renderTranscript([
