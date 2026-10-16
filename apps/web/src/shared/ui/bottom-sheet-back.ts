@@ -3,9 +3,11 @@ type CloseSheet = () => void;
 
 const stack: CloseSheet[] = [];
 
-// 한글 조합 중의 Escape는 조합 취소다 — 시트까지 닫지 않는다
+// 한글 조합 중의 Escape는 조합 취소다 — 시트까지 닫지 않는다.
+// 누르고 있어 오는 반복 입력은 무시한다 — 겹친 층이 연달아 닫히지 않게
 const closeTopOnEscape = (event: KeyboardEvent) => {
-  if (event.key === 'Escape' && !event.isComposing) closeTopSheet();
+  if (event.key === 'Escape' && !event.isComposing && !event.repeat)
+    closeTopSheet();
 };
 
 // 시트가 열릴 때 등록하고, 닫히거나 언마운트되면 해제한다. 열린 게 하나라도 있는 동안만 Escape를 듣는다

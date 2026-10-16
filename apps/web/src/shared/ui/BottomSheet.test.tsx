@@ -161,6 +161,19 @@ describe('BottomSheet', () => {
     opener.remove();
   });
 
+  it('Escape를 누르고 있어 반복 입력이 와도 첫 입력에만 닫는다', () => {
+    const onClose = vi.fn();
+    render(
+      <BottomSheet open onClose={onClose}>
+        내용
+      </BottomSheet>,
+    );
+
+    fireEvent.keyDown(window, { key: 'Escape', repeat: true });
+
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it('두 시트가 겹쳐 열려 있으면 Escape 한 번에 위 시트만 닫는다', () => {
     const closeBelow = vi.fn();
     const closeAbove = vi.fn();
