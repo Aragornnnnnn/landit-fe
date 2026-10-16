@@ -31,4 +31,14 @@ describe('RewardFrame', () => {
       expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument();
     },
   );
+
+  it('아래 버튼이 없으면 본문이 하단 safe-area만큼 띄워진다', () => {
+    // given
+    render(<RewardFrame onBack={() => {}}>본문</RewardFrame>);
+
+    // then
+    expect(screen.getByText('본문').className).toContain(
+      '--safe-area-inset-bottom',
+    );
+  });
 });
