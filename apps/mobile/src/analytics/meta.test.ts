@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import { AppEventsLogger, Settings } from 'react-native-fbsdk-next';
 
+import { reportWarning } from '../monitoring/report';
 import { initMetaSdk } from './meta';
 
 jest.mock('react-native-fbsdk-next', () => ({
@@ -13,6 +14,9 @@ jest.mock('react-native-fbsdk-next', () => ({
     initializeSDK: jest.fn(),
     setAdvertiserTrackingEnabled: jest.fn(() => Promise.resolve(true)),
   },
+}));
+jest.mock('../monitoring/report', () => ({
+  reportWarning: jest.fn(),
 }));
 jest.mock('expo-tracking-transparency', () => ({
   requestTrackingPermissionsAsync: jest.fn(() =>
@@ -62,5 +66,25 @@ describe('initMetaSdk', () => {
 
     decide();
     await expect(pending).resolves.toBe('fb-anon');
+  });
+
+  it('메타 익명 ID를 못 꺼내면 null을 돌려주고 경고로 보고한다', async () => {
+    jest.replaceProperty(Platform, 'OS', 'android');
+    const failure = new Error('no anon id');
+    (AppEventsLogger.getAnonymousID as jest.Mock).mockRejectedValueOnce(
+      failure,
+    );
+
+    await expect(initMetaSdk()).resolves.toBeNull();
+    expect(reportWarning).toHaveBeenCalledWith(failure);
+  });
+
+  it('ATT 요청이 실패해도 경고로 보고하고 메타 익명 ID는 돌려준다', async () => {
+    jest.replaceProperty(Platform, 'OS', 'ios');
+    const failure = new Error('att failed');
+    mockRequestTracking.mockRejectedValueOnce(failure);
+
+    await expect(initMetaSdk()).resolves.toBe('fb-anon');
+    expect(reportWarning).toHaveBeenCalledWith(failure);
   });
 });
