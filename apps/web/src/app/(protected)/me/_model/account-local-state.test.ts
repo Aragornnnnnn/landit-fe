@@ -29,15 +29,13 @@ describe('clearAccountLocalState', () => {
     expect(tapGreetingSeen.has()).toBe(false);
   });
 
-  it('로그인 정보·온보딩 본 표시·진동 설정은 남긴다', () => {
+  it('로그인 정보·진동 설정은 남긴다', () => {
     localStorage.setItem('landit-auth', '{"state":{}}');
-    localStorage.setItem('landit-onboarding-seen', '1');
     localStorage.setItem('landit-haptics-off', '1');
 
     clearAccountLocalState();
 
     expect(localStorage.getItem('landit-auth')).not.toBeNull();
-    expect(localStorage.getItem('landit-onboarding-seen')).toBe('1');
     expect(localStorage.getItem('landit-haptics-off')).toBe('1');
   });
 });

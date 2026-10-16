@@ -1,4 +1,4 @@
-// 소셜 로그인 훅 — 애플 로그인 점검 가드와, 성공한 로그인 방법을 기기에 남기는지 검증한다
+// 소셜 로그인 훅 — 애플 로그인 점검 가드, 성공한 로그인 방법을 기기에 남기는지, 로그인 뒤 갈 곳을 검증한다
 // @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -6,8 +6,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readLastLoginProvider } from './last-login-provider';
 import { useSocialLogin } from './useSocialLogin';
 
+const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  useRouter: () => ({ replace, push: vi.fn() }),
 }));
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 vi.mock('@/shared/auth/auth-store', () => ({
@@ -121,5 +122,34 @@ describe('useSocialLogin — 로그인한 방법 남기기', () => {
 
     // then
     expect(readLastLoginProvider()).toBeNull();
+  });
+});
+
+describe('useSocialLogin — 로그인 뒤 갈 곳', () => {
+  it.each([
+    { label: '새 가입자', newUser: true, path: '/onboarding' },
+    // 이 기기에서 온보딩을 본 기록이 없어도(앱을 지웠다 다시 깐 기기) 기존 유저는 온보딩을 다시 보지 않는다
+    { label: '기존 유저', newUser: false, path: '/scenario' },
+  ])('$label면 $path로 간다', async ({ newUser, path }) => {
+    // given
+    socialLogin.mockResolvedValue({
+      accessToken: 'a',
+      refreshToken: 'r',
+      user: { userId: 1, provider: 'GOOGLE', newUser },
+    });
+    renderHook(() => useSocialLogin());
+
+    // when
+    await act(async () => {
+      await native.emit({
+        type: 'SOCIAL_LOGIN_SUCCESS',
+        provider: 'google',
+        idToken: 'id',
+        nonce: 'n',
+      });
+    });
+
+    // then
+    expect(replace).toHaveBeenCalledWith(path);
   });
 });

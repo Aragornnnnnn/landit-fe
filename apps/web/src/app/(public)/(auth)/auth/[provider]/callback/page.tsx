@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation';
 import { track } from '@/shared/analytics';
 import { socialLogin } from '@/shared/auth/api/social-login';
 import { useAuthStore } from '@/shared/auth/auth-store';
-import { hasSeenOnboarding } from '@/shared/auth/onboarding-seen';
 import {
   clearPendingSocialLogin,
   readPendingSocialLogin,
@@ -126,9 +125,7 @@ export default function SocialLoginCallbackPage({
           method: 'web',
           is_new_user: newUser,
         });
-        router.replace(
-          newUser || !hasSeenOnboarding() ? '/onboarding' : SCENARIO_PATH,
-        );
+        router.replace(newUser ? '/onboarding' : SCENARIO_PATH);
       } catch (err) {
         track(EVENTS.LOGIN_FAILED, {
           provider,
