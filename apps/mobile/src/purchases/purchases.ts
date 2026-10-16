@@ -46,6 +46,9 @@ let configured = false;
 // 식별 작업의 꼬리 — 결제·복원·오퍼링은 이게 끝난 뒤에 간다. 브릿지 핸들러는 메시지마다 따로 돌아 순서를 보장하지 않는다.
 // 새 식별은 앞 식별 뒤에 이어 붙여, 앞 것이 늦게 끝나도 마지막에 보낸 사용자가 남는다
 let identifying: Promise<unknown> = Promise.resolve();
+// 메타 광고 식별자를 붙였는지와 그 익명 ID — 로그인으로 사용자가 바뀌면 새 사용자에게 다시 붙인다
+let metaAttached = false;
+let metaAnonymousId: string | null = null;
 
 const NOT_CONFIGURED_MESSAGE = '결제를 사용할 수 없는 빌드예요.';
 
@@ -58,6 +61,7 @@ const NOT_CONFIGURED_MESSAGE = '결제를 사용할 수 없는 빌드예요.';
 export const configurePurchases = (
   apiKey: string | null = resolveApiKey(Platform.OS),
 ): boolean => {
+  metaAttached = false;
   if (!apiKey) {
     configured = false;
     return false;
@@ -75,14 +79,42 @@ export const configurePurchases = (
  */
 export const identifyUser = async (userId: string | null): Promise<void> => {
   if (!configured) return;
-  const next = (): Promise<unknown> =>
-    userId ? Purchases.logIn(userId) : Purchases.logOut();
+  const next = async () => {
+    await (userId ? Purchases.logIn(userId) : Purchases.logOut());
+    // 로그인 전 익명 사용자에 붙인 값이 옮겨지는지 문서에 없어 다시 붙인다. 바뀐 값만 전송된다
+    if (metaAttached) await sendMetaAttribution();
+  };
   identifying = identifying.catch(() => undefined).then(next);
   await identifying;
 };
 
 // 식별이 끝나길 기다린다. 식별이 실패해도 결제는 막지 않는다 — 그 결과는 웹훅 매칭에서 드러난다
 const afterIdentify = () => identifying.catch(() => undefined);
+
+const sendMetaAttribution = async () => {
+  try {
+    await Purchases.collectDeviceIdentifiers();
+    if (metaAnonymousId) await Purchases.setFBAnonymousID(metaAnonymousId);
+  } catch (error) {
+    reportWarning(error);
+  }
+};
+
+/**
+ * 메타 광고 연동용 식별자를 RevenueCat 사용자에 붙인다 — RevenueCat이 결제 이벤트를 메타로 보낼 때 어느 광고에서 온 기기인지 잇는 데 쓴다.
+ * iOS는 ATT 결정 뒤에 불러야 광고 ID(IDFA)가 실린다. 실패해도 결제는 막지 않는다.
+ *
+ * @param anonymousId 메타 SDK 익명 ID. 없으면 기기 식별자만 붙인다
+ */
+export const attachMetaAttribution = async (
+  anonymousId: string | null,
+): Promise<void> => {
+  if (!configured) return;
+  metaAttached = true;
+  metaAnonymousId = anonymousId;
+  await afterIdentify();
+  await sendMetaAttribution();
+};
 
 const PLAN_BY_PACKAGE_TYPE: Partial<Record<string, OfferingPackage['plan']>> = {
   [PACKAGE_TYPE.MONTHLY]: 'monthly',
