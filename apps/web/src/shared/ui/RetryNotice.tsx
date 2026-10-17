@@ -2,8 +2,6 @@
 
 // 조회가 실패했을 때 그 자리에 뜨는 안내 — 실패를 알리고 다시 시도할 길을 준다
 // 재시도 계측을 안에서 발화한다 — 호출부는 어느 화면인지만 넘긴다.
-// 같은 안내가 여섯 화면에 복사돼 있었고, 그중 편지함·스트릭 둘만 여기로 옮겼다.
-// 남은 넷(시나리오·대화·카드 뒷면·표현 분기)은 role="alert"가 없어 옮기면 동작이 바뀐다 — 별도 작업
 import { EVENTS, type RetryScreen } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
@@ -15,13 +13,20 @@ interface RetryNoticeProps {
   screen: RetryScreen;
   message: string;
   onRetry: () => void;
+  // 남은 세로 공간 한가운데에 놓는다 — 화면 본문 전체가 이 안내로 바뀌는 자리
+  fill?: boolean;
 }
 
-export const RetryNotice = ({ screen, message, onRetry }: RetryNoticeProps) => (
+export const RetryNotice = ({
+  screen,
+  message,
+  onRetry,
+  fill = false,
+}: RetryNoticeProps) => (
   // 스켈레톤이 조용히 교체되면 보조 기술은 실패를 모른다 — 뜨는 즉시 읽히게 한다
   <div
     role="alert"
-    className="flex flex-col items-center gap-4 px-6 pt-24 text-center"
+    className={`flex flex-col items-center gap-4 px-6 text-center ${fill ? 'flex-1 justify-center' : 'pt-24'}`}
   >
     <p className="text-muted-foreground">{message}</p>
     <Button

@@ -3,6 +3,7 @@ import { parseApiResponse } from '@/shared/api/parse';
 import { REFRESH_PATH, refreshAccessToken } from '@/shared/auth/api/refresh';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { clearSession } from '@/shared/auth/clear-session';
+import { LOGIN_PATH } from '@/shared/lib/routes';
 
 /**
  * API 호출 진입점. 로그인 토큰 부착, 토큰이 없을 때 선발급, 401 재발급·1회 재시도를 알아서 처리한다.
@@ -63,7 +64,7 @@ async function request<T>(
     }
     // refresh까지 실패 = 세션 끝. 정리하고 로그인 화면으로 보낸다
     clearSession();
-    window.location.href = '/login';
+    window.location.href = LOGIN_PATH;
     throw new Error('세션이 만료됐어요. 다시 로그인해 주세요.');
   }
 

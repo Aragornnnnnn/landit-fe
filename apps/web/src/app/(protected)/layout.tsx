@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
+import { LOGIN_PATH } from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
@@ -26,7 +27,7 @@ export default function ProtectedLayout({
   const hydrated = useClientOnlyValue(() => true, false);
 
   useEffect(() => {
-    if (hydrated && !isAuthed) router.replace('/login');
+    if (hydrated && !isAuthed) router.replace(LOGIN_PATH);
   }, [hydrated, isAuthed, router]);
 
   // 판단 전이거나 리다이렉트 대기 중엔 스플래시를 유지한다 — 흰 화면 깜빡임 없이 로그인/홈 어느 쪽으로든 이어진다
