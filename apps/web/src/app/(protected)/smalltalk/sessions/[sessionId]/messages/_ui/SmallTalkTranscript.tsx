@@ -126,6 +126,14 @@ export const SmallTalkTranscript = ({
                 )}
               </li>
             ))}
+            {/* 칩은 목록 위에 떠 있다 — 끝까지 내려도 마지막 말풍선이 칩 밑에 깔리지 않게 칩 높이만큼 비워 둔다 */}
+            {hasNext && (
+              <li
+                aria-hidden
+                data-testid="next-correction-chip-space"
+                className="h-12 shrink-0"
+              />
+            )}
           </ul>
           {/* 진행바 대신 칩 하나 — 아직 안 본 교정이 남았을 때만 떠서 다음 카드로 데려간다 */}
           {hasNext && (

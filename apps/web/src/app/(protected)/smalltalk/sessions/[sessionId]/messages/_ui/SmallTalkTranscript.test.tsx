@@ -341,6 +341,29 @@ describe('SmallTalkTranscript 교정 사이 이동', () => {
     expect(scrolledTo("Today it's just stairs at the gym.")).toBe(true);
   });
 
+  it('칩이 떠 있으면 목록 끝에 칩 자리를 비워 마지막 말풍선이 칩에 가리지 않는다', () => {
+    // given — 아직 안 간 교정이 남아 칩이 떠 있다
+    renderTranscript(twoCorrections());
+
+    // then
+    expect(
+      screen.getByTestId('next-correction-chip-space'),
+    ).toBeInTheDocument();
+  });
+
+  it('칩이 사라지면 목록 끝의 칩 자리도 거둔다', async () => {
+    // given
+    renderTranscript(twoCorrections());
+
+    // when — 마지막 교정까지 가서 칩이 사라진다
+    await userEvent.click(
+      screen.getByRole('button', { name: /다음 자연스러운 말/ }),
+    );
+
+    // then
+    expect(screen.queryByTestId('next-correction-chip-space')).toBeNull();
+  });
+
   it('마지막 교정까지 가면 칩이 사라진다', async () => {
     renderTranscript(twoCorrections());
 
