@@ -13,9 +13,9 @@ import { track } from '@/shared/analytics';
 import { toDayLabel } from '@/shared/lib/day-label';
 import { SMALLTALK_PATH, smallTalkHistoryPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
+import { HistoryListSkeleton, HistoryRow } from '@/shared/ui/HistoryRow';
 import { LoadMoreButton } from '@/shared/ui/LoadMoreButton';
 import { PageHeader } from '@/shared/ui/PageHeader';
-import { RecordListSkeleton, RecordRow } from '@/shared/ui/RecordRow';
 
 export const SmallTalkHistory = () => {
   const router = useRouter();
@@ -51,7 +51,7 @@ export const SmallTalkHistory = () => {
         </div>
       ) : sessions === null ? (
         // 조회 중 — 빈 화면만 두면 목록이 비었는지 아직인지 알 수 없다
-        <RecordListSkeleton rows={4} label="지난 대화를 불러오는 중" />
+        <HistoryListSkeleton rows={4} label="지난 대화를 불러오는 중" />
       ) : sessions.length === 0 ? (
         <p className="flex flex-1 items-center justify-center px-6 text-center text-sm break-keep whitespace-pre-line text-muted-foreground">
           {'아직 나눈 대화가 없어요.\n오늘 한 대화부터 여기 쌓여요.'}
@@ -93,7 +93,7 @@ const SessionRow = ({
   session: SmallTalkSessionSummary;
   onSelect: () => void;
 }) => (
-  <RecordRow
+  <HistoryRow
     onClick={onSelect}
     title={toSessionTitle(session.title, session.completedAt)}
     meta={`${toDayLabel(session.completedAt)} · ${toSpeakingTimeLabel(session.userSpeakingDurationMs)}`}

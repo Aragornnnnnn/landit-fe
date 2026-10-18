@@ -7,19 +7,19 @@ import { ChevronRightIcon } from './Icons';
 const ROW_CLASS =
   'flex w-full items-center gap-3 rounded-2xl bg-card px-4.5 py-4 text-left shadow-sm transition-colors active:bg-secondary/40';
 
-type RecordRowProps = {
+type HistoryRowProps = {
   title: ReactNode;
   meta: ReactNode;
   trailing?: ReactNode;
   // 화면 코드를 미리 받게 할 곳은 링크로, 이동 전에 할 일이 있으면 버튼으로 쓴다
 } & ({ href: string } | { onClick: () => void });
 
-export const RecordRow = ({
+export const HistoryRow = ({
   title,
   meta,
   trailing,
   ...target
-}: RecordRowProps) => {
+}: HistoryRowProps) => {
   const content = (
     <>
       <div className="min-w-0 flex-1">
@@ -45,7 +45,7 @@ export const RecordRow = ({
 };
 
 /** 목록이 오는 동안 안내문과 줄 자리를 먼저 잡아, 도착 후 목록이 튀지 않게 한다 */
-export const RecordListSkeleton = ({
+export const HistoryListSkeleton = ({
   rows,
   label,
 }: {

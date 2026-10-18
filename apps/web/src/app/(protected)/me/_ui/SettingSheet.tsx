@@ -10,7 +10,7 @@ interface SettingSheetProps {
   title: string;
   description: string;
   // 제목 오른쪽 보조 동작(들어보기 같은 것)
-  action?: ReactNode;
+  trailing?: ReactNode;
   children: ReactNode;
 }
 
@@ -19,7 +19,7 @@ export const SettingSheet = ({
   onClose,
   title,
   description,
-  action,
+  trailing,
   children,
 }: SettingSheetProps) => (
   <BottomSheet open={open} onClose={onClose}>
@@ -30,7 +30,7 @@ export const SettingSheet = ({
       >
         {title}
       </BottomSheet.Title>
-      {action}
+      {trailing}
     </div>
     <p className="mt-1 mb-4 text-[14px] leading-6" style={{ color: '#666' }}>
       {description}

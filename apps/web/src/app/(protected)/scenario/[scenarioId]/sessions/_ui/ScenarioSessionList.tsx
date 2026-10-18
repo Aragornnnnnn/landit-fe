@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useScenarioTitle } from '@/features/scenario/model/useScenarioTitle';
 import { toDayLabel } from '@/shared/lib/day-label';
 import { scenarioReturnPath, scenarioSessionPath } from '@/shared/lib/routes';
+import { HistoryListSkeleton, HistoryRow } from '@/shared/ui/HistoryRow';
 import { PageHeader } from '@/shared/ui/PageHeader';
-import { RecordListSkeleton, RecordRow } from '@/shared/ui/RecordRow';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 import { StarRating } from '@/shared/ui/StarRating';
 
@@ -44,7 +44,7 @@ export const ScenarioSessionList = ({
           onRetry={retry}
         />
       ) : sessions === null ? (
-        <RecordListSkeleton rows={3} label="지난 대화를 불러오는 중" />
+        <HistoryListSkeleton rows={3} label="지난 대화를 불러오는 중" />
       ) : sessions.length === 0 ? (
         <p className="flex flex-1 items-center justify-center px-6 text-center text-sm break-keep whitespace-pre-line text-muted-foreground">
           {'아직 마친 대화가 없어요.\n대화를 마치면 여기 쌓여요.'}
@@ -84,7 +84,7 @@ const SessionRow = ({
   ordinal: number;
   href: string;
 }) => (
-  <RecordRow
+  <HistoryRow
     href={href}
     title={`${ordinal}번째 대화`}
     meta={

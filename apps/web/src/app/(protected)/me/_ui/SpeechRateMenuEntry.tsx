@@ -98,7 +98,7 @@ export const SpeechRateMenuEntry = () => {
         title="음성"
         description="영어 음성이 들리는 속도예요"
         // 들어보기는 제목 오른쪽 보조 동작 — 본문 세로 흐름(세그먼트·축 라벨·닫기)에 버튼을 하나 더 쌓지 않는다
-        action={
+        trailing={
           <button
             type="button"
             onClick={togglePreview}
