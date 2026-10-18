@@ -33,6 +33,7 @@ export {
   type SatisfactionMoment,
   type SatisfactionAnswer,
   type ReviewTrigger,
+  type ReviewCardStatus,
   type WidgetInstallAnswer,
   type WidgetGuideStep,
   type WidgetInstallPlatform,

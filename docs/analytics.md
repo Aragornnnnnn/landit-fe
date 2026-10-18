@@ -223,6 +223,7 @@
 | Satisfaction Prompt Viewed   | moment(scenario\|smalltalk\|review), attempt(1~4, review만), trigger(talk\|expression, review만) | 대화를 마치고 홈에 돌아와 소감 시트가 뜸. 리뷰 요청은 좋았다고 한 사람이 대화·표현 학습을 마치고 홈에 올 때마다 하루 한 번, 닫으면 2·4·6일 뒤 재요청, 최대 4번 (LAN-689) |
 | Satisfaction Prompt Answered | moment, answer(good\|bad\|dismiss\|already_done)                                                 | 좋았어요/아쉬웠어요 탭, 딤·X·뒤로가기로 닫음(dismiss), 리뷰 재요청의 「이미 남겼어요」(already_done)                                                                     |
 | Review Store Opened          | store(play_store\|app_store)                                                                     | 리뷰 요청 시트에서 리뷰 남기러 가기                                                                                                                                      |
+| Review Card Requested        | status(shown\|not_shown\|unavailable\|timeout)                                                   | 리뷰 시트 버튼으로 앱 안 별점 카드를 청한 결과. shown이 아니면 이어서 Review Store Opened가 찍힌다 (LAN-701)                                                             |
 
 moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 날 두 번째 이상의 시나리오 대화를 마쳤을 때(랜딧 전체를 묻고 별점을 유도). 기기당 순간마다 한 번만 뜬다. dismiss도 답으로 셈해 다시 묻지 않고, 첫 소감이 bad였던 사람에겐 app을 묻지 않는다.
 
