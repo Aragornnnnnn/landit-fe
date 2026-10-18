@@ -49,9 +49,11 @@ const REVIEW_RETRY_GAP_DAYS = [2, 4, 6];
 
 const today = getDeviceToday;
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 // yyyy-MM-dd 둘 사이 날 수 — 둘 다 UTC 자정으로 읽혀 시차가 끼지 않는다
 const daysBetween = (from: string, to: string) =>
-  Math.round((Date.parse(to) - Date.parse(from)) / (24 * 60 * 60 * 1000));
+  Math.round((Date.parse(to) - Date.parse(from)) / DAY_MS);
 
 // 대화를 마쳤다 — 홈에 돌아오면 물을 차례라고 남긴다
 export const markTalkCompleted = (talk: SatisfactionTalk) =>
@@ -93,13 +95,23 @@ const reviewAttempt = (record?: ImpressionRecord) =>
 // 리뷰 시트를 띄운 횟수 — 재요청부터 「이미 남겼어요」를 보여주는 기준
 export const readReviewAttempt = () => reviewAttempt(read('review'));
 
-// 리뷰 시트를 띄웠다 — 횟수와 날을 남기고, 이번 완료로 쌓인 차례를 모두 소비한다.
-// 같은 날 또 불리면(개발 모드의 이펙트 이중 실행 등) 한 번으로 센다 — 하루 한 번이 규칙이라 횟수도 하루 하나다
-export const markReviewShown = () => {
+// 지금 띄우는 시트가 몇 번째인가 — 오늘 이미 띄웠으면(같은 날 재마운트) 그 횟수, 아니면 하나 더
+export const peekReviewAttempt = () => {
   const review = read('review');
-  if (review?.shownOn !== today())
+  return review?.shownOn === today()
+    ? reviewAttempt(review)
+    : reviewAttempt(review) + 1;
+};
+
+// 리뷰 시트를 띄웠다 — 횟수와 날을 남긴다. 차례 소비는 부르는 쪽이 따로 한다(consumeAllPending).
+// 같은 날 또 불리면(개발 모드의 이펙트 이중 실행, 할인 시트에 밀렸다 다시 뜸) 한 번으로 센다 — 하루 한 번이 규칙이라 횟수도 하루 하나다.
+// 이번 호출이 새로 센 것인지 돌려준다 — 노출 계측도 그때만 한 번 찍는다
+export const markReviewShown = (): boolean => {
+  const review = read('review');
+  const counted = review?.shownOn !== today();
+  if (counted)
     update('review', { attempt: reviewAttempt(review) + 1, shownOn: today() });
-  consumeAllPending();
+  return counted;
 };
 
 // 리뷰 요청 — 좋았다고 한 사람이 무엇이든 막 마쳤을 때. 같은 날이어도 묻되 하루 한 번,
@@ -117,9 +129,10 @@ export const shouldAskReview = () => {
   if (attempt >= REVIEW_MAX_ATTEMPTS) return false;
   if (attempt === 0) return true;
 
-  const answeredOn = review?.answeredOn;
+  // 답 없이 뜨기만 했으면(뜨자마자 앱을 끈 경우) 띄운 날부터 센다
+  const since = review?.answeredOn ?? review?.shownOn;
   const gap = REVIEW_RETRY_GAP_DAYS[attempt - 1];
-  return answeredOn === undefined || daysBetween(answeredOn, today()) >= gap;
+  return since === undefined || daysBetween(since, today()) >= gap;
 };
 
 // 무엇을 마치고 와서 뜨는가 — 계측용. 둘 다 마쳤으면 대화를 앞세운다

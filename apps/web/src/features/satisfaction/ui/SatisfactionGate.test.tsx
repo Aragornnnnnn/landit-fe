@@ -15,6 +15,7 @@ import {
   markExpressionCompleted,
   markReviewShown,
   markTalkCompleted,
+  PROMPT_RECORD_KEY,
   readReviewAttempt,
   readSatisfactionAnswer,
   recordSatisfactionAnswer,
@@ -168,6 +169,24 @@ describe('SatisfactionGate — 리뷰 요청(review)', () => {
     });
   });
 
+  it('같은 날 다시 마운트돼도 횟수·계측이 더 늘지 않는다 — 할인 시트에 밀렸다 돌아온 경우', () => {
+    markTalkCompleted('scenario');
+    const { unmount } = render(<SatisfactionGate moment="review" />);
+    unmount();
+
+    render(<SatisfactionGate moment="review" />);
+
+    expect(readReviewAttempt()).toBe(1);
+    expect(screen.queryByText('이미 남겼어요')).not.toBeInTheDocument();
+    expect(
+      trackMock.mock.calls.filter(
+        ([name, props]) =>
+          name === 'Satisfaction Prompt Viewed' &&
+          (props as { moment: string }).moment === 'review',
+      ),
+    ).toHaveLength(1);
+  });
+
   it('뜨면 횟수를 올리고 쌓여 있던 차례를 모두 소비한다 — 닫자마자 다른 시트가 이어 뜨지 않게', () => {
     markTalkCompleted('scenario');
     markTalkCompleted('smalltalk');
@@ -225,11 +244,15 @@ describe('SatisfactionGate — 리뷰 요청(review)', () => {
   });
 
   it('재요청부터 「이미 남겼어요」가 보이고, 누르면 다시 청하지 않는다', () => {
-    // Given 한 번 띄웠다 닫은 적이 있고, 좋았다고 한 사람이 또 대화를 마쳤다
+    // Given 지난날 한 번 띄웠다 닫은 적이 있고, 좋았다고 한 사람이 오늘 또 대화를 마쳤다
     markTalkCompleted('scenario');
     recordSatisfactionAnswer('scenario', 'good');
     markReviewShown();
     recordSatisfactionAnswer('review', 'dismiss');
+    const all = JSON.parse(localStorage.getItem(PROMPT_RECORD_KEY)!);
+    all['satisfaction:review'].shownOn = '2000-01-01';
+    all['satisfaction:review'].answeredOn = '2000-01-01';
+    localStorage.setItem(PROMPT_RECORD_KEY, JSON.stringify(all));
     markTalkCompleted('scenario');
 
     // When 재요청 시트에서 이미 남겼다고 하면

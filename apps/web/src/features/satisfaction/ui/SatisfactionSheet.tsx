@@ -104,11 +104,12 @@ export const SatisfactionSheet = ({
           <CloseIcon size={20} />
         </button>
       )}
-      {/* 모든 화면의 높이를 같게 고정한다 — 문구만 바뀌는 전환이라 시트가 덜컥 줄어들면 안 된다.
+      {/* 소감 화면들은 높이를 같게 고정한다 — 문구만 바뀌는 전환이라 시트가 덜컥 줄어들면 안 된다.
+          리뷰 요청은 전환이 없어 최소 높이만 두고 「이미 남겼어요」 링크만큼 자란다.
           버튼 있는 화면은 위에서부터 쌓고 버튼을 바닥에, 감사는 버튼이 없으니 내용을 가운데로 모아 빈 자리를 없앤다 */}
       <div
         className={`flex flex-col items-center text-center ${
-          showAlreadyDone ? 'h-[364px]' : 'h-[328px]'
+          view === 'review' ? 'min-h-[328px]' : 'h-[328px]'
         } ${view === 'thanks' ? 'justify-center' : ''}`}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}

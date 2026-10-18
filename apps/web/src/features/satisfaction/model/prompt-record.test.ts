@@ -9,6 +9,7 @@ import {
   markExpressionCompleted,
   markReviewShown,
   markTalkCompleted,
+  peekReviewAttempt,
   PROMPT_RECORD_KEY,
   readReviewAttempt,
   readSatisfactionAnswer,
@@ -155,6 +156,7 @@ describe('shouldAskReview — 리뷰 요청', () => {
       answeredGood();
       for (let i = 0; i < n; i += 1) {
         markReviewShown();
+        consumeAllPending();
         recordSatisfactionAnswer('review', 'dismiss');
         rewind('satisfaction:review', 'shownOn', n - i);
       }
@@ -181,6 +183,19 @@ describe('shouldAskReview — 리뷰 요청', () => {
 
       expect(shouldAskReview()).toBe(true);
       expect(readReviewAttempt()).toBe(1);
+    });
+
+    it('답 없이 뜨기만 했으면 띄운 날부터 쉰다 — 뜨자마자 앱을 꺼도 다음 날 바로 또 뜨지 않는다', () => {
+      answeredGood();
+      markTalkCompleted('scenario');
+      markReviewShown();
+
+      rewind('satisfaction:review', 'shownOn', 1);
+      markTalkCompleted('scenario');
+      expect(shouldAskReview()).toBe(false);
+
+      rewind('satisfaction:review', 'shownOn', 2);
+      expect(shouldAskReview()).toBe(true);
     });
 
     it('네 번(처음 1 + 재요청 3) 띄웠으면 아무리 지나도 청하지 않는다', () => {
@@ -252,20 +267,28 @@ describe('markReviewShown · readReviewAttempt', () => {
   });
 
   it('같은 날 두 번 불려도 한 번으로 센다 — 개발 모드의 이펙트 이중 실행에 횟수가 두 배로 늘지 않게', () => {
-    markReviewShown();
-    markReviewShown();
+    expect(markReviewShown()).toBe(true);
+    expect(markReviewShown()).toBe(false);
 
     expect(readReviewAttempt()).toBe(1);
   });
 
-  it('띄우면 쌓여 있던 차례를 모두 소비한다 — 같은 완료로 다른 시트가 이어 뜨지 않게', () => {
+  it('peekReviewAttempt — 오늘 이미 띄웠으면 그 횟수, 아니면 하나 더', () => {
+    expect(peekReviewAttempt()).toBe(1);
+
+    markReviewShown();
+    expect(peekReviewAttempt()).toBe(1);
+
+    rewind('satisfaction:review', 'shownOn', 1);
+    expect(peekReviewAttempt()).toBe(2);
+  });
+
+  it('띄운 것만 남긴다 — 차례 소비는 부르는 쪽 몫이라 여기서는 건드리지 않는다', () => {
     markTalkCompleted('scenario');
-    markExpressionCompleted();
 
     markReviewShown();
 
-    expect(shouldAskSatisfaction('scenario')).toBe(false);
-    expect(shouldAskReview()).toBe(false);
+    expect(shouldAskSatisfaction('scenario')).toBe(true);
   });
 });
 

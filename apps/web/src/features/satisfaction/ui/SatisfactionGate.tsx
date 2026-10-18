@@ -19,7 +19,7 @@ import { MAILBOX_COMPOSE_PATH } from '@/shared/lib/routes';
 import {
   consumeAllPending,
   markReviewShown,
-  readReviewAttempt,
+  peekReviewAttempt,
   recordSatisfactionAnswer,
   resolveReviewTrigger,
 } from '../model/prompt-record';
@@ -41,22 +41,24 @@ export const SatisfactionGate = ({
     moment === 'review' ? 'review' : 'ask',
   );
 
-  // 이번이 몇 번째 리뷰 요청인가 — 마운트 때 고정. 재요청(2번째)부터 「이미 남겼어요」를 보여준다
+  // 이번이 몇 번째 리뷰 요청인가 — 마운트 때 고정. 재요청(2번째)부터 「이미 남겼어요」를 보여준다.
+  // 같은 날 다시 마운트돼도(할인 시트에 밀렸다 돌아옴) 횟수가 더 늘지 않는다
   const [attempt] = useState(() =>
-    moment === 'review' ? readReviewAttempt() + 1 : 0,
+    moment === 'review' ? peekReviewAttempt() : 0,
   );
 
   // 노출을 계측하고, 이번 완료로 쌓인 차례를 모두 소비한다 — 같은 완료로 다른 시트가 또 뜨지 않게.
-  // 리뷰 요청은 횟수·날도 남긴다(하루 한 번·최대 4번의 근거). 무엇을 마치고 왔는지는 소비 전에 읽는다
+  // 리뷰 요청은 횟수·날도 남긴다(하루 한 번·최대 4번의 근거). 무엇을 마치고 왔는지는 소비 전에 읽고,
+  // 같은 날 두 번째 마운트는 새로 센 게 아니라 계측도 찍지 않는다
   useEffect(() => {
     if (moment === 'review') {
       const trigger = resolveReviewTrigger();
-      markReviewShown();
-      track(EVENTS.SATISFACTION_PROMPT_VIEWED, { moment, attempt, trigger });
+      if (markReviewShown())
+        track(EVENTS.SATISFACTION_PROMPT_VIEWED, { moment, attempt, trigger });
     } else {
-      consumeAllPending();
       track(EVENTS.SATISFACTION_PROMPT_VIEWED, { moment });
     }
+    consumeAllPending();
     // 마운트 때 한 번 — moment·attempt는 마운트 동안 안 바뀐다
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
