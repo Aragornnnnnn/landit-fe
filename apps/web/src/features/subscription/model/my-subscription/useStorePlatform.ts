@@ -14,6 +14,6 @@ import { resolveStorePlatform, type StorePlatform } from './store-links';
 export const useStorePlatform = (
   paidStore: MySubscription['store'] | undefined,
 ): StorePlatform => {
-  const context = useNativeContext();
-  return resolveStorePlatform(paidStore, context?.platform);
+  const nativeContext = useNativeContext();
+  return resolveStorePlatform(paidStore, nativeContext?.platform);
 };

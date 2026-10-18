@@ -8,9 +8,9 @@ import { REWARD_CHALLENGE_ENABLED } from './payment-flag';
 import { isRewardChallengeLive } from './paywall-gate';
 
 export const useRewardChallengeLive = (): boolean => {
-  const context = useNativeContext();
+  const nativeContext = useNativeContext();
   return isRewardChallengeLive({
     rewardEnabled: REWARD_CHALLENGE_ENABLED,
-    context,
+    context: nativeContext,
   });
 };

@@ -8,9 +8,9 @@ import { PAYMENT_ENABLED } from './payment-flag';
 import { isPaymentLive } from './paywall-gate';
 
 export const usePaymentLive = (): boolean => {
-  const context = useNativeContext();
+  const nativeContext = useNativeContext();
   return isPaymentLive({
     paymentEnabled: PAYMENT_ENABLED,
-    inApp: context !== null,
+    inApp: nativeContext !== null,
   });
 };

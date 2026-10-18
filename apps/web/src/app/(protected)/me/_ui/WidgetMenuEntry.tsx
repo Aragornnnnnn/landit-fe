@@ -9,8 +9,8 @@ import { Emoji } from '@/shared/ui/emoji';
 import { MenuLink } from './Menu';
 
 export const WidgetMenuEntry = () => {
-  const context = useNativeContext();
-  if (!supportsWidgetInstall(context)) return null;
+  const nativeContext = useNativeContext();
+  if (!supportsWidgetInstall(nativeContext)) return null;
 
   return (
     <MenuLink
