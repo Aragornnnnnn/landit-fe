@@ -4,9 +4,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
+import { useNativeContext } from '@/shared/bridge/useNativeContext';
 import { MAILBOX_COMPOSE_PATH } from '@/shared/lib/routes';
-import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { showToast } from '@/shared/ui/toast';
@@ -36,9 +35,7 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
   const { mutate: send, isPending: isSending } = useSendFeedbackMutation(type);
   const { attachments, isAttaching, isFull, attach, attachFromShell, detach } =
     useAttachments();
-  const photoSource = resolvePhotoSource(
-    useClientOnlyValue(getNativeContextSnapshot, null),
-  );
+  const photoSource = resolvePhotoSource(useNativeContext());
 
   const { question, placeholder } = FEEDBACK_TYPE_FACES[type];
   const trimmed = content.trim();
