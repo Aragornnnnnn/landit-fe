@@ -345,7 +345,7 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     status: restoreStatusSchema,
     message: z.string().optional(),
   }),
-  // REQUEST_REVIEW 응답 — shown은 카드가 떴다(남겼는지는 모른다), not_shown은 2초 안에 안 떴다,
+  // REQUEST_REVIEW 응답 — shown은 카드가 떴다(남겼는지는 모른다), not_shown은 0.5초 안에 안 떴다,
   // unavailable은 이 플랫폼·환경에 카드가 없다. shown이 아니면 웹이 지금처럼 스토어로 보낸다
   z.object({
     type: z.literal('REVIEW_RESULT'),

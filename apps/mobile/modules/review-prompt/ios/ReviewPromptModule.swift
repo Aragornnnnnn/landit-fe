@@ -4,8 +4,9 @@ import StoreKit
 import UIKit
 
 public class ReviewPromptModule: Module {
-  // 카드가 뜨면 이 안에 창이 보인다. 안 뜨면 아무 일도 없으니 이만큼 기다리고 not_shown으로 답한다
-  private static let detectWindowSeconds: Double = 2.0
+  // 카드가 뜨면 이 안에 창이 보인다. 안 뜨면 아무 일도 없으니 이만큼 기다리고 not_shown으로 답한다.
+  // 실측(iPhone 13, 콜드 스타트 포함) 38~44ms에 창이 보였다 — 12배 여유를 두고 사용자 대기는 0.5초로 묶는다
+  private static let detectWindowSeconds: Double = 0.5
 
   public func definition() -> ModuleDefinition {
     Name("ReviewPrompt")

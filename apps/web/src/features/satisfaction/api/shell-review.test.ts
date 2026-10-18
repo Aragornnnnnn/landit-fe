@@ -39,7 +39,7 @@ describe('resolveReviewCardSupport', () => {
 });
 
 describe('requestReviewCardViaBridge', () => {
-  it('REQUEST_REVIEW를 보내고 REVIEW_RESULT를 짧게 기다린다 — 카드는 2초 안에 뜨거나 안 뜬다', async () => {
+  it('REQUEST_REVIEW를 보내고 REVIEW_RESULT를 짧게 기다린다 — 카드는 0.5초 안에 뜨거나 안 뜬다', async () => {
     requestFromNativeMock.mockResolvedValue({
       type: 'REVIEW_RESULT',
       status: 'shown',

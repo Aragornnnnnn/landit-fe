@@ -7,7 +7,7 @@ import * as StoreReview from 'expo-store-review';
 export type ReviewPromptResult = 'shown' | 'not_shown' | 'unavailable';
 
 interface ReviewPromptModule {
-  // OS에 카드를 청하고, 카드 창이 2초 안에 보이면 shown, 아니면 not_shown
+  // OS에 카드를 청하고, 카드 창이 0.5초 안에 보이면 shown, 아니면 not_shown
   requestReview(): Promise<'shown' | 'not_shown'>;
 }
 

@@ -19,8 +19,8 @@ export const resolveReviewCardSupport = (
   return 'ready';
 };
 
-// 셸이 카드 창을 2초 기다리고 답한다 — 그보다 조금 더 기다려 셸이 답할 틈을 준다
-export const REVIEW_CARD_TIMEOUT_MS = 3 * 1000;
+// 셸이 카드 창을 0.5초 기다리고 답한다 — 그보다 조금 더 기다려 셸이 답할 틈을 준다
+export const REVIEW_CARD_TIMEOUT_MS = 1500;
 
 /**
  * 앱 안 별점 카드를 청한다. 회신은 shown·not_shown·unavailable 중 하나고, 못 받으면 null이다.

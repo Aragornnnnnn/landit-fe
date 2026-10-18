@@ -26,7 +26,7 @@
 1. 대화 끝나고 홈 → 「좋았어요」. (지금과 같음)
 2. 그 다음부터 **대화든 표현 학습이든 마치고 홈에 오면** 리뷰 시트. 같은 날이어도 뜸. 하루 1번.
 3. 시트에서
-   - 「리뷰 남기러 가기」 → **앱 안에 iOS 별점 카드.** 별 한 번이면 끝. 카드가 2초 안에 안 뜨면 지금처럼 앱스토어로. 스토어로 간 건 끝이 아니다 — 간 사람 4명 중 3명이 안 쓰고 돌아오니 닫은 것과 같이 2일 뒤 다시 묻는다.
+   - 「리뷰 남기러 가기」 → **앱 안에 iOS 별점 카드.** 별 한 번이면 끝. 카드가 0.5초 안에 안 뜨면 지금처럼 앱스토어로. 스토어로 간 건 끝이 아니다 — 간 사람 4명 중 3명이 안 쓰고 돌아오니 닫은 것과 같이 2일 뒤 다시 묻는다.
    - X 또는 닫기 → 쉬었다가 다시. 닫은 날부터 **2일 → 4일 → 6일** 뒤부터 다시 뜰 수 있음. 재요청 3번까지(총 4번).
    - 「이미 남겼어요」(재요청부터 보이는 작은 링크) → 영구 끝.
 
@@ -66,7 +66,7 @@
 ### 왜 앱 안 카드인가
 
 - 버튼 누른 190명 중 별점은 많아야 44개(23%). **가장 큰 구멍.**
-- 카드는 iOS가 **기기당 1년 3번**만 띄워 주고 떴는지 알려주지 않는다. 그래서 버튼을 누른 사람에게만 쓰고, 안 뜨면(2초 감지) 바로 지금처럼 스토어로 보낸다. 누른 직후라 폴백이 어색하지 않다.
+- 카드는 iOS가 **기기당 1년 3번**만 띄워 주고 떴는지 알려주지 않는다. 그래서 버튼을 누른 사람에게만 쓰고, 안 뜨면(0.5초 감지) 바로 지금처럼 스토어로 보낸다. 누른 직후라 폴백이 어색하지 않다.
 - 가설 — 누른 사람 중 별점 23% → **60% 안팎**(추정). 스토어 앱 이탈이 사라진다.
 
 ### 왜 「이미 남겼어요」를 두나
@@ -129,7 +129,7 @@
 - [x] 재요청 — 2·4·6일 최소 간격, 최대 4번, X 버튼, 「이미 남겼어요」(2번째부터)
 - [ ] 카드 1 — 브릿지 v9 `REQUEST_REVIEW ↔ REVIEW_RESULT`, docs/bridge.md
 - [ ] 카드 2 — iOS 로컬 모듈 창 감지
-- [ ] 카드 3 — 셸 expo-store-review + 판정 + 2초 타임아웃 + 연타 잠금
+- [ ] 카드 3 — 셸 expo-store-review + 판정 + 0.5초 타임아웃 + 연타 잠금
 - [ ] 카드 4 — 웹 버튼 분기 (브릿지 9 이상이면 카드 → 안 뜨면 스토어)
 - [ ] 카드 5 — 실기기 확인 (Xcode Run. TestFlight에선 카드 안 뜸. 설정 → 앱 내 평가 요청 끄고 폴백 확인)
 - [ ] 앰플리튜드 trigger·attempt별 전환 차트, 별점 주간 알림
@@ -144,17 +144,17 @@
   ├─ { type: 'REQUEST_REVIEW' } ───────────────▶ 셸
   │                                               expo-store-review requestReview()
   │                                               → iOS SKStoreReviewController
-  │                                               로컬 모듈이 2초간 새 창 감시
+  │                                               로컬 모듈이 0.5초간 새 창 감시
   │ ◀──── { type: 'REVIEW_RESULT', status } ──────┘
   ├─ shown                → 시트 닫고 끝
-  ├─ not_shown/unavailable/2초 무응답 → 앱스토어 딥링크 (지금 동작)
+  ├─ not_shown/unavailable/0.5초 무응답 → 앱스토어 딥링크 (지금 동작)
   │ bridgeVersion < 9 · 브라우저
   └─ 앱스토어 딥링크
 ```
 
 - `packages/bridge/src/messages.ts` — `REQUEST_REVIEW`, `REVIEW_RESULT { status: 'shown' | 'not_shown' | 'unavailable' }`, `NATIVE_BRIDGE_VERSION` 8 → 9. `GET_OFFERINGS ↔ OFFERINGS` 꼴.
 - 셸 — `npx expo install expo-store-review`. `isAvailableAsync()` false면 `unavailable`. 연타 잠금은 `share.ts`처럼.
-- iOS 로컬 모듈(위젯 설치 감지용) — `UIWindow.didBecomeVisibleNotification` 구독, 클래스 이름 `SKStoreReviewPresentationWindow`면 `shown`, 2초 안에 없으면 `not_shown`. 공개 API만 쓴다.
+- iOS 로컬 모듈(위젯 설치 감지용) — `UIWindow.didBecomeVisibleNotification` 구독, 클래스 이름 `SKStoreReviewPresentationWindow`면 `shown`, 0.5초 안에 없으면 `not_shown`(실측 40ms에 뜸). 공개 API만 쓴다.
 - 웹 — `SatisfactionGate.tsx`의 `writeReview`에서 분기. 기록은 `prompt-record.ts`의 `ImpressionRecord`에 `attempt` · `lastClosedOn` · `done`.
 - Android — expo-store-review가 Play 카드를 띄운다. 감지는 `requestReview()` 소요 시간(1초 미만이면 안 뜬 것).
 - 규정 — iOS 심사 지침은 "커스텀 프롬프트 대신 제공 API". StoreKit 문서는 "안 뜰 수 있으니 버튼에 묶지 말라"고 권하는데 우리는 안 뜨면 스토어로 보낸다. 반려 사례는 모른다(추정). Android 가이드의 "카드 전 질문 금지"는 소감 시트가 리뷰와 분리된 제품 피드백이라 해당 없다고 봄(추정).
