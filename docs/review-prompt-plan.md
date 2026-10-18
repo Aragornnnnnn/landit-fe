@@ -119,8 +119,8 @@
 
 ## 진행
 
-- 1단계(웹) — LAN-689. 시점·재요청·X·「이미 남겼어요」·계측 구현 (10/16).
-- 2단계(앱 카드) — LAN-701. LAN-689 머지 뒤 시작.
+- 1단계(웹) — LAN-689, PR #368. 시점·재요청·X·「이미 남겼어요」·계측 구현 (10/16).
+- 2단계(앱 카드) — LAN-701 구현 (10/18). iOS는 로컬 모듈(창 감지), Android는 expo-store-review(시간 판정). 앱 1.4.1.
 
 ## 체크리스트
 
@@ -156,6 +156,6 @@
 - 셸 — `npx expo install expo-store-review`. `isAvailableAsync()` false면 `unavailable`. 연타 잠금은 `share.ts`처럼.
 - iOS 로컬 모듈(위젯 설치 감지용) — `UIWindow.didBecomeVisibleNotification` 구독, 클래스 이름 `SKStoreReviewPresentationWindow`면 `shown`, 2초 안에 없으면 `not_shown`. 공개 API만 쓴다.
 - 웹 — `SatisfactionGate.tsx`의 `writeReview`에서 분기. 기록은 `prompt-record.ts`의 `ImpressionRecord`에 `attempt` · `lastClosedOn` · `done`.
-- Android — 같은 expo-store-review가 Play 카드. 감지는 `requestReview()` 소요 시간(수백 ms면 안 뜬 것). 모수가 작아(완료 51명) 후순위.
+- Android — expo-store-review가 Play 카드를 띄운다. 감지는 `requestReview()` 소요 시간(1초 미만이면 안 뜬 것).
 - 규정 — iOS 심사 지침은 "커스텀 프롬프트 대신 제공 API". StoreKit 문서는 "안 뜰 수 있으니 버튼에 묶지 말라"고 권하는데 우리는 안 뜨면 스토어로 보낸다. 반려 사례는 모른다(추정). Android 가이드의 "카드 전 질문 금지"는 소감 시트가 리뷰와 분리된 제품 피드백이라 해당 없다고 봄(추정).
 - 후순위 — 리뷰 기록 서버 보관(재설치 초기화 방지).
