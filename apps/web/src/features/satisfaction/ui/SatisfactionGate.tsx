@@ -2,7 +2,7 @@
 
 // 소감 게이트 — 대화 소감(scenario·smalltalk)은 좋았어요 → 감사 후 닫히고, 아쉬웠어요 → 피드백 안내 → 편지함.
 // 리뷰 요청(review)은 물을 게 없어 별점판으로 바로 열려 스토어로 보낸다. 닫으면 간격을 두고 다시 뜨고,
-// 스토어로 갔거나 「이미 남겼어요」면 끝이다 (규칙은 prompt-record).
+// 「이미 남겼어요」면 끝이다. 스토어로 간 것만으로는 끝이 아니다 (규칙은 prompt-record).
 // 띄울지 말지는 부르는 쪽(홈 탭의 useSatisfactionSheet)이 정하고, 여기서는 띄운 뒤의 흐름만 맡는다
 import { useEffect, useState } from 'react';
 import {

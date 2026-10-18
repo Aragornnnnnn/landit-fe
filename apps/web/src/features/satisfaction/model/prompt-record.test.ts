@@ -207,20 +207,36 @@ describe('shouldAskReview — 리뷰 요청', () => {
     });
   });
 
-  it.each([['good'], ['already_done']] as const)(
-    '스토어로 갔거나 이미 남겼다고 하면(%s) 다시 청하지 않는다',
-    (answer) => {
-      answeredGood();
-      markTalkCompleted('scenario');
-      markReviewShown();
-      recordSatisfactionAnswer('review', answer);
-      rewind('satisfaction:review', 'answeredOn', 30);
-      rewind('satisfaction:review', 'shownOn', 30);
-      markTalkCompleted('scenario');
+  it('이미 남겼다고 하면 아무리 지나도 다시 청하지 않는다', () => {
+    answeredGood();
+    markTalkCompleted('scenario');
+    markReviewShown();
+    recordSatisfactionAnswer('review', 'already_done');
+    rewind('satisfaction:review', 'answeredOn', 30);
+    rewind('satisfaction:review', 'shownOn', 30);
+    markTalkCompleted('scenario');
 
-      expect(shouldAskReview()).toBe(false);
-    },
-  );
+    expect(shouldAskReview()).toBe(false);
+  });
+
+  it('스토어로 간 것은 끝이 아니다 — 닫은 것과 같이 2일 뒤 다시 청한다', () => {
+    // Given 리뷰 남기러 가기를 눌러 스토어로 갔다 (썼는지는 모른다)
+    answeredGood();
+    markTalkCompleted('scenario');
+    markReviewShown();
+    recordSatisfactionAnswer('review', 'good');
+
+    // When 하루 뒤 대화를 마치면 아직이고
+    rewind('satisfaction:review', 'answeredOn', 1);
+    rewind('satisfaction:review', 'shownOn', 1);
+    markTalkCompleted('scenario');
+    expect(shouldAskReview()).toBe(false);
+
+    // Then 이틀 뒤면 다시 청한다 — 썼다면 「이미 남겼어요」로 끝낼 수 있다
+    rewind('satisfaction:review', 'answeredOn', 2);
+    rewind('satisfaction:review', 'shownOn', 2);
+    expect(shouldAskReview()).toBe(true);
+  });
 });
 
 describe('markReviewShown · readReviewAttempt', () => {

@@ -18,7 +18,7 @@ interface ImpressionRecord {
   // 마친 날(기기 기준 yyyy-MM-dd) — 오늘 마친 차례만 친다.
   // 마치고 홈에 안 들른 채 앱을 껐다가 다른 날 열면 "방금 마침"이 아니다
   pendingOn?: string;
-  // 마지막 답. 소감은 한 번 답하면 다시 묻지 않는다(닫기도 답이다). 리뷰는 닫기(dismiss)면 다시 묻는다
+  // 마지막 답. 소감은 한 번 답하면 다시 묻지 않는다(닫기도 답이다). 리뷰는 이미 남겼다(already_done)만 끝이다
   answer?: SatisfactionAnswer;
   // 답한 날(기기 기준 yyyy-MM-dd) — 리뷰 재요청 간격을 세는 기준
   answeredOn?: string;
@@ -42,7 +42,7 @@ const read = (key: RecordKey) =>
 const TALKS: SatisfactionTalk[] = ['scenario', 'smalltalk'];
 const ACTIVITIES: CompletedActivity[] = [...TALKS, 'expression'];
 
-// 리뷰 요청은 처음 1번 + 닫은 뒤 재요청 3번. 재요청은 마지막으로 닫은 날부터 이만큼은 쉰다(최소 쉼, 예약이 아니다).
+// 리뷰 요청은 처음 1번 + 재요청 3번. 재요청은 마지막으로 답한 날(닫기·스토어행)부터 이만큼은 쉰다(최소 쉼, 예약이 아니다).
 // 근거는 리뷰 시트를 닫은 사람이 N일 뒤에도 다시 대화하는 비율 — docs/review-prompt-plan.md
 const REVIEW_MAX_ATTEMPTS = 4;
 const REVIEW_RETRY_GAP_DAYS = [2, 4, 6];
@@ -103,23 +103,23 @@ export const markReviewShown = () => {
 };
 
 // 리뷰 요청 — 좋았다고 한 사람이 무엇이든 막 마쳤을 때. 같은 날이어도 묻되 하루 한 번,
-// 닫았으면 닫은 날부터 2·4·6일을 쉬고, 네 번 띄웠거나 끝냈으면(스토어로 감·이미 남김) 다시 묻지 않는다
+// 답한 날부터 2·4·6일을 쉬고, 네 번 띄웠거나 이미 남겼다고 했으면 다시 묻지 않는다.
+// 스토어로 간 것(good)은 끝이 아니다 — 간 사람 4명 중 3명은 안 쓰고 돌아온다. 쓴 사람은 「이미 남겼어요」로 끝낸다
 export const shouldAskReview = () => {
   if (!ACTIVITIES.map(read).some(completedToday)) return false;
   if (!TALKS.map(read).some((r) => r?.answer === 'good')) return false;
 
   const review = read('review');
-  if (review?.answer === 'good' || review?.answer === 'already_done')
-    return false;
+  if (review?.answer === 'already_done') return false;
   if (review?.shownOn === today()) return false;
 
   const attempt = reviewAttempt(review);
   if (attempt >= REVIEW_MAX_ATTEMPTS) return false;
   if (attempt === 0) return true;
 
-  const closedOn = review?.answeredOn;
+  const answeredOn = review?.answeredOn;
   const gap = REVIEW_RETRY_GAP_DAYS[attempt - 1];
-  return closedOn === undefined || daysBetween(closedOn, today()) >= gap;
+  return answeredOn === undefined || daysBetween(answeredOn, today()) >= gap;
 };
 
 // 무엇을 마치고 와서 뜨는가 — 계측용. 둘 다 마쳤으면 대화를 앞세운다
