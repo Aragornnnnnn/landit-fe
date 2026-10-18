@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { track } from '@/shared/analytics';
 import { getNativeContext } from '@/shared/bridge/native-context';
 
+import { requestReviewCardViaBridge } from '../api/shell-review';
 import {
   markExpressionCompleted,
   markReviewShown,
@@ -31,6 +32,11 @@ vi.mock('@/shared/bridge/native-context', () => ({
   getNativeContext: vi.fn(() => null),
 }));
 const getNativeContextMock = vi.mocked(getNativeContext);
+vi.mock('../api/shell-review', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../api/shell-review')>()),
+  requestReviewCardViaBridge: vi.fn(),
+}));
+const requestReviewCardMock = vi.mocked(requestReviewCardViaBridge);
 
 const replace = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
@@ -38,6 +44,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
 beforeEach(() => {
   localStorage.clear();
   vi.useFakeTimers();
+  requestReviewCardMock.mockReset();
 });
 
 afterEach(() => {
@@ -198,22 +205,123 @@ describe('SatisfactionGate — 리뷰 요청(review)', () => {
     expect(shouldAskSatisfaction('smalltalk')).toBe(false);
   });
 
-  it('리뷰 남기러 가기를 누르면 스토어를 연다', () => {
-    getNativeContextMock.mockReturnValue({
+  // 카드를 아는 셸(브릿지 9)과 모르는 셸(8)
+  const shell = (bridgeVersion: number) =>
+    ({
       platform: 'ios',
-    } as ReturnType<typeof getNativeContext>);
-    const location = vi
+      appVersion: '1.4.0',
+      buildNumber: '20',
+      bridgeVersion,
+    }) as ReturnType<typeof getNativeContext>;
+  const stubLocation = () =>
+    vi
       .spyOn(window, 'location', 'get')
       .mockReturnValue({ href: '' } as Location);
+
+  it('카드를 모르는 셸에서 리뷰 남기러 가기를 누르면 바로 스토어를 연다', () => {
+    getNativeContextMock.mockReturnValue(shell(8));
+    const location = stubLocation();
     render(<SatisfactionGate moment="review" />);
 
     fireEvent.click(screen.getByText('리뷰 남기러 가기'));
 
     expect(readSatisfactionAnswer('review')).toBe('good');
+    expect(requestReviewCardMock).not.toHaveBeenCalled();
     expect(trackMock).toHaveBeenCalledWith('Review Store Opened', {
       store: 'app_store',
     });
     location.mockRestore();
+  });
+
+  it('카드를 아는 셸에서 카드가 뜨면 시트만 닫고 스토어로 보내지 않는다', async () => {
+    getNativeContextMock.mockReturnValue(shell(9));
+    requestReviewCardMock.mockResolvedValue({
+      type: 'REVIEW_RESULT',
+      status: 'shown',
+    });
+    const location = stubLocation();
+    render(<SatisfactionGate moment="review" />);
+
+    fireEvent.click(screen.getByText('리뷰 남기러 가기'));
+    await act(async () => {});
+
+    expect(trackMock).toHaveBeenCalledWith('Review Card Requested', {
+      status: 'shown',
+    });
+    expect(trackMock).not.toHaveBeenCalledWith(
+      'Review Store Opened',
+      expect.anything(),
+    );
+    expect(screen.queryByText('잘 써주셔서 감사해요!')).not.toBeInTheDocument();
+    expect(readSatisfactionAnswer('review')).toBe('good');
+    location.mockRestore();
+  });
+
+  it.each([['not_shown'], ['unavailable']] as const)(
+    '카드가 안 뜨면(%s) 스토어로 보낸다',
+    async (status) => {
+      getNativeContextMock.mockReturnValue(shell(9));
+      requestReviewCardMock.mockResolvedValue({
+        type: 'REVIEW_RESULT',
+        status,
+      });
+      const location = stubLocation();
+      render(<SatisfactionGate moment="review" />);
+
+      fireEvent.click(screen.getByText('리뷰 남기러 가기'));
+      await act(async () => {});
+
+      expect(trackMock).toHaveBeenCalledWith('Review Card Requested', {
+        status,
+      });
+      expect(trackMock).toHaveBeenCalledWith('Review Store Opened', {
+        store: 'app_store',
+      });
+      location.mockRestore();
+    },
+  );
+
+  it('셸이 답을 안 주면 timeout으로 남기고 스토어로 보낸다', async () => {
+    getNativeContextMock.mockReturnValue(shell(9));
+    requestReviewCardMock.mockResolvedValue(null);
+    const location = stubLocation();
+    render(<SatisfactionGate moment="review" />);
+
+    fireEvent.click(screen.getByText('리뷰 남기러 가기'));
+    await act(async () => {});
+
+    expect(trackMock).toHaveBeenCalledWith('Review Card Requested', {
+      status: 'timeout',
+    });
+    expect(trackMock).toHaveBeenCalledWith('Review Store Opened', {
+      store: 'app_store',
+    });
+    location.mockRestore();
+  });
+
+  it('카드 회신을 기다리는 동안 버튼은 잠긴다 — 연타해도 요청은 한 번', async () => {
+    getNativeContextMock.mockReturnValue(shell(9));
+    let resolve: (value: {
+      type: 'REVIEW_RESULT';
+      status: 'shown';
+    }) => void = () => {};
+    requestReviewCardMock.mockReturnValue(
+      new Promise((r) => {
+        resolve = r;
+      }),
+    );
+    render(<SatisfactionGate moment="review" />);
+
+    fireEvent.click(screen.getByText('리뷰 남기러 가기'));
+    fireEvent.click(screen.getByText('리뷰 남기러 가기'));
+
+    expect(
+      screen.getByText('리뷰 남기러 가기').closest('button'),
+    ).toBeDisabled();
+    expect(requestReviewCardMock).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      resolve({ type: 'REVIEW_RESULT', status: 'shown' });
+    });
   });
 
   it('딤으로 닫으면 dismiss로 남긴다 — 간격을 두고 다시 청하는 근거', () => {

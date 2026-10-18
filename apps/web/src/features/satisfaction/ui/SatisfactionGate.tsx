@@ -1,7 +1,8 @@
 'use client';
 
 // 소감 게이트 — 대화 소감(scenario·smalltalk)은 좋았어요 → 감사 후 닫히고, 아쉬웠어요 → 피드백 안내 → 편지함.
-// 리뷰 요청(review)은 물을 게 없어 별점판으로 바로 열려 스토어로 보낸다. 닫으면 간격을 두고 다시 뜨고,
+// 리뷰 요청(review)은 물을 게 없어 별점판으로 바로 열린다. 버튼을 누르면 앱 안 별점 카드를 먼저 청하고,
+// 카드가 없거나 안 떴으면 스토어 리뷰 화면으로 보낸다. 닫으면 간격을 두고 다시 뜨고,
 // 「이미 남겼어요」면 끝이다. 스토어로 간 것만으로는 끝이 아니다 (규칙은 prompt-record).
 // 띄울지 말지는 부르는 쪽(홈 탭의 useSatisfactionSheet)이 정하고, 여기서는 띄운 뒤의 흐름만 맡는다
 import { useEffect, useState } from 'react';
@@ -16,6 +17,10 @@ import { track } from '@/shared/analytics';
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { MAILBOX_COMPOSE_PATH } from '@/shared/lib/routes';
 
+import {
+  requestReviewCardViaBridge,
+  resolveReviewCardSupport,
+} from '../api/shell-review';
 import {
   consumeAllPending,
   markReviewShown,
@@ -36,6 +41,8 @@ export const SatisfactionGate = ({
 }) => {
   const router = useRouter();
   const [open, setOpen] = useState(true);
+  // 카드 회신을 기다리는 동안 버튼을 잠근다 — 연타로 요청이 겹치지 않게
+  const [requestingCard, setRequestingCard] = useState(false);
   // 리뷰 요청은 물을 게 없어 별점판으로 바로 연다
   const [view, setView] = useState<SatisfactionView>(
     moment === 'review' ? 'review' : 'ask',
@@ -100,9 +107,8 @@ export const SatisfactionGate = ({
   // 작성 흐름은 히스토리 한 층만 쓴다(편지함 규칙) — 보내고 뒤로가기하면 홈으로 나온다
   const sendFeedback = () => router.replace(MAILBOX_COMPOSE_PATH);
 
-  // 스토어 리뷰 화면 — 앱 셸이면 스토어 앱, 브라우저면 스토어 웹. 누른 것으로 답을 남겨 다시 청하지 않는다
-  const writeReview = () => {
-    answer('good');
+  // 스토어 리뷰 화면 — 앱 셸이면 스토어 앱, 브라우저면 스토어 웹
+  const openStore = () => {
     const { url, store } = resolveReviewStore(
       getNativeContext()?.platform ?? null,
       navigator.userAgent,
@@ -110,6 +116,27 @@ export const SatisfactionGate = ({
     track(EVENTS.REVIEW_STORE_OPENED, { store });
     setOpen(false);
     window.location.href = url;
+  };
+
+  // 버튼 — 카드를 아는 셸이면 앱 안 별점 카드를 먼저 청한다. 떴으면 거기서 끝이고(남겼는지는 모른다),
+  // 안 떴거나 못 시키는 환경이면 지금처럼 스토어로 보낸다. 누른 것으로 답을 남기되 재요청 대상으로 둔다
+  const writeReview = async () => {
+    if (requestingCard) return;
+    answer('good');
+    if (resolveReviewCardSupport() !== 'ready') {
+      openStore();
+      return;
+    }
+    setRequestingCard(true);
+    const reply = await requestReviewCardViaBridge();
+    setRequestingCard(false);
+    const status = reply?.status ?? 'timeout';
+    track(EVENTS.REVIEW_CARD_REQUESTED, { status });
+    if (status === 'shown') {
+      setOpen(false);
+      return;
+    }
+    openStore();
   };
 
   // 시트는 닫힌 뒤에도 마운트를 유지한다 — 언마운트하면 아래로 내려가는 닫힘 연출이 잘린다
@@ -121,7 +148,8 @@ export const SatisfactionGate = ({
       onGood={good}
       onBad={bad}
       onSendFeedback={sendFeedback}
-      onWriteReview={writeReview}
+      onWriteReview={() => void writeReview()}
+      writeReviewPending={requestingCard}
       showAlreadyDone={attempt >= 2}
       onAlreadyDone={alreadyDone}
       onClose={close}
