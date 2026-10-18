@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 // 알람은 유료 전용이고 오늘의 시나리오를 끝낸 날은 울리지 않아서 구독·오늘 시나리오 상태를 함께 읽는다
 import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId, useIsAdmin } from '@/shared/auth/current-member';
 import { postToNative } from '@/shared/bridge/web-bridge';
 import { getDeviceToday } from '@/shared/lib/device-today';
 
@@ -24,8 +24,8 @@ export const AlarmSync = () => {
   const status = useAlarmStatus();
   const { data: setting } = useAlarmSettingQuery();
   const { subscription, isError: subscriptionFailed } = useSubscriptionQuery();
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
-  const isAdmin = useAuthStore((state) => state.member?.role === 'ADMIN');
+  const userId = useCurrentUserId();
+  const isAdmin = useIsAdmin();
   // 오늘 끝냈는지는 알람을 걸 사람만 조회한다 — 느린 조회라 모든 화면에서 부르지 않는다
   const wanted =
     status !== null && wantsAlarm({ setting, subscription, isAdmin });

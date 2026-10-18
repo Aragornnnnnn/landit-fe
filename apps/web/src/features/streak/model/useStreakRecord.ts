@@ -3,13 +3,13 @@
 // 아직 없으면 null — 모른다는 것과 0이라는 것은 다르다
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getStreakCalendar } from '../api/streak';
 import { streakKeys } from './keys';
 
 export const useStreakRecord = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   const { data } = useQuery({
     queryKey: streakKeys.calendar(userId, null),

@@ -2,7 +2,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { ApiError } from '@/shared/api/api-error';
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getReceivedLetterDetail, getSentFeedbackDetail } from '../api/mailbox';
 import type { MailboxBox } from './box';
@@ -21,7 +21,7 @@ const useLetterQuery = <T>(
   id: number,
   queryFn: () => Promise<T>,
 ) => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   const { data, isPending, error, refetch } = useQuery({
     queryKey: mailboxKeys.letter(userId, box, id),
@@ -44,7 +44,7 @@ const useLetterQuery = <T>(
 // 방금 받은 상세는 그대로 두고, 값을 직접 깎지도 않는다. 이미 읽은 편지를 또 열었는지
 // 응답만 보고는 알 수 없어(열면 언제나 읽음이다) 깎으면 틀린다
 export const useReceivedLetterQuery = (letterId: number) => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
   const queryClient = useQueryClient();
 
   return useLetterQuery('received', letterId, async () => {

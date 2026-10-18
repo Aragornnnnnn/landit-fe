@@ -1,7 +1,7 @@
 // 날짜별 시나리오 조회 상태 — 오늘 카드와 지난 날 카드가 같은 훅을 쓴다
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getDailyScenario } from '../api/daily';
 import { scenarioKeys } from './keys';
@@ -13,7 +13,7 @@ export const useDailyScenarioQuery = (
   date?: string,
   { enabled = true }: { enabled?: boolean } = {},
 ) => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   const { data, error, isPending, refetch } = useQuery({
     queryKey: scenarioKeys.daily(userId, date ?? null),

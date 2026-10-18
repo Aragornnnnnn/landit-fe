@@ -1,13 +1,13 @@
 // 헤더용 현재 스트릭 조회 — 열매 상태와 일수만 필요하므로 가벼운 /me/streak를 쓴다
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getCurrentStreak } from '../api/streak';
 import { streakKeys } from './keys';
 
 export const useStreakQuery = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   const { data, isPending } = useQuery({
     queryKey: streakKeys.current(userId),

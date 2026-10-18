@@ -1,13 +1,13 @@
 // 결제 이력 쿼리 — 결제 내역 화면만 쓴다. 로그인 사용자만 조회한다
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getSubscriptionEvents } from '../../api/subscription';
 import { subscriptionKeys } from './keys';
 
 export const useSubscriptionEventsQuery = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   const { data, isPending, isError } = useQuery({
     queryKey: subscriptionKeys.events(userId),

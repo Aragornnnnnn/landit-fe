@@ -4,7 +4,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { useReducedMotion } from 'motion/react';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import {
   balanceGainOf,
@@ -13,8 +13,6 @@ import {
   subscribeSeenBalance,
 } from './seen-balance';
 
-const useUserId = () => useAuthStore((state) => state.member?.userId ?? null);
-
 /**
  * 아직 연출하지 않은 늘어난 금액 — 헤더가 동전을 날리고, 홈 화면은 그동안 시트를 미룬다.
  * 둘이 같은 값을 같은 순간에 봐야 해서, 헤더가 들고 있지 않고 본 금액에서 그때그때 구한다.
@@ -22,7 +20,7 @@ const useUserId = () => useAuthStore((state) => state.member?.userId ?? null);
  * @param balanceWon 도는 회차에 쌓인 금액. 없으면 null
  */
 export const usePendingGain = (balanceWon: number | null) => {
-  const userId = useUserId();
+  const userId = useCurrentUserId();
   const seenWon = useSyncExternalStore(
     subscribeSeenBalance,
     () => (userId === null ? null : readSeenBalance(userId)),
@@ -41,7 +39,7 @@ export const useBalanceGain = (
   balanceWon: number | null,
   outsider: boolean,
 ) => {
-  const userId = useUserId();
+  const userId = useCurrentUserId();
   const gain = usePendingGain(balanceWon);
 
   // 환급과 상관없는 사람은 0원을 본 것으로 적어 둔다 — 결제해 참여자가 되면 처음 쌓인 금액도 돌아왔을 때 동전으로 들어온다.

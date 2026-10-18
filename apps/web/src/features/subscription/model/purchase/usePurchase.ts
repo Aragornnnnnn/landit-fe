@@ -8,7 +8,8 @@ import type { SubscriptionPlan } from '@landit/bridge';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { track } from '@/shared/analytics';
-import { getCurrentUserId, useAuthStore } from '@/shared/auth/auth-store';
+import { getCurrentUserId } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 import { showToast } from '@/shared/ui/toast';
 
 import {
@@ -90,7 +91,7 @@ export const usePurchase = ({
   const promoTag = promo ? { promo: true } : {};
   const [busy, setBusy] = useState(false);
   const queryClient = useQueryClient();
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   // 화면이 사라지면 진행 중인 셸 왕복을 끊는다 — 결제 시트는 5분까지 기다리므로 회신이 사라진 화면에 닿지 않게.
   // 컨트롤러는 effect 안에서 만든다. 밖에서 만들면 dev의 effect 이중 실행이 한 번 끊은 컨트롤러가 그대로 남아 모든 요청이 즉시 null이 된다

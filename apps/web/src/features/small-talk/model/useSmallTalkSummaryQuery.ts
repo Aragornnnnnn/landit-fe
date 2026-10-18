@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery, type QueryClient } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import {
   getSmallTalkSummary,
@@ -36,7 +36,7 @@ export const prefetchSmallTalkSummary = (
   });
 
 export const useSmallTalkSummaryQuery = (sessionId: number) => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   // 기다린 지 오래됐는가 — 상한을 넘기면 그만 묻는다
   const [waitedTooLong, setWaitedTooLong] = useState(false);

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getStreakCalendar, type CurrentStreakResponse } from '../api/streak';
 import { canGoBack, canGoForward, shiftMonth } from '../lib/month-grid';
@@ -10,7 +10,7 @@ import type { YearMonth } from '../lib/seoul-date';
 import { streakKeys } from './keys';
 
 export const useStreakCalendar = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
   const queryClient = useQueryClient();
   // null = 아직 아무 달도 고르지 않았다. 첫 조회의 달은 서버가 정한다
   const [view, setView] = useState<YearMonth | null>(null);

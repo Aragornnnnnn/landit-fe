@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getMyRewards } from '../api/reward';
 import { REWARD_GC_MS, rewardKeys } from './keys';
@@ -13,7 +13,7 @@ import { msUntilKstMidnight } from './time-left';
 const MIDNIGHT_SETTLE_MS = 2_000;
 
 export const useRewardQuery = ({ enabled }: { enabled: boolean }) => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   const queryClient = useQueryClient();
   const asks = enabled && userId !== null;

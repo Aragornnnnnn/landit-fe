@@ -3,14 +3,14 @@
 // 알람 설정(시각·켜짐) 조회 — 서버 값이 단일 출처다
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getMyAlarm } from '../api/alarm';
 import { alarmKeys } from './keys';
 import { isAlarmShell } from './shell-alarm';
 
 export const useAlarmSettingQuery = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
   return useQuery({
     queryKey: alarmKeys.mine(userId),
     queryFn: getMyAlarm,

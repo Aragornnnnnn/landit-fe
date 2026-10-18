@@ -1,13 +1,13 @@
 // 스몰톡 홈 조회 상태 — 고를 주제와 오늘 남은 말하기 예산을 한 번에 받는다 (백엔드가 부르는 이름 그대로 main)
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getSmallTalkTopics } from '../api/small-talk';
 import { smallTalkKeys } from './keys';
 
 export const useSmallTalkMainQuery = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   const { data, error, isPending, refetch } = useQuery({
     queryKey: smallTalkKeys.main(userId),

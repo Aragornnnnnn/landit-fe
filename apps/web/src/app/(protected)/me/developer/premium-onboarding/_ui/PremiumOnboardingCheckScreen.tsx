@@ -4,7 +4,7 @@
 import { useRouter } from 'next/navigation';
 
 import { useAlarmSettingQuery } from '@/features/alarm/model/useAlarmSettingQuery';
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useIsAdmin } from '@/shared/auth/current-member';
 import {
   backToMyPage,
   PREMIUM_ONBOARDING_CHECK_PATH,
@@ -87,7 +87,7 @@ const OnboardingCases = () => {
 
 export const PremiumOnboardingCheckScreen = () => {
   const router = useRouter();
-  const isAdmin = useAuthStore((state) => state.member?.role === 'ADMIN');
+  const isAdmin = useIsAdmin();
 
   return (
     <main className="flex h-dvh flex-col bg-muted">

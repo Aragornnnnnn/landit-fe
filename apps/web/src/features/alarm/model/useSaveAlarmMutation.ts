@@ -5,7 +5,7 @@
 import type { AlarmTime } from '@landit/bridge';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 import { showToast } from '@/shared/ui/toast';
 
 import { updateMyAlarm } from '../api/alarm';
@@ -19,7 +19,7 @@ export interface AlarmDraft {
 
 export const useSaveAlarmMutation = () => {
   const queryClient = useQueryClient();
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   return useMutation({
     // 저장이 겹치면 늦게 온 앞 응답이 뒤 값을 덮는다 — 같은 scope는 순서대로 하나씩 보낸다

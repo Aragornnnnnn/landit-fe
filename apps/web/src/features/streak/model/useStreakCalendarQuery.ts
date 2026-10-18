@@ -2,7 +2,7 @@
 // 완료 직후 refreshStreakAfterCompletion이 같은 키로 미리 받아 둬 보통은 네트워크를 타지 않는다
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getStreakCalendar } from '../api/streak';
 import type { YearMonth } from '../lib/seoul-date';
@@ -16,7 +16,7 @@ export const useStreakCalendarQuery = ({
   enabled: boolean;
   view?: YearMonth | null;
 }) => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   const { data, isError } = useQuery({
     queryKey: streakKeys.calendar(userId, view),
