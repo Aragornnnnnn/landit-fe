@@ -4,8 +4,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useCurrentUserId } from '@/shared/auth/current-member';
 
-import { getMyRewards } from '../api/reward';
 import { REWARD_GC_MS, rewardKeys } from './keys';
+import { rewardQueries } from './queries';
 import { participantOf } from './reward-status';
 import { msUntilKstMidnight } from './time-left';
 
@@ -20,8 +20,7 @@ export const useRewardQuery = ({ enabled }: { enabled: boolean }) => {
 
   const { data, dataUpdatedAt, error, isFetched, isFetching, refetch } =
     useQuery({
-      queryKey: rewardKeys.summary(userId),
-      queryFn: getMyRewards,
+      ...rewardQueries.summary(userId),
       enabled: asks,
       // 헤더가 오래 비지 않게 한 번만 다시 묻는다
       retry: 1,

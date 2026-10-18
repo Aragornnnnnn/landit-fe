@@ -2,7 +2,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useQuery, type QueryClient } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useQuery,
+  type QueryClient,
+} from '@tanstack/react-query';
 
 import { useCurrentUserId } from '@/shared/auth/current-member';
 
@@ -24,16 +28,18 @@ const isStillPreparing = (summary: SmallTalkSummaryResponse | undefined) =>
     summary.reusedExpressions.pending ||
     summary.followUp.pending);
 
+const summaryQuery = (userId: number | null, sessionId: number) =>
+  queryOptions({
+    queryKey: smallTalkKeys.summary(userId, sessionId),
+    queryFn: () => getSmallTalkSummary(sessionId),
+  });
+
 // 대화가 끝나는 자리에서 미리 받아 둔다 — 작별 인사를 듣는 동안 요약이 도착하면 다음 화면이 스켈레톤 없이 선다
 export const prefetchSmallTalkSummary = (
   queryClient: QueryClient,
   userId: number | null,
   sessionId: number,
-) =>
-  queryClient.prefetchQuery({
-    queryKey: smallTalkKeys.summary(userId, sessionId),
-    queryFn: () => getSmallTalkSummary(sessionId),
-  });
+) => queryClient.prefetchQuery(summaryQuery(userId, sessionId));
 
 export const useSmallTalkSummaryQuery = (sessionId: number) => {
   const userId = useCurrentUserId();
@@ -42,8 +48,7 @@ export const useSmallTalkSummaryQuery = (sessionId: number) => {
   const [waitedTooLong, setWaitedTooLong] = useState(false);
 
   const { data, error, isFetching, refetch } = useQuery({
-    queryKey: smallTalkKeys.summary(userId, sessionId),
-    queryFn: () => getSmallTalkSummary(sessionId),
+    ...summaryQuery(userId, sessionId),
     refetchInterval: (query) =>
       isStillPreparing(query.state.data) && !waitedTooLong ? POLL_MS : false,
   });

@@ -5,15 +5,13 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useCurrentUserId } from '@/shared/auth/current-member';
 
-import { getStreakCalendar } from '../api/streak';
-import { streakKeys } from './keys';
+import { streakQueries } from './queries';
 
 export const useStreakRecord = () => {
   const userId = useCurrentUserId();
 
   const { data } = useQuery({
-    queryKey: streakKeys.calendar(userId, null),
-    queryFn: () => getStreakCalendar(null),
+    ...streakQueries.calendar(userId, null),
     enabled: false,
   });
 

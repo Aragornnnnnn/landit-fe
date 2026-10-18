@@ -3,15 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useCurrentUserId } from '@/shared/auth/current-member';
 
-import { getCurrentStreak } from '../api/streak';
-import { streakKeys } from './keys';
+import { streakQueries } from './queries';
 
 export const useStreakQuery = () => {
   const userId = useCurrentUserId();
 
   const { data, isPending } = useQuery({
-    queryKey: streakKeys.current(userId),
-    queryFn: getCurrentStreak,
+    ...streakQueries.current(userId),
     enabled: userId !== null,
     // 조회가 실패해도 홈은 그대로 돌아야 하므로 에러는 밖으로 내보내지 않는다
     retry: 1,

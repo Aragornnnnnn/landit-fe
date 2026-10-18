@@ -4,9 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useCurrentUserId } from '@/shared/auth/current-member';
 
-import { getStreakCalendar } from '../api/streak';
 import type { YearMonth } from '../lib/year-month';
-import { streakKeys } from './keys';
+import { streakQueries } from './queries';
 
 // view를 주면 그 달을, 생략하면 서버가 고른 이번 달을 읽는다
 export const useStreakCalendarQuery = ({
@@ -19,8 +18,7 @@ export const useStreakCalendarQuery = ({
   const userId = useCurrentUserId();
 
   const { data, isError } = useQuery({
-    queryKey: streakKeys.calendar(userId, view),
-    queryFn: () => getStreakCalendar(view),
+    ...streakQueries.calendar(userId, view),
     enabled: enabled && userId !== null,
     retry: 1,
   });
