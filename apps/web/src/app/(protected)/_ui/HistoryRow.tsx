@@ -1,8 +1,8 @@
-// 지난 기록 목록의 한 줄 — 제목과 한 줄 설명, 오른쪽 요약(점수·진행), 화살표. 스몰톡과 시나리오 기록이 함께 쓴다
+// 지난 기록 목록의 한 줄 — 제목·한 줄 설명·오른쪽 요약·화살표. 스몰톡과 시나리오 기록 두 화면이 함께 써서 (protected) 그룹 루트에 둔다
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 
-import { ChevronRightIcon } from './Icons';
+import { ChevronRightIcon } from '@/shared/ui/Icons';
 
 const ROW_CLASS =
   'flex w-full items-center gap-3 rounded-2xl bg-card px-4.5 py-4 text-left shadow-sm transition-colors active:bg-secondary/40';

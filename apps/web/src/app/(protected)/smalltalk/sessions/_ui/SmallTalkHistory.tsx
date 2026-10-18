@@ -5,6 +5,11 @@
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import {
+  HistoryListSkeleton,
+  HistoryRow,
+} from '@/app/(protected)/_ui/HistoryRow';
+import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
 import type { SmallTalkSessionSummary } from '@/features/small-talk/api/small-talk';
 import { toSessionTitle } from '@/features/small-talk/lib/session-summary';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
@@ -13,9 +18,7 @@ import { track } from '@/shared/analytics';
 import { toDayLabel } from '@/shared/lib/day-label';
 import { SMALLTALK_PATH, smallTalkHistoryPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
-import { HistoryListSkeleton, HistoryRow } from '@/shared/ui/HistoryRow';
 import { LoadMoreButton } from '@/shared/ui/LoadMoreButton';
-import { PageHeader } from '@/shared/ui/PageHeader';
 
 export const SmallTalkHistory = () => {
   const router = useRouter();

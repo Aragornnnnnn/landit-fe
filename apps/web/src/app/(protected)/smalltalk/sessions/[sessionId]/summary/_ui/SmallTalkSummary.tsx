@@ -8,6 +8,7 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
 import { GrowthCard } from '@/features/feedback/ui/GrowthCard';
 import { ReusedExpressionsCard } from '@/features/feedback/ui/ReusedExpressionsCard';
 import type {
@@ -22,7 +23,6 @@ import {
   smallTalkTranscriptPath,
 } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
-import { PageHeader } from '@/shared/ui/PageHeader';
 
 import {
   FRESH_ARRIVALS,

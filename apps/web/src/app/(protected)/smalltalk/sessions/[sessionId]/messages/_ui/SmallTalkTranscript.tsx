@@ -7,6 +7,7 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
 import type {
   SmallTalkCorrection,
   SmallTalkHistoryMessage,
@@ -28,7 +29,6 @@ import {
   ChevronDownIcon,
   SparkleIcon,
 } from '@/shared/ui/Icons';
-import { PageHeader } from '@/shared/ui/PageHeader';
 
 import { waitedCorrectionIds } from '../_model/late-corrections';
 import {

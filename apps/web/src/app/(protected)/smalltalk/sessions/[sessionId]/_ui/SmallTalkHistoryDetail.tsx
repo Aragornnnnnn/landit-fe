@@ -5,6 +5,7 @@
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
 import { ExpressionList } from '@/features/expression/ui/ExpressionList';
 import { toSessionTitle } from '@/features/small-talk/lib/session-summary';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
@@ -21,7 +22,6 @@ import {
 } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ChatHistoryIcon } from '@/shared/ui/Icons';
-import { PageHeader } from '@/shared/ui/PageHeader';
 
 import { SmallTalkHistoryDetailSkeleton } from './SmallTalkHistoryDetailSkeleton';
 

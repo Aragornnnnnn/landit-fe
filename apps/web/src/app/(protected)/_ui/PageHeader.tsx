@@ -2,7 +2,7 @@
 // 안전 영역은 화면(main)이 띄운다. 스크롤 그림자와 안전 영역을 스스로 챙기는 머리는 BackHeader다
 import type { ReactNode } from 'react';
 
-import { ChevronLeftIcon, CloseIcon } from './Icons';
+import { ChevronLeftIcon, CloseIcon } from '@/shared/ui/Icons';
 
 interface PageHeaderProps {
   title: ReactNode;

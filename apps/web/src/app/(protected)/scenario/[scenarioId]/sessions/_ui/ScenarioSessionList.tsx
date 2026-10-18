@@ -3,11 +3,14 @@
 // 시나리오 기록 — 그 시나리오를 완료한 회차가 최신순으로 선다. 누르면 그때 받은 피드백을 다시 본다
 import { useRouter } from 'next/navigation';
 
+import {
+  HistoryListSkeleton,
+  HistoryRow,
+} from '@/app/(protected)/_ui/HistoryRow';
+import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
 import { useScenarioTitle } from '@/features/scenario/model/useScenarioTitle';
 import { toDayLabel } from '@/shared/lib/day-label';
 import { scenarioReturnPath, scenarioSessionPath } from '@/shared/lib/routes';
-import { HistoryListSkeleton, HistoryRow } from '@/shared/ui/HistoryRow';
-import { PageHeader } from '@/shared/ui/PageHeader';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 import { StarRating } from '@/shared/ui/StarRating';
 
