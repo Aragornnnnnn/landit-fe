@@ -1,5 +1,7 @@
 // 월 달력의 뼈대 — 7열 격자와 앞뒤로 넘길 수 있는 범위. Date도 타임존도 밖으로 새지 않는다
-import { monthOf, toDateString, type YearMonth } from './seoul-date';
+import { toDateString } from '@/shared/lib/date-string';
+
+import { monthOf, type YearMonth } from './year-month';
 
 // 달 바깥 칸은 null — 앞뒤를 다른 달 날짜로 채우면 그 날의 완료 여부를 알 수 없어 거짓말이 된다
 export type MonthWeek = (string | null)[];

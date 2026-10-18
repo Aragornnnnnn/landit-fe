@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getStreakCalendar } from '../api/streak';
-import type { YearMonth } from '../lib/seoul-date';
+import type { YearMonth } from '../lib/year-month';
 import { streakKeys } from './keys';
 
 // view를 주면 그 달을, 생략하면 서버가 고른 이번 달을 읽는다

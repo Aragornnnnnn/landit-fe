@@ -1,9 +1,10 @@
 // 월 달력 — 월 이동 머리와 7열 격자. 무엇을 그릴지는 calendar-day 규칙이 정한다
+import { WEEKDAY_LABELS } from '@/shared/lib/date-string';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 
 import type { StreakCalendarResponse } from '../../api/streak';
 import { buildMonthGrid } from '../../lib/month-grid';
-import { formatMonthLabel, WEEKDAY_LABELS } from '../../lib/seoul-date';
+import { formatMonthLabel } from '../../lib/year-month';
 import { markOf } from '../../model/calendar-day';
 import { StreakWeek } from './StreakWeek';
 

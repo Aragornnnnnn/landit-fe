@@ -6,7 +6,7 @@ import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getStreakCalendar, type CurrentStreakResponse } from '../api/streak';
 import { canGoBack, canGoForward, shiftMonth } from '../lib/month-grid';
-import type { YearMonth } from '../lib/seoul-date';
+import type { YearMonth } from '../lib/year-month';
 import { streakKeys } from './keys';
 
 export const useStreakCalendar = () => {
