@@ -39,9 +39,12 @@ export const HapticMenuEntry = () => {
       />
 
       <BottomSheet open={open} onClose={() => setOpen(false)}>
-        <h2 className="text-[17px] font-bold" style={{ color: '#111' }}>
+        <BottomSheet.Title
+          className="text-[17px] font-bold"
+          style={{ color: '#111' }}
+        >
           진동
-        </h2>
+        </BottomSheet.Title>
         <p
           className="mt-1 mb-4 text-[14px] leading-6"
           style={{ color: '#666' }}

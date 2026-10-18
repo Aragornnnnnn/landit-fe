@@ -1,15 +1,11 @@
 // 공통 모달 — 오버레이 + 중앙 카드, dismissible=false면 배경클릭·ESC·네이티브 뒤로가기로 안 닫힌다
 'use client';
 
-import { useEffect, useEffectEvent, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { createPortal } from 'react-dom';
 
-import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
-import { useFocusTrap } from '@/shared/lib/useFocusTrap';
-
-import { registerOpenSheet } from './bottom-sheet-back';
 import { CloseIcon } from './Icons';
+import { useDialogLayer } from './useDialogLayer';
 
 interface ModalProps {
   open: boolean;
@@ -27,30 +23,7 @@ export function Modal({
   label,
   children,
 }: ModalProps) {
-  const mounted = useClientOnlyValue(() => true, false);
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  // onClose는 대개 인라인 함수라 렌더마다 참조가 바뀐다 — 등록은 열릴 때 한 번, 부를 땐 최신 것을 쓴다
-  const close = useEffectEvent(onClose);
-
-  useEffect(() => {
-    if (!open || !dismissible) return;
-    return registerOpenSheet(() => close());
-  }, [open, dismissible]);
-
-  useEffect(() => {
-    if (!open || !dismissible) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close();
-    };
-    window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
-  }, [open, dismissible]);
-
-  // 포커스를 다이얼로그 안에 가두고, 닫히면 이전 포커스로 되돌린다.
-  // mounted를 함께 보는 이유 — 패널은 mounted 뒤에야 그려지는데, open만 보면
-  // 처음부터 열린 모달에서 ref가 빈 채로 effect가 한 번 돌고 다시 돌지 않는다
-  useFocusTrap(open && mounted, panelRef);
+  const { mounted, panelRef } = useDialogLayer({ open, dismissible, onClose });
 
   if (!mounted) return null;
 

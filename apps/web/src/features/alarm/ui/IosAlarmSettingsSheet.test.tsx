@@ -10,13 +10,11 @@ vi.mock('@/shared/bridge/web-bridge', () => ({ postToNative: mocks.post }));
 vi.mock('next/image', () => ({ default: () => <span /> }));
 // 시트의 열고 닫는 연출은 보지 않는다
 vi.mock('@/shared/ui/BottomSheet', () => ({
-  BottomSheet: ({
-    open,
-    children,
-  }: {
-    open: boolean;
-    children: React.ReactNode;
-  }) => (open ? <div>{children}</div> : null),
+  BottomSheet: Object.assign(
+    ({ open, children }: { open: boolean; children: React.ReactNode }) =>
+      open ? <div>{children}</div> : null,
+    { Title: (props: React.ComponentProps<'h2'>) => <h2 {...props} /> },
+  ),
 }));
 
 afterEach(cleanup);

@@ -3,8 +3,6 @@
 // 편지함 사진 확대 보기 — 검은 전체 화면에 사진을 맞춰 띄우고, 버튼·더블탭·핀치로 키우고, 넘기고, 쓸어 닫는다.
 // 받은 편지 이미지는 한 장, 보낸 편지 첨부는 여러 장을 넘겨 본다. 배율·이동·손가락 판정 규칙은 model/image-zoom
 import {
-  useEffect,
-  useEffectEvent,
   useRef,
   useState,
   type PointerEvent,
@@ -12,9 +10,8 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 
-import { useFocusTrap } from '@/shared/lib/useFocusTrap';
-import { registerOpenSheet } from '@/shared/ui/bottom-sheet-back';
 import { CloseIcon, MinusIcon, PlusIcon } from '@/shared/ui/Icons';
+import { useDialogLayer } from '@/shared/ui/useDialogLayer';
 
 import {
   clampPan,
@@ -74,27 +71,17 @@ export const ImageViewer = ({
   const [natural, setNatural] = useState<Size | null>(null);
   const [failed, setFailed] = useState(false);
 
-  const panelRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const pointers = useRef(new Map<number, Point>());
   const gesture = useRef<Gesture | null>(null);
   const lastTap = useRef<{ at: number; point: Point } | null>(null);
 
-  // onClose는 대개 인라인 함수라 렌더마다 바뀐다 — 등록은 한 번만 하고 최신 것을 읽는다
-  const close = useEffectEvent(onClose);
-
-  // 안드로이드 뒤로가기는 편지 화면을 떠나지 않고 확대 보기만 닫는다 — 열린 시트와 같은 스택을 쓴다
-  useEffect(() => registerOpenSheet(() => close()), []);
-
-  useEffect(() => {
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close();
-    };
-    window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
-  }, []);
-
-  useFocusTrap(true, panelRef);
+  // 안드로이드 뒤로가기·Escape는 편지 화면을 떠나지 않고 확대 보기만 닫는다 — 열린 시트와 같은 스택을 쓴다
+  const { panelRef } = useDialogLayer({
+    open: true,
+    dismissible: true,
+    onClose,
+  });
 
   const frameSize = (): Size => {
     const rect = frameRef.current?.getBoundingClientRect();
