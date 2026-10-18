@@ -116,7 +116,7 @@ export const SpeechRateMenuEntry = () => {
         <div
           role="radiogroup"
           aria-label="말하기 속도"
-          className="mt-1 flex gap-0 rounded-[10px] p-1"
+          className="mt-5 flex gap-0 rounded-[10px] p-1"
           style={{ background: '#F2F2F7' }}
         >
           {SPEECH_RATES.map((option) => {
