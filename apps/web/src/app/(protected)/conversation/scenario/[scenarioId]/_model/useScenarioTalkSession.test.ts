@@ -156,6 +156,25 @@ describe('useScenarioTalkSession', () => {
     });
   });
 
+  it('응답 전에 콜백이 바뀌면 오프닝 폴백은 새 콜백으로 알려준다', async () => {
+    const first = vi.fn();
+    const next = vi.fn();
+    startScenarioTalkSession.mockResolvedValue(
+      startResponse({ content: 'Hello!', translatedContent: '안녕!' }),
+    );
+    const { rerender } = renderHook(
+      ({ onOpeningMessage }) =>
+        useScenarioTalkSession(scenario, { onOpeningMessage }),
+      { initialProps: { onOpeningMessage: first } },
+    );
+
+    rerender({ onOpeningMessage: next });
+    await act(async () => {});
+
+    expect(first).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
   it('첫 발화가 없으면 오프닝 폴백을 부르지 않는다', async () => {
     const onOpeningMessage = vi.fn();
 

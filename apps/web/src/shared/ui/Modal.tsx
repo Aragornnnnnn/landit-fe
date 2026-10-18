@@ -1,7 +1,7 @@
 // 공통 모달 — 오버레이 + 중앙 카드, dismissible=false면 배경클릭·ESC·네이티브 뒤로가기로 안 닫힌다
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useEffectEvent, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { createPortal } from 'react-dom';
 
@@ -30,21 +30,18 @@ export function Modal({
   const mounted = useClientOnlyValue(() => true, false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // onClose는 대개 인라인 함수라 렌더마다 참조가 바뀐다 — ref로 최신 것을 읽는다
-  const onCloseRef = useRef(onClose);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
+  // onClose는 대개 인라인 함수라 렌더마다 참조가 바뀐다 — 등록은 열릴 때 한 번, 부를 땐 최신 것을 쓴다
+  const close = useEffectEvent(onClose);
 
   useEffect(() => {
     if (!open || !dismissible) return;
-    return registerOpenSheet(() => onCloseRef.current());
+    return registerOpenSheet(() => close());
   }, [open, dismissible]);
 
   useEffect(() => {
     if (!open || !dismissible) return;
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onCloseRef.current();
+      if (event.key === 'Escape') close();
     };
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);

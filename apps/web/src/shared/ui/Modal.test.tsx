@@ -116,6 +116,48 @@ describe('Modal', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it('다시 그려져 onClose가 바뀌면 뒤로가기는 새 onClose를 부른다', () => {
+    const first = vi.fn();
+    const next = vi.fn();
+    const { rerender } = render(
+      <Modal label="테스트 다이얼로그" open onClose={first}>
+        내용
+      </Modal>,
+    );
+    rerender(
+      <Modal label="테스트 다이얼로그" open onClose={next}>
+        내용
+      </Modal>,
+    );
+
+    closeTopSheet();
+
+    expect(first).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it('아래 모달이 다시 그려져도 뒤로가기는 위 모달부터 닫는다', () => {
+    const closeBelow = vi.fn();
+    const closeAbove = vi.fn();
+    const renderBoth = (onCloseBelow: () => void) => (
+      <>
+        <Modal label="아래" open onClose={onCloseBelow}>
+          아래
+        </Modal>
+        <Modal label="위" open onClose={closeAbove}>
+          위
+        </Modal>
+      </>
+    );
+    const { rerender } = render(renderBoth(() => closeBelow()));
+    rerender(renderBoth(() => closeBelow()));
+
+    closeTopSheet();
+
+    expect(closeAbove).toHaveBeenCalledTimes(1);
+    expect(closeBelow).not.toHaveBeenCalled();
+  });
+
   it('다이얼로그 role과 aria-modal을 갖는다', () => {
     render(
       <Modal label="테스트 다이얼로그" open onClose={vi.fn()}>

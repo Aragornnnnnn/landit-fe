@@ -1,7 +1,7 @@
 'use client';
 
 // 대화 세션 수명 훅 — 진입을 막지 않게 백그라운드로 시작하고, 제출 시점의 확보 대기(ensure)와 중도 종료(end)를 맡는다
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
 import { endSession } from '@/features/conversation/api/session';
@@ -33,11 +33,8 @@ export const useScenarioTalkSession = (
   );
   const startedRef = useRef(false);
 
-  // 시작 effect는 한 번만 도는데 응답은 나중에 온다 — 콜백 최신값을 ref로 잡아 stale closure 방지
-  const onOpeningMessageRef = useRef(onOpeningMessage);
-  useEffect(() => {
-    onOpeningMessageRef.current = onOpeningMessage;
-  });
+  // 시작 effect는 한 번만 도는데 응답은 나중에 온다 — 응답이 온 때의 최신 콜백을 부른다
+  const seedOpening = useEffectEvent(onOpeningMessage);
 
   // 백그라운드 시작 — 화면은 이미 openingPreview로 떴고, 제출 때 쓸 sessionId만 확보한다.
   // StrictMode 이중 실행에도 한 번만 만든다.
@@ -57,7 +54,7 @@ export const useScenarioTalkSession = (
         });
         setTotalQuestionCount(res.progress.totalQuestionCount);
         if (res.currentMessage) {
-          onOpeningMessageRef.current({
+          seedOpening({
             content: res.currentMessage.content,
             translatedContent: res.currentMessage.translatedContent,
           });

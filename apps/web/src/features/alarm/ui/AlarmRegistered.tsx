@@ -3,7 +3,7 @@
 // 알람 등록 완료 — 다짐 문장이 위에서 내려와 가운데 자리 잡고, "저는 … 하겠습니다!"가 "매일 … 알려드릴게요!"로 바뀐다. 알아볼 만큼만 보여 주고 저절로 넘어간다.
 // 권한을 거절했으면 등록은 저장돼 있지만 아직 안 울린다 — 다짐 직후가 켤 마음이 가장 큰 순간이라 「지금 켜기」를 한 번 더 건넨다.
 // 켜고 돌아오면 상태가 바뀌어 그대로 완료 연출로 이어진다
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import type { AlarmTime } from '@landit/bridge';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
@@ -62,10 +62,7 @@ const Completed = ({
   const copy = useAlarmCopy();
   const [phase, setPhase] = useState<Phase>(reduced ? 'confirmed' : 'pledge');
   // 부모가 다시 그려져(알람 상태 회신 등) onDone이 바뀌어도 넘어갈 시계를 처음부터 다시 재지 않는다
-  const onDoneRef = useRef(onDone);
-  useEffect(() => {
-    onDoneRef.current = onDone;
-  });
+  const leave = useEffectEvent(onDone);
 
   useEffect(() => {
     const timers = [
@@ -77,7 +74,7 @@ const Completed = ({
         },
         reduced ? 0 : CONFIRM_AT_MS,
       ),
-      setTimeout(() => onDoneRef.current(), LEAVE_AFTER_MS),
+      setTimeout(() => leave(), LEAVE_AFTER_MS),
     ];
     return () => timers.forEach(clearTimeout);
   }, [reduced]);
