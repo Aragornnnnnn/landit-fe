@@ -7,6 +7,7 @@ import type { SatisfactionMoment } from '@landit/analytics';
 
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
+import { CloseIcon } from '@/shared/ui/Icons';
 
 export type SatisfactionView = 'ask' | 'thanks' | 'letter' | 'review';
 
@@ -18,6 +19,9 @@ interface SatisfactionSheetProps {
   onBad: () => void;
   onSendFeedback: () => void;
   onWriteReview: () => void;
+  // 리뷰 요청만 — 재요청(2번째 노출)부터 「이미 남겼어요」를 보여준다. 처음엔 아직 남겼을 리 없다
+  showAlreadyDone?: boolean;
+  onAlreadyDone?: () => void;
   onClose: () => void;
 }
 
@@ -46,7 +50,7 @@ const faceOf = (moment: SatisfactionMoment, view: SatisfactionView): Face => {
       image: REVIEW,
       title: '잘 써주셔서 감사해요!',
       body: '스토어에 남겨주신 응원 한마디가\n랜딧에겐 큰 힘이 돼요',
-      cta: '응원 남기러 가기',
+      cta: '리뷰 남기러 가기',
     };
   if (view === 'thanks')
     return {
@@ -81,18 +85,31 @@ export const SatisfactionSheet = ({
   onBad,
   onSendFeedback,
   onWriteReview,
+  showAlreadyDone = false,
+  onAlreadyDone,
   onClose,
 }: SatisfactionSheetProps) => {
   const face = faceOf(moment, view);
 
   return (
     <BottomSheet open={open} onClose={onClose}>
+      {/* 리뷰 요청은 다시 뜨는 시트라 닫는 길을 눈에 보이게 둔다 — 소감은 한 번뿐이라 딤·뒤로가기로 족하다 */}
+      {view === 'review' && (
+        <button
+          type="button"
+          aria-label="닫기"
+          onClick={onClose}
+          className="absolute top-4 right-4 flex size-8 items-center justify-center rounded-full text-muted-foreground active:scale-90"
+        >
+          <CloseIcon size={20} />
+        </button>
+      )}
       {/* 모든 화면의 높이를 같게 고정한다 — 문구만 바뀌는 전환이라 시트가 덜컥 줄어들면 안 된다.
           버튼 있는 화면은 위에서부터 쌓고 버튼을 바닥에, 감사는 버튼이 없으니 내용을 가운데로 모아 빈 자리를 없앤다 */}
       <div
-        className={`flex h-[328px] flex-col items-center text-center ${
-          view === 'thanks' ? 'justify-center' : ''
-        }`}
+        className={`flex flex-col items-center text-center ${
+          showAlreadyDone ? 'h-[364px]' : 'h-[328px]'
+        } ${view === 'thanks' ? 'justify-center' : ''}`}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -110,7 +127,7 @@ export const SatisfactionSheet = ({
           {face.body}
         </p>
         {view !== 'thanks' && (
-          <div className="mt-auto flex w-full gap-3">
+          <div className="mt-auto flex w-full flex-wrap justify-center gap-3">
             {view === 'ask' ? (
               <>
                 <Button variant="ghost" size="md" onClick={onBad}>
@@ -127,6 +144,15 @@ export const SatisfactionSheet = ({
               >
                 {face.cta}
               </Button>
+            )}
+            {view === 'review' && showAlreadyDone && (
+              <button
+                type="button"
+                onClick={onAlreadyDone}
+                className="text-sm text-muted-foreground underline underline-offset-2"
+              >
+                이미 남겼어요
+              </button>
             )}
           </div>
         )}
