@@ -27,10 +27,11 @@ export const useDialogLayer = ({
   // 리렌더 때 스택에서 빠졌다 다시 올라가며 순서가 뒤집히지 않게 등록은 열릴 때 한 번만 한다
   const close = useEffectEvent(onClose);
 
-  // 열려 있는 동안 전역 스택에 등록 — 네이티브 뒤로가기와 Escape가 화면 이동 대신 맨 위 대화 상자를 닫는다
+  // 열려 있는 동안 전역 스택에 등록 — 네이티브 뒤로가기와 Escape가 화면 이동 대신 맨 위 대화 상자를 닫는다.
+  // 닫을 수 없는 대화 상자도 올려 두어, 맨 위에 있는 동안 Escape가 아래 층을 닫지 않게 한다
   useEffect(() => {
-    if (!open || !dismissible) return;
-    return registerOpenSheet(() => close());
+    if (!open) return;
+    return registerOpenSheet(() => close(), { dismissible });
   }, [open, dismissible]);
 
   // mounted를 함께 보는 이유 — 패널은 mounted 뒤에야 그려지는데, open만 보면

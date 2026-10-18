@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { closeTopSheet } from './bottom-sheet-back';
+import { BottomSheet } from './BottomSheet';
 import { Modal } from './Modal';
 
 // createPortal로 document.body에 그려지는 내용이라, 테스트 사이에 명시적으로 걷어낸다
@@ -156,6 +157,42 @@ describe('Modal', () => {
 
     expect(closeAbove).toHaveBeenCalledTimes(1);
     expect(closeBelow).not.toHaveBeenCalled();
+  });
+
+  it('닫을 수 없는 모달이 시트 위에 떠 있으면 Escape로 아래 시트를 닫지 않는다', () => {
+    const closeSheet = vi.fn();
+    render(
+      <>
+        <BottomSheet open onClose={closeSheet}>
+          아래 시트
+        </BottomSheet>
+        <Modal label="강제 업데이트" open onClose={vi.fn()} dismissible={false}>
+          위 모달
+        </Modal>
+      </>,
+    );
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+
+    expect(closeSheet).not.toHaveBeenCalled();
+  });
+
+  it('닫을 수 없는 모달이 떠 있어도 뒤로가기는 지금처럼 아래 시트를 닫는다', () => {
+    const closeSheet = vi.fn();
+    render(
+      <>
+        <BottomSheet open onClose={closeSheet}>
+          아래 시트
+        </BottomSheet>
+        <Modal label="강제 업데이트" open onClose={vi.fn()} dismissible={false}>
+          위 모달
+        </Modal>
+      </>,
+    );
+
+    closeTopSheet();
+
+    expect(closeSheet).toHaveBeenCalledTimes(1);
   });
 
   it('다이얼로그 role과 aria-modal을 갖는다', () => {
