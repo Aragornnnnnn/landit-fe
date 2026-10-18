@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
-import { listenForeground } from '@/shared/lib/foreground';
+import { subscribeForeground } from '@/shared/lib/foreground';
 
 // 알림 메시지(GET/REQUEST/NOTIFICATION_PERMISSION)를 알아듣는 최소 브릿지 계약 버전
 const REQUIRED_BRIDGE_VERSION = 2;
@@ -29,12 +29,12 @@ export const useNotificationPermission = (): NotificationPermissionStatus => {
     postToNative({ type: 'GET_NOTIFICATION_PERMISSION' });
 
     // 포그라운드 복귀 시 재조회 — OS 설정에서 권한을 바꾸고 돌아온 경우를 그 세션 안에서 반영한다
-    const stopListening = listenForeground(() =>
+    const unsubscribeForeground = subscribeForeground(() =>
       postToNative({ type: 'GET_NOTIFICATION_PERMISSION' }),
     );
 
     return () => {
-      stopListening();
+      unsubscribeForeground();
       unsubscribe();
     };
   }, []);

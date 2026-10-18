@@ -6,7 +6,7 @@ import type { ScheduledAlarm } from '@landit/bridge';
 
 import { isAlarmShell } from '@/features/alarm/model/shell-alarm';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
-import { listenForeground } from '@/shared/lib/foreground';
+import { subscribeForeground } from '@/shared/lib/foreground';
 
 export const useAlarmList = () => {
   const [alarms, setAlarms] = useState<ScheduledAlarm[] | null>(null);
@@ -22,9 +22,9 @@ export const useAlarmList = () => {
     });
     requestList();
 
-    const stopListening = listenForeground(requestList);
+    const unsubscribeForeground = subscribeForeground(requestList);
     return () => {
-      stopListening();
+      unsubscribeForeground();
       unsubscribe();
     };
   }, []);

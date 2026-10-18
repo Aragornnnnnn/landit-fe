@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import type { AlarmStatus } from '@landit/bridge';
 
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
-import { listenForeground } from '@/shared/lib/foreground';
+import { subscribeForeground } from '@/shared/lib/foreground';
 
 import { alarmPlatform, isAlarmShell } from './shell-alarm';
 
@@ -36,12 +36,12 @@ export const useAlarmStatus = () => {
     postToNative({ type: 'GET_ALARM_STATUS' });
 
     // 설정 화면에서 권한을 켜고 돌아오면 다시 묻는다
-    const stopListening = listenForeground(() =>
+    const unsubscribeForeground = subscribeForeground(() =>
       postToNative({ type: 'GET_ALARM_STATUS' }),
     );
 
     return () => {
-      stopListening();
+      unsubscribeForeground();
       unsubscribe();
     };
   }, []);
