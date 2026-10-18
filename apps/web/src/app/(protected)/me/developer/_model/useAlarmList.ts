@@ -6,6 +6,7 @@ import type { ScheduledAlarm } from '@landit/bridge';
 
 import { isAlarmShell } from '@/features/alarm/model/shell-alarm';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
+import { listenForeground } from '@/shared/lib/foreground';
 
 export const useAlarmList = () => {
   const [alarms, setAlarms] = useState<ScheduledAlarm[] | null>(null);
@@ -21,12 +22,9 @@ export const useAlarmList = () => {
     });
     requestList();
 
-    const requery = () => {
-      if (document.visibilityState === 'visible') requestList();
-    };
-    document.addEventListener('visibilitychange', requery);
+    const stopListening = listenForeground(requestList);
     return () => {
-      document.removeEventListener('visibilitychange', requery);
+      stopListening();
       unsubscribe();
     };
   }, []);
