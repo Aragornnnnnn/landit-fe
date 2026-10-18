@@ -2,18 +2,37 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { getDeviceToday } from '@/shared/lib/device-today';
+
 import {
-  consumeAllTalkPending,
+  consumeAllPending,
+  markExpressionCompleted,
+  markReviewShown,
   markTalkCompleted,
-  mayAskReview,
   PROMPT_RECORD_KEY,
+  readReviewAttempt,
   readSatisfactionAnswer,
   recordSatisfactionAnswer,
+  resolveReviewTrigger,
   shouldAskReview,
   shouldAskSatisfaction,
 } from './prompt-record';
 
 beforeEach(() => localStorage.clear());
+
+// 기록의 날짜 칸을 n일 전으로 돌린다 — 시간 흐름을 흉내 내는 유일한 통로
+const daysAgo = (n: number) =>
+  getDeviceToday(new Date(Date.now() - n * 24 * 60 * 60 * 1000));
+
+const rewind = (
+  key: string,
+  field: 'pendingOn' | 'answeredOn' | 'shownOn',
+  n: number,
+) => {
+  const all = JSON.parse(localStorage.getItem(PROMPT_RECORD_KEY)!);
+  all[key][field] = daysAgo(n);
+  localStorage.setItem(PROMPT_RECORD_KEY, JSON.stringify(all));
+};
 
 describe('shouldAskSatisfaction', () => {
   it('대화를 마친 기록이 없으면 묻지 않는다', () => {
@@ -49,92 +68,59 @@ describe('shouldAskSatisfaction', () => {
     expect(shouldAskSatisfaction('smalltalk')).toBe(true);
     expect(shouldAskSatisfaction('scenario')).toBe(false);
   });
-});
-
-describe('묵은 차례는 치지 않는다', () => {
-  // 대화를 마치고 홈에 들르지 않은 채 앱을 껐다가 다른 날 다시 연 상황
-  const completedOnAnotherDay = (talk: 'scenario' | 'smalltalk') => {
-    markTalkCompleted(talk);
-    const all = JSON.parse(localStorage.getItem(PROMPT_RECORD_KEY)!);
-    all[`satisfaction:${talk}`].pendingOn = '2000-01-01';
-    localStorage.setItem(PROMPT_RECORD_KEY, JSON.stringify(all));
-  };
 
   it('어제 마치고 홈에 안 들렀으면 오늘 소감을 묻지 않는다 — 방금 마친 게 아니다', () => {
-    completedOnAnotherDay('scenario');
+    markTalkCompleted('scenario');
+    rewind('satisfaction:scenario', 'pendingOn', 1);
 
     expect(shouldAskSatisfaction('scenario')).toBe(false);
-  });
-
-  it('어제 마친 차례로는 리뷰도 청하지 않는다 — 오늘 다른 활동으로 스트릭만 올라간 경우', () => {
-    markTalkCompleted('scenario');
-    recordSatisfactionAnswer('scenario', 'good');
-    const all = JSON.parse(localStorage.getItem(PROMPT_RECORD_KEY)!);
-    all['satisfaction:scenario'].answeredOn = '2000-01-01';
-    localStorage.setItem(PROMPT_RECORD_KEY, JSON.stringify(all));
-    consumeAllTalkPending();
-    completedOnAnotherDay('scenario');
-
-    expect(shouldAskReview({ activeToday: true, totalActiveDays: 5 })).toBe(
-      false,
-    );
   });
 });
 
 describe('shouldAskReview — 리뷰 요청', () => {
-  const anotherDay = { activeToday: true, totalActiveDays: 2 };
-
-  // 좋았다고 답한 게 어제였던 상태로 만든다 — 리뷰는 답한 날과 다른 날에만 청한다
-  const answeredGoodYesterday = (
-    talk: 'scenario' | 'smalltalk' = 'scenario',
-  ) => {
+  // 좋았다고 답하고 그 시트를 닫은 상태(차례 소비됨)
+  const answeredGood = (talk: 'scenario' | 'smalltalk' = 'scenario') => {
     markTalkCompleted(talk);
     recordSatisfactionAnswer(talk, 'good');
-    const all = JSON.parse(localStorage.getItem(PROMPT_RECORD_KEY)!);
-    all[`satisfaction:${talk}`].answeredOn = '2000-01-01';
-    localStorage.setItem(PROMPT_RECORD_KEY, JSON.stringify(all));
-    consumeAllTalkPending();
+    consumeAllPending();
   };
 
-  // 좋았다고 했던 사람이 다른 날 다시 와서 대화를 마친 상태
-  const cameBackAfterGood = (talk: 'scenario' | 'smalltalk' = 'scenario') => {
-    answeredGoodYesterday(talk);
-    markTalkCompleted(talk);
-  };
+  it('좋았다고 한 사람이 같은 날 대화를 하나 더 마치면 청한다 — 다른 날까지 기다리지 않는다', () => {
+    answeredGood();
 
-  it('좋았다고 했던 사람이 다른 날 또 대화를 마쳤으면 청한다', () => {
-    cameBackAfterGood();
+    markTalkCompleted('scenario');
 
-    expect(shouldAskReview(anotherDay)).toBe(true);
+    expect(shouldAskReview()).toBe(true);
   });
 
   it('대화 종류는 가리지 않는다 — 시나리오에서 좋았다고 하고 스몰톡을 마쳐도 청한다', () => {
-    answeredGoodYesterday('scenario');
+    answeredGood('scenario');
     markTalkCompleted('smalltalk');
 
-    expect(shouldAskReview(anotherDay)).toBe(true);
+    expect(shouldAskReview()).toBe(true);
   });
 
-  it('첫 완료일이면(totalActiveDays 1) 청하지 않는다 — 같은 날 두 번째 대화도 여기 걸린다', () => {
-    cameBackAfterGood();
+  it('표현 학습을 마치고 와도 청한다', () => {
+    answeredGood();
+    markExpressionCompleted();
 
-    expect(shouldAskReview({ activeToday: true, totalActiveDays: 1 })).toBe(
-      false,
-    );
+    expect(shouldAskReview()).toBe(true);
   });
 
-  it('오늘 완료한 게 아니면 청하지 않는다 — 며칠 전 대화한 사람이 오늘 홈만 연 경우', () => {
-    cameBackAfterGood();
+  it('소감 시트가 뜬 그 홈 진입에서는 청하지 않는다 — 차례가 소비돼 막 마친 게 없다', () => {
+    // Given 대화를 마치고 소감 시트에 좋았다고 답했다(시트가 차례를 소비한다)
+    answeredGood();
 
-    expect(shouldAskReview({ activeToday: false, totalActiveDays: 3 })).toBe(
-      false,
-    );
+    // Then 새로 마친 게 없으니 리뷰 시트가 이어 뜨지 않는다
+    expect(shouldAskReview()).toBe(false);
   });
 
-  it('막 마친 차례가 아니면 청하지 않는다', () => {
-    answeredGoodYesterday();
+  it('어제 마치고 홈에 안 들른 차례로는 청하지 않는다', () => {
+    answeredGood();
+    markTalkCompleted('scenario');
+    rewind('satisfaction:scenario', 'pendingOn', 1);
 
-    expect(shouldAskReview(anotherDay)).toBe(false);
+    expect(shouldAskReview()).toBe(false);
   });
 
   it.each([['bad'], ['dismiss']] as const)(
@@ -142,77 +128,149 @@ describe('shouldAskReview — 리뷰 요청', () => {
     (answer) => {
       markTalkCompleted('scenario');
       recordSatisfactionAnswer('scenario', answer);
-      consumeAllTalkPending();
+      consumeAllPending();
       markTalkCompleted('scenario');
 
-      expect(shouldAskReview(anotherDay)).toBe(false);
+      expect(shouldAskReview()).toBe(false);
     },
   );
 
-  it('좋았다고 한 그날 또 대화해도 청하지 않는다 — 다른 날 다시 온 사람만 대상이다', () => {
-    // Given 완료일이 이미 많이 쌓인 사람(배포 전부터 쓰던 유저)이 오늘 좋았다고 답했고
+  it('하루에 한 번만 — 오늘 이미 띄웠으면 또 마쳐도 청하지 않는다', () => {
+    // Given 오늘 리뷰 시트를 한 번 띄웠고 닫았다
+    answeredGood();
     markTalkCompleted('scenario');
-    recordSatisfactionAnswer('scenario', 'good');
-    consumeAllTalkPending();
-
-    // When 같은 날 대화를 한 번 더 마치면
-    markTalkCompleted('scenario');
-
-    // Then 완료일 수는 조건을 넘지만(30일) 답한 날과 같은 날이라 청하지 않는다
-    expect(shouldAskReview({ activeToday: true, totalActiveDays: 30 })).toBe(
-      false,
-    );
-  });
-
-  it('좋았다고 한 게 둘이면 그중 하나라도 다른 날이면 청한다', () => {
-    // Given 스몰톡은 어제 좋았다고 했고, 시나리오는 오늘 좋았다고 답했다
-    answeredGoodYesterday('smalltalk');
-    markTalkCompleted('scenario');
-    recordSatisfactionAnswer('scenario', 'good');
-    consumeAllTalkPending();
-
-    // When 오늘 대화를 한 번 더 마치면
-    markTalkCompleted('scenario');
-
-    // Then 어제 좋았다고 한 사람이 오늘 다시 온 것이니 청한다
-    expect(shouldAskReview(anotherDay)).toBe(true);
-  });
-
-  it('한 번 청했으면 다시 청하지 않는다', () => {
-    cameBackAfterGood();
+    markReviewShown();
     recordSatisfactionAnswer('review', 'dismiss');
 
-    expect(shouldAskReview(anotherDay)).toBe(false);
+    // When 같은 날 대화를 또 마치면
+    markTalkCompleted('scenario');
+
+    // Then 오늘은 더 청하지 않는다
+    expect(shouldAskReview()).toBe(false);
+  });
+
+  describe('닫은 뒤 재요청 — 닫은 날부터 2일, 4일, 6일을 최소로 쉰다', () => {
+    // 리뷰 시트를 n번 띄우고 매번 닫았고, 마지막으로 닫은 게 closedDaysAgo일 전인 상태
+    const closedTimes = (n: number, closedDaysAgo: number) => {
+      answeredGood();
+      for (let i = 0; i < n; i += 1) {
+        markReviewShown();
+        recordSatisfactionAnswer('review', 'dismiss');
+        rewind('satisfaction:review', 'shownOn', n - i);
+      }
+      rewind('satisfaction:review', 'answeredOn', closedDaysAgo);
+      rewind('satisfaction:review', 'shownOn', closedDaysAgo);
+      markTalkCompleted('scenario');
+    };
+
+    it.each([
+      [1, 1, false],
+      [1, 2, true],
+      [2, 3, false],
+      [2, 4, true],
+      [3, 5, false],
+      [3, 6, true],
+    ])('%i번 닫았고 %i일 지났으면 청하는가 → %s', (times, days, expected) => {
+      closedTimes(times, days);
+
+      expect(shouldAskReview()).toBe(expected);
+    });
+
+    it('간격은 최소 쉼이다 — 한 번 닫고 6일 뒤에 와도 1차 재요청으로 청한다', () => {
+      closedTimes(1, 6);
+
+      expect(shouldAskReview()).toBe(true);
+      expect(readReviewAttempt()).toBe(1);
+    });
+
+    it('네 번(처음 1 + 재요청 3) 띄웠으면 아무리 지나도 청하지 않는다', () => {
+      closedTimes(4, 30);
+
+      expect(shouldAskReview()).toBe(false);
+    });
+
+    it('배포 전에 한 번 닫은 기록(attempt 없음)은 1번 띄운 것으로 본다', () => {
+      // Given 옛 코드가 남긴 기록 — answer와 answeredOn만 있다
+      answeredGood();
+      localStorage.setItem(
+        PROMPT_RECORD_KEY,
+        JSON.stringify({
+          ...JSON.parse(localStorage.getItem(PROMPT_RECORD_KEY)!),
+          'satisfaction:review': { answer: 'dismiss', answeredOn: daysAgo(2) },
+        }),
+      );
+      markTalkCompleted('scenario');
+
+      // Then 2일이 지났으니 1차 재요청으로 청한다
+      expect(shouldAskReview()).toBe(true);
+      expect(readReviewAttempt()).toBe(1);
+    });
+  });
+
+  it.each([['good'], ['already_done']] as const)(
+    '스토어로 갔거나 이미 남겼다고 하면(%s) 다시 청하지 않는다',
+    (answer) => {
+      answeredGood();
+      markTalkCompleted('scenario');
+      markReviewShown();
+      recordSatisfactionAnswer('review', answer);
+      rewind('satisfaction:review', 'answeredOn', 30);
+      rewind('satisfaction:review', 'shownOn', 30);
+      markTalkCompleted('scenario');
+
+      expect(shouldAskReview()).toBe(false);
+    },
+  );
+});
+
+describe('markReviewShown · readReviewAttempt', () => {
+  it('다른 날 띄울 때마다 횟수가 하나씩 는다 — 처음은 1', () => {
+    expect(readReviewAttempt()).toBe(0);
+
+    markReviewShown();
+    expect(readReviewAttempt()).toBe(1);
+
+    rewind('satisfaction:review', 'shownOn', 1);
+    markReviewShown();
+    expect(readReviewAttempt()).toBe(2);
+  });
+
+  it('같은 날 두 번 불려도 한 번으로 센다 — 개발 모드의 이펙트 이중 실행에 횟수가 두 배로 늘지 않게', () => {
+    markReviewShown();
+    markReviewShown();
+
+    expect(readReviewAttempt()).toBe(1);
+  });
+
+  it('띄우면 쌓여 있던 차례를 모두 소비한다 — 같은 완료로 다른 시트가 이어 뜨지 않게', () => {
+    markTalkCompleted('scenario');
+    markExpressionCompleted();
+
+    markReviewShown();
+
+    expect(shouldAskSatisfaction('scenario')).toBe(false);
+    expect(shouldAskReview()).toBe(false);
   });
 });
 
-describe('mayAskReview — 스트릭을 조회할 필요가 있는지 로컬만으로 거른다', () => {
-  // 좋았다고 답한 게 어제였던 상태로 만든다 — 리뷰는 답한 날과 다른 날에만 청한다
-  const answeredGoodYesterday = (
-    talk: 'scenario' | 'smalltalk' = 'scenario',
-  ) => {
-    markTalkCompleted(talk);
-    recordSatisfactionAnswer(talk, 'good');
-    const all = JSON.parse(localStorage.getItem(PROMPT_RECORD_KEY)!);
-    all[`satisfaction:${talk}`].answeredOn = '2000-01-01';
-    localStorage.setItem(PROMPT_RECORD_KEY, JSON.stringify(all));
-    consumeAllTalkPending();
-  };
+describe('resolveReviewTrigger — 무엇을 마치고 와서 떴는가', () => {
+  it('대화를 마쳤으면 talk', () => {
+    markTalkCompleted('smalltalk');
 
-  it('막 마쳤고 어제 좋았다고 했고 아직 안 청했으면 조회할 가치가 있다', () => {
-    answeredGoodYesterday();
-    markTalkCompleted('scenario');
-
-    expect(mayAskReview()).toBe(true);
+    expect(resolveReviewTrigger()).toBe('talk');
   });
 
-  it('좋았다고 한 적이 없으면 조회할 필요가 없다', () => {
-    markTalkCompleted('scenario');
-    recordSatisfactionAnswer('scenario', 'bad');
-    consumeAllTalkPending();
+  it('표현 학습만 마쳤으면 expression', () => {
+    markExpressionCompleted();
+
+    expect(resolveReviewTrigger()).toBe('expression');
+  });
+
+  it('둘 다 마쳤으면 대화를 앞세운다', () => {
+    markExpressionCompleted();
     markTalkCompleted('scenario');
 
-    expect(mayAskReview()).toBe(false);
+    expect(resolveReviewTrigger()).toBe('talk');
   });
 });
 
@@ -239,7 +297,7 @@ describe('저장 형식', () => {
         answer: 'good',
         // 마친 날 — 오늘 마친 차례만 친다
         pendingOn: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-        // 답한 날 — 리뷰를 다른 날에만 청하기 위한 값
+        // 답한 날 — 재요청 간격을 세는 기준
         answeredOn: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       },
     });

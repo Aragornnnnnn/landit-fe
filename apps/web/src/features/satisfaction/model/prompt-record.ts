@@ -1,5 +1,6 @@
-// 소감을 물을 차례인지와 답한 기록을 기기(localStorage)에 남긴다 — 순간마다 딱 한 번만 묻기 위한 순수 모듈
+// 소감·리뷰 요청을 물을 차례인지와 답한 기록을 기기(localStorage)에 남긴다 — 소감은 딱 한 번, 리뷰는 남길 때까지 간격을 두고
 import type {
+  ReviewTrigger,
   SatisfactionAnswer,
   SatisfactionMoment,
   SatisfactionTalk,
@@ -12,46 +13,64 @@ import { readPromptEntry, updatePromptEntry } from '@/shared/lib/prompt-store';
 export { PROMPT_RECORD_KEY } from '@/shared/lib/prompt-store';
 
 interface ImpressionRecord {
-  // 대화를 마치고 아직 홈에서 소감 시트를 보지 않았다 — 시트를 띄우는 순간 소비한다
+  // 마치고 아직 홈에서 시트를 보지 않았다 — 시트를 띄우는 순간 소비한다
   pending?: boolean;
-  // 그 대화를 마친 날(기기 기준 yyyy-MM-dd) — 오늘 마친 차례만 친다.
+  // 마친 날(기기 기준 yyyy-MM-dd) — 오늘 마친 차례만 친다.
   // 마치고 홈에 안 들른 채 앱을 껐다가 다른 날 열면 "방금 마침"이 아니다
   pendingOn?: string;
-  // 한 번 답하면 다시 묻지 않는다. 닫기(dismiss)도 답이다
+  // 마지막 답. 소감은 한 번 답하면 다시 묻지 않는다(닫기도 답이다). 리뷰는 닫기(dismiss)면 다시 묻는다
   answer?: SatisfactionAnswer;
-  // 답한 날(기기 기준 yyyy-MM-dd) — 리뷰는 답한 날과 다른 날에만 청한다
+  // 답한 날(기기 기준 yyyy-MM-dd) — 리뷰 재요청 간격을 세는 기준
   answeredOn?: string;
+  // 리뷰 요청만 — 띄운 횟수와 마지막으로 띄운 날. 하루 한 번·최대 4번을 세는 근거
+  attempt?: number;
+  shownOn?: string;
 }
 
-const entryKey = (moment: SatisfactionMoment) => `satisfaction:${moment}`;
+// 리뷰 요청을 띄우게 하는 완료 — 소감을 묻는 대화 둘과, 소감은 안 묻지만 완료는 치는 표현 학습
+type CompletedActivity = SatisfactionTalk | 'expression';
+type RecordKey = SatisfactionMoment | 'expression';
 
-const update = (moment: SatisfactionMoment, patch: Partial<ImpressionRecord>) =>
-  updatePromptEntry<ImpressionRecord>(entryKey(moment), patch);
+const entryKey = (key: RecordKey) => `satisfaction:${key}`;
 
-const read = (moment: SatisfactionMoment) =>
-  readPromptEntry<ImpressionRecord>(entryKey(moment));
+const update = (key: RecordKey, patch: Partial<ImpressionRecord>) =>
+  updatePromptEntry<ImpressionRecord>(entryKey(key), patch);
+
+const read = (key: RecordKey) =>
+  readPromptEntry<ImpressionRecord>(entryKey(key));
 
 const TALKS: SatisfactionTalk[] = ['scenario', 'smalltalk'];
+const ACTIVITIES: CompletedActivity[] = [...TALKS, 'expression'];
+
+// 리뷰 요청은 처음 1번 + 닫은 뒤 재요청 3번. 재요청은 마지막으로 닫은 날부터 이만큼은 쉰다(최소 쉼, 예약이 아니다).
+// 근거는 리뷰 시트를 닫은 사람이 N일 뒤에도 다시 대화하는 비율 — docs/review-prompt-plan.md
+const REVIEW_MAX_ATTEMPTS = 4;
+const REVIEW_RETRY_GAP_DAYS = [2, 4, 6];
 
 const today = getDeviceToday;
+
+// yyyy-MM-dd 둘 사이 날 수 — 둘 다 UTC 자정으로 읽혀 시차가 끼지 않는다
+const daysBetween = (from: string, to: string) =>
+  Math.round((Date.parse(to) - Date.parse(from)) / (24 * 60 * 60 * 1000));
 
 // 대화를 마쳤다 — 홈에 돌아오면 물을 차례라고 남긴다
 export const markTalkCompleted = (talk: SatisfactionTalk) =>
   update(talk, { pending: true, pendingOn: today() });
 
+// 표현 학습을 마쳤다 — 소감은 안 묻지만 리뷰 요청의 완료로는 친다
+export const markExpressionCompleted = () =>
+  update('expression', { pending: true, pendingOn: today() });
+
 // 오늘 마친 차례인가 — 묵은 차례(마치고 홈에 안 들른 채 날이 바뀐 것)는 치지 않는다
 const completedToday = (record?: ImpressionRecord) =>
   record?.pending === true && record.pendingOn === today();
 
-// 홈에서 시트를 하나 띄웠다 — 쌓여 있던 차례를 모두 지운다. 리뷰 요청은 대화 종류를 가리지 않아,
-// 하나만 지우면 남은 차례로 다른 시트가 곧바로 이어 뜬다
-export const consumeAllTalkPending = () => {
-  for (const talk of TALKS) update(talk, { pending: false });
+// 홈에서 시트를 하나 띄웠다 — 쌓여 있던 차례를 모두 지운다. 리뷰 요청은 완료 종류를 가리지 않아,
+// 하나만 지우면 남은 차례로 다른 시트가 곧바로 이어 뜬다. 소감 시트가 뜬 그 홈 진입에서 리뷰가 이어 뜨지 않는 것도 이 덕이다
+export const consumeAllPending = () => {
+  for (const activity of ACTIVITIES) update(activity, { pending: false });
 };
 
-// 답한 날을 함께 남긴다 — 완료일 수만 보면 배포 전부터 쓰던 사람은 이미 이틀을 넘겨서
-// 좋았다고 한 그날 또 대화해도 리뷰가 뜬다. 기기 날짜라 자정 경계가 서버와 어긋날 수 있지만,
-// 그래봐야 하루 이르거나 늦게 청하는 정도다
 export const recordSatisfactionAnswer = (
   moment: SatisfactionMoment,
   answer: SatisfactionAnswer,
@@ -67,21 +86,42 @@ export const shouldAskSatisfaction = (talk: SatisfactionTalk) => {
   return completedToday(record) && record?.answer === undefined;
 };
 
-// 리뷰 요청 — 소감에서 좋았다고 한 사람에게만, 다른 날 다시 와서 대화(종류 무관)를 마쳤을 때 한 번.
-// 완료일 숫자는 부르는 쪽이 넘긴다(스트릭 달력) — 이 슬라이스는 스트릭을 모른다
-export const shouldAskReview = (streak: {
-  activeToday: boolean;
-  totalActiveDays: number;
-}) => mayAskReview() && streak.activeToday && streak.totalActiveDays >= 2;
+// 배포 전 기록은 attempt가 없다 — 답이 남아 있으면 한 번은 띄운 것이다
+const reviewAttempt = (record?: ImpressionRecord) =>
+  record?.attempt ?? (record?.answer === undefined ? 0 : 1);
 
-// 위 조건 중 로컬만으로 알 수 있는 부분 — 스트릭을 굳이 조회할 필요가 있는지 먼저 거른다.
-// 어느 대화든 방금 마쳤고, 지난 날 좋았다고 답한 적이 있고, 아직 리뷰를 청하지 않았을 때.
-// 좋았다고 한 소감이 둘이면 그중 하나만 지난 날이어도 된다
-export const mayAskReview = () => {
-  const records = TALKS.map(read);
-  return (
-    records.some(completedToday) &&
-    records.some((r) => r?.answer === 'good' && r.answeredOn !== today()) &&
-    read('review')?.answer === undefined
-  );
+// 리뷰 시트를 띄운 횟수 — 재요청부터 「이미 남겼어요」를 보여주는 기준
+export const readReviewAttempt = () => reviewAttempt(read('review'));
+
+// 리뷰 시트를 띄웠다 — 횟수와 날을 남기고, 이번 완료로 쌓인 차례를 모두 소비한다.
+// 같은 날 또 불리면(개발 모드의 이펙트 이중 실행 등) 한 번으로 센다 — 하루 한 번이 규칙이라 횟수도 하루 하나다
+export const markReviewShown = () => {
+  const review = read('review');
+  if (review?.shownOn !== today())
+    update('review', { attempt: reviewAttempt(review) + 1, shownOn: today() });
+  consumeAllPending();
 };
+
+// 리뷰 요청 — 좋았다고 한 사람이 무엇이든 막 마쳤을 때. 같은 날이어도 묻되 하루 한 번,
+// 닫았으면 닫은 날부터 2·4·6일을 쉬고, 네 번 띄웠거나 끝냈으면(스토어로 감·이미 남김) 다시 묻지 않는다
+export const shouldAskReview = () => {
+  if (!ACTIVITIES.map(read).some(completedToday)) return false;
+  if (!TALKS.map(read).some((r) => r?.answer === 'good')) return false;
+
+  const review = read('review');
+  if (review?.answer === 'good' || review?.answer === 'already_done')
+    return false;
+  if (review?.shownOn === today()) return false;
+
+  const attempt = reviewAttempt(review);
+  if (attempt >= REVIEW_MAX_ATTEMPTS) return false;
+  if (attempt === 0) return true;
+
+  const closedOn = review?.answeredOn;
+  const gap = REVIEW_RETRY_GAP_DAYS[attempt - 1];
+  return closedOn === undefined || daysBetween(closedOn, today()) >= gap;
+};
+
+// 무엇을 마치고 와서 뜨는가 — 계측용. 둘 다 마쳤으면 대화를 앞세운다
+export const resolveReviewTrigger = (): ReviewTrigger =>
+  TALKS.map(read).some(completedToday) ? 'talk' : 'expression';
