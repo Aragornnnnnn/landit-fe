@@ -13,10 +13,9 @@ import { track } from '@/shared/analytics';
 import { toDayLabel } from '@/shared/lib/day-label';
 import { SMALLTALK_PATH, smallTalkHistoryPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
-import { ChevronRightIcon } from '@/shared/ui/Icons';
+import { LoadMoreButton } from '@/shared/ui/LoadMoreButton';
 import { PageHeader } from '@/shared/ui/PageHeader';
-
-import { SmallTalkHistorySkeleton } from './SmallTalkHistorySkeleton';
+import { RecordListSkeleton, RecordRow } from '@/shared/ui/RecordRow';
 
 export const SmallTalkHistory = () => {
   const router = useRouter();
@@ -52,7 +51,7 @@ export const SmallTalkHistory = () => {
         </div>
       ) : sessions === null ? (
         // 조회 중 — 빈 화면만 두면 목록이 비었는지 아직인지 알 수 없다
-        <SmallTalkHistorySkeleton />
+        <RecordListSkeleton rows={4} label="지난 대화를 불러오는 중" />
       ) : sessions.length === 0 ? (
         <p className="flex flex-1 items-center justify-center px-6 text-center text-sm break-keep whitespace-pre-line text-muted-foreground">
           {'아직 나눈 대화가 없어요.\n오늘 한 대화부터 여기 쌓여요.'}
@@ -78,18 +77,7 @@ export const SmallTalkHistory = () => {
           {/* 쌓이면 첫 장 밖으로 밀린다 — 옛 대화도 이어서 볼 수 있게 한다.
               편지함 목록과 같은 모양으로, 목록의 마지막 한 줄처럼 읽히게 한다 */}
           {hasMore && (
-            <button
-              type="button"
-              onClick={loadMore}
-              disabled={loadingMore}
-              className="flex w-full items-center justify-center gap-1 py-4 text-sm font-semibold text-muted-foreground disabled:opacity-60"
-            >
-              {loadingMore ? '불러오는 중' : '더 보기'}
-              {/* 아래 화살표가 아직 공용 아이콘에 없다 — 있는 걸 돌려 쓴다 */}
-              {!loadingMore && (
-                <ChevronRightIcon size={16} className="rotate-90" />
-              )}
-            </button>
+            <LoadMoreButton loading={loadingMore} onClick={loadMore} />
           )}
         </div>
       )}
@@ -105,25 +93,17 @@ const SessionRow = ({
   session: SmallTalkSessionSummary;
   onSelect: () => void;
 }) => (
-  <button
+  <RecordRow
     onClick={onSelect}
-    className="flex w-full items-center gap-3 rounded-2xl bg-card px-4.5 py-4 text-left shadow-sm transition-colors active:bg-secondary/40"
-  >
-    <div className="min-w-0 flex-1">
-      <p className="truncate text-base font-bold text-foreground">
-        {toSessionTitle(session.title, session.completedAt)}
-      </p>
-      <p className="mt-1.5 text-[13px] font-medium text-muted-foreground">
-        {toDayLabel(session.completedAt)} ·{' '}
-        {toSpeakingTimeLabel(session.userSpeakingDurationMs)}
-      </p>
-    </div>
-    <ExpressionProgress
-      done={session.completedExpressionCount}
-      total={session.expressionCount}
-    />
-    <ChevronRightIcon size={16} className="text-muted-foreground/60" />
-  </button>
+    title={toSessionTitle(session.title, session.completedAt)}
+    meta={`${toDayLabel(session.completedAt)} · ${toSpeakingTimeLabel(session.userSpeakingDurationMs)}`}
+    trailing={
+      <ExpressionProgress
+        done={session.completedExpressionCount}
+        total={session.expressionCount}
+      />
+    }
+  />
 );
 
 // 다 배웠으면 초록, 남았으면 주황, 아직 하나도 안 했으면 회색 — 색만으로 남은 게 있는지 읽힌다.

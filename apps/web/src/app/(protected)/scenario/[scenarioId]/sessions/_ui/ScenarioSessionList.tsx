@@ -1,14 +1,13 @@
 'use client';
 
 // 시나리오 기록 — 그 시나리오를 완료한 회차가 최신순으로 선다. 누르면 그때 받은 피드백을 다시 본다
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { useScenarioTitle } from '@/features/scenario/model/useScenarioTitle';
 import { toDayLabel } from '@/shared/lib/day-label';
 import { scenarioReturnPath, scenarioSessionPath } from '@/shared/lib/routes';
-import { ChevronRightIcon } from '@/shared/ui/Icons';
 import { PageHeader } from '@/shared/ui/PageHeader';
+import { RecordListSkeleton, RecordRow } from '@/shared/ui/RecordRow';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 import { StarRating } from '@/shared/ui/StarRating';
 
@@ -45,7 +44,7 @@ export const ScenarioSessionList = ({
           onRetry={retry}
         />
       ) : sessions === null ? (
-        <SessionListSkeleton />
+        <RecordListSkeleton rows={3} label="지난 대화를 불러오는 중" />
       ) : sessions.length === 0 ? (
         <p className="flex flex-1 items-center justify-center px-6 text-center text-sm break-keep whitespace-pre-line text-muted-foreground">
           {'아직 마친 대화가 없어요.\n대화를 마치면 여기 쌓여요.'}
@@ -85,50 +84,24 @@ const SessionRow = ({
   ordinal: number;
   href: string;
 }) => (
-  <Link
+  <RecordRow
     href={href}
-    className="flex w-full items-center gap-3 rounded-2xl bg-card px-4.5 py-4 text-left shadow-sm transition-colors active:bg-secondary/40"
-  >
-    <div className="min-w-0 flex-1">
-      <p className="text-base font-bold text-foreground">{ordinal}번째 대화</p>
-      <p className="mt-1.5 text-[13px] font-medium text-muted-foreground">
+    title={`${ordinal}번째 대화`}
+    meta={
+      <>
         {toDayLabel(session.endedAt)}
         {session.feedback &&
           ` · 원어민 이해도 ${session.feedback.nativeScore}%`}
-      </p>
-    </div>
-    {session.feedback ? (
-      <StarRating rating={session.feedback.starRating} size={16} />
-    ) : (
-      <span className="shrink-0 text-[13px] font-semibold text-muted-foreground">
-        피드백 없음
-      </span>
-    )}
-    <ChevronRightIcon size={16} className="text-muted-foreground/60" />
-  </Link>
-);
-
-// 조회 중 — 빈 화면만 두면 목록이 비었는지 아직인지 알 수 없다
-const SessionListSkeleton = () => (
-  <div
-    role="status"
-    aria-label="지난 대화를 불러오는 중"
-    className="min-h-0 flex-1 animate-pulse overflow-hidden px-5 pb-[max(var(--safe-area-inset-bottom),24px)]"
-  >
-    <div className="mt-2 mb-4 h-5 w-3/4 rounded bg-secondary" />
-    <div className="flex flex-col gap-2">
-      {[0, 1, 2].map((row) => (
-        <div
-          key={row}
-          className="flex items-center gap-3 rounded-2xl bg-card px-4.5 py-4 shadow-sm"
-        >
-          <div className="min-w-0 flex-1">
-            <div className="h-6 w-1/3 rounded bg-secondary" />
-            <div className="mt-1.5 h-[18px] w-1/2 rounded bg-secondary" />
-          </div>
-          <div className="h-4 w-14 shrink-0 rounded bg-secondary" />
-        </div>
-      ))}
-    </div>
-  </div>
+      </>
+    }
+    trailing={
+      session.feedback ? (
+        <StarRating rating={session.feedback.starRating} size={16} />
+      ) : (
+        <span className="shrink-0 text-[13px] font-semibold text-muted-foreground">
+          피드백 없음
+        </span>
+      )
+    }
+  />
 );
