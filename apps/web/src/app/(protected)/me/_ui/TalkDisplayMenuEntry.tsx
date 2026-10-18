@@ -10,11 +10,10 @@ import {
 } from '@/features/conversation/model/talk-display';
 import { useDisplaySetting } from '@/features/conversation/model/useTalkDisplay';
 import { track } from '@/shared/analytics';
-import { BottomSheet } from '@/shared/ui/BottomSheet';
-import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 
 import { MenuButton, MenuGroup, MenuToggle } from './Menu';
+import { SettingSheet } from './SettingSheet';
 
 // 계측 속성 값은 스네이크 케이스로 남긴다
 const SETTING_NAME: Record<
@@ -46,19 +45,12 @@ export const TalkDisplayMenuEntry = () => {
         onClick={() => setOpen(true)}
       />
 
-      <BottomSheet open={open} onClose={() => setOpen(false)}>
-        <BottomSheet.Title
-          className="text-[17px] font-bold"
-          style={{ color: '#111' }}
-        >
-          대화
-        </BottomSheet.Title>
-        <p
-          className="mt-1 mb-4 text-[14px] leading-6"
-          style={{ color: '#666' }}
-        >
-          대화에서 상대가 한 말을 어떻게 보여줄지 정해요
-        </p>
+      <SettingSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title="대화"
+        description="대화에서 상대가 한 말을 어떻게 보여줄지 정해요"
+      >
         <MenuGroup>
           <MenuToggle
             title="상대 영어 문장 항상 보기"
@@ -71,18 +63,7 @@ export const TalkDisplayMenuEntry = () => {
             onChange={(next) => change('alwaysShowTranslation', next)}
           />
         </MenuGroup>
-        <div className="mt-5">
-          <Button
-            type="button"
-            variant="ghost"
-            size="md"
-            className="w-full"
-            onClick={() => setOpen(false)}
-          >
-            닫기
-          </Button>
-        </div>
-      </BottomSheet>
+      </SettingSheet>
     </>
   );
 };

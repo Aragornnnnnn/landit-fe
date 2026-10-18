@@ -14,11 +14,10 @@ import {
   subscribeSpeechRate,
   type SpeechRate,
 } from '@/shared/lib/speech-rate';
-import { BottomSheet } from '@/shared/ui/BottomSheet';
-import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 
 import { MenuButton } from './Menu';
+import { SettingSheet } from './SettingSheet';
 
 // 0.5는 "0.5x", 1은 "1x" — 소수점 뒤 0은 붙이지 않는다
 const rateLabel = (rate: SpeechRate) => `${rate}x`;
@@ -93,15 +92,13 @@ export const SpeechRateMenuEntry = () => {
         onClick={() => setOpen(true)}
       />
 
-      <BottomSheet open={open} onClose={close}>
-        {/* 들어보기는 헤더 우측 보조 동작 — 본문 세로 흐름(세그먼트·축 라벨·닫기)에 버튼을 하나 더 쌓지 않는다 */}
-        <div className="flex items-center justify-between">
-          <BottomSheet.Title
-            className="text-[17px] font-bold"
-            style={{ color: '#111' }}
-          >
-            음성
-          </BottomSheet.Title>
+      <SettingSheet
+        open={open}
+        onClose={close}
+        title="음성"
+        description="영어 음성이 들리는 속도예요"
+        // 들어보기는 제목 오른쪽 보조 동작 — 본문 세로 흐름(세그먼트·축 라벨·닫기)에 버튼을 하나 더 쌓지 않는다
+        action={
           <button
             type="button"
             onClick={togglePreview}
@@ -114,15 +111,12 @@ export const SpeechRateMenuEntry = () => {
             </span>
             {playing ? '멈추기' : '들어보기'}
           </button>
-        </div>
-        <p className="mt-1 text-[14px] leading-6" style={{ color: '#666' }}>
-          영어 음성이 들리는 속도예요
-        </p>
-
+        }
+      >
         <div
           role="radiogroup"
           aria-label="말하기 속도"
-          className="mt-5 flex gap-0 rounded-[10px] p-1"
+          className="mt-1 flex gap-0 rounded-[10px] p-1"
           style={{ background: '#F2F2F7' }}
         >
           {SPEECH_RATES.map((option) => {
@@ -158,19 +152,7 @@ export const SpeechRateMenuEntry = () => {
             빠르게 <Emoji>🐇</Emoji>
           </span>
         </div>
-
-        <div className="mt-5">
-          <Button
-            type="button"
-            variant="ghost"
-            size="md"
-            className="w-full"
-            onClick={close}
-          >
-            닫기
-          </Button>
-        </div>
-      </BottomSheet>
+      </SettingSheet>
     </>
   );
 };
