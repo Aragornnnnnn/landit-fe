@@ -128,7 +128,7 @@ export const SatisfactionSheet = ({
           {face.body}
         </p>
         {view !== 'thanks' && (
-          <div className="mt-auto flex w-full flex-wrap justify-center gap-3">
+          <div className="mt-auto flex w-full gap-3 pt-6">
             {view === 'ask' ? (
               <>
                 <Button variant="ghost" size="md" onClick={onBad}>
@@ -146,16 +146,17 @@ export const SatisfactionSheet = ({
                 {face.cta}
               </Button>
             )}
-            {view === 'review' && showAlreadyDone && (
-              <button
-                type="button"
-                onClick={onAlreadyDone}
-                className="text-sm text-muted-foreground underline underline-offset-2"
-              >
-                이미 남겼어요
-              </button>
-            )}
           </div>
+        )}
+        {/* 버튼과 떨어뜨려 두어 주 버튼과 한 덩어리로 안 보이게, 탭 영역은 글자보다 넉넉히 */}
+        {view === 'review' && showAlreadyDone && (
+          <button
+            type="button"
+            onClick={onAlreadyDone}
+            className="mt-5 px-4 py-2 text-sm text-muted-foreground underline underline-offset-2"
+          >
+            이미 남겼어요
+          </button>
         )}
       </div>
     </BottomSheet>
