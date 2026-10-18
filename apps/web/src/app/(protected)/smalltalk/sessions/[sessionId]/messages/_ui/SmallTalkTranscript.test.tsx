@@ -121,6 +121,29 @@ describe('SmallTalkTranscript', () => {
   });
 });
 
+describe('SmallTalkTranscript 하단 여백', () => {
+  // 아래 버튼이 없으면 목록이 화면 바닥에 닿는다 — 안드로이드 내비게이션 바·iOS 홈 인디케이터 위로 띄운다
+  it('기록에서 들어와 아래 버튼이 없으면 목록이 하단 safe-area만큼 띄워진다', () => {
+    // given
+    renderTranscript([messageOf({})], { continueToLearning: false });
+
+    // then
+    expect(screen.getByRole('list').className).toContain(
+      '--safe-area-inset-bottom',
+    );
+  });
+
+  it('대화를 마친 직후라 아래 버튼이 있으면 그 버튼이 바닥을 맡는다', () => {
+    // given
+    renderTranscript([messageOf({})], { continueToLearning: true });
+
+    // then
+    expect(screen.getByRole('list').className).not.toContain(
+      '--safe-area-inset-bottom',
+    );
+  });
+});
+
 describe('SmallTalkTranscript 교정 카드', () => {
   it('교정이 있으면 말풍선 아래에 더 자연스러운 문장과 이유가 보인다', () => {
     renderTranscript([
@@ -316,6 +339,29 @@ describe('SmallTalkTranscript 교정 사이 이동', () => {
     );
 
     expect(scrolledTo("Today it's just stairs at the gym.")).toBe(true);
+  });
+
+  it('칩이 떠 있으면 목록 끝에 칩 자리를 비워 마지막 말풍선이 칩에 가리지 않는다', () => {
+    // given — 아직 안 간 교정이 남아 칩이 떠 있다
+    renderTranscript(twoCorrections());
+
+    // then
+    expect(
+      screen.getByTestId('next-correction-chip-space'),
+    ).toBeInTheDocument();
+  });
+
+  it('칩이 사라지면 목록 끝의 칩 자리도 거둔다', async () => {
+    // given
+    renderTranscript(twoCorrections());
+
+    // when — 마지막 교정까지 가서 칩이 사라진다
+    await userEvent.click(
+      screen.getByRole('button', { name: /다음 자연스러운 말/ }),
+    );
+
+    // then
+    expect(screen.queryByTestId('next-correction-chip-space')).toBeNull();
   });
 
   it('마지막 교정까지 가면 칩이 사라진다', async () => {

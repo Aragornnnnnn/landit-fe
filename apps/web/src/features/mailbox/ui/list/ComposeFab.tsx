@@ -4,15 +4,21 @@ import Link from 'next/link';
 
 import { MAILBOX_COMPOSE_PATH } from '@/shared/lib/routes';
 
-// 목록이 FAB 뒤로 숨지 않으려면 이만큼 띄워야 한다 — 아래 높이(h-12)와 바닥 여백의 합
-export const COMPOSE_FAB_CLEARANCE =
-  'pb-[calc(max(var(--safe-area-inset-bottom),20px)+92px)]';
+// FAB가 뜨는 높이 — 내비게이션 바·홈 인디케이터 위로 띄우되 최소 20px
+const FAB_BOTTOM = 'max(var(--safe-area-inset-bottom), 20px)';
+const FAB_HEIGHT_PX = 48;
+// 마지막 편지와 FAB 사이에 남길 틈
+const LIST_GAP_ABOVE_FAB_PX = 44;
+
+// 목록이 FAB 뒤로 숨지 않으려면 이만큼 띄워야 한다 — FAB 바닥 여백 + FAB 높이 + 틈
+export const COMPOSE_FAB_CLEARANCE = `calc(${FAB_BOTTOM} + ${FAB_HEIGHT_PX + LIST_GAP_ABOVE_FAB_PX}px)`;
 
 export const ComposeFab = () => (
   <Link
     replace
     href={MAILBOX_COMPOSE_PATH}
-    className="absolute right-5 bottom-[max(var(--safe-area-inset-bottom),20px)] flex h-12 items-center gap-1.5 rounded-full bg-primary pr-5 pl-4 text-sm font-bold text-primary-foreground shadow-lg transition-transform active:scale-95"
+    style={{ bottom: FAB_BOTTOM, height: FAB_HEIGHT_PX }}
+    className="absolute right-5 flex items-center gap-1.5 rounded-full bg-primary pr-5 pl-4 text-sm font-bold text-primary-foreground shadow-lg transition-transform active:scale-95"
   >
     <span aria-hidden className="text-lg leading-none">
       +
