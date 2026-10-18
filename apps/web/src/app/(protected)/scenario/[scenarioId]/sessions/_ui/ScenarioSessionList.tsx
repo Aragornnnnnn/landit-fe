@@ -7,7 +7,8 @@ import { useRouter } from 'next/navigation';
 import { useScenarioTitle } from '@/features/scenario/model/useScenarioTitle';
 import { toDayLabel } from '@/shared/lib/day-label';
 import { scenarioReturnPath, scenarioSessionPath } from '@/shared/lib/routes';
-import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
+import { ChevronRightIcon } from '@/shared/ui/Icons';
+import { PageHeader } from '@/shared/ui/PageHeader';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 import { StarRating } from '@/shared/ui/StarRating';
 
@@ -31,18 +32,10 @@ export const ScenarioSessionList = ({
       className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
       style={{ paddingTop: 'var(--safe-area-inset-top)' }}
     >
-      <header className="relative flex h-14 flex-none items-center justify-center px-14">
-        <button
-          onClick={() => router.replace(scenarioReturnPath({ date }))}
-          className="absolute left-3 flex size-10 items-center justify-center text-foreground"
-          aria-label="뒤로"
-        >
-          <ChevronLeftIcon size={24} />
-        </button>
-        <h1 className="truncate text-[17px] font-bold text-foreground">
-          {title}
-        </h1>
-      </header>
+      <PageHeader
+        title={title}
+        onBack={() => router.replace(scenarioReturnPath({ date }))}
+      />
 
       {/* 받아 둔 기록이 있으면 다시 받다 실패해도 목록을 그대로 둔다 */}
       {sessions === null && error ? (

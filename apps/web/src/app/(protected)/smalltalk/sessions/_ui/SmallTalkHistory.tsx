@@ -13,7 +13,8 @@ import { track } from '@/shared/analytics';
 import { toDayLabel } from '@/shared/lib/day-label';
 import { SMALLTALK_PATH, smallTalkHistoryPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
-import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
+import { ChevronRightIcon } from '@/shared/ui/Icons';
+import { PageHeader } from '@/shared/ui/PageHeader';
 
 import { SmallTalkHistorySkeleton } from './SmallTalkHistorySkeleton';
 
@@ -27,16 +28,10 @@ export const SmallTalkHistory = () => {
       className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
       style={{ paddingTop: 'var(--safe-area-inset-top)' }}
     >
-      <header className="relative flex h-14 flex-none items-center justify-center">
-        <button
-          onClick={() => router.replace(SMALLTALK_PATH)}
-          className="absolute left-3 flex size-10 items-center justify-center text-foreground"
-          aria-label="뒤로"
-        >
-          <ChevronLeftIcon size={24} />
-        </button>
-        <h1 className="text-[17px] font-bold text-foreground">지난 스몰톡</h1>
-      </header>
+      <PageHeader
+        title="지난 스몰톡"
+        onBack={() => router.replace(SMALLTALK_PATH)}
+      />
 
       {error ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">

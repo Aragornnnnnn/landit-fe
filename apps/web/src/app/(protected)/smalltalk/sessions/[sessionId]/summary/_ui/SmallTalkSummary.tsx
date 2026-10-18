@@ -22,7 +22,7 @@ import {
   smallTalkTranscriptPath,
 } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
-import { CloseIcon } from '@/shared/ui/Icons';
+import { PageHeader } from '@/shared/ui/PageHeader';
 
 import {
   FRESH_ARRIVALS,
@@ -111,17 +111,12 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
       className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
       style={{ paddingTop: 'var(--safe-area-inset-top)' }}
     >
-      <header className="relative flex h-14 flex-none items-center justify-center">
-        <button
-          onClick={() => skipDetail('close')}
-          disabled={leaving}
-          className="absolute left-3 flex size-10 items-center justify-center text-foreground"
-          aria-label="닫기"
-        >
-          <CloseIcon size={24} />
-        </button>
-        <h1 className="text-[17px] font-bold text-foreground">오늘의 스몰톡</h1>
-      </header>
+      <PageHeader
+        title="오늘의 스몰톡"
+        leading="close"
+        backDisabled={leaving}
+        onBack={() => skipDetail('close')}
+      />
 
       {error || summaryStuck ? (
         <SummaryUnavailable
