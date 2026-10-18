@@ -99,6 +99,13 @@ export const pickedPhotoSchema = z.object({
 });
 
 // 한 번에 고를 수 있는 사진 수 상한 — 피드백 첨부 서버 제한(3장)과 같다
+// 앱 안 별점 카드 요청의 결과 — 셸이 창 감지로 판정한다
+export const reviewResultStatusSchema = z.enum([
+  'shown',
+  'not_shown',
+  'unavailable',
+]);
+
 export const MAX_PICK_PHOTOS = 3;
 
 // 반복 알람의 종류 — 종류마다 알람은 하나다.
@@ -248,6 +255,8 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
     type: z.literal('PICK_PHOTOS'),
     limit: z.number().int().min(1).max(MAX_PICK_PHOTOS),
   }),
+  // 앱 안 별점 카드(OS 리뷰 요청)를 띄워 달라 — iOS는 1년 3번만 띄워 주고 떴는지 알려주지 않아 셸이 감지해 답한다. 응답은 REVIEW_RESULT
+  z.object({ type: z.literal('REQUEST_REVIEW') }),
   // 알람 권한·예약 상태 조회 — 다이얼로그를 띄우지 않는다. 응답은 ALARM_STATUS
   z.object({ type: z.literal('GET_ALARM_STATUS') }),
   // 알람 권한 요청 — iOS는 AlarmKit 권한창, Android는 정확한 알람 설정 화면이 뜬다. 응답은 ALARM_STATUS
@@ -336,6 +345,12 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     status: restoreStatusSchema,
     message: z.string().optional(),
   }),
+  // REQUEST_REVIEW 응답 — shown은 카드가 떴다(남겼는지는 모른다), not_shown은 2초 안에 안 떴다,
+  // unavailable은 이 플랫폼·환경에 카드가 없다. shown이 아니면 웹이 지금처럼 스토어로 보낸다
+  z.object({
+    type: z.literal('REVIEW_RESULT'),
+    status: reviewResultStatusSchema,
+  }),
   // PICK_PHOTOS 응답 — success일 때만 photos가 차 있다. 셸이 못 구운 사진은 빼고 보낸다.
   // failedCount·overflowed는 웹이 사용자에게 무엇이 빠졌는지 알리는 데 쓴다
   z.object({
@@ -370,6 +385,7 @@ export type WidgetFamily = z.infer<typeof widgetFamilySchema>;
 export type WidgetChange = z.infer<typeof widgetChangeSchema>;
 export type SubscriptionPlan = z.infer<typeof subscriptionPlanSchema>;
 export type OfferingPackage = z.infer<typeof offeringPackageSchema>;
+export type ReviewResultStatus = z.infer<typeof reviewResultStatusSchema>;
 export type PurchaseStatus = z.infer<typeof purchaseStatusSchema>;
 export type RestoreStatus = z.infer<typeof restoreStatusSchema>;
 export type PhotoPickStatus = z.infer<typeof photoPickStatusSchema>;
