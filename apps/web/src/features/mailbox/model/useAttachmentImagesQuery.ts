@@ -1,11 +1,11 @@
 // 보낸 피드백의 첨부 사진을 장마다 따로 받는다 — 한 장이 실패해도 나머지는 보이고, 실패한 장만 다시 받는다
 import { useQueries } from '@tanstack/react-query';
 
+import { retryUnlessClientError } from '@/shared/api/retry';
 import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getFeedbackAttachment, type FeedbackAttachment } from '../api/mailbox';
 import { mailboxKeys } from './keys';
-import { retryUnlessClientError } from './useLetterDetailQuery';
 
 export type AttachmentImage =
   | { status: 'pending' }
