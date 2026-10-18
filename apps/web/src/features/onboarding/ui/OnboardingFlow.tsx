@@ -22,10 +22,11 @@ import { getNativeContext } from '@/shared/bridge/native-context';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { ONBOARDED_PARAM, SCENARIO_PATH } from '@/shared/lib/routes';
 import { Transition } from '@/shared/motion';
+import { StepDots } from '@/shared/ui/StepDots';
+import { StepHeader } from '@/shared/ui/StepHeader';
 
 import { STEP_ORDER, type OnboardingStep } from '../model/steps';
 import { useSaveAccentMutation } from '../model/useSaveAccentMutation';
-import { OnboardingHeader } from './common/OnboardingHeader';
 import { AccentStep } from './steps/AccentStep';
 import { IntroStep } from './steps/IntroStep';
 import { LampStep } from './steps/LampStep';
@@ -146,11 +147,12 @@ export const OnboardingFlow = () => {
         </div>
       ) : (
         <>
-          <OnboardingHeader
-            step={step}
-            stepOrder={stepOrder}
+          <StepHeader
             onBack={stepBack}
-          />
+            backDisabled={stepOrder.indexOf(step) === 0}
+          >
+            <StepDots step={step} stepOrder={stepOrder} />
+          </StepHeader>
 
           <Transition
             transitionKey={step}
