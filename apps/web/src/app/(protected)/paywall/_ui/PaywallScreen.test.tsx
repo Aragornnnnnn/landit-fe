@@ -464,6 +464,16 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     });
   });
 
+  it('결제 금액 안내는 환급을 이벤트로 따로 내세우지 않고 한 줄로만 말한다', () => {
+    render(<PaywallScreen rewardChallenge />);
+    goCheckout();
+
+    expect(screen.queryByText(/환급 이벤트/)).toBeNull();
+    expect(
+      screen.getByText('매일 하면 낸 돈 다 돌려받을 수 있어요'),
+    ).toBeInTheDocument();
+  });
+
   it('결제 금액 안내는 정가를 지우고 신규 회원 특가로 반값을 보여 준다', () => {
     render(<PaywallScreen rewardChallenge />);
     goCheckout();
@@ -478,9 +488,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     render(<PaywallScreen rewardChallenge />);
     goCheckout();
 
-    fireEvent.click(
-      screen.getByRole('button', { name: '50,000원으로 프리미엄 시작하기' }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: '프리미엄 시작하기' }));
 
     expect(mocks.track).toHaveBeenCalledWith('Purchase Started', {
       plan: 'pass',
@@ -519,9 +527,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
 
     goCheckout();
     expect(screen.getByText('60,000원')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: '30,000원으로 프리미엄 시작하기' }),
-    ).toBeInTheDocument();
+    expect(screen.getByText('30,000원')).toBeInTheDocument();
   });
 
   it('구매 복원은 맨 위에만 있다 — 구독이 아니라 아래 링크를 두지 않는다', () => {

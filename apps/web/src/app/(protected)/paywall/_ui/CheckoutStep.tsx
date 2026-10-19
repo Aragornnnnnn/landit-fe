@@ -7,7 +7,6 @@ import { formatWon } from '@/features/subscription/lib/won';
 import { PAYWALL_HERO } from '@/features/subscription/ui/paywall-hero-image';
 import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
 import { BenefitComparison } from '@/features/subscription/ui/product/BenefitComparison';
-import { Emoji } from '@/shared/ui/emoji';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import { discountPercentOf, listPriceOf } from '../_model/pass-price';
@@ -36,19 +35,10 @@ const PassPriceCard = ({ plan }: { plan: RewardPlan }) => {
           신규 회원 특가
         </span>
       </div>
-      <div className="mt-3 flex flex-col gap-2 border-t border-[#f1ebe3] pt-3">
-        <span className="inline-flex w-fit items-center gap-1 rounded-md bg-[#f4efe8] px-2 py-1 text-xs font-bold text-[#5f5953]">
-          <Emoji>🎁</Emoji>
-          덤으로 환급 이벤트 진행 중
-        </span>
+      <div className="mt-3 border-t border-[#f1ebe3] pt-3">
         <p className="flex items-center gap-2 text-sm font-medium text-[#5f5953]">
           <Coin size={22} />
-          <span>
-            매일 하면{' '}
-            <span className="font-black text-primary">
-              낸 돈 다 돌려받을 수 있어요
-            </span>
-          </span>
+          매일 하면 낸 돈 다 돌려받을 수 있어요
         </p>
       </div>
     </div>
@@ -104,9 +94,6 @@ export const CheckoutStep = ({
         <h3 className="text-[22px] font-black tracking-[-0.02em] text-foreground">
           프리미엄이면 이게 다 열려요
         </h3>
-        <p className="mt-1.5 text-sm font-medium text-muted-foreground">
-          매일 하는 대화를 프리미엄이 끝까지 챙겨 줘요
-        </p>
         <div className="mt-4 rounded-3xl border border-[#e9e7e2] bg-card pt-1 pb-4">
           <BenefitComparison benefits={rewardBenefitsOf(plan.dailyRefund)} />
         </div>

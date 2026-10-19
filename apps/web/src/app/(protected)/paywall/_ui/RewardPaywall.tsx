@@ -5,7 +5,6 @@
 import { useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
-import { formatWon } from '@/features/subscription/lib/won';
 import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
 
@@ -71,7 +70,7 @@ export const RewardPaywall = ({
           </Button>
         ) : (
           <Button onClick={onPurchase} loading={busy}>
-            {formatWon(plan.price)}으로 프리미엄 시작하기
+            프리미엄 시작하기
           </Button>
         )}
       </footer>
