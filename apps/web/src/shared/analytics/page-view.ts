@@ -15,6 +15,7 @@ import {
   readScenarioFeedbackParams,
   REWARD_CHECK_PATH,
   REWARD_PATH,
+  SCENARIO_PATH,
   SUBSCRIPTION_CANCEL_PATH,
   SUBSCRIPTION_HISTORY_PATH,
   SUBSCRIPTION_MANAGE_PATH,
@@ -123,7 +124,7 @@ const resolvePage = (
 
   const seg = pathname.split('/').filter(Boolean);
 
-  if (pathname === '/scenario') {
+  if (pathname === SCENARIO_PATH) {
     // 날짜가 붙으면 완료한 지난 날 카드를 다시 보는 것 — 열 수 있는 과거는 완료한 날뿐이다
     const completedDate = searchParams.get('date');
     const base: PageViewProps = {

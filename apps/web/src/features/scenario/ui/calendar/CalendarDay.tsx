@@ -4,6 +4,7 @@
 import { motion, useReducedMotion } from 'motion/react';
 
 import { weekdayLabelOf } from '@/shared/lib/date-string';
+import { toDayLabel } from '@/shared/lib/day-label';
 
 import type { ScenarioCalendarDay } from '../../api/calendar';
 import { dayStateOf, isOpenable, type DayState } from '../../lib/day-state';
@@ -59,7 +60,7 @@ export const CalendarDay = ({
       type="button"
       disabled={!isOpenable(state)}
       onClick={() => onSelect(day.date)}
-      aria-label={`${Number(day.date.slice(5, 7))}월 ${dayNumber}일${
+      aria-label={`${toDayLabel(day.date)}${
         state === 'completed' ? ' 완료' : state === 'today' ? ' 오늘' : ''
       }`}
       aria-current={selected ? 'date' : undefined}

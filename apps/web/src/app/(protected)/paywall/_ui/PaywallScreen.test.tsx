@@ -459,7 +459,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     render(<PaywallScreen rewardChallenge />);
 
     fireEvent.click(
-      screen.getByRole('button', { name: '100일 환급 챌린지 시작하기' }),
+      screen.getByRole('button', { name: '5만 원 걸고 도전하기' }),
     );
 
     expect(mocks.purchase).toHaveBeenCalledWith('pass');
@@ -474,7 +474,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     expect(screen.getByText('− 30,000원')).toBeInTheDocument();
     expect(screen.getByText('(100일 × 300원)')).toBeInTheDocument();
     expect(
-      screen.getByText('매일 오늘의 시나리오를 할 때마다 300원이 쌓여요'),
+      screen.getByText('시나리오 1개 끝낼 때마다 300원 적립'),
     ).toBeInTheDocument();
   });
 });

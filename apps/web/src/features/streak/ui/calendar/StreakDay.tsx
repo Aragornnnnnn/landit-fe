@@ -1,4 +1,6 @@
 // 달력 한 칸 — 위에 그 날의 마크(열매·빈 원), 아래에 날짜. 이어진 구간 띠는 주 행이 뒤에 깐다
+import { toDayLabel } from '@/shared/lib/day-label';
+
 import type { DayMark } from '../../model/calendar-day';
 import { StreakFruit } from '../common/StreakFruit';
 
@@ -50,7 +52,8 @@ export const StreakDay = ({ date, mark }: StreakDayProps) => {
     <div className="relative flex flex-col items-center pb-1.5">
       {/* 눈으로는 열매·테두리가, 소리로는 이 문장이 같은 것을 말한다 */}
       <span className="sr-only">
-        {Number(date.slice(5, 7))}월 {day}일{status && `, ${status}`}
+        {toDayLabel(date)}
+        {status && `, ${status}`}
       </span>
 
       <span

@@ -21,6 +21,7 @@ import {
 } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, ChevronRightIcon } from '@/shared/ui/Icons';
+import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
@@ -94,20 +95,12 @@ export default function SmallTalkPage() {
 
   if (fatalError) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="text-muted-foreground">{fatalError.message}</p>
-        <Button
-          variant="secondary"
-          size="sm"
-          className="w-auto px-6"
-          onClick={() => {
-            track(EVENTS.ERROR_RETRIED, { screen: 'smalltalk' });
-            void refresh();
-          }}
-        >
-          다시 시도
-        </Button>
-      </div>
+      <RetryNotice
+        fill
+        screen="smalltalk"
+        message={fatalError.message}
+        onRetry={() => void refresh()}
+      />
     );
   }
 
