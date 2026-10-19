@@ -1,9 +1,7 @@
-// 홈의 첫 표현 투어 지휘 — 이어하기 안내·챌린지 소개·카드 코치·페이월 이동을 차례로 낸다
+// 홈의 첫 표현 투어 지휘 — 튜토리얼·카드 뒤집기·페이월 이동을 차례로 낸다
 'use client';
 
-import { useEffect, useEffectEvent, useRef, useState } from 'react';
-
-import { isTourLive, markTourLive } from '@/features/tour/model/tour-session';
+import { useEffect, useEffectEvent, useRef } from 'react';
 
 import { useFirstExpressionTour } from '../../../_model/useFirstExpressionTour';
 import { useRewardOffer } from '../../../_model/useRewardOffer';
@@ -21,10 +19,8 @@ export const useHomeTour = ({
   showerHold: boolean;
 }) => {
   const tour = useFirstExpressionTour();
-  const [live, setLive] = useState(isTourLive);
   const view = homeTourViewOf({
     screen: tour.screen,
-    live,
     cleared,
     showerHold,
   });
@@ -45,10 +41,6 @@ export const useHomeTour = ({
     // 투어가 진행 중이면 홈의 다른 시트(소감·알림 동의)는 미룬다
     active: view !== 'none',
     offer,
-    resume: () => {
-      markTourLive();
-      setLive(true);
-    },
     closeIntro: () => tour.saveStep('CHALLENGE_INTRO_SEEN'),
     cardTour:
       view === 'card' &&

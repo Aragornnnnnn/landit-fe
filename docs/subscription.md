@@ -124,7 +124,7 @@ Google Play도 같은 세 제품 ID로 등록돼 있다. 할인 연간은 기존
 
 진행 단계는 이 기기에 계정별로 둔다(`tour-store.ts`, `localStorage` 키 `landit-first-expression-tour:{userId}`). 단계는 `LEVEL_SEEN`·`FEEDBACK_SEEN` → `CHALLENGE_INTRO_SEEN` → `CARD_FLIPPED` → `FREE_EXPRESSION_DONE` → `COMPLETED`, 저장값은 "마지막으로 끝낸 단계"다. 앱을 지우거나 다른 기기로 옮기면 투어를 다시 볼 수 있다.
 
-앱을 새로 열었는데 단계가 중간이면, 홈이 래디의 이어하기 안내(`TourResumeSheet`)를 먼저 띄우고 다음 단계부터 이어 간다. 이번 실행에서 투어를 진행했는지는 메모리 플래그(`tour-session.ts`)로만 안다. 뒤집기·무료 표현은 끝낸 카드가 있어야 해서, 날이 바뀌어 오늘 카드가 램프면 다음 대화를 끝낼 때까지 투어는 쉰다. 홈의 화면 판정은 `homeTourViewOf`, 시작 판정은 `tourEntryOf`, 튜토리얼 타이핑은 `tutorial-typing.ts`다.
+앱을 새로 열었는데 단계가 중간이면 안내 없이 마지막 단계 다음부터 바로 이어 간다. 뒤집기·무료 표현은 끝낸 카드가 있어야 해서, 날이 바뀌어 오늘 카드가 램프면 다음 대화를 끝낼 때까지 투어는 쉰다. 홈의 화면 판정은 `homeTourViewOf`, 시작 판정은 `tourEntryOf`, 튜토리얼 타이핑은 `tutorial-typing.ts`다.
 
 ## 페이월 노출 조건
 

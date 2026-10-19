@@ -23,7 +23,6 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
 import { useHomeTour } from './_model/useHomeTour';
-import { TourResumeSheet } from './_ui/TourResumeSheet';
 import { TourTutorial } from './_ui/TourTutorial';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
@@ -135,7 +134,6 @@ function ScenarioContent() {
       )}
       {promptTurn && !sheetsHeld && <NotificationConsentGate />}
 
-      {tour.view === 'resume' && <TourResumeSheet onContinue={tour.resume} />}
       {tour.view === 'challenge_intro' && (
         <TourTutorial dailyWon={tour.offer.dailyWon} onDone={tour.closeIntro} />
       )}

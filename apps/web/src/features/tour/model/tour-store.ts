@@ -1,6 +1,5 @@
 // 첫 표현 투어 단계를 이 기기에 계정별로 기억한다 — 서버엔 두지 않는다.
 // 저장소를 못 쓰거나 모르는 값이면 시작 전으로 본다
-import { markTourLive } from './tour-session';
 import { TOUR_STEPS, type TourStep } from './tour-step';
 
 const keyOf = (userId: number) => `landit-first-expression-tour:${userId}`;
@@ -17,8 +16,6 @@ export const readTourStep = (userId: number): TourStep | null => {
 };
 
 export const writeTourStep = (userId: number, step: TourStep) => {
-  // 이번 실행에서 투어를 이어 가는 중이다 — 홈이 이어하기 안내를 다시 띄우지 않게
-  markTourLive();
   try {
     localStorage.setItem(keyOf(userId), step);
   } catch {
