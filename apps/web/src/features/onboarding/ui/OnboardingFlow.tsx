@@ -17,7 +17,6 @@ import {
 import { InstallGuide } from '@/features/widget/ui/install-guide/InstallGuide';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
-import { markOnboardingSeen } from '@/shared/auth/onboarding-seen';
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { ONBOARDED_PARAM, SCENARIO_PATH } from '@/shared/lib/routes';
@@ -121,8 +120,6 @@ export const OnboardingFlow = () => {
   const startFirstConversation = () => {
     track(EVENTS.ONBOARDING_STEP_COMPLETED, { step: 'scenario' });
     track(EVENTS.ONBOARDING_COMPLETED);
-    // 끝까지 본 기기로 기록해 재로그인 시 온보딩을 다시 보여주지 않는다
-    markOnboardingSeen();
     router.replace(`${SCENARIO_PATH}?${ONBOARDED_PARAM}=1`);
   };
 

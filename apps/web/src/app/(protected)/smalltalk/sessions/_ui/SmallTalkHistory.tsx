@@ -2,7 +2,6 @@
 
 // 지난 스몰톡 — 완료한 대화가 최신순으로 선다. 누르면 그때 만든 표현을 다시 본다.
 // 시나리오처럼 날짜로 찾아가는 화면이 아니다 — 스몰톡은 대화 자체가 기록의 단위다
-import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -14,11 +13,10 @@ import type { SmallTalkSessionSummary } from '@/features/small-talk/api/small-ta
 import { toSessionTitle } from '@/features/small-talk/lib/session-summary';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkSessionsQuery } from '@/features/small-talk/model/useSmallTalkSessionsQuery';
-import { track } from '@/shared/analytics';
 import { toDayLabel } from '@/shared/lib/day-label';
 import { SMALLTALK_PATH, smallTalkHistoryPath } from '@/shared/lib/routes';
-import { Button } from '@/shared/ui/Button';
 import { LoadMoreButton } from '@/shared/ui/LoadMoreButton';
+import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 export const SmallTalkHistory = () => {
   const router = useRouter();
@@ -36,22 +34,12 @@ export const SmallTalkHistory = () => {
       />
 
       {error ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            {error.message || '지난 대화를 불러오지 못했어요.'}
-          </p>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="w-auto px-6"
-            onClick={() => {
-              track(EVENTS.ERROR_RETRIED, { screen: 'smalltalk' });
-              retry();
-            }}
-          >
-            다시 시도
-          </Button>
-        </div>
+        <RetryNotice
+          fill
+          screen="smalltalk"
+          message={error.message || '지난 대화를 불러오지 못했어요.'}
+          onRetry={retry}
+        />
       ) : sessions === null ? (
         // 조회 중 — 빈 화면만 두면 목록이 비었는지 아직인지 알 수 없다
         <HistoryListSkeleton rows={4} label="지난 대화를 불러오는 중" />

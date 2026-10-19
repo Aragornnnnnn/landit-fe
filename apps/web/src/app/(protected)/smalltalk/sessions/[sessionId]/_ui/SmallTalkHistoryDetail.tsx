@@ -22,6 +22,7 @@ import {
 } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ChatHistoryIcon } from '@/shared/ui/Icons';
+import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { SmallTalkHistoryDetailSkeleton } from './SmallTalkHistoryDetailSkeleton';
 
@@ -93,22 +94,12 @@ export const SmallTalkHistoryDetail = ({
       />
 
       {error ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            {error.message || '대화를 불러오지 못했어요.'}
-          </p>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="w-auto px-6"
-            onClick={() => {
-              track(EVENTS.ERROR_RETRIED, { screen: 'expression_list' });
-              retry();
-            }}
-          >
-            다시 시도
-          </Button>
-        </div>
+        <RetryNotice
+          fill
+          screen="expression_list"
+          message={error.message || '대화를 불러오지 못했어요.'}
+          onRetry={retry}
+        />
       ) : isLoading ? (
         <SmallTalkHistoryDetailSkeleton />
       ) : (
