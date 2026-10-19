@@ -22,6 +22,9 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
+import { useHomeTour } from './_model/useHomeTour';
+import { TourResumeSheet } from './_ui/TourResumeSheet';
+import { TourTutorial } from './_ui/TourTutorial';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
 export default function ScenarioPage() {
@@ -53,7 +56,6 @@ function ScenarioContent() {
   const promoOpen = usePromoSheetOpen();
   // 돌아온 순간의 환급 동전 연출이 끝날 때까지도 미룬다 — 어둠 아래에서 시트가 같이 올라오면 둘이 겹친다
   const showerHold = useEarnShowerHold();
-  const sheetsHeld = promoOpen || showerHold;
   // 대화 시작을 눌렀다 — 바로 이동하지 않고 브리핑 카드를 잠깐 보여준 뒤 대화로 들어간다
   const [briefingScenario, setBriefingScenario] = useState<Scenario | null>(
     null,
@@ -61,6 +63,12 @@ function ScenarioContent() {
 
   // 완료한 날은 카드 앞면(같은 썸네일·제목·설명)이 이미 떠 있다 — 램프로 시작하는 날만 브리핑이 필요하다
   const cleared = daily?.scenario?.dailyScenarioType === 'CLEARED';
+  // 첫 표현 투어 — 오늘 카드를 끝낸 무료 사용자에게 챌린지를 소개하고 표현 하나를 무료로 열어 준다
+  const tour = useHomeTour({
+    cleared: cleared && date === undefined,
+    showerHold,
+  });
+  const sheetsHeld = promoOpen || showerHold || tour.active;
   // 대화는 페이월 문이 아니다 — 오늘 카드든 지난 카드든, 재대화든 구독과 관계없이 시작한다.
   // 무료 사용자가 막히는 건 그 뒤의 상세 피드백과 표현 학습이다 (docs/subscription.md 「무료 구간과 페이월 게이트」)
   const start = (scenario: Scenario) => {
@@ -112,7 +120,8 @@ function ScenarioContent() {
           playable={daily.playable}
           date={date}
           today={daily.date}
-          autoFlip={autoFlip}
+          autoFlip={autoFlip || tour.openBack}
+          tour={tour.cardTour}
           onStart={start}
           onSummonClose={() => setSummonClosed(true)}
         />
@@ -125,6 +134,11 @@ function ScenarioContent() {
         <SatisfactionGate moment="review" />
       )}
       {promptTurn && !sheetsHeld && <NotificationConsentGate />}
+
+      {tour.view === 'resume' && <TourResumeSheet onContinue={tour.resume} />}
+      {tour.view === 'challenge_intro' && (
+        <TourTutorial dailyWon={tour.offer.dailyWon} onDone={tour.closeIntro} />
+      )}
 
       {/* 브리핑을 다 보여주면 대화로 넘어간다 — push라 뒤로가기는 이 화면(카드)으로 돌아온다 */}
       {briefingScenario && (

@@ -26,6 +26,7 @@ import { MY_PAGE_PATH, REWARD_PATH } from '@/shared/lib/routes';
 import { HeaderAction } from '@/shared/ui/HeaderAction';
 import { UserIcon } from '@/shared/ui/Icons';
 
+import { useFirstExpressionTour } from '../_model/useFirstExpressionTour';
 import { useMissedEarnInvite } from '../_model/useMissedEarnInvite';
 import { useMyReward } from '../_model/useMyReward';
 
@@ -45,6 +46,8 @@ export const AppHeader = () => {
     endShower,
     bubble,
   } = useMissedEarnInvite(invited, missedRewardOf(preview, computedAt));
+  // 첫 표현 투어의 튜토리얼 차례 — 동전은 프리미엄 진입 알약으로 날아가고, 말풍선 대신 튜토리얼이 이어서 말한다
+  const tourIntro = useFirstExpressionTour().screen === 'challenge_intro';
   // 학습을 끝내고 돌아왔으면 그사이 늘어난 만큼 동전이 알약으로 날아든다
   const { gain, endGain } = useBalanceGain(
     // 알약이 없으면 연출을 틀 자리도 없다 — 끝나지 않는 연출을 기다리며 홈의 시트가 막히지 않게 금액도 없는 것으로 넘긴다
@@ -65,7 +68,7 @@ export const AppHeader = () => {
             holding={!settled}
             // 환급을 권할 사람에게만 진입을 환급 소개로 돌린다 — 그 밖에는 지금의 프리미엄 진입 그대로다
             invite={
-              invited
+              invited && !tourIntro
                 ? {
                     href: REWARD_PATH,
                     label: (
@@ -89,17 +92,24 @@ export const AppHeader = () => {
             <span
               className={`${PREMIUM_ENTRY_PILL_CLASS} animate-gold-flow whitespace-nowrap`}
             >
-              <RewardInviteLabel
-                amountWon={landed ? landWon : null}
-                missed={missed}
-              />
+              {tourIntro ? (
+                <>
+                  <span className="tracking-[0.1em]">PREMIUM</span>
+                  <span>시작하기</span>
+                </>
+              ) : (
+                <RewardInviteLabel
+                  amountWon={landed ? landWon : null}
+                  missed={missed}
+                />
+              )}
             </span>
           )}
           onLand={shower.onLand}
           onEnd={endShower}
         />
       )}
-      {bubble && (
+      {bubble && !tourIntro && (
         <RewardInviteBubble
           pill={bubble.pill}
           amountWon={dailyWon}

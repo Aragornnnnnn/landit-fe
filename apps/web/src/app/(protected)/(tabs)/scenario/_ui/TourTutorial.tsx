@@ -1,0 +1,161 @@
+'use client';
+
+// 첫 표현 투어의 튜토리얼 — 동전 연출의 어둠을 그대로 두고, 가운데 래디 아래로 문장을 한 자씩 타이핑한다.
+// 화면을 누르면 지금 문장을 지우고 다음 문장을 쓴다. 마지막 문장 뒤의 버튼이 카드를 뒤집으러 간다
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+
+import { formatWon } from '@/shared/lib/won';
+import { Button } from '@/shared/ui/Button';
+
+import {
+  INITIAL_TYPING,
+  tapTyping,
+  tickTyping,
+} from '../_model/tutorial-typing';
+
+// 한 자 쓰는 간격과 한 자 지우는 간격(ms) — 지우기는 빨라야 기다림으로 안 느껴진다
+const TYPE_MS = 55;
+const ERASE_MS = 16;
+
+// 문장 조각 — 두 번째 값이 참이면 금색으로 강조한다
+type Part = readonly [text: string, highlight?: boolean];
+
+const sentencesOf = (dailyWon: number) =>
+  [
+    {
+      image: '/images/character/landy-good.webp',
+      parts: [
+        ['프리미엄 유저라면\n방금 같은 매 대화마다\n'],
+        [formatWon(dailyWon), true],
+        ['을 받을 수 있어요'],
+      ],
+    },
+    {
+      image: '/images/character/landy-genie.webp',
+      parts: [
+        ['랜딧 프리미엄 이용이 끝나면\n그동안 모은 돈이\n'],
+        ['내 계좌로 들어와요', true],
+      ],
+    },
+    {
+      image: '/images/character/landy-point.webp',
+      parts: [['돈이 쌓이는 동안\n'], ['영어 실력도 쌓여요', true]],
+    },
+  ] satisfies { image: string; parts: Part[] }[];
+
+const lengthOf = (parts: readonly Part[]) =>
+  parts.reduce((sum, [text]) => sum + text.length, 0);
+
+// 앞에서부터 count자만 남긴 조각들
+const sliceParts = (parts: readonly Part[], count: number) => {
+  let left = count;
+  return parts.flatMap(([text, highlight]) => {
+    if (left <= 0) return [];
+    const shown = text.slice(0, left);
+    left -= text.length;
+    return [[shown, highlight] as const];
+  });
+};
+
+export const TourTutorial = ({
+  dailyWon,
+  onDone,
+}: {
+  dailyWon: number;
+  onDone: () => void;
+}) => {
+  const reduced = useReducedMotion();
+  const sentences = sentencesOf(dailyWon);
+  const lengths = sentences.map(({ parts }) => lengthOf(parts));
+  const [typing, setTyping] = useState(INITIAL_TYPING);
+
+  // 시계 — 쓰는 중·지우는 중에만 돈다. 동작 줄이기면 문장을 한 번에 보여 준다
+  useEffect(() => {
+    if (typing.phase === 'shown') return;
+    // 동작 줄이기면 쓰는 단계를 건너뛰고 문장을 한 번에 보여 준다
+    const skip = reduced && typing.phase === 'typing';
+    const timer = setTimeout(
+      () =>
+        setTyping((state) =>
+          skip ? tapTyping(state, lengths) : tickTyping(state, lengths),
+        ),
+      skip ? 0 : typing.phase === 'typing' ? TYPE_MS : ERASE_MS,
+    );
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 글자 수는 문장이 정해지면 바뀌지 않는다
+  }, [typing, reduced]);
+
+  const sentence = sentences[typing.index];
+  const last = typing.index === sentences.length - 1;
+  const done = last && typing.phase === 'shown';
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex flex-col items-center px-6 pt-[max(var(--safe-area-inset-top),10px)] pb-[max(var(--safe-area-inset-bottom),24px)]"
+      role="dialog"
+      aria-modal="true"
+      aria-label="프리미엄 소개"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={() => setTyping((state) => tapTyping(state, lengths))}
+    >
+      <div aria-hidden className="absolute inset-0 bg-black/80" />
+
+      <div className="relative flex w-full flex-1 flex-col items-center justify-center">
+        {/* 문장마다 래디가 바뀐다 — 글자가 지워지는 사이 살짝 바꿔 끼운다 */}
+        <div className="relative size-40">
+          <AnimatePresence initial={false}>
+            <motion.img
+              key={sentence.image}
+              src={sentence.image}
+              alt="래디"
+              className="absolute inset-0 size-full object-contain"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.25 }}
+            />
+          </AnimatePresence>
+        </div>
+
+        {/* 높이를 세 줄로 잡아 둔다 — 글자가 늘고 줄 때 래디가 위아래로 출렁이지 않게 */}
+        <p
+          className="mt-6 min-h-[3lh] text-center text-[25px] leading-[1.45] font-extrabold break-keep whitespace-pre-line text-white"
+          aria-live="polite"
+        >
+          {sliceParts(sentence.parts, typing.count).map(
+            ([text, highlight], i) => (
+              <span key={i} className={highlight ? 'text-[#ffd25e]' : ''}>
+                {text}
+              </span>
+            ),
+          )}
+          <span
+            aria-hidden
+            className="ml-0.5 inline-block h-[0.95em] w-[3px] translate-y-[0.12em] animate-pulse bg-[#ffd25e]"
+          />
+        </p>
+      </div>
+
+      <div className="relative h-14 w-full">
+        {done ? (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Button onClick={onDone}>맞춤 표현 학습하기</Button>
+          </motion.div>
+        ) : (
+          typing.phase === 'shown' && (
+            <p className="pt-3 text-center text-lg font-bold text-white/85">
+              화면을 누르면 계속 ›
+            </p>
+          )
+        )}
+      </div>
+    </motion.div>
+  );
+};
