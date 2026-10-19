@@ -5,7 +5,7 @@
 // 카드가 없거나 안 떴으면 스토어 리뷰 화면으로 보낸다. 닫으면 간격을 두고 다시 뜨고,
 // 「이미 남겼어요」면 끝이다. 스토어로 간 것만으로는 끝이 아니다 (규칙은 prompt-record).
 // 띄울지 말지는 부르는 쪽(홈 탭의 useSatisfactionSheet)이 정하고, 여기서는 띄운 뒤의 흐름만 맡는다
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   EVENTS,
   type SatisfactionAnswer,
@@ -92,8 +92,10 @@ export const SatisfactionGate = ({
     setView('letter');
   };
 
-  // 딤·X·뒤로가기로 닫힘 — 아직 답을 안 남겼으면 dismiss로 남긴다. 리뷰 요청의 dismiss는 간격을 두고 다시 묻는다
+  // 딤·X·뒤로가기로 닫힘 — 아직 답을 안 남겼으면 dismiss로 남긴다. 리뷰 요청의 dismiss는 간격을 두고 다시 묻는다.
+  // 카드 회신을 기다리는 동안은 무시한다 — 닫은 사람을 회신이 온 뒤 스토어로 보내지 않게
   const close = () => {
+    if (requestingCard) return;
     if (view === 'ask' || view === 'review') answer('dismiss');
     setOpen(false);
   };
@@ -118,6 +120,10 @@ export const SatisfactionGate = ({
     window.location.href = url;
   };
 
+  // 카드 회신을 기다리는 사이 화면이 사라지면(다른 라우트로 이동) 요청을 끊는다 — 떠난 사람을 스토어로 보내지 않게
+  const cardRequest = useRef<AbortController | null>(null);
+  useEffect(() => () => cardRequest.current?.abort(), []);
+
   // 버튼 — 카드를 아는 셸이면 앱 안 별점 카드를 먼저 청한다. 떴으면 거기서 끝이고(남겼는지는 모른다),
   // 안 떴거나 못 시키는 환경이면 지금처럼 스토어로 보낸다. 누른 것으로 답을 남기되 재요청 대상으로 둔다
   const writeReview = async () => {
@@ -128,7 +134,10 @@ export const SatisfactionGate = ({
       return;
     }
     setRequestingCard(true);
-    const reply = await requestReviewCardViaBridge();
+    cardRequest.current = new AbortController();
+    const reply = await requestReviewCardViaBridge(cardRequest.current.signal);
+    if (cardRequest.current.signal.aborted) return;
+    cardRequest.current = null;
     setRequestingCard(false);
     const status = reply?.status ?? 'timeout';
     track(EVENTS.REVIEW_CARD_REQUESTED, { status });
