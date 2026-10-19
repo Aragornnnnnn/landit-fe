@@ -1,4 +1,4 @@
-// 「먼저 시작한 유저들의 이야기」 — 스토어 평점과 실제 리뷰를 옆으로 넘겨 본다. 환급 챌린지에서는 제목을 다른 섹션처럼 ~해요체로 쓴다
+// 「먼저 시작한 유저들의 이야기」 — 스토어 평점과 실제 리뷰를 옆으로 넘겨 본다. 환급 챌린지(결제 금액 안내)에서는 「먼저 시작한 분들의 이야기」로 부르고 본문을 자르지 않는다
 import type { CSSProperties } from 'react';
 import Image from 'next/image';
 
@@ -21,7 +21,7 @@ const Stars = ({ className }: { className: string }) => (
 export const ReviewSection = ({
   rewardChallenge,
 }: {
-  /** 환급 챌린지가 켜졌는가 — 제목 문체만 갈린다 */
+  /** 환급 챌린지가 켜졌는가 — 제목 문체와 본문을 다 보여 줄지가 갈린다 */
   rewardChallenge: boolean;
 }) => (
   <div className="pt-14">
@@ -30,8 +30,7 @@ export const ReviewSection = ({
         title={
           rewardChallenge ? (
             <>
-              {'먼저 시작한 유저들은\n'}
-              <Highlight>이렇게 말해요</Highlight>
+              <Highlight>먼저 시작한 분들</Highlight>의 이야기
             </>
           ) : (
             <>
@@ -71,7 +70,7 @@ export const ReviewSection = ({
         {REVIEWS.map((review, index) => (
           <li
             key={review.body}
-            className="reveal-up flex h-[231px] w-[286px] shrink-0 snap-start flex-col gap-2 rounded-[20px] border border-[#e9e7e2] bg-card p-5 shadow-[0_2px_10px_rgba(51,38,26,0.05)]"
+            className={`reveal-up flex w-[286px] shrink-0 snap-start flex-col gap-2 rounded-[20px] border border-[#e9e7e2] bg-card p-5 shadow-[0_2px_10px_rgba(51,38,26,0.05)] ${rewardChallenge ? 'min-h-[231px]' : 'h-[231px]'}`}
             style={{ '--i': index } as CSSProperties}
           >
             <Stars className="text-xs tracking-[0.06em]" />
@@ -81,7 +80,9 @@ export const ReviewSection = ({
               </p>
             )}
             {/* 낱말 가운데에서 끊기지 않게 어절 단위로 줄을 바꾼다 */}
-            <p className="line-clamp-5 text-[13.5px] leading-[21px] tracking-[-0.01em] break-keep text-[#3d3d3f]">
+            <p
+              className={`text-[13.5px] leading-[21px] tracking-[-0.01em] break-keep text-[#3d3d3f] ${rewardChallenge ? '' : 'line-clamp-5'}`}
+            >
               {review.body}
             </p>
             <p className="mt-auto text-xs text-muted-foreground">
