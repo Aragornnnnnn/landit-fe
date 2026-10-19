@@ -2,12 +2,19 @@
 import { readReturnParam } from '@/shared/lib/routes';
 
 import { PaywallScreen } from './_ui/PaywallScreen';
+import { TourCompletion } from './_ui/TourCompletion';
 
 export default async function PaywallPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { from } = await searchParams;
-  return <PaywallScreen returnTo={readReturnParam(from)} />;
+  const { from, source } = await searchParams;
+  return (
+    <>
+      <PaywallScreen returnTo={readReturnParam(from)} />
+      {/* 첫 표현 투어가 보낸 페이월이면 투어를 끝낸 것으로 남긴다 */}
+      {source === 'first_expression_tour' && <TourCompletion />}
+    </>
+  );
 }
