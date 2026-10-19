@@ -120,7 +120,7 @@
 ## 진행
 
 - 1단계(웹) — LAN-689, PR #368. 시점·재요청·X·「이미 남겼어요」·계측 구현 (10/16).
-- 2단계(앱 카드) — LAN-701 구현 (10/18). iOS는 로컬 모듈(창 감지), Android는 expo-store-review(시간 판정). 앱 1.4.1.
+- 2단계(앱 카드) — LAN-701 구현 (10/18). iOS·Android 모두 로컬 모듈(iOS는 창 감지, Android는 카드 단계 소요 시간). 앱 1.4.1.
 
 ## 체크리스트
 
@@ -129,7 +129,7 @@
 - [x] 재요청 — 2·4·6일 최소 간격, 최대 4번, X 버튼, 「이미 남겼어요」(2번째부터)
 - [ ] 카드 1 — 브릿지 v9 `REQUEST_REVIEW ↔ REVIEW_RESULT`, docs/bridge.md
 - [ ] 카드 2 — iOS 로컬 모듈 창 감지
-- [ ] 카드 3 — 셸 expo-store-review + 판정 + 0.5초 타임아웃 + 연타 잠금
+- [ ] 카드 3 — 셸 로컬 모듈(iOS 창 감지 0.5초·Android 카드 단계 1초) + 연타 잠금
 - [ ] 카드 4 — 웹 버튼 분기 (브릿지 9 이상이면 카드 → 안 뜨면 스토어)
 - [ ] 카드 5 — 실기기 확인 (Xcode Run. TestFlight에선 카드 안 뜸. 설정 → 앱 내 평가 요청 끄고 폴백 확인)
 - [ ] 앰플리튜드 trigger·attempt별 전환 차트, 별점 주간 알림
@@ -142,20 +142,20 @@
 웹(시트 버튼 탭)
   │ bridgeVersion >= 9
   ├─ { type: 'REQUEST_REVIEW' } ───────────────▶ 셸
-  │                                               expo-store-review requestReview()
-  │                                               → iOS SKStoreReviewController
-  │                                               로컬 모듈이 0.5초간 새 창 감시
+  │                                               로컬 모듈 requestReview()
+  │                                               iOS: AppStore.requestReview → 0.5초간 카드 창 감시
+  │                                               Android: Play ReviewManager → 카드 단계가 1초 안에 끝나는지
   │ ◀──── { type: 'REVIEW_RESULT', status } ──────┘
   ├─ shown                → 시트 닫고 끝
-  ├─ not_shown/unavailable/0.5초 무응답 → 앱스토어 딥링크 (지금 동작)
+  ├─ not_shown/unavailable/1.5초 무응답 → 스토어 딥링크 (지금 동작)
   │ bridgeVersion < 9 · 브라우저
   └─ 앱스토어 딥링크
 ```
 
 - `packages/bridge/src/messages.ts` — `REQUEST_REVIEW`, `REVIEW_RESULT { status: 'shown' | 'not_shown' | 'unavailable' }`, `NATIVE_BRIDGE_VERSION` 8 → 9. `GET_OFFERINGS ↔ OFFERINGS` 꼴.
-- 셸 — `npx expo install expo-store-review`. `isAvailableAsync()` false면 `unavailable`. 연타 잠금은 `share.ts`처럼.
+- 셸 — 로컬 모듈 `modules/review-prompt` 하나가 iOS·Android를 다 맡는다. Play 스토어가 없으면 `unavailable`. 연타 잠금은 `share.ts`처럼.
 - iOS 로컬 모듈(위젯 설치 감지용) — `UIWindow.didBecomeVisibleNotification` 구독, 클래스 이름 `SKStoreReviewPresentationWindow`면 `shown`, 0.5초 안에 없으면 `not_shown`(실측 40ms에 뜸). 공개 API만 쓴다.
 - 웹 — `SatisfactionGate.tsx`의 `writeReview`에서 분기. 기록은 `prompt-record.ts`의 `ImpressionRecord`에 `attempt` · `lastClosedOn` · `done`.
-- Android — expo-store-review가 Play 카드를 띄운다. 감지는 `requestReview()` 소요 시간(1초 미만이면 안 뜬 것).
+- Android — Play `ReviewManager`로 카드를 띄운다. Play 서버 왕복(`requestReviewFlow`)이 끝난 뒤 카드 단계(`launchReviewFlow`)만 재서, 1초 안에 끝나면 `not_shown`(실측 81~545ms), 1초가 지나도록 안 끝나면 그 자리에서 `shown`. 카드가 닫히길 기다리지 않는다 — 기다리면 웹이 먼저 포기해 카드 위에 스토어가 열린다.
 - 규정 — iOS 심사 지침은 "커스텀 프롬프트 대신 제공 API". StoreKit 문서는 "안 뜰 수 있으니 버튼에 묶지 말라"고 권하는데 우리는 안 뜨면 스토어로 보낸다. 반려 사례는 모른다(추정). Android 가이드의 "카드 전 질문 금지"는 소감 시트가 리뷰와 분리된 제품 피드백이라 해당 없다고 봄(추정).
 - 후순위 — 리뷰 기록 서버 보관(재설치 초기화 방지).

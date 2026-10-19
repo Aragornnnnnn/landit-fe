@@ -779,7 +779,7 @@ export type EventProps = {
     answer: SatisfactionAnswer;
   };
   'Review Store Opened': { store: 'play_store' | 'app_store' };
-  // shown=카드가 떴다, not_shown=2초 안에 안 떴다, unavailable=이 환경엔 카드가 없다, timeout=셸이 답을 안 줬다
+  // shown=카드가 떴다, not_shown=셸이 안 떴다고 판정(iOS 0.5초·Android 1초 기준), unavailable=이 환경엔 카드가 없다, timeout=셸이 답을 안 줬다
   'Review Card Requested': { status: ReviewCardStatus };
 
   // 서버 발화라 세션·리플레이·공통 속성 없음. device_id 랜덤 — 방문 횟수 집계용.

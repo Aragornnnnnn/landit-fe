@@ -99,14 +99,14 @@ export const pickedPhotoSchema = z.object({
 });
 
 // 한 번에 고를 수 있는 사진 수 상한 — 피드백 첨부 서버 제한(3장)과 같다
-// 앱 안 별점 카드 요청의 결과 — 셸이 창 감지로 판정한다
+export const MAX_PICK_PHOTOS = 3;
+
+// 앱 안 별점 카드 요청의 결과 — 셸이 감지해 판정한다 (iOS는 카드 창, Android는 카드 단계가 바로 끝나는지)
 export const reviewResultStatusSchema = z.enum([
   'shown',
   'not_shown',
   'unavailable',
 ]);
-
-export const MAX_PICK_PHOTOS = 3;
 
 // 반복 알람의 종류 — 종류마다 알람은 하나다.
 // 새 종류를 더하면 옛 앱은 모르는 값이라 요청을 버린다 — 브릿지 버전을 올리고, 웹은 그 버전 이상에만 보낸다
@@ -345,7 +345,7 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     status: restoreStatusSchema,
     message: z.string().optional(),
   }),
-  // REQUEST_REVIEW 응답 — shown은 카드가 떴다(남겼는지는 모른다), not_shown은 0.5초 안에 안 떴다,
+  // REQUEST_REVIEW 응답 — shown은 카드가 떴다(남겼는지는 모른다), not_shown은 안 떴다(iOS는 0.5초 안에 창이 없음, Android는 카드 단계가 1초 안에 끝남),
   // unavailable은 이 플랫폼·환경에 카드가 없다. shown이 아니면 웹이 지금처럼 스토어로 보낸다
   z.object({
     type: z.literal('REVIEW_RESULT'),

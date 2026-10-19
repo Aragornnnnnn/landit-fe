@@ -12,3 +12,6 @@ expo-env.d.ts
 
 # 외부에서 가져온 코드 — 원본과 비교하기 쉽게 원본 서식 그대로 둔다
 apps/mobile/modules/alarm-scheduler/
+
+# 로컬 모듈의 안드로이드 빌드 산출물 (gitignore와 같음)
+apps/mobile/modules/*/android/build/

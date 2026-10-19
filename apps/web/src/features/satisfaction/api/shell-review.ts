@@ -19,7 +19,7 @@ export const resolveReviewCardSupport = (
   return 'ready';
 };
 
-// 셸이 카드 창을 0.5초 기다리고 답한다 — 그보다 조금 더 기다려 셸이 답할 틈을 준다
+// 셸은 늦어도 iOS 0.5초·Android 1초 안에 답한다 — 그보다 조금 더 기다려 셸이 답할 틈을 준다
 export const REVIEW_CARD_TIMEOUT_MS = 1500;
 
 /**

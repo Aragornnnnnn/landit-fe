@@ -41,11 +41,7 @@ public class ReviewPromptModule: Module {
           return
         }
 
-        if #available(iOS 16.0, *) {
-          AppStore.requestReview(in: scene)
-        } else {
-          SKStoreReviewController.requestReview(in: scene)
-        }
+        AppStore.requestReview(in: scene)
 
         DispatchQueue.main.asyncAfter(deadline: .now() + Self.detectWindowSeconds) {
           finish("not_shown")
