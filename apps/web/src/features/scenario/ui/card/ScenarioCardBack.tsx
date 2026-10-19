@@ -1,7 +1,7 @@
 'use client';
 
 // 시나리오 카드 뒷면 — 완료 시나리오의 표현 학습 리스트. 표현을 고르면 학습 페이지로 이동.
-// 서버가 무료로 열어 준 표현(freeTrial)은 페이월 없이 연다. 첫 표현 투어 중에는 그 표현을 비추고 무료·PREMIUM을 붙인다
+// 서버가 무료로 열어 준 표현(freeTrial)은 페이월 없이 연다. 무료 사용자 목록에는 무료·PREMIUM을 붙이고, 첫 표현 투어 중에는 그 표현을 비춘다
 import { useEffect, useEffectEvent, useRef } from 'react';
 import { EVENTS } from '@landit/analytics';
 import confetti from 'canvas-confetti';
@@ -56,9 +56,7 @@ interface ScenarioCardBackProps {
   onBack: () => void;
   // 표현 마무리 후 자동으로 펼쳐진 경우만 축하한다 — 목록이 뜨기 전(스켈레톤)엔 터뜨리지 않는다
   autoFlip?: boolean;
-  // 첫 표현 투어의 무료 표현 차례인가
-  freeTour?: boolean;
-  // 투어를 여기서 끝낸다 — 줄 무료 표현이 없거나, 비출 자리를 못 찾았거나, 사용자가 넘겼다
+  // 주면 첫 표현 투어 중이다 — 투어를 여기서 끝낼 때 부른다(줄 무료 표현이 없거나, 비출 자리를 못 찾았거나, 사용자가 넘겼다)
   onTourEnd?: () => void;
 }
 
@@ -67,7 +65,6 @@ export const ScenarioCardBack = ({
   date,
   onBack,
   autoFlip = false,
-  freeTour = false,
   onTourEnd,
 }: ScenarioCardBackProps) => {
   const router = useRouter();
@@ -93,22 +90,18 @@ export const ScenarioCardBack = ({
     (expression) => expression.freeTrial,
   );
   const freeTrialExpressionId = freeTrialExpression?.expressionId;
-  // 투어가 비출 표현
-  const spotlightExpressionId =
-    freeTour && !freeTrialExpression?.completed
-      ? freeTrialExpressionId
+  // 투어가 비출 표현 — 투어 중이고, 무료 표현이 있고, 아직 안 끝냈을 때
+  const tourTarget =
+    onTourEnd && freeTrialExpression && !freeTrialExpression.completed
+      ? freeTrialExpression
       : undefined;
-  // 무료 사용자에게는 목록에 무료·PREMIUM을 붙인다 — 뒤집기는 열려 있고 막는 건 표현이다
-  const premiumLocked = freeTour || gate.locked;
-  // 투어가 줄 표현이 없다 — 이 카드엔 무료 표현이 없거나, 이미 끝냈다(투어 밖에서 마친 경우)
-  const missingFreeTrial =
-    freeTour &&
-    expressions !== null &&
-    (freeTrialExpression === undefined || freeTrialExpression.completed);
-  const endTourWithoutFreeTrial = useEffectEvent(() => onTourEnd?.());
+  // 투어 중인데 비출 표현이 없다 — 이 카드엔 무료 표현이 없거나 이미 끝냈다(투어 밖에서 마친 경우)
+  const missingTourTarget =
+    onTourEnd !== undefined && expressions !== null && tourTarget === undefined;
+  const endTourWithoutTarget = useEffectEvent(() => onTourEnd?.());
   useEffect(() => {
-    if (missingFreeTrial) endTourWithoutFreeTrial();
-  }, [missingFreeTrial]);
+    if (missingTourTarget) endTourWithoutTarget();
+  }, [missingTourTarget]);
   const listRef = useRef<HTMLDivElement>(null);
 
   const selectExpression = (expressionId: number) => {
@@ -161,18 +154,18 @@ export const ScenarioCardBack = ({
         {expressions && (
           <ExpressionList
             expressions={expressions}
-            premiumLocked={premiumLocked}
+            premiumLocked={gate.locked}
             freeTrialExpressionId={freeTrialExpressionId}
             onSelect={selectExpression}
           />
         )}
       </div>
 
-      {spotlightExpressionId !== undefined && (
+      {tourTarget && onTourEnd && (
         <FreeExpressionSpotlight
           list={listRef}
-          onOpen={() => selectExpression(spotlightExpressionId)}
-          onEnd={() => onTourEnd?.()}
+          onOpen={() => selectExpression(tourTarget.expressionId)}
+          onEnd={onTourEnd}
         />
       )}
     </>

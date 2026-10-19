@@ -146,10 +146,7 @@ export const TourTutorial = ({
               </span>
             ),
           )}
-          <span
-            aria-hidden
-            className="ml-0.5 inline-block h-[0.95em] w-[3px] translate-y-[0.12em] animate-pulse bg-[#ffd25e]"
-          />
+          <span className="ml-0.5 inline-block h-[0.95em] w-[3px] translate-y-[0.12em] animate-pulse bg-[#ffd25e]" />
         </p>
         <p className="sr-only" aria-live="polite">
           {typing.phase === 'shown' &&

@@ -113,7 +113,7 @@ export const AppHeader = () => {
           onEnd={endShower}
         />
       )}
-      {bubble && !tourIntro && !tourShown && (
+      {bubble && !tourShown && (
         <RewardInviteBubble
           pill={bubble.pill}
           amountWon={dailyWon}

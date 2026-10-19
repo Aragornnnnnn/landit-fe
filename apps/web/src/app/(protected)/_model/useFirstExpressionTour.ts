@@ -26,11 +26,16 @@ export const useFirstExpressionTour = () => {
     step: eligible ? step : null,
     screen: eligible ? tourScreenOf(step) : ('none' as const),
     saveStep,
-    // 투어의 끝 — 투어를 끝낸 것으로 남기고 페이월로 보낸다
-    finishWithPaywall: () => {
-      saveStep('COMPLETED');
-      track(EVENTS.PAYWALL_GATE_LOCKED, { source: 'first_expression_tour' });
-      router.replace(paywallPath({ source: 'first_expression_tour' }));
-    },
+    // 무료 표현 차례에만 — 표현을 마치면 투어를 끝낸 것으로 남기고 목록 대신 페이월로 보낸다
+    onFreeExpressionFinished:
+      eligible && tourScreenOf(step) === 'free_expression'
+        ? () => {
+            saveStep('COMPLETED');
+            track(EVENTS.PAYWALL_GATE_LOCKED, {
+              source: 'first_expression_tour',
+            });
+            router.replace(paywallPath({ source: 'first_expression_tour' }));
+          }
+        : undefined,
   };
 };

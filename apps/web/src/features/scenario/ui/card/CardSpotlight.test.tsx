@@ -50,6 +50,7 @@ describe('CardSpotlight', () => {
         label="첫 표현"
         settleMs={0}
         onTap={vi.fn()}
+        onMissing={vi.fn()}
         onSkip={onSkip}
       >
         안내

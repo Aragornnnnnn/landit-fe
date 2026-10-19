@@ -33,9 +33,7 @@ function ExpressionFlowContent({
   // searchParams prop은 앱 안에서 이동할 때 갱신되지 않아 훅으로 읽는다
   const date = readDateParam(useSearchParams());
   // 첫 표현 투어의 무료 표현이면 끝나자마자 페이월로 — 목록(나머지는 잠김)으로 돌아가지 않는다
-  const tour = useFirstExpressionTour();
-  const finishTour =
-    tour.screen === 'free_expression' ? tour.finishWithPaywall : undefined;
+  const { onFreeExpressionFinished } = useFirstExpressionTour();
 
   // key로 표현이 바뀌면 플로우를 새로 마운트한다 — step·입력 상태가 이전 표현에서 새어나오지 않게
   return (
@@ -43,7 +41,7 @@ function ExpressionFlowContent({
       key={expressionId}
       origin={{ kind: 'scenario', scenarioId: Number(scenarioId), date }}
       expressionId={Number(expressionId)}
-      onFinished={finishTour}
+      onFinished={onFreeExpressionFinished}
     />
   );
 }

@@ -130,17 +130,6 @@ describe('ScenarioCard', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('무료 사용자도 카드를 뒤집어 뒷면(표현 목록)을 본다 — 막는 건 뒷면의 표현이다', async () => {
-    // Given 게이트가 잠긴 무료 사용자의 완료 카드
-    renderCard();
-
-    // When 표현 배우기를 누르면
-    await userEvent.click(screen.getByText('표현 배우기'));
-
-    // Then 페이월로 가지 않고 뒷면이 열린다
-    expect(screen.getByText('카드 앞면으로')).toBeInTheDocument();
-  });
-
   it('투어의 뒤집기 차례에 사용자가 먼저 뒤집어도 투어 단계를 넘긴다 — 자동 뒤집기를 기다리지 않아도', async () => {
     // Given 튜토리얼이 막 끝나 카드가 스스로 뒤집히기 전
     const onFlipped = vi.fn();

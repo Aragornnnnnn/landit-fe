@@ -1,4 +1,4 @@
-// 피드백 뒤 첫 표현 투어 시작 판정 — 신규·기존 무료, 재대화·지난 카드, 유료, 무료 표현 없음
+// 피드백 뒤 첫 표현 투어 시작 판정 — 신규·기존 무료, 재대화·지난 카드, 유료
 import { describe, expect, it } from 'vitest';
 
 import { tourEntryOf } from './tour-entry';
@@ -9,7 +9,6 @@ describe('tourEntryOf', () => {
     replay: false,
     today: true,
     tour: { eligible: true, step: null },
-    freeExpression: true,
   };
 
   it('무료 사용자의 첫 시나리오(레벨 분석으로 가는 길)는 레벨 결과 뒤에 투어를 시작한다', () => {
@@ -38,12 +37,6 @@ describe('tourEntryOf', () => {
     ).toBeNull();
     expect(
       tourEntryOf({ ...base, tour: { eligible: true, step: 'COMPLETED' } }),
-    ).toBeNull();
-  });
-
-  it('서버가 이 시나리오에서 무료로 열어 준 표현이 없으면 투어 없이 원래 흐름으로 간다', () => {
-    expect(
-      tourEntryOf({ ...base, view: 'analyzing', freeExpression: false }),
     ).toBeNull();
   });
 

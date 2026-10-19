@@ -143,17 +143,15 @@ export const ScenarioFeedbackFlow = ({
         ? (feedback.detailFeedbackLocked ?? false)
         : true,
     });
-    const entryBase = {
+    const entry = tourEntryOf({
       view: next,
       replay,
       // 날짜 없는 주소가 오늘 카드다
       today: date === undefined,
       tour: { eligible: tour.eligible, step: tour.step },
-    };
-    // 무료 표현만 빼면 투어를 시작할 사람일 때만 목록을 확인한다 — 그 밖의 사람은 기다리지 않는다
-    const tourEntry =
-      tourEntryOf({ ...entryBase, freeExpression: true }) &&
-      tourEntryOf({ ...entryBase, freeExpression: await hasFreeExpression() });
+    });
+    // 투어를 시작할 사람일 때만 무료 표현을 확인한다 — 그 밖의 사람은 기다리지 않는다
+    const tourEntry = entry && (await hasFreeExpression()) ? entry : null;
     if (tourEntry === 'home') startTour();
     else if (next === 'home') router.replace(scenarioReturnPath({ date }));
     else if (next === 'branch') continueToExpressionBranch();

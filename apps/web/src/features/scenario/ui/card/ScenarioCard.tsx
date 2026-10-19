@@ -41,7 +41,7 @@ interface ScenarioCardProps {
 
 export interface CardTour {
   screen: 'flip_card' | 'free_expression';
-  // 카드가 스스로 뒤집혔다
+  // 뒤집기 차례에 카드가 뒤집혔다(자동이든 사용자든)
   onFlipped: () => void;
   // 투어를 여기서 끝낸다 — 줄 무료 표현이 없거나 사용자가 넘겼다
   onTourEnd: () => void;
@@ -106,13 +106,13 @@ export const ScenarioCard = ({
   };
   const openExpressions = () => flipToBack('button');
   // 투어는 튜토리얼이 걷히고 잠깐 뒤 카드를 스스로 뒤집는다 — 누를 것 없이 첫 표현으로 이어진다
-  const autoFlipping = tour?.screen === 'flip_card' && completed && !flipped;
+  const tourFlipPending = tour?.screen === 'flip_card' && completed && !flipped;
   const flipForTour = useEffectEvent(() => flipToBack('auto'));
   useEffect(() => {
-    if (!autoFlipping) return;
+    if (!tourFlipPending) return;
     const timer = setTimeout(flipForTour, TOUR_FLIP_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [autoFlipping]);
+  }, [tourFlipPending]);
 
   const closeExpressions = () => {
     track(EVENTS.SCENARIO_CARD_FLIPPED, {
@@ -245,7 +245,6 @@ export const ScenarioCard = ({
               date={date}
               onBack={closeExpressions}
               autoFlip={autoFlip}
-              freeTour={tour !== undefined}
               onTourEnd={tour?.onTourEnd}
             />
           </div>

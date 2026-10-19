@@ -12,10 +12,16 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   // 기본은 열린 문 — 첫 표현 투어 테스트만 잠근다
   guard: vi.fn((go: () => void) => go()),
+  // 무료 사용자인가 — 목록에 무료·PREMIUM이 붙는다
+  locked: false,
 }));
 // 페이월 게이트는 구독·스트릭 조회를 끌고 온다 — 이 화면 테스트에선 목으로 치환한다
 vi.mock('@/features/subscription/model/paywall-gate/usePaywallGate', () => ({
-  usePaywallGate: () => ({ decision: 'open', guard: mocks.guard }),
+  usePaywallGate: () => ({
+    decision: 'open',
+    locked: mocks.locked,
+    guard: mocks.guard,
+  }),
 }));
 vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
 vi.mock('next/navigation', () => ({
@@ -67,6 +73,7 @@ beforeEach(() => {
   mocks.push.mockClear();
   mocks.guard.mockClear();
   mocks.guard.mockImplementation((go: () => void) => go());
+  mocks.locked = false;
 });
 afterEach(() => cleanup());
 
@@ -112,12 +119,15 @@ describe('ScenarioCardBack', () => {
       retry: vi.fn(),
     } as unknown as ReturnType<typeof useExpressionsQuery>);
 
-  it('첫 표현 투어 중에는 서버가 열어 준 무료 표현을 무료로 표시한다', () => {
-    // Given 무료 표현이 있는 카드의 투어 차례
+  it('무료 사용자 목록은 서버가 열어 준 표현을 무료로 표시한다', () => {
+    // Given 무료 표현이 있는 무료 사용자의 카드
+    mocks.locked = true;
     freeTrialList();
 
     // When 뒷면이 열리면
-    render(<ScenarioCardBack scenarioId={1} onBack={vi.fn()} freeTour />);
+    render(
+      <ScenarioCardBack scenarioId={1} onBack={vi.fn()} onTourEnd={vi.fn()} />,
+    );
 
     // Then 목록이 그 표현을 무료로 표시한다
     expect(screen.getByText('무료 11')).toBeInTheDocument();
@@ -126,7 +136,9 @@ describe('ScenarioCardBack', () => {
   it('무료 표현을 누르면 게이트를 거치지 않고 학습으로 간다', () => {
     mocks.guard.mockImplementation(() => {});
     freeTrialList();
-    render(<ScenarioCardBack scenarioId={1} onBack={vi.fn()} freeTour />);
+    render(
+      <ScenarioCardBack scenarioId={1} onBack={vi.fn()} onTourEnd={vi.fn()} />,
+    );
 
     fireEvent.click(screen.getByText('표현 11'));
 
@@ -137,7 +149,9 @@ describe('ScenarioCardBack', () => {
   it('무료가 아닌 표현을 누르면 게이트가 막는다', () => {
     mocks.guard.mockImplementation(() => {});
     freeTrialList();
-    render(<ScenarioCardBack scenarioId={1} onBack={vi.fn()} freeTour />);
+    render(
+      <ScenarioCardBack scenarioId={1} onBack={vi.fn()} onTourEnd={vi.fn()} />,
+    );
 
     fireEvent.click(screen.getByText('표현 12'));
 
@@ -145,7 +159,7 @@ describe('ScenarioCardBack', () => {
     expect(mocks.push).not.toHaveBeenCalled();
   });
 
-  it('투어가 끝난 뒤에도 서버가 열어 준 무료 표현은 페이월 없이 연다 — 무료 표시만 없다', () => {
+  it('투어 밖에서도 서버가 열어 준 무료 표현은 페이월 없이 연다', () => {
     mocks.guard.mockImplementation(() => {});
     vi.mocked(useExpressionsQuery).mockReturnValue({
       expressions: [
@@ -158,7 +172,6 @@ describe('ScenarioCardBack', () => {
     } as unknown as ReturnType<typeof useExpressionsQuery>);
     render(<ScenarioCardBack scenarioId={1} onBack={vi.fn()} />);
 
-    expect(screen.queryByText(/무료/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('표현 11'));
     expect(mocks.guard).not.toHaveBeenCalled();
     expect(mocks.push).toHaveBeenCalledWith('/expressions/scenario/1/11');
@@ -178,7 +191,6 @@ describe('ScenarioCardBack', () => {
       <ScenarioCardBack
         scenarioId={1}
         onBack={vi.fn()}
-        freeTour
         onTourEnd={onTourEnd}
       />,
     );
@@ -200,7 +212,6 @@ describe('ScenarioCardBack', () => {
       <ScenarioCardBack
         scenarioId={1}
         onBack={vi.fn()}
-        freeTour
         onTourEnd={onTourEnd}
       />,
     );

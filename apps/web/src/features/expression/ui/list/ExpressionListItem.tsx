@@ -37,7 +37,7 @@ export const ExpressionListItem = ({
 
   if (locked) {
     return (
-      // 흐림은 글자 쪽에만 — 투어의 PREMIUM 알약은 흐리지 않는다
+      // 흐림은 글자 쪽에만 — 무료 사용자의 PREMIUM 알약은 흐리지 않는다
       <div className="flex items-center gap-3 rounded-2xl bg-secondary/40 px-3.5 py-3.5">
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground opacity-60">
           <LockIcon size={15} />
@@ -97,14 +97,14 @@ export const ExpressionListItem = ({
           {targetExpressionText}
         </p>
       </div>
-      {/* 글자 라벨 대신 왼쪽을 가리키는 손가락 — '다음은 이거'를 직관적으로 (스크린리더용 텍스트는 따로).
-          좌우로 콕콕 찌르듯 움직여 시선을 끈다 */}
       {accessBadge === 'free' && (
         <span className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
           무료
         </span>
       )}
       {accessBadge === 'premium' && <PremiumPill size="sm" />}
+      {/* 글자 라벨 대신 왼쪽을 가리키는 손가락 — '다음은 이거'를 직관적으로 (스크린리더용 텍스트는 따로).
+          좌우로 콕콕 찌르듯 움직여 시선을 끈다 */}
       {!hideStartAction && accessBadge === undefined && (
         <>
           <motion.span

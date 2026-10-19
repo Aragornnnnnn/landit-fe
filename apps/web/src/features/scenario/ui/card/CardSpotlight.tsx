@@ -39,7 +39,7 @@ export const CardSpotlight = ({
   // 주면 소개 말풍선 — 뜬 뒤 이만큼 지나면 저절로 넘어가고(onTap), 화면 어디를 눌러도 넘어간다
   introMs?: number;
   // 기다린 뒤에도 자리를 못 찾았다 — 비출 것이 없으니 부르는 쪽이 안내를 끝낸다
-  onMissing?: () => void;
+  onMissing: () => void;
   // 주면 아래에 「다음에 할게요」를 둔다 — 뚫린 자리 말고도 빠져나갈 길
   onSkip?: () => void;
 }) => {
@@ -50,7 +50,7 @@ export const CardSpotlight = ({
   const measureTarget = useEffectEvent((first: boolean) => {
     const target = findTarget();
     if (!target) {
-      if (first) onMissing?.();
+      if (first) onMissing();
       return;
     }
     // 목록이 길어 칸이 화면 밖이면 먼저 가운데로 데려온다 — 어둠이 스크롤을 막는다
