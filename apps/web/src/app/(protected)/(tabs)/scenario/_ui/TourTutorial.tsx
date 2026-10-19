@@ -104,11 +104,19 @@ export const TourTutorial = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      onClick={() => setTyping((state) => tapTyping(state, lengths))}
     >
       <div aria-hidden className="absolute inset-0 bg-black/80" />
+      {/* 화면 전체가 「다음」 버튼이다 — 손가락으로는 어디를 눌러도, 키보드로는 이 버튼으로 넘긴다 */}
+      {!done && (
+        <button
+          type="button"
+          aria-label="다음 문장"
+          className="absolute inset-0"
+          onClick={() => setTyping((state) => tapTyping(state, lengths))}
+        />
+      )}
 
-      <div className="relative flex w-full flex-1 flex-col items-center justify-center">
+      <div className="pointer-events-none relative flex w-full flex-1 flex-col items-center justify-center">
         {/* 문장마다 래디가 바뀐다 — 글자가 지워지는 사이 살짝 바꿔 끼운다 */}
         <div className="relative size-40">
           <AnimatePresence initial={false}>
@@ -126,9 +134,10 @@ export const TourTutorial = ({
         </div>
 
         {/* 높이를 세 줄로 잡아 둔다 — 글자가 늘고 줄 때 래디가 위아래로 출렁이지 않게 */}
+        {/* 한 자씩 바뀌는 글자는 읽지 않고, 다 쓴 문장만 아래 숨은 칸이 한 번 읽는다 */}
         <p
+          aria-hidden
           className="mt-6 min-h-[3lh] text-center text-[25px] leading-[1.45] font-extrabold break-keep whitespace-pre-line text-white"
-          aria-live="polite"
         >
           {sliceParts(sentence.parts, typing.count).map(
             ([text, highlight], i) => (
@@ -142,14 +151,18 @@ export const TourTutorial = ({
             className="ml-0.5 inline-block h-[0.95em] w-[3px] translate-y-[0.12em] animate-pulse bg-[#ffd25e]"
           />
         </p>
+        <p className="sr-only" aria-live="polite">
+          {typing.phase === 'shown' &&
+            sentence.parts.map(([text]) => text).join('')}
+        </p>
       </div>
 
-      <div className="relative h-14 w-full">
+      <div className="pointer-events-none relative h-14 w-full">
         {done ? (
           <motion.div
+            className="pointer-events-auto"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            onClick={(event) => event.stopPropagation()}
           >
             <Button onClick={onDone}>맞춤 표현 학습하기</Button>
           </motion.div>
