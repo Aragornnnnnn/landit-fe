@@ -454,6 +454,16 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     ).toBeInTheDocument();
   });
 
+  it('결제 금액 안내가 뜨면 노출 이벤트를 찍는다 — 혜택 화면 → 금액 안내 → 결제 단계별 이탈을 본다', () => {
+    render(<PaywallScreen rewardChallenge />);
+
+    goCheckout();
+
+    expect(mocks.track).toHaveBeenCalledWith('Paywall Checkout Viewed', {
+      plan: 'pass',
+    });
+  });
+
   it('결제 금액 안내는 정가를 지우고 신규 회원 특가로 반값을 보여 준다', () => {
     render(<PaywallScreen rewardChallenge />);
     goCheckout();

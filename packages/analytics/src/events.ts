@@ -192,6 +192,8 @@ export const EVENTS = {
   PAYWALL_PLAN_SELECTED: 'Paywall Plan Selected',
   PURCHASE_STARTED: 'Purchase Started',
   PURCHASE_RESTORE_TAPPED: 'Purchase Restore Tapped',
+  // 환급 페이월 2단계(결제 금액 안내)가 떴다 — 혜택 화면 → 금액 안내 → 결제 시작의 단계별 이탈을 본다
+  PAYWALL_CHECKOUT_VIEWED: 'Paywall Checkout Viewed',
   // 학습 진입 게이트 — 무료 구간을 다 쓴 무료 사용자가 어느 문에서 페이월로 보내졌는가
   PAYWALL_GATE_LOCKED: 'Paywall Gate Locked',
   // 대화 직후 무료 사용자가 페이월 전에 지나는 화면 — 레벨 결과(첫 대화만)와 학습 준비
@@ -785,6 +787,7 @@ export type EventProps = {
   'Paywall Plan Selected': { plan: SubscriptionPlan; promo?: boolean };
   'Purchase Started': { plan: SubscriptionPlan; promo?: boolean };
   'Purchase Restore Tapped': undefined;
+  'Paywall Checkout Viewed': { plan: SubscriptionPlan };
   'Paywall Gate Locked': { source: PaywallGateSource };
   'Level Result Viewed': {
     scenario_id: number;

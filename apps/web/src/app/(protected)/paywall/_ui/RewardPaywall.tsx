@@ -3,11 +3,13 @@
 // 환급 챌린지 페이월 — 혜택 화면에서 「100일 프리미엄 시작하기」를 누르면 결제 금액 안내로 넘어가고, 거기서 결제한다.
 // 결제·복원·닫기는 PaywallScreen이 지휘하고 여기서는 어느 단계인지와 버튼만 안다
 import { useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 
 import { formatWon } from '@/features/subscription/lib/won';
+import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
 
-import type { RewardPlan } from '../_model/paywall-content';
+import { REWARD_PLAN_ID, type RewardPlan } from '../_model/paywall-content';
 import { BenefitsStep } from './BenefitsStep';
 import { CheckoutStep } from './CheckoutStep';
 import { PaywallHeader } from './PaywallHeader';
@@ -35,6 +37,9 @@ export const RewardPaywall = ({
   const goTo = (next: Step) => {
     setStep(next);
     scrollRef.current?.scrollTo({ top: 0 });
+    if (next === 'checkout') {
+      track(EVENTS.PAYWALL_CHECKOUT_VIEWED, { plan: REWARD_PLAN_ID });
+    }
   };
 
   return (
