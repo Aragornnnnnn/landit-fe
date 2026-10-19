@@ -10,7 +10,8 @@ export interface LetterBadge {
   tone: LetterBadgeTone;
 }
 
-export const RECEIVED_BADGES: Record<MailboxLetterType, LetterBadge> = {
+// 밖에서는 toReceivedBadge로만 읽는다 — 표를 바로 읽으면 모르는 종류에서 칩이 비어 화면이 깨진다
+const RECEIVED_BADGES: Record<MailboxLetterType, LetterBadge> = {
   NOTICE: { label: '공지', tone: 'notice' },
   UPDATE: { label: '업데이트', tone: 'update' },
   REPLY: { label: '답장', tone: 'reply' },
