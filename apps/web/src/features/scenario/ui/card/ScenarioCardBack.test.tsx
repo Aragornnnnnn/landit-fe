@@ -222,6 +222,7 @@ describe('ScenarioCardBack', () => {
     );
 
     expect(onTourEnd).toHaveBeenCalledTimes(1);
+    expect(onTourEnd).toHaveBeenCalledWith('no_free_expression');
   });
 
   it('투어 중인데 무료 표현을 이미 끝냈으면(투어 밖에서 마친 경우) 투어를 끝낸다', () => {
@@ -243,5 +244,6 @@ describe('ScenarioCardBack', () => {
     );
 
     expect(onTourEnd).toHaveBeenCalledTimes(1);
+    expect(onTourEnd).toHaveBeenCalledWith('no_free_expression');
   });
 });

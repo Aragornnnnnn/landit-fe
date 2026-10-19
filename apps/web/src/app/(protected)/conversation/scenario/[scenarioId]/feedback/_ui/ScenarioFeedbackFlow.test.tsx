@@ -258,6 +258,9 @@ describe('ScenarioFeedbackFlow', () => {
 
     // Then 레벨 단계를 남기고 홈으로 간다
     expect(mocks.saveStep).toHaveBeenCalledWith('STARTED');
+    expect(mocks.track).toHaveBeenCalledWith('First Expression Tour Started', {
+      entry: 'level',
+    });
     expect(mocks.replace).toHaveBeenCalledWith('/scenario');
     expect(mocks.guard).not.toHaveBeenCalled();
   });
@@ -272,6 +275,9 @@ describe('ScenarioFeedbackFlow', () => {
 
     await waitFor(() => expect(mocks.saveStep).toHaveBeenCalledWith('STARTED'));
     expect(mocks.replace).toHaveBeenCalledWith('/scenario');
+    expect(mocks.track).toHaveBeenCalledWith('First Expression Tour Started', {
+      entry: 'home',
+    });
   });
 
   it('지난 날 카드의 대화는 투어를 시작하지 않는다', () => {

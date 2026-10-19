@@ -150,7 +150,7 @@ export const ScenarioFeedbackFlow = ({
     const entry = tourEntryFor(next);
     // 투어를 시작할 사람일 때만 무료 표현을 확인한다 — 그 밖의 사람은 기다리지 않는다
     const tourEntry = entry && (await hasFreeExpression()) ? entry : null;
-    if (tourEntry === 'home') startTour();
+    if (tourEntry === 'home') startTour('home');
     else if (next === 'home') router.replace(scenarioReturnPath({ date }));
     else if (next === 'branch') continueToExpressionBranch();
     else setPostConversation(tourEntry === 'level' ? 'tour' : 'paywall');
@@ -166,7 +166,7 @@ export const ScenarioFeedbackFlow = ({
       tourEntryFor(postFeedbackView()) === 'home' &&
       (await hasFreeExpression())
     ) {
-      startTour();
+      startTour('home');
       return;
     }
     leaving.current = false;
@@ -185,7 +185,12 @@ export const ScenarioFeedbackFlow = ({
   };
 
   // 투어의 첫 단계를 남기고 홈으로 — 홈이 동전 연출 뒤 튜토리얼부터 이어 간다
-  const startTour = () => {
+  // 레벨 결과의 CTA를 연타해도 시작은 한 번만 남긴다
+  const tourStarted = useRef(false);
+  const startTour = (entry: 'level' | 'home') => {
+    if (tourStarted.current) return;
+    tourStarted.current = true;
+    track(EVENTS.FIRST_EXPRESSION_TOUR_STARTED, { entry });
     tour.saveStep('STARTED');
     router.replace(scenarioReturnPath({ date }));
   };
@@ -196,7 +201,9 @@ export const ScenarioFeedbackFlow = ({
         sessionId={sessionId}
         scenarioId={scenarioId}
         onFinish={continueToExpressionBranch}
-        onTourStart={postConversation === 'tour' ? startTour : undefined}
+        onTourStart={
+          postConversation === 'tour' ? () => startTour('level') : undefined
+        }
       />
     );
   }

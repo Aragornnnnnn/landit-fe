@@ -82,6 +82,19 @@
 
 페이월 노출은 별도 이벤트 없이 `Page Viewed`(page_name=paywall)로 본다. 어느 문으로 왔는지는 같은 이벤트의 `paywall_source`가 남긴다 — 게이트에 막혀 왔으면 막힌 자리(`Paywall Gate Locked`의 source와 같은 값), 마이페이지에서 스스로 들어왔으면 `me`. 값은 `paywallPath`가 주소에 실어 보내고 주소를 손으로 고쳐도 모르는 값은 버린다. 노출과 전환이 한 이벤트에 묶여 있어야 진입 경로별 결제 전환율이 바로 나온다.
 
+### 첫 표현 투어
+
+무료 사용자가 피드백을 마치고 홈에서 동전 연출 → 타이핑 튜토리얼 → 카드 자동 뒤집기 → 무료 표현 안내 → 표현 학습 → 페이월로 가는 길이다. 단계마다 한 번씩 찍어 어디서 그만두는지 본다. 끝까지 가면 `Paywall Gate Locked(source: first_expression_tour)`, 카드 뒤집기는 `Scenario Card Flipped(trigger: tour)`가 잡는다.
+
+| 이벤트                                   | 속성                                  | 시점                                                                                                                                         |
+| ---------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| First Expression Tour Started            | entry(level\|home)                    | 피드백 뒤 투어를 시작해 홈으로 보낸 순간. level은 신규(첫 시나리오 레벨 결과 뒤), home은 기존(오늘의 시나리오 총평 뒤 바로 홈)               |
+| First Expression Tour Sentence Advanced  | sentence_index(0부터)                 | 튜토리얼에서 다 쓴 문장을 눌러 다음 문장으로 넘긴 순간. 쓰는 중에 눌러 끝까지 보여 준 것은 찍지 않는다                                       |
+| First Expression Tour Tutorial Completed | 없음                                  | 마지막 문장 뒤 「맞춤 표현 학습하기」를 누른 순간                                                                                            |
+| First Expression Tour Ended              | reason(no_target\|no_free_expression) | 페이월 없이 조용히 끝난 순간. no_target은 안내가 비출 자리를 못 찾음, no_free_expression은 카드에 남은 무료 표현이 없음(이미 마친 경우 포함) |
+
+퍼널은 `Started → Sentence Advanced(0) → Sentence Advanced(1) → Tutorial Completed → Scenario Card Flipped(trigger: tour) → Expression Selected(source: card_back) → Paywall Gate Locked(source: first_expression_tour)` 순서다. 뒤집기 차례에 사용자가 먼저 카드를 뒤집으면 trigger가 button으로 남는다.
+
 ### 인증
 
 | 이벤트           | 속성                          | 시점                 |
@@ -119,11 +132,11 @@
 
 ### 홈
 
-| 이벤트                | 속성                                                                                        | 시점                                          |
-| --------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| Home Tab Switched     | tab(scenario\|smalltalk)                                                                    | 상단 탭 칩 눌러 이동 (보고 있는 탭 재탭 제외) |
-| Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto)                                  | 원어민 표현 배우기 / 자동 뒤집힘 / 앞면 복귀  |
-| Expression Selected   | expression_id, 출처(scenario_id\|session_id), source(card_back\|post_conversation\|history) | 표현 항목 탭                                  |
+| 이벤트                | 속성                                                                                        | 시점                                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Home Tab Switched     | tab(scenario\|smalltalk)                                                                    | 상단 탭 칩 눌러 이동 (보고 있는 탭 재탭 제외)                                                              |
+| Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto\|tour)                            | 원어민 표현 배우기 / 표현을 마치고 돌아와 자동 펴짐(auto) / 첫 표현 투어가 스스로 뒤집음(tour) / 앞면 복귀 |
+| Expression Selected   | expression_id, 출처(scenario_id\|session_id), source(card_back\|post_conversation\|history) | 표현 항목 탭                                                                                               |
 
 ### 오늘의 시나리오 (램프)
 

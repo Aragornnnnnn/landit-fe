@@ -3,7 +3,7 @@
 // 시나리오 카드 뒷면 — 완료 시나리오의 표현 학습 리스트. 표현을 고르면 학습 페이지로 이동.
 // 서버가 무료로 열어 준 표현(freeTrial)은 페이월 없이 연다. 무료 사용자 목록에는 무료·PREMIUM을 붙이고, 첫 표현 투어 중에는 그 표현을 비춘다
 import { useEffect, useEffectEvent, useRef } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type TourEndReason } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQuery'; // 완료 카드 뒷면이 표현 목록을 조합한다 — 교차 조립 블록(widgets 후보)
@@ -32,7 +32,7 @@ interface ScenarioCardBackProps {
   // 표현 마무리 후 자동으로 펼쳐진 경우만 축하한다 — 목록이 뜨기 전(스켈레톤)엔 터뜨리지 않는다
   autoFlip?: boolean;
   // 주면 첫 표현 투어 중이다 — 투어를 여기서 끝낼 때 부른다(줄 무료 표현이 없거나, 비출 자리를 못 찾았거나, 사용자가 넘겼다)
-  onTourEnd?: () => void;
+  onTourEnd?: (reason: TourEndReason) => void;
   // 투어가 비춘 무료 표현을 열었을 때 부른다 — 끝까지 안 하고 나와도 다시 비추지 않게
   onTourOpen?: () => void;
 }
@@ -76,7 +76,9 @@ export const ScenarioCardBack = ({
   // 투어 중인데 비출 표현이 없다 — 이 카드엔 무료 표현이 없거나 이미 끝냈다(투어 밖에서 마친 경우)
   const missingTourTarget =
     onTourEnd !== undefined && expressions !== null && tourTarget === undefined;
-  const endTourWithoutTarget = useEffectEvent(() => onTourEnd?.());
+  const endTourWithoutTarget = useEffectEvent(() =>
+    onTourEnd?.('no_free_expression'),
+  );
   useEffect(() => {
     if (missingTourTarget) endTourWithoutTarget();
   }, [missingTourTarget]);

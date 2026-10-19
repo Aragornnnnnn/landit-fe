@@ -2,9 +2,11 @@
 'use client';
 
 import { useEffect } from 'react';
+import { EVENTS, type TourEndReason } from '@landit/analytics';
 
 // 가로 import 사유: 투어 끝에 이어지는 환급 페이월의 첫 화면 그림을 미리 받는다
 import { SCENARIO_WALL_IMAGES } from '@/app/(protected)/paywall/_model/paywall-content';
+import { track } from '@/shared/analytics';
 import { preloadImages } from '@/shared/lib/preload-next-images';
 
 import { useFirstExpressionTour } from '../../../_model/useFirstExpressionTour';
@@ -45,7 +47,10 @@ export const useHomeTour = ({
             onFlipped: () => tour.saveStep('CARD_FLIPPED'),
             onFreeOpened: () => tour.saveStep('FREE_OPENED'),
             // 줄 표현이 없거나 넘겼으면 페이월로 몰지 않고 조용히 끝낸다
-            onTourEnd: () => tour.saveStep('COMPLETED'),
+            onTourEnd: (reason: TourEndReason) => {
+              track(EVENTS.FIRST_EXPRESSION_TOUR_ENDED, { reason });
+              tour.saveStep('COMPLETED');
+            },
           }
         : undefined,
   };

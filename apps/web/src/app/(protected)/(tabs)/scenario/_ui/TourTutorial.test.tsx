@@ -8,16 +8,26 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { track } from '@/shared/analytics';
+
 import { TourTutorial } from './TourTutorial';
 
 const mocks = vi.hoisted(() => ({ haptic: vi.fn() }));
 vi.mock('@/shared/haptics', () => ({ haptic: mocks.haptic }));
+vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
   mocks.haptic.mockClear();
 });
+
+const nextSentence = () =>
+  fireEvent.click(screen.getByRole('button', { name: '다음 문장' }));
+// 시계는 한 자마다 다시 걸린다 — 한 칸씩 흘려야 다음 타이머가 잡힌다
+const runClock = () => {
+  for (let i = 0; i < 200; i += 1) act(() => vi.advanceTimersByTime(60));
+};
 
 describe('TourTutorial', () => {
   it('「다음 문장」을 누르면 쓰는 중인 문장을 끝까지 보여 주고 그 문장을 한 번 읽어 준다', () => {
@@ -51,5 +61,50 @@ describe('TourTutorial', () => {
     fireEvent.click(screen.getByRole('button', { name: '다음 문장' }));
 
     expect(mocks.haptic).not.toHaveBeenCalled();
+  });
+
+  it('다 쓴 문장에서 누르면 넘긴 문장의 순번을 남긴다', () => {
+    // Given 첫 문장을 다 보여 준 튜토리얼
+    render(<TourTutorial dailyWon={500} onDone={vi.fn()} />);
+    nextSentence();
+
+    // When 다시 누르면
+    nextSentence();
+
+    // Then 첫 문장(0)을 넘겼다고 한 번 남긴다
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith(
+      'First Expression Tour Sentence Advanced',
+      { sentence_index: 0 },
+    );
+  });
+
+  it('쓰는 중인 문장을 눌러 끝까지 보여 주는 것은 넘김으로 남기지 않는다', () => {
+    render(<TourTutorial dailyWon={500} onDone={vi.fn()} />);
+
+    nextSentence();
+
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('마지막 문장 뒤 버튼을 누르면 튜토리얼을 마쳤다고 남기고 끝낸다', () => {
+    // Given 세 문장을 다 넘겨 마지막 버튼이 뜬 튜토리얼
+    vi.useFakeTimers();
+    const onDone = vi.fn();
+    render(<TourTutorial dailyWon={500} onDone={onDone} />);
+    for (let i = 0; i < 2; i += 1) {
+      nextSentence();
+      nextSentence();
+      runClock();
+    }
+
+    // When 버튼을 누르면
+    fireEvent.click(screen.getByRole('button', { name: '맞춤 표현 학습하기' }));
+
+    // Then 마쳤다고 남기고 투어를 넘긴다
+    expect(track).toHaveBeenCalledWith(
+      'First Expression Tour Tutorial Completed',
+    );
+    expect(onDone).toHaveBeenCalledTimes(1);
   });
 });

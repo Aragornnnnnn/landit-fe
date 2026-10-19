@@ -3,7 +3,7 @@
 // 시나리오 카드 — 앞면(썸네일·제목·브리핑·CTA, 완료 시 기록 버튼), 완료 시 뒤집으면 뒷면에 표현 학습 리스트.
 // 뒤집기는 페이월 문이 아니다 — 무료 사용자도 뒷면을 보고, 막는 건 뒷면의 표현이다. 첫 표현 투어 중에는 카드가 스스로 뒤집힌다
 import { useEffect, useEffectEvent, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type TourEndReason } from '@landit/analytics';
 import Link from 'next/link';
 
 import { track } from '@/shared/analytics';
@@ -46,7 +46,7 @@ export interface CardTour {
   // 비춘 무료 표현을 열었다 — 다시 비추지 않는다
   onFreeOpened: () => void;
   // 투어를 여기서 끝낸다 — 줄 무료 표현이 없거나 사용자가 넘겼다
-  onTourEnd: () => void;
+  onTourEnd: (reason: TourEndReason) => void;
 }
 
 export const ScenarioCard = ({
@@ -94,7 +94,7 @@ export const ScenarioCard = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 마운트 시 1회만
   }, []);
 
-  const flipToBack = (trigger: 'button' | 'auto') => {
+  const flipToBack = (trigger: 'button' | 'tour') => {
     haptic('medium'); // 완료 카드를 뒤집는 성취 순간엔 좀 더 묵직한 진동
     track(EVENTS.SCENARIO_CARD_FLIPPED, {
       scenario_id: scenario.scenarioId,
@@ -107,7 +107,7 @@ export const ScenarioCard = ({
   const openExpressions = () => flipToBack('button');
   // 투어는 튜토리얼이 걷히고 잠깐 뒤 카드를 스스로 뒤집는다 — 누를 것 없이 첫 표현으로 이어진다
   const tourFlipPending = tour?.screen === 'flip_card' && completed && !flipped;
-  const flipForTour = useEffectEvent(() => flipToBack('auto'));
+  const flipForTour = useEffectEvent(() => flipToBack('tour'));
   // 투어의 뒤집기 차례에 뒷면이 보이면 단계를 넘긴다 — 자동이든, 사용자가 먼저 눌렀든, 처음부터 뒷면으로 열렸든
   const tourFlipped = tour?.screen === 'flip_card' && completed && flipped;
   const passFlipStep = useEffectEvent(() => tour?.onFlipped());

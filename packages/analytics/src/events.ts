@@ -206,6 +206,14 @@ export const EVENTS = {
   LEVEL_RESULT_VIEWED: 'Level Result Viewed',
   PREPARED_LEARNING_VIEWED: 'Prepared Learning Viewed',
   PREPARED_LEARNING_CONTINUED: 'Prepared Learning Continued',
+  // 첫 표현 투어 — 무료 사용자가 피드백 뒤 홈에서 튜토리얼 → 카드 뒤집기 → 무료 표현으로 가는 길의 단계별 이탈.
+  // 끝까지 가면 Paywall Gate Locked(source: first_expression_tour), 카드 뒤집기는 Scenario Card Flipped(trigger: tour)가 잡는다
+  FIRST_EXPRESSION_TOUR_STARTED: 'First Expression Tour Started',
+  FIRST_EXPRESSION_TOUR_SENTENCE_ADVANCED:
+    'First Expression Tour Sentence Advanced',
+  FIRST_EXPRESSION_TOUR_TUTORIAL_COMPLETED:
+    'First Expression Tour Tutorial Completed',
+  FIRST_EXPRESSION_TOUR_ENDED: 'First Expression Tour Ended',
   // 마이페이지 — 유료 사용자가 구독 관리로 들어갔다 / 무료 사용자가 페이월로 들어갔다 / 진동 토글 / 말하기 속도 변경
   SUBSCRIPTION_MANAGE_TAPPED: 'Subscription Manage Tapped',
   PAYWALL_ENTRY_TAPPED: 'Paywall Entry Tapped',
@@ -244,6 +252,8 @@ export type OnboardingStep =
   | 'scenario';
 // 영어 수준 — BE 저장 API(learningLevel)와 같은 1(막 시작)~5(유창) 정수 척도. 지표와 서버 데이터가 같은 말을 쓴다
 export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
+// 첫 표현 투어가 페이월 없이 끝난 까닭 — 홈 카드가 투어를 끝낼 때 같은 값을 넘긴다
+export type TourEndReason = 'no_target' | 'no_free_expression';
 // 배울 영어 — BE 발음 에셋(accentLocale)과 같은 enum 값을 쓴다. 지표와 서버 데이터가 같은 말을 쓴다
 export type AccentLocale = 'EN_US' | 'EN_GB' | 'EN_AU';
 // 기존 유저 게이트가 묻는 질문 — 온보딩 스텝과 같은 말을 쓴다. 영어 수준은 첫 대화로 BE가 매겨 더 이상 묻지 않는다
@@ -467,7 +477,8 @@ export type EventProps = {
   'Scenario Card Flipped': {
     scenario_id: number;
     direction: 'back' | 'front';
-    trigger: 'button' | 'auto';
+    // auto = 표현을 마치고 돌아와 펴짐, tour = 첫 표현 투어가 스스로 뒤집음
+    trigger: 'button' | 'auto' | 'tour';
   };
   'Expression Selected': ExpressionSource & {
     expression_id: number;
@@ -825,6 +836,13 @@ export type EventProps = {
   };
   'Prepared Learning Viewed': { scenario_id: number };
   'Prepared Learning Continued': { scenario_id: number };
+  // level = 신규(첫 시나리오 레벨 결과 뒤), home = 기존(오늘의 시나리오 총평 뒤 바로 홈)
+  'First Expression Tour Started': { entry: 'level' | 'home' };
+  // 다 쓴 문장을 눌러 다음 문장으로 넘겼다. 0부터 센 넘긴 문장
+  'First Expression Tour Sentence Advanced': { sentence_index: number };
+  'First Expression Tour Tutorial Completed': undefined;
+  // 페이월 없이 조용히 끝났다 — no_target = 비출 자리를 못 찾음, no_free_expression = 카드에 남은 무료 표현이 없음
+  'First Expression Tour Ended': { reason: TourEndReason };
   'Subscription Manage Tapped': { status: SubscriptionState };
   'Paywall Entry Tapped': { source: PaywallEntrySource };
   // 이탈 할인 시트가 떠서 사용자가 본 순간 — 이 수와 할인 결제 수로 전환을 잰다
