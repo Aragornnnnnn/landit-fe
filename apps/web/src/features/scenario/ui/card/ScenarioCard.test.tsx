@@ -140,4 +140,23 @@ describe('ScenarioCard', () => {
     // Then 페이월로 가지 않고 뒷면이 열린다
     expect(screen.getByText('카드 앞면으로')).toBeInTheDocument();
   });
+
+  it('투어의 뒤집기 차례에 사용자가 먼저 뒤집어도 투어 단계를 넘긴다 — 자동 뒤집기를 기다리지 않아도', async () => {
+    // Given 튜토리얼이 막 끝나 카드가 스스로 뒤집히기 전
+    const onFlipped = vi.fn();
+    render(
+      <ScenarioCard
+        scenario={completedScenario}
+        onStart={vi.fn()}
+        expressions={{ completed: 0, total: 3 }}
+        tour={{ screen: 'flip_card', onFlipped, onTourEnd: vi.fn() }}
+      />,
+    );
+
+    // When 사용자가 먼저 표현 배우기를 누르면
+    await userEvent.click(screen.getByText('표현 배우기'));
+
+    // Then 뒤집기 단계를 한 번 넘긴다
+    expect(onFlipped).toHaveBeenCalledTimes(1);
+  });
 });

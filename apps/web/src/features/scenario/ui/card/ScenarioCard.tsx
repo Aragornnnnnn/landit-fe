@@ -101,14 +101,13 @@ export const ScenarioCard = ({
     });
     setHasFlipped(true);
     setFlipped(true);
+    // 투어의 뒤집기 차례면 어느 길로 뒤집었든 단계를 넘긴다 — 자동 뒤집기 전에 사용자가 먼저 누를 수 있다
+    if (tour?.screen === 'flip_card') tour.onFlipped();
   };
   const openExpressions = () => flipToBack('button');
   // 투어는 튜토리얼이 걷히고 잠깐 뒤 카드를 스스로 뒤집는다 — 누를 것 없이 첫 표현으로 이어진다
   const autoFlipping = tour?.screen === 'flip_card' && completed && !flipped;
-  const flipForTour = useEffectEvent(() => {
-    flipToBack('auto');
-    tour?.onFlipped();
-  });
+  const flipForTour = useEffectEvent(() => flipToBack('auto'));
   useEffect(() => {
     if (!autoFlipping) return;
     const timer = setTimeout(flipForTour, TOUR_FLIP_DELAY_MS);
