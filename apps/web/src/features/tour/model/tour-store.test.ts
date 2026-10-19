@@ -35,8 +35,21 @@ describe('tour-store', () => {
   it('저장하면 지켜보는 화면에 알린다', () => {
     const onChange = vi.fn();
     const unsubscribe = subscribeTourStep(onChange);
-    writeTourStep(7, 'LEVEL_SEEN');
+    writeTourStep(7, 'STARTED');
     expect(onChange).toHaveBeenCalledTimes(1);
     unsubscribe();
+  });
+
+  it('저장에 실패해도 이번 실행에서는 저장한 단계로 읽는다 — 튜토리얼이 닫히지 않고 홈을 막지 않게', () => {
+    // Given 저장소가 가득 차 쓰기가 실패할 때
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('quota');
+    });
+
+    // When 다음 단계를 저장하면
+    writeTourStep(9, 'TUTORIAL_DONE');
+
+    // Then 이번 실행에서는 그 단계로 읽힌다
+    expect(readTourStep(9)).toBe('TUTORIAL_DONE');
   });
 });
