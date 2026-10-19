@@ -15,14 +15,13 @@ const RECEIVED_BADGES: Record<MailboxLetterType, LetterBadge> = {
   NOTICE: { label: '공지', tone: 'notice' },
   UPDATE: { label: '업데이트', tone: 'update' },
   REPLY: { label: '답장', tone: 'reply' },
-  DIRECT: { label: '나에게', tone: 'direct' },
+  DIRECT: { label: '편지', tone: 'direct' },
 };
 
-// 서버가 웹보다 먼저 새 종류를 보내도 편지함 전체가 깨지지 않게 색 없는 칩으로 물러선다
-const UNKNOWN_RECEIVED_BADGE: LetterBadge = { label: '편지', tone: 'notice' };
-
+// 서버가 웹보다 먼저 새 종류를 보내도 편지함 전체가 깨지지 않게 「편지」 칩으로 물러선다.
+// 받는 사람에게 「편지」 칩이 두 모양으로 보이지 않게 개인 편지 칩을 그대로 쓴다
 export const toReceivedBadge = (type: MailboxLetterType): LetterBadge =>
-  RECEIVED_BADGES[type] ?? UNKNOWN_RECEIVED_BADGE;
+  RECEIVED_BADGES[type] ?? RECEIVED_BADGES.DIRECT;
 
 // 보낸 피드백은 자리마다 문구가 다르다 — 목록은 처리 단계를 훑는 자리라 '처리완료',
 // 펼친 자리는 그 답장을 읽는 자리라 '답장 도착'. 시안이 그렇게 뒀다
