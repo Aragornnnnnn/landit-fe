@@ -1,7 +1,7 @@
 'use client';
 
-// 프리미엄 페이월 화면 — 길게 내려 보는 한 장(머리 → 프리미엄 시리즈 → 그림 학습 → 환급 챌린지일 때 100일 성과 → 리뷰 → 비교표 → 플랜)과 아래 고정 CTA.
-// 환급 챌린지 스위치가 켜지면 머리·플랜·CTA 문구가 환급용으로 바뀐다. 결제·복원은 usePurchase, 닫기는 usePaywallDismiss가 지휘하고,
+// 프리미엄 페이월 화면 — 길게 내려 보는 한 장(머리 → 프리미엄 시리즈 → 그림 학습 → 리뷰 → 비교표 → 플랜)과 아래 고정 CTA.
+// 환급 챌린지 스위치가 켜지면 혜택 화면 → 결제 금액 안내 두 단계(RewardPaywall)로 바뀐다. 결제·복원은 usePurchase, 닫기는 usePaywallDismiss가 지휘하고,
 // 여기서는 어느 플랜을 골랐는지와 버튼 상태만 안다
 import { useRef, useState } from 'react';
 import { EVENTS, type SubscriptionPlan } from '@landit/analytics';
@@ -34,16 +34,15 @@ import {
   getBillingNotice,
   getCancelNotice,
   getCtaLabel,
-  getRewardCtaLabel,
 } from '../_model/paywall-copy';
 import { CompareSection } from './CompareSection';
 import { DataSection } from './DataSection';
-import { OutcomeSection } from './OutcomeSection';
 import { PaywallHeader } from './PaywallHeader';
 import { PaywallHero } from './PaywallHero';
 import { PlanSection } from './PlanSection';
 import { PremiumOnlySection } from './PremiumOnlySection';
 import { ReviewSection } from './ReviewSection';
+import { RewardPaywall } from './RewardPaywall';
 
 interface PaywallScreenProps {
   /** 결제·복원이 끝난 뒤 돌아갈 내부 경로. 학습 진입에서 막혀 왔을 때만 있고, 없으면 홈으로 간다 */
@@ -59,11 +58,9 @@ export const PaywallScreen = ({
   const router = useRouter();
   const rewardLive = useRewardChallengeLive();
   const rewardChallenge = forcedRewardChallenge ?? rewardLive;
-  // 스위치에 따라 사는 상품이 다르다 — 켜지면 100일 이용권 하나, 꺼지면 월간·연간 가운데 고른다(처음엔 연간).
-  // 셸 컨텍스트는 첫 렌더 뒤에 읽혀서 기본값을 상태에 굳히지 않고 매번 계산한다
-  const [pickedId, setSelectedId] = useState<SubscriptionPlan | null>(null);
-  const selectedId =
-    pickedId ?? (rewardChallenge ? REWARD_PLAN_ID : DEFAULT_PLAN_ID);
+  // 월간·연간 가운데 고른다(처음엔 연간). 환급 챌린지는 100일 이용권 하나라 고를 것이 없다
+  const [selectedId, setSelectedId] =
+    useState<SubscriptionPlan>(DEFAULT_PLAN_ID);
   // 맨 위 줄이 스크롤로 올라가면 닫기만 따로 띄운다
   const [scrolled, setScrolled] = useState(false);
   const plansRef = useRef<HTMLDivElement>(null);
@@ -77,19 +74,9 @@ export const PaywallScreen = ({
   const prices = toKrwPrices(packages);
   const plans = buildPaywallPlans(prices);
   const rewardPlan = buildRewardPlan(prices.pass);
-  // 스위치가 꺼져 있으면 고른 것은 월간·연간 가운데 하나다
   const regularPlan = plans[selectedId === 'monthly' ? 'monthly' : 'yearly'];
-  // CTA와 그 밑 안내 — 지금 플랜은 결제·해지 안내 두 줄, 환급 챌린지는 버튼만
-  const footer = rewardChallenge
-    ? {
-        label: getRewardCtaLabel(rewardPlan),
-        // 한 번 내는 단건 결제라 갱신·해지 안내가 없다
-        notices: [],
-      }
-    : {
-        label: getCtaLabel(regularPlan),
-        notices: [getBillingNotice(regularPlan), getCancelNotice(regularPlan)],
-      };
+  // CTA 밑 결제·해지 안내 두 줄
+  const notices = [getBillingNotice(regularPlan), getCancelNotice(regularPlan)];
 
   const goHome = () => router.replace(homePath());
   const dismiss = usePaywallDismiss(offering);
@@ -153,38 +140,46 @@ export const PaywallScreen = ({
     void restore();
   };
 
+  // 환급 챌린지는 혜택 화면 → 결제 금액 안내 두 단계다. 고를 플랜이 없어 이용권으로 바로 결제한다
+  if (rewardChallenge) {
+    return (
+      <RewardPaywall
+        plan={rewardPlan}
+        busy={busy}
+        onClose={() => void close()}
+        onRestore={startRestore}
+        onPurchase={() => {
+          track(EVENTS.PURCHASE_STARTED, { plan: REWARD_PLAN_ID });
+          void purchase(REWARD_PLAN_ID);
+        }}
+      />
+    );
+  }
+
   return (
     <main className="relative mx-auto h-dvh max-w-[430px] overflow-hidden bg-background">
       {/* 아래 여백은 하단 고정 CTA(버튼+안내) 높이만큼 — 마지막 링크가 버튼 뒤에 깔리지 않게 */}
       <div
         data-scroll-root
-        // 환급 챌린지는 버튼 밑 안내가 없어 그만큼 낮다
-        className={`relative h-full overflow-y-auto ${rewardChallenge ? 'pb-[calc(max(var(--safe-area-inset-bottom),12px)+100px)]' : 'pb-[calc(max(var(--safe-area-inset-bottom),12px)+142px)]'}`}
+        className="relative h-full overflow-y-auto pb-[calc(max(var(--safe-area-inset-bottom),12px)+142px)]"
         onScroll={(event) => setScrolled(event.currentTarget.scrollTop > 48)}
       >
         {/* 닫기·구매 복원 — 고정하지 않고 머리와 함께 올라간다 */}
         <PaywallHeader
-          dark={rewardChallenge}
           onClose={() => void close()}
           onRestore={startRestore}
           restoreDisabled={busy}
         />
-        <PaywallHero
-          rewardChallenge={rewardChallenge}
-          rewardPlan={rewardPlan}
-        />
-        <PremiumOnlySection scenarioFirst={rewardChallenge} />
+        <PaywallHero />
+        <PremiumOnlySection />
         <DataSection />
-        {rewardChallenge && <OutcomeSection />}
-        <ReviewSection rewardChallenge={rewardChallenge} />
+        <ReviewSection rewardChallenge={false} />
         <CompareSection />
         <div ref={plansRef} data-plan-section>
           <PlanSection
             plans={plans}
             selectedId={selectedId}
             onSelect={selectPlan}
-            rewardPlan={rewardPlan}
-            rewardChallenge={rewardChallenge}
             onRestore={startRestore}
             restoreDisabled={busy}
           />
@@ -207,9 +202,9 @@ export const PaywallScreen = ({
           결제 안내는 버튼 바로 밑에 둔다 — 청구액·갱신·해지는 스토어 심사(3.1.2)가 결제 버튼 곁에서 확인한다 */}
       <footer className="absolute inset-x-0 bottom-0 z-20 bg-[linear-gradient(to_bottom,transparent,var(--color-background)_28px)] px-5 pt-9 pb-[max(var(--safe-area-inset-bottom),12px)]">
         <Button onClick={startPurchase} loading={busy}>
-          {footer.label}
+          {getCtaLabel(regularPlan)}
         </Button>
-        {footer.notices.map((notice, index) => (
+        {notices.map((notice, index) => (
           <p
             key={notice}
             className={`${index === 0 ? 'mt-3' : 'mt-1'} text-center text-[11px] leading-[1.35] text-muted-foreground`}
