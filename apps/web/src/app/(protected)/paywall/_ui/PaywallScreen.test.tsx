@@ -429,6 +429,20 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     ).toBeInTheDocument();
   });
 
+  it('상세 피드백 혜택은 다섯 장으로 넘겨 본다 — 잘한 문장·어색한 문장·총평·나아진 점·배운 표현 사용', () => {
+    render(<PaywallScreen rewardChallenge />);
+
+    for (const title of [
+      '잘한 문장은 왜 좋은지',
+      '어색한 문장은 이렇게',
+      '대화 전체를 한눈에',
+      '지난번보다 나아진 점',
+      '배운 표현을 실제로 썼는지',
+    ]) {
+      expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
+    }
+  });
+
   it('혜택 화면의 CTA는 결제하지 않고 결제 금액 안내로 넘어간다', () => {
     render(<PaywallScreen rewardChallenge />);
 

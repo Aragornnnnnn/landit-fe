@@ -6,7 +6,13 @@ import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
 import { maskName, REVIEWS, type RewardPlan } from '../_model/paywall-content';
 import { CoinStackCard } from './CoinStackCard';
 import { ExampleDemo } from './ExampleDemo';
-import { AnalysisDemo, MistakeDemo } from './FeedbackDemo';
+import {
+  BetterTurnDemo,
+  GoodTurnDemo,
+  GrowthDemo,
+  ReuseDemo,
+  SummaryDemo,
+} from './FeedbackDemo';
 import { PronunciationDemo } from './PronunciationDemo';
 import { QuizDemo } from './QuizDemo';
 import { ScenarioWall } from './ScenarioWall';
@@ -75,12 +81,24 @@ export const BenefitsStep = ({ plan }: { plan: RewardPlan }) => {
             label="문장마다 꼼꼼한 상세 피드백"
             items={[
               {
-                title: '대화가 끝나면 꼼꼼하게 분석해요',
-                screen: <AnalysisDemo step={1} width={width} />,
+                title: '잘한 문장은 왜 좋은지',
+                screen: <GoodTurnDemo step={0} width={width} />,
               },
               {
-                title: '자주 하는 실수까지 잡아줘요',
-                screen: <MistakeDemo step={1} width={width} />,
+                title: '어색한 문장은 이렇게',
+                screen: <BetterTurnDemo step={0} width={width} />,
+              },
+              {
+                title: '대화 전체를 한눈에',
+                screen: <SummaryDemo step={0} width={width} />,
+              },
+              {
+                title: '지난번보다 나아진 점',
+                screen: <GrowthDemo step={0} width={width} />,
+              },
+              {
+                title: '배운 표현을 실제로 썼는지',
+                screen: <ReuseDemo step={0} width={width} />,
               },
             ]}
           />
