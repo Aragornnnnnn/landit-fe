@@ -58,14 +58,26 @@ describe('getCancelNotice', () => {
 });
 
 describe('환급 챌린지 문구', () => {
-  it('CTA는 챌린지 기간을 말한다', () => {
-    expect(getRewardCtaLabel(pass)).toBe('100일 환급 챌린지 시작하기');
+  it('CTA는 거는 금액을 만 원 단위로 말한다', () => {
+    expect(getRewardCtaLabel(pass)).toBe('5만 원 걸고 도전하기');
   });
 
-  it('안내 첫 줄은 하루 몫을 가격에서 읽는다', () => {
-    const [[, earning]] = getRewardSteps(buildRewardPlan(30_000));
+  it('만 원으로 나누어떨어지지 않는 가격이면 CTA는 원 단위로 말한다', () => {
+    expect(getRewardCtaLabel(buildRewardPlan(39_900))).toBe(
+      '39,900원 걸고 도전하기',
+    );
+  });
 
-    expect(earning).toBe('매일 오늘의 시나리오를 할 때마다 300원이 쌓여요');
+  it('안내는 내는 돈, 쌓이는 법, 돌려받는 때 세 줄을 가격에서 읽는다', () => {
+    const steps = getRewardSteps(buildRewardPlan(30_000)).map(
+      ([, text]) => text,
+    );
+
+    expect(steps).toEqual([
+      '오늘 30,000원 결제 (100일 이용권)',
+      '시나리오 1개 끝낼 때마다 300원 적립',
+      '100일 뒤, 모은 만큼 돌려받아요',
+    ]);
   });
 
   it('무대 띠는 결제 금액이 아니라 모은 만큼 돌려받는다고 말한다', () => {
