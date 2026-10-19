@@ -106,7 +106,7 @@ export default function SmallTalkPage() {
 
   return (
     // 이 화면은 스크롤이 없다 — 폰 높이가 아니라 이 영역이 실제로 받은 높이(내비 바·헤더를 뺀 값)를 기준으로
-    // 두 단계 줄인다(480~620px 여백·글자 한 단계, 480px 이하 한 단계 더). 캐릭터는 그러고 남은 자리를 먹는다
+    // 두 단계(cq-short·cq-tiny) 줄인다. 캐릭터는 그러고 남은 자리를 먹는다
     <div className="[container-type:size] flex flex-1 flex-col overflow-hidden pb-[max(var(--safe-area-inset-bottom),16px)]">
       {/* 기록은 오늘 대화를 시작하는 길과 섞이면 안 된다 — 화면 안쪽 오른쪽 위에 잔글씨로 둔다.
           상대 줄과 수직 중앙을 맞추면 네 번째 상대처럼 읽혀서, 그 줄보다 위에 걸쳐 둔다 */}
@@ -156,8 +156,8 @@ export default function SmallTalkPage() {
           왜 안 되는지부터 묻게 된다. "다 썼다"는 소진이지만 실은 오늘 몫을 완주한 것이라 채웠다고 말한다
           (1분은 안내 문구와 같은 하드코딩 — 사람마다 달라지면 둘 다 서버 값으로 바꾼다) */}
       {exhausted ? (
-        <div className="mt-8 flex flex-col items-center gap-1.5 px-5 [@container(height<=480px)]:mt-4">
-          <p className="text-lg font-extrabold break-keep text-foreground [@container(height<=480px)]:text-base">
+        <div className="mt-8 flex flex-col items-center gap-1.5 px-5 cq-tiny:mt-4">
+          <p className="text-lg font-extrabold break-keep text-foreground cq-tiny:text-base">
             오늘의 1분 스몰톡을 다 했어요
           </p>
           <p className="text-sm font-medium break-keep text-muted-foreground">
@@ -173,7 +173,7 @@ export default function SmallTalkPage() {
           {/* 잔량과 시작 버튼은 한 덩이다 — 주제가 없어 아래 버튼이 빠지는 날에도
               둘이 함께 바닥 쪽에 서서 손이 기억하는 자리가 안 바뀐다 */}
           <div className="mt-auto">
-            <div className="mt-3 flex h-8 justify-center [@container(height<=480px)]:hidden">
+            <div className="mt-3 flex h-8 justify-center cq-tiny:hidden">
               {main && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
                   오늘 남은 말하기
@@ -188,10 +188,10 @@ export default function SmallTalkPage() {
 
             {/* 하고 싶은 말이 있으면 바로, 아니면 상대가 주제로 열어 준다 — 주 행동이 위다.
               주제가 없어 아래 버튼이 빠지는 날에도 시작 버튼이 같은 자리에 서도록 바닥에 붙인다 */}
-            <div className="mt-4 flex flex-col gap-3 px-5 [@container(height<=480px)]:mt-3 [@container(height<=480px)]:gap-2">
+            <div className="mt-4 flex flex-col gap-3 px-5 cq-tiny:mt-3 cq-tiny:gap-2">
               <Button
                 size="md"
-                className="[@container(height<=480px)]:h-11"
+                className="cq-tiny:h-11"
                 disabled={isLoading}
                 onClick={startWithMe}
               >
@@ -204,7 +204,7 @@ export default function SmallTalkPage() {
                 <Button
                   variant="ghost"
                   size="md"
-                  className="[@container(height<=480px)]:h-11"
+                  className="cq-tiny:h-11"
                   disabled={isLoading}
                   onClick={() => void picker.openPicker()}
                 >
