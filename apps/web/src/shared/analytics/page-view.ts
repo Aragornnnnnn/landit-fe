@@ -65,6 +65,7 @@ const PAYWALL_SOURCES: Record<PaywallSource, true> = {
   smalltalk: true,
   conversation_finished: true,
   feedback_detail: true,
+  first_expression_tour: true,
   me: true,
   header: true,
   reward: true,

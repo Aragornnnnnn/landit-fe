@@ -296,7 +296,9 @@ export type PaywallGateSource =
   // 대화 피드백을 마치고 표현으로 넘어가는 자리 — 첫 시나리오의 무료 구간이 끝나는 곳
   | 'conversation_finished'
   // 총평에서 상세 피드백 보기를 눌렀는데 서버가 잠근 세션 — 두 번째 시나리오부터 페이월이 처음 뜨는 곳
-  | 'feedback_detail';
+  | 'feedback_detail'
+  // 첫 표현 투어 끝 — 무료로 열어 준 표현 하나를 마친 자리
+  | 'first_expression_tour';
 // 결제가 실패한 갈래 — 환경 문제 셋, 셸이 회신한 실패, 이용권을 결제 전에 막은 둘. 셸의 문구는 message에 따로 싣는다
 export type PurchaseFailureReason =
   | 'browser'
