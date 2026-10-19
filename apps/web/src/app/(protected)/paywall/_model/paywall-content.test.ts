@@ -78,12 +78,10 @@ describe('buildRewardPlan', () => {
 });
 
 describe('rewardBenefitsOf', () => {
-  it('적립 줄 하나만 강조하고 하루 몫을 그 줄에 쓴다 — 강조 색은 한 화면에 하나', () => {
-    const highlighted = rewardBenefitsOf(500).filter((row) => row.highlight);
-
-    expect(highlighted).toEqual([
-      { text: '시나리오마다 500원', free: false, highlight: true },
-    ]);
+  it('적립 줄에 하루 몫을 쓴다 — 가격이 바뀌면 줄도 따라간다', () => {
+    expect(rewardBenefitsOf(300).map((row) => row.text)).toContain(
+      '시나리오마다 300원',
+    );
   });
 
   it('무료로도 되는 줄은 매일 새 시나리오 하나뿐이고 맨 위에 있다', () => {

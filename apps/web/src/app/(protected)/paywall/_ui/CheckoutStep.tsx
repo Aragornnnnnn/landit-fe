@@ -6,11 +6,11 @@ import { Coin } from '@/features/reward/ui/common/Coin';
 import { formatWon } from '@/features/subscription/lib/won';
 import { PAYWALL_HERO } from '@/features/subscription/ui/paywall-hero-image';
 import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
-import { BenefitComparison } from '@/features/subscription/ui/product/BenefitComparison';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import { discountPercentOf, listPriceOf } from '../_model/pass-price';
 import { rewardBenefitsOf, type RewardPlan } from '../_model/paywall-content';
+import { CheckoutComparison } from './CheckoutComparison';
 import { ReviewSection } from './ReviewSection';
 
 const PassPriceCard = ({ plan }: { plan: RewardPlan }) => {
@@ -94,8 +94,9 @@ export const CheckoutStep = ({
         <h3 className="text-[22px] font-black tracking-[-0.02em] text-foreground">
           프리미엄이면 이게 다 열려요
         </h3>
-        <div className="mt-4 rounded-3xl border border-[#e9e7e2] bg-card pt-1 pb-4">
-          <BenefitComparison benefits={rewardBenefitsOf(plan.dailyRefund)} />
+
+        <div className="mt-4">
+          <CheckoutComparison rows={rewardBenefitsOf(plan.dailyRefund)} />
         </div>
       </section>
     </div>

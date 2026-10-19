@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 
 import { CheckIcon } from '@/shared/ui/Icons';
 
-import { BENEFITS, type Benefit } from '../../model/product/benefits';
+import { BENEFITS } from '../../model/product/benefits';
 import { PremiumPill } from '../premium-brand';
 
 /** 체크 하나가 들어가는 칸이라 좁다 */
@@ -22,12 +22,7 @@ const HEADER_LABEL = 'flex h-[18px] items-center justify-center';
  * 아래로 켜지는데, 줄 번호를 CSS 변수 `--i`로 넘겨 `globals.css`의 `animate-check-in`이 딜레이를
  * 계단으로 만든다. motion이 아니라 CSS인 것은 rAF가 멎은 웹뷰에서도 끝까지 가야 해서다 (LAN-375).
  */
-export const BenefitComparison = ({
-  benefits = BENEFITS,
-}: {
-  /** 그릴 줄 — 환급 페이월은 적립 줄을 더한 목록을 넘긴다 */
-  benefits?: (Pick<Benefit, 'text' | 'free'> & { highlight?: boolean })[];
-}) => (
+export const BenefitComparison = () => (
   <section className="px-5 pt-2 short:pt-1">
     <div className="relative">
       {/* 표 뒤에 깔려 머리글부터 마지막 줄까지 덮는다 */}
@@ -54,11 +49,11 @@ export const BenefitComparison = ({
           </tr>
         </thead>
         <tbody>
-          {benefits.map(({ text, free, highlight }, index) => (
+          {BENEFITS.map(({ text, free }, index) => (
             <tr key={text}>
               <th
                 scope="row"
-                className={`${ROW_HEIGHT} text-left text-[15px] leading-[1.3] short:text-[13px] ${highlight ? 'font-bold text-primary' : 'font-normal text-foreground'}`}
+                className={`${ROW_HEIGHT} text-left text-[15px] leading-[1.3] font-normal text-foreground short:text-[13px]`}
               >
                 {text}
               </th>

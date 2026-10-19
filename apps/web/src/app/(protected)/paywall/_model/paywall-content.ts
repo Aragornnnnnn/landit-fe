@@ -267,19 +267,15 @@ export const buildRewardPlan = (
 export const WALL_PICK_INDEX = SCENARIOS.length - 2;
 
 /**
- * 결제 금액 안내의 비교표 줄 — 환급 챌린지는 적립을 프리미엄 둘째 줄에 넣고 그 줄만 강조한다. 글자가 많으면 읽기 힘들어 짧게 쓴다
+ * 결제 금액 안내의 비교표 줄 — 환급 챌린지는 적립을 프리미엄 둘째 줄에 넣는다. 글자가 많으면 읽기 힘들어 짧게 쓴다
  *
  * @param dailyRefund 오늘의 시나리오를 끝낸 날 쌓이는 금액
  */
 export const rewardBenefitsOf = (
   dailyRefund: number,
-): { text: string; free: boolean; highlight?: boolean }[] => [
+): { text: string; free: boolean }[] => [
   { text: '매일 새 시나리오', free: true },
-  {
-    text: `시나리오마다 ${formatWon(dailyRefund)}`,
-    free: false,
-    highlight: true,
-  },
+  { text: `시나리오마다 ${formatWon(dailyRefund)}`, free: false },
   { text: '문장별 꼼꼼 피드백', free: false },
   { text: '맞춤 원어민 표현', free: false },
   { text: '원어민 발음 비교', free: false },
