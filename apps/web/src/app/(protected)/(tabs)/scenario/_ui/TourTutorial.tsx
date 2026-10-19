@@ -109,6 +109,8 @@ export const TourTutorial = ({
       {/* 화면 전체가 「다음」 버튼이다 — 손가락으로는 어디를 눌러도, 키보드로는 이 버튼으로 넘긴다 */}
       {!done && (
         <button
+          // 뜨자마자 포커스를 받는다 — 키보드로 바로 넘길 수 있고 뒤에 깔린 헤더가 먼저 잡히지 않게
+          ref={(button) => button?.focus()}
           type="button"
           aria-label="다음 문장"
           className="absolute inset-0"

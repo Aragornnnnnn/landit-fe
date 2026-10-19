@@ -148,4 +148,21 @@ describe('ScenarioCard', () => {
     // Then 뒤집기 단계를 한 번 넘긴다
     expect(onFlipped).toHaveBeenCalledTimes(1);
   });
+
+  it('투어의 뒤집기 차례에 카드가 처음부터 뒷면으로 열려도 투어 단계를 넘긴다', () => {
+    // Given 표현을 마치고 돌아온 길처럼 뒷면으로 펴진 채 열리는 카드
+    const onFlipped = vi.fn();
+    render(
+      <ScenarioCard
+        scenario={completedScenario}
+        onStart={vi.fn()}
+        autoFlip
+        expressions={{ completed: 0, total: 3 }}
+        tour={{ screen: 'flip_card', onFlipped, onTourEnd: vi.fn() }}
+      />,
+    );
+
+    // Then 뒤집기 단계를 넘긴다
+    expect(onFlipped).toHaveBeenCalledTimes(1);
+  });
 });

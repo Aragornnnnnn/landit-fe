@@ -78,12 +78,12 @@ export const ScenarioFeedbackFlow = ({
   const { subscription } = useSubscriptionQuery();
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.member?.userId ?? null);
-  // 투어를 볼 수도 있는 사람인데 목록이 아직 없거나 무료 표현이 안 보이면 한 번 새로 받아 확인한다 —
+  // 투어를 볼 수도 있는 사람인데 목록이 아직 안 왔으면 받아서 확인한다 —
   // 무료 표현은 "처음 완료한 시나리오" 하나에만 붙어서, 여기서 놓치면 투어를 다시 볼 기회가 없다
   const hasFreeExpression = async () => {
     const has = (list: Expression[] | null | undefined) =>
       list?.some((expression) => expression.freeTrial) ?? false;
-    if (has(expressions)) return true;
+    if (expressions) return has(expressions);
     try {
       const fresh = await queryClient.fetchQuery({
         queryKey: expressionKeys.list(userId, scenarioId),
@@ -133,7 +133,11 @@ export const ScenarioFeedbackFlow = ({
   };
 
   // 피드백을 다 본 뒤 — 재대화면 홈, 잠기지 않는 사람은 표현 분기, 무료 사용자는 첫 시나리오만 페이월 전 화면부터
+  // 목록을 기다리는 동안 다시 눌러도 한 번만 이동한다
+  const leaving = useRef(false);
   const goAfterFeedback = async () => {
+    if (leaving.current) return;
+    leaving.current = true;
     const next = decidePostFeedbackView({
       replay,
       learningLocked: paywallGate.locked,

@@ -1,7 +1,7 @@
 'use client';
 
 // 첫 표현 투어의 뒷면 안내 두 박자 — 표현 목록 전체를 잠깐 소개한 뒤, 서버가 무료로 연 표현을 비추고 누르게 한다
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
 
@@ -24,6 +24,13 @@ export const FreeExpressionSpotlight = ({
   onEnd: () => void;
 }) => {
   const [step, setStep] = useState<'intro' | 'free'>('intro');
+  // 손가락이 누르기를 부추겨 연타가 잦다 — 표현 화면은 한 번만 연다
+  const opened = useRef(false);
+  const openOnce = () => {
+    if (opened.current) return;
+    opened.current = true;
+    onOpen();
+  };
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
   const find = (selector: string) =>
     list.current?.querySelector<HTMLElement>(selector) ?? null;
@@ -56,7 +63,7 @@ export const FreeExpressionSpotlight = ({
       settleMs={0}
       onMissing={onEnd}
       onSkip={onEnd}
-      onTap={onOpen}
+      onTap={openOnce}
     >
       첫 표현은 <span className="text-primary">무료</span>로 열어 드렸어요
       <br />

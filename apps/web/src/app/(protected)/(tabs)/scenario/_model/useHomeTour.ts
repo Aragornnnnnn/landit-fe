@@ -18,8 +18,8 @@ export const useHomeTour = ({
 }) => {
   const tour = useFirstExpressionTour();
   const view = homeTourViewOf({ screen: tour.screen, cleared, showerHold });
-  // 가격은 튜토리얼 차례에 미리 받는다 — 동전 연출 동안 받아 두어 타이핑 도중 금액이 바뀌지 않게
-  const offer = useRewardOffer({ enabled: tour.screen === 'tutorial' });
+  // 가격은 투어가 있는 동안 미리 받는다 — 튜토리얼이 뜨기 전에 받아 두어야 금액이 등록가로 굳지 않는다
+  const offer = useRewardOffer({ enabled: tour.screen !== 'none' });
 
   return {
     view,
