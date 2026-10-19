@@ -8,6 +8,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { track } from '@/shared/analytics';
 import { decideBack } from '@/shared/bridge/back-navigation';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
+import { ONBOARDING_PATH } from '@/shared/lib/routes';
 import { closeTopSheet } from '@/shared/ui/bottom-sheet-back';
 import { showToast, TOAST_MS } from '@/shared/ui/toast';
 
@@ -82,7 +83,7 @@ export const BridgeListener = () => {
       // 온보딩 중엔 무시한다 — 위젯 설치 스텝에서 홈으로 나갔다 위젯을 눌러 돌아오면 온보딩이 밀려나 진행 상태가 사라진다
       if (
         message.type === 'NAVIGATE' &&
-        pathnameRef.current !== '/onboarding'
+        pathnameRef.current !== ONBOARDING_PATH
       ) {
         router.push(message.url);
       }

@@ -2,7 +2,6 @@
 
 // 시나리오 탭 — 그날 배정된 카드 한 장을 받는다. 날짜는 ?date=로 넘기고 없으면 오늘
 import { Suspense, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { NotificationConsentGate } from '@/features/notification/ui/NotificationConsentGate';
@@ -14,13 +13,12 @@ import { ScenarioBriefing } from '@/features/scenario/ui/ScenarioBriefing';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
 import { TodayCard } from '@/features/scenario/ui/TodayCard';
 import { usePromoSheetOpen } from '@/features/subscription/model/exit-promo/promo-handoff';
-import { track } from '@/shared/analytics';
 import {
   readDateParam,
   scenarioReturnPath,
   scenarioTalkPath,
 } from '@/shared/lib/routes';
-import { Button } from '@/shared/ui/Button';
+import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
@@ -86,20 +84,12 @@ function ScenarioContent() {
 
   if (error) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="text-muted-foreground">{error.message}</p>
-        <Button
-          variant="secondary"
-          size="sm"
-          className="w-auto px-6"
-          onClick={() => {
-            track(EVENTS.ERROR_RETRIED, { screen: 'scenario' });
-            retry();
-          }}
-        >
-          다시 시도
-        </Button>
-      </div>
+      <RetryNotice
+        fill
+        screen="scenario"
+        message={error.message}
+        onRetry={retry}
+      />
     );
   }
 

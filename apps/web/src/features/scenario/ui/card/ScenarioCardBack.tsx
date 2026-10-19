@@ -16,8 +16,8 @@ import {
   scenarioExpressionPath,
   scenarioReturnPath,
 } from '@/shared/lib/routes';
-import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
+import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { expressionStageOf } from '../../lib/expression-progress';
 
@@ -101,20 +101,11 @@ export const ScenarioCardBack = ({
         {isLoading && <ExpressionListSkeleton />}
 
         {error && (
-          <div className="flex flex-col items-center gap-4 px-6 pt-16 text-center">
-            <p className="text-sm text-muted-foreground">{error.message}</p>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="w-auto px-6"
-              onClick={() => {
-                track(EVENTS.ERROR_RETRIED, { screen: 'card_back' });
-                retry();
-              }}
-            >
-              다시 시도
-            </Button>
-          </div>
+          <RetryNotice
+            screen="card_back"
+            message={error.message}
+            onRetry={retry}
+          />
         )}
 
         {expressions && (

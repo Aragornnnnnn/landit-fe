@@ -6,8 +6,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readLastLoginProvider } from '../../../_model/last-login-provider';
 import SocialLoginCallbackPage from './page';
 
+const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  useRouter: () => ({ replace, push: vi.fn() }),
 }));
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 vi.mock('@/shared/auth/auth-store', () => ({
@@ -98,6 +99,17 @@ describe('SocialLoginCallbackPage', () => {
 
     // then
     expect(readLastLoginProvider()).toBe('kakao');
+  });
+
+  it('기존 유저는 이 기기에 온보딩 본 기록이 없어도 시나리오로 간다', async () => {
+    // when — 앱을 지웠다 다시 깐 기기처럼 기록이 비어 있다
+    await renderCallback(async () => ({
+      ok: true,
+      json: async () => ({ idToken: 'id' }),
+    }));
+
+    // then
+    expect(replace).toHaveBeenCalledWith('/scenario');
   });
 
   it('로그인에 실패하면 로그인한 방법을 남기지 않는다', async () => {

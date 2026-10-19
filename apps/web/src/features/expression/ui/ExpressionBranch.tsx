@@ -16,8 +16,8 @@ import {
   scenarioExpressionPath,
   scenarioReturnPath,
 } from '@/shared/lib/routes';
-import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
+import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { useExpressionsQuery } from '../model/useExpressionsQuery';
 import { AnalyzeStage, CelebrateStage, RevealStage } from './ExpressionStages';
@@ -122,22 +122,12 @@ export const ExpressionBranch = ({
 
       {error && !expressions ? (
         // 표현을 못 불러오면 무한 로딩 대신 원인을 보이고 다시 시도하게 한다
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            {error.message || '표현을 불러오지 못했어요.'}
-          </p>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="w-auto px-6"
-            onClick={() => {
-              track(EVENTS.ERROR_RETRIED, { screen: 'expression_list' });
-              retry();
-            }}
-          >
-            다시 시도
-          </Button>
-        </div>
+        <RetryNotice
+          fill
+          screen="expression_list"
+          message={error.message || '표현을 불러오지 못했어요.'}
+          onRetry={retry}
+        />
       ) : (
         // 찾는 중엔 좌측 위 타이틀 + 가운데 구슬 랜디 → 찾은 뒤엔 타이틀 대신 결과 문구 + 인라인 리스트
         <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(var(--safe-area-inset-bottom),24px)]">
