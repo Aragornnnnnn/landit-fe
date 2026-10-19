@@ -1,4 +1,4 @@
-// 받은 편지의 본문 — 공지·업데이트는 블록 본문, 답장은 글 한 덩이에 내가 보낸 내용이 따라붙는다
+// 받은 편지의 본문 — 공지·업데이트는 블록 본문, 답장·개인 편지는 글 한 덩이고 답장에는 내가 보낸 내용이 따라붙는다
 import type { ReceivedLetterDetail } from '../../api/mailbox';
 import { readLetterBlocks } from '../../model/letter-blocks';
 import { LetterBlocks } from './LetterBlocks';
