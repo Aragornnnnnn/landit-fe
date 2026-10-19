@@ -35,16 +35,16 @@ interface ScenarioCardProps {
   autoFlip?: boolean;
   // 완료 카드에 띄우는 표현 학습 진행도
   expressions: { completed: number; total: number };
-  // 첫 표현 투어의 차례 — auto_flip은 스스로 뒤집기, free_expression은 뒷면 첫 표현 무료
+  // 첫 표현 투어의 차례 — flip_card은 스스로 뒤집기, free_expression은 뒷면 첫 표현 무료
   tour?: CardTour;
 }
 
 export interface CardTour {
-  screen: 'auto_flip' | 'free_expression';
+  screen: 'flip_card' | 'free_expression';
   // 카드가 스스로 뒤집혔다
   onFlipped: () => void;
-  // 서버가 이 카드에 무료 표현을 열어 주지 않았다 — 투어를 여기서 끝낸다
-  onNoFreeExpression: () => void;
+  // 투어를 여기서 끝낸다 — 줄 무료 표현이 없거나 사용자가 넘겼다
+  onTourEnd: () => void;
 }
 
 export const ScenarioCard = ({
@@ -62,12 +62,15 @@ export const ScenarioCard = ({
 
   // 뒤집기 상태. hasFlipped는 뒷면(표현 API)을 첫 뒤집기 전까지 마운트하지 않기 위한 지연 플래그.
   // autoFlip(표현 마무리 후 홈 복귀)이면 처음부터 뒤집힌 채로 마운트한다.
-  const [flipped, setFlipped] = useState(autoFlip && completed);
-  const [hasFlipped, setHasFlipped] = useState(autoFlip && completed);
+  // 뒷면으로 펴 둔 채 시작하는가 — 표현을 마치고 돌아왔거나, 투어의 무료 표현 차례다
+  const openBack =
+    (autoFlip || tour?.screen === 'free_expression') && completed;
+  const [flipped, setFlipped] = useState(openBack);
+  const [hasFlipped, setHasFlipped] = useState(openBack);
   // completed가 마운트 후 뒤늦게 true가 돼도(캐시가 stale이었던 경우) autoFlip이면 한 번은 자동으로 편다.
   // 렌더 중 state 조정 패턴(effect 아님) — 사용자가 이후 앞면으로 되돌리는 건 막지 않는다.
-  const [autoApplied, setAutoApplied] = useState(autoFlip && completed);
-  if (autoFlip && completed && !autoApplied) {
+  const [autoApplied, setAutoApplied] = useState(openBack);
+  if (openBack && !autoApplied) {
     setAutoApplied(true);
     setFlipped(true);
     setHasFlipped(true);
@@ -75,9 +78,7 @@ export const ScenarioCard = ({
 
   const filterClass = locked ? 'brightness-70 grayscale' : '';
   // 등장 연출은 마운트 때 한 번 정한다 — 뒷면으로 펴지며 마운트되면 건너뛰고, 나중에 flip 신호가 빠져도 뒷면 아래서 다시 돌지 않게(iOS에서 비친다)
-  const [cardInClass] = useState(
-    autoFlip && completed ? '' : 'animate-card-in',
-  );
+  const [cardInClass] = useState(openBack ? '' : 'animate-card-in');
 
   // autoFlip으로 처음부터 뒤집힌 채 마운트된 경우도 노출로 기록한다
   useEffect(() => {
@@ -103,7 +104,7 @@ export const ScenarioCard = ({
   };
   const openExpressions = () => flipToBack('button');
   // 투어는 튜토리얼이 걷히고 잠깐 뒤 카드를 스스로 뒤집는다 — 누를 것 없이 첫 표현으로 이어진다
-  const autoFlipping = tour?.screen === 'auto_flip' && completed && !flipped;
+  const autoFlipping = tour?.screen === 'flip_card' && completed && !flipped;
   const flipForTour = useEffectEvent(() => {
     flipToBack('auto');
     tour?.onFlipped();
@@ -246,7 +247,7 @@ export const ScenarioCard = ({
               onBack={closeExpressions}
               autoFlip={autoFlip}
               freeTour={tour !== undefined}
-              onNoFreeExpression={tour?.onNoFreeExpression}
+              onTourEnd={tour?.onTourEnd}
             />
           </div>
         )}

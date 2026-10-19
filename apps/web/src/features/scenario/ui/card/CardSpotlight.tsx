@@ -13,6 +13,9 @@ import { Emoji } from '@/shared/ui/emoji';
 const PAD = 6;
 // 말풍선과 뚫린 자리 사이 — 꼬리가 이 틈을 잇는다
 const GAP = 14;
+// 손가락 자리 — 칸 오른쪽 끝의 「무료」 배지(약 52px)와 겹치지 않게 그 왼쪽, 칸 높이의 40% 지점
+const FINGER_FROM_RIGHT_PX = 118;
+const FINGER_TOP_RATIO = 0.4;
 
 export const CardSpotlight = ({
   findTarget,
@@ -21,6 +24,8 @@ export const CardSpotlight = ({
   children,
   onTap,
   introMs,
+  onMissing,
+  onSkip,
 }: {
   // 뚫어 둘 자리를 찾는다 — 연출이 끝난 뒤에 찾아야 그 자리가 맞다
   findTarget: () => HTMLElement | null;
@@ -33,18 +38,28 @@ export const CardSpotlight = ({
   onTap: () => void;
   // 주면 소개 말풍선 — 뜬 뒤 이만큼 지나면 저절로 넘어가고(onTap), 화면 어디를 눌러도 넘어간다
   introMs?: number;
+  // 기다린 뒤에도 자리를 못 찾았다 — 비출 것이 없으니 부르는 쪽이 안내를 끝낸다
+  onMissing?: () => void;
+  // 주면 아래에 「다음에 할게요」를 둔다 — 뚫린 자리 말고도 빠져나갈 길
+  onSkip?: () => void;
 }) => {
   const intro = introMs !== undefined;
   const reduced = useReducedMotion();
   const [rect, setRect] = useState<DOMRect | null>(null);
 
-  const measureTarget = useEffectEvent(() => {
+  const measureTarget = useEffectEvent((first: boolean) => {
     const target = findTarget();
-    if (target) setRect(target.getBoundingClientRect());
+    if (!target) {
+      if (first) onMissing?.();
+      return;
+    }
+    // 목록이 길어 칸이 화면 밖이면 먼저 가운데로 데려온다 — 어둠이 스크롤을 막는다
+    if (first) target.scrollIntoView({ block: 'center' });
+    setRect(target.getBoundingClientRect());
   });
   useEffect(() => {
-    const measure = () => measureTarget();
-    const timer = setTimeout(measure, settleMs);
+    const measure = () => measureTarget(false);
+    const timer = setTimeout(() => measureTarget(true), settleMs);
     window.addEventListener('resize', measure);
     return () => {
       clearTimeout(timer);
@@ -92,8 +107,8 @@ export const CardSpotlight = ({
           aria-hidden
           className="pointer-events-none absolute text-[34px] drop-shadow-md"
           style={{
-            left: hole.left + hole.width - 118,
-            top: hole.top + hole.height * 0.4,
+            left: hole.left + hole.width - FINGER_FROM_RIGHT_PX,
+            top: hole.top + hole.height * FINGER_TOP_RATIO,
           }}
           animate={reduced ? undefined : { y: [0, -8, 0], scale: [1, 0.92, 1] }}
           transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
@@ -117,6 +132,15 @@ export const CardSpotlight = ({
           {children}
         </p>
       </motion.div>
+      {onSkip && (
+        <button
+          type="button"
+          onClick={onSkip}
+          className="absolute inset-x-0 bottom-[max(var(--safe-area-inset-bottom),20px)] mx-auto w-fit px-4 py-3 text-base font-semibold text-white/75 underline-offset-4 active:underline"
+        >
+          다음에 할게요
+        </button>
+      )}
       {!intro && (
         <button
           type="button"

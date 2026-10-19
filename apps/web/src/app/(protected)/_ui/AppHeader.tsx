@@ -1,6 +1,7 @@
 'use client';
 
 // 앱 헤더 — 왼쪽은 환급 참여자면 쌓인 금액, 그 밖에는 프리미엄 진입(또는 로고), 오른쪽은 열매·편지함·내 정보
+import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
 import { MailboxButton } from '@/features/mailbox/ui/MailboxButton';
@@ -48,6 +49,9 @@ export const AppHeader = () => {
   } = useMissedEarnInvite(invited, missedRewardOf(preview, computedAt));
   // 첫 표현 투어의 튜토리얼 차례 — 동전은 프리미엄 진입 알약으로 날아가고, 말풍선 대신 튜토리얼이 이어서 말한다
   const tourIntro = useFirstExpressionTour().screen === 'challenge_intro';
+  // 이번 방문에 튜토리얼이 있었으면 말풍선은 띄우지 않는다 — 동전이 닿을 때 열린 말풍선이 튜토리얼이 끝난 뒤 스포트라이트 위로 뜨지 않게
+  const [tourShown, setTourShown] = useState(false);
+  if (tourIntro && !tourShown) setTourShown(true);
   // 학습을 끝내고 돌아왔으면 그사이 늘어난 만큼 동전이 알약으로 날아든다
   const { gain, endGain } = useBalanceGain(
     // 알약이 없으면 연출을 틀 자리도 없다 — 끝나지 않는 연출을 기다리며 홈의 시트가 막히지 않게 금액도 없는 것으로 넘긴다
@@ -109,7 +113,7 @@ export const AppHeader = () => {
           onEnd={endShower}
         />
       )}
-      {bubble && !tourIntro && (
+      {bubble && !tourIntro && !tourShown && (
         <RewardInviteBubble
           pill={bubble.pill}
           amountWon={dailyWon}

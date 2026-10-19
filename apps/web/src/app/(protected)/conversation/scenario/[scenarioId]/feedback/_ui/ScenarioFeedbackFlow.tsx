@@ -9,6 +9,11 @@ import { EVENTS } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
+import {
+  getExpressions,
+  type Expression,
+} from '@/features/expression/api/list';
+import { expressionKeys } from '@/features/expression/model/keys';
 import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQuery';
 import { isStaleLockedFeedback } from '@/features/feedback/model/feedback-view';
 import {
@@ -19,8 +24,8 @@ import { FeedbackFlow } from '@/features/feedback/ui/FeedbackFlow';
 import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
 // 가로 import 사유: 피드백이 끝나는 자리가 무료 구간이 끝나는 자리라 여기서 페이월 게이트를 건다
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
-import { tourEntryOf } from '@/features/tour/model/tour-step';
 import { track } from '@/shared/analytics';
+import { useAuthStore } from '@/shared/auth/auth-store';
 import {
   paywallPath,
   scenarioExpressionBranchPath,
@@ -29,6 +34,7 @@ import {
 } from '@/shared/lib/routes';
 
 import { decidePostFeedbackView } from '../_model/post-feedback-view';
+import { tourEntryOf } from '../_model/tour-entry';
 import { useFirstExpressionTour } from '../../../../../_model/useFirstExpressionTour';
 import { PostConversationFlow } from './PostConversationFlow';
 
@@ -65,14 +71,30 @@ export const ScenarioFeedbackFlow = ({
   const tour = useFirstExpressionTour();
   // 서버가 이 시나리오에서 무료로 열어 준 표현이 있어야 투어의 끝(표현 하나)을 줄 수 있다 — 피드백을 보는 동안 미리 받아 둔다
   const { expressions } = useExpressionsQuery(scenarioId);
-  const freeExpression =
-    expressions?.some((expression) => expression.freeTrial) ?? false;
 
   // 유료인데 잠긴 응답을 들고 있다 — 무료일 때 받아 둔 것이다. 이 화면에서 한 번 다시 받는다.
   // 결제하고 돌아온 길, 복원, 다른 기기에서 결제한 뒤 앱을 켠 길이 전부 여기로 모인다.
   // 한 번만이다 — 다시 받아도 잠겨 있으면(웹훅 지연) 그대로 두고, CTA는 페이월(구매 복원)로 이어진다
   const { subscription } = useSubscriptionQuery();
   const queryClient = useQueryClient();
+  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  // 투어를 볼 수도 있는 사람인데 목록이 아직 없거나 무료 표현이 안 보이면 한 번 새로 받아 확인한다 —
+  // 무료 표현은 "처음 완료한 시나리오" 하나에만 붙어서, 여기서 놓치면 투어를 다시 볼 기회가 없다
+  const hasFreeExpression = async () => {
+    const has = (list: Expression[] | null | undefined) =>
+      list?.some((expression) => expression.freeTrial) ?? false;
+    if (has(expressions)) return true;
+    try {
+      const fresh = await queryClient.fetchQuery({
+        queryKey: expressionKeys.list(userId, scenarioId),
+        queryFn: () => getExpressions(scenarioId),
+        staleTime: 0,
+      });
+      return has(fresh);
+    } catch {
+      return false;
+    }
+  };
   const staleLocked = isStaleLockedFeedback(subscription?.premium, feedback);
   const refreshed = useRef(false);
   useEffect(() => {
@@ -111,7 +133,7 @@ export const ScenarioFeedbackFlow = ({
   };
 
   // 피드백을 다 본 뒤 — 재대화면 홈, 잠기지 않는 사람은 표현 분기, 무료 사용자는 첫 시나리오만 페이월 전 화면부터
-  const goAfterFeedback = () => {
+  const goAfterFeedback = async () => {
     const next = decidePostFeedbackView({
       replay,
       learningLocked: paywallGate.locked,
@@ -121,14 +143,17 @@ export const ScenarioFeedbackFlow = ({
         ? (feedback.detailFeedbackLocked ?? false)
         : true,
     });
-    const tourEntry = tourEntryOf({
+    const entryBase = {
       view: next,
       replay,
       // 날짜 없는 주소가 오늘 카드다
       today: date === undefined,
-      tour,
-      freeExpression,
-    });
+      tour: { eligible: tour.eligible, step: tour.step },
+    };
+    // 무료 표현만 빼면 투어를 시작할 사람일 때만 목록을 확인한다 — 그 밖의 사람은 기다리지 않는다
+    const tourEntry =
+      tourEntryOf({ ...entryBase, freeExpression: true }) &&
+      tourEntryOf({ ...entryBase, freeExpression: await hasFreeExpression() });
     if (tourEntry === 'FEEDBACK_SEEN') startTour('FEEDBACK_SEEN');
     else if (next === 'home') router.replace(scenarioReturnPath({ date }));
     else if (next === 'branch') continueToExpressionBranch();
@@ -147,7 +172,7 @@ export const ScenarioFeedbackFlow = ({
         sessionId={sessionId}
         scenarioId={scenarioId}
         onFinish={continueToExpressionBranch}
-        onLevelSeen={
+        onTourStart={
           postConversation === 'tour'
             ? () => startTour('LEVEL_SEEN')
             : undefined
@@ -162,7 +187,7 @@ export const ScenarioFeedbackFlow = ({
       sessionId={sessionId}
       title={title}
       openDetail={openDetail}
-      onExit={goAfterFeedback}
+      onExit={() => void goAfterFeedback()}
       onDetailLocked={openPaywallForDetail}
     />
   );

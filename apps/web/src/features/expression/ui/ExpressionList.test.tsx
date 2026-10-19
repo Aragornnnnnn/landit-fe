@@ -77,7 +77,7 @@ describe('ExpressionList 무료·PREMIUM 표시', () => {
     render(
       <ExpressionList
         premiumLocked
-        freeExpressionId={1}
+        freeTrialExpressionId={1}
         expressions={[
           expression({ expressionId: 1 }),
           expression({ expressionId: 2, locked: true }),
@@ -95,7 +95,7 @@ describe('ExpressionList 무료·PREMIUM 표시', () => {
   it('유료 사용자 목록에는 아무 표시도 없다', () => {
     render(
       <ExpressionList
-        freeExpressionId={1}
+        freeTrialExpressionId={1}
         expressions={[expression({ expressionId: 1 })]}
         onSelect={vi.fn()}
       />,

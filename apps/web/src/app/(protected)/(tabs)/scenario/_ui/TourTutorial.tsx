@@ -2,7 +2,7 @@
 
 // 첫 표현 투어의 튜토리얼 — 동전 연출의 어둠을 그대로 두고, 가운데 래디 아래로 문장을 한 자씩 타이핑한다.
 // 화면을 누르면 지금 문장을 지우고 다음 문장을 쓴다. 마지막 문장 뒤의 버튼이 카드를 뒤집으러 간다
-import { useEffect, useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
 import { formatWon } from '@/shared/lib/won';
@@ -17,6 +17,12 @@ import {
 // 한 자 쓰는 간격과 한 자 지우는 간격(ms) — 지우기는 빨라야 기다림으로 안 느껴진다
 const TYPE_MS = 55;
 const ERASE_MS = 16;
+
+const tickDelayOf = (phase: 'typing' | 'erasing', skip: boolean) => {
+  if (skip) return 0;
+  if (phase === 'typing') return TYPE_MS;
+  return ERASE_MS;
+};
 
 // 문장 조각 — 두 번째 값이 참이면 금색으로 강조한다
 type Part = readonly [text: string, highlight?: boolean];
@@ -66,25 +72,24 @@ export const TourTutorial = ({
   onDone: () => void;
 }) => {
   const reduced = useReducedMotion();
-  const sentences = sentencesOf(dailyWon);
+  // 금액은 처음 뜬 값으로 고정한다 — 쓰는 도중 가격이 도착해 글자 수가 바뀌면 문장이 잘린다
+  const [won] = useState(dailyWon);
+  const sentences = sentencesOf(won);
   const lengths = sentences.map(({ parts }) => lengthOf(parts));
   const [typing, setTyping] = useState(INITIAL_TYPING);
 
-  // 시계 — 쓰는 중·지우는 중에만 돈다. 동작 줄이기면 문장을 한 번에 보여 준다
+  // 시계 — 쓰는 중·지우는 중에만 돈다. 동작 줄이기면 쓰는 단계를 건너뛰고 문장을 한 번에 보여 준다
+  const skip = (reduced ?? false) && typing.phase === 'typing';
+  const advance = useEffectEvent(() =>
+    setTyping((state) =>
+      skip ? tapTyping(state, lengths) : tickTyping(state, lengths),
+    ),
+  );
   useEffect(() => {
     if (typing.phase === 'shown') return;
-    // 동작 줄이기면 쓰는 단계를 건너뛰고 문장을 한 번에 보여 준다
-    const skip = reduced && typing.phase === 'typing';
-    const timer = setTimeout(
-      () =>
-        setTyping((state) =>
-          skip ? tapTyping(state, lengths) : tickTyping(state, lengths),
-        ),
-      skip ? 0 : typing.phase === 'typing' ? TYPE_MS : ERASE_MS,
-    );
+    const timer = setTimeout(advance, tickDelayOf(typing.phase, skip));
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 글자 수는 문장이 정해지면 바뀌지 않는다
-  }, [typing, reduced]);
+  }, [typing, skip]);
 
   const sentence = sentences[typing.index];
   const last = typing.index === sentences.length - 1;

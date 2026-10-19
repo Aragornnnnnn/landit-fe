@@ -21,7 +21,7 @@ export const homeTourViewOf = ({
   showerHold: boolean;
 }): HomeTourView => {
   if (screen === 'none') return 'none';
-  const needsCard = screen === 'auto_flip' || screen === 'free_expression';
+  const needsCard = screen === 'flip_card' || screen === 'free_expression';
   if (needsCard && !cleared) return 'none';
   if (!live) return 'resume';
   if (screen === 'challenge_intro')

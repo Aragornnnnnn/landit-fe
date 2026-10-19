@@ -2,13 +2,11 @@
 
 // 시나리오 표현 학습 라우트 — 한 표현의 영작~복습 스텝을 렌더한다
 import { Suspense, use } from 'react';
-import { EVENTS } from '@landit/analytics';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 import { ExpressionFlow } from '@/features/expression/ui/ExpressionFlow';
 import { QuizStepSkeleton } from '@/features/expression/ui/QuizStepSkeleton';
-import { track } from '@/shared/analytics';
-import { paywallPath, readDateParam } from '@/shared/lib/routes';
+import { readDateParam } from '@/shared/lib/routes';
 
 import { useFirstExpressionTour } from '../../../../_model/useFirstExpressionTour';
 
@@ -34,17 +32,13 @@ function ExpressionFlowContent({
   // 지난 날 카드에서 들어왔으면 그 날짜가 실려 온다.
   // searchParams prop은 앱 안에서 이동할 때 갱신되지 않아 훅으로 읽는다
   const date = readDateParam(useSearchParams());
-  const router = useRouter();
   // 첫 표현 투어의 무료 표현이면 끝나자마자 페이월로 — 목록(나머지는 잠김)으로 돌아가지 않는다
   const tour = useFirstExpressionTour();
   const finishTour =
     tour.screen === 'free_expression'
       ? () => {
           tour.saveStep('FREE_EXPRESSION_DONE');
-          track(EVENTS.PAYWALL_GATE_LOCKED, {
-            source: 'first_expression_tour',
-          });
-          router.replace(paywallPath({ source: 'first_expression_tour' }));
+          tour.goToPaywall('replace');
         }
       : undefined;
 

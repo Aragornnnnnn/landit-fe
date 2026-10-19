@@ -120,7 +120,7 @@ function ScenarioContent() {
           playable={daily.playable}
           date={date}
           today={daily.date}
-          autoFlip={autoFlip || tour.openBack}
+          autoFlip={autoFlip}
           tour={tour.cardTour}
           onStart={start}
           onSummonClose={() => setSummonClosed(true)}

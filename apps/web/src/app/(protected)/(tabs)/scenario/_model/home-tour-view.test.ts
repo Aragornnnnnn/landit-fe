@@ -25,7 +25,7 @@ describe('homeTourViewOf', () => {
   });
 
   it('뒤집기 코치와 무료 표현은 카드에서 한다', () => {
-    expect(homeTourViewOf({ ...base, screen: 'auto_flip' })).toBe('card');
+    expect(homeTourViewOf({ ...base, screen: 'flip_card' })).toBe('card');
     expect(homeTourViewOf({ ...base, screen: 'free_expression' })).toBe('card');
   });
 
@@ -33,7 +33,7 @@ describe('homeTourViewOf', () => {
     expect(
       homeTourViewOf({
         ...base,
-        screen: 'auto_flip',
+        screen: 'flip_card',
         cleared: false,
         live: false,
       }),

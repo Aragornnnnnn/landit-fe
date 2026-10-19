@@ -8,13 +8,13 @@ import { useFirstExpressionTour } from '../../_model/useFirstExpressionTour';
 export const TourCompletion = () => {
   const tour = useFirstExpressionTour();
   const saved = useRef(false);
-  const { known, step, saveStep } = tour;
+  const { eligible, step, saveStep } = tour;
 
   useEffect(() => {
-    if (!known || step === 'COMPLETED' || saved.current) return;
+    if (!eligible || step === 'COMPLETED' || saved.current) return;
     saved.current = true;
     saveStep('COMPLETED');
-  }, [known, step, saveStep]);
+  }, [eligible, step, saveStep]);
 
   return null;
 };

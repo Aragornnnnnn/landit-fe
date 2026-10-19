@@ -2,7 +2,7 @@
 
 // 시나리오 카드 뒷면 — 완료 시나리오의 표현 학습 리스트. 표현을 고르면 학습 페이지로 이동.
 // 서버가 무료로 열어 준 표현(freeTrial)은 페이월 없이 연다. 첫 표현 투어 중에는 그 표현을 비추고 무료·PREMIUM을 붙인다
-import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef } from 'react';
 import { EVENTS } from '@landit/analytics';
 import confetti from 'canvas-confetti';
 import { useRouter } from 'next/navigation';
@@ -13,7 +13,6 @@ import { ExpressionListSkeleton } from '@/features/expression/ui/ExpressionListS
 // 가로 import 사유: 학습 진입 문마다 같은 페이월 게이트를 걸어야 한다 (docs/subscription.md)
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
-import { useAuthStore } from '@/shared/auth/auth-store';
 import {
   scenarioExpressionPath,
   scenarioReturnPath,
@@ -22,12 +21,7 @@ import { CloseIcon } from '@/shared/ui/Icons';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { expressionStageOf } from '../../lib/expression-progress';
-import { CardSpotlight } from './CardSpotlight';
-
-// 뒤집기(0.5초)가 끝나고 목록이 자리 잡은 뒤에 첫 표현의 자리를 잰다
-const SPOTLIGHT_SETTLE_MS = 900;
-// 목록 소개를 읽을 시간 — 지나면 저절로 첫 표현으로 좁힌다
-const SPOTLIGHT_INTRO_MS = 2500;
+import { FreeExpressionSpotlight } from './FreeExpressionSpotlight';
 
 // 원어민 표현을 전부 깨고 카드로 복귀한 순간의 축하 — ReviewSuccess와 같은 브랜드 색·패턴
 const celebrateAllExpressionsDone = () => {
@@ -64,8 +58,8 @@ interface ScenarioCardBackProps {
   autoFlip?: boolean;
   // 첫 표현 투어의 무료 표현 차례인가
   freeTour?: boolean;
-  // 투어 중인데 서버가 이 카드에 무료 표현을 열어 주지 않았다 — 투어를 여기서 끝낸다
-  onNoFreeExpression?: () => void;
+  // 투어를 여기서 끝낸다 — 줄 무료 표현이 없거나, 비출 자리를 못 찾았거나, 사용자가 넘겼다
+  onTourEnd?: () => void;
 }
 
 export const ScenarioCardBack = ({
@@ -74,7 +68,7 @@ export const ScenarioCardBack = ({
   onBack,
   autoFlip = false,
   freeTour = false,
-  onNoFreeExpression,
+  onTourEnd,
 }: ScenarioCardBackProps) => {
   const router = useRouter();
   const gate = usePaywallGate();
@@ -95,26 +89,46 @@ export const ScenarioCardBack = ({
   }, [autoFlip, expressions]);
 
   // 서버가 무료로 열어 준 표현 — 사용자당 하나라 대부분의 카드엔 없다
-  const trialExpressionId = expressions?.find(
+  const freeTrialExpression = expressions?.find(
     (expression) => expression.freeTrial,
-  )?.expressionId;
+  );
+  const freeTrialExpressionId = freeTrialExpression?.expressionId;
   // 투어가 비출 표현
-  const freeExpressionId = freeTour ? trialExpressionId : undefined;
+  const spotlightExpressionId =
+    freeTour && !freeTrialExpression?.completed
+      ? freeTrialExpressionId
+      : undefined;
   // 무료 사용자에게는 목록에 무료·PREMIUM을 붙인다 — 뒤집기는 열려 있고 막는 건 표현이다
   const premiumLocked = freeTour || gate.locked;
-  const missingFree =
-    freeTour && expressions !== null && trialExpressionId === undefined;
-  const endTourWithoutFree = useEffectEvent(() => onNoFreeExpression?.());
+  // 투어가 줄 표현이 없다 — 이 카드엔 무료 표현이 없거나, 이미 끝냈다(투어 밖에서 마친 경우)
+  const missingFreeTrial =
+    freeTour &&
+    expressions !== null &&
+    (freeTrialExpression === undefined || freeTrialExpression.completed);
+  const endTourWithoutFreeTrial = useEffectEvent(() => onTourEnd?.());
   useEffect(() => {
-    if (missingFree) endTourWithoutFree();
-  }, [missingFree]);
-  // 무료 표현 칸 — 스포트라이트가 이 자리를 뚫는다
+    if (missingFreeTrial) endTourWithoutFreeTrial();
+  }, [missingFreeTrial]);
   const listRef = useRef<HTMLDivElement>(null);
-  // 스포트라이트 두 박자 — 먼저 목록이 무엇인지 소개하고, 누르면 첫 표현으로 좁힌다
-  const [spotlight, setSpotlight] = useState<'intro' | 'free'>('intro');
-  const nickname = useAuthStore((state) => state.member?.nickname ?? null);
-  const openExpression = (expressionId: number) =>
-    router.push(scenarioExpressionPath(scenarioId, expressionId, date));
+
+  const selectExpression = (expressionId: number) => {
+    track(EVENTS.EXPRESSION_SELECTED, {
+      expression_id: expressionId,
+      scenario_id: scenarioId,
+      source: 'card_back',
+    });
+    const open = () =>
+      router.push(scenarioExpressionPath(scenarioId, expressionId, date));
+    // 무료 표현은 투어가 끝난 뒤에도 페이월 없이 연다 — 서버가 계속 열어 둔다
+    if (expressionId === freeTrialExpressionId) {
+      open();
+      return;
+    }
+    gate.guard(open, {
+      source: 'expression',
+      returnTo: scenarioReturnPath({ flip: scenarioId, date }),
+    });
+  };
 
   return (
     <>
@@ -148,70 +162,18 @@ export const ScenarioCardBack = ({
           <ExpressionList
             expressions={expressions}
             premiumLocked={premiumLocked}
-            freeExpressionId={trialExpressionId}
-            onSelect={(expressionId) => {
-              track(EVENTS.EXPRESSION_SELECTED, {
-                expression_id: expressionId,
-                scenario_id: scenarioId,
-                source: 'card_back',
-              });
-              const open = () => openExpression(expressionId);
-              // 무료 표현은 투어가 끝난 뒤에도 페이월 없이 연다 — 서버가 계속 열어 둔다
-              if (expressionId === trialExpressionId) {
-                open();
-                return;
-              }
-              gate.guard(open, {
-                source: 'expression',
-                returnTo: scenarioReturnPath({ flip: scenarioId, date }),
-              });
-            }}
+            freeTrialExpressionId={freeTrialExpressionId}
+            onSelect={selectExpression}
           />
         )}
       </div>
 
-      {freeExpressionId !== undefined && spotlight === 'intro' && (
-        <CardSpotlight
-          key="intro"
-          findTarget={() =>
-            listRef.current?.querySelector<HTMLElement>('ul') ?? null
-          }
-          label="맞춤 표현 학습 소개"
-          settleMs={SPOTLIGHT_SETTLE_MS}
-          introMs={SPOTLIGHT_INTRO_MS}
-          onTap={() => setSpotlight('free')}
-        >
-          방금 대화로 만든
-          <br />
-          <span className="text-primary">
-            {nickname ? `${nickname}님` : '나만의'} 맞춤 표현 학습
-          </span>
-          이에요
-        </CardSpotlight>
-      )}
-      {freeExpressionId !== undefined && spotlight === 'free' && (
-        <CardSpotlight
-          key="free"
-          findTarget={() =>
-            listRef.current?.querySelector<HTMLElement>(
-              '[data-free-expression]',
-            ) ?? null
-          }
-          label="첫 표현 무료로 배우기"
-          settleMs={0}
-          onTap={() => {
-            track(EVENTS.EXPRESSION_SELECTED, {
-              expression_id: freeExpressionId,
-              scenario_id: scenarioId,
-              source: 'card_back',
-            });
-            openExpression(freeExpressionId);
-          }}
-        >
-          첫 표현은 <span className="text-primary">무료</span>로 열어 드렸어요
-          <br />
-          눌러서 바로 배워 봐요
-        </CardSpotlight>
+      {spotlightExpressionId !== undefined && (
+        <FreeExpressionSpotlight
+          list={listRef}
+          onOpen={() => selectExpression(spotlightExpressionId)}
+          onEnd={() => onTourEnd?.()}
+        />
       )}
     </>
   );
