@@ -26,7 +26,7 @@ export const BenefitComparison = ({
   benefits = BENEFITS,
 }: {
   /** 그릴 줄 — 환급 페이월은 적립 줄을 더한 목록을 넘긴다 */
-  benefits?: Pick<Benefit, 'text' | 'free'>[];
+  benefits?: (Pick<Benefit, 'text' | 'free'> & { highlight?: boolean })[];
 }) => (
   <section className="px-5 pt-2 short:pt-1">
     <div className="relative">
@@ -54,11 +54,11 @@ export const BenefitComparison = ({
           </tr>
         </thead>
         <tbody>
-          {benefits.map(({ text, free }, index) => (
+          {benefits.map(({ text, free, highlight }, index) => (
             <tr key={text}>
               <th
                 scope="row"
-                className={`${ROW_HEIGHT} text-left text-[15px] leading-[1.3] font-normal text-foreground short:text-[13px]`}
+                className={`${ROW_HEIGHT} text-left text-[15px] leading-[1.3] short:text-[13px] ${highlight ? 'font-bold text-primary' : 'font-normal text-foreground'}`}
               >
                 {text}
               </th>
