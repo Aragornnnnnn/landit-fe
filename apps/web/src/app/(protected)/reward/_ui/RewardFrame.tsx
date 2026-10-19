@@ -49,7 +49,8 @@ export const RewardFrame = ({
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="flex-1 overflow-y-auto"
+        // 푸터가 없을 때는 내용이 바닥에 닿는다 — 내비게이션 바 위로 띄운다
+        className={`flex-1 overflow-y-auto ${footer ? '' : 'pb-[var(--safe-area-inset-bottom)]'}`}
       >
         {children}
       </div>

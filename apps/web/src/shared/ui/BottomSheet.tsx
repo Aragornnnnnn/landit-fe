@@ -1,12 +1,14 @@
-// 공통 바텀 시트 — 오버레이 + 슬라이드업 패널, 웹 너비 자동 대응
+// 공통 바텀 시트 — 오버레이 + 슬라이드업 패널, 웹 너비 자동 대응. 스크린 리더는 BottomSheet.Title을 시트 이름으로 읽는다
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { createContext, use, useId, type ComponentProps } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { createPortal } from 'react-dom';
 
-import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
-import { registerOpenSheet } from '@/shared/ui/bottom-sheet-back';
+import { useDialogLayer } from './useDialogLayer';
+
+// 시트 제목의 id — 시트가 aria-labelledby로 가리킨다
+const SheetTitleIdContext = createContext<string | undefined>(undefined);
 
 interface BottomSheetProps {
   open: boolean;
@@ -15,20 +17,12 @@ interface BottomSheetProps {
 }
 
 export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
-  const mounted = useClientOnlyValue(() => true, false);
-
-  // onClose는 대개 인라인 함수라 렌더마다 참조가 바뀐다 — ref로 최신 것을 읽어,
-  // 리렌더 때 스택에서 빠졌다 다시 올라가며 시트 순서가 뒤집히지 않게 한다
-  const onCloseRef = useRef(onClose);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  // 열려 있는 동안 전역 스택에 등록 — 네이티브 뒤로가기가 화면 이동 대신 이 시트를 닫는다
-  useEffect(() => {
-    if (!open) return;
-    return registerOpenSheet(() => onCloseRef.current());
-  }, [open]);
+  const { mounted, panelRef } = useDialogLayer({
+    open,
+    dismissible: true,
+    onClose,
+  });
+  const titleId = useId();
 
   if (!mounted) return null;
 
@@ -45,7 +39,12 @@ export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
             onClick={onClose}
           />
           <motion.div
-            className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 rounded-t-3xl bg-white px-6 pt-6"
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            tabIndex={-1}
+            className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 rounded-t-3xl bg-white px-6 pt-6 outline-none"
             style={{
               paddingBottom: 'max(var(--safe-area-inset-bottom), 24px)',
             }}
@@ -54,7 +53,9 @@ export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
           >
-            {children}
+            <SheetTitleIdContext value={titleId}>
+              {children}
+            </SheetTitleIdContext>
           </motion.div>
         </>
       )}
@@ -62,3 +63,10 @@ export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
     document.body,
   );
 }
+
+// 시트 제목 — 모양은 쓰는 쪽이 정하고, 여기서는 시트 이름으로 이어 주기만 한다
+const SheetTitle = (props: Omit<ComponentProps<'h2'>, 'id'>) => (
+  <h2 {...props} id={use(SheetTitleIdContext)} />
+);
+
+BottomSheet.Title = SheetTitle;

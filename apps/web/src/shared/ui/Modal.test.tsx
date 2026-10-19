@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { closeTopSheet } from './bottom-sheet-back';
+import { BottomSheet } from './BottomSheet';
 import { Modal } from './Modal';
 
 // createPortal로 document.body에 그려지는 내용이라, 테스트 사이에 명시적으로 걷어낸다
@@ -114,6 +115,84 @@ describe('Modal', () => {
 
     expect(handled).toBe(false);
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('다시 그려져 onClose가 바뀌면 뒤로가기는 새 onClose를 부른다', () => {
+    const first = vi.fn();
+    const next = vi.fn();
+    const { rerender } = render(
+      <Modal label="테스트 다이얼로그" open onClose={first}>
+        내용
+      </Modal>,
+    );
+    rerender(
+      <Modal label="테스트 다이얼로그" open onClose={next}>
+        내용
+      </Modal>,
+    );
+
+    closeTopSheet();
+
+    expect(first).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it('아래 모달이 다시 그려져도 뒤로가기는 위 모달부터 닫는다', () => {
+    const closeBelow = vi.fn();
+    const closeAbove = vi.fn();
+    const renderBoth = (onCloseBelow: () => void) => (
+      <>
+        <Modal label="아래" open onClose={onCloseBelow}>
+          아래
+        </Modal>
+        <Modal label="위" open onClose={closeAbove}>
+          위
+        </Modal>
+      </>
+    );
+    const { rerender } = render(renderBoth(() => closeBelow()));
+    rerender(renderBoth(() => closeBelow()));
+
+    closeTopSheet();
+
+    expect(closeAbove).toHaveBeenCalledTimes(1);
+    expect(closeBelow).not.toHaveBeenCalled();
+  });
+
+  it('닫을 수 없는 모달이 시트 위에 떠 있으면 Escape로 아래 시트를 닫지 않는다', () => {
+    const closeSheet = vi.fn();
+    render(
+      <>
+        <BottomSheet open onClose={closeSheet}>
+          아래 시트
+        </BottomSheet>
+        <Modal label="강제 업데이트" open onClose={vi.fn()} dismissible={false}>
+          위 모달
+        </Modal>
+      </>,
+    );
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+
+    expect(closeSheet).not.toHaveBeenCalled();
+  });
+
+  it('닫을 수 없는 모달이 떠 있어도 뒤로가기는 지금처럼 아래 시트를 닫는다', () => {
+    const closeSheet = vi.fn();
+    render(
+      <>
+        <BottomSheet open onClose={closeSheet}>
+          아래 시트
+        </BottomSheet>
+        <Modal label="강제 업데이트" open onClose={vi.fn()} dismissible={false}>
+          위 모달
+        </Modal>
+      </>,
+    );
+
+    closeTopSheet();
+
+    expect(closeSheet).toHaveBeenCalledTimes(1);
   });
 
   it('다이얼로그 role과 aria-modal을 갖는다', () => {

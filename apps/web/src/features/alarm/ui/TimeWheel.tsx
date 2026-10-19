@@ -7,7 +7,7 @@
 // 쓰는 쪽은 굴리는 동안 onScrub으로, 확정할 때 ref의 read()로 "지금 보이는 시각"을 읽는다
 import '@ncdai/react-wheel-picker/style.css';
 
-import { useEffect, useImperativeHandle, useRef } from 'react';
+import { useEffect, useEffectEvent, useImperativeHandle, useRef } from 'react';
 import type { AlarmTime } from '@landit/bridge';
 import {
   WheelPicker,
@@ -88,10 +88,7 @@ const useCenterRow = (
   root: React.RefObject<HTMLDivElement | null>,
   onRow: (row: number) => void,
 ) => {
-  const onRowRef = useRef(onRow);
-  useEffect(() => {
-    onRowRef.current = onRow;
-  });
+  const notifyRow = useEffectEvent(onRow);
 
   useEffect(() => {
     const column = root.current;
@@ -101,7 +98,7 @@ const useCenterRow = (
       const row = centerRowOf(column);
       if (row === null || row === last) return;
       last = row;
-      onRowRef.current(row);
+      notifyRow(row);
     };
     read();
     const observer = new MutationObserver(read);

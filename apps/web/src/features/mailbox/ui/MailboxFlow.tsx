@@ -35,7 +35,10 @@ export const MailboxFlow = ({ box }: { box: MailboxBox }) => {
       {/* FAB이 목록 위에 떠 있어야 해서 둘을 한 상자에 넣는다 — 기준이 화면이 아니라 앱 컬럼이다 */}
       <div className="relative flex-1 overflow-hidden">
         {/* 마지막 편지가 FAB 뒤로 숨지 않게 아래를 띄운다 — 값의 근거는 ComposeFab의 크기다 */}
-        <div className={`h-full overflow-y-auto ${COMPOSE_FAB_CLEARANCE}`}>
+        <div
+          className="h-full overflow-y-auto"
+          style={{ paddingBottom: COMPOSE_FAB_CLEARANCE }}
+        >
           <LetterBox box={box} />
         </div>
 

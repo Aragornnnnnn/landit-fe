@@ -21,9 +21,9 @@ export const SoftUpdateSheet = ({ reason, onClose }: SoftUpdateSheetProps) => (
         className="object-contain"
         style={{ width: 120, height: 120 }}
       />
-      <h2 className="mt-4 text-lg font-bold text-foreground">
+      <BottomSheet.Title className="mt-4 text-lg font-bold text-foreground">
         Landit 새 버전 출시!
-      </h2>
+      </BottomSheet.Title>
       <p className="mt-4 text-sm leading-6 text-muted-foreground">
         {reason?.trim() || DEFAULT_REASON}
       </p>

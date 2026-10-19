@@ -106,7 +106,10 @@ export const SmallTalkTranscript = ({
         <SmallTalkTranscriptSkeleton />
       ) : (
         <div className="relative flex min-h-0 flex-1 flex-col">
-          <ul className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 pt-2 pb-8">
+          {/* 아래 버튼은 대화를 마친 직후에만 있다 — 기록에서 들어오면 목록이 바닥에 닿아 내비게이션 바 위로 띄운다 */}
+          <ul
+            className={`flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 pt-2 ${continueToLearning ? 'pb-8' : 'pb-[max(var(--safe-area-inset-bottom),32px)]'}`}
+          >
             {session?.messages.map((message) => (
               <li
                 key={message.messageId}
@@ -123,12 +126,20 @@ export const SmallTalkTranscript = ({
                 )}
               </li>
             ))}
+            {/* 칩은 목록 위에 떠 있다 — 끝까지 내려도 마지막 말풍선이 칩 밑에 깔리지 않게 칩 높이만큼 비워 둔다 */}
+            {hasNext && (
+              <li
+                aria-hidden
+                data-testid="next-correction-chip-space"
+                className="h-12 shrink-0"
+              />
+            )}
           </ul>
           {/* 진행바 대신 칩 하나 — 아직 안 본 교정이 남았을 때만 떠서 다음 카드로 데려간다 */}
           {hasNext && (
             <button
               onClick={jumpNext}
-              className="animate-fade-up absolute right-5 bottom-4 flex items-center gap-1 rounded-full bg-foreground px-3.5 py-2 text-[13px] font-semibold text-background shadow-md active:opacity-80"
+              className={`animate-fade-up absolute right-5 ${continueToLearning ? 'bottom-4' : 'bottom-[max(var(--safe-area-inset-bottom),16px)]'} flex items-center gap-1 rounded-full bg-foreground px-3.5 py-2 text-[13px] font-semibold text-background shadow-md active:opacity-80`}
             >
               다음 자연스러운 말
               <ChevronDownIcon size={14} strokeWidth={2.5} />

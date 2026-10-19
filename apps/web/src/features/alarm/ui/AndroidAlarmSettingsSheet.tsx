@@ -39,9 +39,9 @@ export const AndroidAlarmSettingsSheet = ({
 
   return (
     <BottomSheet open={open} onClose={onClose}>
-      <h2 className="text-[22px] font-bold text-foreground">
+      <BottomSheet.Title className="text-[22px] font-bold text-foreground">
         두 가지만 켜 주세요
-      </h2>
+      </BottomSheet.Title>
 
       <ol className="mt-5 space-y-3">
         {STEPS.map((step, index) => {
