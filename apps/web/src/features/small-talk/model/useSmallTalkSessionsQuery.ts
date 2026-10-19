@@ -4,7 +4,7 @@
 
 import { useInfiniteQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getSmallTalkSessions } from '../api/small-talk';
 import { smallTalkKeys } from './keys';
@@ -12,7 +12,7 @@ import { smallTalkKeys } from './keys';
 const PAGE_SIZE = 20;
 
 export const useSmallTalkSessionsQuery = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   const {
     data,

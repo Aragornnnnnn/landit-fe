@@ -3,7 +3,6 @@
 // 프리미엄 온보딩의 첫 화면(환영) — 래디·PREMIUM·"환영해요"는 처음부터 있고, 서리 낀 혜택 카드의 자물쇠가 풀리며 막이 위에서 아래로 걷히고 줄마다 체크가 들어온다.
 // 다 열리면 꽃가루와 함께 「다음」이 나온다 (피그마 3008:2 S1 v2)
 import { useEffect, useState } from 'react';
-import confetti from 'canvas-confetti';
 import {
   motion,
   useReducedMotion,
@@ -18,6 +17,7 @@ import {
 import { PremiumPill } from '@/features/subscription/ui/premium-brand';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { haptic } from '@/shared/haptics';
+import { burstConfetti } from '@/shared/motion/confetti';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 
@@ -94,27 +94,17 @@ const CheckBadge = () => (
   </span>
 );
 
-const burst = () => {
-  const base = {
+// 프리미엄 환영은 보라·파랑을 섞은 다섯 색으로, 혜택 카드 위쪽 높이에서 양쪽 두 발만 쏜다
+const burst = () =>
+  burstConfetti({
+    withCenter: false,
+    originY: 0.35,
+    colors: ['#e07a3a', '#7c4dbe', '#f7cf5c', '#4ea8de', '#2f7d54'],
     spread: 75,
     startVelocity: 42,
     ticks: 160,
-    colors: ['#e07a3a', '#7c4dbe', '#f7cf5c', '#4ea8de', '#2f7d54'],
-    disableForReducedMotion: true,
-  };
-  confetti({
-    ...base,
     particleCount: 50,
-    angle: 60,
-    origin: { x: 0, y: 0.35 },
   });
-  confetti({
-    ...base,
-    particleCount: 50,
-    angle: 120,
-    origin: { x: 1, y: 0.35 },
-  });
-};
 
 export const PremiumWelcome = ({
   onNext,

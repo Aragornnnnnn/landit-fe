@@ -3,7 +3,7 @@
 // 환급 점검 화면(ADMIN) — 케이스 목록을 보여 주고, 고른 케이스(?case=)를 가짜 값으로 연다. 서버도 출시 스위치도 타지 않는다
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useIsAdmin } from '@/shared/auth/current-member';
 import {
   backOrReplace,
   backToMyPage,
@@ -90,7 +90,7 @@ const CaseList = () => (
 
 export const RewardCheckScreen = () => {
   const router = useRouter();
-  const isAdmin = useAuthStore((state) => state.member?.role === 'ADMIN');
+  const isAdmin = useIsAdmin();
   const name = readCheckCase(useSearchParams().get('case'));
 
   if (isAdmin && name !== null)

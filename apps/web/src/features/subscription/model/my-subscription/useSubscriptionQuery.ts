@@ -1,7 +1,7 @@
 // 내 구독 상태 쿼리 — 로그인 사용자만 조회한다. 실패해도 화면은 돌아야 하므로 에러는 밖으로 내보내지 않는다
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getMySubscription } from '../../api/subscription';
 import { subscriptionKeys } from './keys';
@@ -14,7 +14,7 @@ import { subscriptionKeys } from './keys';
 export const useSubscriptionQuery = ({
   enabled = true,
 }: { enabled?: boolean } = {}) => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   const { data, isPending, isError } = useQuery({
     queryKey: subscriptionKeys.mine(userId),

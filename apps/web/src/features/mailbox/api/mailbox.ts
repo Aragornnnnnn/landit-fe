@@ -3,8 +3,8 @@
 // 리스트에서 한 줄로 같아 보이는 건 화면 사정이라, 합치는 일은 model/letter-row가 한다
 import { api } from '@/shared/api/client';
 
-/** 운영이 보내는 편지의 종류. 공지·업데이트는 모두에게, 답장(REPLY)은 내 피드백에 온 회신이다 */
-export type MailboxLetterType = 'NOTICE' | 'UPDATE' | 'REPLY';
+/** 운영이 보내는 편지의 종류. 공지·업데이트는 모두에게, 답장(REPLY)은 내 피드백에 온 회신, 개인 편지(DIRECT)는 운영이 나에게만 보낸 편지다 */
+export type MailboxLetterType = 'NOTICE' | 'UPDATE' | 'REPLY' | 'DIRECT';
 
 /** 내가 보낸 피드백의 유형 — 작성 화면에서 고르는 네 가지. 서버 enum 그대로다 */
 export type FeedbackType =
@@ -46,7 +46,7 @@ export interface SentFeedback {
 
 /**
  * 받은 편지 한 통 (`GET /mailbox/received/{letterId}`).
- * 공지·업데이트는 contentBlocks가, 답장은 bodyText가 채워진다.
+ * 공지·업데이트는 contentBlocks가, 답장·개인 편지는 bodyText가 채워진다.
  * 글자로 오는 본문(bodyText, PARAGRAPH 블록의 text, 피드백 content)은 전부 마크다운으로 그린다
  */
 export interface ReceivedLetterDetail {
@@ -60,9 +60,9 @@ export interface ReceivedLetterDetail {
   sentAt: string;
   /** 조회하면 서버가 읽음으로 찍는다 — 따로 알릴 API가 없다 */
   readAt: string | null;
-  /** 답장일 때만 — 내가 골랐던 유형. 묶음 답장이면 대표 피드백 하나. 공지·업데이트는 null */
+  /** 답장일 때만 — 내가 골랐던 유형. 묶음 답장이면 대표 피드백 하나. 그 밖의 편지는 null */
   feedbackType: FeedbackType | null;
-  /** 답장일 때만 — 그때 내가 쓴 원문. 공지·업데이트는 null */
+  /** 답장일 때만 — 그때 내가 쓴 원문. 그 밖의 편지는 null */
   quotedFeedbackContent: string | null;
 }
 

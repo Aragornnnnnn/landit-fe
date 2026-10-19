@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 
 import { setUserProperties } from '@/shared/analytics';
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { toEnglishLevel } from '../model/english-level';
 import { useAccentQuery } from '../model/useAccentQuery';
@@ -18,7 +18,7 @@ import { useLearningLevelQuery } from '../model/useLearningLevelQuery';
  * 지난 세션에 올려 둔 값이 여전히 맞다 — 유료 여부처럼 "아직 모름"으로 지울 이유가 없다
  */
 export const ProfilePropertiesSync = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
   const { data: level } = useLearningLevelQuery();
   const { data: accent } = useAccentQuery();
 

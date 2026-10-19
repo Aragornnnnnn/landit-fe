@@ -5,6 +5,7 @@
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
 import { ExpressionList } from '@/features/expression/ui/ExpressionList';
 import { toSessionTitle } from '@/features/small-talk/lib/session-summary';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
@@ -20,7 +21,8 @@ import {
   smallTalkTranscriptPath,
 } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
-import { ChatHistoryIcon, ChevronLeftIcon } from '@/shared/ui/Icons';
+import { ChatHistoryIcon } from '@/shared/ui/Icons';
+import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { SmallTalkHistoryDetailSkeleton } from './SmallTalkHistoryDetailSkeleton';
 
@@ -58,59 +60,46 @@ export const SmallTalkHistoryDetail = ({
       className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
       style={{ paddingTop: 'var(--safe-area-inset-top)' }}
     >
-      <header className="relative flex h-14 flex-none items-center justify-center">
-        <button
-          onClick={() => router.replace(SMALLTALK_HISTORY_PATH)}
-          className="absolute left-3 flex size-10 items-center justify-center text-foreground"
-          aria-label="뒤로"
-        >
-          <ChevronLeftIcon size={24} />
-        </button>
-        <h1 className="truncate px-14 text-[17px] font-bold text-foreground">
-          {session ? toSessionTitle(session.title, session.completedAt) : ''}
-        </h1>
-        {/* 그날 나눈 말은 세로 공간을 먹지 않게 헤더에 둔다 — 표현 다섯 개가 스크롤 없이 서야 한다.
-            더 자연스러운 말이 있으면 그 개수를 뱃지로 달아 대화 보기에 볼 것이 있음을 알린다 */}
-        {session && session.messages.length > 0 && (
-          <button
-            onClick={() => router.push(smallTalkTranscriptPath(sessionId))}
-            className="absolute right-3 flex size-10 items-center justify-center text-foreground active:opacity-60"
-            aria-label={
-              hasCorrections
-                ? `대화 다시 보기, 더 자연스러운 말 ${correctionCount}개`
-                : '대화 다시 보기'
-            }
-          >
-            <ChatHistoryIcon size={22} />
-            {hasCorrections && (
-              <span
-                aria-hidden="true"
-                className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] leading-none font-bold text-white"
-              >
-                {correctionCount}
-              </span>
-            )}
-          </button>
-        )}
-      </header>
+      {/* 그날 나눈 말은 세로 공간을 먹지 않게 헤더에 둔다 — 표현 다섯 개가 스크롤 없이 서야 한다.
+          더 자연스러운 말이 있으면 그 개수를 뱃지로 달아 대화 보기에 볼 것이 있음을 알린다 */}
+      <PageHeader
+        title={
+          session ? toSessionTitle(session.title, session.completedAt) : ''
+        }
+        onBack={() => router.replace(SMALLTALK_HISTORY_PATH)}
+        trailing={
+          session &&
+          session.messages.length > 0 && (
+            <button
+              onClick={() => router.push(smallTalkTranscriptPath(sessionId))}
+              className="relative flex size-10 items-center justify-center text-foreground active:opacity-60"
+              aria-label={
+                hasCorrections
+                  ? `대화 다시 보기, 더 자연스러운 말 ${correctionCount}개`
+                  : '대화 다시 보기'
+              }
+            >
+              <ChatHistoryIcon size={22} />
+              {hasCorrections && (
+                <span
+                  aria-hidden="true"
+                  className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] leading-none font-bold text-white"
+                >
+                  {correctionCount}
+                </span>
+              )}
+            </button>
+          )
+        }
+      />
 
       {error ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            {error.message || '대화를 불러오지 못했어요.'}
-          </p>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="w-auto px-6"
-            onClick={() => {
-              track(EVENTS.ERROR_RETRIED, { screen: 'expression_list' });
-              retry();
-            }}
-          >
-            다시 시도
-          </Button>
-        </div>
+        <RetryNotice
+          fill
+          screen="expression_list"
+          message={error.message || '대화를 불러오지 못했어요.'}
+          onRetry={retry}
+        />
       ) : isLoading ? (
         <SmallTalkHistoryDetailSkeleton />
       ) : (

@@ -2,8 +2,8 @@
 import type { ReceivedLetterDetail, SentFeedbackDetail } from '../api/mailbox';
 import { FEEDBACK_TYPE_FACES } from './feedback-type';
 import {
-  RECEIVED_BADGES,
   SENT_DETAIL_BADGES,
+  toReceivedBadge,
   type LetterBadge,
 } from './letter-badge';
 
@@ -20,7 +20,7 @@ export const toReceivedHead = (letter: ReceivedLetterDetail): LetterHead => ({
     letter.letterType === 'REPLY' && letter.feedbackType
       ? FEEDBACK_TYPE_FACES[letter.feedbackType].label
       : letter.title,
-  badge: RECEIVED_BADGES[letter.letterType],
+  badge: toReceivedBadge(letter.letterType),
   sentAt: letter.sentAt,
 });
 

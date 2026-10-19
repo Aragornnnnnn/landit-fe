@@ -1,7 +1,7 @@
 // 스트릭 조회 — 현재 연속 일수와 월별 달력 (백엔드 CurrentStreakResponse·StreakCalendarResponse 미러)
 import { api } from '@/shared/api/client';
 
-import type { YearMonth } from '../lib/seoul-date';
+import type { YearMonth } from '../lib/year-month';
 
 export interface CurrentStreakResponse {
   currentStreakDays: number;

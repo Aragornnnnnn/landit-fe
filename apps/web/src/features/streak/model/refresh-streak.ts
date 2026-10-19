@@ -5,13 +5,10 @@ import type { QueryClient } from '@tanstack/react-query';
 
 import { getCurrentUserId } from '@/shared/auth/auth-store';
 
-import {
-  getCurrentStreak,
-  getStreakCalendar,
-  type CurrentStreakResponse,
-} from '../api/streak';
+import type { CurrentStreakResponse } from '../api/streak';
 import type { StreakBase } from './celebration';
 import { streakKeys } from './keys';
+import { streakQueries } from './queries';
 
 export const refreshStreakAfterCompletion = (queryClient: QueryClient) => {
   // 캐시 키가 userId를 물고 있다는 건 스트릭 사정이라 부르는 쪽이 알 필요 없다
@@ -35,12 +32,6 @@ export const refreshStreakAfterCompletion = (queryClient: QueryClient) => {
 
   // 홈 헤더가 볼 숫자와, 연속 기록 페이지가 열자마자 그릴 달.
   // 어느 달인지는 서버가 정한다 — 연속 기록 페이지도 같은 키로 연다
-  void queryClient.prefetchQuery({
-    queryKey: streakKeys.current(userId),
-    queryFn: getCurrentStreak,
-  });
-  void queryClient.prefetchQuery({
-    queryKey: streakKeys.calendar(userId, null),
-    queryFn: () => getStreakCalendar(null),
-  });
+  void queryClient.prefetchQuery(streakQueries.current(userId));
+  void queryClient.prefetchQuery(streakQueries.calendar(userId, null));
 };

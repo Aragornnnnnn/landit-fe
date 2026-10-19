@@ -2,13 +2,13 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { scenarioKeys } from '@/features/scenario/model/keys';
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getScenarioHistory } from '../_api/scenario-history';
 import { historyStaleTime } from './history-freshness';
 
 export const useScenarioHistoryQuery = (scenarioId: number) => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   const { data, error, refetch, isFetching } = useQuery({
     queryKey: scenarioKeys.history(userId, scenarioId),

@@ -1,7 +1,7 @@
 // 캘린더 창 조회 상태 — 주/월 단위 창과 그 안의 날짜 칸들
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import {
   getScenarioCalendar,
@@ -17,7 +17,7 @@ export const useScenarioCalendarQuery = (
   // 접혀 있는 창은 조회하지 않는다
   enabled = true,
 ) => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
   // 창의 첫날로 맞춰 묻는다 — 안 맞추면 같은 주를 8월 3일치·8월 5일치로 따로 받는다
   const window = date ? firstDayOfWindow(date, type) : undefined;
 

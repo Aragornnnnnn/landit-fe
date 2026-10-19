@@ -1,7 +1,7 @@
 // 안 읽은 편지 개수 조회 — 헤더는 하나라도 있는지만 본다
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getUnreadCount } from '../api/mailbox';
 import { mailboxKeys } from './keys';
@@ -10,7 +10,7 @@ import { mailboxKeys } from './keys';
 const UNREAD_STALE_TIME = 10 * 60_000;
 
 export const useUnreadCountQuery = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   const { data } = useQuery({
     queryKey: mailboxKeys.unread(userId),

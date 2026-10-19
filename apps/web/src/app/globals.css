@@ -49,6 +49,8 @@
   --color-letter-update-bg: var(--letter-update-bg);
   --color-letter-reply: var(--letter-reply);
   --color-letter-reply-bg: var(--letter-reply-bg);
+  --color-letter-direct: var(--letter-direct);
+  --color-letter-direct-bg: var(--letter-direct-bg);
   --color-letter-pending: var(--letter-pending);
   --color-letter-pending-bg: var(--letter-pending-bg);
   --color-letter-answered: var(--letter-answered);
@@ -149,6 +151,9 @@
   --letter-update-bg: var(--green-100);
   --letter-reply: var(--blue-600);
   --letter-reply-bg: var(--blue-100);
+  /* 운영이 나에게만 보낸 편지. 답장과 섞이지 않게 브랜드 주황을 쓴다 */
+  --letter-direct: var(--orange-600);
+  --letter-direct-bg: var(--orange-50);
   --letter-pending: var(--amber-700);
   --letter-pending-bg: var(--amber-100);
   /* 답장이 도착한 보낸 편지 — 지금은 답장 칩과 같은 색이지만 뜻이 달라 이름을 따로 준다 */

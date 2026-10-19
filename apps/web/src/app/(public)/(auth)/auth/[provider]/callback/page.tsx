@@ -8,13 +8,16 @@ import { useRouter } from 'next/navigation';
 import { track } from '@/shared/analytics';
 import { socialLogin } from '@/shared/auth/api/social-login';
 import { useAuthStore } from '@/shared/auth/auth-store';
-import { hasSeenOnboarding } from '@/shared/auth/onboarding-seen';
 import {
   clearPendingSocialLogin,
   readPendingSocialLogin,
   type WebSocialProvider,
 } from '@/shared/auth/web-social-login';
-import { SCENARIO_PATH } from '@/shared/lib/routes';
+import {
+  LOGIN_PATH,
+  ONBOARDING_PATH,
+  SCENARIO_PATH,
+} from '@/shared/lib/routes';
 
 import { rememberLoginProvider } from '../../../_model/last-login-provider';
 import { LoginScreen } from '../../../_ui/LoginScreen';
@@ -53,7 +56,7 @@ export default function SocialLoginCallbackPage({
         if (error === 'access_denied' || error === 'user_cancelled_authorize') {
           track(EVENTS.LOGIN_CANCELED, { provider });
           clearPendingSocialLogin();
-          router.replace('/login');
+          router.replace(LOGIN_PATH);
           return;
         }
         track(EVENTS.LOGIN_FAILED, {
@@ -126,9 +129,7 @@ export default function SocialLoginCallbackPage({
           method: 'web',
           is_new_user: newUser,
         });
-        router.replace(
-          newUser || !hasSeenOnboarding() ? '/onboarding' : SCENARIO_PATH,
-        );
+        router.replace(newUser ? ONBOARDING_PATH : SCENARIO_PATH);
       } catch (err) {
         track(EVENTS.LOGIN_FAILED, {
           provider,

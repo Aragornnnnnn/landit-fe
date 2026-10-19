@@ -1,7 +1,7 @@
 // 이번 스트릭 줄 — 칸 일곱 개에 지금 이어지는 구간을 담는다. 달력의 한 주가 아니다
 // 이레까지는 왼쪽부터 채우고, 여드레부터는 마지막 날을 다섯 번째에 고정해 굴린다.
 // 숫자가 총 일수를 말하고 줄은 흐름을 말한다 — 그래서 여드레째부터 앞 칸이 잘려나가도 거짓말이 아니다
-import { shiftDay, weekdayLabelOf } from '../lib/seoul-date';
+import { shiftDay, weekdayLabelOf } from '@/shared/lib/date-string';
 
 const RUN_LENGTH = 7;
 

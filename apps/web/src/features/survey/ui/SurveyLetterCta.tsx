@@ -6,12 +6,11 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
+import { SURVEY_PATH } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 
 import { isSurveyLetter } from '../model/survey-letter';
-
-const SURVEY_PATH = '/survey';
 
 export const SurveyLetterCta = ({ letterId }: { letterId: number }) => {
   const router = useRouter();

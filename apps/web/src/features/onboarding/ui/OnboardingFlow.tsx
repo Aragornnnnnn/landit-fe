@@ -17,15 +17,15 @@ import {
 import { InstallGuide } from '@/features/widget/ui/install-guide/InstallGuide';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
-import { markOnboardingSeen } from '@/shared/auth/onboarding-seen';
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { ONBOARDED_PARAM, SCENARIO_PATH } from '@/shared/lib/routes';
 import { Transition } from '@/shared/motion';
+import { StepDots } from '@/shared/ui/StepDots';
+import { StepHeader } from '@/shared/ui/StepHeader';
 
 import { STEP_ORDER, type OnboardingStep } from '../model/steps';
 import { useSaveAccentMutation } from '../model/useSaveAccentMutation';
-import { OnboardingHeader } from './common/OnboardingHeader';
 import { AccentStep } from './steps/AccentStep';
 import { IntroStep } from './steps/IntroStep';
 import { LampStep } from './steps/LampStep';
@@ -120,8 +120,6 @@ export const OnboardingFlow = () => {
   const startFirstConversation = () => {
     track(EVENTS.ONBOARDING_STEP_COMPLETED, { step: 'scenario' });
     track(EVENTS.ONBOARDING_COMPLETED);
-    // 끝까지 본 기기로 기록해 재로그인 시 온보딩을 다시 보여주지 않는다
-    markOnboardingSeen();
     router.replace(`${SCENARIO_PATH}?${ONBOARDED_PARAM}=1`);
   };
 
@@ -146,11 +144,12 @@ export const OnboardingFlow = () => {
         </div>
       ) : (
         <>
-          <OnboardingHeader
-            step={step}
-            stepOrder={stepOrder}
+          <StepHeader
             onBack={stepBack}
-          />
+            backDisabled={stepOrder.indexOf(step) === 0}
+          >
+            <StepDots step={step} stepOrder={stepOrder} />
+          </StepHeader>
 
           <Transition
             transitionKey={step}

@@ -3,13 +3,13 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getMyAccentLocale } from '../api/accent';
 import { profileKeys } from './keys';
 
 export const useAccentQuery = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   return useQuery({
     queryKey: profileKeys.accent(userId),

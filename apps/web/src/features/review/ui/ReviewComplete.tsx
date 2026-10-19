@@ -3,12 +3,12 @@
 // 복습 결과 — 래디가 결과를 알리고 표현 카드가 하나씩 칠해진다(맞힘 초록·놓침 빨강). 전부 맞히면 마지막 칠 뒤에 폭죽.
 // 기록은 남기지 않고 홈으로 돌려보낸다 (복습은 알림으로만 들어오는 별도 흐름)
 import { useEffect } from 'react';
-import confetti from 'canvas-confetti';
 import { motion, useReducedMotion } from 'motion/react';
 import Image from 'next/image';
 
 import type { PreloadableImage } from '@/shared/lib/preload-next-images';
 import { EASE_STANDARD } from '@/shared/motion';
+import { burstConfetti } from '@/shared/motion/confetti';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 import { CheckIcon, CloseIcon } from '@/shared/ui/Icons';
@@ -73,27 +73,10 @@ export const ReviewComplete = ({
   useEffect(() => {
     if (!justFinished || !perfect) return;
 
-    const timer = setTimeout(() => {
-      const base = {
-        spread: 70,
-        startVelocity: 45,
-        ticks: 150,
-        colors: ['#e07a3a', '#2f7d54', '#fbbf24', '#ffffff'],
-        disableForReducedMotion: true,
-      };
-      confetti({
-        ...base,
-        particleCount: 55,
-        angle: 60,
-        origin: { x: 0, y: 0.9 },
-      });
-      confetti({
-        ...base,
-        particleCount: 55,
-        angle: 120,
-        origin: { x: 1, y: 0.9 },
-      });
-    }, paintedMs);
+    const timer = setTimeout(
+      () => burstConfetti({ withCenter: false }),
+      paintedMs,
+    );
 
     return () => clearTimeout(timer);
   }, [justFinished, perfect, paintedMs]);

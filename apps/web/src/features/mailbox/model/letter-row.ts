@@ -5,8 +5,8 @@ import { stripMarkdown } from '../lib/strip-markdown';
 import { receivedLetterPath, sentFeedbackPath } from './box';
 import { FEEDBACK_TYPE_FACES } from './feedback-type';
 import {
-  RECEIVED_BADGES,
   SENT_ROW_BADGES,
+  toReceivedBadge,
   type LetterBadge,
 } from './letter-badge';
 
@@ -24,7 +24,7 @@ export interface LetterRow {
 export const toReceivedRow = (letter: ReceivedLetter): LetterRow => ({
   id: letter.letterId,
   href: receivedLetterPath(letter.letterId),
-  badge: RECEIVED_BADGES[letter.letterType],
+  badge: toReceivedBadge(letter.letterType),
   title: letter.title,
   // 본문은 마크다운이지만 미리보기는 한 줄 요약이라 기호를 벗겨 평문으로 보여준다
   preview: stripMarkdown(letter.preview),

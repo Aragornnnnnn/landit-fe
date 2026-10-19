@@ -22,7 +22,7 @@ import {
   PremiumHeaderEntry,
 } from '@/features/subscription/ui/PremiumHeaderEntry';
 import { track } from '@/shared/analytics';
-import { REWARD_PATH } from '@/shared/lib/routes';
+import { MY_PAGE_PATH, REWARD_PATH } from '@/shared/lib/routes';
 import { HeaderAction } from '@/shared/ui/HeaderAction';
 import { UserIcon } from '@/shared/ui/Icons';
 
@@ -113,7 +113,7 @@ export const AppHeader = () => {
       <div className="-mr-[13px] flex items-center">
         <HeaderStreak />
         <MailboxButton />
-        <HeaderAction href="/me" label="내 정보">
+        <HeaderAction href={MY_PAGE_PATH} label="내 정보">
           <UserIcon size={18} />
         </HeaderAction>
       </div>

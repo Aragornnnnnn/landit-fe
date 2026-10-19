@@ -3,7 +3,8 @@
 // 페이월 닫기 — 서버에 이탈을 알리고, 할인을 받으면 구독 캐시에 얹어 홈 헤더가 시트로 열게 넘긴다 (docs/subscription.md)
 import { useQueryClient } from '@tanstack/react-query';
 
-import { getCurrentUserId, useAuthStore } from '@/shared/auth/auth-store';
+import { getCurrentUserId } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import {
   dismissPaywall,
@@ -29,7 +30,7 @@ const DISMISS_TIMEOUT_MS = 3000;
  */
 export const usePaywallDismiss = (offering: Offering) => {
   const queryClient = useQueryClient();
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   // 헤더 배지와 시트는 구독 응답의 promo를 본다 — 캐시에 얹어야 홈에 닿자마자 뜬다.
   // 기다리는 사이 계정이 바뀌었으면(로그아웃 뒤 다른 로그인) 그 할인은 다른 사람 것이라 버린다

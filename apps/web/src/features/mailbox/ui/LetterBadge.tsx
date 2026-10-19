@@ -7,6 +7,7 @@ const TONE_CLASSES: Record<LetterBadgeTone, string> = {
   notice: 'border border-border bg-card text-muted-foreground',
   update: 'bg-letter-update-bg text-letter-update',
   reply: 'bg-letter-reply-bg text-letter-reply',
+  direct: 'bg-letter-direct-bg text-letter-direct',
   pending: 'bg-letter-pending-bg text-letter-pending',
   completed: 'bg-letter-answered-bg text-letter-answered',
 };
