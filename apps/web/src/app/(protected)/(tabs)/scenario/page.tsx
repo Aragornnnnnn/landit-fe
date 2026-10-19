@@ -134,8 +134,8 @@ function ScenarioContent() {
       )}
       {promptTurn && !sheetsHeld && <NotificationConsentGate />}
 
-      {tour.view === 'challenge_intro' && (
-        <TourTutorial dailyWon={tour.offer.dailyWon} onDone={tour.closeIntro} />
+      {tour.view === 'tutorial' && (
+        <TourTutorial dailyWon={tour.dailyWon} onDone={tour.finishTutorial} />
       )}
 
       {/* 브리핑을 다 보여주면 대화로 넘어간다 — push라 뒤로가기는 이 화면(카드)으로 돌아온다 */}

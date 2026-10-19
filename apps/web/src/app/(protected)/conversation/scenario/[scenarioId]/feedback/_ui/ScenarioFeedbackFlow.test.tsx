@@ -257,7 +257,7 @@ describe('ScenarioFeedbackFlow', () => {
     fireEvent.click(await screen.findByText('레벨 보고 홈으로'));
 
     // Then 레벨 단계를 남기고 홈으로 간다
-    expect(mocks.saveStep).toHaveBeenCalledWith('LEVEL_SEEN');
+    expect(mocks.saveStep).toHaveBeenCalledWith('STARTED');
     expect(mocks.replace).toHaveBeenCalledWith('/scenario');
     expect(mocks.guard).not.toHaveBeenCalled();
   });
@@ -270,9 +270,7 @@ describe('ScenarioFeedbackFlow', () => {
 
     fireEvent.click(screen.getByText('카페에서 주문하기 피드백 마침'));
 
-    await waitFor(() =>
-      expect(mocks.saveStep).toHaveBeenCalledWith('FEEDBACK_SEEN'),
-    );
+    await waitFor(() => expect(mocks.saveStep).toHaveBeenCalledWith('STARTED'));
     expect(mocks.replace).toHaveBeenCalledWith('/scenario');
   });
 

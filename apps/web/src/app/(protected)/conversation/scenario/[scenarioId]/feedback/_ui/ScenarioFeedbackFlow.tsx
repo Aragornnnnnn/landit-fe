@@ -154,15 +154,15 @@ export const ScenarioFeedbackFlow = ({
     const tourEntry =
       tourEntryOf({ ...entryBase, freeExpression: true }) &&
       tourEntryOf({ ...entryBase, freeExpression: await hasFreeExpression() });
-    if (tourEntry === 'FEEDBACK_SEEN') startTour('FEEDBACK_SEEN');
+    if (tourEntry === 'home') startTour();
     else if (next === 'home') router.replace(scenarioReturnPath({ date }));
     else if (next === 'branch') continueToExpressionBranch();
-    else setPostConversation(tourEntry === 'LEVEL_SEEN' ? 'tour' : 'paywall');
+    else setPostConversation(tourEntry === 'level' ? 'tour' : 'paywall');
   };
 
-  // 투어의 첫 단계를 남기고 홈으로 — 홈이 동전 연출 뒤 챌린지 소개부터 이어 간다
-  const startTour = (step: 'LEVEL_SEEN' | 'FEEDBACK_SEEN') => {
-    tour.saveStep(step);
+  // 투어의 첫 단계를 남기고 홈으로 — 홈이 동전 연출 뒤 튜토리얼부터 이어 간다
+  const startTour = () => {
+    tour.saveStep('STARTED');
     router.replace(scenarioReturnPath({ date }));
   };
 
@@ -172,11 +172,7 @@ export const ScenarioFeedbackFlow = ({
         sessionId={sessionId}
         scenarioId={scenarioId}
         onFinish={continueToExpressionBranch}
-        onTourStart={
-          postConversation === 'tour'
-            ? () => startTour('LEVEL_SEEN')
-            : undefined
-        }
+        onTourStart={postConversation === 'tour' ? startTour : undefined}
       />
     );
   }

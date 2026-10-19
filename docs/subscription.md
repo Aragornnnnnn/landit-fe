@@ -118,11 +118,11 @@ Google Play도 같은 세 제품 ID로 등록돼 있다. 할인 연간은 기존
 - 신규(첫 시나리오): 분석 → 레벨 결과(CTA 「랜딧으로 영어 공부 시작하기」) → 홈. 학습 준비는 지나지 않는다. 쓸 만한 레벨이 없으면 분석 뒤 바로 홈.
 - 기존(두 번째 시나리오부터): 오늘 카드의 총평을 마치면 홈. 지난 날 카드와 재대화는 신규·기존 모두 투어를 시작하지 않는다(투어가 홈의 오늘 카드를 뒤집어 이어 가서다).
 - 홈: 동전이 「PREMIUM 시작하기」 알약으로 날아간다(투어 중엔 환급 말풍선 없음) → 같은 어둠에서 튜토리얼(`TourTutorial`, 래디와 문장 세 개를 한 자씩 타이핑, 화면을 누르면 다음 문장, 마지막 「맞춤 표현 학습하기」) → 카드가 스스로 뒤집힌다 → 표현 목록 전체를 비추며 「방금 대화로 만든 OO님 맞춤 표현 학습이에요」(2.5초 뒤 저절로) → 무료 표현만 비추고 손가락으로 누르게 한다(`FreeExpressionSpotlight`). 나머지 표현엔 PREMIUM 알약. 「다음에 할게요」를 누르거나, 비출 자리를 못 찾거나, 무료 표현을 이미 끝냈으면 투어를 조용히 끝낸다.
-- 무료 표현을 끝내면 목록 대신 `/paywall?source=first_expression_tour`. 페이월이 뜨면 투어가 끝난다.
+- 무료 표현을 끝내면 투어를 끝낸 것으로 남기고 목록 대신 `/paywall?source=first_expression_tour`로 간다.
 
 **무료 표현은 서버가 정한다(landit-be #308, LAN-704).** 표현 목록 응답의 `freeTrial: true`가 그 표현이다. 서버 기준은 "체험 도입 시각 이후 처음 완료한 시나리오의 현재 수준 1번 표현"이고, 나머지 표현은 서버가 403으로 막는다. 그래서 투어는 피드백을 마칠 때 그 시나리오 목록을 새로 받아 `freeTrial`이 있을 때만 시작하고(`tourEntryOf`의 `freeExpression`), 카드 뒷면에서 없으면 페이월로 몰지 않고 조용히 끝낸다. `freeTrial` 표현은 투어가 끝난 뒤에도 카드 뒷면에서 페이월 없이 열린다. 카드 뒤집기는 무료 사용자에게도 열려 있어(2026-10-19) 언제든 그 표현에 다시 닿을 수 있다.
 
-진행 단계는 이 기기에 계정별로 둔다(`tour-store.ts`, `localStorage` 키 `landit-first-expression-tour:{userId}`). 단계는 `LEVEL_SEEN`·`FEEDBACK_SEEN` → `CHALLENGE_INTRO_SEEN` → `CARD_FLIPPED` → `FREE_EXPRESSION_DONE` → `COMPLETED`, 저장값은 "마지막으로 끝낸 단계"다. 앱을 지우거나 다른 기기로 옮기면 투어를 다시 볼 수 있다.
+진행 단계는 이 기기에 계정별로 둔다(`tour-store.ts`, `localStorage` 키 `landit-first-expression-tour:{userId}`). 단계는 `STARTED` → `TUTORIAL_DONE` → `CARD_FLIPPED` → `COMPLETED`, 저장값은 "마지막으로 끝낸 단계"다. 무료 표현을 마치고 페이월로 보내는 순간 `COMPLETED`를 남긴다. 저장소 쓰기가 실패하면 그 실행 동안은 메모리 값으로 이어 간다. 앱을 지우거나 다른 기기로 옮기면 투어를 다시 볼 수 있다.
 
 앱을 새로 열었는데 단계가 중간이면 안내 없이 마지막 단계 다음부터 바로 이어 간다. 뒤집기·무료 표현은 끝낸 카드가 있어야 해서, 날이 바뀌어 오늘 카드가 램프면 다음 대화를 끝낼 때까지 투어는 쉰다. 홈의 화면 판정은 `homeTourViewOf`, 시작 판정은 `tourEntryOf`, 튜토리얼 타이핑은 `tutorial-typing.ts`다.
 

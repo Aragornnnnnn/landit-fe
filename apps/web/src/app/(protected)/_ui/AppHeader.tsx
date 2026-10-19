@@ -48,7 +48,7 @@ export const AppHeader = () => {
     bubble,
   } = useMissedEarnInvite(invited, missedRewardOf(preview, computedAt));
   // 첫 표현 투어의 튜토리얼 차례 — 동전은 프리미엄 진입 알약으로 날아가고, 말풍선 대신 튜토리얼이 이어서 말한다
-  const tourIntro = useFirstExpressionTour().screen === 'challenge_intro';
+  const tourIntro = useFirstExpressionTour().screen === 'tutorial';
   // 이번 방문에 튜토리얼이 있었으면 말풍선은 띄우지 않는다 — 동전이 닿을 때 열린 말풍선이 튜토리얼이 끝난 뒤 스포트라이트 위로 뜨지 않게
   const [tourShown, setTourShown] = useState(false);
   if (tourIntro && !tourShown) setTourShown(true);

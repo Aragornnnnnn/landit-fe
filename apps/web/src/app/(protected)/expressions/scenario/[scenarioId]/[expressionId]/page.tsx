@@ -35,12 +35,7 @@ function ExpressionFlowContent({
   // 첫 표현 투어의 무료 표현이면 끝나자마자 페이월로 — 목록(나머지는 잠김)으로 돌아가지 않는다
   const tour = useFirstExpressionTour();
   const finishTour =
-    tour.screen === 'free_expression'
-      ? () => {
-          tour.saveStep('FREE_EXPRESSION_DONE');
-          tour.goToPaywall('replace');
-        }
-      : undefined;
+    tour.screen === 'free_expression' ? tour.finishWithPaywall : undefined;
 
   // key로 표현이 바뀌면 플로우를 새로 마운트한다 — step·입력 상태가 이전 표현에서 새어나오지 않게
   return (

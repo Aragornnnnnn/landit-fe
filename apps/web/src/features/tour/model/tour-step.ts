@@ -2,34 +2,27 @@
 
 // 마지막으로 끝낸 단계. 시작 전은 null
 export const TOUR_STEPS = [
-  // 신규 — 첫 시나리오의 레벨 결과까지 봤다
-  'LEVEL_SEEN',
-  // 기존 — 오늘의 시나리오 총평까지 봤다
-  'FEEDBACK_SEEN',
-  'CHALLENGE_INTRO_SEEN',
+  // 피드백을 마치고 홈으로 왔다 — 신규는 레벨 결과 뒤, 기존은 오늘의 시나리오 총평 뒤
+  'STARTED',
+  'TUTORIAL_DONE',
   'CARD_FLIPPED',
-  'FREE_EXPRESSION_DONE',
-  // 페이월까지 봤다 — 투어는 다시 뜨지 않는다
+  // 무료 표현을 마치고 페이월로 갔거나, 투어를 넘겼다 — 다시 뜨지 않는다
   'COMPLETED',
 ] as const;
 export type TourStep = (typeof TOUR_STEPS)[number];
 
-// 투어가 지금 보여 줄 화면. 앞의 셋은 홈에서, 페이월은 페이월 라우트에서
-export type TourScreen =
-  'none' | 'challenge_intro' | 'flip_card' | 'free_expression' | 'paywall';
+// 투어가 지금 보여 줄 화면. 전부 홈에서
+export type TourScreen = 'none' | 'tutorial' | 'flip_card' | 'free_expression';
 
 /** 마지막으로 끝낸 단계의 다음 화면 */
 export const tourScreenOf = (step: TourStep | null): TourScreen => {
   switch (step) {
-    case 'LEVEL_SEEN':
-    case 'FEEDBACK_SEEN':
-      return 'challenge_intro';
-    case 'CHALLENGE_INTRO_SEEN':
+    case 'STARTED':
+      return 'tutorial';
+    case 'TUTORIAL_DONE':
       return 'flip_card';
     case 'CARD_FLIPPED':
       return 'free_expression';
-    case 'FREE_EXPRESSION_DONE':
-      return 'paywall';
     default:
       return 'none';
   }

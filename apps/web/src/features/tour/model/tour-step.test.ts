@@ -9,14 +9,9 @@ describe('tourScreenOf', () => {
     expect(tourScreenOf('COMPLETED')).toBe('none');
   });
 
-  it('레벨이나 총평까지 봤으면 홈에서 챌린지 소개를 본다', () => {
-    expect(tourScreenOf('LEVEL_SEEN')).toBe('challenge_intro');
-    expect(tourScreenOf('FEEDBACK_SEEN')).toBe('challenge_intro');
-  });
-
-  it('소개 다음은 카드 뒤집기, 뒤집은 다음은 무료 표현, 표현을 끝냈으면 페이월이다', () => {
-    expect(tourScreenOf('CHALLENGE_INTRO_SEEN')).toBe('flip_card');
+  it('시작했으면 튜토리얼, 튜토리얼 다음은 카드 뒤집기, 뒤집은 다음은 무료 표현이다', () => {
+    expect(tourScreenOf('STARTED')).toBe('tutorial');
+    expect(tourScreenOf('TUTORIAL_DONE')).toBe('flip_card');
     expect(tourScreenOf('CARD_FLIPPED')).toBe('free_expression');
-    expect(tourScreenOf('FREE_EXPRESSION_DONE')).toBe('paywall');
   });
 });

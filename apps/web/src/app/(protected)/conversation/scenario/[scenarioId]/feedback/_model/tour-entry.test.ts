@@ -13,11 +13,11 @@ describe('tourEntryOf', () => {
   };
 
   it('무료 사용자의 첫 시나리오(레벨 분석으로 가는 길)는 레벨 결과 뒤에 투어를 시작한다', () => {
-    expect(tourEntryOf({ ...base, view: 'analyzing' })).toBe('LEVEL_SEEN');
+    expect(tourEntryOf({ ...base, view: 'analyzing' })).toBe('level');
   });
 
   it('투어를 안 본 무료 사용자가 오늘의 시나리오를 끝내면 총평 뒤에 투어를 시작한다', () => {
-    expect(tourEntryOf(base)).toBe('FEEDBACK_SEEN');
+    expect(tourEntryOf(base)).toBe('home');
   });
 
   it('재대화나 지난 날 카드는 투어를 시작하지 않는다 — 첫 시나리오(레벨 분석)라도 지난 날 카드면 시작하지 않는다', () => {
