@@ -6,10 +6,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Scenario } from '../../lib/to-scenario';
 import { ScenarioCard } from './ScenarioCard';
 
-// 페이월 게이트는 구독 조회를 끌고 온다 — 이 화면 테스트에선 항상 열린 문으로 치환한다
-vi.mock('@/features/subscription/model/paywall-gate/usePaywallGate', () => ({
-  usePaywallGate: () => ({ guard: (go: () => void) => go() }),
-}));
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 // next/link는 next 밑의 react 복사본을 잡아 훅 dispatcher가 null이 된다 — 주소만 보면 되니 평범한 앵커로 대체한다
 vi.mock('next/link', () => ({
@@ -132,5 +128,16 @@ describe('ScenarioCard', () => {
     expect(
       screen.queryByRole('link', { name: '대화 기록' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('무료 사용자도 카드를 뒤집어 뒷면(표현 목록)을 본다 — 막는 건 뒷면의 표현이다', async () => {
+    // Given 게이트가 잠긴 무료 사용자의 완료 카드
+    renderCard();
+
+    // When 표현 배우기를 누르면
+    await userEvent.click(screen.getByText('표현 배우기'));
+
+    // Then 페이월로 가지 않고 뒷면이 열린다
+    expect(screen.getByText('카드 앞면으로')).toBeInTheDocument();
   });
 });
