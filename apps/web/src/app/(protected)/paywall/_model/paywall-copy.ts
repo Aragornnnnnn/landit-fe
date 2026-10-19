@@ -22,18 +22,20 @@ export const getCancelNotice = (plan: PaywallPlan) =>
     ? '체험 종료 24시간 전까지 해지하면 청구되지 않아요'
     : '결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요';
 
-/** 환급 챌린지 CTA 문구 */
-export const getRewardCtaLabel = ({ days }: RewardPlan) =>
-  `${days}일 환급 챌린지 시작하기`;
+/** 거는 금액 — 만 원으로 나누어떨어지면 「5만 원」처럼 짧게, 아니면 원 단위로 적는다 */
+const formatStake = (price: number) =>
+  price % 10_000 === 0 ? `${price / 10_000}만 원` : formatWon(price);
 
-/** 환급 안내 두 줄 — 쌓이는 법과 돌려받는 법. 이모지와 문장 */
-export const getRewardSteps = ({ dailyRefund }: RewardPlan) =>
+/** 환급 챌린지 CTA 문구. 돌려받을 돈을 건다는 느낌이 들게 「걸고」라고 한다 */
+export const getRewardCtaLabel = ({ price }: RewardPlan) =>
+  `${formatStake(price)} 걸고 도전하기`;
+
+/** 환급 안내 세 줄 — 오늘 내는 돈, 쌓이는 법, 돌려받는 때. 이모지와 문장 */
+export const getRewardSteps = ({ days, price, dailyRefund }: RewardPlan) =>
   [
-    [
-      '💰',
-      `매일 오늘의 시나리오를 할 때마다 ${formatWon(dailyRefund)}이 쌓여요`,
-    ],
-    ['📅', '챌린지 기간이 끝나면 내가 모은 만큼 돈을 돌려받아요'],
+    ['💳', `오늘 ${formatWon(price)} 결제 (${days}일 이용권)`],
+    ['💰', `시나리오 1개 끝낼 때마다 ${formatWon(dailyRefund)} 적립`],
+    ['📅', `${days}일 뒤, 모은 만큼 돌려받아요`],
   ] as const;
 
 /** 무대 띠 문구 — 제목 위아래 두 줄 */
