@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 
 import { setUserProperties } from '@/shared/analytics';
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { useAlarmSettingQuery } from '../model/useAlarmSettingQuery';
 
@@ -14,7 +14,7 @@ import { useAlarmSettingQuery } from '../model/useAlarmSettingQuery';
  * 설정을 받은 뒤에만 올린다. 알람을 모르는 환경(브라우저·구 셸)은 설정을 묻지 않아 속성도 없다
  */
 export const AlarmPropertiesSync = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
   const { data: setting } = useAlarmSettingQuery();
   const enabled = setting?.enabled;
 

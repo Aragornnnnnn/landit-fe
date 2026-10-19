@@ -2,7 +2,7 @@
 // 편지가 쌓이면 첫 장 밖으로 밀린다 — 더 보기로 다음 장을 이어 받는다
 import { useInfiniteQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import {
   getReceivedLetters,
@@ -34,7 +34,7 @@ const toRows = (
     : (page.items as ReceivedLetter[]).map(toReceivedRow);
 
 export const useLetterRowsQuery = (box: MailboxBox) => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   const {
     data,

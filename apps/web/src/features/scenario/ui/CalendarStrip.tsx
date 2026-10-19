@@ -6,6 +6,7 @@ import { EVENTS } from '@landit/analytics';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
 import { track } from '@/shared/analytics';
+import { WEEKDAY_LABELS } from '@/shared/lib/date-string';
 import { DURATION, EASE_STANDARD } from '@/shared/motion';
 import { registerOpenSheet } from '@/shared/ui/bottom-sheet-back';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
@@ -16,7 +17,6 @@ import {
   canGoForward,
   datesOfMonth,
   shiftWindow,
-  WEEKDAY_LABELS,
   weekdayIndexOf,
 } from '../lib/calendar-window';
 import { dayStateOf } from '../lib/day-state';

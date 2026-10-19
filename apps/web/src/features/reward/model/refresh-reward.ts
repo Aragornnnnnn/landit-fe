@@ -4,10 +4,11 @@ import type { QueryClient } from '@tanstack/react-query';
 
 import { getCurrentUserId } from '@/shared/auth/auth-store';
 
-import { getMyRewards, type RewardView } from '../api/reward';
+import type { RewardView } from '../api/reward';
 import { earnBaseOf } from './completion-earn';
 import { REWARD_GC_MS, rewardKeys } from './keys';
 import { markMissedEarn } from './missed-earn';
+import { rewardQueries } from './queries';
 import { participantOf } from './reward-status';
 
 // 받아 둔 환급. 받아 본 적이 없으면(출시 전이거나 아직 묻지 않았다) undefined
@@ -23,10 +24,7 @@ const renewReward = (queryClient: QueryClient, userId: number) => {
   void queryClient.invalidateQueries({
     queryKey: rewardKeys.summary(userId),
   });
-  void queryClient.prefetchQuery({
-    queryKey: rewardKeys.summary(userId),
-    queryFn: getMyRewards,
-  });
+  void queryClient.prefetchQuery(rewardQueries.summary(userId));
 };
 
 // 결제처럼 참여 여부가 바뀔 수 있는 순간 — 환급과 상관없던 사람도 새로 받는다
@@ -79,8 +77,7 @@ export const fetchLatestReward = async (
   try {
     return participantOf(
       await queryClient.fetchQuery({
-        queryKey: rewardKeys.summary(userId),
-        queryFn: getMyRewards,
+        ...rewardQueries.summary(userId),
         ...(fresh && { staleTime: 0 }),
       }),
     );

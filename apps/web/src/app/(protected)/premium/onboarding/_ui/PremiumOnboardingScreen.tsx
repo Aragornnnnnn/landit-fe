@@ -23,7 +23,7 @@ import { subscriptionKeys } from '@/features/subscription/model/my-subscription/
 import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
 import { PASS_FALLBACK_PRICE } from '@/features/subscription/model/product/offering';
 import { track } from '@/shared/analytics';
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId, useIsAdmin } from '@/shared/auth/current-member';
 import { homePath } from '@/shared/lib/last-tab';
 import type { PremiumOnboardingPreview } from '@/shared/lib/routes';
 import { formatWon } from '@/shared/lib/won';
@@ -77,8 +77,8 @@ export const PremiumOnboardingScreen = ({
   const { data: setting, refetch } = useAlarmSettingQuery();
   const [step, setStep] = useState<'welcome' | 'guide' | 'alarm'>('welcome');
   const queryClient = useQueryClient();
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
-  const isAdmin = useAuthStore((state) => state.member?.role === 'ADMIN');
+  const userId = useCurrentUserId();
+  const isAdmin = useIsAdmin();
   // 주소의 미리보기 값은 ADMIN일 때만 받는다 — 아니면 실제 상태대로 간다
   const forced = isAdmin ? preview : undefined;
 

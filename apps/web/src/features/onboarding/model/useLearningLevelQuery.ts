@@ -3,13 +3,13 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { getMyLearningLevel } from '../api/learning-level';
 import { profileKeys } from './keys';
 
 export const useLearningLevelQuery = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
 
   return useQuery({
     queryKey: profileKeys.learningLevel(userId),

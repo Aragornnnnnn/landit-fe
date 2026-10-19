@@ -5,7 +5,7 @@ import { EVENTS } from '@landit/analytics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { track } from '@/shared/analytics';
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 import { reportError } from '@/shared/monitoring/report';
 
 import { submitFeedback, type FeedbackType } from '../api/mailbox';
@@ -18,7 +18,7 @@ interface FeedbackDraft {
 }
 
 export const useSendFeedbackMutation = (type: FeedbackType) => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
   const queryClient = useQueryClient();
 
   return useMutation({

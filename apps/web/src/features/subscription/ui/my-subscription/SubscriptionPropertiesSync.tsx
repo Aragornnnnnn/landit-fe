@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 
 import { setUserProperties } from '@/shared/analytics';
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import {
   toSubscriptionProperties,
@@ -20,7 +20,7 @@ import { useSubscriptionQuery } from '../../model/my-subscription/useSubscriptio
  * 게이트와 달리 환경으로 조회를 끄지 않는다 — 브라우저·구버전 셸의 유료 여부도 같은 기준으로 세야 한다
  */
 export const SubscriptionPropertiesSync = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
   const { subscription, isPending, isError } = useSubscriptionQuery();
   // 한 번이라도 받았으면 그 값을 믿는다 — 포그라운드 복귀 재조회가 실패해도(데이터는 남는다) 유료 여부를 잃지 않는다
   const known = subscription !== null || (!isPending && !isError);

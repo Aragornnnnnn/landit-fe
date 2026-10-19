@@ -3,10 +3,10 @@
 // 달력 한 칸 — 원 하나와 그 아래 이름표. 상태별로 무엇을 그릴지는 dayStateOf가 정한다
 import { motion, useReducedMotion } from 'motion/react';
 
+import { weekdayLabelOf } from '@/shared/lib/date-string';
 import { toDayLabel } from '@/shared/lib/day-label';
 
 import type { ScenarioCalendarDay } from '../../api/calendar';
-import { WEEKDAY_LABELS, weekdayIndexOf } from '../../lib/calendar-window';
 import { dayStateOf, isOpenable, type DayState } from '../../lib/day-state';
 import { SHIMMER } from '../../lib/shimmer';
 
@@ -106,9 +106,7 @@ export const CalendarDay = ({
           selected ? 'font-black text-primary' : LABEL_STYLE[state]
         }`}
       >
-        {label === 'weekday'
-          ? WEEKDAY_LABELS[weekdayIndexOf(day.date)]
-          : dayNumber}
+        {label === 'weekday' ? weekdayLabelOf(day.date) : dayNumber}
       </span>
     </button>
   );
