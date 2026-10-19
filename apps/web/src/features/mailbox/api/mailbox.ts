@@ -4,7 +4,7 @@
 import { api } from '@/shared/api/client';
 
 /** 운영이 보내는 편지의 종류. 공지·업데이트는 모두에게, 답장(REPLY)은 내 피드백에 온 회신이다 */
-export type MailboxLetterType = 'NOTICE' | 'UPDATE' | 'REPLY';
+export type MailboxLetterType = 'NOTICE' | 'UPDATE' | 'REPLY' | 'DIRECT';
 
 /** 내가 보낸 피드백의 유형 — 작성 화면에서 고르는 네 가지. 서버 enum 그대로다 */
 export type FeedbackType =
