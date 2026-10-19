@@ -8,6 +8,8 @@ export interface Expression {
   baseExpressionMeaningText: string;
   completed: boolean;
   locked: boolean;
+  // 무료 사용자에게 서버가 열어 준 체험 표현(사용자당 하나, landit-be #308). 구버전 응답엔 없다
+  freeTrial?: boolean;
 }
 
 export const getExpressions = (scenarioId: number) =>
