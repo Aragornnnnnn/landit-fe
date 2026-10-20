@@ -1,6 +1,7 @@
 // 환급 페이월 2단계 — 결제 금액 안내. 예전 한 페이지 페이월처럼 로고와 캐릭터, 무료 vs 프리미엄 표, 고를 것 없는 100일 이용권 카드 한 장을
 // 한 화면에 담는다. 혜택 설명은 앞 화면에서 했으니 여기선 무엇을 얼마에 사는지만 또렷하게. 피그마 「결제 금액 안내 v4」(3563:322)
 import Image from 'next/image';
+import Link from 'next/link';
 
 import { Coin } from '@/features/reward/ui/common/Coin';
 import { formatWon } from '@/features/subscription/lib/won';
@@ -108,5 +109,10 @@ export const CheckoutStep = ({
         <PassCard plan={plan} />
       </div>
     </div>
+    {/* 약관은 버튼 밑이 아니라 페이지 맨 아래에 — 결제 버튼 둘레를 가볍게 두고, 내려 보면 찾을 수 있게 */}
+    <nav className="mt-6 flex justify-center gap-3 text-[11px] leading-[1.3] font-medium text-muted-foreground underline">
+      <Link href="/terms">이용약관</Link>
+      <Link href="/privacy">개인정보 처리방침</Link>
+    </nav>
   </div>
 );
