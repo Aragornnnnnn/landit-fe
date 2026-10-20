@@ -8,13 +8,13 @@ const KEY = 'landit-first-expression-tour-preview';
 let started = false;
 
 /**
- * @param from 끝낸 것으로 둘 단계 — 그다음 화면부터 본다. 기본은 피드백을 막 마친 자리(튜토리얼 차례)
+ * @param lastDone 끝낸 것으로 둘 단계 — 그다음 화면부터 본다. 기본은 피드백을 막 마친 자리(튜토리얼 차례)
  */
 export const startTourPreview = (
   userId: number,
-  from: TourStep = 'STARTED',
+  lastDone: TourStep = 'STARTED',
 ) => {
-  writeTourStep(userId, from);
+  writeTourStep(userId, lastDone);
   started = true;
   try {
     sessionStorage.setItem(KEY, '1');

@@ -18,6 +18,9 @@ import { Emoji } from '@/shared/ui/emoji';
 
 import { MenuButton, MenuLink, MenuSection } from '../../../_ui/Menu';
 
+// 가짜 레벨 결과는 실제 시나리오에서 온 게 아니다 — 노출 이벤트의 시나리오 칸에 0을 넣는다
+const PREVIEW_SCENARIO_ID = 0;
+
 // 레벨 결과에 띄울 가짜 평가 — 첫 대화로 3단계가 나온 사람
 const domain = (score: number) => ({ score, confidence: 0.9 });
 const SAMPLE_ASSESSMENT: UsableAssessment = {
@@ -38,16 +41,25 @@ const SAMPLE_ASSESSMENT: UsableAssessment = {
   assessmentVersion: 'v1',
 };
 
-// 홈 투어의 단계 — [보이는 이름, 끝낸 것으로 둘 단계, 설명]
-const HOME_STEPS: [string, TourStep, string][] = [
-  ['튜토리얼부터', 'STARTED', '래디가 환급을 소개하는 타이핑 문장부터'],
-  ['카드 뒤집기부터', 'TUTORIAL_DONE', '오늘 카드를 뒤집어 보라는 안내부터'],
+// 홈 투어의 단계 — 고르면 lastDone까지 끝낸 것으로 두고 그다음 화면부터 본다
+const HOME_STEPS: { title: string; lastDone: TourStep; description: string }[] =
   [
-    '무료 표현부터',
-    'CARD_FLIPPED',
-    '카드 뒷면의 무료 표현 하나를 여는 자리부터',
-  ],
-];
+    {
+      title: '튜토리얼부터',
+      lastDone: 'STARTED',
+      description: '래디가 환급을 소개하는 타이핑 문장부터',
+    },
+    {
+      title: '카드 뒤집기부터',
+      lastDone: 'TUTORIAL_DONE',
+      description: '오늘 카드를 뒤집어 보라는 안내부터',
+    },
+    {
+      title: '무료 표현부터',
+      lastDone: 'CARD_FLIPPED',
+      description: '카드 뒷면의 무료 표현 하나를 여는 자리부터',
+    },
+  ];
 
 // 목록으로 알 수 없는 것 — [궁금한 것, 답]
 const NOTES = [
@@ -69,14 +81,14 @@ export const TourCheckScreen = () => {
   const userId = useAuthStore((state) => state.member?.userId ?? null);
   const [showLevel, setShowLevel] = useState(false);
 
-  const start = (from: TourStep) => {
-    if (userId !== null) startTourPreview(userId, from);
+  const start = (lastDone: TourStep) => {
+    if (userId !== null) startTourPreview(userId, lastDone);
   };
 
   if (isAdmin && showLevel) {
     return (
       <LevelResultScreen
-        scenarioId={0}
+        scenarioId={PREVIEW_SCENARIO_ID}
         assessment={SAMPLE_ASSESSMENT}
         ctaLabel="랜딧으로 영어 공부 시작하기"
         onContinue={() => {
@@ -104,11 +116,11 @@ export const TourCheckScreen = () => {
               </MenuSection>
 
               <MenuSection title="홈 투어 — 단계를 골라서">
-                {HOME_STEPS.map(([title, from, description]) => (
+                {HOME_STEPS.map(({ title, lastDone, description }) => (
                   <MenuLink
-                    key={from}
+                    key={lastDone}
                     href={SCENARIO_PATH}
-                    onClick={() => start(from)}
+                    onClick={() => start(lastDone)}
                     icon={<Emoji>👋</Emoji>}
                     title={title}
                     description={description}
