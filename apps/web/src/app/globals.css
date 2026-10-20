@@ -11,6 +11,10 @@
 
 /* 키가 작은 폰(iPhone SE 계열, 세로 700px 이하) 전용 변형 — 한 화면에 다 들어가야 하는 화면이 간격을 줄일 때 쓴다 */
 @custom-variant short (@media (max-height: 700px));
+/* 폰 높이 대신 그 화면이 실제로 받은 높이(내비 바·헤더를 뺀 값)로 고르는 변형 — 조상에 [container-type:size]가 있어야 한다.
+   두 구간은 겹치지 않게 나눈다. 겹치면 어느 단계가 이길지가 CSS 출력 순서에 달려 버린다 */
+@custom-variant cq-short (@container (480px < height <= 620px));
+@custom-variant cq-tiny (@container (height <= 480px));
 
 /* Tailwind 유틸리티 클래스(bg-primary 등)와 시맨틱 토큰 연결 */
 @theme inline {

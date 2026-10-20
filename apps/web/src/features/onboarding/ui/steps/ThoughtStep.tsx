@@ -35,12 +35,16 @@ export const ThoughtStep = ({ onNext }: { onNext: () => void }) => {
           상대 속마음을 알려줄게요
         </h1>
 
-        <div className="flex flex-1 items-center justify-center py-6">
+        {/* 박스가 실제로 받은 높이를 재는 컨테이너 — 낮은 화면에서 버튼이 밀려나지 않게 박스와 시연이 함께 줄어든다 */}
+        <div className="[container-type:size] flex flex-1 items-center justify-center py-6">
           {/* 실제 속마음 오버레이(어두운 배경 + 날아드는 래디)를 박스 안에 그대로 담는다 */}
-          <div className="flex min-h-[340px] w-full items-center justify-center overflow-hidden rounded-[32px] bg-black/55 px-6">
-            <AnimatePresence mode="wait">
-              <ThoughtReveal key={index} thought={DEMOS[index]} />
-            </AnimatePresence>
+          <div className="flex h-[340px] max-h-full w-full items-center justify-center overflow-hidden rounded-[32px] bg-black/55 px-6">
+            {/* 시연(래디 180px + 말풍선, 약 310px)이 박스보다 커지지 않게 구간별로 줄인다. 구간끼리는 겹치지 않는다 */}
+            <div className="[@container(272px<=height<340px)]:[zoom:0.8] [@container(height<272px)]:[zoom:0.6]">
+              <AnimatePresence mode="wait">
+                <ThoughtReveal key={index} thought={DEMOS[index]} />
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
