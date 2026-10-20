@@ -94,7 +94,10 @@ export const CheckoutStep = ({
 
     <div className="px-5">
       <div className="rounded-3xl border border-[#e9e7e2] bg-card pt-1 pb-3 shadow-[0_2px_5px_rgba(51,38,26,0.05)]">
-        <BenefitComparison benefits={rewardBenefitsOf(plan.dailyRefund)} />
+        <BenefitComparison
+          benefits={rewardBenefitsOf(plan.dailyRefund)}
+          pillar={false}
+        />
       </div>
       <div className="mt-3.5">
         <PassCard plan={plan} />
