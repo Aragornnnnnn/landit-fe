@@ -15,6 +15,7 @@ import { Button } from '@/shared/ui/Button';
 
 import {
   INITIAL_TYPING,
+  revealTyping,
   tapTyping,
   tickTyping,
 } from '../_model/tutorial-typing';
@@ -103,7 +104,7 @@ export const PreviewIntro = ({
       if (next && next.trim()) haptic(typeHaptic());
     }
     setTyping((state) =>
-      skip ? tapTyping(state, lengths) : tickTyping(state, lengths),
+      skip ? revealTyping(state, lengths) : tickTyping(state, lengths),
     );
   });
   useEffect(() => {
@@ -116,7 +117,7 @@ export const PreviewIntro = ({
   const last = typing.index === sentences.length - 1;
   const done = last && typing.phase === 'shown';
   const tapNext = () => {
-    // 다 쓴 문장을 넘길 때만 — 쓰는 중에 눌러 끝까지 보여 주는 건 넘김이 아니다
+    // 다 쓴 문장을 넘길 때만 — 쓰는 중의 누름은 무시된다
     if (typing.phase === 'shown' && !last) {
       track(EVENTS.PREMIUM_PREVIEW_INTRO_ADVANCED, {
         sentence_index: typing.index,
