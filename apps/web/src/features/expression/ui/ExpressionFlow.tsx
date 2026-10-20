@@ -39,6 +39,8 @@ export type ExpressionOrigin =
 interface ExpressionFlowProps {
   origin: ExpressionOrigin;
   expressionId: number;
+  // 완료 처리 뒤 목록 대신 갈 곳 — 첫 표현 투어는 여기서 페이월로 간다
+  onFinished?: () => void;
 }
 
 // 화면 스텝 — PRONOUNCE(발음 평가)는 발음 자산이 있는 표현에만, EXAMPLES(추가 예문)는 예문을 받았을 때만 낀다.
@@ -73,6 +75,7 @@ const PRONUNCIATION_PROGRESS = 0.6;
 export const ExpressionFlow = ({
   origin,
   expressionId,
+  onFinished,
 }: ExpressionFlowProps) => {
   const router = useRouter();
   // 플로우 전체(퀴즈·설명·복습)는 대표 예문(learning-start)만으로 굴러간다.
@@ -98,6 +101,7 @@ export const ExpressionFlow = ({
         learning={learning}
         practice={practice}
         practiceLoading={practiceLoading}
+        onFinished={onFinished}
       />
     );
   }
@@ -121,6 +125,7 @@ interface LoadedExpressionFlowProps {
   learning: ExpressionLearning;
   practice: ExpressionPractice | null;
   practiceLoading: boolean;
+  onFinished?: () => void;
 }
 
 const LoadedExpressionFlow = ({
@@ -129,6 +134,7 @@ const LoadedExpressionFlow = ({
   learning,
   practice,
   practiceLoading,
+  onFinished,
 }: LoadedExpressionFlowProps) => {
   const router = useRouter();
   // 계측에 싣는 출처 — 시나리오면 시나리오 id, 스몰톡이면 세션 id
@@ -258,7 +264,8 @@ const LoadedExpressionFlow = ({
           ...originProps,
         });
         markExpressionCompleted();
-        router.replace(listPath);
+        if (onFinished) onFinished();
+        else router.replace(listPath);
       },
     });
 

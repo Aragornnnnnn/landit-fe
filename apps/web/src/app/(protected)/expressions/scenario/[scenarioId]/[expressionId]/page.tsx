@@ -8,6 +8,8 @@ import { ExpressionFlow } from '@/features/expression/ui/ExpressionFlow';
 import { QuizStepSkeleton } from '@/features/expression/ui/QuizStepSkeleton';
 import { readDateParam } from '@/shared/lib/routes';
 
+import { useFirstExpressionTour } from '../../../../_model/useFirstExpressionTour';
+
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
 export default function ExpressionFlowPage({
   params,
@@ -30,6 +32,8 @@ function ExpressionFlowContent({
   // 지난 날 카드에서 들어왔으면 그 날짜가 실려 온다.
   // searchParams prop은 앱 안에서 이동할 때 갱신되지 않아 훅으로 읽는다
   const date = readDateParam(useSearchParams());
+  // 첫 표현 투어의 무료 표현이면 끝나자마자 페이월로 — 목록(나머지는 잠김)으로 돌아가지 않는다
+  const { onFreeExpressionFinished } = useFirstExpressionTour();
 
   // key로 표현이 바뀌면 플로우를 새로 마운트한다 — step·입력 상태가 이전 표현에서 새어나오지 않게
   return (
@@ -37,6 +41,7 @@ function ExpressionFlowContent({
       key={expressionId}
       origin={{ kind: 'scenario', scenarioId: Number(scenarioId), date }}
       expressionId={Number(expressionId)}
+      onFinished={onFreeExpressionFinished}
     />
   );
 }

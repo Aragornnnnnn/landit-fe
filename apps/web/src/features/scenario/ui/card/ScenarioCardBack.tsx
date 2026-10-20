@@ -1,7 +1,8 @@
 'use client';
 
-// 시나리오 카드 뒷면 — 완료 시나리오의 표현 학습 리스트. 표현을 고르면 학습 페이지로 이동
-import { useEffect, useRef } from 'react';
+// 시나리오 카드 뒷면 — 완료 시나리오의 표현 학습 리스트. 표현을 고르면 학습 페이지로 이동.
+// 서버가 무료로 열어 준 표현(freeTrial)은 페이월 없이 연다. 무료 사용자 목록에는 무료·PREMIUM을 붙이고, 첫 표현 투어 중에는 그 표현을 비춘다
+import { useEffect, useEffectEvent, useRef } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
@@ -20,6 +21,7 @@ import { CloseIcon } from '@/shared/ui/Icons';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { expressionStageOf } from '../../lib/expression-progress';
+import { FreeExpressionSpotlight } from './FreeExpressionSpotlight';
 
 interface ScenarioCardBackProps {
   scenarioId: number;
@@ -29,6 +31,8 @@ interface ScenarioCardBackProps {
   onBack: () => void;
   // 표현 마무리 후 자동으로 펼쳐진 경우만 축하한다 — 목록이 뜨기 전(스켈레톤)엔 터뜨리지 않는다
   autoFlip?: boolean;
+  // 주면 첫 표현 투어 중이다 — 투어를 여기서 끝낼 때 부른다(줄 무료 표현이 없거나, 비출 자리를 못 찾았거나, 사용자가 넘겼다)
+  onTourEnd?: () => void;
 }
 
 export const ScenarioCardBack = ({
@@ -36,6 +40,7 @@ export const ScenarioCardBack = ({
   date,
   onBack,
   autoFlip = false,
+  onTourEnd,
 }: ScenarioCardBackProps) => {
   const router = useRouter();
   const gate = usePaywallGate();
@@ -55,6 +60,44 @@ export const ScenarioCardBack = ({
     burstConfetti();
   }, [autoFlip, expressions]);
 
+  // 서버가 무료로 열어 준 표현 — 사용자당 하나라 대부분의 카드엔 없다
+  const freeTrialExpression = expressions?.find(
+    (expression) => expression.freeTrial,
+  );
+  const freeTrialExpressionId = freeTrialExpression?.expressionId;
+  // 투어가 비출 표현 — 투어 중이고, 무료 표현이 있고, 아직 안 끝냈을 때
+  const tourTarget =
+    onTourEnd && freeTrialExpression && !freeTrialExpression.completed
+      ? freeTrialExpression
+      : undefined;
+  // 투어 중인데 비출 표현이 없다 — 이 카드엔 무료 표현이 없거나 이미 끝냈다(투어 밖에서 마친 경우)
+  const missingTourTarget =
+    onTourEnd !== undefined && expressions !== null && tourTarget === undefined;
+  const endTourWithoutTarget = useEffectEvent(() => onTourEnd?.());
+  useEffect(() => {
+    if (missingTourTarget) endTourWithoutTarget();
+  }, [missingTourTarget]);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const selectExpression = (expressionId: number) => {
+    track(EVENTS.EXPRESSION_SELECTED, {
+      expression_id: expressionId,
+      scenario_id: scenarioId,
+      source: 'card_back',
+    });
+    const open = () =>
+      router.push(scenarioExpressionPath(scenarioId, expressionId, date));
+    // 무료 표현은 투어가 끝난 뒤에도 페이월 없이 연다 — 서버가 계속 열어 둔다
+    if (expressionId === freeTrialExpressionId) {
+      open();
+      return;
+    }
+    gate.guard(open, {
+      source: 'expression',
+      returnTo: scenarioReturnPath({ flip: scenarioId, date }),
+    });
+  };
+
   return (
     <>
       <header className="relative flex h-14 flex-none items-center justify-center px-3">
@@ -72,7 +115,7 @@ export const ScenarioCardBack = ({
 
       {/* overscroll-contain을 두면 리스트가 짧아도 스와이프를 먹어 카드 전환(바깥 스냅 스크롤)이 막힌다 —
           리스트 경계에 닿으면 제스처가 바깥으로 이어져 뒷면에서도 카드를 넘길 수 있게 한다 */}
-      <div className="min-h-0 flex-1 overflow-y-auto pb-6">
+      <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto pb-6">
         {isLoading && <ExpressionListSkeleton />}
 
         {error && (
@@ -86,26 +129,20 @@ export const ScenarioCardBack = ({
         {expressions && (
           <ExpressionList
             expressions={expressions}
-            onSelect={(expressionId) => {
-              track(EVENTS.EXPRESSION_SELECTED, {
-                expression_id: expressionId,
-                scenario_id: scenarioId,
-                source: 'card_back',
-              });
-              gate.guard(
-                () =>
-                  router.push(
-                    scenarioExpressionPath(scenarioId, expressionId, date),
-                  ),
-                {
-                  source: 'expression',
-                  returnTo: scenarioReturnPath({ flip: scenarioId, date }),
-                },
-              );
-            }}
+            premiumLocked={gate.locked}
+            freeTrialExpressionId={freeTrialExpressionId}
+            onSelect={selectExpression}
           />
         )}
       </div>
+
+      {tourTarget && onTourEnd && (
+        <FreeExpressionSpotlight
+          list={listRef}
+          onOpen={() => selectExpression(tourTarget.expressionId)}
+          onEnd={onTourEnd}
+        />
+      )}
     </>
   );
 };

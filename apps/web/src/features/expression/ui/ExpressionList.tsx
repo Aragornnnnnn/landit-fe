@@ -17,6 +17,9 @@ interface ExpressionListProps {
   hideProgress?: boolean;
   // 진행 표시 왼쪽에 서는 제목 — 화면에 다른 블록이 함께 있어 무슨 목록인지 밝혀야 할 때만 준다
   title?: string;
+  // 무료 사용자의 목록인가 — 서버가 무료로 열어 준 표현(freeTrialExpressionId)엔 「무료」, 나머지 안 끝낸 표현엔 「PREMIUM」을 붙인다
+  premiumLocked?: boolean;
+  freeTrialExpressionId?: number;
 }
 
 export const ExpressionList = ({
@@ -26,7 +29,16 @@ export const ExpressionList = ({
   hideStartAction = false,
   hideProgress = false,
   title,
+  premiumLocked = false,
+  freeTrialExpressionId,
 }: ExpressionListProps) => {
+  // 무료 사용자에게만 붙는 표시 — 유료 사용자와 이미 끝낸 표현에는 없다
+  const accessBadgeOf = (expression: Expression) => {
+    if (!premiumLocked) return undefined;
+    if (expression.expressionId === freeTrialExpressionId) return 'free';
+    if (expression.completed) return undefined;
+    return 'premium';
+  };
   const total = expressions.length;
   const done = expressions.filter((expression) => expression.completed).length;
   const ratio = total === 0 ? 0 : (done / total) * 100;
@@ -56,13 +68,15 @@ export const ExpressionList = ({
         </div>
       )}
 
-      <ul className="flex flex-col gap-2">
+      {/* 표식 — 첫 표현 투어가 목록 전체를 비출 때 찾는다 */}
+      <ul data-expression-items className="flex flex-col gap-2">
         {expressions.map((expression, index) => {
           const item = (
             <ExpressionListItem
               expression={expression}
               onSelect={onSelect}
               hideStartAction={hideStartAction}
+              accessBadge={accessBadgeOf(expression)}
             />
           );
           return stagger ? (

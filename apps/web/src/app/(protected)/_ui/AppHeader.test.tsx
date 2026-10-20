@@ -29,6 +29,10 @@ const analytics = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/shared/analytics', () => ({ track: analytics.track }));
 
 vi.mock('../_model/useMyReward', () => ({ useMyReward: () => mocks.my }));
+// 첫 표현 투어는 자기 테스트가 있다 — 여기선 투어가 없는 사람으로 둔다
+vi.mock('../_model/useFirstExpressionTour', () => ({
+  useFirstExpressionTour: () => ({ screen: 'none' }),
+}));
 vi.mock('../_model/useMissedEarnInvite', () => ({
   useMissedEarnInvite: () => mocks.missed,
 }));

@@ -6,10 +6,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Scenario } from '../../lib/to-scenario';
 import { ScenarioCard } from './ScenarioCard';
 
-// 페이월 게이트는 구독 조회를 끌고 온다 — 이 화면 테스트에선 항상 열린 문으로 치환한다
-vi.mock('@/features/subscription/model/paywall-gate/usePaywallGate', () => ({
-  usePaywallGate: () => ({ guard: (go: () => void) => go() }),
-}));
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 // next/link는 next 밑의 react 복사본을 잡아 훅 dispatcher가 null이 된다 — 주소만 보면 되니 평범한 앵커로 대체한다
 vi.mock('next/link', () => ({
@@ -132,5 +128,41 @@ describe('ScenarioCard', () => {
     expect(
       screen.queryByRole('link', { name: '대화 기록' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('투어의 뒤집기 차례에 사용자가 먼저 뒤집어도 투어 단계를 넘긴다 — 자동 뒤집기를 기다리지 않아도', async () => {
+    // Given 튜토리얼이 막 끝나 카드가 스스로 뒤집히기 전
+    const onFlipped = vi.fn();
+    render(
+      <ScenarioCard
+        scenario={completedScenario}
+        onStart={vi.fn()}
+        expressions={{ completed: 0, total: 3 }}
+        tour={{ screen: 'flip_card', onFlipped, onTourEnd: vi.fn() }}
+      />,
+    );
+
+    // When 사용자가 먼저 표현 배우기를 누르면
+    await userEvent.click(screen.getByText('표현 배우기'));
+
+    // Then 뒤집기 단계를 한 번 넘긴다
+    expect(onFlipped).toHaveBeenCalledTimes(1);
+  });
+
+  it('투어의 뒤집기 차례에 카드가 처음부터 뒷면으로 열려도 투어 단계를 넘긴다', () => {
+    // Given 표현을 마치고 돌아온 길처럼 뒷면으로 펴진 채 열리는 카드
+    const onFlipped = vi.fn();
+    render(
+      <ScenarioCard
+        scenario={completedScenario}
+        onStart={vi.fn()}
+        autoFlip
+        expressions={{ completed: 0, total: 3 }}
+        tour={{ screen: 'flip_card', onFlipped, onTourEnd: vi.fn() }}
+      />,
+    );
+
+    // Then 뒤집기 단계를 넘긴다
+    expect(onFlipped).toHaveBeenCalledTimes(1);
   });
 });

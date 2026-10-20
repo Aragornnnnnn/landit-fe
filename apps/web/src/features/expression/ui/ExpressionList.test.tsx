@@ -70,3 +70,38 @@ describe('ExpressionList 진행바', () => {
     expect(fill?.className).not.toContain('bg-success');
   });
 });
+
+describe('ExpressionList 무료·PREMIUM 표시', () => {
+  it('무료 사용자 목록은 무료 표현에 「무료」, 나머지 안 끝낸 표현에 「PREMIUM」을 붙인다', () => {
+    // Given 첫 표현이 무료로 열린 무료 사용자의 목록
+    render(
+      <ExpressionList
+        premiumLocked
+        freeTrialExpressionId={1}
+        expressions={[
+          expression({ expressionId: 1 }),
+          expression({ expressionId: 2, locked: true }),
+          expression({ expressionId: 3 }),
+        ]}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    // Then 무료는 하나, PREMIUM은 나머지 둘이다
+    expect(screen.getAllByText('무료')).toHaveLength(1);
+    expect(screen.getAllByText('PREMIUM')).toHaveLength(2);
+  });
+
+  it('유료 사용자 목록에는 아무 표시도 없다', () => {
+    render(
+      <ExpressionList
+        freeTrialExpressionId={1}
+        expressions={[expression({ expressionId: 1 })]}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText('무료')).not.toBeInTheDocument();
+    expect(screen.queryByText('PREMIUM')).not.toBeInTheDocument();
+  });
+});

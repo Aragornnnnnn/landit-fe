@@ -1,8 +1,11 @@
 'use client';
 
-// 표현 리스트 항목 — 완료(연녹색 체크) / 시작할 표현(강조 카드) / 잠금(회색) 상태를 그린다
+// 표현 리스트 항목 — 완료(연녹색 체크) / 시작할 표현(강조 카드) / 잠금(회색) 상태를 그린다.
+// 무료 사용자에게는 서버가 열어 준 표현에 「무료」, 결제해야 열리는 표현에 「PREMIUM」을 붙인다
 import { motion } from 'motion/react';
 
+// 가로 import 사유: 투어의 잠긴 표현에 앱 전체가 프리미엄을 뜻하는 같은 골드 알약을 붙인다
+import { PremiumPill } from '@/features/subscription/ui/premium-brand';
 import { Emoji } from '@/shared/ui/emoji';
 import { CheckIcon, LockIcon } from '@/shared/ui/Icons';
 
@@ -13,12 +16,15 @@ interface ExpressionListItemProps {
   onSelect: (expressionId: number) => void;
   // 활성 항목의 다음 표현 표시(👈)를 숨긴다
   hideStartAction?: boolean;
+  // 무료 사용자에게 붙이는 표시 — free는 서버가 무료로 열어 준 표현, premium은 결제해야 열리는 표현
+  accessBadge?: 'free' | 'premium';
 }
 
 export const ExpressionListItem = ({
   expression,
   onSelect,
   hideStartAction = false,
+  accessBadge,
 }: ExpressionListItemProps) => {
   const {
     expressionId,
@@ -31,12 +37,13 @@ export const ExpressionListItem = ({
 
   if (locked) {
     return (
-      <div className="flex items-center gap-3 rounded-2xl bg-secondary/40 px-3.5 py-3.5 opacity-60">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+      // 흐림은 글자 쪽에만 — 무료 사용자의 PREMIUM 알약은 흐리지 않는다
+      <div className="flex items-center gap-3 rounded-2xl bg-secondary/40 px-3.5 py-3.5">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground opacity-60">
           <LockIcon size={15} />
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-base font-bold text-muted-foreground">
+        <div className="min-w-0 flex-1 opacity-60">
+          <p className="truncate text-base font-bold text-muted-foreground">
             {baseExpressionMeaningText}
           </p>
           {/* 영어 표현은 잠금 상태에서도 미리 보여준다 */}
@@ -44,6 +51,7 @@ export const ExpressionListItem = ({
             {targetExpressionText}
           </p>
         </div>
+        {accessBadge === 'premium' && <PremiumPill size="sm" />}
       </div>
     );
   }
@@ -74,6 +82,7 @@ export const ExpressionListItem = ({
   return (
     <button
       onClick={() => onSelect(expressionId)}
+      data-free-expression={accessBadge === 'free' ? '' : undefined}
       className="flex w-full items-center gap-3 rounded-2xl border-2 border-primary bg-primary/5 px-3 py-4 text-left shadow-[0_3px_0_var(--primary)] transition-[translate,box-shadow] duration-75 active:translate-y-[3px] active:shadow-none"
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
@@ -88,9 +97,15 @@ export const ExpressionListItem = ({
           {targetExpressionText}
         </p>
       </div>
+      {accessBadge === 'free' && (
+        <span className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
+          무료
+        </span>
+      )}
+      {accessBadge === 'premium' && <PremiumPill size="sm" />}
       {/* 글자 라벨 대신 왼쪽을 가리키는 손가락 — '다음은 이거'를 직관적으로 (스크린리더용 텍스트는 따로).
           좌우로 콕콕 찌르듯 움직여 시선을 끈다 */}
-      {!hideStartAction && (
+      {!hideStartAction && accessBadge === undefined && (
         <>
           <motion.span
             className="shrink-0 text-2xl"

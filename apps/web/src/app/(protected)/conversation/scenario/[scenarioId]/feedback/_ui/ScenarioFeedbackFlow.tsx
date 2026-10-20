@@ -2,12 +2,19 @@
 
 // 대화 피드백 흐름 — 총평·상세를 보이고, 마치면 재대화는 홈, 잠기지 않는 사람은 표현 분기,
 // 무료 사용자는 첫 시나리오에서만 레벨 분석 → 결과 → 학습 준비를 지나 표현 분기(그 자리에서 페이월)로 넘긴다.
-// 서버가 상세를 잠근 세션은 총평의 상세 보기가 페이월로 이어지고, 결제하면 이 주소의 상세로 돌아온다
+// 서버가 상세를 잠근 세션은 총평의 상세 보기가 페이월로 이어지고, 결제하면 이 주소의 상세로 돌아온다.
+// 첫 표현 투어를 아직 안 본 무료 사용자는 페이월 대신 홈으로 간다 — 신규는 레벨 뒤, 기존은 오늘의 시나리오 총평 뒤
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
+import {
+  getExpressions,
+  type Expression,
+} from '@/features/expression/api/list';
+import { expressionKeys } from '@/features/expression/model/keys';
+import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQuery';
 import { isStaleLockedFeedback } from '@/features/feedback/model/feedback-view';
 import {
   sessionFeedbackKey,
@@ -18,6 +25,7 @@ import { useSubscriptionQuery } from '@/features/subscription/model/my-subscript
 // 가로 import 사유: 피드백이 끝나는 자리가 무료 구간이 끝나는 자리라 여기서 페이월 게이트를 건다
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
+import { useAuthStore } from '@/shared/auth/auth-store';
 import {
   paywallPath,
   scenarioExpressionBranchPath,
@@ -26,6 +34,8 @@ import {
 } from '@/shared/lib/routes';
 
 import { decidePostFeedbackView } from '../_model/post-feedback-view';
+import { tourEntryOf } from '../_model/tour-entry';
+import { useFirstExpressionTour } from '../../../../../_model/useFirstExpressionTour';
 import { PostConversationFlow } from './PostConversationFlow';
 
 interface ScenarioFeedbackFlowProps {
@@ -54,13 +64,37 @@ export const ScenarioFeedbackFlow = ({
   // 피드백 화면과 같은 키를 읽는다 — 서버가 이 세션의 상세를 잠갔는지가 피드백 뒤 갈 곳을 가른다
   const { feedback } = useSessionFeedbackQuery(sessionId);
   // 피드백 뒤 페이월 전 화면 — 무료 사용자의 첫 시나리오는 레벨 분석·결과·학습 준비를 지난다
-  const [postConversation, setPostConversation] = useState(false);
+  // 첫 표현 투어를 시작하는 사람은 레벨까지만 보고 홈으로 간다(tour)
+  const [postConversation, setPostConversation] = useState<
+    'paywall' | 'tour' | null
+  >(null);
+  const tour = useFirstExpressionTour();
+  // 서버가 이 시나리오에서 무료로 열어 준 표현이 있어야 투어의 끝(표현 하나)을 줄 수 있다 — 피드백을 보는 동안 미리 받아 둔다
+  const { expressions } = useExpressionsQuery(scenarioId);
 
   // 유료인데 잠긴 응답을 들고 있다 — 무료일 때 받아 둔 것이다. 이 화면에서 한 번 다시 받는다.
   // 결제하고 돌아온 길, 복원, 다른 기기에서 결제한 뒤 앱을 켠 길이 전부 여기로 모인다.
   // 한 번만이다 — 다시 받아도 잠겨 있으면(웹훅 지연) 그대로 두고, CTA는 페이월(구매 복원)로 이어진다
   const { subscription } = useSubscriptionQuery();
   const queryClient = useQueryClient();
+  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  // 투어를 볼 수도 있는 사람인데 목록이 아직 안 왔으면 받아서 확인한다 —
+  // 무료 표현은 "처음 완료한 시나리오" 하나에만 붙어서, 여기서 놓치면 투어를 다시 볼 기회가 없다
+  const hasFreeExpression = async () => {
+    const has = (list: Expression[] | null | undefined) =>
+      list?.some((expression) => expression.freeTrial) ?? false;
+    if (expressions) return has(expressions);
+    try {
+      const fresh = await queryClient.fetchQuery({
+        queryKey: expressionKeys.list(userId, scenarioId),
+        queryFn: () => getExpressions(scenarioId),
+        staleTime: 0,
+      });
+      return has(fresh);
+    } catch {
+      return false;
+    }
+  };
   const staleLocked = isStaleLockedFeedback(subscription?.premium, feedback);
   const refreshed = useRef(false);
   useEffect(() => {
@@ -99,7 +133,11 @@ export const ScenarioFeedbackFlow = ({
   };
 
   // 피드백을 다 본 뒤 — 재대화면 홈, 잠기지 않는 사람은 표현 분기, 무료 사용자는 첫 시나리오만 페이월 전 화면부터
-  const goAfterFeedback = () => {
+  // 목록을 기다리는 동안 다시 눌러도 한 번만 이동한다
+  const leaving = useRef(false);
+  const goAfterFeedback = async () => {
+    if (leaving.current) return;
+    leaving.current = true;
     const next = decidePostFeedbackView({
       replay,
       learningLocked: paywallGate.locked,
@@ -109,9 +147,25 @@ export const ScenarioFeedbackFlow = ({
         ? (feedback.detailFeedbackLocked ?? false)
         : true,
     });
-    if (next === 'home') router.replace(scenarioReturnPath({ date }));
+    const entry = tourEntryOf({
+      view: next,
+      replay,
+      // 날짜 없는 주소가 오늘 카드다
+      today: date === undefined,
+      tour: { eligible: tour.eligible, step: tour.step },
+    });
+    // 투어를 시작할 사람일 때만 무료 표현을 확인한다 — 그 밖의 사람은 기다리지 않는다
+    const tourEntry = entry && (await hasFreeExpression()) ? entry : null;
+    if (tourEntry === 'home') startTour();
+    else if (next === 'home') router.replace(scenarioReturnPath({ date }));
     else if (next === 'branch') continueToExpressionBranch();
-    else setPostConversation(true);
+    else setPostConversation(tourEntry === 'level' ? 'tour' : 'paywall');
+  };
+
+  // 투어의 첫 단계를 남기고 홈으로 — 홈이 동전 연출 뒤 튜토리얼부터 이어 간다
+  const startTour = () => {
+    tour.saveStep('STARTED');
+    router.replace(scenarioReturnPath({ date }));
   };
 
   if (postConversation) {
@@ -120,6 +174,7 @@ export const ScenarioFeedbackFlow = ({
         sessionId={sessionId}
         scenarioId={scenarioId}
         onFinish={continueToExpressionBranch}
+        onTourStart={postConversation === 'tour' ? startTour : undefined}
       />
     );
   }
@@ -130,7 +185,7 @@ export const ScenarioFeedbackFlow = ({
       sessionId={sessionId}
       title={title}
       openDetail={openDetail}
-      onExit={goAfterFeedback}
+      onExit={() => void goAfterFeedback()}
       onDetailLocked={openPaywallForDetail}
     />
   );
