@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 // 가로 import 사유: 첫 대화 직후 화면을 대화 피드백 라우트의 것 그대로 보여 준다
 import { LevelResultScreen } from '@/app/(protected)/conversation/scenario/[scenarioId]/feedback/_ui/LevelResultScreen';
 import type { UsableAssessment } from '@/features/feedback/model/level-assessment';
+import { markMissedEarn } from '@/features/reward/model/missed-earn';
 import { startTourPreview } from '@/features/tour/model/tour-preview';
 import type { TourStep } from '@/features/tour/model/tour-step';
 import { useAuthStore } from '@/shared/auth/auth-store';
@@ -47,7 +48,7 @@ const HOME_STEPS: { title: string; lastDone: TourStep; description: string }[] =
     {
       title: '튜토리얼부터',
       lastDone: 'STARTED',
-      description: '래디가 환급을 소개하는 타이핑 문장부터',
+      description: '동전이 알약으로 쌓이는 연출과 래디의 타이핑 문장부터',
     },
     {
       title: '카드 뒤집기부터',
@@ -82,7 +83,10 @@ export const TourCheckScreen = () => {
   const [showLevel, setShowLevel] = useState(false);
 
   const start = (lastDone: TourStep) => {
-    if (userId !== null) startTourPreview(userId, lastDone);
+    if (userId === null) return;
+    startTourPreview(userId, lastDone);
+    // 튜토리얼 앞에는 오늘 시나리오를 막 끝내고 돌아온 순간의 동전 연출이 있다 — 그 자리부터 볼 때만 같이 켠다
+    if (lastDone === 'STARTED') markMissedEarn(userId);
   };
 
   if (isAdmin && showLevel) {
