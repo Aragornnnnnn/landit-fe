@@ -3,13 +3,13 @@
 // 심는 쪽이 화면 전환보다 먼저 끝나므로 구독하지 않고 그때의 값을 그대로 읽는다
 import { useQueryClient } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import type { StreakBase } from './celebration';
 import { streakKeys } from './keys';
 
 export const useCelebrationBase = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
   const queryClient = useQueryClient();
 
   return (

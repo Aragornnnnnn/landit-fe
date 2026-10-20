@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
-import { ChevronRightIcon } from '@/shared/ui/Icons';
+import { LoadMoreButton } from '@/shared/ui/LoadMoreButton';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 import { showToast } from '@/shared/ui/toast';
 
@@ -62,23 +62,15 @@ const LetterBox = ({ box }: { box: MailboxBox }) => {
         {/* 편지가 쌓이면 첫 장 밖으로 밀린다 — 옛 편지도 이어서 볼 수 있게 한다.
             줄과 같은 여백에 두어 목록의 마지막 한 줄처럼 읽히게 한다 */}
         {hasMore && (
-          <button
-            type="button"
+          <LoadMoreButton
+            loading={loadingMore}
             // 다음 장이 실패하면 목록은 그대로고 버튼만 돌아온다 — 첫 장 실패(RetryNotice)와 달리 알릴 자리가 없어 토스트로
             onClick={() =>
               void loadMore().then((result) => {
                 if (result.isError) showToast('편지를 더 불러오지 못했어요.');
               })
             }
-            disabled={loadingMore}
-            className="flex w-full items-center justify-center gap-1 py-4 text-sm font-semibold text-muted-foreground disabled:opacity-60"
-          >
-            {loadingMore ? '불러오는 중' : '더 보기'}
-            {/* 아래 화살표가 아직 공용 아이콘에 없다 — 있는 걸 돌려 쓴다 */}
-            {!loadingMore && (
-              <ChevronRightIcon size={16} className="rotate-90" />
-            )}
-          </button>
+          />
         )}
       </>
     );

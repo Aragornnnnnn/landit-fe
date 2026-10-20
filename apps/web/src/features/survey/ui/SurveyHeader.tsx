@@ -1,7 +1,7 @@
 'use client';
 
 // 설문 상단 — 뒤로가기와 진행 막대. 문항이 열 개가 넘어 점 대신 막대와 "3/12"로 보여준다
-import { ChevronLeftIcon } from '@/shared/ui/Icons';
+import { StepHeader } from '@/shared/ui/StepHeader';
 
 export const SurveyHeader = ({
   questionIndex,
@@ -13,19 +13,7 @@ export const SurveyHeader = ({
   questionCount: number;
   onBack: () => void;
 }) => (
-  <header
-    className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5"
-    style={{ paddingTop: 'max(var(--safe-area-inset-top), 18px)' }}
-  >
-    <button
-      type="button"
-      onClick={onBack}
-      aria-label="이전"
-      className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-opacity active:bg-black/5"
-    >
-      <ChevronLeftIcon size={28} strokeWidth={2.8} />
-    </button>
-
+  <StepHeader onBack={onBack}>
     {questionIndex !== null && (
       <div className="flex items-center gap-2.5">
         <div className="h-1.5 w-24 overflow-hidden rounded-full bg-border">
@@ -42,5 +30,5 @@ export const SurveyHeader = ({
         </span>
       </div>
     )}
-  </header>
+  </StepHeader>
 );

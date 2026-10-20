@@ -12,7 +12,7 @@ import { useAlarmSettingQuery } from '@/features/alarm/model/useAlarmSettingQuer
 import { useAlarmStatus } from '@/features/alarm/model/useAlarmStatus';
 import { preloadIntroPreview } from '@/features/alarm/ui/LockScreenPreview';
 import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useIsAdmin } from '@/shared/auth/current-member';
 import { ALARM_SETTINGS_PATH } from '@/shared/lib/routes';
 import { Emoji } from '@/shared/ui/emoji';
 
@@ -22,7 +22,7 @@ export const AlarmMenuEntry = () => {
   const status = useAlarmStatus();
   const { data: setting, isPending, isError } = useAlarmSettingQuery();
   const { subscription } = useSubscriptionQuery();
-  const isAdmin = useAuthStore((state) => state.member?.role === 'ADMIN');
+  const isAdmin = useIsAdmin();
   const shown =
     status?.supported === true && canUseAlarm({ subscription, isAdmin });
   const needsSetup = !isPending && !isError && setting?.enabled !== true;

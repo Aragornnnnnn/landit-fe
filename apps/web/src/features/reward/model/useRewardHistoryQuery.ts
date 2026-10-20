@@ -7,7 +7,7 @@ import {
   type QueryKey,
 } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import {
   getRewardHistory,
@@ -92,7 +92,7 @@ const useHistoryPagesQuery = <
 };
 
 export const useRewardHistoryQuery = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
   return useHistoryPagesQuery({
     queryKey: rewardKeys.history(userId),
     fetchPage: getRewardHistory,
@@ -107,7 +107,7 @@ export const useRewardHistoryQuery = () => {
  * @param today 서버가 정한 오늘 — 그 날짜 줄을 오늘로 적는다
  */
 export const useRewardPreviewHistoryQuery = (today: string | null) => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
   return useHistoryPagesQuery({
     queryKey: rewardKeys.previewHistory(userId),
     fetchPage: getRewardPreviewHistory,

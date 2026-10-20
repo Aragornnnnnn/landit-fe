@@ -26,7 +26,7 @@ import { SUMMARY_IMAGE_SOURCES } from '@/features/small-talk/model/randi-pose';
 import { prefetchSmallTalkSummary } from '@/features/small-talk/model/useSmallTalkSummaryQuery';
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
 import { track } from '@/shared/analytics';
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 import { reportError } from '@/shared/monitoring/report';
 import { showToast } from '@/shared/ui/toast';
 
@@ -59,7 +59,7 @@ export const useSmallTalkFlow = ({
   showSummary,
 }: SmallTalkFlowOptions) => {
   const queryClient = useQueryClient();
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
   // 마지막 제출이 알려준 진행 상태 — 종료 화면의 "얘기한 시간"이 여기서 나온다
   const [progress, setProgress] = useState<SmallTalkProgress | null>(null);
   // 서버가 받아 준 내 발화 수 — 0이면 아직 나눈 대화가 없어 종료해도 남길 기록이 없다

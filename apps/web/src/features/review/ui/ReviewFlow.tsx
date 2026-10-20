@@ -14,6 +14,7 @@ import { fromWritingSentence } from '@/features/expression/model/sentence-quiz';
 import { QuizStep } from '@/features/expression/ui/learning/QuizStep';
 import { track } from '@/shared/analytics';
 import { ApiError } from '@/shared/api/api-error';
+import { isRetriableFailure } from '@/shared/api/retry';
 import { preloadImages } from '@/shared/lib/preload-next-images';
 import { SCENARIO_PATH } from '@/shared/lib/routes';
 
@@ -28,7 +29,7 @@ import {
   progressRangeOf,
 } from '../model/review-progress';
 import { useReviewAnswerMutation } from '../model/useReviewAnswerMutation';
-import { isRetriableFailure, useReviewQuery } from '../model/useReviewQuery';
+import { useReviewQuery } from '../model/useReviewQuery';
 import { useStartReviewMutation } from '../model/useStartReviewMutation';
 import {
   LANDY_REVIEW_PERFECT,

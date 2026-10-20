@@ -10,11 +10,10 @@ import {
   setHapticsEnabled,
   subscribeHapticsSetting,
 } from '@/shared/haptics';
-import { BottomSheet } from '@/shared/ui/BottomSheet';
-import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 
 import { MenuButton, MenuGroup, MenuToggle } from './Menu';
+import { SettingSheet } from './SettingSheet';
 
 export const HapticMenuEntry = () => {
   const [open, setOpen] = useState(false);
@@ -38,35 +37,17 @@ export const HapticMenuEntry = () => {
         onClick={() => setOpen(true)}
       />
 
-      <BottomSheet open={open} onClose={() => setOpen(false)}>
-        <BottomSheet.Title
-          className="text-[17px] font-bold"
-          style={{ color: '#111' }}
-        >
-          진동
-        </BottomSheet.Title>
-        <p
-          className="mt-1 mb-4 text-[14px] leading-6"
-          style={{ color: '#666' }}
-        >
-          버튼을 누를 때 살짝 울리는 진동이에요
-        </p>
+      <SettingSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title="진동"
+        description="버튼을 누를 때 살짝 울리는 진동이에요"
+      >
         {/* 시트 안에서도 같은 행 모양 — 카드 한 줄에 스위치 하나 */}
         <MenuGroup>
           <MenuToggle title="버튼 진동" checked={enabled} onChange={toggle} />
         </MenuGroup>
-        <div className="mt-5">
-          <Button
-            type="button"
-            variant="ghost"
-            size="md"
-            className="w-full"
-            onClick={() => setOpen(false)}
-          >
-            닫기
-          </Button>
-        </div>
-      </BottomSheet>
+      </SettingSheet>
     </>
   );
 };

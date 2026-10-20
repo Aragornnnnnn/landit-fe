@@ -157,7 +157,8 @@ export const EVENTS = {
   // 환급 상품을 산 직후, 환영과 알람 사이의 환급 안내
   REWARD_GUIDE_VIEWED: 'Reward Guide Viewed',
 
-  // 소감 시트 — 첫 시나리오 대화·첫 스몰톡·다른 날 두 번째 대화(랜딧 소감)를 마치고 홈에 돌아왔을 때 한 번 묻는다
+  // 소감 시트 — 첫 시나리오 대화·첫 스몰톡을 마치고 홈에 돌아왔을 때 한 번 묻는다.
+  // 리뷰 요청(review)은 좋았다고 한 사람에게 대화·표현 학습을 마치고 홈에 올 때마다 하루 한 번, 최대 4번 (LAN-689)
   SATISFACTION_PROMPT_VIEWED: 'Satisfaction Prompt Viewed',
   SATISFACTION_PROMPT_ANSWERED: 'Satisfaction Prompt Answered',
   // 랜딧 소감에서 좋았어요 → 별점판 → 스토어 리뷰 화면을 연다
@@ -364,10 +365,13 @@ export type RewardProfileState =
 export type NotificationPermissionSource =
   'onboarding' | NotificationConsentSource;
 // 소감을 물은 순간과 답 — 닫기(딤·뒤로가기)도 답으로 셈해 다시 묻지 않는다.
-// talk = 대화 종류(첫 소감), review = 다른 날 다시 와서 대화를 마쳤을 때 청하는 스토어 리뷰
+// talk = 대화 종류(첫 소감), review = 좋았다고 한 사람에게 완료 때마다 청하는 스토어 리뷰 요청
 export type SatisfactionTalk = 'scenario' | 'smalltalk';
 export type SatisfactionMoment = SatisfactionTalk | 'review';
-export type SatisfactionAnswer = 'good' | 'bad' | 'dismiss';
+// already_done — 리뷰 요청에서 「이미 남겼어요」. 알아서 남긴 사람·재설치한 사람이 재요청을 끊는 길
+export type SatisfactionAnswer = 'good' | 'bad' | 'dismiss' | 'already_done';
+// 리뷰 요청이 뜨게 한 완료 — 대화(시나리오·스몰톡) 또는 표현 학습
+export type ReviewTrigger = 'talk' | 'expression';
 export type CalendarView = 'week' | 'month';
 export type HomeTab = 'scenario' | 'smalltalk';
 // 위젯 설치 유도에서 고른 답 — 닫기·나중에는 dismiss로 묶는다
@@ -762,7 +766,12 @@ export type EventProps = {
     source: NotificationPermissionSource;
   };
 
-  'Satisfaction Prompt Viewed': { moment: SatisfactionMoment };
+  // attempt·trigger는 리뷰 요청(moment=review)에만 — 몇 번째 노출인지(1~4), 무엇을 마치고 와서 떴는지
+  'Satisfaction Prompt Viewed': {
+    moment: SatisfactionMoment;
+    attempt?: number;
+    trigger?: ReviewTrigger;
+  };
   'Satisfaction Prompt Answered': {
     moment: SatisfactionMoment;
     answer: SatisfactionAnswer;

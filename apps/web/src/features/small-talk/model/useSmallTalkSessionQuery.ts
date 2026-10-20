@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 import { reportWarning } from '@/shared/monitoring/report';
 
 import {
@@ -41,7 +41,7 @@ export const useSmallTalkSessionQuery = (
   sessionId: number,
   { awaitCorrections = false }: SessionQueryOptions = {},
 ) => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
   const queryClient = useQueryClient();
   const queryKey = smallTalkKeys.session(userId, sessionId);
 

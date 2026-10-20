@@ -7,6 +7,7 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
 import type {
   SmallTalkCorrection,
   SmallTalkHistoryMessage,
@@ -26,7 +27,6 @@ import {
   ArrowRightIcon,
   CheckIcon,
   ChevronDownIcon,
-  ChevronLeftIcon,
   SparkleIcon,
 } from '@/shared/ui/Icons';
 
@@ -85,18 +85,12 @@ export const SmallTalkTranscript = ({
       className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
       style={{ paddingTop: 'var(--safe-area-inset-top)' }}
     >
-      <header className="relative flex h-14 flex-none items-center justify-center">
-        <button
-          onClick={() => router.replace(smallTalkHistoryPath(sessionId))}
-          className="absolute left-3 flex size-10 items-center justify-center text-foreground"
-          aria-label="뒤로"
-        >
-          <ChevronLeftIcon size={24} />
-        </button>
-        <h1 className="truncate px-14 text-[17px] font-bold text-foreground">
-          {session ? toSessionTitle(session.title, session.completedAt) : ''}
-        </h1>
-      </header>
+      <PageHeader
+        title={
+          session ? toSessionTitle(session.title, session.completedAt) : ''
+        }
+        onBack={() => router.replace(smallTalkHistoryPath(sessionId))}
+      />
 
       {error ? (
         <p className="flex flex-1 items-center justify-center px-6 text-center text-sm text-muted-foreground">

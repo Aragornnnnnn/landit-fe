@@ -16,6 +16,7 @@ import { useAlarmStatus } from '@/features/alarm/model/useAlarmStatus';
 import { useSaveAlarmMutation } from '@/features/alarm/model/useSaveAlarmMutation';
 import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
 import { useAuthStore } from '@/shared/auth/auth-store';
+import { useIsAdmin } from '@/shared/auth/current-member';
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { postToNative } from '@/shared/bridge/web-bridge';
 import { backToMyPage } from '@/shared/lib/routes';
@@ -342,7 +343,7 @@ const AlarmCheck = () => {
 
 export const AlarmCheckScreen = () => {
   const router = useRouter();
-  const isAdmin = useAuthStore((state) => state.member?.role === 'ADMIN');
+  const isAdmin = useIsAdmin();
 
   return (
     <main className="flex h-dvh flex-col bg-muted">

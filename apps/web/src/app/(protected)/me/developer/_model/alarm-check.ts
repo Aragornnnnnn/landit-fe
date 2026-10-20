@@ -1,5 +1,6 @@
 // 알람 점검 화면 계산 — 테스트 알람이 실제로 울릴 시각, 걸린 알람의 다음 울림을 사람 말로 옮긴다
 import { formatClock } from '@/features/alarm/model/alarm-time';
+import { WEEKDAY_LABELS } from '@/shared/lib/date-string';
 
 const MINUTE_MS = 60_000;
 // 누르고 화면을 잠글 틈 — 다음 정각 분까지 이보다 짧으면 그다음 분부터 고른다
@@ -26,8 +27,6 @@ export const testAlarmChoices = (now: Date) => {
   });
 };
 
-const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
-
 const dayKey = (date: Date) =>
   `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 
@@ -40,5 +39,5 @@ export const describeNextRing = (nextAt: number | null, now: Date) => {
   tomorrow.setDate(now.getDate() + 1);
   if (dayKey(at) === dayKey(now)) return `오늘 ${time}`;
   if (dayKey(at) === dayKey(tomorrow)) return `내일 ${time}`;
-  return `${at.getMonth() + 1}월 ${at.getDate()}일(${DAY_NAMES[at.getDay()]}) ${time}`;
+  return `${at.getMonth() + 1}월 ${at.getDate()}일(${WEEKDAY_LABELS[at.getDay()]}) ${time}`;
 };

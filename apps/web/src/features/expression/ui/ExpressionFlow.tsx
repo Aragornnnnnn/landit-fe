@@ -6,6 +6,8 @@ import { EVENTS, type ExpressionStep } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
 
+// 가로 import — 표현 학습 완료는 리뷰 요청의 완료로도 친다 (LAN-689). satisfaction은 다른 feature를 import하지 않는다
+import { markExpressionCompleted } from '@/features/satisfaction/model/prompt-record';
 import { track } from '@/shared/analytics';
 import { scenarioReturnPath, smallTalkHistoryPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
@@ -261,6 +263,7 @@ const LoadedExpressionFlow = ({
           expression_id: expressionId,
           ...originProps,
         });
+        markExpressionCompleted();
         if (onFinished) onFinished();
         else router.replace(listPath);
       },

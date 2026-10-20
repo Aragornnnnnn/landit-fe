@@ -3,7 +3,7 @@
 // 내 정보 "개발자" 묶음 — ADMIN 계정에만 보인다. 알람 점검·프리미엄 온보딩 점검·환급 점검으로 들어가고, 서버와 폰의 알람이 어긋났으면 여기서 바로 보인다
 import { useAlarmSettingQuery } from '@/features/alarm/model/useAlarmSettingQuery';
 import { useAlarmStatus } from '@/features/alarm/model/useAlarmStatus';
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useIsAdmin } from '@/shared/auth/current-member';
 import {
   ALARM_CHECK_PATH,
   PREMIUM_ONBOARDING_CHECK_PATH,
@@ -36,7 +36,7 @@ const AlarmCheckLink = () => {
 };
 
 export const DeveloperMenuSection = () => {
-  const isAdmin = useAuthStore((state) => state.member?.role === 'ADMIN');
+  const isAdmin = useIsAdmin();
   // ADMIN이 아니면 알람 상태를 묻지도 않는다
   if (!isAdmin) return null;
 

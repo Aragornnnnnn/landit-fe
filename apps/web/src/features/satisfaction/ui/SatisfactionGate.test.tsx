@@ -12,8 +12,14 @@ import { track } from '@/shared/analytics';
 import { getNativeContext } from '@/shared/bridge/native-context';
 
 import {
+  markExpressionCompleted,
+  markReviewShown,
   markTalkCompleted,
+  PROMPT_RECORD_KEY,
+  readReviewAttempt,
   readSatisfactionAnswer,
+  recordSatisfactionAnswer,
+  shouldAskReview,
   shouldAskSatisfaction,
 } from '../model/prompt-record';
 import { SatisfactionGate, THANKS_MS } from './SatisfactionGate';
@@ -137,27 +143,62 @@ describe('SatisfactionGate', () => {
 });
 
 describe('SatisfactionGate — 리뷰 요청(review)', () => {
-  it('묻는 단계 없이 별점판으로 바로 열린다', () => {
+  it('묻는 단계 없이 별점판으로 바로 열리고, 몇 번째 노출인지와 무엇을 마치고 왔는지를 계측한다', () => {
+    markTalkCompleted('scenario');
+
     render(<SatisfactionGate moment="review" />);
 
     expect(screen.getByText('잘 써주셔서 감사해요!')).toBeInTheDocument();
-    expect(screen.getByText('응원 남기러 가기')).toBeInTheDocument();
+    expect(screen.getByText('리뷰 남기러 가기')).toBeInTheDocument();
     expect(trackMock).toHaveBeenCalledWith('Satisfaction Prompt Viewed', {
       moment: 'review',
+      attempt: 1,
+      trigger: 'talk',
     });
   });
 
-  it('뜨면 쌓여 있던 차례를 모두 소비한다 — 닫자마자 다른 시트가 이어 뜨지 않게', () => {
+  it('표현 학습을 마치고 왔으면 trigger가 expression이다', () => {
+    markExpressionCompleted();
+
+    render(<SatisfactionGate moment="review" />);
+
+    expect(trackMock).toHaveBeenCalledWith('Satisfaction Prompt Viewed', {
+      moment: 'review',
+      attempt: 1,
+      trigger: 'expression',
+    });
+  });
+
+  it('같은 날 다시 마운트돼도 횟수·계측이 더 늘지 않는다 — 할인 시트에 밀렸다 돌아온 경우', () => {
+    markTalkCompleted('scenario');
+    const { unmount } = render(<SatisfactionGate moment="review" />);
+    unmount();
+
+    render(<SatisfactionGate moment="review" />);
+
+    expect(readReviewAttempt()).toBe(1);
+    expect(screen.queryByText('이미 남겼어요')).not.toBeInTheDocument();
+    expect(
+      trackMock.mock.calls.filter(
+        ([name, props]) =>
+          name === 'Satisfaction Prompt Viewed' &&
+          (props as { moment: string }).moment === 'review',
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('뜨면 횟수를 올리고 쌓여 있던 차례를 모두 소비한다 — 닫자마자 다른 시트가 이어 뜨지 않게', () => {
     markTalkCompleted('scenario');
     markTalkCompleted('smalltalk');
 
     render(<SatisfactionGate moment="review" />);
 
+    expect(readReviewAttempt()).toBe(1);
     expect(shouldAskSatisfaction('scenario')).toBe(false);
     expect(shouldAskSatisfaction('smalltalk')).toBe(false);
   });
 
-  it('응원 남기러 가기를 누르면 스토어를 연다', () => {
+  it('리뷰 남기러 가기를 누르면 스토어를 연다', () => {
     getNativeContextMock.mockReturnValue({
       platform: 'ios',
     } as ReturnType<typeof getNativeContext>);
@@ -166,7 +207,7 @@ describe('SatisfactionGate — 리뷰 요청(review)', () => {
       .mockReturnValue({ href: '' } as Location);
     render(<SatisfactionGate moment="review" />);
 
-    fireEvent.click(screen.getByText('응원 남기러 가기'));
+    fireEvent.click(screen.getByText('리뷰 남기러 가기'));
 
     expect(readSatisfactionAnswer('review')).toBe('good');
     expect(trackMock).toHaveBeenCalledWith('Review Store Opened', {
@@ -175,12 +216,57 @@ describe('SatisfactionGate — 리뷰 요청(review)', () => {
     location.mockRestore();
   });
 
-  it('딤으로 닫으면 dismiss로 남겨 다시 청하지 않는다', () => {
+  it('딤으로 닫으면 dismiss로 남긴다 — 간격을 두고 다시 청하는 근거', () => {
     render(<SatisfactionGate moment="review" />);
 
     fireEvent.click(screen.getByTestId('bottom-sheet-dim'));
 
     expect(readSatisfactionAnswer('review')).toBe('dismiss');
     expect(screen.queryByText('잘 써주셔서 감사해요!')).not.toBeInTheDocument();
+  });
+
+  it('X 버튼으로 닫아도 딤과 같다', () => {
+    render(<SatisfactionGate moment="review" />);
+
+    fireEvent.click(screen.getByLabelText('닫기'));
+
+    expect(readSatisfactionAnswer('review')).toBe('dismiss');
+    expect(trackMock).toHaveBeenCalledWith('Satisfaction Prompt Answered', {
+      moment: 'review',
+      answer: 'dismiss',
+    });
+  });
+
+  it('처음 뜰 때는 「이미 남겼어요」가 없다 — 아직 남겼을 리 없다', () => {
+    render(<SatisfactionGate moment="review" />);
+
+    expect(screen.queryByText('이미 남겼어요')).not.toBeInTheDocument();
+  });
+
+  it('재요청부터 「이미 남겼어요」가 보이고, 누르면 다시 청하지 않는다', () => {
+    // Given 지난날 한 번 띄웠다 닫은 적이 있고, 좋았다고 한 사람이 오늘 또 대화를 마쳤다
+    markTalkCompleted('scenario');
+    recordSatisfactionAnswer('scenario', 'good');
+    markReviewShown();
+    recordSatisfactionAnswer('review', 'dismiss');
+    const all = JSON.parse(localStorage.getItem(PROMPT_RECORD_KEY)!);
+    all['satisfaction:review'].shownOn = '2000-01-01';
+    all['satisfaction:review'].answeredOn = '2000-01-01';
+    localStorage.setItem(PROMPT_RECORD_KEY, JSON.stringify(all));
+    markTalkCompleted('scenario');
+
+    // When 재요청 시트에서 이미 남겼다고 하면
+    render(<SatisfactionGate moment="review" />);
+    fireEvent.click(screen.getByText('이미 남겼어요'));
+
+    // Then 그 답을 남기고 시트가 닫히며, 또 마쳐도 청하지 않는다
+    expect(readSatisfactionAnswer('review')).toBe('already_done');
+    expect(trackMock).toHaveBeenCalledWith('Satisfaction Prompt Answered', {
+      moment: 'review',
+      answer: 'already_done',
+    });
+    expect(screen.queryByText('잘 써주셔서 감사해요!')).not.toBeInTheDocument();
+    markTalkCompleted('scenario');
+    expect(shouldAskReview()).toBe(false);
   });
 });

@@ -11,8 +11,9 @@ import {
 import { track } from '@/shared/analytics';
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { Transition } from '@/shared/motion';
+import { StepDots } from '@/shared/ui/StepDots';
+import { StepHeader } from '@/shared/ui/StepHeader';
 
-import { GuideHeader } from './GuideHeader';
 import { InviteStep } from './InviteStep';
 import { MenuStep } from './MenuStep';
 import { PressStep } from './PressStep';
@@ -80,7 +81,9 @@ export const InstallGuide = ({
     <>
       {/* 헤더는 전환 밖에 고정 — 내용만 슬라이드하고 뒤로가기·진행점은 제자리를 지킨다 */}
       {guideIndex >= 0 && (
-        <GuideHeader step={step} stepOrder={GUIDE_STEPS} onBack={back} />
+        <StepHeader onBack={back}>
+          <StepDots step={step} stepOrder={GUIDE_STEPS} />
+        </StepHeader>
       )}
       <Transition
         transitionKey={step}

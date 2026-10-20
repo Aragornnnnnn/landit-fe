@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 
 import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
 import { setUserProperties } from '@/shared/analytics';
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import { toRewardProperties } from '../model/reward-properties';
 import { useRewardQuery } from '../model/useRewardQuery';
@@ -18,7 +18,7 @@ import { useRewardQuery } from '../model/useRewardQuery';
  */
 export const RewardPropertiesSync = () => {
   const enabled = useRewardChallengeLive();
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
   const { reward, loaded } = useRewardQuery({ enabled });
   // 국면이 바뀔 때만 올린다 — 재조회마다 금액이 바뀌어도 프로필은 그대로다
   const state = loaded ? toRewardProperties(reward).reward_state : null;

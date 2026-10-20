@@ -1,7 +1,8 @@
 'use client';
 
 // 소감 게이트 — 대화 소감(scenario·smalltalk)은 좋았어요 → 감사 후 닫히고, 아쉬웠어요 → 피드백 안내 → 편지함.
-// 리뷰 요청(review)은 물을 게 없어 별점판으로 바로 열려 스토어로 보낸다.
+// 리뷰 요청(review)은 물을 게 없어 별점판으로 바로 열려 스토어로 보낸다. 닫으면 간격을 두고 다시 뜨고,
+// 「이미 남겼어요」면 끝이다. 스토어로 간 것만으로는 끝이 아니다 (규칙은 prompt-record).
 // 띄울지 말지는 부르는 쪽(홈 탭의 useSatisfactionSheet)이 정하고, 여기서는 띄운 뒤의 흐름만 맡는다
 import { useEffect, useState } from 'react';
 import {
@@ -16,8 +17,11 @@ import { getNativeContext } from '@/shared/bridge/native-context';
 import { MAILBOX_COMPOSE_PATH } from '@/shared/lib/routes';
 
 import {
-  consumeAllTalkPending,
+  consumeAllPending,
+  markReviewShown,
+  peekReviewAttempt,
   recordSatisfactionAnswer,
+  resolveReviewTrigger,
 } from '../model/prompt-record';
 import { resolveReviewStore } from '../model/review-store';
 import { SatisfactionSheet, type SatisfactionView } from './SatisfactionSheet';
@@ -37,11 +41,25 @@ export const SatisfactionGate = ({
     moment === 'review' ? 'review' : 'ask',
   );
 
-  // 노출을 계측하고, 이번 완료로 쌓인 차례를 모두 소비한다 — 같은 완료로 다른 시트가 또 뜨지 않게
+  // 이번이 몇 번째 리뷰 요청인가 — 마운트 때 고정. 재요청(2번째)부터 「이미 남겼어요」를 보여준다.
+  // 같은 날 다시 마운트돼도(할인 시트에 밀렸다 돌아옴) 횟수가 더 늘지 않는다
+  const [attempt] = useState(() =>
+    moment === 'review' ? peekReviewAttempt() : 0,
+  );
+
+  // 노출을 계측하고, 이번 완료로 쌓인 차례를 모두 소비한다 — 같은 완료로 다른 시트가 또 뜨지 않게.
+  // 리뷰 요청은 횟수·날도 남긴다(하루 한 번·최대 4번의 근거). 무엇을 마치고 왔는지는 소비 전에 읽고,
+  // 같은 날 두 번째 마운트는 새로 센 게 아니라 계측도 찍지 않는다
   useEffect(() => {
-    consumeAllTalkPending();
-    track(EVENTS.SATISFACTION_PROMPT_VIEWED, { moment });
-    // 마운트 때 한 번 — moment는 마운트 동안 안 바뀐다
+    if (moment === 'review') {
+      const trigger = resolveReviewTrigger();
+      if (markReviewShown())
+        track(EVENTS.SATISFACTION_PROMPT_VIEWED, { moment, attempt, trigger });
+    } else {
+      track(EVENTS.SATISFACTION_PROMPT_VIEWED, { moment });
+    }
+    consumeAllPending();
+    // 마운트 때 한 번 — moment·attempt는 마운트 동안 안 바뀐다
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -67,9 +85,15 @@ export const SatisfactionGate = ({
     setView('letter');
   };
 
-  // 딤·뒤로가기로 닫힘 — 아직 답을 안 남겼으면 dismiss로 남긴다. 리뷰 요청도 닫으면 그것으로 끝이다
+  // 딤·X·뒤로가기로 닫힘 — 아직 답을 안 남겼으면 dismiss로 남긴다. 리뷰 요청의 dismiss는 간격을 두고 다시 묻는다
   const close = () => {
     if (view === 'ask' || view === 'review') answer('dismiss');
+    setOpen(false);
+  };
+
+  // 이미 남겼다 — 우리가 모르는 사이 남겼거나 재설치한 사람. 다시 묻지 않는다
+  const alreadyDone = () => {
+    answer('already_done');
     setOpen(false);
   };
 
@@ -98,6 +122,8 @@ export const SatisfactionGate = ({
       onBad={bad}
       onSendFeedback={sendFeedback}
       onWriteReview={writeReview}
+      showAlreadyDone={attempt >= 2}
+      onAlreadyDone={alreadyDone}
       onClose={close}
     />
   );

@@ -50,7 +50,7 @@ function ScenarioContent() {
   // 지난 날 카드도 완료했으면 CLEARED라 날짜가 없는(=오늘) 화면으로 한정한다
   const [summonClosed, setSummonClosed] = useState(false);
   // 이번 방문에 띄울 시트 하나 — 소감·리뷰가 없을 때만 알림 동의를 청한다
-  const satisfaction = useSatisfactionSheet('scenario');
+  const satisfactionSheet = useSatisfactionSheet('scenario');
   // 할인 시트가 떠 있으면 소감은 미룬다 — 할인은 5분뿐이고 소감은 다음에 또 물을 수 있다
   const promoOpen = usePromoSheetOpen();
   // 돌아온 순간의 환급 동전 연출이 끝날 때까지도 미룬다 — 어둠 아래에서 시트가 같이 올라오면 둘이 겹친다
@@ -80,9 +80,8 @@ function ScenarioContent() {
     router.prefetch(scenarioTalkPath(scenario.scenarioId, date));
   };
   const settled = date === undefined && (cleared || summonClosed);
-  // 시트류(소감 다음 순번)가 나설 차례 — 카드 판단과 소감 판정이 모두 끝났고 소감 시트가 안 뜰 때
-  const promptTurn =
-    settled && satisfaction.settled && satisfaction.sheet === null;
+  // 시트류(소감 다음 순번)가 나설 차례 — 카드 판단이 끝났고 소감 시트가 안 뜰 때
+  const promptTurn = settled && satisfactionSheet === null;
 
   // 날짜 이동은 replace다 — push면 히스토리가 쌓여 뒤로가기가 날짜 되감기가 된다.
   // 오늘은 날짜 없는 주소가 정본이다 — 붙여 두면 자정을 넘겨도 어제에 머문다
@@ -126,10 +125,10 @@ function ScenarioContent() {
         />
       )}
 
-      {settled && !sheetsHeld && satisfaction.sheet === 'talk' && (
+      {settled && !sheetsHeld && satisfactionSheet === 'talk' && (
         <SatisfactionGate moment="scenario" />
       )}
-      {settled && !sheetsHeld && satisfaction.sheet === 'review' && (
+      {settled && !sheetsHeld && satisfactionSheet === 'review' && (
         <SatisfactionGate moment="review" />
       )}
       {promptTurn && !sheetsHeld && <NotificationConsentGate />}

@@ -1,4 +1,4 @@
-// RevenueCat 래퍼의 갈림길 — 키 없을 때 비활성, 패키지 매핑, 취소와 실패 구분, 로그인·로그아웃 위임과 그 뒤에 가는 결제
+// RevenueCat 래퍼의 갈림길 — 키 없을 때 비활성, 패키지 매핑, 취소와 실패 구분, 로그인·로그아웃 위임과 그 뒤에 가는 결제, 메타 광고 식별자 전달
 import Purchases, {
   PACKAGE_TYPE,
   PURCHASES_ERROR_CODE,
@@ -6,6 +6,7 @@ import Purchases, {
 
 import { reportError, reportWarning } from '../monitoring/report';
 import {
+  attachMetaAttribution,
   configurePurchases,
   fetchOfferingPackages,
   identifyUser,
@@ -25,6 +26,8 @@ jest.mock('react-native-purchases', () => ({
     getOfferings: jest.fn(),
     purchasePackage: jest.fn(),
     restorePurchases: jest.fn(() => Promise.resolve({})),
+    collectDeviceIdentifiers: jest.fn(() => Promise.resolve()),
+    setFBAnonymousID: jest.fn(() => Promise.resolve()),
   },
   PACKAGE_TYPE: {
     MONTHLY: 'MONTHLY',
@@ -167,6 +170,74 @@ describe('identifyUser', () => {
     mockPurchases.purchasePackage.mockResolvedValueOnce({} as never);
 
     await identifyUser('42').catch(() => undefined);
+
+    await expect(purchasePackage('$rc_annual')).resolves.toEqual({
+      status: 'success',
+    });
+  });
+});
+
+describe('attachMetaAttribution', () => {
+  it('SDK가 꺼져 있으면 아무것도 보내지 않는다', async () => {
+    configurePurchases(null);
+
+    await attachMetaAttribution('fb-anon');
+
+    expect(mockPurchases.collectDeviceIdentifiers).not.toHaveBeenCalled();
+    expect(mockPurchases.setFBAnonymousID).not.toHaveBeenCalled();
+  });
+
+  it('기기 광고 식별자와 메타 익명 ID를 RevenueCat에 붙인다', async () => {
+    configurePurchases('key');
+
+    await attachMetaAttribution('fb-anon');
+
+    expect(mockPurchases.collectDeviceIdentifiers).toHaveBeenCalledTimes(1);
+    expect(mockPurchases.setFBAnonymousID).toHaveBeenCalledWith('fb-anon');
+  });
+
+  it('메타 익명 ID가 없으면 기기 식별자만 붙인다', async () => {
+    configurePurchases('key');
+
+    await attachMetaAttribution(null);
+
+    expect(mockPurchases.collectDeviceIdentifiers).toHaveBeenCalledTimes(1);
+    expect(mockPurchases.setFBAnonymousID).not.toHaveBeenCalled();
+  });
+
+  it('전달이 실패해도 던지지 않고 경고로 보고한다', async () => {
+    configurePurchases('key');
+    const failure = new Error('network');
+    mockPurchases.collectDeviceIdentifiers.mockRejectedValueOnce(failure);
+
+    await expect(attachMetaAttribution('fb-anon')).resolves.toBeUndefined();
+    expect(reportWarning).toHaveBeenCalledWith(failure);
+  });
+
+  it('붙인 뒤 로그인으로 사용자가 바뀌면 새 사용자에게 다시 붙인다', async () => {
+    configurePurchases('key');
+    await attachMetaAttribution('fb-anon');
+
+    await identifyUser('42');
+    await flushMicrotasks();
+
+    expect(mockPurchases.logIn).toHaveBeenCalledWith('42');
+    expect(mockPurchases.setFBAnonymousID).toHaveBeenCalledTimes(2);
+    expect(
+      mockPurchases.setFBAnonymousID.mock.invocationCallOrder[1],
+    ).toBeGreaterThan(mockPurchases.logIn.mock.invocationCallOrder[0]);
+  });
+
+  it('로그인 뒤 다시 붙이는 일이 끝나지 않아도 결제는 기다리지 않는다', async () => {
+    configurePurchases('key');
+    await attachMetaAttribution('fb-anon');
+    mockPurchases.collectDeviceIdentifiers.mockReturnValueOnce(
+      new Promise(() => {}),
+    );
+    mockPurchases.getOfferings.mockResolvedValue(offeringsWith([annual]));
+    mockPurchases.purchasePackage.mockResolvedValueOnce({} as never);
+
+    void identifyUser('42');
 
     await expect(purchasePackage('$rc_annual')).resolves.toEqual({
       status: 'success',

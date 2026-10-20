@@ -4,14 +4,14 @@
 import type { AccentLocale } from '@landit/analytics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/shared/auth/auth-store';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 import { reportWarning } from '@/shared/monitoring/report';
 
 import { updateAccentLocale } from '../api/accent';
 import { profileKeys } from './keys';
 
 export const useSaveAccentMutation = () => {
-  const userId = useAuthStore((state) => state.member?.userId ?? null);
+  const userId = useCurrentUserId();
   const queryClient = useQueryClient();
 
   return useMutation({

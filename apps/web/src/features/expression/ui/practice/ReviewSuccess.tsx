@@ -3,9 +3,9 @@
 // 복습 영작 정답 연출 — '표현 획득!' 시트가 하단에서 튀어오르고, 획득한 표현 카드를 강조한다.
 // 정답일 때만 부모가 마운트하므로, 마운트 시점에 콘페티를 1회 터뜨린다.
 import { useEffect } from 'react';
-import confetti from 'canvas-confetti';
 import { motion } from 'motion/react';
 
+import { burstConfetti } from '@/shared/motion/confetti';
 import { Button } from '@/shared/ui/Button';
 import { CheckIcon } from '@/shared/ui/Icons';
 
@@ -24,33 +24,7 @@ export const ReviewSuccess = ({
 }: ReviewSuccessProps) => {
   // 정답 순간 콘페티 — 브랜드 색으로 양쪽에서 터뜨린다
   useEffect(() => {
-    const colors = ['#e07a3a', '#2f7d54', '#fbbf24', '#ffffff'];
-    // ticks 150 ≈ 2.5초(60fps 기준). 3발 합쳐 155개 — 화려하되 과하지 않게.
-    const base = {
-      spread: 70,
-      startVelocity: 45,
-      ticks: 150,
-      colors,
-      disableForReducedMotion: true,
-    };
-    confetti({
-      ...base,
-      particleCount: 55,
-      angle: 60,
-      origin: { x: 0, y: 0.9 },
-    });
-    confetti({
-      ...base,
-      particleCount: 55,
-      angle: 120,
-      origin: { x: 1, y: 0.9 },
-    });
-    confetti({
-      ...base,
-      particleCount: 45,
-      spread: 110,
-      origin: { x: 0.5, y: 0.6 },
-    });
+    burstConfetti();
   }, []);
 
   return (

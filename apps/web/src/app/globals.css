@@ -49,6 +49,8 @@
   --color-letter-update-bg: var(--letter-update-bg);
   --color-letter-reply: var(--letter-reply);
   --color-letter-reply-bg: var(--letter-reply-bg);
+  --color-letter-direct: var(--letter-direct);
+  --color-letter-direct-bg: var(--letter-direct-bg);
   --color-letter-pending: var(--letter-pending);
   --color-letter-pending-bg: var(--letter-pending-bg);
   --color-letter-answered: var(--letter-answered);
@@ -104,6 +106,8 @@
   --amber-100: #fcedcc;
   --amber-700: #9e7314;
   --red-400: #e3574a;
+  --violet-100: #ece6fb;
+  --violet-600: #6a4cc2;
 
   /* ── Layer 2: Semantic — 역할 토큰. 다크모드 도입 시 이 블록만 재정의한다 ── */
   --background: var(--gray-50);
@@ -149,6 +153,9 @@
   --letter-update-bg: var(--green-100);
   --letter-reply: var(--blue-600);
   --letter-reply-bg: var(--blue-100);
+  /* 운영이 나에게만 보낸 편지. 다른 칩·안 읽음 점과 겹치지 않는 보라를 쓴다 */
+  --letter-direct: var(--violet-600);
+  --letter-direct-bg: var(--violet-100);
   --letter-pending: var(--amber-700);
   --letter-pending-bg: var(--amber-100);
   /* 답장이 도착한 보낸 편지 — 지금은 답장 칩과 같은 색이지만 뜻이 달라 이름을 따로 준다 */
