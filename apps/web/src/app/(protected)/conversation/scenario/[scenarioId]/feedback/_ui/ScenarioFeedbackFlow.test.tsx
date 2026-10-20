@@ -325,4 +325,17 @@ describe('ScenarioFeedbackFlow', () => {
     await waitFor(() => expect(mocks.push).toHaveBeenCalled());
     expect(mocks.saveStep).not.toHaveBeenCalled();
   });
+
+  it('투어 대상이어도 이 시나리오에 무료 표현이 없으면 잠긴 상세 버튼은 페이월로 간다', async () => {
+    mocks.locked = true;
+    mocks.feedback = { detailFeedbackLocked: true };
+    mocks.tour = { eligible: true, step: null };
+    mocks.freeTrial = false;
+    renderFlow();
+
+    fireEvent.click(screen.getByText('잠긴 상세 보기'));
+
+    await waitFor(() => expect(mocks.push).toHaveBeenCalled());
+    expect(mocks.saveStep).not.toHaveBeenCalled();
+  });
 });

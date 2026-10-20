@@ -131,7 +131,7 @@ export const ScenarioFeedbackFlow = ({
     });
 
   // 여기서 첫 표현 투어를 시작할 사람인가 — 무료 표현은 따로 확인한다(그 사람일 때만 기다린다)
-  const tourEntryAfter = (view: PostFeedbackView) =>
+  const tourEntryFor = (view: PostFeedbackView) =>
     tourEntryOf({
       view,
       replay,
@@ -147,7 +147,7 @@ export const ScenarioFeedbackFlow = ({
     if (leaving.current) return;
     leaving.current = true;
     const next = postFeedbackView();
-    const entry = tourEntryAfter(next);
+    const entry = tourEntryFor(next);
     // 투어를 시작할 사람일 때만 무료 표현을 확인한다 — 그 밖의 사람은 기다리지 않는다
     const tourEntry = entry && (await hasFreeExpression()) ? entry : null;
     if (tourEntry === 'home') startTour();
@@ -159,11 +159,11 @@ export const ScenarioFeedbackFlow = ({
   // 잠긴 상세를 보려 했다 — 투어를 시작할 사람이면 페이월 대신 투어로 간다. 상세가 잠긴 기존 무료 유저는 대부분 이 버튼으로 나가서,
   // 여기서 투어를 확인하지 않으면 투어를 볼 기회가 없다. 그 밖에는 페이월로 — 결제하면 이 주소의 상세로 돌아온다.
   // 게이트의 환경 판정을 타지 않는다. 서버가 이미 상세를 비워 보냈으니 어느 환경이든 보여줄 게 없다
-  const openPaywallForDetail = async () => {
+  const goForLockedDetail = async () => {
     if (leaving.current) return;
     leaving.current = true;
     if (
-      tourEntryAfter(postFeedbackView()) === 'home' &&
+      tourEntryFor(postFeedbackView()) === 'home' &&
       (await hasFreeExpression())
     ) {
       startTour();
@@ -208,7 +208,7 @@ export const ScenarioFeedbackFlow = ({
       title={title}
       openDetail={openDetail}
       onExit={() => void goAfterFeedback()}
-      onDetailLocked={() => void openPaywallForDetail()}
+      onDetailLocked={() => void goForLockedDetail()}
     />
   );
 };
