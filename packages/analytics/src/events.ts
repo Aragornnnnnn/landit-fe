@@ -335,7 +335,9 @@ export type PurchaseFailureReason =
   // 100일 이용권을 지금 살 수 없다 — 도는 챌린지가 있거나 결제를 검토 중
   | 'pass_unavailable'
   // 이용권을 살 수 있는지 확인하지 못했다 — 조회 실패·시간 초과
-  | 'pass_check_failed';
+  | 'pass_check_failed'
+  // 결제 회신을 받기 전에 페이월을 떠났다 — 결과를 알 수 없어 시작만 남지 않게 닫아 둔다
+  | 'left_screen';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete' | 'alarm_delete';
 export type RetryScreen =
