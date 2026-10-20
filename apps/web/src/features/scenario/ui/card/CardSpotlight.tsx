@@ -25,7 +25,6 @@ export const CardSpotlight = ({
   onTap,
   introMs,
   onMissing,
-  onSkip,
 }: {
   // 뚫어 둘 자리를 찾는다 — 연출이 끝난 뒤에 찾아야 그 자리가 맞다
   findTarget: () => HTMLElement | null;
@@ -40,8 +39,6 @@ export const CardSpotlight = ({
   introMs?: number;
   // 기다린 뒤에도 자리를 못 찾았다 — 비출 것이 없으니 부르는 쪽이 안내를 끝낸다
   onMissing: () => void;
-  // 주면 아래에 「다음에 할게요」를 둔다 — 뚫린 자리 말고도 빠져나갈 길
-  onSkip?: () => void;
 }) => {
   const intro = introMs !== undefined;
   const reduced = useReducedMotion();
@@ -132,15 +129,6 @@ export const CardSpotlight = ({
           {children}
         </p>
       </motion.div>
-      {onSkip && (
-        <button
-          type="button"
-          onClick={onSkip}
-          className="absolute inset-x-0 bottom-[max(var(--safe-area-inset-bottom),20px)] mx-auto w-fit px-4 py-3 text-base font-semibold text-white/75 underline-offset-4 active:underline"
-        >
-          다음에 할게요
-        </button>
-      )}
       {!intro && (
         <button
           type="button"

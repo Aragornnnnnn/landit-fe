@@ -20,7 +20,7 @@ export const FreeExpressionSpotlight = ({
   // 표현 목록을 감싼 칸 — 목록과 무료 표현을 표식으로 찾는다
   list: React.RefObject<HTMLElement | null>;
   onOpen: () => void;
-  // 비출 것을 못 찾았거나 사용자가 넘겼다 — 투어를 여기서 끝낸다
+  // 비출 것을 못 찾았다 — 투어를 여기서 끝낸다
   onEnd: () => void;
 }) => {
   const [step, setStep] = useState<'intro' | 'free'>('intro');
@@ -62,7 +62,6 @@ export const FreeExpressionSpotlight = ({
       label="첫 표현 무료로 배우기"
       settleMs={0}
       onMissing={onEnd}
-      onSkip={onEnd}
       onTap={openOnce}
     >
       첫 표현은 <span className="text-primary">무료</span>로 열어 드렸어요
