@@ -1,4 +1,4 @@
-// 혜택 01 그림 — 날마다 동전 기둥이 한 개씩 높아지고, 100일째엔 최대 환급액이 쌓인다. 동전은 앱의 실제 환급 동전이다
+// 혜택 01 그림 — 날마다 동전 기둥이 한 개씩 높아지고, 100일째엔 모을 수 있는 전부가 쌓인다. 동전은 앱의 실제 환급 동전이다
 import { Coin } from '@/features/reward/ui/common/Coin';
 import { formatWon } from '@/features/subscription/lib/won';
 import { Emoji } from '@/shared/ui/emoji';
@@ -42,7 +42,7 @@ export const CoinStackCard = ({ plan }: { plan: RewardPlan }) => (
       <div className="flex flex-col items-center gap-2">
         <CoinPile count={6} size={56} />
         <p className="text-[17px] font-black text-primary tabular-nums">
-          최대 {formatWon(plan.maxRefund)}
+          {formatWon(plan.maxRefund)}
         </p>
         <p className="text-xs font-medium text-primary">{plan.days}일</p>
       </div>
@@ -50,7 +50,7 @@ export const CoinStackCard = ({ plan }: { plan: RewardPlan }) => (
     <ul className="mt-5 flex flex-col gap-2.5 border-t border-[#efdfc8] pt-4 text-sm font-bold text-foreground">
       <li className="flex items-center gap-2">
         <Emoji className="text-lg">🏦</Emoji>
-        {plan.days}일이 끝나면 모은 돈이 그대로 내 계좌로
+        {plan.days}일 뒤에 모은 돈을 출금할 수 있어요
       </li>
       <li className="flex items-center gap-2">
         <Emoji className="text-lg">🙆</Emoji>
