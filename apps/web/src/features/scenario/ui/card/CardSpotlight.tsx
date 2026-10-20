@@ -1,7 +1,7 @@
 'use client';
 
 // 카드 위의 스포트라이트 — 화면을 어둡게 덮고 한 자리만 뚫어 둔다. 그 자리에 꼬리가 닿는 말풍선이 붙는다.
-// 소개(introMs)는 잠깐 보여 준 뒤 저절로 넘어가고 눌러도 넘어간다. 그 밖에는 뚫린 자리만 눌린다(손가락이 콕콕 가리킨다). 첫 표현 투어에서 첫 표현으로 이끈다
+// 소개(introMs)는 잠깐 보여 준 뒤 저절로 넘어가고 눌러도 넘어간다. 그 밖에는 뚫린 자리만 눌린다(손가락이 콕콕 가리킨다). 프리미엄 프리뷰에서 첫 표현으로 이끈다
 import { useEffect, useEffectEvent, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { createPortal } from 'react-dom';

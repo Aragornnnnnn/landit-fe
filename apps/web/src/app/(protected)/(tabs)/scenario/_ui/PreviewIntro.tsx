@@ -1,6 +1,6 @@
 'use client';
 
-// 첫 표현 투어의 튜토리얼 — 동전 연출의 어둠을 그대로 두고, 가운데 래디 아래로 문장을 한 자씩 타이핑한다.
+// 프리미엄 프리뷰의 튜토리얼 — 동전 연출의 어둠을 그대로 두고, 가운데 래디 아래로 문장을 한 자씩 타이핑한다.
 // 화면을 누르면 지금 문장을 지우고 다음 문장을 쓴다. 마지막 문장 뒤의 버튼이 카드를 뒤집으러 간다
 import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
@@ -80,7 +80,7 @@ const sliceParts = (parts: readonly Part[], count: number) => {
   });
 };
 
-export const TourTutorial = ({
+export const PreviewIntro = ({
   dailyWon,
   onDone,
 }: {
@@ -118,14 +118,14 @@ export const TourTutorial = ({
   const tapNext = () => {
     // 다 쓴 문장을 넘길 때만 — 쓰는 중에 눌러 끝까지 보여 주는 건 넘김이 아니다
     if (typing.phase === 'shown' && !last) {
-      track(EVENTS.FIRST_EXPRESSION_TOUR_SENTENCE_ADVANCED, {
+      track(EVENTS.PREMIUM_PREVIEW_INTRO_ADVANCED, {
         sentence_index: typing.index,
       });
     }
     setTyping((state) => tapTyping(state, lengths));
   };
   const finish = () => {
-    track(EVENTS.FIRST_EXPRESSION_TOUR_TUTORIAL_COMPLETED);
+    track(EVENTS.PREMIUM_PREVIEW_INTRO_COMPLETED);
     onDone();
   };
 

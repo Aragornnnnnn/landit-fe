@@ -7,7 +7,7 @@ export {
   type LoginMethod,
   type OnboardingStep,
   type EnglishLevel,
-  type TourEndReason,
+  type PreviewEndReason,
   type AccentLocale,
   type GateQuestion,
   type ExpressionStep,

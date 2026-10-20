@@ -10,7 +10,7 @@ import { ScenarioCardBack } from './ScenarioCardBack';
 
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
-  // 기본은 열린 문 — 첫 표현 투어 테스트만 잠근다
+  // 기본은 열린 문 — 프리미엄 프리뷰 테스트만 잠근다
   guard: vi.fn((go: () => void) => go()),
   // 무료 사용자인가 — 목록에 무료·PREMIUM이 붙는다
   locked: false,
@@ -60,7 +60,7 @@ vi.mock('@/features/expression/ui/ExpressionList', () => ({
 // 스포트라이트는 자기 테스트가 있다 — 여기선 무료 표현을 여는 버튼만 드러낸다
 vi.mock('./FreeExpressionSpotlight', () => ({
   FreeExpressionSpotlight: ({ onOpen }: { onOpen: () => void }) => (
-    <button onClick={onOpen}>투어로 무료 표현 열기</button>
+    <button onClick={onOpen}>프리뷰로 무료 표현 열기</button>
   ),
 }));
 
@@ -133,7 +133,11 @@ describe('ScenarioCardBack', () => {
 
     // When 뒷면이 열리면
     render(
-      <ScenarioCardBack scenarioId={1} onBack={vi.fn()} onTourEnd={vi.fn()} />,
+      <ScenarioCardBack
+        scenarioId={1}
+        onBack={vi.fn()}
+        onPreviewEnd={vi.fn()}
+      />,
     );
 
     // Then 목록이 그 표현을 무료로 표시한다
@@ -144,7 +148,11 @@ describe('ScenarioCardBack', () => {
     mocks.guard.mockImplementation(() => {});
     freeTrialList();
     render(
-      <ScenarioCardBack scenarioId={1} onBack={vi.fn()} onTourEnd={vi.fn()} />,
+      <ScenarioCardBack
+        scenarioId={1}
+        onBack={vi.fn()}
+        onPreviewEnd={vi.fn()}
+      />,
     );
 
     fireEvent.click(screen.getByText('표현 11'));
@@ -153,22 +161,22 @@ describe('ScenarioCardBack', () => {
     expect(mocks.push).toHaveBeenCalledWith('/expressions/scenario/1/11');
   });
 
-  it('투어가 비춘 무료 표현을 열면 연 것으로 알리고 학습으로 간다 — 끝까지 안 하고 나와도 다시 비추지 않게', () => {
+  it('프리뷰가 비춘 무료 표현을 열면 연 것으로 알리고 학습으로 간다 — 끝까지 안 하고 나와도 다시 비추지 않게', () => {
     mocks.locked = true;
     freeTrialList();
-    const onTourOpen = vi.fn();
+    const onPreviewOpen = vi.fn();
     render(
       <ScenarioCardBack
         scenarioId={1}
         onBack={vi.fn()}
-        onTourEnd={vi.fn()}
-        onTourOpen={onTourOpen}
+        onPreviewEnd={vi.fn()}
+        onPreviewOpen={onPreviewOpen}
       />,
     );
 
-    fireEvent.click(screen.getByText('투어로 무료 표현 열기'));
+    fireEvent.click(screen.getByText('프리뷰로 무료 표현 열기'));
 
-    expect(onTourOpen).toHaveBeenCalledTimes(1);
+    expect(onPreviewOpen).toHaveBeenCalledTimes(1);
     expect(mocks.push).toHaveBeenCalledWith('/expressions/scenario/1/11');
   });
 
@@ -176,7 +184,11 @@ describe('ScenarioCardBack', () => {
     mocks.guard.mockImplementation(() => {});
     freeTrialList();
     render(
-      <ScenarioCardBack scenarioId={1} onBack={vi.fn()} onTourEnd={vi.fn()} />,
+      <ScenarioCardBack
+        scenarioId={1}
+        onBack={vi.fn()}
+        onPreviewEnd={vi.fn()}
+      />,
     );
 
     fireEvent.click(screen.getByText('표현 12'));
@@ -185,7 +197,7 @@ describe('ScenarioCardBack', () => {
     expect(mocks.push).not.toHaveBeenCalled();
   });
 
-  it('투어 밖에서도 서버가 열어 준 무료 표현은 페이월 없이 연다', () => {
+  it('프리뷰 밖에서도 서버가 열어 준 무료 표현은 페이월 없이 연다', () => {
     mocks.guard.mockImplementation(() => {});
     vi.mocked(useExpressionsQuery).mockReturnValue({
       expressions: [
@@ -205,27 +217,27 @@ describe('ScenarioCardBack', () => {
     expect(mocks.guard).toHaveBeenCalledTimes(1);
   });
 
-  it('투어 중인데 서버가 이 카드에 무료 표현을 열어 주지 않았으면 투어를 끝낸다', () => {
+  it('프리뷰 중인데 서버가 이 카드에 무료 표현을 열어 주지 않았으면 프리뷰를 끝낸다', () => {
     vi.mocked(useExpressionsQuery).mockReturnValue({
       expressions: [{ expressionId: 11, completed: false, locked: false }],
       error: null,
       isLoading: false,
       retry: vi.fn(),
     } as unknown as ReturnType<typeof useExpressionsQuery>);
-    const onTourEnd = vi.fn();
+    const onPreviewEnd = vi.fn();
     render(
       <ScenarioCardBack
         scenarioId={1}
         onBack={vi.fn()}
-        onTourEnd={onTourEnd}
+        onPreviewEnd={onPreviewEnd}
       />,
     );
 
-    expect(onTourEnd).toHaveBeenCalledTimes(1);
-    expect(onTourEnd).toHaveBeenCalledWith('no_free_expression');
+    expect(onPreviewEnd).toHaveBeenCalledTimes(1);
+    expect(onPreviewEnd).toHaveBeenCalledWith('no_free_expression');
   });
 
-  it('투어 중인데 무료 표현을 이미 끝냈으면(투어 밖에서 마친 경우) 투어를 끝낸다', () => {
+  it('프리뷰 중인데 무료 표현을 이미 끝냈으면(프리뷰 밖에서 마친 경우) 프리뷰를 끝낸다', () => {
     vi.mocked(useExpressionsQuery).mockReturnValue({
       expressions: [
         { expressionId: 11, completed: true, locked: false, freeTrial: true },
@@ -234,16 +246,16 @@ describe('ScenarioCardBack', () => {
       isLoading: false,
       retry: vi.fn(),
     } as unknown as ReturnType<typeof useExpressionsQuery>);
-    const onTourEnd = vi.fn();
+    const onPreviewEnd = vi.fn();
     render(
       <ScenarioCardBack
         scenarioId={1}
         onBack={vi.fn()}
-        onTourEnd={onTourEnd}
+        onPreviewEnd={onPreviewEnd}
       />,
     );
 
-    expect(onTourEnd).toHaveBeenCalledTimes(1);
-    expect(onTourEnd).toHaveBeenCalledWith('no_free_expression');
+    expect(onPreviewEnd).toHaveBeenCalledTimes(1);
+    expect(onPreviewEnd).toHaveBeenCalledWith('no_free_expression');
   });
 });

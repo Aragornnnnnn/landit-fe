@@ -1,4 +1,4 @@
-// 첫 표현 투어 뒷면 안내가 투어를 끝낼 때 왜 끝났는지(비출 자리 없음)를 부르는 쪽에 알린다
+// 프리미엄 프리뷰 뒷면 안내가 프리뷰를 끝낼 때 왜 끝났는지(비출 자리 없음)를 부르는 쪽에 알린다
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

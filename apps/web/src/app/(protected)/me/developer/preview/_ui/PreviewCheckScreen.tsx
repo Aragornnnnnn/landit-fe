@@ -1,16 +1,16 @@
 'use client';
 
-// 투어 점검 화면(ADMIN) — 첫 대화 직후의 레벨 결과부터, 또는 홈 투어(튜토리얼 → 카드 뒤집기 → 무료 표현)의 단계를 골라 이 계정으로 다시 본다.
-// 고르면 투어 단계를 그 자리로 돌리고 이번 실행 동안 무료 판정을 넘기는 미리보기를 켠 뒤 홈으로 간다
+// 프리뷰 점검 화면(ADMIN) — 첫 대화 직후의 레벨 결과부터, 또는 홈 프리뷰(튜토리얼 → 카드 뒤집기 → 무료 표현)의 단계를 골라 이 계정으로 다시 본다.
+// 고르면 프리뷰 단계를 그 자리로 돌리고 이번 실행 동안 무료 판정을 넘기는 미리보기를 켠 뒤 홈으로 간다
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 // 가로 import 사유: 첫 대화 직후 화면을 대화 피드백 라우트의 것 그대로 보여 준다
 import { LevelResultScreen } from '@/app/(protected)/conversation/scenario/[scenarioId]/feedback/_ui/LevelResultScreen';
 import type { UsableAssessment } from '@/features/feedback/model/level-assessment';
+import { startPreviewReplay } from '@/features/premium-preview/model/preview-replay';
+import type { PreviewStep } from '@/features/premium-preview/model/preview-step';
 import { markMissedEarn } from '@/features/reward/model/missed-earn';
-import { startTourPreview } from '@/features/tour/model/tour-preview';
-import type { TourStep } from '@/features/tour/model/tour-step';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { useIsAdmin } from '@/shared/auth/current-member';
 import { backToMyPage, SCENARIO_PATH } from '@/shared/lib/routes';
@@ -42,25 +42,28 @@ const SAMPLE_ASSESSMENT: UsableAssessment = {
   assessmentVersion: 'v1',
 };
 
-// 홈 투어의 단계 — 고르면 lastDone까지 끝낸 것으로 두고 그다음 화면부터 본다
-const HOME_STEPS: { title: string; lastDone: TourStep; description: string }[] =
-  [
-    {
-      title: '튜토리얼부터',
-      lastDone: 'STARTED',
-      description: '동전이 알약으로 쌓이는 연출과 래디의 타이핑 문장부터',
-    },
-    {
-      title: '카드 뒤집기부터',
-      lastDone: 'TUTORIAL_DONE',
-      description: '오늘 카드를 뒤집어 보라는 안내부터',
-    },
-    {
-      title: '무료 표현부터',
-      lastDone: 'CARD_FLIPPED',
-      description: '카드 뒷면의 무료 표현 하나를 여는 자리부터',
-    },
-  ];
+// 홈 프리뷰의 단계 — 고르면 lastDone까지 끝낸 것으로 두고 그다음 화면부터 본다
+const HOME_STEPS: {
+  title: string;
+  lastDone: PreviewStep;
+  description: string;
+}[] = [
+  {
+    title: '튜토리얼부터',
+    lastDone: 'STARTED',
+    description: '동전이 알약으로 쌓이는 연출과 래디의 타이핑 문장부터',
+  },
+  {
+    title: '카드 뒤집기부터',
+    lastDone: 'TUTORIAL_DONE',
+    description: '오늘 카드를 뒤집어 보라는 안내부터',
+  },
+  {
+    title: '무료 표현부터',
+    lastDone: 'CARD_FLIPPED',
+    description: '카드 뒷면의 무료 표현 하나를 여는 자리부터',
+  },
+];
 
 // 목록으로 알 수 없는 것 — [궁금한 것, 답]
 const NOTES = [
@@ -76,15 +79,15 @@ const NOTES = [
   ['미리보기는 언제 꺼지나요', '앱을 다시 열면 꺼져요'],
 ] as const;
 
-export const TourCheckScreen = () => {
+export const PreviewCheckScreen = () => {
   const router = useRouter();
   const isAdmin = useIsAdmin();
   const userId = useAuthStore((state) => state.member?.userId ?? null);
   const [showLevel, setShowLevel] = useState(false);
 
-  const start = (lastDone: TourStep) => {
+  const start = (lastDone: PreviewStep) => {
     if (userId === null) return;
-    startTourPreview(userId, lastDone);
+    startPreviewReplay(userId, lastDone);
     // 튜토리얼 앞에는 오늘 시나리오를 막 끝내고 돌아온 순간의 동전 연출이 있다 — 그 자리부터 볼 때만 같이 켠다
     if (lastDone === 'STARTED') markMissedEarn(userId);
   };
@@ -105,7 +108,7 @@ export const TourCheckScreen = () => {
 
   return (
     <main className="flex h-dvh flex-col bg-muted">
-      <BackHeader title="투어 점검" onBack={() => backToMyPage(router)} />
+      <BackHeader title="프리뷰 점검" onBack={() => backToMyPage(router)} />
 
       <div className="flex-1 overflow-y-auto pb-(--safe-area-inset-bottom)">
         <div className="space-y-5 px-4 pt-3 pb-10">
@@ -119,7 +122,7 @@ export const TourCheckScreen = () => {
                 />
               </MenuSection>
 
-              <MenuSection title="홈 투어 — 단계를 골라서">
+              <MenuSection title="홈 프리뷰 — 단계를 골라서">
                 {HOME_STEPS.map(({ title, lastDone, description }) => (
                   <MenuLink
                     key={lastDone}

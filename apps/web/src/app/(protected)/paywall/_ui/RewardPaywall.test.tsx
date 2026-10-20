@@ -86,7 +86,7 @@ describe('RewardPaywall', () => {
       <RewardPaywall
         plan={buildRewardPlan(50_000)}
         busy={false}
-        source="first_expression_tour"
+        source="premium_preview"
         onClose={vi.fn()}
         onRestore={vi.fn()}
         onPurchase={vi.fn()}
@@ -94,7 +94,7 @@ describe('RewardPaywall', () => {
     );
 
     expect(mocks.track).toHaveBeenCalledWith('Paywall Benefits Viewed', {
-      paywall_source: 'first_expression_tour',
+      paywall_source: 'premium_preview',
     });
   });
 

@@ -22,7 +22,7 @@ const open = () =>
   renderHook(() =>
     usePaywallExit({
       variant: 'reward',
-      source: 'first_expression_tour',
+      source: 'premium_preview',
       startStep: 'benefits',
     }),
   );
@@ -44,7 +44,7 @@ describe('usePaywallExit', () => {
       step: 'benefits',
       trigger: 'close',
       variant: 'reward',
-      paywall_source: 'first_expression_tour',
+      paywall_source: 'premium_preview',
       dwell_ms: 3000,
       max_scroll_pct: 50,
     });

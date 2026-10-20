@@ -275,7 +275,7 @@ export const scenarioWallImageOf = (src: string): PreloadableImage => ({
   unoptimized: true,
 });
 
-/** 카드 벽에 깔리는 그림 전부 — 페이월로 오기 전 화면(대화 직후·홈 투어)이 미리 받는다 */
+/** 카드 벽에 깔리는 그림 전부 — 페이월로 오기 전 화면(대화 직후·홈 프리뷰)이 미리 받는다 */
 export const SCENARIO_WALL_IMAGES = SCENARIOS.map(({ image }) =>
   scenarioWallImageOf(image),
 );

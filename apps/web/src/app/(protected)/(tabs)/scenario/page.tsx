@@ -22,8 +22,8 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
-import { useHomeTour } from './_model/useHomeTour';
-import { TourTutorial } from './_ui/TourTutorial';
+import { useHomePreview } from './_model/useHomePreview';
+import { PreviewIntro } from './_ui/PreviewIntro';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
 export default function ScenarioPage() {
@@ -62,12 +62,12 @@ function ScenarioContent() {
 
   // 완료한 날은 카드 앞면(같은 썸네일·제목·설명)이 이미 떠 있다 — 램프로 시작하는 날만 브리핑이 필요하다
   const cleared = daily?.scenario?.dailyScenarioType === 'CLEARED';
-  // 첫 표현 투어 — 오늘 카드를 끝낸 무료 사용자에게 챌린지를 소개하고 표현 하나를 무료로 열어 준다
-  const tour = useHomeTour({
+  // 프리미엄 프리뷰 — 오늘 카드를 끝낸 무료 사용자에게 챌린지를 소개하고 표현 하나를 무료로 열어 준다
+  const premiumPreview = useHomePreview({
     cleared: cleared && date === undefined,
     showerHold,
   });
-  const sheetsHeld = promoOpen || showerHold || tour.active;
+  const sheetsHeld = promoOpen || showerHold || premiumPreview.active;
   // 대화는 페이월 문이 아니다 — 오늘 카드든 지난 카드든, 재대화든 구독과 관계없이 시작한다.
   // 무료 사용자가 막히는 건 그 뒤의 상세 피드백과 표현 학습이다 (docs/subscription.md 「무료 구간과 페이월 게이트」)
   const start = (scenario: Scenario) => {
@@ -119,7 +119,7 @@ function ScenarioContent() {
           date={date}
           today={daily.date}
           autoFlip={autoFlip}
-          tour={tour.cardTour}
+          premiumPreview={premiumPreview.cardPreview}
           onStart={start}
           onSummonClose={() => setSummonClosed(true)}
         />
@@ -133,8 +133,11 @@ function ScenarioContent() {
       )}
       {promptTurn && !sheetsHeld && <NotificationConsentGate />}
 
-      {tour.view === 'tutorial' && (
-        <TourTutorial dailyWon={tour.dailyWon} onDone={tour.finishTutorial} />
+      {premiumPreview.view === 'tutorial' && (
+        <PreviewIntro
+          dailyWon={premiumPreview.dailyWon}
+          onDone={premiumPreview.finishTutorial}
+        />
       )}
 
       {/* 브리핑을 다 보여주면 대화로 넘어간다 — push라 뒤로가기는 이 화면(카드)으로 돌아온다 */}
