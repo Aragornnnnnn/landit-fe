@@ -114,13 +114,13 @@ describe('RewardPaywall', () => {
 describe('RewardPaywall 아래로 더 있다는 안내', () => {
   afterEach(() => vi.useRealTimers());
 
-  it('혜택 화면이 뜨고 잠시 뒤 한 번 살짝 내려갔다 돌아온다 — 아래에 혜택 4가지가 더 있다는 걸 보여 준다', () => {
+  it('혜택 화면이 뜨자마자 한 번 살짝 내려갔다 돌아온다 — 아래에 혜택 4가지가 더 있다는 걸 보여 준다', () => {
     vi.useFakeTimers();
     const scrollTo = vi.fn();
     Element.prototype.scrollTo = scrollTo;
     renderPaywall();
 
-    act(() => vi.advanceTimersByTime(1200));
+    act(() => vi.advanceTimersByTime(300));
     expect(scrollTo).toHaveBeenLastCalledWith({ top: 72, behavior: 'smooth' });
 
     act(() => vi.advanceTimersByTime(500));
