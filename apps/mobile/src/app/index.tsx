@@ -31,6 +31,7 @@ import { runHaptic } from '@/bridge/haptics';
 import { nativeContextScript } from '@/bridge/nativeContext';
 import { getNativeInsetsScript } from '@/bridge/nativeInsets';
 import { openShareSheet } from '@/bridge/share';
+import { requestStoreReview } from '@/bridge/store-review';
 import { useNativeBridge } from '@/bridge/useNativeBridge';
 import { WEB_URL } from '@/config/webUrl';
 import { reportWarning, setMonitoringUser } from '@/monitoring/report';
@@ -176,6 +177,11 @@ const ShellScreen = () => {
     PICK_PHOTOS: async ({ limit }) => {
       const result = await pickPhotos(limit);
       postToWeb({ type: 'PHOTOS_PICKED', ...result });
+    },
+    // 앱 안 별점 카드를 청하고 떴는지 회신한다 — 안 떴으면 웹이 스토어로 보낸다
+    REQUEST_REVIEW: async () => {
+      const status = await requestStoreReview();
+      postToWeb({ type: 'REVIEW_RESULT', status });
     },
     GET_ALARM_STATUS: () => replyAlarmStatus(),
     REQUEST_ALARM_PERMISSION: async () => {

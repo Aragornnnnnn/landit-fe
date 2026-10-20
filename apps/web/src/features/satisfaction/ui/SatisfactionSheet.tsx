@@ -19,6 +19,8 @@ interface SatisfactionSheetProps {
   onBad: () => void;
   onSendFeedback: () => void;
   onWriteReview: () => void;
+  // 리뷰 요청만 — 앱 안 별점 카드의 회신을 기다리는 동안 버튼을 잠근다
+  writeReviewPending?: boolean;
   // 리뷰 요청만 — 재요청(2번째 노출)부터 「이미 남겼어요」를 보여준다. 처음엔 아직 남겼을 리 없다
   showAlreadyDone?: boolean;
   onAlreadyDone?: () => void;
@@ -85,6 +87,7 @@ export const SatisfactionSheet = ({
   onBad,
   onSendFeedback,
   onWriteReview,
+  writeReviewPending = false,
   showAlreadyDone = false,
   onAlreadyDone,
   onClose,
@@ -141,6 +144,7 @@ export const SatisfactionSheet = ({
             ) : (
               <Button
                 size="md"
+                disabled={view === 'review' && writeReviewPending}
                 onClick={view === 'review' ? onWriteReview : onSendFeedback}
               >
                 {face.cta}

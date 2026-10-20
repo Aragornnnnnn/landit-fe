@@ -161,8 +161,10 @@ export const EVENTS = {
   // 리뷰 요청(review)은 좋았다고 한 사람에게 대화·표현 학습을 마치고 홈에 올 때마다 하루 한 번, 최대 4번 (LAN-689)
   SATISFACTION_PROMPT_VIEWED: 'Satisfaction Prompt Viewed',
   SATISFACTION_PROMPT_ANSWERED: 'Satisfaction Prompt Answered',
-  // 랜딧 소감에서 좋았어요 → 별점판 → 스토어 리뷰 화면을 연다
+  // 리뷰 시트의 버튼으로 스토어 리뷰 화면을 연다 — 앱 안 카드가 없거나 안 떴을 때의 길
   REVIEW_STORE_OPENED: 'Review Store Opened',
+  // 리뷰 시트의 버튼으로 앱 안 별점 카드를 청했다 — 셸이 답한 판정을 그대로 싣는다 (LAN-701)
+  REVIEW_CARD_REQUESTED: 'Review Card Requested',
 
   // 유입 — /download 스토어 리다이렉트가 서버에서 발화한다 (route 핸들러, LAN-237)
   DOWNLOAD_LINK_VISITED: 'Download Link Visited',
@@ -370,6 +372,8 @@ export type SatisfactionMoment = SatisfactionTalk | 'review';
 export type SatisfactionAnswer = 'good' | 'bad' | 'dismiss' | 'already_done';
 // 리뷰 요청이 뜨게 한 완료 — 대화(시나리오·스몰톡) 또는 표현 학습
 export type ReviewTrigger = 'talk' | 'expression';
+export type ReviewCardStatus =
+  'shown' | 'not_shown' | 'unavailable' | 'timeout';
 export type CalendarView = 'week' | 'month';
 export type HomeTab = 'scenario' | 'smalltalk';
 // 위젯 설치 유도에서 고른 답 — 닫기·나중에는 dismiss로 묶는다
@@ -775,6 +779,8 @@ export type EventProps = {
     answer: SatisfactionAnswer;
   };
   'Review Store Opened': { store: 'play_store' | 'app_store' };
+  // shown=카드가 떴다, not_shown=셸이 안 떴다고 판정(iOS 0.5초·Android 1초 기준), unavailable=이 환경엔 카드가 없다, timeout=셸이 답을 안 줬다
+  'Review Card Requested': { status: ReviewCardStatus };
 
   // 서버 발화라 세션·리플레이·공통 속성 없음. device_id 랜덤 — 방문 횟수 집계용.
   // /download 링크 자체를 방문한 경우만 (외부 링크·인스타 등)
