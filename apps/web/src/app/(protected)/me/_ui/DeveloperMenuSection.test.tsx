@@ -51,14 +51,14 @@ describe('DeveloperMenuSection', () => {
     );
   });
 
-  it('ADMIN이면 첫 대화 뒤 투어와 환급 페이월을 점검할 수 있다', () => {
+  it('ADMIN이면 첫 대화 뒤 프리뷰와 환급 페이월을 점검할 수 있다', () => {
     signIn('ADMIN');
 
     render(<DeveloperMenuSection />);
 
-    expect(screen.getByText('투어 점검').closest('a')).toHaveAttribute(
+    expect(screen.getByText('프리뷰 점검').closest('a')).toHaveAttribute(
       'href',
-      '/me/developer/tour',
+      '/me/developer/preview',
     );
     expect(screen.getByText('환급 페이월 보기').closest('a')).toHaveAttribute(
       'href',

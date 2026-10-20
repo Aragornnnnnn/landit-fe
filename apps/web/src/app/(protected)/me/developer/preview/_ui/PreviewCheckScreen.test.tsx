@@ -1,12 +1,12 @@
-// 투어 점검 — 첫 대화 뒤 레벨 결과부터, 또는 홈 투어의 단계를 골라 이 계정으로 다시 본다
+// 프리뷰 점검 — 첫 대화 뒤 레벨 결과부터, 또는 홈 프리뷰의 단계를 골라 이 계정으로 다시 본다
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { TourCheckScreen } from './TourCheckScreen';
+import { PreviewCheckScreen } from './PreviewCheckScreen';
 
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
-  startTourPreview: vi.fn(),
+  startPreviewReplay: vi.fn(),
   markMissedEarn: vi.fn(),
   isAdmin: true,
 }));
@@ -33,8 +33,8 @@ vi.mock('@/shared/auth/auth-store', () => ({
   useAuthStore: (selector: (state: unknown) => unknown) =>
     selector({ member: { userId: 1, nickname: '준서' } }),
 }));
-vi.mock('@/features/tour/model/tour-preview', () => ({
-  startTourPreview: mocks.startTourPreview,
+vi.mock('@/features/premium-preview/model/preview-replay', () => ({
+  startPreviewReplay: mocks.startPreviewReplay,
 }));
 vi.mock('@/features/reward/model/missed-earn', () => ({
   markMissedEarn: mocks.markMissedEarn,
@@ -43,12 +43,12 @@ vi.mock('@/features/reward/model/missed-earn', () => ({
 afterEach(() => {
   cleanup();
   mocks.push.mockClear();
-  mocks.startTourPreview.mockClear();
+  mocks.startPreviewReplay.mockClear();
   mocks.markMissedEarn.mockClear();
   mocks.isAdmin = true;
 });
 
-describe('TourCheckScreen', () => {
+describe('PreviewCheckScreen', () => {
   it.each([
     ['튜토리얼부터', 'STARTED'],
     ['카드 뒤집기부터', 'TUTORIAL_DONE'],
@@ -56,30 +56,30 @@ describe('TourCheckScreen', () => {
   ])(
     '「%s」를 누르면 그 단계부터 이어 보도록 미리보기를 켜고 홈으로 간다',
     (title, step) => {
-      render(<TourCheckScreen />);
+      render(<PreviewCheckScreen />);
 
       const link = screen.getByText(title).closest('a')!;
       fireEvent.click(link);
 
       expect(link).toHaveAttribute('href', '/scenario');
-      expect(mocks.startTourPreview).toHaveBeenCalledWith(1, step);
+      expect(mocks.startPreviewReplay).toHaveBeenCalledWith(1, step);
     },
   );
 
   it('「레벨 결과부터」는 첫 대화 직후 레벨 결과를 보여 주고, 버튼을 누르면 튜토리얼부터 이어 홈으로 간다', () => {
-    render(<TourCheckScreen />);
+    render(<PreviewCheckScreen />);
 
     fireEvent.click(screen.getByText('레벨 결과부터'));
     fireEvent.click(
       screen.getByRole('button', { name: '랜딧으로 영어 공부 시작하기' }),
     );
 
-    expect(mocks.startTourPreview).toHaveBeenCalledWith(1, 'STARTED');
+    expect(mocks.startPreviewReplay).toHaveBeenCalledWith(1, 'STARTED');
     expect(mocks.push).toHaveBeenCalledWith('/scenario');
   });
 
   it('튜토리얼부터 보면 오늘 시나리오를 막 끝낸 것처럼 홈에서 동전이 알약으로 쌓이는 연출부터 튼다', () => {
-    render(<TourCheckScreen />);
+    render(<PreviewCheckScreen />);
 
     fireEvent.click(screen.getByText('튜토리얼부터').closest('a')!);
 
@@ -87,7 +87,7 @@ describe('TourCheckScreen', () => {
   });
 
   it('카드 뒤집기부터 보면 동전 연출은 건너뛴다 — 실제로도 튜토리얼 앞에서만 나온다', () => {
-    render(<TourCheckScreen />);
+    render(<PreviewCheckScreen />);
 
     fireEvent.click(screen.getByText('카드 뒤집기부터').closest('a')!);
 
@@ -97,7 +97,7 @@ describe('TourCheckScreen', () => {
   it('ADMIN이 아니면 단계 목록을 보여 주지 않는다', () => {
     mocks.isAdmin = false;
 
-    render(<TourCheckScreen />);
+    render(<PreviewCheckScreen />);
 
     expect(screen.queryByText('튜토리얼부터')).not.toBeInTheDocument();
     expect(

@@ -264,8 +264,8 @@ export const PREMIUM_ONBOARDING_CHECK_PATH = '/me/developer/premium-onboarding';
 export const REWARD_CHECK_PATH = '/me/developer/reward';
 // ADMIN이 개발자 묶음에서 여는 환급 페이월 미리보기 — 결제하지 않고 지표도 찍지 않는다
 export const REWARD_PAYWALL_CHECK_PATH = '/me/developer/reward-paywall';
-// ADMIN이 첫 대화 뒤 투어를 단계별로 다시 보는 점검 화면
-export const TOUR_CHECK_PATH = '/me/developer/tour';
+// ADMIN이 첫 대화 뒤 프리뷰를 단계별로 다시 보는 점검 화면
+export const PREVIEW_CHECK_PATH = '/me/developer/preview';
 
 /**
  * 마이페이지 아래 화면에서 돌아가기. 마이페이지에서 밀고 들어왔으면 한 칸 뒤로 —

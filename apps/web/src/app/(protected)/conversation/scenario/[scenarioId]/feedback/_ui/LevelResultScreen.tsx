@@ -22,7 +22,7 @@ interface LevelResultScreenProps {
   /** isUsableAssessment를 통과한 결과만 — 여기서 다시 검사하지 않는다 */
   assessment: UsableAssessment;
   onContinue: () => void;
-  /** 첫 표현 투어로 홈에 갈 때는 학습지 대신 공부 시작을 권한다 */
+  /** 프리미엄 프리뷰로 홈에 갈 때는 학습지 대신 공부 시작을 권한다 */
   ctaLabel?: string;
 }
 

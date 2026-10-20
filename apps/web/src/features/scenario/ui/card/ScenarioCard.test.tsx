@@ -1,7 +1,9 @@
 // 완료 카드 앞면 배지(별점·기록 버튼)의 노출 계약 검증 — 뒤집힌 동안에는 그리지 않는다 (iOS backdrop-filter 잔상 방지)
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { track } from '@/shared/analytics';
 
 import type { Scenario } from '../../lib/to-scenario';
 import { ScenarioCard } from './ScenarioCard';
@@ -58,7 +60,10 @@ const renderCard = ({
     />,
   );
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 describe('ScenarioCard', () => {
   it('완료 카드 앞면에는 별점 배지가 보인다', () => {
@@ -130,7 +135,7 @@ describe('ScenarioCard', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('투어의 뒤집기 차례에 사용자가 먼저 뒤집어도 투어 단계를 넘긴다 — 자동 뒤집기를 기다리지 않아도', async () => {
+  it('프리뷰의 뒤집기 차례에 사용자가 먼저 뒤집어도 프리뷰 단계를 넘긴다 — 자동 뒤집기를 기다리지 않아도', async () => {
     // Given 튜토리얼이 막 끝나 카드가 스스로 뒤집히기 전
     const onFlipped = vi.fn();
     render(
@@ -138,11 +143,11 @@ describe('ScenarioCard', () => {
         scenario={completedScenario}
         onStart={vi.fn()}
         expressions={{ completed: 0, total: 3 }}
-        tour={{
+        premiumPreview={{
           screen: 'flip_card',
           onFlipped,
           onFreeOpened: vi.fn(),
-          onTourEnd: vi.fn(),
+          onPreviewEnd: vi.fn(),
         }}
       />,
     );
@@ -154,7 +159,7 @@ describe('ScenarioCard', () => {
     expect(onFlipped).toHaveBeenCalledTimes(1);
   });
 
-  it('투어의 뒤집기 차례에 카드가 처음부터 뒷면으로 열려도 투어 단계를 넘긴다', () => {
+  it('프리뷰의 뒤집기 차례에 카드가 처음부터 뒷면으로 열려도 프리뷰 단계를 넘긴다', () => {
     // Given 표현을 마치고 돌아온 길처럼 뒷면으로 펴진 채 열리는 카드
     const onFlipped = vi.fn();
     render(
@@ -163,16 +168,45 @@ describe('ScenarioCard', () => {
         onStart={vi.fn()}
         autoFlip
         expressions={{ completed: 0, total: 3 }}
-        tour={{
+        premiumPreview={{
           screen: 'flip_card',
           onFlipped,
           onFreeOpened: vi.fn(),
-          onTourEnd: vi.fn(),
+          onPreviewEnd: vi.fn(),
         }}
       />,
     );
 
     // Then 뒤집기 단계를 넘긴다
     expect(onFlipped).toHaveBeenCalledTimes(1);
+  });
+
+  it('프리뷰가 카드를 스스로 뒤집으면 표현 마무리 뒤 자동 뒤집기와 갈리게 trigger를 preview로 남긴다', () => {
+    // Given 튜토리얼이 막 끝나 카드가 스스로 뒤집힐 차례
+    vi.useFakeTimers();
+    render(
+      <ScenarioCard
+        scenario={completedScenario}
+        onStart={vi.fn()}
+        expressions={{ completed: 0, total: 3 }}
+        premiumPreview={{
+          screen: 'flip_card',
+          onFlipped: vi.fn(),
+          onPreviewEnd: vi.fn(),
+          onFreeOpened: vi.fn(),
+        }}
+      />,
+    );
+
+    // When 기다리면 카드가 뒤집힌다
+    act(() => vi.advanceTimersByTime(500));
+
+    // Then 프리뷰가 뒤집었다고 한 번 남긴다
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith('Scenario Card Flipped', {
+      scenario_id: 1,
+      direction: 'back',
+      trigger: 'preview',
+    });
   });
 });

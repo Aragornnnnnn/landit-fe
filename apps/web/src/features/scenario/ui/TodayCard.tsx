@@ -9,7 +9,7 @@ import { EASE_STANDARD } from '@/shared/motion';
 import type { DailyScenario } from '../api/daily';
 import { toScenario, type Scenario } from '../lib/to-scenario';
 import { CARD_SHADOW_CLASS, CardShadow, CardStage } from './card/CardStage';
-import { ScenarioCard, type CardTour } from './card/ScenarioCard';
+import { ScenarioCard, type CardPreview } from './card/ScenarioCard';
 import { LampStage } from './lamp/LampStage';
 
 interface TodayCardProps {
@@ -27,8 +27,8 @@ interface TodayCardProps {
   autoFlip?: boolean;
   // 소환을 닫아 오늘은 안 하기로 했다. 복귀 연출까지 끝난 뒤에 온다
   onSummonClose?: () => void;
-  // 첫 표현 투어의 차례 — 완료 카드에만 건다
-  tour?: CardTour;
+  // 프리미엄 프리뷰의 차례 — 완료 카드에만 건다
+  premiumPreview?: CardPreview;
 }
 
 export const TodayCard = ({
@@ -39,7 +39,7 @@ export const TodayCard = ({
   today,
   autoFlip = false,
   onSummonClose,
-  tour,
+  premiumPreview,
 }: TodayCardProps) => {
   const reduced = useReducedMotion() ?? false;
   const scenario = toScenario(daily, playable);
@@ -54,7 +54,7 @@ export const TodayCard = ({
           onStart={onStart}
           date={date}
           autoFlip={autoFlip}
-          tour={tour}
+          premiumPreview={premiumPreview}
           expressions={{
             completed: daily.completedExpressionCount,
             total: daily.expressionCount,

@@ -3,7 +3,7 @@
 // 환급 챌린지 페이월 — 혜택 화면에서 「다음」을 누르면 결제 금액 안내로 넘어가고, 거기서 결제한다.
 // 결제·복원·닫기는 PaywallScreen이 지휘하고 여기서는 어느 단계인지와 버튼만 안다
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type PaywallSource } from '@landit/analytics';
 import { useReducedMotion } from 'motion/react';
 
 import { track } from '@/shared/analytics';
@@ -31,6 +31,9 @@ export const RewardPaywall = ({
   onRestore,
   onPurchase,
   preview = false,
+  source,
+  onStepChange,
+  onScroll,
 }: {
   plan: RewardPlan;
   /** 처음 보여 줄 단계 — 혜택을 이미 본 환급 화면에서 오면 결제 금액 안내부터 */
@@ -40,16 +43,33 @@ export const RewardPaywall = ({
   onClose: () => void;
   onRestore: () => void;
   onPurchase: () => void;
-  /** 개발자 묶음의 미리보기인가 — 그러면 결제 금액 안내 노출을 찍지 않아 실험 지표에 섞이지 않는다 */
+  /** 개발자 묶음의 미리보기인가 — 그러면 단계 노출을 찍지 않아 실험 지표에 섞이지 않는다 */
   preview?: boolean;
+  /** 어느 문으로 왔나 — 단계 노출에 실어 진입 경로별로 가른다 */
+  source?: PaywallSource;
+  /** 보이는 단계가 정해지거나 바뀌었다 — 떠남 계측이 어느 단계에서 떠났는지 안다 */
+  onStepChange?: (step: Step) => void;
+  /** 스크롤했다 — 떠남 계측이 얼마나 내려 봤는지 잰다 */
+  onScroll?: (root: HTMLElement) => void;
 }) => {
   const [step, setStep] = useState<Step>(startStep);
   const [scrolled, setScrolled] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const trackCheckoutViewed = () => {
-    if (!preview)
-      track(EVENTS.PAYWALL_CHECKOUT_VIEWED, { plan: REWARD_PLAN_ID });
+  // 단계 노출 — 진입 경로(source)와, 결제 금액 안내는 혜택을 거쳐 왔는지까지 싣는다
+  const sourceTag = source ? { paywall_source: source } : {};
+  const trackStepViewed = (next: Step) => {
+    onStepChange?.(next);
+    if (preview) return;
+    if (next === 'benefits') {
+      track(EVENTS.PAYWALL_BENEFITS_VIEWED, sourceTag);
+      return;
+    }
+    track(EVENTS.PAYWALL_CHECKOUT_VIEWED, {
+      plan: REWARD_PLAN_ID,
+      entry_step: startStep,
+      ...sourceTag,
+    });
   };
 
   // 단계가 바뀌면 맨 위부터 보여 준다 — 혜택 화면 맨 아래에서 넘어와도 결제 금액 안내의 가격이 먼저 보이게
@@ -57,7 +77,7 @@ export const RewardPaywall = ({
     setStep(next);
     setScrolled(false);
     scrollRef.current?.scrollTo({ top: 0 });
-    if (next === 'checkout') trackCheckoutViewed();
+    trackStepViewed(next);
   };
 
   // 혜택 화면이 뜨자마자 한 번만 살짝 내려갔다 돌아온다 — 첫 화면 아래에 「프리미엄만 누리는 혜택 4가지」가 이어진다는 걸 보여 준다.
@@ -84,12 +104,10 @@ export const RewardPaywall = ({
     };
   }, [step, reduced]);
 
-  // 결제 금액 안내부터 열었으면 그 노출도 한 번 찍는다 — 혜택 화면을 거치지 않았을 뿐 같은 단계다
-  const reportOpenedAtCheckout = useEffectEvent(() => {
-    if (startStep === 'checkout') trackCheckoutViewed();
-  });
+  // 처음 연 단계의 노출을 한 번 찍는다 — 혜택부터든 결제 금액 안내부터든
+  const reportOpened = useEffectEvent(() => trackStepViewed(startStep));
   useEffect(() => {
-    reportOpenedAtCheckout();
+    reportOpened();
   }, []);
 
   return (
@@ -98,7 +116,10 @@ export const RewardPaywall = ({
       <div
         ref={scrollRef}
         data-scroll-root
-        onScroll={(event) => setScrolled(event.currentTarget.scrollTop > 48)}
+        onScroll={(event) => {
+          setScrolled(event.currentTarget.scrollTop > 48);
+          onScroll?.(event.currentTarget);
+        }}
         className={`relative h-full overflow-y-auto pb-[calc(max(var(--safe-area-inset-bottom),12px)+100px)] ${step === 'benefits' ? 'bg-card' : ''}`}
       >
         {step === 'benefits' ? (

@@ -92,7 +92,7 @@ describe('ExpressionList 무료·PREMIUM 표시', () => {
     expect(screen.queryByText('PREMIUM')).not.toBeInTheDocument();
   });
 
-  it('무료로 열린 표현에는 투어 스포트라이트가 찾을 표식만 남긴다', () => {
+  it('무료로 열린 표현에는 프리뷰 스포트라이트가 찾을 표식만 남긴다', () => {
     const { container } = render(
       <ExpressionList
         premiumLocked
@@ -110,7 +110,7 @@ describe('ExpressionList 무료·PREMIUM 표시', () => {
     );
   });
 
-  it('무료로 열린 표현에는 다음 표현 손가락을 띄우지 않는다 — 투어 스포트라이트가 이미 가리킨다', () => {
+  it('무료로 열린 표현에는 다음 표현 손가락을 띄우지 않는다 — 프리뷰 스포트라이트가 이미 가리킨다', () => {
     render(
       <ExpressionList
         premiumLocked

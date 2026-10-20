@@ -39,7 +39,7 @@ export type ExpressionOrigin =
 interface ExpressionFlowProps {
   origin: ExpressionOrigin;
   expressionId: number;
-  // 완료 처리 뒤 목록 대신 갈 곳 — 첫 표현 투어는 여기서 페이월로 간다
+  // 완료 처리 뒤 목록 대신 갈 곳 — 프리미엄 프리뷰는 여기서 페이월로 간다
   onFinished?: () => void;
 }
 

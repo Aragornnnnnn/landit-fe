@@ -1,7 +1,8 @@
 'use client';
 
-// 첫 표현 투어의 뒷면 안내 두 박자 — 표현 목록 전체를 잠깐 소개한 뒤, 서버가 무료로 연 표현을 비추고 누르게 한다
+// 프리미엄 프리뷰의 뒷면 안내 두 박자 — 표현 목록 전체를 잠깐 소개한 뒤, 서버가 무료로 연 표현을 비추고 누르게 한다
 import { useRef, useState } from 'react';
+import type { PreviewEndReason } from '@landit/analytics';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
 
@@ -20,8 +21,8 @@ export const FreeExpressionSpotlight = ({
   // 표현 목록을 감싼 칸 — 목록과 무료 표현을 표식으로 찾는다
   list: React.RefObject<HTMLElement | null>;
   onOpen: () => void;
-  // 비출 것을 못 찾았다 — 투어를 여기서 끝낸다
-  onEnd: () => void;
+  // 비출 것을 못 찾았다 — 프리뷰를 여기서 끝낸다
+  onEnd: (reason: PreviewEndReason) => void;
 }) => {
   const [step, setStep] = useState<'intro' | 'free'>('intro');
   // 손가락이 누르기를 부추겨 연타가 잦다 — 표현 화면은 한 번만 연다
@@ -44,7 +45,7 @@ export const FreeExpressionSpotlight = ({
         settleMs={SETTLE_MS}
         placement="above"
         introMs={INTRO_MS}
-        onMissing={onEnd}
+        onMissing={() => onEnd('no_target')}
         onTap={() => setStep('free')}
       >
         방금 대화로 만든
@@ -62,7 +63,7 @@ export const FreeExpressionSpotlight = ({
       findTarget={() => find('[data-free-expression]')}
       label="첫 표현 무료로 배우기"
       settleMs={0}
-      onMissing={onEnd}
+      onMissing={() => onEnd('no_target')}
       onTap={openOnce}
     >
       첫 표현은 <span className="text-primary">무료</span>로 열어 드렸어요

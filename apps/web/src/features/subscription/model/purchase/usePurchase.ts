@@ -122,6 +122,14 @@ export const usePurchase = ({
     return availability === 'available' ? null : PASS_BLOCKED[availability];
   };
 
+  // 회신 전에 화면을 떠났다 — 결과를 모르니 시작만 덩그러니 남지 않게 닫아 둔다
+  const trackLeftScreen = (plan: SubscriptionPlan) =>
+    track(EVENTS.PURCHASE_FAILED, {
+      plan,
+      reason: 'left_screen',
+      ...promoTag,
+    });
+
   const purchase = async (plan: SubscriptionPlan) => {
     if (busy) return;
     const unsupported = findUnsupported();
@@ -141,7 +149,11 @@ export const usePurchase = ({
       if (plan === 'pass') {
         const blocked = await findPassBlock();
         // 묻는 사이 화면을 떠났거나 계정이 바뀌었으면 그 답으로 결제하지 않는다
-        if (signal?.aborted || getCurrentUserId() !== userId) return;
+        if (signal?.aborted) {
+          trackLeftScreen(plan);
+          return;
+        }
+        if (getCurrentUserId() !== userId) return;
         if (blocked) {
           track(EVENTS.PURCHASE_FAILED, {
             plan,
@@ -157,7 +169,10 @@ export const usePurchase = ({
         packageIdFor(plan, packages),
         signal,
       );
-      if (signal?.aborted) return;
+      if (signal?.aborted) {
+        trackLeftScreen(plan);
+        return;
+      }
 
       if (!result) {
         track(EVENTS.PURCHASE_FAILED, {

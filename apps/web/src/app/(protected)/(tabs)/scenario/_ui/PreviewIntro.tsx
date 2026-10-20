@@ -1,12 +1,14 @@
 'use client';
 
-// 첫 표현 투어의 튜토리얼 — 동전 연출의 어둠을 그대로 두고, 가운데 래디 아래로 문장을 한 자씩 타이핑한다.
+// 프리미엄 프리뷰의 튜토리얼 — 동전 연출의 어둠을 그대로 두고, 가운데 래디 아래로 문장을 한 자씩 타이핑한다.
 // 화면을 누르면 지금 문장을 지우고 다음 문장을 쓴다. 마지막 문장 뒤의 버튼이 카드를 뒤집으러 간다
 import { useEffect, useEffectEvent, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
 // 가로 import 사유: 칸이 넘어가는 진동 세기를 알람 시각 바퀴와 같은 기준(플랫폼)으로 고른다
 import { alarmPlatform } from '@/features/alarm/model/shell-alarm';
+import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { formatWon } from '@/shared/lib/won';
 import { Button } from '@/shared/ui/Button';
@@ -78,7 +80,7 @@ const sliceParts = (parts: readonly Part[], count: number) => {
   });
 };
 
-export const TourTutorial = ({
+export const PreviewIntro = ({
   dailyWon,
   onDone,
 }: {
@@ -113,6 +115,19 @@ export const TourTutorial = ({
   const sentence = sentences[typing.index];
   const last = typing.index === sentences.length - 1;
   const done = last && typing.phase === 'shown';
+  const tapNext = () => {
+    // 다 쓴 문장을 넘길 때만 — 쓰는 중에 눌러 끝까지 보여 주는 건 넘김이 아니다
+    if (typing.phase === 'shown' && !last) {
+      track(EVENTS.PREMIUM_PREVIEW_INTRO_ADVANCED, {
+        sentence_index: typing.index,
+      });
+    }
+    setTyping((state) => tapTyping(state, lengths));
+  };
+  const finish = () => {
+    track(EVENTS.PREMIUM_PREVIEW_INTRO_COMPLETED);
+    onDone();
+  };
 
   return (
     <motion.div
@@ -133,7 +148,7 @@ export const TourTutorial = ({
           type="button"
           aria-label="다음 문장"
           className="absolute inset-0"
-          onClick={() => setTyping((state) => tapTyping(state, lengths))}
+          onClick={tapNext}
         />
       )}
 
@@ -182,7 +197,7 @@ export const TourTutorial = ({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <Button onClick={onDone}>맞춤 표현 학습하기</Button>
+            <Button onClick={finish}>맞춤 표현 학습하기</Button>
           </motion.div>
         ) : (
           typing.phase === 'shown' && (

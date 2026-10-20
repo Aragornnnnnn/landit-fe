@@ -449,7 +449,9 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
       mocks.track.mock.calls.filter(
         ([name]) => name === 'Paywall Checkout Viewed',
       ),
-    ).toEqual([['Paywall Checkout Viewed', { plan: 'pass' }]]);
+    ).toEqual([
+      ['Paywall Checkout Viewed', { plan: 'pass', entry_step: 'checkout' }],
+    ]);
   });
 
   it('혜택 화면의 CTA는 결제하지 않고 결제 금액 안내로 넘어간다', () => {
@@ -480,6 +482,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
 
     expect(mocks.track).toHaveBeenCalledWith('Paywall Checkout Viewed', {
       plan: 'pass',
+      entry_step: 'benefits',
     });
   });
 

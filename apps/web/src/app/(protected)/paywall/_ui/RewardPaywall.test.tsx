@@ -77,6 +77,24 @@ describe('RewardPaywall', () => {
 
     expect(mocks.track).toHaveBeenCalledWith('Paywall Checkout Viewed', {
       plan: 'pass',
+      entry_step: 'benefits',
+    });
+  });
+
+  it('혜택 화면이 뜨면 노출을 찍고, 어느 문으로 왔는지 싣는다', () => {
+    render(
+      <RewardPaywall
+        plan={buildRewardPlan(50_000)}
+        busy={false}
+        source="premium_preview"
+        onClose={vi.fn()}
+        onRestore={vi.fn()}
+        onPurchase={vi.fn()}
+      />,
+    );
+
+    expect(mocks.track).toHaveBeenCalledWith('Paywall Benefits Viewed', {
+      paywall_source: 'premium_preview',
     });
   });
 

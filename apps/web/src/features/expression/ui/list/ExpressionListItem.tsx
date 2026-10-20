@@ -13,7 +13,7 @@ interface ExpressionListItemProps {
   onSelect: (expressionId: number) => void;
   // 활성 항목의 다음 표현 표시(👈)를 숨긴다
   hideStartAction?: boolean;
-  // 서버가 무료 사용자에게 무료로 열어 준 표현인가 — 첫 표현 투어의 스포트라이트가 이 항목을 찾는다
+  // 서버가 무료 사용자에게 무료로 열어 준 표현인가 — 프리미엄 프리뷰의 스포트라이트가 이 항목을 찾는다
   freeTrial?: boolean;
 }
 
@@ -93,7 +93,7 @@ export const ExpressionListItem = ({
         </p>
       </div>
       {/* 글자 라벨 대신 왼쪽을 가리키는 손가락 — '다음은 이거'를 직관적으로 (스크린리더용 텍스트는 따로).
-          무료로 열린 표현은 투어 스포트라이트가 이미 가리키니 손가락을 겹치지 않는다.
+          무료로 열린 표현은 프리뷰 스포트라이트가 이미 가리키니 손가락을 겹치지 않는다.
           좌우로 콕콕 찌르듯 움직여 시선을 끈다 */}
       {!hideStartAction && !freeTrial && (
         <>

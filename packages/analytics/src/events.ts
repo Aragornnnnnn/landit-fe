@@ -193,19 +193,28 @@ export const EVENTS = {
   SURVEY_STARTED: 'Survey Started',
   SURVEY_QUESTION_VIEWED: 'Survey Question Viewed',
   SURVEY_SUBMITTED: 'Survey Submitted',
-  // 페이월 — 노출은 Page Viewed(page_name=paywall)로 잡고, 플랜 선택·결제 시작·복원만 따로 찍는다.
-  // 결제 성공·취소는 결제 연동(LAN-447)에서 결과 메시지를 받을 때 추가한다
+  // 페이월 — 노출은 Page Viewed(page_name=paywall)로 잡고, 플랜 선택·결제 시작·복원·단계 노출·떠남을 따로 찍는다
   PAYWALL_PLAN_SELECTED: 'Paywall Plan Selected',
   PURCHASE_STARTED: 'Purchase Started',
   PURCHASE_RESTORE_TAPPED: 'Purchase Restore Tapped',
   // 환급 페이월 2단계(결제 금액 안내)가 떴다 — 혜택 화면 → 금액 안내 → 결제 시작의 단계별 이탈을 본다
   PAYWALL_CHECKOUT_VIEWED: 'Paywall Checkout Viewed',
+  // 환급 페이월 1단계(혜택 화면)가 떴다 — 처음 열렸을 때와 결제 금액 안내에서 되돌아왔을 때
+  PAYWALL_BENEFITS_VIEWED: 'Paywall Benefits Viewed',
+  // 결제·복원 없이 페이월을 떠났다 — 어느 단계에서, 닫기로인지 다른 길로인지, 얼마나 머물고 얼마나 내려 봤는지
+  PAYWALL_EXITED: 'Paywall Exited',
   // 학습 진입 게이트 — 무료 구간을 다 쓴 무료 사용자가 어느 문에서 페이월로 보내졌는가
   PAYWALL_GATE_LOCKED: 'Paywall Gate Locked',
   // 대화 직후 무료 사용자가 페이월 전에 지나는 화면 — 레벨 결과(첫 대화만)와 학습 준비
   LEVEL_RESULT_VIEWED: 'Level Result Viewed',
   PREPARED_LEARNING_VIEWED: 'Prepared Learning Viewed',
   PREPARED_LEARNING_CONTINUED: 'Prepared Learning Continued',
+  // 프리미엄 프리뷰 — 무료 사용자가 피드백 뒤 홈에서 튜토리얼 → 카드 뒤집기 → 무료 표현으로 가는 길의 단계별 이탈.
+  // 끝까지 가면 Paywall Gate Locked(source: premium_preview), 카드 뒤집기는 Scenario Card Flipped(trigger: preview)가 잡는다
+  PREMIUM_PREVIEW_STARTED: 'Premium Preview Started',
+  PREMIUM_PREVIEW_INTRO_ADVANCED: 'Premium Preview Intro Advanced',
+  PREMIUM_PREVIEW_INTRO_COMPLETED: 'Premium Preview Intro Completed',
+  PREMIUM_PREVIEW_ENDED: 'Premium Preview Ended',
   // 마이페이지 — 유료 사용자가 구독 관리로 들어갔다 / 무료 사용자가 페이월로 들어갔다 / 진동 토글 / 말하기 속도 변경
   SUBSCRIPTION_MANAGE_TAPPED: 'Subscription Manage Tapped',
   PAYWALL_ENTRY_TAPPED: 'Paywall Entry Tapped',
@@ -244,6 +253,8 @@ export type OnboardingStep =
   | 'scenario';
 // 영어 수준 — BE 저장 API(learningLevel)와 같은 1(막 시작)~5(유창) 정수 척도. 지표와 서버 데이터가 같은 말을 쓴다
 export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
+// 프리미엄 프리뷰가 페이월 없이 끝난 까닭 — 홈 카드가 프리뷰를 끝낼 때 같은 값을 넘긴다
+export type PreviewEndReason = 'no_target' | 'no_free_expression';
 // 배울 영어 — BE 발음 에셋(accentLocale)과 같은 enum 값을 쓴다. 지표와 서버 데이터가 같은 말을 쓴다
 export type AccentLocale = 'EN_US' | 'EN_GB' | 'EN_AU';
 // 기존 유저 게이트가 묻는 질문 — 온보딩 스텝과 같은 말을 쓴다. 영어 수준은 첫 대화로 BE가 매겨 더 이상 묻지 않는다
@@ -287,6 +298,12 @@ export type PaywallEntrySource = 'me' | 'header' | 'reward';
 // 페이월에 어디서 왔는가 — 게이트에 막혀 왔으면 막힌 자리, 스스로 들어왔으면 마이페이지.
 // 노출(Page Viewed)에 실어 진입 경로별 전환율을 가른다
 export type PaywallSource = PaywallGateSource | PaywallEntrySource;
+// 페이월 단계 — 환급 페이월은 혜택(benefits)·결제 금액 안내(checkout) 두 단계, 일반 페이월은 한 장(single)
+export type PaywallStepName = 'benefits' | 'checkout' | 'single';
+// 페이월을 어떻게 떠났나 — close는 닫기 버튼, navigate는 뒤로가기처럼 다른 길로 화면을 벗어남
+export type PaywallExitTrigger = 'close' | 'navigate';
+// 어느 페이월이었나 — 환급 챌린지 두 단계(reward) / 월간·연간 한 장(regular)
+export type PaywallVariant = 'reward' | 'regular';
 // 구독 관리에서 스토어로 나간 이유 — 해지 / 해지 취소. 둘 다 같은 스토어 화면이 열리지만 의도를 남긴다
 export type StoreSubscriptionAction = 'cancel' | 'resubscribe';
 /** 구독 해지 사유 — ① 라디오 순서 그대로 */
@@ -305,8 +322,8 @@ export type PaywallGateSource =
   | 'conversation_finished'
   // 총평에서 상세 피드백 보기를 눌렀는데 서버가 잠근 세션 — 두 번째 시나리오부터 페이월이 처음 뜨는 곳
   | 'feedback_detail'
-  // 첫 표현 투어 끝 — 무료로 열어 준 표현 하나를 마친 자리
-  | 'first_expression_tour';
+  // 프리미엄 프리뷰 끝 — 무료로 열어 준 표현 하나를 마친 자리
+  | 'premium_preview';
 // 결제가 실패한 갈래 — 환경 문제 셋, 셸이 회신한 실패, 이용권을 결제 전에 막은 둘. 셸의 문구는 message에 따로 싣는다
 export type PurchaseFailureReason =
   | 'browser'
@@ -316,7 +333,9 @@ export type PurchaseFailureReason =
   // 100일 이용권을 지금 살 수 없다 — 도는 챌린지가 있거나 결제를 검토 중
   | 'pass_unavailable'
   // 이용권을 살 수 있는지 확인하지 못했다 — 조회 실패·시간 초과
-  | 'pass_check_failed';
+  | 'pass_check_failed'
+  // 결제 회신을 받기 전에 페이월을 떠났다 — 결과를 알 수 없어 시작만 남지 않게 닫아 둔다
+  | 'left_screen';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete' | 'alarm_delete';
 export type RetryScreen =
@@ -467,7 +486,8 @@ export type EventProps = {
   'Scenario Card Flipped': {
     scenario_id: number;
     direction: 'back' | 'front';
-    trigger: 'button' | 'auto';
+    // auto = 표현을 마치고 돌아와 펴짐, preview = 프리미엄 프리뷰가 스스로 뒤집음
+    trigger: 'button' | 'auto' | 'preview';
   };
   'Expression Selected': ExpressionSource & {
     expression_id: number;
@@ -816,7 +836,23 @@ export type EventProps = {
   'Paywall Plan Selected': { plan: SubscriptionPlan; promo?: boolean };
   'Purchase Started': { plan: SubscriptionPlan; promo?: boolean };
   'Purchase Restore Tapped': undefined;
-  'Paywall Checkout Viewed': { plan: SubscriptionPlan };
+  'Paywall Checkout Viewed': {
+    plan: SubscriptionPlan;
+    // 혜택 화면을 거쳐 왔는지(benefits), 결제 금액 안내부터 열었는지(checkout)
+    entry_step: 'benefits' | 'checkout';
+    paywall_source?: PaywallSource;
+  };
+  'Paywall Benefits Viewed': { paywall_source?: PaywallSource };
+  'Paywall Exited': {
+    step: PaywallStepName;
+    trigger: PaywallExitTrigger;
+    variant: PaywallVariant;
+    paywall_source?: PaywallSource;
+    // 페이월을 연 뒤 떠나기까지
+    dwell_ms: number;
+    // 떠난 단계에서 가장 깊이 내려 본 비율(0~100) — 한 번도 내리지 않았으면 0
+    max_scroll_pct: number;
+  };
   'Paywall Gate Locked': { source: PaywallGateSource };
   'Level Result Viewed': {
     scenario_id: number;
@@ -825,6 +861,13 @@ export type EventProps = {
   };
   'Prepared Learning Viewed': { scenario_id: number };
   'Prepared Learning Continued': { scenario_id: number };
+  // level = 신규(첫 시나리오 레벨 결과 뒤), home = 기존(오늘의 시나리오 총평 뒤 바로 홈)
+  'Premium Preview Started': { entry: 'level' | 'home' };
+  // 다 쓴 문장을 눌러 다음 문장으로 넘겼다. 0부터 센 넘긴 문장
+  'Premium Preview Intro Advanced': { sentence_index: number };
+  'Premium Preview Intro Completed': undefined;
+  // 페이월 없이 조용히 끝났다 — no_target = 비출 자리를 못 찾음, no_free_expression = 카드에 남은 무료 표현이 없음
+  'Premium Preview Ended': { reason: PreviewEndReason };
   'Subscription Manage Tapped': { status: SubscriptionState };
   'Paywall Entry Tapped': { source: PaywallEntrySource };
   // 이탈 할인 시트가 떠서 사용자가 본 순간 — 이 수와 할인 결제 수로 전환을 잰다

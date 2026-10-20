@@ -1,9 +1,9 @@
 'use client';
 
 // 시나리오 카드 — 앞면(썸네일·제목·브리핑·CTA, 완료 시 기록 버튼), 완료 시 뒤집으면 뒷면에 표현 학습 리스트.
-// 뒤집기는 페이월 문이 아니다 — 무료 사용자도 뒷면을 보고, 막는 건 뒷면의 표현이다. 첫 표현 투어 중에는 카드가 스스로 뒤집힌다
+// 뒤집기는 페이월 문이 아니다 — 무료 사용자도 뒷면을 보고, 막는 건 뒷면의 표현이다. 프리미엄 프리뷰 중에는 카드가 스스로 뒤집힌다
 import { useEffect, useEffectEvent, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type PreviewEndReason } from '@landit/analytics';
 import Link from 'next/link';
 
 import { track } from '@/shared/analytics';
@@ -35,18 +35,18 @@ interface ScenarioCardProps {
   autoFlip?: boolean;
   // 완료 카드에 띄우는 표현 학습 진행도
   expressions: { completed: number; total: number };
-  // 첫 표현 투어의 차례 — flip_card은 스스로 뒤집기, free_expression은 뒷면 첫 표현 무료
-  tour?: CardTour;
+  // 프리미엄 프리뷰의 차례 — flip_card은 스스로 뒤집기, free_expression은 뒷면 첫 표현 무료
+  premiumPreview?: CardPreview;
 }
 
-export interface CardTour {
+export interface CardPreview {
   screen: 'flip_card' | 'free_expression';
   // 뒤집기 차례에 카드가 뒤집혔다(자동이든 사용자든)
   onFlipped: () => void;
   // 비춘 무료 표현을 열었다 — 다시 비추지 않는다
   onFreeOpened: () => void;
-  // 투어를 여기서 끝낸다 — 줄 무료 표현이 없거나 사용자가 넘겼다
-  onTourEnd: () => void;
+  // 프리뷰를 여기서 끝낸다 — 줄 무료 표현이 없거나 사용자가 넘겼다
+  onPreviewEnd: (reason: PreviewEndReason) => void;
 }
 
 export const ScenarioCard = ({
@@ -55,7 +55,7 @@ export const ScenarioCard = ({
   date,
   autoFlip = false,
   expressions,
-  tour,
+  premiumPreview,
 }: ScenarioCardProps) => {
   // 잠금·완료 판정은 전부 백엔드 몫(직전 시나리오를 깨야 다음이 열린다). 카드는 두 플래그를 그리기만 한다.
   // locked   → 흑백 썸네일 + 회색 제목 + "잠겨있어요"
@@ -64,9 +64,9 @@ export const ScenarioCard = ({
 
   // 뒤집기 상태. hasFlipped는 뒷면(표현 API)을 첫 뒤집기 전까지 마운트하지 않기 위한 지연 플래그.
   // autoFlip(표현 마무리 후 홈 복귀)이면 처음부터 뒤집힌 채로 마운트한다.
-  // 뒷면으로 펴 둔 채 시작하는가 — 표현을 마치고 돌아왔거나, 투어의 무료 표현 차례다
+  // 뒷면으로 펴 둔 채 시작하는가 — 표현을 마치고 돌아왔거나, 프리뷰의 무료 표현 차례다
   const openBack =
-    (autoFlip || tour?.screen === 'free_expression') && completed;
+    (autoFlip || premiumPreview?.screen === 'free_expression') && completed;
   const [flipped, setFlipped] = useState(openBack);
   const [hasFlipped, setHasFlipped] = useState(openBack);
   // completed가 마운트 후 뒤늦게 true가 돼도(캐시가 stale이었던 경우) autoFlip이면 한 번은 자동으로 편다.
@@ -94,7 +94,7 @@ export const ScenarioCard = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 마운트 시 1회만
   }, []);
 
-  const flipToBack = (trigger: 'button' | 'auto') => {
+  const flipToBack = (trigger: 'button' | 'preview') => {
     haptic('medium'); // 완료 카드를 뒤집는 성취 순간엔 좀 더 묵직한 진동
     track(EVENTS.SCENARIO_CARD_FLIPPED, {
       scenario_id: scenario.scenarioId,
@@ -105,20 +105,22 @@ export const ScenarioCard = ({
     setFlipped(true);
   };
   const openExpressions = () => flipToBack('button');
-  // 투어는 튜토리얼이 걷히고 잠깐 뒤 카드를 스스로 뒤집는다 — 누를 것 없이 첫 표현으로 이어진다
-  const tourFlipPending = tour?.screen === 'flip_card' && completed && !flipped;
-  const flipForTour = useEffectEvent(() => flipToBack('auto'));
-  // 투어의 뒤집기 차례에 뒷면이 보이면 단계를 넘긴다 — 자동이든, 사용자가 먼저 눌렀든, 처음부터 뒷면으로 열렸든
-  const tourFlipped = tour?.screen === 'flip_card' && completed && flipped;
-  const passFlipStep = useEffectEvent(() => tour?.onFlipped());
+  // 프리뷰는 튜토리얼이 걷히고 잠깐 뒤 카드를 스스로 뒤집는다 — 누를 것 없이 첫 표현으로 이어진다
+  const previewFlipPending =
+    premiumPreview?.screen === 'flip_card' && completed && !flipped;
+  const flipForPreview = useEffectEvent(() => flipToBack('preview'));
+  // 프리뷰의 뒤집기 차례에 뒷면이 보이면 단계를 넘긴다 — 자동이든, 사용자가 먼저 눌렀든, 처음부터 뒷면으로 열렸든
+  const previewFlipped =
+    premiumPreview?.screen === 'flip_card' && completed && flipped;
+  const passFlipStep = useEffectEvent(() => premiumPreview?.onFlipped());
   useEffect(() => {
-    if (tourFlipped) passFlipStep();
-  }, [tourFlipped]);
+    if (previewFlipped) passFlipStep();
+  }, [previewFlipped]);
   useEffect(() => {
-    if (!tourFlipPending) return;
-    const timer = setTimeout(flipForTour, TOUR_FLIP_DELAY_MS);
+    if (!previewFlipPending) return;
+    const timer = setTimeout(flipForPreview, TOUR_FLIP_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [tourFlipPending]);
+  }, [previewFlipPending]);
 
   const closeExpressions = () => {
     track(EVENTS.SCENARIO_CARD_FLIPPED, {
@@ -251,8 +253,8 @@ export const ScenarioCard = ({
               date={date}
               onBack={closeExpressions}
               autoFlip={autoFlip}
-              onTourEnd={tour?.onTourEnd}
-              onTourOpen={tour?.onFreeOpened}
+              onPreviewEnd={premiumPreview?.onPreviewEnd}
+              onPreviewOpen={premiumPreview?.onFreeOpened}
             />
           </div>
         )}
