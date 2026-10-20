@@ -11,7 +11,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('premiumPreview-preview', () => {
+describe('preview-replay', () => {
   it('켜기 전에는 미리보기가 아니다', () => {
     expect(isPreviewReplay()).toBe(false);
   });

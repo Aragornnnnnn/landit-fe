@@ -13,7 +13,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('premiumPreview-store', () => {
+describe('preview-store', () => {
   it('저장한 단계를 같은 계정으로 다시 읽는다', () => {
     writePreviewStep(7, 'CARD_FLIPPED');
     expect(readPreviewStep(7)).toBe('CARD_FLIPPED');

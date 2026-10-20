@@ -86,7 +86,7 @@
 
 ### 프리미엄 프리뷰
 
-무료 사용자가 피드백을 마치고 홈에서 동전 연출 → 타이핑 튜토리얼 → 카드 자동 뒤집기 → 무료 표현 안내 → 표현 학습 → 페이월로 가는 길이다. 단계마다 한 번씩 찍어 어디서 그만두는지 본다. 끝까지 가면 `Paywall Gate Locked(source: premium_preview)`, 카드 뒤집기는 `Scenario Card Flipped(trigger: premiumPreview)`가 잡는다.
+무료 사용자가 피드백을 마치고 홈에서 동전 연출 → 타이핑 튜토리얼 → 카드 자동 뒤집기 → 무료 표현 안내 → 표현 학습 → 페이월로 가는 길이다. 단계마다 한 번씩 찍어 어디서 그만두는지 본다. 끝까지 가면 `Paywall Gate Locked(source: premium_preview)`, 카드 뒤집기는 `Scenario Card Flipped(trigger: preview)`가 잡는다.
 
 | 이벤트                          | 속성                                  | 시점                                                                                                                                         |
 | ------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -95,7 +95,7 @@
 | Premium Preview Intro Completed | 없음                                  | 마지막 문장 뒤 「맞춤 표현 학습하기」를 누른 순간                                                                                            |
 | Premium Preview Ended           | reason(no_target\|no_free_expression) | 페이월 없이 조용히 끝난 순간. no_target은 안내가 비출 자리를 못 찾음, no_free_expression은 카드에 남은 무료 표현이 없음(이미 마친 경우 포함) |
 
-퍼널은 `Started → Sentence Advanced(0) → Sentence Advanced(1) → Tutorial Completed → Scenario Card Flipped(trigger: premiumPreview) → Expression Selected(source: card_back) → Paywall Gate Locked(source: premium_preview)` 순서다. 뒤집기 차례에 사용자가 먼저 카드를 뒤집으면 trigger가 button으로 남는다.
+퍼널은 `Premium Preview Started → Premium Preview Intro Advanced(0) → Premium Preview Intro Advanced(1) → Premium Preview Intro Completed → Scenario Card Flipped(trigger: preview) → Expression Selected(source: card_back) → Paywall Gate Locked(source: premium_preview)` 순서다. 뒤집기 차례에 사용자가 먼저 카드를 뒤집으면 trigger가 button으로 남는다.
 
 ### 인증
 
@@ -134,11 +134,11 @@
 
 ### 홈
 
-| 이벤트                | 속성                                                                                        | 시점                                                                                                                    |
-| --------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Home Tab Switched     | tab(scenario\|smalltalk)                                                                    | 상단 탭 칩 눌러 이동 (보고 있는 탭 재탭 제외)                                                                           |
-| Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto\|premiumPreview)                  | 원어민 표현 배우기 / 표현을 마치고 돌아와 자동 펴짐(auto) / 프리미엄 프리뷰가 스스로 뒤집음(premiumPreview) / 앞면 복귀 |
-| Expression Selected   | expression_id, 출처(scenario_id\|session_id), source(card_back\|post_conversation\|history) | 표현 항목 탭                                                                                                            |
+| 이벤트                | 속성                                                                                        | 시점                                                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Home Tab Switched     | tab(scenario\|smalltalk)                                                                    | 상단 탭 칩 눌러 이동 (보고 있는 탭 재탭 제외)                                                                    |
+| Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto\|preview)                         | 원어민 표현 배우기 / 표현을 마치고 돌아와 자동 펴짐(auto) / 프리미엄 프리뷰가 스스로 뒤집음(preview) / 앞면 복귀 |
+| Expression Selected   | expression_id, 출처(scenario_id\|session_id), source(card_back\|post_conversation\|history) | 표현 항목 탭                                                                                                     |
 
 ### 오늘의 시나리오 (램프)
 

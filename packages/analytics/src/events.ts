@@ -210,7 +210,7 @@ export const EVENTS = {
   PREPARED_LEARNING_VIEWED: 'Prepared Learning Viewed',
   PREPARED_LEARNING_CONTINUED: 'Prepared Learning Continued',
   // 프리미엄 프리뷰 — 무료 사용자가 피드백 뒤 홈에서 튜토리얼 → 카드 뒤집기 → 무료 표현으로 가는 길의 단계별 이탈.
-  // 끝까지 가면 Paywall Gate Locked(source: premium_preview), 카드 뒤집기는 Scenario Card Flipped(trigger: premiumPreview)가 잡는다
+  // 끝까지 가면 Paywall Gate Locked(source: premium_preview), 카드 뒤집기는 Scenario Card Flipped(trigger: preview)가 잡는다
   PREMIUM_PREVIEW_STARTED: 'Premium Preview Started',
   PREMIUM_PREVIEW_INTRO_ADVANCED: 'Premium Preview Intro Advanced',
   PREMIUM_PREVIEW_INTRO_COMPLETED: 'Premium Preview Intro Completed',
@@ -486,7 +486,7 @@ export type EventProps = {
   'Scenario Card Flipped': {
     scenario_id: number;
     direction: 'back' | 'front';
-    // auto = 표현을 마치고 돌아와 펴짐, premiumPreview = 프리미엄 프리뷰가 스스로 뒤집음
+    // auto = 표현을 마치고 돌아와 펴짐, preview = 프리미엄 프리뷰가 스스로 뒤집음
     trigger: 'button' | 'auto' | 'preview';
   };
   'Expression Selected': ExpressionSource & {

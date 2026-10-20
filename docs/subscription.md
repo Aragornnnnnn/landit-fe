@@ -122,7 +122,7 @@ Google Play도 같은 세 제품 ID로 등록돼 있다. 할인 연간은 기존
 
 **무료 표현은 서버가 정한다(landit-be #308, LAN-704).** 표현 목록 응답의 `freeTrial: true`가 그 표현이다. 서버 기준은 "체험 도입 시각 이후 처음 완료한 시나리오의 현재 수준 1번 표현"이고, 나머지 표현은 서버가 403으로 막는다. 그래서 프리뷰는 피드백을 마칠 때 그 시나리오 목록을 새로 받아 `freeTrial`이 있을 때만 시작하고, 카드 뒷면에서 없으면 페이월로 몰지 않고 조용히 끝낸다. `freeTrial` 표현은 프리뷰가 끝난 뒤에도 카드 뒷면에서 페이월 없이 열린다. 카드 뒤집기는 무료 사용자에게도 열려 있어(2026-10-19) 언제든 그 표현에 다시 닿을 수 있다.
 
-진행 단계는 이 기기에 계정별로 둔다(`premiumPreview-store.ts`, `localStorage` 키 `landit-premium-preview:{userId}`). 단계는 `STARTED` → `TUTORIAL_DONE` → `CARD_FLIPPED` → `FREE_OPENED` → `COMPLETED`, 저장값은 "마지막으로 끝낸 단계"다. 비춘 무료 표현을 열면 `FREE_OPENED`를 남겨, 끝까지 안 하고 나와도 카드를 뒤집을 때마다 다시 비추지 않는다. 무료 표현을 마치고 페이월로 보내는 순간(`CARD_FLIPPED`·`FREE_OPENED` 어느 쪽에서든) `COMPLETED`를 남긴다. 저장소 쓰기가 실패하면 그 실행 동안은 메모리 값으로 이어 간다. 앱을 지우거나 다른 기기로 옮기면 프리뷰를 다시 볼 수 있다.
+진행 단계는 이 기기에 계정별로 둔다(`features/premium-preview/model/preview-store.ts`, `localStorage` 키 `landit-premium-preview:{userId}`). 단계는 `STARTED` → `TUTORIAL_DONE` → `CARD_FLIPPED` → `FREE_OPENED` → `COMPLETED`, 저장값은 "마지막으로 끝낸 단계"다. 비춘 무료 표현을 열면 `FREE_OPENED`를 남겨, 끝까지 안 하고 나와도 카드를 뒤집을 때마다 다시 비추지 않는다. 무료 표현을 마치고 페이월로 보내는 순간(`CARD_FLIPPED`·`FREE_OPENED` 어느 쪽에서든) `COMPLETED`를 남긴다. 저장소 쓰기가 실패하면 그 실행 동안은 메모리 값으로 이어 간다. 앱을 지우거나 다른 기기로 옮기면 프리뷰를 다시 볼 수 있다.
 
 앱을 새로 열었는데 단계가 중간이면 안내 없이 마지막 단계 다음부터 바로 이어 간다. 뒤집기·무료 표현은 끝낸 카드가 있어야 해서, 날이 바뀌어 오늘 카드가 램프면 다음 대화를 끝낼 때까지 프리뷰는 쉰다. 홈의 화면 판정은 `homePreviewViewOf`, 시작 판정은 `previewEntryOf`, 튜토리얼 타이핑은 `tutorial-typing.ts`다.
 
