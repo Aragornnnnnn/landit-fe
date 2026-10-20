@@ -20,7 +20,7 @@ export const FreeExpressionSpotlight = ({
   // 표현 목록을 감싼 칸 — 목록과 무료 표현을 표식으로 찾는다
   list: React.RefObject<HTMLElement | null>;
   onOpen: () => void;
-  // 비출 것을 못 찾았다 — 투어를 여기서 끝낸다. 무료 표현 차례는 건너뛸 수 없다(「다음에 할게요」 없음)
+  // 비출 것을 못 찾았다 — 투어를 여기서 끝낸다
   onEnd: () => void;
 }) => {
   const [step, setStep] = useState<'intro' | 'free'>('intro');
