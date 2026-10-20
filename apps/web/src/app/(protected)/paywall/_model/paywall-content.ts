@@ -275,8 +275,8 @@ export const rewardBenefitsOf = (
   dailyRefund: number,
 ): { text: string; free: boolean }[] => [
   { text: '매일 새 시나리오', free: true },
-  { text: `시나리오마다 ${formatWon(dailyRefund)}`, free: false },
-  { text: '문장별 꼼꼼 피드백', free: false },
+  { text: `시나리오마다 ${formatWon(dailyRefund)} 적립`, free: false },
+  { text: '문장별 꼼꼼한 피드백', free: false },
   { text: '맞춤 원어민 표현', free: false },
   { text: '원어민 발음 비교', free: false },
   { text: '무제한 프리톡', free: false },

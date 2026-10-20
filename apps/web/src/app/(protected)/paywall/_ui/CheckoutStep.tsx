@@ -1,46 +1,47 @@
-// 환급 페이월 2단계 — 결제 금액 안내. 무엇을 얼마에 사는지(정가를 지운 신규 회원 특가)와 돌려받는 길을 맨 위에 두고, 비교표·리뷰로 받친다.
-// 한 화면 안에 가격과 혜택 정리가 함께 보이게 한다. 피그마 「결제 금액 안내 화면」(3540:322)
+// 환급 페이월 2단계 — 결제 금액 안내. 예전 한 페이지 페이월처럼 로고와 캐릭터, 무료 vs 프리미엄 표, 고를 것 없는 100일 이용권 카드 한 장을
+// 한 화면에 담는다. 혜택 설명은 앞 화면에서 했으니 여기선 무엇을 얼마에 사는지만 또렷하게. 피그마 「결제 금액 안내 v4」(3563:322)
 import Image from 'next/image';
 
 import { Coin } from '@/features/reward/ui/common/Coin';
 import { formatWon } from '@/features/subscription/lib/won';
 import { PAYWALL_HERO } from '@/features/subscription/ui/paywall-hero-image';
 import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
+import { BenefitComparison } from '@/features/subscription/ui/product/BenefitComparison';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import { discountPercentOf, listPriceOf } from '../_model/pass-price';
 import { rewardBenefitsOf, type RewardPlan } from '../_model/paywall-content';
-import { CheckoutComparison } from './CheckoutComparison';
-import { ReviewSection } from './ReviewSection';
 
-const PassPriceCard = ({ plan }: { plan: RewardPlan }) => {
+const PassCard = ({ plan }: { plan: RewardPlan }) => {
   const listPrice = listPriceOf(plan.price);
 
   return (
-    <div className="rounded-[22px] border border-[#ece6de] bg-card px-5 py-[18px] shadow-[0_6px_18px_rgba(51,31,13,0.06)]">
-      <p className="text-base font-bold text-foreground">
-        {plan.days}일 프리미엄 이용권
-      </p>
-      <p className="mt-3 text-[15px] font-medium text-[#b1aaa3] line-through">
-        {formatWon(listPrice)}
-      </p>
-      <div className="flex items-center gap-2">
-        <span className="text-2xl font-black whitespace-nowrap text-primary">
-          {discountPercentOf(plan.price, listPrice)}%
+    // 고를 것이 이용권 하나뿐이라 처음부터 골라 둔 모양으로 그린다 — 플랜 카드의 선택 상태와 같은 테두리·바탕
+    <div className="rounded-[20px] border-2 border-primary bg-[#fffcf8] px-4 py-3 shadow-[0_6px_16px_rgba(224,122,58,0.12)]">
+      <p className="flex items-center gap-1.5">
+        <span className="text-[15px] font-bold text-[#c4601f]">
+          {plan.days}일 프리미엄 이용권
         </span>
-        <span className="text-[28px] font-black whitespace-nowrap text-foreground tabular-nums">
-          {formatWon(plan.price)}
-        </span>
-        <span className="shrink-0 rounded-md bg-destructive px-1.5 py-0.5 text-[11px] font-bold whitespace-nowrap text-white">
+        <span className="rounded-md bg-destructive px-1.5 py-0.5 text-[10px] font-bold whitespace-nowrap text-white">
           신규 회원 특가
         </span>
-      </div>
-      <div className="mt-3 border-t border-[#f1ebe3] pt-3">
-        <p className="flex items-center gap-2 text-sm font-medium text-[#5f5953]">
-          <Coin size={22} />
-          매일 하면 낸 돈 다 돌려받을 수 있어요
-        </p>
-      </div>
+      </p>
+      {/* 원가·할인율·판매가를 한 줄에 — 카드 높이를 줄여 작은 폰에서도 환급 줄까지 버튼 위에 보이게 */}
+      <p className="mt-1 flex items-baseline gap-1.5">
+        <span className="text-[13px] font-medium text-[#b1aaa3] line-through">
+          {formatWon(listPrice)}
+        </span>
+        <span className="text-lg font-black text-primary">
+          {discountPercentOf(plan.price, listPrice)}%
+        </span>
+        <span className="text-[22px] font-black text-foreground tabular-nums">
+          {formatWon(plan.price)}
+        </span>
+      </p>
+      <p className="mt-2 flex items-center gap-1.5 border-t border-[#f1ebe3] pt-2 text-[13px] font-medium text-[#5f5953]">
+        <Coin size={18} />
+        꾸준히 하면 결제한 {formatWon(plan.price)}도 돌려받아요
+      </p>
     </div>
   );
 };
@@ -48,16 +49,17 @@ const PassPriceCard = ({ plan }: { plan: RewardPlan }) => {
 export const CheckoutStep = ({
   plan,
   onBack,
+  onRestore,
+  restoreDisabled,
 }: {
   plan: RewardPlan;
   onBack: () => void;
+  onRestore: () => void;
+  restoreDisabled: boolean;
 }) => (
-  <>
-    <section
-      data-inview="true"
-      className="relative bg-[linear-gradient(180deg,#fdf1e8,var(--color-background))] pt-[max(var(--safe-area-inset-top),8px)] text-center"
-    >
-      <div className="flex h-10 items-center pl-2">
+  <div data-inview="true">
+    <section className="bg-[linear-gradient(180deg,#fdf1e8,var(--color-background))] pt-[max(var(--safe-area-inset-top),8px)]">
+      <div className="flex h-10 items-center justify-between pr-5 pl-2">
         <button
           type="button"
           onClick={onBack}
@@ -66,43 +68,37 @@ export const CheckoutStep = ({
         >
           <ChevronLeftIcon size={26} />
         </button>
+        {/* 스토어 심사가 요구하는 구매 복원 진입점 — 결제가 일어나는 화면에도 둔다 */}
+        <button
+          type="button"
+          onClick={onRestore}
+          disabled={restoreDisabled}
+          className="text-[13px] leading-none text-muted-foreground disabled:opacity-50"
+        >
+          구매 복원
+        </button>
       </div>
-      <div className="flex justify-center">
-        <PremiumBadge />
+      <div className="mt-1 flex justify-center">
+        <PremiumBadge logoHeight={32} />
       </div>
-      <h2 className="mt-3 text-[26px] font-black tracking-[-0.025em] text-foreground">
-        {plan.days}일 프리미엄 이용권
-      </h2>
-      {/* 캐릭터 단체샷 — 팔을 기댄 선에서 잘라 아래 흰 판이 받친다 */}
-      <div className="relative mt-3 h-[200px] overflow-hidden">
+      {/* 캐릭터 단체샷 — 자르지 않고 줄여서, 팔을 기댄 선이 아래 표 카드 윗선에 오게 한다 */}
+      <div className="relative mt-3 h-[131px] overflow-hidden">
         <Image
           {...PAYWALL_HERO}
           alt=""
           priority
-          className="absolute top-0 left-1/2 w-[calc(100%+10px)] max-w-none -translate-x-1/2"
+          className="absolute top-0 left-1/2 w-[257px] max-w-none -translate-x-1/2"
         />
       </div>
     </section>
 
-    <div
-      data-inview="true"
-      className="rounded-t-[28px] bg-card px-5 pt-6 pb-8 shadow-[0_-6px_18px_rgba(51,31,13,0.06)]"
-    >
-      <PassPriceCard plan={plan} />
-
-      <section className="mt-9">
-        <h3 className="text-[22px] font-black tracking-[-0.02em] text-foreground">
-          프리미엄이면 이게 다 열려요
-        </h3>
-
-        <div className="mt-4">
-          <CheckoutComparison rows={rewardBenefitsOf(plan.dailyRefund)} />
-        </div>
-      </section>
+    <div className="px-5">
+      <div className="rounded-3xl border border-[#e9e7e2] bg-card pt-1 pb-3 shadow-[0_2px_5px_rgba(51,38,26,0.05)]">
+        <BenefitComparison benefits={rewardBenefitsOf(plan.dailyRefund)} />
+      </div>
+      <div className="mt-3.5">
+        <PassCard plan={plan} />
+      </div>
     </div>
-
-    <div className="-mt-6 pb-4">
-      <ReviewSection rewardChallenge />
-    </div>
-  </>
+  </div>
 );

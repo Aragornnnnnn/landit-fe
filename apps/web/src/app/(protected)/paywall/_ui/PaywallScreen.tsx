@@ -173,7 +173,7 @@ export const PaywallScreen = ({
         <PaywallHero />
         <PremiumOnlySection />
         <DataSection />
-        <ReviewSection rewardChallenge={false} />
+        <ReviewSection />
         <CompareSection />
         <div ref={plansRef} data-plan-section>
           <PlanSection

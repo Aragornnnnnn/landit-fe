@@ -80,7 +80,7 @@ describe('buildRewardPlan', () => {
 describe('rewardBenefitsOf', () => {
   it('적립 줄에 하루 몫을 쓴다 — 가격이 바뀌면 줄도 따라간다', () => {
     expect(rewardBenefitsOf(300).map((row) => row.text)).toContain(
-      '시나리오마다 300원',
+      '시나리오마다 300원 적립',
     );
   });
 

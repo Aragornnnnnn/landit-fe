@@ -4,6 +4,7 @@
 // 결제·복원·닫기는 PaywallScreen이 지휘하고 여기서는 어느 단계인지와 버튼만 안다
 import { useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import Link from 'next/link';
 
 import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
@@ -59,19 +60,28 @@ export const RewardPaywall = ({
             <BenefitsStep plan={plan} />
           </>
         ) : (
-          <CheckoutStep plan={plan} onBack={() => goTo('benefits')} />
+          <CheckoutStep
+            plan={plan}
+            onBack={() => goTo('benefits')}
+            onRestore={onRestore}
+            restoreDisabled={busy}
+          />
         )}
       </div>
 
       <footer className="absolute inset-x-0 bottom-0 z-20 bg-[linear-gradient(to_bottom,transparent,var(--color-background)_28px)] px-5 pt-9 pb-[max(var(--safe-area-inset-bottom),12px)]">
         {step === 'benefits' ? (
-          <Button onClick={() => goTo('checkout')}>
-            {plan.days}일 프리미엄 시작하기
-          </Button>
+          <Button onClick={() => goTo('checkout')}>다음</Button>
         ) : (
-          <Button onClick={onPurchase} loading={busy}>
-            프리미엄 시작하기
-          </Button>
+          <>
+            <Button onClick={onPurchase} loading={busy}>
+              프리미엄 시작하기
+            </Button>
+            <nav className="mt-3 flex justify-center gap-3 text-[11px] leading-[1.3] font-medium text-muted-foreground underline">
+              <Link href="/terms">이용약관</Link>
+              <Link href="/privacy">개인정보 처리방침</Link>
+            </nav>
+          </>
         )}
       </footer>
     </main>

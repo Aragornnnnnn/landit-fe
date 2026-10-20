@@ -410,9 +410,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     pass: { packageId: 'pass_100d', price, currency: 'KRW' },
   });
   const goCheckout = () =>
-    fireEvent.click(
-      screen.getByRole('button', { name: '100일 프리미엄 시작하기' }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
   beforeEach(() => {
     mocks.packages = passPackages(50_000);
@@ -449,9 +447,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     goCheckout();
 
     expect(mocks.purchase).not.toHaveBeenCalled();
-    expect(
-      screen.getByRole('heading', { name: '100일 프리미엄 이용권' }),
-    ).toBeInTheDocument();
+    expect(screen.getByText('100일 프리미엄 이용권')).toBeInTheDocument();
   });
 
   it('결제 금액 안내가 뜨면 노출 이벤트를 찍는다 — 혜택 화면 → 금액 안내 → 결제 단계별 이탈을 본다', () => {
@@ -464,14 +460,23 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     });
   });
 
-  it('결제 금액 안내는 환급을 이벤트로 따로 내세우지 않고 한 줄로만 말한다', () => {
+  it('결제 금액 안내는 환급을 이벤트로 따로 내세우지 않고 결제한 금액을 돌려받는다고 한 줄로만 말한다', () => {
     render(<PaywallScreen rewardChallenge />);
     goCheckout();
 
     expect(screen.queryByText(/환급 이벤트/)).toBeNull();
     expect(
-      screen.getByText('매일 하면 낸 돈 다 돌려받을 수 있어요'),
+      screen.getByText('꾸준히 하면 결제한 50,000원도 돌려받아요'),
     ).toBeInTheDocument();
+  });
+
+  it('결제 금액 안내에서도 구매 복원을 할 수 있다 — 스토어 심사가 결제 화면에서 찾는다', () => {
+    render(<PaywallScreen rewardChallenge />);
+    goCheckout();
+
+    fireEvent.click(screen.getByRole('button', { name: '구매 복원' }));
+
+    expect(mocks.restore).toHaveBeenCalled();
   });
 
   it('결제 금액 안내는 정가를 지우고 신규 회원 특가로 반값을 보여 준다', () => {
@@ -527,7 +532,9 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
 
     goCheckout();
     expect(screen.getByText('60,000원')).toBeInTheDocument();
-    expect(screen.getByText('30,000원')).toBeInTheDocument();
+    expect(
+      screen.getByText('꾸준히 하면 결제한 30,000원도 돌려받아요'),
+    ).toBeInTheDocument();
   });
 
   it('구매 복원은 맨 위에만 있다 — 구독이 아니라 아래 링크를 두지 않는다', () => {

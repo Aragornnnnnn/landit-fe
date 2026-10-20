@@ -1,4 +1,4 @@
-// 「먼저 시작한 유저들의 이야기」 — 스토어 평점과 실제 리뷰를 옆으로 넘겨 본다. 환급 챌린지(결제 금액 안내)에서는 「먼저 시작한 분들의 이야기」로 부르고 본문을 자르지 않는다
+// 「먼저 시작한 유저들의 이야기」 — 스토어 평점과 실제 리뷰를 옆으로 넘겨 본다
 import type { CSSProperties } from 'react';
 import Image from 'next/image';
 
@@ -18,25 +18,14 @@ const Stars = ({ className }: { className: string }) => (
   </span>
 );
 
-export const ReviewSection = ({
-  rewardChallenge,
-}: {
-  /** 환급 챌린지가 켜졌는가 — 제목 문체와 본문을 다 보여 줄지가 갈린다 */
-  rewardChallenge: boolean;
-}) => (
+export const ReviewSection = () => (
   <div className="pt-14">
     <RevealSection>
       <SectionHeading
         title={
-          rewardChallenge ? (
-            <>
-              <Highlight>먼저 시작한 분들</Highlight>의 이야기
-            </>
-          ) : (
-            <>
-              <Highlight>먼저 시작한 유저들</Highlight>의 이야기
-            </>
-          )
+          <>
+            <Highlight>먼저 시작한 유저들</Highlight>의 이야기
+          </>
         }
       />
       <div className="relative mt-5 flex items-center gap-2.5 px-6">
@@ -70,7 +59,7 @@ export const ReviewSection = ({
         {REVIEWS.map((review, index) => (
           <li
             key={review.body}
-            className={`reveal-up flex w-[286px] shrink-0 snap-start flex-col gap-2 rounded-[20px] border border-[#e9e7e2] bg-card p-5 shadow-[0_2px_10px_rgba(51,38,26,0.05)] ${rewardChallenge ? 'min-h-[231px]' : 'h-[231px]'}`}
+            className="reveal-up flex h-[231px] w-[286px] shrink-0 snap-start flex-col gap-2 rounded-[20px] border border-[#e9e7e2] bg-card p-5 shadow-[0_2px_10px_rgba(51,38,26,0.05)]"
             style={{ '--i': index } as CSSProperties}
           >
             <Stars className="text-xs tracking-[0.06em]" />
@@ -80,9 +69,7 @@ export const ReviewSection = ({
               </p>
             )}
             {/* 낱말 가운데에서 끊기지 않게 어절 단위로 줄을 바꾼다 */}
-            <p
-              className={`text-[13.5px] leading-[21px] tracking-[-0.01em] break-keep text-[#3d3d3f] ${rewardChallenge ? '' : 'line-clamp-5'}`}
-            >
+            <p className="line-clamp-5 text-[13.5px] leading-[21px] tracking-[-0.01em] break-keep text-[#3d3d3f]">
               {review.body}
             </p>
             <p className="mt-auto text-xs text-muted-foreground">
