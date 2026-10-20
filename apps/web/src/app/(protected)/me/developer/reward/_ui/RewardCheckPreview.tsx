@@ -8,6 +8,7 @@ import { rewardIntroCopyOf } from '@/app/(protected)/reward/_model/reward-intro-
 // 점검은 실제 부품을 그대로 그려야 해서 환급 라우트의 비공개 폴더를 가져온다
 import { MissedRewardView } from '@/app/(protected)/reward/_ui/MissedRewardIntro';
 import { RefundApplyButton } from '@/app/(protected)/reward/_ui/RefundApplyButton';
+import { RewardExitOfferSheet } from '@/app/(protected)/reward/_ui/RewardExitOfferSheet';
 import { RewardFrame } from '@/app/(protected)/reward/_ui/RewardFrame';
 import { RewardHistoryList } from '@/app/(protected)/reward/_ui/RewardHistoryFeed';
 import {
@@ -95,6 +96,29 @@ const RecordPreview = ({
   );
 };
 
+// 나가려 할 때 뜨는 신규 회원 특가 — 하루 한 번 조건 없이 바로 연다. 시트를 닫으면 다시 열 수 있게 소개 위에 둔다
+const ExitOfferPreview = ({ onBack }: { onBack: () => void }) => {
+  const [open, setOpen] = useState(true);
+  const copy = rewardIntroCopyOf(PREVIEW_OFFER, false);
+
+  return (
+    <RewardFrame
+      onBack={() => (open ? onBack() : setOpen(true))}
+      footer={<RewardStartButton label={copy.cta} note={copy.priceNote} />}
+      fadeAboveFooter
+    >
+      <RewardIntro copy={copy} offer={PREVIEW_OFFER} />
+      <RewardExitOfferSheet
+        open={open}
+        offer={PREVIEW_OFFER}
+        onStart={onBack}
+        onLeave={onBack}
+        onClose={() => setOpen(false)}
+      />
+    </RewardFrame>
+  );
+};
+
 const COIN_BALANCE_WON = 21000;
 // 하루 몫 — 오늘의 시나리오 하나로 받는 금액
 const COIN_GAIN_WON = 500;
@@ -167,7 +191,6 @@ export const RewardCheckPreview = ({
     return (
       <RewardFrame
         onBack={onBack}
-        trailing={<RewardRulesButton dailyWon={PREVIEW_OFFER.dailyWon} />}
         footer={<RewardStartButton label={copy.cta} note={copy.priceNote} />}
         fadeAboveFooter
       >
@@ -175,6 +198,7 @@ export const RewardCheckPreview = ({
       </RewardFrame>
     );
   }
+  if (name === 'exitOffer') return <ExitOfferPreview onBack={onBack} />;
   if (name === 'missed' || name === 'missedTalked') {
     const missed = missedOf(name === 'missedTalked');
     const copy = rewardIntroCopyOf(PREVIEW_OFFER, missed.talkedToday);

@@ -59,6 +59,7 @@ const OTHER_CASES = [
   'introTalked',
   'missed',
   'missedTalked',
+  'exitOffer',
   'loading',
   'coin',
   'earned',
