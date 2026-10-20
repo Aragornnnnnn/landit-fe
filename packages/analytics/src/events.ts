@@ -151,6 +151,9 @@ export const EVENTS = {
   REWARD_VIEWED: 'Reward Viewed',
   REWARD_ENTRY_TAPPED: 'Reward Entry Tapped',
   REWARD_RULES_OPENED: 'Reward Rules Opened',
+  // 결제 전 환급 화면에서 나가려 할 때 하루 한 번 뜨는 신규 회원 특가 시트와, 거기서 고른 버튼
+  REWARD_EXIT_OFFER_VIEWED: 'Reward Exit Offer Viewed',
+  REWARD_EXIT_OFFER_TAPPED: 'Reward Exit Offer Tapped',
   // 오늘의 시나리오를 끝내고 홈에 돌아왔을 때 헤더 알약으로 동전이 날아드는 연출
   REWARD_COIN_SHOWER_VIEWED: 'Reward Coin Shower Viewed',
   REWARD_COIN_SHOWER_SKIPPED: 'Reward Coin Shower Skipped',
@@ -357,6 +360,10 @@ export type RewardViewStatus =
   | 'review';
 // 환급 화면으로 들어온 곳 — 탭 헤더의 알약, 내 정보의 타일
 export type RewardEntrySource = 'header' | 'me';
+// 나갈 때 특가를 본 화면 — 처음 보는 소개(대화 0~2일) / 놓친 금액(대화 3일째부터)
+export type RewardExitOfferStatus = 'intro' | 'missed';
+// 특가 시트에서 고른 버튼 — 신규 특가로 시작하기 / 혜택 포기하기
+export type RewardExitOfferAction = 'start' | 'leave';
 // 프로필에 붙는 환급 상태 — 참여한 적 없으면 none
 export type RewardProfileState =
   'none' | 'active' | 'ended' | 'pending' | 'review';
@@ -747,6 +754,11 @@ export type EventProps = {
   };
   'Reward Entry Tapped': { source: RewardEntrySource };
   'Reward Rules Opened': undefined;
+  'Reward Exit Offer Viewed': { status: RewardExitOfferStatus };
+  'Reward Exit Offer Tapped': {
+    status: RewardExitOfferStatus;
+    action: RewardExitOfferAction;
+  };
   'Reward Coin Shower Viewed': { gain_won: number };
   'Reward Coin Shower Skipped': { gain_won: number };
   // confirmed가 거짓이면 결제 확인이 늦어 금액 없이 보여 준 안내다

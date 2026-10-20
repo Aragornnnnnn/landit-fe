@@ -29,6 +29,8 @@ const mocks = vi.hoisted(() => ({
   daily: null as { scenario: { completed: boolean } | null } | null,
 }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
+// 그림(동전)은 보지 않는다
+vi.mock('next/image', () => ({ default: () => <span /> }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace }),
 }));
@@ -88,6 +90,7 @@ const viewed = () =>
 beforeEach(() => {
   mocks.my = base;
   mocks.daily = null;
+  localStorage.clear();
 });
 afterEach(cleanup);
 
@@ -217,5 +220,89 @@ describe('RewardScreen 계측', () => {
 
     expect(screen.getByText('소개')).toBeInTheDocument();
     expect(screen.queryByText(/^놓친/)).not.toBeInTheDocument();
+  });
+
+  describe('결제 전 화면에서 나갈 때', () => {
+    const back = () =>
+      fireEvent.click(screen.getByRole('button', { name: /뒤로/ }));
+
+    it('뒤로 가면 바로 나가지 않고 신규 회원 특가 시트를 띄우고 한 번 찍는다', () => {
+      mocks.my = { ...base, invited: true };
+      render(<RewardScreen />);
+      mocks.replace.mockClear();
+
+      back();
+
+      expect(screen.getByText('신규 특가로 시작하기')).toBeInTheDocument();
+      expect(mocks.replace).not.toHaveBeenCalled();
+      expect(
+        mocks.track.mock.calls.filter(
+          ([name]) => name === 'Reward Exit Offer Viewed',
+        ),
+      ).toEqual([['Reward Exit Offer Viewed', { status: 'intro' }]]);
+    });
+
+    it('「신규 특가로 시작하기」는 결제 금액 안내로 바로 보낸다', () => {
+      mocks.my = { ...base, invited: true };
+      render(<RewardScreen />);
+      back();
+
+      fireEvent.click(
+        screen.getByRole('button', { name: '신규 특가로 시작하기' }),
+      );
+
+      expect(mocks.replace).toHaveBeenLastCalledWith(
+        '/paywall?from=%2Freward&source=reward&step=checkout',
+      );
+      expect(mocks.track).toHaveBeenCalledWith('Reward Exit Offer Tapped', {
+        status: 'intro',
+        action: 'start',
+      });
+    });
+
+    it('「혜택 포기하기」를 누르면 홈으로 나간다', () => {
+      mocks.my = { ...base, invited: true };
+      render(<RewardScreen />);
+      back();
+
+      fireEvent.click(screen.getByRole('button', { name: '혜택 포기하기' }));
+
+      expect(mocks.replace).toHaveBeenLastCalledWith('/scenario');
+      expect(mocks.track).toHaveBeenCalledWith('Reward Exit Offer Tapped', {
+        status: 'intro',
+        action: 'leave',
+      });
+    });
+
+    it('같은 날 다시 나가면 시트 없이 바로 홈으로 간다', () => {
+      mocks.my = { ...base, invited: true };
+      const first = render(<RewardScreen />);
+      back();
+      first.unmount();
+      mocks.replace.mockClear();
+
+      render(<RewardScreen />);
+      back();
+
+      expect(screen.queryByText('신규 특가로 시작하기')).toBeNull();
+      expect(mocks.replace).toHaveBeenCalledWith('/scenario');
+    });
+
+    it('참여자는 붙잡지 않고 바로 나간다', () => {
+      mocks.my = { ...base, reward: kept() };
+      render(<RewardScreen />);
+
+      back();
+
+      expect(screen.queryByText('신규 특가로 시작하기')).toBeNull();
+      expect(mocks.replace).toHaveBeenCalledWith('/scenario');
+    });
+  });
+
+  it('처음 보는 소개(대화 0~2일)는 화면에 같은 그림이 있어 ⓘ를 두지 않는다', () => {
+    mocks.my = { ...base, invited: true };
+    render(<RewardScreen />);
+
+    expect(screen.queryByRole('button', { name: '환급 규칙' })).toBeNull();
   });
 });
