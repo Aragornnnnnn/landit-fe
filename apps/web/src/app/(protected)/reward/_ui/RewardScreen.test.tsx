@@ -36,7 +36,12 @@ vi.mock('@/shared/lib/last-tab', () => ({ homePath: () => '/scenario' }));
 vi.mock('../../_model/useMyReward', () => ({ useMyReward: () => mocks.my }));
 // 소개 화면의 금액과 오늘 대화 여부 — 셸과 서버를 부르지 않게 고정한다
 vi.mock('../../_model/useRewardOffer', () => ({
-  useRewardOffer: () => ({ days: 100, dailyWon: 500, maximumWon: 50_000 }),
+  useRewardOffer: () => ({
+    days: 100,
+    priceWon: 50_000,
+    dailyWon: 500,
+    maximumWon: 50_000,
+  }),
 }));
 vi.mock('@/features/scenario/model/useDailyScenarioQuery', () => ({
   useDailyScenarioQuery: () => ({ daily: mocks.daily }),
@@ -53,8 +58,15 @@ vi.mock('./MissedRewardIntro', () => ({
   ),
 }));
 vi.mock('@/features/reward/ui/RewardGuide', () => ({
-  RewardGuide: () => <p>소개</p>,
   RewardRuleList: () => <p>규칙</p>,
+  SAMPLE_DAYS: 3,
+  sampleHistoryOf: () => [],
+}));
+vi.mock('@/features/reward/ui/RefundDepositDemo', () => ({
+  RefundDepositDemo: () => <p>소개</p>,
+}));
+vi.mock('@/features/reward/ui/RewardHistory', () => ({
+  RewardHistory: () => null,
 }));
 
 const preview = (patch: Partial<RewardPreview> = {}): RewardPreview => ({
@@ -165,7 +177,7 @@ describe('RewardScreen 계측', () => {
     mocks.track.mockClear();
 
     fireEvent.click(
-      screen.getByRole('button', { name: '100일 환급 챌린지 시작하기' }),
+      screen.getByRole('button', { name: '프리미엄 시작하고 환급받기' }),
     );
 
     expect(mocks.track.mock.calls).toEqual([

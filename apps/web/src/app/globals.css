@@ -888,3 +888,29 @@
     }
   }
 }
+
+/* 환급 소개 동전 탑이 내려앉는 순간 — 카드가 아래로 눌렸다가 튀어 오른다. 마지막 날 기둥이 앞 사흘과 다른 무게로 「쾅」 떨어지게 */
+@keyframes coin-thud {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    transform: translateY(5px) scale(1.012, 0.985);
+  }
+  60% {
+    transform: translateY(-2px) scale(1);
+  }
+}
+
+@layer utilities {
+  .animate-coin-thud {
+    animation: coin-thud 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.32s both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-coin-thud {
+      animation: none;
+    }
+  }
+}

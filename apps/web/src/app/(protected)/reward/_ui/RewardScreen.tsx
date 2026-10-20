@@ -89,7 +89,7 @@ export const RewardScreen = () => {
       glow={glow}
       footer={
         introReady ? (
-          <RewardStartButton label={introCopy.cta} />
+          <RewardStartButton label={introCopy.cta} note={introCopy.priceNote} />
         ) : view.kind === 'record' ? (
           <RefundApplyButton reward={view.reward} />
         ) : null
@@ -102,7 +102,7 @@ export const RewardScreen = () => {
         (missed ? (
           <MissedRewardIntro missed={missed} />
         ) : (
-          <RewardIntro copy={introCopy} dailyWon={offer.dailyWon} />
+          <RewardIntro copy={introCopy} offer={offer} />
         ))}
       {view.kind === 'record' && (
         <RewardRecord reward={view.reward} history={<RewardHistoryFeed />} />

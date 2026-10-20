@@ -133,10 +133,10 @@ export const RewardCheckPreview = ({
       <RewardFrame
         onBack={onBack}
         trailing={<RewardRulesButton dailyWon={PREVIEW_OFFER.dailyWon} />}
-        footer={<RewardStartButton label={copy.cta} />}
+        footer={<RewardStartButton label={copy.cta} note={copy.priceNote} />}
         fadeAboveFooter
       >
-        <RewardIntro copy={copy} dailyWon={PREVIEW_OFFER.dailyWon} />
+        <RewardIntro copy={copy} offer={PREVIEW_OFFER} />
       </RewardFrame>
     );
   }
