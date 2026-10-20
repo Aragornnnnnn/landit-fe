@@ -6,6 +6,7 @@ import {
   EXAMPLE_CARDS,
   EXAMPLE_LANDING_INDEX,
   maskName,
+  rewardBenefitsOf,
 } from './paywall-content';
 
 describe('EXAMPLE_CARDS', () => {
@@ -73,5 +74,22 @@ describe('buildRewardPlan', () => {
       dailyRefund: 555,
       maxRefund: 55_500,
     });
+  });
+});
+
+describe('rewardBenefitsOf', () => {
+  it('적립 줄에 하루 몫을 쓴다 — 가격이 바뀌면 줄도 따라간다', () => {
+    expect(rewardBenefitsOf(300).map((row) => row.text)).toContain(
+      '시나리오마다 300원 적립',
+    );
+  });
+
+  it('무료로도 되는 줄은 매일 새 시나리오 하나뿐이고 맨 위에 있다', () => {
+    const rows = rewardBenefitsOf(500);
+
+    expect(rows.filter((row) => row.free).map((row) => row.text)).toEqual([
+      '매일 새 시나리오',
+    ]);
+    expect(rows[0].free).toBe(true);
   });
 });

@@ -91,7 +91,8 @@ export const FeedbackDetail = ({
   );
 };
 
-const TurnCard = ({ turn }: { turn: MessageFeedbackResponse }) => {
+// 턴 한 장 — 상세 분석 화면이 넘겨 보는 본문. 환급 페이월의 피드백 미리보기도 같은 걸 그린다
+export const TurnCard = ({ turn }: { turn: MessageFeedbackResponse }) => {
   const isGood = turn.feedbackType === 'GOOD';
 
   return (

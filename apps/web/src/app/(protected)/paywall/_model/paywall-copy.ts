@@ -1,8 +1,6 @@
-// 고른 플랜에 따라 갈리는 문구 — 지금 플랜은 연간에만 무료 체험이 있어 CTA와 결제 안내가 달라지고, 환급 챌린지가 켜지면 환급 플랜 문구를 쓴다
+// 고른 플랜에 따라 갈리는 문구 — 지금 플랜은 연간에만 무료 체험이 있어 CTA와 결제 안내가 달라진다
 import { formatWon } from '@/features/subscription/lib/won';
 import { type PaywallPlan } from '@/features/subscription/model/product/plans';
-
-import type { RewardPlan } from './paywall-content';
 
 /** CTA 문구. 연간은 무료 체험을, 월간은 월 결제액을 앞세운다 */
 export const getCtaLabel = (plan: PaywallPlan) =>
@@ -21,26 +19,3 @@ export const getCancelNotice = (plan: PaywallPlan) =>
   plan.id === 'yearly'
     ? '체험 종료 24시간 전까지 해지하면 청구되지 않아요'
     : '결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요';
-
-/** 거는 금액 — 만 원으로 나누어떨어지면 「5만 원」처럼 짧게, 아니면 원 단위로 적는다 */
-const formatStake = (price: number) =>
-  price % 10_000 === 0 ? `${price / 10_000}만 원` : formatWon(price);
-
-/** 환급 챌린지 CTA 문구. 돌려받을 돈을 건다는 느낌이 들게 「걸고」라고 한다 */
-export const getRewardCtaLabel = ({ price }: RewardPlan) =>
-  `${formatStake(price)} 걸고 도전하기`;
-
-/** 환급 안내 세 줄 — 오늘 내는 돈, 쌓이는 법, 돌려받는 때. 이모지와 문장 */
-export const getRewardSteps = ({ days, price, dailyRefund }: RewardPlan) =>
-  [
-    ['💳', `오늘 ${formatWon(price)} 결제 (${days}일 이용권)`],
-    ['💰', `시나리오 1개 끝낼 때마다 ${formatWon(dailyRefund)} 적립`],
-    ['📅', `${days}일 뒤, 모은 만큼 돌려받아요`],
-  ] as const;
-
-/** 무대 띠 문구 — 제목 위아래 두 줄 */
-export const getRewardTickers = ({ days, dailyRefund }: RewardPlan) => ({
-  top: `${days}일 환급 챌린지 ✦ 오늘의 시나리오 하면 하루 ${formatWon(dailyRefund)} ✦ `,
-  // 「결제 금액 그대로」라고 하지 않는다 — 돌려받는 것은 모은 금액이다
-  bottom: '공부하면 돌려받는 영어 ✦ 모은 만큼 100% 환급 ✦ ',
-});

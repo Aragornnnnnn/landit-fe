@@ -255,6 +255,8 @@ export const ALARM_CHECK_PATH = '/me/developer';
 export const PREMIUM_ONBOARDING_CHECK_PATH = '/me/developer/premium-onboarding';
 // 환급 점검 — 가짜 값으로 환급 화면을 케이스별로 연다 (ADMIN)
 export const REWARD_CHECK_PATH = '/me/developer/reward';
+// ADMIN이 개발자 묶음에서 여는 환급 페이월 미리보기 — 결제하지 않고 지표도 찍지 않는다
+export const REWARD_PAYWALL_CHECK_PATH = '/me/developer/reward-paywall';
 
 /**
  * 마이페이지 아래 화면에서 돌아가기. 마이페이지에서 밀고 들어왔으면 한 칸 뒤로 —

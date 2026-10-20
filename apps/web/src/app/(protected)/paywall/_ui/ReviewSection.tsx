@@ -1,4 +1,4 @@
-// 「먼저 시작한 유저들의 이야기」 — 스토어 평점과 실제 리뷰를 옆으로 넘겨 본다. 환급 챌린지에서는 제목을 다른 섹션처럼 ~해요체로 쓴다
+// 「먼저 시작한 유저들의 이야기」 — 스토어 평점과 실제 리뷰를 옆으로 넘겨 본다
 import type { CSSProperties } from 'react';
 import Image from 'next/image';
 
@@ -18,26 +18,14 @@ const Stars = ({ className }: { className: string }) => (
   </span>
 );
 
-export const ReviewSection = ({
-  rewardChallenge,
-}: {
-  /** 환급 챌린지가 켜졌는가 — 제목 문체만 갈린다 */
-  rewardChallenge: boolean;
-}) => (
+export const ReviewSection = () => (
   <div className="pt-14">
     <RevealSection>
       <SectionHeading
         title={
-          rewardChallenge ? (
-            <>
-              {'먼저 시작한 유저들은\n'}
-              <Highlight>이렇게 말해요</Highlight>
-            </>
-          ) : (
-            <>
-              <Highlight>먼저 시작한 유저들</Highlight>의 이야기
-            </>
-          )
+          <>
+            <Highlight>먼저 시작한 유저들</Highlight>의 이야기
+          </>
         }
       />
       <div className="relative mt-5 flex items-center gap-2.5 px-6">

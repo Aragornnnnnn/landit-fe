@@ -1,10 +1,8 @@
 // 롱 페이월의 고정 문구와 그림 — 학습 단계 카드, 대화 카드, 데이터 수치, 리뷰. 아래쪽에 환급 챌린지 값도 있다(하루 몫과 최대 환급액 산식은 features/reward의 refund-offer). 피그마 「페이월 v2」(2640:8041) 기준
 import type { SubscriptionPlan } from '@landit/analytics';
 
-import {
-  CHALLENGE_DAYS,
-  rewardOfferOf,
-} from '@/features/reward/model/refund-offer';
+import { rewardOfferOf } from '@/features/reward/model/refund-offer';
+import { formatWon } from '@/features/subscription/lib/won';
 import { PASS_FALLBACK_PRICE } from '@/features/subscription/model/product/offering';
 
 const IMAGE_DIR = '/images/paywall';
@@ -238,20 +236,8 @@ export const maskName = (name: string) => {
   );
 };
 
-/** 6개월 꾸준히 한 유저의 평균 습득 표현 수 */
-export const LEARNABLE_EXPRESSION_COUNT = 726;
-/** 그 기간 꾸준히 한 유저의 평균 대화 시간(분) */
-export const AVERAGE_TALK_MINUTES = 1278;
-/** 위 두 평균을 낸 때 */
-export const OUTCOME_AS_OF = '2026년 10월';
-/** 두 평균을 잰 기간(6개월)의 날짜 수 — 챌린지 기간으로 환산할 때 나눈다 */
-export const OUTCOME_DAYS = 183;
-
 /** 환급 챌린지로 파는 상품 — 100일 이용권 하나(한 번 결제하는 단건 상품) */
 export const REWARD_PLAN_ID = 'pass' satisfies SubscriptionPlan;
-
-/** 환급 챌린지 기간 문구 */
-export const REWARD_CHALLENGE_PERIOD = `${CHALLENGE_DAYS}일`;
 
 /** 환급 챌린지 화면에 그릴 값 */
 export interface RewardPlan {
@@ -276,3 +262,24 @@ export const buildRewardPlan = (
   const { days, dailyWon, maximumWon } = rewardOfferOf(price);
   return { days, price, dailyRefund: dailyWon, maxRefund: maximumWon };
 };
+
+/** 오늘의 시나리오로 뽑혀 카드 벽 가운데 놓이는 시나리오 — 처음 만난 클로이와 파티에서 대화하는 장면이 가장 해 보고 싶게 만든다 */
+export const WALL_PICK_INDEX = SCENARIOS.findIndex((scenario) =>
+  scenario.image.endsWith('/s-06.webp'),
+);
+
+/**
+ * 결제 금액 안내의 비교표 줄 — 환급 챌린지는 적립을 프리미엄 둘째 줄에 넣는다. 글자가 많으면 읽기 힘들어 짧게 쓴다
+ *
+ * @param dailyRefund 오늘의 시나리오를 끝낸 날 쌓이는 금액
+ */
+export const rewardBenefitsOf = (
+  dailyRefund: number,
+): { text: string; free: boolean }[] => [
+  { text: '매일 새 시나리오', free: true },
+  { text: `시나리오마다 ${formatWon(dailyRefund)} 적립`, free: false },
+  { text: '문장별 꼼꼼한 피드백', free: false },
+  { text: '맞춤 원어민 표현', free: false },
+  { text: '원어민 발음 비교', free: false },
+  { text: '무제한 프리톡', free: false },
+];
