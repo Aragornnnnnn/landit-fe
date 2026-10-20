@@ -138,7 +138,12 @@ describe('ScenarioCard', () => {
         scenario={completedScenario}
         onStart={vi.fn()}
         expressions={{ completed: 0, total: 3 }}
-        tour={{ screen: 'flip_card', onFlipped, onTourEnd: vi.fn() }}
+        tour={{
+          screen: 'flip_card',
+          onFlipped,
+          onFreeOpened: vi.fn(),
+          onTourEnd: vi.fn(),
+        }}
       />,
     );
 
@@ -158,7 +163,12 @@ describe('ScenarioCard', () => {
         onStart={vi.fn()}
         autoFlip
         expressions={{ completed: 0, total: 3 }}
-        tour={{ screen: 'flip_card', onFlipped, onTourEnd: vi.fn() }}
+        tour={{
+          screen: 'flip_card',
+          onFlipped,
+          onFreeOpened: vi.fn(),
+          onTourEnd: vi.fn(),
+        }}
       />,
     );
 

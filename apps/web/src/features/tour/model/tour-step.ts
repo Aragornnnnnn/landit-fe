@@ -6,6 +6,8 @@ export const TOUR_STEPS = [
   'STARTED',
   'TUTORIAL_DONE',
   'CARD_FLIPPED',
+  // 비춘 무료 표현을 열었다 — 끝까지 안 하고 나와도 다시 비추지 않는다. 그 표현을 마치면 그때 페이월로 간다
+  'FREE_OPENED',
   // 무료 표현을 마치고 페이월로 갔거나, 투어를 넘겼다 — 다시 뜨지 않는다
   'COMPLETED',
 ] as const;
@@ -27,3 +29,7 @@ export const tourScreenOf = (step: TourStep | null): TourScreen => {
       return 'none';
   }
 };
+
+/** 무료 표현을 마치면 투어를 끝내고 페이월로 보낼 단계인가 — 무료 표현 차례이거나, 열어 둔 채 나왔다 */
+export const awaitsFreeExpressionFinish = (step: TourStep | null) =>
+  step === 'CARD_FLIPPED' || step === 'FREE_OPENED';

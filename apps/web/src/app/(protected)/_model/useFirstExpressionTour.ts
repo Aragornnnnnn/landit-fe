@@ -8,7 +8,10 @@ import { useRouter } from 'next/navigation';
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
 import { isTourPreview } from '@/features/tour/model/tour-preview';
-import { tourScreenOf } from '@/features/tour/model/tour-step';
+import {
+  awaitsFreeExpressionFinish,
+  tourScreenOf,
+} from '@/features/tour/model/tour-step';
 import { useTourStep } from '@/features/tour/model/useTourStep';
 import { track } from '@/shared/analytics';
 import { paywallPath } from '@/shared/lib/routes';
@@ -27,9 +30,9 @@ export const useFirstExpressionTour = () => {
     step: eligible ? step : null,
     screen: eligible ? tourScreenOf(step) : ('none' as const),
     saveStep,
-    // 무료 표현 차례에만 — 표현을 마치면 투어를 끝낸 것으로 남기고 목록 대신 페이월로 보낸다
+    // 무료 표현 차례(또는 열어 둔 채 나왔을 때)에만 — 표현을 마치면 투어를 끝낸 것으로 남기고 목록 대신 페이월로 보낸다
     onFreeExpressionFinished:
-      eligible && tourScreenOf(step) === 'free_expression'
+      eligible && awaitsFreeExpressionFinish(step)
         ? () => {
             saveStep('COMPLETED');
             track(EVENTS.PAYWALL_GATE_LOCKED, {

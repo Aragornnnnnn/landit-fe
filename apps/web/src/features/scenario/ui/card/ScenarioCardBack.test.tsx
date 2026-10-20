@@ -57,6 +57,13 @@ vi.mock('@/features/expression/ui/ExpressionList', () => ({
   ),
 }));
 
+// 스포트라이트는 자기 테스트가 있다 — 여기선 무료 표현을 여는 버튼만 드러낸다
+vi.mock('./FreeExpressionSpotlight', () => ({
+  FreeExpressionSpotlight: ({ onOpen }: { onOpen: () => void }) => (
+    <button onClick={onOpen}>투어로 무료 표현 열기</button>
+  ),
+}));
+
 const queryResult = (completedFlags: boolean[]) =>
   ({
     expressions: completedFlags.map((completed, i) => ({
@@ -143,6 +150,25 @@ describe('ScenarioCardBack', () => {
     fireEvent.click(screen.getByText('표현 11'));
 
     expect(mocks.guard).not.toHaveBeenCalled();
+    expect(mocks.push).toHaveBeenCalledWith('/expressions/scenario/1/11');
+  });
+
+  it('투어가 비춘 무료 표현을 열면 연 것으로 알리고 학습으로 간다 — 끝까지 안 하고 나와도 다시 비추지 않게', () => {
+    mocks.locked = true;
+    freeTrialList();
+    const onTourOpen = vi.fn();
+    render(
+      <ScenarioCardBack
+        scenarioId={1}
+        onBack={vi.fn()}
+        onTourEnd={vi.fn()}
+        onTourOpen={onTourOpen}
+      />,
+    );
+
+    fireEvent.click(screen.getByText('투어로 무료 표현 열기'));
+
+    expect(onTourOpen).toHaveBeenCalledTimes(1);
     expect(mocks.push).toHaveBeenCalledWith('/expressions/scenario/1/11');
   });
 
