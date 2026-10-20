@@ -263,8 +263,10 @@ export const buildRewardPlan = (
   return { days, price, dailyRefund: dailyWon, maxRefund: maximumWon };
 };
 
-/** 오늘의 시나리오로 뽑혀 카드 벽 가운데 놓이는 시나리오(입주 첫날 첫 만남) — 시나리오 데모가 멈추는 장과 같다 */
-export const WALL_PICK_INDEX = SCENARIOS.length - 2;
+/** 오늘의 시나리오로 뽑혀 카드 벽 가운데 놓이는 시나리오 — 처음 만난 클로이와 파티에서 대화하는 장면이 가장 해 보고 싶게 만든다 */
+export const WALL_PICK_INDEX = SCENARIOS.findIndex((scenario) =>
+  scenario.image.endsWith('/s-06.webp'),
+);
 
 /**
  * 결제 금액 안내의 비교표 줄 — 환급 챌린지는 적립을 프리미엄 둘째 줄에 넣는다. 글자가 많으면 읽기 힘들어 짧게 쓴다

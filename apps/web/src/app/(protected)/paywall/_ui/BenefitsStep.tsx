@@ -37,7 +37,7 @@ export const BenefitsStep = ({ plan }: { plan: RewardPlan }) => {
       {/* 위 여백 40px은 겹쳐 떠 있는 PaywallHeader의 줄 높이(h-10)다 */}
       <section
         data-inview="true"
-        className="bg-[linear-gradient(180deg,#fdf1e8,var(--color-background))] pt-[calc(max(var(--safe-area-inset-top),8px)+40px)] text-center"
+        className="bg-[#fbf6ef] pt-[calc(max(var(--safe-area-inset-top),8px)+40px)] text-center"
       >
         <div className="flex justify-center pt-1.5">
           <PremiumBadge />
@@ -48,10 +48,6 @@ export const BenefitsStep = ({ plan }: { plan: RewardPlan }) => {
           으로 제대로 공부해요
         </h2>
         <ScenarioWall />
-        <p className="relative -mt-6 pb-7 text-[17px] font-bold text-foreground">
-          매일 하는 대화가 <span className="font-black text-primary">돈</span>이
-          되고, <span className="font-black text-primary">실력</span>이 돼요
-        </p>
       </section>
 
       {/* 혜택 판 — 맨 위 머리글이 아래 넷을 프리미엄 전용으로 묶는다 */}
