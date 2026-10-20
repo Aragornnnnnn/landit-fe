@@ -1,6 +1,6 @@
 'use client';
 
-// 환급 챌린지 페이월 — 혜택 화면에서 「100일 프리미엄 시작하기」를 누르면 결제 금액 안내로 넘어가고, 거기서 결제한다.
+// 환급 챌린지 페이월 — 혜택 화면에서 「다음」을 누르면 결제 금액 안내로 넘어가고, 거기서 결제한다.
 // 결제·복원·닫기는 PaywallScreen이 지휘하고 여기서는 어느 단계인지와 버튼만 안다
 import { useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
@@ -8,6 +8,7 @@ import Link from 'next/link';
 
 import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
+import { CloseIcon } from '@/shared/ui/Icons';
 
 import { REWARD_PLAN_ID, type RewardPlan } from '../_model/paywall-content';
 import { BenefitsStep } from './BenefitsStep';
@@ -31,11 +32,13 @@ export const RewardPaywall = ({
   onPurchase: () => void;
 }) => {
   const [step, setStep] = useState<Step>('benefits');
+  const [scrolled, setScrolled] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // 단계가 바뀌면 맨 위부터 보여 준다 — 혜택 화면 맨 아래에서 넘어와도 결제 금액 안내의 가격이 먼저 보이게
   const goTo = (next: Step) => {
     setStep(next);
+    setScrolled(false);
     scrollRef.current?.scrollTo({ top: 0 });
     if (next === 'checkout') {
       track(EVENTS.PAYWALL_CHECKOUT_VIEWED, { plan: REWARD_PLAN_ID });
@@ -48,6 +51,7 @@ export const RewardPaywall = ({
       <div
         ref={scrollRef}
         data-scroll-root
+        onScroll={(event) => setScrolled(event.currentTarget.scrollTop > 48)}
         className={`relative h-full overflow-y-auto pb-[calc(max(var(--safe-area-inset-bottom),12px)+100px)] ${step === 'benefits' ? 'bg-card' : ''}`}
       >
         {step === 'benefits' ? (
@@ -68,6 +72,18 @@ export const RewardPaywall = ({
           />
         )}
       </div>
+
+      {/* 떠 있는 닫기 — 혜택 화면은 길어서, 맨 위 줄이 올라간 뒤에도 언제든 닫을 수 있게 한다. 결제 금액 안내는 뒤로 버튼이 화면 안에 있다 */}
+      {step === 'benefits' && scrolled && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="닫기"
+          className="absolute top-[max(var(--safe-area-inset-top),8px)] left-3 z-30 flex size-9 items-center justify-center rounded-full bg-card/90 text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.12)] backdrop-blur transition-transform active:scale-90"
+        >
+          <CloseIcon size={20} />
+        </button>
+      )}
 
       <footer
         className={`absolute inset-x-0 bottom-0 z-20 px-5 pt-9 pb-[max(var(--safe-area-inset-bottom),12px)] ${step === 'benefits' ? 'bg-[linear-gradient(to_bottom,transparent,var(--color-card)_28px)]' : 'bg-[linear-gradient(to_bottom,transparent,var(--color-background)_28px)]'}`}

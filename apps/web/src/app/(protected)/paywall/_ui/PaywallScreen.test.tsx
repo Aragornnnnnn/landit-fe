@@ -545,6 +545,17 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     );
   });
 
+  it('혜택 화면을 스크롤해 내려가면 닫기 버튼이 따로 떠 있다 — 긴 혜택 화면 어디서든 닫을 수 있다', () => {
+    const { container } = render(<PaywallScreen rewardChallenge />);
+    const root = container.querySelector('[data-scroll-root]')!;
+
+    expect(screen.getAllByRole('button', { name: '닫기' })).toHaveLength(1);
+    root.scrollTop = 600;
+    fireEvent.scroll(root);
+
+    expect(screen.getAllByRole('button', { name: '닫기' })).toHaveLength(2);
+  });
+
   it('닫아도 이탈 할인을 받지 않고 바로 홈으로 간다 — 환급 페이월엔 연간 할인 시트가 없다', async () => {
     render(<PaywallScreen rewardChallenge />);
 
