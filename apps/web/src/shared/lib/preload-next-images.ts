@@ -2,8 +2,14 @@
 import { getImageProps, type ImageProps } from 'next/image';
 import { preload } from 'react-dom';
 
-/** <Image>에 그대로 펼칠 수 있는 최소 props — 미리 받는 곳과 그리는 곳이 같은 객체를 쓰면 주소가 어긋나지 않는다 */
-export type PreloadableImage = Pick<ImageProps, 'src' | 'width' | 'height'> & {
+/**
+ * <Image>에 그대로 펼칠 수 있는 최소 props — 미리 받는 곳과 그리는 곳이 같은 객체를 쓰면 주소가 어긋나지 않는다.
+ * unoptimized면 최적화 주소 대신 원본 파일 주소 하나로 받는다
+ */
+export type PreloadableImage = Pick<
+  ImageProps,
+  'src' | 'width' | 'height' | 'unoptimized'
+> & {
   src: string;
 };
 

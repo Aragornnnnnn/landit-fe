@@ -2,10 +2,15 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { SCENARIO_WALL_IMAGES } from '@/app/(protected)/paywall/_model/paywall-content';
+
 import { PostConversationFlow } from './PostConversationFlow';
 
-// 그림 미리 받기는 자기 테스트가 있다 — 여기선 화면 계약만 본다
-vi.mock('@/shared/lib/preload-next-images', () => ({ preloadImages: vi.fn() }));
+// 그림 미리 받기는 자기 테스트가 있다 — 여기선 무엇을 미리 받는지와 화면 계약만 본다
+const mocks = vi.hoisted(() => ({ preloadImages: vi.fn() }));
+vi.mock('@/shared/lib/preload-next-images', () => ({
+  preloadImages: mocks.preloadImages,
+}));
 vi.mock('@/shared/motion', () => ({
   Transition: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -65,5 +70,15 @@ describe('PostConversationFlow', () => {
 
     expect(screen.getByText('학습 시작하기')).toBeInTheDocument();
     expect(screen.queryByText(/레벨/)).not.toBeInTheDocument();
+  });
+
+  it('분석하는 동안 환급 페이월 맨 위 카드 벽 그림을 미리 받는다 — 대화 뒤 페이월이 뜰 때 카드가 늦게 차지 않게', () => {
+    render(
+      <PostConversationFlow sessionId={1} scenarioId={7} onFinish={vi.fn()} />,
+    );
+
+    expect(mocks.preloadImages).toHaveBeenCalledWith(
+      expect.arrayContaining(SCENARIO_WALL_IMAGES),
+    );
   });
 });
