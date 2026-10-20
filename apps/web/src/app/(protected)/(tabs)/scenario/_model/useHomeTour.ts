@@ -43,6 +43,7 @@ export const useHomeTour = ({
         ? {
             screen: tour.screen,
             onFlipped: () => tour.saveStep('CARD_FLIPPED'),
+            onFreeOpened: () => tour.saveStep('FREE_OPENED'),
             // 줄 표현이 없거나 넘겼으면 페이월로 몰지 않고 조용히 끝낸다
             onTourEnd: () => tour.saveStep('COMPLETED'),
           }

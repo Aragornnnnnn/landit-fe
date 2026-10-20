@@ -33,6 +33,8 @@ interface ScenarioCardBackProps {
   autoFlip?: boolean;
   // 주면 첫 표현 투어 중이다 — 투어를 여기서 끝낼 때 부른다(줄 무료 표현이 없거나, 비출 자리를 못 찾았거나, 사용자가 넘겼다)
   onTourEnd?: () => void;
+  // 투어가 비춘 무료 표현을 열었을 때 부른다 — 끝까지 안 하고 나와도 다시 비추지 않게
+  onTourOpen?: () => void;
 }
 
 export const ScenarioCardBack = ({
@@ -41,6 +43,7 @@ export const ScenarioCardBack = ({
   onBack,
   autoFlip = false,
   onTourEnd,
+  onTourOpen,
 }: ScenarioCardBackProps) => {
   const router = useRouter();
   const gate = usePaywallGate();
@@ -139,7 +142,10 @@ export const ScenarioCardBack = ({
       {tourTarget && onTourEnd && (
         <FreeExpressionSpotlight
           list={listRef}
-          onOpen={() => selectExpression(tourTarget.expressionId)}
+          onOpen={() => {
+            onTourOpen?.();
+            selectExpression(tourTarget.expressionId);
+          }}
           onEnd={onTourEnd}
         />
       )}

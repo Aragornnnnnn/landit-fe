@@ -43,6 +43,8 @@ export interface CardTour {
   screen: 'flip_card' | 'free_expression';
   // 뒤집기 차례에 카드가 뒤집혔다(자동이든 사용자든)
   onFlipped: () => void;
+  // 비춘 무료 표현을 열었다 — 다시 비추지 않는다
+  onFreeOpened: () => void;
   // 투어를 여기서 끝낸다 — 줄 무료 표현이 없거나 사용자가 넘겼다
   onTourEnd: () => void;
 }
@@ -250,6 +252,7 @@ export const ScenarioCard = ({
               onBack={closeExpressions}
               autoFlip={autoFlip}
               onTourEnd={tour?.onTourEnd}
+              onTourOpen={tour?.onFreeOpened}
             />
           </div>
         )}
