@@ -19,8 +19,9 @@ export const resolveReviewCardSupport = (
   return 'ready';
 };
 
-// 셸은 늦어도 iOS 0.5초·Android 1초 안에 답한다 — 그보다 조금 더 기다려 셸이 답할 틈을 준다
-export const REVIEW_CARD_TIMEOUT_MS = 1500;
+// 셸은 늦어도 iOS 0.5초·Android 3초(Play 왕복 마감 2초 + 카드 단계 1초) 안에 답한다 — 그보다 조금 더 기다려 셸이 답할 틈을 준다.
+// 이 시간을 다 기다리는 건 셸이 답을 안 줄 때뿐이다
+export const REVIEW_CARD_TIMEOUT_MS = 3500;
 
 /**
  * 앱 안 별점 카드를 청한다. 회신은 shown·not_shown·unavailable 중 하나고, 못 받으면 null이다.

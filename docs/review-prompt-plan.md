@@ -144,10 +144,10 @@
   ├─ { type: 'REQUEST_REVIEW' } ───────────────▶ 셸
   │                                               로컬 모듈 requestReview()
   │                                               iOS: AppStore.requestReview → 0.5초간 카드 창 감시
-  │                                               Android: Play ReviewManager → 카드 단계가 1초 안에 끝나는지
+  │                                               Android: Play ReviewManager(왕복 2초 마감) → 카드 단계가 1초 안에 끝나는지
   │ ◀──── { type: 'REVIEW_RESULT', status } ──────┘
   ├─ shown                → 시트 닫고 끝
-  ├─ not_shown/unavailable/1.5초 무응답 → 스토어 딥링크 (지금 동작)
+  ├─ not_shown/unavailable/3.5초 무응답 → 스토어 딥링크 (지금 동작)
   │ bridgeVersion < 9 · 브라우저
   └─ 앱스토어 딥링크
 ```
