@@ -70,15 +70,16 @@ export const missedCopyOf = ({
   return {
     eyebrow: `지난 ${pastDays}일 동안 받을 수 있었던 금액`,
     amount: formatWon(missedWon),
+    // 「시작하면」 뒤에서 줄을 바꾼다 — 폭에 맡기면 「쌓여요」만 홀로 다음 줄로 떨어진다.
     // 지난 날은 돌아오지 않지만 오늘 몫은 결제 당일 결제 전 대화도 인정돼 아직 받을 수 있다
     box: talkedToday
       ? {
-          lead: '지금 프리미엄을 시작하면 오늘 몫 ',
+          lead: '지금 프리미엄을 시작하면\n오늘 몫 ',
           strong: daily,
           tail: '이 바로 쌓여요',
         }
       : {
-          lead: '프리미엄을 시작하면 오늘부터 ',
+          lead: '프리미엄을 시작하면\n오늘부터 ',
           strong: daily,
           tail: '씩 쌓여요',
         },

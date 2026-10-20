@@ -65,7 +65,7 @@ describe('missedCopyOf', () => {
       eyebrow: '지난 32일 동안 받을 수 있었던 금액',
       amount: '16,000원',
       box: {
-        lead: '프리미엄을 시작하면 오늘부터 ',
+        lead: '프리미엄을 시작하면\n오늘부터 ',
         strong: '500원',
         tail: '씩 쌓여요',
       },
@@ -75,7 +75,7 @@ describe('missedCopyOf', () => {
 
   it('오늘 했으면 지금 시작하면 오늘 몫이 바로 쌓인다고 권한다', () => {
     expect(missedCopyOf({ ...missed, talkedToday: true }).box).toEqual({
-      lead: '지금 프리미엄을 시작하면 오늘 몫 ',
+      lead: '지금 프리미엄을 시작하면\n오늘 몫 ',
       strong: '500원',
       tail: '이 바로 쌓여요',
     });
