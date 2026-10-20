@@ -33,7 +33,10 @@ import {
   scenarioReturnPath,
 } from '@/shared/lib/routes';
 
-import { decidePostFeedbackView } from '../_model/post-feedback-view';
+import {
+  decidePostFeedbackView,
+  type PostFeedbackView,
+} from '../_model/post-feedback-view';
 import { tourEntryOf } from '../_model/tour-entry';
 import { useFirstExpressionTour } from '../../../../../_model/useFirstExpressionTour';
 import { PostConversationFlow } from './PostConversationFlow';
@@ -115,9 +118,58 @@ export const ScenarioFeedbackFlow = ({
       replace: true,
     });
 
-  // 잠긴 상세를 보려 했다 — 페이월로. 결제하면 이 주소의 상세로 돌아온다.
+  // 피드백 뒤 원래 갈 곳 — 재대화면 홈, 잠기지 않는 사람은 표현 분기, 무료 사용자는 첫 시나리오만 페이월 전 화면부터
+  const postFeedbackView = () =>
+    decidePostFeedbackView({
+      replay,
+      learningLocked: paywallGate.locked,
+      // 필드가 없는 구버전 응답은 열린 것으로(그 BE는 대화 자체를 하나로 막는다),
+      // 응답 자체를 못 받았으면 잠긴 것으로 본다 — 둘째 시나리오에서 레벨 화면이 또 뜨는 쪽이 더 나쁘다
+      detailFeedbackLocked: feedback
+        ? (feedback.detailFeedbackLocked ?? false)
+        : true,
+    });
+
+  // 여기서 첫 표현 투어를 시작할 사람인가 — 무료 표현은 따로 확인한다(그 사람일 때만 기다린다)
+  const tourEntryFor = (view: PostFeedbackView) =>
+    tourEntryOf({
+      view,
+      replay,
+      // 날짜 없는 주소가 오늘 카드다
+      today: date === undefined,
+      tour: { eligible: tour.eligible, step: tour.step },
+    });
+
+  // 피드백을 다 본 뒤 — 투어를 시작할 사람이면 투어로, 아니면 원래 갈 곳으로.
+  // 목록을 기다리는 동안 다시 눌러도 한 번만 이동한다
+  const leaving = useRef(false);
+  const goAfterFeedback = async () => {
+    if (leaving.current) return;
+    leaving.current = true;
+    const next = postFeedbackView();
+    const entry = tourEntryFor(next);
+    // 투어를 시작할 사람일 때만 무료 표현을 확인한다 — 그 밖의 사람은 기다리지 않는다
+    const tourEntry = entry && (await hasFreeExpression()) ? entry : null;
+    if (tourEntry === 'home') startTour();
+    else if (next === 'home') router.replace(scenarioReturnPath({ date }));
+    else if (next === 'branch') continueToExpressionBranch();
+    else setPostConversation(tourEntry === 'level' ? 'tour' : 'paywall');
+  };
+
+  // 잠긴 상세를 보려 했다 — 투어를 시작할 사람이면 페이월 대신 투어로 간다. 상세가 잠긴 기존 무료 유저는 대부분 이 버튼으로 나가서,
+  // 여기서 투어를 확인하지 않으면 투어를 볼 기회가 없다. 그 밖에는 페이월로 — 결제하면 이 주소의 상세로 돌아온다.
   // 게이트의 환경 판정을 타지 않는다. 서버가 이미 상세를 비워 보냈으니 어느 환경이든 보여줄 게 없다
-  const openPaywallForDetail = () => {
+  const goForLockedDetail = async () => {
+    if (leaving.current) return;
+    leaving.current = true;
+    if (
+      tourEntryFor(postFeedbackView()) === 'home' &&
+      (await hasFreeExpression())
+    ) {
+      startTour();
+      return;
+    }
+    leaving.current = false;
     track(EVENTS.PAYWALL_GATE_LOCKED, { source: 'feedback_detail' });
     router.push(
       paywallPath({
@@ -130,36 +182,6 @@ export const ScenarioFeedbackFlow = ({
         }),
       }),
     );
-  };
-
-  // 피드백을 다 본 뒤 — 재대화면 홈, 잠기지 않는 사람은 표현 분기, 무료 사용자는 첫 시나리오만 페이월 전 화면부터
-  // 목록을 기다리는 동안 다시 눌러도 한 번만 이동한다
-  const leaving = useRef(false);
-  const goAfterFeedback = async () => {
-    if (leaving.current) return;
-    leaving.current = true;
-    const next = decidePostFeedbackView({
-      replay,
-      learningLocked: paywallGate.locked,
-      // 필드가 없는 구버전 응답은 열린 것으로(그 BE는 대화 자체를 하나로 막는다),
-      // 응답 자체를 못 받았으면 잠긴 것으로 본다 — 둘째 시나리오에서 레벨 화면이 또 뜨는 쪽이 더 나쁘다
-      detailFeedbackLocked: feedback
-        ? (feedback.detailFeedbackLocked ?? false)
-        : true,
-    });
-    const entry = tourEntryOf({
-      view: next,
-      replay,
-      // 날짜 없는 주소가 오늘 카드다
-      today: date === undefined,
-      tour: { eligible: tour.eligible, step: tour.step },
-    });
-    // 투어를 시작할 사람일 때만 무료 표현을 확인한다 — 그 밖의 사람은 기다리지 않는다
-    const tourEntry = entry && (await hasFreeExpression()) ? entry : null;
-    if (tourEntry === 'home') startTour();
-    else if (next === 'home') router.replace(scenarioReturnPath({ date }));
-    else if (next === 'branch') continueToExpressionBranch();
-    else setPostConversation(tourEntry === 'level' ? 'tour' : 'paywall');
   };
 
   // 투어의 첫 단계를 남기고 홈으로 — 홈이 동전 연출 뒤 튜토리얼부터 이어 간다
@@ -186,7 +208,7 @@ export const ScenarioFeedbackFlow = ({
       title={title}
       openDetail={openDetail}
       onExit={() => void goAfterFeedback()}
-      onDetailLocked={openPaywallForDetail}
+      onDetailLocked={() => void goForLockedDetail()}
     />
   );
 };
