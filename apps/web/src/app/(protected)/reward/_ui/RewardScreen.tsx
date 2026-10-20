@@ -1,7 +1,7 @@
 'use client';
 
 // 환급 화면(/reward) — 참여자에게는 쌓인 환급액을, 무료 유저에게는 환급 소개를 보여 준다
-import { useEffect, useEffectEvent } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
@@ -12,10 +12,17 @@ import {
 import { dailyWonOf } from '@/features/reward/model/reward-status';
 import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 import { track } from '@/shared/analytics';
+import { getDeviceToday } from '@/shared/lib/device-today';
 import { homePath } from '@/shared/lib/last-tab';
+import { paywallPath, REWARD_PATH } from '@/shared/lib/routes';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { glowOf, potStageOf } from '../_model/pot-stage';
+import {
+  exitOfferDue,
+  markExitOfferShown,
+  readExitOfferShownDate,
+} from '../_model/reward-exit-offer';
 import { rewardIntroCopyOf } from '../_model/reward-intro-copy';
 import {
   rewardScreenViewOf,
@@ -25,6 +32,7 @@ import { useMyReward } from '../../_model/useMyReward';
 import { useRewardOffer } from '../../_model/useRewardOffer';
 import { MissedRewardIntro } from './MissedRewardIntro';
 import { RefundApplyButton } from './RefundApplyButton';
+import { RewardExitOfferSheet } from './RewardExitOfferSheet';
 import { RewardFrame } from './RewardFrame';
 import { RewardHistoryFeed } from './RewardHistoryFeed';
 import { RewardIntro, RewardStartButton } from './RewardIntro';
@@ -57,6 +65,37 @@ export const RewardScreen = () => {
         ? 'missed'
         : null;
 
+  // 결제 전 화면(소개·놓친 금액)에서 나가려 하면 하루 한 번 신규 회원 특가로 붙잡는다
+  const [exitOfferOpen, setExitOfferOpen] = useState(false);
+  const exitStatus = missed ? 'missed' : 'intro';
+  const leave = () => router.replace(homePath());
+  const goBack = () => {
+    const today = getDeviceToday();
+    if (!introReady || !exitOfferDue(readExitOfferShownDate(), today)) {
+      leave();
+      return;
+    }
+    markExitOfferShown(today);
+    setExitOfferOpen(true);
+    track(EVENTS.REWARD_EXIT_OFFER_VIEWED, { status: exitStatus });
+  };
+  const startFromExitOffer = () => {
+    track(EVENTS.REWARD_EXIT_OFFER_TAPPED, {
+      status: exitStatus,
+      action: 'start',
+    });
+    router.replace(
+      paywallPath({ source: 'reward', from: REWARD_PATH, step: 'checkout' }),
+    );
+  };
+  const leaveFromExitOffer = () => {
+    track(EVENTS.REWARD_EXIT_OFFER_TAPPED, {
+      status: exitStatus,
+      action: 'leave',
+    });
+    leave();
+  };
+
   // 기존 월간·연간 유저처럼 환급과 상관없는 사람 — 보여 줄 것이 없다
   const outsider = view.kind === 'outsider';
   useEffect(() => {
@@ -77,11 +116,12 @@ export const RewardScreen = () => {
 
   return (
     <RewardFrame
-      onBack={() => router.replace(homePath())}
+      onBack={goBack}
       trailing={
         view.kind === 'record' ? (
           <RewardRulesButton dailyWon={dailyWonOf(view.reward)} />
-        ) : introReady ? (
+        ) : introReady && missed ? (
+          // 처음 보는 소개(대화 0~2일)는 화면에 같은 동전 그림이 있어 ⓘ를 두지 않는다
           <RewardRulesButton dailyWon={offer.dailyWon} />
         ) : undefined
       }
@@ -89,7 +129,7 @@ export const RewardScreen = () => {
       glow={glow}
       footer={
         introReady ? (
-          <RewardStartButton label={introCopy.cta} />
+          <RewardStartButton label={introCopy.cta} note={introCopy.priceNote} />
         ) : view.kind === 'record' ? (
           <RefundApplyButton reward={view.reward} />
         ) : null
@@ -102,7 +142,7 @@ export const RewardScreen = () => {
         (missed ? (
           <MissedRewardIntro missed={missed} />
         ) : (
-          <RewardIntro copy={introCopy} dailyWon={offer.dailyWon} />
+          <RewardIntro copy={introCopy} offer={offer} />
         ))}
       {view.kind === 'record' && (
         <RewardRecord reward={view.reward} history={<RewardHistoryFeed />} />
@@ -114,6 +154,13 @@ export const RewardScreen = () => {
           onRetry={retry}
         />
       )}
+      <RewardExitOfferSheet
+        open={exitOfferOpen}
+        offer={offer}
+        onStart={startFromExitOffer}
+        onLeave={leaveFromExitOffer}
+        onClose={() => setExitOfferOpen(false)}
+      />
     </RewardFrame>
   );
 };

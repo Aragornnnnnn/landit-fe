@@ -56,7 +56,7 @@ export const RewardInviteBubble = ({
         </>
       ) : (
         <>
-          챌린지를 시작하면
+          프리미엄을 시작하면
           <br />
           대화할 때마다{' '}
           <span className="text-primary">{formatWon(amountWon)}</span>씩 쌓여요

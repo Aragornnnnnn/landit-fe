@@ -2,8 +2,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  paywallPath,
   premiumOnboardingPath,
   readDateParam,
+  readPaywallStep,
   readReturnParam,
   readScenarioFeedbackParams,
   readScenarioSessionParams,
@@ -318,5 +320,28 @@ describe('premiumOnboardingPath', () => {
     // then
     expect(welcome.pathname).toBe('/premium/onboarding');
     expect(from).toBe(destination);
+  });
+});
+
+describe('paywallPath — 결제 금액 안내로 바로', () => {
+  it('step을 주면 혜택 화면을 건너뛰고 결제 금액 안내를 연다고 싣는다', () => {
+    expect(
+      paywallPath({ source: 'reward', from: '/reward', step: 'checkout' }),
+    ).toBe('/paywall?from=%2Freward&source=reward&step=checkout');
+  });
+
+  it('step이 없으면 지금처럼 혜택 화면부터 연다', () => {
+    expect(paywallPath({ source: 'reward', from: '/reward' })).toBe(
+      '/paywall?from=%2Freward&source=reward',
+    );
+  });
+});
+
+describe('readPaywallStep', () => {
+  it('checkout만 알아듣고 나머지는 처음(혜택 화면)으로 본다', () => {
+    expect(readPaywallStep('checkout')).toBe('checkout');
+    expect(readPaywallStep('benefits')).toBeUndefined();
+    expect(readPaywallStep(['checkout'])).toBeUndefined();
+    expect(readPaywallStep(undefined)).toBeUndefined();
   });
 });

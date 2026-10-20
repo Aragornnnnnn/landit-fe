@@ -314,18 +314,20 @@ OS 권한 팝업의 답 자체는 따로 찍지 않는다 — 위 두 step의 �
 
 출시 스위치(`NEXT_PUBLIC_REFUND_CHALLENGE`)가 꺼져 있으면 아래 이벤트와 `reward_state`는 하나도 나가지 않는다.
 
-| 이벤트                     | 속성                                                                                                 | 시점                                                                                    |
-| -------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Reward Viewed              | status(intro\|kept\|idle\|at_risk\|reset\|ended\|pending\|review), balance_won?, pending_refund_won? | 환급 화면에 볼 것이 그려진 순간 한 번. 보는 중에 status가 바뀌면 다시 찍는다            |
-| Reward Entry Tapped        | source(header\|me)                                                                                   | 탭 헤더의 환급 알약(참여자의 금액 알약·권할 사람의 진입 알약), 내 정보의 환급 타일      |
-| Reward Rules Opened        | -                                                                                                    | 환급 화면·환급 소개 헤더의 규칙 안내(ⓘ)를 연 순간. 닫는 건 찍지 않는다                  |
-| Reward Coin Shower Viewed  | gain_won                                                                                             | 오늘의 시나리오를 끝내고 홈에 돌아와 동전 연출이 뜬 순간. gain_won은 그사이 늘어난 금액 |
-| Reward Coin Shower Skipped | gain_won                                                                                             | 연출이 다 돌기 전에 눌러 끝낸 순간                                                      |
-| Reward Guide Viewed        | confirmed                                                                                            | 환급 상품을 산 직후의 환급 안내. 결제 확인이 늦어 금액 없이 보여 줬으면 confirmed=false |
+| 이벤트                     | 속성                                                                                                 | 시점                                                                                                   |
+| -------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Reward Viewed              | status(intro\|kept\|idle\|at_risk\|reset\|ended\|pending\|review), balance_won?, pending_refund_won? | 환급 화면에 볼 것이 그려진 순간 한 번. 보는 중에 status가 바뀌면 다시 찍는다                           |
+| Reward Entry Tapped        | source(header\|me)                                                                                   | 탭 헤더의 환급 알약(참여자의 금액 알약·권할 사람의 진입 알약), 내 정보의 환급 타일                     |
+| Reward Rules Opened        | -                                                                                                    | 환급 화면·환급 소개 헤더의 규칙 안내(ⓘ)를 연 순간. 닫는 건 찍지 않는다                                 |
+| Reward Exit Offer Viewed   | status(intro\|missed)                                                                                | 결제 전 환급 화면(소개·놓친 금액)에서 뒤로 가려 할 때 신규 회원 특가 시트가 뜬 순간. 하루 한 번만 뜬다 |
+| Reward Exit Offer Tapped   | status(intro\|missed), action(start\|leave)                                                          | 특가 시트에서 「신규 특가로 시작하기」(start) 또는 「혜택 포기하기」(leave)를 누른 순간                |
+| Reward Coin Shower Viewed  | gain_won                                                                                             | 오늘의 시나리오를 끝내고 홈에 돌아와 동전 연출이 뜬 순간. gain_won은 그사이 늘어난 금액                |
+| Reward Coin Shower Skipped | gain_won                                                                                             | 연출이 다 돌기 전에 눌러 끝낸 순간                                                                     |
+| Reward Guide Viewed        | confirmed                                                                                            | 환급 상품을 산 직후의 환급 안내. 결제 확인이 늦어 금액 없이 보여 줬으면 confirmed=false                |
 
 `Reward Viewed`의 status는 화면이 말한 것 그대로다 — intro는 참여 전 소개, kept는 오늘 몫을 받음, idle은 오늘의 시나리오가 아직(쌓인 금액이 있든 없든), ended는 기간이 끝남, pending은 결제 확인 중, review는 결제 내역 검토 중. `balance_won`은 도는 회차가 있을 때만 싣는다(ended·pending·intro에는 없다). `pending_refund_won`은 ended일 때만 싣는다 — 0이면 돌려받을 것 없이 다시 시작을 권하는 화면이다. at_risk·reset은 쉬면 쌓인 금액이 사라지던 옛 정책의 값이다 — 100일 정책(LAN-661)부터 웹은 보내지 않고, 과거 데이터에만 남아 있다(타입에는 그대로 둔다). `Page Viewed(page_name=reward)`는 주소만 알아 상태를 모르므로 따로 찍는다 — 받는 중이거나 환급과 상관없어 홈으로 보내는 경우 `Reward Viewed`는 없다.
 
-환급 소개의 「100일 환급 챌린지 시작하기」와 기간이 끝난 화면의 「100일 챌린지 다시 시작하기」 카드는 새 이벤트가 아니라 `Paywall Entry Tapped(source: reward)`다. 해지 가격 화면에서 환급 문구를 봤는지는 `Cancel Retention Viewed`의 `reward`로 본다.
+환급 소개의 「프리미엄 시작하고 환급받기」와 기간이 끝난 화면의 「100일 챌린지 다시 시작하기」 카드는 새 이벤트가 아니라 `Paywall Entry Tapped(source: reward)`다. 환급 소개의 버튼은 페이월을 결제 금액 안내부터 연다. 해지 가격 화면에서 환급 문구를 봤는지는 `Cancel Retention Viewed`의 `reward`로 본다.
 
 내역 줄만 받지 못했을 때의 「다시 시도」는 `Error Retried(screen: reward_history)`다. 내역을 이어 받는 스크롤은 찍지 않는다 — 볼 질문이 없다. 무료 사용자가 오늘의 시나리오를 끝내고 홈에 왔을 때의 동전 연출과 말풍선도 찍지 않는다 — 지금 계약으로는 연출을 본 사람과 아닌 사람을 가를 수 없다(`Reward Entry Tapped`와 `Reward Viewed(status: intro)`에 그 속성이 없다). 연출의 효과를 재려면 속성을 더해야 한다.
 

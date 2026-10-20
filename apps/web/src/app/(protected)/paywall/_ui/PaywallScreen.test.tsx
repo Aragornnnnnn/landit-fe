@@ -441,6 +441,17 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     }
   });
 
+  it('환급 화면에서 결제 금액 안내부터 열라고 오면 혜택 화면을 건너뛰고 노출을 한 번 찍는다', () => {
+    render(<PaywallScreen rewardChallenge startStep="checkout" />);
+
+    expect(screen.getByText('100일 프리미엄 이용권')).toBeInTheDocument();
+    expect(
+      mocks.track.mock.calls.filter(
+        ([name]) => name === 'Paywall Checkout Viewed',
+      ),
+    ).toEqual([['Paywall Checkout Viewed', { plan: 'pass' }]]);
+  });
+
   it('혜택 화면의 CTA는 결제하지 않고 결제 금액 안내로 넘어간다', () => {
     render(<PaywallScreen rewardChallenge />);
 

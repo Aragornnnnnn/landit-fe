@@ -2,7 +2,7 @@
 // rAF가 아니라 타이머로 돈다. rAF가 멎은 웹뷰에서 중간값에 얼어붙지 않게 (LAN-375)
 import { useEffect, useState } from 'react';
 
-import { prefersReducedMotion } from './reduced-motion';
+import { prefersReducedMotion } from '@/shared/lib/reduced-motion';
 
 const TICK_MS = 40;
 

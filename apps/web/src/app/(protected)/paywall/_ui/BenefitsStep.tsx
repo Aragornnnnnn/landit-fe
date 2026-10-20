@@ -1,5 +1,7 @@
 // 환급 페이월 1단계 — 혜택 화면. 매일 오는 시나리오(카드 벽) 위에 프리미엄만 누리는 혜택 넷을 쌓고, 맨 아래 리뷰를 옆으로 넘겨 보게 둔다.
 // 시나리오는 무료로도 하니 혜택이 아니라 무대로만 쓴다. 결제는 다음 단계(결제 금액 안내)에서 한다. 피그마 「페이월 v4 · 전체 스크롤」(3514:322)
+import { rewardOfferOf } from '@/features/reward/model/refund-offer';
+import { CoinStackCard } from '@/features/reward/ui/CoinStackCard';
 import { formatWon } from '@/features/subscription/lib/won';
 import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
 
@@ -9,7 +11,6 @@ import {
   STORE_RATING,
   type RewardPlan,
 } from '../_model/paywall-content';
-import { CoinStackCard } from './CoinStackCard';
 import { ExampleDemo } from './ExampleDemo';
 import { PronunciationDemo } from './PronunciationDemo';
 import { QuizDemo } from './QuizDemo';
@@ -71,7 +72,7 @@ export const BenefitsStep = ({ plan }: { plan: RewardPlan }) => (
             시나리오 끝낼 때마다 {formatWon(plan.dailyRefund)} 적립
           </p>
           <div className="mt-4">
-            <CoinStackCard plan={plan} />
+            <CoinStackCard offer={rewardOfferOf(plan.price)} />
           </div>
         </section>
 
