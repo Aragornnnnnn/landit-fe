@@ -1,8 +1,10 @@
 // 스냅 스크롤 컨테이너에서 중앙에 가장 가까운 자식의 인덱스를 추적한다 — 가로/세로 겸용, 자식 크기가 제각각이어도 동작
 import { useRef, useState } from 'react';
 
-export const useSnapIndex = (axis: 'x' | 'y' = 'y') => {
-  const scrollRef = useRef<HTMLDivElement>(null);
+export const useSnapIndex = <T extends HTMLElement = HTMLDivElement>(
+  axis: 'x' | 'y' = 'y',
+) => {
+  const scrollRef = useRef<T>(null);
   const rafRef = useRef(0);
   const [activeIndex, setActiveIndex] = useState(0);
 
