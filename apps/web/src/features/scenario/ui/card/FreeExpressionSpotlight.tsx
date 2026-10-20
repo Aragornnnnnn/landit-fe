@@ -42,6 +42,7 @@ export const FreeExpressionSpotlight = ({
         findTarget={() => find('[data-expression-items]')}
         label="맞춤 표현 학습 소개"
         settleMs={SETTLE_MS}
+        placement="above"
         introMs={INTRO_MS}
         onMissing={onEnd}
         onTap={() => setStep('free')}

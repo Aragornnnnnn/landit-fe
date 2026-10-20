@@ -29,7 +29,7 @@ describe('TourTutorial', () => {
 
     // Then 다 쓴 문장이 읽기 칸에 들어간다 — 대화를 끝낼 때마다 받는다고 말한다
     expect(
-      screen.getByText(/방금처럼 대화를 끝내면\s*500원을 받을 수 있어요/),
+      screen.getByText(/방금처럼 대화를 끝낼 때마다\s*500원을 받을 수 있어요/),
     ).toBeInTheDocument();
   });
 
