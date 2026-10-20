@@ -8,7 +8,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { buildRewardPlan } from '../_model/paywall-content';
+import { buildRewardPlan, REVIEWS } from '../_model/paywall-content';
 import { RewardPaywall } from './RewardPaywall';
 
 const mocks = vi.hoisted(() => ({ track: vi.fn() }));
@@ -108,6 +108,23 @@ describe('RewardPaywall', () => {
     fireEvent.click(screen.getByRole('button', { name: '닫기' }));
 
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('RewardPaywall 리뷰', () => {
+  it('스토어 평점 옆에 언제 기준인지 작게 적는다', () => {
+    renderPaywall();
+
+    expect(screen.getByText('(26년 10월 기준)')).toBeInTheDocument();
+  });
+
+  it('리뷰 아래에 리뷰 개수만큼 점을 두고 첫 점이 켜져 있다', () => {
+    renderPaywall();
+
+    const dots = screen.getAllByTestId('review-dot');
+    expect(dots).toHaveLength(REVIEWS.length);
+    expect(dots[0]).toHaveAttribute('data-active', 'true');
+    expect(dots[1]).toHaveAttribute('data-active', 'false');
   });
 });
 

@@ -4,11 +4,14 @@ import { rewardOfferOf } from '@/features/reward/model/refund-offer';
 import { CoinStackCard } from '@/features/reward/ui/CoinStackCard';
 import { formatWon } from '@/features/subscription/lib/won';
 import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
+import { useSnapIndex } from '@/shared/lib/useSnapIndex';
 
 import {
   maskName,
+  ratingAsOfLabel,
   REVIEWS,
   STORE_RATING,
+  STORE_RATING_AS_OF,
   type RewardPlan,
 } from '../_model/paywall-content';
 import { ExampleDemo } from './ExampleDemo';
@@ -142,54 +145,82 @@ export const BenefitsStep = ({ plan }: { plan: RewardPlan }) => (
         />
       </div>
 
-      {/* 리뷰 — 스토어에 실제로 달린 글 그대로, 옆으로 넘겨 본다 */}
-      <section className="mt-14">
-        <div className="px-6">
-          <p className="text-[21px] font-extrabold tracking-[-0.02em] text-foreground">
-            먼저 시작한 분들의 이야기
-          </p>
-          {/* 평점 숫자를 크게, 별과 출처는 옆에 두 줄로 — 숫자가 먼저 읽히게 */}
-          <div className="mt-3 flex items-center gap-2.5">
-            <span className="text-[34px] leading-none font-bold tracking-[-0.02em] text-foreground">
-              {STORE_RATING}
-            </span>
-            <div>
-              <span
-                aria-hidden="true"
-                className="text-base tracking-[0.08em] text-primary"
-              >
-                ★★★★★
-              </span>
-              <p className="text-xs text-muted-foreground">스토어 평점</p>
-            </div>
-          </div>
-        </div>
-        <ul className="mt-4 flex snap-x snap-mandatory scroll-px-6 items-start gap-3 overflow-x-auto px-6 pb-2">
-          {REVIEWS.map((review) => (
-            <li
-              key={review.body}
-              className="flex w-[286px] shrink-0 snap-start flex-col rounded-[20px] bg-background p-5"
-            >
-              <span aria-hidden="true" className="text-xs text-primary">
-                ★★★★★
-              </span>
-              {review.title && (
-                <p className="mt-1.5 text-[15px] font-bold break-keep text-foreground">
-                  {review.title}
-                </p>
-              )}
-              <blockquote className="mt-1.5 text-sm leading-[1.6] break-keep text-[#5f5953]">
-                {review.body}
-              </blockquote>
-              <p className="mt-3 text-xs text-muted-foreground">
-                {review.author
-                  ? `${maskName(review.author)} · ${review.date}`
-                  : '스토어 리뷰'}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <StoreReviews />
     </div>
   </>
 );
+
+// 리뷰 — 스토어에 실제로 달린 글 그대로, 옆으로 넘겨 본다. 아래 점이 몇 장 중 몇 번째인지 알려 준다
+const StoreReviews = () => {
+  const { scrollRef, activeIndex, onScroll } =
+    useSnapIndex<HTMLUListElement>('x');
+
+  return (
+    <section className="mt-14">
+      <div className="px-6">
+        <p className="text-[21px] font-extrabold tracking-[-0.02em] text-foreground">
+          먼저 시작한 분들의 이야기
+        </p>
+        {/* 평점 숫자를 크게, 별과 출처는 옆에 두 줄로 — 숫자가 먼저 읽히게 */}
+        <div className="mt-3 flex items-center gap-2.5">
+          <span className="text-[34px] leading-none font-bold tracking-[-0.02em] text-foreground">
+            {STORE_RATING}
+          </span>
+          <div>
+            <span
+              aria-hidden="true"
+              className="text-base tracking-[0.08em] text-primary"
+            >
+              ★★★★★
+            </span>
+            <p className="text-xs text-muted-foreground">
+              스토어 평점{' '}
+              <span className="text-[10px] text-[#b0b0ad]">
+                {ratingAsOfLabel(STORE_RATING_AS_OF)}
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <ul
+        ref={scrollRef}
+        onScroll={onScroll}
+        className="mt-4 flex snap-x snap-mandatory scroll-px-6 items-start gap-3 overflow-x-auto px-6 pb-2"
+      >
+        {REVIEWS.map((review) => (
+          <li
+            key={review.body}
+            className="flex w-[286px] shrink-0 snap-start flex-col rounded-[20px] bg-background p-5"
+          >
+            <span aria-hidden="true" className="text-xs text-primary">
+              ★★★★★
+            </span>
+            {review.title && (
+              <p className="mt-1.5 text-[15px] font-bold break-keep text-foreground">
+                {review.title}
+              </p>
+            )}
+            <blockquote className="mt-1.5 text-sm leading-[1.6] break-keep text-[#5f5953]">
+              {review.body}
+            </blockquote>
+            <p className="mt-3 text-xs text-muted-foreground">
+              {review.author
+                ? `${maskName(review.author)} · ${review.date}`
+                : '스토어 리뷰'}
+            </p>
+          </li>
+        ))}
+      </ul>
+      <div aria-hidden="true" className="mt-3 flex justify-center gap-1.5">
+        {REVIEWS.map((review, index) => (
+          <span
+            key={review.body}
+            data-testid="review-dot"
+            data-active={index === activeIndex}
+            className={`size-1.5 rounded-full transition-colors ${index === activeIndex ? 'bg-primary' : 'bg-[#dcd8d2]'}`}
+          />
+        ))}
+      </div>
+    </section>
+  );
+};

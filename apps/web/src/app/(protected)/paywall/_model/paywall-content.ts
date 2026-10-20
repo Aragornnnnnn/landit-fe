@@ -188,6 +188,12 @@ export const STORE_RATING = 4.8;
 /** 평점을 확인한 날 — 숫자 옆에 "○○ 기준"으로 붙는다 */
 export const STORE_RATING_AS_OF = '2026.10.06';
 
+/** 평점 기준 시점을 연·월로 줄인 한 마디 — "2026.10.06" → "(26년 10월 기준)" */
+export const ratingAsOfLabel = (asOf: string) => {
+  const [year, month] = asOf.split('.');
+  return `(${year.slice(2)}년 ${Number(month)}월 기준)`;
+};
+
 export interface Review {
   title?: string;
   body: string;
@@ -211,7 +217,11 @@ export const REVIEWS: Review[] = [
     date: '2026.09.09',
   },
   {
+    // 제목은 스토어 글에 없어 본문 내용 그대로 붙였다. 닉네임은 스토어에 가려진 채로 보이는 그대로다
+    title: '진짜 원어민이랑 대화하는 느낌!',
     body: '원어민과 실제로 대화하는 느낌이 들어서 좋았어요. 제가 한 말을 바로 피드백 해 줘서 많이 도움 됐어요.',
+    author: '박 ****',
+    date: '2026.09.16',
   },
   {
     title: '도움 엄청 돼요',

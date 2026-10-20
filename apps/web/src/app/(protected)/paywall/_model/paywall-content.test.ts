@@ -6,6 +6,8 @@ import {
   EXAMPLE_CARDS,
   EXAMPLE_LANDING_INDEX,
   maskName,
+  ratingAsOfLabel,
+  REVIEWS,
   rewardBenefitsOf,
 } from './paywall-content';
 
@@ -41,6 +43,26 @@ describe('maskName', () => {
 
   it('한 글자 이름도 가려진 자리가 하나는 생긴다', () => {
     expect(maskName('김')).toBe('김*');
+  });
+});
+
+describe('ratingAsOfLabel', () => {
+  it('평점을 확인한 날을 「(26년 10월 기준)」처럼 연·월로 줄인다', () => {
+    expect(ratingAsOfLabel('2026.10.06')).toBe('(26년 10월 기준)');
+    expect(ratingAsOfLabel('2027.03.01')).toBe('(27년 3월 기준)');
+  });
+});
+
+describe('REVIEWS', () => {
+  it('「원어민과 실제로 대화하는 느낌」 리뷰는 제목·작성자·날짜를 다른 카드처럼 갖춘다', () => {
+    const review = REVIEWS.find(({ body }) =>
+      body.startsWith('원어민과 실제로 대화하는 느낌'),
+    );
+    expect(review).toMatchObject({
+      title: expect.any(String),
+      author: '박 ****',
+      date: '2026.09.16',
+    });
   });
 });
 
