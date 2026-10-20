@@ -297,4 +297,32 @@ describe('ScenarioFeedbackFlow', () => {
     expect(await screen.findByText('학습 준비 마침')).toBeInTheDocument();
     expect(mocks.saveStep).not.toHaveBeenCalled();
   });
+
+  it('투어를 안 본 무료 사용자가 잠긴 상세 버튼을 누르면 페이월 대신 투어를 시작한다 — 기존 유저 대부분이 이 버튼으로 나간다', async () => {
+    // Given 상세가 잠긴 기존 무료 유저의 오늘 카드 총평. 이 시나리오에 무료 표현이 열려 있다
+    mocks.locked = true;
+    mocks.feedback = { detailFeedbackLocked: true };
+    mocks.tour = { eligible: true, step: null };
+    renderFlow();
+
+    // When 잠긴 상세 버튼을 누르면
+    fireEvent.click(screen.getByText('잠긴 상세 보기'));
+
+    // Then 페이월이 아니라 투어 첫 단계를 남기고 홈으로 간다
+    await waitFor(() => expect(mocks.saveStep).toHaveBeenCalledWith('STARTED'));
+    expect(mocks.replace).toHaveBeenCalledWith('/scenario');
+    expect(mocks.push).not.toHaveBeenCalled();
+  });
+
+  it('투어 대상이 아니면 잠긴 상세 버튼은 그대로 페이월로 간다', async () => {
+    mocks.locked = true;
+    mocks.feedback = { detailFeedbackLocked: true };
+    mocks.tour = { eligible: true, step: 'COMPLETED' };
+    renderFlow();
+
+    fireEvent.click(screen.getByText('잠긴 상세 보기'));
+
+    await waitFor(() => expect(mocks.push).toHaveBeenCalled());
+    expect(mocks.saveStep).not.toHaveBeenCalled();
+  });
 });
