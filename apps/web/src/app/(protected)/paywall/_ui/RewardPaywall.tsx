@@ -4,6 +4,7 @@
 // 결제·복원·닫기는 PaywallScreen이 지휘하고 여기서는 어느 단계인지와 버튼만 안다
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useReducedMotion } from 'motion/react';
 
 import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
@@ -15,6 +16,11 @@ import { CheckoutStep } from './CheckoutStep';
 import { PaywallHeader } from './PaywallHeader';
 
 type Step = 'benefits' | 'checkout';
+
+// 혜택 화면이 뜬 뒤 아래에 더 있다는 걸 알려 주는 움찔 — 이만큼 기다렸다가, 이만큼 내려갔다가, 이만큼 뒤에 돌아온다
+const SCROLL_HINT_DELAY_MS = 1200;
+const SCROLL_HINT_PX = 72;
+const SCROLL_HINT_RETURN_MS = 500;
 
 export const RewardPaywall = ({
   plan,
@@ -52,6 +58,30 @@ export const RewardPaywall = ({
     scrollRef.current?.scrollTo({ top: 0 });
     if (next === 'checkout') trackCheckoutViewed();
   };
+
+  // 혜택 화면이 처음 뜨면 한 번만 살짝 내려갔다 돌아온다 — 첫 화면 아래에 「프리미엄만 누리는 혜택 4가지」가 이어진다는 걸 보여 준다.
+  // 그 전에 스스로 내렸거나 결제 금액 안내로 넘어갔으면 하지 않고, 동작 줄이기를 켰으면 하지 않는다
+  const reduced = useReducedMotion();
+  const hinted = useRef(false);
+  useEffect(() => {
+    if (step !== 'benefits' || reduced || hinted.current) return;
+    let back: ReturnType<typeof setTimeout> | undefined;
+    const hint = setTimeout(() => {
+      const root = scrollRef.current;
+      hinted.current = true;
+      if (!root || root.scrollTop > 0) return;
+      root.scrollTo({ top: SCROLL_HINT_PX, behavior: 'smooth' });
+      back = setTimeout(() => {
+        // 그사이 스스로 더 내렸으면 끌어올리지 않는다
+        if (root.scrollTop <= SCROLL_HINT_PX)
+          root.scrollTo({ top: 0, behavior: 'smooth' });
+      }, SCROLL_HINT_RETURN_MS);
+    }, SCROLL_HINT_DELAY_MS);
+    return () => {
+      clearTimeout(hint);
+      clearTimeout(back);
+    };
+  }, [step, reduced]);
 
   // 결제 금액 안내부터 열었으면 그 노출도 한 번 찍는다 — 혜택 화면을 거치지 않았을 뿐 같은 단계다
   const reportOpenedAtCheckout = useEffectEvent(() => {

@@ -114,6 +114,18 @@ describe('refreshRewardAfterPurchase', () => {
 
     expect(getMyRewards).not.toHaveBeenCalled();
   });
+
+  it('결제하면 대화를 끝낼 때 적어 둔 「받을 수 있었던 몫」을 지운다 — 홈에서 500원 알약이 떴다 사라지지 않게', () => {
+    // given — 무료로 오늘의 시나리오를 끝내 표시가 남은 채 페이월에서 결제했다
+    refreshRewardAfterCompletion(cacheWith(outsider), FIRST);
+    expect(hasMissedEarn(42)).toBe(true);
+
+    // when
+    refreshRewardAfterPurchase(cacheWith(outsider));
+
+    // then — 이제 실제로 쌓이는 사람이라 놓친 몫이 아니다
+    expect(hasMissedEarn(42)).toBe(false);
+  });
 });
 
 describe('fetchLatestReward', () => {
