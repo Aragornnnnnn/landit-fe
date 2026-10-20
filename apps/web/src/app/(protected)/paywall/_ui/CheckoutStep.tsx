@@ -78,8 +78,9 @@ export const CheckoutStep = ({
           구매 복원
         </button>
       </div>
-      <div className="mt-1 flex justify-center">
-        <PremiumBadge logoHeight={32} />
+      {/* 앞 화면과 같은 크기의 로고 — 화면이 넘어가도 같은 페이월 안이라는 게 이어 보이게 */}
+      <div className="flex justify-center pt-1.5">
+        <PremiumBadge />
       </div>
       {/* 캐릭터 단체샷 — 자르지 않고 줄여서, 팔을 기댄 선이 아래 표 카드 윗선에 오게 한다 */}
       <div className="relative mt-3 h-[131px] overflow-hidden">
