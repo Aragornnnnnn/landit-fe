@@ -27,8 +27,10 @@ describe('TourTutorial', () => {
     // When 다음 문장 버튼을 누르면
     fireEvent.click(screen.getByRole('button', { name: '다음 문장' }));
 
-    // Then 다 쓴 문장이 읽기 칸에 들어간다
-    expect(screen.getByText(/500원을 받을 수 있어요/)).toBeInTheDocument();
+    // Then 다 쓴 문장이 읽기 칸에 들어간다 — 대화를 끝낼 때마다 받는다고 말한다
+    expect(
+      screen.getByText(/방금처럼 대화를 끝내면\s*500원을 받을 수 있어요/),
+    ).toBeInTheDocument();
   });
 
   it('글자를 한 자 쓸 때마다 가볍게 진동하고, 빈칸에서는 울리지 않는다 — 타자 치는 느낌', () => {

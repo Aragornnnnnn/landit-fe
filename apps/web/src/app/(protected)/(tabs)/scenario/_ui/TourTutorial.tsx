@@ -39,7 +39,7 @@ const sentencesOf = (dailyWon: number) =>
     {
       image: '/images/character/landy-good.webp',
       parts: [
-        ['프리미엄 유저라면\n방금 같은 매 대화마다\n'],
+        ['프리미엄 유저라면\n방금처럼 대화를 끝내면\n'],
         [formatWon(dailyWon), true],
         ['을 받을 수 있어요'],
       ],
@@ -47,7 +47,7 @@ const sentencesOf = (dailyWon: number) =>
     {
       image: '/images/character/landy-genie.webp',
       parts: [
-        ['랜딧 프리미엄 이용이 끝나면\n그동안 모은 돈이\n'],
+        ['프리미엄 이용이 끝나면\n그동안 모은 돈이\n'],
         ['내 계좌로 들어와요', true],
       ],
     },
