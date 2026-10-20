@@ -4,12 +4,15 @@ import Image from 'next/image';
 
 import { Coin } from '@/features/reward/ui/common/Coin';
 import { formatWon } from '@/features/subscription/lib/won';
+import {
+  discountPercentOf,
+  listPriceOf,
+} from '@/features/subscription/model/product/pass-price';
 import { PAYWALL_HERO } from '@/features/subscription/ui/paywall-hero-image';
 import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
 import { BenefitComparison } from '@/features/subscription/ui/product/BenefitComparison';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
-import { discountPercentOf, listPriceOf } from '../_model/pass-price';
 import { rewardBenefitsOf, type RewardPlan } from '../_model/paywall-content';
 
 const PassCard = ({ plan }: { plan: RewardPlan }) => {
