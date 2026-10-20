@@ -114,9 +114,10 @@ export const ReviewComplete = ({
         {questions.map((question, index) => {
           const correct = isSolved(question);
           return (
+            // 카드는 눌리지 않는다 — overflow-hidden이라 flex가 내용보다 작게 누르면 뜻 줄이 잘린다. 모자라면 목록이 스크롤된다
             <li
               key={question.questionId}
-              className="relative overflow-hidden rounded-[22px] bg-card"
+              className="relative shrink-0 overflow-hidden rounded-[22px] bg-card"
             >
               {/* 칠 — 왼쪽에서 오른쪽으로 카드 전체가 색으로 덮인다 */}
               <motion.span
