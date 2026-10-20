@@ -110,6 +110,19 @@ describe('ExpressionList 무료·PREMIUM 표시', () => {
     );
   });
 
+  it('무료로 열린 표현에는 다음 표현 손가락을 띄우지 않는다 — 투어 스포트라이트가 이미 가리킨다', () => {
+    render(
+      <ExpressionList
+        premiumLocked
+        freeTrialExpressionId={1}
+        expressions={[expression({ expressionId: 1 })]}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText('다음에 배울 표현')).not.toBeInTheDocument();
+  });
+
   it('유료 사용자 목록에는 스포트라이트 표식도 없다', () => {
     const { container } = render(
       <ExpressionList
