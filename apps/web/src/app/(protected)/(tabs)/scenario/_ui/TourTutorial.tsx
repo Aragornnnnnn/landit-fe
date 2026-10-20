@@ -5,6 +5,9 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
+// 가로 import 사유: 칸이 넘어가는 진동 세기를 알람 시각 바퀴와 같은 기준(플랫폼)으로 고른다
+import { alarmPlatform } from '@/features/alarm/model/shell-alarm';
+import { haptic } from '@/shared/haptics';
 import { formatWon } from '@/shared/lib/won';
 import { Button } from '@/shared/ui/Button';
 
@@ -17,6 +20,10 @@ import {
 // 한 자 쓰는 간격과 한 자 지우는 간격(ms) — 지우기는 빨라야 기다림으로 안 느껴진다
 const TYPE_MS = 55;
 const ERASE_MS = 16;
+
+// 한 자 쓸 때의 진동 — Android의 selection은 너무 약해 거의 안 느껴져서 한 단계 센 light를 쓴다
+const typeHaptic = () =>
+  alarmPlatform() === 'android' ? ('light' as const) : ('selection' as const);
 
 const tickDelayOf = (phase: 'typing' | 'erasing', skip: boolean) => {
   if (skip) return 0;
@@ -50,6 +57,9 @@ const sentencesOf = (dailyWon: number) =>
     },
   ] satisfies { image: string; parts: Part[] }[];
 
+const plainTextOf = (parts: readonly Part[]) =>
+  parts.map(([text]) => text).join('');
+
 const lengthOf = (parts: readonly Part[]) =>
   parts.reduce((sum, [text]) => sum + text.length, 0);
 
@@ -80,11 +90,16 @@ export const TourTutorial = ({
 
   // 시계 — 쓰는 중·지우는 중에만 돈다. 동작 줄이기면 쓰는 단계를 건너뛰고 문장을 한 번에 보여 준다
   const skip = (reduced ?? false) && typing.phase === 'typing';
-  const advance = useEffectEvent(() =>
+  const advance = useEffectEvent(() => {
+    // 한 자씩 쓸 때만 타자 치듯 진동한다 — 빈칸·줄바꿈엔 울리지 않고, 한 번에 보여 줄 때와 지울 때도 조용하다
+    if (!skip && typing.phase === 'typing') {
+      const next = plainTextOf(sentences[typing.index].parts)[typing.count];
+      if (next && next.trim()) haptic(typeHaptic());
+    }
     setTyping((state) =>
       skip ? tapTyping(state, lengths) : tickTyping(state, lengths),
-    ),
-  );
+    );
+  });
   useEffect(() => {
     if (typing.phase === 'shown') return;
     const timer = setTimeout(advance, tickDelayOf(typing.phase, skip));

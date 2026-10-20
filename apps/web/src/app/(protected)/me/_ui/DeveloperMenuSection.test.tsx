@@ -12,6 +12,7 @@ vi.mock('next/link', () => ({
     <a href={href}>{children}</a>
   ),
 }));
+
 vi.mock('@/features/alarm/model/useAlarmStatus', () => ({
   useAlarmStatus: () => null,
 }));
@@ -50,14 +51,14 @@ describe('DeveloperMenuSection', () => {
     );
   });
 
-  it('ADMIN이면 튜토리얼과 환급 페이월을 다시 볼 수 있다', () => {
+  it('ADMIN이면 첫 대화 뒤 투어와 환급 페이월을 점검할 수 있다', () => {
     signIn('ADMIN');
 
     render(<DeveloperMenuSection />);
 
-    expect(screen.getByText('튜토리얼 보기').closest('a')).toHaveAttribute(
+    expect(screen.getByText('투어 점검').closest('a')).toHaveAttribute(
       'href',
-      '/onboarding',
+      '/me/developer/tour',
     );
     expect(screen.getByText('환급 페이월 보기').closest('a')).toHaveAttribute(
       'href',
