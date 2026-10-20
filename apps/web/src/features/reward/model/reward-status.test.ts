@@ -34,7 +34,7 @@ describe('participantOf', () => {
     expect(participantOf(view)).toBe(null);
   });
 
-  it.each(['ACTIVE', 'ENDED', 'PENDING', 'REVIEW'] as const)(
+  it.each(['ACTIVE', 'PENDING', 'REVIEW'] as const)(
     '%s 국면은 참여자다',
     (state) => {
       const view = rewardView({ state });
@@ -42,6 +42,28 @@ describe('participantOf', () => {
       expect(participantOf(view)).toBe(view);
     },
   );
+
+  it('기간이 끝나도 돌려받을 금액이 남았으면 참여자다', () => {
+    const view = endedRewardView(31920);
+
+    expect(participantOf(view)).toBe(view);
+  });
+
+  it('기간이 끝나 돌려받을 금액도 없고 다시 살 수 있으면 참여자로 보지 않는다 — 환급 소개를 다시 권한다', () => {
+    expect(participantOf(endedRewardView(0))).toBe(null);
+  });
+
+  it('검토 중인 금액이 남았으면 기간이 끝나도 참여자다', () => {
+    const view = { ...endedRewardView(0), heldRefundWon: 5000 };
+
+    expect(participantOf(view)).toBe(view);
+  });
+
+  it('돌려받을 금액이 없어도 아직 다시 살 수 없으면 참여자다', () => {
+    const view = { ...endedRewardView(0), purchaseAvailable: false };
+
+    expect(participantOf(view)).toBe(view);
+  });
 });
 
 describe('balanceOf', () => {
