@@ -5,6 +5,8 @@
 // 첫 표현 투어를 시작하는 사람은 학습 준비 없이 레벨까지만 보고 onTourStart으로 홈에 간다
 import { useEffect, useState } from 'react';
 
+// 가로 import 사유: 대화 뒤 이어지는 환급 페이월의 첫 화면 그림을 미리 받는다
+import { SCENARIO_WALL_IMAGES } from '@/app/(protected)/paywall/_model/paywall-content';
 import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQuery';
 import {
   LEVEL_IMAGES,
@@ -41,12 +43,13 @@ export const PostConversationFlow = ({
   const [screen, setScreen] = useState<Screen>({ name: 'analyzing' });
   // 학습 준비 화면이 쓸 표현 개수를 분석 중에 미리 받아 둔다 — 그 화면에서 숫자가 바뀌어 보이지 않게
   useExpressionsQuery(scenarioId);
-  // 뒤 화면의 그림도 분석 중에 미리 받는다 — 레벨 마법사 다섯, 장면 래디, 페이월 히어로. 장면이 넘어가거나 페이월이 뜰 때 빈 자리가 안 보이게
+  // 뒤 화면의 그림도 분석 중에 미리 받는다 — 레벨 마법사 다섯, 장면 래디, 페이월 히어로와 환급 페이월 카드 벽. 장면이 넘어가거나 페이월이 뜰 때 빈 자리가 안 보이게
   useEffect(() => {
     preloadImages([
       ...Object.values(LEVEL_IMAGES),
       ...SLIDE_IMAGES,
       PAYWALL_HERO,
+      ...SCENARIO_WALL_IMAGES,
     ]);
   }, []);
 
