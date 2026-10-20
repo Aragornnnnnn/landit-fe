@@ -11,7 +11,7 @@ import { preloadImages } from '@/shared/lib/preload-next-images';
 
 import { usePremiumPreview } from '../../../_model/usePremiumPreview';
 import { useRewardOffer } from '../../../_model/useRewardOffer';
-import { homePreviewViewOf } from './home-preview-view';
+import { homePreviewViewOf, previewHoldsSheets } from './home-preview-view';
 
 /**
  * @param cleared 오늘 카드를 끝냈는가
@@ -40,8 +40,10 @@ export const useHomePreview = ({
 
   return {
     view,
-    // 프리뷰가 화면에 있으면 홈의 다른 시트(소감·알림 동의)는 미룬다
-    active: view !== 'none',
+    holdsSheets: previewHoldsSheets({
+      deciding: premiumPreview.deciding,
+      step: premiumPreview.step,
+    }),
     dailyWon: offer.dailyWon,
     finishTutorial: () => premiumPreview.saveStep('TUTORIAL_DONE'),
     cardPreview:

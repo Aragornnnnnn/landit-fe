@@ -67,7 +67,7 @@ function ScenarioContent() {
     cleared: cleared && date === undefined,
     showerHold,
   });
-  const sheetsHeld = promoOpen || showerHold || premiumPreview.active;
+  const sheetsHeld = promoOpen || showerHold || premiumPreview.holdsSheets;
   // 대화는 페이월 문이 아니다 — 오늘 카드든 지난 카드든, 재대화든 구독과 관계없이 시작한다.
   // 무료 사용자가 막히는 건 그 뒤의 상세 피드백과 표현 학습이다 (docs/subscription.md 「무료 구간과 페이월 게이트」)
   const start = (scenario: Scenario) => {

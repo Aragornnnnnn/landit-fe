@@ -1,7 +1,7 @@
 // 홈에서 프리뷰가 무엇을 보여 줄지 — 앱을 새로 열어도 마지막 단계 다음부터 바로 이어 간다
 import { describe, expect, it } from 'vitest';
 
-import { homePreviewViewOf } from './home-preview-view';
+import { homePreviewViewOf, previewHoldsSheets } from './home-preview-view';
 
 describe('homePreviewViewOf', () => {
   const base = {
@@ -30,5 +30,28 @@ describe('homePreviewViewOf', () => {
     expect(
       homePreviewViewOf({ ...base, screen: 'flip_card', cleared: false }),
     ).toBe('none');
+  });
+});
+
+describe('previewHoldsSheets', () => {
+  it('프리뷰 대상인지 아직 모르면 미룬다 — 튜토리얼보다 소감이 먼저 떴다 사라지지 않게', () => {
+    expect(previewHoldsSheets({ deciding: true, step: null })).toBe(true);
+  });
+
+  it('프리뷰가 진행 중이면 무료 표현을 마칠 때까지 미룬다 — 화면에 아무것도 안 떠 있어도', () => {
+    for (const step of [
+      'STARTED',
+      'TUTORIAL_DONE',
+      'CARD_FLIPPED',
+      'FREE_OPENED',
+    ] as const)
+      expect(previewHoldsSheets({ deciding: false, step })).toBe(true);
+  });
+
+  it('프리뷰를 끝냈거나 대상이 아니면 미루지 않는다', () => {
+    expect(previewHoldsSheets({ deciding: false, step: 'COMPLETED' })).toBe(
+      false,
+    );
+    expect(previewHoldsSheets({ deciding: false, step: null })).toBe(false);
   });
 });
