@@ -54,7 +54,7 @@ export const MissedRewardView = ({
       </section>
 
       <div className="mx-5 mt-4 rounded-2xl bg-primary/10 px-4 py-3.5 text-center">
-        <p className="text-[15px] font-medium text-foreground">
+        <p className="text-[15px] font-medium whitespace-pre-line text-foreground">
           <EmphasizedText line={copy.box} />
         </p>
         <p className="mt-1 text-[13px] font-medium text-muted-foreground">

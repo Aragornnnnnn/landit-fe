@@ -17,8 +17,9 @@ import { PaywallHeader } from './PaywallHeader';
 
 type Step = 'benefits' | 'checkout';
 
-// 혜택 화면이 뜬 뒤 아래에 더 있다는 걸 알려 주는 움찔 — 이만큼 기다렸다가, 이만큼 내려갔다가, 이만큼 뒤에 돌아온다
-const SCROLL_HINT_DELAY_MS = 1200;
+// 혜택 화면이 뜬 뒤 아래에 더 있다는 걸 알려 주는 움찔 — 이만큼 기다렸다가, 이만큼 내려갔다가, 이만큼 뒤에 돌아온다.
+// 화면 전환 페이드(0.25초)가 끝나자마자 한다 — 늦으면 사람이 스스로 내리려는 순간과 겹친다
+const SCROLL_HINT_DELAY_MS = 300;
 const SCROLL_HINT_PX = 72;
 const SCROLL_HINT_RETURN_MS = 500;
 
@@ -59,7 +60,7 @@ export const RewardPaywall = ({
     if (next === 'checkout') trackCheckoutViewed();
   };
 
-  // 혜택 화면이 처음 뜨면 한 번만 살짝 내려갔다 돌아온다 — 첫 화면 아래에 「프리미엄만 누리는 혜택 4가지」가 이어진다는 걸 보여 준다.
+  // 혜택 화면이 뜨자마자 한 번만 살짝 내려갔다 돌아온다 — 첫 화면 아래에 「프리미엄만 누리는 혜택 4가지」가 이어진다는 걸 보여 준다.
   // 그 전에 스스로 내렸거나 결제 금액 안내로 넘어갔으면 하지 않고, 동작 줄이기를 켰으면 하지 않는다
   const reduced = useReducedMotion();
   const hinted = useRef(false);
@@ -112,7 +113,9 @@ export const RewardPaywall = ({
         ) : (
           <CheckoutStep
             plan={plan}
-            onBack={() => goTo('benefits')}
+            // 혜택 화면을 거치지 않고 열었으면 되돌아갈 곳이 없다 — 바로 닫는다
+            exit={startStep === 'checkout' ? 'close' : 'back'}
+            onExit={startStep === 'checkout' ? onClose : () => goTo('benefits')}
             onRestore={onRestore}
             restoreDisabled={busy}
           />

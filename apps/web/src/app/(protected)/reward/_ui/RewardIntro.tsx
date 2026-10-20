@@ -63,36 +63,25 @@ export const RewardIntro = ({
   </div>
 );
 
-// 아래 고정 버튼 — 환급은 프리미엄 혜택이라 결제부터다. 버튼 밑에 무엇을 얼마에 사는지 한 줄로 둔다
-export const RewardStartButton = ({
-  label,
-  note,
-}: {
-  label: string;
-  note: string;
-}) => {
+// 아래 고정 버튼 — 환급은 프리미엄 혜택이라 결제부터다. 가격은 이어지는 페이월이 말한다
+export const RewardStartButton = ({ label }: { label: string }) => {
   const router = useRouter();
 
   return (
-    <>
-      <Button
-        onClick={() => {
-          track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'reward' });
-          // 결제하고 돌아오면 이 화면이 다시 열린다 — 기록에 같은 화면이 두 번 쌓이지 않게 갈아 끼운다
-          router.replace(
-            paywallPath({
-              source: 'reward',
-              from: REWARD_PATH,
-              step: 'checkout',
-            }),
-          );
-        }}
-      >
-        {label}
-      </Button>
-      <p className="mt-2 text-center text-[12px] font-medium text-muted-foreground">
-        {note}
-      </p>
-    </>
+    <Button
+      onClick={() => {
+        track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'reward' });
+        // 결제하고 돌아오면 이 화면이 다시 열린다 — 기록에 같은 화면이 두 번 쌓이지 않게 갈아 끼운다
+        router.replace(
+          paywallPath({
+            source: 'reward',
+            from: REWARD_PATH,
+            step: 'checkout',
+          }),
+        );
+      }}
+    >
+      {label}
+    </Button>
   );
 };
