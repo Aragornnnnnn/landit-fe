@@ -2,6 +2,7 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ANALYZING_STAGE_MS } from '@/features/expression/ui/pronunciation/AnalyzingLandy';
 import type { UsableAssessment } from '@/features/feedback/model/level-assessment';
 
 import { AnalyzingScreen } from './AnalyzingScreen';
@@ -15,9 +16,13 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/features/feedback/model/useLevelAssessmentQuery', () => ({
   useLevelAssessmentQuery: () => mocks.query,
 }));
-vi.mock('@/features/expression/ui/pronunciation/AnalyzingLandy', () => ({
-  AnalyzingLandy: () => <span data-testid="landy" />,
-}));
+vi.mock(
+  '@/features/expression/ui/pronunciation/AnalyzingLandy',
+  async (importOriginal) => ({
+    ...(await importOriginal()),
+    AnalyzingLandy: () => <span data-testid="landy" />,
+  }),
+);
 
 const domain = (score: number) => ({ score, confidence: 0.9 });
 const usable: UsableAssessment = {
@@ -61,7 +66,7 @@ describe('AnalyzingScreen', () => {
     const onDone = vi.fn();
     render(<AnalyzingScreen sessionId={1} onDone={onDone} />);
 
-    act(() => vi.advanceTimersByTime(2_599));
+    act(() => vi.advanceTimersByTime(ANALYZING_STAGE_MS - 1));
 
     expect(onDone).not.toHaveBeenCalled();
   });
@@ -71,7 +76,7 @@ describe('AnalyzingScreen', () => {
     const onDone = vi.fn();
     render(<AnalyzingScreen sessionId={1} onDone={onDone} />);
 
-    act(() => vi.advanceTimersByTime(2_600));
+    act(() => vi.advanceTimersByTime(ANALYZING_STAGE_MS));
 
     expect(onDone).toHaveBeenCalledWith(usable);
   });
@@ -97,7 +102,7 @@ describe('AnalyzingScreen', () => {
     const onDone = vi.fn();
     render(<AnalyzingScreen sessionId={1} onDone={onDone} />);
 
-    act(() => vi.advanceTimersByTime(2_600));
+    act(() => vi.advanceTimersByTime(ANALYZING_STAGE_MS));
 
     expect(onDone).toHaveBeenCalledWith(null);
   });
@@ -107,7 +112,7 @@ describe('AnalyzingScreen', () => {
     const onDone = vi.fn();
     render(<AnalyzingScreen sessionId={1} onDone={onDone} />);
 
-    act(() => vi.advanceTimersByTime(2_600));
+    act(() => vi.advanceTimersByTime(ANALYZING_STAGE_MS));
 
     expect(onDone).toHaveBeenCalledWith(null);
   });
@@ -127,7 +132,7 @@ describe('AnalyzingScreen', () => {
     const onDone = vi.fn();
     render(<AnalyzingScreen sessionId={1} onDone={onDone} />);
 
-    act(() => vi.advanceTimersByTime(2_600));
+    act(() => vi.advanceTimersByTime(ANALYZING_STAGE_MS));
     expect(onDone).toHaveBeenCalledWith(usable);
 
     act(() => vi.advanceTimersByTime(20_000));

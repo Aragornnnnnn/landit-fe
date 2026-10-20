@@ -6,6 +6,7 @@ import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
 // 가로 import 사유: 같은 대기 연출을 두 벌 두지 않는다 — 문구만 레벨 분석용으로 바꿔 쓴다
 import {
+  ANALYZING_STAGE_MS,
   AnalyzingLandy,
   type AnalyzingStage,
 } from '@/features/expression/ui/pronunciation/AnalyzingLandy';
@@ -17,8 +18,8 @@ import { useLevelAssessmentQuery } from '@/features/feedback/model/useLevelAsses
 
 // 이 시간 안에 결과가 안 오면 레벨 화면 없이 진행한다 (BE 자체 만료는 120초)
 const ANALYSIS_WAIT_MS = 20_000;
-// 결과가 빨리 와도 이만큼은 보여준다 — 분석 화면이 깜빡 지나가면 레벨이 갑자기 뜬 것처럼 보인다. 래디 문구 한 단계 길이다
-const MIN_ANALYSIS_MS = 2_600;
+// 결과가 빨리 와도 래디 문구 한 단계는 보여준다 — 분석 화면이 깜빡 지나가면 레벨이 갑자기 뜬 것처럼 보인다
+const MIN_ANALYSIS_MS = ANALYZING_STAGE_MS;
 
 const LEVEL_STAGES: AnalyzingStage[] = [
   {
