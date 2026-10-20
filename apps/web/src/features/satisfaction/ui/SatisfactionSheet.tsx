@@ -64,7 +64,10 @@ const faceOf = (
     return {
       image: WAVE,
       title: '좋았다니 래디도 기뻐요!',
-      body: '남은 표현들도 이어서 공부해보세요',
+      // 표현까지 마치고 온 사람(프리뷰를 끝낸 무료 유저)은 남은 표현이 잠겨 있어 꾸준한 학습을 권한다
+      body: withExpression
+        ? '앞으로도 랜딧으로 매일 꾸준히 공부해봐요'
+        : '남은 표현들도 이어서 공부해보세요',
     };
   if (view === 'letter')
     return {

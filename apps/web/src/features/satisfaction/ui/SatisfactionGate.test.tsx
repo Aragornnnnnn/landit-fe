@@ -87,6 +87,18 @@ describe('SatisfactionGate', () => {
     ).toBeInTheDocument();
   });
 
+  it('표현까지 마치고 왔으면 좋았어요 뒤에 남은 표현 대신 꾸준한 학습을 권한다 — 무료 유저는 남은 표현이 잠겨 있다', () => {
+    markTalkCompleted('scenario');
+    markExpressionCompleted();
+
+    render(<SatisfactionGate moment="scenario" />);
+    fireEvent.click(screen.getByRole('button', { name: '좋았어요' }));
+
+    expect(
+      screen.getByText('앞으로도 랜딧으로 매일 꾸준히 공부해봐요'),
+    ).toBeInTheDocument();
+  });
+
   it('좋았어요를 누르면 감사 문구로 바뀌고 잠시 후 닫힌다', () => {
     markTalkCompleted('scenario');
     render(<SatisfactionGate moment="scenario" />);
