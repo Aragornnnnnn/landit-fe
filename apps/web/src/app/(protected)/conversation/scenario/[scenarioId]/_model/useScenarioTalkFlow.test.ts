@@ -447,6 +447,43 @@ describe('useScenarioTalkFlow', async () => {
     expect(monitoringMock.reportError).toHaveBeenCalledWith(error);
   });
 
+  it('응답이 끊겨 같은 턴을 다시 보내면 처음과 같은 발화 식별자를 싣는다', async () => {
+    // Given 첫 제출이 응답 없이 끊긴 상태
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockRejectedValueOnce(
+      new TypeError('Load failed'),
+    );
+    await speakAndSubmit(result, 'Hello!');
+
+    // When 같은 턴을 다시 보내면
+    submitScenarioTalkMessage.mockResolvedValueOnce(submitResponse());
+    await speakAndSubmit(result, 'Hello!');
+
+    // Then 두 요청의 식별자가 같다
+    const [first, retry] = submitScenarioTalkMessage.mock.calls;
+    expect(first[3]).toEqual(expect.any(String));
+    expect(retry[3]).toBe(first[3]);
+  });
+
+  it('다음 턴의 발화는 새 식별자를 싣는다', async () => {
+    // Given 첫 답을 보내고 두 번째 질문까지 받은 상태
+    const { result } = await renderAiFirstReady();
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+    await speakAndSubmit(result, 'First answer.');
+    act(() => {
+      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+    });
+    await act(async () => ttsMock.state.onEnd?.());
+
+    // When 두 번째 답을 보내면
+    await speakAndSubmit(result, 'Second answer.');
+
+    // Then 첫 답과 다른 식별자가 실린다
+    const [first, second] = submitScenarioTalkMessage.mock.calls;
+    expect(second[3]).toEqual(expect.any(String));
+    expect(second[3]).not.toBe(first[3]);
+  });
+
   it('다음 질문이 있으면 속마음이 끝난 뒤 다음 AI 질문으로 이어간다', async () => {
     const { result } = await renderUserFirst();
     submitScenarioTalkMessage.mockResolvedValue(submitResponse());
@@ -927,6 +964,7 @@ describe('useScenarioTalkFlow', async () => {
       1,
       'Hello there.',
       'VOICE',
+      expect.any(String),
     );
     // 제출이 이어져 속마음까지 진행된다 (submitResponse 기본은 COMPLETED)
     expect(result.current.phase).toBe('AI_INNER_THOUGHT');
@@ -942,6 +980,7 @@ describe('useScenarioTalkFlow', async () => {
       1,
       'Hello there.',
       'TEXT',
+      expect.any(String),
     );
     expect(sttMock.start).not.toHaveBeenCalled();
   });
