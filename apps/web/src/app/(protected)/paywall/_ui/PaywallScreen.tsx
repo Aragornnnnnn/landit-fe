@@ -23,7 +23,7 @@ import {
 } from '@/features/subscription/model/purchase/usePurchase';
 import { track } from '@/shared/analytics';
 import { homePath } from '@/shared/lib/last-tab';
-import { premiumOnboardingPath } from '@/shared/lib/routes';
+import { premiumOnboardingPath, type PaywallStep } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
@@ -49,11 +49,14 @@ interface PaywallScreenProps {
   returnTo?: string;
   /** 환급 챌린지를 켤지 — 기본은 환급이 열린 환경인지(useRewardChallengeLive). 테스트와 미리보기만 넘긴다 */
   rewardChallenge?: boolean;
+  /** 환급 페이월을 어느 단계에서 열지. 혜택을 이미 본 환급 화면에서 오면 결제 금액 안내부터 */
+  startStep?: PaywallStep;
 }
 
 export const PaywallScreen = ({
   returnTo,
   rewardChallenge: forcedRewardChallenge,
+  startStep,
 }: PaywallScreenProps) => {
   const router = useRouter();
   const rewardLive = useRewardChallengeLive();
@@ -145,6 +148,7 @@ export const PaywallScreen = ({
     return (
       <RewardPaywall
         plan={rewardPlan}
+        startStep={startStep}
         busy={busy}
         onClose={() => void close()}
         onRestore={startRestore}

@@ -201,16 +201,23 @@ export const PAYWALL_PATH = '/paywall';
  *   필수로 둬서, 페이월로 보내는 자리가 늘 때 어느 문인지 정하고 가게 한다
  * @param from 결제 뒤 돌아갈 내부 경로 — 학습 진입에서 막혀 왔을 때만 붙는다
  */
+// 페이월을 어느 단계에서 열지 — 환급 페이월은 혜택 화면 → 결제 금액 안내 두 단계다
+export type PaywallStep = 'checkout';
+
 export const paywallPath = ({
   source,
   from,
+  step,
 }: {
   source: PaywallSource;
   from?: string;
+  // 혜택을 이미 본 곳(환급 화면)에서 오면 결제 금액 안내부터 연다
+  step?: PaywallStep;
 }) => {
   const query = new URLSearchParams();
   if (from) query.set('from', from);
   if (source) query.set('source', source);
+  if (step) query.set('step', step);
   const suffix = query.toString();
   return suffix ? `${PAYWALL_PATH}?${suffix}` : PAYWALL_PATH;
 };
@@ -285,6 +292,10 @@ const INTERNAL_PATH_PATTERN = /^\/(?![/\\])/;
  *
  * @param from 쿼리 값. 내부 절대 경로가 아니면(없음·외부 주소·배열) undefined
  */
+// 주소에 실려 온 시작 단계. 모르는 값이면 처음(혜택 화면)부터
+export const readPaywallStep = (step: unknown): PaywallStep | undefined =>
+  step === 'checkout' ? 'checkout' : undefined;
+
 export const readReturnParam = (from: unknown): string | undefined =>
   typeof from === 'string' && INTERNAL_PATH_PATTERN.test(from)
     ? from

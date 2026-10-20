@@ -79,7 +79,13 @@ export const RewardStartButton = ({
         onClick={() => {
           track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'reward' });
           // 결제하고 돌아오면 이 화면이 다시 열린다 — 기록에 같은 화면이 두 번 쌓이지 않게 갈아 끼운다
-          router.replace(paywallPath({ source: 'reward', from: REWARD_PATH }));
+          router.replace(
+            paywallPath({
+              source: 'reward',
+              from: REWARD_PATH,
+              step: 'checkout',
+            }),
+          );
         }}
       >
         {label}

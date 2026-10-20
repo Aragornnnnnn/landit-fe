@@ -2,7 +2,7 @@
 
 // 환급 챌린지 페이월 — 혜택 화면에서 「다음」을 누르면 결제 금액 안내로 넘어가고, 거기서 결제한다.
 // 결제·복원·닫기는 PaywallScreen이 지휘하고 여기서는 어느 단계인지와 버튼만 안다
-import { useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
 
@@ -19,6 +19,7 @@ type Step = 'benefits' | 'checkout';
 
 export const RewardPaywall = ({
   plan,
+  startStep = 'benefits',
   busy,
   onClose,
   onRestore,
@@ -26,6 +27,8 @@ export const RewardPaywall = ({
   preview = false,
 }: {
   plan: RewardPlan;
+  /** 처음 보여 줄 단계 — 혜택을 이미 본 환급 화면에서 오면 결제 금액 안내부터 */
+  startStep?: Step;
   /** 결제·복원이 진행 중이면 버튼을 잠근다 */
   busy: boolean;
   onClose: () => void;
@@ -34,19 +37,30 @@ export const RewardPaywall = ({
   /** 개발자 묶음의 미리보기인가 — 그러면 결제 금액 안내 노출을 찍지 않아 실험 지표에 섞이지 않는다 */
   preview?: boolean;
 }) => {
-  const [step, setStep] = useState<Step>('benefits');
+  const [step, setStep] = useState<Step>(startStep);
   const [scrolled, setScrolled] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const trackCheckoutViewed = () => {
+    if (!preview)
+      track(EVENTS.PAYWALL_CHECKOUT_VIEWED, { plan: REWARD_PLAN_ID });
+  };
 
   // 단계가 바뀌면 맨 위부터 보여 준다 — 혜택 화면 맨 아래에서 넘어와도 결제 금액 안내의 가격이 먼저 보이게
   const goTo = (next: Step) => {
     setStep(next);
     setScrolled(false);
     scrollRef.current?.scrollTo({ top: 0 });
-    if (next === 'checkout' && !preview) {
-      track(EVENTS.PAYWALL_CHECKOUT_VIEWED, { plan: REWARD_PLAN_ID });
-    }
+    if (next === 'checkout') trackCheckoutViewed();
   };
+
+  // 결제 금액 안내부터 열었으면 그 노출도 한 번 찍는다 — 혜택 화면을 거치지 않았을 뿐 같은 단계다
+  const reportOpenedAtCheckout = useEffectEvent(() => {
+    if (startStep === 'checkout') trackCheckoutViewed();
+  });
+  useEffect(() => {
+    reportOpenedAtCheckout();
+  }, []);
 
   return (
     <main className="relative mx-auto h-dvh max-w-[430px] overflow-hidden bg-background">
