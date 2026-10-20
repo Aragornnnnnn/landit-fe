@@ -67,7 +67,9 @@ function ScenarioContent() {
     cleared: cleared && date === undefined,
     showerHold,
   });
-  const sheetsHeld = promoOpen || showerHold || premiumPreview.holdsSheets;
+  const sheetsHeld = promoOpen || showerHold || premiumPreview.active;
+  // 소감·리뷰는 프리뷰를 끝낼 때까지 더 미룬다 — 그사이 이 방문엔 알림 동의도 안 뜬다(소감 차례가 남아 있어서)
+  const satisfactionHeld = sheetsHeld || premiumPreview.holdsSatisfaction;
   // 대화는 페이월 문이 아니다 — 오늘 카드든 지난 카드든, 재대화든 구독과 관계없이 시작한다.
   // 무료 사용자가 막히는 건 그 뒤의 상세 피드백과 표현 학습이다 (docs/subscription.md 「무료 구간과 페이월 게이트」)
   const start = (scenario: Scenario) => {
@@ -125,10 +127,10 @@ function ScenarioContent() {
         />
       )}
 
-      {settled && !sheetsHeld && satisfactionSheet === 'talk' && (
+      {settled && !satisfactionHeld && satisfactionSheet === 'talk' && (
         <SatisfactionGate moment="scenario" />
       )}
-      {settled && !sheetsHeld && satisfactionSheet === 'review' && (
+      {settled && !satisfactionHeld && satisfactionSheet === 'review' && (
         <SatisfactionGate moment="review" />
       )}
       {promptTurn && !sheetsHeld && <NotificationConsentGate />}
