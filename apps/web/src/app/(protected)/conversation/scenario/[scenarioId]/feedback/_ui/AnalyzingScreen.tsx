@@ -2,7 +2,7 @@
 
 // 대화 직후 레벨 분석 대기 — BE가 세션 수준 평가를 마칠 때까지 기다리고, 쓸 수 있는 결과면 넘기고 아니면 빈손으로 넘긴다.
 // 기다림은 발음 평가와 같은 래디 서사(듣기→비교→검토→정리)로 채운다. 상한을 두는 이유는 이 화면 뒤가 페이월이라서다
-import { useEffect, useEffectEvent, useRef } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
 // 가로 import 사유: 같은 대기 연출을 두 벌 두지 않는다 — 문구만 레벨 분석용으로 바꿔 쓴다
 import {
@@ -17,6 +17,8 @@ import { useLevelAssessmentQuery } from '@/features/feedback/model/useLevelAsses
 
 // 이 시간 안에 결과가 안 오면 레벨 화면 없이 진행한다 (BE 자체 만료는 120초)
 const ANALYSIS_WAIT_MS = 20_000;
+// 결과가 빨리 와도 이만큼은 보여준다 — 분석 화면이 깜빡 지나가면 레벨이 갑자기 뜬 것처럼 보인다. 래디 문구 한 단계 길이다
+const MIN_ANALYSIS_MS = 2_600;
 
 const LEVEL_STAGES: AnalyzingStage[] = [
   {
@@ -65,6 +67,7 @@ export const AnalyzingScreen = ({
   onDone,
 }: AnalyzingScreenProps) => {
   const { outcome, levelAssessment } = useLevelAssessmentQuery(sessionId);
+  const [minElapsed, setMinElapsed] = useState(false);
   // 한 번만 넘긴다 — 결과를 넘긴 뒤에도 화면 전환이 끝날 때까지 이 화면이 잠깐 남아 있어 제한 시간 타이머가 뒤따라 울 수 있다.
   // 부모의 화면 전환 함수는 매 렌더 새로 만들어진다 — 이벤트로 감싸 effect가 그것 때문에 다시 돌지 않게 한다
   const settled = useRef(false);
@@ -75,17 +78,21 @@ export const AnalyzingScreen = ({
   });
 
   useEffect(() => {
-    if (outcome === 'pending') return;
+    if (!minElapsed || outcome === 'pending') return;
     finish(
       outcome === 'ready' && isUsableAssessment(levelAssessment)
         ? levelAssessment
         : null,
     );
-  }, [outcome, levelAssessment]);
+  }, [minElapsed, outcome, levelAssessment]);
 
   useEffect(() => {
+    const minTimer = setTimeout(() => setMinElapsed(true), MIN_ANALYSIS_MS);
     const timer = setTimeout(() => finish(null), ANALYSIS_WAIT_MS);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(minTimer);
+      clearTimeout(timer);
+    };
   }, []);
 
   return <AnalyzingView />;
