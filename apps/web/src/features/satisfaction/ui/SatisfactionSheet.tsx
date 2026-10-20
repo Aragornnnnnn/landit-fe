@@ -15,6 +15,8 @@ interface SatisfactionSheetProps {
   open: boolean;
   moment: SatisfactionMoment;
   view: SatisfactionView;
+  // 시나리오 소감을 표현 학습 뒤로 미뤘다 — 대화와 표현을 함께 묻는다
+  withExpression?: boolean;
   onGood: () => void;
   onBad: () => void;
   onSendFeedback: () => void;
@@ -46,7 +48,11 @@ const CRYING = '/images/character/landy-crying.webp';
 const REVIEW = '/images/character/landy-review.webp';
 
 // 순간·화면별 얼굴과 말 — 본문은 모두 두 줄 이내로 맞춰 시트 높이가 같게 유지되게 한다
-const faceOf = (moment: SatisfactionMoment, view: SatisfactionView): Face => {
+const faceOf = (
+  moment: SatisfactionMoment,
+  view: SatisfactionView,
+  withExpression: boolean,
+): Face => {
   if (moment === 'review')
     return {
       image: REVIEW,
@@ -72,7 +78,9 @@ const faceOf = (moment: SatisfactionMoment, view: SatisfactionView): Face => {
     title:
       moment === 'smalltalk'
         ? '첫 스몰톡, 어떠셨나요?'
-        : '방금 대화, 어떠셨나요?',
+        : withExpression
+          ? '방금 대화와 표현 학습, 어떠셨나요?'
+          : '방금 대화, 어떠셨나요?',
     body: '래디가 많이 궁금해요!\n솔직하게 골라주세요',
     bad: '아쉬웠어요',
     good: '좋았어요',
@@ -83,6 +91,7 @@ export const SatisfactionSheet = ({
   open,
   moment,
   view,
+  withExpression = false,
   onGood,
   onBad,
   onSendFeedback,
@@ -92,7 +101,7 @@ export const SatisfactionSheet = ({
   onAlreadyDone,
   onClose,
 }: SatisfactionSheetProps) => {
-  const face = faceOf(moment, view);
+  const face = faceOf(moment, view, withExpression);
 
   return (
     <BottomSheet open={open} onClose={onClose}>

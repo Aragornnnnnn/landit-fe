@@ -23,6 +23,7 @@ import {
 } from '../api/shell-review';
 import {
   consumeAllPending,
+  expressionCompletedToday,
   markReviewShown,
   peekReviewAttempt,
   recordSatisfactionAnswer,
@@ -52,6 +53,11 @@ export const SatisfactionGate = ({
   // 같은 날 다시 마운트돼도(할인 시트에 밀렸다 돌아옴) 횟수가 더 늘지 않는다
   const [attempt] = useState(() =>
     moment === 'review' ? peekReviewAttempt() : 0,
+  );
+
+  // 표현까지 마치고 왔는가 — 차례가 소비되기 전 마운트 때 고정한다
+  const [withExpression] = useState(
+    () => moment === 'scenario' && expressionCompletedToday(),
   );
 
   // 노출을 계측하고, 이번 완료로 쌓인 차례를 모두 소비한다 — 같은 완료로 다른 시트가 또 뜨지 않게.
@@ -154,6 +160,7 @@ export const SatisfactionGate = ({
       open={open}
       moment={moment}
       view={view}
+      withExpression={withExpression}
       onGood={good}
       onBad={bad}
       onSendFeedback={sendFeedback}

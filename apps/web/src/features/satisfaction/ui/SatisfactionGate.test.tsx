@@ -76,6 +76,17 @@ describe('SatisfactionGate', () => {
     expect(screen.getByText('첫 스몰톡, 어떠셨나요?')).toBeInTheDocument();
   });
 
+  it('표현 학습까지 마치고 돌아왔으면 둘을 함께 묻는다 — 프리뷰가 끝날 때까지 미뤄 둔 소감', () => {
+    markTalkCompleted('scenario');
+    markExpressionCompleted();
+
+    render(<SatisfactionGate moment="scenario" />);
+
+    expect(
+      screen.getByText('방금 대화와 표현 학습, 어떠셨나요?'),
+    ).toBeInTheDocument();
+  });
+
   it('좋았어요를 누르면 감사 문구로 바뀌고 잠시 후 닫힌다', () => {
     markTalkCompleted('scenario');
     render(<SatisfactionGate moment="scenario" />);
