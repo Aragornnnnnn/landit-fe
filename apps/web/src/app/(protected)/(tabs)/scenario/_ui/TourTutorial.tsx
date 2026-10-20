@@ -53,7 +53,11 @@ const sentencesOf = (dailyWon: number) =>
     },
     {
       image: '/images/character/landy-point.webp',
-      parts: [['돈이 쌓이는 동안\n'], ['영어 실력도 쌓여요', true]],
+      parts: [
+        ['프리미엄의 또 다른 혜택!\n방금 대화로 만든 '],
+        ['맞춤 표현', true],
+        ['을\n하나 무료로 열어 드릴게요'],
+      ],
     },
   ] satisfies { image: string; parts: Part[] }[];
 
