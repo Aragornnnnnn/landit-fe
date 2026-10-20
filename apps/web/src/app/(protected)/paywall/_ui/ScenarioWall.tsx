@@ -39,9 +39,16 @@ export const ScenarioWall = () => {
   const picked = SCENARIOS[WALL_PICK_INDEX];
 
   return (
-    <div aria-hidden="true" className="relative h-[460px] overflow-hidden">
+    // 높이는 화면에 맞춰 줄인다 — 작은 폰에서도 첫 화면 CTA 위로 「프리미엄만 누리는 혜택 4가지」 머리글까지 보이게.
+    // 375px는 벽 위 머리(로고·제목) 174px + 혜택 판 머리글 101px + CTA와 그 위 흐림 100px이고, 안전 영역은 따로 뺀다.
+    // 낮은 화면(short)은 벽 위 머리가 24px, 혜택 판 머리글이 16px 작아져 그만큼 덜 뺀다. 큰 화면은 피그마 높이 460px
+    <div
+      aria-hidden="true"
+      className="relative h-(--wall-h) overflow-hidden [--wall-h:clamp(260px,calc(100dvh_-_375px_-_max(var(--safe-area-inset-top),8px)_-_max(var(--safe-area-inset-bottom),12px)),460px)] short:[--wall-h:clamp(220px,calc(100dvh_-_335px_-_max(var(--safe-area-inset-top),8px)_-_max(var(--safe-area-inset-bottom),12px)),460px)]"
+    >
       {/* 760×560 묶음을 시계 방향으로 7도 기울인다 — 피그마처럼 묶음 가운데가 화면 가운데보다 5px 오른쪽에 오게 둔다 */}
-      <div className="absolute top-[34px] left-[calc(50%-375px)] h-[560px] w-[760px] rotate-7">
+      {/* 벽이 낮아지면 줄어든 만큼 묶음을 위로 올려 오늘의 시나리오 카드가 가운데 남게 한다 */}
+      <div className="absolute top-[calc(34px-(460px-var(--wall-h))*0.8)] left-[calc(50%-375px)] h-[560px] w-[760px] rotate-7">
         {ROWS.map((row) =>
           row.scenarios.map((index, column) => (
             <div

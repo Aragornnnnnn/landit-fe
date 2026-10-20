@@ -79,16 +79,17 @@ export const CheckoutStep = ({
         </button>
       </div>
       {/* 앞 화면과 같은 크기의 로고 — 화면이 넘어가도 같은 페이월 안이라는 게 이어 보이게 */}
-      <div className="flex justify-center pt-1.5">
+      {/* 낮은 화면에선 로고를 80%로 줄인다 — 레이아웃 자리까지 같이 줄도록 transform이 아니라 zoom */}
+      <div className="flex justify-center pt-1.5 short:[zoom:0.8]">
         <PremiumBadge />
       </div>
-      {/* 캐릭터 단체샷 — 자르지 않고 줄여서, 팔을 기댄 선이 아래 표 카드 윗선에 오게 한다 */}
-      <div className="relative mt-3 h-[131px] overflow-hidden">
+      {/* 캐릭터 단체샷 — 자르지 않고 줄여서, 팔을 기댄 선이 아래 표 카드 윗선에 오게 한다. 낮은 화면은 같은 비율로 80% */}
+      <div className="relative mt-3 h-[131px] overflow-hidden short:mt-2 short:h-[104px]">
         <Image
           {...PAYWALL_HERO}
           alt=""
           priority
-          className="absolute top-0 left-1/2 w-[257px] max-w-none -translate-x-1/2"
+          className="absolute top-0 left-1/2 w-[257px] max-w-none -translate-x-1/2 short:w-[204px]"
         />
       </div>
     </section>

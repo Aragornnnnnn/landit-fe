@@ -41,10 +41,11 @@ export const BenefitsStep = ({ plan }: { plan: RewardPlan }) => (
       data-inview="true"
       className="bg-[#fbf6ef] pt-[calc(max(var(--safe-area-inset-top),8px)+40px)] text-center"
     >
-      <div className="flex justify-center pt-1.5">
+      {/* 낮은 화면에선 로고를 80%로 줄인다 — 레이아웃 자리까지 같이 줄도록 transform이 아니라 zoom */}
+      <div className="flex justify-center pt-1.5 short:[zoom:0.8]">
         <PremiumBadge />
       </div>
-      <h2 className="mt-4 px-6 text-[26px] leading-[36px] font-black tracking-[-0.025em] whitespace-pre-line text-foreground">
+      <h2 className="mt-4 px-6 text-[26px] leading-[36px] font-black tracking-[-0.025em] whitespace-pre-line text-foreground short:mt-3 short:text-[22px] short:leading-[30px]">
         {'매일 도착하는 시나리오\n'}
         <PremiumWord />
         으로 제대로 공부해요
@@ -53,12 +54,12 @@ export const BenefitsStep = ({ plan }: { plan: RewardPlan }) => (
     </section>
 
     {/* 혜택 판 — 맨 위 머리글이 아래 넷을 프리미엄 전용으로 묶는다 */}
-    <div className="rounded-t-[28px] bg-card pt-8 pb-10 shadow-[0_-6px_18px_rgba(51,31,13,0.06)]">
+    <div className="rounded-t-[28px] bg-card pt-8 pb-10 shadow-[0_-6px_18px_rgba(51,31,13,0.06)] short:pt-6">
       <div className="px-6">
         <span className="inline-block rounded-full bg-[#f6c54a] px-2.5 py-1 text-xs font-black tracking-wide text-[#3a2a00]">
           PREMIUM ONLY
         </span>
-        <p className="mt-3 text-2xl font-black tracking-[-0.02em] text-foreground">
+        <p className="mt-3 text-2xl font-black tracking-[-0.02em] text-foreground short:mt-2 short:text-xl">
           프리미엄만 누리는 혜택 4가지
         </p>
       </div>
