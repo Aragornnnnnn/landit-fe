@@ -28,6 +28,12 @@ describe('tour-preview', () => {
     expect(isTourPreview()).toBe(true);
   });
 
+  it('단계를 골라 켜면 그 단계를 끝낸 자리부터 이어 본다 — 카드 뒤집기부터 보려면 튜토리얼을 끝낸 자리', () => {
+    startTourPreview(7, 'TUTORIAL_DONE');
+
+    expect(readTourStep(7)).toBe('TUTORIAL_DONE');
+  });
+
   it('세션 저장소를 못 써도 이번 실행에서는 미리보기로 친다', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('blocked');
