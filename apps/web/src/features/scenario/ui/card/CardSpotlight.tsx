@@ -13,6 +13,8 @@ import { Emoji } from '@/shared/ui/emoji';
 const PAD = 6;
 // 말풍선과 뚫린 자리 사이 — 꼬리가 이 틈을 잇는다
 const GAP = 14;
+// 위에 붙인 말풍선이 올라갈 수 있는 끝 — 상태 표시줄 아래
+const SAFE_TOP = 'calc(var(--safe-area-inset-top) + 12px)';
 // 손가락 자리 — 칸 오른쪽 끝의 「무료」 배지(약 52px)와 겹치지 않게 그 왼쪽, 칸 높이의 40% 지점
 const FINGER_FROM_RIGHT_PX = 118;
 const FINGER_TOP_RATIO = 0.4;
@@ -25,6 +27,7 @@ export const CardSpotlight = ({
   onTap,
   introMs,
   onMissing,
+  placement = 'below',
 }: {
   // 뚫어 둘 자리를 찾는다 — 연출이 끝난 뒤에 찾아야 그 자리가 맞다
   findTarget: () => HTMLElement | null;
@@ -39,7 +42,10 @@ export const CardSpotlight = ({
   introMs?: number;
   // 기다린 뒤에도 자리를 못 찾았다 — 비출 것이 없으니 부르는 쪽이 안내를 끝낸다
   onMissing: () => void;
+  // 말풍선을 자리 위·아래 어디에 붙일까 — 화면을 거의 채우는 큰 자리(표현 목록)는 아래가 모자라 위에 붙인다
+  placement?: 'above' | 'below';
 }) => {
+  const above = placement === 'above';
   const intro = introMs !== undefined;
   const reduced = useReducedMotion();
   const [rect, setRect] = useState<DOMRect | null>(null);
@@ -50,8 +56,9 @@ export const CardSpotlight = ({
       if (first) onMissing();
       return;
     }
-    // 목록이 길어 칸이 화면 밖이면 먼저 가운데로 데려온다 — 어둠이 스크롤을 막는다
-    if (first) target.scrollIntoView({ block: 'center' });
+    // 목록이 길어 칸이 화면 밖이면 먼저 화면 안으로 데려온다 — 어둠이 스크롤을 막는다.
+    // 말풍선이 위에 붙으면 아래쪽에 붙여 위 자리를 넓힌다
+    if (first) target.scrollIntoView({ block: above ? 'end' : 'center' });
     setRect(target.getBoundingClientRect());
   });
   useEffect(() => {
@@ -113,18 +120,28 @@ export const CardSpotlight = ({
           <Emoji>👆</Emoji>
         </motion.span>
       )}
-      {/* 말풍선 — 꼬리가 위로 뚫린 자리에 닿는다. 누구의 말도 아닌 안내라 캐릭터 없이 */}
+      {/* 말풍선 — 꼬리가 뚫린 자리에 닿는다. 누구의 말도 아닌 안내라 캐릭터 없이.
+          위에 붙일 땐 화면 맨 위부터 자리 위까지를 칸으로 잡고 그 바닥에 둔다 — 칸이 말풍선보다 낮으면 위 빈칸이 0으로 줄어 말풍선이 화면 위에 걸린 채 자리 윗부분을 덮는다(잘리지 않는다) */}
       <motion.div
-        className="pointer-events-none absolute right-0 left-0 flex justify-center px-6"
-        style={{ top: hole.top + hole.height + GAP }}
-        initial={{ y: 8, opacity: 0 }}
+        data-placement={placement}
+        className="pointer-events-none absolute right-0 left-0 flex flex-col px-6"
+        style={
+          above
+            ? {
+                top: SAFE_TOP,
+                height: `max(0px, calc(${hole.top - GAP}px - ${SAFE_TOP}))`,
+              }
+            : { top: hole.top + hole.height + GAP }
+        }
+        initial={{ y: above ? -8 : 8, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: DURATION.base, delay: 0.15 }}
       >
-        <p className="relative rounded-2xl bg-card px-5 py-3.5 text-center text-base leading-snug font-bold break-keep text-foreground shadow-lg">
+        {above && <div className="flex-1" />}
+        <p className="relative mx-auto rounded-2xl bg-card px-5 py-3.5 text-center text-base leading-snug font-bold break-keep text-foreground shadow-lg">
           <span
             aria-hidden
-            className="absolute -top-1.5 left-1/2 size-3.5 -translate-x-1/2 rotate-45 rounded-[3px] bg-card"
+            className={`absolute left-1/2 size-3.5 -translate-x-1/2 rotate-45 rounded-[3px] bg-card ${above ? '-bottom-1.5' : '-top-1.5'}`}
           />
           {children}
         </p>
