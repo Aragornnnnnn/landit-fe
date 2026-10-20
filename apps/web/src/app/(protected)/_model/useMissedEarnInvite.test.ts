@@ -15,7 +15,12 @@ import { useMissedEarnInvite } from './useMissedEarnInvite';
 const mocks = vi.hoisted(() => ({ reduced: false }));
 vi.mock('motion/react', () => ({ useReducedMotion: () => mocks.reduced }));
 vi.mock('./useRewardOffer', () => ({
-  useRewardOffer: () => ({ days: 100, dailyWon: 500, maximumWon: 50_000 }),
+  useRewardOffer: () => ({
+    days: 100,
+    priceWon: 50_000,
+    dailyWon: 500,
+    maximumWon: 50_000,
+  }),
 }));
 
 const USER_ID = 42;

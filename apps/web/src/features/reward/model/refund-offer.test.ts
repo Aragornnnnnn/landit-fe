@@ -7,6 +7,7 @@ describe('rewardOfferOf', () => {
   it('5만 원이면 100일 동안 하루 500원, 다 채우면 5만 원이다', () => {
     expect(rewardOfferOf(50_000)).toEqual({
       days: 100,
+      priceWon: 50_000,
       dailyWon: 500,
       maximumWon: 50_000,
     });
@@ -14,6 +15,7 @@ describe('rewardOfferOf', () => {
 
   it('일수로 나눠떨어지지 않는 가격이면 하루 몫을 내리고, 최대 환급액은 그 합이다', () => {
     expect(rewardOfferOf(55_550)).toMatchObject({
+      priceWon: 55_550,
       dailyWon: 555,
       maximumWon: 55_500,
     });
