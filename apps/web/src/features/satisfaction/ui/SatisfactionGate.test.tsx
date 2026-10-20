@@ -87,6 +87,16 @@ describe('SatisfactionGate', () => {
     ).toBeInTheDocument();
   });
 
+  it('프리뷰 중간에 멈췄다 돌아왔으면 좀 전 대화로 묻는다', () => {
+    markTalkCompleted('scenario');
+
+    render(<SatisfactionGate moment="scenario" earlier />);
+
+    expect(
+      screen.getByText('좀 전에 나눈 대화, 어떠셨나요?'),
+    ).toBeInTheDocument();
+  });
+
   it('표현까지 마치고 왔으면 좋았어요 뒤에 남은 표현 대신 꾸준한 학습을 권한다 — 무료 유저는 남은 표현이 잠겨 있다', () => {
     markTalkCompleted('scenario');
     markExpressionCompleted();

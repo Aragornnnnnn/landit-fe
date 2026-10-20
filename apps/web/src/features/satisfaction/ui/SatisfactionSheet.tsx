@@ -17,6 +17,8 @@ interface SatisfactionSheetProps {
   view: SatisfactionView;
   // 시나리오 소감을 표현 학습 뒤로 미뤘다 — 대화와 표현을 함께 묻는다
   withExpression?: boolean;
+  // 프리뷰 중간에 멈췄다 돌아왔다 — 좀 전 대화로 묻는다
+  earlier?: boolean;
   onGood: () => void;
   onBad: () => void;
   onSendFeedback: () => void;
@@ -52,6 +54,7 @@ const faceOf = (
   moment: SatisfactionMoment,
   view: SatisfactionView,
   withExpression: boolean,
+  earlier: boolean,
 ): Face => {
   if (moment === 'review')
     return {
@@ -83,7 +86,9 @@ const faceOf = (
         ? '첫 스몰톡, 어떠셨나요?'
         : withExpression
           ? '방금 대화와 표현 학습, 어떠셨나요?'
-          : '방금 대화, 어떠셨나요?',
+          : earlier
+            ? '좀 전에 나눈 대화, 어떠셨나요?'
+            : '방금 대화, 어떠셨나요?',
     body: '래디가 많이 궁금해요!\n솔직하게 골라주세요',
     bad: '아쉬웠어요',
     good: '좋았어요',
@@ -95,6 +100,7 @@ export const SatisfactionSheet = ({
   moment,
   view,
   withExpression = false,
+  earlier = false,
   onGood,
   onBad,
   onSendFeedback,
@@ -104,7 +110,7 @@ export const SatisfactionSheet = ({
   onAlreadyDone,
   onClose,
 }: SatisfactionSheetProps) => {
-  const face = faceOf(moment, view, withExpression);
+  const face = faceOf(moment, view, withExpression, earlier);
 
   return (
     <BottomSheet open={open} onClose={onClose}>

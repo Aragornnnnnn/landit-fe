@@ -128,7 +128,10 @@ function ScenarioContent() {
       )}
 
       {settled && !satisfactionHeld && satisfactionSheet === 'talk' && (
-        <SatisfactionGate moment="scenario" />
+        <SatisfactionGate
+          moment="scenario"
+          earlier={premiumPreview.unfinished}
+        />
       )}
       {settled && !satisfactionHeld && satisfactionSheet === 'review' && (
         <SatisfactionGate moment="review" />

@@ -37,8 +37,11 @@ export const THANKS_MS = 2000;
 
 export const SatisfactionGate = ({
   moment,
+  earlier = false,
 }: {
   moment: SatisfactionMoment;
+  /** 프리뷰 중간에 멈췄다 돌아왔다 — 방금이 아니라 좀 전 대화로 묻는다 */
+  earlier?: boolean;
 }) => {
   const router = useRouter();
   const [open, setOpen] = useState(true);
@@ -161,6 +164,7 @@ export const SatisfactionGate = ({
       moment={moment}
       view={view}
       withExpression={withExpression}
+      earlier={earlier}
       onGood={good}
       onBad={bad}
       onSendFeedback={sendFeedback}
