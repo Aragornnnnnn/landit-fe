@@ -104,7 +104,7 @@ const ExitOfferPreview = ({ onBack }: { onBack: () => void }) => {
   return (
     <RewardFrame
       onBack={() => (open ? onBack() : setOpen(true))}
-      footer={<RewardStartButton label={copy.cta} note={copy.priceNote} />}
+      footer={<RewardStartButton label={copy.cta} />}
       fadeAboveFooter
     >
       <RewardIntro copy={copy} offer={PREVIEW_OFFER} />
@@ -191,7 +191,7 @@ export const RewardCheckPreview = ({
     return (
       <RewardFrame
         onBack={onBack}
-        footer={<RewardStartButton label={copy.cta} note={copy.priceNote} />}
+        footer={<RewardStartButton label={copy.cta} />}
         fadeAboveFooter
       >
         <RewardIntro copy={copy} offer={PREVIEW_OFFER} />
@@ -206,7 +206,7 @@ export const RewardCheckPreview = ({
       <RewardFrame
         onBack={onBack}
         trailing={<RewardRulesButton dailyWon={PREVIEW_OFFER.dailyWon} />}
-        footer={<RewardStartButton label={copy.cta} note={copy.priceNote} />}
+        footer={<RewardStartButton label={copy.cta} />}
         fadeAboveFooter
         glow="missed"
       >

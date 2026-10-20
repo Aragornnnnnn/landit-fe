@@ -15,7 +15,6 @@ describe('rewardIntroCopyOf', () => {
       deposit: '50,000원 입금',
       caption: null,
       cta: '프리미엄 시작하고 환급받기',
-      priceNote: '50,000원 · 100일 이용권',
     });
   });
 
@@ -27,20 +26,10 @@ describe('rewardIntroCopyOf', () => {
     });
   });
 
-  it('가격 안내는 최대 환급액이 아니라 실제 결제 금액을 말한다 — 일수로 나눠떨어지지 않는 가격에서 둘이 갈린다', () => {
-    const copy = rewardIntroCopyOf(rewardOfferOf(55_550), false);
-    expect([copy.deposit, copy.priceNote]).toEqual([
-      '55,500원 입금',
-      '55,550원 · 100일 이용권',
-    ]);
-  });
-
-  it('가격이 다른 이용권이면 입금 금액과 가격 안내가 따라 바뀐다', () => {
-    const copy = rewardIntroCopyOf(rewardOfferOf(30_000), false);
-    expect([copy.deposit, copy.priceNote]).toEqual([
+  it('가격이 다른 이용권이면 입금 금액이 따라 바뀐다', () => {
+    expect(rewardIntroCopyOf(rewardOfferOf(30_000), false).deposit).toBe(
       '30,000원 입금',
-      '30,000원 · 100일 이용권',
-    ]);
+    );
   });
 
   it('어느 문구에도 「챌린지」가 없다', () => {

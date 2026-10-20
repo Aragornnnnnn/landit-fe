@@ -19,9 +19,8 @@ export interface RewardIntroCopy {
   deposit: string;
   // 연출 아래 한 줄. 오늘 대화를 이미 했을 때만
   caption: EmphasizedLine | null;
-  // 아래 고정 버튼과 그 밑 가격 한 줄
+  // 아래 고정 버튼
   cta: string;
-  priceNote: string;
 }
 
 /**
@@ -47,7 +46,6 @@ export const rewardIntroCopyOf = (
       }
     : null,
   cta: '프리미엄 시작하고 환급받기',
-  priceNote: `${formatWon(offer.priceWon)} · ${offer.days}일 이용권`,
 });
 
 export interface MissedCopy {
