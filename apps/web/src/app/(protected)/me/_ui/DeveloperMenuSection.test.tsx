@@ -50,6 +50,21 @@ describe('DeveloperMenuSection', () => {
     );
   });
 
+  it('ADMIN이면 튜토리얼과 환급 페이월을 다시 볼 수 있다', () => {
+    signIn('ADMIN');
+
+    render(<DeveloperMenuSection />);
+
+    expect(screen.getByText('튜토리얼 보기').closest('a')).toHaveAttribute(
+      'href',
+      '/onboarding',
+    );
+    expect(screen.getByText('환급 페이월 보기').closest('a')).toHaveAttribute(
+      'href',
+      '/me/developer/reward-paywall',
+    );
+  });
+
   it.each([['USER' as const], [undefined]])(
     'role이 %s이면 보이지 않는다',
     (role) => {

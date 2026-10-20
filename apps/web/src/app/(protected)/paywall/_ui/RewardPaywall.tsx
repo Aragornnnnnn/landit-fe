@@ -23,6 +23,7 @@ export const RewardPaywall = ({
   onClose,
   onRestore,
   onPurchase,
+  preview = false,
 }: {
   plan: RewardPlan;
   /** 결제·복원이 진행 중이면 버튼을 잠근다 */
@@ -30,6 +31,8 @@ export const RewardPaywall = ({
   onClose: () => void;
   onRestore: () => void;
   onPurchase: () => void;
+  /** 개발자 묶음의 미리보기인가 — 그러면 결제 금액 안내 노출을 찍지 않아 실험 지표에 섞이지 않는다 */
+  preview?: boolean;
 }) => {
   const [step, setStep] = useState<Step>('benefits');
   const [scrolled, setScrolled] = useState(false);
@@ -40,7 +43,7 @@ export const RewardPaywall = ({
     setStep(next);
     setScrolled(false);
     scrollRef.current?.scrollTo({ top: 0 });
-    if (next === 'checkout') {
+    if (next === 'checkout' && !preview) {
       track(EVENTS.PAYWALL_CHECKOUT_VIEWED, { plan: REWARD_PLAN_ID });
     }
   };
