@@ -50,7 +50,7 @@ export default function SmallTalkPage() {
   const { guideOpen, coaching, closeGuide, tapPartner, partnerRef, trapFocus } =
     useGreetingCoach({ onTap: greet });
   // 이번 방문에 띄울 시트 하나 — 첫 스몰톡 소감 → 리뷰 요청
-  const satisfaction = useSatisfactionSheet('smalltalk');
+  const satisfactionSheet = useSatisfactionSheet('smalltalk');
   // 할인 시트가 떠 있으면 소감은 미룬다 — 할인은 5분뿐이고 소감은 다음에 또 물을 수 있다
   const promoOpen = usePromoSheetOpen();
   // 돌아온 순간의 환급 동전 연출이 끝날 때까지도 미룬다 — 어둠 아래에서 시트가 같이 올라오면 둘이 겹친다
@@ -212,10 +212,10 @@ export default function SmallTalkPage() {
       {guideOpen && <IntroGuide onClose={closeGuide} />}
       <AnimatePresence>{coaching && <CoachDim />}</AnimatePresence>
       {/* 스몰톡을 마치고 돌아온 사람에게 한 번 — 안내·코치마크는 첫 진입 때 이미 끝난 뒤라 겹치지 않는다 */}
-      {!sheetsHeld && satisfaction.sheet === 'talk' && (
+      {!sheetsHeld && satisfactionSheet === 'talk' && (
         <SatisfactionGate moment="smalltalk" />
       )}
-      {!sheetsHeld && satisfaction.sheet === 'review' && (
+      {!sheetsHeld && satisfactionSheet === 'review' && (
         <SatisfactionGate moment="review" />
       )}
 

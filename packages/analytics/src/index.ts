@@ -32,6 +32,7 @@ export {
   type SatisfactionTalk,
   type SatisfactionMoment,
   type SatisfactionAnswer,
+  type ReviewTrigger,
   type WidgetInstallAnswer,
   type WidgetGuideStep,
   type WidgetInstallPlatform,
