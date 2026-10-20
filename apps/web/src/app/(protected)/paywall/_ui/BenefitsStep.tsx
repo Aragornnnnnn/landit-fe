@@ -64,7 +64,7 @@ export const BenefitsStep = ({ plan }: { plan: RewardPlan }) => (
         </p>
       </div>
 
-      <div className="mt-11 flex flex-col gap-11">
+      <div className="mt-8 flex flex-col gap-11">
         <section className="px-6">
           <p className="text-[15px] font-black text-primary">01</p>
           <p className="mt-1 text-[21px] font-extrabold tracking-[-0.02em] text-foreground">
