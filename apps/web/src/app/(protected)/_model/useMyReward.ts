@@ -6,8 +6,9 @@ import { useRewardQuery } from '@/features/reward/model/useRewardQuery';
 import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
 import { usePaymentLive } from '@/features/subscription/model/paywall-gate/usePaymentLive';
 import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
+import { isTourPreview } from '@/features/tour/model/tour-preview';
 
-import { rewardAudienceOf } from './reward-audience';
+import { asTourPreview, rewardAudienceOf } from './reward-audience';
 
 export const useMyReward = () => {
   const paymentLive = usePaymentLive();
@@ -26,5 +27,7 @@ export const useMyReward = () => {
     participant: query.reward !== null,
   });
 
+  // 개발자 묶음의 투어 미리보기가 켜졌으면 이번 실행 동안 환급을 권할 무료 유저로 친다
+  if (isTourPreview()) return asTourPreview({ ...query, ...audience });
   return { ...query, ...audience };
 };

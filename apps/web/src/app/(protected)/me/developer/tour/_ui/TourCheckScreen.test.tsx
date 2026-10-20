@@ -7,6 +7,7 @@ import { TourCheckScreen } from './TourCheckScreen';
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   startTourPreview: vi.fn(),
+  markMissedEarn: vi.fn(),
   isAdmin: true,
 }));
 
@@ -35,11 +36,15 @@ vi.mock('@/shared/auth/auth-store', () => ({
 vi.mock('@/features/tour/model/tour-preview', () => ({
   startTourPreview: mocks.startTourPreview,
 }));
+vi.mock('@/features/reward/model/missed-earn', () => ({
+  markMissedEarn: mocks.markMissedEarn,
+}));
 
 afterEach(() => {
   cleanup();
   mocks.push.mockClear();
   mocks.startTourPreview.mockClear();
+  mocks.markMissedEarn.mockClear();
   mocks.isAdmin = true;
 });
 
@@ -71,6 +76,22 @@ describe('TourCheckScreen', () => {
 
     expect(mocks.startTourPreview).toHaveBeenCalledWith(1, 'STARTED');
     expect(mocks.push).toHaveBeenCalledWith('/scenario');
+  });
+
+  it('튜토리얼부터 보면 오늘 시나리오를 막 끝낸 것처럼 홈에서 동전이 알약으로 쌓이는 연출부터 튼다', () => {
+    render(<TourCheckScreen />);
+
+    fireEvent.click(screen.getByText('튜토리얼부터').closest('a')!);
+
+    expect(mocks.markMissedEarn).toHaveBeenCalledWith(1);
+  });
+
+  it('카드 뒤집기부터 보면 동전 연출은 건너뛴다 — 실제로도 튜토리얼 앞에서만 나온다', () => {
+    render(<TourCheckScreen />);
+
+    fireEvent.click(screen.getByText('카드 뒤집기부터').closest('a')!);
+
+    expect(mocks.markMissedEarn).not.toHaveBeenCalled();
   });
 
   it('ADMIN이 아니면 단계 목록을 보여 주지 않는다', () => {

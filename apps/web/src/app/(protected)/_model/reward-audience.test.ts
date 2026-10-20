@@ -1,7 +1,7 @@
 // 환급을 누구에게 보여 줄지의 계약 테스트
 import { describe, expect, it } from 'vitest';
 
-import { rewardAudienceOf } from './reward-audience';
+import { asTourPreview, rewardAudienceOf } from './reward-audience';
 
 // 결제가 열린 환경에서 환급 응답까지 받은 무료 유저
 const base = {
@@ -84,5 +84,28 @@ describe('rewardAudienceOf', () => {
     });
 
     expect(audience).toEqual({ invited: false, settled: true });
+  });
+});
+
+describe('asTourPreview', () => {
+  it('투어 미리보기에서는 환급을 권할 무료 유저로 친다 — 유료·참여자 계정도 동전 연출과 「0원 프리미엄 시작하기」 알약을 본다', () => {
+    // Given 환급 참여자이고 놓친 금액도 있는 계정의 응답
+    const query = {
+      reward: { participant: true },
+      preview: { dailyWon: 500 },
+      loaded: false,
+    };
+
+    // When 투어 미리보기로 바꾸면
+    const shown = asTourPreview(query);
+
+    // Then 참여 기록과 놓친 금액 없이, 권할 사람으로 이미 정해진 상태다
+    expect(shown).toMatchObject({
+      reward: null,
+      preview: null,
+      loaded: true,
+      invited: true,
+      settled: true,
+    });
   });
 });

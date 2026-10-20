@@ -38,3 +38,16 @@ export const rewardAudienceOf = ({
     settled: (rewardLoaded || rewardFailed) && subscriptionSettled,
   };
 };
+
+/**
+ * 투어 미리보기(개발자 묶음)에서는 환급을 권할 무료 유저로 친다 — 유료·참여자 계정도 홈에 돌아온 순간의 동전 연출과
+ * 「0원 프리미엄 시작하기」 알약을 실제 첫 대화 뒤처럼 본다. 참여 기록과 놓친 금액은 지워 평소 진입 글자가 보이게 한다
+ */
+export const asTourPreview = <Query extends object>(query: Query) => ({
+  ...query,
+  reward: null,
+  preview: null,
+  loaded: true,
+  invited: true,
+  settled: true,
+});
