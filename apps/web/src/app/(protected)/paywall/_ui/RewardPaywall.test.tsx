@@ -1,5 +1,11 @@
 // 환급 페이월 미리보기 — 개발자 묶음에서 열 때는 결제 금액 안내 노출을 찍지 않아 실험 지표가 섞이지 않는다
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { buildRewardPlan } from '../_model/paywall-content';
@@ -72,5 +78,36 @@ describe('RewardPaywall', () => {
 
     expect(screen.getByText('100일 프리미엄 이용권')).toBeInTheDocument();
     expect(mocks.track).not.toHaveBeenCalled();
+  });
+});
+
+describe('RewardPaywall 아래로 더 있다는 안내', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('혜택 화면이 뜨고 잠시 뒤 한 번 살짝 내려갔다 돌아온다 — 아래에 혜택 4가지가 더 있다는 걸 보여 준다', () => {
+    vi.useFakeTimers();
+    const scrollTo = vi.fn();
+    Element.prototype.scrollTo = scrollTo;
+    renderPaywall();
+
+    act(() => vi.advanceTimersByTime(1200));
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 72, behavior: 'smooth' });
+
+    act(() => vi.advanceTimersByTime(500));
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
+  });
+
+  it('그 전에 이미 스크롤했으면 움찔하지 않는다', () => {
+    vi.useFakeTimers();
+    const scrollTo = vi.fn();
+    Element.prototype.scrollTo = scrollTo;
+    const { container } = renderPaywall();
+    const root = container.querySelector('[data-scroll-root]')!;
+
+    root.scrollTop = 200;
+    fireEvent.scroll(root);
+    act(() => vi.advanceTimersByTime(2000));
+
+    expect(scrollTo).not.toHaveBeenCalled();
   });
 });
