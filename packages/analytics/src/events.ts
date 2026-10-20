@@ -193,13 +193,16 @@ export const EVENTS = {
   SURVEY_STARTED: 'Survey Started',
   SURVEY_QUESTION_VIEWED: 'Survey Question Viewed',
   SURVEY_SUBMITTED: 'Survey Submitted',
-  // 페이월 — 노출은 Page Viewed(page_name=paywall)로 잡고, 플랜 선택·결제 시작·복원만 따로 찍는다.
-  // 결제 성공·취소는 결제 연동(LAN-447)에서 결과 메시지를 받을 때 추가한다
+  // 페이월 — 노출은 Page Viewed(page_name=paywall)로 잡고, 플랜 선택·결제 시작·복원·단계 노출·떠남을 따로 찍는다
   PAYWALL_PLAN_SELECTED: 'Paywall Plan Selected',
   PURCHASE_STARTED: 'Purchase Started',
   PURCHASE_RESTORE_TAPPED: 'Purchase Restore Tapped',
   // 환급 페이월 2단계(결제 금액 안내)가 떴다 — 혜택 화면 → 금액 안내 → 결제 시작의 단계별 이탈을 본다
   PAYWALL_CHECKOUT_VIEWED: 'Paywall Checkout Viewed',
+  // 환급 페이월 1단계(혜택 화면)가 떴다 — 처음 열렸을 때와 결제 금액 안내에서 되돌아왔을 때
+  PAYWALL_BENEFITS_VIEWED: 'Paywall Benefits Viewed',
+  // 결제·복원 없이 페이월을 떠났다 — 어느 단계에서, 닫기로인지 다른 길로인지, 얼마나 머물고 얼마나 내려 봤는지
+  PAYWALL_EXITED: 'Paywall Exited',
   // 학습 진입 게이트 — 무료 구간을 다 쓴 무료 사용자가 어느 문에서 페이월로 보내졌는가
   PAYWALL_GATE_LOCKED: 'Paywall Gate Locked',
   // 대화 직후 무료 사용자가 페이월 전에 지나는 화면 — 레벨 결과(첫 대화만)와 학습 준비
@@ -297,6 +300,12 @@ export type PaywallEntrySource = 'me' | 'header' | 'reward';
 // 페이월에 어디서 왔는가 — 게이트에 막혀 왔으면 막힌 자리, 스스로 들어왔으면 마이페이지.
 // 노출(Page Viewed)에 실어 진입 경로별 전환율을 가른다
 export type PaywallSource = PaywallGateSource | PaywallEntrySource;
+// 페이월 단계 — 환급 페이월은 혜택(benefits)·결제 금액 안내(checkout) 두 단계, 일반 페이월은 한 장(single)
+export type PaywallStepName = 'benefits' | 'checkout' | 'single';
+// 페이월을 어떻게 떠났나 — close는 닫기 버튼, navigate는 뒤로가기처럼 다른 길로 화면을 벗어남
+export type PaywallExitTrigger = 'close' | 'navigate';
+// 어느 페이월이었나 — 환급 챌린지 두 단계(reward) / 월간·연간 한 장(regular)
+export type PaywallVariant = 'reward' | 'regular';
 // 구독 관리에서 스토어로 나간 이유 — 해지 / 해지 취소. 둘 다 같은 스토어 화면이 열리지만 의도를 남긴다
 export type StoreSubscriptionAction = 'cancel' | 'resubscribe';
 /** 구독 해지 사유 — ① 라디오 순서 그대로 */
@@ -827,7 +836,23 @@ export type EventProps = {
   'Paywall Plan Selected': { plan: SubscriptionPlan; promo?: boolean };
   'Purchase Started': { plan: SubscriptionPlan; promo?: boolean };
   'Purchase Restore Tapped': undefined;
-  'Paywall Checkout Viewed': { plan: SubscriptionPlan };
+  'Paywall Checkout Viewed': {
+    plan: SubscriptionPlan;
+    // 혜택 화면을 거쳐 왔는지(benefits), 결제 금액 안내부터 열었는지(checkout)
+    entry_step: 'benefits' | 'checkout';
+    paywall_source?: PaywallSource;
+  };
+  'Paywall Benefits Viewed': { paywall_source?: PaywallSource };
+  'Paywall Exited': {
+    step: PaywallStepName;
+    trigger: PaywallExitTrigger;
+    variant: PaywallVariant;
+    paywall_source?: PaywallSource;
+    // 페이월을 연 뒤 떠나기까지
+    dwell_ms: number;
+    // 떠난 단계에서 가장 깊이 내려 본 비율(0~100) — 한 번도 내리지 않았으면 0
+    max_scroll_pct: number;
+  };
   'Paywall Gate Locked': { source: PaywallGateSource };
   'Level Result Viewed': {
     scenario_id: number;

@@ -75,7 +75,9 @@ const PAYWALL_SOURCES: Record<PaywallSource, true> = {
   reward: true,
 };
 
-const readPaywallSource = (raw: string | null): PaywallSource | undefined =>
+export const readPaywallSource = (
+  raw: string | null,
+): PaywallSource | undefined =>
   raw && raw in PAYWALL_SOURCES ? (raw as PaywallSource) : undefined;
 
 const STATIC_PAGES = new Set([

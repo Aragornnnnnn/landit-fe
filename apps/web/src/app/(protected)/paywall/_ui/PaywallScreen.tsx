@@ -4,7 +4,11 @@
 // 환급 챌린지 스위치가 켜지면 혜택 화면 → 결제 금액 안내 두 단계(RewardPaywall)로 바뀐다. 결제·복원은 usePurchase, 닫기는 usePaywallDismiss가 지휘하고,
 // 여기서는 어느 플랜을 골랐는지와 버튼 상태만 안다
 import { useRef, useState } from 'react';
-import { EVENTS, type SubscriptionPlan } from '@landit/analytics';
+import {
+  EVENTS,
+  type PaywallSource,
+  type SubscriptionPlan,
+} from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
@@ -35,6 +39,7 @@ import {
   getCancelNotice,
   getCtaLabel,
 } from '../_model/paywall-copy';
+import { usePaywallExit } from '../_model/usePaywallExit';
 import { CompareSection } from './CompareSection';
 import { DataSection } from './DataSection';
 import { PaywallHeader } from './PaywallHeader';
@@ -51,12 +56,15 @@ interface PaywallScreenProps {
   rewardChallenge?: boolean;
   /** 환급 페이월을 어느 단계에서 열지. 혜택을 이미 본 환급 화면에서 오면 결제 금액 안내부터 */
   startStep?: PaywallStep;
+  /** 어느 문으로 왔나(?source=) — 단계 노출과 떠남에 실어 진입 경로별로 가른다 */
+  source?: PaywallSource;
 }
 
 export const PaywallScreen = ({
   returnTo,
   rewardChallenge: forcedRewardChallenge,
   startStep,
+  source,
 }: PaywallScreenProps) => {
   const router = useRouter();
   const rewardLive = useRewardChallengeLive();
@@ -82,12 +90,19 @@ export const PaywallScreen = ({
   const notices = [getBillingNotice(regularPlan), getCancelNotice(regularPlan)];
 
   const goHome = () => router.replace(homePath());
+  // 결제·복원 없이 떠나는 순간 — 환급 페이월은 단계를 RewardPaywall이 알려 준다
+  const exit = usePaywallExit({
+    variant: rewardChallenge ? 'reward' : 'regular',
+    source,
+    startStep: rewardChallenge ? (startStep ?? 'benefits') : 'single',
+  });
   const dismiss = usePaywallDismiss(offering);
   // 닫으면 서버에 알린 뒤 홈으로 — 할인을 받았으면 시트는 홈에서 뜬다.
   // 환급 페이월은 알리지 않는다 — 이탈 할인은 연간 상품용이라 환급 플랜 화면에서 권하지 않는다.
   // 학습 진입에서 밀려 올라온 화면이라 온 곳으로 되돌리면 다시 페이월에 걸린다 (docs/subscription.md)
   const close = async () => {
     if (closing) return;
+    exit.markClose();
     setClosing(true);
     if (!rewardChallenge) await dismiss();
     setClosing(false);
@@ -97,6 +112,7 @@ export const PaywallScreen = ({
   // 유료가 되면 원래 가려던 곳(게이트가 붙인 ?from=)으로 가되, 결제 직후면 프리미엄 온보딩을 거친다 — 캐시가 이미 유료라 다시 막히지 않는다
   const queryClient = useQueryClient();
   const unlock = (reason: UnlockReason) => {
+    exit.markUnlocked();
     // 환급 상품을 샀으면 참여자가 된다 — 결제 전에 받아 둔 "환급과 상관없음"으로 다음 화면이 갈리지 않게 새로 받는다
     refreshRewardAfterPurchase(queryClient);
     const destination = returnTo ?? homePath();
@@ -150,6 +166,9 @@ export const PaywallScreen = ({
         plan={rewardPlan}
         startStep={startStep}
         busy={busy}
+        source={source}
+        onStepChange={exit.noteStep}
+        onScroll={exit.noteScroll}
         onClose={() => void close()}
         onRestore={startRestore}
         onPurchase={() => {
@@ -166,7 +185,10 @@ export const PaywallScreen = ({
       <div
         data-scroll-root
         className="relative h-full overflow-y-auto pb-[calc(max(var(--safe-area-inset-bottom),12px)+142px)]"
-        onScroll={(event) => setScrolled(event.currentTarget.scrollTop > 48)}
+        onScroll={(event) => {
+          setScrolled(event.currentTarget.scrollTop > 48);
+          exit.noteScroll(event.currentTarget);
+        }}
       >
         {/* 닫기·구매 복원 — 고정하지 않고 머리와 함께 올라간다 */}
         <PaywallHeader
