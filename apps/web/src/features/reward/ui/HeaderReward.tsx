@@ -93,7 +93,7 @@ export const RewardInviteLabel = ({
   <>
     <Coin size={16} />
     {amountWon === null ? (
-      <span>0원 프리미엄 이용하기</span>
+      <span>0원 프리미엄 시작하기</span>
     ) : (
       <>
         <span className="tabular-nums">{formatWon(amountWon)}</span>
