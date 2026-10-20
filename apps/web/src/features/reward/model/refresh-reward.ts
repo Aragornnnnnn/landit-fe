@@ -7,7 +7,7 @@ import { getCurrentUserId } from '@/shared/auth/auth-store';
 import type { RewardView } from '../api/reward';
 import { earnBaseOf } from './completion-earn';
 import { REWARD_GC_MS, rewardKeys } from './keys';
-import { markMissedEarn } from './missed-earn';
+import { clearMissedEarn, markMissedEarn } from './missed-earn';
 import { rewardQueries } from './queries';
 import { participantOf } from './reward-status';
 
@@ -29,6 +29,9 @@ const renewReward = (queryClient: QueryClient, userId: number) => {
 
 // 결제처럼 참여 여부가 바뀔 수 있는 순간 — 환급과 상관없던 사람도 새로 받는다
 export const refreshRewardAfterPurchase = (queryClient: QueryClient) => {
+  // 결제했으니 이제 실제로 쌓이는 사람이다 — 대화를 끝낼 때 적어 둔 「받을 수 있었던 몫」이 남아 있으면,
+  // 홈에 돌아와 유료 반영 전에 동전 연출과 금액 알약이 잠깐 떴다 사라진다
+  clearMissedEarn();
   const userId = getCurrentUserId();
   if (userId === null || cachedReward(queryClient, userId) === undefined)
     return;
