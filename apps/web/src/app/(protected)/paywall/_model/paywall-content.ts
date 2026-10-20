@@ -4,6 +4,7 @@ import type { SubscriptionPlan } from '@landit/analytics';
 import { rewardOfferOf } from '@/features/reward/model/refund-offer';
 import { formatWon } from '@/features/subscription/lib/won';
 import { PASS_FALLBACK_PRICE } from '@/features/subscription/model/product/offering';
+import type { PreloadableImage } from '@/shared/lib/preload-next-images';
 
 const IMAGE_DIR = '/images/paywall';
 
@@ -262,6 +263,22 @@ export const buildRewardPlan = (
   const { days, dailyWon, maximumWon } = rewardOfferOf(price);
   return { days, price, dailyRefund: dailyWon, maxRefund: maximumWon };
 };
+
+/**
+ * 카드 벽 그림 한 장 — 원본이 이미 216px webp로 작게 줄여 둔 파일이라 최적화 서버를 거치지 않고 파일을 그대로 받는다.
+ * 최적화 주소는 열 때마다 서버에 다시 묻는 캐시(max-age=0)라 카드가 늦게 차고, 원본 주소는 next.config가 하루 캐시를 붙인다
+ */
+export const scenarioWallImageOf = (src: string): PreloadableImage => ({
+  src,
+  width: 128,
+  height: 192,
+  unoptimized: true,
+});
+
+/** 카드 벽에 깔리는 그림 전부 — 페이월로 오기 전 화면(대화 직후·홈 투어)이 미리 받는다 */
+export const SCENARIO_WALL_IMAGES = SCENARIOS.map(({ image }) =>
+  scenarioWallImageOf(image),
+);
 
 /** 오늘의 시나리오로 뽑혀 카드 벽 가운데 놓이는 시나리오 — 처음 만난 클로이와 파티에서 대화하는 장면이 가장 해 보고 싶게 만든다 */
 export const WALL_PICK_INDEX = SCENARIOS.findIndex((scenario) =>
