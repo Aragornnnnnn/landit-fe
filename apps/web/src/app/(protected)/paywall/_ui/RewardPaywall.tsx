@@ -44,11 +44,11 @@ export const RewardPaywall = ({
 
   return (
     <main className="relative mx-auto h-dvh max-w-[430px] overflow-hidden bg-background">
-      {/* 아래 여백은 하단 고정 CTA 높이만큼 — 마지막 내용이 버튼 뒤에 깔리지 않게 */}
+      {/* 아래 여백은 하단 고정 CTA 높이만큼 — 마지막 내용이 버튼 뒤에 깔리지 않게. 혜택 화면은 혜택 판(흰색)이 끝까지 이어 보이게 여백도 흰색으로 칠한다 */}
       <div
         ref={scrollRef}
         data-scroll-root
-        className="relative h-full overflow-y-auto pb-[calc(max(var(--safe-area-inset-bottom),12px)+100px)]"
+        className={`relative h-full overflow-y-auto pb-[calc(max(var(--safe-area-inset-bottom),12px)+100px)] ${step === 'benefits' ? 'bg-card' : ''}`}
       >
         {step === 'benefits' ? (
           <>
@@ -69,7 +69,9 @@ export const RewardPaywall = ({
         )}
       </div>
 
-      <footer className="absolute inset-x-0 bottom-0 z-20 bg-[linear-gradient(to_bottom,transparent,var(--color-background)_28px)] px-5 pt-9 pb-[max(var(--safe-area-inset-bottom),12px)]">
+      <footer
+        className={`absolute inset-x-0 bottom-0 z-20 px-5 pt-9 pb-[max(var(--safe-area-inset-bottom),12px)] ${step === 'benefits' ? 'bg-[linear-gradient(to_bottom,transparent,var(--color-card)_28px)]' : 'bg-[linear-gradient(to_bottom,transparent,var(--color-background)_28px)]'}`}
+      >
         {step === 'benefits' ? (
           <Button onClick={() => goTo('checkout')}>다음</Button>
         ) : (
