@@ -1,4 +1,4 @@
-// 튜토리얼은 키보드로도 넘긴다 — 「다음 문장」 버튼이 쓰는 중인 문장을 끝까지 보여 주고, 다 쓴 문장만 읽어 준다
+// 튜토리얼은 키보드로도 넘긴다 — 「다음 문장」 버튼은 다 쓴 문장만 넘기고, 다 쓴 문장만 읽어 준다
 import {
   act,
   cleanup,
@@ -30,12 +30,29 @@ const runClock = () => {
 };
 
 describe('PreviewIntro', () => {
-  it('「다음 문장」을 누르면 쓰는 중인 문장을 끝까지 보여 주고 그 문장을 한 번 읽어 준다', () => {
+  it('쓰는 중에 「다음 문장」을 눌러도 문장을 건너뛰지 않는다 — 다 읽어야 넘어간다', () => {
     // Given 첫 문장을 쓰기 시작한 튜토리얼
     render(<PreviewIntro dailyWon={500} onDone={vi.fn()} />);
 
-    // When 다음 문장 버튼을 누르면
-    fireEvent.click(screen.getByRole('button', { name: '다음 문장' }));
+    // When 다음 문장 버튼을 연달아 누르면
+    nextSentence();
+    nextSentence();
+
+    // Then 문장이 끝까지 나오지 않아 읽기 칸이 비어 있다
+    expect(
+      screen.queryByText(
+        /방금처럼 대화를 끝낼 때마다\s*500원을 받을 수 있어요/,
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it('다 쓴 문장은 한 번 읽어 준다', () => {
+    // Given 첫 문장을 쓰기 시작한 튜토리얼
+    vi.useFakeTimers();
+    render(<PreviewIntro dailyWon={500} onDone={vi.fn()} />);
+
+    // When 문장을 다 쓰고 나면
+    runClock();
 
     // Then 다 쓴 문장이 읽기 칸에 들어간다 — 대화를 끝낼 때마다 받는다고 말한다
     expect(
@@ -55,18 +72,11 @@ describe('PreviewIntro', () => {
     expect(mocks.haptic).toHaveBeenCalledTimes(4);
   });
 
-  it('화면을 눌러 문장을 한 번에 보여 줄 때는 진동하지 않는다', () => {
-    render(<PreviewIntro dailyWon={500} onDone={vi.fn()} />);
-
-    fireEvent.click(screen.getByRole('button', { name: '다음 문장' }));
-
-    expect(mocks.haptic).not.toHaveBeenCalled();
-  });
-
   it('다 쓴 문장에서 누르면 넘긴 문장의 순번을 남긴다', () => {
-    // Given 첫 문장을 다 보여 준 튜토리얼
+    // Given 첫 문장을 다 쓴 튜토리얼
+    vi.useFakeTimers();
     render(<PreviewIntro dailyWon={500} onDone={vi.fn()} />);
-    nextSentence();
+    runClock();
 
     // When 다시 누르면
     nextSentence();
@@ -78,7 +88,7 @@ describe('PreviewIntro', () => {
     });
   });
 
-  it('쓰는 중인 문장을 눌러 끝까지 보여 주는 것은 넘김으로 남기지 않는다', () => {
+  it('쓰는 중에 누른 것은 넘김으로 남기지 않는다', () => {
     render(<PreviewIntro dailyWon={500} onDone={vi.fn()} />);
 
     nextSentence();
@@ -91,8 +101,8 @@ describe('PreviewIntro', () => {
     vi.useFakeTimers();
     const onDone = vi.fn();
     render(<PreviewIntro dailyWon={500} onDone={onDone} />);
+    runClock();
     for (let i = 0; i < 2; i += 1) {
-      nextSentence();
       nextSentence();
       runClock();
     }
