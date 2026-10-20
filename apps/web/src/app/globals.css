@@ -11,6 +11,10 @@
 
 /* 키가 작은 폰(iPhone SE 계열, 세로 700px 이하) 전용 변형 — 한 화면에 다 들어가야 하는 화면이 간격을 줄일 때 쓴다 */
 @custom-variant short (@media (max-height: 700px));
+/* 폰 높이 대신 그 화면이 실제로 받은 높이(내비 바·헤더를 뺀 값)로 고르는 변형 — 조상에 [container-type:size]가 있어야 한다.
+   두 구간은 겹치지 않게 나눈다. 겹치면 어느 단계가 이길지가 CSS 출력 순서에 달려 버린다 */
+@custom-variant cq-short (@container (480px < height <= 620px));
+@custom-variant cq-tiny (@container (height <= 480px));
 
 /* Tailwind 유틸리티 클래스(bg-primary 등)와 시맨틱 토큰 연결 */
 @theme inline {
@@ -106,6 +110,8 @@
   --amber-100: #fcedcc;
   --amber-700: #9e7314;
   --red-400: #e3574a;
+  --violet-100: #ece6fb;
+  --violet-600: #6a4cc2;
 
   /* ── Layer 2: Semantic — 역할 토큰. 다크모드 도입 시 이 블록만 재정의한다 ── */
   --background: var(--gray-50);
@@ -151,9 +157,9 @@
   --letter-update-bg: var(--green-100);
   --letter-reply: var(--blue-600);
   --letter-reply-bg: var(--blue-100);
-  /* 운영이 나에게만 보낸 편지. 답장과 섞이지 않게 브랜드 주황을 쓴다 */
-  --letter-direct: var(--orange-600);
-  --letter-direct-bg: var(--orange-50);
+  /* 운영이 나에게만 보낸 편지. 다른 칩·안 읽음 점과 겹치지 않는 보라를 쓴다 */
+  --letter-direct: var(--violet-600);
+  --letter-direct-bg: var(--violet-100);
   --letter-pending: var(--amber-700);
   --letter-pending-bg: var(--amber-100);
   /* 답장이 도착한 보낸 편지 — 지금은 답장 칩과 같은 색이지만 뜻이 달라 이름을 따로 준다 */
@@ -884,6 +890,32 @@
 
   @media (prefers-reduced-motion: reduce) {
     .animate-text-shine {
+      animation: none;
+    }
+  }
+}
+
+/* 환급 소개 동전 탑이 내려앉는 순간 — 카드가 아래로 눌렸다가 튀어 오른다. 마지막 날 기둥이 앞 사흘과 다른 무게로 「쾅」 떨어지게 */
+@keyframes coin-thud {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    transform: translateY(5px) scale(1.012, 0.985);
+  }
+  60% {
+    transform: translateY(-2px) scale(1);
+  }
+}
+
+@layer utilities {
+  .animate-coin-thud {
+    animation: coin-thud 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.32s both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-coin-thud {
       animation: none;
     }
   }

@@ -14,12 +14,22 @@ export interface SeriesItem {
 export const SeriesCarousel = ({
   label,
   items,
+  number,
 }: {
   label: string;
   items: SeriesItem[];
+  /** 줄 이름 위에 붙는 혜택 번호(01·02…) — 환급 페이월의 혜택 목록만 쓴다 */
+  number?: string;
 }) => (
   <RevealSection>
-    <p className="reveal-up px-6 text-[22px] font-extrabold tracking-[-0.02em] text-foreground">
+    {number && (
+      <p className="reveal-up px-6 text-[15px] font-black text-primary">
+        {number}
+      </p>
+    )}
+    <p
+      className={`reveal-up px-6 font-extrabold tracking-[-0.02em] text-foreground ${number ? 'mt-1 text-[21px]' : 'text-[22px]'}`}
+    >
       {label}
     </p>
     <div className="mt-3 flex snap-x snap-mandatory scroll-px-5 [scrollbar-width:none] gap-3 overflow-x-auto px-5 pb-2 [&::-webkit-scrollbar]:hidden">

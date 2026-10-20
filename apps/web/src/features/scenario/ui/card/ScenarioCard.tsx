@@ -1,15 +1,14 @@
 'use client';
 
-// 시나리오 카드 — 앞면(썸네일·제목·브리핑·CTA, 완료 시 기록 버튼), 완료 시 뒤집으면 뒷면에 표현 학습 리스트
-import { useEffect, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+// 시나리오 카드 — 앞면(썸네일·제목·브리핑·CTA, 완료 시 기록 버튼), 완료 시 뒤집으면 뒷면에 표현 학습 리스트.
+// 뒤집기는 페이월 문이 아니다 — 무료 사용자도 뒷면을 보고, 막는 건 뒷면의 표현이다. 프리미엄 프리뷰 중에는 카드가 스스로 뒤집힌다
+import { useEffect, useEffectEvent, useState } from 'react';
+import { EVENTS, type PreviewEndReason } from '@landit/analytics';
 import Link from 'next/link';
 
-// 가로 import 사유: 완료 카드를 뒤집어 표현을 보는 것도 학습 진입이라 같은 페이월 게이트를 건다 (docs/subscription.md)
-import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
-import { scenarioReturnPath, scenarioSessionsPath } from '@/shared/lib/routes';
+import { scenarioSessionsPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 import {
@@ -24,6 +23,9 @@ import type { Scenario } from '../../lib/to-scenario';
 import { ExpressionProgress } from './ExpressionProgress';
 import { ScenarioCardBack } from './ScenarioCardBack';
 
+// 튜토리얼 어둠이 걷히는 걸 본 뒤에 뒤집는다
+const TOUR_FLIP_DELAY_MS = 500;
+
 interface ScenarioCardProps {
   scenario: Scenario;
   onStart: (scenario: Scenario) => void;
@@ -33,6 +35,18 @@ interface ScenarioCardProps {
   autoFlip?: boolean;
   // 완료 카드에 띄우는 표현 학습 진행도
   expressions: { completed: number; total: number };
+  // 프리미엄 프리뷰의 차례 — flip_card은 스스로 뒤집기, free_expression은 뒷면 첫 표현 무료
+  premiumPreview?: CardPreview;
+}
+
+export interface CardPreview {
+  screen: 'flip_card' | 'free_expression';
+  // 뒤집기 차례에 카드가 뒤집혔다(자동이든 사용자든)
+  onFlipped: () => void;
+  // 비춘 무료 표현을 열었다 — 다시 비추지 않는다
+  onFreeOpened: () => void;
+  // 프리뷰를 여기서 끝낸다 — 줄 무료 표현이 없거나 사용자가 넘겼다
+  onPreviewEnd: (reason: PreviewEndReason) => void;
 }
 
 export const ScenarioCard = ({
@@ -41,6 +55,7 @@ export const ScenarioCard = ({
   date,
   autoFlip = false,
   expressions,
+  premiumPreview,
 }: ScenarioCardProps) => {
   // 잠금·완료 판정은 전부 백엔드 몫(직전 시나리오를 깨야 다음이 열린다). 카드는 두 플래그를 그리기만 한다.
   // locked   → 흑백 썸네일 + 회색 제목 + "잠겨있어요"
@@ -49,12 +64,15 @@ export const ScenarioCard = ({
 
   // 뒤집기 상태. hasFlipped는 뒷면(표현 API)을 첫 뒤집기 전까지 마운트하지 않기 위한 지연 플래그.
   // autoFlip(표현 마무리 후 홈 복귀)이면 처음부터 뒤집힌 채로 마운트한다.
-  const [flipped, setFlipped] = useState(autoFlip && completed);
-  const [hasFlipped, setHasFlipped] = useState(autoFlip && completed);
+  // 뒷면으로 펴 둔 채 시작하는가 — 표현을 마치고 돌아왔거나, 프리뷰의 무료 표현 차례다
+  const openBack =
+    (autoFlip || premiumPreview?.screen === 'free_expression') && completed;
+  const [flipped, setFlipped] = useState(openBack);
+  const [hasFlipped, setHasFlipped] = useState(openBack);
   // completed가 마운트 후 뒤늦게 true가 돼도(캐시가 stale이었던 경우) autoFlip이면 한 번은 자동으로 편다.
   // 렌더 중 state 조정 패턴(effect 아님) — 사용자가 이후 앞면으로 되돌리는 건 막지 않는다.
-  const [autoApplied, setAutoApplied] = useState(autoFlip && completed);
-  if (autoFlip && completed && !autoApplied) {
+  const [autoApplied, setAutoApplied] = useState(openBack);
+  if (openBack && !autoApplied) {
     setAutoApplied(true);
     setFlipped(true);
     setHasFlipped(true);
@@ -62,9 +80,7 @@ export const ScenarioCard = ({
 
   const filterClass = locked ? 'brightness-70 grayscale' : '';
   // 등장 연출은 마운트 때 한 번 정한다 — 뒷면으로 펴지며 마운트되면 건너뛰고, 나중에 flip 신호가 빠져도 뒷면 아래서 다시 돌지 않게(iOS에서 비친다)
-  const [cardInClass] = useState(
-    autoFlip && completed ? '' : 'animate-card-in',
-  );
+  const [cardInClass] = useState(openBack ? '' : 'animate-card-in');
 
   // autoFlip으로 처음부터 뒤집힌 채 마운트된 경우도 노출로 기록한다
   useEffect(() => {
@@ -78,22 +94,33 @@ export const ScenarioCard = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 마운트 시 1회만
   }, []);
 
-  // 잠긴 무료 사용자는 뒷면(표현 목록)도 못 본다 — 뒤집기가 곧 학습 진입이라 페이월로 보낸다
-  const gate = usePaywallGate();
-  const openExpressions = () =>
-    gate.guard(
-      () => {
-        haptic('medium'); // 완료 카드를 뒤집는 성취 순간엔 좀 더 묵직한 진동
-        track(EVENTS.SCENARIO_CARD_FLIPPED, {
-          scenario_id: scenario.scenarioId,
-          direction: 'back',
-          trigger: 'button',
-        });
-        setHasFlipped(true);
-        setFlipped(true);
-      },
-      { source: 'expression', returnTo: scenarioReturnPath({ date }) },
-    );
+  const flipToBack = (trigger: 'button' | 'preview') => {
+    haptic('medium'); // 완료 카드를 뒤집는 성취 순간엔 좀 더 묵직한 진동
+    track(EVENTS.SCENARIO_CARD_FLIPPED, {
+      scenario_id: scenario.scenarioId,
+      direction: 'back',
+      trigger,
+    });
+    setHasFlipped(true);
+    setFlipped(true);
+  };
+  const openExpressions = () => flipToBack('button');
+  // 프리뷰는 튜토리얼이 걷히고 잠깐 뒤 카드를 스스로 뒤집는다 — 누를 것 없이 첫 표현으로 이어진다
+  const previewFlipPending =
+    premiumPreview?.screen === 'flip_card' && completed && !flipped;
+  const flipForPreview = useEffectEvent(() => flipToBack('preview'));
+  // 프리뷰의 뒤집기 차례에 뒷면이 보이면 단계를 넘긴다 — 자동이든, 사용자가 먼저 눌렀든, 처음부터 뒷면으로 열렸든
+  const previewFlipped =
+    premiumPreview?.screen === 'flip_card' && completed && flipped;
+  const passFlipStep = useEffectEvent(() => premiumPreview?.onFlipped());
+  useEffect(() => {
+    if (previewFlipped) passFlipStep();
+  }, [previewFlipped]);
+  useEffect(() => {
+    if (!previewFlipPending) return;
+    const timer = setTimeout(flipForPreview, TOUR_FLIP_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [previewFlipPending]);
 
   const closeExpressions = () => {
     track(EVENTS.SCENARIO_CARD_FLIPPED, {
@@ -226,6 +253,8 @@ export const ScenarioCard = ({
               date={date}
               onBack={closeExpressions}
               autoFlip={autoFlip}
+              onPreviewEnd={premiumPreview?.onPreviewEnd}
+              onPreviewOpen={premiumPreview?.onFreeOpened}
             />
           </div>
         )}

@@ -1,5 +1,5 @@
 // 카드 뒷면 전체 완료 축하 콘페티의 계약 검증 — 발동 조건과 모션 감소 설정
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import confetti from 'canvas-confetti';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -8,21 +8,60 @@ import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQ
 
 import { ScenarioCardBack } from './ScenarioCardBack';
 
-// 페이월 게이트는 구독·스트릭 조회를 끌고 온다 — 이 화면 테스트에선 항상 열린 문으로 치환한다
+const mocks = vi.hoisted(() => ({
+  push: vi.fn(),
+  // 기본은 열린 문 — 프리미엄 프리뷰 테스트만 잠근다
+  guard: vi.fn((go: () => void) => go()),
+  // 무료 사용자인가 — 목록에 무료·PREMIUM이 붙는다
+  locked: false,
+}));
+// 페이월 게이트는 구독·스트릭 조회를 끌고 온다 — 이 화면 테스트에선 목으로 치환한다
 vi.mock('@/features/subscription/model/paywall-gate/usePaywallGate', () => ({
   usePaywallGate: () => ({
     decision: 'open',
-    guard: (go: () => void) => go(),
+    locked: mocks.locked,
+    guard: mocks.guard,
   }),
 }));
 vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: mocks.push }),
+}));
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 vi.mock('@/features/expression/model/useExpressionsQuery', () => ({
   useExpressionsQuery: vi.fn(),
 }));
+// 목록은 무료로 열어 준 표현과 누를 거리만 드러낸다
 vi.mock('@/features/expression/ui/ExpressionList', () => ({
-  ExpressionList: () => null,
+  ExpressionList: ({
+    expressions,
+    onSelect,
+    premiumLocked,
+    freeTrialExpressionId,
+  }: {
+    expressions: { expressionId: number }[];
+    onSelect: (id: number) => void;
+    premiumLocked?: boolean;
+    freeTrialExpressionId?: number;
+  }) => (
+    <>
+      {premiumLocked && freeTrialExpressionId !== undefined && (
+        <p>무료 {freeTrialExpressionId}</p>
+      )}
+      {expressions.map(({ expressionId }) => (
+        <button key={expressionId} onClick={() => onSelect(expressionId)}>
+          표현 {expressionId}
+        </button>
+      ))}
+    </>
+  ),
+}));
+
+// 스포트라이트는 자기 테스트가 있다 — 여기선 무료 표현을 여는 버튼만 드러낸다
+vi.mock('./FreeExpressionSpotlight', () => ({
+  FreeExpressionSpotlight: ({ onOpen }: { onOpen: () => void }) => (
+    <button onClick={onOpen}>프리뷰로 무료 표현 열기</button>
+  ),
 }));
 
 const queryResult = (completedFlags: boolean[]) =>
@@ -36,7 +75,13 @@ const queryResult = (completedFlags: boolean[]) =>
     retry: vi.fn(),
   }) as unknown as ReturnType<typeof useExpressionsQuery>;
 
-beforeEach(() => vi.mocked(confetti).mockClear());
+beforeEach(() => {
+  vi.mocked(confetti).mockClear();
+  mocks.push.mockClear();
+  mocks.guard.mockClear();
+  mocks.guard.mockImplementation((go: () => void) => go());
+  mocks.locked = false;
+});
 afterEach(() => cleanup());
 
 describe('ScenarioCardBack', () => {
@@ -68,5 +113,149 @@ describe('ScenarioCardBack', () => {
 
     // Then 축하는 없다 — 방금 완료한 순간에만 축하한다
     expect(confetti).not.toHaveBeenCalled();
+  });
+
+  const freeTrialList = () =>
+    vi.mocked(useExpressionsQuery).mockReturnValue({
+      expressions: [
+        { expressionId: 11, completed: false, locked: false, freeTrial: true },
+        { expressionId: 12, completed: false, locked: true },
+      ],
+      error: null,
+      isLoading: false,
+      retry: vi.fn(),
+    } as unknown as ReturnType<typeof useExpressionsQuery>);
+
+  it('무료 사용자 목록은 서버가 열어 준 표현을 무료로 표시한다', () => {
+    // Given 무료 표현이 있는 무료 사용자의 카드
+    mocks.locked = true;
+    freeTrialList();
+
+    // When 뒷면이 열리면
+    render(
+      <ScenarioCardBack
+        scenarioId={1}
+        onBack={vi.fn()}
+        onPreviewEnd={vi.fn()}
+      />,
+    );
+
+    // Then 목록이 그 표현을 무료로 표시한다
+    expect(screen.getByText('무료 11')).toBeInTheDocument();
+  });
+
+  it('무료 표현을 누르면 게이트를 거치지 않고 학습으로 간다', () => {
+    mocks.guard.mockImplementation(() => {});
+    freeTrialList();
+    render(
+      <ScenarioCardBack
+        scenarioId={1}
+        onBack={vi.fn()}
+        onPreviewEnd={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText('표현 11'));
+
+    expect(mocks.guard).not.toHaveBeenCalled();
+    expect(mocks.push).toHaveBeenCalledWith('/expressions/scenario/1/11');
+  });
+
+  it('프리뷰가 비춘 무료 표현을 열면 연 것으로 알리고 학습으로 간다 — 끝까지 안 하고 나와도 다시 비추지 않게', () => {
+    mocks.locked = true;
+    freeTrialList();
+    const onPreviewOpen = vi.fn();
+    render(
+      <ScenarioCardBack
+        scenarioId={1}
+        onBack={vi.fn()}
+        onPreviewEnd={vi.fn()}
+        onPreviewOpen={onPreviewOpen}
+      />,
+    );
+
+    fireEvent.click(screen.getByText('프리뷰로 무료 표현 열기'));
+
+    expect(onPreviewOpen).toHaveBeenCalledTimes(1);
+    expect(mocks.push).toHaveBeenCalledWith('/expressions/scenario/1/11');
+  });
+
+  it('무료가 아닌 표현을 누르면 게이트가 막는다', () => {
+    mocks.guard.mockImplementation(() => {});
+    freeTrialList();
+    render(
+      <ScenarioCardBack
+        scenarioId={1}
+        onBack={vi.fn()}
+        onPreviewEnd={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText('표현 12'));
+
+    expect(mocks.guard).toHaveBeenCalledTimes(1);
+    expect(mocks.push).not.toHaveBeenCalled();
+  });
+
+  it('프리뷰 밖에서도 서버가 열어 준 무료 표현은 페이월 없이 연다', () => {
+    mocks.guard.mockImplementation(() => {});
+    vi.mocked(useExpressionsQuery).mockReturnValue({
+      expressions: [
+        { expressionId: 11, completed: true, locked: false, freeTrial: true },
+        { expressionId: 12, completed: false, locked: false },
+      ],
+      error: null,
+      isLoading: false,
+      retry: vi.fn(),
+    } as unknown as ReturnType<typeof useExpressionsQuery>);
+    render(<ScenarioCardBack scenarioId={1} onBack={vi.fn()} />);
+
+    fireEvent.click(screen.getByText('표현 11'));
+    expect(mocks.guard).not.toHaveBeenCalled();
+    expect(mocks.push).toHaveBeenCalledWith('/expressions/scenario/1/11');
+    fireEvent.click(screen.getByText('표현 12'));
+    expect(mocks.guard).toHaveBeenCalledTimes(1);
+  });
+
+  it('프리뷰 중인데 서버가 이 카드에 무료 표현을 열어 주지 않았으면 프리뷰를 끝낸다', () => {
+    vi.mocked(useExpressionsQuery).mockReturnValue({
+      expressions: [{ expressionId: 11, completed: false, locked: false }],
+      error: null,
+      isLoading: false,
+      retry: vi.fn(),
+    } as unknown as ReturnType<typeof useExpressionsQuery>);
+    const onPreviewEnd = vi.fn();
+    render(
+      <ScenarioCardBack
+        scenarioId={1}
+        onBack={vi.fn()}
+        onPreviewEnd={onPreviewEnd}
+      />,
+    );
+
+    expect(onPreviewEnd).toHaveBeenCalledTimes(1);
+    expect(onPreviewEnd).toHaveBeenCalledWith('no_free_expression');
+  });
+
+  it('프리뷰 중인데 무료 표현을 이미 끝냈으면(프리뷰 밖에서 마친 경우) 프리뷰를 끝낸다', () => {
+    vi.mocked(useExpressionsQuery).mockReturnValue({
+      expressions: [
+        { expressionId: 11, completed: true, locked: false, freeTrial: true },
+      ],
+      error: null,
+      isLoading: false,
+      retry: vi.fn(),
+    } as unknown as ReturnType<typeof useExpressionsQuery>);
+    const onPreviewEnd = vi.fn();
+    render(
+      <ScenarioCardBack
+        scenarioId={1}
+        onBack={vi.fn()}
+        onPreviewEnd={onPreviewEnd}
+      />,
+    );
+
+    expect(onPreviewEnd).toHaveBeenCalledTimes(1);
+    expect(onPreviewEnd).toHaveBeenCalledWith('no_free_expression');
   });
 });

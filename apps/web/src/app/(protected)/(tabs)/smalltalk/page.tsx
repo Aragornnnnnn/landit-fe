@@ -50,7 +50,7 @@ export default function SmallTalkPage() {
   const { guideOpen, coaching, closeGuide, tapPartner, partnerRef, trapFocus } =
     useGreetingCoach({ onTap: greet });
   // 이번 방문에 띄울 시트 하나 — 첫 스몰톡 소감 → 리뷰 요청
-  const satisfaction = useSatisfactionSheet('smalltalk');
+  const satisfactionSheet = useSatisfactionSheet('smalltalk');
   // 할인 시트가 떠 있으면 소감은 미룬다 — 할인은 5분뿐이고 소감은 다음에 또 물을 수 있다
   const promoOpen = usePromoSheetOpen();
   // 돌아온 순간의 환급 동전 연출이 끝날 때까지도 미룬다 — 어둠 아래에서 시트가 같이 올라오면 둘이 겹친다
@@ -105,7 +105,9 @@ export default function SmallTalkPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden pb-[max(var(--safe-area-inset-bottom),16px)]">
+    // 이 화면은 스크롤이 없다 — 폰 높이가 아니라 이 영역이 실제로 받은 높이(내비 바·헤더를 뺀 값)를 기준으로
+    // 두 단계(cq-short·cq-tiny) 줄인다. 캐릭터는 그러고 남은 자리를 먹는다
+    <div className="[container-type:size] flex flex-1 flex-col overflow-hidden pb-[max(var(--safe-area-inset-bottom),16px)]">
       {/* 기록은 오늘 대화를 시작하는 길과 섞이면 안 된다 — 화면 안쪽 오른쪽 위에 잔글씨로 둔다.
           상대 줄과 수직 중앙을 맞추면 네 번째 상대처럼 읽혀서, 그 줄보다 위에 걸쳐 둔다 */}
       <div className="relative">
@@ -119,8 +121,7 @@ export default function SmallTalkPage() {
         <PartnerPicker selected={partner.id} onSelect={selectPartner} />
       </div>
 
-      {/* 이 화면은 스크롤이 없다 — 남는 자리는 캐릭터가 먹되 아래위로 한계를 둔다.
-          낮은 화면에서 먼저 양보하는 쪽은 캐릭터가 아니라 소개 카드다(글자·여백을 줄인다) */}
+      {/* 남는 자리는 캐릭터가 먹는다 — 위로는 한계를 두고, 아래로는 작은 폰에서 버튼이 밀려나지 않게 끝까지 줄어든다 */}
       {/* 캐릭터는 눌리는 것이다 — 누르면 자기소개를 한다. 코치마크가 켜진 동안은 딤(z-40) 위 z-50으로 올라와
           화면에서 유일하게 눌리는 것이 되고, 말풍선 한마디가 붙는다. 눌린 느낌은 살짝 눌리는 크기로 준다 */}
       <button
@@ -130,7 +131,7 @@ export default function SmallTalkPage() {
         onKeyDown={trapFocus}
         aria-label={`${partner.koreanName} 인사 듣기`}
         className={[
-          'relative flex max-h-[190px] min-h-[142px] flex-1 justify-center transition-transform active:scale-[0.97]',
+          'relative flex max-h-[190px] min-h-0 flex-1 justify-center transition-transform active:scale-[0.97]',
           coaching && 'z-50',
         ]
           .filter(Boolean)
@@ -155,8 +156,8 @@ export default function SmallTalkPage() {
           왜 안 되는지부터 묻게 된다. "다 썼다"는 소진이지만 실은 오늘 몫을 완주한 것이라 채웠다고 말한다
           (1분은 안내 문구와 같은 하드코딩 — 사람마다 달라지면 둘 다 서버 값으로 바꾼다) */}
       {exhausted ? (
-        <div className="mt-8 flex flex-col items-center gap-1.5 px-5">
-          <p className="text-lg font-extrabold break-keep text-foreground">
+        <div className="mt-8 flex flex-col items-center gap-1.5 px-5 cq-tiny:mt-4">
+          <p className="text-lg font-extrabold break-keep text-foreground cq-tiny:text-base">
             오늘의 1분 스몰톡을 다 했어요
           </p>
           <p className="text-sm font-medium break-keep text-muted-foreground">
@@ -167,11 +168,12 @@ export default function SmallTalkPage() {
         <>
           {/* 남은 시간은 시작을 누르기 직전에 알아야 하는 값이라, 잔글씨 대신 알약으로 세워 둔다.
               테두리를 두면 입력칸처럼 보여서, 흰 바탕에 옅은 그림자만으로 배경에서 띄운다.
-              높이(h-8)는 알약 크기로 미리 잡아 둔다 — 값이 늦게 와서 그때 나타나면 아래 버튼이 밀린다 */}
+              높이(h-8)는 알약 크기로 미리 잡아 둔다 — 값이 늦게 와서 그때 나타나면 아래 버튼이 밀린다.
+              아주 낮은 화면에서는 알약을 빼서 그 자리를 캐릭터에 준다 */}
           {/* 잔량과 시작 버튼은 한 덩이다 — 주제가 없어 아래 버튼이 빠지는 날에도
               둘이 함께 바닥 쪽에 서서 손이 기억하는 자리가 안 바뀐다 */}
           <div className="mt-auto">
-            <div className="mt-3 flex h-8 justify-center">
+            <div className="mt-3 flex h-8 justify-center cq-tiny:hidden">
               {main && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
                   오늘 남은 말하기
@@ -186,8 +188,13 @@ export default function SmallTalkPage() {
 
             {/* 하고 싶은 말이 있으면 바로, 아니면 상대가 주제로 열어 준다 — 주 행동이 위다.
               주제가 없어 아래 버튼이 빠지는 날에도 시작 버튼이 같은 자리에 서도록 바닥에 붙인다 */}
-            <div className="mt-4 flex flex-col gap-3 px-5">
-              <Button size="md" disabled={isLoading} onClick={startWithMe}>
+            <div className="mt-4 flex flex-col gap-3 px-5 cq-tiny:mt-3 cq-tiny:gap-2">
+              <Button
+                size="md"
+                className="cq-tiny:h-11"
+                disabled={isLoading}
+                onClick={startWithMe}
+              >
                 내가 먼저 말 걸기
                 <ArrowRightIcon size={16} />
               </Button>
@@ -197,6 +204,7 @@ export default function SmallTalkPage() {
                 <Button
                   variant="ghost"
                   size="md"
+                  className="cq-tiny:h-11"
                   disabled={isLoading}
                   onClick={() => void picker.openPicker()}
                 >
@@ -212,10 +220,10 @@ export default function SmallTalkPage() {
       {guideOpen && <IntroGuide onClose={closeGuide} />}
       <AnimatePresence>{coaching && <CoachDim />}</AnimatePresence>
       {/* 스몰톡을 마치고 돌아온 사람에게 한 번 — 안내·코치마크는 첫 진입 때 이미 끝난 뒤라 겹치지 않는다 */}
-      {!sheetsHeld && satisfaction.sheet === 'talk' && (
+      {!sheetsHeld && satisfactionSheet === 'talk' && (
         <SatisfactionGate moment="smalltalk" />
       )}
-      {!sheetsHeld && satisfaction.sheet === 'review' && (
+      {!sheetsHeld && satisfactionSheet === 'review' && (
         <SatisfactionGate moment="review" />
       )}
 

@@ -12,6 +12,7 @@ vi.mock('next/link', () => ({
     <a href={href}>{children}</a>
   ),
 }));
+
 vi.mock('@/features/alarm/model/useAlarmStatus', () => ({
   useAlarmStatus: () => null,
 }));
@@ -47,6 +48,21 @@ describe('DeveloperMenuSection', () => {
     expect(screen.getByText('환급 점검').closest('a')).toHaveAttribute(
       'href',
       '/me/developer/reward',
+    );
+  });
+
+  it('ADMIN이면 첫 대화 뒤 프리뷰와 환급 페이월을 점검할 수 있다', () => {
+    signIn('ADMIN');
+
+    render(<DeveloperMenuSection />);
+
+    expect(screen.getByText('프리뷰 점검').closest('a')).toHaveAttribute(
+      'href',
+      '/me/developer/preview',
+    );
+    expect(screen.getByText('환급 페이월 보기').closest('a')).toHaveAttribute(
+      'href',
+      '/me/developer/reward-paywall',
     );
   });
 

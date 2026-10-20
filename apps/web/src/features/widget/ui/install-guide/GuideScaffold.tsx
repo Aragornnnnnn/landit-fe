@@ -28,7 +28,8 @@ export const GuideScaffold = ({
       </h1>
       <p className="mt-4 text-xl font-bold text-muted-foreground">{subtitle}</p>
 
-      <div className="flex flex-1 items-center justify-center py-6">
+      {/* 목업이 실제로 받은 높이를 재는 컨테이너 — PhoneMockup이 이 높이에 맞춰 줄어든다 */}
+      <div className="[container-type:size] flex flex-1 items-center justify-center py-6">
         {children}
       </div>
     </div>
@@ -47,9 +48,10 @@ export const GuideScaffold = ({
 );
 
 // 하늘색 폰 목업 틀 — 안내 화면들이 같은 틀 위에 각자의 장면을 그린다.
-// 세로가 짧은 화면(iPhone SE·iPad 호환 모드 667)에선 0.8배로 줄여 CTA가 화면 밖으로 밀리지 않게 한다
+// 목업 자리(GuideScaffold의 컨테이너)가 낮으면 0.8·0.6·0.5배로 줄여 CTA가 화면 밖으로 밀리지 않게 한다.
+// 구간마다 430×배율이 그 구간 최소 높이 + 위아래 여백(py-6, 48px) 안에 들어가게 잡았고, 구간끼리는 겹치지 않는다
 export const PhoneMockup = ({ children }: { children: React.ReactNode }) => (
-  <div className="relative h-[430px] w-[262px] overflow-hidden rounded-[28px] bg-gradient-to-b from-[#dceefb] to-[#f4f9ff] [@media(max-height:760px)]:[zoom:0.8]">
+  <div className="relative h-[430px] w-[262px] overflow-hidden rounded-[28px] bg-gradient-to-b from-[#dceefb] to-[#f4f9ff] [@container(210px<=height<296px)]:[zoom:0.6] [@container(296px<=height<382px)]:[zoom:0.8] [@container(height<210px)]:[zoom:0.5]">
     {children}
   </div>
 );

@@ -11,8 +11,8 @@ import { dateLabelAhead, type HistoryRow } from '../model/reward-history';
 import { RewardHistory } from './RewardHistory';
 
 // 처음 사흘 — 실제 내역이 아니라 "이렇게 쌓인다"는 보기다. 오늘 시작한 것으로 치고 하루에 한 줄, 늦은 날이 위에 온다
-const SAMPLE_DAYS = 3;
-const sampleOf = (dailyWon: number): HistoryRow[] =>
+export const SAMPLE_DAYS = 3;
+export const sampleHistoryOf = (dailyWon: number): HistoryRow[] =>
   Array.from({ length: SAMPLE_DAYS }, (_, index) => {
     const day = SAMPLE_DAYS - index;
     return {
@@ -36,7 +36,7 @@ export const rewardRulesOf = (dailyWon: number | null) =>
       '💰',
       `매일 오늘의 시나리오를 하면 ${dailyWon === null ? '환급액' : `최대 ${formatWon(dailyWon)}`}이 쌓여요`,
     ],
-    ['💸', '챌린지 기간이 끝나면 내가 모은 만큼 돈을 돌려받아요'],
+    ['💸', '기간이 끝나면 모은 돈을 출금할 수 있어요'],
   ] as const;
 
 /** 환급 안내에 들어가기 전에 맨 위 그림을 받아 둔다 — 화면이 열린 뒤에야 받으면 그림 자리가 잠깐 비어 보인다 */
@@ -117,7 +117,7 @@ export const RewardGuide = ({
           매일 이렇게 쌓여요
         </p>
         <div className="mt-3 px-5 opacity-60">
-          <RewardHistory history={sampleOf(dailyWon)} />
+          <RewardHistory history={sampleHistoryOf(dailyWon)} />
         </div>
       </>
     )}

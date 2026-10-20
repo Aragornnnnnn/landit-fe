@@ -1,4 +1,4 @@
-// 「프리미엄에서만 이렇게 배워요」의 본문 — 표현 학습·시나리오·스몰톡 세 시리즈(환급 챌린지에서는 시나리오가 먼저). 헤드라인은 PaywallHero에 있다.
+// 「프리미엄으로 이렇게 배워요」의 본문 — 표현 학습·시나리오·스몰톡 세 시리즈. 헤드라인은 PaywallHero에 있다.
 // 시리즈마다 좌우로 넘기는 카드 한 줄이라 세로로는 짧고, 더 보고 싶은 사람만 옆으로 넘긴다(다음 카드가 오른쪽에 살짝 보여 넘길 수 있는 줄 안다).
 // 피드백은 시나리오·스몰톡 시리즈 마지막 장에 있다. 화면 번호는 데모마다 다 나온 뒤의 대표 장면이라 정지 화면으로 읽힌다. 시나리오 첫 카드만 「많았다가 하나로」를 되풀이한다
 import { ExampleDemo } from './ExampleDemo';
@@ -57,15 +57,10 @@ const SCENARIO_SERIES = (
   />
 );
 
-export const PremiumOnlySection = ({
-  scenarioFirst,
-}: {
-  /** 시나리오를 맨 앞에 둘지 — 환급 챌린지는 오늘의 시나리오로 쌓이니 그것부터 보여 준다 */
-  scenarioFirst: boolean;
-}) => (
+export const PremiumOnlySection = () => (
   <div className="flex flex-col gap-10 pt-8">
-    {scenarioFirst ? SCENARIO_SERIES : EXPRESSION_SERIES}
-    {scenarioFirst ? EXPRESSION_SERIES : SCENARIO_SERIES}
+    {EXPRESSION_SERIES}
+    {SCENARIO_SERIES}
 
     <SeriesCarousel
       label="스몰톡"

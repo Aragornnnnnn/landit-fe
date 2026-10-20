@@ -11,10 +11,21 @@ const PARTICIPANT_STATES: readonly string[] = [
   'REVIEW',
 ] satisfies RewardState[];
 
+// 기간을 마쳤고 돌려받을 금액도 검토 중인 금액도 없으며 이용권을 다시 살 수 있는 사람 — 끝난 이력만 남아
+// 보여 줄 것이 없으니 환급과 상관없는 사람처럼 다시 환급 소개를 권한다
+const finishedWithNothingLeft = (view: RewardView) =>
+  view.state === 'ENDED' &&
+  view.pendingRefundWon === 0 &&
+  view.heldRefundWon === 0 &&
+  view.withdrawableWon === 0 &&
+  view.purchaseAvailable;
+
 // 환급과 상관없는 사람은 null — 화면들이 "참여자인가"를 이 한 곳에서 가른다.
 // 모르는 국면도 null이다 — 쌓는 중인 것처럼 그리느니 환급 표시를 접는다
 export const participantOf = (view: RewardView) =>
-  PARTICIPANT_STATES.includes(view.state) ? view : null;
+  PARTICIPANT_STATES.includes(view.state) && !finishedWithNothingLeft(view)
+    ? view
+    : null;
 
 // 도는 회차에 쌓인 금액. 도는 회차가 없으면(끝났거나 결제 확인 중) null
 export const balanceOf = (view: RewardView) => view.current?.balanceWon ?? null;

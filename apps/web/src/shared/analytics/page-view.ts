@@ -12,9 +12,11 @@ import {
   PAYWALL_PATH,
   PREMIUM_ONBOARDING_CHECK_PATH,
   PREMIUM_ONBOARDING_PATH,
+  PREVIEW_CHECK_PATH,
   readScenarioFeedbackParams,
   REWARD_CHECK_PATH,
   REWARD_PATH,
+  REWARD_PAYWALL_CHECK_PATH,
   SCENARIO_PATH,
   SUBSCRIPTION_CANCEL_PATH,
   SUBSCRIPTION_HISTORY_PATH,
@@ -57,6 +59,8 @@ const NESTED_PAGES: Record<string, string> = {
   [PREMIUM_ONBOARDING_PATH]: 'premium_onboarding',
   [REWARD_PATH]: 'reward',
   [REWARD_CHECK_PATH]: 'reward_check',
+  [REWARD_PAYWALL_CHECK_PATH]: 'reward_paywall_check',
+  [PREVIEW_CHECK_PATH]: 'preview_check',
 };
 
 // 페이월로 보낸 문 — 주소에 실려 온 값만 받는다. 문이 늘었는데 여기를 빠뜨리면 빌드가 깨진다
@@ -65,12 +69,15 @@ const PAYWALL_SOURCES: Record<PaywallSource, true> = {
   smalltalk: true,
   conversation_finished: true,
   feedback_detail: true,
+  premium_preview: true,
   me: true,
   header: true,
   reward: true,
 };
 
-const readPaywallSource = (raw: string | null): PaywallSource | undefined =>
+export const readPaywallSource = (
+  raw: string | null,
+): PaywallSource | undefined =>
   raw && raw in PAYWALL_SOURCES ? (raw as PaywallSource) : undefined;
 
 const STATIC_PAGES = new Set([

@@ -22,6 +22,8 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
+import { useHomePreview } from './_model/useHomePreview';
+import { PreviewIntro } from './_ui/PreviewIntro';
 
 // useSearchParams는 프리렌더 시 Suspense 경계가 필요하다
 export default function ScenarioPage() {
@@ -48,12 +50,11 @@ function ScenarioContent() {
   // 지난 날 카드도 완료했으면 CLEARED라 날짜가 없는(=오늘) 화면으로 한정한다
   const [summonClosed, setSummonClosed] = useState(false);
   // 이번 방문에 띄울 시트 하나 — 소감·리뷰가 없을 때만 알림 동의를 청한다
-  const satisfaction = useSatisfactionSheet('scenario');
+  const satisfactionSheet = useSatisfactionSheet('scenario');
   // 할인 시트가 떠 있으면 소감은 미룬다 — 할인은 5분뿐이고 소감은 다음에 또 물을 수 있다
   const promoOpen = usePromoSheetOpen();
   // 돌아온 순간의 환급 동전 연출이 끝날 때까지도 미룬다 — 어둠 아래에서 시트가 같이 올라오면 둘이 겹친다
   const showerHold = useEarnShowerHold();
-  const sheetsHeld = promoOpen || showerHold;
   // 대화 시작을 눌렀다 — 바로 이동하지 않고 브리핑 카드를 잠깐 보여준 뒤 대화로 들어간다
   const [briefingScenario, setBriefingScenario] = useState<Scenario | null>(
     null,
@@ -61,6 +62,12 @@ function ScenarioContent() {
 
   // 완료한 날은 카드 앞면(같은 썸네일·제목·설명)이 이미 떠 있다 — 램프로 시작하는 날만 브리핑이 필요하다
   const cleared = daily?.scenario?.dailyScenarioType === 'CLEARED';
+  // 프리미엄 프리뷰 — 오늘 카드를 끝낸 무료 사용자에게 챌린지를 소개하고 표현 하나를 무료로 열어 준다
+  const premiumPreview = useHomePreview({
+    cleared: cleared && date === undefined,
+    showerHold,
+  });
+  const sheetsHeld = promoOpen || showerHold || premiumPreview.active;
   // 대화는 페이월 문이 아니다 — 오늘 카드든 지난 카드든, 재대화든 구독과 관계없이 시작한다.
   // 무료 사용자가 막히는 건 그 뒤의 상세 피드백과 표현 학습이다 (docs/subscription.md 「무료 구간과 페이월 게이트」)
   const start = (scenario: Scenario) => {
@@ -73,9 +80,8 @@ function ScenarioContent() {
     router.prefetch(scenarioTalkPath(scenario.scenarioId, date));
   };
   const settled = date === undefined && (cleared || summonClosed);
-  // 시트류(소감 다음 순번)가 나설 차례 — 카드 판단과 소감 판정이 모두 끝났고 소감 시트가 안 뜰 때
-  const promptTurn =
-    settled && satisfaction.settled && satisfaction.sheet === null;
+  // 시트류(소감 다음 순번)가 나설 차례 — 카드 판단이 끝났고 소감 시트가 안 뜰 때
+  const promptTurn = settled && satisfactionSheet === null;
 
   // 날짜 이동은 replace다 — push면 히스토리가 쌓여 뒤로가기가 날짜 되감기가 된다.
   // 오늘은 날짜 없는 주소가 정본이다 — 붙여 두면 자정을 넘겨도 어제에 머문다
@@ -113,18 +119,26 @@ function ScenarioContent() {
           date={date}
           today={daily.date}
           autoFlip={autoFlip}
+          premiumPreview={premiumPreview.cardPreview}
           onStart={start}
           onSummonClose={() => setSummonClosed(true)}
         />
       )}
 
-      {settled && !sheetsHeld && satisfaction.sheet === 'talk' && (
+      {settled && !sheetsHeld && satisfactionSheet === 'talk' && (
         <SatisfactionGate moment="scenario" />
       )}
-      {settled && !sheetsHeld && satisfaction.sheet === 'review' && (
+      {settled && !sheetsHeld && satisfactionSheet === 'review' && (
         <SatisfactionGate moment="review" />
       )}
       {promptTurn && !sheetsHeld && <NotificationConsentGate />}
+
+      {premiumPreview.view === 'tutorial' && (
+        <PreviewIntro
+          dailyWon={premiumPreview.dailyWon}
+          onDone={premiumPreview.finishTutorial}
+        />
+      )}
 
       {/* 브리핑을 다 보여주면 대화로 넘어간다 — push라 뒤로가기는 이 화면(카드)으로 돌아온다 */}
       {briefingScenario && (

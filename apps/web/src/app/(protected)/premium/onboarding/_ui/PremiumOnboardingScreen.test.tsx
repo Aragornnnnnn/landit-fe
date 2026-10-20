@@ -436,7 +436,7 @@ describe('PremiumOnboardingScreen', () => {
 
       // 모은 만큼 돌려받는다는 걸 알람보다 먼저 말한다
       expect(
-        screen.getByText('챌린지 기간이 끝나면 내가 모은 만큼 돈을 돌려받아요'),
+        screen.getByText('기간이 끝나면 모은 돈을 출금할 수 있어요'),
       ).toBeVisible();
     });
 

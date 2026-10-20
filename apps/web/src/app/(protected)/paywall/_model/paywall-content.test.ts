@@ -6,6 +6,9 @@ import {
   EXAMPLE_CARDS,
   EXAMPLE_LANDING_INDEX,
   maskName,
+  ratingAsOfLabel,
+  REVIEWS,
+  rewardBenefitsOf,
 } from './paywall-content';
 
 describe('EXAMPLE_CARDS', () => {
@@ -43,6 +46,26 @@ describe('maskName', () => {
   });
 });
 
+describe('ratingAsOfLabel', () => {
+  it('평점을 확인한 날을 「(26년 10월 기준)」처럼 연·월로 줄인다', () => {
+    expect(ratingAsOfLabel('2026.10.06')).toBe('(26년 10월 기준)');
+    expect(ratingAsOfLabel('2027.03.01')).toBe('(27년 3월 기준)');
+  });
+});
+
+describe('REVIEWS', () => {
+  it('「원어민과 실제로 대화하는 느낌」 리뷰는 제목·작성자·날짜를 다른 카드처럼 갖춘다', () => {
+    const review = REVIEWS.find(({ body }) =>
+      body.startsWith('원어민과 실제로 대화하는 느낌'),
+    );
+    expect(review).toMatchObject({
+      title: expect.any(String),
+      author: '박 ****',
+      date: '2026.09.16',
+    });
+  });
+});
+
 describe('buildRewardPlan', () => {
   it('스토어 가격이 없으면 5만 원 이용권 등록값으로 100일·하루 500원을 정한다', () => {
     expect(buildRewardPlan()).toEqual({
@@ -73,5 +96,22 @@ describe('buildRewardPlan', () => {
       dailyRefund: 555,
       maxRefund: 55_500,
     });
+  });
+});
+
+describe('rewardBenefitsOf', () => {
+  it('적립 줄에 하루 몫을 쓴다 — 가격이 바뀌면 줄도 따라간다', () => {
+    expect(rewardBenefitsOf(300).map((row) => row.text)).toContain(
+      '시나리오마다 300원 적립',
+    );
+  });
+
+  it('무료로도 되는 줄은 매일 새 시나리오 하나뿐이고 맨 위에 있다', () => {
+    const rows = rewardBenefitsOf(500);
+
+    expect(rows.filter((row) => row.free).map((row) => row.text)).toEqual([
+      '매일 새 시나리오',
+    ]);
+    expect(rows[0].free).toBe(true);
   });
 });

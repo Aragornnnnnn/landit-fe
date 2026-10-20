@@ -70,3 +70,68 @@ describe('ExpressionList 진행바', () => {
     expect(fill?.className).not.toContain('bg-success');
   });
 });
+
+describe('ExpressionList 무료·PREMIUM 표시', () => {
+  it('무료 사용자 목록에도 「무료」·「PREMIUM」 표시를 붙이지 않는다 — 어느 표현이든 눌러 보고 싶게', () => {
+    // Given 첫 표현이 무료로 열린 무료 사용자의 목록
+    render(
+      <ExpressionList
+        premiumLocked
+        freeTrialExpressionId={1}
+        expressions={[
+          expression({ expressionId: 1 }),
+          expression({ expressionId: 2, locked: true }),
+          expression({ expressionId: 3 }),
+        ]}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    // Then 표시는 하나도 없다
+    expect(screen.queryByText('무료')).not.toBeInTheDocument();
+    expect(screen.queryByText('PREMIUM')).not.toBeInTheDocument();
+  });
+
+  it('무료로 열린 표현에는 프리뷰 스포트라이트가 찾을 표식만 남긴다', () => {
+    const { container } = render(
+      <ExpressionList
+        premiumLocked
+        freeTrialExpressionId={3}
+        expressions={[
+          expression({ expressionId: 3 }),
+          expression({ expressionId: 4 }),
+        ]}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(container.querySelectorAll('[data-free-expression]')).toHaveLength(
+      1,
+    );
+  });
+
+  it('무료로 열린 표현에는 다음 표현 손가락을 띄우지 않는다 — 프리뷰 스포트라이트가 이미 가리킨다', () => {
+    render(
+      <ExpressionList
+        premiumLocked
+        freeTrialExpressionId={1}
+        expressions={[expression({ expressionId: 1 })]}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText('다음에 배울 표현')).not.toBeInTheDocument();
+  });
+
+  it('유료 사용자 목록에는 스포트라이트 표식도 없다', () => {
+    const { container } = render(
+      <ExpressionList
+        freeTrialExpressionId={1}
+        expressions={[expression({ expressionId: 1 })]}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(container.querySelector('[data-free-expression]')).toBeNull();
+  });
+});

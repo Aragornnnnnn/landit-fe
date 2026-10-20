@@ -7,9 +7,9 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
+import { prefersReducedMotion } from '@/shared/lib/reduced-motion';
 import { useInView } from '@/shared/lib/useInView';
 
-import { prefersReducedMotion } from '../_lib/reduced-motion';
 import {
   EXAMPLE_CARDS,
   EXAMPLE_LANDING_GLOSS,

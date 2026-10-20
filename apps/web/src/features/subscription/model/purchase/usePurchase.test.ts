@@ -284,6 +284,11 @@ describe('usePurchase — 결제', () => {
     expect(mocks.getMySubscription).not.toHaveBeenCalled();
     expect(mocks.showToast).not.toHaveBeenCalled();
     expect(onUnlocked).not.toHaveBeenCalled();
+    // 결과를 모르니 시작만 덩그러니 남지 않게 화면을 떠났다고 닫아 둔다
+    expect(mocks.track).toHaveBeenCalledWith('Purchase Failed', {
+      plan: 'yearly',
+      reason: 'left_screen',
+    });
   });
 });
 
@@ -405,6 +410,10 @@ describe('usePurchase — 100일 이용권 구매 가능 확인', () => {
 
     expect(mocks.purchaseViaBridge).not.toHaveBeenCalled();
     expect(mocks.showToast).not.toHaveBeenCalled();
+    expect(mocks.track).toHaveBeenCalledWith('Purchase Failed', {
+      plan: 'pass',
+      reason: 'left_screen',
+    });
   });
 
   it('확인을 기다리는 사이 계정이 바뀌면 결제를 요청하지 않는다', async () => {

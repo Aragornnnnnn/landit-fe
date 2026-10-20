@@ -14,7 +14,7 @@ const todayWon = (name: keyof typeof RECORD_CASES) =>
     .reduce((sum, item) => sum + item.amountWon, 0);
 
 describe('readCheckCase', () => {
-  it.each([['kept'], ['intro'], ['loading'], ['coin'], ['earned']])(
+  it.each([['kept'], ['intro'], ['missed'], ['loading'], ['coin'], ['earned']])(
     '아는 케이스 %s는 그대로 읽는다',
     (name) => {
       expect(readCheckCase(name)).toBe(name);

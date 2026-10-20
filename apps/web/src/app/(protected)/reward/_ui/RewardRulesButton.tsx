@@ -1,9 +1,14 @@
 'use client';
 
-// 환급 화면 헤더 오른쪽의 안내(i) 버튼 — 누르면 환급 규칙이 시트로 올라온다
+// 환급 화면 헤더 오른쪽의 안내(i) 버튼 — 누르면 환급이 어떻게 쌓이는지 동전 그림으로 시트에 올라온다. 하루 몫을 모르면 규칙 글만 적는다
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
+import {
+  CHALLENGE_DAYS,
+  rewardOfferOf,
+} from '@/features/reward/model/refund-offer';
+import { CoinStackCard } from '@/features/reward/ui/CoinStackCard';
 import { RewardRuleList } from '@/features/reward/ui/RewardGuide';
 import { track } from '@/shared/analytics';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
@@ -34,10 +39,14 @@ export const RewardRulesButton = ({
       <BottomSheet open={open} onClose={() => setOpen(false)}>
         <div>
           <BottomSheet.Title className="text-[18px] font-black text-foreground">
-            환급 규칙
+            {dailyWon === null ? '환급 규칙' : '이렇게 환급돼요'}
           </BottomSheet.Title>
           <div className="mt-4 mb-6">
-            <RewardRuleList dailyWon={dailyWon} />
+            {dailyWon === null ? (
+              <RewardRuleList dailyWon={dailyWon} />
+            ) : (
+              <CoinStackCard offer={rewardOfferOf(dailyWon * CHALLENGE_DAYS)} />
+            )}
           </div>
           <Button onClick={() => setOpen(false)}>확인</Button>
         </div>

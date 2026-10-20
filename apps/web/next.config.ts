@@ -39,6 +39,18 @@ const nextConfig: NextConfig = {
   // 파일 확장자가 있는 경로(public 에셋)·/_next(청크, 자체 immutable 정책)·/api(백엔드 프록시)는 제외
   async headers() {
     return [
+      // 페이월 그림은 열 때마다 서버에 다시 묻지 않게 하루 동안 그대로 쓰고, 일주일까지는 쓰면서 뒤에서 새로 받는다.
+      // 기본값(max-age=0, must-revalidate)이면 페이월을 열 때마다 그림 수만큼 왕복이 생겨 카드가 늦게 찬다.
+      // 그림을 같은 이름으로 바꾸면 최대 하루 늦게 반영된다 — 바로 바꿔야 하면 파일 이름을 바꾼다
+      {
+        source: '/images/paywall/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
+          },
+        ],
+      },
       {
         source: '/((?!api(?:/|$)|_next(?:/|$)|.*\\.[^/]+$).*)',
         headers: [{ key: 'Cache-Control', value: 'no-store' }],

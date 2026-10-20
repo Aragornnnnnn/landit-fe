@@ -29,6 +29,10 @@ const analytics = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/shared/analytics', () => ({ track: analytics.track }));
 
 vi.mock('../_model/useMyReward', () => ({ useMyReward: () => mocks.my }));
+// 프리미엄 프리뷰는 자기 테스트가 있다 — 여기선 프리뷰가 없는 사람으로 둔다
+vi.mock('../_model/usePremiumPreview', () => ({
+  usePremiumPreview: () => ({ screen: 'none' }),
+}));
 vi.mock('../_model/useMissedEarnInvite', () => ({
   useMissedEarnInvite: () => mocks.missed,
 }));

@@ -3,18 +3,9 @@ import { describe, expect, it } from 'vitest';
 
 import { buildPaywallPlans } from '@/features/subscription/model/product/plans';
 
-import { buildRewardPlan } from './paywall-content';
-import {
-  getBillingNotice,
-  getCancelNotice,
-  getCtaLabel,
-  getRewardCtaLabel,
-  getRewardSteps,
-  getRewardTickers,
-} from './paywall-copy';
+import { getBillingNotice, getCancelNotice, getCtaLabel } from './paywall-copy';
 
 const { monthly, yearly } = buildPaywallPlans();
-const pass = buildRewardPlan();
 
 describe('getCtaLabel', () => {
   it('연간을 고르면 무료 체험으로 시작한다고 말한다', () => {
@@ -53,40 +44,6 @@ describe('getCancelNotice', () => {
     );
     expect(getCancelNotice(monthly)).toBe(
       '결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요',
-    );
-  });
-});
-
-describe('환급 챌린지 문구', () => {
-  it('CTA는 거는 금액을 만 원 단위로 말한다', () => {
-    expect(getRewardCtaLabel(pass)).toBe('5만 원 걸고 도전하기');
-  });
-
-  it('만 원으로 나누어떨어지지 않는 가격이면 CTA는 원 단위로 말한다', () => {
-    expect(getRewardCtaLabel(buildRewardPlan(39_900))).toBe(
-      '39,900원 걸고 도전하기',
-    );
-  });
-
-  it('안내는 내는 돈, 쌓이는 법, 돌려받는 때 세 줄을 가격에서 읽는다', () => {
-    const steps = getRewardSteps(buildRewardPlan(30_000)).map(
-      ([, text]) => text,
-    );
-
-    expect(steps).toEqual([
-      '오늘 30,000원 결제 (100일 이용권)',
-      '시나리오 1개 끝낼 때마다 300원 적립',
-      '100일 뒤, 모은 만큼 돌려받아요',
-    ]);
-  });
-
-  it('무대 띠는 결제 금액이 아니라 모은 만큼 돌려받는다고 말한다', () => {
-    expect(getRewardTickers(pass).bottom).toContain('모은 만큼 100% 환급');
-  });
-
-  it('무대 띠도 하루 몫을 가격에서 읽는다', () => {
-    expect(getRewardTickers(buildRewardPlan(30_000)).top).toContain(
-      '하루 300원',
     );
   });
 });

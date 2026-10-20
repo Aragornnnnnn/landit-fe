@@ -31,6 +31,7 @@ import { runHaptic } from '@/bridge/haptics';
 import { nativeContextScript } from '@/bridge/nativeContext';
 import { getNativeInsetsScript } from '@/bridge/nativeInsets';
 import { openShareSheet } from '@/bridge/share';
+import { requestStoreReview } from '@/bridge/store-review';
 import { useNativeBridge } from '@/bridge/useNativeBridge';
 import { WEB_URL } from '@/config/webUrl';
 import { reportWarning, setMonitoringUser } from '@/monitoring/report';
@@ -44,6 +45,7 @@ import { initializeNotifications } from '@/notifications/setup';
 import { useNotificationDeepLink } from '@/notifications/useNotificationDeepLink';
 import { pickPhotos } from '@/photos/pick-photos';
 import {
+  attachMetaAttribution,
   configurePurchases,
   fetchOfferingPackages,
   identifyUser,
@@ -176,6 +178,11 @@ const ShellScreen = () => {
       const result = await pickPhotos(limit);
       postToWeb({ type: 'PHOTOS_PICKED', ...result });
     },
+    // 앱 안 별점 카드를 청하고 떴는지 회신한다 — 안 떴으면 웹이 스토어로 보낸다
+    REQUEST_REVIEW: async () => {
+      const status = await requestStoreReview();
+      postToWeb({ type: 'REVIEW_RESULT', status });
+    },
     GET_ALARM_STATUS: () => replyAlarmStatus(),
     REQUEST_ALARM_PERMISSION: async () => {
       postToWeb({ type: 'ALARM_STATUS', ...(await requestAlarmPermission()) });
@@ -254,9 +261,10 @@ const ShellScreen = () => {
     postToWeb({ type: 'ALARM_OPENED', ...entry }),
   );
 
-  // Meta SDK 초기화와 iOS ATT 동의 요청 — 앱 첫 진입에 1회 (광고 설치 어트리뷰션)
+  // Meta SDK 초기화와 iOS ATT 동의 요청 — 앱 첫 진입에 1회 (광고 설치 어트리뷰션).
+  // 끝나면 메타 식별자를 RevenueCat에 붙여, 결제 이벤트가 광고와 이어지게 한다
   useEffect(() => {
-    void initMetaSdk();
+    void initMetaSdk().then(attachMetaAttribution);
   }, []);
 
   // 알림 표시 정책·Android 채널 등록 — 권한 요청은 웹이 브릿지로 시점을 정한다

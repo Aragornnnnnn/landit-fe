@@ -5,6 +5,8 @@ export const CHALLENGE_DAYS = 100;
 
 export interface RewardOffer {
   days: number;
+  /** 결제 금액 — 일수로 나눠떨어지지 않으면 최대 환급액과 다르다 */
+  priceWon: number;
   /** 오늘의 시나리오를 끝낸 날 쌓이는 금액 */
   dailyWon: number;
   /** 하루도 빠짐없이 채웠을 때 돌려받는 금액 */
@@ -20,6 +22,7 @@ export const rewardOfferOf = (priceWon: number): RewardOffer => {
   const dailyWon = Math.floor(priceWon / CHALLENGE_DAYS);
   return {
     days: CHALLENGE_DAYS,
+    priceWon,
     dailyWon,
     // 하루 몫을 날마다 다 받은 합 — 일수로 나눠떨어지지 않는 가격에서도 화면의 숫자끼리 어긋나지 않는다
     maximumWon: dailyWon * CHALLENGE_DAYS,

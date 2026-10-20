@@ -53,10 +53,13 @@ export const RECORD_CASES = {
 // 오늘의 시나리오를 막 끝낸 순간의 환급
 export const EARNED_REWARD = RECORD_CASES.kept.reward;
 
-// 열 수 있는 케이스 — 환급 화면 케이스에 소개·불러오는 중·받는 순간을 더한 것
+// 열 수 있는 케이스 — 환급 화면 케이스에 결제 전 소개(대화 0~2일)·놓친 금액(3일째부터)·불러오는 중·받는 순간을 더한 것
 const OTHER_CASES = [
   'intro',
   'introTalked',
+  'missed',
+  'missedTalked',
+  'exitOffer',
   'loading',
   'coin',
   'earned',

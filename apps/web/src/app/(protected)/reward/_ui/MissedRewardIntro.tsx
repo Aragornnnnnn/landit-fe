@@ -1,12 +1,15 @@
 'use client';
 
-// 무료로 며칠 해 온 사람이 보는 환급 화면 — 챌린지였다면 받았을 금액을 흐리게 보여 주고, 오늘 몫은 아직 받을 수 있다고 권한다
+// 무료로 대화한 날이 쌓인 사람(대화 3일째부터)이 보는 환급 화면 — 프리미엄이었다면 받았을 금액을 흐리게 보여 주고, 오늘 몫은 아직 받을 수 있다고 권한다
 import type {
   MissedReward,
   MissedRow,
 } from '@/features/reward/model/missed-reward';
 import { useMidnightUrgent } from '@/features/reward/model/useMidnightUrgent';
-import { useRewardPreviewHistoryQuery } from '@/features/reward/model/useRewardHistoryQuery';
+import {
+  useRewardPreviewHistoryQuery,
+  type RewardHistoryState,
+} from '@/features/reward/model/useRewardHistoryQuery';
 import { formatWon } from '@/shared/lib/won';
 
 import { missedCopyOf } from '../_model/reward-intro-copy';
@@ -15,9 +18,23 @@ import { MidnightCountdown } from './MidnightCountdown';
 import { HistoryFeedList } from './RewardHistoryFeed';
 import { RewardPot } from './RewardPot';
 
-export const MissedRewardIntro = ({ missed }: { missed: MissedReward }) => {
+// 실제 화면 — 지난 기록을 서버에서 받아 그린다
+export const MissedRewardIntro = ({ missed }: { missed: MissedReward }) => (
+  <MissedRewardView
+    missed={missed}
+    history={useRewardPreviewHistoryQuery(missed.today)}
+  />
+);
+
+// 그리기만 하는 몸통 — 개발자 환급 점검이 가짜 기록을 넣어 같은 화면을 연다
+export const MissedRewardView = ({
+  missed,
+  history,
+}: {
+  missed: MissedReward;
+  history: RewardHistoryState<MissedRow>;
+}) => {
   const copy = missedCopyOf(missed);
-  const history = useRewardPreviewHistoryQuery(missed.today);
   // 오늘 끝낸 대화는 오늘 시작해야 인정된다 — 자정이 가까우면 시계로 알린다
   const urgent = useMidnightUrgent(missed.talkedToday);
 
@@ -36,9 +53,14 @@ export const MissedRewardIntro = ({ missed }: { missed: MissedReward }) => {
         </h2>
       </section>
 
-      <p className="mx-5 mt-4 rounded-2xl bg-primary/10 px-4 py-3.5 text-center text-[15px] font-medium text-foreground">
-        <EmphasizedText line={copy.box} />
-      </p>
+      <div className="mx-5 mt-4 rounded-2xl bg-primary/10 px-4 py-3.5 text-center">
+        <p className="text-[15px] font-medium whitespace-pre-line text-foreground">
+          <EmphasizedText line={copy.box} />
+        </p>
+        <p className="mt-1 text-[13px] font-medium text-muted-foreground">
+          {copy.note}
+        </p>
+      </div>
 
       <p className="mt-6 px-5 text-[13px] font-bold text-muted-foreground">
         기록

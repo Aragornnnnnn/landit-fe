@@ -49,8 +49,9 @@ export const RewardFrame = ({
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        // 푸터가 없을 때는 내용이 바닥에 닿는다 — 내비게이션 바 위로 띄운다
-        className={`flex-1 overflow-y-auto ${footer ? '' : 'pb-[var(--safe-area-inset-bottom)]'}`}
+        // 푸터가 없을 때는 내용이 바닥에 닿는다 — 내비게이션 바 위로 띄운다.
+        // 입금 알림이 화면 밖까지 튀어나와도 손으로 좌우로 끌리지 않게 가로 스크롤은 막는다
+        className={`flex-1 overflow-x-hidden overflow-y-auto ${footer ? '' : 'pb-[var(--safe-area-inset-bottom)]'}`}
       >
         {children}
       </div>

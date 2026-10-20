@@ -6,7 +6,9 @@ import { useState } from 'react';
 import { glowOf, potStageOf } from '@/app/(protected)/reward/_model/pot-stage';
 import { rewardIntroCopyOf } from '@/app/(protected)/reward/_model/reward-intro-copy';
 // 점검은 실제 부품을 그대로 그려야 해서 환급 라우트의 비공개 폴더를 가져온다
+import { MissedRewardView } from '@/app/(protected)/reward/_ui/MissedRewardIntro';
 import { RefundApplyButton } from '@/app/(protected)/reward/_ui/RefundApplyButton';
+import { RewardExitOfferSheet } from '@/app/(protected)/reward/_ui/RewardExitOfferSheet';
 import { RewardFrame } from '@/app/(protected)/reward/_ui/RewardFrame';
 import { RewardHistoryList } from '@/app/(protected)/reward/_ui/RewardHistoryFeed';
 import {
@@ -18,9 +20,14 @@ import { RewardRulesButton } from '@/app/(protected)/reward/_ui/RewardRulesButto
 import { RewardSkeleton } from '@/app/(protected)/reward/_ui/RewardSkeleton';
 import { TITLE_CLASS } from '@/features/expression/ui/ExpressionStages';
 import { completionEarnOf } from '@/features/reward/model/completion-earn';
+import type {
+  MissedReward,
+  MissedRow,
+} from '@/features/reward/model/missed-reward';
 import { rewardOfferOf } from '@/features/reward/model/refund-offer';
 import { rewardBadgeOf } from '@/features/reward/model/reward-status';
 import type { BalanceGain } from '@/features/reward/model/seen-balance';
+import type { RewardHistoryState } from '@/features/reward/model/useRewardHistoryQuery';
 import { EarnedStamp } from '@/features/reward/ui/EarnedStamp';
 import { HeaderReward } from '@/features/reward/ui/HeaderReward';
 import { PASS_FALLBACK_PRICE } from '@/features/subscription/model/product/offering';
@@ -39,6 +46,35 @@ import { useFakeHistory } from '../_model/useFakeHistory';
 // 소개 화면의 견본 금액 — 노출하는 5만 원 이용권
 const PREVIEW_OFFER = rewardOfferOf(PASS_FALLBACK_PRICE);
 
+// 대화 3일째부터 보는 놓친 금액 — 지난 32일을 무료로 대화했고, 오늘 했는지만 갈린다
+const MISSED_DAYS = 32;
+const missedOf = (talkedToday: boolean): MissedReward => ({
+  pastDays: MISSED_DAYS,
+  missedWon: PREVIEW_OFFER.dailyWon * MISSED_DAYS,
+  dailyWon: PREVIEW_OFFER.dailyWon,
+  talkedToday,
+  today: '2026-10-20',
+});
+
+// 놓친 금액 아래 기록 — 서버 대신 오늘과 지난 사흘을 한 장으로 준다
+const missedHistoryOf = (
+  missed: MissedReward,
+): RewardHistoryState<MissedRow> => ({
+  rows: ['10.20', '10.19', '10.18', '10.17'].map((dateLabel, index) => ({
+    id: dateLabel,
+    dateLabel,
+    amountWon: missed.dailyWon,
+    isToday: index === 0,
+  })),
+  error: null,
+  retry: () => {},
+  hasMore: false,
+  fetching: false,
+  loadingMore: false,
+  moreFailed: false,
+  loadMore: () => {},
+});
+
 const RecordPreview = ({
   reward,
   history: mode,
@@ -55,6 +91,29 @@ const RecordPreview = ({
       <RewardRecord
         reward={reward}
         history={<RewardHistoryList {...history} />}
+      />
+    </RewardFrame>
+  );
+};
+
+// 나가려 할 때 뜨는 신규 회원 특가 — 하루 한 번 조건 없이 바로 연다. 시트를 닫으면 다시 열 수 있게 소개 위에 둔다
+const ExitOfferPreview = ({ onBack }: { onBack: () => void }) => {
+  const [open, setOpen] = useState(true);
+  const copy = rewardIntroCopyOf(PREVIEW_OFFER, false);
+
+  return (
+    <RewardFrame
+      onBack={() => (open ? onBack() : setOpen(true))}
+      footer={<RewardStartButton label={copy.cta} />}
+      fadeAboveFooter
+    >
+      <RewardIntro copy={copy} offer={PREVIEW_OFFER} />
+      <RewardExitOfferSheet
+        open={open}
+        offer={PREVIEW_OFFER}
+        onStart={onBack}
+        onLeave={onBack}
+        onClose={() => setOpen(false)}
       />
     </RewardFrame>
   );
@@ -132,11 +191,26 @@ export const RewardCheckPreview = ({
     return (
       <RewardFrame
         onBack={onBack}
-        trailing={<RewardRulesButton dailyWon={PREVIEW_OFFER.dailyWon} />}
         footer={<RewardStartButton label={copy.cta} />}
         fadeAboveFooter
       >
-        <RewardIntro copy={copy} dailyWon={PREVIEW_OFFER.dailyWon} />
+        <RewardIntro copy={copy} offer={PREVIEW_OFFER} />
+      </RewardFrame>
+    );
+  }
+  if (name === 'exitOffer') return <ExitOfferPreview onBack={onBack} />;
+  if (name === 'missed' || name === 'missedTalked') {
+    const missed = missedOf(name === 'missedTalked');
+    const copy = rewardIntroCopyOf(PREVIEW_OFFER, missed.talkedToday);
+    return (
+      <RewardFrame
+        onBack={onBack}
+        trailing={<RewardRulesButton dailyWon={PREVIEW_OFFER.dailyWon} />}
+        footer={<RewardStartButton label={copy.cta} />}
+        fadeAboveFooter
+        glow="missed"
+      >
+        <MissedRewardView missed={missed} history={missedHistoryOf(missed)} />
       </RewardFrame>
     );
   }

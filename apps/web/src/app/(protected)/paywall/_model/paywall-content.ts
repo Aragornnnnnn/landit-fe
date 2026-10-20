@@ -1,11 +1,10 @@
 // 롱 페이월의 고정 문구와 그림 — 학습 단계 카드, 대화 카드, 데이터 수치, 리뷰. 아래쪽에 환급 챌린지 값도 있다(하루 몫과 최대 환급액 산식은 features/reward의 refund-offer). 피그마 「페이월 v2」(2640:8041) 기준
 import type { SubscriptionPlan } from '@landit/analytics';
 
-import {
-  CHALLENGE_DAYS,
-  rewardOfferOf,
-} from '@/features/reward/model/refund-offer';
+import { rewardOfferOf } from '@/features/reward/model/refund-offer';
+import { formatWon } from '@/features/subscription/lib/won';
 import { PASS_FALLBACK_PRICE } from '@/features/subscription/model/product/offering';
+import type { PreloadableImage } from '@/shared/lib/preload-next-images';
 
 const IMAGE_DIR = '/images/paywall';
 
@@ -189,6 +188,12 @@ export const STORE_RATING = 4.8;
 /** 평점을 확인한 날 — 숫자 옆에 "○○ 기준"으로 붙는다 */
 export const STORE_RATING_AS_OF = '2026.10.06';
 
+/** 평점 기준 시점을 연·월로 줄인 한 마디 — "2026.10.06" → "(26년 10월 기준)" */
+export const ratingAsOfLabel = (asOf: string) => {
+  const [year, month] = asOf.split('.');
+  return `(${year.slice(2)}년 ${Number(month)}월 기준)`;
+};
+
 export interface Review {
   title?: string;
   body: string;
@@ -212,7 +217,11 @@ export const REVIEWS: Review[] = [
     date: '2026.09.09',
   },
   {
+    // 제목은 스토어 글에 없어 본문 내용 그대로 붙였다. 닉네임은 스토어에 가려진 채로 보이는 그대로다
+    title: '진짜 원어민이랑 대화하는 느낌!',
     body: '원어민과 실제로 대화하는 느낌이 들어서 좋았어요. 제가 한 말을 바로 피드백 해 줘서 많이 도움 됐어요.',
+    author: '박 ****',
+    date: '2026.09.16',
   },
   {
     title: '도움 엄청 돼요',
@@ -238,20 +247,8 @@ export const maskName = (name: string) => {
   );
 };
 
-/** 6개월 꾸준히 한 유저의 평균 습득 표현 수 */
-export const LEARNABLE_EXPRESSION_COUNT = 726;
-/** 그 기간 꾸준히 한 유저의 평균 대화 시간(분) */
-export const AVERAGE_TALK_MINUTES = 1278;
-/** 위 두 평균을 낸 때 */
-export const OUTCOME_AS_OF = '2026년 10월';
-/** 두 평균을 잰 기간(6개월)의 날짜 수 — 챌린지 기간으로 환산할 때 나눈다 */
-export const OUTCOME_DAYS = 183;
-
 /** 환급 챌린지로 파는 상품 — 100일 이용권 하나(한 번 결제하는 단건 상품) */
 export const REWARD_PLAN_ID = 'pass' satisfies SubscriptionPlan;
-
-/** 환급 챌린지 기간 문구 */
-export const REWARD_CHALLENGE_PERIOD = `${CHALLENGE_DAYS}일`;
 
 /** 환급 챌린지 화면에 그릴 값 */
 export interface RewardPlan {
@@ -276,3 +273,40 @@ export const buildRewardPlan = (
   const { days, dailyWon, maximumWon } = rewardOfferOf(price);
   return { days, price, dailyRefund: dailyWon, maxRefund: maximumWon };
 };
+
+/**
+ * 카드 벽 그림 한 장 — 원본이 이미 216px webp로 작게 줄여 둔 파일이라 최적화 서버를 거치지 않고 파일을 그대로 받는다.
+ * 최적화 주소는 열 때마다 서버에 다시 묻는 캐시(max-age=0)라 카드가 늦게 차고, 원본 주소는 next.config가 하루 캐시를 붙인다
+ */
+export const scenarioWallImageOf = (src: string): PreloadableImage => ({
+  src,
+  width: 128,
+  height: 192,
+  unoptimized: true,
+});
+
+/** 카드 벽에 깔리는 그림 전부 — 페이월로 오기 전 화면(대화 직후·홈 프리뷰)이 미리 받는다 */
+export const SCENARIO_WALL_IMAGES = SCENARIOS.map(({ image }) =>
+  scenarioWallImageOf(image),
+);
+
+/** 오늘의 시나리오로 뽑혀 카드 벽 가운데 놓이는 시나리오 — 처음 만난 클로이와 파티에서 대화하는 장면이 가장 해 보고 싶게 만든다 */
+export const WALL_PICK_INDEX = SCENARIOS.findIndex((scenario) =>
+  scenario.image.endsWith('/s-06.webp'),
+);
+
+/**
+ * 결제 금액 안내의 비교표 줄 — 환급 챌린지는 적립을 프리미엄 둘째 줄에 넣는다. 글자가 많으면 읽기 힘들어 짧게 쓴다
+ *
+ * @param dailyRefund 오늘의 시나리오를 끝낸 날 쌓이는 금액
+ */
+export const rewardBenefitsOf = (
+  dailyRefund: number,
+): { text: string; free: boolean }[] => [
+  { text: '매일 새 시나리오', free: true },
+  { text: `시나리오마다 ${formatWon(dailyRefund)} 적립`, free: false },
+  { text: '문장별 꼼꼼한 피드백', free: false },
+  { text: '맞춤 원어민 표현', free: false },
+  { text: '원어민 발음 비교', free: false },
+  { text: '무제한 프리톡', free: false },
+];

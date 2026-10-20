@@ -1,6 +1,12 @@
 // 피드백 뒤 갈 곳 배선 — 재대화는 홈, 잠기지 않으면 표현 분기, 무료 첫 시나리오는 레벨 분석, 잠긴 상세는 페이월,
 // 유료인데 잠긴 응답이면 다시 받는다
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ScenarioFeedbackFlow } from './ScenarioFeedbackFlow';
@@ -14,9 +20,19 @@ const mocks = vi.hoisted(() => ({
   locked: false,
   premium: false,
   feedback: null as { detailFeedbackLocked?: boolean } | null,
+  saveStep: vi.fn(),
+  // 프리미엄 프리뷰 — 기본은 단계를 모르는 상태(서버 미배포)라 원래 흐름을 탄다
+  premiumPreview: { eligible: false, step: null as string | null },
+  // 서버가 이 시나리오에서 무료로 열어 준 표현이 있는가
+  freeTrial: true,
 }));
 vi.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({ invalidateQueries: mocks.invalidateQueries }),
+  useQueryClient: () => ({
+    invalidateQueries: mocks.invalidateQueries,
+    // 프리뷰를 시작하기 전에 목록을 새로 받는다 — 서버가 무료 표현을 열어 줬는지
+    fetchQuery: () =>
+      Promise.resolve([{ expressionId: 1, freeTrial: mocks.freeTrial }]),
+  }),
 }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace, push: mocks.push }),
@@ -34,6 +50,17 @@ vi.mock(
     }),
   }),
 );
+vi.mock('../../../../../_model/usePremiumPreview', () => ({
+  usePremiumPreview: () => ({
+    ...mocks.premiumPreview,
+    saveStep: mocks.saveStep,
+  }),
+}));
+vi.mock('@/features/expression/model/useExpressionsQuery', () => ({
+  useExpressionsQuery: () => ({
+    expressions: [{ expressionId: 1, freeTrial: mocks.freeTrial }],
+  }),
+}));
 vi.mock('@/features/feedback/model/useSessionFeedbackQuery', () => ({
   sessionFeedbackKey: (sessionId: number | null) => [
     'session-feedback',
@@ -62,9 +89,18 @@ vi.mock('@/features/feedback/ui/FeedbackFlow', () => ({
   ),
 }));
 vi.mock('./PostConversationFlow', () => ({
-  PostConversationFlow: ({ onFinish }: { onFinish: () => void }) => (
-    <button onClick={onFinish}>학습 준비 마침</button>
-  ),
+  PostConversationFlow: ({
+    onFinish,
+    onPreviewStart,
+  }: {
+    onFinish: () => void;
+    onPreviewStart?: () => void;
+  }) =>
+    onPreviewStart ? (
+      <button onClick={onPreviewStart}>레벨 보고 홈으로</button>
+    ) : (
+      <button onClick={onFinish}>학습 준비 마침</button>
+    ),
 }));
 
 const renderFlow = (
@@ -88,6 +124,8 @@ beforeEach(() => {
   mocks.locked = false;
   mocks.premium = false;
   mocks.feedback = { detailFeedbackLocked: false };
+  mocks.premiumPreview = { eligible: false, step: null };
+  mocks.freeTrial = true;
 });
 afterEach(() => cleanup());
 
@@ -209,5 +247,104 @@ describe('ScenarioFeedbackFlow', () => {
 
     expect(mocks.replace).toHaveBeenCalledWith('/scenario');
     expect(screen.queryByText('학습 준비 마침')).not.toBeInTheDocument();
+  });
+
+  it('프리뷰를 안 본 무료 사용자의 첫 시나리오는 레벨까지 보고 첫 단계를 남긴 뒤 홈으로 간다 — 학습 준비·페이월을 거치지 않는다', async () => {
+    // Given 프리뷰 단계가 비어 있는 무료 사용자의 첫 시나리오
+    mocks.locked = true;
+    mocks.premiumPreview = { eligible: true, step: null };
+    renderFlow();
+
+    // When 피드백을 마치고 레벨을 보면
+    fireEvent.click(screen.getByText('카페에서 주문하기 피드백 마침'));
+    fireEvent.click(await screen.findByText('레벨 보고 홈으로'));
+
+    // Then 레벨 단계를 남기고 홈으로 간다
+    expect(mocks.saveStep).toHaveBeenCalledWith('STARTED');
+    expect(mocks.track).toHaveBeenCalledWith('Premium Preview Started', {
+      entry: 'level',
+    });
+    expect(mocks.replace).toHaveBeenCalledWith('/scenario');
+    expect(mocks.guard).not.toHaveBeenCalled();
+  });
+
+  it('프리뷰를 안 본 무료 사용자가 오늘의 시나리오 총평을 마치면 총평 단계를 남기고 홈으로 간다', async () => {
+    mocks.locked = true;
+    mocks.feedback = { detailFeedbackLocked: true };
+    mocks.premiumPreview = { eligible: true, step: null };
+    renderFlow();
+
+    fireEvent.click(screen.getByText('카페에서 주문하기 피드백 마침'));
+
+    await waitFor(() => expect(mocks.saveStep).toHaveBeenCalledWith('STARTED'));
+    expect(mocks.replace).toHaveBeenCalledWith('/scenario');
+    expect(mocks.track).toHaveBeenCalledWith('Premium Preview Started', {
+      entry: 'home',
+    });
+  });
+
+  it('지난 날 카드의 대화는 프리뷰를 시작하지 않는다', () => {
+    mocks.locked = true;
+    mocks.feedback = { detailFeedbackLocked: true };
+    mocks.premiumPreview = { eligible: true, step: null };
+    renderFlow({ date: '2026-07-29' });
+
+    fireEvent.click(screen.getByText('카페에서 주문하기 피드백 마침'));
+
+    expect(mocks.saveStep).not.toHaveBeenCalled();
+    expect(mocks.replace).toHaveBeenCalledWith('/scenario?date=2026-07-29');
+  });
+
+  it('서버가 이 시나리오에 무료 표현을 열어 주지 않았으면 프리뷰 없이 원래 흐름(학습 준비)으로 간다', async () => {
+    mocks.locked = true;
+    mocks.premiumPreview = { eligible: true, step: null };
+    mocks.freeTrial = false;
+    renderFlow();
+
+    fireEvent.click(screen.getByText('카페에서 주문하기 피드백 마침'));
+
+    expect(await screen.findByText('학습 준비 마침')).toBeInTheDocument();
+    expect(mocks.saveStep).not.toHaveBeenCalled();
+  });
+
+  it('프리뷰를 안 본 무료 사용자가 잠긴 상세 버튼을 누르면 페이월 대신 프리뷰를 시작한다 — 기존 유저 대부분이 이 버튼으로 나간다', async () => {
+    // Given 상세가 잠긴 기존 무료 유저의 오늘 카드 총평. 이 시나리오에 무료 표현이 열려 있다
+    mocks.locked = true;
+    mocks.feedback = { detailFeedbackLocked: true };
+    mocks.premiumPreview = { eligible: true, step: null };
+    renderFlow();
+
+    // When 잠긴 상세 버튼을 누르면
+    fireEvent.click(screen.getByText('잠긴 상세 보기'));
+
+    // Then 페이월이 아니라 프리뷰 첫 단계를 남기고 홈으로 간다
+    await waitFor(() => expect(mocks.saveStep).toHaveBeenCalledWith('STARTED'));
+    expect(mocks.replace).toHaveBeenCalledWith('/scenario');
+    expect(mocks.push).not.toHaveBeenCalled();
+  });
+
+  it('프리뷰 대상이 아니면 잠긴 상세 버튼은 그대로 페이월로 간다', async () => {
+    mocks.locked = true;
+    mocks.feedback = { detailFeedbackLocked: true };
+    mocks.premiumPreview = { eligible: true, step: 'COMPLETED' };
+    renderFlow();
+
+    fireEvent.click(screen.getByText('잠긴 상세 보기'));
+
+    await waitFor(() => expect(mocks.push).toHaveBeenCalled());
+    expect(mocks.saveStep).not.toHaveBeenCalled();
+  });
+
+  it('프리뷰 대상이어도 이 시나리오에 무료 표현이 없으면 잠긴 상세 버튼은 페이월로 간다', async () => {
+    mocks.locked = true;
+    mocks.feedback = { detailFeedbackLocked: true };
+    mocks.premiumPreview = { eligible: true, step: null };
+    mocks.freeTrial = false;
+    renderFlow();
+
+    fireEvent.click(screen.getByText('잠긴 상세 보기'));
+
+    await waitFor(() => expect(mocks.push).toHaveBeenCalled());
+    expect(mocks.saveStep).not.toHaveBeenCalled();
   });
 });

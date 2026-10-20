@@ -191,8 +191,9 @@ export const PreparedLearningView = ({
       </h1>
 
       {/* 흐린 학습지 위에서 장면이 바뀐다 — 말풍선과 얼굴이 함께 넘어가고, 자물쇠 줄은 고정 */}
-      {/* 카드 네 장 높이만으로는 캐릭터가 넘칠 수 있어 장면이 설 높이를 확보한다 */}
-      <section className="relative mt-4 min-h-[380px]">
+      {/* 카드 네 장 높이만으로는 캐릭터가 넘칠 수 있어 장면이 설 높이를 확보한다.
+          낮은 화면에서는 버튼이 밀려나지 않게 장면(말풍선+캐릭터)이 들어갈 만큼까지만 줄어든다 */}
+      <section className="relative mt-4 h-[380px] min-h-[230px] overflow-hidden">
         <ul
           className="flex flex-col gap-2.5 blur-[5px] select-none"
           aria-hidden="true"

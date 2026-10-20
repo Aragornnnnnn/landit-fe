@@ -13,12 +13,15 @@ interface ExpressionListItemProps {
   onSelect: (expressionId: number) => void;
   // 활성 항목의 다음 표현 표시(👈)를 숨긴다
   hideStartAction?: boolean;
+  // 서버가 무료 사용자에게 무료로 열어 준 표현인가 — 프리미엄 프리뷰의 스포트라이트가 이 항목을 찾는다
+  freeTrial?: boolean;
 }
 
 export const ExpressionListItem = ({
   expression,
   onSelect,
   hideStartAction = false,
+  freeTrial = false,
 }: ExpressionListItemProps) => {
   const {
     expressionId,
@@ -31,12 +34,12 @@ export const ExpressionListItem = ({
 
   if (locked) {
     return (
-      <div className="flex items-center gap-3 rounded-2xl bg-secondary/40 px-3.5 py-3.5 opacity-60">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+      <div className="flex items-center gap-3 rounded-2xl bg-secondary/40 px-3.5 py-3.5">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground opacity-60">
           <LockIcon size={15} />
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-base font-bold text-muted-foreground">
+        <div className="min-w-0 flex-1 opacity-60">
+          <p className="truncate text-base font-bold text-muted-foreground">
             {baseExpressionMeaningText}
           </p>
           {/* 영어 표현은 잠금 상태에서도 미리 보여준다 */}
@@ -74,6 +77,7 @@ export const ExpressionListItem = ({
   return (
     <button
       onClick={() => onSelect(expressionId)}
+      data-free-expression={freeTrial ? '' : undefined}
       className="flex w-full items-center gap-3 rounded-2xl border-2 border-primary bg-primary/5 px-3 py-4 text-left shadow-[0_3px_0_var(--primary)] transition-[translate,box-shadow] duration-75 active:translate-y-[3px] active:shadow-none"
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
@@ -89,8 +93,9 @@ export const ExpressionListItem = ({
         </p>
       </div>
       {/* 글자 라벨 대신 왼쪽을 가리키는 손가락 — '다음은 이거'를 직관적으로 (스크린리더용 텍스트는 따로).
+          무료로 열린 표현은 프리뷰 스포트라이트가 이미 가리키니 손가락을 겹치지 않는다.
           좌우로 콕콕 찌르듯 움직여 시선을 끈다 */}
-      {!hideStartAction && (
+      {!hideStartAction && !freeTrial && (
         <>
           <motion.span
             className="shrink-0 text-2xl"

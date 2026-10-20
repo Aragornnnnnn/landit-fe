@@ -406,34 +406,161 @@ describe('PaywallScreen', () => {
 });
 
 describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
-  it('머리 제목은 「프리미엄에서만 이렇게 배워요」다', () => {
+  const passPackages = (price: number) => ({
+    pass: { packageId: 'pass_100d', price, currency: 'KRW' },
+  });
+  const goCheckout = () =>
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+  beforeEach(() => {
+    mocks.packages = passPackages(50_000);
+  });
+
+  it('처음엔 혜택 화면이다 — 매일 오는 시나리오에 프리미엄 혜택 4가지를 더해 보여 준다', () => {
     render(<PaywallScreen rewardChallenge />);
 
     expect(
-      screen.getByRole('heading', { name: /프리미엄에서만/ }),
+      screen.getByRole('heading', { name: /매일 도착하는 시나리오/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('프리미엄만 누리는 혜택 4가지'),
     ).toBeInTheDocument();
   });
 
-  it('고를 플랜 없이 100일 이용권 요약 한 장을 보여 준다', () => {
+  it('상세 피드백 혜택은 다섯 장으로 넘겨 본다 — 잘한 문장·어색한 문장·총평·나아진 점·배운 표현 사용', () => {
+    render(<PaywallScreen rewardChallenge />);
+
+    for (const title of [
+      '잘한 문장은 왜 좋은지',
+      '어색한 문장은 이렇게',
+      '대화 전체를 한눈에',
+      '지난번보다 나아진 점',
+      '배운 표현을 실제로 썼는지',
+    ]) {
+      expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
+    }
+  });
+
+  it('환급 화면에서 결제 금액 안내부터 열라고 오면 혜택 화면을 건너뛰고 노출을 한 번 찍는다', () => {
+    render(<PaywallScreen rewardChallenge startStep="checkout" />);
+
+    expect(screen.getByText('100일 프리미엄 이용권')).toBeInTheDocument();
+    expect(
+      mocks.track.mock.calls.filter(
+        ([name]) => name === 'Paywall Checkout Viewed',
+      ),
+    ).toEqual([
+      ['Paywall Checkout Viewed', { plan: 'pass', entry_step: 'checkout' }],
+    ]);
+  });
+
+  it('혜택 화면의 CTA는 결제하지 않고 결제 금액 안내로 넘어간다', () => {
+    render(<PaywallScreen rewardChallenge />);
+
+    goCheckout();
+
+    expect(mocks.purchase).not.toHaveBeenCalled();
+    expect(screen.getByText('100일 프리미엄 이용권')).toBeInTheDocument();
+  });
+
+  it('결제 금액 안내는 버튼 밑이 아니라 페이지 맨 아래에 이용약관과 개인정보 처리방침을 둔다', () => {
+    render(<PaywallScreen rewardChallenge />);
+    goCheckout();
+
+    const scrollRoot = document.querySelector('[data-scroll-root]')!;
+    for (const name of ['이용약관', '개인정보 처리방침']) {
+      expect(scrollRoot.contains(screen.getByRole('link', { name }))).toBe(
+        true,
+      );
+    }
+  });
+
+  it('결제 금액 안내가 뜨면 노출 이벤트를 찍는다 — 혜택 화면 → 금액 안내 → 결제 단계별 이탈을 본다', () => {
+    render(<PaywallScreen rewardChallenge />);
+
+    goCheckout();
+
+    expect(mocks.track).toHaveBeenCalledWith('Paywall Checkout Viewed', {
+      plan: 'pass',
+      entry_step: 'benefits',
+    });
+  });
+
+  it('결제 금액 안내는 환급을 이벤트로 따로 내세우지 않고 결제한 금액을 돌려받는다고 한 줄로만 말한다', () => {
+    render(<PaywallScreen rewardChallenge />);
+    goCheckout();
+
+    expect(screen.queryByText(/환급 이벤트/)).toBeNull();
+    expect(
+      screen.getByText('꾸준히 하면 결제한 50,000원도 돌려받아요'),
+    ).toBeInTheDocument();
+  });
+
+  it('결제 금액 안내에서도 구매 복원을 할 수 있다 — 스토어 심사가 결제 화면에서 찾는다', () => {
+    render(<PaywallScreen rewardChallenge />);
+    goCheckout();
+
+    fireEvent.click(screen.getByRole('button', { name: '구매 복원' }));
+
+    expect(mocks.restore).toHaveBeenCalled();
+  });
+
+  it('결제 금액 안내는 정가를 지우고 신규 회원 특가로 반값을 보여 준다', () => {
+    render(<PaywallScreen rewardChallenge />);
+    goCheckout();
+
+    expect(screen.getByText('100,000원')).toBeInTheDocument();
+    expect(screen.getByText('50%')).toBeInTheDocument();
+    expect(screen.getByText('50,000원')).toBeInTheDocument();
+    expect(screen.getByText('신규 회원 특가')).toBeInTheDocument();
+  });
+
+  it('결제 금액 안내의 CTA를 누르면 결제 시작 이벤트를 찍고 100일 이용권으로 결제를 요청한다', () => {
+    render(<PaywallScreen rewardChallenge />);
+    goCheckout();
+
+    fireEvent.click(screen.getByRole('button', { name: '프리미엄 시작하기' }));
+
+    expect(mocks.track).toHaveBeenCalledWith('Purchase Started', {
+      plan: 'pass',
+    });
+    expect(mocks.purchase).toHaveBeenCalledWith('pass');
+  });
+
+  it('결제 금액 안내에서 뒤로 가면 혜택 화면으로 돌아온다', () => {
+    render(<PaywallScreen rewardChallenge />);
+    goCheckout();
+
+    fireEvent.click(screen.getByRole('button', { name: '뒤로' }));
+
+    expect(
+      screen.getByRole('heading', { name: /매일 도착하는 시나리오/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('결제가 진행 중이면 결제 금액 안내의 CTA가 잠긴다', () => {
+    mocks.busy = true;
+    render(<PaywallScreen rewardChallenge />);
+    goCheckout();
+
+    expect(
+      screen.getByRole('button', { name: /프리미엄 시작하기/ }),
+    ).toBeDisabled();
+  });
+
+  it('셸이 준 이용권 가격으로 금액·정가·하루 몫을 그린다 — 가격만 다른 이용권을 올려도 화면이 따라온다', () => {
+    mocks.packages = passPackages(30_000);
     render(<PaywallScreen rewardChallenge />);
 
     expect(
-      screen.getByRole('heading', { name: /모은 만큼 돌려받아요/ }),
+      screen.getByText('시나리오 끝낼 때마다 300원 적립'),
     ).toBeInTheDocument();
-    expect(screen.getByText('프리미엄 100일')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /플랜/ })).toBeNull();
-  });
 
-  it('버튼 밑에 정기 결제 안내가 없다 — 한 번 내는 단건 결제다', () => {
-    render(<PaywallScreen rewardChallenge />);
-
-    expect(screen.queryByText(/정기 결제/)).toBeNull();
-  });
-
-  it('시리즈는 시나리오가 표현 학습보다 먼저다 — 환급은 오늘의 시나리오로 쌓인다', () => {
-    render(<PaywallScreen rewardChallenge />);
-
-    expect(seriesOrder()).toEqual(['시나리오', '표현']);
+    goCheckout();
+    expect(screen.getByText('60,000원')).toBeInTheDocument();
+    expect(
+      screen.getByText('꾸준히 하면 결제한 30,000원도 돌려받아요'),
+    ).toBeInTheDocument();
   });
 
   it('구매 복원은 맨 위에만 있다 — 구독이 아니라 아래 링크를 두지 않는다', () => {
@@ -442,6 +569,17 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     expect(screen.getAllByRole('button', { name: '구매 복원' })).toHaveLength(
       1,
     );
+  });
+
+  it('혜택 화면을 스크롤해 내려가면 닫기 버튼이 따로 떠 있다 — 긴 혜택 화면 어디서든 닫을 수 있다', () => {
+    const { container } = render(<PaywallScreen rewardChallenge />);
+    const root = container.querySelector('[data-scroll-root]')!;
+
+    expect(screen.getAllByRole('button', { name: '닫기' })).toHaveLength(1);
+    root.scrollTop = 600;
+    fireEvent.scroll(root);
+
+    expect(screen.getAllByRole('button', { name: '닫기' })).toHaveLength(2);
   });
 
   it('닫아도 이탈 할인을 받지 않고 바로 홈으로 간다 — 환급 페이월엔 연간 할인 시트가 없다', async () => {
@@ -453,28 +591,5 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
       expect(mocks.replace).toHaveBeenCalledWith('/scenario'),
     );
     expect(mocks.dismiss).not.toHaveBeenCalled();
-  });
-
-  it('CTA를 누르면 100일 이용권으로 결제를 요청한다', () => {
-    render(<PaywallScreen rewardChallenge />);
-
-    fireEvent.click(
-      screen.getByRole('button', { name: '5만 원 걸고 도전하기' }),
-    );
-
-    expect(mocks.purchase).toHaveBeenCalledWith('pass');
-  });
-
-  it('셸이 준 이용권 가격으로 금액과 하루 몫을 그린다 — 가격만 다른 이용권을 올려도 화면이 따라온다', () => {
-    mocks.packages = {
-      pass: { packageId: 'pass_100d', price: 30_000, currency: 'KRW' },
-    };
-    render(<PaywallScreen rewardChallenge />);
-
-    expect(screen.getByText('− 30,000원')).toBeInTheDocument();
-    expect(screen.getByText('(100일 × 300원)')).toBeInTheDocument();
-    expect(
-      screen.getByText('시나리오 1개 끝낼 때마다 300원 적립'),
-    ).toBeInTheDocument();
   });
 });

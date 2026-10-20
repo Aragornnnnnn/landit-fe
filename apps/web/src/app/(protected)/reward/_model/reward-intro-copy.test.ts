@@ -8,32 +8,36 @@ import { missedCopyOf, rewardIntroCopyOf } from './reward-intro-copy';
 const offer = rewardOfferOf(50_000);
 
 describe('rewardIntroCopyOf', () => {
-  it('오늘의 시나리오를 아직 안 했으면 100일의 최대 금액을 크게 말하고 아래 한 줄은 규칙에 맡긴다', () => {
+  it('챌린지가 아니라 프리미엄 혜택으로 말한다 — 프리미엄이 사실상 0원이고, 결제한 금액이 입금된다', () => {
     expect(rewardIntroCopyOf(offer, false)).toEqual({
-      eyebrow: '100일 동안 매일 대화하면',
-      amount: '최대 50,000원',
+      title: { lead: '프리미엄이 사실상 ', strong: '0원!', tail: '' },
+      subtitle: '환급 혜택으로 결제한 금액을 다 돌려받으세요',
+      deposit: '50,000원 입금',
       caption: null,
-      cta: '100일 환급 챌린지 시작하기',
+      cta: '프리미엄 시작하고 환급받기',
     });
   });
 
-  it('오늘의 시나리오를 이미 했어도 최대 금액을 크게 말하고 지금 시작하면 오늘 몫이 바로 적립된다고 덧붙인다', () => {
-    expect(rewardIntroCopyOf(offer, true)).toEqual({
-      eyebrow: '100일 동안 매일 대화하면',
-      amount: '최대 50,000원',
-      caption: {
-        lead: '지금 시작하면 바로 ',
-        strong: '500원',
-        tail: '이 쌓여요',
-      },
-      cta: '100일 환급 챌린지 시작하기',
+  it('오늘의 시나리오를 이미 했으면 지금 시작하면 오늘 몫이 바로 쌓인다고 덧붙인다', () => {
+    expect(rewardIntroCopyOf(offer, true).caption).toEqual({
+      lead: '지금 시작하면 오늘 몫 ',
+      strong: '500원',
+      tail: '이 바로 쌓여요',
     });
   });
 
-  it('가격이 다른 이용권이면 금액이 따라 바뀐다', () => {
-    expect(rewardIntroCopyOf(rewardOfferOf(30_000), false).amount).toBe(
-      '최대 30,000원',
+  it('가격이 다른 이용권이면 입금 금액이 따라 바뀐다', () => {
+    expect(rewardIntroCopyOf(rewardOfferOf(30_000), false).deposit).toBe(
+      '30,000원 입금',
     );
+  });
+
+  it('어느 문구에도 「챌린지」가 없다', () => {
+    for (const talked of [false, true]) {
+      expect(JSON.stringify(rewardIntroCopyOf(offer, talked))).not.toContain(
+        '챌린지',
+      );
+    }
   });
 });
 
@@ -45,23 +49,32 @@ describe('missedCopyOf', () => {
     today: '2026-10-15',
   };
 
-  it('놓친 날수와 금액을 말하고, 오늘 아직이면 챌린지를 시작해 첫 몫을 받으라고 권한다', () => {
+  it('받을 수 있었던 금액을 흐리게 말하고, 오늘 아직이면 프리미엄으로 오늘부터 쌓자고 권한다', () => {
     expect(missedCopyOf({ ...missed, talkedToday: false })).toEqual({
-      eyebrow: '32일 동안 놓친 환급액',
+      eyebrow: '지난 32일 동안 받을 수 있었던 금액',
       amount: '16,000원',
       box: {
-        lead: '챌린지를 시작하고 첫 ',
+        lead: '프리미엄을 시작하면\n오늘부터 ',
         strong: '500원',
-        tail: '을 받아봐요',
+        tail: '씩 쌓여요',
       },
+      note: '꾸준히 하면 결제한 금액을 다 돌려받아요',
     });
   });
 
-  it('오늘 했으면 지금 시작해 첫 몫을 받으라고 권한다', () => {
+  it('오늘 했으면 지금 시작하면 오늘 몫이 바로 쌓인다고 권한다', () => {
     expect(missedCopyOf({ ...missed, talkedToday: true }).box).toEqual({
-      lead: '지금 시작하면 첫 ',
+      lead: '지금 프리미엄을 시작하면\n오늘 몫 ',
       strong: '500원',
-      tail: '이 쌓여요',
+      tail: '이 바로 쌓여요',
     });
+  });
+
+  it('어느 문구에도 「챌린지」가 없다', () => {
+    for (const talkedToday of [false, true]) {
+      expect(
+        JSON.stringify(missedCopyOf({ ...missed, talkedToday })),
+      ).not.toContain('챌린지');
+    }
   });
 });

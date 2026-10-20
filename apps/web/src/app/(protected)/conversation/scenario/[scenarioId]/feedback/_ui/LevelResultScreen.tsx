@@ -22,12 +22,15 @@ interface LevelResultScreenProps {
   /** isUsableAssessment를 통과한 결과만 — 여기서 다시 검사하지 않는다 */
   assessment: UsableAssessment;
   onContinue: () => void;
+  /** 프리미엄 프리뷰로 홈에 갈 때는 학습지 대신 공부 시작을 권한다 */
+  ctaLabel?: string;
 }
 
 export const LevelResultScreen = ({
   scenarioId,
   assessment,
   onContinue,
+  ctaLabel = '나에게 맞는 학습지 받기',
 }: LevelResultScreenProps) => {
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
   const result = toLevelResult(assessment);
@@ -84,7 +87,7 @@ export const LevelResultScreen = ({
       </section>
 
       <div className="pt-4 pb-[max(var(--safe-area-inset-bottom),24px)]">
-        <Button onClick={onContinue}>나에게 맞는 학습지 받기</Button>
+        <Button onClick={onContinue}>{ctaLabel}</Button>
       </div>
     </main>
   );
