@@ -54,9 +54,9 @@ const sentencesOf = (dailyWon: number) =>
     {
       image: '/images/character/landy-point.webp',
       parts: [
-        ['프리미엄의 또 다른 혜택!\n방금 대화로 만든 '],
+        ['프리미엄의 또 다른 혜택!\n방금 대화로 만든 첫 '],
         ['맞춤 표현', true],
-        ['을\n하나 무료로 열어 드릴게요'],
+        ['을\n무료로 열어 드릴게요'],
       ],
     },
   ] satisfies { image: string; parts: Part[] }[];
