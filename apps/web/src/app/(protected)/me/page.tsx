@@ -28,6 +28,7 @@ import { Emoji } from '@/shared/ui/emoji';
 import { clearAccountLocalState } from './_model/account-local-state';
 import { AccentMenuEntry } from './_ui/AccentMenuEntry';
 import { AlarmMenuEntry } from './_ui/AlarmMenuEntry';
+import { AppVersionFooter } from './_ui/AppVersionFooter';
 import { DeveloperMenuSection } from './_ui/DeveloperMenuSection';
 import { HapticMenuEntry } from './_ui/HapticMenuEntry';
 import { MenuButton, MenuLink, MenuSection } from './_ui/Menu';
@@ -190,6 +191,7 @@ export default function MyPage() {
           </MenuSection>
 
           <DeveloperMenuSection />
+          <AppVersionFooter />
         </div>
       </div>
 
