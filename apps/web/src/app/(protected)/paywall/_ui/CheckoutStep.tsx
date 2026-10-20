@@ -13,7 +13,7 @@ import {
 import { PAYWALL_HERO } from '@/features/subscription/ui/paywall-hero-image';
 import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
 import { BenefitComparison } from '@/features/subscription/ui/product/BenefitComparison';
-import { ChevronLeftIcon } from '@/shared/ui/Icons';
+import { ChevronLeftIcon, CloseIcon } from '@/shared/ui/Icons';
 
 import { rewardBenefitsOf, type RewardPlan } from '../_model/paywall-content';
 
@@ -61,12 +61,15 @@ const PassCard = ({ plan }: { plan: RewardPlan }) => {
 
 export const CheckoutStep = ({
   plan,
-  onBack,
+  exit,
+  onExit,
   onRestore,
   restoreDisabled,
 }: {
   plan: RewardPlan;
-  onBack: () => void;
+  // 왼쪽 위 버튼 — 혜택 화면에서 넘어왔으면 뒤로, 여기서부터 열었으면 닫기
+  exit: 'back' | 'close';
+  onExit: () => void;
   onRestore: () => void;
   restoreDisabled: boolean;
 }) => (
@@ -75,11 +78,15 @@ export const CheckoutStep = ({
       <div className="flex h-10 items-center justify-between pr-5 pl-2">
         <button
           type="button"
-          onClick={onBack}
-          aria-label="뒤로"
+          onClick={onExit}
+          aria-label={exit === 'back' ? '뒤로' : '닫기'}
           className="flex size-9 items-center justify-center rounded-full text-foreground active:bg-black/5"
         >
-          <ChevronLeftIcon size={26} />
+          {exit === 'back' ? (
+            <ChevronLeftIcon size={26} />
+          ) : (
+            <CloseIcon size={24} />
+          )}
         </button>
         {/* 스토어 심사가 요구하는 구매 복원 진입점 — 결제가 일어나는 화면에도 둔다 */}
         <button

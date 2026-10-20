@@ -48,12 +48,21 @@ afterEach(() => {
   mocks.track.mockClear();
 });
 
-const renderPaywall = (preview?: boolean) =>
+const renderPaywall = ({
+  preview,
+  onClose = vi.fn(),
+  startStep,
+}: {
+  preview?: boolean;
+  onClose?: () => void;
+  startStep?: 'benefits' | 'checkout';
+} = {}) =>
   render(
     <RewardPaywall
       plan={buildRewardPlan(50_000)}
+      startStep={startStep}
       busy={false}
-      onClose={vi.fn()}
+      onClose={onClose}
       onRestore={vi.fn()}
       onPurchase={vi.fn()}
       preview={preview}
@@ -72,12 +81,33 @@ describe('RewardPaywall', () => {
   });
 
   it('미리보기면 결제 금액 안내로 넘어가도 노출 이벤트를 찍지 않는다', () => {
-    renderPaywall(true);
+    renderPaywall({ preview: true });
 
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
     expect(screen.getByText('100일 프리미엄 이용권')).toBeInTheDocument();
     expect(mocks.track).not.toHaveBeenCalled();
+  });
+
+  it('혜택 화면에서 넘어온 결제 금액 안내는 뒤로 가면 혜택 화면으로 돌아간다', () => {
+    const onClose = vi.fn();
+    renderPaywall({ onClose });
+
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+    fireEvent.click(screen.getByRole('button', { name: '뒤로' }));
+
+    expect(screen.getByRole('button', { name: '다음' })).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('결제 금액 안내부터 열었으면 닫기로 바로 닫는다 — 보지 않은 혜택 화면으로 되돌아가지 않는다', () => {
+    const onClose = vi.fn();
+    renderPaywall({ onClose, startStep: 'checkout' });
+
+    expect(screen.queryByRole('button', { name: '뒤로' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
 

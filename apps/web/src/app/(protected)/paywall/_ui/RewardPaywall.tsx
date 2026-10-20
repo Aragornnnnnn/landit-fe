@@ -112,7 +112,9 @@ export const RewardPaywall = ({
         ) : (
           <CheckoutStep
             plan={plan}
-            onBack={() => goTo('benefits')}
+            // 혜택 화면을 거치지 않고 열었으면 되돌아갈 곳이 없다 — 바로 닫는다
+            exit={startStep === 'checkout' ? 'close' : 'back'}
+            onExit={startStep === 'checkout' ? onClose : () => goTo('benefits')}
             onRestore={onRestore}
             restoreDisabled={busy}
           />
