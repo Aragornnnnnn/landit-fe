@@ -11,15 +11,15 @@ import {
 } from '../_model/paywall-content';
 import { CoinStackCard } from './CoinStackCard';
 import { ExampleDemo } from './ExampleDemo';
+import { PronunciationDemo } from './PronunciationDemo';
+import { QuizDemo } from './QuizDemo';
 import {
   BetterTurnDemo,
   GoodTurnDemo,
   GrowthDemo,
   ReuseDemo,
   SummaryDemo,
-} from './FeedbackDemo';
-import { PronunciationDemo } from './PronunciationDemo';
-import { QuizDemo } from './QuizDemo';
+} from './RewardFeedbackDemo';
 import { ScenarioWall } from './ScenarioWall';
 import { SERIES_SCREEN_WIDTH, SeriesCarousel } from './SeriesCarousel';
 import { SmallTalkDemo } from './SmallTalkDemo';

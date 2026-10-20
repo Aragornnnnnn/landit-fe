@@ -178,8 +178,8 @@ const ReuseSection = ({
   );
 };
 
-// 총평 화면의 카드 껍데기 — 성장·배운 표현 카드와 같은 모양
-const SummaryCard = ({
+// 총평 화면의 카드 껍데기 — 성장·배운 표현 카드와 같은 모양. 환급 페이월의 피드백 미리보기도 쓴다
+export const SummaryCard = ({
   title,
   children,
 }: {
