@@ -461,6 +461,18 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     expect(screen.getByText('100일 프리미엄 이용권')).toBeInTheDocument();
   });
 
+  it('결제 금액 안내는 버튼 밑이 아니라 페이지 맨 아래에 이용약관과 개인정보 처리방침을 둔다', () => {
+    render(<PaywallScreen rewardChallenge />);
+    goCheckout();
+
+    const scrollRoot = document.querySelector('[data-scroll-root]')!;
+    for (const name of ['이용약관', '개인정보 처리방침']) {
+      expect(scrollRoot.contains(screen.getByRole('link', { name }))).toBe(
+        true,
+      );
+    }
+  });
+
   it('결제 금액 안내가 뜨면 노출 이벤트를 찍는다 — 혜택 화면 → 금액 안내 → 결제 단계별 이탈을 본다', () => {
     render(<PaywallScreen rewardChallenge />);
 

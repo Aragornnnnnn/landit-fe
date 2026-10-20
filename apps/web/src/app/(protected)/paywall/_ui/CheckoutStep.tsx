@@ -1,6 +1,8 @@
 // 환급 페이월 2단계 — 결제 금액 안내. 예전 한 페이지 페이월처럼 로고와 캐릭터, 무료 vs 프리미엄 표, 고를 것 없는 100일 이용권 카드 한 장을
 // 한 화면에 담는다. 혜택 설명은 앞 화면에서 했으니 여기선 무엇을 얼마에 사는지만 또렷하게. 피그마 「결제 금액 안내 v4」(3563:322)
+import type { CSSProperties } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import { Coin } from '@/features/reward/ui/common/Coin';
 import { formatWon } from '@/features/subscription/lib/won';
@@ -14,6 +16,14 @@ import { BenefitComparison } from '@/features/subscription/ui/product/BenefitCom
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import { rewardBenefitsOf, type RewardPlan } from '../_model/paywall-content';
+
+/** 캐릭터 그림 높이 — 기본(그림 너비 257px)과, 긴 화면에서 키울 수 있는 끝 */
+const HERO_MIN_PX = 131;
+const HERO_MAX_PX = 180;
+/** 그림 밖 내용 높이 — 위아래 안전 영역 기본값(8px·12px)을 뺀 나머지 전부(헤더·로고·표·이용권 카드·약관·버튼 자리) */
+const HERO_REST_PX = 614;
+/** 계산이 조금 어긋나도 스크롤이 생기지 않게 남기는 여유 */
+const HERO_SPARE_PX = 16;
 
 const PassCard = ({ plan }: { plan: RewardPlan }) => {
   const listPrice = listPriceOf(plan.price);
@@ -86,13 +96,22 @@ export const CheckoutStep = ({
       <div className="flex justify-center pt-1.5 short:[zoom:0.8]">
         <PremiumBadge />
       </div>
-      {/* 캐릭터 단체샷 — 자르지 않고 줄여서, 팔을 기댄 선이 아래 표 카드 윗선에 오게 한다. 낮은 화면은 같은 비율로 80% */}
-      <div className="relative mt-3 h-[131px] overflow-hidden short:mt-2 short:h-[104px]">
+      {/* 캐릭터 단체샷 — 자르지 않고 줄여서, 팔을 기댄 선이 아래 표 카드 윗선에 오게 한다. 낮은 화면은 같은 비율로 80%.
+          긴 화면은 남는 높이만큼 키운다 — 그림 밖 내용이 HERO_REST_PX라 그만큼 빼고, 스크롤이 생기지 않게 16px 여유를 둔다.
+          너비가 화면을 넘지 않게 180px에서 멈춘다(그때 너비 353px) */}
+      <div
+        className="relative mt-3 h-(--hero-h) overflow-hidden short:mt-2 short:h-[104px]"
+        style={
+          {
+            '--hero-h': `clamp(${HERO_MIN_PX}px, calc(100dvh - ${HERO_REST_PX + HERO_SPARE_PX}px - max(var(--safe-area-inset-top), 8px) - max(var(--safe-area-inset-bottom), 12px)), ${HERO_MAX_PX}px)`,
+          } as CSSProperties
+        }
+      >
         <Image
           {...PAYWALL_HERO}
           alt=""
           priority
-          className="absolute top-0 left-1/2 w-[257px] max-w-none -translate-x-1/2 short:w-[204px]"
+          className="absolute top-0 left-1/2 w-[calc(var(--hero-h)*257/131)] max-w-none -translate-x-1/2 short:w-[204px]"
         />
       </div>
     </section>
@@ -108,5 +127,10 @@ export const CheckoutStep = ({
         <PassCard plan={plan} />
       </div>
     </div>
+    {/* 약관은 버튼 밑이 아니라 페이지 맨 아래에 — 결제 버튼 둘레를 가볍게 두고, 내려 보면 찾을 수 있게 */}
+    <nav className="mt-6 flex justify-center gap-3 text-[11px] leading-[1.3] font-medium text-muted-foreground underline">
+      <Link href="/terms">이용약관</Link>
+      <Link href="/privacy">개인정보 처리방침</Link>
+    </nav>
   </div>
 );
