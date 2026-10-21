@@ -71,6 +71,12 @@ describe('nextConversationState', () => {
     ).toEqual(state('USER_READY'));
   });
 
+  it('실패한 답변을 다시 보내면 녹음 없이 바로 응답 대기로 넘어간다', () => {
+    expect(
+      nextConversationState(state('USER_READY'), 'RESEND_STARTED'),
+    ).toEqual(state('AI_THINKING'));
+  });
+
   it('속마음이 끝나면 다음 AI 발화로 넘어간다 — 서버가 종료 인사까지 항상 보내주므로 다음 발화는 늘 있다', () => {
     expect(
       nextConversationState(state('AI_INNER_THOUGHT', 0), 'INNER_THOUGHT_DONE'),

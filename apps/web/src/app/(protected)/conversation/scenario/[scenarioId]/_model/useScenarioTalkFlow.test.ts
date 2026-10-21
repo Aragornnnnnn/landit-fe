@@ -16,6 +16,7 @@ import {
 import { shouldAskSatisfaction } from '@/features/satisfaction/model/prompt-record';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
+import { ApiError } from '@/shared/api/api-error';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 import * as scenarioTalkApi from '../_api/scenario-session';
@@ -428,41 +429,115 @@ describe('useScenarioTalkFlow', async () => {
     expect(result.current.turn.innerThoughtType).toBe('GOOD');
   });
 
-  it('제출이 실패하면 마이크 대기로 되돌아간다', async () => {
+  it('응답이 끊기면 같은 답변을 같은 식별자로 자동으로 다시 보내 대화를 이어 간다', async () => {
+    // Given 첫 제출이 응답 없이 끊기고, 다시 보내면 받는 상황
     const { result } = await renderUserFirst();
-    submitScenarioTalkMessage.mockRejectedValue(new Error('network'));
+    submitScenarioTalkMessage
+      .mockRejectedValueOnce(new TypeError('Load failed'))
+      .mockResolvedValueOnce(submitResponse());
 
+    // When 답변을 보내고 재전송 간격만큼 기다리면
     await speakAndSubmit(result, 'Hello!');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
 
-    expect(result.current.phase).toBe('USER_READY');
+    // Then 같은 답변이 한 번 더 나가고 속마음으로 이어진다. 실패로 보지 않는다
+    const [first, resent] = submitScenarioTalkMessage.mock.calls;
+    expect(resent).toEqual(first);
+    expect(first[3]).toEqual(expect.any(String));
+    expect(result.current.phase).toBe('AI_INNER_THOUGHT');
+    expect(monitoringMock.reportError).not.toHaveBeenCalled();
   });
 
-  it('제출 실패를 Sentry로 보고한다 — 대화 턴이 유실되는 사고라 바로 알아야 한다', async () => {
+  it('다시 보내도 안 되면 방금 답변을 남긴 채 다시 보내기를 띄운다', async () => {
     const { result } = await renderUserFirst();
-    const error = new Error('network');
+    submitScenarioTalkMessage.mockRejectedValue(new TypeError('Load failed'));
+
+    await speakAndSubmit(result, 'Hello!');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000);
+    });
+
+    expect(result.current.phase).toBe('USER_READY');
+    expect(result.current.resend).toEqual(expect.any(Function));
+    expect(result.current.input.transcript).toBe('Hello!');
+  });
+
+  it('다시 보내기를 띄울 때 한 번만 Sentry로 보고한다', async () => {
+    const { result } = await renderUserFirst();
+    const error = new TypeError('Load failed');
     submitScenarioTalkMessage.mockRejectedValue(error);
 
     await speakAndSubmit(result, 'Hello!');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000);
+    });
 
+    expect(monitoringMock.reportError).toHaveBeenCalledTimes(1);
     expect(monitoringMock.reportError).toHaveBeenCalledWith(error);
   });
 
-  it('응답이 끊겨 같은 턴을 다시 보내면 처음과 같은 발화 식별자를 싣는다', async () => {
-    // Given 첫 제출이 응답 없이 끊긴 상태
+  it('서버 에러면 기다리지 않고 바로 다시 보내기를 띄운다', async () => {
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockRejectedValue(
+      new ApiError('서버 오류', 500, '/api/v1/sessions/1/messages'),
+    );
+
+    await speakAndSubmit(result, 'Hello!');
+
+    expect(submitScenarioTalkMessage).toHaveBeenCalledTimes(1);
+    expect(result.current.resend).toEqual(expect.any(Function));
+  });
+
+  it('전달되지 못한 턴에서는 새로 말할 수 없다 — 서버가 다른 문장을 거절한다', async () => {
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockRejectedValue(
+      new ApiError('서버 오류', 500, '/api/v1/sessions/1/messages'),
+    );
+    await speakAndSubmit(result, 'Hello!');
+    sttMock.start.mockClear();
+
+    act(() => result.current.input.pressMic());
+
+    expect(sttMock.start).not.toHaveBeenCalled();
+    expect(result.current.phase).toBe('USER_READY');
+  });
+
+  it('다시 보내기를 누르면 같은 답변을 같은 식별자로 보내 이어 간다', async () => {
+    // Given 다시 보내기가 뜬 상태
     const { result } = await renderUserFirst();
     submitScenarioTalkMessage.mockRejectedValueOnce(
-      new TypeError('Load failed'),
+      new ApiError('서버 오류', 500, '/api/v1/sessions/1/messages'),
     );
     await speakAndSubmit(result, 'Hello!');
 
-    // When 같은 턴을 다시 보내면
+    // When 다시 보내기를 누르면
     submitScenarioTalkMessage.mockResolvedValueOnce(submitResponse());
+    await act(async () => {
+      result.current.resend?.();
+    });
+
+    // Then 처음과 똑같은 요청이 나가고 속마음으로 이어지며, 다시 보내기는 사라진다
+    const [first, resent] = submitScenarioTalkMessage.mock.calls;
+    expect(resent).toEqual(first);
+    expect(result.current.phase).toBe('AI_INNER_THOUGHT');
+    expect(result.current.resend).toBeUndefined();
+  });
+
+  it('다시 보내는 사이 대화를 나가면 더 보내지 않고 실패도 알리지 않는다', async () => {
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockRejectedValue(new TypeError('Load failed'));
+    vi.mocked(sessionApi.endSession).mockResolvedValue(undefined);
     await speakAndSubmit(result, 'Hello!');
 
-    // Then 두 요청의 식별자가 같다
-    const [first, retry] = submitScenarioTalkMessage.mock.calls;
-    expect(first[3]).toEqual(expect.any(String));
-    expect(retry[3]).toBe(first[3]);
+    act(() => result.current.leave());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000);
+    });
+
+    expect(submitScenarioTalkMessage).toHaveBeenCalledTimes(1);
+    expect(monitoringMock.reportError).not.toHaveBeenCalled();
   });
 
   it('다음 턴의 발화는 새 식별자를 싣는다', async () => {
