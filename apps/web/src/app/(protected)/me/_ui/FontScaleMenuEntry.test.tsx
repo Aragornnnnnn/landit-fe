@@ -1,4 +1,4 @@
-// FontScaleMenuEntry — "글자 크기" 행을 눌러 연 시트가 저장된 단계를 따르고, 고르면 바로 적용하며 계측을 남긴다. 구 셸에서는 숨긴다
+// FontScaleMenuEntry — "글자 크기" 행을 눌러 연 시트의 바가 저장된 단계를 따르고, 옮기면 바로 적용하며 계측을 남긴다. 구 셸에서는 숨긴다
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -13,6 +13,9 @@ vi.mock('motion/react', () => import('@/shared/motion/test-double'));
 
 const openSheet = () =>
   fireEvent.click(screen.getByRole('button', { name: '글자 크기' }));
+const slider = () => screen.getByRole('slider', { name: '글자 크기' });
+const moveTo = (step: number) =>
+  fireEvent.change(slider(), { target: { value: String(step) } });
 
 beforeEach(() => {
   localStorage.clear();
@@ -25,47 +28,31 @@ afterEach(() => {
 });
 
 describe('FontScaleMenuEntry', () => {
-  it('아무것도 고른 적 없으면 보통이 골라진 채로 열린다', () => {
+  it('아무것도 고른 적 없으면 바가 보통에 놓인 채로 열린다', () => {
     render(<FontScaleMenuEntry />);
 
     openSheet();
 
-    expect(screen.getByRole('radio', { name: '보통' })).toHaveAttribute(
-      'aria-checked',
-      'true',
-    );
+    expect(slider()).toHaveValue('2');
+    expect(slider()).toHaveAttribute('aria-valuetext', '보통');
+    expect(screen.getByText('보통')).toBeInTheDocument();
   });
 
-  it('칸마다 단계 이름이 붙어 있다', () => {
-    render(<FontScaleMenuEntry />);
-
-    openSheet();
-
-    expect(
-      screen
-        .getAllByRole('radio')
-        .map((radio) => radio.getAttribute('aria-label')),
-    ).toEqual(['가장 작게', '작게', '보통', '크게', '가장 크게']);
-    expect(screen.getByText('가장 크게')).toBeInTheDocument();
-  });
-
-  it('이미 고른 기기에서는 그 단계가 골라진 채로 열린다', () => {
+  it('이미 고른 기기에서는 그 단계에 놓인 채로 열린다', () => {
     setFontScale(1.3);
     render(<FontScaleMenuEntry />);
 
     openSheet();
 
-    expect(screen.getByRole('radio', { name: '가장 크게' })).toHaveAttribute(
-      'aria-checked',
-      'true',
-    );
+    expect(slider()).toHaveValue('4');
+    expect(screen.getByText('가장 크게')).toBeInTheDocument();
   });
 
-  it('단계를 고르면 바로 적용되고 계측에 남는다', () => {
+  it('바를 옮기면 바로 적용되고 계측에 남는다', () => {
     render(<FontScaleMenuEntry />);
     openSheet();
 
-    fireEvent.click(screen.getByRole('radio', { name: '작게' }));
+    moveTo(1);
 
     expect(getFontScale()).toBe(0.92);
     expect(
@@ -74,14 +61,15 @@ describe('FontScaleMenuEntry', () => {
     expect(mocks.track).toHaveBeenCalledWith('Font Scale Changed', {
       scale: 0.92,
     });
+    expect(screen.getByText('작게')).toBeInTheDocument();
   });
 
-  it('이미 고른 단계를 다시 누르면 계측하지 않는다', () => {
+  it('같은 단계에 다시 놓으면 계측하지 않는다', () => {
     setFontScale(1.15);
     render(<FontScaleMenuEntry />);
     openSheet();
 
-    fireEvent.click(screen.getByRole('radio', { name: '크게' }));
+    moveTo(3);
 
     expect(mocks.track).not.toHaveBeenCalled();
   });

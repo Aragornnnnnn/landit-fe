@@ -1,6 +1,6 @@
 'use client';
 
-// 마이페이지 "글자 크기" 행 — 눌러 들어간 시트에서 앱 전체 글자 크기를 다섯 단계 중에 고른다. 값은 이 기기의 localStorage에만 산다
+// 마이페이지 "글자 크기" 행 — 눌러 들어간 시트의 바를 옮겨 앱 전체 글자 크기를 다섯 단계 중에 고른다. 값은 이 기기의 localStorage에만 산다
 import { useState, useSyncExternalStore } from 'react';
 import { EVENTS } from '@landit/analytics';
 
@@ -29,14 +29,8 @@ const LABELS: Record<FontScale, string> = {
   1.3: '가장 크게',
 };
 
-// 칸 안 "가"는 배율을 받지 않는 고정 크기로 단계마다 키운다 — 고를 때마다 칸이 커지면 누를 자리가 흔들린다
-const GLYPH_PX: Record<FontScale, number> = {
-  0.85: 13,
-  0.92: 15,
-  1: 17,
-  1.15: 19,
-  1.3: 21,
-};
+// 바 양끝 손잡이 반지름(px) — 눈금이 손잡이 중심과 맞도록 바를 이만큼 안쪽에 그린다
+const THUMB_RADIUS = 14;
 
 export const FontScaleMenuEntry = () => {
   const [open, setOpen] = useState(false);
@@ -53,8 +47,11 @@ export const FontScaleMenuEntry = () => {
 
   if (!available) return null;
 
+  const step = FONT_SCALES.indexOf(scale);
+  const percent = (step / (FONT_SCALES.length - 1)) * 100;
+
   const choose = (next: FontScale) => {
-    // 이미 고른 칸을 다시 눌러도 role="radio" 버튼은 클릭이 들어온다 — 바뀐 게 없으면 계측하지 않는다
+    // 끄는 동안 같은 칸에서도 change가 들어온다 — 바뀐 게 없으면 저장도 계측도 하지 않는다
     if (next === getFontScale()) return;
     setFontScale(next);
     track(EVENTS.FONT_SCALE_CHANGED, { scale: next });
@@ -74,51 +71,62 @@ export const FontScaleMenuEntry = () => {
         // 설명은 두지 않는다 — 고르는 순간 시트 뒤 화면 글자가 바뀌어 그걸로 알 수 있다
         title="글자 크기"
       >
-        {/* 음성 속도 시트와 같은 세그먼트 — 고르면 시트 뒤 화면 글자가 바로 바뀌어 따로 미리보기를 두지 않는다. */}
-        <div
-          role="radiogroup"
-          aria-label="글자 크기"
-          className="mt-5 flex gap-0 rounded-[10px] p-1"
-          style={{ background: '#F2F2F7' }}
-        >
-          {FONT_SCALES.map((option) => {
-            const selected = option === scale;
-            return (
-              <button
-                key={option}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                aria-label={LABELS[option]}
-                onClick={() => choose(option)}
-                className={`flex h-10 flex-1 items-center justify-center rounded-lg transition-colors ${
-                  selected ? 'bg-white font-bold shadow-sm' : 'font-medium'
-                }`}
-                style={{
-                  color: selected ? '#111' : '#6B7280',
-                  fontSize: GLYPH_PX[option],
-                }}
-              >
-                가
-              </button>
-            );
-          })}
+        {/* 휴대폰 설정처럼 「작은 가 — 바 — 큰 가」. 옮기는 순간 시트 뒤 화면 글자가 바뀌어 따로 미리보기를 두지 않는다.
+            바·「가」·이름은 배율을 받지 않는 고정 크기다 — 옮길 때마다 바가 커지면 손가락 아래 자리가 흔들린다 */}
+        <div className="mt-5 flex items-center gap-3.5">
+          <span className="text-[13px] font-medium text-[#6B7280]" aria-hidden>
+            가
+          </span>
+          <div className="relative h-7 flex-1">
+            <div
+              className="absolute inset-y-0"
+              style={{ left: THUMB_RADIUS, right: THUMB_RADIUS }}
+              aria-hidden
+            >
+              <span className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-[#E5E5EA]" />
+              <span
+                className="absolute top-1/2 left-0 h-1 -translate-y-1/2 rounded-full bg-primary transition-[width] duration-150"
+                style={{ width: `${percent}%` }}
+              />
+              {FONT_SCALES.map((option, index) => (
+                <span
+                  key={option}
+                  className={`absolute top-1/2 size-2 -translate-1/2 rounded-full ${
+                    index <= step ? 'bg-primary' : 'bg-[#D1D1D6]'
+                  }`}
+                  style={{
+                    left: `${(index / (FONT_SCALES.length - 1)) * 100}%`,
+                  }}
+                />
+              ))}
+              <span
+                className="absolute top-1/2 size-7 -translate-1/2 rounded-full border-[0.5px] border-[#E5E5EA] bg-white shadow-[0_2px_6px_rgba(0,0,0,0.18)] transition-[left] duration-150"
+                style={{ left: `${percent}%` }}
+              />
+            </div>
+            {/* 끌기·누르기·키보드는 기본 range 입력이 맡는다 — 보이지 않게 위에 깔고 손잡이 폭을 그림과 맞춘다 */}
+            <input
+              type="range"
+              min={0}
+              max={FONT_SCALES.length - 1}
+              step={1}
+              value={step}
+              onChange={(event) =>
+                choose(FONT_SCALES[Number(event.target.value)])
+              }
+              aria-label="글자 크기"
+              aria-valuetext={LABELS[scale]}
+              className="absolute inset-0 m-0 w-full cursor-pointer appearance-none bg-transparent opacity-0 [&::-moz-range-thumb]:size-7 [&::-webkit-slider-thumb]:size-7 [&::-webkit-slider-thumb]:appearance-none"
+            />
+          </div>
+          <span className="text-[22px] font-medium text-[#6B7280]" aria-hidden>
+            가
+          </span>
         </div>
 
-        {/* 칸마다 이름을 바로 아래에 단다 — 배율을 받지 않아 가장 크게에서도 한 줄이다 */}
-        <div className="mt-2 flex px-1" aria-hidden>
-          {FONT_SCALES.map((option) => (
-            <span
-              key={option}
-              className={`flex-1 text-center text-[11px] whitespace-nowrap ${
-                option === scale ? 'font-bold' : ''
-              }`}
-              style={{ color: option === scale ? '#111' : '#9CA3AF' }}
-            >
-              {LABELS[option]}
-            </span>
-          ))}
-        </div>
+        <p className="mt-2 text-center text-[12px] font-bold text-[#111]">
+          {LABELS[scale]}
+        </p>
       </SettingSheet>
     </>
   );
