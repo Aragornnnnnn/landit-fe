@@ -71,10 +71,10 @@ export const FontScaleMenuEntry = () => {
       <SettingSheet
         open={open}
         onClose={() => setOpen(false)}
-        // 설명은 두지 않는다 — 고르는 순간 제목부터 시트 뒤 화면까지 글자가 바뀌어 그걸로 알 수 있다
+        // 설명은 두지 않는다 — 고르는 순간 시트 뒤 화면 글자가 바뀌어 그걸로 알 수 있다
         title="글자 크기"
       >
-        {/* 음성 속도 시트와 같은 세그먼트 — 고르면 시트 뒤 화면 글자가 바로 바뀌어 따로 미리보기를 두지 않는다. 단계 이름은 화면 읽기용 라벨로만 둔다 */}
+        {/* 음성 속도 시트와 같은 세그먼트 — 고르면 시트 뒤 화면 글자가 바로 바뀌어 따로 미리보기를 두지 않는다. */}
         <div
           role="radiogroup"
           aria-label="글자 크기"
@@ -103,6 +103,21 @@ export const FontScaleMenuEntry = () => {
               </button>
             );
           })}
+        </div>
+
+        {/* 칸마다 이름을 바로 아래에 단다 — 배율을 받지 않아 가장 크게에서도 한 줄이다 */}
+        <div className="mt-2 flex px-1" aria-hidden>
+          {FONT_SCALES.map((option) => (
+            <span
+              key={option}
+              className={`flex-1 text-center text-[11px] whitespace-nowrap ${
+                option === scale ? 'font-bold' : ''
+              }`}
+              style={{ color: option === scale ? '#111' : '#9CA3AF' }}
+            >
+              {LABELS[option]}
+            </span>
+          ))}
         </div>
       </SettingSheet>
     </>
