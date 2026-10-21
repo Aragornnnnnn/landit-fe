@@ -420,7 +420,73 @@
   }
 }
 
+/* 답변 가이드 — 카드가 펼쳐질 때 테두리를 따라 빛이 한 번 훑고, 저절로 펼치기 직전 칩이 한 번 부푼다 */
+@keyframes guide-sweep {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -20% 0;
+  }
+}
+
+@keyframes guide-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgb(236 106 140 / 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 10px rgb(236 106 140 / 0);
+  }
+}
+
+@keyframes guide-nudge {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgb(139 108 240 / 0);
+  }
+  45% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 5px rgb(139 108 240 / 0.18);
+  }
+}
+
 @layer utilities {
+  /* 테두리 두께만큼만 보이게 가운데를 뚫은 층 — 그 위로 흰 빛줄기가 지나간다 */
+  .animate-guide-sweep {
+    position: absolute;
+    inset: -1.5px;
+    padding: 1.5px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+        100deg,
+        transparent 40%,
+        rgb(255 255 255 / 0.95) 50%,
+        transparent 60%
+      )
+      0 0 / 300% 100% no-repeat;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    animation:
+      guide-sweep 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both,
+      guide-glow 0.9s ease-out 0.1s both;
+  }
+
+  /* 펼치기 직전 한 번 — 지연은 화면이 --guide-nudge-delay로 넘긴다 */
+  .animate-guide-nudge {
+    /* 끝난 뒤 크기를 붙들지 않는다 — 칩이 카드로 커지는 모양 변화가 transform을 쓴다 */
+    animation: guide-nudge 0.7s ease-in-out var(--guide-nudge-delay, 0s);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-guide-sweep,
+    .animate-guide-nudge {
+      animation: none;
+    }
+  }
+
   /* 프리미엄 알약의 금색 — 7초에 한 바퀴 천천히 흐른다. 진입 링크와 할인 배지가 같이 쓴다.
      색은 premium-brand.tsx의 GOLD_GRADIENT와 같은 두 값이다 */
   .animate-gold-flow {

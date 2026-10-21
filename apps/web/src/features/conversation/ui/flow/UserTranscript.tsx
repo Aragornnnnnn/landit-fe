@@ -18,6 +18,8 @@ interface UserTranscriptProps {
   onChange?: (value: string) => void;
   onSubmit?: () => void;
   onCancel?: () => void;
+  // 라벨 오른쪽에 붙는 보조 버튼 — 대화마다 다르게 끼운다 (시나리오의 답변 가이드 칩)
+  headerAction?: React.ReactNode;
 }
 
 export const UserTranscript = ({
@@ -27,6 +29,7 @@ export const UserTranscript = ({
   onChange,
   onSubmit,
   onCancel,
+  headerAction,
 }: UserTranscriptProps) => {
   const listening = phase === 'USER_SPEAKING';
   const boxRef = useRef<HTMLDivElement>(null);
@@ -88,7 +91,10 @@ export const UserTranscript = ({
 
   return (
     <div className="mt-3 flex h-28 w-full flex-none flex-col rounded-2xl border border-border/60 bg-muted/50 px-5 py-3">
-      <p className="text-xs font-semibold text-muted-foreground">내 답변</p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-muted-foreground">내 답변</p>
+        {headerAction}
+      </div>
       {/* 넘치면 끝으로 붙이고 윗변을 흐린다 — 방금 한 말이 항상 보이고 앞은 …처럼 사라진다 */}
       <div
         ref={boxRef}

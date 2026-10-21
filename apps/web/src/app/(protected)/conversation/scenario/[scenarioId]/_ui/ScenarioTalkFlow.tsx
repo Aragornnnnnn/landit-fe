@@ -25,7 +25,9 @@ import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 import { ProgressBar } from '@/shared/ui/ProgressBar';
 
+import { useAnswerGuideToggle } from '../_model/useAnswerGuideToggle';
 import { useScenarioTalkFlow } from '../_model/useScenarioTalkFlow';
+import { AnswerGuideChip, AnswerGuideSlot } from './AnswerGuide';
 
 export const ScenarioTalkFlow = ({
   scenario,
@@ -57,6 +59,7 @@ export const ScenarioTalkFlow = ({
     leave,
     sessionId,
     gauge,
+    answerGuide,
   } = useScenarioTalkFlow(scenario);
   const {
     transcript,
@@ -77,6 +80,28 @@ export const ScenarioTalkFlow = ({
   const keyboardInset = useKeyboardInset();
   // 키보드가 입력 박스를 밀어 올린 상태 — 하단 inset 영역은 키보드가 덮는다
   const keyboardLifted = typing && keyboardInset > 0;
+  // 답변 가이드 — 내 차례(대기·말하는 중)에만 내 답변 칸과 같은 자리를 번갈아 쓴다.
+  // 키보드로 쓰는 중엔 그 칸이 입력창이라, 답을 낸 뒤엔 방금 한 말을 보여야 해서 비켜 준다
+  const myTurn = phase === 'USER_READY' || phase === 'USER_SPEAKING';
+  const guideShown = answerGuide != null && myTurn && !typing;
+  const guide = useAnswerGuideToggle({
+    question: turn.aiMessage,
+    available: answerGuide != null && !ended,
+    // 다시 듣기·시트가 떠 있는 동안은 망설이는 게 아니라 다른 걸 하는 중이다
+    waiting:
+      phase === 'USER_READY' &&
+      !replay?.playing &&
+      !showExitModal &&
+      !micPermissionDenied,
+    onToggled: (opened, trigger) =>
+      track(EVENTS.ANSWER_GUIDE_TOGGLED, {
+        session_id: sessionId ?? undefined,
+        scenario_id: scenario.scenarioId,
+        turn_index: turnIndex,
+        opened,
+        trigger,
+      }),
+  });
   // 선발화 안내는 대기(USER_READY) 동안만 — 사용자가 말하기 시작하거나 속마음이 오면 즉시 비켜준다
   const showUserFirstIntro =
     turn.isUserOpening && phase === 'USER_READY' && !introDismissed;
@@ -183,16 +208,32 @@ export const ScenarioTalkFlow = ({
             translationDefaultOpen={display.translationDefaultOpen}
           />
         </div>
-        {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다 */}
+        {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다.
+            가이드를 펼치면 칩이 그 자리에서 예시 카드로 커져 칸 위에 겹친다 */}
         {!ended && (
-          <UserTranscript
-            text={transcript}
-            phase={phase}
-            editing={typing}
-            onChange={setTranscript}
-            onSubmit={submitText}
-            onCancel={cancelInput}
-          />
+          <AnswerGuideSlot
+            guide={answerGuide}
+            open={guideShown && guide.open}
+            onClose={guide.closeGuide}
+          >
+            <UserTranscript
+              text={transcript}
+              phase={phase}
+              editing={typing}
+              onChange={setTranscript}
+              onSubmit={submitText}
+              onCancel={cancelInput}
+              headerAction={
+                guideShown &&
+                !guide.open && (
+                  <AnswerGuideChip
+                    onOpen={guide.openGuide}
+                    autoPending={guide.autoPending}
+                  />
+                )
+              }
+            />
+          </AnswerGuideSlot>
         )}
       </section>
 
