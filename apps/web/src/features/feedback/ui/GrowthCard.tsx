@@ -20,7 +20,7 @@ export const GrowthCard = ({
     </h2>
     <dl className="mt-3 flex flex-col gap-2 rounded-xl bg-secondary px-4 py-3">
       <div className="flex gap-3">
-        <dt className="w-[calc(56px*var(--font-scale))] shrink-0 text-13 text-muted-foreground">
+        <dt className="w-[calc(56px*var(--font-scale))] shrink-0 text-13 whitespace-nowrap text-muted-foreground">
           {toDayLabel(growth.previousDate)}
         </dt>
         <dd className="text-15 leading-6 text-muted-foreground">
@@ -32,7 +32,7 @@ export const GrowthCard = ({
         </dd>
       </div>
       <div className="flex gap-3">
-        <dt className="w-[calc(56px*var(--font-scale))] shrink-0 text-13 text-muted-foreground">
+        <dt className="w-[calc(56px*var(--font-scale))] shrink-0 text-13 whitespace-nowrap text-muted-foreground">
           오늘
         </dt>
         <dd className="text-15 leading-6 font-bold text-foreground">

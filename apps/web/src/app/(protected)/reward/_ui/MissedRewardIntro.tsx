@@ -81,7 +81,7 @@ export const MissedRewardView = ({
 const MissedLine = ({ row }: { row: MissedRow }) => (
   <li className="flex items-center gap-3 pt-4">
     <span
-      className={`w-[calc(36px*var(--font-scale))] shrink-0 text-13 font-medium tabular-nums ${row.isToday ? 'text-primary' : 'text-muted-foreground'}`}
+      className={`w-[calc(36px*var(--font-scale))] shrink-0 text-13 font-medium whitespace-nowrap tabular-nums ${row.isToday ? 'text-primary' : 'text-muted-foreground'}`}
     >
       {row.dateLabel}
     </span>
