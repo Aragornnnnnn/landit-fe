@@ -29,8 +29,9 @@ const LABELS: Record<FontScale, string> = {
   1.3: '가장 크게',
 };
 
-// 바 양끝 손잡이 반지름(px) — 눈금이 손잡이 중심과 맞도록 바를 이만큼 안쪽에 그린다
-const THUMB_RADIUS = 11;
+// 손잡이 지름(px) — 그림·실제 터치 손잡이·바 안쪽 여백이 모두 이 값에서 나온다. 눈금이 손잡이 중심과 맞으려면 셋이 같아야 한다
+const THUMB_SIZE_PX = 22;
+const LAST_STEP = FONT_SCALES.length - 1;
 
 export const FontScaleMenuEntry = () => {
   const [open, setOpen] = useState(false);
@@ -48,7 +49,7 @@ export const FontScaleMenuEntry = () => {
   if (!available) return null;
 
   const step = FONT_SCALES.indexOf(scale);
-  const percent = (step / (FONT_SCALES.length - 1)) * 100;
+  const percent = (step / LAST_STEP) * 100;
 
   const choose = (next: FontScale) => {
     // 끄는 동안 같은 칸에서도 change가 들어온다 — 바뀐 게 없으면 저장도 계측도 하지 않는다
@@ -77,10 +78,13 @@ export const FontScaleMenuEntry = () => {
           <span className="text-[13px] font-medium text-[#6B7280]" aria-hidden>
             가
           </span>
-          <div className="relative h-7 flex-1">
+          <div
+            className="relative h-7 flex-1"
+            style={{ '--thumb': `${THUMB_SIZE_PX}px` } as React.CSSProperties}
+          >
             <div
               className="absolute inset-y-0"
-              style={{ left: THUMB_RADIUS, right: THUMB_RADIUS }}
+              style={{ left: THUMB_SIZE_PX / 2, right: THUMB_SIZE_PX / 2 }}
               aria-hidden
             >
               <span className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-[#E5E5EA]" />
@@ -95,20 +99,20 @@ export const FontScaleMenuEntry = () => {
                     index <= step ? 'bg-primary' : 'bg-[#D1D1D6]'
                   }`}
                   style={{
-                    left: `${(index / (FONT_SCALES.length - 1)) * 100}%`,
+                    left: `${(index / LAST_STEP) * 100}%`,
                   }}
                 />
               ))}
               <span
-                className="absolute top-1/2 size-[22px] -translate-1/2 rounded-full border-[0.5px] border-[#E5E5EA] bg-white shadow-[0_2px_6px_rgba(0,0,0,0.18)] transition-[left] duration-150"
+                className="absolute top-1/2 size-(--thumb) -translate-1/2 rounded-full border-[0.5px] border-[#E5E5EA] bg-white shadow-[0_2px_6px_rgba(0,0,0,0.18)] transition-[left] duration-150"
                 style={{ left: `${percent}%` }}
               />
             </div>
-            {/* 끌기·누르기·키보드는 기본 range 입력이 맡는다 — 보이지 않게 위에 깔고 손잡이 폭을 그림과 맞춘다 */}
+            {/* 끌기·키보드는 기본 range 입력이 맡는다 — 보이지 않게 위에 깔고 손잡이 폭을 그림과 맞춘다 */}
             <input
               type="range"
               min={0}
-              max={FONT_SCALES.length - 1}
+              max={LAST_STEP}
               step={1}
               value={step}
               onChange={(event) =>
@@ -116,7 +120,7 @@ export const FontScaleMenuEntry = () => {
               }
               aria-label="글자 크기"
               aria-valuetext={LABELS[scale]}
-              className="absolute inset-0 m-0 w-full cursor-pointer appearance-none bg-transparent opacity-0 [&::-moz-range-thumb]:size-[22px] [&::-webkit-slider-thumb]:size-[22px] [&::-webkit-slider-thumb]:appearance-none"
+              className="absolute inset-0 m-0 w-full cursor-pointer appearance-none bg-transparent opacity-0 [&::-moz-range-thumb]:size-(--thumb) [&::-webkit-slider-thumb]:size-(--thumb) [&::-webkit-slider-thumb]:appearance-none"
             />
           </div>
           <span className="text-[22px] font-medium text-[#6B7280]" aria-hidden>
