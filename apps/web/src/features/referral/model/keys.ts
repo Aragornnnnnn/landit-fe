@@ -10,6 +10,10 @@ export const referralKeys = {
   all: ['referral'] as const,
   summary: (userId: number | null) =>
     [...referralKeys.all, userId, 'summary'] as const,
+  code: (userId: number | null) =>
+    [...referralKeys.all, userId, 'code'] as const,
+  rewards: (userId: number | null) =>
+    [...referralKeys.all, userId, 'rewards'] as const,
   preview: (userId: number | null, code: string) =>
     [...referralKeys.all, userId, 'preview', code] as const,
 };

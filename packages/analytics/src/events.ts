@@ -24,6 +24,9 @@ export const EVENTS = {
   // 온보딩 초대 코드 단계 — 스텝 완료만으로는 등록했는지 건너뛰었는지 몰라 결과를 따로 찍는다
   REFERRAL_CODE_REGISTERED: 'Referral Code Registered',
   REFERRAL_CODE_SKIPPED: 'Referral Code Skipped',
+  // 친구 초대 — 초대 메시지를 보냈거나(공유 시트를 열었거나 복사함), 코드만 복사했다
+  REFERRAL_INVITE_SHARED: 'Referral Invite Shared',
+  REFERRAL_CODE_COPIED: 'Referral Code Copied',
 
   // 프로필 질문 게이트 — 신규 유저는 온보딩 스텝(level·accent)이라 위 계측이 그대로 커버한다.
   // 온보딩을 이미 마친 기존 유저는 온보딩 밖 별도 게이트라 노출·응답을 따로 찍는다.
@@ -363,7 +366,8 @@ export type RetryScreen =
   | 'expression_list'
   | 'streak'
   | 'mailbox'
-  | 'alarm';
+  | 'alarm'
+  | 'referral_invite';
 // 피드백 유형 — 작성 화면에서 고르는 넷. 값은 서버 enum 그대로다 (지표와 데이터가 같은 말을 쓰도록)
 export type FeedbackType =
   'BUG_REPORT' | 'FEATURE_REQUEST' | 'QUESTION' | 'CHEER';
@@ -493,6 +497,12 @@ export type EventProps = {
   'Referral Code Registered': { method: 'paste' | 'typed' };
   // 질문에서 「아니요」(ask)인지, 코드 입력에서 「코드 없이 계속」(entry)인지
   'Referral Code Skipped': { from: 'ask' | 'entry' };
+  // source — 환급 화면의 초대 띠(reward) 또는 친구 초대 화면(invite)
+  'Referral Invite Shared': {
+    method: 'native_sheet' | 'web_share' | 'copy';
+    source: 'reward' | 'invite';
+  };
+  'Referral Code Copied': undefined;
   'Profile Gate Viewed': { question: GateQuestion };
   'Profile Gate Answered': { question: 'accent'; accent: AccentLocale };
   'Accent Changed': { accent: AccentLocale };

@@ -58,3 +58,41 @@ export const registerReferralCode = (body: {
 /** 코드 입력을 영구히 건너뛴다 — 부르지 않으면 PENDING으로 남아 다음에 또 묻는다 */
 export const skipReferralRegistration = () =>
   api.post<null>('/api/v1/referrals/registration/skip');
+
+/** 내 초대 코드를 발급한다 — 이미 있으면 같은 코드를 돌려준다 */
+export const issueReferralCode = () =>
+  api.post<string>('/api/v1/referrals/code');
+
+export type ReferralRewardStage = 'SIGNUP' | 'PURCHASE';
+export type ReferralRecipientRole = 'INVITER' | 'INVITEE';
+// 지급 처리 상태 — 적립됨(CREDITED) 말고는 아직 들어오지 않았거나(대기·검토) 빠졌다(환불로 취소)
+export type ReferralRewardStatus =
+  'PENDING' | 'CREDITED' | 'REVIEW_REQUIRED' | 'REVERSED';
+
+// 내가 받은 지급 한 건. 친구의 결제 금액·상품·개인정보는 오지 않는다
+export interface ReferralReward {
+  id: number;
+  referralId: number;
+  policyVersion: number;
+  recipientId: number;
+  stage: ReferralRewardStage;
+  recipientRole: ReferralRecipientRole;
+  // 정책으로 확정된 금액
+  amountWon: number;
+  // 이 지급이 환급 적립금에 실제로 더한 순액 — 취소되면 0
+  creditedWon: number;
+  status: ReferralRewardStatus;
+  reason: string | null;
+  createdAt: string;
+}
+
+export interface ReferralRewardPage {
+  items: ReferralReward[];
+  hasNext: boolean;
+}
+
+/** 내 지급 내역 — 최신부터, before(지급 id)보다 앞의 것을 size개 */
+export const getReferralRewards = (before?: number) =>
+  api.get<ReferralRewardPage>(
+    `/api/v1/referrals/rewards${before === undefined ? '' : `?before=${before}`}`,
+  );
