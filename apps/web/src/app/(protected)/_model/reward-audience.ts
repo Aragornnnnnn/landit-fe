@@ -47,6 +47,8 @@ export const asPreviewReplay = <Query extends object>(query: Query) => ({
   ...query,
   reward: null,
   preview: null,
+  // 다시 보기는 처음 보는 무료 유저로 친다 — 보관 중인 돈도 없는 것으로
+  storedWon: 0,
   loaded: true,
   invited: true,
   settled: true,

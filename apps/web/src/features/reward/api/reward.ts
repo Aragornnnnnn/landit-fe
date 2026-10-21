@@ -126,6 +126,9 @@ export interface RewardView {
   purchaseAvailableAt: string | null;
   // 무료로 한 대화를 챌린지였다면 받았을 금액. 무료 대상이 아니거나 챌린지를 산 적이 있으면 null
   preview: RewardPreview | null;
+  // 학습과 친구 초대를 합친 실제 적립 순액 — 결제 전에 받은 초대 보상(구매 대기)도 든다. 무료 학습 미리보기(preview)는 빠진다.
+  // 이 필드를 모르는 옛 서버는 보내지 않는다
+  balanceWon?: number;
 }
 
 // 결제했으면 받을 수 있었던 금액 — 표시용이라 결제해도 적립금으로 바뀌지 않는다
