@@ -31,6 +31,23 @@ describe('historyRowsOf', () => {
     ]);
   });
 
+  it.each([
+    ['REFERRAL_SIGNUP', '친구 초대 · 가입'],
+    ['REFERRAL_PURCHASE', '친구 초대 · 결제'],
+  ] as const)('%s 적립은 「%s」로 적는다', (activityType, title) => {
+    const [row] = historyRowsOf([
+      item({
+        activityType,
+        amountWon: 3000,
+        cycleId: null,
+        completionId: null,
+      }),
+    ]);
+
+    expect(row.title).toBe(title);
+    expect(row.amountWon).toBe(3000);
+  });
+
   it('끝낸 시각은 서버가 어느 시간대로 주든 한국 시각으로 적는다', () => {
     const [row] = historyRowsOf([item({ occurredAt: '2026-10-09T23:24:11Z' })]);
 

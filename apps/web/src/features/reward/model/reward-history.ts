@@ -2,7 +2,7 @@
 import { readSeoulDateParts } from '@/shared/lib/seoul-date';
 
 import type {
-  RewardActivity,
+  RewardHistoryActivity,
   RewardHistoryItem,
   RewardHistoryPage,
   RewardPreviewHistoryPage,
@@ -22,8 +22,11 @@ export interface HistoryRow {
   balanceWon: number;
 }
 
-const EARN_TITLE: Record<RewardActivity['activityType'], string> = {
+// 친구 초대 줄은 내가 초대한 쪽인지 초대받은 쪽인지 내역이 알려 주지 않아, 양쪽에 다 맞는 말로 적는다
+const EARN_TITLE: Record<RewardHistoryActivity, string> = {
   SCENARIO: '시나리오 대화 완료',
+  REFERRAL_SIGNUP: '친구 초대 · 가입',
+  REFERRAL_PURCHASE: '친구 초대 · 결제',
 };
 
 // 오늘부터 며칠 뒤의 날짜 글자 ("10.12") — 실제 내역이 없는 보기 줄이 같은 모양으로 적는다. 보기라서 폰 시계로 센다
