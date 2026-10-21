@@ -27,8 +27,8 @@ const GUIDE_LAYOUT_ID = 'answer-guide';
 // 칩↔카드 모양 변화 — 살짝만 넘치고 멈추는 스프링
 const MORPH = { type: 'spring', stiffness: 420, damping: 34 } as const;
 
-// 칩이 부푸는 길이(guide-nudge 0.7s)만큼 먼저 시작해 부풂이 끝나는 순간 카드가 열린다
-const NUDGE_LEAD_MS = 700;
+// 칩이 부푸는 길이 — 이만큼 먼저 시작해 부풂이 끝나는 순간 카드가 열린다. CSS(guide-nudge)도 이 값을 받아 쓴다
+const NUDGE_MS = 700;
 
 // 네 꼭짓점 반짝이 — SparkleIcon과 같은 별을 그라데이션으로 칠한다
 const GradientSparkle = ({ size }: { size: number }) => {
@@ -87,7 +87,8 @@ export const AnswerGuideChip = ({
           ...gradientBorder,
           // 높이(24px)의 절반 — 999로 두면 카드로 커지는 동안 알약처럼 부푼다
           borderRadius: 12,
-          '--guide-nudge-delay': `${answerGuideAutoOpenMs - NUDGE_LEAD_MS}ms`,
+          '--guide-nudge-duration': `${NUDGE_MS}ms`,
+          '--guide-nudge-delay': `${answerGuideAutoOpenMs - NUDGE_MS}ms`,
         } as React.CSSProperties
       }
     >
@@ -140,7 +141,7 @@ const AnswerGuideCard = ({
 }) => {
   const reduced = useReducedMotion() ?? false;
   // 칩이 카드 크기로 커진 뒤에 안쪽이 차례로 올라온다
-  const settle = reduced ? 0 : 0.18;
+  const settle = reduced ? 0 : 0.25;
   const line = (delay: number) => ({
     initial: { opacity: 0, y: reduced ? 0 : 6 },
     animate: { opacity: 1, y: 0 },

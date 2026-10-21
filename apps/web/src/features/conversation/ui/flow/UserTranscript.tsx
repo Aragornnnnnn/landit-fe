@@ -18,7 +18,7 @@ interface UserTranscriptProps {
   onChange?: (value: string) => void;
   onSubmit?: () => void;
   onCancel?: () => void;
-  // 라벨 오른쪽에 붙는 보조 버튼 — 대화마다 다르게 끼운다 (시나리오의 답변 가이드 칩)
+  // 라벨 오른쪽에 붙는 보조 버튼 — 끼울지와 무엇을 끼울지는 대화 쪽이 정한다
   headerAction?: React.ReactNode;
 }
 

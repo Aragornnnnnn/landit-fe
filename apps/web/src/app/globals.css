@@ -430,15 +430,6 @@
   }
 }
 
-@keyframes guide-glow {
-  0% {
-    box-shadow: 0 0 0 0 rgb(236 106 140 / 0.35);
-  }
-  100% {
-    box-shadow: 0 0 0 10px rgb(236 106 140 / 0);
-  }
-}
-
 @keyframes guide-nudge {
   0%,
   100% {
@@ -452,7 +443,8 @@
 }
 
 @layer utilities {
-  /* 테두리 두께만큼만 보이게 가운데를 뚫은 층 — 그 위로 흰 빛줄기가 지나간다 */
+  /* 테두리 두께만큼만 보이게 가운데를 뚫은 층 — 그 위로 흰 빛줄기가 지나간다.
+     절대 위치의 기준은 카드의 테두리 안쪽이라, -1.5px로 테두리 바깥 끝까지 넓히고 같은 두께를 비워야 띠가 테두리와 겹친다 */
   .animate-guide-sweep {
     position: absolute;
     inset: -1.5px;
@@ -469,15 +461,14 @@
     mask:
       linear-gradient(#000 0 0) content-box exclude,
       linear-gradient(#000 0 0);
-    animation:
-      guide-sweep 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both,
-      guide-glow 0.9s ease-out 0.1s both;
+    animation: guide-sweep 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both;
   }
 
-  /* 펼치기 직전 한 번 — 지연은 화면이 --guide-nudge-delay로 넘긴다 */
+  /* 펼치기 직전 한 번 — 길이·지연은 화면(AnswerGuide.tsx)의 상수에서 넘겨받는다. 보라는 GUIDE_COLORS[2]와 같은 색이다 */
   .animate-guide-nudge {
     /* 끝난 뒤 크기를 붙들지 않는다 — 칩이 카드로 커지는 모양 변화가 transform을 쓴다 */
-    animation: guide-nudge 0.7s ease-in-out var(--guide-nudge-delay, 0s);
+    animation: guide-nudge var(--guide-nudge-duration, 0.7s) ease-in-out
+      var(--guide-nudge-delay, 0s);
   }
 
   @media (prefers-reduced-motion: reduce) {
