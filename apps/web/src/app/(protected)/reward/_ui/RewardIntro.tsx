@@ -9,6 +9,7 @@ import type { RewardOffer } from '@/features/reward/model/refund-offer';
 import { RefundDepositDemo } from '@/features/reward/ui/RefundDepositDemo';
 import { SAMPLE_DAYS, sampleHistoryOf } from '@/features/reward/ui/RewardGuide';
 import { RewardHistory } from '@/features/reward/ui/RewardHistory';
+import { StoredRewardCard } from '@/features/reward/ui/StoredRewardCard';
 import { track } from '@/shared/analytics';
 import { paywallPath, REWARD_PATH } from '@/shared/lib/routes';
 import { formatWon } from '@/shared/lib/won';
@@ -20,9 +21,12 @@ import { EmphasizedText } from './EmphasizedText';
 export const RewardIntro = ({
   copy,
   offer,
+  storedWon = 0,
 }: {
   copy: RewardIntroCopy;
   offer: RewardOffer;
+  // 결제 전에 보관 중인 돈(초대 보상 등) — 있으면 연출 아래에 알린다
+  storedWon?: number;
 }) => (
   <div className="pb-8">
     <section className="px-5 pt-3 text-center">
@@ -41,6 +45,9 @@ export const RewardIntro = ({
       <p className="mt-3 px-5 text-center text-14 font-medium text-muted-foreground">
         <EmphasizedText line={copy.caption} />
       </p>
+    )}
+    {storedWon > 0 && (
+      <StoredRewardCard storedWon={storedWon} className="mx-5 mt-5" />
     )}
 
     {/* 결제하면 보게 될 환급 내역과 같은 모습 — 실제 내역이 아니라 보기라 흐리게 둔다 */}

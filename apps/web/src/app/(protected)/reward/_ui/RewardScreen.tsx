@@ -140,9 +140,13 @@ export const RewardScreen = () => {
       )}
       {introReady &&
         (missed ? (
-          <MissedRewardIntro missed={missed} />
+          <MissedRewardIntro missed={missed} storedWon={my.storedWon} />
         ) : (
-          <RewardIntro copy={introCopy} offer={offer} />
+          <RewardIntro
+            copy={introCopy}
+            offer={offer}
+            storedWon={my.storedWon}
+          />
         ))}
       {view.kind === 'record' && (
         <RewardRecord reward={view.reward} history={<RewardHistoryFeed />} />

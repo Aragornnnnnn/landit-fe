@@ -10,6 +10,7 @@ import {
   useRewardPreviewHistoryQuery,
   type RewardHistoryState,
 } from '@/features/reward/model/useRewardHistoryQuery';
+import { StoredRewardCard } from '@/features/reward/ui/StoredRewardCard';
 import { formatWon } from '@/shared/lib/won';
 
 import { missedCopyOf } from '../_model/reward-intro-copy';
@@ -19,9 +20,16 @@ import { HistoryFeedList } from './RewardHistoryFeed';
 import { RewardPot } from './RewardPot';
 
 // 실제 화면 — 지난 기록을 서버에서 받아 그린다
-export const MissedRewardIntro = ({ missed }: { missed: MissedReward }) => (
+export const MissedRewardIntro = ({
+  missed,
+  storedWon,
+}: {
+  missed: MissedReward;
+  storedWon: number;
+}) => (
   <MissedRewardView
     missed={missed}
+    storedWon={storedWon}
     history={useRewardPreviewHistoryQuery(missed.today)}
   />
 );
@@ -30,8 +38,11 @@ export const MissedRewardIntro = ({ missed }: { missed: MissedReward }) => (
 export const MissedRewardView = ({
   missed,
   history,
+  storedWon = 0,
 }: {
   missed: MissedReward;
+  // 결제 전에 보관 중인 돈 — 놓친 금액(흐림)과 달리 진짜 돈이라 따로 알린다
+  storedWon?: number;
   history: RewardHistoryState<MissedRow>;
 }) => {
   const copy = missedCopyOf(missed);
@@ -61,6 +72,9 @@ export const MissedRewardView = ({
           {copy.note}
         </p>
       </div>
+      {storedWon > 0 && (
+        <StoredRewardCard storedWon={storedWon} className="mx-5 mt-3" />
+      )}
 
       <p className="mt-6 px-5 text-13 font-bold text-muted-foreground">기록</p>
       <HistoryFeedList
