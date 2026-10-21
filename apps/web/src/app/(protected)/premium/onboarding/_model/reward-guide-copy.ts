@@ -10,6 +10,8 @@ export interface RewardGuideCopy {
   amount: string;
   // 그 아래 한 줄
   caption: string;
+  // 결제 전에 받아 둔 돈(초대 보상 등)이 회차에 합쳐져 0원이 아닌 데서 시작하면 그 한 줄. 아니면 null
+  startNote: string | null;
   // 하루 몫 — 규칙과 보기 내역이 이 금액으로 말한다. 결제 확인이 늦어 아직 모르면 null
   dailyWon: number | null;
   // 금액을 알고 적은 안내인가 — 결제 확인이 늦으면 거짓
@@ -26,6 +28,7 @@ export const rewardGuideCopyOf = (
       eyebrow: '오늘부터 챌린지 시작!',
       amount: '환급 챌린지',
       caption: '오늘의 시나리오를 한 날마다 쌓이고, 모은 만큼 돌려받아요',
+      startNote: null,
       dailyWon: null,
       confirmed: false,
     };
@@ -36,6 +39,10 @@ export const rewardGuideCopyOf = (
     amount: `최대 ${formatWon(reward.current.maximumWon)}`,
     // 남은 날이 아니라 상품의 전체 기간이다 — 며칠 뒤에 봐도 같은 말을 한다
     caption: `${reward.current.eligibleDays}일 동안 모은 만큼 돌려받아요`,
+    startNote:
+      reward.current.balanceWon > 0
+        ? `${formatWon(reward.current.balanceWon)}부터 시작해요`
+        : null,
     dailyWon: dailyWonOf(reward),
     confirmed: true,
   };

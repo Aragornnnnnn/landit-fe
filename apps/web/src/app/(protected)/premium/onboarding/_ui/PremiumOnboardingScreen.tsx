@@ -41,6 +41,7 @@ const PREVIEW_REWARD_COPY: RewardGuideCopy = {
   eyebrow: '오늘부터 챌린지 시작!',
   amount: `최대 ${formatWon(PREVIEW_OFFER.maximumWon)}`,
   caption: `${PREVIEW_OFFER.days}일 동안 모은 만큼 돌려받아요`,
+  startNote: null,
   dailyWon: PREVIEW_OFFER.dailyWon,
   confirmed: true,
 };

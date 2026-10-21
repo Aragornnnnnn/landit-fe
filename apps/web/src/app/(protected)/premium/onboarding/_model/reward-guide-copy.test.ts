@@ -25,9 +25,16 @@ describe('rewardGuideCopyOf', () => {
       eyebrow: '오늘부터 챌린지 시작!',
       amount: '최대 30,000원',
       caption: '100일 동안 모은 만큼 돌려받아요',
+      startNote: null,
       dailyWon: 300,
       confirmed: true,
     });
+  });
+
+  it('결제 전에 받아 둔 돈(초대 보상 등)이 회차에 합쳐졌으면 그 금액부터 시작한다고 말한다', () => {
+    const view = rewardView({ current: rewardCycle({ balanceWon: 8000 }) });
+
+    expect(rewardGuideCopyOf(view)?.startNote).toBe('8,000원부터 시작해요');
   });
 
   it('며칠 지나 남은 날이 줄어도 상품의 전체 기간으로 말한다', () => {
@@ -49,6 +56,7 @@ describe('rewardGuideCopyOf', () => {
       eyebrow: '오늘부터 챌린지 시작!',
       amount: '환급 챌린지',
       caption: '오늘의 시나리오를 한 날마다 쌓이고, 모은 만큼 돌려받아요',
+      startNote: null,
       dailyWon: null,
       confirmed: false,
     });
