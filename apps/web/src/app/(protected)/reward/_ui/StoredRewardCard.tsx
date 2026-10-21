@@ -1,7 +1,6 @@
 // 환급을 시작하기 전에 보관 중인 돈 — 친구 초대로 받은 몫은 사라지지 않고, 시작하면 그 회차와 함께 돌려받는다
+import { Coin } from '@/features/reward/ui/common/Coin';
 import { formatWon } from '@/shared/lib/won';
-
-import { Coin } from './common/Coin';
 
 export const StoredRewardCard = ({
   storedWon,

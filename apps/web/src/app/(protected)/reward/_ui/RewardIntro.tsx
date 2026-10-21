@@ -9,7 +9,6 @@ import type { RewardOffer } from '@/features/reward/model/refund-offer';
 import { RefundDepositDemo } from '@/features/reward/ui/RefundDepositDemo';
 import { SAMPLE_DAYS, sampleHistoryOf } from '@/features/reward/ui/RewardGuide';
 import { RewardHistory } from '@/features/reward/ui/RewardHistory';
-import { StoredRewardCard } from '@/features/reward/ui/StoredRewardCard';
 import { track } from '@/shared/analytics';
 import { paywallPath, REWARD_PATH } from '@/shared/lib/routes';
 import { formatWon } from '@/shared/lib/won';
@@ -17,6 +16,7 @@ import { Button } from '@/shared/ui/Button';
 
 import type { RewardIntroCopy } from '../_model/reward-intro-copy';
 import { EmphasizedText } from './EmphasizedText';
+import { StoredRewardCard } from './StoredRewardCard';
 
 export const RewardIntro = ({
   copy,

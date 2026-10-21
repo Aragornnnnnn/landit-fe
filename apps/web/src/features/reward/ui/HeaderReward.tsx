@@ -95,20 +95,35 @@ export const RewardInviteLabel = ({
 }) => (
   <>
     <Coin size={16} />
-    {storedWon > 0 ? (
+    <InviteLabelText
+      amountWon={amountWon}
+      missed={missed}
+      storedWon={storedWon}
+    />
+  </>
+);
+
+const InviteLabelText = ({
+  amountWon,
+  missed,
+  storedWon,
+}: {
+  amountWon: number | null;
+  missed: boolean;
+  storedWon: number;
+}) => {
+  if (storedWon > 0)
+    return (
       <>
         <span className="tabular-nums">{formatWon(storedWon)}</span>
         <span className="font-medium">쌓여 있어요</span>
       </>
-    ) : amountWon === null ? (
-      <span>0원 프리미엄 시작하기</span>
-    ) : (
-      <>
-        <span className="tabular-nums">{formatWon(amountWon)}</span>
-        <span className="font-medium">
-          {missed ? '놓쳤어요' : '받으러 가기'}
-        </span>
-      </>
-    )}
-  </>
-);
+    );
+  if (amountWon === null) return <span>0원 프리미엄 시작하기</span>;
+  return (
+    <>
+      <span className="tabular-nums">{formatWon(amountWon)}</span>
+      <span className="font-medium">{missed ? '놓쳤어요' : '받으러 가기'}</span>
+    </>
+  );
+};

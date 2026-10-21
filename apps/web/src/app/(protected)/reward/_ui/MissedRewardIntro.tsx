@@ -10,7 +10,6 @@ import {
   useRewardPreviewHistoryQuery,
   type RewardHistoryState,
 } from '@/features/reward/model/useRewardHistoryQuery';
-import { StoredRewardCard } from '@/features/reward/ui/StoredRewardCard';
 import { formatWon } from '@/shared/lib/won';
 
 import { missedCopyOf } from '../_model/reward-intro-copy';
@@ -18,6 +17,7 @@ import { EmphasizedText } from './EmphasizedText';
 import { MidnightCountdown } from './MidnightCountdown';
 import { HistoryFeedList } from './RewardHistoryFeed';
 import { RewardPot } from './RewardPot';
+import { StoredRewardCard } from './StoredRewardCard';
 
 // 실제 화면 — 지난 기록을 서버에서 받아 그린다
 export const MissedRewardIntro = ({

@@ -109,6 +109,8 @@ export const AppHeader = () => {
                 <RewardInviteLabel
                   amountWon={landed ? landWon : null}
                   missed={missed}
+                  // 아래 실제 알약과 같은 글자여야 자리가 맞는다
+                  storedWon={storedWon}
                 />
               )}
             </span>

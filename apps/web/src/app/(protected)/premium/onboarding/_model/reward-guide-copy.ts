@@ -1,6 +1,7 @@
 // 결제 직후 환급 안내를 보여 줄지와 거기 적을 글자 — 환급 챌린지로 쌓기 시작한 사람에게만 보여 준다
 import type { RewardView } from '@/features/reward/api/reward';
 import { dailyWonOf } from '@/features/reward/model/reward-status';
+import { carriedRewardWonOf } from '@/features/reward/model/stored-reward';
 import { formatWon } from '@/shared/lib/won';
 
 export interface RewardGuideCopy {
@@ -39,11 +40,12 @@ export const rewardGuideCopyOf = (
     amount: `최대 ${formatWon(reward.current.maximumWon)}`,
     // 남은 날이 아니라 상품의 전체 기간이다 — 며칠 뒤에 봐도 같은 말을 한다
     caption: `${reward.current.eligibleDays}일 동안 모은 만큼 돌려받아요`,
-    startNote:
-      reward.current.balanceWon > 0
-        ? `${formatWon(reward.current.balanceWon)}부터 시작해요`
-        : null,
+    startNote: startNoteOf(carriedRewardWonOf(reward.current, reward.today)),
     dailyWon: dailyWonOf(reward),
     confirmed: true,
   };
 };
+
+// 결제 전 몫이 있으면 0원이 아닌 데서 시작한다는 한 줄
+const startNoteOf = (carriedWon: number) =>
+  carriedWon > 0 ? `${formatWon(carriedWon)}부터 시작해요` : null;

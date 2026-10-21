@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  earnedRewardToday,
   endedRewardView,
   rewardCycle,
   rewardView,
@@ -32,9 +33,21 @@ describe('rewardGuideCopyOf', () => {
   });
 
   it('결제 전에 받아 둔 돈(초대 보상 등)이 회차에 합쳐졌으면 그 금액부터 시작한다고 말한다', () => {
-    const view = rewardView({ current: rewardCycle({ balanceWon: 8000 }) });
+    const view = rewardView({
+      current: rewardCycle({ balanceWon: 8000, days: [] }),
+      today: null,
+    });
 
     expect(rewardGuideCopyOf(view)?.startNote).toBe('8,000원부터 시작해요');
+  });
+
+  it('결제 당일 끝낸 오늘의 시나리오 몫만 들어 있으면 시작 금액으로 치지 않는다', () => {
+    const view = rewardView({
+      current: rewardCycle({ balanceWon: 500, days: [] }),
+      today: earnedRewardToday(),
+    });
+
+    expect(rewardGuideCopyOf(view)?.startNote).toBeNull();
   });
 
   it('며칠 지나 남은 날이 줄어도 상품의 전체 기간으로 말한다', () => {
