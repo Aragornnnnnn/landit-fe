@@ -5,6 +5,7 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { InviteBand } from '@/features/referral/ui/InviteBand';
 import {
   missedRewardOf,
   pastDaysOf,
@@ -145,7 +146,11 @@ export const RewardScreen = () => {
           <RewardIntro copy={introCopy} offer={offer} />
         ))}
       {view.kind === 'record' && (
-        <RewardRecord reward={view.reward} history={<RewardHistoryFeed />} />
+        <RewardRecord
+          reward={view.reward}
+          invite={<InviteBand className="mx-5 mt-5" />}
+          history={<RewardHistoryFeed />}
+        />
       )}
       {view.kind === 'error' && (
         <RetryNotice
