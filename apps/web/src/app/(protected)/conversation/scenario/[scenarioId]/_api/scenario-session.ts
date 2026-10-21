@@ -9,6 +9,7 @@ import type {
   ProcessingStatus,
   SubmittedMessage,
 } from '@/features/conversation/api/session';
+import type { RewardCompletion } from '@/features/reward/api/reward';
 import { api } from '@/shared/api/client';
 
 // 시나리오 첫 질문에는 속마음이 함께 온다 (스몰톡과 달리 이미 오간 맥락 위에서 나온다)
@@ -64,6 +65,8 @@ export interface ScenarioTalkSubmitResponse {
   // (둘 다 재생 대상이라 FE는 nextMessage 유무로 발화 여부를, completed로 종료 여부를 판단한다)
   nextMessage: ScenarioTalkNextMessage | null;
   progress: ScenarioTalkProgress;
+  // 대화가 끝나는 턴에만 실려 오는 적립 영수증
+  reward?: RewardCompletion;
 }
 
 // 시나리오 세션 시작 — sessionId·선발화자·오프닝·TTS 보이스를 받는다

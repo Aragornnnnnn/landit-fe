@@ -27,7 +27,7 @@ export const CelebrateStage = ({
   // 방금 끝낸 것이 환급이 쌓이는 대화인가 — 시나리오뿐이다
   earns?: boolean;
 }) => {
-  const { earn, pending } = useCompletionEarn({ enabled: earns });
+  const { earn } = useCompletionEarn({ enabled: earns });
 
   return (
     <motion.div
@@ -38,13 +38,7 @@ export const CelebrateStage = ({
       transition={{ duration: 0.25 }}
     >
       <h1 className={TITLE_CLASS}>{'대화 하나를\n잘 완료했어요!'}</h1>
-      {pending ? (
-        <div className="flex-1" />
-      ) : earn ? (
-        <EarnedStamp earn={earn} />
-      ) : (
-        <StreakStamp />
-      )}
+      {earn ? <EarnedStamp earn={earn} /> : <StreakStamp />}
     </motion.div>
   );
 };

@@ -10,7 +10,7 @@ import {
   refreshRewardAfterCompletion,
   refreshRewardAfterPurchase,
 } from './refresh-reward';
-import { earnedRewardToday, rewardCycle, rewardView } from './reward.fixture';
+import { rewardCompletion, rewardCycle, rewardView } from './reward.fixture';
 
 vi.mock('../api/reward', () => ({ getMyRewards: vi.fn() }));
 vi.mock('@/shared/auth/auth-store', () => ({ getCurrentUserId: () => 42 }));
@@ -35,8 +35,8 @@ beforeEach(() => {
   getMyRewards.mockResolvedValue(next);
 });
 
-// 오늘의 시나리오를 처음 끝낸 완료 — 적립 대상이다
-const FIRST = { todaysFirst: true };
+// 오늘의 시나리오를 처음 끝내 500원을 받은 완료 — 적립 대상이다
+const FIRST = { todaysFirst: true, receipt: rewardCompletion() };
 
 describe('refreshRewardAfterCompletion', () => {
   it('참여자가 시나리오를 끝내면 새 금액을 미리 받아 둔다', async () => {
@@ -63,32 +63,38 @@ describe('refreshRewardAfterCompletion', () => {
     expect(getMyRewards).not.toHaveBeenCalled();
   });
 
-  it('오늘 몫이 아직이었다는 걸 적어 둔다 — 축하 화면이 받은 금액을 보여 줄지 정한다', () => {
+  it('영수증의 받은 금액을 적어 둔다 — 축하 화면이 그걸 보여 준다', () => {
     const queryClient = cacheWith(rewardView());
 
     refreshRewardAfterCompletion(queryClient, FIRST);
 
-    expect(queryClient.getQueryData(rewardKeys.earnBase(42))).toEqual({
-      date: '2026-10-10',
+    expect(queryClient.getQueryData(rewardKeys.completionEarn(42))).toEqual({
+      earnedWon: 500,
     });
   });
 
-  it('오늘 몫을 이미 받은 사람이 시나리오를 또 끝내면 전에 적어 둔 것을 지운다', () => {
-    const queryClient = cacheWith(rewardView({ today: earnedRewardToday() }));
-    queryClient.setQueryData(rewardKeys.earnBase(42), { date: '2026-10-10' });
+  it('이번 완료로 더 받은 것이 없으면 전에 적어 둔 것을 지운다', () => {
+    const queryClient = cacheWith(rewardView());
+    queryClient.setQueryData(rewardKeys.completionEarn(42), { earnedWon: 500 });
 
-    refreshRewardAfterCompletion(queryClient, FIRST);
+    refreshRewardAfterCompletion(queryClient, {
+      todaysFirst: false,
+      receipt: rewardCompletion({
+        status: 'NO_ADDITIONAL_REWARD',
+        earnedWon: 0,
+      }),
+    });
 
-    expect(queryClient.getQueryData(rewardKeys.earnBase(42))).toBeNull();
+    expect(queryClient.getQueryData(rewardKeys.completionEarn(42))).toBeNull();
   });
 
   it('환급과 상관없는 사람이 대화를 끝내면 전에 적어 둔 것을 지운다', () => {
     const queryClient = cacheWith(outsider);
-    queryClient.setQueryData(rewardKeys.earnBase(42), { date: '2026-10-10' });
+    queryClient.setQueryData(rewardKeys.completionEarn(42), { earnedWon: 500 });
 
     refreshRewardAfterCompletion(queryClient, FIRST);
 
-    expect(queryClient.getQueryData(rewardKeys.earnBase(42))).toBeNull();
+    expect(queryClient.getQueryData(rewardKeys.completionEarn(42))).toBeNull();
   });
 
   it('환급을 받아 본 적이 없으면 새로 묻지 않는다', () => {
@@ -184,7 +190,10 @@ describe('refreshRewardAfterCompletion — 환급을 시작하지 않은 사람'
   });
 
   it('지난 시나리오를 끝냈거나 오늘 것을 다시 한 것이면 적지 않는다 — 적립 대상이 아니다', () => {
-    refreshRewardAfterCompletion(cacheWith(outsider), { todaysFirst: false });
+    refreshRewardAfterCompletion(cacheWith(outsider), {
+      todaysFirst: false,
+      receipt: undefined,
+    });
 
     expect(hasMissedEarn(42)).toBe(false);
   });
