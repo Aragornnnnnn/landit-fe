@@ -54,6 +54,7 @@ export const ScenarioTalkFlow = ({
     speech,
     replay,
     input,
+    resend,
     leave,
     sessionId,
     gauge,
@@ -192,6 +193,7 @@ export const ScenarioTalkFlow = ({
             onChange={setTranscript}
             onSubmit={submitText}
             onCancel={cancelInput}
+            unsent={resend != null}
           />
         )}
       </section>
@@ -214,6 +216,7 @@ export const ScenarioTalkFlow = ({
             onKeyboard={pressKeyboard}
             onCancel={cancelInput}
             onDone={finishListening}
+            onResend={resend}
           />
         )}
       </footer>
