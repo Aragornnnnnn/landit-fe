@@ -28,3 +28,16 @@ export const markRegistrationStatus = (
     referralKeys.summary(userId),
     (summary) => summary && { ...summary, registrationStatus },
   );
+
+// 발급받은 코드를 요약 캐시에도 심는다 — 요약을 다시 받기 전까지 코드가 null로 남아 또 발급을 묻지 않게
+export const rememberReferralCode = (
+  queryClient: QueryClient,
+  userId: number | null,
+  code: string,
+) => {
+  queryClient.setQueryData(referralKeys.code(userId), code);
+  queryClient.setQueryData<ReferralSummary>(
+    referralKeys.summary(userId),
+    (summary) => summary && { ...summary, code },
+  );
+};

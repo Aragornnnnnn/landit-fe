@@ -91,8 +91,11 @@ export interface ReferralRewardPage {
   hasNext: boolean;
 }
 
-/** 내 지급 내역 — 최신부터, before(지급 id)보다 앞의 것을 size개 */
+// 한 장에 받는 지급 수
+export const REFERRAL_REWARD_PAGE_SIZE = 20;
+
+/** 내 지급 내역 — 최신부터, before(지급 id)보다 앞의 것을 한 장씩 */
 export const getReferralRewards = (before?: number) =>
   api.get<ReferralRewardPage>(
-    `/api/v1/referrals/rewards${before === undefined ? '' : `?before=${before}`}`,
+    `/api/v1/referrals/rewards?size=${REFERRAL_REWARD_PAGE_SIZE}${before === undefined ? '' : `&before=${before}`}`,
   );

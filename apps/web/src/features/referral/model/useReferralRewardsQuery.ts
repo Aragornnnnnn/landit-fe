@@ -8,7 +8,7 @@ import { useCurrentUserId } from '@/shared/auth/current-member';
 import { getReferralRewards, type ReferralReward } from '../api/referral';
 import { referralKeys } from './keys';
 
-// 한 장 20건 — 이 이상 받는 사람은 드물다. 응답이 끝없이 이어져도 화면이 멈추지 않게 장 수를 묶는다
+// 장 수 상한 — 이보다 많이 받는 사람은 드물다. 응답이 끝없이 이어져도 화면이 멈추지 않게 묶는다
 const MAX_PAGES = 10;
 
 const getAllReferralRewards = async () => {

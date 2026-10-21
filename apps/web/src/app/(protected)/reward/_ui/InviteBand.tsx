@@ -4,15 +4,18 @@
 // 있으면 「친구 2명 초대 · +11,000원」으로 친구 초대 화면을 연다. 초대 보상이 환급 적립금에 합쳐져 환급 화면 안에 둔다
 import Link from 'next/link';
 
+import {
+  earnedByInvitingOf,
+  inviteHeadlineOf,
+} from '@/features/referral/model/inviter-reward';
+import { useInviteShare } from '@/features/referral/model/useInviteShare';
+import { useReferralCode } from '@/features/referral/model/useReferralCode';
+import { useReferralRewardsQuery } from '@/features/referral/model/useReferralRewardsQuery';
+import { useReferralSummaryQuery } from '@/features/referral/model/useReferralSummaryQuery';
 import { REFERRAL_INVITE_PATH } from '@/shared/lib/routes';
 import { formatWon } from '@/shared/lib/won';
 import { Emoji } from '@/shared/ui/emoji';
 import { ChevronRightIcon } from '@/shared/ui/Icons';
-
-import { earnedByInvitingOf, inviteHeadlineOf } from '../model/inviter-reward';
-import { useInviteShare } from '../model/useInviteShare';
-import { useReferralRewardsQuery } from '../model/useReferralRewardsQuery';
-import { useReferralSummaryQuery } from '../model/useReferralSummaryQuery';
 
 const BAND_CLASS =
   'flex items-center gap-3 rounded-2xl bg-primary/10 py-2.5 pl-4';
@@ -22,7 +25,10 @@ export const InviteBand = ({ className = '' }: { className?: string }) => {
   const summary = useReferralSummaryQuery().data;
   const rewards = useReferralRewardsQuery().data;
   const { share } = useInviteShare('reward');
+  // 보낼 때 발급을 기다리지 않게 코드를 미리 받아 둔다 — 같은 사람에게는 늘 같은 코드가 온다
+  useReferralCode();
   if (!summary) return null;
+  const earnedWon = rewards ? earnedByInvitingOf(rewards) : 0;
 
   if (summary.invitedCount > 0)
     return (
@@ -33,7 +39,8 @@ export const InviteBand = ({ className = '' }: { className?: string }) => {
         <Emoji className="size-6 shrink-0">🎁</Emoji>
         <span className="min-w-0 flex-1 text-[15px] font-bold text-foreground">
           친구 {summary.invitedCount}명 초대
-          {rewards && ` · +${formatWon(earnedByInvitingOf(rewards))}`}
+          {/* 보상이 아직 확인 중이면 0원 — 금액을 적지 않는다 */}
+          {earnedWon > 0 && ` · +${formatWon(earnedWon)}`}
         </span>
         <ChevronRightIcon size={18} className="shrink-0 text-primary" />
       </Link>

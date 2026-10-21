@@ -1,7 +1,8 @@
 // 친구 초대 화면의 받은 보상 한 줄 규칙 테스트
 import { describe, expect, it } from 'vitest';
 
-import type { ReferralReward } from '../api/referral';
+import type { ReferralReward } from '@/features/referral/api/referral';
+
 import { inviteRewardRowOf } from './invite-reward-row';
 
 const reward = (over: Partial<ReferralReward>): ReferralReward => ({
@@ -30,6 +31,7 @@ describe('inviteRewardRowOf', () => {
       amountLabel: '+3,000원',
       statusLabel: '적립됨',
       settled: true,
+      canceled: false,
     });
   });
 

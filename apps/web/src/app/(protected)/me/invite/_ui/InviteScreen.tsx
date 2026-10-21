@@ -8,7 +8,6 @@ import type {
   ReferralPreview,
   ReferralReward,
 } from '@/features/referral/api/referral';
-import { inviteRewardRowOf } from '@/features/referral/model/invite-reward-row';
 import {
   earnedByInvitingOf,
   inviterWonOf,
@@ -18,11 +17,14 @@ import { useReferralCode } from '@/features/referral/model/useReferralCode';
 import { useReferralRewardsQuery } from '@/features/referral/model/useReferralRewardsQuery';
 import { useReferralSummaryQuery } from '@/features/referral/model/useReferralSummaryQuery';
 import { track } from '@/shared/analytics';
+import { backToMyPage } from '@/shared/lib/routes';
 import { formatWon } from '@/shared/lib/won';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { Button } from '@/shared/ui/Button';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 import { showToast } from '@/shared/ui/toast';
+
+import { inviteRewardRowOf } from '../_model/invite-reward-row';
 
 // 네 자씩 끊어 보여 준다 — 말로 불러 주거나 눈으로 옮겨 칠 때 덜 틀린다. 복사는 붙인 그대로
 const CODE_GROUP = 4;
@@ -34,7 +36,7 @@ export const InviteScreen = () => {
   const summary = useReferralSummaryQuery();
   const rewards = useReferralRewardsQuery();
   const code = useReferralCode();
-  const { share } = useInviteShare('invite');
+  const { ready, share } = useInviteShare('invite');
 
   const copyCode = async () => {
     if (!code) return;
@@ -49,7 +51,7 @@ export const InviteScreen = () => {
 
   return (
     <main className="flex h-dvh flex-col bg-background">
-      <BackHeader title="친구 초대" onBack={() => router.back()} />
+      <BackHeader title="친구 초대" onBack={() => backToMyPage(router)} />
 
       <div className="flex-1 overflow-y-auto px-5 pt-4 pb-6">
         {summary.isError ? (
@@ -99,7 +101,15 @@ export const InviteScreen = () => {
             <h2 className="mt-7 text-[15px] font-bold text-foreground">
               받은 보상
             </h2>
-            <RewardRows rewards={rewards.data} />
+            {rewards.isError ? (
+              <RetryNotice
+                screen="referral_invite"
+                message="받은 보상을 불러오지 못했어요"
+                onRetry={() => rewards.refetch()}
+              />
+            ) : (
+              <RewardRows rewards={rewards.data} />
+            )}
 
             <p className="mt-6 text-[12px] leading-[1.6] break-keep text-muted-foreground">
               친구 이름과 결제 금액은 보이지 않아요. 초대로 받은 돈은 환급
@@ -110,7 +120,7 @@ export const InviteScreen = () => {
       </div>
 
       <div className="px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),20px)]">
-        <Button disabled={!summary.data} onClick={() => void share()}>
+        <Button disabled={!ready} onClick={() => void share()}>
           친구에게 코드 보내기
         </Button>
       </div>
@@ -192,7 +202,7 @@ const RewardRows = ({ rewards }: { rewards: ReferralReward[] | undefined }) => {
           </span>
           <span className="shrink-0 text-right">
             <span
-              className={`block text-[15px] font-black tabular-nums ${row.settled ? 'text-primary' : 'text-muted-foreground/60'}`}
+              className={`block text-[15px] font-black tabular-nums ${row.settled ? 'text-primary' : 'text-muted-foreground/60'} ${row.canceled ? 'line-through' : ''}`}
             >
               {row.amountLabel}
             </span>

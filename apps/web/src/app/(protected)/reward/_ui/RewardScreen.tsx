@@ -5,7 +5,6 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
-import { InviteBand } from '@/features/referral/ui/InviteBand';
 import {
   missedRewardOf,
   pastDaysOf,
@@ -31,6 +30,7 @@ import {
 } from '../_model/reward-screen-view';
 import { useMyReward } from '../../_model/useMyReward';
 import { useRewardOffer } from '../../_model/useRewardOffer';
+import { InviteBand } from './InviteBand';
 import { MissedRewardIntro } from './MissedRewardIntro';
 import { RefundApplyButton } from './RefundApplyButton';
 import { RewardExitOfferSheet } from './RewardExitOfferSheet';

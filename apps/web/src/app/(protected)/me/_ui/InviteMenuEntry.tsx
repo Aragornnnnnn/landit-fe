@@ -7,11 +7,14 @@ import { useReferralSummaryQuery } from '@/features/referral/model/useReferralSu
 import { REFERRAL_INVITE_PATH } from '@/shared/lib/routes';
 import { Emoji } from '@/shared/ui/emoji';
 
-import { MenuLink } from './Menu';
+import { MenuLink, ROW_CLASS, ROW_STYLE } from './Menu';
 import { ShareMenuEntry } from './ShareMenuEntry';
 
 export const InviteMenuEntry = () => {
-  const summary = useReferralSummaryQuery().data;
+  const { data: summary, isPending } = useReferralSummaryQuery();
+  // 조건을 아는 동안은 같은 높이 빈 행으로 기다린다 — 앱 공유 행이 비쳤다가 초대 행으로 바뀌면, 그새 누른 사람에게 코드 없는 공유가 나간다
+  if (isPending)
+    return <div aria-hidden className={ROW_CLASS} style={ROW_STYLE} />;
   const headline = summary ? inviteHeadlineOf(summary.currentOffer) : null;
   if (headline === null) return <ShareMenuEntry />;
   return (

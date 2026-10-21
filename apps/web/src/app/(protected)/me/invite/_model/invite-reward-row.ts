@@ -1,8 +1,7 @@
 // 친구 초대 화면의 받은 보상 한 줄 — 언제, 친구가 무엇을 해서, 얼마를, 들어왔는지. 친구가 누구인지는 오지 않아 적지 않는다
+import type { ReferralReward } from '@/features/referral/api/referral';
 import { readSeoulDateParts } from '@/shared/lib/seoul-date';
 import { formatWon } from '@/shared/lib/won';
-
-import type { ReferralReward } from '../api/referral';
 
 export interface InviteRewardRow {
   id: number;
@@ -13,6 +12,8 @@ export interface InviteRewardRow {
   statusLabel: string;
   // 실제로 적립됐는가 — 아니면 흐리게 그린다
   settled: boolean;
+  // 환불로 빠졌는가 — 금액에 줄을 긋는다
+  canceled: boolean;
 }
 
 const TITLE_BY_STAGE: Record<ReferralReward['stage'], string> = {
@@ -44,5 +45,6 @@ export const inviteRewardRowOf = (reward: ReferralReward): InviteRewardRow => {
     amountLabel: `+${formatWon(reward.amountWon)}`,
     statusLabel: STATUS_LABEL[reward.status],
     settled: reward.status === 'CREDITED',
+    canceled: reward.status === 'REVERSED',
   };
 };
