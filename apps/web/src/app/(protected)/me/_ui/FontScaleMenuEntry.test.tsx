@@ -64,6 +64,33 @@ describe('FontScaleMenuEntry', () => {
     expect(screen.getByText('작게')).toBeInTheDocument();
   });
 
+  it('바를 누르면 누른 자리에서 가장 가까운 눈금으로 옮긴다 — iOS는 눌러도 값이 바뀌지 않는다', () => {
+    render(<FontScaleMenuEntry />);
+    openSheet();
+    // 바 폭 222px, 손잡이 22px — 눈금은 11px부터 211px까지 50px 간격이다
+    vi.spyOn(slider(), 'getBoundingClientRect').mockReturnValue({
+      left: 100,
+      width: 222,
+    } as DOMRect);
+
+    fireEvent.click(slider(), { clientX: 100 + 11 + 50 * 3 + 10 });
+
+    expect(getFontScale()).toBe(1.15);
+  });
+
+  it('바 양끝 바깥을 눌러도 끝 눈금에 멈춘다', () => {
+    render(<FontScaleMenuEntry />);
+    openSheet();
+    vi.spyOn(slider(), 'getBoundingClientRect').mockReturnValue({
+      left: 100,
+      width: 222,
+    } as DOMRect);
+
+    fireEvent.click(slider(), { clientX: 100 });
+
+    expect(getFontScale()).toBe(0.85);
+  });
+
   it('같은 단계에 다시 놓으면 계측하지 않는다', () => {
     setFontScale(1.15);
     render(<FontScaleMenuEntry />);

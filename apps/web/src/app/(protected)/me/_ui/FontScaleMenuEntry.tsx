@@ -33,6 +33,13 @@ const LABELS: Record<FontScale, string> = {
 const THUMB_SIZE_PX = 22;
 const LAST_STEP = FONT_SCALES.length - 1;
 
+// 누른 x좌표에서 가장 가까운 눈금 — 눈금은 바 양끝에서 손잡이 반지름만큼 안쪽에 있다
+const stepAt = (clientX: number, { left, width }: DOMRect) => {
+  const radius = THUMB_SIZE_PX / 2;
+  const ratio = (clientX - left - radius) / (width - THUMB_SIZE_PX);
+  return Math.min(LAST_STEP, Math.max(0, Math.round(ratio * LAST_STEP)));
+};
+
 export const FontScaleMenuEntry = () => {
   const [open, setOpen] = useState(false);
   // 서버 렌더와 첫 렌더는 숨긴 채로 둔다 — 구 셸에서 행이 떴다 사라지지 않게
@@ -117,6 +124,17 @@ export const FontScaleMenuEntry = () => {
               value={step}
               onChange={(event) =>
                 choose(FONT_SCALES[Number(event.target.value)])
+              }
+              // iOS는 바를 눌러도 값이 바뀌지 않아 손잡이를 끌어야만 움직인다 — 누른 자리로 직접 옮긴다(Android는 같은 값이라 choose가 건너뛴다)
+              onClick={(event) =>
+                choose(
+                  FONT_SCALES[
+                    stepAt(
+                      event.clientX,
+                      event.currentTarget.getBoundingClientRect(),
+                    )
+                  ],
+                )
               }
               aria-label="글자 크기"
               aria-valuetext={LABELS[scale]}
