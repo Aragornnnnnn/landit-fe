@@ -93,16 +93,16 @@ export const LetterOfferSheet = ({
           </span>
           <span className="flex shrink-0 flex-col items-end gap-0.5">
             {/* 가격 줄은 글자 크기 배율을 받지 않는다 — 크게 단계에서 "58,500원 / / 년"으로 끊기지 않게 */}
-            <span className="flex items-baseline gap-1.5 whitespace-nowrap">
+            <span className="flex items-baseline gap-1.5 whitespace-nowrap [--font-scale:1]">
               {offer.listPrice && (
-                <span className="text-[12px] leading-[1.3] text-[#9ca3af] line-through">
+                <span className="text-12 leading-[1.3] text-[#9ca3af] line-through">
                   {formatWon(offer.listPrice)}
                 </span>
               )}
               {/* 큰 숫자는 실제 청구액 — 월 환산가가 더 눈에 띄면 스토어 심사 3.1.2(c)에서 반려된다 */}
-              <span className="text-[19px] leading-[1.3] font-bold text-foreground">
+              <span className="text-19 leading-[1.3] font-bold text-foreground">
                 {formatWon(offer.price)}
-                <span className="text-[15px]"> /년</span>
+                <span className="text-15"> /년</span>
               </span>
             </span>
             <span className="text-12 leading-[1.3] text-muted-foreground">

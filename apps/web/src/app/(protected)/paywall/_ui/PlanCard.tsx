@@ -69,7 +69,7 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
           : '\u00a0'}
       </span>
       {/* 가격은 글자 크기 배율을 받지 않는다 — 크게 단계에서 "14,900 / 원"으로 끊기지 않게 */}
-      <span className="text-[22px] leading-[1.2] font-bold whitespace-nowrap text-foreground">
+      <span className="text-22 leading-[1.2] font-bold whitespace-nowrap text-foreground [--font-scale:1]">
         {plan.period} {formatWon(plan.price)}
       </span>
       <span

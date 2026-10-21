@@ -223,16 +223,16 @@ const PlanRow = ({
     </span>
     <span className="flex shrink-0 flex-col items-end gap-0.5">
       {/* 가격 줄은 글자 크기 배율을 받지 않는다 — 크게 단계에서 "58,500원 / / 년"으로 끊기지 않게 */}
-      <span className="flex items-baseline gap-1.5 whitespace-nowrap">
+      <span className="flex items-baseline gap-1.5 whitespace-nowrap [--font-scale:1]">
         {listPrice && (
-          <span className="text-[12px] leading-[1.3] text-[#9ca3af] line-through">
+          <span className="text-12 leading-[1.3] text-[#9ca3af] line-through">
             {listPrice}
           </span>
         )}
         {/* 단위는 한 급 낮춰 붙인다 — 견줄 것은 금액이다 */}
-        <span className="text-[19px] leading-[1.3] font-bold text-foreground">
+        <span className="text-19 leading-[1.3] font-bold text-foreground">
           {price}
-          <span className="text-[15px]"> {unit}</span>
+          <span className="text-15"> {unit}</span>
         </span>
       </span>
       <span className="text-12 leading-[1.3] text-muted-foreground">
