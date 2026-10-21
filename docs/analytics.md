@@ -113,15 +113,17 @@
 
 ### 온보딩
 
-| 이벤트                    | 속성                                      | 시점                                                                          |
-| ------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------- |
-| Onboarding Started        | —                                         | 온보딩 진입                                                                   |
-| Onboarding Step Viewed    | step, step_index                          | 스텝 노출 (intro→sound→mic→thought→notification→widget→level→accent→scenario) |
-| Onboarding Step Completed | step                                      | 각 스텝 전진 CTA                                                              |
-| Mic Permission Decided    | granted, source(onboarding\|conversation) | 마이크 권한 프롬프트 결과                                                     |
-| Onboarding Completed      | —                                         | 마지막 스텝 시작하기                                                          |
+| 이벤트                    | 속성                                      | 시점                                                                                   |
+| ------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------- |
+| Onboarding Started        | —                                         | 온보딩 진입                                                                            |
+| Onboarding Step Viewed    | step, step_index                          | 스텝 노출 (intro→sound→mic→thought→notification→widget→level→accent→referral→scenario) |
+| Onboarding Step Completed | step                                      | 각 스텝 전진 CTA                                                                       |
+| Mic Permission Decided    | granted, source(onboarding\|conversation) | 마이크 권한 프롬프트 결과                                                              |
+| Onboarding Completed      | —                                         | 마지막 스텝 시작하기                                                                   |
+| Referral Code Registered  | method(paste\|typed)                      | 초대 코드 등록 성공                                                                    |
+| Referral Code Skipped     | —                                         | 초대 코드 단계의 「초대 코드가 없어요」                                                |
 
-`step_index`는 전체 스텝 기준 고정값이라 조건부 스텝이 빠져도 뒤 번호가 흔들리지 않는다. notification은 OS 권한이 아직 결정되지 않았을 때만, widget은 위젯이 실린 앱 버전이고 아직 설치 유도를 안 봤을 때만 들어간다. 알림 스텝의 완료는 OS 권한창 회신이 왔을 때 찍힌다(마이크 스텝과 같은 방식).
+`step_index`는 전체 스텝 기준 고정값이라 조건부 스텝이 빠져도 뒤 번호가 흔들리지 않는다. notification은 OS 권한이 아직 결정되지 않았을 때만, widget은 위젯이 실린 앱 버전이고 아직 설치 유도를 안 봤을 때만 들어간다. 알림 스텝의 완료는 OS 권한창 회신이 왔을 때 찍힌다(마이크 스텝과 같은 방식). referral은 서버가 초대 코드를 받을 수 있다고 한 신규 가입자(registrationStatus PENDING)에게만 들어간다.
 
 ### 프로필 (영어 수준·배울 영어)
 

@@ -7,6 +7,9 @@ import { useRouter } from 'next/navigation';
 
 import { requestNotificationPermission } from '@/features/notification/model/request-permission';
 import { useNotificationPermission } from '@/features/notification/model/useNotificationPermission';
+// 초대 코드 단계를 넣을지는 referral feature의 등록 상태가 정한다
+import { inviteeWonOf } from '@/features/referral/model/invitee-reward';
+import { useReferralSummaryQuery } from '@/features/referral/model/useReferralSummaryQuery';
 // 위젯 설치 유도의 노출 조건·기록은 widget feature가 정본이라 온보딩 위젯 스텝이 가로 import한다
 import {
   recordInstallInvited,
@@ -31,6 +34,7 @@ import { IntroStep } from './steps/IntroStep';
 import { LampStep } from './steps/LampStep';
 import { MicStep } from './steps/MicStep';
 import { NotificationStep } from './steps/NotificationStep';
+import { ReferralStep } from './steps/ReferralStep';
 import { SoundStep } from './steps/SoundStep';
 import { ThoughtStep } from './steps/ThoughtStep';
 
@@ -42,6 +46,9 @@ export const OnboardingFlow = () => {
   const saveAccent = useSaveAccentMutation();
   // 물어볼 수 있는 상태(undetermined)에만 알림 스텝을 넣는다 — 이미 확정(granted·denied)이거나 요청 수단이 없으면(unavailable) 5스텝
   const canAskNotification = useNotificationPermission() === 'undetermined';
+  // 서버가 코드를 받을 수 있다고 한 신규 가입자만 초대 코드 단계를 본다 — 조회가 실패하거나 늦으면 단계 없이 지나간다
+  const referral = useReferralSummaryQuery().data;
+  const canEnterReferral = referral?.registrationStatus === 'PENDING';
 
   // 위젯 스텝을 넣을지 마운트 때 한 번 고정한다 — 진입 시 recordInstallInvited로 조건이 바뀌어도 목록이 흔들리지 않게
   const [showWidgetStep] = useState(
@@ -52,11 +59,12 @@ export const OnboardingFlow = () => {
   // 스텝 이동 방향 — 슬라이드가 전진(1)이면 오른쪽에서, 후진(-1)이면 왼쪽에서 들어오게 한다
   const [direction, setDirection] = useState(1);
   // 조건부 스텝은 목록에서 걸러낸다 — 단, 그 스텝에 머무는 동안엔 유지한다(현재 index가 사라지는 레이스 방지).
-  // 알림: 물어볼 수 있을 때만. 위젯: 위젯 있는 앱이고 아직 안 봤을 때만
+  // 알림: 물어볼 수 있을 때만. 위젯: 위젯 있는 앱이고 아직 안 봤을 때만. 초대 코드: 등록할 수 있을 때만
   const stepOrder: readonly OnboardingStep[] = STEP_ORDER.filter((item) => {
     if (item === 'notification')
       return canAskNotification || step === 'notification';
     if (item === 'widget') return showWidgetStep || step === 'widget';
+    if (item === 'referral') return canEnterReferral || step === 'referral';
     return true;
   });
   // 지연 콜백(마이크 권한 프롬프트)이 최신 스텝을 읽기 위한 ref — 스텝을 벗어났으면 완료로 치지 않는다
@@ -202,8 +210,19 @@ export const OnboardingFlow = () => {
               <AccentStep
                 onNext={(locale) => {
                   saveAccent.mutate(locale);
-                  finishStep('accent', 'scenario');
+                  finishStep(
+                    'accent',
+                    canEnterReferral ? 'referral' : 'scenario',
+                  );
                 }}
+              />
+            )}
+            {step === 'referral' && (
+              <ReferralStep
+                signupWon={
+                  referral ? inviteeWonOf(referral.currentOffer.signup) : 0
+                }
+                onDone={() => finishStep('referral', 'scenario')}
               />
             )}
             {step === 'scenario' && (

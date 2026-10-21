@@ -21,6 +21,9 @@ export const EVENTS = {
   ONBOARDING_STEP_COMPLETED: 'Onboarding Step Completed',
   MIC_PERMISSION_DECIDED: 'Mic Permission Decided',
   ONBOARDING_COMPLETED: 'Onboarding Completed',
+  // 온보딩 초대 코드 단계 — 스텝 완료만으로는 등록했는지 건너뛰었는지 몰라 결과를 따로 찍는다
+  REFERRAL_CODE_REGISTERED: 'Referral Code Registered',
+  REFERRAL_CODE_SKIPPED: 'Referral Code Skipped',
 
   // 프로필 질문 게이트 — 신규 유저는 온보딩 스텝(level·accent)이라 위 계측이 그대로 커버한다.
   // 온보딩을 이미 마친 기존 유저는 온보딩 밖 별도 게이트라 노출·응답을 따로 찍는다.
@@ -258,6 +261,7 @@ export type OnboardingStep =
   | 'notification'
   | 'widget'
   | 'accent'
+  | 'referral'
   | 'scenario';
 // 영어 수준 — BE 저장 API(learningLevel)와 같은 1(막 시작)~5(유창) 정수 척도. 지표와 서버 데이터가 같은 말을 쓴다
 export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
@@ -485,6 +489,9 @@ export type EventProps = {
     source: 'onboarding' | 'conversation';
   };
   'Onboarding Completed': undefined;
+  // 코드를 어떻게 넣었나 — 붙여넣기(버튼·칸 길게 눌러 붙여넣기) 또는 직접 입력
+  'Referral Code Registered': { method: 'paste' | 'typed' };
+  'Referral Code Skipped': undefined;
   'Profile Gate Viewed': { question: GateQuestion };
   'Profile Gate Answered': { question: 'accent'; accent: AccentLocale };
   'Accent Changed': { accent: AccentLocale };
