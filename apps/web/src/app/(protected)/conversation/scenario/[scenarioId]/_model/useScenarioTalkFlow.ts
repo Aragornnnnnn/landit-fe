@@ -14,7 +14,10 @@ import { prepareFeedbackSummary } from '@/features/feedback/model/useSessionFeed
 import { refreshRewardAfterCompletion } from '@/features/reward/model/refresh-reward';
 // 첫 완료 뒤 홈에서 소감을 묻는다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { markTalkCompleted } from '@/features/satisfaction/model/prompt-record';
-import type { DailyScenarioResponse } from '@/features/scenario/api/daily';
+import type {
+  AnswerGuide,
+  DailyScenarioResponse,
+} from '@/features/scenario/api/daily';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { scenarioKeys } from '@/features/scenario/model/keys';
 // 대화 완료가 스트릭도 늘린다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
@@ -56,9 +59,26 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
       : null,
   );
 
+  // 답변 가이드는 응답에 실린 그 질문 문장과 짝지어 둔다 — 화면의 질문이 그 문장일 때만 보인다.
+  // 제출 응답은 속마음보다 먼저 오므로, 짝이 없으면 이전 질문 카드에 다음 질문 가이드가 붙는다
+  const [guide, setGuide] = useState<{
+    question: string;
+    guide: AnswerGuide;
+  } | null>(() =>
+    preview?.answerGuide && opening
+      ? { question: opening.content, guide: preview.answerGuide }
+      : null,
+  );
+
   // 세션 수명(백그라운드 시작·확보 대기·중도 종료)은 훅 안에 — 여기서는 오프닝 폴백만 받는다
   const session = useScenarioTalkSession(scenario, {
-    onOpeningMessage: (message) => setOpening((prev) => prev ?? message),
+    onOpeningMessage: ({ answerGuide, ...message }) => {
+      setOpening((prev) => prev ?? message);
+      if (answerGuide)
+        setGuide(
+          (prev) => prev ?? { question: message.content, guide: answerGuide },
+        );
+    },
   });
 
   const queryClient = useQueryClient();
@@ -99,6 +119,12 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
         input_type: inputType === 'VOICE' ? 'voice' : 'text',
         char_count: content.length,
       });
+      const next = res.nextMessage;
+      setGuide(
+        next?.answerGuide
+          ? { question: next.content, guide: next.answerGuide }
+          : null,
+      );
       // 마지막 발화였다면 피드백을 미리 만들고 다음 대화 해금을 홈에 반영한다
       if (res.progress.completed) {
         track(EVENTS.SCENARIO_TALK_COMPLETED, {
@@ -138,6 +164,7 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
       firstSpeaker: scenario.firstSpeaker,
       totalQuestionCount: session.totalQuestionCount,
     }),
+    answerGuide: guide?.question === engine.turn.aiMessage ? guide.guide : null,
     // DONE 시점엔 세션이 확보돼 있다 — 피드백 생성에 쓴다 (없으면 세션 시작이 실패한 경우)
     sessionId: session.sessionId,
   };

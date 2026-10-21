@@ -219,6 +219,7 @@ const submitResponse = (
     ttsText: null,
     fixedQuestionText: null,
     questionAudioUrl: null,
+    answerGuide: null,
   },
   progress: {
     currentTurnNumber: 2,
@@ -242,6 +243,7 @@ const splitSubmitResponse = () =>
       ttsText: 'Thanks!',
       fixedQuestionText: 'What size would you like?',
       questionAudioUrl: 'https://cdn.example.com/question-2.mp3',
+      answerGuide: null,
     },
   });
 
@@ -474,6 +476,7 @@ describe('useScenarioTalkFlow', async () => {
           ttsText: null,
           fixedQuestionText: null,
           questionAudioUrl: null,
+          answerGuide: null,
         },
         progress: {
           currentTurnNumber: 3,
@@ -511,6 +514,7 @@ describe('useScenarioTalkFlow', async () => {
           ttsText: null,
           fixedQuestionText: null,
           questionAudioUrl: null,
+          answerGuide: null,
         },
         progress: {
           currentTurnNumber: 3,
@@ -614,6 +618,7 @@ describe('useScenarioTalkFlow', async () => {
           ttsText: null,
           fixedQuestionText: null,
           questionAudioUrl: null,
+          answerGuide: null,
         },
         progress: {
           currentTurnNumber: 3,
@@ -958,5 +963,105 @@ describe('useScenarioTalkFlow', async () => {
     expect(result.current.phase).toBe('USER_READY');
     expect(result.current.input.transcript).toBe('');
     expect(result.current.input.keyboardMode).toBe(false);
+  });
+
+  describe('답변 가이드', () => {
+    const openingGuide = {
+      content: "I'm a student. I like watching movies.",
+      translatedContent: '난 학생이야. 영화 보는 걸 좋아해.',
+    };
+    const nextGuide = {
+      content: 'I watched a movie yesterday. It was fun.',
+      translatedContent: '어제 영화를 봤어. 재미있었어.',
+    };
+    const guidedScenario = {
+      ...scenario,
+      openingPreview: { ...scenario.openingPreview, answerGuide: openingGuide },
+    } as unknown as Scenario;
+
+    it('첫 질문의 가이드는 시나리오 미리보기에서 바로 보여 준다', async () => {
+      const { result } = renderHook(() => useScenarioTalkFlow(guidedScenario));
+
+      expect(result.current.answerGuide).toEqual(openingGuide);
+
+      await act(async () => {});
+    });
+
+    it('미리보기에 첫 발화가 없으면 세션 시작 응답의 첫 질문 가이드를 쓴다', async () => {
+      // given — 미리보기 없이 들어와 세션 응답이 첫 질문을 채운다
+      startScenarioTalkSession.mockResolvedValue({
+        ...startResponse(),
+        currentMessage: {
+          messageId: 1,
+          turnNumber: 1,
+          messageSequence: 1,
+          role: 'AI',
+          content: 'Hey! Can you introduce yourself?',
+          translatedContent: '자기소개 해 줄래?',
+          innerThought: '',
+          innerThoughtType: '',
+          questionAudioUrl: null,
+          answerGuide: openingGuide,
+        },
+      });
+      const noPreview = {
+        ...scenario,
+        openingPreview: null,
+      } as unknown as Scenario;
+
+      const { result } = renderHook(() => useScenarioTalkFlow(noPreview));
+      await act(async () => {});
+
+      expect(result.current.answerGuide).toEqual(openingGuide);
+    });
+
+    it('다음 질문의 가이드는 그 질문이 화면에 뜬 뒤에 바뀐다 — 속마음이 도는 동안엔 보이지 않는다', async () => {
+      // given — 첫 질문에서 답을 내고, 다음 질문에 가이드가 실려 온다
+      startScenarioTalkSession.mockResolvedValue(startResponse());
+      const { result } = renderHook(() => useScenarioTalkFlow(guidedScenario));
+      await act(async () => {});
+      await act(async () => ttsMock.state.onEnd?.());
+      submitScenarioTalkMessage.mockResolvedValue(
+        submitResponse({
+          nextMessage: {
+            ...submitResponse().nextMessage!,
+            answerGuide: nextGuide,
+          },
+        }),
+      );
+
+      // when — 답을 내 속마음이 도는 동안
+      await speakAndSubmit(result, 'I am a student.');
+
+      // then — 이전 질문 카드에는 다음 질문 가이드가 붙지 않는다
+      expect(result.current.answerGuide).toBeNull();
+
+      act(() => {
+        vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+      });
+      expect(result.current.answerGuide).toEqual(nextGuide);
+    });
+
+    it('다음 질문에 가이드가 없으면 보여 주지 않는다', async () => {
+      startScenarioTalkSession.mockResolvedValue(startResponse());
+      const { result } = renderHook(() => useScenarioTalkFlow(guidedScenario));
+      await act(async () => {});
+      await act(async () => ttsMock.state.onEnd?.());
+      submitScenarioTalkMessage.mockResolvedValue(
+        submitResponse({
+          nextMessage: {
+            ...submitResponse().nextMessage!,
+            answerGuide: null,
+          },
+        }),
+      );
+
+      await speakAndSubmit(result, 'I am a student.');
+      act(() => {
+        vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+      });
+
+      expect(result.current.answerGuide).toBeNull();
+    });
   });
 });
