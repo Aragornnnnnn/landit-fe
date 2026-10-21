@@ -136,4 +136,18 @@ describe('useAnswerGuideToggle', () => {
 
     expect(result.current.autoPending).toBe(false);
   });
+
+  it('키보드로 바꿔 접히면 계측 없이 접고, 그 질문은 다시 저절로 펼치지 않는다', () => {
+    const { result } = renderToggle(ready);
+    act(() => result.current.openGuide());
+    onToggled.mockClear();
+
+    act(() => result.current.collapseGuide());
+    act(() => {
+      vi.advanceTimersByTime(answerGuideAutoOpenMs * 2);
+    });
+
+    expect(result.current.open).toBe(false);
+    expect(onToggled).not.toHaveBeenCalled();
+  });
 });

@@ -56,5 +56,8 @@ export const useAnswerGuideToggle = ({
     autoPending,
     openGuide: () => toggle(true, 'tap'),
     closeGuide: () => toggle(false, 'tap'),
+    // 키보드로 바꿀 때 — 답변 칸이 입력창이 되니 비켜 준다. 가이드를 접은 게 아니라 계측하지 않고,
+    // 입력을 취소해도 저절로 다시 덮지 않게 직접 만진 것으로 남긴다
+    collapseGuide: () => setState({ question, open: false, touched: true }),
   };
 };

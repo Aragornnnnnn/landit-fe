@@ -252,7 +252,10 @@ export const ScenarioTalkFlow = ({
           <MicControl
             phase={phase}
             onPress={pressMic}
-            onKeyboard={pressKeyboard}
+            onKeyboard={() => {
+              guide.collapseGuide();
+              pressKeyboard();
+            }}
             onCancel={cancelInput}
             onDone={finishListening}
           />
