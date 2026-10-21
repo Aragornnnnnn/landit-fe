@@ -25,14 +25,14 @@ export const SettingSheet = ({
   <BottomSheet open={open} onClose={onClose}>
     <div className="flex items-center justify-between">
       <BottomSheet.Title
-        className="text-[17px] font-bold"
+        className="text-17 font-bold"
         style={{ color: '#111' }}
       >
         {title}
       </BottomSheet.Title>
       {trailing}
     </div>
-    <p className="mt-1 mb-4 text-[14px] leading-6" style={{ color: '#666' }}>
+    <p className="mt-1 mb-4 text-14 leading-6" style={{ color: '#666' }}>
       {description}
     </p>
     {children}

@@ -17,12 +17,12 @@ export const DataSection = () => (
         mascot={RANDY.cards}
       />
       {/* 근거는 제목 바로 아래 한 줄로 — 따로 상자에 두면 읽히지 않는 각주가 된다 */}
-      <p className="reveal-up mt-3 px-6 text-sm leading-[21px] tracking-[-0.01em] text-muted-foreground">
+      <p className="reveal-up mt-3 px-6 text-sm leading-[calc(21/14)] tracking-[-0.01em] text-muted-foreground">
         글자만 볼 때보다 그림과 함께 볼 때 더 잘 기억해요.
         <br />
         랜딧은 예문마다 상황 그림을 함께 보여줘요.
       </p>
-      <p className="reveal-up mt-1.5 px-6 text-[11px] tracking-[-0.01em] text-[#a89a8b]">
+      <p className="reveal-up mt-1.5 px-6 text-11 tracking-[-0.01em] text-[#a89a8b]">
         그림 우월성 효과 · Paivio, 이중 부호화 이론
       </p>
     </RevealSection>

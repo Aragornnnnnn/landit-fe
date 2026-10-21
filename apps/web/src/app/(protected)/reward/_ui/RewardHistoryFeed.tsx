@@ -16,7 +16,7 @@ import { track } from '@/shared/analytics';
 import { useInView } from '@/shared/lib/useInView';
 
 const NOTICE_CLASS =
-  'py-6 text-center text-[13px] font-medium text-muted-foreground';
+  'py-6 text-center text-13 font-medium text-muted-foreground';
 
 export const RewardHistoryFeed = () => (
   <RewardHistoryList {...useRewardHistoryQuery()} />

@@ -33,13 +33,13 @@ export const WithdrawSheet = ({
 
   return (
     <BottomSheet open={open} onClose={onClose}>
-      <BottomSheet.Title className="text-[17px] font-bold text-foreground">
+      <BottomSheet.Title className="text-17 font-bold text-foreground">
         회원탈퇴
       </BottomSheet.Title>
       {mustCancelFirst ? (
         <>
           {/* 세 문장을 한 줄씩 — 왜 안 되는지, 그래서 뭘 해야 하는지가 한눈에 읽히게 */}
-          <p className="mt-2 text-[14px] leading-6 text-muted-foreground">
+          <p className="mt-2 text-14 leading-6 text-muted-foreground">
             구독 중에는 탈퇴할 수 없어요.
             <br />
             탈퇴해도 스토어 결제는 계속돼요.
@@ -64,7 +64,7 @@ export const WithdrawSheet = ({
         </>
       ) : (
         <>
-          <p className="mt-2 text-[14px] leading-6 text-muted-foreground">
+          <p className="mt-2 text-14 leading-6 text-muted-foreground">
             계정과 이용 기록이 삭제됩니다. 계속 진행할까요?
           </p>
           {/* 버튼에 포커스가 남은 채 늦게 뜨는 글이라 라이브 영역으로 — 스크린 리더가 실패를 읽어 준다 */}

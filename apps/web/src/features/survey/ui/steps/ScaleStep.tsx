@@ -50,7 +50,7 @@ export const ScaleStep = ({
           );
         })}
       </div>
-      <div className="mt-3 flex justify-between text-[13px] font-semibold text-muted-foreground">
+      <div className="mt-3 flex justify-between text-13 font-semibold text-muted-foreground">
         <span>{question.low}</span>
         <span>{question.high}</span>
       </div>

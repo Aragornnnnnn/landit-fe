@@ -68,7 +68,7 @@ const CancelTestButton = ({ alarm }: { alarm: ScheduledAlarm }) => (
   <button
     type="button"
     onClick={() => postToNative({ type: 'CANCEL_ALARM', id: alarm.id })}
-    className="ml-2 rounded-full bg-card px-2.5 py-1 text-[12px] font-bold text-foreground ring-1 ring-border active:scale-95"
+    className="ml-2 rounded-full bg-card px-2.5 py-1 text-12 font-bold text-foreground ring-1 ring-border active:scale-95"
   >
     취소
   </button>

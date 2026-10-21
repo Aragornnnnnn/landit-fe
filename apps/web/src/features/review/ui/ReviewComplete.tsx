@@ -143,7 +143,7 @@ export const ReviewComplete = ({
                   >
                     {question.targetExpressionText}
                   </span>
-                  <span className="mt-0.5 truncate text-[13px] font-medium text-foreground/80">
+                  <span className="mt-0.5 truncate text-13 font-medium text-foreground/80">
                     {question.baseExpressionMeaningText}
                   </span>
                 </span>

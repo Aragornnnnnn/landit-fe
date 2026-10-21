@@ -46,7 +46,7 @@ export const SentenceListenBlock = ({
         />
       )}
     </div>
-    <p className="mt-2 text-[15px] font-medium text-muted-foreground">
+    <p className="mt-2 text-15 font-medium text-muted-foreground">
       {sentenceTranslation}
     </p>
   </div>

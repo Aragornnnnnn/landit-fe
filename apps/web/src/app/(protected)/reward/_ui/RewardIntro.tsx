@@ -26,10 +26,10 @@ export const RewardIntro = ({
 }) => (
   <div className="pb-8">
     <section className="px-5 pt-3 text-center">
-      <h2 className="text-[26px] leading-9 font-black tracking-[-0.025em] text-foreground">
+      <h2 className="text-26 leading-9 font-black tracking-[-0.025em] text-foreground">
         <EmphasizedText line={copy.title} />
       </h2>
-      <p className="mt-1 text-[14px] font-medium text-muted-foreground">
+      <p className="mt-1 text-14 font-medium text-muted-foreground">
         {copy.subtitle}
       </p>
     </section>
@@ -38,22 +38,22 @@ export const RewardIntro = ({
       <RefundDepositDemo offer={offer} depositLabel={copy.deposit} />
     </div>
     {copy.caption && (
-      <p className="mt-3 px-5 text-center text-[14px] font-medium text-muted-foreground">
+      <p className="mt-3 px-5 text-center text-14 font-medium text-muted-foreground">
         <EmphasizedText line={copy.caption} />
       </p>
     )}
 
     {/* 결제하면 보게 될 환급 내역과 같은 모습 — 실제 내역이 아니라 보기라 흐리게 둔다 */}
     <section className="mt-9 px-5">
-      <h3 className="text-[18px] font-black tracking-[-0.02em] text-foreground">
+      <h3 className="text-18 font-black tracking-[-0.02em] text-foreground">
         이렇게 쌓여요
       </h3>
       <div className="opacity-60">
         <p className="mt-3 flex items-center justify-between border-b border-border pb-3.5">
-          <span className="text-[15px] font-medium text-foreground">
+          <span className="text-15 font-medium text-foreground">
             쌓인 환급액
           </span>
-          <span className="text-[20px] font-black text-primary tabular-nums">
+          <span className="text-20 font-black text-primary tabular-nums">
             {formatWon(offer.dailyWon * SAMPLE_DAYS)}
           </span>
         </p>

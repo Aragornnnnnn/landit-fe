@@ -233,7 +233,7 @@ export const PaywallScreen = ({
         {notices.map((notice, index) => (
           <p
             key={notice}
-            className={`${index === 0 ? 'mt-3' : 'mt-1'} text-center text-[11px] leading-[1.35] text-muted-foreground`}
+            className={`${index === 0 ? 'mt-3' : 'mt-1'} text-center text-11 leading-[1.35] text-muted-foreground`}
           >
             {notice}
           </p>

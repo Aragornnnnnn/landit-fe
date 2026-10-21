@@ -14,8 +14,8 @@ interface PremiumPillProps {
 }
 
 const PILL_SIZE: Record<NonNullable<PremiumPillProps['size']>, string> = {
-  md: 'px-[11px] py-1 text-[13px]',
-  sm: 'px-2 py-[3px] text-[10px]',
+  md: 'px-[11px] py-1 text-13',
+  sm: 'px-2 py-[3px] text-10',
 };
 
 /** "PREMIUM" 골드 알약 하나 — 화면에서 프리미엄을 뜻하는 색은 이것 하나다 */

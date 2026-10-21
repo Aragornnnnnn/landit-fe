@@ -36,7 +36,7 @@ export const AlarmIntro = ({
       ) : (
         <div className="pt-[max(var(--safe-area-inset-top),16px)]" />
       )}
-      <h1 className="px-6 pt-4 text-[25px] leading-tight font-black whitespace-pre-line text-foreground">
+      <h1 className="px-6 pt-4 text-25 leading-tight font-black whitespace-pre-line text-foreground">
         {copy.introTitle}
       </h1>
 
@@ -66,7 +66,7 @@ export const AlarmIntro = ({
             className="absolute left-1/2 -translate-x-1/2"
             style={{ bottom: `calc(${(1 - buttonTop) * 100}% + 7px)` }}
           >
-            <p className="relative flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-2.5 text-[13px] font-bold whitespace-nowrap text-foreground shadow-md">
+            <p className="relative flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-2.5 text-13 font-bold whitespace-nowrap text-foreground shadow-md">
               <Emoji>👇</Emoji>누르면 바로 오늘의 시나리오 시작!
             </p>
             <span
@@ -83,7 +83,7 @@ export const AlarmIntro = ({
           <button
             type="button"
             onClick={onSkip}
-            className="mt-4 w-full text-center text-[13px] font-bold text-muted-foreground"
+            className="mt-4 w-full text-center text-13 font-bold text-muted-foreground"
           >
             다음에 할게요
           </button>

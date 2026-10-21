@@ -109,7 +109,7 @@ export const AlarmPledge = ({
       ) : (
         <div className="pt-[max(var(--safe-area-inset-top),16px)]" />
       )}
-      <h1 className="px-6 pt-4 text-[26px] leading-snug font-black text-foreground">
+      <h1 className="px-6 pt-4 text-26 leading-snug font-black text-foreground">
         <PledgeSentence time={initialTime} chipRef={chipRef} />
       </h1>
 
@@ -165,7 +165,7 @@ export const AlarmPledge = ({
           </span>
         </button>
         <p
-          className={`mt-6 text-[16px] font-bold ${phase === 'done' ? 'text-primary' : 'text-muted-foreground'}`}
+          className={`mt-6 text-16 font-bold ${phase === 'done' ? 'text-primary' : 'text-muted-foreground'}`}
         >
           {phase === 'done' ? '다짐했어요!' : '3초간 눌러 다짐하기'}
         </p>

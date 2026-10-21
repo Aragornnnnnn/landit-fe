@@ -36,7 +36,7 @@ export const PageHeader = ({
       )}
     </button>
     {/* 양옆 버튼 자리를 비워 긴 제목이 버튼 밑으로 들어가지 않게 한다 */}
-    <h1 className="truncate px-14 text-[17px] font-bold text-foreground">
+    <h1 className="truncate px-14 text-17 font-bold text-foreground">
       {title}
     </h1>
     {trailing && <div className="absolute right-3">{trailing}</div>}

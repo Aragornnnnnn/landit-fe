@@ -20,9 +20,7 @@ export const UsageDemo = ({ step, width }: DemoProps) => (
       </span>
       <span className="w-6" />
     </p>
-    <p className="px-6 pt-6 text-[22px] font-bold text-foreground">
-      이렇게도 써요
-    </p>
+    <p className="px-6 pt-6 text-22 font-bold text-foreground">이렇게도 써요</p>
 
     <div className="mt-4 overflow-hidden">
       <div
@@ -50,11 +48,11 @@ export const UsageDemo = ({ step, width }: DemoProps) => (
               />
             </div>
             <div className="flex flex-col gap-2 px-5 py-4">
-              <p className="text-[17px] leading-snug font-bold text-foreground">
+              <p className="text-17 leading-snug font-bold text-foreground">
                 <span className="mr-2 text-sm text-muted-foreground">Q</span>
                 {example.question}
               </p>
-              <p className="text-[17px] leading-snug font-bold text-foreground">
+              <p className="text-17 leading-snug font-bold text-foreground">
                 <span className="mr-2 text-sm text-muted-foreground">A</span>
                 {example.sentence[0]}
                 <span className="text-primary">{example.sentence[1]}</span>

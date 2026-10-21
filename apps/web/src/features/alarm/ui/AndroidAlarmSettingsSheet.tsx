@@ -39,7 +39,7 @@ export const AndroidAlarmSettingsSheet = ({
 
   return (
     <BottomSheet open={open} onClose={onClose}>
-      <BottomSheet.Title className="text-[22px] font-bold text-foreground">
+      <BottomSheet.Title className="text-22 font-bold text-foreground">
         두 가지만 켜 주세요
       </BottomSheet.Title>
 
@@ -53,7 +53,7 @@ export const AndroidAlarmSettingsSheet = ({
               className={`flex items-center gap-3 ${active ? '' : 'opacity-40'}`}
             >
               <span
-                className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[13px] font-bold ${
+                className={`flex size-6 shrink-0 items-center justify-center rounded-full text-13 font-bold ${
                   active
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-muted-foreground'
@@ -61,7 +61,7 @@ export const AndroidAlarmSettingsSheet = ({
               >
                 {index + 1}
               </span>
-              <span className="flex-1 text-[16px] font-bold text-foreground">
+              <span className="flex-1 text-16 font-bold text-foreground">
                 {step.title}
               </span>
               <span

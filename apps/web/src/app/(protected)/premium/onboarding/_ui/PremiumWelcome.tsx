@@ -159,7 +159,7 @@ export const PremiumWelcome = ({
         <div className="mt-3">
           <PremiumPill />
         </div>
-        <h1 className="mt-3 text-center text-[24px] leading-snug font-black text-balance text-foreground short:text-[21px]">
+        <h1 className="mt-3 text-center text-24 leading-snug font-black text-balance text-foreground short:text-21">
           {nickname ? `환영해요, ${nickname}님!` : '환영해요!'}
           <br />
           이제 랜딧을 마음껏 즐겨요
@@ -175,7 +175,7 @@ export const PremiumWelcome = ({
                 <Emoji className="size-6 shrink-0">
                   {BENEFIT_EMOJI[benefit.icon]}
                 </Emoji>
-                <span className="min-w-0 flex-1 text-[15px] font-bold text-foreground">
+                <span className="min-w-0 flex-1 text-15 font-bold text-foreground">
                   {benefit.text}
                 </span>
                 <motion.span

@@ -112,7 +112,7 @@ const LetterContent = ({
         </h1>
         <div className="mt-3 flex items-center gap-2">
           <LetterBadge label={head.badge.label} tone={head.badge.tone} />
-          <time className="text-[13px] text-muted-foreground">
+          <time className="text-13 text-muted-foreground">
             {formatLetterDateTime(head.sentAt)}
           </time>
         </div>

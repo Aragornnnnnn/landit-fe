@@ -53,7 +53,7 @@ export const BenefitComparison = ({
               <th scope="col" className="h-9 short:h-[23px]" />
               <th scope="col" className={freeColumn}>
                 <span
-                  className={`${HEADER_LABEL} text-[13px] leading-none font-bold text-muted-foreground`}
+                  className={`${HEADER_LABEL} text-13 leading-none font-bold text-muted-foreground`}
                 >
                   무료
                 </span>
@@ -70,7 +70,7 @@ export const BenefitComparison = ({
               <tr key={text}>
                 <th
                   scope="row"
-                  className={`${ROW_HEIGHT} text-left text-[15px] leading-[1.3] font-normal text-foreground short:text-[13px]`}
+                  className={`${ROW_HEIGHT} text-left text-15 leading-[1.3] font-normal text-foreground short:text-13`}
                 >
                   {text}
                 </th>

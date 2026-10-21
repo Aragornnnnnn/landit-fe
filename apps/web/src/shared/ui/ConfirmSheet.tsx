@@ -33,7 +33,7 @@ export const ConfirmSheet = ({
     <div className={top ? 'flex flex-col items-center text-center' : undefined}>
       {top}
       <BottomSheet.Title
-        className={`text-[17px] font-bold text-foreground ${top ? 'mt-1' : ''}`}
+        className={`text-17 font-bold text-foreground ${top ? 'mt-1' : ''}`}
       >
         {title}
       </BottomSheet.Title>

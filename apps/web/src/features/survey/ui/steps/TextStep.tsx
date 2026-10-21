@@ -42,7 +42,7 @@ export const TextStep = ({
           aria-label={question.title}
           // 화면이 넘어오자마자 쓸 수 있게 초점을 준다 — 키보드도 같이 올라온다
           autoFocus
-          className="h-[180px] w-full shrink-0 resize-none rounded-2xl border border-border bg-card p-4 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          className="h-[180px] w-full shrink-0 resize-none rounded-2xl border border-border bg-card p-4 text-15 leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
         />
       </div>
       <Button className="mt-4" loading={submitting} onClick={onNext}>

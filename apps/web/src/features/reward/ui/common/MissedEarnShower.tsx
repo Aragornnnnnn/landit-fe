@@ -167,7 +167,7 @@ export const MissedEarnShower = ({
         animate={{ opacity: [0, 1, 1, 0], y: [10, 0, 0, 0] }}
         transition={{ duration: LAND, times: [0, 0.2, 0.75, 1] }}
       >
-        <p className="text-[15px] font-bold text-white/85">
+        <p className="text-15 font-bold text-white/85">
           방금 대화로 받을 수 있었던
         </p>
         <p className="mt-1 text-[40px] leading-none font-black text-[#ffd36b] tabular-nums">

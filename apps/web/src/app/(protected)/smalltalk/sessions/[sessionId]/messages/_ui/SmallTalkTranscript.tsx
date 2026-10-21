@@ -133,7 +133,7 @@ export const SmallTalkTranscript = ({
           {hasNext && (
             <button
               onClick={jumpNext}
-              className={`animate-fade-up absolute right-5 ${continueToLearning ? 'bottom-4' : 'bottom-[max(var(--safe-area-inset-bottom),16px)]'} flex items-center gap-1 rounded-full bg-foreground px-3.5 py-2 text-[13px] font-semibold text-background shadow-md active:opacity-80`}
+              className={`animate-fade-up absolute right-5 ${continueToLearning ? 'bottom-4' : 'bottom-[max(var(--safe-area-inset-bottom),16px)]'} flex items-center gap-1 rounded-full bg-foreground px-3.5 py-2 text-13 font-semibold text-background shadow-md active:opacity-80`}
             >
               다음 자연스러운 말
               <ChevronDownIcon size={14} strokeWidth={2.5} />
@@ -165,11 +165,11 @@ export const SmallTalkTranscript = ({
 const PartnerMessage = ({ message }: { message: SmallTalkHistoryMessage }) => (
   <div className="flex justify-start">
     <div className="max-w-[78%] rounded-2xl bg-card px-4 py-3 shadow-sm">
-      <p className="text-[15px] leading-6 font-medium text-foreground">
+      <p className="text-15 leading-6 font-medium text-foreground">
         {message.content}
       </p>
       {message.translatedContent && (
-        <p className="mt-1.5 text-[13px] leading-5 text-muted-foreground">
+        <p className="mt-1.5 text-13 leading-5 text-muted-foreground">
           {message.translatedContent}
         </p>
       )}
@@ -193,7 +193,7 @@ const MyMessage = ({
 }) => (
   <div className="flex flex-col items-end gap-1.5">
     <div className="max-w-[78%] rounded-2xl bg-primary px-4 py-3 text-white">
-      <p className="text-[15px] leading-6 font-medium">
+      <p className="text-15 leading-6 font-medium">
         <HighlightedContent
           content={message.content}
           matchedText={message.reusedExpression?.matchedText}
@@ -204,7 +204,7 @@ const MyMessage = ({
       <ReusedExpressionTag expression={message.reusedExpression} />
     )}
     {message.correctionStatus === 'PREPARING' && !waitExpired && (
-      <p className="text-[12px] text-muted-foreground">
+      <p className="text-12 text-muted-foreground">
         더 자연스러운 말을 찾는 중…
       </p>
     )}
@@ -246,7 +246,7 @@ const ReusedExpressionTag = ({
 }: {
   expression: SmallTalkReusedExpression;
 }) => (
-  <p className="flex items-center gap-1 rounded-full bg-success/10 px-3 py-1.5 text-[12px] font-semibold text-success">
+  <p className="flex items-center gap-1 rounded-full bg-success/10 px-3 py-1.5 text-12 font-semibold text-success">
     <CheckIcon size={12} strokeWidth={3} />
     배운 표현 「{expression.text}」을 썼어요
   </p>
@@ -254,7 +254,7 @@ const ReusedExpressionTag = ({
 
 // 고칠 게 없던 말 — 배운 표현 태그와 같은 알약, 색만 파랑(잘한 것을 파랑으로 쓰는 피드백 상세와 같은 토큰)
 const GoodJobTag = () => (
-  <p className="flex items-center gap-1 rounded-full bg-good/10 px-3 py-1.5 text-[12px] font-semibold text-good">
+  <p className="flex items-center gap-1 rounded-full bg-good/10 px-3 py-1.5 text-12 font-semibold text-good">
     <CheckIcon size={12} strokeWidth={3} />
     잘했어요!
   </p>
@@ -274,18 +274,18 @@ const CorrectionCard = ({
   <section
     className={`max-w-[88%] rounded-2xl bg-success/10 px-4 py-3 ${className}`}
   >
-    <p className="flex items-center gap-1 text-[12px] font-semibold text-success">
+    <p className="flex items-center gap-1 text-12 font-semibold text-success">
       <SparkleIcon size={13} />
       이렇게 말하면 더 자연스러워요
     </p>
-    <p className="mt-1.5 text-[15px] leading-6 font-bold text-success">
+    <p className="mt-1.5 text-15 leading-6 font-bold text-success">
       {correction.betterSentence}
     </p>
-    <p className="mt-1.5 text-[13px] leading-5 text-muted-foreground">
+    <p className="mt-1.5 text-13 leading-5 text-muted-foreground">
       {correction.reason}
     </p>
     {correction.memoryTag && (
-      <p className="mt-2 inline-block rounded-full bg-card px-2.5 py-1 text-[12px] text-muted-foreground">
+      <p className="mt-2 inline-block rounded-full bg-card px-2.5 py-1 text-12 text-muted-foreground">
         <Emoji>🗓️</Emoji> {correction.memoryTag}
       </p>
     )}

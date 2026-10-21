@@ -13,10 +13,10 @@ export const MidnightCountdown = ({ amountWon }: { amountWon: number }) => {
     <p
       // 초마다 읽어 주면 시끄럽다 — 같은 내용은 아래 안내 문구가 말한다
       aria-hidden
-      className="flex h-9 items-center gap-2 rounded-full bg-destructive px-4 text-[13px] font-bold text-destructive-foreground"
+      className="flex h-9 items-center gap-2 rounded-full bg-destructive px-4 text-13 font-bold text-destructive-foreground"
     >
       오늘 {formatWon(amountWon)} 놓치기까지
-      <span className="text-[16px] font-black tabular-nums">
+      <span className="text-16 font-black tabular-nums">
         {clockLabel(left)}
       </span>
     </p>

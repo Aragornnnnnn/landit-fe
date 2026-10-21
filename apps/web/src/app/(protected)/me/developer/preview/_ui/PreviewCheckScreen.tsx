@@ -139,10 +139,10 @@ export const PreviewCheckScreen = () => {
                 <dl className="space-y-3 px-4 py-4">
                   {NOTES.map(([question, answer]) => (
                     <div key={question}>
-                      <dt className="text-[14px] font-bold text-foreground">
+                      <dt className="text-14 font-bold text-foreground">
                         {question}
                       </dt>
-                      <dd className="mt-0.5 text-[13px] leading-snug text-muted-foreground">
+                      <dd className="mt-0.5 text-13 leading-snug text-muted-foreground">
                         {answer}
                       </dd>
                     </div>

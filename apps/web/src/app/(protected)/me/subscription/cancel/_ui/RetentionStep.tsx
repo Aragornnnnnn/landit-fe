@@ -18,10 +18,8 @@ const Card = ({ card }: { card: RetentionCard }) => {
       <dl className={`${CARD_CLASS} flex divide-x divide-border`}>
         {card.items.map((item) => (
           <div key={item.label} className="flex flex-1 flex-col items-center">
-            <dd className="text-[18px] font-bold text-foreground">
-              {item.value}
-            </dd>
-            <dt className="mt-0.5 text-[13px] text-muted-foreground">
+            <dd className="text-18 font-bold text-foreground">{item.value}</dd>
+            <dt className="mt-0.5 text-13 text-muted-foreground">
               {item.label}
             </dt>
           </div>
@@ -32,10 +30,10 @@ const Card = ({ card }: { card: RetentionCard }) => {
   if (card.kind === 'quote') {
     return (
       <figure className={CARD_CLASS}>
-        <figcaption className="text-[13px] text-muted-foreground">
+        <figcaption className="text-13 text-muted-foreground">
           {card.label}
         </figcaption>
-        <blockquote className="mt-1 text-[15px] text-foreground">
+        <blockquote className="mt-1 text-15 text-foreground">
           “{card.text}”
         </blockquote>
       </figure>
@@ -43,13 +41,13 @@ const Card = ({ card }: { card: RetentionCard }) => {
   }
   return (
     <dl className={`${CARD_CLASS} flex items-center justify-between gap-3`}>
-      <dt className="text-[14px] text-muted-foreground">
+      <dt className="text-14 text-muted-foreground">
         {card.label}
         {card.sublabel && (
-          <span className="mt-0.5 block text-[12px]">{card.sublabel}</span>
+          <span className="mt-0.5 block text-12">{card.sublabel}</span>
         )}
       </dt>
-      <dd className="shrink-0 text-[18px] font-bold text-foreground">
+      <dd className="shrink-0 text-18 font-bold text-foreground">
         {card.value}
       </dd>
     </dl>
@@ -70,10 +68,10 @@ export const RetentionStep = ({
   <>
     <div className="flex flex-1 flex-col items-center overflow-y-auto px-5 pt-9 pb-4 text-center">
       <Emoji className="text-[84px]">{content.emoji}</Emoji>
-      <h1 className="mt-5 text-[22px] leading-[1.35] font-bold text-foreground">
+      <h1 className="mt-5 text-22 leading-[1.35] font-bold text-foreground">
         {content.title}
       </h1>
-      <p className="mt-2 text-[15px] leading-[1.55] text-muted-foreground">
+      <p className="mt-2 text-15 leading-[1.55] text-muted-foreground">
         {content.body.map((line) => (
           <span key={line} className="block">
             {line}

@@ -22,7 +22,7 @@ export const CoachBubble = () => {
   const reduced = useReducedMotion();
   return (
     <motion.span
-      className="pointer-events-none absolute top-2 left-[calc(50%+42px)] flex h-9 items-center rounded-2xl rounded-bl-md bg-card px-3.5 text-[13px] font-semibold whitespace-nowrap text-foreground shadow-md shadow-black/10"
+      className="pointer-events-none absolute top-2 left-[calc(50%+42px)] flex h-9 items-center rounded-2xl rounded-bl-md bg-card px-3.5 text-13 font-semibold whitespace-nowrap text-foreground shadow-md shadow-black/10"
       initial={{ y: 4, opacity: 0 }}
       animate={{ y: reduced ? 0 : [0, -3, 0], opacity: 1 }}
       exit={{ opacity: 0 }}

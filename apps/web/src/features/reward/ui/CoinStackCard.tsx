@@ -66,7 +66,7 @@ export const CoinStackCard = ({
         {EARLY_DAYS.map((day) => (
           <div key={day} className="flex flex-col items-center gap-2">
             <CoinPile count={day} size={34} shown={step >= day} />
-            <p className="text-[13px] font-bold text-foreground tabular-nums">
+            <p className="text-13 font-bold text-foreground tabular-nums">
               {formatWon(offer.dailyWon * day)}
             </p>
             <p className="text-xs font-medium text-muted-foreground">{day}일</p>
@@ -82,7 +82,7 @@ export const CoinStackCard = ({
           <CoinPile count={6} size={56} shown={tower} heavy={animated} />
           {/* 다 모은 금액은 기둥이 설 때 커지며 주황으로 켜진다 — 그 전엔 흐린 자리만 지킨다 */}
           <p
-            className={`text-[17px] font-black tabular-nums transition-[scale,color] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${tower ? 'scale-100 text-primary delay-300' : 'scale-75 text-[#d6c7b4]'}`}
+            className={`text-17 font-black tabular-nums transition-[scale,color] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${tower ? 'scale-100 text-primary delay-300' : 'scale-75 text-[#d6c7b4]'}`}
           >
             {formatWon(offer.maximumWon)}
           </p>

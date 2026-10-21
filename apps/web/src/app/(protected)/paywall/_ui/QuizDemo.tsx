@@ -37,7 +37,7 @@ const BANK = [
 const CHIP_GAP = 240;
 
 const CHIP =
-  'rounded-2xl border-[1.5px] border-[#e5e5e0] bg-card px-4 py-2.5 text-[19px] font-semibold text-foreground shadow-[0_3px_0_#e5e5e0]';
+  'rounded-2xl border-[1.5px] border-[#e5e5e0] bg-card px-4 py-2.5 text-19 font-semibold text-foreground shadow-[0_3px_0_#e5e5e0]';
 
 export const QuizDemo = ({ step, width }: DemoProps) => {
   const building = step >= QUIZ_SCENE.build;
@@ -45,7 +45,7 @@ export const QuizDemo = ({ step, width }: DemoProps) => {
 
   return (
     <DemoScreen width={width}>
-      <p className="px-5 pt-7 text-[22px] font-bold text-foreground">
+      <p className="px-5 pt-7 text-22 font-bold text-foreground">
         질문에 대한 대답을 완성하세요
       </p>
 
@@ -62,7 +62,7 @@ export const QuizDemo = ({ step, width }: DemoProps) => {
           />
         </div>
         <div className="flex-1 rounded-3xl bg-[#f0f0ee] px-5 py-4">
-          <p className="text-[17px] leading-snug font-bold text-foreground">
+          <p className="text-17 leading-snug font-bold text-foreground">
             Are you more of a go-explore person or a stay-in person?
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -70,7 +70,7 @@ export const QuizDemo = ({ step, width }: DemoProps) => {
           </p>
         </div>
       </div>
-      <p className="mt-4 mr-5 ml-auto w-fit max-w-[290px] rounded-3xl rounded-tr-md bg-primary px-5 py-3.5 text-[17px] font-bold text-primary-foreground">
+      <p className="mt-4 mr-5 ml-auto w-fit max-w-[290px] rounded-3xl rounded-tr-md bg-primary px-5 py-3.5 text-17 font-bold text-primary-foreground">
         솔직히 난 도시 탐험이라면 언제든 콜이야.
       </p>
 
@@ -122,7 +122,7 @@ export const QuizDemo = ({ step, width }: DemoProps) => {
           correct ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
-        <p className="flex items-center gap-2.5 text-[22px] font-bold text-[#2e7d4f]">
+        <p className="flex items-center gap-2.5 text-22 font-bold text-[#2e7d4f]">
           <span
             className={`flex size-8 items-center justify-center rounded-full bg-[#2e7d4f] text-lg text-white ${correct ? 'animate-pop' : ''}`}
             style={{ animationDelay: '350ms' } as CSSProperties}
@@ -132,7 +132,7 @@ export const QuizDemo = ({ step, width }: DemoProps) => {
           정답이에요!
         </p>
         <p className="mt-4 text-sm font-bold text-[#2e7d4f]">정답</p>
-        <p className="mt-1 text-[19px] font-bold text-foreground">
+        <p className="mt-1 text-19 font-bold text-foreground">
           Honestly, I&apos;m always up for exploring the city.
         </p>
         <p className="mt-5 rounded-2xl bg-[#2e7d4f] py-4 text-center text-base font-bold text-white shadow-[0_4px_0_#1f5c39]">

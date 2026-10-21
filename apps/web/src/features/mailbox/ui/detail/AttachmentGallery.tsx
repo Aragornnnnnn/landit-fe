@@ -49,7 +49,7 @@ export const AttachmentGallery = ({
                 className="flex size-full flex-col items-center justify-center gap-1.5 text-muted-foreground active:opacity-70"
               >
                 <RefreshIcon size={20} />
-                <span className="text-[11px]">다시 불러오기</span>
+                <span className="text-11">다시 불러오기</span>
               </button>
             )}
             {image.status === 'success' && (

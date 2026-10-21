@@ -36,7 +36,7 @@ export const MicPermissionSheet = ({
 
   return (
     <BottomSheet open={open} onClose={onClose}>
-      <BottomSheet.Title className="text-[17px] font-bold text-foreground">
+      <BottomSheet.Title className="text-17 font-bold text-foreground">
         마이크를 켜야 대화할 수 있어요
       </BottomSheet.Title>
 
@@ -44,7 +44,7 @@ export const MicPermissionSheet = ({
         <ol className="mt-4 space-y-2.5 rounded-2xl bg-muted px-4 py-4">
           {APP_STEPS.map((text, index) => (
             <li key={text} className="flex items-center gap-3">
-              <span className="flex size-5 flex-none items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
+              <span className="flex size-5 flex-none items-center justify-center rounded-full bg-primary text-11 font-bold text-primary-foreground">
                 {index + 1}
               </span>
               <span className="text-sm text-foreground">{text}</span>

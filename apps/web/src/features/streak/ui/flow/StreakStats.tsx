@@ -13,7 +13,7 @@ export const StreakStats = ({
   if (totalActiveDays === 0) return null;
 
   return (
-    <p className="px-5 text-center text-[13px] text-muted-foreground">
+    <p className="px-5 text-center text-13 text-muted-foreground">
       가장 길게{' '}
       <strong className="font-bold text-foreground">
         {longestStreakDays}일

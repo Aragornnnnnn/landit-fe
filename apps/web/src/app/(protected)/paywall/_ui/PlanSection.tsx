@@ -49,7 +49,7 @@ export const PlanSection = ({
         />
       ))}
     </div>
-    <nav className="mt-5 flex justify-center gap-3 text-[10px] leading-[1.3] font-medium text-muted-foreground underline">
+    <nav className="mt-5 flex justify-center gap-3 text-10 leading-[1.3] font-medium text-muted-foreground underline">
       <Link href="/terms">이용약관</Link>
       <Link href="/privacy">개인정보 처리방침</Link>
       <button
