@@ -30,7 +30,7 @@ const LABELS: Record<FontScale, string> = {
 };
 
 // 바 양끝 손잡이 반지름(px) — 눈금이 손잡이 중심과 맞도록 바를 이만큼 안쪽에 그린다
-const THUMB_RADIUS = 14;
+const THUMB_RADIUS = 11;
 
 export const FontScaleMenuEntry = () => {
   const [open, setOpen] = useState(false);
@@ -100,7 +100,7 @@ export const FontScaleMenuEntry = () => {
                 />
               ))}
               <span
-                className="absolute top-1/2 size-7 -translate-1/2 rounded-full border-[0.5px] border-[#E5E5EA] bg-white shadow-[0_2px_6px_rgba(0,0,0,0.18)] transition-[left] duration-150"
+                className="absolute top-1/2 size-[22px] -translate-1/2 rounded-full border-[0.5px] border-[#E5E5EA] bg-white shadow-[0_2px_6px_rgba(0,0,0,0.18)] transition-[left] duration-150"
                 style={{ left: `${percent}%` }}
               />
             </div>
@@ -116,7 +116,7 @@ export const FontScaleMenuEntry = () => {
               }
               aria-label="글자 크기"
               aria-valuetext={LABELS[scale]}
-              className="absolute inset-0 m-0 w-full cursor-pointer appearance-none bg-transparent opacity-0 [&::-moz-range-thumb]:size-7 [&::-webkit-slider-thumb]:size-7 [&::-webkit-slider-thumb]:appearance-none"
+              className="absolute inset-0 m-0 w-full cursor-pointer appearance-none bg-transparent opacity-0 [&::-moz-range-thumb]:size-[22px] [&::-webkit-slider-thumb]:size-[22px] [&::-webkit-slider-thumb]:appearance-none"
             />
           </div>
           <span className="text-[22px] font-medium text-[#6B7280]" aria-hidden>
