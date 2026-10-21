@@ -2,10 +2,12 @@
 // 붙여넣으면 글 전체에서 코드만 찾아 넣는다 (카톡 메시지를 통째로 복사해 와도 된다)
 'use client';
 
+import { useState } from 'react';
+
 import {
+  cleanTypedReferralCode,
   findReferralCode,
   REFERRAL_CODE_LENGTH,
-  typedReferralCode,
 } from '../model/referral-code';
 
 export type CodeInputTone = 'idle' | 'ok' | 'error';
@@ -24,38 +26,53 @@ export const ReferralCodeInput = ({
   onType: (code: string) => void;
   // 붙여넣은 글에서 찾은 코드. 못 찾으면 null
   onPaste: (code: string | null) => void;
-}) => (
-  <div className="relative mx-auto flex items-center justify-center gap-1.5">
-    {Array.from({ length: REFERRAL_CODE_LENGTH }, (_, index) => (
-      <CodeCell
-        key={index}
-        char={value[index] ?? ''}
-        divider={index === GROUP_SIZE}
-        tone={tone}
-        // 다음에 채울 칸만 주황 테두리 — 어디에 들어갈지 보인다
-        current={tone === 'idle' && index === value.length}
+}) => {
+  const [focused, setFocused] = useState(false);
+
+  // 붙여넣기 이벤트 없이 글이 한꺼번에 들어오는 길도 있다 — 키보드의 클립보드 칩·제안 바. 한 번에 두 자 넘게 늘었으면 붙여넣은 것으로 본다
+  const changeText = (raw: string) => {
+    if (raw.length - value.length > 1) {
+      const found = findReferralCode(raw);
+      if (found) return onPaste(found);
+    }
+    onType(cleanTypedReferralCode(raw));
+  };
+
+  return (
+    <div className="relative mx-auto flex items-center justify-center gap-1.5">
+      {Array.from({ length: REFERRAL_CODE_LENGTH }, (_, index) => (
+        <CodeCell
+          key={index}
+          char={value[index] ?? ''}
+          divider={index === GROUP_SIZE}
+          tone={tone}
+          // 칸에 포커스가 있을 때 다음에 채울 칸만 주황 테두리 — 어디에 들어갈지와 키보드가 이 칸에 있다는 걸 같이 보인다
+          current={focused && tone === 'idle' && index === value.length}
+        />
+      ))}
+      <input
+        aria-label="초대 코드"
+        value={value}
+        inputMode="text"
+        autoCapitalize="characters"
+        // 문자 인증번호 제안(one-time-code)이 뜨지 않게 끈다 — 이 코드는 문자로 오지 않는다
+        autoComplete="off"
+        autoCorrect="off"
+        spellCheck={false}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onChange={(event) => changeText(event.target.value)}
+        onPaste={(event) => {
+          event.preventDefault();
+          onPaste(findReferralCode(event.clipboardData.getData('text')));
+        }}
+        // 글자는 칸이 그린다 — 입력칸은 투명하게 칸 전체를 덮어 어디를 눌러도 키보드가 뜨고, 길게 누르면 붙여넣기 메뉴가 뜬다
+        // text-base — 16px보다 작으면 iOS가 누를 때 화면을 확대한다
+        className="absolute inset-0 h-full w-full cursor-text bg-transparent text-base text-transparent caret-transparent outline-none selection:bg-transparent"
       />
-    ))}
-    <input
-      aria-label="초대 코드"
-      value={value}
-      inputMode="text"
-      autoCapitalize="characters"
-      // 문자 인증번호 제안(one-time-code)이 뜨지 않게 끈다 — 이 코드는 문자로 오지 않는다
-      autoComplete="off"
-      autoCorrect="off"
-      spellCheck={false}
-      onChange={(event) => onType(typedReferralCode(event.target.value))}
-      onPaste={(event) => {
-        event.preventDefault();
-        onPaste(findReferralCode(event.clipboardData.getData('text')));
-      }}
-      // 글자는 칸이 그린다 — 입력칸은 투명하게 칸 전체를 덮어 어디를 눌러도 키보드가 뜨고, 길게 누르면 붙여넣기 메뉴가 뜬다
-      // text-base — 16px보다 작으면 iOS가 누를 때 화면을 확대한다
-      className="absolute inset-0 h-full w-full cursor-text bg-transparent text-base text-transparent caret-transparent outline-none selection:bg-transparent"
-    />
-  </div>
-);
+    </div>
+  );
+};
 
 const CodeCell = ({
   char,

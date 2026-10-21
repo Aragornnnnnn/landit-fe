@@ -14,11 +14,13 @@ import * as referralApi from '@/features/referral/api/referral';
 import type { ReferralPreview } from '@/features/referral/api/referral';
 import { track } from '@/shared/analytics';
 import { ApiError } from '@/shared/api/api-error';
+import { showToast } from '@/shared/ui/toast';
 
 import { ReferralStep } from './ReferralStep';
 
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 vi.mock('@/shared/monitoring/report', () => ({ reportWarning: vi.fn() }));
+vi.mock('@/shared/ui/toast', () => ({ showToast: vi.fn() }));
 vi.mock('@/shared/auth/auth-store', () => ({
   useAuthStore: (selector: (state: unknown) => unknown) =>
     selector({ member: { userId: 42 } }),
@@ -152,6 +154,57 @@ describe('ReferralStep', () => {
     );
 
     await waitFor(() => expect(onDone).toHaveBeenCalled());
+  });
+
+  it('등록할 수 없게 됐으면 한 줄 알리고 다음으로 넘어간다', async () => {
+    registerReferralCode.mockRejectedValue(
+      new ApiError(
+        'x',
+        409,
+        '/api/v1/referrals/registration',
+        'REFERRAL_REGISTRATION_CLOSED',
+      ),
+    );
+    const { input, onDone } = renderStep();
+    pasteMessage(input, 'K7QM3XPA');
+    await screen.findByText('✓ 확인됐어요 · 지금 등록하면 3,000원');
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '등록하고 계속할게요' }),
+    );
+
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect(showToast).toHaveBeenCalledWith(
+      '지금은 초대 코드를 등록할 수 없어요',
+    );
+  });
+
+  it('등록이 거절되면 확인 표시를 걷고 이유를 알리며 같은 코드로는 다시 못 누른다', async () => {
+    registerReferralCode.mockRejectedValue(
+      new ApiError(
+        'x',
+        400,
+        '/api/v1/referrals/registration',
+        'REFERRAL_SELF_INVITE',
+      ),
+    );
+    const { input } = renderStep();
+    pasteMessage(input, 'K7QM3XPA');
+    await screen.findByText('✓ 확인됐어요 · 지금 등록하면 3,000원');
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '등록하고 계속할게요' }),
+    );
+
+    expect(
+      await screen.findByText('내 초대 코드는 넣을 수 없어요'),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('✓ 확인됐어요 · 지금 등록하면 3,000원'),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '등록하고 계속할게요' }),
+    ).toBeDisabled();
   });
 
   it('「초대 코드가 없어요」를 누르면 건너뛰기를 서버에 남기고 다음으로 넘어간다', async () => {

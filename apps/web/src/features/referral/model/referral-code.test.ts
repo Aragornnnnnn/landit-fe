@@ -1,7 +1,7 @@
 // 초대 코드 찾기·정리 규칙 테스트
 import { describe, expect, it } from 'vitest';
 
-import { findReferralCode, typedReferralCode } from './referral-code';
+import { cleanTypedReferralCode, findReferralCode } from './referral-code';
 
 describe('findReferralCode', () => {
   it('공유 문구를 통째로 붙여넣으면 「초대 코드:」 뒤 코드를 찾는다', () => {
@@ -18,7 +18,9 @@ describe('findReferralCode', () => {
   it.each([
     ['소문자', 'k7qm3xpa'],
     ['하이픈', 'K7QM-3XPA'],
-    ['공백', 'K7QM 3XPA'],
+    // 초대 화면이 네 자씩 끊어 보여 주는 줄표 — 화면 글자를 그대로 복사해 와도 받는다
+    ['줄표', 'K7QM–3XPA'],
+    ['라벨 뒤 공백', '초대 코드: K7QM 3XPA'],
     ['앞뒤 공백', '  K7QM3XPA \n'],
   ])('%s이 섞여도 대문자 8자리로 찾는다', (_, text) => {
     expect(findReferralCode(text)).toBe('K7QM3XPA');
@@ -32,6 +34,10 @@ describe('findReferralCode', () => {
     const message = 'ABCDEFGH 말고 초대 코드: K7QM3XPA';
 
     expect(findReferralCode(message)).toBe('K7QM3XPA');
+  });
+
+  it('라벨 없이 띄어 쓴 영단어 두 개는 코드로 보지 않는다', () => {
+    expect(findReferralCode('LETS PLAY GAME NOW')).toBeNull();
   });
 
   it('링크 속 글자는 코드로 보지 않는다', () => {
@@ -51,12 +57,12 @@ describe('findReferralCode', () => {
   });
 });
 
-describe('typedReferralCode', () => {
+describe('cleanTypedReferralCode', () => {
   it('친 글자를 대문자로 바꾸고 코드에 안 쓰는 글자는 버린다', () => {
-    expect(typedReferralCode('k7-qm 3!')).toBe('K7QM3');
+    expect(cleanTypedReferralCode('k7-qm 3!')).toBe('K7QM3');
   });
 
   it('8자를 넘기면 앞 8자만 남긴다', () => {
-    expect(typedReferralCode('K7QM3XPAZZ')).toBe('K7QM3XPA');
+    expect(cleanTypedReferralCode('K7QM3XPAZZ')).toBe('K7QM3XPA');
   });
 });

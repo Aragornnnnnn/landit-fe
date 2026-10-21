@@ -41,6 +41,17 @@ describe('ReferralCodeInput', () => {
     expect(onPaste).toHaveBeenCalledWith('K7QM3XPA');
   });
 
+  it('붙여넣기 없이 메시지가 한꺼번에 들어와도(키보드 클립보드 칩) 코드만 찾아 넘긴다', () => {
+    const { input, onPaste, onType } = renderInput();
+
+    fireEvent.change(input, {
+      target: { value: '같이 해요 3,000원을 받아요\n초대 코드: K7QM3XPA' },
+    });
+
+    expect(onPaste).toHaveBeenCalledWith('K7QM3XPA');
+    expect(onType).not.toHaveBeenCalled();
+  });
+
   it('붙여넣은 글에 코드가 없으면 null을 넘긴다', () => {
     const { input, onPaste } = renderInput();
 
