@@ -29,8 +29,14 @@ const LABELS: Record<FontScale, string> = {
   1.3: '가장 크게',
 };
 
-// 칸 안의 "가"는 배율을 받지 않는 고정 크기다 — 고를 때마다 칸이 커지면 누를 자리가 흔들린다
-const GLYPH_PX = [13, 15, 17, 19, 21];
+// 칸 안 "가"는 배율을 받지 않는 고정 크기로 단계마다 키운다 — 고를 때마다 칸이 커지면 누를 자리가 흔들린다
+const GLYPH_PX: Record<FontScale, number> = {
+  0.85: 13,
+  0.92: 15,
+  1: 17,
+  1.15: 19,
+  1.3: 21,
+};
 
 export const FontScaleMenuEntry = () => {
   const [open, setOpen] = useState(false);
@@ -68,13 +74,14 @@ export const FontScaleMenuEntry = () => {
         title="글자 크기"
         description="앱 전체 글자 크기예요"
       >
+        {/* 음성 속도 시트와 같은 세그먼트 — 고르면 시트 뒤 화면 글자가 바로 바뀌어 따로 미리보기를 두지 않는다 */}
         <div
           role="radiogroup"
           aria-label="글자 크기"
-          className="flex gap-0 rounded-[10px] p-1"
+          className="mt-5 flex gap-0 rounded-[10px] p-1"
           style={{ background: '#F2F2F7' }}
         >
-          {FONT_SCALES.map((option, index) => {
+          {FONT_SCALES.map((option) => {
             const selected = option === scale;
             return (
               <button
@@ -89,7 +96,7 @@ export const FontScaleMenuEntry = () => {
                 }`}
                 style={{
                   color: selected ? '#111' : '#6B7280',
-                  fontSize: GLYPH_PX[index],
+                  fontSize: GLYPH_PX[option],
                 }}
               >
                 가
@@ -98,19 +105,20 @@ export const FontScaleMenuEntry = () => {
           })}
         </div>
 
-        <p className="mt-2 text-center text-12" style={{ color: '#9CA3AF' }}>
-          {LABELS[scale]}
-        </p>
-
-        {/* 고른 크기가 실제로 어떤지 바로 보이는 자리 — 이 글자는 배율을 받는다 */}
-        <p
-          className="mt-4 rounded-xl px-4 py-3 text-15 leading-relaxed"
-          style={{ background: '#F7F7F8', color: '#111' }}
-        >
-          방금 그 영어, 진짜 통했을까?
-          <br />
-          외국인 속마음을 들려드려요
-        </p>
+        {/* 칸마다 이름을 바로 아래에 단다 — 배율을 받지 않아 가장 크게에서도 한 줄이다 */}
+        <div className="mt-2 flex px-1" aria-hidden>
+          {FONT_SCALES.map((option) => (
+            <span
+              key={option}
+              className={`flex-1 text-center text-[11px] whitespace-nowrap ${
+                option === scale ? 'font-bold' : ''
+              }`}
+              style={{ color: option === scale ? '#111' : '#9CA3AF' }}
+            >
+              {LABELS[option]}
+            </span>
+          ))}
+        </div>
       </SettingSheet>
     </>
   );

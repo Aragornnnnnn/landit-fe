@@ -36,6 +36,19 @@ describe('FontScaleMenuEntry', () => {
     );
   });
 
+  it('칸마다 단계 이름이 붙어 있다', () => {
+    render(<FontScaleMenuEntry />);
+
+    openSheet();
+
+    expect(
+      screen
+        .getAllByRole('radio')
+        .map((radio) => radio.getAttribute('aria-label')),
+    ).toEqual(['가장 작게', '작게', '보통', '크게', '가장 크게']);
+    expect(screen.getByText('가장 크게')).toBeInTheDocument();
+  });
+
   it('이미 고른 기기에서는 그 단계가 골라진 채로 열린다', () => {
     setFontScale(1.3);
     render(<FontScaleMenuEntry />);
