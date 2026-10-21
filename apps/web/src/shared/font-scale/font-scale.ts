@@ -4,6 +4,8 @@ import type { NativeContext } from '@landit/bridge';
 const STORAGE_KEY = 'landit-font-scale';
 // 이 버전부터 셸이 Android 자동 확대를 끄고 기기 배율을 준다. 그 전 셸은 배율이 겹쳐 기능을 끈다
 const FONT_SCALE_BRIDGE_VERSION = 10;
+// Android 웹뷰 사용자 에이전트 표식 — 주입이 없는데 웹뷰면 구 셸(자동 확대가 켜진 셸)로 본다
+const ANDROID_WEBVIEW_UA = '; wv)';
 const watchers = new Set<() => void>();
 
 /** 고를 수 있는 배율 — 가장 작게부터 가장 크게까지 순서대로. 화면도 이 순서로 그린다 */
@@ -21,6 +23,7 @@ const initFontScale = (
   scales: readonly number[],
   key: string,
   minBridgeVersion: number,
+  webviewMarker: string,
 ) => {
   try {
     const native = (
@@ -28,6 +31,8 @@ const initFontScale = (
         __LANDIT_NATIVE__?: { bridgeVersion?: unknown; fontScale?: unknown };
       }
     ).__LANDIT_NATIVE__;
+    // 주입이 빠진 Android 웹뷰는 브라우저가 아니라 구 셸이다 — 셸이 기기 글꼴 크기를 이미 곱하고 있다
+    if (!native && navigator.userAgent.includes(webviewMarker)) return;
     if (
       native &&
       !(
@@ -60,14 +65,24 @@ const initFontScale = (
 
 /** 저장값이나 기기 배율로 첫 단계를 정해 적용한다. 하이드레이션 뒤에 다시 불러도 된다 */
 export const applyInitialFontScale = () =>
-  initFontScale(FONT_SCALES, STORAGE_KEY, FONT_SCALE_BRIDGE_VERSION);
+  initFontScale(
+    FONT_SCALES,
+    STORAGE_KEY,
+    FONT_SCALE_BRIDGE_VERSION,
+    ANDROID_WEBVIEW_UA,
+  );
 
 /** 첫 페인트 전에 실행할 인라인 스크립트 */
-export const fontScaleScript = `(${initFontScale.toString()})(${JSON.stringify(FONT_SCALES)}, ${JSON.stringify(STORAGE_KEY)}, ${FONT_SCALE_BRIDGE_VERSION})`;
+export const fontScaleScript = `(${initFontScale.toString()})(${JSON.stringify(FONT_SCALES)}, ${JSON.stringify(STORAGE_KEY)}, ${FONT_SCALE_BRIDGE_VERSION}, ${JSON.stringify(ANDROID_WEBVIEW_UA)})`;
 
-/** 셸 밖(브라우저)이거나 브릿지 10 이상 셸이면 쓸 수 있다 */
-export const isFontScaleAvailable = (context: NativeContext | null) =>
-  context === null || context.bridgeVersion >= FONT_SCALE_BRIDGE_VERSION;
+/** 브릿지 10 이상 셸이거나 셸 밖 브라우저면 쓸 수 있다. 주입 없는 Android 웹뷰는 구 셸이라 쓸 수 없다 */
+export const isFontScaleAvailable = (
+  context: NativeContext | null,
+  userAgent: string,
+) =>
+  context === null
+    ? !userAgent.includes(ANDROID_WEBVIEW_UA)
+    : context.bridgeVersion >= FONT_SCALE_BRIDGE_VERSION;
 
 /** 지금 단계. 저장값이 없거나 목록 밖이면 보통으로 본다 */
 export const getFontScale = (): FontScale => {

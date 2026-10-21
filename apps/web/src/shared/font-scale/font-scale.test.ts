@@ -25,7 +25,15 @@ const shell = (context: Record<string, unknown>) => {
   };
 };
 
+const ANDROID_WEBVIEW_UA =
+  'Mozilla/5.0 (Linux; Android 14; SM-S911N Build/UP1A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/129.0 Mobile Safari/537.36';
+const ANDROID_CHROME_UA =
+  'Mozilla/5.0 (Linux; Android 14; SM-S911N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Mobile Safari/537.36';
+const useUserAgent = (ua: string) =>
+  vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(ua);
+
 afterEach(() => {
+  vi.restoreAllMocks();
   localStorage.clear();
   delete window.__LANDIT_NATIVE__;
   document.documentElement.style.removeProperty('--font-scale');
@@ -92,6 +100,24 @@ describe('applyInitialFontScale', () => {
     expect(appliedScale()).toBe('');
   });
 
+  it('주입 없는 Android 웹뷰(구 셸)면 저장값이 있어도 적용하지 않는다 — 셸의 자동 확대와 배율이 곱해지지 않게', () => {
+    localStorage.setItem('landit-font-scale', '1.3');
+    useUserAgent(ANDROID_WEBVIEW_UA);
+
+    applyInitialFontScale();
+
+    expect(appliedScale()).toBe('');
+  });
+
+  it('Android 크롬 브라우저면 저장값을 적용한다', () => {
+    localStorage.setItem('landit-font-scale', '1.3');
+    useUserAgent(ANDROID_CHROME_UA);
+
+    applyInitialFontScale();
+
+    expect(appliedScale()).toBe('1.3');
+  });
+
   it('저장소를 못 읽어도 터지지 않는다', () => {
     shell({ fontScale: 1 });
     const getItem = vi
@@ -156,28 +182,38 @@ describe('getFontScale', () => {
 
 describe('isFontScaleAvailable', () => {
   it('브라우저(셸 밖)에서는 쓸 수 있다', () => {
-    expect(isFontScaleAvailable(null)).toBe(true);
+    expect(isFontScaleAvailable(null, ANDROID_CHROME_UA)).toBe(true);
+  });
+
+  it('주입 없는 Android 웹뷰(구 셸)에서는 쓸 수 없다', () => {
+    expect(isFontScaleAvailable(null, ANDROID_WEBVIEW_UA)).toBe(false);
   });
 
   it('브릿지 10 셸에서는 쓸 수 있다', () => {
     expect(
-      isFontScaleAvailable({
-        platform: 'android',
-        appVersion: '1.6.0',
-        buildNumber: '1',
-        bridgeVersion: 10,
-      }),
+      isFontScaleAvailable(
+        {
+          platform: 'android',
+          appVersion: '1.6.0',
+          buildNumber: '1',
+          bridgeVersion: 10,
+        },
+        ANDROID_WEBVIEW_UA,
+      ),
     ).toBe(true);
   });
 
   it('브릿지 9 이하 셸에서는 쓸 수 없다 — Android 자동 확대가 남아 있어 배율이 겹친다', () => {
     expect(
-      isFontScaleAvailable({
-        platform: 'android',
-        appVersion: '1.5.0',
-        buildNumber: '1',
-        bridgeVersion: 9,
-      }),
+      isFontScaleAvailable(
+        {
+          platform: 'android',
+          appVersion: '1.5.0',
+          buildNumber: '1',
+          bridgeVersion: 9,
+        },
+        ANDROID_WEBVIEW_UA,
+      ),
     ).toBe(false);
   });
 });

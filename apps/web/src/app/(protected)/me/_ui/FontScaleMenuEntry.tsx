@@ -36,7 +36,7 @@ export const FontScaleMenuEntry = () => {
   const [open, setOpen] = useState(false);
   // 서버 렌더와 첫 렌더는 숨긴 채로 둔다 — 구 셸에서 행이 떴다 사라지지 않게
   const available = useClientOnlyValue(
-    () => isFontScaleAvailable(getNativeContextSnapshot()),
+    () => isFontScaleAvailable(getNativeContextSnapshot(), navigator.userAgent),
     false,
   );
   const scale = useSyncExternalStore(
