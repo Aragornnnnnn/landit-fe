@@ -84,15 +84,23 @@ export const HeaderReward = ({
 export const RewardInviteLabel = ({
   amountWon = null,
   missed = false,
+  storedWon = 0,
 }: {
   // 알약이 말할 금액. 평소에는 null
   amountWon?: number | null;
   // 금액이 놓친 환급액인가
   missed?: boolean;
+  // 결제 전에 보관 중인 돈(초대 보상 등) — 있으면 받으러 가기·놓쳤어요보다 먼저 말한다. 진짜 들어와 있는 돈이다
+  storedWon?: number;
 }) => (
   <>
     <Coin size={16} />
-    {amountWon === null ? (
+    {storedWon > 0 ? (
+      <>
+        <span className="tabular-nums">{formatWon(storedWon)}</span>
+        <span className="font-medium">쌓여 있어요</span>
+      </>
+    ) : amountWon === null ? (
       <span>0원 프리미엄 시작하기</span>
     ) : (
       <>

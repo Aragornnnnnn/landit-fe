@@ -32,7 +32,7 @@ import { useMyReward } from '../_model/useMyReward';
 import { usePremiumPreview } from '../_model/usePremiumPreview';
 
 export const AppHeader = () => {
-  const { reward, loaded, invited, settled, preview, computedAt } =
+  const { reward, loaded, invited, settled, preview, computedAt, storedWon } =
     useMyReward();
   const badge = reward && rewardBadgeOf(reward);
   // 환급을 권할 사람이 오늘의 시나리오를 끝내고 돌아왔으면, 받을 수 있었던 동전이 진입 알약으로 날아간다.
@@ -76,7 +76,11 @@ export const AppHeader = () => {
                 ? {
                     href: REWARD_PATH,
                     label: (
-                      <RewardInviteLabel amountWon={pillWon} missed={missed} />
+                      <RewardInviteLabel
+                        amountWon={pillWon}
+                        missed={missed}
+                        storedWon={storedWon}
+                      />
                     ),
                     onClick: () =>
                       track(EVENTS.REWARD_ENTRY_TAPPED, {
