@@ -305,7 +305,7 @@
     color: var(--foreground);
   }
   45% {
-    color: var(--orange-300);
+    color: var(--primary-light);
   }
 }
 

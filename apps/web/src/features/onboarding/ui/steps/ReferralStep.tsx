@@ -47,9 +47,13 @@ export const ReferralStep = ({
   onDone: () => void;
 }) => {
   const skip = useSkipReferralMutation();
+  // 서버에 영구로 남는 요청이라 한 번만 보낸다 — 화면이 빠져나가는 동안 한 번 더 눌려도 다시 보내지 않는다
+  const skipped = useRef(false);
 
   // 어디서 건너뛰었는지 남긴다 — 질문에서 「아니요」인지, 코드를 찾다 포기했는지가 갈린다
   const skipCode = (from: 'ask' | 'entry') => {
+    if (skipped.current) return;
+    skipped.current = true;
     track(EVENTS.REFERRAL_CODE_SKIPPED, { from });
     skip.mutate();
     onDone();
@@ -108,19 +112,31 @@ const CodeEntry = ({
   // 건너뛰기는 서버에 영구로 남아 되돌릴 수 없다 — 바로 넘기지 않고 코드 모양을 보여 주며 한 번 더 묻는다
   const [askingSkip, setAskingSkip] = useState(false);
   // 등록되면 그 조건으로 받은 금액을 띄운다 — 연출이 끝나야 다음 단계로 간다
-  const [creditedWon, setCreditedWon] = useState<number | null>(null);
+  const [credited, setCredited] = useState<{
+    won: number;
+    holdMs: number;
+  } | null>(null);
 
-  const submitCode = (policyVersion: number, won: number) =>
+  // 거절된 코드·조건 — 같은 걸 다시 넣으면 보내지 않고 그 이유를 그대로 보여 준다(캐시된 확인 결과로 「확인됐어요」가 다시 뜨지 않게)
+  const [rejected, setRejected] = useState<Record<string, string>>({});
+  // 조건이 바뀌어 다시 보내는 건 한 번만 — 서버가 같은 버전을 다시 줘도 무한히 돌지 않는다
+  const rechecked = useRef(false);
+  // 다시 보내도 되는 실패마다 하나씩 올린다 — 같은 코드·조건이어도 보낼 키가 달라져 다시 나간다
+  const [attempt, setAttempt] = useState(0);
+  // 건너뛰기를 고른 뒤에는 무엇도 보내지 않는다 — 화면이 빠지기 전 확인이 끝나도 등록이 따라 나가지 않게
+  const [leaving, setLeaving] = useState(false);
+
+  const submitCode = (key: string, policyVersion: number, won: number) =>
     register.mutate(
       { code, policyVersion },
       {
         onSuccess: () => {
           track(EVENTS.REFERRAL_CODE_REGISTERED, { method });
           const shown = performance.now() - verifiedAt.current;
-          setTimeout(
-            () => setCreditedWon(won),
-            Math.max(0, VERIFIED_HOLD_MS - shown),
-          );
+          setCredited({
+            won,
+            holdMs: Math.max(0, VERIFIED_HOLD_MS - shown),
+          });
         },
         onError: (error) => {
           const failure = referralFailureOf(error);
@@ -128,30 +144,52 @@ const CodeEntry = ({
             if (failure.notice) showToast(failure.notice);
             return onDone();
           }
-          if (failure.kind === 'recheck') {
-            // 새 조건을 받으면 정책 버전이 바뀌어 아래 effect가 그 버전으로 다시 보낸다
+          if (failure.kind === 'recheck' && !rechecked.current) {
+            // 새 조건을 받으면 아래 effect가 그 버전으로 한 번 더 보낸다
+            rechecked.current = true;
+            setAttempt((count) => count + 1);
             setNotice({ message: POLICY_CHANGED_MESSAGE, blocking: false });
             preview.refetch();
             return;
           }
+          if (failure.kind === 'recheck') {
+            setNotice({ message: POLICY_CHANGED_MESSAGE, blocking: true });
+            setAttempt((count) => count + 1);
+            return;
+          }
           if (!failure.expected) reportWarning(error);
+          // 틀린 코드처럼 다시 보내도 같은 거절만 기억한다 — 네트워크·횟수 제한은 같은 코드를 다시 넣으면 다시 보낸다
+          if (failure.retryable) setAttempt((count) => count + 1);
+          else setRejected((prev) => ({ ...prev, [key]: failure.message }));
           setNotice({ message: failure.message, blocking: true });
         },
       },
     );
 
-  const status = statusOf(preview, notice);
+  const previewKey = preview.data
+    ? `${code}:${preview.data.policyVersion}`
+    : null;
+  const status = statusOf(
+    preview,
+    notice,
+    previewKey ? rejected[previewKey] : undefined,
+  );
   // 확인이 끝나면 누를 것 없이 바로 등록한다. 같은 코드·같은 조건은 한 번만 보낸다 — 거절된 걸 또 보내지 않는다
   const sentKey = useRef<string | null>(null);
   const verifiedAt = useRef(0);
   const ready = status.tone === 'ok' && !preview.isFetching;
+  // 건너뛸지 묻는 시트가 떠 있는 동안은 보내지 않는다 — 시트 뒤에서 등록과 건너뛰기가 같이 나가지 않게
   const readyKey =
-    ready && preview.data ? `${code}:${preview.data.policyVersion}` : null;
+    ready && !askingSkip && !leaving ? `${previewKey}#${attempt}` : null;
   const submitReady = useEffectEvent(() => {
-    if (!preview.data) return;
+    if (!preview.data || !previewKey) return;
     haptic('light');
     verifiedAt.current = performance.now();
-    submitCode(preview.data.policyVersion, inviteeWonOf(preview.data.signup));
+    submitCode(
+      previewKey,
+      preview.data.policyVersion,
+      inviteeWonOf(preview.data.signup),
+    );
   });
   useEffect(() => {
     if (readyKey === null || readyKey === sentKey.current) return;
@@ -200,8 +238,6 @@ const CodeEntry = ({
         <button
           type="button"
           onClick={() => setAskingSkip(true)}
-          // 등록을 보내는 중에 건너뛰면 둘이 같이 나간다
-          disabled={register.isPending}
           className="text-[15px] font-medium text-muted-foreground underline underline-offset-4 disabled:opacity-45"
         >
           초대 코드가 없어요
@@ -215,6 +251,7 @@ const CodeEntry = ({
         confirmLabel="코드 없이 계속할게요"
         continueLabel="코드 찾아볼게요"
         onConfirm={() => {
+          setLeaving(true);
           setAskingSkip(false);
           onSkip();
         }}
@@ -222,8 +259,15 @@ const CodeEntry = ({
         extra={<CodeSample />}
       />
 
-      {creditedWon !== null && (
-        <ReferralRewardMoment won={creditedWon} onDone={onDone} />
+      {/* 등록을 보내는 동안 화면을 투명하게 덮는다 — 그새 코드를 바꾸거나 건너뛰거나 뒤로 가 결과를 놓치지 않게 */}
+      {register.isPending && <div aria-hidden className="fixed inset-0 z-50" />}
+
+      {credited && (
+        <ReferralRewardMoment
+          won={credited.won}
+          holdMs={credited.holdMs}
+          onDone={onDone}
+        />
       )}
     </div>
   );
@@ -239,14 +283,25 @@ type Status =
 const statusOf = (
   preview: ReturnType<typeof useReferralPreviewQuery>,
   notice: Notice | null,
+  // 이 코드·조건으로 이미 거절당한 이유
+  rejectedMessage: string | undefined,
 ): Status => {
   if (notice?.blocking) return { tone: 'error', message: notice.message };
-  const failure = preview.error ? referralFailureOf(preview.error) : null;
+  if (rejectedMessage) return { tone: 'error', message: rejectedMessage };
   // 다시 받다 실패했으면(그새 초대 보상이 꺼졌다 등) 남아 있는 옛 결과를 믿지 않는다
-  if (failure?.kind === 'message' && (preview.isRefetchError || !preview.data))
-    return { tone: 'error', message: failure.message };
+  if (preview.error && (preview.isRefetchError || !preview.data))
+    return { tone: 'error', message: previewFailureMessageOf(preview.error) };
   if (preview.data) return { tone: 'ok', notice: notice?.message ?? null };
   return preview.isFetching ? { tone: 'checking' } : { tone: 'idle' };
+};
+
+// 확인 단계에서는 넘어갈 곳이 없어 무슨 실패든 칸 아래에 적는다 — 아무 안내 없이 멈춘 화면이 되지 않게
+const previewFailureMessageOf = (error: unknown) => {
+  const failure = referralFailureOf(error);
+  if (failure.kind === 'message') return failure.message;
+  if (failure.kind === 'move_on')
+    return failure.notice ?? '이미 초대 코드를 등록했어요';
+  return POLICY_CHANGED_MESSAGE;
 };
 
 const StatusLines = ({ status }: { status: Status }) => {
@@ -299,7 +354,7 @@ const CheckCircle = () => (
     <path
       d="M9.5 16.5l4.5 4.5 8.5-9"
       fill="none"
-      stroke="white"
+      className="stroke-success-foreground"
       strokeWidth={3.2}
       strokeLinecap="round"
       strokeLinejoin="round"

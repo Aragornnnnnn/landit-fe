@@ -2,7 +2,7 @@
 // 환급 화면의 「친구 가입 적립 순간」(피그마 P4)과 같은 연출이다
 'use client';
 
-import { useEffect, useEffectEvent } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 
 // 환급 동전 그림은 reward feature가 정본이라 온보딩이 가로 import한다
 import { Coin } from '@/features/reward/ui/common/Coin';
@@ -14,20 +14,33 @@ const LEAVE_AFTER_MS = 1500;
 
 export const ReferralRewardMoment = ({
   won,
+  holdMs,
   onDone,
 }: {
   // 등록한 조건으로 받은 금액 — 0이면 금액 없이 등록됐다고만 한다
   won: number;
+  // 연출을 띄우기 전 기다릴 시간 — 그동안 뒤에 있는 「확인됐어요」가 보인다
+  holdMs: number;
   onDone: () => void;
 }) => {
+  const [shown, setShown] = useState(holdMs === 0);
   // 부모가 다시 그려져 onDone이 바뀌어도 넘어갈 시계를 처음부터 다시 재지 않는다
   const leave = useEffectEvent(onDone);
 
   useEffect(() => {
-    haptic('success');
-    const timer = setTimeout(() => leave(), LEAVE_AFTER_MS);
-    return () => clearTimeout(timer);
-  }, []);
+    const showTimer = setTimeout(() => {
+      setShown(true);
+      haptic('success');
+    }, holdMs);
+    const leaveTimer = setTimeout(() => leave(), holdMs + LEAVE_AFTER_MS);
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(leaveTimer);
+    };
+  }, [holdMs]);
+
+  // 기다리는 동안에도 화면을 투명하게 덮는다 — 이미 등록됐는데 뒤로가기로 빠져 다음 단계로 못 가는 일을 막는다
+  if (!shown) return <div aria-hidden className="fixed inset-0 z-50" />;
 
   return (
     <div

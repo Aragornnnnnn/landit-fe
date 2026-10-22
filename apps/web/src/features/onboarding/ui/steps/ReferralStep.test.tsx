@@ -74,6 +74,8 @@ const pasteMessage = (input: HTMLElement, text: string) =>
   fireEvent.paste(input, { clipboardData: { getData: () => text } });
 
 beforeEach(() => {
+  // 앞 테스트가 걸어 둔 한 번짜리 응답(mock…Once)이 남지 않게 매번 처음부터 다시 건다
+  vi.resetAllMocks();
   previewReferralCode.mockResolvedValue(preview());
   registerReferralCode.mockResolvedValue(null);
   skipReferralRegistration.mockResolvedValue(null);
@@ -113,6 +115,18 @@ describe('ReferralStep · 초대 받았는지 묻기', () => {
     expect(track).toHaveBeenCalledWith(EVENTS.REFERRAL_CODE_SKIPPED, {
       from: 'ask',
     });
+  });
+});
+
+describe('ReferralStep · 건너뛰기 한 번만', () => {
+  it('「아니요」를 두 번 눌러도 건너뛰기는 한 번만 보낸다', async () => {
+    renderStep('ask');
+
+    fireEvent.click(screen.getByRole('button', { name: '아니요' }));
+    fireEvent.click(screen.getByRole('button', { name: '아니요' }));
+
+    await waitFor(() => expect(skipReferralRegistration).toHaveBeenCalled());
+    expect(skipReferralRegistration).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -188,15 +202,31 @@ describe('ReferralStep · 코드 입력', () => {
     expect(registerReferralCode).not.toHaveBeenCalled();
   });
 
-  it('「네」를 고른 뒤라 있는지 묻지 않고 넣어 달라고 하며, 등록하면 받을 금액을 알린다', () => {
+  it('「네」를 고른 뒤라 코드가 있는지 다시 묻지 않고 넣어 달라고 한다', () => {
     renderStep();
 
     expect(
       screen.getByRole('heading', { name: /초대 코드를 넣어 주세요/ }),
     ).toBeInTheDocument();
+  });
+
+  it('등록하면 받을 금액을 제목 아래에 알린다', () => {
+    renderStep();
+
     expect(
       screen.getByText('등록하면 3,000원을 적립해 드려요'),
     ).toBeInTheDocument();
+  });
+
+  it('등록이 바로 끝나도 확인됨을 먼저 보여 주고 잠시 뒤에 적립 연출을 띄운다', async () => {
+    const { input } = renderStep();
+
+    pasteMessage(input, 'K7QM3XPA');
+
+    await waitFor(() => expect(registerReferralCode).toHaveBeenCalled());
+    expect(screen.getByText('확인됐어요')).toBeInTheDocument();
+    expect(screen.queryByText('+3,000원')).not.toBeInTheDocument();
+    expect(await screen.findByText('+3,000원')).toBeInTheDocument();
   });
 
   it('붙여넣기 버튼으로 클립보드의 메시지를 읽어 코드를 넣는다', async () => {
@@ -212,7 +242,7 @@ describe('ReferralStep · 코드 입력', () => {
     );
   });
 
-  it('누를 등록 버튼이 없다', () => {
+  it('코드 입력 화면에는 누를 등록 버튼을 두지 않는다', () => {
     renderStep();
 
     expect(
@@ -372,5 +402,86 @@ describe('ReferralStep · 코드 입력', () => {
     );
     expect(skipReferralRegistration).not.toHaveBeenCalled();
     expect(onDone).not.toHaveBeenCalled();
+  });
+});
+
+describe('ReferralStep · 거절·재시도', () => {
+  const selfInvite = () =>
+    new ApiError(
+      'x',
+      400,
+      '/api/v1/referrals/registration',
+      'REFERRAL_SELF_INVITE',
+    );
+
+  it('거절된 코드를 다시 넣으면 확인됐다고 하지 않고 거절 이유를 그대로 보이며 다시 보내지 않는다', async () => {
+    registerReferralCode.mockRejectedValue(selfInvite());
+    const { input } = renderStep();
+    pasteMessage(input, 'K7QM3XPA');
+    await screen.findByText('내 초대 코드는 넣을 수 없어요');
+
+    pasteMessage(input, 'K7QM3XPA');
+
+    expect(
+      await screen.findByText('내 초대 코드는 넣을 수 없어요'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('확인됐어요')).not.toBeInTheDocument();
+    expect(registerReferralCode).toHaveBeenCalledTimes(1);
+  });
+
+  it('네트워크로 실패했으면 같은 코드를 다시 넣을 때 다시 보낸다', async () => {
+    registerReferralCode
+      .mockRejectedValueOnce(new Error('network'))
+      .mockResolvedValue(null);
+    const { input } = renderStep();
+    pasteMessage(input, 'K7QM3XPA');
+    await screen.findByText('확인하지 못했어요. 다시 시도해 주세요');
+
+    pasteMessage(input, 'K7QM3XPA');
+
+    await waitFor(() => expect(registerReferralCode).toHaveBeenCalledTimes(2));
+  });
+
+  it('조건이 또 바뀌었다고 하면 한 번만 다시 보내고 멈춰 다시 확인하라고 알린다', async () => {
+    registerReferralCode.mockRejectedValue(
+      new ApiError(
+        'x',
+        409,
+        '/api/v1/referrals/registration',
+        'REFERRAL_POLICY_CHANGED',
+      ),
+    );
+    const { input } = renderStep();
+
+    pasteMessage(input, 'K7QM3XPA');
+
+    await waitFor(() => expect(registerReferralCode).toHaveBeenCalledTimes(2));
+    expect(
+      await screen.findByText('보상 조건이 바뀌었어요. 다시 확인해 주세요'),
+    ).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(registerReferralCode).toHaveBeenCalledTimes(2);
+  });
+
+  it('건너뛸지 묻는 동안 확인이 끝나도 등록을 보내지 않고, 건너뛰면 등록 없이 넘어간다', async () => {
+    let resolvePreview: (value: ReferralPreview) => void = () => {};
+    previewReferralCode.mockReturnValue(
+      new Promise((resolve) => {
+        resolvePreview = resolve;
+      }),
+    );
+    const { input, onDone } = renderStep();
+    fireEvent.change(input, { target: { value: 'K7QM3XPA' } });
+    fireEvent.click(screen.getByRole('button', { name: '초대 코드가 없어요' }));
+
+    resolvePreview(preview());
+    await screen.findByText('확인됐어요');
+    fireEvent.click(
+      screen.getByRole('button', { name: '코드 없이 계속할게요' }),
+    );
+
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect(registerReferralCode).not.toHaveBeenCalled();
+    expect(skipReferralRegistration).toHaveBeenCalled();
   });
 });
