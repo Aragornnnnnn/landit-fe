@@ -5,7 +5,9 @@ import type { ReferralReward, ReferralStage } from '../api/referral';
 import {
   earnedByInvitingOf,
   inviteHeadlineOf,
+  inviteOfferOf,
   inviterWonOf,
+  REFERRAL_INVITE_LIMIT,
 } from './inviter-reward';
 
 const reward = (over: Partial<ReferralReward>): ReferralReward => ({
@@ -60,6 +62,39 @@ describe('earnedByInvitingOf', () => {
     ];
 
     expect(earnedByInvitingOf(rewards)).toBe(8000);
+  });
+});
+
+describe('inviteOfferOf', () => {
+  const offer = (signup: Partial<ReferralStage>) => ({
+    signup: {
+      enabled: true,
+      target: 'BOTH' as const,
+      inviterWon: 1000,
+      inviteeWon: 3000,
+      ...signup,
+    },
+  });
+
+  it('친구가 내 코드로 가입하면 둘이 받는 금액과 상한까지의 최대 금액을 준다', () => {
+    expect(inviteOfferOf(offer({}))).toEqual({
+      inviterWon: 1000,
+      inviteeWon: 3000,
+      maxWon: 1000 * REFERRAL_INVITE_LIMIT,
+    });
+  });
+
+  it('초대받은 사람 몫이 없어도 초대한 사람 몫이 있으면 연다', () => {
+    expect(inviteOfferOf(offer({ target: 'INVITER' }))).toEqual({
+      inviterWon: 1000,
+      inviteeWon: 0,
+      maxWon: 10000,
+    });
+  });
+
+  it('초대한 사람 몫이 없으면 null이다 — 초대 자리를 숨긴다', () => {
+    expect(inviteOfferOf(offer({ enabled: false }))).toBeNull();
+    expect(inviteOfferOf(offer({ target: 'INVITEE' }))).toBeNull();
   });
 });
 
