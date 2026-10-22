@@ -3,7 +3,7 @@
 // 여닫을 때 답변 칸이 다시 그려지거나 위 질문 카드가 밀리지 않는다. 움직임 줄이기면 모양 변화 없이 바로 바뀐다
 'use client';
 
-import { useId } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
 import type { AnswerGuide } from '@/features/scenario/api/daily';
@@ -71,9 +71,12 @@ const GradientSparkle = ({ size }: { size: number }) => {
 export const AnswerGuideChip = ({
   onOpen,
   hintVisible,
+  ref,
 }: {
   onOpen: () => void;
   hintVisible: boolean;
+  // 카드를 접은 뒤 포커스를 돌려받을 자리
+  ref?: React.Ref<HTMLButtonElement>;
 }) => {
   const reduced = useReducedMotion() ?? false;
   const hintId = `guide-hint-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
@@ -81,6 +84,7 @@ export const AnswerGuideChip = ({
     // 말풍선은 칩 버튼 밖 형제로 둔다 — 칩이 카드로 커지는 모양 변화에 같이 늘어나지 않게
     <span className="relative flex">
       <motion.button
+        ref={ref}
         layoutId={GUIDE_LAYOUT_ID}
         transition={reduced ? { duration: 0 } : MORPH}
         onClick={onOpen}
@@ -182,6 +186,12 @@ const AnswerGuideCard = ({
     },
   });
 
+  // 칩이 카드로 바뀌며 사라지므로 포커스를 카드 안(접기)으로 옮긴다 — 키보드·화면 읽기 사용자가 자리를 잃지 않게
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    closeRef.current?.focus({ preventScroll: true });
+  }, []);
+
   return (
     <motion.div
       layoutId={GUIDE_LAYOUT_ID}
@@ -191,6 +201,8 @@ const AnswerGuideCard = ({
       initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 0.12 } }}
+      role="region"
+      aria-label="답변 예시"
       className="absolute inset-x-0 bottom-0 z-10 flex min-h-28 flex-col border-[1.5px] px-5 py-3 shadow-lg shadow-black/5"
       style={{ ...gradientBorder, borderRadius: 16 }}
     >
@@ -209,6 +221,7 @@ const AnswerGuideCard = ({
           막막하면 이렇게 말해 봐요
         </p>
         <button
+          ref={closeRef}
           onClick={onClose}
           className="-my-1 -mr-1 flex items-center gap-0.5 px-1 py-1 text-xs font-medium text-muted-foreground active:opacity-70"
         >

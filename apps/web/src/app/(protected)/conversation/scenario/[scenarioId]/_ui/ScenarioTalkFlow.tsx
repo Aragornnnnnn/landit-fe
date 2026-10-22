@@ -2,7 +2,7 @@
 // 캐릭터 무대·질문 카드·내 답변·마이크를 상태 기계 단계에 맞춰 오케스트레이션한다
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
@@ -84,6 +84,7 @@ export const ScenarioTalkFlow = ({
   // 키보드로 쓰는 중엔 그 칸이 입력창이라, 답을 낸 뒤엔 방금 한 말을 보여야 해서 비켜 준다
   const myTurn = phase === 'USER_READY' || phase === 'USER_SPEAKING';
   const guideShown = answerGuide != null && myTurn && !typing;
+  const guideChipRef = useRef<HTMLButtonElement>(null);
   // 첫 질문의 턴 — USER 선발화면 0번은 상황 안내라 첫 AI 질문은 그다음이다
   const firstQuestionIndex = scenario.firstSpeaker === 'USER' ? 1 : 0;
   const guide = useAnswerGuideToggle({
@@ -212,7 +213,13 @@ export const ScenarioTalkFlow = ({
           <AnswerGuideSlot
             guide={answerGuide}
             open={guideShown && guide.open}
-            onClose={guide.closeGuide}
+            onClose={() => {
+              guide.closeGuide();
+              // 다시 나타난 칩으로 포커스를 돌려준다 — 칩은 이번 렌더가 끝난 뒤에 붙는다
+              requestAnimationFrame(() =>
+                guideChipRef.current?.focus({ preventScroll: true }),
+              );
+            }}
           >
             <UserTranscript
               text={transcript}
@@ -225,6 +232,7 @@ export const ScenarioTalkFlow = ({
                 guideShown &&
                 !guide.open && (
                   <AnswerGuideChip
+                    ref={guideChipRef}
                     onOpen={guide.openGuide}
                     hintVisible={guide.hintVisible}
                   />
