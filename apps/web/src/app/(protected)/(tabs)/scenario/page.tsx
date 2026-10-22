@@ -4,6 +4,7 @@
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { EventPopupGate } from '@/features/event-popup/ui/EventPopupGate';
 import { NotificationConsentGate } from '@/features/notification/ui/NotificationConsentGate';
 import { SatisfactionGate } from '@/features/satisfaction/ui/SatisfactionGate';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
@@ -22,6 +23,7 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
+import { useActiveEventPopup } from './_model/useActiveEventPopup';
 import { useHomePreview } from './_model/useHomePreview';
 import { PreviewIntro } from './_ui/PreviewIntro';
 
@@ -82,6 +84,8 @@ function ScenarioContent() {
   const settled = date === undefined && (cleared || summonClosed);
   // 시트류(소감 다음 순번)가 나설 차례 — 카드 판단이 끝났고 소감 시트가 안 뜰 때
   const promptTurn = settled && satisfactionSheet === null;
+  // 그 차례의 첫 순번은 이벤트 공지, 공지가 없을 때만 알림 동의를 청한다 — 한 방문에 시트는 하나
+  const eventPopup = useActiveEventPopup();
 
   // 날짜 이동은 replace다 — push면 히스토리가 쌓여 뒤로가기가 날짜 되감기가 된다.
   // 오늘은 날짜 없는 주소가 정본이다 — 붙여 두면 자정을 넘겨도 어제에 머문다
@@ -131,7 +135,10 @@ function ScenarioContent() {
       {settled && !sheetsHeld && satisfactionSheet === 'review' && (
         <SatisfactionGate moment="review" />
       )}
-      {promptTurn && !sheetsHeld && <NotificationConsentGate />}
+      {promptTurn && !sheetsHeld && eventPopup && (
+        <EventPopupGate popup={eventPopup} />
+      )}
+      {promptTurn && !sheetsHeld && !eventPopup && <NotificationConsentGate />}
 
       {premiumPreview.view === 'tutorial' && (
         <PreviewIntro
