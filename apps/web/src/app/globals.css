@@ -291,6 +291,30 @@
   }
 }
 
+/* 초대 코드 확인 중 — 글자에만 연한 주황 빛이 칸을 따라 흘러간다. 칸마다 지연을 줘 물결이 된다 */
+@keyframes code-wave {
+  0%,
+  100% {
+    color: var(--foreground);
+  }
+  45% {
+    color: var(--orange-300);
+  }
+}
+
+/* 초대 코드 확인됨 — 초록으로 바뀐 글자가 한 칸씩 톡 튄다 */
+@keyframes code-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.12) translateY(-1px);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 /* 정답 글자 튀어오름 — 복습 영작 성공 시 글자칸에 순차 적용 */
 @keyframes pop {
   0% {

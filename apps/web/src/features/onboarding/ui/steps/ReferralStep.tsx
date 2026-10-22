@@ -1,12 +1,11 @@
-// 온보딩 초대 코드 단계 — 친구에게 받은 8자리를 넣으면 확인까지 저절로 하고, 한 번 눌러 등록한다.
+// 온보딩 초대 코드 단계 — 친구에게 받은 8자리를 넣으면 확인과 등록까지 누를 것 없이 저절로 한다.
 // 첫 결제보다 앞에 있어야 결제 보상까지 받는다(등록 전 결제는 소급되지 않는다)
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
 // 초대 코드 확인·등록은 referral feature가 정본이라 온보딩 단계가 가로 import한다
-import { inviteeWonOf } from '@/features/referral/model/invitee-reward';
 import { findReferralCode } from '@/features/referral/model/referral-code';
 import { referralFailureOf } from '@/features/referral/model/referral-failure';
 import { useReferralPreviewQuery } from '@/features/referral/model/useReferralPreviewQuery';
@@ -14,6 +13,7 @@ import { useRegisterReferralCodeMutation } from '@/features/referral/model/useRe
 import { useSkipReferralMutation } from '@/features/referral/model/useSkipReferralMutation';
 import { ReferralCodeInput } from '@/features/referral/ui/ReferralCodeInput';
 import { track } from '@/shared/analytics';
+import { haptic } from '@/shared/haptics';
 import { formatWon } from '@/shared/lib/won';
 import { reportWarning } from '@/shared/monitoring/report';
 import { Button } from '@/shared/ui/Button';
@@ -115,6 +115,7 @@ const CodeEntry = ({
             return onDone();
           }
           if (failure.kind === 'recheck') {
+            // 새 조건을 받으면 정책 버전이 바뀌어 아래 effect가 그 버전으로 다시 보낸다
             setNotice({ message: POLICY_CHANGED_MESSAGE, blocking: false });
             preview.refetch();
             return;
@@ -126,8 +127,21 @@ const CodeEntry = ({
     );
 
   const status = statusOf(preview, notice);
-  // 조건을 다시 받는 동안은 누르지 못한다 — 옛 정책 버전으로 보내면 또 거절된다
-  const canSubmit = status.tone === 'ok' && !preview.isFetching;
+  // 확인이 끝나면 누를 것 없이 바로 등록한다. 같은 코드·같은 조건은 한 번만 보낸다 — 거절된 걸 또 보내지 않는다
+  const sentKey = useRef<string | null>(null);
+  const ready = status.tone === 'ok' && !preview.isFetching;
+  const readyKey =
+    ready && preview.data ? `${code}:${preview.data.policyVersion}` : null;
+  const submitReady = useEffectEvent(() => {
+    if (!preview.data) return;
+    haptic('light');
+    submitCode(preview.data.policyVersion);
+  });
+  useEffect(() => {
+    if (readyKey === null || readyKey === sentKey.current) return;
+    sentKey.current = readyKey;
+    submitReady();
+  }, [readyKey]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col pt-7">
@@ -150,7 +164,7 @@ const CodeEntry = ({
         <div role="status" aria-live="polite" className="mt-3.5 text-center">
           <StatusLines status={status} />
         </div>
-        {status.tone !== 'ok' && (
+        {status.tone !== 'ok' && status.tone !== 'checking' && (
           <Button
             variant="ghost"
             size="md"
@@ -162,7 +176,7 @@ const CodeEntry = ({
         )}
       </div>
 
-      <div className="mt-auto flex flex-col items-center gap-4 pt-4">
+      <div className="mt-auto flex flex-col items-center pt-4">
         <button
           type="button"
           onClick={onSkip}
@@ -172,27 +186,16 @@ const CodeEntry = ({
         >
           초대 코드가 없어요
         </button>
-        <Button
-          disabled={!canSubmit}
-          loading={register.isPending}
-          onClick={() => preview.data && submitCode(preview.data.policyVersion)}
-        >
-          등록하고 계속할게요
-        </Button>
       </div>
     </div>
   );
 };
 
 type Status =
-  | { tone: 'idle'; checking: boolean }
+  | { tone: 'idle' }
+  | { tone: 'checking' }
   | { tone: 'error'; message: string }
-  | {
-      tone: 'ok';
-      signupWon: number;
-      purchaseWon: number;
-      notice: string | null;
-    };
+  | { tone: 'ok'; notice: string | null };
 
 // 칸 아래 상태 하나로 모은다 — 막는 안내(못 찾음·등록 실패)와 다시 받은 확인의 실패가 확인 결과보다 앞선다
 const statusOf = (
@@ -204,37 +207,28 @@ const statusOf = (
   // 다시 받다 실패했으면(그새 초대 보상이 꺼졌다 등) 남아 있는 옛 결과를 믿지 않는다
   if (failure?.kind === 'message' && (preview.isRefetchError || !preview.data))
     return { tone: 'error', message: failure.message };
-  if (preview.data)
-    return {
-      tone: 'ok',
-      signupWon: inviteeWonOf(preview.data.signup),
-      purchaseWon: inviteeWonOf(preview.data.purchase),
-      notice: notice?.message ?? null,
-    };
-  return { tone: 'idle', checking: preview.isFetching };
+  if (preview.data) return { tone: 'ok', notice: notice?.message ?? null };
+  return preview.isFetching ? { tone: 'checking' } : { tone: 'idle' };
 };
 
 const StatusLines = ({ status }: { status: Status }) => {
+  if (status.tone === 'idle') return null;
   if (status.tone === 'error')
     return (
       <p className="text-sm font-bold text-destructive">{status.message}</p>
     );
-  if (status.tone === 'idle')
-    return status.checking ? (
-      <p className="text-sm font-bold text-muted-foreground">확인하고 있어요</p>
-    ) : null;
+  if (status.tone === 'checking')
+    return (
+      <p className="text-base font-bold text-muted-foreground">
+        확인하고 있어요
+      </p>
+    );
   return (
     <>
-      <p className="text-sm font-bold text-success">
-        {status.signupWon > 0
-          ? `✓ 확인됐어요 · 지금 등록하면 ${formatWon(status.signupWon)}`
-          : '✓ 확인됐어요'}
+      <p className="inline-flex items-center gap-1.5 text-base font-bold text-success">
+        <CheckCircle />
+        확인됐어요
       </p>
-      {status.purchaseWon > 0 && (
-        <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-          프리미엄을 시작하면 {formatWon(status.purchaseWon)} 더
-        </p>
-      )}
       {status.notice && (
         <p className="mt-1 text-[13px] font-bold text-destructive">
           {status.notice}
@@ -243,3 +237,22 @@ const StatusLines = ({ status }: { status: Status }) => {
     </>
   );
 };
+
+// 초록 동그라미 안 흰 체크 — 동그라미가 커지고 체크가 그려진다(알람 등록 완료와 같은 모양, 색만 초록)
+const CheckCircle = () => (
+  <svg
+    viewBox="0 0 32 32"
+    className="size-5 animate-[check-in_0.4s_ease-out_both]"
+    aria-hidden
+  >
+    <circle cx="16" cy="16" r="16" className="fill-success" />
+    <path
+      d="M9.5 16.5l4.5 4.5 8.5-9"
+      fill="none"
+      stroke="white"
+      strokeWidth={3.2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);

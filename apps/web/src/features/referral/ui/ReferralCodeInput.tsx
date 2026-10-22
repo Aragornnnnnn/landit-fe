@@ -2,7 +2,7 @@
 // 붙여넣으면 글 전체에서 코드만 찾아 넣는다 (카톡 메시지를 통째로 복사해 와도 된다)
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
   cleanTypedReferralCode,
@@ -10,7 +10,8 @@ import {
   REFERRAL_CODE_LENGTH,
 } from '../model/referral-code';
 
-export type CodeInputTone = 'idle' | 'ok' | 'error';
+// checking — 서버가 확인하는 중, ok — 확인됨. 둘 다 칸은 그대로 두고 글자 색만 바꾼다(테두리에 색을 넣으면 촌스럽다)
+export type CodeInputTone = 'idle' | 'checking' | 'ok' | 'error';
 
 // 네 칸씩 끊어 보이게 가운데에 줄표 — 공유 문구는 붙여 쓰지만 눈으로 옮겨 칠 때 덜 틀린다
 const GROUP_SIZE = 4;
@@ -28,6 +29,12 @@ export const ReferralCodeInput = ({
   onPaste: (code: string | null) => void;
 }) => {
   const [focused, setFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // 다 차면 키보드를 내린다 — 확인 결과와 그다음 연출이 키보드에 가리지 않게
+  useEffect(() => {
+    if (value.length === REFERRAL_CODE_LENGTH) inputRef.current?.blur();
+  }, [value]);
 
   // 붙여넣기 이벤트 없이 글이 한꺼번에 들어오는 길도 있다 — 키보드의 클립보드 칩·제안 바. 한 번에 두 자 넘게 늘었으면 붙여넣은 것으로 본다
   const changeText = (raw: string) => {
@@ -44,6 +51,7 @@ export const ReferralCodeInput = ({
       {Array.from({ length: REFERRAL_CODE_LENGTH }, (_, index) => (
         <CodeCell
           key={index}
+          index={index}
           char={value[index] ?? ''}
           divider={index === GROUP_SIZE}
           tone={tone}
@@ -52,6 +60,7 @@ export const ReferralCodeInput = ({
         />
       ))}
       <input
+        ref={inputRef}
         aria-label="초대 코드"
         value={value}
         inputMode="text"
@@ -76,11 +85,13 @@ export const ReferralCodeInput = ({
 };
 
 const CodeCell = ({
+  index,
   char,
   divider,
   tone,
   current,
 }: {
+  index: number;
   char: string;
   divider: boolean;
   tone: CodeInputTone;
@@ -94,12 +105,31 @@ const CodeCell = ({
     )}
     <span
       aria-hidden
-      className={`flex h-[50px] w-9 items-center justify-center rounded-[10px] bg-card text-[22px] font-bold text-foreground ${borderOf(tone, current)}`}
+      className={`flex h-[50px] w-9 items-center justify-center rounded-[10px] bg-card text-[22px] font-bold ${borderOf(tone, current)}`}
     >
-      {char}
+      <span
+        className={charClassOf(tone)}
+        // 확인 중엔 빛이 왼쪽→오른쪽으로 훑고, 확인되면 왼쪽부터 한 칸씩 초록으로 톡 튄다
+        style={
+          tone === 'checking' || tone === 'ok'
+            ? { animationDelay: `${index * (tone === 'checking' ? 90 : 40)}ms` }
+            : undefined
+        }
+      >
+        {char}
+      </span>
     </span>
   </>
 );
+
+// CSS 애니메이션 — rAF가 멎은 웹뷰에서도 돈다 (LAN-375 교훈)
+const charClassOf = (tone: CodeInputTone) => {
+  if (tone === 'checking')
+    return 'inline-block animate-[code-wave_0.9s_ease-in-out_infinite] text-foreground';
+  if (tone === 'ok')
+    return 'inline-block animate-[code-pop_0.32s_ease-out_both] text-success';
+  return 'text-foreground';
+};
 
 // 틀린 코드면 전부 빨강, 아니면 다음에 채울 칸만 주황
 const borderOf = (tone: CodeInputTone, current: boolean) => {

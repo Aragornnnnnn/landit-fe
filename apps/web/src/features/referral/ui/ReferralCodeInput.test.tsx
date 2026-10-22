@@ -52,6 +52,17 @@ describe('ReferralCodeInput', () => {
     expect(onType).not.toHaveBeenCalled();
   });
 
+  it('8칸이 다 차면 포커스를 풀어 키보드를 내린다', () => {
+    const props = { tone: 'idle' as const, onType: vi.fn(), onPaste: vi.fn() };
+    const { rerender } = render(<ReferralCodeInput value="K7QM" {...props} />);
+    const input = screen.getByLabelText('초대 코드');
+    input.focus();
+
+    rerender(<ReferralCodeInput value="K7QM3XPA" {...props} />);
+
+    expect(input).not.toHaveFocus();
+  });
+
   it('붙여넣은 글에 코드가 없으면 null을 넘긴다', () => {
     const { input, onPaste } = renderInput();
 
