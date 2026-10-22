@@ -12,7 +12,7 @@ export type ConversationPhase =
 
 /**
  * 단계를 바꾸는 사건 — `{단계·행위}_{결말}` 꼴로 단계와 짝을 이룬다.
- * 발생원: 유저 버튼(USER_SPEAKING_*), 재생 종료(AI_SPEAKING_DONE),
+ * 발생원: 유저 버튼(USER_SPEAKING_*·RESEND_STARTED), 재생 종료(AI_SPEAKING_DONE),
  * 서버 응답(AI_RESPONSE_*), 속마음 노출 타이머(INNER_THOUGHT_DONE).
  */
 export type ConversationEvent =
@@ -20,6 +20,7 @@ export type ConversationEvent =
   | 'USER_SPEAKING_STARTED'
   | 'USER_SPEAKING_CANCELLED'
   | 'USER_SPEAKING_DONE'
+  | 'RESEND_STARTED'
   | 'AI_RESPONSE_READY'
   | 'AI_RESPONSE_SKIPPED'
   | 'AI_RESPONSE_FAILED'
@@ -83,6 +84,8 @@ const TRANSITIONS: Record<
   },
   USER_READY: {
     USER_SPEAKING_STARTED: moveTo('USER_SPEAKING'),
+    // 전달되지 못한 답변을 그대로 다시 보낸다 — 새로 말하지 않으니 듣기를 건너뛴다
+    RESEND_STARTED: moveTo('AI_THINKING'),
   },
   USER_SPEAKING: {
     USER_SPEAKING_CANCELLED: moveTo('USER_READY'),

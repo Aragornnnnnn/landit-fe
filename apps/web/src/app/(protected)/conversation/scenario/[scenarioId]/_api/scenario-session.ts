@@ -75,13 +75,15 @@ export const startScenarioTalkSession = (scenarioId: number) =>
     `/api/v1/scenarios/${scenarioId}/sessions`,
   );
 
-// 유저 발화 제출 — 상대 속마음·다음 질문·진행 상태를 받는다
+// 유저 발화 제출 — 상대 속마음·다음 질문·진행 상태를 받는다.
+// 같은 clientMessageId로 다시 보내면 서버는 이미 만든 응답을 그대로 돌려준다
 export const submitScenarioTalkMessage = (
   sessionId: number,
   content: string,
   inputType: InputType,
+  clientMessageId: string,
 ) =>
   api.post<ScenarioTalkSubmitResponse>(
     `/api/v1/sessions/${sessionId}/messages`,
-    { content, inputType },
+    { content, inputType, clientMessageId },
   );

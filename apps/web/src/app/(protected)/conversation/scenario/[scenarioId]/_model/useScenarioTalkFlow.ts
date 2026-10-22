@@ -4,7 +4,7 @@
 // 진입을 막지 않는다.
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 
@@ -64,6 +64,17 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
 
   const queryClient = useQueryClient();
 
+  // 턴마다 하나씩 붙이는 발화 식별자 — 응답이 끊겨 다시 보낼 때 같은 값을 써야
+  // 서버가 재전송으로 알아보고 처음 만든 응답을 돌려준다 (마지막 턴이면 이미 끝난 세션이어도)
+  const clientMessageIdsRef = useRef(new Map<number, string>());
+  const clientMessageIdFor = (turnIndex: number) => {
+    const issued = clientMessageIdsRef.current.get(turnIndex);
+    if (issued) return issued;
+    const created = crypto.randomUUID();
+    clientMessageIdsRef.current.set(turnIndex, created);
+    return created;
+  };
+
   // 대화가 완료되면: 피드백을 미리 생성 요청(prefetch)해 화면 진입 시 즉시 뜨게 하고,
   // 해금된 다음 시나리오(다음 대화)가 홈에 반영되도록 시나리오 캐시를 무효화한다.
   // 오늘 열매가 채워진 것도 이 순간이라, 스트릭은 새 값을 미리 받아 둔다 —
@@ -95,6 +106,7 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
         sessionId,
         content,
         inputType,
+        clientMessageIdFor(turnIndex),
       );
       track(EVENTS.SCENARIO_TALK_TURN_COMPLETED, {
         session_id: sessionId,
