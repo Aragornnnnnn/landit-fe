@@ -26,6 +26,8 @@ import { ReferralRewardMoment } from './ReferralRewardMoment';
 
 const NOT_FOUND_MESSAGE = '복사한 내용에서 초대 코드를 못 찾았어요';
 const POLICY_CHANGED_MESSAGE = '보상 조건이 바뀌었어요. 다시 확인해 주세요';
+// 초록으로 바뀐 칸을 알아볼 틈 — 등록이 더 빨리 끝나도 이만큼은 「확인됐어요」를 보여 주고 적립 연출로 넘어간다
+const VERIFIED_HOLD_MS = 400;
 
 type InputMethod = 'paste' | 'typed';
 
@@ -114,7 +116,11 @@ const CodeEntry = ({
       {
         onSuccess: () => {
           track(EVENTS.REFERRAL_CODE_REGISTERED, { method });
-          setCreditedWon(won);
+          const shown = performance.now() - verifiedAt.current;
+          setTimeout(
+            () => setCreditedWon(won),
+            Math.max(0, VERIFIED_HOLD_MS - shown),
+          );
         },
         onError: (error) => {
           const failure = referralFailureOf(error);
@@ -137,12 +143,14 @@ const CodeEntry = ({
   const status = statusOf(preview, notice);
   // 확인이 끝나면 누를 것 없이 바로 등록한다. 같은 코드·같은 조건은 한 번만 보낸다 — 거절된 걸 또 보내지 않는다
   const sentKey = useRef<string | null>(null);
+  const verifiedAt = useRef(0);
   const ready = status.tone === 'ok' && !preview.isFetching;
   const readyKey =
     ready && preview.data ? `${code}:${preview.data.policyVersion}` : null;
   const submitReady = useEffectEvent(() => {
     if (!preview.data) return;
     haptic('light');
+    verifiedAt.current = performance.now();
     submitCode(preview.data.policyVersion, inviteeWonOf(preview.data.signup));
   });
   useEffect(() => {
