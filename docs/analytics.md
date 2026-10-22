@@ -304,6 +304,16 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 
 온보딩의 알림 스텝은 시트 없이 바로 OS 권한창을 띄워 Consent 이벤트가 없고, 결과는 `Notification Permission Decided(source: onboarding)`로 남는다. 이미 거부한 상태에서 내 정보의 "OS 설정 열기"는 안 찍는다 — 결과를 알 수 없다.
 
+### 이벤트 공지 팝업
+
+| 이벤트                | 속성     | 시점                                             |
+| --------------------- | -------- | ------------------------------------------------ |
+| Event Popup Viewed    | popup_id | 홈에서 공지 팝업 노출                            |
+| Event Popup Tapped    | popup_id | 이미지나 「자세히 보기」를 눌러 공지 화면으로 감 |
+| Event Popup Dismissed | popup_id | 닫기 버튼·바깥 탭·뒤로가기로 닫음                |
+
+`popup_id`는 프론트 목록(`features/event-popup/model/event-popups.ts`)의 id다. 백엔드 API로 바뀌어도 같은 이름으로 싣는다.
+
 ### 알람
 
 | 이벤트                         | 속성                                                                    | 시점                                                                                                                                                                           |

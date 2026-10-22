@@ -133,6 +133,11 @@ export const EVENTS = {
   NOTIFICATION_CONSENT_DISMISSED: 'Notification Consent Dismissed',
   NOTIFICATION_PERMISSION_DECIDED: 'Notification Permission Decided',
 
+  // 이벤트 공지 팝업 — 홈에 뜨는 운영 공지. 어느 공지인지는 popup_id로 가른다
+  EVENT_POPUP_VIEWED: 'Event Popup Viewed',
+  EVENT_POPUP_TAPPED: 'Event Popup Tapped',
+  EVENT_POPUP_DISMISSED: 'Event Popup Dismissed',
+
   // 오늘의 시나리오 알람 — 등록 흐름(소개 → 다짐)은 내 정보와 프리미엄 온보딩이 같이 쓴다
   ALARM_REGISTERED: 'Alarm Registered',
   ALARM_SETUP_SKIPPED: 'Alarm Setup Skipped',
@@ -803,6 +808,11 @@ export type EventProps = {
     granted: boolean;
     source: NotificationPermissionSource;
   };
+
+  // 탭 = 이미지나 「자세히 보기」로 공지 화면에 들어감. 닫기는 버튼·바깥·뒤로가기를 가리지 않는다
+  'Event Popup Viewed': { popup_id: string };
+  'Event Popup Tapped': { popup_id: string };
+  'Event Popup Dismissed': { popup_id: string };
 
   // attempt·trigger는 리뷰 요청(moment=review)에만 — 몇 번째 노출인지(1~4), 무엇을 마치고 와서 떴는지
   'Satisfaction Prompt Viewed': {
