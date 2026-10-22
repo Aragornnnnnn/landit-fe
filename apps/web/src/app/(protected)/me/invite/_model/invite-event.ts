@@ -36,3 +36,10 @@ export const inviteEventViewOf = ({
         : '친구에게 초대 코드 보내기',
   };
 };
+
+// 받는 방법 마지막 단계의 「바로 나 N원 · 친구 N원 적립」 — 받을 사람만 남긴다(10명을 채우면 내 몫은 끝난다)
+export const stepRewardsOf = (offer: InviteOffer, full: boolean) =>
+  [
+    { who: '나', won: full ? 0 : offer.inviterWon },
+    { who: '친구', won: offer.inviteeWon },
+  ].filter((part) => part.won > 0);

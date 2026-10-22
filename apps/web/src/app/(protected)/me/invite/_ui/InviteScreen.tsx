@@ -30,7 +30,7 @@ import { ChevronDownIcon, InfoIcon } from '@/shared/ui/Icons';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 import { showToast } from '@/shared/ui/toast';
 
-import { inviteEventViewOf } from '../_model/invite-event';
+import { inviteEventViewOf, stepRewardsOf } from '../_model/invite-event';
 import { inviteRewardRowOf } from '../_model/invite-reward-row';
 
 // 네 자씩 끊어 보여 준다 — 말로 불러 주거나 눈으로 옮겨 칠 때 덜 틀린다. 복사는 붙인 그대로
@@ -110,7 +110,7 @@ export const InviteScreen = () => {
                   rewardsFailed={rewards.isError}
                   onRetryRewards={() => rewards.refetch()}
                 />
-                <Steps offer={offer} />
+                <Steps offer={offer} full={view.full} />
               </>
             )}
 
@@ -318,17 +318,19 @@ const RewardRows = ({ rewards }: { rewards: ReferralReward[] | undefined }) => {
 };
 
 // 받는 방법 — 단계마다 한 줄로만
-const Steps = ({ offer }: { offer: InviteOffer }) => {
+const Steps = ({ offer, full }: { offer: InviteOffer; full: boolean }) => {
+  const rewards = stepRewardsOf(offer, full);
   const steps = [
     '내 초대 코드 보내기',
     '친구가 코드 넣고 가입하면',
     <>
-      바로 나 <Won won={offer.inviterWon} />
-      {offer.inviteeWon > 0 && (
-        <>
-          {' · '}친구 <Won won={offer.inviteeWon} />
-        </>
-      )}{' '}
+      바로{' '}
+      {rewards.map((part, index) => (
+        <span key={part.who}>
+          {index > 0 && ' · '}
+          {part.who} <Won won={part.won} />
+        </span>
+      ))}{' '}
       적립
     </>,
   ];
