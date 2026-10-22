@@ -20,6 +20,8 @@ interface UserTranscriptProps {
   onCancel?: () => void;
   // 라벨 오른쪽에 붙는 보조 버튼 — 끼울지와 무엇을 끼울지는 대화 쪽이 정한다
   headerAction?: React.ReactNode;
+  // 끝내 전달되지 못한 답변 — 연한 빨강으로 묶어 무엇이 다시 보내지는지 보여 준다
+  unsent?: boolean;
 }
 
 export const UserTranscript = ({
@@ -30,6 +32,7 @@ export const UserTranscript = ({
   onSubmit,
   onCancel,
   headerAction,
+  unsent = false,
 }: UserTranscriptProps) => {
   const listening = phase === 'USER_SPEAKING';
   const boxRef = useRef<HTMLDivElement>(null);
@@ -90,9 +93,21 @@ export const UserTranscript = ({
   }
 
   return (
-    <div className="mt-3 flex h-28 w-full flex-none flex-col rounded-2xl border border-border/60 bg-muted/50 px-5 py-3">
+    <div
+      className={`mt-3 flex h-28 w-full flex-none flex-col rounded-2xl border px-5 py-3 ${
+        unsent
+          ? 'border-transparent bg-destructive/5'
+          : 'border-border/60 bg-muted/50'
+      }`}
+    >
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold text-muted-foreground">내 답변</p>
+        {/* 서버가 받았는지는 모른다 — 아는 건 대답이 오지 않았다는 것뿐이라 연결 상태로만 말한다 */}
+        {unsent && (
+          <p role="status" className="text-xs font-semibold text-destructive">
+            연결이 불안정해요
+          </p>
+        )}
         {headerAction}
       </div>
       {/* 넘치면 끝으로 붙이고 윗변을 흐린다 — 방금 한 말이 항상 보이고 앞은 …처럼 사라진다 */}

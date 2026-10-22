@@ -13,6 +13,7 @@ import type {
   SmallTalkSessionStartResponse,
 } from '@/features/small-talk/api/small-talk';
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
+import { ApiError } from '@/shared/api/api-error';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 import { useSmallTalkFlow } from './useSmallTalkFlow';
@@ -248,7 +249,9 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
 
   it('제출이 실패해도 되돌아온다', async () => {
     // 서버가 받지 못했으면 차감도 없다
-    submitSmallTalkMessage.mockRejectedValueOnce(new Error('503'));
+    submitSmallTalkMessage.mockRejectedValueOnce(
+      new ApiError('서버 오류', 503, '/api/v1/free-talk/sessions/1/messages'),
+    );
     const { result } = renderFlow(20_000);
 
     speakFor(result, 5);

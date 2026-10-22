@@ -56,6 +56,7 @@ export const ScenarioTalkFlow = ({
     speech,
     replay,
     input,
+    resend,
     leave,
     sessionId,
     gauge,
@@ -83,7 +84,8 @@ export const ScenarioTalkFlow = ({
   // 답변 가이드 — 내 차례(대기·말하는 중)에만 내 답변 칸과 같은 자리를 번갈아 쓴다.
   // 키보드로 쓰는 중엔 그 칸이 입력창이라, 답을 낸 뒤엔 방금 한 말을 보여야 해서 비켜 준다
   const myTurn = phase === 'USER_READY' || phase === 'USER_SPEAKING';
-  const guideShown = answerGuide != null && myTurn && !typing;
+  // 답변이 전달되지 못한 동안은 다시 보내기가 먼저라 가이드를 비켜 준다 — 펼쳐 둔 카드가 실패한 답변을 덮지 않게
+  const guideShown = answerGuide != null && myTurn && !typing && resend == null;
   const guideChipRef = useRef<HTMLButtonElement>(null);
   // 첫 질문의 턴 — USER 선발화면 0번은 상황 안내라 첫 AI 질문은 그다음이다
   const firstQuestionIndex = scenario.firstSpeaker === 'USER' ? 1 : 0;
@@ -228,6 +230,7 @@ export const ScenarioTalkFlow = ({
               onChange={setTranscript}
               onSubmit={submitText}
               onCancel={cancelInput}
+              unsent={resend != null}
               headerAction={
                 guideShown &&
                 !guide.open && (
@@ -267,6 +270,7 @@ export const ScenarioTalkFlow = ({
             }}
             onCancel={cancelInput}
             onDone={finishListening}
+            onResend={resend}
           />
         )}
       </footer>

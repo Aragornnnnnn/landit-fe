@@ -203,6 +203,26 @@ export const MicIcon = ({ size = 22, ...props }: IconProps) => (
   </svg>
 );
 
+// 전달되지 못한 답변 다시 보내기 — 마이크·정지처럼 채운 면이 있어야 같은 자리에서 무게가 맞는다.
+// 화살촉만 채운 시계 방향 화살표라 같은 화면의 다시 듣기(반시계, 선만)와 구분된다
+export const ResendIcon = ({ size = 22, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2.2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="M18.4 15.5A7.5 7.5 0 1 1 18 7.6" />
+    <path d="M20.5 3.8v5.6h-5.6Z" fill="currentColor" />
+  </svg>
+);
+
 export const SpeakerIcon = ({ size = 22, ...props }: IconProps) => (
   <svg
     width={size}

@@ -9,6 +9,7 @@ import type {
   ProcessingStatus,
   SubmittedMessage,
 } from '@/features/conversation/api/session';
+import type { RewardCompletion } from '@/features/reward/api/reward';
 import type { AnswerGuide } from '@/features/scenario/api/daily';
 import { api } from '@/shared/api/client';
 
@@ -69,6 +70,8 @@ export interface ScenarioTalkSubmitResponse {
   // (둘 다 재생 대상이라 FE는 nextMessage 유무로 발화 여부를, completed로 종료 여부를 판단한다)
   nextMessage: ScenarioTalkNextMessage | null;
   progress: ScenarioTalkProgress;
+  // 대화가 끝나는 턴에만 실려 오는 적립 영수증
+  reward?: RewardCompletion;
 }
 
 // 시나리오 세션 시작 — sessionId·선발화자·오프닝·TTS 보이스를 받는다
@@ -77,13 +80,15 @@ export const startScenarioTalkSession = (scenarioId: number) =>
     `/api/v1/scenarios/${scenarioId}/sessions`,
   );
 
-// 유저 발화 제출 — 상대 속마음·다음 질문·진행 상태를 받는다
+// 유저 발화 제출 — 상대 속마음·다음 질문·진행 상태를 받는다.
+// 같은 clientMessageId로 다시 보내면 서버는 이미 만든 응답을 그대로 돌려준다
 export const submitScenarioTalkMessage = (
   sessionId: number,
   content: string,
   inputType: InputType,
+  clientMessageId: string,
 ) =>
   api.post<ScenarioTalkSubmitResponse>(
     `/api/v1/sessions/${sessionId}/messages`,
-    { content, inputType },
+    { content, inputType, clientMessageId },
   );

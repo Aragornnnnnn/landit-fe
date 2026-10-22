@@ -4,7 +4,13 @@
 
 import { motion } from 'motion/react';
 
-import { CloseIcon, KeyboardIcon, MicIcon, StopIcon } from '@/shared/ui/Icons';
+import {
+  CloseIcon,
+  KeyboardIcon,
+  MicIcon,
+  ResendIcon,
+  StopIcon,
+} from '@/shared/ui/Icons';
 
 import type { ConversationPhase } from '../../model/conversation-machine';
 
@@ -17,6 +23,8 @@ interface MicControlProps {
   onDone: () => void;
   // 남은 몫(0~1). 시간이 걸린 대화(스몰톡)만 준다 — 주면 완료 버튼 둘레가 그만큼 차 있다
   remainingRatio?: number;
+  // 전달되지 못한 답변이 있을 때만 준다 — 주면 마이크 자리가 다시 보내기로 바뀐다
+  onResend?: () => void;
 }
 
 // 완료 버튼(size-20=80px) 둘레를 도는 링 — 버튼 밖으로 6px씩 나가 92px
@@ -31,6 +39,7 @@ export const MicControl = ({
   onCancel,
   onDone,
   remainingRatio,
+  onResend,
 }: MicControlProps) => {
   const listening = phase === 'USER_SPEAKING';
   // 발화·속마음 중엔 누를 수 없게 잠근다 — 자리는 유지해 레이아웃이 튀지 않게
@@ -101,6 +110,28 @@ export const MicControl = ({
               <StopIcon size={28} />
             </button>
           </div>
+        </motion.div>
+      ) : onResend ? (
+        // 같은 자리·크기의 버튼이 잠깐 다시 보내기로 바뀐다 — 그 턴은 새로 말하거나 타이핑할 수 없다
+        <motion.div
+          key="resend"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.18 }}
+          // 아래 안내 한 줄만큼 올려 버튼과 안내가 함께 가운데 오게 한다
+          className="relative mb-2.5 flex flex-col items-center"
+        >
+          <button
+            onClick={onResend}
+            disabled={disabled}
+            aria-label="다시 보내기"
+            className="flex size-20 items-center justify-center rounded-full bg-primary text-white transition-opacity active:scale-95 disabled:opacity-30"
+          >
+            <ResendIcon size={34} />
+          </button>
+          <p className="absolute top-full mt-1 text-xs font-semibold whitespace-nowrap text-muted-foreground">
+            눌러서 다시 보내기
+          </p>
         </motion.div>
       ) : (
         <motion.div
