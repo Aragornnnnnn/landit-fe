@@ -19,20 +19,58 @@ import { reportWarning } from '@/shared/monitoring/report';
 import { Button } from '@/shared/ui/Button';
 import { showToast } from '@/shared/ui/toast';
 
+import { ReferralAsk } from './ReferralAsk';
+
 const NOT_FOUND_MESSAGE = '복사한 내용에서 초대 코드를 못 찾았어요';
 const POLICY_CHANGED_MESSAGE = '보상 조건이 바뀌었어요. 다시 확인해 주세요';
 
 type InputMethod = 'paste' | 'typed';
 
-// 칸 아래 안내 — 못 찾음·등록 실패는 빨간 줄로 확인 결과를 덮고, 조건이 바뀐 건 새 조건 아래에 덧붙인다
-type Notice = { message: string; blocking: boolean };
+// 먼저 초대 받고 왔는지 묻고(ask), 「네」면 코드를 받는다(enter). 헤더 뒤로가기가 enter → ask로 되돌리게 플로우가 쥔다
+export type ReferralPhase = 'ask' | 'enter';
 
 export const ReferralStep = ({
+  phase,
+  onEnter,
   signupWon,
   onDone,
 }: {
+  phase: ReferralPhase;
+  onEnter: () => void;
   // 지금 조건으로 초대받은 사람이 가입 때 받는 금액 — 0이면 금액 없이 묻는다
   signupWon: number;
+  onDone: () => void;
+}) => {
+  const skip = useSkipReferralMutation();
+
+  // 어디서 건너뛰었는지 남긴다 — 질문에서 「아니요」인지, 코드를 찾다 포기했는지가 갈린다
+  const skipCode = (from: 'ask' | 'entry') => {
+    track(EVENTS.REFERRAL_CODE_SKIPPED, { from });
+    skip.mutate();
+    onDone();
+  };
+
+  if (phase === 'ask')
+    return <ReferralAsk onYes={onEnter} onNo={() => skipCode('ask')} />;
+  return (
+    <CodeEntry
+      signupWon={signupWon}
+      onSkip={() => skipCode('entry')}
+      onDone={onDone}
+    />
+  );
+};
+
+// 칸 아래 안내 — 못 찾음·등록 실패는 빨간 줄로 확인 결과를 덮고, 조건이 바뀐 건 새 조건 아래에 덧붙인다
+type Notice = { message: string; blocking: boolean };
+
+const CodeEntry = ({
+  signupWon,
+  onSkip,
+  onDone,
+}: {
+  signupWon: number;
+  onSkip: () => void;
   onDone: () => void;
 }) => {
   const [code, setCode] = useState('');
@@ -41,7 +79,6 @@ export const ReferralStep = ({
   const [notice, setNotice] = useState<Notice | null>(null);
   const preview = useReferralPreviewQuery(code);
   const register = useRegisterReferralCodeMutation();
-  const skip = useSkipReferralMutation();
 
   const enterCode = (next: string, via: InputMethod) => {
     setCode(next);
@@ -88,12 +125,6 @@ export const ReferralStep = ({
       },
     );
 
-  const skipCode = () => {
-    track(EVENTS.REFERRAL_CODE_SKIPPED);
-    skip.mutate();
-    onDone();
-  };
-
   const status = statusOf(preview, notice);
   // 조건을 다시 받는 동안은 누르지 못한다 — 옛 정책 버전으로 보내면 또 거절된다
   const canSubmit = status.tone === 'ok' && !preview.isFetching;
@@ -134,7 +165,7 @@ export const ReferralStep = ({
       <div className="mt-auto flex flex-col items-center gap-4 pt-4">
         <button
           type="button"
-          onClick={skipCode}
+          onClick={onSkip}
           // 등록을 보내는 중에 건너뛰면 둘이 같이 나간다
           disabled={register.isPending}
           className="text-[15px] font-medium text-muted-foreground underline underline-offset-4 disabled:opacity-45"

@@ -34,7 +34,7 @@ import { IntroStep } from './steps/IntroStep';
 import { LampStep } from './steps/LampStep';
 import { MicStep } from './steps/MicStep';
 import { NotificationStep } from './steps/NotificationStep';
-import { ReferralStep } from './steps/ReferralStep';
+import { ReferralStep, type ReferralPhase } from './steps/ReferralStep';
 import { SoundStep } from './steps/SoundStep';
 import { ThoughtStep } from './steps/ThoughtStep';
 
@@ -56,6 +56,8 @@ export const OnboardingFlow = () => {
   );
 
   const [step, setStep] = useState<OnboardingStep>('intro');
+  // 초대 코드 단계 안의 질문 → 입력 — 스텝을 늘리지 않아 진행점·step_index는 그대로다
+  const [referralPhase, setReferralPhase] = useState<ReferralPhase>('ask');
   // 스텝 이동 방향 — 슬라이드가 전진(1)이면 오른쪽에서, 후진(-1)이면 왼쪽에서 들어오게 한다
   const [direction, setDirection] = useState(1);
   // 조건부 스텝은 목록에서 걸러낸다 — 단, 그 스텝에 머무는 동안엔 유지한다(현재 index가 사라지는 레이스 방지).
@@ -119,6 +121,9 @@ export const OnboardingFlow = () => {
   );
 
   const stepBack = () => {
+    // 코드 입력에서 뒤로 가면 질문으로 — 「네」를 잘못 눌렀어도 「아니요」로 다시 고를 수 있다
+    if (step === 'referral' && referralPhase === 'enter')
+      return setReferralPhase('ask');
     const currentIndex = stepOrder.indexOf(step);
     if (currentIndex > 0) goTo(stepOrder[currentIndex - 1]);
   };
@@ -219,6 +224,8 @@ export const OnboardingFlow = () => {
             )}
             {step === 'referral' && (
               <ReferralStep
+                phase={referralPhase}
+                onEnter={() => setReferralPhase('enter')}
                 signupWon={
                   referral ? inviteeWonOf(referral.currentOffer.signup) : 0
                 }

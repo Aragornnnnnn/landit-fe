@@ -16,7 +16,7 @@ import { track } from '@/shared/analytics';
 import { ApiError } from '@/shared/api/api-error';
 import { showToast } from '@/shared/ui/toast';
 
-import { ReferralStep } from './ReferralStep';
+import { ReferralStep, type ReferralPhase } from './ReferralStep';
 
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 vi.mock('@/shared/monitoring/report', () => ({ reportWarning: vi.fn() }));
@@ -51,14 +51,20 @@ const preview = (over: Partial<ReferralPreview> = {}): ReferralPreview => ({
   ...over,
 });
 
-const renderStep = () => {
+const renderStep = (phase: ReferralPhase = 'enter') => {
   const onDone = vi.fn();
+  const onEnter = vi.fn();
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <ReferralStep signupWon={3000} onDone={onDone} />
+      <ReferralStep
+        phase={phase}
+        onEnter={onEnter}
+        signupWon={3000}
+        onDone={onDone}
+      />
     </QueryClientProvider>,
   );
-  return { onDone, input: screen.getByLabelText('초대 코드') };
+  return { onDone, onEnter, input: screen.queryByLabelText('초대 코드')! };
 };
 
 const pasteMessage = (input: HTMLElement, text: string) =>
@@ -72,6 +78,39 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+});
+
+describe('ReferralStep · 초대 받았는지 묻기', () => {
+  it('처음에는 돈 이야기 없이 초대 받고 왔는지만 묻는다', () => {
+    renderStep('ask');
+
+    expect(screen.getByText(/친구에게 초대 받고/)).toBeInTheDocument();
+    expect(screen.queryByText(/원/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('초대 코드')).not.toBeInTheDocument();
+  });
+
+  it('「네, 초대 코드가 있어요」를 누르면 코드 입력으로 넘어간다', () => {
+    const { onEnter, onDone } = renderStep('ask');
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '네, 초대 코드가 있어요' }),
+    );
+
+    expect(onEnter).toHaveBeenCalled();
+    expect(onDone).not.toHaveBeenCalled();
+  });
+
+  it('「아니요」를 누르면 건너뛰기를 서버에 남기고 다음으로 넘어간다', async () => {
+    const { onDone } = renderStep('ask');
+
+    fireEvent.click(screen.getByRole('button', { name: '아니요' }));
+
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect(skipReferralRegistration).toHaveBeenCalled();
+    expect(track).toHaveBeenCalledWith(EVENTS.REFERRAL_CODE_SKIPPED, {
+      from: 'ask',
+    });
+  });
 });
 
 describe('ReferralStep', () => {
@@ -214,6 +253,8 @@ describe('ReferralStep', () => {
 
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(skipReferralRegistration).toHaveBeenCalled();
-    expect(track).toHaveBeenCalledWith(EVENTS.REFERRAL_CODE_SKIPPED);
+    expect(track).toHaveBeenCalledWith(EVENTS.REFERRAL_CODE_SKIPPED, {
+      from: 'entry',
+    });
   });
 });

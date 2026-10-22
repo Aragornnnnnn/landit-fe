@@ -491,7 +491,8 @@ export type EventProps = {
   'Onboarding Completed': undefined;
   // 코드를 어떻게 넣었나 — 붙여넣기(버튼·칸 길게 눌러 붙여넣기) 또는 직접 입력
   'Referral Code Registered': { method: 'paste' | 'typed' };
-  'Referral Code Skipped': undefined;
+  // 질문에서 「아니요」(ask)인지, 코드 입력에서 「코드 없이 계속」(entry)인지
+  'Referral Code Skipped': { from: 'ask' | 'entry' };
   'Profile Gate Viewed': { question: GateQuestion };
   'Profile Gate Answered': { question: 'accent'; accent: AccentLocale };
   'Accent Changed': { accent: AccentLocale };
