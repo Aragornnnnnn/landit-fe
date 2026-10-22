@@ -1,12 +1,12 @@
-// EventPopupGate — 띄운 공지에 반응하면 다시 안 뜨고, 자세히 보기만 공지 화면으로 보내는 계약 검증
+// EventPopupGate — 띄운 공지에 반응하면 다시 안 뜨고, 링크가 있을 때만 자세히 보기로 공지 화면에 보내는 계약 검증
 import { useState } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
 
-import { isEventPopupDone } from '../model/active-popup';
-import type { EventPopup } from '../model/event-popups';
+import type { ActivePopup } from '../api/event-popup';
+import { readEventPopupDoneIds } from '../model/active-popup';
 import { EventPopupGate } from './EventPopupGate';
 
 vi.mock('motion/react', () => import('@/shared/motion/test-double'));
@@ -16,20 +16,17 @@ const trackMock = vi.mocked(track);
 const push = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
 
-const POPUP: EventPopup = {
-  popupId: 'invite-2026-10',
-  imageUrl: '/images/event/invite.webp',
-  imageAlt: '친구 초대 이벤트',
-  linkUrl: '/mailbox/letters/12',
-  startAt: '2026-10-20T00:00:00+09:00',
-  endAt: '2026-11-01T00:00:00+09:00',
+const POPUP: ActivePopup = {
+  popupId: 7,
+  imageUrl: 'https://cdn.landit.im/popup/7.webp',
+  linkUrl: '/mailbox/received/12',
 };
 
 // 홈 탭처럼 열림을 쥐고 있는 쪽 — 닫으면 open을 내린다
-const Host = () => {
+const Host = ({ popup = POPUP }: { popup?: ActivePopup }) => {
   const [open, setOpen] = useState(true);
   return (
-    <EventPopupGate popup={POPUP} open={open} onClose={() => setOpen(false)} />
+    <EventPopupGate popup={popup} open={open} onClose={() => setOpen(false)} />
   );
 };
 
@@ -44,20 +41,20 @@ describe('EventPopupGate', () => {
     render(<Host />);
 
     expect(trackMock).toHaveBeenCalledWith('Event Popup Viewed', {
-      popup_id: 'invite-2026-10',
+      popup_id: 7,
     });
   });
 
   it.each([
     ['자세히 보기', () => screen.getByRole('button', { name: '자세히 보기' })],
-    ['이미지', () => screen.getByRole('button', { name: '친구 초대 이벤트' })],
+    ['이미지', () => screen.getByRole('button', { name: '이벤트 공지' })],
   ])('%s를 누르면 공지 화면으로 가고 다시 띄우지 않는다', (_, target) => {
     render(<Host />);
 
     fireEvent.click(target());
 
-    expect(push).toHaveBeenCalledWith('/mailbox/letters/12');
-    expect(isEventPopupDone('invite-2026-10')).toBe(true);
+    expect(push).toHaveBeenCalledWith('/mailbox/received/12');
+    expect(readEventPopupDoneIds()).toEqual([7]);
   });
 
   it('닫기를 누르면 이동 없이 닫고 다시 띄우지 않는다', () => {
@@ -67,6 +64,17 @@ describe('EventPopupGate', () => {
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(push).not.toHaveBeenCalled();
-    expect(isEventPopupDone('invite-2026-10')).toBe(true);
+    expect(readEventPopupDoneIds()).toEqual([7]);
+  });
+
+  it('링크가 없는 공지면 자세히 보기 없이 닫기만 남는다', () => {
+    render(<Host popup={{ ...POPUP, linkUrl: null }} />);
+
+    expect(
+      screen.queryByRole('button', { name: '자세히 보기' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: '이벤트 공지' }),
+    ).not.toBeInTheDocument();
   });
 });

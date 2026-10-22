@@ -810,9 +810,9 @@ export type EventProps = {
   };
 
   // 탭 = 이미지나 「자세히 보기」로 공지 화면에 들어감. 닫기는 버튼·바깥·뒤로가기를 가리지 않는다
-  'Event Popup Viewed': { popup_id: string };
-  'Event Popup Tapped': { popup_id: string };
-  'Event Popup Dismissed': { popup_id: string };
+  'Event Popup Viewed': { popup_id: number };
+  'Event Popup Tapped': { popup_id: number };
+  'Event Popup Dismissed': { popup_id: number };
 
   // attempt·trigger는 리뷰 요청(moment=review)에만 — 몇 번째 노출인지(1~4), 무엇을 마치고 와서 떴는지
   'Satisfaction Prompt Viewed': {

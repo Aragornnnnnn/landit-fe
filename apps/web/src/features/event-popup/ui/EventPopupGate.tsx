@@ -8,8 +8,8 @@ import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
 
-import { markEventPopupDone } from '../model/active-popup';
-import type { EventPopup } from '../model/event-popups';
+import type { ActivePopup } from '../api/event-popup';
+import { markEventPopupDone, popupLinkTarget } from '../model/active-popup';
 import { EventPopupSheet } from './EventPopupSheet';
 
 export const EventPopupGate = ({
@@ -17,11 +17,12 @@ export const EventPopupGate = ({
   open,
   onClose,
 }: {
-  popup: EventPopup;
+  popup: ActivePopup;
   open: boolean;
   onClose: () => void;
 }) => {
   const router = useRouter();
+  const target = popupLinkTarget(popup.linkUrl);
 
   useEffect(() => {
     if (open) track(EVENTS.EVENT_POPUP_VIEWED, { popup_id: popup.popupId });
@@ -33,9 +34,12 @@ export const EventPopupGate = ({
   };
 
   const openDetail = () => {
+    if (!target) return;
     track(EVENTS.EVENT_POPUP_TAPPED, { popup_id: popup.popupId });
     close();
-    router.push(popup.linkUrl);
+    // 바깥 주소는 셸이 웹뷰 밖(OS 브라우저)으로 넘긴다 — 편지 본문 링크와 같은 길이다
+    if (target.kind === 'external') window.location.assign(target.url);
+    else router.push(target.path);
   };
 
   const dismiss = () => {
@@ -46,8 +50,8 @@ export const EventPopupGate = ({
   return (
     <EventPopupSheet
       open={open}
-      popup={popup}
-      onOpenDetail={openDetail}
+      imageUrl={popup.imageUrl}
+      onOpenDetail={target ? openDetail : undefined}
       onClose={dismiss}
     />
   );

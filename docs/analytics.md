@@ -312,7 +312,7 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 | Event Popup Tapped    | popup_id | 이미지나 「자세히 보기」를 눌러 공지 화면으로 감 |
 | Event Popup Dismissed | popup_id | 닫기 버튼·바깥 탭·뒤로가기로 닫음                |
 
-`popup_id`는 프론트 목록(`features/event-popup/model/event-popups.ts`)의 id다. 백엔드 API로 바뀌어도 같은 이름으로 싣는다.
+`popup_id`는 어드민에서 등록한 팝업 id다 (`GET /popups/active`의 popupId).
 
 ### 알람
 

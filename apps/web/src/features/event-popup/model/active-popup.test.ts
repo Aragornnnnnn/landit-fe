@@ -1,64 +1,59 @@
-// 이벤트 팝업 고르기 — 노출 기간·반응한 기록으로 이번에 띄울 팝업 하나를 고르는 규칙 검증
+// 이벤트 공지 — 이 기기에서 반응한 공지를 거르고, 링크를 앱 안 이동과 바깥 열기로 가르는 규칙 검증
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import type { ActivePopup } from '../api/event-popup';
 import {
-  isEventPopupDone,
   markEventPopupDone,
-  pickActivePopup,
+  popupLinkTarget,
+  readEventPopupDoneIds,
+  unseenPopup,
 } from './active-popup';
-import type { EventPopup } from './event-popups';
 
-const popup = (overrides: Partial<EventPopup> = {}): EventPopup => ({
-  popupId: 'invite-2026-10',
-  imageUrl: '/images/event/invite.webp',
-  imageAlt: '친구 초대 이벤트',
-  linkUrl: '/mailbox',
-  startAt: '2026-10-20T00:00:00+09:00',
-  endAt: '2026-11-01T00:00:00+09:00',
-  ...overrides,
-});
+const POPUP: ActivePopup = {
+  popupId: 7,
+  imageUrl: 'https://cdn.landit.im/popup/7.webp',
+  linkUrl: '/mailbox/received/12',
+};
 
-const NOW = new Date('2026-10-22T12:00:00+09:00');
-const neverDone = () => false;
+describe('unseenPopup', () => {
+  it('서버가 준 공지에 아직 반응하지 않았으면 그대로 띄운다', () => {
+    expect(unseenPopup(POPUP, [])).toBe(POPUP);
+  });
 
-describe('pickActivePopup', () => {
-  it('노출 기간 안의 반응하지 않은 팝업을 고른다', () => {
-    const target = popup();
-
-    const picked = pickActivePopup([target], NOW, neverDone);
-
-    expect(picked).toBe(target);
+  it('이미 반응한 공지면 띄우지 않는다', () => {
+    expect(unseenPopup(POPUP, [7])).toBeNull();
   });
 
   it.each([
-    ['시작 전', { startAt: '2026-10-23T00:00:00+09:00' }],
-    ['끝난 뒤', { endAt: '2026-10-22T12:00:00+09:00' }],
-  ])('%s이면 고르지 않는다', (_, period) => {
-    const picked = pickActivePopup([popup(period)], NOW, neverDone);
+    ['띄울 공지가 없다고 하면', null],
+    ['아직 응답이 없으면', undefined],
+  ])('%s 띄우지 않는다', (_, popup) => {
+    expect(unseenPopup(popup, [])).toBeNull();
+  });
+});
 
-    expect(picked).toBeNull();
+describe('popupLinkTarget', () => {
+  it('앱 안 경로면 화면을 옮긴다', () => {
+    expect(popupLinkTarget('/mailbox/received/12')).toEqual({
+      kind: 'app',
+      path: '/mailbox/received/12',
+    });
   });
 
-  it('이미 반응한 팝업은 건너뛰고 다음 팝업을 고른다', () => {
-    const done = popup({ popupId: 'old' });
-    const next = popup({ popupId: 'new' });
-
-    const picked = pickActivePopup([done, next], NOW, (id) => id === 'old');
-
-    expect(picked).toBe(next);
+  it('https 주소면 바깥 브라우저로 연다', () => {
+    expect(popupLinkTarget('https://landit.im/event')).toEqual({
+      kind: 'external',
+      url: 'https://landit.im/event',
+    });
   });
 
-  it('조건에 맞는 팝업이 여럿이면 목록 앞의 것을 고른다', () => {
-    const first = popup({ popupId: 'first' });
-
-    const picked = pickActivePopup(
-      [first, popup({ popupId: 'second' })],
-      NOW,
-      neverDone,
-    );
-
-    expect(picked).toBe(first);
+  it.each([
+    ['링크가 없으면', null],
+    ['//로 시작하는 다른 사이트 주소면', '//evil.example'],
+    ['허용하지 않는 형식이면', 'javascript:alert(1)'],
+  ])('%s 누를 곳을 만들지 않는다', (_, linkUrl) => {
+    expect(popupLinkTarget(linkUrl)).toBeNull();
   });
 });
 
@@ -67,19 +62,10 @@ describe('반응한 기록', () => {
     localStorage.clear();
   });
 
-  it('반응한 팝업만 기록에 남는다', () => {
-    markEventPopupDone('a');
+  it('반응한 공지가 기록에 쌓인다', () => {
+    markEventPopupDone(1);
+    markEventPopupDone(2);
 
-    expect([isEventPopupDone('a'), isEventPopupDone('b')]).toEqual([
-      true,
-      false,
-    ]);
-  });
-
-  it('여러 개에 반응하면 앞선 기록도 남는다', () => {
-    markEventPopupDone('a');
-    markEventPopupDone('b');
-
-    expect(isEventPopupDone('a')).toBe(true);
+    expect(readEventPopupDoneIds()).toEqual([1, 2]);
   });
 });
