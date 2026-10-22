@@ -101,7 +101,7 @@ export const UserTranscript = ({
         <p className="text-xs font-semibold text-muted-foreground">내 답변</p>
         {/* 서버가 받았는지는 모른다 — 아는 건 대답이 오지 않았다는 것뿐이라 연결 상태로만 말한다 */}
         {unsent && (
-          <p className="text-xs font-semibold text-destructive">
+          <p role="status" className="text-xs font-semibold text-destructive">
             연결이 불안정해요
           </p>
         )}
