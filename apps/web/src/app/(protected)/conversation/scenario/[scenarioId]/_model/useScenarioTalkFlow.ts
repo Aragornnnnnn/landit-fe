@@ -61,12 +61,12 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
 
   // 답변 가이드는 응답에 실린 그 질문 문장과 짝지어 둔다 — 화면의 질문이 그 문장일 때만 보인다.
   // 제출 응답은 속마음보다 먼저 오므로, 짝이 없으면 이전 질문 카드에 다음 질문 가이드가 붙는다
-  const [guide, setGuide] = useState<{
+  const [pairedGuide, setPairedGuide] = useState<{
     question: string;
-    guide: AnswerGuide;
+    answerGuide: AnswerGuide;
   } | null>(() =>
     preview?.answerGuide && opening
-      ? { question: opening.content, guide: preview.answerGuide }
+      ? { question: opening.content, answerGuide: preview.answerGuide }
       : null,
   );
 
@@ -75,8 +75,8 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
     onOpeningMessage: ({ answerGuide, ...message }) => {
       setOpening((prev) => prev ?? message);
       if (answerGuide)
-        setGuide(
-          (prev) => prev ?? { question: message.content, guide: answerGuide },
+        setPairedGuide(
+          (prev) => prev ?? { question: message.content, answerGuide },
         );
     },
   });
@@ -120,9 +120,9 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
         char_count: content.length,
       });
       const next = res.nextMessage;
-      setGuide(
+      setPairedGuide(
         next?.answerGuide
-          ? { question: next.content, guide: next.answerGuide }
+          ? { question: next.content, answerGuide: next.answerGuide }
           : null,
       );
       // 마지막 발화였다면 피드백을 미리 만들고 다음 대화 해금을 홈에 반영한다
@@ -164,7 +164,10 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
       firstSpeaker: scenario.firstSpeaker,
       totalQuestionCount: session.totalQuestionCount,
     }),
-    answerGuide: guide?.question === engine.turn.aiMessage ? guide.guide : null,
+    answerGuide:
+      pairedGuide?.question === engine.turn.aiMessage
+        ? pairedGuide.answerGuide
+        : null,
     // DONE 시점엔 세션이 확보돼 있다 — 피드백 생성에 쓴다 (없으면 세션 시작이 실패한 경우)
     sessionId: session.sessionId,
   };

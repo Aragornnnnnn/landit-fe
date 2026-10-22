@@ -84,11 +84,13 @@ export const ScenarioTalkFlow = ({
   // 키보드로 쓰는 중엔 그 칸이 입력창이라, 답을 낸 뒤엔 방금 한 말을 보여야 해서 비켜 준다
   const myTurn = phase === 'USER_READY' || phase === 'USER_SPEAKING';
   const guideShown = answerGuide != null && myTurn && !typing;
+  // 첫 질문의 턴 — USER 선발화면 0번은 상황 안내라 첫 AI 질문은 그다음이다
+  const firstQuestionIndex = scenario.firstSpeaker === 'USER' ? 1 : 0;
   const guide = useAnswerGuideToggle({
     question: turn.aiMessage,
     available: answerGuide != null && !ended,
     // 유도 힌트는 첫 질문의 음성이 끝나 내 차례가 된 순간에만 — 말 없이 나가는 사람 대부분이 그 직후에 나간다
-    hintable: turnIndex === 0 && phase === 'USER_READY',
+    hintable: turnIndex === firstQuestionIndex && phase === 'USER_READY',
     onToggled: (opened, fromHint) =>
       track(EVENTS.ANSWER_GUIDE_TOGGLED, {
         session_id: sessionId ?? undefined,

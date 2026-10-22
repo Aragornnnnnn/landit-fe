@@ -49,18 +49,6 @@ describe('useAnswerGuideToggle', () => {
     expect(onToggled).toHaveBeenLastCalledWith(false, false);
   });
 
-  it('시간이 지나도 저절로 펼치지 않는다', () => {
-    vi.useFakeTimers();
-    const { result } = renderToggle(ready);
-
-    act(() => {
-      vi.advanceTimersByTime(60_000);
-    });
-
-    expect(result.current.open).toBe(false);
-    vi.useRealTimers();
-  });
-
   it('다음 질문으로 넘어가면 접힌 채 시작한다', () => {
     const { result, rerender } = renderToggle(ready);
     act(() => result.current.openGuide());

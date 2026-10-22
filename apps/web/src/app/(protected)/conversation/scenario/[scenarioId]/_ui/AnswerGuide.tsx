@@ -25,6 +25,12 @@ const GUIDE_LAYOUT_ID = 'answer-guide';
 // 칩↔카드 모양 변화 — 살짝만 넘치고 멈추는 스프링
 const MORPH = { type: 'spring', stiffness: 420, damping: 34 } as const;
 
+// 모양 변화가 대략 자리 잡는 시간(초) — 칩·카드 안쪽 글자는 이 뒤에 나타나야 늘어난 채 보이지 않는다
+const MORPH_SETTLE_S = 0.25;
+
+// 힌트가 떠 있는 동안 칩 둘레를 감싸는 옅은 보라 고리 — 반짝이·테두리의 보라와 같은 색
+const HINT_RING = `0 0 0 4px ${GUIDE_COLORS[2]}33`;
+
 // 네 꼭짓점 반짝이 — SparkleIcon과 같은 별을 그라데이션으로 칠한다
 const GradientSparkle = ({ size }: { size: number }) => {
   // useId에는 url(#…) 참조를 깨는 문자가 섞일 수 있어 걸러 낸다
@@ -60,7 +66,8 @@ const GradientSparkle = ({ size }: { size: number }) => {
 };
 
 /** 내 답변 칸 머리에 붙는 칩 — 라벨 줄 높이를 키우지 않게 위아래를 끌어당긴다.
- * 유도 힌트가 켜지면 칩 위에 "말이 안 떠오르면 눌러 봐요" 말풍선이 떠서 칩을 가리킨다 */
+ * 유도 힌트가 켜지면 칩 아래(아직 비어 있는 답변 칸 안)에 "말이 안 떠오르면 눌러 봐요" 말풍선이 떠서 칩을 가리킨다.
+ * 칩 위로 띄우면 작은 화면에서 질문 카드의 다시 듣기·해석 버튼을 가린다 */
 export const AnswerGuideChip = ({
   onOpen,
   hintVisible,
@@ -69,6 +76,7 @@ export const AnswerGuideChip = ({
   hintVisible: boolean;
 }) => {
   const reduced = useReducedMotion() ?? false;
+  const hintId = `guide-hint-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   return (
     // 말풍선은 칩 버튼 밖 형제로 둔다 — 칩이 카드로 커지는 모양 변화에 같이 늘어나지 않게
     <span className="relative flex">
@@ -76,13 +84,13 @@ export const AnswerGuideChip = ({
         layoutId={GUIDE_LAYOUT_ID}
         transition={reduced ? { duration: 0 } : MORPH}
         onClick={onOpen}
-        className={`-my-1 flex h-6 items-center gap-1 border px-2.5 text-xs font-bold text-foreground transition-shadow active:scale-95 ${
-          hintVisible ? 'shadow-[0_0_0_4px_rgb(139_108_240/0.2)]' : ''
-        }`}
+        aria-describedby={hintVisible ? hintId : undefined}
+        className="-my-1 flex h-6 items-center gap-1 border px-2.5 text-xs font-bold text-foreground transition-shadow active:scale-95"
         style={{
           ...gradientBorder,
           // 높이(24px)의 절반 — 999로 두면 카드로 커지는 동안 알약처럼 부푼다
           borderRadius: 12,
+          boxShadow: hintVisible ? HINT_RING : undefined,
         }}
       >
         {/* 카드에서 줄어들어 돌아올 때 글자가 늘어난 채 보이지 않게, 모양이 자리 잡은 뒤 나타난다 */}
@@ -90,7 +98,7 @@ export const AnswerGuideChip = ({
           className="flex items-center gap-1"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.15, delay: reduced ? 0 : 0.22 }}
+          transition={{ duration: 0.15, delay: reduced ? 0 : MORPH_SETTLE_S }}
         >
           <GradientSparkle size={12} />
           예시 볼래요
@@ -100,12 +108,12 @@ export const AnswerGuideChip = ({
         {hintVisible && (
           <motion.span
             key="hint"
-            role="status"
-            initial={{ opacity: 0, y: reduced ? 0 : 6 }}
+            id={hintId}
+            initial={{ opacity: 0, y: reduced ? 0 : -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
             transition={{ duration: DURATION.base, ease: EASE_STANDARD }}
-            className="pointer-events-none absolute right-0 bottom-full mb-3 whitespace-nowrap"
+            className="pointer-events-none absolute top-full right-0 z-10 mt-3 whitespace-nowrap"
           >
             {/* 살짝 떠다녀 눈에 걸리게 한다. 움직임 줄이기면 멈춘다 */}
             <motion.span
@@ -118,8 +126,8 @@ export const AnswerGuideChip = ({
               }}
             >
               말이 안 떠오르면 눌러 봐요
-              {/* 칩 가운데를 가리키는 꼬리 */}
-              <span className="absolute top-full right-9 border-x-[6px] border-t-[7px] border-x-transparent border-t-foreground" />
+              {/* 위쪽 칩 가운데를 가리키는 꼬리 — 칩 폭(약 92px)의 절반쯤에 둔다 */}
+              <span className="absolute right-10 bottom-full border-x-[6px] border-b-[7px] border-x-transparent border-b-foreground" />
             </motion.span>
           </motion.span>
         )}
@@ -163,7 +171,7 @@ const AnswerGuideCard = ({
 }) => {
   const reduced = useReducedMotion() ?? false;
   // 칩이 카드 크기로 커진 뒤에 안쪽이 차례로 올라온다
-  const settle = reduced ? 0 : 0.25;
+  const settle = reduced ? 0 : MORPH_SETTLE_S;
   const line = (delay: number) => ({
     initial: { opacity: 0, y: reduced ? 0 : 6 },
     animate: { opacity: 1, y: 0 },
