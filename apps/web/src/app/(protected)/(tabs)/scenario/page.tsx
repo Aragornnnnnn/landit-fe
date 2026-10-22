@@ -60,9 +60,12 @@ function ScenarioContent() {
   const showerHold = useEarnShowerHold();
   // 이벤트 공지는 들어오자마자 가장 먼저 띄운다 — 닫힐 때까지 램프 자동 소환·소감·프리뷰가 기다린다.
   // 강제 업데이트·할인 시트·동전 연출은 방금 한 행동의 응답이라 공지가 그 뒤를 기다린다
-  const eventPopup = useActiveEventPopup();
+  const { popup: eventPopup, loading: eventPopupLoading } =
+    useActiveEventPopup();
   const [eventPopupClosed, setEventPopupClosed] = useState(false);
-  const eventPopupPending = eventPopup !== null && !eventPopupClosed;
+  // 공지가 뜰지 아직 모르거나, 떠서 아직 안 닫혔다
+  const eventPopupPending =
+    eventPopupLoading || (eventPopup !== null && !eventPopupClosed);
   const forceUpdate = useAppUpdateCheck().updateType === 'FORCE';
   const eventPopupReady = !forceUpdate && !promoOpen && !showerHold;
   // 대화 시작을 눌렀다 — 바로 이동하지 않고 브리핑 카드를 잠깐 보여준 뒤 대화로 들어간다
