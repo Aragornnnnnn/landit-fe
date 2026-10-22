@@ -1,8 +1,7 @@
-// 분석 대기 화면 — 결과가 쓸 만하면 그 결과로, 실패·근거 부족·시간 초과면 빈손으로 한 번만 넘긴다. 결과가 빨리 와도 최소 시간은 보여준다
+// 분석 대기 화면 — 결과가 쓸 만하면 그 결과로, 실패·근거 부족·시간 초과면 빈손으로 한 번만 넘긴다. 결과가 빨리 와도 래디 두 장면은 보여준다
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ANALYZING_STAGE_MS } from '@/features/expression/ui/pronunciation/AnalyzingLandy';
 import type { UsableAssessment } from '@/features/feedback/model/level-assessment';
 
 import { AnalyzingScreen } from './AnalyzingScreen';
@@ -16,13 +15,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/features/feedback/model/useLevelAssessmentQuery', () => ({
   useLevelAssessmentQuery: () => mocks.query,
 }));
-vi.mock(
-  '@/features/expression/ui/pronunciation/AnalyzingLandy',
-  async (importOriginal) => ({
-    ...(await importOriginal()),
-    AnalyzingLandy: () => <span data-testid="landy" />,
-  }),
-);
 
 const domain = (score: number) => ({ score, confidence: 0.9 });
 const usable: UsableAssessment = {
@@ -61,12 +53,25 @@ describe('AnalyzingScreen', () => {
     expect(onDone).not.toHaveBeenCalled();
   });
 
+  it('래디 문구는 1.3초마다 바뀐다 — 최소 시간 안에 두 장면을 보여준다', () => {
+    render(<AnalyzingScreen sessionId={1} onDone={vi.fn()} />);
+    expect(
+      screen.getByText(/방금 대화를 다시 듣고 있어요/),
+    ).toBeInTheDocument();
+
+    act(() => vi.advanceTimersByTime(1_300));
+
+    expect(
+      screen.getByText(/원어민 표현과 비교하고 있어요/),
+    ).toBeInTheDocument();
+  });
+
   it('쓸 만한 결과가 바로 와도 최소 시간 전에는 넘기지 않는다 — 분석 화면이 깜빡 지나가면 레벨이 갑자기 뜬 것처럼 보인다', () => {
     mocks.query = { outcome: 'ready', levelAssessment: usable };
     const onDone = vi.fn();
     render(<AnalyzingScreen sessionId={1} onDone={onDone} />);
 
-    act(() => vi.advanceTimersByTime(ANALYZING_STAGE_MS - 1));
+    act(() => vi.advanceTimersByTime(2_599));
 
     expect(onDone).not.toHaveBeenCalled();
   });
@@ -76,7 +81,7 @@ describe('AnalyzingScreen', () => {
     const onDone = vi.fn();
     render(<AnalyzingScreen sessionId={1} onDone={onDone} />);
 
-    act(() => vi.advanceTimersByTime(ANALYZING_STAGE_MS));
+    act(() => vi.advanceTimersByTime(2_600));
 
     expect(onDone).toHaveBeenCalledWith(usable);
   });
@@ -102,7 +107,7 @@ describe('AnalyzingScreen', () => {
     const onDone = vi.fn();
     render(<AnalyzingScreen sessionId={1} onDone={onDone} />);
 
-    act(() => vi.advanceTimersByTime(ANALYZING_STAGE_MS));
+    act(() => vi.advanceTimersByTime(2_600));
 
     expect(onDone).toHaveBeenCalledWith(null);
   });
@@ -112,7 +117,7 @@ describe('AnalyzingScreen', () => {
     const onDone = vi.fn();
     render(<AnalyzingScreen sessionId={1} onDone={onDone} />);
 
-    act(() => vi.advanceTimersByTime(ANALYZING_STAGE_MS));
+    act(() => vi.advanceTimersByTime(2_600));
 
     expect(onDone).toHaveBeenCalledWith(null);
   });
@@ -132,7 +137,7 @@ describe('AnalyzingScreen', () => {
     const onDone = vi.fn();
     render(<AnalyzingScreen sessionId={1} onDone={onDone} />);
 
-    act(() => vi.advanceTimersByTime(ANALYZING_STAGE_MS));
+    act(() => vi.advanceTimersByTime(2_600));
     expect(onDone).toHaveBeenCalledWith(usable);
 
     act(() => vi.advanceTimersByTime(20_000));

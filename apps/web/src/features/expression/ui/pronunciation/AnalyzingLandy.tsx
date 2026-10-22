@@ -29,13 +29,16 @@ const PRONUNCIATION_STAGES: AnalyzingStage[] = [
     text: '피드백을 정리하고 있어요',
   },
 ];
-/** 단계 하나가 머무는 시간 — 대기 화면이 최소로 보여줄 시간도 여기에 맞춘다 */
-export const ANALYZING_STAGE_MS = 2600;
+// 단계 하나가 머무는 기본 시간 — 발음 평가 기준이다
+const STAGE_MS = 2600;
 
 export const AnalyzingLandy = ({
   stages = PRONUNCIATION_STAGES,
+  stageMs = STAGE_MS,
 }: {
   stages?: AnalyzingStage[];
+  /** 단계 하나가 머무는 시간 */
+  stageMs?: number;
 }) => {
   const [stage, setStage] = useState(0);
   const lastIndex = stages.length - 1;
@@ -46,10 +49,10 @@ export const AnalyzingLandy = ({
         setStage((current) =>
           current >= lastIndex ? lastIndex - 1 : current + 1,
         ),
-      ANALYZING_STAGE_MS,
+      stageMs,
     );
     return () => clearInterval(timer);
-  }, [lastIndex]);
+  }, [lastIndex, stageMs]);
 
   const { image, text } = stages[stage];
 
