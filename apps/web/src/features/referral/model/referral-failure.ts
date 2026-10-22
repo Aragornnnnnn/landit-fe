@@ -15,6 +15,8 @@ const MESSAGE_BY_CODE: Record<string, string> = {
   REFERRAL_SELF_INVITE: '내 초대 코드는 넣을 수 없어요',
   REFERRAL_RATE_LIMITED: '잠시 뒤 다시 해 주세요',
   REFERRAL_DISABLED: '지금은 초대 보상을 받을 수 없어요',
+  // 같은 기기에서 다른 계정으로 또 넣었다 — 셸이 준 기기 ID로 서버가 가른다
+  REFERRAL_DEVICE_ALREADY_USED: '이 기기에서는 이미 초대 코드를 등록했어요',
 };
 
 const RETRY_MESSAGE = '확인하지 못했어요. 다시 시도해 주세요';

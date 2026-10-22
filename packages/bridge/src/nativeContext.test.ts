@@ -28,6 +28,16 @@ describe('readNativeContext', () => {
     expect(readNativeContext(fakeWindow[NATIVE_CONTEXT_GLOBAL])).toEqual(valid);
   });
 
+  it('기기 ID를 주는 셸이면 기기 ID도 읽는다', () => {
+    expect(
+      readNativeContext({ ...valid, deviceId: 'device-1' })?.deviceId,
+    ).toBe('device-1');
+  });
+
+  it('기기 ID를 주지 않는 이전 셸도 그대로 읽는다', () => {
+    expect(readNativeContext(valid)?.deviceId).toBeUndefined();
+  });
+
   it('브라우저(주입값 없음)면 null을 돌려준다', () => {
     expect(readNativeContext(undefined)).toBeNull();
     expect(readNativeContext(null)).toBeNull();

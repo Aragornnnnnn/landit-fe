@@ -4,6 +4,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useCurrentUserId } from '@/shared/auth/current-member';
+import { getNativeContext } from '@/shared/bridge/native-context';
 
 import { registerReferralCode } from '../api/referral';
 import { markRegistrationStatus } from './keys';
@@ -14,8 +15,11 @@ export const useRegisterReferralCodeMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (body: { code: string; policyVersion: number }) =>
-      registerReferralCode(body),
+    mutationFn: (body: { code: string; policyVersion: number }) => {
+      // 같은 기기에서 초대 코드를 여러 번 넣지 못하게 서버가 가르도록, 셸이 준 기기 ID를 같이 보낸다
+      const deviceId = getNativeContext()?.deviceId;
+      return registerReferralCode(deviceId ? { ...body, deviceId } : body);
+    },
     onSuccess: () => markRegistrationStatus(queryClient, userId, 'REGISTERED'),
     onError: (error) => {
       const failure = referralFailureOf(error);
