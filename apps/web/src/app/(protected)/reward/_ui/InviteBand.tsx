@@ -40,7 +40,7 @@ export const InviteBand = ({ className = '' }: { className?: string }) => {
           className="shrink-0 text-muted-foreground"
         />
       </span>
-      <span className="mt-2.5 block h-1.5 overflow-hidden rounded-full bg-primary/15">
+      <span className="mt-2.5 block h-1.5 overflow-hidden rounded-full bg-invite-strip">
         <span
           className="block h-full rounded-full bg-primary"
           style={{ width: `${band.ratio * 100}%` }}

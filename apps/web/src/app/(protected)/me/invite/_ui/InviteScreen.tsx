@@ -155,17 +155,17 @@ export const InviteScreen = () => {
 
 // 나와 초대받은 친구가 각각 얼마를 받는지 — 두 사람 얼굴로 누가 받는지 먼저 읽히게 한다. 조건은 아래 띠 한 줄
 const RewardSplit = ({ offer }: { offer: InviteOffer }) => (
-  <div className="overflow-hidden rounded-[20px] bg-primary/10">
+  <div className="overflow-hidden rounded-[20px] bg-invite">
     <div className="flex items-center px-3 pt-5 pb-4">
       <SplitSide emoji="🙋" who="나" won={offer.inviterWon} />
       {offer.inviteeWon > 0 && (
         <>
-          <span aria-hidden className="h-[72px] w-px bg-primary/15" />
+          <span aria-hidden className="h-[72px] w-px bg-invite-strip" />
           <SplitSide emoji="🙆‍♂️" who="초대 받은 친구" won={offer.inviteeWon} />
         </>
       )}
     </div>
-    <p className="bg-primary/10 py-2.5 text-center text-[13px] font-bold text-primary">
+    <p className="bg-invite-strip py-2.5 text-center text-[13px] font-bold text-invite-ink">
       친구가 가입할 때 내 코드를 넣으면 바로 적립돼요
     </p>
   </div>
@@ -207,7 +207,7 @@ const Progress = ({
 }) => {
   if (view.full)
     return (
-      <div className="rounded-[20px] bg-primary/10 px-5 py-5 text-center">
+      <div className="rounded-[20px] bg-invite px-5 py-5 text-center">
         <p className="text-[13px] font-bold text-primary">
           친구 {REFERRAL_INVITE_LIMIT}명 초대 완료
         </p>
@@ -224,7 +224,7 @@ const Progress = ({
     );
 
   return (
-    <div className="rounded-[20px] bg-primary/10 p-5">
+    <div className="rounded-[20px] bg-invite p-5">
       <p className="text-[13px] font-bold text-muted-foreground">
         친구 초대로 받은 적립금
       </p>
@@ -241,7 +241,7 @@ const Progress = ({
           {view.progressLabel}
         </span>
       </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-primary/15">
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-invite-strip">
         <div
           className="h-full rounded-full bg-primary"
           style={{ width: `${(view.count / REFERRAL_INVITE_LIMIT) * 100}%` }}
