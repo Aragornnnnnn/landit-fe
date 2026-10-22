@@ -1,6 +1,7 @@
 // 테스트와 환급 점검 화면이 같이 쓰는 환급 응답 견본 — 100일 이용권(하루 500원)으로 쌓는 중이고 오늘은 아직인 사람이 기본이다
 import type {
   RewardActivity,
+  RewardCompletion,
   RewardCycle,
   RewardCycleDay,
   RewardToday,
@@ -116,3 +117,25 @@ export const endedRewardView = (pendingRefundWon: number): RewardView =>
     purchaseAvailable: true,
     purchaseAvailableAt: null,
   });
+
+// 오늘의 시나리오를 끝내 500원을 받은 완료의 영수증
+export const rewardCompletion = (
+  patch: Partial<RewardCompletion> = {},
+): RewardCompletion => ({
+  completionId: 1,
+  cycleId: 1,
+  activityType: 'SCENARIO',
+  learningDate: '2026-10-10',
+  status: 'EARNED',
+  reason: null,
+  earnedWon: 500,
+  balanceWon: 500,
+  todayEarnedWon: 500,
+  todayMaximumWon: 500,
+  todayFullyAchieved: true,
+  activities: [rewardActivity({ earnedWon: 500, completed: true })],
+  computedAt: '2026-10-10T12:00:00Z',
+  calculationVersion: 1,
+  currency: 'KRW',
+  ...patch,
+});

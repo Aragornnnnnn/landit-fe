@@ -13,6 +13,7 @@ import {
   innerThoughtPollMs,
   thoughtHoldMs,
 } from '@/features/conversation/model/pacing';
+import { rewardCompletion } from '@/features/reward/model/reward.fixture';
 import { shouldAskSatisfaction } from '@/features/satisfaction/model/prompt-record';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
@@ -518,6 +519,7 @@ describe('useScenarioTalkFlow', async () => {
           totalQuestionCount: 3,
           completed: true,
         },
+        reward: rewardCompletion(),
       }),
     );
 
@@ -535,6 +537,8 @@ describe('useScenarioTalkFlow', async () => {
     expect(refreshRewardAfterCompletion).toHaveBeenCalledWith(queryClientMock, {
       // 오늘의 시나리오가 무엇인지 받아 둔 적이 없으면 오늘 것으로 치지 않는다
       todaysFirst: false,
+      // 축하 화면의 받은 금액은 완료 응답의 영수증으로 정한다
+      receipt: rewardCompletion(),
     });
     // 홈에 돌아가면 소감을 물을 차례라고 남긴다
     expect(shouldAskSatisfaction('scenario')).toBe(true);

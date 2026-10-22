@@ -11,6 +11,7 @@ import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { prepareFeedbackSummary } from '@/features/feedback/model/useSessionFeedbackQuery';
 // 대화 완료가 환급액도 늘린다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
+import type { RewardCompletion } from '@/features/reward/api/reward';
 import { refreshRewardAfterCompletion } from '@/features/reward/model/refresh-reward';
 // 첫 완료 뒤 홈에서 소감을 묻는다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { markTalkCompleted } from '@/features/satisfaction/model/prompt-record';
@@ -67,14 +68,17 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
   // 해금된 다음 시나리오(다음 대화)가 홈에 반영되도록 시나리오 캐시를 무효화한다.
   // 오늘 열매가 채워진 것도 이 순간이라, 스트릭은 새 값을 미리 받아 둔다 —
   // 버리기만 하면 홈으로 돌아왔을 때 옛 숫자를 먼저 그리고 응답이 온 뒤 번쩍인다.
-  const prepareFeedbackAndUnlock = (finishedSessionId: number) => {
+  const prepareFeedbackAndUnlock = (
+    finishedSessionId: number,
+    receipt: RewardCompletion | undefined,
+  ) => {
     // 오늘 것을 처음 끝낸 것인지는 시나리오 캐시를 버리기 전에 묻는다
     const todaysFirst = isTodaysFirstCompletion(queryClient, scenario);
     void prepareFeedbackSummary(queryClient, finishedSessionId);
     void queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
     refreshStreakAfterCompletion(queryClient);
     // 환급 참여자는 이 완료로 금액이 쌓인다 — 홈에 돌아왔을 때 새 금액이 서 있도록 미리 받는다
-    refreshRewardAfterCompletion(queryClient, { todaysFirst });
+    refreshRewardAfterCompletion(queryClient, { todaysFirst, receipt });
   };
 
   const engine = useConversationTurns({
@@ -106,7 +110,7 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
           scenario_id: scenario.scenarioId,
           turn_count: res.progress.totalQuestionCount,
         });
-        prepareFeedbackAndUnlock(sessionId);
+        prepareFeedbackAndUnlock(sessionId, res.reward);
         markTalkCompleted('scenario');
       }
       return {

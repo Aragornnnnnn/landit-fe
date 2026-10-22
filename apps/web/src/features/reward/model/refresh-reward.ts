@@ -4,8 +4,8 @@ import type { QueryClient } from '@tanstack/react-query';
 
 import { getCurrentUserId } from '@/shared/auth/auth-store';
 
-import type { RewardView } from '../api/reward';
-import { earnBaseOf } from './completion-earn';
+import type { RewardCompletion, RewardView } from '../api/reward';
+import { completionEarnOf } from './completion-earn';
 import { REWARD_GC_MS, rewardKeys } from './keys';
 import { clearMissedEarn, markMissedEarn } from './missed-earn';
 import { rewardQueries } from './queries';
@@ -42,21 +42,25 @@ export const refreshRewardAfterPurchase = (queryClient: QueryClient) => {
  * 시나리오 대화를 끝낸 순간 — 금액이 쌓이는 건 참여자와 무료 미리보기뿐이라, 환급과 상관없는 사람은 묻지 않는다.
  *
  * @param todaysFirst 오늘의 시나리오를 처음 끝낸 것인가 — 그 대화만 적립 대상이다
+ * @param receipt 완료 응답에 실려 온 적립 영수증
  */
 export const refreshRewardAfterCompletion = (
   queryClient: QueryClient,
-  { todaysFirst }: { todaysFirst: boolean },
+  {
+    todaysFirst,
+    receipt,
+  }: { todaysFirst: boolean; receipt: RewardCompletion | undefined },
 ) => {
   const userId = getCurrentUserId();
   if (userId === null) return;
   const cached = cachedReward(queryClient, userId);
   const participant = cached === undefined ? null : participantOf(cached);
-  // 새로 받기 전에 적는다 — 받아 둔 것이 곧 대화에 들어갈 때 알던 값이다. 받을 것이 없으면 전에 적어 둔 것을 지운다
-  const key = rewardKeys.earnBase(userId);
+  // 축하 화면이 보여 줄 받은 금액을 적는다. 받은 것이 없으면 전에 적어 둔 것을 지운다
+  const key = rewardKeys.completionEarn(userId);
   // 보는 화면이 없는 값이라 기본 보관 시간(5분)이면 축하 화면 전에 지워질 수 있다 — 축하는 피드백 화면을 거쳐 간다.
   // 보관 시간은 캐시에 처음 놓일 때 정해지므로 적기 전에 건다
   queryClient.setQueryDefaults(key, { gcTime: REWARD_GC_MS });
-  queryClient.setQueryData(key, participant ? earnBaseOf(participant) : null);
+  queryClient.setQueryData(key, participant ? completionEarnOf(receipt) : null);
   if (participant === null) {
     // 환급을 받아 본 적이 있고(출시됨) 참여자가 아니면, 이 대화는 챌린지였다면 받았을 몫이다 — 홈이 그걸 한 번 보여 준다.
     // 권할 사람인지(무료·결제 가능)는 보여 주는 쪽이 가린다
