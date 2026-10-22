@@ -16,17 +16,16 @@ import { Button } from '@/shared/ui/Button';
 
 import type { RewardIntroCopy } from '../_model/reward-intro-copy';
 import { EmphasizedText } from './EmphasizedText';
-import { StoredRewardCard } from './StoredRewardCard';
 
 export const RewardIntro = ({
   copy,
   offer,
-  storedWon = 0,
+  stored,
 }: {
   copy: RewardIntroCopy;
   offer: RewardOffer;
-  // 결제 전에 보관 중인 돈(초대 보상 등) — 있으면 연출 아래에 알린다
-  storedWon?: number;
+  // 결제 전에 이미 쌓인 돈(초대 보상 등)과 그 실제 내역 — 있으면 아래 보기 내역 대신 진짜 내역을 보여 준다
+  stored?: { won: number; history: React.ReactNode };
 }) => (
   <div className="pb-8">
     <section className="px-5 pt-3 text-center">
@@ -46,28 +45,54 @@ export const RewardIntro = ({
         <EmphasizedText line={copy.caption} />
       </p>
     )}
-    {storedWon > 0 && (
-      <StoredRewardCard storedWon={storedWon} className="mx-5 mt-5" />
-    )}
 
-    {/* 결제하면 보게 될 환급 내역과 같은 모습 — 실제 내역이 아니라 보기라 흐리게 둔다 */}
+    {stored ? (
+      <StoredRecord won={stored.won} history={stored.history} />
+    ) : (
+      <SampleRecord dailyWon={offer.dailyWon} />
+    )}
+  </div>
+);
+
+// 결제하면 보게 될 환급 내역과 같은 모습 — 실제 내역이 아니라 보기라 흐리게 둔다
+const SampleRecord = ({ dailyWon }: { dailyWon: number }) => (
+  <section className="mt-9 px-5">
+    <h3 className="text-18 font-black tracking-[-0.02em] text-foreground">
+      이렇게 쌓여요
+    </h3>
+    <div className="opacity-60">
+      <RecordHead won={dailyWon * SAMPLE_DAYS} />
+      <RewardHistory history={sampleHistoryOf(dailyWon)} />
+    </div>
+  </section>
+);
+
+// 결제 전에 이미 쌓인 돈 — 같은 자리를 진하게, 실제 내역으로 채운다
+const StoredRecord = ({
+  won,
+  history,
+}: {
+  won: number;
+  history: React.ReactNode;
+}) => (
+  <>
     <section className="mt-9 px-5">
       <h3 className="text-18 font-black tracking-[-0.02em] text-foreground">
-        이렇게 쌓여요
+        이미 이렇게 쌓였어요
       </h3>
-      <div className="opacity-60">
-        <p className="mt-3 flex items-center justify-between border-b border-border pb-3.5">
-          <span className="text-15 font-medium text-foreground">
-            쌓인 환급액
-          </span>
-          <span className="text-20 font-black text-primary tabular-nums">
-            {formatWon(offer.dailyWon * SAMPLE_DAYS)}
-          </span>
-        </p>
-        <RewardHistory history={sampleHistoryOf(offer.dailyWon)} />
-      </div>
+      <RecordHead won={won} />
     </section>
-  </div>
+    {history}
+  </>
+);
+
+const RecordHead = ({ won }: { won: number }) => (
+  <p className="mt-3 flex items-center justify-between border-b border-border pb-3.5">
+    <span className="text-15 font-medium text-foreground">쌓인 환급액</span>
+    <span className="text-20 font-black text-primary tabular-nums">
+      {formatWon(won)}
+    </span>
+  </p>
 );
 
 // 아래 고정 버튼 — 환급은 프리미엄 혜택이라 결제부터다. 가격은 이어지는 페이월이 말한다

@@ -17,19 +17,25 @@ import { EmphasizedText } from './EmphasizedText';
 import { MidnightCountdown } from './MidnightCountdown';
 import { HistoryFeedList } from './RewardHistoryFeed';
 import { RewardPot } from './RewardPot';
-import { StoredRewardCard } from './StoredRewardCard';
+
+// 결제 전에 이미 쌓인 돈 — 금액, 다 채우면 돌려받는 금액(받아 둔 돈은 그와 따로 더해진다), 실제 내역
+export interface MissedStored {
+  won: number;
+  maximumWon: number;
+  history: React.ReactNode;
+}
 
 // 실제 화면 — 지난 기록을 서버에서 받아 그린다
 export const MissedRewardIntro = ({
   missed,
-  storedWon,
+  stored,
 }: {
   missed: MissedReward;
-  storedWon: number;
+  stored?: MissedStored;
 }) => (
   <MissedRewardView
     missed={missed}
-    storedWon={storedWon}
+    stored={stored}
     history={useRewardPreviewHistoryQuery(missed.today)}
   />
 );
@@ -38,14 +44,17 @@ export const MissedRewardIntro = ({
 export const MissedRewardView = ({
   missed,
   history,
-  storedWon = 0,
+  stored,
 }: {
   missed: MissedReward;
-  // 결제 전에 보관 중인 돈 — 놓친 금액(흐림)과 달리 진짜 돈이라 따로 알린다
-  storedWon?: number;
+  // 결제 전에 이미 쌓인 돈 — 상자 아래 한 줄이 그것까지 돌려받는다고 말하고, 기록 끝에 실제 내역이 붙는다
+  stored?: MissedStored;
   history: RewardHistoryState<MissedRow>;
 }) => {
-  const copy = missedCopyOf(missed);
+  const copy = missedCopyOf(
+    missed,
+    stored && { storedWon: stored.won, maximumWon: stored.maximumWon },
+  );
   // 오늘 끝낸 대화는 오늘 시작해야 인정된다 — 자정이 가까우면 시계로 알린다
   const urgent = useMidnightUrgent(missed.talkedToday);
 
@@ -72,9 +81,6 @@ export const MissedRewardView = ({
           {copy.note}
         </p>
       </div>
-      {storedWon > 0 && (
-        <StoredRewardCard storedWon={storedWon} className="mx-5 mt-3" />
-      )}
 
       <p className="mt-6 px-5 text-13 font-bold text-muted-foreground">기록</p>
       <HistoryFeedList
@@ -87,6 +93,8 @@ export const MissedRewardView = ({
           </ul>
         )}
       />
+      {/* 결제 전에 들어온 돈(초대 보상 등)은 놓친 기록 아래에 실제 내역으로 — 시간 순서상 가장 오래된 쪽이다 */}
+      {stored?.history}
     </div>
   );
 };

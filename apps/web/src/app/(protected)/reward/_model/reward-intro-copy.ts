@@ -58,12 +58,11 @@ export interface MissedCopy {
   note: string;
 }
 
-export const missedCopyOf = ({
-  pastDays,
-  missedWon,
-  dailyWon,
-  talkedToday,
-}: MissedReward): MissedCopy => {
+export const missedCopyOf = (
+  { pastDays, missedWon, dailyWon, talkedToday }: MissedReward,
+  // 결제 전에 받아 둔 돈(친구 초대 보상 등)과 다 채우면 돌려받는 금액 — 받아 둔 돈은 그 한도와 따로 더해진다
+  carry?: { storedWon: number; maximumWon: number },
+): MissedCopy => {
   const daily = formatWon(dailyWon);
   return {
     eyebrow: `지난 ${pastDays}일 동안 받을 수 있었던 금액`,
@@ -81,6 +80,9 @@ export const missedCopyOf = ({
           strong: daily,
           tail: '씩 쌓여요',
         },
-    note: '꾸준히 하면 결제한 금액을 다 돌려받아요',
+    note:
+      carry && carry.storedWon > 0
+        ? `받아 둔 ${formatWon(carry.storedWon)}까지 ${formatWon(carry.maximumWon + carry.storedWon)}을 다 돌려받아요`
+        : '꾸준히 하면 결제한 금액을 다 돌려받아요',
   };
 };
