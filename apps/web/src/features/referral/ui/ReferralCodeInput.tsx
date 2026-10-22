@@ -39,7 +39,8 @@ export const ReferralCodeInput = ({
   };
 
   return (
-    <div className="relative mx-auto flex items-center justify-center gap-1.5">
+    // gap-1 — 칸 8개(36px)와 줄표가 좁은 폰의 본문 폭(342px) 안에 들어가게
+    <div className="relative mx-auto flex items-center justify-center gap-1">
       {Array.from({ length: REFERRAL_CODE_LENGTH }, (_, index) => (
         <CodeCell
           key={index}
