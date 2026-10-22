@@ -7,7 +7,8 @@ import type { HistoryRow } from '../model/reward-history';
 const HistoryLine = ({ row }: { row: HistoryRow }) => (
   <li
     // 날짜가 붙는 줄(그날의 첫 줄)은 위를 조금 더 띄워 하루씩 끊어 보이게 한다
-    className={`flex items-start gap-3 ${row.dateLabel ? 'pt-5' : 'pt-4'}`}
+    // 아래 글이 없는 줄(친구 초대)은 제목을 금액 두 줄의 가운데에 앉힌다
+    className={`flex gap-3 ${row.note ? 'items-start' : 'items-center'} ${row.dateLabel ? 'pt-5' : 'pt-4'}`}
   >
     <span className="w-[calc(36px*var(--font-scale))] shrink-0 pt-0.5 text-13 font-medium whitespace-nowrap text-muted-foreground tabular-nums">
       {row.dateLabel}
@@ -16,9 +17,11 @@ const HistoryLine = ({ row }: { row: HistoryRow }) => (
       <span className="block text-16 font-bold text-foreground">
         {row.title}
       </span>
-      <span className="mt-0.5 block text-13 font-medium break-keep text-muted-foreground">
-        {row.note}
-      </span>
+      {row.note && (
+        <span className="mt-0.5 block text-13 font-medium break-keep text-muted-foreground">
+          {row.note}
+        </span>
+      )}
     </span>
     <span className="shrink-0 text-right">
       {row.amountWon !== null && (

@@ -46,6 +46,8 @@ describe('historyRowsOf', () => {
 
     expect(row.title).toBe(title);
     expect(row.amountWon).toBe(3000);
+    // 들어온 돈이라 시각을 적지 않는다
+    expect(row.note).toBe('');
   });
 
   it('끝낸 시각은 서버가 어느 시간대로 주든 한국 시각으로 적는다', () => {
