@@ -17,8 +17,8 @@ import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { formatWon } from '@/shared/lib/won';
 import { reportWarning } from '@/shared/monitoring/report';
-import { Button } from '@/shared/ui/Button';
 import { ConfirmSheet } from '@/shared/ui/ConfirmSheet';
+import { ClipboardPasteIcon } from '@/shared/ui/Icons';
 import { showToast } from '@/shared/ui/toast';
 
 import { ReferralAsk } from './ReferralAsk';
@@ -154,13 +154,16 @@ const CodeEntry = ({
   return (
     <div className="flex min-h-0 flex-1 flex-col pt-7">
       <h1 className="text-3xl leading-[1.18] font-black tracking-normal break-keep">
-        초대 코드가 있나요?
+        친구에게 받은
+        <br />
+        초대 코드를 넣어 주세요
       </h1>
-      <p className="mt-4 text-xl font-bold break-keep text-muted-foreground">
-        {signupWon > 0
-          ? `코드를 넣으면 ${formatWon(signupWon)}을 적립해 드려요`
-          : '친구에게 받은 8자리 코드를 넣어 주세요'}
-      </p>
+      {/* 「네, 초대 코드가 있어요」를 고른 사람만 오는 화면이라 여기서는 받을 돈을 말해도 된다 */}
+      {signupWon > 0 && (
+        <p className="mt-4 text-xl font-bold break-keep text-muted-foreground">
+          등록하면 {formatWon(signupWon)}을 적립해 드려요
+        </p>
+      )}
 
       <div className="mt-8">
         <ReferralCodeInput
@@ -173,14 +176,15 @@ const CodeEntry = ({
           <StatusLines status={status} />
         </div>
         {status.tone !== 'ok' && status.tone !== 'checking' && (
-          <Button
-            variant="ghost"
-            size="md"
-            className="mt-5"
+          // 칸을 길게 눌러도 붙여넣을 수 있어 보조 수단이다 — 화면을 차지하지 않게 작은 알약으로 둔다
+          <button
+            type="button"
             onClick={pasteFromClipboard}
+            className="mx-auto mt-5 flex items-center gap-1.5 rounded-full bg-secondary px-4 py-2 text-sm font-bold text-foreground transition-transform active:scale-95"
           >
-            복사한 메시지 붙여넣기
-          </Button>
+            <ClipboardPasteIcon size={16} />
+            붙여넣기
+          </button>
         )}
       </div>
 

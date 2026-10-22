@@ -188,6 +188,30 @@ describe('ReferralStep · 코드 입력', () => {
     expect(registerReferralCode).not.toHaveBeenCalled();
   });
 
+  it('「네」를 고른 뒤라 있는지 묻지 않고 넣어 달라고 하며, 등록하면 받을 금액을 알린다', () => {
+    renderStep();
+
+    expect(
+      screen.getByRole('heading', { name: /초대 코드를 넣어 주세요/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('등록하면 3,000원을 적립해 드려요'),
+    ).toBeInTheDocument();
+  });
+
+  it('붙여넣기 버튼으로 클립보드의 메시지를 읽어 코드를 넣는다', async () => {
+    Object.assign(navigator, {
+      clipboard: { readText: vi.fn().mockResolvedValue('초대 코드: K7QM3XPA') },
+    });
+    renderStep();
+
+    fireEvent.click(screen.getByRole('button', { name: '붙여넣기' }));
+
+    await waitFor(() =>
+      expect(previewReferralCode).toHaveBeenCalledWith('K7QM3XPA'),
+    );
+  });
+
   it('누를 등록 버튼이 없다', () => {
     renderStep();
 
