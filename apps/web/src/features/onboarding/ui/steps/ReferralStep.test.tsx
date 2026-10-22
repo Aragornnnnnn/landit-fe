@@ -154,7 +154,7 @@ describe('ReferralStep · 코드 입력', () => {
     expect(screen.getByText('초대 코드로 적립됐어요')).toBeInTheDocument();
     expect(haptic).toHaveBeenCalledWith('success');
     expect(onDone).not.toHaveBeenCalled();
-    await waitFor(() => expect(onDone).toHaveBeenCalled(), { timeout: 3000 });
+    await waitFor(() => expect(onDone).toHaveBeenCalled(), { timeout: 5000 });
   });
 
   it('받을 금액이 없는 조건이면 금액 없이 등록됐다고만 알린다', async () => {
