@@ -33,12 +33,12 @@ export const EventPopupSheet = ({
         className="aspect-[4/3] w-full object-cover"
       />
     </button>
-    <Button className="mt-5" onClick={onOpenDetail}>
+    <Button size="md" className="mt-4" onClick={onOpenDetail}>
       자세히 보기
     </Button>
     <button
       type="button"
-      className="mt-4 w-full text-center text-sm font-semibold text-muted-foreground"
+      className="mt-3 w-full text-center text-sm font-semibold text-muted-foreground"
       onClick={onClose}
     >
       닫기

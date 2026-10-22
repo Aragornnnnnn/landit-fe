@@ -5,19 +5,19 @@ type HomePreviewView = 'none' | 'tutorial' | 'card';
 
 /**
  * @param cleared 오늘 카드를 끝냈는가 — 뒤집기·무료 표현은 끝낸 카드에서만 할 수 있다
- * @param showerHold 돌아온 순간의 동전 연출이 아직 도는가
+ * @param held 앞선 연출(돌아온 순간의 동전·이벤트 공지)이 아직 화면에 있는가
  */
 export const homePreviewViewOf = ({
   screen,
   cleared,
-  showerHold,
+  held,
 }: {
   screen: PreviewScreen;
   cleared: boolean;
-  showerHold: boolean;
+  held: boolean;
 }): HomePreviewView => {
   if (screen === 'none') return 'none';
-  if (screen === 'tutorial') return showerHold ? 'none' : 'tutorial';
+  if (screen === 'tutorial') return held ? 'none' : 'tutorial';
   // 뒤집기·무료 표현 — 날이 바뀌어 오늘 카드가 램프면 다음 대화를 끝낼 때까지 쉰다
   return cleared ? 'card' : 'none';
 };

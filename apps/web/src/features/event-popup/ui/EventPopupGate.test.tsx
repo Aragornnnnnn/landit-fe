@@ -1,4 +1,5 @@
 // EventPopupGate — 띄운 공지에 반응하면 다시 안 뜨고, 자세히 보기만 공지 화면으로 보내는 계약 검증
+import { useState } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -24,6 +25,14 @@ const POPUP: EventPopup = {
   endAt: '2026-11-01T00:00:00+09:00',
 };
 
+// 홈 탭처럼 열림을 쥐고 있는 쪽 — 닫으면 open을 내린다
+const Host = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <EventPopupGate popup={POPUP} open={open} onClose={() => setOpen(false)} />
+  );
+};
+
 beforeEach(() => {
   localStorage.clear();
 });
@@ -32,7 +41,7 @@ afterEach(cleanup);
 
 describe('EventPopupGate', () => {
   it('띄우면 어느 공지가 보였는지 계측한다', () => {
-    render(<EventPopupGate popup={POPUP} />);
+    render(<Host />);
 
     expect(trackMock).toHaveBeenCalledWith('Event Popup Viewed', {
       popup_id: 'invite-2026-10',
@@ -43,7 +52,7 @@ describe('EventPopupGate', () => {
     ['자세히 보기', () => screen.getByRole('button', { name: '자세히 보기' })],
     ['이미지', () => screen.getByRole('button', { name: '친구 초대 이벤트' })],
   ])('%s를 누르면 공지 화면으로 가고 다시 띄우지 않는다', (_, target) => {
-    render(<EventPopupGate popup={POPUP} />);
+    render(<Host />);
 
     fireEvent.click(target());
 
@@ -52,7 +61,7 @@ describe('EventPopupGate', () => {
   });
 
   it('닫기를 누르면 이동 없이 닫고 다시 띄우지 않는다', () => {
-    render(<EventPopupGate popup={POPUP} />);
+    render(<Host />);
 
     fireEvent.click(screen.getByRole('button', { name: '닫기' }));
 

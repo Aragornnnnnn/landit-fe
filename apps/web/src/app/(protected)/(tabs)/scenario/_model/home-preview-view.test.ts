@@ -7,7 +7,7 @@ describe('homePreviewViewOf', () => {
   const base = {
     screen: 'tutorial' as const,
     cleared: true,
-    showerHold: false,
+    held: false,
   };
 
   it('프리뷰가 없으면 아무것도 띄우지 않는다', () => {
@@ -15,7 +15,7 @@ describe('homePreviewViewOf', () => {
   });
 
   it('튜토리얼은 동전 연출이 끝난 뒤에 띄운다', () => {
-    expect(homePreviewViewOf({ ...base, showerHold: true })).toBe('none');
+    expect(homePreviewViewOf({ ...base, held: true })).toBe('none');
     expect(homePreviewViewOf(base)).toBe('tutorial');
   });
 

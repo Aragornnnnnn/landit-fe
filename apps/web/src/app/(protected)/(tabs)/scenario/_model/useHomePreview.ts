@@ -15,20 +15,20 @@ import { homePreviewViewOf } from './home-preview-view';
 
 /**
  * @param cleared 오늘 카드를 끝냈는가
- * @param showerHold 돌아온 순간의 동전 연출이 아직 도는가
+ * @param held 앞선 연출(돌아온 순간의 동전·이벤트 공지)이 아직 화면에 있는가
  */
 export const useHomePreview = ({
   cleared,
-  showerHold,
+  held,
 }: {
   cleared: boolean;
-  showerHold: boolean;
+  held: boolean;
 }) => {
   const premiumPreview = usePremiumPreview();
   const view = homePreviewViewOf({
     screen: premiumPreview.screen,
     cleared,
-    showerHold,
+    held,
   });
   // 가격은 프리뷰가 있는 동안 미리 받는다 — 튜토리얼이 뜨기 전에 받아 두어야 금액이 등록가로 굳지 않는다
   const offer = useRewardOffer({ enabled: premiumPreview.screen !== 'none' });
