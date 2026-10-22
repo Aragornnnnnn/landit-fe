@@ -52,7 +52,8 @@ export const InviteBand = ({ className = '' }: { className?: string }) => {
     <div className={`${BAND_CLASS} pr-2.5 ${className}`}>
       <Emoji className="size-6 shrink-0">🎁</Emoji>
       <span className="min-w-0 flex-1 text-[15px] font-bold text-foreground">
-        {headline}
+        {/* 「더 적립!」 — 쌓인 환급액 바로 아래라, 거기에 더 붙는다는 걸 말한다 */}
+        {headline} 더 적립!
       </span>
       <button
         type="button"
