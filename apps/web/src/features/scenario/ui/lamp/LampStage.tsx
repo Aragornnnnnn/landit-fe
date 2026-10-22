@@ -35,6 +35,8 @@ interface LampStageProps {
   today?: string;
   // 소환을 닫고 대기 카드로 돌아왔다 — 복귀 연출이 끝난 뒤에 나간다
   onSummonClose?: () => void;
+  // 화면 위에 다른 안내(이벤트 공지)가 먼저 떠 있다 — 풀릴 때까지 자동 소환을 미룬다
+  summonHeld?: boolean;
 }
 
 // 소환에는 두 결이 있다 — 화면이 알아서 띄우면 묻고, 사용자가 부르면 묻지 않는다
@@ -48,6 +50,7 @@ export const LampStage = ({
   retry,
   today,
   onSummonClose,
+  summonHeld = false,
 }: LampStageProps) => {
   const [summon, setSummon] = useState<Summon | null>(null);
   const lampBoxRef = useRef<HTMLDivElement>(null);
@@ -106,6 +109,7 @@ export const LampStage = ({
   // 자동 소환 — 그날 처음이거나 알림으로 들어왔을 때만. 그 외엔 카드에 담겨 있다
   useEffect(() => {
     // 소환할 수 없는 카드여도 딱지는 뗀다 — 남으면 뒤로 돌아올 때 유입이 또 세어진다
+    if (summonHeld) return;
     const fromReminder = consumeReminderEntry();
     if (!today || !onStart) return;
 
@@ -121,9 +125,9 @@ export const LampStage = ({
     // 한 프레임 미룬다 — 레이아웃이 앉은 뒤에 램프 자리를 재고, 효과 안 동기 setState도 피한다
     const frame = requestAnimationFrame(() => startSummon(!fromOnboarding));
     return () => cancelAnimationFrame(frame);
-    // 마운트 시점의 판정이다 — today가 바뀌는 건 리마운트(다른 날 카드)뿐이다
+    // 마운트(또는 보류가 풀린) 시점의 판정이다 — today가 바뀌는 건 리마운트(다른 날 카드)뿐이다
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [today]);
+  }, [today, summonHeld]);
 
   return (
     <>
