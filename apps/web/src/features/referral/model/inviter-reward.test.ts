@@ -7,6 +7,7 @@ import {
   inviteOfferOf,
   inviterWonOf,
   REFERRAL_INVITE_LIMIT,
+  signupEarnedByInvitingOf,
 } from './inviter-reward';
 
 const reward = (over: Partial<ReferralReward>): ReferralReward => ({
@@ -61,6 +62,19 @@ describe('earnedByInvitingOf', () => {
     ];
 
     expect(earnedByInvitingOf(rewards)).toBe(8000);
+  });
+});
+
+describe('signupEarnedByInvitingOf', () => {
+  it('초대한 사람으로 친구 가입에서 실제 적립된 순액만 더한다 — 결제 보상은 상한 진행에 넣지 않는다', () => {
+    const rewards = [
+      reward({ id: 1, creditedWon: 1000 }),
+      reward({ id: 2, stage: 'PURCHASE', creditedWon: 5000 }),
+      reward({ id: 3, recipientRole: 'INVITEE', creditedWon: 3000 }),
+      reward({ id: 4, status: 'PENDING', creditedWon: 0 }),
+    ];
+
+    expect(signupEarnedByInvitingOf(rewards)).toBe(1000);
   });
 });
 

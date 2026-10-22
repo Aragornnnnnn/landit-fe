@@ -9,14 +9,15 @@ import { useRouter } from 'next/navigation';
 import type { ReferralReward } from '@/features/referral/api/referral';
 import {
   earnedByInvitingOf,
-  inviteOfferOf,
+  invitingRewardsOf,
   REFERRAL_INVITE_LIMIT,
+  signupEarnedByInvitingOf,
   type InviteOffer,
 } from '@/features/referral/model/inviter-reward';
+import { useInviteOffer } from '@/features/referral/model/useInviteOffer';
 import { useInviteShare } from '@/features/referral/model/useInviteShare';
 import { useReferralCode } from '@/features/referral/model/useReferralCode';
 import { useReferralRewardsQuery } from '@/features/referral/model/useReferralRewardsQuery';
-import { useReferralSummaryQuery } from '@/features/referral/model/useReferralSummaryQuery';
 import { Coin } from '@/features/reward/ui/common/Coin';
 import { track } from '@/shared/analytics';
 import { backToMyPage } from '@/shared/lib/routes';
@@ -43,19 +44,19 @@ const RECENT_COUNT = 3;
 
 export const InviteScreen = () => {
   const router = useRouter();
-  const summary = useReferralSummaryQuery();
+  const { summary, offer } = useInviteOffer();
   const rewards = useReferralRewardsQuery();
   const code = useReferralCode();
-  const { ready, share } = useInviteShare('invite');
+  const { ready, share } = useInviteShare();
   const [infoOpen, setInfoOpen] = useState(false);
 
-  const offer = summary.data ? inviteOfferOf(summary.data.currentOffer) : null;
-  const earnedWon = rewards.data ? earnedByInvitingOf(rewards.data) : 0;
   const view = offer
     ? inviteEventViewOf({
         offer,
         invitedCount: summary.data?.invitedCount ?? 0,
-        earnedWon,
+        signupEarnedWon: rewards.data
+          ? signupEarnedByInvitingOf(rewards.data)
+          : null,
       })
     : null;
 
@@ -104,7 +105,9 @@ export const InviteScreen = () => {
                 <RewardSplit offer={offer} />
                 <Progress
                   view={view}
-                  earnedWon={earnedWon}
+                  earnedWon={
+                    rewards.data ? earnedByInvitingOf(rewards.data) : null
+                  }
                   offer={offer}
                   rewards={rewards.data}
                   rewardsFailed={rewards.isError}
@@ -126,6 +129,7 @@ export const InviteScreen = () => {
               <button
                 type="button"
                 disabled={!code}
+                aria-label="초대 코드 복사"
                 onClick={() => void copyCode()}
                 className="rounded-full bg-secondary px-3.5 py-2 text-sm font-bold text-secondary-foreground active:opacity-80 disabled:opacity-45"
               >
@@ -199,7 +203,8 @@ const Progress = ({
   onRetryRewards,
 }: {
   view: ReturnType<typeof inviteEventViewOf>;
-  earnedWon: number;
+  // 내역을 받기 전이면 null — 0원으로 보이지 않게 비워 둔다
+  earnedWon: number | null;
   offer: InviteOffer;
   rewards: ReferralReward[] | undefined;
   rewardsFailed: boolean;
@@ -230,7 +235,7 @@ const Progress = ({
       </p>
       <p className="mt-0.5 flex items-center gap-1.5 text-2xl font-black text-foreground">
         <Coin size={26} />
-        {formatWon(earnedWon)}
+        {earnedWon === null ? '—' : formatWon(earnedWon)}
       </p>
 
       <div className="mt-4 flex items-center justify-between text-[13px] font-bold">
@@ -241,7 +246,14 @@ const Progress = ({
           {view.progressLabel}
         </span>
       </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-invite-strip">
+      <div
+        role="progressbar"
+        aria-label="초대 받은 친구"
+        aria-valuemin={0}
+        aria-valuemax={REFERRAL_INVITE_LIMIT}
+        aria-valuenow={view.count}
+        className="mt-2 h-2 overflow-hidden rounded-full bg-invite-strip"
+      >
         <div
           className="h-full rounded-full bg-primary"
           style={{ width: `${(view.count / REFERRAL_INVITE_LIMIT) * 100}%` }}
@@ -267,9 +279,7 @@ const Progress = ({
 const RewardRows = ({ rewards }: { rewards: ReferralReward[] | undefined }) => {
   const [expanded, setExpanded] = useState(false);
   if (!rewards) return null;
-  const rows = rewards
-    .filter((reward) => reward.recipientRole === 'INVITER')
-    .map(inviteRewardRowOf);
+  const rows = invitingRewardsOf(rewards).map(inviteRewardRowOf);
   if (rows.length === 0)
     return (
       <p className="py-4 text-center text-[13px] font-medium text-muted-foreground">

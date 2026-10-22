@@ -7,11 +7,22 @@ export const inviterWonOf = (stage: ReferralStage) =>
     ? stage.inviterWon
     : 0;
 
+// 초대한 사람으로 받은 지급만 — 내가 초대받아 받은 몫은 「초대로 받은 돈」이 아니다. 합계와 내역 목록이 같은 규칙을 쓴다
+export const invitingRewardsOf = (rewards: ReferralReward[]) =>
+  rewards.filter((reward) => reward.recipientRole === 'INVITER');
+
+const creditedSum = (rewards: ReferralReward[]) =>
+  rewards.reduce((sum, reward) => sum + reward.creditedWon, 0);
+
 // 초대한 사람으로 받은 지급의 실제 적립 순액 합 — 대기·검토 중이거나 환불로 빠진 건 순액이 0이라 저절로 빠진다
 export const earnedByInvitingOf = (rewards: ReferralReward[]) =>
-  rewards
-    .filter((reward) => reward.recipientRole === 'INVITER')
-    .reduce((sum, reward) => sum + reward.creditedWon, 0);
+  creditedSum(invitingRewardsOf(rewards));
+
+// 그중 친구 가입으로 받은 것만 — 상한(친구 수 × 가입 금액)에 견주는 진행은 가입 몫으로만 센다
+export const signupEarnedByInvitingOf = (rewards: ReferralReward[]) =>
+  creditedSum(
+    invitingRewardsOf(rewards).filter((reward) => reward.stage === 'SIGNUP'),
+  );
 
 // 한 사람이 초대로 받을 수 있는 친구 수 — BE 정책에 아직 상한이 없어 화면 표시만 여기서 맞춘다(BE에 상한 필드 요청)
 export const REFERRAL_INVITE_LIMIT = 10;

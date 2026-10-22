@@ -499,11 +499,8 @@ export type EventProps = {
   'Referral Code Registered': { method: 'paste' | 'typed' };
   // 질문에서 「아니요」(ask)인지, 코드 입력에서 「코드 없이 계속」(entry)인지
   'Referral Code Skipped': { from: 'ask' | 'entry' };
-  // source — 환급 화면의 초대 띠(reward) 또는 친구 초대 화면(invite)
-  'Referral Invite Shared': {
-    method: 'native_sheet' | 'web_share' | 'copy';
-    source: 'reward' | 'invite';
-  };
+  // 친구 초대 이벤트 화면의 보내기 버튼 — 어떤 길로 보냈는가
+  'Referral Invite Shared': { method: 'native_sheet' | 'web_share' | 'copy' };
   'Referral Code Copied': undefined;
   'Referral Letter Tapped': { letter_id: number };
   'Profile Gate Viewed': { question: GateQuestion };

@@ -33,12 +33,12 @@ import { DeveloperMenuSection } from './_ui/DeveloperMenuSection';
 import { FontScaleMenuEntry } from './_ui/FontScaleMenuEntry';
 import { HapticMenuEntry } from './_ui/HapticMenuEntry';
 import { InviteEventBanner } from './_ui/InviteEventBanner';
-import { InviteMenuEntry } from './_ui/InviteMenuEntry';
 import { MenuButton, MenuLink, MenuSection } from './_ui/Menu';
 import { MyProgressTiles } from './_ui/MyProgressTiles';
 import { NotificationMenuEntry } from './_ui/NotificationMenuEntry';
 import { PremiumEntry } from './_ui/PremiumEntry';
 import { ProfileHeader } from './_ui/ProfileHeader';
+import { ShareMenuFallback } from './_ui/ShareMenuFallback';
 import { SpeechRateMenuEntry } from './_ui/SpeechRateMenuEntry';
 import { TalkDisplayMenuEntry } from './_ui/TalkDisplayMenuEntry';
 import { WidgetMenuEntry } from './_ui/WidgetMenuEntry';
@@ -150,7 +150,7 @@ export default function MyPage() {
           </MenuSection>
 
           <MenuSection title="지원">
-            <InviteMenuEntry />
+            <ShareMenuFallback />
             <MenuLink
               href={MAILBOX_COMPOSE_PATH}
               icon={<Emoji>💬</Emoji>}

@@ -4,8 +4,7 @@
 // 초대 보상이 꺼져 있으면 띠 없이 지원 묶음의 「친구에게 랜딧 공유하기」만 남는다
 import Link from 'next/link';
 
-import { inviteOfferOf } from '@/features/referral/model/inviter-reward';
-import { useReferralSummaryQuery } from '@/features/referral/model/useReferralSummaryQuery';
+import { useInviteOffer } from '@/features/referral/model/useInviteOffer';
 import { REFERRAL_INVITE_PATH } from '@/shared/lib/routes';
 import { Emoji } from '@/shared/ui/emoji';
 import { ChevronRightIcon } from '@/shared/ui/Icons';
@@ -13,8 +12,7 @@ import { ChevronRightIcon } from '@/shared/ui/Icons';
 import { inviteBannerLineOf } from '../_model/invite-banner';
 
 export const InviteEventBanner = () => {
-  const summary = useReferralSummaryQuery().data;
-  const offer = summary ? inviteOfferOf(summary.currentOffer) : null;
+  const { offer } = useInviteOffer();
   if (!offer) return null;
 
   return (

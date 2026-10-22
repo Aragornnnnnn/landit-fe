@@ -11,29 +11,25 @@ import { shareText } from '@/shared/lib/share-text';
 import { reportWarning } from '@/shared/monitoring/report';
 import { showToast } from '@/shared/ui/toast';
 
-import { issueReferralCode } from '../api/referral';
 import { inviteeWonOf } from './invitee-reward';
-import { referralKeys, rememberReferralCode } from './keys';
+import { rememberReferralCode } from './keys';
 import { referralShareMessage } from './share-message';
+import { useReferralCode } from './useReferralCode';
 import { useReferralSummaryQuery } from './useReferralSummaryQuery';
 
-export const useInviteShare = (source: 'reward' | 'invite') => {
+export const useInviteShare = () => {
   const userId = useCurrentUserId();
   const queryClient = useQueryClient();
   const summary = useReferralSummaryQuery().data;
+  // 발급 전이면 미리 받아 둔다 — 탭한 뒤 발급을 기다리면 브라우저가 탭 직후에만 주는 공유·복사 권한이 사라진다
+  const code = useReferralCode();
   // 웹 공유 시트가 떠 있는 동안 또 누르면 두 번째 공유가 거절돼 복사로 샌다 — 끝날 때까지 탭을 무시한다 (앱 공유와 같은 이유)
   const sharingRef = useRef(false);
 
   const share = async () => {
-    if (!summary || sharingRef.current) return;
+    if (!summary || !code || sharingRef.current) return;
     sharingRef.current = true;
     try {
-      // 발급 전이면 받아 둔 코드를 쓰고, 그것도 없을 때만 그 자리에서 받는다 — 같은 사람에게는 늘 같은 코드가 온다.
-      // 기다림이 길면 브라우저가 탭 직후에만 주는 공유·복사 권한이 사라지니, 화면이 미리 받아 두는 편이 좋다
-      const code =
-        summary.code ??
-        queryClient.getQueryData<string>(referralKeys.code(userId)) ??
-        (await issueReferralCode());
       rememberReferralCode(queryClient, userId, code);
       const method = await shareText(
         referralShareMessage({
@@ -41,7 +37,7 @@ export const useInviteShare = (source: 'reward' | 'invite') => {
           inviteeSignupWon: inviteeWonOf(summary.currentOffer.signup),
         }),
       );
-      track(EVENTS.REFERRAL_INVITE_SHARED, { method, source });
+      track(EVENTS.REFERRAL_INVITE_SHARED, { method });
       if (method === 'copy') showToast('초대 메시지를 복사했어요');
     } catch (error) {
       reportWarning(error);
@@ -51,5 +47,5 @@ export const useInviteShare = (source: 'reward' | 'invite') => {
     }
   };
 
-  return { ready: summary !== undefined, share };
+  return { ready: summary !== undefined && code !== null, share };
 };

@@ -58,7 +58,7 @@ const summary = (code: string | null): ReferralSummary => ({
 
 const renderShare = async () => {
   const client = new QueryClient();
-  const { result } = renderHook(() => useInviteShare('reward'), {
+  const { result } = renderHook(() => useInviteShare(), {
     wrapper: ({ children }) => (
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
     ),
@@ -81,7 +81,6 @@ describe('useInviteShare', () => {
     expect(shareTextMock.mock.calls[0][0]).toContain('초대 코드: K7QM3XPA');
     expect(track).toHaveBeenCalledWith(EVENTS.REFERRAL_INVITE_SHARED, {
       method: 'native_sheet',
-      source: 'reward',
     });
   });
 
@@ -93,6 +92,21 @@ describe('useInviteShare', () => {
     await act(() => result.current.share());
 
     expect(shareTextMock.mock.calls[0][0]).toContain('초대 코드: R4TN8WKE');
+  });
+
+  it('코드를 받기 전에는 보낼 준비가 되지 않는다 — 탭한 뒤 발급을 기다리면 공유 권한이 사라진다', async () => {
+    getReferralSummary.mockResolvedValue(summary(null));
+    issueReferralCode.mockReturnValue(new Promise(() => {}));
+    const client = new QueryClient();
+
+    const { result } = renderHook(() => useInviteShare(), {
+      wrapper: ({ children }) => (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      ),
+    });
+
+    await waitFor(() => expect(getReferralSummary).toHaveBeenCalled());
+    expect(result.current.ready).toBe(false);
   });
 
   it('복사로 끝나면 복사했다고 알린다', async () => {

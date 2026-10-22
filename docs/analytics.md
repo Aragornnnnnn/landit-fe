@@ -122,6 +122,8 @@
 | Onboarding Completed      | —                                         | 마지막 스텝 시작하기                                                                     |
 | Referral Code Registered  | method(paste\|typed)                      | 초대 코드 등록 성공                                                                      |
 | Referral Code Skipped     | from(ask\|entry)                          | 초대 코드 건너뛰기 — 질문의 「아니요」(ask), 코드 입력의 「코드 없이 계속할게요」(entry) |
+| Referral Invite Shared    | method(native_sheet\|web_share\|copy)     | 친구 초대 이벤트 화면의 보내기 버튼 — 어떤 길로 보냈는가                                 |
+| Referral Code Copied      | —                                         | 친구 초대 이벤트 화면에서 내 초대 코드 복사                                              |
 | Referral Letter Tapped    | letter_id                                 | 친구 초대 안내 편지의 「친구에게 공유하기」 → 친구 초대 이벤트 화면                      |
 
 `step_index`는 전체 스텝 기준 고정값이라 조건부 스텝이 빠져도 뒤 번호가 흔들리지 않는다. 다만 스텝을 새로 끼우면 그 뒤 번호가 한 칸씩 밀린다(2026-10 referral 추가로 scenario가 7→8). 퍼널은 번호 말고 `step`으로 묶는다. notification은 OS 권한이 아직 결정되지 않았을 때만, widget은 위젯이 실린 앱 버전이고 아직 설치 유도를 안 봤을 때만 들어간다. 알림 스텝의 완료는 OS 권한창 회신이 왔을 때 찍힌다(마이크 스텝과 같은 방식). referral은 서버가 초대 코드를 받을 수 있다고 한 신규 가입자(registrationStatus PENDING)에게만 들어간다.

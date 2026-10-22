@@ -22,11 +22,10 @@ const reward = (over: Partial<ReferralReward>): ReferralReward => ({
 });
 
 describe('inviteRewardRowOf', () => {
-  it('적립된 가입 보상은 한국 날짜·시각과 금액을 적는다', () => {
+  it('적립된 가입 보상은 한국 날짜와 금액을 적는다', () => {
     expect(inviteRewardRowOf(reward({}))).toEqual({
       id: 1,
       dateLabel: '10.21',
-      time: '13:02',
       title: '친구가 가입했어요',
       amountLabel: '+3,000원',
       statusLabel: '적립됨',

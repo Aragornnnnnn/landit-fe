@@ -1,4 +1,4 @@
-// 친구 초대 화면의 받은 보상 한 줄 — 언제, 친구가 무엇을 해서, 얼마를, 들어왔는지. 친구가 누구인지는 오지 않아 적지 않는다
+// 친구 초대 화면의 받은 보상 한 줄 — 어느 날, 친구가 무엇을 해서, 얼마를, 들어왔는지. 친구가 누구인지는 오지 않아 적지 않는다
 import type { ReferralReward } from '@/features/referral/api/referral';
 import { readSeoulDateParts } from '@/shared/lib/seoul-date';
 import { formatWon } from '@/shared/lib/won';
@@ -6,7 +6,6 @@ import { formatWon } from '@/shared/lib/won';
 export interface InviteRewardRow {
   id: number;
   dateLabel: string;
-  time: string;
   title: string;
   amountLabel: string;
   statusLabel: string;
@@ -32,15 +31,10 @@ export const inviteRewardRowOf = (reward: ReferralReward): InviteRewardRow => {
   const parts = readSeoulDateParts(reward.createdAt, {
     month: 'numeric',
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    // h23이라야 자정이 24시로 나오지 않는다
-    hourCycle: 'h23',
   });
   return {
     id: reward.id,
     dateLabel: parts ? `${parts.month}.${parts.day}` : '',
-    time: parts ? `${parts.hour}:${parts.minute}` : '',
     title: TITLE_BY_STAGE[reward.stage],
     amountLabel: `+${formatWon(reward.amountWon)}`,
     statusLabel: STATUS_LABEL[reward.status],
