@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest';
 import type { ReferralReward, ReferralStage } from '../api/referral';
 import {
   earnedByInvitingOf,
-  inviteHeadlineOf,
   inviteOfferOf,
   inviterWonOf,
   REFERRAL_INVITE_LIMIT,
@@ -95,34 +94,5 @@ describe('inviteOfferOf', () => {
   it('초대한 사람 몫이 없으면 null이다 — 초대 자리를 숨긴다', () => {
     expect(inviteOfferOf(offer({ enabled: false }))).toBeNull();
     expect(inviteOfferOf(offer({ target: 'INVITEE' }))).toBeNull();
-  });
-});
-
-describe('inviteHeadlineOf', () => {
-  const offer = (signupWon: number, purchaseWon: number) => ({
-    signup: {
-      enabled: signupWon > 0,
-      target: signupWon > 0 ? ('BOTH' as const) : ('NONE' as const),
-      inviterWon: signupWon,
-      inviteeWon: signupWon,
-    },
-    purchase: {
-      enabled: purchaseWon > 0,
-      target: purchaseWon > 0 ? ('BOTH' as const) : ('NONE' as const),
-      inviterWon: purchaseWon,
-      inviteeWon: purchaseWon,
-    },
-  });
-
-  it('가입 보상이 있으면 가입 금액으로 부른다', () => {
-    expect(inviteHeadlineOf(offer(3000, 5000))).toBe('친구 초대하면 3,000원');
-  });
-
-  it('결제 보상만 있으면 결제 금액으로 부른다', () => {
-    expect(inviteHeadlineOf(offer(0, 5000))).toBe('친구가 결제하면 5,000원');
-  });
-
-  it('초대한 사람 몫이 하나도 없으면 null이다 — 초대 자리를 숨긴다', () => {
-    expect(inviteHeadlineOf(offer(0, 0))).toBeNull();
   });
 });

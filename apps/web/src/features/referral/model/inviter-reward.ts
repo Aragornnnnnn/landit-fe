@@ -1,6 +1,4 @@
 // 초대한 사람이 받는 몫 — 지금 조건에서 친구 한 명당 둘이 받을 금액과, 지금까지 초대로 실제 들어온 돈
-import { formatWon } from '@/shared/lib/won';
-
 import type { ReferralReward, ReferralStage } from '../api/referral';
 import { inviteeWonOf } from './invitee-reward';
 
@@ -31,15 +29,3 @@ export const inviteOfferOf = (offer: { signup: ReferralStage }) => {
 };
 
 export type InviteOffer = NonNullable<ReturnType<typeof inviteOfferOf>>;
-
-// 초대 자리의 한 줄 — 친구 한 명이 가입할 때 받는 금액, 없으면 결제할 때 받는 금액. 둘 다 없으면 초대할 이유가 없어 null
-export const inviteHeadlineOf = (offer: {
-  signup: ReferralStage;
-  purchase: ReferralStage;
-}) => {
-  const signupWon = inviterWonOf(offer.signup);
-  if (signupWon > 0) return `친구 초대하면 ${formatWon(signupWon)}`;
-  const purchaseWon = inviterWonOf(offer.purchase);
-  if (purchaseWon > 0) return `친구가 결제하면 ${formatWon(purchaseWon)}`;
-  return null;
-};

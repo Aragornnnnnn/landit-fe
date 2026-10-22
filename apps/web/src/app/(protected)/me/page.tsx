@@ -32,6 +32,7 @@ import { AppVersionFooter } from './_ui/AppVersionFooter';
 import { DeveloperMenuSection } from './_ui/DeveloperMenuSection';
 import { FontScaleMenuEntry } from './_ui/FontScaleMenuEntry';
 import { HapticMenuEntry } from './_ui/HapticMenuEntry';
+import { InviteEventBanner } from './_ui/InviteEventBanner';
 import { InviteMenuEntry } from './_ui/InviteMenuEntry';
 import { MenuButton, MenuLink, MenuSection } from './_ui/Menu';
 import { MyProgressTiles } from './_ui/MyProgressTiles';
@@ -128,6 +129,7 @@ export default function MyPage() {
       >
         <div className="space-y-5 px-4 pt-3 pb-[max(var(--safe-area-inset-bottom),32px)]">
           <ProfileHeader />
+          <InviteEventBanner />
           <PremiumEntry />
           <MyProgressTiles />
 
