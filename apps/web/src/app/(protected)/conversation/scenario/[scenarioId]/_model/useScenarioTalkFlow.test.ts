@@ -540,6 +540,29 @@ describe('useScenarioTalkFlow', async () => {
     expect(monitoringMock.reportError).not.toHaveBeenCalled();
   });
 
+  it('대화를 나간 뒤 응답이 도착하면 다음 질문을 준비하지 않고 속마음도 띄우지 않는다', async () => {
+    // Given 답변을 보내고 응답을 기다리는 중
+    const { result } = await renderUserFirst();
+    let respond: (res: ScenarioTalkSubmitResponse) => void = () => {};
+    submitScenarioTalkMessage.mockReturnValueOnce(
+      new Promise((resolve) => {
+        respond = resolve;
+      }),
+    );
+    vi.mocked(sessionApi.endSession).mockResolvedValue(undefined);
+    await speakAndSubmit(result, 'Hello!');
+
+    // When 대화를 나간 뒤 응답이 도착하면
+    act(() => result.current.leave());
+    await act(async () => {
+      respond(submitResponse());
+    });
+
+    // Then 다음 질문을 미리 합성하지 않고 속마음으로 넘어가지 않는다
+    expect(ttsMock.prefetch).not.toHaveBeenCalled();
+    expect(result.current.phase).not.toBe('AI_INNER_THOUGHT');
+  });
+
   it('다음 턴의 발화는 새 식별자를 싣는다', async () => {
     // Given 첫 답을 보내고 두 번째 질문까지 받은 상태
     const { result } = await renderAiFirstReady();

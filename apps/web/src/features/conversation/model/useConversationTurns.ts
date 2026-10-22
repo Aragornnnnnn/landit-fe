@@ -238,7 +238,7 @@ export const useConversationTurns = ({
         { isCancelled: () => abandonedRef.current },
       );
       // 호출자가 이 턴을 스스로 접었다(예: 대화를 나가는 중) — 다음 연출을 이어붙이지 않는다
-      if (!res) return;
+      if (!res || abandonedRef.current) return;
       setUnsent(null);
       // 종료 인사도 nextMessage로 오고, 그 인사를 끝으로 종료인지는 completed가 알려준다 (인사 재생 후 CTA)
       nextMessageRef.current = res.nextMessage;
