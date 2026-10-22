@@ -10,8 +10,6 @@ import type { AnswerGuide } from '@/features/scenario/api/daily';
 import { DURATION, EASE_STANDARD } from '@/shared/motion';
 import { ChevronDownIcon } from '@/shared/ui/Icons';
 
-import { answerGuideAutoOpenMs } from '../_model/useAnswerGuideToggle';
-
 // 주황(브랜드)에서 분홍·보라로 — 반짝이 아이콘과 테두리가 같은 세 색을 쓴다
 const GUIDE_COLORS = ['#f2994a', '#ec6a8c', '#8b6cf0'] as const;
 
@@ -26,9 +24,6 @@ const GUIDE_LAYOUT_ID = 'answer-guide';
 
 // 칩↔카드 모양 변화 — 살짝만 넘치고 멈추는 스프링
 const MORPH = { type: 'spring', stiffness: 420, damping: 34 } as const;
-
-// 칩이 부푸는 길이 — 이만큼 먼저 시작해 부풂이 끝나는 순간 카드가 열린다. CSS(guide-nudge)도 이 값을 받아 쓴다
-const NUDGE_MS = 700;
 
 // 네 꼭짓점 반짝이 — SparkleIcon과 같은 별을 그라데이션으로 칠한다
 const GradientSparkle = ({ size }: { size: number }) => {
@@ -65,44 +60,71 @@ const GradientSparkle = ({ size }: { size: number }) => {
 };
 
 /** 내 답변 칸 머리에 붙는 칩 — 라벨 줄 높이를 키우지 않게 위아래를 끌어당긴다.
- * 저절로 펼칠 시계가 도는 동안엔 열리기 직전에 한 번 부풀어 곧 열린다고 알린다 */
+ * 유도 힌트가 켜지면 칩 위에 "막히면 여기를 눌러 보세요" 말풍선이 떠서 칩을 가리킨다 */
 export const AnswerGuideChip = ({
   onOpen,
-  autoPending,
+  hintVisible,
 }: {
   onOpen: () => void;
-  autoPending: boolean;
+  hintVisible: boolean;
 }) => {
   const reduced = useReducedMotion() ?? false;
   return (
-    <motion.button
-      layoutId={GUIDE_LAYOUT_ID}
-      transition={reduced ? { duration: 0 } : MORPH}
-      onClick={onOpen}
-      className={`-my-1 flex h-6 items-center gap-1 border px-2.5 text-xs font-bold text-foreground active:scale-95 ${
-        autoPending ? 'animate-guide-nudge' : ''
-      }`}
-      style={
-        {
+    // 말풍선은 칩 버튼 밖 형제로 둔다 — 칩이 카드로 커지는 모양 변화에 같이 늘어나지 않게
+    <span className="relative flex">
+      <motion.button
+        layoutId={GUIDE_LAYOUT_ID}
+        transition={reduced ? { duration: 0 } : MORPH}
+        onClick={onOpen}
+        className={`-my-1 flex h-6 items-center gap-1 border px-2.5 text-xs font-bold text-foreground transition-shadow active:scale-95 ${
+          hintVisible ? 'shadow-[0_0_0_4px_rgb(139_108_240/0.2)]' : ''
+        }`}
+        style={{
           ...gradientBorder,
           // 높이(24px)의 절반 — 999로 두면 카드로 커지는 동안 알약처럼 부푼다
           borderRadius: 12,
-          '--guide-nudge-duration': `${NUDGE_MS}ms`,
-          '--guide-nudge-delay': `${answerGuideAutoOpenMs - NUDGE_MS}ms`,
-        } as React.CSSProperties
-      }
-    >
-      {/* 카드에서 줄어들어 돌아올 때 글자가 늘어난 채 보이지 않게, 모양이 자리 잡은 뒤 나타난다 */}
-      <motion.span
-        className="flex items-center gap-1"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.15, delay: reduced ? 0 : 0.22 }}
+        }}
       >
-        <GradientSparkle size={12} />
-        예시 볼래요
-      </motion.span>
-    </motion.button>
+        {/* 카드에서 줄어들어 돌아올 때 글자가 늘어난 채 보이지 않게, 모양이 자리 잡은 뒤 나타난다 */}
+        <motion.span
+          className="flex items-center gap-1"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15, delay: reduced ? 0 : 0.22 }}
+        >
+          <GradientSparkle size={12} />
+          예시 볼래요
+        </motion.span>
+      </motion.button>
+      <AnimatePresence>
+        {hintVisible && (
+          <motion.span
+            key="hint"
+            role="status"
+            initial={{ opacity: 0, y: reduced ? 0 : 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, transition: { duration: 0.12 } }}
+            transition={{ duration: DURATION.base, ease: EASE_STANDARD }}
+            className="pointer-events-none absolute right-0 bottom-full mb-3 whitespace-nowrap"
+          >
+            {/* 살짝 떠다녀 눈에 걸리게 한다. 움직임 줄이기면 멈춘다 */}
+            <motion.span
+              className="relative block rounded-xl bg-foreground px-3 py-2 text-[13px] font-bold text-background shadow-lg shadow-black/15"
+              animate={reduced ? undefined : { y: [0, -3, 0] }}
+              transition={{
+                duration: 1.8,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            >
+              막히면 여기를 눌러 보세요
+              {/* 칩 가운데를 가리키는 꼬리 */}
+              <span className="absolute top-full right-9 border-x-[6px] border-t-[7px] border-x-transparent border-t-foreground" />
+            </motion.span>
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </span>
   );
 };
 

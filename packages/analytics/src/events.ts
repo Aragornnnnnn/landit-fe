@@ -569,14 +569,13 @@ export type EventProps = {
     turn_index: number;
     hidden: boolean;
   };
-  // 첫 시나리오 답변 가이드를 펼치거나 접은 순간 — 직접 연 사람과 망설이다 저절로 열린 사람이 얼마나 되는지 본다.
-  // 이 숫자로 가이드를 늘 펼쳐 둘지 정한다
+  // 첫 시나리오 답변 가이드를 펼치거나 접은 순간 — 첫 질문의 유도 힌트를 보고 연 사람이 얼마나 되는지 본다
   'Answer Guide Toggled': {
     session_id?: number;
     scenario_id: number;
     turn_index: number;
     opened: boolean;
-    trigger: 'tap' | 'auto';
+    from_hint: boolean;
   };
   // 상대 발화를 다시 들은 순간 — 어느 턴에서 못 알아들어 되감는지 본다. 멈추려고 누른 건 세지 않는다
   'Speech Replayed': {

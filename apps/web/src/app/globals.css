@@ -420,25 +420,13 @@
   }
 }
 
-/* 답변 가이드 — 카드가 펼쳐질 때 테두리를 따라 빛이 한 번 훑고, 저절로 펼치기 직전 칩이 한 번 부푼다 */
+/* 답변 가이드 — 카드가 펼쳐질 때 테두리를 따라 빛이 한 번 훑는다 */
 @keyframes guide-sweep {
   from {
     background-position: 120% 0;
   }
   to {
     background-position: -20% 0;
-  }
-}
-
-@keyframes guide-nudge {
-  0%,
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgb(139 108 240 / 0);
-  }
-  45% {
-    transform: scale(1.08);
-    box-shadow: 0 0 0 5px rgb(139 108 240 / 0.18);
   }
 }
 
@@ -464,16 +452,8 @@
     animation: guide-sweep 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both;
   }
 
-  /* 펼치기 직전 한 번 — 길이·지연은 화면(AnswerGuide.tsx)의 상수에서 넘겨받는다. 보라는 GUIDE_COLORS[2]와 같은 색이다 */
-  .animate-guide-nudge {
-    /* 끝난 뒤 크기를 붙들지 않는다 — 칩이 카드로 커지는 모양 변화가 transform을 쓴다 */
-    animation: guide-nudge var(--guide-nudge-duration, 0.7s) ease-in-out
-      var(--guide-nudge-delay, 0s);
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .animate-guide-sweep,
-    .animate-guide-nudge {
+    .animate-guide-sweep {
       animation: none;
     }
   }

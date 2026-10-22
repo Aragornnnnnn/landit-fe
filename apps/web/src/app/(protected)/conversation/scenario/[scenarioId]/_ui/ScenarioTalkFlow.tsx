@@ -87,19 +87,15 @@ export const ScenarioTalkFlow = ({
   const guide = useAnswerGuideToggle({
     question: turn.aiMessage,
     available: answerGuide != null && !ended,
-    // 다시 듣기·시트가 떠 있는 동안은 망설이는 게 아니라 다른 걸 하는 중이다
-    waiting:
-      phase === 'USER_READY' &&
-      !replay?.playing &&
-      !showExitModal &&
-      !micPermissionDenied,
-    onToggled: (opened, trigger) =>
+    // 유도 힌트는 첫 질문의 음성이 끝나 내 차례가 된 순간에만 — 말 없이 나가는 사람 대부분이 그 직후에 나간다
+    hintable: turnIndex === 0 && phase === 'USER_READY',
+    onToggled: (opened, fromHint) =>
       track(EVENTS.ANSWER_GUIDE_TOGGLED, {
         session_id: sessionId ?? undefined,
         scenario_id: scenario.scenarioId,
         turn_index: turnIndex,
         opened,
-        trigger,
+        from_hint: fromHint,
       }),
   });
   // 선발화 안내는 대기(USER_READY) 동안만 — 사용자가 말하기 시작하거나 속마음이 오면 즉시 비켜준다
@@ -228,7 +224,7 @@ export const ScenarioTalkFlow = ({
                 !guide.open && (
                   <AnswerGuideChip
                     onOpen={guide.openGuide}
-                    autoPending={guide.autoPending}
+                    hintVisible={guide.hintVisible}
                   />
                 )
               }
@@ -251,7 +247,10 @@ export const ScenarioTalkFlow = ({
         ) : typing ? null : (
           <MicControl
             phase={phase}
-            onPress={pressMic}
+            onPress={() => {
+              guide.dismissHint();
+              pressMic();
+            }}
             onKeyboard={() => {
               guide.collapseGuide();
               pressKeyboard();
