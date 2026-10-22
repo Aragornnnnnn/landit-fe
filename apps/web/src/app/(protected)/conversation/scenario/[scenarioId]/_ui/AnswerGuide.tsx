@@ -60,7 +60,7 @@ const GradientSparkle = ({ size }: { size: number }) => {
 };
 
 /** 내 답변 칸 머리에 붙는 칩 — 라벨 줄 높이를 키우지 않게 위아래를 끌어당긴다.
- * 유도 힌트가 켜지면 칩 위에 "막히면 여기를 눌러 보세요" 말풍선이 떠서 칩을 가리킨다 */
+ * 유도 힌트가 켜지면 칩 위에 "말이 안 떠오르면 눌러 봐요" 말풍선이 떠서 칩을 가리킨다 */
 export const AnswerGuideChip = ({
   onOpen,
   hintVisible,
@@ -117,7 +117,7 @@ export const AnswerGuideChip = ({
                 ease: 'easeInOut',
               }}
             >
-              막히면 여기를 눌러 보세요
+              말이 안 떠오르면 눌러 봐요
               {/* 칩 가운데를 가리키는 꼬리 */}
               <span className="absolute top-full right-9 border-x-[6px] border-t-[7px] border-x-transparent border-t-foreground" />
             </motion.span>
