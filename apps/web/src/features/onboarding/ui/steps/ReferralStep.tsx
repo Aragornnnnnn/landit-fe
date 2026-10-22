@@ -18,6 +18,7 @@ import { haptic } from '@/shared/haptics';
 import { formatWon } from '@/shared/lib/won';
 import { reportWarning } from '@/shared/monitoring/report';
 import { Button } from '@/shared/ui/Button';
+import { ConfirmSheet } from '@/shared/ui/ConfirmSheet';
 import { showToast } from '@/shared/ui/toast';
 
 import { ReferralAsk } from './ReferralAsk';
@@ -102,6 +103,8 @@ const CodeEntry = ({
     }
   };
 
+  // 건너뛰기는 서버에 영구로 남아 되돌릴 수 없다 — 바로 넘기지 않고 코드 모양을 보여 주며 한 번 더 묻는다
+  const [askingSkip, setAskingSkip] = useState(false);
   // 등록되면 그 조건으로 받은 금액을 띄운다 — 연출이 끝나야 다음 단계로 간다
   const [creditedWon, setCreditedWon] = useState<number | null>(null);
 
@@ -184,7 +187,7 @@ const CodeEntry = ({
       <div className="mt-auto flex flex-col items-center pt-4">
         <button
           type="button"
-          onClick={onSkip}
+          onClick={() => setAskingSkip(true)}
           // 등록을 보내는 중에 건너뛰면 둘이 같이 나간다
           disabled={register.isPending}
           className="text-[15px] font-medium text-muted-foreground underline underline-offset-4 disabled:opacity-45"
@@ -192,6 +195,20 @@ const CodeEntry = ({
           초대 코드가 없어요
         </button>
       </div>
+
+      <ConfirmSheet
+        open={askingSkip}
+        title="친구에게 받은 메시지를 확인해 보세요"
+        description="건너뛰면 나중에는 코드를 넣을 수 없어요"
+        confirmLabel="코드 없이 계속할게요"
+        continueLabel="코드 찾아볼게요"
+        onConfirm={() => {
+          setAskingSkip(false);
+          onSkip();
+        }}
+        onClose={() => setAskingSkip(false)}
+        extra={<CodeSample />}
+      />
 
       {creditedWon !== null && (
         <ReferralRewardMoment won={creditedWon} onDone={onDone} />
@@ -246,6 +263,18 @@ const StatusLines = ({ status }: { status: Status }) => {
     </>
   );
 };
+
+// 친구가 보낸 메시지에서 코드가 어떻게 생겼는지 — 공유 문구의 「초대 코드:」 줄과 같은 모양이다
+const CodeSample = () => (
+  <div className="rounded-2xl bg-secondary px-4 py-3.5">
+    <p className="text-[13px] font-medium text-muted-foreground">
+      이렇게 생긴 8자리 코드예요
+    </p>
+    <p className="mt-1 text-base font-bold text-foreground">
+      초대 코드: K7QM3XPA
+    </p>
+  </div>
+);
 
 // 초록 동그라미 안 흰 체크 — 동그라미가 커지고 체크가 그려진다(알람 등록 완료와 같은 모양, 색만 초록)
 const CheckCircle = () => (

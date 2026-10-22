@@ -307,15 +307,46 @@ describe('ReferralStep · 코드 입력', () => {
     );
   });
 
-  it('「초대 코드가 없어요」를 누르면 건너뛰기를 서버에 남기고 다음으로 넘어간다', async () => {
+  it('「초대 코드가 없어요」를 누르면 바로 건너뛰지 않고 코드 모양을 보여 주며 한 번 더 묻는다', () => {
     const { onDone } = renderStep();
 
     fireEvent.click(screen.getByRole('button', { name: '초대 코드가 없어요' }));
+
+    expect(
+      screen.getByText('친구에게 받은 메시지를 확인해 보세요'),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/초대 코드: K7QM3XPA/)).toBeInTheDocument();
+    expect(skipReferralRegistration).not.toHaveBeenCalled();
+    expect(onDone).not.toHaveBeenCalled();
+  });
+
+  it('확인 시트에서 「코드 없이 계속할게요」를 누르면 건너뛰기를 서버에 남기고 다음으로 넘어간다', async () => {
+    const { onDone } = renderStep();
+    fireEvent.click(screen.getByRole('button', { name: '초대 코드가 없어요' }));
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '코드 없이 계속할게요' }),
+    );
 
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(skipReferralRegistration).toHaveBeenCalled();
     expect(track).toHaveBeenCalledWith(EVENTS.REFERRAL_CODE_SKIPPED, {
       from: 'entry',
     });
+  });
+
+  it('확인 시트에서 「코드 찾아볼게요」를 누르면 건너뛰지 않고 코드 입력에 남는다', async () => {
+    const { onDone } = renderStep();
+    fireEvent.click(screen.getByRole('button', { name: '초대 코드가 없어요' }));
+
+    fireEvent.click(screen.getByRole('button', { name: '코드 찾아볼게요' }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText('친구에게 받은 메시지를 확인해 보세요'),
+      ).not.toBeInTheDocument(),
+    );
+    expect(skipReferralRegistration).not.toHaveBeenCalled();
+    expect(onDone).not.toHaveBeenCalled();
   });
 });
