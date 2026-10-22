@@ -27,6 +27,8 @@ export const EVENTS = {
   // 친구 초대 — 초대 메시지를 보냈거나(공유 시트를 열었거나 복사함), 코드만 복사했다
   REFERRAL_INVITE_SHARED: 'Referral Invite Shared',
   REFERRAL_CODE_COPIED: 'Referral Code Copied',
+  // 친구 초대 안내 편지의 「친구에게 공유하기」 — 편지 → 이벤트 화면 진입을 편지별로 본다
+  REFERRAL_LETTER_TAPPED: 'Referral Letter Tapped',
 
   // 프로필 질문 게이트 — 신규 유저는 온보딩 스텝(level·accent)이라 위 계측이 그대로 커버한다.
   // 온보딩을 이미 마친 기존 유저는 온보딩 밖 별도 게이트라 노출·응답을 따로 찍는다.
@@ -503,6 +505,7 @@ export type EventProps = {
     source: 'reward' | 'invite';
   };
   'Referral Code Copied': undefined;
+  'Referral Letter Tapped': { letter_id: number };
   'Profile Gate Viewed': { question: GateQuestion };
   'Profile Gate Answered': { question: 'accent'; accent: AccentLocale };
   'Accent Changed': { accent: AccentLocale };
