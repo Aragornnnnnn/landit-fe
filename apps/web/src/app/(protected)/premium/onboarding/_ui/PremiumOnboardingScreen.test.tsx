@@ -302,9 +302,12 @@ describe('PremiumOnboardingScreen', () => {
       tapNext();
       await screen.findByText('최대 30,000원');
 
-      expect(analytics.track.mock.calls).toEqual([
-        ['Reward Guide Viewed', { confirmed: true }],
-      ]);
+      // 계측은 안내가 그려진 뒤 effect에서 찍힌다 — 글자가 보인 순간엔 아직 안 찍혔을 수 있어 기다린다(CI에서 간헐 실패)
+      await waitFor(() =>
+        expect(analytics.track.mock.calls).toEqual([
+          ['Reward Guide Viewed', { confirmed: true }],
+        ]),
+      );
     });
 
     it('결제 확인이 늦어 금액 없이 보여 준 안내는 confirmed가 거짓이다', async () => {
@@ -319,9 +322,12 @@ describe('PremiumOnboardingScreen', () => {
       tapNext();
       await screen.findByText('환급 챌린지');
 
-      expect(analytics.track.mock.calls).toEqual([
-        ['Reward Guide Viewed', { confirmed: false }],
-      ]);
+      // 계측은 안내가 그려진 뒤 effect에서 찍힌다 — 글자가 보인 순간엔 아직 안 찍혔을 수 있어 기다린다(CI에서 간헐 실패)
+      await waitFor(() =>
+        expect(analytics.track.mock.calls).toEqual([
+          ['Reward Guide Viewed', { confirmed: false }],
+        ]),
+      );
     });
 
     it('환급 안내를 넘기면 알람 등록이 환급 문구로 나온다', async () => {
