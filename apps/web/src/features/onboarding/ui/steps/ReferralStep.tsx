@@ -6,6 +6,7 @@ import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
 // 초대 코드 확인·등록은 referral feature가 정본이라 온보딩 단계가 가로 import한다
+import { inviteeWonOf } from '@/features/referral/model/invitee-reward';
 import { findReferralCode } from '@/features/referral/model/referral-code';
 import { referralFailureOf } from '@/features/referral/model/referral-failure';
 import { useReferralPreviewQuery } from '@/features/referral/model/useReferralPreviewQuery';
@@ -20,6 +21,7 @@ import { Button } from '@/shared/ui/Button';
 import { showToast } from '@/shared/ui/toast';
 
 import { ReferralAsk } from './ReferralAsk';
+import { ReferralRewardMoment } from './ReferralRewardMoment';
 
 const NOT_FOUND_MESSAGE = '복사한 내용에서 초대 코드를 못 찾았어요';
 const POLICY_CHANGED_MESSAGE = '보상 조건이 바뀌었어요. 다시 확인해 주세요';
@@ -100,13 +102,16 @@ const CodeEntry = ({
     }
   };
 
-  const submitCode = (policyVersion: number) =>
+  // 등록되면 그 조건으로 받은 금액을 띄운다 — 연출이 끝나야 다음 단계로 간다
+  const [creditedWon, setCreditedWon] = useState<number | null>(null);
+
+  const submitCode = (policyVersion: number, won: number) =>
     register.mutate(
       { code, policyVersion },
       {
         onSuccess: () => {
           track(EVENTS.REFERRAL_CODE_REGISTERED, { method });
-          onDone();
+          setCreditedWon(won);
         },
         onError: (error) => {
           const failure = referralFailureOf(error);
@@ -135,7 +140,7 @@ const CodeEntry = ({
   const submitReady = useEffectEvent(() => {
     if (!preview.data) return;
     haptic('light');
-    submitCode(preview.data.policyVersion);
+    submitCode(preview.data.policyVersion, inviteeWonOf(preview.data.signup));
   });
   useEffect(() => {
     if (readyKey === null || readyKey === sentKey.current) return;
@@ -187,6 +192,10 @@ const CodeEntry = ({
           초대 코드가 없어요
         </button>
       </div>
+
+      {creditedWon !== null && (
+        <ReferralRewardMoment won={creditedWon} onDone={onDone} />
+      )}
     </div>
   );
 };

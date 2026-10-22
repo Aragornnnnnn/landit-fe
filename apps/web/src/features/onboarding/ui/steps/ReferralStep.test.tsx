@@ -14,6 +14,7 @@ import * as referralApi from '@/features/referral/api/referral';
 import type { ReferralPreview } from '@/features/referral/api/referral';
 import { track } from '@/shared/analytics';
 import { ApiError } from '@/shared/api/api-error';
+import { haptic } from '@/shared/haptics';
 import { showToast } from '@/shared/ui/toast';
 
 import { ReferralStep, type ReferralPhase } from './ReferralStep';
@@ -21,6 +22,8 @@ import { ReferralStep, type ReferralPhase } from './ReferralStep';
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 vi.mock('@/shared/monitoring/report', () => ({ reportWarning: vi.fn() }));
 vi.mock('@/shared/ui/toast', () => ({ showToast: vi.fn() }));
+vi.mock('@/shared/haptics', () => ({ haptic: vi.fn() }));
+vi.mock('next/image', () => ({ default: () => <span /> }));
 vi.mock('@/shared/auth/auth-store', () => ({
   useAuthStore: (selector: (state: unknown) => unknown) =>
     selector({ member: { userId: 42 } }),
@@ -114,21 +117,65 @@ describe('ReferralStep · 초대 받았는지 묻기', () => {
 });
 
 describe('ReferralStep · 코드 입력', () => {
-  it('메시지를 붙여넣으면 확인하고 확인한 정책 버전으로 저절로 등록한 뒤 다음으로 넘어간다', async () => {
-    const { input, onDone } = renderStep();
+  it('메시지를 붙여넣으면 확인하고 확인한 정책 버전으로 저절로 등록한다', async () => {
+    const { input } = renderStep();
 
     pasteMessage(input, '같이 해요\n초대 코드: K7QM3XPA');
 
     expect(await screen.findByText('확인됐어요')).toBeInTheDocument();
-    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(registerReferralCode).toHaveBeenCalledWith({
+        code: 'K7QM3XPA',
+        policyVersion: 3,
+      }),
+    );
     expect(previewReferralCode).toHaveBeenCalledWith('K7QM3XPA');
-    expect(registerReferralCode).toHaveBeenCalledWith({
-      code: 'K7QM3XPA',
-      policyVersion: 3,
-    });
     expect(track).toHaveBeenCalledWith(EVENTS.REFERRAL_CODE_REGISTERED, {
       method: 'paste',
     });
+  });
+
+  it('등록되면 성공 진동과 함께 확인한 조건의 적립 금액을 띄우고 잠시 뒤 저절로 다음으로 넘어간다', async () => {
+    previewReferralCode.mockResolvedValue(
+      preview({
+        signup: {
+          enabled: true,
+          target: 'BOTH',
+          inviterWon: 1000,
+          inviteeWon: 3000,
+        },
+      }),
+    );
+    const { input, onDone } = renderStep();
+
+    pasteMessage(input, 'K7QM3XPA');
+
+    expect(await screen.findByText('+3,000원')).toBeInTheDocument();
+    expect(screen.getByText('초대 코드로 적립됐어요')).toBeInTheDocument();
+    expect(haptic).toHaveBeenCalledWith('success');
+    expect(onDone).not.toHaveBeenCalled();
+    await waitFor(() => expect(onDone).toHaveBeenCalled(), { timeout: 3000 });
+  });
+
+  it('받을 금액이 없는 조건이면 금액 없이 등록됐다고만 알린다', async () => {
+    previewReferralCode.mockResolvedValue(
+      preview({
+        signup: {
+          enabled: false,
+          target: 'NONE',
+          inviterWon: 0,
+          inviteeWon: 0,
+        },
+      }),
+    );
+    const { input } = renderStep();
+
+    pasteMessage(input, 'K7QM3XPA');
+
+    expect(
+      await screen.findByText('초대 코드가 등록됐어요'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^\+/)).not.toBeInTheDocument();
   });
 
   it('확인하는 동안에는 확인 중이라고 알린다', async () => {
@@ -248,15 +295,16 @@ describe('ReferralStep · 코드 입력', () => {
     previewReferralCode
       .mockResolvedValueOnce(preview())
       .mockResolvedValue(preview({ policyVersion: 4 }));
-    const { input, onDone } = renderStep();
+    const { input } = renderStep();
 
     pasteMessage(input, 'K7QM3XPA');
 
-    await waitFor(() => expect(onDone).toHaveBeenCalled());
-    expect(registerReferralCode).toHaveBeenLastCalledWith({
-      code: 'K7QM3XPA',
-      policyVersion: 4,
-    });
+    await waitFor(() =>
+      expect(registerReferralCode).toHaveBeenLastCalledWith({
+        code: 'K7QM3XPA',
+        policyVersion: 4,
+      }),
+    );
   });
 
   it('「초대 코드가 없어요」를 누르면 건너뛰기를 서버에 남기고 다음으로 넘어간다', async () => {
