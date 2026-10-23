@@ -1,4 +1,4 @@
-// 이벤트 공지 순서 — 공지를 건너뛸 방문, 공지가 다른 안내를 붙잡는 때, 공지가 차례를 기다리는 때를 가르는 규칙 검증
+// 이벤트 공지 순서 — 공지를 건너뛸 방문, 공지가 시트를 붙잡는 때, 공지가 램프 등 앞선 것을 기다리는 때를 가르는 규칙 검증
 import { describe, expect, it } from 'vitest';
 
 import { eventPopupOrder, skipsEventPopup } from './event-popup-order';
@@ -29,6 +29,7 @@ describe('eventPopupOrder', () => {
     hasPopup: false,
     closed: false,
     previewDeciding: false,
+    lampSettled: true,
     updateFirst: false,
     promoOpen: false,
     showerHold: false,
@@ -46,6 +47,7 @@ describe('eventPopupOrder', () => {
 
   it.each([
     ['강제 업데이트가 먼저면', { updateFirst: true }],
+    ['램프가 묻는 중이거나 물을지 아직 모르면', { lampSettled: false }],
     ['프리뷰 대상인지 아직 모르면', { previewDeciding: true }],
     ['할인 시트가 떠 있으면', { promoOpen: true }],
     ['동전 연출이 도는 중이면', { showerHold: true }],

@@ -86,6 +86,13 @@ function ScenarioContent() {
     { skip: eventPopupSkipped },
   );
   const [eventPopupClosed, setEventPopupClosed] = useState(false);
+  // 램프가 이번 방문에 자동으로 물을지 — 카드가 정해 알려 준다. 묻는 날엔 끄고 나서 공지가 뜬다
+  const [lampSummons, setLampSummons] = useState<boolean | null>(null);
+  const lampSettled =
+    date !== undefined ||
+    (daily != null && (!daily.scenario || cleared)) ||
+    lampSummons === false ||
+    summonClosed;
   const { pending: eventPopupPending, ready: eventPopupReady } =
     eventPopupOrder({
       loading: eventPopupLoading,
@@ -93,14 +100,17 @@ function ScenarioContent() {
       closed: eventPopupClosed,
       // 이미 건너뛰기로 정한 방문이면 프리뷰 판정을 기다릴 이유가 없다
       previewDeciding: !eventPopupSkipped && premiumPreview.deciding,
+      lampSettled,
       updateFirst,
       promoOpen,
       showerHold,
     });
-  // 램프보다 먼저 나서는 것 — 강제 업데이트와 이벤트 공지
-  const lampHeld = updateFirst || eventPopupPending;
   const sheetsHeld =
-    lampHeld || promoOpen || showerHold || premiumPreview.active;
+    updateFirst ||
+    eventPopupPending ||
+    promoOpen ||
+    showerHold ||
+    premiumPreview.active;
   // 소감·리뷰는 프리뷰를 끝낼 때까지 더 미룬다 — 그사이 이 방문엔 알림 동의도 안 뜬다(소감 차례가 남아 있어서)
   const satisfactionHeld = sheetsHeld || premiumPreview.holdsSatisfaction;
   // 대화는 페이월 문이 아니다 — 오늘 카드든 지난 카드든, 재대화든 구독과 관계없이 시작한다.
@@ -159,7 +169,8 @@ function ScenarioContent() {
           premiumPreview={premiumPreview.cardPreview}
           onStart={start}
           onSummonClose={() => setSummonClosed(true)}
-          summonHeld={lampHeld}
+          summonHeld={updateFirst}
+          onAutoSummonDecided={setLampSummons}
         />
       )}
 
