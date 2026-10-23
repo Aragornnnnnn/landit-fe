@@ -10,7 +10,7 @@ const apiError = (status: number, code?: string) =>
 
 describe('referralFailureOf', () => {
   it.each([
-    ['REFERRAL_CODE_INVALID', '코드를 다시 확인해 주세요', false],
+    ['REFERRAL_CODE_INVALID', '코드를 한 번 더 확인해 보세요', false],
     ['REFERRAL_SELF_INVITE', '내 초대 코드는 넣을 수 없어요', false],
     ['REFERRAL_RATE_LIMITED', '잠시 뒤 다시 해 주세요', true],
     ['REFERRAL_DISABLED', '지금은 초대 보상을 받을 수 없어요', false],
@@ -29,7 +29,7 @@ describe('referralFailureOf', () => {
   it('코드 형식이 틀렸다는 공용 검증 오류도 틀린 코드처럼 알리고 다시 보내지 않는다', () => {
     expect(referralFailureOf(apiError(400, 'VALIDATION_FAILED'))).toEqual({
       kind: 'message',
-      message: '코드를 다시 확인해 주세요',
+      message: '코드를 한 번 더 확인해 보세요',
       expected: true,
       retryable: false,
     });

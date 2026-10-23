@@ -278,7 +278,7 @@ describe('ReferralStep · 코드 입력', () => {
     fireEvent.change(input, { target: { value: 'K7QM3XPB' } });
 
     expect(
-      await screen.findByText('코드를 다시 확인해 주세요'),
+      await screen.findByText('코드를 한 번 더 확인해 보세요'),
     ).toBeInTheDocument();
     expect(registerReferralCode).not.toHaveBeenCalled();
   });

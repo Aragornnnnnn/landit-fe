@@ -232,14 +232,16 @@ const CodeEntry = ({
             붙여넣기
           </button>
         )}
-        {/* 코드 칸 바로 아래 둔다 — 빈 화면 맨 아래 혼자 있으면 찾기 어렵고 어색하다 */}
-        <button
-          type="button"
-          onClick={() => setAskingSkip(true)}
-          className="mx-auto mt-6 block text-[15px] font-medium text-muted-foreground underline underline-offset-4"
-        >
-          초대 코드가 없어요
-        </button>
+        {/* 코드 칸 바로 아래 둔다 — 빈 화면 맨 아래 혼자 있으면 찾기 어렵고 어색하다. 확인되면 바로 등록돼 건너뛸 일이 없어 감춘다 */}
+        {status.tone !== 'ok' && (
+          <button
+            type="button"
+            onClick={() => setAskingSkip(true)}
+            className="mx-auto mt-6 block text-[15px] font-medium text-muted-foreground underline underline-offset-4"
+          >
+            초대 코드가 없어요
+          </button>
+        )}
       </div>
 
       <ConfirmSheet
@@ -306,7 +308,10 @@ const StatusLines = ({ status }: { status: Status }) => {
   if (status.tone === 'idle') return null;
   if (status.tone === 'error')
     return (
-      <p className="text-base font-bold text-destructive">{status.message}</p>
+      // 틀린 건 빨간 글자와 흔들림이 이미 알린다 — 안내까지 빨가면 혼내는 것처럼 보여 회색으로 부드럽게
+      <p className="text-base font-bold text-muted-foreground">
+        {status.message}
+      </p>
     );
   if (status.tone === 'checking')
     return (
