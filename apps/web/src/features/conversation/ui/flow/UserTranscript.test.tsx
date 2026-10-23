@@ -1,5 +1,5 @@
 // UserTranscript — 듣는 중 점(물결)이 언제 보이고 언제 사라지는지 검증한다
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { UserTranscript } from './UserTranscript';
@@ -73,5 +73,25 @@ describe('UserTranscript', () => {
     // 글자를 담은 스크롤 상자
     const box = screen.getByText(text).parentElement!;
     expect(box.scrollTop).toBe(140);
+  });
+
+  it('넘친 답변을 맨 위까지 올려 보면 윗변 흐림을 거둔다', () => {
+    // 스크롤로 앞부분을 다시 볼 때 첫 줄이 흐려져 있으면 읽을 수 없다
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(140);
+    const text = 'I went to the park with my friend yesterday';
+    render(
+      <UserTranscript
+        text={text}
+        phase="USER_SPEAKING"
+        speechPending={false}
+      />,
+    );
+    const box = screen.getByText(text).parentElement!;
+    expect(box.className).toContain('mask-image');
+
+    box.scrollTop = 0;
+    fireEvent.scroll(box);
+
+    expect(box.className).not.toContain('mask-image');
   });
 });
