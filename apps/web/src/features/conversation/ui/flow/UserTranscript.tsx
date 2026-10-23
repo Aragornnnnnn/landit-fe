@@ -116,10 +116,12 @@ export const UserTranscript = ({
         )}
         {headerAction}
       </div>
-      {/* 넘치면 끝으로 붙이고 윗변을 흐린다 — 방금 한 말이 항상 보이고 앞은 …처럼 사라진다 */}
+      {/* 넘치면 끝으로 붙이고 윗변을 흐린다 — 방금 한 말이 항상 보이고 앞은 …처럼 사라진다.
+          칸 높이는 그대로 두고 안에서만 스크롤해 앞부분을 다시 볼 수 있다 */}
       <div
         ref={boxRef}
-        className={`mt-1.5 min-h-0 flex-1 overflow-hidden ${
+        onScroll={(event) => setClipped(event.currentTarget.scrollTop > 0)}
+        className={`mt-1.5 min-h-0 flex-1 overflow-y-auto overscroll-contain ${
           clipped
             ? '[mask-image:linear-gradient(to_bottom,transparent,#000_1.75rem)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,#000_1.75rem)]'
             : ''
