@@ -1,7 +1,8 @@
 // Deepgram 실시간 STT 전송 계층 — getUserMedia 오디오를 WebSocket으로 보내고 트랜스크립트를 콜백으로 전달 (React 무관)
 
 export interface SttHandlers {
-  onInterim: (transcript: string) => void; // 발화 중 실시간 미리보기
+  // 발화 중 확정된 구간까지의 누적 텍스트와, 아직 확정 전인 말이 남아 있는지
+  onInterim: (transcript: string, pending: boolean) => void;
   onFinal: (transcript: string) => void; // 턴 종료 시 한 번 — 침묵 또는 stop()
   onError: (error: Error) => void;
 }
@@ -76,7 +77,7 @@ export const startDeepgramStt = async (
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(event.data);
     else pendingChunks.push(event.data);
   };
-  // 100ms 간격으로 오디오를 흘려보낸다 — 청크가 작을수록 Deepgram이 더 빨리 받아 interim이 촘촘하게 뜬다
+  // 100ms 간격으로 오디오를 흘려보낸다 — 청크가 작을수록 Deepgram이 더 빨리 받아 확정·남은 말 신호가 빨리 온다
   recorder.start(100);
 
   const stopRecorder = () => {
@@ -124,6 +125,7 @@ export const startDeepgramStt = async (
   ws = socket; // 이 시점부터 recorder.ondataavailable가 live 전송으로 전환된다
 
   let finalTranscript = '';
+  let pending = false; // 확정 전 말이 남아 있는가
   let finished = false;
   let finalizeTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -159,13 +161,17 @@ export const startDeepgramStt = async (
 
     if (msg.type === 'Results' && msg.channel) {
       const text = msg.channel.alternatives[0]?.transcript ?? '';
-      if (text) {
-        if (msg.is_final) {
-          finalTranscript = `${finalTranscript} ${text}`.trim();
-          onInterim(finalTranscript);
-        } else {
-          onInterim(`${finalTranscript} ${text}`.trim());
+      // 확정 전 결과는 말하는 동안 계속 고쳐 써져 사용자가 잘못 들은 줄 알고 취소한다 — 확정된 구간만 넘긴다.
+      // 확정 전 글자 대신, 확정 전 말이 남아 있는지만 알려 화면이 듣는 중 표시를 켜고 끈다
+      if (msg.is_final) {
+        if (text) finalTranscript = `${finalTranscript} ${text}`.trim();
+        if (text || pending) {
+          pending = false;
+          onInterim(finalTranscript, false);
         }
+      } else if (Boolean(text) !== pending) {
+        pending = Boolean(text);
+        onInterim(finalTranscript, pending);
       }
       // stop()의 Finalize 응답 — 남은 버퍼까지 반영된 시점이라 타임아웃 없이 즉시 종료
       if (msg.from_finalize) finishTurn();

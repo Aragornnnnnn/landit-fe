@@ -8,11 +8,13 @@ import { useDeferredValue, useEffect, useRef, useState } from 'react';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
 import type { ConversationPhase } from '../../model/conversation-machine';
-import { TypingCursor } from './TypingCursor';
+import { ListeningDots } from './ListeningDots';
 
 interface UserTranscriptProps {
   text: string;
   phase: ConversationPhase;
+  // 확정 전 말이 남아 있는가 — 다 확정되면 점을 거둔다
+  speechPending?: boolean;
   // 키보드 입력 모드 — 박스가 입력창이 되고 보내기/취소 버튼이 붙는다
   editing?: boolean;
   onChange?: (value: string) => void;
@@ -27,6 +29,7 @@ interface UserTranscriptProps {
 export const UserTranscript = ({
   text,
   phase,
+  speechPending = false,
   editing = false,
   onChange,
   onSubmit,
@@ -35,10 +38,12 @@ export const UserTranscript = ({
   unsent = false,
 }: UserTranscriptProps) => {
   const listening = phase === 'USER_SPEAKING';
+  // 아직 아무 말도 확정 전이면 듣는 중 표시로, 그 뒤엔 확정 전 말이 남아 있을 때만 점을 띄운다
+  const showDots = listening && (text === '' || speechPending);
   const boxRef = useRef<HTMLDivElement>(null);
   // 넘쳐서 앞부분이 잘렸는지 — 잘렸을 때만 윗변을 흐린다. 짧은 답변의 첫 줄까지 흐려지면 안 된다
   const [clipped, setClipped] = useState(false);
-  // STT interim이 말하는 동안 초당 여러 번 들어와 text가 바뀐다 — 그때마다 강제 리플로우를 돌리면
+  // 말하는 동안 확정 문장이 붙을 때마다 text가 바뀐다 — 그때마다 강제 리플로우를 돌리면
   // 메인 스레드가 밀려 화면 전체가 버벅여 보인다. deferred 값으로 늦춰 브라우저가 한가할 때만 계산한다
   const deferredText = useDeferredValue(text);
 
@@ -48,7 +53,8 @@ export const UserTranscript = ({
     if (!box) return;
     box.scrollTop = box.scrollHeight;
     setClipped(box.scrollTop > 0);
-  }, [deferredText]);
+    // 점이 나타나거나 사라져도 높이가 바뀐다 — 글자가 그대로여도 다시 맞춘다
+  }, [deferredText, showDots]);
 
   if (editing) {
     return (
@@ -122,7 +128,7 @@ export const UserTranscript = ({
         {/* 같은 높이에 세 줄이 들어오는 조합 — 글자 16px에 줄 간격을 좁혀 잡았다 */}
         <p className="text-base leading-snug font-semibold text-foreground">
           {text}
-          {listening && <TypingCursor />}
+          {showDots && <ListeningDots spaced={text !== ''} />}
         </p>
       </div>
     </div>

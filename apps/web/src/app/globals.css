@@ -378,6 +378,20 @@
   }
 }
 
+/* 듣는 중 점 — 차례로 떠올랐다 내려앉는다. 내려앉은 동안엔 흐리게 둔다 */
+@keyframes listening-wave {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
 @keyframes skeleton-flow {
   from {
     background-position: 150% 0;
@@ -558,6 +572,18 @@
     .animate-bar-fill {
       animation: none;
       width: var(--bar-width, 0%);
+    }
+  }
+
+  /* --i가 점 번호 — 150ms씩 늦게 출발해 1.2초마다 물결이 한 번 지나간다 */
+  .animate-listening-wave {
+    animation: listening-wave 1.2s ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * 150ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-listening-wave {
+      animation: none;
     }
   }
 

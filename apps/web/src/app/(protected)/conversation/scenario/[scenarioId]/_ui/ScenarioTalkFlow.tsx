@@ -64,6 +64,7 @@ export const ScenarioTalkFlow = ({
   } = useScenarioTalkFlow(scenario);
   const {
     transcript,
+    speechPending,
     setTranscript,
     keyboardMode,
     pressMic,
@@ -225,6 +226,7 @@ export const ScenarioTalkFlow = ({
           >
             <UserTranscript
               text={transcript}
+              speechPending={speechPending}
               phase={phase}
               editing={typing}
               onChange={setTranscript}

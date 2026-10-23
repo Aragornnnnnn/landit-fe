@@ -33,6 +33,8 @@ export const useConversationInput = ({
   onContent,
 }: ConversationInputOptions) => {
   const [transcript, setTranscript] = useState('');
+  // 확정 전 말이 남아 있는가 — 답변 칸이 듣는 중 표시(점 물결)를 켜고 끄는 기준
+  const [speechPending, setSpeechPending] = useState(false);
   // 입력 수단 — 기본은 마이크(음성), 키보드 아이콘을 누르면 타이핑 모드로 바꾼다
   const [keyboardMode, setKeyboardMode] = useState(false);
   // 마이크 권한이 거부돼 STT를 못 켠 상태 — 설정 유도 안내를 띄운다
@@ -95,7 +97,10 @@ export const useConversationInput = ({
   // 마이크 STT 배선 — 침묵 자동 종료는 끄고 완료 버튼(■)만으로 끝낸다 (긴 답변 중 침묵에도 안 끊기게)
   const stt = useStt({
     stopOnSilence: false,
-    onInterim: (text) => setTranscript(text),
+    onInterim: (text, pending) => {
+      setTranscript(text);
+      setSpeechPending(pending);
+    },
     onFinal: submitVoice,
     onError: recoverFromSttError,
   });
@@ -104,6 +109,7 @@ export const useConversationInput = ({
   const resetToVoiceInput = () => {
     setKeyboardMode(false);
     setTranscript('');
+    setSpeechPending(false);
   };
 
   // 마이크로 말하기 — 듣기 시작을 알리고 STT를 켠다
@@ -180,6 +186,7 @@ export const useConversationInput = ({
   return {
     transcript,
     setTranscript,
+    speechPending,
     keyboardMode,
     pressMic,
     pressKeyboard,
