@@ -33,6 +33,62 @@ class FakeRecognition {
   }
 }
 
+// 마이크 준비를 붙잡아 "연결 중" 상태를 만드는 Deepgram 경로 장치 — 연결 중 ■·X 순서를 재현한다
+const setupGatedDeepgram = () => {
+  const trackStop = vi.fn();
+  class GateRecorder {
+    static isTypeSupported = () => true;
+    state = 'recording';
+    ondataavailable: ((event: { data: Blob }) => void) | null = null;
+    onstop: (() => void) | null = null;
+    start() {}
+    stop() {
+      this.state = 'inactive';
+      this.onstop?.();
+    }
+  }
+  class GateWs {
+    static CONNECTING = 0;
+    static OPEN = 1;
+    static instances: GateWs[] = [];
+    readyState = 0; // open()을 안 불러 연결 중 상태를 유지한다
+    sent: unknown[] = [];
+    onopen: (() => void) | null = null;
+    onmessage: ((event: { data: string }) => void) | null = null;
+    onerror: (() => void) | null = null;
+    onclose: (() => void) | null = null;
+    constructor() {
+      GateWs.instances.push(this);
+    }
+    send(data: unknown) {
+      this.sent.push(data);
+    }
+    close() {
+      this.readyState = 3;
+    }
+  }
+  vi.stubGlobal('MediaRecorder', GateRecorder);
+  vi.stubGlobal('WebSocket', GateWs);
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => ({ ok: true, json: async () => ({ token: 't' }) })),
+  );
+  let releaseMedia!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    releaseMedia = resolve;
+  });
+  Object.defineProperty(navigator, 'mediaDevices', {
+    value: {
+      getUserMedia: vi.fn(async () => {
+        await gate; // 마이크 준비를 붙잡아 "연결 중" 상태를 만든다
+        return { getTracks: () => [{ stop: trackStop }] };
+      }),
+    },
+    configurable: true,
+  });
+  return { GateWs, releaseMedia: () => releaseMedia(), trackStop };
+};
+
 describe('useStt', () => {
   beforeEach(() => {
     FakeRecognition.instances = [];
@@ -205,56 +261,7 @@ describe('useStt', () => {
   it('연결 중에 stop하면 뒤늦게 완성된 세션이 방치되지 않고 연결 뒤 확정 처리된다', async () => {
     // 완료(■)를 연결 중(권한→토큰→소켓)에 눌렀다고 무시되면, 세션이 계속 들으며
     // 방치되고 — stopOnSilence:false 소비자는 침묵으로도 안 끝나 다음 재시작까지 막힌다
-    class GateRecorder {
-      static isTypeSupported = () => true;
-      state = 'recording';
-      ondataavailable: ((event: { data: Blob }) => void) | null = null;
-      onstop: (() => void) | null = null;
-      start() {}
-      stop() {
-        this.state = 'inactive';
-        this.onstop?.();
-      }
-    }
-    class GateWs {
-      static CONNECTING = 0;
-      static OPEN = 1;
-      static instances: GateWs[] = [];
-      readyState = 0; // open()을 안 불러 연결 중 상태를 유지한다
-      sent: unknown[] = [];
-      onopen: (() => void) | null = null;
-      onmessage: ((event: { data: string }) => void) | null = null;
-      onerror: (() => void) | null = null;
-      onclose: (() => void) | null = null;
-      constructor() {
-        GateWs.instances.push(this);
-      }
-      send(data: unknown) {
-        this.sent.push(data);
-      }
-      close() {
-        this.readyState = 3;
-      }
-    }
-    vi.stubGlobal('MediaRecorder', GateRecorder);
-    vi.stubGlobal('WebSocket', GateWs);
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => ({ ok: true, json: async () => ({ token: 't' }) })),
-    );
-    let releaseMedia!: () => void;
-    const gate = new Promise<void>((resolve) => {
-      releaseMedia = resolve;
-    });
-    Object.defineProperty(navigator, 'mediaDevices', {
-      value: {
-        getUserMedia: vi.fn(async () => {
-          await gate; // 마이크 준비를 붙잡아 "연결 중" 상태를 만든다
-          return { getTracks: () => [{ stop: vi.fn() }] };
-        }),
-      },
-      configurable: true,
-    });
+    const { GateWs, releaseMedia } = setupGatedDeepgram();
     const onFinal = vi.fn();
     const { result } = renderHook(() => useStt({ onFinal }));
 
@@ -287,6 +294,29 @@ describe('useStt', () => {
     // 방치된 세션이 sessionRef를 붙잡고 있지 않아 재시작이 막히지 않는다
     await act(() => result.current.start());
     expect(GateWs.instances).toHaveLength(2);
+  });
+
+  it('연결 중에 완료한 뒤 취소하면 연결을 기다리지 않고 마이크와 연결을 바로 정리한다', async () => {
+    // 완료(■) 뒤 X·화면 이탈이 세션에 닿지 않으면, 버린 말이 연결 뒤 전송되고 마이크가 켜진 채 남는다
+    const { GateWs, releaseMedia, trackStop } = setupGatedDeepgram();
+    const onFinal = vi.fn();
+    const { result } = renderHook(() => useStt({ onFinal }));
+
+    let startPromise!: Promise<void>;
+    act(() => {
+      startPromise = result.current.start();
+    });
+    act(() => result.current.stop());
+    await act(async () => {
+      releaseMedia();
+      await startPromise;
+    });
+    act(() => result.current.abort());
+
+    const ws = GateWs.instances.at(-1)!;
+    expect(trackStop).toHaveBeenCalled();
+    expect(ws.readyState).toBe(3);
+    expect(onFinal).not.toHaveBeenCalled();
   });
 
   it('발화가 끝나면 onFinal로 확정 텍스트를 전달한다', async () => {

@@ -91,12 +91,10 @@ export function useStt(options: UseSttOptions = {}) {
         session.abort();
         return;
       }
-      // 연결 중에 완료가 불렸으면 설치 없이 바로 확정 — sessionRef를 안 잡아야 다음 시작이 안 막힌다
-      if (pendingStopRef.current) {
-        session.stop();
-        return;
-      }
       sessionRef.current = session;
+      // 연결 중에 완료가 불렸으면 설치하자마자 확정한다. 확정을 기다리는 동안에도 취소(X)·이탈이
+      // 이 세션에 닿아야 해서 담아 둔다 — 끝나면 onFinal·onError가 비워 다음 시작이 막히지 않는다
+      if (pendingStopRef.current) session.stop();
     };
 
     try {
