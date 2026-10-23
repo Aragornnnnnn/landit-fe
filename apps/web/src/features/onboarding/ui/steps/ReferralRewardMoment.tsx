@@ -58,6 +58,10 @@ export const ReferralRewardMoment = ({
           <p className="mt-1 animate-[fade-up_0.35s_ease-out_0.25s_both] text-base font-bold text-white/90">
             초대 코드로 적립됐어요
           </p>
+          {/* 현금이 아니라 환급 적립금이다 — 무료로 시작한 사람도 결제하면 그 환급에 더해진다는 걸 안다 */}
+          <p className="mt-2 animate-[fade-up_0.35s_ease-out_0.35s_both] text-[13px] font-medium text-white/75">
+            100일 챌린지를 결제하면 환급에 바로 더해져요
+          </p>
         </>
       ) : (
         <p className="mt-5 animate-[fade-up_0.35s_ease-out_0.15s_both] text-xl font-black text-white">
