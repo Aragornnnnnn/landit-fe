@@ -1,8 +1,9 @@
-// 글자 크기 설정 — 처음 한 번 기기 글자 배율로 단계를 정해 저장하고, 그 뒤로는 마이페이지에서 고른 값을 유지한다
+// 글자 크기 설정 — 처음엔 보통이고, 마이페이지에서 고른 값을 유지한다. 구 셸은 늘 보통으로 보이게 한다
 import type { NativeContext } from '@landit/bridge';
 
-const STORAGE_KEY = 'landit-font-scale';
-// 이 버전부터 셸이 Android 자동 확대를 끄고 기기 배율을 준다. 그 전 셸은 배율이 겹쳐 기능을 끈다
+// v2: 기기 배율로 첫 단계를 정하던 때의 저장값을 버리고 모두 보통에서 시작한다
+const STORAGE_KEY = 'landit-font-scale-v2';
+// 이 버전부터 셸이 Android 자동 확대를 끈다. 그 전 셸은 기능을 끄고 늘 보통으로 보이게 한다
 const FONT_SCALE_BRIDGE_VERSION = 10;
 // Android 웹뷰 사용자 에이전트 표식 — 주입이 없는데 웹뷰면 구 셸(자동 확대가 켜진 셸)로 본다
 const ANDROID_WEBVIEW_UA = '; wv)';
@@ -28,42 +29,40 @@ const initFontScale = (
   try {
     const native = (
       window as {
-        __LANDIT_NATIVE__?: { bridgeVersion?: unknown; fontScale?: unknown };
+        __LANDIT_NATIVE__?: { bridgeVersion?: unknown };
       }
     ).__LANDIT_NATIVE__;
-    // 주입이 빠진 Android 웹뷰는 브라우저가 아니라 구 셸이다 — 셸이 기기 글꼴 크기를 이미 곱하고 있다
-    if (!native && navigator.userAgent.includes(webviewMarker)) return;
-    if (
-      native &&
-      !(
-        typeof native.bridgeVersion === 'number' &&
-        native.bridgeVersion >= minBridgeVersion
-      )
-    ) {
-      return;
-    }
     const apply = (scale: number) =>
       document.documentElement.style.setProperty('--font-scale', String(scale));
-
-    const saved = Number(localStorage.getItem(key) ?? NaN);
-    if (scales.includes(saved)) {
-      apply(saved);
+    // 주입이 빠진 Android 웹뷰는 브라우저가 아니라 구 셸이다 — 셸이 기기 글꼴 크기를 이미 곱하고 있다
+    const isOldShell =
+      (!native && navigator.userAgent.includes(webviewMarker)) ||
+      (native &&
+        !(
+          typeof native.bridgeVersion === 'number' &&
+          native.bridgeVersion >= minBridgeVersion
+        ));
+    if (isOldShell) {
+      // 구 셸은 늘 보통으로 보인다 — Android 웹뷰는 셸이 키운 배율이 계산된 글자 크기에 그대로 실려, 100px이 몇 px로 계산되는지 보고 되돌린다
+      const probe = document.createElement('span');
+      probe.style.cssText =
+        'position:absolute;visibility:hidden;font-size:100px';
+      document.documentElement.appendChild(probe);
+      const zoom = parseFloat(getComputedStyle(probe).fontSize) / 100;
+      probe.remove();
+      if (zoom > 0 && Math.abs(zoom - 1) > 0.02) apply(1 / zoom);
       return;
     }
-    // 셸 주입이 아직 없으면 정하지 않는다 — 늦게 온 기기 배율로 다음 실행에서 정한다
-    const device = native?.fontScale;
-    if (typeof device !== 'number') return;
-    const closest = scales.reduce((best, scale) =>
-      Math.abs(scale - device) < Math.abs(best - device) ? scale : best,
-    );
-    localStorage.setItem(key, String(closest));
-    apply(closest);
+
+    // 고른 적이 없으면 기기 배율과 상관없이 보통으로 둔다
+    const saved = Number(localStorage.getItem(key) ?? NaN);
+    if (scales.includes(saved)) apply(saved);
   } catch {
     // 저장소를 못 쓰면 기본 크기로 둔다
   }
 };
 
-/** 저장값이나 기기 배율로 첫 단계를 정해 적용한다. 하이드레이션 뒤에 다시 불러도 된다 */
+/** 저장값을 적용한다. 하이드레이션 뒤에 다시 불러도 된다 */
 export const applyInitialFontScale = () =>
   initFontScale(
     FONT_SCALES,
@@ -97,7 +96,7 @@ export const getFontScale = (): FontScale => {
 export const setFontScale = (scale: FontScale) => {
   // 목록 밖 값은 저장소에 들이지 않는다
   if (!isFontScale(scale)) return;
-  // 보통도 지우지 않고 저장한다 — 지우면 다음 실행에서 기기 배율로 다시 정해진다
+  // 보통도 지우지 않고 저장한다 — 고른 값이 그대로 남게
   try {
     localStorage.setItem(STORAGE_KEY, String(scale));
   } catch {
