@@ -10,12 +10,14 @@ import { useActivePopupQuery } from '@/features/event-popup/model/useActivePopup
 
 export const useActiveEventPopup = () => {
   const [doneIds] = useState(readEventPopupDoneIds);
-  const { data, isPending } = useActivePopupQuery();
+  const { data, isPending, isFetching } = useActivePopupQuery();
+  // 지난 방문의 응답이 캐시에 남아 있으면 다시 묻는 동안에도 isPending이 false다 —
+  // 그 사이 램프가 먼저 나서거나 내려간 공지가 뜨지 않게, 이번에 묻는 동안은 모르는 것으로 둔다.
+  // 실패(배포 전 404 포함)하면 묻기가 끝나 공지 없이 지나간다
+  const loading = isPending || isFetching;
 
   return {
-    popup: unseenPopup(data, doneIds),
-    // 응답을 기다리는 동안엔 공지가 뜰지 모른다 — 그동안 램프·소감이 먼저 나서지 않게 붙잡는다.
-    // 실패(배포 전 404 포함)하면 isPending이 풀려 공지 없이 지나간다
-    loading: isPending,
+    popup: loading ? null : unseenPopup(data, doneIds),
+    loading,
   };
 };
