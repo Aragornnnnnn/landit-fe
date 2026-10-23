@@ -9,7 +9,7 @@ const HistoryLine = ({ row }: { row: HistoryRow }) => (
     // 날짜가 붙는 줄(그날의 첫 줄)은 위를 조금 더 띄워 하루씩 끊어 보이게 한다
     className={`flex items-start gap-3 ${row.dateLabel ? 'pt-5' : 'pt-4'}`}
   >
-    <span className="w-9 shrink-0 pt-0.5 text-13 font-medium text-muted-foreground tabular-nums">
+    <span className="w-[calc(36px*var(--font-scale))] shrink-0 pt-0.5 text-13 font-medium whitespace-nowrap text-muted-foreground tabular-nums">
       {row.dateLabel}
     </span>
     <span className="min-w-0 flex-1">

@@ -81,8 +81,8 @@ export const FontScaleMenuEntry = () => {
       >
         {/* 휴대폰 설정처럼 「작은 가 — 바 — 큰 가」. 옮기는 순간 시트 뒤 화면 글자가 바뀌어 따로 미리보기를 두지 않는다.
             바·「가」·이름은 배율을 받지 않는 고정 크기다 — 옮길 때마다 바가 커지면 손가락 아래 자리가 흔들린다 */}
-        <div className="mt-5 flex items-center gap-3.5">
-          <span className="text-[13px] font-medium text-[#6B7280]" aria-hidden>
+        <div className="mt-5 flex items-center gap-3.5 [--font-scale:1]">
+          <span className="text-13 font-medium text-[#6B7280]" aria-hidden>
             가
           </span>
           <div
@@ -141,12 +141,12 @@ export const FontScaleMenuEntry = () => {
               className="absolute inset-0 m-0 w-full cursor-pointer appearance-none bg-transparent opacity-0 [&::-moz-range-thumb]:size-(--thumb) [&::-webkit-slider-thumb]:size-(--thumb) [&::-webkit-slider-thumb]:appearance-none"
             />
           </div>
-          <span className="text-[22px] font-medium text-[#6B7280]" aria-hidden>
+          <span className="text-22 font-medium text-[#6B7280]" aria-hidden>
             가
           </span>
         </div>
 
-        <p className="mt-2 text-center text-[12px] font-bold text-[#111]">
+        <p className="mt-2 text-center text-12 font-bold text-[#111] [--font-scale:1]">
           {LABELS[scale]}
         </p>
       </SettingSheet>

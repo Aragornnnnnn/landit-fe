@@ -209,7 +209,7 @@ const PlanRow = ({
         {badge}
       </span>
     )}
-    <span className="flex flex-col gap-0.5">
+    <span className="flex min-w-0 flex-col gap-0.5">
       <span className="text-17 leading-[1.3] font-bold text-foreground">
         {title}
       </span>
@@ -221,8 +221,9 @@ const PlanRow = ({
         {trial ?? '무료 체험 미포함'}
       </span>
     </span>
-    <span className="flex flex-col items-end gap-0.5">
-      <span className="flex items-baseline gap-1.5">
+    <span className="flex shrink-0 flex-col items-end gap-0.5">
+      {/* 가격 줄은 글자 크기 배율을 받지 않는다 — 크게 단계에서 "58,500원 / / 년"으로 끊기지 않게 */}
+      <span className="flex items-baseline gap-1.5 whitespace-nowrap [--font-scale:1]">
         {listPrice && (
           <span className="text-12 leading-[1.3] text-[#9ca3af] line-through">
             {listPrice}

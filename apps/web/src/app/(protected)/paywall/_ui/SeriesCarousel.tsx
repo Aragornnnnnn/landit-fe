@@ -32,9 +32,10 @@ export const SeriesCarousel = ({
     </p>
     <div className="mt-3 flex snap-x snap-mandatory scroll-px-5 [scrollbar-width:none] gap-3 overflow-x-auto px-5 pb-2 [&::-webkit-scrollbar]:hidden">
       {items.map((item) => (
+        // 카드는 폰 화면 목업이라 글자 크기 배율을 받지 않는다 — 제목이 두 줄이 되면 아래 폰 화면에 가려진다
         <article
           key={item.title}
-          className="relative h-[400px] w-[272px] shrink-0 snap-start overflow-hidden rounded-3xl border border-[#e9e7e2] bg-card shadow-[0_2px_10px_rgba(51,38,26,0.05)]"
+          className="relative h-[400px] w-[272px] shrink-0 snap-start overflow-hidden rounded-3xl border border-[#e9e7e2] bg-card shadow-[0_2px_10px_rgba(51,38,26,0.05)] [--font-scale:1]"
         >
           <h3 className="px-5 pt-5 text-center text-17 leading-snug font-bold tracking-[-0.02em] text-foreground">
             {item.title}

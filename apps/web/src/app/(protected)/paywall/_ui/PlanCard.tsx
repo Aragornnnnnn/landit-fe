@@ -68,7 +68,8 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
           ? `${plan.period} ${formatWon(plan.listPrice)}`
           : '\u00a0'}
       </span>
-      <span className="text-22 leading-[1.2] font-bold text-foreground">
+      {/* 가격은 글자 크기 배율을 받지 않는다 — 크게 단계에서 "14,900 / 원"으로 끊기지 않게 */}
+      <span className="text-22 leading-[1.2] font-bold whitespace-nowrap text-foreground [--font-scale:1]">
         {plan.period} {formatWon(plan.price)}
       </span>
       <span

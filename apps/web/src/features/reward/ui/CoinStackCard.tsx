@@ -62,7 +62,8 @@ export const CoinStackCard = ({
     <div
       className={`rounded-3xl bg-[linear-gradient(180deg,#fff1db,#fffaf3)] px-5 pt-6 pb-5 ${animated && tower ? 'animate-coin-thud' : ''}`}
     >
-      <div className="flex items-end justify-between">
+      {/* 동전 그래프는 그림이라 글자 크기 배율을 받지 않는다 — 크게 단계에서 "500 / 원"으로 끊기지 않게 */}
+      <div className="flex items-end justify-between [--font-scale:1]">
         {EARLY_DAYS.map((day) => (
           <div key={day} className="flex flex-col items-center gap-2">
             <CoinPile count={day} size={34} shown={step >= day} />
