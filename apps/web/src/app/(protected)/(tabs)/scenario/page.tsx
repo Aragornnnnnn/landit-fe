@@ -80,17 +80,15 @@ function ScenarioContent() {
 
   // 완료한 날은 카드 앞면(같은 썸네일·제목·설명)이 이미 떠 있다 — 램프로 시작하는 날만 브리핑이 필요하다
   const cleared = daily?.scenario?.dailyScenarioType === 'CLEARED';
+  // 램프·프리뷰보다 먼저 나서는 것 — 강제 업데이트와 이벤트 공지
+  const lampHeld = updateFirst || eventPopupPending;
   // 프리미엄 프리뷰 — 오늘 카드를 끝낸 무료 사용자에게 챌린지를 소개하고 표현 하나를 무료로 열어 준다
   const premiumPreview = useHomePreview({
     cleared: cleared && date === undefined,
-    held: updateFirst || showerHold || eventPopupPending,
+    held: lampHeld || showerHold,
   });
   const sheetsHeld =
-    updateFirst ||
-    promoOpen ||
-    showerHold ||
-    premiumPreview.active ||
-    eventPopupPending;
+    lampHeld || promoOpen || showerHold || premiumPreview.active;
   // 대화는 페이월 문이 아니다 — 오늘 카드든 지난 카드든, 재대화든 구독과 관계없이 시작한다.
   // 무료 사용자가 막히는 건 그 뒤의 상세 피드백과 표현 학습이다 (docs/subscription.md 「무료 구간과 페이월 게이트」)
   const start = (scenario: Scenario) => {
@@ -147,7 +145,7 @@ function ScenarioContent() {
           premiumPreview={premiumPreview.cardPreview}
           onStart={start}
           onSummonClose={() => setSummonClosed(true)}
-          summonHeld={updateFirst || eventPopupPending}
+          summonHeld={lampHeld}
         />
       )}
 

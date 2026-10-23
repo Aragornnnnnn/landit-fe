@@ -35,7 +35,7 @@ interface LampStageProps {
   today?: string;
   // 소환을 닫고 대기 카드로 돌아왔다 — 복귀 연출이 끝난 뒤에 나간다
   onSummonClose?: () => void;
-  // 화면 위에 다른 안내(이벤트 공지)가 먼저 떠 있다 — 풀릴 때까지 자동 소환을 미룬다
+  // 먼저 나설 것(강제 업데이트·이벤트 공지)이 있다 — 풀릴 때까지 자동 소환을 미룬다
   summonHeld?: boolean;
 }
 
@@ -108,8 +108,9 @@ export const LampStage = ({
 
   // 자동 소환 — 그날 처음이거나 알림으로 들어왔을 때만. 그 외엔 카드에 담겨 있다
   useEffect(() => {
-    // 소환할 수 없는 카드여도 딱지는 뗀다 — 남으면 뒤로 돌아올 때 유입이 또 세어진다
+    // 보류 중엔 알림 유입 딱지도 그대로 둔다 — 풀린 뒤 판정에서 쓴다
     if (summonHeld) return;
+    // 소환할 수 없는 카드여도 딱지는 뗀다 — 남으면 뒤로 돌아올 때 유입이 또 세어진다
     const fromReminder = consumeReminderEntry();
     if (!today || !onStart) return;
 

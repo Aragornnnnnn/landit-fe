@@ -27,7 +27,7 @@ interface TodayCardProps {
   autoFlip?: boolean;
   // 소환을 닫아 오늘은 안 하기로 했다. 복귀 연출까지 끝난 뒤에 온다
   onSummonClose?: () => void;
-  // 이벤트 공지가 먼저 떠 있다 — 닫힐 때까지 램프 자동 소환을 미룬다
+  // 먼저 나설 것(강제 업데이트·이벤트 공지)이 있다 — 풀릴 때까지 램프 자동 소환을 미룬다
   summonHeld?: boolean;
   // 프리미엄 프리뷰의 차례 — 완료 카드에만 건다
   premiumPreview?: CardPreview;
