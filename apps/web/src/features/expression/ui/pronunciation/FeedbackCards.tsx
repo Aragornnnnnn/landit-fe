@@ -59,7 +59,7 @@ export const FeedbackCards = ({
               {word.word}
             </p>
             {card.kind === 'stress' && (
-              <div className="mb-3 flex gap-3 text-[11px] font-medium text-muted-foreground">
+              <div className="mb-3 flex gap-3 text-11 font-medium text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Dot className="bg-success" /> 원어민 강세
                 </span>

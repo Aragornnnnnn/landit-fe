@@ -32,31 +32,31 @@ export const RewardExitOfferSheet = ({
   return (
     <BottomSheet open={open} onClose={onClose}>
       <div className="flex flex-col items-center text-center">
-        <span className="rounded-md bg-destructive px-2 py-0.5 text-[12px] font-bold text-white">
+        <span className="rounded-md bg-destructive px-2 py-0.5 text-12 font-bold text-white">
           신규 회원 특가
         </span>
-        <BottomSheet.Title className="mt-3 text-[22px] leading-[31px] font-black tracking-[-0.025em] whitespace-pre-line text-foreground">
+        <BottomSheet.Title className="mt-3 text-22 leading-[calc(31/22)] font-black tracking-[-0.025em] whitespace-pre-line text-foreground">
           {'잠깐! 지금 시작하면\n프리미엄이 사실상 '}
           <span className="text-primary">0원</span>이에요
         </BottomSheet.Title>
       </div>
 
       <div className="mt-5 rounded-[20px] border-2 border-primary bg-[#fffcf8] px-4 py-3.5 text-left">
-        <p className="text-[15px] font-bold text-[#c4601f]">
+        <p className="text-15 font-bold text-[#c4601f]">
           {offer.days}일 프리미엄 이용권
         </p>
         <p className="mt-1 flex items-baseline gap-1.5">
-          <span className="text-[13px] font-medium text-[#b1aaa3] line-through">
+          <span className="text-13 font-medium text-[#b1aaa3] line-through">
             {formatWon(listPrice)}
           </span>
           <span className="text-lg font-black text-primary">
             {discountPercentOf(offer.priceWon, listPrice)}%
           </span>
-          <span className="text-[22px] font-black text-foreground tabular-nums">
+          <span className="text-22 font-black text-foreground tabular-nums">
             {formatWon(offer.priceWon)}
           </span>
         </p>
-        <p className="mt-2 flex items-center gap-1.5 border-t border-[#f1ebe3] pt-2 text-[13px] font-medium text-[#5f5953]">
+        <p className="mt-2 flex items-center gap-1.5 border-t border-[#f1ebe3] pt-2 text-13 font-medium text-[#5f5953]">
           <Coin size={18} />
           꾸준히 하면 결제한 {formatWon(offer.priceWon)}도 돌려받아요
         </p>
@@ -67,7 +67,7 @@ export const RewardExitOfferSheet = ({
         <button
           type="button"
           onClick={onLeave}
-          className="px-4 py-3 text-[15px] font-medium text-muted-foreground"
+          className="px-4 py-3 text-15 font-medium text-muted-foreground"
         >
           혜택 포기하기
         </button>

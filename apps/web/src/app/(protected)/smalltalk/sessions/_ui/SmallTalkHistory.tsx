@@ -116,7 +116,7 @@ const ExpressionProgress = ({
         : 'text-primary';
 
   return (
-    <span className={`shrink-0 text-[13px] font-semibold ${tone}`}>
+    <span className={`shrink-0 text-13 font-semibold ${tone}`}>
       표현 {done}/{total}
     </span>
   );

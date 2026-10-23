@@ -53,7 +53,7 @@ export const AnalyzingView = () => (
     className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background px-6"
     style={{ paddingTop: 'calc(max(var(--safe-area-inset-top), 18px) + 58px)' }}
   >
-    <h1 className="text-[26px] leading-[1.3] font-black break-keep">
+    <h1 className="text-26 leading-[1.3] font-black break-keep">
       방금 대화를 바탕으로
       <br />
       레벨을 분석하고 있어요

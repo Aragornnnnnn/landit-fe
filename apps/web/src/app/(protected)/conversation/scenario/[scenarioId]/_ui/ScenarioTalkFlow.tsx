@@ -2,7 +2,7 @@
 // 캐릭터 무대·질문 카드·내 답변·마이크를 상태 기계 단계에 맞춰 오케스트레이션한다
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
@@ -25,7 +25,9 @@ import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 import { ProgressBar } from '@/shared/ui/ProgressBar';
 
+import { useAnswerGuideToggle } from '../_model/useAnswerGuideToggle';
 import { useScenarioTalkFlow } from '../_model/useScenarioTalkFlow';
+import { AnswerGuideChip, AnswerGuideSlot } from './AnswerGuide';
 
 export const ScenarioTalkFlow = ({
   scenario,
@@ -58,6 +60,7 @@ export const ScenarioTalkFlow = ({
     leave,
     sessionId,
     gauge,
+    answerGuide,
   } = useScenarioTalkFlow(scenario);
   const {
     transcript,
@@ -79,6 +82,28 @@ export const ScenarioTalkFlow = ({
   const keyboardInset = useKeyboardInset();
   // 키보드가 입력 박스를 밀어 올린 상태 — 하단 inset 영역은 키보드가 덮는다
   const keyboardLifted = typing && keyboardInset > 0;
+  // 답변 가이드 — 내 차례(대기·말하는 중)에만 내 답변 칸과 같은 자리를 번갈아 쓴다.
+  // 키보드로 쓰는 중엔 그 칸이 입력창이라, 답을 낸 뒤엔 방금 한 말을 보여야 해서 비켜 준다
+  const myTurn = phase === 'USER_READY' || phase === 'USER_SPEAKING';
+  // 답변이 전달되지 못한 동안은 다시 보내기가 먼저라 가이드를 비켜 준다 — 펼쳐 둔 카드가 실패한 답변을 덮지 않게
+  const guideShown = answerGuide != null && myTurn && !typing && resend == null;
+  const guideChipRef = useRef<HTMLButtonElement>(null);
+  // 첫 질문의 턴 — USER 선발화면 0번은 상황 안내라 첫 AI 질문은 그다음이다
+  const firstQuestionIndex = scenario.firstSpeaker === 'USER' ? 1 : 0;
+  const guide = useAnswerGuideToggle({
+    question: turn.aiMessage,
+    available: answerGuide != null && !ended,
+    // 유도 힌트는 첫 질문의 음성이 끝나 내 차례가 된 순간에만 — 말 없이 나가는 사람 대부분이 그 직후에 나간다
+    hintable: turnIndex === firstQuestionIndex && phase === 'USER_READY',
+    onToggled: (opened, fromHint) =>
+      track(EVENTS.ANSWER_GUIDE_TOGGLED, {
+        session_id: sessionId ?? undefined,
+        scenario_id: scenario.scenarioId,
+        turn_index: turnIndex,
+        opened,
+        from_hint: fromHint,
+      }),
+  });
   // 선발화 안내는 대기(USER_READY) 동안만 — 사용자가 말하기 시작하거나 속마음이 오면 즉시 비켜준다
   const showUserFirstIntro =
     turn.isUserOpening && phase === 'USER_READY' && !introDismissed;
@@ -185,18 +210,41 @@ export const ScenarioTalkFlow = ({
             translationDefaultOpen={display.translationDefaultOpen}
           />
         </div>
-        {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다 */}
+        {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다.
+            가이드를 펼치면 칩이 그 자리에서 예시 카드로 커져 칸 위에 겹친다 */}
         {!ended && (
-          <UserTranscript
-            text={transcript}
-            speechPending={speechPending}
-            phase={phase}
-            editing={typing}
-            onChange={setTranscript}
-            onSubmit={submitText}
-            onCancel={cancelInput}
-            unsent={resend != null}
-          />
+          <AnswerGuideSlot
+            guide={answerGuide}
+            open={guideShown && guide.open}
+            onClose={() => {
+              guide.closeGuide();
+              // 다시 나타난 칩으로 포커스를 돌려준다 — 칩은 이번 렌더가 끝난 뒤에 붙는다
+              requestAnimationFrame(() =>
+                guideChipRef.current?.focus({ preventScroll: true }),
+              );
+            }}
+          >
+            <UserTranscript
+              text={transcript}
+              speechPending={speechPending}
+              phase={phase}
+              editing={typing}
+              onChange={setTranscript}
+              onSubmit={submitText}
+              onCancel={cancelInput}
+              unsent={resend != null}
+              headerAction={
+                guideShown &&
+                !guide.open && (
+                  <AnswerGuideChip
+                    ref={guideChipRef}
+                    onOpen={guide.openGuide}
+                    hintVisible={guide.hintVisible}
+                  />
+                )
+              }
+            />
+          </AnswerGuideSlot>
         )}
       </section>
 
@@ -214,8 +262,14 @@ export const ScenarioTalkFlow = ({
         ) : typing ? null : (
           <MicControl
             phase={phase}
-            onPress={pressMic}
-            onKeyboard={pressKeyboard}
+            onPress={() => {
+              guide.dismissHint();
+              pressMic();
+            }}
+            onKeyboard={() => {
+              guide.collapseGuide();
+              pressKeyboard();
+            }}
             onCancel={cancelInput}
             onDone={finishListening}
             onResend={resend}

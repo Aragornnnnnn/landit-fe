@@ -15,7 +15,7 @@ export const LetterBlocks = ({ blocks }: { blocks: LetterBlock[] }) => (
 const Block = ({ block }: { block: LetterBlock }) => {
   if (block.type === 'PARAGRAPH')
     return (
-      <MarkdownBody text={block.text} className="text-[15px] text-foreground" />
+      <MarkdownBody text={block.text} className="text-15 text-foreground" />
     );
 
   if (block.type === 'ORDERED_LIST') {
@@ -23,10 +23,10 @@ const Block = ({ block }: { block: LetterBlock }) => {
       <ol className="flex flex-col gap-4">
         {block.items.map((item, index) => (
           <li key={index} className="flex gap-2.5">
-            <span className="shrink-0 text-[15px] font-bold text-foreground">
+            <span className="shrink-0 text-15 font-bold text-foreground">
               {index + 1}.
             </span>
-            <span className="text-[15px] leading-relaxed text-foreground">
+            <span className="text-15 leading-relaxed text-foreground">
               {item}
             </span>
           </li>

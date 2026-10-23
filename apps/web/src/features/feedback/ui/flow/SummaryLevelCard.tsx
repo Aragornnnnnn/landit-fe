@@ -24,13 +24,13 @@ export const SummaryLevelCard = ({
 }) => (
   <section className="rounded-2xl bg-card px-5 py-4 shadow-sm">
     <div className="flex items-center justify-between">
-      <h2 className="text-[14px] font-extrabold text-primary">이번 대화에서</h2>
+      <h2 className="text-14 font-extrabold text-primary">이번 대화에서</h2>
       <ScoreInfo />
     </div>
     <dl className="mt-3 flex flex-col gap-3">
       {rows.map((row, index) => (
         <div key={row.key} className="flex flex-col gap-1.5">
-          <dt className="text-[14px] text-muted-foreground">{row.label}</dt>
+          <dt className="text-14 text-muted-foreground">{row.label}</dt>
           <dd className="flex items-center gap-2.5">
             <span
               className="animate-bar-fill h-3 shrink-0 rounded-full bg-primary"
@@ -41,7 +41,7 @@ export const SummaryLevelCard = ({
                 } as CSSProperties
               }
             />
-            <span className="text-[16px] font-extrabold text-primary tabular-nums">
+            <span className="text-16 font-extrabold text-primary tabular-nums">
               {row.score}점
             </span>
           </dd>
@@ -49,7 +49,7 @@ export const SummaryLevelCard = ({
       ))}
     </dl>
     {improvement && (
-      <p className="mt-4 text-[14px] leading-[1.6] text-muted-foreground">
+      <p className="mt-4 text-14 leading-[1.6] text-muted-foreground">
         {improvement}
       </p>
     )}
@@ -124,7 +124,7 @@ const ScoreInfo = () => {
         <div
           id={tooltipId}
           role="tooltip"
-          className="animate-fade-up absolute top-full right-0 z-10 mt-1 w-72 rounded-xl bg-foreground px-3.5 py-3 text-[13px] leading-5 text-background shadow-lg"
+          className="animate-fade-up absolute top-full right-0 z-10 mt-1 w-72 rounded-xl bg-foreground px-3.5 py-3 text-13 leading-5 text-background shadow-lg"
         >
           <ScoreGuide />
         </div>

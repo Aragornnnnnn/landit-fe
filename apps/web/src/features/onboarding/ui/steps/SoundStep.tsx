@@ -97,7 +97,7 @@ const QuestionBubble = ({
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="w-full rounded-[28px] rounded-tl-md bg-secondary px-6 py-7"
           >
-            <p className="text-[22px] leading-snug font-bold">
+            <p className="text-22 leading-snug font-bold">
               {question.split('').map((char, i) => (
                 <motion.span
                   key={i}

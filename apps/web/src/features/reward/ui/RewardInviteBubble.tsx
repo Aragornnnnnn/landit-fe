@@ -36,7 +36,7 @@ export const RewardInviteBubble = ({
     <motion.div
       role="status"
       // 동전 연출의 어둠(z-70)보다 위에 둔다 — 어둠이 걷히기 전에 뜨고, 걷힌 뒤에도 그대로 남는다
-      className="pointer-events-none fixed z-[71] rounded-2xl bg-card px-4 py-3 text-[14px] leading-[1.45] font-bold text-foreground shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+      className="pointer-events-none fixed z-[71] rounded-2xl bg-card px-4 py-3 text-14 leading-[1.45] font-bold text-foreground shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
       style={{ left: pill.left, top: pill.top + pill.height + GAP }}
       initial={{ opacity: 0, y: -6, scale: 0.92 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}

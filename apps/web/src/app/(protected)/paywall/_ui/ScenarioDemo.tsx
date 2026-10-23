@@ -42,7 +42,7 @@ export const ScenarioDemo = ({ step, width }: DemoProps) => {
   return (
     <DemoScreen width={width}>
       <DemoSlide shown={step !== SCENARIO_SCENE.talk}>
-        <p className="px-6 pt-6 text-[22px] font-bold text-foreground">
+        <p className="px-6 pt-6 text-22 font-bold text-foreground">
           오늘의 시나리오
         </p>
         <div className="relative mt-5 h-[490px] overflow-hidden">
@@ -127,7 +127,7 @@ export const ScenarioDemo = ({ step, width }: DemoProps) => {
           {CHAT.map((line, index) => (
             <p
               key={line.text}
-              className={`max-w-[300px] rounded-3xl px-5 py-3 text-[17px] font-bold ${
+              className={`max-w-[300px] rounded-3xl px-5 py-3 text-17 font-bold ${
                 line.mine
                   ? 'self-end rounded-tr-md bg-primary text-primary-foreground'
                   : 'self-start rounded-tl-md bg-[#f0f0ee] text-foreground'

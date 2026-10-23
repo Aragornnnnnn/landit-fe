@@ -63,7 +63,7 @@ export const LevelResultScreen = ({
           className="size-[200px] short:size-[132px]"
           priority
         />
-        <p className="mt-1 text-[15px] font-medium text-muted-foreground">
+        <p className="mt-1 text-15 font-medium text-muted-foreground">
           {nickname ? `${nickname}님의 레벨은` : '지금 레벨은'}
         </p>
         {/* 레벨은 이름 뒤에 작게 — 주황은 강점 태그와 CTA에만 남겨 시선을 나누지 않는다 */}
@@ -71,7 +71,7 @@ export const LevelResultScreen = ({
           <span className="text-[34px] leading-[1.15] font-black text-foreground">
             {result.name}
           </span>
-          <span className="text-[16px] font-bold text-muted-foreground">
+          <span className="text-16 font-bold text-muted-foreground">
             Lv.{result.level}
           </span>
         </p>
@@ -79,7 +79,7 @@ export const LevelResultScreen = ({
 
       {/* 표는 캐릭터와 CTA 사이 남은 높이에 맞춰 줄어든다 — 어느 폰에서도 스크롤 없이 한 화면 */}
       <section className="mt-6 flex min-h-0 flex-1 flex-col overflow-y-auto short:mt-4">
-        <h2 className="px-1 text-[15px] font-bold">영역별 점수</h2>
+        <h2 className="px-1 text-15 font-bold">영역별 점수</h2>
         {/* 표 바닥 높이 180 — 그 아래로는 줄이지 않고 절이 스크롤한다 */}
         <div className="mt-3 min-h-[180px] flex-1">
           <ScoreChart rows={result.rows} />

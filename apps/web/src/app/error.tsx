@@ -30,7 +30,7 @@ export default function Error({
           <h1 className="text-xl font-extrabold text-foreground">
             문제가 생겼어요
           </h1>
-          <p className="mt-2 text-[15px] leading-[22px] text-muted-foreground">
+          <p className="mt-2 text-15 leading-[calc(22/15)] text-muted-foreground">
             잠시 후 다시 시도해 주세요
           </p>
         </div>

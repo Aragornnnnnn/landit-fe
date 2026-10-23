@@ -20,6 +20,8 @@ interface UserTranscriptProps {
   onChange?: (value: string) => void;
   onSubmit?: () => void;
   onCancel?: () => void;
+  // 라벨 오른쪽에 붙는 보조 버튼 — 끼울지와 무엇을 끼울지는 대화 쪽이 정한다
+  headerAction?: React.ReactNode;
   // 끝내 전달되지 못한 답변 — 연한 빨강으로 묶어 무엇이 다시 보내지는지 보여 준다
   unsent?: boolean;
 }
@@ -32,6 +34,7 @@ export const UserTranscript = ({
   onChange,
   onSubmit,
   onCancel,
+  headerAction,
   unsent = false,
 }: UserTranscriptProps) => {
   const listening = phase === 'USER_SPEAKING';
@@ -110,6 +113,7 @@ export const UserTranscript = ({
             연결이 불안정해요
           </p>
         )}
+        {headerAction}
       </div>
       {/* 넘치면 끝으로 붙이고 윗변을 흐린다 — 방금 한 말이 항상 보이고 앞은 …처럼 사라진다 */}
       <div

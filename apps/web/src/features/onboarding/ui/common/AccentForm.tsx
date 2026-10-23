@@ -28,7 +28,7 @@ export const AccentForm = ({
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-1">
         <AccentOptions selected={selected} onSelect={setSelected} />
         {footnote && (
-          <p className="mt-3.5 text-[13px] text-muted-foreground">{footnote}</p>
+          <p className="mt-3.5 text-13 text-muted-foreground">{footnote}</p>
         )}
       </div>
 

@@ -33,7 +33,7 @@ const Card = ({
   <div
     className={`mx-5 rounded-2xl bg-card px-5 py-4 shadow-[0_2px_10px_rgba(51,38,26,0.08)] ${className}`}
   >
-    <p className="text-[15px] font-extrabold text-primary">{title}</p>
+    <p className="text-15 font-extrabold text-primary">{title}</p>
     {children}
   </div>
 );
@@ -58,9 +58,9 @@ const GrowthCard = ({
     }
     className={className}
   >
-    <div className="mt-3 flex flex-col gap-2 rounded-xl bg-secondary px-4 py-3 text-[15px]">
+    <div className="mt-3 flex flex-col gap-2 rounded-xl bg-secondary px-4 py-3 text-15">
       <p className="flex gap-3 text-muted-foreground">
-        <span className="w-10 shrink-0 text-[13px]">9/28</span>
+        <span className="w-10 shrink-0 text-13">9/28</span>
         <span>
           {before[0]}
           <span className="font-bold text-destructive line-through">
@@ -70,7 +70,7 @@ const GrowthCard = ({
         </span>
       </p>
       <p className="flex gap-3 font-bold text-foreground">
-        <span className="w-10 shrink-0 text-[13px] font-normal text-muted-foreground">
+        <span className="w-10 shrink-0 text-13 font-normal text-muted-foreground">
           오늘
         </span>
         <span>
@@ -82,7 +82,7 @@ const GrowthCard = ({
         </span>
       </p>
     </div>
-    <p className="mt-3 text-[13px] leading-5 text-muted-foreground">
+    <p className="mt-3 text-13 leading-5 text-muted-foreground">
       {succeeded
         ? '지난번엔 헷갈렸는데, 오늘은 맞았어요.'
         : '지난번에 이어 오늘도 헷갈렸어요. 상세 피드백에서 다시 볼 수 있어요.'}
@@ -91,7 +91,7 @@ const GrowthCard = ({
 );
 
 const Heading = ({ children }: { children: React.ReactNode }) => (
-  <p className="px-6 pt-6 text-[22px] font-bold text-foreground">{children}</p>
+  <p className="px-6 pt-6 text-22 font-bold text-foreground">{children}</p>
 );
 
 /** ① 대화마다 다섯 가지로 분석 — 점수가 차오르고, 다음에 나아질 점이 한 줄 붙는다 */
@@ -102,7 +102,7 @@ export const AnalysisDemo = ({ step, width }: DemoProps) => (
       <div className="mt-3 flex flex-col gap-2.5">
         {AREAS.map((area, index) => (
           <div key={area.label}>
-            <div className="flex justify-between text-[15px]">
+            <div className="flex justify-between text-15">
               <span className="text-muted-foreground">{area.label}</span>
               <span className="font-extrabold text-primary">
                 {area.score}점
@@ -128,7 +128,7 @@ export const AnalysisDemo = ({ step, width }: DemoProps) => (
     <div
       className={`mx-5 mt-3 rounded-2xl bg-[#faf2e9] px-5 py-4 ${appear(step >= NEXT)}`}
     >
-      <p className="text-[15px] font-extrabold text-[#c8641f]">
+      <p className="text-15 font-extrabold text-[#c8641f]">
         이것만 고치면 돼요
       </p>
       <p className="mt-1 text-base leading-[1.6] text-foreground">
@@ -152,14 +152,14 @@ export const MistakeDemo = ({ step, width }: DemoProps) => (
         className={`max-w-[92%] self-end rounded-2xl bg-success/10 px-4 py-3 ${step === FIRST ? 'animate-reveal-up' : ''}`}
         style={{ '--i': 4 } as CSSProperties}
       >
-        <p className="flex items-center gap-1 text-[13px] font-semibold text-success">
+        <p className="flex items-center gap-1 text-13 font-semibold text-success">
           <SparklesIcon size={14} />
           이렇게 말하면 더 자연스러워요
         </p>
         <p className="mt-1 text-base font-bold text-success">
           Yes, she goes to the gym every day.
         </p>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        <p className="mt-1 text-13 text-muted-foreground">
           주어가 she면 동사에 -s를 붙여요.
         </p>
       </div>

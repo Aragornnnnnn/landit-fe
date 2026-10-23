@@ -28,7 +28,7 @@ export const MethodStep = ({
     <div className="flex-1 overflow-y-auto px-5 pt-3 pb-4">
       <h1
         id={TITLE_ID}
-        className="text-[22px] leading-[1.35] font-bold text-foreground"
+        className="text-22 leading-[1.35] font-bold text-foreground"
       >
         어떤 방법으로
         <br />

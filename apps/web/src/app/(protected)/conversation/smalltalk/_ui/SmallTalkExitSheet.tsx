@@ -36,7 +36,7 @@ export const SmallTalkExitSheet = ({
         height={96}
         className="size-24"
       />
-      <BottomSheet.Title className="mt-1 text-[17px] font-bold break-keep text-foreground">
+      <BottomSheet.Title className="mt-1 text-17 font-bold break-keep text-foreground">
         이대로 끝내려고요?
       </BottomSheet.Title>
       <p className="mt-2 text-sm leading-6 break-keep text-muted-foreground">
@@ -44,7 +44,7 @@ export const SmallTalkExitSheet = ({
       </p>
     </div>
     <div className="mt-4 rounded-2xl bg-selected px-4 py-3 text-left">
-      <p className="text-[13px] font-semibold text-accent">직접 끝내볼래요</p>
+      <p className="text-13 font-semibold text-accent">직접 끝내볼래요</p>
       <p className="mt-1 text-sm font-medium text-foreground">
         “{goodbyePhrase}”
       </p>
