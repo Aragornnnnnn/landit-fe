@@ -26,8 +26,8 @@ export const rewardGuideCopyOf = (
   // 결제는 끝났는데 환급 쪽 반영이 늦다 — 얼마짜리를 샀는지 모르니 금액을 단정하지 않는다
   if (reward?.state === 'PENDING')
     return {
-      eyebrow: '오늘부터 챌린지 시작!',
-      amount: '환급 챌린지',
+      eyebrow: '오늘부터 환급 혜택 시작!',
+      amount: '환급 혜택',
       caption: '오늘의 시나리오를 한 날마다 쌓이고, 모은 만큼 돌려받아요',
       startNote: null,
       dailyWon: null,
@@ -36,7 +36,7 @@ export const rewardGuideCopyOf = (
   if (reward?.state !== 'ACTIVE' || reward.current === null) return null;
 
   return {
-    eyebrow: '오늘부터 챌린지 시작!',
+    eyebrow: '오늘부터 환급 혜택 시작!',
     amount: `최대 ${formatWon(reward.current.maximumWon)}`,
     // 남은 날이 아니라 상품의 전체 기간이다 — 며칠 뒤에 봐도 같은 말을 한다
     caption: `${reward.current.eligibleDays}일 동안 모은 만큼 돌려받아요`,

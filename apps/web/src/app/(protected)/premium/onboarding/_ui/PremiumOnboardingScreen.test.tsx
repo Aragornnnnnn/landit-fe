@@ -320,7 +320,7 @@ describe('PremiumOnboardingScreen', () => {
       render(<PremiumOnboardingScreen returnTo="/me" />);
 
       tapNext();
-      await screen.findByText('환급 챌린지');
+      await screen.findByText('환급 혜택');
 
       // 계측은 안내가 그려진 뒤 effect에서 찍힌다 — 글자가 보인 순간엔 아직 안 찍혔을 수 있어 기다린다(CI에서 간헐 실패)
       await waitFor(() =>

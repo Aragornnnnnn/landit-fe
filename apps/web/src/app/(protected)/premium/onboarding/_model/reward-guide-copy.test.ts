@@ -23,7 +23,7 @@ describe('rewardGuideCopyOf', () => {
     });
 
     expect(rewardGuideCopyOf(view)).toEqual({
-      eyebrow: '오늘부터 챌린지 시작!',
+      eyebrow: '오늘부터 환급 혜택 시작!',
       amount: '최대 30,000원',
       caption: '100일 동안 모은 만큼 돌려받아요',
       startNote: null,
@@ -66,8 +66,8 @@ describe('rewardGuideCopyOf', () => {
     const view = rewardView({ state: 'PENDING', ...offCycle });
 
     expect(rewardGuideCopyOf(view)).toEqual({
-      eyebrow: '오늘부터 챌린지 시작!',
-      amount: '환급 챌린지',
+      eyebrow: '오늘부터 환급 혜택 시작!',
+      amount: '환급 혜택',
       caption: '오늘의 시나리오를 한 날마다 쌓이고, 모은 만큼 돌려받아요',
       startNote: null,
       dailyWon: null,
