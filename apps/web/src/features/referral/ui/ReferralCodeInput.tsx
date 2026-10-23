@@ -21,9 +21,12 @@ export const ReferralCodeInput = ({
   tone,
   onType,
   onPaste,
+  entryKey = 0,
 }: {
   value: string;
   tone: CodeInputTone;
+  // 넣을 때마다 바뀌는 값 — 같은 코드가 또 거절돼 상태가 그대로여도 칸 묶음을 새로 그려 다시 흔든다
+  entryKey?: number;
   onType: (code: string) => void;
   // 붙여넣은 글에서 찾은 코드. 못 찾으면 null
   onPaste: (code: string | null) => void;
@@ -47,21 +50,24 @@ export const ReferralCodeInput = ({
 
   return (
     // gap-1 — 칸 8개(36px)와 줄표가 좁은 폰의 본문 폭(342px) 안에 들어가게
-    // 거절되면 칸 묶음이 한 번 흔들린다 — 다시 거절되면 확인 중을 거쳐 클래스가 새로 붙어 다시 흔들린다
-    <div
-      className={`relative mx-auto flex items-center justify-center gap-1 ${tone === 'error' ? 'animate-shake' : ''}`}
-    >
-      {Array.from({ length: REFERRAL_CODE_LENGTH }, (_, index) => (
-        <CodeCell
-          key={index}
-          index={index}
-          char={value[index] ?? ''}
-          divider={index === GROUP_SIZE}
-          tone={tone}
-          // 칸에 포커스가 있을 때 다음에 채울 칸만 주황 테두리 — 어디에 들어갈지와 키보드가 이 칸에 있다는 걸 같이 보인다
-          current={focused && tone === 'idle' && index === value.length}
-        />
-      ))}
+    <div className="relative mx-auto flex justify-center">
+      {/* 거절되면 칸 묶음이 한 번 흔들린다 — 입력칸은 묶음 밖에 두어 다시 그려도 포커스를 잃지 않는다 */}
+      <div
+        key={entryKey}
+        className={`flex items-center gap-1 ${tone === 'error' ? 'animate-shake' : ''}`}
+      >
+        {Array.from({ length: REFERRAL_CODE_LENGTH }, (_, index) => (
+          <CodeCell
+            key={index}
+            index={index}
+            char={value[index] ?? ''}
+            divider={index === GROUP_SIZE}
+            tone={tone}
+            // 칸에 포커스가 있을 때 다음에 채울 칸만 주황 테두리 — 어디에 들어갈지와 키보드가 이 칸에 있다는 걸 같이 보인다
+            current={focused && tone === 'idle' && index === value.length}
+          />
+        ))}
+      </div>
       <input
         ref={inputRef}
         aria-label="초대 코드"

@@ -70,4 +70,26 @@ describe('ReferralCodeInput', () => {
 
     expect(onPaste).toHaveBeenCalledWith(null);
   });
+
+  it('거절된 채로 다시 넣으면 칸 묶음을 새로 그려 다시 흔든다', () => {
+    // given — 같은 코드가 거절돼 빨간 상태다
+    const props = {
+      value: 'K7QM3XPA',
+      tone: 'error' as const,
+      onType: vi.fn(),
+      onPaste: vi.fn(),
+    };
+    const { container, rerender } = render(
+      <ReferralCodeInput {...props} entryKey={1} />,
+    );
+    const before = container.querySelector('.animate-shake');
+
+    // when — 같은 코드를 다시 붙여넣어 상태는 그대로 거절이다
+    rerender(<ReferralCodeInput {...props} entryKey={2} />);
+
+    // then — 흔들리는 묶음이 새 노드라 애니메이션이 처음부터 돈다
+    const after = container.querySelector('.animate-shake');
+    expect(before).not.toBeNull();
+    expect(after).not.toBe(before);
+  });
 });

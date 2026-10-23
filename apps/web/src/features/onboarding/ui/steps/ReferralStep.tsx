@@ -89,15 +89,19 @@ const CodeEntry = ({
   const preview = useReferralPreviewQuery(code);
   const register = useRegisterReferralCodeMutation();
 
+  // 넣을 때마다 센다 — 같은 코드가 또 거절돼 상태가 그대로여도 칸이 다시 흔들리게
+  const [entries, setEntries] = useState(0);
   const enterCode = (next: string, via: InputMethod) => {
     setCode(next);
     setMethod(via);
     setNotice(null);
+    setEntries((count) => count + 1);
   };
 
   const pasteCode = (found: string | null) => {
     if (found) return enterCode(found, 'paste');
     setNotice({ message: NOT_FOUND_MESSAGE, blocking: true });
+    setEntries((count) => count + 1);
   };
 
   // 칸을 길게 누르지 않아도 되게 버튼으로도 읽는다 — 화면에 들어오자마자 몰래 읽지는 않는다(iOS는 읽을 때마다 허용을 묻는다)
@@ -215,6 +219,7 @@ const CodeEntry = ({
         <ReferralCodeInput
           value={code}
           tone={status.tone}
+          entryKey={entries}
           onType={(typed) => enterCode(typed, 'typed')}
           onPaste={pasteCode}
         />
@@ -232,7 +237,7 @@ const CodeEntry = ({
             붙여넣기
           </button>
         )}
-        {/* 코드 칸 바로 아래 둔다 — 빈 화면 맨 아래 혼자 있으면 찾기 어렵고 어색하다. 확인되면 바로 등록돼 건너뛸 일이 없어 감춘다 */}
+        {/* 코드 칸 바로 아래 둔다 — 빈 화면 맨 아래 혼자 있으면 찾기 어렵고 어색하다 */}
         {status.tone !== 'ok' && (
           <button
             type="button"
