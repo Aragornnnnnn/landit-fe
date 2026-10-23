@@ -43,7 +43,10 @@ const IntroVisual = ({
   scenario,
   loading,
 }: Pick<ScenarioIntroStepProps, 'scenario' | 'loading'>) => {
-  if (scenario) return <ScenarioCard scenario={scenario} />;
+  // 썸네일 주소가 바뀌면(자정이 지나 다음 날 시나리오가 오면) 카드를 새로 그려 이전 로드 실패를 넘기지 않는다
+  if (scenario) {
+    return <ScenarioCard key={scenario.thumbnailUrl} scenario={scenario} />;
+  }
 
   if (loading) {
     return (

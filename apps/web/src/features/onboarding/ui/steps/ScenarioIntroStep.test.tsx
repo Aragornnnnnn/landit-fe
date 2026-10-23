@@ -54,6 +54,33 @@ describe('ScenarioIntroStep', () => {
     expect(screen.getByText(scenario.scenarioTitle)).toBeInTheDocument();
   });
 
+  it('썸네일이 실패한 뒤 다른 시나리오로 바뀌면 새 썸네일은 다시 보여준다', () => {
+    const { rerender } = render(
+      <ScenarioIntroStep
+        scenario={scenario}
+        loading={false}
+        onStart={vi.fn()}
+      />,
+    );
+    fireEvent.error(screen.getByRole('presentation'));
+
+    rerender(
+      <ScenarioIntroStep
+        scenario={{
+          ...scenario,
+          thumbnailUrl: 'https://cdn.example/next.webp',
+        }}
+        loading={false}
+        onStart={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('presentation')).toHaveAttribute(
+      'src',
+      'https://cdn.example/next.webp',
+    );
+  });
+
   it('시나리오를 못 받았어도 카드 없이 첫 대화를 시작할 수 있다', () => {
     const onStart = vi.fn();
 
