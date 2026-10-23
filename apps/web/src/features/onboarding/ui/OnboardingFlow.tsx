@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
+import { preload } from 'react-dom';
 
 import { requestNotificationPermission } from '@/features/notification/model/request-permission';
 import { useNotificationPermission } from '@/features/notification/model/useNotificationPermission';
@@ -11,6 +12,7 @@ import { useNotificationPermission } from '@/features/notification/model/useNoti
 import { inviteeWonOf } from '@/features/referral/model/invitee-reward';
 import { canEnterReferralStep } from '@/features/referral/model/referral-entry';
 import { useReferralSummaryQuery } from '@/features/referral/model/useReferralSummaryQuery';
+import { useDailyScenarioQuery } from '@/features/scenario/model/useDailyScenarioQuery';
 // 위젯 설치 유도의 노출 조건·기록은 widget feature가 정본이라 온보딩 위젯 스텝이 가로 import한다
 import {
   recordInstallInvited,
@@ -32,10 +34,10 @@ import { STEP_ORDER, type OnboardingStep } from '../model/steps';
 import { useSaveAccentMutation } from '../model/useSaveAccentMutation';
 import { AccentStep } from './steps/AccentStep';
 import { IntroStep } from './steps/IntroStep';
-import { LampStep } from './steps/LampStep';
 import { MicStep } from './steps/MicStep';
 import { NotificationStep } from './steps/NotificationStep';
 import { ReferralStep, type ReferralPhase } from './steps/ReferralStep';
+import { ScenarioIntroStep } from './steps/ScenarioIntroStep';
 import { SoundStep } from './steps/SoundStep';
 import { ThoughtStep } from './steps/ThoughtStep';
 
@@ -50,6 +52,12 @@ export const OnboardingFlow = () => {
   // 서버가 코드를 받을 수 있다고 한 신규 가입자이고 보상이 켜져 있을 때만 초대 코드 단계를 본다 — 조회가 실패하거나 늦으면 단계 없이 지나간다
   const referral = useReferralSummaryQuery().data;
   const canEnterReferral = canEnterReferralStep(referral);
+  // 마지막 스텝에 보여줄 첫 시나리오 — 온보딩을 시작할 때 받아 두면 도착할 땐 이미 떠 있다.
+  // 홈과 같은 오늘 조회라 홈에 도착하면 이 캐시로 카드가 바로 뜬다
+  const { daily, isLoading: scenarioLoading } = useDailyScenarioQuery();
+  const firstScenario = daily?.scenario ?? null;
+  if (firstScenario?.thumbnailUrl)
+    preload(firstScenario.thumbnailUrl, { as: 'image' });
 
   // 위젯 스텝을 넣을지 마운트 때 한 번 고정한다 — 진입 시 recordInstallInvited로 조건이 바뀌어도 목록이 흔들리지 않게
   const [showWidgetStep] = useState(
@@ -234,7 +242,11 @@ export const OnboardingFlow = () => {
               />
             )}
             {step === 'scenario' && (
-              <LampStep onStart={startFirstConversation} />
+              <ScenarioIntroStep
+                scenario={firstScenario}
+                loading={scenarioLoading}
+                onStart={startFirstConversation}
+              />
             )}
           </Transition>
         </>
