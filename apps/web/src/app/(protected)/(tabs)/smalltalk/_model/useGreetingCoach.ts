@@ -11,12 +11,22 @@ import { track } from '@/shared/analytics';
 import { tapGreetingSeen } from '../../_model/tap-greeting-seen';
 import { clearOldIntroGuideSeen, introGuideSeen } from './intro-guide-seen';
 
-/** onTap — 캐릭터를 눌렀을 때 할 일(인사 시작). 코치마크 여부와 상관없이 늘 부른다 */
-export const useGreetingCoach = ({ onTap }: { onTap: () => void }) => {
+/**
+ * onTap — 캐릭터를 눌렀을 때 할 일(인사 시작). 코치마크 여부와 상관없이 늘 부른다.
+ * held — 화면 위에 더 급한 것(강제 업데이트)이 있다. 풀릴 때까지 안내도 코치마크도 띄우지 않는다
+ */
+export const useGreetingCoach = ({
+  onTap,
+  held = false,
+}: {
+  onTap: () => void;
+  held?: boolean;
+}) => {
   // 서버 렌더엔 localStorage가 없어 안 본 것으로 두고, 하이드레이션 뒤 첫 상태 계산에서 본 기록이 반영된다
-  const [guideOpen, setGuideOpen] = useState(() => !introGuideSeen.has());
+  const [guideUnseen, setGuideUnseen] = useState(() => !introGuideSeen.has());
   const [coachOpen, setCoachOpen] = useState(() => !tapGreetingSeen.has());
-  const coaching = !guideOpen && coachOpen;
+  const guideOpen = !held && guideUnseen;
+  const coaching = !held && !guideUnseen && coachOpen;
 
   // 코치마크가 켜지면 캐릭터로 포커스를 옮긴다 — 키보드 사용자도 어디를 눌러야 하는지 바로 안다
   const partnerRef = useRef<HTMLButtonElement>(null);
@@ -28,7 +38,7 @@ export const useGreetingCoach = ({ onTap }: { onTap: () => void }) => {
     track(EVENTS.SMALL_TALK_INTRO_GUIDE_CLOSED);
     introGuideSeen.mark();
     clearOldIntroGuideSeen();
-    setGuideOpen(false);
+    setGuideUnseen(false);
   };
 
   // 코치마크가 실제로 보이는 중일 때만 배운 것으로 친다 — 안내 뒤에 가려진 채 눌린 건 셈하지 않는다

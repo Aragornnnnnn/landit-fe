@@ -8,7 +8,7 @@ export const appUpdateKey = (request: AppUpdateRequest | null) =>
   ['app-update', request?.platform, request?.versionName] as const;
 
 export const useAppUpdateQuery = (request: AppUpdateRequest | null) => {
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: appUpdateKey(request),
     queryFn: () =>
       checkAppUpdate(
@@ -20,5 +20,6 @@ export const useAppUpdateQuery = (request: AppUpdateRequest | null) => {
     retry: false,
   });
 
-  return { data: data ?? null };
+  // 묻는 중인가 — 비활성(브라우저)이면 묻지 않으므로 false다
+  return { data: data ?? null, checking: isLoading };
 };

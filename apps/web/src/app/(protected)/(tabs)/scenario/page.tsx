@@ -4,6 +4,8 @@
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { useForceUpdateFirst } from '@/features/app-update/model/useForceUpdateFirst';
+import { EventPopupGate } from '@/features/event-popup/ui/EventPopupGate';
 import { NotificationConsentGate } from '@/features/notification/ui/NotificationConsentGate';
 import { SatisfactionGate } from '@/features/satisfaction/ui/SatisfactionGate';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
@@ -22,6 +24,8 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
+import { eventPopupOrder } from './_model/event-popup-order';
+import { useActiveEventPopup } from './_model/useActiveEventPopup';
 import { useHomePreview } from './_model/useHomePreview';
 import { PreviewIntro } from './_ui/PreviewIntro';
 
@@ -55,6 +59,20 @@ function ScenarioContent() {
   const promoOpen = usePromoSheetOpen();
   // 돌아온 순간의 환급 동전 연출이 끝날 때까지도 미룬다 — 어둠 아래에서 시트가 같이 올라오면 둘이 겹친다
   const showerHold = useEarnShowerHold();
+  const { popup: eventPopup, loading: eventPopupLoading } =
+    useActiveEventPopup();
+  const [eventPopupClosed, setEventPopupClosed] = useState(false);
+  // 강제 업데이트가 1순위다 — 그거거나 그럴지 모르는 동안엔 공지·램프·시트 모두 나서지 않는다
+  const updateFirst = useForceUpdateFirst();
+  const { pending: eventPopupPending, ready: eventPopupReady } =
+    eventPopupOrder({
+      loading: eventPopupLoading,
+      hasPopup: eventPopup !== null,
+      closed: eventPopupClosed,
+      updateFirst,
+      promoOpen,
+      showerHold,
+    });
   // 대화 시작을 눌렀다 — 바로 이동하지 않고 브리핑 카드를 잠깐 보여준 뒤 대화로 들어간다
   const [briefingScenario, setBriefingScenario] = useState<Scenario | null>(
     null,
@@ -62,12 +80,15 @@ function ScenarioContent() {
 
   // 완료한 날은 카드 앞면(같은 썸네일·제목·설명)이 이미 떠 있다 — 램프로 시작하는 날만 브리핑이 필요하다
   const cleared = daily?.scenario?.dailyScenarioType === 'CLEARED';
+  // 램프·프리뷰보다 먼저 나서는 것 — 강제 업데이트와 이벤트 공지
+  const lampHeld = updateFirst || eventPopupPending;
   // 프리미엄 프리뷰 — 오늘 카드를 끝낸 무료 사용자에게 챌린지를 소개하고 표현 하나를 무료로 열어 준다
   const premiumPreview = useHomePreview({
     cleared: cleared && date === undefined,
-    showerHold,
+    held: lampHeld || showerHold,
   });
-  const sheetsHeld = promoOpen || showerHold || premiumPreview.active;
+  const sheetsHeld =
+    lampHeld || promoOpen || showerHold || premiumPreview.active;
   // 소감·리뷰는 프리뷰를 끝낼 때까지 더 미룬다 — 그사이 이 방문엔 알림 동의도 안 뜬다(소감 차례가 남아 있어서)
   const satisfactionHeld = sheetsHeld || premiumPreview.holdsSatisfaction;
   // 대화는 페이월 문이 아니다 — 오늘 카드든 지난 카드든, 재대화든 구독과 관계없이 시작한다.
@@ -82,8 +103,10 @@ function ScenarioContent() {
     router.prefetch(scenarioTalkPath(scenario.scenarioId, date));
   };
   const settled = date === undefined && (cleared || summonClosed);
-  // 시트류(소감 다음 순번)가 나설 차례 — 카드 판단이 끝났고 소감 시트가 안 뜰 때
-  const promptTurn = settled && satisfactionSheet === null;
+  // 시트류(소감 다음 순번)가 나설 차례 — 카드 판단이 끝났고 소감 시트가 안 뜰 때.
+  // 이번 방문에 공지를 띄웠으면 알림 동의는 다음 방문으로 넘긴다 — 들어오자마자 시트가 연달아 뜨지 않게
+  const promptTurn =
+    settled && satisfactionSheet === null && eventPopup === null;
 
   // 날짜 이동은 replace다 — push면 히스토리가 쌓여 뒤로가기가 날짜 되감기가 된다.
   // 오늘은 날짜 없는 주소가 정본이다 — 붙여 두면 자정을 넘겨도 어제에 머문다
@@ -124,6 +147,7 @@ function ScenarioContent() {
           premiumPreview={premiumPreview.cardPreview}
           onStart={start}
           onSummonClose={() => setSummonClosed(true)}
+          summonHeld={lampHeld}
         />
       )}
 
@@ -135,6 +159,13 @@ function ScenarioContent() {
       )}
       {settled && !satisfactionHeld && satisfactionSheet === 'review' && (
         <SatisfactionGate moment="review" />
+      )}
+      {eventPopup && eventPopupReady && (
+        <EventPopupGate
+          popup={eventPopup}
+          open={!eventPopupClosed}
+          onClose={() => setEventPopupClosed(true)}
+        />
       )}
       {promptTurn && !sheetsHeld && <NotificationConsentGate />}
 

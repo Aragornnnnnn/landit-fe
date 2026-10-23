@@ -20,20 +20,20 @@ import {
 
 /**
  * @param cleared 오늘 카드를 끝냈는가
- * @param showerHold 돌아온 순간의 동전 연출이 아직 도는가
+ * @param held 앞선 연출(돌아온 순간의 동전·이벤트 공지)이 아직 화면에 있는가
  */
 export const useHomePreview = ({
   cleared,
-  showerHold,
+  held,
 }: {
   cleared: boolean;
-  showerHold: boolean;
+  held: boolean;
 }) => {
   const premiumPreview = usePremiumPreview();
   const view = homePreviewViewOf({
     screen: premiumPreview.screen,
     cleared,
-    showerHold,
+    held,
   });
   // 이번 방문에 프리뷰를 진행했는가 — 이 화면이 떠 있는 동안만 기억한다. 다시 홈에 오면 새로 센다
   const [actedThisVisit, setActedThisVisit] = useState(false);
