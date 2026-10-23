@@ -33,13 +33,13 @@ export const InviteEventBanner = () => {
         </span>
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-black text-foreground">
+        <span className="block text-15 font-black text-foreground">
           친구 초대 이벤트
         </span>
         {lines.map((line) => (
           <span
             key={line}
-            className="block text-[12px] leading-snug font-bold text-muted-foreground"
+            className="block text-12 leading-snug font-bold text-muted-foreground"
           >
             {line}
           </span>

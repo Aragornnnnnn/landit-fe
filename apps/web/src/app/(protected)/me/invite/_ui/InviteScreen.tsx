@@ -112,7 +112,7 @@ export const InviteScreen = () => {
 
             {/* 초대 보상이 꺼져 있으면 코드를 받은 친구도 등록에서 거절된다 — 보내게 두지 않고 쉬는 중이라고만 알린다 */}
             {summary.data && !offer && (
-              <p className="rounded-2xl bg-secondary px-4 py-5 text-center text-[15px] font-bold break-keep text-muted-foreground">
+              <p className="rounded-2xl bg-secondary px-4 py-5 text-center text-15 font-bold break-keep text-muted-foreground">
                 지금은 친구 초대 이벤트를 하지 않아요
               </p>
             )}
@@ -120,10 +120,10 @@ export const InviteScreen = () => {
             {offer && (
               <div className="flex items-center gap-2 rounded-2xl border border-border bg-card py-3 pr-3 pl-4">
                 <div className="min-w-0 flex-1">
-                  <p className="text-[12px] font-medium text-muted-foreground">
+                  <p className="text-12 font-medium text-muted-foreground">
                     내 초대 코드
                   </p>
-                  <p className="text-[22px] font-black tracking-wide text-foreground">
+                  <p className="text-22 font-black tracking-wide text-foreground">
                     {code ? displayCode(code) : '—'}
                   </p>
                 </div>
@@ -173,7 +173,7 @@ const RewardSplit = ({ offer }: { offer: InviteOffer }) => (
         </>
       )}
     </div>
-    <p className="bg-invite-strip py-2.5 text-center text-[13px] font-bold text-invite-ink">
+    <p className="bg-invite-strip py-2.5 text-center text-13 font-bold text-invite-ink">
       친구가 가입할 때 내 코드를 넣으면 바로 적립돼요
     </p>
   </div>
@@ -190,7 +190,7 @@ const SplitSide = ({
 }) => (
   <div className="flex flex-1 flex-col items-center gap-1">
     <Emoji className="size-11">{emoji}</Emoji>
-    <p className="mt-1 text-[13px] font-bold text-muted-foreground">{who}</p>
+    <p className="mt-1 text-13 font-bold text-muted-foreground">{who}</p>
     <p className="text-xl font-black text-foreground">
       <span className="text-primary">{formatWon(won)}</span> 적립
     </p>
@@ -216,13 +216,13 @@ const Progress = ({
   if (view.full)
     return (
       <div className="rounded-[20px] bg-invite px-5 py-5 text-center">
-        <p className="text-[13px] font-bold text-primary">{view.fullLabel}</p>
+        <p className="text-13 font-bold text-primary">{view.fullLabel}</p>
         <p className="mt-1 text-xl font-black text-foreground">
           <span className="text-primary">{formatWon(earnedWon)}</span>
           {view.fullAllEarned ? '이 모두 적립됐어요' : '이 적립됐어요'}
         </p>
         {offer.inviteeWon > 0 && (
-          <p className="mt-1 text-[13px] font-medium text-muted-foreground">
+          <p className="mt-1 text-13 font-medium text-muted-foreground">
             이제 초대하면 친구만 {formatWon(offer.inviteeWon)}이 적립돼요
           </p>
         )}
@@ -231,7 +231,7 @@ const Progress = ({
 
   return (
     <div className="rounded-[20px] bg-invite p-5">
-      <p className="text-[13px] font-bold text-muted-foreground">
+      <p className="text-13 font-bold text-muted-foreground">
         친구 초대로 쌓인 적립금
       </p>
       <p className="mt-0.5 flex items-center gap-1.5 text-2xl font-black text-foreground">
@@ -239,7 +239,7 @@ const Progress = ({
         {formatWon(earnedWon)}
       </p>
 
-      <div className="mt-4 flex items-center justify-between text-[13px] font-bold">
+      <div className="mt-4 flex items-center justify-between text-13 font-bold">
         <span className="text-foreground">{view.countLabel}</span>
         {view.progressLabel && (
           <span className="text-muted-foreground tabular-nums">
@@ -285,7 +285,7 @@ const RewardRows = ({ rewards }: { rewards: ReferralReward[] | undefined }) => {
   const rows = shownInviteRewardsOf(rewards).map(inviteRewardRowOf);
   if (rows.length === 0)
     return (
-      <p className="py-4 text-center text-[13px] font-medium text-muted-foreground">
+      <p className="py-4 text-center text-13 font-medium text-muted-foreground">
         아직 가입한 친구가 없어요
       </p>
     );
@@ -296,16 +296,16 @@ const RewardRows = ({ rewards }: { rewards: ReferralReward[] | undefined }) => {
         {shown.map((row) => (
           <li key={row.id} className="flex items-center gap-3 py-3">
             <span className="min-w-0 flex-1">
-              <span className="block text-[15px] font-bold text-foreground">
+              <span className="block text-15 font-bold text-foreground">
                 {row.title}
               </span>
-              <span className="mt-0.5 block text-[12px] font-medium text-muted-foreground">
+              <span className="mt-0.5 block text-12 font-medium text-muted-foreground">
                 {row.dateLabel}
                 {!row.settled && ` · ${row.statusLabel}`}
               </span>
             </span>
             <span
-              className={`shrink-0 text-[15px] font-black tabular-nums ${row.settled ? 'text-primary' : 'text-muted-foreground/60'} ${row.canceled ? 'line-through' : ''}`}
+              className={`shrink-0 text-15 font-black tabular-nums ${row.settled ? 'text-primary' : 'text-muted-foreground/60'} ${row.canceled ? 'line-through' : ''}`}
             >
               {row.amountLabel}
             </span>
@@ -317,7 +317,7 @@ const RewardRows = ({ rewards }: { rewards: ReferralReward[] | undefined }) => {
           type="button"
           aria-expanded={expanded}
           onClick={() => setExpanded((open) => !open)}
-          className="flex w-full items-center justify-center gap-1 pt-1 pb-3 text-[13px] font-bold text-muted-foreground"
+          className="flex w-full items-center justify-center gap-1 pt-1 pb-3 text-13 font-bold text-muted-foreground"
         >
           {expanded ? '접기' : '모두 보기'}
           <ChevronDownIcon
@@ -349,16 +349,14 @@ const Steps = ({ offer }: { offer: InviteOffer }) => {
   ];
   return (
     <div className="rounded-[20px] bg-card p-5">
-      <h3 className="text-[15px] font-black text-foreground">이렇게 쌓여요</h3>
+      <h3 className="text-15 font-black text-foreground">이렇게 쌓여요</h3>
       <ol className="mt-1">
         {steps.map((step, index) => (
           <li key={index} className="flex items-center gap-3.5 pt-3.5">
             <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-black text-foreground">
               {index + 1}
             </span>
-            <span className="text-[15px] font-bold text-foreground">
-              {step}
-            </span>
+            <span className="text-15 font-bold text-foreground">{step}</span>
           </li>
         ))}
       </ol>
@@ -384,7 +382,7 @@ const InfoSheet = ({
     <BottomSheet.Title className="text-lg font-black text-foreground">
       친구 초대 안내
     </BottomSheet.Title>
-    <ul className="mt-3 flex flex-col gap-2 text-[14px] leading-[1.55] font-medium break-keep text-foreground/80">
+    <ul className="mt-3 flex flex-col gap-2 text-14 leading-[1.55] font-medium break-keep text-foreground/80">
       <li>
         · 현금이 아니라 환급 적립금이에요. 100일 챌린지를 결제하면 환급에 바로
         더해져요

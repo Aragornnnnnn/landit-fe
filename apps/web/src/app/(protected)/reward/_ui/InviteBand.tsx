@@ -24,7 +24,7 @@ export const InviteBand = ({ className = '' }: { className?: string }) => {
     >
       <span className="flex items-center gap-2">
         <Coin size={22} className="shrink-0" />
-        <span className="min-w-0 flex-1 text-[15px] font-black text-foreground">
+        <span className="min-w-0 flex-1 text-15 font-black text-foreground">
           {band.lead}
           <span className="text-primary">{band.amount}</span>
           {band.tail}
