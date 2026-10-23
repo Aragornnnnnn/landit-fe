@@ -14,13 +14,8 @@ describe('referralFailureOf', () => {
     ['REFERRAL_SELF_INVITE', '내 초대 코드는 넣을 수 없어요', false],
     ['REFERRAL_RATE_LIMITED', '잠시 뒤 다시 해 주세요', true],
     ['REFERRAL_DISABLED', '지금은 초대 보상을 받을 수 없어요', false],
-    [
-      'REFERRAL_DEVICE_ALREADY_USED',
-      '이 기기에서는 이미 초대 코드를 등록했어요',
-      false,
-    ],
   ])(
-    '%s면 「%s」를 칸 아래에 알리는 예상한 실패다',
+    '%s면 그 이유를 칸 아래에 알리는 예상한 실패다 — 다시 보내도 되는가는 %s',
     (code, message, retryable) => {
       expect(referralFailureOf(apiError(400, code))).toEqual({
         kind: 'message',

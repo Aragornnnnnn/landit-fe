@@ -24,10 +24,6 @@ vi.mock('@/shared/monitoring/report', () => ({ reportWarning: vi.fn() }));
 vi.mock('@/shared/ui/toast', () => ({ showToast: vi.fn() }));
 vi.mock('@/shared/haptics', () => ({ haptic: vi.fn() }));
 vi.mock('next/image', () => ({ default: () => <span /> }));
-const nativeContext = vi.hoisted(() => ({ current: null as unknown }));
-vi.mock('@/shared/bridge/native-context', () => ({
-  getNativeContext: () => nativeContext.current,
-}));
 vi.mock('@/shared/auth/auth-store', () => ({
   useAuthStore: (selector: (state: unknown) => unknown) =>
     selector({ member: { userId: 42 } }),
@@ -80,7 +76,6 @@ const pasteMessage = (input: HTMLElement, text: string) =>
 beforeEach(() => {
   // 앞 테스트가 걸어 둔 한 번짜리 응답(mock…Once)이 남지 않게 매번 처음부터 다시 건다
   vi.resetAllMocks();
-  nativeContext.current = null;
   previewReferralCode.mockResolvedValue(preview());
   registerReferralCode.mockResolvedValue(null);
   skipReferralRegistration.mockResolvedValue(null);
@@ -488,59 +483,5 @@ describe('ReferralStep · 거절·재시도', () => {
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(registerReferralCode).not.toHaveBeenCalled();
     expect(skipReferralRegistration).toHaveBeenCalled();
-  });
-});
-
-describe('ReferralStep · 같은 기기 막기', () => {
-  it('셸이 기기 ID를 주면 등록할 때 같이 보낸다 — 같은 기기에서 여러 번 넣는 걸 서버가 막는다', async () => {
-    nativeContext.current = {
-      platform: 'ios',
-      appVersion: '1.6.0',
-      buildNumber: '20',
-      bridgeVersion: 9,
-      deviceId: 'device-1',
-    };
-    const { input } = renderStep();
-
-    pasteMessage(input, 'K7QM3XPA');
-
-    await waitFor(() =>
-      expect(registerReferralCode).toHaveBeenCalledWith({
-        code: 'K7QM3XPA',
-        policyVersion: 3,
-        deviceId: 'device-1',
-      }),
-    );
-  });
-
-  it('기기 ID가 없으면(브라우저·이전 셸) 기기 ID 없이 보낸다', async () => {
-    const { input } = renderStep();
-
-    pasteMessage(input, 'K7QM3XPA');
-
-    await waitFor(() => expect(registerReferralCode).toHaveBeenCalled());
-    expect(registerReferralCode.mock.calls[0][0]).not.toHaveProperty(
-      'deviceId',
-    );
-  });
-
-  it('이 기기에서 이미 등록했다고 거절되면 이유를 알리고 같은 코드로 다시 보내지 않는다', async () => {
-    registerReferralCode.mockRejectedValue(
-      new ApiError(
-        'x',
-        409,
-        '/api/v1/referrals/registration',
-        'REFERRAL_DEVICE_ALREADY_USED',
-      ),
-    );
-    const { input } = renderStep();
-    pasteMessage(input, 'K7QM3XPA');
-
-    expect(
-      await screen.findByText('이 기기에서는 이미 초대 코드를 등록했어요'),
-    ).toBeInTheDocument();
-    pasteMessage(input, 'K7QM3XPA');
-
-    expect(registerReferralCode).toHaveBeenCalledTimes(1);
   });
 });

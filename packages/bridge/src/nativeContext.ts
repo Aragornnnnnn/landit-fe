@@ -24,9 +24,6 @@ export const nativeContextSchema = z.object({
   bridgeVersion: z.number().int(),
   // 기기 글자 크기 배율(1 = 기본). 웹이 첫 글자 크기 단계를 정할 때 쓴다. 브릿지 9 이하 셸은 보내지 않는다
   fontScale: z.number().positive().optional(),
-  // 앱을 지웠다 다시 깔아도 같은 기기 식별값(iOS 키체인 UUID·Android ANDROID_ID) — 같은 기기에서 초대 코드를 여러 번 넣는 걸 서버가 막는 데 쓴다.
-  // 이전 셸은 주지 않아 없을 수 있다
-  deviceId: z.string().min(1).optional(),
 });
 
 export type NativeContext = z.infer<typeof nativeContextSchema>;

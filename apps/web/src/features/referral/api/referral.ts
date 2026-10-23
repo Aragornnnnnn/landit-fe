@@ -53,8 +53,6 @@ export const previewReferralCode = (code: string) =>
 export const registerReferralCode = (body: {
   code: string;
   policyVersion: number;
-  // 앱을 지웠다 다시 깔아도 같은 기기 식별값. 브라우저·이전 셸이면 보내지 않는다
-  deviceId?: string;
 }) => api.post<null>('/api/v1/referrals/registration', body);
 
 /** 코드 입력을 영구히 건너뛴다 — 부르지 않으면 PENDING으로 남아 다음에 또 묻는다 */
