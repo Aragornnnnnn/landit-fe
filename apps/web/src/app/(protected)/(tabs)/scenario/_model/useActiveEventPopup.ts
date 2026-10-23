@@ -14,15 +14,14 @@ import { isEventPopupAudience } from './event-popup-audience';
 /** @param skip 이번 방문엔 공지를 띄우지 않는다(다른 흐름이 홈을 차지하는 방문) — 묻지도 않고, 반응 기록을 안 남겨 다음 방문에 뜬다 */
 export const useActiveEventPopup = ({ skip = false } = {}) => {
   const [doneIds] = useState(readEventPopupDoneIds);
-  const { data, isPending, isFetching, fetchStatus } = useActivePopupQuery({
+  const { data, fetchStatus } = useActivePopupQuery({
     enabled: !skip,
   });
   const membership = useSubscriptionQuery();
   if (skip) return { popup: null, loading: false };
-  // 지난 방문의 응답이 캐시에 남아 있으면 다시 묻는 동안에도 isPending이 false다 — 이번에 묻는 동안은 모르는 것으로 둔다.
-  // 실패(배포 전 404 포함)하거나 묻지 않는 조회(로그인 정보 없음)면 기다리지 않고 공지 없이 지나간다
-  const loading =
-    isFetching || (isPending && fetchStatus !== 'idle') || membership.isPending;
+  // 이번 방문에 묻는 동안은 지난 방문의 캐시가 있어도 모르는 것으로 둔다(fetchStatus는 캐시와 상관없이 묻는 중을 말한다).
+  // 실패(배포 전 404 포함)하거나 묻지 않는 조회(로그인 정보 없음)면 idle이라 기다리지 않고 공지 없이 지나간다
+  const loading = fetchStatus !== 'idle' || membership.isPending;
   // 정기 구독자에게는 띄우지 않는다(서버 숨김과 겹치는 안전망) — 구독 상태를 모르면(조회 실패) 구독자일 수 있으니 띄우지 않는다
   const audience =
     membership.subscription !== null &&

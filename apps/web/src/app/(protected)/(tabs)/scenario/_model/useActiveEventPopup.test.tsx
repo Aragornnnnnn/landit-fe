@@ -73,7 +73,8 @@ describe('useActiveEventPopup', () => {
 
     const { result } = renderWithCache(null);
 
-    await waitFor(() => expect(result.current.loading).toBe(true));
+    // 첫 렌더부터 기다려야 그 사이 시트가 한 프레임이라도 먼저 나서지 않는다
+    expect(result.current.loading).toBe(true);
   });
 
   it('캐시에 남은 공지는 이번 응답이 오기 전엔 띄우지 않는다', async () => {
