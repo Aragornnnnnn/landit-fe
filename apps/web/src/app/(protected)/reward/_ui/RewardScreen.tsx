@@ -141,9 +141,28 @@ export const RewardScreen = () => {
       )}
       {introReady &&
         (missed ? (
-          <MissedRewardIntro missed={missed} />
+          <MissedRewardIntro
+            missed={missed}
+            stored={
+              my.storedWon > 0
+                ? {
+                    won: my.storedWon,
+                    maximumWon: offer.maximumWon,
+                    history: <RewardHistoryFeed />,
+                  }
+                : undefined
+            }
+          />
         ) : (
-          <RewardIntro copy={introCopy} offer={offer} />
+          <RewardIntro
+            copy={introCopy}
+            offer={offer}
+            stored={
+              my.storedWon > 0
+                ? { won: my.storedWon, history: <RewardHistoryFeed /> }
+                : undefined
+            }
+          />
         ))}
       {view.kind === 'record' && (
         <RewardRecord
