@@ -127,7 +127,7 @@ describe('startWebSpeech', () => {
 
     recognition.onerror?.({ error: 'no-speech' });
 
-    expect(onFinal).toHaveBeenCalledWith('');
+    expect(onFinal).toHaveBeenCalledWith('', expect.anything());
     expect(onError).not.toHaveBeenCalled();
   });
 
@@ -181,6 +181,6 @@ describe('startWebSpeech', () => {
     recognition.onend?.();
 
     expect(onFinal).toHaveBeenCalledTimes(1);
-    expect(onFinal).toHaveBeenCalledWith('안녕하세요');
+    expect(onFinal).toHaveBeenCalledWith('안녕하세요', expect.anything());
   });
 });

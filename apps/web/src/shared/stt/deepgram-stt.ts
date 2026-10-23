@@ -1,9 +1,19 @@
 // Deepgram 실시간 STT 전송 계층 — getUserMedia 오디오를 WebSocket으로 보내고 트랜스크립트를 콜백으로 전달 (React 무관)
 
+import { SttError } from './errors';
+
+// 결과가 어떻게 나왔는지 — 빈 결과·늦은 응답을 문의와 대조하려고 계측에 싣는다
+export interface SttResultMeta {
+  engine: 'deepgram' | 'web_speech';
+  endReason: 'finalize' | 'timeout' | 'utterance_end' | 'ended';
+  connectMs: number | null; // 마이크를 켠 뒤 연결이 열리기까지
+  finalizeWaitMs: number | null; // 완료를 누른 뒤 결과가 나오기까지
+}
+
 export interface SttHandlers {
   // 발화 중 확정된 구간까지의 누적 텍스트와, 아직 확정 전인 말이 남아 있는지
   onInterim: (transcript: string, pending: boolean) => void;
-  onFinal: (transcript: string) => void; // 턴 종료 시 한 번 — 침묵 또는 stop()
+  onFinal: (transcript: string, meta: SttResultMeta) => void; // 턴 종료 시 한 번 — 침묵 또는 stop()
   onError: (error: Error) => void;
 }
 
@@ -22,6 +32,8 @@ export interface DeepgramSttOptions extends SttHandlers {
 
 const TOKEN_ENDPOINT = '/api/stt/token';
 const DEEPGRAM_WS_URL = 'wss://api.deepgram.com/v1/listen';
+// 완료 뒤 확정 응답을 기다리는 상한 — 넘기면 받은 데까지 제출한다
+const FINALIZE_TIMEOUT_MS = 2000;
 
 const pickMimeType = () => {
   if (MediaRecorder.isTypeSupported('audio/webm')) return 'audio/webm';
@@ -43,7 +55,7 @@ interface DeepgramMessage {
  * @param options 콜백(onInterim·onFinal·onError)과 언어·침묵 감지 설정
  * @returns 진행 중인 세션 — `stop()`은 마지막 발화를 마무리하고, `abort()`는 onFinal 없이 즉시 파기
  * @throws getUserMedia 거부·미지원, 토큰 발급 실패, WebSocket 생성 실패(동기) — 호출부(훅)가 폴백을 판단한다.
- *   연결 후(onerror·onclose) 실패는 던지지 않고 onError 콜백으로 전달된다
+ *   소켓을 만든 뒤의 실패(onerror·onclose)는 던지지 않고 onError로 전달된다 — 열리기 전이면 connect_failed, 열린 뒤면 closed
  */
 export const startDeepgramStt = async (
   options: DeepgramSttOptions,
@@ -60,6 +72,7 @@ export const startDeepgramStt = async (
   }
 
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const micOnAt = Date.now();
 
   // 앞부분 유실 방지 — getUserMedia 직후 바로 녹음을 시작하고, WS가 열리기 전 오디오는
   // 버퍼에 담아 뒀다가 open 시 먼저 흘려보낸다. (토큰 발급·WS 핸드셰이크 지연 동안 말한
@@ -128,6 +141,9 @@ export const startDeepgramStt = async (
   let pending = false; // 확정 전 말이 남아 있는가
   let finished = false;
   let finalizeTimer: ReturnType<typeof setTimeout> | null = null;
+  let openedAt: number | null = null;
+  let stoppedAt: number | null = null; // 완료를 누른 시각 — null이면 아직 듣는 중
+  let recorderDone = false; // 녹음기가 마지막 조각까지 내보냈는가
 
   const cleanup = () => {
     if (finalizeTimer) clearTimeout(finalizeTimer);
@@ -143,17 +159,31 @@ export const startDeepgramStt = async (
   };
 
   // 턴 종료를 정확히 한 번만 처리
-  const finishTurn = () => {
+  const finishTurn = (endReason: SttResultMeta['endReason']) => {
     if (finished) return;
     finished = true;
     cleanup();
-    onFinal(finalTranscript.trim());
+    onFinal(finalTranscript.trim(), {
+      engine: 'deepgram',
+      endReason,
+      connectMs: openedAt === null ? null : openedAt - micOnAt,
+      finalizeWaitMs: stoppedAt === null ? null : Date.now() - stoppedAt,
+    });
+  };
+
+  // 마지막 조각까지 보낸 뒤에만 확정을 요청한다 — 먼저 보내면 끝부분이 확정에서 빠진다
+  const requestFinalize = () => {
+    if (!recorderDone || socket.readyState !== WebSocket.OPEN) return;
+    socket.send(JSON.stringify({ type: 'Finalize' }));
   };
 
   socket.onopen = () => {
+    openedAt = Date.now();
     // WS 여는 동안 버퍼에 쌓인 앞부분 오디오를 먼저 흘려보낸다
     for (const chunk of pendingChunks) socket.send(chunk);
     pendingChunks.length = 0;
+    // 연결 준비 중에 완료를 눌렀다면 여기서 이어서 확정한다
+    requestFinalize();
   };
 
   socket.onmessage = (event) => {
@@ -173,38 +203,50 @@ export const startDeepgramStt = async (
         pending = Boolean(text);
         onInterim(finalTranscript, pending);
       }
-      // stop()의 Finalize 응답 — 남은 버퍼까지 반영된 시점이라 타임아웃 없이 즉시 종료
-      if (msg.from_finalize) finishTurn();
+      // Finalize 응답 — 남은 버퍼까지 반영된 시점이라 즉시 종료
+      if (msg.from_finalize) finishTurn('finalize');
       return;
     }
 
     // 침묵 감지 → 발화 종료
-    if (msg.type === 'UtteranceEnd') finishTurn();
+    if (msg.type === 'UtteranceEnd') finishTurn('utterance_end');
   };
 
-  const fail = (message: string) => {
+  const fail = (error: SttError) => {
     if (finished) return;
     finished = true;
     cleanup();
-    onError(new Error(message));
+    onError(error);
   };
 
-  // 연결 성립 전 실패는 throw로 잡히므로, 여기 도달하면 세션 도중 에러
-  socket.onerror = () => fail('STT 연결 오류');
-  socket.onclose = () => fail('STT 연결이 끊겼습니다.');
+  // 소켓을 만든 뒤의 실패 — 열리기 전이면 연결 실패, 열린 뒤면 도중 끊김으로 나눈다
+  const failSocket = (closedMessage: string) =>
+    fail(
+      openedAt === null
+        ? new SttError('STT 연결 실패', 'connect_failed')
+        : new SttError(closedMessage, 'closed'),
+    );
+  socket.onerror = () => failSocket('STT 연결 오류');
+  socket.onclose = () => failSocket('STT 연결이 끊겼습니다.');
 
   return {
     stop: () => {
-      if (finished) return;
-      // Finalize 전송 → 남은 버퍼 처리 후 UtteranceEnd 수신 → finishTurn.
-      // 응답 전 WS가 닫혀 있으면 즉시 종료.
-      if (socket.readyState === WebSocket.OPEN) {
-        stopRecorder();
-        socket.send(JSON.stringify({ type: 'Finalize' }));
-        // UtteranceEnd가 안 오는 경우 대비 — 일정 시간 후 강제 종료
-        finalizeTimer = setTimeout(finishTurn, 2000);
-      } else {
-        finishTurn();
+      if (finished || stoppedAt !== null) return;
+      stoppedAt = Date.now();
+      // Finalize 응답은 보장되지 않는다 — 안 오면 받은 데까지 제출하고 timeout으로 남긴다
+      finalizeTimer = setTimeout(
+        () => finishTurn('timeout'),
+        FINALIZE_TIMEOUT_MS,
+      );
+      // 녹음기는 stop() 뒤 마지막 조각을 비동기로 내고 stop 이벤트를 쏜다 — 그다음에 확정을 요청한다
+      const onRecorderStopped = () => {
+        recorderDone = true;
+        requestFinalize();
+      };
+      if (recorder.state === 'inactive') onRecorderStopped();
+      else {
+        recorder.onstop = onRecorderStopped;
+        recorder.stop();
       }
     },
     abort: () => {

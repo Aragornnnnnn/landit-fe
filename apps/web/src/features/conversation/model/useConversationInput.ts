@@ -8,8 +8,9 @@ import { EVENTS } from '@landit/analytics';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { reportWarning } from '@/shared/monitoring/report';
-import { isMicPermissionDeniedError } from '@/shared/stt/errors';
-import { useStt } from '@/shared/stt/useStt';
+import type { SttResultMeta } from '@/shared/stt/deepgram-stt';
+import { isMicPermissionDeniedError, SttError } from '@/shared/stt/errors';
+import { useStt, type SttErrorMeta } from '@/shared/stt/useStt';
 import { showToast } from '@/shared/ui/toast';
 
 interface ConversationInputOptions {
@@ -52,11 +53,21 @@ export const useConversationInput = ({
   };
 
   // 음성 최종 텍스트 — 비었으면(인식 실패) 마이크 대기로 되돌리고 이유를 알린다. 취소 후엔 오지 않는다(useStt 보장)
-  const submitVoice = (raw: string) => {
+  const submitVoice = (raw: string, meta: SttResultMeta) => {
     const content = raw.trim();
     const utteranceDurationMs = takeUtteranceDuration();
+    const { sessionId, turnIndex } = trackContext();
+    // 빈 결과까지 모두 남긴다 — 문의가 오면 엔진·대기 시간·종료 사유로 대조한다
+    track(EVENTS.SPEECH_RECOGNITION_COMPLETED, {
+      session_id: sessionId ?? undefined,
+      turn_index: turnIndex,
+      engine: meta.engine,
+      end_reason: meta.endReason,
+      connect_ms: meta.connectMs ?? undefined,
+      finalize_wait_ms: meta.finalizeWaitMs ?? undefined,
+      char_count: content.length,
+    });
     if (!content) {
-      const { sessionId, turnIndex } = trackContext();
       haptic('error');
       setTranscript('');
       onInputCancel();
@@ -72,9 +83,9 @@ export const useConversationInput = ({
   };
 
   // 인식 오류 — 권한 거부는 설정 유도 안내를, 그 외에는 토스트로 알리고 마이크 대기로 되돌린다
-  const recoverFromSttError = (error: Error) => {
-    // 좁히기(never) 전에 읽어둔다 — 계측 속성용 에러 이름
-    const errorName = error.name;
+  const recoverFromSttError = (error: Error, meta: SttErrorMeta) => {
+    // 좁히기(never) 전에 읽어둔다 — 계측 사유는 SttError면 그 사유(연결 실패·도중 끊김), 그 밖엔 에러 이름
+    const failReason = error instanceof SttError ? error.reason : error.name;
     if (isMicPermissionDeniedError(error)) {
       setMicPermissionDenied(true);
       if (!micDeniedTrackedRef.current) {
@@ -86,7 +97,10 @@ export const useConversationInput = ({
       }
     } else {
       showToast('음성 인식에 문제가 생겼어요. 다시 시도해 주세요');
-      track(EVENTS.SPEECH_RECOGNITION_FAILED, { reason: errorName });
+      track(EVENTS.SPEECH_RECOGNITION_FAILED, {
+        engine: meta.engine,
+        reason: failReason,
+      });
       reportWarning(error);
     }
     haptic('error');
