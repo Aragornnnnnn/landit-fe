@@ -55,6 +55,17 @@ describe('readNativeContext', () => {
     expect(readNativeContext({ ...valid, fontScale: 0 })).toBeNull();
   });
 
+  it('기기 ID(deviceId)를 함께 읽는다', () => {
+    expect(readNativeContext({ ...valid, deviceId: 'abc-123' })).toEqual({
+      ...valid,
+      deviceId: 'abc-123',
+    });
+  });
+
+  it('deviceId가 빈 문자열이면 null을 돌려준다', () => {
+    expect(readNativeContext({ ...valid, deviceId: '' })).toBeNull();
+  });
+
   it('규격 밖이면 null을 돌려준다', () => {
     // 알 수 없는 platform
     expect(readNativeContext({ ...valid, platform: 'web' })).toBeNull();
