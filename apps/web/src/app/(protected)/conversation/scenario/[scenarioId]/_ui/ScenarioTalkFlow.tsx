@@ -61,6 +61,7 @@ export const ScenarioTalkFlow = ({
     sessionId,
     gauge,
     answerGuide,
+    markGuideViewed,
   } = useScenarioTalkFlow(scenario);
   const {
     transcript,
@@ -95,14 +96,16 @@ export const ScenarioTalkFlow = ({
     available: answerGuide != null && !ended,
     // 유도 힌트는 첫 질문의 음성이 끝나 내 차례가 된 순간에만 — 말 없이 나가는 사람 대부분이 그 직후에 나간다
     hintable: turnIndex === firstQuestionIndex && phase === 'USER_READY',
-    onToggled: (opened, fromHint) =>
+    onToggled: (opened, fromHint) => {
+      if (opened) markGuideViewed();
       track(EVENTS.ANSWER_GUIDE_TOGGLED, {
         session_id: sessionId ?? undefined,
         scenario_id: scenario.scenarioId,
         turn_index: turnIndex,
         opened,
         from_hint: fromHint,
-      }),
+      });
+    },
   });
   // 선발화 안내는 대기(USER_READY) 동안만 — 사용자가 말하기 시작하거나 속마음이 오면 즉시 비켜준다
   const showUserFirstIntro =

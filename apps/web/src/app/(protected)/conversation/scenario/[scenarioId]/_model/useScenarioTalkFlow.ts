@@ -84,14 +84,22 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
 
   const queryClient = useQueryClient();
 
-  // 턴마다 하나씩 붙이는 발화 식별자 — 응답이 끊겨 다시 보낼 때 같은 값을 써야
-  // 서버가 재전송으로 알아보고 처음 만든 응답을 돌려준다 (마지막 턴이면 이미 끝난 세션이어도)
-  const clientMessageIdsRef = useRef(new Map<number, string>());
-  const clientMessageIdFor = (turnIndex: number) => {
-    const issued = clientMessageIdsRef.current.get(turnIndex);
+  // 가이드를 열어 본 턴 — 레벨 평가가 그 답변을 가이드에 기대 말한 것인지 따로 본다
+  const guideViewedTurnsRef = useRef(new Set<number>());
+
+  // 턴마다 처음 낼 때 정한 발화 식별자·가이드 열람 여부 — 응답이 끊겨 다시 보낼 때 같은 값을 써야
+  // 서버가 재전송으로 알아보고 처음 만든 응답을 돌려준다 (마지막 턴이면 이미 끝난 세션이어도). 열람 여부가 바뀌면 거절한다
+  const submissionsRef = useRef(
+    new Map<number, { clientMessageId: string; guideViewed: boolean }>(),
+  );
+  const submissionFor = (turnIndex: number) => {
+    const issued = submissionsRef.current.get(turnIndex);
     if (issued) return issued;
-    const created = crypto.randomUUID();
-    clientMessageIdsRef.current.set(turnIndex, created);
+    const created = {
+      clientMessageId: crypto.randomUUID(),
+      guideViewed: guideViewedTurnsRef.current.has(turnIndex),
+    };
+    submissionsRef.current.set(turnIndex, created);
     return created;
   };
 
@@ -122,11 +130,13 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
     sessionId: session.sessionId,
     ensureSession: session.ensure,
     submit: async ({ sessionId, content, inputType, turnIndex }) => {
+      const { clientMessageId, guideViewed } = submissionFor(turnIndex);
       const res = await submitScenarioTalkMessage(
         sessionId,
         content,
         inputType,
-        clientMessageIdFor(turnIndex),
+        clientMessageId,
+        guideViewed,
       );
       track(EVENTS.SCENARIO_TALK_TURN_COMPLETED, {
         session_id: sessionId,
@@ -170,10 +180,16 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
     session.end();
   };
 
+  // 지금 질문에서 가이드를 열었다 — 이 턴의 답변에 열람했다고 실어 보낸다
+  const markGuideViewed = () => {
+    guideViewedTurnsRef.current.add(engine.turnIndex);
+  };
+
   return {
     ...engine,
     partner,
     leave,
+    markGuideViewed,
     // 게이지는 화면에 떠 있는 카드를 따른다 — 답한 횟수를 따로 세면 카드보다 먼저 움직인다
     gauge: toTalkGauge({
       turnIndex: engine.turnIndex,

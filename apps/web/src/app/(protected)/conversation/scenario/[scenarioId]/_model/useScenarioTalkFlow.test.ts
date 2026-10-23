@@ -1081,6 +1081,7 @@ describe('useScenarioTalkFlow', async () => {
       'Hello there.',
       'VOICE',
       expect.any(String),
+      false,
     );
     // 제출이 이어져 속마음까지 진행된다 (submitResponse 기본은 COMPLETED)
     expect(result.current.phase).toBe('AI_INNER_THOUGHT');
@@ -1097,6 +1098,7 @@ describe('useScenarioTalkFlow', async () => {
       'Hello there.',
       'TEXT',
       expect.any(String),
+      false,
     );
     expect(sttMock.start).not.toHaveBeenCalled();
   });
@@ -1212,6 +1214,75 @@ describe('useScenarioTalkFlow', async () => {
       });
 
       expect(result.current.answerGuide).toBeNull();
+    });
+
+    // 첫 질문을 다 듣고 내 차례가 된 상태
+    const renderGuidedReady = async () => {
+      startScenarioTalkSession.mockResolvedValue(startResponse());
+      const hook = renderHook(() => useScenarioTalkFlow(guidedScenario));
+      await act(async () => {});
+      await act(async () => ttsMock.state.onEnd?.());
+      return hook;
+    };
+
+    it('가이드를 열어 본 답변은 열람했다고 함께 보낸다', async () => {
+      // Given 첫 질문에서 가이드를 열어 본 상태
+      const { result } = await renderGuidedReady();
+      submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+      act(() => result.current.markGuideViewed());
+
+      // When 답을 내면
+      await speakAndSubmit(result, 'I am a student.');
+
+      // Then 열람했다고 함께 보낸다
+      expect(submitScenarioTalkMessage.mock.calls[0][4]).toBe(true);
+    });
+
+    it('가이드를 열지 않은 답변은 열람하지 않았다고 보낸다', async () => {
+      const { result } = await renderGuidedReady();
+      submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+
+      await speakAndSubmit(result, 'I am a student.');
+
+      expect(submitScenarioTalkMessage.mock.calls[0][4]).toBe(false);
+    });
+
+    it('다시 보내도 열람 여부는 처음 보낸 값 그대로다 — 바뀌면 서버가 거절한다', async () => {
+      // Given 가이드를 열고 낸 답이 끊긴 상태
+      const { result } = await renderGuidedReady();
+      submitScenarioTalkMessage
+        .mockRejectedValueOnce(new TypeError('Load failed'))
+        .mockResolvedValueOnce(submitResponse());
+      act(() => result.current.markGuideViewed());
+      await speakAndSubmit(result, 'I am a student.');
+
+      // When 재전송 간격만큼 기다려 다시 보내면
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+
+      // Then 처음과 똑같이 열람했다고 보낸다
+      const [first, resent] = submitScenarioTalkMessage.mock.calls;
+      expect(first[4]).toBe(true);
+      expect(resent).toEqual(first);
+    });
+
+    it('다음 질문에서는 열람 여부를 새로 센다', async () => {
+      // Given 첫 질문에서 가이드를 열고 답한 뒤 다음 질문이 뜬 상태
+      const { result } = await renderGuidedReady();
+      submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+      act(() => result.current.markGuideViewed());
+      await speakAndSubmit(result, 'I am a student.');
+      act(() => {
+        vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+      });
+      await act(async () => ttsMock.state.onEnd?.());
+
+      // When 가이드를 열지 않고 답하면
+      await speakAndSubmit(result, 'I like movies.');
+
+      // Then 이번 답변은 열람하지 않았다고 보낸다
+      expect(submitScenarioTalkMessage.mock.calls[1][4]).toBe(false);
     });
   });
 });
