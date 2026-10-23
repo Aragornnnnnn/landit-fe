@@ -3,7 +3,10 @@ import { PixelRatio } from 'react-native';
 import { readNativeContext } from '@landit/bridge';
 import * as Application from 'expo-application';
 
+import { getDeviceId } from './deviceId';
 import { getNativeContext } from './nativeContext';
+
+jest.mock('./deviceId', () => ({ getDeviceId: jest.fn() }));
 
 describe('getNativeContext', () => {
   it('브릿지 스키마를 만족하는 컨텍스트를 만든다', () => {
@@ -32,6 +35,20 @@ describe('getNativeContext', () => {
     jest.spyOn(PixelRatio, 'getFontScale').mockReturnValue(1.3);
 
     expect(getNativeContext().fontScale).toBe(1.3);
+  });
+
+  it('기기 ID를 채운다', () => {
+    jest.mocked(getDeviceId).mockReturnValue('device-1');
+
+    expect(getNativeContext().deviceId).toBe('device-1');
+  });
+
+  it('기기 ID를 못 읽어도 스키마를 만족한다', () => {
+    jest.mocked(getDeviceId).mockReturnValue(undefined);
+    const context = getNativeContext();
+
+    expect(context.deviceId).toBeUndefined();
+    expect(readNativeContext(context)).toEqual(context);
   });
 
   it('바이너리에서 빌드 번호를 못 읽으면 null로 둔다', () => {
