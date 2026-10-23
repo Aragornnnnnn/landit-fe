@@ -351,6 +351,8 @@ const ShellScreen = () => {
       injectedJavaScriptBeforeContentLoaded={beforeContentLoadedScript}
       // Android의 로드 전 주입은 비동기라 새 문서에 못 닿을 수 있어, 매 로드 끝에도 inset을 넣는다
       injectedJavaScript={nativeInsetsScript ?? undefined}
+      // Android가 기기 글꼴 크기를 웹 글자에 자동으로 곱하지 않게 한다 — 글자 크기는 웹의 마이페이지 설정이 정한다 (iOS는 해당 없음)
+      textZoom={100}
       onMessage={onMessage}
       // 웹 도메인 밖으로 나가는 이동(스토어 등)은 WebView 대신 OS가 연다 —
       // 스토어가 웹뷰 안에서 로그인 페이지로 열리는 문제 방지
