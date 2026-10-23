@@ -319,7 +319,7 @@ describe('usePurchase — 100일 이용권 구매 가능 확인', () => {
 
     expect(mocks.purchaseViaBridge).not.toHaveBeenCalled();
     expect(mocks.showToast).toHaveBeenCalledWith(
-      '진행 중이거나 확인 중인 챌린지가 있어 지금은 결제할 수 없어요',
+      '진행 중이거나 확인 중인 이용권이 있어 지금은 결제할 수 없어요',
     );
     expect(mocks.track).toHaveBeenCalledWith('Purchase Failed', {
       plan: 'pass',
