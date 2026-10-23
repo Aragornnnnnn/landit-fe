@@ -13,20 +13,16 @@ import {
 import { MicPermissionDeniedError } from './errors';
 import { startWebSpeech } from './web-speech-fallback';
 
-// 계측용 — 어느 엔진이 어떤 언어로 들었는가
-export interface SttFinalMeta extends SttResultMeta {
-  lang: string;
-}
+// 계측용 — 실패 시점에 어느 엔진으로 듣고 있었는가
 export interface SttErrorMeta {
   engine: SttResultMeta['engine'];
-  lang: string;
 }
 
 export interface UseSttOptions {
   lang?: string;
   endpointingMs?: number;
   stopOnSilence?: boolean; // false면 stop()까지 계속 듣는다 (기본 true)
-  onFinal?: (transcript: string, meta: SttFinalMeta) => void;
+  onFinal?: (transcript: string, meta: SttResultMeta) => void;
   onInterim?: (transcript: string, pending: boolean) => void;
   onError?: (error: Error, meta: SttErrorMeta) => void;
 }
@@ -64,7 +60,7 @@ export function useStt(options: UseSttOptions = {}) {
 
   const failWith = (err: Error) => {
     sessionRef.current = null;
-    callbacksRef.current.onError?.(err, { engine: engineRef.current, lang });
+    callbacksRef.current.onError?.(err, { engine: engineRef.current });
   };
 
   const start = async () => {
@@ -82,7 +78,7 @@ export function useStt(options: UseSttOptions = {}) {
       onFinal: (text, meta) => {
         if (generationRef.current !== gen) return;
         sessionRef.current = null;
-        callbacksRef.current.onFinal?.(text, { ...meta, lang });
+        callbacksRef.current.onFinal?.(text, meta);
       },
       onError: (err) => {
         if (generationRef.current !== gen) return;

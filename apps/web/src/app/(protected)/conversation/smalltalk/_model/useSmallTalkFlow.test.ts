@@ -14,14 +14,13 @@ import type {
 } from '@/features/small-talk/api/small-talk';
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
 import { ApiError } from '@/shared/api/api-error';
-import type { SttFinalMeta } from '@/shared/stt/useStt';
+import type { SttResultMeta } from '@/shared/stt/deepgram-stt';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 import { useSmallTalkFlow } from './useSmallTalkFlow';
 
-const STT_META: SttFinalMeta = {
+const STT_META: SttResultMeta = {
   engine: 'deepgram',
-  lang: 'en-US',
   endReason: 'finalize',
   connectMs: 0,
   finalizeWaitMs: 0,
@@ -74,7 +73,7 @@ const sttMock = vi.hoisted(() => ({
   abort: vi.fn(),
 }));
 vi.mock('@/shared/stt/useStt', () => ({
-  useStt: (opts: { onFinal?: (t: string, meta: SttFinalMeta) => void }) => {
+  useStt: (opts: { onFinal?: (t: string, meta: SttResultMeta) => void }) => {
     // 결과 정보는 계측용이라 흐름 검증과 무관하다 — 고정값을 붙여 넘긴다
     sttMock.callbacks.onFinal = (t: string) => opts.onFinal?.(t, STT_META);
     return { start: sttMock.start, stop: sttMock.stop, abort: sttMock.abort };

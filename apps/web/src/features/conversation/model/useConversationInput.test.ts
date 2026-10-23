@@ -3,8 +3,9 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { SttResultMeta } from '@/shared/stt/deepgram-stt';
 import { MicPermissionDeniedError, SttError } from '@/shared/stt/errors';
-import type { SttErrorMeta, SttFinalMeta } from '@/shared/stt/useStt';
+import type { SttErrorMeta } from '@/shared/stt/useStt';
 
 import { useConversationInput } from './useConversationInput';
 
@@ -17,20 +18,20 @@ vi.mock('@/shared/monitoring/report', () => monitoringMock);
 const trackMock = vi.hoisted(() => vi.fn());
 vi.mock('@/shared/analytics', () => ({ track: trackMock }));
 
-const FINAL_META: SttFinalMeta = {
+const FINAL_META: SttResultMeta = {
   engine: 'deepgram',
-  lang: 'en-US',
   endReason: 'finalize',
   connectMs: 300,
   finalizeWaitMs: 500,
 };
-const ERROR_META: SttErrorMeta = { engine: 'deepgram', lang: 'en-US' };
+const ERROR_META: SttErrorMeta = { engine: 'deepgram' };
 
 // STT는 경계(마이크)라 목으로 둔다 — start/stop 호출을 붙잡고, onInterim·onFinal 콜백을 흉내 낸다
 const sttMock = vi.hoisted(() => {
   const callbacks = {
     onInterim: undefined as ((t: string, pending: boolean) => void) | undefined,
-    onFinal: undefined as ((t: string, meta: SttFinalMeta) => void) | undefined,
+    onFinal: undefined as
+      ((t: string, meta: SttResultMeta) => void) | undefined,
     onError: undefined as ((e: Error, meta: SttErrorMeta) => void) | undefined,
   };
   return {
@@ -43,7 +44,7 @@ const sttMock = vi.hoisted(() => {
 vi.mock('@/shared/stt/useStt', () => ({
   useStt: (opts: {
     onInterim?: (t: string, pending: boolean) => void;
-    onFinal?: (t: string, meta: SttFinalMeta) => void;
+    onFinal?: (t: string, meta: SttResultMeta) => void;
     onError?: (e: Error, meta: SttErrorMeta) => void;
   }) => {
     sttMock.callbacks.onInterim = opts.onInterim;
@@ -169,7 +170,7 @@ describe('useConversationInput', () => {
     expect(result.current.transcript).toBe('');
   });
 
-  it('인식 결과가 오면 엔진·언어·종료 사유·대기 시간을 계측한다', () => {
+  it('인식 결과가 오면 엔진·종료 사유·대기 시간을 계측한다', () => {
     const { result } = renderInput();
 
     act(() => result.current.pressMic());
@@ -179,7 +180,6 @@ describe('useConversationInput', () => {
       session_id: 1,
       turn_index: 0,
       engine: 'deepgram',
-      lang: 'en-US',
       end_reason: 'finalize',
       connect_ms: 300,
       finalize_wait_ms: 500,
@@ -187,7 +187,7 @@ describe('useConversationInput', () => {
     });
   });
 
-  it('빈 결과도 글자 수 0으로 계측해 연결 실패·타임아웃과 구분한다', () => {
+  it('빈 결과도 글자 수 0으로 계측해 연결 실패와 구분한다', () => {
     const { result } = renderInput();
 
     act(() => result.current.pressMic());
@@ -199,21 +199,20 @@ describe('useConversationInput', () => {
     );
   });
 
-  it('인식 실패는 엔진·언어와 함께 연결 실패·타임아웃 같은 사유로 계측한다', () => {
+  it('인식 실패는 엔진과 함께 연결 실패·도중 끊김 같은 사유로 계측한다', () => {
     const { result } = renderInput();
 
     act(() => result.current.pressMic());
     act(() =>
       sttMock.callbacks.onError?.(
-        new SttError('STT 결과 대기 시간 초과', 'timeout'),
+        new SttError('STT 연결 실패', 'connect_failed'),
         ERROR_META,
       ),
     );
 
     expect(trackMock).toHaveBeenCalledWith('Speech Recognition Failed', {
       engine: 'deepgram',
-      lang: 'en-US',
-      reason: 'timeout',
+      reason: 'connect_failed',
     });
   });
 

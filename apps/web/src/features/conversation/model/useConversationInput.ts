@@ -8,12 +8,9 @@ import { EVENTS } from '@landit/analytics';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { reportWarning } from '@/shared/monitoring/report';
+import type { SttResultMeta } from '@/shared/stt/deepgram-stt';
 import { isMicPermissionDeniedError, SttError } from '@/shared/stt/errors';
-import {
-  useStt,
-  type SttErrorMeta,
-  type SttFinalMeta,
-} from '@/shared/stt/useStt';
+import { useStt, type SttErrorMeta } from '@/shared/stt/useStt';
 import { showToast } from '@/shared/ui/toast';
 
 interface ConversationInputOptions {
@@ -56,7 +53,7 @@ export const useConversationInput = ({
   };
 
   // 음성 최종 텍스트 — 비었으면(인식 실패) 마이크 대기로 되돌리고 이유를 알린다. 취소 후엔 오지 않는다(useStt 보장)
-  const submitVoice = (raw: string, meta: SttFinalMeta) => {
+  const submitVoice = (raw: string, meta: SttResultMeta) => {
     const content = raw.trim();
     const utteranceDurationMs = takeUtteranceDuration();
     const { sessionId, turnIndex } = trackContext();
@@ -65,7 +62,6 @@ export const useConversationInput = ({
       session_id: sessionId ?? undefined,
       turn_index: turnIndex,
       engine: meta.engine,
-      lang: meta.lang,
       end_reason: meta.endReason,
       connect_ms: meta.connectMs ?? undefined,
       finalize_wait_ms: meta.finalizeWaitMs ?? undefined,
@@ -90,7 +86,7 @@ export const useConversationInput = ({
   const recoverFromSttError = (error: Error, meta: SttErrorMeta) => {
     // 좁히기(never) 전에 읽어둔다 — 계측 속성용 에러 이름
     const errorName = error.name;
-    // 연결 실패·도중 끊김·응답 없음은 사유로, 그 밖의 오류는 에러 이름으로 남긴다
+    // 연결 실패·도중 끊김은 사유로, 그 밖의 오류는 에러 이름으로 남긴다
     const failReason = error instanceof SttError ? error.reason : errorName;
     if (isMicPermissionDeniedError(error)) {
       setMicPermissionDenied(true);
@@ -105,7 +101,6 @@ export const useConversationInput = ({
       showToast('음성 인식에 문제가 생겼어요. 다시 시도해 주세요');
       track(EVENTS.SPEECH_RECOGNITION_FAILED, {
         engine: meta.engine,
-        lang: meta.lang,
         reason: failReason,
       });
       reportWarning(error);
