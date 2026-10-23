@@ -76,7 +76,7 @@ describe('missedCopyOf', () => {
       { storedWon: 3_000, maximumWon: 50_000 },
     );
 
-    expect(copy.note).toBe('받아 둔 3,000원까지 53,000원을 다 돌려받아요');
+    expect(copy.note).toBe('쌓인 3,000원까지 53,000원을 다 돌려받아요');
   });
 
   it('받아 둔 돈이 없으면 지금 문구 그대로다', () => {
@@ -94,7 +94,7 @@ describe('missedCopyOf', () => {
       { storedWon: 3_000, maximumWon: 50_000 },
     );
 
-    expect(copy.note).toBe('받아 둔 3,000원까지 53,000원을 다 돌려받아요');
+    expect(copy.note).toBe('쌓인 3,000원까지 53,000원을 다 돌려받아요');
   });
 
   it('받아 둔 돈이 없으면 지금 문구 그대로다', () => {

@@ -82,7 +82,7 @@ export const missedCopyOf = (
         },
     note:
       carry && carry.storedWon > 0
-        ? `받아 둔 ${formatWon(carry.storedWon)}까지 ${formatWon(carry.maximumWon + carry.storedWon)}을 다 돌려받아요`
+        ? `쌓인 ${formatWon(carry.storedWon)}까지 ${formatWon(carry.maximumWon + carry.storedWon)}을 다 돌려받아요`
         : '꾸준히 하면 결제한 금액을 다 돌려받아요',
   };
 };
