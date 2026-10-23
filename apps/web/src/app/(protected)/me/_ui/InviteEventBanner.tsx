@@ -1,7 +1,7 @@
 'use client';
 
 // 내 정보 맨 위 친구 초대 이벤트 띠 — 프로필 바로 아래에 두고, 누르면 친구 초대 이벤트 화면으로 간다.
-// 초대 보상이 꺼져 있으면 띠 없이 지원 묶음의 「친구에게 랜딧 공유하기」만 남는다
+// 초대 보상이 꺼져 있거나 환급과 상관없는 사람(기존 월간·연간 구독자)이면 띠 없이 지원 묶음의 「친구에게 랜딧 공유하기」만 남는다
 import Link from 'next/link';
 
 import { useInviteOffer } from '@/features/referral/model/useInviteOffer';
@@ -10,10 +10,12 @@ import { Emoji } from '@/shared/ui/emoji';
 import { ChevronRightIcon } from '@/shared/ui/Icons';
 
 import { inviteBannerLineOf } from '../_model/invite-banner';
+import { useReferralAudience } from '../../_model/useReferralAudience';
 
 export const InviteEventBanner = () => {
   const { offer } = useInviteOffer();
-  if (!offer) return null;
+  const audience = useReferralAudience();
+  if (!offer || !audience.shown) return null;
 
   return (
     <Link

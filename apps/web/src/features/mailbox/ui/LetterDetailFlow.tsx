@@ -31,7 +31,14 @@ import { ReceivedBody } from './detail/ReceivedBody';
 import { SentBody } from './detail/SentBody';
 import { LetterBadge } from './LetterBadge';
 
-export const ReceivedLetterFlow = ({ letterId }: { letterId: number }) => {
+export const ReceivedLetterFlow = ({
+  letterId,
+  canInvite,
+}: {
+  letterId: number;
+  // 친구 초대를 보여 줄 사람인가 — 환급 대상 판정이 라우트 층에 있어 받아 온다
+  canInvite: boolean;
+}) => {
   const { letter, isPending, error, retry } = useReceivedLetterQuery(letterId);
 
   return (
@@ -45,7 +52,7 @@ export const ReceivedLetterFlow = ({ letterId }: { letterId: number }) => {
       {letter && <ReceivedBody letter={letter} />}
       {letter && <SurveyLetterCta letterId={letter.letterId} />}
       {letter && <LetterOfferCta letterId={letter.letterId} />}
-      {letter && <ReferralLetterCta letterId={letter.letterId} />}
+      {letter && canInvite && <ReferralLetterCta letterId={letter.letterId} />}
     </LetterShell>
   );
 };

@@ -2,7 +2,7 @@
 
 // 친구 초대 이벤트 화면 — 둘이 쌓는 적립금, 초대로 쌓인 적립금과 상한 진행, 쌓는 방법, 내 코드(복사), 보내기 버튼.
 // 자세한 조건은 헤더 ⓘ 시트로 뺀다 — 화면에는 받는 이유와 방법만 둔다
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
@@ -14,7 +14,7 @@ import { useReferralCode } from '@/features/referral/model/useReferralCode';
 import { useReferralRewardsQuery } from '@/features/referral/model/useReferralRewardsQuery';
 import { Coin } from '@/features/reward/ui/common/Coin';
 import { track } from '@/shared/analytics';
-import { backToMyPage } from '@/shared/lib/routes';
+import { backToMyPage, MY_PAGE_PATH } from '@/shared/lib/routes';
 import { formatWon } from '@/shared/lib/won';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
@@ -30,6 +30,7 @@ import {
   inviteRewardRowOf,
   shownInviteRewardsOf,
 } from '../_model/invite-reward-row';
+import { useReferralAudience } from '../../../_model/useReferralAudience';
 
 // 네 자씩 끊어 보여 준다 — 말로 불러 주거나 눈으로 옮겨 칠 때 덜 틀린다. 복사는 붙인 그대로
 const CODE_GROUP = 4;
@@ -46,6 +47,13 @@ export const InviteScreen = () => {
   const code = useReferralCode();
   const { ready, share } = useInviteShare();
   const [infoOpen, setInfoOpen] = useState(false);
+  const audience = useReferralAudience();
+
+  // 환급과 상관없는 사람(기존 월간·연간 구독자)이 편지·주소로 들어오면 내 정보로 돌려보낸다
+  const outsider = audience.settled && !audience.shown;
+  useEffect(() => {
+    if (outsider) router.replace(MY_PAGE_PATH);
+  }, [outsider, router]);
 
   const view = offer
     ? inviteEventViewOf({
@@ -65,6 +73,17 @@ export const InviteScreen = () => {
       showToast('초대 코드를 복사하지 못했어요');
     }
   };
+
+  // 누구인지 알기 전에도 본문을 그리지 않는다 — 내보낼 사람에게 초대 조건이 비치지 않게
+  if (!audience.shown)
+    return (
+      <main className="flex h-dvh flex-col bg-background">
+        <BackHeader
+          title="친구 초대 이벤트"
+          onBack={() => backToMyPage(router)}
+        />
+      </main>
+    );
 
   return (
     <main className="flex h-dvh flex-col bg-background">
