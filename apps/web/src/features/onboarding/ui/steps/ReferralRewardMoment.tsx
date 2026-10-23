@@ -10,7 +10,7 @@ import { haptic } from '@/shared/haptics';
 import { formatWon } from '@/shared/lib/won';
 
 // 금액을 읽을 만큼만 머문다 — 버튼이 없어 사람이 넘길 수 없으니 너무 길면 멈춘 것처럼 보인다
-const LEAVE_AFTER_MS = 1500;
+const LEAVE_AFTER_MS = 2000;
 
 export const ReferralRewardMoment = ({
   won,
