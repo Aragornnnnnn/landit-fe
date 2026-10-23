@@ -3,7 +3,7 @@ import type { LegalDocument } from '../_ui/LegalDocumentPage';
 
 export const termsDocument: LegalDocument = {
   title: '서비스 이용약관',
-  effectiveDate: '2026년 10월 30일',
+  effectiveDate: '2026년 10월 23일',
   version: 'v1.4',
   introduction: [
     '본 약관은 Landit(이하 "회사")가 제공하는 영어 회화 연습 및 AI 피드백 서비스(이하 "서비스")의 이용 조건과 절차, 이용자와 회사의 권리와 의무를 정합니다.',
