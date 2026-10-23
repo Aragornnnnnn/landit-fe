@@ -11,7 +11,7 @@ import { useSubscriptionQuery } from '@/features/subscription/model/my-subscript
 
 import { isEventPopupAudience } from './event-popup-audience';
 
-/** @param skip 이번 방문엔 공지를 띄우지 않는다(온보딩 직후 바로 대화로 가는 길) — 반응 기록을 안 남겨 다음 방문에 뜬다 */
+/** @param skip 이번 방문엔 공지를 띄우지 않는다(다른 흐름이 홈을 차지하는 방문) — 묻지도 않고, 반응 기록을 안 남겨 다음 방문에 뜬다 */
 export const useActiveEventPopup = ({ skip = false } = {}) => {
   const [doneIds] = useState(readEventPopupDoneIds);
   const { data, isPending, isFetching } = useActivePopupQuery({

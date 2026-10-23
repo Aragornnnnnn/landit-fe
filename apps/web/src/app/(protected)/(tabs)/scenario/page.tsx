@@ -25,8 +25,9 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
-import { eventPopupOrder, skipsEventPopup } from './_model/event-popup-order';
+import { eventPopupOrder, isLampSettled } from './_model/event-popup-order';
 import { useActiveEventPopup } from './_model/useActiveEventPopup';
+import { useEventPopupSkip } from './_model/useEventPopupSkip';
 import { useHomePreview } from './_model/useHomePreview';
 import { PreviewIntro } from './_ui/PreviewIntro';
 
@@ -75,12 +76,10 @@ function ScenarioContent() {
     held: updateFirst || showerHold,
   });
   // 이벤트 공지는 아무것도 나서지 않는 방문에만 — 온보딩 직후·프리뷰·소감 차례면 건너뛰고 다음 방문에 띄운다
-  const onboarded = searchParams.has(ONBOARDED_PARAM);
-  const satisfactionTurn = satisfactionSheet !== null;
-  const eventPopupSkipped = skipsEventPopup({
-    onboarded,
+  const eventPopupSkipped = useEventPopupSkip({
+    onboarded: searchParams.has(ONBOARDED_PARAM),
     previewTurn: premiumPreview.turn,
-    satisfactionTurn,
+    satisfactionTurn: satisfactionSheet !== null,
   });
   const { popup: eventPopup, loading: eventPopupLoading } = useActiveEventPopup(
     { skip: eventPopupSkipped },
@@ -88,11 +87,14 @@ function ScenarioContent() {
   const [eventPopupClosed, setEventPopupClosed] = useState(false);
   // 램프가 이번 방문에 자동으로 물을지 — 카드가 정해 알려 준다. 묻는 날엔 끄고 나서 공지가 뜬다
   const [lampSummons, setLampSummons] = useState<boolean | null>(null);
-  const lampSettled =
-    date !== undefined ||
-    (daily != null && (!daily.scenario || cleared)) ||
-    lampSummons === false ||
-    summonClosed;
+  const lampSettled = isLampSettled({
+    pastDay: date !== undefined,
+    dailyLoaded: daily != null,
+    hasScenario: Boolean(daily?.scenario),
+    cleared,
+    lampSummons,
+    summonClosed,
+  });
   const { pending: eventPopupPending, ready: eventPopupReady } =
     eventPopupOrder({
       loading: eventPopupLoading,

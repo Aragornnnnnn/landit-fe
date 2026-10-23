@@ -16,6 +16,30 @@ export const skipsEventPopup = ({
   satisfactionTurn: boolean;
 }) => onboarded || previewTurn || satisfactionTurn;
 
+/** 램프 차례가 끝났나 — 램프가 이번에 묻지 않거나, 물은 램프를 껐다. 그 전엔 공지가 램프 위를 덮지 않는다 */
+export const isLampSettled = ({
+  pastDay,
+  dailyLoaded,
+  hasScenario,
+  cleared,
+  lampSummons,
+  summonClosed,
+}: {
+  /** 지난 날 카드를 보고 있다 — 램프가 자동으로 묻지 않는다 */
+  pastDay: boolean;
+  dailyLoaded: boolean;
+  hasScenario: boolean;
+  /** 그날 대화를 끝냈다 — 램프 대신 완료 카드가 뜬다 */
+  cleared: boolean;
+  /** 램프가 이번 방문에 자동으로 물을지. 아직 정하지 않았으면 null */
+  lampSummons: boolean | null;
+  summonClosed: boolean;
+}) =>
+  pastDay ||
+  (dailyLoaded && (!hasScenario || cleared)) ||
+  lampSummons === false ||
+  summonClosed;
+
 interface EventPopupOrderInput {
   /** 공지 응답을 기다리는 중 — 뜰지 모르니 붙잡는다 */
   loading: boolean;

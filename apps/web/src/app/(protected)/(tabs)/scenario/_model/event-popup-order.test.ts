@@ -1,7 +1,11 @@
 // 이벤트 공지 순서 — 공지를 건너뛸 방문, 공지가 시트를 붙잡는 때, 공지가 램프 등 앞선 것을 기다리는 때를 가르는 규칙 검증
 import { describe, expect, it } from 'vitest';
 
-import { eventPopupOrder, skipsEventPopup } from './event-popup-order';
+import {
+  eventPopupOrder,
+  isLampSettled,
+  skipsEventPopup,
+} from './event-popup-order';
 
 describe('skipsEventPopup', () => {
   const quiet = {
@@ -57,5 +61,34 @@ describe('eventPopupOrder', () => {
 
   it('앞선 것이 없으면 공지가 나설 수 있다', () => {
     expect(eventPopupOrder(base).ready).toBe(true);
+  });
+});
+
+describe('isLampSettled', () => {
+  const asking = {
+    pastDay: false,
+    dailyLoaded: true,
+    hasScenario: true,
+    cleared: false,
+    lampSummons: true as boolean | null,
+    summonClosed: false,
+  };
+
+  it.each([
+    ['지난 날 카드를 보고 있으면', { pastDay: true }],
+    ['그날 카드가 없으면', { hasScenario: false }],
+    ['그날 대화를 이미 끝냈으면', { cleared: true }],
+    ['램프가 이번엔 묻지 않기로 했으면', { lampSummons: false }],
+    ['물은 램프를 껐으면', { summonClosed: true }],
+  ])('%s 램프 차례가 끝난 것으로 본다', (_, given) => {
+    expect(isLampSettled({ ...asking, ...given })).toBe(true);
+  });
+
+  it.each([
+    ['램프가 묻는 중이면', {}],
+    ['램프가 물을지 아직 모르면', { lampSummons: null }],
+    ['오늘 카드를 아직 받는 중이면', { dailyLoaded: false, lampSummons: null }],
+  ])('%s 공지는 램프를 기다린다', (_, given) => {
+    expect(isLampSettled({ ...asking, ...given })).toBe(false);
   });
 });
