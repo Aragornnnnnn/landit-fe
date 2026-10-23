@@ -142,6 +142,10 @@ export interface RewardPreview {
   accruing: boolean;
 }
 
+// 내역 줄을 만든 활동 — 오늘의 시나리오 말고도 친구 초대 가입·결제 적립이 같은 내역에 섞인다
+export type RewardHistoryActivity =
+  RewardActivity['activityType'] | 'REFERRAL_SIGNUP' | 'REFERRAL_PURCHASE';
+
 // 환급 내역 한 줄 — 통장처럼 완료 하나가 한 줄이다
 export interface RewardHistoryItem {
   // 종류와 원본으로 만든 고정 문자열. 뜻을 읽지 않고 중복을 거르는 열쇠로만 쓴다
@@ -149,7 +153,7 @@ export interface RewardHistoryItem {
   // EARN 적립 · CYCLE_END 기간 종료. 종류는 늘어날 수 있어 모르는 값은 건너뛴다
   type: string;
   // EARN일 때만
-  activityType: RewardActivity['activityType'] | null;
+  activityType: RewardHistoryActivity | null;
   // 이 줄이 속한 KST 날짜 (yyyy-MM-dd)
   date: string;
   occurredAt: string;
@@ -157,7 +161,8 @@ export interface RewardHistoryItem {
   amountWon: number;
   // 이 줄까지 반영한 잔액
   balanceWon: number;
-  cycleId: number;
+  // 결제 전에 받은 친구 초대 적립(구매 대기)이면 아직 회차가 없어 null
+  cycleId: number | null;
   // EARN일 때만. 영수증의 completionId와 같은 값
   completionId: number | null;
 }
