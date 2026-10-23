@@ -190,8 +190,31 @@ describe('startDeepgramStt', () => {
       channel: { alternatives: [{ transcript: '저는' }] },
     });
 
-    expect(onInterim).toHaveBeenCalledTimes(1);
-    expect(onInterim).toHaveBeenLastCalledWith('안녕하세요');
+    // 글자는 확정된 것만, 확정 전 말이 남아 있다는 사실만 함께 알린다
+    expect(onInterim).toHaveBeenLastCalledWith('안녕하세요', true);
+    expect(onInterim).not.toHaveBeenCalledWith(
+      expect.stringContaining('저는'),
+      expect.anything(),
+    );
+  });
+
+  it('남은 말이 확정되면 확정 전 말이 없다고 알린다', async () => {
+    const { ws, onInterim } = await startWithFakes();
+    ws.open();
+
+    ws.receive({
+      type: 'Results',
+      is_final: false,
+      channel: { alternatives: [{ transcript: 'I went' }] },
+    });
+    expect(onInterim).toHaveBeenLastCalledWith('', true);
+
+    ws.receive({
+      type: 'Results',
+      is_final: true,
+      channel: { alternatives: [{ transcript: 'I went to the park' }] },
+    });
+    expect(onInterim).toHaveBeenLastCalledWith('I went to the park', false);
   });
 
   it('UtteranceEnd가 오면 누적 텍스트로 onFinal을 정확히 한 번 호출하고 마이크를 끈다', async () => {
@@ -252,7 +275,7 @@ describe('startDeepgramStt', () => {
     });
 
     expect(onFinal).not.toHaveBeenCalled();
-    expect(onInterim).toHaveBeenLastCalledWith('첫 문장 둘째 문장');
+    expect(onInterim).toHaveBeenLastCalledWith('첫 문장 둘째 문장', false);
   });
 
   it('stop() 후 from_finalize 결과가 오면 타임아웃을 기다리지 않고 즉시 턴을 종료한다', async () => {

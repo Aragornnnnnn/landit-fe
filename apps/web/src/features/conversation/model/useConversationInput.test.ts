@@ -16,7 +16,7 @@ vi.mock('@/shared/monitoring/report', () => monitoringMock);
 // STT는 경계(마이크)라 목으로 둔다 — start/stop 호출을 붙잡고, onInterim·onFinal 콜백을 흉내 낸다
 const sttMock = vi.hoisted(() => {
   const callbacks = {
-    onInterim: undefined as ((t: string) => void) | undefined,
+    onInterim: undefined as ((t: string, pending: boolean) => void) | undefined,
     onFinal: undefined as ((t: string) => void) | undefined,
     onError: undefined as ((e: Error) => void) | undefined,
   };
@@ -29,7 +29,7 @@ const sttMock = vi.hoisted(() => {
 });
 vi.mock('@/shared/stt/useStt', () => ({
   useStt: (opts: {
-    onInterim?: (t: string) => void;
+    onInterim?: (t: string, pending: boolean) => void;
     onFinal?: (t: string) => void;
     onError?: (e: Error) => void;
   }) => {
@@ -97,9 +97,20 @@ describe('useConversationInput', () => {
     const { result } = renderInput();
 
     act(() => result.current.pressMic());
-    act(() => sttMock.callbacks.onInterim?.('Hel'));
+    act(() => sttMock.callbacks.onInterim?.('Hel', true));
 
     expect(result.current.transcript).toBe('Hel');
+  });
+
+  it('확정 전 말이 남아 있는지를 speechPending으로 알려 준다', () => {
+    const { result } = renderInput();
+
+    act(() => result.current.pressMic());
+    act(() => sttMock.callbacks.onInterim?.('I went', true));
+    expect(result.current.speechPending).toBe(true);
+
+    act(() => sttMock.callbacks.onInterim?.('I went to the park', false));
+    expect(result.current.speechPending).toBe(false);
   });
 
   it('음성 완료(■)는 STT를 멈추고, 최종 텍스트가 오면 VOICE로 전달한다', () => {
@@ -192,7 +203,7 @@ describe('useConversationInput', () => {
     const { result } = renderInput();
 
     act(() => result.current.pressMic());
-    act(() => sttMock.callbacks.onInterim?.('Hello there.'));
+    act(() => sttMock.callbacks.onInterim?.('Hello there.', false));
     act(() => result.current.pressKeyboard());
 
     expect(result.current.transcript).toBe('Hello there.');
@@ -224,7 +235,7 @@ describe('useConversationInput', () => {
     const { result, onInputCancel } = renderInput();
 
     act(() => result.current.pressMic());
-    act(() => sttMock.callbacks.onInterim?.('Hel'));
+    act(() => sttMock.callbacks.onInterim?.('Hel', true));
     act(() => result.current.cancelInput());
 
     expect(sttMock.abort).toHaveBeenCalled();

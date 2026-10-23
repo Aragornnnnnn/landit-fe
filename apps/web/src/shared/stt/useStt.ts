@@ -17,7 +17,7 @@ export interface UseSttOptions {
   endpointingMs?: number;
   stopOnSilence?: boolean; // false면 stop()까지 계속 듣는다 (기본 true)
   onFinal?: (transcript: string) => void;
-  onInterim?: (transcript: string) => void;
+  onInterim?: (transcript: string, pending: boolean) => void;
   onError?: (error: Error) => void;
 }
 
@@ -61,9 +61,9 @@ export function useStt(options: UseSttOptions = {}) {
 
     // 파기된(구세대) 세션이 뒤늦게 내는 소리는 전부 무시한다
     const handlers: SttHandlers = {
-      onInterim: (text) => {
+      onInterim: (text, pending) => {
         if (generationRef.current !== gen) return;
-        callbacksRef.current.onInterim?.(text);
+        callbacksRef.current.onInterim?.(text, pending);
       },
       onFinal: (text) => {
         if (generationRef.current !== gen) return;

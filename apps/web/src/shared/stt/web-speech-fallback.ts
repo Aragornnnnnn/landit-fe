@@ -61,13 +61,15 @@ export const startWebSpeech = (options: WebSpeechOptions): SttSession => {
   };
 
   recognition.onresult = (event) => {
-    // Deepgram 경로와 같이 진행 중 결과는 넘기지 않는다
+    // Deepgram 경로와 같이 진행 중 결과는 글자로 넘기지 않고, 남아 있는지만 알린다
+    let pending = false;
     for (let i = event.resultIndex; i < event.results.length; i += 1) {
       const result = event.results[i];
       if (result.isFinal)
         accumulated = `${accumulated} ${result[0].transcript}`.trim();
+      else if (result[0].transcript.trim()) pending = true;
     }
-    options.onInterim(accumulated);
+    options.onInterim(accumulated, pending);
   };
 
   recognition.onerror = (event) => {

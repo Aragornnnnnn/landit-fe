@@ -13,6 +13,8 @@ import { ListeningDots } from './ListeningDots';
 interface UserTranscriptProps {
   text: string;
   phase: ConversationPhase;
+  // 확정 전 말이 남아 있는가 — 다 확정되면 점을 거둔다
+  speechPending?: boolean;
   // 키보드 입력 모드 — 박스가 입력창이 되고 보내기/취소 버튼이 붙는다
   editing?: boolean;
   onChange?: (value: string) => void;
@@ -25,6 +27,7 @@ interface UserTranscriptProps {
 export const UserTranscript = ({
   text,
   phase,
+  speechPending = false,
   editing = false,
   onChange,
   onSubmit,
@@ -32,6 +35,8 @@ export const UserTranscript = ({
   unsent = false,
 }: UserTranscriptProps) => {
   const listening = phase === 'USER_SPEAKING';
+  // 아직 아무 말도 확정 전이면 듣는 중 표시로, 그 뒤엔 확정 전 말이 남아 있을 때만 점을 띄운다
+  const showDots = listening && (text === '' || speechPending);
   const boxRef = useRef<HTMLDivElement>(null);
   // 넘쳐서 앞부분이 잘렸는지 — 잘렸을 때만 윗변을 흐린다. 짧은 답변의 첫 줄까지 흐려지면 안 된다
   const [clipped, setClipped] = useState(false);
@@ -118,7 +123,7 @@ export const UserTranscript = ({
         {/* 같은 높이에 세 줄이 들어오는 조합 — 글자 16px에 줄 간격을 좁혀 잡았다 */}
         <p className="text-base leading-snug font-semibold text-foreground">
           {text}
-          {listening && <ListeningDots spaced={text !== ''} />}
+          {showDots && <ListeningDots spaced={text !== ''} />}
         </p>
       </div>
     </div>

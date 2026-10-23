@@ -99,7 +99,15 @@ describe('startWebSpeech', () => {
       ]),
     );
 
-    expect(onInterim).toHaveBeenLastCalledWith('안녕하세요');
+    expect(onInterim).toHaveBeenLastCalledWith('안녕하세요', true);
+  });
+
+  it('진행 중 결과가 없으면 확정 전 말이 없다고 알린다', () => {
+    const { recognition, onInterim } = startWithFake();
+
+    recognition.onresult?.(resultEvent([['안녕하세요', true]]));
+
+    expect(onInterim).toHaveBeenLastCalledWith('안녕하세요', false);
   });
 
   it('no-speech 에러는 실패가 아니라 정상 종료로 처리한다', () => {

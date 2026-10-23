@@ -85,6 +85,7 @@ export const SmallTalkConversation = ({
   });
   const {
     transcript,
+    speechPending,
     pressMic,
     cancelInput,
     finishListening,
@@ -177,6 +178,7 @@ export const SmallTalkConversation = ({
         ) : (
           <UserTranscript
             text={transcript}
+            speechPending={speechPending}
             phase={phase}
             unsent={resend != null}
           />
