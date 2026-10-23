@@ -8,7 +8,7 @@ interface SettingSheetProps {
   open: boolean;
   onClose: () => void;
   title: string;
-  description: string;
+  description?: string;
   // 제목 오른쪽 보조 동작(들어보기 같은 것)
   trailing?: ReactNode;
   children: ReactNode;
@@ -32,9 +32,11 @@ export const SettingSheet = ({
       </BottomSheet.Title>
       {trailing}
     </div>
-    <p className="mt-1 mb-4 text-14 leading-6" style={{ color: '#666' }}>
-      {description}
-    </p>
+    {description && (
+      <p className="mt-1 mb-4 text-14 leading-6" style={{ color: '#666' }}>
+        {description}
+      </p>
+    )}
     {children}
     <div className="mt-5">
       <Button
