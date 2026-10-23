@@ -2,7 +2,7 @@
 import type { InviteOffer } from '@/features/referral/model/inviter-reward';
 import { formatWon } from '@/shared/lib/won';
 
-// 서버 상한 진행 비율 — 아무도 없어도 빈 게이지를 두어 채울 자리가 있다는 걸 보인다. 상한이 없으면 채울 끝이 없어 그리지 않는다
+// 서버 상한 진행 비율 — 아무도 없어도 빈 게이지를 두어 채울 자리가 있다는 걸 보인다
 const ratioOf = ({ progress }: InviteOffer) =>
   progress ? Math.min(progress.used, progress.total) / progress.total : null;
 
