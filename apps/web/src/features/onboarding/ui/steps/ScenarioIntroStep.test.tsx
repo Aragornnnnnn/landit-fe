@@ -40,6 +40,20 @@ describe('ScenarioIntroStep', () => {
     expect(onStart).toHaveBeenCalledOnce();
   });
 
+  it('썸네일을 못 불러오면 그림 자리를 비워 두고 제목과 상황은 그대로 보여준다', () => {
+    render(
+      <ScenarioIntroStep
+        scenario={scenario}
+        loading={false}
+        onStart={vi.fn()}
+      />,
+    );
+    fireEvent.error(screen.getByRole('presentation'));
+
+    expect(screen.queryByRole('presentation')).not.toBeInTheDocument();
+    expect(screen.getByText(scenario.scenarioTitle)).toBeInTheDocument();
+  });
+
   it('시나리오를 못 받았어도 카드 없이 첫 대화를 시작할 수 있다', () => {
     const onStart = vi.fn();
 

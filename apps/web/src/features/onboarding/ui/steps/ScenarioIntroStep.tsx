@@ -1,6 +1,7 @@
 // 온보딩 마지막 — 첫 대화(수준 파악)의 상황을 카드로 먼저 보여주고, 누르면 홈에서 램프가 열리며 그 대화로 이어진다
 'use client';
 
+import { useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import Image from 'next/image';
 
@@ -70,6 +71,8 @@ const IntroVisual = ({
 // 홈 브리핑 카드와 같은 모양 — 브리핑에서 이 카드를 다시 보면 "아까 그 대화"로 알아본다
 const ScenarioCard = ({ scenario }: { scenario: DailyScenario }) => {
   const reduced = useReducedMotion() ?? false;
+  // 썸네일 주소가 깨지면 브라우저의 깨진 그림 대신 빈 회색 칸을 남긴다
+  const [imageFailed, setImageFailed] = useState(false);
 
   return (
     <motion.div
@@ -79,11 +82,13 @@ const ScenarioCard = ({ scenario }: { scenario: DailyScenario }) => {
       transition={{ type: 'spring', stiffness: 220, damping: 22, delay: 0.15 }}
     >
       <div className="relative min-h-0 w-full flex-1 overflow-hidden bg-secondary">
-        {scenario.thumbnailUrl && (
+        {scenario.thumbnailUrl && !imageFailed && (
           // eslint-disable-next-line @next/next/no-img-element -- 백엔드 썸네일 도메인이 미정이라 next/image 원격 허용 목록을 아직 못 만든다
           <img
             src={scenario.thumbnailUrl}
             alt=""
+            decoding="async"
+            onError={() => setImageFailed(true)}
             // 세로 그림을 가로 칸에 담으면 가운데가 몸통이라, 얼굴이 보이게 위쪽에 맞춘다
             className="h-full w-full object-cover object-[50%_15%]"
           />
