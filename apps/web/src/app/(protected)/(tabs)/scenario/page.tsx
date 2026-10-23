@@ -4,7 +4,7 @@
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { useAppUpdateCheck } from '@/features/app-update/model/useAppUpdateCheck';
+import { useForceUpdateFirst } from '@/features/app-update/model/useForceUpdateFirst';
 import { EventPopupGate } from '@/features/event-popup/ui/EventPopupGate';
 import { NotificationConsentGate } from '@/features/notification/ui/NotificationConsentGate';
 import { SatisfactionGate } from '@/features/satisfaction/ui/SatisfactionGate';
@@ -66,9 +66,8 @@ function ScenarioContent() {
   // 공지가 뜰지 아직 모르거나, 떠서 아직 안 닫혔다
   const eventPopupPending =
     eventPopupLoading || (eventPopup !== null && !eventPopupClosed);
-  // 업데이트 정책을 묻는 동안엔 NONE으로 보이다 FORCE로 바뀔 수 있다 — 답이 정해진 뒤에 띄운다
-  const appUpdate = useAppUpdateCheck();
-  const updateFirst = appUpdate.checking || appUpdate.updateType === 'FORCE';
+  // 강제 업데이트가 1순위다 — 그거거나 그럴지 모르는 동안엔 공지·램프·시트 모두 나서지 않는다
+  const updateFirst = useForceUpdateFirst();
   const eventPopupReady = !updateFirst && !promoOpen && !showerHold;
   // 대화 시작을 눌렀다 — 바로 이동하지 않고 브리핑 카드를 잠깐 보여준 뒤 대화로 들어간다
   const [briefingScenario, setBriefingScenario] = useState<Scenario | null>(
@@ -80,10 +79,14 @@ function ScenarioContent() {
   // 프리미엄 프리뷰 — 오늘 카드를 끝낸 무료 사용자에게 챌린지를 소개하고 표현 하나를 무료로 열어 준다
   const premiumPreview = useHomePreview({
     cleared: cleared && date === undefined,
-    held: showerHold || eventPopupPending,
+    held: updateFirst || showerHold || eventPopupPending,
   });
   const sheetsHeld =
-    promoOpen || showerHold || premiumPreview.active || eventPopupPending;
+    updateFirst ||
+    promoOpen ||
+    showerHold ||
+    premiumPreview.active ||
+    eventPopupPending;
   // 대화는 페이월 문이 아니다 — 오늘 카드든 지난 카드든, 재대화든 구독과 관계없이 시작한다.
   // 무료 사용자가 막히는 건 그 뒤의 상세 피드백과 표현 학습이다 (docs/subscription.md 「무료 구간과 페이월 게이트」)
   const start = (scenario: Scenario) => {
@@ -140,7 +143,7 @@ function ScenarioContent() {
           premiumPreview={premiumPreview.cardPreview}
           onStart={start}
           onSummonClose={() => setSummonClosed(true)}
-          summonHeld={eventPopupPending}
+          summonHeld={updateFirst || eventPopupPending}
         />
       )}
 
