@@ -26,7 +26,7 @@ const FINAL_META: SttResultMeta = {
 };
 const ERROR_META: SttErrorMeta = { engine: 'deepgram' };
 
-// STT는 경계(마이크)라 목으로 둔다 — start/stop 호출을 붙잡고, onInterim·onFinal 콜백을 흉내 낸다
+// STT는 경계(마이크)라 목으로 둔다 — start/stop 호출을 붙잡고, onInterim(확정 텍스트·남은 말)·onFinal 콜백을 흉내 낸다
 const sttMock = vi.hoisted(() => {
   const callbacks = {
     onInterim: undefined as ((t: string, pending: boolean) => void) | undefined,
@@ -108,7 +108,7 @@ describe('useConversationInput', () => {
     expect(sttMock.start).not.toHaveBeenCalled();
   });
 
-  it('말하는 동안 실시간 인식 결과를 transcript로 보여준다', () => {
+  it('말하는 동안 확정된 인식 결과를 transcript로 보여준다', () => {
     const { result } = renderInput();
 
     act(() => result.current.pressMic());

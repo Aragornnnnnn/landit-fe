@@ -43,7 +43,7 @@ export const UserTranscript = ({
   const boxRef = useRef<HTMLDivElement>(null);
   // 넘쳐서 앞부분이 잘렸는지 — 잘렸을 때만 윗변을 흐린다. 짧은 답변의 첫 줄까지 흐려지면 안 된다
   const [clipped, setClipped] = useState(false);
-  // STT interim이 말하는 동안 초당 여러 번 들어와 text가 바뀐다 — 그때마다 강제 리플로우를 돌리면
+  // 말하는 동안 확정 문장이 붙을 때마다 text가 바뀐다 — 그때마다 강제 리플로우를 돌리면
   // 메인 스레드가 밀려 화면 전체가 버벅여 보인다. deferred 값으로 늦춰 브라우저가 한가할 때만 계산한다
   const deferredText = useDeferredValue(text);
 
@@ -53,7 +53,8 @@ export const UserTranscript = ({
     if (!box) return;
     box.scrollTop = box.scrollHeight;
     setClipped(box.scrollTop > 0);
-  }, [deferredText]);
+    // 점이 나타나거나 사라져도 높이가 바뀐다 — 글자가 그대로여도 다시 맞춘다
+  }, [deferredText, showDots]);
 
   if (editing) {
     return (

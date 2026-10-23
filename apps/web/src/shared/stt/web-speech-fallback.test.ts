@@ -102,6 +102,18 @@ describe('startWebSpeech', () => {
     expect(onInterim).toHaveBeenLastCalledWith('안녕하세요', true);
   });
 
+  it('바뀐 결과가 없어도 앞쪽에 남은 진행 중 결과가 있으면 확정 전 말이 있다고 알린다', () => {
+    // 명세상 결과 목록이 줄면 resultIndex가 목록 길이와 같을 수 있다 — 바뀐 구간만 보면 남은 말을 놓친다
+    const { recognition, onInterim } = startWithFake();
+
+    recognition.onresult?.({
+      ...resultEvent([['I went', false]]),
+      resultIndex: 1,
+    });
+
+    expect(onInterim).toHaveBeenLastCalledWith('', true);
+  });
+
   it('진행 중 결과가 없으면 확정 전 말이 없다고 알린다', () => {
     const { recognition, onInterim } = startWithFake();
 

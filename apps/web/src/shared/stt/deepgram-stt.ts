@@ -88,7 +88,7 @@ export const startDeepgramStt = async (
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(event.data);
     else pendingChunks.push(event.data);
   };
-  // 100ms 간격으로 오디오를 흘려보낸다 — 청크가 작을수록 Deepgram이 더 빨리 받아 interim이 촘촘하게 뜬다
+  // 100ms 간격으로 오디오를 흘려보낸다 — 청크가 작을수록 Deepgram이 더 빨리 받아 확정·남은 말 신호가 빨리 온다
   recorder.start(100);
 
   const stopRecorder = () => {
