@@ -18,11 +18,20 @@ import { shouldAskSatisfaction } from '@/features/satisfaction/model/prompt-reco
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
 import { ApiError } from '@/shared/api/api-error';
+import type { SttFinalMeta } from '@/shared/stt/useStt';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 import * as scenarioTalkApi from '../_api/scenario-session';
 import type { ScenarioTalkSubmitResponse } from '../_api/scenario-session';
 import { useScenarioTalkFlow } from './useScenarioTalkFlow';
+
+const STT_META: SttFinalMeta = {
+  engine: 'deepgram',
+  lang: 'en-US',
+  endReason: 'finalize',
+  connectMs: 0,
+  finalizeWaitMs: 0,
+};
 
 const monitoringMock = vi.hoisted(() => ({
   reportError: vi.fn(),
@@ -91,10 +100,11 @@ const sttMock = vi.hoisted(() => {
 vi.mock('@/shared/stt/useStt', () => ({
   useStt: (opts: {
     onInterim?: (t: string) => void;
-    onFinal?: (t: string) => void;
+    onFinal?: (t: string, meta: SttFinalMeta) => void;
   }) => {
     sttMock.callbacks.onInterim = opts.onInterim;
-    sttMock.callbacks.onFinal = opts.onFinal;
+    // 결과 정보는 계측용이라 흐름 검증과 무관하다 — 고정값을 붙여 넘긴다
+    sttMock.callbacks.onFinal = (t: string) => opts.onFinal?.(t, STT_META);
     return {
       start: sttMock.start,
       stop: sttMock.stop,

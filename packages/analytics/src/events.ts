@@ -65,6 +65,7 @@ export const EVENTS = {
   TRANSLATION_TOGGLED: 'Translation Toggled',
   ENGLISH_TEXT_TOGGLED: 'English Text Toggled',
   SPEECH_REPLAYED: 'Speech Replayed',
+  SPEECH_RECOGNITION_COMPLETED: 'Speech Recognition Completed',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
   SPEECH_PLAYBACK_FAILED: 'Speech Playback Failed',
   HINT_USED: 'Hint Used',
@@ -573,8 +574,21 @@ export type EventProps = {
     session_id?: number;
     turn_index: number;
   };
+  // 음성 인식 결과가 나온 순간(빈 결과 포함) — 끝난 방식과 대기 시간을 문의와 대조한다
+  'Speech Recognition Completed': {
+    session_id?: number;
+    turn_index: number;
+    engine: 'deepgram' | 'web_speech';
+    lang: string;
+    end_reason: 'finalize' | 'metadata' | 'closed' | 'utterance_end' | 'ended';
+    connect_ms?: number; // 마이크를 켠 뒤 연결이 열리기까지
+    finalize_wait_ms?: number; // 완료를 누른 뒤 결과가 나오기까지
+    char_count: number;
+  };
+  // reason은 connect_failed(연결 실패)·closed(도중 끊김)·timeout(완료 뒤 응답 없음), 그 밖엔 에러 이름
   'Speech Recognition Failed': {
     engine?: 'deepgram' | 'web_speech';
+    lang?: string;
     reason?: string;
   };
   // AI 발화 재생 실패 — 실패 비율을 본다. 스몰톡 탭의 캐릭터 인사도 같은 재생 훅이라 포함된다.
