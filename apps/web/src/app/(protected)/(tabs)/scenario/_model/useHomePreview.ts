@@ -53,6 +53,14 @@ export const useHomePreview = ({
     view,
     // 프리뷰가 화면에 있거나 대상인지 아직 모르면 홈의 다른 시트(소감·알림 동의)는 미룬다
     active: premiumPreview.deciding || view !== 'none',
+    deciding: premiumPreview.deciding,
+    // 붙잡힘과 상관없이 이번 방문이 프리뷰 차례인가 — 이벤트 공지는 이 방문을 비켜 간다
+    turn:
+      homePreviewViewOf({
+        screen: premiumPreview.screen,
+        cleared,
+        held: false,
+      }) !== 'none',
     holdsSatisfaction: previewHoldsSatisfaction({
       deciding: premiumPreview.deciding,
       step: premiumPreview.step,

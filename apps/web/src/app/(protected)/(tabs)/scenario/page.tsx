@@ -16,6 +16,7 @@ import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleto
 import { TodayCard } from '@/features/scenario/ui/TodayCard';
 import { usePromoSheetOpen } from '@/features/subscription/model/exit-promo/promo-handoff';
 import {
+  ONBOARDED_PARAM,
   readDateParam,
   scenarioReturnPath,
   scenarioTalkPath,
@@ -24,8 +25,9 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
-import { eventPopupOrder } from './_model/event-popup-order';
+import { eventPopupOrder, isLampSettled } from './_model/event-popup-order';
 import { useActiveEventPopup } from './_model/useActiveEventPopup';
+import { useEventPopupSkip } from './_model/useEventPopupSkip';
 import { useHomePreview } from './_model/useHomePreview';
 import { PreviewIntro } from './_ui/PreviewIntro';
 
@@ -59,20 +61,8 @@ function ScenarioContent() {
   const promoOpen = usePromoSheetOpen();
   // 돌아온 순간의 환급 동전 연출이 끝날 때까지도 미룬다 — 어둠 아래에서 시트가 같이 올라오면 둘이 겹친다
   const showerHold = useEarnShowerHold();
-  const { popup: eventPopup, loading: eventPopupLoading } =
-    useActiveEventPopup();
-  const [eventPopupClosed, setEventPopupClosed] = useState(false);
   // 강제 업데이트가 1순위다 — 그거거나 그럴지 모르는 동안엔 공지·램프·시트 모두 나서지 않는다
   const updateFirst = useForceUpdateFirst();
-  const { pending: eventPopupPending, ready: eventPopupReady } =
-    eventPopupOrder({
-      loading: eventPopupLoading,
-      hasPopup: eventPopup !== null,
-      closed: eventPopupClosed,
-      updateFirst,
-      promoOpen,
-      showerHold,
-    });
   // 대화 시작을 눌렀다 — 바로 이동하지 않고 브리핑 카드를 잠깐 보여준 뒤 대화로 들어간다
   const [briefingScenario, setBriefingScenario] = useState<Scenario | null>(
     null,
@@ -80,15 +70,49 @@ function ScenarioContent() {
 
   // 완료한 날은 카드 앞면(같은 썸네일·제목·설명)이 이미 떠 있다 — 램프로 시작하는 날만 브리핑이 필요하다
   const cleared = daily?.scenario?.dailyScenarioType === 'CLEARED';
-  // 램프·프리뷰보다 먼저 나서는 것 — 강제 업데이트와 이벤트 공지
-  const lampHeld = updateFirst || eventPopupPending;
   // 프리미엄 프리뷰 — 오늘 카드를 끝낸 무료 사용자에게 챌린지를 소개하고 표현 하나를 무료로 열어 준다
   const premiumPreview = useHomePreview({
     cleared: cleared && date === undefined,
-    held: lampHeld || showerHold,
+    held: updateFirst || showerHold,
   });
+  // 이벤트 공지는 아무것도 나서지 않는 방문에만 — 온보딩 직후·프리뷰·소감 차례면 건너뛰고 다음 방문에 띄운다
+  const eventPopupSkipped = useEventPopupSkip({
+    onboarded: searchParams.has(ONBOARDED_PARAM),
+    previewTurn: premiumPreview.turn,
+    satisfactionTurn: satisfactionSheet !== null,
+  });
+  const { popup: eventPopup, loading: eventPopupLoading } = useActiveEventPopup(
+    { skip: eventPopupSkipped },
+  );
+  const [eventPopupClosed, setEventPopupClosed] = useState(false);
+  // 램프가 이번 방문에 자동으로 물을지 — 카드가 정해 알려 준다. 묻는 날엔 끄고 나서 공지가 뜬다
+  const [lampSummons, setLampSummons] = useState<boolean | null>(null);
+  const lampSettled = isLampSettled({
+    pastDay: date !== undefined,
+    dailyLoaded: daily != null,
+    hasScenario: Boolean(daily?.scenario),
+    cleared,
+    lampSummons,
+    summonClosed,
+  });
+  const { pending: eventPopupPending, ready: eventPopupReady } =
+    eventPopupOrder({
+      loading: eventPopupLoading,
+      hasPopup: eventPopup !== null,
+      closed: eventPopupClosed,
+      // 이미 건너뛰기로 정한 방문이면 프리뷰 판정을 기다릴 이유가 없다
+      previewDeciding: !eventPopupSkipped && premiumPreview.deciding,
+      lampSettled,
+      updateFirst,
+      promoOpen,
+      showerHold,
+    });
   const sheetsHeld =
-    lampHeld || promoOpen || showerHold || premiumPreview.active;
+    updateFirst ||
+    eventPopupPending ||
+    promoOpen ||
+    showerHold ||
+    premiumPreview.active;
   // 소감·리뷰는 프리뷰를 끝낼 때까지 더 미룬다 — 그사이 이 방문엔 알림 동의도 안 뜬다(소감 차례가 남아 있어서)
   const satisfactionHeld = sheetsHeld || premiumPreview.holdsSatisfaction;
   // 대화는 페이월 문이 아니다 — 오늘 카드든 지난 카드든, 재대화든 구독과 관계없이 시작한다.
@@ -147,7 +171,8 @@ function ScenarioContent() {
           premiumPreview={premiumPreview.cardPreview}
           onStart={start}
           onSummonClose={() => setSummonClosed(true)}
-          summonHeld={lampHeld}
+          summonHeld={updateFirst}
+          onAutoSummonDecided={setLampSummons}
         />
       )}
 

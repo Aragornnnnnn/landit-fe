@@ -42,10 +42,13 @@ const subscription = (premium: boolean) =>
   }) as MySubscription;
 
 // 지난 방문에 받아 둔 응답이 낡은 채 캐시에 남은 상태
-const renderWithStaleCache = (cached: ActivePopup | null) => {
+const renderWithStaleCache = (
+  cached: ActivePopup | null,
+  { skip = false }: { skip?: boolean } = {},
+) => {
   const client = new QueryClient();
   client.setQueryData(eventPopupKeys.active, cached, { updatedAt: 0 });
-  return renderHook(() => useActiveEventPopup(), {
+  return renderHook(() => useActiveEventPopup({ skip }), {
     wrapper: ({ children }) => (
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
     ),
@@ -116,5 +119,15 @@ describe('useActiveEventPopup', () => {
       timeout: 4000,
     });
     expect(result.current.popup).toBeNull();
+  });
+
+  it('이번 방문을 건너뛰면 공지를 묻지도 기다리지도 않는다', async () => {
+    getActivePopupMock.mockResolvedValue(POPUP);
+
+    const { result } = renderWithStaleCache(null, { skip: true });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(result.current).toEqual({ popup: null, loading: false });
+    expect(getActivePopupMock).not.toHaveBeenCalled();
   });
 });

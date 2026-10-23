@@ -7,10 +7,12 @@ export const eventPopupKeys = {
   active: ['event-popup', 'active'] as const,
 };
 
-export const useActivePopupQuery = () =>
+/** @param enabled 이번 방문에 공지를 띄우지 않을 거면 끄고 묻지 않는다 */
+export const useActivePopupQuery = ({ enabled = true } = {}) =>
   useQuery({
     queryKey: eventPopupKeys.active,
     queryFn: getActivePopup,
+    enabled,
     // 공지가 없거나 서버가 아직 이 API를 모르면(배포 전) 바로 포기한다 — 기다리는 동안 램프가 멈춰 있다
     retry: false,
     refetchOnWindowFocus: false,

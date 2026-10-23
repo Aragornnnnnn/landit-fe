@@ -140,3 +140,49 @@ describe('LampStage 자동 소환 보류', () => {
     ).toBeInTheDocument();
   });
 });
+
+describe('LampStage 자동 소환 판정 알림', () => {
+  it('그날 처음이면 이번에 묻는다고 알린다', () => {
+    const onAutoSummonDecided = vi.fn();
+
+    render(
+      <LampStage
+        onStart={vi.fn()}
+        today="2026-08-07"
+        onAutoSummonDecided={onAutoSummonDecided}
+      />,
+    );
+
+    expect(onAutoSummonDecided).toHaveBeenCalledWith(true);
+  });
+
+  it('그날 이미 물었으면 이번엔 묻지 않는다고 알린다', () => {
+    localStorage.setItem('landit:lamp-summoned', '2026-08-07');
+    const onAutoSummonDecided = vi.fn();
+
+    render(
+      <LampStage
+        onStart={vi.fn()}
+        today="2026-08-07"
+        onAutoSummonDecided={onAutoSummonDecided}
+      />,
+    );
+
+    expect(onAutoSummonDecided).toHaveBeenCalledWith(false);
+  });
+
+  it('보류 중엔 아직 정하지 않았으니 알리지 않는다', () => {
+    const onAutoSummonDecided = vi.fn();
+
+    render(
+      <LampStage
+        onStart={vi.fn()}
+        today="2026-08-07"
+        summonHeld
+        onAutoSummonDecided={onAutoSummonDecided}
+      />,
+    );
+
+    expect(onAutoSummonDecided).not.toHaveBeenCalled();
+  });
+});
