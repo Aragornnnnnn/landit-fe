@@ -383,17 +383,17 @@ const InfoSheet = ({
       친구 초대 안내
     </BottomSheet.Title>
     <ul className="mt-3 flex flex-col gap-2 text-14 leading-[1.55] font-medium break-keep text-foreground/80">
-      <li>
-        · 현금이 아니라 환급 적립금이에요. 100일 챌린지를 결제하면 환급에 바로
-        더해져요
-      </li>
+      <li>· 적립금은 100일 프리미엄 이용권의 환급 혜택에 더해져요</li>
       <li>
         · 친구 한 명당 {formatWon(offer.inviterWon)}씩
         {offer.maxWon !== null && `, 최대 ${formatWon(offer.maxWon)}까지`}{' '}
         적립돼요
       </li>
       <li>· 부정 이용이 확인되면 적립이 취소될 수 있어요</li>
-      <li>· 혜택은 바뀌거나 취소될 수 있지만, 적립금은 그대로예요</li>
+      <li>
+        · 이벤트는 11월 20일에 끝나요. 사정에 따라 일찍 끝나거나 혜택이 바뀔 수
+        있지만, 바뀌기 전에 쌓인 적립금은 그대로예요
+      </li>
     </ul>
     <Button className="mt-6" onClick={onClose}>
       확인했어요
