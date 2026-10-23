@@ -15,6 +15,10 @@ interface SatisfactionSheetProps {
   open: boolean;
   moment: SatisfactionMoment;
   view: SatisfactionView;
+  // 시나리오 소감을 표현 학습 뒤로 미뤘다 — 대화와 표현을 함께 묻는다
+  withExpression?: boolean;
+  // 프리뷰 중간에 멈췄다 돌아왔다 — 좀 전 대화로 묻는다
+  earlier?: boolean;
   onGood: () => void;
   onBad: () => void;
   onSendFeedback: () => void;
@@ -46,7 +50,12 @@ const CRYING = '/images/character/landy-crying.webp';
 const REVIEW = '/images/character/landy-review.webp';
 
 // 순간·화면별 얼굴과 말 — 본문은 모두 두 줄 이내로 맞춰 시트 높이가 같게 유지되게 한다
-const faceOf = (moment: SatisfactionMoment, view: SatisfactionView): Face => {
+const faceOf = (
+  moment: SatisfactionMoment,
+  view: SatisfactionView,
+  withExpression: boolean,
+  earlier: boolean,
+): Face => {
   if (moment === 'review')
     return {
       image: REVIEW,
@@ -58,7 +67,10 @@ const faceOf = (moment: SatisfactionMoment, view: SatisfactionView): Face => {
     return {
       image: WAVE,
       title: '좋았다니 래디도 기뻐요!',
-      body: '남은 표현들도 이어서 공부해보세요',
+      // 표현까지 마치고 온 사람(프리뷰를 끝낸 무료 유저)은 남은 표현이 잠겨 있어 꾸준한 학습을 권한다
+      body: withExpression
+        ? '앞으로도 랜딧으로 매일 꾸준히 공부해봐요'
+        : '남은 표현들도 이어서 공부해보세요',
     };
   if (view === 'letter')
     return {
@@ -72,7 +84,11 @@ const faceOf = (moment: SatisfactionMoment, view: SatisfactionView): Face => {
     title:
       moment === 'smalltalk'
         ? '첫 스몰톡, 어떠셨나요?'
-        : '방금 대화, 어떠셨나요?',
+        : withExpression
+          ? '방금 대화와 표현 학습, 어떠셨나요?'
+          : earlier
+            ? '좀 전에 나눈 대화, 어떠셨나요?'
+            : '방금 대화, 어떠셨나요?',
     body: '래디가 많이 궁금해요!\n솔직하게 골라주세요',
     bad: '아쉬웠어요',
     good: '좋았어요',
@@ -83,6 +99,8 @@ export const SatisfactionSheet = ({
   open,
   moment,
   view,
+  withExpression = false,
+  earlier = false,
   onGood,
   onBad,
   onSendFeedback,
@@ -92,7 +110,7 @@ export const SatisfactionSheet = ({
   onAlreadyDone,
   onClose,
 }: SatisfactionSheetProps) => {
-  const face = faceOf(moment, view);
+  const face = faceOf(moment, view, withExpression, earlier);
 
   return (
     <BottomSheet open={open} onClose={onClose}>

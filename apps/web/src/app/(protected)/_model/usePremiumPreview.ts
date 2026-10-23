@@ -27,6 +27,8 @@ export const usePremiumPreview = () => {
 
   return {
     eligible,
+    // 구독을 아직 못 받아 대상인지 모른다 — 받으면 대상이 될 수 있는 환경일 때만
+    deciding: !eligible && rewardLive && gate.deciding,
     step: eligible ? step : null,
     screen: eligible ? previewScreenOf(step) : ('none' as const),
     saveStep,

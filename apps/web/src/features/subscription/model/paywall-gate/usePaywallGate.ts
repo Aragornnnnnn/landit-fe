@@ -26,7 +26,8 @@ interface GuardOptions {
  * 학습 진입을 감싸는 게이트.
  *
  * @returns `guard(이동, 옵션)`은 열려 있으면 이동을 그대로 실행하고, 잠겼으면 계측을 남기고 페이월로 보낸다.
- *   `locked`는 이 사람에게 학습 문이 잠기는지 — 피드백 뒤 어디로 갈지 정할 때 쓴다
+ *   `locked`는 이 사람에게 학습 문이 잠기는지 — 피드백 뒤 어디로 갈지 정할 때 쓴다.
+ *   `deciding`은 구독을 아직 못 받아 판단을 보류 중인지
  */
 export const usePaywallGate = () => {
   const router = useRouter();
@@ -45,6 +46,8 @@ export const usePaywallGate = () => {
         premium: subscription?.premium ?? null,
       });
   const locked = decision === 'locked';
+  // 판단 재료(구독)가 오는 중 — 잠그진 않지만 잠길지도 모른다
+  const deciding = decision === 'unknown';
 
   const guard = (
     go: () => void,
@@ -60,5 +63,5 @@ export const usePaywallGate = () => {
     else router.push(to);
   };
 
-  return { locked, guard };
+  return { locked, deciding, guard };
 };
