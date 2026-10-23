@@ -11,10 +11,14 @@ import { useSubscriptionQuery } from '@/features/subscription/model/my-subscript
 
 import { isEventPopupAudience } from './event-popup-audience';
 
-export const useActiveEventPopup = () => {
+/** @param skip 이번 방문엔 공지를 띄우지 않는다(온보딩 직후 바로 대화로 가는 길) — 반응 기록을 안 남겨 다음 방문에 뜬다 */
+export const useActiveEventPopup = ({ skip = false } = {}) => {
   const [doneIds] = useState(readEventPopupDoneIds);
-  const { data, isPending, isFetching } = useActivePopupQuery();
+  const { data, isPending, isFetching } = useActivePopupQuery({
+    enabled: !skip,
+  });
   const membership = useSubscriptionQuery();
+  if (skip) return { popup: null, loading: false };
   // 지난 방문의 응답이 캐시에 남아 있으면 다시 묻는 동안에도 isPending이 false다 — 이번에 묻는 동안은 모르는 것으로 둔다.
   // 실패(배포 전 404 포함)하면 묻기가 끝나 공지 없이 지나간다
   const loading = isPending || isFetching || membership.isPending;

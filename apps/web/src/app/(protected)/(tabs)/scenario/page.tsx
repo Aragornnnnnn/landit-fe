@@ -16,6 +16,7 @@ import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleto
 import { TodayCard } from '@/features/scenario/ui/TodayCard';
 import { usePromoSheetOpen } from '@/features/subscription/model/exit-promo/promo-handoff';
 import {
+  ONBOARDED_PARAM,
   readDateParam,
   scenarioReturnPath,
   scenarioTalkPath,
@@ -59,8 +60,10 @@ function ScenarioContent() {
   const promoOpen = usePromoSheetOpen();
   // 돌아온 순간의 환급 동전 연출이 끝날 때까지도 미룬다 — 어둠 아래에서 시트가 같이 올라오면 둘이 겹친다
   const showerHold = useEarnShowerHold();
-  const { popup: eventPopup, loading: eventPopupLoading } =
-    useActiveEventPopup();
+  // 온보딩을 막 마치고 온 방문은 바로 대화로 이어진다 — 공지는 다음 방문으로 미룬다
+  const { popup: eventPopup, loading: eventPopupLoading } = useActiveEventPopup(
+    { skip: searchParams.has(ONBOARDED_PARAM) },
+  );
   const [eventPopupClosed, setEventPopupClosed] = useState(false);
   // 강제 업데이트가 1순위다 — 그거거나 그럴지 모르는 동안엔 공지·램프·시트 모두 나서지 않는다
   const updateFirst = useForceUpdateFirst();
