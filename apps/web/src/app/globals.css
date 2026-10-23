@@ -72,6 +72,33 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* 글자 크기 — 마이페이지 글자 크기 배율(--font-scale)을 받는다. 30px 이상 제목과 폰 화면 목업은 px로 고정한다 */
+  --text-xs: calc(0.75rem * var(--font-scale));
+  --text-sm: calc(0.875rem * var(--font-scale));
+  --text-base: calc(1rem * var(--font-scale));
+  --text-lg: calc(1.125rem * var(--font-scale));
+  --text-xl: calc(1.25rem * var(--font-scale));
+  --text-2xl: calc(1.5rem * var(--font-scale));
+  --text-9: calc(9px * var(--font-scale));
+  --text-10: calc(10px * var(--font-scale));
+  --text-11: calc(11px * var(--font-scale));
+  --text-12: calc(12px * var(--font-scale));
+  --text-13: calc(13px * var(--font-scale));
+  --text-14: calc(14px * var(--font-scale));
+  --text-15: calc(15px * var(--font-scale));
+  --text-16: calc(16px * var(--font-scale));
+  --text-17: calc(17px * var(--font-scale));
+  --text-18: calc(18px * var(--font-scale));
+  --text-19: calc(19px * var(--font-scale));
+  --text-20: calc(20px * var(--font-scale));
+  --text-21: calc(21px * var(--font-scale));
+  --text-22: calc(22px * var(--font-scale));
+  --text-23: calc(23px * var(--font-scale));
+  --text-24: calc(24px * var(--font-scale));
+  --text-25: calc(25px * var(--font-scale));
+  --text-26: calc(26px * var(--font-scale));
+  --text-28: calc(28px * var(--font-scale));
 }
 
 :root {
@@ -168,6 +195,8 @@
   /* 안 읽은 편지 점. destructive(경고 빨강)보다 한 톤 죽인 색이라 따로 둔다 */
   --letter-unread: var(--red-400);
   --radius: 0.75rem;
+  /* 글자 크기 배율 — 기본 1. html 글자 크기는 16px로 두고 글자 토큰에만 곱한다(여백까지 커지지 않게) */
+  --font-scale: 1;
 }
 
 /* 다크모드는 현재 미지원 (라이트 단일 테마). 도입 시 아래처럼 시맨틱만 재정의한다 — 값을 지어내지 말 것.

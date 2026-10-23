@@ -34,7 +34,7 @@ export const BackHeader = ({
       <ChevronLeftIcon size={24} />
     </button>
     {title && (
-      <h1 className="absolute left-1/2 -translate-x-1/2 text-[18px] font-bold text-foreground">
+      <h1 className="absolute left-1/2 -translate-x-1/2 text-18 font-bold text-foreground">
         {title}
       </h1>
     )}

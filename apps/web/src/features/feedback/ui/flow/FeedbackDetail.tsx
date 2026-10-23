@@ -139,13 +139,13 @@ export const TurnCard = ({ turn }: { turn: MessageFeedbackResponse }) => {
             <Section title="이렇게 하면 더 통해요">
               <div className="flex flex-col gap-2.5 rounded-2xl border border-border bg-card p-4">
                 {/* before는 위 '내 답변'에 이미 있어 생략, 교정문만 노출 */}
-                <p className="text-[15px] font-bold text-foreground">
+                <p className="text-15 font-bold text-foreground">
                   {turn.correctionExpression}
                 </p>
                 {turn.correctionReason && (
                   <>
                     <div className="h-px w-full bg-border" />
-                    <p className="text-[13px] leading-[1.6] text-muted-foreground">
+                    <p className="text-13 leading-[1.6] text-muted-foreground">
                       {turn.correctionReason}
                     </p>
                   </>
@@ -211,7 +211,7 @@ const Section = ({
         : 'text-foreground';
   return (
     <div className="flex flex-col gap-[10px]">
-      <p className={`text-[13px] font-bold ${titleColor}`}>{title}</p>
+      <p className={`text-13 font-bold ${titleColor}`}>{title}</p>
       {children}
     </div>
   );

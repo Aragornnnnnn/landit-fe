@@ -33,7 +33,7 @@ export const BenefitList = () => (
       return (
         <li key={icon} className="flex items-center gap-3">
           <Icon size={22} className="shrink-0 text-primary short:size-[18px]" />
-          <span className="text-[15px] leading-[1.3] font-medium text-foreground short:text-[13px]">
+          <span className="text-15 leading-[1.3] font-medium text-foreground short:text-13">
             {text}
           </span>
         </li>

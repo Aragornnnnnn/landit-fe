@@ -19,7 +19,7 @@ interface LetterBadgeProps {
 
 export const LetterBadge = ({ label, tone }: LetterBadgeProps) => (
   <span
-    className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${TONE_CLASSES[tone]}`}
+    className={`shrink-0 rounded-full px-2.5 py-1 text-11 font-semibold ${TONE_CLASSES[tone]}`}
   >
     {label}
   </span>

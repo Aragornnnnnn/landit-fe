@@ -39,7 +39,7 @@ const ScenarioCard = ({
     />
     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(to_bottom,transparent,rgba(0,0,0,0.72))]" />
     <p
-      className={`absolute inset-x-2 bottom-2 line-clamp-2 font-bold break-keep text-white ${picked ? 'text-[13px] leading-[1.3]' : 'text-[10px] leading-[1.3]'}`}
+      className={`absolute inset-x-2 bottom-2 line-clamp-2 font-bold break-keep text-white ${picked ? 'text-13 leading-[1.3]' : 'text-10 leading-[1.3]'}`}
     >
       {title}
     </p>

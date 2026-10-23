@@ -56,7 +56,7 @@ export const ExampleDemo = ({ step, width }: DemoProps) => (
       className={`mx-5 mt-5 border-t border-[#ebebe8] pt-5 ${appear(step >= EXAMPLE_SCENE.sentence)}`}
     >
       <div className="flex items-start gap-3">
-        <p className="flex-1 text-[22px] leading-snug text-foreground">
+        <p className="flex-1 text-22 leading-snug text-foreground">
           Honestly, I&apos;m always up for exploring the city.
         </p>
         <Speaker playing={step === EXAMPLE_SCENE.sentence} />
@@ -88,7 +88,7 @@ export const ExampleDemo = ({ step, width }: DemoProps) => (
         <p className="text-base font-bold text-muted-foreground">
           이런 느낌이에요
         </p>
-        <p className="mt-1 text-[22px] leading-snug font-bold text-foreground">
+        <p className="mt-1 text-22 leading-snug font-bold text-foreground">
           &apos;콜!&apos;처럼 반갑게 답할 때 써요
         </p>
       </div>

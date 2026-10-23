@@ -23,12 +23,10 @@ export const SeriesCarousel = ({
 }) => (
   <RevealSection>
     {number && (
-      <p className="reveal-up px-6 text-[15px] font-black text-primary">
-        {number}
-      </p>
+      <p className="reveal-up px-6 text-15 font-black text-primary">{number}</p>
     )}
     <p
-      className={`reveal-up px-6 font-extrabold tracking-[-0.02em] text-foreground ${number ? 'mt-1 text-[21px]' : 'text-[22px]'}`}
+      className={`reveal-up px-6 font-extrabold tracking-[-0.02em] text-foreground ${number ? 'mt-1 text-21' : 'text-22'}`}
     >
       {label}
     </p>
@@ -38,7 +36,7 @@ export const SeriesCarousel = ({
           key={item.title}
           className="relative h-[400px] w-[272px] shrink-0 snap-start overflow-hidden rounded-3xl border border-[#e9e7e2] bg-card shadow-[0_2px_10px_rgba(51,38,26,0.05)]"
         >
-          <h3 className="px-5 pt-5 text-center text-[17px] leading-snug font-bold tracking-[-0.02em] text-foreground">
+          <h3 className="px-5 pt-5 text-center text-17 leading-snug font-bold tracking-[-0.02em] text-foreground">
             {item.title}
           </h3>
           {/* 폰은 카드 아래로 잘려 화면 윗부분만 보인다 */}

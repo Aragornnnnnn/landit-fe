@@ -160,10 +160,10 @@ const Headline = ({ headline }: { headline: SmallTalkSummaryHeadline }) => (
     />
     {/* 첫 문장엔 닉네임이 들어갈 수 있고 길이 제한이 없다 — 띄어쓰기 없는 긴 이름도 풍선 안에서 끊는다 */}
     <div className="min-w-0 flex-1 rounded-2xl rounded-bl-sm bg-secondary px-4 py-3 [overflow-wrap:anywhere]">
-      <p className="text-[15px] leading-6 font-bold break-keep text-foreground">
+      <p className="text-15 leading-6 font-bold break-keep text-foreground">
         {headline.text}
       </p>
-      <p className="text-[15px] leading-6 font-bold break-keep text-foreground">
+      <p className="text-15 leading-6 font-bold break-keep text-foreground">
         {headline.subline}
       </p>
     </div>

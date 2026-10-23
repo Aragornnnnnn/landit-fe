@@ -207,7 +207,7 @@ export const SummaryDemo = ({ width }: DemoProps) => (
         <div className="px-6 pt-[18px]">
           <div className="flex flex-col gap-[7px]">
             <StarRating rating={2} size={32} />
-            <p className="text-[23px] leading-[1.28] font-bold break-keep text-foreground">
+            <p className="text-23 leading-[1.28] font-bold break-keep text-foreground">
               이제 새 룸메이트와 어색하지 않게 인사할 수 있어요!
             </p>
           </div>
@@ -219,7 +219,7 @@ export const SummaryDemo = ({ width }: DemoProps) => (
           </p>
           <div className="mt-6 flex flex-col gap-3">
             <SummaryCard title="총평">
-              <p className="text-[15px] leading-[1.6] text-foreground">
+              <p className="text-15 leading-[1.6] text-foreground">
                 자기소개는 이름·출신·전공을 한 번에 전해 좋았어요. 취미를 말할
                 때는 이유를 한 문장 덧붙여 보세요.
               </p>

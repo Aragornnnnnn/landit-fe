@@ -38,7 +38,7 @@ export const RewardRulesButton = ({
       </button>
       <BottomSheet open={open} onClose={() => setOpen(false)}>
         <div>
-          <BottomSheet.Title className="text-[18px] font-black text-foreground">
+          <BottomSheet.Title className="text-18 font-black text-foreground">
             {dailyWon === null ? '환급 규칙' : '이렇게 환급돼요'}
           </BottomSheet.Title>
           <div className="mt-4 mb-6">

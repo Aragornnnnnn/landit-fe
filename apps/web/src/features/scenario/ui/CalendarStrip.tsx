@@ -291,7 +291,7 @@ const MonthSkeleton = ({
             }`}
           />
           <span
-            className={`text-[13px] leading-[1.15] ${
+            className={`text-13 leading-[1.15] ${
               isBlank(day)
                 ? 'text-muted-foreground/40'
                 : 'text-muted-foreground'
@@ -402,7 +402,7 @@ const WeekSkeleton = () => (
         className="flex w-full flex-col items-center gap-1 border-2 border-transparent pt-1.5 pb-1"
       >
         <span className="animate-skeleton-flow size-10 rounded-full min-[390px]:size-11" />
-        <span className="text-[13px] leading-[1.15] text-muted-foreground">
+        <span className="text-13 leading-[1.15] text-muted-foreground">
           {weekday}
         </span>
       </div>

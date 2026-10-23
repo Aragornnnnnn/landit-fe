@@ -21,7 +21,7 @@ export const Highlight = ({ children }: { children: React.ReactNode }) => (
 export const SectionHeading = ({ title, mascot }: SectionHeadingProps) => (
   <div className="flex items-end px-6">
     <div className="reveal-up shrink-0">
-      <h2 className="text-[26px] leading-[34px] font-black tracking-[-0.025em] whitespace-pre-line text-foreground">
+      <h2 className="text-26 leading-[calc(34/26)] font-black tracking-[-0.025em] whitespace-pre-line text-foreground">
         {title}
       </h2>
     </div>

@@ -93,7 +93,7 @@ const Completed = ({
         <div className="mb-4 flex flex-col items-center gap-2">
           <CheckMark shown={confirmed} />
           <motion.p
-            className="text-[15px] font-bold text-primary"
+            className="text-15 font-bold text-primary"
             initial={false}
             animate={confirmed ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
             transition={{ ...SHIFT, delay: confirmed ? 0.2 : 0 }}
@@ -101,7 +101,7 @@ const Completed = ({
             등록이 완료되었어요
           </motion.p>
         </div>
-        <p className="text-[26px] leading-snug font-black text-foreground">
+        <p className="text-26 leading-snug font-black text-foreground">
           <motion.span
             layout
             transition={SHIFT}
@@ -159,13 +159,11 @@ const NeedsPermission = ({
 }) => (
   <main className="flex h-dvh flex-col bg-background">
     <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-      <p className="text-[26px] leading-snug font-black text-foreground">
+      <p className="text-26 leading-snug font-black text-foreground">
         <PledgeSentence time={time} />
       </p>
-      <p className="mt-8 text-[18px] font-bold text-foreground">
-        거의 다 됐어요!
-      </p>
-      <p className="mt-1.5 text-[15px] font-medium text-muted-foreground">
+      <p className="mt-8 text-18 font-bold text-foreground">거의 다 됐어요!</p>
+      <p className="mt-1.5 text-15 font-medium text-muted-foreground">
         권한만 켜면 매일 {formatAlarmTime(time)}에 알려드릴게요
       </p>
     </div>
@@ -174,7 +172,7 @@ const NeedsPermission = ({
       <button
         type="button"
         onClick={onLater}
-        className="mt-4 w-full text-center text-[13px] font-bold text-muted-foreground"
+        className="mt-4 w-full text-center text-13 font-bold text-muted-foreground"
       >
         나중에 할게요
       </button>

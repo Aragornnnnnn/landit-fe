@@ -7,7 +7,7 @@ const BUBBLES: { mine: boolean; width: string; lines: number }[] = [
   { mine: false, width: '78%', lines: 2 },
 ];
 
-// 원문 한 줄(text-[15px] leading-6)과 번역 한 줄(text-[13px] leading-5) 높이
+// 원문 한 줄(text-15 leading-6)과 번역 한 줄(text-13 leading-5) 높이
 const LINE = 24;
 const SUB_LINE = 20;
 

@@ -127,7 +127,7 @@ export const SatisfactionSheet = ({
         >
           {face.title}
         </BottomSheet.Title>
-        <p className="mt-2 text-[15px] leading-6 whitespace-pre-line text-muted-foreground">
+        <p className="mt-2 text-15 leading-6 whitespace-pre-line text-muted-foreground">
           {face.body}
         </p>
         {view !== 'thanks' && (

@@ -20,7 +20,7 @@ export const PaywallHero = () => (
     </div>
 
     <h2
-      className="animate-reveal-up mt-5 px-6 text-[28px] leading-[38px] font-black tracking-[-0.025em] text-foreground"
+      className="animate-reveal-up mt-5 px-6 text-28 leading-[calc(38/28)] font-black tracking-[-0.025em] text-foreground"
       style={{ '--i': 1 } as CSSProperties}
     >
       <span className="relative isolate inline-block">

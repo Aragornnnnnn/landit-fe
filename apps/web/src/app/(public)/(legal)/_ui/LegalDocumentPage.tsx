@@ -52,7 +52,7 @@ export const LegalDocumentPage = ({ document }: LegalDocumentPageProps) => {
         >
           <ChevronLeftIcon />
         </button>
-        <h1 className="absolute left-1/2 -translate-x-1/2 text-[17px] font-semibold text-foreground">
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-17 font-semibold text-foreground">
           {document.title}
         </h1>
       </header>
@@ -95,7 +95,7 @@ export const LegalDocumentPage = ({ document }: LegalDocumentPageProps) => {
                 id={section.id}
                 className="overflow-hidden rounded-xl bg-card px-4 py-4"
               >
-                <h2 className="text-[15px] font-bold text-foreground">
+                <h2 className="text-15 font-bold text-foreground">
                   {section.title}
                 </h2>
                 <div className="mt-2 space-y-2">
