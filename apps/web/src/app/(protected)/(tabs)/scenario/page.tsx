@@ -24,6 +24,7 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
+import { eventPopupOrder } from './_model/event-popup-order';
 import { useActiveEventPopup } from './_model/useActiveEventPopup';
 import { useHomePreview } from './_model/useHomePreview';
 import { PreviewIntro } from './_ui/PreviewIntro';
@@ -58,17 +59,20 @@ function ScenarioContent() {
   const promoOpen = usePromoSheetOpen();
   // 돌아온 순간의 환급 동전 연출이 끝날 때까지도 미룬다 — 어둠 아래에서 시트가 같이 올라오면 둘이 겹친다
   const showerHold = useEarnShowerHold();
-  // 이벤트 공지는 들어오자마자 가장 먼저 띄운다 — 닫힐 때까지 램프 자동 소환·소감·프리뷰가 기다린다.
-  // 강제 업데이트·할인 시트·동전 연출은 방금 한 행동의 응답이라 공지가 그 뒤를 기다린다
   const { popup: eventPopup, loading: eventPopupLoading } =
     useActiveEventPopup();
   const [eventPopupClosed, setEventPopupClosed] = useState(false);
-  // 공지가 뜰지 아직 모르거나, 떠서 아직 안 닫혔다
-  const eventPopupPending =
-    eventPopupLoading || (eventPopup !== null && !eventPopupClosed);
   // 강제 업데이트가 1순위다 — 그거거나 그럴지 모르는 동안엔 공지·램프·시트 모두 나서지 않는다
   const updateFirst = useForceUpdateFirst();
-  const eventPopupReady = !updateFirst && !promoOpen && !showerHold;
+  const { pending: eventPopupPending, ready: eventPopupReady } =
+    eventPopupOrder({
+      loading: eventPopupLoading,
+      hasPopup: eventPopup !== null,
+      closed: eventPopupClosed,
+      updateFirst,
+      promoOpen,
+      showerHold,
+    });
   // 대화 시작을 눌렀다 — 바로 이동하지 않고 브리핑 카드를 잠깐 보여준 뒤 대화로 들어간다
   const [briefingScenario, setBriefingScenario] = useState<Scenario | null>(
     null,
