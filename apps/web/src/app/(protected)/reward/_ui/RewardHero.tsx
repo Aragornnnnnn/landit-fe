@@ -66,7 +66,7 @@ export const RewardHero = ({ reward }: { reward: RewardView }) => {
           <Emoji className="size-7 shrink-0">💰</Emoji>
           <span className="min-w-0 flex-1">
             <span className="block text-16 font-bold text-foreground">
-              100일 챌린지 다시 시작하기
+              100일 이용권 다시 시작하기
             </span>
             <span className="mt-0.5 block text-13 font-medium break-keep text-muted-foreground">
               대화할 때마다 환급액이 다시 쌓여요
