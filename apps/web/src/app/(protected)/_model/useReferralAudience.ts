@@ -5,6 +5,11 @@ import { referralAudienceOf } from './referral-audience';
 import { useMyReward } from './useMyReward';
 
 export const useReferralAudience = () => {
-  const { invited, settled, reward } = useMyReward();
-  return referralAudienceOf({ invited, settled, participant: reward !== null });
+  const { invited, settled, fetching, reward } = useMyReward();
+  return referralAudienceOf({
+    invited,
+    settled,
+    fetching,
+    participant: reward !== null,
+  });
 };

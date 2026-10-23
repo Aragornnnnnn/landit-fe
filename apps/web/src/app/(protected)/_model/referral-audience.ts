@@ -3,6 +3,7 @@ export const referralAudienceOf = ({
   invited,
   participant,
   settled,
+  fetching,
 }: {
   // 환급을 권할 무료 유저인가
   invited: boolean;
@@ -10,7 +11,9 @@ export const referralAudienceOf = ({
   participant: boolean;
   // 누구인지 다 알게 됐는가
   settled: boolean;
+  // 환급을 다시 받는 중인가 — 결제 직후처럼 받아 둔 답이 곧 바뀔 수 있다(환급 화면과 같은 가드)
+  fetching: boolean;
 }) => ({
   shown: invited || participant,
-  settled: settled || participant,
+  settled: participant || (settled && !fetching),
 });
