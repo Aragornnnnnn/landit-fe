@@ -5,7 +5,7 @@ import { SttError } from './errors';
 // 결과가 어떻게 나왔는지 — 빈 결과·늦은 응답을 문의와 대조하려고 계측에 싣는다
 export interface SttResultMeta {
   engine: 'deepgram' | 'web_speech';
-  endReason: 'finalize' | 'metadata' | 'closed' | 'utterance_end' | 'ended';
+  endReason: 'finalize' | 'timeout' | 'utterance_end' | 'ended';
   connectMs: number | null; // 마이크를 켠 뒤 연결이 열리기까지
   finalizeWaitMs: number | null; // 완료를 누른 뒤 결과가 나오기까지
 }
@@ -32,8 +32,6 @@ export interface DeepgramSttOptions extends SttHandlers {
 
 const TOKEN_ENDPOINT = '/api/stt/token';
 const DEEPGRAM_WS_URL = 'wss://api.deepgram.com/v1/listen';
-// 완료를 누른 뒤 이 안에 끝나지 않으면 실패로 본다 — 연결 준비 중에 누른 경우의 연결 대기까지 포함한다
-const FINALIZE_TIMEOUT_MS = 3000;
 
 const pickMimeType = () => {
   if (MediaRecorder.isTypeSupported('audio/webm')) return 'audio/webm';
@@ -171,14 +169,12 @@ export const startDeepgramStt = async (
     });
   };
 
-  // 마지막 조각까지 보낸 뒤에만 확정을 요청한다. Finalize 응답은 보장되지 않아
-  // CloseStream으로 남은 결과·Metadata를 받고 서버가 연결을 닫게 한다
+  // 마지막 조각까지 보낸 뒤에만 확정을 요청한다 — 먼저 보내면 끝부분이 확정에서 빠진다
   const requestFinalize = () => {
     if (!recorderDone || socket.readyState !== WebSocket.OPEN) return;
     for (const chunk of pendingChunks) socket.send(chunk);
     pendingChunks.length = 0;
     socket.send(JSON.stringify({ type: 'Finalize' }));
-    socket.send(JSON.stringify({ type: 'CloseStream' }));
   };
 
   socket.onopen = () => {
@@ -212,8 +208,6 @@ export const startDeepgramStt = async (
       return;
     }
 
-    // CloseStream 뒤 마지막으로 오는 요약 — Finalize 응답이 없을 때의 종료 신호
-    if (msg.type === 'Metadata' && stoppedAt !== null) finishTurn('metadata');
     // 침묵 감지 → 발화 종료
     if (msg.type === 'UtteranceEnd') finishTurn('utterance_end');
   };
@@ -232,23 +226,19 @@ export const startDeepgramStt = async (
         ? new SttError('STT 연결 실패', 'connect_failed')
         : new SttError('STT 연결 오류', 'closed'),
     );
-  socket.onclose = () => {
-    // 완료 뒤 서버가 닫는 건 CloseStream의 정상 마무리다
-    if (stoppedAt !== null && openedAt !== null) finishTurn('closed');
-    else if (openedAt === null)
-      fail(new SttError('STT 연결 실패', 'connect_failed'));
-    else fail(new SttError('STT 연결이 끊겼습니다.', 'closed'));
-  };
+  socket.onclose = () =>
+    fail(
+      openedAt === null
+        ? new SttError('STT 연결 실패', 'connect_failed')
+        : new SttError('STT 연결이 끊겼습니다.', 'closed'),
+    );
 
   return {
     stop: () => {
       if (finished || stoppedAt !== null) return;
       stoppedAt = Date.now();
-      // 응답이 끝내 안 오면 받은 데까지 조용히 제출하지 않고 실패로 알린다
-      finalizeTimer = setTimeout(
-        () => fail(new SttError('STT 결과 대기 시간 초과', 'timeout')),
-        FINALIZE_TIMEOUT_MS,
-      );
+      // Finalize 응답은 보장되지 않는다 — 안 오면 받은 데까지 제출하고 timeout으로 남긴다
+      finalizeTimer = setTimeout(() => finishTurn('timeout'), 2000);
       // 녹음기는 stop() 뒤 마지막 조각을 비동기로 내고 stop 이벤트를 쏜다 — 그다음에 확정을 요청한다
       const onRecorderStopped = () => {
         recorderDone = true;

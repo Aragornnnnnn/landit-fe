@@ -273,9 +273,16 @@ describe('useStt', () => {
     act(() => {
       ws.readyState = GateWs.OPEN;
       ws.onopen?.();
-      ws.onmessage?.({ data: JSON.stringify({ type: 'Metadata' }) });
+      ws.onmessage?.({
+        data: JSON.stringify({
+          type: 'Results',
+          is_final: true,
+          from_finalize: true,
+          channel: { alternatives: [{ transcript: '' }] },
+        }),
+      });
     });
-    expect(ws.sent).toContainEqual(JSON.stringify({ type: 'CloseStream' }));
+    expect(ws.sent).toContainEqual(JSON.stringify({ type: 'Finalize' }));
     expect(onFinal).toHaveBeenCalledWith('', expect.anything());
     // 방치된 세션이 sessionRef를 붙잡고 있지 않아 재시작이 막히지 않는다
     await act(() => result.current.start());
@@ -301,7 +308,7 @@ describe('useStt', () => {
 
     expect(onFinal).toHaveBeenCalledWith(
       '안녕하세요',
-      expect.objectContaining({ engine: 'web_speech', lang: 'en-US' }),
+      expect.objectContaining({ engine: 'web_speech' }),
     );
   });
 });

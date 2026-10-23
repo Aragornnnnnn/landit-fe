@@ -6,8 +6,8 @@ export class MicPermissionDeniedError extends Error {
   }
 }
 
-// 세션 도중 인식 실패 — 연결 실패·도중 끊김·완료 뒤 응답 없음을 구분해 계측한다
-export type SttErrorReason = 'connect_failed' | 'closed' | 'timeout';
+// 세션 도중 인식 실패 — 연결 실패와 도중 끊김을 구분해 계측한다
+export type SttErrorReason = 'connect_failed' | 'closed';
 
 export class SttError extends Error {
   constructor(
