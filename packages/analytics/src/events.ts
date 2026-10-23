@@ -64,6 +64,7 @@ export const EVENTS = {
   INNER_THOUGHT_VIEWED: 'Inner Thought Viewed',
   TRANSLATION_TOGGLED: 'Translation Toggled',
   ENGLISH_TEXT_TOGGLED: 'English Text Toggled',
+  ANSWER_GUIDE_TOGGLED: 'Answer Guide Toggled',
   SPEECH_REPLAYED: 'Speech Replayed',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
   SPEECH_PLAYBACK_FAILED: 'Speech Playback Failed',
@@ -568,6 +569,14 @@ export type EventProps = {
     session_id?: number;
     turn_index: number;
     hidden: boolean;
+  };
+  // 첫 시나리오 답변 가이드를 펼치거나 접은 순간 — 첫 질문의 유도 힌트를 보고 연 사람이 얼마나 되는지 본다
+  'Answer Guide Toggled': {
+    session_id?: number;
+    scenario_id: number;
+    turn_index: number;
+    opened: boolean;
+    from_hint: boolean;
   };
   // 상대 발화를 다시 들은 순간 — 어느 턴에서 못 알아들어 되감는지 본다. 멈추려고 누른 건 세지 않는다
   'Speech Replayed': {

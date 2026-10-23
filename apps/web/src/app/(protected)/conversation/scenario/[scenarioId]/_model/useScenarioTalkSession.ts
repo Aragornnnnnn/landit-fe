@@ -5,6 +5,7 @@ import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
 import { endSession } from '@/features/conversation/api/session';
+import type { AnswerGuide } from '@/features/scenario/api/daily';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
 import { reportError, reportWarning } from '@/shared/monitoring/report';
@@ -16,6 +17,7 @@ interface ScenarioTalkSessionOptions {
   onOpeningMessage: (message: {
     content: string;
     translatedContent: string | null;
+    answerGuide: AnswerGuide | null;
   }) => void;
 }
 
@@ -57,6 +59,7 @@ export const useScenarioTalkSession = (
           seedOpening({
             content: res.currentMessage.content,
             translatedContent: res.currentMessage.translatedContent,
+            answerGuide: res.currentMessage.answerGuide,
           });
         }
         return res.sessionId;

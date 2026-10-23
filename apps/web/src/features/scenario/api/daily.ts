@@ -3,6 +3,13 @@
 import type { ConversationCharacter } from '@/features/conversation/api/session';
 import { api } from '@/shared/api/client';
 
+// 질문에 따라 말해 볼 수 있는 예시 답변과 반말 뜻 — 첫 시나리오의 진단 질문에만 온다 (백엔드 AnswerGuide 미러).
+// 시나리오 질문 콘텐츠라 여기 두고, 대화 세션 응답 타입도 이걸 쓴다
+export interface AnswerGuide {
+  content: string;
+  translatedContent: string;
+}
+
 export interface ScenarioOpeningPreview {
   aiOpeningMessage: string | null;
   aiOpeningMessageTranslation: string | null;
@@ -11,6 +18,8 @@ export interface ScenarioOpeningPreview {
   userOpeningInstruction: string | null;
   innerThought: string | null;
   innerThoughtType: string | null;
+  // 첫 질문의 답변 가이드 — 없는 질문이면 null
+  answerGuide: AnswerGuide | null;
   // 이 시나리오의 상대(얼굴·목소리). 얼굴은 이 값으로 정한다 —
   // 세션 시작 응답에도 같은 값이 오지만 그건 백그라운드라 늦다
   character: ConversationCharacter;
