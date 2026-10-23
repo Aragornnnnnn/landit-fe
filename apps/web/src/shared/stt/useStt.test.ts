@@ -202,16 +202,18 @@ describe('useStt', () => {
     expect(GateWs.instances).toHaveLength(2);
   });
 
-  it('연결 중에 stop하면 뒤늦게 완성된 세션이 방치되지 않고 즉시 확정 처리된다', async () => {
+  it('연결 중에 stop하면 뒤늦게 완성된 세션이 방치되지 않고 연결 뒤 확정 처리된다', async () => {
     // 완료(■)를 연결 중(권한→토큰→소켓)에 눌렀다고 무시되면, 세션이 계속 들으며
     // 방치되고 — stopOnSilence:false 소비자는 침묵으로도 안 끝나 다음 재시작까지 막힌다
     class GateRecorder {
       static isTypeSupported = () => true;
       state = 'recording';
       ondataavailable: ((event: { data: Blob }) => void) | null = null;
+      onstop: (() => void) | null = null;
       start() {}
       stop() {
         this.state = 'inactive';
+        this.onstop?.();
       }
     }
     class GateWs {
@@ -221,7 +223,7 @@ describe('useStt', () => {
       readyState = 0; // open()을 안 불러 연결 중 상태를 유지한다
       sent: unknown[] = [];
       onopen: (() => void) | null = null;
-      onmessage: (() => void) | null = null;
+      onmessage: ((event: { data: string }) => void) | null = null;
       onerror: (() => void) | null = null;
       onclose: (() => void) | null = null;
       constructor() {
@@ -266,8 +268,15 @@ describe('useStt', () => {
       await startPromise;
     });
 
-    // 설치되자마자 확정 처리돼 onFinal이 온다 — 세션이 방치되지 않는다
-    expect(onFinal).toHaveBeenCalledWith('');
+    // 연결이 열리면 녹음분을 보내 확정하고 onFinal이 온다 — 세션이 방치되지 않는다
+    const ws = GateWs.instances.at(-1)!;
+    act(() => {
+      ws.readyState = GateWs.OPEN;
+      ws.onopen?.();
+      ws.onmessage?.({ data: JSON.stringify({ type: 'Metadata' }) });
+    });
+    expect(ws.sent).toContainEqual(JSON.stringify({ type: 'CloseStream' }));
+    expect(onFinal).toHaveBeenCalledWith('', expect.anything());
     // 방치된 세션이 sessionRef를 붙잡고 있지 않아 재시작이 막히지 않는다
     await act(() => result.current.start());
     expect(GateWs.instances).toHaveLength(2);
@@ -290,6 +299,9 @@ describe('useStt', () => {
       recognition.onend?.();
     });
 
-    expect(onFinal).toHaveBeenCalledWith('안녕하세요');
+    expect(onFinal).toHaveBeenCalledWith(
+      '안녕하세요',
+      expect.objectContaining({ engine: 'web_speech', lang: 'en-US' }),
+    );
   });
 });

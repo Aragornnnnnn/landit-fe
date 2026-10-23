@@ -54,10 +54,17 @@ export const startWebSpeech = (options: WebSpeechOptions): SttSession => {
   let accumulated = '';
   let finished = false;
 
+  let stoppedAt: number | null = null;
+
   const finishTurn = () => {
     if (finished) return;
     finished = true;
-    options.onFinal(accumulated.trim());
+    options.onFinal(accumulated.trim(), {
+      engine: 'web_speech',
+      endReason: 'ended',
+      connectMs: null,
+      finalizeWaitMs: stoppedAt === null ? null : Date.now() - stoppedAt,
+    });
   };
 
   recognition.onresult = (event) => {
@@ -95,7 +102,10 @@ export const startWebSpeech = (options: WebSpeechOptions): SttSession => {
   recognition.start();
 
   return {
-    stop: () => recognition.stop(),
+    stop: () => {
+      stoppedAt ??= Date.now();
+      recognition.stop();
+    },
     abort: () => {
       if (finished) return;
       finished = true; // 이후 onresult·onend가 와도 결과를 내보내지 않는다

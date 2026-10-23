@@ -7,18 +7,28 @@ import { useEffect, useRef } from 'react';
 import {
   startDeepgramStt,
   type SttHandlers,
+  type SttResultMeta,
   type SttSession,
 } from './deepgram-stt';
 import { MicPermissionDeniedError } from './errors';
 import { startWebSpeech } from './web-speech-fallback';
 
+// 계측용 — 어느 엔진이 어떤 언어로 들었는가
+export interface SttFinalMeta extends SttResultMeta {
+  lang: string;
+}
+export interface SttErrorMeta {
+  engine: SttResultMeta['engine'];
+  lang: string;
+}
+
 export interface UseSttOptions {
   lang?: string;
   endpointingMs?: number;
   stopOnSilence?: boolean; // false면 stop()까지 계속 듣는다 (기본 true)
-  onFinal?: (transcript: string) => void;
+  onFinal?: (transcript: string, meta: SttFinalMeta) => void;
   onInterim?: (transcript: string, pending: boolean) => void;
-  onError?: (error: Error) => void;
+  onError?: (error: Error, meta: SttErrorMeta) => void;
 }
 
 // 영어 말하기 연습 제품이라 영어가 기본 — 한국어 받아쓰기가 필요한 기능은 lang: 'ko'로 덮어쓴다
@@ -49,15 +59,19 @@ export function useStt(options: UseSttOptions = {}) {
     callbacksRef.current = { onFinal, onInterim, onError };
   });
 
+  // 지금 듣고 있는 엔진 — Deepgram으로 시작했다가 실패하면 폴백으로 바뀐다
+  const engineRef = useRef<SttResultMeta['engine']>('deepgram');
+
   const failWith = (err: Error) => {
     sessionRef.current = null;
-    callbacksRef.current.onError?.(err);
+    callbacksRef.current.onError?.(err, { engine: engineRef.current, lang });
   };
 
   const start = async () => {
     if (sessionRef.current) return;
     const gen = ++generationRef.current;
     pendingStopRef.current = false;
+    engineRef.current = 'deepgram';
 
     // 파기된(구세대) 세션이 뒤늦게 내는 소리는 전부 무시한다
     const handlers: SttHandlers = {
@@ -65,10 +79,10 @@ export function useStt(options: UseSttOptions = {}) {
         if (generationRef.current !== gen) return;
         callbacksRef.current.onInterim?.(text, pending);
       },
-      onFinal: (text) => {
+      onFinal: (text, meta) => {
         if (generationRef.current !== gen) return;
         sessionRef.current = null;
-        callbacksRef.current.onFinal?.(text);
+        callbacksRef.current.onFinal?.(text, { ...meta, lang });
       },
       onError: (err) => {
         if (generationRef.current !== gen) return;
@@ -109,6 +123,7 @@ export function useStt(options: UseSttOptions = {}) {
         return;
       }
       // 미지원(iOS WKWebView 등)·토큰 실패 → 브라우저 SpeechRecognition 폴백
+      engineRef.current = 'web_speech';
       try {
         installIfCurrent(startWebSpeech({ ...handlers, lang, stopOnSilence }));
       } catch (fallbackErr) {

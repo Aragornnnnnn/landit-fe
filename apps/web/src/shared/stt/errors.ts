@@ -6,6 +6,19 @@ export class MicPermissionDeniedError extends Error {
   }
 }
 
+// 세션 도중 인식 실패 — 연결 실패·도중 끊김·완료 뒤 응답 없음을 구분해 계측한다
+export type SttErrorReason = 'connect_failed' | 'closed' | 'timeout';
+
+export class SttError extends Error {
+  constructor(
+    message: string,
+    readonly reason: SttErrorReason,
+  ) {
+    super(message);
+    this.name = 'SttError';
+  }
+}
+
 export const isMicPermissionDeniedError = (
   error: unknown,
 ): error is MicPermissionDeniedError =>

@@ -44,6 +44,7 @@ class FakeMediaRecorder {
 
   state = 'recording';
   ondataavailable: ((event: { data: Blob }) => void) | null = null;
+  onstop: (() => void) | null = null;
 
   constructor() {
     FakeMediaRecorder.instances.push(this);
@@ -53,7 +54,16 @@ class FakeMediaRecorder {
   stop() {
     this.state = 'inactive';
   }
+
+  // 테스트 헬퍼 — 실제 stop()처럼 마지막 조각(dataavailable)이 비동기로 온 뒤 stop 이벤트가 뒤따른다
+  finishStop(lastChunk = 'tail') {
+    this.ondataavailable?.({ data: new Blob([lastChunk]) });
+    this.onstop?.();
+  }
 }
+
+const FINALIZE = JSON.stringify({ type: 'Finalize' });
+const CLOSE_STREAM = JSON.stringify({ type: 'CloseStream' });
 
 const makeHandlers = () => ({
   onInterim: vi.fn(),
@@ -230,23 +240,149 @@ describe('startDeepgramStt', () => {
     ws.receive({ type: 'UtteranceEnd' });
 
     expect(onFinal).toHaveBeenCalledTimes(1);
-    expect(onFinal).toHaveBeenCalledWith('안녕하세요');
+    expect(onFinal).toHaveBeenCalledWith(
+      '안녕하세요',
+      expect.objectContaining({ endReason: 'utterance_end' }),
+    );
     expect(trackStop).toHaveBeenCalled();
   });
 
-  it('stop() 후 UtteranceEnd가 안 오면 2초 뒤 강제로 턴을 종료한다', async () => {
-    vi.useFakeTimers();
-    const { session, ws, onFinal } = await startWithFakes();
+  it('완료하면 마지막 음성 조각을 보낸 뒤에 Finalize와 CloseStream을 보낸다', async () => {
+    const { session, ws } = await startWithFakes({ stopOnSilence: false });
+    const recorder = FakeMediaRecorder.instances.at(-1)!;
     ws.open();
 
     session.stop();
+    // 녹음기가 마지막 조각을 내기 전에는 확정 요청을 보내지 않는다
+    expect(ws.sent).not.toContainEqual(FINALIZE);
 
-    expect(ws.sent).toContainEqual(JSON.stringify({ type: 'Finalize' }));
+    recorder.finishStop('tail');
+
+    expect(ws.sent.at(-3)).toBeInstanceOf(Blob);
+    expect(ws.sent.slice(-2)).toEqual([FINALIZE, CLOSE_STREAM]);
+  });
+
+  it('연결 준비 중에 완료해도 녹음한 음성을 버리지 않고 연결 뒤 보내서 확정한다', async () => {
+    const { session, ws, onFinal } = await startWithFakes({
+      stopOnSilence: false,
+    });
+    const recorder = FakeMediaRecorder.instances.at(-1)!;
+    recorder.ondataavailable?.({ data: new Blob(['early']) });
+
+    session.stop();
+    recorder.finishStop('tail');
     expect(onFinal).not.toHaveBeenCalled();
 
-    vi.advanceTimersByTime(2000);
+    ws.open();
+    expect(ws.sent).toHaveLength(4);
+    expect(ws.sent.slice(-2)).toEqual([FINALIZE, CLOSE_STREAM]);
+
+    ws.receive({
+      type: 'Results',
+      is_final: true,
+      channel: { alternatives: [{ transcript: '늦게 연결돼도 남는 말' }] },
+    });
+    ws.receive({ type: 'Metadata' });
 
     expect(onFinal).toHaveBeenCalledTimes(1);
+    expect(onFinal).toHaveBeenCalledWith(
+      '늦게 연결돼도 남는 말',
+      expect.objectContaining({ endReason: 'metadata' }),
+    );
+  });
+
+  it('완료 뒤 from_finalize 없이 Metadata만 와도 턴을 끝낸다', async () => {
+    const { session, ws, onFinal } = await startWithFakes({
+      stopOnSilence: false,
+    });
+    ws.open();
+
+    session.stop();
+    FakeMediaRecorder.instances.at(-1)!.finishStop();
+    ws.receive({ type: 'Metadata' });
+
+    expect(onFinal).toHaveBeenCalledTimes(1);
+  });
+
+  it('완료 뒤 서버가 연결을 닫으면 오류가 아니라 정상 종료로 처리한다', async () => {
+    const { session, ws, onFinal, onError } = await startWithFakes({
+      stopOnSilence: false,
+    });
+    ws.open();
+    ws.receive({
+      type: 'Results',
+      is_final: true,
+      channel: { alternatives: [{ transcript: '끝까지 한 말' }] },
+    });
+
+    session.stop();
+    FakeMediaRecorder.instances.at(-1)!.finishStop();
+    ws.onclose?.();
+
+    expect(onError).not.toHaveBeenCalled();
+    expect(onFinal).toHaveBeenCalledWith(
+      '끝까지 한 말',
+      expect.objectContaining({ endReason: 'closed' }),
+    );
+  });
+
+  it('완료 뒤 응답이 오지 않으면 받은 데까지 제출하지 않고 타임아웃 오류를 낸다', async () => {
+    vi.useFakeTimers();
+    const { session, ws, onFinal, onError } = await startWithFakes({
+      stopOnSilence: false,
+    });
+    ws.open();
+    ws.receive({
+      type: 'Results',
+      is_final: true,
+      channel: { alternatives: [{ transcript: '앞부분만' }] },
+    });
+
+    session.stop();
+    FakeMediaRecorder.instances.at(-1)!.finishStop();
+    vi.advanceTimersByTime(3000);
+
+    expect(onFinal).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'SttError', reason: 'timeout' }),
+    );
+    expect(trackStop).toHaveBeenCalled();
+  });
+
+  it('연결이 열리기 전에 실패하면 연결 실패로 구분해 알린다', async () => {
+    const { ws, onError } = await startWithFakes();
+
+    ws.onerror?.();
+
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: 'connect_failed' }),
+    );
+  });
+
+  it('결과에 엔진·연결 준비 시간·완료 뒤 대기 시간을 함께 넘긴다', async () => {
+    vi.useFakeTimers();
+    const { session, ws, onFinal } = await startWithFakes({
+      stopOnSilence: false,
+    });
+    vi.advanceTimersByTime(300);
+    ws.open();
+
+    session.stop();
+    FakeMediaRecorder.instances.at(-1)!.finishStop();
+    vi.advanceTimersByTime(500);
+    ws.receive({
+      type: 'Results',
+      is_final: true,
+      from_finalize: true,
+      channel: { alternatives: [{ transcript: '' }] },
+    });
+
+    expect(onFinal).toHaveBeenCalledWith('', {
+      engine: 'deepgram',
+      endReason: 'finalize',
+      connectMs: 300,
+      finalizeWaitMs: 500,
+    });
   });
 
   it('stopOnSilence를 끄면 침묵 자동 종료 파라미터 없이 연결한다', async () => {
@@ -290,6 +426,7 @@ describe('startDeepgramStt', () => {
     });
 
     session.stop();
+    FakeMediaRecorder.instances.at(-1)!.finishStop();
     ws.receive({
       type: 'Results',
       is_final: true,
@@ -298,7 +435,7 @@ describe('startDeepgramStt', () => {
     });
 
     expect(onFinal).toHaveBeenCalledTimes(1);
-    expect(onFinal).toHaveBeenCalledWith('마지막 문장');
+    expect(onFinal).toHaveBeenCalledWith('마지막 문장', expect.anything());
   });
 
   it('abort()는 onFinal 없이 즉시 자원을 정리한다', async () => {
@@ -326,8 +463,9 @@ describe('startDeepgramStt', () => {
     ws.open();
 
     session.stop();
+    FakeMediaRecorder.instances.at(-1)!.finishStop();
     session.abort();
-    vi.advanceTimersByTime(2000);
+    vi.advanceTimersByTime(3000);
 
     expect(onFinal).not.toHaveBeenCalled();
   });
@@ -368,7 +506,9 @@ describe('startDeepgramStt', () => {
 
     ws.onclose?.();
 
-    expect(onError).toHaveBeenCalledWith(new Error('STT 연결이 끊겼습니다.'));
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: 'closed' }),
+    );
     expect(onFinal).not.toHaveBeenCalled();
   });
 });
