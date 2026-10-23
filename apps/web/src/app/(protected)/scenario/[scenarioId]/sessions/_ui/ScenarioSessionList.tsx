@@ -101,7 +101,7 @@ const SessionRow = ({
       session.feedback ? (
         <StarRating rating={session.feedback.starRating} size={16} />
       ) : (
-        <span className="shrink-0 text-[13px] font-semibold text-muted-foreground">
+        <span className="shrink-0 text-13 font-semibold text-muted-foreground">
           피드백 없음
         </span>
       )

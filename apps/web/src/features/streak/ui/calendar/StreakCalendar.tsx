@@ -51,7 +51,7 @@ export const StreakCalendar = ({
           disabled={!canGoBack}
           onPress={onGoMonth}
         />
-        <h3 className="text-[16px] font-black text-foreground">
+        <h3 className="text-16 font-black text-foreground">
           {formatMonthLabel(view)}
         </h3>
         <MonthArrow
@@ -66,7 +66,7 @@ export const StreakCalendar = ({
         {WEEKDAY_LABELS.map((weekday) => (
           <span
             key={weekday}
-            className="text-center text-[13px] font-medium text-muted-foreground"
+            className="text-center text-13 font-medium text-muted-foreground"
           >
             {weekday}
           </span>

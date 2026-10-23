@@ -113,7 +113,7 @@ export default function SmallTalkPage() {
       <div className="relative">
         <button
           onClick={() => router.push(SMALLTALK_HISTORY_PATH)}
-          className="absolute top-1 right-5 flex items-center gap-0.5 py-1 text-[13px] font-semibold text-muted-foreground active:opacity-60"
+          className="absolute top-1 right-5 flex items-center gap-0.5 py-1 text-13 font-semibold text-muted-foreground active:opacity-60"
         >
           기록
           <ChevronRightIcon size={14} />

@@ -311,7 +311,7 @@ export const ImageViewer = ({
         {!isSingle && (
           <p
             aria-live="polite"
-            className="mt-2.5 rounded-full bg-black/50 px-3 py-1.5 text-[15px] font-bold text-white"
+            className="mt-2.5 rounded-full bg-black/50 px-3 py-1.5 text-15 font-bold text-white"
           >
             {index + 1} / {images.length}
           </p>

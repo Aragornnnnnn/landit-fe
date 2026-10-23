@@ -57,9 +57,9 @@ const MINUTES: WheelPickerOption<number>[] = Array.from(
 // 라이브러리 기본 CSS가 글자 크기를 덮어써서 !로 이긴다.
 // 가운데 띠는 불투명해야 뒤에서 도는 회색 글자를 가린다(투명하면 글자가 두 겹으로 보인다) —
 // 칸마다 그리되 양 끝 칸만 둥글게 해서 iOS처럼 한 줄로 이어 보이게 한다
-const OPTION_CLASS = '!text-[21px] text-muted-foreground tabular-nums';
+const OPTION_CLASS = '!text-21 text-muted-foreground tabular-nums';
 const BAND_CLASS =
-  '!text-[22px] !font-normal text-foreground tabular-nums bg-[color-mix(in_srgb,#767680_12%,var(--wheel-surface))]';
+  '!text-22 !font-normal text-foreground tabular-nums bg-[color-mix(in_srgb,#767680_12%,var(--wheel-surface))]';
 const classNamesFor = (edge: 'start' | 'middle' | 'end') => ({
   optionItem: OPTION_CLASS,
   highlightWrapper: `${BAND_CLASS} ${edge === 'start' ? 'rounded-l-lg' : edge === 'end' ? 'rounded-r-lg' : ''}`,

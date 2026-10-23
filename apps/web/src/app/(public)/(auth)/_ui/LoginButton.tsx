@@ -27,7 +27,7 @@ export const LoginButton = ({
       {recent && (
         <span
           id={recentId}
-          className="pointer-events-none absolute -top-5 left-1/2 z-10 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[11px] font-semibold whitespace-nowrap text-primary-foreground after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-4 after:border-transparent after:border-t-primary after:content-['']"
+          className="pointer-events-none absolute -top-5 left-1/2 z-10 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-11 font-semibold whitespace-nowrap text-primary-foreground after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-4 after:border-transparent after:border-t-primary after:content-['']"
         >
           최근 로그인
         </span>

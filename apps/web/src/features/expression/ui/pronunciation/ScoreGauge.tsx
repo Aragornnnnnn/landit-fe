@@ -88,7 +88,7 @@ export const ScoreGauge = ({ view }: { view: ScoreView }) => {
           {view.label}
         </span>
       </div>
-      <div className="mt-1 flex justify-between px-1 text-[10px] font-medium text-muted-foreground">
+      <div className="mt-1 flex justify-between px-1 text-10 font-medium text-muted-foreground">
         <span>0</span>
         <span>100</span>
       </div>

@@ -19,6 +19,6 @@ export const OtherInput = ({
     aria-label="기타 내용"
     // 기타를 고른 직후라 바로 쓸 수 있게 초점을 준다
     autoFocus
-    className="w-full shrink-0 rounded-2xl border border-border bg-card px-4 py-3.5 text-[15px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+    className="w-full shrink-0 rounded-2xl border border-border bg-card px-4 py-3.5 text-15 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
   />
 );

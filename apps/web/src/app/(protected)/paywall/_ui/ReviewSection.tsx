@@ -36,7 +36,7 @@ export const ReviewSection = () => (
           <Stars className="text-base tracking-[0.08em]" />
           <p className="text-xs text-muted-foreground">
             스토어 평점{' '}
-            <span className="text-[10px] text-[#b0b0ad]">
+            <span className="text-10 text-[#b0b0ad]">
               · {STORE_RATING_AS_OF} 기준
             </span>
           </p>
@@ -64,12 +64,12 @@ export const ReviewSection = () => (
           >
             <Stars className="text-xs tracking-[0.06em]" />
             {review.title && (
-              <p className="text-sm leading-[22px] font-bold tracking-[-0.01em] break-keep text-foreground">
+              <p className="text-sm leading-[calc(22/14)] font-bold tracking-[-0.01em] break-keep text-foreground">
                 {review.title}
               </p>
             )}
             {/* 낱말 가운데에서 끊기지 않게 어절 단위로 줄을 바꾼다 */}
-            <p className="line-clamp-5 text-[13.5px] leading-[21px] tracking-[-0.01em] break-keep text-[#3d3d3f]">
+            <p className="line-clamp-5 text-14 leading-[calc(21/14)] tracking-[-0.01em] break-keep text-[#3d3d3f]">
               {review.body}
             </p>
             <p className="mt-auto text-xs text-muted-foreground">

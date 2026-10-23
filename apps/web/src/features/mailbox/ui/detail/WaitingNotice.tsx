@@ -7,7 +7,7 @@ export const WaitingNotice = () => (
     <p className="mt-3 text-sm font-semibold text-foreground">
       랜딧 팀이 읽고 있어요
     </p>
-    <p className="mt-1 text-[13px] text-muted-foreground">
+    <p className="mt-1 text-13 text-muted-foreground">
       꼼꼼히 읽고 답장드릴게요
     </p>
   </div>

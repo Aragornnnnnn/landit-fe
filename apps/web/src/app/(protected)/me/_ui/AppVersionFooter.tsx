@@ -9,7 +9,7 @@ export const AppVersionFooter = () => {
 
   const { appVersion, buildNumber } = nativeContext;
   return (
-    <p className="text-center text-[12px]" style={{ color: '#6b7280' }}>
+    <p className="text-center text-12" style={{ color: '#6b7280' }}>
       앱 버전 {appVersion}
       {buildNumber && ` (${buildNumber})`}
     </p>

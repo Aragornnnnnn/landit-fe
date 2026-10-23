@@ -107,13 +107,14 @@ export const SatisfactionSheet = ({
           <CloseIcon size={20} />
         </button>
       )}
-      {/* 소감 화면들은 높이를 같게 고정한다 — 문구만 바뀌는 전환이라 시트가 덜컥 줄어들면 안 된다.
-          리뷰 요청은 전환이 없어 최소 높이만 두고 「이미 남겼어요」 링크만큼 자란다.
+      {/* 소감 화면들은 같은 최소 높이로 맞춘다 — 문구만 바뀌는 전환이라 시트가 덜컥 줄어들면 안 된다.
+          고정 높이가 아니라 최소 높이인 건 글자 크기를 키우면 내용이 넘쳐 버튼이 시트 밖으로 밀려서다.
+          리뷰 요청은 「이미 남겼어요」 링크만큼 자란다.
           버튼 있는 화면은 위에서부터 쌓고 버튼을 바닥에, 감사는 버튼이 없으니 내용을 가운데로 모아 빈 자리를 없앤다 */}
       <div
-        className={`flex flex-col items-center text-center ${
-          view === 'review' ? 'min-h-[328px]' : 'h-[328px]'
-        } ${view === 'thanks' ? 'justify-center' : ''}`}
+        className={`flex min-h-[328px] flex-col items-center text-center ${
+          view === 'thanks' ? 'justify-center' : ''
+        }`}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -127,7 +128,7 @@ export const SatisfactionSheet = ({
         >
           {face.title}
         </BottomSheet.Title>
-        <p className="mt-2 text-[15px] leading-6 whitespace-pre-line text-muted-foreground">
+        <p className="mt-2 text-15 leading-6 whitespace-pre-line text-muted-foreground">
           {face.body}
         </p>
         {view !== 'thanks' && (

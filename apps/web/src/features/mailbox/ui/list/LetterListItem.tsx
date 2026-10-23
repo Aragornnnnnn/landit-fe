@@ -21,7 +21,7 @@ export const LetterListItem = ({ row }: { row: LetterRow }) => (
         />
       )}
       <h2
-        className={`truncate text-[15px] text-foreground ${
+        className={`truncate text-15 text-foreground ${
           row.unread ? 'font-bold' : 'font-semibold'
         }`}
       >
@@ -30,7 +30,7 @@ export const LetterListItem = ({ row }: { row: LetterRow }) => (
       </h2>
     </div>
 
-    <p className="mt-1.5 truncate text-[13px] text-muted-foreground">
+    <p className="mt-1.5 truncate text-13 text-muted-foreground">
       {row.preview}
     </p>
   </div>

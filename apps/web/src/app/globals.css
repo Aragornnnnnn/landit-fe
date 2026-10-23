@@ -72,6 +72,33 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* 글자 크기 — 마이페이지 글자 크기 배율(--font-scale)을 받는다. 30px 이상 제목과 폰 화면 목업은 px로 고정한다 */
+  --text-xs: calc(0.75rem * var(--font-scale));
+  --text-sm: calc(0.875rem * var(--font-scale));
+  --text-base: calc(1rem * var(--font-scale));
+  --text-lg: calc(1.125rem * var(--font-scale));
+  --text-xl: calc(1.25rem * var(--font-scale));
+  --text-2xl: calc(1.5rem * var(--font-scale));
+  --text-9: calc(9px * var(--font-scale));
+  --text-10: calc(10px * var(--font-scale));
+  --text-11: calc(11px * var(--font-scale));
+  --text-12: calc(12px * var(--font-scale));
+  --text-13: calc(13px * var(--font-scale));
+  --text-14: calc(14px * var(--font-scale));
+  --text-15: calc(15px * var(--font-scale));
+  --text-16: calc(16px * var(--font-scale));
+  --text-17: calc(17px * var(--font-scale));
+  --text-18: calc(18px * var(--font-scale));
+  --text-19: calc(19px * var(--font-scale));
+  --text-20: calc(20px * var(--font-scale));
+  --text-21: calc(21px * var(--font-scale));
+  --text-22: calc(22px * var(--font-scale));
+  --text-23: calc(23px * var(--font-scale));
+  --text-24: calc(24px * var(--font-scale));
+  --text-25: calc(25px * var(--font-scale));
+  --text-26: calc(26px * var(--font-scale));
+  --text-28: calc(28px * var(--font-scale));
 }
 
 :root {
@@ -168,6 +195,8 @@
   /* 안 읽은 편지 점. destructive(경고 빨강)보다 한 톤 죽인 색이라 따로 둔다 */
   --letter-unread: var(--red-400);
   --radius: 0.75rem;
+  /* 글자 크기 배율 — 기본 1. html 글자 크기는 16px로 두고 글자 토큰에만 곱한다(여백까지 커지지 않게) */
+  --font-scale: 1;
 }
 
 /* 다크모드는 현재 미지원 (라이트 단일 테마). 도입 시 아래처럼 시맨틱만 재정의한다 — 값을 지어내지 말 것.
@@ -223,6 +252,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* 한글을 단어 단위로 줄바꿈한다 — 글자가 커지면 "사 / 라져요"처럼 단어 중간에서 끊기는 곳이 늘어난다. 한 줄보다 긴 단어만 예외로 끊는다 */
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
   /* 브라우저 웹(넓은 화면)에서는 앱이 430px 컬럼이라, 바깥 여백을 한 톤 진하게 깔아 컬럼을 자연스럽게 구분한다.
      모바일·웹뷰는 컬럼이 화면을 꽉 채워 이 배경이 드러나지 않는다 (min-width가 컬럼 폭보다 클 때만 적용). */
@@ -434,7 +466,44 @@
   }
 }
 
+/* 답변 가이드 — 카드가 펼쳐질 때 테두리를 따라 빛이 한 번 훑는다 */
+@keyframes guide-sweep {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -20% 0;
+  }
+}
+
 @layer utilities {
+  /* 테두리 두께만큼만 보이게 가운데를 뚫은 층 — 그 위로 흰 빛줄기가 지나간다.
+     절대 위치의 기준은 카드의 테두리 안쪽이라, -1.5px로 테두리 바깥 끝까지 넓히고 같은 두께를 비워야 띠가 테두리와 겹친다 */
+  .animate-guide-sweep {
+    position: absolute;
+    inset: -1.5px;
+    padding: 1.5px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+        100deg,
+        transparent 40%,
+        rgb(255 255 255 / 0.95) 50%,
+        transparent 60%
+      )
+      0 0 / 300% 100% no-repeat;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    animation: guide-sweep 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-guide-sweep {
+      animation: none;
+    }
+  }
+
   /* 프리미엄 알약의 금색 — 7초에 한 바퀴 천천히 흐른다. 진입 링크와 할인 배지가 같이 쓴다.
      색은 premium-brand.tsx의 GOLD_GRADIENT와 같은 두 값이다 */
   .animate-gold-flow {

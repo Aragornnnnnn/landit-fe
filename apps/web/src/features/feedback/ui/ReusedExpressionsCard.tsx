@@ -33,7 +33,7 @@ export const ReusedExpressionsCard = ({
 
   return (
     <section className={`rounded-2xl bg-card px-5 py-4 shadow-sm ${className}`}>
-      <h2 className="text-[14px] font-extrabold text-primary">
+      <h2 className="text-14 font-extrabold text-primary">
         {REUSED_EXPRESSIONS_TITLE}
       </h2>
       <ul className="mt-1 flex flex-col divide-y divide-border">
@@ -56,7 +56,7 @@ export const ReusedExpressionsCard = ({
       {hiddenCount > 0 && (
         <button
           onClick={() => setExpanded(true)}
-          className="flex w-full items-center justify-center gap-1 pt-3 text-[13px] font-semibold text-muted-foreground active:opacity-70"
+          className="flex w-full items-center justify-center gap-1 pt-3 text-13 font-semibold text-muted-foreground active:opacity-70"
         >
           +{hiddenCount}개 더 보기
           <ChevronDownIcon size={14} />
@@ -69,17 +69,15 @@ export const ReusedExpressionsCard = ({
 const ReusedExpression = ({ item }: { item: ScenarioExpressionReuseItem }) => (
   <div className="flex flex-col gap-2">
     <div className="flex items-center gap-2.5">
-      <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[15px] font-bold text-primary">
+      <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-15 font-bold text-primary">
         {item.text}
       </span>
-      <span className="text-[12px] text-muted-foreground">
-        {item.sourceLabel}
-      </span>
+      <span className="text-12 text-muted-foreground">{item.sourceLabel}</span>
     </div>
-    <p className="text-[15px] leading-6 text-foreground">
+    <p className="text-15 leading-6 text-foreground">
       “<QuotedSentence item={item} />”
     </p>
-    <p className="text-[13px] text-muted-foreground">{item.meaning}</p>
+    <p className="text-13 text-muted-foreground">{item.meaning}</p>
   </div>
 );
 

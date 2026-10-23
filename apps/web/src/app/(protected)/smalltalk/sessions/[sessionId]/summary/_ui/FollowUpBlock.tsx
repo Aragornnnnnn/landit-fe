@@ -10,7 +10,7 @@ export const FollowUpBlock = ({
   className?: string;
 }) => (
   <section className={className}>
-    <h2 className="text-[13px] font-bold text-foreground">다음 스몰톡에서</h2>
+    <h2 className="text-13 font-bold text-foreground">다음 스몰톡에서</h2>
     <div className="mt-2 flex items-end gap-2">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -21,10 +21,10 @@ export const FollowUpBlock = ({
         style={{ width: 33, height: 56 }}
       />
       <div className="flex-1 rounded-2xl rounded-bl-sm bg-secondary px-4 py-3">
-        <p className="text-[15px] leading-6 font-bold break-keep text-foreground">
+        <p className="text-15 leading-6 font-bold break-keep text-foreground">
           {followUp.question}
         </p>
-        <p className="mt-0.5 text-[13px] leading-5 text-muted-foreground">
+        <p className="mt-0.5 text-13 leading-5 text-muted-foreground">
           {followUp.invite}
         </p>
       </div>

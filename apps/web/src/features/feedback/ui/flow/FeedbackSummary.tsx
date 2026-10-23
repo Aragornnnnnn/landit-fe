@@ -74,7 +74,7 @@ export const FeedbackSummary = ({
           {/* 별점 → 헤드라인(시나리오×별점 문구) → 원어민 이해도 % */}
           <div className="flex flex-col gap-[7px]">
             <StarRating rating={feedback.starRating} size={32} animate />
-            <p className="text-[23px] leading-[1.28] font-bold break-keep text-foreground">
+            <p className="text-23 leading-[1.28] font-bold break-keep text-foreground">
               {summaryHeadline(feedback.highlightMessage)}
             </p>
           </div>
@@ -92,7 +92,7 @@ export const FeedbackSummary = ({
 
           <div className="mt-6 flex flex-col gap-3">
             <SummaryCard title="총평">
-              <p className="text-[15px] leading-[1.6] text-foreground">
+              <p className="text-15 leading-[1.6] text-foreground">
                 {feedback.summaryMessage}
               </p>
             </SummaryCard>
@@ -187,11 +187,11 @@ export const SummaryCard = ({
   children: React.ReactNode;
 }) => (
   <section className="rounded-2xl bg-card px-5 py-4 shadow-sm">
-    <h2 className="text-[14px] font-extrabold text-primary">{title}</h2>
+    <h2 className="text-14 font-extrabold text-primary">{title}</h2>
     <div className="mt-2">{children}</div>
   </section>
 );
 
 const EmptyText = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-[15px] text-muted-foreground">{children}</p>
+  <p className="text-15 text-muted-foreground">{children}</p>
 );

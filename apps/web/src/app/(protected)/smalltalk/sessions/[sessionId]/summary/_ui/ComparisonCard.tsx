@@ -13,17 +13,15 @@ export const ComparisonCard = ({
 }) => (
   <section className="rounded-2xl bg-card px-5 py-4 shadow-sm">
     <div className="flex items-baseline justify-between">
-      <h2 className="text-[17px] font-extrabold text-foreground">
-        지난번과 비교
-      </h2>
-      <p className="text-[12px] text-muted-foreground">
+      <h2 className="text-17 font-extrabold text-foreground">지난번과 비교</h2>
+      <p className="text-12 text-muted-foreground">
         {toPeriodLabel(comparison)}
       </p>
     </div>
     <dl className="mt-3 flex flex-col gap-4">
       {toComparisonRows(comparison).map((row, index) => (
         <div key={row.label}>
-          <dt className="text-[12px] text-muted-foreground">{row.label}</dt>
+          <dt className="text-12 text-muted-foreground">{row.label}</dt>
           <dd className="mt-1.5 flex flex-col gap-1.5">
             {/* 한 줄에 지난번·오늘 두 개씩 — 위 줄부터 차례로 차오르게 번호를 매긴다 */}
             <Bar
@@ -73,7 +71,7 @@ const Bar = ({
       />
     </div>
     <span
-      className={`w-16 shrink-0 text-[13px] ${
+      className={`w-16 shrink-0 text-13 ${
         tone === 'current'
           ? 'font-extrabold text-primary'
           : 'font-medium text-muted-foreground'

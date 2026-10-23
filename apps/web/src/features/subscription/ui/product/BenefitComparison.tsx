@@ -15,8 +15,9 @@ const WIDE_FREE_COLUMN = 'w-[62px]';
 const SLIM_PREMIUM_COLUMN = 'w-[76px]';
 /** 줄 높이는 `tr`이 아니라 셀에 건다 — `tr`의 height는 내용 높이에 밀려 무시된다 */
 const ROW_HEIGHT = 'h-[30px] short:h-5';
-/** 머리글 두 칸을 배지 높이(18px) 상자에 담아 가운데 맞춘다 — 베이스라인에 맡기면 작은 "무료"가 위로 뜬다 */
-const HEADER_LABEL = 'flex h-[18px] items-center justify-center';
+/** 머리글 두 칸을 배지 높이(18px) 상자에 담아 가운데 맞춘다 — 베이스라인에 맡기면 작은 "무료"가 위로 뜬다.
+ * 최소 높이인 건 글자 크기를 키우면 배지가 18px보다 커져서다 */
+const HEADER_LABEL = 'flex min-h-[18px] items-center justify-center';
 
 /**
  * 기능 이름 왼쪽, 무료·프리미엄 두 열. 프리미엄 열만 연한 주황 기둥으로 띄운다.
@@ -53,7 +54,7 @@ export const BenefitComparison = ({
               <th scope="col" className="h-9 short:h-[23px]" />
               <th scope="col" className={freeColumn}>
                 <span
-                  className={`${HEADER_LABEL} text-[13px] leading-none font-bold text-muted-foreground`}
+                  className={`${HEADER_LABEL} text-13 leading-none font-bold text-muted-foreground`}
                 >
                   무료
                 </span>
@@ -70,7 +71,7 @@ export const BenefitComparison = ({
               <tr key={text}>
                 <th
                   scope="row"
-                  className={`${ROW_HEIGHT} text-left text-[15px] leading-[1.3] font-normal text-foreground short:text-[13px]`}
+                  className={`${ROW_HEIGHT} text-left text-15 leading-[1.3] font-normal text-foreground short:text-13`}
                 >
                   {text}
                 </th>

@@ -28,7 +28,7 @@ export const PaywallHeader = ({
         type="button"
         onClick={onRestore}
         disabled={restoreDisabled}
-        className="text-[13px] leading-none text-muted-foreground disabled:opacity-50"
+        className="text-13 leading-none text-muted-foreground disabled:opacity-50"
       >
         구매 복원
       </button>

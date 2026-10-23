@@ -30,6 +30,7 @@ import { AccentMenuEntry } from './_ui/AccentMenuEntry';
 import { AlarmMenuEntry } from './_ui/AlarmMenuEntry';
 import { AppVersionFooter } from './_ui/AppVersionFooter';
 import { DeveloperMenuSection } from './_ui/DeveloperMenuSection';
+import { FontScaleMenuEntry } from './_ui/FontScaleMenuEntry';
 import { HapticMenuEntry } from './_ui/HapticMenuEntry';
 import { MenuButton, MenuLink, MenuSection } from './_ui/Menu';
 import { MyProgressTiles } from './_ui/MyProgressTiles';
@@ -140,6 +141,7 @@ export default function MyPage() {
             <AlarmMenuEntry />
             <TalkDisplayMenuEntry />
             <SpeechRateMenuEntry />
+            <FontScaleMenuEntry />
             <NotificationMenuEntry />
             <HapticMenuEntry />
             <WidgetMenuEntry />

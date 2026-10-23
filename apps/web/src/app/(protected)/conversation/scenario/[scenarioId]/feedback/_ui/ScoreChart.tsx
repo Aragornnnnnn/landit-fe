@@ -27,10 +27,10 @@ const ScoreList = ({ rows }: { rows: DomainRow[] }) =>
       {rows.map((row) => (
         <li
           key={row.key}
-          className="flex items-center justify-between py-2.5 text-[15px]"
+          className="flex items-center justify-between py-2.5 text-15"
         >
           <span className="text-muted-foreground">{row.label}</span>
-          <span className="text-[17px] font-black">{row.score}</span>
+          <span className="text-17 font-black">{row.score}</span>
         </li>
       ))}
     </ul>

@@ -27,7 +27,7 @@ export const MenuSection = ({
   return (
     <section>
       <h2
-        className="mb-2 ml-1.5 text-[12px] font-medium"
+        className="mb-2 ml-1.5 text-12 font-medium"
         style={{ color: '#6b7280' }}
       >
         {title}
@@ -68,18 +68,18 @@ const RowContent = ({
       {icon && (
         // 이모지는 부모 font-size를 따른다 — 행 글자보다 한 단계 크게
         <span
-          className="flex size-6 shrink-0 items-center justify-center text-[19px]"
+          className="flex size-6 shrink-0 items-center justify-center text-19"
           style={{ color }}
         >
           {icon}
         </span>
       )}
       <span className="flex flex-1 flex-col text-left">
-        <span className="text-[14.5px]" style={{ color }}>
+        <span className="text-15" style={{ color }}>
           {title}
         </span>
         {description && (
-          <span className="mt-0.5 text-[12px]" style={{ color: '#6b7280' }}>
+          <span className="mt-0.5 text-12" style={{ color: '#6b7280' }}>
             {description}
           </span>
         )}

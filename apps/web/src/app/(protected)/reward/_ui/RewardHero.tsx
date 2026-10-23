@@ -33,12 +33,10 @@ export const RewardHero = ({ reward }: { reward: RewardView }) => {
       {urgent && <MidnightCountdown amountWon={todayLeftWon} />}
       <RewardPot stage={stage} dropsCoin={earnedToday} />
 
-      {label && (
-        <p className="mt-2 text-[13px] font-bold text-primary">{label}</p>
-      )}
+      {label && <p className="mt-2 text-13 font-bold text-primary">{label}</p>}
       <h2
         className={`leading-tight font-black text-foreground ${
-          amountWon === null ? 'mt-2 text-[24px]' : 'mt-0.5 text-[36px]'
+          amountWon === null ? 'mt-2 text-24' : 'mt-0.5 text-[36px]'
         }`}
       >
         {amountWon === null ? (
@@ -51,7 +49,7 @@ export const RewardHero = ({ reward }: { reward: RewardView }) => {
           />
         )}
       </h2>
-      <p className="mt-1.5 text-center text-[14px] font-medium whitespace-pre-line text-muted-foreground">
+      <p className="mt-1.5 text-center text-14 font-medium whitespace-pre-line text-muted-foreground">
         {guide}
       </p>
 
@@ -67,10 +65,10 @@ export const RewardHero = ({ reward }: { reward: RewardView }) => {
         >
           <Emoji className="size-7 shrink-0">💰</Emoji>
           <span className="min-w-0 flex-1">
-            <span className="block text-[16px] font-bold text-foreground">
+            <span className="block text-16 font-bold text-foreground">
               100일 챌린지 다시 시작하기
             </span>
-            <span className="mt-0.5 block text-[13px] font-medium break-keep text-muted-foreground">
+            <span className="mt-0.5 block text-13 font-medium break-keep text-muted-foreground">
               대화할 때마다 환급액이 다시 쌓여요
             </span>
           </span>

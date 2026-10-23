@@ -36,7 +36,7 @@ import { PromoSheet } from './exit-promo/PromoSheet';
 // 이건 결제로 넘어가는 진입점이라, 마이페이지 프리미엄 카드와 같은 버튼 쪽 곡률을 쓴다
 // 진입 알약의 모양 — 헤더가 환급 동전 연출의 어둠 위에 같은 알약을 다시 그릴 때도 쓴다
 export const PREMIUM_ENTRY_PILL_CLASS =
-  'flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-[13px] leading-[1.2] font-bold text-[#4a2f00]';
+  'flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-13 leading-[1.2] font-bold text-[#4a2f00]';
 
 const HomeLogo = () => (
   <Link href={SCENARIO_PATH} aria-label="홈으로">
