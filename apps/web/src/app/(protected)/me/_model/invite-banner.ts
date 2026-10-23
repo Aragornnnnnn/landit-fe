@@ -3,11 +3,15 @@
 import type { InviteOffer } from '@/features/referral/model/inviter-reward';
 import { formatWon } from '@/shared/lib/won';
 
+// 권할 것이 없으면(상한을 채웠고 친구 몫도 없음) null — 환급 화면 띠와 같이 띠를 그리지 않는다
 export const inviteBannerLinesOf = (offer: InviteOffer) => {
+  // 상한을 채우면 내 몫은 끝난다
+  if (offer.full)
+    return offer.inviteeWon > 0
+      ? [`친구에게 ${formatWon(offer.inviteeWon)} 선물하기`]
+      : null;
   if (offer.inviteeWon === 0)
     return [`친구 초대하고 ${formatWon(offer.inviterWon)}씩 적립`];
-  // 상한을 채우면 내 몫은 끝난다
-  if (offer.full) return [`친구에게 ${formatWon(offer.inviteeWon)} 선물하기`];
   return [
     `친구에게 ${formatWon(offer.inviteeWon)} 선물하고`,
     `나도 ${formatWon(offer.inviterWon)} 적립`,

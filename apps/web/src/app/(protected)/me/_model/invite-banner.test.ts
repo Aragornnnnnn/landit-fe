@@ -28,6 +28,12 @@ describe('inviteBannerLinesOf', () => {
     ]);
   });
 
+  it('상한을 채웠고 친구 몫도 없으면 권할 것이 없어 띠를 그리지 않는다', () => {
+    expect(
+      inviteBannerLinesOf(offer({ full: true, inviteeWon: 0 })),
+    ).toBeNull();
+  });
+
   it('상한을 채우면 내 몫은 끝나 친구 선물만 말한다', () => {
     expect(inviteBannerLinesOf(offer({ full: true }))).toEqual([
       '친구에게 5,000원 선물하기',

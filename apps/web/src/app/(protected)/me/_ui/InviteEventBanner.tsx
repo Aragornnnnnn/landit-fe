@@ -15,7 +15,8 @@ import { useReferralAudience } from '../../_model/useReferralAudience';
 export const InviteEventBanner = () => {
   const { offer } = useInviteOffer();
   const audience = useReferralAudience();
-  if (!offer || !audience.shown) return null;
+  const lines = offer && inviteBannerLinesOf(offer);
+  if (!lines || !audience.shown) return null;
 
   return (
     <Link
@@ -35,7 +36,7 @@ export const InviteEventBanner = () => {
         <span className="block text-[15px] font-black text-foreground">
           친구 초대 이벤트
         </span>
-        {inviteBannerLinesOf(offer).map((line) => (
+        {lines.map((line) => (
           <span
             key={line}
             className="block text-[12px] leading-snug font-bold text-muted-foreground"
