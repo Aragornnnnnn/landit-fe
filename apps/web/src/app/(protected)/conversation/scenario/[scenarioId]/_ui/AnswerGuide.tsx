@@ -188,8 +188,13 @@ const AnswerGuideCard = ({
 
   // 칩이 카드로 바뀌며 사라지므로 포커스를 카드 안(접기)으로 옮긴다 — 키보드·화면 읽기 사용자가 자리를 잃지 않게
   const closeRef = useRef<HTMLButtonElement>(null);
+  // 칩이 카드로 다 커진 뒤에 옮긴다 — 펼치는 첫 프레임에 포커스까지 얹으면 화면 계산이 겹쳐 버벅인다
   useEffect(() => {
-    closeRef.current?.focus({ preventScroll: true });
+    const timer = setTimeout(
+      () => closeRef.current?.focus({ preventScroll: true }),
+      MORPH_SETTLE_S * 1000,
+    );
+    return () => clearTimeout(timer);
   }, []);
 
   return (
