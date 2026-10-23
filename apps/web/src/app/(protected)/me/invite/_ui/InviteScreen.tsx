@@ -406,8 +406,8 @@ const InfoSheet = ({
         적립금은 그대로예요.
       </InfoItem>
       <InfoItem>
-        여러 계정을 만드는 등 부정한 방법으로 참여하면 적립이 취소되고, 서비스
-        이용이 제한될 수 있어요.
+        부정한 방법으로 참여하면 적립이 취소되고, 서비스 이용이 제한될 수
+        있어요.
       </InfoItem>
     </ul>
     <Button className="mt-6" onClick={onClose}>
