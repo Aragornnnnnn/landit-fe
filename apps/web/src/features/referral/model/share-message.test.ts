@@ -21,7 +21,7 @@ describe('referralShareMessage', () => {
       inviteeSignupWon: 3000,
     });
 
-    expect(message).toContain('3,000원을 받아요');
+    expect(message).toContain('3,000원이 적립돼요');
   });
 
   it('받는 사람 몫이 없으면 금액 없이 코드를 넣어 달라고만 한다', () => {
@@ -30,6 +30,6 @@ describe('referralShareMessage', () => {
       inviteeSignupWon: 0,
     });
 
-    expect(message).not.toContain('원을 받아요');
+    expect(message).not.toContain('적립돼요');
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-// 환급 화면의 친구 초대 띠 — 「친구 초대하고 N원씩 받기」와 진행 막대. 누르면 친구 초대 이벤트 화면으로 간다.
+// 환급 화면의 친구 초대 띠 — 「친구 초대하고 N원씩 적립」와 진행 막대. 누르면 친구 초대 이벤트 화면으로 간다.
 // 돈이 쌓이는 걸 보러 오는 화면이라 몇 명 더 초대하면 얼마인지가 보이게 진행으로 그린다. 10명을 채워도 친구 몫이 남아 띠는 그대로 둔다
 import Link from 'next/link';
 
@@ -28,7 +28,7 @@ export const InviteBand = ({ className = '' }: { className?: string }) => {
         <span className="min-w-0 flex-1 text-[15px] font-black text-foreground">
           친구 초대하고{' '}
           <span className="text-primary">{formatWon(band.inviterWon)}</span>씩
-          받기
+          적립
         </span>
         {band.sideLabel && (
           <span className="shrink-0 text-[12px] font-bold text-muted-foreground tabular-nums">

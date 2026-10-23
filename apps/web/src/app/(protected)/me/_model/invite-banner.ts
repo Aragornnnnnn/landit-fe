@@ -4,5 +4,5 @@ import { formatWon } from '@/shared/lib/won';
 
 export const inviteBannerLineOf = (offer: InviteOffer) =>
   offer.inviteeWon > 0
-    ? `친구에게 ${formatWon(offer.inviteeWon)} 선물하고 나도 ${formatWon(offer.inviterWon)} 받기`
-    : `친구 초대하고 ${formatWon(offer.inviterWon)}씩 받기`;
+    ? `친구에게 ${formatWon(offer.inviteeWon)} 선물하고 나도 ${formatWon(offer.inviterWon)} 적립`
+    : `친구 초대하고 ${formatWon(offer.inviterWon)}씩 적립`;

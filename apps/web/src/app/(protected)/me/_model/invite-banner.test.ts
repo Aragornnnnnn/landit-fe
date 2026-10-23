@@ -12,7 +12,7 @@ describe('inviteBannerLineOf', () => {
         limitCount: 10,
         maxWon: 10000,
       }),
-    ).toBe('친구에게 3,000원 선물하고 나도 1,000원 받기');
+    ).toBe('친구에게 3,000원 선물하고 나도 1,000원 적립');
   });
 
   it('친구 몫이 없으면 내가 받는 금액만 말한다', () => {
@@ -23,6 +23,6 @@ describe('inviteBannerLineOf', () => {
         limitCount: 10,
         maxWon: 10000,
       }),
-    ).toBe('친구 초대하고 1,000원씩 받기');
+    ).toBe('친구 초대하고 1,000원씩 적립');
   });
 });

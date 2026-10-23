@@ -20,8 +20,8 @@ export const inviteEventViewOf = ({
   return {
     title:
       offer.inviteeWon > 0
-        ? '친구를 초대하면 둘 다 적립금을 받아요'
-        : '친구를 초대하면 적립금을 받아요',
+        ? '친구를 초대하면 둘 다 적립금이 쌓여요'
+        : '친구를 초대하면 적립금이 쌓여요',
     count,
     full,
     countLabel:

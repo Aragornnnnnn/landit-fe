@@ -1,6 +1,6 @@
 'use client';
 
-// 친구 초대 이벤트 화면 — 둘이 받는 금액, 초대로 받은 적립금과 10명 진행, 받는 방법, 내 코드(복사), 보내기 버튼.
+// 친구 초대 이벤트 화면 — 둘이 쌓는 적립금, 초대로 쌓인 적립금과 상한 진행, 쌓는 방법, 내 코드(복사), 보내기 버튼.
 // 자세한 조건은 헤더 ⓘ 시트로 뺀다 — 화면에는 받는 이유와 방법만 둔다
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
@@ -186,7 +186,7 @@ const SplitSide = ({
   </div>
 );
 
-// 초대로 받은 적립금과 상한까지의 진행, 받은 내역 — 상한을 채우면 받은 금액 한 마디로 바꾼다
+// 초대로 쌓인 적립금과 상한까지의 진행, 적립 내역 — 상한을 채우면 적립된 금액 한 마디로 바꾼다
 const Progress = ({
   view,
   earnedWon,
@@ -210,11 +210,11 @@ const Progress = ({
         </p>
         <p className="mt-1 text-xl font-black text-foreground">
           <span className="text-primary">{formatWon(earnedWon)}</span>
-          {view.fullAllEarned ? '을 모두 받았어요' : '을 받았어요'}
+          {view.fullAllEarned ? '이 모두 적립됐어요' : '이 적립됐어요'}
         </p>
         {offer.inviteeWon > 0 && (
           <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-            이제 초대하면 친구만 {formatWon(offer.inviteeWon)}을 받아요
+            이제 초대하면 친구만 {formatWon(offer.inviteeWon)}이 적립돼요
           </p>
         )}
       </div>
@@ -223,7 +223,7 @@ const Progress = ({
   return (
     <div className="rounded-[20px] bg-invite p-5">
       <p className="text-[13px] font-bold text-muted-foreground">
-        친구 초대로 받은 적립금
+        친구 초대로 쌓인 적립금
       </p>
       <p className="mt-0.5 flex items-center gap-1.5 text-2xl font-black text-foreground">
         <Coin size={26} />
@@ -340,7 +340,7 @@ const Steps = ({ offer, full }: { offer: InviteOffer; full: boolean }) => {
   ];
   return (
     <div className="rounded-[20px] bg-card p-5">
-      <h3 className="text-[15px] font-black text-foreground">이렇게 받아요</h3>
+      <h3 className="text-[15px] font-black text-foreground">이렇게 쌓여요</h3>
       <ol className="mt-1">
         {steps.map((step, index) => (
           <li key={index} className="flex items-center gap-3.5 pt-3.5">
@@ -376,7 +376,10 @@ const InfoSheet = ({
       친구 초대 안내
     </BottomSheet.Title>
     <ul className="mt-3 flex flex-col gap-2 text-[14px] leading-[1.55] font-medium break-keep text-foreground/80">
-      <li>· 적립금은 100일 이용권이 끝날 때 받는 환급금에 더해져요</li>
+      <li>
+        · 현금이 아니라 환급 적립금이에요. 100일 챌린지를 결제하면 환급에 바로
+        더해져요
+      </li>
       <li>
         · 친구 한 명당 {formatWon(offer.inviterWon)}씩
         {offer.maxWon !== null && `, 최대 ${formatWon(offer.maxWon)}까지`}{' '}

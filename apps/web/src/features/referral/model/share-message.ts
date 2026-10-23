@@ -17,7 +17,7 @@ export const referralShareMessage = ({
   [
     '랜딧에서 영어 회화 같이 해요 🙌',
     inviteeSignupWon > 0
-      ? `앱을 받고 가입할 때 아래 초대 코드를 넣으면 ${formatWon(inviteeSignupWon)}을 받아요`
+      ? `앱을 받고 가입할 때 아래 초대 코드를 넣으면 ${formatWon(inviteeSignupWon)}이 적립돼요`
       : '앱을 받고 가입할 때 아래 초대 코드를 넣어 주세요',
     '',
     `초대 코드: ${code}`,

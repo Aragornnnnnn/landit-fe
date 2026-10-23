@@ -15,7 +15,7 @@ describe('inviteEventViewOf', () => {
   it('친구도 받는 조건이면 둘 다 받는다고 부른다', () => {
     expect(
       inviteEventViewOf({ offer, invitedCount: 0, earnedWon: 0 }).title,
-    ).toBe('친구를 초대하면 둘 다 적립금을 받아요');
+    ).toBe('친구를 초대하면 둘 다 적립금이 쌓여요');
   });
 
   it('친구 몫이 없으면 「둘 다」라고 하지 않는다', () => {
@@ -25,7 +25,7 @@ describe('inviteEventViewOf', () => {
         invitedCount: 0,
         earnedWon: 0,
       }).title,
-    ).toBe('친구를 초대하면 적립금을 받아요');
+    ).toBe('친구를 초대하면 적립금이 쌓여요');
   });
 
   it('아직 아무도 없으면 진행 옆에 받을 수 있는 최대 금액을 적는다', () => {
