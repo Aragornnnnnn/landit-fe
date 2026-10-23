@@ -8,7 +8,7 @@ import { useDeferredValue, useEffect, useRef, useState } from 'react';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
 import type { ConversationPhase } from '../../model/conversation-machine';
-import { TypingCursor } from './TypingCursor';
+import { ListeningDots } from './ListeningDots';
 
 interface UserTranscriptProps {
   text: string;
@@ -118,7 +118,7 @@ export const UserTranscript = ({
         {/* 같은 높이에 세 줄이 들어오는 조합 — 글자 16px에 줄 간격을 좁혀 잡았다 */}
         <p className="text-base leading-snug font-semibold text-foreground">
           {text}
-          {listening && <TypingCursor />}
+          {listening && <ListeningDots spaced={text !== ''} />}
         </p>
       </div>
     </div>
