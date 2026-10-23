@@ -232,13 +232,11 @@ const CodeEntry = ({
             붙여넣기
           </button>
         )}
-      </div>
-
-      <div className="mt-auto flex flex-col items-center pt-4">
+        {/* 코드 칸 바로 아래 둔다 — 빈 화면 맨 아래 혼자 있으면 찾기 어렵고 어색하다 */}
         <button
           type="button"
           onClick={() => setAskingSkip(true)}
-          className="text-[15px] font-medium text-muted-foreground underline underline-offset-4 disabled:opacity-45"
+          className="mx-auto mt-6 block text-[15px] font-medium text-muted-foreground underline underline-offset-4"
         >
           초대 코드가 없어요
         </button>
@@ -308,7 +306,7 @@ const StatusLines = ({ status }: { status: Status }) => {
   if (status.tone === 'idle') return null;
   if (status.tone === 'error')
     return (
-      <p className="text-sm font-bold text-destructive">{status.message}</p>
+      <p className="text-base font-bold text-destructive">{status.message}</p>
     );
   if (status.tone === 'checking')
     return (
