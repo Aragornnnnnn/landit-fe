@@ -53,7 +53,8 @@ export const UserTranscript = ({
     if (!box) return;
     box.scrollTop = box.scrollHeight;
     setClipped(box.scrollTop > 0);
-  }, [deferredText]);
+    // 점이 나타나거나 사라져도 높이가 바뀐다 — 글자가 그대로여도 다시 맞춘다
+  }, [deferredText, showDots]);
 
   if (editing) {
     return (
