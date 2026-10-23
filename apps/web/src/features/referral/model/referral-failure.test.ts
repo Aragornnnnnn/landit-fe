@@ -26,6 +26,15 @@ describe('referralFailureOf', () => {
     },
   );
 
+  it('코드 형식이 틀렸다는 공용 검증 오류도 틀린 코드처럼 알리고 다시 보내지 않는다', () => {
+    expect(referralFailureOf(apiError(400, 'VALIDATION_FAILED'))).toEqual({
+      kind: 'message',
+      message: '코드를 다시 확인해 주세요',
+      expected: true,
+      retryable: false,
+    });
+  });
+
   it('보상 조건이 바뀌었으면 조건을 다시 확인하게 한다', () => {
     expect(referralFailureOf(apiError(409, 'REFERRAL_POLICY_CHANGED'))).toEqual(
       { kind: 'recheck' },

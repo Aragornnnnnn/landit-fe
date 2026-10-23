@@ -15,6 +15,8 @@ const MESSAGE_BY_CODE: Record<string, string> = {
   REFERRAL_SELF_INVITE: '내 초대 코드는 넣을 수 없어요',
   REFERRAL_RATE_LIMITED: '잠시 뒤 다시 해 주세요',
   REFERRAL_DISABLED: '지금은 초대 보상을 받을 수 없어요',
+  // 등록 요청의 코드 형식 검사는 공용 검증 오류로 온다 — 칸이 같은 글자·자리 수만 받아 드물지만, 오면 틀린 코드와 같다
+  VALIDATION_FAILED: '코드를 다시 확인해 주세요',
 };
 
 const RETRY_MESSAGE = '확인하지 못했어요. 다시 시도해 주세요';
