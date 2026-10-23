@@ -3,7 +3,9 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { MicPermissionDeniedError } from '@/shared/stt/errors';
+import type { SttResultMeta } from '@/shared/stt/deepgram-stt';
+import { MicPermissionDeniedError, SttError } from '@/shared/stt/errors';
+import type { SttErrorMeta } from '@/shared/stt/useStt';
 
 import { useConversationInput } from './useConversationInput';
 
@@ -13,12 +15,24 @@ const monitoringMock = vi.hoisted(() => ({
 }));
 vi.mock('@/shared/monitoring/report', () => monitoringMock);
 
-// STT는 경계(마이크)라 목으로 둔다 — start/stop 호출을 붙잡고, onInterim·onFinal 콜백을 흉내 낸다
+const trackMock = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/analytics', () => ({ track: trackMock }));
+
+const FINAL_META: SttResultMeta = {
+  engine: 'deepgram',
+  endReason: 'finalize',
+  connectMs: 300,
+  finalizeWaitMs: 500,
+};
+const ERROR_META: SttErrorMeta = { engine: 'deepgram' };
+
+// STT는 경계(마이크)라 목으로 둔다 — start/stop 호출을 붙잡고, onInterim(확정 텍스트·남은 말)·onFinal 콜백을 흉내 낸다
 const sttMock = vi.hoisted(() => {
   const callbacks = {
-    onInterim: undefined as ((t: string) => void) | undefined,
-    onFinal: undefined as ((t: string) => void) | undefined,
-    onError: undefined as ((e: Error) => void) | undefined,
+    onInterim: undefined as ((t: string, pending: boolean) => void) | undefined,
+    onFinal: undefined as
+      ((t: string, meta: SttResultMeta) => void) | undefined,
+    onError: undefined as ((e: Error, meta: SttErrorMeta) => void) | undefined,
   };
   return {
     callbacks,
@@ -29,9 +43,9 @@ const sttMock = vi.hoisted(() => {
 });
 vi.mock('@/shared/stt/useStt', () => ({
   useStt: (opts: {
-    onInterim?: (t: string) => void;
-    onFinal?: (t: string) => void;
-    onError?: (e: Error) => void;
+    onInterim?: (t: string, pending: boolean) => void;
+    onFinal?: (t: string, meta: SttResultMeta) => void;
+    onError?: (e: Error, meta: SttErrorMeta) => void;
   }) => {
     sttMock.callbacks.onInterim = opts.onInterim;
     sttMock.callbacks.onFinal = opts.onFinal;
@@ -70,6 +84,7 @@ beforeEach(() => {
   sttMock.start.mockClear();
   sttMock.stop.mockClear();
   sttMock.abort.mockClear();
+  trackMock.mockClear();
 });
 
 describe('useConversationInput', () => {
@@ -93,13 +108,24 @@ describe('useConversationInput', () => {
     expect(sttMock.start).not.toHaveBeenCalled();
   });
 
-  it('말하는 동안 실시간 인식 결과를 transcript로 보여준다', () => {
+  it('말하는 동안 확정된 인식 결과를 transcript로 보여준다', () => {
     const { result } = renderInput();
 
     act(() => result.current.pressMic());
-    act(() => sttMock.callbacks.onInterim?.('Hel'));
+    act(() => sttMock.callbacks.onInterim?.('Hel', true));
 
     expect(result.current.transcript).toBe('Hel');
+  });
+
+  it('확정 전 말이 남아 있는지를 speechPending으로 알려 준다', () => {
+    const { result } = renderInput();
+
+    act(() => result.current.pressMic());
+    act(() => sttMock.callbacks.onInterim?.('I went', true));
+    expect(result.current.speechPending).toBe(true);
+
+    act(() => sttMock.callbacks.onInterim?.('I went to the park', false));
+    expect(result.current.speechPending).toBe(false);
   });
 
   it('음성 완료(■)는 STT를 멈추고, 최종 텍스트가 오면 VOICE로 전달한다', () => {
@@ -110,7 +136,7 @@ describe('useConversationInput', () => {
     expect(sttMock.stop).toHaveBeenCalled();
     expect(onContent).not.toHaveBeenCalled();
 
-    act(() => sttMock.callbacks.onFinal?.('Hello there.'));
+    act(() => sttMock.callbacks.onFinal?.('Hello there.', FINAL_META));
 
     expect(onContent).toHaveBeenCalledWith(
       'Hello there.',
@@ -126,7 +152,7 @@ describe('useConversationInput', () => {
 
     act(() => result.current.pressMic());
     act(() => vi.advanceTimersByTime(3200));
-    act(() => sttMock.callbacks.onFinal?.('Hello there.'));
+    act(() => sttMock.callbacks.onFinal?.('Hello there.', FINAL_META));
 
     expect(onContent).toHaveBeenCalledWith('Hello there.', 'VOICE', 3200);
     vi.useRealTimers();
@@ -137,11 +163,57 @@ describe('useConversationInput', () => {
     const { result, onContent, onInputCancel } = renderInput();
 
     act(() => result.current.pressMic());
-    act(() => sttMock.callbacks.onFinal?.('   '));
+    act(() => sttMock.callbacks.onFinal?.('   ', FINAL_META));
 
     expect(onContent).not.toHaveBeenCalled();
     expect(onInputCancel).toHaveBeenCalledTimes(1);
     expect(result.current.transcript).toBe('');
+  });
+
+  it('인식 결과가 오면 엔진·종료 사유·대기 시간을 계측한다', () => {
+    const { result } = renderInput();
+
+    act(() => result.current.pressMic());
+    act(() => sttMock.callbacks.onFinal?.('Hello there.', FINAL_META));
+
+    expect(trackMock).toHaveBeenCalledWith('Speech Recognition Completed', {
+      session_id: 1,
+      turn_index: 0,
+      engine: 'deepgram',
+      end_reason: 'finalize',
+      connect_ms: 300,
+      finalize_wait_ms: 500,
+      char_count: 12,
+    });
+  });
+
+  it('빈 결과도 글자 수 0으로 계측해 연결 실패와 구분한다', () => {
+    const { result } = renderInput();
+
+    act(() => result.current.pressMic());
+    act(() => sttMock.callbacks.onFinal?.('   ', FINAL_META));
+
+    expect(trackMock).toHaveBeenCalledWith(
+      'Speech Recognition Completed',
+      expect.objectContaining({ char_count: 0 }),
+    );
+  });
+
+  it('인식 실패는 엔진과 함께 연결 실패·도중 끊김 같은 사유로 계측한다', () => {
+    const { result } = renderInput();
+
+    act(() => result.current.pressMic());
+    act(() =>
+      sttMock.callbacks.onError?.(
+        new SttError('STT 연결 실패', 'connect_failed'),
+        ERROR_META,
+      ),
+    );
+
+    expect(trackMock).toHaveBeenCalledWith('Speech Recognition Failed', {
+      engine: 'deepgram',
+      reason: 'connect_failed',
+    });
   });
 
   it('대기 상태가 아니면 키보드를 눌러도 무시한다', () => {
@@ -192,7 +264,7 @@ describe('useConversationInput', () => {
     const { result } = renderInput();
 
     act(() => result.current.pressMic());
-    act(() => sttMock.callbacks.onInterim?.('Hello there.'));
+    act(() => sttMock.callbacks.onInterim?.('Hello there.', false));
     act(() => result.current.pressKeyboard());
 
     expect(result.current.transcript).toBe('Hello there.');
@@ -224,7 +296,7 @@ describe('useConversationInput', () => {
     const { result, onInputCancel } = renderInput();
 
     act(() => result.current.pressMic());
-    act(() => sttMock.callbacks.onInterim?.('Hel'));
+    act(() => sttMock.callbacks.onInterim?.('Hel', true));
     act(() => result.current.cancelInput());
 
     expect(sttMock.abort).toHaveBeenCalled();
@@ -251,7 +323,10 @@ describe('useConversationInput', () => {
 
     act(() => result.current.pressMic());
     act(() =>
-      sttMock.callbacks.onError?.(new Error('음성 인식 오류: network')),
+      sttMock.callbacks.onError?.(
+        new Error('음성 인식 오류: network'),
+        ERROR_META,
+      ),
     );
 
     expect(onInputCancel).toHaveBeenCalledTimes(1);
@@ -264,7 +339,7 @@ describe('useConversationInput', () => {
     const error = new Error('음성 인식 오류: network');
 
     act(() => result.current.pressMic());
-    act(() => sttMock.callbacks.onError?.(error));
+    act(() => sttMock.callbacks.onError?.(error, ERROR_META));
 
     expect(monitoringMock.reportWarning).toHaveBeenCalledWith(error);
   });
@@ -273,7 +348,9 @@ describe('useConversationInput', () => {
     const { result } = renderInput();
 
     act(() => result.current.pressMic());
-    act(() => sttMock.callbacks.onError?.(new MicPermissionDeniedError()));
+    act(() =>
+      sttMock.callbacks.onError?.(new MicPermissionDeniedError(), ERROR_META),
+    );
 
     expect(monitoringMock.reportError).not.toHaveBeenCalled();
     expect(monitoringMock.reportWarning).not.toHaveBeenCalled();
@@ -283,7 +360,9 @@ describe('useConversationInput', () => {
     const { result, onInputCancel } = renderInput();
 
     act(() => result.current.pressMic());
-    act(() => sttMock.callbacks.onError?.(new MicPermissionDeniedError()));
+    act(() =>
+      sttMock.callbacks.onError?.(new MicPermissionDeniedError(), ERROR_META),
+    );
 
     expect(onInputCancel).toHaveBeenCalledTimes(1);
     expect(result.current.micPermissionDenied).toBe(true);

@@ -38,9 +38,10 @@ import { RewardGuideStep } from './RewardGuideStep';
 // 개발자 묶음의 「환급 문구로 보기」가 보여 주는 견본 — 5만 원 이용권을 막 산 사람
 const PREVIEW_OFFER = rewardOfferOf(PASS_FALLBACK_PRICE);
 const PREVIEW_REWARD_COPY: RewardGuideCopy = {
-  eyebrow: '오늘부터 챌린지 시작!',
+  eyebrow: '오늘부터 환급 혜택 시작!',
   amount: `최대 ${formatWon(PREVIEW_OFFER.maximumWon)}`,
   caption: `${PREVIEW_OFFER.days}일 동안 모은 만큼 돌려받아요`,
+  startNote: null,
   dailyWon: PREVIEW_OFFER.dailyWon,
   confirmed: true,
 };

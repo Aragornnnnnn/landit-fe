@@ -155,7 +155,7 @@ const DetailCard = ({ step }: { step: number }) => {
         shown ? 'translate-y-0 opacity-100' : 'translate-y-[120%] opacity-0'
       }`}
     >
-      <p className="text-[26px] font-bold text-foreground">Honestly</p>
+      <p className="text-26 font-bold text-foreground">Honestly</p>
       <p className="mt-3 flex items-baseline gap-5">
         <span className="w-14 text-lg text-muted-foreground">원어민</span>
         <span className="text-[32px] font-bold text-[#3f7d55]">

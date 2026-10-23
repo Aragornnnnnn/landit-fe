@@ -30,6 +30,7 @@ import {
 } from '../_model/reward-screen-view';
 import { useMyReward } from '../../_model/useMyReward';
 import { useRewardOffer } from '../../_model/useRewardOffer';
+import { InviteBand } from './InviteBand';
 import { MissedRewardIntro } from './MissedRewardIntro';
 import { RefundApplyButton } from './RefundApplyButton';
 import { RewardExitOfferSheet } from './RewardExitOfferSheet';
@@ -140,12 +141,35 @@ export const RewardScreen = () => {
       )}
       {introReady &&
         (missed ? (
-          <MissedRewardIntro missed={missed} />
+          <MissedRewardIntro
+            missed={missed}
+            stored={
+              my.storedWon > 0
+                ? {
+                    won: my.storedWon,
+                    maximumWon: offer.maximumWon,
+                    history: <RewardHistoryFeed />,
+                  }
+                : undefined
+            }
+          />
         ) : (
-          <RewardIntro copy={introCopy} offer={offer} />
+          <RewardIntro
+            copy={introCopy}
+            offer={offer}
+            stored={
+              my.storedWon > 0
+                ? { won: my.storedWon, history: <RewardHistoryFeed /> }
+                : undefined
+            }
+          />
         ))}
       {view.kind === 'record' && (
-        <RewardRecord reward={view.reward} history={<RewardHistoryFeed />} />
+        <RewardRecord
+          reward={view.reward}
+          invite={<InviteBand className="mx-5 mt-5" />}
+          history={<RewardHistoryFeed />}
+        />
       )}
       {view.kind === 'error' && (
         <RetryNotice

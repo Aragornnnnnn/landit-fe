@@ -60,7 +60,7 @@ export const PremiumEntry = () => {
       style={{ background: GOLD_GRADIENT, color: '#4a2f00' }}
     >
       <PremiumBadge logoHeight={20} onGold />
-      <span className="ml-auto text-[14.5px] font-bold whitespace-nowrap">
+      <span className="ml-auto text-15 font-bold whitespace-nowrap">
         {entry.label}
       </span>
       <ChevronRightIcon

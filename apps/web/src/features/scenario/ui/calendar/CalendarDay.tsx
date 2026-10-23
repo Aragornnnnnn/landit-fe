@@ -102,7 +102,7 @@ export const CalendarDay = ({
       </span>
 
       <span
-        className={`text-[13px] leading-[1.15] ${
+        className={`text-13 leading-[1.15] ${
           selected ? 'font-black text-primary' : LABEL_STYLE[state]
         }`}
       >

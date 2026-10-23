@@ -32,26 +32,26 @@ const PassCard = ({ plan }: { plan: RewardPlan }) => {
     // 고를 것이 이용권 하나뿐이라 처음부터 골라 둔 모양으로 그린다 — 플랜 카드의 선택 상태와 같은 테두리·바탕
     <div className="rounded-[20px] border-2 border-primary bg-[#fffcf8] px-4 py-3 shadow-[0_6px_16px_rgba(224,122,58,0.12)]">
       <p className="flex items-center gap-1.5">
-        <span className="text-[15px] font-bold text-[#c4601f]">
+        <span className="text-15 font-bold text-[#c4601f]">
           {plan.days}일 프리미엄 이용권
         </span>
-        <span className="rounded-md bg-destructive px-1.5 py-0.5 text-[10px] font-bold whitespace-nowrap text-white">
+        <span className="rounded-md bg-destructive px-1.5 py-0.5 text-10 font-bold whitespace-nowrap text-white">
           신규 회원 특가
         </span>
       </p>
       {/* 원가·할인율·판매가를 한 줄에 — 카드 높이를 줄여 작은 폰에서도 환급 줄까지 버튼 위에 보이게 */}
       <p className="mt-1 flex items-baseline gap-1.5">
-        <span className="text-[13px] font-medium text-[#b1aaa3] line-through">
+        <span className="text-13 font-medium text-[#b1aaa3] line-through">
           {formatWon(listPrice)}
         </span>
         <span className="text-lg font-black text-primary">
           {discountPercentOf(plan.price, listPrice)}%
         </span>
-        <span className="text-[22px] font-black text-foreground tabular-nums">
+        <span className="text-22 font-black text-foreground tabular-nums">
           {formatWon(plan.price)}
         </span>
       </p>
-      <p className="mt-2 flex items-center gap-1.5 border-t border-[#f1ebe3] pt-2 text-[13px] font-medium text-[#5f5953]">
+      <p className="mt-2 flex items-center gap-1.5 border-t border-[#f1ebe3] pt-2 text-13 font-medium text-[#5f5953]">
         <Coin size={18} />
         꾸준히 하면 결제한 {formatWon(plan.price)}도 돌려받아요
       </p>
@@ -93,7 +93,7 @@ export const CheckoutStep = ({
           type="button"
           onClick={onRestore}
           disabled={restoreDisabled}
-          className="text-[13px] leading-none text-muted-foreground disabled:opacity-50"
+          className="text-13 leading-none text-muted-foreground disabled:opacity-50"
         >
           구매 복원
         </button>
@@ -135,7 +135,7 @@ export const CheckoutStep = ({
       </div>
     </div>
     {/* 약관은 버튼 밑이 아니라 페이지 맨 아래에 — 결제 버튼 둘레를 가볍게 두고, 내려 보면 찾을 수 있게 */}
-    <nav className="mt-6 flex justify-center gap-3 text-[11px] leading-[1.3] font-medium text-muted-foreground underline">
+    <nav className="mt-6 flex justify-center gap-3 text-11 leading-[1.3] font-medium text-muted-foreground underline">
       <Link href="/terms">이용약관</Link>
       <Link href="/privacy">개인정보 처리방침</Link>
     </nav>

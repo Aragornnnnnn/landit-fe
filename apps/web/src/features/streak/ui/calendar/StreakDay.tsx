@@ -66,7 +66,7 @@ export const StreakDay = ({ date, mark }: StreakDayProps) => {
 
       <span
         aria-hidden
-        className={`mt-1 text-[12px] leading-none ${LABEL_STYLE[mark]}`}
+        className={`mt-1 text-12 leading-none ${LABEL_STYLE[mark]}`}
       >
         {day}
       </span>

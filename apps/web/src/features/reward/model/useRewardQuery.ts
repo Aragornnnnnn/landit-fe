@@ -7,6 +7,7 @@ import { useCurrentUserId } from '@/shared/auth/current-member';
 import { REWARD_GC_MS, rewardKeys } from './keys';
 import { rewardQueries } from './queries';
 import { participantOf } from './reward-status';
+import { storedRewardWonOf } from './stored-reward';
 import { msUntilKstMidnight } from './time-left';
 
 // 서버가 하루를 마감할 틈 — 자정 정각에 물으면 어제 값을 받을 수 있다
@@ -43,6 +44,8 @@ export const useRewardQuery = ({ enabled }: { enabled: boolean }) => {
     reward: data ? participantOf(data) : null,
     // 무료로 한 대화가 챌린지였다면 받았을 금액 — 무료 대상이 아니면 null. 이 값을 모르는 서버는 필드를 안 보낸다
     preview: data?.preview ?? null,
+    // 환급을 시작하지 않은 사람에게 보관 중인 돈(초대 보상 등) — 없거나 참여자면 0
+    storedWon: data ? storedRewardWonOf(data) : 0,
     // 서버가 이 요약을 계산한 시각 — 서버가 정한 오늘을 여기서 읽는다
     computedAt: data?.computedAt ?? null,
     // 응답을 받았는지 — 받았는데 reward가 null이면 참여자가 아니다

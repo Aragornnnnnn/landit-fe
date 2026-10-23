@@ -27,7 +27,7 @@ export const SubmitBar = ({
       height: BAR_HEIGHT,
       paddingBottom: keyboardOpen ? 0 : 'var(--safe-area-inset-bottom)',
     }}
-    className={`box-content w-full shrink-0 text-[15px] font-bold transition-colors ${
+    className={`box-content w-full shrink-0 text-15 font-bold transition-colors ${
       disabled
         ? 'bg-secondary text-muted-foreground'
         : 'bg-primary text-primary-foreground'

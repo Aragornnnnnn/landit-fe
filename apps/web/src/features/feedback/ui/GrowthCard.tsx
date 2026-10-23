@@ -13,17 +13,17 @@ export const GrowthCard = ({
   className?: string;
 }) => (
   <section className={`rounded-2xl bg-card px-5 py-4 shadow-sm ${className}`}>
-    <h2 className="text-[14px] font-extrabold text-primary">
+    <h2 className="text-14 font-extrabold text-primary">
       {growth.succeeded
         ? `지난번엔 헷갈렸던 ${growth.patternLabel}`
         : `아직 헷갈리는 ${growth.patternLabel}`}
     </h2>
     <dl className="mt-3 flex flex-col gap-2 rounded-xl bg-secondary px-4 py-3">
       <div className="flex gap-3">
-        <dt className="w-14 shrink-0 text-[13px] text-muted-foreground">
+        <dt className="w-[calc(56px*var(--font-scale))] shrink-0 text-13 whitespace-nowrap text-muted-foreground">
           {toDayLabel(growth.previousDate)}
         </dt>
-        <dd className="text-[15px] leading-6 text-muted-foreground">
+        <dd className="text-15 leading-6 text-muted-foreground">
           <Highlighted
             sentence={growth.previousSentence}
             span={growth.previousWrongSpan}
@@ -32,10 +32,10 @@ export const GrowthCard = ({
         </dd>
       </div>
       <div className="flex gap-3">
-        <dt className="w-14 shrink-0 text-[13px] text-muted-foreground">
+        <dt className="w-[calc(56px*var(--font-scale))] shrink-0 text-13 whitespace-nowrap text-muted-foreground">
           오늘
         </dt>
-        <dd className="text-[15px] leading-6 font-bold text-foreground">
+        <dd className="text-15 leading-6 font-bold text-foreground">
           <Highlighted
             sentence={growth.currentSentence}
             span={growth.currentSpan}
@@ -44,7 +44,7 @@ export const GrowthCard = ({
         </dd>
       </div>
     </dl>
-    <p className="mt-3 text-[13px] leading-5 text-muted-foreground">
+    <p className="mt-3 text-13 leading-5 text-muted-foreground">
       {growth.succeeded
         ? '지난번엔 헷갈렸는데, 오늘은 맞았어요.'
         : '지난번에 이어 오늘도 헷갈렸어요. 상세 피드백에서 다시 볼 수 있어요.'}

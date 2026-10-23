@@ -34,7 +34,7 @@ export const DailyTimeRow = ({
       <Emoji>⏰</Emoji>
       <label
         htmlFor="daily-alarm-time"
-        className="flex-1 text-[15px] whitespace-nowrap text-foreground"
+        className="flex-1 text-15 whitespace-nowrap text-foreground"
       >
         시각 정하기
       </label>
@@ -43,13 +43,13 @@ export const DailyTimeRow = ({
         type="time"
         value={time}
         onChange={(event) => setDraft(event.target.value)}
-        className="rounded-lg bg-muted px-2.5 py-1.5 text-[15px] font-bold text-foreground tabular-nums"
+        className="rounded-lg bg-muted px-2.5 py-1.5 text-15 font-bold text-foreground tabular-nums"
       />
       <button
         type="button"
         disabled={saving || time === '' || unchanged}
         onClick={() => onSave(time)}
-        className="shrink-0 rounded-full bg-primary px-3.5 py-1.5 text-[13px] font-bold text-primary-foreground active:scale-95 disabled:bg-muted disabled:text-muted-foreground disabled:active:scale-100"
+        className="shrink-0 rounded-full bg-primary px-3.5 py-1.5 text-13 font-bold text-primary-foreground active:scale-95 disabled:bg-muted disabled:text-muted-foreground disabled:active:scale-100"
       >
         저장
       </button>

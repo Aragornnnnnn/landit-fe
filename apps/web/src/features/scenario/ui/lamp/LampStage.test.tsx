@@ -115,3 +115,74 @@ describe('LampStage 계측', () => {
     expect(trackMock).not.toHaveBeenCalled();
   });
 });
+
+describe('LampStage 자동 소환 보류', () => {
+  it('보류 중이면 그날 처음이어도 자동으로 묻지 않는다', async () => {
+    render(<LampStage onStart={vi.fn()} today="2026-08-07" summonHeld />);
+
+    // 한 프레임 미뤄 소환하므로, 뜰 만큼 기다려도 안 뜨는지 본다
+    await expect(
+      screen.findByRole('button', { name: '네!' }, { timeout: 300 }),
+    ).rejects.toThrow();
+  });
+
+  it('보류가 풀리면 그때 자동으로 묻는다', async () => {
+    const { rerender } = render(
+      <LampStage onStart={vi.fn()} today="2026-08-07" summonHeld />,
+    );
+
+    rerender(
+      <LampStage onStart={vi.fn()} today="2026-08-07" summonHeld={false} />,
+    );
+
+    expect(
+      await screen.findByRole('button', { name: '네!' }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe('LampStage 자동 소환 판정 알림', () => {
+  it('그날 처음이면 이번에 묻는다고 알린다', () => {
+    const onAutoSummonDecided = vi.fn();
+
+    render(
+      <LampStage
+        onStart={vi.fn()}
+        today="2026-08-07"
+        onAutoSummonDecided={onAutoSummonDecided}
+      />,
+    );
+
+    expect(onAutoSummonDecided).toHaveBeenCalledWith(true);
+  });
+
+  it('그날 이미 물었으면 이번엔 묻지 않는다고 알린다', () => {
+    localStorage.setItem('landit:lamp-summoned', '2026-08-07');
+    const onAutoSummonDecided = vi.fn();
+
+    render(
+      <LampStage
+        onStart={vi.fn()}
+        today="2026-08-07"
+        onAutoSummonDecided={onAutoSummonDecided}
+      />,
+    );
+
+    expect(onAutoSummonDecided).toHaveBeenCalledWith(false);
+  });
+
+  it('보류 중엔 아직 정하지 않았으니 알리지 않는다', () => {
+    const onAutoSummonDecided = vi.fn();
+
+    render(
+      <LampStage
+        onStart={vi.fn()}
+        today="2026-08-07"
+        summonHeld
+        onAutoSummonDecided={onAutoSummonDecided}
+      />,
+    );
+
+    expect(onAutoSummonDecided).not.toHaveBeenCalled();
+  });
+});

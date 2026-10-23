@@ -30,13 +30,15 @@ import { AccentMenuEntry } from './_ui/AccentMenuEntry';
 import { AlarmMenuEntry } from './_ui/AlarmMenuEntry';
 import { AppVersionFooter } from './_ui/AppVersionFooter';
 import { DeveloperMenuSection } from './_ui/DeveloperMenuSection';
+import { FontScaleMenuEntry } from './_ui/FontScaleMenuEntry';
 import { HapticMenuEntry } from './_ui/HapticMenuEntry';
+import { InviteEventBanner } from './_ui/InviteEventBanner';
 import { MenuButton, MenuLink, MenuSection } from './_ui/Menu';
 import { MyProgressTiles } from './_ui/MyProgressTiles';
 import { NotificationMenuEntry } from './_ui/NotificationMenuEntry';
 import { PremiumEntry } from './_ui/PremiumEntry';
 import { ProfileHeader } from './_ui/ProfileHeader';
-import { ShareMenuEntry } from './_ui/ShareMenuEntry';
+import { ShareMenuFallback } from './_ui/ShareMenuFallback';
 import { SpeechRateMenuEntry } from './_ui/SpeechRateMenuEntry';
 import { TalkDisplayMenuEntry } from './_ui/TalkDisplayMenuEntry';
 import { WidgetMenuEntry } from './_ui/WidgetMenuEntry';
@@ -127,6 +129,7 @@ export default function MyPage() {
       >
         <div className="space-y-5 px-4 pt-3 pb-[max(var(--safe-area-inset-bottom),32px)]">
           <ProfileHeader />
+          <InviteEventBanner />
           <PremiumEntry />
           <MyProgressTiles />
 
@@ -140,13 +143,14 @@ export default function MyPage() {
             <AlarmMenuEntry />
             <TalkDisplayMenuEntry />
             <SpeechRateMenuEntry />
+            <FontScaleMenuEntry />
             <NotificationMenuEntry />
             <HapticMenuEntry />
             <WidgetMenuEntry />
           </MenuSection>
 
           <MenuSection title="지원">
-            <ShareMenuEntry />
+            <ShareMenuFallback />
             <MenuLink
               href={MAILBOX_COMPOSE_PATH}
               icon={<Emoji>💬</Emoji>}

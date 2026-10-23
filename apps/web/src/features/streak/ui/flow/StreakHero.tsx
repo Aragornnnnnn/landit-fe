@@ -26,7 +26,7 @@ export const StreakHero = ({
       <h2 className="mt-2 text-[32px] leading-tight font-black text-foreground">
         {title}
       </h2>
-      <p className="mt-1.5 text-[14px] font-medium text-muted-foreground">
+      <p className="mt-1.5 text-14 font-medium text-muted-foreground">
         {guide}
       </p>
     </section>

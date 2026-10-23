@@ -17,7 +17,17 @@ export const RewardGuideStep = ({
       <RewardGuide
         eyebrow={copy.eyebrow}
         amount={copy.amount}
-        caption={copy.caption}
+        caption={
+          <>
+            {copy.caption}
+            {/* 초대 보상처럼 결제 전에 받아 둔 돈이 있으면 0원이 아닌 데서 시작한다 */}
+            {copy.startNote && (
+              <span className="mt-1 block font-bold text-primary">
+                {copy.startNote}
+              </span>
+            )}
+          </>
+        }
         dailyWon={copy.dailyWon}
       />
     </div>

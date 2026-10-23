@@ -50,7 +50,7 @@ const PASS_BLOCKED: Record<
 > = {
   unavailable: {
     reason: 'pass_unavailable',
-    message: '진행 중이거나 확인 중인 챌린지가 있어 지금은 결제할 수 없어요',
+    message: '진행 중이거나 확인 중인 이용권이 있어 지금은 결제할 수 없어요',
   },
   unknown: {
     reason: 'pass_check_failed',

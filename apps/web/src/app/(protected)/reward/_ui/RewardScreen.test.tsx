@@ -20,6 +20,7 @@ const base = {
   fetching: false,
   invited: false,
   settled: true,
+  storedWon: 0,
   retry: () => {},
 };
 const mocks = vi.hoisted(() => ({
@@ -207,6 +208,24 @@ describe('RewardScreen 계측', () => {
       'Reward Viewed',
       { status: 'intro', past_days: 2 },
     ]);
+  });
+
+  it('처음 보는 소개에서 결제 전에 받아 둔 돈이 있으면 보기 내역 대신 이미 쌓인 금액을 보여 준다', () => {
+    mocks.my = { ...base, invited: true, storedWon: 3_000 };
+
+    render(<RewardScreen />);
+
+    expect(screen.getByText('이미 이렇게 쌓였어요')).toBeInTheDocument();
+    expect(screen.getByText('3,000원')).toBeInTheDocument();
+    expect(screen.queryByText('이렇게 쌓여요')).not.toBeInTheDocument();
+  });
+
+  it('받아 둔 돈이 없으면 처음 보는 소개는 보기 내역 그대로다', () => {
+    mocks.my = { ...base, invited: true };
+
+    render(<RewardScreen />);
+
+    expect(screen.getByText('이렇게 쌓여요')).toBeInTheDocument();
   });
 
   it('지난 날이 하루뿐이면 처음 보는 소개를 그대로 본다', () => {

@@ -78,7 +78,7 @@ export const StreakStamp = () => {
           }}
           transition={{ delay: TITLE_DELAY, duration: 0.32 }}
         >
-          <p className="text-[26px] leading-none font-extrabold text-foreground">
+          <p className="text-26 leading-none font-extrabold text-foreground">
             {celebration.title}
           </p>
           {/* 고비를 채운 날 문구는 길어서 두 줄로 감긴다 — 가운데 정렬로 감겨야 줄이 흐트러지지 않는다 */}
@@ -239,7 +239,7 @@ const RunCell = ({
       </div>
     </div>
     <span
-      className={`text-[12px] leading-none ${
+      className={`text-12 leading-none ${
         cell.latest
           ? 'font-bold text-primary'
           : filled

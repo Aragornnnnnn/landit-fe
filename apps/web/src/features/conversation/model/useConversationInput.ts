@@ -8,8 +8,9 @@ import { EVENTS } from '@landit/analytics';
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
 import { reportWarning } from '@/shared/monitoring/report';
-import { isMicPermissionDeniedError } from '@/shared/stt/errors';
-import { useStt } from '@/shared/stt/useStt';
+import type { SttResultMeta } from '@/shared/stt/deepgram-stt';
+import { isMicPermissionDeniedError, SttError } from '@/shared/stt/errors';
+import { useStt, type SttErrorMeta } from '@/shared/stt/useStt';
 import { showToast } from '@/shared/ui/toast';
 
 interface ConversationInputOptions {
@@ -33,6 +34,8 @@ export const useConversationInput = ({
   onContent,
 }: ConversationInputOptions) => {
   const [transcript, setTranscript] = useState('');
+  // 확정 전 말이 남아 있는가 — 답변 칸이 듣는 중 표시(점 물결)를 켜고 끄는 기준
+  const [speechPending, setSpeechPending] = useState(false);
   // 입력 수단 — 기본은 마이크(음성), 키보드 아이콘을 누르면 타이핑 모드로 바꾼다
   const [keyboardMode, setKeyboardMode] = useState(false);
   // 마이크 권한이 거부돼 STT를 못 켠 상태 — 설정 유도 안내를 띄운다
@@ -50,11 +53,21 @@ export const useConversationInput = ({
   };
 
   // 음성 최종 텍스트 — 비었으면(인식 실패) 마이크 대기로 되돌리고 이유를 알린다. 취소 후엔 오지 않는다(useStt 보장)
-  const submitVoice = (raw: string) => {
+  const submitVoice = (raw: string, meta: SttResultMeta) => {
     const content = raw.trim();
     const utteranceDurationMs = takeUtteranceDuration();
+    const { sessionId, turnIndex } = trackContext();
+    // 빈 결과까지 모두 남긴다 — 문의가 오면 엔진·대기 시간·종료 사유로 대조한다
+    track(EVENTS.SPEECH_RECOGNITION_COMPLETED, {
+      session_id: sessionId ?? undefined,
+      turn_index: turnIndex,
+      engine: meta.engine,
+      end_reason: meta.endReason,
+      connect_ms: meta.connectMs ?? undefined,
+      finalize_wait_ms: meta.finalizeWaitMs ?? undefined,
+      char_count: content.length,
+    });
     if (!content) {
-      const { sessionId, turnIndex } = trackContext();
       haptic('error');
       setTranscript('');
       onInputCancel();
@@ -70,9 +83,9 @@ export const useConversationInput = ({
   };
 
   // 인식 오류 — 권한 거부는 설정 유도 안내를, 그 외에는 토스트로 알리고 마이크 대기로 되돌린다
-  const recoverFromSttError = (error: Error) => {
-    // 좁히기(never) 전에 읽어둔다 — 계측 속성용 에러 이름
-    const errorName = error.name;
+  const recoverFromSttError = (error: Error, meta: SttErrorMeta) => {
+    // 좁히기(never) 전에 읽어둔다 — 계측 사유는 SttError면 그 사유(연결 실패·도중 끊김), 그 밖엔 에러 이름
+    const failReason = error instanceof SttError ? error.reason : error.name;
     if (isMicPermissionDeniedError(error)) {
       setMicPermissionDenied(true);
       if (!micDeniedTrackedRef.current) {
@@ -84,7 +97,10 @@ export const useConversationInput = ({
       }
     } else {
       showToast('음성 인식에 문제가 생겼어요. 다시 시도해 주세요');
-      track(EVENTS.SPEECH_RECOGNITION_FAILED, { reason: errorName });
+      track(EVENTS.SPEECH_RECOGNITION_FAILED, {
+        engine: meta.engine,
+        reason: failReason,
+      });
       reportWarning(error);
     }
     haptic('error');
@@ -95,7 +111,10 @@ export const useConversationInput = ({
   // 마이크 STT 배선 — 침묵 자동 종료는 끄고 완료 버튼(■)만으로 끝낸다 (긴 답변 중 침묵에도 안 끊기게)
   const stt = useStt({
     stopOnSilence: false,
-    onInterim: (text) => setTranscript(text),
+    onInterim: (text, pending) => {
+      setTranscript(text);
+      setSpeechPending(pending);
+    },
     onFinal: submitVoice,
     onError: recoverFromSttError,
   });
@@ -104,6 +123,7 @@ export const useConversationInput = ({
   const resetToVoiceInput = () => {
     setKeyboardMode(false);
     setTranscript('');
+    setSpeechPending(false);
   };
 
   // 마이크로 말하기 — 듣기 시작을 알리고 STT를 켠다
@@ -180,6 +200,7 @@ export const useConversationInput = ({
   return {
     transcript,
     setTranscript,
+    speechPending,
     keyboardMode,
     pressMic,
     pressKeyboard,

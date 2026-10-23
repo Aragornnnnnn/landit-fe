@@ -19,6 +19,7 @@ import {
   type ConversationEvent,
 } from './conversation-machine';
 import { expressionHoldMs, thoughtHoldMs, toThoughtType } from './pacing';
+import { sendWithResend } from './resend';
 import type { FloatingThought, ThoughtType } from './thought';
 import { useAiSpeech, type SpeechSource } from './useAiSpeech';
 import { useConversationInput } from './useConversationInput';
@@ -103,6 +104,13 @@ export const useConversationTurns = ({
   const completedRef = useRef(false); // 그 발화를 끝으로 대화가 종료되는가
   const nextMessageRef = useRef<TurnNextMessage | null>(null);
   const submittingRef = useRef(false); // 중복 제출 방지 (연출은 AI_THINKING phase가 맡는다)
+  const abandonedRef = useRef(false); // 대화를 떠났는가 — 재전송을 멈추고 늦은 실패도 버린다
+  // 끝내 전달되지 못한 답변 — 서버는 같은 턴에 다른 문장을 거절하므로 새로 말하게 하지 않고 이것만 다시 보낸다
+  const [unsent, setUnsent] = useState<{
+    content: string;
+    inputType: 'VOICE' | 'TEXT';
+    utteranceDurationMs: number;
+  } | null>(null);
 
   const innerThought = useInnerThought();
 
@@ -127,7 +135,7 @@ export const useConversationTurns = ({
 
   // 유저 입력 — 마이크/키보드 전환과 STT 배선은 훅 안에, 여기서는 상태 전이와 제출만 잇는다
   const input = useConversationInput({
-    canStart: state.phase === 'USER_READY',
+    canStart: state.phase === 'USER_READY' && !unsent,
     trackContext: () => ({
       sessionId,
       turnIndex: state.turnIndex,
@@ -196,10 +204,12 @@ export const useConversationTurns = ({
     content: string,
     inputType: 'VOICE' | 'TEXT',
     utteranceDurationMs: number,
+    resending = false,
   ) => {
     if (submittingRef.current) return;
     submittingRef.current = true;
-    send('USER_SPEAKING_DONE'); // → AI_THINKING (상대가 생각 중)
+    // → AI_THINKING (상대가 생각 중). 다시 보낼 때는 듣기 없이 바로 넘어간다
+    send(resending ? 'RESEND_STARTED' : 'USER_SPEAKING_DONE');
     try {
       // 반환하는 sessionId 옵션과 다른 값 — 백그라운드 시작이 아직이면 확보를 기다린 결과
       const activeSessionId = await ensureSession();
@@ -215,15 +225,21 @@ export const useConversationTurns = ({
         return;
       }
 
-      const res = await submit({
-        sessionId: activeSessionId,
-        content,
-        inputType,
-        turnIndex: state.turnIndex,
-        utteranceDurationMs,
-      });
+      // 응답이 끊기면 같은 답변을 다시 보낸다 — 그동안 화면은 상대가 생각하는 중 그대로다
+      const res = await sendWithResend(
+        () =>
+          submit({
+            sessionId: activeSessionId,
+            content,
+            inputType,
+            turnIndex: state.turnIndex,
+            utteranceDurationMs,
+          }),
+        { isCancelled: () => abandonedRef.current },
+      );
       // 호출자가 이 턴을 스스로 접었다(예: 대화를 나가는 중) — 다음 연출을 이어붙이지 않는다
-      if (!res) return;
+      if (!res || abandonedRef.current) return;
+      setUnsent(null);
       // 종료 인사도 nextMessage로 오고, 그 인사를 끝으로 종료인지는 completed가 알려준다 (인사 재생 후 CTA)
       nextMessageRef.current = res.nextMessage;
       completedRef.current = res.completed;
@@ -254,11 +270,15 @@ export const useConversationTurns = ({
           send('AI_RESPONSE_READY'); // → AI_INNER_THOUGHT
         });
     } catch (error) {
+      if (abandonedRef.current) return; // 이미 떠난 대화 — 이 실패는 볼 일이 없다
       console.warn('[conversation] 발화 제출 실패', error);
       reportError(error);
       haptic('error');
-      send('AI_RESPONSE_FAILED'); // → USER_READY (다시 시도)
-      showToast('전송에 실패했어요. 다시 시도해 주세요');
+      send('AI_RESPONSE_FAILED'); // → USER_READY (다시 보내기 대기)
+      // 보낸 답변을 그 자리에 남겨 두고, 마이크 대신 다시 보내기를 띄운다
+      setUnsent({ content, inputType, utteranceDurationMs });
+      input.resetForNextTurn();
+      input.setTranscript(content);
       track(EVENTS.TURN_FAILED, {
         session_id: sessionId ?? undefined,
         turn_index: state.turnIndex,
@@ -269,10 +289,22 @@ export const useConversationTurns = ({
     }
   };
 
-  // 중도 이탈 — 진행 중인 속마음 폴링을 멈춘다 (세션 정리는 세션을 소유한 호출자 몫)
+  // 중도 이탈 — 진행 중인 재전송과 속마음 폴링을 멈춘다 (세션 정리는 세션을 소유한 호출자 몫)
   const abandon = () => {
+    abandonedRef.current = true;
     innerThought.cancel();
   };
+
+  // 전달되지 못한 답변을 그대로 다시 보낸다 — 보낼 게 없으면 버튼 자체를 두지 않는다
+  const resend = unsent
+    ? () =>
+        void submitContent(
+          unsent.content,
+          unsent.inputType,
+          unsent.utteranceDurationMs,
+          true,
+        )
+    : undefined;
 
   // USER 선발화면 오프닝 안내를, AI 선발화면 현재 질문을 보여준다
   const turn: ConversationTurn = {
@@ -295,5 +327,6 @@ export const useConversationTurns = ({
     // 입력은 하위 훅 결과를 통째로 — 낱개 중계를 안 해야 input의 반환 형태에 flow가 결합하지 않는다
     input,
     abandon,
+    resend,
   };
 };

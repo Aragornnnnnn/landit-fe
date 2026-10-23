@@ -209,14 +209,14 @@ export const QuestionCard = ({
   // 질문이 길수록 글자를 줄여 줄 수를 낮춘다 — 답변·마이크 공간 압박을 덜고, 스크롤과 함께 가독성을 지킨다
   const questionSize =
     question.length > 320
-      ? 'text-[15px]'
+      ? 'text-15'
       : question.length > 240
-        ? 'text-[16px]'
+        ? 'text-16'
         : question.length > 180
-          ? 'text-[17px]'
+          ? 'text-17'
           : question.length > 100
-            ? 'text-[19px]'
-            : 'text-[20px]';
+            ? 'text-19'
+            : 'text-20';
 
   return (
     <motion.div
@@ -249,7 +249,7 @@ export const QuestionCard = ({
             <p className="text-sm font-bold text-primary">
               내가 먼저 말해보는 상황
             </p>
-            <p className="mt-2 text-[17px] leading-relaxed font-semibold text-foreground">
+            <p className="mt-2 text-17 leading-relaxed font-semibold text-foreground">
               {question}
             </p>
           </>

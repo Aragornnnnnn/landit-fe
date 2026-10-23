@@ -1,0 +1,95 @@
+// 초대 코드 칸 동작 테스트 — 직접 입력은 정리해서, 붙여넣기는 코드만 찾아서 넘긴다
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { ReferralCodeInput } from './ReferralCodeInput';
+
+const renderInput = () => {
+  const onType = vi.fn();
+  const onPaste = vi.fn();
+  render(
+    <ReferralCodeInput
+      value=""
+      tone="idle"
+      onType={onType}
+      onPaste={onPaste}
+    />,
+  );
+  return { input: screen.getByLabelText('초대 코드'), onType, onPaste };
+};
+
+afterEach(() => {
+  cleanup();
+});
+
+describe('ReferralCodeInput', () => {
+  it('소문자로 치면 대문자 코드로 넘긴다', () => {
+    const { input, onType } = renderInput();
+
+    fireEvent.change(input, { target: { value: 'k7qm' } });
+
+    expect(onType).toHaveBeenCalledWith('K7QM');
+  });
+
+  it('메시지를 통째로 붙여넣으면 그 안의 코드만 넘긴다', () => {
+    const { input, onPaste } = renderInput();
+
+    fireEvent.paste(input, {
+      clipboardData: { getData: () => '같이 해요 🙌\n초대 코드: K7QM3XPA' },
+    });
+
+    expect(onPaste).toHaveBeenCalledWith('K7QM3XPA');
+  });
+
+  it('붙여넣기 없이 메시지가 한꺼번에 들어와도(키보드 클립보드 칩) 코드만 찾아 넘긴다', () => {
+    const { input, onPaste, onType } = renderInput();
+
+    fireEvent.change(input, {
+      target: { value: '같이 해요 3,000원을 받아요\n초대 코드: K7QM3XPA' },
+    });
+
+    expect(onPaste).toHaveBeenCalledWith('K7QM3XPA');
+    expect(onType).not.toHaveBeenCalled();
+  });
+
+  it('8칸이 다 차면 포커스를 풀어 키보드를 내린다', () => {
+    const props = { tone: 'idle' as const, onType: vi.fn(), onPaste: vi.fn() };
+    const { rerender } = render(<ReferralCodeInput value="K7QM" {...props} />);
+    const input = screen.getByLabelText('초대 코드');
+    input.focus();
+
+    rerender(<ReferralCodeInput value="K7QM3XPA" {...props} />);
+
+    expect(input).not.toHaveFocus();
+  });
+
+  it('붙여넣은 글에 코드가 없으면 null을 넘긴다', () => {
+    const { input, onPaste } = renderInput();
+
+    fireEvent.paste(input, { clipboardData: { getData: () => '안녕하세요' } });
+
+    expect(onPaste).toHaveBeenCalledWith(null);
+  });
+
+  it('거절된 채로 다시 넣으면 칸 묶음을 새로 그려 다시 흔든다', () => {
+    // given — 같은 코드가 거절돼 빨간 상태다
+    const props = {
+      value: 'K7QM3XPA',
+      tone: 'error' as const,
+      onType: vi.fn(),
+      onPaste: vi.fn(),
+    };
+    const { container, rerender } = render(
+      <ReferralCodeInput {...props} entryKey={1} />,
+    );
+    const before = container.querySelector('.animate-shake');
+
+    // when — 같은 코드를 다시 붙여넣어 상태는 그대로 거절이다
+    rerender(<ReferralCodeInput {...props} entryKey={2} />);
+
+    // then — 흔들리는 묶음이 새 노드라 애니메이션이 처음부터 돈다
+    const after = container.querySelector('.animate-shake');
+    expect(before).not.toBeNull();
+    expect(after).not.toBe(before);
+  });
+});

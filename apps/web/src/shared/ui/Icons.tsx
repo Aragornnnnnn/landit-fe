@@ -203,6 +203,26 @@ export const MicIcon = ({ size = 22, ...props }: IconProps) => (
   </svg>
 );
 
+// 전달되지 못한 답변 다시 보내기 — 마이크·정지처럼 채운 면이 있어야 같은 자리에서 무게가 맞는다.
+// 화살촉만 채운 시계 방향 화살표라 같은 화면의 다시 듣기(반시계, 선만)와 구분된다
+export const ResendIcon = ({ size = 22, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2.2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="M18.4 15.5A7.5 7.5 0 1 1 18 7.6" />
+    <path d="M20.5 3.8v5.6h-5.6Z" fill="currentColor" />
+  </svg>
+);
+
 export const SpeakerIcon = ({ size = 22, ...props }: IconProps) => (
   <svg
     width={size}
@@ -563,5 +583,26 @@ export const InfoIcon = ({ size = 22, ...props }: IconProps) => (
     <circle cx="12" cy="12" r="10" />
     <path d="M12 16v-4" />
     <path d="M12 8h.01" />
+  </svg>
+);
+
+export const ClipboardPasteIcon = ({ size = 22, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="M11 14h10" />
+    <path d="M16 4h2a2 2 0 0 1 2 2v1.344" />
+    <path d="m17 18 4-4-4-4" />
+    <path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 1.793-1.113" />
+    <rect x="8" y="2" width="8" height="4" rx="1" />
   </svg>
 );

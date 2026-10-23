@@ -90,7 +90,7 @@ const TopicPicker = ({
     <>
       {/* 왼쪽 제목 ↔ 오른쪽 닫기로 한 줄을 잡는다. 오른쪽 여백은 X 자리를 비켜 준다.
           색은 검정 — 눌러야 할 건 칩이라 주황은 그쪽에 양보한다 */}
-      <h2 className="pr-8 text-[17px] font-bold text-foreground">
+      <h2 className="pr-8 text-17 font-bold text-foreground">
         {partnerName}와 어떤 주제로 대화할까요?
       </h2>
       {/* 칩 길이가 제각각이라 줄바꿈에 맡기고 가운데로 모은다.
@@ -126,7 +126,7 @@ const TopicPicker = ({
           type="button"
           disabled={refreshing || cooling}
           onClick={requestRefresh}
-          className="flex items-center gap-1.5 px-2 py-1 text-[13px] font-semibold text-muted-foreground active:opacity-60 disabled:opacity-40"
+          className="flex items-center gap-1.5 px-2 py-1 text-13 font-semibold text-muted-foreground active:opacity-60 disabled:opacity-40"
         >
           <RefreshIcon
             key={spins}

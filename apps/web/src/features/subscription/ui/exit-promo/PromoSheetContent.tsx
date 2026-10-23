@@ -105,13 +105,13 @@ export const PromoSheetContent = ({
 
       <header className="relative flex flex-col items-center text-center">
         <PremiumPill />
-        <BottomSheet.Title className="mt-2.5 text-[26px] leading-[1.3] font-bold text-foreground">
+        <BottomSheet.Title className="mt-2.5 text-26 leading-[1.3] font-bold text-foreground">
           지금 화면에서만
           <br />
           구독 <span className="text-[30px]">{yearly.discountRate}%</span> 할인
         </BottomSheet.Title>
         {/* 금색은 맨 위 PREMIUM과 할인율 배지 둘만 — 남은 시간은 배경 없이 빨간 글자로 */}
-        <p className="mt-2.5 flex items-center gap-1 text-[15px] leading-[1.3] font-bold text-destructive">
+        <p className="mt-2.5 flex items-center gap-1 text-15 leading-[1.3] font-bold text-destructive">
           <PromoClock seconds={promo.remainingSeconds} /> 후 종료
         </p>
       </header>
@@ -151,7 +151,7 @@ export const PromoSheetContent = ({
         >
           {ctaLabel}
         </Button>
-        <nav className="mt-3 flex justify-center gap-3 text-[10px] leading-[1.3] font-medium text-muted-foreground underline">
+        <nav className="mt-3 flex justify-center gap-3 text-10 leading-[1.3] font-medium text-muted-foreground underline">
           <Link href="/terms">이용약관</Link>
           <Link href="/privacy">개인정보 처리방침</Link>
         </nav>
@@ -203,38 +203,39 @@ const PlanRow = ({
   >
     {badge && (
       <span
-        className="absolute -top-2.5 right-4 rounded-full px-2.5 py-[3px] text-[11px] leading-[1.3] font-bold text-[#4a2f00]"
+        className="absolute -top-2.5 right-4 rounded-full px-2.5 py-[3px] text-11 leading-[1.3] font-bold text-[#4a2f00]"
         style={{ background: GOLD_GRADIENT }}
       >
         {badge}
       </span>
     )}
-    <span className="flex flex-col gap-0.5">
-      <span className="text-[17px] leading-[1.3] font-bold text-foreground">
+    <span className="flex min-w-0 flex-col gap-0.5">
+      <span className="text-17 leading-[1.3] font-bold text-foreground">
         {title}
       </span>
       <span
-        className={`text-[12px] leading-[1.3] ${
+        className={`text-12 leading-[1.3] ${
           trial ? 'text-primary' : 'text-muted-foreground'
         }`}
       >
         {trial ?? '무료 체험 미포함'}
       </span>
     </span>
-    <span className="flex flex-col items-end gap-0.5">
-      <span className="flex items-baseline gap-1.5">
+    <span className="flex shrink-0 flex-col items-end gap-0.5">
+      {/* 가격 줄은 글자 크기 배율을 받지 않는다 — 크게 단계에서 "58,500원 / / 년"으로 끊기지 않게 */}
+      <span className="flex items-baseline gap-1.5 whitespace-nowrap [--font-scale:1]">
         {listPrice && (
-          <span className="text-[12px] leading-[1.3] text-[#9ca3af] line-through">
+          <span className="text-12 leading-[1.3] text-[#9ca3af] line-through">
             {listPrice}
           </span>
         )}
         {/* 단위는 한 급 낮춰 붙인다 — 견줄 것은 금액이다 */}
-        <span className="text-[19px] leading-[1.3] font-bold text-foreground">
+        <span className="text-19 leading-[1.3] font-bold text-foreground">
           {price}
-          <span className="text-[15px]"> {unit}</span>
+          <span className="text-15"> {unit}</span>
         </span>
       </span>
-      <span className="text-[12px] leading-[1.3] text-muted-foreground">
+      <span className="text-12 leading-[1.3] text-muted-foreground">
         {note}
       </span>
     </span>

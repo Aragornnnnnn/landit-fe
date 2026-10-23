@@ -26,6 +26,7 @@ import type {
 } from '@/features/reward/model/missed-reward';
 import { rewardOfferOf } from '@/features/reward/model/refund-offer';
 import { rewardBadgeOf } from '@/features/reward/model/reward-status';
+import { rewardCompletion } from '@/features/reward/model/reward.fixture';
 import type { BalanceGain } from '@/features/reward/model/seen-balance';
 import type { RewardHistoryState } from '@/features/reward/model/useRewardHistoryQuery';
 import { EarnedStamp } from '@/features/reward/ui/EarnedStamp';
@@ -163,9 +164,9 @@ const CoinPreview = ({ onBack }: { onBack: () => void }) => {
 
 // 시나리오를 끝낸 순간의 축하 — 제목 아래 가운데만 실제 부품이다
 const EarnedPreview = ({ onBack }: { onBack: () => void }) => {
-  const earn = completionEarnOf(EARNED_REWARD, {
-    date: EARNED_REWARD.today?.date ?? '',
-  });
+  const earn = completionEarnOf(
+    rewardCompletion({ earnedWon: EARNED_REWARD.today?.earnedWon ?? 0 }),
+  );
 
   return (
     <RewardFrame onBack={onBack}>

@@ -103,10 +103,10 @@ export const SpeechRateMenuEntry = () => {
             type="button"
             onClick={togglePreview}
             // 들어보기↔멈추기로 글자 수가 달라도 pill 크기는 그대로 — 눌렀다고 버튼이 줄어들면 흔들려 보인다
-            className="flex min-w-[88px] items-center justify-center gap-1.5 rounded-full py-1.5 pr-3 pl-2.5 text-[12.5px] font-medium active:opacity-70"
+            className="flex min-w-[88px] items-center justify-center gap-1.5 rounded-full py-1.5 pr-3 pl-2.5 text-13 font-medium active:opacity-70"
             style={{ background: '#F2F2F7', color: '#111' }}
           >
-            <span className="text-[9px]" aria-hidden>
+            <span className="text-9" aria-hidden>
               {playing ? '■' : '▶'}
             </span>
             {playing ? '멈추기' : '들어보기'}
@@ -129,7 +129,7 @@ export const SpeechRateMenuEntry = () => {
                 aria-checked={selected}
                 aria-label={`${option}배`}
                 onClick={() => choose(option)}
-                className={`flex-1 rounded-lg py-[9px] text-[13px] transition-colors ${
+                className={`flex-1 rounded-lg py-[9px] text-13 transition-colors ${
                   selected ? 'bg-white font-bold shadow-sm' : 'font-medium'
                 }`}
                 style={{ color: selected ? '#111' : '#6B7280' }}
@@ -142,7 +142,7 @@ export const SpeechRateMenuEntry = () => {
 
         {/* 숫자가 주인공이고 거북이·토끼는 양 끝이 어느 쪽인지만 알려준다 */}
         <div
-          className="mt-2 flex justify-between px-1 text-[12px]"
+          className="mt-2 flex justify-between px-1 text-12"
           style={{ color: '#9CA3AF' }}
         >
           <span>

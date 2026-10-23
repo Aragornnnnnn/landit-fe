@@ -25,8 +25,8 @@ export const ChoiceRow = ({
       checked ? 'border-primary bg-selected' : 'border-border bg-card'
     }`}
   >
-    <Emoji className="text-[22px]">{emoji}</Emoji>
-    <span className="flex-1 text-[15px] font-semibold text-foreground">
+    <Emoji className="text-22">{emoji}</Emoji>
+    <span className="flex-1 text-15 font-semibold text-foreground">
       {label}
     </span>
     <span

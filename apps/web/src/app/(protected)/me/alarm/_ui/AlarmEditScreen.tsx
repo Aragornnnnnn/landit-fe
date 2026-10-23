@@ -31,7 +31,7 @@ import { ChevronRightIcon } from '@/shared/ui/Icons';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 const SectionLabel = ({ children }: { children: string }) => (
-  <h2 className="shrink-0 px-2 pt-2 text-[14px] font-medium text-muted-foreground">
+  <h2 className="shrink-0 px-2 pt-2 text-14 font-medium text-muted-foreground">
     {children}
   </h2>
 );
@@ -123,7 +123,7 @@ const AlarmEditForm = ({
               className="h-full w-auto max-w-[170px] object-contain"
             />
           </div>
-          <p className="shrink-0 text-[14px] text-muted-foreground">
+          <p className="shrink-0 text-14 text-muted-foreground">
             소리가 울리고 잠금화면 위에 알람 화면이 떠요
           </p>
         </div>
@@ -131,10 +131,10 @@ const AlarmEditForm = ({
         <SectionLabel>약속 시간</SectionLabel>
         <div className="shrink-0 rounded-[20px] bg-card pr-4 pl-5">
           <div className="flex items-center border-b border-border py-[18px]">
-            <span className="flex-1 text-[16px] font-medium text-foreground">
+            <span className="flex-1 text-16 font-medium text-foreground">
               반복
             </span>
-            <span className="text-[16px] font-medium text-muted-foreground">
+            <span className="text-16 font-medium text-muted-foreground">
               매일
             </span>
           </div>
@@ -143,10 +143,10 @@ const AlarmEditForm = ({
             onClick={openPicker}
             className="flex w-full items-center gap-2 py-[18px] text-left"
           >
-            <span className="flex-1 text-[16px] font-medium text-foreground">
+            <span className="flex-1 text-16 font-medium text-foreground">
               시각
             </span>
-            <span className="text-[16px] font-medium text-foreground">
+            <span className="text-16 font-medium text-foreground">
               {formatAlarmTime(time)}
             </span>
             <ChevronRightIcon size={16} className="text-[#C7C7CC]" />
@@ -161,7 +161,7 @@ const AlarmEditForm = ({
           }}
           // 저장이 진행 중이면 삭제를 막는다 — 둘 다 끝나면 저장의 뒤로 가기와 삭제의 두 칸 뒤로 가기가 겹친다
           disabled={isPending}
-          className="shrink-0 rounded-[20px] bg-card py-4 text-[16px] font-medium text-destructive active:bg-muted disabled:opacity-40"
+          className="shrink-0 rounded-[20px] bg-card py-4 text-16 font-medium text-destructive active:bg-muted disabled:opacity-40"
         >
           알람 삭제
         </button>
@@ -174,7 +174,7 @@ const AlarmEditForm = ({
       </div>
 
       <BottomSheet open={picking} onClose={() => setPicking(false)}>
-        <BottomSheet.Title className="text-[20px] font-bold text-foreground">
+        <BottomSheet.Title className="text-20 font-bold text-foreground">
           시각
         </BottomSheet.Title>
         <div className="mt-2">
@@ -199,7 +199,7 @@ const AlarmEditForm = ({
 
       {/* 확인은 왼쪽 「취소」, 오른쪽 빨간 「삭제」 — 지우는 버튼이 무엇인지 그대로 보이게 */}
       <BottomSheet open={confirmingDelete} onClose={cancelDelete}>
-        <BottomSheet.Title className="text-[17px] font-bold text-foreground">
+        <BottomSheet.Title className="text-17 font-bold text-foreground">
           알람을 삭제할까요?
         </BottomSheet.Title>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">

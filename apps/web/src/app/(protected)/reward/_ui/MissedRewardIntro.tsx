@@ -18,10 +18,24 @@ import { MidnightCountdown } from './MidnightCountdown';
 import { HistoryFeedList } from './RewardHistoryFeed';
 import { RewardPot } from './RewardPot';
 
+// 결제 전에 이미 쌓인 돈 — 금액, 다 채우면 돌려받는 금액(받아 둔 돈은 그와 따로 더해진다), 실제 내역
+export interface MissedStored {
+  won: number;
+  maximumWon: number;
+  history: React.ReactNode;
+}
+
 // 실제 화면 — 지난 기록을 서버에서 받아 그린다
-export const MissedRewardIntro = ({ missed }: { missed: MissedReward }) => (
+export const MissedRewardIntro = ({
+  missed,
+  stored,
+}: {
+  missed: MissedReward;
+  stored?: MissedStored;
+}) => (
   <MissedRewardView
     missed={missed}
+    stored={stored}
     history={useRewardPreviewHistoryQuery(missed.today)}
   />
 );
@@ -30,11 +44,17 @@ export const MissedRewardIntro = ({ missed }: { missed: MissedReward }) => (
 export const MissedRewardView = ({
   missed,
   history,
+  stored,
 }: {
   missed: MissedReward;
+  // 결제 전에 이미 쌓인 돈 — 상자 아래 한 줄이 그것까지 돌려받는다고 말하고, 기록 끝에 실제 내역이 붙는다
+  stored?: MissedStored;
   history: RewardHistoryState<MissedRow>;
 }) => {
-  const copy = missedCopyOf(missed);
+  const copy = missedCopyOf(
+    missed,
+    stored && { storedWon: stored.won, maximumWon: stored.maximumWon },
+  );
   // 오늘 끝낸 대화는 오늘 시작해야 인정된다 — 자정이 가까우면 시계로 알린다
   const urgent = useMidnightUrgent(missed.talkedToday);
 
@@ -44,7 +64,7 @@ export const MissedRewardView = ({
         {urgent && <MidnightCountdown amountWon={missed.dailyWon} />}
         {/* 손을 흔들며 재촉하는 래디 — 아직 늦지 않았다는 말과 맞춘다 */}
         <RewardPot stage="urgent" dropsCoin={false} />
-        <p className="mt-2 text-[13px] font-bold text-muted-foreground">
+        <p className="mt-2 text-13 font-bold text-muted-foreground">
           {copy.eyebrow}
         </p>
         {/* 받지 못한 돈이라 흐리게 — 주황은 지금 받을 수 있는 돈에만 쓴다 */}
@@ -54,17 +74,15 @@ export const MissedRewardView = ({
       </section>
 
       <div className="mx-5 mt-4 rounded-2xl bg-primary/10 px-4 py-3.5 text-center">
-        <p className="text-[15px] font-medium whitespace-pre-line text-foreground">
+        <p className="text-15 font-medium whitespace-pre-line text-foreground">
           <EmphasizedText line={copy.box} />
         </p>
-        <p className="mt-1 text-[13px] font-medium text-muted-foreground">
+        <p className="mt-1 text-13 font-medium text-muted-foreground">
           {copy.note}
         </p>
       </div>
 
-      <p className="mt-6 px-5 text-[13px] font-bold text-muted-foreground">
-        기록
-      </p>
+      <p className="mt-6 px-5 text-13 font-bold text-muted-foreground">기록</p>
       <HistoryFeedList
         {...history}
         renderRows={(rows) => (
@@ -75,6 +93,8 @@ export const MissedRewardView = ({
           </ul>
         )}
       />
+      {/* 결제 전에 들어온 돈(초대 보상 등)은 놓친 기록 아래에 실제 내역으로 — 시간 순서상 가장 오래된 쪽이다 */}
+      {stored?.history}
     </div>
   );
 };
@@ -83,23 +103,23 @@ export const MissedRewardView = ({
 const MissedLine = ({ row }: { row: MissedRow }) => (
   <li className="flex items-center gap-3 pt-4">
     <span
-      className={`w-9 shrink-0 text-[13px] font-medium tabular-nums ${row.isToday ? 'text-primary' : 'text-muted-foreground'}`}
+      className={`w-[calc(36px*var(--font-scale))] shrink-0 text-13 font-medium whitespace-nowrap tabular-nums ${row.isToday ? 'text-primary' : 'text-muted-foreground'}`}
     >
       {row.dateLabel}
     </span>
     <span
-      className={`min-w-0 flex-1 text-[16px] font-bold ${row.isToday ? 'text-foreground' : 'text-muted-foreground'}`}
+      className={`min-w-0 flex-1 text-16 font-bold ${row.isToday ? 'text-foreground' : 'text-muted-foreground'}`}
     >
       시나리오 대화 완료
     </span>
     <span
       className={`shrink-0 text-right ${row.isToday ? 'text-primary' : 'text-muted-foreground'}`}
     >
-      <span className="block text-[16px] font-black tabular-nums">
+      <span className="block text-16 font-black tabular-nums">
         {row.isToday ? '+' : ''}
         {formatWon(row.amountWon)}
       </span>
-      <span className="mt-0.5 block text-[13px] font-medium">
+      <span className="mt-0.5 block text-13 font-medium">
         {row.isToday ? '받을 수 있어요' : '못 받았어요'}
       </span>
     </span>

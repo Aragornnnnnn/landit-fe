@@ -9,6 +9,8 @@ import type {
   ProcessingStatus,
   SubmittedMessage,
 } from '@/features/conversation/api/session';
+import type { RewardCompletion } from '@/features/reward/api/reward';
+import type { AnswerGuide } from '@/features/scenario/api/daily';
 import { api } from '@/shared/api/client';
 
 // 시나리오 첫 질문에는 속마음이 함께 온다 (스몰톡과 달리 이미 오간 맥락 위에서 나온다)
@@ -17,6 +19,8 @@ export interface ScenarioTalkCurrentMessage extends CurrentMessage {
   innerThoughtType: string;
   // 첫 고정 질문 음원 — 오프닝은 번들 mp3 즉시 재생을 유지해 아직 읽지 않는다 (세션 응답이 재생 시점보다 늦다)
   questionAudioUrl: string | null;
+  // 첫 질문의 답변 가이드 — 없는 질문이면 null
+  answerGuide: AnswerGuide | null;
 }
 
 // 다음 AI 발화의 분리 재생 소스 — 맞장구(ttsText)는 프론트가 합성하고, 고정 질문은 미리 만든
@@ -26,6 +30,8 @@ export interface ScenarioTalkNextMessage extends NextMessage {
   ttsText: string | null;
   fixedQuestionText: string | null;
   questionAudioUrl: string | null;
+  // 다음 질문의 답변 가이드 — 없는 질문과 종료 메시지면 null
+  answerGuide: AnswerGuide | null;
 }
 
 // 시나리오는 메시지별 피드백을 만든다 — 그 생성 상태가 함께 온다
@@ -64,6 +70,8 @@ export interface ScenarioTalkSubmitResponse {
   // (둘 다 재생 대상이라 FE는 nextMessage 유무로 발화 여부를, completed로 종료 여부를 판단한다)
   nextMessage: ScenarioTalkNextMessage | null;
   progress: ScenarioTalkProgress;
+  // 대화가 끝나는 턴에만 실려 오는 적립 영수증
+  reward?: RewardCompletion;
 }
 
 // 시나리오 세션 시작 — sessionId·선발화자·오프닝·TTS 보이스를 받는다
@@ -72,13 +80,17 @@ export const startScenarioTalkSession = (scenarioId: number) =>
     `/api/v1/scenarios/${scenarioId}/sessions`,
   );
 
-// 유저 발화 제출 — 상대 속마음·다음 질문·진행 상태를 받는다
+// 유저 발화 제출 — 상대 속마음·다음 질문·진행 상태를 받는다.
+// 같은 clientMessageId로 다시 보내면 서버는 이미 만든 응답을 그대로 돌려준다.
+// guideViewed는 그 답변 전·중에 가이드를 열었는지 — 서버는 첫 시나리오의 가이드 있는 질문에서만 받는다
 export const submitScenarioTalkMessage = (
   sessionId: number,
   content: string,
   inputType: InputType,
+  clientMessageId: string,
+  guideViewed: boolean,
 ) =>
   api.post<ScenarioTalkSubmitResponse>(
     `/api/v1/sessions/${sessionId}/messages`,
-    { content, inputType },
+    { content, inputType, clientMessageId, guideViewed },
   );

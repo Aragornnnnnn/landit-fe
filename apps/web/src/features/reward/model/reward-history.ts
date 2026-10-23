@@ -2,7 +2,7 @@
 import { readSeoulDateParts } from '@/shared/lib/seoul-date';
 
 import type {
-  RewardActivity,
+  RewardHistoryActivity,
   RewardHistoryItem,
   RewardHistoryPage,
   RewardPreviewHistoryPage,
@@ -22,8 +22,17 @@ export interface HistoryRow {
   balanceWon: number;
 }
 
-const EARN_TITLE: Record<RewardActivity['activityType'], string> = {
+// 친구 초대 줄은 내가 초대한 쪽인지 초대받은 쪽인지 내역이 알려 주지 않아, 가입·결제 모두 양쪽에 다 맞는 이름 하나로 적는다
+// 친구 초대 줄은 시각 없이 한 줄로 — 끝낸 일이 아니라 쌓인 적립금이라 언제 했는지가 뜻이 없다
+const REFERRAL_ACTIVITIES: ReadonlySet<RewardHistoryActivity | null> = new Set([
+  'REFERRAL_SIGNUP',
+  'REFERRAL_PURCHASE',
+]);
+
+const EARN_TITLE: Record<RewardHistoryActivity, string> = {
   SCENARIO: '시나리오 대화 완료',
+  REFERRAL_SIGNUP: '친구 초대 적립',
+  REFERRAL_PURCHASE: '친구 초대 적립',
 };
 
 // 오늘부터 며칠 뒤의 날짜 글자 ("10.12") — 실제 내역이 없는 보기 줄이 같은 모양으로 적는다. 보기라서 폰 시계로 센다
@@ -55,7 +64,9 @@ const bodyOf = (
       // 모르는 활동이어도 돈이 들어온 줄은 남긴다 — 건너뛰면 잔액이 설명 없이 뛴다
       title:
         (item.activityType && EARN_TITLE[item.activityType]) ?? '학습 완료',
-      note: kstClockOf(item.occurredAt),
+      note: REFERRAL_ACTIVITIES.has(item.activityType)
+        ? ''
+        : kstClockOf(item.occurredAt),
       amountWon: item.amountWon,
     };
   if (item.type === 'CYCLE_END')

@@ -13,9 +13,18 @@ import type {
   SmallTalkSessionStartResponse,
 } from '@/features/small-talk/api/small-talk';
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
+import { ApiError } from '@/shared/api/api-error';
+import type { SttResultMeta } from '@/shared/stt/deepgram-stt';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 import { useSmallTalkFlow } from './useSmallTalkFlow';
+
+const STT_META: SttResultMeta = {
+  engine: 'deepgram',
+  endReason: 'finalize',
+  connectMs: 0,
+  finalizeWaitMs: 0,
+};
 
 const monitoringMock = vi.hoisted(() => ({
   reportError: vi.fn(),
@@ -64,8 +73,9 @@ const sttMock = vi.hoisted(() => ({
   abort: vi.fn(),
 }));
 vi.mock('@/shared/stt/useStt', () => ({
-  useStt: (opts: { onFinal?: (t: string) => void }) => {
-    sttMock.callbacks.onFinal = opts.onFinal;
+  useStt: (opts: { onFinal?: (t: string, meta: SttResultMeta) => void }) => {
+    // 결과 정보는 계측용이라 흐름 검증과 무관하다 — 고정값을 붙여 넘긴다
+    sttMock.callbacks.onFinal = (t: string) => opts.onFinal?.(t, STT_META);
     return { start: sttMock.start, stop: sttMock.stop, abort: sttMock.abort };
   },
 }));
@@ -248,7 +258,9 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
 
   it('제출이 실패해도 되돌아온다', async () => {
     // 서버가 받지 못했으면 차감도 없다
-    submitSmallTalkMessage.mockRejectedValueOnce(new Error('503'));
+    submitSmallTalkMessage.mockRejectedValueOnce(
+      new ApiError('서버 오류', 503, '/api/v1/free-talk/sessions/1/messages'),
+    );
     const { result } = renderFlow(20_000);
 
     speakFor(result, 5);

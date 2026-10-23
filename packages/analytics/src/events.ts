@@ -21,6 +21,14 @@ export const EVENTS = {
   ONBOARDING_STEP_COMPLETED: 'Onboarding Step Completed',
   MIC_PERMISSION_DECIDED: 'Mic Permission Decided',
   ONBOARDING_COMPLETED: 'Onboarding Completed',
+  // 온보딩 초대 코드 단계 — 스텝 완료만으로는 등록했는지 건너뛰었는지 몰라 결과를 따로 찍는다
+  REFERRAL_CODE_REGISTERED: 'Referral Code Registered',
+  REFERRAL_CODE_SKIPPED: 'Referral Code Skipped',
+  // 친구 초대 — 초대 메시지를 보냈거나(공유 시트를 열었거나 복사함), 코드만 복사했다
+  REFERRAL_INVITE_SHARED: 'Referral Invite Shared',
+  REFERRAL_CODE_COPIED: 'Referral Code Copied',
+  // 친구 초대 안내 편지의 「친구에게 공유하기」 — 편지 → 이벤트 화면 진입을 편지별로 본다
+  REFERRAL_LETTER_TAPPED: 'Referral Letter Tapped',
 
   // 프로필 질문 게이트 — 신규 유저는 온보딩 스텝(level·accent)이라 위 계측이 그대로 커버한다.
   // 온보딩을 이미 마친 기존 유저는 온보딩 밖 별도 게이트라 노출·응답을 따로 찍는다.
@@ -64,7 +72,9 @@ export const EVENTS = {
   INNER_THOUGHT_VIEWED: 'Inner Thought Viewed',
   TRANSLATION_TOGGLED: 'Translation Toggled',
   ENGLISH_TEXT_TOGGLED: 'English Text Toggled',
+  ANSWER_GUIDE_TOGGLED: 'Answer Guide Toggled',
   SPEECH_REPLAYED: 'Speech Replayed',
+  SPEECH_RECOGNITION_COMPLETED: 'Speech Recognition Completed',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
   SPEECH_PLAYBACK_FAILED: 'Speech Playback Failed',
   HINT_USED: 'Hint Used',
@@ -132,6 +142,11 @@ export const EVENTS = {
   NOTIFICATION_CONSENT_ACCEPTED: 'Notification Consent Accepted',
   NOTIFICATION_CONSENT_DISMISSED: 'Notification Consent Dismissed',
   NOTIFICATION_PERMISSION_DECIDED: 'Notification Permission Decided',
+
+  // 이벤트 공지 팝업 — 홈에 뜨는 운영 공지. 어느 공지인지는 popup_id로 가른다
+  EVENT_POPUP_VIEWED: 'Event Popup Viewed',
+  EVENT_POPUP_TAPPED: 'Event Popup Tapped',
+  EVENT_POPUP_DISMISSED: 'Event Popup Dismissed',
 
   // 오늘의 시나리오 알람 — 등록 흐름(소개 → 다짐)은 내 정보와 프리미엄 온보딩이 같이 쓴다
   ALARM_REGISTERED: 'Alarm Registered',
@@ -221,6 +236,7 @@ export const EVENTS = {
   PROMO_SHEET_VIEWED: 'Promo Sheet Viewed',
   HAPTICS_TOGGLED: 'Haptics Toggled',
   SPEECH_RATE_CHANGED: 'Speech Rate Changed',
+  FONT_SCALE_CHANGED: 'Font Scale Changed',
   TALK_DISPLAY_CHANGED: 'Talk Display Changed',
   // 구독 관리 화면 — 결제 내역으로 들어갔다 / 스토어 구독 화면으로 나갔다
   SUBSCRIPTION_HISTORY_TAPPED: 'Subscription History Tapped',
@@ -250,6 +266,7 @@ export type OnboardingStep =
   | 'notification'
   | 'widget'
   | 'accent'
+  | 'referral'
   | 'scenario';
 // 영어 수준 — BE 저장 API(learningLevel)와 같은 1(막 시작)~5(유창) 정수 척도. 지표와 서버 데이터가 같은 말을 쓴다
 export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
@@ -351,7 +368,8 @@ export type RetryScreen =
   | 'expression_list'
   | 'streak'
   | 'mailbox'
-  | 'alarm';
+  | 'alarm'
+  | 'referral_invite';
 // 피드백 유형 — 작성 화면에서 고르는 넷. 값은 서버 enum 그대로다 (지표와 데이터가 같은 말을 쓰도록)
 export type FeedbackType =
   'BUG_REPORT' | 'FEATURE_REQUEST' | 'QUESTION' | 'CHEER';
@@ -477,6 +495,14 @@ export type EventProps = {
     source: 'onboarding' | 'conversation';
   };
   'Onboarding Completed': undefined;
+  // 코드를 어떻게 넣었나 — 붙여넣기(버튼·칸 길게 눌러 붙여넣기) 또는 직접 입력
+  'Referral Code Registered': { method: 'paste' | 'typed' };
+  // 질문에서 「아니요」(ask)인지, 코드 입력에서 「코드 없이 계속」(entry)인지
+  'Referral Code Skipped': { from: 'ask' | 'entry' };
+  // 친구 초대 이벤트 화면의 보내기 버튼 — 어떤 길로 보냈는가
+  'Referral Invite Shared': { method: 'native_sheet' | 'web_share' | 'copy' };
+  'Referral Code Copied': undefined;
+  'Referral Letter Tapped': { letter_id: number };
   'Profile Gate Viewed': { question: GateQuestion };
   'Profile Gate Answered': { question: 'accent'; accent: AccentLocale };
   'Accent Changed': { accent: AccentLocale };
@@ -568,11 +594,30 @@ export type EventProps = {
     turn_index: number;
     hidden: boolean;
   };
+  // 첫 시나리오 답변 가이드를 펼치거나 접은 순간 — 첫 질문의 유도 힌트를 보고 연 사람이 얼마나 되는지 본다
+  'Answer Guide Toggled': {
+    session_id?: number;
+    scenario_id: number;
+    turn_index: number;
+    opened: boolean;
+    from_hint: boolean;
+  };
   // 상대 발화를 다시 들은 순간 — 어느 턴에서 못 알아들어 되감는지 본다. 멈추려고 누른 건 세지 않는다
   'Speech Replayed': {
     session_id?: number;
     turn_index: number;
   };
+  // 음성 인식 결과가 나온 순간(빈 결과 포함) — 끝난 방식과 대기 시간을 문의와 대조한다
+  'Speech Recognition Completed': {
+    session_id?: number;
+    turn_index: number;
+    engine: 'deepgram' | 'web_speech';
+    end_reason: 'finalize' | 'timeout' | 'utterance_end' | 'ended';
+    connect_ms?: number; // 마이크를 켠 뒤 연결이 열리기까지
+    finalize_wait_ms?: number; // 완료를 누른 뒤 결과가 나오기까지
+    char_count: number;
+  };
+  // reason은 connect_failed(연결 실패)·closed(도중 끊김), 그 밖엔 에러 이름
   'Speech Recognition Failed': {
     engine?: 'deepgram' | 'web_speech';
     reason?: string;
@@ -804,6 +849,11 @@ export type EventProps = {
     source: NotificationPermissionSource;
   };
 
+  // 탭 = 이미지나 「자세히 보기」로 공지 화면에 들어감. 닫기는 버튼·바깥·뒤로가기를 가리지 않는다
+  'Event Popup Viewed': { popup_id: number };
+  'Event Popup Tapped': { popup_id: number };
+  'Event Popup Dismissed': { popup_id: number };
+
   // attempt·trigger는 리뷰 요청(moment=review)에만 — 몇 번째 노출인지(1~4), 무엇을 마치고 와서 떴는지
   'Satisfaction Prompt Viewed': {
     moment: SatisfactionMoment;
@@ -875,6 +925,8 @@ export type EventProps = {
   'Haptics Toggled': { enabled: boolean };
   // 고른 배속 그대로 — 0.75 · 1 · 1.25 · 1.5
   'Speech Rate Changed': { rate: number };
+  // 고른 글자 크기 배율 그대로 — 0.85 · 0.92 · 1 · 1.15 · 1.3
+  'Font Scale Changed': { scale: number };
   // 마이페이지 대화 설정 — 대화를 시작할 때의 상대 말 글자·해석을 처음부터 보일지
   'Talk Display Changed': {
     setting: 'always_show_text' | 'always_show_translation';

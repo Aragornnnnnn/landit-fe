@@ -5,6 +5,8 @@
 import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
+// 친구 초대 안내 편지 — features 간 가로 import. 편지함은 어느 편지인지만 넘기고 이동은 referral 슬라이스가 한다
+import { ReferralLetterCta } from '@/features/referral/ui/ReferralLetterCta';
 // LAN-428 설문(임시) — features 간 가로 import. 설문이 끝나면 이 import와 아래 CTA 한 줄을 지운다
 // 편지 혜택가 — features 간 가로 import. 결제는 구독 슬라이스가 들고, 편지함은 어느 편지인지만 넘긴다
 import { LetterOfferCta } from '@/features/subscription/ui/letter-offer/LetterOfferCta';
@@ -29,7 +31,14 @@ import { ReceivedBody } from './detail/ReceivedBody';
 import { SentBody } from './detail/SentBody';
 import { LetterBadge } from './LetterBadge';
 
-export const ReceivedLetterFlow = ({ letterId }: { letterId: number }) => {
+export const ReceivedLetterFlow = ({
+  letterId,
+  canInvite,
+}: {
+  letterId: number;
+  // 친구 초대를 보여 줄 사람인가 — 환급 대상 판정이 라우트 층에 있어 받아 온다
+  canInvite: boolean;
+}) => {
   const { letter, isPending, error, retry } = useReceivedLetterQuery(letterId);
 
   return (
@@ -43,6 +52,7 @@ export const ReceivedLetterFlow = ({ letterId }: { letterId: number }) => {
       {letter && <ReceivedBody letter={letter} />}
       {letter && <SurveyLetterCta letterId={letter.letterId} />}
       {letter && <LetterOfferCta letterId={letter.letterId} />}
+      {letter && canInvite && <ReferralLetterCta letterId={letter.letterId} />}
     </LetterShell>
   );
 };
@@ -112,7 +122,7 @@ const LetterContent = ({
         </h1>
         <div className="mt-3 flex items-center gap-2">
           <LetterBadge label={head.badge.label} tone={head.badge.tone} />
-          <time className="text-[13px] text-muted-foreground">
+          <time className="text-13 text-muted-foreground">
             {formatLetterDateTime(head.sentAt)}
           </time>
         </div>

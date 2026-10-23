@@ -6,7 +6,6 @@ import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
 // 가로 import 사유: 같은 대기 연출을 두 벌 두지 않는다 — 문구만 레벨 분석용으로 바꿔 쓴다
 import {
-  ANALYZING_STAGE_MS,
   AnalyzingLandy,
   type AnalyzingStage,
 } from '@/features/expression/ui/pronunciation/AnalyzingLandy';
@@ -18,8 +17,10 @@ import { useLevelAssessmentQuery } from '@/features/feedback/model/useLevelAsses
 
 // 이 시간 안에 결과가 안 오면 레벨 화면 없이 진행한다 (BE 자체 만료는 120초)
 const ANALYSIS_WAIT_MS = 20_000;
-// 결과가 빨리 와도 래디 문구 한 단계는 보여준다 — 분석 화면이 깜빡 지나가면 레벨이 갑자기 뜬 것처럼 보인다
-const MIN_ANALYSIS_MS = ANALYZING_STAGE_MS;
+// 래디 문구가 바뀌는 간격 — 발음 평가보다 빠르게 넘겨 짧은 대기에도 분석이 진행되는 게 보이게 한다
+const LEVEL_STAGE_MS = 1_300;
+// 결과가 빨리 와도 래디 두 장면은 보여준다 — 분석 화면이 번쩍 지나가면 결과 화면이 갑자기 나온 것처럼 보인다
+const MIN_ANALYSIS_MS = LEVEL_STAGE_MS * 2;
 
 const LEVEL_STAGES: AnalyzingStage[] = [
   {
@@ -52,13 +53,13 @@ export const AnalyzingView = () => (
     className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background px-6"
     style={{ paddingTop: 'calc(max(var(--safe-area-inset-top), 18px) + 58px)' }}
   >
-    <h1 className="text-[26px] leading-[1.3] font-black break-keep">
+    <h1 className="text-26 leading-[1.3] font-black break-keep">
       방금 대화를 바탕으로
       <br />
       레벨을 분석하고 있어요
     </h1>
     <div className="flex flex-1 items-center justify-center pb-24">
-      <AnalyzingLandy stages={LEVEL_STAGES} />
+      <AnalyzingLandy stages={LEVEL_STAGES} stageMs={LEVEL_STAGE_MS} />
     </div>
   </main>
 );

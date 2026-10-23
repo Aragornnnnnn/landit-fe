@@ -182,7 +182,7 @@ export const PreparedLearningView = ({
       }}
     >
       {/* 줄은 강제로 끊지 않는다 — 22px에서 첫 문장이 한 줄에 안 들어가 "있도록"만 남는 줄이 생겼다 */}
-      <h1 className="text-[22px] leading-[1.35] font-black break-keep">
+      <h1 className="text-22 leading-[1.35] font-black break-keep">
         방금 대화를 더 원어민처럼 하도록 맞춤형 학습{' '}
         <span className="text-[30px] leading-none font-black text-primary">
           {count}개
@@ -203,12 +203,12 @@ export const PreparedLearningView = ({
               key={index}
               className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5"
             >
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-[12px] font-bold text-muted-foreground">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-12 font-bold text-muted-foreground">
                 {index + 1}
               </span>
               <span className="flex flex-col">
-                <span className="text-[15px] font-bold">{meaning}</span>
-                <span className="text-[12px] text-muted-foreground">
+                <span className="text-15 font-bold">{meaning}</span>
+                <span className="text-12 text-muted-foreground">
                   {expression}
                 </span>
               </span>
@@ -234,7 +234,7 @@ export const PreparedLearningView = ({
               <p
                 data-testid="slide-caption"
                 aria-hidden="true"
-                className="relative rounded-2xl bg-foreground px-5 py-3 text-[17px] font-bold whitespace-nowrap text-background shadow-lg after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-[6px] after:border-transparent after:border-t-foreground"
+                className="relative rounded-2xl bg-foreground px-5 py-3 text-17 font-bold whitespace-nowrap text-background shadow-lg after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-[6px] after:border-transparent after:border-t-foreground"
               >
                 {renderCaption(slide.caption)}
               </p>

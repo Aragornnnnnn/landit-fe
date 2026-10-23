@@ -68,6 +68,7 @@ export const SmallTalkConversation = ({
     speech,
     replay,
     input,
+    resend,
     completeTalk,
     pressClose,
     completing,
@@ -84,6 +85,7 @@ export const SmallTalkConversation = ({
   });
   const {
     transcript,
+    speechPending,
     pressMic,
     cancelInput,
     finishListening,
@@ -174,7 +176,12 @@ export const SmallTalkConversation = ({
             <div className="flex-1" />
           </>
         ) : (
-          <UserTranscript text={transcript} phase={phase} />
+          <UserTranscript
+            text={transcript}
+            speechPending={speechPending}
+            phase={phase}
+            unsent={resend != null}
+          />
         )}
       </section>
 
@@ -207,6 +214,7 @@ export const SmallTalkConversation = ({
               onCancel={cancelInput}
               onDone={finishListening}
               remainingRatio={unlimited ? undefined : speakingRatio}
+              onResend={resend}
             />
           </>
         )}

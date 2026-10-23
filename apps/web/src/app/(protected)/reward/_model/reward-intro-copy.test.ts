@@ -70,6 +70,42 @@ describe('missedCopyOf', () => {
     });
   });
 
+  it('결제 전에 받아 둔 돈이 있으면 그것까지 더해 돌려받는다고 말한다', () => {
+    const copy = missedCopyOf(
+      { ...missed, talkedToday: false },
+      { storedWon: 3_000, maximumWon: 50_000 },
+    );
+
+    expect(copy.note).toBe('쌓인 3,000원까지 53,000원을 다 돌려받아요');
+  });
+
+  it('받아 둔 돈이 없으면 지금 문구 그대로다', () => {
+    expect(
+      missedCopyOf(
+        { ...missed, talkedToday: false },
+        { storedWon: 0, maximumWon: 50_000 },
+      ).note,
+    ).toBe('꾸준히 하면 결제한 금액을 다 돌려받아요');
+  });
+
+  it('결제 전에 받아 둔 돈이 있으면 그것까지 더해 돌려받는다고 말한다', () => {
+    const copy = missedCopyOf(
+      { ...missed, talkedToday: false },
+      { storedWon: 3_000, maximumWon: 50_000 },
+    );
+
+    expect(copy.note).toBe('쌓인 3,000원까지 53,000원을 다 돌려받아요');
+  });
+
+  it('받아 둔 돈이 없으면 지금 문구 그대로다', () => {
+    expect(
+      missedCopyOf(
+        { ...missed, talkedToday: false },
+        { storedWon: 0, maximumWon: 50_000 },
+      ).note,
+    ).toBe('꾸준히 하면 결제한 금액을 다 돌려받아요');
+  });
+
   it('어느 문구에도 「챌린지」가 없다', () => {
     for (const talkedToday of [false, true]) {
       expect(

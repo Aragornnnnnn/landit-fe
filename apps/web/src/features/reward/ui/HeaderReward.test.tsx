@@ -139,4 +139,12 @@ describe('RewardInviteLabel', () => {
     expect(screen.getByText('15,500원')).toBeInTheDocument();
     expect(screen.getByText('놓쳤어요')).toBeInTheDocument();
   });
+
+  it('보관 중인 돈이 있으면 놓친 금액보다 그 금액을 먼저 말한다', () => {
+    render(<RewardInviteLabel amountWon={1_000} missed storedWon={3_000} />);
+
+    expect(screen.getByText('3,000원')).toBeInTheDocument();
+    expect(screen.getByText('쌓여 있어요')).toBeInTheDocument();
+    expect(screen.queryByText('놓쳤어요')).not.toBeInTheDocument();
+  });
 });

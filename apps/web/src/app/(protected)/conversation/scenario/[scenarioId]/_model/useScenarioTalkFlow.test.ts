@@ -13,14 +13,24 @@ import {
   innerThoughtPollMs,
   thoughtHoldMs,
 } from '@/features/conversation/model/pacing';
+import { rewardCompletion } from '@/features/reward/model/reward.fixture';
 import { shouldAskSatisfaction } from '@/features/satisfaction/model/prompt-record';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
+import { ApiError } from '@/shared/api/api-error';
+import type { SttResultMeta } from '@/shared/stt/deepgram-stt';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 import * as scenarioTalkApi from '../_api/scenario-session';
 import type { ScenarioTalkSubmitResponse } from '../_api/scenario-session';
 import { useScenarioTalkFlow } from './useScenarioTalkFlow';
+
+const STT_META: SttResultMeta = {
+  engine: 'deepgram',
+  endReason: 'finalize',
+  connectMs: 0,
+  finalizeWaitMs: 0,
+};
 
 const monitoringMock = vi.hoisted(() => ({
   reportError: vi.fn(),
@@ -89,10 +99,11 @@ const sttMock = vi.hoisted(() => {
 vi.mock('@/shared/stt/useStt', () => ({
   useStt: (opts: {
     onInterim?: (t: string) => void;
-    onFinal?: (t: string) => void;
+    onFinal?: (t: string, meta: SttResultMeta) => void;
   }) => {
     sttMock.callbacks.onInterim = opts.onInterim;
-    sttMock.callbacks.onFinal = opts.onFinal;
+    // 결과 정보는 계측용이라 흐름 검증과 무관하다 — 고정값을 붙여 넘긴다
+    sttMock.callbacks.onFinal = (t: string) => opts.onFinal?.(t, STT_META);
     return {
       start: sttMock.start,
       stop: sttMock.stop,
@@ -219,6 +230,7 @@ const submitResponse = (
     ttsText: null,
     fixedQuestionText: null,
     questionAudioUrl: null,
+    answerGuide: null,
   },
   progress: {
     currentTurnNumber: 2,
@@ -242,6 +254,7 @@ const splitSubmitResponse = () =>
       ttsText: 'Thanks!',
       fixedQuestionText: 'What size would you like?',
       questionAudioUrl: 'https://cdn.example.com/question-2.mp3',
+      answerGuide: null,
     },
   });
 
@@ -428,23 +441,157 @@ describe('useScenarioTalkFlow', async () => {
     expect(result.current.turn.innerThoughtType).toBe('GOOD');
   });
 
-  it('제출이 실패하면 마이크 대기로 되돌아간다', async () => {
+  it('응답이 끊기면 같은 답변을 같은 식별자로 자동으로 다시 보내 대화를 이어 간다', async () => {
+    // Given 첫 제출이 응답 없이 끊기고, 다시 보내면 받는 상황
     const { result } = await renderUserFirst();
-    submitScenarioTalkMessage.mockRejectedValue(new Error('network'));
+    submitScenarioTalkMessage
+      .mockRejectedValueOnce(new TypeError('Load failed'))
+      .mockResolvedValueOnce(submitResponse());
 
+    // When 답변을 보내고 재전송 간격만큼 기다리면
     await speakAndSubmit(result, 'Hello!');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
 
-    expect(result.current.phase).toBe('USER_READY');
+    // Then 같은 답변이 한 번 더 나가고 속마음으로 이어진다. 실패로 보지 않는다
+    const [first, resent] = submitScenarioTalkMessage.mock.calls;
+    expect(resent).toEqual(first);
+    expect(first[3]).toEqual(expect.any(String));
+    expect(result.current.phase).toBe('AI_INNER_THOUGHT');
+    expect(monitoringMock.reportError).not.toHaveBeenCalled();
   });
 
-  it('제출 실패를 Sentry로 보고한다 — 대화 턴이 유실되는 사고라 바로 알아야 한다', async () => {
+  it('다시 보내도 안 되면 방금 답변을 남긴 채 다시 보내기를 띄운다', async () => {
     const { result } = await renderUserFirst();
-    const error = new Error('network');
+    submitScenarioTalkMessage.mockRejectedValue(new TypeError('Load failed'));
+
+    await speakAndSubmit(result, 'Hello!');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000);
+    });
+
+    expect(result.current.phase).toBe('USER_READY');
+    expect(result.current.resend).toEqual(expect.any(Function));
+    expect(result.current.input.transcript).toBe('Hello!');
+  });
+
+  it('다시 보내기를 띄울 때 한 번만 Sentry로 보고한다', async () => {
+    const { result } = await renderUserFirst();
+    const error = new TypeError('Load failed');
     submitScenarioTalkMessage.mockRejectedValue(error);
 
     await speakAndSubmit(result, 'Hello!');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000);
+    });
 
+    expect(monitoringMock.reportError).toHaveBeenCalledTimes(1);
     expect(monitoringMock.reportError).toHaveBeenCalledWith(error);
+  });
+
+  it('서버 에러면 기다리지 않고 바로 다시 보내기를 띄운다', async () => {
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockRejectedValue(
+      new ApiError('서버 오류', 500, '/api/v1/sessions/1/messages'),
+    );
+
+    await speakAndSubmit(result, 'Hello!');
+
+    expect(submitScenarioTalkMessage).toHaveBeenCalledTimes(1);
+    expect(result.current.resend).toEqual(expect.any(Function));
+  });
+
+  it('전달되지 못한 턴에서는 새로 말할 수 없다 — 서버가 다른 문장을 거절한다', async () => {
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockRejectedValue(
+      new ApiError('서버 오류', 500, '/api/v1/sessions/1/messages'),
+    );
+    await speakAndSubmit(result, 'Hello!');
+    sttMock.start.mockClear();
+
+    act(() => result.current.input.pressMic());
+
+    expect(sttMock.start).not.toHaveBeenCalled();
+    expect(result.current.phase).toBe('USER_READY');
+  });
+
+  it('다시 보내기를 누르면 같은 답변을 같은 식별자로 보내 이어 간다', async () => {
+    // Given 다시 보내기가 뜬 상태
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockRejectedValueOnce(
+      new ApiError('서버 오류', 500, '/api/v1/sessions/1/messages'),
+    );
+    await speakAndSubmit(result, 'Hello!');
+
+    // When 다시 보내기를 누르면
+    submitScenarioTalkMessage.mockResolvedValueOnce(submitResponse());
+    await act(async () => {
+      result.current.resend?.();
+    });
+
+    // Then 처음과 똑같은 요청이 나가고 속마음으로 이어지며, 다시 보내기는 사라진다
+    const [first, resent] = submitScenarioTalkMessage.mock.calls;
+    expect(resent).toEqual(first);
+    expect(result.current.phase).toBe('AI_INNER_THOUGHT');
+    expect(result.current.resend).toBeUndefined();
+  });
+
+  it('다시 보내는 사이 대화를 나가면 더 보내지 않고 실패도 알리지 않는다', async () => {
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockRejectedValue(new TypeError('Load failed'));
+    vi.mocked(sessionApi.endSession).mockResolvedValue(undefined);
+    await speakAndSubmit(result, 'Hello!');
+
+    act(() => result.current.leave());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000);
+    });
+
+    expect(submitScenarioTalkMessage).toHaveBeenCalledTimes(1);
+    expect(monitoringMock.reportError).not.toHaveBeenCalled();
+  });
+
+  it('대화를 나간 뒤 응답이 도착하면 다음 질문을 준비하지 않고 속마음도 띄우지 않는다', async () => {
+    // Given 답변을 보내고 응답을 기다리는 중
+    const { result } = await renderUserFirst();
+    let respond: (res: ScenarioTalkSubmitResponse) => void = () => {};
+    submitScenarioTalkMessage.mockReturnValueOnce(
+      new Promise((resolve) => {
+        respond = resolve;
+      }),
+    );
+    vi.mocked(sessionApi.endSession).mockResolvedValue(undefined);
+    await speakAndSubmit(result, 'Hello!');
+
+    // When 대화를 나간 뒤 응답이 도착하면
+    act(() => result.current.leave());
+    await act(async () => {
+      respond(submitResponse());
+    });
+
+    // Then 다음 질문을 미리 합성하지 않고 속마음으로 넘어가지 않는다
+    expect(ttsMock.prefetch).not.toHaveBeenCalled();
+    expect(result.current.phase).not.toBe('AI_INNER_THOUGHT');
+  });
+
+  it('다음 턴의 발화는 새 식별자를 싣는다', async () => {
+    // Given 첫 답을 보내고 두 번째 질문까지 받은 상태
+    const { result } = await renderAiFirstReady();
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+    await speakAndSubmit(result, 'First answer.');
+    act(() => {
+      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+    });
+    await act(async () => ttsMock.state.onEnd?.());
+
+    // When 두 번째 답을 보내면
+    await speakAndSubmit(result, 'Second answer.');
+
+    // Then 첫 답과 다른 식별자가 실린다
+    const [first, second] = submitScenarioTalkMessage.mock.calls;
+    expect(second[3]).toEqual(expect.any(String));
+    expect(second[3]).not.toBe(first[3]);
   });
 
   it('다음 질문이 있으면 속마음이 끝난 뒤 다음 AI 질문으로 이어간다', async () => {
@@ -474,6 +621,7 @@ describe('useScenarioTalkFlow', async () => {
           ttsText: null,
           fixedQuestionText: null,
           questionAudioUrl: null,
+          answerGuide: null,
         },
         progress: {
           currentTurnNumber: 3,
@@ -511,6 +659,7 @@ describe('useScenarioTalkFlow', async () => {
           ttsText: null,
           fixedQuestionText: null,
           questionAudioUrl: null,
+          answerGuide: null,
         },
         progress: {
           currentTurnNumber: 3,
@@ -518,6 +667,7 @@ describe('useScenarioTalkFlow', async () => {
           totalQuestionCount: 3,
           completed: true,
         },
+        reward: rewardCompletion(),
       }),
     );
 
@@ -535,6 +685,8 @@ describe('useScenarioTalkFlow', async () => {
     expect(refreshRewardAfterCompletion).toHaveBeenCalledWith(queryClientMock, {
       // 오늘의 시나리오가 무엇인지 받아 둔 적이 없으면 오늘 것으로 치지 않는다
       todaysFirst: false,
+      // 축하 화면의 받은 금액은 완료 응답의 영수증으로 정한다
+      receipt: rewardCompletion(),
     });
     // 홈에 돌아가면 소감을 물을 차례라고 남긴다
     expect(shouldAskSatisfaction('scenario')).toBe(true);
@@ -614,6 +766,7 @@ describe('useScenarioTalkFlow', async () => {
           ttsText: null,
           fixedQuestionText: null,
           questionAudioUrl: null,
+          answerGuide: null,
         },
         progress: {
           currentTurnNumber: 3,
@@ -927,6 +1080,8 @@ describe('useScenarioTalkFlow', async () => {
       1,
       'Hello there.',
       'VOICE',
+      expect.any(String),
+      false,
     );
     // 제출이 이어져 속마음까지 진행된다 (submitResponse 기본은 COMPLETED)
     expect(result.current.phase).toBe('AI_INNER_THOUGHT');
@@ -942,6 +1097,8 @@ describe('useScenarioTalkFlow', async () => {
       1,
       'Hello there.',
       'TEXT',
+      expect.any(String),
+      false,
     );
     expect(sttMock.start).not.toHaveBeenCalled();
   });
@@ -958,5 +1115,174 @@ describe('useScenarioTalkFlow', async () => {
     expect(result.current.phase).toBe('USER_READY');
     expect(result.current.input.transcript).toBe('');
     expect(result.current.input.keyboardMode).toBe(false);
+  });
+
+  describe('답변 가이드', () => {
+    const openingGuide = {
+      content: "I'm a student. I like watching movies.",
+      translatedContent: '난 학생이야. 영화 보는 걸 좋아해.',
+    };
+    const nextGuide = {
+      content: 'I watched a movie yesterday. It was fun.',
+      translatedContent: '어제 영화를 봤어. 재미있었어.',
+    };
+    const guidedScenario = {
+      ...scenario,
+      openingPreview: { ...scenario.openingPreview, answerGuide: openingGuide },
+    } as unknown as Scenario;
+
+    it('첫 질문의 가이드는 시나리오 미리보기에서 바로 보여 준다', async () => {
+      const { result } = renderHook(() => useScenarioTalkFlow(guidedScenario));
+
+      expect(result.current.answerGuide).toEqual(openingGuide);
+
+      await act(async () => {});
+    });
+
+    it('미리보기에 첫 발화가 없으면 세션 시작 응답의 첫 질문 가이드를 쓴다', async () => {
+      // given — 미리보기 없이 들어와 세션 응답이 첫 질문을 채운다
+      startScenarioTalkSession.mockResolvedValue({
+        ...startResponse(),
+        currentMessage: {
+          messageId: 1,
+          turnNumber: 1,
+          messageSequence: 1,
+          role: 'AI',
+          content: 'Hey! Can you introduce yourself?',
+          translatedContent: '자기소개 해 줄래?',
+          innerThought: '',
+          innerThoughtType: '',
+          questionAudioUrl: null,
+          answerGuide: openingGuide,
+        },
+      });
+      const noPreview = {
+        ...scenario,
+        openingPreview: null,
+      } as unknown as Scenario;
+
+      const { result } = renderHook(() => useScenarioTalkFlow(noPreview));
+      await act(async () => {});
+
+      expect(result.current.answerGuide).toEqual(openingGuide);
+    });
+
+    it('다음 질문의 가이드는 그 질문이 화면에 뜬 뒤에 바뀐다 — 속마음이 도는 동안엔 보이지 않는다', async () => {
+      // given — 첫 질문에서 답을 내고, 다음 질문에 가이드가 실려 온다
+      startScenarioTalkSession.mockResolvedValue(startResponse());
+      const { result } = renderHook(() => useScenarioTalkFlow(guidedScenario));
+      await act(async () => {});
+      await act(async () => ttsMock.state.onEnd?.());
+      submitScenarioTalkMessage.mockResolvedValue(
+        submitResponse({
+          nextMessage: {
+            ...submitResponse().nextMessage!,
+            answerGuide: nextGuide,
+          },
+        }),
+      );
+
+      // when — 답을 내 속마음이 도는 동안
+      await speakAndSubmit(result, 'I am a student.');
+
+      // then — 이전 질문 카드에는 다음 질문 가이드가 붙지 않는다
+      expect(result.current.answerGuide).toBeNull();
+
+      act(() => {
+        vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+      });
+      expect(result.current.answerGuide).toEqual(nextGuide);
+    });
+
+    it('다음 질문에 가이드가 없으면 보여 주지 않는다', async () => {
+      startScenarioTalkSession.mockResolvedValue(startResponse());
+      const { result } = renderHook(() => useScenarioTalkFlow(guidedScenario));
+      await act(async () => {});
+      await act(async () => ttsMock.state.onEnd?.());
+      submitScenarioTalkMessage.mockResolvedValue(
+        submitResponse({
+          nextMessage: {
+            ...submitResponse().nextMessage!,
+            answerGuide: null,
+          },
+        }),
+      );
+
+      await speakAndSubmit(result, 'I am a student.');
+      act(() => {
+        vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+      });
+
+      expect(result.current.answerGuide).toBeNull();
+    });
+
+    // 첫 질문을 다 듣고 내 차례가 된 상태
+    const renderGuidedReady = async () => {
+      startScenarioTalkSession.mockResolvedValue(startResponse());
+      const hook = renderHook(() => useScenarioTalkFlow(guidedScenario));
+      await act(async () => {});
+      await act(async () => ttsMock.state.onEnd?.());
+      return hook;
+    };
+
+    it('가이드를 열어 본 답변은 열람했다고 함께 보낸다', async () => {
+      // Given 첫 질문에서 가이드를 열어 본 상태
+      const { result } = await renderGuidedReady();
+      submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+      act(() => result.current.markGuideViewed());
+
+      // When 답을 내면
+      await speakAndSubmit(result, 'I am a student.');
+
+      // Then 열람했다고 함께 보낸다
+      expect(submitScenarioTalkMessage.mock.calls[0][4]).toBe(true);
+    });
+
+    it('가이드를 열지 않은 답변은 열람하지 않았다고 보낸다', async () => {
+      const { result } = await renderGuidedReady();
+      submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+
+      await speakAndSubmit(result, 'I am a student.');
+
+      expect(submitScenarioTalkMessage.mock.calls[0][4]).toBe(false);
+    });
+
+    it('다시 보내도 열람 여부는 처음 보낸 값 그대로다 — 바뀌면 서버가 거절한다', async () => {
+      // Given 가이드를 열고 낸 답이 끊긴 상태
+      const { result } = await renderGuidedReady();
+      submitScenarioTalkMessage
+        .mockRejectedValueOnce(new TypeError('Load failed'))
+        .mockResolvedValueOnce(submitResponse());
+      act(() => result.current.markGuideViewed());
+      await speakAndSubmit(result, 'I am a student.');
+
+      // When 재전송 간격만큼 기다려 다시 보내면
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+
+      // Then 처음과 똑같이 열람했다고 보낸다
+      const [first, resent] = submitScenarioTalkMessage.mock.calls;
+      expect(first[4]).toBe(true);
+      expect(resent).toEqual(first);
+    });
+
+    it('다음 질문에서는 열람 여부를 새로 센다', async () => {
+      // Given 첫 질문에서 가이드를 열고 답한 뒤 다음 질문이 뜬 상태
+      const { result } = await renderGuidedReady();
+      submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+      act(() => result.current.markGuideViewed());
+      await speakAndSubmit(result, 'I am a student.');
+      act(() => {
+        vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+      });
+      await act(async () => ttsMock.state.onEnd?.());
+
+      // When 가이드를 열지 않고 답하면
+      await speakAndSubmit(result, 'I like movies.');
+
+      // Then 이번 답변은 열람하지 않았다고 보낸다
+      expect(submitScenarioTalkMessage.mock.calls[1][4]).toBe(false);
+    });
   });
 });

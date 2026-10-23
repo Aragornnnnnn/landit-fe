@@ -41,14 +41,14 @@ export const PartnerPicker = ({ selected, onSelect }: PartnerPickerProps) => (
             />
           </span>
           <span
-            className={`flex items-center gap-1 text-[13px] transition-colors cq-tiny:text-xs ${
+            className={`flex items-center gap-1 text-13 transition-colors cq-tiny:text-xs ${
               isSelected
                 ? 'font-semibold text-foreground'
                 : 'font-normal text-muted-foreground'
             }`}
           >
             {partner.name}
-            <Emoji className="text-[11px]">{partner.flag}</Emoji>
+            <Emoji className="text-11">{partner.flag}</Emoji>
           </span>
         </button>
       );

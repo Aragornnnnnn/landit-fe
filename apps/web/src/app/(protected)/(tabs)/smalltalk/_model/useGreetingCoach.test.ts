@@ -17,6 +17,27 @@ const tabKey = () =>
   ({ key: 'Tab', preventDefault: vi.fn() }) as unknown as React.KeyboardEvent;
 
 describe('useGreetingCoach', () => {
+  it('붙잡혀 있는 동안엔 안내도 코치마크도 띄우지 않는다', () => {
+    localStorage.setItem('landit-smalltalk-intro-guide-seen-v2', '1');
+    const { result } = renderHook(() =>
+      useGreetingCoach({ onTap: vi.fn(), held: true }),
+    );
+
+    expect(result.current.guideOpen).toBe(false);
+    expect(result.current.coaching).toBe(false);
+  });
+
+  it('붙잡힘이 풀리면 처음 온 기기에 안내를 띄운다', () => {
+    const { result, rerender } = renderHook(
+      ({ held }) => useGreetingCoach({ onTap: vi.fn(), held }),
+      { initialProps: { held: true } },
+    );
+
+    rerender({ held: false });
+
+    expect(result.current.guideOpen).toBe(true);
+  });
+
   it('처음 온 기기면 안내가 먼저고, 안내를 닫으면 코치마크가 켜진다', () => {
     const { result } = renderHook(() => useGreetingCoach({ onTap: vi.fn() }));
 

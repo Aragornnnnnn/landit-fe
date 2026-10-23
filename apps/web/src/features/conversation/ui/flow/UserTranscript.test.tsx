@@ -1,0 +1,97 @@
+// UserTranscript — 듣는 중 점(물결)이 언제 보이고 언제 사라지는지 검증한다
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { UserTranscript } from './UserTranscript';
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
+
+const listeningDots = () => screen.queryByRole('img', { name: '듣는 중' });
+
+describe('UserTranscript', () => {
+  it('아직 아무 말도 확정되지 않았으면 듣는 중 표시로 점이 보인다', () => {
+    render(
+      <UserTranscript text="" phase="USER_SPEAKING" speechPending={false} />,
+    );
+
+    expect(listeningDots()).toBeInTheDocument();
+  });
+
+  it('확정 전 말이 남아 있으면 글자 뒤에 점이 보인다', () => {
+    render(
+      <UserTranscript
+        text="I went to the park"
+        phase="USER_SPEAKING"
+        speechPending
+      />,
+    );
+
+    expect(listeningDots()).toBeInTheDocument();
+  });
+
+  it('말한 것이 모두 확정되면 점이 사라진다', () => {
+    render(
+      <UserTranscript
+        text="I went to the park"
+        phase="USER_SPEAKING"
+        speechPending={false}
+      />,
+    );
+
+    expect(listeningDots()).not.toBeInTheDocument();
+  });
+
+  it('듣는 중이 아니면 점이 보이지 않는다', () => {
+    render(<UserTranscript text="" phase="AI_THINKING" speechPending />);
+
+    expect(listeningDots()).not.toBeInTheDocument();
+  });
+
+  it('글이 넘친 상태에서 점이 다시 나타나면 끝으로 다시 붙인다', () => {
+    // 점이 다음 줄로 넘어가면 높이가 늘어난다 — 글자가 그대로여도 스크롤을 다시 맞춰야 점이 잘리지 않는다
+    let scrollHeight = 100;
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockImplementation(
+      () => scrollHeight,
+    );
+    const text = 'I went to the park with my friend yesterday';
+    const { rerender } = render(
+      <UserTranscript
+        text={text}
+        phase="USER_SPEAKING"
+        speechPending={false}
+      />,
+    );
+
+    scrollHeight = 140;
+    rerender(
+      <UserTranscript text={text} phase="USER_SPEAKING" speechPending />,
+    );
+
+    // 글자를 담은 스크롤 상자
+    const box = screen.getByText(text).parentElement!;
+    expect(box.scrollTop).toBe(140);
+  });
+
+  it('넘친 답변을 맨 위까지 올려 보면 윗변 흐림을 거둔다', () => {
+    // 스크롤로 앞부분을 다시 볼 때 첫 줄이 흐려져 있으면 읽을 수 없다
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(140);
+    const text = 'I went to the park with my friend yesterday';
+    render(
+      <UserTranscript
+        text={text}
+        phase="USER_SPEAKING"
+        speechPending={false}
+      />,
+    );
+    const box = screen.getByText(text).parentElement!;
+    expect(box.className).toContain('mask-image');
+
+    box.scrollTop = 0;
+    fireEvent.scroll(box);
+
+    expect(box.className).not.toContain('mask-image');
+  });
+});

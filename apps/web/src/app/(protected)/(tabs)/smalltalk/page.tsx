@@ -5,6 +5,7 @@ import { EVENTS } from '@landit/analytics';
 import { AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
+import { useForceUpdateFirst } from '@/features/app-update/model/useForceUpdateFirst';
 import { PartnerCharacter } from '@/features/conversation/ui/character/PartnerCharacter';
 import { SatisfactionGate } from '@/features/satisfaction/ui/SatisfactionGate';
 import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
@@ -46,16 +47,18 @@ export default function SmallTalkPage() {
   const { partner, look, speech, greet, selectPartner } = usePartnerGreeting();
   // 주제는 서버가 매번 무작위로 뽑아 준다 — 열 때마다, 새로고침할 때마다 다시 받는다
   const picker = useTopicPicker({ partner: partner.id, refresh });
+  // 강제 업데이트가 1순위다 — 그거거나 그럴지 모르는 동안엔 안내·시트가 나서지 않는다
+  const updateFirst = useForceUpdateFirst();
   // 처음 들어온 사람에겐 래디 안내부터, 닫으면 캐릭터를 눌러 보라는 코치마크 — 둘 다 기기당 한 번이다
   const { guideOpen, coaching, closeGuide, tapPartner, partnerRef, trapFocus } =
-    useGreetingCoach({ onTap: greet });
+    useGreetingCoach({ onTap: greet, held: updateFirst });
   // 이번 방문에 띄울 시트 하나 — 첫 스몰톡 소감 → 리뷰 요청
   const satisfactionSheet = useSatisfactionSheet('smalltalk');
   // 할인 시트가 떠 있으면 소감은 미룬다 — 할인은 5분뿐이고 소감은 다음에 또 물을 수 있다
   const promoOpen = usePromoSheetOpen();
   // 돌아온 순간의 환급 동전 연출이 끝날 때까지도 미룬다 — 어둠 아래에서 시트가 같이 올라오면 둘이 겹친다
   const showerHold = useEarnShowerHold();
-  const sheetsHeld = promoOpen || showerHold;
+  const sheetsHeld = updateFirst || promoOpen || showerHold;
 
   // 캐릭터 탭 인사 — 코치마크가 켜진 채로 눌렀는지도 함께 남긴다 (코치마크가 시킨 첫 탭인지)
   const tapGreeting = () => {
@@ -113,7 +116,7 @@ export default function SmallTalkPage() {
       <div className="relative">
         <button
           onClick={() => router.push(SMALLTALK_HISTORY_PATH)}
-          className="absolute top-1 right-5 flex items-center gap-0.5 py-1 text-[13px] font-semibold text-muted-foreground active:opacity-60"
+          className="absolute top-1 right-5 flex items-center gap-0.5 py-1 text-13 font-semibold text-muted-foreground active:opacity-60"
         >
           기록
           <ChevronRightIcon size={14} />

@@ -89,7 +89,7 @@ describe('startWebSpeech', () => {
     expect(recognition.continuous).toBe(true);
   });
 
-  it('확정 결과와 진행 중 결과를 이어붙여 onInterim으로 전달한다', () => {
+  it('진행 중 결과는 넘기지 않고 확정된 결과만 onInterim으로 전달한다', () => {
     const { recognition, onInterim } = startWithFake();
 
     recognition.onresult?.(
@@ -99,7 +99,27 @@ describe('startWebSpeech', () => {
       ]),
     );
 
-    expect(onInterim).toHaveBeenLastCalledWith('안녕하세요 저는');
+    expect(onInterim).toHaveBeenLastCalledWith('안녕하세요', true);
+  });
+
+  it('바뀐 결과가 없어도 앞쪽에 남은 진행 중 결과가 있으면 확정 전 말이 있다고 알린다', () => {
+    // 명세상 결과 목록이 줄면 resultIndex가 목록 길이와 같을 수 있다 — 바뀐 구간만 보면 남은 말을 놓친다
+    const { recognition, onInterim } = startWithFake();
+
+    recognition.onresult?.({
+      ...resultEvent([['I went', false]]),
+      resultIndex: 1,
+    });
+
+    expect(onInterim).toHaveBeenLastCalledWith('', true);
+  });
+
+  it('진행 중 결과가 없으면 확정 전 말이 없다고 알린다', () => {
+    const { recognition, onInterim } = startWithFake();
+
+    recognition.onresult?.(resultEvent([['안녕하세요', true]]));
+
+    expect(onInterim).toHaveBeenLastCalledWith('안녕하세요', false);
   });
 
   it('no-speech 에러는 실패가 아니라 정상 종료로 처리한다', () => {
@@ -107,7 +127,7 @@ describe('startWebSpeech', () => {
 
     recognition.onerror?.({ error: 'no-speech' });
 
-    expect(onFinal).toHaveBeenCalledWith('');
+    expect(onFinal).toHaveBeenCalledWith('', expect.anything());
     expect(onError).not.toHaveBeenCalled();
   });
 
@@ -161,6 +181,6 @@ describe('startWebSpeech', () => {
     recognition.onend?.();
 
     expect(onFinal).toHaveBeenCalledTimes(1);
-    expect(onFinal).toHaveBeenCalledWith('안녕하세요');
+    expect(onFinal).toHaveBeenCalledWith('안녕하세요', expect.anything());
   });
 });

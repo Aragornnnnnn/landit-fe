@@ -12,7 +12,7 @@ import { BackHeader } from '@/shared/ui/BackHeader';
 import { MenuGroup, ROW_CLASS, ROW_STYLE } from '../../../_ui/Menu';
 
 const Notice = ({ children }: { children: React.ReactNode }) => (
-  <p className="pt-16 text-center text-[14px]" style={{ color: '#6b7280' }}>
+  <p className="pt-16 text-center text-14" style={{ color: '#6b7280' }}>
     {children}
   </p>
 );
@@ -45,12 +45,12 @@ export const SubscriptionHistoryScreen = () => {
                   style={ROW_STYLE}
                 >
                   <div className="flex flex-1 flex-col">
-                    <span className="text-[14.5px]" style={{ color: '#111' }}>
+                    <span className="text-15" style={{ color: '#111' }}>
                       {line.title}
                       {line.plan && ` · ${line.plan}`}
                       {line.sandbox && (
                         <span
-                          className="ml-1.5 rounded px-1 align-middle text-[10px]"
+                          className="ml-1.5 rounded px-1 align-middle text-10"
                           style={{ background: '#F2F2F7', color: '#6b7280' }}
                         >
                           테스트
@@ -58,17 +58,14 @@ export const SubscriptionHistoryScreen = () => {
                       )}
                     </span>
                     {date && (
-                      <span
-                        className="text-[12px]"
-                        style={{ color: '#6b7280' }}
-                      >
+                      <span className="text-12" style={{ color: '#6b7280' }}>
                         {date}
                       </span>
                     )}
                   </div>
                   {line.amount && (
                     <span
-                      className="text-[14.5px] font-semibold"
+                      className="text-15 font-semibold"
                       style={{ color: '#111' }}
                     >
                       {line.amount}

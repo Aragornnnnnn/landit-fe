@@ -73,6 +73,10 @@ export const consumeAllPending = () => {
   for (const activity of ACTIVITIES) update(activity, { pending: false });
 };
 
+// 오늘 표현 학습도 마쳤고 아직 홈에서 시트를 안 봤는가 — 대화 소감을 표현 뒤로 미뤘다면 둘을 함께 묻는다
+export const expressionCompletedToday = () =>
+  completedToday(read('expression'));
+
 export const recordSatisfactionAnswer = (
   moment: SatisfactionMoment,
   answer: SatisfactionAnswer,

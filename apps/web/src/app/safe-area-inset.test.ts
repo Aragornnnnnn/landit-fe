@@ -92,6 +92,7 @@ const SCROLL_EXCEPTIONS = new Set([
   // 아래에 늘 있는 푸터가 safe-area를 맡는다
   'app/(protected)/smalltalk/sessions/[sessionId]/summary/_ui/SmallTalkSummary.tsx',
   'app/(protected)/me/subscription/cancel/_ui/ReasonStep.tsx',
+  'app/(protected)/me/invite/_ui/InviteScreen.tsx',
   'app/(protected)/me/subscription/cancel/_ui/MethodStep.tsx',
   'app/(protected)/me/subscription/cancel/_ui/RetentionStep.tsx',
   'app/(protected)/premium/onboarding/_ui/RewardGuideStep.tsx',
@@ -117,6 +118,8 @@ const SCROLL_EXCEPTIONS = new Set([
   'app/(public)/(auth)/_ui/LoginScreen.tsx',
   // 카드 뒷면 안쪽 스크롤 — 바닥에 닿지 않는다
   'features/scenario/ui/card/ScenarioCardBack.tsx',
+  // 높이가 고정된 내 답변 칸 안쪽 스크롤 — 바닥에 닿지 않는다
+  'features/conversation/ui/flow/UserTranscript.tsx',
   // 개발자 전용
   'app/(protected)/me/developer/_ui/AlarmCheckScreen.tsx',
   'app/(protected)/me/developer/reward/_ui/RewardCheckScreen.tsx',

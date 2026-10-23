@@ -36,7 +36,7 @@ export const SmallTalkDemo = ({ step, width }: DemoProps) => (
   <DemoScreen width={width}>
     {/* 친구 고르기 — 셋이 나란히 웃고 있고, 고른 칸이 옮겨 다니다 테디에 선다 */}
     <DemoSlide shown={step !== SMALLTALK_SCENE.talk}>
-      <p className="px-6 pt-6 text-[22px] leading-snug font-bold text-foreground">
+      <p className="px-6 pt-6 text-22 leading-snug font-bold text-foreground">
         오늘은 누구랑
         <br />
         이야기할까요?
@@ -65,7 +65,7 @@ export const SmallTalkDemo = ({ step, width }: DemoProps) => (
                 {friend.name}
               </p>
               <span
-                className={`mt-1.5 rounded-full px-2.5 py-1 text-[13px] font-bold transition-colors duration-300 ${
+                className={`mt-1.5 rounded-full px-2.5 py-1 text-13 font-bold transition-colors duration-300 ${
                   chosen
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-[#f0f0ee] text-muted-foreground'
@@ -87,7 +87,7 @@ export const SmallTalkDemo = ({ step, width }: DemoProps) => (
     {/* 테디와 자유 대화 — 영국 억양, 시간 제한 없이 */}
     <DemoSlide shown={step === SMALLTALK_SCENE.talk}>
       <div className="flex items-center justify-between px-6 pt-6">
-        <p className="text-[22px] font-bold text-foreground">테디와 스몰톡</p>
+        <p className="text-22 font-bold text-foreground">테디와 스몰톡</p>
         <span className="rounded-full bg-[#faf2e9] px-3 py-1 text-sm font-bold text-[#c8641f]">
           <Emoji>🇬🇧</Emoji> 영국 영어
         </span>
@@ -104,7 +104,7 @@ export const SmallTalkDemo = ({ step, width }: DemoProps) => (
         {CHAT.map((line, index) => (
           <p
             key={line.text}
-            className={`max-w-[300px] rounded-3xl px-5 py-3 text-[17px] font-bold ${
+            className={`max-w-[300px] rounded-3xl px-5 py-3 text-17 font-bold ${
               line.mine
                 ? 'self-end rounded-tr-md bg-primary text-primary-foreground'
                 : 'self-start rounded-tl-md bg-[#f0f0ee] text-foreground'

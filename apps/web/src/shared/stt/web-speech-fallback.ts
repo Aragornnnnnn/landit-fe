@@ -54,21 +54,33 @@ export const startWebSpeech = (options: WebSpeechOptions): SttSession => {
   let accumulated = '';
   let finished = false;
 
+  let stoppedAt: number | null = null;
+
   const finishTurn = () => {
     if (finished) return;
     finished = true;
-    options.onFinal(accumulated.trim());
+    options.onFinal(accumulated.trim(), {
+      engine: 'web_speech',
+      endReason: 'ended',
+      connectMs: null,
+      finalizeWaitMs: stoppedAt === null ? null : Date.now() - stoppedAt,
+    });
   };
 
   recognition.onresult = (event) => {
-    let interim = '';
+    // Deepgram 경로와 같이 진행 중 결과는 글자로 넘기지 않고, 남아 있는지만 알린다
     for (let i = event.resultIndex; i < event.results.length; i += 1) {
       const result = event.results[i];
       if (result.isFinal)
         accumulated = `${accumulated} ${result[0].transcript}`.trim();
-      else interim = `${interim} ${result[0].transcript}`.trim();
     }
-    options.onInterim(`${accumulated} ${interim}`.trim());
+    // 남은 말은 바뀐 구간이 아니라 목록 전체로 본다 — 앞쪽의 바뀌지 않은 진행 중 결과도 남은 말이다
+    let pending = false;
+    for (let i = 0; i < event.results.length; i += 1) {
+      const result = event.results[i];
+      if (!result.isFinal && result[0].transcript.trim()) pending = true;
+    }
+    options.onInterim(accumulated, pending);
   };
 
   recognition.onerror = (event) => {
@@ -94,7 +106,10 @@ export const startWebSpeech = (options: WebSpeechOptions): SttSession => {
   recognition.start();
 
   return {
-    stop: () => recognition.stop(),
+    stop: () => {
+      stoppedAt ??= Date.now();
+      recognition.stop();
+    },
     abort: () => {
       if (finished) return;
       finished = true; // 이후 onresult·onend가 와도 결과를 내보내지 않는다

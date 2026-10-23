@@ -250,6 +250,8 @@ export const SUBSCRIPTION_MANAGE_PATH = '/me/subscription';
 export const SUBSCRIPTION_HISTORY_PATH = '/me/subscription/history';
 // 구독 해지 사유 플로우 — 스토어로 나가기 전에 사유를 묻고 사유별 화면을 거친다 (①→②→③은 이 라우트 안 스텝)
 export const SUBSCRIPTION_CANCEL_PATH = '/me/subscription/cancel';
+// 친구 초대 이벤트 — 내 정보 초대 띠·환급 화면 초대 띠·친구 초대 안내 편지에서 들어온다. 코드 보내기와 받은 초대 보상
+export const REFERRAL_INVITE_PATH = '/me/invite';
 // 홈 화면 위젯 설치 안내 — 온보딩에서 미뤘던 사람이 마이페이지에서 다시 연다
 export const WIDGET_GUIDE_PATH = '/me/widget';
 // 오늘의 시나리오 알람 — 마이페이지 설정 묶음의 "알람" 행에서 들어온다. 등록됐으면 시간 카드, 아니면 등록 흐름

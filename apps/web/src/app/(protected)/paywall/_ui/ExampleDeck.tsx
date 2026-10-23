@@ -114,7 +114,7 @@ export const ExampleDeck = () => {
       >
         <div className="overflow-hidden">
           <div className="flex flex-col items-center gap-1.5 px-6 pt-5 pb-2 text-center">
-            <p className="text-[17px] leading-snug font-bold text-foreground">
+            <p className="text-17 leading-snug font-bold text-foreground">
               {before}
               <span className="text-primary">{landing.highlight}</span>
               {after}

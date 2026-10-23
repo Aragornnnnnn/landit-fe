@@ -8,31 +8,42 @@ import { useDeferredValue, useEffect, useRef, useState } from 'react';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
 
 import type { ConversationPhase } from '../../model/conversation-machine';
-import { TypingCursor } from './TypingCursor';
+import { ListeningDots } from './ListeningDots';
 
 interface UserTranscriptProps {
   text: string;
   phase: ConversationPhase;
+  // 확정 전 말이 남아 있는가 — 다 확정되면 점을 거둔다
+  speechPending?: boolean;
   // 키보드 입력 모드 — 박스가 입력창이 되고 보내기/취소 버튼이 붙는다
   editing?: boolean;
   onChange?: (value: string) => void;
   onSubmit?: () => void;
   onCancel?: () => void;
+  // 라벨 오른쪽에 붙는 보조 버튼 — 끼울지와 무엇을 끼울지는 대화 쪽이 정한다
+  headerAction?: React.ReactNode;
+  // 끝내 전달되지 못한 답변 — 연한 빨강으로 묶어 무엇이 다시 보내지는지 보여 준다
+  unsent?: boolean;
 }
 
 export const UserTranscript = ({
   text,
   phase,
+  speechPending = false,
   editing = false,
   onChange,
   onSubmit,
   onCancel,
+  headerAction,
+  unsent = false,
 }: UserTranscriptProps) => {
   const listening = phase === 'USER_SPEAKING';
+  // 아직 아무 말도 확정 전이면 듣는 중 표시로, 그 뒤엔 확정 전 말이 남아 있을 때만 점을 띄운다
+  const showDots = listening && (text === '' || speechPending);
   const boxRef = useRef<HTMLDivElement>(null);
   // 넘쳐서 앞부분이 잘렸는지 — 잘렸을 때만 윗변을 흐린다. 짧은 답변의 첫 줄까지 흐려지면 안 된다
   const [clipped, setClipped] = useState(false);
-  // STT interim이 말하는 동안 초당 여러 번 들어와 text가 바뀐다 — 그때마다 강제 리플로우를 돌리면
+  // 말하는 동안 확정 문장이 붙을 때마다 text가 바뀐다 — 그때마다 강제 리플로우를 돌리면
   // 메인 스레드가 밀려 화면 전체가 버벅여 보인다. deferred 값으로 늦춰 브라우저가 한가할 때만 계산한다
   const deferredText = useDeferredValue(text);
 
@@ -42,7 +53,8 @@ export const UserTranscript = ({
     if (!box) return;
     box.scrollTop = box.scrollHeight;
     setClipped(box.scrollTop > 0);
-  }, [deferredText]);
+    // 점이 나타나거나 사라져도 높이가 바뀐다 — 글자가 그대로여도 다시 맞춘다
+  }, [deferredText, showDots]);
 
   if (editing) {
     return (
@@ -87,12 +99,29 @@ export const UserTranscript = ({
   }
 
   return (
-    <div className="mt-3 flex h-28 w-full flex-none flex-col rounded-2xl border border-border/60 bg-muted/50 px-5 py-3">
-      <p className="text-xs font-semibold text-muted-foreground">내 답변</p>
-      {/* 넘치면 끝으로 붙이고 윗변을 흐린다 — 방금 한 말이 항상 보이고 앞은 …처럼 사라진다 */}
+    <div
+      className={`mt-3 flex h-28 w-full flex-none flex-col rounded-2xl border px-5 py-3 ${
+        unsent
+          ? 'border-transparent bg-destructive/5'
+          : 'border-border/60 bg-muted/50'
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-muted-foreground">내 답변</p>
+        {/* 서버가 받았는지는 모른다 — 아는 건 대답이 오지 않았다는 것뿐이라 연결 상태로만 말한다 */}
+        {unsent && (
+          <p role="status" className="text-xs font-semibold text-destructive">
+            연결이 불안정해요
+          </p>
+        )}
+        {headerAction}
+      </div>
+      {/* 넘치면 끝으로 붙이고 윗변을 흐린다 — 방금 한 말이 항상 보이고 앞은 …처럼 사라진다.
+          칸 높이는 그대로 두고 안에서만 스크롤해 앞부분을 다시 볼 수 있다 */}
       <div
         ref={boxRef}
-        className={`mt-1.5 min-h-0 flex-1 overflow-hidden ${
+        onScroll={(event) => setClipped(event.currentTarget.scrollTop > 0)}
+        className={`mt-1.5 min-h-0 flex-1 overflow-y-auto overscroll-contain ${
           clipped
             ? '[mask-image:linear-gradient(to_bottom,transparent,#000_1.75rem)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,#000_1.75rem)]'
             : ''
@@ -101,7 +130,7 @@ export const UserTranscript = ({
         {/* 같은 높이에 세 줄이 들어오는 조합 — 글자 16px에 줄 간격을 좁혀 잡았다 */}
         <p className="text-base leading-snug font-semibold text-foreground">
           {text}
-          {listening && <TypingCursor />}
+          {showDots && <ListeningDots spaced={text !== ''} />}
         </p>
       </div>
     </div>

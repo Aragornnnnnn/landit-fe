@@ -49,7 +49,7 @@ export const BenefitsStep = ({ plan }: { plan: RewardPlan }) => (
       <div className="flex justify-center pt-1.5 short:[zoom:0.8]">
         <PremiumBadge />
       </div>
-      <h2 className="mt-4 px-6 text-[26px] leading-[36px] font-black tracking-[-0.025em] whitespace-pre-line text-foreground short:mt-3 short:text-[22px] short:leading-[30px]">
+      <h2 className="mt-4 px-6 text-26 leading-[calc(36/26)] font-black tracking-[-0.025em] whitespace-pre-line text-foreground short:mt-3 short:text-22 short:leading-[calc(30/22)]">
         {'매일 도착하는 시나리오\n'}
         <PremiumWord />
         으로 제대로 공부해요
@@ -70,8 +70,8 @@ export const BenefitsStep = ({ plan }: { plan: RewardPlan }) => (
 
       <div className="mt-8 flex flex-col gap-11">
         <section className="px-6">
-          <p className="text-[15px] font-black text-primary">01</p>
-          <p className="mt-1 text-[21px] font-extrabold tracking-[-0.02em] text-foreground">
+          <p className="text-15 font-black text-primary">01</p>
+          <p className="mt-1 text-21 font-extrabold tracking-[-0.02em] text-foreground">
             시나리오 끝낼 때마다 {formatWon(plan.dailyRefund)} 적립
           </p>
           <div className="mt-4">
@@ -158,7 +158,7 @@ const StoreReviews = () => {
   return (
     <section className="mt-14">
       <div className="px-6">
-        <p className="text-[21px] font-extrabold tracking-[-0.02em] text-foreground">
+        <p className="text-21 font-extrabold tracking-[-0.02em] text-foreground">
           먼저 시작한 분들의 이야기
         </p>
         {/* 평점 숫자를 크게, 별과 출처는 옆에 두 줄로 — 숫자가 먼저 읽히게 */}
@@ -175,7 +175,7 @@ const StoreReviews = () => {
             </span>
             <p className="text-xs text-muted-foreground">
               스토어 평점{' '}
-              <span className="text-[10px] text-[#b0b0ad]">
+              <span className="text-10 text-[#b0b0ad]">
                 {ratingAsOfLabel(STORE_RATING_AS_OF)}
               </span>
             </p>
@@ -196,7 +196,7 @@ const StoreReviews = () => {
               ★★★★★
             </span>
             {review.title && (
-              <p className="mt-1.5 text-[15px] font-bold break-keep text-foreground">
+              <p className="mt-1.5 text-15 font-bold break-keep text-foreground">
                 {review.title}
               </p>
             )}

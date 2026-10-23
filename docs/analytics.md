@@ -40,7 +40,7 @@
 | Page Viewed             | page_name, path, return_reason?, scenario_id?, session_id?, expression_id?, completed_date?, letter_id?, feedback_id?, feedback_type?, paywall_source?, entry_campaign?, entry_content? | 라우트 변경                                                                                                           |
 | Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete\|alarm_delete)                                                                                                                 | 이탈·탈퇴·알람 삭제 확인 시트 열림                                                                                    |
 | Confirm Sheet Dismissed | sheet                                                                                                                                                                                   | 확인 시트에서 계속하기/닫기                                                                                           |
-| Error Retried           | screen(reward\|reward_history\|scenario\|scenario_history\|smalltalk\|smalltalk_summary\|conversation\|card_back\|expression_list\|streak\|mailbox\|alarm)                              | 에러 화면 "다시 시도"                                                                                                 |
+| Error Retried           | screen(reward\|reward_history\|scenario\|scenario_history\|smalltalk\|smalltalk_summary\|conversation\|card_back\|expression_list\|streak\|mailbox\|alarm\|referral_invite)             | 에러 화면 "다시 시도"                                                                                                 |
 | App Exited              | trigger(back_button)                                                                                                                                                                    | 네이티브 뒤로가기로 앱 종료 (셸에서만)                                                                                |
 | Download Link Visited   | store(play_store\|app_store), utm_source?, utm_medium?, utm_campaign?                                                                                                                   | /download 스토어 리다이렉트 진입 (서버 발화, 익명). utm_*은 링크에 딱지가 있을 때만. 메신저 미리보기 봇은 세지 않는다 |
 | App Update Store Opened | store(play_store\|app_store)                                                                                                                                                            | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화)                                                         |
@@ -70,6 +70,7 @@
 | Subscription Manage Tapped  | status(trial\|active\|canceled)                                                                                                                    | 마이페이지 골드 카드에서 구독 관리로 들어감                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Paywall Entry Tapped        | source(me\|header\|reward)                                                                                                                         | 게이트가 아닌 자리(마이페이지·헤더 알약·환급 화면)에서 페이월로 들어감                                                                                                                                                                                                                                                                                                                                                                                                  |
 | Haptics Toggled             | enabled                                                                                                                                            | 마이페이지 진동 시트에서 켜거나 껐을 때                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Font Scale Changed          | scale(0.85\|0.92\|1\|1.15\|1.3)                                                                                                                    | 마이페이지 글자 크기 시트에서 단계를 바꿨을 때                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | Subscription History Tapped | status(trial\|active\|canceled)                                                                                                                    | 구독 관리에서 결제 내역으로 들어감                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Store Subscription Tapped   | status(trial\|active\|canceled), action(cancel\|resubscribe), reason?, method?                                                                     | 스토어 구독 관리 링크를 눌렀을 때 — 해지 예약을 되돌릴 때는 구독 관리에서, 해지는 사유 플로우의 "그래도 해지하러 가기"에서(그때 reason·method가 붙는다)                                                                                                                                                                                                                                                                                                                 |
 | Cancel Reason Selected      | reason(price\|time\|progress\|content\|bug\|other_method\|other), other_text?(기타일 때 적은 글)                                                   | 해지 사유 플로우 ①에서 사유를 고르고 "다음"을 눌렀을 때                                                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -112,15 +113,20 @@
 
 ### 온보딩
 
-| 이벤트                    | 속성                                      | 시점                                                                          |
-| ------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------- |
-| Onboarding Started        | —                                         | 온보딩 진입                                                                   |
-| Onboarding Step Viewed    | step, step_index                          | 스텝 노출 (intro→sound→mic→thought→notification→widget→level→accent→scenario) |
-| Onboarding Step Completed | step                                      | 각 스텝 전진 CTA                                                              |
-| Mic Permission Decided    | granted, source(onboarding\|conversation) | 마이크 권한 프롬프트 결과                                                     |
-| Onboarding Completed      | —                                         | 마지막 스텝 시작하기                                                          |
+| 이벤트                    | 속성                                      | 시점                                                                                     |
+| ------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Onboarding Started        | —                                         | 온보딩 진입                                                                              |
+| Onboarding Step Viewed    | step, step_index                          | 스텝 노출 (intro→sound→mic→thought→notification→widget→level→accent→referral→scenario)   |
+| Onboarding Step Completed | step                                      | 각 스텝 전진 CTA                                                                         |
+| Mic Permission Decided    | granted, source(onboarding\|conversation) | 마이크 권한 프롬프트 결과                                                                |
+| Onboarding Completed      | —                                         | 마지막 스텝 시작하기                                                                     |
+| Referral Code Registered  | method(paste\|typed)                      | 초대 코드 등록 성공                                                                      |
+| Referral Code Skipped     | from(ask\|entry)                          | 초대 코드 건너뛰기 — 질문의 「아니요」(ask), 코드 입력의 「코드 없이 계속할게요」(entry) |
+| Referral Invite Shared    | method(native_sheet\|web_share\|copy)     | 친구 초대 이벤트 화면의 보내기 버튼 — 어떤 길로 보냈는가                                 |
+| Referral Code Copied      | —                                         | 친구 초대 이벤트 화면에서 내 초대 코드 복사                                              |
+| Referral Letter Tapped    | letter_id                                 | 친구 초대 안내 편지의 「친구에게 공유하기」 → 친구 초대 이벤트 화면                      |
 
-`step_index`는 전체 스텝 기준 고정값이라 조건부 스텝이 빠져도 뒤 번호가 흔들리지 않는다. notification은 OS 권한이 아직 결정되지 않았을 때만, widget은 위젯이 실린 앱 버전이고 아직 설치 유도를 안 봤을 때만 들어간다. 알림 스텝의 완료는 OS 권한창 회신이 왔을 때 찍힌다(마이크 스텝과 같은 방식).
+`step_index`는 전체 스텝 기준 고정값이라 조건부 스텝이 빠져도 뒤 번호가 흔들리지 않는다. 다만 스텝을 새로 끼우면 그 뒤 번호가 한 칸씩 밀린다(2026-10 referral 추가로 scenario가 7→8). 퍼널은 번호 말고 `step`으로 묶는다. notification은 OS 권한이 아직 결정되지 않았을 때만, widget은 위젯이 실린 앱 버전이고 아직 설치 유도를 안 봤을 때만 들어간다. 알림 스텝의 완료는 OS 권한창 회신이 왔을 때 찍힌다(마이크 스텝과 같은 방식). referral은 서버가 초대 코드를 받을 수 있다고 한 신규 가입자(registrationStatus PENDING)에게만 들어간다.
 
 ### 프로필 (영어 수준·배울 영어)
 
@@ -185,8 +191,10 @@
 | Turn Failed                  | session_id?, turn_index, reason(empty\|api_error)                        | 빈 발화 / 제출 실패                                                                                                                     |
 | Inner Thought Viewed         | session_id, turn_index, thought_type?                                    | 상대 속마음 노출                                                                                                                        |
 | Translation Toggled          | session_id?, turn_index, opened                                          | 상대 발화 해석을 펼침(true)/접음(false)                                                                                                 |
+| Answer Guide Toggled         | session_id?, scenario_id, turn_index, opened, from_hint                  | 첫 시나리오 답변 가이드를 펼침(true)/접음(false). from_hint=true는 첫 질문의 유도 힌트가 떠 있을 때 연 것                               |
 | Speech Replayed              | session_id?, turn_index                                                  | 상대 발화 다시 듣기 시작 (멈추려고 누른 건 안 찍음)                                                                                     |
-| Speech Recognition Failed    | engine?, reason?                                                         | STT 오류 (권한 거부 제외)                                                                                                               |
+| Speech Recognition Completed | session_id?, turn_index, engine, end_reason, char_count                  | 음성 인식 결과(빈 결과 포함) — end_reason(finalize\|timeout\|utterance_end\|ended), connect_ms?·finalize_wait_ms?(대기 시간)            |
+| Speech Recognition Failed    | engine?, reason?                                                         | STT 오류 (권한 거부 제외) — reason(connect_failed\|closed, 그 밖엔 에러 이름)                                                           |
 | Speech Playback Failed       | source(synth\|question_audio)                                            | AI 발화 재생 실패 — 실패 비율용. question_audio는 서버 음원(오프닝 첫 질문·이어 재생 질문), 스몰톡 탭 인사도 포함 (synth 원인은 Sentry) |
 | Scenario Talk Completed      | session_id, scenario_id, turn_count                                      | 서버가 완료 판정                                                                                                                        |
 | Scenario Talk Abandoned      | session_id?, scenario_id, turn_index                                     | 중도 이탈 확정                                                                                                                          |
@@ -218,7 +226,7 @@
 
 탭의 네 이벤트는 대화 시작 전 갈림길이다. 기본 상대로 그냥 시작하면 `Partner Selected`는 안 찍히고 `Started`의 `partner`로 본다. 주제 모달 열림은 안 찍는다 — `Started`의 `topic_id` 유무로 "주제로 시작" 비율이 나온다.
 
-단, 마이크·STT처럼 **대화 엔진이 쏘는 것은 두 대화가 함께 쓴다** (Recording Started/Stopped/Canceled, Input Mode Switched, Turn Failed, Inner Thought Viewed, Translation Toggled, Speech Replayed, Speech Recognition Failed, Speech Playback Failed). 입력 기계의 사건이라 어느 대화인지와 무관하고, 대화 엔진(features/conversation)은 대화 종류를 모른다.
+단, 마이크·STT처럼 **대화 엔진이 쏘는 것은 두 대화가 함께 쓴다** (Recording Started/Stopped/Canceled, Input Mode Switched, Turn Failed, Inner Thought Viewed, Translation Toggled, Speech Replayed, Speech Recognition Completed/Failed, Speech Playback Failed). 입력 기계의 사건이라 어느 대화인지와 무관하고, 대화 엔진(features/conversation)은 대화 종류를 모른다.
 
 ### 분석 피드백
 
@@ -303,6 +311,16 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 | Notification Permission Decided | granted, source(onboarding\|scenario\|me) | OS 권한창 결과 — 셸의 회신에서 찍는다 (마이크와 같은 짝) |
 
 온보딩의 알림 스텝은 시트 없이 바로 OS 권한창을 띄워 Consent 이벤트가 없고, 결과는 `Notification Permission Decided(source: onboarding)`로 남는다. 이미 거부한 상태에서 내 정보의 "OS 설정 열기"는 안 찍는다 — 결과를 알 수 없다.
+
+### 이벤트 공지 팝업
+
+| 이벤트                | 속성     | 시점                                             |
+| --------------------- | -------- | ------------------------------------------------ |
+| Event Popup Viewed    | popup_id | 홈에서 공지 팝업 노출                            |
+| Event Popup Tapped    | popup_id | 이미지나 「자세히 보기」를 눌러 공지 화면으로 감 |
+| Event Popup Dismissed | popup_id | 닫기 버튼·바깥 탭·뒤로가기로 닫음                |
+
+`popup_id`는 어드민에서 등록한 팝업 id다 (`GET /popups/active`의 popupId).
 
 ### 알람
 
