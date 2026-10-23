@@ -391,17 +391,19 @@ const InfoSheet = ({
       친구 초대 안내
     </BottomSheet.Title>
     <ul className="mt-3 flex flex-col gap-2 text-14 leading-[1.55] font-medium break-keep text-foreground/80">
-      <InfoItem>적립금은 100일 프리미엄 이용권의 환급 혜택에 더해져요</InfoItem>
+      <InfoItem>이벤트 기간: 2026년 11월 20일(금)까지</InfoItem>
       <InfoItem>
-        친구 한 명당 {formatWon(offer.inviterWon)}씩
+        친구 1명당 {formatWon(offer.inviterWon)}
         {offer.maxWon !== null && `, 최대 ${formatWon(offer.maxWon)}까지`}{' '}
-        적립돼요
+        적립돼요.
       </InfoItem>
-      <InfoItem>부정 이용이 확인되면 적립이 취소될 수 있어요</InfoItem>
-      <InfoItem>초대 이벤트는 11월 20일에 끝나요</InfoItem>
       <InfoItem>
-        사정에 따라 일찍 끝나거나 혜택이 바뀌어도, 그 전에 쌓인 적립금은
-        그대로예요
+        적립금은 100일 프리미엄 이용권을 결제하면 환급 혜택에 더해져요.
+      </InfoItem>
+      <InfoItem>부정한 방법으로 참여하면 적립이 취소돼요.</InfoItem>
+      <InfoItem>
+        이벤트는 사정에 따라 바뀌거나 일찍 끝날 수 있어요. 이미 적립된 금액은
+        그대로예요.
       </InfoItem>
     </ul>
     <Button className="mt-6" onClick={onClose}>
