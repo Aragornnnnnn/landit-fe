@@ -402,8 +402,8 @@ const InfoSheet = ({
       </InfoItem>
       <InfoItem>부정한 방법으로 참여하면 적립이 취소돼요.</InfoItem>
       <InfoItem>
-        이벤트는 사정에 따라 바뀌거나 일찍 끝날 수 있어요. 이미 적립된 금액은
-        그대로예요.
+        이벤트가 일찍 끝나거나 적립 금액이 바뀌어도, 이미 받은 적립금은 사라지지
+        않아요.
       </InfoItem>
     </ul>
     <Button className="mt-6" onClick={onClose}>
