@@ -32,8 +32,8 @@ describe('historyRowsOf', () => {
   });
 
   it.each([
-    ['REFERRAL_SIGNUP', '친구 초대 · 가입'],
-    ['REFERRAL_PURCHASE', '친구 초대 · 결제'],
+    ['REFERRAL_SIGNUP', '친구 초대 적립'],
+    ['REFERRAL_PURCHASE', '친구 초대 적립'],
   ] as const)('%s 적립은 「%s」로 적는다', (activityType, title) => {
     const [row] = historyRowsOf([
       item({
