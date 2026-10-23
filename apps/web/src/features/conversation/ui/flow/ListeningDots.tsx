@@ -2,7 +2,8 @@
 // spaced는 앞에 글자가 있을 때 — 마지막 단어에 붙지 않게 한 칸 띄운다
 export const ListeningDots = ({ spaced }: { spaced: boolean }) => (
   <span
-    aria-hidden
+    role="img"
+    aria-label="듣는 중"
     className={`inline-flex h-[1em] items-end gap-1 ${spaced ? 'ml-2.5' : ''}`}
   >
     {[0, 1, 2].map((i) => (

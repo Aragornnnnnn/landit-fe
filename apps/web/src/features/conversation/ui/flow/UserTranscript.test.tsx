@@ -9,20 +9,19 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const countDots = (container: HTMLElement) =>
-  container.querySelectorAll('.animate-listening-wave').length;
+const listeningDots = () => screen.queryByRole('img', { name: '듣는 중' });
 
 describe('UserTranscript', () => {
   it('아직 아무 말도 확정되지 않았으면 듣는 중 표시로 점이 보인다', () => {
-    const { container } = render(
+    render(
       <UserTranscript text="" phase="USER_SPEAKING" speechPending={false} />,
     );
 
-    expect(countDots(container)).toBe(3);
+    expect(listeningDots()).toBeInTheDocument();
   });
 
   it('확정 전 말이 남아 있으면 글자 뒤에 점이 보인다', () => {
-    const { container } = render(
+    render(
       <UserTranscript
         text="I went to the park"
         phase="USER_SPEAKING"
@@ -30,11 +29,11 @@ describe('UserTranscript', () => {
       />,
     );
 
-    expect(countDots(container)).toBe(3);
+    expect(listeningDots()).toBeInTheDocument();
   });
 
   it('말한 것이 모두 확정되면 점이 사라진다', () => {
-    const { container } = render(
+    render(
       <UserTranscript
         text="I went to the park"
         phase="USER_SPEAKING"
@@ -42,15 +41,13 @@ describe('UserTranscript', () => {
       />,
     );
 
-    expect(countDots(container)).toBe(0);
+    expect(listeningDots()).not.toBeInTheDocument();
   });
 
   it('듣는 중이 아니면 점이 보이지 않는다', () => {
-    const { container } = render(
-      <UserTranscript text="" phase="AI_THINKING" speechPending />,
-    );
+    render(<UserTranscript text="" phase="AI_THINKING" speechPending />);
 
-    expect(countDots(container)).toBe(0);
+    expect(listeningDots()).not.toBeInTheDocument();
   });
 
   it('글이 넘친 상태에서 점이 다시 나타나면 끝으로 다시 붙인다', () => {
