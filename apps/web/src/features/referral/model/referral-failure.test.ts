@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ApiError } from '@/shared/api/api-error';
 
-import { referralFailureOf } from './referral-failure';
+import { isSettledSkipRejection, referralFailureOf } from './referral-failure';
 
 const apiError = (status: number, code?: string) =>
   new ApiError('실패', status, '/api/v1/referrals/registration', code);
@@ -63,5 +63,19 @@ describe('referralFailureOf', () => {
       expected: false,
       retryable: true,
     });
+  });
+});
+
+describe('isSettledSkipRejection', () => {
+  it.each(['REFERRAL_ALREADY_REGISTERED', 'REFERRAL_REGISTRATION_CLOSED'])(
+    '건너뛰기를 %s로 거절하면 이미 끝난 상태라 경고로 올리지 않는다',
+    (code) => {
+      expect(isSettledSkipRejection(apiError(409, code))).toBe(true);
+    },
+  );
+
+  it('그 밖의 실패는 경고로 올린다', () => {
+    expect(isSettledSkipRejection(new Error('network'))).toBe(false);
+    expect(isSettledSkipRejection(apiError(500, 'INTERNAL_ERROR'))).toBe(false);
   });
 });

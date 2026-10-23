@@ -8,6 +8,7 @@ import { reportWarning } from '@/shared/monitoring/report';
 
 import { skipReferralRegistration } from '../api/referral';
 import { markRegistrationStatus } from './keys';
+import { isSettledSkipRejection } from './referral-failure';
 
 export const useSkipReferralMutation = () => {
   const userId = useCurrentUserId();
@@ -16,6 +17,8 @@ export const useSkipReferralMutation = () => {
   return useMutation({
     mutationFn: () => skipReferralRegistration(),
     onMutate: () => markRegistrationStatus(queryClient, userId, 'SKIPPED'),
-    onError: (error) => reportWarning(error),
+    onError: (error) => {
+      if (!isSettledSkipRejection(error)) reportWarning(error);
+    },
   });
 };

@@ -44,3 +44,9 @@ export const referralFailureOf = (error: unknown): ReferralFailure => {
         retryable: true,
       };
 };
+
+// 건너뛰기를 서버가 이미 끝난 상태(등록했거나 이미 건너뜀)라며 거절했다 — 화면은 이미 넘어갔고 고칠 것도 없어 경고로 올리지 않는다
+export const isSettledSkipRejection = (error: unknown) =>
+  error instanceof ApiError &&
+  (error.code === 'REFERRAL_ALREADY_REGISTERED' ||
+    error.code === 'REFERRAL_REGISTRATION_CLOSED');
