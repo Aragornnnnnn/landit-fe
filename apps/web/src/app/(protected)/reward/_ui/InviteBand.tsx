@@ -30,27 +30,31 @@ export const InviteBand = ({ className = '' }: { className?: string }) => {
           <span className="text-primary">{formatWon(band.inviterWon)}</span>씩
           받기
         </span>
-        <span className="shrink-0 text-[12px] font-bold text-muted-foreground tabular-nums">
-          {band.sideLabel}
-        </span>
+        {band.sideLabel && (
+          <span className="shrink-0 text-[12px] font-bold text-muted-foreground tabular-nums">
+            {band.sideLabel}
+          </span>
+        )}
         <ChevronRightIcon
           size={18}
           className="shrink-0 text-muted-foreground"
         />
       </span>
-      <span
-        role="progressbar"
-        aria-label="초대 받은 친구"
-        aria-valuemin={0}
-        aria-valuemax={1}
-        aria-valuenow={band.ratio}
-        className="mt-2.5 block h-1.5 overflow-hidden rounded-full bg-invite-strip"
-      >
+      {band.ratio !== null && (
         <span
-          className="block h-full rounded-full bg-primary"
-          style={{ width: `${band.ratio * 100}%` }}
-        />
-      </span>
+          role="progressbar"
+          aria-label="초대 받은 친구"
+          aria-valuemin={0}
+          aria-valuemax={1}
+          aria-valuenow={band.ratio}
+          className="mt-2.5 block h-1.5 overflow-hidden rounded-full bg-invite-strip"
+        >
+          <span
+            className="block h-full rounded-full bg-primary"
+            style={{ width: `${band.ratio * 100}%` }}
+          />
+        </span>
+      )}
     </Link>
   );
 };

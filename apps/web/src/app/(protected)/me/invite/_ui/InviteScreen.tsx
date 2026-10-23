@@ -7,13 +7,7 @@ import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import type { ReferralReward } from '@/features/referral/api/referral';
-import {
-  earnedByInvitingOf,
-  invitingRewardsOf,
-  REFERRAL_INVITE_LIMIT,
-  signupEarnedByInvitingOf,
-  type InviteOffer,
-} from '@/features/referral/model/inviter-reward';
+import type { InviteOffer } from '@/features/referral/model/inviter-reward';
 import { useInviteOffer } from '@/features/referral/model/useInviteOffer';
 import { useInviteShare } from '@/features/referral/model/useInviteShare';
 import { useReferralCode } from '@/features/referral/model/useReferralCode';
@@ -32,7 +26,10 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 import { showToast } from '@/shared/ui/toast';
 
 import { inviteEventViewOf, stepRewardsOf } from '../_model/invite-event';
-import { inviteRewardRowOf } from '../_model/invite-reward-row';
+import {
+  inviteRewardRowOf,
+  shownInviteRewardsOf,
+} from '../_model/invite-reward-row';
 
 // 네 자씩 끊어 보여 준다 — 말로 불러 주거나 눈으로 옮겨 칠 때 덜 틀린다. 복사는 붙인 그대로
 const CODE_GROUP = 4;
@@ -54,9 +51,7 @@ export const InviteScreen = () => {
     ? inviteEventViewOf({
         offer,
         invitedCount: summary.data?.invitedCount ?? 0,
-        signupEarnedWon: rewards.data
-          ? signupEarnedByInvitingOf(rewards.data)
-          : null,
+        earnedWon: summary.data?.inviterCreditedWon ?? 0,
       })
     : null;
 
@@ -105,9 +100,7 @@ export const InviteScreen = () => {
                 <RewardSplit offer={offer} />
                 <Progress
                   view={view}
-                  earnedWon={
-                    rewards.data ? earnedByInvitingOf(rewards.data) : null
-                  }
+                  earnedWon={summary.data?.inviterCreditedWon ?? 0}
                   offer={offer}
                   rewards={rewards.data}
                   rewardsFailed={rewards.isError}
@@ -193,7 +186,7 @@ const SplitSide = ({
   </div>
 );
 
-// 초대로 받은 적립금과 상한까지의 진행, 받은 내역 — 다 채우면 다 받았다는 한 마디로 바꾼다
+// 초대로 받은 적립금과 상한까지의 진행, 받은 내역 — 상한을 채우면 받은 금액 한 마디로 바꾼다
 const Progress = ({
   view,
   earnedWon,
@@ -203,8 +196,7 @@ const Progress = ({
   onRetryRewards,
 }: {
   view: ReturnType<typeof inviteEventViewOf>;
-  // 내역을 받기 전이면 null — 0원으로 보이지 않게 비워 둔다
-  earnedWon: number | null;
+  earnedWon: number;
   offer: InviteOffer;
   rewards: ReferralReward[] | undefined;
   rewardsFailed: boolean;
@@ -214,11 +206,11 @@ const Progress = ({
     return (
       <div className="rounded-[20px] bg-invite px-5 py-5 text-center">
         <p className="text-[13px] font-bold text-primary">
-          친구 {REFERRAL_INVITE_LIMIT}명 초대 완료
+          친구 {offer.limitCount}명 초대 완료
         </p>
         <p className="mt-1 text-xl font-black text-foreground">
-          <span className="text-primary">{formatWon(offer.maxWon)}</span>을 모두
-          받았어요
+          <span className="text-primary">{formatWon(earnedWon)}</span>
+          {view.fullAllEarned ? '을 모두 받았어요' : '을 받았어요'}
         </p>
         {offer.inviteeWon > 0 && (
           <p className="mt-1 text-[13px] font-medium text-muted-foreground">
@@ -235,30 +227,32 @@ const Progress = ({
       </p>
       <p className="mt-0.5 flex items-center gap-1.5 text-2xl font-black text-foreground">
         <Coin size={26} />
-        {earnedWon === null ? '—' : formatWon(earnedWon)}
+        {formatWon(earnedWon)}
       </p>
 
       <div className="mt-4 flex items-center justify-between text-[13px] font-bold">
-        <span className="text-foreground">
-          초대 받은 친구 {view.count}/{REFERRAL_INVITE_LIMIT}명
-        </span>
-        <span className="text-muted-foreground tabular-nums">
-          {view.progressLabel}
-        </span>
+        <span className="text-foreground">{view.countLabel}</span>
+        {view.progressLabel && (
+          <span className="text-muted-foreground tabular-nums">
+            {view.progressLabel}
+          </span>
+        )}
       </div>
-      <div
-        role="progressbar"
-        aria-label="초대 받은 친구"
-        aria-valuemin={0}
-        aria-valuemax={REFERRAL_INVITE_LIMIT}
-        aria-valuenow={view.count}
-        className="mt-2 h-2 overflow-hidden rounded-full bg-invite-strip"
-      >
+      {view.ratio !== null && (
         <div
-          className="h-full rounded-full bg-primary"
-          style={{ width: `${(view.count / REFERRAL_INVITE_LIMIT) * 100}%` }}
-        />
-      </div>
+          role="progressbar"
+          aria-label="초대 받은 친구"
+          aria-valuemin={0}
+          aria-valuemax={1}
+          aria-valuenow={view.ratio}
+          className="mt-2 h-2 overflow-hidden rounded-full bg-invite-strip"
+        >
+          <div
+            className="h-full rounded-full bg-primary"
+            style={{ width: `${view.ratio * 100}%` }}
+          />
+        </div>
+      )}
 
       <div className="mt-4 rounded-2xl bg-card px-4 py-1">
         {rewardsFailed ? (
@@ -275,11 +269,11 @@ const Progress = ({
   );
 };
 
-// 초대한 사람으로 받은 것만 — 내가 초대받아 받은 몫은 여기 적지 않는다
+// 초대한 사람으로 받은 것만 서버가 걸러 준다 — 상한을 넘겨 0원이 된 건 여기서 뺀다
 const RewardRows = ({ rewards }: { rewards: ReferralReward[] | undefined }) => {
   const [expanded, setExpanded] = useState(false);
   if (!rewards) return null;
-  const rows = invitingRewardsOf(rewards).map(inviteRewardRowOf);
+  const rows = shownInviteRewardsOf(rewards).map(inviteRewardRowOf);
   if (rows.length === 0)
     return (
       <p className="py-4 text-center text-[13px] font-medium text-muted-foreground">
@@ -384,8 +378,9 @@ const InfoSheet = ({
     <ul className="mt-3 flex flex-col gap-2 text-[14px] leading-[1.55] font-medium break-keep text-foreground/80">
       <li>· 적립금은 100일 이용권이 끝날 때 받는 환급금에 더해져요</li>
       <li>
-        · 친구 한 명당 {formatWon(offer.inviterWon)}씩, 최대{' '}
-        {formatWon(offer.maxWon)}까지 적립돼요
+        · 친구 한 명당 {formatWon(offer.inviterWon)}씩
+        {offer.maxWon !== null && `, 최대 ${formatWon(offer.maxWon)}까지`}{' '}
+        적립돼요
       </li>
       <li>· 부정 이용이 확인되면 적립이 취소될 수 있어요</li>
       <li>· 혜택은 바뀌거나 취소될 수 있지만, 적립금은 그대로예요</li>

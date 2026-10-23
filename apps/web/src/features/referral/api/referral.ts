@@ -28,6 +28,20 @@ export interface ReferralPreview {
 export type ReferralRegistrationStatus =
   'PENDING' | 'REGISTERED' | 'SKIPPED' | 'UNAVAILABLE';
 
+// 초대한 사람 상한 — 인원(INVITE_COUNT)·금액(TOTAL_AMOUNT)·무제한(UNLIMITED). 무제한이면 value·used·remaining이 null
+export type ReferralInviterLimitType =
+  'UNLIMITED' | 'INVITE_COUNT' | 'TOTAL_AMOUNT';
+
+export interface ReferralInviterLimit {
+  type: ReferralInviterLimitType;
+  // 최대 인원 또는 최대 원 금액
+  value: number | null;
+  // 등록 인원 또는 지금까지 정해진 초대인 지급액. 환불로 줄지 않는다
+  used: number | null;
+  // 남은 인원 또는 원 금액. 넘겼으면 0
+  remaining: number | null;
+}
+
 export interface ReferralSummary {
   // 아직 발급 전이면 null — 발급은 POST /referrals/code
   code: string | null;
@@ -38,6 +52,9 @@ export interface ReferralSummary {
   invitedCount: number;
   convertedCount: number;
   registrationStatus: ReferralRegistrationStatus;
+  // 초대한 사람으로 실제 적립된 순액 — 환불은 빼고 검토 중 보존액은 포함
+  inviterCreditedWon: number;
+  inviterLimit: ReferralInviterLimit;
 }
 
 export const getReferralSummary = () =>
@@ -94,8 +111,11 @@ export interface ReferralRewardPage {
 // 한 장에 받는 지급 수
 export const REFERRAL_REWARD_PAGE_SIZE = 20;
 
-/** 내 지급 내역 — 최신부터, before(지급 id)보다 앞의 것을 한 장씩 */
-export const getReferralRewards = (before?: number) =>
+/** 내 지급 내역 — 최신부터 한 장. 역할을 주면 그 역할로 받은 것만 */
+export const getReferralRewards = ({
+  before,
+  recipientRole,
+}: { before?: number; recipientRole?: ReferralRecipientRole } = {}) =>
   api.get<ReferralRewardPage>(
-    `/api/v1/referrals/rewards?size=${REFERRAL_REWARD_PAGE_SIZE}${before === undefined ? '' : `&before=${before}`}`,
+    `/api/v1/referrals/rewards?size=${REFERRAL_REWARD_PAGE_SIZE}${before === undefined ? '' : `&before=${before}`}${recipientRole ? `&recipientRole=${recipientRole}` : ''}`,
   );

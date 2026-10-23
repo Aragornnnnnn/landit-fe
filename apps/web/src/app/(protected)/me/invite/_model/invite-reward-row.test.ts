@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ReferralReward } from '@/features/referral/api/referral';
 
-import { inviteRewardRowOf } from './invite-reward-row';
+import { inviteRewardRowOf, shownInviteRewardsOf } from './invite-reward-row';
 
 const reward = (over: Partial<ReferralReward>): ReferralReward => ({
   id: 1,
@@ -56,5 +56,19 @@ describe('inviteRewardRowOf', () => {
       inviteRewardRowOf(reward({ status: 'PENDING', creditedWon: 0 }))
         .amountLabel,
     ).toBe('+3,000원');
+  });
+});
+
+describe('shownInviteRewardsOf', () => {
+  it('상한을 넘겨 0원으로 끝난 지급은 목록에서 뺀다 — 받지도 않은 1,000원이 찍히지 않게', () => {
+    const rewards = [
+      reward({ id: 1 }),
+      reward({ id: 2, creditedWon: 0, reason: 'INVITER_LIMIT_REACHED' }),
+      reward({ id: 3, status: 'PENDING', creditedWon: 0 }),
+    ];
+
+    expect(shownInviteRewardsOf(rewards).map((item) => item.id)).toEqual([
+      1, 3,
+    ]);
   });
 });

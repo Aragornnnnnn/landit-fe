@@ -54,6 +54,8 @@ const summary = (code: string | null): ReferralSummary => ({
   invitedCount: 0,
   convertedCount: 0,
   registrationStatus: 'UNAVAILABLE',
+  inviterCreditedWon: 0,
+  inviterLimit: { type: 'INVITE_COUNT', value: 10, used: 0, remaining: 10 },
 });
 
 const renderShare = async () => {

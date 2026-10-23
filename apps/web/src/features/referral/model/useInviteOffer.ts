@@ -8,6 +8,6 @@ export const useInviteOffer = () => {
   const summary = useReferralSummaryQuery();
   return {
     summary,
-    offer: summary.data ? inviteOfferOf(summary.data.currentOffer) : null,
+    offer: summary.data ? inviteOfferOf(summary.data) : null,
   };
 };

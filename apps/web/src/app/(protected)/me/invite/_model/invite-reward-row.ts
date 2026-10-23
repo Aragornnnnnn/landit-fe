@@ -42,3 +42,9 @@ export const inviteRewardRowOf = (reward: ReferralReward): InviteRewardRow => {
     canceled: reward.status === 'REVERSED',
   };
 };
+
+// 목록에 적을 지급 — 상한을 넘겨 0원으로 확정된 건 빼고, 아직 들어오는 중(대기·검토)인 건 흐리게 남긴다
+export const shownInviteRewardsOf = (rewards: ReferralReward[]) =>
+  rewards.filter(
+    (reward) => !(reward.status === 'CREDITED' && reward.creditedWon === 0),
+  );

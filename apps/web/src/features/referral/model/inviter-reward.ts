@@ -1,5 +1,5 @@
-// 초대한 사람이 받는 몫 — 지금 조건에서 친구 한 명당 둘이 받을 금액과, 지금까지 초대로 실제 들어온 돈
-import type { ReferralReward, ReferralStage } from '../api/referral';
+// 초대한 사람이 받는 몫 — 지금 조건에서 친구 한 명당 둘이 받을 금액과, 서버 정책이 정한 초대 상한
+import type { ReferralStage, ReferralSummary } from '../api/referral';
 import { inviteeWonOf } from './invitee-reward';
 
 export const inviterWonOf = (stage: ReferralStage) =>
@@ -7,35 +7,38 @@ export const inviterWonOf = (stage: ReferralStage) =>
     ? stage.inviterWon
     : 0;
 
-// 초대한 사람으로 받은 지급만 — 내가 초대받아 받은 몫은 「초대로 받은 돈」이 아니다. 합계와 내역 목록이 같은 규칙을 쓴다
-export const invitingRewardsOf = (rewards: ReferralReward[]) =>
-  rewards.filter((reward) => reward.recipientRole === 'INVITER');
+// 상한을 사람 수로 — 인원 상한이면 그대로, 금액 상한이면 한 명당 금액으로 나눈 몫, 무제한이면 null
+const limitCountOf = (
+  limit: ReferralSummary['inviterLimit'],
+  inviterWon: number,
+) => {
+  if (limit.value === null) return null;
+  if (limit.type === 'INVITE_COUNT') return limit.value;
+  if (limit.type === 'TOTAL_AMOUNT')
+    return Math.floor(limit.value / inviterWon);
+  return null;
+};
 
-const creditedSum = (rewards: ReferralReward[]) =>
-  rewards.reduce((sum, reward) => sum + reward.creditedWon, 0);
-
-// 초대한 사람으로 받은 지급의 실제 적립 순액 합 — 대기·검토 중이거나 환불로 빠진 건 순액이 0이라 저절로 빠진다
-export const earnedByInvitingOf = (rewards: ReferralReward[]) =>
-  creditedSum(invitingRewardsOf(rewards));
-
-// 그중 친구 가입으로 받은 것만 — 상한(친구 수 × 가입 금액)에 견주는 진행은 가입 몫으로만 센다
-export const signupEarnedByInvitingOf = (rewards: ReferralReward[]) =>
-  creditedSum(
-    invitingRewardsOf(rewards).filter((reward) => reward.stage === 'SIGNUP'),
-  );
-
-// 한 사람이 초대로 받을 수 있는 친구 수 — BE 정책에 아직 상한이 없어 화면 표시만 여기서 맞춘다(BE에 상한 필드 요청)
-export const REFERRAL_INVITE_LIMIT = 10;
-
-// 지금 초대하면 둘이 받는 금액 — 친구가 가입하며 내 코드를 등록하는 순간 둘 다 적립된다.
+// 지금 초대하면 둘이 받는 금액과 상한 — 친구가 가입하며 내 코드를 등록하는 순간 둘 다 적립된다.
 // 초대한 사람 몫이 없으면 초대할 이유가 없어 null(초대 자리를 숨긴다)
-export const inviteOfferOf = (offer: { signup: ReferralStage }) => {
-  const inviterWon = inviterWonOf(offer.signup);
+export const inviteOfferOf = (
+  summary: Pick<ReferralSummary, 'currentOffer' | 'inviterLimit'>,
+) => {
+  const inviterWon = inviterWonOf(summary.currentOffer.signup);
   if (inviterWon === 0) return null;
+  const limitCount = limitCountOf(summary.inviterLimit, inviterWon);
+  const { type, value } = summary.inviterLimit;
   return {
     inviterWon,
-    inviteeWon: inviteeWonOf(offer.signup),
-    maxWon: inviterWon * REFERRAL_INVITE_LIMIT,
+    inviteeWon: inviteeWonOf(summary.currentOffer.signup),
+    // 무제한이면 null — 진행 막대와 최대 금액을 그리지 않는다
+    limitCount,
+    maxWon:
+      type === 'TOTAL_AMOUNT'
+        ? value
+        : limitCount === null
+          ? null
+          : limitCount * inviterWon,
   };
 };
 
