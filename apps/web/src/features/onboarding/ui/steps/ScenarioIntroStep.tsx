@@ -29,9 +29,6 @@ export const ScenarioIntroStep = ({
         첫 대화로 내 레벨을 찾고
         <br />딱 맞게 배워요
       </h1>
-      <p className="mt-2.5 text-base font-medium text-muted-foreground">
-        잘 못해도 괜찮으니까 편하게 말해 봐요
-      </p>
 
       <IntroVisual scenario={scenario} loading={loading} />
     </div>
