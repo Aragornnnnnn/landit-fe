@@ -10,7 +10,7 @@ import {
   REFERRAL_CODE_LENGTH,
 } from '../model/referral-code';
 
-// checking — 서버가 확인하는 중, ok — 확인됨. 둘 다 칸은 그대로 두고 글자 색만 바꾼다(테두리에 색을 넣으면 촌스럽다)
+// checking — 서버가 확인하는 중, ok — 확인됨, error — 거절됨. 칸은 그대로 두고 글자 색만 바꾼다(테두리에 색을 넣으면 촌스럽다)
 export type CodeInputTone = 'idle' | 'checking' | 'ok' | 'error';
 
 // 네 칸씩 끊어 보이게 가운데에 줄표 — 공유 문구는 붙여 쓰지만 눈으로 옮겨 칠 때 덜 틀린다
@@ -47,7 +47,10 @@ export const ReferralCodeInput = ({
 
   return (
     // gap-1 — 칸 8개(36px)와 줄표가 좁은 폰의 본문 폭(342px) 안에 들어가게
-    <div className="relative mx-auto flex items-center justify-center gap-1">
+    // 거절되면 칸 묶음이 한 번 흔들린다 — 다시 거절되면 확인 중을 거쳐 클래스가 새로 붙어 다시 흔들린다
+    <div
+      className={`relative mx-auto flex items-center justify-center gap-1 ${tone === 'error' ? 'animate-shake' : ''}`}
+    >
       {Array.from({ length: REFERRAL_CODE_LENGTH }, (_, index) => (
         <CodeCell
           key={index}
@@ -105,7 +108,7 @@ const CodeCell = ({
     )}
     <span
       aria-hidden
-      className={`flex h-[50px] w-9 items-center justify-center rounded-[10px] bg-card text-[22px] font-bold ${borderOf(tone, current)}`}
+      className={`flex h-[50px] w-9 items-center justify-center rounded-[10px] bg-card text-[22px] font-bold ${borderOf(current)}`}
     >
       <span
         className={charClassOf(tone)}
@@ -128,12 +131,12 @@ const charClassOf = (tone: CodeInputTone) => {
     return 'inline-block animate-[code-wave_0.9s_ease-in-out_infinite] text-foreground';
   if (tone === 'ok')
     return 'inline-block animate-[code-pop_0.32s_ease-out_both] text-success';
+  if (tone === 'error') return 'text-destructive';
   return 'text-foreground';
 };
 
-// 틀린 코드면 전부 빨강, 아니면 다음에 채울 칸만 주황
-const borderOf = (tone: CodeInputTone, current: boolean) => {
-  if (tone === 'error') return 'border-[1.5px] border-destructive';
+// 다음에 채울 칸만 주황
+const borderOf = (current: boolean) => {
   if (current) return 'border-2 border-primary';
   return 'border-[1.5px] border-border';
 };
