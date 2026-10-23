@@ -376,7 +376,7 @@ const InfoItem = ({ children }: { children: ReactNode }) => (
   </li>
 );
 
-// 헤더 ⓘ — 돈이 어디로 가는지와 취소될 수 있는 경우만. 화면에서 이미 말한 건 되풀이하지 않는다
+// 헤더 ⓘ — 돈이 어디로 가는지, 취소될 수 있는 경우, 이벤트 기간만. 화면에서 이미 말한 건 되풀이하지 않는다
 const InfoSheet = ({
   open,
   offer,
