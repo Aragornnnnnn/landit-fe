@@ -2,7 +2,7 @@
 import { use } from 'react';
 import { notFound } from 'next/navigation';
 
-import { ReceivedLetterFlow } from '@/features/mailbox/ui/LetterDetailFlow';
+import { ReceivedLetter } from './_ui/ReceivedLetter';
 
 export default function ReceivedLetterPage({
   params,
@@ -15,5 +15,5 @@ export default function ReceivedLetterPage({
   // Number()로 재면 1e3·0x10·공백까지 통과해 이상한 주소가 그대로 요청이 된다
   if (!/^\d+$/.test(letterId)) notFound();
 
-  return <ReceivedLetterFlow letterId={Number(letterId)} />;
+  return <ReceivedLetter letterId={Number(letterId)} />;
 }

@@ -57,6 +57,9 @@
   --color-letter-direct-bg: var(--letter-direct-bg);
   --color-letter-pending: var(--letter-pending);
   --color-letter-pending-bg: var(--letter-pending-bg);
+  --color-invite: var(--invite);
+  --color-invite-strip: var(--invite-strip);
+  --color-invite-ink: var(--invite-ink);
   --color-letter-answered: var(--letter-answered);
   --color-letter-answered-bg: var(--letter-answered-bg);
   --color-letter-unread: var(--letter-unread);
@@ -134,7 +137,10 @@
   --green-100: #d9edd9;
   --green-700: #38784c;
   --blue-600: #4a70d4;
+  --amber-50: #fff6dc;
   --amber-100: #fcedcc;
+  --amber-200: #ffecc7;
+  --amber-800: #9e6129;
   --amber-700: #9e7314;
   --red-400: #e3574a;
   --violet-100: #ece6fb;
@@ -192,6 +198,10 @@
   /* 답장이 도착한 보낸 편지 — 지금은 답장 칩과 같은 색이지만 뜻이 달라 이름을 따로 준다 */
   --letter-answered: var(--blue-600);
   --letter-answered-bg: var(--blue-100);
+  /* 친구 초대 이벤트 — 적립금을 말하는 금빛 카드 바탕, 그 아래 조건 띠, 띠 위 글자 (피그마 레퍼럴 최종 시안) */
+  --invite: var(--amber-50);
+  --invite-strip: var(--amber-200);
+  --invite-ink: var(--amber-800);
   /* 안 읽은 편지 점. destructive(경고 빨강)보다 한 톤 죽인 색이라 따로 둔다 */
   --letter-unread: var(--red-400);
   --radius: 0.75rem;

@@ -1,8 +1,8 @@
-// 친구에게 공유하기 — 셸 공유 시트·웹 공유·링크 복사 중 어느 길로 가는지와 공유 문구 검증
+// 글 공유하기 — 셸 공유 시트·웹 공유·링크 복사 중 어느 길로 가는지 검증
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { shareApp } from './share-app';
+import { shareText } from './share-text';
 
 const shellContext = (bridgeVersion: number) => ({
   platform: 'android',
@@ -37,12 +37,12 @@ afterEach(() => {
   delete window.ReactNativeWebView;
 });
 
-describe('shareApp', () => {
+describe('shareText', () => {
   it('공유를 아는 셸이면 셸에 공유 시트를 요청한다', async () => {
     window.__LANDIT_NATIVE__ = shellContext(6);
     window.ReactNativeWebView = { postMessage };
 
-    const method = await shareApp('같이 해요');
+    const method = await shareText('같이 해요');
 
     expect(method).toBe('native_sheet');
     expect(JSON.parse(postMessage.mock.calls[0][0])).toEqual({
@@ -55,7 +55,7 @@ describe('shareApp', () => {
     window.__LANDIT_NATIVE__ = shellContext(5);
     window.ReactNativeWebView = { postMessage };
 
-    const method = await shareApp('같이 해요');
+    const method = await shareText('같이 해요');
 
     expect(method).toBe('copy');
     expect(postMessage).not.toHaveBeenCalled();
@@ -66,7 +66,7 @@ describe('shareApp', () => {
     webShare.mockResolvedValue(undefined);
     setNavigator({ share: webShare });
 
-    const method = await shareApp('같이 해요');
+    const method = await shareText('같이 해요');
 
     expect(method).toBe('web_share');
     expect(webShare).toHaveBeenCalledWith({ text: '같이 해요' });
@@ -77,7 +77,7 @@ describe('shareApp', () => {
     webShare.mockRejectedValue(new DOMException('닫음', 'AbortError'));
     setNavigator({ share: webShare });
 
-    const method = await shareApp('같이 해요');
+    const method = await shareText('같이 해요');
 
     expect(method).toBe('web_share');
     expect(writeText).not.toHaveBeenCalled();
@@ -87,14 +87,14 @@ describe('shareApp', () => {
     webShare.mockRejectedValue(new DOMException('막힘', 'NotAllowedError'));
     setNavigator({ share: webShare });
 
-    const method = await shareApp('같이 해요');
+    const method = await shareText('같이 해요');
 
     expect(method).toBe('copy');
     expect(writeText).toHaveBeenCalledWith('같이 해요');
   });
 
   it('공유 수단이 없으면 링크를 복사한다', async () => {
-    const method = await shareApp('같이 해요');
+    const method = await shareText('같이 해요');
 
     expect(method).toBe('copy');
     expect(writeText).toHaveBeenCalledWith('같이 해요');

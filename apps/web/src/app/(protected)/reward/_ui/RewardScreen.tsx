@@ -30,6 +30,7 @@ import {
 } from '../_model/reward-screen-view';
 import { useMyReward } from '../../_model/useMyReward';
 import { useRewardOffer } from '../../_model/useRewardOffer';
+import { InviteBand } from './InviteBand';
 import { MissedRewardIntro } from './MissedRewardIntro';
 import { RefundApplyButton } from './RefundApplyButton';
 import { RewardExitOfferSheet } from './RewardExitOfferSheet';
@@ -145,7 +146,11 @@ export const RewardScreen = () => {
           <RewardIntro copy={introCopy} offer={offer} />
         ))}
       {view.kind === 'record' && (
-        <RewardRecord reward={view.reward} history={<RewardHistoryFeed />} />
+        <RewardRecord
+          reward={view.reward}
+          invite={<InviteBand className="mx-5 mt-5" />}
+          history={<RewardHistoryFeed />}
+        />
       )}
       {view.kind === 'error' && (
         <RetryNotice
