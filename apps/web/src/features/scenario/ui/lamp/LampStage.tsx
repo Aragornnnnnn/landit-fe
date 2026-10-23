@@ -35,8 +35,10 @@ interface LampStageProps {
   today?: string;
   // 소환을 닫고 대기 카드로 돌아왔다 — 복귀 연출이 끝난 뒤에 나간다
   onSummonClose?: () => void;
-  // 먼저 나설 것(강제 업데이트·이벤트 공지)이 있다 — 풀릴 때까지 자동 소환을 미룬다
+  // 먼저 나설 것(강제 업데이트)이 있다 — 풀릴 때까지 자동 소환을 미룬다
   summonHeld?: boolean;
+  // 이번에 자동으로 물을지 정해지면 알린다 — 홈이 램프 뒤에 띄울 것(이벤트 공지)의 차례를 잡는다
+  onAutoSummonDecided?: (summons: boolean) => void;
 }
 
 // 소환에는 두 결이 있다 — 화면이 알아서 띄우면 묻고, 사용자가 부르면 묻지 않는다
@@ -51,6 +53,7 @@ export const LampStage = ({
   today,
   onSummonClose,
   summonHeld = false,
+  onAutoSummonDecided,
 }: LampStageProps) => {
   const [summon, setSummon] = useState<Summon | null>(null);
   const lampBoxRef = useRef<HTMLDivElement>(null);
@@ -112,10 +115,12 @@ export const LampStage = ({
     if (summonHeld) return;
     // 소환할 수 없는 카드여도 딱지는 뗀다 — 남으면 뒤로 돌아올 때 유입이 또 세어진다
     const fromReminder = consumeReminderEntry();
-    if (!today || !onStart) return;
-
-    if (!decideSummon({ lastSeen: readLastSummoned(), today, fromReminder }))
-      return;
+    const summons =
+      !!today &&
+      !!onStart &&
+      decideSummon({ lastSeen: readLastSummoned(), today, fromReminder });
+    onAutoSummonDecided?.(summons);
+    if (!summons) return;
 
     // 온보딩을 막 끝낸 사람은 방금 "시작할게요"라고 답했다 — 다시 묻지 않는다.
     // 표식은 지우지 않아도 된다. 한 번 보면 그날은 위 판정에서 걸러진다

@@ -27,8 +27,10 @@ interface TodayCardProps {
   autoFlip?: boolean;
   // 소환을 닫아 오늘은 안 하기로 했다. 복귀 연출까지 끝난 뒤에 온다
   onSummonClose?: () => void;
-  // 먼저 나설 것(강제 업데이트·이벤트 공지)이 있다 — 풀릴 때까지 램프 자동 소환을 미룬다
+  // 먼저 나설 것(강제 업데이트)이 있다 — 풀릴 때까지 램프 자동 소환을 미룬다
   summonHeld?: boolean;
+  // 이번 방문에 램프가 자동으로 물을지 정해지면 알린다
+  onAutoSummonDecided?: (summons: boolean) => void;
   // 프리미엄 프리뷰의 차례 — 완료 카드에만 건다
   premiumPreview?: CardPreview;
 }
@@ -42,6 +44,7 @@ export const TodayCard = ({
   autoFlip = false,
   onSummonClose,
   summonHeld,
+  onAutoSummonDecided,
   premiumPreview,
 }: TodayCardProps) => {
   const reduced = useReducedMotion() ?? false;
@@ -75,6 +78,7 @@ export const TodayCard = ({
         onStart={playable ? () => onStart(scenario) : undefined}
         onSummonClose={onSummonClose}
         summonHeld={summonHeld}
+        onAutoSummonDecided={onAutoSummonDecided}
       />
     </Arrival>
   );
