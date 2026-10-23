@@ -10,7 +10,8 @@ import { z } from 'zod';
 // 8: GET_ALARM_STATUS / REQUEST_ALARM_PERMISSION / OPEN_ALARM_SETTINGS / SET_ALARM / SKIP_ALARM_TODAY / TEST_ALARM / GET_ALARM_LIST / CANCEL_ALARM ↔ ALARM_STATUS / ALARM_LIST, ALARM_OPENED (오늘의 시나리오 알람, LAN-461)
 // 9: REQUEST_REVIEW ↔ REVIEW_RESULT (앱 안 별점 카드, LAN-701)
 // 10: 컨텍스트에 fontScale 추가, Android 글자 자동 확대(textZoom) 끔 (마이페이지 글자 크기)
-export const NATIVE_BRIDGE_VERSION = 10;
+// 11: 컨텍스트에 deviceId 추가 (친구 초대 같은 기기 판정용)
+export const NATIVE_BRIDGE_VERSION = 11;
 
 // 셸이 주입하고 웹이 읽는 전역 키
 export const NATIVE_CONTEXT_GLOBAL = '__LANDIT_NATIVE__';
@@ -24,6 +25,8 @@ export const nativeContextSchema = z.object({
   bridgeVersion: z.number().int(),
   // 기기 글자 크기 배율(1 = 기본). 웹이 첫 글자 크기 단계를 정할 때 쓴다. 브릿지 9 이하 셸은 보내지 않는다
   fontScale: z.number().positive().optional(),
+  // 다시 설치해도 유지되는 기기 ID(iOS 키체인 UUID·Android ANDROID_ID). 못 읽었거나 브릿지 10 이하 셸이면 없다
+  deviceId: z.string().min(1).optional(),
 });
 
 export type NativeContext = z.infer<typeof nativeContextSchema>;

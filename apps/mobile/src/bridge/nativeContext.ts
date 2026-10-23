@@ -8,6 +8,8 @@ import {
 import { nativeBuildVersion } from 'expo-application';
 import Constants from 'expo-constants';
 
+import { getDeviceId } from './deviceId';
+
 export function getNativeContext(): NativeContext {
   return {
     platform: Platform.OS === 'ios' ? 'ios' : 'android',
@@ -18,6 +20,8 @@ export function getNativeContext(): NativeContext {
     bridgeVersion: NATIVE_BRIDGE_VERSION,
     // 기기 글자 크기 설정 배율 (iOS 동적 글자·Android 글꼴 크기)
     fontScale: PixelRatio.getFontScale(),
+    // 웹은 아직 서버로 보내지 않는다 — 친구 초대 같은 기기 판정을 백엔드가 받기로 하면 쓴다
+    deviceId: getDeviceId(),
   };
 }
 
