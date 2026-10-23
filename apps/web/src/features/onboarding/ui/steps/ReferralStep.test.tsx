@@ -168,7 +168,9 @@ describe('ReferralStep · 코드 입력', () => {
     expect(screen.getByText('초대 코드로 적립됐어요')).toBeInTheDocument();
     // 현금이 아니라 환급 적립금이다 — 결제하면 그 환급에 더해진다는 걸 같이 알린다
     expect(
-      screen.getByText('100일 챌린지를 결제하면 환급에 바로 더해져요'),
+      screen.getByText(
+        '100일 프리미엄 이용권을 결제하면 환급 혜택에 바로 더해져요',
+      ),
     ).toBeInTheDocument();
     expect(haptic).toHaveBeenCalledWith('success');
     expect(onDone).not.toHaveBeenCalled();
