@@ -75,14 +75,12 @@ export const RefundDepositDemo = ({
         />
         <div className="min-w-0 flex-1 text-left">
           <div className="flex items-baseline justify-between gap-2">
-            <p className="text-[21px] leading-tight font-black text-foreground">
+            <p className="text-21 leading-tight font-black text-foreground">
               {depositLabel}
             </p>
-            <span className="shrink-0 text-[13px] text-muted-foreground">
-              지금
-            </span>
+            <span className="shrink-0 text-13 text-muted-foreground">지금</span>
           </div>
-          <p className="mt-1 text-[14px] font-medium text-muted-foreground">
+          <p className="mt-1 text-14 font-medium text-muted-foreground">
             랜딧 → 내 계좌
           </p>
         </div>

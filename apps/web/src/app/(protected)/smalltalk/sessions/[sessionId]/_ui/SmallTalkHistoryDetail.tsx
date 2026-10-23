@@ -83,7 +83,7 @@ export const SmallTalkHistoryDetail = ({
               {hasCorrections && (
                 <span
                   aria-hidden="true"
-                  className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] leading-none font-bold text-white"
+                  className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-10 leading-none font-bold text-white"
                 >
                   {correctionCount}
                 </span>
@@ -167,8 +167,8 @@ export const SmallTalkHistoryDetail = ({
 // 통계 한 칸 — 라벨은 작게 위, 값은 굵게 아래 (대화 종료 화면과 같은 모양)
 const Stat = ({ label, value }: { label: string; value: string }) => (
   <div className="min-w-0 flex-1 text-center">
-    <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-    <p className="mt-1 truncate text-[15px] font-extrabold text-foreground">
+    <p className="text-11 font-medium text-muted-foreground">{label}</p>
+    <p className="mt-1 truncate text-15 font-extrabold text-foreground">
       {value}
     </p>
   </div>

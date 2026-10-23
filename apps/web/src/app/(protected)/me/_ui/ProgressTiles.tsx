@@ -46,17 +46,17 @@ const Tile = ({
     onClick={onClick}
     className="flex flex-1 flex-col rounded-2xl bg-white px-4 py-3.5 transition-transform active:scale-[0.98]"
   >
-    <span className="flex items-center justify-between text-[12px] font-bold text-muted-foreground">
+    <span className="flex items-center justify-between text-12 font-bold text-muted-foreground">
       {label}
       <ChevronRightIcon size={14} />
     </span>
     <span className="mt-2 flex items-center gap-1.5">
       {icon}
-      <span className="text-[19px] leading-none font-black text-foreground tabular-nums">
+      <span className="text-19 leading-none font-black text-foreground tabular-nums">
         {value}
       </span>
     </span>
-    <span className="mt-1.5 text-[12px] font-medium text-muted-foreground">
+    <span className="mt-1.5 text-12 font-medium text-muted-foreground">
       {note}
     </span>
   </Link>

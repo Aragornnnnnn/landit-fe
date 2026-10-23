@@ -16,6 +16,8 @@ import { AnalyticsBootstrap, PageViewTracker } from '@/shared/analytics';
 import { BridgeListener } from '@/shared/bridge/BridgeListener';
 import { platformMarkerScript } from '@/shared/bridge/platform-marker';
 import { PlatformMarkerSync } from '@/shared/bridge/PlatformMarkerSync';
+import { fontScaleScript } from '@/shared/font-scale/font-scale';
+import { FontScaleSync } from '@/shared/font-scale/FontScaleSync';
 import { GlobalHaptics } from '@/shared/haptics';
 import { MonitoringBootstrap } from '@/shared/monitoring/MonitoringBootstrap';
 import { Toaster } from '@/shared/ui/toast';
@@ -48,6 +50,9 @@ export default function RootLayout({
         {/* 첫 페인트 전에 플랫폼을 찍는다 — 하이드레이션 뒤에 찍으면 Android 하단 여백이 한 번 점프한다 */}
         <script dangerouslySetInnerHTML={{ __html: platformMarkerScript }} />
         <PlatformMarkerSync />
+        {/* 첫 페인트 전에 글자 크기를 적용한다 — 하이드레이션 뒤에 적용하면 보통 크기로 그려졌다가 한 번 바뀐다 */}
+        <script dangerouslySetInnerHTML={{ __html: fontScaleScript }} />
+        <FontScaleSync />
         <AnalyticsBootstrap />
         <MonitoringBootstrap />
         <PageViewTracker />

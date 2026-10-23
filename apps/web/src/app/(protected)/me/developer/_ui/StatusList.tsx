@@ -15,11 +15,9 @@ export const StatusList = ({
   children: React.ReactNode;
 }) => (
   <div className="m-3 rounded-lg bg-muted/70 px-3.5 py-3">
-    <dl className="space-y-1.5 text-[13px] leading-snug">{children}</dl>
+    <dl className="space-y-1.5 text-13 leading-snug">{children}</dl>
     {note && (
-      <p className="mt-2 text-[12px] leading-snug text-muted-foreground">
-        {note}
-      </p>
+      <p className="mt-2 text-12 leading-snug text-muted-foreground">{note}</p>
     )}
   </div>
 );

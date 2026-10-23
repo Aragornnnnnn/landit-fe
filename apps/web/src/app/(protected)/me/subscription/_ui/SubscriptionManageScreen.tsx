@@ -88,9 +88,9 @@ const PremiumOverview = ({ summary }: { summary: PaidSubscriptionSummary }) => {
         style={{ background: GOLD_GRADIENT, color: '#3a2500' }}
       >
         <PremiumBadge logoHeight={22} onGold />
-        <p className="mt-3 text-[17px] font-bold">{toCardTitle(summary)}</p>
+        <p className="mt-3 text-17 font-bold">{toCardTitle(summary)}</p>
         {rows.length > 0 && (
-          <dl className="mt-3 space-y-1.5 text-[13px]">
+          <dl className="mt-3 space-y-1.5 text-13">
             {rows.map((row) => (
               <CardRowItem key={row.label} row={row} />
             ))}

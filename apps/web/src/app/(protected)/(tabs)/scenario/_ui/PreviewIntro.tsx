@@ -174,7 +174,7 @@ export const PreviewIntro = ({
         {/* 한 자씩 바뀌는 글자는 읽지 않고, 다 쓴 문장만 아래 숨은 칸이 한 번 읽는다 */}
         <p
           aria-hidden
-          className="mt-6 min-h-[3lh] text-center text-[25px] leading-[1.45] font-extrabold break-keep whitespace-pre-line text-white"
+          className="mt-6 min-h-[3lh] text-center text-25 leading-[1.45] font-extrabold break-keep whitespace-pre-line text-white"
         >
           {sliceParts(sentence.parts, typing.count).map(
             ([text, highlight], i) => (

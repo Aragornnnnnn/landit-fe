@@ -46,9 +46,9 @@ const PROVIDER_BADGE: Record<
 
 // 이름이 길수록 글자를 줄여 줄바꿈을 줄인다 — 가장 작은 크기에서만 두 줄이 된다
 const NAME_SIZE_CLASS: Record<NicknameDisplaySize, string> = {
-  lg: 'text-[22px]',
-  md: 'text-[18px]',
-  sm: 'text-[16px]',
+  lg: 'text-22',
+  md: 'text-18',
+  sm: 'text-16',
 };
 
 export const ProfileHeader = () => {
@@ -92,7 +92,7 @@ export const ProfileHeader = () => {
         </button>
         {member?.email && (
           <p
-            className="mt-2 flex items-center gap-2 text-[12.5px]"
+            className="mt-2 flex items-center gap-2 text-13"
             style={{ color: '#6b7280' }}
           >
             {badge && (
@@ -123,10 +123,7 @@ export const ProfileHeader = () => {
           />
         )}
         {level && (
-          <p
-            className="mt-0.5 text-[12.5px] font-bold"
-            style={{ color: '#111' }}
-          >
+          <p className="mt-0.5 text-13 font-bold" style={{ color: '#111' }}>
             {LEVEL_NAMES[level]} Lv.{level}
           </p>
         )}

@@ -28,7 +28,7 @@ export const FeedbackTypeFlow = () => {
       <BackHeader onBack={() => router.replace(MAILBOX_PATH)} />
 
       <div className="flex-1 overflow-y-auto px-5 pb-[var(--safe-area-inset-bottom)]">
-        <h1 className="mt-4 text-[22px] leading-snug font-bold text-foreground">
+        <h1 className="mt-4 text-22 leading-snug font-bold text-foreground">
           어떤 피드백을
           <br />
           개발자에게 보낼까요?
@@ -59,8 +59,8 @@ const FeedbackTypeRow = ({ type }: { type: FeedbackType }) => {
       }
       className="flex h-[58px] items-center gap-4 rounded-2xl bg-secondary px-4 transition-transform active:scale-[0.98]"
     >
-      <Emoji className="text-[22px]">{emoji}</Emoji>
-      <span className="flex-1 text-[15px] font-semibold text-foreground">
+      <Emoji className="text-22">{emoji}</Emoji>
+      <span className="flex-1 text-15 font-semibold text-foreground">
         {label}
       </span>
       <ChevronRightIcon size={18} className="text-muted-foreground" />

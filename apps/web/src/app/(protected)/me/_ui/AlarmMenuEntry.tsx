@@ -53,7 +53,7 @@ export const AlarmMenuEntry = () => {
       value={
         value && (
           <span
-            className={`text-[13px] ${value.alert ? 'font-bold text-destructive' : 'text-muted-foreground'}`}
+            className={`text-13 ${value.alert ? 'font-bold text-destructive' : 'text-muted-foreground'}`}
           >
             {value.text}
           </span>

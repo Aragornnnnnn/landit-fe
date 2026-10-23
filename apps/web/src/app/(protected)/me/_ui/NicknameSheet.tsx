@@ -103,10 +103,10 @@ const NicknameForm = ({
       // 키보드가 시트 아래를 가리지 않게 그만큼 띄운다
       style={{ paddingBottom: keyboardInset }}
     >
-      <BottomSheet.Title className="text-[17px] font-bold text-foreground">
+      <BottomSheet.Title className="text-17 font-bold text-foreground">
         뭐라고 불러드릴까요?
       </BottomSheet.Title>
-      <p className="mt-1 text-[14px] leading-6 text-muted-foreground">
+      <p className="mt-1 text-14 leading-6 text-muted-foreground">
         언제든 다시 바꿀 수 있어요
       </p>
 
@@ -129,21 +129,18 @@ const NicknameForm = ({
           autoComplete="nickname"
           aria-label="닉네임"
           aria-invalid={errorMessage !== null}
-          className="h-13 min-w-0 flex-1 bg-transparent text-[16px] font-semibold text-foreground outline-none placeholder:text-muted-foreground"
+          className="h-13 min-w-0 flex-1 bg-transparent text-16 font-semibold text-foreground outline-none placeholder:text-muted-foreground"
           placeholder="이름을 입력해 주세요"
         />
         <span
-          className={`shrink-0 text-[13px] tabular-nums ${
+          className={`shrink-0 text-13 tabular-nums ${
             tooLong ? 'text-destructive' : 'text-muted-foreground'
           }`}
         >
           {length}/{NICKNAME_MAX_LENGTH}
         </span>
       </div>
-      <p
-        className="mt-2 min-h-5 px-1 text-[13px] text-destructive"
-        role="alert"
-      >
+      <p className="mt-2 min-h-5 px-1 text-13 text-destructive" role="alert">
         {errorMessage ??
           (saveFailed ? '저장하지 못했어요. 다시 시도해 주세요' : '')}
       </p>

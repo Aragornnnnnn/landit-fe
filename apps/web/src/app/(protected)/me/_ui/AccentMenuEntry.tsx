@@ -35,15 +35,12 @@ export const AccentMenuEntry = () => {
       <BottomSheet open={open} onClose={() => setOpen(false)}>
         <div className="flex max-h-[75dvh] flex-col">
           <BottomSheet.Title
-            className="text-[17px] font-bold"
+            className="text-17 font-bold"
             style={{ color: '#111' }}
           >
             어떤 영어로 배우고 싶으세요?
           </BottomSheet.Title>
-          <p
-            className="mt-1 mb-5 text-[14px] leading-6"
-            style={{ color: '#666' }}
-          >
+          <p className="mt-1 mb-5 text-14 leading-6" style={{ color: '#666' }}>
             추천 표현과 피드백이 달라져요
           </p>
           {/* 지금 값을 모르면 아무것도 안 골라진 채로 연다 — 기본값(미국 영어)으로 열면

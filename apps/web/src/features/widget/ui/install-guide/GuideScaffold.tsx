@@ -39,7 +39,7 @@ export const GuideScaffold = ({
       <button
         type="button"
         onClick={onLater}
-        className="mt-2 flex h-12 w-full items-center justify-center text-[15px] font-medium text-muted-foreground"
+        className="mt-2 flex h-12 w-full items-center justify-center text-15 font-medium text-muted-foreground"
       >
         나중에 하기
       </button>

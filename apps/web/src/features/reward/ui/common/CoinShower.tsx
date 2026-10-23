@@ -238,7 +238,7 @@ export const CoinShower = ({
         type="button"
         // 뜨는 순간 여기로 초점을 옮긴다 — 키보드와 화면 낭독기로도 바로 끝낼 수 있고, 뒤에 깔린 홈으로 초점이 새지 않는다
         autoFocus
-        className="absolute right-5 bottom-[max(var(--safe-area-inset-bottom),28px)] px-2 py-2 text-[14px] font-bold tracking-wide text-white/80"
+        className="absolute right-5 bottom-[max(var(--safe-area-inset-bottom),28px)] px-2 py-2 text-14 font-bold tracking-wide text-white/80"
       >
         {SKIP_LABEL}
       </button>

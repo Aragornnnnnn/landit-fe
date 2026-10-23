@@ -99,7 +99,7 @@ export const ExpressionIntroStep = ({
         {/* 긴 표현은 한 단계 줄여 줄바꿈을 최소화한다 */}
         <h1
           className={`min-w-0 flex-1 leading-tight font-extrabold text-foreground ${
-            targetExpressionText.length > 20 ? 'text-2xl' : 'text-[28px]'
+            targetExpressionText.length > 20 ? 'text-2xl' : 'text-28'
           }`}
         >
           <KaraokeSentence
@@ -143,7 +143,7 @@ export const ExpressionIntroStep = ({
           className="w-[72px] flex-none object-contain"
         />
         <div className="min-w-0 flex-1 rounded-2xl rounded-bl-sm border border-border bg-card px-4 py-3.5">
-          <p className="text-[15px] leading-relaxed font-medium text-foreground">
+          <p className="text-15 leading-relaxed font-medium text-foreground">
             {usageDescription}
           </p>
         </div>

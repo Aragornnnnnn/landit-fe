@@ -54,7 +54,7 @@ export const RewardRuleList = ({ dailyWon }: { dailyWon: number | null }) => (
     {rewardRulesOf(dailyWon).map(([emoji, text]) => (
       <li
         key={text}
-        className="flex items-start gap-2.5 text-[14px] leading-[22px] font-medium break-keep text-foreground"
+        className="flex items-start gap-2.5 text-14 leading-[calc(22/14)] font-medium break-keep text-foreground"
       >
         {/* 글자 한 줄(22px)의 가운데에 앉힌다 — 두 줄로 넘어가도 첫 줄에 붙어 있다 */}
         <Emoji className="mt-0.5 size-[18px] shrink-0">{emoji}</Emoji>
@@ -93,27 +93,25 @@ export const RewardGuide = ({
           priority
         />
       </div>
-      <p className="mt-2 text-[14px] font-bold text-primary">{eyebrow}</p>
+      <p className="mt-2 text-14 font-bold text-primary">{eyebrow}</p>
       <h2 className="mt-0.5 text-[36px] leading-tight font-black text-foreground">
         {amount}
       </h2>
-      <div className="mt-1.5 text-center text-[14px] font-medium text-muted-foreground">
+      <div className="mt-1.5 text-center text-14 font-medium text-muted-foreground">
         {caption}
       </div>
     </section>
 
     {!rulesInHeader && (
       <section className="mx-5 mt-4 rounded-[20px] border border-border bg-card px-4 py-4">
-        <h3 className="mb-3 text-[15px] font-black text-foreground">
-          환급 규칙
-        </h3>
+        <h3 className="mb-3 text-15 font-black text-foreground">환급 규칙</h3>
         <RewardRuleList dailyWon={dailyWon} />
       </section>
     )}
 
     {dailyWon !== null && (
       <>
-        <p className="mt-6 px-5 text-[13px] font-bold text-muted-foreground">
+        <p className="mt-6 px-5 text-13 font-bold text-muted-foreground">
           매일 이렇게 쌓여요
         </p>
         <div className="mt-3 px-5 opacity-60">

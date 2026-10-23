@@ -24,7 +24,7 @@ export const HistoryRow = ({
     <>
       <div className="min-w-0 flex-1">
         <p className="truncate text-base font-bold text-foreground">{title}</p>
-        <p className="mt-1.5 text-[13px] font-medium text-muted-foreground">
+        <p className="mt-1.5 text-13 font-medium text-muted-foreground">
           {meta}
         </p>
       </div>

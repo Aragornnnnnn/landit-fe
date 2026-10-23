@@ -25,7 +25,7 @@ export const SurveyHeader = ({
             }}
           />
         </div>
-        <span className="text-[13px] font-bold text-muted-foreground tabular-nums">
+        <span className="text-13 font-bold text-muted-foreground tabular-nums">
           {questionIndex + 1}/{questionCount}
         </span>
       </div>

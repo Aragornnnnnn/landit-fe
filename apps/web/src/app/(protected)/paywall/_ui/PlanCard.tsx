@@ -44,7 +44,7 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
           회색 배경은 항상 깔고 골드는 그 위에 이미지로만 얹는다 — 색 전환 중 배지가 비쳐 뒤의 테두리 선이 보이지 않게 */}
       {plan.badge && (
         <span
-          className={`absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-[#f0f0ee] px-3 py-[3px] text-[11px] leading-[1.3] font-bold whitespace-nowrap transition-colors ${
+          className={`absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-[#f0f0ee] px-3 py-[3px] text-11 leading-[1.3] font-bold whitespace-nowrap transition-colors ${
             selected
               ? 'text-[#4a2f00] shadow-[0_2px_6px_rgba(74,46,0,0.18)]'
               : 'text-muted-foreground'
@@ -56,23 +56,24 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
       )}
 
       <span
-        className={`text-[14px] leading-[1.2] font-bold transition-colors ${selected ? 'text-[#c4601f]' : 'text-foreground'}`}
+        className={`text-14 leading-[1.2] font-bold transition-colors ${selected ? 'text-[#c4601f]' : 'text-foreground'}`}
       >
         {plan.title}
       </span>
       {/* 비교 기준이 없는 카드는 그 줄을 비워 두 카드의 큰 숫자 높이를 맞춘다 — 빈칸에 취소선이 그어지지 않게 클래스도 뗀다 */}
       <span
-        className={`text-[12px] leading-[1.3] text-muted-foreground ${plan.listPrice ? 'line-through' : ''}`}
+        className={`text-12 leading-[1.3] text-muted-foreground ${plan.listPrice ? 'line-through' : ''}`}
       >
         {plan.listPrice
           ? `${plan.period} ${formatWon(plan.listPrice)}`
           : '\u00a0'}
       </span>
-      <span className="text-[22px] leading-[1.2] font-bold text-foreground">
+      {/* 가격은 글자 크기 배율을 받지 않는다 — 크게 단계에서 "14,900 / 원"으로 끊기지 않게 */}
+      <span className="text-22 leading-[1.2] font-bold whitespace-nowrap text-foreground [--font-scale:1]">
         {plan.period} {formatWon(plan.price)}
       </span>
       <span
-        className={`text-[11px] leading-[1.3] transition-colors ${selected ? 'text-[#c4601f]' : 'text-muted-foreground'}`}
+        className={`text-11 leading-[1.3] transition-colors ${selected ? 'text-[#c4601f]' : 'text-muted-foreground'}`}
       >
         {plan.subtitle}
       </span>

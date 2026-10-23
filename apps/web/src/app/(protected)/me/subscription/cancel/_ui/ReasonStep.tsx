@@ -34,7 +34,7 @@ export const ReasonStep = ({
     <div className="flex-1 overflow-y-auto px-5 pt-3 pb-4">
       <h1
         id={TITLE_ID}
-        className="text-[22px] leading-[1.35] font-bold text-foreground"
+        className="text-22 leading-[1.35] font-bold text-foreground"
       >
         해지하기 전에
         <br />
@@ -56,7 +56,7 @@ export const ReasonStep = ({
         ))}
         {draft.reason === 'other' && (
           <label className="mt-2 block">
-            <span className="mb-1.5 block text-[13px] font-semibold text-primary">
+            <span className="mb-1.5 block text-13 font-semibold text-primary">
               어떤 이유인지 적어주세요 (필수)
             </span>
             <textarea
@@ -66,7 +66,7 @@ export const ReasonStep = ({
               rows={3}
               // 기타를 고른 직후라 바로 쓸 수 있게 초점을 준다
               autoFocus
-              className="w-full resize-none rounded-2xl border border-primary bg-card px-4 py-3 text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none"
+              className="w-full resize-none rounded-2xl border border-primary bg-card px-4 py-3 text-14 text-foreground placeholder:text-muted-foreground focus:outline-none"
               placeholder="예: 발음 평가가 너무 엄격한 것 같아요"
             />
           </label>

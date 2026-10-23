@@ -47,18 +47,18 @@
 }
 
 .root h1 {
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
 }
 
 .root h2 {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
 }
 
 .root h3,
 .root h4,
 .root h5,
 .root h6 {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
 }
 
 .root ul,

@@ -91,7 +91,7 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
       />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-4">
-        <h1 className="mt-3 shrink-0 text-[22px] leading-snug font-bold whitespace-pre-line text-foreground">
+        <h1 className="mt-3 shrink-0 text-22 leading-snug font-bold whitespace-pre-line text-foreground">
           {question}
         </h1>
 
@@ -102,7 +102,7 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
           placeholder={placeholder}
           // 들어오자마자 쓸 수 있게 초점을 준다. 질문은 위에 고정돼 있어 키보드가 올라와도 안 가린다
           autoFocus
-          className="mt-6 h-[180px] w-full shrink-0 resize-none rounded-2xl border border-border bg-card p-4 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          className="mt-6 h-[180px] w-full shrink-0 resize-none rounded-2xl border border-border bg-card p-4 text-15 leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
         />
 
         <AttachmentThumbnails

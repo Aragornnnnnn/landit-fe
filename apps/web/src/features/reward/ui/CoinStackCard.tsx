@@ -62,11 +62,12 @@ export const CoinStackCard = ({
     <div
       className={`rounded-3xl bg-[linear-gradient(180deg,#fff1db,#fffaf3)] px-5 pt-6 pb-5 ${animated && tower ? 'animate-coin-thud' : ''}`}
     >
-      <div className="flex items-end justify-between">
+      {/* 동전 그래프는 그림이라 글자 크기 배율을 받지 않는다 — 크게 단계에서 "500 / 원"으로 끊기지 않게 */}
+      <div className="flex items-end justify-between [--font-scale:1]">
         {EARLY_DAYS.map((day) => (
           <div key={day} className="flex flex-col items-center gap-2">
             <CoinPile count={day} size={34} shown={step >= day} />
-            <p className="text-[13px] font-bold text-foreground tabular-nums">
+            <p className="text-13 font-bold text-foreground tabular-nums">
               {formatWon(offer.dailyWon * day)}
             </p>
             <p className="text-xs font-medium text-muted-foreground">{day}일</p>
@@ -82,7 +83,7 @@ export const CoinStackCard = ({
           <CoinPile count={6} size={56} shown={tower} heavy={animated} />
           {/* 다 모은 금액은 기둥이 설 때 커지며 주황으로 켜진다 — 그 전엔 흐린 자리만 지킨다 */}
           <p
-            className={`text-[17px] font-black tabular-nums transition-[scale,color] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${tower ? 'scale-100 text-primary delay-300' : 'scale-75 text-[#d6c7b4]'}`}
+            className={`text-17 font-black tabular-nums transition-[scale,color] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${tower ? 'scale-100 text-primary delay-300' : 'scale-75 text-[#d6c7b4]'}`}
           >
             {formatWon(offer.maximumWon)}
           </p>

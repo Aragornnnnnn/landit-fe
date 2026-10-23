@@ -175,7 +175,7 @@ export const ScenarioCard = ({
               <Link
                 href={scenarioSessionsPath(scenario.scenarioId, date)}
                 aria-label="대화 기록"
-                className="absolute top-[15px] right-3 flex h-[34px] items-center gap-0.5 rounded-full bg-white/90 pr-2.5 pl-3 text-[13px] font-semibold text-foreground shadow-sm backdrop-blur-sm active:opacity-70"
+                className="absolute top-[15px] right-3 flex h-[34px] items-center gap-0.5 rounded-full bg-white/90 pr-2.5 pl-3 text-13 font-semibold text-foreground shadow-sm backdrop-blur-sm active:opacity-70"
               >
                 기록
                 <ChevronRightIcon size={14} />
