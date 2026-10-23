@@ -59,6 +59,28 @@ describe('inviteRewardRowOf', () => {
   });
 });
 
+describe('inviteRewardRowOf · 금액', () => {
+  it('상한에 걸려 일부만 적립됐으면 실제로 더해진 금액을 적는다', () => {
+    expect(
+      inviteRewardRowOf(
+        reward({
+          amountWon: 3000,
+          creditedWon: 1000,
+          reason: 'INVITER_LIMIT_REACHED',
+        }),
+      ).amountLabel,
+    ).toBe('+1,000원');
+  });
+
+  it('아직 확인 중이면 정책으로 정해진 금액을 적는다', () => {
+    expect(
+      inviteRewardRowOf(
+        reward({ status: 'PENDING', amountWon: 1000, creditedWon: 0 }),
+      ).amountLabel,
+    ).toBe('+1,000원');
+  });
+});
+
 describe('shownInviteRewardsOf', () => {
   it('상한을 넘겨 0원으로 끝난 지급은 목록에서 뺀다 — 받지도 않은 1,000원이 찍히지 않게', () => {
     const rewards = [

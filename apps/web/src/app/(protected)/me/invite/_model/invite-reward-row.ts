@@ -36,7 +36,8 @@ export const inviteRewardRowOf = (reward: ReferralReward): InviteRewardRow => {
     id: reward.id,
     dateLabel: parts ? `${parts.month}.${parts.day}` : '',
     title: TITLE_BY_STAGE[reward.stage],
-    amountLabel: `+${formatWon(reward.amountWon)}`,
+    // 적립됐으면 실제로 더해진 금액 — 금액 상한에 걸리면 정책 금액보다 적게 들어온다. 아직이면 정책 금액을 흐리게
+    amountLabel: `+${formatWon(reward.status === 'CREDITED' ? reward.creditedWon : reward.amountWon)}`,
     statusLabel: STATUS_LABEL[reward.status],
     settled: reward.status === 'CREDITED',
     canceled: reward.status === 'REVERSED',

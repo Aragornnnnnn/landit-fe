@@ -106,38 +106,49 @@ export const InviteScreen = () => {
                   rewardsFailed={rewards.isError}
                   onRetryRewards={() => rewards.refetch()}
                 />
-                <Steps offer={offer} full={view.full} />
+                <Steps offer={offer} />
               </>
             )}
 
-            <div className="flex items-center gap-2 rounded-2xl border border-border bg-card py-3 pr-3 pl-4">
-              <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-medium text-muted-foreground">
-                  내 초대 코드
-                </p>
-                <p className="text-[22px] font-black tracking-wide text-foreground">
-                  {code ? displayCode(code) : '—'}
-                </p>
+            {/* 초대 보상이 꺼져 있으면 코드를 받은 친구도 등록에서 거절된다 — 보내게 두지 않고 쉬는 중이라고만 알린다 */}
+            {summary.data && !offer && (
+              <p className="rounded-2xl bg-secondary px-4 py-5 text-center text-[15px] font-bold break-keep text-muted-foreground">
+                지금은 친구 초대 이벤트를 하지 않아요
+              </p>
+            )}
+
+            {offer && (
+              <div className="flex items-center gap-2 rounded-2xl border border-border bg-card py-3 pr-3 pl-4">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-medium text-muted-foreground">
+                    내 초대 코드
+                  </p>
+                  <p className="text-[22px] font-black tracking-wide text-foreground">
+                    {code ? displayCode(code) : '—'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={!code}
+                  aria-label="초대 코드 복사"
+                  onClick={() => void copyCode()}
+                  className="rounded-full bg-secondary px-3.5 py-2 text-sm font-bold text-secondary-foreground active:opacity-80 disabled:opacity-45"
+                >
+                  복사
+                </button>
               </div>
-              <button
-                type="button"
-                disabled={!code}
-                aria-label="초대 코드 복사"
-                onClick={() => void copyCode()}
-                className="rounded-full bg-secondary px-3.5 py-2 text-sm font-bold text-secondary-foreground active:opacity-80 disabled:opacity-45"
-              >
-                복사
-              </button>
-            </div>
+            )}
           </div>
         )}
       </div>
 
-      <div className="px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),20px)]">
-        <Button disabled={!ready} onClick={() => void share()}>
-          {view?.shareLabel ?? '친구에게 초대 코드 보내기'}
-        </Button>
-      </div>
+      {(offer || summary.isPending) && (
+        <div className="px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),20px)]">
+          <Button disabled={!ready || !offer} onClick={() => void share()}>
+            {view?.shareLabel ?? '친구에게 초대 코드 보내기'}
+          </Button>
+        </div>
+      )}
 
       {offer && (
         <InfoSheet
@@ -205,9 +216,7 @@ const Progress = ({
   if (view.full)
     return (
       <div className="rounded-[20px] bg-invite px-5 py-5 text-center">
-        <p className="text-[13px] font-bold text-primary">
-          친구 {offer.limitCount}명 초대 완료
-        </p>
+        <p className="text-[13px] font-bold text-primary">{view.fullLabel}</p>
         <p className="mt-1 text-xl font-black text-foreground">
           <span className="text-primary">{formatWon(earnedWon)}</span>
           {view.fullAllEarned ? '이 모두 적립됐어요' : '이 적립됐어요'}
@@ -322,8 +331,8 @@ const RewardRows = ({ rewards }: { rewards: ReferralReward[] | undefined }) => {
 };
 
 // 받는 방법 — 단계마다 한 줄로만
-const Steps = ({ offer, full }: { offer: InviteOffer; full: boolean }) => {
-  const rewards = stepRewardsOf(offer, full);
+const Steps = ({ offer }: { offer: InviteOffer }) => {
+  const rewards = stepRewardsOf(offer);
   const steps = [
     '내 초대 코드 보내기',
     '친구가 코드 넣고 가입하면',

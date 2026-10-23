@@ -52,9 +52,10 @@ export interface ReferralSummary {
   invitedCount: number;
   convertedCount: number;
   registrationStatus: ReferralRegistrationStatus;
-  // 초대한 사람으로 실제 적립된 순액 — 환불은 빼고 검토 중 보존액은 포함
-  inviterCreditedWon: number;
-  inviterLimit: ReferralInviterLimit;
+  // 초대한 사람으로 실제 적립된 순액 — 환불은 빼고 검토 중 보존액은 포함.
+  // 아래 둘은 #310 이후 서버만 준다 — 이전 서버(develop)에 붙어도 깨지지 않게 없을 수 있다고 둔다
+  inviterCreditedWon?: number;
+  inviterLimit?: ReferralInviterLimit;
 }
 
 export const getReferralSummary = () =>

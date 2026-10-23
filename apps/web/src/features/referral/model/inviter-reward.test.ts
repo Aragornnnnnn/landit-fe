@@ -12,31 +12,41 @@ const stage = (over: Partial<ReferralStage> = {}): ReferralStage => ({
   ...over,
 });
 
-const purchaseOff: ReferralStage = {
+const off: ReferralStage = {
   enabled: false,
   target: 'NONE',
   inviterWon: 0,
   inviteeWon: 0,
 };
 
-const summary = (
-  signup: ReferralStage,
-  inviterLimit: ReferralInviterLimit,
-) => ({
+const limit = (
+  type: ReferralInviterLimit['type'],
+  value: number | null,
+  used: number | null,
+  remaining: number | null,
+): ReferralInviterLimit => ({ type, value, used, remaining });
+
+const summary = ({
+  signup = stage(),
+  purchase = off,
+  inviterLimit,
+  invitedCount = 0,
+}: {
+  signup?: ReferralStage;
+  purchase?: ReferralStage;
+  inviterLimit?: ReferralInviterLimit;
+  invitedCount?: number;
+}) => ({
   currentOffer: {
     code: null,
     policyVersion: 1,
     signup,
-    purchase: purchaseOff,
+    purchase,
     purchaseProductNames: [],
   },
+  invitedCount,
   inviterLimit,
 });
-
-const limit = (
-  type: ReferralInviterLimit['type'],
-  value: number | null,
-): ReferralInviterLimit => ({ type, value, used: null, remaining: null });
 
 describe('inviterWonOf', () => {
   it.each(['BOTH', 'INVITER'] as const)(
@@ -47,7 +57,7 @@ describe('inviterWonOf', () => {
   );
 
   it.each([
-    ['초대받은 사람만', stage({ target: 'INVITEE' })],
+    ['초대받은 사람만이면', stage({ target: 'INVITEE' })],
     ['단계가 꺼져 있으면', stage({ enabled: false })],
   ])('%s 0이다', (_, given) => {
     expect(inviterWonOf(given)).toBe(0);
@@ -55,32 +65,79 @@ describe('inviterWonOf', () => {
 });
 
 describe('inviteOfferOf', () => {
-  it('인원 상한이면 그 인원과, 인원 × 한 명당 금액을 최대 금액으로 준다', () => {
-    expect(inviteOfferOf(summary(stage(), limit('INVITE_COUNT', 10)))).toEqual({
+  it('인원 상한이면 인원 진행과, 인원 × 한 명당 금액을 최대 금액으로 준다', () => {
+    expect(
+      inviteOfferOf(
+        summary({
+          inviterLimit: limit('INVITE_COUNT', 10, 3, 7),
+          invitedCount: 3,
+        }),
+      ),
+    ).toEqual({
       inviterWon: 1000,
       inviteeWon: 3000,
-      limitCount: 10,
+      progress: { kind: 'count', used: 3, total: 10 },
       maxWon: 10000,
+      full: false,
     });
   });
 
-  it('금액 상한이면 그 금액을 최대로, 한 명당 금액으로 나눈 몫을 인원으로 준다', () => {
+  it('결제 단계에도 초대한 사람 몫이 있으면 최대 금액을 적지 않는다 — 결제 보상이 더해져 넘칠 수 있다', () => {
     expect(
-      inviteOfferOf(summary(stage(), limit('TOTAL_AMOUNT', 5500))),
-    ).toMatchObject({ limitCount: 5, maxWon: 5500 });
+      inviteOfferOf(
+        summary({
+          purchase: stage({ inviterWon: 5000 }),
+          inviterLimit: limit('INVITE_COUNT', 10, 0, 10),
+        }),
+      )?.maxWon,
+    ).toBeNull();
   });
 
-  it('무제한이면 인원·최대 금액을 비운다 — 진행 막대를 그리지 않는다', () => {
+  it('금액 상한이면 서버가 정한 지급액으로 진행을 그리고 그 금액을 최대로 준다', () => {
     expect(
-      inviteOfferOf(summary(stage(), limit('UNLIMITED', null))),
-    ).toMatchObject({ limitCount: null, maxWon: null });
+      inviteOfferOf(
+        summary({ inviterLimit: limit('TOTAL_AMOUNT', 10000, 4000, 6000) }),
+      ),
+    ).toMatchObject({
+      progress: { kind: 'amount', used: 4000, total: 10000 },
+      maxWon: 10000,
+      full: false,
+    });
+  });
+
+  it('다 찼는지는 서버가 준 남은 양으로 본다 — 금액 상한의 부분 지급까지 서버와 같게 판단한다', () => {
+    expect(
+      inviteOfferOf(
+        summary({ inviterLimit: limit('TOTAL_AMOUNT', 10000, 10000, 0) }),
+      )?.full,
+    ).toBe(true);
+  });
+
+  it('상한 값이 0이면 진행을 그리지 않는다 — 0으로 나누지 않게', () => {
+    expect(
+      inviteOfferOf(summary({ inviterLimit: limit('INVITE_COUNT', 0, 0, 0) })),
+    ).toMatchObject({ progress: null, maxWon: null });
+  });
+
+  it('무제한이면 진행·최대 금액이 없고 다 차지 않는다', () => {
+    expect(
+      inviteOfferOf(
+        summary({ inviterLimit: limit('UNLIMITED', null, null, null) }),
+      ),
+    ).toMatchObject({ progress: null, maxWon: null, full: false });
+  });
+
+  it('상한 필드가 없는 서버(develop)에서도 깨지지 않고 무제한으로 본다', () => {
+    expect(inviteOfferOf(summary({}))).toMatchObject({
+      progress: null,
+      maxWon: null,
+      full: false,
+    });
   });
 
   it('초대한 사람 몫이 없으면 null이다 — 초대 자리를 숨긴다', () => {
     expect(
-      inviteOfferOf(
-        summary(stage({ target: 'INVITEE' }), limit('INVITE_COUNT', 10)),
-      ),
+      inviteOfferOf(summary({ signup: stage({ target: 'INVITEE' }) })),
     ).toBeNull();
   });
 });

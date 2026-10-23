@@ -9,7 +9,8 @@ describe('inviteBannerLineOf', () => {
       inviteBannerLineOf({
         inviterWon: 1000,
         inviteeWon: 3000,
-        limitCount: 10,
+        progress: null,
+        full: false,
         maxWon: 10000,
       }),
     ).toBe('친구에게 3,000원 선물하고 나도 1,000원 적립');
@@ -20,7 +21,8 @@ describe('inviteBannerLineOf', () => {
       inviteBannerLineOf({
         inviterWon: 1000,
         inviteeWon: 0,
-        limitCount: 10,
+        progress: null,
+        full: false,
         maxWon: 10000,
       }),
     ).toBe('친구 초대하고 1,000원씩 적립');
