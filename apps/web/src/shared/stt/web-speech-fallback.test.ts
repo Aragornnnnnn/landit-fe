@@ -89,7 +89,7 @@ describe('startWebSpeech', () => {
     expect(recognition.continuous).toBe(true);
   });
 
-  it('확정 결과와 진행 중 결과를 이어붙여 onInterim으로 전달한다', () => {
+  it('진행 중 결과는 넘기지 않고 확정된 결과만 onInterim으로 전달한다', () => {
     const { recognition, onInterim } = startWithFake();
 
     recognition.onresult?.(
@@ -99,7 +99,7 @@ describe('startWebSpeech', () => {
       ]),
     );
 
-    expect(onInterim).toHaveBeenLastCalledWith('안녕하세요 저는');
+    expect(onInterim).toHaveBeenLastCalledWith('안녕하세요');
   });
 
   it('no-speech 에러는 실패가 아니라 정상 종료로 처리한다', () => {

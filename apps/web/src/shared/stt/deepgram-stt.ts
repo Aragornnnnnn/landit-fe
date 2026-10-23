@@ -1,7 +1,7 @@
 // Deepgram 실시간 STT 전송 계층 — getUserMedia 오디오를 WebSocket으로 보내고 트랜스크립트를 콜백으로 전달 (React 무관)
 
 export interface SttHandlers {
-  onInterim: (transcript: string) => void; // 발화 중 실시간 미리보기
+  onInterim: (transcript: string) => void; // 발화 중 확정된 구간까지의 누적 텍스트
   onFinal: (transcript: string) => void; // 턴 종료 시 한 번 — 침묵 또는 stop()
   onError: (error: Error) => void;
 }
@@ -159,13 +159,10 @@ export const startDeepgramStt = async (
 
     if (msg.type === 'Results' && msg.channel) {
       const text = msg.channel.alternatives[0]?.transcript ?? '';
-      if (text) {
-        if (msg.is_final) {
-          finalTranscript = `${finalTranscript} ${text}`.trim();
-          onInterim(finalTranscript);
-        } else {
-          onInterim(`${finalTranscript} ${text}`.trim());
-        }
+      // 확정 전 결과는 말하는 동안 계속 고쳐 써져 사용자가 잘못 들은 줄 알고 취소한다 — 확정된 구간만 넘긴다
+      if (text && msg.is_final) {
+        finalTranscript = `${finalTranscript} ${text}`.trim();
+        onInterim(finalTranscript);
       }
       // stop()의 Finalize 응답 — 남은 버퍼까지 반영된 시점이라 타임아웃 없이 즉시 종료
       if (msg.from_finalize) finishTurn();

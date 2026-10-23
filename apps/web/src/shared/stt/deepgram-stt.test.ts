@@ -175,7 +175,7 @@ describe('startDeepgramStt', () => {
     expect(ws.sent).toHaveLength(3);
   });
 
-  it('interim 결과가 오면 확정된 텍스트 뒤에 이어붙여 onInterim으로 전달한다', async () => {
+  it('확정 전 결과는 넘기지 않고 확정된 구간만 onInterim으로 전달한다', async () => {
     const { ws, onInterim } = await startWithFakes();
     ws.open();
 
@@ -190,7 +190,8 @@ describe('startDeepgramStt', () => {
       channel: { alternatives: [{ transcript: '저는' }] },
     });
 
-    expect(onInterim).toHaveBeenLastCalledWith('안녕하세요 저는');
+    expect(onInterim).toHaveBeenCalledTimes(1);
+    expect(onInterim).toHaveBeenLastCalledWith('안녕하세요');
   });
 
   it('UtteranceEnd가 오면 누적 텍스트로 onFinal을 정확히 한 번 호출하고 마이크를 끈다', async () => {
