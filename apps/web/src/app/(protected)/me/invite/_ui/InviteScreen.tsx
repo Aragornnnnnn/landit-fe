@@ -2,7 +2,7 @@
 
 // 친구 초대 이벤트 화면 — 둘이 쌓는 적립금, 초대로 쌓인 적립금과 상한 진행, 쌓는 방법, 내 코드(복사), 보내기 버튼.
 // 자세한 조건은 헤더 ⓘ 시트로 뺀다 — 화면에는 받는 이유와 방법만 둔다
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
@@ -368,6 +368,14 @@ const Won = ({ won }: { won: number }) => (
   <span className="text-primary">{formatWon(won)}</span>
 );
 
+// 안내 한 줄 — 점은 따로 두어 둘째 줄이 점 아래가 아니라 글자 첫머리에 맞춰 내려간다
+const InfoItem = ({ children }: { children: ReactNode }) => (
+  <li className="flex gap-1.5">
+    <span aria-hidden>·</span>
+    <span>{children}</span>
+  </li>
+);
+
 // 헤더 ⓘ — 돈이 어디로 가는지와 취소될 수 있는 경우만. 화면에서 이미 말한 건 되풀이하지 않는다
 const InfoSheet = ({
   open,
@@ -383,17 +391,18 @@ const InfoSheet = ({
       친구 초대 안내
     </BottomSheet.Title>
     <ul className="mt-3 flex flex-col gap-2 text-14 leading-[1.55] font-medium break-keep text-foreground/80">
-      <li>· 적립금은 100일 프리미엄 이용권의 환급 혜택에 더해져요</li>
-      <li>
-        · 친구 한 명당 {formatWon(offer.inviterWon)}씩
+      <InfoItem>적립금은 100일 프리미엄 이용권의 환급 혜택에 더해져요</InfoItem>
+      <InfoItem>
+        친구 한 명당 {formatWon(offer.inviterWon)}씩
         {offer.maxWon !== null && `, 최대 ${formatWon(offer.maxWon)}까지`}{' '}
         적립돼요
-      </li>
-      <li>· 부정 이용이 확인되면 적립이 취소될 수 있어요</li>
-      <li>
-        · 이벤트는 11월 20일에 끝나요. 사정에 따라 일찍 끝나거나 혜택이 바뀔 수
-        있지만, 바뀌기 전에 쌓인 적립금은 그대로예요
-      </li>
+      </InfoItem>
+      <InfoItem>부정 이용이 확인되면 적립이 취소될 수 있어요</InfoItem>
+      <InfoItem>초대 이벤트는 11월 20일에 끝나요</InfoItem>
+      <InfoItem>
+        사정에 따라 일찍 끝나거나 혜택이 바뀌어도, 그 전에 쌓인 적립금은
+        그대로예요
+      </InfoItem>
     </ul>
     <Button className="mt-6" onClick={onClose}>
       확인했어요
