@@ -32,6 +32,8 @@ export interface DeepgramSttOptions extends SttHandlers {
 
 const TOKEN_ENDPOINT = '/api/stt/token';
 const DEEPGRAM_WS_URL = 'wss://api.deepgram.com/v1/listen';
+// 완료 뒤 확정 응답을 기다리는 상한 — 넘기면 받은 데까지 제출한다
+const FINALIZE_TIMEOUT_MS = 2000;
 
 const pickMimeType = () => {
   if (MediaRecorder.isTypeSupported('audio/webm')) return 'audio/webm';
@@ -53,7 +55,7 @@ interface DeepgramMessage {
  * @param options 콜백(onInterim·onFinal·onError)과 언어·침묵 감지 설정
  * @returns 진행 중인 세션 — `stop()`은 마지막 발화를 마무리하고, `abort()`는 onFinal 없이 즉시 파기
  * @throws getUserMedia 거부·미지원, 토큰 발급 실패, WebSocket 생성 실패(동기) — 호출부(훅)가 폴백을 판단한다.
- *   연결 후(onerror·onclose) 실패는 던지지 않고 onError 콜백으로 전달된다
+ *   소켓을 만든 뒤의 실패(onerror·onclose)는 던지지 않고 onError로 전달된다 — 열리기 전이면 connect_failed, 열린 뒤면 closed
  */
 export const startDeepgramStt = async (
   options: DeepgramSttOptions,
@@ -172,8 +174,6 @@ export const startDeepgramStt = async (
   // 마지막 조각까지 보낸 뒤에만 확정을 요청한다 — 먼저 보내면 끝부분이 확정에서 빠진다
   const requestFinalize = () => {
     if (!recorderDone || socket.readyState !== WebSocket.OPEN) return;
-    for (const chunk of pendingChunks) socket.send(chunk);
-    pendingChunks.length = 0;
     socket.send(JSON.stringify({ type: 'Finalize' }));
   };
 
@@ -219,26 +219,25 @@ export const startDeepgramStt = async (
     onError(error);
   };
 
-  // 연결 성립 전 실패는 throw로 잡히므로, 여기 도달하면 세션 도중 에러
-  socket.onerror = () =>
+  // 소켓을 만든 뒤의 실패 — 열리기 전이면 연결 실패, 열린 뒤면 도중 끊김으로 나눈다
+  const failSocket = (closedMessage: string) =>
     fail(
       openedAt === null
         ? new SttError('STT 연결 실패', 'connect_failed')
-        : new SttError('STT 연결 오류', 'closed'),
+        : new SttError(closedMessage, 'closed'),
     );
-  socket.onclose = () =>
-    fail(
-      openedAt === null
-        ? new SttError('STT 연결 실패', 'connect_failed')
-        : new SttError('STT 연결이 끊겼습니다.', 'closed'),
-    );
+  socket.onerror = () => failSocket('STT 연결 오류');
+  socket.onclose = () => failSocket('STT 연결이 끊겼습니다.');
 
   return {
     stop: () => {
       if (finished || stoppedAt !== null) return;
       stoppedAt = Date.now();
       // Finalize 응답은 보장되지 않는다 — 안 오면 받은 데까지 제출하고 timeout으로 남긴다
-      finalizeTimer = setTimeout(() => finishTurn('timeout'), 2000);
+      finalizeTimer = setTimeout(
+        () => finishTurn('timeout'),
+        FINALIZE_TIMEOUT_MS,
+      );
       // 녹음기는 stop() 뒤 마지막 조각을 비동기로 내고 stop 이벤트를 쏜다 — 그다음에 확정을 요청한다
       const onRecorderStopped = () => {
         recorderDone = true;

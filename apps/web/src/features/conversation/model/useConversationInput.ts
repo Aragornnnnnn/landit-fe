@@ -84,10 +84,8 @@ export const useConversationInput = ({
 
   // 인식 오류 — 권한 거부는 설정 유도 안내를, 그 외에는 토스트로 알리고 마이크 대기로 되돌린다
   const recoverFromSttError = (error: Error, meta: SttErrorMeta) => {
-    // 좁히기(never) 전에 읽어둔다 — 계측 속성용 에러 이름
-    const errorName = error.name;
-    // 연결 실패·도중 끊김은 사유로, 그 밖의 오류는 에러 이름으로 남긴다
-    const failReason = error instanceof SttError ? error.reason : errorName;
+    // 좁히기(never) 전에 읽어둔다 — 계측 사유는 SttError면 그 사유(연결 실패·도중 끊김), 그 밖엔 에러 이름
+    const failReason = error instanceof SttError ? error.reason : error.name;
     if (isMicPermissionDeniedError(error)) {
       setMicPermissionDenied(true);
       if (!micDeniedTrackedRef.current) {
