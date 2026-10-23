@@ -9,6 +9,7 @@ import { requestNotificationPermission } from '@/features/notification/model/req
 import { useNotificationPermission } from '@/features/notification/model/useNotificationPermission';
 // 초대 코드 단계를 넣을지는 referral feature의 등록 상태가 정한다
 import { inviteeWonOf } from '@/features/referral/model/invitee-reward';
+import { canEnterReferralStep } from '@/features/referral/model/referral-entry';
 import { useReferralSummaryQuery } from '@/features/referral/model/useReferralSummaryQuery';
 // 위젯 설치 유도의 노출 조건·기록은 widget feature가 정본이라 온보딩 위젯 스텝이 가로 import한다
 import {
@@ -46,9 +47,9 @@ export const OnboardingFlow = () => {
   const saveAccent = useSaveAccentMutation();
   // 물어볼 수 있는 상태(undetermined)에만 알림 스텝을 넣는다 — 이미 확정(granted·denied)이거나 요청 수단이 없으면(unavailable) 5스텝
   const canAskNotification = useNotificationPermission() === 'undetermined';
-  // 서버가 코드를 받을 수 있다고 한 신규 가입자만 초대 코드 단계를 본다 — 조회가 실패하거나 늦으면 단계 없이 지나간다
+  // 서버가 코드를 받을 수 있다고 한 신규 가입자이고 보상이 켜져 있을 때만 초대 코드 단계를 본다 — 조회가 실패하거나 늦으면 단계 없이 지나간다
   const referral = useReferralSummaryQuery().data;
-  const canEnterReferral = referral?.registrationStatus === 'PENDING';
+  const canEnterReferral = canEnterReferralStep(referral);
 
   // 위젯 스텝을 넣을지 마운트 때 한 번 고정한다 — 진입 시 recordInstallInvited로 조건이 바뀌어도 목록이 흔들리지 않게
   const [showWidgetStep] = useState(
