@@ -49,6 +49,7 @@ afterEach(() => cleanup());
 describe('AppUpdateGate', () => {
   it('강제 업데이트면 나중에 할래요 없이 모달만 보여준다', () => {
     useAppUpdateCheckMock.mockReturnValue({
+      checking: false,
       updateType: 'FORCE',
       reason: '보안 패치가 필요해요',
     });
@@ -62,6 +63,7 @@ describe('AppUpdateGate', () => {
 
   it('강제 업데이트인데 사유가 없으면 기본 문구를 보여준다', () => {
     useAppUpdateCheckMock.mockReturnValue({
+      checking: false,
       updateType: 'FORCE',
       reason: null,
     });
@@ -75,6 +77,7 @@ describe('AppUpdateGate', () => {
 
   it('강제 업데이트인데 사유가 빈 문자열이면 기본 문구를 보여준다', () => {
     useAppUpdateCheckMock.mockReturnValue({
+      checking: false,
       updateType: 'FORCE',
       reason: '   ',
     });
@@ -88,6 +91,7 @@ describe('AppUpdateGate', () => {
 
   it('소프트 업데이트면 나중에 할래요 버튼이 있는 시트를 보여준다', () => {
     useAppUpdateCheckMock.mockReturnValue({
+      checking: false,
       updateType: 'SOFT',
       reason: '알림 기능이 추가됐어요',
     });
@@ -99,6 +103,7 @@ describe('AppUpdateGate', () => {
 
   it('소프트 업데이트에서 나중에 할래요를 누르면 사라진다', () => {
     useAppUpdateCheckMock.mockReturnValue({
+      checking: false,
       updateType: 'SOFT',
       reason: '알림 기능이 추가됐어요',
     });
@@ -110,7 +115,11 @@ describe('AppUpdateGate', () => {
   });
 
   it('소프트 업데이트인데 사유가 없으면 기본 문구를 보여준다', () => {
-    useAppUpdateCheckMock.mockReturnValue({ updateType: 'SOFT', reason: null });
+    useAppUpdateCheckMock.mockReturnValue({
+      checking: false,
+      updateType: 'SOFT',
+      reason: null,
+    });
 
     render(<AppUpdateGate />);
 
@@ -118,7 +127,11 @@ describe('AppUpdateGate', () => {
   });
 
   it('소프트 업데이트인데 사유가 빈 문자열이면 기본 문구를 보여준다', () => {
-    useAppUpdateCheckMock.mockReturnValue({ updateType: 'SOFT', reason: '' });
+    useAppUpdateCheckMock.mockReturnValue({
+      checking: false,
+      updateType: 'SOFT',
+      reason: '',
+    });
 
     render(<AppUpdateGate />);
 
@@ -126,7 +139,11 @@ describe('AppUpdateGate', () => {
   });
 
   it('업데이트가 필요 없으면 아무것도 보여주지 않는다', () => {
-    useAppUpdateCheckMock.mockReturnValue({ updateType: 'NONE', reason: null });
+    useAppUpdateCheckMock.mockReturnValue({
+      checking: false,
+      updateType: 'NONE',
+      reason: null,
+    });
 
     render(<AppUpdateGate />);
 

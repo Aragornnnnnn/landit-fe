@@ -8,10 +8,12 @@ import { useAppUpdateQuery } from './useAppUpdateQuery';
 export const useAppUpdateCheck = (): {
   updateType: AppUpdateType;
   reason: string | null;
+  /** 정책을 아직 묻는 중이다 — 그동안은 NONE으로 보이지만 FORCE로 바뀔 수 있다 */
+  checking: boolean;
 } => {
   const request = resolveAppUpdateRequest(getSurface(), getNativeContext());
-  const { data } = useAppUpdateQuery(request);
+  const { data, checking } = useAppUpdateQuery(request);
 
-  if (!data) return { updateType: 'NONE', reason: null };
-  return { updateType: data.updateType, reason: data.reason };
+  if (!data) return { updateType: 'NONE', reason: null, checking };
+  return { updateType: data.updateType, reason: data.reason, checking };
 };

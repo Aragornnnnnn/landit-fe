@@ -66,8 +66,10 @@ function ScenarioContent() {
   // 공지가 뜰지 아직 모르거나, 떠서 아직 안 닫혔다
   const eventPopupPending =
     eventPopupLoading || (eventPopup !== null && !eventPopupClosed);
-  const forceUpdate = useAppUpdateCheck().updateType === 'FORCE';
-  const eventPopupReady = !forceUpdate && !promoOpen && !showerHold;
+  // 업데이트 정책을 묻는 동안엔 NONE으로 보이다 FORCE로 바뀔 수 있다 — 답이 정해진 뒤에 띄운다
+  const appUpdate = useAppUpdateCheck();
+  const updateFirst = appUpdate.checking || appUpdate.updateType === 'FORCE';
+  const eventPopupReady = !updateFirst && !promoOpen && !showerHold;
   // 대화 시작을 눌렀다 — 바로 이동하지 않고 브리핑 카드를 잠깐 보여준 뒤 대화로 들어간다
   const [briefingScenario, setBriefingScenario] = useState<Scenario | null>(
     null,
