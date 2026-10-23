@@ -242,7 +242,7 @@ const CodeEntry = ({
           <button
             type="button"
             onClick={() => setAskingSkip(true)}
-            className="mx-auto mt-6 block text-[15px] font-medium text-muted-foreground underline underline-offset-4"
+            className="mx-auto mt-6 block text-15 font-medium text-muted-foreground underline underline-offset-4"
           >
             초대 코드가 없어요
           </button>
@@ -331,7 +331,7 @@ const StatusLines = ({ status }: { status: Status }) => {
         확인됐어요
       </p>
       {status.notice && (
-        <p className="mt-1 text-[13px] font-bold text-destructive">
+        <p className="mt-1 text-13 font-bold text-destructive">
           {status.notice}
         </p>
       )}
@@ -342,7 +342,7 @@ const StatusLines = ({ status }: { status: Status }) => {
 // 친구가 보낸 메시지에서 코드가 어떻게 생겼는지 — 공유 문구의 「초대 코드:」 줄과 같은 모양이다
 const CodeSample = () => (
   <div className="rounded-2xl bg-secondary px-4 py-3.5">
-    <p className="text-[13px] font-medium text-muted-foreground">
+    <p className="text-13 font-medium text-muted-foreground">
       이렇게 생긴 8자리 코드예요
     </p>
     <p className="mt-1 text-base font-bold text-foreground">

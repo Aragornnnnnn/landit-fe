@@ -114,7 +114,7 @@ const CodeCell = ({
     )}
     <span
       aria-hidden
-      className={`flex h-[50px] w-9 items-center justify-center rounded-[10px] bg-card text-[22px] font-bold ${borderOf(current)}`}
+      className={`flex h-[50px] w-9 items-center justify-center rounded-[10px] bg-card text-22 font-bold ${borderOf(current)}`}
     >
       <span
         className={charClassOf(tone)}
