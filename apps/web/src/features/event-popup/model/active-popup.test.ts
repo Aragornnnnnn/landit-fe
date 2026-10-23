@@ -51,6 +51,7 @@ describe('popupLinkTarget', () => {
   it.each([
     ['링크가 없으면', null],
     ['//로 시작하는 다른 사이트 주소면', '//evil.example'],
+    ['/\\로 시작해 다른 사이트로 풀리는 주소면', '/\\evil.example'],
     ['허용하지 않는 형식이면', 'javascript:alert(1)'],
   ])('%s 누를 곳을 만들지 않는다', (_, linkUrl) => {
     expect(popupLinkTarget(linkUrl)).toBeNull();

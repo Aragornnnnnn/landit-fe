@@ -36,8 +36,8 @@ export const popupLinkTarget = (
   linkUrl: string | null,
 ): PopupLinkTarget | null => {
   if (!linkUrl) return null;
-  if (linkUrl.startsWith('/') && !linkUrl.startsWith('//'))
-    return { kind: 'app', path: linkUrl };
+  // `//`와 `/\`는 브라우저가 다른 사이트 주소로 푼다 — 딥링크 검증과 같은 기준으로 거른다
+  if (/^\/(?![/\\])/.test(linkUrl)) return { kind: 'app', path: linkUrl };
   if (linkUrl.startsWith('https://')) return { kind: 'external', url: linkUrl };
   return null;
 };
