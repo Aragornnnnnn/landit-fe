@@ -22,7 +22,7 @@
       }
     },
     "ios": {
-      "buildNumber": "20",
+      "buildNumber": "23",
       "bundleIdentifier": "com.saynow.app",
       "usesAppleSignIn": true,
       "infoPlist": {
@@ -64,7 +64,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.saynow.app",
-      "versionCode": 36,
+      "versionCode": 38,
       "intentFilters": [
         {
           "action": "VIEW",
