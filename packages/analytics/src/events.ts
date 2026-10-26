@@ -65,6 +65,8 @@ export const EVENTS = {
   RECORDING_STARTED: 'Recording Started',
   RECORDING_STOPPED: 'Recording Stopped',
   RECORDING_CANCELED: 'Recording Canceled',
+  // 말한 뒤 확인 단계의 마무리 — 그대로·고쳐서 보냈는지, 다시 말했는지. 잘못 알아들은 빈도를 본다
+  TRANSCRIPT_REVIEWED: 'Transcript Reviewed',
   MIC_SETTINGS_OPENED: 'Mic Settings Opened',
   INPUT_MODE_SWITCHED: 'Input Mode Switched',
   SCENARIO_TALK_TURN_COMPLETED: 'Scenario Talk Turn Completed',
@@ -563,6 +565,13 @@ export type EventProps = {
   // ■(답변 완료) 탭 순간 — 이후 인식·제출 결과는 각 대화의 Turn Completed / Turn Failed로 이어진다
   'Recording Stopped': { session_id?: number; turn_index: number };
   'Recording Canceled': { session_id?: number; turn_index: number };
+  // 인식된 문장을 확인하고 마무리한 순간 — retry는 다시 말하기, edited는 고쳐서 보냈는가(retry면 false)
+  'Transcript Reviewed': {
+    session_id?: number;
+    turn_index: number;
+    action: 'send' | 'retry';
+    edited: boolean;
+  };
   'Mic Settings Opened': undefined;
   'Input Mode Switched': { session_id?: number; mode: TurnInputType };
   'Scenario Talk Turn Completed': {
