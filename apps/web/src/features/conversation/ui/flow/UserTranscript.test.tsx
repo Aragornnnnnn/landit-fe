@@ -249,4 +249,81 @@ describe('UserTranscript', () => {
       expect(onSubmit).toHaveBeenCalled();
     });
   });
+
+  describe('말한 뒤 확인', () => {
+    it('확인 중이면 문장 끝에 커서를 띄워 입력된 글처럼 보인다', () => {
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText('|')).toBeInTheDocument();
+    });
+
+    it('확인 중이면 눌러서 고칠 수 있다고 알려 준다', () => {
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText('눌러서 고치기')).toBeInTheDocument();
+    });
+
+    it('확인 중이 아니면 커서가 없다', () => {
+      render(
+        <UserTranscript text="I went to the bitch." phase="USER_SPEAKING" />,
+      );
+
+      expect(screen.queryByText('|')).not.toBeInTheDocument();
+    });
+
+    it('글자를 눌러도 칸 전체가 버튼이라 바로 고치기로 간다', () => {
+      const onEdit = vi.fn();
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={onEdit}
+        />,
+      );
+
+      fireEvent.click(screen.getByText('I went to the bitch.'));
+
+      expect(onEdit).toHaveBeenCalledTimes(1);
+    });
+
+    it('확인 중엔 머리 자리의 다른 칩(답변 예시)을 내린다', () => {
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={vi.fn()}
+          headerAction={<button>예시 볼래요</button>}
+        />,
+      );
+
+      expect(
+        screen.queryByRole('button', { name: '예시 볼래요' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('확인 중이면 말하는 중이어도 듣는 중 점을 띄우지 않는다', () => {
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          speechPending
+          onEdit={vi.fn()}
+        />,
+      );
+
+      expect(listeningDots()).not.toBeInTheDocument();
+    });
+  });
 });
