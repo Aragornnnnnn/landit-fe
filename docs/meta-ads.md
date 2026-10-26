@@ -96,5 +96,5 @@ RevenueCat 대시보드 → Integrations → Meta Ads에서 아래처럼 넣고 
 
 1. 셸 코드가 들어간 앱이 배포되어 있어야 한다.
 2. RevenueCat 메타 연동의 운영 칸을 운영 메타로 바꾼다. 메타가 App Events API를 더는 관리하지 않으므로 운영은 Conversions API(운영 데이터 세트 ID와 토큰)를 권장한다. Conversions API로 바꾸면 샌드박스 칸도 데이터 세트 ID를 받으므로, 테스트 결제를 운영 데이터와 분리하려면 테스트용 데이터 세트가 따로 필요하다.
-3. 같은 날 메타 SDK의 결제 자동 로깅을 끈다.
+3. 같은 날 메타 SDK의 결제 자동 로깅을 끈다. iOS 결제 시작도 이 자동 기록이 남기던 것이라, 셸 `logCheckoutStarted`의 안드로이드 제한을 같이 풀어야 iOS 결제 시작이 끊기지 않는다.
 4. 하루 안에 운영 이벤트 관리자에 RevenueCat 통합으로 이벤트가 들어오는지 본다.
