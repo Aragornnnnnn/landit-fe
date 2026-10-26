@@ -205,8 +205,8 @@ export const useSmallTalkFlow = ({
     // 말한 뒤 확인하며 머무는 시간은 말한 시간이 아니다 — 마이크가 켜져 있는 동안만 깎는다
     speaking: engine.phase === 'USER_SPEAKING' && !engine.input.reviewing,
     waiting: engine.phase === 'USER_READY',
-    attempt: engine.input.listenCount,
-    answeredMs: engine.input.reviewedDurationMs,
+    listenCount: engine.input.listenCount,
+    reviewedDurationMs: engine.input.reviewedDurationMs,
   });
 
   // 대화가 완료됐다 — 작별 인사·시간 소진·종료 버튼 어느 길이든 같은 후속을 한다
