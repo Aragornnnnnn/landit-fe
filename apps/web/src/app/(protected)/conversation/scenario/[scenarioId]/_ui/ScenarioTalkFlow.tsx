@@ -6,7 +6,6 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
-import { useDocumentScrollPin } from '@/features/conversation/lib/useDocumentScrollPin';
 import { toCharacterLook } from '@/features/conversation/model/character-look';
 import { userIntroHoldMs } from '@/features/conversation/model/pacing';
 import type { FloatingThought } from '@/features/conversation/model/thought';
@@ -21,6 +20,7 @@ import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
 import { scenarioFeedbackPath, scenarioReturnPath } from '@/shared/lib/routes';
+import { useDocumentScrollPin } from '@/shared/lib/useDocumentScrollPin';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';

@@ -7,7 +7,6 @@ import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
-import { useDocumentScrollPin } from '@/features/conversation/lib/useDocumentScrollPin';
 import {
   toCharacterLook,
   type Partner,
@@ -26,6 +25,7 @@ import { toCountdownLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSpeakingLimit } from '@/features/small-talk/model/useSpeakingLimit';
 import { track } from '@/shared/analytics';
 import { SMALLTALK_PATH, smallTalkSummaryPath } from '@/shared/lib/routes';
+import { useDocumentScrollPin } from '@/shared/lib/useDocumentScrollPin';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
