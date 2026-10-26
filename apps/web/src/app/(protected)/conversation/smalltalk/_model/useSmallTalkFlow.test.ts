@@ -235,6 +235,18 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
     expect(result.current.speakingRatio).toBe(0);
   });
 
+  it('말한 뒤 확인하는 동안에는 깎이지 않는다', () => {
+    // 서버는 말한 시간만 깎는다 — 확인하며 머문 시간까지 깎으면 화면만 시간이 빨리 줄어든다
+    const { result } = renderFlow(20_000);
+
+    speakFor(result, 5);
+    act(() => result.current.input.finishListening());
+    act(() => sttMock.callbacks.onFinal?.('Hello there.'));
+    act(() => vi.advanceTimersByTime(4000));
+
+    expect(result.current.remainingMs).toBe(15_000);
+  });
+
   it('말하다 취소하면 말하기 전 값으로 되돌아온다', () => {
     // 보낸 말이 없으면 서버도 안 깎는다 — 화면만 깎인 채로 두면 다음 제출에서 시간이 되살아난다
     const { result } = renderFlow(20_000);
