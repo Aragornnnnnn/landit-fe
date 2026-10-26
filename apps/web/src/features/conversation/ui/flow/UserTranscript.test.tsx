@@ -141,7 +141,7 @@ describe('UserTranscript', () => {
       );
       return { input: screen.getByRole('textbox'), onChange, onSubmit };
     };
-    const englishNotice = () => screen.queryByText('영어로만 입력해 주세요');
+    const englishNotice = () => screen.queryByText('영어로만 입력할 수 있어요');
 
     it('한글을 치면 빼고 넘기고 영어로 입력하라고 토스트로 안내한다', () => {
       const { input, onChange } = renderEditing();
@@ -200,7 +200,7 @@ describe('UserTranscript', () => {
 
       fireEvent.change(input, { target: { value: 'ㅏ' } });
 
-      expect(screen.getAllByText('영어로만 입력해 주세요')).toHaveLength(1);
+      expect(screen.getAllByText('영어로만 입력할 수 있어요')).toHaveLength(1);
     });
 
     it('한글 조합 중에는 거르지 않고 그대로 넘긴다', () => {
@@ -241,6 +241,29 @@ describe('UserTranscript', () => {
       fireEvent.keyDown(input, { key: 'Enter', isComposing: true });
 
       expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('조합 끝 신호 없이 입력창을 떠나면 남은 한글을 거르고 안내한다', () => {
+      // 거르지 않고 두면 한글이 화면에 남고, 전송을 눌러도 조용히 무시된다
+      const { input, onChange } = renderEditing();
+      fireEvent.compositionStart(input);
+      fireEvent.change(input, { target: { value: 'hi 안' } });
+
+      fireEvent.blur(input);
+
+      expect(onChange).toHaveBeenLastCalledWith('hi ');
+      expect(englishNotice()).toBeInTheDocument();
+    });
+
+    it('분해형 악센트를 합치기만 했으면 안내하지 않는다', () => {
+      // 지운 글자가 없는데 경고가 뜨면 영어만 친 사람이 혼난 꼴이 된다
+      const { input, onChange } = renderEditing();
+
+      fireEvent.change(input, { target: { value: 'cafe\u0301' } });
+
+      expect(onChange).toHaveBeenLastCalledWith('caf\u00e9');
+      expect(englishNotice()).not.toBeInTheDocument();
+      expect(hapticMock).not.toHaveBeenCalled();
     });
 
     it('조합을 확정하는 Enter(키 코드 229)로는 전송하지 않는다', () => {

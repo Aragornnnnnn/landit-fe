@@ -208,7 +208,7 @@ const TranscriptEditor = ({
     setShaking(true);
     haptic('error');
     // 이어 치는 동안 계속 띄워도 토스트는 그대로 떠 있고 시간만 늘어난다
-    showToast('영어로만 입력해 주세요');
+    showToast('영어로만 입력할 수 있어요');
   };
 
   // 걸러 낸 뒤 넘긴다. 지운 만큼 커서를 당겨 쓰던 자리에 둔다
@@ -216,8 +216,11 @@ const TranscriptEditor = ({
     const { value, selectionStart } = input;
     const english = removeNonEnglish(value);
     onChange?.(english);
-    if (english === value) return;
+    // 분해형 악센트를 합치기만 한 것은 지운 게 아니다 — 합친 원문과 비교한다
+    if (english === value.normalize('NFC')) return;
     warnNonEnglish();
+    // 입력창을 떠난 뒤 거른 경우엔 커서를 건드리지 않는다
+    if (document.activeElement !== input) return;
     const caret = removeNonEnglish(value.slice(0, selectionStart)).length;
     requestAnimationFrame(() => input.setSelectionRange(caret, caret));
   };
@@ -252,9 +255,11 @@ const TranscriptEditor = ({
           composingRef.current = false;
           acceptTyping(event.currentTarget);
         }}
-        // 조합 끝 신호를 빠뜨리는 키보드가 있다 — 입력창을 떠나면 조합도 끝난 것으로 본다
-        onBlur={() => {
+        // 조합 끝 신호를 빠뜨리는 키보드가 있다 — 입력창을 떠나면 조합도 끝난 것으로 보고 남은 글자를 거른다
+        onBlur={(event) => {
+          if (!composingRef.current) return;
           composingRef.current = false;
+          acceptTyping(event.currentTarget);
         }}
         onChange={(event) => {
           if (composingRef.current) onChange?.(event.target.value);
