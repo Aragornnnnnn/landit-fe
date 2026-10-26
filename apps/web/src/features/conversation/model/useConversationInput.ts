@@ -51,7 +51,10 @@ export const useConversationInput = ({
   const [reviewed, setReviewed] = useState<{
     original: string;
     utteranceDurationMs: number;
+    reviewedAt: number; // 확인 화면에 올라온 시각 — 머문 시간 계측용
   } | null>(null);
+  // 이번 확인에서 고치기 입력창을 한 번이라도 열었는가 — 열었다 닫고 그대로 보낸 경우도 센다
+  const editOpenedRef = useRef(false);
   const reviewing = reviewed != null;
   // 다시 말하기 직전의 확인 — 다시 말하다 취소하거나 인식에 실패하면 이 답으로 돌아간다
   const retryFromRef = useRef<typeof reviewed>(null);
@@ -108,7 +111,12 @@ export const useConversationInput = ({
     // 보내기 전에 한 번 보여 준다 — 발음 때문에 잘못 알아들은 문장이 그대로 가지 않게
     setTranscript(content);
     setSpeechPending(false);
-    setReviewed({ original: content, utteranceDurationMs });
+    editOpenedRef.current = false;
+    setReviewed({
+      original: content,
+      utteranceDurationMs,
+      reviewedAt: Date.now(),
+    });
   };
 
   // 인식 오류 — 권한 거부는 설정 유도 안내를, 그 외에는 토스트로 알리고 마이크 대기로 되돌린다
@@ -159,14 +167,20 @@ export const useConversationInput = ({
     retryFromRef.current = null;
   };
 
-  // 확인 단계의 마무리를 남긴다 — 다시 말하기와 고친 비율로 잘못 알아들은 빈도를 본다
-  const trackReview = (action: 'send' | 'retry', edited: boolean) => {
+  // 확인 단계의 마무리를 남긴다 — 다시 말하기와 고친 비율로 잘못 알아들은 빈도를, 머문 시간과 나간 비율로 늘어난 단계의 부담을 본다
+  const trackReview = (
+    action: 'send' | 'retry' | 'leave',
+    edited: boolean,
+    reviewedAt: number,
+  ) => {
     const { sessionId, turnIndex } = trackContext();
     track(EVENTS.TRANSCRIPT_REVIEWED, {
       session_id: sessionId ?? undefined,
       turn_index: turnIndex,
       action,
       edited,
+      edit_opened: editOpenedRef.current,
+      review_ms: Date.now() - reviewedAt,
     });
   };
 
@@ -197,8 +211,8 @@ export const useConversationInput = ({
 
   // 확인 단계에서 다시 말하기 — 인식된 문장을 버리고 말하는 중 그대로 마이크를 다시 켠다
   const speakAgain = () => {
-    if (!reviewing) return;
-    trackReview('retry', false);
+    if (!reviewed) return;
+    trackReview('retry', false, reviewed.reviewedAt);
     const previous = reviewed;
     resetToVoiceInput();
     retryFromRef.current = previous;
@@ -208,6 +222,7 @@ export const useConversationInput = ({
   // 확인 단계에서 고치기 — 인식된 문장이 채워진 입력창을 연다(키보드 입력과 같은 화면)
   const editTranscript = () => {
     if (!reviewing) return;
+    editOpenedRef.current = true;
     // 인식기가 드물게 적는 허용 밖 글자는 입력창을 열기 전에 걸러 둔다 — 키보드로 고쳐 쓰는 규칙과 같다
     setTranscript((prev) => removeNonEnglish(prev));
     setKeyboardMode(true);
@@ -219,7 +234,7 @@ export const useConversationInput = ({
     // 고쳐 쓴 입력창이 조합을 끝내기 전에 보낼 수 있다 — 키보드 전송과 같은 거름망을 거친다
     const content = removeNonEnglish(transcript).trim();
     if (!content) return;
-    trackReview('send', content !== reviewed.original);
+    trackReview('send', content !== reviewed.original, reviewed.reviewedAt);
     onContent(content, 'VOICE', reviewed.utteranceDurationMs);
   };
 
@@ -241,8 +256,10 @@ export const useConversationInput = ({
 
   const cancelInput = () => {
     const { sessionId, turnIndex } = trackContext();
-    // 확인 중엔 마이크가 이미 꺼져 있다 — 끌 것도, 전환할 것도 없이 대기로 되돌린다
-    if (reviewing) {
+    // 확인 중엔 마이크가 이미 꺼져 있다 — 끌 것도, 전환할 것도 없이 대기로 되돌린다.
+    // 확인 중 취소는 대화를 나갈 때뿐이라 나갔다고 남긴다
+    if (reviewed) {
+      trackReview('leave', false, reviewed.reviewedAt);
       resetToVoiceInput();
       onInputCancel();
       return;

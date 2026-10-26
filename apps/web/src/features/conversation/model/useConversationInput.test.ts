@@ -610,6 +610,8 @@ describe('useConversationInput', () => {
           turn_index: 0,
           action,
           edited,
+          edit_opened: edit,
+          review_ms: expect.any(Number),
         });
       },
     );
@@ -624,7 +626,47 @@ describe('useConversationInput', () => {
         turn_index: 0,
         action: 'retry',
         edited: false,
+        edit_opened: false,
+        review_ms: expect.any(Number),
       });
+    });
+
+    it('확인 화면에 머문 시간을 함께 남긴다 — 단계가 늘어 늦어지는지 본다', () => {
+      vi.useFakeTimers();
+      const { result } = renderReviewing();
+
+      act(() => vi.advanceTimersByTime(2500));
+      act(() => result.current.submitReviewed());
+
+      expect(trackMock).toHaveBeenCalledWith(
+        'Transcript Reviewed',
+        expect.objectContaining({ review_ms: 2500 }),
+      );
+      vi.useRealTimers();
+    });
+
+    it('고치기를 열었다가 닫고 그대로 보내도 열어 봤다는 걸 남긴다', () => {
+      const { result } = renderReviewing();
+
+      act(() => result.current.editTranscript());
+      act(() => result.current.closeTyping());
+      act(() => result.current.submitReviewed());
+
+      expect(trackMock).toHaveBeenCalledWith(
+        'Transcript Reviewed',
+        expect.objectContaining({ edited: false, edit_opened: true }),
+      );
+    });
+
+    it('확인 화면에서 대화를 나가면 나갔다고 남긴다 — 늘어난 단계에서 이탈하는지 본다', () => {
+      const { result } = renderReviewing();
+
+      act(() => result.current.cancelInput());
+
+      expect(trackMock).toHaveBeenCalledWith(
+        'Transcript Reviewed',
+        expect.objectContaining({ action: 'leave', edited: false }),
+      );
     });
 
     it('확인 중에 입력을 취소하면(대화 나가기) 마이크를 건드리지 않고 대기로 되돌린다', () => {

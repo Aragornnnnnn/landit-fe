@@ -565,12 +565,15 @@ export type EventProps = {
   // ■(답변 완료) 탭 순간 — 이후 인식·제출 결과는 각 대화의 Turn Completed / Turn Failed로 이어진다
   'Recording Stopped': { session_id?: number; turn_index: number };
   'Recording Canceled': { session_id?: number; turn_index: number };
-  // 인식된 문장을 확인하고 마무리한 순간 — retry는 다시 말하기, edited는 고쳐서 보냈는가(retry면 false)
+  // 인식된 문장을 확인하고 마무리한 순간 — retry는 다시 말하기, leave는 확인 화면에서 대화를 나감.
+  // edited는 고쳐서 보냈는가(send가 아니면 false), edit_opened는 고치기를 한 번이라도 열었는가, review_ms는 확인 화면에 머문 시간
   'Transcript Reviewed': {
     session_id?: number;
     turn_index: number;
-    action: 'send' | 'retry';
+    action: 'send' | 'retry' | 'leave';
     edited: boolean;
+    edit_opened: boolean;
+    review_ms: number;
   };
   'Mic Settings Opened': undefined;
   'Input Mode Switched': { session_id?: number; mode: TurnInputType };
