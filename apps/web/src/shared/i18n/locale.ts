@@ -1,0 +1,42 @@
+// 화면 언어를 정하는 규칙 — 지원 언어 목록과 Accept-Language·html lang 해석
+export const LOCALES = ['ko', 'ja'] as const;
+export type Locale = (typeof LOCALES)[number];
+
+// 지원하지 않는 언어의 기기는 지금처럼 한국어로 보여 준다
+export const DEFAULT_LOCALE: Locale = 'ko';
+
+const isLocale = (value: string): value is Locale =>
+  (LOCALES as readonly string[]).includes(value);
+
+/**
+ * Accept-Language 헤더에서 지원 언어를 하나 고른다. 우선순위(q)가 높은 것부터 보고, 지역(`-JP`)은 무시한다.
+ *
+ * @param header 요청의 Accept-Language (예: `ja-JP,ja;q=0.9,en-US;q=0.8`). 없으면 null
+ * @returns 지원 언어가 하나도 없으면 DEFAULT_LOCALE
+ */
+export const localeFromAcceptLanguage = (header: string | null): Locale => {
+  const ranked = (header ?? '')
+    .split(',')
+    .map((part) => {
+      const [tag, ...params] = part.trim().split(';');
+      const q = params.find((p) => p.trim().startsWith('q='));
+      return {
+        language: tag.split('-')[0].toLowerCase(),
+        quality: q ? Number(q.trim().slice(2)) : 1,
+      };
+    })
+    .sort((a, b) => b.quality - a.quality);
+
+  return (
+    (ranked.find((r) => isLocale(r.language))?.language as Locale) ??
+    DEFAULT_LOCALE
+  );
+};
+
+/**
+ * 서버가 정해 html lang에 박은 언어를 읽는다. 브라우저에서 보내는 요청이 화면과 같은 언어를 쓰게 하는 단일 출처.
+ */
+export const localeFromDocument = (): Locale => {
+  const lang = document.documentElement.lang;
+  return isLocale(lang) ? lang : DEFAULT_LOCALE;
+};
