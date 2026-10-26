@@ -55,6 +55,8 @@ export const useConversationInput = ({
   } | null>(null);
   // 이번 확인에서 고치기 입력창을 한 번이라도 열었는가 — 열었다 닫고 그대로 보낸 경우도 센다
   const editOpenedRef = useRef(false);
+  // 마이크를 켠 횟수 — 다시 말하기가 새 발화를 시작했다는 걸 남은 시간 눈금이 알아챈다
+  const [listenCount, setListenCount] = useState(0);
   const reviewing = reviewed != null;
   // 다시 말하기 직전의 확인 — 다시 말하다 취소하거나 인식에 실패하면 이 답으로 돌아간다
   const retryFromRef = useRef<typeof reviewed>(null);
@@ -74,7 +76,8 @@ export const useConversationInput = ({
     spokeFromRef.current = null;
     setTranscript(previous.original);
     setSpeechPending(false);
-    setReviewed(previous);
+    // 머문 시간은 돌아온 때부터 다시 잰다 — 다시 말하던 시간은 확인 화면에 머문 시간이 아니다
+    setReviewed({ ...previous, reviewedAt: Date.now() });
     return true;
   };
 
@@ -192,6 +195,7 @@ export const useConversationInput = ({
       turn_index: turnIndex,
     });
     spokeFromRef.current = Date.now();
+    setListenCount((count) => count + 1);
     void stt.start();
   };
 
@@ -234,8 +238,15 @@ export const useConversationInput = ({
     // 고쳐 쓴 입력창이 조합을 끝내기 전에 보낼 수 있다 — 키보드 전송과 같은 거름망을 거친다
     const content = removeNonEnglish(transcript).trim();
     if (!content) return;
-    trackReview('send', content !== reviewed.original, reviewed.reviewedAt);
+    // 처음 문장도 같은 거름망을 거친 값과 견준다 — 손대지 않았는데 걸러졌다고 고친 것으로 세지 않게
+    const original = removeNonEnglish(reviewed.original).trim();
+    trackReview('send', content !== original, reviewed.reviewedAt);
     onContent(content, 'VOICE', reviewed.utteranceDurationMs);
+    // 보냈으면 확인은 끝났다 — 세션을 못 잡아 대기로 돌아오는 길은 다음 턴 준비를 거치지 않아 여기서 닫는다.
+    // 보낸 문장은 남겨 둔다(전송 실패 때 다시 보낼 답으로 보인다)
+    setReviewed(null);
+    setKeyboardMode(false);
+    retryFromRef.current = null;
   };
 
   // 키보드로 입력 — 듣기를 시작하되 마이크는 켜지 않고 타이핑 입력창을 연다
@@ -328,6 +339,9 @@ export const useConversationInput = ({
     finishListening,
     submitText,
     reviewing,
+    // 확인 중인 답이 말한 시간 — 남은 시간 눈금이 이 답 하나만 깎은 값으로 맞춘다
+    reviewedDurationMs: reviewed?.utteranceDurationMs ?? null,
+    listenCount,
     speakAgain,
     editTranscript,
     submitReviewed,

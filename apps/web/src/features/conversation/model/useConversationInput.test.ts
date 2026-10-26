@@ -524,7 +524,7 @@ describe('useConversationInput', () => {
       vi.useRealTimers();
     });
 
-    it('고칠래요를 누르면 인식된 문장이 채워진 입력창이 열린다', () => {
+    it('「수정」을 누르면 인식된 문장이 채워진 입력창이 열린다', () => {
       const { result } = renderReviewing();
 
       act(() => result.current.editTranscript());
@@ -678,6 +678,46 @@ describe('useConversationInput', () => {
       expect(onInputCancel).toHaveBeenCalledTimes(1);
       expect(result.current.reviewing).toBe(false);
       expect(result.current.transcript).toBe('');
+    });
+
+    it('보내면 확인 단계를 닫는다 — 보낸 뒤 대기로 돌아와도 확인 화면이 남지 않게', () => {
+      // 세션을 못 잡아 대기로 돌아오는 길은 다음 턴 준비를 거치지 않는다
+      const { result } = renderReviewing();
+
+      act(() => result.current.submitReviewed());
+
+      expect(result.current.reviewing).toBe(false);
+      expect(result.current.keyboardMode).toBe(false);
+      expect(result.current.transcript).toBe('I went to the bitch.');
+    });
+
+    it('다시 말하다 앞 답으로 돌아오면 머문 시간은 돌아온 때부터 잰다', () => {
+      vi.useFakeTimers();
+      const { result } = renderReviewing();
+
+      act(() => vi.advanceTimersByTime(4000));
+      act(() => result.current.speakAgain());
+      act(() => vi.advanceTimersByTime(3000));
+      act(() => result.current.cancelInput());
+      act(() => vi.advanceTimersByTime(1000));
+      act(() => result.current.submitReviewed());
+
+      expect(trackMock).toHaveBeenLastCalledWith(
+        'Transcript Reviewed',
+        expect.objectContaining({ action: 'send', review_ms: 1000 }),
+      );
+      vi.useRealTimers();
+    });
+
+    it('인식된 글에 거르는 글자가 섞여 있어도 손대지 않고 보내면 고치지 않은 것이다', () => {
+      const { result } = renderReviewing('I went to the beach 😀');
+
+      act(() => result.current.submitReviewed());
+
+      expect(trackMock).toHaveBeenCalledWith(
+        'Transcript Reviewed',
+        expect.objectContaining({ action: 'send', edited: false }),
+      );
     });
 
     it('다음 턴 준비는 확인 단계도 닫는다', () => {
