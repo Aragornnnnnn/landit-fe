@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Toaster } from '@/shared/ui/toast';
 
+import { editHintSeen } from '../../model/edit-hint-seen';
 import { UserTranscript } from './UserTranscript';
 
 // 진동은 경계(네이티브 셸)라 목으로 둔다
@@ -13,6 +14,7 @@ vi.mock('@/shared/haptics', () => ({ haptic: hapticMock }));
 
 afterEach(() => {
   cleanup();
+  localStorage.clear();
   vi.restoreAllMocks();
 });
 
@@ -103,6 +105,15 @@ describe('UserTranscript', () => {
   });
 
   describe('키보드 입력', () => {
+    it('열리면 커서가 문장 끝에 놓인다 — 말한 문장을 이어 쓰거나 고치기 시작하는 자리다', () => {
+      const { input } = renderEditing('I went to the beach.');
+
+      expect(input).toHaveFocus();
+      expect((input as HTMLTextAreaElement).selectionStart).toBe(
+        'I went to the beach.'.length,
+      );
+    });
+
     // 실제 화면처럼 넘긴 값이 다시 text로 돌아오게 상태를 든다
     const renderEditing = (initial = '') => {
       const onChange = vi.fn();
@@ -270,6 +281,141 @@ describe('UserTranscript', () => {
       fireEvent.keyDown(input, { key: 'Enter' });
 
       expect(onSubmit).toHaveBeenCalled();
+    });
+  });
+
+  describe('말한 뒤 확인', () => {
+    it('확인 중이면 문장 끝에 커서를 띄워 입력된 글처럼 보인다', () => {
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText('|')).toBeInTheDocument();
+    });
+
+    it('확인 중이면 고칠 수 있다는 수정 버튼 표시를 띄운다', () => {
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText('수정')).toBeInTheDocument();
+    });
+
+    it('처음 확인 화면이면 고칠 수 있다는 안내를 한 번 띄운다', () => {
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={vi.fn()}
+        />,
+      );
+
+      expect(
+        screen.getByText('말한 내용과 다르면 눌러서 고칠 수 있어요'),
+      ).toBeInTheDocument();
+    });
+
+    it('스크린 리더도 고치기 버튼에서 인식된 문장을 듣는다', () => {
+      // 확인 단계는 문장을 확인하는 화면이다 — 버튼 이름이 문장을 가리면 들을 수 없다
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={vi.fn()}
+        />,
+      );
+
+      expect(
+        screen.getByRole('button', { name: /I went to the bitch\./ }),
+      ).toBeInTheDocument();
+    });
+
+    it('첫 안내는 고치기 버튼의 설명으로 함께 읽힌다', () => {
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={vi.fn()}
+        />,
+      );
+
+      expect(
+        screen.getByRole('button', { name: /답변 고치기/ }),
+      ).toHaveAccessibleDescription('말한 내용과 다르면 눌러서 고칠 수 있어요');
+    });
+
+    it('안내를 이미 본 기기면 띄우지 않는다', () => {
+      editHintSeen.mark();
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={vi.fn()}
+        />,
+      );
+
+      expect(
+        screen.queryByText('말한 내용과 다르면 눌러서 고칠 수 있어요'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('확인 중이 아니면 커서가 없다', () => {
+      render(
+        <UserTranscript text="I went to the bitch." phase="USER_SPEAKING" />,
+      );
+
+      expect(screen.queryByText('|')).not.toBeInTheDocument();
+    });
+
+    it('글자를 눌러도 칸 전체가 버튼이라 바로 고치기로 간다', () => {
+      const onEdit = vi.fn();
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={onEdit}
+        />,
+      );
+
+      fireEvent.click(screen.getByText('I went to the bitch.'));
+
+      expect(onEdit).toHaveBeenCalledTimes(1);
+    });
+
+    it('확인 중엔 머리 자리의 다른 칩(답변 예시)을 내린다', () => {
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={vi.fn()}
+          headerAction={<button>예시 볼래요</button>}
+        />,
+      );
+
+      expect(
+        screen.queryByRole('button', { name: '예시 볼래요' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('확인 중이면 말하는 중이어도 듣는 중 점을 띄우지 않는다', () => {
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          speechPending
+          onEdit={vi.fn()}
+        />,
+      );
+
+      expect(listeningDots()).not.toBeInTheDocument();
     });
   });
 });

@@ -287,6 +287,8 @@ const speakAndSubmit = async (
   await act(async () => {
     sttMock.callbacks.onFinal?.(text); // 최종 텍스트 도착 → 음성 제출
   });
+  // 말한 뒤 확인 단계에서 그대로 보낸다
+  await act(async () => result.current.input.submitReviewed());
 };
 
 // 키보드로 입력 → 전송까지 몰아준다
@@ -424,6 +426,8 @@ describe('useScenarioTalkFlow', async () => {
     act(() => {
       sttMock.callbacks.onFinal?.('Hello!'); // 최종 텍스트 → 음성 제출 시작
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     expect(result.current.phase).toBe('AI_THINKING');
 
@@ -535,6 +539,25 @@ describe('useScenarioTalkFlow', async () => {
     expect(resent).toEqual(first);
     expect(result.current.phase).toBe('AI_INNER_THOUGHT');
     expect(result.current.resend).toBeUndefined();
+  });
+
+  it('말한 답을 확인하는 중에 대화를 나가면 확인 화면에서 나갔다고 남긴다', async () => {
+    const { result } = await renderUserFirst();
+    vi.mocked(sessionApi.endSession).mockResolvedValue(undefined);
+    act(() => result.current.input.pressMic());
+    await act(async () => {
+      await result.current.input.finishListening();
+    });
+    await act(async () => {
+      sttMock.callbacks.onFinal?.('Hello!');
+    });
+
+    act(() => result.current.leave());
+
+    expect(track).toHaveBeenCalledWith(
+      'Transcript Reviewed',
+      expect.objectContaining({ action: 'leave' }),
+    );
   });
 
   it('다시 보내는 사이 대화를 나가면 더 보내지 않고 실패도 알리지 않는다', async () => {
@@ -1075,6 +1098,8 @@ describe('useScenarioTalkFlow', async () => {
     await act(async () => {
       sttMock.callbacks.onFinal?.('Hello there.');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     expect(submitScenarioTalkMessage).toHaveBeenCalledWith(
       1,

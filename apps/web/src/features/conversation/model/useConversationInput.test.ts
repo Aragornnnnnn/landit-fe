@@ -128,31 +128,31 @@ describe('useConversationInput', () => {
     expect(result.current.speechPending).toBe(false);
   });
 
-  it('음성 완료(■)는 STT를 멈추고, 최종 텍스트가 오면 VOICE로 전달한다', () => {
+  it('음성 완료(■)는 STT를 멈추고, 최종 텍스트가 오면 보내지 않고 확인 단계로 보여 준다', () => {
+    // 발음 때문에 잘못 알아들은 문장이 그대로 가지 않게, 보내기 전에 한 번 보여 준다
     const { result, onContent } = renderInput();
 
     act(() => result.current.pressMic());
     act(() => result.current.finishListening());
     expect(sttMock.stop).toHaveBeenCalled();
-    expect(onContent).not.toHaveBeenCalled();
 
     act(() => sttMock.callbacks.onFinal?.('Hello there.', FINAL_META));
 
-    expect(onContent).toHaveBeenCalledWith(
-      'Hello there.',
-      'VOICE',
-      expect.any(Number),
-    );
+    expect(onContent).not.toHaveBeenCalled();
+    expect(result.current.reviewing).toBe(true);
+    expect(result.current.transcript).toBe('Hello there.');
   });
 
-  it('음성은 마이크를 켠 순간부터 최종 텍스트까지 걸린 시간을 함께 전달한다', () => {
-    // 스몰톡의 일일 발화 예산이 이 값으로 깎인다 — STT가 FE라 잴 수 있는 곳이 여기뿐이다
+  it('확인 단계에서 보내면 VOICE로, 마이크를 켠 순간부터 인식이 끝날 때까지 걸린 시간과 함께 전달한다', () => {
+    // 스몰톡의 일일 발화 예산이 이 값으로 깎인다 — 확인하며 머문 시간은 말한 시간이 아니다
     vi.useFakeTimers();
     const { result, onContent } = renderInput();
 
     act(() => result.current.pressMic());
     act(() => vi.advanceTimersByTime(3200));
     act(() => sttMock.callbacks.onFinal?.('Hello there.', FINAL_META));
+    act(() => vi.advanceTimersByTime(5000));
+    act(() => result.current.submitReviewed());
 
     expect(onContent).toHaveBeenCalledWith('Hello there.', 'VOICE', 3200);
     vi.useRealTimers();
@@ -401,6 +401,379 @@ describe('useConversationInput', () => {
 
     act(() => result.current.dismissMicPermissionNotice());
     expect(result.current.micPermissionDenied).toBe(false);
+  });
+
+  describe('말한 뒤 확인', () => {
+    // 말하기를 마쳐 인식된 문장이 확인 단계에 올라온 상태
+    const renderReviewing = (text = 'I went to the bitch.') => {
+      const rendered = renderInput();
+      act(() => rendered.result.current.pressMic());
+      act(() => rendered.result.current.finishListening());
+      act(() => sttMock.callbacks.onFinal?.(text, FINAL_META));
+      trackMock.mockClear();
+      sttMock.start.mockClear();
+      return rendered;
+    };
+
+    it('다시 말하기는 인식된 문장을 버리고 듣기 단계 그대로 마이크를 다시 켠다', () => {
+      const { result, onInputStart, onInputCancel } = renderReviewing();
+
+      act(() => result.current.speakAgain());
+
+      expect(result.current.reviewing).toBe(false);
+      expect(result.current.transcript).toBe('');
+      expect(sttMock.start).toHaveBeenCalledTimes(1);
+      // 대화 단계는 말하는 중 그대로다 — 시작·취소를 다시 알리지 않는다
+      expect(onInputStart).toHaveBeenCalledTimes(1);
+      expect(onInputCancel).not.toHaveBeenCalled();
+    });
+
+    it('다시 말하다 취소하면 처음부터가 아니라 직전에 인식된 문장으로 확인에 돌아간다', () => {
+      // X는 방금 한 일(다시 말하기)만 되돌린다 — 이미 있던 답까지 버리면 처음부터 다시 말해야 한다
+      const { result, onInputCancel } = renderReviewing();
+
+      act(() => result.current.speakAgain());
+      act(() => sttMock.callbacks.onInterim?.('I went', true));
+      act(() => result.current.cancelInput());
+
+      expect(sttMock.abort).toHaveBeenCalled();
+      expect(onInputCancel).not.toHaveBeenCalled();
+      expect(result.current.reviewing).toBe(true);
+      expect(result.current.transcript).toBe('I went to the bitch.');
+    });
+
+    it('다시 말한 게 인식되지 않으면 직전에 인식된 문장으로 확인에 돌아간다', () => {
+      const { result, onInputCancel } = renderReviewing();
+
+      act(() => result.current.speakAgain());
+      act(() => sttMock.callbacks.onFinal?.('   ', FINAL_META));
+
+      expect(onInputCancel).not.toHaveBeenCalled();
+      expect(result.current.reviewing).toBe(true);
+      expect(result.current.transcript).toBe('I went to the bitch.');
+    });
+
+    it('다시 말하다 인식 오류가 나도 직전에 인식된 문장으로 확인에 돌아간다', () => {
+      const { result, onInputCancel } = renderReviewing();
+
+      act(() => result.current.speakAgain());
+      act(() =>
+        sttMock.callbacks.onError?.(
+          new SttError('STT 연결 실패', 'connect_failed'),
+          ERROR_META,
+        ),
+      );
+
+      expect(onInputCancel).not.toHaveBeenCalled();
+      expect(result.current.reviewing).toBe(true);
+      expect(result.current.transcript).toBe('I went to the bitch.');
+    });
+
+    it('돌아온 문장을 보내면 처음 말한 시간 그대로 전달한다', () => {
+      vi.useFakeTimers();
+      const rendered = renderInput();
+      act(() => rendered.result.current.pressMic());
+      act(() => vi.advanceTimersByTime(2000));
+      act(() =>
+        sttMock.callbacks.onFinal?.('I went to the bitch.', FINAL_META),
+      );
+      act(() => rendered.result.current.speakAgain());
+      act(() => vi.advanceTimersByTime(1000));
+      act(() => rendered.result.current.cancelInput());
+
+      act(() => rendered.result.current.submitReviewed());
+
+      expect(rendered.onContent).toHaveBeenCalledWith(
+        'I went to the bitch.',
+        'VOICE',
+        2000,
+      );
+      vi.useRealTimers();
+    });
+
+    it('처음 말하다 취소하면 지금처럼 말하기 전으로 돌아간다', () => {
+      // 돌아갈 답이 없을 때는 대기로 — 다시 말하기에서만 직전 답으로 돌아간다
+      const { result, onInputCancel } = renderReviewing();
+
+      act(() => result.current.submitReviewed());
+      act(() => result.current.resetForNextTurn());
+      act(() => result.current.pressMic());
+      act(() => result.current.cancelInput());
+
+      expect(onInputCancel).toHaveBeenCalledTimes(1);
+      expect(result.current.reviewing).toBe(false);
+    });
+
+    it('다시 말한 뒤 보내면 말한 시간은 다시 켠 순간부터 잰다', () => {
+      vi.useFakeTimers();
+      const { result, onContent } = renderReviewing();
+
+      act(() => vi.advanceTimersByTime(4000));
+      act(() => result.current.speakAgain());
+      act(() => vi.advanceTimersByTime(1500));
+      act(() =>
+        sttMock.callbacks.onFinal?.('I went to the beach.', FINAL_META),
+      );
+      act(() => result.current.submitReviewed());
+
+      expect(onContent).toHaveBeenCalledWith(
+        'I went to the beach.',
+        'VOICE',
+        1500,
+      );
+      vi.useRealTimers();
+    });
+
+    it('「수정」을 누르면 인식된 문장이 채워진 입력창이 열린다', () => {
+      const { result } = renderReviewing();
+
+      act(() => result.current.editTranscript());
+
+      expect(result.current.keyboardMode).toBe(true);
+      expect(result.current.reviewing).toBe(true);
+      expect(result.current.transcript).toBe('I went to the bitch.');
+    });
+
+    it('고쳐서 보내도 말한 답이라 VOICE와 말한 시간 그대로 전달한다', () => {
+      // 타이핑(TEXT·0초)으로 보내면 말한 시간이 0초로 잡혀 지표가 깨진다 (LAN-550)
+      vi.useFakeTimers();
+      const rendered = renderInput();
+      act(() => rendered.result.current.pressMic());
+      act(() => vi.advanceTimersByTime(2000));
+      act(() =>
+        sttMock.callbacks.onFinal?.('I went to the bitch.', FINAL_META),
+      );
+
+      act(() => rendered.result.current.editTranscript());
+      act(() =>
+        rendered.result.current.setTranscript(' I went to the beach. '),
+      );
+      act(() => rendered.result.current.submitText());
+
+      expect(rendered.onContent).toHaveBeenCalledWith(
+        'I went to the beach.',
+        'VOICE',
+        2000,
+      );
+      vi.useRealTimers();
+    });
+
+    it('입력창을 닫으면 고친 내용을 버리고 처음 인식된 문장으로 확인 단계에 돌아간다', () => {
+      const { result, onInputCancel } = renderReviewing();
+
+      act(() => result.current.editTranscript());
+      act(() => result.current.setTranscript('something else'));
+      act(() => result.current.closeTyping());
+
+      expect(result.current.keyboardMode).toBe(false);
+      expect(result.current.reviewing).toBe(true);
+      expect(result.current.transcript).toBe('I went to the bitch.');
+      expect(onInputCancel).not.toHaveBeenCalled();
+    });
+
+    it('키보드로 쓰던 입력창을 닫으면 지금처럼 입력을 취소한다', () => {
+      const { result, onInputCancel } = renderInput();
+
+      act(() => result.current.pressKeyboard());
+      act(() => result.current.closeTyping());
+
+      expect(result.current.keyboardMode).toBe(false);
+      expect(onInputCancel).toHaveBeenCalledTimes(1);
+    });
+
+    it('고친 문장을 다 지우면 보내지 않는다', () => {
+      const { result, onContent } = renderReviewing();
+
+      act(() => result.current.editTranscript());
+      act(() => result.current.setTranscript('   '));
+      act(() => result.current.submitText());
+
+      expect(onContent).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['그대로 보내면', false, 'send', false],
+      ['고쳐서 보내면', true, 'send', true],
+    ] as const)(
+      '%s 어떻게 마무리했는지 계측한다',
+      (_, edit, action, edited) => {
+        const { result } = renderReviewing();
+
+        if (edit) {
+          act(() => result.current.editTranscript());
+          act(() => result.current.setTranscript('I went to the beach.'));
+        }
+        act(() => result.current.submitReviewed());
+
+        expect(trackMock).toHaveBeenCalledWith('Transcript Reviewed', {
+          session_id: 1,
+          turn_index: 0,
+          action,
+          edited,
+          edit_opened: edit,
+          review_ms: expect.any(Number),
+        });
+      },
+    );
+
+    it('다시 말하기도 계측한다 — 잘못 알아들은 빈도를 본다', () => {
+      const { result } = renderReviewing();
+
+      act(() => result.current.speakAgain());
+
+      expect(trackMock).toHaveBeenCalledWith('Transcript Reviewed', {
+        session_id: 1,
+        turn_index: 0,
+        action: 'retry',
+        edited: false,
+        edit_opened: false,
+        review_ms: expect.any(Number),
+      });
+    });
+
+    it('확인 화면에 머문 시간을 함께 남긴다 — 단계가 늘어 늦어지는지 본다', () => {
+      vi.useFakeTimers();
+      const { result } = renderReviewing();
+
+      act(() => vi.advanceTimersByTime(2500));
+      act(() => result.current.submitReviewed());
+
+      expect(trackMock).toHaveBeenCalledWith(
+        'Transcript Reviewed',
+        expect.objectContaining({ review_ms: 2500 }),
+      );
+      vi.useRealTimers();
+    });
+
+    it('고치기를 열었다가 닫고 그대로 보내도 열어 봤다는 걸 남긴다', () => {
+      const { result } = renderReviewing();
+
+      act(() => result.current.editTranscript());
+      act(() => result.current.closeTyping());
+      act(() => result.current.submitReviewed());
+
+      expect(trackMock).toHaveBeenCalledWith(
+        'Transcript Reviewed',
+        expect.objectContaining({ edited: false, edit_opened: true }),
+      );
+    });
+
+    it('확인 화면에서 대화를 나가면 나갔다고 남긴다 — 늘어난 단계에서 이탈하는지 본다', () => {
+      const { result } = renderReviewing();
+
+      act(() => result.current.abandonInput());
+
+      expect(trackMock).toHaveBeenCalledWith(
+        'Transcript Reviewed',
+        expect.objectContaining({ action: 'leave', edited: false }),
+      );
+    });
+
+    it('확인 중에 대화를 나가면 마이크를 건드리지 않고 대기로 되돌린다', () => {
+      const { result, onInputCancel } = renderReviewing();
+
+      act(() => result.current.abandonInput());
+
+      expect(sttMock.abort).not.toHaveBeenCalled();
+      expect(onInputCancel).toHaveBeenCalledTimes(1);
+      expect(result.current.reviewing).toBe(false);
+      expect(result.current.transcript).toBe('');
+    });
+
+    it('보내면 확인 단계를 닫는다 — 보낸 뒤 대기로 돌아와도 확인 화면이 남지 않게', () => {
+      // 세션을 못 잡아 대기로 돌아오는 길은 다음 턴 준비를 거치지 않는다
+      const { result } = renderReviewing();
+
+      act(() => result.current.submitReviewed());
+
+      expect(result.current.reviewing).toBe(false);
+      expect(result.current.keyboardMode).toBe(false);
+      expect(result.current.transcript).toBe('I went to the bitch.');
+    });
+
+    it('다시 말하다 앞 답으로 돌아오면 머문 시간은 돌아온 때부터 잰다', () => {
+      vi.useFakeTimers();
+      const { result } = renderReviewing();
+
+      act(() => vi.advanceTimersByTime(4000));
+      act(() => result.current.speakAgain());
+      act(() => vi.advanceTimersByTime(3000));
+      act(() => result.current.cancelInput());
+      act(() => vi.advanceTimersByTime(1000));
+      act(() => result.current.submitReviewed());
+
+      expect(trackMock).toHaveBeenLastCalledWith(
+        'Transcript Reviewed',
+        expect.objectContaining({ action: 'send', review_ms: 1000 }),
+      );
+      vi.useRealTimers();
+    });
+
+    it('인식된 글에 거르는 글자가 섞여 있어도 손대지 않고 보내면 고치지 않은 것이다', () => {
+      const { result } = renderReviewing('I went to the beach 😀');
+
+      act(() => result.current.submitReviewed());
+
+      expect(trackMock).toHaveBeenCalledWith(
+        'Transcript Reviewed',
+        expect.objectContaining({ action: 'send', edited: false }),
+      );
+    });
+
+    it('다음 턴 준비는 확인 단계도 닫는다', () => {
+      const { result } = renderReviewing();
+
+      act(() => result.current.resetForNextTurn());
+
+      expect(result.current.reviewing).toBe(false);
+    });
+  });
+
+  describe('대화를 나갈 때 입력 접기', () => {
+    it('키보드로 쓰던 중이면 조용히 지운다 — 음성으로 바꾼 게 아니라 전환으로 세지 않는다', () => {
+      const { result, onInputCancel } = renderInput();
+      act(() => result.current.pressKeyboard());
+      act(() => result.current.setTranscript('typed'));
+      trackMock.mockClear();
+
+      act(() => result.current.abandonInput());
+
+      expect(trackMock).not.toHaveBeenCalledWith(
+        'Input Mode Switched',
+        expect.anything(),
+      );
+      expect(onInputCancel).toHaveBeenCalledTimes(1);
+      expect(result.current.transcript).toBe('');
+      expect(result.current.keyboardMode).toBe(false);
+    });
+
+    it('듣던 중이면 녹음을 버린다', () => {
+      const { result, onInputCancel } = renderInput();
+      act(() => result.current.pressMic());
+
+      act(() => result.current.abandonInput());
+
+      expect(sttMock.abort).toHaveBeenCalled();
+      expect(trackMock).toHaveBeenCalledWith(
+        'Recording Canceled',
+        expect.anything(),
+      );
+      expect(onInputCancel).toHaveBeenCalledTimes(1);
+    });
+
+    it('다시 말하던 중이면 앞 답으로 돌아가지 않고 접는다', () => {
+      const { result, onInputCancel } = renderInput();
+      act(() => result.current.pressMic());
+      act(() =>
+        sttMock.callbacks.onFinal?.('I went to the bitch.', FINAL_META),
+      );
+      act(() => result.current.speakAgain());
+
+      act(() => result.current.abandonInput());
+
+      expect(result.current.reviewing).toBe(false);
+      expect(onInputCancel).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('다음 턴 준비(resetForNextTurn)는 transcript를 비우고 마이크 모드로 되돌린다', () => {

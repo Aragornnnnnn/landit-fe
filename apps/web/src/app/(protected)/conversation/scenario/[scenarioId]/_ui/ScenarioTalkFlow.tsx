@@ -20,6 +20,7 @@ import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
 import { scenarioFeedbackPath, scenarioReturnPath } from '@/shared/lib/routes';
+import { useDocumentScrollPin } from '@/shared/lib/useDocumentScrollPin';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
@@ -73,6 +74,11 @@ export const ScenarioTalkFlow = ({
     cancelInput,
     finishListening,
     submitText,
+    reviewing,
+    speakAgain,
+    editTranscript,
+    submitReviewed,
+    closeTyping,
     micPermissionDenied,
     dismissMicPermissionNotice,
   } = input;
@@ -83,11 +89,15 @@ export const ScenarioTalkFlow = ({
   const keyboardInset = useKeyboardInset();
   // 키보드가 입력 박스를 밀어 올린 상태 — 하단 inset 영역은 키보드가 덮는다
   const keyboardLifted = typing && keyboardInset > 0;
+  // 입력하는 동안 iOS가 문서를 밀어 화면이 두 번 올라가지 않게 맨 위에 붙잡는다
+  useDocumentScrollPin(typing);
   // 답변 가이드 — 내 차례(대기·말하는 중)에만 내 답변 칸과 같은 자리를 번갈아 쓴다.
   // 키보드로 쓰는 중엔 그 칸이 입력창이라, 답을 낸 뒤엔 방금 한 말을 보여야 해서 비켜 준다
   const myTurn = phase === 'USER_READY' || phase === 'USER_SPEAKING';
-  // 답변이 전달되지 못한 동안은 다시 보내기가 먼저라 가이드를 비켜 준다 — 펼쳐 둔 카드가 실패한 답변을 덮지 않게
-  const guideShown = answerGuide != null && myTurn && !typing && resend == null;
+  // 답변이 전달되지 못한 동안은 다시 보내기가 먼저라 가이드를 비켜 준다 — 펼쳐 둔 카드가 실패한 답변을 덮지 않게.
+  // 말한 뒤 확인 중에도 비켜 준다 — 인식된 문장을 봐야 하고, 칸 머리 자리는 고치기 표시가 쓴다
+  const guideShown =
+    answerGuide != null && myTurn && !typing && !reviewing && resend == null;
   const guideChipRef = useRef<HTMLButtonElement>(null);
   // 첫 질문의 턴 — USER 선발화면 0번은 상황 안내라 첫 AI 질문은 그다음이다
   const firstQuestionIndex = scenario.firstSpeaker === 'USER' ? 1 : 0;
@@ -184,7 +194,13 @@ export const ScenarioTalkFlow = ({
       <CharacterStage partner={partner} look={characterLook} speech={speech} />
 
       {/* 무대·답변·마이크는 고정. 질문만 남는 공간을 채우는 스크롤 영역에 담아, 길어져도 겹치지 않고 카드 안에서 스크롤된다 */}
-      <section className="flex min-h-0 flex-1 flex-col px-5">
+      {/* 질문은 최소 한 줄 남짓은 남긴다 — 키보드로 자리가 모자라면 무대가 먼저 줄어든다.
+          키보드가 올라와 있는 동안엔 질문을 접는다 — 입력창이 캐릭터 바로 아래에 붙고, 남는 높이는 입력창과 키보드 사이로 간다 */}
+      <section
+        className={
+          keyboardLifted ? 'hidden' : 'flex min-h-24 flex-1 flex-col px-5'
+        }
+      >
         {/* pt-5는 무대와의 간격이자 페이드 구간 — 위로 스크롤될 때 무대 밑에서 그림자·글자가 직각으로 잘리지 않고 서서히 사라진다 */}
         {/* 카드가 남는 높이를 다 쓰되 넘치진 않는다 — 넘치는 글은 카드 안에서 스크롤된다 */}
         <div className="flex min-h-0 flex-1 flex-col pt-2">
@@ -213,8 +229,12 @@ export const ScenarioTalkFlow = ({
             translationDefaultOpen={display.translationDefaultOpen}
           />
         </div>
+      </section>
+
+      {/* 답변 칸은 질문 영역 밖에 둔다 — 키보드가 올라와 자리가 모자라면 질문이 아니라 무대가 줄고, 입력창은 그대로 키보드 위에 선다 */}
+      <div className="flex-none px-5">
         {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다.
-            가이드를 펼치면 칩이 그 자리에서 예시 카드로 커져 칸 위에 겹친다 */}
+              가이드를 펼치면 칩이 그 자리에서 예시 카드로 커져 칸 위에 겹친다 */}
         {!ended && (
           <AnswerGuideSlot
             guide={answerGuide}
@@ -234,7 +254,8 @@ export const ScenarioTalkFlow = ({
               editing={typing}
               onChange={setTranscript}
               onSubmit={submitText}
-              onCancel={cancelInput}
+              onCancel={closeTyping}
+              onEdit={reviewing && !typing ? editTranscript : undefined}
               unsent={resend != null}
               headerAction={
                 guideShown &&
@@ -249,7 +270,7 @@ export const ScenarioTalkFlow = ({
             />
           </AnswerGuideSlot>
         )}
-      </section>
+      </div>
 
       <footer
         className={`flex-none ${keyboardLifted ? 'pb-4' : 'pb-[max(var(--safe-area-inset-bottom),16px)]'}`}
@@ -274,8 +295,17 @@ export const ScenarioTalkFlow = ({
               pressKeyboard();
             }}
             onCancel={cancelInput}
-            onDone={finishListening}
+            onDone={() => {
+              // 펼쳐 둔 가이드는 접어 둔다 — 확인 뒤 다시 말하기로 돌아와도 접힌 채로 시작한다
+              guide.collapseGuide();
+              finishListening();
+            }}
             onResend={resend}
+            review={
+              reviewing
+                ? { onRetry: speakAgain, onSend: submitReviewed }
+                : undefined
+            }
           />
         )}
       </footer>

@@ -332,6 +332,36 @@
   }
 }
 
+/* 말한 뒤 확인 — 듣기가 끝난 답변 칸이 입력창으로 바뀌며 한 번 살짝 내려앉는다 */
+@keyframes review-in {
+  0% {
+    transform: scale(0.97);
+  }
+  55% {
+    transform: scale(1.015);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 답변 칸 버튼 등장 — 고치려고 열면 X·보내기가 제자리에서 톡 솟는다.
+ * 완전히 투명하게 시작하지 않는다 — 시작 직후 프레임이 멎어도 버튼이 비어 보이면 안 된다 (check-in과 같은 규칙) */
+@keyframes control-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0.35;
+  }
+}
+
+/* 고치기를 닫고 돌아오면 안내만 살며시 돌아온다 — 칸은 이미 그 자리에 있어 다시 출렁이지 않는다 */
+@keyframes hint-in {
+  from {
+    transform: translateX(-4px);
+    opacity: 0.35;
+  }
+}
+
 /* 정답 글자 튀어오름 — 복습 영작 성공 시 글자칸에 순차 적용 */
 @keyframes pop {
   0% {
@@ -708,6 +738,28 @@
 
   .animate-pop {
     animation: pop 0.45s ease;
+  }
+
+  .animate-review-in {
+    animation: review-in 0.35s ease-out;
+  }
+
+  .animate-control-in {
+    animation: control-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    /* 끝난 뒤엔 손을 뗀다 — 보내기 버튼의 비활성 흐림(opacity)을 덮어쓰지 않게 */
+    animation-delay: var(--delay, 0ms);
+  }
+
+  .animate-hint-in {
+    animation: hint-in 0.2s ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-review-in,
+    .animate-control-in,
+    .animate-hint-in {
+      animation: none;
+    }
   }
 
   /* 새로고침 아이콘 한 바퀴 — 응답이 아무리 빨라도 누른 것이 눈에 보이게 한 바퀴는 돈다.
