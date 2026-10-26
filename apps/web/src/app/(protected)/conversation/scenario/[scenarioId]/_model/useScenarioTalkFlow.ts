@@ -27,6 +27,10 @@ import { track } from '@/shared/analytics';
 import { getCurrentUserId } from '@/shared/auth/auth-store';
 
 import { submitScenarioTalkMessage } from '../_api/scenario-session';
+import {
+  hasCompletedScenarioBefore,
+  notifyFirstScenarioCompleted,
+} from './first-scenario-ad-event';
 import { toTalkGauge } from './talk-gauge';
 import { useScenarioTalkSession } from './useScenarioTalkSession';
 
@@ -131,6 +135,7 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
     ensureSession: session.ensure,
     submit: async ({ sessionId, content, inputType, turnIndex }) => {
       const { clientMessageId, guideViewed } = submissionFor(turnIndex);
+      const completedBefore = hasCompletedScenarioBefore(queryClient);
       const res = await submitScenarioTalkMessage(
         sessionId,
         content,
@@ -160,6 +165,7 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
         });
         prepareFeedbackAndUnlock(sessionId, res.reward);
         markTalkCompleted('scenario');
+        notifyFirstScenarioCompleted(completedBefore);
       }
       return {
         submittedMessage: res.submittedMessage,

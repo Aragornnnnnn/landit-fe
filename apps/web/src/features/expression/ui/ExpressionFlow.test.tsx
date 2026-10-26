@@ -16,7 +16,10 @@ const routerMocks = vi.hoisted(() => ({ replace: vi.fn() }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: routerMocks.replace }),
 }));
-vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
+vi.mock('@/shared/analytics', () => ({
+  track: vi.fn(),
+  sendAdEventOnce: vi.fn(),
+}));
 vi.mock('../model/useExpressionLearningQuery', () => ({
   useExpressionLearningQuery: vi.fn(),
 }));
