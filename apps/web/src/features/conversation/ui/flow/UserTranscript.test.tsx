@@ -103,6 +103,15 @@ describe('UserTranscript', () => {
   });
 
   describe('키보드 입력', () => {
+    it('열리면 커서가 문장 끝에 놓인다 — 말한 문장을 이어 쓰거나 고치기 시작하는 자리다', () => {
+      const { input } = renderEditing('I went to the beach.');
+
+      expect(input).toHaveFocus();
+      expect((input as HTMLTextAreaElement).selectionStart).toBe(
+        'I went to the beach.'.length,
+      );
+    });
+
     // 실제 화면처럼 넘긴 값이 다시 text로 돌아오게 상태를 든다
     const renderEditing = (initial = '') => {
       const onChange = vi.fn();

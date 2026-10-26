@@ -171,6 +171,16 @@ const TranscriptEditor = ({
   const composingRef = useRef(false);
   // 글자가 안 써지는 순간을 바로 알아채게 박스를 흔든다. 끝나면 거둬야 다음에 다시 흔들 수 있다
   const [shaking, setShaking] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // 열리면 커서를 문장 끝에 둔다 — 브라우저는 채워진 글 앞에 두는데, 말한 문장을 고치거나 이어 쓰는 자리는 끝이다.
+  // 처음 한 번만이다. 그 뒤엔 사용자가 누른 자리를 존중한다
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.setSelectionRange(input.value.length, input.value.length);
+  }, []);
+
   // 글자가 걸러졌다는 걸 흔들림·진동·토스트로 바로 알린다
   const warnNonEnglish = () => {
     setShaking(true);
@@ -210,6 +220,7 @@ const TranscriptEditor = ({
         </button>
       </div>
       <textarea
+        ref={inputRef}
         autoFocus
         value={text}
         onCompositionStart={() => {
