@@ -18,6 +18,8 @@ import { shouldAskSatisfaction } from '@/features/satisfaction/model/prompt-reco
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
 import { ApiError } from '@/shared/api/api-error';
+import type { AuthMember } from '@/shared/auth/api/social-login';
+import { useAuthStore } from '@/shared/auth/auth-store';
 import type { SttResultMeta } from '@/shared/stt/deepgram-stt';
 import type { TtsVoice } from '@/shared/tts/voice';
 
@@ -36,7 +38,11 @@ const monitoringMock = vi.hoisted(() => ({
   reportError: vi.fn(),
   reportWarning: vi.fn(),
 }));
-vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
+// 광고 이벤트는 셸 경계 — 보냈다고 치지 않아(false) 기기 기록이 테스트 사이에 남지 않는다
+const sendAdEvent = vi.hoisted(() =>
+  vi.fn<(event: string) => boolean>(() => false),
+);
+vi.mock('@/shared/analytics', () => ({ track: vi.fn(), sendAdEvent }));
 vi.mock('@/shared/monitoring/report', () => monitoringMock);
 
 vi.mock('@/features/conversation/api/session', () => ({
@@ -123,6 +129,10 @@ const queryClientMock = vi.hoisted(() => ({
 const refreshRewardAfterCompletion = vi.hoisted(() => vi.fn());
 vi.mock('@/features/reward/model/refresh-reward', () => ({
   refreshRewardAfterCompletion,
+}));
+// 스트릭 미리받기도 다른 기능의 후속이다 — 로그인한 사람으로 돌리는 테스트에서 캐시 목에 없는 호출을 하지 않게 막는다
+vi.mock('@/features/streak/model/refresh-streak', () => ({
+  refreshStreakAfterCompletion: vi.fn(),
 }));
 vi.mock('@tanstack/react-query', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@tanstack/react-query')>()),
@@ -335,6 +345,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  useAuthStore.getState().clearAuth();
 });
 
 describe('useScenarioTalkFlow', async () => {
@@ -690,6 +701,43 @@ describe('useScenarioTalkFlow', async () => {
     });
     // 홈에 돌아가면 소감을 물을 차례라고 남긴다
     expect(shouldAskSatisfaction('scenario')).toBe(true);
+  });
+
+  it.each([
+    ['서버가 끝내 본 적 없다고 하면 첫 시나리오 완료를 알린다', false, 1],
+    [
+      '서버가 이미 끝내 본 적 있다고 하면 첫 시나리오 완료를 알리지 않는다',
+      true,
+      0,
+    ],
+  ])('대화가 완료됐을 때 %s', async (_, completedBefore, sentCount) => {
+    useAuthStore
+      .getState()
+      .setAuth('access', 'refresh', { userId: 7 } as AuthMember);
+    queryClientMock.getQueryData.mockImplementation((key: unknown) =>
+      Array.isArray(key) && key[0] === 'subscription'
+        ? { conversationCompletedSinceLaunch: completedBefore }
+        : undefined,
+    );
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockResolvedValue(
+      submitResponse({
+        progress: {
+          currentTurnNumber: 3,
+          currentMessageSequenceNumber: 1,
+          totalQuestionCount: 3,
+          completed: true,
+        },
+      }),
+    );
+
+    await speakAndSubmit(result, 'Yes, here you go.');
+
+    expect(
+      sendAdEvent.mock.calls.filter(
+        ([event]) => event === 'first_scenario_completed',
+      ),
+    ).toHaveLength(sentCount);
   });
 
   it('대화가 안 끝났으면 피드백을 미리 만들지 않는다', async () => {

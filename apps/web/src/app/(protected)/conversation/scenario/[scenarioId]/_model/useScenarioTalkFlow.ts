@@ -23,10 +23,14 @@ import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { scenarioKeys } from '@/features/scenario/model/keys';
 // 대화 완료가 스트릭도 늘린다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
+// 첫 완료인지는 구독 응답의 완료 이력으로 가린다 — 그 값을 내려 주는 곳이 구독 조회뿐이라 가로 import를 둔다
+import type { MySubscription } from '@/features/subscription/api/subscription';
+import { subscriptionKeys } from '@/features/subscription/model/my-subscription/keys';
 import { track } from '@/shared/analytics';
 import { getCurrentUserId } from '@/shared/auth/auth-store';
 
 import { submitScenarioTalkMessage } from '../_api/scenario-session';
+import { reportFirstScenarioCompleted } from './first-completion-ad-event';
 import { toTalkGauge } from './talk-gauge';
 import { useScenarioTalkSession } from './useScenarioTalkSession';
 
@@ -160,6 +164,14 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
         });
         prepareFeedbackAndUnlock(sessionId, res.reward);
         markTalkCompleted('scenario');
+        // 받아 둔 구독 응답은 끝내기 전 값이다 — 받은 적 없으면 모르는 것이라 처음으로 친다
+        const userId = getCurrentUserId();
+        const completedBefore =
+          queryClient.getQueryData<MySubscription>(
+            subscriptionKeys.mine(userId),
+          )?.conversationCompletedSinceLaunch === true;
+        if (userId !== null)
+          reportFirstScenarioCompleted(userId, completedBefore);
       }
       return {
         submittedMessage: res.submittedMessage,
