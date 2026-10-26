@@ -319,7 +319,7 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 | --------------------------- | ------- | ---------------------------------------------------------------------------------------------- |
 | Tracking Permission Decided | granted | 이번 실행에서 ATT 권한창이 떠 답했을 때 — 셸의 회신(`TRACKING_STATUS`의 `prompted`)에서 찍는다 |
 
-셸이 앱을 켤 때 Meta SDK 초기화와 함께 권한창을 띄운다(`initMetaSdk`). 웹은 사용자가 답하기 전에 뜨므로 `TrackingStatusSync`가 셸에 묻고, 셸은 답이 날 때까지 기다렸다 회신한다. 예전에 답해 둔 사람은 이벤트 없이 유저 속성 `att_status`만 올라가니, 허용률은 이벤트가 아니라 `att_status`로 본다. 제한(restricted, 자녀 보호 등)은 거부로 온다. Android·브라우저·브릿지 11 이하 셸에는 둘 다 없다.
+셸이 앱을 켤 때 Meta SDK 초기화와 함께 권한창을 띄운다(`initMetaSdk`). 웹은 사용자가 답하기 전에 뜨므로 `TrackingStatusSync`가 셸에 묻고, 셸은 답이 날 때까지 기다렸다 회신한다. 예전에 답해 둔 사람은 이벤트 없이 유저 속성 `att_status`만 올라가니, 허용률은 이벤트가 아니라 `att_status`로 본다. 제한(restricted, 자녀 보호 등)은 거부로 온다. Android·브라우저·브릿지 12 이하 셸에는 둘 다 없다.
 
 ### 이벤트 공지 팝업
 
