@@ -247,6 +247,32 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
     expect(result.current.remainingMs).toBe(15_000);
   });
 
+  it('다시 말하면 처음 말한 만큼 깎인 눈금이 돌아오고 다시 말한 만큼만 깎인다', () => {
+    // 서버는 보낸 답의 말한 시간만 깎는다 — 버린 첫 답까지 깎아 두면 화면만 시간이 두 배로 줄어든다
+    const { result } = renderFlow(20_000);
+
+    speakFor(result, 5);
+    act(() => result.current.input.finishListening());
+    act(() => sttMock.callbacks.onFinal?.('Hello there.'));
+    act(() => result.current.input.speakAgain());
+    act(() => vi.advanceTimersByTime(3000));
+
+    expect(result.current.remainingMs).toBe(17_000);
+  });
+
+  it('다시 말하다 취소해 앞 답으로 돌아가면 그 답이 쓴 만큼만 깎인 눈금이다', () => {
+    const { result } = renderFlow(20_000);
+
+    speakFor(result, 5);
+    act(() => result.current.input.finishListening());
+    act(() => sttMock.callbacks.onFinal?.('Hello there.'));
+    act(() => result.current.input.speakAgain());
+    act(() => vi.advanceTimersByTime(3000));
+    act(() => result.current.input.cancelInput());
+
+    expect(result.current.remainingMs).toBe(15_000);
+  });
+
   it('말하다 취소하면 말하기 전 값으로 되돌아온다', () => {
     // 보낸 말이 없으면 서버도 안 깎는다 — 화면만 깎인 채로 두면 다음 제출에서 시간이 되살아난다
     const { result } = renderFlow(20_000);

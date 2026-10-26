@@ -14,12 +14,18 @@ interface SpeakingBudgetOptions {
   speaking: boolean;
   // 말하기 대기로 되돌아왔는가 — 보낸 말 없이 돌아왔다는 뜻이라 눈금을 되돌린다
   waiting: boolean;
+  // 마이크를 켠 횟수 — 바뀌면 새 발화(다시 말하기)라 말하기 전 값에서 다시 깎는다
+  attempt: number;
+  // 확인 중인 답이 말한 시간 — 있으면 눈금은 그 답 하나만 깎은 값이다 (다시 말하다 앞 답으로 돌아온 때도)
+  answeredMs: number | null;
 }
 
 export const useSpeakingBudget = ({
   initialMs,
   speaking,
   waiting,
+  attempt,
+  answeredMs,
 }: SpeakingBudgetOptions) => {
   const [remainingMs, setRemainingMs] = useState(initialMs);
   // 이번 발화를 시작할 때의 잔량 — 타이머 링이 이 값을 가득 찬 것으로 잡고, 되돌릴 때의 기준이 된다.
@@ -31,6 +37,18 @@ export const useSpeakingBudget = ({
   if (waiting && budgetMs !== null) {
     setRemainingMs(budgetMs);
     setBudgetMs(null);
+  }
+  // 서버는 보낸 답의 말한 시간만 깎는다 — 버린 발화까지 깎아 두면 화면만 시간이 더 줄어든다
+  const [seenAttempt, setSeenAttempt] = useState(attempt);
+  if (attempt !== seenAttempt) {
+    setSeenAttempt(attempt);
+    if (budgetMs !== null) setRemainingMs(budgetMs);
+  }
+  const [seenAnsweredMs, setSeenAnsweredMs] = useState(answeredMs);
+  if (answeredMs !== seenAnsweredMs) {
+    setSeenAnsweredMs(answeredMs);
+    if (answeredMs !== null && budgetMs !== null)
+      setRemainingMs(Math.max(0, budgetMs - answeredMs));
   }
 
   useEffect(() => {
