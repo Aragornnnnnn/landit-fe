@@ -22,7 +22,10 @@ beforeEach(() => {
   });
 });
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 // 토스트 글자를 감싼 고정 위치 틀
 const toastFrame = () =>
@@ -59,7 +62,6 @@ describe('Toaster', () => {
     act(() => vi.advanceTimersByTime(TOAST_MS - 500));
 
     expect(screen.getByText('안내')).toBeInTheDocument();
-    vi.useRealTimers();
   });
 
   it('키보드가 없으면 원래 자리(화면 아래)에 띄운다', () => {
