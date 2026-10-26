@@ -2,7 +2,7 @@
   "expo": {
     "name": "Landit",
     "slug": "saynow",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": [
@@ -22,7 +22,7 @@
       }
     },
     "ios": {
-      "buildNumber": "23",
+      "buildNumber": "24",
       "bundleIdentifier": "com.saynow.app",
       "usesAppleSignIn": true,
       "infoPlist": {
@@ -64,7 +64,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.saynow.app",
-      "versionCode": 38,
+      "versionCode": 39,
       "intentFilters": [
         {
           "action": "VIEW",
