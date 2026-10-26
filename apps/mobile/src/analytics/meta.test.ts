@@ -1,14 +1,20 @@
-// initMetaSdk의 플랫폼 분기 계약을 검증한다 — iOS는 ATT 동의 후 그 결과로 광고 추적을 설정, Android는 ATT 생략, 끝나면 메타 익명 ID를 돌려준다
+// initMetaSdk의 플랫폼 분기(iOS ATT·Android 생략·메타 익명 ID)와 logAdEvent의 메타 표준 이벤트 대응을 검증한다
 import { Platform } from 'react-native';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import { AppEventsLogger, Settings } from 'react-native-fbsdk-next';
 
 import { reportWarning } from '../monitoring/report';
-import { initMetaSdk } from './meta';
+import { initMetaSdk, logAdEvent } from './meta';
 
 jest.mock('react-native-fbsdk-next', () => ({
   AppEventsLogger: {
     getAnonymousID: jest.fn(() => Promise.resolve('fb-anon')),
+    logEvent: jest.fn(),
+    AppEvents: {
+      CompletedTutorial: 'fb_mobile_tutorial_completion',
+      ViewedContent: 'fb_mobile_content_view',
+    },
+    AppEventParams: { ContentType: 'fb_content_type' },
   },
   Settings: {
     initializeSDK: jest.fn(),
@@ -86,5 +92,24 @@ describe('initMetaSdk', () => {
 
     await expect(initMetaSdk()).resolves.toBe('fb-anon');
     expect(reportWarning).toHaveBeenCalledWith(failure);
+  });
+});
+
+describe('logAdEvent', () => {
+  it('첫 시나리오 완료는 메타 표준 이벤트 튜토리얼 완료로 기록한다', () => {
+    logAdEvent('first_scenario_completed');
+
+    expect(AppEventsLogger.logEvent).toHaveBeenCalledWith(
+      'fb_mobile_tutorial_completion',
+    );
+  });
+
+  it('페이월 조회는 콘텐츠 조회로, 콘텐츠 종류를 페이월로 실어 기록한다', () => {
+    logAdEvent('paywall_viewed');
+
+    expect(AppEventsLogger.logEvent).toHaveBeenCalledWith(
+      'fb_mobile_content_view',
+      { fb_content_type: 'paywall' },
+    );
   });
 });

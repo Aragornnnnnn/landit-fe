@@ -1,5 +1,6 @@
-// Meta(Facebook) SDK 초기화와 iOS ATT 동의 흐름 — 광고 설치 어트리뷰션·앱 이벤트 수집용
+// Meta(Facebook) SDK 초기화와 iOS ATT 동의 흐름, 웹이 알린 광고 이벤트 기록 — 광고 설치 어트리뷰션·앱 이벤트 수집용
 import { Platform } from 'react-native';
+import type { AdEvent } from '@landit/bridge';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import { AppEventsLogger, Settings } from 'react-native-fbsdk-next';
 
@@ -28,3 +29,21 @@ export async function initMetaSdk(): Promise<string | null> {
     return null;
   }
 }
+
+// 웹이 알린 일을 메타 표준 이벤트로 기록한다 — 표준 이벤트여야 광고 관리자에서 최적화 목표로 고를 수 있다
+export const logAdEvent = (event: AdEvent) => {
+  const { AppEvents, AppEventParams } = AppEventsLogger;
+  switch (event) {
+    case 'first_scenario_completed':
+      AppEventsLogger.logEvent(AppEvents.CompletedTutorial);
+      return;
+    case 'paywall_viewed':
+      AppEventsLogger.logEvent(AppEvents.ViewedContent, {
+        [AppEventParams.ContentType]: 'paywall',
+      });
+      return;
+    default:
+      // 새 광고 이벤트를 더하면 여기서 타입 에러가 나 대응을 빠뜨리지 않는다
+      event satisfies never;
+  }
+};
