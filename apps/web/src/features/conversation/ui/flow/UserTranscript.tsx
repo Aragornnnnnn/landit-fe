@@ -130,7 +130,7 @@ const TranscriptEditor = ({
     setShaking(true);
     haptic('error');
     // 이어 치는 동안 계속 띄워도 토스트는 그대로 떠 있고 시간만 늘어난다
-    showToast('영어로만 입력해 주세요');
+    showToast('영어로만 입력할 수 있어요');
   };
 
   // 걸러 낸 뒤 넘긴다. 지운 만큼 커서를 당겨 쓰던 자리에 둔다

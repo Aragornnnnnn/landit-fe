@@ -130,7 +130,7 @@ describe('UserTranscript', () => {
       );
       return { input: screen.getByRole('textbox'), onChange, onSubmit };
     };
-    const englishNotice = () => screen.queryByText('영어로만 입력해 주세요');
+    const englishNotice = () => screen.queryByText('영어로만 입력할 수 있어요');
 
     it('한글을 치면 빼고 넘기고 영어로 입력하라고 토스트로 안내한다', () => {
       const { input, onChange } = renderEditing();
@@ -189,7 +189,7 @@ describe('UserTranscript', () => {
 
       fireEvent.change(input, { target: { value: 'ㅏ' } });
 
-      expect(screen.getAllByText('영어로만 입력해 주세요')).toHaveLength(1);
+      expect(screen.getAllByText('영어로만 입력할 수 있어요')).toHaveLength(1);
     });
 
     it('한글 조합 중에는 거르지 않고 그대로 넘긴다', () => {
