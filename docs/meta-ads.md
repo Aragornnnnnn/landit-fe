@@ -11,7 +11,7 @@
 | 설치, 앱 실행                                                 | 셸의 메타 SDK         | 앱 → 메타                       |
 | 체험 시작, 결제, 체험 전환, 갱신                              | RevenueCat 메타 연동  | 스토어 → RevenueCat 서버 → 메타 |
 | 온보딩 완료, 첫 시나리오 완료, 첫 표현 학습 완료, 페이월 조회 | 웹이 알리고 셸이 기록 | 웹 → 셸의 메타 SDK → 메타       |
-| 결제 시작 (Android)                                           | 셸                    | 셸의 메타 SDK → 메타            |
+| 결제 시작                                                     | 셸                    | 셸의 메타 SDK → 메타            |
 
 ![광고에서 결제까지 이어지는 방식](images/meta-ads-matching.png)
 
@@ -39,7 +39,7 @@ App Events API 방식은 iOS에서 추적 허용(ATT)을 받은 사용자 이벤
 - 첫 시나리오 완료 → 튜토리얼 완료(`fb_mobile_tutorial_completion`). 계정마다 한 번만 간다. 서버가 이미 끝내 본 적 있다고 한 사람은 뺀다. 서버 값은 구독 응답의 `conversationCompletedSinceLaunch`라 유료 구독 도입(9월) 전에만 끝낸 사람은 처음으로 잡힌다.
 - 첫 표현 학습 완료 → 업적 달성(`fb_mobile_achievement_unlocked`). 계정마다 한 번만 간다. 서버에 처음인지 알려 주는 값이 없어, 전에 해 본 기존 사용자도 앱을 올린 뒤 처음 끝낼 때 한 번 간다.
 - 페이월 조회 → 콘텐츠 조회(`fb_mobile_content_view`), 콘텐츠 종류 `paywall`. 페이월이 뜰 때마다 간다.
-- 결제 버튼 → 결제 시작(`fb_mobile_initiated_checkout`), 고른 패키지 id를 `fb_content_id`로 싣는다. Android만 셸이 결제 시트를 띄우기 직전에 남긴다. iOS는 메타 SDK가 스토어 결제를 보고 스스로 남겨서 같이 남기면 두 번 잡힌다.
+- 결제 버튼 → 결제 시작(`fb_mobile_initiated_checkout`), 고른 패키지 id를 `fb_content_id`로 싣는다. 셸이 결제 시트를 띄우기 직전에 남긴다. iOS는 메타 SDK의 자동 기록도 결제 시작을 남기므로, 아래 "운영으로 바꾸는 날"에 자동 기록을 끄기 전까지는 iOS 결제 시작이 두 번 잡힌다.
 - 결제 완료는 보내지 않는다. 위의 RevenueCat 연동이 맡는다.
 
 웹이 보내는 이름은 앰플리튜드 이벤트와 같은 명사+과거형이다(`onboarding_completed`, `first_scenario_talk_completed`, `first_expression_completed`, `paywall_viewed`). 계정마다 한 번은 이 기기에 계정별로 남긴 기록으로 지킨다. 셸에 실제로 보낸 뒤에만 남겨서, 옛 앱이라 못 보냈으면 앱을 올린 뒤 처음 할 때 간다. 다만 온보딩은 다시 거치지 않고, 첫 시나리오는 옛 앱에서 끝내면 서버가 이미 끝내 본 사람으로 기억해서, 이 둘은 옛 앱에서 한 사람 몫은 메타에 가지 않는다.
@@ -99,5 +99,5 @@ RevenueCat 대시보드 → Integrations → Meta Ads에서 아래처럼 넣고 
 
 1. 셸 코드가 들어간 앱이 배포되어 있어야 한다.
 2. RevenueCat 메타 연동의 운영 칸을 운영 메타로 바꾼다. 메타가 App Events API를 더는 관리하지 않으므로 운영은 Conversions API(운영 데이터 세트 ID와 토큰)를 권장한다. Conversions API로 바꾸면 샌드박스 칸도 데이터 세트 ID를 받으므로, 테스트 결제를 운영 데이터와 분리하려면 테스트용 데이터 세트가 따로 필요하다.
-3. 같은 날 메타 SDK의 결제 자동 로깅을 끈다. iOS 결제 시작도 이 자동 기록이 남기던 것이라, 셸 `logCheckoutStarted`의 안드로이드 제한을 같이 풀어야 iOS 결제 시작이 끊기지 않는다.
+3. 같은 날 메타 SDK의 결제 자동 로깅을 끈다.
 4. 하루 안에 운영 이벤트 관리자에 RevenueCat 통합으로 이벤트가 들어오는지 본다.
