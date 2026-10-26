@@ -44,4 +44,20 @@ describe('useEditHint', () => {
 
     expect(result.current).toBe(false);
   });
+
+  it('안내가 떠 있는 채로 화면을 떠나도 본 것으로 남긴다', () => {
+    const { unmount } = renderHook(() => useEditHint(true));
+
+    unmount();
+
+    expect(editHintSeen.has()).toBe(true);
+  });
+
+  it('한 화면에서 안내가 떠 있는 동안은 계속 보인다 — 띄우자마자 기록해도 바로 사라지지 않는다', () => {
+    const { result, rerender } = renderHook(() => useEditHint(true));
+
+    act(() => rerender());
+
+    expect(result.current).toBe(true);
+  });
 });
