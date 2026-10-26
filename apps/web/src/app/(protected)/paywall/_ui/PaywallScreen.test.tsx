@@ -24,7 +24,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace }),
 }));
-vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
+vi.mock('@/shared/analytics', () => ({
+  track: mocks.track,
+  sendAdEvent: vi.fn(),
+}));
 // 조회 캐시는 이 화면이 직접 쓰지 않는다 — 결제 뒤 환급을 새로 받으라고 넘겨주기만 한다
 vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => 'client' }));
 vi.mock('../_model/pass-availability', () => ({
