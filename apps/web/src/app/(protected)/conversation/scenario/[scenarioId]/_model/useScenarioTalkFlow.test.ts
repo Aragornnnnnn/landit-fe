@@ -742,6 +742,37 @@ describe('useScenarioTalkFlow', async () => {
     else expect(sendAdEventOnce).not.toHaveBeenCalled();
   });
 
+  it('제출 중에 구독이 새로 받아져 방금 끝낸 것이 이력에 들어가도 첫 시나리오 완료를 알린다', async () => {
+    useAuthStore
+      .getState()
+      .setAuth('access', 'refresh', { userId: 7 } as AuthMember);
+    let completedBefore = false;
+    queryClientMock.getQueryData.mockImplementation((key: unknown) =>
+      Array.isArray(key) && key[0] === 'subscription'
+        ? { conversationCompletedSinceLaunch: completedBefore }
+        : undefined,
+    );
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockImplementation(async () => {
+      completedBefore = true;
+      return submitResponse({
+        progress: {
+          currentTurnNumber: 3,
+          currentMessageSequenceNumber: 1,
+          totalQuestionCount: 3,
+          completed: true,
+        },
+      });
+    });
+
+    await speakAndSubmit(result, 'Yes, here you go.');
+
+    expect(sendAdEventOnce).toHaveBeenCalledWith(
+      'first_scenario_talk_completed',
+      7,
+    );
+  });
+
   it('대화가 안 끝났으면 피드백을 미리 만들지 않는다', async () => {
     const { result } = await renderUserFirst();
     submitScenarioTalkMessage.mockResolvedValue(submitResponse()); // completed: false

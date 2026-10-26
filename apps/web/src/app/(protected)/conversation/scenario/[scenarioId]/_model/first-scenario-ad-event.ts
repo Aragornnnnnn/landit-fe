@@ -7,13 +7,19 @@ import { subscriptionKeys } from '@/features/subscription/model/my-subscription/
 import { sendAdEventOnce } from '@/shared/analytics';
 import { getCurrentUserId } from '@/shared/auth/auth-store';
 
-// 끝내기 전 구독 응답으로 이미 끝내 본 사람은 거른다 — 받은 적 없으면 모르는 것이라 처음으로 친다(온보딩에서 바로 온 신규 가입자)
-export const notifyFirstScenarioCompleted = (queryClient: QueryClient) => {
+// 받아 둔 구독 응답으로 이미 끝내 본 사람인지 본다 — 받은 적 없으면 모르는 것이라 처음으로 친다(온보딩에서 바로 온 신규 가입자)
+export const hasCompletedScenarioBefore = (queryClient: QueryClient) => {
   const userId = getCurrentUserId();
-  if (userId === null) return;
+  if (userId === null) return false;
   const subscription = queryClient.getQueryData<MySubscription>(
     subscriptionKeys.mine(userId),
   );
-  if (subscription?.conversationCompletedSinceLaunch === true) return;
+  return subscription?.conversationCompletedSinceLaunch === true;
+};
+
+// 완료 이력은 제출 전에 읽어 넘긴다 — 제출 중에 구독이 새로 받아지면 방금 끝낸 것까지 이력에 들어 있다
+export const notifyFirstScenarioCompleted = (completedBefore: boolean) => {
+  const userId = getCurrentUserId();
+  if (userId === null || completedBefore) return;
   sendAdEventOnce('first_scenario_talk_completed', userId);
 };
