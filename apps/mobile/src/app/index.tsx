@@ -168,6 +168,7 @@ const ShellScreen = () => {
     },
     // 결제 시트를 띄우고 성공·취소·실패를 회신한다. 유료 여부는 BE 웹훅이 정하므로 여기선 결과만 전한다
     PURCHASE: async ({ packageId }) => {
+      logCheckoutStarted(packageId);
       const result = await purchasePackage(packageId);
       postToWeb({ type: 'PURCHASE_RESULT', ...result });
     },
