@@ -46,7 +46,7 @@ afterEach(() => cleanup());
 
 describe('TrackingStatusSync', () => {
   it('새 iOS 셸이면 마운트 때 추적 허용 상태를 묻는다', () => {
-    vi.mocked(getNativeContext).mockReturnValue(shell('ios', 12));
+    vi.mocked(getNativeContext).mockReturnValue(shell('ios', 13));
 
     render(<TrackingStatusSync />);
 
@@ -56,7 +56,7 @@ describe('TrackingStatusSync', () => {
   });
 
   it('이번에 권한창에 답했으면 상태를 속성으로 올리고 결정 이벤트를 남긴다', () => {
-    vi.mocked(getNativeContext).mockReturnValue(shell('ios', 12));
+    vi.mocked(getNativeContext).mockReturnValue(shell('ios', 13));
     render(<TrackingStatusSync />);
 
     answer('denied', true);
@@ -68,7 +68,7 @@ describe('TrackingStatusSync', () => {
   });
 
   it('예전에 답해 둔 상태면 속성만 올리고 이벤트는 남기지 않는다', () => {
-    vi.mocked(getNativeContext).mockReturnValue(shell('ios', 12));
+    vi.mocked(getNativeContext).mockReturnValue(shell('ios', 13));
     render(<TrackingStatusSync />);
 
     answer('granted', false);
@@ -78,7 +78,7 @@ describe('TrackingStatusSync', () => {
   });
 
   it('Android·구버전 셸·브라우저에선 묻지도 듣지도 않는다', () => {
-    for (const context of [shell('android', 12), shell('ios', 11), null]) {
+    for (const context of [shell('android', 13), shell('ios', 12), null]) {
       vi.mocked(getNativeContext).mockReturnValue(context);
 
       render(<TrackingStatusSync />);

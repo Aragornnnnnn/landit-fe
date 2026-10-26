@@ -10,7 +10,7 @@ import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { setUserProperties, track } from './amplitude';
 
 // REQUEST_TRACKING_STATUS / TRACKING_STATUS를 알아듣는 최소 브릿지 계약 버전
-const REQUIRED_BRIDGE_VERSION = 12;
+const REQUIRED_BRIDGE_VERSION = 13;
 
 export const TrackingStatusSync = () => {
   useEffect(() => {

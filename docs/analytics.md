@@ -416,7 +416,7 @@ OS 권한 팝업의 답 자체는 따로 찍지 않는다 — 위 두 step의 �
 | accent_locale                                   | EN_US \| EN_GB \| EN_AU (아직 없으면 지움)     | 학습 수준·배울 영어 도착 시                                    |
 | reward_state                                    | none \| active \| ended \| pending \| review   | 환급 조회 결과가 바뀔 때 (환급이 열린 뒤에만)                  |
 | has_alarm                                       | 참·거짓                                        | 알람 설정 도착 시·바뀔 때 (알람을 아는 셸에서만)               |
-| att_status                                      | granted \| denied \| undetermined              | 앱을 켤 때마다 셸이 ATT 상태를 회신하면 (iOS 브릿지 12 이상만) |
+| att_status                                      | granted \| denied \| undetermined              | 앱을 켤 때마다 셸이 ATT 상태를 회신하면 (iOS 브릿지 13 이상만) |
 
 이름은 백엔드 필드(`learningLevel`, `accentLocale`)에 맞춘다 — 이벤트 속성 쪽이 `level`·`accent`·`status`로 짧은 것과 어긋나 보이지만, 이미 쌓이고 있는 이벤트 속성을 바꾸면 과거 데이터가 갈라진다. 유저 속성은 서버 데이터와 같은 말을 쓰는 쪽을 택했다.
 
