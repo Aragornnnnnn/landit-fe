@@ -16,6 +16,7 @@ import { showToast } from '@/shared/ui/toast';
 interface ConversationInputOptions {
   canStart: boolean; // 대기(USER_READY)에서만 시작 — 연타 이중 집계 방지
   trackContext: () => { sessionId: number | null; turnIndex: number }; // 계측용 최신값 getter
+  keyterms: readonly string[]; // 이번 턴 음성 인식이 잘 받아쓰게 할 고유명사
   onInputStart: () => void; // → USER_SPEAKING_STARTED
   onInputCancel: () => void; // → USER_SPEAKING_CANCELLED
   // 다듬어진 최종 발화 (음성·타이핑 공통) — utteranceDurationMs는 실제로 말한 시간, 타이핑은 0
@@ -29,6 +30,7 @@ interface ConversationInputOptions {
 export const useConversationInput = ({
   canStart,
   trackContext,
+  keyterms,
   onInputStart,
   onInputCancel,
   onContent,
@@ -111,6 +113,7 @@ export const useConversationInput = ({
   // 마이크 STT 배선 — 침묵 자동 종료는 끄고 완료 버튼(■)만으로 끝낸다 (긴 답변 중 침묵에도 안 끊기게)
   const stt = useStt({
     stopOnSilence: false,
+    keyterms,
     onInterim: (text, pending) => {
       setTranscript(text);
       setSpeechPending(pending);

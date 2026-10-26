@@ -27,6 +27,7 @@ import { track } from '@/shared/analytics';
 import { getCurrentUserId } from '@/shared/auth/auth-store';
 
 import { submitScenarioTalkMessage } from '../_api/scenario-session';
+import { scenarioKeyterms } from './scenario-keyterms';
 import { toTalkGauge } from './talk-gauge';
 import { useScenarioTalkSession } from './useScenarioTalkSession';
 
@@ -129,6 +130,12 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
     openingAudioSrc: preview?.questionAudioUrl ?? null,
     sessionId: session.sessionId,
     ensureSession: session.ensure,
+    keytermsFor: (turnIndex) =>
+      scenarioKeyterms({
+        scenarioId: scenario.scenarioId,
+        firstSpeaker: scenario.firstSpeaker,
+        turnIndex,
+      }),
     submit: async ({ sessionId, content, inputType, turnIndex }) => {
       const { clientMessageId, guideViewed } = submissionFor(turnIndex);
       const res = await submitScenarioTalkMessage(
