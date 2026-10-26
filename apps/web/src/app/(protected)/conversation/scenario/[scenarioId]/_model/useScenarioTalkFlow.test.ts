@@ -541,6 +541,25 @@ describe('useScenarioTalkFlow', async () => {
     expect(result.current.resend).toBeUndefined();
   });
 
+  it('말한 답을 확인하는 중에 대화를 나가면 확인 화면에서 나갔다고 남긴다', async () => {
+    const { result } = await renderUserFirst();
+    vi.mocked(sessionApi.endSession).mockResolvedValue(undefined);
+    act(() => result.current.input.pressMic());
+    await act(async () => {
+      await result.current.input.finishListening();
+    });
+    await act(async () => {
+      sttMock.callbacks.onFinal?.('Hello!');
+    });
+
+    act(() => result.current.leave());
+
+    expect(track).toHaveBeenCalledWith(
+      'Transcript Reviewed',
+      expect.objectContaining({ action: 'leave' }),
+    );
+  });
+
   it('다시 보내는 사이 대화를 나가면 더 보내지 않고 실패도 알리지 않는다', async () => {
     const { result } = await renderUserFirst();
     submitScenarioTalkMessage.mockRejectedValue(new TypeError('Load failed'));
