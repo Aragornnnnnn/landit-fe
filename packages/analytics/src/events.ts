@@ -143,6 +143,9 @@ export const EVENTS = {
   NOTIFICATION_CONSENT_DISMISSED: 'Notification Consent Dismissed',
   NOTIFICATION_PERMISSION_DECIDED: 'Notification Permission Decided',
 
+  // 광고 추적 허용(iOS ATT) — 앱을 처음 켤 때 셸이 띄우는 권한창의 답. 지금 상태는 유저 속성 att_status로 본다
+  TRACKING_PERMISSION_DECIDED: 'Tracking Permission Decided',
+
   // 이벤트 공지 팝업 — 홈에 뜨는 운영 공지. 어느 공지인지는 popup_id로 가른다
   EVENT_POPUP_VIEWED: 'Event Popup Viewed',
   EVENT_POPUP_TAPPED: 'Event Popup Tapped',
@@ -412,6 +415,8 @@ export type RewardProfileState =
 // OS 알림 권한창을 띄운 지면 — 안내 시트 둘에 온보딩 스텝이 더해진다
 export type NotificationPermissionSource =
   'onboarding' | NotificationConsentSource;
+// iOS 광고 추적(ATT) 권한 상태 — 제한(restricted)은 셸이 denied로 보낸다
+export type TrackingPermissionStatus = 'granted' | 'denied' | 'undetermined';
 // 소감을 물은 순간과 답 — 닫기(딤·뒤로가기)도 답으로 셈해 다시 묻지 않는다.
 // talk = 대화 종류(첫 소감), review = 좋았다고 한 사람에게 완료 때마다 청하는 스토어 리뷰 요청
 export type SatisfactionTalk = 'scenario' | 'smalltalk';
@@ -848,6 +853,8 @@ export type EventProps = {
     granted: boolean;
     source: NotificationPermissionSource;
   };
+  // 이번 실행에서 권한창이 떠 답한 경우만 — 셸의 회신(TRACKING_STATUS의 prompted)에서 찍는다. 제한(restricted)은 거부로 온다
+  'Tracking Permission Decided': { granted: boolean };
 
   // 탭 = 이미지나 「자세히 보기」로 공지 화면에 들어감. 닫기는 버튼·바깥·뒤로가기를 가리지 않는다
   'Event Popup Viewed': { popup_id: number };
@@ -1013,6 +1020,7 @@ export interface UserProperties {
   accent_locale: AccentLocale | null;
   reward_state: RewardProfileState;
   has_alarm: boolean;
+  att_status: TrackingPermissionStatus;
 }
 
 // 한 번에 갱신할 속성들 — null은 "이 사람에게는 값이 없다"라는 뜻으로 프로필에서 그 속성을 지운다
