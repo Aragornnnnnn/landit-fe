@@ -779,7 +779,7 @@ describe('parseWebToNativeMessage — 광고 이벤트', () => {
   it('광고 이벤트 기록 요청을 그대로 되돌린다 (round-trip)', () => {
     const message = {
       type: 'LOG_AD_EVENT',
-      event: 'first_scenario_completed',
+      event: 'first_scenario_talk_completed',
     } as const;
 
     expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(

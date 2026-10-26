@@ -37,8 +37,11 @@ export const logAdEvent = (event: AdEvent) => {
     case 'onboarding_completed':
       AppEventsLogger.logEvent(AppEvents.CompletedRegistration);
       return;
-    case 'first_scenario_completed':
+    case 'first_scenario_talk_completed':
       AppEventsLogger.logEvent(AppEvents.CompletedTutorial);
+      return;
+    case 'first_expression_completed':
+      AppEventsLogger.logEvent(AppEvents.UnlockedAchievement);
       return;
     case 'paywall_viewed':
       AppEventsLogger.logEvent(AppEvents.ViewedContent, {

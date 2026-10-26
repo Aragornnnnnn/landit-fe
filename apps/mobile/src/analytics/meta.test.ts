@@ -15,6 +15,7 @@ jest.mock('react-native-fbsdk-next', () => ({
       CompletedTutorial: 'fb_mobile_tutorial_completion',
       ViewedContent: 'fb_mobile_content_view',
       InitiatedCheckout: 'fb_mobile_initiated_checkout',
+      UnlockedAchievement: 'fb_mobile_achievement_unlocked',
     },
     AppEventParams: {
       ContentType: 'fb_content_type',
@@ -110,10 +111,18 @@ describe('logAdEvent', () => {
   });
 
   it('첫 시나리오 완료는 메타 표준 이벤트 튜토리얼 완료로 기록한다', () => {
-    logAdEvent('first_scenario_completed');
+    logAdEvent('first_scenario_talk_completed');
 
     expect(AppEventsLogger.logEvent).toHaveBeenCalledWith(
       'fb_mobile_tutorial_completion',
+    );
+  });
+
+  it('첫 표현 학습 완료는 메타 표준 이벤트 업적 달성으로 기록한다', () => {
+    logAdEvent('first_expression_completed');
+
+    expect(AppEventsLogger.logEvent).toHaveBeenCalledWith(
+      'fb_mobile_achievement_unlocked',
     );
   });
 
