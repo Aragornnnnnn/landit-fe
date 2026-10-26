@@ -108,6 +108,13 @@ export const reviewResultStatusSchema = z.enum([
   'unavailable',
 ]);
 
+// 광고 최적화에 쓰는 앱 이벤트 — 웹은 일어난 일을 말하고, 셸이 메타 표준 이벤트로 옮긴다.
+// 새 이벤트를 더하면 옛 앱은 모르는 값이라 요청을 버린다 — 브릿지 버전을 올리고, 웹은 그 버전 이상에만 보낸다
+export const adEventSchema = z.enum([
+  'first_scenario_completed',
+  'paywall_viewed',
+]);
+
 // 반복 알람의 종류 — 종류마다 알람은 하나다.
 // 새 종류를 더하면 옛 앱은 모르는 값이라 요청을 버린다 — 브릿지 버전을 올리고, 웹은 그 버전 이상에만 보낸다
 export const alarmTypeSchema = z.enum(['scenario']);
@@ -257,6 +264,8 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   }),
   // 앱 안 별점 카드(OS 리뷰 요청)를 띄워 달라 — iOS는 1년 3번만 띄워 주고 떴는지 알려주지 않아 셸이 감지해 답한다. 응답은 REVIEW_RESULT
   z.object({ type: z.literal('REQUEST_REVIEW') }),
+  // 광고 최적화용 이벤트를 메타에 기록해 달라 (단방향)
+  z.object({ type: z.literal('LOG_AD_EVENT'), event: adEventSchema }),
   // 알람 권한·예약 상태 조회 — 다이얼로그를 띄우지 않는다. 응답은 ALARM_STATUS
   z.object({ type: z.literal('GET_ALARM_STATUS') }),
   // 알람 권한 요청 — iOS는 AlarmKit 권한창, Android는 정확한 알람 설정 화면이 뜬다. 응답은 ALARM_STATUS
@@ -390,6 +399,7 @@ export type PurchaseStatus = z.infer<typeof purchaseStatusSchema>;
 export type RestoreStatus = z.infer<typeof restoreStatusSchema>;
 export type PhotoPickStatus = z.infer<typeof photoPickStatusSchema>;
 export type PickedPhoto = z.infer<typeof pickedPhotoSchema>;
+export type AdEvent = z.infer<typeof adEventSchema>;
 export type AlarmType = z.infer<typeof alarmTypeSchema>;
 export type AlarmTime = z.infer<typeof alarmTimeSchema>;
 export type AlarmSchedule = z.infer<typeof alarmScheduleSchema>;
