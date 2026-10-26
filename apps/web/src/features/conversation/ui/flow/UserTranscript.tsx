@@ -193,8 +193,9 @@ const TranscriptEditor = ({
   return (
     <div
       onAnimationEnd={() => setShaking(false)}
+      // 자리가 모자라도 줄지 않는다 — 줄면 보내기 버튼이 칸 밖으로 넘쳐 키보드 뒤로 들어간다.
       // 간격·여백·글자는 답변 칸과 같다 — 확인 칸을 눌러 열 때 글이 제자리에 있어야 같은 칸이 입력 상태가 된 것으로 읽힌다
-      className={`mt-3 w-full rounded-2xl border border-primary bg-card px-5 py-3 ${shaking ? 'animate-shake' : ''}`}
+      className={`mt-3 w-full flex-none rounded-2xl border border-primary bg-card px-5 py-3 ${shaking ? 'animate-shake' : ''}`}
     >
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold text-muted-foreground">내 답변</p>

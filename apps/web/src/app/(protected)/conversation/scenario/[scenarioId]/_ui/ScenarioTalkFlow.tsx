@@ -191,7 +191,8 @@ export const ScenarioTalkFlow = ({
       <CharacterStage partner={partner} look={characterLook} speech={speech} />
 
       {/* 무대·답변·마이크는 고정. 질문만 남는 공간을 채우는 스크롤 영역에 담아, 길어져도 겹치지 않고 카드 안에서 스크롤된다 */}
-      <section className="flex min-h-0 flex-1 flex-col px-5">
+      {/* 질문은 최소 한 줄 남짓은 남긴다 — 키보드로 자리가 모자라면 무대가 먼저 줄어든다 */}
+      <section className="flex min-h-24 flex-1 flex-col px-5">
         {/* pt-5는 무대와의 간격이자 페이드 구간 — 위로 스크롤될 때 무대 밑에서 그림자·글자가 직각으로 잘리지 않고 서서히 사라진다 */}
         {/* 카드가 남는 높이를 다 쓰되 넘치진 않는다 — 넘치는 글은 카드 안에서 스크롤된다 */}
         <div className="flex min-h-0 flex-1 flex-col pt-2">
@@ -220,8 +221,12 @@ export const ScenarioTalkFlow = ({
             translationDefaultOpen={display.translationDefaultOpen}
           />
         </div>
+      </section>
+
+      {/* 답변 칸은 질문 영역 밖에 둔다 — 키보드가 올라와 자리가 모자라면 질문이 아니라 무대가 줄고, 입력창은 그대로 키보드 위에 선다 */}
+      <div className="flex-none px-5">
         {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다.
-            가이드를 펼치면 칩이 그 자리에서 예시 카드로 커져 칸 위에 겹친다 */}
+              가이드를 펼치면 칩이 그 자리에서 예시 카드로 커져 칸 위에 겹친다 */}
         {!ended && (
           <AnswerGuideSlot
             guide={answerGuide}
@@ -257,7 +262,7 @@ export const ScenarioTalkFlow = ({
             />
           </AnswerGuideSlot>
         )}
-      </section>
+      </div>
 
       <footer
         className={`flex-none ${keyboardLifted ? 'pb-4' : 'pb-[max(var(--safe-area-inset-bottom),16px)]'}`}
