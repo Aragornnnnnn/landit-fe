@@ -3,6 +3,7 @@ import { parseApiResponse } from '@/shared/api/parse';
 import { REFRESH_PATH, refreshAccessToken } from '@/shared/auth/api/refresh';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { clearSession } from '@/shared/auth/clear-session';
+import { localeFromDocument } from '@/shared/i18n/locale';
 import { LOGIN_PATH } from '@/shared/lib/routes';
 
 /**
@@ -41,6 +42,8 @@ async function request<T>(
   const headers = new Headers(
     body instanceof FormData ? {} : { 'Content-Type': 'application/json' },
   );
+  // 백엔드가 화면과 같은 언어로 응답하게 한다
+  headers.set('Accept-Language', localeFromDocument());
   if (tokenToSend) {
     headers.set('Authorization', `Bearer ${tokenToSend}`);
   }
