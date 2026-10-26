@@ -164,15 +164,15 @@ export const SmallTalkConversation = ({
       <CharacterStage partner={partner} look={characterLook} speech={speech} />
 
       {/* 질문은 최소 한 줄 남짓은 남긴다 — 키보드로 자리가 모자라면 무대가 먼저 줄어든다.
-          고치려고 키보드가 올라와 있는 동안엔 한 줄만으로는 읽을 수 없어 질문을 접고 그 자리를 무대에 준다 — 앱에서 보던 모습(캐릭터 바로 아래 입력창) 그대로 */}
+          키보드가 올라와 있는 동안엔 질문을 접는다 — 입력창이 캐릭터 바로 아래에 붙고, 남는 높이는 입력창과 키보드 사이로 간다 */}
       <section
-        className={`flex flex-1 flex-col px-5 ${keyboardLifted ? 'min-h-0' : 'min-h-24'}`}
+        className={
+          keyboardLifted ? 'hidden' : 'flex min-h-24 flex-1 flex-col px-5'
+        }
       >
         {/* 카드가 남는 높이를 다 쓰되 넘치진 않는다 — 넘치는 글은 카드 안에서 스크롤된다.
             끝난 뒤엔 남는 높이를 통계 시트 아래로 넘긴다 — 시트가 작별 인사에 붙어야 이 대화의 결과로 읽힌다 */}
-        <div
-          className={`min-h-0 flex-col pt-2 ${ended ? '' : 'flex-1'} ${keyboardLifted ? 'hidden' : 'flex'}`}
-        >
+        <div className={`flex min-h-0 flex-col pt-2 ${ended ? '' : 'flex-1'}`}>
           <QuestionCard
             question={turn.aiMessage}
             translation={turn.aiTranslation}

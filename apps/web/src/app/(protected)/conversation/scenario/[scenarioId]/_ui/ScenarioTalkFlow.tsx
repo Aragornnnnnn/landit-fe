@@ -195,15 +195,15 @@ export const ScenarioTalkFlow = ({
 
       {/* 무대·답변·마이크는 고정. 질문만 남는 공간을 채우는 스크롤 영역에 담아, 길어져도 겹치지 않고 카드 안에서 스크롤된다 */}
       {/* 질문은 최소 한 줄 남짓은 남긴다 — 키보드로 자리가 모자라면 무대가 먼저 줄어든다.
-          키보드가 올라와 있는 동안엔 한 줄만으로는 읽을 수 없어 질문을 접고 그 자리를 무대에 준다 — 앱에서 보던 모습(캐릭터 바로 아래 입력창) 그대로 */}
+          키보드가 올라와 있는 동안엔 질문을 접는다 — 입력창이 캐릭터 바로 아래에 붙고, 남는 높이는 입력창과 키보드 사이로 간다 */}
       <section
-        className={`flex flex-1 flex-col px-5 ${keyboardLifted ? 'min-h-0' : 'min-h-24'}`}
+        className={
+          keyboardLifted ? 'hidden' : 'flex min-h-24 flex-1 flex-col px-5'
+        }
       >
         {/* pt-5는 무대와의 간격이자 페이드 구간 — 위로 스크롤될 때 무대 밑에서 그림자·글자가 직각으로 잘리지 않고 서서히 사라진다 */}
         {/* 카드가 남는 높이를 다 쓰되 넘치진 않는다 — 넘치는 글은 카드 안에서 스크롤된다 */}
-        <div
-          className={`min-h-0 flex-1 flex-col pt-2 ${keyboardLifted ? 'hidden' : 'flex'}`}
-        >
+        <div className="flex min-h-0 flex-1 flex-col pt-2">
           <QuestionCard
             question={turn.aiMessage}
             translation={turn.aiTranslation}
