@@ -268,6 +268,8 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Hello there.');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     expect(result.current.remainingMs).toBe(20_000);
   });
@@ -282,6 +284,8 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Hello there.');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     expect(result.current.remainingMs).toBe(12_000);
   });
@@ -296,6 +300,8 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Hello there.');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     expect(ttsMock.prefetch).toHaveBeenCalledWith('Nice!', sessionVoice);
   });
@@ -309,6 +315,8 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Hello there.');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     expect(submitSmallTalkMessage).toHaveBeenCalledWith(
       7,
@@ -335,6 +343,8 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Bye!');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     expect(submitSmallTalkMessage).toHaveBeenCalledWith(
       7,
@@ -356,6 +366,8 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Bye!');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     expect(shouldAskSatisfaction('smalltalk')).toBe(true);
   });
@@ -368,6 +380,8 @@ describe('useSmallTalkFlow — 남은 말하기 시간', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Hello!');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     expect(shouldAskSatisfaction('smalltalk')).toBe(false);
   });
@@ -394,6 +408,8 @@ describe('useSmallTalkFlow — 중도 이탈', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Hello there.');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
     act(() => result.current.leave());
 
     expect(endSession).toHaveBeenCalled();
@@ -422,6 +438,8 @@ describe('useSmallTalkFlow — 종료 확인', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('I should get going.');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     expect(decideSmallTalkExit).toHaveBeenCalledWith(7, {
       submittedMessageId: 100,
@@ -457,6 +475,8 @@ describe('useSmallTalkFlow — 종료 확인', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('I should get going.');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     expect(endSession).toHaveBeenCalled();
     expect(goHome).toHaveBeenCalled();
@@ -474,6 +494,8 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Hello there.');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
   };
 
   // 속마음과 상대 발화가 끝나 다시 말할 차례(USER_READY)가 될 때까지 넘긴다
@@ -534,6 +556,8 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('And you?');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     await act(async () => result.current.completeTalk());
     refreshStreak.mockClear();
@@ -557,6 +581,8 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Bye!');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
     refreshStreak.mockClear();
 
     await act(async () => result.current.completeTalk());
@@ -595,6 +621,8 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Wait, one more thing.');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     expect(submitSmallTalkMessage).not.toHaveBeenCalled();
   });
@@ -621,6 +649,8 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('I should get going.');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     await act(async () => result.current.completeTalk());
     await act(async () => rejectDecision(new Error('409')));
@@ -644,6 +674,8 @@ describe('useSmallTalkFlow — 종료 버튼으로 직접 완료', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('And you?');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
     expect(submitSmallTalkMessage).toHaveBeenCalledTimes(2);
     monitoringMock.reportError.mockClear();
 
@@ -680,6 +712,8 @@ describe('useSmallTalkFlow — X 누르기', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Hello there.');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     let confirm: boolean | undefined;
     act(() => {
@@ -702,6 +736,8 @@ describe('useSmallTalkFlow — X 누르기', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Bye!');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     let confirm: boolean | undefined;
     act(() => {
@@ -725,6 +761,8 @@ describe('useSmallTalkFlow — X 누르기', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Bye!');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     act(() => void result.current.pressClose());
     await act(async () =>
@@ -756,6 +794,8 @@ describe('useSmallTalkFlow — X 누르기', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Bye!');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
     expect(decideSmallTalkExit).toHaveBeenCalled();
 
     let confirm: boolean | undefined;
@@ -793,6 +833,8 @@ describe('useSmallTalkFlow — X 누르기', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Bye!');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
     expect(endSession).toHaveBeenCalledTimes(1);
     goHome.mockClear();
 
@@ -824,6 +866,8 @@ describe('useSmallTalkFlow — X 누르기', () => {
       result.current.input.finishListening();
       sttMock.callbacks.onFinal?.('Bye!');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     expect(result.current.summary.speakingDurationMs).toBe(7_000);
   });

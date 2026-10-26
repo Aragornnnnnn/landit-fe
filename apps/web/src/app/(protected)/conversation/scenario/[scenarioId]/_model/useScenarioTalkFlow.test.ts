@@ -287,6 +287,8 @@ const speakAndSubmit = async (
   await act(async () => {
     sttMock.callbacks.onFinal?.(text); // 최종 텍스트 도착 → 음성 제출
   });
+  // 말한 뒤 확인 단계에서 그대로 보낸다
+  await act(async () => result.current.input.submitReviewed());
 };
 
 // 키보드로 입력 → 전송까지 몰아준다
@@ -424,6 +426,8 @@ describe('useScenarioTalkFlow', async () => {
     act(() => {
       sttMock.callbacks.onFinal?.('Hello!'); // 최종 텍스트 → 음성 제출 시작
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     expect(result.current.phase).toBe('AI_THINKING');
 
@@ -1075,6 +1079,8 @@ describe('useScenarioTalkFlow', async () => {
     await act(async () => {
       sttMock.callbacks.onFinal?.('Hello there.');
     });
+    // 말한 뒤 확인 단계에서 그대로 보낸다
+    await act(async () => result.current.input.submitReviewed());
 
     expect(submitScenarioTalkMessage).toHaveBeenCalledWith(
       1,

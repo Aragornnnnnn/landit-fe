@@ -2,6 +2,7 @@
 
 // 유저 입력 훅 — 마이크 STT(음성)와 키보드 타이핑을 오가며 최종 발화를 다듬어 전달한다 (LAN-141)
 // 기본은 마이크(음성, VOICE), 키보드 아이콘을 누르면 타이핑(TEXT)으로 전환한다.
+// 음성은 ■ 뒤 바로 보내지 않고 인식된 문장을 확인 단계에 올린다 — 보내기·다시 말하기·고치기 중 하나로 마무리한다.
 import { useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
@@ -46,12 +47,32 @@ export const useConversationInput = ({
   const micDeniedTrackedRef = useRef(false);
   // 말하기 시작 시각 — 마이크를 켠 순간부터 최종 텍스트가 올 때까지가 발화 시간이다
   const spokeFromRef = useRef<number | null>(null);
+  // 확인 단계에 올린 음성 — 처음 인식된 문장과 그때까지 말한 시간. 고쳐서 보내도 말한 답이라 이 시간을 그대로 쓴다
+  const [reviewed, setReviewed] = useState<{
+    original: string;
+    utteranceDurationMs: number;
+  } | null>(null);
+  const reviewing = reviewed != null;
+  // 다시 말하기 직전의 확인 — 다시 말하다 취소하거나 인식에 실패하면 이 답으로 돌아간다
+  const retryFromRef = useRef<typeof reviewed>(null);
 
   // 이번 발화에 걸린 시간. 시작 표시가 없으면(취소 후 늦게 온 결과) 0으로 둔다
   const takeUtteranceDuration = () => {
     const spokeFrom = spokeFromRef.current;
     spokeFromRef.current = null;
     return spokeFrom == null ? 0 : Date.now() - spokeFrom;
+  };
+
+  // 다시 말하기를 되돌린다 — 직전에 인식된 문장으로 확인에 돌아간다. 돌아갈 답이 없으면 false
+  const returnToPreviousReview = () => {
+    const previous = retryFromRef.current;
+    if (!previous) return false;
+    retryFromRef.current = null;
+    spokeFromRef.current = null;
+    setTranscript(previous.original);
+    setSpeechPending(false);
+    setReviewed(previous);
+    return true;
   };
 
   // 음성 최종 텍스트 — 비었으면(인식 실패) 마이크 대기로 되돌리고 이유를 알린다. 취소 후엔 오지 않는다(useStt 보장)
@@ -71,17 +92,23 @@ export const useConversationInput = ({
     });
     if (!content) {
       haptic('error');
-      setTranscript('');
-      onInputCancel();
       showToast('말이 인식되지 않았어요. 다시 말해볼까요?');
       track(EVENTS.TURN_FAILED, {
         session_id: sessionId ?? undefined,
         turn_index: turnIndex,
         reason: 'empty',
       });
+      // 다시 말하던 중이면 이미 있던 답을 버리지 않는다
+      if (returnToPreviousReview()) return;
+      setTranscript('');
+      onInputCancel();
       return;
     }
-    onContent(content, 'VOICE', utteranceDurationMs);
+    retryFromRef.current = null;
+    // 보내기 전에 한 번 보여 준다 — 발음 때문에 잘못 알아들은 문장이 그대로 가지 않게
+    setTranscript(content);
+    setSpeechPending(false);
+    setReviewed({ original: content, utteranceDurationMs });
   };
 
   // 인식 오류 — 권한 거부는 설정 유도 안내를, 그 외에는 토스트로 알리고 마이크 대기로 되돌린다
@@ -106,6 +133,8 @@ export const useConversationInput = ({
       reportWarning(error);
     }
     haptic('error');
+    // 다시 말하던 중이면 이미 있던 답을 버리지 않는다
+    if (returnToPreviousReview()) return;
     setTranscript('');
     onInputCancel();
   };
@@ -126,26 +155,72 @@ export const useConversationInput = ({
     setKeyboardMode(false);
     setTranscript('');
     setSpeechPending(false);
+    setReviewed(null);
+    retryFromRef.current = null;
+  };
+
+  // 확인 단계의 마무리를 남긴다 — 다시 말하기와 고친 비율로 잘못 알아들은 빈도를 본다
+  const trackReview = (action: 'send' | 'retry', edited: boolean) => {
+    const { sessionId, turnIndex } = trackContext();
+    track(EVENTS.TRANSCRIPT_REVIEWED, {
+      session_id: sessionId ?? undefined,
+      turn_index: turnIndex,
+      action,
+      edited,
+    });
+  };
+
+  // 마이크를 켜고 말한 시간을 새로 재기 시작한다 — 처음 말하기와 다시 말하기가 같이 쓴다
+  const startListening = () => {
+    const { sessionId, turnIndex } = trackContext();
+    track(EVENTS.RECORDING_STARTED, {
+      session_id: sessionId ?? undefined,
+      turn_index: turnIndex,
+    });
+    spokeFromRef.current = Date.now();
+    void stt.start();
   };
 
   // 마이크로 말하기 — 듣기 시작을 알리고 STT를 켠다
   const pressMic = () => {
     if (!canStart) return;
-    const { sessionId, turnIndex } = trackContext();
     if (keyboardMode) {
       track(EVENTS.INPUT_MODE_SWITCHED, {
-        session_id: sessionId ?? undefined,
+        session_id: trackContext().sessionId ?? undefined,
         mode: 'voice',
       });
     }
-    track(EVENTS.RECORDING_STARTED, {
-      session_id: sessionId ?? undefined,
-      turn_index: turnIndex,
-    });
     resetToVoiceInput();
-    spokeFromRef.current = Date.now();
     onInputStart();
-    void stt.start();
+    startListening();
+  };
+
+  // 확인 단계에서 다시 말하기 — 인식된 문장을 버리고 말하는 중 그대로 마이크를 다시 켠다
+  const speakAgain = () => {
+    if (!reviewing) return;
+    trackReview('retry', false);
+    const previous = reviewed;
+    resetToVoiceInput();
+    retryFromRef.current = previous;
+    startListening();
+  };
+
+  // 확인 단계에서 고치기 — 인식된 문장이 채워진 입력창을 연다(키보드 입력과 같은 화면)
+  const editTranscript = () => {
+    if (!reviewing) return;
+    // 인식기가 드물게 적는 허용 밖 글자는 입력창을 열기 전에 걸러 둔다 — 키보드로 고쳐 쓰는 규칙과 같다
+    setTranscript((prev) => removeNonEnglish(prev));
+    setKeyboardMode(true);
+  };
+
+  // 확인한 답을 보낸다 — 고쳤어도 말한 답이라 VOICE·말한 시간 그대로. 다 지웠으면 보내지 않는다
+  const submitReviewed = () => {
+    if (!reviewed) return;
+    // 고쳐 쓴 입력창이 조합을 끝내기 전에 보낼 수 있다 — 키보드 전송과 같은 거름망을 거친다
+    const content = removeNonEnglish(transcript).trim();
+    if (!content) return;
+    trackReview('send', content !== reviewed.original);
+    onContent(content, 'VOICE', reviewed.utteranceDurationMs);
   };
 
   // 키보드로 입력 — 듣기를 시작하되 마이크는 켜지 않고 타이핑 입력창을 연다
@@ -166,12 +241,20 @@ export const useConversationInput = ({
 
   const cancelInput = () => {
     const { sessionId, turnIndex } = trackContext();
+    // 확인 중엔 마이크가 이미 꺼져 있다 — 끌 것도, 전환할 것도 없이 대기로 되돌린다
+    if (reviewing) {
+      resetToVoiceInput();
+      onInputCancel();
+      return;
+    }
     if (!keyboardMode) {
       stt.abort();
       track(EVENTS.RECORDING_CANCELED, {
         session_id: sessionId ?? undefined,
         turn_index: turnIndex,
       });
+      // 다시 말하기만 되돌린다 — 이미 있던 답은 그대로 확인에 남는다
+      if (returnToPreviousReview()) return;
     } else {
       // 타이핑 취소 = 기본 입력 수단(마이크 대기)으로 복귀
       track(EVENTS.INPUT_MODE_SWITCHED, {
@@ -195,11 +278,26 @@ export const useConversationInput = ({
 
   // 키보드 전송 — 타이핑한 텍스트를 다듬어 전달한다. 비었으면 조용히 무시(입력창은 열려 있다)
   const submitText = () => {
+    // 확인 단계에서 연 입력창 — 쓴 게 아니라 말한 답을 고친 것이다
+    if (reviewing) {
+      submitReviewed();
+      return;
+    }
     // 입력창이 조합을 끝내기 전에 전송될 수 있어 여기서도 한 번 더 거른다
     const content = removeNonEnglish(transcript).trim();
     if (!content) return;
     // 타이핑은 말한 게 아니라 쓴 것 — 발화 시간을 차감하지 않는다
     onContent(content, 'TEXT', 0);
+  };
+
+  // 입력창 닫기(X) — 확인 단계에서 열었으면 고친 내용을 버리고 처음 인식된 문장으로 확인에 돌아간다
+  const closeTyping = () => {
+    if (!reviewed) {
+      cancelInput();
+      return;
+    }
+    setKeyboardMode(false);
+    setTranscript(reviewed.original);
   };
 
   return {
@@ -212,6 +310,11 @@ export const useConversationInput = ({
     cancelInput,
     finishListening,
     submitText,
+    reviewing,
+    speakAgain,
+    editTranscript,
+    submitReviewed,
+    closeTyping,
     // 다음 턴 준비 — 미리보기를 비우고 기본 입력 수단(마이크)부터 다시 시작한다
     resetForNextTurn: resetToVoiceInput,
     micPermissionDenied,
