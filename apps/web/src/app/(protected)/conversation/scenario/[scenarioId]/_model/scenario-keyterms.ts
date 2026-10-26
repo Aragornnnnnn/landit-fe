@@ -1,32 +1,10 @@
 // 시나리오 대화의 음성 인식 키워드 — 캐릭터 이름에 지금 시나리오(또는 지금 질문)의 목록 하나만 더한다
 import { CHARACTER_KEYTERMS } from '@/features/conversation/model/stt-keyterms';
 
-const MBTI = [
-  'MBTI',
-  'ISTJ',
-  'ISFJ',
-  'INFJ',
-  'INTJ',
-  'ISTP',
-  'ISFP',
-  'INFP',
-  'INTP',
-  'ESTP',
-  'ESFP',
-  'ENFP',
-  'ENTP',
-  'ESTJ',
-  'ESFJ',
-  'ENFJ',
-  'ENTJ',
-];
-
 const KOREAN_FOOD = [
   'tteokbokki',
   'bulgogi',
   'kimchi',
-  'kimbap',
-  'gimbap',
   'bibimbap',
   'samgyeopsal',
 ];
@@ -36,13 +14,9 @@ const KOREAN_CITIES = [
   'Busan',
   'Jeju',
   'Gangneung',
-  'Sokcho',
   'Yangyang',
   'Gyeongju',
   'Jeonju',
-  'Daejeon',
-  'Daegu',
-  'Incheon',
 ];
 
 const SEOUL_PLACES = [
@@ -56,12 +30,13 @@ const SEOUL_PLACES = [
   'Gwanghwamun',
 ];
 
+// 대전·대구·속초·인천·김밥과 MBTI 16유형은 한국어식 발음에서 다른 말을 이 단어로 바꿔 받아써서 넣지 않는다
 // 키는 DB의 scenario_id다 — 화면의 Day 순서와 다르다
 export const SCENARIO_KEYTERMS: Record<number, readonly string[]> = {
   // 유심과 관심사
   40: ['USIM', 'SIM', 'eSIM', 'SNS'],
   278: ['SNS', 'OTT'],
-  101: MBTI,
+  101: ['MBTI'],
   117: ['Halli Galli', 'Jenga', 'Uno'],
   64: ['Coachella'],
   72: ['OTT'],
@@ -74,7 +49,7 @@ export const SCENARIO_KEYTERMS: Record<number, readonly string[]> = {
   // 음식과 카페
   6: KOREAN_FOOD,
   17: ['matcha'],
-  34: ['kimchi', 'kimbap', 'gimbap'],
+  34: ['kimchi'],
   41: KOREAN_FOOD,
   49: ['soju'],
   85: ['matcha'],
@@ -84,7 +59,7 @@ export const SCENARIO_KEYTERMS: Record<number, readonly string[]> = {
   226: ['paella'],
   230: ['bulgogi'],
   238: ['tteokbokki'],
-  242: ['tteokbokki', 'kimbap', 'gimbap'],
+  242: ['tteokbokki'],
   250: ['matcha'],
   267: ['matcha'],
   // 여행과 지역
@@ -96,7 +71,7 @@ export const SCENARIO_KEYTERMS: Record<number, readonly string[]> = {
   137: ['Hongdae', 'Seongsu', 'Gangnam'],
   139: KOREAN_CITIES,
   160: ['Hangang', 'Namsan'],
-  189: ['Jeju', 'Busan', 'Gangneung', 'Sokcho', 'Yangyang'],
+  189: ['Jeju', 'Busan', 'Gangneung', 'Yangyang'],
   // 한국 명절과 문화
   175: ['Chuseok', 'hanbok'],
   268: ['Chuseok', 'hanbok', 'kimchi', 'bulgogi', 'tteokbokki'],

@@ -62,6 +62,40 @@ describe('scenarioKeyterms', () => {
     expect(keyterms).toEqual(NAMES);
   });
 
+  // 한국어식 발음 테스트에서 말하지 않은 단어로 바꿔 받아쓴 키워드 — 다시 넣지 않는다
+  it('받아쓰기를 오히려 틀리게 만든 키워드는 어느 목록에도 없다', () => {
+    const harmful = [
+      'Daejeon',
+      'Daegu',
+      'Sokcho',
+      'Incheon',
+      'kimbap',
+      'gimbap',
+      'ISTJ',
+      'ISFJ',
+      'INFJ',
+      'INTJ',
+      'ISTP',
+      'ISFP',
+      'INFP',
+      'INTP',
+      'ESTP',
+      'ESFP',
+      'ENFP',
+      'ENTP',
+      'ESTJ',
+      'ESFJ',
+      'ENFJ',
+      'ENTJ',
+    ];
+    const terms = [
+      ...Object.values(SCENARIO_KEYTERMS),
+      ...Object.values(QUESTION_KEYTERMS).flat(),
+    ].flat();
+
+    expect(terms.filter((term) => harmful.includes(term))).toEqual([]);
+  });
+
   // 한 요청에 너무 많이 실으면 키워드 효과가 흐려진다 — 목록을 늘릴 때 이 상한을 지킨다
   it('어느 시나리오·질문이든 한 번에 넘기는 키워드는 20개를 넘지 않는다', () => {
     const lists = [
