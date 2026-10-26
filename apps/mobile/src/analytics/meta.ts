@@ -17,12 +17,12 @@ export async function initMetaSdk(): Promise<string | null> {
   if (Platform.OS === 'ios') {
     // iOS 14.5+는 ATT 동의 전까지 IDFA를 못 쓴다 — 동의 여부를 그대로 광고 추적 설정에 반영한다
     try {
-      // 묻기 전에 미정이었으면 이번 요청이 권한창을 띄운다 — 웹이 허용률을 계측할 때 처음 답한 사람만 이벤트로 남긴다
+      // 묻기 전엔 미정이었다가 답이 정해졌으면 이번에 권한창에 답한 것이다 — 앱이 활성 전이면 창 없이 미정이 그대로 돌아온다
       const before = await getTrackingPermissionsAsync();
       const { granted, status } = await requestTrackingPermissionsAsync();
       trackingStatus.settle({
         status,
-        prompted: before.status === 'undetermined',
+        prompted: before.status === 'undetermined' && status !== 'undetermined',
       });
       await Settings.setAdvertiserTrackingEnabled(granted);
     } catch (error) {

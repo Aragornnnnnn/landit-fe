@@ -136,6 +136,24 @@ describe('initMetaSdk', () => {
       });
     });
 
+    it('요청 뒤에도 미정이면 권한창이 뜨지 않은 것으로 보관한다', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios');
+      mockGetTracking.mockResolvedValueOnce({
+        status: 'undetermined',
+      } as never);
+      mockRequestTracking.mockResolvedValueOnce({
+        granted: false,
+        status: 'undetermined',
+      } as never);
+
+      await initMetaSdk();
+
+      expect(settle).toHaveBeenCalledWith({
+        status: 'undetermined',
+        prompted: false,
+      });
+    });
+
     it('Android면 결과 없음으로 보관한다', async () => {
       jest.replaceProperty(Platform, 'OS', 'android');
 
