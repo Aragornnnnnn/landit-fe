@@ -270,6 +270,17 @@ describe('useConversationInput', () => {
     expect(result.current.transcript).toBe('Hello there.');
   });
 
+  it('말한 내용을 키보드로 고쳐 쓸 때 허용 밖 글자는 미리 거른다', () => {
+    // 첫 영어 입력에 인식기가 적어 둔 기호가 지워지며 경고가 뜨면, 영어만 친 사람이 혼난 꼴이 된다
+    const { result } = renderInput();
+
+    act(() => result.current.pressMic());
+    act(() => sttMock.callbacks.onInterim?.("I'm #1 at 30°", false));
+    act(() => result.current.pressKeyboard());
+
+    expect(result.current.transcript).toBe("I'm 1 at 30");
+  });
+
   it('마이크로 시작하면 쓰던 초안을 지운다', () => {
     // 말하기는 인식 결과로 처음부터 채운다 — 쓰다 만 글이 남아 있으면 말하지도 않은 문장이
     // 인식된 것처럼 보인다

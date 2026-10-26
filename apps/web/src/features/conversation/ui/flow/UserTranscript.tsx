@@ -125,16 +125,21 @@ const TranscriptEditor = ({
   // 글자가 안 써지는 순간을 바로 알아채게 박스를 흔든다. 끝나면 거둬야 다음에 다시 흔들 수 있다
   const [shaking, setShaking] = useState(false);
 
+  // 글자가 걸러졌다는 걸 흔들림·진동·토스트로 바로 알린다
+  const warnNonEnglish = () => {
+    setShaking(true);
+    haptic('error');
+    // 이어 치는 동안 계속 띄워도 토스트는 그대로 떠 있고 시간만 늘어난다
+    showToast('영어로만 입력해 주세요');
+  };
+
   // 걸러 낸 뒤 넘긴다. 지운 만큼 커서를 당겨 쓰던 자리에 둔다
   const acceptTyping = (input: HTMLTextAreaElement) => {
     const { value, selectionStart } = input;
     const english = removeNonEnglish(value);
     onChange?.(english);
     if (english === value) return;
-    setShaking(true);
-    haptic('error');
-    // 이어 치는 동안 계속 띄워도 토스트는 그대로 떠 있고 시간만 늘어난다
-    showToast('영어로만 입력해 주세요');
+    warnNonEnglish();
     const caret = removeNonEnglish(value.slice(0, selectionStart)).length;
     requestAnimationFrame(() => input.setSelectionRange(caret, caret));
   };
@@ -164,13 +169,17 @@ const TranscriptEditor = ({
           composingRef.current = false;
           acceptTyping(event.currentTarget);
         }}
+        // 조합 끝 신호를 빠뜨리는 키보드가 있다 — 입력창을 떠나면 조합도 끝난 것으로 본다
+        onBlur={() => {
+          composingRef.current = false;
+        }}
         onChange={(event) => {
           if (composingRef.current) onChange?.(event.target.value);
           else acceptTyping(event.target);
         }}
         onKeyDown={(event) => {
-          // 한글 조합을 끝내는 Enter는 전송이 아니다
-          if (event.nativeEvent.isComposing) return;
+          // 한글 조합을 끝내는 Enter는 전송이 아니다. Safari는 조합 끝 신호를 먼저 보내 isComposing 대신 229로 온다
+          if (event.nativeEvent.isComposing || event.keyCode === 229) return;
           // Enter는 전송, Shift+Enter만 줄바꿈 — 모바일 키보드의 완료 동작과 맞춘다
           if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();

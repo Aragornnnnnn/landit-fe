@@ -1,6 +1,12 @@
 // 답변을 영어로만 받기 위해 영어 대화에 필요 없는 글자를 걸러 내는 규칙
 
-// 남기는 글자 — 영문·숫자·공백과 문장에 쓰는 부호. iOS가 바꿔 넣는 둥근 따옴표(’“”)도 포함한다
-const NOT_ENGLISH = /[^A-Za-z0-9\s.,?!'’"“”-]/gu;
+// 남기는 글자는 아래 넷이다. 그 밖(한글·이모지·@#*_<>[]{}|\~^ 같은 기호)은 지운다.
+// - 라틴 문자(악센트 포함 — 인식기가 café·résumé로 적어 준다)·숫자·공백
+// - 문장 부호와 흔한 기호: . , ? ! : ; ' " ( ) / & + -
+// - 시간·가격·퍼센트: $ % £ € (5:30, $20, 50%)
+// - iOS가 자동으로 바꿔 넣는 글자: ‘ ’ “ ” … – —
+const NOT_ENGLISH = /[^\p{Script=Latin}0-9\s.,?!:;'"()/&+\-$%£€‘’“”…–—]/gu;
 
-export const removeNonEnglish = (text: string) => text.replace(NOT_ENGLISH, '');
+// 분해형(e + 결합 악센트)은 결합 악센트만 지워지므로 먼저 합친다
+export const removeNonEnglish = (text: string) =>
+  text.normalize('NFC').replace(NOT_ENGLISH, '');

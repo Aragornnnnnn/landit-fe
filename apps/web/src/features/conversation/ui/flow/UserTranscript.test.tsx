@@ -192,23 +192,51 @@ describe('UserTranscript', () => {
       expect(screen.getAllByText('영어로만 입력해 주세요')).toHaveLength(1);
     });
 
-    it('한글 조합 중에는 거르지 않고, 조합이 끝나면 거른다', () => {
+    it('한글 조합 중에는 거르지 않고 그대로 넘긴다', () => {
       // 조합 중에 글자를 지우면 입력기가 꼬여 글자가 깨진다
       const { input, onChange } = renderEditing();
+      fireEvent.compositionStart(input);
 
+      fireEvent.change(input, { target: { value: 'hi 안' } });
+
+      expect(onChange).toHaveBeenLastCalledWith('hi 안');
+    });
+
+    it('한글 조합이 끝나면 거르고 안내한다', () => {
+      const { input, onChange } = renderEditing();
       fireEvent.compositionStart(input);
       fireEvent.change(input, { target: { value: 'hi 안' } });
-      expect(onChange).toHaveBeenLastCalledWith('hi 안');
 
       fireEvent.compositionEnd(input);
+
       expect(onChange).toHaveBeenLastCalledWith('hi ');
       expect(englishNotice()).toBeInTheDocument();
+    });
+
+    it('조합이 끝났다는 신호 없이 입력창을 떠나도 다음 입력은 거른다', () => {
+      // 일부 키보드는 조합 끝 신호를 빠뜨린다 — 그대로 두면 이후 입력이 전부 통과한다
+      const { input, onChange } = renderEditing();
+      fireEvent.compositionStart(input);
+      fireEvent.blur(input);
+
+      fireEvent.change(input, { target: { value: 'hi 안' } });
+
+      expect(onChange).toHaveBeenLastCalledWith('hi ');
     });
 
     it('한글 조합을 끝내는 Enter로는 전송하지 않는다', () => {
       const { input, onSubmit } = renderEditing('hi 안');
 
       fireEvent.keyDown(input, { key: 'Enter', isComposing: true });
+
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('조합을 확정하는 Enter(키 코드 229)로는 전송하지 않는다', () => {
+      // Safari는 조합 끝 신호를 Enter보다 먼저 보내 isComposing이 false로 온다
+      const { input, onSubmit } = renderEditing('hi');
+
+      fireEvent.keyDown(input, { key: 'Enter', keyCode: 229 });
 
       expect(onSubmit).not.toHaveBeenCalled();
     });

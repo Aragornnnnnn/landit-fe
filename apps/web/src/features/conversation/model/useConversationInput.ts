@@ -158,6 +158,8 @@ export const useConversationInput = ({
         mode: 'text',
       });
     }
+    // 말한 내용을 고쳐 쓰는 자리 — 인식기가 적은 허용 밖 글자를 미리 걸러, 첫 입력에 경고가 뜨지 않게 한다
+    setTranscript((prev) => removeNonEnglish(prev));
     setKeyboardMode(true);
     onInputStart();
   };
