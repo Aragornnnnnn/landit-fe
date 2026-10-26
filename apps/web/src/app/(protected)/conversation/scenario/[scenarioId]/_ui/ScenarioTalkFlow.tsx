@@ -73,6 +73,11 @@ export const ScenarioTalkFlow = ({
     cancelInput,
     finishListening,
     submitText,
+    reviewing,
+    speakAgain,
+    editTranscript,
+    submitReviewed,
+    closeTyping,
     micPermissionDenied,
     dismissMicPermissionNotice,
   } = input;
@@ -86,8 +91,10 @@ export const ScenarioTalkFlow = ({
   // 답변 가이드 — 내 차례(대기·말하는 중)에만 내 답변 칸과 같은 자리를 번갈아 쓴다.
   // 키보드로 쓰는 중엔 그 칸이 입력창이라, 답을 낸 뒤엔 방금 한 말을 보여야 해서 비켜 준다
   const myTurn = phase === 'USER_READY' || phase === 'USER_SPEAKING';
-  // 답변이 전달되지 못한 동안은 다시 보내기가 먼저라 가이드를 비켜 준다 — 펼쳐 둔 카드가 실패한 답변을 덮지 않게
-  const guideShown = answerGuide != null && myTurn && !typing && resend == null;
+  // 답변이 전달되지 못한 동안은 다시 보내기가 먼저라 가이드를 비켜 준다 — 펼쳐 둔 카드가 실패한 답변을 덮지 않게.
+  // 말한 뒤 확인 중에도 비켜 준다 — 인식된 문장을 봐야 하고, 칸 머리 자리는 고치기 표시가 쓴다
+  const guideShown =
+    answerGuide != null && myTurn && !typing && !reviewing && resend == null;
   const guideChipRef = useRef<HTMLButtonElement>(null);
   // 첫 질문의 턴 — USER 선발화면 0번은 상황 안내라 첫 AI 질문은 그다음이다
   const firstQuestionIndex = scenario.firstSpeaker === 'USER' ? 1 : 0;
@@ -234,7 +241,8 @@ export const ScenarioTalkFlow = ({
               editing={typing}
               onChange={setTranscript}
               onSubmit={submitText}
-              onCancel={cancelInput}
+              onCancel={closeTyping}
+              onEdit={reviewing && !typing ? editTranscript : undefined}
               unsent={resend != null}
               headerAction={
                 guideShown &&
@@ -274,8 +282,17 @@ export const ScenarioTalkFlow = ({
               pressKeyboard();
             }}
             onCancel={cancelInput}
-            onDone={finishListening}
+            onDone={() => {
+              // 펼쳐 둔 가이드는 접어 둔다 — 확인 뒤 다시 말하기로 돌아와도 접힌 채로 시작한다
+              guide.collapseGuide();
+              finishListening();
+            }}
             onResend={resend}
+            review={
+              reviewing
+                ? { onRetry: speakAgain, onSend: submitReviewed }
+                : undefined
+            }
           />
         )}
       </footer>
