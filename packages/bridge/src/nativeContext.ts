@@ -11,8 +11,9 @@ import { z } from 'zod';
 // 9: REQUEST_REVIEW ↔ REVIEW_RESULT (앱 안 별점 카드, LAN-701)
 // 10: 컨텍스트에 fontScale 추가, Android 글자 자동 확대(textZoom) 끔 (마이페이지 글자 크기)
 // 11: 컨텍스트에 deviceId 추가 (친구 초대 같은 기기 판정용)
-// 12: REQUEST_TRACKING_STATUS ↔ TRACKING_STATUS (iOS 광고 추적 허용 계측, LAN-769)
-export const NATIVE_BRIDGE_VERSION = 12;
+// 12: LOG_AD_EVENT 추가 (메타 광고 최적화용 앱 이벤트, LAN-768)
+// 13: REQUEST_TRACKING_STATUS ↔ TRACKING_STATUS (iOS 광고 추적 허용 계측, LAN-769)
+export const NATIVE_BRIDGE_VERSION = 13;
 
 // 셸이 주입하고 웹이 읽는 전역 키
 export const NATIVE_CONTEXT_GLOBAL = '__LANDIT_NATIVE__';

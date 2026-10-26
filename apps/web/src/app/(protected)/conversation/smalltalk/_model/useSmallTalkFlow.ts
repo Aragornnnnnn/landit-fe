@@ -202,8 +202,11 @@ export const useSmallTalkFlow = ({
   // 서버도 예약 차감이라 초과분을 받아 주고(잔량은 0에서 멈춘다), 그 턴을 작별 인사로 닫는다
   const budget = useSpeakingBudget({
     initialMs: remainingSpeakingTimeMs,
-    speaking: engine.phase === 'USER_SPEAKING',
+    // 말한 뒤 확인하며 머무는 시간은 말한 시간이 아니다 — 마이크가 켜져 있는 동안만 깎는다
+    speaking: engine.phase === 'USER_SPEAKING' && !engine.input.reviewing,
     waiting: engine.phase === 'USER_READY',
+    listenCount: engine.input.listenCount,
+    reviewedDurationMs: engine.input.reviewedDurationMs,
   });
 
   // 대화가 완료됐다 — 작별 인사·시간 소진·종료 버튼 어느 길이든 같은 후속을 한다
@@ -257,7 +260,7 @@ export const useSmallTalkFlow = ({
     }
     if (answeredTurns === 0) {
       // 하던 말은 버린다 — 나간 뒤 인식 결과가 도착해 홈 위에 토스트를 띄우지 않게
-      if (engine.phase === 'USER_SPEAKING') engine.input.cancelInput();
+      if (engine.phase === 'USER_SPEAKING') engine.input.abandonInput();
       leave();
       goHome();
       return false;
@@ -275,7 +278,7 @@ export const useSmallTalkFlow = ({
     directEndStartedRef.current = true;
     setCompleting(true);
     // 하던 말은 버린다 — 보내지 않은 발화라 깎인 시간도 되돌아온다
-    if (engine.phase === 'USER_SPEAKING') engine.input.cancelInput();
+    if (engine.phase === 'USER_SPEAKING') engine.input.abandonInput();
     engine.abandon();
     try {
       await completeSmallTalkSession(session.sessionId);
