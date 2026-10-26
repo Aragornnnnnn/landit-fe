@@ -9,6 +9,7 @@
  *   유지해야 할 정보(예: API 라우트 실패)는 reportError/reportWarning으로 Sentry에 별도 보고한다
  * - rewrites: /api/* → 백엔드 프록시 (CORS 회피)
  * - withSentryConfig: 소스맵을 Sentry에만 올리고 배포 산출물에서는 삭제
+ * - withNextIntl: 요청마다 화면 언어를 정하는 설정 파일(shared/i18n/request.ts)을 연결
  *
  * 안 적었지만 기본값으로 적용 중인 것 (Next 16)
  * - Turbopack이 dev·build 기본 번들러, 프로덕션 minify(SWC)·주석 제거 기본 on
@@ -18,6 +19,9 @@
  */
 import { withSentryConfig } from '@sentry/nextjs/config';
 import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./src/shared/i18n/request.ts');
 
 // 브라우저가 백엔드를 직접 호출하면 CORS가 걸리므로, 같은 오리진의 /api/*를 백엔드로 프록시한다
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -71,7 +75,7 @@ const nextConfig: NextConfig = {
 };
 
 // 소스맵은 SENTRY_AUTH_TOKEN이 있는 배포 빌드에서만 올린다
-export default withSentryConfig(nextConfig, {
+export default withSentryConfig(withNextIntl(nextConfig), {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
