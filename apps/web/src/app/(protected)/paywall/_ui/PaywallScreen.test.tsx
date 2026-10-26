@@ -7,6 +7,7 @@ import { PaywallScreen } from './PaywallScreen';
 const mocks = vi.hoisted(() => ({
   replace: vi.fn(),
   track: vi.fn(),
+  sendAdEvent: vi.fn(),
   purchase: vi.fn(),
   restore: vi.fn(),
   refreshRewardAfterPurchase: vi.fn(),
@@ -26,7 +27,7 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('@/shared/analytics', () => ({
   track: mocks.track,
-  sendAdEvent: vi.fn(),
+  sendAdEvent: mocks.sendAdEvent,
 }));
 // 조회 캐시는 이 화면이 직접 쓰지 않는다 — 결제 뒤 환급을 새로 받으라고 넘겨주기만 한다
 vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => 'client' }));
@@ -107,6 +108,7 @@ beforeEach(() => {
   mocks.busy = false;
   mocks.purchaseOptions = null;
   mocks.refreshRewardAfterPurchase.mockClear();
+  mocks.sendAdEvent.mockClear();
   mocks.dismiss = vi.fn().mockResolvedValue(undefined);
   mocks.packages = {
     yearly: { packageId: '$rc_annual', price: 94_500, currency: 'KRW' },
@@ -116,6 +118,13 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('PaywallScreen', () => {
+  it('화면이 뜨면 페이월을 봤다고 메타에 한 번 알린다', () => {
+    render(<PaywallScreen />);
+
+    expect(mocks.sendAdEvent).toHaveBeenCalledTimes(1);
+    expect(mocks.sendAdEvent).toHaveBeenCalledWith('paywall_viewed');
+  });
+
   it('결제 지휘에 이용권 구매 가능 확인을 넘긴다 — 넘기지 않으면 이용권 결제가 막힌다', () => {
     render(<PaywallScreen />);
 
