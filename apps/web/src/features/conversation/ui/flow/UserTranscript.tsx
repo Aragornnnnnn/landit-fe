@@ -2,14 +2,14 @@
 // 그 이상은 질문 카드에 넘긴다. 길어지면 끝만 보이게 앞을 흐린다.
 // 키보드 입력 모드(editing)에선 이 박스가 그대로 입력창이 된다 — 별도 입력바 없이 답변 자리에서 쓰고 보낸다.
 // 답변은 영어로만 받는다 — 웹은 자판 언어를 고정할 수 없어 영어 대화에 필요 없는 글자를 걸러 낸다.
-// 말한 뒤 확인(onEdit을 받음)에선 칸이 입력창처럼 바뀐다(흰 바탕·주황 테두리·문장 끝 커서) — 이미 입력된 내 답변으로 읽히게.
+// 말한 뒤 확인(onEdit을 받음)에선 칸이 입력창처럼 바뀐다(흰 바탕·회색 테두리·문장 끝 커서·수정 표시) — 이미 입력된 내 답변으로 읽히게.
 // 칸 전체가 고치기 버튼이라 글자를 눌러도 바로 입력창으로 간다.
 'use client';
 
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
 
 import { haptic } from '@/shared/haptics';
-import { ArrowUpIcon, CloseIcon, PencilIcon } from '@/shared/ui/Icons';
+import { ArrowUpIcon, CloseIcon } from '@/shared/ui/Icons';
 import { showToast } from '@/shared/ui/toast';
 
 import type { ConversationPhase } from '../../model/conversation-machine';
@@ -89,7 +89,8 @@ export const UserTranscript = ({
   }
 
   const toneClass = () => {
-    if (reviewing) return 'border-primary bg-card';
+    // 확인 중엔 흰 칸에 회색 테두리 — 주황 테두리는 키보드로 입력하는 동안에만 쓴다
+    if (reviewing) return 'border-border bg-card';
     if (unsent) return 'border-transparent bg-destructive/5';
     return 'border-border/60 bg-muted/50';
   };
@@ -123,14 +124,15 @@ export const UserTranscript = ({
             연결이 불안정해요
           </p>
         )}
-        {/* 커서만으로는 누르면 고쳐진다는 걸 모른다 — 라벨과 같은 크기의 글로 할 수 있는 일을 알린다 */}
+        {/* 커서만으로는 누르면 고쳐진다는 걸 모른다 — 버튼 모양 「수정」으로 알린다.
+            칸 전체가 버튼이라 이건 표시일 뿐이다. 입력창의 X와 같은 회색이라 눌러 열면 같은 자리의 X로 이어진다 */}
         {reviewing ? (
-          <p
-            className={`flex items-center gap-1 text-xs font-bold text-primary ${backFromEditing ? 'animate-hint-in' : ''}`}
+          <span
+            aria-hidden
+            className={`rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground/70 ${backFromEditing ? 'animate-hint-in' : ''}`}
           >
-            <PencilIcon size={12} strokeWidth={2.25} />
-            눌러서 고치기
-          </p>
+            수정
+          </span>
         ) : (
           headerAction
         )}

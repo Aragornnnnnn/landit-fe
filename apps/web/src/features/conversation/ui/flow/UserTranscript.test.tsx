@@ -272,7 +272,7 @@ describe('UserTranscript', () => {
       expect(screen.getByText('|')).toBeInTheDocument();
     });
 
-    it('확인 중이면 눌러서 고칠 수 있다고 알려 준다', () => {
+    it('확인 중이면 고칠 수 있다는 수정 버튼 표시를 띄운다', () => {
       render(
         <UserTranscript
           text="I went to the bitch."
@@ -281,7 +281,7 @@ describe('UserTranscript', () => {
         />,
       );
 
-      expect(screen.getByText('눌러서 고치기')).toBeInTheDocument();
+      expect(screen.getByText('수정')).toBeInTheDocument();
     });
 
     it('확인 중이 아니면 커서가 없다', () => {
