@@ -58,7 +58,8 @@ export const MicControl = ({
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.18 }}
-          // 이름은 버튼 아래로 늘어뜨린다 — 버튼을 X·■와 같은 높이에 둬야 답변 칸과의 간격이 그대로다
+          // 이름은 버튼 아래로 늘어뜨린다 — 버튼을 X·■와 같은 높이에 둬야 답변 칸과의 간격이 그대로다.
+          // 줄 높이를 글자 크기만큼만 둬 가장 큰 글자 크기에서도 아래 여백 안에 들어간다
           className="flex items-center gap-8"
         >
           {/* X·■와 같은 자리·크기 — 엄지를 옮기지 않고 바로 보낸다 */}
@@ -72,7 +73,7 @@ export const MicControl = ({
             </button>
             <p
               aria-hidden
-              className="absolute top-full mt-1 text-xs font-semibold whitespace-nowrap text-muted-foreground"
+              className="absolute top-full mt-1 text-xs leading-none font-semibold whitespace-nowrap text-muted-foreground"
             >
               다시 말하기
             </p>
@@ -87,7 +88,7 @@ export const MicControl = ({
             </button>
             <p
               aria-hidden
-              className="absolute top-full mt-1 text-xs font-semibold whitespace-nowrap text-muted-foreground"
+              className="absolute top-full mt-1 text-xs leading-none font-semibold whitespace-nowrap text-muted-foreground"
             >
               보내기
             </p>
