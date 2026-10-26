@@ -20,10 +20,9 @@ export async function initMetaSdk(): Promise<string | null> {
       // 묻기 전엔 미정이었다가 답이 정해졌으면 이번에 권한창에 답한 것이다 — 앱이 활성 전이면 창 없이 미정이 그대로 돌아온다
       const before = await getTrackingPermissionsAsync();
       const { granted, status } = await requestTrackingPermissionsAsync();
-      trackingStatus.settle({
-        status,
-        prompted: before.status === 'undetermined' && status !== 'undetermined',
-      });
+      const answeredPrompt =
+        before.status === 'undetermined' && status !== 'undetermined';
+      trackingStatus.settle({ status, prompted: answeredPrompt });
       await Settings.setAdvertiserTrackingEnabled(granted);
     } catch (error) {
       reportWarning(error);

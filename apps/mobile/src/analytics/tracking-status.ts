@@ -7,15 +7,15 @@ export type TrackingStatus = Omit<
 >;
 
 export const createTrackingStatus = () => {
-  let settle: (outcome: TrackingStatus | null) => void = () => {};
+  let resolveOutcome: (outcome: TrackingStatus | null) => void = () => {};
   const outcome = new Promise<TrackingStatus | null>((resolve) => {
-    settle = resolve;
+    resolveOutcome = resolve;
   });
   let promptReported = false;
 
   return {
     // ATT 요청이 끝나면 부른다 — Android·실패는 null. 두 번째 호출부터는 무시된다(Promise는 한 번만 정해진다)
-    settle: (status: TrackingStatus | null) => settle(status),
+    settle: (status: TrackingStatus | null) => resolveOutcome(status),
     // 웹은 사용자가 권한창에 답하기 전에 뜨므로, 답이 날 때까지 기다렸다 돌려준다
     read: async () => {
       const status = await outcome;
