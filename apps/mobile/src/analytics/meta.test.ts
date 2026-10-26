@@ -1,10 +1,14 @@
-// initMetaSdk의 플랫폼 분기 계약을 검증한다 — iOS는 ATT 동의 후 그 결과로 광고 추적을 설정, Android는 ATT 생략, 끝나면 메타 익명 ID를 돌려준다
+// initMetaSdk의 플랫폼 분기 계약을 검증한다 — iOS는 ATT 동의 후 그 결과로 광고 추적을 설정하고 결과를 보관, Android는 ATT 생략, 끝나면 메타 익명 ID를 돌려준다
 import { Platform } from 'react-native';
-import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
+import {
+  getTrackingPermissionsAsync,
+  requestTrackingPermissionsAsync,
+} from 'expo-tracking-transparency';
 import { AppEventsLogger, Settings } from 'react-native-fbsdk-next';
 
 import { reportWarning } from '../monitoring/report';
 import { initMetaSdk } from './meta';
+import { trackingStatus } from './tracking-status';
 
 jest.mock('react-native-fbsdk-next', () => ({
   AppEventsLogger: {
@@ -19,11 +23,17 @@ jest.mock('../monitoring/report', () => ({
   reportWarning: jest.fn(),
 }));
 jest.mock('expo-tracking-transparency', () => ({
+  getTrackingPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ status: 'undetermined' }),
+  ),
   requestTrackingPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ granted: true }),
+    Promise.resolve({ granted: true, status: 'granted' }),
   ),
 }));
 
+const mockGetTracking = getTrackingPermissionsAsync as jest.MockedFunction<
+  typeof getTrackingPermissionsAsync
+>;
 const mockRequestTracking =
   requestTrackingPermissionsAsync as jest.MockedFunction<
     typeof requestTrackingPermissionsAsync
@@ -86,5 +96,61 @@ describe('initMetaSdk', () => {
 
     await expect(initMetaSdk()).resolves.toBe('fb-anon');
     expect(reportWarning).toHaveBeenCalledWith(failure);
+  });
+
+  describe('ATT 결과 보관', () => {
+    // 설정의 restoreMocks가 테스트마다 스파이를 풀어 매번 다시 건다
+    let settle: jest.SpiedFunction<typeof trackingStatus.settle>;
+    beforeEach(() => {
+      settle = jest.spyOn(trackingStatus, 'settle');
+    });
+
+    it('묻기 전 상태가 미정이었으면 권한창을 띄운 것으로 보관한다', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios');
+      mockGetTracking.mockResolvedValueOnce({
+        status: 'undetermined',
+      } as never);
+      mockRequestTracking.mockResolvedValueOnce({
+        granted: false,
+        status: 'denied',
+      } as never);
+
+      await initMetaSdk();
+
+      expect(settle).toHaveBeenCalledWith({ status: 'denied', prompted: true });
+    });
+
+    it('이미 답해 둔 상태였으면 권한창 없이 상태만 보관한다', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios');
+      mockGetTracking.mockResolvedValueOnce({ status: 'granted' } as never);
+      mockRequestTracking.mockResolvedValueOnce({
+        granted: true,
+        status: 'granted',
+      } as never);
+
+      await initMetaSdk();
+
+      expect(settle).toHaveBeenCalledWith({
+        status: 'granted',
+        prompted: false,
+      });
+    });
+
+    it('Android면 결과 없음으로 보관한다', async () => {
+      jest.replaceProperty(Platform, 'OS', 'android');
+
+      await initMetaSdk();
+
+      expect(settle).toHaveBeenCalledWith(null);
+    });
+
+    it('ATT 요청이 실패하면 결과 없음으로 보관한다', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios');
+      mockRequestTracking.mockRejectedValueOnce(new Error('att failed'));
+
+      await initMetaSdk();
+
+      expect(settle).toHaveBeenCalledWith(null);
+    });
   });
 });

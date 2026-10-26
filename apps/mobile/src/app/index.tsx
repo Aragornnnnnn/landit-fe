@@ -25,6 +25,7 @@ import {
 import { cancelAlarm, listAlarms, scheduleTestAlarm } from '@/alarm/dev-alarm';
 import { useAlarmOpen } from '@/alarm/useAlarmOpen';
 import { initMetaSdk } from '@/analytics/meta';
+import { trackingStatus } from '@/analytics/tracking-status';
 import { generateNonce } from '@/auth/nonce';
 import { requestSocialIdToken, toSocialLoginFailure } from '@/auth/socialLogin';
 import { runHaptic } from '@/bridge/haptics';
@@ -140,6 +141,11 @@ const ShellScreen = () => {
     REQUEST_WIDGET_PIN: () => requestWidgetPin(),
     // 웹이 떴다 — 그동안 쌓인 위젯 추가·삭제를 건별로 보낸다
     REQUEST_WIDGET_CHANGES: () => flushWidgetChanges(),
+    // 웹이 광고 추적(ATT) 허용 상태를 묻는다 — 권한창에 답할 때까지 기다렸다 회신하고, Android·실패면 답하지 않는다
+    REQUEST_TRACKING_STATUS: async () => {
+      const status = await trackingStatus.read();
+      if (status) postToWeb({ type: 'TRACKING_STATUS', ...status });
+    },
     // 위젯 설치 안내 끝 — iOS에서 앱을 홈 화면으로 내려 사용자가 직접 위젯을 얹게 한다
     GO_HOME: () => goHome(),
     // 알림 권한 상태 조회 — 다이얼로그 없이 현재 상태만 회신한다
