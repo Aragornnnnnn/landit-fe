@@ -1,13 +1,17 @@
 // 내 답변 섹션 — 늘 같은 자리에 얇게 선다. 말하는 중에 읽는 건 방금 뱉은 끝부분이라 두 줄이면 되고,
 // 그 이상은 질문 카드에 넘긴다. 길어지면 끝만 보이게 앞을 흐린다.
 // 키보드 입력 모드(editing)에선 이 박스가 그대로 입력창이 된다 — 별도 입력바 없이 답변 자리에서 쓰고 보낸다.
+// 답변은 영어로만 받는다 — 웹은 자판 언어를 고정할 수 없어 영어 대화에 필요 없는 글자를 걸러 낸다.
 'use client';
 
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
 
+import { haptic } from '@/shared/haptics';
 import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
+import { showToast } from '@/shared/ui/toast';
 
 import type { ConversationPhase } from '../../model/conversation-machine';
+import { removeNonEnglish } from '../../model/english-only';
 import { ListeningDots } from './ListeningDots';
 
 interface UserTranscriptProps {
@@ -58,43 +62,12 @@ export const UserTranscript = ({
 
   if (editing) {
     return (
-      <div className="mt-4 w-full rounded-2xl border border-primary bg-card px-5 py-4">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold text-muted-foreground">내 답변</p>
-          <button
-            onClick={onCancel}
-            aria-label="입력 취소"
-            className="flex size-7 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-95"
-          >
-            <CloseIcon size={16} strokeWidth={2.5} />
-          </button>
-        </div>
-        <textarea
-          autoFocus
-          value={text}
-          onChange={(event) => onChange?.(event.target.value)}
-          onKeyDown={(event) => {
-            // Enter는 전송, Shift+Enter만 줄바꿈 — 모바일 키보드의 완료 동작과 맞춘다
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault();
-              if (text.trim()) onSubmit?.();
-            }
-          }}
-          placeholder="답변을 입력하세요"
-          rows={2}
-          className="mt-1.5 max-h-[14dvh] w-full resize-none bg-transparent text-lg leading-relaxed font-semibold text-foreground outline-none placeholder:text-muted-foreground/50"
-        />
-        <div className="flex justify-end">
-          <button
-            onClick={onSubmit}
-            disabled={!text.trim()}
-            aria-label="답변 전송"
-            className="flex size-10 items-center justify-center rounded-full bg-primary text-white transition-opacity active:scale-95 disabled:opacity-30"
-          >
-            <ArrowRightIcon size={20} />
-          </button>
-        </div>
-      </div>
+      <TranscriptEditor
+        text={text}
+        onChange={onChange}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
     );
   }
 
@@ -132,6 +105,91 @@ export const UserTranscript = ({
           {text}
           {showDots && <ListeningDots spaced={text !== ''} />}
         </p>
+      </div>
+    </div>
+  );
+};
+
+// 키보드 입력 모드의 입력창 — 답변은 영어로만 받아서 그 밖의 글자를 걸러 낸다
+const TranscriptEditor = ({
+  text,
+  onChange,
+  onSubmit,
+  onCancel,
+}: Pick<
+  UserTranscriptProps,
+  'text' | 'onChange' | 'onSubmit' | 'onCancel'
+>) => {
+  // 조합 중에 글자를 지우면 입력기가 꼬여 글자가 깨진다 — 조합이 끝난 뒤에 거른다
+  const composingRef = useRef(false);
+  // 글자가 안 써지는 순간을 바로 알아채게 박스를 흔든다. 끝나면 거둬야 다음에 다시 흔들 수 있다
+  const [shaking, setShaking] = useState(false);
+
+  // 걸러 낸 뒤 넘긴다. 지운 만큼 커서를 당겨 쓰던 자리에 둔다
+  const acceptTyping = (input: HTMLTextAreaElement) => {
+    const { value, selectionStart } = input;
+    const english = removeNonEnglish(value);
+    onChange?.(english);
+    if (english === value) return;
+    setShaking(true);
+    haptic('error');
+    // 이어 치는 동안 계속 띄워도 토스트는 그대로 떠 있고 시간만 늘어난다
+    showToast('영어로만 입력해 주세요');
+    const caret = removeNonEnglish(value.slice(0, selectionStart)).length;
+    requestAnimationFrame(() => input.setSelectionRange(caret, caret));
+  };
+
+  return (
+    <div
+      onAnimationEnd={() => setShaking(false)}
+      className={`mt-4 w-full rounded-2xl border border-primary bg-card px-5 py-4 ${shaking ? 'animate-shake' : ''}`}
+    >
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-muted-foreground">내 답변</p>
+        <button
+          onClick={onCancel}
+          aria-label="입력 취소"
+          className="flex size-7 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-95"
+        >
+          <CloseIcon size={16} strokeWidth={2.5} />
+        </button>
+      </div>
+      <textarea
+        autoFocus
+        value={text}
+        onCompositionStart={() => {
+          composingRef.current = true;
+        }}
+        onCompositionEnd={(event) => {
+          composingRef.current = false;
+          acceptTyping(event.currentTarget);
+        }}
+        onChange={(event) => {
+          if (composingRef.current) onChange?.(event.target.value);
+          else acceptTyping(event.target);
+        }}
+        onKeyDown={(event) => {
+          // 한글 조합을 끝내는 Enter는 전송이 아니다
+          if (event.nativeEvent.isComposing) return;
+          // Enter는 전송, Shift+Enter만 줄바꿈 — 모바일 키보드의 완료 동작과 맞춘다
+          if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            if (text.trim()) onSubmit?.();
+          }
+        }}
+        placeholder="답변을 입력하세요"
+        rows={2}
+        className="mt-1.5 max-h-[14dvh] w-full resize-none bg-transparent text-lg leading-relaxed font-semibold text-foreground outline-none placeholder:text-muted-foreground/50"
+      />
+      <div className="flex justify-end">
+        <button
+          onClick={onSubmit}
+          disabled={!text.trim()}
+          aria-label="답변 전송"
+          className="flex size-10 items-center justify-center rounded-full bg-primary text-white transition-opacity active:scale-95 disabled:opacity-30"
+        >
+          <ArrowRightIcon size={20} />
+        </button>
       </div>
     </div>
   );

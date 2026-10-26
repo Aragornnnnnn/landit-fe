@@ -282,6 +282,27 @@ describe('useConversationInput', () => {
     expect(result.current.transcript).toBe('');
   });
 
+  it('타이핑에 한글이 남아 있으면 빼고 전달한다', () => {
+    // 입력창이 걸러도 조합이 덜 끝난 채 전송되는 틈이 있다 — 마지막 관문에서 한 번 더 거른다
+    const { result, onContent } = renderInput();
+
+    act(() => result.current.pressKeyboard());
+    act(() => result.current.setTranscript('Hello 안'));
+    act(() => result.current.submitText());
+
+    expect(onContent).toHaveBeenCalledWith('Hello', 'TEXT', 0);
+  });
+
+  it('한글을 빼고 나면 빈 타이핑은 전달하지 않는다', () => {
+    const { result, onContent } = renderInput();
+
+    act(() => result.current.pressKeyboard());
+    act(() => result.current.setTranscript('안녕하세요'));
+    act(() => result.current.submitText());
+
+    expect(onContent).not.toHaveBeenCalled();
+  });
+
   it('빈 타이핑은 전달하지 않는다', () => {
     const { result, onContent, onInputCancel } = renderInput();
 

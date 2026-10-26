@@ -13,6 +13,8 @@ import { isMicPermissionDeniedError, SttError } from '@/shared/stt/errors';
 import { useStt, type SttErrorMeta } from '@/shared/stt/useStt';
 import { showToast } from '@/shared/ui/toast';
 
+import { removeNonEnglish } from './english-only';
+
 interface ConversationInputOptions {
   canStart: boolean; // 대기(USER_READY)에서만 시작 — 연타 이중 집계 방지
   trackContext: () => { sessionId: number | null; turnIndex: number }; // 계측용 최신값 getter
@@ -191,7 +193,8 @@ export const useConversationInput = ({
 
   // 키보드 전송 — 타이핑한 텍스트를 다듬어 전달한다. 비었으면 조용히 무시(입력창은 열려 있다)
   const submitText = () => {
-    const content = transcript.trim();
+    // 입력창이 조합을 끝내기 전에 전송될 수 있어 여기서도 한 번 더 거른다
+    const content = removeNonEnglish(transcript).trim();
     if (!content) return;
     // 타이핑은 말한 게 아니라 쓴 것 — 발화 시간을 차감하지 않는다
     onContent(content, 'TEXT', 0);
