@@ -137,24 +137,19 @@ describe('logAdEvent', () => {
 });
 
 describe('logCheckoutStarted', () => {
-  it('Android에서는 결제 시작을 고른 패키지와 함께 기록한다', () => {
-    jest.replaceProperty(Platform, 'OS', 'android');
+  it.each(['android', 'ios'] as const)(
+    '%s에서 결제 시작을 고른 패키지와 함께 기록한다',
+    (os) => {
+      jest.replaceProperty(Platform, 'OS', os);
 
-    logCheckoutStarted('$rc_annual');
+      logCheckoutStarted('$rc_annual');
 
-    expect(AppEventsLogger.logEvent).toHaveBeenCalledWith(
-      'fb_mobile_initiated_checkout',
-      { fb_content_id: '$rc_annual' },
-    );
-  });
-
-  it('iOS에서는 메타 SDK가 결제 시작을 스스로 기록하므로 남기지 않는다', () => {
-    jest.replaceProperty(Platform, 'OS', 'ios');
-
-    logCheckoutStarted('$rc_annual');
-
-    expect(AppEventsLogger.logEvent).not.toHaveBeenCalled();
-  });
+      expect(AppEventsLogger.logEvent).toHaveBeenCalledWith(
+        'fb_mobile_initiated_checkout',
+        { fb_content_id: '$rc_annual' },
+      );
+    },
+  );
 
   it('기록이 실패해도 던지지 않고 경고로 보고한다 — 결제 시트가 막히면 안 된다', () => {
     jest.replaceProperty(Platform, 'OS', 'android');

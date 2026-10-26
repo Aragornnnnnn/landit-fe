@@ -54,9 +54,8 @@ export const logAdEvent = (event: AdEvent) => {
   }
 };
 
-// 결제 시트를 띄우기 직전에 결제 시작을 기록한다 — iOS는 메타 SDK가 스토어 결제를 지켜보다 스스로 남겨서, 같이 남기면 두 번 잡힌다
+// 결제 시트를 띄우기 직전에 결제 시작을 기록한다 — 결제 완료는 RevenueCat이 보내고, 메타 SDK의 결제 자동 기록은 끈다(docs/meta-ads.md)
 export const logCheckoutStarted = (packageId: string) => {
-  if (Platform.OS !== 'android') return;
   // 결제보다 앞서 부르므로, 기록이 실패해도 결제 시트는 그대로 뜨게 삼키고 보고만 한다
   try {
     AppEventsLogger.logEvent(AppEventsLogger.AppEvents.InitiatedCheckout, {
