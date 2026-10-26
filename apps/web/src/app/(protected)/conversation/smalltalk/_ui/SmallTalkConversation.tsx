@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { useDocumentScrollPin } from '@/features/conversation/lib/useDocumentScrollPin';
 import {
   toCharacterLook,
   type Partner,
@@ -108,6 +109,8 @@ export const SmallTalkConversation = ({
   const keyboardInset = useKeyboardInset();
   // 키보드가 입력 박스를 밀어 올린 상태 — 하단 inset 영역은 키보드가 덮는다
   const keyboardLifted = typing && keyboardInset > 0;
+  // 입력하는 동안 iOS가 문서를 밀어 화면이 두 번 올라가지 않게 맨 위에 붙잡는다
+  useDocumentScrollPin(typing);
   // 작별 인사가 끝나면 오늘의 스몰톡 라우트를 미리 받아 둔다 — CTA가 버튼이라 링크 자동 프리페치가 안 걸리고,
   // 누르는 순간 받으면 늦다 (요약 데이터·래디 그림은 흐름 훅이 완료 턴에서 미리 받는다)
   useEffect(() => {

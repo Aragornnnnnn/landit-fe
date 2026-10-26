@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
+import { useDocumentScrollPin } from '@/features/conversation/lib/useDocumentScrollPin';
 import { toCharacterLook } from '@/features/conversation/model/character-look';
 import { userIntroHoldMs } from '@/features/conversation/model/pacing';
 import type { FloatingThought } from '@/features/conversation/model/thought';
@@ -88,6 +89,8 @@ export const ScenarioTalkFlow = ({
   const keyboardInset = useKeyboardInset();
   // 키보드가 입력 박스를 밀어 올린 상태 — 하단 inset 영역은 키보드가 덮는다
   const keyboardLifted = typing && keyboardInset > 0;
+  // 입력하는 동안 iOS가 문서를 밀어 화면이 두 번 올라가지 않게 맨 위에 붙잡는다
+  useDocumentScrollPin(typing);
   // 답변 가이드 — 내 차례(대기·말하는 중)에만 내 답변 칸과 같은 자리를 번갈아 쓴다.
   // 키보드로 쓰는 중엔 그 칸이 입력창이라, 답을 낸 뒤엔 방금 한 말을 보여야 해서 비켜 준다
   const myTurn = phase === 'USER_READY' || phase === 'USER_SPEAKING';
