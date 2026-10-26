@@ -6,7 +6,7 @@
 // 칸 전체가 고치기 버튼이라 글자를 눌러도 바로 입력창으로 간다.
 'use client';
 
-import { useDeferredValue, useEffect, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useId, useRef, useState } from 'react';
 
 import { haptic } from '@/shared/haptics';
 import { ArrowUpIcon, CloseIcon } from '@/shared/ui/Icons';
@@ -60,6 +60,7 @@ export const UserTranscript = ({
   if (!reviewing && !editing && backFromEditing) setBackFromEditing(false);
   // 처음 만난 확인 화면에서만 — 이 화면이 왜 떴고 무엇을 할 수 있는지 한 번 알려 준다
   const editHintVisible = useEditHint(reviewing && !editing);
+  const editHintId = useId();
   // 확인 중엔 마이크가 꺼져 있다 — 단계는 말하는 중이어도 더 들을 말이 없다
   const listening = phase === 'USER_SPEAKING' && !reviewing;
   // 아직 아무 말도 확정 전이면 듣는 중 표시로, 그 뒤엔 확정 전 말이 남아 있을 때만 점을 띄운다
@@ -110,7 +111,9 @@ export const UserTranscript = ({
       {...(reviewing && {
         role: 'button',
         tabIndex: 0,
-        'aria-label': '답변 고치기',
+        // 버튼 안 글은 이름에 묻힌다 — 확인할 문장을 이름에 함께 실어 스크린 리더도 듣게 한다
+        'aria-label': `답변 고치기: ${text}`,
+        'aria-describedby': editHintVisible ? editHintId : undefined,
         onClick: onEdit,
         onKeyDown: (event: React.KeyboardEvent) => {
           if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -140,7 +143,7 @@ export const UserTranscript = ({
             {editHintVisible && (
               // 칸 위로 떠서 「수정」을 가리킨다 — 답변 가이드 유도 힌트와 같은 말풍선 모양
               <span
-                role="status"
+                id={editHintId}
                 className="animate-fade-up pointer-events-none absolute right-0 bottom-full z-10 mb-2.5 rounded-xl bg-foreground px-3 py-2 text-[13px] font-bold whitespace-nowrap text-background shadow-lg shadow-black/15"
               >
                 말한 내용과 다르면 눌러서 고칠 수 있어요

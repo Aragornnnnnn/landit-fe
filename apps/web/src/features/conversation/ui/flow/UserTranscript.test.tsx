@@ -300,6 +300,35 @@ describe('UserTranscript', () => {
       ).toBeInTheDocument();
     });
 
+    it('스크린 리더도 고치기 버튼에서 인식된 문장을 듣는다', () => {
+      // 확인 단계는 문장을 확인하는 화면이다 — 버튼 이름이 문장을 가리면 들을 수 없다
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={vi.fn()}
+        />,
+      );
+
+      expect(
+        screen.getByRole('button', { name: /I went to the bitch\./ }),
+      ).toBeInTheDocument();
+    });
+
+    it('첫 안내는 고치기 버튼의 설명으로 함께 읽힌다', () => {
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={vi.fn()}
+        />,
+      );
+
+      expect(
+        screen.getByRole('button', { name: /답변 고치기/ }),
+      ).toHaveAccessibleDescription('말한 내용과 다르면 눌러서 고칠 수 있어요');
+    });
+
     it('안내를 이미 본 기기면 띄우지 않는다', () => {
       editHintSeen.mark();
       render(
