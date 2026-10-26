@@ -661,7 +661,7 @@ describe('useConversationInput', () => {
     it('확인 화면에서 대화를 나가면 나갔다고 남긴다 — 늘어난 단계에서 이탈하는지 본다', () => {
       const { result } = renderReviewing();
 
-      act(() => result.current.cancelInput());
+      act(() => result.current.abandonInput());
 
       expect(trackMock).toHaveBeenCalledWith(
         'Transcript Reviewed',
@@ -669,10 +669,10 @@ describe('useConversationInput', () => {
       );
     });
 
-    it('확인 중에 입력을 취소하면(대화 나가기) 마이크를 건드리지 않고 대기로 되돌린다', () => {
+    it('확인 중에 대화를 나가면 마이크를 건드리지 않고 대기로 되돌린다', () => {
       const { result, onInputCancel } = renderReviewing();
 
-      act(() => result.current.cancelInput());
+      act(() => result.current.abandonInput());
 
       expect(sttMock.abort).not.toHaveBeenCalled();
       expect(onInputCancel).toHaveBeenCalledTimes(1);
@@ -726,6 +726,53 @@ describe('useConversationInput', () => {
       act(() => result.current.resetForNextTurn());
 
       expect(result.current.reviewing).toBe(false);
+    });
+  });
+
+  describe('대화를 나갈 때 입력 접기', () => {
+    it('키보드로 쓰던 중이면 조용히 지운다 — 음성으로 바꾼 게 아니라 전환으로 세지 않는다', () => {
+      const { result, onInputCancel } = renderInput();
+      act(() => result.current.pressKeyboard());
+      act(() => result.current.setTranscript('typed'));
+      trackMock.mockClear();
+
+      act(() => result.current.abandonInput());
+
+      expect(trackMock).not.toHaveBeenCalledWith(
+        'Input Mode Switched',
+        expect.anything(),
+      );
+      expect(onInputCancel).toHaveBeenCalledTimes(1);
+      expect(result.current.transcript).toBe('');
+      expect(result.current.keyboardMode).toBe(false);
+    });
+
+    it('듣던 중이면 녹음을 버린다', () => {
+      const { result, onInputCancel } = renderInput();
+      act(() => result.current.pressMic());
+
+      act(() => result.current.abandonInput());
+
+      expect(sttMock.abort).toHaveBeenCalled();
+      expect(trackMock).toHaveBeenCalledWith(
+        'Recording Canceled',
+        expect.anything(),
+      );
+      expect(onInputCancel).toHaveBeenCalledTimes(1);
+    });
+
+    it('다시 말하던 중이면 앞 답으로 돌아가지 않고 접는다', () => {
+      const { result, onInputCancel } = renderInput();
+      act(() => result.current.pressMic());
+      act(() =>
+        sttMock.callbacks.onFinal?.('I went to the bitch.', FINAL_META),
+      );
+      act(() => result.current.speakAgain());
+
+      act(() => result.current.abandonInput());
+
+      expect(result.current.reviewing).toBe(false);
+      expect(onInputCancel).toHaveBeenCalledTimes(1);
     });
   });
 

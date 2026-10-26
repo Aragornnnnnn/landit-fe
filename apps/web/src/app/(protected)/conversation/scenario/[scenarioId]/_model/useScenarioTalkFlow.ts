@@ -172,7 +172,7 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
   // 중도 이탈 (정상 완료는 서버가 판정하므로 세션을 끝내지 않는다)
   const leave = () => {
     // 말하거나 답을 확인하던 중이면 그 입력부터 접는다 — 녹음을 끄고, 확인 화면에서 나갔다고 남긴다
-    if (engine.phase === 'USER_SPEAKING') engine.input.cancelInput();
+    if (engine.phase === 'USER_SPEAKING') engine.input.abandonInput();
     track(EVENTS.SCENARIO_TALK_ABANDONED, {
       session_id: session.sessionId ?? undefined,
       scenario_id: scenario.scenarioId,

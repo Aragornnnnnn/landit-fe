@@ -260,7 +260,7 @@ export const useSmallTalkFlow = ({
     }
     if (answeredTurns === 0) {
       // 하던 말은 버린다 — 나간 뒤 인식 결과가 도착해 홈 위에 토스트를 띄우지 않게
-      if (engine.phase === 'USER_SPEAKING') engine.input.cancelInput();
+      if (engine.phase === 'USER_SPEAKING') engine.input.abandonInput();
       leave();
       goHome();
       return false;
@@ -278,7 +278,7 @@ export const useSmallTalkFlow = ({
     directEndStartedRef.current = true;
     setCompleting(true);
     // 하던 말은 버린다 — 보내지 않은 발화라 깎인 시간도 되돌아온다
-    if (engine.phase === 'USER_SPEAKING') engine.input.cancelInput();
+    if (engine.phase === 'USER_SPEAKING') engine.input.abandonInput();
     engine.abandon();
     try {
       await completeSmallTalkSession(session.sessionId);

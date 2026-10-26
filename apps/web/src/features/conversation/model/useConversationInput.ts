@@ -267,10 +267,8 @@ export const useConversationInput = ({
 
   const cancelInput = () => {
     const { sessionId, turnIndex } = trackContext();
-    // 확인 중엔 마이크가 이미 꺼져 있다 — 끌 것도, 전환할 것도 없이 대기로 되돌린다.
-    // 확인 중 취소는 대화를 나갈 때뿐이라 나갔다고 남긴다
+    // 확인 중엔 마이크가 이미 꺼져 있다 — 끌 것도, 전환할 것도 없이 대기로 되돌린다
     if (reviewed) {
-      trackReview('leave', false, reviewed.reviewedAt);
       resetToVoiceInput();
       onInputCancel();
       return;
@@ -288,6 +286,23 @@ export const useConversationInput = ({
       track(EVENTS.INPUT_MODE_SWITCHED, {
         session_id: sessionId ?? undefined,
         mode: 'voice',
+      });
+    }
+    resetToVoiceInput();
+    onInputCancel();
+  };
+
+  // 대화를 떠날 때 하던 입력을 접는다 — 확인 중이면 나갔다고 남기고, 듣던 중이면 녹음을 버리고, 쓰던 중이면 조용히 지운다.
+  // 취소(cancelInput)와 달리 앞 답으로 돌아가지 않고, 입력 수단을 바꾼 것으로 세지 않는다
+  const abandonInput = () => {
+    if (reviewed) {
+      trackReview('leave', false, reviewed.reviewedAt);
+    } else if (!keyboardMode) {
+      const { sessionId, turnIndex } = trackContext();
+      stt.abort();
+      track(EVENTS.RECORDING_CANCELED, {
+        session_id: sessionId ?? undefined,
+        turn_index: turnIndex,
       });
     }
     resetToVoiceInput();
@@ -336,6 +351,7 @@ export const useConversationInput = ({
     pressMic,
     pressKeyboard,
     cancelInput,
+    abandonInput,
     finishListening,
     submitText,
     reviewing,
