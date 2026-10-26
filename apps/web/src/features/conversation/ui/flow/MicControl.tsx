@@ -1,10 +1,11 @@
-// 마이크 컨트롤 — 대기(말하기·키보드) ↔ 듣는 중(X·■)을 전환한다.
+// 마이크 컨트롤 — 대기(말하기·키보드) ↔ 듣는 중(X·■) ↔ 말한 뒤 확인(다시 말하기·보내기)을 전환한다.
 // 키보드 입력창도, 듣는 중이라는 안내도 내 답변 박스(UserTranscript)가 맡는다 — 같은 말을 두 군데서 하지 않는다
 'use client';
 
 import { motion } from 'motion/react';
 
 import {
+  ArrowUpIcon,
   CloseIcon,
   KeyboardIcon,
   MicIcon,
@@ -25,6 +26,8 @@ interface MicControlProps {
   remainingRatio?: number;
   // 전달되지 못한 답변이 있을 때만 준다 — 주면 마이크 자리가 다시 보내기로 바뀐다
   onResend?: () => void;
+  // 말한 뒤 확인 중일 때만 준다 — 주면 X·■ 자리가 다시 말하기·보내기로 바뀐다
+  review?: { onRetry: () => void; onSend: () => void };
 }
 
 // 완료 버튼(size-20=80px) 둘레를 도는 링 — 버튼 밖으로 6px씩 나가 92px
@@ -40,6 +43,7 @@ export const MicControl = ({
   onDone,
   remainingRatio,
   onResend,
+  review,
 }: MicControlProps) => {
   const listening = phase === 'USER_SPEAKING';
   // 발화·속마음 중엔 누를 수 없게 잠근다 — 자리는 유지해 레이아웃이 튀지 않게
@@ -48,7 +52,48 @@ export const MicControl = ({
   return (
     <div className="flex h-24 flex-none flex-col items-center justify-center">
       {/* 컨트롤은 즉시 전환한다 — exit 애니메이션 대기는 입력 지연으로 느껴진다 */}
-      {listening ? (
+      {listening && review ? (
+        <motion.div
+          key="review"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.18 }}
+          // 이름은 버튼 아래로 늘어뜨린다 — 버튼을 X·■와 같은 높이에 둬야 답변 칸과의 간격이 그대로다
+          className="flex items-center gap-8"
+        >
+          {/* X·■와 같은 자리·크기 — 엄지를 옮기지 않고 바로 보낸다 */}
+          <div className="relative flex flex-col items-center">
+            <button
+              onClick={review.onRetry}
+              aria-label="다시 말하기"
+              className="flex size-16 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-95"
+            >
+              <MicIcon size={26} />
+            </button>
+            <p
+              aria-hidden
+              className="absolute top-full mt-1 text-xs font-semibold whitespace-nowrap text-muted-foreground"
+            >
+              다시 말하기
+            </p>
+          </div>
+          <div className="relative flex flex-col items-center">
+            <button
+              onClick={review.onSend}
+              aria-label="보내기"
+              className="flex size-20 items-center justify-center rounded-full bg-primary text-white active:scale-95"
+            >
+              <ArrowUpIcon size={32} strokeWidth={2.5} />
+            </button>
+            <p
+              aria-hidden
+              className="absolute top-full mt-1 text-xs font-semibold whitespace-nowrap text-muted-foreground"
+            >
+              보내기
+            </p>
+          </div>
+        </motion.div>
+      ) : listening ? (
         <motion.div
           key="listening"
           initial={{ opacity: 0, scale: 0.9 }}
