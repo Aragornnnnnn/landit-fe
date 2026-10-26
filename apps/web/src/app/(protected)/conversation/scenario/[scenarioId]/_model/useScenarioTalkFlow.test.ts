@@ -38,11 +38,9 @@ const monitoringMock = vi.hoisted(() => ({
   reportError: vi.fn(),
   reportWarning: vi.fn(),
 }));
-// 광고 이벤트는 셸 경계 — 보냈다고 치지 않아(false) 기기 기록이 테스트 사이에 남지 않는다
-const sendAdEvent = vi.hoisted(() =>
-  vi.fn<(event: string) => boolean>(() => false),
-);
-vi.mock('@/shared/analytics', () => ({ track: vi.fn(), sendAdEvent }));
+// 광고 이벤트는 셸 경계 — 한 번만 보내는 규칙은 ad-event 테스트가 맡고, 여기서는 부르는지만 본다
+const sendAdEventOnce = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/analytics', () => ({ track: vi.fn(), sendAdEventOnce }));
 vi.mock('@/shared/monitoring/report', () => monitoringMock);
 
 vi.mock('@/features/conversation/api/session', () => ({
@@ -704,18 +702,21 @@ describe('useScenarioTalkFlow', async () => {
   });
 
   it.each([
-    ['서버가 끝내 본 적 없다고 하면 첫 시나리오 완료를 알린다', false, 1],
+    ['서버가 끝내 본 적 없다고 하면 첫 시나리오 완료를 알린다', false, true],
+    ['구독 응답을 받은 적 없으면 처음으로 쳐서 알린다', undefined, true],
     [
       '서버가 이미 끝내 본 적 있다고 하면 첫 시나리오 완료를 알리지 않는다',
       true,
-      0,
+      false,
     ],
-  ])('대화가 완료됐을 때 %s', async (_, completedBefore, sentCount) => {
+  ])('대화가 완료됐을 때 %s', async (_, completedBefore, notified) => {
     useAuthStore
       .getState()
       .setAuth('access', 'refresh', { userId: 7 } as AuthMember);
     queryClientMock.getQueryData.mockImplementation((key: unknown) =>
-      Array.isArray(key) && key[0] === 'subscription'
+      Array.isArray(key) &&
+      key[0] === 'subscription' &&
+      completedBefore !== undefined
         ? { conversationCompletedSinceLaunch: completedBefore }
         : undefined,
     );
@@ -733,11 +734,12 @@ describe('useScenarioTalkFlow', async () => {
 
     await speakAndSubmit(result, 'Yes, here you go.');
 
-    expect(
-      sendAdEvent.mock.calls.filter(
-        ([event]) => event === 'first_scenario_completed',
-      ),
-    ).toHaveLength(sentCount);
+    if (notified)
+      expect(sendAdEventOnce).toHaveBeenCalledWith(
+        'first_scenario_talk_completed',
+        7,
+      );
+    else expect(sendAdEventOnce).not.toHaveBeenCalled();
   });
 
   it('대화가 안 끝났으면 피드백을 미리 만들지 않는다', async () => {
