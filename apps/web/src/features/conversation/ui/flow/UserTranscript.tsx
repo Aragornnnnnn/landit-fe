@@ -14,6 +14,7 @@ import { showToast } from '@/shared/ui/toast';
 
 import type { ConversationPhase } from '../../model/conversation-machine';
 import { removeNonEnglish } from '../../model/english-only';
+import { useEditHint } from '../../model/useEditHint';
 import { ListeningDots } from './ListeningDots';
 import { TypingCursor } from './TypingCursor';
 
@@ -57,6 +58,8 @@ export const UserTranscript = ({
     setBackFromEditing(prevEditing && !editing);
   }
   if (!reviewing && !editing && backFromEditing) setBackFromEditing(false);
+  // 처음 만난 확인 화면에서만 — 이 화면이 왜 떴고 무엇을 할 수 있는지 한 번 알려 준다
+  const editHintVisible = useEditHint(reviewing && !editing);
   // 확인 중엔 마이크가 꺼져 있다 — 단계는 말하는 중이어도 더 들을 말이 없다
   const listening = phase === 'USER_SPEAKING' && !reviewing;
   // 아직 아무 말도 확정 전이면 듣는 중 표시로, 그 뒤엔 확정 전 말이 남아 있을 때만 점을 띄운다
@@ -127,11 +130,23 @@ export const UserTranscript = ({
         {/* 커서만으로는 누르면 고쳐진다는 걸 모른다 — 버튼 모양 「수정」으로 알린다.
             칸 전체가 버튼이라 이건 표시일 뿐이다. 입력창의 X와 같은 회색이라 눌러 열면 같은 자리의 X로 이어진다 */}
         {reviewing ? (
-          <span
-            aria-hidden
-            className={`rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground/70 ${backFromEditing ? 'animate-hint-in' : ''}`}
-          >
-            수정
+          <span className="relative">
+            <span
+              aria-hidden
+              className={`block rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground/70 ${backFromEditing ? 'animate-hint-in' : ''}`}
+            >
+              수정
+            </span>
+            {editHintVisible && (
+              // 칸 위로 떠서 「수정」을 가리킨다 — 답변 가이드 유도 힌트와 같은 말풍선 모양
+              <span
+                role="status"
+                className="animate-fade-up pointer-events-none absolute right-0 bottom-full z-10 mb-2.5 rounded-xl bg-foreground px-3 py-2 text-[13px] font-bold whitespace-nowrap text-background shadow-lg shadow-black/15"
+              >
+                말한 내용과 다르면 눌러서 고칠 수 있어요
+                <span className="absolute top-full right-4 border-x-[6px] border-t-[7px] border-x-transparent border-t-foreground" />
+              </span>
+            )}
           </span>
         ) : (
           headerAction

@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Toaster } from '@/shared/ui/toast';
 
+import { editHintSeen } from '../../model/edit-hint-seen';
 import { UserTranscript } from './UserTranscript';
 
 // 진동은 경계(네이티브 셸)라 목으로 둔다
@@ -13,6 +14,7 @@ vi.mock('@/shared/haptics', () => ({ haptic: hapticMock }));
 
 afterEach(() => {
   cleanup();
+  localStorage.clear();
   vi.restoreAllMocks();
 });
 
@@ -282,6 +284,35 @@ describe('UserTranscript', () => {
       );
 
       expect(screen.getByText('수정')).toBeInTheDocument();
+    });
+
+    it('처음 확인 화면이면 고칠 수 있다는 안내를 한 번 띄운다', () => {
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={vi.fn()}
+        />,
+      );
+
+      expect(
+        screen.getByText('말한 내용과 다르면 눌러서 고칠 수 있어요'),
+      ).toBeInTheDocument();
+    });
+
+    it('안내를 이미 본 기기면 띄우지 않는다', () => {
+      editHintSeen.mark();
+      render(
+        <UserTranscript
+          text="I went to the bitch."
+          phase="USER_SPEAKING"
+          onEdit={vi.fn()}
+        />,
+      );
+
+      expect(
+        screen.queryByText('말한 내용과 다르면 눌러서 고칠 수 있어요'),
+      ).not.toBeInTheDocument();
     });
 
     it('확인 중이 아니면 커서가 없다', () => {
