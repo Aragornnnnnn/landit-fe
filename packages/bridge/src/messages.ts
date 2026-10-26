@@ -17,7 +17,7 @@ export const hapticPatternSchema = z.enum([
   'error',
 ]);
 
-// 알림 권한 상태 — expo-notifications의 PermissionStatus와 대응. 알람(AlarmKit) 권한도 같은 세 상태로 알린다
+// 알림 권한 상태 — expo-notifications의 PermissionStatus와 대응. 알람(AlarmKit)·광고 추적(ATT) 권한도 같은 세 상태로 알린다
 export const notificationPermissionStatusSchema = z.enum([
   'granted',
   'denied',
@@ -240,6 +240,8 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('GO_HOME') }),
   // 웹이 준비됐으니 쌓아 둔 위젯 추가·삭제를 보내 달라 — 응답은 WIDGET_CHANGED (건별, 없으면 무응답)
   z.object({ type: z.literal('REQUEST_WIDGET_CHANGES') }),
+  // iOS 광고 추적(ATT) 권한 상태를 달라 — 권한창이 떠 있으면 답할 때까지 기다렸다 회신한다. 응답은 TRACKING_STATUS (Android는 무응답)
+  z.object({ type: z.literal('REQUEST_TRACKING_STATUS') }),
   // 로그인한 사용자를 RevenueCat에 알린다(Purchases.logIn). null이면 로그아웃(logOut). 단방향
   z.object({
     type: z.literal('IDENTIFY'),
@@ -338,6 +340,12 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     type: z.literal('WIDGET_CHANGED'),
     change: widgetChangeSchema,
     family: widgetFamilySchema,
+  }),
+  // REQUEST_TRACKING_STATUS 응답 — 제한(restricted)은 denied로 온다. prompted는 이번 실행에서 권한창이 떠 답을 받았는가(실행당 한 번만 참)
+  z.object({
+    type: z.literal('TRACKING_STATUS'),
+    status: notificationPermissionStatusSchema,
+    prompted: z.boolean(),
   }),
   // GET_OFFERINGS 응답 — 셸이 스토어에서 받은 패키지 목록. 오퍼링이 비어 있으면 빈 배열
   z.object({
