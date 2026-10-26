@@ -181,6 +181,8 @@ const TranscriptEditor = ({
     const input = inputRef.current;
     if (!input) return;
     input.setSelectionRange(input.value.length, input.value.length);
+    // 긴 답은 입력창 높이를 넘는다 — 커서가 있는 끝이 보이게 내려 둔다
+    input.scrollTop = input.scrollHeight;
   }, []);
 
   // 글자가 걸러졌다는 걸 흔들림·진동·토스트로 바로 알린다
