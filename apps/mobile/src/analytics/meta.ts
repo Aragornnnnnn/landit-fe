@@ -34,6 +34,9 @@ export async function initMetaSdk(): Promise<string | null> {
 export const logAdEvent = (event: AdEvent) => {
   const { AppEvents, AppEventParams } = AppEventsLogger;
   switch (event) {
+    case 'onboarding_completed':
+      AppEventsLogger.logEvent(AppEvents.CompletedRegistration);
+      return;
     case 'first_scenario_completed':
       AppEventsLogger.logEvent(AppEvents.CompletedTutorial);
       return;

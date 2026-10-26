@@ -111,6 +111,7 @@ export const reviewResultStatusSchema = z.enum([
 // 광고 최적화에 쓰는 앱 이벤트 — 웹은 일어난 일을 말하고, 셸이 메타 표준 이벤트로 옮긴다.
 // 새 이벤트를 더하면 옛 앱은 모르는 값이라 요청을 버린다 — 브릿지 버전을 올리고, 웹은 그 버전 이상에만 보낸다
 export const adEventSchema = z.enum([
+  'onboarding_completed',
   'first_scenario_completed',
   'paywall_viewed',
 ]);

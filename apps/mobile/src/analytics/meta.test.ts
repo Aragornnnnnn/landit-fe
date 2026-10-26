@@ -1,4 +1,4 @@
-// initMetaSdk의 플랫폼 분기(iOS ATT·Android 생략·메타 익명 ID)와 logAdEvent의 메타 표준 이벤트 대응을 검증한다
+// initMetaSdk의 플랫폼 분기(iOS ATT·Android 생략·메타 익명 ID)와 광고 이벤트의 메타 표준 이벤트 대응을 검증한다
 import { Platform } from 'react-native';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import { AppEventsLogger, Settings } from 'react-native-fbsdk-next';
@@ -11,10 +11,15 @@ jest.mock('react-native-fbsdk-next', () => ({
     getAnonymousID: jest.fn(() => Promise.resolve('fb-anon')),
     logEvent: jest.fn(),
     AppEvents: {
+      CompletedRegistration: 'fb_mobile_complete_registration',
       CompletedTutorial: 'fb_mobile_tutorial_completion',
       ViewedContent: 'fb_mobile_content_view',
+      InitiatedCheckout: 'fb_mobile_initiated_checkout',
     },
-    AppEventParams: { ContentType: 'fb_content_type' },
+    AppEventParams: {
+      ContentType: 'fb_content_type',
+      ContentID: 'fb_content_id',
+    },
   },
   Settings: {
     initializeSDK: jest.fn(),
@@ -96,6 +101,14 @@ describe('initMetaSdk', () => {
 });
 
 describe('logAdEvent', () => {
+  it('온보딩 완료는 메타 표준 이벤트 회원가입 완료로 기록한다', () => {
+    logAdEvent('onboarding_completed');
+
+    expect(AppEventsLogger.logEvent).toHaveBeenCalledWith(
+      'fb_mobile_complete_registration',
+    );
+  });
+
   it('첫 시나리오 완료는 메타 표준 이벤트 튜토리얼 완료로 기록한다', () => {
     logAdEvent('first_scenario_completed');
 

@@ -24,7 +24,7 @@ import {
 } from '@/alarm/alarm';
 import { cancelAlarm, listAlarms, scheduleTestAlarm } from '@/alarm/dev-alarm';
 import { useAlarmOpen } from '@/alarm/useAlarmOpen';
-import { initMetaSdk, logAdEvent } from '@/analytics/meta';
+import { initMetaSdk, logAdEvent, logCheckoutStarted } from '@/analytics/meta';
 import { generateNonce } from '@/auth/nonce';
 import { requestSocialIdToken, toSocialLoginFailure } from '@/auth/socialLogin';
 import { runHaptic } from '@/bridge/haptics';
@@ -130,7 +130,7 @@ const ShellScreen = () => {
     OPEN_SETTINGS: () => void Linking.openSettings(),
     // 친구에게 공유하기 — OS 공유 시트를 연다. 보냈는지·닫았는지는 안드로이드가 알려주지 않아 회신하지 않는다
     SHARE: ({ message }) => openShareSheet(message),
-    // 광고 최적화용 이벤트를 메타 SDK로 기록한다 — 첫 시나리오 완료·페이월 조회
+    // 광고 최적화용 이벤트를 메타 SDK로 기록한다 — 온보딩 완료·첫 시나리오 완료·페이월 조회
     LOG_AD_EVENT: ({ event }) => logAdEvent(event),
     // 홈 위젯 데이터를 기록하고 iOS 위젯 타임라인을 새로 예약한다.
     // 저장을 먼저 끝낸다 — 저장이 실패하면 다음 실행이 낡은 데이터로 위젯을 되돌려 놓는다
