@@ -43,6 +43,13 @@ export const localeFromAcceptLanguage = (header: string | null): Locale => {
 /** 로그인한 사용자의 저장 언어를 서버 렌더에 알리는 쿠키 — 웹이 `GET /api/v1/me/locale` 결과로 쓴다 */
 export const LOCALE_COOKIE = 'landit-locale';
 
+const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
+
+/** 언어 쿠키를 쓴다 — 다음 서버 렌더부터 이 언어로 그린다 */
+export const saveLocaleCookie = (locale: Locale) => {
+  document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=${ONE_YEAR_SECONDS}; samesite=lax`;
+};
+
 /**
  * 요청의 화면 언어를 정한다. 저장 언어 쿠키가 있으면 그 값이 먼저다 — 한 번 고른 언어는 기기 언어가 바뀌어도 유지한다.
  * 쿠키가 없으면(로그인 전·재설치 직후) 기기 언어(Accept-Language)로 그린다.
