@@ -85,8 +85,8 @@
     "failedRetryButton": "もう一度言う",
     "failedExamplesButton": "ほかの例文を見る",
     "micStartError": "マイクを開始できませんでした。もう一度お試しください。",
-    "silentError": "録音された音がありません。もう一度言ってみましょう。",
-    "invalidAudioError": "録音がうまく届きませんでした。もう一度言ってみましょう。"
+    "silentError": "録音された音がありません。もう一度どうぞ。",
+    "invalidAudioError": "録音が届きませんでした。もう一度どうぞ。"
   },
   "analyzingLandy": {
     "listeningCaption": "発音を聞いています",
