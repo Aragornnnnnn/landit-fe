@@ -66,7 +66,7 @@ describe('일본어 화면', () => {
     expect(getCtaLabel(yen.yearly, tJa)).toBe('7日間の無料体験を始める');
     expect(getCtaLabel(yen.monthly, tJa)).toBe('月額980円で始める');
     expect(getBillingNotice(yen.yearly, tJa)).toBe(
-      '7日間の無料体験後、年額5,800円で自動更新・いつでも解約できます',
+      '7日間の無料体験後は年額5,800円で自動更新。いつでも解約できます',
     );
   });
 });

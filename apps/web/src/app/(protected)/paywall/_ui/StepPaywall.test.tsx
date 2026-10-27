@@ -218,7 +218,7 @@ describe('StepPaywall — 일본어 구독', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        '7日間の無料体験後、年額9,800円で自動更新・いつでも解約できます',
+        '7日間の無料体験後は年額9,800円で自動更新。いつでも解約できます',
       ),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '月間プラン' }));
