@@ -347,6 +347,18 @@ describe('UserTranscript', () => {
       expect(hapticMock).not.toHaveBeenCalled();
     });
 
+    it('거르고 나면 커서는 그 자리에서 바로 쓰던 곳에 놓인다', () => {
+      // 늦게 놓으면 그사이 들어온 띄어쓰기 앞으로 커서가 돌아가, 다음 글자와 지우기가 엉뚱한 자리에 간다(안드로이드 Gboard)
+      const { input } = renderEditing('hello world');
+
+      fireEvent.change(input, {
+        target: { value: 'hello안 world', selectionStart: 6, selectionEnd: 6 },
+      });
+
+      expect((input as HTMLTextAreaElement).value).toBe('hello world');
+      expect((input as HTMLTextAreaElement).selectionStart).toBe(5);
+    });
+
     it('조합을 확정하는 Enter(키 코드 229)로는 전송하지 않는다', () => {
       // Safari는 조합 끝 신호를 Enter보다 먼저 보내 isComposing이 false로 온다
       const { input, onSubmit } = renderEditing('hi');

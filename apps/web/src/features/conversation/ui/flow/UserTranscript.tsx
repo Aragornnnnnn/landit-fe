@@ -272,6 +272,13 @@ const TranscriptEditor = ({
   const acceptTyping = (input: HTMLTextAreaElement) => {
     const { value, selectionStart } = input;
     const english = removeNonEnglish(value);
+    // 고친 글과 커서를 그 자리에서 바로 쓴다 — 다음 프레임에 놓으면 그사이 들어온 글자(띄어쓰기 등) 앞으로 커서가 돌아간다.
+    // 입력창을 떠난 뒤 거른 경우엔 커서를 건드리지 않는다
+    const writeBack = (next: string, caret: number) => {
+      input.value = next;
+      if (document.activeElement === input)
+        input.setSelectionRange(caret, caret);
+    };
     // 한도를 넘기면 방금 끼워 넣은 글만 자른다 — 커서 뒤에 있던 글은 그대로 두어야 중간에 써도 뒷부분이 사라지지 않는다
     if (english.length > ANSWER_MAX_LENGTH) {
       const caret = removeNonEnglish(value.slice(0, selectionStart)).length;
@@ -279,23 +286,18 @@ const TranscriptEditor = ({
       const before = english
         .slice(0, caret)
         .slice(0, ANSWER_MAX_LENGTH - after.length);
+      writeBack(before + after, before.length);
       onChange?.(before + after);
       setShaking(true);
       haptic('error');
       showToast(LIMIT_NOTICE);
-      requestAnimationFrame(() =>
-        input.setSelectionRange(before.length, before.length),
-      );
       return;
     }
     onChange?.(english);
     // 분해형 악센트를 합치기만 한 것은 지운 게 아니다 — 합친 원문과 비교한다
     if (english === value.normalize('NFC')) return;
+    writeBack(english, removeNonEnglish(value.slice(0, selectionStart)).length);
     warnNonEnglish();
-    // 입력창을 떠난 뒤 거른 경우엔 커서를 건드리지 않는다
-    if (document.activeElement !== input) return;
-    const caret = removeNonEnglish(value.slice(0, selectionStart)).length;
-    requestAnimationFrame(() => input.setSelectionRange(caret, caret));
   };
 
   return (
