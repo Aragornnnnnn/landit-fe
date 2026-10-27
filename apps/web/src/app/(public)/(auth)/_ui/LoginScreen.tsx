@@ -30,7 +30,7 @@ export const LoginScreen = ({
   <main className="relative mx-auto h-dvh max-w-[430px] overflow-x-hidden overflow-y-auto bg-background">
     <script dangerouslySetInnerHTML={{ __html: splashSkip }} />
     {children}
-    {/* 로그인이 진행 중이면 숨긴다 — 가입 헤더는 이미 이전 언어로 나갔다 */}
+    {/* 웹 로그인 콜백에서 토큰을 교환하는 동안엔 숨긴다 — 가입 헤더는 이미 그 언어로 나갔다 */}
     {!pending && <LanguagePicker />}
 
     <div className={styles.logoWrap}>
