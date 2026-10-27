@@ -114,6 +114,26 @@ describe('UserTranscript', () => {
       );
     });
 
+    it('글이 늘면 입력창도 글 높이만큼 늘어난다 — 남는 자리를 두고 안에서 스크롤하지 않게', () => {
+      // jsdom은 글 높이를 계산하지 않는다 — 글자 수에 비례하는 높이로 흉내 낸다
+      vi.spyOn(
+        HTMLTextAreaElement.prototype,
+        'scrollHeight',
+        'get',
+      ).mockImplementation(function (this: HTMLTextAreaElement) {
+        return this.value.length * 2;
+      });
+      const { input } = renderEditing('Hello');
+
+      fireEvent.change(input, {
+        target: { value: 'Hello there, nice to meet you' },
+      });
+
+      expect(input.style.height).toBe(
+        `${'Hello there, nice to meet you'.length * 2}px`,
+      );
+    });
+
     // 실제 화면처럼 넘긴 값이 다시 text로 돌아오게 상태를 든다
     const renderEditing = (initial = '') => {
       const onChange = vi.fn();

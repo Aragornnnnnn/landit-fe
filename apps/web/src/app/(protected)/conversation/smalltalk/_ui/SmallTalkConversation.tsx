@@ -163,64 +163,74 @@ export const SmallTalkConversation = ({
 
       <CharacterStage partner={partner} look={characterLook} speech={speech} />
 
-      {/* 질문은 최소 한 줄 남짓은 남긴다 — 키보드로 자리가 모자라면 무대가 먼저 줄어든다.
-          키보드가 올라와 있는 동안엔 질문을 접는다 — 입력창이 캐릭터 바로 아래에 붙고, 남는 높이는 입력창과 키보드 사이로 간다 */}
-      <section
-        className={
-          keyboardLifted ? 'hidden' : 'flex min-h-24 flex-1 flex-col px-5'
-        }
+      {/* 질문과 답변 칸이 무대 아래 높이를 나눠 쓴다 — 둘 다 글 길이만큼 서고, 모자라면 질문이 최소 높이까지 먼저 줄어(줄어드는 비율 1000) 안에서 스크롤된다. 지금 읽고 고칠 건 내 답이다.
+          키보드가 없을 땐 무대 높이를 건드리지 않고, 키보드가 올라오면 무대가 먼저 줄어 입력창에 자리를 내준다 */}
+      <div
+        className={`flex min-h-0 flex-col ${keyboardLifted ? 'flex-initial' : 'flex-1'}`}
       >
-        {/* 카드가 남는 높이를 다 쓰되 넘치진 않는다 — 넘치는 글은 카드 안에서 스크롤된다.
+        {/* 질문은 글자 크기와 상관없이 한 줄은 온전히 보이게 남긴다(카드 여백·버튼 4.75rem + 17px 글 한 줄). 더 크게 잡으면 짧은 질문 밑이 빈다.
+          키보드가 올라와 있는 동안엔 질문을 접는다 — 입력창이 캐릭터 바로 아래에 붙고, 남는 높이는 입력창과 키보드 사이로 간다 */}
+        <section
+          className={
+            keyboardLifted
+              ? 'hidden'
+              : 'flex min-h-[calc(4.75rem+1.46rem*var(--font-scale))] flex-auto shrink-[1000] flex-col px-5'
+          }
+        >
+          {/* 카드가 남는 높이를 다 쓰되 넘치진 않는다 — 넘치는 글은 카드 안에서 스크롤된다.
             끝난 뒤엔 남는 높이를 통계 시트 아래로 넘긴다 — 시트가 작별 인사에 붙어야 이 대화의 결과로 읽힌다 */}
-        <div className={`flex min-h-0 flex-col pt-2 ${ended ? '' : 'flex-1'}`}>
-          <QuestionCard
-            question={turn.aiMessage}
-            translation={turn.aiTranslation}
-            speaking={phase === 'AI_SPEAKING'}
-            instruction={turn.isUserOpening}
-            onTranslationToggled={(opened) =>
-              track(EVENTS.TRANSLATION_TOGGLED, {
-                session_id: session.sessionId,
-                turn_index: turnIndex,
-                opened,
-              })
-            }
-            replay={replay}
-            textHidden={display.textHidden}
-            onTextToggled={(visible) =>
-              track(EVENTS.ENGLISH_TEXT_TOGGLED, {
-                session_id: session.sessionId,
-                turn_index: turnIndex,
-                hidden: !visible,
-              })
-            }
-            translationDefaultOpen={display.translationDefaultOpen}
-          />
-        </div>
-        {ended && (
-          <>
-            <TalkSummary {...summary} />
-            <div className="flex-1" />
-          </>
-        )}
-      </section>
+          <div
+            className={`flex min-h-0 flex-col pt-2 ${ended ? '' : 'flex-1'}`}
+          >
+            <QuestionCard
+              question={turn.aiMessage}
+              translation={turn.aiTranslation}
+              speaking={phase === 'AI_SPEAKING'}
+              instruction={turn.isUserOpening}
+              onTranslationToggled={(opened) =>
+                track(EVENTS.TRANSLATION_TOGGLED, {
+                  session_id: session.sessionId,
+                  turn_index: turnIndex,
+                  opened,
+                })
+              }
+              replay={replay}
+              textHidden={display.textHidden}
+              onTextToggled={(visible) =>
+                track(EVENTS.ENGLISH_TEXT_TOGGLED, {
+                  session_id: session.sessionId,
+                  turn_index: turnIndex,
+                  hidden: !visible,
+                })
+              }
+              translationDefaultOpen={display.translationDefaultOpen}
+            />
+          </div>
+          {ended && (
+            <>
+              <TalkSummary {...summary} />
+              <div className="flex-1" />
+            </>
+          )}
+        </section>
 
-      {/* 답변 칸은 질문 영역 밖에 둔다 — 키보드가 올라와 자리가 모자라면 질문이 아니라 무대가 줄고, 입력창은 그대로 키보드 위에 선다 */}
-      {!ended && (
-        <div className="flex-none px-5">
-          <UserTranscript
-            text={transcript}
-            speechPending={speechPending}
-            phase={phase}
-            unsent={resend != null}
-            editing={typing}
-            onChange={setTranscript}
-            onSubmit={submitText}
-            onCancel={closeTyping}
-            onEdit={reviewing && !typing ? editTranscript : undefined}
-          />
-        </div>
-      )}
+        {/* 답변 칸은 질문 영역 밖에 둔다 — 키보드가 올라와 자리가 모자라면 질문이 아니라 무대가 줄고, 입력창은 그대로 키보드 위에 선다 */}
+        {!ended && (
+          <div className="flex min-h-0 shrink flex-col px-5">
+            <UserTranscript
+              text={transcript}
+              speechPending={speechPending}
+              phase={phase}
+              unsent={resend != null}
+              editing={typing}
+              onChange={setTranscript}
+              onSubmit={submitText}
+              onCancel={closeTyping}
+              onEdit={reviewing && !typing ? editTranscript : undefined}
+            />
+          </div>
+        )}
+      </div>
 
       <footer
         className={`flex-none ${keyboardLifted ? 'pb-4' : 'pb-[max(var(--safe-area-inset-bottom),16px)]'}`}
