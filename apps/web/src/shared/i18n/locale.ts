@@ -10,6 +10,11 @@ export const DEFAULT_LOCALE: Locale = 'ko';
 const isLocale = (value: string): value is Locale =>
   (LOCALES as readonly string[]).includes(value);
 
+// q는 0~1, 소수 셋째 자리까지만 유효하다(RFC 9110) — Infinity·1.5 같은 값은 0으로 보고 그 언어를 고르지 않는다
+const VALID_QUALITY = /^(0(\.\d{0,3})?|1(\.0{0,3})?)$/;
+const qualityOf = (value: string) =>
+  VALID_QUALITY.test(value) ? Number(value) : 0;
+
 /**
  * Accept-Language 헤더에서 지원 언어를 하나 고른다. 우선순위(q)가 높은 것부터 보고, 지역(`-JP`)은 무시한다.
  * q=0(거절)이나 읽을 수 없는 q는 고르지 않는다 — 백엔드(AppLocale.fromAcceptLanguage)와 같은 규칙이다.
@@ -26,7 +31,7 @@ export const localeFromAcceptLanguage = (header: string | null): Locale => {
       const q = params.find((p) => /^q\s*=/i.test(p.trim()));
       return {
         language: tag.trim().split('-')[0].toLowerCase(),
-        quality: q ? Number(q.split('=')[1]) : 1,
+        quality: q ? qualityOf(q.split('=')[1].trim()) : 1,
       };
     })
     .filter((r) => r.quality > 0)

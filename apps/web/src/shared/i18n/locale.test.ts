@@ -55,6 +55,14 @@ describe('localeFromAcceptLanguage', () => {
     expect(localeFromAcceptLanguage('ja;q=0,en-US')).toBe('ko');
   });
 
+  it.each([
+    ['ja;q=Infinity,ko;q=0.9'],
+    ['ja;q=1.5,ko;q=0.9'],
+    ['ja;q=abc,ko;q=0.9'],
+  ])('q가 0~1 숫자가 아니면(%s) 그 언어는 고르지 않는다', (header) => {
+    expect(localeFromAcceptLanguage(header)).toBe('ko');
+  });
+
   it('지원하지 않는 언어가 앞서면 건너뛰고 다음 지원 언어를 고른다', () => {
     expect(localeFromAcceptLanguage('en-US,ja;q=0.7')).toBe('ja');
   });
