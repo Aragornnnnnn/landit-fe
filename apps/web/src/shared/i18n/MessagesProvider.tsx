@@ -5,7 +5,7 @@ import { getMessages } from 'next-intl/server';
 import { pickMessages } from './messages';
 
 interface MessagesProviderProps {
-  // 그 화면의 클라이언트 컴포넌트가 쓰는 네임스페이스 — 서버 컴포넌트(getTranslations)만 쓰는 묶음은 넣지 않는다
+  // 그 화면의 클라이언트 컴포넌트가 쓰는 네임스페이스 — 안쪽 Provider는 바깥 묶음을 합치지 않고 갈아 끼우므로 바깥 layout이 보낸 묶음도 다시 적는다
   namespaces?: readonly (keyof Messages)[];
   children: React.ReactNode;
 }
