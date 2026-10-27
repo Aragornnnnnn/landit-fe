@@ -202,8 +202,11 @@ export const useSmallTalkFlow = ({
   // 서버도 예약 차감이라 초과분을 받아 주고(잔량은 0에서 멈춘다), 그 턴을 작별 인사로 닫는다
   const budget = useSpeakingBudget({
     initialMs: remainingSpeakingTimeMs,
-    // 말한 뒤 확인하며 머무는 시간은 말한 시간이 아니다 — 마이크가 켜져 있는 동안만 깎는다
-    speaking: engine.phase === 'USER_SPEAKING' && !engine.input.reviewing,
+    // 말한 뒤 확인하며 머무는 시간·타이핑하는 시간은 말한 시간이 아니다 — 마이크가 켜져 있는 동안만 깎는다
+    speaking:
+      engine.phase === 'USER_SPEAKING' &&
+      !engine.input.reviewing &&
+      !engine.input.keyboardMode,
     waiting: engine.phase === 'USER_READY',
     listenCount: engine.input.listenCount,
     reviewedDurationMs: engine.input.reviewedDurationMs,

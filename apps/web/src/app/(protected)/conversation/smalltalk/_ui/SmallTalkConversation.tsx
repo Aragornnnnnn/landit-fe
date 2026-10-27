@@ -1,6 +1,6 @@
 // 스몰톡 대화 화면 — 세션이 열린 뒤의 본편. 시나리오 대화와 같은 무대·카드·마이크를 쓰되,
 // 오늘 남은 발화 시간을 머리 위에 두고, 끝나면 점수 대신 "얼마나 얘기했는지"를 보여준다.
-// 답은 말로만 한다 — 타이핑한 대화는 "말한 시간"이 0초로 남아 이 화면의 기록이 뜻을 잃는다
+// 답은 말로도 타이핑으로도 한다 — 타이핑 동안엔 발화 시간이 흐르지 않는다
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -89,6 +89,7 @@ export const SmallTalkConversation = ({
     transcript,
     speechPending,
     pressMic,
+    pressKeyboard,
     cancelInput,
     finishListening,
     keyboardMode,
@@ -104,7 +105,7 @@ export const SmallTalkConversation = ({
   } = input;
 
   const ended = phase === 'DONE';
-  // 말한 뒤 확인에서 고치는 중 — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
+  // 타이핑 중(키보드로 쓰거나 말한 뒤 고치는 중) — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
   const typing = keyboardMode && phase === 'USER_SPEAKING';
   const keyboardInset = useKeyboardInset();
   // 키보드가 입력 박스를 밀어 올린 상태 — 하단 inset 영역은 키보드가 덮는다
@@ -250,6 +251,7 @@ export const SmallTalkConversation = ({
             <MicControl
               phase={phase}
               onPress={pressMic}
+              onKeyboard={pressKeyboard}
               onCancel={cancelInput}
               onDone={finishListening}
               remainingRatio={unlimited ? undefined : speakingRatio}
