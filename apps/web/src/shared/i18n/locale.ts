@@ -10,12 +10,13 @@ const isLocale = (value: string): value is Locale =>
 
 /**
  * Accept-Language 헤더에서 지원 언어를 하나 고른다. 우선순위(q)가 높은 것부터 보고, 지역(`-JP`)은 무시한다.
+ * q=0(거절)이나 읽을 수 없는 q는 고르지 않는다 — 백엔드(AppLocale.fromAcceptLanguage)와 같은 규칙이다.
  *
  * @param header 요청의 Accept-Language (예: `ja-JP,ja;q=0.9,en-US;q=0.8`). 없으면 null
  * @returns 지원 언어가 하나도 없으면 DEFAULT_LOCALE
  */
 export const localeFromAcceptLanguage = (header: string | null): Locale => {
-  const ranked = (header ?? '')
+  const languages = (header ?? '')
     .split(',')
     .map((part) => {
       const [tag, ...params] = part.trim().split(';');
@@ -25,12 +26,11 @@ export const localeFromAcceptLanguage = (header: string | null): Locale => {
         quality: q ? Number(q.trim().slice(2)) : 1,
       };
     })
-    .sort((a, b) => b.quality - a.quality);
+    .filter((r) => r.quality > 0)
+    .sort((a, b) => b.quality - a.quality)
+    .map((r) => r.language);
 
-  return (
-    (ranked.find((r) => isLocale(r.language))?.language as Locale) ??
-    DEFAULT_LOCALE
-  );
+  return languages.find(isLocale) ?? DEFAULT_LOCALE;
 };
 
 /**

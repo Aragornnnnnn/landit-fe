@@ -17,6 +17,10 @@ describe('localeFromAcceptLanguage', () => {
     expect(localeFromAcceptLanguage('ko;q=0.5,ja;q=0.8')).toBe('ja');
   });
 
+  it('우선순위가 0인 언어는 거절한 것으로 보고 고르지 않는다', () => {
+    expect(localeFromAcceptLanguage('ja;q=0,en-US')).toBe('ko');
+  });
+
   it('지원하지 않는 언어가 앞서면 건너뛰고 다음 지원 언어를 고른다', () => {
     expect(localeFromAcceptLanguage('en-US,ja;q=0.7')).toBe('ja');
   });
