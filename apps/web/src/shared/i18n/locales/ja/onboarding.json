@@ -1,0 +1,60 @@
+{
+  "introStep": {
+    "greetingTitle": "こんにちは <wave></wave><br></br>ネイティブみたいに<br></br>話せるようにします",
+    "namedGreetingTitle": "こんにちは、{nickname}さん <wave></wave><br></br>ネイティブみたいに<br></br>話せるようにします",
+    "body": "毎日ひとつ、会話を用意します<br></br>続けるうちに話せるようになります",
+    "mascotLabel": "ラディ",
+    "nextButton": "いいですね！"
+  },
+  "soundStep": {
+    "title": "こんなふうに話しかけます<br></br>音はちゃんと聞こえますか？",
+    "nextButton": "聞こえます！"
+  },
+  "micStep": {
+    "title": "マイクをオンにして<br></br>声を聞かせてください",
+    "nextButton": "続けます"
+  },
+  "permissionPreview": {
+    "iosTitle": "“Landit”がマイクへの<br></br>アクセスを求めています",
+    "iosBody": "音声での回答を聞いて会話を続けるために必要です。",
+    "iosDenyLabel": "許可しない",
+    "iosAllowLabel": "許可",
+    "androidTitle": "Landit に音声の録音を許可しますか？",
+    "androidWhileUsingLabel": "アプリの使用時のみ",
+    "androidOnceLabel": "今回のみ",
+    "androidDenyLabel": "許可しない"
+  },
+  "thoughtStep": {
+    "title": "話すたびに登場して<br></br>相手の本音を教えます",
+    "goodBody": "お、理由まで話してくれた。会話がはずむね！",
+    "normalBody": "言いたいことはわかったよ。ちゃんと伝わった。",
+    "badBody": "ちょっと首をかしげちゃった。次はゆっくり話してね！",
+    "nextButton": "わかりました！"
+  },
+  "notificationStep": {
+    "title": "毎日続けられるよう<br></br>通知でお手伝いします",
+    "subtitle": "今日の会話を忘れていたらお知らせします",
+    "nextButton": "通知を受け取ります！"
+  },
+  "accentStep": {
+    "title": "どの英語を<br></br>学びたいですか？",
+    "subtitle": "おすすめのフレーズとフィードバックが変わります",
+    "hint": "学ぶアクセントはいつでも変更できます"
+  },
+  "accentForm": {
+    "confirmButton": "これにします！"
+  },
+  "accentOptions": {
+    "americanLabel": "アメリカ英語",
+    "britishLabel": "イギリス英語",
+    "australianLabel": "オーストラリア英語"
+  },
+  "scenarioIntroStep": {
+    "title": "最初の会話でレベル診断<br></br>ぴったりの内容で学べます",
+    "startButton": "最初の会話を始めます！",
+    "partnerStartButton": "{name}と会話を始めます！"
+  },
+  "profileGate": {
+    "dialogLabel": "始める前に少しだけ教えてください"
+  }
+}

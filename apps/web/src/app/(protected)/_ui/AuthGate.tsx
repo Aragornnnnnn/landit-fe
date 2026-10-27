@@ -1,0 +1,32 @@
+'use client';
+
+// 인증 가드 — 비로그인이면 /login으로 보낸다. 보호 그룹 레이아웃이 감싼다
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+import { useAuthStore } from '@/shared/auth/auth-store';
+import { LOGIN_PATH } from '@/shared/lib/routes';
+import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
+import { LanditLogo } from '@/shared/ui/LanditLogo';
+
+// 인증 판단 동안 보여주는 화면 — 네이티브 스플래시(주황+흰 로고)와 같은 그림이라 어느 쪽으로 가든 이어져 보인다
+const AuthSplash = () => (
+  <div className="flex h-dvh items-center justify-center bg-primary">
+    <LanditLogo className="h-12 w-auto text-white" />
+  </div>
+);
+
+export const AuthGate = ({ children }: { children: React.ReactNode }) => {
+  const router = useRouter();
+  const isAuthed = useAuthStore((state) => state.refreshToken !== null);
+  // true가 된 시점엔 persist 복원(동기 localStorage)이 끝나 있어 로그인 여부를 믿고 판단할 수 있다
+  const hydrated = useClientOnlyValue(() => true, false);
+
+  useEffect(() => {
+    if (hydrated && !isAuthed) router.replace(LOGIN_PATH);
+  }, [hydrated, isAuthed, router]);
+
+  // 판단 전이거나 리다이렉트 대기 중엔 스플래시를 유지한다 — 흰 화면 깜빡임 없이 로그인/홈 어느 쪽으로든 이어진다
+  if (!hydrated || !isAuthed) return <AuthSplash />;
+  return children;
+};
