@@ -40,12 +40,24 @@ export const localeFromAcceptLanguage = (header: string | null): Locale => {
   return languages.find(isLocale) ?? DEFAULT_LOCALE;
 };
 
-/** 로그인한 사용자의 저장 언어를 서버 렌더에 알리는 쿠키 — 웹이 `GET /api/v1/me/locale` 결과로 쓴다 */
+/** 서버 렌더가 기기 언어보다 먼저 읽는 언어 쿠키 — 로그인 뒤엔 `GET /api/v1/me/locale` 저장값, 로그인 전엔 로그인 화면에서 고른 값 */
 export const LOCALE_COOKIE = 'landit-locale';
+
+const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
+
+/** 언어 쿠키를 쓴다 — 다음 서버 렌더부터 이 언어로 그린다 */
+export const saveLocaleCookie = (locale: Locale) => {
+  document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=${ONE_YEAR_SECONDS}; samesite=lax`;
+};
+
+/** 언어 쿠키를 지운다 — 다음 서버 렌더부터 다시 기기 언어로 그린다 */
+export const clearLocaleCookie = () => {
+  document.cookie = `${LOCALE_COOKIE}=; path=/; max-age=0; samesite=lax`;
+};
 
 /**
  * 요청의 화면 언어를 정한다. 저장 언어 쿠키가 있으면 그 값이 먼저다 — 한 번 고른 언어는 기기 언어가 바뀌어도 유지한다.
- * 쿠키가 없으면(로그인 전·재설치 직후) 기기 언어(Accept-Language)로 그린다.
+ * 쿠키가 없으면(로그아웃 뒤·재설치 직후, 로그인 화면에서 고르기 전) 기기 언어(Accept-Language)로 그린다.
  *
  * @param cookie 저장 언어 쿠키 값. 없으면 null
  * @param acceptLanguage 요청의 Accept-Language. 없으면 null
@@ -57,6 +69,24 @@ export const resolveRequestLocale = (
   cookie && isLocale(cookie)
     ? cookie
     : localeFromAcceptLanguage(acceptLanguage);
+
+/** 기기 언어 목록에 지원 언어(ko·ja)가 하나라도 있는지 — 없으면 로그인 화면에 언어 버튼을 띄운다 */
+export const hasSupportedLanguage = (languages: readonly string[]) =>
+  languages.some((tag) => isLocale(tag.split('-')[0].toLowerCase()));
+
+/**
+ * 소셜 로그인에 실을 언어 목록. 기기에 지원 언어가 있으면 그대로 두고, 없으면 지금 화면 언어를 맨 앞에 둔다 — 보던 언어로 가입하게.
+ *
+ * @param languages `navigator.languages`
+ * @param screenLocale 지금 화면 언어(기본 한국어, 로그인 화면에서 고르면 그 언어)
+ */
+export const signupLanguages = (
+  languages: readonly string[],
+  screenLocale: Locale,
+) =>
+  hasSupportedLanguage(languages)
+    ? [...languages]
+    : [screenLocale, ...languages];
 
 /**
  * 기기 선호 언어 목록을 우선순위 그대로 Accept-Language로 만든다 — 신규 가입 때 백엔드가 이 목록에서 ko·ja를 고른다.
