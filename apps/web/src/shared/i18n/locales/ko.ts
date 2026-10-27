@@ -7,6 +7,7 @@ import home from './ko/home.json';
 import notification from './ko/notification.json';
 import onboarding from './ko/onboarding.json';
 import paywall from './ko/paywall.json';
+import streak from './ko/streak.json';
 import subscription from './ko/subscription.json';
 import widget from './ko/widget.json';
 
@@ -19,6 +20,7 @@ const ko = {
   notification,
   onboarding,
   paywall,
+  streak,
   subscription,
   widget,
 };

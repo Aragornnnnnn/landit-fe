@@ -1,4 +1,6 @@
 // 연속 기록 히어로 — 큰 열매와 현재 상태 한 줄, 그 아래 다음 행동을 가리키는 안내
+import { useTranslations } from 'next-intl';
+
 import { fruitStateOf, heroMessageOf } from '../../model/streak-status';
 import { StreakFruit } from '../common/StreakFruit';
 
@@ -13,12 +15,12 @@ export const StreakHero = ({
   activeToday,
   totalActiveDays,
 }: StreakHeroProps) => {
+  const t = useTranslations('streak');
   const state = fruitStateOf({ currentStreakDays, activeToday });
-  const { title, guide } = heroMessageOf({
-    currentStreakDays,
-    activeToday,
-    totalActiveDays,
-  });
+  const { title, guide } = heroMessageOf(
+    { currentStreakDays, activeToday, totalActiveDays },
+    t,
+  );
 
   return (
     <section className="flex flex-col items-center px-5 pt-4">

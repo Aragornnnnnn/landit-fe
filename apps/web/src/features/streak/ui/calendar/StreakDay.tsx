@@ -1,5 +1,5 @@
 // 달력 한 칸 — 위에 그 날의 마크(열매·빈 원), 아래에 날짜. 이어진 구간 띠는 주 행이 뒤에 깐다
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { toDayLabel } from '@/shared/lib/day-label';
 
@@ -20,12 +20,12 @@ const LABEL_STYLE: Record<DayMark, string> = {
 };
 
 // 화면은 열매·테두리로 상태를 말하지만 스크린 리더에는 숫자만 읽힌다 — 상태를 말로도 준다
-const MARK_LABEL: Record<DayMark, string> = {
-  done: '학습 완료',
-  today: '오늘, 아직 학습 전',
-  missed: '학습 안 함',
-  blank: '',
-};
+// 기록 밖·미래 날짜(blank)는 날짜만 읽힌다
+const MARK_LABEL_KEYS = {
+  done: 'doneLabel',
+  today: 'todayLabel',
+  missed: 'missedLabel',
+} as const satisfies Record<Exclude<DayMark, 'blank'>, string>;
 
 const DayMarkShape = ({ mark }: { mark: DayMark }) => {
   if (mark === 'done') return <StreakFruit state="fresh" size={14} />;
@@ -47,16 +47,18 @@ interface StreakDayProps {
 
 export const StreakDay = ({ date, mark }: StreakDayProps) => {
   const locale = useLocale();
+  const t = useTranslations('streak.streakDay');
   const day = Number(date.slice(8));
-  const status = MARK_LABEL[mark];
+  const dayLabel = toDayLabel(date, locale);
 
   return (
     // relative를 줘야 뒤에 깔린 띠(absolute) 위로 올라온다 — 안 주면 띠가 열매를 덮는다
     <div className="relative flex flex-col items-center pb-1.5">
       {/* 눈으로는 열매·테두리가, 소리로는 이 문장이 같은 것을 말한다 */}
       <span className="sr-only">
-        {toDayLabel(date, locale)}
-        {status && `, ${status}`}
+        {mark === 'blank'
+          ? dayLabel
+          : t(MARK_LABEL_KEYS[mark], { date: dayLabel })}
       </span>
 
       <span
