@@ -10,7 +10,6 @@ import type { RewardView } from '@/features/reward/api/reward';
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
 import { formatWon } from '@/features/subscription/lib/won';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
-import { PLAN_TITLE } from '@/features/subscription/model/product/plans';
 
 import type { RetentionReason } from './cancel-flow';
 
@@ -52,6 +51,15 @@ export const DAILY_STUDY_MINUTES = 7;
 export const DAILY_REMINDER_LABEL = '매일 오후 9:00';
 
 const STAY = { label: '조금 더 써볼게요', to: 'manage' as const };
+
+// 플랜 이름 — 해지 화면 문구가 아직 한국어라 구독 관리(subscription.plans)와 따로 둔다. 해지 화면을 옮기면 지운다
+const PLAN_TITLE: Record<SubscriptionPlan, string> = {
+  monthly: '월간',
+  yearly: '연간',
+  quarterly: '3개월',
+  halfyear: '6개월',
+  pass: '100일 이용권',
+};
 
 /** 환급을 쌓는 중인 사람이 걸어 둔 것 — 지금까지 쌓인 금액과 끝까지 채우면 받는 금액 */
 export interface RefundStake {

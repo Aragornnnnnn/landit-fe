@@ -1,5 +1,5 @@
 // 결제 이력 한 건을 화면 한 줄로 접는다 — 무슨 일이었는지, 어느 플랜인지, 얼마였는지 (docs/subscription.md 「마이페이지와 법적 문서」)
-import type { useTranslations } from 'next-intl';
+import type { Translator } from '@/shared/i18n/translator';
 
 import type { SubscriptionEvent } from '../../api/subscription';
 import { formatPrice, isPricedCurrency } from '../../lib/store-price';
@@ -19,9 +19,7 @@ export interface SubscriptionEventSummary {
 // RevenueCat이 환불을 해지(CANCELLATION)로 보내며 붙이는 사유
 const REFUND_CANCEL_REASON = 'CUSTOMER_SUPPORT';
 
-type SubscriptionTranslator = ReturnType<
-  typeof useTranslations<'subscription'>
->;
+type SubscriptionTranslator = Translator<'subscription'>;
 
 // 이벤트 한 건의 제목 문구 키 — subscription.subscriptionEvents 아래
 const toTitleKey = (event: SubscriptionEvent) => {

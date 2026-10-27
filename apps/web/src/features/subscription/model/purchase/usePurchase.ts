@@ -11,6 +11,7 @@ import { useLocale, useTranslations, type Messages } from 'next-intl';
 import { track } from '@/shared/analytics';
 import { getCurrentUserId } from '@/shared/auth/auth-store';
 import { useCurrentUserId } from '@/shared/auth/current-member';
+import type { Locale } from '@/shared/i18n/locale';
 import { reportWarning } from '@/shared/monitoring/report';
 import { showToast } from '@/shared/ui/toast';
 
@@ -46,6 +47,9 @@ interface UsePurchaseOptions {
   /** 플랜별로 화면이 금액을 그린 통화 — 결제할 패키지의 통화가 이와 다르면 본 금액과 다른 돈이 나가므로 막는다 */
   displayCurrencies?: Partial<Record<SubscriptionPlan, string>>;
 }
+
+// 셸 결제 실패 문구의 언어 — 셸이 번역되기 전까지 한국어뿐이다. 한국 전용 상품의 언어 조건(sellsKoreaOnlyOffers)과는 따로 풀린다
+const SHELL_MESSAGE_LOCALE: Locale = 'ko';
 
 // 안내 토스트 문구 키 — subscription.purchase 아래
 type PurchaseToastKey = keyof Messages['subscription']['purchase'];
@@ -105,9 +109,9 @@ export const usePurchase = ({
   const promoTag = promo ? { promo: true } : {};
   const t = useTranslations('subscription.purchase');
   const locale = useLocale();
-  // 셸이 준 실패 사유 — 셸 문구는 아직 한국어뿐이라 다른 언어 화면에서는 버리고 웹 문구를 쓴다
+  // 셸이 준 실패 사유 — 셸 문구와 같은 언어 화면에서만 쓰고, 다른 언어 화면에서는 버리고 웹 문구를 쓴다
   const shellMessage = (message?: string) =>
-    locale === 'ko' ? message : undefined;
+    locale === SHELL_MESSAGE_LOCALE ? message : undefined;
   const [busy, setBusy] = useState(false);
   const queryClient = useQueryClient();
   const userId = useCurrentUserId();

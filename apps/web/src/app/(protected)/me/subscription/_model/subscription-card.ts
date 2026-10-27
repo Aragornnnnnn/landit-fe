@@ -1,6 +1,4 @@
 // 구독 관리 골드 카드의 문구 규칙 — 상태·플랜으로 제목을, 상태로 날짜 행을, 플랜으로 결제 금액 행을 만든다. 문구는 화면 언어로 붙인다
-import type { useTranslations } from 'next-intl';
-
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
 import { formatWon } from '@/features/subscription/lib/won';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
@@ -9,10 +7,9 @@ import {
   YEARLY_LIST_PRICE,
 } from '@/features/subscription/model/product/plans';
 import type { Locale } from '@/shared/i18n/locale';
+import type { Translator } from '@/shared/i18n/translator';
 
-type SubscriptionTranslator = ReturnType<
-  typeof useTranslations<'subscription'>
->;
+type SubscriptionTranslator = Translator<'subscription'>;
 
 const STATUS_TITLE_KEYS = {
   trial: 'trialTitle',
