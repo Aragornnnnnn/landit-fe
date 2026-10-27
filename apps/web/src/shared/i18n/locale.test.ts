@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  acceptLanguageOf,
   localeFromAcceptLanguage,
   localeFromDocument,
   resolveRequestLocale,
@@ -28,6 +29,18 @@ describe('resolveRequestLocale', () => {
 
     await expect(resolveRequestLocale(readHeader)).resolves.toBe('ko');
     expect(readHeader).not.toHaveBeenCalled();
+  });
+});
+
+describe('acceptLanguageOf', () => {
+  it('기기 선호 언어 목록을 우선순위 그대로 q를 낮춰 잇는다', () => {
+    expect(acceptLanguageOf(['en-US', 'ja-JP', 'ko'])).toBe(
+      'en-US,ja-JP;q=0.9,ko;q=0.8',
+    );
+  });
+
+  it('목록이 비면 헤더를 만들지 않는다', () => {
+    expect(acceptLanguageOf([])).toBeNull();
   });
 });
 

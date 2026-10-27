@@ -55,6 +55,22 @@ export const resolveRequestLocale = async (
     : DEFAULT_LOCALE;
 
 /**
+ * 기기 선호 언어 목록을 우선순위 그대로 Accept-Language로 만든다 — 신규 가입 때 백엔드가 이 목록에서 ko·ja를 고른다.
+ * 앞에서부터 q를 0.1씩 낮춘다(`en-US,ja-JP;q=0.9,ko;q=0.8`). 목록이 비면 null이라 호출부가 헤더를 붙이지 않는다
+ *
+ * @param languages `navigator.languages`
+ */
+export const acceptLanguageOf = (languages: readonly string[]) => {
+  const list = languages.filter(Boolean).slice(0, 10);
+  if (list.length === 0) return null;
+  return list
+    .map((tag, index) =>
+      index === 0 ? tag : `${tag};q=${((10 - index) / 10).toFixed(1)}`,
+    )
+    .join(',');
+};
+
+/**
  * 서버가 정해 html lang에 박은 언어를 읽는다. 브라우저에서 보내는 요청이 화면과 같은 언어를 쓰게 하는 단일 출처.
  * 서버에서 불리면(문서가 없으면) 기본 언어를 준다.
  */
