@@ -1,5 +1,6 @@
 // 탭 셸 — 헤더와 탭 칩을 탭들이 공유한다. 탭을 오가도 이 껍데기는 리마운트되지 않는다
 import { ProfileGate } from '@/features/onboarding/ui/ProfileGate';
+import { MessagesProvider } from '@/shared/i18n/MessagesProvider';
 
 import { AppHeader } from '../_ui/AppHeader';
 import { RememberLastTab } from './_ui/RememberLastTab';
@@ -11,14 +12,17 @@ export default function TabsLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // home은 탭들이 같이 쓰는 헤더·탭 칩 문구다
   return (
-    <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-muted">
-      <RememberLastTab />
-      <AppHeader />
-      <TabBar tabs={VISIBLE_TABS} />
-      {children}
-      {/* 어느 탭으로 들어오든 무조건 앞을 막는다 — 온보딩을 마쳤지만 아직 답 안 한 기존 유저만 대상 */}
-      <ProfileGate />
-    </main>
+    <MessagesProvider namespaces={['home']}>
+      <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-muted">
+        <RememberLastTab />
+        <AppHeader />
+        <TabBar tabs={VISIBLE_TABS} />
+        {children}
+        {/* 어느 탭으로 들어오든 무조건 앞을 막는다 — 온보딩을 마쳤지만 아직 답 안 한 기존 유저만 대상 */}
+        <ProfileGate />
+      </main>
+    </MessagesProvider>
   );
 }

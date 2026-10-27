@@ -3,6 +3,7 @@ import auth from './ko/auth.json';
 import common from './ko/common.json';
 import conversation from './ko/conversation.json';
 import feedback from './ko/feedback.json';
+import home from './ko/home.json';
 import notification from './ko/notification.json';
 import onboarding from './ko/onboarding.json';
 import paywall from './ko/paywall.json';
@@ -14,6 +15,7 @@ const ko = {
   common,
   conversation,
   feedback,
+  home,
   notification,
   onboarding,
   paywall,
