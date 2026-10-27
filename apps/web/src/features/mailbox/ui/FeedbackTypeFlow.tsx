@@ -3,6 +3,7 @@
 // 피드백 유형 선택 — 무슨 말을 하러 왔는지 먼저 고르게 한다.
 // 유형을 알아야 다음 화면이 알맞게 물을 수 있고, 보낸 편지의 제목도 이 선택이 된다
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -47,7 +48,8 @@ export const FeedbackTypeFlow = () => {
 };
 
 const FeedbackTypeRow = ({ type }: { type: FeedbackType }) => {
-  const { emoji, label } = FEEDBACK_TYPE_FACES[type];
+  const t = useTranslations('mailbox.feedbackType');
+  const { emoji, labelKey } = FEEDBACK_TYPE_FACES[type];
 
   return (
     // 한 층이라 replace (MAILBOX_COMPOSE_PATH 참고). 유형을 다시 고르는 길은 작성 화면의 화살표가 낸다
@@ -61,7 +63,7 @@ const FeedbackTypeRow = ({ type }: { type: FeedbackType }) => {
     >
       <Emoji className="text-22">{emoji}</Emoji>
       <span className="flex-1 text-15 font-semibold text-foreground">
-        {label}
+        {t(labelKey)}
       </span>
       <ChevronRightIcon size={18} className="text-muted-foreground" />
     </Link>

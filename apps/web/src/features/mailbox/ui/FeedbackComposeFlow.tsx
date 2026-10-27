@@ -2,9 +2,11 @@
 
 // 피드백 작성 — 고른 유형에 맞춰 묻고, 다 쓰면 보낸 편지함으로 돌려보낸다
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { useNativeContext } from '@/shared/bridge/useNativeContext';
+import { lineBreak } from '@/shared/i18n/rich';
 import { MAILBOX_COMPOSE_PATH } from '@/shared/lib/routes';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { BackHeader } from '@/shared/ui/BackHeader';
@@ -37,7 +39,8 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
     useAttachments();
   const photoSource = resolvePhotoSource(useNativeContext());
 
-  const { question, placeholder } = FEEDBACK_TYPE_FACES[type];
+  const tType = useTranslations('mailbox.feedbackType');
+  const { titleKey, placeholderKey } = FEEDBACK_TYPE_FACES[type];
   const trimmed = content.trim();
 
   const submit = () => {
@@ -91,15 +94,15 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
       />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-4">
-        <h1 className="mt-3 shrink-0 text-22 leading-snug font-bold whitespace-pre-line text-foreground">
-          {question}
+        <h1 className="mt-3 shrink-0 text-22 leading-snug font-bold text-foreground">
+          {tType.rich(titleKey, lineBreak)}
         </h1>
 
         <textarea
           value={content}
           onChange={(event) => setContent(event.target.value)}
           maxLength={MAX_LENGTH}
-          placeholder={placeholder}
+          placeholder={tType(placeholderKey)}
           // 들어오자마자 쓸 수 있게 초점을 준다. 질문은 위에 고정돼 있어 키보드가 올라와도 안 가린다
           autoFocus
           className="mt-6 h-[180px] w-full shrink-0 resize-none rounded-2xl border border-border bg-card p-4 text-15 leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"

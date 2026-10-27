@@ -1,0 +1,55 @@
+{
+  "mailboxButton": {
+    "label": "편지함",
+    "unreadLabel": "편지함, 안 읽은 편지 있음"
+  },
+  "mailboxPage": {
+    "title": "편지함"
+  },
+  "mailboxTabs": {
+    "groupLabel": "편지함",
+    "receivedLabel": "받은 편지",
+    "sentLabel": "보낸 편지"
+  },
+  "mailboxFlow": {
+    "loadMoreFailedToast": "편지를 더 불러오지 못했어요."
+  },
+  "mailboxEmpty": {
+    "receivedTitle": "아직 도착한 편지가 없어요",
+    "receivedDescription": "공지나 답장이 도착하면 여기에서 확인할 수 있어요",
+    "sentTitle": "아직 보낸 편지가 없어요",
+    "sentDescription": "궁금한 점이나 의견이 있다면 언제든 편하게 보내주세요"
+  },
+  "composeFab": {
+    "button": "피드백 보내기"
+  },
+  "letterListItem": {
+    "unreadLabel": "(안 읽음)"
+  },
+  "letterBadge": {
+    "noticeBadge": "공지",
+    "updateBadge": "업데이트",
+    "replyBadge": "답장",
+    "directBadge": "편지",
+    "pendingBadge": "처리중",
+    "completedBadge": "처리완료",
+    "answeredBadge": "답장 도착"
+  },
+  "feedbackType": {
+    "bugLabel": "문제 신고하기",
+    "bugTitle": "겪으신 문제를<br></br>자세히 알려주세요",
+    "bugPlaceholder": "이곳에 문제 상황을 적어주세요",
+    "featureLabel": "신규 기능 요청하기",
+    "featureTitle": "있었으면 하는<br></br>기능을 알려주세요",
+    "featurePlaceholder": "이곳에 원하는 기능을 적어주세요",
+    "questionLabel": "궁금한 점 문의하기",
+    "questionTitle": "궁금한 점이 있다면<br></br>무엇이든 물어봐주세요",
+    "questionPlaceholder": "이곳에 궁금한 점을 적어주세요",
+    "cheerLabel": "개발자 응원하기",
+    "cheerTitle": "응원하고 싶은<br></br>내용을 남겨주세요",
+    "cheerPlaceholder": "이곳에 응원 한마디를 적어주세요"
+  },
+  "sentBody": {
+    "replyCaption": "랜딧 팀의 답장 · {date}"
+  }
+}

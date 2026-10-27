@@ -4,9 +4,13 @@ import { MAILBOX_PATH } from '@/shared/lib/routes';
 
 export type MailboxBox = 'received' | 'sent';
 
-export const MAILBOX_BOXES: { box: MailboxBox; label: string }[] = [
-  { box: 'received', label: '받은 편지' },
-  { box: 'sent', label: '보낸 편지' },
+// 칸 이름은 mailbox.mailboxTabs 아래 문구 키
+export const MAILBOX_BOXES: {
+  box: MailboxBox;
+  labelKey: 'receivedLabel' | 'sentLabel';
+}[] = [
+  { box: 'received', labelKey: 'receivedLabel' },
+  { box: 'sent', labelKey: 'sentLabel' },
 ];
 
 // 받은 편지가 정본 — 주소에 값이 없거나 모르는 값이면 여기로 돌린다

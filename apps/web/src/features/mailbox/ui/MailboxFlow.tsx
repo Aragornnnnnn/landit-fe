@@ -2,6 +2,7 @@
 
 // 편지함 화면 — 받은/보낸 칸을 오가며 편지 목록을 본다. 헤더는 페이지가 얹는다
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -52,6 +53,7 @@ export const MailboxFlow = ({ box }: { box: MailboxBox }) => {
 const LetterBox = ({ box }: { box: MailboxBox }) => {
   const { rows, isPending, error, retry, hasMore, loadingMore, loadMore } =
     useLetterRowsQuery(box);
+  const t = useTranslations('mailbox.mailboxFlow');
 
   if (rows) {
     if (rows.length === 0) return <MailboxEmpty box={box} />;
@@ -67,7 +69,7 @@ const LetterBox = ({ box }: { box: MailboxBox }) => {
             // 다음 장이 실패하면 목록은 그대로고 버튼만 돌아온다 — 첫 장 실패(RetryNotice)와 달리 알릴 자리가 없어 토스트로
             onClick={() =>
               void loadMore().then((result) => {
-                if (result.isError) showToast('편지를 더 불러오지 못했어요.');
+                if (result.isError) showToast(t('loadMoreFailedToast'));
               })
             }
           />

@@ -1,0 +1,55 @@
+{
+  "mailboxButton": {
+    "label": "メールボックス",
+    "unreadLabel": "メールボックス、未読のお手紙あり"
+  },
+  "mailboxPage": {
+    "title": "メールボックス"
+  },
+  "mailboxTabs": {
+    "groupLabel": "メールボックス",
+    "receivedLabel": "届いたお手紙",
+    "sentLabel": "送ったお手紙"
+  },
+  "mailboxFlow": {
+    "loadMoreFailedToast": "続きのお手紙を読み込めませんでした。"
+  },
+  "mailboxEmpty": {
+    "receivedTitle": "まだお手紙は届いていません",
+    "receivedDescription": "お知らせや返信が届くと、ここで確認できます",
+    "sentTitle": "まだ送ったお手紙はありません",
+    "sentDescription": "気になることやご意見があれば、いつでも気軽に送ってください"
+  },
+  "composeFab": {
+    "button": "フィードバックを送る"
+  },
+  "letterListItem": {
+    "unreadLabel": "(未読)"
+  },
+  "letterBadge": {
+    "noticeBadge": "お知らせ",
+    "updateBadge": "アップデート",
+    "replyBadge": "返信",
+    "directBadge": "お手紙",
+    "pendingBadge": "対応中",
+    "completedBadge": "対応済み",
+    "answeredBadge": "返信あり"
+  },
+  "feedbackType": {
+    "bugLabel": "不具合を報告する",
+    "bugTitle": "起きた問題を<br></br>詳しく教えてください",
+    "bugPlaceholder": "ここに状況を書いてください",
+    "featureLabel": "新機能をリクエストする",
+    "featureTitle": "あったらいいなと思う<br></br>機能を教えてください",
+    "featurePlaceholder": "ほしい機能を書いてください",
+    "questionLabel": "気になることを質問する",
+    "questionTitle": "気になることがあれば<br></br>何でも聞いてください",
+    "questionPlaceholder": "気になることを書いてください",
+    "cheerLabel": "開発者を応援する",
+    "cheerTitle": "応援のメッセージを<br></br>残してください",
+    "cheerPlaceholder": "応援のひとことを書いてください"
+  },
+  "sentBody": {
+    "replyCaption": "Landitチームからの返信 · {date}"
+  }
+}

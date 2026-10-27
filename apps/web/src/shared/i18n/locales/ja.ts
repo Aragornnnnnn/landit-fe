@@ -3,6 +3,7 @@ import auth from './ja/auth.json';
 import common from './ja/common.json';
 import conversation from './ja/conversation.json';
 import feedback from './ja/feedback.json';
+import mailbox from './ja/mailbox.json';
 import notification from './ja/notification.json';
 import onboarding from './ja/onboarding.json';
 import paywall from './ja/paywall.json';
@@ -14,6 +15,7 @@ const ja = {
   common,
   conversation,
   feedback,
+  mailbox,
   notification,
   onboarding,
   paywall,
