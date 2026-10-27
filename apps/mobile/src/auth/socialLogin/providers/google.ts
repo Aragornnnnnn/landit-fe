@@ -4,6 +4,7 @@ import * as AuthSession from 'expo-auth-session';
 import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 
+import { shellText } from '../../../i18n/shell-text';
 import { assertIdToken, SocialLoginError } from '../shared/errors';
 import { REDIRECT_PATH } from '../shared/redirect';
 
@@ -48,7 +49,7 @@ export async function requestGoogleIdToken(nonce: string): Promise<string> {
 
 function assertAuthCode(result: AuthSession.AuthSessionResult): string {
   if (result.type !== 'success') {
-    throw new SocialLoginError('로그인이 취소됐어요.', true);
+    throw new SocialLoginError(shellText().login.cancelled, true);
   }
   if (result.params.error) {
     throw new SocialLoginError(
@@ -57,7 +58,7 @@ function assertAuthCode(result: AuthSession.AuthSessionResult): string {
   }
   const code = result.params.code;
   if (!code) {
-    throw new SocialLoginError('인증 코드를 받지 못했어요.');
+    throw new SocialLoginError(shellText().login.authCodeMissing);
   }
   return code;
 }

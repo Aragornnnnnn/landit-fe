@@ -1,4 +1,6 @@
 // 소셜 로그인 공통 에러 타입과 id_token 검증 헬퍼
+import { shellText } from '../../../i18n/shell-text';
+
 export class SocialLoginError extends Error {
   constructor(
     message: string,
@@ -11,7 +13,7 @@ export class SocialLoginError extends Error {
 
 export function assertIdToken(idToken: string | undefined): string {
   if (!idToken) {
-    throw new SocialLoginError('id_token을 받지 못했어요.');
+    throw new SocialLoginError(shellText().login.idTokenMissing);
   }
   return idToken;
 }

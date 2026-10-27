@@ -2,6 +2,7 @@
 import { Platform } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 
+import { shellText } from '../../../i18n/shell-text';
 import {
   assertIdToken,
   hasErrorCode,
@@ -44,7 +45,7 @@ export async function requestAppleLogin(
     };
   } catch (error) {
     if (hasErrorCode(error, 'ERR_REQUEST_CANCELED')) {
-      throw new SocialLoginError('로그인이 취소됐어요.', true);
+      throw new SocialLoginError(shellText().login.cancelled, true);
     }
     throw error;
   }
