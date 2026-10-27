@@ -33,25 +33,25 @@ const toBars = (
 
 export const toComparisonRows = (
   { previous, current }: SmallTalkSummaryComparison,
-  t: Translator<'smallTalk'>,
+  t: Translator<'smallTalk.comparison'>,
   locale: Locale,
 ): ComparisonRow[] => [
   {
-    label: t('comparison.speakingTimeLabel'),
+    label: t('speakingTimeLabel'),
     ...toBars(previous.speakingMs, current.speakingMs, (ms) =>
       toSpeakingTimeLabel(ms, locale),
     ),
   },
   {
-    label: t('comparison.exchangeLabel'),
+    label: t('exchangeLabel'),
     ...toBars(previous.turnCount, current.turnCount, (count) =>
-      t('comparison.exchangeCountLabel', { count }),
+      t('exchangeCountLabel', { count }),
     ),
   },
   {
-    label: t('comparison.longestTurnLabel'),
+    label: t('longestTurnLabel'),
     ...toBars(previous.maxWordsInTurn, current.maxWordsInTurn, (count) =>
-      t('comparison.wordCountLabel', { count }),
+      t('wordCountLabel', { count }),
     ),
   },
 ];
@@ -59,9 +59,9 @@ export const toComparisonRows = (
 // 카드 오른쪽 위 — 어느 날과 견주는지. 첫 스몰톡은 견줄 날이 없어 첫 기록이라고 말한다
 export const toPeriodLabel = (
   { previousDate }: SmallTalkSummaryComparison,
-  t: Translator<'smallTalk'>,
+  t: Translator<'smallTalk.comparison'>,
   locale: Locale,
 ): string =>
   previousDate
-    ? t('comparison.periodCaption', { date: toDayLabel(previousDate, locale) })
-    : t('comparison.firstPeriodCaption');
+    ? t('periodCaption', { date: toDayLabel(previousDate, locale) })
+    : t('firstPeriodCaption');

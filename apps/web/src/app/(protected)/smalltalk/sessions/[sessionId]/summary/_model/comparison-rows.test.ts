@@ -11,12 +11,12 @@ import { toComparisonRows, toPeriodLabel } from './comparison-rows';
 const tKo = createTranslator({
   locale: 'ko',
   messages: ko,
-  namespace: 'smallTalk',
+  namespace: 'smallTalk.comparison',
 });
 const tJa = createTranslator({
   locale: 'ja',
   messages: ja,
-  namespace: 'smallTalk',
+  namespace: 'smallTalk.comparison',
 });
 
 const comparison: SmallTalkSummaryComparison = {
