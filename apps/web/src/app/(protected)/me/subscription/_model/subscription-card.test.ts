@@ -1,9 +1,33 @@
 // 골드 카드 문구 규칙 — 제목의 플랜, 상태별 날짜 라벨, 결제 금액과 비교가
+import { createTranslator } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
+import ja from '@/shared/i18n/locales/ja';
+import ko from '@/shared/i18n/locales/ko';
 
-import { toAmountRow, toCardTitle, toDateRow } from './subscription-card';
+import {
+  toAmountRow as amountRowOf,
+  toCardTitle as cardTitleOf,
+  toDateRow as dateRowOf,
+} from './subscription-card';
+
+const t = createTranslator({
+  locale: 'ko',
+  messages: ko,
+  namespace: 'subscription',
+});
+const tJa = createTranslator({
+  locale: 'ja',
+  messages: ja,
+  namespace: 'subscription',
+});
+const toCardTitle = (summary: PaidSubscriptionSummary) =>
+  cardTitleOf(summary, t);
+const toDateRow = (summary: PaidSubscriptionSummary) =>
+  dateRowOf(summary, t, 'ko');
+const toAmountRow = (summary: PaidSubscriptionSummary) =>
+  amountRowOf(summary, t);
 
 const active = (
   overrides: Partial<PaidSubscriptionSummary> = {},
@@ -118,5 +142,19 @@ describe('toAmountRow', () => {
     expect(
       toAmountRow(active({ kind: 'canceled', renews: false, plan: 'yearly' })),
     ).toBeNull();
+  });
+});
+
+describe('일본어 화면', () => {
+  it('제목·날짜 행을 일본어로 적는다', () => {
+    const summary = active({ kind: 'canceled', renews: false, plan: 'yearly' });
+
+    expect(cardTitleOf(active({ plan: 'yearly' }), tJa)).toBe(
+      '年間プレミアムを利用中です',
+    );
+    expect(dateRowOf(summary, tJa, 'ja')).toEqual({
+      label: '利用期限',
+      value: '2026年10月4日・自動更新オフ',
+    });
   });
 });

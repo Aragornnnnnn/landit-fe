@@ -62,5 +62,31 @@
     "loadError": "결제 내역을 불러오지 못했어요",
     "emptyBody": "아직 결제 내역이 없어요",
     "sandboxBadge": "테스트"
+  },
+  "subscriptionCard": {
+    "trialTitle": "무료 체험 중이에요",
+    "activeTitle": "프리미엄을 쓰고 있어요",
+    "planActiveTitle": "{plan} 프리미엄을 쓰고 있어요",
+    "canceledTitle": "해지가 예약됐어요",
+    "passTitle": "100일 이용권을 쓰고 있어요",
+    "firstChargeLabel": "첫 결제일",
+    "nextChargeLabel": "다음 결제일",
+    "expiryLabel": "이용 만료일",
+    "autoRenewOffLabel": "{date} · 자동 갱신 꺼짐",
+    "firstAmountLabel": "첫 결제 금액",
+    "nextAmountLabel": "다음 결제 금액"
+  },
+  "subscriptionManage": {
+    "title": "구독 관리",
+    "passTitle": "이용권 관리",
+    "benefitsTitle": "이용 중인 혜택",
+    "historyLink": "결제 내역",
+    "passSectionTitle": "이용권",
+    "subscriptionSectionTitle": "구독",
+    "cancelSubscriptionLink": "구독 해지하기",
+    "cancelTrialLink": "체험 해지하기",
+    "resubscribeLink": "해지 취소하기",
+    "listPriceLabel": "정가",
+    "noSubscriptionLink": "구독 중이 아니에요 · 프리미엄 구독하기"
   }
 }

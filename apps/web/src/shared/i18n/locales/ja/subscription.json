@@ -62,5 +62,31 @@
     "loadError": "購入履歴を読み込めませんでした",
     "emptyBody": "まだ購入履歴がありません",
     "sandboxBadge": "テスト"
+  },
+  "subscriptionCard": {
+    "trialTitle": "無料体験中です",
+    "activeTitle": "プレミアムを利用中です",
+    "planActiveTitle": "{plan}プレミアムを利用中です",
+    "canceledTitle": "解約を予約しました",
+    "passTitle": "100日パスを利用中です",
+    "firstChargeLabel": "初回の請求日",
+    "nextChargeLabel": "次回の請求日",
+    "expiryLabel": "利用期限",
+    "autoRenewOffLabel": "{date}・自動更新オフ",
+    "firstAmountLabel": "初回の請求額",
+    "nextAmountLabel": "次回の請求額"
+  },
+  "subscriptionManage": {
+    "title": "プランの管理",
+    "passTitle": "パスの管理",
+    "benefitsTitle": "利用中の特典",
+    "historyLink": "購入履歴",
+    "passSectionTitle": "パス",
+    "subscriptionSectionTitle": "サブスクリプション",
+    "cancelSubscriptionLink": "サブスクリプションを解約する",
+    "cancelTrialLink": "無料体験を解約する",
+    "resubscribeLink": "解約を取り消す",
+    "listPriceLabel": "通常価格",
+    "noSubscriptionLink": "未登録です・プレミアムに登録する"
   }
 }
