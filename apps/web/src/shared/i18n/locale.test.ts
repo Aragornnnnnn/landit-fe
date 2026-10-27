@@ -9,26 +9,16 @@ import {
   resolveRequestLocale,
 } from './locale';
 
-// 출시 스위치는 빌드 환경 값이라 경계로 본다 — 기본은 켠 상태로 규칙을 검증한다
-const flag = vi.hoisted(() => ({ JAPANESE_ENABLED: true }));
-vi.mock('./japanese-flag', () => flag);
-
 describe('resolveRequestLocale', () => {
-  afterEach(() => {
-    flag.JAPANESE_ENABLED = true;
+  it('저장 언어 쿠키가 있으면 기기 언어보다 먼저다 — 고른 언어는 기기 언어가 바뀌어도 유지한다', () => {
+    expect(resolveRequestLocale('ja', 'ko-KR,en;q=0.9')).toBe('ja');
+    expect(resolveRequestLocale('ko', 'ja-JP')).toBe('ko');
   });
 
-  it('일본어 출시 스위치가 켜져 있으면 헤더로 언어를 정한다', async () => {
-    await expect(resolveRequestLocale(async () => 'ja-JP')).resolves.toBe('ja');
-  });
-
-  it('일본어 출시 스위치가 꺼져 있으면 헤더를 읽지 않고 한국어로 둔다', async () => {
-    // 헤더를 읽으면 페이지가 요청마다 렌더된다 — 꺼져 있는 동안은 정적으로 남게 아예 안 읽는다
-    flag.JAPANESE_ENABLED = false;
-    const readHeader = vi.fn(async () => 'ja-JP');
-
-    await expect(resolveRequestLocale(readHeader)).resolves.toBe('ko');
-    expect(readHeader).not.toHaveBeenCalled();
+  it('쿠키가 없거나 지원하지 않는 값이면 기기 언어로 정한다', () => {
+    expect(resolveRequestLocale(null, 'ja-JP')).toBe('ja');
+    expect(resolveRequestLocale('en', 'ja-JP')).toBe('ja');
+    expect(resolveRequestLocale(null, null)).toBe('ko');
   });
 });
 

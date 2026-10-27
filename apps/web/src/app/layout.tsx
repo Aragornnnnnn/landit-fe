@@ -25,7 +25,7 @@ import { PlatformMarkerSync } from '@/shared/bridge/PlatformMarkerSync';
 import { fontScaleScript } from '@/shared/font-scale/font-scale';
 import { FontScaleSync } from '@/shared/font-scale/FontScaleSync';
 import { GlobalHaptics } from '@/shared/haptics';
-import { LocaleSync } from '@/shared/i18n/LocaleSync';
+import { LocaleGate } from '@/shared/i18n/LocaleGate';
 import { MonitoringBootstrap } from '@/shared/monitoring/MonitoringBootstrap';
 import { Toaster } from '@/shared/ui/toast';
 
@@ -51,7 +51,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // 요청의 Accept-Language로 정한 화면 언어 — API 요청도 html lang을 읽어 같은 언어를 보낸다
+  // 저장 언어 쿠키(없으면 Accept-Language)로 정한 화면 언어 — API 요청도 html lang을 읽어 같은 언어를 보낸다
   const locale = await getLocale();
   // 브라우저엔 어디서나 쓰는 common만 보낸다 — 화면 문구는 그 화면의 layout이 자기 묶음을 더해 보낸다
   const { common } = await getMessages();
@@ -75,7 +75,7 @@ export default async function RootLayout({
             {children}
             <AppUpdateGate />
             <PushDeviceSync />
-            <LocaleSync />
+            <LocaleGate />
             <WidgetDataSync />
             <WidgetChangeSync />
             <TrackingStatusSync />
