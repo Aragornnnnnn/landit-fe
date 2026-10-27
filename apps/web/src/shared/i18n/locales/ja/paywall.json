@@ -2,6 +2,28 @@
   "paywallHeader": {
     "restoreButton": "購入を復元"
   },
+  "feedbackDemo": {
+    "detailTitle": "詳しい分析",
+    "goodUserBody": "Hi Marco! I'm Yuki. I'm from Japan and I study computer science.",
+    "goodContextBody": "えっ、君がルームメイト？スペインから来た交換留学生のマルコだよ。君のこと教えて！",
+    "goodAnalogyBody": "「やあマルコ！ユウキだよ。日本から来て、情報工学を専攻してるんだ。」くらいに聞こえます。",
+    "goodDetailBody": "名前・出身・専攻を一度に伝えたので、相手が次の質問をしやすくなりました。",
+    "goodBenchmarkBody": "I'm from Japan and I study ~ のように2つをandでつなげて、ネイティブのように自然でした。",
+    "betterContextBody": "いいね！じゃあ趣味は何？どうやって始めたの？",
+    "betterAnalogyBody": "「ギターを弾くのが好き。楽しい。」くらいに聞こえます。",
+    "betterReasonBody": "理由も一文足すと会話が続きます。be intoは「ハマっている」感じです。",
+    "betterPositiveBody": "好きなことをすぐに言えて、質問にまっすぐ答えられました。",
+    "summaryHeadlineTitle": "新しいルームメイトとも自然にあいさつできます！",
+    "summaryOverallBody": "自己紹介で名前・出身・専攻を一度に伝えられて良かったです。趣味を話すときは理由を一文足してみましょう。",
+    "summaryImprovementBody": "趣味を話すとき理由を一文足すと、会話がもっと長く続きます。",
+    "growthPatternLabel": "過去形",
+    "growthPreviousBody": "I go to Okinawa last summer.",
+    "beIntoMeaningLabel": "～にハマっている",
+    "getIntoMeaningLabel": "～を始めるようになる",
+    "usedToMeaningLabel": "以前は～していた",
+    "scenarioSourceLabel": "10月7日のシナリオ",
+    "expressionSourceLabel": "10月5日のフレーズ学習"
+  },
   "planCard": {
     "monthlyTitle": "月間プラン",
     "yearlyTitle": "年間プラン",

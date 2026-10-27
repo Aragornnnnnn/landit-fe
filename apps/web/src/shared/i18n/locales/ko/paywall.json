@@ -2,6 +2,28 @@
   "paywallHeader": {
     "restoreButton": "구매 복원"
   },
+  "feedbackDemo": {
+    "detailTitle": "상세 분석",
+    "goodUserBody": "Hi Marco! I'm Junseo. I'm from Korea and I study computer science.",
+    "goodContextBody": "잠깐, 네가 내 룸메이트야? 난 스페인에서 온 교환학생 마르코야. 너에 대해 알려 줘!",
+    "goodAnalogyBody": "“안녕 마르코! 난 준서야. 한국에서 왔고 컴퓨터공학 전공해.” 정도로 들려요.",
+    "goodDetailBody": "이름, 출신, 전공을 한 번에 말해서 상대가 다음 질문을 이어 가기 쉬웠어요.",
+    "goodBenchmarkBody": "I'm from Korea and I study ~ 처럼 두 가지를 and로 이어 말해 원어민처럼 자연스러웠어요.",
+    "betterContextBody": "좋다! 그럼 넌 재미로 뭐 해? 어떻게 시작하게 됐어?",
+    "betterAnalogyBody": "“기타 치는 거 좋아해. 그거 재밌어.” 정도로 들려요.",
+    "betterReasonBody": "어떻게 시작했는지도 물었으니 이유를 한 문장 붙이면 대화가 이어져요. be into는 ‘푹 빠져 있다’는 느낌이에요.",
+    "betterPositiveBody": "좋아하는 걸 바로 말해서 질문에 곧장 답했어요.",
+    "summaryHeadlineTitle": "이제 새 룸메이트와 어색하지 않게 인사할 수 있어요!",
+    "summaryOverallBody": "자기소개는 이름·출신·전공을 한 번에 전해 좋았어요. 취미를 말할 때는 이유를 한 문장 덧붙여 보세요.",
+    "summaryImprovementBody": "취미를 말할 때 이유를 한 문장 덧붙이면 대화가 더 길게 이어져요.",
+    "growthPatternLabel": "과거형",
+    "growthPreviousBody": "I go to Busan last summer.",
+    "beIntoMeaningLabel": "~에 푹 빠져 있다",
+    "getIntoMeaningLabel": "~을 시작하게 되다",
+    "usedToMeaningLabel": "예전엔 ~하곤 했다",
+    "scenarioSourceLabel": "10월 7일 시나리오",
+    "expressionSourceLabel": "10월 5일 표현 학습"
+  },
   "planCard": {
     "monthlyTitle": "월간",
     "yearlyTitle": "연간",
