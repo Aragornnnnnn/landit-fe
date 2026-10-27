@@ -12,4 +12,8 @@ describe('toDayLabel', () => {
     // Date로 파싱하면 브라우저가 UTC로 읽어 하루가 밀 수 있다
     expect(toDayLabel('2026-07-28T23:50:00')).toBe('7월 28일');
   });
+
+  it('일본어 화면은 띄어쓰기 없이 月·日로 적는다', () => {
+    expect(toDayLabel('2026-07-08T21:03:11', 'ja')).toBe('7月8日');
+  });
 });
