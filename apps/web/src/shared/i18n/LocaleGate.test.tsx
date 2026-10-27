@@ -12,25 +12,35 @@ vi.mock('./api/user-locale', () => ({ getUserLocale: vi.fn() }));
 const getMock = vi.mocked(getUserLocale);
 
 const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
+// 실제 라우터처럼 렌더마다 같은 객체를 준다
+const router = { refresh };
+const nav = vi.hoisted(() => ({ pathname: '/scenario' }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => router,
+  usePathname: () => nav.pathname,
+}));
 
 const signIn = (userId: number) =>
   act(() =>
     useAuthStore.getState().setAuth('access', 'refresh', { userId } as never),
   );
 
-const renderGate = () =>
-  render(
-    <QueryClientProvider
-      client={
-        new QueryClient({ defaultOptions: { queries: { retry: false } } })
-      }
-    >
+// 같은 QueryClient로 다시 그릴 수 있게 rerender를 함께 돌려준다 — 화면 이동을 흉내 낸다
+const renderGate = () => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  const tree = () => (
+    <QueryClientProvider client={client}>
       <LocaleGate />
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
+  const view = render(tree());
+  return { ...view, rerenderGate: () => view.rerender(tree()) };
+};
 
 beforeEach(() => {
+  nav.pathname = '/scenario';
   document.documentElement.lang = 'ko';
   document.cookie = 'landit-locale=; max-age=0; path=/';
 });
@@ -65,6 +75,31 @@ describe('LocaleGate', () => {
 
     await waitFor(() => expect(document.cookie).toContain('landit-locale=ja'));
     expect(refresh).toHaveBeenCalled();
+  });
+
+  it('다시 그리기가 다른 이동에 밀려 화면 언어가 아직 다르면, 이동이 끝난 뒤 다시 그린다', async () => {
+    getMock.mockResolvedValue({ locale: 'ja', selectionRequired: false });
+    const { rerenderGate } = renderGate();
+    signIn(1);
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+
+    nav.pathname = '/me';
+    rerenderGate();
+
+    expect(refresh).toHaveBeenCalledTimes(2);
+  });
+
+  it('화면 언어가 이미 맞으면 이동해도 다시 그리지 않는다', async () => {
+    getMock.mockResolvedValue({ locale: 'ja', selectionRequired: false });
+    const { rerenderGate } = renderGate();
+    signIn(1);
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+
+    document.documentElement.lang = 'ja';
+    nav.pathname = '/me';
+    rerenderGate();
+
+    expect(refresh).toHaveBeenCalledTimes(1);
   });
 
   it('저장값이 지금 화면 언어와 같으면 다시 그리지 않는다', async () => {
