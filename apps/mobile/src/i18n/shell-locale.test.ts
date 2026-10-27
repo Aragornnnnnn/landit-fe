@@ -16,6 +16,10 @@ const deviceIs = (...languageTags: string[]) =>
     })) as ReturnType<typeof getLocales>,
   );
 
+jest.mock('../monitoring/report', () => ({ reportWarning: jest.fn() }));
+
+afterEach(() => jest.restoreAllMocks());
+
 // 모듈 안 캐시를 테스트마다 비운다
 const load = () => {
   let mod!: typeof import('./shell-locale');
@@ -25,8 +29,8 @@ const load = () => {
   return mod;
 };
 
-beforeEach(() => {
-  void AsyncStorage.clear();
+beforeEach(async () => {
+  await AsyncStorage.clear();
   deviceIs('ko-KR');
 });
 
@@ -70,6 +74,33 @@ describe('shellLocale', () => {
     await next.loadShellLocale();
 
     expect(next.shellLocale()).toBe('ja');
+  });
+
+  it('저장소를 읽는 사이 웹이 먼저 알려 준 언어를 저장소의 옛 값으로 덮지 않는다', async () => {
+    await AsyncStorage.setItem('landit.shell.locale', 'ko');
+    const { loadShellLocale, saveShellLocale, shellLocale } = load();
+
+    const loading = loadShellLocale();
+    await saveShellLocale('ja');
+    await loading;
+
+    expect(shellLocale()).toBe('ja');
+  });
+
+  it('저장소를 읽지 못해도 기기 언어로 계속 간다', async () => {
+    jest.spyOn(AsyncStorage, 'getItem').mockRejectedValueOnce(new Error('io'));
+    deviceIs('ja-JP');
+
+    await expect(load().loadShellLocale()).resolves.toBe('ja');
+  });
+
+  it('여러 곳에서 불러도 저장소는 한 번만 읽는다', async () => {
+    const getItem = jest.spyOn(AsyncStorage, 'getItem');
+    const { loadShellLocale } = load();
+
+    await Promise.all([loadShellLocale(), loadShellLocale()]);
+
+    expect(getItem).toHaveBeenCalledTimes(1);
   });
 });
 

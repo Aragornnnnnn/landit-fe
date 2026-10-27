@@ -2,6 +2,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 
+import { reportWarning } from '../monitoring/report';
+
 export type ShellLocale = 'ko' | 'ja';
 
 const STORAGE_KEY = 'landit.shell.locale';
@@ -11,6 +13,8 @@ const isShellLocale = (value: unknown): value is ShellLocale =>
 
 // 웹이 알려 준 화면 언어 — 앱을 켤 때 저장소에서 한 번 읽어 둔다
 let saved: ShellLocale | null = null;
+// 저장소 읽기는 프로세스당 한 번 — 여러 곳(시작·알람·위젯)이 같이 기다린다
+let loading: Promise<void> | null = null;
 
 /** 기기 선호 언어를 우선순위 그대로 — 웹이 로그인 화면 언어 버튼과 가입 헤더에 쓴다 */
 export const deviceLanguageTags = () =>
@@ -24,10 +28,15 @@ const deviceLocale = (): ShellLocale =>
 
 export const shellLocale = (): ShellLocale => saved ?? deviceLocale();
 
-/** 저장해 둔 화면 언어를 읽어 둔다 — 깨진 값이면 기기 언어로 둔다 */
+/** 저장해 둔 화면 언어를 읽어 둔다 — 깨졌거나 못 읽으면 기기 언어로 둔다. 셸 문구를 쓰기 전에 기다린다 */
 export const loadShellLocale = async (): Promise<ShellLocale> => {
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
-  if (isShellLocale(raw)) saved = raw;
+  loading ??= AsyncStorage.getItem(STORAGE_KEY)
+    .then((raw) => {
+      // 읽는 사이 웹이 먼저 알려 줬으면 그 값이 최신이다 — 저장소의 옛 값으로 덮지 않는다
+      if (saved === null && isShellLocale(raw)) saved = raw;
+    })
+    .catch(reportWarning);
+  await loading;
   return shellLocale();
 };
 

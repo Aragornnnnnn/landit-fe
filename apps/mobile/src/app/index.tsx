@@ -297,7 +297,8 @@ const ShellScreen = () => {
 
   // 알림 표시 정책·Android 채널 등록 — 권한 요청은 웹이 브릿지로 시점을 정한다
   useEffect(() => {
-    void initializeNotifications();
+    // 채널 이름이 셸 언어로 붙게 저장된 언어부터 읽는다
+    void loadShellLocale().then(initializeNotifications);
   }, []);
 
   // 웹 첫 페인트(onLoad)나 로드 실패로 화면이 바뀌면 스플래시를 감춘다 — 그 전까지 네이티브 스플래시가 흰 로딩 화면을 가려 준다

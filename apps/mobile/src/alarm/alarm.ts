@@ -11,7 +11,7 @@ import {
   type RepeatingAlarmState,
 } from '@landit/bridge';
 
-import { shellLocale } from '@/i18n/shell-locale';
+import { loadShellLocale, shellLocale } from '@/i18n/shell-locale';
 import { shellText } from '@/i18n/shell-text';
 import { reportWarning } from '@/monitoring/report';
 
@@ -116,6 +116,8 @@ const scheduleOne = async (
   schedule: AlarmSchedule,
   skipToday: boolean,
 ) => {
+  // 버튼 문구가 셸 언어로 박힌다 — 콜드 스타트에 저장된 언어를 읽기 전이면 기다린다
+  await loadShellLocale();
   const now = new Date();
   const timing = skipToday
     ? withoutToday(schedule, now)
@@ -333,14 +335,16 @@ const toPermissionStatus = (
 type StoredMemo = Record<string, string | boolean>;
 
 // 두 플랫폼 공통 — 버튼 문구와 동작. 문구는 거는 순간의 셸 언어(웹 화면 언어)로 박힌다
-export const ringOptions = (memo: StoredMemo, silent: boolean) =>
-  ({
-    secondaryButtonTitle: shellText().alarm.goButton,
+export const ringOptions = (memo: StoredMemo, silent: boolean) => {
+  const { alarm } = shellText();
+  return {
+    secondaryButtonTitle: alarm.goButton,
     secondaryButtonBehavior: 'openApp',
-    stopButtonTitle: shellText().alarm.stopButton,
+    stopButtonTitle: alarm.stopButton,
     silent,
     metadata: memo,
-  }) as const;
+  } as const;
+};
 
 export const androidRingOptions = (memo: StoredMemo, silent: boolean) => ({
   ...ringOptions(memo, silent),

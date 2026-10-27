@@ -25,7 +25,10 @@ jest.mock('../../modules/alarm-scheduler', () => ({
 }));
 jest.mock('@/monitoring/report', () => ({ reportWarning: jest.fn() }));
 const shell = { locale: 'ko' as 'ko' | 'ja' };
-jest.mock('@/i18n/shell-locale', () => ({ shellLocale: () => shell.locale }));
+jest.mock('@/i18n/shell-locale', () => ({
+  shellLocale: () => shell.locale,
+  loadShellLocale: async () => shell.locale,
+}));
 afterEach(() => {
   shell.locale = 'ko';
 });
