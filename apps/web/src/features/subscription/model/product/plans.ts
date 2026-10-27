@@ -27,7 +27,16 @@ export const PLAN_ORDER: readonly RegularPlan[] = ['monthly', 'yearly'];
 
 export const DEFAULT_PLAN_ID: RegularPlan = 'yearly';
 
-/** 플랜 이름 — 페이월 카드 제목과 구독 관리·결제 내역·해지 화면의 플랜 표기가 같이 쓴다 */
+/** 플랜 이름 문구 키 — subscription.plans 아래. 구독 관리·결제 내역이 화면 언어로 그린다 */
+export const PLAN_LABEL_KEYS = {
+  monthly: 'monthlyLabel',
+  yearly: 'yearlyLabel',
+  quarterly: 'quarterlyLabel',
+  halfyear: 'halfyearLabel',
+  pass: 'passLabel',
+} as const satisfies Record<SubscriptionPlan, string>;
+
+/** 플랜 이름(한국어) — 해지 화면의 플랜 표기가 쓴다 */
 export const PLAN_TITLE: Record<SubscriptionPlan, string> = {
   monthly: '월간',
   yearly: '연간',

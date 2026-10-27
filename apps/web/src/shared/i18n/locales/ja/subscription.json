@@ -34,5 +34,33 @@
     "namedTitle": "ようこそ、{nickname}さん！<br></br>Landitを思いきり楽しもう",
     "title": "ようこそ！<br></br>Landitを思いきり楽しもう",
     "nextButton": "次へ"
+  },
+  "plans": {
+    "monthlyLabel": "月間",
+    "yearlyLabel": "年間",
+    "quarterlyLabel": "3か月",
+    "halfyearLabel": "6か月",
+    "passLabel": "100日パス"
+  },
+  "subscriptionEvents": {
+    "trialStartLabel": "無料体験開始",
+    "firstPurchaseLabel": "初回購入",
+    "refundLabel": "返金",
+    "cancelLabel": "解約予約",
+    "renewalLabel": "更新",
+    "uncancelLabel": "解約の取り消し",
+    "expirationLabel": "期限切れ",
+    "billingIssueLabel": "支払いエラー",
+    "productChangeLabel": "プラン変更",
+    "grantLabel": "無料利用開始",
+    "transferLabel": "サブスクリプションの移行",
+    "otherLabel": "サブスクリプションの状態変更",
+    "planLabel": "{plan}プラン"
+  },
+  "subscriptionHistory": {
+    "title": "購入履歴",
+    "loadError": "購入履歴を読み込めませんでした",
+    "emptyBody": "まだ購入履歴がありません",
+    "sandboxBadge": "テスト"
   }
 }

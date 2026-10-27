@@ -174,7 +174,8 @@ const priceContent = (
 // 체험 중이면 아직 결제 전이다 — 언제부터 내는지 한 행 더
 const firstChargeRow = (summary: PaidSubscriptionSummary): RowCard | null => {
   if (summary.kind !== 'trial' || !summary.expiresAt) return null;
-  const date = formatSubscriptionDate(summary.expiresAt);
+  // 해지 화면 문구가 아직 한국어라 날짜도 한국어 표기로 맞춘다
+  const date = formatSubscriptionDate(summary.expiresAt, 'ko');
   return date ? { kind: 'row', label: '첫 결제일', value: date } : null;
 };
 

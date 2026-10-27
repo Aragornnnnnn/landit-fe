@@ -34,5 +34,33 @@
     "namedTitle": "환영해요, {nickname}님!<br></br>이제 랜딧을 마음껏 즐겨요",
     "title": "환영해요!<br></br>이제 랜딧을 마음껏 즐겨요",
     "nextButton": "다음"
+  },
+  "plans": {
+    "monthlyLabel": "월간",
+    "yearlyLabel": "연간",
+    "quarterlyLabel": "3개월",
+    "halfyearLabel": "6개월",
+    "passLabel": "100일 이용권"
+  },
+  "subscriptionEvents": {
+    "trialStartLabel": "무료 체험 시작",
+    "firstPurchaseLabel": "첫 결제",
+    "refundLabel": "환불",
+    "cancelLabel": "해지 예약",
+    "renewalLabel": "갱신 결제",
+    "uncancelLabel": "해지 취소",
+    "expirationLabel": "만료",
+    "billingIssueLabel": "결제 실패",
+    "productChangeLabel": "플랜 변경",
+    "grantLabel": "무료 이용 시작",
+    "transferLabel": "구독 이전",
+    "otherLabel": "구독 상태 변경",
+    "planLabel": "{plan} 플랜"
+  },
+  "subscriptionHistory": {
+    "title": "결제 내역",
+    "loadError": "결제 내역을 불러오지 못했어요",
+    "emptyBody": "아직 결제 내역이 없어요",
+    "sandboxBadge": "테스트"
   }
 }

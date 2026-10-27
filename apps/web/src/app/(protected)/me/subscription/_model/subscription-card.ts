@@ -39,7 +39,7 @@ export const toCardTitle = (summary: PaidSubscriptionSummary) => {
 // 무엇의 날짜인지가 상태마다 다르다. 체험은 첫 결제, 구독은 다음 결제, 그날로 끝나면 만료
 export const toDateRow = (summary: PaidSubscriptionSummary): CardRow | null => {
   const date = summary.expiresAt
-    ? formatSubscriptionDate(summary.expiresAt)
+    ? formatSubscriptionDate(summary.expiresAt, 'ko')
     : null;
   if (!date) return null;
   if (summary.kind === 'trial') return { label: '첫 결제일', value: date };
