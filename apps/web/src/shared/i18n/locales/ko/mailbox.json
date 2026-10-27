@@ -49,6 +49,30 @@
     "cheerTitle": "응원하고 싶은<br></br>내용을 남겨주세요",
     "cheerPlaceholder": "이곳에 응원 한마디를 적어주세요"
   },
+  "feedbackTypeFlow": {
+    "title": "어떤 피드백을<br></br>개발자에게 보낼까요?"
+  },
+  "feedbackComposeFlow": {
+    "sentToast": "소중한 의견 고마워요!"
+  },
+  "attachment": {
+    "retryLaterError": "보내지 못했어요. 잠시 후 다시 시도해 주세요.",
+    "tooLargeError": "사진 용량이 너무 커요. 한 장을 빼고 다시 보내 주세요.",
+    "invalidPhotoError": "보낼 수 없는 사진이 있어요. 다른 사진으로 바꿔 주세요.",
+    "limitToast": "사진은 {max}장까지 보낼 수 있어요",
+    "partialFailedToast": "불러올 수 없는 사진은 빼고 담았어요",
+    "loadFailedToast": "사진을 불러오지 못했어요"
+  },
+  "submitBar": {
+    "button": "보내기"
+  },
+  "attachPhotoButton": {
+    "label": "사진 추가"
+  },
+  "attachmentThumbnails": {
+    "photoLabel": "첨부 사진 {order}",
+    "removeLabel": "첨부 사진 {order} 빼기"
+  },
   "sentBody": {
     "replyCaption": "랜딧 팀의 답장 · {date}"
   }

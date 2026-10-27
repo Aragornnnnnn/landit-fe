@@ -39,6 +39,7 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
     useAttachments();
   const photoSource = resolvePhotoSource(useNativeContext());
 
+  const t = useTranslations('mailbox');
   const tType = useTranslations('mailbox.feedbackType');
   const { titleKey, placeholderKey } = FEEDBACK_TYPE_FACES[type];
   const trimmed = content.trim();
@@ -51,7 +52,7 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
     const images = attachments.map(({ file }) => file);
     // 앞단 프록시가 큰 요청을 끊기 전에 막는다 — 보내 봐야 실패할 것을 기다리게 하지 않는다
     if (exceedsSendLimit(images)) {
-      showToast(TOO_LARGE);
+      showToast(t(`attachment.${TOO_LARGE}`));
       return;
     }
 
@@ -59,12 +60,15 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
       { content: trimmed, images },
       {
         onSuccess: () => {
-          showToast('소중한 의견 고마워요!');
+          showToast(t('feedbackComposeFlow.sentToast'));
           // 방금 보낸 편지가 보이는 자리로 데려간다. replace라 뒤로가기가 작성 화면으로 되돌지 않는다
           router.replace(mailboxPath('sent'));
         },
         // 사진 때문에 거부됐으면 다시 시도해도 같다 — 무엇을 바꾸면 되는지 알려준다
-        onError: (error) => showToast(sendFailureMessage(error, images.length)),
+        onError: (error) =>
+          showToast(
+            t(`attachment.${sendFailureMessage(error, images.length)}`),
+          ),
       },
     );
   };

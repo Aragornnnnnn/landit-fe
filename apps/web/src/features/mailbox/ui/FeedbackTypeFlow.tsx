@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
+import { lineBreak } from '@/shared/i18n/rich';
 import { MAILBOX_PATH } from '@/shared/lib/routes';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { Emoji } from '@/shared/ui/emoji';
@@ -22,6 +23,7 @@ import {
 
 export const FeedbackTypeFlow = () => {
   const router = useRouter();
+  const t = useTranslations('mailbox.feedbackTypeFlow');
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
@@ -30,9 +32,7 @@ export const FeedbackTypeFlow = () => {
 
       <div className="flex-1 overflow-y-auto px-5 pb-[var(--safe-area-inset-bottom)]">
         <h1 className="mt-4 text-22 leading-snug font-bold text-foreground">
-          어떤 피드백을
-          <br />
-          개발자에게 보낼까요?
+          {t.rich('title', lineBreak)}
         </h1>
 
         <ul className="mt-7 flex flex-col gap-2.5">

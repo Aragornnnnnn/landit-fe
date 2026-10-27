@@ -49,6 +49,30 @@
     "cheerTitle": "応援のメッセージを<br></br>残してください",
     "cheerPlaceholder": "応援のひとことを書いてください"
   },
+  "feedbackTypeFlow": {
+    "title": "どんなフィードバックを<br></br>開発者に送りますか？"
+  },
+  "feedbackComposeFlow": {
+    "sentToast": "貴重なご意見ありがとうございます！"
+  },
+  "attachment": {
+    "retryLaterError": "送れませんでした。しばらくしてからもう一度お試しください。",
+    "tooLargeError": "写真の容量が大きすぎます。1枚外してもう一度送ってください。",
+    "invalidPhotoError": "送れない写真があります。別の写真に変えてください。",
+    "limitToast": "写真は{max}枚まで送れます",
+    "partialFailedToast": "読み込めない写真を除いて追加しました",
+    "loadFailedToast": "写真を読み込めませんでした"
+  },
+  "submitBar": {
+    "button": "送る"
+  },
+  "attachPhotoButton": {
+    "label": "写真を追加"
+  },
+  "attachmentThumbnails": {
+    "photoLabel": "添付写真{order}",
+    "removeLabel": "添付写真{order}を外す"
+  },
   "sentBody": {
     "replyCaption": "Landitチームからの返信 · {date}"
   }

@@ -1,4 +1,6 @@
 // 입력창 아래 첨부 사진 줄 — 72px 썸네일, 오른쪽 위 ×로 뺀다
+import { useTranslations } from 'next-intl';
+
 import { CloseIcon } from '@/shared/ui/Icons';
 
 import type { Attachment } from '../../model/useAttachments';
@@ -15,6 +17,8 @@ export const AttachmentThumbnails = ({
   locked,
   onDetach,
 }: AttachmentThumbnailsProps) => {
+  const t = useTranslations('mailbox.attachmentThumbnails');
+
   if (attachments.length === 0) return null;
 
   return (
@@ -27,7 +31,7 @@ export const AttachmentThumbnails = ({
           {/* eslint-disable-next-line @next/next/no-img-element -- blob 미리보기라 next/image 최적화가 필요 없다 */}
           <img
             src={previewUrl}
-            alt={`첨부 사진 ${index + 1}`}
+            alt={t('photoLabel', { order: index + 1 })}
             decoding="async"
             className="size-full object-cover"
           />
@@ -35,7 +39,7 @@ export const AttachmentThumbnails = ({
             <button
               type="button"
               onClick={() => onDetach(id)}
-              aria-label={`첨부 사진 ${index + 1} 빼기`}
+              aria-label={t('removeLabel', { order: index + 1 })}
               className="absolute top-1 right-1 flex size-[22px] items-center justify-center rounded-full bg-foreground/60 text-background active:scale-90"
             >
               <CloseIcon size={12} strokeWidth={2.5} />
