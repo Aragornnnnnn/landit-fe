@@ -15,6 +15,7 @@ const now = new Date('2026-08-27T15:00:00+09:00');
 describe('buildTimelineEntries', () => {
   it('엔트리를 만들면 시각마다 그 시각의 상태와 주간 스트립을 함께 싣는다', () => {
     const [first] = buildTimelineEntries({
+      locale: 'ko',
       data: dataOf(),
       now,
       artDir: 'file:///art/',
@@ -31,6 +32,7 @@ describe('buildTimelineEntries', () => {
 
   it('값이 null이면 키 자체를 빼서 보낸다 — 네이티브 변환이 null을 거부한다', () => {
     const [first] = buildTimelineEntries({
+      locale: 'ko',
       data: dataOf(),
       now,
       artDir: null,
@@ -42,6 +44,7 @@ describe('buildTimelineEntries', () => {
 
   it('마일스톤 달성일이면 달성 숫자를 싣는다', () => {
     const [first] = buildTimelineEntries({
+      locale: 'ko',
       data: dataOf({ streak: 14, lastCompletedDate: '2026-08-27' }),
       now,
       artDir: null,
@@ -51,7 +54,12 @@ describe('buildTimelineEntries', () => {
   });
 
   it('날이 바뀐 엔트리는 주간 창도 그 날짜로 민다 — 라벨과 열매가 항상 짝이 맞는다', () => {
-    const entries = buildTimelineEntries({ data: dataOf(), now, artDir: null });
+    const entries = buildTimelineEntries({
+      locale: 'ko',
+      data: dataOf(),
+      now,
+      artDir: null,
+    });
 
     const tomorrow = entries.find(
       (e) =>
@@ -62,5 +70,16 @@ describe('buildTimelineEntries', () => {
     expect((tomorrow?.props.weekLabels as string[]).at(-1)).toBe('금');
     // 새로 생긴 날은 미완료다 — 앱을 안 열면 완료했을 리 없다
     expect((tomorrow?.props.weekDone as boolean[]).at(-1)).toBe(false);
+  });
+
+  it('요일을 셸 언어로 싣는다 — 위젯은 웹 화면과 같은 언어로 그린다', () => {
+    const [ja] = buildTimelineEntries({
+      locale: 'ja',
+      data: dataOf(),
+      now,
+      artDir: null,
+    });
+
+    expect(ja.props.weekLabels).toContain('木');
   });
 });
