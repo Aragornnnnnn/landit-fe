@@ -26,10 +26,13 @@ export const CharacterStage = ({
   // 캐릭터 에셋 배경을 앱 배경색(bg-background)에 맞춰 둬서 무대도 같은 색 — 배경이 이음매 없이 이어진다
   // 높이 고정 — 텍스트가 길어져도 무대는 그대로 두고, 질문/답변이 각자 칸 안에서 스크롤된다
   // 작은 화면에선 질문 자리가 부족하지 않게 상한만 뷰포트에 맞춘다(대화 중엔 변하지 않는 기기별 고정값)
+  // 키보드가 올라와 자리가 모자랄 때만 줄어든다 — 그대로 두면 입력창 아래가 키보드 뒤로 밀린다. 캐릭터는 높이에 맞춰 작아진다.
+  // 입력창보다 먼저 최소 높이까지 줄고(줄어드는 비율 1000), 닫기(X)가 무대 위에 떠 있어 그 높이 밑으로는 줄지 않는다
   <div
-    className="relative flex w-full flex-none items-end justify-center overflow-hidden rounded-b-3xl border-b border-border bg-background shadow-lg shadow-black/5"
+    className="relative flex w-full shrink-[1000] items-end justify-center overflow-hidden rounded-b-3xl border-b border-border bg-background shadow-lg shadow-black/5"
     style={{
       height: 'calc(min(17rem, 34dvh) + max(var(--safe-area-inset-top), 8px))',
+      minHeight: 'calc(3.5rem + max(var(--safe-area-inset-top), 8px))',
     }}
   >
     <motion.div

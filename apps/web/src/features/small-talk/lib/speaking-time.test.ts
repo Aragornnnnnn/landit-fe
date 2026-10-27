@@ -1,7 +1,11 @@
 // 발화 시간 표기 규칙 검증 — 서버가 밀리초로 주는 값을 사람이 읽는 문장으로 바꾼다
 import { describe, expect, it } from 'vitest';
 
-import { toCountdownLabel, toSpeakingTimeLabel } from './speaking-time';
+import {
+  hasSpokenTime,
+  toCountdownLabel,
+  toSpeakingTimeLabel,
+} from './speaking-time';
 
 describe('toSpeakingTimeLabel', () => {
   it('1분이 안 되면 초만 말한다', () => {
@@ -48,5 +52,17 @@ describe('toCountdownLabel', () => {
   it('다 쓰면 0:00에서 멈춘다 — 음수도 마찬가지다', () => {
     expect(toCountdownLabel(0)).toBe('0:00');
     expect(toCountdownLabel(-5_000)).toBe('0:00');
+  });
+});
+
+describe('hasSpokenTime', () => {
+  it('1초라도 말했으면 말한 시간이 있다', () => {
+    expect(hasSpokenTime(1_000)).toBe(true);
+  });
+
+  it('1초 미만이면 말한 시간이 없다 — "0초"로 읽히는 값이다', () => {
+    // 전부 타이핑한 대화는 0이 오고, 1초 미만도 표기로는 0초다
+    expect(hasSpokenTime(0)).toBe(false);
+    expect(hasSpokenTime(999)).toBe(false);
   });
 });
