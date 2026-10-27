@@ -35,6 +35,12 @@ import { openShareSheet } from '@/bridge/share';
 import { requestStoreReview } from '@/bridge/store-review';
 import { useNativeBridge } from '@/bridge/useNativeBridge';
 import { WEB_URL } from '@/config/webUrl';
+import {
+  loadShellLocale,
+  saveShellLocale,
+  shellLocale,
+} from '@/i18n/shell-locale';
+import { shellText } from '@/i18n/shell-text';
 import { reportWarning, setMonitoringUser } from '@/monitoring/report';
 import { isExternalNavigation } from '@/navigation/isExternalNavigation';
 import {
@@ -42,7 +48,10 @@ import {
   requestNotificationPermission,
 } from '@/notifications/permission';
 import { getExpoPushToken } from '@/notifications/push-token';
-import { initializeNotifications } from '@/notifications/setup';
+import {
+  initializeNotifications,
+  syncNotificationChannel,
+} from '@/notifications/setup';
 import { useNotificationDeepLink } from '@/notifications/useNotificationDeepLink';
 import { pickPhotos } from '@/photos/pick-photos';
 import {
@@ -67,9 +76,10 @@ void SplashScreen.preventAutoHideAsync();
 
 const ShellScreen = () => {
   // 앱 시작 시 한 번 — 위젯 타임라인 되살리기(로그인 전에도 0일 시간표가 돌게)와 RevenueCat 켜기.
+  // 위젯 요일을 지난번 화면 언어로 그리게 저장해 둔 셸 언어부터 읽는다.
   // RevenueCat 키가 없는 빌드(로컬 dev)면 꺼진 채로 두고 결제 요청은 실패로 회신한다
   useEffect(() => {
-    void syncWidgetOnLaunch();
+    void loadShellLocale().then(syncWidgetOnLaunch);
     configurePurchases();
   }, []);
 
@@ -147,6 +157,15 @@ const ShellScreen = () => {
     REQUEST_TRACKING_STATUS: async () => {
       const status = await trackingStatus.read();
       if (status) postToWeb({ type: 'TRACKING_STATUS', ...status });
+    },
+    // 웹 화면 언어 — 기억해 두고, 바뀌었으면 위젯 요일과 알림 채널 이름을 그 언어로 다시 그린다.
+    // 이미 걸린 알람의 버튼 문구는 다음에 알람을 다시 걸 때 바뀐다
+    SET_LOCALE: async ({ locale }) => {
+      const changed = locale !== shellLocale();
+      await saveShellLocale(locale);
+      if (!changed) return;
+      void syncWidgetOnLaunch();
+      void syncNotificationChannel();
     },
     // 위젯 설치 안내 끝 — iOS에서 앱을 홈 화면으로 내려 사용자가 직접 위젯을 얹게 한다
     GO_HOME: () => goHome(),
@@ -328,12 +347,14 @@ const ShellScreen = () => {
           source={require('../../assets/images/landy-crying.webp')}
           style={styles.errorCharacter}
         />
-        <Text style={styles.errorTitle}>화면을 불러오지 못했어요</Text>
+        <Text style={styles.errorTitle}>{shellText().loadFailed.title}</Text>
         <Text style={styles.errorDescription}>
-          네트워크 연결을 확인하고{'\n'}다시 시도해 주세요
+          {shellText().loadFailed.description}
         </Text>
         <Pressable style={styles.retryButton} onPress={restartWebView}>
-          <Text style={styles.retryLabel}>다시 시도할게요</Text>
+          <Text style={styles.retryLabel}>
+            {shellText().loadFailed.retryButton}
+          </Text>
         </Pressable>
       </View>
     );
