@@ -11,5 +11,13 @@
     "monthlySubtitle": "毎月払い・いつでも解約",
     "yearlySubtitle": "月{price}相当・7日間無料",
     "yearlyBadge": "月間より{rate}%お得"
+  },
+  "paywallCheckout": {
+    "trialStartButton": "7日間の無料体験を始める",
+    "monthlyStartButton": "月額{price}で始める",
+    "yearlyBillingCaption": "7日間の無料体験後、年額{price}で自動更新・いつでも解約できます",
+    "monthlyBillingCaption": "毎月{price}で自動更新・いつでも解約できます",
+    "yearlyCancelCaption": "体験終了の24時間前までに解約すれば請求されません",
+    "monthlyCancelCaption": "更新日の24時間前までに解約すれば翌月分は請求されません"
   }
 }

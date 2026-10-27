@@ -10,6 +10,7 @@ import {
   type SubscriptionPlan,
 } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { refreshRewardAfterPurchase } from '@/features/reward/model/refresh-reward';
@@ -70,6 +71,8 @@ export const PaywallScreen = ({
   source,
 }: PaywallScreenProps) => {
   const router = useRouter();
+  const t = useTranslations('paywall.paywallCheckout');
+  const tCommon = useTranslations('common');
   const rewardLive = useRewardChallengeLive();
   const rewardChallenge = forcedRewardChallenge ?? rewardLive;
   // 월간·연간 가운데 고른다(처음엔 연간). 환급 챌린지는 100일 이용권 하나라 고를 것이 없다
@@ -91,7 +94,10 @@ export const PaywallScreen = ({
   const rewardPlan = buildRewardPlan(toKrwPrices(packages).pass);
   const regularPlan = plans[selectedId === 'monthly' ? 'monthly' : 'yearly'];
   // CTA 밑 결제·해지 안내 두 줄
-  const notices = [getBillingNotice(regularPlan), getCancelNotice(regularPlan)];
+  const notices = [
+    getBillingNotice(regularPlan, t),
+    getCancelNotice(regularPlan, t),
+  ];
 
   // 페이월을 봤다고 메타에 알린다 — 결제 기준 광고 최적화로 넘어갈 때 쓸 중간 단계
   useEffect(() => {
@@ -228,7 +234,7 @@ export const PaywallScreen = ({
         <button
           type="button"
           onClick={() => void close()}
-          aria-label="닫기"
+          aria-label={tCommon('closeLabel')}
           className="absolute top-[max(var(--safe-area-inset-top),8px)] left-3 z-30 flex size-9 items-center justify-center rounded-full bg-card/90 text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.12)] backdrop-blur transition-transform active:scale-90"
         >
           <CloseIcon size={20} />
@@ -239,7 +245,7 @@ export const PaywallScreen = ({
           결제 안내는 버튼 바로 밑에 둔다 — 청구액·갱신·해지는 스토어 심사(3.1.2)가 결제 버튼 곁에서 확인한다 */}
       <footer className="absolute inset-x-0 bottom-0 z-20 bg-[linear-gradient(to_bottom,transparent,var(--color-background)_28px)] px-5 pt-9 pb-[max(var(--safe-area-inset-bottom),12px)]">
         <Button onClick={startPurchase} loading={busy}>
-          {getCtaLabel(regularPlan)}
+          {getCtaLabel(regularPlan, t)}
         </Button>
         {notices.map((notice, index) => (
           <p
