@@ -31,8 +31,8 @@
     "startLabel": "始める"
   },
   "premiumWelcome": {
-    "namedTitle": "ようこそ、{nickname}さん！<br></br>Landitを思いきり楽しみましょう",
-    "title": "ようこそ！<br></br>Landitを思いきり楽しみましょう",
+    "namedTitle": "ようこそ、{nickname}さん！<br></br>思いきり楽しみましょう",
+    "title": "ようこそ！<br></br>思いきり楽しみましょう",
     "nextButton": "次へ"
   },
   "plans": {
