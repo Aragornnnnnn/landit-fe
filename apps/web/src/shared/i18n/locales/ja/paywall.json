@@ -1,5 +1,15 @@
 {
   "paywallHeader": {
     "restoreButton": "購入を復元"
+  },
+  "planCard": {
+    "monthlyTitle": "月間プラン",
+    "yearlyTitle": "年間プラン",
+    "selectLabel": "{title}",
+    "monthlyPriceLabel": "月額{price}",
+    "yearlyPriceLabel": "年額{price}",
+    "monthlySubtitle": "毎月払い・いつでも解約",
+    "yearlySubtitle": "月{price}相当・7日間無料",
+    "yearlyBadge": "月間より{rate}%お得"
   }
 }
