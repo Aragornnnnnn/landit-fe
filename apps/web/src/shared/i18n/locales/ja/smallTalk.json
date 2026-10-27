@@ -8,11 +8,11 @@
     "teddyIntroDescription": "テディだよ。山で変な物を食べてイギリス英語に。ロンドンで出稼ぎ中。"
   },
   "tabPage": {
-    "historyButton": "履歴",
+    "historyButton": "記録",
     "greetingLabel": "{name}のあいさつを聞く",
     "doneTitle": "今日の1分スモールトークは完了です",
     "doneCaption": "また明日お話ししましょう",
-    "remainingLabel": "今日の残り時間",
+    "remainingLabel": "今日話せる残り",
     "unlimitedLabel": "無制限",
     "userFirstButton": "自分から話しかける",
     "partnerFirstButton": "{name}から話しかけてもらう"
@@ -20,7 +20,7 @@
   "introGuide": {
     "mascotLabel": "ラディ",
     "title": "自由に会話できる時間です",
-    "description": "好きな相手を選んで話してみましょう。<br></br><phrase>“Bye!”</phrase>や<phrase>“Talk to you later”</phrase>などのあいさつで会話が終わります。",
+    "description": "好きな相手を選んで話してみましょう。<br></br><phrase>“Bye!”</phrase>や<phrase>“Talk to you later”</phrase>などと言えば会話が終わります。",
     "confirmButton": "わかりました"
   },
   "greetingCoach": {
@@ -35,11 +35,11 @@
     "fallbackTitle": "{date}の会話"
   },
   "history": {
-    "title": "スモールトーク履歴",
+    "title": "スモールトークの記録",
     "loadError": "これまでの会話を読み込めませんでした。",
     "loadingLabel": "これまでの会話を読み込み中",
     "emptyDescription": "まだ会話がありません。<br></br>今日の会話からここにたまっていきます。",
-    "guideCaption": "会話をタップしてフレーズを見返せます。",
+    "guideCaption": "会話をタップするとフレーズを見返せます。",
     "expressionProgressLabel": "フレーズ {done}/{total}"
   },
   "historyDetail": {
@@ -75,7 +75,7 @@
     "unavailableError": "今日のスモールトークをまとめられませんでした。",
     "loadError": "今日のスモールトークを読み込めませんでした。",
     "detailButton": "詳しいフィードバックを見ます",
-    "reusedLoadingLabel": "学んだフレーズの使用を探しています",
+    "reusedLoadingLabel": "学んだフレーズの再利用を探しています",
     "followUpLoadingLabel": "次のスモールトークの質問を探しています",
     "retryButton": "もう一度試す",
     "learnButton": "フレーズを学びに行く"

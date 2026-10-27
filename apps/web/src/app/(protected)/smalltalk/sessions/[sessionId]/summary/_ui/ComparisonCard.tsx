@@ -13,13 +13,11 @@ export const ComparisonCard = ({
   comparison: SmallTalkSummaryComparison;
 }) => {
   const locale = useLocale();
-  const t = useTranslations('smallTalk');
+  const t = useTranslations('smallTalk.comparison');
   return (
     <section className="rounded-2xl bg-card px-5 py-4 shadow-sm">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-17 font-extrabold text-foreground">
-          {t('comparison.title')}
-        </h2>
+        <h2 className="text-17 font-extrabold text-foreground">{t('title')}</h2>
         <p className="text-12 text-muted-foreground">
           {toPeriodLabel(comparison, t, locale)}
         </p>

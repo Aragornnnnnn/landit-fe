@@ -42,10 +42,10 @@
   "quizPrompt": {
     "title": "質問への答えを完成させましょう",
     "retryTitle": "もう一度やってみましょう",
-    "revealAnswerTitle": "正解を見てそのまま作りましょう"
+    "revealAnswerTitle": "正解の通りに並べましょう"
   },
   "quizStep": {
-    "nextButton": "フレーズを学びに行く",
+    "nextButton": "フレーズを学ぶ",
     "checkButton": "確認する",
     "hintButton": "ヒントを見る"
   },
@@ -65,7 +65,7 @@
   "examplesStep": {
     "nextButton": "復習クイズを解く",
     "sectionTitle": "こんな使い方も",
-    "coachCaption": "ひとつのフレーズで、いろいろな場面を話せます"
+    "coachCaption": "ひとつのフレーズで、いろいろな場面で使えます"
   },
   "introStep": {
     "nextButton": "声に出して言ってみる",
@@ -75,22 +75,22 @@
   "pronunciationStep": {
     "title": "フレーズを言ってみましょう",
     "coachCaption": "しっかり聞いて、<br></br>ネイティブ発音へ導きます！",
-    "listeningCaption": "聞いています...",
+    "listeningCaption": "聞いています…",
     "feedbackTitle": "ラディの発音フィードバック",
     "rerecordCaption": "<emphasis>文全体</emphasis>を最初からもう一度言ってみましょう",
-    "examplesButton": "ほかの例文を見に行く",
+    "examplesButton": "ほかの例文を見る",
     "retryButton": "もう一度言う ↻",
     "perfectCaption": "ネイティブのように完璧です！",
     "failedError": "分析できませんでした。もう一度お試しください。",
-    "failedRetryButton": "もう一度話す",
-    "failedExamplesButton": "ほかの例文を見に行く",
+    "failedRetryButton": "もう一度言う",
+    "failedExamplesButton": "ほかの例文を見る",
     "micStartError": "マイクを開始できませんでした。もう一度お試しください。",
-    "silentError": "録音された音がありません。もう一度言ってみましょうか？",
-    "invalidAudioError": "録音がうまく届きませんでした。もう一度言ってみましょうか？"
+    "silentError": "録音された音がありません。もう一度言ってみましょう。",
+    "invalidAudioError": "録音がうまく届きませんでした。もう一度言ってみましょう。"
   },
   "analyzingLandy": {
     "listeningCaption": "発音を聞いています",
-    "comparingCaption": "ネイティブの発音と比べています",
+    "comparingCaption": "お手本の発音と比べています",
     "reviewingCaption": "単語をひとつずつ確認しています",
     "finalizingCaption": "フィードバックをまとめています"
   },
@@ -103,7 +103,7 @@
   },
   "feedbackCards": {
     "nativeStressCaption": "お手本の強勢",
-    "mineStressCaption": "自分が強く言いすぎた所",
+    "mineStressCaption": "自分が強く言った所",
     "nativeRowLabel": "お手本",
     "mineRowLabel": "自分",
     "nativeListenLabel": "お手本の発音を聞く",

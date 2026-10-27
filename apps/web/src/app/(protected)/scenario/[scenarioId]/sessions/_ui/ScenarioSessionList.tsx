@@ -53,7 +53,8 @@ export const ScenarioSessionList = ({
         <HistoryListSkeleton rows={3} label={t('loadingLabel')} />
       ) : sessions.length === 0 ? (
         <p className="flex flex-1 items-center justify-center px-6 text-center text-sm break-keep whitespace-pre-line text-muted-foreground">
-          {t.rich('emptyDescription', lineBreak)}
+          {/* 가운데 정렬 flex라 한 덩어리로 감싸야 줄바꿈 앞뒤 문장이 옆으로 나란히 서지 않는다 */}
+          <span>{t.rich('emptyDescription', lineBreak)}</span>
         </p>
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-[max(var(--safe-area-inset-bottom),24px)]">
