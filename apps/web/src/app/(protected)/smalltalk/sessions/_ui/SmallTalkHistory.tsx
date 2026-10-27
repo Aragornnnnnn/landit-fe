@@ -89,8 +89,8 @@ const SessionRow = ({
   return (
     <HistoryRow
       onClick={onSelect}
-      title={toSessionTitle(session.title, session.completedAt)}
-      meta={`${toDayLabel(session.completedAt)} · ${toSpeakingTimeLabel(session.userSpeakingDurationMs, locale)}`}
+      title={toSessionTitle(session.title, session.completedAt, locale)}
+      meta={`${toDayLabel(session.completedAt, locale)} · ${toSpeakingTimeLabel(session.userSpeakingDurationMs, locale)}`}
       trailing={
         <ExpressionProgress
           done={session.completedExpressionCount}

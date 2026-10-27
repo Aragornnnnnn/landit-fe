@@ -5,6 +5,7 @@
 // 조회가 아직이면 열매만 정적으로 — 숫자를 지어내느니 말을 아낀다
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
+import { useLocale } from 'next-intl';
 import Image from 'next/image';
 
 import { EASE_STANDARD } from '@/shared/motion';
@@ -25,6 +26,7 @@ const TITLE_DELAY = 0.72;
 const CELL_FRUIT_SIZE = 22;
 
 export const StreakStamp = () => {
+  const locale = useLocale();
   const { streak } = useStreakQuery();
   const { totalActiveDays, longestStreakDays } = useStreakRecord();
   const base = useCelebrationBase();
@@ -49,6 +51,7 @@ export const StreakStamp = () => {
     currentStreakDays: streak.currentStreakDays,
     activeToday: streak.activeToday,
     today: streak.today,
+    locale,
   });
 
   return (

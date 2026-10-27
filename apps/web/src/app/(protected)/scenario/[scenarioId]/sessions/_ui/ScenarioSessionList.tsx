@@ -1,6 +1,7 @@
 'use client';
 
 // 시나리오 기록 — 그 시나리오를 완료한 회차가 최신순으로 선다. 누르면 그때 받은 피드백을 다시 본다
+import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -86,25 +87,28 @@ const SessionRow = ({
   session: ScenarioHistorySession;
   ordinal: number;
   href: string;
-}) => (
-  <HistoryRow
-    href={href}
-    title={`${ordinal}번째 대화`}
-    meta={
-      <>
-        {toDayLabel(session.endedAt)}
-        {session.feedback &&
-          ` · 원어민 이해도 ${session.feedback.nativeScore}%`}
-      </>
-    }
-    trailing={
-      session.feedback ? (
-        <StarRating rating={session.feedback.starRating} size={16} />
-      ) : (
-        <span className="shrink-0 text-13 font-semibold text-muted-foreground">
-          피드백 없음
-        </span>
-      )
-    }
-  />
-);
+}) => {
+  const locale = useLocale();
+  return (
+    <HistoryRow
+      href={href}
+      title={`${ordinal}번째 대화`}
+      meta={
+        <>
+          {toDayLabel(session.endedAt, locale)}
+          {session.feedback &&
+            ` · 원어민 이해도 ${session.feedback.nativeScore}%`}
+        </>
+      }
+      trailing={
+        session.feedback ? (
+          <StarRating rating={session.feedback.starRating} size={16} />
+        ) : (
+          <span className="shrink-0 text-13 font-semibold text-muted-foreground">
+            피드백 없음
+          </span>
+        )
+      }
+    />
+  );
+};

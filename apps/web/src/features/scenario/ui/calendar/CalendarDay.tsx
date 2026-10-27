@@ -2,6 +2,7 @@
 
 // 달력 한 칸 — 원 하나와 그 아래 이름표. 상태별로 무엇을 그릴지는 dayStateOf가 정한다
 import { motion, useReducedMotion } from 'motion/react';
+import { useLocale } from 'next-intl';
 
 import { weekdayLabelOf } from '@/shared/lib/date-string';
 import { toDayLabel } from '@/shared/lib/day-label';
@@ -51,6 +52,7 @@ export const CalendarDay = ({
   animated = true,
   label = 'day',
 }: CalendarDayProps) => {
+  const locale = useLocale();
   const reduced = useReducedMotion() ?? false;
   const state = dayStateOf(day, { today, startedAt });
   const dayNumber = Number(day.date.slice(8));
@@ -60,7 +62,7 @@ export const CalendarDay = ({
       type="button"
       disabled={!isOpenable(state)}
       onClick={() => onSelect(day.date)}
-      aria-label={`${toDayLabel(day.date)}${
+      aria-label={`${toDayLabel(day.date, locale)}${
         state === 'completed' ? ' 완료' : state === 'today' ? ' 오늘' : ''
       }`}
       aria-current={selected ? 'date' : undefined}
@@ -106,7 +108,7 @@ export const CalendarDay = ({
           selected ? 'font-black text-primary' : LABEL_STYLE[state]
         }`}
       >
-        {label === 'weekday' ? weekdayLabelOf(day.date) : dayNumber}
+        {label === 'weekday' ? weekdayLabelOf(day.date, locale) : dayNumber}
       </span>
     </button>
   );

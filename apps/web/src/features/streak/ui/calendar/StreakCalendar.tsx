@@ -1,4 +1,6 @@
 // 월 달력 — 월 이동 머리와 7열 격자. 무엇을 그릴지는 calendar-day 규칙이 정한다
+import { useLocale } from 'next-intl';
+
 import { WEEKDAY_LABELS } from '@/shared/lib/date-string';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 
@@ -24,6 +26,7 @@ export const StreakCalendar = ({
   onGoMonth,
   isSwitching,
 }: StreakCalendarProps) => {
+  const locale = useLocale();
   // 그리는 달도 오늘도 받은 응답이 정한다. 요청한 달로 격자를 그리면 응답이 오기 전까지
   // 새 달 격자에 이전 달 활동일을 맞춰 보게 돼 달력이 통째로 비어 보인다
   const view = { year: calendar.year, month: calendar.month };
@@ -63,7 +66,7 @@ export const StreakCalendar = ({
       </header>
 
       <div className="grid grid-cols-7 pb-3">
-        {WEEKDAY_LABELS.map((weekday) => (
+        {WEEKDAY_LABELS[locale].map((weekday) => (
           <span
             key={weekday}
             className="text-center text-13 font-medium text-muted-foreground"

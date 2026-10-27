@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { useLocale } from 'next-intl';
 
 import { track } from '@/shared/analytics';
 import { WEEKDAY_LABELS } from '@/shared/lib/date-string';
@@ -37,6 +38,7 @@ export const CalendarStrip = ({
   date: routeDate,
   onSelect,
 }: CalendarStripProps) => {
+  const locale = useLocale();
   const reduced = useReducedMotion() ?? false;
   const [expanded, setExpanded] = useState(false);
   // 창은 보고 있는 날과 따로 움직인다 — 지난 주를 훑어보다 아무 날도 안 고를 수 있다
@@ -203,7 +205,7 @@ export const CalendarStrip = ({
               >
                 <div className="px-4 pt-3 pb-4">
                   <div className="grid grid-cols-7 justify-items-center pb-1.5">
-                    {WEEKDAY_LABELS.map((weekday) => (
+                    {WEEKDAY_LABELS[locale].map((weekday) => (
                       <span
                         key={weekday}
                         className="text-xs font-bold text-muted-foreground/60"
@@ -393,19 +395,22 @@ const StripSkeleton = () => (
 );
 
 // 주 스트립 자리표시 — 요일은 고정이라 그대로 쓰고 날짜 칸만 비운다. 크기는 CalendarDay와 맞춘다
-const WeekSkeleton = () => (
-  <div role="status" aria-label="주 불러오는 중" className="grid grid-cols-7">
-    {WEEKDAY_LABELS.map((weekday) => (
-      <div
-        key={weekday}
-        aria-hidden
-        className="flex w-full flex-col items-center gap-1 border-2 border-transparent pt-1.5 pb-1"
-      >
-        <span className="animate-skeleton-flow size-10 rounded-full min-[390px]:size-11" />
-        <span className="text-13 leading-[1.15] text-muted-foreground">
-          {weekday}
-        </span>
-      </div>
-    ))}
-  </div>
-);
+const WeekSkeleton = () => {
+  const locale = useLocale();
+  return (
+    <div role="status" aria-label="주 불러오는 중" className="grid grid-cols-7">
+      {WEEKDAY_LABELS[locale].map((weekday) => (
+        <div
+          key={weekday}
+          aria-hidden
+          className="flex w-full flex-col items-center gap-1 border-2 border-transparent pt-1.5 pb-1"
+        >
+          <span className="animate-skeleton-flow size-10 rounded-full min-[390px]:size-11" />
+          <span className="text-13 leading-[1.15] text-muted-foreground">
+            {weekday}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
