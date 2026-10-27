@@ -4,6 +4,7 @@ import appUpdate from './ja/appUpdate.json';
 import auth from './ja/auth.json';
 import common from './ja/common.json';
 import conversation from './ja/conversation.json';
+import eventPopup from './ja/eventPopup.json';
 import feedback from './ja/feedback.json';
 import me from './ja/me.json';
 import notification from './ja/notification.json';
@@ -18,6 +19,7 @@ const ja = {
   auth,
   common,
   conversation,
+  eventPopup,
   feedback,
   me,
   notification,

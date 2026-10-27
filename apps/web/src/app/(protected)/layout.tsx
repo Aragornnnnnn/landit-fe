@@ -12,7 +12,7 @@ export default function ProtectedLayout({
   // feedback은 레벨 이름·총평 카드(대화 직후·기록·스몰톡 요약·내 정보·해지·페이월 미리보기),
   // notification은 알림 잠금화면 목업(온보딩·홈 시트), widget은 위젯 설치 안내(온보딩·내 정보),
   // subscription은 혜택 목록·결제 안내·구독 관리 문구(페이월·구독 관리·결제 내역·프리미엄 환영·홈 헤더 알약),
-  // alarm은 알람 등록 흐름·알람 설정(내 정보·알람 화면·프리미엄 온보딩)
+  // alarm은 알람 등록 흐름·알람 설정(내 정보·알람 화면·프리미엄 온보딩), eventPopup은 홈 탭에 뜨는 이벤트 공지
   return (
     <MessagesProvider
       namespaces={[
@@ -22,6 +22,7 @@ export default function ProtectedLayout({
         'widget',
         'subscription',
         'alarm',
+        'eventPopup',
       ]}
     >
       <AuthGate>{children}</AuthGate>

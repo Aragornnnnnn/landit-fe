@@ -4,6 +4,7 @@ import appUpdate from './ko/appUpdate.json';
 import auth from './ko/auth.json';
 import common from './ko/common.json';
 import conversation from './ko/conversation.json';
+import eventPopup from './ko/eventPopup.json';
 import feedback from './ko/feedback.json';
 import me from './ko/me.json';
 import notification from './ko/notification.json';
@@ -18,6 +19,7 @@ const ko = {
   auth,
   common,
   conversation,
+  eventPopup,
   feedback,
   me,
   notification,
