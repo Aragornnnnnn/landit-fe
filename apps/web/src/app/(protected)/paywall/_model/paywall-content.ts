@@ -4,6 +4,7 @@ import type { SubscriptionPlan } from '@landit/analytics';
 import { rewardOfferOf } from '@/features/reward/model/refund-offer';
 import { formatWon } from '@/features/subscription/lib/won';
 import { PASS_FALLBACK_PRICE } from '@/features/subscription/model/product/offering';
+import type { Locale } from '@/shared/i18n/locale';
 import type { PreloadableImage } from '@/shared/lib/preload-next-images';
 
 const IMAGE_DIR = '/images/paywall';
@@ -199,6 +200,9 @@ export const SCENARIOS: { titleKey: ScenarioTitleKey; image: string }[] = [
     image: `${IMAGE_DIR}/scenarios/s-14.webp`,
   },
 ];
+
+/** 평점·리뷰는 한국 스토어에 달린 한국어 글이라 한국어 화면에서만 보인다 — 일본 스토어엔 아직 평점이 없다 */
+export const showsStoreReviews = (locale: Locale) => locale === 'ko';
 
 export const STORE_RATING = 4.8;
 /** 평점을 확인한 날 — 숫자 옆에 "○○ 기준"으로 붙는다 */

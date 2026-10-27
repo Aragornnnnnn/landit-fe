@@ -2,6 +2,24 @@
   "paywallHeader": {
     "restoreButton": "購入を復元"
   },
+  "benefitsStep": {
+    "title": "毎日届くシナリオを<br></br><premium>プレミアム</premium>で学びましょう",
+    "benefitsTitle": "プレミアムだけの特典{count}つ",
+    "feedbackLabel": "一文ごとの詳しいフィードバック",
+    "goodTurnTitle": "良かった文はその理由まで",
+    "betterTurnTitle": "不自然な文はこう直す",
+    "summaryTitle": "会話全体をひと目で",
+    "growthTitle": "前回より良くなった点",
+    "reuseTitle": "学んだフレーズを使えたか",
+    "expressionLabel": "自分の会話から作るフレーズ学習",
+    "expressionImageTitle": "絵と例文でニュアンスまで",
+    "expressionPronunciationTitle": "ネイティブのような発音に",
+    "expressionUsageTitle": "たくさんの例文で自分のものに",
+    "expressionQuizTitle": "身についたかクイズで確認",
+    "smallTalkLabel": "キャラクターと自由に会話",
+    "smallTalkPartnerTitle": "相手もアクセントも選べる",
+    "smallTalkFreeTitle": "テーマなしで自由に会話"
+  },
   "feedbackDemo": {
     "detailTitle": "詳しい分析",
     "goodUserBody": "Hi Marco! I'm Yuki. I'm from Japan and I study computer science.",

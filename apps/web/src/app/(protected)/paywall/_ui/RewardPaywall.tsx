@@ -129,7 +129,7 @@ export const RewardPaywall = ({
               onRestore={onRestore}
               restoreDisabled={busy}
             />
-            <BenefitsStep plan={plan} />
+            <BenefitsStep reward={plan} />
           </>
         ) : (
           <CheckoutStep

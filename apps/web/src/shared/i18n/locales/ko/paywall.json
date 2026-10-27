@@ -2,6 +2,24 @@
   "paywallHeader": {
     "restoreButton": "구매 복원"
   },
+  "benefitsStep": {
+    "title": "매일 도착하는 시나리오<br></br><premium>프리미엄</premium>으로 제대로 공부해요",
+    "benefitsTitle": "프리미엄만 누리는 혜택 {count}가지",
+    "feedbackLabel": "문장마다 꼼꼼한 상세 피드백",
+    "goodTurnTitle": "잘한 문장은 왜 좋은지",
+    "betterTurnTitle": "어색한 문장은 이렇게",
+    "summaryTitle": "대화 전체를 한눈에",
+    "growthTitle": "지난번보다 나아진 점",
+    "reuseTitle": "배운 표현을 실제로 썼는지",
+    "expressionLabel": "내 대화로 만든 맞춤 표현 학습",
+    "expressionImageTitle": "그림과 예문으로 실제 뉘앙스까지",
+    "expressionPronunciationTitle": "원어민처럼 발음하게 만들어드려요",
+    "expressionUsageTitle": "여러 예문으로 확실히 내 표현으로",
+    "expressionQuizTitle": "퀴즈로 내 것이 됐는지 확인해요",
+    "smallTalkLabel": "캐릭터와 자유롭게 프리톡",
+    "smallTalkPartnerTitle": "원하는 친구와 억양까지 골라서",
+    "smallTalkFreeTitle": "주제 없이 자유롭게 대화해요"
+  },
   "feedbackDemo": {
     "detailTitle": "상세 분석",
     "goodUserBody": "Hi Marco! I'm Junseo. I'm from Korea and I study computer science.",
