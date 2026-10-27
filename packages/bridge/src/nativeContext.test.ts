@@ -66,6 +66,22 @@ describe('readNativeContext', () => {
     expect(readNativeContext({ ...valid, deviceId: '' })).toBeNull();
   });
 
+  it('기기 선호 언어 목록(languages)을 순서 그대로 읽는다', () => {
+    expect(
+      readNativeContext({ ...valid, languages: ['en-US', 'ja-JP', 'ko-KR'] }),
+    ).toEqual({ ...valid, languages: ['en-US', 'ja-JP', 'ko-KR'] });
+  });
+
+  it('목록을 보내지 않는 구 셸이면 languages 없이 읽는다', () => {
+    expect(readNativeContext(valid)?.languages).toBeUndefined();
+  });
+
+  it('목록에 문자열이 아닌 값이 섞여도 컨텍스트 전체를 버리지 않고 목록만 뺀다', () => {
+    expect(readNativeContext({ ...valid, languages: ['ja-JP', 3] })).toEqual(
+      valid,
+    );
+  });
+
   it('규격 밖이면 null을 돌려준다', () => {
     // 알 수 없는 platform
     expect(readNativeContext({ ...valid, platform: 'web' })).toBeNull();

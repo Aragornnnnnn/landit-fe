@@ -242,6 +242,11 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('REQUEST_WIDGET_CHANGES') }),
   // iOS 광고 추적(ATT) 권한 상태를 달라 — 권한창이 떠 있으면 답할 때까지 기다렸다 회신한다. 응답은 TRACKING_STATUS (Android는 무응답)
   z.object({ type: z.literal('REQUEST_TRACKING_STATUS') }),
+  // 지금 화면 언어를 알린다 — 셸은 저장해 두고 알람 버튼·위젯·오류 화면 같은 셸 문구를 이 언어로 그린다 (단방향)
+  z.object({
+    type: z.literal('SET_LOCALE'),
+    locale: z.enum(['ko', 'ja']),
+  }),
   // 로그인한 사용자를 RevenueCat에 알린다(Purchases.logIn). null이면 로그아웃(logOut). 단방향
   z.object({
     type: z.literal('IDENTIFY'),

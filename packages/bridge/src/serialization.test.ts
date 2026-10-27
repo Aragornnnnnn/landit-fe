@@ -834,3 +834,21 @@ describe('parseWebToNativeMessage — 광고 이벤트', () => {
     ).toBeNull();
   });
 });
+
+describe('화면 언어 알림 메시지', () => {
+  it('웹이 지금 화면 언어를 셸에 알린다 (round-trip)', () => {
+    const message = { type: 'SET_LOCALE', locale: 'ja' } as const;
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('지원하지 않는 언어는 버린다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({ type: 'SET_LOCALE', locale: 'en' }),
+      ),
+    ).toBeNull();
+  });
+});

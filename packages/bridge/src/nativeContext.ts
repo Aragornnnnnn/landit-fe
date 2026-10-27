@@ -13,7 +13,8 @@ import { z } from 'zod';
 // 11: 컨텍스트에 deviceId 추가 (친구 초대 같은 기기 판정용)
 // 12: LOG_AD_EVENT 추가 (메타 광고 최적화용 앱 이벤트, LAN-768)
 // 13: REQUEST_TRACKING_STATUS ↔ TRACKING_STATUS (iOS 광고 추적 허용 계측, LAN-769)
-export const NATIVE_BRIDGE_VERSION = 13;
+// 14: 컨텍스트에 languages(기기 선호 언어 목록) 추가, SET_LOCALE 추가 (셸 문구를 화면 언어로, LAN-777)
+export const NATIVE_BRIDGE_VERSION = 14;
 
 // 셸이 주입하고 웹이 읽는 전역 키
 export const NATIVE_CONTEXT_GLOBAL = '__LANDIT_NATIVE__';
@@ -29,6 +30,9 @@ export const nativeContextSchema = z.object({
   fontScale: z.number().positive().optional(),
   // 다시 설치해도 유지되는 기기 ID(iOS 키체인 UUID·Android ANDROID_ID). 못 읽었거나 브릿지 10 이하 셸이면 없다
   deviceId: z.string().min(1).optional(),
+  // 기기 선호 언어 목록(우선순위 순, 예: ["en-US", "ja-JP"]). iOS WebView의 navigator.languages는 첫 언어만 줄 수 있어 셸이 넘긴다.
+  // 목록이 깨져도 컨텍스트 전체를 버리지 않고 이 필드만 뺀다. 브릿지 13 이하 셸은 보내지 않는다
+  languages: z.array(z.string()).optional().catch(undefined),
 });
 
 export type NativeContext = z.infer<typeof nativeContextSchema>;
