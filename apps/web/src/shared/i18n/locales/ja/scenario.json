@@ -47,7 +47,7 @@
   "lampWaiting": {
     "retryTitle": "昨日終わらなかった会話が残っています",
     "waitingTitle": "ラディがランプで待っています",
-    "deadlineDescription": "夜12時を過ぎると今日の会話は消えます",
+    "deadlineDescription": "夜12時に今日の会話は消えます",
     "summonButton": "ランプをこすって会話を始める"
   },
   "lampSummon": {
@@ -66,7 +66,7 @@
     "nextLabel": "次の文",
     "characterLabel": "ラディ",
     "dailyScenarioBody": "毎日こうして<br></br><em>シナリオをひとつずつ</em><br></br>お届けします",
-    "freeExpressionBody": "さらにプレミアム特典！<br></br>今の会話で作った<em>専用フレーズ</em><br></br>1つ目を無料で開放します",
+    "freeExpressionBody": "さらにプレミアム特典！<br></br>今の会話の<em>専用フレーズ</em><br></br>1つ目を無料で開きます",
     "learnButton": "専用フレーズを学ぶ",
     "continueCaption": "画面をタップして続ける ›"
   },
@@ -75,7 +75,7 @@
     "loadError": "過去の会話を読み込めませんでした。",
     "loadingLabel": "過去の会話を読み込み中",
     "emptyDescription": "まだ終えた会話がありません。<br></br>会話を終えるとここにたまります。",
-    "guideDescription": "会話をタップすると、そのとき受けたフィードバックをもう一度見られます。",
+    "guideDescription": "タップすると当時のフィードバックを見返せます。",
     "sessionTitle": "{ordinal}回目の会話",
     "scoredMetaCaption": "{date} · ネイティブ理解度 {score}%",
     "noFeedbackBadge": "フィードバックなし"
