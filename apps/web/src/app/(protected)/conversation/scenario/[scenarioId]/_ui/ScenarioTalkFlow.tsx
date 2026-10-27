@@ -4,6 +4,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { toCharacterLook } from '@/features/conversation/model/character-look';
@@ -38,6 +39,7 @@ export const ScenarioTalkFlow = ({
   // 어느 날 카드에서 들어왔는지. 나갈 때 그 날로 돌려보낸다
   date?: string;
 }) => {
+  const t = useTranslations('conversation.scenarioTalkFlow');
   const router = useRouter();
   const [showExitModal, setShowExitModal] = useState(false);
   const display = useTalkDisplay();
@@ -127,8 +129,7 @@ export const ScenarioTalkFlow = ({
   }, [showUserFirstIntro]);
   // 속마음 오버레이 내용 — 선발화 안내가 우선, 다음이 속마음, 그 외엔 안 띄운다
   const resolveOverlayThought = (): FloatingThought | null => {
-    if (showUserFirstIntro)
-      return { text: '상황을 잘 읽고 먼저 말을 걸어보세요!', type: 'NORMAL' };
+    if (showUserFirstIntro) return { text: t('userFirstHint'), type: 'NORMAL' };
     if (phase === 'AI_INNER_THOUGHT')
       return { text: turn.innerThought, type: turn.innerThoughtType };
     return null;
@@ -170,7 +171,7 @@ export const ScenarioTalkFlow = ({
         <ProgressBar
           progress={gauge.ratio}
           tone={gauge.tone}
-          label="대화 진행도"
+          label={t('progressLabel')}
         />
       </div>
 
@@ -185,7 +186,7 @@ export const ScenarioTalkFlow = ({
             setShowExitModal(true);
           }}
           className="flex size-10 items-center justify-center text-foreground transition-transform active:scale-90"
-          aria-label="대화 나가기"
+          aria-label={t('exitButton')}
         >
           <CloseIcon size={24} />
         </button>
@@ -279,7 +280,7 @@ export const ScenarioTalkFlow = ({
           // 대화 종료 — 마지막 AI 발화만 남기고 마이크 대신 분석으로 가는 CTA를 아래쪽에 보여준다
           <div className="flex h-36 items-end px-5 pb-3">
             <Button onClick={goToFeedback} loading={leavingForFeedback}>
-              상세 분석 보러갈래요
+              {t('feedbackButton')}
               <ArrowRightIcon size={16} />
             </Button>
           </div>
