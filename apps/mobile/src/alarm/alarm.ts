@@ -11,6 +11,8 @@ import {
   type RepeatingAlarmState,
 } from '@landit/bridge';
 
+import { shellLocale } from '@/i18n/shell-locale';
+import { shellText } from '@/i18n/shell-text';
 import { reportWarning } from '@/monitoring/report';
 
 import {
@@ -330,22 +332,23 @@ const toPermissionStatus = (
 // 메모가 폰에 저장되는 모양 (라이브러리의 metadata)
 type StoredMemo = Record<string, string | boolean>;
 
-// 두 플랫폼 공통 — 버튼 문구와 동작
+// 두 플랫폼 공통 — 버튼 문구와 동작. 문구는 거는 순간의 셸 언어(웹 화면 언어)로 박힌다
 export const ringOptions = (memo: StoredMemo, silent: boolean) =>
   ({
-    secondaryButtonTitle: '대화하러 가기',
+    secondaryButtonTitle: shellText().alarm.goButton,
     secondaryButtonBehavior: 'openApp',
-    stopButtonTitle: '끄기',
+    stopButtonTitle: shellText().alarm.stopButton,
     silent,
     metadata: memo,
   }) as const;
 
 export const androidRingOptions = (memo: StoredMemo, silent: boolean) => ({
   ...ringOptions(memo, silent),
+  // 울림 화면이 날짜를 이 언어로 쓴다 — 시스템 언어가 아니라 셸 언어를 따르게 메모에 함께 싣는다
+  metadata: { ...memo, locale: shellLocale() },
   // 볼륨을 최대로 올리지 않고 폰의 알람 볼륨을 따른다
   enforceVolume: false,
-  // 비워 두면 라이브러리가 영어 "Alarm"을 넣는다
-  alertBody: '지금 바로 대화하러 가요',
+  alertBody: shellText().alarm.alertBody,
 });
 
 /* 날짜 계산 */

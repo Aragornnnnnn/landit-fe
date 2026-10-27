@@ -2,6 +2,8 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
+import { shellText } from '@/i18n/shell-text';
+
 // 'default'는 채널 미지정 푸시가 게시되는 Expo 기본 채널 — 명시적으로 만들어 importance만 우리 값으로 올린다
 const DEFAULT_CHANNEL_ID = 'default';
 
@@ -19,11 +21,15 @@ export const initializeNotifications = async () => {
     handleNotification: async () => FOREGROUND_BEHAVIOR,
   });
 
-  if (Platform.OS === 'android') {
-    // importance HIGH — 헤드업 배너까지 띄우되 방해금지 모드는 뚫지 않는다
-    await Notifications.setNotificationChannelAsync(DEFAULT_CHANNEL_ID, {
-      name: '기본 알림',
-      importance: Notifications.AndroidImportance.HIGH,
-    });
-  }
+  await syncNotificationChannel();
+};
+
+/** Android 채널을 만들거나, 셸 언어가 바뀌었으면 채널 이름을 그 언어로 고친다 (같은 id로 다시 만들면 이름만 바뀐다) */
+export const syncNotificationChannel = async () => {
+  if (Platform.OS !== 'android') return;
+  // importance HIGH — 헤드업 배너까지 띄우되 방해금지 모드는 뚫지 않는다
+  await Notifications.setNotificationChannelAsync(DEFAULT_CHANNEL_ID, {
+    name: shellText().notificationChannelName,
+    importance: Notifications.AndroidImportance.HIGH,
+  });
 };
