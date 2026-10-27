@@ -25,10 +25,11 @@ export const localeFromAcceptLanguage = (header: string | null): Locale => {
     .split(',')
     .map((part) => {
       const [tag, ...params] = part.trim().split(';');
-      const q = params.find((p) => p.trim().startsWith('q='));
+      // q는 대소문자를 가리지 않고 = 앞뒤 공백도 허용한다 (q=0.9, Q=0.9, q = 0.9)
+      const q = params.find((p) => /^q\s*=/i.test(p.trim()));
       return {
-        language: tag.split('-')[0].toLowerCase(),
-        quality: q ? Number(q.trim().slice(2)) : 1,
+        language: tag.trim().split('-')[0].toLowerCase(),
+        quality: q ? Number(q.split('=')[1]) : 1,
       };
     })
     .filter((r) => r.quality > 0)

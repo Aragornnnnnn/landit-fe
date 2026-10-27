@@ -19,6 +19,13 @@ describe('localeFromAcceptLanguage', () => {
     expect(localeFromAcceptLanguage('ja-JP,ja;q=0.9')).toBe('ko');
   });
 
+  it.each([['ko;Q=0.1,ja;q=0.9'], ['ko;q = 0.1,ja']])(
+    'q 표기가 대문자거나 띄어 써도(%s) 우선순위를 읽는다',
+    (header) => {
+      expect(localeFromAcceptLanguage(header)).toBe('ja');
+    },
+  );
+
   it.each([
     ['ja-JP,ja;q=0.9,en-US;q=0.8', 'ja'],
     ['ko-KR,ko;q=0.9', 'ko'],
