@@ -448,6 +448,54 @@ describe('usePurchase — 100일 이용권 구매 가능 확인', () => {
   });
 });
 
+describe('usePurchase — 화면 금액과 결제 통화', () => {
+  const yenMonthly: PlanPackages = {
+    monthly: { packageId: '$rc_monthly', price: 980, currency: 'JPY' },
+  };
+  const renderShown = (
+    packages: PlanPackages,
+    displayCurrencies: Partial<Record<'monthly' | 'yearly' | 'pass', string>>,
+  ) =>
+    renderHook(
+      () => usePurchase({ packages, onUnlocked: vi.fn(), displayCurrencies }),
+      { wrapper },
+    );
+
+  it('화면은 원화인데 결제할 패키지가 엔화면 결제하지 않고 다시 시도하라고 안내한다 — 본 금액과 다른 돈이 나가지 않게', async () => {
+    // Given 월간 카드는 원화 등록값으로 그렸고 월간 패키지는 엔화다
+    const { result } = renderShown(yenMonthly, { monthly: 'KRW' });
+
+    // When 월간을 결제하면
+    await act(() => result.current.purchase('monthly'));
+
+    // Then 스토어 결제를 요청하지 않고 통화 불일치로 남긴다
+    expect(mocks.purchaseViaBridge).not.toHaveBeenCalled();
+    expect(mocks.showToast).toHaveBeenCalledTimes(1);
+    expect(mocks.track).toHaveBeenCalledWith('Purchase Failed', {
+      plan: 'monthly',
+      reason: 'currency_mismatch',
+    });
+  });
+
+  it('화면 통화와 패키지 통화가 같으면 그대로 결제한다', async () => {
+    mocks.purchaseViaBridge.mockResolvedValue(success);
+    const { result } = renderShown(yenMonthly, { monthly: 'JPY' });
+
+    await act(() => result.current.purchase('monthly'));
+
+    expect(mocks.purchaseViaBridge).toHaveBeenCalledTimes(1);
+  });
+
+  it('패키지가 없어 표준 identifier로 결제할 때는 막지 않는다 — 비교할 통화가 없다', async () => {
+    mocks.purchaseViaBridge.mockResolvedValue(success);
+    const { result } = renderShown({}, { yearly: 'KRW' });
+
+    await act(() => result.current.purchase('yearly'));
+
+    expect(mocks.purchaseViaBridge).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('usePurchase — 서버 확인 중 화면을 떠남', () => {
   it('확인이 끝나기 전에 화면이 사라지면 안내와 이동을 하지 않는다 — 캐시 반영만 남는다', async () => {
     mocks.purchaseViaBridge.mockResolvedValue({
