@@ -4,6 +4,7 @@
 import { useEffect } from 'react';
 import { EVENTS } from '@landit/analytics';
 import type { AlarmStatus } from '@landit/bridge';
+import { useTranslations } from 'next-intl';
 
 import { track } from '@/shared/analytics';
 
@@ -16,6 +17,7 @@ export const AlarmPermissionBanner = ({
 }: {
   status: AlarmStatus | null;
 }) => {
+  const t = useTranslations('alarm.permissionBanner');
   const { blocker, unblock, sheet, closeSheet } = useAlarmUnblock(status);
 
   // 배너가 뜬 순간 한 번 — 막힌 권한이 바뀌면(알림을 켰더니 정확한 알람이 남는 등) 다시 센다
@@ -31,7 +33,7 @@ export const AlarmPermissionBanner = ({
       {blocker && (
         <div className="flex items-center gap-3 rounded-[14px] bg-destructive/10 py-3 pr-3 pl-4">
           <p className="min-w-0 flex-1 truncate text-14 font-bold text-destructive">
-            알람을 계속 쓰려면 권한이 필요해요
+            {t('body')}
           </p>
           <button
             type="button"
@@ -44,7 +46,7 @@ export const AlarmPermissionBanner = ({
             }}
             className="shrink-0 rounded-full bg-destructive px-3 py-1.5 text-14 font-bold text-white active:scale-95"
           >
-            지금 켜기
+            {t('unblockButton')}
           </button>
         </div>
       )}

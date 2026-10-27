@@ -1,5 +1,5 @@
 // 스몰톡 대화 상대 — 누구와 얘기할지 홈에서 고른다. 상대마다 출신과 말투가 달라 자기소개가 붙는다.
-// 소개 문구는 화면 고정값이다 — 서버는 상대 개념을 아직 모르고, 세션 시작 응답의 음성만 내려준다.
+// 소개 문구는 화면 고정값이다(해석은 smallTalk 묶음) — 서버는 상대 개념을 아직 모르고, 세션 시작 응답의 음성만 내려준다.
 import type { Partner } from '@/features/conversation/model/character-look';
 import type { TtsVoice } from '@/shared/tts/voice';
 
@@ -7,12 +7,13 @@ export interface PartnerProfile {
   id: Partner;
   // 아바타 아래 이름 — 영문 표기는 디자인 그대로다
   name: string;
-  // 문장 안에서 부르는 이름 ("테디가 먼저 말 걸기")
-  koreanName: string;
+  // 문장 안에서 부르는 이름 ("테디가 먼저 말 걸기") — smallTalk 묶음의 문구 키
+  nameKey: `partner.${Partner}NameLabel`;
   // 어느 나라 영어를 쓰는지 — 이름 옆에 국기로 붙는다 (토스페이스로 그린다)
   flag: string;
   intro: string;
-  introTranslation: string;
+  // 영어 소개의 해석 — 화면 언어로 나오는 smallTalk 묶음의 문구 키
+  introTranslationKey: `partner.${Partner}IntroDescription`;
   // 아바타는 얼굴만, 홈 일러스트는 상반신만 잘라 쓴다 — SVG라 viewBox로 자른다.
   // 캐릭터마다 원본 비율이 달라(테디는 곰이라 더 가로로 넓다) 값을 따로 잡는다
   avatarViewBox: string;
@@ -29,12 +30,11 @@ export const PARTNERS: PartnerProfile[] = [
     id: 'chloe',
     introAudioSrc: '/audio/smalltalk-intro-chloe.mp3',
     name: 'Chloe',
-    koreanName: '클로이',
+    nameKey: 'partner.chloeNameLabel',
     flag: '🇺🇸',
     intro:
       "Hi! I'm Chloe from LA.\nI love to talk — like, a lot. Your English doesn't have to be perfect. Let's chat!",
-    introTranslation:
-      '안녕! 난 LA 사람 클로이야. 나 말하는 거 진짜 좋아해. 영어 잘 못해도 괜찮아, 나랑 얘기하자!',
+    introTranslationKey: 'partner.chloeIntroDescription',
     avatarViewBox: '283 40 439 439',
     portraitViewBox: '185 50 650 630',
     voice: {
@@ -48,12 +48,11 @@ export const PARTNERS: PartnerProfile[] = [
     id: 'marco',
     introAudioSrc: '/audio/smalltalk-intro-marco.mp3',
     name: 'Marco',
-    koreanName: '마르코',
+    nameKey: 'partner.marcoNameLabel',
     flag: '🇦🇺',
     intro:
       "Hey, I'm Marco — a Spanish Aussie in Sydney. Spanish at home, English out there. So, how ya going?",
-    introTranslation:
-      '안녕, 난 마르코야 — 시드니 사는 스페인계 호주인. 집에선 스페인어, 밖에선 영어 써. 요즘 어떻게 지내?',
+    introTranslationKey: 'partner.marcoIntroDescription',
     avatarViewBox: '300 66 396 396',
     portraitViewBox: '180 55 640 620',
     voice: {
@@ -67,12 +66,11 @@ export const PARTNERS: PartnerProfile[] = [
     id: 'teddy',
     introAudioSrc: '/audio/smalltalk-intro-teddy.mp3',
     name: 'Teddy',
-    koreanName: '테디',
+    nameKey: 'partner.teddyNameLabel',
     flag: '🇬🇧',
     intro:
       "Hi, I'm Teddy. Ate something odd up in the mountains - now I speak British English. Doing odd jobs in London for honey.",
-    introTranslation:
-      '안녕, 나 테디야. 산에서 뭘 잘못 먹고 영국 영어를 하게 됐어. 런던에서 꿀 값 버는 중이야.',
+    introTranslationKey: 'partner.teddyIntroDescription',
     avatarViewBox: '0 -90 900 900',
     portraitViewBox: '34 52 840 904',
     voice: {

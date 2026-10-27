@@ -703,16 +703,14 @@ describe('ExpressionFlow 복습 큐', () => {
     // 2번 문제 맞힘 → 1번 문제 재도전: 같은 문제에 라벨만 바뀐다
     await user.click(screen.getByText('quiz-next'));
     expect(screen.getByText('question:I get it now')).toBeInTheDocument();
-    expect(
-      screen.getByText('instruction:다시 한번 해보세요'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('instruction:retryTitle')).toBeInTheDocument();
     expect(screen.getByText('reveal:n')).toBeInTheDocument();
 
     // 두 번째 틀림 → 정답을 보여주며 다시 낸다
     await user.click(screen.getByText('quiz-wrong'));
     expect(screen.getByText('question:I get it now')).toBeInTheDocument();
     expect(
-      screen.getByText('instruction:정답을 보고 그대로 만들어보세요'),
+      screen.getByText('instruction:revealAnswerTitle'),
     ).toBeInTheDocument();
     expect(screen.getByText('reveal:y')).toBeInTheDocument();
   });

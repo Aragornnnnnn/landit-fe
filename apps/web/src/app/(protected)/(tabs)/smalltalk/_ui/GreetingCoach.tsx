@@ -3,6 +3,7 @@
 'use client';
 
 import { motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import { DURATION } from '@/shared/motion';
 
@@ -20,6 +21,7 @@ export const CoachDim = () => (
 // 머리 옆 말풍선 — 딤 위에서도 흰 카드라 눈이 먼저 간다. 살짝 둥실 떠서 살아 있음을 주되, 움직임 줄이기면 가만히 있는다
 export const CoachBubble = () => {
   const reduced = useReducedMotion();
+  const t = useTranslations('smallTalk.greetingCoach');
   return (
     <motion.span
       className="pointer-events-none absolute top-2 left-[calc(50%+42px)] flex h-9 items-center rounded-2xl rounded-bl-md bg-card px-3.5 text-13 font-semibold whitespace-nowrap text-foreground shadow-md shadow-black/10"
@@ -33,7 +35,7 @@ export const CoachBubble = () => {
           : { duration: 2.2, repeat: Infinity, ease: 'easeInOut' },
       }}
     >
-      누르면 인사해요
+      {t('bubbleCaption')}
     </motion.span>
   );
 };

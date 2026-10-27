@@ -2,6 +2,7 @@
 
 // 표현학습 스텝 공통 뼈대 — 상단 진행바 + 좌상단(뒤로가기/나가기X) 헤더 + 스크롤 본문 + 하단 CTA
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { ChevronLeftIcon, CloseIcon } from '@/shared/ui/Icons';
 import { ProgressBar, type ProgressTone } from '@/shared/ui/ProgressBar';
@@ -34,6 +35,7 @@ export const StepScaffold = ({
   progressTone = 'primary',
   headerOverlay = false,
 }: StepScaffoldProps) => {
+  const t = useTranslations('expression.stepScaffold');
   // 본문이 스크롤되면 헤더에 그림자를 드리워 콘텐츠가 아래로 지나감을 알린다 (오버레이 헤더 제외)
   const [scrolled, setScrolled] = useState(false);
 
@@ -48,7 +50,7 @@ export const StepScaffold = ({
       <ProgressBar
         progress={progress}
         tone={progressTone}
-        label="학습 진행도"
+        label={t('progressLabel')}
       />
 
       <div className={headerOverlay ? 'relative min-h-0 flex-1' : 'contents'}>
@@ -69,7 +71,9 @@ export const StepScaffold = ({
                   '[filter:drop-shadow(0_0_4px_rgba(255,255,255,0.9))]'
                 : 'absolute left-2'
             }`}
-            aria-label={leftAction === 'close' ? '나가기' : '뒤로'}
+            aria-label={
+              leftAction === 'close' ? t('closeLabel') : t('backLabel')
+            }
           >
             {leftAction === 'close' ? (
               <CloseIcon size={24} />

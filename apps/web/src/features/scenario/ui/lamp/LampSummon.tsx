@@ -4,6 +4,7 @@
 // 화면을 통째로 덮는다. 딤이 헤더·달력까지 가리는 것이 시안의 의도다
 import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import { registerOpenSheet } from '@/shared/ui/bottom-sheet-back';
@@ -79,6 +80,7 @@ export const LampSummon = ({
   onAccept,
   onClose,
 }: LampSummonProps) => {
+  const t = useTranslations('scenario.lampSummon');
   const reduced = useReducedMotion() ?? false;
   const [phase, setPhase] = useState<Phase>('summon');
 
@@ -148,7 +150,7 @@ export const LampSummon = ({
         <motion.button
           type="button"
           onClick={() => leave('closing', onClose)}
-          aria-label="나가기"
+          aria-label={t('exitLabel')}
           className="absolute top-[max(var(--safe-area-inset-top),16px)] left-3 z-10 flex size-11 items-center justify-center rounded-xl text-white transition-transform active:scale-90"
           {...(phase === 'summon'
             ? { initial: false, animate: { opacity: 1 } }
@@ -268,7 +270,7 @@ export const LampSummon = ({
             className="text-lg"
             onClick={() => leave('accepting', onAccept)}
           >
-            네!
+            {t('acceptButton')}
           </Button>
         </motion.div>
       )}
@@ -285,39 +287,42 @@ const SpeechBubble = ({
   reduced: boolean;
   lampWidth: number;
   leaving: boolean;
-}) => (
-  <motion.div
-    className="absolute"
-    style={{
-      left: BUBBLE_AT.left * lampWidth,
-      top: BUBBLE_AT.top * lampWidth,
-      width: BUBBLE_AT.width * lampWidth,
-    }}
-    {...(leaving
-      ? RETURN.props
-      : reduced
-        ? { initial: false, animate: { opacity: 1, y: 0, scale: 1 } }
-        : popIn(BUBBLE_MS))}
-  >
-    <Image
-      src="/images/character/speech-bubble.webp"
-      alt=""
-      width={450}
-      height={225}
-      sizes="300px"
-      className="w-full"
-    />
-
-    {/* 자리는 시안 텍스트 박스(본문 240x90 안에서 x56 y24)를 이 그림 크기로 환산한 값.
-        글자도 램프 폭에 비례한다 — 고정 px면 작은 폰에서 말풍선을 뚫고 나온다 (기준 20px/램프 226px) */}
-    <p
-      className="absolute top-[48.9%] left-[49.4%] w-[54%] -translate-x-1/2 -translate-y-1/2 text-center leading-snug font-extrabold break-keep text-foreground"
-      style={{ fontSize: lampWidth * 0.0885 }}
+}) => {
+  const t = useTranslations('scenario.lampSummon');
+  return (
+    <motion.div
+      className="absolute"
+      style={{
+        left: BUBBLE_AT.left * lampWidth,
+        top: BUBBLE_AT.top * lampWidth,
+        width: BUBBLE_AT.width * lampWidth,
+      }}
+      {...(leaving
+        ? RETURN.props
+        : reduced
+          ? { initial: false, animate: { opacity: 1, y: 0, scale: 1 } }
+          : popIn(BUBBLE_MS))}
     >
-      오늘의 대화를 시작할까요?
-    </p>
-  </motion.div>
-);
+      <Image
+        src="/images/character/speech-bubble.webp"
+        alt=""
+        width={450}
+        height={225}
+        sizes="300px"
+        className="w-full"
+      />
+
+      {/* 자리는 시안 텍스트 박스(본문 240x90 안에서 x56 y24)를 이 그림 크기로 환산한 값.
+        글자도 램프 폭에 비례한다 — 고정 px면 작은 폰에서 말풍선을 뚫고 나온다 (기준 20px/램프 226px) */}
+      <p
+        className="absolute top-[48.9%] left-[49.4%] w-[54%] -translate-x-1/2 -translate-y-1/2 text-center leading-snug font-extrabold break-keep text-foreground"
+        style={{ fontSize: lampWidth * 0.0885 }}
+      >
+        {t('askTitle')}
+      </p>
+    </motion.div>
+  );
+};
 
 // 램프 목에서 새어나오는 연기 — 다섯 덩이가 조금씩 어긋나게 부풀어 오른다
 const Mist = ({ lampWidth }: { lampWidth: number }) => (

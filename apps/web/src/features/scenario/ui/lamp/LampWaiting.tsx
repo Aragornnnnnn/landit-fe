@@ -2,6 +2,7 @@
 
 // 대기면 — 래디가 램프에서 자고 있다. 깨워야 오늘 대화가 시작된다
 import { motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import { Button } from '@/shared/ui/Button';
@@ -23,6 +24,7 @@ export const LampWaiting = ({
   retry = false,
   asleep = true,
 }: LampWaitingProps) => {
+  const t = useTranslations('scenario.lampWaiting');
   const reduced = useReducedMotion() ?? false;
 
   return (
@@ -31,12 +33,10 @@ export const LampWaiting = ({
       <div className={asleep ? 'visible' : 'invisible'}>
         {/* break-keep이 없으면 좁은 화면에서 "있어 / 요"로 갈린다 */}
         <p className="text-center text-xl leading-snug font-extrabold break-keep text-foreground">
-          {retry
-            ? '어제 마치지 못한 대화가 남아 있어요'
-            : '래디가 램프에서 기다리고 있어요'}
+          {retry ? t('retryTitle') : t('waitingTitle')}
         </p>
         <p className="mt-2 text-center text-base font-medium text-muted-foreground">
-          밤 12시가 지나면 오늘의 대화가 사라져요
+          {t('deadlineDescription')}
         </p>
       </div>
 
@@ -85,7 +85,7 @@ export const LampWaiting = ({
       {/* 소환 중에는 오버레이의 CTA가 대신 선다 — 둘이 겹치면 어느 쪽을 눌러야 할지 알 수 없다 */}
       <div className={`w-full ${asleep ? 'visible' : 'invisible'}`}>
         <Button onClick={onSummon} disabled={!onSummon}>
-          램프 문질러 대화 시작하기
+          {t('summonButton')}
         </Button>
       </div>
     </div>

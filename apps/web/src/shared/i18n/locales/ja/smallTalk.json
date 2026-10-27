@@ -1,0 +1,99 @@
+{
+  "partner": {
+    "chloeNameLabel": "クロエ",
+    "chloeIntroDescription": "LAのクロエだよ！おしゃべり大好き。英語が下手でも大丈夫、一緒に話そう！",
+    "marcoNameLabel": "マルコ",
+    "marcoIntroDescription": "シドニーに住むスペイン系のマルコだよ。家ではスペイン語、外では英語。最近どう？",
+    "teddyNameLabel": "テディ",
+    "teddyIntroDescription": "テディだよ。山で変な物を食べてイギリス英語に。ロンドンで出稼ぎ中。"
+  },
+  "tabPage": {
+    "historyButton": "履歴",
+    "greetingLabel": "{name}のあいさつを聞く",
+    "doneTitle": "今日の1分スモールトークは完了です",
+    "doneCaption": "また明日お話ししましょう",
+    "remainingLabel": "今日の残り時間",
+    "unlimitedLabel": "無制限",
+    "userFirstButton": "自分から話しかける",
+    "partnerFirstButton": "{name}から話しかけてもらう"
+  },
+  "introGuide": {
+    "mascotLabel": "ラディ",
+    "title": "自由に会話できる時間です",
+    "description": "好きな相手を選んで話してみましょう。<br></br><phrase>“Bye!”</phrase>や<phrase>“Talk to you later”</phrase>などのあいさつで会話が終わります。",
+    "confirmButton": "わかりました"
+  },
+  "greetingCoach": {
+    "bubbleCaption": "タップであいさつ"
+  },
+  "topicPicker": {
+    "title": "{name}と何について話しますか？",
+    "refreshButton": "ほかの話題を見る",
+    "loadFailedToast": "話題を読み込めませんでした"
+  },
+  "session": {
+    "fallbackTitle": "{date}の会話"
+  },
+  "history": {
+    "title": "スモールトーク履歴",
+    "loadError": "これまでの会話を読み込めませんでした。",
+    "loadingLabel": "これまでの会話を読み込み中",
+    "emptyDescription": "まだ会話がありません。<br></br>今日の会話からここにたまっていきます。",
+    "guideCaption": "会話をタップしてフレーズを見返せます。",
+    "expressionProgressLabel": "フレーズ {done}/{total}"
+  },
+  "historyDetail": {
+    "transcriptLabel": "会話を見返す",
+    "transcriptCorrectionsLabel": "会話を見返す、より自然な言い方{count}件",
+    "loadError": "会話を読み込めませんでした。",
+    "dateLabel": "会話した日",
+    "speakingTimeLabel": "話した時間",
+    "exchangeLabel": "やりとり",
+    "exchangeCountLabel": "{count}回",
+    "expressionsTitle": "この日のフレーズ",
+    "generationFailedDescription": "フレーズを作れませんでした。<br></br>もう一度作ってみますか？",
+    "regenerateButton": "もう一度作る",
+    "generatingDescription": "この会話のフレーズはまだ作成中です。<br></br>しばらくしてから開いてください。"
+  },
+  "historyDetailSkeleton": {
+    "loadingLabel": "フレーズを読み込み中"
+  },
+  "transcript": {
+    "loadError": "会話を読み込めませんでした。",
+    "nextCorrectionButton": "次の自然な言い方",
+    "learnButton": "フレーズを学びに行く",
+    "preparingCaption": "より自然な言い方を探しています…",
+    "reusedExpressionBadge": "学んだフレーズ「{expression}」を使いました",
+    "goodJobBadge": "よくできました！",
+    "correctionTitle": "こう言うともっと自然です"
+  },
+  "transcriptSkeleton": {
+    "loadingLabel": "会話を読み込み中"
+  },
+  "summary": {
+    "title": "今日のスモールトーク",
+    "unavailableError": "今日のスモールトークをまとめられませんでした。",
+    "loadError": "今日のスモールトークを読み込めませんでした。",
+    "detailButton": "詳しいフィードバックを見ます",
+    "reusedLoadingLabel": "学んだフレーズの使用を探しています",
+    "followUpLoadingLabel": "次のスモールトークの質問を探しています",
+    "retryButton": "もう一度試す",
+    "learnButton": "フレーズを学びに行く"
+  },
+  "summarySkeleton": {
+    "loadingLabel": "今日のスモールトークを読み込み中"
+  },
+  "comparison": {
+    "title": "前回との比較",
+    "speakingTimeLabel": "話した時間",
+    "exchangeLabel": "やりとり",
+    "longestTurnLabel": "一番長く話したターン",
+    "exchangeCountLabel": "{count}回",
+    "wordCountLabel": "{count}語",
+    "periodCaption": "{date} → 今日",
+    "firstPeriodCaption": "初めての記録 · 今日"
+  },
+  "followUp": {
+    "title": "次のスモールトークで"
+  }
+}

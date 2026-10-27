@@ -16,5 +16,11 @@
   },
   "bridgeListener": {
     "exitToast": "もう一度押すとアプリを終了します"
+  },
+  "backLabel": "戻る",
+  "errorScreen": {
+    "title": "問題が発生しました",
+    "description": "しばらくしてからもう一度お試しください",
+    "retryButton": "もう一度試す"
   }
 }

@@ -1,5 +1,6 @@
 // 다짐 문장 — "저는 매일 [시각]에 / 영어 공부를 하겠습니다!". 다짐 화면·완료 화면이 같은 칩과 문장을 쓴다
 import type { AlarmTime } from '@landit/bridge';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { useAlarmCopy } from '../model/alarm-copy';
 import { formatClock } from '../model/alarm-time';
@@ -11,14 +12,17 @@ export const TimeChip = ({
 }: {
   time: AlarmTime;
   ref?: React.Ref<HTMLSpanElement>;
-}) => (
-  <span
-    ref={ref}
-    className="rounded-lg bg-primary/12 px-1.5 text-primary tabular-nums"
-  >
-    {formatClock(time)}
-  </span>
-);
+}) => {
+  const locale = useLocale();
+  return (
+    <span
+      ref={ref}
+      className="rounded-lg bg-primary/12 px-1.5 text-primary tabular-nums"
+    >
+      {formatClock(time, locale)}
+    </span>
+  );
+};
 
 // 문장 내용만 그린다 — 감싸는 요소(제목·문단)와 글자 크기는 쓰는 쪽이 정한다
 export const PledgeSentence = ({
@@ -28,10 +32,13 @@ export const PledgeSentence = ({
   time: AlarmTime;
   chipRef?: React.Ref<HTMLSpanElement>;
 }) => {
+  const t = useTranslations('alarm.pledge');
   const copy = useAlarmCopy();
   return (
     <>
-      저는 매일 <TimeChip time={time} ref={chipRef} />에
+      {t.rich('sentenceTitle', {
+        time: () => <TimeChip time={time} ref={chipRef} />,
+      })}
       <br />
       <span className="whitespace-pre-line">{copy.pledgeClosing}</span>
     </>

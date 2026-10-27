@@ -1,6 +1,8 @@
 // 알람 등록 완료 화면 검증 — 연출 도중 부모가 다시 그려져도 넘어갈 시계를 처음부터 다시 재지 않는다
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { AlarmRegistered } from './AlarmRegistered';
 
@@ -18,6 +20,26 @@ afterEach(() => {
 });
 
 describe('AlarmRegistered', () => {
+  it('일본어 화면에서 권한이 막혔으면 일본어 시각으로 켜기를 권한다', () => {
+    // given
+    setTestLocale('ja');
+
+    // when
+    render(
+      <AlarmRegistered
+        time={time}
+        blocked
+        onUnblock={vi.fn()}
+        onDone={vi.fn()}
+      />,
+    );
+
+    // then
+    expect(
+      screen.getByText('権限オンで毎日午前9時にお知らせします'),
+    ).toBeInTheDocument();
+  });
+
   it('연출 도중 onDone이 바뀌어도 처음 시계대로 새 onDone으로 넘어간다', () => {
     const first = vi.fn();
     const next = vi.fn();

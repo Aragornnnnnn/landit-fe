@@ -28,14 +28,14 @@ describe('retryGuideOf', () => {
   it('한 번 틀리면 정답을 감춘 채 다시 풀게 한다', () => {
     expect(retryGuideOf(1)).toEqual({
       revealAnswer: false,
-      instruction: '다시 한번 해보세요',
+      instruction: 'retryTitle',
     });
   });
 
   it('두 번 틀리면 정답을 보여주고 그대로 만들게 한다', () => {
     expect(retryGuideOf(2)).toEqual({
       revealAnswer: true,
-      instruction: '정답을 보고 그대로 만들어보세요',
+      instruction: 'revealAnswerTitle',
     });
   });
 });

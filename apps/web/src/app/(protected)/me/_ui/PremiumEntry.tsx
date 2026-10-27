@@ -3,6 +3,7 @@
 // 마이페이지 프리미엄 카드 — 골드 한 줄. 무료면 페이월로, 유료면 구독 관리로 간다.
 // 결제할 수 없는 환경(브라우저·플래그 꺼짐)의 무료 사용자에겐 그리지 않는다 (docs/subscription.md 「마이페이지와 법적 문서」)
 import { EVENTS, type SubscriptionState } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
 import { summarizeSubscription } from '@/features/subscription/model/my-subscription/subscription-summary';
@@ -20,13 +21,14 @@ import {
 } from '@/shared/lib/routes';
 import { ChevronRightIcon } from '@/shared/ui/Icons';
 
-const LABEL: Record<SubscriptionState, string> = {
-  trial: '체험 중',
-  active: '이용 중',
-  canceled: '해지 예정',
-};
+const LABEL_KEYS = {
+  trial: 'trialLabel',
+  active: 'activeLabel',
+  canceled: 'canceledLabel',
+} as const satisfies Record<SubscriptionState, string>;
 
 export const PremiumEntry = () => {
+  const t = useTranslations('me.premiumEntry');
   const { subscription, isPending, isError } = useSubscriptionQuery();
   const paymentLive = usePaymentLive();
 
@@ -42,12 +44,12 @@ export const PremiumEntry = () => {
     summary.kind === 'none'
       ? {
           href: paywallPath({ from: MY_PAGE_PATH, source: 'me' }),
-          label: '구독하기',
+          label: t('subscribeLabel'),
           onClick: () => track(EVENTS.PAYWALL_ENTRY_TAPPED, { source: 'me' }),
         }
       : {
           href: SUBSCRIPTION_MANAGE_PATH,
-          label: LABEL[summary.kind],
+          label: t(LABEL_KEYS[summary.kind]),
           onClick: () =>
             track(EVENTS.SUBSCRIPTION_MANAGE_TAPPED, { status: summary.kind }),
         };

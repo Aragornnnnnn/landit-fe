@@ -5,6 +5,7 @@
 // 조회가 아직이면 열매만 정적으로 — 숫자를 지어내느니 말을 아낀다
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
+import { useLocale, useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import { EASE_STANDARD } from '@/shared/motion';
@@ -25,6 +26,8 @@ const TITLE_DELAY = 0.72;
 const CELL_FRUIT_SIZE = 22;
 
 export const StreakStamp = () => {
+  const locale = useLocale();
+  const t = useTranslations('streak');
   const { streak } = useStreakQuery();
   const { totalActiveDays, longestStreakDays } = useStreakRecord();
   const base = useCelebrationBase();
@@ -37,18 +40,22 @@ export const StreakStamp = () => {
       </StampStage>
     );
 
-  const celebration = celebrationOf({
-    currentStreakDays: streak.currentStreakDays,
-    base,
-    totalActiveDays,
-    longestStreakDays,
-  });
+  const celebration = celebrationOf(
+    {
+      currentStreakDays: streak.currentStreakDays,
+      base,
+      totalActiveDays,
+      longestStreakDays,
+    },
+    t,
+  );
   // 찍히는 연출을 안 할 땐(같은 날 두 번째 대화, 집어둔 값 없음) 처음부터 다 채워 둔다
   const animated = celebration.stamping && !reduceMotion;
   const cells = streakRunOf({
     currentStreakDays: streak.currentStreakDays,
     activeToday: streak.activeToday,
     today: streak.today,
+    locale,
   });
 
   return (

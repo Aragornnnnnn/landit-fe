@@ -2,6 +2,7 @@
 
 // 복습 영작 스텝 — 작문 문제 여러 개를 큐로 돌린다. 틀리면 맨 뒤로 보내 맞출 때까지 다시 내고, 마지막 정답에서만 획득 연출로 완료한다
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { pickDistinctPartners } from '../../model/quiz-partner';
 import {
@@ -39,6 +40,7 @@ export const ReviewStep = ({
   onFinish,
   finishing,
 }: ReviewStepProps) => {
+  const t = useTranslations('expression.reviewStep');
   // 아직 안 풀린 문제 인덱스 — 맨 앞이 지금 문제
   const [pending, setPending] = useState(() =>
     quizzes.map((_, index) => index),
@@ -83,8 +85,8 @@ export const ReviewStep = ({
       onBack={onBack}
       leftAction={leftAction}
       onNext={settle}
-      nextLabel="다음 문제"
-      wrongLabel={last ? '다시 풀어볼게요' : undefined}
+      nextLabel={t('nextButton')}
+      wrongLabel={last ? t('retryButton') : undefined}
       progressRange={[progressAt(solved), progressAt(solved + 1)]}
       correctSlot={
         last

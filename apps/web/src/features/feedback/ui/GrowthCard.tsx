@@ -1,6 +1,6 @@
 // 실수 기억 카드 — 지난번에 교정받은 패턴이 오늘 다시 나왔을 때, 그때 문장과 오늘 문장을 나란히 놓는다.
 // 오늘 맞았으면 초록, 또 틀렸으면 빨강. 여러 패턴이어도 서버가 하나만 고른다. 스몰톡 요약과 시나리오 총평이 같이 쓴다
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { toDayLabel } from '@/shared/lib/day-label';
 import { splitMatchedText } from '@/shared/lib/matched-text';
@@ -15,6 +15,7 @@ export const GrowthCard = ({
   className?: string;
 }) => {
   const t = useTranslations('feedback.growthCard');
+  const locale = useLocale();
   return (
     <section className={`rounded-2xl bg-card px-5 py-4 shadow-sm ${className}`}>
       <h2 className="text-14 font-extrabold text-primary">
@@ -25,7 +26,7 @@ export const GrowthCard = ({
       <dl className="mt-3 flex flex-col gap-2 rounded-xl bg-secondary px-4 py-3">
         <div className="flex gap-3">
           <dt className="w-[calc(56px*var(--font-scale))] shrink-0 text-13 whitespace-nowrap text-muted-foreground">
-            {toDayLabel(growth.previousDate)}
+            {toDayLabel(growth.previousDate, locale)}
           </dt>
           <dd className="text-15 leading-6 text-muted-foreground">
             <Highlighted

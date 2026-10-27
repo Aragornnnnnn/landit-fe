@@ -8,13 +8,24 @@ export interface Tab {
   // 계측에 싣는 탭 이름
   id: HomeTab;
   href: string;
-  label: string;
+  // 칩 글자 — home.tabBar 묶음의 키
+  labelKey: 'scenarioLabel' | 'smalltalkLabel';
   ready: boolean;
 }
 
 export const TABS: Tab[] = [
-  { id: 'scenario', href: SCENARIO_PATH, label: '시나리오', ready: true },
-  { id: 'smalltalk', href: SMALLTALK_PATH, label: '스몰톡', ready: true },
+  {
+    id: 'scenario',
+    href: SCENARIO_PATH,
+    labelKey: 'scenarioLabel',
+    ready: true,
+  },
+  {
+    id: 'smalltalk',
+    href: SMALLTALK_PATH,
+    labelKey: 'smalltalkLabel',
+    ready: true,
+  },
 ];
 
 export const VISIBLE_TABS = TABS.filter((tab) => tab.ready);

@@ -1,0 +1,89 @@
+{
+  "calendarStrip": {
+    "closeLabel": "カレンダーを閉じる",
+    "monthLoadingLabel": "カレンダーを読み込み中",
+    "weekLoadingLabel": "週を読み込み中",
+    "previousLabel": "前へ",
+    "nextLabel": "次へ",
+    "weekLabel": "週",
+    "monthLabel": "月",
+    "periodSkeletonLabel": "0000年00月 第0週"
+  },
+  "calendarDay": {
+    "completedLabel": "{date} 完了",
+    "todayLabel": "{date} 今日"
+  },
+  "scenarioCard": {
+    "historyLabel": "会話の記録",
+    "historyButton": "記録",
+    "lockedLabel": "ロックされています",
+    "replayButton": "もう一度会話する",
+    "startButton": "会話を始める"
+  },
+  "cardSkeleton": {
+    "loadingLabel": "カードを読み込み中",
+    "titleSkeletonLabel": "カフェでコーヒーを注文する",
+    "briefingSkeletonLabel": "行きつけのカフェで初めて会う店員に飲み物を注文する会話です"
+  },
+  "expressionProgress": {
+    "sectionLabel": "ネイティブフレーズ",
+    "countLabel": "{done}/{total} 完了",
+    "progressLabel": "ネイティブフレーズの学習進度",
+    "learnButton": "フレーズを学ぶ",
+    "continueButton": "続けてフレーズを学ぶ",
+    "reviewButton": "フレーズを復習する"
+  },
+  "cardBack": {
+    "title": "ネイティブはこう言います",
+    "frontLabel": "カードの表に戻る"
+  },
+  "freeExpressionSpotlight": {
+    "introLabel": "専用フレーズ学習の紹介",
+    "introBody": "今の会話から作った<br></br><em>あなた専用のフレーズ学習</em>です",
+    "introNamedBody": "今の会話から作った<br></br><em>{nickname}さん専用のフレーズ学習</em>です",
+    "freeLabel": "最初のフレーズを無料で学ぶ",
+    "freeBody": "最初のフレーズは<em>無料</em>で開放しました<br></br>タップしてすぐ学びましょう"
+  },
+  "lampWaiting": {
+    "retryTitle": "昨日終わらなかった会話が残っています",
+    "waitingTitle": "ラディがランプで待っています",
+    "deadlineDescription": "夜12時に今日の会話は消えます",
+    "summonButton": "ランプをこすって会話を始める"
+  },
+  "lampSummon": {
+    "exitLabel": "閉じる",
+    "acceptButton": "はい！",
+    "askTitle": "今日の会話を始めますか？"
+  },
+  "emptyDay": {
+    "todayTitle": "今日のカードは準備中です",
+    "pastTitle": "この日はカードがありません",
+    "todayDescription": "少ししたらまた来てください<br></br>新しいカードを持ってきます",
+    "pastDescription": "この日は会話をしていません<br></br>過ぎたカードは開けません"
+  },
+  "previewIntro": {
+    "dialogLabel": "プレミアムの紹介",
+    "nextLabel": "次の文",
+    "characterLabel": "ラディ",
+    "dailyScenarioBody": "毎日こうして<br></br><em>シナリオをひとつずつ</em><br></br>お届けします",
+    "freeExpressionBody": "さらにプレミアム特典！<br></br>今の会話の<em>専用フレーズ</em><br></br>1つ目を無料で開きます",
+    "learnButton": "専用フレーズを学ぶ",
+    "continueCaption": "画面をタップして続ける ›"
+  },
+  "sessionList": {
+    "fallbackTitle": "過去の会話",
+    "loadError": "過去の会話を読み込めませんでした。",
+    "loadingLabel": "過去の会話を読み込み中",
+    "emptyDescription": "まだ終えた会話がありません。<br></br>会話を終えるとここにたまります。",
+    "guideDescription": "タップすると当時のフィードバックを見返せます。",
+    "sessionTitle": "{ordinal}回目の会話",
+    "scoredMetaCaption": "{date} · ネイティブ理解度 {score}%",
+    "noFeedbackBadge": "フィードバックなし"
+  },
+  "sessionFeedback": {
+    "loadError": "記録を読み込めませんでした。",
+    "noFeedbackError": "この会話には保存されたフィードバックがありません。",
+    "notFoundError": "この会話が見つかりません。",
+    "backButton": "記録へ"
+  }
+}
