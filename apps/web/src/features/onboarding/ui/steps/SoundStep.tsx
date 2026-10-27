@@ -2,21 +2,22 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
+import { lineBreak } from '@/shared/i18n/rich';
 import { Button } from '@/shared/ui/Button';
 
 import { useSoundPlayback } from '../../model/useSoundPlayback';
 
 export const SoundStep = ({ onNext }: { onNext: () => void }) => {
+  const t = useTranslations('onboarding.soundStep');
   const { question, isSpeaking, bubbleVisible, progress } = useSoundPlayback();
 
   return (
     <>
       <div className="flex flex-1 flex-col pt-7">
         <h1 className="text-3xl leading-[1.18] font-black tracking-normal">
-          제가 이렇게 말을 걸게요
-          <br />
-          소리가 잘 들리나요?
+          {t.rich('title', lineBreak)}
         </h1>
 
         <div className="flex flex-1 flex-col justify-center gap-6">
@@ -29,7 +30,7 @@ export const SoundStep = ({ onNext }: { onNext: () => void }) => {
         </div>
       </div>
 
-      <Button onClick={onNext}>잘 들려요!</Button>
+      <Button onClick={onNext}>{t('nextButton')}</Button>
     </>
   );
 };
