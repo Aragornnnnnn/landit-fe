@@ -88,5 +88,31 @@
     "resubscribeLink": "해지 취소하기",
     "listPriceLabel": "정가",
     "noSubscriptionLink": "구독 중이 아니에요 · 프리미엄 구독하기"
+  },
+  "reasonStep": {
+    "title": "해지하기 전에<br></br>이유를 알려주세요",
+    "otherLabel": "어떤 이유인지 적어주세요 (필수)",
+    "otherPlaceholder": "예: 발음 평가가 너무 엄격한 것 같아요",
+    "nextButton": "다음",
+    "stayButton": "계속 이용할게요"
+  },
+  "methodStep": {
+    "title": "어떤 방법으로<br></br>공부하실 예정이에요?",
+    "nextButton": "다음"
+  },
+  "cancelReasons": {
+    "priceLabel": "가격이 부담돼요",
+    "timeLabel": "쓸 시간이 없어요",
+    "progressLabel": "실력이 느는 것 같지 않아요",
+    "contentLabel": "원하는 콘텐츠가 부족해요",
+    "bugLabel": "앱이 불편하거나 오류가 있어요",
+    "otherMethodLabel": "다른 방법으로 공부하려고요",
+    "otherLabel": "기타"
+  },
+  "studyMethods": {
+    "academyLabel": "학원 · 과외",
+    "otherAppLabel": "다른 앱",
+    "youtubeLabel": "유튜브 · 독학",
+    "abroadLabel": "어학연수 · 해외"
   }
 }
