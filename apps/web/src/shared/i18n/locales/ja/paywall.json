@@ -19,5 +19,44 @@
     "monthlyBillingCaption": "毎月{price}で自動更新・いつでも解約できます",
     "yearlyCancelCaption": "体験終了の24時間前までに解約すれば請求されません",
     "monthlyCancelCaption": "更新日の24時間前までに解約すれば翌月分は請求されません"
+  },
+  "exampleDemo": {
+    "meaningLabel": "～する気がある、乗り気だ",
+    "translationBody": "正直、街の探検ならいつでも大歓迎。",
+    "nuanceLabel": "こんなニュアンスです",
+    "nuanceBody": "「いいね！」と乗り気で答えるときに"
+  },
+  "quizDemo": {
+    "title": "質問への答えを完成させましょう",
+    "questionCaption": "街を探検する派？おうち派？",
+    "answerBody": "正直、街の探検ならいつでも大歓迎。",
+    "correctTitle": "正解です！",
+    "correctLabel": "正解",
+    "nextButton": "フレーズを学びに行く"
+  },
+  "pronunciationDemo": {
+    "title": "ラディの発音フィードバック",
+    "listeningLabel": "聞いています",
+    "nativeLabel": "お手本",
+    "mineLabel": "自分"
+  },
+  "usageDemo": {
+    "title": "こんな使い方も",
+    "meaningLabel": "試しにやってみる",
+    "firstTranslationBody": "やってみたら？気に入るかもよ。",
+    "secondTranslationBody": "彼女、お菓子作りを試したらすっかりハマったよ。",
+    "thirdTranslationBody": "やってみる価値はあるよ。",
+    "fourthTranslationBody": "やってみなよ。失敗しても大したことないって。"
+  },
+  "smallTalkDemo": {
+    "title": "今日は誰と<br></br>話しますか？",
+    "chloeLabel": "クロエ",
+    "marcoLabel": "マルコ",
+    "teddyLabel": "テディ",
+    "startButton": "テディと話す",
+    "talkTitle": "テディと会話",
+    "americanLabel": "米国英語",
+    "australianLabel": "豪州英語",
+    "britishLabel": "英国英語"
   }
 }

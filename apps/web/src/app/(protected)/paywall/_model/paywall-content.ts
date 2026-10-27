@@ -23,34 +23,33 @@ export const SCENE_IMAGES = {
 
 /**
  * 04 카드 「이렇게도 써요」 — 실제 표현 give it a shot의 추가 예문 넷(landit-be V44 문장 + V56 그림).
- * 한 표현이 상황마다 어떻게 쓰이는지 카드가 옆으로 넘어가며 보여준다
+ * 한 표현이 상황마다 어떻게 쓰이는지 카드가 옆으로 넘어가며 보여준다. 뜻과 해석은 paywall.usageDemo 문구다
  */
 export const USAGE_EXPRESSION = {
   text: 'give it a shot',
-  meaning: '한번 해보다, 시도해 보다',
   examples: [
     {
       question: 'Do you think I should try it?',
       sentence: ['Why not ', 'give it a shot', '? You might like it.'],
-      translation: '한번 해보지 그래? 마음에 들지도 몰라.',
+      translationKey: 'firstTranslationBody',
       image: `${IMAGE_DIR}/give-it-a-shot/ex-1.webp`,
     },
     {
       question: 'How did she discover she liked baking?',
       sentence: ['She ', 'gave baking a shot', ' and loved it.'],
-      translation: '걔 베이킹 한번 해봤는데 완전 빠졌어.',
+      translationKey: 'secondTranslationBody',
       image: `${IMAGE_DIR}/give-it-a-shot/ex-2.webp`,
     },
     {
       question: 'Is it worth trying?',
       sentence: ["It's worth ", 'giving it a shot', '.'],
-      translation: '한번 해볼 만한 가치는 있어.',
+      translationKey: 'thirdTranslationBody',
       image: `${IMAGE_DIR}/give-it-a-shot/ex-3.webp`,
     },
     {
       question: "I'm afraid I'll fail.",
       sentence: ['', 'Give it a go', " — what's the worst that can happen?"],
-      translation: '해봐. 잘못돼 봤자 뭐 얼마나 잘못되겠어?',
+      translationKey: 'fourthTranslationBody',
       image: `${IMAGE_DIR}/give-it-a-shot/ex-4.webp`,
     },
   ],

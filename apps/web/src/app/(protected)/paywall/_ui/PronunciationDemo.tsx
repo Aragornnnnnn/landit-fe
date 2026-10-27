@@ -4,6 +4,7 @@
 // 듣는 중 → 점수 게이지가 차오름 → 단어마다 판정 → 틀린 음절을 짚는 카드.
 // 멈춰 있으면(관찰 전·동작 줄이기) 마지막 장면이라 연출이 안 돌아도 완성된 화면이 보인다
 import type { CSSProperties } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { useCountUp } from '../_lib/useCountUp';
 import { DemoScreen, type DemoProps } from './DemoScreen';
@@ -30,7 +31,7 @@ const WORDS: { text: string; ok: boolean }[] = [
   { text: 'city', ok: false },
 ];
 
-const Listening = () => (
+const Listening = ({ label }: { label: string }) => (
   <div className="flex flex-col items-center gap-3">
     <div className="flex h-12 items-center gap-1.5">
       {[0, 1, 2, 3, 4].map((i) => (
@@ -41,7 +42,7 @@ const Listening = () => (
         />
       ))}
     </div>
-    <p className="text-lg font-bold text-muted-foreground">듣고 있어요</p>
+    <p className="text-lg font-bold text-muted-foreground">{label}</p>
   </div>
 );
 
@@ -55,7 +56,13 @@ const Score = ({ counting }: { counting: boolean }) => {
   );
 };
 
-const Gauge = ({ step }: { step: number }) => {
+const Gauge = ({
+  step,
+  listeningLabel,
+}: {
+  step: number;
+  listeningLabel: string;
+}) => {
   const filled = step >= PRONUNCIATION_SCENE.scoring;
   return (
     <div className="relative mx-auto h-[200px] w-[260px]">
@@ -91,7 +98,7 @@ const Gauge = ({ step }: { step: number }) => {
       </svg>
       <div className="absolute inset-x-0 top-[78px] flex flex-col items-center">
         {step === PRONUNCIATION_SCENE.listening ? (
-          <Listening />
+          <Listening label={listeningLabel} />
         ) : (
           <Score counting={filled} />
         )}
@@ -148,6 +155,7 @@ const WordChips = ({ step }: { step: number }) => {
 
 /** 틀린 음절 카드 — 아래에서 올라와 원어민과 내 발음을 음절로 맞대고, 틀린 't'가 흔들린다 */
 const DetailCard = ({ step }: { step: number }) => {
+  const t = useTranslations('paywall.pronunciationDemo');
   const shown = step === PRONUNCIATION_SCENE.detail;
   return (
     <div
@@ -157,7 +165,9 @@ const DetailCard = ({ step }: { step: number }) => {
     >
       <p className="text-26 font-bold text-foreground">Honestly</p>
       <p className="mt-3 flex items-baseline gap-5">
-        <span className="w-14 text-lg text-muted-foreground">원어민</span>
+        <span className="w-14 text-lg text-muted-foreground">
+          {t('nativeLabel')}
+        </span>
         <span className="text-[32px] font-bold text-[#3f7d55]">
           ah·nihs
           <span className="underline decoration-2 underline-offset-4">t</span>
@@ -165,7 +175,9 @@ const DetailCard = ({ step }: { step: number }) => {
         </span>
       </p>
       <p className="mt-1.5 flex items-baseline gap-5">
-        <span className="w-14 text-lg text-muted-foreground">나</span>
+        <span className="w-14 text-lg text-muted-foreground">
+          {t('mineLabel')}
+        </span>
         <span className="text-[32px] font-bold text-[#3f7d55]">
           o·nes·
           <span
@@ -182,17 +194,18 @@ const DetailCard = ({ step }: { step: number }) => {
 };
 
 export const PronunciationDemo = ({ step, width }: DemoProps) => {
+  const t = useTranslations('paywall.pronunciationDemo');
   return (
     <DemoScreen width={width}>
       <div className="flex items-center px-5 py-4">
         <span className="w-6 text-2xl text-foreground">‹</span>
         <p className="flex-1 text-center text-lg font-bold text-foreground">
-          래디의 발음 피드백
+          {t('title')}
         </p>
         <span className="w-6" />
       </div>
 
-      <Gauge step={step} />
+      <Gauge step={step} listeningLabel={t('listeningLabel')} />
       <WordChips step={step} />
       <DetailCard step={step} />
     </DemoScreen>

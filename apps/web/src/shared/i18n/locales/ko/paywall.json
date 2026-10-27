@@ -19,5 +19,44 @@
     "monthlyBillingCaption": "매월 {price} 정기 결제 · 언제든 해지 가능",
     "yearlyCancelCaption": "체험 종료 24시간 전까지 해지하면 청구되지 않아요",
     "monthlyCancelCaption": "결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요"
+  },
+  "exampleDemo": {
+    "meaningLabel": "~할 마음이 있다, 콜이다",
+    "translationBody": "솔직히 난 도시 탐험이라면 언제든 콜이야.",
+    "nuanceLabel": "이런 느낌이에요",
+    "nuanceBody": "'콜!'처럼 반갑게 답할 때 써요"
+  },
+  "quizDemo": {
+    "title": "질문에 대한 대답을 완성하세요",
+    "questionCaption": "넌 도시 탐험파야, 집콕파야?",
+    "answerBody": "솔직히 난 도시 탐험이라면 언제든 콜이야.",
+    "correctTitle": "정답이에요!",
+    "correctLabel": "정답",
+    "nextButton": "표현 배우러 갈게요"
+  },
+  "pronunciationDemo": {
+    "title": "래디의 발음 피드백",
+    "listeningLabel": "듣고 있어요",
+    "nativeLabel": "원어민",
+    "mineLabel": "나"
+  },
+  "usageDemo": {
+    "title": "이렇게도 써요",
+    "meaningLabel": "한번 해보다, 시도해 보다",
+    "firstTranslationBody": "한번 해보지 그래? 마음에 들지도 몰라.",
+    "secondTranslationBody": "걔 베이킹 한번 해봤는데 완전 빠졌어.",
+    "thirdTranslationBody": "한번 해볼 만한 가치는 있어.",
+    "fourthTranslationBody": "해봐. 잘못돼 봤자 뭐 얼마나 잘못되겠어?"
+  },
+  "smallTalkDemo": {
+    "title": "오늘은 누구랑<br></br>이야기할까요?",
+    "chloeLabel": "클로이",
+    "marcoLabel": "마르코",
+    "teddyLabel": "테디",
+    "startButton": "테디와 대화 시작",
+    "talkTitle": "테디와 스몰톡",
+    "americanLabel": "미국 영어",
+    "australianLabel": "호주 영어",
+    "britishLabel": "영국 영어"
   }
 }
