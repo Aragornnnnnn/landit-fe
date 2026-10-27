@@ -29,6 +29,7 @@ import {
   MessagesProvider,
   RootMessagesProvider,
 } from '@/shared/i18n/MessagesProvider';
+import { NativeLocaleSync } from '@/shared/i18n/NativeLocaleSync';
 import { MonitoringBootstrap } from '@/shared/monitoring/MonitoringBootstrap';
 import { Toaster } from '@/shared/ui/toast';
 
@@ -81,6 +82,7 @@ export default async function RootLayout({
             </MessagesProvider>
             <PushDeviceSync />
             <LocaleGate />
+            <NativeLocaleSync />
             <WidgetDataSync />
             <WidgetChangeSync />
             <TrackingStatusSync />

@@ -25,6 +25,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  delete window.__LANDIT_NATIVE__;
   cleanup();
   vi.clearAllMocks();
   vi.restoreAllMocks();
@@ -33,6 +34,21 @@ afterEach(() => {
 describe('LanguagePicker', () => {
   it('기기에 한국어나 일본어가 있으면 보이지 않는다', () => {
     deviceLanguages(['en-US', 'ja-JP']);
+
+    const { container } = renderPicker();
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('셸이 넘긴 기기 언어 목록에 일본어가 있으면 navigator가 영어만 줘도 보이지 않는다', () => {
+    deviceLanguages(['en-US']);
+    window.__LANDIT_NATIVE__ = {
+      platform: 'ios',
+      appVersion: '1.6.0',
+      buildNumber: '30',
+      bridgeVersion: 14,
+      languages: ['en-US', 'ja-JP'],
+    };
 
     const { container } = renderPicker();
 

@@ -6,6 +6,7 @@ import { useRef, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
+import { deviceLanguages } from '@/shared/i18n/device-languages';
 import {
   hasSupportedLanguage,
   saveLocaleCookie,
@@ -73,7 +74,7 @@ export const LanguagePicker = () => {
   const toggleRef = useRef<HTMLButtonElement>(null);
   // 서버 렌더·첫 렌더엔 숨긴다 — 기기 언어는 브라우저에서만 안다
   const visible = useClientOnlyValue(
-    () => !hasSupportedLanguage(navigator.languages ?? []),
+    () => !hasSupportedLanguage(deviceLanguages()),
     false,
   );
   if (!visible) return null;
