@@ -14,6 +14,7 @@ import { isMicPermissionDeniedError, SttError } from '@/shared/stt/errors';
 import { useStt, type SttErrorMeta } from '@/shared/stt/useStt';
 import { showToast } from '@/shared/ui/toast';
 
+import { ANSWER_MAX_LENGTH, clampAnswer } from './answer-length';
 import { removeNonEnglish } from './english-only';
 
 interface ConversationInputOptions {
@@ -58,6 +59,8 @@ export const useConversationInput = ({
   // 마이크를 켠 횟수 — 다시 말하기가 새 발화를 시작했다는 걸 남은 시간 눈금이 알아챈다
   const [listenCount, setListenCount] = useState(0);
   const reviewing = reviewed != null;
+  // 이번 듣기가 글자 수 한도로 멈췄는가 — 멈추는 사이 들어온 말로 다시 멈추지 않게
+  const limitStoppedRef = useRef(false);
   // 다시 말하기 직전의 확인 — 다시 말하다 취소하거나 인식에 실패하면 이 답으로 돌아간다
   const retryFromRef = useRef<typeof reviewed>(null);
 
@@ -83,7 +86,8 @@ export const useConversationInput = ({
 
   // 음성 최종 텍스트 — 비었으면(인식 실패) 마이크 대기로 되돌리고 이유를 알린다. 취소 후엔 오지 않는다(useStt 보장)
   const submitVoice = (raw: string, meta: SttResultMeta) => {
-    const content = raw.trim();
+    // 한도에 닿아 멈춘 사이에 붙은 말까지 오면 한도에서 자른다
+    const content = clampAnswer(raw.trim());
     const utteranceDurationMs = takeUtteranceDuration();
     const { sessionId, turnIndex } = trackContext();
     // 빈 결과까지 모두 남긴다 — 문의가 오면 엔진·대기 시간·종료 사유로 대조한다
@@ -156,6 +160,11 @@ export const useConversationInput = ({
     onInterim: (text, pending) => {
       setTranscript(text);
       setSpeechPending(pending);
+      // 한도에 닿으면 대신 멈춰 확인으로 넘긴다 — 더 말해도 보낼 수 없다. 멈추는 사이에 또 와도 한 번만
+      if (text.length < ANSWER_MAX_LENGTH || limitStoppedRef.current) return;
+      limitStoppedRef.current = true;
+      showToast('답변이 길어서 여기까지 받았어요');
+      finishListening();
     },
     onFinal: submitVoice,
     onError: recoverFromSttError,
@@ -195,6 +204,7 @@ export const useConversationInput = ({
       turn_index: turnIndex,
     });
     spokeFromRef.current = Date.now();
+    limitStoppedRef.current = false;
     setListenCount((count) => count + 1);
     void stt.start();
   };
@@ -236,7 +246,7 @@ export const useConversationInput = ({
   const submitReviewed = () => {
     if (!reviewed) return;
     // 고쳐 쓴 입력창이 조합을 끝내기 전에 보낼 수 있다 — 키보드 전송과 같은 거름망을 거친다
-    const content = removeNonEnglish(transcript).trim();
+    const content = clampAnswer(removeNonEnglish(transcript).trim());
     if (!content) return;
     // 처음 문장도 같은 거름망을 거친 값과 견준다 — 손대지 않았는데 걸러졌다고 고친 것으로 세지 않게
     const original = removeNonEnglish(reviewed.original).trim();
@@ -326,8 +336,8 @@ export const useConversationInput = ({
       submitReviewed();
       return;
     }
-    // 입력창이 조합을 끝내기 전에 전송될 수 있어 여기서도 한 번 더 거른다
-    const content = removeNonEnglish(transcript).trim();
+    // 입력창이 조합을 끝내기 전에 전송될 수 있어 여기서도 한 번 더 거르고 한도에서 자른다
+    const content = clampAnswer(removeNonEnglish(transcript).trim());
     if (!content) return;
     // 타이핑은 말한 게 아니라 쓴 것 — 발화 시간을 차감하지 않는다
     onContent(content, 'TEXT', 0);

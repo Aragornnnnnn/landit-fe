@@ -6,12 +6,20 @@
 // 칸 전체가 고치기 버튼이라 글자를 눌러도 바로 입력창으로 간다.
 'use client';
 
-import { useDeferredValue, useEffect, useId, useRef, useState } from 'react';
+import {
+  useDeferredValue,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { haptic } from '@/shared/haptics';
 import { ArrowUpIcon, CloseIcon } from '@/shared/ui/Icons';
 import { showToast } from '@/shared/ui/toast';
 
+import { ANSWER_MAX_LENGTH } from '../../model/answer-length';
 import type { ConversationPhase } from '../../model/conversation-machine';
 import { removeNonEnglish } from '../../model/english-only';
 import { useEditHint } from '../../model/useEditHint';
@@ -102,10 +110,12 @@ export const UserTranscript = ({
   return (
     <div
       // 색은 이어서 바뀌고, 확인으로 들어서는 순간 한 번 살짝 내려앉는다 — 듣기가 끝나고 이제 내 차례라는 신호
-      className={`mt-3 flex h-28 w-full flex-none flex-col rounded-2xl border px-5 py-3 transition-[background-color,border-color] duration-300 ease-out ${toneClass()} ${
+      // 말하는 중엔 높이를 고정해 끝 두 줄만 보이고, 확인 중엔 글 길이만큼 자라 남는 자리를 쓴다 — 다 읽고 보내게.
+      // 자리가 모자라면 줄어들고 안에서 스크롤된다
+      className={`mt-3 flex w-full flex-col rounded-2xl border px-5 py-3 transition-[background-color,border-color] duration-300 ease-out ${toneClass()} ${
         reviewing
-          ? `cursor-pointer text-left ${backFromEditing ? '' : 'animate-review-in'}`
-          : ''
+          ? `min-h-28 shrink cursor-pointer text-left ${backFromEditing ? '' : 'animate-review-in'}`
+          : 'h-28 flex-none'
       }`}
       // 안에 스크롤 영역이 있어 button 요소로는 감쌀 수 없다 — 역할과 키보드 조작을 직접 단다
       {...(reviewing && {
@@ -160,7 +170,7 @@ export const UserTranscript = ({
       <div
         ref={boxRef}
         onScroll={(event) => setClipped(event.currentTarget.scrollTop > 0)}
-        className={`mt-1.5 min-h-0 flex-1 overflow-y-auto overscroll-contain ${
+        className={`mt-1.5 min-h-0 flex-auto overflow-y-auto overscroll-contain ${
           clipped
             ? '[mask-image:linear-gradient(to_bottom,transparent,#000_1.75rem)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,#000_1.75rem)]'
             : ''
@@ -177,6 +187,10 @@ export const UserTranscript = ({
   );
 };
 
+// 글자 수를 보이기 시작하는 지점 — 한도의 90%
+const COUNTER_FROM = ANSWER_MAX_LENGTH * 0.9;
+const LIMIT_NOTICE = `${ANSWER_MAX_LENGTH.toLocaleString()}자까지 입력할 수 있어요`;
+
 // 키보드 입력 모드의 입력창 — 답변은 영어로만 받아서 그 밖의 글자를 걸러 낸다
 const TranscriptEditor = ({
   text,
@@ -192,6 +206,9 @@ const TranscriptEditor = ({
   // 글자가 안 써지는 순간을 바로 알아채게 박스를 흔든다. 끝나면 거둬야 다음에 다시 흔들 수 있다
   const [shaking, setShaking] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const counterId = useId();
+  // 칸이 줄어 앞부분이 위로 넘쳤는지 — 답변 칸처럼 윗변을 흐려 반쯤 잘린 줄이 보이지 않게 한다
+  const [clipped, setClipped] = useState(false);
 
   // 열리면 커서를 문장 끝에 둔다 — 브라우저는 채워진 글 앞에 두는데, 말한 문장을 고치거나 이어 쓰는 자리는 끝이다.
   // 처음 한 번만이다. 그 뒤엔 사용자가 누른 자리를 존중한다
@@ -201,7 +218,16 @@ const TranscriptEditor = ({
     input.setSelectionRange(input.value.length, input.value.length);
     // 긴 답은 입력창 높이를 넘는다 — 커서가 있는 끝이 보이게 내려 둔다
     input.scrollTop = input.scrollHeight;
+    setClipped(input.scrollTop > 0);
   }, []);
+
+  // 글 높이만큼 늘린다 — 남는 자리를 두고 좁은 칸 안에서 스크롤하지 않게. 자리가 모자라면 칸이 줄고 안에서 스크롤된다
+  useLayoutEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.style.height = 'auto';
+    input.style.height = `${input.scrollHeight}px`;
+  }, [text]);
 
   // 글자가 걸러졌다는 걸 흔들림·진동·토스트로 바로 알린다
   const warnNonEnglish = () => {
@@ -211,10 +237,26 @@ const TranscriptEditor = ({
     showToast('영어로만 입력할 수 있어요');
   };
 
-  // 걸러 낸 뒤 넘긴다. 지운 만큼 커서를 당겨 쓰던 자리에 둔다
+  // 걸러 내고 한도에서 자른 뒤 넘긴다. 지운 만큼 커서를 당겨 쓰던 자리에 둔다
   const acceptTyping = (input: HTMLTextAreaElement) => {
     const { value, selectionStart } = input;
     const english = removeNonEnglish(value);
+    // 한도를 넘기면 방금 끼워 넣은 글만 자른다 — 커서 뒤에 있던 글은 그대로 두어야 중간에 써도 뒷부분이 사라지지 않는다
+    if (english.length > ANSWER_MAX_LENGTH) {
+      const caret = removeNonEnglish(value.slice(0, selectionStart)).length;
+      const after = english.slice(caret);
+      const before = english
+        .slice(0, caret)
+        .slice(0, ANSWER_MAX_LENGTH - after.length);
+      onChange?.(before + after);
+      setShaking(true);
+      haptic('error');
+      showToast(LIMIT_NOTICE);
+      requestAnimationFrame(() =>
+        input.setSelectionRange(before.length, before.length),
+      );
+      return;
+    }
     onChange?.(english);
     // 분해형 악센트를 합치기만 한 것은 지운 게 아니다 — 합친 원문과 비교한다
     if (english === value.normalize('NFC')) return;
@@ -228,12 +270,26 @@ const TranscriptEditor = ({
   return (
     <div
       onAnimationEnd={() => setShaking(false)}
-      // 자리가 모자라도 줄지 않는다 — 줄면 보내기 버튼이 칸 밖으로 넘쳐 키보드 뒤로 들어간다.
       // 간격·여백·글자는 답변 칸과 같다 — 확인 칸을 눌러 열 때 글이 제자리에 있어야 같은 칸이 입력 상태가 된 것으로 읽힌다
-      className={`mt-3 w-full flex-none rounded-2xl border border-primary bg-card px-5 py-3 ${shaking ? 'animate-shake' : ''}`}
+      // 글이 길면 칸도 자라고, 자리가 모자라면 줄어 안에서 스크롤된다 — 보내기 버튼은 늘 칸 안에 남는다
+      className={`mt-3 flex w-full shrink flex-col rounded-2xl border border-primary bg-card px-5 py-3 ${shaking ? 'animate-shake' : ''}`}
+      // 줄어도 라벨·두 줄·보내기 버튼까지는 남긴다 — 여백·테두리·간격·버튼(4.5rem) + 라벨 줄 + 글 두 줄
+      style={{
+        minHeight:
+          'calc(4.5rem + max(1rem, 1rem * var(--font-scale)) + 2.75rem * var(--font-scale))',
+      }}
     >
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold text-muted-foreground">내 답변</p>
+        {/* 한도에 가까워졌을 때만 글자 수를 보인다 — 늘 띄우면 짧은 답에도 숫자를 신경 쓰게 된다 */}
+        {text.length >= COUNTER_FROM && (
+          <p
+            id={counterId}
+            className={`mr-2 ml-auto text-xs font-semibold tabular-nums ${text.length >= ANSWER_MAX_LENGTH ? 'text-destructive' : 'text-muted-foreground'}`}
+          >
+            {text.length.toLocaleString()}/{ANSWER_MAX_LENGTH.toLocaleString()}
+          </p>
+        )}
         <button
           onClick={onCancel}
           aria-label="입력 취소"
@@ -244,9 +300,14 @@ const TranscriptEditor = ({
           <CloseIcon size={16} strokeWidth={2.5} />
         </button>
       </div>
+      {/* 토스트는 화면 읽기에 닿지 않는다 — 한도에 닿은 걸 따로 읽어 준다 */}
+      <p role="status" className="sr-only">
+        {text.length >= ANSWER_MAX_LENGTH ? LIMIT_NOTICE : ''}
+      </p>
       <textarea
         ref={inputRef}
         autoFocus
+        aria-describedby={text.length >= COUNTER_FROM ? counterId : undefined}
         value={text}
         onCompositionStart={() => {
           composingRef.current = true;
@@ -276,16 +337,22 @@ const TranscriptEditor = ({
         }}
         placeholder="답변을 입력하세요"
         rows={2}
-        className="mt-1.5 max-h-[14dvh] w-full resize-none bg-transparent text-base leading-snug font-semibold text-foreground outline-none placeholder:text-muted-foreground/50"
+        onScroll={(event) => setClipped(event.currentTarget.scrollTop > 0)}
+        // 글은 칸 너비를 다 쓴다. 높이는 글만큼이고, 칸이 줄면 두 줄까지만 같이 줄어 안에서 스크롤된다
+        className={`mt-1.5 min-h-[2lh] w-full shrink resize-none bg-transparent text-base leading-snug font-semibold text-foreground outline-none placeholder:text-muted-foreground/50 ${
+          clipped
+            ? '[mask-image:linear-gradient(to_bottom,transparent,#000_1.75rem)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,#000_1.75rem)]'
+            : ''
+        }`}
       />
-      <div className="flex justify-end">
+      <div className="flex flex-none justify-end">
         <button
           onClick={onSubmit}
           disabled={!text.trim()}
           aria-label="답변 전송"
           // X보다 한 박자 늦게 — 위에서 아래로 차례로 열린다
           style={{ '--delay': '50ms' } as React.CSSProperties}
-          className="animate-control-in flex size-10 items-center justify-center rounded-full bg-primary text-white transition-opacity active:scale-95 disabled:opacity-30"
+          className="animate-control-in flex size-10 flex-none items-center justify-center rounded-full bg-primary text-white transition-opacity active:scale-95 disabled:opacity-30"
         >
           <ArrowUpIcon size={20} strokeWidth={2.5} />
         </button>
