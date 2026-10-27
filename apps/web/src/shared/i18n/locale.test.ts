@@ -6,6 +6,7 @@ import {
   localeFromAcceptLanguage,
   localeFromDocument,
   resolveRequestLocale,
+  sellsKoreaOnlyOffers,
 } from './locale';
 
 // 출시 스위치는 빌드 환경 값이라 경계로 본다 — 기본은 켠 상태로 규칙을 검증한다
@@ -101,5 +102,12 @@ describe('localeFromDocument', () => {
     document.documentElement.lang = 'fr';
 
     expect(localeFromDocument()).toBe('ko');
+  });
+});
+
+describe('sellsKoreaOnlyOffers', () => {
+  it('한국어 화면만 한국 전용 혜택을 보여 준다', () => {
+    expect(sellsKoreaOnlyOffers('ko')).toBe(true);
+    expect(sellsKoreaOnlyOffers('ja')).toBe(false);
   });
 });

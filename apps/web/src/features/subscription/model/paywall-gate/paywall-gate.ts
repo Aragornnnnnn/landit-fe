@@ -3,6 +3,7 @@
 import type { NativeContext } from '@landit/bridge';
 
 import { isAppVersionAtLeast } from '@/shared/bridge/app-version';
+import { sellsKoreaOnlyOffers, type Locale } from '@/shared/i18n/locale';
 
 export interface PaymentEnvironment {
   /** NEXT_PUBLIC_PAYMENT_ENABLED — 결제를 막아야 할 때 끄는 웹 스위치 */
@@ -21,6 +22,8 @@ export interface PaywallGateInput {
 export interface RewardEnvironment {
   /** NEXT_PUBLIC_REFUND_CHALLENGE — 환급 챌린지 배포 스위치 */
   rewardEnabled: boolean;
+  /** 화면 언어 — 환급은 한국어 화면에서만 판다 */
+  locale: Locale;
   /** 셸이 준 플랫폼·앱 버전. 브라우저면 null */
   context: NativeContext | null;
 }
@@ -42,14 +45,16 @@ export const isPaymentLive = ({ paymentEnabled, inApp }: PaymentEnvironment) =>
   paymentEnabled && inApp;
 
 /**
- * 환급 챌린지가 열린 환경인가 — 스위치가 켜져 있고, 환급 상품이 실린 앱 버전일 때만.
- * 그 전 버전에 열면 심사를 통과하지 않은 상품이 기존 사용자에게 보여 결제가 실패한다.
+ * 환급 챌린지가 열린 환경인가 — 스위치가 켜져 있고, 한국어 화면이고, 환급 상품이 실린 앱 버전일 때만.
+ * 그 전 버전에 열면 심사를 통과하지 않은 상품이 기존 사용자에게 보여 결제가 실패한다 (닫히면 적립 표시·친구 초대도 함께 빠진다).
  */
 export const isRewardChallengeLive = ({
   rewardEnabled,
+  locale,
   context,
 }: RewardEnvironment) => {
-  if (!rewardEnabled || context === null) return false;
+  if (!rewardEnabled || !sellsKoreaOnlyOffers(locale) || context === null)
+    return false;
   return isAppVersionAtLeast(
     context.appVersion,
     REWARD_MIN_APP_VERSION[context.platform],

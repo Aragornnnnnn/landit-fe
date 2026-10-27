@@ -7,6 +7,9 @@ export type Locale = (typeof LOCALES)[number];
 // 지원하지 않는 언어의 기기는 지금처럼 한국어로 보여 준다
 export const DEFAULT_LOCALE: Locale = 'ko';
 
+/** 한국에서만 파는 혜택(환급·친구 초대·이탈 할인)을 보여 줄 화면인가 — 일본어 화면은 구독만 판다 */
+export const sellsKoreaOnlyOffers = (locale: Locale) => locale === 'ko';
+
 const isLocale = (value: string): value is Locale =>
   (LOCALES as readonly string[]).includes(value);
 
