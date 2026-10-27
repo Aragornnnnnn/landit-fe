@@ -9,6 +9,7 @@
 import {
   useDeferredValue,
   useEffect,
+  useEffectEvent,
   useId,
   useLayoutEffect,
   useRef,
@@ -21,7 +22,7 @@ import { showToast } from '@/shared/ui/toast';
 
 import { ANSWER_MAX_LENGTH } from '../../model/answer-length';
 import type { ConversationPhase } from '../../model/conversation-machine';
-import { removeNonEnglish } from '../../model/english-only';
+import { hasNonEnglish, removeNonEnglish } from '../../model/english-only';
 import { useEditHint } from '../../model/useEditHint';
 import { ListeningDots } from './ListeningDots';
 import { TypingCursor } from './TypingCursor';
@@ -203,6 +204,9 @@ const TranscriptEditor = ({
 >) => {
   // 조합 중에 글자를 지우면 입력기가 꼬여 글자가 깨진다 — 조합이 끝난 뒤에 거른다
   const composingRef = useRef(false);
+  // 막은 한글을 키보드는 아직 있다고 믿는다 — 그 글자 수. iOS 한글 키보드는 조합을 "지우고 다시 넣기"로 해서,
+  // 이만큼의 지우기는 막은 글자를 지우려는 것이다. 그대로 두면 앞 영어가 지워진다
+  const blockedRef = useRef(0);
   // 글자가 안 써지는 순간을 바로 알아채게 박스를 흔든다. 끝나면 거둬야 다음에 다시 흔들 수 있다
   const [shaking, setShaking] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -236,6 +240,33 @@ const TranscriptEditor = ({
     // 이어 치는 동안 계속 띄워도 토스트는 그대로 떠 있고 시간만 늘어난다
     showToast('영어로만 입력할 수 있어요');
   };
+
+  // 조합 없이 바로 넣는 키보드의 한글은 들어가기 전에 막는다 — 넣은 뒤 지우면 키보드가 기억하는 글과 어긋난다.
+  // 조합으로 넣는 키보드(안드로이드 등)는 이 신호를 막을 수 없어 아래 조합 끝 거르기가 맡는다
+  const guardKeyboardInput = useEffectEvent((event: InputEvent) => {
+    if (event.inputType === 'insertText' && event.data != null) {
+      // 띄어쓰기·영어를 치면 키보드가 합치던 글자를 끝낸다
+      if (!hasNonEnglish(event.data)) {
+        blockedRef.current = 0;
+        return;
+      }
+      event.preventDefault();
+      blockedRef.current += event.data.length;
+      warnNonEnglish();
+      return;
+    }
+    if (event.inputType === 'deleteContentBackward' && blockedRef.current > 0) {
+      event.preventDefault();
+      blockedRef.current -= 1;
+    }
+  });
+  // React의 onBeforeInput은 inputType을 주지 않아 실제 이벤트를 직접 듣는다
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.addEventListener('beforeinput', guardKeyboardInput);
+    return () => input.removeEventListener('beforeinput', guardKeyboardInput);
+  }, []);
 
   // 걸러 내고 한도에서 자른 뒤 넘긴다. 지운 만큼 커서를 당겨 쓰던 자리에 둔다
   const acceptTyping = (input: HTMLTextAreaElement) => {
@@ -318,9 +349,15 @@ const TranscriptEditor = ({
         }}
         // 조합 끝 신호를 빠뜨리는 키보드가 있다 — 입력창을 떠나면 조합도 끝난 것으로 보고 남은 글자를 거른다
         onBlur={(event) => {
+          // 입력창을 떠나면 키보드도 합치던 글자를 잊는다
+          blockedRef.current = 0;
           if (!composingRef.current) return;
           composingRef.current = false;
           acceptTyping(event.currentTarget);
+        }}
+        // 커서를 옮기면 키보드는 합치던 글자를 잊는다
+        onPointerDown={() => {
+          blockedRef.current = 0;
         }}
         onChange={(event) => {
           if (composingRef.current) onChange?.(event.target.value);
