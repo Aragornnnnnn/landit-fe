@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import type { AccentLocale } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/shared/ui/Button';
 
@@ -20,6 +21,7 @@ export const AccentForm = ({
   footnote?: string;
   onConfirm: (locale: AccentLocale) => void;
 }) => {
+  const t = useTranslations('onboarding.accentForm');
   const [selected, setSelected] = useState<AccentLocale | null>(initial);
 
   return (
@@ -37,7 +39,7 @@ export const AccentForm = ({
         disabled={selected === null}
         onClick={() => selected && onConfirm(selected)}
       >
-        선택했어요!
+        {t('confirmButton')}
       </Button>
     </>
   );

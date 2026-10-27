@@ -6,6 +6,7 @@
 
 import { useEffect, useRef } from 'react';
 import { EVENTS, type AccentLocale } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 
 import { track } from '@/shared/analytics';
 import { useFocusTrap } from '@/shared/lib/useFocusTrap';
@@ -16,6 +17,7 @@ import { useSaveAccentMutation } from '../model/useSaveAccentMutation';
 import { AccentStep } from './steps/AccentStep';
 
 export const ProfileGate = () => {
+  const t = useTranslations('onboarding.profileGate');
   const accentQuery = useAccentQuery();
   const saveAccent = useSaveAccentMutation();
 
@@ -45,7 +47,7 @@ export const ProfileGate = () => {
       ref={panelRef}
       role="dialog"
       aria-modal="true"
-      aria-label="시작하기 전에 몇 가지만 알려주세요"
+      aria-label={t('dialogLabel')}
       tabIndex={-1}
       className="fixed inset-0 z-50 mx-auto flex h-dvh max-w-[430px] flex-col overflow-hidden bg-background px-6 text-foreground outline-none"
       style={{

@@ -3,6 +3,7 @@
 'use client';
 
 import type { AccentLocale } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import Image, { type StaticImageData } from 'next/image';
 
 import auFlag from '../../assets/flag/au.svg';
@@ -17,6 +18,13 @@ const FLAGS: Record<AccentLocale, StaticImageData> = {
   EN_AU: auFlag,
 };
 
+// Record라 선택지가 늘면 이름 누락도 타입 에러로 잡힌다
+const LABEL_KEYS = {
+  EN_US: 'americanLabel',
+  EN_GB: 'britishLabel',
+  EN_AU: 'australianLabel',
+} as const satisfies Record<AccentLocale, string>;
+
 export const AccentOptions = ({
   selected,
   onSelect,
@@ -24,35 +32,38 @@ export const AccentOptions = ({
   // null이면 아무것도 강조하지 않는다 — 지금 값을 아직 모를 때다
   selected: AccentLocale | null;
   onSelect: (locale: AccentLocale) => void;
-}) => (
-  <div className="flex flex-col gap-3">
-    {ACCENTS.map((item) => {
-      const isSelected = selected === item.locale;
-      return (
-        <button
-          key={item.locale}
-          type="button"
-          onClick={() => onSelect(item.locale)}
-          aria-pressed={isSelected}
-          className={`flex w-full items-center gap-3 rounded-2xl px-4 py-4 text-left transition-[translate,box-shadow,background-color] duration-75 ${
-            isSelected
-              ? 'translate-y-[3px] bg-selected shadow-none'
-              : 'bg-card shadow-[0_3px_0_var(--border)] active:translate-y-[3px] active:shadow-none'
-          }`}
-        >
-          {/* 국기는 3:2 비율 그대로 — 모서리 라운드는 에셋에 들어 있다 */}
-          <Image
-            src={FLAGS[item.locale]}
-            alt=""
-            width={30}
-            height={20}
-            className="shrink-0"
-          />
-          <span className="text-base font-extrabold text-foreground">
-            {item.label}
-          </span>
-        </button>
-      );
-    })}
-  </div>
-);
+}) => {
+  const t = useTranslations('onboarding.accentOptions');
+  return (
+    <div className="flex flex-col gap-3">
+      {ACCENTS.map((locale) => {
+        const isSelected = selected === locale;
+        return (
+          <button
+            key={locale}
+            type="button"
+            onClick={() => onSelect(locale)}
+            aria-pressed={isSelected}
+            className={`flex w-full items-center gap-3 rounded-2xl px-4 py-4 text-left transition-[translate,box-shadow,background-color] duration-75 ${
+              isSelected
+                ? 'translate-y-[3px] bg-selected shadow-none'
+                : 'bg-card shadow-[0_3px_0_var(--border)] active:translate-y-[3px] active:shadow-none'
+            }`}
+          >
+            {/* 국기는 3:2 비율 그대로 — 모서리 라운드는 에셋에 들어 있다 */}
+            <Image
+              src={FLAGS[locale]}
+              alt=""
+              width={30}
+              height={20}
+              className="shrink-0"
+            />
+            <span className="text-base font-extrabold text-foreground">
+              {t(LABEL_KEYS[locale])}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
