@@ -24,7 +24,7 @@
     "inputLabel": "ニックネーム",
     "inputPlaceholder": "名前を入力してください",
     "tooLongError": "{max}文字まで入力できます",
-    "invalidCharError": "文字・数字・スペースのみ使えます",
+    "invalidCharError": "記号や絵文字は使えません",
     "saveFailedError": "保存できませんでした。もう一度お試しください",
     "saveButton": "この名前にします",
     "savedToast": "これから{nickname}さんとお呼びします"
@@ -36,7 +36,7 @@
     "canceledLabel": "解約予定"
   },
   "accentMenu": {
-    "title": "学ぶアクセント",
+    "title": "英語のアクセント",
     "sheetTitle": "どの英語を学びたいですか？",
     "sheetSubtitle": "おすすめフレーズとフィードバックが変わります"
   },
@@ -93,7 +93,7 @@
     "title": "退会",
     "blockedDescription": "サブスクリプション中は退会できません。<br></br>退会してもストアの決済は続きます。<br></br>先にサブスクリプションを解約してください。",
     "blockedCloseButton": "閉じる",
-    "manageButton": "管理画面へ",
+    "manageButton": "サブスク管理へ",
     "description": "アカウントと利用履歴が削除されます。続けますか？",
     "closeButton": "閉じる",
     "deletingButton": "処理中",
