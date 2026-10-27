@@ -41,5 +41,21 @@
     "emptyDescription": "아직 나눈 대화가 없어요.<br></br>오늘 한 대화부터 여기 쌓여요.",
     "guideCaption": "대화를 누르면 그때 만든 표현을 다시 볼 수 있어요.",
     "expressionProgressLabel": "표현 {done}/{total}"
+  },
+  "historyDetail": {
+    "transcriptLabel": "대화 다시 보기",
+    "transcriptCorrectionsLabel": "대화 다시 보기, 더 자연스러운 말 {count}개",
+    "loadError": "대화를 불러오지 못했어요.",
+    "dateLabel": "대화한 날",
+    "speakingTimeLabel": "말한 시간",
+    "exchangeLabel": "주고받은 말",
+    "exchangeCountLabel": "{count}개",
+    "expressionsTitle": "이날 만든 표현",
+    "generationFailedDescription": "표현을 만들지 못했어요.<br></br>다시 만들어 볼까요?",
+    "regenerateButton": "다시 만들기",
+    "generatingDescription": "이 대화의 표현은 아직 만들어지는 중이에요.<br></br>잠시 후 다시 열어봐 주세요."
+  },
+  "historyDetailSkeleton": {
+    "loadingLabel": "표현을 불러오는 중"
   }
 }

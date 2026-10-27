@@ -41,5 +41,21 @@
     "emptyDescription": "まだ会話がありません。<br></br>今日の会話からここにたまっていきます。",
     "guideCaption": "会話をタップすると、そのときのフレーズを見返せます。",
     "expressionProgressLabel": "フレーズ {done}/{total}"
+  },
+  "historyDetail": {
+    "transcriptLabel": "会話を見返す",
+    "transcriptCorrectionsLabel": "会話を見返す、より自然な言い方{count}件",
+    "loadError": "会話を読み込めませんでした。",
+    "dateLabel": "会話した日",
+    "speakingTimeLabel": "話した時間",
+    "exchangeLabel": "やりとり",
+    "exchangeCountLabel": "{count}回",
+    "expressionsTitle": "この日のフレーズ",
+    "generationFailedDescription": "フレーズを作れませんでした。<br></br>もう一度作ってみますか？",
+    "regenerateButton": "もう一度作る",
+    "generatingDescription": "この会話のフレーズはまだ作成中です。<br></br>しばらくしてから開いてください。"
+  },
+  "historyDetailSkeleton": {
+    "loadingLabel": "フレーズを読み込み中"
   }
 }

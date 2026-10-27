@@ -14,6 +14,7 @@ import { toExpressionListItems } from '@/features/small-talk/model/session-expre
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
+import { lineBreak } from '@/shared/i18n/rich';
 import { toDayLabel } from '@/shared/lib/day-label';
 import {
   sessionExpressionPath,
@@ -80,8 +81,10 @@ export const SmallTalkHistoryDetail = ({
               className="relative flex size-10 items-center justify-center text-foreground active:opacity-60"
               aria-label={
                 hasCorrections
-                  ? `대화 다시 보기, 더 자연스러운 말 ${correctionCount}개`
-                  : '대화 다시 보기'
+                  ? t('historyDetail.transcriptCorrectionsLabel', {
+                      count: correctionCount,
+                    })
+                  : t('historyDetail.transcriptLabel')
               }
             >
               <ChatHistoryIcon size={22} />
@@ -102,7 +105,7 @@ export const SmallTalkHistoryDetail = ({
         <RetryNotice
           fill
           screen="expression_list"
-          message={error.message || '대화를 불러오지 못했어요.'}
+          message={error.message || t('historyDetail.loadError')}
           onRetry={retry}
         />
       ) : isLoading ? (
@@ -115,12 +118,12 @@ export const SmallTalkHistoryDetail = ({
             <div className="px-5 pt-1 pb-4">
               <div className="flex items-center rounded-2xl bg-card px-5 py-3.5 shadow-sm">
                 <Stat
-                  label="대화한 날"
-                  value={toDayLabel(session.completedAt)}
+                  label={t('historyDetail.dateLabel')}
+                  value={toDayLabel(session.completedAt, locale)}
                 />
                 <Divider />
                 <Stat
-                  label="말한 시간"
+                  label={t('historyDetail.speakingTimeLabel')}
                   value={toSpeakingTimeLabel(
                     session.userSpeakingDurationMs,
                     locale,
@@ -128,8 +131,10 @@ export const SmallTalkHistoryDetail = ({
                 />
                 <Divider />
                 <Stat
-                  label="주고받은 말"
-                  value={`${session.messages.length}개`}
+                  label={t('historyDetail.exchangeLabel')}
+                  value={t('historyDetail.exchangeCountLabel', {
+                    count: session.messages.length,
+                  })}
                 />
               </div>
             </div>
@@ -138,7 +143,7 @@ export const SmallTalkHistoryDetail = ({
           {/* 표현은 대화가 끝난 뒤 서버가 만든다 — 아직이면 리스트에 셀 것이 없다 */}
           {expressions && expressions.length > 0 ? (
             <ExpressionList
-              title="이날 만든 표현"
+              title={t('historyDetail.expressionsTitle')}
               expressions={expressions}
               onSelect={goExpression}
             />
@@ -146,8 +151,11 @@ export const SmallTalkHistoryDetail = ({
             session &&
             (generationStuck ? (
               <div className="flex flex-col items-center gap-4 px-8 pt-10 text-center">
-                <p className="text-sm leading-6 break-keep whitespace-pre-line text-muted-foreground">
-                  {'표현을 만들지 못했어요.\n다시 만들어 볼까요?'}
+                <p className="text-sm leading-6 break-keep text-muted-foreground">
+                  {t.rich(
+                    'historyDetail.generationFailedDescription',
+                    lineBreak,
+                  )}
                 </p>
                 <Button
                   variant="secondary"
@@ -155,14 +163,12 @@ export const SmallTalkHistoryDetail = ({
                   className="w-auto px-6"
                   onClick={() => void regenerate()}
                 >
-                  다시 만들기
+                  {t('historyDetail.regenerateButton')}
                 </Button>
               </div>
             ) : (
-              <p className="px-8 pt-10 text-center text-sm break-keep whitespace-pre-line text-muted-foreground">
-                {
-                  '이 대화의 표현은 아직 만들어지는 중이에요.\n잠시 후 다시 열어봐 주세요.'
-                }
+              <p className="px-8 pt-10 text-center text-sm break-keep text-muted-foreground">
+                {t.rich('historyDetail.generatingDescription', lineBreak)}
               </p>
             ))
           )}
