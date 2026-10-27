@@ -29,14 +29,23 @@ const toBars = (
   };
 };
 
+// 오늘 말한 시간이 0초면 전부 타이핑한 대화다 — "0초"는 기록으로 뜻이 없어 그 줄을 뺀다
 export const toComparisonRows = ({
   previous,
   current,
 }: SmallTalkSummaryComparison): ComparisonRow[] => [
-  {
-    label: '말한 시간',
-    ...toBars(previous.speakingMs, current.speakingMs, toSpeakingTimeLabel),
-  },
+  ...(current.speakingMs === 0
+    ? []
+    : [
+        {
+          label: '말한 시간',
+          ...toBars(
+            previous.speakingMs,
+            current.speakingMs,
+            toSpeakingTimeLabel,
+          ),
+        },
+      ]),
   {
     label: '주고받은 말',
     ...toBars(previous.turnCount, current.turnCount, (count) => `${count}번`),
