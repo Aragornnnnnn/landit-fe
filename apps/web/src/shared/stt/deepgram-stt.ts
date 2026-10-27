@@ -28,6 +28,7 @@ export interface DeepgramSttOptions extends SttHandlers {
   lang: string;
   endpointingMs: number;
   stopOnSilence: boolean; // false면 침묵에도 안 끝난다 — 종료는 stop()뿐
+  keyterms?: readonly string[]; // 잘 받아쓰게 할 고유명사 — 단어마다 keyterm으로 따로 실어야 한다
 }
 
 const TOKEN_ENDPOINT = '/api/stt/token';
@@ -60,8 +61,15 @@ interface DeepgramMessage {
 export const startDeepgramStt = async (
   options: DeepgramSttOptions,
 ): Promise<SttSession> => {
-  const { lang, endpointingMs, stopOnSilence, onInterim, onFinal, onError } =
-    options;
+  const {
+    lang,
+    endpointingMs,
+    stopOnSilence,
+    keyterms = [],
+    onInterim,
+    onFinal,
+    onError,
+  } = options;
 
   // 실시간 오디오 캡처 미지원(구형 iOS WKWebView 등) → throw로 폴백 유도
   if (
@@ -127,6 +135,8 @@ export const startDeepgramStt = async (
         }
       : { endpointing: 'false' }),
   });
+  // 쉼표로 묶으면 오류 없이 무시된다 — 단어마다 같은 이름으로 반복해 붙인다
+  keyterms.forEach((term) => params.append('keyterm', term));
   // 소켓 생성도 동기로 던질 수 있다(프로토콜 문자열로 쓰는 토큰이 비정상이거나 CSP 차단) — 마이크를 되돌려놓고 폴백을 유도한다
   let socket: WebSocket;
   try {

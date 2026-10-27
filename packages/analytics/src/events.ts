@@ -65,6 +65,8 @@ export const EVENTS = {
   RECORDING_STARTED: 'Recording Started',
   RECORDING_STOPPED: 'Recording Stopped',
   RECORDING_CANCELED: 'Recording Canceled',
+  // 말한 뒤 확인 단계의 마무리 — 그대로·고쳐서 보냈는지, 다시 말했는지. 잘못 알아들은 빈도를 본다
+  TRANSCRIPT_REVIEWED: 'Transcript Reviewed',
   MIC_SETTINGS_OPENED: 'Mic Settings Opened',
   INPUT_MODE_SWITCHED: 'Input Mode Switched',
   SCENARIO_TALK_TURN_COMPLETED: 'Scenario Talk Turn Completed',
@@ -142,6 +144,9 @@ export const EVENTS = {
   NOTIFICATION_CONSENT_ACCEPTED: 'Notification Consent Accepted',
   NOTIFICATION_CONSENT_DISMISSED: 'Notification Consent Dismissed',
   NOTIFICATION_PERMISSION_DECIDED: 'Notification Permission Decided',
+
+  // 광고 추적 허용(iOS ATT) — 앱을 처음 켤 때 셸이 띄우는 권한창의 답. 지금 상태는 유저 속성 att_status로 본다
+  TRACKING_PERMISSION_DECIDED: 'Tracking Permission Decided',
 
   // 이벤트 공지 팝업 — 홈에 뜨는 운영 공지. 어느 공지인지는 popup_id로 가른다
   EVENT_POPUP_VIEWED: 'Event Popup Viewed',
@@ -412,6 +417,8 @@ export type RewardProfileState =
 // OS 알림 권한창을 띄운 지면 — 안내 시트 둘에 온보딩 스텝이 더해진다
 export type NotificationPermissionSource =
   'onboarding' | NotificationConsentSource;
+// iOS 광고 추적(ATT) 권한 상태 — 제한(restricted)은 셸이 denied로 보낸다
+export type TrackingPermissionStatus = 'granted' | 'denied' | 'undetermined';
 // 소감을 물은 순간과 답 — 닫기(딤·뒤로가기)도 답으로 셈해 다시 묻지 않는다.
 // talk = 대화 종류(첫 소감), review = 좋았다고 한 사람에게 완료 때마다 청하는 스토어 리뷰 요청
 export type SatisfactionTalk = 'scenario' | 'smalltalk';
@@ -563,6 +570,16 @@ export type EventProps = {
   // ■(답변 완료) 탭 순간 — 이후 인식·제출 결과는 각 대화의 Turn Completed / Turn Failed로 이어진다
   'Recording Stopped': { session_id?: number; turn_index: number };
   'Recording Canceled': { session_id?: number; turn_index: number };
+  // 인식된 문장을 확인하고 마무리한 순간 — retry는 다시 말하기, leave는 확인 화면에서 대화를 나감.
+  // edited는 고쳐서 보냈는가(send가 아니면 false), edit_opened는 고치기를 한 번이라도 열었는가, review_ms는 확인 화면에 머문 시간
+  'Transcript Reviewed': {
+    session_id?: number;
+    turn_index: number;
+    action: 'send' | 'retry' | 'leave';
+    edited: boolean;
+    edit_opened: boolean;
+    review_ms: number;
+  };
   'Mic Settings Opened': undefined;
   'Input Mode Switched': { session_id?: number; mode: TurnInputType };
   'Scenario Talk Turn Completed': {
@@ -848,6 +865,8 @@ export type EventProps = {
     granted: boolean;
     source: NotificationPermissionSource;
   };
+  // 이번 실행에서 권한창이 떠 답한 경우만 — 셸의 회신(TRACKING_STATUS의 prompted)에서 찍는다. 제한(restricted)은 거부로 온다
+  'Tracking Permission Decided': { granted: boolean };
 
   // 탭 = 이미지나 「자세히 보기」로 공지 화면에 들어감. 닫기는 버튼·바깥·뒤로가기를 가리지 않는다
   'Event Popup Viewed': { popup_id: number };
@@ -1013,6 +1032,7 @@ export interface UserProperties {
   accent_locale: AccentLocale | null;
   reward_state: RewardProfileState;
   has_alarm: boolean;
+  att_status: TrackingPermissionStatus;
 }
 
 // 한 번에 갱신할 속성들 — null은 "이 사람에게는 값이 없다"라는 뜻으로 프로필에서 그 속성을 지운다

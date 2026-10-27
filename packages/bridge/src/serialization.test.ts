@@ -384,6 +384,45 @@ describe('위젯 설치·삭제 메시지', () => {
   });
 });
 
+describe('광고 추적(ATT) 상태 메시지', () => {
+  it('웹의 추적 상태 요청은 페이로드 없이 오간다 (round-trip)', () => {
+    const message = { type: 'REQUEST_TRACKING_STATUS' } as const;
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('추적 상태 응답을 그대로 되돌린다 (round-trip)', () => {
+    const message = {
+      type: 'TRACKING_STATUS',
+      status: 'denied',
+      prompted: true,
+    } as const;
+
+    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('규격 밖 상태거나 권한창 여부가 빠지면 버린다', () => {
+    expect(
+      parseNativeToWebMessage(
+        JSON.stringify({
+          type: 'TRACKING_STATUS',
+          status: 'restricted',
+          prompted: false,
+        }),
+      ),
+    ).toBeNull();
+    expect(
+      parseNativeToWebMessage(
+        JSON.stringify({ type: 'TRACKING_STATUS', status: 'granted' }),
+      ),
+    ).toBeNull();
+  });
+});
+
 describe('parseWebToNativeMessage — 결제', () => {
   it('로그인 사용자 식별 요청을 그대로 되돌린다 (round-trip)', () => {
     const message = { type: 'IDENTIFY', userId: '42' } as const;
@@ -772,5 +811,26 @@ describe('알람 목록 (GET_ALARM_LIST·CANCEL_ALARM ↔ ALARM_LIST)', () => {
     expect(parse({ id: 'a' })).toEqual({ type: 'CANCEL_ALARM', id: 'a' });
     expect(parse({ id: '' })).toBeNull();
     expect(parse({})).toBeNull();
+  });
+});
+
+describe('parseWebToNativeMessage — 광고 이벤트', () => {
+  it('광고 이벤트 기록 요청을 그대로 되돌린다 (round-trip)', () => {
+    const message = {
+      type: 'LOG_AD_EVENT',
+      event: 'first_scenario_talk_completed',
+    } as const;
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('정해 두지 않은 광고 이벤트면 버린다 — 셸이 메타 이벤트로 옮길 수 없다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({ type: 'LOG_AD_EVENT', event: 'purchase' }),
+      ),
+    ).toBeNull();
   });
 });

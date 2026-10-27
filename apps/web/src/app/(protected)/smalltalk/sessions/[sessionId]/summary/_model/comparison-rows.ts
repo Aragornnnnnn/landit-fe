@@ -1,6 +1,9 @@
 // 지난번과 비교 카드의 줄 — 세 지표를 라벨·값·막대 길이로 바꾼다. 막대는 둘 중 큰 값을 가득으로 친다
 import type { SmallTalkSummaryComparison } from '@/features/small-talk/api/small-talk';
-import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
+import {
+  hasSpokenTime,
+  toSpeakingTimeLabel,
+} from '@/features/small-talk/lib/speaking-time';
 import { toDayLabel } from '@/shared/lib/day-label';
 
 interface Bar {
@@ -29,14 +32,23 @@ const toBars = (
   };
 };
 
+// 오늘 말한 시간이 0초면(전부 타이핑) 그 줄을 뺀다. 지난번만 0초면 그대로 둔다
 export const toComparisonRows = ({
   previous,
   current,
 }: SmallTalkSummaryComparison): ComparisonRow[] => [
-  {
-    label: '말한 시간',
-    ...toBars(previous.speakingMs, current.speakingMs, toSpeakingTimeLabel),
-  },
+  ...(!hasSpokenTime(current.speakingMs)
+    ? []
+    : [
+        {
+          label: '말한 시간',
+          ...toBars(
+            previous.speakingMs,
+            current.speakingMs,
+            toSpeakingTimeLabel,
+          ),
+        },
+      ]),
   {
     label: '주고받은 말',
     ...toBars(previous.turnCount, current.turnCount, (count) => `${count}번`),

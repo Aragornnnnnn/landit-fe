@@ -21,7 +21,7 @@ import {
 } from '@/features/widget/model/install-prompt';
 // 같은 설치 안내 화면을 온보딩(1차)과 대화 후(2차)가 공유해 widget feature에 두고 가로 import한다
 import { InstallGuide } from '@/features/widget/ui/install-guide/InstallGuide';
-import { track } from '@/shared/analytics';
+import { sendAdEventOnce, track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
@@ -142,6 +142,8 @@ export const OnboardingFlow = () => {
   const startFirstConversation = () => {
     track(EVENTS.ONBOARDING_STEP_COMPLETED, { step: 'scenario' });
     track(EVENTS.ONBOARDING_COMPLETED);
+    // 온보딩은 새로 가입한 사람만 거친다 — 메타에는 가입 완료로 계정마다 한 번 알린다
+    if (member) sendAdEventOnce('onboarding_completed', member.userId);
     router.replace(`${SCENARIO_PATH}?${ONBOARDED_PARAM}=1`);
   };
 
