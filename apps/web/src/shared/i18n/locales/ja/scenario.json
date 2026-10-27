@@ -43,5 +43,16 @@
     "introNamedBody": "今の会話から作った<br></br><em>{nickname}さんだけのフレーズ学習</em>です",
     "freeLabel": "最初のフレーズを無料で学ぶ",
     "freeBody": "最初のフレーズは<em>無料</em>で開放しました<br></br>タップしてすぐ学びましょう"
+  },
+  "lampWaiting": {
+    "retryTitle": "昨日終わらなかった会話が残っています",
+    "waitingTitle": "ラディがランプで待っています",
+    "deadlineDescription": "夜12時を過ぎると今日の会話は消えます",
+    "summonButton": "ランプをこすって会話を始める"
+  },
+  "lampSummon": {
+    "exitLabel": "閉じる",
+    "acceptButton": "はい！",
+    "askTitle": "今日の会話を始めますか？"
   }
 }

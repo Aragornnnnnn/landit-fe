@@ -43,5 +43,16 @@
     "introNamedBody": "방금 대화로 만든<br></br><em>{nickname}님 맞춤 표현 학습</em>이에요",
     "freeLabel": "첫 표현 무료로 배우기",
     "freeBody": "첫 표현은 <em>무료</em>로 열어 드렸어요<br></br>눌러서 바로 배워 봐요"
+  },
+  "lampWaiting": {
+    "retryTitle": "어제 마치지 못한 대화가 남아 있어요",
+    "waitingTitle": "래디가 램프에서 기다리고 있어요",
+    "deadlineDescription": "밤 12시가 지나면 오늘의 대화가 사라져요",
+    "summonButton": "램프 문질러 대화 시작하기"
+  },
+  "lampSummon": {
+    "exitLabel": "나가기",
+    "acceptButton": "네!",
+    "askTitle": "오늘의 대화를 시작할까요?"
   }
 }
