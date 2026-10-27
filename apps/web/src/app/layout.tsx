@@ -1,8 +1,7 @@
 // 앱 전체 공통 레이아웃 (루트). 폰트는 globals.css에서 자체 호스팅하는 Pretendard 하나뿐이다
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
-import { NextIntlClientProvider } from 'next-intl';
-import { getLocale, getMessages } from 'next-intl/server';
+import { getLocale } from 'next-intl/server';
 
 import { AlarmPropertiesSync } from '@/features/alarm/ui/AlarmPropertiesSync';
 import { AlarmSync } from '@/features/alarm/ui/AlarmSync';
@@ -22,6 +21,7 @@ import { fontScaleScript } from '@/shared/font-scale/font-scale';
 import { FontScaleSync } from '@/shared/font-scale/FontScaleSync';
 import { GlobalHaptics } from '@/shared/haptics';
 import { LocaleSync } from '@/shared/i18n/LocaleSync';
+import { MessagesProvider } from '@/shared/i18n/MessagesProvider';
 import { MonitoringBootstrap } from '@/shared/monitoring/MonitoringBootstrap';
 import { Toaster } from '@/shared/ui/toast';
 
@@ -49,8 +49,6 @@ export default async function RootLayout({
 }>) {
   // 요청의 Accept-Language로 정한 화면 언어 — API 요청도 html lang을 읽어 같은 언어를 보낸다
   const locale = await getLocale();
-  // 브라우저엔 어디서나 쓰는 common만 보낸다 — 화면 문구는 그 화면의 layout이 자기 묶음을 더해 보낸다
-  const { common } = await getMessages();
 
   return (
     <html lang={locale} className="antialiased" suppressHydrationWarning>
@@ -59,7 +57,8 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: platformMarkerScript }} />
         {/* 첫 페인트 전에 글자 크기를 적용한다 — 하이드레이션 뒤에 적용하면 보통 크기로 그려졌다가 한 번 바뀐다 */}
         <script dangerouslySetInnerHTML={{ __html: fontScaleScript }} />
-        <NextIntlClientProvider messages={{ common }}>
+        {/* 브라우저엔 어디서나 쓰는 common만 보낸다 — 화면 문구는 그 화면의 layout이 MessagesProvider로 자기 묶음을 더한다 */}
+        <MessagesProvider>
           <PlatformMarkerSync />
           <FontScaleSync />
           <AnalyticsBootstrap />
@@ -83,7 +82,7 @@ export default async function RootLayout({
           </Providers>
           <Toaster />
           <SpeedInsights />
-        </NextIntlClientProvider>
+        </MessagesProvider>
       </body>
     </html>
   );
