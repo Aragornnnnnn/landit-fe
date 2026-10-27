@@ -6,7 +6,7 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import type { AlarmTime } from '@landit/bridge';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { haptic } from '@/shared/haptics';
 import { EASE_STANDARD } from '@/shared/motion';
@@ -60,6 +60,7 @@ const Completed = ({
   onDone: () => void;
 }) => {
   const reduced = useReducedMotion();
+  const t = useTranslations('alarm.registered');
   const copy = useAlarmCopy();
   const [phase, setPhase] = useState<Phase>(reduced ? 'confirmed' : 'pledge');
   // 부모가 다시 그려져(알람 상태 회신 등) onDone이 바뀌어도 넘어갈 시계를 처음부터 다시 재지 않는다
@@ -99,7 +100,7 @@ const Completed = ({
             animate={confirmed ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
             transition={{ ...SHIFT, delay: confirmed ? 0.2 : 0 }}
           >
-            등록이 완료되었어요
+            {t('confirmedCaption')}
           </motion.p>
         </div>
         <p className="text-26 leading-snug font-black text-foreground">
@@ -108,23 +109,33 @@ const Completed = ({
             transition={SHIFT}
             className="relative inline-flex items-baseline gap-[0.25em]"
           >
-            <AnimatePresence initial={false} mode="popLayout">
-              {!swapped && (
-                <motion.span
-                  key="me"
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  저는
+            {/* 「저는」은 빠지고 「매일 [시각]에」만 남아 자리를 옮긴다 — 문장 조각마다 태그로 감싸 언어가 어순을 정한다 */}
+            {t.rich('sentenceTitle', {
+              subject: (chunks) => (
+                <AnimatePresence initial={false} mode="popLayout">
+                  {!swapped && (
+                    <motion.span
+                      key="me"
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {chunks}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              ),
+              daily: (chunks) => (
+                <motion.span layout transition={SHIFT}>
+                  {chunks}
                 </motion.span>
-              )}
-            </AnimatePresence>
-            <motion.span layout transition={SHIFT}>
-              매일
-            </motion.span>
-            <motion.span layout transition={SHIFT}>
-              <TimeChip time={time} />에
-            </motion.span>
+              ),
+              at: (chunks) => (
+                <motion.span layout transition={SHIFT}>
+                  {chunks}
+                </motion.span>
+              ),
+              time: () => <TimeChip time={time} />,
+            })}
           </motion.span>
           <br />
           {/* 둘째 줄은 옛 글자가 위로 빠진 뒤 새 글자가 아래에서 올라온다 — 겹치지 않게 차례로 */}
@@ -140,7 +151,7 @@ const Completed = ({
                 transition: { duration: 0.22, ease: 'easeIn' },
               }}
             >
-              {swapped ? '알려드릴게요!' : copy.pledgeClosing}
+              {swapped ? t('doneTitle') : copy.pledgeClosing}
             </motion.span>
           </AnimatePresence>
         </p>
@@ -159,6 +170,7 @@ const NeedsPermission = ({
   onLater: () => void;
 }) => {
   const locale = useLocale();
+  const t = useTranslations('alarm.registered');
   return (
     <main className="flex h-dvh flex-col bg-background">
       <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
@@ -166,20 +178,20 @@ const NeedsPermission = ({
           <PledgeSentence time={time} />
         </p>
         <p className="mt-8 text-18 font-bold text-foreground">
-          거의 다 됐어요!
+          {t('almostTitle')}
         </p>
         <p className="mt-1.5 text-15 font-medium text-muted-foreground">
-          권한만 켜면 매일 {formatAlarmTime(time, locale)}에 알려드릴게요
+          {t('almostDescription', { time: formatAlarmTime(time, locale) })}
         </p>
       </div>
       <div className="px-6 pb-[max(var(--safe-area-inset-bottom),24px)]">
-        <Button onClick={onUnblock}>지금 켜기</Button>
+        <Button onClick={onUnblock}>{t('unblockButton')}</Button>
         <button
           type="button"
           onClick={onLater}
           className="mt-4 w-full text-center text-13 font-bold text-muted-foreground"
         >
-          나중에 할게요
+          {t('laterButton')}
         </button>
       </div>
     </main>

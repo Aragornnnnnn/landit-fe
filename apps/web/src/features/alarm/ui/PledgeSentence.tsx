@@ -1,6 +1,6 @@
 // 다짐 문장 — "저는 매일 [시각]에 / 영어 공부를 하겠습니다!". 다짐 화면·완료 화면이 같은 칩과 문장을 쓴다
 import type { AlarmTime } from '@landit/bridge';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { useAlarmCopy } from '../model/alarm-copy';
 import { formatClock } from '../model/alarm-time';
@@ -32,10 +32,13 @@ export const PledgeSentence = ({
   time: AlarmTime;
   chipRef?: React.Ref<HTMLSpanElement>;
 }) => {
+  const t = useTranslations('alarm.pledge');
   const copy = useAlarmCopy();
   return (
     <>
-      저는 매일 <TimeChip time={time} ref={chipRef} />에
+      {t.rich('sentenceTitle', {
+        time: () => <TimeChip time={time} ref={chipRef} />,
+      })}
       <br />
       <span className="whitespace-pre-line">{copy.pledgeClosing}</span>
     </>

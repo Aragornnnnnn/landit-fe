@@ -4,6 +4,7 @@
 // 저장하면 AlarmSync가 셸 예약을 맞춘다
 import type { AlarmTime } from '@landit/bridge';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 
 import { useCurrentUserId } from '@/shared/auth/current-member';
 import { showToast } from '@/shared/ui/toast';
@@ -18,6 +19,7 @@ export interface AlarmDraft {
 }
 
 export const useSaveAlarmMutation = () => {
+  const t = useTranslations('alarm.save');
   const queryClient = useQueryClient();
   const userId = useCurrentUserId();
 
@@ -31,10 +33,6 @@ export const useSaveAlarmMutation = () => {
     },
     // 실패는 여기서 알린다 — 저장 직후 화면을 떠나면 호출부 콜백은 불리지 않아 조용히 사라진다
     onError: (_, { enabled }) =>
-      showToast(
-        enabled
-          ? '알람을 저장하지 못했어요. 다시 시도해 주세요'
-          : '알람을 삭제하지 못했어요. 다시 시도해 주세요',
-      ),
+      showToast(enabled ? t('saveFailedToast') : t('deleteFailedToast')),
   });
 };

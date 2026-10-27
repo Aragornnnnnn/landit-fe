@@ -1,0 +1,61 @@
+{
+  "intro": {
+    "title": "毎日のアラームで<br></br>英語を習慣にしましょう",
+    "tooltipCaption": "タップですぐ今日のシナリオ開始！",
+    "nextButton": "アラームの時間を決める",
+    "skipButton": "あとで設定します"
+  },
+  "pledge": {
+    "sentenceTitle": "私は毎日<time></time>に",
+    "closingTitle": "英語を勉強します！",
+    "holdLabel": "3秒長押しで約束する",
+    "holdCaption": "3秒長押しで約束する",
+    "doneCaption": "約束しました！"
+  },
+  "registered": {
+    "sentenceTitle": "<subject>私は</subject><daily>毎日</daily><at><time></time>に</at>",
+    "doneTitle": "お知らせします！",
+    "confirmedCaption": "登録が完了しました",
+    "almostTitle": "あと少しです！",
+    "almostDescription": "権限オンで毎日{time}にお知らせします",
+    "unblockButton": "今すぐオンにする",
+    "laterButton": "あとで設定します"
+  },
+  "timeWheel": {
+    "meridiemLabel": "午前 午後",
+    "hourLabel": "時",
+    "minuteLabel": "分"
+  },
+  "permissionBanner": {
+    "body": "アラームには権限が必要です",
+    "unblockButton": "オンにする"
+  },
+  "androidSettings": {
+    "title": "2つだけオンにしてください",
+    "exactAlarmLabel": "正確な時間に鳴らす",
+    "exactAlarmButton": "アラームとリマインダーをオンにする",
+    "fullScreenLabel": "ロック画面に大きく表示",
+    "fullScreenButton": "全画面通知をオンにする",
+    "onLabel": "オン",
+    "offLabel": "オフ",
+    "doneButton": "すべてオンにしました"
+  },
+  "iosSettings": {
+    "title": "設定でこれをオンにしてください",
+    "openStepLabel": "下の「設定を開く」をタップします",
+    "toggleStepLabel": "「{setting}」をオンにします",
+    "settingLabel": "アラームとタイマー",
+    "appLabel": "Landit",
+    "openButton": "設定を開く"
+  },
+  "lockScreen": {
+    "imageLabel": "ロック画面に表示された今日のシナリオのアラーム"
+  },
+  "save": {
+    "saveFailedToast": "アラームを保存できませんでした。もう一度お試しください",
+    "deleteFailedToast": "アラームを削除できませんでした。もう一度お試しください"
+  },
+  "screen": {
+    "description": "毎日約束の時間にお知らせします"
+  }
+}

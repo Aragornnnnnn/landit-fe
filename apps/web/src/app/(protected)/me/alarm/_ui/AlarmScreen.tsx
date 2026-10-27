@@ -3,7 +3,7 @@
 // 알람 화면 — 등록 전이면 등록 흐름(프리미엄 온보딩과 같은 화면), 등록됐으면 시간 카드 하나. 카드를 누르면 알람 수정으로 간다.
 // 권한이 꺼져 안 울리면 카드 위에 한 줄 배너를 띄운다
 import { useEffect, useState } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { alarmCopy } from '@/features/alarm/model/alarm-copy';
@@ -30,6 +30,7 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 export const AlarmScreen = () => {
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations('alarm');
   const status = useAlarmStatus();
   const { data: setting, isPending, isError, refetch } = useAlarmSettingQuery();
   const registered = setting?.enabled === true;
@@ -85,7 +86,7 @@ export const AlarmScreen = () => {
         <div className="px-2 pb-3">
           <h1 className="text-28 font-black text-foreground">알람</h1>
           <p className="mt-1.5 text-15 font-medium text-muted-foreground">
-            {alarmCopy(rewardParticipant).settingsDescription}
+            {alarmCopy(rewardParticipant, t).settingsDescription}
           </p>
         </div>
 
