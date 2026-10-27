@@ -4,5 +4,11 @@
     "bodyLabel": "寝る前の5分でラディに実をあげましょう",
     "dateLabel": "7月28日 火曜日",
     "nowLabel": "今"
+  },
+  "consentSheet": {
+    "title": "通知でお手伝いします",
+    "subtitle": "今日の会話を忘れていたらお知らせします",
+    "acceptButton": "通知を受け取ります！",
+    "laterButton": "あとで"
   }
 }

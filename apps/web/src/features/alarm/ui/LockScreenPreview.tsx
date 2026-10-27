@@ -2,6 +2,7 @@
 
 // 알람이 울릴 때 모습 — 플랫폼에 맞는 잠금화면 폰 그림(피그마 내보내기, 그림자는 여기서 입힌다).
 // 알람 소개와 알람 수정 화면이 같이 쓴다
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import {
@@ -54,11 +55,12 @@ export const LockScreenPreview = ({
   width: number;
   className?: string;
 }) => {
+  const t = useTranslations('alarm.lockScreen');
   const platform = useClientOnlyValue<Platform>(alarmPlatform, 'ios');
   return (
     <Image
       {...previewImage(platform, width)}
-      alt="잠금화면 위에 뜬 오늘의 시나리오 알람"
+      alt={t('imageLabel')}
       priority
       draggable={false}
       className={`drop-shadow-[0_18px_28px_rgba(0,0,0,0.22)] select-none ${className ?? ''}`}

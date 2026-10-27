@@ -2,6 +2,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setTestLocale } from '@/shared/i18n/test-locale';
+
 import { NicknameSheet } from './NicknameSheet';
 
 const mocks = vi.hoisted(() => ({
@@ -42,6 +44,13 @@ describe('NicknameSheet', () => {
 
     expect(screen.getByText('10자까지 쓸 수 있어요')).toBeInTheDocument();
     expect(saveButton()).toBeDisabled();
+  });
+
+  it('일본어 화면에서는 일본어 글자 수 안내를 보여 준다', () => {
+    setTestLocale('ja');
+    renderSheet('あ'.repeat(11));
+
+    expect(screen.getByText('10文字まで入力できます')).toBeInTheDocument();
   });
 
   it('기호나 이모지를 넣으면 글자·숫자만 된다고 알려준다', () => {

@@ -4,6 +4,7 @@
 // 꺼진 것부터 차례로 하나씩 열고, 돌아오면 useAlarmStatus가 다시 물어 단계가 넘어간다
 import { EVENTS } from '@landit/analytics';
 import type { AlarmStatus } from '@landit/bridge';
+import { useTranslations } from 'next-intl';
 
 import { track } from '@/shared/analytics';
 import { postToNative } from '@/shared/bridge/web-bridge';
@@ -15,14 +16,14 @@ const STEPS = [
     target: 'exactAlarm',
     // 계측에 싣는 이름
     tracked: 'exact_alarm',
-    title: '정확한 시간에 울리기',
-    action: '알람 및 리마인더 켜기',
+    title: 'exactAlarmLabel',
+    action: 'exactAlarmButton',
   },
   {
     target: 'fullScreen',
     tracked: 'full_screen',
-    title: '잠금화면에 크게 띄우기',
-    action: '전체 화면 알림 켜기',
+    title: 'fullScreenLabel',
+    action: 'fullScreenButton',
   },
 ] as const;
 
@@ -35,12 +36,13 @@ export const AndroidAlarmSettingsSheet = ({
   status: AlarmStatus | null;
   onClose: () => void;
 }) => {
+  const t = useTranslations('alarm.androidSettings');
   const current = STEPS.find((step) => status && !status[step.target]);
 
   return (
     <BottomSheet open={open} onClose={onClose}>
       <BottomSheet.Title className="text-22 font-bold text-foreground">
-        두 가지만 켜 주세요
+        {t('title')}
       </BottomSheet.Title>
 
       <ol className="mt-5 space-y-3">
@@ -62,10 +64,10 @@ export const AndroidAlarmSettingsSheet = ({
                 {index + 1}
               </span>
               <span className="flex-1 text-16 font-bold text-foreground">
-                {step.title}
+                {t(step.title)}
               </span>
               <span
-                aria-label={on ? '켜짐' : '꺼짐'}
+                aria-label={on ? t('onLabel') : t('offLabel')}
                 className={`relative h-[26px] w-[44px] shrink-0 rounded-full ${on ? 'bg-primary' : 'bg-[#D1D1D6]'}`}
               >
                 <span
@@ -86,7 +88,7 @@ export const AndroidAlarmSettingsSheet = ({
           postToNative({ type: 'OPEN_ALARM_SETTINGS', target: current.target });
         }}
       >
-        {current ? current.action : '다 켰어요'}
+        {current ? t(current.action) : t('doneButton')}
       </Button>
     </BottomSheet>
   );

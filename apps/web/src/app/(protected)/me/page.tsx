@@ -3,6 +3,7 @@
 // 내 정보(/me) — 프로필 헤더, 프리미엄 카드, 학습 · 설정 · 지원 · 계정 네 묶음. 페이지 전환 모션은 전역 라우트 트랜지션이 맡는다
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -45,6 +46,7 @@ import { WidgetMenuEntry } from './_ui/WidgetMenuEntry';
 import { WithdrawSheet } from './_ui/WithdrawSheet';
 
 export default function MyPage() {
+  const t = useTranslations('me.page');
   const router = useRouter();
   const refreshToken = useAuthStore((state) => state.refreshToken);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -107,7 +109,7 @@ export default function MyPage() {
       finishSignedOut();
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : '회원탈퇴에 실패했습니다.';
+        error instanceof Error ? error.message : t('withdrawError');
       setDeleteErrorMessage(message);
     } finally {
       setIsDeletingAccount(false);
@@ -117,7 +119,7 @@ export default function MyPage() {
   return (
     <main className="flex h-dvh flex-col bg-background">
       <BackHeader
-        title="내 정보"
+        title={t('title')}
         hasShadow={hasShadow}
         onBack={() => router.replace(homePath())}
       />
@@ -133,11 +135,11 @@ export default function MyPage() {
           <PremiumEntry />
           <MyProgressTiles />
 
-          <MenuSection title="학습">
+          <MenuSection title={t('learningTitle')}>
             <AccentMenuEntry />
           </MenuSection>
 
-          <MenuSection title="설정">
+          <MenuSection title={t('settingsTitle')}>
             {/* 알림은 권한 체계가 있는 셸에서만, 위젯은 위젯이 실린 셸에서만 보인다 — 브라우저에선 대화·음성·진동만 남는다.
                 알람은 결제 유저가 알람을 아는 셸에서만 맨 위에 보인다 */}
             <AlarmMenuEntry />
@@ -149,40 +151,40 @@ export default function MyPage() {
             <WidgetMenuEntry />
           </MenuSection>
 
-          <MenuSection title="지원">
+          <MenuSection title={t('supportTitle')}>
             <ShareMenuFallback />
             <MenuLink
               href={MAILBOX_COMPOSE_PATH}
               icon={<Emoji>💬</Emoji>}
-              title="피드백 남기기"
+              title={t('feedbackTitle')}
             />
             <MenuLink
               href={SURVEY_PATH}
               icon={<Emoji>📝</Emoji>}
-              title="설문조사 참여하기"
+              title={t('surveyTitle')}
             />
           </MenuSection>
 
-          <MenuSection title="계정">
+          <MenuSection title={t('accountTitle')}>
             <MenuLink
               href="/terms"
               icon={<Emoji>📄</Emoji>}
-              title="서비스 이용약관"
+              title={t('termsTitle')}
             />
             <MenuLink
               href="/privacy"
               icon={<Emoji>🔒</Emoji>}
-              title="개인정보 처리방침"
+              title={t('privacyTitle')}
             />
             <MenuButton
-              title={isLoggingOut ? '로그아웃 중...' : '로그아웃'}
+              title={isLoggingOut ? t('loggingOutTitle') : t('logoutTitle')}
               icon={<Emoji>🚪</Emoji>}
               chevron={false}
               onClick={logout}
               disabled={isLoggingOut}
             />
             <MenuButton
-              title="회원탈퇴"
+              title={t('withdrawTitle')}
               icon={<Emoji>🗑️</Emoji>}
               tone="danger"
               chevron={false}

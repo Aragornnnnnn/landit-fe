@@ -34,7 +34,10 @@ const dayKey = (date: Date) =>
 export const describeNextRing = (nextAt: number | null, now: Date) => {
   if (nextAt === null) return '이미 울렸어요';
   const at = new Date(nextAt);
-  const time = formatClock({ hour: at.getHours(), minute: at.getMinutes() });
+  const time = formatClock(
+    { hour: at.getHours(), minute: at.getMinutes() },
+    'ko',
+  );
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
   if (dayKey(at) === dayKey(now)) return `오늘 ${time}`;

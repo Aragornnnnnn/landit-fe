@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import type { AlarmTime } from '@landit/bridge';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -57,6 +58,8 @@ const AlarmEditForm = ({
   onDeleted: () => void;
 }) => {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('alarm.editScreen');
   const { mutate: save, isPending } = useSaveAlarmMutation();
   const [time, setTime] = useState(saved);
   // 시트의 휠 — 관성으로 도는 중에 「확인」해도 보인 시각(휠이 마지막으로 지나간 칸)으로 정한다
@@ -111,11 +114,11 @@ const AlarmEditForm = ({
 
   return (
     <main className="flex h-dvh flex-col bg-background">
-      <BackHeader onBack={back} title="알람 수정" />
+      <BackHeader onBack={back} title={t('title')} />
 
       {/* 작은 폰에서도 약속 시간·알람 삭제·저장하기는 늘 보이게 — 폰 그림만 남는 높이에 맞춰 줄어든다 */}
       <div className="flex min-h-0 flex-1 flex-col gap-2.5 bg-muted px-4 pt-2 pb-4">
-        <SectionLabel>알려주는 방식</SectionLabel>
+        <SectionLabel>{t('methodLabel')}</SectionLabel>
         <div className="flex min-h-0 flex-1 flex-col items-center gap-3 rounded-[20px] bg-card px-5 pt-5 pb-4">
           <div className="flex min-h-0 w-full flex-1 justify-center">
             <LockScreenPreview
@@ -124,18 +127,18 @@ const AlarmEditForm = ({
             />
           </div>
           <p className="shrink-0 text-14 text-muted-foreground">
-            소리가 울리고 잠금화면 위에 알람 화면이 떠요
+            {t('previewCaption')}
           </p>
         </div>
 
-        <SectionLabel>약속 시간</SectionLabel>
+        <SectionLabel>{t('scheduleLabel')}</SectionLabel>
         <div className="shrink-0 rounded-[20px] bg-card pr-4 pl-5">
           <div className="flex items-center border-b border-border py-[18px]">
             <span className="flex-1 text-16 font-medium text-foreground">
-              반복
+              {t('repeatLabel')}
             </span>
             <span className="text-16 font-medium text-muted-foreground">
-              매일
+              {t('dailyLabel')}
             </span>
           </div>
           <button
@@ -144,10 +147,10 @@ const AlarmEditForm = ({
             className="flex w-full items-center gap-2 py-[18px] text-left"
           >
             <span className="flex-1 text-16 font-medium text-foreground">
-              시각
+              {t('timeLabel')}
             </span>
             <span className="text-16 font-medium text-foreground">
-              {formatAlarmTime(time)}
+              {formatAlarmTime(time, locale)}
             </span>
             <ChevronRightIcon size={16} className="text-[#C7C7CC]" />
           </button>
@@ -163,19 +166,19 @@ const AlarmEditForm = ({
           disabled={isPending}
           className="shrink-0 rounded-[20px] bg-card py-4 text-16 font-medium text-destructive active:bg-muted disabled:opacity-40"
         >
-          알람 삭제
+          {t('deleteButton')}
         </button>
       </div>
 
       <div className="bg-muted px-6 pt-2 pb-[max(var(--safe-area-inset-bottom),24px)]">
         <Button onClick={submit} loading={isPending}>
-          저장하기
+          {t('saveButton')}
         </Button>
       </div>
 
       <BottomSheet open={picking} onClose={() => setPicking(false)}>
         <BottomSheet.Title className="text-20 font-bold text-foreground">
-          시각
+          {t('pickerTitle')}
         </BottomSheet.Title>
         <div className="mt-2">
           {/* 열 때마다 그때 시각에서 시작한다 — 닫히는 중에 다시 열어도 새로 그린다 */}
@@ -193,24 +196,24 @@ const AlarmEditForm = ({
             setPicking(false);
           }}
         >
-          확인
+          {t('confirmButton')}
         </Button>
       </BottomSheet>
 
       {/* 확인은 왼쪽 「취소」, 오른쪽 빨간 「삭제」 — 지우는 버튼이 무엇인지 그대로 보이게 */}
       <BottomSheet open={confirmingDelete} onClose={cancelDelete}>
         <BottomSheet.Title className="text-17 font-bold text-foreground">
-          알람을 삭제할까요?
+          {t('deleteTitle')}
         </BottomSheet.Title>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          다시 만들려면 약속을 새로 해야 해요
+          {t('deleteDescription')}
         </p>
         <div className="mt-5 grid grid-cols-2 gap-2">
           <Button variant="ghost" size="md" onClick={cancelDelete}>
-            취소
+            {t('cancelButton')}
           </Button>
           <Button variant="danger" size="md" onClick={remove}>
-            삭제
+            {t('confirmDeleteButton')}
           </Button>
         </div>
       </BottomSheet>
@@ -220,6 +223,7 @@ const AlarmEditForm = ({
 
 export const AlarmEditScreen = () => {
   const router = useRouter();
+  const t = useTranslations('alarm.editScreen');
   const { data: setting, isPending, isError, refetch } = useAlarmSettingQuery();
   const registered = setting?.enabled === true;
 
@@ -243,11 +247,11 @@ export const AlarmEditScreen = () => {
       <main className="flex h-dvh flex-col bg-background">
         <BackHeader
           onBack={() => backOrReplace(router, ALARM_SETTINGS_PATH)}
-          title="알람 수정"
+          title={t('title')}
         />
         <RetryNotice
           screen="alarm"
-          message="알람 설정을 불러오지 못했어요"
+          message={t('loadError')}
           onRetry={() => void refetch()}
         />
       </main>

@@ -1,0 +1,106 @@
+{
+  "page": {
+    "title": "マイページ",
+    "learningTitle": "学習",
+    "settingsTitle": "設定",
+    "supportTitle": "サポート",
+    "accountTitle": "アカウント",
+    "feedbackTitle": "フィードバックを送る",
+    "surveyTitle": "アンケートに答える",
+    "termsTitle": "利用規約",
+    "privacyTitle": "プライバシーポリシー",
+    "logoutTitle": "ログアウト",
+    "loggingOutTitle": "ログアウト中...",
+    "withdrawTitle": "退会",
+    "withdrawError": "退会できませんでした。"
+  },
+  "profileHeader": {
+    "guestLabel": "ゲスト",
+    "editNicknameLabel": "ニックネームを変更"
+  },
+  "nicknameSheet": {
+    "title": "何とお呼びしましょうか？",
+    "subtitle": "いつでも変更できます",
+    "inputLabel": "ニックネーム",
+    "inputPlaceholder": "名前を入力してください",
+    "tooLongError": "{max}文字まで入力できます",
+    "invalidCharError": "文字・数字・スペースのみ使えます",
+    "saveFailedError": "保存できませんでした。もう一度お試しください",
+    "saveButton": "この名前にします",
+    "savedToast": "これから{nickname}さんとお呼びします"
+  },
+  "premiumEntry": {
+    "subscribeLabel": "登録する",
+    "trialLabel": "無料体験中",
+    "activeLabel": "利用中",
+    "canceledLabel": "解約予定"
+  },
+  "accentMenu": {
+    "title": "学ぶアクセント",
+    "sheetTitle": "どの英語を学びたいですか？",
+    "sheetSubtitle": "おすすめフレーズとフィードバックが変わります"
+  },
+  "alarmMenu": {
+    "title": "アラーム"
+  },
+  "talkDisplayMenu": {
+    "title": "会話",
+    "description": "相手の発言をどう表示するか選べます",
+    "showTextLabel": "相手の英文を常に表示",
+    "showTranslationLabel": "訳を常に表示"
+  },
+  "speechRateMenu": {
+    "title": "音声",
+    "description": "英語音声の再生速度です",
+    "playButton": "聞いてみる",
+    "stopButton": "停止",
+    "rateGroupLabel": "話す速さ",
+    "rateLabel": "{rate}倍",
+    "slowLabel": "ゆっくり",
+    "fastLabel": "速く"
+  },
+  "fontScaleMenu": {
+    "title": "文字サイズ",
+    "smallSampleLabel": "あ",
+    "largeSampleLabel": "あ",
+    "smallestLabel": "最小",
+    "smallLabel": "小",
+    "normalLabel": "標準",
+    "largeLabel": "大",
+    "largestLabel": "最大"
+  },
+  "notificationMenu": {
+    "title": "通知"
+  },
+  "hapticMenu": {
+    "title": "振動",
+    "description": "ボタンを押したときの軽い振動です",
+    "toggleLabel": "ボタンの振動"
+  },
+  "widgetMenu": {
+    "title": "ホーム画面ウィジェット"
+  },
+  "shareMenu": {
+    "title": "友だちにLanditをシェア",
+    "messageBody": "Landitで一緒に英語を勉強しましょう 🙌\n{url}",
+    "copiedToast": "リンクをコピーしました",
+    "copyFailedToast": "リンクをコピーできませんでした"
+  },
+  "settingSheet": {
+    "closeButton": "閉じる"
+  },
+  "withdrawSheet": {
+    "title": "退会",
+    "blockedDescription": "サブスクリプション中は退会できません。<br></br>退会してもストアの決済は続きます。<br></br>先にサブスクリプションを解約してください。",
+    "blockedCloseButton": "閉じる",
+    "manageButton": "管理画面へ",
+    "description": "アカウントと利用履歴が削除されます。続けますか？",
+    "closeButton": "閉じる",
+    "deletingButton": "処理中",
+    "confirmButton": "退会する"
+  },
+  "appVersion": {
+    "caption": "アプリバージョン {version}",
+    "buildCaption": "アプリバージョン {version} ({build})"
+  }
+}

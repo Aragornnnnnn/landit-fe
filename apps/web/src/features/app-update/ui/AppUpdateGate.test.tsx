@@ -2,6 +2,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { setTestLocale } from '@/shared/i18n/test-locale';
+
 import { useAppUpdateCheck } from '../model/useAppUpdateCheck';
 import { AppUpdateGate } from './AppUpdateGate';
 
@@ -47,6 +49,22 @@ const useAppUpdateCheckMock = vi.mocked(useAppUpdateCheck);
 afterEach(() => cleanup());
 
 describe('AppUpdateGate', () => {
+  it('일본어 화면에서 서버가 사유를 주지 않으면 일본어 기본 안내를 보여 준다', () => {
+    setTestLocale('ja');
+    useAppUpdateCheckMock.mockReturnValue({
+      checking: false,
+      updateType: 'SOFT',
+      reason: null,
+    });
+
+    render(<AppUpdateGate />);
+
+    expect(screen.getByText('Landitの新バージョン登場！')).toBeInTheDocument();
+    expect(
+      screen.getByText('新しくなった機能をお試しください'),
+    ).toBeInTheDocument();
+  });
+
   it('강제 업데이트면 나중에 할래요 없이 모달만 보여준다', () => {
     useAppUpdateCheckMock.mockReturnValue({
       checking: false,

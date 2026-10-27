@@ -14,6 +14,7 @@ import {
   WheelPickerWrapper,
   type WheelPickerOption,
 } from '@ncdai/react-wheel-picker';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { haptic } from '@/shared/haptics';
 
@@ -22,6 +23,7 @@ import {
   suspendWheelTick,
   unlockWheelTick,
 } from '../lib/wheel-tick';
+import { MERIDIEM_LABELS } from '../model/alarm-time';
 import { alarmPlatform } from '../model/shell-alarm';
 import {
   fromWheel,
@@ -41,10 +43,6 @@ const MERIDIEM_SETTLE_MS = 500;
 const tickHaptic = () =>
   alarmPlatform() === 'android' ? ('light' as const) : ('selection' as const);
 
-const MERIDIEMS: WheelPickerOption<number>[] = [
-  { value: 0, label: '오전' },
-  { value: 1, label: '오후' },
-];
 const HOURS: WheelPickerOption<number>[] = Array.from(
   { length: 12 },
   (_, index) => ({ value: index + 1, label: String(index + 1) }),
@@ -186,6 +184,12 @@ export const TimeWheel = ({
   surface?: 'background' | 'card';
   ref?: React.Ref<TimeWheelHandle>;
 }) => {
+  const t = useTranslations('alarm.timeWheel');
+  const [am, pm] = MERIDIEM_LABELS[useLocale()];
+  const meridiems: WheelPickerOption<number>[] = [
+    { value: 0, label: am },
+    { value: 1, label: pm },
+  ];
   const initial = toWheel(initialValue);
   const meridiemColumn = useRef<HTMLDivElement>(null);
   // 지금 보이는 시·분과 있어야 할 오전/오후
@@ -317,16 +321,16 @@ export const TimeWheel = ({
     >
       <WheelPickerWrapper>
         <Column
-          label="오전 오후"
+          label={t('meridiemLabel')}
           edge="start"
           columnRef={meridiemColumn}
-          options={MERIDIEMS}
+          options={meridiems}
           infinite={false}
           initial={initial.meridiem}
           onRow={(_row, meridiem) => rollMeridiem(meridiem)}
         />
         <Column
-          label="시"
+          label={t('hourLabel')}
           edge="middle"
           options={HOURS}
           infinite
@@ -335,7 +339,7 @@ export const TimeWheel = ({
           onRow={rollHour}
         />
         <Column
-          label="분"
+          label={t('minuteLabel')}
           edge="end"
           options={MINUTES}
           infinite
