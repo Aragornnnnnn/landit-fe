@@ -11,6 +11,7 @@ import { useLocale, useTranslations, type Messages } from 'next-intl';
 import { track } from '@/shared/analytics';
 import { getCurrentUserId } from '@/shared/auth/auth-store';
 import { useCurrentUserId } from '@/shared/auth/current-member';
+import { getNativeContext } from '@/shared/bridge/native-context';
 import type { Locale } from '@/shared/i18n/locale';
 import { reportWarning } from '@/shared/monitoring/report';
 import { showToast } from '@/shared/ui/toast';
@@ -48,8 +49,9 @@ interface UsePurchaseOptions {
   displayCurrencies?: Partial<Record<SubscriptionPlan, string>>;
 }
 
-// 셸 결제 실패 문구의 언어 — 셸이 번역되기 전까지 한국어뿐이다. 한국 전용 상품의 언어 조건(sellsKoreaOnlyOffers)과는 따로 풀린다
+// 옛 셸의 결제 실패 문구는 한국어뿐이다. 브릿지 14부터는 셸이 웹이 알려 준 화면 언어(SET_LOCALE)로 문구를 준다
 const SHELL_MESSAGE_LOCALE: Locale = 'ko';
+const LOCALIZED_SHELL_MESSAGE_BRIDGE_VERSION = 14;
 
 // 안내 토스트 문구 키 — subscription.purchase 아래
 type PurchaseToastKey = keyof Messages['subscription']['purchase'];
@@ -109,9 +111,13 @@ export const usePurchase = ({
   const promoTag = promo ? { promo: true } : {};
   const t = useTranslations('subscription.purchase');
   const locale = useLocale();
-  // 셸이 준 실패 사유 — 셸 문구와 같은 언어 화면에서만 쓰고, 다른 언어 화면에서는 버리고 웹 문구를 쓴다
+  // 셸이 준 실패 사유 — 셸이 화면 언어로 주거나 화면이 한국어일 때만 쓰고, 아니면 버리고 웹 문구를 쓴다
   const shellMessage = (message?: string) =>
-    locale === SHELL_MESSAGE_LOCALE ? message : undefined;
+    locale === SHELL_MESSAGE_LOCALE ||
+    (getNativeContext()?.bridgeVersion ?? 0) >=
+      LOCALIZED_SHELL_MESSAGE_BRIDGE_VERSION
+      ? message
+      : undefined;
   const [busy, setBusy] = useState(false);
   const queryClient = useQueryClient();
   const userId = useCurrentUserId();
