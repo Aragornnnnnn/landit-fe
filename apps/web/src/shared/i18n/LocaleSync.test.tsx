@@ -12,6 +12,9 @@ vi.mock('./api/user-locale', () => ({
 }));
 const updateUserLocaleMock = vi.mocked(updateUserLocale);
 
+const flag = vi.hoisted(() => ({ JAPANESE_ENABLED: true }));
+vi.mock('./japanese-flag', () => flag);
+
 const signIn = (userId: number) =>
   act(() =>
     useAuthStore.getState().setAuth('access', 'refresh', { userId } as never),
@@ -21,6 +24,7 @@ afterEach(() => {
   cleanup();
   useAuthStore.getState().clearAuth();
   document.documentElement.lang = '';
+  flag.JAPANESE_ENABLED = true;
 });
 
 describe('LocaleSync', () => {
@@ -37,6 +41,15 @@ describe('LocaleSync', () => {
     signIn(1);
 
     expect(updateUserLocaleMock).toHaveBeenCalledWith('ja');
+  });
+
+  it('일본어 출시 스위치가 꺼져 있으면 로그인해도 보내지 않는다', () => {
+    flag.JAPANESE_ENABLED = false;
+    render(<LocaleSync />);
+
+    signIn(1);
+
+    expect(updateUserLocaleMock).not.toHaveBeenCalled();
   });
 
   it('다른 계정으로 바뀌면 다시 보낸다', () => {

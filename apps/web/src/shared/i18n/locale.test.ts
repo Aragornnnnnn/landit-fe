@@ -1,10 +1,24 @@
 // 언어 판단 규칙 검증 — Accept-Language에서 지원 언어 고르기, 문서 lang 읽기
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { localeFromAcceptLanguage, localeFromDocument } from './locale';
 
+// 출시 스위치는 빌드 환경 값이라 경계로 본다 — 기본은 켠 상태로 규칙을 검증한다
+const flag = vi.hoisted(() => ({ JAPANESE_ENABLED: true }));
+vi.mock('./japanese-flag', () => flag);
+
 describe('localeFromAcceptLanguage', () => {
+  afterEach(() => {
+    flag.JAPANESE_ENABLED = true;
+  });
+
+  it('일본어 출시 스위치가 꺼져 있으면 일본어 기기도 한국어로 본다', () => {
+    flag.JAPANESE_ENABLED = false;
+
+    expect(localeFromAcceptLanguage('ja-JP,ja;q=0.9')).toBe('ko');
+  });
+
   it.each([
     ['ja-JP,ja;q=0.9,en-US;q=0.8', 'ja'],
     ['ko-KR,ko;q=0.9', 'ko'],

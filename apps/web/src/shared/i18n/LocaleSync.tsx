@@ -7,6 +7,7 @@ import { useAuthStore } from '@/shared/auth/auth-store';
 import { reportWarning } from '@/shared/monitoring/report';
 
 import { updateUserLocale } from './api/user-locale';
+import { JAPANESE_ENABLED } from './japanese-flag';
 import { localeFromDocument } from './locale';
 
 /**
@@ -18,7 +19,8 @@ export const LocaleSync = () => {
 
   // 실행·로그인·계정 전환이 모두 여기로 온다
   useEffect(() => {
-    if (!userId) return;
+    // 일본어를 잠가 둔 동안은 모두 한국어라 서버 기본값(ko)과 같다 — 보낼 이유가 없다
+    if (!userId || !JAPANESE_ENABLED) return;
     // 동기화 실패로 화면이 깨지면 안 된다 — 다음 실행에서 다시 보낸다
     updateUserLocale(localeFromDocument()).catch((error: unknown) => {
       console.warn('[locale] 동기화 실패:', error);
