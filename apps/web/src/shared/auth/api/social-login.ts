@@ -1,6 +1,5 @@
 // 소셜 로그인 idToken을 백엔드에 넘겨 자체 access/refresh 토큰을 발급받는다
 import { parseApiResponse } from '@/shared/api/parse';
-import { localeFromDocument } from '@/shared/i18n/locale';
 
 export const SOCIAL_LOGIN_PATH = '/api/v1/auth/social-login';
 
@@ -34,11 +33,7 @@ export async function socialLogin(
 ): Promise<SocialLoginResponse> {
   const response = await fetch(SOCIAL_LOGIN_PATH, {
     method: 'POST',
-    // 가입 시점의 언어를 백엔드가 유저 언어로 저장할 수 있게 같이 보낸다
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept-Language': localeFromDocument(),
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ provider, idToken, nonce, nickname }),
   });
   return parseApiResponse<SocialLoginResponse>(response);
