@@ -3,6 +3,7 @@
 // 소셜 로그인 콜백 — 제공자가 돌려준 code를 id_token으로 교환하고 백엔드 로그인까지 마친 뒤 라우팅한다
 import { use, useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
@@ -35,6 +36,7 @@ export default function SocialLoginCallbackPage({
 }) {
   const { provider } = use(params);
   const { code, state, error } = use(searchParams);
+  const t = useTranslations('auth.callback');
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
   const [message, setMessage] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export default function SocialLoginCallbackPage({
 
     const run = async () => {
       if (!isWebProvider(provider)) {
-        setMessage('지원하지 않는 로그인 제공자예요.');
+        setMessage(t('unsupportedProviderError'));
         return;
       }
 
@@ -64,7 +66,7 @@ export default function SocialLoginCallbackPage({
           method: 'web',
           reason: 'provider_error',
         });
-        setMessage('소셜 로그인이 취소됐어요.');
+        setMessage(t('providerError'));
         return;
       }
 
@@ -75,7 +77,7 @@ export default function SocialLoginCallbackPage({
           method: 'web',
           reason: 'missing_request',
         });
-        setMessage('로그인 요청 정보를 찾지 못했어요. 다시 시도해 주세요.');
+        setMessage(t('missingRequestError'));
         return;
       }
       // CSRF 방어 — 시작할 때 저장한 provider·state와 일치해야 한다
@@ -85,7 +87,7 @@ export default function SocialLoginCallbackPage({
           method: 'web',
           reason: 'state_mismatch',
         });
-        setMessage('로그인 검증 값이 일치하지 않아요. 다시 시도해 주세요.');
+        setMessage(t('stateMismatchError'));
         return;
       }
 
@@ -110,7 +112,11 @@ export default function SocialLoginCallbackPage({
             method: 'web',
             reason: 'token_exchange_failed',
           });
-          setMessage(tokenJson.error ?? '소셜 로그인 토큰 교환에 실패했어요.');
+          // 교환 라우트의 사유는 개발용 문구라 개발 모드에서만 덧붙인다
+          const isDev = process.env.NODE_ENV === 'development';
+          const detail =
+            isDev && tokenJson.error ? ` (${tokenJson.error})` : '';
+          setMessage(`${t('tokenExchangeError')}${detail}`);
           return;
         }
 
@@ -139,12 +145,12 @@ export default function SocialLoginCallbackPage({
         console.debug('[auth] 웹 소셜 로그인 실패:', err);
         const isDev = process.env.NODE_ENV === 'development';
         const detail = isDev && err instanceof Error ? ` (${err.message})` : '';
-        setMessage(`로그인에 실패했어요. 다시 시도해 주세요.${detail}`);
+        setMessage(`${t('failedError')}${detail}`);
       }
     };
 
     run();
-  }, [provider, code, state, error, router, setAuth]);
+  }, [provider, code, state, error, router, setAuth, t]);
 
   // 떠났던 로그인 화면으로 돌아온다 — 교환이 도는 동안은 눌렀던 제공자 버튼이 로그인 중이고,
   // 실패하면 그 화면 위에 이유를 보여주고 버튼을 풀어 바로 다시 누를 수 있게 한다

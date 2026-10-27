@@ -1,5 +1,6 @@
 // 소셜 로그인 버튼 — 아이콘 + 라벨. 색은 각 브랜드 규정색을 className으로 주입받는다
 import { useId } from 'react';
+import { useTranslations } from 'next-intl';
 
 export const LoginButton = ({
   label,
@@ -20,6 +21,7 @@ export const LoginButton = ({
   // 이 기기에서 마지막으로 로그인한 방법 — 버튼 위에 「최근 로그인」 말풍선이 붙는다
   recent?: boolean;
 }) => {
+  const t = useTranslations('auth.loginButton');
   const recentId = useId();
 
   return (
@@ -29,7 +31,7 @@ export const LoginButton = ({
           id={recentId}
           className="pointer-events-none absolute -top-5 left-1/2 z-10 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-11 font-semibold whitespace-nowrap text-primary-foreground after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-4 after:border-transparent after:border-t-primary after:content-['']"
         >
-          최근 로그인
+          {t('recentBadge')}
         </span>
       )}
       <button
