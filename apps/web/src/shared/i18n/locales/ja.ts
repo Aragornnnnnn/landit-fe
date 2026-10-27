@@ -5,6 +5,7 @@ import conversation from './ja/conversation.json';
 import feedback from './ja/feedback.json';
 import notification from './ja/notification.json';
 import onboarding from './ja/onboarding.json';
+import subscription from './ja/subscription.json';
 import widget from './ja/widget.json';
 
 const ja = {
@@ -14,6 +15,7 @@ const ja = {
   feedback,
   notification,
   onboarding,
+  subscription,
   widget,
 };
 

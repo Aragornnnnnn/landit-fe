@@ -5,6 +5,7 @@ import conversation from './ko/conversation.json';
 import feedback from './ko/feedback.json';
 import notification from './ko/notification.json';
 import onboarding from './ko/onboarding.json';
+import subscription from './ko/subscription.json';
 import widget from './ko/widget.json';
 
 const ko = {
@@ -14,6 +15,7 @@ const ko = {
   feedback,
   notification,
   onboarding,
+  subscription,
   widget,
 };
 

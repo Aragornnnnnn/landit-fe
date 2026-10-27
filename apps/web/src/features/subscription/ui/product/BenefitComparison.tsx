@@ -1,9 +1,10 @@
 // 페이월의 무료 vs 프리미엄 혜택 비교표
 import type { CSSProperties } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { CheckIcon } from '@/shared/ui/Icons';
 
-import { BENEFITS, type Benefit } from '../../model/product/benefits';
+import { BENEFITS } from '../../model/product/benefits';
 import { PremiumPill } from '../premium-brand';
 
 /** 체크 하나가 들어가는 칸이라 좁다 */
@@ -27,14 +28,21 @@ const HEADER_LABEL = 'flex min-h-[18px] items-center justify-center';
  * 계단으로 만든다. motion이 아니라 CSS인 것은 rAF가 멎은 웹뷰에서도 끝까지 가야 해서다 (LAN-375).
  */
 export const BenefitComparison = ({
-  benefits = BENEFITS,
+  benefits,
   pillar = true,
 }: {
-  /** 그릴 줄 — 환급 페이월은 적립 줄을 더한 목록을 넘긴다 */
-  benefits?: Pick<Benefit, 'text' | 'free'>[];
+  /** 그릴 줄 — 환급 페이월은 적립 줄을 더한 목록을 넘긴다. 없으면 {@link BENEFITS}를 화면 언어로 그린다 */
+  benefits?: { text: string; free: boolean }[];
   /** 프리미엄 열 뒤 주황 기둥 — 끄면 주황 체크와 배지만으로 강조하고 두 열을 넓게 벌린다 */
   pillar?: boolean;
 }) => {
+  const t = useTranslations('subscription');
+  const rows =
+    benefits ??
+    BENEFITS.map(({ labelKey, free }) => ({
+      text: t(`benefits.${labelKey}`),
+      free,
+    }));
   const freeColumn = pillar ? FREE_COLUMN : WIDE_FREE_COLUMN;
   const premiumColumn = pillar ? PREMIUM_COLUMN : SLIM_PREMIUM_COLUMN;
 
@@ -56,7 +64,7 @@ export const BenefitComparison = ({
                 <span
                   className={`${HEADER_LABEL} text-13 leading-none font-bold text-muted-foreground`}
                 >
-                  무료
+                  {t('benefitComparison.freeLabel')}
                 </span>
               </th>
               <th scope="col" className={premiumColumn}>
@@ -67,7 +75,7 @@ export const BenefitComparison = ({
             </tr>
           </thead>
           <tbody>
-            {benefits.map(({ text, free }, index) => (
+            {rows.map(({ text, free }, index) => (
               <tr key={text}>
                 <th
                   scope="row"
@@ -87,7 +95,9 @@ export const BenefitComparison = ({
                     <span className="inline-block h-0.5 w-3 rounded-full bg-border align-middle" />
                   )}
                   <span className="sr-only">
-                    {free ? '무료 포함' : '무료 미포함'}
+                    {free
+                      ? t('benefitComparison.freeIncludedLabel')
+                      : t('benefitComparison.freeExcludedLabel')}
                   </span>
                 </td>
                 <td className="text-center">
@@ -100,7 +110,9 @@ export const BenefitComparison = ({
                       strokeWidth={3}
                       className="block text-primary"
                     />
-                    <span className="sr-only">프리미엄 포함</span>
+                    <span className="sr-only">
+                      {t('benefitComparison.premiumIncludedLabel')}
+                    </span>
                   </span>
                 </td>
               </tr>
