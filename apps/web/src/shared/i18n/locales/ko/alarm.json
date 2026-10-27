@@ -43,7 +43,7 @@
   "iosSettings": {
     "title": "설정에서 이것 하나만 켜 주세요",
     "openStepLabel": "아래 「설정 열기」를 눌러요",
-    "toggleStepLabel": "'{setting}'를 켜요",
+    "toggleStepLabel": "''{setting}''를 켜요",
     "settingLabel": "알람 및 타이머",
     "appLabel": "랜딧",
     "openButton": "설정 열기"
