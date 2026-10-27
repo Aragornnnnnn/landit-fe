@@ -1,5 +1,4 @@
-// 화면 언어를 정하는 규칙 — 지원 언어 목록과 Accept-Language·html lang 해석
-import { JAPANESE_ENABLED } from './japanese-flag';
+// 화면 언어를 정하는 규칙 — 지원 언어 목록, 저장 언어 쿠키·Accept-Language·html lang 해석
 
 export const LOCALES = ['ko', 'ja'] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -41,18 +40,39 @@ export const localeFromAcceptLanguage = (header: string | null): Locale => {
   return languages.find(isLocale) ?? DEFAULT_LOCALE;
 };
 
+/** 로그인한 사용자의 저장 언어를 서버 렌더에 알리는 쿠키 — 웹이 `GET /api/v1/me/locale` 결과로 쓴다 */
+export const LOCALE_COOKIE = 'landit-locale';
+
 /**
- * 요청의 화면 언어를 정한다. 일본어 출시 스위치가 꺼져 있으면 헤더를 읽지 않고 한국어로 둔다 —
- * 헤더를 읽는 순간 페이지가 요청마다 렌더되므로, 꺼져 있는 동안은 정적 페이지를 그대로 지킨다.
+ * 요청의 화면 언어를 정한다. 저장 언어 쿠키가 있으면 그 값이 먼저다 — 한 번 고른 언어는 기기 언어가 바뀌어도 유지한다.
+ * 쿠키가 없으면(로그인 전·재설치 직후) 기기 언어(Accept-Language)로 그린다.
  *
- * @param readAcceptLanguage 요청의 Accept-Language를 읽는 함수 (next/headers)
+ * @param cookie 저장 언어 쿠키 값. 없으면 null
+ * @param acceptLanguage 요청의 Accept-Language. 없으면 null
  */
-export const resolveRequestLocale = async (
-  readAcceptLanguage: () => Promise<string | null>,
-): Promise<Locale> =>
-  JAPANESE_ENABLED
-    ? localeFromAcceptLanguage(await readAcceptLanguage())
-    : DEFAULT_LOCALE;
+export const resolveRequestLocale = (
+  cookie: string | null,
+  acceptLanguage: string | null,
+): Locale =>
+  cookie && isLocale(cookie)
+    ? cookie
+    : localeFromAcceptLanguage(acceptLanguage);
+
+/**
+ * 기기 선호 언어 목록을 우선순위 그대로 Accept-Language로 만든다 — 신규 가입 때 백엔드가 이 목록에서 ko·ja를 고른다.
+ * 앞에서부터 q를 0.1씩 낮춘다(`en-US,ja-JP;q=0.9,ko;q=0.8`). 목록이 비면 null이라 호출부가 헤더를 붙이지 않는다
+ *
+ * @param languages `navigator.languages`
+ */
+export const acceptLanguageOf = (languages: readonly string[]) => {
+  const list = languages.filter(Boolean).slice(0, 10);
+  if (list.length === 0) return null;
+  return list
+    .map((tag, index) =>
+      index === 0 ? tag : `${tag};q=${((10 - index) / 10).toFixed(1)}`,
+    )
+    .join(',');
+};
 
 /**
  * 서버가 정해 html lang에 박은 언어를 읽는다. 브라우저에서 보내는 요청이 화면과 같은 언어를 쓰게 하는 단일 출처.
