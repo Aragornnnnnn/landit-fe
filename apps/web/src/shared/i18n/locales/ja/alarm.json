@@ -75,7 +75,7 @@
     "pickerTitle": "時刻",
     "confirmButton": "決定",
     "deleteTitle": "アラームを削除しますか？",
-    "deleteDescription": "もう一度作るには新しく約束が必要です",
+    "deleteDescription": "作り直すには約束のやり直しが必要です",
     "cancelButton": "キャンセル",
     "confirmDeleteButton": "削除",
     "loadError": "アラーム設定を読み込めませんでした"
