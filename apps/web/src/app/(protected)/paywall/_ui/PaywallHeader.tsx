@@ -34,7 +34,7 @@ export const PaywallHeader = ({
           disabled={restoreDisabled}
           className="text-13 leading-none text-muted-foreground disabled:opacity-50"
         >
-          {t('paywall.paywallHeader.restoreButton')}
+          {t('paywall.restoreButton')}
         </button>
       </div>
     </header>

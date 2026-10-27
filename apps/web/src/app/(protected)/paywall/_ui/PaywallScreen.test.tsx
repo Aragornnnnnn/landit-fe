@@ -210,6 +210,7 @@ describe('PaywallScreen', () => {
     render(<PaywallScreen />);
 
     expect(screen.getByText('연 58,500원')).toBeInTheDocument();
+    expect(screen.getByText('월간보다 67% 저렴')).toBeInTheDocument();
     expect(
       screen.getByText('월 4,900원꼴 · 7일 무료 체험'),
     ).toBeInTheDocument();

@@ -12,15 +12,12 @@ import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
 import { REWARD_PLAN_ID } from '../_model/paywall-content';
-import {
-  getBillingNotice,
-  getCancelNotice,
-  getCtaLabel,
-} from '../_model/paywall-copy';
+import { getCtaLabel } from '../_model/paywall-copy';
 import type { StepOffer } from '../_model/step-offer';
 import { BenefitsStep } from './BenefitsStep';
 import { CheckoutStep } from './CheckoutStep';
 import { PaywallHeader } from './PaywallHeader';
+import { PurchaseNotices, SCROLL_PADDING } from './PurchaseNotices';
 
 type Step = 'benefits' | 'checkout';
 
@@ -61,17 +58,12 @@ export const StepPaywall = ({
   onScroll?: (root: HTMLElement) => void;
 }) => {
   const t = useTranslations();
-  const tCheckout = useTranslations('paywall.paywallCheckout');
+  const tPaywall = useTranslations('paywall');
   const [step, setStep] = useState<Step>(startStep);
-  // 구독은 고른 플랜의 결제·해지 안내를 버튼 밑에 둔다 — 청구액·갱신·해지는 스토어 심사(3.1.2)가 결제 버튼 곁에서 확인한다
+  // 구독을 파는 결제 단계면 고른 플랜의 결제·해지 안내를 버튼 밑에 둔다
   const subscriptionPlan =
     offer.kind === 'subscription' ? offer.plans[offer.selectedId] : null;
-  const notices = subscriptionPlan
-    ? [
-        getBillingNotice(subscriptionPlan, tCheckout),
-        getCancelNotice(subscriptionPlan, tCheckout),
-      ]
-    : [];
+  const showsNotices = subscriptionPlan !== null && step === 'checkout';
   const [scrolled, setScrolled] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -139,7 +131,7 @@ export const StepPaywall = ({
           setScrolled(event.currentTarget.scrollTop > 48);
           onScroll?.(event.currentTarget);
         }}
-        className={`relative h-full overflow-y-auto ${notices.length > 0 && step === 'checkout' ? 'pb-[calc(max(var(--safe-area-inset-bottom),12px)+142px)]' : 'pb-[calc(max(var(--safe-area-inset-bottom),12px)+100px)]'} ${step === 'benefits' ? 'bg-card' : ''}`}
+        className={`relative h-full overflow-y-auto ${showsNotices ? SCROLL_PADDING.withNotices : SCROLL_PADDING.buttonOnly} ${step === 'benefits' ? 'bg-card' : ''}`}
       >
         {step === 'benefits' ? (
           <>
@@ -186,17 +178,10 @@ export const StepPaywall = ({
             <Button onClick={onPurchase} loading={busy}>
               {/* 이용권은 환급 챌린지(한국어 화면)에만 있어 문구를 옮기지 않는다 */}
               {subscriptionPlan
-                ? getCtaLabel(subscriptionPlan, tCheckout)
+                ? getCtaLabel(subscriptionPlan, tPaywall)
                 : '프리미엄 시작하기'}
             </Button>
-            {notices.map((notice, index) => (
-              <p
-                key={notice}
-                className={`${index === 0 ? 'mt-3' : 'mt-1'} text-center text-11 leading-[1.35] text-muted-foreground`}
-              >
-                {notice}
-              </p>
-            ))}
+            {subscriptionPlan && <PurchaseNotices plan={subscriptionPlan} />}
           </>
         )}
       </footer>

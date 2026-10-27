@@ -1,7 +1,11 @@
 {
-  "paywallHeader": {
-    "restoreButton": "購入を復元"
-  },
+  "restoreButton": "購入を復元",
+  "trialStartButton": "7日間の無料体験を始める",
+  "monthlyStartButton": "月額{price}で始める",
+  "yearlyBillingCaption": "7日間の無料体験後は年額{price}で自動更新。いつでも解約できます",
+  "monthlyBillingCaption": "毎月{price}で自動更新。いつでも解約できます",
+  "yearlyCancelCaption": "体験終了の24時間前までに解約すれば請求されません",
+  "monthlyCancelCaption": "更新日の24時間前までに解約すれば翌月分は請求されません",
   "benefitsStep": {
     "title": "毎日届くシナリオを<br></br><premium>プレミアム</premium>で学びましょう",
     "benefitsTitle": "プレミアムだけの特典{count}つ",
@@ -16,7 +20,7 @@
     "expressionPronunciationTitle": "ネイティブのような発音に",
     "expressionUsageTitle": "たくさんの例文で自分のものに",
     "expressionQuizTitle": "身についたかクイズで確認",
-    "smallTalkLabel": "キャラクターと自由に会話",
+    "smallTalkLabel": "キャラクターとスモールトーク",
     "smallTalkPartnerTitle": "相手もアクセントも選べる",
     "smallTalkFreeTitle": "テーマなしで自由に会話"
   },
@@ -45,7 +49,7 @@
     "growthPatternLabel": "過去形",
     "growthPreviousBody": "I go to Okinawa last summer.",
     "beIntoMeaningLabel": "～にハマっている",
-    "getIntoMeaningLabel": "～を始めるようになる",
+    "getIntoMeaningLabel": "～を始める",
     "usedToMeaningLabel": "以前は～していた",
     "scenarioSourceLabel": "10月7日のシナリオ",
     "expressionSourceLabel": "10月5日のフレーズ学習"
@@ -59,14 +63,6 @@
     "monthlySubtitle": "毎月払い・いつでも解約",
     "yearlySubtitle": "月{price}相当・7日間無料",
     "yearlyBadge": "月間より{rate}%お得"
-  },
-  "paywallCheckout": {
-    "trialStartButton": "7日間の無料体験を始める",
-    "monthlyStartButton": "月額{price}で始める",
-    "yearlyBillingCaption": "7日間の無料体験後、年額{price}で自動更新・いつでも解約できます",
-    "monthlyBillingCaption": "毎月{price}で自動更新・いつでも解約できます",
-    "yearlyCancelCaption": "体験終了の24時間前までに解約すれば請求されません",
-    "monthlyCancelCaption": "更新日の24時間前までに解約すれば翌月分は請求されません"
   },
   "exampleDemo": {
     "meaningLabel": "～する気がある、乗り気だ",
@@ -91,14 +87,17 @@
   "usageDemo": {
     "title": "こんな使い方も",
     "meaningLabel": "試しにやってみる",
-    "firstTranslationBody": "やってみたら？気に入るかもよ。",
-    "secondTranslationBody": "彼女、お菓子作りを試したらすっかりハマったよ。",
-    "thirdTranslationBody": "やってみる価値はあるよ。",
-    "fourthTranslationBody": "やってみなよ。失敗しても大したことないって。"
+    "tryItTranslationBody": "やってみたら？気に入るかもよ。",
+    "bakingTranslationBody": "彼女、お菓子作りを試したらすっかりハマったよ。",
+    "worthItTranslationBody": "やってみる価値はあるよ。",
+    "giveItAGoTranslationBody": "やってみなよ。失敗しても大したことないって。"
   },
   "scenarioDemo": {
     "dailyLabel": "今日のシナリオ",
     "startButton": "会話を始める"
+  },
+  "scenarioWall": {
+    "dailyLabel": "今日のシナリオ"
   },
   "smallTalkDemo": {
     "title": "今日は誰と<br></br>話しますか？",

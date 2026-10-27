@@ -85,7 +85,7 @@ export const ScenarioWall = () => {
           />
         </div>
         <span className="absolute top-[158px] left-[332px] z-10 rounded-full bg-primary px-2.5 py-[5px] text-xs font-bold whitespace-nowrap text-primary-foreground">
-          {t('scenarioDemo.dailyLabel')}
+          {t('scenarioWall.dailyLabel')}
         </span>
       </div>
       {/* 위아래 60px은 혜택 화면 머리 배경색(#fbf6ef)으로 흐려 벽이 화면 밖으로 이어지는 것처럼 보인다 */}

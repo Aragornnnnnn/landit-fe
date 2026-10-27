@@ -1,12 +1,9 @@
 // 혜택 목록 — 페이월 비교표(무료 vs 프리미엄)와 구독 관리 "이용 중인 혜택"이 같은 목록을 쓴다.
 // 무료로도 되는 줄은 위에, 프리미엄 전용은 아래에 둔다 (LAN-500). 아이콘은 shared/ui/Icons의 라인 아이콘 이름으로 가리킨다
-export type BenefitLabelKey =
-  | 'dailyScenarioLabel'
-  | 'detailFeedbackLabel'
-  | 'phraseLabel'
-  | 'pronunciationLabel'
-  | 'smallTalkLabel'
-  | 'accentLabel';
+// 혜택 문구 키 — subscription.benefits 아래
+import type { Messages } from 'next-intl';
+
+export type BenefitLabelKey = keyof Messages['subscription']['benefits'];
 
 export type BenefitIcon =
   'calendar' | 'list-checks' | 'chat' | 'sparkles' | 'mic' | 'globe';
