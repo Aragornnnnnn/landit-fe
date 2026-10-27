@@ -1,7 +1,8 @@
-// 프리미엄 프리뷰 배선 — 페이월 게이트가 잠그고 환급 챌린지를 팔 수 있는 사람에게만 프리뷰 단계와 저장·마무리를 내준다
+// 프리미엄 프리뷰 배선 — 페이월 게이트가 잠근 사람에게 프리뷰 단계와 저장·마무리를 내준다. 한국어 화면은 환급 챌린지를 팔 수 있을 때만
 'use client';
 
 import { EVENTS } from '@landit/analytics';
+import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { isPreviewReplay } from '@/features/premium-preview/model/preview-replay';
@@ -14,21 +15,26 @@ import { usePreviewStep } from '@/features/premium-preview/model/usePreviewStep'
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
 import { track } from '@/shared/analytics';
+import { sellsKoreaOnlyOffers } from '@/shared/i18n/locale';
 import { paywallPath } from '@/shared/lib/routes';
 
 export const usePremiumPreview = () => {
   const router = useRouter();
   const gate = usePaywallGate();
-  // 프리뷰는 환급 챌린지를 소개한다 — 챌린지를 팔 수 없는 환경(스위치 꺼짐·구버전 앱)에서는 열지 않는다
+  // 한국어 화면은 환급 챌린지를 팔 수 있을 때만 열고, 일본어 화면은 환급 문장을 뺀 프리뷰를 늘 연다
   const rewardLive = useRewardChallengeLive();
+  const locale = useLocale();
+  const tourLive = rewardLive || !sellsKoreaOnlyOffers(locale);
   const { step, saveStep } = usePreviewStep();
   // 프리뷰를 볼 수 있는 사람인가 — 유료·결제 못 하는 환경에는 프리뷰가 없다. 개발자 묶음에서 다시 보기를 켰으면 이번 실행 동안 누구나 본다
-  const eligible = (gate.locked && rewardLive) || isPreviewReplay();
+  const eligible = (gate.locked && tourLive) || isPreviewReplay();
 
   return {
     eligible,
     // 구독을 아직 못 받아 대상인지 모른다 — 받으면 대상이 될 수 있는 환경일 때만
-    deciding: !eligible && rewardLive && gate.deciding,
+    deciding: !eligible && tourLive && gate.deciding,
+    // 튜토리얼에 환급 문장을 넣을까
+    introducesReward: rewardLive,
     step: eligible ? step : null,
     screen: eligible ? previewScreenOf(step) : ('none' as const),
     saveStep,

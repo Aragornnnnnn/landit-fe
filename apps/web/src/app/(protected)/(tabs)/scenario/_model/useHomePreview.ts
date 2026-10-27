@@ -41,8 +41,11 @@ export const useHomePreview = ({
     setActedThisVisit(true);
     premiumPreview.saveStep(step);
   };
-  // 가격은 프리뷰가 있는 동안 미리 받는다 — 튜토리얼이 뜨기 전에 받아 두어야 금액이 등록가로 굳지 않는다
-  const offer = useRewardOffer({ enabled: premiumPreview.screen !== 'none' });
+  // 가격은 프리뷰가 있는 동안 미리 받는다 — 튜토리얼이 뜨기 전에 받아 두어야 금액이 등록가로 굳지 않는다. 환급을 안 팔면 받지 않는다
+  const offer = useRewardOffer({
+    enabled:
+      premiumPreview.introducesReward && premiumPreview.screen !== 'none',
+  });
   // 무료 표현을 마치면 환급 페이월로 간다 — 그 차례가 오면 페이월 첫 화면의 카드 벽 그림을 미리 받는다
   useEffect(() => {
     if (premiumPreview.screen === 'free_expression')
@@ -68,7 +71,8 @@ export const useHomePreview = ({
     }),
     // 소감을 물을 때 좀 전 대화라고 부를까 — 튜토리얼 뒤에서 멈췄다가 홈에 다시 왔다
     unfinished: previewUnfinished(premiumPreview.step),
-    dailyWon: offer.dailyWon,
+    // 환급을 안 팔면 null — 튜토리얼이 적립 문장을 뺀다
+    dailyWon: premiumPreview.introducesReward ? offer.dailyWon : null,
     finishTutorial: () => advance('TUTORIAL_DONE'),
     cardPreview:
       view === 'card' &&
