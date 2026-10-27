@@ -7,6 +7,7 @@ import mailbox from './ja/mailbox.json';
 import notification from './ja/notification.json';
 import onboarding from './ja/onboarding.json';
 import paywall from './ja/paywall.json';
+import satisfaction from './ja/satisfaction.json';
 import subscription from './ja/subscription.json';
 import widget from './ja/widget.json';
 
@@ -19,6 +20,7 @@ const ja = {
   notification,
   onboarding,
   paywall,
+  satisfaction,
   subscription,
   widget,
 };

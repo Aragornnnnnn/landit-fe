@@ -1,0 +1,22 @@
+{
+  "satisfactionSheet": {
+    "characterLabel": "래디",
+    "reviewTitle": "잘 써주셔서 감사해요!",
+    "reviewDescription": "스토어에 남겨주신 응원 한마디가<br></br>랜딧에겐 큰 힘이 돼요",
+    "reviewButton": "리뷰 남기러 가기",
+    "alreadyDoneButton": "이미 남겼어요",
+    "thanksTitle": "좋았다니 래디도 기뻐요!",
+    "thanksExpressionDescription": "앞으로도 랜딧으로 매일 꾸준히 공부해봐요",
+    "thanksDescription": "남은 표현들도 이어서 공부해보세요",
+    "letterTitle": "아쉬웠군요…",
+    "letterDescription": "어떤 점이 아쉬웠는지 알려주세요.<br></br>피드백을 보내주시면 꼭 읽고 답장드릴게요",
+    "letterButton": "피드백 보내기",
+    "smalltalkAskTitle": "첫 스몰톡, 어떠셨나요?",
+    "expressionAskTitle": "방금 대화와 표현 학습, 어떠셨나요?",
+    "earlierAskTitle": "좀 전에 나눈 대화, 어떠셨나요?",
+    "askTitle": "방금 대화, 어떠셨나요?",
+    "askDescription": "래디가 많이 궁금해요!<br></br>솔직하게 골라주세요",
+    "badButton": "아쉬웠어요",
+    "goodButton": "좋았어요"
+  }
+}

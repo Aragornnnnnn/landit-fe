@@ -12,9 +12,9 @@ export default function TabsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // mailbox는 헤더의 편지함 버튼이 쓴다
+  // mailbox는 헤더의 편지함 버튼이, satisfaction은 시나리오·스몰톡 탭의 소감 시트가 쓴다
   return (
-    <MessagesProvider namespaces={['mailbox']}>
+    <MessagesProvider namespaces={['mailbox', 'satisfaction']}>
       <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-muted">
         <RememberLastTab />
         <AppHeader />

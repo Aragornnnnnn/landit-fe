@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
 import { getNativeContext } from '@/shared/bridge/native-context';
+import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { requestReviewCardViaBridge } from '../api/shell-review';
 import {
@@ -66,6 +67,21 @@ describe('SatisfactionGate', () => {
     expect(trackMock).toHaveBeenCalledWith('Satisfaction Prompt Viewed', {
       moment: 'scenario',
     });
+  });
+
+  it('일본어 화면이면 일본어로 묻는다', () => {
+    // Given 일본어 화면에서 대화를 마쳤다
+    setTestLocale('ja');
+    markTalkCompleted('scenario');
+
+    // When 소감을 띄우면
+    render(<SatisfactionGate moment="scenario" />);
+
+    // Then 묻는 말과 두 버튼이 일본어다
+    expect(screen.getByText('今の会話はどうでしたか？')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'よかったです' }),
+    ).toBeInTheDocument();
   });
 
   it('스몰톡은 스몰톡 문구로 묻는다', () => {
