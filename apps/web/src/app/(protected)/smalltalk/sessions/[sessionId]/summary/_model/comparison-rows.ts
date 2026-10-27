@@ -1,6 +1,7 @@
 // 지난번과 비교 카드의 줄 — 세 지표를 라벨·값·막대 길이로 바꾼다. 막대는 둘 중 큰 값을 가득으로 친다
 import type { SmallTalkSummaryComparison } from '@/features/small-talk/api/small-talk';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
+import type { Locale } from '@/shared/i18n/locale';
 import { toDayLabel } from '@/shared/lib/day-label';
 
 interface Bar {
@@ -29,13 +30,15 @@ const toBars = (
   };
 };
 
-export const toComparisonRows = ({
-  previous,
-  current,
-}: SmallTalkSummaryComparison): ComparisonRow[] => [
+export const toComparisonRows = (
+  { previous, current }: SmallTalkSummaryComparison,
+  locale: Locale,
+): ComparisonRow[] => [
   {
     label: '말한 시간',
-    ...toBars(previous.speakingMs, current.speakingMs, toSpeakingTimeLabel),
+    ...toBars(previous.speakingMs, current.speakingMs, (ms) =>
+      toSpeakingTimeLabel(ms, locale),
+    ),
   },
   {
     label: '주고받은 말',

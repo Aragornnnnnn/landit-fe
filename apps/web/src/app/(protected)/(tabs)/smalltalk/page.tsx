@@ -3,6 +3,7 @@
 // 스몰톡 탭 — 대화 상대를 고르고, 내가 먼저 걸거나 상대가 주제로 먼저 걸게 한다. 정답도 점수도 없는 대화다
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence } from 'motion/react';
+import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { useForceUpdateFirst } from '@/features/app-update/model/useForceUpdateFirst';
@@ -37,6 +38,7 @@ import { TopicPickerModal } from './_ui/TopicPickerModal';
 
 export default function SmallTalkPage() {
   const router = useRouter();
+  const locale = useLocale();
   const { main, fatalError, isLoading, refresh } = useSmallTalkMainQuery();
   // 오늘 예산을 다 썼는지는 서버(canStart)가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
   const exhausted = main !== null && !main.canStart;
@@ -183,7 +185,10 @@ export default function SmallTalkPage() {
                   <span className="text-sm font-bold text-primary">
                     {unlimited
                       ? '무제한'
-                      : toSpeakingTimeLabel(main.remainingSpeakingTimeMs)}
+                      : toSpeakingTimeLabel(
+                          main.remainingSpeakingTimeMs,
+                          locale,
+                        )}
                   </span>
                 </span>
               )}

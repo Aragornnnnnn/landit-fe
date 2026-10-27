@@ -14,7 +14,7 @@ const comparison: SmallTalkSummaryComparison = {
 
 describe('toComparisonRows', () => {
   it('세 지표를 라벨과 함께 나란히 놓고, 막대는 둘 중 큰 값을 가득으로 친다', () => {
-    const rows = toComparisonRows(comparison);
+    const rows = toComparisonRows(comparison, 'ko');
 
     expect(rows.map((row) => row.label)).toEqual([
       '말한 시간',
@@ -37,21 +37,27 @@ describe('toComparisonRows', () => {
   });
 
   it('오늘이 지난번보다 줄었으면 지난번 막대가 가득이다', () => {
-    const rows = toComparisonRows({
-      ...comparison,
-      current: { ...comparison.current, turnCount: 7 },
-    });
+    const rows = toComparisonRows(
+      {
+        ...comparison,
+        current: { ...comparison.current, turnCount: 7 },
+      },
+      'ko',
+    );
 
     expect(rows[1]!.previous.ratio).toBe(1);
     expect(rows[1]!.current.ratio).toBeCloseTo(7 / 14);
   });
 
   it('둘 다 0이면 막대도 0이다 — 0으로 나누지 않는다', () => {
-    const rows = toComparisonRows({
-      ...comparison,
-      current: { speakingMs: 0, turnCount: 0, maxWordsInTurn: 0 },
-      previous: { speakingMs: 0, turnCount: 0, maxWordsInTurn: 0 },
-    });
+    const rows = toComparisonRows(
+      {
+        ...comparison,
+        current: { speakingMs: 0, turnCount: 0, maxWordsInTurn: 0 },
+        previous: { speakingMs: 0, turnCount: 0, maxWordsInTurn: 0 },
+      },
+      'ko',
+    );
 
     expect(rows[0]!.current.ratio).toBe(0);
     expect(rows[0]!.previous.ratio).toBe(0);

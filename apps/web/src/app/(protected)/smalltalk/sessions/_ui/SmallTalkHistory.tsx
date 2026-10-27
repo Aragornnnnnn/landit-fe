@@ -2,6 +2,7 @@
 
 // 지난 스몰톡 — 완료한 대화가 최신순으로 선다. 누르면 그때 만든 표현을 다시 본다.
 // 시나리오처럼 날짜로 찾아가는 화면이 아니다 — 스몰톡은 대화 자체가 기록의 단위다
+import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -83,19 +84,22 @@ const SessionRow = ({
 }: {
   session: SmallTalkSessionSummary;
   onSelect: () => void;
-}) => (
-  <HistoryRow
-    onClick={onSelect}
-    title={toSessionTitle(session.title, session.completedAt)}
-    meta={`${toDayLabel(session.completedAt)} · ${toSpeakingTimeLabel(session.userSpeakingDurationMs)}`}
-    trailing={
-      <ExpressionProgress
-        done={session.completedExpressionCount}
-        total={session.expressionCount}
-      />
-    }
-  />
-);
+}) => {
+  const locale = useLocale();
+  return (
+    <HistoryRow
+      onClick={onSelect}
+      title={toSessionTitle(session.title, session.completedAt)}
+      meta={`${toDayLabel(session.completedAt)} · ${toSpeakingTimeLabel(session.userSpeakingDurationMs, locale)}`}
+      trailing={
+        <ExpressionProgress
+          done={session.completedExpressionCount}
+          total={session.expressionCount}
+        />
+      }
+    />
+  );
+};
 
 // 다 배웠으면 초록, 남았으면 주황, 아직 하나도 안 했으면 회색 — 색만으로 남은 게 있는지 읽힌다.
 // 표현이 아직 안 만들어졌으면 셀 것이 없다

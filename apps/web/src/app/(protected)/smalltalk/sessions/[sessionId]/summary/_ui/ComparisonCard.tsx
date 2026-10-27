@@ -1,6 +1,7 @@
 // 지난번과 비교 — 연회색(지난번) 위에 주황(오늘) 막대 세 줄(말한 시간·주고받은 말·가장 길게 말한 턴).
 // 첫 스몰톡이면 지난번은 0으로 그려 다음부터 채워질 자리를 보여준다
 import type { CSSProperties } from 'react';
+import { useLocale } from 'next-intl';
 
 import type { SmallTalkSummaryComparison } from '@/features/small-talk/api/small-talk';
 
@@ -10,38 +11,43 @@ export const ComparisonCard = ({
   comparison,
 }: {
   comparison: SmallTalkSummaryComparison;
-}) => (
-  <section className="rounded-2xl bg-card px-5 py-4 shadow-sm">
-    <div className="flex items-baseline justify-between">
-      <h2 className="text-17 font-extrabold text-foreground">지난번과 비교</h2>
-      <p className="text-12 text-muted-foreground">
-        {toPeriodLabel(comparison)}
-      </p>
-    </div>
-    <dl className="mt-3 flex flex-col gap-4">
-      {toComparisonRows(comparison).map((row, index) => (
-        <div key={row.label}>
-          <dt className="text-12 text-muted-foreground">{row.label}</dt>
-          <dd className="mt-1.5 flex flex-col gap-1.5">
-            {/* 한 줄에 지난번·오늘 두 개씩 — 위 줄부터 차례로 차오르게 번호를 매긴다 */}
-            <Bar
-              ratio={row.previous.ratio}
-              value={row.previous.value}
-              tone="previous"
-              order={index * 2}
-            />
-            <Bar
-              ratio={row.current.ratio}
-              value={row.current.value}
-              tone="current"
-              order={index * 2 + 1}
-            />
-          </dd>
-        </div>
-      ))}
-    </dl>
-  </section>
-);
+}) => {
+  const locale = useLocale();
+  return (
+    <section className="rounded-2xl bg-card px-5 py-4 shadow-sm">
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-17 font-extrabold text-foreground">
+          지난번과 비교
+        </h2>
+        <p className="text-12 text-muted-foreground">
+          {toPeriodLabel(comparison)}
+        </p>
+      </div>
+      <dl className="mt-3 flex flex-col gap-4">
+        {toComparisonRows(comparison, locale).map((row, index) => (
+          <div key={row.label}>
+            <dt className="text-12 text-muted-foreground">{row.label}</dt>
+            <dd className="mt-1.5 flex flex-col gap-1.5">
+              {/* 한 줄에 지난번·오늘 두 개씩 — 위 줄부터 차례로 차오르게 번호를 매긴다 */}
+              <Bar
+                ratio={row.previous.ratio}
+                value={row.previous.value}
+                tone="previous"
+                order={index * 2}
+              />
+              <Bar
+                ratio={row.current.ratio}
+                value={row.current.value}
+                tone="current"
+                order={index * 2 + 1}
+              />
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+};
 
 // 값이 0일 때 막대 대신 남기는 점의 길이(%) — 자리가 비어 있음을 보여준다
 const EMPTY_BAR_PERCENT = 3;
