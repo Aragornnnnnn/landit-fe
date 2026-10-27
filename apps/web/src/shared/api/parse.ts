@@ -1,4 +1,6 @@
 // 백엔드 공통 응답 포맷 { success, data, error }
+import { commonTranslator } from '@/shared/i18n/common-translator';
+
 import { ApiError } from './api-error';
 
 interface ApiBody {
@@ -30,7 +32,8 @@ export async function parseApiResponse<T>(response: Response): Promise<T> {
 
   throw new ApiError(
     // 공통 봉투 없이 온 실패(스프링 기본 에러 페이지 등)는 상태코드를 붙인 기본 문구로
-    body?.error?.message ?? `서버 오류가 발생했어요. (${response.status})`,
+    body?.error?.message ??
+      commonTranslator()('api.serverError', { status: response.status }),
     response.status,
     endpointOf(response),
     body?.error?.code,

@@ -1,3 +1,20 @@
 {
-  "closeLabel": "닫기"
+  "closeLabel": "닫기",
+  "retryButton": "다시 시도",
+  "backHeader": {
+    "backLabel": "뒤로 가기"
+  },
+  "stepHeader": {
+    "backLabel": "이전"
+  },
+  "loadMoreButton": {
+    "moreButton": "더 보기",
+    "loadingButton": "불러오는 중"
+  },
+  "api": {
+    "serverError": "서버 오류가 발생했어요. ({status})"
+  },
+  "bridgeListener": {
+    "exitToast": "한 번 더 누르면 앱이 종료돼요"
+  }
 }
