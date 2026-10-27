@@ -1,5 +1,5 @@
 // 사유별 화면(②·③)의 문구와 카드 — 피그마 확정 플로우(정리 섹션 2373:329) 그대로.
-// 화면은 여기서 돌려준 모양만 그린다. 플랜·체험·이름·기록 같은 분기는 전부 여기서 끝낸다
+// 화면은 여기서 돌려준 모양만 그린다. 플랜·체험·이름·기록 같은 분기는 전부 여기서 끝내고, 문구는 받은 번역 함수로 화면 언어에 맞춘다
 import type {
   CancelStayDestination,
   StudyMethod,
@@ -10,6 +10,9 @@ import type { RewardView } from '@/features/reward/api/reward';
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
 import { formatWon } from '@/features/subscription/lib/won';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
+import { PLAN_LABEL_KEYS } from '@/features/subscription/model/product/plans';
+import type { Locale } from '@/shared/i18n/locale';
+import type { Translator } from '@/shared/i18n/translator';
 
 import type { RetentionReason } from './cancel-flow';
 
@@ -47,19 +50,14 @@ export interface RetentionContent {
 
 /** 대화 시작부터 표현 학습 완료까지 걸린 시간의 실측 중앙값(앰플리튜드, 2026-09). 문구와 카드가 같은 숫자를 쓴다 */
 export const DAILY_STUDY_MINUTES = 7;
-/** 매일 학습 알림 시각 — 사용자별 설정이 없어 서버 푸시 시각을 그대로 적는다. 시각이 바뀌면 여기만 */
-export const DAILY_REMINDER_LABEL = '매일 오후 9:00';
+// 매일 학습 알림 시각은 문구(subscription.retention.reminderTimeLabel)에 있다 — 사용자별 설정이 없어 서버 푸시 시각을 그대로 적는다
 
-const STAY = { label: '조금 더 써볼게요', to: 'manage' as const };
+type SubscriptionTranslator = Translator<'subscription'>;
 
-// 플랜 이름 — 해지 화면 문구가 아직 한국어라 구독 관리(subscription.plans)와 따로 둔다. 해지 화면을 옮기면 지운다
-const PLAN_TITLE: Record<SubscriptionPlan, string> = {
-  monthly: '월간',
-  yearly: '연간',
-  quarterly: '3개월',
-  halfyear: '6개월',
-  pass: '100일 이용권',
-};
+const stayOf = (t: SubscriptionTranslator) => ({
+  label: t('retention.stayButton'),
+  to: 'manage' as const,
+});
 
 /** 환급을 쌓는 중인 사람이 걸어 둔 것 — 지금까지 쌓인 금액과 끝까지 채우면 받는 금액 */
 export interface RefundStake {
@@ -77,10 +75,13 @@ export const refundStakeOf = (reward: RewardView | null): RefundStake | null =>
     : null;
 
 interface RetentionContext {
+  /** 문구를 고를 번역 함수와 날짜를 적을 화면 언어 */
+  t: SubscriptionTranslator;
+  locale: Locale;
   summary: PaidSubscriptionSummary;
   /** 환급을 쌓는 중이 아니면 null */
   stake: RefundStake | null;
-  /** 마이페이지가 쓰는 이름 — 없으면 "게스트" */
+  /** 마이페이지가 쓰는 이름 — 없으면 "게스트"(화면 언어) */
   nickname: string;
   /** 스트릭 달력의 누적 학습일. 아직 못 받았으면 null */
   totalActiveDays: number | null;
@@ -93,8 +94,12 @@ interface RetentionContext {
 export const dailyWon = (price: number, days: number) =>
   Math.round(price / days / 10) * 10;
 
-// 환급을 쌓는 중이면 하루 요금보다 돌려받는 금액이 가격 이야기의 답이다
-const rewardPriceContent = (stake: RefundStake): RetentionContent => ({
+// 환급을 쌓는 중이면 하루 요금보다 돌려받는 금액이 가격 이야기의 답이다.
+// 환급은 한국어 화면에만 있어 문구를 옮기지 않는다
+const rewardPriceContent = (
+  stake: RefundStake,
+  t: SubscriptionTranslator,
+): RetentionContent => ({
   emoji: '💸',
   title: '가격이 부담되셨군요',
   body: [
@@ -110,7 +115,7 @@ const rewardPriceContent = (stake: RefundStake): RetentionContent => ({
     },
     { kind: 'row', label: '최대 환급액', value: formatWon(stake.maximumWon) },
   ],
-  primary: STAY,
+  primary: stayOf(t),
 });
 
 const PLAN_DAYS: Record<SubscriptionPlan, number> = {
@@ -121,157 +126,189 @@ const PLAN_DAYS: Record<SubscriptionPlan, number> = {
   // 이용권은 해지할 것이 없어 이 화면에 오지 않는다 — 아래 세 표의 pass는 타입을 채우는 값이다
   pass: 100,
 };
-// 하루 요금을 빗댄 것 — 월간 500원·3개월 440원은 껌, 6개월 330원은 사탕 두 개, 연간 160원은 사탕 하나
-const PLAN_TREAT: Record<SubscriptionPlan, string> = {
-  monthly: '껌 한 통 값',
-  quarterly: '껌 한 통 값',
-  halfyear: '사탕 두 개 값',
-  yearly: '사탕 하나 값',
-  pass: '껌 한 통 값',
-};
-// 결제 금액 앞에 붙는 주기 — 월간은 하루 요금 행만으로 충분해 보조 문구를 달지 않는다
-const PLAN_PRICE_PREFIX: Record<SubscriptionPlan, string | null> = {
+// 하루 요금을 빗댄 문장 — 월간 500원·3개월 440원은 껌, 6개월 330원은 사탕 두 개, 연간 160원은 사탕 하나
+const PLAN_TREAT_KEYS = {
+  monthly: 'gumTreatBody',
+  quarterly: 'gumTreatBody',
+  halfyear: 'twoCandiesTreatBody',
+  yearly: 'candyTreatBody',
+  pass: 'gumTreatBody',
+} as const satisfies Record<SubscriptionPlan, string>;
+// 결제 금액 보조 문구 — 월간은 하루 요금 행만으로 충분해 달지 않는다
+const PLAN_PRICE_KEYS = {
   monthly: null,
-  quarterly: '3개월',
-  halfyear: '6개월',
-  yearly: '연',
-  pass: '100일',
-};
+  quarterly: 'quarterlyPriceLabel',
+  halfyear: 'halfyearPriceLabel',
+  yearly: 'yearlyPriceLabel',
+  pass: 'passPriceLabel',
+} as const satisfies Record<SubscriptionPlan, string | null>;
 
-const priceContent = (
-  summary: PaidSubscriptionSummary,
-  stake: RefundStake | null,
-): RetentionContent => {
-  if (stake) return rewardPriceContent(stake);
+const priceContent = ({
+  t,
+  locale,
+  summary,
+  stake,
+}: RetentionContext): RetentionContent => {
+  if (stake) return rewardPriceContent(stake, t);
   const { plan, price } = summary;
   // 플랜이나 실제 결제액을 모르면 숫자를 지어내지 않는다 — 문구도 카드도 없이
   if (!plan || price === null) {
     return {
       emoji: '💸',
-      title: '가격이 부담되셨군요',
-      body: ['조금 더 써 보고 결정해도 늦지 않아요.'],
+      title: t('retention.priceTitle'),
+      body: [t('retention.priceUnknownBody')],
       cards: [],
-      primary: STAY,
+      primary: stayOf(t),
     };
   }
-  const title = PLAN_TITLE[plan];
-  const daily = `하루 ${formatWon(dailyWon(price, PLAN_DAYS[plan]))}`;
-  const firstCharge = firstChargeRow(summary);
+  const title = t(`plans.${PLAN_LABEL_KEYS[plan]}`);
+  // 결제액은 원화만 온다(summary.price) — 원화 표기 그대로
+  const daily = t('retention.dailyPriceLabel', {
+    price: formatWon(dailyWon(price, PLAN_DAYS[plan])),
+  });
+  const priceKey = PLAN_PRICE_KEYS[plan];
+  const firstCharge = firstChargeRow(summary, t, locale);
   return {
     emoji: '💸',
-    title: '가격이 부담되셨군요',
+    title: t('retention.priceTitle'),
     body: [
-      `${plan === 'monthly' ? '지금' : title} 요금은 ${daily}이에요.`,
-      `매일 ${PLAN_TREAT[plan]}으로 영어 회화를 연습하고 있어요.`,
+      plan === 'monthly'
+        ? t('retention.monthlyDailyBody', { daily })
+        : t('retention.planDailyBody', { plan: title, daily }),
+      t(`retention.${PLAN_TREAT_KEYS[plan]}`),
     ],
     cards: [
       {
         kind: 'row',
-        label: `지금 · ${title}`,
-        sublabel: PLAN_PRICE_PREFIX[plan]
-          ? `${PLAN_PRICE_PREFIX[plan]} ${formatWon(price)}`
+        label: t('retention.currentPlanLabel', { plan: title }),
+        sublabel: priceKey
+          ? t(`retention.${priceKey}`, { price: formatWon(price) })
           : undefined,
         value: daily,
       },
       ...(firstCharge ? [firstCharge] : []),
     ],
-    primary: STAY,
+    primary: stayOf(t),
   };
 };
 
 // 체험 중이면 아직 결제 전이다 — 언제부터 내는지 한 행 더
-const firstChargeRow = (summary: PaidSubscriptionSummary): RowCard | null => {
+const firstChargeRow = (
+  summary: PaidSubscriptionSummary,
+  t: SubscriptionTranslator,
+  locale: Locale,
+): RowCard | null => {
   if (summary.kind !== 'trial' || !summary.expiresAt) return null;
-  // 해지 화면 문구가 아직 한국어라 날짜도 한국어 표기로 맞춘다
-  const date = formatSubscriptionDate(summary.expiresAt, 'ko');
-  return date ? { kind: 'row', label: '첫 결제일', value: date } : null;
+  const date = formatSubscriptionDate(summary.expiresAt, locale);
+  return date
+    ? {
+        kind: 'row',
+        label: t('subscriptionCard.firstChargeLabel'),
+        value: date,
+      }
+    : null;
 };
 
 const progressContent = ({
+  t,
   nickname,
   totalActiveDays,
   levelLabel,
 }: RetentionContext): RetentionContent => {
   const items = [
     ...(totalActiveDays !== null
-      ? [{ value: `${totalActiveDays}일`, label: '학습한 날' }]
+      ? [
+          {
+            value: t('retention.activeDaysValueLabel', {
+              days: totalActiveDays,
+            }),
+            label: t('retention.activeDaysLabel'),
+          },
+        ]
       : []),
-    ...(levelLabel ? [{ value: levelLabel, label: '내 학습 레벨' }] : []),
+    ...(levelLabel
+      ? [{ value: levelLabel, label: t('retention.levelStatLabel') }]
+      : []),
   ];
   return {
     emoji: '📈',
-    title: '실력이 안 느는 것 같으셨군요',
+    title: t('retention.progressTitle'),
     body: [
-      `매 대화를 분석해서 ${nickname}님 수준에 맞춰 가고 있어요.`,
-      '지금까지 이만큼 함께했어요.',
+      t('retention.progressBody', { nickname }),
+      t('retention.progressTogetherBody'),
     ],
     // 보여줄 숫자가 하나도 없으면 카드 자체를 안 그린다 — 빈 칸은 기죽이기만 한다
     cards: items.length > 0 ? [{ kind: 'stat', items }] : [],
-    primary: STAY,
+    primary: stayOf(t),
   };
 };
 
-const REASON_CONTENT: Record<
-  Exclude<RetentionReason, 'price' | 'progress' | 'other'>,
-  RetentionContent
-> = {
-  time: {
-    emoji: '⏰',
-    title: '시간이 없으셨군요',
-    body: [
-      `하루 ${DAILY_STUDY_MINUTES}분만 투자하면`,
-      '대화부터 표현 학습까지 할 수 있어요.',
-      '잊지 않게 알림도 보내드릴게요.',
-    ],
-    cards: [
-      {
-        kind: 'row',
-        label: '대화부터 표현 학습까지 평균 소요 시간',
-        value: `${DAILY_STUDY_MINUTES}분`,
-      },
-      { kind: 'row', label: '매일 학습 알림', value: DAILY_REMINDER_LABEL },
-    ],
-    primary: STAY,
-  },
-  content: {
-    emoji: '🗂️',
-    title: '원하는 상황이 없으셨군요',
-    body: [
-      '빠짐없이 읽고 꼭 답장 드려요.',
-      '만들 수 있는 건 바로 시나리오로 만들어 드릴게요.',
-    ],
-    cards: [
-      { kind: 'row', label: '편지함', value: '빠짐없이 읽고 꼭 답장해요' },
-    ],
-    primary: { label: '원하는 상황 알려주기', to: 'mailbox' },
-  },
-  bug: {
-    emoji: '🐞',
-    title: '불편을 드려 죄송해요',
-    body: [
-      '빠짐없이 읽고 꼭 답장 드려요.',
-      '버그는 파악하는 즉시 바로 고치고 있어요.',
-    ],
-    cards: [
-      {
-        kind: 'row',
-        label: '편지함',
-        value: '고치면 편지 답장으로 알려드려요',
-      },
-    ],
-    primary: { label: '불편한 점 알려주기', to: 'mailbox' },
-  },
-};
-
-const otherContent = (otherText: string): RetentionContent => ({
-  emoji: '✍️',
-  title: '말씀 감사해요',
+const timeContent = (t: SubscriptionTranslator): RetentionContent => ({
+  emoji: '⏰',
+  title: t('retention.timeTitle'),
   body: [
-    '적어주신 내용은 빠짐없이 읽고 꼭 답장 드려요.',
-    '답장은 편지함으로 갈게요.',
+    t('retention.timeMinutesBody', { minutes: DAILY_STUDY_MINUTES }),
+    t('retention.timeCoverBody'),
+    t('retention.timeReminderBody'),
   ],
-  cards: [{ kind: 'quote', label: '적어주신 내용', text: otherText.trim() }],
-  primary: { label: '편지함으로 답장 받기', to: 'mailbox' },
+  cards: [
+    {
+      kind: 'row',
+      label: t('retention.averageTimeLabel'),
+      value: t('retention.minutesValueLabel', { minutes: DAILY_STUDY_MINUTES }),
+    },
+    {
+      kind: 'row',
+      label: t('retention.reminderLabel'),
+      value: t('retention.reminderTimeLabel'),
+    },
+  ],
+  primary: stayOf(t),
+});
+
+const contentContent = (t: SubscriptionTranslator): RetentionContent => ({
+  emoji: '🗂️',
+  title: t('retention.contentTitle'),
+  body: [t('retention.readAndReplyBody'), t('retention.contentScenarioBody')],
+  cards: [
+    {
+      kind: 'row',
+      label: t('retention.mailboxLabel'),
+      value: t('retention.contentMailboxLabel'),
+    },
+  ],
+  primary: { label: t('retention.contentButton'), to: 'mailbox' },
+});
+
+const bugContent = (t: SubscriptionTranslator): RetentionContent => ({
+  emoji: '🐞',
+  title: t('retention.bugTitle'),
+  body: [t('retention.readAndReplyBody'), t('retention.bugFixBody')],
+  cards: [
+    {
+      kind: 'row',
+      label: t('retention.mailboxLabel'),
+      value: t('retention.bugMailboxLabel'),
+    },
+  ],
+  primary: { label: t('retention.bugButton'), to: 'mailbox' },
+});
+
+const otherContent = ({
+  t,
+  otherText,
+}: RetentionContext): RetentionContent => ({
+  emoji: '✍️',
+  title: t('retention.otherTitle'),
+  body: [t('retention.otherReadBody'), t('retention.otherReplyBody')],
+  cards: [
+    {
+      kind: 'quote',
+      label: t('retention.otherQuoteLabel'),
+      text: otherText.trim(),
+    },
+  ],
+  primary: { label: t('retention.otherButton'), to: 'mailbox' },
 });
 
 /** ② 화면 — 사유 하나에 한 장. "다른 방법"은 ③으로 가므로 여기 없다 */
@@ -281,52 +318,58 @@ export const retentionContent = (
 ): RetentionContent => {
   switch (reason) {
     case 'price':
-      return priceContent(context.summary, context.stake);
+      return priceContent(context);
     case 'progress':
       return progressContent(context);
     case 'other':
-      return otherContent(context.otherText);
-    default:
-      return REASON_CONTENT[reason];
+      return otherContent(context);
+    case 'time':
+      return timeContent(context.t);
+    case 'content':
+      return contentContent(context.t);
+    case 'bug':
+      return bugContent(context.t);
   }
 };
 
-const METHOD_CONTENT: Record<
-  StudyMethod,
-  { title: string; first: string; second: string }
-> = {
+// 방법마다 제목·첫 줄·둘째 줄 문구 키 — subscription.methodRetention 아래
+const METHOD_CONTENT_KEYS = {
   academy: {
-    title: '수업 뒤 복습은 말하기로',
-    first: '수업에서 배운 표현을 랜딧에서 말해 보세요.',
-    second: '말해 본 표현은 정말 오래 남을 거예요.',
+    title: 'academyTitle',
+    first: 'academyBody',
+    second: 'spokenStaysBody',
   },
   other_app: {
-    title: '익힌 표현, 여기서 말해 보세요',
-    first: '다른 데서 익힌 표현도 여기서 말해 보세요.',
-    second: '말해 본 표현은 정말 오래 남을 거예요.',
+    title: 'otherAppTitle',
+    first: 'otherAppBody',
+    second: 'spokenStaysBody',
   },
   youtube: {
-    title: '본 표현을 말해 볼 차례예요',
-    first: '영상으로 본 표현을 입으로 꺼내 보세요.',
-    second: '말해 본 표현은 정말 오래 남을 거예요.',
+    title: 'youtubeTitle',
+    first: 'youtubeBody',
+    second: 'spokenStaysBody',
   },
   abroad: {
-    title: '떠나기 전에 말문을 트세요',
-    first: '떠나기 전 여기서 말문을 트고 가세요.',
-    second: '다녀와서도 정말 오래 이어질 거예요.',
+    title: 'abroadTitle',
+    first: 'abroadBody',
+    second: 'abroadStaysBody',
   },
-};
+} as const satisfies Record<
+  StudyMethod,
+  { title: string; first: string; second: string }
+>;
 
 /** ③ 화면 — 고른 방법마다 제목·첫 줄이 다르다. 카드는 없다 */
 export const methodRetentionContent = (
   method: StudyMethod,
+  t: SubscriptionTranslator,
 ): RetentionContent => {
-  const { title, first, second } = METHOD_CONTENT[method];
+  const { title, first, second } = METHOD_CONTENT_KEYS[method];
   return {
     emoji: '💬',
-    title,
-    body: [first, second],
+    title: t(`methodRetention.${title}`),
+    body: [t(`methodRetention.${first}`), t(`methodRetention.${second}`)],
     cards: [],
-    primary: STAY,
+    primary: stayOf(t),
   };
 };

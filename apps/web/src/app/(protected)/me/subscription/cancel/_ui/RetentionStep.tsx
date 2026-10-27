@@ -1,6 +1,8 @@
 'use client';
 
 // 사유별 화면(②·③) — 이모지 → 제목 → 본문 → 카드 → 주 버튼 → 작은 해지 링크. 내용은 전부 _model/retention-content가 준다
+import { useTranslations } from 'next-intl';
+
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 
@@ -13,6 +15,7 @@ import { StepFooter } from './StepFooter';
 const CARD_CLASS = 'rounded-2xl bg-muted px-4 py-3.5';
 
 const Card = ({ card }: { card: RetentionCard }) => {
+  const t = useTranslations('subscription.cancelFlow');
   if (card.kind === 'stat') {
     return (
       <dl className={`${CARD_CLASS} flex divide-x divide-border`}>
@@ -34,7 +37,7 @@ const Card = ({ card }: { card: RetentionCard }) => {
           {card.label}
         </figcaption>
         <blockquote className="mt-1 text-15 text-foreground">
-          “{card.text}”
+          {t('quoteBody', { text: card.text })}
         </blockquote>
       </figure>
     );
