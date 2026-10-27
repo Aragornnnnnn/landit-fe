@@ -143,11 +143,40 @@ describe('UserTranscript', () => {
       });
 
       expect(onChange).toHaveBeenLastCalledWith('a'.repeat(ANSWER_MAX_LENGTH));
+      // 토스트와 화면 읽기용 안내 둘 다 뜬다
       expect(
-        screen.getByText(
+        screen.getAllByText(
           `${ANSWER_MAX_LENGTH.toLocaleString()}자까지 입력할 수 있어요`,
         ),
-      ).toBeInTheDocument();
+      ).toHaveLength(2);
+    });
+
+    it('한도에서 중간에 끼워 넣으면 뒤에 있던 글은 그대로 두고 끼워 넣은 글만 자른다', () => {
+      const full = `${'a'.repeat(ANSWER_MAX_LENGTH - 3)}END`;
+      const { input, onChange } = renderEditing(full);
+
+      // 맨 앞에 'xyz'를 끼워 넣은 직후의 값과 커서
+      fireEvent.change(input, {
+        target: { value: `xyz${full}`, selectionStart: 3, selectionEnd: 3 },
+      });
+
+      expect(onChange).toHaveBeenLastCalledWith(full);
+    });
+
+    it('한도에 닿으면 화면 읽기에도 더 쓸 수 없다고 알린다', () => {
+      renderEditing('a'.repeat(ANSWER_MAX_LENGTH));
+
+      expect(screen.getByRole('status')).toHaveTextContent(
+        `${ANSWER_MAX_LENGTH.toLocaleString()}자까지 입력할 수 있어요`,
+      );
+    });
+
+    it('글자 수 표시는 입력창 설명으로 함께 읽힌다', () => {
+      const { input } = renderEditing('a'.repeat(ANSWER_MAX_LENGTH - 50));
+
+      expect(input).toHaveAccessibleDescription(
+        `${ANSWER_MAX_LENGTH - 50}/${ANSWER_MAX_LENGTH.toLocaleString()}`,
+      );
     });
 
     it('한도에 가까워지면 지금 글자 수를 보여 준다', () => {

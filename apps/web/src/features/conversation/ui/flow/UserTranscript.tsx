@@ -19,7 +19,7 @@ import { haptic } from '@/shared/haptics';
 import { ArrowUpIcon, CloseIcon } from '@/shared/ui/Icons';
 import { showToast } from '@/shared/ui/toast';
 
-import { ANSWER_MAX_LENGTH, clampAnswer } from '../../model/answer-length';
+import { ANSWER_MAX_LENGTH } from '../../model/answer-length';
 import type { ConversationPhase } from '../../model/conversation-machine';
 import { removeNonEnglish } from '../../model/english-only';
 import { useEditHint } from '../../model/useEditHint';
@@ -189,6 +189,7 @@ export const UserTranscript = ({
 
 // 글자 수를 보이기 시작하는 지점 — 한도의 90%
 const COUNTER_FROM = ANSWER_MAX_LENGTH * 0.9;
+const LIMIT_NOTICE = `${ANSWER_MAX_LENGTH.toLocaleString()}자까지 입력할 수 있어요`;
 
 // 키보드 입력 모드의 입력창 — 답변은 영어로만 받아서 그 밖의 글자를 걸러 낸다
 const TranscriptEditor = ({
@@ -205,6 +206,7 @@ const TranscriptEditor = ({
   // 글자가 안 써지는 순간을 바로 알아채게 박스를 흔든다. 끝나면 거둬야 다음에 다시 흔들 수 있다
   const [shaking, setShaking] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const counterId = useId();
   // 칸이 줄어 앞부분이 위로 넘쳤는지 — 답변 칸처럼 윗변을 흐려 반쯤 잘린 줄이 보이지 않게 한다
   const [clipped, setClipped] = useState(false);
 
@@ -239,15 +241,23 @@ const TranscriptEditor = ({
   const acceptTyping = (input: HTMLTextAreaElement) => {
     const { value, selectionStart } = input;
     const english = removeNonEnglish(value);
-    const accepted = clampAnswer(english);
-    onChange?.(accepted);
-    // 한도를 넘긴 글(붙여 넣기 포함)은 잘라 내고 더 쓸 수 없다고 알린다
-    if (accepted !== english) {
+    // 한도를 넘기면 방금 끼워 넣은 글만 자른다 — 커서 뒤에 있던 글은 그대로 두어야 중간에 써도 뒷부분이 사라지지 않는다
+    if (english.length > ANSWER_MAX_LENGTH) {
+      const caret = removeNonEnglish(value.slice(0, selectionStart)).length;
+      const after = english.slice(caret);
+      const before = english
+        .slice(0, caret)
+        .slice(0, ANSWER_MAX_LENGTH - after.length);
+      onChange?.(before + after);
       setShaking(true);
       haptic('error');
-      showToast(`${ANSWER_MAX_LENGTH.toLocaleString()}자까지 입력할 수 있어요`);
+      showToast(LIMIT_NOTICE);
+      requestAnimationFrame(() =>
+        input.setSelectionRange(before.length, before.length),
+      );
       return;
     }
+    onChange?.(english);
     // 분해형 악센트를 합치기만 한 것은 지운 게 아니다 — 합친 원문과 비교한다
     if (english === value.normalize('NFC')) return;
     warnNonEnglish();
@@ -260,7 +270,6 @@ const TranscriptEditor = ({
   return (
     <div
       onAnimationEnd={() => setShaking(false)}
-      // 자리가 모자라도 줄지 않는다 — 줄면 보내기 버튼이 칸 밖으로 넘쳐 키보드 뒤로 들어간다.
       // 간격·여백·글자는 답변 칸과 같다 — 확인 칸을 눌러 열 때 글이 제자리에 있어야 같은 칸이 입력 상태가 된 것으로 읽힌다
       // 글이 길면 칸도 자라고, 자리가 모자라면 줄어 안에서 스크롤된다 — 보내기 버튼은 늘 칸 안에 남는다
       className={`mt-3 flex w-full shrink flex-col rounded-2xl border border-primary bg-card px-5 py-3 ${shaking ? 'animate-shake' : ''}`}
@@ -275,6 +284,7 @@ const TranscriptEditor = ({
         {/* 한도에 가까워졌을 때만 글자 수를 보인다 — 늘 띄우면 짧은 답에도 숫자를 신경 쓰게 된다 */}
         {text.length >= COUNTER_FROM && (
           <p
+            id={counterId}
             className={`mr-2 ml-auto text-xs font-semibold tabular-nums ${text.length >= ANSWER_MAX_LENGTH ? 'text-destructive' : 'text-muted-foreground'}`}
           >
             {text.length.toLocaleString()}/{ANSWER_MAX_LENGTH.toLocaleString()}
@@ -290,9 +300,14 @@ const TranscriptEditor = ({
           <CloseIcon size={16} strokeWidth={2.5} />
         </button>
       </div>
+      {/* 토스트는 화면 읽기에 닿지 않는다 — 한도에 닿은 걸 따로 읽어 준다 */}
+      <p role="status" className="sr-only">
+        {text.length >= ANSWER_MAX_LENGTH ? LIMIT_NOTICE : ''}
+      </p>
       <textarea
         ref={inputRef}
         autoFocus
+        aria-describedby={text.length >= COUNTER_FROM ? counterId : undefined}
         value={text}
         onCompositionStart={() => {
           composingRef.current = true;
