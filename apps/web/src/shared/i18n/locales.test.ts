@@ -55,6 +55,15 @@ const slotsOf = (message: string) =>
     .sort();
 
 describe('문구 파일 계약', () => {
+  it('한 언어에만 줄바꿈이 있는 키가 없다 — 줄바꿈 문구는 t.rich로만 그려져서 t()로 그리는 키에 한쪽만 생기면 그 언어에서 깨진다', () => {
+    const hasBreak = (message: string) => message.includes('<br>');
+    for (const [path, message] of jaEntries) {
+      const koMessage = koByKey.get(path);
+      if (koMessage === undefined) continue;
+      expect(hasBreak(message), path).toBe(hasBreak(koMessage));
+    }
+  });
+
   it('스스로 닫는 태그(<br/>)를 쓰지 않는다 — next-intl이 태그로 읽지 않고 글자 그대로 내보낸다', () => {
     for (const [path, message] of [...koEntries, ...jaEntries]) {
       expect(message, path).not.toMatch(/<\w+\s*\/>/);

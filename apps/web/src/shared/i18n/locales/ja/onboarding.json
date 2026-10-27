@@ -1,7 +1,7 @@
 {
   "introStep": {
-    "greetingTitle": "こんにちは <wave></wave><br></br>ネイティブみたいに<br></br>話せるようにします",
-    "namedGreetingTitle": "こんにちは、{nickname}さん <wave></wave><br></br>ネイティブみたいに<br></br>話せるようにします",
+    "greetingTitle": "こんにちは<wave></wave><br></br>ネイティブみたいに<br></br>話せるようにします",
+    "namedGreetingTitle": "こんにちは、{nickname}さん<wave></wave><br></br>ネイティブみたいに<br></br>話せるようにします",
     "body": "毎日ひとつ、会話を用意します<br></br>続けるうちに話せるようになります",
     "mascotLabel": "ラディ",
     "nextButton": "いいですね！"
