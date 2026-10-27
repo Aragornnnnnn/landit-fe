@@ -1,3 +1,9 @@
 {
-  "closeLabel": "閉じる"
+  "closeLabel": "閉じる",
+  "backLabel": "戻る",
+  "errorScreen": {
+    "title": "問題が発生しました",
+    "description": "しばらくしてからもう一度お試しください",
+    "retryButton": "もう一度試す"
+  }
 }

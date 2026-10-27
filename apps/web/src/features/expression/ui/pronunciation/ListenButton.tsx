@@ -2,6 +2,8 @@
 
 // 발음 듣기 공용 버튼 — 대기: 회색 배경+전경 아이콘, 재생 중: 전경색 배경+흰 아이콘 (전 화면 동일 문법)
 // 원어민이든 내 녹음이든 "듣는" 동작은 전부 스피커 — 누구 소리인지는 옆 라벨이 말한다
+import { useTranslations } from 'next-intl';
+
 import { SpeakerIcon } from '@/shared/ui/Icons';
 
 interface ListenButtonProps {
@@ -35,12 +37,13 @@ export const ListenButton = ({
   ariaLabel,
   disabled,
 }: ListenButtonProps) => {
+  const t = useTranslations('expression.listenButton');
   const shape = label ? 'chip' : 'circle';
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      aria-label={ariaLabel ?? label ?? '발음 듣기'}
+      aria-label={ariaLabel ?? label ?? t('defaultLabel')}
       // 막힌 동안은 흐리게 — 눌러도 반응이 없으면 고장난 버튼으로 보인다
       className={`flex items-center justify-center rounded-full transition-colors active:opacity-70 disabled:opacity-40 ${SHAPE[shape]} ${
         playing ? PLAYING : IDLE[shape]

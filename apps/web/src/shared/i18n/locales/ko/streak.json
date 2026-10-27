@@ -1,0 +1,47 @@
+{
+  "streakFlow": {
+    "title": "연속 학습 기록"
+  },
+  "headerStreak": {
+    "pendingLabel": "연속 기록 보기",
+    "openLabel": "연속 학습 {days}일, 연속 기록 보기"
+  },
+  "hero": {
+    "emptyTitle": "아직 열매가 없어요",
+    "emptyDescription": "오늘 첫 대화로 열매를 모아봐요",
+    "daysTitle": "{days}일 연속 학습",
+    "restartDescription": "오늘 대화 하나면 다시 1일이에요",
+    "weekMilestoneDescription": "일주일을 꽉 채웠어요!",
+    "monthMilestoneDescription": "한 달을 꽉 채웠어요!",
+    "hundredMilestoneDescription": "백 일째 이어가고 있어요",
+    "tomorrowDescription": "내일도 이어가면 {days}일이 돼요",
+    "todayDescription": "오늘 대화를 끝내면 {days}일이 돼요"
+  },
+  "celebration": {
+    "weekReachedDescription": "일주일 연속! 이 기세면 원어민 실력도 시간 문제예요",
+    "monthReachedDescription": "한 달을 채웠어요! 꾸준히 하는 모습이 멋져요",
+    "hundredReachedDescription": "백 일 동안 하루도 안 빠졌어요! 정말 멋져요",
+    "weekLeftDescription": "한 주 연속까지 {days}일 남았어요",
+    "continuingDescription": "{days}일째 이어가고 있어요",
+    "recordBreakingDescription": "최고 기록을 새로 쓰는 중이에요",
+    "recordLeftDescription": "최고 기록까지 {days}일 남았어요",
+    "filledEarlierTitle": "오늘 열매는 이미 채웠어요",
+    "filledEarlierDescription": "오늘 열매는 이미 채웠어요",
+    "firstTitle": "첫 열매예요!",
+    "stampedTitle": "오늘 열매를 채웠어요",
+    "firstWeekDescription": "내일도 이어가서 한 주를 채워봐요",
+    "daysTitle": "{days}일 연속"
+  },
+  "streakStats": {
+    "recordDescription": "가장 길게 <strong>{longest}일</strong> 이어갔고, 지금까지 <strong>{total}일</strong> 학습했어요"
+  },
+  "streakCalendar": {
+    "previousLabel": "이전 달",
+    "nextLabel": "다음 달"
+  },
+  "streakDay": {
+    "doneLabel": "{date}, 학습 완료",
+    "todayLabel": "{date}, 오늘, 아직 학습 전",
+    "missedLabel": "{date}, 학습 안 함"
+  }
+}

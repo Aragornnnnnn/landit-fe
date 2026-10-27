@@ -41,13 +41,13 @@ vi.mock('next/link', () => ({
 const scenario: Tab = {
   id: 'scenario',
   href: '/scenario',
-  label: '시나리오',
+  labelKey: 'scenarioLabel',
   ready: true,
 };
 const smalltalk: Tab = {
   id: 'smalltalk',
   href: '/smalltalk',
-  label: '스몰톡',
+  labelKey: 'smalltalkLabel',
   ready: true,
 };
 

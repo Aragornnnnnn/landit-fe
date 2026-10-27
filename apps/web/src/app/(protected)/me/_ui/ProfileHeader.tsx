@@ -54,6 +54,7 @@ const NAME_SIZE_CLASS: Record<NicknameDisplaySize, string> = {
 
 export const ProfileHeader = () => {
   const levelName = useTranslations('feedback.levelNames');
+  const t = useTranslations('me.profileHeader');
   const member = useAuthStore((state) => state.member);
   const { data, isPending } = useLearningLevelQuery();
   const level = toEnglishLevel(data?.learningLevel ?? null);
@@ -74,14 +75,14 @@ export const ProfileHeader = () => {
           type="button"
           onClick={() => setNicknameSheetOpen(true)}
           className="-mx-1 rounded-lg px-1 text-left transition-transform active:scale-[0.97]"
-          aria-label="닉네임 바꾸기"
+          aria-label={t('editNicknameLabel')}
         >
           {/* 긴 이름은 자르지 않는다 — 크기를 줄이고도 넘치면 줄을 넘긴다 */}
           <span
             className={`${NAME_SIZE_CLASS[nicknameDisplaySize(nickname)]} leading-tight font-bold break-words`}
             style={{ color: '#111' }}
           >
-            {nickname || '게스트'}
+            {nickname || t('guestLabel')}
           </span>
           {/* 연필만 다음 줄로 떨어지지 않게 마지막 글자에 붙인다 — 단어 결합자(U+2060)가 그 사이 줄바꿈을 막는다 */}
           <span className="whitespace-nowrap" aria-hidden="true">

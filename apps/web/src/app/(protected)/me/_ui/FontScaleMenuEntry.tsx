@@ -3,6 +3,7 @@
 // 마이페이지 "글자 크기" 행 — 눌러 들어간 시트의 바를 옮겨 앱 전체 글자 크기를 다섯 단계 중에 고른다. 값은 이 기기의 localStorage에만 산다
 import { useState, useSyncExternalStore } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 
 import { track } from '@/shared/analytics';
 import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
@@ -21,13 +22,13 @@ import { Emoji } from '@/shared/ui/emoji';
 import { MenuButton } from './Menu';
 import { SettingSheet } from './SettingSheet';
 
-const LABELS: Record<FontScale, string> = {
-  0.85: '가장 작게',
-  0.92: '작게',
-  1: '보통',
-  1.15: '크게',
-  1.3: '가장 크게',
-};
+const LABEL_KEYS = {
+  0.85: 'smallestLabel',
+  0.92: 'smallLabel',
+  1: 'normalLabel',
+  1.15: 'largeLabel',
+  1.3: 'largestLabel',
+} as const satisfies Record<FontScale, string>;
 
 // 손잡이 지름(px) — 그림·실제 터치 손잡이·바 안쪽 여백이 모두 이 값에서 나온다. 눈금이 손잡이 중심과 맞으려면 셋이 같아야 한다
 const THUMB_SIZE_PX = 22;
@@ -41,6 +42,7 @@ const stepAt = (clientX: number, { left, width }: DOMRect) => {
 };
 
 export const FontScaleMenuEntry = () => {
+  const t = useTranslations('me.fontScaleMenu');
   const [open, setOpen] = useState(false);
   // 서버 렌더와 첫 렌더는 숨긴 채로 둔다 — 구 셸에서 행이 떴다 사라지지 않게
   const available = useClientOnlyValue(
@@ -68,7 +70,7 @@ export const FontScaleMenuEntry = () => {
   return (
     <>
       <MenuButton
-        title="글자 크기"
+        title={t('title')}
         icon={<Emoji>🔠</Emoji>}
         onClick={() => setOpen(true)}
       />
@@ -77,13 +79,13 @@ export const FontScaleMenuEntry = () => {
         open={open}
         onClose={() => setOpen(false)}
         // 설명은 두지 않는다 — 고르는 순간 시트 뒤 화면 글자가 바뀌어 그걸로 알 수 있다
-        title="글자 크기"
+        title={t('title')}
       >
         {/* 휴대폰 설정처럼 「작은 가 — 바 — 큰 가」. 옮기는 순간 시트 뒤 화면 글자가 바뀌어 따로 미리보기를 두지 않는다.
             바·「가」·이름은 배율을 받지 않는 고정 크기다 — 옮길 때마다 바가 커지면 손가락 아래 자리가 흔들린다 */}
         <div className="mt-5 flex items-center gap-3.5 [--font-scale:1]">
           <span className="text-13 font-medium text-[#6B7280]" aria-hidden>
-            가
+            {t('smallSampleLabel')}
           </span>
           <div
             className="relative h-7 flex-1"
@@ -136,18 +138,18 @@ export const FontScaleMenuEntry = () => {
                   ],
                 )
               }
-              aria-label="글자 크기"
-              aria-valuetext={LABELS[scale]}
+              aria-label={t('title')}
+              aria-valuetext={t(LABEL_KEYS[scale])}
               className="absolute inset-0 m-0 w-full cursor-pointer appearance-none bg-transparent opacity-0 [&::-moz-range-thumb]:size-(--thumb) [&::-webkit-slider-thumb]:size-(--thumb) [&::-webkit-slider-thumb]:appearance-none"
             />
           </div>
           <span className="text-22 font-medium text-[#6B7280]" aria-hidden>
-            가
+            {t('largeSampleLabel')}
           </span>
         </div>
 
         <p className="mt-2 text-center text-12 font-bold text-[#111] [--font-scale:1]">
-          {LABELS[scale]}
+          {t(LABEL_KEYS[scale])}
         </p>
       </SettingSheet>
     </>

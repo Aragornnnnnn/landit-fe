@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 
 import { requestNotificationPermission } from '@/features/notification/model/request-permission';
 import { useNotificationPermission } from '@/features/notification/model/useNotificationPermission';
@@ -15,6 +16,7 @@ import { Emoji } from '@/shared/ui/emoji';
 import { MenuButton } from './Menu';
 
 export const NotificationMenuEntry = () => {
+  const t = useTranslations('me.notificationMenu');
   const notificationPermission = useNotificationPermission();
   const [isPromptOpen, setIsPromptOpen] = useState(false);
 
@@ -45,7 +47,7 @@ export const NotificationMenuEntry = () => {
   return (
     <>
       <MenuButton
-        title="알림"
+        title={t('title')}
         icon={<Emoji>🔔</Emoji>}
         onClick={openNotificationSetup}
       />

@@ -2,6 +2,7 @@
 'use client';
 
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
@@ -19,6 +20,7 @@ import { StreakHero } from './flow/StreakHero';
 import { StreakStats } from './flow/StreakStats';
 
 export const StreakFlow = () => {
+  const t = useTranslations('streak.streakFlow');
   const router = useRouter();
   const { ref: scrollRef, onScroll, hasShadow } = useScrollShadow();
   const {
@@ -47,7 +49,7 @@ export const StreakFlow = () => {
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
       <BackHeader
-        title="연속 학습 기록"
+        title={t('title')}
         hasShadow={hasShadow}
         onBack={() => router.replace(homePath())}
       />

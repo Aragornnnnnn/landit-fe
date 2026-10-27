@@ -4,6 +4,7 @@
 // 정답일 때만 부모가 마운트하므로, 마운트 시점에 콘페티를 1회 터뜨린다.
 import { useEffect } from 'react';
 import { motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import { burstConfetti } from '@/shared/motion/confetti';
 import { Button } from '@/shared/ui/Button';
@@ -22,6 +23,7 @@ export const ReviewSuccess = ({
   onFinish,
   finishing,
 }: ReviewSuccessProps) => {
+  const t = useTranslations('expression.reviewSuccess');
   // 정답 순간 콘페티 — 브랜드 색으로 양쪽에서 터뜨린다
   useEffect(() => {
     burstConfetti();
@@ -49,7 +51,9 @@ export const ReviewSuccess = ({
           }}
         >
           <CheckIcon size={16} className="text-white" />
-          <span className="text-sm font-extrabold text-white">표현 획득!</span>
+          <span className="text-sm font-extrabold text-white">
+            {t('earnedBadge')}
+          </span>
         </motion.div>
 
         {/* 획득한 표현 카드 */}
@@ -76,7 +80,7 @@ export const ReviewSuccess = ({
           loading={finishing}
           onClick={onFinish}
         >
-          학습 완료
+          {t('finishButton')}
         </Button>
       </div>
     </motion.div>

@@ -2,6 +2,7 @@
 
 // 전역 에러 바운더리 — 렌더 중 예외가 나면 흰 화면 대신 복구 화면을 보여주고 Sentry로 보낸다
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { reportError } from '@/shared/monitoring/report';
 import { Button } from '@/shared/ui/Button';
@@ -13,6 +14,7 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations('common.errorScreen');
   useEffect(() => {
     reportError(error);
   }, [error]);
@@ -28,15 +30,15 @@ export default function Error({
         />
         <div>
           <h1 className="text-xl font-extrabold text-foreground">
-            문제가 생겼어요
+            {t('title')}
           </h1>
           <p className="mt-2 text-15 leading-[calc(22/15)] text-muted-foreground">
-            잠시 후 다시 시도해 주세요
+            {t('description')}
           </p>
         </div>
       </div>
       <div className="flex-none px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),24px)]">
-        <Button onClick={reset}>다시 시도할게요</Button>
+        <Button onClick={reset}>{t('retryButton')}</Button>
       </div>
     </main>
   );

@@ -2,6 +2,8 @@
 
 // 단어별 판정 칩 — 퀴즈 단어 칩과 같은 3D 스타일에 판정 색만 얹는다.
 // 오류 단어 칩은 눌러서 해당 피드백 카드로 이동한다
+import { useTranslations } from 'next-intl';
+
 import type { PronunciationWord } from '../../api/pronunciation';
 
 interface WordChipsProps {
@@ -18,42 +20,47 @@ const chipDelay = (index: number) => ({
   animationDelay: `${500 + index * 50}ms`,
 });
 
-export const WordChips = ({ words, onSelectWord }: WordChipsProps) => (
-  <div className="flex flex-wrap justify-center gap-x-2 gap-y-2.5">
-    {words.map((word, index) => {
-      const isError = word.status !== 'CORRECT';
-      // 이동할 교정 카드가 실제로 있는 오류만 버튼으로 — 음절 없는 강세 오류는 카드가 접혀 정적 칩으로 남긴다
-      const hasCard =
-        word.status === 'PHONEME_ERROR' ||
-        (word.status === 'STRESS_ERROR' && Boolean(word.syllables?.length));
-      // 눌리는 것만 눌리게 보이게 — 오류 단어만 3D 돌출(퀴즈 칩 문법), 정상 단어는 납작하게 가라앉힌다
-      if (hasCard && onSelectWord) {
+export const WordChips = ({ words, onSelectWord }: WordChipsProps) => {
+  const t = useTranslations('expression.wordChips');
+  return (
+    <div className="flex flex-wrap justify-center gap-x-2 gap-y-2.5">
+      {words.map((word, index) => {
+        const isError = word.status !== 'CORRECT';
+        // 이동할 교정 카드가 실제로 있는 오류만 버튼으로 — 음절 없는 강세 오류는 카드가 접혀 정적 칩으로 남긴다
+        const hasCard =
+          word.status === 'PHONEME_ERROR' ||
+          (word.status === 'STRESS_ERROR' && Boolean(word.syllables?.length));
+        // 눌리는 것만 눌리게 보이게 — 오류 단어만 3D 돌출(퀴즈 칩 문법), 정상 단어는 납작하게 가라앉힌다
+        if (hasCard && onSelectWord) {
+          return (
+            <button
+              key={word.order}
+              onClick={() => onSelectWord(word.order)}
+              aria-label={t('jumpLabel', { word: word.word })}
+              style={chipDelay(index)}
+              className={`${CHIP_BASE} animate-fade-up border border-border bg-card text-destructive shadow-[0_3px_0_var(--border)] transition-[translate,box-shadow] duration-75 active:translate-y-[3px] active:shadow-none`}
+            >
+              {word.word}
+            </button>
+          );
+        }
         return (
-          <button
+          <span
             key={word.order}
-            onClick={() => onSelectWord(word.order)}
-            aria-label={`${word.word}, 발음 교정 필요 — 교정 카드로 이동`}
+            aria-label={
+              isError ? t('needsFixLabel', { word: word.word }) : undefined
+            }
             style={chipDelay(index)}
-            className={`${CHIP_BASE} animate-fade-up border border-border bg-card text-destructive shadow-[0_3px_0_var(--border)] transition-[translate,box-shadow] duration-75 active:translate-y-[3px] active:shadow-none`}
+            className={`${CHIP_BASE} animate-fade-up ${
+              isError
+                ? 'border border-border bg-card text-destructive'
+                : 'bg-secondary/60 text-success'
+            }`}
           >
             {word.word}
-          </button>
+          </span>
         );
-      }
-      return (
-        <span
-          key={word.order}
-          aria-label={isError ? `${word.word}, 발음 교정 필요` : undefined}
-          style={chipDelay(index)}
-          className={`${CHIP_BASE} animate-fade-up ${
-            isError
-              ? 'border border-border bg-card text-destructive'
-              : 'bg-secondary/60 text-success'
-          }`}
-        >
-          {word.word}
-        </span>
-      );
-    })}
-  </div>
-);
+      })}
+    </div>
+  );
+};

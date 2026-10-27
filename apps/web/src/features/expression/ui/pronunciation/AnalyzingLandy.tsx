@@ -5,41 +5,51 @@
 // 전체 시간을 모르므로 서사는 한 번만 진행하고, 끝에 도달하면 마지막 두 단계(검토↔정리)를
 // 오가며 살아 있게 한다 — 처음으로 되돌면 이야기가 리셋된 것처럼 보인다
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 export interface AnalyzingStage {
   image: string;
   text: string;
 }
 
-const PRONUNCIATION_STAGES: AnalyzingStage[] = [
+// 발음 평가의 장면 그림과 그 장면의 문구 키(expression.analyzingLandy)
+const PRONUNCIATION_STAGES = [
   {
     image: '/images/character/landy-loading-01-listening.webp',
-    text: '발음을 듣고 있어요',
+    textKey: 'listeningCaption',
   },
   {
     image: '/images/character/landy-loading-02-compare-orb.webp',
-    text: '원어민 발음과 비교하고 있어요',
+    textKey: 'comparingCaption',
   },
   {
     image: '/images/character/landy-loading-03-review.webp',
-    text: '단어 하나하나 살펴보고 있어요',
+    textKey: 'reviewingCaption',
   },
   {
     image: '/images/character/landy-loading-04-finalize.webp',
-    text: '피드백을 정리하고 있어요',
+    textKey: 'finalizingCaption',
   },
-];
+] as const;
 // 단계 하나가 머무는 기본 시간 — 발음 평가 기준이다
 const STAGE_MS = 2600;
 
 export const AnalyzingLandy = ({
-  stages = PRONUNCIATION_STAGES,
+  stages: stagesProp,
   stageMs = STAGE_MS,
 }: {
+  // 없으면 발음 평가 문구
   stages?: AnalyzingStage[];
   /** 단계 하나가 머무는 시간 */
   stageMs?: number;
 }) => {
+  const t = useTranslations('expression.analyzingLandy');
+  const stages =
+    stagesProp ??
+    PRONUNCIATION_STAGES.map(({ image, textKey }) => ({
+      image,
+      text: t(textKey),
+    }));
   const [stage, setStage] = useState(0);
   const lastIndex = stages.length - 1;
 

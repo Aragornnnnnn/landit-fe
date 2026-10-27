@@ -1,6 +1,8 @@
 'use client';
 
 // 완료 카드의 표현 학습 진행 줄 — 몇 개 남았는지 보여주고 다음 행동을 버튼 문구로 못박는다
+import { useTranslations } from 'next-intl';
+
 import { Button } from '@/shared/ui/Button';
 
 import {
@@ -19,19 +21,23 @@ const BAR: Record<Tone, string> = {
 
 const STAGE_STYLE: Record<
   Exclude<ExpressionStage, 'unavailable'>,
-  { label: string; tone: Tone; count: string }
+  {
+    labelKey: 'learnButton' | 'continueButton' | 'reviewButton';
+    tone: Tone;
+    count: string;
+  }
 > = {
   none: {
-    label: '표현 배우기',
+    labelKey: 'learnButton',
     tone: 'primary',
     count: 'text-muted-foreground',
   },
   partial: {
-    label: '이어서 표현 배우기',
+    labelKey: 'continueButton',
     tone: 'primary',
     count: 'text-primary',
   },
-  done: { label: '표현 복습하기', tone: 'success', count: 'text-success' },
+  done: { labelKey: 'reviewButton', tone: 'success', count: 'text-success' },
 };
 
 interface ExpressionProgressProps {
@@ -45,6 +51,7 @@ export const ExpressionProgress = ({
   total,
   onLearn,
 }: ExpressionProgressProps) => {
+  const t = useTranslations('scenario.expressionProgress');
   const stage = expressionStageOf(completed, total);
   // 배정된 표현이 없으면 진행도도 버튼도 없다 — 남은 건 다시 대화하기뿐이다
   if (stage === 'unavailable') return null;
@@ -57,16 +64,16 @@ export const ExpressionProgress = ({
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between">
         <span className="text-sm font-bold text-muted-foreground">
-          원어민 표현
+          {t('sectionLabel')}
         </span>
         <span className={`text-sm font-bold ${style.count}`}>
-          {done}/{total} 완료
+          {t('countLabel', { done, total })}
         </span>
       </div>
 
       <div
         role="progressbar"
-        aria-label="원어민 표현 학습 진행도"
+        aria-label={t('progressLabel')}
         aria-valuenow={done}
         aria-valuemin={0}
         aria-valuemax={total}
@@ -87,7 +94,7 @@ export const ExpressionProgress = ({
         className="text-base! font-bold!"
         onClick={onLearn}
       >
-        {style.label}
+        {t(style.labelKey)}
       </Button>
     </div>
   );

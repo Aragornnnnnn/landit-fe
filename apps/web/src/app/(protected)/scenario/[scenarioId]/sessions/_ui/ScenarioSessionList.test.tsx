@@ -2,6 +2,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { setTestLocale } from '@/shared/i18n/test-locale';
+
 import type { ScenarioHistorySession } from '../_api/scenario-history';
 import { ScenarioSessionList } from './ScenarioSessionList';
 
@@ -76,6 +78,17 @@ describe('ScenarioSessionList', () => {
       'href',
       '/scenario/12/sessions/30?date=2026-09-30',
     );
+  });
+
+  it('일본어 화면에서는 회차·날짜·점수를 일본어 어순으로 쓴다', () => {
+    setTestLocale('ja');
+    mocks.sessions = [session(30, '2026-09-30T21:00:00')];
+    render(<ScenarioSessionList scenarioId={12} />);
+
+    expect(screen.getByText('1回目の会話')).toBeInTheDocument();
+    expect(
+      screen.getByText('9月30日 · ネイティブ理解度 53%'),
+    ).toBeInTheDocument();
   });
 
   it('피드백이 저장되지 않은 회차는 점수 대신 그 사실을 보인다', () => {

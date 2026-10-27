@@ -38,7 +38,7 @@ const PERMISSION_LABEL = {
 } as const;
 
 const clock = (date: Date) =>
-  formatClock({ hour: date.getHours(), minute: date.getMinutes() });
+  formatClock({ hour: date.getHours(), minute: date.getMinutes() }, 'ko');
 
 // 1초마다 지금 시각 — 테스트 알람 선택지와 남은 시간이 늘 "지금 누르면"을 보여 주게
 const useNow = () => {
@@ -112,7 +112,7 @@ const AlarmCheck = () => {
       { time: next, enabled: true },
       {
         onSuccess: () =>
-          showToast(`매일 ${formatClock(next)}에 울리게 저장했어요`),
+          showToast(`매일 ${formatClock(next, 'ko')}에 울리게 저장했어요`),
       },
     );
   };
@@ -159,7 +159,7 @@ const AlarmCheck = () => {
             pendingTests.map((alarm) => (
               <StatusItem
                 key={alarm.id}
-                label={`${formatClock(alarm)}에 울려요`}
+                label={`${formatClock(alarm, 'ko')}에 울려요`}
                 tone="good"
                 value={
                   <>

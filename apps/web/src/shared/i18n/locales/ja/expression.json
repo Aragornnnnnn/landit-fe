@@ -1,0 +1,122 @@
+{
+  "branch": {
+    "loadError": "フレーズを読み込めませんでした。"
+  },
+  "stages": {
+    "celebrateTitle": "会話をひとつ<br></br>完了しました！",
+    "analyzeTitle": "今の会話を分析して<br></br>フレーズ学習を作成中",
+    "foundTitle": "ネイティブのフレーズを<emphasis>{count}</emphasis>個発見",
+    "namedPreparedTitle": "{nickname}さんのためのフレーズを用意しました",
+    "preparedTitle": "あなたのためのフレーズを用意しました",
+    "learnButton": "最初のフレーズから学ぶ"
+  },
+  "list": {
+    "progressLabel": "{done}/{total} 完了"
+  },
+  "listItem": {
+    "nextLabel": "次に学ぶフレーズ"
+  },
+  "smallTalkResult": {
+    "errorTitle": "読み込めませんでした",
+    "errorDescription": "しばらくしてから履歴で開けます。",
+    "pendingTitle": "フレーズは少しあとに<br></br>用意しておきます",
+    "pendingDescription": "今は作成に時間がかかっています。<br></br>できたら履歴で見られます。",
+    "backButton": "戻る"
+  },
+  "flow": {
+    "loadError": "フレーズを読み込めませんでした。",
+    "backButton": "戻る",
+    "nextButton": "次へ"
+  },
+  "exitSheet": {
+    "title": "学習をやめますか？",
+    "description": "今やめると、このフレーズは完了になりません。",
+    "confirmButton": "やめる",
+    "continueButton": "学習を続ける"
+  },
+  "stepScaffold": {
+    "progressLabel": "学習の進み具合",
+    "closeLabel": "やめる",
+    "backLabel": "戻る"
+  },
+  "quizPrompt": {
+    "title": "質問への答えを完成させましょう",
+    "retryTitle": "もう一度やってみましょう",
+    "revealAnswerTitle": "正解を見てそのまま作りましょう"
+  },
+  "quizStep": {
+    "nextButton": "フレーズを学びに行く",
+    "checkButton": "確認する",
+    "hintButton": "ヒントを見る"
+  },
+  "resultSheet": {
+    "correctTitle": "正解です！",
+    "wrongTitle": "惜しい！",
+    "answerLabel": "正解"
+  },
+  "reviewStep": {
+    "nextButton": "次の問題",
+    "retryButton": "もう一度解く"
+  },
+  "reviewSuccess": {
+    "earnedBadge": "フレーズ獲得！",
+    "finishButton": "学習完了"
+  },
+  "examplesStep": {
+    "nextButton": "復習クイズを解く",
+    "sectionTitle": "こんな使い方も",
+    "coachCaption": "ひとつのフレーズで、いろいろな場面を話せます"
+  },
+  "introStep": {
+    "nextButton": "声に出して言ってみる",
+    "skipButton": "今は話せません",
+    "listenLabel": "フレーズの発音を聞く"
+  },
+  "pronunciationStep": {
+    "title": "フレーズを言ってみましょう",
+    "coachCaption": "しっかり聞いて、<br></br>ネイティブ発音へ導きます！",
+    "listeningCaption": "聞いています...",
+    "feedbackTitle": "ラディの発音フィードバック",
+    "rerecordCaption": "<emphasis>文全体</emphasis>を最初からもう一度言ってみましょう",
+    "examplesButton": "ほかの例文を見に行く",
+    "retryButton": "もう一度言う ↻",
+    "perfectCaption": "ネイティブのように完璧です！",
+    "failedError": "分析できませんでした。もう一度お試しください。",
+    "failedRetryButton": "もう一度話す",
+    "failedExamplesButton": "ほかの例文を見に行く",
+    "micStartError": "マイクを開始できませんでした。もう一度お試しください。",
+    "silentError": "録音された音がありません。もう一度言ってみましょうか？",
+    "invalidAudioError": "録音がうまく届きませんでした。もう一度言ってみましょうか？"
+  },
+  "analyzingLandy": {
+    "listeningCaption": "発音を聞いています",
+    "comparingCaption": "ネイティブの発音と比べています",
+    "reviewingCaption": "単語をひとつずつ確認しています",
+    "finalizingCaption": "フィードバックをまとめています"
+  },
+  "compareListen": {
+    "caption": "お手本と聞き比べてみましょうか？",
+    "nativeButton": "お手本",
+    "nativeLabel": "お手本の文を聞く",
+    "mineButton": "自分の発音",
+    "mineLabel": "自分が話した文を聞く"
+  },
+  "feedbackCards": {
+    "nativeStressCaption": "お手本の強勢",
+    "mineStressCaption": "自分が強く言いすぎた所",
+    "nativeRowLabel": "お手本",
+    "mineRowLabel": "自分",
+    "nativeListenLabel": "お手本の発音を聞く",
+    "mineListenLabel": "自分の発音を聞く"
+  },
+  "listenButton": {
+    "defaultLabel": "発音を聞く"
+  },
+  "sentenceListen": {
+    "listenLabel": "例文の発音を聞く"
+  },
+  "wordChips": {
+    "jumpLabel": "{word}、発音の修正が必要。修正カードへ移動",
+    "needsFixLabel": "{word}、発音の修正が必要"
+  }
+}

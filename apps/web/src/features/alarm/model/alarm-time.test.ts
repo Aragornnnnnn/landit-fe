@@ -36,16 +36,27 @@ describe('formatAlarmTime', () => {
     ['자정은 오전 12시', 0, 0, '오전 12시'],
     ['정오는 오후 12시', 12, 0, '오후 12시'],
   ])('%s', (_, hour, minute, expected) => {
-    expect(formatAlarmTime({ hour, minute })).toBe(expected);
+    expect(formatAlarmTime({ hour, minute }, 'ko')).toBe(expected);
+  });
+
+  it.each([
+    ['일본어 정각은 「午後7時」', 19, 0, '午後7時'],
+    ['일본어 분은 「午前7時30分」', 7, 30, '午前7時30分'],
+  ])('%s', (_, hour, minute, expected) => {
+    expect(formatAlarmTime({ hour, minute }, 'ja')).toBe(expected);
   });
 });
 
 describe('formatClock', () => {
   it('휠과 같은 모양 "오후 7:05"로 쓴다', () => {
-    expect(formatClock({ hour: 19, minute: 5 })).toBe('오후 7:05');
+    expect(formatClock({ hour: 19, minute: 5 }, 'ko')).toBe('오후 7:05');
   });
 
   it('자정은 "오전 12:00"이다', () => {
-    expect(formatClock({ hour: 0, minute: 0 })).toBe('오전 12:00');
+    expect(formatClock({ hour: 0, minute: 0 }, 'ko')).toBe('오전 12:00');
+  });
+
+  it('일본어는 오전·오후를 붙여 「午後7:05」로 쓴다', () => {
+    expect(formatClock({ hour: 19, minute: 5 }, 'ja')).toBe('午後7:05');
   });
 });

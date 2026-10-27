@@ -3,6 +3,7 @@
 // 앱 헤더 — 왼쪽은 환급 참여자면 쌓인 금액, 그 밖에는 프리미엄 진입(또는 로고), 오른쪽은 열매·편지함·내 정보
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 
 import { MailboxButton } from '@/features/mailbox/ui/MailboxButton';
 import { missedRewardOf } from '@/features/reward/model/missed-reward';
@@ -32,6 +33,7 @@ import { useMyReward } from '../_model/useMyReward';
 import { usePremiumPreview } from '../_model/usePremiumPreview';
 
 export const AppHeader = () => {
+  const t = useTranslations('home.appHeader');
   const { reward, loaded, invited, settled, preview, computedAt, storedWon } =
     useMyReward();
   const badge = reward && rewardBadgeOf(reward);
@@ -103,6 +105,7 @@ export const AppHeader = () => {
               {previewIntro ? (
                 <>
                   <span className="tracking-[0.1em]">PREMIUM</span>
+                  {/* 한국어 화면에만 있어 옮기지 않는다 — 동전 연출은 환급을 권할 사람에게만 뜬다 */}
                   <span>시작하기</span>
                 </>
               ) : (
@@ -133,7 +136,7 @@ export const AppHeader = () => {
       <div className="-mr-[13px] flex items-center">
         <HeaderStreak />
         <MailboxButton />
-        <HeaderAction href={MY_PAGE_PATH} label="내 정보">
+        <HeaderAction href={MY_PAGE_PATH} label={t('myPageLabel')}>
           <UserIcon size={18} />
         </HeaderAction>
       </div>

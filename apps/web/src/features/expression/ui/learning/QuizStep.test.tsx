@@ -122,7 +122,7 @@ describe('QuizStep', () => {
         expressionId={1}
         onBack={vi.fn()}
         onNext={vi.fn()}
-        instruction="정답을 보고 그대로 만들어보세요"
+        instruction="revealAnswerTitle"
         revealAnswer
       />,
     );
