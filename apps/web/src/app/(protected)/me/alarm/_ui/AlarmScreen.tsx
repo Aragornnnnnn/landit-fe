@@ -3,6 +3,7 @@
 // 알람 화면 — 등록 전이면 등록 흐름(프리미엄 온보딩과 같은 화면), 등록됐으면 시간 카드 하나. 카드를 누르면 알람 수정으로 간다.
 // 권한이 꺼져 안 울리면 카드 위에 한 줄 배너를 띄운다
 import { useEffect, useState } from 'react';
+import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { alarmCopy } from '@/features/alarm/model/alarm-copy';
@@ -28,6 +29,7 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 export const AlarmScreen = () => {
   const router = useRouter();
+  const locale = useLocale();
   const status = useAlarmStatus();
   const { data: setting, isPending, isError, refetch } = useAlarmSettingQuery();
   const registered = setting?.enabled === true;
@@ -102,7 +104,7 @@ export const AlarmScreen = () => {
             <span className="mt-0.5 text-14 text-muted-foreground">매일</span>
           </span>
           <span className="shrink-0 text-17 font-bold text-foreground">
-            {formatAlarmTime(parseAlarmTime(setting?.time ?? null))}
+            {formatAlarmTime(parseAlarmTime(setting?.time ?? null), locale)}
           </span>
           <ChevronRightIcon
             size={18}

@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import type { AlarmTime } from '@landit/bridge';
+import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -57,6 +58,7 @@ const AlarmEditForm = ({
   onDeleted: () => void;
 }) => {
   const router = useRouter();
+  const locale = useLocale();
   const { mutate: save, isPending } = useSaveAlarmMutation();
   const [time, setTime] = useState(saved);
   // 시트의 휠 — 관성으로 도는 중에 「확인」해도 보인 시각(휠이 마지막으로 지나간 칸)으로 정한다
@@ -147,7 +149,7 @@ const AlarmEditForm = ({
               시각
             </span>
             <span className="text-16 font-medium text-foreground">
-              {formatAlarmTime(time)}
+              {formatAlarmTime(time, locale)}
             </span>
             <ChevronRightIcon size={16} className="text-[#C7C7CC]" />
           </button>

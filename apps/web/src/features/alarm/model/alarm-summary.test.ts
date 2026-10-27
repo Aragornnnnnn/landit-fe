@@ -6,19 +6,19 @@ import { alarmSummary } from './alarm-summary';
 describe('alarmSummary', () => {
   it('등록 전이면 "없음"이다', () => {
     expect(
-      alarmSummary({ registered: false, blocked: true, time: '19:00' }),
+      alarmSummary({ registered: false, blocked: true, time: '19:00' }, 'ko'),
     ).toEqual({ text: '없음', alert: false });
   });
 
   it('등록했는데 권한이 막혀 안 울리면 시각 대신 "권한 필요"로 경고한다', () => {
     expect(
-      alarmSummary({ registered: true, blocked: true, time: '19:00' }),
+      alarmSummary({ registered: true, blocked: true, time: '19:00' }, 'ko'),
     ).toEqual({ text: '권한 필요', alert: true });
   });
 
   it('등록했고 울릴 수 있으면 매일 울리는 시각이다', () => {
     expect(
-      alarmSummary({ registered: true, blocked: false, time: '07:30' }),
+      alarmSummary({ registered: true, blocked: false, time: '07:30' }, 'ko'),
     ).toEqual({ text: '매일 오전 7시 30분', alert: false });
   });
 });

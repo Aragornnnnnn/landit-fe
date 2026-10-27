@@ -4,6 +4,7 @@
 // 아래 지문을 3초 누르고 있으면 주황이 차오르며 다짐이 끝난다. 중간에 떼면 다시 비워진다
 import { useEffect, useRef, useState } from 'react';
 import type { AlarmTime } from '@landit/bridge';
+import { useLocale } from 'next-intl';
 
 import { haptic } from '@/shared/haptics';
 import { BackHeader } from '@/shared/ui/BackHeader';
@@ -58,12 +59,13 @@ export const AlarmPledge = ({
 }) => {
   // 관성으로 도는 중에 다짐해도 화면에 보인 시각(휠이 마지막으로 지나간 칸)을 저장한다
   const wheelRef = useRef<TimeWheelHandle>(null);
+  const locale = useLocale();
   // 굴리는 동안 문장 속 시각 글자만 직접 바꾼다 — 칸마다 화면을 다시 그리면 손가락 움직임 처리가 밀려 틱이 뒤늦게 몰려온다.
   // React가 그린 글자 노드의 값만 바꾸므로, 휠이 멈춰 time이 바뀌면 React가 그대로 이어 받는다
   const chipRef = useRef<HTMLSpanElement>(null);
   const scrub = (next: AlarmTime) => {
     const text = chipRef.current?.firstChild;
-    if (text) text.nodeValue = formatClock(next);
+    if (text) text.nodeValue = formatClock(next, locale);
   };
   const [phase, setPhase] = useState<Phase>('idle');
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);

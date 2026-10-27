@@ -6,6 +6,7 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import type { AlarmTime } from '@landit/bridge';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { useLocale } from 'next-intl';
 
 import { haptic } from '@/shared/haptics';
 import { EASE_STANDARD } from '@/shared/motion';
@@ -156,29 +157,34 @@ const NeedsPermission = ({
   time: AlarmTime;
   onUnblock: () => void;
   onLater: () => void;
-}) => (
-  <main className="flex h-dvh flex-col bg-background">
-    <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-      <p className="text-26 leading-snug font-black text-foreground">
-        <PledgeSentence time={time} />
-      </p>
-      <p className="mt-8 text-18 font-bold text-foreground">거의 다 됐어요!</p>
-      <p className="mt-1.5 text-15 font-medium text-muted-foreground">
-        권한만 켜면 매일 {formatAlarmTime(time)}에 알려드릴게요
-      </p>
-    </div>
-    <div className="px-6 pb-[max(var(--safe-area-inset-bottom),24px)]">
-      <Button onClick={onUnblock}>지금 켜기</Button>
-      <button
-        type="button"
-        onClick={onLater}
-        className="mt-4 w-full text-center text-13 font-bold text-muted-foreground"
-      >
-        나중에 할게요
-      </button>
-    </div>
-  </main>
-);
+}) => {
+  const locale = useLocale();
+  return (
+    <main className="flex h-dvh flex-col bg-background">
+      <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+        <p className="text-26 leading-snug font-black text-foreground">
+          <PledgeSentence time={time} />
+        </p>
+        <p className="mt-8 text-18 font-bold text-foreground">
+          거의 다 됐어요!
+        </p>
+        <p className="mt-1.5 text-15 font-medium text-muted-foreground">
+          권한만 켜면 매일 {formatAlarmTime(time, locale)}에 알려드릴게요
+        </p>
+      </div>
+      <div className="px-6 pb-[max(var(--safe-area-inset-bottom),24px)]">
+        <Button onClick={onUnblock}>지금 켜기</Button>
+        <button
+          type="button"
+          onClick={onLater}
+          className="mt-4 w-full text-center text-13 font-bold text-muted-foreground"
+        >
+          나중에 할게요
+        </button>
+      </div>
+    </main>
+  );
+};
 
 export const AlarmRegistered = ({
   time,
