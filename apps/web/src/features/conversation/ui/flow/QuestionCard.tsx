@@ -238,9 +238,9 @@ export const QuestionCard = ({
         // 가려진 쪽만 흐린다 — 클래스로는 calc이 섞인 이 그라데이션을 조건부로 못 만든다
         style={{ maskImage: fade, WebkitMaskImage: fade }}
         // 카드 여백 쪽으로 넓히고 같은 만큼 안쪽을 비운다 — 글자 자리는 그대로, 가린 글자의 흐림이 경계에 잘려 네모나게 보이지 않는다.
-        // 위아래는 머리말·버튼 줄과 겹치므로 가렸을 때만 넓힌다 — 안 가린 긴 발화가 스크롤되며 그 위로 비치지 않게
-        className={`-mx-4 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 ${
-          blurred ? '-my-3 py-3' : ''
+        // 가렸을 땐 흐림이 번지는 폭(약 20px)만큼 카드 끝까지 넓힌다. 위아래는 머리말·버튼 줄과 겹치므로 가렸을 때만 넓힌다 — 안 가린 긴 발화가 스크롤되며 그 위로 비치지 않게
+        className={`min-h-0 flex-1 overflow-y-auto overscroll-contain ${
+          blurred ? '-mx-5 -my-5 px-5 py-5' : '-mx-4 px-4'
         }`}
       >
         {instruction ? (
@@ -259,8 +259,11 @@ export const QuestionCard = ({
             // 가린 동안엔 화면 낭독기도 읽지 않는다 — 눈 버튼("영어 문장 보기")으로 같은 동작을 할 수 있다
             aria-hidden={blurred || undefined}
             onClick={blurred ? toggleText : undefined}
-            className={`${questionSize} leading-snug font-bold text-foreground transition-[filter] duration-200 ${
-              blurred ? 'cursor-pointer blur-[7px] select-none' : ''
+            // 흐림은 filter가 아니라 글자 그림자로 만든다 — iOS는 filter를 그때그때 다른 경로로 그려 흐린 정도가 번쩍이고 경계가 네모로 잘린다
+            className={`${questionSize} leading-snug font-bold transition-[color,text-shadow] duration-200 ${
+              blurred
+                ? 'cursor-pointer text-transparent select-none [text-shadow:0_0_14px_var(--color-foreground)]'
+                : 'text-foreground'
             }`}
           >
             {question.slice(0, visibleCount)}
