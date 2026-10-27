@@ -2,23 +2,36 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { localeFromAcceptLanguage, localeFromDocument } from './locale';
+import {
+  localeFromAcceptLanguage,
+  localeFromDocument,
+  resolveRequestLocale,
+} from './locale';
 
 // 출시 스위치는 빌드 환경 값이라 경계로 본다 — 기본은 켠 상태로 규칙을 검증한다
 const flag = vi.hoisted(() => ({ JAPANESE_ENABLED: true }));
 vi.mock('./japanese-flag', () => flag);
 
-describe('localeFromAcceptLanguage', () => {
+describe('resolveRequestLocale', () => {
   afterEach(() => {
     flag.JAPANESE_ENABLED = true;
   });
 
-  it('일본어 출시 스위치가 꺼져 있으면 일본어 기기도 한국어로 본다', () => {
-    flag.JAPANESE_ENABLED = false;
-
-    expect(localeFromAcceptLanguage('ja-JP,ja;q=0.9')).toBe('ko');
+  it('일본어 출시 스위치가 켜져 있으면 헤더로 언어를 정한다', async () => {
+    await expect(resolveRequestLocale(async () => 'ja-JP')).resolves.toBe('ja');
   });
 
+  it('일본어 출시 스위치가 꺼져 있으면 헤더를 읽지 않고 한국어로 둔다', async () => {
+    // 헤더를 읽으면 페이지가 요청마다 렌더된다 — 꺼져 있는 동안은 정적으로 남게 아예 안 읽는다
+    flag.JAPANESE_ENABLED = false;
+    const readHeader = vi.fn(async () => 'ja-JP');
+
+    await expect(resolveRequestLocale(readHeader)).resolves.toBe('ko');
+    expect(readHeader).not.toHaveBeenCalled();
+  });
+});
+
+describe('localeFromAcceptLanguage', () => {
   it.each([['ko;Q=0.1,ja;q=0.9'], ['ko;q = 0.1,ja']])(
     'q 표기가 대문자거나 띄어 써도(%s) 우선순위를 읽는다',
     (header) => {

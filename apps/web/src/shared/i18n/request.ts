@@ -2,13 +2,13 @@
 import { getRequestConfig } from 'next-intl/server';
 import { headers } from 'next/headers';
 
-import { DEFAULT_LOCALE, localeFromAcceptLanguage } from './locale';
+import { DEFAULT_LOCALE, resolveRequestLocale } from './locale';
 import ko from './locales/ko';
 import { mergeMessages } from './messages';
 
 // URL에 언어를 붙이지 않는다 — 기기 언어가 실려 오는 Accept-Language만 보고 정한다
 export default getRequestConfig(async () => {
-  const locale = localeFromAcceptLanguage(
+  const locale = await resolveRequestLocale(async () =>
     (await headers()).get('accept-language'),
   );
   const messages =

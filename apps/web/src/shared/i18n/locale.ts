@@ -15,12 +15,9 @@ const isLocale = (value: string): value is Locale =>
  * q=0(거절)이나 읽을 수 없는 q는 고르지 않는다 — 백엔드(AppLocale.fromAcceptLanguage)와 같은 규칙이다.
  *
  * @param header 요청의 Accept-Language (예: `ja-JP,ja;q=0.9,en-US;q=0.8`). 없으면 null
- * @returns 지원 언어가 하나도 없거나 일본어 출시 스위치가 꺼져 있으면 DEFAULT_LOCALE
+ * @returns 지원 언어가 하나도 없으면 DEFAULT_LOCALE
  */
 export const localeFromAcceptLanguage = (header: string | null): Locale => {
-  // 지원 언어가 한국어·일본어 둘뿐이라, 일본어를 잠그면 고를 언어가 한국어밖에 없다
-  if (!JAPANESE_ENABLED) return DEFAULT_LOCALE;
-
   const languages = (header ?? '')
     .split(',')
     .map((part) => {
@@ -38,6 +35,19 @@ export const localeFromAcceptLanguage = (header: string | null): Locale => {
 
   return languages.find(isLocale) ?? DEFAULT_LOCALE;
 };
+
+/**
+ * 요청의 화면 언어를 정한다. 일본어 출시 스위치가 꺼져 있으면 헤더를 읽지 않고 한국어로 둔다 —
+ * 헤더를 읽는 순간 페이지가 요청마다 렌더되므로, 꺼져 있는 동안은 정적 페이지를 그대로 지킨다.
+ *
+ * @param readAcceptLanguage 요청의 Accept-Language를 읽는 함수 (next/headers)
+ */
+export const resolveRequestLocale = async (
+  readAcceptLanguage: () => Promise<string | null>,
+): Promise<Locale> =>
+  JAPANESE_ENABLED
+    ? localeFromAcceptLanguage(await readAcceptLanguage())
+    : DEFAULT_LOCALE;
 
 /**
  * 서버가 정해 html lang에 박은 언어를 읽는다. 브라우저에서 보내는 요청이 화면과 같은 언어를 쓰게 하는 단일 출처.
