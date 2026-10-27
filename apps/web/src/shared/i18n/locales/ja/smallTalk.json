@@ -1,0 +1,34 @@
+{
+  "partner": {
+    "chloeNameLabel": "クロエ",
+    "chloeIntroDescription": "やあ！LA出身のクロエだよ。おしゃべりが大好きなの。英語が完璧じゃなくても大丈夫、一緒に話そう！",
+    "marcoNameLabel": "マルコ",
+    "marcoIntroDescription": "やあ、マルコだよ。シドニーに住むスペイン系オーストラリア人。家ではスペイン語、外では英語。最近どう？",
+    "teddyNameLabel": "テディ",
+    "teddyIntroDescription": "やあ、テディだよ。山で変なものを食べたらイギリス英語を話すようになったんだ。ロンドンでハチミツ代を稼いでる。"
+  },
+  "tabPage": {
+    "historyButton": "履歴",
+    "greetingLabel": "{name}のあいさつを聞く",
+    "doneTitle": "今日の1分スモールトークは完了です",
+    "doneCaption": "また明日お話ししましょう",
+    "remainingLabel": "今日の残り時間",
+    "unlimitedLabel": "無制限",
+    "userFirstButton": "自分から話しかける",
+    "partnerFirstButton": "{name}から話しかけてもらう"
+  },
+  "introGuide": {
+    "mascotLabel": "ラディ",
+    "title": "自由に会話できる時間です",
+    "description": "3人のキャラクターから好きな相手を選んで話してみましょう。<br></br><phrase>“Bye!”</phrase>や<phrase>“Talk to you later”</phrase>などの締めのあいさつで会話が終わります。",
+    "confirmButton": "わかりました"
+  },
+  "greetingCoach": {
+    "bubbleCaption": "タップであいさつ"
+  },
+  "topicPicker": {
+    "title": "{name}と何について話しますか？",
+    "refreshButton": "ほかの話題を見る",
+    "loadFailedToast": "話題を読み込めませんでした"
+  }
+}

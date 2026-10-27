@@ -1,0 +1,34 @@
+{
+  "partner": {
+    "chloeNameLabel": "클로이",
+    "chloeIntroDescription": "안녕! 난 LA 사람 클로이야. 나 말하는 거 진짜 좋아해. 영어 잘 못해도 괜찮아, 나랑 얘기하자!",
+    "marcoNameLabel": "마르코",
+    "marcoIntroDescription": "안녕, 난 마르코야 — 시드니 사는 스페인계 호주인. 집에선 스페인어, 밖에선 영어 써. 요즘 어떻게 지내?",
+    "teddyNameLabel": "테디",
+    "teddyIntroDescription": "안녕, 나 테디야. 산에서 뭘 잘못 먹고 영국 영어를 하게 됐어. 런던에서 꿀 값 버는 중이야."
+  },
+  "tabPage": {
+    "historyButton": "기록",
+    "greetingLabel": "{name} 인사 듣기",
+    "doneTitle": "오늘의 1분 스몰톡을 다 했어요",
+    "doneCaption": "내일 또 같이 이야기해요",
+    "remainingLabel": "오늘 남은 말하기",
+    "unlimitedLabel": "무제한",
+    "userFirstButton": "내가 먼저 말 걸기",
+    "partnerFirstButton": "{name}가 먼저 말 걸기"
+  },
+  "introGuide": {
+    "mascotLabel": "래디",
+    "title": "자유롭게 대화할 수 있는 시간이에요",
+    "description": "세 명의 캐릭터 중 마음에 드는 친구와 얘기해봐요.<br></br><phrase>“Bye!”</phrase>, <phrase>“Talk to you later”</phrase> 같은 마무리 인사를 하면 대화가 끝나요.",
+    "confirmButton": "이해했어요"
+  },
+  "greetingCoach": {
+    "bubbleCaption": "누르면 인사해요"
+  },
+  "topicPicker": {
+    "title": "{name}와 어떤 주제로 대화할까요?",
+    "refreshButton": "다른 주제 보기",
+    "loadFailedToast": "주제를 받아오지 못했어요"
+  }
+}
