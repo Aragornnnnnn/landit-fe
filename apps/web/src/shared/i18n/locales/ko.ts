@@ -1,5 +1,6 @@
 // 한국어 문구 묶음 — 화면(네임스페이스)마다 파일 하나, 새 화면 파일을 만들면 여기에 한 줄 더한다
 import alarm from './ko/alarm.json';
+import appUpdate from './ko/appUpdate.json';
 import auth from './ko/auth.json';
 import common from './ko/common.json';
 import conversation from './ko/conversation.json';
@@ -13,6 +14,7 @@ import widget from './ko/widget.json';
 
 const ko = {
   alarm,
+  appUpdate,
   auth,
   common,
   conversation,

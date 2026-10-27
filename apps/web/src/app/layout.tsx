@@ -25,7 +25,10 @@ import { fontScaleScript } from '@/shared/font-scale/font-scale';
 import { FontScaleSync } from '@/shared/font-scale/FontScaleSync';
 import { GlobalHaptics } from '@/shared/haptics';
 import { LocaleSync } from '@/shared/i18n/LocaleSync';
-import { RootMessagesProvider } from '@/shared/i18n/MessagesProvider';
+import {
+  MessagesProvider,
+  RootMessagesProvider,
+} from '@/shared/i18n/MessagesProvider';
 import { MonitoringBootstrap } from '@/shared/monitoring/MonitoringBootstrap';
 import { Toaster } from '@/shared/ui/toast';
 
@@ -72,7 +75,10 @@ export default async function RootLayout({
           <GlobalHaptics />
           <Providers>
             {children}
-            <AppUpdateGate />
+            {/* 앱 업데이트 안내는 어느 화면에서나 뜬다 — 그 묶음만 여기서 더한다 */}
+            <MessagesProvider namespaces={['appUpdate']}>
+              <AppUpdateGate />
+            </MessagesProvider>
             <PushDeviceSync />
             <LocaleSync />
             <WidgetDataSync />
