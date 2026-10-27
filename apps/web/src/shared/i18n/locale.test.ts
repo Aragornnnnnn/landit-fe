@@ -4,10 +4,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   acceptLanguageOf,
+  hasSupportedLanguage,
   localeFromAcceptLanguage,
   localeFromDocument,
   resolveRequestLocale,
   sellsKoreaOnlyOffers,
+  signupLanguages,
 } from './locale';
 
 describe('resolveRequestLocale', () => {
@@ -32,6 +34,36 @@ describe('acceptLanguageOf', () => {
 
   it('목록이 비면 헤더를 만들지 않는다', () => {
     expect(acceptLanguageOf([])).toBeNull();
+  });
+});
+
+describe('hasSupportedLanguage', () => {
+  it('기기 언어 목록에 한국어나 일본어가 하나라도 있으면 참이다', () => {
+    expect(hasSupportedLanguage(['en-US', 'ja-JP'])).toBe(true);
+    expect(hasSupportedLanguage(['ko-KR'])).toBe(true);
+  });
+
+  it('둘 다 없거나 목록이 비면 거짓이다', () => {
+    expect(hasSupportedLanguage(['en-US', 'fr'])).toBe(false);
+    expect(hasSupportedLanguage([])).toBe(false);
+  });
+});
+
+describe('signupLanguages', () => {
+  it('기기에 한국어·일본어가 있으면 기기 목록 그대로 보낸다', () => {
+    expect(signupLanguages(['en-US', 'ja-JP', 'ko'], 'ko')).toEqual([
+      'en-US',
+      'ja-JP',
+      'ko',
+    ]);
+  });
+
+  it('둘 다 없으면 지금 화면 언어를 맨 앞에 둬서 보이는 언어로 가입하게 한다', () => {
+    expect(signupLanguages(['en-US', 'fr'], 'ja')).toEqual([
+      'ja',
+      'en-US',
+      'fr',
+    ]);
   });
 });
 

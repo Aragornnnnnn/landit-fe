@@ -1,47 +1,46 @@
-// LocaleGate — 저장 언어 조회·최초 선택·저장 계약 검증 (자동 저장 금지, 선택 필요할 때만 선택 화면, 고른 값만 저장)
+// LocaleGate — 저장 언어 조회 계약 검증 (백엔드 응답 언어를 따르고, 웹은 저장하지 않는다)
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import {
-  act,
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react';
+import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
 
-import { getUserLocale, updateUserLocale } from './api/user-locale';
+import { getUserLocale } from './api/user-locale';
 import { LocaleGate } from './LocaleGate';
 
-vi.mock('./api/user-locale', () => ({
-  getUserLocale: vi.fn(),
-  updateUserLocale: vi.fn(),
-}));
+vi.mock('./api/user-locale', () => ({ getUserLocale: vi.fn() }));
 const getMock = vi.mocked(getUserLocale);
-const putMock = vi.mocked(updateUserLocale);
 
 const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
+// 실제 라우터처럼 렌더마다 같은 객체를 준다
+const router = { refresh };
+const nav = vi.hoisted(() => ({ pathname: '/scenario' }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => router,
+  usePathname: () => nav.pathname,
+}));
 
 const signIn = (userId: number) =>
   act(() =>
     useAuthStore.getState().setAuth('access', 'refresh', { userId } as never),
   );
 
-const renderGate = () =>
-  render(
-    <QueryClientProvider
-      client={
-        new QueryClient({ defaultOptions: { queries: { retry: false } } })
-      }
-    >
+// 같은 QueryClient로 다시 그릴 수 있게 rerender를 함께 돌려준다 — 화면 이동을 흉내 낸다
+const renderGate = () => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  const tree = () => (
+    <QueryClientProvider client={client}>
       <LocaleGate />
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
+  const view = render(tree());
+  return { ...view, rerenderGate: () => view.rerender(tree()) };
+};
 
 beforeEach(() => {
+  nav.pathname = '/scenario';
   document.documentElement.lang = 'ko';
   document.cookie = 'landit-locale=; max-age=0; path=/';
 });
@@ -59,52 +58,48 @@ describe('LocaleGate', () => {
     expect(getMock).not.toHaveBeenCalled();
   });
 
-  it('영어만 쓰는 신규 사용자처럼 선택이 필요하면 선택 화면을 띄우고, 임시 ko로 저장하지 않는다', async () => {
+  it('백엔드가 아직 언어를 확정하지 않았어도(selectionRequired) 응답 언어로 그린다 — 화면과 콘텐츠 언어를 맞춘다', async () => {
+    document.documentElement.lang = 'ja';
     getMock.mockResolvedValue({ locale: 'ko', selectionRequired: true });
     renderGate();
     signIn(1);
 
-    expect(await screen.findByRole('dialog')).toBeInTheDocument();
-    expect(putMock).not.toHaveBeenCalled();
-    expect(document.cookie).not.toContain('landit-locale=ko');
-  });
-
-  it('고른 언어만 저장하고, 성공하면 선택 화면을 닫고 그 언어로 다시 그린다', async () => {
-    getMock.mockResolvedValue({ locale: 'ko', selectionRequired: true });
-    putMock.mockResolvedValue({ locale: 'ja', selectionRequired: false });
-    renderGate();
-    signIn(1);
-
-    fireEvent.click(await screen.findByRole('button', { name: '日本語' }));
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(putMock).toHaveBeenCalledWith('ja');
-    expect(document.cookie).toContain('landit-locale=ja');
+    await waitFor(() => expect(document.cookie).toContain('landit-locale=ko'));
     expect(refresh).toHaveBeenCalled();
   });
 
-  it('저장이 실패하면 선택 완료로 치지 않고 다시 고르게 한다', async () => {
-    getMock.mockResolvedValue({ locale: 'ko', selectionRequired: true });
-    putMock.mockRejectedValue(new Error('network'));
-    renderGate();
-    signIn(1);
-
-    fireEvent.click(await screen.findByRole('button', { name: '日本語' }));
-
-    expect(await screen.findByRole('alert')).toBeInTheDocument();
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(document.cookie).not.toContain('landit-locale=ja');
-  });
-
-  it('일본어를 고른 사용자는 기기 언어가 한국어여도 일본어를 유지하고, 다시 저장하지 않는다', async () => {
+  it('일본어로 저장된 사용자는 기기 언어가 한국어여도 일본어를 유지한다', async () => {
     getMock.mockResolvedValue({ locale: 'ja', selectionRequired: false });
     renderGate();
     signIn(1);
 
     await waitFor(() => expect(document.cookie).toContain('landit-locale=ja'));
     expect(refresh).toHaveBeenCalled();
-    expect(putMock).not.toHaveBeenCalled();
-    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('다시 그리기가 다른 이동에 밀려 화면 언어가 아직 다르면, 이동이 끝난 뒤 다시 그린다', async () => {
+    getMock.mockResolvedValue({ locale: 'ja', selectionRequired: false });
+    const { rerenderGate } = renderGate();
+    signIn(1);
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+
+    nav.pathname = '/me';
+    rerenderGate();
+
+    expect(refresh).toHaveBeenCalledTimes(2);
+  });
+
+  it('화면 언어가 이미 맞으면 이동해도 다시 그리지 않는다', async () => {
+    getMock.mockResolvedValue({ locale: 'ja', selectionRequired: false });
+    const { rerenderGate } = renderGate();
+    signIn(1);
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+
+    document.documentElement.lang = 'ja';
+    nav.pathname = '/me';
+    rerenderGate();
+
+    expect(refresh).toHaveBeenCalledTimes(1);
   });
 
   it('저장값이 지금 화면 언어와 같으면 다시 그리지 않는다', async () => {
@@ -129,14 +124,13 @@ describe('LocaleGate', () => {
     expect(getMock).toHaveBeenCalledTimes(2);
   });
 
-  it('조회가 실패하면 아무것도 저장하지 않고 선택 화면도 띄우지 않는다', async () => {
+  it('조회가 실패하면 저장 언어를 쿠키에 담지 않는다', async () => {
     getMock.mockRejectedValue(new Error('404'));
     renderGate();
     signIn(1);
 
     await waitFor(() => expect(getMock).toHaveBeenCalled());
-    expect(putMock).not.toHaveBeenCalled();
-    expect(screen.queryByRole('dialog')).toBeNull();
     expect(document.cookie).not.toContain('landit-locale=');
+    expect(refresh).not.toHaveBeenCalled();
   });
 });
