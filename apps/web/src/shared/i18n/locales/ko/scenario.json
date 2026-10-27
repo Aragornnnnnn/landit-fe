@@ -54,5 +54,20 @@
     "exitLabel": "나가기",
     "acceptButton": "네!",
     "askTitle": "오늘의 대화를 시작할까요?"
+  },
+  "emptyDay": {
+    "todayTitle": "오늘 카드는 준비 중이에요",
+    "pastTitle": "이 날은 카드가 없어요",
+    "todayDescription": "조금 뒤에 다시 들러주세요<br></br>곧 새 카드를 가져올게요",
+    "pastDescription": "그날은 대화를 남기지 않았어요<br></br>지나간 카드는 다시 열 수 없어요"
+  },
+  "previewIntro": {
+    "dialogLabel": "프리미엄 소개",
+    "nextLabel": "다음 문장",
+    "characterLabel": "래디",
+    "dailyScenarioBody": "매일 이렇게<br></br><em>시나리오를 하나씩</em><br></br>제공해 드려요",
+    "freeExpressionBody": "프리미엄의 또 다른 혜택!<br></br>방금 대화로 만든 첫 <em>맞춤 표현</em>을<br></br>무료로 열어 드릴게요",
+    "learnButton": "맞춤 표현 학습하기",
+    "continueCaption": "화면을 누르면 계속 ›"
   }
 }

@@ -38,9 +38,9 @@
     "frontLabel": "カードの表に戻る"
   },
   "freeExpressionSpotlight": {
-    "introLabel": "あなただけのフレーズ学習の紹介",
-    "introBody": "今の会話から作った<br></br><em>あなただけのフレーズ学習</em>です",
-    "introNamedBody": "今の会話から作った<br></br><em>{nickname}さんだけのフレーズ学習</em>です",
+    "introLabel": "専用フレーズ学習の紹介",
+    "introBody": "今の会話から作った<br></br><em>あなた専用のフレーズ学習</em>です",
+    "introNamedBody": "今の会話から作った<br></br><em>{nickname}さん専用のフレーズ学習</em>です",
     "freeLabel": "最初のフレーズを無料で学ぶ",
     "freeBody": "最初のフレーズは<em>無料</em>で開放しました<br></br>タップしてすぐ学びましょう"
   },
@@ -54,5 +54,20 @@
     "exitLabel": "閉じる",
     "acceptButton": "はい！",
     "askTitle": "今日の会話を始めますか？"
+  },
+  "emptyDay": {
+    "todayTitle": "今日のカードは準備中です",
+    "pastTitle": "この日はカードがありません",
+    "todayDescription": "少ししたらまた来てください<br></br>新しいカードを持ってきます",
+    "pastDescription": "この日は会話をしていません<br></br>過ぎたカードは開けません"
+  },
+  "previewIntro": {
+    "dialogLabel": "プレミアムの紹介",
+    "nextLabel": "次の文",
+    "characterLabel": "ラディ",
+    "dailyScenarioBody": "毎日こうして<br></br><em>シナリオをひとつずつ</em><br></br>お届けします",
+    "freeExpressionBody": "さらにプレミアム特典！<br></br>今の会話で作った<em>専用フレーズ</em><br></br>1つ目を無料で開放します",
+    "learnButton": "専用フレーズを学ぶ",
+    "continueCaption": "画面をタップして続ける ›"
   }
 }
