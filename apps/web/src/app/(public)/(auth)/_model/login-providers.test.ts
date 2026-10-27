@@ -16,15 +16,14 @@ describe('loginProvidersOf', () => {
     ).toEqual(['kakao', 'google']);
   });
 
-  it('일본어 화면은 카카오를 빼고 구글·애플만 둔다 — 일본에서는 카카오 계정이 거의 없다', () => {
-    expect(
-      loginProvidersOf({
-        locale: 'ja',
-        android: false,
-        lastProvider: 'google',
-      }),
-    ).toEqual(['google', 'apple']);
-  });
+  it.each([null, 'google', 'apple'] as const)(
+    '일본어 화면은 지난번 로그인이 %s면 카카오를 빼고 구글·애플만 둔다 — 일본에서는 카카오 계정이 거의 없다',
+    (lastProvider) => {
+      expect(
+        loginProvidersOf({ locale: 'ja', android: false, lastProvider }),
+      ).toEqual(['google', 'apple']);
+    },
+  );
 
   it('일본어 화면이어도 이 기기에서 지난번에 카카오로 들어왔으면 맨 아래에 둔다 — 기존 카카오 가입자가 길을 잃지 않게', () => {
     expect(
