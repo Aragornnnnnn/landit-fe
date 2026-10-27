@@ -24,5 +24,15 @@
     "pendingToast": "결제가 확인되는 중이에요. 잠시 후 다시 열어 주세요",
     "restoreFailedToast": "구매 복원에 실패했어요. 잠시 후 다시 시도해 주세요",
     "restoreEmptyToast": "복원할 구매 내역이 없어요"
+  },
+  "premiumHeaderEntry": {
+    "homeLabel": "홈으로",
+    "discountLabel": "할인",
+    "startLabel": "시작하기"
+  },
+  "premiumWelcome": {
+    "namedTitle": "환영해요, {nickname}님!<br></br>이제 랜딧을 마음껏 즐겨요",
+    "title": "환영해요!<br></br>이제 랜딧을 마음껏 즐겨요",
+    "nextButton": "다음"
   }
 }

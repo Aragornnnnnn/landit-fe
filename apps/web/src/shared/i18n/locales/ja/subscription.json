@@ -24,5 +24,15 @@
     "pendingToast": "購入を確認しています。しばらくしてからもう一度開いてください",
     "restoreFailedToast": "購入を復元できませんでした。しばらくしてからもう一度お試しください",
     "restoreEmptyToast": "復元できる購入履歴がありません"
+  },
+  "premiumHeaderEntry": {
+    "homeLabel": "ホームへ",
+    "discountLabel": "割引",
+    "startLabel": "はじめる"
+  },
+  "premiumWelcome": {
+    "namedTitle": "ようこそ、{nickname}さん！<br></br>Landitを思いきり楽しもう",
+    "title": "ようこそ！<br></br>Landitを思いきり楽しもう",
+    "nextButton": "次へ"
   }
 }
