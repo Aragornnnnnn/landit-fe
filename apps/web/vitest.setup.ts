@@ -4,6 +4,7 @@ import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
 
 import ko from './src/shared/i18n/locales/ko';
+import { TIME_ZONE } from './src/shared/i18n/time-zone';
 
 // 테스트에서 앰플리튜드 키가 실수로 주입돼도 실제 SDK 전송이 일어나지 않게 no-op 모드를 강제한다
 process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY = '';
@@ -17,5 +18,7 @@ vi.mock('next-intl', async (importOriginal) => {
     useLocale: () => 'ko',
     useTranslations: (namespace?: keyof typeof ko) =>
       actual.createTranslator({ locale: 'ko', messages: ko, namespace }),
+    useFormatter: () =>
+      actual.createFormatter({ locale: 'ko', timeZone: TIME_ZONE }),
   };
 });

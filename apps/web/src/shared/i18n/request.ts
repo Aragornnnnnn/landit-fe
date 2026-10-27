@@ -5,6 +5,7 @@ import { headers } from 'next/headers';
 import { DEFAULT_LOCALE, resolveRequestLocale } from './locale';
 import ko from './locales/ko';
 import { mergeMessages } from './messages';
+import { TIME_ZONE } from './time-zone';
 
 // 일본어 문구는 배포 단위로 고정이라 한 번만 합친다 — 요청마다 문구 전체를 다시 합치지 않게
 let jaMessages: ReturnType<typeof mergeMessages> | undefined;
@@ -18,5 +19,6 @@ export default getRequestConfig(async () => {
   );
   const messages = locale === DEFAULT_LOCALE ? ko : await loadJaMessages();
 
-  return { locale, messages };
+  // 시간대를 고정해야 서버와 브라우저가 같은 날짜를 그린다 — 비우면 next-intl이 경고하고 둘이 어긋날 수 있다
+  return { locale, messages, timeZone: TIME_ZONE };
 });
