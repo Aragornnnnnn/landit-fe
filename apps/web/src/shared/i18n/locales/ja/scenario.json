@@ -69,5 +69,21 @@
     "freeExpressionBody": "さらにプレミアム特典！<br></br>今の会話で作った<em>専用フレーズ</em><br></br>1つ目を無料で開放します",
     "learnButton": "専用フレーズを学ぶ",
     "continueCaption": "画面をタップして続ける ›"
+  },
+  "sessionList": {
+    "fallbackTitle": "過去の会話",
+    "loadError": "過去の会話を読み込めませんでした。",
+    "loadingLabel": "過去の会話を読み込み中",
+    "emptyDescription": "まだ終えた会話がありません。<br></br>会話を終えるとここにたまります。",
+    "guideDescription": "会話をタップすると、そのとき受けたフィードバックをもう一度見られます。",
+    "sessionTitle": "{ordinal}回目の会話",
+    "scoredMetaCaption": "{date} · ネイティブ理解度 {score}%",
+    "noFeedbackBadge": "フィードバックなし"
+  },
+  "sessionFeedback": {
+    "loadError": "記録を読み込めませんでした。",
+    "noFeedbackError": "この会話には保存されたフィードバックがありません。",
+    "notFoundError": "この会話が見つかりません。",
+    "backButton": "記録へ"
   }
 }
