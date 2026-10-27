@@ -71,5 +71,52 @@
     "nextButton": "소리 내서 말해볼게요",
     "skipButton": "지금은 말할 수 없어요",
     "listenLabel": "표현 발음 듣기"
+  },
+  "pronunciationStep": {
+    "title": "방금 배운 표현을 직접 말해보세요",
+    "coachCaption": "열심히 듣고 원어민처럼<br></br>말할 수 있게 도와드릴게요!",
+    "listeningCaption": "듣고 있어요...",
+    "feedbackTitle": "래디의 발음 피드백",
+    "rerecordCaption": "<emphasis>문장 전체</emphasis>를 처음부터 다시 말해보세요",
+    "examplesButton": "추가 예문 보러 갈게요",
+    "retryButton": "다시 말해보기 ↻",
+    "perfectCaption": "원어민처럼 완벽했어요!",
+    "failedError": "분석에 실패했어요. 다시 시도해 주세요.",
+    "failedRetryButton": "다시 말하기",
+    "failedExamplesButton": "추가 예문 보러 갈게요",
+    "micStartError": "마이크를 시작하지 못했어요. 다시 시도해 주세요.",
+    "silentError": "녹음된 소리가 없어요. 다시 말해볼까요?",
+    "invalidAudioError": "녹음이 잘 전달되지 않았어요. 다시 말해볼까요?"
+  },
+  "analyzingLandy": {
+    "listeningCaption": "발음을 듣고 있어요",
+    "comparingCaption": "원어민 발음과 비교하고 있어요",
+    "reviewingCaption": "단어 하나하나 살펴보고 있어요",
+    "finalizingCaption": "피드백을 정리하고 있어요"
+  },
+  "compareListen": {
+    "caption": "원어민이랑 비교해서 들어볼까요?",
+    "nativeButton": "원어민",
+    "nativeLabel": "원어민 문장 듣기",
+    "mineButton": "내 발음",
+    "mineLabel": "내가 말한 문장 듣기"
+  },
+  "feedbackCards": {
+    "nativeStressCaption": "원어민 강세",
+    "mineStressCaption": "내가 잘못 강세 넣은 곳",
+    "nativeRowLabel": "원어민",
+    "mineRowLabel": "나",
+    "nativeListenLabel": "원어민 발음 듣기",
+    "mineListenLabel": "나 발음 듣기"
+  },
+  "listenButton": {
+    "defaultLabel": "발음 듣기"
+  },
+  "sentenceListen": {
+    "listenLabel": "예문 발음 듣기"
+  },
+  "wordChips": {
+    "jumpLabel": "{word}, 발음 교정 필요 — 교정 카드로 이동",
+    "needsFixLabel": "{word}, 발음 교정 필요"
   }
 }
