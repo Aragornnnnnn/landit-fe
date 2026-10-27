@@ -28,11 +28,11 @@
   "premiumHeaderEntry": {
     "homeLabel": "ホームへ",
     "discountLabel": "割引",
-    "startLabel": "はじめる"
+    "startLabel": "始める"
   },
   "premiumWelcome": {
-    "namedTitle": "ようこそ、{nickname}さん！<br></br>Landitを思いきり楽しもう",
-    "title": "ようこそ！<br></br>Landitを思いきり楽しもう",
+    "namedTitle": "ようこそ、{nickname}さん！<br></br>Landitを思いきり楽しみましょう",
+    "title": "ようこそ！<br></br>Landitを思いきり楽しみましょう",
     "nextButton": "次へ"
   },
   "plans": {
@@ -47,7 +47,7 @@
     "firstPurchaseLabel": "初回購入",
     "refundLabel": "返金",
     "cancelLabel": "解約予約",
-    "renewalLabel": "更新",
+    "renewalLabel": "自動更新",
     "uncancelLabel": "解約の取り消し",
     "expirationLabel": "期限切れ",
     "billingIssueLabel": "支払いエラー",
@@ -77,7 +77,7 @@
     "nextAmountLabel": "次回の請求額"
   },
   "subscriptionManage": {
-    "title": "プランの管理",
+    "title": "サブスクリプション",
     "passTitle": "パスの管理",
     "benefitsTitle": "利用中の特典",
     "historyLink": "購入履歴",

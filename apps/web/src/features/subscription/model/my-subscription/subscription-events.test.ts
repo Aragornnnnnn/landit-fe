@@ -141,7 +141,7 @@ describe('summarizeSubscriptionEvent', () => {
     expect(
       summarizeSubscriptionEvent(event({ price: 9_800, currency: 'JPY' }), tJa),
     ).toEqual({
-      title: '更新',
+      title: '自動更新',
       plan: '年間プラン',
       amount: '9,800円',
       sandbox: false,
