@@ -6,15 +6,17 @@ import { DEFAULT_LOCALE, resolveRequestLocale } from './locale';
 import ko from './locales/ko';
 import { mergeMessages } from './messages';
 
+// 일본어 문구는 배포 단위로 고정이라 한 번만 합친다 — 요청마다 문구 전체를 다시 합치지 않게
+let jaMessages: ReturnType<typeof mergeMessages> | undefined;
+const loadJaMessages = async () =>
+  (jaMessages ??= mergeMessages(ko, (await import('./locales/ja')).default));
+
 // URL에 언어를 붙이지 않는다 — 기기 언어가 실려 오는 Accept-Language만 보고 정한다
 export default getRequestConfig(async () => {
   const locale = await resolveRequestLocale(async () =>
     (await headers()).get('accept-language'),
   );
-  const messages =
-    locale === DEFAULT_LOCALE
-      ? ko
-      : mergeMessages(ko, (await import(`./locales/${locale}`)).default);
+  const messages = locale === DEFAULT_LOCALE ? ko : await loadJaMessages();
 
   return { locale, messages };
 });
