@@ -132,10 +132,8 @@ export const toKrwPrices = (
 });
 
 /**
- * 페이월 카드(월간·연간)에 그릴 스토어 가격과 그 통화.
- *
- * 원화가 아닌 통화(엔화)는 두 플랜이 같은 통화로 다 있을 때만 쓴다. 하나라도 빠지면 그 자리에 원화 등록값이 들어가
- * 한 화면에 엔화와 원화가 섞이고 할인율 산식도 틀어지기 때문이다. 그때와 다루지 않는 통화는 원화로 돌아간다.
+ * 페이월 카드(월간·연간)에 그릴 스토어 가격과 그 통화 — 엔화는 두 플랜이 다 엔화일 때만 쓰고, 아니면 원화로 돌아간다.
+ * 한쪽만 엔화면 빈칸에 원화 등록값이 들어가 한 화면에 통화가 섞인다.
  */
 export const toRegularPrices = (
   packages: PlanPackages,
@@ -144,13 +142,12 @@ export const toRegularPrices = (
   prices: Partial<Record<SubscriptionPlan, number>>;
 } => {
   const { monthly, yearly } = packages;
-  if (
+  const bothSameForeign =
     monthly &&
     yearly &&
     monthly.currency !== 'KRW' &&
-    monthly.currency === yearly.currency &&
-    isPricedCurrency(monthly.currency)
-  ) {
+    monthly.currency === yearly.currency;
+  if (bothSameForeign && isPricedCurrency(monthly.currency)) {
     return {
       currency: monthly.currency,
       prices: { monthly: monthly.price, yearly: yearly.price },
