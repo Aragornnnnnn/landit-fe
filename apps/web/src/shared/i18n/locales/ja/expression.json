@@ -90,7 +90,7 @@
   },
   "analyzingLandy": {
     "listeningCaption": "発音を聞いています",
-    "comparingCaption": "ネイティブの発音と比べています",
+    "comparingCaption": "お手本の発音と比べています",
     "reviewingCaption": "単語をひとつずつ確認しています",
     "finalizingCaption": "フィードバックをまとめています"
   },
@@ -103,7 +103,7 @@
   },
   "feedbackCards": {
     "nativeStressCaption": "お手本の強勢",
-    "mineStressCaption": "自分が強く言いすぎた所",
+    "mineStressCaption": "自分が強く言った所",
     "nativeRowLabel": "お手本",
     "mineRowLabel": "自分",
     "nativeListenLabel": "お手本の発音を聞く",
