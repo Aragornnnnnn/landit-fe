@@ -17,7 +17,7 @@ import type { StepOffer } from '../_model/step-offer';
 import { BenefitsStep } from './BenefitsStep';
 import { CheckoutStep } from './CheckoutStep';
 import { PaywallHeader } from './PaywallHeader';
-import { PurchaseNotices, SCROLL_PADDING } from './PurchaseNotices';
+import { PurchaseNotices } from './PurchaseNotices';
 
 type Step = 'benefits' | 'checkout';
 
@@ -131,7 +131,7 @@ export const StepPaywall = ({
           setScrolled(event.currentTarget.scrollTop > 48);
           onScroll?.(event.currentTarget);
         }}
-        className={`relative h-full overflow-y-auto ${showsNotices ? SCROLL_PADDING.withNotices : SCROLL_PADDING.buttonOnly} ${step === 'benefits' ? 'bg-card' : ''}`}
+        className={`relative h-full overflow-y-auto ${showsNotices ? 'pb-[calc(max(var(--safe-area-inset-bottom),12px)+142px)]' : 'pb-[calc(max(var(--safe-area-inset-bottom),12px)+100px)]'} ${step === 'benefits' ? 'bg-card' : ''}`}
       >
         {step === 'benefits' ? (
           <>

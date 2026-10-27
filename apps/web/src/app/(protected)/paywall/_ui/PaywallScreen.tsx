@@ -47,7 +47,7 @@ import { PaywallHeader } from './PaywallHeader';
 import { PaywallHero } from './PaywallHero';
 import { PlanSection } from './PlanSection';
 import { PremiumOnlySection } from './PremiumOnlySection';
-import { PurchaseNotices, SCROLL_PADDING } from './PurchaseNotices';
+import { PurchaseNotices } from './PurchaseNotices';
 import { ReviewSection } from './ReviewSection';
 import { StepPaywall } from './StepPaywall';
 
@@ -207,7 +207,7 @@ export const PaywallScreen = ({
       {/* 아래 여백은 하단 고정 CTA(버튼+안내) 높이만큼 — 마지막 링크가 버튼 뒤에 깔리지 않게 */}
       <div
         data-scroll-root
-        className={`relative h-full overflow-y-auto ${SCROLL_PADDING.withNotices}`}
+        className="relative h-full overflow-y-auto pb-[calc(max(var(--safe-area-inset-bottom),12px)+142px)]"
         onScroll={(event) => {
           setScrolled(event.currentTarget.scrollTop > 48);
           exit.noteScroll(event.currentTarget);

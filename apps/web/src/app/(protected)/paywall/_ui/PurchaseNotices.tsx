@@ -5,14 +5,11 @@ import type { PaywallPlan } from '@/features/subscription/model/product/plans';
 
 import { getBillingNotice, getCancelNotice } from '../_model/paywall-copy';
 
-/** 안내 두 줄이 차지하는 높이 — 버튼만 있을 때보다 이만큼 더 아래 여백이 필요하다 */
+/**
+ * 안내 두 줄이 차지하는 높이 — 버튼만 있을 때(스크롤 아래 여백 +100px)보다 이만큼 더 둔다(+142px).
+ * 여백 클래스는 safe-area 규칙 테스트가 스크롤 영역 줄에서 읽으므로 그 자리에 숫자로 적는다. 이 값을 바꾸면 그 142도 같이 바꾼다
+ */
 export const NOTICES_HEIGHT_PX = 42;
-
-/** 하단 고정 CTA가 가리는 만큼의 스크롤 아래 여백 — 버튼만(100px)과 버튼+안내(100+42px). 마지막 내용이 버튼 뒤에 깔리지 않게 */
-export const SCROLL_PADDING = {
-  buttonOnly: 'pb-[calc(max(var(--safe-area-inset-bottom),12px)+100px)]',
-  withNotices: 'pb-[calc(max(var(--safe-area-inset-bottom),12px)+142px)]',
-} as const;
 
 export const PurchaseNotices = ({ plan }: { plan: PaywallPlan }) => {
   const t = useTranslations('paywall');
