@@ -22,5 +22,54 @@
     "pendingTitle": "フレーズは少しあとに<br></br>用意しておきます",
     "pendingDescription": "今は作成に時間がかかっています。<br></br>できたら履歴で見られます。",
     "backButton": "戻る"
+  },
+  "flow": {
+    "loadError": "フレーズを読み込めませんでした。",
+    "backButton": "戻る",
+    "nextButton": "次へ"
+  },
+  "exitSheet": {
+    "title": "学習をやめますか？",
+    "description": "今やめると、このフレーズは完了になりません。",
+    "confirmButton": "やめる",
+    "continueButton": "学習を続ける"
+  },
+  "stepScaffold": {
+    "progressLabel": "学習の進み具合",
+    "closeLabel": "やめる",
+    "backLabel": "戻る"
+  },
+  "quizPrompt": {
+    "title": "質問への答えを完成させましょう",
+    "retryTitle": "もう一度やってみましょう",
+    "revealAnswerTitle": "正解を見てそのまま作りましょう"
+  },
+  "quizStep": {
+    "nextButton": "フレーズを学びに行く",
+    "checkButton": "確認する",
+    "hintButton": "ヒントを見る"
+  },
+  "resultSheet": {
+    "correctTitle": "正解です！",
+    "wrongTitle": "惜しい！",
+    "answerLabel": "正解"
+  },
+  "reviewStep": {
+    "nextButton": "次の問題",
+    "retryButton": "もう一度解く"
+  },
+  "reviewSuccess": {
+    "earnedBadge": "フレーズ獲得！",
+    "finishButton": "学習完了"
+  },
+  "examplesStep": {
+    "nextButton": "復習クイズを解く",
+    "sectionTitle": "こんな使い方も",
+    "coachCaption": "ひとつのフレーズで、いろいろな場面を話せます"
+  },
+  "introStep": {
+    "nextButton": "声に出して言ってみる",
+    "skipButton": "今は話せません",
+    "listenLabel": "フレーズの発音を聞く"
   }
 }

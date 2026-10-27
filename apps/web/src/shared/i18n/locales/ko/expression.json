@@ -22,5 +22,54 @@
     "pendingTitle": "표현은 조금 뒤에<br></br>만들어 둘게요",
     "pendingDescription": "지금은 만들기가 오래 걸리고 있어요.<br></br>다 되면 기록에서 볼 수 있어요.",
     "backButton": "돌아가기"
+  },
+  "flow": {
+    "loadError": "표현을 불러오지 못했어요.",
+    "backButton": "돌아갈게요",
+    "nextButton": "다음"
+  },
+  "exitSheet": {
+    "title": "학습을 중단할까요?",
+    "description": "지금 나가면 이 표현은 완료되지 않아요.",
+    "confirmButton": "나가기",
+    "continueButton": "계속 학습하기"
+  },
+  "stepScaffold": {
+    "progressLabel": "학습 진행도",
+    "closeLabel": "나가기",
+    "backLabel": "뒤로"
+  },
+  "quizPrompt": {
+    "title": "질문에 대한 대답을 완성하세요",
+    "retryTitle": "다시 한번 해보세요",
+    "revealAnswerTitle": "정답을 보고 그대로 만들어보세요"
+  },
+  "quizStep": {
+    "nextButton": "표현 배우러 갈게요",
+    "checkButton": "확인할게요",
+    "hintButton": "힌트 보기"
+  },
+  "resultSheet": {
+    "correctTitle": "정답이에요!",
+    "wrongTitle": "아쉬워요",
+    "answerLabel": "정답"
+  },
+  "reviewStep": {
+    "nextButton": "다음 문제",
+    "retryButton": "다시 풀어볼게요"
+  },
+  "reviewSuccess": {
+    "earnedBadge": "표현 획득!",
+    "finishButton": "학습 완료"
+  },
+  "examplesStep": {
+    "nextButton": "복습 퀴즈 풀게요",
+    "sectionTitle": "이렇게도 써요",
+    "coachCaption": "한 표현으로 이렇게 다양한 상황을 말할 수 있어요"
+  },
+  "introStep": {
+    "nextButton": "소리 내서 말해볼게요",
+    "skipButton": "지금은 말할 수 없어요",
+    "listenLabel": "표현 발음 듣기"
   }
 }
