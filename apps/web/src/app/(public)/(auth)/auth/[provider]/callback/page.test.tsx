@@ -9,6 +9,8 @@ import { readLastLoginProvider } from '../../../_model/last-login-provider';
 import SocialLoginCallbackPage from './page';
 
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
+// 언어 버튼은 이 테스트의 관심 밖이다
+vi.mock('../../../_ui/LanguagePicker', () => ({ LanguagePicker: () => null }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace, push: vi.fn() }),
 }));
