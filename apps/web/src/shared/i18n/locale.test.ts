@@ -60,6 +60,7 @@ describe('localeFromAcceptLanguage', () => {
 
 describe('localeFromDocument', () => {
   afterEach(() => {
+    vi.unstubAllGlobals();
     document.documentElement.lang = '';
   });
 
@@ -67,6 +68,12 @@ describe('localeFromDocument', () => {
     document.documentElement.lang = 'ja';
 
     expect(localeFromDocument()).toBe('ja');
+  });
+
+  it('서버처럼 문서가 없으면 한국어를 준다', () => {
+    vi.stubGlobal('document', undefined);
+
+    expect(localeFromDocument()).toBe('ko');
   });
 
   it('html lang이 지원 언어가 아니면 한국어를 준다', () => {
