@@ -73,7 +73,7 @@ export const MicControl = ({
             </button>
             <p
               aria-hidden
-              className="absolute top-full mt-2 text-xs leading-none font-semibold whitespace-nowrap text-muted-foreground"
+              className="absolute top-full mt-1 text-xs leading-none font-semibold whitespace-nowrap text-muted-foreground"
             >
               다시 말하기
             </p>
@@ -88,7 +88,7 @@ export const MicControl = ({
             </button>
             <p
               aria-hidden
-              className="absolute top-full mt-2 text-xs leading-none font-semibold whitespace-nowrap text-muted-foreground"
+              className="absolute top-full mt-1 text-xs leading-none font-semibold whitespace-nowrap text-muted-foreground"
             >
               보내기
             </p>
