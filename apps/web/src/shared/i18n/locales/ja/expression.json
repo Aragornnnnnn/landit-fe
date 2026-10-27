@@ -5,7 +5,7 @@
   "stages": {
     "celebrateTitle": "会話をひとつ<br></br>完了しました！",
     "analyzeTitle": "今の会話を分析して<br></br>フレーズ学習を作成中",
-    "foundTitle": "ネイティブに近づくフレーズを<emphasis>{count}</emphasis>個見つけました",
+    "foundTitle": "ネイティブのフレーズを<emphasis>{count}</emphasis>個発見",
     "namedPreparedTitle": "{nickname}さんのためのフレーズを用意しました",
     "preparedTitle": "あなたのためのフレーズを用意しました",
     "learnButton": "最初のフレーズから学ぶ"
@@ -17,7 +17,7 @@
     "nextLabel": "次に学ぶフレーズ"
   },
   "smallTalkResult": {
-    "errorTitle": "フレーズを読み込めませんでした",
+    "errorTitle": "読み込めませんでした",
     "errorDescription": "しばらくしてから履歴で開けます。",
     "pendingTitle": "フレーズは少しあとに<br></br>用意しておきます",
     "pendingDescription": "今は作成に時間がかかっています。<br></br>できたら履歴で見られます。",
@@ -73,8 +73,8 @@
     "listenLabel": "フレーズの発音を聞く"
   },
   "pronunciationStep": {
-    "title": "学んだフレーズを実際に言ってみましょう",
-    "coachCaption": "しっかり聞いて、ネイティブのように<br></br>話せるようお手伝いします！",
+    "title": "フレーズを言ってみましょう",
+    "coachCaption": "しっかり聞いて、<br></br>ネイティブ発音へ導きます！",
     "listeningCaption": "聞いています...",
     "feedbackTitle": "ラディの発音フィードバック",
     "rerecordCaption": "<emphasis>文全体</emphasis>を最初からもう一度言ってみましょう",

@@ -1,7 +1,7 @@
 {
   "flow": {
     "loadError": "復習を読み込めませんでした。",
-    "expiredError": "復習できる期間が過ぎました。次の通知でまた会いましょう。",
+    "expiredError": "復習期間が終わりました。また次の通知で！",
     "nextButton": "次の問題",
     "resultButton": "結果を見る",
     "wrongNextButton": "次の問題",
