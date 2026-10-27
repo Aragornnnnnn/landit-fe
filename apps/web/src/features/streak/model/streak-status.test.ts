@@ -1,7 +1,18 @@
 // 스트릭 전체 상태(열매 모양·안내 문구)의 계약 테스트
+import { createTranslator } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 
+import ja from '@/shared/i18n/locales/ja';
+import ko from '@/shared/i18n/locales/ko';
+
 import { fruitStateOf, heroMessageOf } from './streak-status';
+
+const t = createTranslator({ locale: 'ko', messages: ko, namespace: 'streak' });
+const tJa = createTranslator({
+  locale: 'ja',
+  messages: ja,
+  namespace: 'streak',
+});
 
 describe('fruitStateOf', () => {
   it('오늘까지 이어졌으면 열매가 싱싱하다', () => {
@@ -29,11 +40,14 @@ describe('heroMessageOf', () => {
     // given — 어제까지 6일 이어진 상태
 
     // when
-    const message = heroMessageOf({
-      currentStreakDays: 6,
-      activeToday: false,
-      totalActiveDays: 20,
-    });
+    const message = heroMessageOf(
+      {
+        currentStreakDays: 6,
+        activeToday: false,
+        totalActiveDays: 20,
+      },
+      t,
+    );
 
     // then
     expect(message.title).toBe('6일 연속 학습');
@@ -44,11 +58,14 @@ describe('heroMessageOf', () => {
     // given — 오늘까지 5일. 오늘 걸 또 하라고 하면 틀린 말이 된다
 
     // when
-    const message = heroMessageOf({
-      currentStreakDays: 5,
-      activeToday: true,
-      totalActiveDays: 20,
-    });
+    const message = heroMessageOf(
+      {
+        currentStreakDays: 5,
+        activeToday: true,
+        totalActiveDays: 20,
+      },
+      t,
+    );
 
     // then
     expect(message.title).toBe('5일 연속 학습');
@@ -59,11 +76,14 @@ describe('heroMessageOf', () => {
     // given — 완료한 날은 20일 있지만 연속은 끊겼다
 
     // when
-    const message = heroMessageOf({
-      currentStreakDays: 0,
-      activeToday: false,
-      totalActiveDays: 20,
-    });
+    const message = heroMessageOf(
+      {
+        currentStreakDays: 0,
+        activeToday: false,
+        totalActiveDays: 20,
+      },
+      t,
+    );
 
     // then
     expect(message.title).toBe('0일 연속 학습');
@@ -78,11 +98,14 @@ describe('heroMessageOf', () => {
     // given — 오늘치를 채워 그 수에 막 도달했다
 
     // when
-    const message = heroMessageOf({
-      currentStreakDays: days,
-      activeToday: true,
-      totalActiveDays: days,
-    });
+    const message = heroMessageOf(
+      {
+        currentStreakDays: days,
+        activeToday: true,
+        totalActiveDays: days,
+      },
+      t,
+    );
 
     // then — 제목은 그대로 두고 안내만 바뀐다
     expect(message.title).toBe(`${days}일 연속 학습`);
@@ -93,11 +116,14 @@ describe('heroMessageOf', () => {
     // given — 어제 7일째를 채웠고 오늘은 아직. 어제 축하를 오늘 또 하면 김빠진다
 
     // when
-    const message = heroMessageOf({
-      currentStreakDays: 7,
-      activeToday: false,
-      totalActiveDays: 20,
-    });
+    const message = heroMessageOf(
+      {
+        currentStreakDays: 7,
+        activeToday: false,
+        totalActiveDays: 20,
+      },
+      t,
+    );
 
     // then — 평소처럼 오늘을 가리킨다
     expect(message.guide).toBe('오늘 대화를 끝내면 8일이 돼요');
@@ -108,11 +134,14 @@ describe('heroMessageOf', () => {
 
     // when + then
     expect(
-      heroMessageOf({
-        currentStreakDays: 8,
-        activeToday: true,
-        totalActiveDays: 20,
-      }).guide,
+      heroMessageOf(
+        {
+          currentStreakDays: 8,
+          activeToday: true,
+          totalActiveDays: 20,
+        },
+        t,
+      ).guide,
     ).toBe('내일도 이어가면 9일이 돼요');
   });
 
@@ -120,14 +149,29 @@ describe('heroMessageOf', () => {
     // given — 완료한 날이 하나도 없는 신규 유저
 
     // when
-    const message = heroMessageOf({
-      currentStreakDays: 0,
-      activeToday: false,
-      totalActiveDays: 0,
-    });
+    const message = heroMessageOf(
+      {
+        currentStreakDays: 0,
+        activeToday: false,
+        totalActiveDays: 0,
+      },
+      t,
+    );
 
     // then
     expect(message.title).toBe('아직 열매가 없어요');
     expect(message.guide).toBe('오늘 첫 대화로 열매를 모아봐요');
+  });
+});
+
+describe('heroMessageOf — 일본어', () => {
+  it('일본어 화면에서는 연속 일수와 다음 안내를 일본어로 말한다', () => {
+    const message = heroMessageOf(
+      { currentStreakDays: 6, activeToday: false, totalActiveDays: 20 },
+      tJa,
+    );
+
+    expect(message.title).toBe('6日連続');
+    expect(message.guide).toBe('今日の会話を終えると7日になります');
   });
 });

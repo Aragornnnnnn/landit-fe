@@ -1,0 +1,10 @@
+{
+  "appHeader": {
+    "myPageLabel": "내 정보"
+  },
+  "tabBar": {
+    "navLabel": "탭",
+    "scenarioLabel": "시나리오",
+    "smalltalkLabel": "스몰톡"
+  }
+}

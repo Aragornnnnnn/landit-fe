@@ -2,6 +2,7 @@
 
 // 달력 한 칸 — 원 하나와 그 아래 이름표. 상태별로 무엇을 그릴지는 dayStateOf가 정한다
 import { motion, useReducedMotion } from 'motion/react';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { weekdayLabelOf } from '@/shared/lib/date-string';
 import { toDayLabel } from '@/shared/lib/day-label';
@@ -51,18 +52,25 @@ export const CalendarDay = ({
   animated = true,
   label = 'day',
 }: CalendarDayProps) => {
+  const locale = useLocale();
+  const t = useTranslations('scenario.calendarDay');
   const reduced = useReducedMotion() ?? false;
   const state = dayStateOf(day, { today, startedAt });
   const dayNumber = Number(day.date.slice(8));
+  // 완료한 날과 오늘만 상태를 덧붙여 읽는다
+  const dayLabelOf = (dayState: DayState, date: string) =>
+    dayState === 'completed'
+      ? t('completedLabel', { date })
+      : dayState === 'today'
+        ? t('todayLabel', { date })
+        : date;
 
   return (
     <button
       type="button"
       disabled={!isOpenable(state)}
       onClick={() => onSelect(day.date)}
-      aria-label={`${toDayLabel(day.date)}${
-        state === 'completed' ? ' 완료' : state === 'today' ? ' 오늘' : ''
-      }`}
+      aria-label={dayLabelOf(state, toDayLabel(day.date, locale))}
       aria-current={selected ? 'date' : undefined}
       // 테두리는 늘 자리를 차지한다 — 선택할 때만 넣으면 칸이 밀린다
       className={`flex w-full flex-col items-center gap-1 rounded-[16px] border-2 pt-1.5 pb-1 disabled:cursor-default ${
@@ -106,7 +114,7 @@ export const CalendarDay = ({
           selected ? 'font-black text-primary' : LABEL_STYLE[state]
         }`}
       >
-        {label === 'weekday' ? weekdayLabelOf(day.date) : dayNumber}
+        {label === 'weekday' ? weekdayLabelOf(day.date, locale) : dayNumber}
       </span>
     </button>
   );

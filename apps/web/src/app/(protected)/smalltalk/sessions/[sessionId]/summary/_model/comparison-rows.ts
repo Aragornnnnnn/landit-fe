@@ -55,7 +55,10 @@ export const toComparisonRows = (
 ];
 
 // 카드 오른쪽 위 — 어느 날과 견주는지. 첫 스몰톡은 견줄 날이 없어 첫 기록이라고 말한다
-export const toPeriodLabel = ({
-  previousDate,
-}: SmallTalkSummaryComparison): string =>
-  previousDate ? `${toDayLabel(previousDate)} → 오늘` : '첫 기록 · 오늘';
+export const toPeriodLabel = (
+  { previousDate }: SmallTalkSummaryComparison,
+  locale: Locale,
+): string =>
+  previousDate
+    ? `${toDayLabel(previousDate, locale)} → 오늘`
+    : '첫 기록 · 오늘';

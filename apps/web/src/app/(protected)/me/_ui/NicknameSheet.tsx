@@ -2,6 +2,7 @@
 
 // 닉네임 변경 시트 — "뭐라고 불러드릴까요?"로 묻고, 백엔드와 같은 규칙에 맞을 때만 저장한다
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
@@ -16,11 +17,6 @@ import {
   NICKNAME_MAX_LENGTH,
   validateNickname,
 } from '../_model/nickname';
-
-const ERROR_MESSAGES = {
-  too_long: `${NICKNAME_MAX_LENGTH}자까지 쓸 수 있어요`,
-  invalid_char: '한글·영문·숫자와 띄어쓰기만 쓸 수 있어요',
-} as const;
 
 interface NicknameSheetProps {
   open: boolean;
@@ -62,6 +58,7 @@ const NicknameForm = ({
   onSavingChange: (saving: boolean) => void;
   onDone: () => void;
 }) => {
+  const t = useTranslations('me.nicknameSheet');
   const setNickname = useAuthStore((state) => state.setNickname);
   const keyboardInset = useKeyboardInset();
   const [input, setInput] = useState(current);
@@ -70,9 +67,11 @@ const NicknameForm = ({
   const result = validateNickname(input);
   // 빈칸은 버튼만 막는다 — 지우고 새로 쓰는 중에 경고부터 띄우면 혼나는 느낌이다
   const errorMessage =
-    !result.ok && result.reason !== 'empty'
-      ? ERROR_MESSAGES[result.reason]
-      : null;
+    result.ok || result.reason === 'empty'
+      ? null
+      : result.reason === 'too_long'
+        ? t('tooLongError', { max: NICKNAME_MAX_LENGTH })
+        : t('invalidCharError');
   const unchanged = result.ok && result.value === current.trim();
   const length = countNicknameLength(input);
   const tooLong = !result.ok && result.reason === 'too_long';
@@ -84,7 +83,7 @@ const NicknameForm = ({
     try {
       const { nickname } = await updateNickname(result.value);
       setNickname(nickname);
-      showToast(`이제 ${nickname}님으로 불러드릴게요`);
+      showToast(t('savedToast', { nickname }));
       onDone();
     } catch (error) {
       reportWarning(error);
@@ -104,10 +103,10 @@ const NicknameForm = ({
       style={{ paddingBottom: keyboardInset }}
     >
       <BottomSheet.Title className="text-17 font-bold text-foreground">
-        뭐라고 불러드릴까요?
+        {t('title')}
       </BottomSheet.Title>
       <p className="mt-1 text-14 leading-6 text-muted-foreground">
-        언제든 다시 바꿀 수 있어요
+        {t('subtitle')}
       </p>
 
       <div
@@ -127,10 +126,10 @@ const NicknameForm = ({
           autoFocus
           enterKeyHint="done"
           autoComplete="nickname"
-          aria-label="닉네임"
+          aria-label={t('inputLabel')}
           aria-invalid={errorMessage !== null}
           className="h-13 min-w-0 flex-1 bg-transparent text-16 font-semibold text-foreground outline-none placeholder:text-muted-foreground"
-          placeholder="이름을 입력해 주세요"
+          placeholder={t('inputPlaceholder')}
         />
         <span
           className={`shrink-0 text-13 tabular-nums ${
@@ -141,8 +140,7 @@ const NicknameForm = ({
         </span>
       </div>
       <p className="mt-2 min-h-5 px-1 text-13 text-destructive" role="alert">
-        {errorMessage ??
-          (saveFailed ? '저장하지 못했어요. 다시 시도해 주세요' : '')}
+        {errorMessage ?? (saveFailed ? t('saveFailedError') : '')}
       </p>
 
       <Button
@@ -151,7 +149,7 @@ const NicknameForm = ({
         disabled={!result.ok || unchanged}
         loading={saving}
       >
-        이 이름으로 할게요
+        {t('saveButton')}
       </Button>
     </form>
   );

@@ -39,6 +39,7 @@ export const ScenarioSessionFeedback = ({
 }: ScenarioSessionFeedbackProps) => {
   const router = useRouter();
   const t = useTranslations('feedback.feedbackView');
+  const tSession = useTranslations('scenario.sessionFeedback');
   const title = useScenarioTitle(scenarioId, date, t('fallbackTitle'));
   const { sessions, error, retry, isRefreshing } =
     useScenarioHistoryQuery(scenarioId);
@@ -77,7 +78,7 @@ export const ScenarioSessionFeedback = ({
       <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
         <RetryNotice
           screen="scenario_history"
-          message={error.message || '기록을 불러오지 못했어요.'}
+          message={error.message || tSession('loadError')}
           onRetry={retry}
         />
       </main>
@@ -88,11 +89,9 @@ export const ScenarioSessionFeedback = ({
     return (
       <FeedbackNotice
         message={
-          session
-            ? '이 대화는 저장된 피드백이 없어요.'
-            : '이 대화를 찾지 못했어요.'
+          session ? tSession('noFeedbackError') : tSession('notFoundError')
         }
-        actionLabel="기록으로"
+        actionLabel={tSession('backButton')}
         onAction={backToList}
       />
     );

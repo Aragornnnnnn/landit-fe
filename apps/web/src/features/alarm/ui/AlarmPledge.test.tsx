@@ -2,6 +2,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { setTestLocale } from '@/shared/i18n/test-locale';
+
 import { AlarmPledge } from './AlarmPledge';
 
 vi.mock('@/shared/haptics', () => ({ haptic: vi.fn() }));
@@ -16,6 +18,19 @@ afterEach(() => {
 });
 
 describe('AlarmPledge', () => {
+  it('일본어 화면에서는 다짐 문장과 시각을 일본어로 쓴다', () => {
+    // given
+    setTestLocale('ja');
+
+    // when
+    render(<AlarmPledge initialTime={SEVEN_PM} onPledge={vi.fn()} />);
+
+    // then
+    expect(screen.getByRole('heading')).toHaveTextContent(
+      '私は毎日午後7:00に英語を勉強します！',
+    );
+  });
+
   it('키보드나 스크린 리더로 버튼을 누르면 바로 다짐한다', () => {
     // given
     const onPledge = vi.fn();

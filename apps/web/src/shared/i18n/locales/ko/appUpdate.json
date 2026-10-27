@@ -1,0 +1,15 @@
+{
+  "forceUpdate": {
+    "title": "Landit 새 버전 출시!",
+    "defaultReasonBody": "새로운 기능을 사용하려면 업데이트가 꼭 필요해요",
+    "mascotLabel": "랜디",
+    "updateButton": "업데이트하러 가기"
+  },
+  "softUpdate": {
+    "title": "Landit 새 버전 출시!",
+    "defaultReasonBody": "새로워진 기능을 만나보세요",
+    "mascotLabel": "랜디",
+    "updateButton": "업데이트하러 가기",
+    "laterButton": "나중에 할래요"
+  }
+}

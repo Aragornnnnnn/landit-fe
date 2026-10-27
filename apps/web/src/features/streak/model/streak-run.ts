@@ -1,6 +1,7 @@
 // 이번 스트릭 줄 — 칸 일곱 개에 지금 이어지는 구간을 담는다. 달력의 한 주가 아니다
 // 이레까지는 왼쪽부터 채우고, 여드레부터는 마지막 날을 다섯 번째에 고정해 굴린다.
 // 숫자가 총 일수를 말하고 줄은 흐름을 말한다 — 그래서 여드레째부터 앞 칸이 잘려나가도 거짓말이 아니다
+import type { Locale } from '@/shared/i18n/locale';
 import { shiftDay, weekdayLabelOf } from '@/shared/lib/date-string';
 
 const RUN_LENGTH = 7;
@@ -22,12 +23,15 @@ interface StreakRun {
   activeToday: boolean;
   // 서버가 판단에 쓴 KST 오늘
   today: string;
+  // 요일 글자를 쓸 화면 언어
+  locale: Locale;
 }
 
 export const streakRunOf = ({
   currentStreakDays,
   activeToday,
   today,
+  locale,
 }: StreakRun): StreakRunCell[] => {
   // 줄은 오늘이 아니라 마지막으로 채운 날에 붙는다 — 자정을 넘겨 조회가 도착해도 그림이 어긋나지 않는다
   const lastDay =
@@ -43,7 +47,7 @@ export const streakRunOf = ({
     const date = shiftDay(lastDay, index - anchorIndex);
     return {
       date,
-      label: weekdayLabelOf(date),
+      label: weekdayLabelOf(date, locale),
       // 마지막으로 채운 날까지가 채운 칸이다. 그 뒤는 아직 오지 않은 날이라 비워 둔다
       filled: index <= lastFilled,
       latest: index === lastFilled,
