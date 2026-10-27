@@ -9,7 +9,7 @@ import {
   exceedsSendLimit,
   MAX_ATTACHMENTS,
   MAX_SEND_BYTES,
-  sendFailureMessage as sendFailureKey,
+  sendFailureKey,
   takeAttachable,
 } from './attachment';
 
@@ -54,7 +54,7 @@ describe('exceedsSendLimit', () => {
   });
 });
 
-describe('sendFailureMessage', () => {
+describe('sendFailureKey', () => {
   const failure = (status: number, code?: string) =>
     new ApiError('실패', status, '/api/v1/mailbox/feedbacks', code);
 

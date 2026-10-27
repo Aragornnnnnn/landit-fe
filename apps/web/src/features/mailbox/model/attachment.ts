@@ -24,16 +24,16 @@ export const exceedsSendLimit = (files: { size: number }[]) =>
   files.reduce((total, file) => total + file.size, 0) > MAX_SEND_BYTES;
 
 // 문구 키는 mailbox.attachment 아래
-export const TOO_LARGE = 'tooLargeError';
+export const TOO_LARGE_KEY = 'tooLargeError';
 
 /**
  * 전송 실패를 사용자에게 할 말(mailbox.attachment 문구 키)로 바꾼다.
  * 사진 때문에 거부됐으면 다시 시도해도 같으니 사진을 바꾸거나 빼라고 한다
  */
-export const sendFailureMessage = (
+export const sendFailureKey = (
   error: unknown,
   imageCount: number,
-): 'retryLaterError' | 'invalidPhotoError' | typeof TOO_LARGE => {
+): 'retryLaterError' | 'invalidPhotoError' | typeof TOO_LARGE_KEY => {
   if (imageCount === 0 || !(error instanceof ApiError)) {
     return 'retryLaterError';
   }
@@ -41,6 +41,6 @@ export const sendFailureMessage = (
     return 'invalidPhotoError';
   }
   // 413은 서버가, 502는 앞단 프록시가 큰 요청을 끊을 때 온다
-  if (error.status === 413 || error.status === 502) return TOO_LARGE;
+  if (error.status === 413 || error.status === 502) return TOO_LARGE_KEY;
   return 'retryLaterError';
 };

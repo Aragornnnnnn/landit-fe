@@ -15,8 +15,8 @@ import { showToast } from '@/shared/ui/toast';
 import type { FeedbackType } from '../api/mailbox';
 import {
   exceedsSendLimit,
-  sendFailureMessage,
-  TOO_LARGE,
+  sendFailureKey,
+  TOO_LARGE_KEY,
 } from '../model/attachment';
 import { mailboxPath } from '../model/box';
 import { FEEDBACK_TYPE_FACES } from '../model/feedback-type';
@@ -52,7 +52,7 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
     const images = attachments.map(({ file }) => file);
     // 앞단 프록시가 큰 요청을 끊기 전에 막는다 — 보내 봐야 실패할 것을 기다리게 하지 않는다
     if (exceedsSendLimit(images)) {
-      showToast(t(`attachment.${TOO_LARGE}`));
+      showToast(t(`attachment.${TOO_LARGE_KEY}`));
       return;
     }
 
@@ -66,9 +66,7 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
         },
         // 사진 때문에 거부됐으면 다시 시도해도 같다 — 무엇을 바꾸면 되는지 알려준다
         onError: (error) =>
-          showToast(
-            t(`attachment.${sendFailureMessage(error, images.length)}`),
-          ),
+          showToast(t(`attachment.${sendFailureKey(error, images.length)}`)),
       },
     );
   };
