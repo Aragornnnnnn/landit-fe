@@ -75,3 +75,49 @@ describe('MicControl 다시 보내기', () => {
     expect(screen.queryByRole('button', { name: '키보드로 입력' })).toBeNull();
   });
 });
+
+describe('MicControl 말한 뒤 확인', () => {
+  const renderReview = () => {
+    const onRetry = vi.fn();
+    const onSend = vi.fn();
+    render(
+      <MicControl
+        phase="USER_SPEAKING"
+        onPress={vi.fn()}
+        onCancel={vi.fn()}
+        onDone={vi.fn()}
+        review={{ onRetry, onSend }}
+      />,
+    );
+    return { onRetry, onSend };
+  };
+
+  it('확인 중이면 완료(■) 대신 다시 말하기와 보내기를 둔다', () => {
+    renderReview();
+
+    expect(
+      screen.queryByRole('button', { name: '답변 완료' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '다시 말하기' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '보내기' })).toBeInTheDocument();
+  });
+
+  it('보내기를 누르면 보낸다', async () => {
+    const { onSend, onRetry } = renderReview();
+
+    await userEvent.click(screen.getByRole('button', { name: '보내기' }));
+
+    expect(onSend).toHaveBeenCalledTimes(1);
+    expect(onRetry).not.toHaveBeenCalled();
+  });
+
+  it('다시 말하기를 누르면 다시 말한다', async () => {
+    const { onRetry } = renderReview();
+
+    await userEvent.click(screen.getByRole('button', { name: '다시 말하기' }));
+
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+});

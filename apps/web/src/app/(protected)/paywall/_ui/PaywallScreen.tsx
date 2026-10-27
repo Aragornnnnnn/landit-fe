@@ -3,7 +3,7 @@
 // 프리미엄 페이월 화면 — 길게 내려 보는 한 장(머리 → 프리미엄 시리즈 → 그림 학습 → 리뷰 → 비교표 → 플랜)과 아래 고정 CTA.
 // 환급 챌린지 스위치가 켜지면 혜택 화면 → 결제 금액 안내 두 단계(RewardPaywall)로 바뀐다. 결제·복원은 usePurchase, 닫기는 usePaywallDismiss가 지휘하고,
 // 여기서는 어느 플랜을 골랐는지와 버튼 상태만 안다
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   EVENTS,
   type PaywallSource,
@@ -25,7 +25,7 @@ import {
   usePurchase,
   type UnlockReason,
 } from '@/features/subscription/model/purchase/usePurchase';
-import { track } from '@/shared/analytics';
+import { sendAdEvent, track } from '@/shared/analytics';
 import { homePath } from '@/shared/lib/last-tab';
 import { premiumOnboardingPath, type PaywallStep } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
@@ -88,6 +88,11 @@ export const PaywallScreen = ({
   const regularPlan = plans[selectedId === 'monthly' ? 'monthly' : 'yearly'];
   // CTA 밑 결제·해지 안내 두 줄
   const notices = [getBillingNotice(regularPlan), getCancelNotice(regularPlan)];
+
+  // 페이월을 봤다고 메타에 알린다 — 결제 기준 광고 최적화로 넘어갈 때 쓸 중간 단계
+  useEffect(() => {
+    sendAdEvent('paywall_viewed');
+  }, []);
 
   const goHome = () => router.replace(homePath());
   // 결제·복원 없이 떠나는 순간 — 환급 페이월은 단계를 RewardPaywall이 알려 준다

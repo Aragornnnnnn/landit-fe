@@ -24,7 +24,8 @@ import {
 } from '@/alarm/alarm';
 import { cancelAlarm, listAlarms, scheduleTestAlarm } from '@/alarm/dev-alarm';
 import { useAlarmOpen } from '@/alarm/useAlarmOpen';
-import { initMetaSdk } from '@/analytics/meta';
+import { initMetaSdk, logAdEvent, logCheckoutStarted } from '@/analytics/meta';
+import { trackingStatus } from '@/analytics/tracking-status';
 import { generateNonce } from '@/auth/nonce';
 import { requestSocialIdToken, toSocialLoginFailure } from '@/auth/socialLogin';
 import { runHaptic } from '@/bridge/haptics';
@@ -130,6 +131,8 @@ const ShellScreen = () => {
     OPEN_SETTINGS: () => void Linking.openSettings(),
     // 친구에게 공유하기 — OS 공유 시트를 연다. 보냈는지·닫았는지는 안드로이드가 알려주지 않아 회신하지 않는다
     SHARE: ({ message }) => openShareSheet(message),
+    // 광고 최적화용 이벤트를 메타 표준 이벤트로 기록한다
+    LOG_AD_EVENT: ({ event }) => logAdEvent(event),
     // 홈 위젯 데이터를 기록하고 iOS 위젯 타임라인을 새로 예약한다.
     // 저장을 먼저 끝낸다 — 저장이 실패하면 다음 실행이 낡은 데이터로 위젯을 되돌려 놓는다
     SYNC_WIDGET_DATA: async ({ data }) => {
@@ -140,6 +143,11 @@ const ShellScreen = () => {
     REQUEST_WIDGET_PIN: () => requestWidgetPin(),
     // 웹이 떴다 — 그동안 쌓인 위젯 추가·삭제를 건별로 보낸다
     REQUEST_WIDGET_CHANGES: () => flushWidgetChanges(),
+    // 웹이 광고 추적(ATT) 허용 상태를 묻는다 — 권한창에 답할 때까지 기다렸다 회신하고, Android·실패면 답하지 않는다
+    REQUEST_TRACKING_STATUS: async () => {
+      const status = await trackingStatus.read();
+      if (status) postToWeb({ type: 'TRACKING_STATUS', ...status });
+    },
     // 위젯 설치 안내 끝 — iOS에서 앱을 홈 화면으로 내려 사용자가 직접 위젯을 얹게 한다
     GO_HOME: () => goHome(),
     // 알림 권한 상태 조회 — 다이얼로그 없이 현재 상태만 회신한다
@@ -166,6 +174,7 @@ const ShellScreen = () => {
     },
     // 결제 시트를 띄우고 성공·취소·실패를 회신한다. 유료 여부는 BE 웹훅이 정하므로 여기선 결과만 전한다
     PURCHASE: async ({ packageId }) => {
+      logCheckoutStarted(packageId);
       const result = await purchasePackage(packageId);
       postToWeb({ type: 'PURCHASE_RESULT', ...result });
     },

@@ -22,6 +22,7 @@ export {
   type FeedbackType,
   type HomeTab,
   type NotificationPermissionSource,
+  type TrackingPermissionStatus,
   type AlarmSetupSource,
   type AlarmSetupStep,
   type AlarmBlockerKind,

@@ -179,25 +179,26 @@
 
 ### 시나리오 대화
 
-| 이벤트                       | 속성                                                                     | 시점                                                                                                                                    |
-| ---------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Scenario Talk Started        | scenario_id, session_id, first_speaker, is_retry                         | 세션 시작 성공                                                                                                                          |
-| Recording Started            | session_id?, turn_index                                                  | 마이크 눌러 말하기                                                                                                                      |
-| Recording Stopped            | session_id?, turn_index                                                  | ■ 답변 완료 탭 (결과는 각 대화의 Turn Completed / Turn Failed)                                                                          |
-| Recording Canceled           | session_id?, turn_index                                                  | 듣기 취소 (음성)                                                                                                                        |
-| Mic Settings Opened          | —                                                                        | 권한 안내에서 "설정 열기"                                                                                                               |
-| Input Mode Switched          | session_id?, mode(text\|voice)                                           | 키보드↔마이크 전환 (타이핑 취소 포함)                                                                                                   |
-| Scenario Talk Turn Completed | session_id, scenario_id, turn_index, input_type(voice\|text), char_count | 발화 제출 성공                                                                                                                          |
-| Turn Failed                  | session_id?, turn_index, reason(empty\|api_error)                        | 빈 발화 / 제출 실패                                                                                                                     |
-| Inner Thought Viewed         | session_id, turn_index, thought_type?                                    | 상대 속마음 노출                                                                                                                        |
-| Translation Toggled          | session_id?, turn_index, opened                                          | 상대 발화 해석을 펼침(true)/접음(false)                                                                                                 |
-| Answer Guide Toggled         | session_id?, scenario_id, turn_index, opened, from_hint                  | 첫 시나리오 답변 가이드를 펼침(true)/접음(false). from_hint=true는 첫 질문의 유도 힌트가 떠 있을 때 연 것                               |
-| Speech Replayed              | session_id?, turn_index                                                  | 상대 발화 다시 듣기 시작 (멈추려고 누른 건 안 찍음)                                                                                     |
-| Speech Recognition Completed | session_id?, turn_index, engine, end_reason, char_count                  | 음성 인식 결과(빈 결과 포함) — end_reason(finalize\|timeout\|utterance_end\|ended), connect_ms?·finalize_wait_ms?(대기 시간)            |
-| Speech Recognition Failed    | engine?, reason?                                                         | STT 오류 (권한 거부 제외) — reason(connect_failed\|closed, 그 밖엔 에러 이름)                                                           |
-| Speech Playback Failed       | source(synth\|question_audio)                                            | AI 발화 재생 실패 — 실패 비율용. question_audio는 서버 음원(오프닝 첫 질문·이어 재생 질문), 스몰톡 탭 인사도 포함 (synth 원인은 Sentry) |
-| Scenario Talk Completed      | session_id, scenario_id, turn_count                                      | 서버가 완료 판정                                                                                                                        |
-| Scenario Talk Abandoned      | session_id?, scenario_id, turn_index                                     | 중도 이탈 확정                                                                                                                          |
+| 이벤트                       | 속성                                                                     | 시점                                                                                                                                            |
+| ---------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scenario Talk Started        | scenario_id, session_id, first_speaker, is_retry                         | 세션 시작 성공                                                                                                                                  |
+| Recording Started            | session_id?, turn_index                                                  | 마이크 눌러 말하기                                                                                                                              |
+| Recording Stopped            | session_id?, turn_index                                                  | ■ 답변 완료 탭 (결과는 각 대화의 Turn Completed / Turn Failed)                                                                                  |
+| Recording Canceled           | session_id?, turn_index                                                  | 듣기 취소 (음성)                                                                                                                                |
+| Transcript Reviewed          | session_id?, turn_index, action, edited, edit_opened, review_ms          | ■ 뒤 확인 단계 마무리 — send(edited: 고쳐서 보냄)·retry(다시 말하기)·leave(확인 중 나감). edit_opened: 고치기를 열어 봤나, review_ms: 머문 시간 |
+| Mic Settings Opened          | —                                                                        | 권한 안내에서 "설정 열기"                                                                                                                       |
+| Input Mode Switched          | session_id?, mode(text\|voice)                                           | 키보드↔마이크 전환 (타이핑 취소 포함)                                                                                                           |
+| Scenario Talk Turn Completed | session_id, scenario_id, turn_index, input_type(voice\|text), char_count | 발화 제출 성공                                                                                                                                  |
+| Turn Failed                  | session_id?, turn_index, reason(empty\|api_error)                        | 빈 발화 / 제출 실패                                                                                                                             |
+| Inner Thought Viewed         | session_id, turn_index, thought_type?                                    | 상대 속마음 노출                                                                                                                                |
+| Translation Toggled          | session_id?, turn_index, opened                                          | 상대 발화 해석을 펼침(true)/접음(false)                                                                                                         |
+| Answer Guide Toggled         | session_id?, scenario_id, turn_index, opened, from_hint                  | 첫 시나리오 답변 가이드를 펼침(true)/접음(false). from_hint=true는 첫 질문의 유도 힌트가 떠 있을 때 연 것                                       |
+| Speech Replayed              | session_id?, turn_index                                                  | 상대 발화 다시 듣기 시작 (멈추려고 누른 건 안 찍음)                                                                                             |
+| Speech Recognition Completed | session_id?, turn_index, engine, end_reason, char_count                  | 음성 인식 결과(빈 결과 포함) — end_reason(finalize\|timeout\|utterance_end\|ended), connect_ms?·finalize_wait_ms?(대기 시간)                    |
+| Speech Recognition Failed    | engine?, reason?                                                         | STT 오류 (권한 거부 제외) — reason(connect_failed\|closed, 그 밖엔 에러 이름)                                                                   |
+| Speech Playback Failed       | source(synth\|question_audio)                                            | AI 발화 재생 실패 — 실패 비율용. question_audio는 서버 음원(오프닝 첫 질문·이어 재생 질문), 스몰톡 탭 인사도 포함 (synth 원인은 Sentry)         |
+| Scenario Talk Completed      | session_id, scenario_id, turn_count                                      | 서버가 완료 판정                                                                                                                                |
+| Scenario Talk Abandoned      | session_id?, scenario_id, turn_index                                     | 중도 이탈 확정                                                                                                                                  |
 
 `session_id`가 optional인 이벤트는 세션이 백그라운드로 시작돼 확보 전에도 발생할 수 있다.
 
@@ -312,6 +313,14 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 
 온보딩의 알림 스텝은 시트 없이 바로 OS 권한창을 띄워 Consent 이벤트가 없고, 결과는 `Notification Permission Decided(source: onboarding)`로 남는다. 이미 거부한 상태에서 내 정보의 "OS 설정 열기"는 안 찍는다 — 결과를 알 수 없다.
 
+### 광고 추적 허용 (iOS ATT)
+
+| 이벤트                      | 속성    | 시점                                                                                           |
+| --------------------------- | ------- | ---------------------------------------------------------------------------------------------- |
+| Tracking Permission Decided | granted | 이번 실행에서 ATT 권한창이 떠 답했을 때 — 셸의 회신(`TRACKING_STATUS`의 `prompted`)에서 찍는다 |
+
+셸이 앱을 켤 때 Meta SDK 초기화와 함께 권한창을 띄운다(`initMetaSdk`). 웹은 사용자가 답하기 전에 뜨므로 `TrackingStatusSync`가 셸에 묻고, 셸은 답이 날 때까지 기다렸다 회신한다. 예전에 답해 둔 사람은 이벤트 없이 유저 속성 `att_status`만 올라가니, 허용률은 이벤트가 아니라 `att_status`로 본다. 제한(restricted, 자녀 보호 등)은 거부로 온다. Android·브라우저·브릿지 12 이하 셸에는 둘 다 없다.
+
 ### 이벤트 공지 팝업
 
 | 이벤트                | 속성     | 시점                                             |
@@ -396,22 +405,23 @@ OS 권한 팝업의 답 자체는 따로 찍지 않는다 — 위 두 step의 �
 
 사람에 붙는 값이다. 설정한 뒤에 찍힌 이벤트부터 따라붙고, 이미 쌓인 과거 이벤트에는 소급되지 않는다 — 무료였던 시절 이벤트가 `is_premium=false`로 남아야 전환 퍼널이 맞게 나오므로 이게 맞는 동작이다.
 
-| 속성                                            | 값                                             | 시점                                             |
-| ----------------------------------------------- | ---------------------------------------------- | ------------------------------------------------ |
-| provider                                        | kakao \| google \| apple                       | 로그인 식별 시                                   |
-| surface / platform / app_version / build_number | 네이티브 컨텍스트                              | 초기화 시                                        |
-| app_language                                    | ko \| ja (화면 언어)                           | 초기화 시                                        |
-| is_premium                                      | 참·거짓 (모르는 동안은 지움)                   | 구독 조회 결과가 바뀔 때                         |
-| subscription_state                              | unknown \| none \| trial \| active \| canceled | 구독 조회 결과가 바뀔 때                         |
-| plan                                            | monthly \| yearly \| pass (유료가 아니면 지움) | 구독 조회 결과가 바뀔 때                         |
-| learning_level                                  | 1~5 (아직 없으면 지움)                         | 학습 수준·배울 영어 도착 시                      |
-| accent_locale                                   | EN_US \| EN_GB \| EN_AU (아직 없으면 지움)     | 학습 수준·배울 영어 도착 시                      |
-| reward_state                                    | none \| active \| ended \| pending \| review   | 환급 조회 결과가 바뀔 때 (환급이 열린 뒤에만)    |
-| has_alarm                                       | 참·거짓                                        | 알람 설정 도착 시·바뀔 때 (알람을 아는 셸에서만) |
+| 속성                                            | 값                                             | 시점                                                           |
+| ----------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------- |
+| provider                                        | kakao \| google \| apple                       | 로그인 식별 시                                                 |
+| surface / platform / app_version / build_number | 네이티브 컨텍스트                              | 초기화 시                                                      |
+| app_language                                    | ko \| ja (화면 언어)                           | 초기화 시                                                      |
+| is_premium                                      | 참·거짓 (모르는 동안은 지움)                   | 구독 조회 결과가 바뀔 때                                       |
+| subscription_state                              | unknown \| none \| trial \| active \| canceled | 구독 조회 결과가 바뀔 때                                       |
+| plan                                            | monthly \| yearly \| pass (유료가 아니면 지움) | 구독 조회 결과가 바뀔 때                                       |
+| learning_level                                  | 1~5 (아직 없으면 지움)                         | 학습 수준·배울 영어 도착 시                                    |
+| accent_locale                                   | EN_US \| EN_GB \| EN_AU (아직 없으면 지움)     | 학습 수준·배울 영어 도착 시                                    |
+| reward_state                                    | none \| active \| ended \| pending \| review   | 환급 조회 결과가 바뀔 때 (환급이 열린 뒤에만)                  |
+| has_alarm                                       | 참·거짓                                        | 알람 설정 도착 시·바뀔 때 (알람을 아는 셸에서만)               |
+| att_status                                      | granted \| denied \| undetermined              | 앱을 켤 때마다 셸이 ATT 상태를 회신하면 (iOS 브릿지 13 이상만) |
 
 이름은 백엔드 필드(`learningLevel`, `accentLocale`)에 맞춘다 — 이벤트 속성 쪽이 `level`·`accent`·`status`로 짧은 것과 어긋나 보이지만, 이미 쌓이고 있는 이벤트 속성을 바꾸면 과거 데이터가 갈라진다. 유저 속성은 서버 데이터와 같은 말을 쓰는 쪽을 택했다.
 
-계약은 `packages/analytics`의 `UserProperties`에 있고, 발화는 `setUserProperties`(값이 `null`이면 속성을 지운다) 하나를 지나간다. 올리는 자리는 루트 레이아웃에 마운트한 무렌더 컴포넌트 넷이다 — 구독은 `SubscriptionPropertiesSync`, 수준·배울 영어는 `ProfilePropertiesSync`, 환급은 `RewardPropertiesSync`, 알람은 `AlarmPropertiesSync`. 표의 위 두 줄은 이 통로를 지나지 않는다 — `provider`는 로그인 식별(`identifyUser`)이, 네이티브 컨텍스트 넷은 초기화(`initAnalytics`)가 각각 따로 올린다.
+계약은 `packages/analytics`의 `UserProperties`에 있고, 발화는 `setUserProperties`(값이 `null`이면 속성을 지운다) 하나를 지나간다. 올리는 자리는 루트 레이아웃에 마운트한 무렌더 컴포넌트 다섯이다 — 구독은 `SubscriptionPropertiesSync`, 수준·배울 영어는 `ProfilePropertiesSync`, 환급은 `RewardPropertiesSync`, 알람은 `AlarmPropertiesSync`, 광고 추적 허용은 `TrackingStatusSync`. 표의 위 두 줄은 이 통로를 지나지 않는다 — `provider`는 로그인 식별(`identifyUser`)이, 네이티브 컨텍스트 넷은 초기화(`initAnalytics`)가 각각 따로 올린다.
 
 `subscription_state`의 `unknown`은 구독을 한 번도 받지 못한 동안이다 — 로그인 직후 첫 조회가 끝나기 전, 그리고 그 첫 조회가 실패한 동안. 그 구간에는 `is_premium`·`plan`을 지워 지난 세션 값이 남지 않게 한다. "유료 여부를 몰라서 빈 것"과 "속성을 아예 안 쓰던 시절이라 빈 것"을 나중에 구분할 수 있게. 앱을 켜자마자 나가는 홈 `Page Viewed`가 여기 걸린다.
 
