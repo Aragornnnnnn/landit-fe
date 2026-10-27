@@ -12,5 +12,36 @@
   "calendarDay": {
     "completedLabel": "{date} 완료",
     "todayLabel": "{date} 오늘"
+  },
+  "scenarioCard": {
+    "historyLabel": "대화 기록",
+    "historyButton": "기록",
+    "lockedLabel": "잠겨있어요",
+    "replayButton": "다시 대화하기",
+    "startButton": "대화 시작하기"
+  },
+  "cardSkeleton": {
+    "loadingLabel": "카드 불러오는 중",
+    "titleSkeletonLabel": "카페에서 커피 주문하기",
+    "briefingSkeletonLabel": "단골 카페에서 처음 보는 직원에게 마실 것을 주문해 보는 대화예요"
+  },
+  "expressionProgress": {
+    "sectionLabel": "원어민 표현",
+    "countLabel": "{done}/{total} 완료",
+    "progressLabel": "원어민 표현 학습 진행도",
+    "learnButton": "표현 배우기",
+    "continueButton": "이어서 표현 배우기",
+    "reviewButton": "표현 복습하기"
+  },
+  "cardBack": {
+    "title": "원어민은 이렇게 말해요",
+    "frontLabel": "카드 앞면으로"
+  },
+  "freeExpressionSpotlight": {
+    "introLabel": "맞춤 표현 학습 소개",
+    "introBody": "방금 대화로 만든<br></br><em>나만의 맞춤 표현 학습</em>이에요",
+    "introNamedBody": "방금 대화로 만든<br></br><em>{nickname}님 맞춤 표현 학습</em>이에요",
+    "freeLabel": "첫 표현 무료로 배우기",
+    "freeBody": "첫 표현은 <em>무료</em>로 열어 드렸어요<br></br>눌러서 바로 배워 봐요"
   }
 }

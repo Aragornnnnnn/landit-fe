@@ -4,6 +4,7 @@
 // 서버가 무료로 열어 준 표현(freeTrial)은 페이월 없이 연다. 무료 사용자 목록에는 무료·PREMIUM을 붙이고, 프리미엄 프리뷰 중에는 그 표현을 비춘다
 import { useEffect, useEffectEvent, useRef } from 'react';
 import { EVENTS, type PreviewEndReason } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { useExpressionsQuery } from '@/features/expression/model/useExpressionsQuery'; // 완료 카드 뒷면이 표현 목록을 조합한다 — 교차 조립 블록(widgets 후보)
@@ -45,6 +46,7 @@ export const ScenarioCardBack = ({
   onPreviewEnd,
   onPreviewOpen,
 }: ScenarioCardBackProps) => {
+  const t = useTranslations('scenario.cardBack');
   const router = useRouter();
   const gate = usePaywallGate();
   const { expressions, error, isLoading, retry } =
@@ -108,13 +110,11 @@ export const ScenarioCardBack = ({
   return (
     <>
       <header className="relative flex h-14 flex-none items-center justify-center px-3">
-        <h2 className="text-base font-bold text-foreground">
-          원어민은 이렇게 말해요
-        </h2>
+        <h2 className="text-base font-bold text-foreground">{t('title')}</h2>
         <button
           onClick={onBack}
           className="absolute right-2 flex size-10 items-center justify-center text-muted-foreground"
-          aria-label="카드 앞면으로"
+          aria-label={t('frontLabel')}
         >
           <CloseIcon size={22} />
         </button>
