@@ -8,9 +8,10 @@ export default function ProtectedLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // onboarding 묶음을 여기서 보낸다 — 배울 영어 선택 폼과 시작 전 질문(ProfileGate)을 홈·내 정보도 같이 쓴다
+  // 여러 화면이 같이 쓰는 묶음은 여기서 보낸다 — onboarding은 배울 영어 선택 폼·시작 전 질문(홈·내 정보),
+  // notification은 알림 잠금화면 목업(온보딩·홈 시트), widget은 위젯 설치 안내(온보딩·내 정보)
   return (
-    <MessagesProvider namespaces={['onboarding']}>
+    <MessagesProvider namespaces={['onboarding', 'notification', 'widget']}>
       <AuthGate>{children}</AuthGate>
     </MessagesProvider>
   );

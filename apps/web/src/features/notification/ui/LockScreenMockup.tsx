@@ -2,14 +2,16 @@
 'use client';
 
 import { motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 export const LockScreenMockup = ({
-  title = '오늘만 가능한 시나리오 도착 💌',
-  body = '자기 전 5분으로 래디에게 열매를 먹여주세요',
+  title,
+  body,
 }: {
   title?: string;
   body?: string;
 }) => {
+  const t = useTranslations('notification.lockScreenMockup');
   const reduced = useReducedMotion();
   return (
     <div className="relative w-full max-w-[342px]">
@@ -18,7 +20,7 @@ export const LockScreenMockup = ({
         <div className="absolute top-[13px] left-1/2 h-6 w-[88px] -translate-x-1/2 rounded-full bg-[#0a0a0a]" />
 
         <p className="pt-[50px] text-center text-[13px] font-medium text-white/20">
-          7월 28일 화요일
+          {t('dateLabel')}
         </p>
         <p className="text-center text-[40px] leading-[48px] font-semibold text-white/20">
           8:00
@@ -50,14 +52,14 @@ export const LockScreenMockup = ({
             />
             <span className="text-[13px] font-bold text-[#6b7280]">Landit</span>
             <span className="flex-1 text-right text-xs text-[#6b7280]">
-              지금
+              {t('nowLabel')}
             </span>
           </div>
           <p className="mt-1 text-[15px] leading-[21px] font-bold text-[#111]">
-            {title}
+            {title ?? t('titleLabel')}
           </p>
           <p className="mt-1 text-[13.5px] leading-[19px] text-[#6b7280]">
-            {body}
+            {body ?? t('bodyLabel')}
           </p>
         </motion.div>
       </div>

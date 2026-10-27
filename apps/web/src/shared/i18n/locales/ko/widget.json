@@ -1,0 +1,32 @@
+{
+  "guideScaffold": {
+    "laterButton": "나중에 하기"
+  },
+  "inviteStep": {
+    "title": "홈 화면에서<br></br>래디와 매일 만나요",
+    "subtitle": "앱을 열지 않아도 며칠째인지 보여요",
+    "addButton": "위젯 추가하기"
+  },
+  "pressStep": {
+    "title": "홈 화면에서 아무곳이나<br></br>길게 눌러주세요",
+    "subtitle": "아이콘이 흔들리면 준비 끝이에요",
+    "nextButton": "다음",
+    "editLabel": "편집",
+    "doneLabel": "완료"
+  },
+  "menuStep": {
+    "title": "편집을 누르고<br></br>위젯 추가를 골라주세요",
+    "subtitle": "메뉴가 열리면 위젯 추가가 보여요",
+    "nextButton": "다음",
+    "editLabel": "편집",
+    "doneLabel": "완료",
+    "addWidgetLabel": "위젯 추가"
+  },
+  "searchStep": {
+    "title": "landit을 검색해서<br></br>위젯을 골라주세요",
+    "subtitle": "크기는 세 가지 중에 고를 수 있어요",
+    "homeButton": "홈 화면으로 가기",
+    "widgetNameLabel": "대화 스트릭",
+    "widgetTitle": "대화 스트릭 위젯"
+  }
+}
