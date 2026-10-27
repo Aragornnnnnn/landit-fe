@@ -2,6 +2,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import { createPortal } from 'react-dom';
 
 import { CloseIcon } from './Icons';
@@ -24,6 +25,7 @@ export function Modal({
   children,
 }: ModalProps) {
   const { mounted, panelRef } = useDialogLayer({ open, dismissible, onClose });
+  const t = useTranslations('common');
 
   if (!mounted) return null;
 
@@ -57,7 +59,7 @@ export function Modal({
               <button
                 type="button"
                 onClick={onClose}
-                aria-label="닫기"
+                aria-label={t('closeLabel')}
                 className="absolute top-5 right-5 flex size-8 items-center justify-center rounded-full text-muted-foreground transition-transform active:scale-90"
               >
                 <CloseIcon size={22} />
