@@ -45,9 +45,11 @@ const endsWithRole = (segment: string) =>
       segment.endsWith(role[0].toUpperCase() + role.slice(1)),
   );
 
-// "<link>약관</link>에 {price}" → ['<link>', 'price'] 처럼 문장 안의 자리만 뽑는다
+// "<link>약관</link>에 {price}" → ['<link>', 'price'] 처럼 문장 안의 자리만 뽑는다.
+// 변수는 영문으로 시작하는 이름만 본다 — plural·select 분기 안의 문장({7일 …})을 변수로 잘못 잡지 않게.
+// 태그는 <br/>처럼 스스로 닫는 것도 센다
 const slotsOf = (message: string) =>
-  [...message.matchAll(/\{(\w+)|<(\w+)>/g)]
+  [...message.matchAll(/\{([a-zA-Z_]\w*)|<(\w+)\s*\/?>/g)]
     .map((m) => m[1] ?? `<${m[2]}>`)
     .sort();
 
