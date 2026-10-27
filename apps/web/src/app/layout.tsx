@@ -24,7 +24,7 @@ import { PlatformMarkerSync } from '@/shared/bridge/PlatformMarkerSync';
 import { fontScaleScript } from '@/shared/font-scale/font-scale';
 import { FontScaleSync } from '@/shared/font-scale/FontScaleSync';
 import { GlobalHaptics } from '@/shared/haptics';
-import { LocaleSync } from '@/shared/i18n/LocaleSync';
+import { LocaleGate } from '@/shared/i18n/LocaleGate';
 import {
   MessagesProvider,
   RootMessagesProvider,
@@ -54,7 +54,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // 요청의 Accept-Language로 정한 화면 언어 — API 요청도 html lang을 읽어 같은 언어를 보낸다
+  // 저장 언어 쿠키(없으면 Accept-Language)로 정한 화면 언어 — API 요청도 html lang을 읽어 같은 언어를 보낸다
   const locale = await getLocale();
 
   return (
@@ -80,7 +80,7 @@ export default async function RootLayout({
               <AppUpdateGate />
             </MessagesProvider>
             <PushDeviceSync />
-            <LocaleSync />
+            <LocaleGate />
             <WidgetDataSync />
             <WidgetChangeSync />
             <TrackingStatusSync />

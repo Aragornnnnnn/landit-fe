@@ -250,4 +250,18 @@ describe('일본어 화면', () => {
       '見たフレーズを話す番です',
     );
   });
+
+  it('실력·체험 가격 화면의 이름과 날짜를 일본어 표기로 끼워 넣는다', () => {
+    const ja = { t: tJa, locale: 'ja' as const };
+
+    expect(
+      retentionContent('progress', { ...context(active()), ...ja }).body[0],
+    ).toBe('会話ごとに준서さんのレベルに合わせています。');
+    expect(
+      retentionContent('price', {
+        ...context(active({ kind: 'trial', plan: 'yearly', price: 58_500 })),
+        ...ja,
+      }).cards[1],
+    ).toEqual({ kind: 'row', label: '初回の請求日', value: '2026年10月4日' });
+  });
 });
