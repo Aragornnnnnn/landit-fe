@@ -25,6 +25,7 @@ export const AlarmMenuEntry = () => {
   const { subscription } = useSubscriptionQuery();
   const isAdmin = useIsAdmin();
   const locale = useLocale();
+  const t = useTranslations('me.alarmMenu');
   const tAlarm = useTranslations('alarm');
   const shown =
     status?.supported === true && canUseAlarm({ subscription, isAdmin });
@@ -56,7 +57,7 @@ export const AlarmMenuEntry = () => {
     <MenuLink
       href={ALARM_SETTINGS_PATH}
       icon={<Emoji>⏰</Emoji>}
-      title="알람"
+      title={t('title')}
       value={
         value && (
           <span
