@@ -133,6 +133,8 @@ export const PaywallScreen = ({
     packages,
     onUnlocked: unlock,
     checkPassAvailability,
+    // 이용권은 스토어 통화대로 결제해도 된다고 정해 비교하지 않는다
+    displayCurrencies: { monthly: currency, yearly: currency },
   });
 
   const selectPlan = (id: SubscriptionPlan) => {
