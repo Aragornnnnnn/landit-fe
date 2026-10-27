@@ -6,6 +6,7 @@
 // 여기서 나가는 길은 둘 — 상세 피드백(대화 보기)을 거쳐 표현 학습으로, 또는 바로 표현 학습으로
 import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
@@ -37,6 +38,7 @@ import { SmallTalkSummarySkeleton } from './SmallTalkSummarySkeleton';
 
 export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
   const router = useRouter();
+  const t = useTranslations('smallTalk.summary');
   const { summary, error, isLoading, waitExpired, retry } =
     useSmallTalkSummaryQuery(sessionId);
   // 총평은 이 세션의 교정이 다 끝나야 계산된다 — 보통 수 초지만, 상한까지 안 오면 붙잡아 두지 않는다
@@ -112,7 +114,7 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
       style={{ paddingTop: 'var(--safe-area-inset-top)' }}
     >
       <PageHeader
-        title="오늘의 스몰톡"
+        title={t('title')}
         leading="close"
         backDisabled={leaving}
         onBack={() => skipDetail('close')}
@@ -120,7 +122,7 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
 
       {error || summaryStuck ? (
         <SummaryUnavailable
-          message={error?.message ?? '오늘의 스몰톡을 정리하지 못했어요.'}
+          message={error?.message ?? t('unavailableError')}
           onRetry={retry}
           onSkip={() => skipDetail('unavailable')}
         />
@@ -140,7 +142,7 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
               상세 피드백을 보고 나면 그 화면이 표현 학습으로 이어 준다 */}
           <footer className="flex-none px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),16px)]">
             <Button onClick={() => openDetail(summary)} disabled={leaving}>
-              상세 피드백 보러갈게요
+              {t('detailButton')}
             </Button>
           </footer>
         </>
@@ -181,34 +183,37 @@ const ConditionalBlocks = ({
 }: {
   blocks: SummaryBlocks;
   arrivals: Arrivals;
-}) => (
-  <>
-    {blocks.growth.kind === 'ready' && (
-      <GrowthCard
-        growth={blocks.growth.data}
-        className={risingIn(arrivals.growth)}
-      />
-    )}
-    {blocks.reusedExpressions.kind === 'ready' && (
-      <ReusedExpressionsCard
-        items={blocks.reusedExpressions.data}
-        className={risingIn(arrivals.reusedExpressions)}
-      />
-    )}
-    {blocks.reusedExpressions.kind === 'loading' && (
-      <BlockSkeleton label="배운 표현 재사용을 찾는 중" />
-    )}
-    {blocks.followUp.kind === 'ready' && (
-      <FollowUpBlock
-        followUp={blocks.followUp.data}
-        className={risingIn(arrivals.followUp)}
-      />
-    )}
-    {blocks.followUp.kind === 'loading' && (
-      <BlockSkeleton label="다음 스몰톡 질문을 찾는 중" />
-    )}
-  </>
-);
+}) => {
+  const t = useTranslations('smallTalk.summary');
+  return (
+    <>
+      {blocks.growth.kind === 'ready' && (
+        <GrowthCard
+          growth={blocks.growth.data}
+          className={risingIn(arrivals.growth)}
+        />
+      )}
+      {blocks.reusedExpressions.kind === 'ready' && (
+        <ReusedExpressionsCard
+          items={blocks.reusedExpressions.data}
+          className={risingIn(arrivals.reusedExpressions)}
+        />
+      )}
+      {blocks.reusedExpressions.kind === 'loading' && (
+        <BlockSkeleton label={t('reusedLoadingLabel')} />
+      )}
+      {blocks.followUp.kind === 'ready' && (
+        <FollowUpBlock
+          followUp={blocks.followUp.data}
+          className={risingIn(arrivals.followUp)}
+        />
+      )}
+      {blocks.followUp.kind === 'loading' && (
+        <BlockSkeleton label={t('followUpLoadingLabel')} />
+      )}
+    </>
+  );
+};
 
 // 요약을 못 받았을 때 — 다시 물어보거나, 요약 없이 표현 학습으로 넘어간다 (대화는 이미 끝났다)
 const SummaryUnavailable = ({
@@ -219,30 +224,33 @@ const SummaryUnavailable = ({
   message: string;
   onRetry: () => void;
   onSkip: () => void;
-}) => (
-  <div
-    role="alert"
-    className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center"
-  >
-    <p className="text-sm text-muted-foreground">
-      {message || '오늘의 스몰톡을 불러오지 못했어요.'}
-    </p>
-    <Button
-      variant="secondary"
-      size="sm"
-      className="w-auto px-6"
-      onClick={() => {
-        track(EVENTS.ERROR_RETRIED, { screen: 'smalltalk_summary' });
-        onRetry();
-      }}
+}) => {
+  const t = useTranslations('smallTalk.summary');
+  return (
+    <div
+      role="alert"
+      className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center"
     >
-      다시 시도
-    </Button>
-    <button
-      onClick={onSkip}
-      className="py-1 text-sm font-semibold text-muted-foreground active:opacity-70"
-    >
-      표현 배우러 가기
-    </button>
-  </div>
-);
+      <p className="text-sm text-muted-foreground">
+        {message || t('loadError')}
+      </p>
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-auto px-6"
+        onClick={() => {
+          track(EVENTS.ERROR_RETRIED, { screen: 'smalltalk_summary' });
+          onRetry();
+        }}
+      >
+        {t('retryButton')}
+      </Button>
+      <button
+        onClick={onSkip}
+        className="py-1 text-sm font-semibold text-muted-foreground active:opacity-70"
+      >
+        {t('learnButton')}
+      </button>
+    </div>
+  );
+};

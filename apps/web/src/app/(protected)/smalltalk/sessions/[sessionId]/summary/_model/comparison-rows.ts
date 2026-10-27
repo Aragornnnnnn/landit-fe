@@ -2,6 +2,7 @@
 import type { SmallTalkSummaryComparison } from '@/features/small-talk/api/small-talk';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import type { Locale } from '@/shared/i18n/locale';
+import type { Translator } from '@/shared/i18n/translator';
 import { toDayLabel } from '@/shared/lib/day-label';
 
 interface Bar {
@@ -32,30 +33,35 @@ const toBars = (
 
 export const toComparisonRows = (
   { previous, current }: SmallTalkSummaryComparison,
+  t: Translator<'smallTalk'>,
   locale: Locale,
 ): ComparisonRow[] => [
   {
-    label: '말한 시간',
+    label: t('comparison.speakingTimeLabel'),
     ...toBars(previous.speakingMs, current.speakingMs, (ms) =>
       toSpeakingTimeLabel(ms, locale),
     ),
   },
   {
-    label: '주고받은 말',
-    ...toBars(previous.turnCount, current.turnCount, (count) => `${count}번`),
+    label: t('comparison.exchangeLabel'),
+    ...toBars(previous.turnCount, current.turnCount, (count) =>
+      t('comparison.exchangeCountLabel', { count }),
+    ),
   },
   {
-    label: '가장 길게 말한 턴',
-    ...toBars(
-      previous.maxWordsInTurn,
-      current.maxWordsInTurn,
-      (words) => `${words}단어`,
+    label: t('comparison.longestTurnLabel'),
+    ...toBars(previous.maxWordsInTurn, current.maxWordsInTurn, (count) =>
+      t('comparison.wordCountLabel', { count }),
     ),
   },
 ];
 
 // 카드 오른쪽 위 — 어느 날과 견주는지. 첫 스몰톡은 견줄 날이 없어 첫 기록이라고 말한다
-export const toPeriodLabel = ({
-  previousDate,
-}: SmallTalkSummaryComparison): string =>
-  previousDate ? `${toDayLabel(previousDate)} → 오늘` : '첫 기록 · 오늘';
+export const toPeriodLabel = (
+  { previousDate }: SmallTalkSummaryComparison,
+  t: Translator<'smallTalk'>,
+  locale: Locale,
+): string =>
+  previousDate
+    ? t('comparison.periodCaption', { date: toDayLabel(previousDate, locale) })
+    : t('comparison.firstPeriodCaption');

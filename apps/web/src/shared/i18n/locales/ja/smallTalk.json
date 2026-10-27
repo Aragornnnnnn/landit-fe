@@ -69,5 +69,31 @@
   },
   "transcriptSkeleton": {
     "loadingLabel": "会話を読み込み中"
+  },
+  "summary": {
+    "title": "今日のスモールトーク",
+    "unavailableError": "今日のスモールトークをまとめられませんでした。",
+    "loadError": "今日のスモールトークを読み込めませんでした。",
+    "detailButton": "詳しいフィードバックを見ます",
+    "reusedLoadingLabel": "学んだフレーズの使用を探しています",
+    "followUpLoadingLabel": "次のスモールトークの質問を探しています",
+    "retryButton": "もう一度試す",
+    "learnButton": "フレーズを学びに行く"
+  },
+  "summarySkeleton": {
+    "loadingLabel": "今日のスモールトークを読み込み中"
+  },
+  "comparison": {
+    "title": "前回との比較",
+    "speakingTimeLabel": "話した時間",
+    "exchangeLabel": "やりとり",
+    "longestTurnLabel": "一番長く話したターン",
+    "exchangeCountLabel": "{count}回",
+    "wordCountLabel": "{count}語",
+    "periodCaption": "{date} → 今日",
+    "firstPeriodCaption": "初めての記録 · 今日"
+  },
+  "followUp": {
+    "title": "次のスモールトークで"
   }
 }

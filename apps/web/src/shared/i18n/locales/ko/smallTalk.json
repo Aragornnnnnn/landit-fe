@@ -69,5 +69,31 @@
   },
   "transcriptSkeleton": {
     "loadingLabel": "대화를 불러오는 중"
+  },
+  "summary": {
+    "title": "오늘의 스몰톡",
+    "unavailableError": "오늘의 스몰톡을 정리하지 못했어요.",
+    "loadError": "오늘의 스몰톡을 불러오지 못했어요.",
+    "detailButton": "상세 피드백 보러갈게요",
+    "reusedLoadingLabel": "배운 표현 재사용을 찾는 중",
+    "followUpLoadingLabel": "다음 스몰톡 질문을 찾는 중",
+    "retryButton": "다시 시도",
+    "learnButton": "표현 배우러 가기"
+  },
+  "summarySkeleton": {
+    "loadingLabel": "오늘의 스몰톡을 불러오는 중"
+  },
+  "comparison": {
+    "title": "지난번과 비교",
+    "speakingTimeLabel": "말한 시간",
+    "exchangeLabel": "주고받은 말",
+    "longestTurnLabel": "가장 길게 말한 턴",
+    "exchangeCountLabel": "{count}번",
+    "wordCountLabel": "{count}단어",
+    "periodCaption": "{date} → 오늘",
+    "firstPeriodCaption": "첫 기록 · 오늘"
+  },
+  "followUp": {
+    "title": "다음 스몰톡에서"
   }
 }
