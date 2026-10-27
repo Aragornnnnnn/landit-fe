@@ -140,6 +140,7 @@ describe('getAlarmStatus', () => {
         schedules: [{ hour: 19, minute: 30, weekdays: EVERY_DAY }],
         path: PATH,
         skipDate: '2026-10-07',
+        title: TITLE,
       },
     ]);
   });

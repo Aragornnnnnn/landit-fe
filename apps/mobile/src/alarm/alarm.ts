@@ -272,6 +272,7 @@ const toState = (
   schedules: alarms.map(scheduleOf),
   path: readMemo(alarms[0])?.path ?? '/',
   skipDate: skipDateOf(alarms),
+  title: alarms[0].title,
 });
 
 const toStatus = async (

@@ -170,6 +170,8 @@ export const repeatingAlarmStateSchema = z.object({
   path: alarmPathSchema,
   // 오늘 회차를 건너뛴 날 — 건너뛴 적 없거나 날이 지나 되돌렸으면 null
   skipDate: localDateSchema.nullable(),
+  // 걸린 알람의 제목 — 웹이 화면 언어로 만든 제목과 다르면 다시 건다. 브릿지 13 이하 셸은 보내지 않는다
+  title: z.string().optional(),
 });
 
 // 셸이 띄울 수 있는 알람 설정 화면 — Android 14+에서 사용자가 직접 켜야 하는 두 권한
