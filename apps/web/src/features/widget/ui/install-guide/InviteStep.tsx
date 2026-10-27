@@ -2,8 +2,10 @@
 'use client';
 
 import { motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import { WidgetPreviewSmall } from '@/features/widget/ui/WidgetPreviewCard';
+import { lineBreak } from '@/shared/i18n/rich';
 
 import { AppSlots, GuideScaffold, PhoneMockup } from './GuideScaffold';
 
@@ -23,19 +25,14 @@ export const InviteStep = ({
   onAdd: () => void;
   onLater: () => void;
 }) => {
+  const t = useTranslations('widget.inviteStep');
   const reduced = useReducedMotion() ?? false;
 
   return (
     <GuideScaffold
-      title={
-        <>
-          홈 화면에서
-          <br />
-          래디와 매일 만나요
-        </>
-      }
-      subtitle="앱을 열지 않아도 며칠째인지 보여요"
-      cta="위젯 추가하기"
+      title={t.rich('title', lineBreak)}
+      subtitle={t('subtitle')}
+      cta={t('addButton')}
       onCta={onAdd}
       onLater={onLater}
     >

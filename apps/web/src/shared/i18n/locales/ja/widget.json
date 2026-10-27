@@ -1,0 +1,32 @@
+{
+  "guideScaffold": {
+    "laterButton": "あとで"
+  },
+  "inviteStep": {
+    "title": "ホーム画面で<br></br>毎日ラディに会えます",
+    "subtitle": "開かなくても何日目かわかります",
+    "addButton": "ウィジェットを追加"
+  },
+  "pressStep": {
+    "title": "ホーム画面のどこかを<br></br>長押ししてください",
+    "subtitle": "アイコンが揺れたら準備OKです",
+    "nextButton": "次へ",
+    "editLabel": "編集",
+    "doneLabel": "完了"
+  },
+  "menuStep": {
+    "title": "「編集」をタップして<br></br>ウィジェットを追加",
+    "subtitle": "メニューが開くと「ウィジェットを追加」が出ます",
+    "nextButton": "次へ",
+    "editLabel": "編集",
+    "doneLabel": "完了",
+    "addWidgetLabel": "ウィジェットを追加"
+  },
+  "searchStep": {
+    "title": "landitを検索して<br></br>ウィジェットを選びます",
+    "subtitle": "サイズは3種類から選べます",
+    "homeButton": "ホーム画面へ",
+    "widgetNameLabel": "会話の連続記録",
+    "widgetTitle": "会話の連続記録ウィジェット"
+  }
+}

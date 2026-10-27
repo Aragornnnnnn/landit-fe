@@ -4,6 +4,9 @@
 
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
+
+import { lineBreak } from '@/shared/i18n/rich';
 
 import {
   Capsule,
@@ -46,6 +49,7 @@ const DeleteBadge = () => (
 );
 
 export const PressStep = ({ onNext }: { onNext: () => void }) => {
+  const t = useTranslations('widget.pressStep');
   const reduced = useReducedMotion() ?? false;
   // reduced motion이면 사이클 없이 편집 모드 정지 화면으로 시작한다
   const [phase, setPhase] = useState<Phase>(reduced ? 'editing' : 'idle');
@@ -63,15 +67,9 @@ export const PressStep = ({ onNext }: { onNext: () => void }) => {
 
   return (
     <GuideScaffold
-      title={
-        <>
-          홈 화면에서 아무곳이나
-          <br />
-          길게 눌러주세요
-        </>
-      }
-      subtitle="아이콘이 흔들리면 준비 끝이에요"
-      cta="다음"
+      title={t.rich('title', lineBreak)}
+      subtitle={t('subtitle')}
+      cta={t('nextButton')}
       onCta={onNext}
     >
       <PhoneMockup>
@@ -119,8 +117,8 @@ export const PressStep = ({ onNext }: { onNext: () => void }) => {
           animate={{ opacity: editing ? 1 : 0 }}
           transition={{ duration: 0.2 }}
         >
-          <Capsule left={16}>편집</Capsule>
-          <Capsule left={186}>완료</Capsule>
+          <Capsule left={16}>{t('editLabel')}</Capsule>
+          <Capsule left={186}>{t('doneLabel')}</Capsule>
         </motion.div>
       </PhoneMockup>
     </GuideScaffold>
