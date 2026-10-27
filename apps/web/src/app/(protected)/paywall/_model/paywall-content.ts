@@ -123,62 +123,79 @@ export const EXAMPLE_LANDING_GLOSS = {
   meaning: '열심히 공부하다',
 };
 
+/** 시나리오 카드 제목 — paywall.scenarios 아래 문구 키 */
+export type ScenarioTitleKey =
+  | 'cafeOrderTitle'
+  | 'hotelCheckInTitle'
+  | 'flightSeatmateTitle'
+  | 'pharmacyTitle'
+  | 'debateClassTitle'
+  | 'trainTicketTitle'
+  | 'refundRequestTitle'
+  | 'partyChloeTitle'
+  | 'seatChangeTitle'
+  | 'travelChatTitle'
+  | 'groupPresentationTitle'
+  | 'headphonesTitle'
+  | 'roommateMarcoTitle'
+  | 'baggageClaimTitle';
+
 /** 시나리오 데모에서 넘어가는 실제 시나리오 카드(제목·썸네일). 끝에서 두 번째 장(첫 만남)에 멈춘다. 그림은 CDN 원본을 216px로 줄여 담았다 */
-export const SCENARIOS: { title: string; image: string }[] = [
+export const SCENARIOS: { titleKey: ScenarioTitleKey; image: string }[] = [
   {
-    title: '카페에서 주문하기',
+    titleKey: 'cafeOrderTitle',
     image: `${IMAGE_DIR}/scenarios/s-17.webp`,
   },
   {
-    title: '호텔 체크인 하기',
+    titleKey: 'hotelCheckInTitle',
     image: `${IMAGE_DIR}/scenarios/s-15.webp`,
   },
   {
-    title: '비행기 옆자리 승객과의 대화',
+    titleKey: 'flightSeatmateTitle',
     image: `${IMAGE_DIR}/scenarios/s-13.webp`,
   },
   {
-    title: '약국에서 증상 설명하고 약 사기',
+    titleKey: 'pharmacyTitle',
     image: `${IMAGE_DIR}/scenarios/s-18.webp`,
   },
   {
-    title: '토론 수업 — 돈과 행복',
+    titleKey: 'debateClassTitle',
     image: `${IMAGE_DIR}/scenarios/s-12.webp`,
   },
   {
-    title: '일정에 맞는 기차표 구매하기',
+    titleKey: 'trainTicketTitle',
     image: `${IMAGE_DIR}/scenarios/s-26.webp`,
   },
   {
-    title: '불량 상품 교환 또는 환불 요청하기',
+    titleKey: 'refundRequestTitle',
     image: `${IMAGE_DIR}/scenarios/s-39.webp`,
   },
   {
-    title: '인터내셔널 파티 — 처음 만난 Chloe',
+    titleKey: 'partyChloeTitle',
     image: `${IMAGE_DIR}/scenarios/s-06.webp`,
   },
   {
-    title: '공항에서 더 편한 좌석으로 변경하기',
+    titleKey: 'seatChangeTitle',
     image: `${IMAGE_DIR}/scenarios/s-30.webp`,
   },
   {
-    title: '친구와 여행 수다 떨기',
+    titleKey: 'travelChatTitle',
     image: `${IMAGE_DIR}/scenarios/s-20.webp`,
   },
   {
-    title: '조별 발표 준비하기',
+    titleKey: 'groupPresentationTitle',
     image: `${IMAGE_DIR}/scenarios/s-09.webp`,
   },
   {
-    title: '기능과 가격을 비교해 헤드폰 고르기',
+    titleKey: 'headphonesTitle',
     image: `${IMAGE_DIR}/scenarios/s-37.webp`,
   },
   {
-    title: '입주 첫날, 룸메이트 Marco와 첫 만남',
+    titleKey: 'roommateMarcoTitle',
     image: `${IMAGE_DIR}/scenarios/s-01.webp`,
   },
   {
-    title: '수하물 파손 — 카운터에 항의하기',
+    titleKey: 'baggageClaimTitle',
     image: `${IMAGE_DIR}/scenarios/s-14.webp`,
   },
 ];

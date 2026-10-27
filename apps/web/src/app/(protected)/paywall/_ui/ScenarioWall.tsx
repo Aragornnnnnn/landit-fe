@@ -1,5 +1,6 @@
 // 혜택 화면 맨 위 카드 벽 — 실제 시나리오 그림을 비스듬히 깔고, 그중 한 장이 「오늘의 시나리오」로 뽑혀 떠 있다.
 // 시나리오는 무료로도 하니 혜택이 아니라 무대다. 배치·크기·흐림은 피그마 「상황 카드 벽」(3526:337)을 그대로 옮겼다
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import {
@@ -47,6 +48,7 @@ const ScenarioCard = ({
 );
 
 export const ScenarioWall = () => {
+  const t = useTranslations('paywall');
   const picked = SCENARIOS[WALL_PICK_INDEX];
 
   return (
@@ -69,17 +71,21 @@ export const ScenarioWall = () => {
               style={{ left: row.left + column * STEP_X, top: row.top }}
             >
               <ScenarioCard
-                title={SCENARIOS[index].title}
+                title={t(`scenarios.${SCENARIOS[index].titleKey}`)}
                 image={SCENARIOS[index].image}
               />
             </div>
           )),
         )}
         <div className="absolute top-[172px] left-[318px] z-10">
-          <ScenarioCard title={picked.title} image={picked.image} picked />
+          <ScenarioCard
+            title={t(`scenarios.${picked.titleKey}`)}
+            image={picked.image}
+            picked
+          />
         </div>
         <span className="absolute top-[158px] left-[332px] z-10 rounded-full bg-primary px-2.5 py-[5px] text-xs font-bold whitespace-nowrap text-primary-foreground">
-          오늘의 시나리오
+          {t('scenarioDemo.dailyLabel')}
         </span>
       </div>
       {/* 위아래 60px은 혜택 화면 머리 배경색(#fbf6ef)으로 흐려 벽이 화면 밖으로 이어지는 것처럼 보인다 */}

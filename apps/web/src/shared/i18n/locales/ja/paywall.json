@@ -48,6 +48,10 @@
     "thirdTranslationBody": "やってみる価値はあるよ。",
     "fourthTranslationBody": "やってみなよ。失敗しても大したことないって。"
   },
+  "scenarioDemo": {
+    "dailyLabel": "今日のシナリオ",
+    "startButton": "会話を始める"
+  },
   "smallTalkDemo": {
     "title": "今日は誰と<br></br>話しますか？",
     "chloeLabel": "クロエ",
@@ -58,5 +62,21 @@
     "americanLabel": "米国英語",
     "australianLabel": "豪州英語",
     "britishLabel": "英国英語"
+  },
+  "scenarios": {
+    "cafeOrderTitle": "カフェで注文する",
+    "hotelCheckInTitle": "ホテルでチェックイン",
+    "flightSeatmateTitle": "機内で隣の乗客と会話",
+    "pharmacyTitle": "薬局で症状を伝えて薬を買う",
+    "debateClassTitle": "討論の授業 — お金と幸せ",
+    "trainTicketTitle": "予定に合う電車の切符を買う",
+    "refundRequestTitle": "不良品の交換・返金を頼む",
+    "partyChloeTitle": "パーティーでChloeと初対面",
+    "seatChangeTitle": "空港でもっと楽な席に変更する",
+    "travelChatTitle": "友だちと旅行の話で盛り上がる",
+    "groupPresentationTitle": "グループ発表の準備",
+    "headphonesTitle": "機能と価格を比べてヘッドホンを選ぶ",
+    "roommateMarcoTitle": "入居初日、Marcoと初対面",
+    "baggageClaimTitle": "荷物の破損 — カウンターで抗議する"
   }
 }

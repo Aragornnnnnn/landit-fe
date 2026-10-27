@@ -48,6 +48,10 @@
     "thirdTranslationBody": "한번 해볼 만한 가치는 있어.",
     "fourthTranslationBody": "해봐. 잘못돼 봤자 뭐 얼마나 잘못되겠어?"
   },
+  "scenarioDemo": {
+    "dailyLabel": "오늘의 시나리오",
+    "startButton": "대화 시작"
+  },
   "smallTalkDemo": {
     "title": "오늘은 누구랑<br></br>이야기할까요?",
     "chloeLabel": "클로이",
@@ -58,5 +62,21 @@
     "americanLabel": "미국 영어",
     "australianLabel": "호주 영어",
     "britishLabel": "영국 영어"
+  },
+  "scenarios": {
+    "cafeOrderTitle": "카페에서 주문하기",
+    "hotelCheckInTitle": "호텔 체크인 하기",
+    "flightSeatmateTitle": "비행기 옆자리 승객과의 대화",
+    "pharmacyTitle": "약국에서 증상 설명하고 약 사기",
+    "debateClassTitle": "토론 수업 — 돈과 행복",
+    "trainTicketTitle": "일정에 맞는 기차표 구매하기",
+    "refundRequestTitle": "불량 상품 교환 또는 환불 요청하기",
+    "partyChloeTitle": "인터내셔널 파티 — 처음 만난 Chloe",
+    "seatChangeTitle": "공항에서 더 편한 좌석으로 변경하기",
+    "travelChatTitle": "친구와 여행 수다 떨기",
+    "groupPresentationTitle": "조별 발표 준비하기",
+    "headphonesTitle": "기능과 가격을 비교해 헤드폰 고르기",
+    "roommateMarcoTitle": "입주 첫날, 룸메이트 Marco와 첫 만남",
+    "baggageClaimTitle": "수하물 파손 — 카운터에 항의하기"
   }
 }
