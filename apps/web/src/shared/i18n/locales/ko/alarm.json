@@ -49,7 +49,8 @@
     "openButton": "설정 열기"
   },
   "lockScreen": {
-    "imageLabel": "잠금화면 위에 뜬 오늘의 시나리오 알람"
+    "imageLabel": "잠금화면 위에 뜬 오늘의 시나리오 알람",
+    "title": "오늘의 시나리오 할 시간!"
   },
   "save": {
     "saveFailedToast": "알람을 저장하지 못했어요. 다시 시도해 주세요",
