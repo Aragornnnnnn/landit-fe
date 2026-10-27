@@ -5,6 +5,7 @@ import { lineBreak } from '@/shared/i18n/rich';
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
 import type { SocialProvider } from '../_model/useSocialLogin';
+import { LanguagePicker } from './LanguagePicker';
 import styles from './login-motion.module.css';
 import { SocialLoginButtons } from './SocialLoginButtons';
 
@@ -34,6 +35,8 @@ export const LoginScreen = ({
     <main className="relative mx-auto h-dvh max-w-[430px] overflow-x-hidden overflow-y-auto bg-background">
       <script dangerouslySetInnerHTML={{ __html: splashSkip }} />
       {children}
+      {/* 웹 로그인 콜백에서 토큰을 교환하는 동안엔 숨긴다 — 가입 헤더는 이미 그 언어로 나갔다 */}
+      {!pending && <LanguagePicker />}
 
       <div className={styles.logoWrap}>
         <LanditLogo className={`${styles.logo} h-12 text-foreground`} />
