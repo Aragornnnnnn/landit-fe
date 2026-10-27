@@ -3,7 +3,7 @@
 // 마이페이지 "알람" 행 — 등록한 시각, 등록 전이면 "없음", 권한이 꺼져 안 울리면 빨간 "권한 필요"를 오른쪽에 보여 준다.
 // 결제 유저 전용이고, 알람을 못 쓰는 환경(브라우저·구 셸·iOS 25 이하)에서는 행 자체가 없다
 import { useEffect } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { canUseAlarm } from '@/features/alarm/model/alarm-access';
 import { alarmBlocker } from '@/features/alarm/model/alarm-permission';
@@ -25,6 +25,7 @@ export const AlarmMenuEntry = () => {
   const { subscription } = useSubscriptionQuery();
   const isAdmin = useIsAdmin();
   const locale = useLocale();
+  const tAlarm = useTranslations('alarm');
   const shown =
     status?.supported === true && canUseAlarm({ subscription, isAdmin });
   const needsSetup = !isPending && !isError && setting?.enabled !== true;
@@ -47,6 +48,7 @@ export const AlarmMenuEntry = () => {
             blocked: alarmBlocker(status, platform) !== null,
             time: setting?.time ?? null,
           },
+          tAlarm,
           locale,
         );
 

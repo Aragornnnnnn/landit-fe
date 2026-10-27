@@ -56,6 +56,33 @@
     "deleteFailedToast": "アラームを削除できませんでした。もう一度お試しください"
   },
   "screen": {
-    "description": "毎日約束の時間にお知らせします"
+    "title": "アラーム",
+    "description": "毎日約束の時間にお知らせします",
+    "loadError": "アラーム設定を読み込めませんでした",
+    "cardTitle": "シナリオのアラーム",
+    "repeatCaption": "毎日"
+  },
+  "editScreen": {
+    "title": "アラームを編集",
+    "methodLabel": "お知らせ方法",
+    "previewCaption": "音が鳴り、ロック画面にアラームが出ます",
+    "scheduleLabel": "約束の時間",
+    "repeatLabel": "繰り返し",
+    "dailyLabel": "毎日",
+    "timeLabel": "時刻",
+    "deleteButton": "アラームを削除",
+    "saveButton": "保存する",
+    "pickerTitle": "時刻",
+    "confirmButton": "決定",
+    "deleteTitle": "アラームを削除しますか？",
+    "deleteDescription": "もう一度作るには新しく約束が必要です",
+    "cancelButton": "キャンセル",
+    "confirmDeleteButton": "削除",
+    "loadError": "アラーム設定を読み込めませんでした"
+  },
+  "summary": {
+    "noneLabel": "なし",
+    "blockedLabel": "権限が必要",
+    "dailyLabel": "毎日{time}"
   }
 }

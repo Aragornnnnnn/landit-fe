@@ -58,7 +58,7 @@ export const AlarmScreen = () => {
         <BackHeader onBack={leave} />
         <RetryNotice
           screen="alarm"
-          message="알람 설정을 불러오지 못했어요"
+          message={t('screen.loadError')}
           onRetry={() => void refetch()}
         />
       </main>
@@ -84,7 +84,9 @@ export const AlarmScreen = () => {
       {/* 내 정보처럼 본문은 한 단계 진한 바탕에 흰 카드를 올려 카드가 또렷하게 보이게 한다 */}
       <div className="flex flex-1 flex-col gap-3 bg-muted px-4 pt-2">
         <div className="px-2 pb-3">
-          <h1 className="text-28 font-black text-foreground">알람</h1>
+          <h1 className="text-28 font-black text-foreground">
+            {t('screen.title')}
+          </h1>
           <p className="mt-1.5 text-15 font-medium text-muted-foreground">
             {alarmCopy(rewardParticipant, t).settingsDescription}
           </p>
@@ -100,9 +102,11 @@ export const AlarmScreen = () => {
           <Emoji className="shrink-0 text-[30px]">🤝</Emoji>
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-15 font-bold text-foreground">
-              시나리오 알람
+              {t('screen.cardTitle')}
             </span>
-            <span className="mt-0.5 text-14 text-muted-foreground">매일</span>
+            <span className="mt-0.5 text-14 text-muted-foreground">
+              {t('screen.repeatCaption')}
+            </span>
           </span>
           <span className="shrink-0 text-17 font-bold text-foreground">
             {formatAlarmTime(parseAlarmTime(setting?.time ?? null), locale)}
