@@ -30,3 +30,11 @@ describe('IosAlarmSettingsSheet 계측', () => {
     ]);
   });
 });
+
+describe('IosAlarmSettingsSheet 안내 문구', () => {
+  it('두 번째 단계에 켜야 할 설정 이름을 따옴표로 감싸 보여 준다', () => {
+    render(<IosAlarmSettingsSheet open onClose={() => {}} />);
+
+    expect(screen.getByText("'알람 및 타이머'를 켜요")).toBeTruthy();
+  });
+});

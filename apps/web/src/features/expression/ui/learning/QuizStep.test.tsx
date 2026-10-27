@@ -134,6 +134,35 @@ describe('QuizStep', () => {
     expect(screen.getByText('내가 이겨')).toBeInTheDocument();
   });
 
+  it('지시문을 주지 않으면 기본 지시문을, 다시 풀기면 다시 풀기 지시문을 보여 준다', () => {
+    const { rerender } = render(
+      <QuizStep
+        step="review"
+        quiz={quiz}
+        partner="chloe"
+        expressionId={1}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByText('질문에 대한 대답을 완성하세요'),
+    ).toBeInTheDocument();
+
+    rerender(
+      <QuizStep
+        step="review"
+        quiz={quiz}
+        partner="chloe"
+        expressionId={1}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+        instruction="retryTitle"
+      />,
+    );
+    expect(screen.getByText('다시 한번 해보세요')).toBeInTheDocument();
+  });
+
   it('오답이면 오답용 CTA 문구를 띄우고 onNext에 wrong을 넘긴다', async () => {
     // given — 정답·오답 CTA 문구가 다른 복습 퀴즈
     const user = userEvent.setup();

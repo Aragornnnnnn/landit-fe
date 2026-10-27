@@ -25,11 +25,11 @@
     "continuingDescription": "{days}日続いています",
     "recordBreakingDescription": "最高記録を更新中です",
     "recordLeftDescription": "最高記録まであと{days}日です",
-    "filledEarlierTitle": "今日はもう実を付けました",
-    "filledEarlierDescription": "今日はもう実を付けました",
+    "filledEarlierTitle": "今日の実はもう付きました",
+    "filledEarlierDescription": "今日の実はもう付きました",
     "firstTitle": "初めての実です！",
     "stampedTitle": "今日の実が付きました",
-    "firstWeekDescription": "明日も続けて1週間を埋めましょう",
+    "firstWeekDescription": "明日も続けて1週間にしましょう",
     "daysTitle": "{days}日連続"
   },
   "streakStats": {
@@ -41,7 +41,7 @@
   },
   "streakDay": {
     "doneLabel": "{date}、学習済み",
-    "todayLabel": "{date}、今日、まだ学習前",
+    "todayLabel": "{date}、今日、未学習",
     "missedLabel": "{date}、学習なし"
   }
 }

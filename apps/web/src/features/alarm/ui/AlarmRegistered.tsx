@@ -60,6 +60,7 @@ const Completed = ({
   onDone: () => void;
 }) => {
   const reduced = useReducedMotion();
+  const locale = useLocale();
   const t = useTranslations('alarm.registered');
   const copy = useAlarmCopy();
   const [phase, setPhase] = useState<Phase>(reduced ? 'confirmed' : 'pledge');
@@ -107,7 +108,8 @@ const Completed = ({
           <motion.span
             layout
             transition={SHIFT}
-            className="relative inline-flex items-baseline gap-[0.25em]"
+            // 한국어는 띄어쓰기 자리를 간격으로 채우고, 띄어 쓰지 않는 일본어는 다짐 문장처럼 붙인다
+            className={`relative inline-flex items-baseline ${locale === 'ko' ? 'gap-[0.25em]' : ''}`}
           >
             {/* 「저는」은 빠지고 「매일 [시각]에」만 남아 자리를 옮긴다 — 문장 조각마다 태그로 감싸 언어가 어순을 정한다 */}
             {t.rich('sentenceTitle', {
