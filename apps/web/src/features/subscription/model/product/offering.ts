@@ -1,6 +1,8 @@
 // 셸이 준 오퍼링(패키지 목록)을 플랜별 패키지로 묶는다 — 화면은 원화 숫자로 표시값을 덮어쓰고, 결제 요청에는 packageId를 쓴다
 import type { OfferingPackage, SubscriptionPlan } from '@landit/bridge';
 
+import { isPricedCurrency, type PricedCurrency } from '../../lib/store-price';
+
 /** 플랜 하나에 대응하는 스토어 패키지 — 결제에 쓸 id와 스토어가 정한 가격 */
 export interface PlanPackage {
   packageId: string;
@@ -108,7 +110,7 @@ const isDiscount = (pkg: OfferingPackage) => pkg.id.endsWith(DISCOUNT_SUFFIX);
 /**
  * 원화 패키지만 남긴다. 셸 가격은 통화가 늘 오므로 KRW일 때만 원화다.
  *
- * 화면 숫자가 「원」 표기와 100원 단위 환산을 전제로 짜여 있어, 다른 통화는 그대로 그리면 "월 100원" 같은 값이 나온다 (해외 스토어프런트는 다음 이슈).
+ * 이탈 할인 시트·편지 할인 오퍼가 쓴다 — 할인은 한국에서만 팔아서, 엔화 스토어면 패키지가 비어 오퍼가 뜨지 않는다.
  */
 export const krwPackage = (pkg?: PlanPackage) =>
   pkg?.currency === 'KRW' ? pkg : undefined;
@@ -116,7 +118,8 @@ export const krwPackage = (pkg?: PlanPackage) =>
 /**
  * 스토어 가격 중 원화만 숫자로 뽑는다.
  *
- * 다른 통화는 월 환산·할인율 산식이 맞지 않아 비워 두고, 화면은 등록값을 쓴다 (해외 스토어프런트는 다음 이슈).
+ * 100일 이용권이 쓴다 — 환급 금액이 이용권 가격에서 나오고 환급은 늘 원화라, 다른 통화면 비워 두고 등록값을 쓴다.
+ * 월간·연간 카드는 엔화도 그리는 toRegularPrices를 쓴다.
  */
 export const toKrwPrices = (
   packages: PlanPackages,
@@ -127,6 +130,38 @@ export const toKrwPrices = (
   halfyear: krwPackage(packages.halfyear)?.price,
   pass: krwPackage(packages.pass)?.price,
 });
+
+/**
+ * 페이월 카드(월간·연간)에 그릴 스토어 가격과 그 통화.
+ *
+ * 원화가 아닌 통화(엔화)는 두 플랜이 같은 통화로 다 있을 때만 쓴다. 하나라도 빠지면 그 자리에 원화 등록값이 들어가
+ * 한 화면에 엔화와 원화가 섞이고 할인율 산식도 틀어지기 때문이다. 그때와 다루지 않는 통화는 원화로 돌아간다.
+ */
+export const toRegularPrices = (
+  packages: PlanPackages,
+): {
+  currency: PricedCurrency;
+  prices: Partial<Record<SubscriptionPlan, number>>;
+} => {
+  const { monthly, yearly } = packages;
+  if (
+    monthly &&
+    yearly &&
+    monthly.currency !== 'KRW' &&
+    monthly.currency === yearly.currency &&
+    isPricedCurrency(monthly.currency)
+  ) {
+    return {
+      currency: monthly.currency,
+      prices: { monthly: monthly.price, yearly: yearly.price },
+    };
+  }
+  const krw = toKrwPrices(packages);
+  return {
+    currency: 'KRW',
+    prices: { monthly: krw.monthly, yearly: krw.yearly },
+  };
+};
 
 /** 오퍼링을 못 받았을 때 결제에 쓸 RevenueCat 표준 패키지 identifier — 셸이 identifier로 패키지를 찾는다.
  * 옛 3·6개월 플랜은 예약 식별자, 이용권은 커스텀 이름이다 */

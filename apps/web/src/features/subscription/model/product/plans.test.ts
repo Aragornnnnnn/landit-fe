@@ -33,6 +33,10 @@ describe('calculateMonthlyEquivalent', () => {
   it('실제보다 낮게 보이지 않게 올린다 — 59,900원이면 월 4,990원이 아니라 5,000원', () => {
     expect(calculateMonthlyEquivalent(59_900)).toBe(5_000);
   });
+
+  it('엔화는 10엔 단위로 올린다 — 5,800円은 483円이라 월 490円', () => {
+    expect(calculateMonthlyEquivalent(5_800, 'JPY')).toBe(490);
+  });
 });
 
 describe('buildPaywallPlans — 등록값', () => {
@@ -85,6 +89,21 @@ describe('buildPaywallPlans — 스토어 가격', () => {
     expect(yearly.monthlyPrice).toBe(5_500);
     expect(yearly.badge).toBe('월간보다 50% 저렴');
     expect(yearly.subtitle).toBe('월 5,500원꼴 · 7일 무료 체험');
+  });
+
+  it('엔화 가격이면 카드가 엔화로 적힌다', () => {
+    const { monthly, yearly } = buildPaywallPlans(
+      { monthly: 980, yearly: 5_800 },
+      'JPY',
+    );
+
+    expect(monthly.currency).toBe('JPY');
+    expect(yearly.monthlyPrice).toBe(490);
+    expect(yearly.subtitle).toBe('월 490円꼴 · 7일 무료 체험');
+  });
+
+  it('통화를 안 주면 원화다', () => {
+    expect(buildPaywallPlans().yearly.currency).toBe('KRW');
   });
 
   it('한 플랜만 주면 나머지는 등록값을 쓴다', () => {
