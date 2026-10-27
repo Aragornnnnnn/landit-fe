@@ -115,4 +115,11 @@ describe('summarizeSubscriptionEvent', () => {
       ),
     ).toMatchObject({ plan: null, amount: '5.99 USD', sandbox: true });
   });
+
+  it('엔화는 엔 표기로 적는다', () => {
+    expect(
+      summarizeSubscriptionEvent(event({ price: 1_500, currency: 'JPY' }))
+        .amount,
+    ).toBe('1,500円');
+  });
 });

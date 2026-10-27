@@ -35,6 +35,15 @@ describe('getBillingNotice', () => {
       '매월 14,900원 정기 결제 · 언제든 해지 가능',
     );
   });
+
+  it('엔화 스토어면 금액을 엔화로 알린다', () => {
+    const yen = buildPaywallPlans({ monthly: 980, yearly: 5_800 }, 'JPY');
+
+    expect(getBillingNotice(yen.yearly)).toBe(
+      '7일 무료 체험 후 연 5,800円 정기 결제 · 언제든 해지 가능',
+    );
+    expect(getCtaLabel(yen.monthly)).toBe('월 980円으로 시작하기');
+  });
 });
 
 describe('getCancelNotice', () => {
