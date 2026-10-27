@@ -6,9 +6,11 @@ export default function OnboardingLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // 안쪽 Provider는 바깥 묶음을 갈아 끼우므로 보호 그룹이 보낸 onboarding도 다시 적는다
+  // 안쪽 Provider는 바깥 묶음을 갈아 끼우므로 보호 그룹이 보낸 onboarding·notification·widget도 다시 적는다
   return (
-    <MessagesProvider namespaces={['onboarding', 'conversation']}>
+    <MessagesProvider
+      namespaces={['onboarding', 'notification', 'widget', 'conversation']}
+    >
       {children}
     </MessagesProvider>
   );
