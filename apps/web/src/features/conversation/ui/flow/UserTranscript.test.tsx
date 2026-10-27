@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Toaster } from '@/shared/ui/toast';
 
+import { ANSWER_MAX_LENGTH } from '../../model/answer-length';
 import { editHintSeen } from '../../model/edit-hint-seen';
 import { UserTranscript } from './UserTranscript';
 
@@ -132,6 +133,37 @@ describe('UserTranscript', () => {
       expect(input.style.height).toBe(
         `${'Hello there, nice to meet you'.length * 2}px`,
       );
+    });
+
+    it('글자 수 한도를 넘게 치면 한도까지만 넘기고 더 쓸 수 없다고 안내한다', () => {
+      const { input, onChange } = renderEditing();
+
+      fireEvent.change(input, {
+        target: { value: 'a'.repeat(ANSWER_MAX_LENGTH + 20) },
+      });
+
+      expect(onChange).toHaveBeenLastCalledWith('a'.repeat(ANSWER_MAX_LENGTH));
+      expect(
+        screen.getByText(
+          `${ANSWER_MAX_LENGTH.toLocaleString()}자까지 입력할 수 있어요`,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('한도에 가까워지면 지금 글자 수를 보여 준다', () => {
+      renderEditing('a'.repeat(ANSWER_MAX_LENGTH - 50));
+
+      expect(
+        screen.getByText(
+          `${ANSWER_MAX_LENGTH - 50}/${ANSWER_MAX_LENGTH.toLocaleString()}`,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('한도와 멀면 글자 수를 보이지 않는다', () => {
+      renderEditing('Hello');
+
+      expect(screen.queryByText(/\/1,000/)).not.toBeInTheDocument();
     });
 
     // 실제 화면처럼 넘긴 값이 다시 text로 돌아오게 상태를 든다

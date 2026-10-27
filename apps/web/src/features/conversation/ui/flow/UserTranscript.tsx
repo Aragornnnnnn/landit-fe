@@ -19,6 +19,7 @@ import { haptic } from '@/shared/haptics';
 import { ArrowUpIcon, CloseIcon } from '@/shared/ui/Icons';
 import { showToast } from '@/shared/ui/toast';
 
+import { ANSWER_MAX_LENGTH, clampAnswer } from '../../model/answer-length';
 import type { ConversationPhase } from '../../model/conversation-machine';
 import { removeNonEnglish } from '../../model/english-only';
 import { useEditHint } from '../../model/useEditHint';
@@ -186,6 +187,9 @@ export const UserTranscript = ({
   );
 };
 
+// 글자 수를 보이기 시작하는 지점 — 한도의 90%
+const COUNTER_FROM = ANSWER_MAX_LENGTH * 0.9;
+
 // 키보드 입력 모드의 입력창 — 답변은 영어로만 받아서 그 밖의 글자를 걸러 낸다
 const TranscriptEditor = ({
   text,
@@ -231,11 +235,19 @@ const TranscriptEditor = ({
     showToast('영어로만 입력할 수 있어요');
   };
 
-  // 걸러 낸 뒤 넘긴다. 지운 만큼 커서를 당겨 쓰던 자리에 둔다
+  // 걸러 내고 한도에서 자른 뒤 넘긴다. 지운 만큼 커서를 당겨 쓰던 자리에 둔다
   const acceptTyping = (input: HTMLTextAreaElement) => {
     const { value, selectionStart } = input;
     const english = removeNonEnglish(value);
-    onChange?.(english);
+    const accepted = clampAnswer(english);
+    onChange?.(accepted);
+    // 한도를 넘긴 글(붙여 넣기 포함)은 잘라 내고 더 쓸 수 없다고 알린다
+    if (accepted !== english) {
+      setShaking(true);
+      haptic('error');
+      showToast(`${ANSWER_MAX_LENGTH.toLocaleString()}자까지 입력할 수 있어요`);
+      return;
+    }
     // 분해형 악센트를 합치기만 한 것은 지운 게 아니다 — 합친 원문과 비교한다
     if (english === value.normalize('NFC')) return;
     warnNonEnglish();
@@ -260,6 +272,14 @@ const TranscriptEditor = ({
     >
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold text-muted-foreground">내 답변</p>
+        {/* 한도에 가까워졌을 때만 글자 수를 보인다 — 늘 띄우면 짧은 답에도 숫자를 신경 쓰게 된다 */}
+        {text.length >= COUNTER_FROM && (
+          <p
+            className={`mr-2 ml-auto text-xs font-semibold tabular-nums ${text.length >= ANSWER_MAX_LENGTH ? 'text-destructive' : 'text-muted-foreground'}`}
+          >
+            {text.length.toLocaleString()}/{ANSWER_MAX_LENGTH.toLocaleString()}
+          </p>
+        )}
         <button
           onClick={onCancel}
           aria-label="입력 취소"
