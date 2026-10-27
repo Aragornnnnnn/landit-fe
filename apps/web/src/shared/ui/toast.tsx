@@ -4,8 +4,13 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
+import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
+
 // 노출 시간 — 종료 재입력 대기(BridgeListener) 등 외부 타이머와 맞출 때 참조한다
 export const TOAST_MS = 2000;
+
+// 키보드가 올라와 있을 때 토스트와 키보드 사이 간격
+const KEYBOARD_GAP_PX = 16;
 
 let listener: ((message: string) => void) | null = null;
 
@@ -13,12 +18,22 @@ let listener: ((message: string) => void) | null = null;
 export const showToast = (message: string) => listener?.(message);
 
 export const Toaster = () => {
-  const [toast, setToast] = useState<{ id: number; message: string } | null>(
-    null,
-  );
+  const [toast, setToast] = useState<{
+    id: number;
+    message: string;
+    expiresAt: number;
+  } | null>(null);
+  // 웹뷰는 키보드가 올라와도 화면 아래가 그대로라 토스트가 키보드 뒤에 숨는다 — 키보드 위로 올린다
+  const keyboardInset = useKeyboardInset();
 
   useEffect(() => {
-    listener = (message) => setToast({ id: Date.now(), message });
+    // 같은 안내가 떠 있으면 새로 그리지 않고 떠 있는 시간만 늘린다 — 새로 그리면 사라졌다 나타나며 번쩍인다
+    listener = (message) =>
+      setToast((current) =>
+        current?.message === message
+          ? { ...current, expiresAt: Date.now() + TOAST_MS }
+          : { id: Date.now(), message, expiresAt: Date.now() + TOAST_MS },
+      );
     return () => {
       listener = null;
     };
@@ -26,14 +41,24 @@ export const Toaster = () => {
 
   useEffect(() => {
     if (!toast) return;
-    const timer = setTimeout(() => setToast(null), TOAST_MS);
+    const timer = setTimeout(
+      () => setToast(null),
+      toast.expiresAt - Date.now(),
+    );
     return () => clearTimeout(timer);
   }, [toast]);
 
   return (
     // 센터링은 바깥 div가 맡는다 — motion이 주입하는 transform(y)이 -translate-x-1/2를 덮어쓰지 않게
     // 모달·시트(z-50)보다 위에 — 같은 층이면 나중에 붙는 포털에 가려 딤 뒤로 가라앉는다
-    <div className="pointer-events-none fixed bottom-[max(var(--safe-area-inset-bottom),24px)] left-1/2 z-[60] -translate-x-1/2">
+    <div
+      style={
+        keyboardInset > 0
+          ? { bottom: keyboardInset + KEYBOARD_GAP_PX }
+          : undefined
+      }
+      className="pointer-events-none fixed bottom-[max(var(--safe-area-inset-bottom),24px)] left-1/2 z-[60] -translate-x-1/2"
+    >
       <AnimatePresence>
         {toast && (
           <motion.div

@@ -14,7 +14,11 @@ import { SubscriptionPropertiesSync } from '@/features/subscription/ui/my-subscr
 import { IdentifySync } from '@/features/subscription/ui/purchase/IdentifySync';
 import { WidgetChangeSync } from '@/features/widget/ui/WidgetChangeSync';
 import { WidgetDataSync } from '@/features/widget/ui/WidgetDataSync';
-import { AnalyticsBootstrap, PageViewTracker } from '@/shared/analytics';
+import {
+  AnalyticsBootstrap,
+  PageViewTracker,
+  TrackingStatusSync,
+} from '@/shared/analytics';
 import { BridgeListener } from '@/shared/bridge/BridgeListener';
 import { platformMarkerScript } from '@/shared/bridge/platform-marker';
 import { PlatformMarkerSync } from '@/shared/bridge/PlatformMarkerSync';
@@ -74,6 +78,7 @@ export default async function RootLayout({
             <LocaleSync />
             <WidgetDataSync />
             <WidgetChangeSync />
+            <TrackingStatusSync />
             <AlarmSync />
             <IdentifySync />
             <SubscriptionPropertiesSync />

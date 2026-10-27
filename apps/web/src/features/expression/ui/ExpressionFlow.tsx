@@ -8,7 +8,8 @@ import { preload } from 'react-dom';
 
 // 가로 import — 표현 학습 완료는 리뷰 요청의 완료로도 친다 (LAN-689). satisfaction은 다른 feature를 import하지 않는다
 import { markExpressionCompleted } from '@/features/satisfaction/model/prompt-record';
-import { track } from '@/shared/analytics';
+import { sendAdEventOnce, track } from '@/shared/analytics';
+import { getCurrentUserId } from '@/shared/auth/auth-store';
 import { scenarioReturnPath, smallTalkHistoryPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 
@@ -264,6 +265,10 @@ const LoadedExpressionFlow = ({
           ...originProps,
         });
         markExpressionCompleted();
+        // 첫 표현 학습 완료를 메타에 계정마다 한 번 알린다
+        const userId = getCurrentUserId();
+        if (userId !== null)
+          sendAdEventOnce('first_expression_completed', userId);
         if (onFinished) onFinished();
         else router.replace(listPath);
       },

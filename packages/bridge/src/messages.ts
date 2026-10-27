@@ -17,7 +17,7 @@ export const hapticPatternSchema = z.enum([
   'error',
 ]);
 
-// 알림 권한 상태 — expo-notifications의 PermissionStatus와 대응. 알람(AlarmKit) 권한도 같은 세 상태로 알린다
+// 알림 권한 상태 — expo-notifications의 PermissionStatus와 대응. 알람(AlarmKit)·광고 추적(ATT) 권한도 같은 세 상태로 알린다
 export const notificationPermissionStatusSchema = z.enum([
   'granted',
   'denied',
@@ -106,6 +106,15 @@ export const reviewResultStatusSchema = z.enum([
   'shown',
   'not_shown',
   'unavailable',
+]);
+
+// 광고 최적화에 쓰는 앱 이벤트 — 웹은 일어난 일을 앰플리튜드와 같은 이름(명사+과거형)으로 말하고, 셸이 메타 표준 이벤트로 옮긴다.
+// 새 이벤트를 더하면 옛 앱은 모르는 값이라 요청을 버린다 — 브릿지 버전을 올리고, 웹은 그 버전 이상에만 보낸다
+export const adEventSchema = z.enum([
+  'onboarding_completed',
+  'first_scenario_talk_completed',
+  'first_expression_completed',
+  'paywall_viewed',
 ]);
 
 // 반복 알람의 종류 — 종류마다 알람은 하나다.
@@ -231,6 +240,8 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('GO_HOME') }),
   // 웹이 준비됐으니 쌓아 둔 위젯 추가·삭제를 보내 달라 — 응답은 WIDGET_CHANGED (건별, 없으면 무응답)
   z.object({ type: z.literal('REQUEST_WIDGET_CHANGES') }),
+  // iOS 광고 추적(ATT) 권한 상태를 달라 — 권한창이 떠 있으면 답할 때까지 기다렸다 회신한다. 응답은 TRACKING_STATUS (Android는 무응답)
+  z.object({ type: z.literal('REQUEST_TRACKING_STATUS') }),
   // 로그인한 사용자를 RevenueCat에 알린다(Purchases.logIn). null이면 로그아웃(logOut). 단방향
   z.object({
     type: z.literal('IDENTIFY'),
@@ -257,6 +268,8 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   }),
   // 앱 안 별점 카드(OS 리뷰 요청)를 띄워 달라 — iOS는 1년 3번만 띄워 주고 떴는지 알려주지 않아 셸이 감지해 답한다. 응답은 REVIEW_RESULT
   z.object({ type: z.literal('REQUEST_REVIEW') }),
+  // 광고 최적화용 이벤트를 메타에 기록해 달라 (단방향)
+  z.object({ type: z.literal('LOG_AD_EVENT'), event: adEventSchema }),
   // 알람 권한·예약 상태 조회 — 다이얼로그를 띄우지 않는다. 응답은 ALARM_STATUS
   z.object({ type: z.literal('GET_ALARM_STATUS') }),
   // 알람 권한 요청 — iOS는 AlarmKit 권한창, Android는 정확한 알람 설정 화면이 뜬다. 응답은 ALARM_STATUS
@@ -328,6 +341,12 @@ export const nativeToWebMessageSchema = z.discriminatedUnion('type', [
     change: widgetChangeSchema,
     family: widgetFamilySchema,
   }),
+  // REQUEST_TRACKING_STATUS 응답 — 제한(restricted)은 denied로 온다. prompted는 이번 실행에서 권한창이 떠 답을 받았는가(실행당 한 번만 참)
+  z.object({
+    type: z.literal('TRACKING_STATUS'),
+    status: notificationPermissionStatusSchema,
+    prompted: z.boolean(),
+  }),
   // GET_OFFERINGS 응답 — 셸이 스토어에서 받은 패키지 목록. 오퍼링이 비어 있으면 빈 배열
   z.object({
     type: z.literal('OFFERINGS'),
@@ -390,6 +409,7 @@ export type PurchaseStatus = z.infer<typeof purchaseStatusSchema>;
 export type RestoreStatus = z.infer<typeof restoreStatusSchema>;
 export type PhotoPickStatus = z.infer<typeof photoPickStatusSchema>;
 export type PickedPhoto = z.infer<typeof pickedPhotoSchema>;
+export type AdEvent = z.infer<typeof adEventSchema>;
 export type AlarmType = z.infer<typeof alarmTypeSchema>;
 export type AlarmTime = z.infer<typeof alarmTimeSchema>;
 export type AlarmSchedule = z.infer<typeof alarmScheduleSchema>;

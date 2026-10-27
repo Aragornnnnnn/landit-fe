@@ -1,14 +1,30 @@
-// initMetaSdk의 플랫폼 분기 계약을 검증한다 — iOS는 ATT 동의 후 그 결과로 광고 추적을 설정, Android는 ATT 생략, 끝나면 메타 익명 ID를 돌려준다
+// initMetaSdk의 플랫폼 분기(iOS ATT와 결과 보관·Android 생략·메타 익명 ID)와 광고 이벤트의 메타 표준 이벤트 대응을 검증한다
 import { Platform } from 'react-native';
-import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
+import {
+  getTrackingPermissionsAsync,
+  requestTrackingPermissionsAsync,
+} from 'expo-tracking-transparency';
 import { AppEventsLogger, Settings } from 'react-native-fbsdk-next';
 
 import { reportWarning } from '../monitoring/report';
-import { initMetaSdk } from './meta';
+import { initMetaSdk, logAdEvent, logCheckoutStarted } from './meta';
+import { trackingStatus } from './tracking-status';
 
 jest.mock('react-native-fbsdk-next', () => ({
   AppEventsLogger: {
     getAnonymousID: jest.fn(() => Promise.resolve('fb-anon')),
+    logEvent: jest.fn(),
+    AppEvents: {
+      CompletedRegistration: 'fb_mobile_complete_registration',
+      CompletedTutorial: 'fb_mobile_tutorial_completion',
+      ViewedContent: 'fb_mobile_content_view',
+      InitiatedCheckout: 'fb_mobile_initiated_checkout',
+      UnlockedAchievement: 'fb_mobile_achievement_unlocked',
+    },
+    AppEventParams: {
+      ContentType: 'fb_content_type',
+      ContentID: 'fb_content_id',
+    },
   },
   Settings: {
     initializeSDK: jest.fn(),
@@ -19,11 +35,17 @@ jest.mock('../monitoring/report', () => ({
   reportWarning: jest.fn(),
 }));
 jest.mock('expo-tracking-transparency', () => ({
+  getTrackingPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ status: 'undetermined' }),
+  ),
   requestTrackingPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ granted: true }),
+    Promise.resolve({ granted: true, status: 'granted' }),
   ),
 }));
 
+const mockGetTracking = getTrackingPermissionsAsync as jest.MockedFunction<
+  typeof getTrackingPermissionsAsync
+>;
 const mockRequestTracking =
   requestTrackingPermissionsAsync as jest.MockedFunction<
     typeof requestTrackingPermissionsAsync
@@ -85,6 +107,142 @@ describe('initMetaSdk', () => {
     mockRequestTracking.mockRejectedValueOnce(failure);
 
     await expect(initMetaSdk()).resolves.toBe('fb-anon');
+    expect(reportWarning).toHaveBeenCalledWith(failure);
+  });
+
+  describe('ATT 결과 보관', () => {
+    // 설정의 restoreMocks가 테스트마다 스파이를 풀어 매번 다시 건다
+    let settle: jest.SpiedFunction<typeof trackingStatus.settle>;
+    beforeEach(() => {
+      settle = jest.spyOn(trackingStatus, 'settle');
+    });
+
+    it('묻기 전 상태가 미정이었으면 권한창을 띄운 것으로 보관한다', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios');
+      mockGetTracking.mockResolvedValueOnce({
+        status: 'undetermined',
+      } as never);
+      mockRequestTracking.mockResolvedValueOnce({
+        granted: false,
+        status: 'denied',
+      } as never);
+
+      await initMetaSdk();
+
+      expect(settle).toHaveBeenCalledWith({ status: 'denied', prompted: true });
+    });
+
+    it('이미 답해 둔 상태였으면 권한창 없이 상태만 보관한다', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios');
+      mockGetTracking.mockResolvedValueOnce({ status: 'granted' } as never);
+      mockRequestTracking.mockResolvedValueOnce({
+        granted: true,
+        status: 'granted',
+      } as never);
+
+      await initMetaSdk();
+
+      expect(settle).toHaveBeenCalledWith({
+        status: 'granted',
+        prompted: false,
+      });
+    });
+
+    it('요청 뒤에도 미정이면 권한창이 뜨지 않은 것으로 보관한다', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios');
+      mockGetTracking.mockResolvedValueOnce({
+        status: 'undetermined',
+      } as never);
+      mockRequestTracking.mockResolvedValueOnce({
+        granted: false,
+        status: 'undetermined',
+      } as never);
+
+      await initMetaSdk();
+
+      expect(settle).toHaveBeenCalledWith({
+        status: 'undetermined',
+        prompted: false,
+      });
+    });
+
+    it('Android면 결과 없음으로 보관한다', async () => {
+      jest.replaceProperty(Platform, 'OS', 'android');
+
+      await initMetaSdk();
+
+      expect(settle).toHaveBeenCalledWith(null);
+    });
+
+    it('ATT 요청이 실패하면 결과 없음으로 보관한다', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios');
+      mockRequestTracking.mockRejectedValueOnce(new Error('att failed'));
+
+      await initMetaSdk();
+
+      expect(settle).toHaveBeenCalledWith(null);
+    });
+  });
+});
+
+describe('logAdEvent', () => {
+  it('온보딩 완료는 메타 표준 이벤트 회원가입 완료로 기록한다', () => {
+    logAdEvent('onboarding_completed');
+
+    expect(AppEventsLogger.logEvent).toHaveBeenCalledWith(
+      'fb_mobile_complete_registration',
+    );
+  });
+
+  it('첫 시나리오 완료는 메타 표준 이벤트 튜토리얼 완료로 기록한다', () => {
+    logAdEvent('first_scenario_talk_completed');
+
+    expect(AppEventsLogger.logEvent).toHaveBeenCalledWith(
+      'fb_mobile_tutorial_completion',
+    );
+  });
+
+  it('첫 표현 학습 완료는 메타 표준 이벤트 업적 달성으로 기록한다', () => {
+    logAdEvent('first_expression_completed');
+
+    expect(AppEventsLogger.logEvent).toHaveBeenCalledWith(
+      'fb_mobile_achievement_unlocked',
+    );
+  });
+
+  it('페이월 조회는 콘텐츠 조회로, 콘텐츠 종류를 페이월로 실어 기록한다', () => {
+    logAdEvent('paywall_viewed');
+
+    expect(AppEventsLogger.logEvent).toHaveBeenCalledWith(
+      'fb_mobile_content_view',
+      { fb_content_type: 'paywall' },
+    );
+  });
+});
+
+describe('logCheckoutStarted', () => {
+  it.each(['android', 'ios'] as const)(
+    '%s에서 결제 시작을 고른 패키지와 함께 기록한다',
+    (os) => {
+      jest.replaceProperty(Platform, 'OS', os);
+
+      logCheckoutStarted('$rc_annual');
+
+      expect(AppEventsLogger.logEvent).toHaveBeenCalledWith(
+        'fb_mobile_initiated_checkout',
+        { fb_content_id: '$rc_annual' },
+      );
+    },
+  );
+
+  it('기록이 실패해도 던지지 않고 경고로 보고한다 — 결제 시트가 막히면 안 된다', () => {
+    jest.replaceProperty(Platform, 'OS', 'android');
+    const failure = new Error('no native module');
+    (AppEventsLogger.logEvent as jest.Mock).mockImplementationOnce(() => {
+      throw failure;
+    });
+
+    expect(() => logCheckoutStarted('$rc_annual')).not.toThrow();
     expect(reportWarning).toHaveBeenCalledWith(failure);
   });
 });
