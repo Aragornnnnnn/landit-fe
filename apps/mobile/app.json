@@ -11,6 +11,10 @@
       "com.googleusercontent.apps.1062331189445-7tb3d2u3fkmqn2o1n53sqfhi7ljopqn1"
     ],
     "userInterfaceStyle": "automatic",
+    "locales": {
+      "ko": "./locales/ko.json",
+      "ja": "./locales/ja.json"
+    },
     "backgroundColor": "#e07a3a",
     "runtimeVersion": {
       "policy": "appVersion"
@@ -232,6 +236,14 @@
         {
           "faceIDPermission": false,
           "configureAndroidBackup": false
+        }
+      ],
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": ["ko", "ja"]
+          }
         }
       ]
     ],

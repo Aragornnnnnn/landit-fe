@@ -1,0 +1,8 @@
+{
+  "ios": {
+    "NSMicrophoneUsageDescription": "음성 인식(말하기) 기능에 마이크를 사용합니다.",
+    "NSPhotoLibraryUsageDescription": "피드백에 첨부할 사진을 고르는 데 사진 보관함을 사용합니다.",
+    "NSUserTrackingUsageDescription": "광고 성과를 측정하고 서비스를 개선하기 위해 기기의 활동 정보를 사용해요.",
+    "NSAlarmKitUsageDescription": "고른 시각에 오늘의 시나리오를 잊지 않게 알람으로 알려드려요."
+  }
+}
