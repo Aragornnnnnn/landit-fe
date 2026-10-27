@@ -50,6 +50,11 @@ export const saveLocaleCookie = (locale: Locale) => {
   document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=${ONE_YEAR_SECONDS}; samesite=lax`;
 };
 
+/** 언어 쿠키를 지운다 — 다음 서버 렌더부터 다시 기기 언어로 그린다 */
+export const clearLocaleCookie = () => {
+  document.cookie = `${LOCALE_COOKIE}=; path=/; max-age=0; samesite=lax`;
+};
+
 /**
  * 요청의 화면 언어를 정한다. 저장 언어 쿠키가 있으면 그 값이 먼저다 — 한 번 고른 언어는 기기 언어가 바뀌어도 유지한다.
  * 쿠키가 없으면(로그아웃 뒤·재설치 직후, 로그인 화면에서 고르기 전) 기기 언어(Accept-Language)로 그린다.
