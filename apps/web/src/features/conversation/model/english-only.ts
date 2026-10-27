@@ -10,3 +10,7 @@ const NOT_ENGLISH = /[^\p{Script=Latin}0-9\s.,?!:;'"()/&+\-$%£€‘’“”�
 // 분해형(e + 결합 악센트)은 결합 악센트만 지워지므로 먼저 합친다
 export const removeNonEnglish = (text: string) =>
   text.normalize('NFC').replace(NOT_ENGLISH, '');
+
+// 걸러 낼 글자가 섞였는가 — 분해형 악센트는 합치면 영어라 섞인 것으로 보지 않는다
+export const hasNonEnglish = (text: string) =>
+  removeNonEnglish(text) !== text.normalize('NFC');

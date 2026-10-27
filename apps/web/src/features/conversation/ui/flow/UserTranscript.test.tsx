@@ -347,6 +347,18 @@ describe('UserTranscript', () => {
       expect(hapticMock).not.toHaveBeenCalled();
     });
 
+    it('거르고 나면 커서는 그 자리에서 바로 쓰던 곳에 놓인다', () => {
+      // 늦게 놓으면 그사이 들어온 띄어쓰기 앞으로 커서가 돌아가, 다음 글자와 지우기가 엉뚱한 자리에 간다(안드로이드 Gboard)
+      const { input } = renderEditing('hello world');
+
+      fireEvent.change(input, {
+        target: { value: 'hello안 world', selectionStart: 6, selectionEnd: 6 },
+      });
+
+      expect((input as HTMLTextAreaElement).value).toBe('hello world');
+      expect((input as HTMLTextAreaElement).selectionStart).toBe(5);
+    });
+
     it('조합을 확정하는 Enter(키 코드 229)로는 전송하지 않는다', () => {
       // Safari는 조합 끝 신호를 Enter보다 먼저 보내 isComposing이 false로 온다
       const { input, onSubmit } = renderEditing('hi');
@@ -362,6 +374,109 @@ describe('UserTranscript', () => {
       fireEvent.keyDown(input, { key: 'Enter' });
 
       expect(onSubmit).toHaveBeenCalled();
+    });
+  });
+
+  // iOS 한글 키보드는 조합 이벤트 없이 자모마다 "지우고 다시 넣기"로 글자를 합친다.
+  // 키보드가 넣은 한글을 웹이 지우면, 키보드는 그 글자가 아직 있다고 믿고 보내는 지우기로 앞 영어를 지운다
+  describe('키보드 입력 — 조합 없이 지우고 다시 넣는 키보드(iOS 한글)', () => {
+    const renderEditor = (initial = 'hello') => {
+      const Host = () => {
+        const [text, setText] = useState(initial);
+        return (
+          <UserTranscript
+            text={text}
+            phase="USER_SPEAKING"
+            editing
+            onChange={setText}
+          />
+        );
+      };
+      render(
+        <>
+          <Host />
+          <Toaster />
+        </>,
+      );
+      return screen.getByRole('textbox');
+    };
+    // 키보드가 보내는 입력 신호 하나 — 웹이 막았으면 true
+    const press = (
+      input: HTMLElement,
+      inputType: 'insertText' | 'deleteContentBackward',
+      data: string | null = null,
+    ) =>
+      !fireEvent(
+        input,
+        new InputEvent('beforeinput', {
+          inputType,
+          data,
+          cancelable: true,
+          bubbles: true,
+        }),
+      );
+
+    it('한글은 들어가기 전에 막고 바로 흔들고 진동하고 안내한다', () => {
+      const input = renderEditor();
+
+      expect(press(input, 'insertText', 'ㅇ')).toBe(true);
+
+      expect(input.closest('.animate-shake')).not.toBeNull();
+      expect(hapticMock).toHaveBeenCalledWith('error');
+      expect(screen.getByText('영어로만 입력할 수 있어요')).toBeInTheDocument();
+    });
+
+    it('영어는 막지 않는다', () => {
+      const input = renderEditor();
+
+      expect(press(input, 'insertText', 'a')).toBe(false);
+      expect(hapticMock).not.toHaveBeenCalled();
+    });
+
+    it('한글을 막은 뒤 키보드가 그 글자를 합치려 보내는 지우기는 막아 앞 영어를 지킨다', () => {
+      const input = renderEditor();
+      press(input, 'insertText', 'ㅇ');
+
+      // ㅏ를 치면 키보드는 ㅇ을 지우고 "아"를 넣는다
+      expect(press(input, 'deleteContentBackward')).toBe(true);
+      expect(press(input, 'insertText', '아')).toBe(true);
+      expect(press(input, 'deleteContentBackward')).toBe(true);
+      expect(press(input, 'insertText', '안')).toBe(true);
+    });
+
+    it('막은 글자를 다 지운 뒤의 지우기는 그대로 둔다 — 그건 사람이 누른 지우기다', () => {
+      const input = renderEditor();
+      press(input, 'insertText', 'ㅇ');
+
+      // 백스페이스로 키보드가 기억하던 ㅇ을 지웠다
+      expect(press(input, 'deleteContentBackward')).toBe(true);
+
+      expect(press(input, 'deleteContentBackward')).toBe(false);
+    });
+
+    it('띄어쓰기나 영어를 치면 키보드가 조합을 끝내므로 다음 지우기는 그대로 둔다', () => {
+      const input = renderEditor();
+      press(input, 'insertText', '안');
+
+      expect(press(input, 'insertText', ' ')).toBe(false);
+
+      expect(press(input, 'deleteContentBackward')).toBe(false);
+    });
+
+    it('입력창을 다시 누르면 키보드가 조합을 끝내므로 다음 지우기는 그대로 둔다', () => {
+      // 커서를 옮기면 키보드는 합치던 글자를 잊는다
+      const input = renderEditor();
+      press(input, 'insertText', '안');
+
+      fireEvent.pointerDown(input);
+
+      expect(press(input, 'deleteContentBackward')).toBe(false);
+    });
+
+    it('막은 게 없으면 지우기는 그대로 둔다', () => {
+      const input = renderEditor();
+
+      expect(press(input, 'deleteContentBackward')).toBe(false);
     });
   });
 
