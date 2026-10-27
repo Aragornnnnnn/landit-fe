@@ -3,6 +3,7 @@
 // 그래도 끝내겠다면 종료 버튼이 대화를 완료로 처리해 피드백까지 이어 준다
 'use client';
 
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import { BottomSheet } from '@/shared/ui/BottomSheet';
@@ -26,38 +27,43 @@ export const SmallTalkExitSheet = ({
   completing,
   onComplete,
   onClose,
-}: SmallTalkExitSheetProps) => (
-  <BottomSheet open={open} onClose={onClose}>
-    <div className="flex flex-col items-center text-center">
-      <Image
-        src="/images/character/landy-goodbye-card.webp"
-        alt=""
-        width={96}
-        height={96}
-        className="size-24"
-      />
-      <BottomSheet.Title className="mt-1 text-17 font-bold break-keep text-foreground">
-        이대로 끝내려고요?
-      </BottomSheet.Title>
-      <p className="mt-2 text-sm leading-6 break-keep text-muted-foreground">
-        대화를 잘 마무리하는 것까지가 영어 실력!
-      </p>
-    </div>
-    <div className="mt-4 rounded-2xl bg-selected px-4 py-3 text-left">
-      <p className="text-13 font-semibold text-accent">직접 끝내볼래요</p>
-      <p className="mt-1 text-sm font-medium text-foreground">
-        “{goodbyePhrase}”
-      </p>
-    </div>
-    <Button className="mt-5" disabled={completing} onClick={onClose}>
-      직접 대화 마무리하기
-    </Button>
-    <button
-      disabled={completing}
-      onClick={onComplete}
-      className="mx-auto mt-3 block px-4 py-2 text-sm font-medium text-muted-foreground underline underline-offset-4 disabled:opacity-45"
-    >
-      대화 종료하기
-    </button>
-  </BottomSheet>
-);
+}: SmallTalkExitSheetProps) => {
+  const t = useTranslations('conversation.smallTalkExitSheet');
+  return (
+    <BottomSheet open={open} onClose={onClose}>
+      <div className="flex flex-col items-center text-center">
+        <Image
+          src="/images/character/landy-goodbye-card.webp"
+          alt=""
+          width={96}
+          height={96}
+          className="size-24"
+        />
+        <BottomSheet.Title className="mt-1 text-17 font-bold break-keep text-foreground">
+          {t('title')}
+        </BottomSheet.Title>
+        <p className="mt-2 text-sm leading-6 break-keep text-muted-foreground">
+          {t('description')}
+        </p>
+      </div>
+      <div className="mt-4 rounded-2xl bg-selected px-4 py-3 text-left">
+        <p className="text-13 font-semibold text-accent">
+          {t('goodbyeCaption')}
+        </p>
+        <p className="mt-1 text-sm font-medium text-foreground">
+          “{goodbyePhrase}”
+        </p>
+      </div>
+      <Button className="mt-5" disabled={completing} onClick={onClose}>
+        {t('closeButton')}
+      </Button>
+      <button
+        disabled={completing}
+        onClick={onComplete}
+        className="mx-auto mt-3 block px-4 py-2 text-sm font-medium text-muted-foreground underline underline-offset-4 disabled:opacity-45"
+      >
+        {t('completeButton')}
+      </button>
+    </BottomSheet>
+  );
+};
