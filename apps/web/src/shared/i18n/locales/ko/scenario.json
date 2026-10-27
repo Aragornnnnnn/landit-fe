@@ -1,0 +1,16 @@
+{
+  "calendarStrip": {
+    "closeLabel": "달력 닫기",
+    "monthLoadingLabel": "달력 불러오는 중",
+    "weekLoadingLabel": "주 불러오는 중",
+    "previousLabel": "이전",
+    "nextLabel": "다음",
+    "weekLabel": "주",
+    "monthLabel": "월",
+    "periodSkeletonLabel": "0000년 00월 0주차"
+  },
+  "calendarDay": {
+    "completedLabel": "{date} 완료",
+    "todayLabel": "{date} 오늘"
+  }
+}

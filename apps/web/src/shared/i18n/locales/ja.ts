@@ -7,6 +7,7 @@ import home from './ja/home.json';
 import notification from './ja/notification.json';
 import onboarding from './ja/onboarding.json';
 import paywall from './ja/paywall.json';
+import scenario from './ja/scenario.json';
 import streak from './ja/streak.json';
 import subscription from './ja/subscription.json';
 import widget from './ja/widget.json';
@@ -20,6 +21,7 @@ const ja = {
   notification,
   onboarding,
   paywall,
+  scenario,
   streak,
   subscription,
   widget,

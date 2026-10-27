@@ -11,6 +11,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
+import { setTestLocale } from '@/shared/i18n/test-locale';
 import { closeTopSheet } from '@/shared/ui/bottom-sheet-back';
 
 import type { ScenarioCalendarResponse } from '../api/calendar';
@@ -272,6 +273,22 @@ describe('CalendarStrip 선택 표시', () => {
     expect(
       screen.getByRole('button', { name: '8월 5일 완료' }),
     ).toHaveAttribute('aria-current', 'date');
+  });
+
+  it('일본어 화면에서는 날짜·요일·상태를 일본어로 쓴다', () => {
+    // Given 일본어 화면에서
+    setTestLocale('ja');
+    givenCompletedWeek();
+
+    // When 스트립을 그리면
+    render(<CalendarStrip date="2026-08-05" onSelect={vi.fn()} />);
+
+    // Then 완료한 날은 「8月5日 完了」로 읽히고 요일은 일본어 한 글자다
+    expect(screen.getByRole('button', { name: '8月5日 完了' })).toHaveAttribute(
+      'aria-current',
+      'date',
+    );
+    expect(screen.getByText('水')).toBeInTheDocument();
   });
 
   it('URL에 date가 없으면 오늘을 선택해 둔다', () => {

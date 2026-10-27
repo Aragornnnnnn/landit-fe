@@ -1,0 +1,16 @@
+{
+  "calendarStrip": {
+    "closeLabel": "カレンダーを閉じる",
+    "monthLoadingLabel": "カレンダーを読み込み中",
+    "weekLoadingLabel": "週を読み込み中",
+    "previousLabel": "前へ",
+    "nextLabel": "次へ",
+    "weekLabel": "週",
+    "monthLabel": "月",
+    "periodSkeletonLabel": "0000年00月 第0週"
+  },
+  "calendarDay": {
+    "completedLabel": "{date} 完了",
+    "todayLabel": "{date} 今日"
+  }
+}

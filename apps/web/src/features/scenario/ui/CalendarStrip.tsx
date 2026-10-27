@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { track } from '@/shared/analytics';
 import { WEEKDAY_LABELS } from '@/shared/lib/date-string';
@@ -39,6 +39,7 @@ export const CalendarStrip = ({
   onSelect,
 }: CalendarStripProps) => {
   const locale = useLocale();
+  const t = useTranslations('scenario.calendarStrip');
   const reduced = useReducedMotion() ?? false;
   const [expanded, setExpanded] = useState(false);
   // 창은 보고 있는 날과 따로 움직인다 — 지난 주를 훑어보다 아무 날도 안 고를 수 있다
@@ -185,7 +186,7 @@ export const CalendarStrip = ({
               {/* 좌우는 패널(-inset-x-5)과 같은 폭까지 — 스트립 패딩만큼 좁으면 양옆에 안 덮인 띠가 남는다 */}
               <motion.button
                 type="button"
-                aria-label="달력 닫기"
+                aria-label={t('closeLabel')}
                 onClick={() => toggle('WEEK')}
                 className="absolute -inset-x-5 top-0 h-screen cursor-default bg-black/30"
                 initial={{ opacity: 0 }}
@@ -264,6 +265,7 @@ const MonthSkeleton = ({
   today: string;
   startedAt: string | null;
 }) => {
+  const t = useTranslations('scenario.calendarStrip');
   const dates = datesOfMonth(date);
   // 칸 상태 규칙은 실제 칸과 같은 곳에서 가져온다 — 완료 여부는 몰라도 '그릴 게 없는 날'은 정해진다
   const isBlank = (day: string) =>
@@ -274,7 +276,7 @@ const MonthSkeleton = ({
   return (
     <div
       role="status"
-      aria-label="달력 불러오는 중"
+      aria-label={t('monthLoadingLabel')}
       className="grid grid-cols-7 gap-y-0.5"
     >
       {Array.from({ length: leadingBlanks(dates[0]) }).map((_, index) => (
@@ -315,21 +317,24 @@ const ArrowButton = ({
   direction: -1 | 1;
   disabled: boolean;
   onClick: () => void;
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    disabled={disabled}
-    aria-label={direction === -1 ? '이전' : '다음'}
-    className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-secondary disabled:opacity-25"
-  >
-    {direction === -1 ? (
-      <ChevronLeftIcon size={16} />
-    ) : (
-      <ChevronRightIcon size={16} />
-    )}
-  </button>
-);
+}) => {
+  const t = useTranslations('scenario.calendarStrip');
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={direction === -1 ? t('previousLabel') : t('nextLabel')}
+      className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-secondary disabled:opacity-25"
+    >
+      {direction === -1 ? (
+        <ChevronLeftIcon size={16} />
+      ) : (
+        <ChevronRightIcon size={16} />
+      )}
+    </button>
+  );
+};
 
 const TypeToggle = ({
   value,
@@ -337,41 +342,47 @@ const TypeToggle = ({
 }: {
   value: ScenarioCalendarType;
   onChange: (type: ScenarioCalendarType) => void;
-}) => (
-  <div className="flex rounded-full bg-secondary p-0.5">
-    {(
-      [
-        { id: 'WEEK', label: '주' },
-        { id: 'MONTH', label: '월' },
-      ] as const
-    ).map((option) => (
-      <button
-        key={option.id}
-        type="button"
-        onClick={() => onChange(option.id)}
-        aria-pressed={value === option.id}
-        // 보이는 크기는 그대로 두고 눌리는 자리만 넓힌다 — 손끝으로 겨누기엔 24px이 좁다
-        className={`relative rounded-full px-3.5 py-1 text-xs font-bold transition-colors after:absolute after:-inset-x-1 after:-inset-y-3 after:content-[''] ${
-          value === option.id
-            ? 'bg-background text-foreground shadow-sm'
-            : 'text-muted-foreground'
-        }`}
-      >
-        {option.label}
-      </button>
-    ))}
-  </div>
-);
+}) => {
+  const t = useTranslations('scenario.calendarStrip');
+  return (
+    <div className="flex rounded-full bg-secondary p-0.5">
+      {(
+        [
+          { id: 'WEEK', labelKey: 'weekLabel' },
+          { id: 'MONTH', labelKey: 'monthLabel' },
+        ] as const
+      ).map((option) => (
+        <button
+          key={option.id}
+          type="button"
+          onClick={() => onChange(option.id)}
+          aria-pressed={value === option.id}
+          // 보이는 크기는 그대로 두고 눌리는 자리만 넓힌다 — 손끝으로 겨누기엔 24px이 좁다
+          className={`relative rounded-full px-3.5 py-1 text-xs font-bold transition-colors after:absolute after:-inset-x-1 after:-inset-y-3 after:content-[''] ${
+            value === option.id
+              ? 'bg-background text-foreground shadow-sm'
+              : 'text-muted-foreground'
+          }`}
+        >
+          {t(option.labelKey)}
+        </button>
+      ))}
+    </div>
+  );
+};
 
 // 이름표는 서버가 정한다 — 응답 전에는 직전 주 이름표 대신 비슷한 길이의 자리만 잡는다
-const LabelSkeleton = () => (
-  <span
-    aria-hidden
-    className="animate-skeleton-flow rounded-md text-transparent select-none"
-  >
-    0000년 00월 0주차
-  </span>
-);
+const LabelSkeleton = () => {
+  const t = useTranslations('scenario.calendarStrip');
+  return (
+    <span
+      aria-hidden
+      className="animate-skeleton-flow rounded-md text-transparent select-none"
+    >
+      {t('periodSkeletonLabel')}
+    </span>
+  );
+};
 
 // 첫 응답 전 스트립 — 실제 스트립과 같은 틀에 화살표·토글은 누를 수 없게 두고 이름표와 날짜 칸만 비운다
 const StripSkeleton = () => (
@@ -397,8 +408,13 @@ const StripSkeleton = () => (
 // 주 스트립 자리표시 — 요일은 고정이라 그대로 쓰고 날짜 칸만 비운다. 크기는 CalendarDay와 맞춘다
 const WeekSkeleton = () => {
   const locale = useLocale();
+  const t = useTranslations('scenario.calendarStrip');
   return (
-    <div role="status" aria-label="주 불러오는 중" className="grid grid-cols-7">
+    <div
+      role="status"
+      aria-label={t('weekLoadingLabel')}
+      className="grid grid-cols-7"
+    >
       {WEEKDAY_LABELS[locale].map((weekday) => (
         <div
           key={weekday}

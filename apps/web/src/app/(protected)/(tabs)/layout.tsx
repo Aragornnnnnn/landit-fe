@@ -12,9 +12,9 @@ export default function TabsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // home은 탭들이 같이 쓰는 헤더·탭 칩 문구다
+  // home은 탭들이 같이 쓰는 헤더·탭 칩 문구, scenario는 시나리오 탭의 카드·달력 문구다
   return (
-    <MessagesProvider namespaces={['home']}>
+    <MessagesProvider namespaces={['home', 'scenario']}>
       <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-muted">
         <RememberLastTab />
         <AppHeader />
