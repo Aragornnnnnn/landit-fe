@@ -3,7 +3,8 @@ import auth from './ko/auth.json';
 import common from './ko/common.json';
 import notification from './ko/notification.json';
 import onboarding from './ko/onboarding.json';
+import widget from './ko/widget.json';
 
-const ko = { auth, common, notification, onboarding };
+const ko = { auth, common, notification, onboarding, widget };
 
 export default ko;

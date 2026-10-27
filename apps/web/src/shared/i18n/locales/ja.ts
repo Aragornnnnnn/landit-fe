@@ -3,7 +3,8 @@ import auth from './ja/auth.json';
 import common from './ja/common.json';
 import notification from './ja/notification.json';
 import onboarding from './ja/onboarding.json';
+import widget from './ja/widget.json';
 
-const ja = { auth, common, notification, onboarding };
+const ja = { auth, common, notification, onboarding, widget };
 
 export default ja;

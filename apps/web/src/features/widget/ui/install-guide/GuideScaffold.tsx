@@ -2,6 +2,7 @@
 'use client';
 
 import { motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/shared/ui/Button';
 
@@ -20,32 +21,37 @@ export const GuideScaffold = ({
   // 있으면 CTA 아래에 "나중에 하기" 텍스트 버튼이 붙는다
   onLater?: () => void;
   children: React.ReactNode;
-}) => (
-  <>
-    <div className="flex flex-1 flex-col pt-7">
-      <h1 className="text-3xl leading-[1.18] font-black tracking-normal">
-        {title}
-      </h1>
-      <p className="mt-4 text-xl font-bold text-muted-foreground">{subtitle}</p>
+}) => {
+  const t = useTranslations('widget.guideScaffold');
+  return (
+    <>
+      <div className="flex flex-1 flex-col pt-7">
+        <h1 className="text-3xl leading-[1.18] font-black tracking-normal">
+          {title}
+        </h1>
+        <p className="mt-4 text-xl font-bold text-muted-foreground">
+          {subtitle}
+        </p>
 
-      {/* 목업이 실제로 받은 높이를 재는 컨테이너 — PhoneMockup이 이 높이에 맞춰 줄어든다 */}
-      <div className="[container-type:size] flex flex-1 items-center justify-center py-6">
-        {children}
+        {/* 목업이 실제로 받은 높이를 재는 컨테이너 — PhoneMockup이 이 높이에 맞춰 줄어든다 */}
+        <div className="[container-type:size] flex flex-1 items-center justify-center py-6">
+          {children}
+        </div>
       </div>
-    </div>
 
-    <Button onClick={onCta}>{cta}</Button>
-    {onLater && (
-      <button
-        type="button"
-        onClick={onLater}
-        className="mt-2 flex h-12 w-full items-center justify-center text-15 font-medium text-muted-foreground"
-      >
-        나중에 하기
-      </button>
-    )}
-  </>
-);
+      <Button onClick={onCta}>{cta}</Button>
+      {onLater && (
+        <button
+          type="button"
+          onClick={onLater}
+          className="mt-2 flex h-12 w-full items-center justify-center text-15 font-medium text-muted-foreground"
+        >
+          {t('laterButton')}
+        </button>
+      )}
+    </>
+  );
+};
 
 // 하늘색 폰 목업 틀 — 안내 화면들이 같은 틀 위에 각자의 장면을 그린다.
 // 목업 자리(GuideScaffold의 컨테이너)가 낮으면 0.8·0.6·0.5배로 줄여 CTA가 화면 밖으로 밀리지 않게 한다.
