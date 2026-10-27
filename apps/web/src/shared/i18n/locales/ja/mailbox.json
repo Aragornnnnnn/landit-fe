@@ -38,7 +38,7 @@
   "feedbackType": {
     "bugLabel": "不具合を報告する",
     "bugTitle": "起きた問題を<br></br>詳しく教えてください",
-    "bugPlaceholder": "ここに状況を書いてください",
+    "bugPlaceholder": "起きた状況を書いてください",
     "featureLabel": "新機能をリクエストする",
     "featureTitle": "あったらいいなと思う<br></br>機能を教えてください",
     "featurePlaceholder": "ほしい機能を書いてください",
@@ -46,7 +46,7 @@
     "questionTitle": "気になることがあれば<br></br>何でも聞いてください",
     "questionPlaceholder": "気になることを書いてください",
     "cheerLabel": "開発者を応援する",
-    "cheerTitle": "応援のメッセージを<br></br>残してください",
+    "cheerTitle": "応援したいことを<br></br>自由に書いてください",
     "cheerPlaceholder": "応援のひとことを書いてください"
   },
   "feedbackTypeFlow": {
