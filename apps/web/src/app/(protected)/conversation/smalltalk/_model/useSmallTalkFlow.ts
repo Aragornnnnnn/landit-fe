@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { preload } from 'react-dom';
 
 import type { Partner } from '@/features/conversation/model/character-look';
+import { CHARACTER_KEYTERMS } from '@/features/conversation/model/stt-keyterms';
 import { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 // 첫 완료 뒤 스몰톡 탭에서 소감을 묻는다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { markTalkCompleted } from '@/features/satisfaction/model/prompt-record';
@@ -129,6 +130,8 @@ export const useSmallTalkFlow = ({
     openingAudioSrc: null,
     sessionId: session.sessionId,
     ensureSession: async () => session.sessionId,
+    // 스몰톡은 주제가 매번 달라 캐릭터 이름만 넘긴다
+    keytermsFor: () => CHARACTER_KEYTERMS,
     submit: async ({ content, inputType, turnIndex, utteranceDurationMs }) => {
       if (talkClosed()) return null; // 끝냈거나 나간 대화 — 더 보내지 않는다
       let result: SmallTalkMessageSubmitResponse;

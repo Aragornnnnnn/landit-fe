@@ -69,6 +69,7 @@ const renderInput = (
     useConversationInput({
       canStart: true,
       trackContext: () => ({ sessionId: 1, turnIndex: 0 }),
+      keyterms: [],
       onInputStart,
       onInputCancel,
       onContent,

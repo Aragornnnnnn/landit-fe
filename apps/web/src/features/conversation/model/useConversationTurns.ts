@@ -66,6 +66,8 @@ interface ConversationTurnsOptions {
   sessionId: number | null;
   // 제출 직전 세션 확보 — 실패하면 null을 주고, 턴은 재시도 대기로 되돌아간다
   ensureSession: () => Promise<number | null>;
+  // 그 턴에 음성 인식으로 넘길 키워드 — 시나리오는 질문마다 다를 수 있다
+  keytermsFor: (turnIndex: number) => readonly string[];
   submit: (args: {
     sessionId: number;
     content: string;
@@ -85,6 +87,7 @@ export const useConversationTurns = ({
   openingAudioSrc,
   sessionId,
   ensureSession,
+  keytermsFor,
   submit,
 }: ConversationTurnsOptions) => {
   const [state, setState] = useState(() =>
@@ -140,6 +143,7 @@ export const useConversationTurns = ({
       sessionId,
       turnIndex: state.turnIndex,
     }),
+    keyterms: keytermsFor(state.turnIndex),
     onInputStart: () => send('USER_SPEAKING_STARTED'),
     onInputCancel: () => send('USER_SPEAKING_CANCELLED'),
     onContent: (content, inputType, utteranceDurationMs) =>
