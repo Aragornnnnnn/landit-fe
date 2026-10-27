@@ -74,7 +74,8 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
   // 가격 부담 화면이 환급을 쌓는 중인 사람에게 다른 답을 한다 — 스위치가 꺼져 있으면 묻지 않는다
   const rewardLive = useRewardChallengeLive();
   const { reward } = useRewardQuery({ enabled: rewardLive });
-  const stake = refundStakeOf(reward);
+  // 꺼진 쿼리도 캐시에 남은 답을 돌려준다 — 한국어에서 받아 둔 환급이 일본어 화면에 새지 않게 스위치로 한 번 더 막는다
+  const stake = rewardLive ? refundStakeOf(reward) : null;
 
   const leaveToManage = () => backOrReplace(router, SUBSCRIPTION_MANAGE_PATH);
 

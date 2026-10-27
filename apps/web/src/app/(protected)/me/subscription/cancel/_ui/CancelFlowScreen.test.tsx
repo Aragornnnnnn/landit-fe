@@ -279,6 +279,20 @@ describe('환급을 쌓는 중인 사람', () => {
       screen.getByText('최대 50,000원까지 돌려받는 플랜이에요.'),
     ).toBeInTheDocument();
   });
+
+  it('환급이 꺼진 화면에선 캐시에 남은 환급이 있어도 환급 문구를 보이지 않는다', () => {
+    mocks.rewardLaunched = false;
+    mocks.reward = { reward: rewardView() };
+    renderScreen(
+      premium({ productId: 'com.saynow.app.premium.halfyear', price: 59_900 }),
+    );
+
+    chooseReason('가격이 부담돼요');
+
+    expect(
+      screen.queryByText('최대 50,000원까지 돌려받는 플랜이에요.'),
+    ).toBeNull();
+  });
 });
 
 describe('가격 화면 노출의 환급 여부', () => {

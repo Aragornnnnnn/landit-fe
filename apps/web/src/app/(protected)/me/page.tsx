@@ -64,10 +64,10 @@ export default function MyPage() {
     setIsDeleteSheetOpen(false);
   }
 
-  // 인증 상태와 쿼리 캐시를 함께 비운다 — 캐시가 남으면 다음 계정에 이전 계정 데이터가 노출된다
+  // 세션을 비우고 문서를 통째로 다시 받는다 — 루트 레이아웃(html lang·문구)까지 지운 언어 쿠키대로 기기 언어로 그린다
   function finishSignedOut() {
     clearSession();
-    router.replace(LOGIN_PATH);
+    window.location.replace(LOGIN_PATH);
   }
 
   // 서버 폐기가 실패해도 로컬 세션은 지우고 로그인으로 보낸다 — 사용자를 로그인 상태에 가둘 이유가 없다
