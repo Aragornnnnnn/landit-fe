@@ -73,7 +73,33 @@
     "photoLabel": "첨부 사진 {order}",
     "removeLabel": "첨부 사진 {order} 빼기"
   },
+  "attachmentGallery": {
+    "photoLabel": "첨부 사진 {order}",
+    "loadingLabel": "첨부 사진 {order} 불러오는 중",
+    "retryLabel": "첨부 사진 {order} 다시 불러오기",
+    "retryButton": "다시 불러오기",
+    "zoomLabel": "첨부 사진 {order} 크게 보기"
+  },
+  "zoomableImage": {
+    "altZoomLabel": "{alt} 크게 보기",
+    "zoomLabel": "사진 크게 보기"
+  },
+  "imageViewer": {
+    "dialogLabel": "사진 크게 보기",
+    "loadFailedError": "사진을 불러오지 못했어요",
+    "previousButton": "이전 사진",
+    "nextButton": "다음 사진",
+    "zoomInLabel": "확대",
+    "zoomOutLabel": "축소"
+  },
   "sentBody": {
     "replyCaption": "랜딧 팀의 답장 · {date}"
+  },
+  "waitingNotice": {
+    "title": "랜딧 팀이 읽고 있어요",
+    "description": "꼼꼼히 읽고 답장드릴게요"
+  },
+  "quotedLetter": {
+    "label": "내가 보낸 내용"
   }
 }

@@ -73,7 +73,33 @@
     "photoLabel": "添付写真{order}",
     "removeLabel": "添付写真{order}を外す"
   },
+  "attachmentGallery": {
+    "photoLabel": "添付写真{order}",
+    "loadingLabel": "添付写真{order}を読み込み中",
+    "retryLabel": "添付写真{order}をもう一度読み込む",
+    "retryButton": "再読み込み",
+    "zoomLabel": "添付写真{order}を拡大して見る"
+  },
+  "zoomableImage": {
+    "altZoomLabel": "{alt}を拡大して見る",
+    "zoomLabel": "写真を拡大して見る"
+  },
+  "imageViewer": {
+    "dialogLabel": "写真を拡大して見る",
+    "loadFailedError": "写真を読み込めませんでした",
+    "previousButton": "前の写真",
+    "nextButton": "次の写真",
+    "zoomInLabel": "拡大",
+    "zoomOutLabel": "縮小"
+  },
   "sentBody": {
     "replyCaption": "Landitチームからの返信 · {date}"
+  },
+  "waitingNotice": {
+    "title": "Landitチームが読んでいます",
+    "description": "しっかり読んでお返事します"
+  },
+  "quotedLetter": {
+    "label": "自分が送った内容"
   }
 }
