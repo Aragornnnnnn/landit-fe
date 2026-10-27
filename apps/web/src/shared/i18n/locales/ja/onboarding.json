@@ -1,13 +1,13 @@
 {
   "introStep": {
-    "greetingTitle": "こんにちは<wave></wave><br></br>ネイティブみたいに<br></br>話せるようにします",
-    "namedGreetingTitle": "こんにちは、{nickname}さん<wave></wave><br></br>ネイティブみたいに<br></br>話せるようにします",
+    "greetingTitle": "こんにちは<wave></wave><br></br>ネイティブに近づけます",
+    "namedGreetingTitle": "こんにちは、{nickname}さん<wave></wave><br></br>ネイティブに近づけます",
     "body": "毎日ひとつ、会話を用意します<br></br>続けるうちに話せるようになります",
     "mascotLabel": "ラディ",
     "nextButton": "いいですね！"
   },
   "soundStep": {
-    "title": "こんなふうに話しかけます<br></br>音はちゃんと聞こえますか？",
+    "title": "こんな声で話します<br></br>ちゃんと聞こえますか？",
     "nextButton": "聞こえます！"
   },
   "micStep": {
@@ -33,12 +33,12 @@
   },
   "notificationStep": {
     "title": "毎日続けられるよう<br></br>通知でお手伝いします",
-    "subtitle": "今日の会話を忘れていたらお知らせします",
+    "subtitle": "忘れていたらお知らせします",
     "nextButton": "通知を受け取ります！"
   },
   "accentStep": {
     "title": "どの英語を<br></br>学びたいですか？",
-    "subtitle": "おすすめのフレーズとフィードバックが変わります",
+    "subtitle": "フレーズと添削が変わります",
     "hint": "学ぶアクセントはいつでも変更できます"
   },
   "accentForm": {
@@ -50,7 +50,7 @@
     "australianLabel": "オーストラリア英語"
   },
   "scenarioIntroStep": {
-    "title": "最初の会話でレベル診断<br></br>ぴったりの内容で学べます",
+    "title": "最初の会話でレベル診断<br></br>ぴったり学べます",
     "startButton": "最初の会話を始めます！",
     "partnerStartButton": "{name}と会話を始めます！"
   },
