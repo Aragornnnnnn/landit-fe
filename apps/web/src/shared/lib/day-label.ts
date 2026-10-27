@@ -9,7 +9,7 @@ const DAY_FORMAT: Record<Locale, (month: number, day: number) => string> = {
 
 // 서버가 주는 LocalDateTime(2026-07-28T21:03:11)에는 시간대가 없다.
 // Date로 파싱하면 브라우저가 UTC로 읽어 하루가 밀 수 있어 앞의 날짜만 잘라 쓴다.
-// 언어를 안 넘기는 호출부(홈 달력·스트릭·성장 카드)는 아직 한국어 화면 그대로다
+// 언어를 안 넘기는 호출부(홈 달력·스트릭·시나리오 기록)는 아직 한국어 화면 그대로다
 export const toDayLabel = (
   isoDateTime: string,
   locale: Locale = DEFAULT_LOCALE,
