@@ -97,7 +97,7 @@
   },
   "waitingNotice": {
     "title": "Landitチームが読んでいます",
-    "description": "しっかり読んでお返事します"
+    "description": "しっかり読んで返信します"
   },
   "quotedLetter": {
     "label": "自分が送った内容"
