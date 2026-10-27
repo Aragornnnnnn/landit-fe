@@ -9,6 +9,7 @@ import type {
 } from '@landit/analytics';
 
 import { getNativeContext } from '@/shared/bridge/native-context';
+import { localeFromDocument } from '@/shared/i18n/locale';
 
 const getApiKey = () => process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
 
@@ -28,7 +29,7 @@ const logAndShouldSend = (...args: unknown[]) => {
 
 let initialized = false;
 
-// 전 이벤트 공통 속성 — 셸이 주입한 네이티브 컨텍스트에서 온다 (LAN-156).
+// 전 이벤트 공통 속성 — 셸이 주입한 네이티브 컨텍스트(LAN-156)와 화면 언어에서 온다.
 // 스크롤·탭마다 불리는 핫패스라 컨텍스트를 한 번만 읽고 surface도 여기서 파생한다
 const baseProps = () => {
   const native = getNativeContext();
@@ -37,6 +38,8 @@ const baseProps = () => {
   return {
     surface: native ? 'app' : 'browser',
     platform: native?.platform ?? 'web',
+    // 서버가 정해 html lang에 박은 화면 언어 — 일본어 사용자 지표를 따로 보려고 싣는다
+    app_language: localeFromDocument(),
     ...(native && { app_version: native.appVersion }),
     ...(native?.buildNumber && { build_number: native.buildNumber }),
     ...(webVersion && { web_version: webVersion }),
