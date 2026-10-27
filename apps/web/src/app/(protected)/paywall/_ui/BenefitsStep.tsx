@@ -43,6 +43,9 @@ const premiumWord = (chunks: React.ReactNode) => (
   </span>
 );
 
+/** 적립 혜택 밖의 시리즈 수 — 상세 피드백·표현 학습·스몰톡. 아래 SeriesCarousel 개수와 짝이다 */
+const SERIES_COUNT = 3;
+
 /** 혜택 번호 — 01·02… */
 const numberOf = (index: number) => String(index + 1).padStart(2, '0');
 
@@ -81,7 +84,7 @@ export const BenefitsStep = ({
             PREMIUM ONLY
           </span>
           <p className="mt-3 text-2xl font-black tracking-[-0.02em] text-foreground short:mt-2 short:text-xl">
-            {t('benefitsTitle', { count: offset + 3 })}
+            {t('benefitsTitle', { count: offset + SERIES_COUNT })}
           </p>
         </div>
 

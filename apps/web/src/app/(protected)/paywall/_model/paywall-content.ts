@@ -1,5 +1,6 @@
 // 롱 페이월의 고정 문구와 그림 — 학습 단계 카드, 대화 카드, 데이터 수치, 리뷰. 아래쪽에 환급 챌린지 값도 있다(하루 몫과 최대 환급액 산식은 features/reward의 refund-offer). 피그마 「페이월 v2」(2640:8041) 기준
 import type { SubscriptionPlan } from '@landit/analytics';
+import type { Messages } from 'next-intl';
 
 import { rewardOfferOf } from '@/features/reward/model/refund-offer';
 import { formatWon } from '@/features/subscription/lib/won';
@@ -32,25 +33,25 @@ export const USAGE_EXPRESSION = {
     {
       question: 'Do you think I should try it?',
       sentence: ['Why not ', 'give it a shot', '? You might like it.'],
-      translationKey: 'firstTranslationBody',
+      translationKey: 'tryItTranslationBody',
       image: `${IMAGE_DIR}/give-it-a-shot/ex-1.webp`,
     },
     {
       question: 'How did she discover she liked baking?',
       sentence: ['She ', 'gave baking a shot', ' and loved it.'],
-      translationKey: 'secondTranslationBody',
+      translationKey: 'bakingTranslationBody',
       image: `${IMAGE_DIR}/give-it-a-shot/ex-2.webp`,
     },
     {
       question: 'Is it worth trying?',
       sentence: ["It's worth ", 'giving it a shot', '.'],
-      translationKey: 'thirdTranslationBody',
+      translationKey: 'worthItTranslationBody',
       image: `${IMAGE_DIR}/give-it-a-shot/ex-3.webp`,
     },
     {
       question: "I'm afraid I'll fail.",
       sentence: ['', 'Give it a go', " — what's the worst that can happen?"],
-      translationKey: 'fourthTranslationBody',
+      translationKey: 'giveItAGoTranslationBody',
       image: `${IMAGE_DIR}/give-it-a-shot/ex-4.webp`,
     },
   ],
@@ -125,21 +126,7 @@ export const EXAMPLE_LANDING_GLOSS = {
 };
 
 /** 시나리오 카드 제목 — paywall.scenarios 아래 문구 키 */
-export type ScenarioTitleKey =
-  | 'cafeOrderTitle'
-  | 'hotelCheckInTitle'
-  | 'flightSeatmateTitle'
-  | 'pharmacyTitle'
-  | 'debateClassTitle'
-  | 'trainTicketTitle'
-  | 'refundRequestTitle'
-  | 'partyChloeTitle'
-  | 'seatChangeTitle'
-  | 'travelChatTitle'
-  | 'groupPresentationTitle'
-  | 'headphonesTitle'
-  | 'roommateMarcoTitle'
-  | 'baggageClaimTitle';
+export type ScenarioTitleKey = keyof Messages['paywall']['scenarios'];
 
 /** 시나리오 데모에서 넘어가는 실제 시나리오 카드(제목·썸네일). 끝에서 두 번째 장(첫 만남)에 멈춘다. 그림은 CDN 원본을 216px로 줄여 담았다 */
 export const SCENARIOS: { titleKey: ScenarioTitleKey; image: string }[] = [

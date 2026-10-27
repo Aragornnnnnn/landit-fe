@@ -12,12 +12,12 @@ const { monthly, yearly } = buildPaywallPlans();
 const t = createTranslator({
   locale: 'ko',
   messages: ko,
-  namespace: 'paywall.paywallCheckout',
+  namespace: 'paywall',
 });
 const tJa = createTranslator({
   locale: 'ja',
   messages: ja,
-  namespace: 'paywall.paywallCheckout',
+  namespace: 'paywall',
 });
 
 describe('getCtaLabel', () => {

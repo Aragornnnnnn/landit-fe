@@ -13,15 +13,14 @@ import { ScoreTrack } from '@/features/feedback/ui/flow/ScoreTrack';
 import { SummaryLevelCard } from '@/features/feedback/ui/flow/SummaryLevelCard';
 import { GrowthCard } from '@/features/feedback/ui/GrowthCard';
 import { ReusedExpressionsCard } from '@/features/feedback/ui/ReusedExpressionsCard';
+import type { Translator } from '@/shared/i18n/translator';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
 
 import { DemoScreen, type DemoProps } from './DemoScreen';
 
 /** 가짜 대화 문구 — 서버가 주는 피드백 본문을 화면 언어로 흉내 낸다 (paywall.feedbackDemo) */
-type DemoTranslator = ReturnType<
-  typeof useTranslations<'paywall.feedbackDemo'>
->;
+type DemoTranslator = Translator<'paywall.feedbackDemo'>;
 
 /** 장마다 내려 둔 거리(390폭 기준 px) — 잘한 이유·고친 문장·영역 점수가 폰 안에 들어오는 자리 */
 const GOOD_SCROLL = 210;

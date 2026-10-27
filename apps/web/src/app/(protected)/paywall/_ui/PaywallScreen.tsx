@@ -39,11 +39,7 @@ import { CloseIcon } from '@/shared/ui/Icons';
 import { needsScrollToPlans } from '../_lib/plans-below-fold';
 import { checkPassAvailability } from '../_model/pass-availability';
 import { buildRewardPlan, REWARD_PLAN_ID } from '../_model/paywall-content';
-import {
-  getBillingNotice,
-  getCancelNotice,
-  getCtaLabel,
-} from '../_model/paywall-copy';
+import { getCtaLabel } from '../_model/paywall-copy';
 import { usePaywallExit } from '../_model/usePaywallExit';
 import { CompareSection } from './CompareSection';
 import { DataSection } from './DataSection';
@@ -51,6 +47,7 @@ import { PaywallHeader } from './PaywallHeader';
 import { PaywallHero } from './PaywallHero';
 import { PlanSection } from './PlanSection';
 import { PremiumOnlySection } from './PremiumOnlySection';
+import { PurchaseNotices, SCROLL_PADDING } from './PurchaseNotices';
 import { ReviewSection } from './ReviewSection';
 import { StepPaywall } from './StepPaywall';
 
@@ -72,7 +69,7 @@ export const PaywallScreen = ({
   source,
 }: PaywallScreenProps) => {
   const router = useRouter();
-  const t = useTranslations('paywall.paywallCheckout');
+  const t = useTranslations('paywall');
   const tCommon = useTranslations('common');
   const locale = useLocale();
   const rewardLive = useRewardChallengeLive();
@@ -97,11 +94,6 @@ export const PaywallScreen = ({
   const plans = buildPaywallPlans(prices, currency);
   const rewardPlan = buildRewardPlan(toKrwPrices(packages).pass);
   const regularPlan = plans[selectedId === 'monthly' ? 'monthly' : 'yearly'];
-  // CTA 밑 결제·해지 안내 두 줄
-  const notices = [
-    getBillingNotice(regularPlan, t),
-    getCancelNotice(regularPlan, t),
-  ];
 
   // 페이월을 봤다고 메타에 알린다 — 결제 기준 광고 최적화로 넘어갈 때 쓸 중간 단계
   useEffect(() => {
@@ -180,36 +172,21 @@ export const PaywallScreen = ({
     void restore();
   };
 
-  // 환급 챌린지는 혜택 화면 → 결제 금액 안내 두 단계다. 고를 플랜이 없어 이용권으로 바로 결제한다
-  if (rewardChallenge) {
-    return (
-      <StepPaywall
-        offer={{ kind: 'pass', plan: rewardPlan }}
-        startStep={startStep}
-        busy={busy}
-        source={source}
-        onStepChange={exit.noteStep}
-        onScroll={exit.noteScroll}
-        onClose={() => void close()}
-        onRestore={startRestore}
-        onPurchase={() => {
-          track(EVENTS.PURCHASE_STARTED, { plan: REWARD_PLAN_ID });
-          void purchase(REWARD_PLAN_ID);
-        }}
-      />
-    );
-  }
-
-  // 일본어 화면 — 같은 두 단계에 환급만 빼고, 결제 단계에서 월간·연간을 고른다. 결제 안내는 고른 플랜 것이다
+  // 혜택 화면 → 결제 금액 안내 두 단계. 환급 챌린지는 고를 것 없는 이용권을, 일본어 화면은 환급 없이 월간·연간을 판다
   if (stepped) {
+    const stepPlanId = rewardChallenge ? REWARD_PLAN_ID : regularPlan.id;
     return (
       <StepPaywall
-        offer={{
-          kind: 'subscription',
-          plans,
-          selectedId: regularPlan.id,
-          onSelect: selectPlan,
-        }}
+        offer={
+          rewardChallenge
+            ? { kind: 'pass', plan: rewardPlan }
+            : {
+                kind: 'subscription',
+                plans,
+                selectedId: regularPlan.id,
+                onSelect: selectPlan,
+              }
+        }
         startStep={startStep}
         busy={busy}
         source={source}
@@ -218,8 +195,8 @@ export const PaywallScreen = ({
         onClose={() => void close()}
         onRestore={startRestore}
         onPurchase={() => {
-          track(EVENTS.PURCHASE_STARTED, { plan: regularPlan.id });
-          void purchase(regularPlan.id);
+          track(EVENTS.PURCHASE_STARTED, { plan: stepPlanId });
+          void purchase(stepPlanId);
         }}
       />
     );
@@ -230,7 +207,7 @@ export const PaywallScreen = ({
       {/* 아래 여백은 하단 고정 CTA(버튼+안내) 높이만큼 — 마지막 링크가 버튼 뒤에 깔리지 않게 */}
       <div
         data-scroll-root
-        className="relative h-full overflow-y-auto pb-[calc(max(var(--safe-area-inset-bottom),12px)+142px)]"
+        className={`relative h-full overflow-y-auto ${SCROLL_PADDING.withNotices}`}
         onScroll={(event) => {
           setScrolled(event.currentTarget.scrollTop > 48);
           exit.noteScroll(event.currentTarget);
@@ -276,14 +253,7 @@ export const PaywallScreen = ({
         <Button onClick={startPurchase} loading={busy}>
           {getCtaLabel(regularPlan, t)}
         </Button>
-        {notices.map((notice, index) => (
-          <p
-            key={notice}
-            className={`${index === 0 ? 'mt-3' : 'mt-1'} text-center text-11 leading-[1.35] text-muted-foreground`}
-          >
-            {notice}
-          </p>
-        ))}
+        <PurchaseNotices plan={regularPlan} />
       </footer>
     </main>
   );

@@ -1,12 +1,9 @@
 // 고른 플랜에 따라 갈리는 문구 — 지금 플랜은 연간에만 무료 체험이 있어 CTA와 결제 안내가 달라진다
-import type { useTranslations } from 'next-intl';
-
 import { formatPrice } from '@/features/subscription/lib/store-price';
 import { type PaywallPlan } from '@/features/subscription/model/product/plans';
+import type { Translator } from '@/shared/i18n/translator';
 
-type CheckoutTranslator = ReturnType<
-  typeof useTranslations<'paywall.paywallCheckout'>
->;
+type CheckoutTranslator = Translator<'paywall'>;
 
 const priceOf = (plan: PaywallPlan) => formatPrice(plan.price, plan.currency);
 

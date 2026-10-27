@@ -132,7 +132,7 @@ describe('StepPaywall', () => {
   });
 });
 
-describe('RewardPaywall 리뷰', () => {
+describe('StepPaywall 리뷰 — 환급(한국어)', () => {
   it('스토어 평점 옆에 언제 기준인지 작게 적는다', () => {
     renderPaywall();
 
@@ -149,7 +149,7 @@ describe('RewardPaywall 리뷰', () => {
   });
 });
 
-describe('RewardPaywall 아래로 더 있다는 안내', () => {
+describe('StepPaywall 아래로 더 있다는 안내', () => {
   afterEach(() => vi.useRealTimers());
 
   it('혜택 화면이 뜨자마자 한 번 살짝 내려갔다 돌아온다 — 아래에 혜택 4가지가 더 있다는 걸 보여 준다', () => {

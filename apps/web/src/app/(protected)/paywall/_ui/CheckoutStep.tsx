@@ -20,14 +20,17 @@ import { ChevronLeftIcon, CloseIcon } from '@/shared/ui/Icons';
 import { rewardBenefitsOf, type RewardPlan } from '../_model/paywall-content';
 import type { StepOffer } from '../_model/step-offer';
 import { PlanCard } from './PlanCard';
+import { NOTICES_HEIGHT_PX } from './PurchaseNotices';
 
 /** 캐릭터 그림 높이 — 기본(그림 너비 257px)과, 긴 화면에서 키울 수 있는 끝 */
 const HERO_MIN_PX = 131;
 const HERO_MAX_PX = 180;
 /** 그림 밖 내용 높이 — 위아래 안전 영역 기본값(8px·12px)을 뺀 나머지 전부(헤더·로고·표·이용권 카드·약관·버튼 자리) */
 const HERO_REST_PX = 614;
-/** 구독은 이용권 카드보다 플랜 카드가 높고 버튼 밑에 결제 안내 두 줄이 붙어, 그만큼 그림을 줄인다 */
-const SUBSCRIPTION_EXTRA_PX = 64;
+/** 플랜 카드 두 장이 이용권 카드 한 장보다 높은 만큼 */
+const PLAN_CARDS_EXTRA_PX = 22;
+/** 구독은 플랜 카드가 높고 버튼 밑에 결제 안내 두 줄이 붙어, 그만큼 그림을 줄인다 */
+const SUBSCRIPTION_EXTRA_PX = PLAN_CARDS_EXTRA_PX + NOTICES_HEIGHT_PX;
 /** 계산이 조금 어긋나도 스크롤이 생기지 않게 남기는 여유 */
 const HERO_SPARE_PX = 16;
 
@@ -112,7 +115,7 @@ export const CheckoutStep = ({
             disabled={restoreDisabled}
             className="text-13 leading-none text-muted-foreground disabled:opacity-50"
           >
-            {t('paywall.paywallHeader.restoreButton')}
+            {t('paywall.restoreButton')}
           </button>
         </div>
         {/* 앞 화면과 같은 크기의 로고 — 화면이 넘어가도 같은 페이월 안이라는 게 이어 보이게 */}

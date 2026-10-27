@@ -1,7 +1,11 @@
 {
-  "paywallHeader": {
-    "restoreButton": "구매 복원"
-  },
+  "restoreButton": "구매 복원",
+  "trialStartButton": "7일 무료 체험 시작하기",
+  "monthlyStartButton": "월 {price}으로 시작하기",
+  "yearlyBillingCaption": "7일 무료 체험 후 연 {price} 정기 결제 · 언제든 해지 가능",
+  "monthlyBillingCaption": "매월 {price} 정기 결제 · 언제든 해지 가능",
+  "yearlyCancelCaption": "체험 종료 24시간 전까지 해지하면 청구되지 않아요",
+  "monthlyCancelCaption": "결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요",
   "benefitsStep": {
     "title": "매일 도착하는 시나리오<br></br><premium>프리미엄</premium>으로 제대로 공부해요",
     "benefitsTitle": "프리미엄만 누리는 혜택 {count}가지",
@@ -60,14 +64,6 @@
     "yearlySubtitle": "월 {price}꼴 · 7일 무료 체험",
     "yearlyBadge": "월간보다 {rate}% 저렴"
   },
-  "paywallCheckout": {
-    "trialStartButton": "7일 무료 체험 시작하기",
-    "monthlyStartButton": "월 {price}으로 시작하기",
-    "yearlyBillingCaption": "7일 무료 체험 후 연 {price} 정기 결제 · 언제든 해지 가능",
-    "monthlyBillingCaption": "매월 {price} 정기 결제 · 언제든 해지 가능",
-    "yearlyCancelCaption": "체험 종료 24시간 전까지 해지하면 청구되지 않아요",
-    "monthlyCancelCaption": "결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요"
-  },
   "exampleDemo": {
     "meaningLabel": "~할 마음이 있다, 콜이다",
     "translationBody": "솔직히 난 도시 탐험이라면 언제든 콜이야.",
@@ -91,14 +87,17 @@
   "usageDemo": {
     "title": "이렇게도 써요",
     "meaningLabel": "한번 해보다, 시도해 보다",
-    "firstTranslationBody": "한번 해보지 그래? 마음에 들지도 몰라.",
-    "secondTranslationBody": "걔 베이킹 한번 해봤는데 완전 빠졌어.",
-    "thirdTranslationBody": "한번 해볼 만한 가치는 있어.",
-    "fourthTranslationBody": "해봐. 잘못돼 봤자 뭐 얼마나 잘못되겠어?"
+    "tryItTranslationBody": "한번 해보지 그래? 마음에 들지도 몰라.",
+    "bakingTranslationBody": "걔 베이킹 한번 해봤는데 완전 빠졌어.",
+    "worthItTranslationBody": "한번 해볼 만한 가치는 있어.",
+    "giveItAGoTranslationBody": "해봐. 잘못돼 봤자 뭐 얼마나 잘못되겠어?"
   },
   "scenarioDemo": {
     "dailyLabel": "오늘의 시나리오",
     "startButton": "대화 시작"
+  },
+  "scenarioWall": {
+    "dailyLabel": "오늘의 시나리오"
   },
   "smallTalkDemo": {
     "title": "오늘은 누구랑<br></br>이야기할까요?",
