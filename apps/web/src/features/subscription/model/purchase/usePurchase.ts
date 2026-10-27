@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { EVENTS, type PurchaseFailureReason } from '@landit/analytics';
 import type { SubscriptionPlan } from '@landit/bridge';
 import { useQueryClient } from '@tanstack/react-query';
-import { useTranslations, type Messages } from 'next-intl';
+import { useLocale, useTranslations, type Messages } from 'next-intl';
 
 import { track } from '@/shared/analytics';
 import { getCurrentUserId } from '@/shared/auth/auth-store';
@@ -104,6 +104,10 @@ export const usePurchase = ({
   // 결제 이벤트마다 같은 꼬리를 붙인다 — 정가 결제와 할인 결제를 나눠 보려면 전 구간에 있어야 한다
   const promoTag = promo ? { promo: true } : {};
   const t = useTranslations('subscription.purchase');
+  const locale = useLocale();
+  // 셸이 준 실패 사유 — 셸 문구는 아직 한국어뿐이라 다른 언어 화면에서는 버리고 웹 문구를 쓴다
+  const shellMessage = (message?: string) =>
+    locale === 'ko' ? message : undefined;
   const [busy, setBusy] = useState(false);
   const queryClient = useQueryClient();
   const userId = useCurrentUserId();
@@ -225,8 +229,7 @@ export const usePurchase = ({
           message: result.message,
           ...promoTag,
         });
-        // 셸이 준 사유가 있으면 그대로 — 셸 문구의 언어는 셸이 정한다
-        showToast(result.message ?? t('failedToast'));
+        showToast(shellMessage(result.message) ?? t('failedToast'));
         return;
       }
 
@@ -271,7 +274,7 @@ export const usePurchase = ({
 
       if (!result || result.status === 'error') {
         track(EVENTS.PURCHASE_RESTORED, { succeeded: false });
-        showToast(result?.message ?? t('restoreFailedToast'));
+        showToast(shellMessage(result?.message) ?? t('restoreFailedToast'));
         return;
       }
 
