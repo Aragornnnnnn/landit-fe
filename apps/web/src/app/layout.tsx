@@ -21,6 +21,7 @@ import { PlatformMarkerSync } from '@/shared/bridge/PlatformMarkerSync';
 import { fontScaleScript } from '@/shared/font-scale/font-scale';
 import { FontScaleSync } from '@/shared/font-scale/FontScaleSync';
 import { GlobalHaptics } from '@/shared/haptics';
+import { LocaleSync } from '@/shared/i18n/LocaleSync';
 import { MonitoringBootstrap } from '@/shared/monitoring/MonitoringBootstrap';
 import { Toaster } from '@/shared/ui/toast';
 
@@ -70,6 +71,7 @@ export default async function RootLayout({
             {children}
             <AppUpdateGate />
             <PushDeviceSync />
+            <LocaleSync />
             <WidgetDataSync />
             <WidgetChangeSync />
             <AlarmSync />
