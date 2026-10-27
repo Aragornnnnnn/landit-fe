@@ -162,7 +162,6 @@ describe('track', () => {
       'Logout Completed',
       expect.objectContaining({ app_language: 'ja' }),
     );
-    document.documentElement.lang = '';
   });
 
   it('일반 브라우저면 platform을 web으로 보내고 앱 버전은 싣지 않는다', async () => {
