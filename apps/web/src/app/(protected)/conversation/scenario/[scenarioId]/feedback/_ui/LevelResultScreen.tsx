@@ -4,10 +4,12 @@
 // 쓸 만한 결과(isUsableAssessment)일 때만 그린다. 그 다음 화면이 학습 준비, 그 다음이 페이월이다
 import { useEffect, useEffectEvent } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import {
   LEVEL_IMAGES,
+  LEVEL_NAME_KEYS,
   toLevelResult,
   type UsableAssessment,
 } from '@/features/feedback/model/level-assessment';
@@ -30,8 +32,10 @@ export const LevelResultScreen = ({
   scenarioId,
   assessment,
   onContinue,
-  ctaLabel = '나에게 맞는 학습지 받기',
+  ctaLabel,
 }: LevelResultScreenProps) => {
+  const t = useTranslations('conversation.levelResultScreen');
+  const levelName = useTranslations('feedback.levelNames');
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
   const result = toLevelResult(assessment);
 
@@ -64,12 +68,12 @@ export const LevelResultScreen = ({
           priority
         />
         <p className="mt-1 text-15 font-medium text-muted-foreground">
-          {nickname ? `${nickname}님의 레벨은` : '지금 레벨은'}
+          {nickname ? t('namedLevelCaption', { nickname }) : t('levelCaption')}
         </p>
         {/* 레벨은 이름 뒤에 작게 — 주황은 강점 태그와 CTA에만 남겨 시선을 나누지 않는다 */}
         <p className="mt-1 flex items-baseline gap-1.5">
           <span className="text-[34px] leading-[1.15] font-black text-foreground">
-            {result.name}
+            {levelName(LEVEL_NAME_KEYS[result.level])}
           </span>
           <span className="text-16 font-bold text-muted-foreground">
             Lv.{result.level}
@@ -79,7 +83,7 @@ export const LevelResultScreen = ({
 
       {/* 표는 캐릭터와 CTA 사이 남은 높이에 맞춰 줄어든다 — 어느 폰에서도 스크롤 없이 한 화면 */}
       <section className="mt-6 flex min-h-0 flex-1 flex-col overflow-y-auto short:mt-4">
-        <h2 className="px-1 text-15 font-bold">영역별 점수</h2>
+        <h2 className="px-1 text-15 font-bold">{t('scoresTitle')}</h2>
         {/* 표 바닥 높이 180 — 그 아래로는 줄이지 않고 절이 스크롤한다 */}
         <div className="mt-3 min-h-[180px] flex-1">
           <ScoreChart rows={result.rows} />
@@ -87,7 +91,7 @@ export const LevelResultScreen = ({
       </section>
 
       <div className="pt-4 pb-[max(var(--safe-area-inset-bottom),24px)]">
-        <Button onClick={onContinue}>{ctaLabel}</Button>
+        <Button onClick={onContinue}>{ctaLabel ?? t('worksheetButton')}</Button>
       </div>
     </main>
   );

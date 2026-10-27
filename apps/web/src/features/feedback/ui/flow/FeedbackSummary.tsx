@@ -1,23 +1,18 @@
 'use client';
 
 // 피드백 총평 — 별점·헤드라인·점수 트랙·성공률 아래로 총평, 영역 점수, 지난번과의 비교, 배운 표현 카드를 쌓고 상세로 넘긴다
+import { useTranslations } from 'next-intl';
+
 import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon, LockIcon } from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
 
 import type { SessionFeedbackResponse } from '../../api/session-feedback';
 import { useMoreBelow } from '../../lib/useMoreBelow';
-import {
-  detailCtaLabel,
-  LOCKED_DETAIL_CTA_LABEL,
-  summaryHeadline,
-} from '../../model/feedback-view';
+import { summaryHeadline } from '../../model/feedback-view';
 import { useSummaryLevelCard } from '../../model/useSummaryLevelCard';
 import { GrowthCard } from '../GrowthCard';
-import {
-  REUSED_EXPRESSIONS_TITLE,
-  ReusedExpressionsCard,
-} from '../ReusedExpressionsCard';
+import { ReusedExpressionsCard } from '../ReusedExpressionsCard';
 import { ScoreTrack } from './ScoreTrack';
 import { SummaryLevelCard, SummaryLevelCardSkeleton } from './SummaryLevelCard';
 
@@ -38,6 +33,12 @@ export const FeedbackSummary = ({
   onBack: () => void;
   onDetail: () => void;
 }) => {
+  const t = useTranslations('feedback.feedbackSummary');
+  // 남은 개선 턴이 있으면 걸음 수로, 없으면 잘한 점을 보라고 부른다
+  const improveOrReview = (improvementCount: number) =>
+    improvementCount > 0
+      ? t('improveButton', { count: improvementCount })
+      : t('reviewButton');
   const levelCard = useSummaryLevelCard(feedback);
   const { ref: scrollRef, onScroll, moreBelow } = useMoreBelow();
   const goodCount = feedback.messageFeedbacks.filter(
@@ -54,7 +55,7 @@ export const FeedbackSummary = ({
         <button
           type="button"
           onClick={onBack}
-          aria-label="닫기"
+          aria-label={t('closeButton')}
           className="flex h-7 w-[21px] items-center justify-center text-muted-foreground active:opacity-60"
         >
           <ChevronLeftIcon size={24} strokeWidth={2.4} />
@@ -75,7 +76,7 @@ export const FeedbackSummary = ({
           <div className="flex flex-col gap-[7px]">
             <StarRating rating={feedback.starRating} size={32} animate />
             <p className="text-23 leading-[1.28] font-bold break-keep text-foreground">
-              {summaryHeadline(feedback.highlightMessage)}
+              {summaryHeadline(feedback.highlightMessage) ?? t('fallbackTitle')}
             </p>
           </div>
 
@@ -85,13 +86,18 @@ export const FeedbackSummary = ({
 
           {!detailLocked && (
             <p className="mt-5 text-base font-semibold text-foreground">
-              {total}번 중 <span className="text-primary">{goodCount}번</span>{' '}
-              원어민처럼 말했어요
+              {t.rich('successBody', {
+                total,
+                good: goodCount,
+                emphasis: (chunks) => (
+                  <span className="text-primary">{chunks}</span>
+                ),
+              })}
             </p>
           )}
 
           <div className="mt-6 flex flex-col gap-3">
-            <SummaryCard title="총평">
+            <SummaryCard title={t('overallTitle')}>
               <p className="text-15 leading-[1.6] text-foreground">
                 {feedback.summaryMessage}
               </p>
@@ -128,17 +134,16 @@ export const FeedbackSummary = ({
           onClick={onDetail}
           loading={detailLocked && refreshing}
           // 자물쇠는 장식이라 읽어 주지 않는다 — 잠겼다는 것과 어디로 가는지를 이름에 담는다
-          aria-label={
-            detailLocked ? '상세 피드백 보기. 결제 화면으로 갑니다' : undefined
-          }
+          aria-label={detailLocked ? t('lockedDetailLabel') : undefined}
         >
+          {/* 서버가 상세를 잠근 세션은 턴 수를 몰라 걸음 수 문구 대신 잠금 문구를 쓴다 */}
           {detailLocked ? (
             <>
               <LockIcon size={18} />
-              {LOCKED_DETAIL_CTA_LABEL}
+              {t('lockedDetailButton')}
             </>
           ) : (
-            detailCtaLabel(total - goodCount)
+            improveOrReview(total - goodCount)
           )}
         </Button>
       </div>
@@ -152,12 +157,13 @@ const GrowthSection = ({
 }: {
   growth: SessionFeedbackResponse['growthFeedback'];
 }) => {
+  const t = useTranslations('feedback.feedbackSummary');
   if (growth === undefined) return null;
   if (growth) return <GrowthCard growth={growth} />;
   return (
     // 비교할 패턴이 없어도 시안 제목 그대로 둔다 (2026-09-30 확정)
-    <SummaryCard title="지난번엔 헷갈렸던 과거형">
-      <EmptyText>아직 지난 기록이 없어요.</EmptyText>
+    <SummaryCard title={t('growthEmptyTitle')}>
+      <EmptyText>{t('growthEmptyBody')}</EmptyText>
     </SummaryCard>
   );
 };
@@ -168,12 +174,14 @@ const ReuseSection = ({
 }: {
   reuse: SessionFeedbackResponse['expressionReuse'];
 }) => {
+  const t = useTranslations('feedback.feedbackSummary');
+  const reuseT = useTranslations('feedback.reusedExpressionsCard');
   if (!reuse || reuse.pending) return null;
   if (reuse.items.length > 0)
     return <ReusedExpressionsCard items={reuse.items} />;
   return (
-    <SummaryCard title={REUSED_EXPRESSIONS_TITLE}>
-      <EmptyText>아직 배운 표현이 없어요.</EmptyText>
+    <SummaryCard title={reuseT('title')}>
+      <EmptyText>{t('reuseEmptyBody')}</EmptyText>
     </SummaryCard>
   );
 };

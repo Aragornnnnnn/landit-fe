@@ -4,9 +4,10 @@
 // 갱신되는 구독(체험·구독 중)에만 열린다. 해지 예약·프로모션 부여·유료 아님은 구독 관리로 돌려보낸다
 import { useEffect, useState } from 'react';
 import { EVENTS, type CancelStayDestination } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
-import { LEVEL_NAMES } from '@/features/feedback/model/level-assessment';
+import { LEVEL_NAME_KEYS } from '@/features/feedback/model/level-assessment';
 import { toEnglishLevel } from '@/features/onboarding/model/english-level';
 import { useLearningLevelQuery } from '@/features/onboarding/model/useLearningLevelQuery';
 import { useRewardQuery } from '@/features/reward/model/useRewardQuery';
@@ -55,6 +56,7 @@ interface FlowProps {
 }
 
 const Flow = ({ summary, paidStore }: FlowProps) => {
+  const levelName = useTranslations('feedback.levelNames');
   const router = useRouter();
   const [step, setStep] = useState<CancelStep>({ kind: 'reason' });
   const [draft, setDraft] = useState<CancelDraft>(EMPTY_DRAFT);
@@ -162,7 +164,9 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
           stake,
           nickname,
           totalActiveDays: calendar?.totalActiveDays ?? null,
-          levelLabel: level ? `${LEVEL_NAMES[level]} Lv.${level}` : null,
+          levelLabel: level
+            ? `${levelName(LEVEL_NAME_KEYS[level])} Lv.${level}`
+            : null,
           otherText: draft.otherText,
         });
         return (

@@ -11,44 +11,19 @@ import {
 import type { LevelAssessmentOutcome } from './useLevelAssessmentQuery';
 
 /**
- * 총평 카드의 영역 이름·순서·설명 — 이름과 순서는 시안(피그마 2618:4714) 기준. 레벨 결과 화면의 이름(DOMAINS)과는 따로 간다.
- * 설명은 (i) 툴팁에 쓴다
+ * 총평 카드의 영역 순서 — 시안(피그마 2618:4714) 기준. 이름과 (i) 툴팁 설명은 feedback.summaryDomains 문구에서 읽고,
+ * 레벨 결과 화면의 이름(feedback.domains)과는 따로 간다
  */
-export const SUMMARY_DOMAINS: {
-  key: DomainKey;
-  label: string;
-  description: string;
-}[] = [
-  {
-    key: 'situationPerformance',
-    label: '상황 대처 능력',
-    description: '상황에 맞게 해야 할 말을 해냈는지 봐요',
-  },
-  {
-    key: 'vocabulary',
-    label: '어휘력',
-    description: '상황에 어울리는 단어를 골라 썼는지 봐요',
-  },
-  {
-    key: 'grammar',
-    label: '문법',
-    description: '시제·어순 같은 문법을 맞게 썼는지 봐요',
-  },
-  {
-    key: 'discourse',
-    label: '문장 완성도',
-    description: '생각을 끝까지 이어 완결된 문장으로 말했는지 봐요',
-  },
-  {
-    key: 'interactionPragmatics',
-    label: '대화 매너',
-    description: '상대 말에 반응하며 자연스럽게 주고받았는지 봐요',
-  },
+export const SUMMARY_DOMAINS: readonly DomainKey[] = [
+  'situationPerformance',
+  'vocabulary',
+  'grammar',
+  'discourse',
+  'interactionPragmatics',
 ];
 
 export interface SummaryDomainRow {
   key: DomainKey;
-  label: string;
   /** 100점 환산 */
   score: number;
 }
@@ -71,9 +46,9 @@ export const isAwaitingLevel = (
 const toReadyCard = (assessment: SessionLevelAssessment): SummaryLevelCard => {
   // FALLBACK·근거 부족은 기본값으로 채운 점수라 보여주면 거짓이 된다
   if (!isUsableAssessment(assessment)) return HIDDEN;
-  const rows = SUMMARY_DOMAINS.flatMap(({ key, label }) => {
+  const rows = SUMMARY_DOMAINS.flatMap((key) => {
     const score = toDomainPercent(assessment, key);
-    return score === null ? [] : [{ key, label, score }];
+    return score === null ? [] : [{ key, score }];
   });
   if (rows.length === 0) return HIDDEN;
   return {

@@ -3,6 +3,7 @@
 // 랜딧에서 배운 표현을 실제로 사용했어요 — 표현마다 칩·출처·그때 내가 한 말·뜻.
 // 둘까지 펼치고 셋째부터는 접어 둔다. 더 보기를 누르면 그 자리에서 펼친다. 스몰톡 요약과 시나리오 총평이 같이 쓴다
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { splitMatchedText } from '@/shared/lib/matched-text';
 import { ChevronDownIcon } from '@/shared/ui/Icons';
@@ -15,10 +16,6 @@ const VISIBLE_COUNT = 2;
 // 표현이 셋이면 그냥 셋 다 편다
 const MIN_FOLDED = 2;
 
-// 표현이 없을 때 총평이 그리는 빈 카드도 같은 제목을 쓴다
-export const REUSED_EXPRESSIONS_TITLE =
-  '랜딧에서 배운 표현을 실제로 사용했어요';
-
 export const ReusedExpressionsCard = ({
   items,
   className = '',
@@ -26,6 +23,7 @@ export const ReusedExpressionsCard = ({
   items: ScenarioExpressionReuseItem[];
   className?: string;
 }) => {
+  const t = useTranslations('feedback.reusedExpressionsCard');
   const [expanded, setExpanded] = useState(false);
   const folded = !expanded && items.length - VISIBLE_COUNT >= MIN_FOLDED;
   const visible = folded ? items.slice(0, VISIBLE_COUNT) : items;
@@ -33,9 +31,7 @@ export const ReusedExpressionsCard = ({
 
   return (
     <section className={`rounded-2xl bg-card px-5 py-4 shadow-sm ${className}`}>
-      <h2 className="text-14 font-extrabold text-primary">
-        {REUSED_EXPRESSIONS_TITLE}
-      </h2>
+      <h2 className="text-14 font-extrabold text-primary">{t('title')}</h2>
       <ul className="mt-1 flex flex-col divide-y divide-border">
         {/* 같은 표현을 두 메시지에서 썼으면 표현 id만으로는 겹친다 — 쓴 자리까지 합쳐 가른다 */}
         {visible.map((item, index) => (
@@ -58,7 +54,7 @@ export const ReusedExpressionsCard = ({
           onClick={() => setExpanded(true)}
           className="flex w-full items-center justify-center gap-1 pt-3 text-13 font-semibold text-muted-foreground active:opacity-70"
         >
-          +{hiddenCount}개 더 보기
+          {t('moreButton', { count: hiddenCount })}
           <ChevronDownIcon size={14} />
         </button>
       )}

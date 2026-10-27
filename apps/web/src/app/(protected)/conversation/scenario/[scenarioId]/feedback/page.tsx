@@ -2,9 +2,9 @@
 
 // 대화 피드백 페이지 — 대화가 끝나면 replace로 넘어온다. 어느 세션·어느 날·재대화였는지를 주소에서 읽어 피드백 흐름을 조립한다
 import { Suspense, use } from 'react';
+import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 
-import { FEEDBACK_FALLBACK_TITLE } from '@/features/feedback/model/feedback-view';
 import { FeedbackSkeleton } from '@/features/feedback/ui/flow/FeedbackSkeleton';
 import { useScenarioTitle } from '@/features/scenario/model/useScenarioTitle';
 import { readScenarioFeedbackParams } from '@/shared/lib/routes';
@@ -33,7 +33,8 @@ function ScenarioFeedbackContent({
   const id = Number(scenarioId);
   const { session, date, replay, detail } =
     readScenarioFeedbackParams(useSearchParams());
-  const title = useScenarioTitle(id, date, FEEDBACK_FALLBACK_TITLE);
+  const t = useTranslations('feedback.feedbackView');
+  const title = useScenarioTitle(id, date, t('fallbackTitle'));
 
   return (
     <ScenarioFeedbackFlow

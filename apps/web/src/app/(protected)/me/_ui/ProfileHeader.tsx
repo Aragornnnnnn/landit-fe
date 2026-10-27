@@ -2,11 +2,12 @@
 
 // 마이페이지 상단 — 이름(눌러서 바꾸기)과 로그인 계정, 오른쪽에 학습 수준의 마법사 래디와 레벨 이름. 수준을 아직 모르면 기본 래디만 선다.
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import {
   LEVEL_IMAGES,
-  LEVEL_NAMES,
+  LEVEL_NAME_KEYS,
 } from '@/features/feedback/model/level-assessment';
 import { toEnglishLevel } from '@/features/onboarding/model/english-level';
 import { useLearningLevelQuery } from '@/features/onboarding/model/useLearningLevelQuery';
@@ -52,6 +53,7 @@ const NAME_SIZE_CLASS: Record<NicknameDisplaySize, string> = {
 };
 
 export const ProfileHeader = () => {
+  const levelName = useTranslations('feedback.levelNames');
   const member = useAuthStore((state) => state.member);
   const { data, isPending } = useLearningLevelQuery();
   const level = toEnglishLevel(data?.learningLevel ?? null);
@@ -124,7 +126,7 @@ export const ProfileHeader = () => {
         )}
         {level && (
           <p className="mt-0.5 text-13 font-bold" style={{ color: '#111' }}>
-            {LEVEL_NAMES[level]} Lv.{level}
+            {levelName(LEVEL_NAME_KEYS[level])} Lv.{level}
           </p>
         )}
       </div>

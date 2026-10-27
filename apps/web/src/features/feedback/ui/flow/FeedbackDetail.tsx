@@ -3,6 +3,7 @@
 // 피드백 상세 — 턴별로 질문/상황·내 답변과 GOOD/개선 분석을 한 장씩 넘겨 본다
 import { useEffect, useState } from 'react';
 import { EVENTS, type FeedbackSource } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 
 import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
@@ -10,7 +11,7 @@ import { Emoji } from '@/shared/ui/emoji';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
 
 import type { MessageFeedbackResponse } from '../../api/session-feedback';
-import { evaluationContextLabel } from '../../model/feedback-view';
+import { evaluationContextLabelKey } from '../../model/feedback-view';
 
 export const FeedbackDetail = ({
   sessionId,
@@ -25,6 +26,7 @@ export const FeedbackDetail = ({
   onBack: () => void;
   onDone: () => void;
 }) => {
+  const t = useTranslations('feedback.feedbackDetail');
   const [index, setIndex] = useState(0);
   const turn = turns[index];
   const isLast = index === turns.length - 1;
@@ -54,13 +56,13 @@ export const FeedbackDetail = ({
           <button
             type="button"
             onClick={goBack}
-            aria-label="이전"
+            aria-label={t('backButton')}
             className="flex h-7 w-[21px] items-center justify-center text-muted-foreground active:opacity-60"
           >
             <ChevronLeftIcon size={24} strokeWidth={2.4} />
           </button>
           <p className="flex-1 pr-[21px] text-center text-lg font-bold text-foreground">
-            상세 분석
+            {t('title')}
           </p>
         </div>
         <div className="flex gap-1.5">
@@ -84,7 +86,7 @@ export const FeedbackDetail = ({
         style={{ paddingBottom: 'max(var(--safe-area-inset-bottom), 20px)' }}
       >
         <Button onClick={goNext}>
-          {isLast ? '분석 다 봤어요' : '다음 분석 볼게요'}
+          {isLast ? t('finishButton') : t('nextButton')}
         </Button>
       </div>
     </div>
@@ -93,29 +95,30 @@ export const FeedbackDetail = ({
 
 // 턴 한 장 — 상세 분석 화면이 넘겨 보는 본문. 환급 페이월의 피드백 미리보기도 같은 걸 그린다
 export const TurnCard = ({ turn }: { turn: MessageFeedbackResponse }) => {
+  const t = useTranslations('feedback.feedbackDetail');
   const isGood = turn.feedbackType === 'GOOD';
 
   return (
     <div className="flex flex-col gap-[18px] pt-2">
       <p className="text-xl font-bold text-foreground">
         <Emoji>{isGood ? '✅' : '💪'}</Emoji>{' '}
-        {isGood ? '잘 통했어요' : '한 단계 더 업그레이드해봐요'}
+        {isGood ? t('goodTitle') : t('improveTitle')}
       </p>
 
       {/* 과거 회차는 당시 문맥을 복원하지 못해 비어 올 수 있다 — 그때는 내 답변만 보인다 */}
       {turn.evaluationContext && (
         <Bubble
-          label={evaluationContextLabel(turn.evaluationContext.type)}
+          label={t(evaluationContextLabelKey(turn.evaluationContext.type))}
           text={turn.evaluationContext.content}
           sub={turn.evaluationContext.translatedContent}
         />
       )}
-      <Bubble label="내 답변" text={turn.userMessage} align="right" />
+      <Bubble label={t('answerLabel')} text={turn.userMessage} align="right" />
 
       <div className="h-px w-full bg-border" />
 
       {turn.baseLocaleAnalogy && (
-        <Section title="한국어로 치면">
+        <Section title={t('analogyTitle')}>
           <NeutralBox>{turn.baseLocaleAnalogy}</NeutralBox>
         </Section>
       )}
@@ -123,12 +126,12 @@ export const TurnCard = ({ turn }: { turn: MessageFeedbackResponse }) => {
       {isGood ? (
         <>
           {turn.feedbackDetail && (
-            <Section title="잘한 이유">
+            <Section title={t('goodReasonTitle')}>
               <NeutralBox>{turn.feedbackDetail}</NeutralBox>
             </Section>
           )}
           {turn.benchmarkMessage && (
-            <Section title="이 디테일이 통했어요" tone="good">
+            <Section title={t('goodDetailTitle')} tone="good">
               <GoodBox>{turn.benchmarkMessage}</GoodBox>
             </Section>
           )}
@@ -136,7 +139,7 @@ export const TurnCard = ({ turn }: { turn: MessageFeedbackResponse }) => {
       ) : (
         <>
           {turn.correctionExpression && (
-            <Section title="이렇게 하면 더 통해요">
+            <Section title={t('correctionTitle')}>
               <div className="flex flex-col gap-2.5 rounded-2xl border border-border bg-card p-4">
                 {/* before는 위 '내 답변'에 이미 있어 생략, 교정문만 노출 */}
                 <p className="text-15 font-bold text-foreground">
@@ -154,7 +157,7 @@ export const TurnCard = ({ turn }: { turn: MessageFeedbackResponse }) => {
             </Section>
           )}
           {turn.positiveFeedback && (
-            <Section title="이 부분은 좋았어요" tone="need">
+            <Section title={t('positiveTitle')} tone="need">
               <NeedBox>{turn.positiveFeedback}</NeedBox>
             </Section>
           )}

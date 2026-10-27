@@ -2,8 +2,9 @@
 import auth from './ja/auth.json';
 import common from './ja/common.json';
 import conversation from './ja/conversation.json';
+import feedback from './ja/feedback.json';
 import onboarding from './ja/onboarding.json';
 
-const ja = { auth, common, conversation, onboarding };
+const ja = { auth, common, conversation, feedback, onboarding };
 
 export default ja;

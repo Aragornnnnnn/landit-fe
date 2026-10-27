@@ -112,5 +112,42 @@
   "smallTalkStart": {
     "startError": "대화를 시작하지 못했어요. 잠시 후 다시 시도해 주세요",
     "backButton": "돌아가기"
+  },
+  "analyzingScreen": {
+    "title": "방금 대화를 바탕으로<br></br>레벨을 분석하고 있어요",
+    "listeningCaption": "방금 대화를 다시 듣고 있어요",
+    "comparingCaption": "원어민 표현과 비교하고 있어요",
+    "reviewingCaption": "영역별로 꼼꼼히 살펴보고 있어요",
+    "finalizingCaption": "레벨과 학습지를 정리하고 있어요"
+  },
+  "levelResultScreen": {
+    "worksheetButton": "나에게 맞는 학습지 받기",
+    "namedLevelCaption": "{nickname}님의 레벨은",
+    "levelCaption": "지금 레벨은",
+    "scoresTitle": "영역별 점수"
+  },
+  "postConversationFlow": {
+    "previewStartButton": "랜딧으로 영어 공부 시작하기"
+  },
+  "scoreChart": {
+    "summaryLabel": "영역별 점수. {scores}",
+    "domainScoreLabel": "{domain} {score}점",
+    "separatorLabel": ", "
+  },
+  "preparedLearningScreen": {
+    "title": "방금 대화를 더 원어민처럼 하도록 맞춤형 학습 <emphasis>{count}개</emphasis>를 준비했어요",
+    "levelCaption": "내 <emphasis>레벨</emphasis>에 딱 맞춰 드려요",
+    "namedLevelCaption": "{nickname}님 <emphasis>레벨</emphasis>에 딱 맞춰 드려요",
+    "pickedCaption": "방금 대화에서 바로 뽑은 <emphasis>표현 {count}개</emphasis>예요",
+    "practiceCaption": "<emphasis>이미지·예문·퀴즈</emphasis>로 익혀요",
+    "pronunciationCaption": "<emphasis>발음 평가</emphasis>로 원어민에 가까워져요",
+    "reviewCaption": "<emphasis>복습 퀴즈</emphasis>로 완전히 체화해요",
+    "freeTalkCaption": "<emphasis>무제한 프리톡</emphasis>에서 활용해요",
+    "lockedLabel": "잠긴 학습 {count}개. 레벨에 맞춰 준비한 학습을 이미지·예문·퀴즈, 발음 평가, 복습 퀴즈, 프리톡으로 이어 가요",
+    "coffeeMeaningLabel": "커피 한잔 하러 갈래?",
+    "agreeMeaningLabel": "나도 완전 콜이야",
+    "dropByMeaningLabel": "잠깐 들를게",
+    "goToMeaningLabel": "내가 늘 찾는 메뉴야",
+    "startButton": "학습 시작하기"
   }
 }

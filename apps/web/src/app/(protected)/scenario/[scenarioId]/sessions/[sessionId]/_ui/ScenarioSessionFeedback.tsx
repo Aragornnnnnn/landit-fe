@@ -3,12 +3,10 @@
 // 시나리오 기록의 한 회차 — 그때 받은 총평·상세를 다시 보고, 대화 직후 흐름 없이 기록 목록으로 돌아간다
 import { useEffect, useRef } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
-import {
-  FEEDBACK_FALLBACK_TITLE,
-  isStaleLockedFeedback,
-} from '@/features/feedback/model/feedback-view';
+import { isStaleLockedFeedback } from '@/features/feedback/model/feedback-view';
 import { FeedbackContent } from '@/features/feedback/ui/flow/FeedbackContent';
 import { FeedbackNotice } from '@/features/feedback/ui/flow/FeedbackNotice';
 import { FeedbackSkeleton } from '@/features/feedback/ui/flow/FeedbackSkeleton';
@@ -40,7 +38,8 @@ export const ScenarioSessionFeedback = ({
   openDetail,
 }: ScenarioSessionFeedbackProps) => {
   const router = useRouter();
-  const title = useScenarioTitle(scenarioId, date, FEEDBACK_FALLBACK_TITLE);
+  const t = useTranslations('feedback.feedbackView');
+  const title = useScenarioTitle(scenarioId, date, t('fallbackTitle'));
   const { sessions, error, retry, isRefreshing } =
     useScenarioHistoryQuery(scenarioId);
   const session = sessions?.find((item) => item.sessionId === sessionId);
