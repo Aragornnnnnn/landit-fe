@@ -62,4 +62,13 @@ describe('일본어 화면', () => {
       '8月9日 午後3:47',
     );
   });
+
+  it('자정·정오는 일본 관례대로 0시로 적는다', () => {
+    expect(formatLetterDateTime('2026-08-09T15:00:00Z', 'ja')).toBe(
+      '8月10日 午前0:00',
+    );
+    expect(formatLetterDateTime('2026-08-09T03:00:00Z', 'ja')).toBe(
+      '8月9日 午後0:00',
+    );
+  });
 });

@@ -25,12 +25,13 @@ const DATE_FORMAT: Record<Locale, (parts: DateParts) => string> = {
 // 상세용 — `8월 9일 오전 11:30`·`8月9日 午前11:30`. 편지 한 통을 펼쳐 보는 자리라 시각까지 읽어 준다
 const DATE_TIME_FORMAT: Record<
   Locale,
-  (parts: DateParts & { morning: boolean; hour12: number }) => string
+  (parts: DateParts & { morning: boolean; hour24: number }) => string
 > = {
-  ko: ({ month, day, morning, hour12, minute }) =>
-    `${Number(month)}월 ${Number(day)}일 ${morning ? '오전' : '오후'} ${hour12}:${minute}`,
-  ja: ({ month, day, morning, hour12, minute }) =>
-    `${Number(month)}月${Number(day)}日 ${morning ? '午前' : '午後'}${hour12}:${minute}`,
+  ko: ({ month, day, morning, hour24, minute }) =>
+    `${Number(month)}월 ${Number(day)}일 ${morning ? '오전' : '오후'} ${hour24 % 12 || 12}:${minute}`,
+  // 일본은 자정·정오를 午前0時·午後0時로 쓴다 — 午前12時는 정오로도 읽힌다
+  ja: ({ month, day, morning, hour24, minute }) =>
+    `${Number(month)}月${Number(day)}日 ${morning ? '午前' : '午後'}${hour24 % 12}:${minute}`,
 };
 
 export const formatLetterDate = (sentAt: string, locale: Locale) => {
@@ -48,6 +49,6 @@ export const formatLetterDateTime = (sentAt: string, locale: Locale) => {
   return DATE_TIME_FORMAT[locale]({
     ...parts,
     morning: hour24 < 12,
-    hour12: hour24 % 12 || 12,
+    hour24,
   });
 };
