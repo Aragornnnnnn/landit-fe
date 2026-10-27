@@ -30,5 +30,16 @@
     "title": "{name}와 어떤 주제로 대화할까요?",
     "refreshButton": "다른 주제 보기",
     "loadFailedToast": "주제를 받아오지 못했어요"
+  },
+  "session": {
+    "fallbackTitle": "{date}의 대화"
+  },
+  "history": {
+    "title": "지난 스몰톡",
+    "loadError": "지난 대화를 불러오지 못했어요.",
+    "loadingLabel": "지난 대화를 불러오는 중",
+    "emptyDescription": "아직 나눈 대화가 없어요.<br></br>오늘 한 대화부터 여기 쌓여요.",
+    "guideCaption": "대화를 누르면 그때 만든 표현을 다시 볼 수 있어요.",
+    "expressionProgressLabel": "표현 {done}/{total}"
   }
 }

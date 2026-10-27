@@ -30,5 +30,16 @@
     "title": "{name}と何について話しますか？",
     "refreshButton": "ほかの話題を見る",
     "loadFailedToast": "話題を読み込めませんでした"
+  },
+  "session": {
+    "fallbackTitle": "{date}の会話"
+  },
+  "history": {
+    "title": "スモールトーク履歴",
+    "loadError": "これまでの会話を読み込めませんでした。",
+    "loadingLabel": "これまでの会話を読み込み中",
+    "emptyDescription": "まだ会話がありません。<br></br>今日の会話からここにたまっていきます。",
+    "guideCaption": "会話をタップすると、そのときのフレーズを見返せます。",
+    "expressionProgressLabel": "フレーズ {done}/{total}"
   }
 }

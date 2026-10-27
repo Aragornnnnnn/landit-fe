@@ -3,7 +3,7 @@
 // 지난 스몰톡 한 건 — 그때 만든 표현을 다시 배우러 들어오는 자리.
 // 대화 직후 결과 화면과 같은 응답을 쓰지만 연출은 없다. 여기선 얼마나 배웠는지와 남은 표현이 중심이다
 import { EVENTS } from '@landit/analytics';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
@@ -33,6 +33,7 @@ export const SmallTalkHistoryDetail = ({
   sessionId: number;
 }) => {
   const locale = useLocale();
+  const t = useTranslations('smallTalk');
   const router = useRouter();
   const gate = usePaywallGate();
   const { session, error, isLoading, generationStuck, retry, regenerate } =
@@ -66,7 +67,9 @@ export const SmallTalkHistoryDetail = ({
           더 자연스러운 말이 있으면 그 개수를 뱃지로 달아 대화 보기에 볼 것이 있음을 알린다 */}
       <PageHeader
         title={
-          session ? toSessionTitle(session.title, session.completedAt) : ''
+          session
+            ? toSessionTitle(session.title, session.completedAt, t, locale)
+            : ''
         }
         onBack={() => router.replace(SMALLTALK_HISTORY_PATH)}
         trailing={

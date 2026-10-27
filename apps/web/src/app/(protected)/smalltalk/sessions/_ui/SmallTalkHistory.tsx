@@ -2,7 +2,7 @@
 
 // 지난 스몰톡 — 완료한 대화가 최신순으로 선다. 누르면 그때 만든 표현을 다시 본다.
 // 시나리오처럼 날짜로 찾아가는 화면이 아니다 — 스몰톡은 대화 자체가 기록의 단위다
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -14,6 +14,7 @@ import type { SmallTalkSessionSummary } from '@/features/small-talk/api/small-ta
 import { toSessionTitle } from '@/features/small-talk/lib/session-summary';
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkSessionsQuery } from '@/features/small-talk/model/useSmallTalkSessionsQuery';
+import { lineBreak } from '@/shared/i18n/rich';
 import { toDayLabel } from '@/shared/lib/day-label';
 import { SMALLTALK_PATH, smallTalkHistoryPath } from '@/shared/lib/routes';
 import { LoadMoreButton } from '@/shared/ui/LoadMoreButton';
@@ -21,6 +22,7 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 export const SmallTalkHistory = () => {
   const router = useRouter();
+  const t = useTranslations('smallTalk.history');
   const { sessions, error, retry, hasMore, loadingMore, loadMore } =
     useSmallTalkSessionsQuery();
 
@@ -30,7 +32,7 @@ export const SmallTalkHistory = () => {
       style={{ paddingTop: 'var(--safe-area-inset-top)' }}
     >
       <PageHeader
-        title="지난 스몰톡"
+        title={t('title')}
         onBack={() => router.replace(SMALLTALK_PATH)}
       />
 
@@ -38,20 +40,20 @@ export const SmallTalkHistory = () => {
         <RetryNotice
           fill
           screen="smalltalk"
-          message={error.message || '지난 대화를 불러오지 못했어요.'}
+          message={error.message || t('loadError')}
           onRetry={retry}
         />
       ) : sessions === null ? (
         // 조회 중 — 빈 화면만 두면 목록이 비었는지 아직인지 알 수 없다
-        <HistoryListSkeleton rows={4} label="지난 대화를 불러오는 중" />
+        <HistoryListSkeleton rows={4} label={t('loadingLabel')} />
       ) : sessions.length === 0 ? (
-        <p className="flex flex-1 items-center justify-center px-6 text-center text-sm break-keep whitespace-pre-line text-muted-foreground">
-          {'아직 나눈 대화가 없어요.\n오늘 한 대화부터 여기 쌓여요.'}
+        <p className="flex flex-1 items-center justify-center px-6 text-center text-sm break-keep text-muted-foreground">
+          {t.rich('emptyDescription', lineBreak)}
         </p>
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-[max(var(--safe-area-inset-bottom),24px)]">
           <p className="pt-2 pb-4 text-sm text-muted-foreground">
-            대화를 누르면 그때 만든 표현을 다시 볼 수 있어요.
+            {t('guideCaption')}
           </p>
           <ul className="flex flex-col gap-2">
             {sessions.map((session) => (
@@ -86,11 +88,12 @@ const SessionRow = ({
   onSelect: () => void;
 }) => {
   const locale = useLocale();
+  const t = useTranslations('smallTalk');
   return (
     <HistoryRow
       onClick={onSelect}
-      title={toSessionTitle(session.title, session.completedAt)}
-      meta={`${toDayLabel(session.completedAt)} · ${toSpeakingTimeLabel(session.userSpeakingDurationMs, locale)}`}
+      title={toSessionTitle(session.title, session.completedAt, t, locale)}
+      meta={`${toDayLabel(session.completedAt, locale)} · ${toSpeakingTimeLabel(session.userSpeakingDurationMs, locale)}`}
       trailing={
         <ExpressionProgress
           done={session.completedExpressionCount}
@@ -110,6 +113,7 @@ const ExpressionProgress = ({
   done: number;
   total: number;
 }) => {
+  const t = useTranslations('smallTalk.history');
   if (total === 0) return null;
 
   const tone =
@@ -121,7 +125,7 @@ const ExpressionProgress = ({
 
   return (
     <span className={`shrink-0 text-13 font-semibold ${tone}`}>
-      표현 {done}/{total}
+      {t('expressionProgressLabel', { done, total })}
     </span>
   );
 };

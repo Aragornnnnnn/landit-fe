@@ -5,6 +5,7 @@
 // 대화 중엔 교정을 보여주지 않는 대신, 여기서 내 말풍선 아래에 더 자연스러운 말과 배운 표현 재사용을 붙인다
 import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
@@ -52,6 +53,8 @@ export const SmallTalkTranscript = ({
   continueToLearning,
 }: SmallTalkTranscriptProps) => {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('smallTalk');
   // 교정은 대화가 끝난 뒤 따로 만들어진다 — 이 화면이 그걸 그리므로 준비될 때까지 기다린다
   const { session, error, isLoading, waitExpired } = useSmallTalkSessionQuery(
     sessionId,
@@ -87,7 +90,9 @@ export const SmallTalkTranscript = ({
     >
       <PageHeader
         title={
-          session ? toSessionTitle(session.title, session.completedAt) : ''
+          session
+            ? toSessionTitle(session.title, session.completedAt, t, locale)
+            : ''
         }
         onBack={() => router.replace(smallTalkHistoryPath(sessionId))}
       />
