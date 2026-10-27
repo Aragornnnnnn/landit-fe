@@ -12,5 +12,17 @@
     "freeIncludedLabel": "무료 포함",
     "freeExcludedLabel": "무료 미포함",
     "premiumIncludedLabel": "프리미엄 포함"
+  },
+  "purchase": {
+    "currencyMismatchToast": "지금은 결제할 수 없어요. 잠시 후 다시 시도해 주세요",
+    "passUnavailableToast": "진행 중이거나 확인 중인 이용권이 있어 지금은 결제할 수 없어요",
+    "passCheckFailedToast": "구매할 수 있는지 확인하지 못했어요. 잠시 후 다시 시도해 주세요",
+    "browserToast": "결제는 랜딧 앱에서 할 수 있어요",
+    "outdatedShellToast": "앱을 최신 버전으로 업데이트하면 결제할 수 있어요",
+    "noResponseToast": "결제 응답이 없어요. 잠시 후 다시 시도해 주세요",
+    "failedToast": "결제에 실패했어요. 잠시 후 다시 시도해 주세요",
+    "pendingToast": "결제가 확인되는 중이에요. 잠시 후 다시 열어 주세요",
+    "restoreFailedToast": "구매 복원에 실패했어요. 잠시 후 다시 시도해 주세요",
+    "restoreEmptyToast": "복원할 구매 내역이 없어요"
   }
 }

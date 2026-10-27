@@ -12,5 +12,17 @@
     "freeIncludedLabel": "無料で利用可",
     "freeExcludedLabel": "無料では利用不可",
     "premiumIncludedLabel": "プレミアムで利用可"
+  },
+  "purchase": {
+    "currencyMismatchToast": "ただいま購入できません。しばらくしてからもう一度お試しください",
+    "passUnavailableToast": "利用中または確認中のパスがあるため、今は購入できません",
+    "passCheckFailedToast": "購入できるか確認できませんでした。しばらくしてからもう一度お試しください",
+    "browserToast": "購入はLanditアプリからできます",
+    "outdatedShellToast": "アプリを最新バージョンにアップデートすると購入できます",
+    "noResponseToast": "購入の応答がありません。しばらくしてからもう一度お試しください",
+    "failedToast": "購入できませんでした。しばらくしてからもう一度お試しください",
+    "pendingToast": "購入を確認しています。しばらくしてからもう一度開いてください",
+    "restoreFailedToast": "購入を復元できませんでした。しばらくしてからもう一度お試しください",
+    "restoreEmptyToast": "復元できる購入履歴がありません"
   }
 }

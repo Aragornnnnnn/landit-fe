@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setTestLocale } from '@/shared/i18n/test-locale';
+
 import type { PlanPackages } from '../product/offering';
 import { usePurchase, type PassAvailability } from './usePurchase';
 
@@ -88,6 +90,18 @@ beforeEach(() => {
 });
 
 describe('usePurchase — 결제', () => {
+  it('일본어 화면에서는 안내도 일본어로 한다', async () => {
+    setTestLocale('ja');
+    mocks.getNativeContext.mockReturnValue(null);
+    const { result } = renderPurchase();
+
+    await act(() => result.current.purchase('yearly'));
+
+    expect(mocks.showToast).toHaveBeenCalledWith(
+      '購入はLanditアプリからできます',
+    );
+  });
+
   it('브라우저에서는 셸에 결제를 요청하지 않고 앱 안내만 한다', async () => {
     mocks.getNativeContext.mockReturnValue(null);
     const { result } = renderPurchase();

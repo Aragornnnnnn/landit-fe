@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { EVENTS, type PurchaseFailureReason } from '@landit/analytics';
 import type { SubscriptionPlan } from '@landit/bridge';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslations, type Messages } from 'next-intl';
 
 import { track } from '@/shared/analytics';
 import { getCurrentUserId } from '@/shared/auth/auth-store';
@@ -46,36 +47,39 @@ interface UsePurchaseOptions {
   displayCurrencies?: Partial<Record<SubscriptionPlan, string>>;
 }
 
+// 안내 토스트 문구 키 — subscription.purchase 아래
+type PurchaseToastKey = keyof Messages['subscription']['purchase'];
+
 // 화면 금액과 결제 통화가 다를 때의 계측 사유와 안내 문구 — 오퍼링이 덜 반영됐을 때라 잠시 뒤 다시 받으면 풀린다
 const CURRENCY_MISMATCH = {
   reason: 'currency_mismatch',
-  message: '지금은 결제할 수 없어요. 잠시 후 다시 시도해 주세요',
+  messageKey: 'currencyMismatchToast',
 } as const;
 
 // 이용권을 살 수 없을 때의 계측 사유와 안내 문구
 const PASS_BLOCKED: Record<
   Exclude<PassAvailability, 'available'>,
-  { reason: PurchaseFailureReason; message: string }
+  { reason: PurchaseFailureReason; messageKey: PurchaseToastKey }
 > = {
   unavailable: {
     reason: 'pass_unavailable',
-    message: '진행 중이거나 확인 중인 이용권이 있어 지금은 결제할 수 없어요',
+    messageKey: 'passUnavailableToast',
   },
   unknown: {
     reason: 'pass_check_failed',
-    message: '구매할 수 있는지 확인하지 못했어요. 잠시 후 다시 시도해 주세요',
+    messageKey: 'passCheckFailedToast',
   },
 };
 
 // 결제를 시킬 수 없는 환경별 계측 사유와 안내 문구
 const UNSUPPORTED: Record<
   Exclude<PurchaseSupport, 'ready'>,
-  { reason: PurchaseFailureReason; message: string }
+  { reason: PurchaseFailureReason; messageKey: PurchaseToastKey }
 > = {
-  browser: { reason: 'browser', message: '결제는 랜딧 앱에서 할 수 있어요' },
+  browser: { reason: 'browser', messageKey: 'browserToast' },
   'outdated-shell': {
     reason: 'outdated_shell',
-    message: '앱을 최신 버전으로 업데이트하면 결제할 수 있어요',
+    messageKey: 'outdatedShellToast',
   },
 };
 
@@ -99,6 +103,7 @@ export const usePurchase = ({
 }: UsePurchaseOptions) => {
   // 결제 이벤트마다 같은 꼬리를 붙인다 — 정가 결제와 할인 결제를 나눠 보려면 전 구간에 있어야 한다
   const promoTag = promo ? { promo: true } : {};
+  const t = useTranslations('subscription.purchase');
   const [busy, setBusy] = useState(false);
   const queryClient = useQueryClient();
   const userId = useCurrentUserId();
@@ -149,7 +154,7 @@ export const usePurchase = ({
         reason: unsupported.reason,
         ...promoTag,
       });
-      showToast(unsupported.message);
+      showToast(t(unsupported.messageKey));
       return;
     }
     const pkg = packages[plan];
@@ -160,7 +165,7 @@ export const usePurchase = ({
         reason: CURRENCY_MISMATCH.reason,
         ...promoTag,
       });
-      showToast(CURRENCY_MISMATCH.message);
+      showToast(t(CURRENCY_MISMATCH.messageKey));
       reportWarning('화면 금액과 결제 패키지의 통화가 다르다', {
         plan,
         shownCurrency,
@@ -186,7 +191,7 @@ export const usePurchase = ({
             reason: blocked.reason,
             ...promoTag,
           });
-          showToast(blocked.message);
+          showToast(t(blocked.messageKey));
           return;
         }
       }
@@ -206,7 +211,7 @@ export const usePurchase = ({
           reason: 'no_response',
           ...promoTag,
         });
-        showToast('결제 응답이 없어요. 잠시 후 다시 시도해 주세요');
+        showToast(t('noResponseToast'));
         return;
       }
       if (result.status === 'cancelled') {
@@ -220,9 +225,8 @@ export const usePurchase = ({
           message: result.message,
           ...promoTag,
         });
-        showToast(
-          result.message ?? '결제에 실패했어요. 잠시 후 다시 시도해 주세요',
-        );
+        // 셸이 준 사유가 있으면 그대로 — 셸 문구의 언어는 셸이 정한다
+        showToast(result.message ?? t('failedToast'));
         return;
       }
 
@@ -242,7 +246,7 @@ export const usePurchase = ({
       if (signal?.aborted) return;
       // 스토어 결제는 끝났다 — 웹훅이 늦어도 사용자를 페이월에 붙잡아 두지 않는다
       if (!premiumConfirmed) {
-        showToast('결제가 확인되는 중이에요. 잠시 후 다시 열어 주세요');
+        showToast(t('pendingToast'));
       }
       onUnlocked('purchase');
     } finally {
@@ -255,7 +259,7 @@ export const usePurchase = ({
     const unsupported = findUnsupported();
     if (unsupported) {
       track(EVENTS.PURCHASE_FAILED, { reason: unsupported.reason });
-      showToast(unsupported.message);
+      showToast(t(unsupported.messageKey));
       return;
     }
 
@@ -267,10 +271,7 @@ export const usePurchase = ({
 
       if (!result || result.status === 'error') {
         track(EVENTS.PURCHASE_RESTORED, { succeeded: false });
-        showToast(
-          result?.message ??
-            '구매 복원에 실패했어요. 잠시 후 다시 시도해 주세요',
-        );
+        showToast(result?.message ?? t('restoreFailedToast'));
         return;
       }
 
@@ -278,7 +279,7 @@ export const usePurchase = ({
       track(EVENTS.PURCHASE_RESTORED, { succeeded: premiumConfirmed });
       if (signal?.aborted) return;
       if (premiumConfirmed) onUnlocked('restore');
-      else showToast('복원할 구매 내역이 없어요');
+      else showToast(t('restoreEmptyToast'));
     } finally {
       setBusy(false);
     }
