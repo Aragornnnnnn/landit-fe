@@ -20,6 +20,14 @@
     "smallTalkPartnerTitle": "相手もアクセントも選べる",
     "smallTalkFreeTitle": "テーマなしで自由に会話"
   },
+  "stepPaywall": {
+    "nextButton": "次へ"
+  },
+  "checkoutStep": {
+    "backLabel": "戻る",
+    "termsLink": "利用規約",
+    "privacyLink": "プライバシーポリシー"
+  },
   "feedbackDemo": {
     "detailTitle": "詳しい分析",
     "goodUserBody": "Hi Marco! I'm Yuki. I'm from Japan and I study computer science.",

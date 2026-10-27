@@ -12,7 +12,7 @@ import {
 import { track } from '@/shared/analytics';
 
 /**
- * @param startStep 처음 보여 준 단계 — 환급 페이월은 혜택이나 결제 금액 안내, 일반 페이월은 한 장
+ * @param startStep 처음 보여 준 단계 — 단계형 페이월(환급·일본어)은 혜택이나 결제 금액 안내, 한 장 페이월은 single
  */
 export const usePaywallExit = ({
   variant,

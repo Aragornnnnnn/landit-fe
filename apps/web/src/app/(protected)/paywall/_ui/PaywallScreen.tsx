@@ -1,7 +1,7 @@
 'use client';
 
 // 프리미엄 페이월 화면 — 길게 내려 보는 한 장(머리 → 프리미엄 시리즈 → 그림 학습 → 리뷰 → 비교표 → 플랜)과 아래 고정 CTA.
-// 환급 챌린지 스위치가 켜지면 혜택 화면 → 결제 금액 안내 두 단계(RewardPaywall)로 바뀐다. 결제·복원은 usePurchase, 닫기는 usePaywallDismiss가 지휘하고,
+// 환급 챌린지 스위치가 켜지면 혜택 화면 → 결제 금액 안내 두 단계(StepPaywall, 100일 이용권)로 바뀐다. 일본어 화면도 같은 두 단계로 월간·연간 구독을 판다. 결제·복원은 usePurchase, 닫기는 usePaywallDismiss가 지휘하고,
 // 여기서는 어느 플랜을 골랐는지와 버튼 상태만 안다
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -10,7 +10,7 @@ import {
   type SubscriptionPlan,
 } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { refreshRewardAfterPurchase } from '@/features/reward/model/refresh-reward';
@@ -30,6 +30,7 @@ import {
   type UnlockReason,
 } from '@/features/subscription/model/purchase/usePurchase';
 import { sendAdEvent, track } from '@/shared/analytics';
+import { sellsKoreaOnlyOffers } from '@/shared/i18n/locale';
 import { homePath } from '@/shared/lib/last-tab';
 import { premiumOnboardingPath, type PaywallStep } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
@@ -51,7 +52,7 @@ import { PaywallHero } from './PaywallHero';
 import { PlanSection } from './PlanSection';
 import { PremiumOnlySection } from './PremiumOnlySection';
 import { ReviewSection } from './ReviewSection';
-import { RewardPaywall } from './RewardPaywall';
+import { StepPaywall } from './StepPaywall';
 
 interface PaywallScreenProps {
   /** 결제·복원이 끝난 뒤 돌아갈 내부 경로. 학습 진입에서 막혀 왔을 때만 있고, 없으면 홈으로 간다 */
@@ -73,8 +74,11 @@ export const PaywallScreen = ({
   const router = useRouter();
   const t = useTranslations('paywall.paywallCheckout');
   const tCommon = useTranslations('common');
+  const locale = useLocale();
   const rewardLive = useRewardChallengeLive();
   const rewardChallenge = forcedRewardChallenge ?? rewardLive;
+  // 환급이 없는 일본어 화면도 단계형으로 보여 준다 — 결제 단계에서 이용권 대신 월간·연간을 고른다
+  const stepped = rewardChallenge || !sellsKoreaOnlyOffers(locale);
   // 월간·연간 가운데 고른다(처음엔 연간). 환급 챌린지는 100일 이용권 하나라 고를 것이 없다
   const [selectedId, setSelectedId] =
     useState<SubscriptionPlan>(DEFAULT_PLAN_ID);
@@ -105,11 +109,11 @@ export const PaywallScreen = ({
   }, []);
 
   const goHome = () => router.replace(homePath());
-  // 결제·복원 없이 떠나는 순간 — 환급 페이월은 단계를 RewardPaywall이 알려 준다
+  // 결제·복원 없이 떠나는 순간 — 단계형 페이월은 단계를 StepPaywall이 알려 준다
   const exit = usePaywallExit({
     variant: rewardChallenge ? 'reward' : 'regular',
     source,
-    startStep: rewardChallenge ? (startStep ?? 'benefits') : 'single',
+    startStep: stepped ? (startStep ?? 'benefits') : 'single',
   });
   const dismiss = usePaywallDismiss(offering);
   // 닫으면 서버에 알린 뒤 홈으로 — 할인을 받았으면 시트는 홈에서 뜬다.
@@ -179,8 +183,8 @@ export const PaywallScreen = ({
   // 환급 챌린지는 혜택 화면 → 결제 금액 안내 두 단계다. 고를 플랜이 없어 이용권으로 바로 결제한다
   if (rewardChallenge) {
     return (
-      <RewardPaywall
-        plan={rewardPlan}
+      <StepPaywall
+        offer={{ kind: 'pass', plan: rewardPlan }}
         startStep={startStep}
         busy={busy}
         source={source}
@@ -191,6 +195,31 @@ export const PaywallScreen = ({
         onPurchase={() => {
           track(EVENTS.PURCHASE_STARTED, { plan: REWARD_PLAN_ID });
           void purchase(REWARD_PLAN_ID);
+        }}
+      />
+    );
+  }
+
+  // 일본어 화면 — 같은 두 단계에 환급만 빼고, 결제 단계에서 월간·연간을 고른다. 결제 안내는 고른 플랜 것이다
+  if (stepped) {
+    return (
+      <StepPaywall
+        offer={{
+          kind: 'subscription',
+          plans,
+          selectedId: regularPlan.id,
+          onSelect: selectPlan,
+        }}
+        startStep={startStep}
+        busy={busy}
+        source={source}
+        onStepChange={exit.noteStep}
+        onScroll={exit.noteScroll}
+        onClose={() => void close()}
+        onRestore={startRestore}
+        onPurchase={() => {
+          track(EVENTS.PURCHASE_STARTED, { plan: regularPlan.id });
+          void purchase(regularPlan.id);
         }}
       />
     );

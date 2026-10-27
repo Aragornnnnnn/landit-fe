@@ -217,9 +217,9 @@ export const EVENTS = {
   PAYWALL_PLAN_SELECTED: 'Paywall Plan Selected',
   PURCHASE_STARTED: 'Purchase Started',
   PURCHASE_RESTORE_TAPPED: 'Purchase Restore Tapped',
-  // 환급 페이월 2단계(결제 금액 안내)가 떴다 — 혜택 화면 → 금액 안내 → 결제 시작의 단계별 이탈을 본다
+  // 단계형 페이월(환급·일본어) 2단계(결제 금액 안내)가 떴다 — 혜택 화면 → 금액 안내 → 결제 시작의 단계별 이탈을 본다
   PAYWALL_CHECKOUT_VIEWED: 'Paywall Checkout Viewed',
-  // 환급 페이월 1단계(혜택 화면)가 떴다 — 처음 열렸을 때와 결제 금액 안내에서 되돌아왔을 때
+  // 단계형 페이월(환급·일본어) 1단계(혜택 화면)가 떴다 — 처음 열렸을 때와 결제 금액 안내에서 되돌아왔을 때
   PAYWALL_BENEFITS_VIEWED: 'Paywall Benefits Viewed',
   // 결제·복원 없이 페이월을 떠났다 — 어느 단계에서, 닫기로인지 다른 길로인지, 얼마나 머물고 얼마나 내려 봤는지
   PAYWALL_EXITED: 'Paywall Exited',
@@ -320,11 +320,11 @@ export type PaywallEntrySource = 'me' | 'header' | 'reward';
 // 페이월에 어디서 왔는가 — 게이트에 막혀 왔으면 막힌 자리, 스스로 들어왔으면 마이페이지.
 // 노출(Page Viewed)에 실어 진입 경로별 전환율을 가른다
 export type PaywallSource = PaywallGateSource | PaywallEntrySource;
-// 페이월 단계 — 환급 페이월은 혜택(benefits)·결제 금액 안내(checkout) 두 단계, 일반 페이월은 한 장(single)
+// 페이월 단계 — 단계형 페이월(환급 챌린지·일본어 화면)은 혜택(benefits)·결제 금액 안내(checkout) 두 단계, 한 장 페이월은 single
 export type PaywallStepName = 'benefits' | 'checkout' | 'single';
 // 페이월을 어떻게 떠났나 — close는 닫기 버튼, navigate는 뒤로가기처럼 다른 길로 화면을 벗어남
 export type PaywallExitTrigger = 'close' | 'navigate';
-// 어느 페이월이었나 — 환급 챌린지 두 단계(reward) / 월간·연간 한 장(regular)
+// 어느 페이월이었나 — 환급 챌린지 이용권(reward) / 월간·연간 구독(regular, 한국어는 한 장·일본어는 두 단계)
 export type PaywallVariant = 'reward' | 'regular';
 // 구독 관리에서 스토어로 나간 이유 — 해지 / 해지 취소. 둘 다 같은 스토어 화면이 열리지만 의도를 남긴다
 export type StoreSubscriptionAction = 'cancel' | 'resubscribe';

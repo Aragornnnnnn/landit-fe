@@ -20,6 +20,14 @@
     "smallTalkPartnerTitle": "원하는 친구와 억양까지 골라서",
     "smallTalkFreeTitle": "주제 없이 자유롭게 대화해요"
   },
+  "stepPaywall": {
+    "nextButton": "다음"
+  },
+  "checkoutStep": {
+    "backLabel": "뒤로",
+    "termsLink": "이용약관",
+    "privacyLink": "개인정보 처리방침"
+  },
   "feedbackDemo": {
     "detailTitle": "상세 분석",
     "goodUserBody": "Hi Marco! I'm Junseo. I'm from Korea and I study computer science.",
