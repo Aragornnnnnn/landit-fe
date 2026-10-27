@@ -3,6 +3,7 @@
 'use client';
 
 import { motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import {
   ArrowUpIcon,
@@ -45,6 +46,7 @@ export const MicControl = ({
   onResend,
   review,
 }: MicControlProps) => {
+  const t = useTranslations('conversation.micControl');
   const listening = phase === 'USER_SPEAKING';
   // 발화·속마음 중엔 누를 수 없게 잠근다 — 자리는 유지해 레이아웃이 튀지 않게
   const disabled = phase !== 'USER_READY' && !listening;
@@ -66,7 +68,7 @@ export const MicControl = ({
           <div className="relative flex flex-col items-center">
             <button
               onClick={review.onRetry}
-              aria-label="다시 말하기"
+              aria-label={t('retryButton')}
               className="flex size-16 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-95"
             >
               <MicIcon size={26} />
@@ -75,13 +77,13 @@ export const MicControl = ({
               aria-hidden
               className="absolute top-full mt-1 text-xs leading-none font-semibold whitespace-nowrap text-muted-foreground"
             >
-              다시 말하기
+              {t('retryButton')}
             </p>
           </div>
           <div className="relative flex flex-col items-center">
             <button
               onClick={review.onSend}
-              aria-label="보내기"
+              aria-label={t('sendButton')}
               className="flex size-20 items-center justify-center rounded-full bg-primary text-white active:scale-95"
             >
               <ArrowUpIcon size={32} strokeWidth={2.5} />
@@ -90,7 +92,7 @@ export const MicControl = ({
               aria-hidden
               className="absolute top-full mt-1 text-xs leading-none font-semibold whitespace-nowrap text-muted-foreground"
             >
-              보내기
+              {t('sendButton')}
             </p>
           </div>
         </motion.div>
@@ -105,14 +107,14 @@ export const MicControl = ({
           <div className="flex items-center gap-8">
             <button
               onClick={onCancel}
-              aria-label="답변 중단"
+              aria-label={t('cancelButton')}
               className="flex size-16 items-center justify-center rounded-full bg-destructive/10 text-destructive active:scale-95"
             >
               <CloseIcon size={26} strokeWidth={2.5} />
             </button>
             <button
               onClick={onDone}
-              aria-label="답변 완료"
+              aria-label={t('doneButton')}
               className="relative flex size-20 items-center justify-center rounded-full bg-primary text-white active:scale-95"
             >
               {/* 듣는 중임을 알리는 바깥 링 펄스 — 남은 시간 링이 있으면 그쪽이 같은 말을 하므로 접는다 */}
@@ -170,13 +172,13 @@ export const MicControl = ({
           <button
             onClick={onResend}
             disabled={disabled}
-            aria-label="다시 보내기"
+            aria-label={t('resendButton')}
             className="flex size-20 items-center justify-center rounded-full bg-primary text-white transition-opacity active:scale-95 disabled:opacity-30"
           >
             <ResendIcon size={34} />
           </button>
           <p className="absolute top-full mt-1 text-xs font-semibold whitespace-nowrap text-muted-foreground">
-            눌러서 다시 보내기
+            {t('resendHint')}
           </p>
         </motion.div>
       ) : (
@@ -192,7 +194,7 @@ export const MicControl = ({
             <button
               onClick={onKeyboard}
               disabled={disabled}
-              aria-label="키보드로 입력"
+              aria-label={t('keyboardButton')}
               className="absolute top-1.5 left-[calc(50%+3rem)] flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground transition-opacity active:scale-95 disabled:opacity-30"
             >
               <KeyboardIcon size={22} />
@@ -201,7 +203,7 @@ export const MicControl = ({
           <button
             onClick={onPress}
             disabled={disabled}
-            aria-label="말하기"
+            aria-label={t('speakButton')}
             className="flex size-20 items-center justify-center rounded-full bg-primary text-white transition-opacity active:scale-95 disabled:opacity-30"
           >
             <MicIcon size={34} />

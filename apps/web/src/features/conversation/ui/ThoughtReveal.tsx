@@ -2,6 +2,7 @@
 'use client';
 
 import { motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import type { FloatingThought } from '../model/thought';
 
@@ -13,6 +14,7 @@ export const ThoughtReveal = ({
 }: {
   thought: FloatingThought | null;
 }) => {
+  const t = useTranslations('conversation.thoughtReveal');
   const hasThought = Boolean(thought);
   const landyType = (thought?.type ?? 'NORMAL').toLowerCase();
   // 생성 중 = 구슬 든 랜디, 도착 = 감정 표정 랜디
@@ -43,7 +45,7 @@ export const ThoughtReveal = ({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={characterSrc}
-            alt="랜디"
+            alt={t('mascotLabel')}
             className="object-contain"
             style={{ width: 180, height: 180 }}
           />
@@ -70,7 +72,7 @@ export const ThoughtReveal = ({
           <>
             {/* 랜디가 대신 전해주는 프레임 — 속마음 본문은 상대의 목소리라 따옴표로 감싼다 */}
             <p className="mb-1.5 text-center text-xs font-bold text-primary">
-              대신 알려주는 속마음
+              {t('frameCaption')}
             </p>
             <p className="text-center text-base leading-relaxed font-medium text-foreground">
               {`“${thought.text}”`.split('').map((char, i) => (
@@ -89,7 +91,7 @@ export const ThoughtReveal = ({
           // 대기 — 상대가 마음을 정리하는 중
           <div
             className="flex items-center gap-2 px-2 py-1.5"
-            aria-label="상대가 생각하고 있어요"
+            aria-label={t('waitingLabel')}
           >
             {[0, 1, 2].map((i) => (
               <motion.span

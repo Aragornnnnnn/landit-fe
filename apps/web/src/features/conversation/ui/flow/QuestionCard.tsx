@@ -8,6 +8,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import { getSpeechRate } from '@/shared/lib/speech-rate';
 import { EyeIcon, SpeakerIcon, TranslateIcon } from '@/shared/ui/Icons';
@@ -80,6 +81,7 @@ export const QuestionCard = ({
   textHidden = false,
   onTextToggled,
 }: QuestionCardProps) => {
+  const t = useTranslations('conversation.questionCard');
   // 진행값이 어느 질문 것인지 함께 저장한다 — 질문이 바뀐 첫 프레임에 이전 값이 새어 나오지 않도록
   const [typed, setTyped] = useState({ question, count: 0 });
   const count = typed.question === question ? typed.count : 0;
@@ -229,7 +231,7 @@ export const QuestionCard = ({
       {/* 카드 맨 위에 붙박이 — 긴 질문이 안쪽에서 스크롤돼도 머리말은 늘 보인다 (아래 버튼 줄과 같은 규칙) */}
       {lastQuestion && (
         <p className="mb-1.5 flex-none text-xs font-bold text-primary">
-          마지막 질문이에요
+          {t('lastQuestionBadge')}
         </p>
       )}
       <div
@@ -247,7 +249,7 @@ export const QuestionCard = ({
           // 선발화 안내 — 상대 발화처럼 크게 꽂지 않고, 라벨 + 차분한 크기의 상황 설명으로 정리한다
           <>
             <p className="text-sm font-bold text-primary">
-              내가 먼저 말해보는 상황
+              {t('instructionCaption')}
             </p>
             <p className="mt-2 text-17 leading-relaxed font-semibold text-foreground">
               {question}
@@ -302,7 +304,7 @@ export const QuestionCard = ({
             <CardIconButton
               on={replay.playing}
               disabled={!replay.enabled}
-              label={replay.playing ? '다시 듣기 멈추기' : '다시 듣기'}
+              label={replay.playing ? t('stopReplayButton') : t('replayButton')}
               onClick={replay.toggle}
             >
               <SpeakerIcon size={14} />
@@ -311,7 +313,11 @@ export const QuestionCard = ({
           {done && translation && (
             <CardIconButton
               on={translationOpen}
-              label={translationOpen ? '해석 접기' : '해석 보기'}
+              label={
+                translationOpen
+                  ? t('hideTranslationButton')
+                  : t('showTranslationButton')
+              }
               onClick={toggleTranslation}
             >
               <TranslateIcon size={14} />
@@ -320,7 +326,7 @@ export const QuestionCard = ({
           {/* 이 카드의 글자 보기 스위치 — 글자가 보이면 칠한다. 아이콘은 하나로 둔다 */}
           <CardIconButton
             on={!blurred}
-            label={blurred ? '영어 문장 보기' : '영어 문장 가리기'}
+            label={blurred ? t('showTextButton') : t('hideTextButton')}
             onClick={toggleText}
           >
             <EyeIcon size={14} />
