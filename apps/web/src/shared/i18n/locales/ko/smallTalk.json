@@ -57,5 +57,17 @@
   },
   "historyDetailSkeleton": {
     "loadingLabel": "표현을 불러오는 중"
+  },
+  "transcript": {
+    "loadError": "대화를 불러오지 못했어요.",
+    "nextCorrectionButton": "다음 자연스러운 말",
+    "learnButton": "표현 배우러 가기",
+    "preparingCaption": "더 자연스러운 말을 찾는 중…",
+    "reusedExpressionBadge": "배운 표현 「{expression}」을 썼어요",
+    "goodJobBadge": "잘했어요!",
+    "correctionTitle": "이렇게 말하면 더 자연스러워요"
+  },
+  "transcriptSkeleton": {
+    "loadingLabel": "대화를 불러오는 중"
   }
 }

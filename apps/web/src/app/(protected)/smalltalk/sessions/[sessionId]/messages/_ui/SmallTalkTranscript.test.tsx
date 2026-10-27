@@ -9,6 +9,7 @@ import type {
   SmallTalkSessionDetailResponse,
 } from '@/features/small-talk/api/small-talk';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
+import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { SmallTalkTranscript } from './SmallTalkTranscript';
 
@@ -205,6 +206,15 @@ describe('SmallTalkTranscript 교정 카드', () => {
     ]);
 
     expect(screen.getByText('잘했어요!')).toBeInTheDocument();
+  });
+
+  it('일본어 화면은 잘했어요를 일본어로 보여 준다', () => {
+    setTestLocale('ja');
+    renderTranscript([
+      messageOf({ correctionStatus: 'COMPLETED', correction: null }),
+    ]);
+
+    expect(screen.getByText('よくできました！')).toBeInTheDocument();
   });
 
   it.each([
