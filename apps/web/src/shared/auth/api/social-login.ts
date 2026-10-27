@@ -1,6 +1,10 @@
 // 소셜 로그인 idToken을 백엔드에 넘겨 자체 access/refresh 토큰을 발급받는다
 import { parseApiResponse } from '@/shared/api/parse';
-import { acceptLanguageOf } from '@/shared/i18n/locale';
+import {
+  acceptLanguageOf,
+  localeFromDocument,
+  signupLanguages,
+} from '@/shared/i18n/locale';
 
 export const SOCIAL_LOGIN_PATH = '/api/v1/auth/social-login';
 
@@ -32,8 +36,10 @@ export async function socialLogin(
   // 애플 최초 로그인 1회에만 전달된다 — 애플은 이름을 id_token에 넣지 않아 이 경로가 유일하다
   nickname?: string,
 ): Promise<SocialLoginResponse> {
-  // 신규 가입이면 백엔드가 이 목록에서 서비스 언어를 고른다 — 화면의 임시 언어(html lang)가 아니라 기기 선호 목록 전체를 보낸다
-  const acceptLanguage = acceptLanguageOf(navigator.languages ?? []);
+  // 신규 가입이면 백엔드가 이 목록에서 서비스 언어를 고른다 — 기기 선호 목록을 보내되, 한국어·일본어가 없으면 보던 화면 언어를 앞에 둔다
+  const acceptLanguage = acceptLanguageOf(
+    signupLanguages(navigator.languages ?? [], localeFromDocument()),
+  );
   const response = await fetch(SOCIAL_LOGIN_PATH, {
     method: 'POST',
     headers: {
