@@ -45,17 +45,14 @@ import {
 import { MenuGroup, MenuLink, MenuSection } from '../../_ui/Menu';
 
 // 맨 아래 스토어 행 — 상태마다 지금 할 수 있는 일 하나. 해지 예약이면 되돌리는 쪽이다
-const STORE_ROW: Record<
-  PaidSubscriptionSummary['kind'],
-  {
-    action: StoreSubscriptionAction;
-    titleKey: 'cancelSubscriptionLink' | 'cancelTrialLink' | 'resubscribeLink';
-  }
-> = {
+const STORE_ROW = {
   active: { action: 'cancel', titleKey: 'cancelSubscriptionLink' },
   trial: { action: 'cancel', titleKey: 'cancelTrialLink' },
   canceled: { action: 'resubscribe', titleKey: 'resubscribeLink' },
-};
+} as const satisfies Record<
+  PaidSubscriptionSummary['kind'],
+  { action: StoreSubscriptionAction; titleKey: string }
+>;
 
 // 스토어에서 손댈 구독이 있는 상태만 — 해지할 구독(판정은 해지 사유 화면과 공유)과 해지 예약.
 // 갱신이 없는 기간(대시보드 프로모션·선결제)은 스토어에 구독이 없어 보내면 빈 화면이 뜬다

@@ -2,6 +2,14 @@
 import type { Locale } from '@/shared/i18n/locale';
 import { readSeoulDateParts } from '@/shared/lib/seoul-date';
 
+type DateParts = NonNullable<ReturnType<typeof readSeoulDateParts>>;
+
+// 언어마다 한 줄 — 언어가 늘면 여기를 채우지 않고는 타입 검사를 못 지나간다
+const DATE_FORMAT: Record<Locale, (parts: DateParts) => string> = {
+  ko: ({ year, month, day }) => `${year}년 ${month}월 ${day}일`,
+  ja: ({ year, month, day }) => `${year}年${month}月${day}日`,
+};
+
 export const formatSubscriptionDate = (
   dateTime: string,
   locale: Locale,
@@ -11,8 +19,5 @@ export const formatSubscriptionDate = (
     month: 'numeric',
     day: 'numeric',
   });
-  if (!parts) return null;
-  return locale === 'ja'
-    ? `${parts.year}年${parts.month}月${parts.day}日`
-    : `${parts.year}년 ${parts.month}월 ${parts.day}일`;
+  return parts ? DATE_FORMAT[locale](parts) : null;
 };
