@@ -6,6 +6,9 @@ import { toSocialLoginFailure } from './failure';
 jest.mock('../../../monitoring/report', () => ({ reportError: jest.fn() }));
 const shell = { locale: 'ko' as 'ko' | 'ja' };
 jest.mock('@/i18n/shell-locale', () => ({ shellLocale: () => shell.locale }));
+afterEach(() => {
+  shell.locale = 'ko';
+});
 
 describe('toSocialLoginFailure', () => {
   it('사용자가 취소한 실패는 cancelled로 돌려주고 보고하지 않는다', () => {
@@ -50,7 +53,6 @@ describe('toSocialLoginFailure', () => {
 
     const failure = toSocialLoginFailure(new Error('SDK crashed'), 'google');
 
-    expect(failure.message).toBe('ログイン中に問題が起きました。');
-    shell.locale = 'ko';
+    expect(failure.message).toBe('ログイン中に問題が発生しました。');
   });
 });

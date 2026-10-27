@@ -26,6 +26,9 @@ jest.mock('../../modules/alarm-scheduler', () => ({
 jest.mock('@/monitoring/report', () => ({ reportWarning: jest.fn() }));
 const shell = { locale: 'ko' as 'ko' | 'ja' };
 jest.mock('@/i18n/shell-locale', () => ({ shellLocale: () => shell.locale }));
+afterEach(() => {
+  shell.locale = 'ko';
+});
 
 const scheduler = jest.mocked(AlarmScheduler);
 
@@ -240,16 +243,15 @@ describe('setAlarm', () => {
     await setAlarm('scenario', everyDayAt(7));
 
     expect(scheduled()).toMatchObject({
-      ios: { secondaryButtonTitle: '会話しに行く', stopButtonTitle: '止める' },
+      ios: { secondaryButtonTitle: '会話を始める', stopButtonTitle: '停止' },
       android: {
-        secondaryButtonTitle: '会話しに行く',
-        stopButtonTitle: '止める',
-        alertBody: '今すぐ会話しに行きましょう',
+        secondaryButtonTitle: '会話を始める',
+        stopButtonTitle: '停止',
+        alertBody: '今すぐ会話を始めましょう',
         metadata: { locale: 'ja' },
       },
     });
     expect(scheduled().ios?.metadata).not.toHaveProperty('locale');
-    shell.locale = 'ko';
   });
 
   it('null이면 지우기만 한다', async () => {

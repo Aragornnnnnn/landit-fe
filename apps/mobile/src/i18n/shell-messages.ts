@@ -1,4 +1,4 @@
-// 셸이 직접 그리는 문구 — 오류 화면·알람 버튼·위젯 요일·결제·로그인 오류. 웹과 같은 용어를 쓴다(docs/i18n-glossary.md)
+// 셸이 직접 그리는 문구 — 오류 화면·알람 버튼·위젯 요일·결제·로그인 오류. 일본어는 웹 일본어와 같은 용어를 쓴다
 import type { ShellLocale } from './shell-locale';
 
 const ko = {
@@ -45,13 +45,13 @@ const ja: ShellMessages = {
     retryButton: 'もう一度試す',
   },
   alarm: {
-    goButton: '会話しに行く',
-    stopButton: '止める',
-    alertBody: '今すぐ会話しに行きましょう',
+    goButton: '会話を始める',
+    stopButton: '停止',
+    alertBody: '今すぐ会話を始めましょう',
   },
-  notificationChannelName: '基本の通知',
+  notificationChannelName: 'お知らせ',
   login: {
-    failed: 'ログイン中に問題が起きました。',
+    failed: 'ログイン中に問題が発生しました。',
     cancelled: 'ログインがキャンセルされました。',
     authCodeMissing: '認証コードを受け取れませんでした。',
     idTokenMissing: 'id_tokenを受け取れませんでした。',
@@ -60,13 +60,13 @@ const ja: ShellMessages = {
     notConfigured: '決済を使えないビルドです。',
     network: 'ネットワーク接続を確認してください',
     alreadySubscribed:
-      'すでにサブスクリプション中です。購入を復元を押してください',
+      'サブスクリプション中です。「購入を復元」をタップしてください',
     otherAccount: 'サブスクリプション中の別アカウントでログインしてください',
     notAvailable: '現在購入できない商品です',
     packageMissing: '現在購入できない商品です。',
-    notAllowed: 'この端末では決済できません',
+    notAllowed: 'この端末では購入できません',
     pending: '承認待ちです。承認されるとすぐ使えます',
-    failed: '問題が起きました。しばらくしてからもう一度お試しください',
+    failed: '問題が発生しました。しばらくしてからもう一度お試しください',
   },
   weekdays: ['日', '月', '火', '水', '木', '金', '土'],
 };

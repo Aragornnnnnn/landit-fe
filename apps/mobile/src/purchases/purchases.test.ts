@@ -48,6 +48,9 @@ jest.mock('../monitoring/report', () => ({
 }));
 const shell = { locale: 'ko' as 'ko' | 'ja' };
 jest.mock('@/i18n/shell-locale', () => ({ shellLocale: () => shell.locale }));
+afterEach(() => {
+  shell.locale = 'ko';
+});
 
 const mockPurchases = Purchases as jest.Mocked<typeof Purchases>;
 
@@ -380,9 +383,8 @@ describe('purchasePackage', () => {
     const result = await purchasePackage('$rc_annual');
 
     expect(result.message).toBe(
-      'すでにサブスクリプション中です。購入を復元を押してください',
+      'サブスクリプション中です。「購入を復元」をタップしてください',
     );
-    shell.locale = 'ko';
   });
 
   it('오퍼링에 없는 패키지 id면 스토어를 부르지 않고 실패로 끝내며 설정 결함으로 보고한다', async () => {

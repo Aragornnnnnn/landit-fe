@@ -1,4 +1,4 @@
-// 셸 문구 묶음 — 일본어가 한국어와 같은 키를 모두 갖고, 비어 있지 않은지 검증한다
+// 셸 문구 묶음 — 일본어가 한국어와 같은 키를 모두 갖고, 빈 문구가 없는지 검증한다
 import { SHELL_MESSAGES } from './shell-messages';
 
 const keysOf = (value: object): string[] =>
@@ -13,6 +13,19 @@ describe('SHELL_MESSAGES', () => {
     expect(keysOf(SHELL_MESSAGES.ja).sort()).toEqual(
       keysOf(SHELL_MESSAGES.ko).sort(),
     );
+  });
+
+  it('비어 있는 문구가 없다 — 타입은 키만 맞출 뿐 빈 문자열을 막지 못한다', () => {
+    const leaves = (value: unknown): unknown[] =>
+      value && typeof value === 'object'
+        ? Object.values(value).flatMap(leaves)
+        : [value];
+
+    for (const locale of ['ko', 'ja'] as const) {
+      expect(leaves(SHELL_MESSAGES[locale]).every((text) => text !== '')).toBe(
+        true,
+      );
+    }
   });
 
   it('요일 이름은 일요일부터 7개다', () => {
