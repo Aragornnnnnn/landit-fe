@@ -16,11 +16,11 @@ import {
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
 import type { PaywallPromo } from '../api/subscription';
-import { PROMO_ENABLED } from '../model/exit-promo/promo-flag';
 import {
   clearPromoHandoff,
   useHandedPromo,
 } from '../model/exit-promo/promo-handoff';
+import { usePromoLive } from '../model/exit-promo/usePromoLive';
 import {
   resolvePromoDisplay,
   usePromoOffer,
@@ -64,9 +64,8 @@ export const PremiumHeaderEntry = ({
   const { subscription, isPending, isError } = useSubscriptionQuery({
     enabled: paymentLive,
   });
-  const live = usePromoOffer(
-    PROMO_ENABLED ? (subscription?.promo ?? null) : null,
-  );
+  const promoLive = usePromoLive();
+  const live = usePromoOffer(promoLive ? (subscription?.promo ?? null) : null);
   // 배지를 눌러 연 할인과 페이월에서 넘어온 할인. 둘 다 열 때의 값을 복사해 들고 있는다 —
   // 구독 쿼리가 다시 조회돼 promo가 비어도 열려 있던 시트가 닫히면 안 된다
   const [tappedPromo, setTappedPromo] = useState<PaywallPromo | null>(null);

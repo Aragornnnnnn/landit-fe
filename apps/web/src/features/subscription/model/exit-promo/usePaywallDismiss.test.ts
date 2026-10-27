@@ -3,6 +3,8 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setTestLocale } from '@/shared/i18n/test-locale';
+
 import type { Offering } from '../product/offering';
 import { usePaywallDismiss } from './usePaywallDismiss';
 
@@ -62,6 +64,15 @@ describe('usePaywallDismiss', () => {
 
     expect(mocks.setQueryData).toHaveBeenCalled();
     expect(mocks.handOffPromo).toHaveBeenCalledWith(promo);
+  });
+
+  it('일본어 화면에서는 서버에 알리지 않는다 — 할인은 한국에서만 판다', async () => {
+    setTestLocale('ja');
+    const { result } = renderHook(() => usePaywallDismiss(offering));
+
+    await act(() => result.current());
+
+    expect(mocks.dismiss).not.toHaveBeenCalled();
   });
 
   it('할인을 보여줄 수 없으면 서버에 알리지 않는다 — 못 보여줄 할인에 5분을 태우지 않는다', async () => {

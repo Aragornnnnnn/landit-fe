@@ -9,6 +9,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
+import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import type { MySubscription } from '../api/subscription';
 import {
@@ -103,6 +104,19 @@ describe('PremiumHeaderEntry', () => {
 
     // 자리마다 따로 그려 글자가 쪼개진다 — 합친 문자열로 본다
     expect(document.body.textContent).toContain('02:45');
+  });
+
+  it('일본어 화면에서는 할인 중이어도 남은 시간 대신 진입 알약을 그린다 — 할인은 한국에서만 판다', () => {
+    setTestLocale('ja');
+    mocks.subscription = free({
+      remainingSeconds: 165,
+      expiresAt: '2026-09-22T14:35:00',
+      newUser: true,
+    });
+    render(<PremiumHeaderEntry />);
+
+    expect(document.body.textContent).not.toContain('02:45');
+    expect(screen.getByText('시작하기')).toBeInTheDocument();
   });
 
   it('유료 사용자에게는 로고를 그린다 — 팔 것이 없다', () => {
