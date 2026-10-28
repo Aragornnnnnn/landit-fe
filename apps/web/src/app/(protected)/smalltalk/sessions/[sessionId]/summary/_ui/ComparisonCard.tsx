@@ -20,7 +20,7 @@ export const ComparisonCard = ({
           지난번과 비교
         </h2>
         <p className="text-12 text-muted-foreground">
-          {toPeriodLabel(comparison)}
+          {toPeriodLabel(comparison, locale)}
         </p>
       </div>
       <dl className="mt-3 flex flex-col gap-4">

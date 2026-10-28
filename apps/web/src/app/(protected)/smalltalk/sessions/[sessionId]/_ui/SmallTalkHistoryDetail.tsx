@@ -69,7 +69,9 @@ export const SmallTalkHistoryDetail = ({
           더 자연스러운 말이 있으면 그 개수를 뱃지로 달아 대화 보기에 볼 것이 있음을 알린다 */}
       <PageHeader
         title={
-          session ? toSessionTitle(session.title, session.completedAt) : ''
+          session
+            ? toSessionTitle(session.title, session.completedAt, locale)
+            : ''
         }
         onBack={() => router.replace(SMALLTALK_HISTORY_PATH)}
         trailing={
@@ -116,7 +118,7 @@ export const SmallTalkHistoryDetail = ({
               <div className="flex items-center rounded-2xl bg-card px-5 py-3.5 shadow-sm">
                 <Stat
                   label="대화한 날"
-                  value={toDayLabel(session.completedAt)}
+                  value={toDayLabel(session.completedAt, locale)}
                 />
                 {/* 전부 타이핑한 대화는 말한 시간이 0초라 칸째 뺀다 */}
                 {hasSpokenTime(session.userSpeakingDurationMs) && (

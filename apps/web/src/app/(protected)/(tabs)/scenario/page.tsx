@@ -2,6 +2,7 @@
 
 // 시나리오 탭 — 그날 배정된 카드 한 장을 받는다. 날짜는 ?date=로 넘기고 없으면 오늘
 import { Suspense, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useForceUpdateFirst } from '@/features/app-update/model/useForceUpdateFirst';
@@ -15,6 +16,7 @@ import { ScenarioBriefing } from '@/features/scenario/ui/ScenarioBriefing';
 import { ScenarioCardSkeleton } from '@/features/scenario/ui/ScenarioCardSkeleton';
 import { TodayCard } from '@/features/scenario/ui/TodayCard';
 import { usePromoSheetOpen } from '@/features/subscription/model/exit-promo/promo-handoff';
+import { lineBreak } from '@/shared/i18n/rich';
 import {
   ONBOARDED_PARAM,
   readDateParam,
@@ -215,24 +217,18 @@ function ScenarioContent() {
   );
 }
 
-const EmptyDay = ({ isToday }: { isToday: boolean }) => (
-  <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-    <p className="text-2xl leading-snug font-extrabold text-foreground">
-      {isToday ? '오늘 카드는 준비 중이에요' : '이 날은 카드가 없어요'}
-    </p>
-    <p className="text-base font-medium text-muted-foreground">
-      {isToday ? (
-        <>
-          조금 뒤에 다시 들러주세요
-          <br />곧 새 카드를 가져올게요
-        </>
-      ) : (
-        <>
-          그날은 대화를 남기지 않았어요
-          <br />
-          지나간 카드는 다시 열 수 없어요
-        </>
-      )}
-    </p>
-  </div>
-);
+const EmptyDay = ({ isToday }: { isToday: boolean }) => {
+  const t = useTranslations('scenario.emptyDay');
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+      <p className="text-2xl leading-snug font-extrabold text-foreground">
+        {isToday ? t('todayTitle') : t('pastTitle')}
+      </p>
+      <p className="text-base font-medium text-muted-foreground">
+        {isToday
+          ? t.rich('todayDescription', lineBreak)
+          : t.rich('pastDescription', lineBreak)}
+      </p>
+    </div>
+  );
+};

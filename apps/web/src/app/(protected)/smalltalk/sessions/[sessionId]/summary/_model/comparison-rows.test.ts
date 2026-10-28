@@ -98,16 +98,19 @@ describe('toComparisonRows', () => {
 
 describe('toPeriodLabel', () => {
   it('지난번이 있으면 그 날짜에서 오늘로', () => {
-    expect(toPeriodLabel(comparison)).toBe('9월 10일 → 오늘');
+    expect(toPeriodLabel(comparison, 'ko')).toBe('9월 10일 → 오늘');
   });
 
   it('첫 스몰톡이면 첫 기록이라고 말한다', () => {
     expect(
-      toPeriodLabel({
-        ...comparison,
-        previousSessionId: null,
-        previousDate: null,
-      }),
+      toPeriodLabel(
+        {
+          ...comparison,
+          previousSessionId: null,
+          previousDate: null,
+        },
+        'ko',
+      ),
     ).toBe('첫 기록 · 오늘');
   });
 });

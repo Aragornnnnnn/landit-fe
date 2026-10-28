@@ -17,6 +17,7 @@ describe('streakRunOf', () => {
       currentStreakDays: 1,
       activeToday: true,
       today: '2026-08-06',
+      locale: 'ko',
     });
 
     // then — 목요일 한 칸만 차고, 뒤로 엿새가 비어 있다
@@ -30,6 +31,7 @@ describe('streakRunOf', () => {
       currentStreakDays: 3,
       activeToday: true,
       today: '2026-08-06',
+      locale: 'ko',
     });
 
     // then — 화·수·목이 차고 오늘은 세 번째 칸
@@ -42,6 +44,7 @@ describe('streakRunOf', () => {
       currentStreakDays: 7,
       activeToday: true,
       today: '2026-08-06',
+      locale: 'ko',
     });
 
     expect(shapeOf(cells)).toBe('금토일월화수목');
@@ -53,6 +56,7 @@ describe('streakRunOf', () => {
       currentStreakDays: 12,
       activeToday: true,
       today: '2026-08-06',
+      locale: 'ko',
     });
 
     // then — 앞 네 칸이 차고 오늘이 다섯 번째, 뒤 두 칸이 활주로
@@ -66,6 +70,7 @@ describe('streakRunOf', () => {
       currentStreakDays: 3,
       activeToday: false,
       today: '2026-08-07',
+      locale: 'ko',
     });
 
     // then — 마지막으로 채운 날은 어제(목)이고, 그 뒤로 활주로가 이어진다
@@ -79,11 +84,25 @@ describe('streakRunOf', () => {
       currentStreakDays: 0,
       activeToday: false,
       today: '2026-08-06',
+      locale: 'ko',
     });
 
     // then — 오늘부터 이레가 통째로 활주로다
     expect(shapeOf(cells)).toBe('·······');
     expect(latestOf(cells)).toBeNull();
     expect(cells[0].date).toBe('2026-08-06');
+  });
+
+  it('일본어 화면에서는 요일을 일본어 한 글자로 쓴다', () => {
+    // given — 오늘(목) 처음 채웠다
+    const cells = streakRunOf({
+      currentStreakDays: 1,
+      activeToday: true,
+      today: '2026-08-06',
+      locale: 'ja',
+    });
+
+    // then
+    expect(cells.map((cell) => cell.label).join('')).toBe('木金土日月火水');
   });
 });

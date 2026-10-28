@@ -92,12 +92,12 @@ const SessionRow = ({
   return (
     <HistoryRow
       onClick={onSelect}
-      title={toSessionTitle(session.title, session.completedAt)}
+      title={toSessionTitle(session.title, session.completedAt, locale)}
       // 전부 타이핑한 대화는 말한 시간이 0초라 날짜만 남긴다
       meta={
         hasSpokenTime(session.userSpeakingDurationMs)
-          ? `${toDayLabel(session.completedAt)} · ${toSpeakingTimeLabel(session.userSpeakingDurationMs, locale)}`
-          : toDayLabel(session.completedAt)
+          ? `${toDayLabel(session.completedAt, locale)} · ${toSpeakingTimeLabel(session.userSpeakingDurationMs, locale)}`
+          : toDayLabel(session.completedAt, locale)
       }
       trailing={
         <ExpressionProgress

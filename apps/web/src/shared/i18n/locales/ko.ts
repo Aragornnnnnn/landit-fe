@@ -6,10 +6,13 @@ import common from './ko/common.json';
 import conversation from './ko/conversation.json';
 import eventPopup from './ko/eventPopup.json';
 import feedback from './ko/feedback.json';
+import home from './ko/home.json';
 import me from './ko/me.json';
 import notification from './ko/notification.json';
 import onboarding from './ko/onboarding.json';
 import paywall from './ko/paywall.json';
+import scenario from './ko/scenario.json';
+import streak from './ko/streak.json';
 import subscription from './ko/subscription.json';
 import widget from './ko/widget.json';
 
@@ -21,10 +24,13 @@ const ko = {
   conversation,
   eventPopup,
   feedback,
+  home,
   me,
   notification,
   onboarding,
   paywall,
+  scenario,
+  streak,
   subscription,
   widget,
 };

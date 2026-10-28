@@ -6,10 +6,13 @@ import common from './ja/common.json';
 import conversation from './ja/conversation.json';
 import eventPopup from './ja/eventPopup.json';
 import feedback from './ja/feedback.json';
+import home from './ja/home.json';
 import me from './ja/me.json';
 import notification from './ja/notification.json';
 import onboarding from './ja/onboarding.json';
 import paywall from './ja/paywall.json';
+import scenario from './ja/scenario.json';
+import streak from './ja/streak.json';
 import subscription from './ja/subscription.json';
 import widget from './ja/widget.json';
 
@@ -21,10 +24,13 @@ const ja = {
   conversation,
   eventPopup,
   feedback,
+  home,
   me,
   notification,
   onboarding,
   paywall,
+  scenario,
+  streak,
   subscription,
   widget,
 };

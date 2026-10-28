@@ -42,5 +42,6 @@ export const describeNextRing = (nextAt: number | null, now: Date) => {
   tomorrow.setDate(now.getDate() + 1);
   if (dayKey(at) === dayKey(now)) return `오늘 ${time}`;
   if (dayKey(at) === dayKey(tomorrow)) return `내일 ${time}`;
-  return `${at.getMonth() + 1}월 ${at.getDate()}일(${WEEKDAY_LABELS[at.getDay()]}) ${time}`;
+  // 한국어 화면에만 있어 옮기지 않는다 — 개발자 메뉴라 요일도 한국어 그대로 쓴다
+  return `${at.getMonth() + 1}월 ${at.getDate()}일(${WEEKDAY_LABELS.ko[at.getDay()]}) ${time}`;
 };
