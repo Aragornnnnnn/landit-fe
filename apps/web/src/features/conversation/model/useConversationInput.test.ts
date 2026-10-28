@@ -7,6 +7,7 @@ import type { SttResultMeta } from '@/shared/stt/deepgram-stt';
 import { MicPermissionDeniedError, SttError } from '@/shared/stt/errors';
 import type { SttErrorMeta } from '@/shared/stt/useStt';
 
+import { ANSWER_MAX_LENGTH } from './answer-length';
 import { useConversationInput } from './useConversationInput';
 
 const monitoringMock = vi.hoisted(() => ({
@@ -68,6 +69,7 @@ const renderInput = (
     useConversationInput({
       canStart: true,
       trackContext: () => ({ sessionId: 1, turnIndex: 0 }),
+      keyterms: [],
       onInputStart,
       onInputCancel,
       onContent,
@@ -726,6 +728,54 @@ describe('useConversationInput', () => {
       act(() => result.current.resetForNextTurn());
 
       expect(result.current.reviewing).toBe(false);
+    });
+  });
+
+  describe('답 글자 수 제한', () => {
+    const LONG = 'a'.repeat(ANSWER_MAX_LENGTH + 50);
+
+    it('말하다 글자 수 한도에 닿으면 녹음을 멈춰 확인으로 넘긴다', () => {
+      const { result } = renderInput();
+      act(() => result.current.pressMic());
+
+      act(() => sttMock.callbacks.onInterim?.(LONG, true));
+      act(() => sttMock.callbacks.onInterim?.(`${LONG} more`, true));
+
+      expect(sttMock.stop).toHaveBeenCalledTimes(1);
+    });
+
+    it('한도 아래로 말하는 동안은 녹음을 멈추지 않는다', () => {
+      const { result } = renderInput();
+      act(() => result.current.pressMic());
+
+      act(() =>
+        sttMock.callbacks.onInterim?.('a'.repeat(ANSWER_MAX_LENGTH - 1), true),
+      );
+
+      expect(sttMock.stop).not.toHaveBeenCalled();
+    });
+
+    it('인식된 문장이 한도를 넘으면 한도까지만 확인에 올린다', () => {
+      const { result } = renderInput();
+      act(() => result.current.pressMic());
+
+      act(() => sttMock.callbacks.onFinal?.(LONG, FINAL_META));
+
+      expect(result.current.transcript).toHaveLength(ANSWER_MAX_LENGTH);
+    });
+
+    it('타이핑이 한도를 넘어도 한도까지만 보낸다', () => {
+      const { result, onContent } = renderInput();
+      act(() => result.current.pressKeyboard());
+      act(() => result.current.setTranscript(LONG));
+
+      act(() => result.current.submitText());
+
+      expect(onContent).toHaveBeenCalledWith(
+        'a'.repeat(ANSWER_MAX_LENGTH),
+        'TEXT',
+        0,
+      );
     });
   });
 
