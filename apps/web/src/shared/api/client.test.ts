@@ -200,3 +200,20 @@ describe('api.getBlob', () => {
     });
   });
 });
+
+describe('Accept-Language', () => {
+  afterEach(() => {
+    document.documentElement.lang = '';
+  });
+
+  it('화면 언어(html lang)를 Accept-Language로 실어 보낸다', async () => {
+    document.documentElement.lang = 'ja';
+    const fetchMock = vi.fn().mockResolvedValue(okResponse());
+    vi.stubGlobal('fetch', fetchMock);
+
+    await api.get('/api/v1/test');
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(new Headers(init.headers).get('Accept-Language')).toBe('ja');
+  });
+});
