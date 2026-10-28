@@ -1,5 +1,8 @@
 // parseApiResponse — 백엔드 공통 응답 포맷 파싱 검증
+// @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
+
+import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { ApiError } from './api-error';
 import { parseApiResponse } from './parse';
@@ -39,6 +42,18 @@ describe('parseApiResponse', () => {
 
     await expect(parseApiResponse(response)).rejects.toThrow(
       '서버 오류가 발생했어요. (400)',
+    );
+  });
+
+  it('일본어 화면이면 기본 문구도 일본어로 던진다', async () => {
+    // Given 일본어 화면에서 메시지 없는 실패 응답
+    setTestLocale('ja');
+    const response = fakeResponse({ success: false }, 502);
+
+    // When 해석하면
+    // Then 사용자에게 보일 기본 문구가 화면 언어를 따른다
+    await expect(parseApiResponse(response)).rejects.toThrow(
+      'サーバーエラーが発生しました。(502)',
     );
   });
 

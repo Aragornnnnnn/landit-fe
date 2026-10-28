@@ -2,9 +2,11 @@
 
 // 피드백 작성 — 고른 유형에 맞춰 묻고, 다 쓰면 보낸 편지함으로 돌려보낸다
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { useNativeContext } from '@/shared/bridge/useNativeContext';
+import { lineBreak } from '@/shared/i18n/rich';
 import { MAILBOX_COMPOSE_PATH } from '@/shared/lib/routes';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { BackHeader } from '@/shared/ui/BackHeader';
@@ -13,8 +15,8 @@ import { showToast } from '@/shared/ui/toast';
 import type { FeedbackType } from '../api/mailbox';
 import {
   exceedsSendLimit,
-  sendFailureMessage,
-  TOO_LARGE,
+  sendFailureKey,
+  TOO_LARGE_KEY,
 } from '../model/attachment';
 import { mailboxPath } from '../model/box';
 import { FEEDBACK_TYPE_FACES } from '../model/feedback-type';
@@ -37,7 +39,9 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
     useAttachments();
   const photoSource = resolvePhotoSource(useNativeContext());
 
-  const { question, placeholder } = FEEDBACK_TYPE_FACES[type];
+  const t = useTranslations('mailbox');
+  const tType = useTranslations('mailbox.feedbackType');
+  const { titleKey, placeholderKey } = FEEDBACK_TYPE_FACES[type];
   const trimmed = content.trim();
 
   const submit = () => {
@@ -48,7 +52,7 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
     const images = attachments.map(({ file }) => file);
     // 앞단 프록시가 큰 요청을 끊기 전에 막는다 — 보내 봐야 실패할 것을 기다리게 하지 않는다
     if (exceedsSendLimit(images)) {
-      showToast(TOO_LARGE);
+      showToast(t(`attachment.${TOO_LARGE_KEY}`));
       return;
     }
 
@@ -56,12 +60,13 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
       { content: trimmed, images },
       {
         onSuccess: () => {
-          showToast('소중한 의견 고마워요!');
+          showToast(t('feedbackComposeFlow.sentToast'));
           // 방금 보낸 편지가 보이는 자리로 데려간다. replace라 뒤로가기가 작성 화면으로 되돌지 않는다
           router.replace(mailboxPath('sent'));
         },
         // 사진 때문에 거부됐으면 다시 시도해도 같다 — 무엇을 바꾸면 되는지 알려준다
-        onError: (error) => showToast(sendFailureMessage(error, images.length)),
+        onError: (error) =>
+          showToast(t(`attachment.${sendFailureKey(error, images.length)}`)),
       },
     );
   };
@@ -91,15 +96,15 @@ export const FeedbackComposeFlow = ({ type }: { type: FeedbackType }) => {
       />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-4">
-        <h1 className="mt-3 shrink-0 text-22 leading-snug font-bold whitespace-pre-line text-foreground">
-          {question}
+        <h1 className="mt-3 shrink-0 text-22 leading-snug font-bold text-foreground">
+          {tType.rich(titleKey, lineBreak)}
         </h1>
 
         <textarea
           value={content}
           onChange={(event) => setContent(event.target.value)}
           maxLength={MAX_LENGTH}
-          placeholder={placeholder}
+          placeholder={tType(placeholderKey)}
           // 들어오자마자 쓸 수 있게 초점을 준다. 질문은 위에 고정돼 있어 키보드가 올라와도 안 가린다
           autoFocus
           className="mt-6 h-[180px] w-full shrink-0 resize-none rounded-2xl border border-border bg-card p-4 text-15 leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"

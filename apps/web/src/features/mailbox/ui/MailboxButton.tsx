@@ -1,6 +1,8 @@
 'use client';
 
 // 헤더에서 편지함으로 들어가는 칸 — 안 읽은 편지가 있으면 점으로 알린다
+import { useTranslations } from 'next-intl';
+
 import { MAILBOX_PATH } from '@/shared/lib/routes';
 import { HeaderAction } from '@/shared/ui/HeaderAction';
 import { MailIcon } from '@/shared/ui/Icons';
@@ -9,11 +11,12 @@ import { useUnreadCountQuery } from '../model/useUnreadCountQuery';
 
 export const MailboxButton = () => {
   const { hasUnread } = useUnreadCountQuery();
+  const t = useTranslations('mailbox.mailboxButton');
 
   return (
     <HeaderAction
       href={MAILBOX_PATH}
-      label={hasUnread ? '편지함, 안 읽은 편지 있음' : '편지함'}
+      label={hasUnread ? t('unreadLabel') : t('label')}
     >
       <span className="relative">
         <MailIcon size={18} />

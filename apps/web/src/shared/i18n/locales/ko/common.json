@@ -1,5 +1,23 @@
 {
   "closeLabel": "닫기",
+  "retryButton": "다시 시도",
+  "backHeader": {
+    "backLabel": "뒤로 가기"
+  },
+  "stepHeader": {
+    "backLabel": "이전"
+  },
+  "loadMoreButton": {
+    "moreButton": "더 보기",
+    "loadingButton": "불러오는 중"
+  },
+  "api": {
+    "serverError": "서버 오류가 발생했어요. ({status})",
+    "sessionExpiredError": "세션이 만료됐어요. 다시 로그인해 주세요."
+  },
+  "bridgeListener": {
+    "exitToast": "한 번 더 누르면 앱이 종료돼요"
+  },
   "backLabel": "뒤로",
   "errorScreen": {
     "title": "문제가 생겼어요",

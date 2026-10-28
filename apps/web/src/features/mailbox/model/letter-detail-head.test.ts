@@ -1,8 +1,24 @@
 // 편지를 펼쳤을 때의 제목과 칩 — 받은 편지와 보낸 피드백이 제목을 다른 데서 가져온다
+import { createTranslator } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 
+import ko from '@/shared/i18n/locales/ko';
+
 import type { ReceivedLetterDetail, SentFeedbackDetail } from '../api/mailbox';
-import { toReceivedHead, toSentHead } from './letter-detail-head';
+import {
+  toReceivedHead as toReceivedHeadIn,
+  toSentHead as toSentHeadIn,
+} from './letter-detail-head';
+
+const tKo = createTranslator({
+  locale: 'ko',
+  messages: ko,
+  namespace: 'mailbox',
+});
+const toReceivedHead = (letter: ReceivedLetterDetail) =>
+  toReceivedHeadIn(letter, tKo);
+const toSentHead = (feedback: SentFeedbackDetail) =>
+  toSentHeadIn(feedback, tKo);
 
 const received: ReceivedLetterDetail = {
   letterId: 1,

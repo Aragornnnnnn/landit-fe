@@ -4,7 +4,9 @@
 // 아쉬웠어요 → 피드백 안내(letter)로 같은 시트 안에서 말만 바뀐다. 리뷰 요청(review)은 물을 게 없어 별점판으로 바로 열린다.
 // 시나리오 쪽 제목이 "첫 대화"가 아니라 "방금 대화"인 건, 배포 전부터 쓰던 사람에겐 첫 대화가 아니어서다
 import type { SatisfactionMoment } from '@landit/analytics';
+import { useTranslations, type Messages } from 'next-intl';
 
+import { lineBreak } from '@/shared/i18n/rich';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
@@ -31,15 +33,15 @@ interface SatisfactionSheetProps {
   onClose: () => void;
 }
 
+type SheetKey = keyof Messages['satisfaction']['satisfactionSheet'];
+
+// 문구는 satisfaction.satisfactionSheet 아래 키
 interface Face {
   image: string;
-  title: string;
-  body: string;
-  // 묻기 화면의 두 버튼
-  bad?: string;
-  good?: string;
-  // 한 버튼 화면의 CTA
-  cta?: string;
+  titleKey: SheetKey;
+  descriptionKey: SheetKey;
+  // 한 버튼 화면의 CTA — 묻기 화면은 두 버튼(아쉬웠어요·좋았어요)이 고정이라 따로 두지 않는다
+  buttonKey?: SheetKey;
 }
 
 // 시나리오는 왼쪽에서, 스몰톡은 반대쪽에서 빼꼼 — 두 번째로 볼 때 같은 그림이 아니게 (물음표는 정방향인 별도 에셋)
@@ -59,39 +61,37 @@ const faceOf = (
   if (moment === 'review')
     return {
       image: REVIEW,
-      title: '잘 써주셔서 감사해요!',
-      body: '스토어에 남겨주신 응원 한마디가\n랜딧에겐 큰 힘이 돼요',
-      cta: '리뷰 남기러 가기',
+      titleKey: 'reviewTitle',
+      descriptionKey: 'reviewDescription',
+      buttonKey: 'reviewButton',
     };
   if (view === 'thanks')
     return {
       image: WAVE,
-      title: '좋았다니 래디도 기뻐요!',
+      titleKey: 'thanksTitle',
       // 표현까지 마치고 온 사람(프리뷰를 끝낸 무료 유저)은 남은 표현이 잠겨 있어 꾸준한 학습을 권한다
-      body: withExpression
-        ? '앞으로도 랜딧으로 매일 꾸준히 공부해봐요'
-        : '남은 표현들도 이어서 공부해보세요',
+      descriptionKey: withExpression
+        ? 'thanksExpressionDescription'
+        : 'thanksDescription',
     };
   if (view === 'letter')
     return {
       image: CRYING,
-      title: '아쉬웠군요…',
-      body: '어떤 점이 아쉬웠는지 알려주세요.\n피드백을 보내주시면 꼭 읽고 답장드릴게요',
-      cta: '피드백 보내기',
+      titleKey: 'letterTitle',
+      descriptionKey: 'letterDescription',
+      buttonKey: 'letterButton',
     };
   return {
     image: moment === 'smalltalk' ? PEEK_RIGHT : PEEK,
-    title:
+    titleKey:
       moment === 'smalltalk'
-        ? '첫 스몰톡, 어떠셨나요?'
+        ? 'smalltalkAskTitle'
         : withExpression
-          ? '방금 대화와 표현 학습, 어떠셨나요?'
+          ? 'expressionAskTitle'
           : earlier
-            ? '좀 전에 나눈 대화, 어떠셨나요?'
-            : '방금 대화, 어떠셨나요?',
-    body: '래디가 많이 궁금해요!\n솔직하게 골라주세요',
-    bad: '아쉬웠어요',
-    good: '좋았어요',
+            ? 'earlierAskTitle'
+            : 'askTitle',
+    descriptionKey: 'askDescription',
   };
 };
 
@@ -110,6 +110,8 @@ export const SatisfactionSheet = ({
   onAlreadyDone,
   onClose,
 }: SatisfactionSheetProps) => {
+  const t = useTranslations('satisfaction.satisfactionSheet');
+  const tCommon = useTranslations('common');
   const face = faceOf(moment, view, withExpression, earlier);
 
   return (
@@ -118,7 +120,7 @@ export const SatisfactionSheet = ({
       {view === 'review' && (
         <button
           type="button"
-          aria-label="닫기"
+          aria-label={tCommon('closeLabel')}
           onClick={onClose}
           className="absolute top-4 right-4 flex size-8 items-center justify-center rounded-full text-muted-foreground active:scale-90"
         >
@@ -137,27 +139,27 @@ export const SatisfactionSheet = ({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={face.image}
-          alt="래디"
+          alt={t('characterLabel')}
           className="object-contain"
           style={{ width: 160, height: 160 }}
         />
         <BottomSheet.Title
           className={`${view === 'thanks' ? 'mt-5' : 'mt-4'} text-xl font-bold text-foreground`}
         >
-          {face.title}
+          {t(face.titleKey)}
         </BottomSheet.Title>
-        <p className="mt-2 text-15 leading-6 whitespace-pre-line text-muted-foreground">
-          {face.body}
+        <p className="mt-2 text-15 leading-6 text-muted-foreground">
+          {t.rich(face.descriptionKey, lineBreak)}
         </p>
         {view !== 'thanks' && (
           <div className="mt-auto flex w-full gap-3 pt-6">
             {view === 'ask' ? (
               <>
                 <Button variant="ghost" size="md" onClick={onBad}>
-                  {face.bad}
+                  {t('badButton')}
                 </Button>
                 <Button size="md" onClick={onGood}>
-                  {face.good}
+                  {t('goodButton')}
                 </Button>
               </>
             ) : (
@@ -166,7 +168,7 @@ export const SatisfactionSheet = ({
                 disabled={view === 'review' && writeReviewPending}
                 onClick={view === 'review' ? onWriteReview : onSendFeedback}
               >
-                {face.cta}
+                {face.buttonKey && t(face.buttonKey)}
               </Button>
             )}
           </div>
@@ -178,7 +180,7 @@ export const SatisfactionSheet = ({
             onClick={onAlreadyDone}
             className="mt-5 px-4 py-2 text-sm text-muted-foreground underline underline-offset-2"
           >
-            이미 남겼어요
+            {t('alreadyDoneButton')}
           </button>
         )}
       </div>

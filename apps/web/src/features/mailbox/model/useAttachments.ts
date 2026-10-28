@@ -1,5 +1,6 @@
 // 작성 중인 피드백의 첨부 사진 — 브라우저 파일은 JPEG로 다시 구워, 셸 보관함 사진은 그대로 담는다. 넘치거나 못 읽으면 토스트로 알린다
 import { useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { reportWarning } from '@/shared/monitoring/report';
 import { showToast } from '@/shared/ui/toast';
@@ -16,6 +17,7 @@ export interface Attachment {
 }
 
 export const useAttachments = () => {
+  const t = useTranslations('mailbox.attachment');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   // 굽는 동안엔 사진 추가와 보내기를 막는다 — 안 막으면 사진 없이 전송되거나 개수 계산이 옛 값으로 된다
   const [isAttaching, setIsAttaching] = useState(false);
@@ -50,7 +52,7 @@ export const useAttachments = () => {
 
   const attach = async (picked: File[]) => {
     const { taken, overflowed } = takeAttachable(attachments.length, picked);
-    if (overflowed) showToast(`사진은 ${MAX_ATTACHMENTS}장까지 보낼 수 있어요`);
+    if (overflowed) showToast(t('limitToast', { max: MAX_ATTACHMENTS }));
     if (taken.length === 0) return;
 
     setIsAttaching(true);
@@ -67,7 +69,7 @@ export const useAttachments = () => {
     if (!isMounted.current) return;
     // 못 읽은 사진만 빼고 나머지는 담는다 — 한 장 때문에 전부 다시 고르게 하지 않는다
     if (converted.length < taken.length) {
-      showToast('불러올 수 없는 사진은 빼고 담았어요');
+      showToast(t('partialFailedToast'));
     }
 
     add(converted);
@@ -84,11 +86,11 @@ export const useAttachments = () => {
     if (!isMounted.current) return;
     // 토스트는 한 번에 하나만 보이니 가장 중요한 것 하나만 말한다 — 전부 실패 > 일부 실패 > 넘침
     if (reply?.status === 'error') {
-      showToast('사진을 불러오지 못했어요');
+      showToast(t('loadFailedToast'));
     } else if (reply && reply.failedCount > 0) {
-      showToast('불러올 수 없는 사진은 빼고 담았어요');
+      showToast(t('partialFailedToast'));
     } else if (reply?.overflowed) {
-      showToast(`사진은 ${MAX_ATTACHMENTS}장까지 보낼 수 있어요`);
+      showToast(t('limitToast', { max: MAX_ATTACHMENTS }));
     }
     if (reply?.status === 'success') add(reply.photos.map(toPickedFile));
     setIsAttaching(false);

@@ -1,5 +1,6 @@
 // 작성 화면 헤더 오른쪽의 사진 추가 버튼 — 앱 안에선 셸 사진 보관함을, 브라우저에선 숨은 파일 입력을 연다
 import { useRef } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { ImagePlusIcon } from '@/shared/ui/Icons';
 
@@ -22,6 +23,7 @@ export const AttachPhotoButton = ({
   onPickFromShell,
 }: AttachPhotoButtonProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const t = useTranslations('mailbox.attachPhotoButton');
 
   return (
     <>
@@ -31,7 +33,7 @@ export const AttachPhotoButton = ({
         onClick={() =>
           source === 'shell' ? onPickFromShell() : inputRef.current?.click()
         }
-        aria-label="사진 추가"
+        aria-label={t('label')}
         className="flex size-9 items-center justify-center rounded-full text-foreground transition-all active:scale-90 active:bg-secondary disabled:opacity-20 disabled:active:scale-100 disabled:active:bg-transparent"
       >
         <ImagePlusIcon size={24} />

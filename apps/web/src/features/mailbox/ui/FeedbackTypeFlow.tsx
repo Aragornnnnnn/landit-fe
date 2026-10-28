@@ -3,10 +3,12 @@
 // 피드백 유형 선택 — 무슨 말을 하러 왔는지 먼저 고르게 한다.
 // 유형을 알아야 다음 화면이 알맞게 물을 수 있고, 보낸 편지의 제목도 이 선택이 된다
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
+import { lineBreak } from '@/shared/i18n/rich';
 import { MAILBOX_PATH } from '@/shared/lib/routes';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { Emoji } from '@/shared/ui/emoji';
@@ -21,6 +23,7 @@ import {
 
 export const FeedbackTypeFlow = () => {
   const router = useRouter();
+  const t = useTranslations('mailbox.feedbackTypeFlow');
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
@@ -29,9 +32,7 @@ export const FeedbackTypeFlow = () => {
 
       <div className="flex-1 overflow-y-auto px-5 pb-[var(--safe-area-inset-bottom)]">
         <h1 className="mt-4 text-22 leading-snug font-bold text-foreground">
-          어떤 피드백을
-          <br />
-          개발자에게 보낼까요?
+          {t.rich('title', lineBreak)}
         </h1>
 
         <ul className="mt-7 flex flex-col gap-2.5">
@@ -47,7 +48,8 @@ export const FeedbackTypeFlow = () => {
 };
 
 const FeedbackTypeRow = ({ type }: { type: FeedbackType }) => {
-  const { emoji, label } = FEEDBACK_TYPE_FACES[type];
+  const t = useTranslations('mailbox.feedbackType');
+  const { emoji, labelKey } = FEEDBACK_TYPE_FACES[type];
 
   return (
     // 한 층이라 replace (MAILBOX_COMPOSE_PATH 참고). 유형을 다시 고르는 길은 작성 화면의 화살표가 낸다
@@ -61,7 +63,7 @@ const FeedbackTypeRow = ({ type }: { type: FeedbackType }) => {
     >
       <Emoji className="text-22">{emoji}</Emoji>
       <span className="flex-1 text-15 font-semibold text-foreground">
-        {label}
+        {t(labelKey)}
       </span>
       <ChevronRightIcon size={18} className="text-muted-foreground" />
     </Link>

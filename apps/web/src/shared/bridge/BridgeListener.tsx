@@ -3,6 +3,7 @@
 // 어느 화면에서든 항상 처리해야 하는 네이티브 메시지(뒤로가기 등)를 받는 전역 리스너 — 루트 레이아웃에 마운트
 import { useEffect, useRef } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
@@ -19,6 +20,7 @@ const ALARM_BLOCKED_PATH =
 export const BridgeListener = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations('common.bridgeListener');
 
   // 구독은 마운트에 한 번만 — 핸들러는 ref로 최신 경로·대기 상태를 읽는다 (라우트마다 재구독하지 않게)
   const pathnameRef = useRef(pathname);
@@ -70,7 +72,7 @@ export const BridgeListener = () => {
         return;
       }
       exitArmedRef.current = true;
-      showToast('한 번 더 누르면 앱이 종료돼요');
+      showToast(t('exitToast'));
       window.clearTimeout(timerRef.current);
       timerRef.current = window.setTimeout(() => {
         exitArmedRef.current = false;
@@ -95,8 +97,8 @@ export const BridgeListener = () => {
         router.push(message.path);
       }
     });
-    // router는 App Router에서 안정된 객체라 재구독이 일어나지 않는다
-  }, [router]);
+    // router는 App Router에서 안정된 객체, t는 언어가 같으면 그대로라 재구독이 일어나지 않는다
+  }, [router, t]);
 
   return null;
 };

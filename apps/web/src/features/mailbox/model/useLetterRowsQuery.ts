@@ -1,8 +1,10 @@
 // 지금 보고 있는 칸의 편지 목록 — 받은/보낸 두 갈래를 리스트가 쓰는 한 모양으로 맞춰 돌려준다.
 // 편지가 쌓이면 첫 장 밖으로 밀린다 — 더 보기로 다음 장을 이어 받는다
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 
 import { useCurrentUserId } from '@/shared/auth/current-member';
+import type { Translator } from '@/shared/i18n/translator';
 
 import {
   getReceivedLetters,
@@ -28,13 +30,15 @@ const fetchLetters = (
 const toRows = (
   box: MailboxBox,
   page: MailboxPage<ReceivedLetter | SentFeedback>,
+  t: Translator<'mailbox'>,
 ): LetterRow[] =>
   box === 'sent'
-    ? (page.items as SentFeedback[]).map(toSentRow)
-    : (page.items as ReceivedLetter[]).map(toReceivedRow);
+    ? (page.items as SentFeedback[]).map((item) => toSentRow(item, t))
+    : (page.items as ReceivedLetter[]).map((item) => toReceivedRow(item, t));
 
 export const useLetterRowsQuery = (box: MailboxBox) => {
   const userId = useCurrentUserId();
+  const t = useTranslations('mailbox');
 
   const {
     data,
@@ -49,7 +53,7 @@ export const useLetterRowsQuery = (box: MailboxBox) => {
     queryFn: ({ pageParam }) => fetchLetters(box, pageParam),
     initialPageParam: null as string | null,
     getNextPageParam: nextLetterCursor,
-    select: (data) => data.pages.flatMap((page) => toRows(box, page)),
+    select: (data) => data.pages.flatMap((page) => toRows(box, page, t)),
     enabled: userId !== null,
   });
 

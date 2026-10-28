@@ -1,15 +1,26 @@
 // 사진 담기 규칙 — 남은 칸만큼 앞에서부터 채우고, 넘쳤는지·너무 큰지·왜 못 보냈는지 알려준다
+import { createTranslator } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 
 import { ApiError } from '@/shared/api/api-error';
+import ko from '@/shared/i18n/locales/ko';
 
 import {
   exceedsSendLimit,
   MAX_ATTACHMENTS,
   MAX_SEND_BYTES,
-  sendFailureMessage,
+  sendFailureKey,
   takeAttachable,
 } from './attachment';
+
+// 키를 한국어 문구로 펼쳐 본다 — 사용자가 읽는 말이 맞는지가 계약이다
+const t = createTranslator({
+  locale: 'ko',
+  messages: ko,
+  namespace: 'mailbox.attachment',
+});
+const sendFailureMessage = (error: unknown, imageCount: number) =>
+  t(sendFailureKey(error, imageCount));
 
 describe('takeAttachable', () => {
   it('남은 칸 안이면 고른 사진을 전부 담는다', () => {
@@ -43,7 +54,7 @@ describe('exceedsSendLimit', () => {
   });
 });
 
-describe('sendFailureMessage', () => {
+describe('sendFailureKey', () => {
   const failure = (status: number, code?: string) =>
     new ApiError('실패', status, '/api/v1/mailbox/feedbacks', code);
 

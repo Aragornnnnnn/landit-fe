@@ -8,11 +8,13 @@ import eventPopup from './ja/eventPopup.json';
 import expression from './ja/expression.json';
 import feedback from './ja/feedback.json';
 import home from './ja/home.json';
+import mailbox from './ja/mailbox.json';
 import me from './ja/me.json';
 import notification from './ja/notification.json';
 import onboarding from './ja/onboarding.json';
 import paywall from './ja/paywall.json';
 import review from './ja/review.json';
+import satisfaction from './ja/satisfaction.json';
 import scenario from './ja/scenario.json';
 import smallTalk from './ja/smallTalk.json';
 import streak from './ja/streak.json';
@@ -29,11 +31,13 @@ const ja = {
   expression,
   feedback,
   home,
+  mailbox,
   me,
   notification,
   onboarding,
   paywall,
   review,
+  satisfaction,
   scenario,
   smallTalk,
   streak,

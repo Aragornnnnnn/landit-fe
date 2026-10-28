@@ -1,8 +1,28 @@
 // 받은 편지와 보낸 피드백을 같은 줄 모양으로 맞추는 변환 — 두 갈래가 제목과 미읽음을 다르게 정한다
+import { createTranslator } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 
+import ja from '@/shared/i18n/locales/ja';
+import ko from '@/shared/i18n/locales/ko';
+
 import type { ReceivedLetter, SentFeedback } from '../api/mailbox';
-import { toReceivedRow, toSentRow } from './letter-row';
+import {
+  toReceivedRow as toReceivedRowIn,
+  toSentRow as toSentRowIn,
+} from './letter-row';
+
+const tKo = createTranslator({
+  locale: 'ko',
+  messages: ko,
+  namespace: 'mailbox',
+});
+const tJa = createTranslator({
+  locale: 'ja',
+  messages: ja,
+  namespace: 'mailbox',
+});
+const toReceivedRow = (letter: ReceivedLetter) => toReceivedRowIn(letter, tKo);
+const toSentRow = (feedback: SentFeedback) => toSentRowIn(feedback, tKo);
 
 const received: ReceivedLetter = {
   letterId: 1,
@@ -62,5 +82,15 @@ describe('toSentRow', () => {
 
   it('보낸 시각은 작성 시각이다 — 목록이 한 줄로 같은 자리에 그린다', () => {
     expect(toSentRow(sent).sentAt).toBe(sent.createdAt);
+  });
+
+  it('일본어 화면이면 제목과 칩도 일본어로 단다', () => {
+    // Given 일본어 화면
+    // When 보낸 피드백을 줄로 옮기면
+    const row = toSentRowIn(sent, tJa);
+
+    // Then 유형 이름과 처리 상태가 일본어다
+    expect(row.title).toBe('不具合を報告する');
+    expect(row.badge.label).toBe('対応中');
   });
 });
