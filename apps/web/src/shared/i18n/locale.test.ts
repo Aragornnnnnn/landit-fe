@@ -8,6 +8,7 @@ import {
   localeFromAcceptLanguage,
   localeFromDocument,
   resolveRequestLocale,
+  sellsKoreaOnlyOffers,
   signupLanguages,
 } from './locale';
 
@@ -136,5 +137,12 @@ describe('localeFromDocument', () => {
     document.documentElement.lang = 'fr';
 
     expect(localeFromDocument()).toBe('ko');
+  });
+});
+
+describe('sellsKoreaOnlyOffers', () => {
+  it('한국어 화면만 한국 전용 혜택을 보여 준다', () => {
+    expect(sellsKoreaOnlyOffers('ko')).toBe(true);
+    expect(sellsKoreaOnlyOffers('ja')).toBe(false);
   });
 });

@@ -114,4 +114,19 @@ describe('PreviewIntro', () => {
     expect(track).toHaveBeenCalledWith('Premium Preview Intro Completed');
     expect(onDone).toHaveBeenCalledTimes(1);
   });
+
+  it('환급을 팔지 않으면 적립 대신 매일 시나리오와 맞춤 표현을 소개한다', () => {
+    // Given 환급 금액 없이 연 튜토리얼
+    vi.useFakeTimers();
+    render(<PreviewIntro dailyWon={null} onDone={vi.fn()} />);
+
+    // When 첫 문장을 다 쓰면
+    runClock();
+
+    // Then 매일 시나리오를 준다고 말하고, 적립 이야기는 없다
+    expect(
+      screen.getByText(/매일 이렇게\s*시나리오를 하나씩\s*제공해 드려요/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/받을 수 있어요/)).not.toBeInTheDocument();
+  });
 });

@@ -37,32 +37,49 @@ const tickDelayOf = (phase: 'typing' | 'erasing', skip: boolean) => {
 // 문장 조각 — 두 번째 값이 참이면 금색으로 강조한다
 type Part = readonly [text: string, highlight?: boolean];
 
-const sentencesOf = (dailyWon: number) =>
-  [
-    {
-      image: '/images/character/landy-good.webp',
-      parts: [
-        ['프리미엄 유저라면\n방금처럼 대화를 끝낼 때마다\n'],
-        [formatWon(dailyWon), true],
-        ['을 받을 수 있어요'],
-      ],
-    },
-    {
-      image: '/images/character/landy-genie.webp',
-      parts: [
-        ['프리미엄 이용이 끝나면\n그동안 모은 돈이\n'],
-        ['내 계좌로 들어와요', true],
-      ],
-    },
-    {
-      image: '/images/character/landy-point.webp',
-      parts: [
-        ['프리미엄의 또 다른 혜택!\n방금 대화로 만든 첫 '],
-        ['맞춤 표현', true],
-        ['을\n무료로 열어 드릴게요'],
-      ],
-    },
-  ] satisfies { image: string; parts: Part[] }[];
+type Sentence = { image: string; parts: Part[] };
+
+// 맞춤 표현을 열어 주는 마지막 문장 — 환급을 팔든 안 팔든 튜토리얼은 이 문장으로 끝나 무료 표현으로 이어진다
+const FREE_EXPRESSION_SENTENCE: Sentence = {
+  image: '/images/character/landy-point.webp',
+  parts: [
+    ['프리미엄의 또 다른 혜택!\n방금 대화로 만든 첫 '],
+    ['맞춤 표현', true],
+    ['을\n무료로 열어 드릴게요'],
+  ],
+};
+
+// 환급을 팔지 않는 화면(일본어)은 적립 대신 매일 받는 시나리오를 소개한다
+const PLAIN_SENTENCES: Sentence[] = [
+  {
+    image: '/images/character/landy-good.webp',
+    parts: [
+      ['매일 이렇게\n'],
+      ['시나리오를 하나씩', true],
+      ['\n제공해 드려요'],
+    ],
+  },
+  FREE_EXPRESSION_SENTENCE,
+];
+
+const rewardSentencesOf = (dailyWon: number): Sentence[] => [
+  {
+    image: '/images/character/landy-good.webp',
+    parts: [
+      ['프리미엄 유저라면\n방금처럼 대화를 끝낼 때마다\n'],
+      [formatWon(dailyWon), true],
+      ['을 받을 수 있어요'],
+    ],
+  },
+  {
+    image: '/images/character/landy-genie.webp',
+    parts: [
+      ['프리미엄 이용이 끝나면\n그동안 모은 돈이\n'],
+      ['내 계좌로 들어와요', true],
+    ],
+  },
+  FREE_EXPRESSION_SENTENCE,
+];
 
 const plainTextOf = (parts: readonly Part[]) =>
   parts.map(([text]) => text).join('');
@@ -85,13 +102,14 @@ export const PreviewIntro = ({
   dailyWon,
   onDone,
 }: {
-  dailyWon: number;
+  /** 대화 한 번에 쌓이는 환급액. 환급을 팔지 않으면 null이고 적립 문장을 빼고 소개한다 */
+  dailyWon: number | null;
   onDone: () => void;
 }) => {
   const reduced = useReducedMotion();
   // 금액은 처음 뜬 값으로 고정한다 — 쓰는 도중 가격이 도착해 글자 수가 바뀌면 문장이 잘린다
   const [won] = useState(dailyWon);
-  const sentences = sentencesOf(won);
+  const sentences = won === null ? PLAIN_SENTENCES : rewardSentencesOf(won);
   const lengths = sentences.map(({ parts }) => lengthOf(parts));
   const [typing, setTyping] = useState(INITIAL_TYPING);
 
