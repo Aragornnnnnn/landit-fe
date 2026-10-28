@@ -4,6 +4,7 @@ import {
   hasSpokenTime,
   toSpeakingTimeLabel,
 } from '@/features/small-talk/lib/speaking-time';
+import type { Locale } from '@/shared/i18n/locale';
 import { toDayLabel } from '@/shared/lib/day-label';
 
 interface Bar {
@@ -33,19 +34,17 @@ const toBars = (
 };
 
 // 오늘 말한 시간이 0초면(전부 타이핑) 그 줄을 뺀다. 지난번만 0초면 그대로 둔다
-export const toComparisonRows = ({
-  previous,
-  current,
-}: SmallTalkSummaryComparison): ComparisonRow[] => [
+export const toComparisonRows = (
+  { previous, current }: SmallTalkSummaryComparison,
+  locale: Locale,
+): ComparisonRow[] => [
   ...(!hasSpokenTime(current.speakingMs)
     ? []
     : [
         {
           label: '말한 시간',
-          ...toBars(
-            previous.speakingMs,
-            current.speakingMs,
-            toSpeakingTimeLabel,
+          ...toBars(previous.speakingMs, current.speakingMs, (ms) =>
+            toSpeakingTimeLabel(ms, locale),
           ),
         },
       ]),

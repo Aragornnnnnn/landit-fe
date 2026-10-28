@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -48,6 +49,7 @@ export const SmallTalkConversation = ({
   remainingSpeakingTimeMs,
   endSession,
 }: SmallTalkConversationProps) => {
+  const t = useTranslations('conversation.smallTalkConversation');
   const router = useRouter();
   const goHome = () => router.replace(SMALLTALK_PATH);
   const summaryPath = smallTalkSummaryPath(session.sessionId);
@@ -126,8 +128,7 @@ export const SmallTalkConversation = ({
   }, [showUserFirstIntro]);
 
   const resolveOverlayThought = (): FloatingThought | null => {
-    if (showUserFirstIntro)
-      return { text: '편하게 인사부터 건네 보세요!', type: 'NORMAL' };
+    if (showUserFirstIntro) return { text: t('userFirstHint'), type: 'NORMAL' };
     if (phase === 'AI_INNER_THOUGHT')
       return { text: turn.innerThought, type: turn.innerThoughtType };
     return null;
@@ -156,7 +157,7 @@ export const SmallTalkConversation = ({
             setShowExitSheet(true);
           }}
           className="flex size-10 items-center justify-center text-foreground transition-transform active:scale-90"
-          aria-label="대화 나가기"
+          aria-label={t('exitButton')}
         >
           <CloseIcon size={24} />
         </button>
@@ -241,7 +242,7 @@ export const SmallTalkConversation = ({
           // 버튼은 끝내는 말이 아니라 다음에 볼 것으로 부른다 — 여기서 대화는 이미 끝났다
           <div className="flex h-36 items-end px-5 pb-3">
             <Button onClick={showSummary}>
-              피드백 보러가기
+              {t('feedbackButton')}
               <ArrowRightIcon size={16} />
             </Button>
           </div>
@@ -252,10 +253,13 @@ export const SmallTalkConversation = ({
                 무제한이면 이 줄째 없다 — "무제한"이라 써 둘 것도 없다 */}
             {!unlimited && (
               <p className="mt-3 text-center text-sm font-medium text-muted-foreground">
-                남은 말하기 시간{' '}
-                <span className="font-bold text-primary">
-                  {toCountdownLabel(remainingMs)}
-                </span>
+                {/* 남은 시간만 강조색으로 — 언어마다 앞뒤 말 순서가 달라 문구 안에 자리를 둔다 */}
+                {t.rich('remainingTimeLabel', {
+                  time: toCountdownLabel(remainingMs),
+                  emphasis: (chunks) => (
+                    <span className="font-bold text-primary">{chunks}</span>
+                  ),
+                })}
               </p>
             )}
             <MicControl

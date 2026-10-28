@@ -3,6 +3,7 @@
 // 대화 페이지 — 시나리오를 찾아 대화 플로우([시뮬])를 시작한다
 import { Suspense, use } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSkeleton';
@@ -32,6 +33,7 @@ function ScenarioTalkContent({
 }: {
   params: Promise<{ scenarioId: string }>;
 }) {
+  const t = useTranslations('conversation.scenarioTalkPage');
   const { scenarioId } = use(params);
   // 지난 날 카드에서 들어오면 그 날짜가 실려 온다. 없으면 오늘이다.
   // searchParams prop은 앱 안에서 이동할 때 갱신되지 않아 훅으로 읽는다
@@ -55,7 +57,7 @@ function ScenarioTalkContent({
     return (
       <main className="mx-auto flex h-dvh max-w-[430px] flex-col items-center justify-center gap-4 bg-background px-6 text-center">
         <p className="text-sm text-muted-foreground">
-          {error?.message ?? '시나리오를 찾을 수 없어요.'}
+          {error?.message ?? t('notFoundError')}
         </p>
         <Button
           variant="secondary"
@@ -71,7 +73,7 @@ function ScenarioTalkContent({
                 () => router.replace(scenarioReturnPath({ date }))
           }
         >
-          {error ? '다시 시도' : '홈으로'}
+          {error ? t('retryButton') : t('homeButton')}
         </Button>
       </main>
     );

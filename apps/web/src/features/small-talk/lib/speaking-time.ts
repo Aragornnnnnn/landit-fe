@@ -1,4 +1,6 @@
-// 발화 시간 표기 — 서버가 주는 밀리초를 "2분 41초"처럼 읽히는 문장으로 바꾼다
+// 발화 시간 표기 — 서버가 주는 밀리초를 "2분 41초"(일본어는 "2分41秒")처럼 읽히는 문장으로 바꾼다
+import type { Locale } from '@/shared/i18n/locale';
+
 const SECOND_MS = 1000;
 const MINUTE_SECONDS = 60;
 
@@ -11,12 +13,21 @@ const toMinutesSeconds = (ms: number) => {
   };
 };
 
-export const toSpeakingTimeLabel = (ms: number): string => {
-  const { minutes, seconds } = toMinutesSeconds(ms);
+// 분·초 단위 글자와 그 사이 띄어쓰기 — 일본어는 단위 사이를 띄우지 않는다
+const UNITS: Record<Locale, { minute: string; second: string; gap: string }> = {
+  ko: { minute: '분', second: '초', gap: ' ' },
+  ja: { minute: '分', second: '秒', gap: '' },
+};
 
-  if (minutes === 0) return `${seconds}초`;
+export const toSpeakingTimeLabel = (ms: number, locale: Locale): string => {
+  const { minutes, seconds } = toMinutesSeconds(ms);
+  const { minute, second, gap } = UNITS[locale];
+
+  if (minutes === 0) return `${seconds}${second}`;
   // 딱 떨어지는 분에 "0초"를 붙이지 않는다
-  return seconds === 0 ? `${minutes}분` : `${minutes}분 ${seconds}초`;
+  return seconds === 0
+    ? `${minutes}${minute}`
+    : `${minutes}${minute}${gap}${seconds}${second}`;
 };
 
 // 말한 시간이 있는가 — 전부 타이핑한 대화는 0이 온다. 표기가 "0초"인 값(1초 미만)은 기록으로 뜻이 없어 그 칸을 뺀다

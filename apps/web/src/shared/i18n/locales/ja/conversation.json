@@ -1,0 +1,117 @@
+{
+  "thoughtReveal": {
+    "mascotLabel": "ラディ",
+    "frameCaption": "こっそり教える本音",
+    "waitingLabel": "相手が考えています"
+  },
+  "thoughtOverlay": {
+    "dialogLabel": "相手の本音"
+  },
+  "micControl": {
+    "retryButton": "もう一度話す",
+    "sendButton": "送信",
+    "cancelButton": "回答をやめる",
+    "doneButton": "回答を終える",
+    "resendButton": "もう一度送信",
+    "resendHint": "タップしてもう一度送信",
+    "keyboardButton": "キーボードで入力",
+    "speakButton": "話す"
+  },
+  "questionCard": {
+    "lastQuestionBadge": "最後の質問です",
+    "instructionCaption": "自分から話しかける場面",
+    "replayButton": "もう一度聞く",
+    "stopReplayButton": "再生を止める",
+    "showTranslationButton": "訳を見る",
+    "hideTranslationButton": "訳を閉じる",
+    "showTextButton": "英文を表示",
+    "hideTextButton": "英文を隠す"
+  },
+  "userTranscript": {
+    "editLabel": "回答を直す：{text}",
+    "headerLabel": "あなたの回答",
+    "unsentError": "接続が不安定です",
+    "editBadge": "修正",
+    "editHint": "話した内容と違ったらタップして直せます"
+  },
+  "transcriptEditor": {
+    "headerLabel": "あなたの回答",
+    "cancelButton": "入力をキャンセル",
+    "placeholder": "回答を入力してください",
+    "sendButton": "回答を送信",
+    "englishOnlyToast": "英語のみ入力できます",
+    "limitToast": "{max}文字まで入力できます"
+  },
+  "listeningDots": {
+    "listeningLabel": "聞いています"
+  },
+  "micPermissionSheet": {
+    "title": "会話するにはマイクをオンにしてください",
+    "browserBody": "ブラウザの設定でこのサイトのマイクを許可してから、もう一度お試しください。",
+    "closeButton": "閉じる",
+    "settingsButton": "設定を開く",
+    "openSettingsBody": "下の「設定を開く」をタップします。",
+    "findMicBody": "「権限」→「マイク」に移動します。",
+    "allowBody": "「許可」をオンにして戻ります。"
+  },
+  "exitConfirmSheet": {
+    "title": "会話を終了しますか？",
+    "description": "今やめると、この会話は保存されません。",
+    "confirmButton": "やめる",
+    "continueButton": "続ける"
+  },
+  "conversationTurns": {
+    "connectionToast": "接続に問題が発生しました。しばらくしてからもう一度お試しください"
+  },
+  "conversationInput": {
+    "notRecognizedToast": "うまく聞き取れませんでした。もう一度話してみましょうか？",
+    "sttErrorToast": "音声認識に問題が発生しました。もう一度お試しください"
+  },
+  "smallTalkFlow": {
+    "openingHint": "今日あったことでも最近気になることでも、自分から話しかけてみましょう",
+    "connectionToast": "接続に問題があり、会話を続けられませんでした",
+    "completeFailedToast": "接続に問題があり、会話を終えられませんでした"
+  },
+  "smallTalkConversation": {
+    "userFirstHint": "気軽にあいさつから始めてみましょう！",
+    "exitButton": "会話をやめる",
+    "feedbackButton": "フィードバックを見る",
+    "remainingTimeLabel": "残り話せる時間 <emphasis>{time}</emphasis>"
+  },
+  "talkSummary": {
+    "speakingTimeLabel": "話した時間",
+    "exchangeLabel": "やりとり",
+    "exchangeCountLabel": "{count}回"
+  },
+  "smallTalkExitSheet": {
+    "title": "このまま終わりますか？",
+    "description": "会話をうまく締めくくるのも英語力のうち！",
+    "goodbyeCaption": "自分で締めくくってみます",
+    "closeButton": "自分で会話を締めくくる",
+    "completeButton": "会話を終了する"
+  },
+  "scenarioTalkPage": {
+    "notFoundError": "シナリオが見つかりません。",
+    "retryButton": "もう一度試す",
+    "homeButton": "ホームへ"
+  },
+  "answerGuideChip": {
+    "openButton": "例を見ます",
+    "hint": "思いつかないときはタップしてみてください"
+  },
+  "answerGuideCard": {
+    "regionLabel": "回答の例",
+    "title": "困ったらこう言ってみましょう",
+    "closeButton": "閉じる"
+  },
+  "scenarioTalkFlow": {
+    "userFirstHint": "場面をよく読んで、自分から話しかけてみましょう！",
+    "progressLabel": "会話の進み具合",
+    "exitButton": "会話をやめる",
+    "feedbackButton": "詳しい分析を見ます"
+  },
+  "smallTalkStart": {
+    "startError": "会話を始められませんでした。しばらくしてからもう一度お試しください",
+    "backButton": "戻る"
+  }
+}
