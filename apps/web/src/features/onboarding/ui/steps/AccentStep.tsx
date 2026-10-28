@@ -2,6 +2,9 @@
 'use client';
 
 import type { AccentLocale } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
+
+import { lineBreak } from '@/shared/i18n/rich';
 
 import { AccentForm } from '../common/AccentForm';
 
@@ -9,22 +12,20 @@ export const AccentStep = ({
   onNext,
 }: {
   onNext: (locale: AccentLocale) => void;
-}) => (
-  <div className="flex min-h-0 flex-1 flex-col pt-7">
-    <h1 className="text-3xl leading-[1.18] font-black tracking-normal break-keep">
-      어떤 영어로
-      <br />
-      배우고 싶으세요?
-    </h1>
-    <p className="mt-4 text-xl font-bold text-muted-foreground">
-      추천 표현과 피드백이 달라져요
-    </p>
+}) => {
+  const t = useTranslations('onboarding.accentStep');
+  return (
+    <div className="flex min-h-0 flex-1 flex-col pt-7">
+      <h1 className="text-3xl leading-[1.18] font-black tracking-normal break-keep">
+        {t.rich('title', lineBreak)}
+      </h1>
+      <p className="mt-4 text-xl font-bold text-muted-foreground">
+        {t('subtitle')}
+      </p>
 
-    <div className="mt-6 flex min-h-0 flex-1 flex-col">
-      <AccentForm
-        footnote="배울 억양은 언제든 변경할 수 있어요"
-        onConfirm={onNext}
-      />
+      <div className="mt-6 flex min-h-0 flex-1 flex-col">
+        <AccentForm footnote={t('hint')} onConfirm={onNext} />
+      </div>
     </div>
-  </div>
-);
+  );
+};

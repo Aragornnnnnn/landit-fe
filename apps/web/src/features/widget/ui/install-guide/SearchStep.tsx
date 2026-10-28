@@ -3,12 +3,14 @@
 
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import {
   WidgetPreviewMedium,
   WidgetPreviewSmall,
 } from '@/features/widget/ui/WidgetPreviewCard';
+import { lineBreak } from '@/shared/i18n/rich';
 
 import { GuideScaffold, PhoneMockup, TouchPulse } from './GuideScaffold';
 
@@ -18,12 +20,17 @@ const TYPE_MS = 80;
 // 다 친 뒤 결과 행이 떠 있는 걸 보여주는 시간 — 이 사이 손끝이 행을 누른다
 const RESULT_TAP_MS = 1500;
 
-const SizeCaption = ({ size }: { size: string }) => (
-  <span className="flex flex-col items-center gap-px">
-    <span className="text-[10px] font-bold text-[#1c1c1e]">{size}</span>
-    <span className="text-[9px] font-medium text-[#8e8e93]">대화 스트릭</span>
-  </span>
-);
+const SizeCaption = ({ size }: { size: string }) => {
+  const t = useTranslations('widget.searchStep');
+  return (
+    <span className="flex flex-col items-center gap-px">
+      <span className="text-[10px] font-bold text-[#1c1c1e]">{size}</span>
+      <span className="text-[9px] font-medium text-[#8e8e93]">
+        {t('widgetNameLabel')}
+      </span>
+    </span>
+  );
+};
 
 // 위젯 카드가 위에서부터 차례로 페이드인
 const cardFade = (order: number, reduced: boolean) =>
@@ -36,6 +43,7 @@ const cardFade = (order: number, reduced: boolean) =>
       };
 
 export const SearchStep = ({ onDone }: { onDone: () => void }) => {
+  const t = useTranslations('widget.searchStep');
   const reduced = useReducedMotion() ?? false;
   const [typed, setTyped] = useState(reduced ? QUERY : '');
   // 'search' = 검색 결과에서 landit 앱을 고르는 중, 'widgets' = 위젯 크기 목록이 펼쳐짐
@@ -70,15 +78,9 @@ export const SearchStep = ({ onDone }: { onDone: () => void }) => {
 
   return (
     <GuideScaffold
-      title={
-        <>
-          landit을 검색해서
-          <br />
-          위젯을 골라주세요
-        </>
-      }
-      subtitle="크기는 세 가지 중에 고를 수 있어요"
-      cta="홈 화면으로 가기"
+      title={t.rich('title', lineBreak)}
+      subtitle={t('subtitle')}
+      cta={t('homeButton')}
       onCta={onDone}
     >
       <PhoneMockup>
@@ -132,7 +134,7 @@ export const SearchStep = ({ onDone }: { onDone: () => void }) => {
                   landit
                 </span>
                 <span className="text-[10px] font-medium text-[#8e8e93]">
-                  대화 스트릭 위젯
+                  {t('widgetTitle')}
                 </span>
               </span>
               {/* 손끝이 결과 행을 톡 누른다 */}

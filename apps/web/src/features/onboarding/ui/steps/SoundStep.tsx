@@ -2,21 +2,22 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
+import { lineBreak } from '@/shared/i18n/rich';
 import { Button } from '@/shared/ui/Button';
 
 import { useSoundPlayback } from '../../model/useSoundPlayback';
 
 export const SoundStep = ({ onNext }: { onNext: () => void }) => {
+  const t = useTranslations('onboarding.soundStep');
   const { question, isSpeaking, bubbleVisible, progress } = useSoundPlayback();
 
   return (
     <>
       <div className="flex flex-1 flex-col pt-7">
         <h1 className="text-3xl leading-[1.18] font-black tracking-normal">
-          제가 이렇게 말을 걸게요
-          <br />
-          소리가 잘 들리나요?
+          {t.rich('title', lineBreak)}
         </h1>
 
         <div className="flex flex-1 flex-col justify-center gap-6">
@@ -29,7 +30,7 @@ export const SoundStep = ({ onNext }: { onNext: () => void }) => {
         </div>
       </div>
 
-      <Button onClick={onNext}>잘 들려요!</Button>
+      <Button onClick={onNext}>{t('nextButton')}</Button>
     </>
   );
 };
@@ -73,6 +74,16 @@ const Waveform = ({ isSpeaking }: { isSpeaking: boolean }) => {
   );
 };
 
+// 문장을 낱말(뒤 공백 포함)로 나누고 각 낱말이 문장 몇 번째 글자에서 시작하는지 함께 준다 — 하이라이트는 문장 전체 글자 순서로 센다
+const toWords = (sentence: string) => {
+  let start = 0;
+  return (sentence.match(/\S+\s*|\s+/g) ?? []).map((text) => {
+    const word = { text, start };
+    start += text.length;
+    return word;
+  });
+};
+
 // 질문 말풍선 — 재생 진행률(progress)에 맞춰 글자를 순서대로 하이라이트한다
 const QuestionBubble = ({
   question,
@@ -97,22 +108,32 @@ const QuestionBubble = ({
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="w-full rounded-[28px] rounded-tl-md bg-secondary px-6 py-7"
           >
+            {/* 글자를 하나씩 칠하되 낱말은 묶어 둔다 — 글자마다 inline-block이라 묶지 않으면 alrig/ht처럼 낱말 중간에서 줄이 넘어간다 */}
             <p className="text-22 leading-snug font-bold">
-              {question.split('').map((char, i) => (
-                <motion.span
-                  key={i}
-                  animate={{
-                    color:
-                      i < litIndex ? 'var(--primary)' : 'var(--foreground)',
-                  }}
-                  transition={{ duration: 0.08 }}
-                  style={{
-                    display: 'inline-block',
-                    whiteSpace: char === ' ' ? 'pre' : undefined,
-                  }}
-                >
-                  {char}
-                </motion.span>
+              {toWords(question).map(({ text, start }) => (
+                <span key={start} className="inline-block whitespace-nowrap">
+                  {text.split('').map((char, offset) => {
+                    const i = start + offset;
+                    return (
+                      <motion.span
+                        key={i}
+                        animate={{
+                          color:
+                            i < litIndex
+                              ? 'var(--primary)'
+                              : 'var(--foreground)',
+                        }}
+                        transition={{ duration: 0.08 }}
+                        style={{
+                          display: 'inline-block',
+                          whiteSpace: char === ' ' ? 'pre' : undefined,
+                        }}
+                      >
+                        {char}
+                      </motion.span>
+                    );
+                  })}
+                </span>
               ))}
             </p>
           </motion.div>

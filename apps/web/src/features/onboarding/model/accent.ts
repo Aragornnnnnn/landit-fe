@@ -4,8 +4,5 @@
 // 고른 값은 서버에만 남는다 (useSaveAccentMutation)
 import type { AccentLocale } from '@landit/analytics';
 
-export const ACCENTS: { locale: AccentLocale; label: string }[] = [
-  { locale: 'EN_US', label: '미국 영어' },
-  { locale: 'EN_GB', label: '영국 영어' },
-  { locale: 'EN_AU', label: '호주 영어' },
-];
+// 선택지 순서 — 이름은 화면 언어에 따라 문구 파일(onboarding.accentOptions)에서 읽는다
+export const ACCENTS: readonly AccentLocale[] = ['EN_US', 'EN_GB', 'EN_AU'];

@@ -47,13 +47,29 @@ const endsWithRole = (segment: string) =>
 
 // "<link>약관</link>에 {price}" → ['<link>', 'price'] 처럼 문장 안의 자리만 뽑는다.
 // 변수는 영문으로 시작하는 이름만 본다 — plural·select 분기 안의 문장({7일 …})을 변수로 잘못 잡지 않게.
-// 태그는 <br/>처럼 스스로 닫는 것도 센다
+// 줄바꿈(<br>)은 세지 않는다 — 줄을 바꾸는 자리는 언어마다 글자 길이에 따라 다르다
 const slotsOf = (message: string) =>
-  [...message.matchAll(/\{([a-zA-Z_]\w*)|<(\w+)\s*\/?>/g)]
+  [...message.matchAll(/\{([a-zA-Z_]\w*)|<(\w+)>/g)]
     .map((m) => m[1] ?? `<${m[2]}>`)
+    .filter((slot) => slot !== '<br>')
     .sort();
 
 describe('문구 파일 계약', () => {
+  it('한 언어에만 줄바꿈이 있는 키가 없다 — 줄바꿈 문구는 t.rich로만 그려져서 t()로 그리는 키에 한쪽만 생기면 그 언어에서 깨진다', () => {
+    const hasBreak = (message: string) => message.includes('<br>');
+    for (const [path, message] of jaEntries) {
+      const koMessage = koByKey.get(path);
+      if (koMessage === undefined) continue;
+      expect(hasBreak(message), path).toBe(hasBreak(koMessage));
+    }
+  });
+
+  it('스스로 닫는 태그(<br/>)를 쓰지 않는다 — next-intl이 태그로 읽지 않고 글자 그대로 내보낸다', () => {
+    for (const [path, message] of [...koEntries, ...jaEntries]) {
+      expect(message, path).not.toMatch(/<\w+\s*\/>/);
+    }
+  });
+
   it('언어마다 묶음 파일이 있다', async () => {
     for (const locale of LOCALES) {
       await expect(import(`./locales/${locale}.ts`)).resolves.toBeDefined();

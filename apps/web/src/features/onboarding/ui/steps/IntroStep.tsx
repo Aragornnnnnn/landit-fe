@@ -2,7 +2,9 @@
 'use client';
 
 import { motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
+import { lineBreak } from '@/shared/i18n/rich';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 
@@ -13,27 +15,30 @@ export const IntroStep = ({
   nickname: string | null;
   onNext: () => void;
 }) => {
+  const t = useTranslations('onboarding.introStep');
   return (
     <>
       <div className="flex flex-1 flex-col pt-7">
         <div className="space-y-5">
           <h1 className="text-3xl leading-[1.3] font-black tracking-normal">
-            안녕하세요{nickname ? `, ${nickname}님` : ''}{' '}
-            <motion.span
-              className="inline-block"
-              animate={{ rotate: [0, 20, -10, 20, -5, 0] }}
-              transition={{ delay: 0.5, duration: 1, ease: 'easeInOut' }}
-            >
-              <Emoji>👋</Emoji>
-            </motion.span>
-            <br />
-            원어민으로 만들어드릴게요
+            {t.rich(nickname ? 'namedGreetingTitle' : 'greetingTitle', {
+              nickname: nickname ?? '',
+              ...lineBreak,
+              // 인사말 끝에서 손을 흔든다 — 언어마다 인사말 길이가 달라 문구 안에 자리를 둔다
+              wave: () => (
+                <motion.span
+                  className="inline-block"
+                  animate={{ rotate: [0, 20, -10, 20, -5, 0] }}
+                  transition={{ delay: 0.5, duration: 1, ease: 'easeInOut' }}
+                >
+                  <Emoji>👋</Emoji>
+                </motion.span>
+              ),
+            })}
           </h1>
 
           <p className="text-xl leading-snug font-bold">
-            매일 대화 하나를 준비해드려요
-            <br />
-            꾸준히 하다 보면 입이 트여요
+            {t.rich('body', lineBreak)}
           </p>
         </div>
 
@@ -46,7 +51,7 @@ export const IntroStep = ({
           >
             <motion.img
               src="/images/character/landy-wave-smile.webp"
-              alt="래디"
+              alt={t('mascotLabel')}
               className="object-contain"
               style={{ width: 220, height: 220 }}
               animate={{
@@ -65,7 +70,7 @@ export const IntroStep = ({
         </div>
       </div>
 
-      <Button onClick={onNext}>좋아요!</Button>
+      <Button onClick={onNext}>{t('nextButton')}</Button>
     </>
   );
 };

@@ -2,6 +2,9 @@
 'use client';
 
 import { motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
+
+import { lineBreak } from '@/shared/i18n/rich';
 
 import {
   AppSlots,
@@ -28,19 +31,14 @@ const APP_SLOTS = [
 const PRESS_MS = 0.2;
 
 export const MenuStep = ({ onNext }: { onNext: () => void }) => {
+  const t = useTranslations('widget.menuStep');
   const reduced = useReducedMotion() ?? false;
 
   return (
     <GuideScaffold
-      title={
-        <>
-          편집을 누르고
-          <br />
-          위젯 추가를 골라주세요
-        </>
-      }
-      subtitle="메뉴가 열리면 위젯 추가가 보여요"
-      cta="다음"
+      title={t.rich('title', lineBreak)}
+      subtitle={t('subtitle')}
+      cta={t('nextButton')}
       onCta={onNext}
     >
       <PhoneMockup>
@@ -54,10 +52,10 @@ export const MenuStep = ({ onNext }: { onNext: () => void }) => {
           className="absolute"
         >
           <Capsule left={16} highlight>
-            편집
+            {t('editLabel')}
           </Capsule>
         </motion.div>
-        <Capsule left={186}>완료</Capsule>
+        <Capsule left={186}>{t('doneLabel')}</Capsule>
 
         {/* 메뉴가 캡슐 아래 좌상단 기준으로 펼쳐진다 — 첫 항목만 밝게, 색이 아니라 밝기로 짚는다 */}
         <motion.div
@@ -81,7 +79,7 @@ export const MenuStep = ({ onNext }: { onNext: () => void }) => {
                 : { duration: 0.9, repeat: Infinity, ease: 'easeInOut' }
             }
           >
-            위젯 추가
+            {t('addWidgetLabel')}
           </motion.div>
           <div className="h-8" />
           <div className="h-8" />
