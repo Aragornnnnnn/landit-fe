@@ -7,14 +7,14 @@ import type { PreloadableImage } from '@/shared/lib/preload-next-images';
 
 import type { SessionLevelAssessment } from '../api/level-assessment';
 
-/** 레벨 이름 — 래디의 마법사 성장 단계 (피그마 2136:2437, 2026-09-08) */
-export const LEVEL_NAMES: Record<EnglishLevel, string> = {
-  1: '애기 마법사',
-  2: '입문 마법사',
-  3: '견습 마법사',
-  4: '초급 마법사',
-  5: '중급 마법사',
-};
+/** 레벨 이름의 문구 키(feedback.levelNames) — 래디의 마법사 성장 단계 (피그마 2136:2437, 2026-09-08) */
+export const LEVEL_NAME_KEYS = {
+  1: 'babyLabel',
+  2: 'noviceLabel',
+  3: 'apprenticeLabel',
+  4: 'beginnerLabel',
+  5: 'intermediateLabel',
+} as const satisfies Record<EnglishLevel, string>;
 
 /** 레벨별 마법사 래디 — 피그마 2136:2437에서 배경 제거한 원본을 480px webp로. 레벨 결과와 마이페이지가 같이 쓴다 */
 // next/image에 그대로 펼친다 — 미리 받는 곳(대화 직후 흐름·마이페이지)과 그리는 곳이 같은 주소를 쓰게 크기까지 여기 둔다
@@ -33,23 +33,14 @@ export type DomainKey =
   | 'discourse'
   | 'interactionPragmatics';
 
-/** 평가 영역 다섯 개 — 시안 순서. label은 읽어 주는 이름, shortLabel은 그래프 꼭짓점에 쓴다 */
-export const DOMAINS: { key: DomainKey; label: string; shortLabel: string }[] =
-  [
-    {
-      key: 'situationPerformance',
-      label: '상황 수행 능력',
-      shortLabel: '상황 수행',
-    },
-    { key: 'grammar', label: '문법', shortLabel: '문법' },
-    { key: 'vocabulary', label: '어휘', shortLabel: '어휘' },
-    { key: 'discourse', label: '대화 구성', shortLabel: '대화 구성' },
-    {
-      key: 'interactionPragmatics',
-      label: '상호 작용 및 활용',
-      shortLabel: '상호 작용',
-    },
-  ];
+/** 평가 영역 다섯 개 — 시안 순서. 이름(읽어 주는 이름·그래프 꼭짓점 이름)은 feedback.domains 문구에서 읽는다 */
+export const DOMAINS: readonly DomainKey[] = [
+  'situationPerformance',
+  'grammar',
+  'vocabulary',
+  'discourse',
+  'interactionPragmatics',
+];
 
 // scoreMax가 없는 구버전 응답의 척도
 const LEGACY_SCORE_MAX = 5;
@@ -77,15 +68,12 @@ export const isUsableAssessment = (
 
 export interface DomainRow {
   key: DomainKey;
-  label: string;
-  shortLabel: string;
   /** 100점 환산 */
   score: number;
 }
 
 export interface LevelResult {
   level: EnglishLevel;
-  name: string;
   /** 관찰이 없는 영역은 뺀다 */
   rows: DomainRow[];
 }
@@ -102,9 +90,8 @@ export const toDomainPercent = (
 /** 쓸 만한 결과를 레벨 결과 화면의 값으로 바꾼다 */
 export const toLevelResult = (assessment: UsableAssessment): LevelResult => ({
   level: assessment.assessedLevel,
-  name: LEVEL_NAMES[assessment.assessedLevel],
-  rows: DOMAINS.flatMap(({ key, label, shortLabel }) => {
+  rows: DOMAINS.flatMap((key) => {
     const score = toDomainPercent(assessment, key);
-    return score === null ? [] : [{ key, label, shortLabel, score }];
+    return score === null ? [] : [{ key, score }];
   }),
 });

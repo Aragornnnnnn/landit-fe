@@ -25,7 +25,7 @@ import { fontScaleScript } from '@/shared/font-scale/font-scale';
 import { FontScaleSync } from '@/shared/font-scale/FontScaleSync';
 import { GlobalHaptics } from '@/shared/haptics';
 import { LocaleGate } from '@/shared/i18n/LocaleGate';
-import { MessagesProvider } from '@/shared/i18n/MessagesProvider';
+import { RootMessagesProvider } from '@/shared/i18n/MessagesProvider';
 import { MonitoringBootstrap } from '@/shared/monitoring/MonitoringBootstrap';
 import { Toaster } from '@/shared/ui/toast';
 
@@ -62,7 +62,7 @@ export default async function RootLayout({
         {/* 첫 페인트 전에 글자 크기를 적용한다 — 하이드레이션 뒤에 적용하면 보통 크기로 그려졌다가 한 번 바뀐다 */}
         <script dangerouslySetInnerHTML={{ __html: fontScaleScript }} />
         {/* 브라우저엔 어디서나 쓰는 common만 보낸다 — 화면 문구는 그 화면의 layout이 MessagesProvider로 자기 묶음을 더한다 */}
-        <MessagesProvider>
+        <RootMessagesProvider>
           <PlatformMarkerSync />
           <FontScaleSync />
           <AnalyticsBootstrap />
@@ -87,7 +87,7 @@ export default async function RootLayout({
           </Providers>
           <Toaster />
           <SpeedInsights />
-        </MessagesProvider>
+        </RootMessagesProvider>
       </body>
     </html>
   );

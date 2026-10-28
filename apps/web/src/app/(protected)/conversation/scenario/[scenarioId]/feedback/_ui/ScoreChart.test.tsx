@@ -3,27 +3,18 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { DomainRow } from '@/features/feedback/model/level-assessment';
+import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { ScoreChart } from './ScoreChart';
 
 vi.mock('motion/react', () => import('@/shared/motion/test-double'));
 
-const row = (
-  key: DomainRow['key'],
-  label: string,
-  score: number,
-): DomainRow => ({
-  key,
-  label,
-  shortLabel: label,
-  score,
-});
 const five: DomainRow[] = [
-  row('situationPerformance', '상황 수행', 82),
-  row('grammar', '문법', 54),
-  row('vocabulary', '어휘', 71),
-  row('discourse', '대화 구성', 66),
-  row('interactionPragmatics', '상호 작용', 58),
+  { key: 'situationPerformance', score: 82 },
+  { key: 'grammar', score: 54 },
+  { key: 'vocabulary', score: 71 },
+  { key: 'discourse', score: 66 },
+  { key: 'interactionPragmatics', score: 58 },
 ];
 
 afterEach(() => cleanup());
@@ -33,7 +24,7 @@ describe('ScoreChart', () => {
     render(<ScoreChart rows={five} />);
 
     expect(screen.getByRole('img')).toHaveAccessibleName(
-      '영역별 점수. 상황 수행 82점, 문법 54점, 어휘 71점, 대화 구성 66점, 상호 작용 58점',
+      '영역별 점수. 상황 수행 능력 82점, 문법 54점, 어휘 71점, 대화 구성 66점, 상호 작용 및 활용 58점',
     );
     expect(screen.queryByRole('list')).not.toBeInTheDocument();
   });
@@ -43,7 +34,7 @@ describe('ScoreChart', () => {
 
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
     expect(screen.getAllByRole('listitem')).toHaveLength(2);
-    expect(screen.getByText('상황 수행')).toBeInTheDocument();
+    expect(screen.getByText('상황 수행 능력')).toBeInTheDocument();
     expect(screen.getByText('82')).toBeInTheDocument();
   });
 
@@ -51,5 +42,15 @@ describe('ScoreChart', () => {
     const { container } = render(<ScoreChart rows={[]} />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it('일본어 화면은 영역 이름을 일본어로, 나열은 読点(、)으로 읽어 준다', () => {
+    setTestLocale('ja');
+
+    render(<ScoreChart rows={five} />);
+
+    expect(screen.getByRole('img')).toHaveAccessibleName(
+      '分野別スコア。場面対応力 82点、文法 54点、語彙 71点、会話の組み立て 66点、やりとりと活用 58点',
+    );
   });
 });

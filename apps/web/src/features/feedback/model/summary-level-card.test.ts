@@ -49,11 +49,11 @@ describe('decideSummaryLevelCard', () => {
     expect(card).toEqual({
       kind: 'ready',
       rows: [
-        { key: 'situationPerformance', label: '상황 대처 능력', score: 100 },
-        { key: 'vocabulary', label: '어휘력', score: 18 },
-        { key: 'grammar', label: '문법', score: 23 },
-        { key: 'discourse', label: '문장 완성도', score: 24 },
-        { key: 'interactionPragmatics', label: '대화 매너', score: 22 },
+        { key: 'situationPerformance', score: 100 },
+        { key: 'vocabulary', score: 18 },
+        { key: 'grammar', score: 23 },
+        { key: 'discourse', score: 24 },
+        { key: 'interactionPragmatics', score: 22 },
       ],
       improvement: '상황에 맞는 말을 해 봐요',
     });
@@ -72,8 +72,8 @@ describe('decideSummaryLevelCard', () => {
     });
 
     expect(card.kind === 'ready' && card.rows.slice(0, 2)).toEqual([
-      { key: 'situationPerformance', label: '상황 대처 능력', score: 100 },
-      { key: 'vocabulary', label: '어휘력', score: 18 },
+      { key: 'situationPerformance', score: 100 },
+      { key: 'vocabulary', score: 18 },
     ]);
   });
 

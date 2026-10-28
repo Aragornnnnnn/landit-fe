@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest';
 import type { SessionLevelAssessment } from '../api/level-assessment';
 import {
   isUsableAssessment,
-  LEVEL_NAMES,
   toLevelResult,
   toPercentScore,
   type UsableAssessment,
@@ -65,24 +64,16 @@ describe('isUsableAssessment', () => {
 });
 
 describe('toLevelResult', () => {
-  it('레벨 이름과 영역 다섯 줄을 시안 순서로 만든다', () => {
+  it('레벨과 영역 다섯 줄을 시안 순서로 만든다', () => {
     const result = toLevelResult(base);
 
     expect(result.level).toBe(3);
-    expect(result.name).toBe(LEVEL_NAMES[3]);
-    expect(result.rows.map((row) => row.label)).toEqual([
-      '상황 수행 능력',
-      '문법',
-      '어휘',
-      '대화 구성',
-      '상호 작용 및 활용',
-    ]);
-    expect(result.rows.map((row) => row.shortLabel)).toEqual([
-      '상황 수행',
-      '문법',
-      '어휘',
-      '대화 구성',
-      '상호 작용',
+    expect(result.rows.map((row) => row.key)).toEqual([
+      'situationPerformance',
+      'grammar',
+      'vocabulary',
+      'discourse',
+      'interactionPragmatics',
     ]);
     expect(result.rows.map((row) => row.score)).toEqual([82, 54, 71, 66, 58]);
   });

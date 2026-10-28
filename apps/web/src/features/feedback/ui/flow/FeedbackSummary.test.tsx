@@ -19,7 +19,6 @@ import type {
   ScenarioGrowthCard,
   SessionFeedbackResponse,
 } from '../../api/session-feedback';
-import { LOCKED_DETAIL_CTA_LABEL } from '../../model/feedback-view';
 import { FeedbackSummary } from './FeedbackSummary';
 
 const mocks = vi.hoisted(() => ({ getLevelAssessment: vi.fn() }));
@@ -147,7 +146,7 @@ describe('FeedbackSummary', () => {
     expect(screen.queryByText(/걸음/)).not.toBeInTheDocument();
 
     // When 그 CTA를 누르면 호출부가 페이월로 보낼 수 있게 그대로 알린다
-    fireEvent.click(screen.getByText(LOCKED_DETAIL_CTA_LABEL));
+    fireEvent.click(screen.getByText('상세 피드백 볼게요'));
     expect(onDetail).toHaveBeenCalledTimes(1);
   });
 

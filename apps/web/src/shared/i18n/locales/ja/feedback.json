@@ -1,0 +1,91 @@
+{
+  "levelNames": {
+    "babyLabel": "ひよっこ魔法使い",
+    "noviceLabel": "入門魔法使い",
+    "apprenticeLabel": "見習い魔法使い",
+    "beginnerLabel": "初級魔法使い",
+    "intermediateLabel": "中級魔法使い"
+  },
+  "domains": {
+    "situationPerformanceLabel": "場面対応力",
+    "situationPerformanceShortLabel": "場面対応",
+    "grammarLabel": "文法",
+    "grammarShortLabel": "文法",
+    "vocabularyLabel": "語彙",
+    "vocabularyShortLabel": "語彙",
+    "discourseLabel": "会話の組み立て",
+    "discourseShortLabel": "組み立て",
+    "interactionPragmaticsLabel": "やりとりと活用",
+    "interactionPragmaticsShortLabel": "やりとり"
+  },
+  "summaryDomains": {
+    "situationPerformanceLabel": "場面への対応力",
+    "situationPerformanceDescription": "場面に合わせて言うべきことを言えたかを見ます",
+    "vocabularyLabel": "語彙力",
+    "vocabularyDescription": "場面にふさわしい単語を選んで使えたかを見ます",
+    "grammarLabel": "文法",
+    "grammarDescription": "時制や語順などの文法を正しく使えたかを見ます",
+    "discourseLabel": "文の完成度",
+    "discourseDescription": "考えを最後までつなげて、完結した文で話せたかを見ます",
+    "interactionPragmaticsLabel": "会話のマナー",
+    "interactionPragmaticsDescription": "相手の話に反応しながら、自然にやりとりできたかを見ます"
+  },
+  "feedbackView": {
+    "fallbackTitle": "会話のフィードバック"
+  },
+  "feedbackFlow": {
+    "unavailableError": "フィードバックを読み込めませんでした。",
+    "nextButton": "次へ"
+  },
+  "feedbackSummary": {
+    "closeButton": "閉じる",
+    "successBody": "{total}回中<emphasis>{good}回</emphasis>、ネイティブのように話せました",
+    "overallTitle": "総評",
+    "lockedDetailLabel": "詳しいフィードバックを見る。決済画面に移動します",
+    "lockedDetailButton": "詳しいフィードバックを見ます",
+    "improveButton": "ネイティブまであと{count}歩、直してみます",
+    "reviewButton": "何がうまく伝わったか見てみます",
+    "growthEmptyTitle": "前回迷った過去形",
+    "growthEmptyBody": "まだ前回の記録がありません。",
+    "reuseEmptyBody": "まだ学んだフレーズがありません。",
+    "fallbackTitle": "今日もシナリオをしっかりやり遂げました"
+  },
+  "feedbackDetail": {
+    "backButton": "前へ",
+    "title": "詳しい分析",
+    "finishButton": "分析を全部見ました",
+    "nextButton": "次の分析を見ます",
+    "goodTitle": "うまく伝わりました",
+    "improveTitle": "もう一段階レベルアップしましょう",
+    "questionLabel": "質問",
+    "situationLabel": "場面",
+    "answerLabel": "あなたの回答",
+    "analogyTitle": "日本語で言うと",
+    "goodReasonTitle": "よかった理由",
+    "goodDetailTitle": "この細かい部分が伝わりました",
+    "correctionTitle": "こう言うともっと伝わります",
+    "positiveTitle": "ここはよかったです"
+  },
+  "growthCard": {
+    "succeededTitle": "前回迷った{pattern}",
+    "stillTitle": "まだ迷っている{pattern}",
+    "todayLabel": "今日",
+    "succeededBody": "前回は迷いましたが、今日は正解でした。",
+    "stillBody": "前回に続き、今日も迷いました。詳しいフィードバックでもう一度確認できます。"
+  },
+  "reusedExpressionsCard": {
+    "title": "Landitで学んだフレーズを実際に使いました",
+    "moreButton": "さらに{count}個を見る"
+  },
+  "scoreTrack": {
+    "scoreLabel": "ネイティブ理解度 {score}%",
+    "mascotLabel": "飛んでいくラディ"
+  },
+  "summaryLevelCard": {
+    "title": "今回の会話で",
+    "scoreLabel": "{score}点",
+    "loadingLabel": "今回の会話のスコアを分析しています",
+    "infoBody": "今回の会話1回を分野ごとに見たスコアです。100点に近いほど、ネイティブのように自然に話せています。",
+    "infoButton": "スコアの説明"
+  }
+}

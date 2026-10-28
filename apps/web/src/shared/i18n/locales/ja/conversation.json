@@ -113,5 +113,42 @@
   "smallTalkStart": {
     "startError": "会話を始められませんでした。しばらくしてからもう一度お試しください",
     "backButton": "戻る"
+  },
+  "analyzingScreen": {
+    "title": "今の会話をもとに<br></br>レベルを分析しています",
+    "listeningCaption": "今の会話をもう一度聞いています",
+    "comparingCaption": "ネイティブの表現と比べています",
+    "reviewingCaption": "分野ごとにじっくり見ています",
+    "finalizingCaption": "レベルと学習プランをまとめています"
+  },
+  "levelResultScreen": {
+    "worksheetButton": "自分にぴったりの学習プランを受け取る",
+    "namedLevelCaption": "{nickname}さんのレベルは",
+    "levelCaption": "今のレベルは",
+    "scoresTitle": "分野別スコア"
+  },
+  "postConversationFlow": {
+    "previewStartButton": "Landitで英語の勉強を始める"
+  },
+  "scoreChart": {
+    "summaryLabel": "分野別スコア。{scores}",
+    "domainScoreLabel": "{domain} {score}点",
+    "separatorLabel": "、"
+  },
+  "preparedLearningScreen": {
+    "title": "今の会話に合わせた学習を<emphasis>{count}個</emphasis>用意しました",
+    "levelCaption": "<emphasis>レベル</emphasis>にぴったり合わせます",
+    "namedLevelCaption": "{nickname}さんの<emphasis>レベル</emphasis>に合わせます",
+    "pickedCaption": "会話から選んだ<emphasis>フレーズ{count}個</emphasis>",
+    "practiceCaption": "<emphasis>絵・例文・クイズ</emphasis>で身につけます",
+    "pronunciationCaption": "<emphasis>発音チェック</emphasis>で上達します",
+    "reviewCaption": "<emphasis>復習クイズ</emphasis>で定着させます",
+    "freeTalkCaption": "<emphasis>無制限スモールトーク</emphasis>で実践",
+    "lockedLabel": "ロックされた学習{count}個。レベルに合わせた学習を、絵・例文・クイズ、発音チェック、復習クイズ、スモールトークで進めます",
+    "coffeeMeaningLabel": "コーヒーでも飲みに行く？",
+    "agreeMeaningLabel": "私も大賛成",
+    "dropByMeaningLabel": "ちょっと寄るね",
+    "goToMeaningLabel": "いつも頼むメニューなんだ",
+    "startButton": "学習を始める"
   }
 }
