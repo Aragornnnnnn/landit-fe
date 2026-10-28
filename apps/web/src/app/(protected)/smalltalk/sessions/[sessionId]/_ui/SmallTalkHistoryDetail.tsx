@@ -9,7 +9,10 @@ import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
 import { ExpressionList } from '@/features/expression/ui/ExpressionList';
 import { toSessionTitle } from '@/features/small-talk/lib/session-summary';
-import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
+import {
+  hasSpokenTime,
+  toSpeakingTimeLabel,
+} from '@/features/small-talk/lib/speaking-time';
 import { toExpressionListItems } from '@/features/small-talk/model/session-expressions';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
@@ -121,14 +124,19 @@ export const SmallTalkHistoryDetail = ({
                   label={t('historyDetail.dateLabel')}
                   value={toDayLabel(session.completedAt, locale)}
                 />
-                <Divider />
-                <Stat
-                  label={t('historyDetail.speakingTimeLabel')}
-                  value={toSpeakingTimeLabel(
-                    session.userSpeakingDurationMs,
-                    locale,
-                  )}
-                />
+                {/* 전부 타이핑한 대화는 말한 시간이 0초라 칸째 뺀다 */}
+                {hasSpokenTime(session.userSpeakingDurationMs) && (
+                  <>
+                    <Divider />
+                    <Stat
+                      label={t('historyDetail.speakingTimeLabel')}
+                      value={toSpeakingTimeLabel(
+                        session.userSpeakingDurationMs,
+                        locale,
+                      )}
+                    />
+                  </>
+                )}
                 <Divider />
                 <Stat
                   label={t('historyDetail.exchangeLabel')}

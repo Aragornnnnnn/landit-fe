@@ -122,3 +122,44 @@ describe('SmallTalkHistoryDetail 더 자연스러운 말 뱃지', () => {
     ).toBeInTheDocument();
   });
 });
+
+describe('SmallTalkHistoryDetail 말한 시간', () => {
+  const renderWithSpeaking = (userSpeakingDurationMs: number) => {
+    sessionQuery.mockReturnValue({
+      session: {
+        sessionId: 362,
+        title: 'Cardio workout',
+        startedAt: '2026-09-10T09:50:00',
+        completedAt: '2026-09-10T10:00:00',
+        userSpeakingDurationMs,
+        messages: [],
+        expressionGenerationStatus: 'READY',
+        expressionLearningStatus: 'NOT_STARTED',
+        expressions: [],
+        correctionCount: 0,
+      },
+      error: null,
+      isLoading: false,
+      generationStuck: false,
+      waitExpired: false,
+      retry: vi.fn(),
+      regenerate: vi.fn(),
+    });
+    render(<SmallTalkHistoryDetail sessionId={362} />);
+  };
+
+  it('말한 시간이 있으면 통계 칸에 보인다', () => {
+    renderWithSpeaking(52_000);
+
+    expect(screen.getByText('말한 시간')).toBeInTheDocument();
+    expect(screen.getByText('52초')).toBeInTheDocument();
+  });
+
+  it('전부 타이핑해 0초면 말한 시간 칸을 뺀다', () => {
+    renderWithSpeaking(0);
+
+    expect(screen.queryByText('말한 시간')).toBeNull();
+    expect(screen.getByText('대화한 날')).toBeInTheDocument();
+    expect(screen.getByText('주고받은 말')).toBeInTheDocument();
+  });
+});
