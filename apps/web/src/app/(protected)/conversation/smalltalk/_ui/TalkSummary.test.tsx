@@ -1,4 +1,4 @@
-// 스몰톡이 끝난 자리의 두 숫자 — 말한 시간과 주고받은 말을 화면 언어대로 적는다
+// 스몰톡이 끝난 자리의 두 숫자 — 화면 언어대로 적고, 전부 타이핑한 대화면 말한 시간 칸을 뺀다
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -27,5 +27,12 @@ describe('TalkSummary', () => {
     expect(screen.getByText('話した時間')).toBeInTheDocument();
     expect(screen.getByText('2分41秒')).toBeInTheDocument();
     expect(screen.getByText('12回')).toBeInTheDocument();
+  });
+
+  it('전부 타이핑해 0초면 말한 시간 칸을 뺀다', () => {
+    render(<TalkSummary speakingDurationMs={0} exchangeCount={6} />);
+
+    expect(screen.queryByText('말한 시간')).toBeNull();
+    expect(screen.getByText('6개')).toBeInTheDocument();
   });
 });
