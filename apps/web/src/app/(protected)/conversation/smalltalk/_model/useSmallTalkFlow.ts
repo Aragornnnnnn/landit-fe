@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 import { preload } from 'react-dom';
 
 import type { Partner } from '@/features/conversation/model/character-look';
+import { CHARACTER_KEYTERMS } from '@/features/conversation/model/stt-keyterms';
 import { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 // 첫 완료 뒤 스몰톡 탭에서 소감을 묻는다 — 완료를 아는 곳이 여기뿐이라 가로 import를 둔다
 import { markTalkCompleted } from '@/features/satisfaction/model/prompt-record';
@@ -128,6 +129,8 @@ export const useSmallTalkFlow = ({
     openingAudioSrc: null,
     sessionId: session.sessionId,
     ensureSession: async () => session.sessionId,
+    // 스몰톡은 주제가 매번 달라 캐릭터 이름만 넘긴다
+    keytermsFor: () => CHARACTER_KEYTERMS,
     submit: async ({ content, inputType, turnIndex, utteranceDurationMs }) => {
       if (talkClosed()) return null; // 끝냈거나 나간 대화 — 더 보내지 않는다
       let result: SmallTalkMessageSubmitResponse;
@@ -201,8 +204,11 @@ export const useSmallTalkFlow = ({
   // 서버도 예약 차감이라 초과분을 받아 주고(잔량은 0에서 멈춘다), 그 턴을 작별 인사로 닫는다
   const budget = useSpeakingBudget({
     initialMs: remainingSpeakingTimeMs,
-    // 말한 뒤 확인하며 머무는 시간은 말한 시간이 아니다 — 마이크가 켜져 있는 동안만 깎는다
-    speaking: engine.phase === 'USER_SPEAKING' && !engine.input.reviewing,
+    // 말한 뒤 확인하며 머무는 시간·타이핑하는 시간은 말한 시간이 아니다 — 마이크가 켜져 있는 동안만 깎는다
+    speaking:
+      engine.phase === 'USER_SPEAKING' &&
+      !engine.input.reviewing &&
+      !engine.input.keyboardMode,
     waiting: engine.phase === 'USER_READY',
     listenCount: engine.input.listenCount,
     reviewedDurationMs: engine.input.reviewedDurationMs,
