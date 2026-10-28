@@ -39,7 +39,8 @@
     "cancelButton": "입력 취소",
     "placeholder": "답변을 입력하세요",
     "sendButton": "답변 전송",
-    "englishOnlyToast": "영어로만 입력할 수 있어요"
+    "englishOnlyToast": "영어로만 입력할 수 있어요",
+    "limitToast": "{max}자까지 입력할 수 있어요"
   },
   "listeningDots": {
     "listeningLabel": "듣는 중"

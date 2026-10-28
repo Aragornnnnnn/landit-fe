@@ -39,7 +39,8 @@
     "cancelButton": "入力をキャンセル",
     "placeholder": "回答を入力してください",
     "sendButton": "回答を送信",
-    "englishOnlyToast": "英語のみ入力できます"
+    "englishOnlyToast": "英語のみ入力できます",
+    "limitToast": "{max}文字まで入力できます"
   },
   "listeningDots": {
     "listeningLabel": "聞いています"

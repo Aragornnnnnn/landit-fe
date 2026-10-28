@@ -70,13 +70,16 @@ const makeHandlers = () => ({
   onError: vi.fn(),
 });
 
-const startWithFakes = async (options: { stopOnSilence?: boolean } = {}) => {
+const startWithFakes = async (
+  options: { stopOnSilence?: boolean; keyterms?: readonly string[] } = {},
+) => {
   const handlers = makeHandlers();
   const session = await startDeepgramStt({
     ...handlers,
     lang: 'ko',
     endpointingMs: 2000,
     stopOnSilence: options.stopOnSilence ?? true,
+    keyterms: options.keyterms,
   });
   const ws = FakeWebSocket.instances.at(-1)!;
   return { session, ws, ...handlers };
@@ -354,6 +357,13 @@ describe('startDeepgramStt', () => {
 
     expect(ws.url).toContain('endpointing=false');
     expect(ws.url).not.toContain('utterance_end_ms');
+  });
+
+  it('키워드를 넘기면 단어마다 keyterm 파라미터를 따로 붙인다', async () => {
+    const { ws } = await startWithFakes({ keyterms: ['USIM', 'Halli Galli'] });
+
+    const params = new URL(ws.url).searchParams;
+    expect(params.getAll('keyterm')).toEqual(['USIM', 'Halli Galli']);
   });
 
   it('stopOnSilence가 꺼져 있으면 침묵이 지나도 발화가 이어진다', async () => {

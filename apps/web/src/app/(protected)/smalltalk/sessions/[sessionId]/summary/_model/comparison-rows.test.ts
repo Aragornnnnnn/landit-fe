@@ -1,4 +1,4 @@
-// 지난번과 비교 카드의 줄 — 막대 길이는 둘 중 큰 값 기준, 첫 스몰톡이면 지난번은 0
+// 지난번과 비교 카드의 줄 — 막대 길이는 둘 중 큰 값 기준, 첫 스몰톡이면 지난번은 0, 오늘 말한 시간 0초면 그 줄은 뺀다
 import { describe, expect, it } from 'vitest';
 
 import type { SmallTalkSummaryComparison } from '@/features/small-talk/api/small-talk';
@@ -59,8 +59,40 @@ describe('toComparisonRows', () => {
       'ko',
     );
 
-    expect(rows[0]!.current.ratio).toBe(0);
-    expect(rows[0]!.previous.ratio).toBe(0);
+    const turns = rows.find((row) => row.label === '주고받은 말')!;
+    expect(turns.current.ratio).toBe(0);
+    expect(turns.previous.ratio).toBe(0);
+  });
+
+  it('오늘 말한 시간이 0초면(전부 타이핑) 말한 시간 줄을 빼고 나머지 두 줄만 둔다', () => {
+    const rows = toComparisonRows(
+      {
+        ...comparison,
+        current: { ...comparison.current, speakingMs: 0 },
+      },
+      'ko',
+    );
+
+    expect(rows.map((row) => row.label)).toEqual([
+      '주고받은 말',
+      '가장 길게 말한 턴',
+    ]);
+  });
+
+  it('지난번만 0초면 말한 시간 줄을 그대로 둔다 — 첫 스몰톡도 이 경우다', () => {
+    const rows = toComparisonRows(
+      {
+        ...comparison,
+        previous: { ...comparison.previous, speakingMs: 0 },
+      },
+      'ko',
+    );
+
+    expect(rows[0]).toMatchObject({
+      label: '말한 시간',
+      previous: { ratio: 0 },
+      current: { ratio: 1 },
+    });
   });
 });
 
