@@ -13,7 +13,7 @@ import { z } from 'zod';
 // 11: 컨텍스트에 deviceId 추가 (친구 초대 같은 기기 판정용)
 // 12: LOG_AD_EVENT 추가 (메타 광고 최적화용 앱 이벤트, LAN-768)
 // 13: REQUEST_TRACKING_STATUS ↔ TRACKING_STATUS (iOS 광고 추적 허용 계측, LAN-769)
-// 14: 컨텍스트에 languages(기기 선호 언어 목록) 추가, SET_LOCALE 추가 (셸 문구를 화면 언어로, LAN-777)
+// 14: 컨텍스트에 languages(기기 선호 언어 목록) 추가, SET_LOCALE 추가, ALARM_STATUS 알람에 title 추가 (셸 문구를 화면 언어로, LAN-777)
 export const NATIVE_BRIDGE_VERSION = 14;
 
 // 셸이 주입하고 웹이 읽는 전역 키
