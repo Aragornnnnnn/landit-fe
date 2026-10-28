@@ -22,6 +22,7 @@ export interface UseSttOptions {
   lang?: string;
   endpointingMs?: number;
   stopOnSilence?: boolean; // false면 stop()까지 계속 듣는다 (기본 true)
+  keyterms?: readonly string[]; // Deepgram에만 실린다 — 폴백(브라우저 인식)은 받지 않는다
   onFinal?: (transcript: string, meta: SttResultMeta) => void;
   onInterim?: (transcript: string, pending: boolean) => void;
   onError?: (error: Error, meta: SttErrorMeta) => void;
@@ -37,6 +38,7 @@ export function useStt(options: UseSttOptions = {}) {
     lang = DEFAULT_LANG,
     endpointingMs = DEFAULT_ENDPOINTING_MS,
     stopOnSilence = true,
+    keyterms,
     onFinal,
     onInterim,
     onError,
@@ -104,6 +106,7 @@ export function useStt(options: UseSttOptions = {}) {
           lang,
           endpointingMs,
           stopOnSilence,
+          keyterms,
         }),
       );
     } catch (deepgramErr) {

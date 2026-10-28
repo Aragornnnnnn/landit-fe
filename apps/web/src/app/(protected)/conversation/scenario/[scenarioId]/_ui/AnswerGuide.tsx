@@ -158,7 +158,7 @@ export const AnswerGuideSlot = ({
   children: React.ReactNode;
 }) => (
   // flex로 둬서 안쪽 답변 칸의 위 여백이 바깥으로 새지 않게 한다 — 카드가 칸 높이를 그대로 덮어야 한다
-  <div className="relative flex flex-none flex-col">
+  <div className="relative flex min-h-0 shrink flex-col">
     {children}
     <AnimatePresence>
       {open && guide && (
