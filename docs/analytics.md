@@ -25,7 +25,7 @@
   - dev 환경(`NODE_ENV=development`)에선 키가 있어도 모든 이벤트를 콘솔에 같이 찍는다.
   - 세션 리플레이는 초기 단계라 **100% 수집**(`@amplitude/unified` `initAll`). **오토캡처는 전부 off** — 커스텀 이벤트(events.ts 계약)로 충분하고 노이즈·볼륨을 줄인다.
   - `minIdLength: 1` — 백엔드 회원번호가 1~4자리라 앰플리튜드 기본 5자 제한(400 Invalid id length)에 걸리는 것을 푼다.
-  - 전 이벤트 공통 속성: `surface`(app|browser), `platform`(ios|android|web), `app_version`, `build_number` — 셸이 주입한 `window.__LANDIT_NATIVE__`(LAN-156)에서 온다.
+  - 전 이벤트 공통 속성: `surface`(app|browser), `platform`(ios|android|web), `app_version`, `build_number` — 셸이 주입한 `window.__LANDIT_NATIVE__`(LAN-156)에서 온다. `app_language`(ko|ja)는 서버가 정해 `<html lang>`에 박은 화면 언어다 (docs/i18n.md).
 - **유저 식별**: `AnalyticsBootstrap`이 auth 스토어를 구독해 로그인 시 `setUserId(member.userId)` + `provider` 유저 속성, 로그아웃 시 `reset()`. 앱/브라우저 어디서든 같은 유저로 묶인다.
 - **화면 노출**: `PageViewTracker`가 라우트 변경마다 `Page Viewed` 발화. 동적 세그먼트는 `page_name`으로 정규화하고 id는 속성으로 뺀다. `/stt-demo`, `/dev`, `/`(즉시 redirect)는 제외. 이름을 안 준 주소는 폴백이 경로를 그대로 쓰므로, 화면을 더할 때 `page-view.ts`에 이름을 같이 등록한다 (두 칸짜리는 `NESTED_PAGES`). 빠뜨리면 `page-name-coverage.test.ts`가 라우트를 전부 훑어 잡는다.
 - **서버 발화**: `/download`는 서버 302 리다이렉트라 클라이언트 SDK가 못 잡는다 — route 핸들러가 HTTP V2 API로 직접 발화한다(`Download Link Visited`). 키는 클라이언트와 같은 `NEXT_PUBLIC_AMPLITUDE_API_KEY`(공개 키라 서버 전용으로 나누지 않는다), device_id는 랜덤이라 방문 횟수 집계용.
@@ -409,6 +409,7 @@ OS 권한 팝업의 답 자체는 따로 찍지 않는다 — 위 두 step의 �
 | ----------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------- |
 | provider                                        | kakao \| google \| apple                       | 로그인 식별 시                                                 |
 | surface / platform / app_version / build_number | 네이티브 컨텍스트                              | 초기화 시                                                      |
+| app_language                                    | ko \| ja (화면 언어)                           | 초기화 시                                                      |
 | is_premium                                      | 참·거짓 (모르는 동안은 지움)                   | 구독 조회 결과가 바뀔 때                                       |
 | subscription_state                              | unknown \| none \| trial \| active \| canceled | 구독 조회 결과가 바뀔 때                                       |
 | plan                                            | monthly \| yearly \| pass (유료가 아니면 지움) | 구독 조회 결과가 바뀔 때                                       |

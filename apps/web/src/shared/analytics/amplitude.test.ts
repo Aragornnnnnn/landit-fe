@@ -142,12 +142,26 @@ describe('track', () => {
     expect(amplitudeMock.track).toHaveBeenCalledWith('Feedback Submitted', {
       surface: 'app',
       platform: 'ios',
+      app_language: 'ko',
       app_version: '1.2.0',
       build_number: '42',
       feedback_type: 'BUG_REPORT',
       length: 12,
       image_count: 0,
     });
+  });
+
+  it('화면 언어(html lang)를 app_language로 모든 이벤트에 싣는다', async () => {
+    vi.stubEnv('NEXT_PUBLIC_AMPLITUDE_API_KEY', 'test-key');
+    document.documentElement.lang = 'ja';
+    const { track } = await loadWrapper();
+
+    track('Logout Completed');
+
+    expect(amplitudeMock.track).toHaveBeenCalledWith(
+      'Logout Completed',
+      expect.objectContaining({ app_language: 'ja' }),
+    );
   });
 
   it('일반 브라우저면 platform을 web으로 보내고 앱 버전은 싣지 않는다', async () => {
@@ -159,6 +173,7 @@ describe('track', () => {
     expect(amplitudeMock.track).toHaveBeenCalledWith('Logout Completed', {
       surface: 'browser',
       platform: 'web',
+      app_language: 'ko',
     });
   });
 

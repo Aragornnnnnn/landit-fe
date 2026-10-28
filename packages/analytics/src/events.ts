@@ -1058,7 +1058,8 @@ type _UserPropKeysAreSnakeCase = AssertNever<
 >;
 // 컴파일 타임 검증 ④ 모든 이벤트에 붙는 전역 속성과 같은 키를 쓰지 않는다 — 겹치면 그 이벤트만 전역 값이 덮인다.
 // platform은 뜻이 같은 기존 이벤트가 있어 여기서 막지 않는다
-type GlobalPropKey = 'surface' | 'app_version' | 'build_number';
+type GlobalPropKey =
+  'surface' | 'app_version' | 'build_number' | 'app_language';
 type KeysShadowingGlobals = {
   [E in keyof EventProps]: EventProps[E] extends undefined
     ? never
