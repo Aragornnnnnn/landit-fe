@@ -47,7 +47,9 @@
     "reviewButton": "何がうまく伝わったか見てみます",
     "growthEmptyTitle": "前回迷った過去形",
     "growthEmptyBody": "まだ前回の記録がありません。",
+    "growthEmptyRetryBody": "前回と比べられるミスはありませんでした。",
     "reuseEmptyBody": "まだ学んだフレーズがありません。",
+    "reuseEmptyRetryBody": "今回の会話では、活用したフレーズはありませんでした。",
     "fallbackTitle": "今日もシナリオをしっかりやり遂げました"
   },
   "feedbackDetail": {

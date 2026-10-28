@@ -52,6 +52,7 @@ describe('FeedbackContent', () => {
         })}
         title="카페"
         source="post_conversation"
+        premium={false}
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
       />,
@@ -74,6 +75,7 @@ describe('FeedbackContent', () => {
         feedback={feedback({ detailFeedbackLocked: true })}
         title="카페"
         source="post_conversation"
+        premium={false}
         onExit={vi.fn()}
         onDetailLocked={onDetailLocked}
       />,
@@ -97,6 +99,7 @@ describe('FeedbackContent', () => {
         feedback={feedback({ detailFeedbackLocked: true })}
         title="카페"
         source="post_conversation"
+        premium={false}
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
       />,
@@ -114,6 +117,7 @@ describe('FeedbackContent', () => {
         feedback={feedback({ detailFeedbackLocked: false })}
         title="카페"
         source="history"
+        premium={false}
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
       />,
@@ -134,6 +138,7 @@ describe('FeedbackContent', () => {
         })}
         title="카페"
         source="post_conversation"
+        premium={false}
         openDetail
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
@@ -150,6 +155,7 @@ describe('FeedbackContent', () => {
         feedback={feedback({ detailFeedbackLocked: true })}
         title="카페"
         source="post_conversation"
+        premium={false}
         openDetail
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
@@ -166,6 +172,7 @@ describe('FeedbackContent', () => {
         })}
         title="카페"
         source="post_conversation"
+        premium={false}
         openDetail
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
@@ -187,6 +194,7 @@ describe('FeedbackContent', () => {
         feedback={feedback({ detailFeedbackLocked: true })}
         title="카페"
         source="post_conversation"
+        premium={false}
         openDetail
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
@@ -206,6 +214,7 @@ describe('FeedbackContent', () => {
         feedback={feedback({ detailFeedbackLocked: true })}
         title="카페"
         source="post_conversation"
+        premium={false}
         openDetail
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
@@ -222,6 +231,7 @@ describe('FeedbackContent', () => {
         feedback={feedback({ detailFeedbackLocked: true })}
         title="카페"
         source="post_conversation"
+        premium={false}
         refreshing
         onExit={vi.fn()}
         onDetailLocked={onDetailLocked}
@@ -240,6 +250,7 @@ describe('FeedbackContent', () => {
         feedback={feedback({ detailFeedbackLocked: false })}
         title="카페"
         source="post_conversation"
+        premium={false}
         onExit={onExit}
         onDetailLocked={vi.fn()}
       />,
@@ -257,6 +268,7 @@ describe('FeedbackContent', () => {
         feedback={feedback({ messageFeedbacks: [turn] })}
         title="카페"
         source="post_conversation"
+        premium={false}
         onExit={vi.fn()}
         onDetailLocked={vi.fn()}
       />,
