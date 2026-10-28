@@ -13,7 +13,8 @@ export default function ProtectedLayout({
   // notification은 알림 잠금화면 목업(온보딩·홈 시트), widget은 위젯 설치 안내(온보딩·내 정보),
   // subscription은 혜택 목록·결제 안내·구독 관리 문구(페이월·구독 관리·결제 내역·해지·프리미엄 환영·홈 헤더 알약),
   // alarm은 알람 등록 흐름·알람 설정(내 정보·알람 화면·프리미엄 온보딩), eventPopup은 홈 탭에 뜨는 이벤트 공지,
-  // streak은 연속 기록 문구(홈 헤더 열매·연속 기록 화면·표현 학습을 마친 축하 도장)
+  // streak은 연속 기록 문구(홈 헤더 열매·연속 기록 화면·표현 학습을 마친 축하 도장),
+  // expression은 표현 목록·퀴즈·분석 대기 연출(홈 카드 뒷면·스몰톡 기록·표현 학습·푸시 복습·대화 직후 분석)
   return (
     <MessagesProvider
       namespaces={[
@@ -25,6 +26,7 @@ export default function ProtectedLayout({
         'alarm',
         'eventPopup',
         'streak',
+        'expression',
       ]}
     >
       <AuthGate>{children}</AuthGate>

@@ -1,6 +1,8 @@
 'use client';
 
 // 오류 단어 피드백 카드 목록 — 행마다 원어민/나 라벨로 구분하고 듣기는 공용 ListenButton
+import { useTranslations } from 'next-intl';
+
 import type { PronunciationWord } from '../../api/pronunciation';
 import type {
   DisplaySegment,
@@ -33,98 +35,106 @@ export const FeedbackCards = ({
   playingId,
   onPlayNative,
   onPlayMine,
-}: FeedbackCardsProps) => (
-  <div className="flex flex-col gap-5">
-    {cards.map((card, cardIndex) => {
-      const { word } = card;
-      const playNative = word.nativeWordAudioUrl
-        ? () => onPlayNative(word)
-        : undefined;
-      const playMine =
-        word.startTimeMs !== null && word.endTimeMs !== null
-          ? () => onPlayMine(word)
+}: FeedbackCardsProps) => {
+  const t = useTranslations('expression.feedbackCards');
+  return (
+    <div className="flex flex-col gap-5">
+      {cards.map((card, cardIndex) => {
+        const { word } = card;
+        const playNative = word.nativeWordAudioUrl
+          ? () => onPlayNative(word)
           : undefined;
+        const playMine =
+          word.startTimeMs !== null && word.endTimeMs !== null
+            ? () => onPlayMine(word)
+            : undefined;
 
-      return (
-        // scroll-mt로 앵커 이동 시 헤더에 가리지 않게 여유를 둔다 (단어 칩에서 이동해 온다).
-        // 등장은 칩·말풍선 다음 차례 — 카드가 순서대로 떠오른다
-        <section
-          key={word.order}
-          id={feedbackCardId(word.order)}
-          className="animate-fade-up scroll-mt-16"
-          style={{ animationDelay: `${1100 + cardIndex * 120}ms` }}
-        >
-          <div className="rounded-2xl border border-border bg-card px-4 py-4">
-            <p className="mb-3 text-lg font-extrabold text-foreground">
-              {word.word}
-            </p>
-            {card.kind === 'stress' && (
-              <div className="mb-3 flex gap-3 text-11 font-medium text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Dot className="bg-success" /> 원어민 강세
-                </span>
-                <span className="flex items-center gap-1">
-                  <Dot className="bg-destructive" /> 내가 잘못 강세 넣은 곳
-                </span>
-              </div>
-            )}
-
-            <div className="flex flex-col gap-2.5">
-              <PronRow
-                label="원어민"
-                onPlay={playNative}
-                disabled={disabled}
-                playing={playingId === nativeWordAudioId(word.order)}
-              >
-                {card.kind === 'phoneme' ? (
-                  <Respelling segments={card.native} tone="native" />
-                ) : (
-                  <SyllableWord
-                    syllables={card.syllables}
-                    dotIndex={card.stressIndex}
-                    tone="native"
-                  />
-                )}
-              </PronRow>
-              <PronRow
-                label="나"
-                onPlay={playMine}
-                disabled={disabled}
-                playing={playingId === myWordAudioId(word.order)}
-              >
-                {card.kind === 'phoneme' ? (
-                  <Respelling segments={card.user} tone="mine" />
-                ) : (
-                  <SyllableWord
-                    syllables={card.syllables}
-                    dotIndex={card.userStressIndex}
-                    tone="mine"
-                  />
-                )}
-              </PronRow>
-            </div>
-
-            {word.coachingText && (
-              <p className="mt-3.5 rounded-xl bg-muted px-3.5 py-2.5 text-sm leading-relaxed font-medium text-foreground">
-                {word.coachingText}
+        return (
+          // scroll-mt로 앵커 이동 시 헤더에 가리지 않게 여유를 둔다 (단어 칩에서 이동해 온다).
+          // 등장은 칩·말풍선 다음 차례 — 카드가 순서대로 떠오른다
+          <section
+            key={word.order}
+            id={feedbackCardId(word.order)}
+            className="animate-fade-up scroll-mt-16"
+            style={{ animationDelay: `${1100 + cardIndex * 120}ms` }}
+          >
+            <div className="rounded-2xl border border-border bg-card px-4 py-4">
+              <p className="mb-3 text-lg font-extrabold text-foreground">
+                {word.word}
               </p>
-            )}
-          </div>
-        </section>
-      );
-    })}
-  </div>
-);
+              {card.kind === 'stress' && (
+                <div className="mb-3 flex gap-3 text-11 font-medium text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Dot className="bg-success" /> {t('nativeStressCaption')}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Dot className="bg-destructive" /> {t('mineStressCaption')}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-2.5">
+                <PronRow
+                  label={t('nativeRowLabel')}
+                  listenLabel={t('nativeListenLabel')}
+                  onPlay={playNative}
+                  disabled={disabled}
+                  playing={playingId === nativeWordAudioId(word.order)}
+                >
+                  {card.kind === 'phoneme' ? (
+                    <Respelling segments={card.native} tone="native" />
+                  ) : (
+                    <SyllableWord
+                      syllables={card.syllables}
+                      dotIndex={card.stressIndex}
+                      tone="native"
+                    />
+                  )}
+                </PronRow>
+                <PronRow
+                  label={t('mineRowLabel')}
+                  listenLabel={t('mineListenLabel')}
+                  onPlay={playMine}
+                  disabled={disabled}
+                  playing={playingId === myWordAudioId(word.order)}
+                >
+                  {card.kind === 'phoneme' ? (
+                    <Respelling segments={card.user} tone="mine" />
+                  ) : (
+                    <SyllableWord
+                      syllables={card.syllables}
+                      dotIndex={card.userStressIndex}
+                      tone="mine"
+                    />
+                  )}
+                </PronRow>
+              </div>
+
+              {word.coachingText && (
+                <p className="mt-3.5 rounded-xl bg-muted px-3.5 py-2.5 text-sm leading-relaxed font-medium text-foreground">
+                  {word.coachingText}
+                </p>
+              )}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+};
 
 // 발음 비교 한 행 — 맨 앞 라벨(원어민/나) + 표기 + 공용 듣기 버튼
 const PronRow = ({
   label,
+  listenLabel,
   onPlay,
   playing,
   disabled,
   children,
 }: {
   label: string;
+  // 듣기 버튼의 접근성 이름
+  listenLabel: string;
   onPlay?: () => void;
   playing: boolean;
   disabled: boolean;
@@ -140,7 +150,7 @@ const PronRow = ({
         playing={playing}
         onClick={onPlay}
         disabled={disabled}
-        ariaLabel={`${label} 발음 듣기`}
+        ariaLabel={listenLabel}
       />
     )}
   </div>

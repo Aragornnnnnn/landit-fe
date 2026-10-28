@@ -1,0 +1,30 @@
+{
+  "flow": {
+    "loadError": "복습을 불러오지 못했어요.",
+    "expiredError": "복습할 수 있는 기간이 지났어요. 다음 알림에서 다시 만나요.",
+    "nextButton": "다음 문제",
+    "resultButton": "결과 볼게요",
+    "wrongNextButton": "다음 문제",
+    "wrongResultButton": "결과 볼게요",
+    "retryButton": "다시 풀어볼게요"
+  },
+  "intro": {
+    "closeLabel": "나가기",
+    "title": "배웠던 표현<br></br><emphasis>3분</emphasis> 퀴즈로 복습해요",
+    "startButton": "복습 시작할게요"
+  },
+  "complete": {
+    "perfectTitle": "완벽해요!",
+    "someSolvedTitle": "잘했어요!",
+    "noneSolvedTitle": "괜찮아요!",
+    "perfectSubtitle": "전부 맞혔어요. 대화에서 적극 활용해 보세요.",
+    "missedSubtitle": "틀린 표현은 다음 복습에서 다시 익혀 봐요.",
+    "solvedLabel": "맞힘",
+    "missedLabel": "놓침",
+    "homeButton": "홈으로 갈게요"
+  },
+  "notice": {
+    "retryButton": "다시 시도",
+    "homeButton": "홈으로 갈게요"
+  }
+}

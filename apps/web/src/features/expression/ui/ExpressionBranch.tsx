@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 // 가로 import 사유: 학습 진입 문마다 같은 페이월 게이트를 걸어야 한다 (docs/subscription.md)
@@ -35,6 +36,8 @@ export const ExpressionBranch = ({
   // 어느 날 카드에서 온 대화였는지. 학습으로 들어갈 때도 나올 때도 이어 나른다
   date?: string;
 }) => {
+  const t = useTranslations('expression.branch');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const gate = usePaywallGate();
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
@@ -47,7 +50,6 @@ export const ExpressionBranch = ({
 
   // 이 화면은 표현 데이터만 있으면 된다 — 시나리오 목록 fetch에 묶지 않아야 그게 느리거나 실패해도 안 멈춘다
   const ready = Boolean(expressions);
-  const name = nickname ?? '회원';
   const count = expressions?.length ?? 0;
 
   // 진입 연출 2단계 — 축하(스트릭 도장) → 분석(랜디) 문구를 읽을 만큼만 → 리빌.
@@ -114,7 +116,7 @@ export const ExpressionBranch = ({
             router.replace(scenarioReturnPath({ date }));
           }}
           className="flex size-10 items-center justify-center text-muted-foreground"
-          aria-label="닫기"
+          aria-label={tCommon('closeLabel')}
         >
           <CloseIcon size={22} />
         </button>
@@ -125,7 +127,7 @@ export const ExpressionBranch = ({
         <RetryNotice
           fill
           screen="expression_list"
-          message={error.message || '표현을 불러오지 못했어요.'}
+          message={error.message || t('loadError')}
           onRetry={retry}
         />
       ) : (
@@ -140,7 +142,7 @@ export const ExpressionBranch = ({
               <RevealStage
                 key="reveal"
                 count={count}
-                name={name}
+                nickname={nickname}
                 expressions={expressions}
                 onSelect={goExpression}
                 onLearn={goLearn}

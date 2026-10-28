@@ -2,6 +2,7 @@
 
 // 표현 리스트 항목 — 완료(연녹색 체크) / 시작할 표현(강조 카드) / 잠금(회색) 상태를 그린다
 import { motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import { Emoji } from '@/shared/ui/emoji';
 import { CheckIcon, LockIcon } from '@/shared/ui/Icons';
@@ -23,6 +24,7 @@ export const ExpressionListItem = ({
   hideStartAction = false,
   freeTrial = false,
 }: ExpressionListItemProps) => {
+  const t = useTranslations('expression.listItem');
   const {
     expressionId,
     displayOrder,
@@ -110,7 +112,7 @@ export const ExpressionListItem = ({
           >
             <Emoji>👈</Emoji>
           </motion.span>
-          <span className="sr-only">다음에 배울 표현</span>
+          <span className="sr-only">{t('nextLabel')}</span>
         </>
       )}
     </button>

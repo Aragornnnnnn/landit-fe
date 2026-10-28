@@ -4,6 +4,7 @@
 // 기록은 남기지 않고 홈으로 돌려보낸다 (복습은 알림으로만 들어오는 별도 흐름)
 import { useEffect } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import type { PreloadableImage } from '@/shared/lib/preload-next-images';
@@ -39,21 +40,22 @@ export const LANDY_REVIEW_STUDY: PreloadableImage = {
   height: 230,
 };
 
-// 결과 한 컷(제목·이모지·부제·그림)을 한 곳에서 고른다 — 몇 개 맞혔는지는 아래 카드가 보여 준다
+// 결과 한 컷(제목·이모지·부제·그림)을 한 곳에서 고른다 — 몇 개 맞혔는지는 아래 카드가 보여 준다. 제목·부제는 문구 키(review.complete)
 const resultOf = (perfect: boolean, solved: number) => {
   if (perfect)
     return {
-      title: '완벽해요!',
+      title: 'perfectTitle',
       emoji: '🎉',
-      subtitle: '전부 맞혔어요. 대화에서 적극 활용해 보세요.',
+      subtitle: 'perfectSubtitle',
       image: LANDY_REVIEW_PERFECT,
-    };
+    } as const;
   const missed = {
-    subtitle: '틀린 표현은 다음 복습에서 다시 익혀 봐요.',
+    subtitle: 'missedSubtitle',
     image: LANDY_REVIEW_STUDY,
-  };
-  if (solved === 0) return { title: '괜찮아요!', emoji: '💪', ...missed };
-  return { title: '잘했어요!', emoji: '👏', ...missed };
+  } as const;
+  if (solved === 0)
+    return { title: 'noneSolvedTitle', emoji: '💪', ...missed } as const;
+  return { title: 'someSolvedTitle', emoji: '👏', ...missed } as const;
 };
 
 export const ReviewComplete = ({
@@ -61,6 +63,7 @@ export const ReviewComplete = ({
   justFinished,
   onHome,
 }: ReviewCompleteProps) => {
+  const t = useTranslations('review.complete');
   const reduced = useReducedMotion() ?? false;
   // 끝난 문제 전부가 맞힘일 때만 만점이다 — 두 번 틀려 끝난 문제는 맞힘이 아니다
   const solved = questions.filter(isSolved).length;
@@ -102,11 +105,11 @@ export const ReviewComplete = ({
       </motion.div>
 
       <h1 className="mt-1 text-center text-[30px] font-black text-foreground">
-        {result.title}
+        {t(result.title)}
         <Emoji className="ml-1.5 align-[-0.1em]">{result.emoji}</Emoji>
       </h1>
       <p className="mt-2 text-center text-sm leading-relaxed font-medium break-keep text-muted-foreground">
-        {result.subtitle}
+        {t(result.subtitle)}
       </p>
 
       {/* 스크롤 영역이 카드 그림자를 자르지 않게 안쪽 여백을 둔다 */}
@@ -159,7 +162,9 @@ export const ReviewComplete = ({
                     <CloseIcon size={16} strokeWidth={3} />
                   )}
                 </span>
-                <span className="sr-only">{correct ? '맞힘' : '놓침'}</span>
+                <span className="sr-only">
+                  {correct ? t('solvedLabel') : t('missedLabel')}
+                </span>
               </div>
             </li>
           );
@@ -169,7 +174,7 @@ export const ReviewComplete = ({
       <div className="flex-1" />
       <div className="pt-4 pb-[max(var(--safe-area-inset-bottom),24px)]">
         <Button variant={perfect ? 'success' : 'primary'} onClick={onHome}>
-          홈으로 갈게요
+          {t('homeButton')}
         </Button>
       </div>
     </main>

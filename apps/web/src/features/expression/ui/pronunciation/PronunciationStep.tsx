@@ -3,12 +3,14 @@
 // 발음 평가 스텝 — 대기→녹음→분석→피드백(재도전 루프). 점수 구간 표시는 pronunciation-score가 정한다
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS, type EventProps } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 
 // 마이크 컨트롤·권한 시트는 공용 슬라이스(conversation)의 것을 그대로 쓴다 — 대화와 같은 조작감
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
 import { track } from '@/shared/analytics';
 import { ApiError } from '@/shared/api/api-error';
+import { lineBreak } from '@/shared/i18n/rich';
 import { isMicPermissionDeniedError } from '@/shared/stt/errors';
 import { Button } from '@/shared/ui/Button';
 
@@ -62,6 +64,9 @@ interface PronunciationStepProps {
 
 type Phase = 'ready' | 'recording' | 'analyzing' | 'failed' | 'feedback';
 
+// 녹음을 다시 유도하는 안내 문구 키(expression.pronunciationStep)
+type NoticeKey = 'micStartError' | 'silentError' | 'invalidAudioError';
+
 // 전체 문장 재생 식별자 — 원어민은 대기 화면 스피커와 피드백 말풍선이 같은 소리를 튼다.
 // 내 녹음 전체는 카드 행의 단어 구간 재생(mine-N)과 구분한다
 const NATIVE_SENTENCE_AUDIO_ID = 'sentence';
@@ -82,11 +87,12 @@ export const PronunciationStep = ({
   onUnavailable,
   onSettled,
 }: PronunciationStepProps) => {
+  const t = useTranslations('expression.pronunciationStep');
   const [phase, setPhase] = useState<Phase>('ready');
   const [analysis, setAnalysis] = useState<PronunciationAnalysis | null>(null);
   const [micSheetOpen, setMicSheetOpen] = useState(false);
   // 녹음이 잘못됐을 때(빈 녹음·INVALID_AUDIO) 다시 유도하는 안내 문구
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<NoticeKey | null>(null);
   // 내 녹음 재생용 object URL — 새 녹음이 오면 이전 것을 해제한다
   const recordingUrlRef = useRef<string | null>(null);
   // 분석 회차 — 재도전 포함 몇 번째 결과인지 계측에 싣는다
@@ -132,7 +138,7 @@ export const PronunciationStep = ({
       setPhase('recording');
     } catch (error) {
       if (isMicPermissionDeniedError(error)) setMicSheetOpen(true);
-      else setNotice('마이크를 시작하지 못했어요. 다시 시도해 주세요.');
+      else setNotice('micStartError');
     }
   };
 
@@ -150,7 +156,7 @@ export const PronunciationStep = ({
       recording.blob.size === 0 ||
       isSilentRecording(recording)
     ) {
-      setNotice('녹음된 소리가 없어요. 다시 말해볼까요?');
+      setNotice('silentError');
       setPhase(analysis ? 'feedback' : 'ready');
       return;
     }
@@ -187,7 +193,7 @@ export const PronunciationStep = ({
             return;
           }
           if (error.code === 'INVALID_AUDIO') {
-            setNotice('녹음이 잘 전달되지 않았어요. 다시 말해볼까요?');
+            setNotice('invalidAudioError');
             setPhase(analysis ? 'feedback' : 'ready');
             return;
           }
@@ -255,7 +261,7 @@ export const PronunciationStep = ({
 
     return (
       <StepScaffold
-        title="래디의 발음 피드백"
+        title={t('feedbackTitle')}
         progress={progress}
         // 통과하면 되돌아갈 이유가 없다 — X(나가기 확인)로 바꾼다. 미통과는 ‹로 재도전 맥락 유지
         leftAction={view.passed ? 'close' : 'back'}
@@ -266,8 +272,11 @@ export const PronunciationStep = ({
             // 단어만 말하면 된다는 오해 방지 — 재녹음은 문장 전체가 계약이다
             <div className="-mx-5 -mb-[max(var(--safe-area-inset-bottom),24px)] border-t border-border bg-secondary/40 px-5 pt-3 pb-[max(var(--safe-area-inset-bottom),16px)]">
               <p className="text-center text-sm font-medium text-muted-foreground">
-                <span className="font-bold text-foreground">문장 전체</span>를
-                처음부터 다시 말해보세요
+                {t.rich('rerecordCaption', {
+                  emphasis: (chunks) => (
+                    <span className="font-bold text-foreground">{chunks}</span>
+                  ),
+                })}
               </p>
               <MicControl
                 phase="USER_SPEAKING"
@@ -283,14 +292,14 @@ export const PronunciationStep = ({
                 variant={view.passed ? 'success' : 'primary'}
                 onClick={onNext}
               >
-                추가 예문 보러 갈게요
+                {t('examplesButton')}
               </Button>
               {!view.passed && (
                 <button
                   onClick={startRecording}
                   className="py-1 text-sm font-semibold text-muted-foreground active:opacity-70"
                 >
-                  다시 말해보기 ↻
+                  {t('retryButton')}
                 </button>
               )}
             </div>
@@ -325,7 +334,7 @@ export const PronunciationStep = ({
               style={{ animationDelay: '600ms' }}
             >
               <div className="rounded-2xl rounded-bl-sm bg-secondary px-4 py-2.5 text-base font-bold text-foreground">
-                원어민처럼 완벽했어요!
+                {t('perfectCaption')}
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -353,7 +362,7 @@ export const PronunciationStep = ({
               />
             </>
           )}
-          {notice && <Notice text={notice} />}
+          {notice && <Notice text={t(notice)} />}
         </div>
         <MicPermissionSheet
           open={micSheetOpen}
@@ -384,7 +393,7 @@ export const PronunciationStep = ({
         {/* 설명 화면에서 아래에 있던 예문이 표현 자리로 부드럽게 올라온다 */}
         <div className="animate-rise-in mt-4">
           <h1 className="text-2xl leading-snug font-extrabold text-foreground">
-            방금 배운 표현을 직접 말해보세요
+            {t('title')}
           </h1>
           <div className="mt-4">
             <SentenceListenBlock
@@ -405,13 +414,9 @@ export const PronunciationStep = ({
               {/* 말풍선은 래디 얼굴보다 살짝 위 — 캐릭터를 아래로 내려 시선이 말풍선→래디→지팡이로 흐른다 */}
               <div className="mt-3 rounded-2xl rounded-br-sm bg-secondary px-3.5 py-2.5 text-sm leading-snug font-semibold text-foreground">
                 {phase === 'recording' ? (
-                  <span className="animate-pulse">듣고 있어요...</span>
+                  <span className="animate-pulse">{t('listeningCaption')}</span>
                 ) : (
-                  <>
-                    열심히 듣고 원어민처럼
-                    <br />
-                    말할 수 있게 도와드릴게요!
-                  </>
+                  t.rich('coachCaption', lineBreak)
                 )}
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -430,7 +435,7 @@ export const PronunciationStep = ({
             phase === 'analyzing' ? 'my-auto pb-10' : 'mt-auto'
           }`}
         >
-          {notice && <Notice text={notice} />}
+          {notice && <Notice text={t(notice)} />}
 
           {(phase === 'ready' || phase === 'recording') && (
             <>
@@ -453,13 +458,13 @@ export const PronunciationStep = ({
           {phase === 'failed' && (
             <div className="flex w-full flex-col items-center gap-3">
               <p className="text-sm font-medium text-muted-foreground">
-                분석에 실패했어요. 다시 시도해 주세요.
+                {t('failedError')}
               </p>
               <Button size="md" onClick={startRecording}>
-                다시 말하기
+                {t('failedRetryButton')}
               </Button>
               <Button size="md" variant="ghost" onClick={onNext}>
-                추가 예문 보러 갈게요
+                {t('failedExamplesButton')}
               </Button>
             </div>
           )}

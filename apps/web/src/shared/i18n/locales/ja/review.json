@@ -1,0 +1,30 @@
+{
+  "flow": {
+    "loadError": "復習を読み込めませんでした。",
+    "expiredError": "復習期間が終わりました。また次の通知で！",
+    "nextButton": "次の問題",
+    "resultButton": "結果を見る",
+    "wrongNextButton": "次の問題",
+    "wrongResultButton": "結果を見る",
+    "retryButton": "もう一度解く"
+  },
+  "intro": {
+    "closeLabel": "やめる",
+    "title": "学んだフレーズを<br></br><emphasis>3分</emphasis>のクイズで復習",
+    "startButton": "復習を始める"
+  },
+  "complete": {
+    "perfectTitle": "完璧です！",
+    "someSolvedTitle": "よくできました！",
+    "noneSolvedTitle": "大丈夫！",
+    "perfectSubtitle": "全問正解です。会話でどんどん使ってみましょう。",
+    "missedSubtitle": "間違えたフレーズは次の復習でまた練習しましょう。",
+    "solvedLabel": "正解",
+    "missedLabel": "不正解",
+    "homeButton": "ホームへ"
+  },
+  "notice": {
+    "retryButton": "もう一度試す",
+    "homeButton": "ホームへ"
+  }
+}

@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { EVENTS, type QuizStepKind } from '@landit/analytics';
 import { motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import type { Partner } from '@/features/conversation/model/character-look';
 import { track } from '@/shared/analytics';
@@ -13,7 +14,7 @@ import { EASE_STANDARD } from '@/shared/motion';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 
-import type { QuizResult } from '../../model/review-queue';
+import type { QuizResult, RetryInstruction } from '../../model/review-queue';
 import type { SentenceQuiz } from '../../model/sentence-quiz';
 import { useChipReorder } from '../../model/useChipReorder';
 import {
@@ -56,7 +57,7 @@ interface QuizStepProps {
   initialSelected?: number[];
   onSelectedChange?: (selected: number[]) => void;
   // 상단 지시문 — 복습 재도전에서 "다시 한번 해보세요" 등으로 바꾼다. 없으면 기본 문구
-  instruction?: string;
+  instruction?: RetryInstruction;
   // 정답 공개 — 내 말풍선에 정답을 위에, 옮길 문장을 아래에 보여준다(복습에서 두 번 틀렸을 때)
   revealAnswer?: boolean;
   // 판정을 밖에서 받아온다 — 서버가 채점하는 푸시 복습에서 쓴다.
@@ -95,8 +96,8 @@ export const QuizStep = ({
   onBack,
   leftAction,
   onNext,
-  nextLabel = '표현 배우러 갈게요',
-  wrongLabel = nextLabel,
+  nextLabel: nextLabelProp,
+  wrongLabel: wrongLabelProp,
   progressRange = [0, 0.5],
   initialSelected,
   onSelectedChange,
@@ -106,6 +107,9 @@ export const QuizStep = ({
   hideWrongAnswer = false,
   correctSlot,
 }: QuizStepProps) => {
+  const t = useTranslations('expression.quizStep');
+  const nextLabel = nextLabelProp ?? t('nextButton');
+  const wrongLabel = wrongLabelProp ?? nextLabel;
   // 정답으로 인정하는 배치들 — 한국어는 어순이 다른 정답이 여럿이라 하나만 보면 맞는 답을 틀렸다고 한다
   const answers = quiz.acceptedAnswers;
   const reduced = useReducedMotion() ?? false;
@@ -253,7 +257,7 @@ export const QuizStep = ({
             loading={judging}
             onClick={check}
           >
-            확인할게요
+            {t('checkButton')}
           </Button>
         ) : undefined
       }
@@ -320,7 +324,8 @@ export const QuizStep = ({
             disabled={hintActive || judging}
             className="text-sm font-semibold text-muted-foreground underline underline-offset-4 transition-colors active:text-foreground disabled:opacity-60"
           >
-            <Emoji className="mr-1">💡</Emoji>힌트 보기
+            <Emoji className="mr-1">💡</Emoji>
+            {t('hintButton')}
           </button>
         </div>
       )}
