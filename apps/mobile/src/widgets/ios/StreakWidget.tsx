@@ -81,6 +81,13 @@ const StreakWidgetView = (
       weight: 'bold',
       size: family === 'small' ? 14 : 16,
     });
+    // 앱이 아직 언어를 넘기지 못한 때라 기기 언어(Intl)로 고른다 — 위젯 런타임(JSContext)은 앱과 달라 Intl이 없으면 한국어
+    const japanese =
+      typeof Intl !== 'undefined' &&
+      Intl.DateTimeFormat().resolvedOptions().locale.startsWith('ja');
+    const [guideTop, guideBottom] = japanese
+      ? ['Landitで会話して', '連続記録を始めましょう！']
+      : ['랜딧과 대화하고', '스트릭을 시작해보세요!'];
     return (
       <ZStack
         modifiers={[
@@ -90,10 +97,10 @@ const StreakWidgetView = (
       >
         <VStack spacing={2} modifiers={[padding({ horizontal: 12 })]}>
           <Text modifiers={[guideFont, foregroundStyle('#0E3A5C')]}>
-            랜딧과 대화하고
+            {guideTop}
           </Text>
           <Text modifiers={[guideFont, foregroundStyle('#0E3A5C')]}>
-            스트릭을 시작해보세요!
+            {guideBottom}
           </Text>
         </VStack>
       </ZStack>
