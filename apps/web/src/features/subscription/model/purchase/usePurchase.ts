@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { track } from '@/shared/analytics';
 import { getCurrentUserId } from '@/shared/auth/auth-store';
 import { useCurrentUserId } from '@/shared/auth/current-member';
+import { reportWarning } from '@/shared/monitoring/report';
 import { showToast } from '@/shared/ui/toast';
 
 import {
@@ -41,7 +42,15 @@ interface UsePurchaseOptions {
    * 구매 가능 여부는 환급 도메인이 알아서 주입받는다. 받지 못했으면 이용권은 결제하지 않는다
    */
   checkPassAvailability?: () => Promise<PassAvailability>;
+  /** 플랜별로 화면이 금액을 그린 통화 — 결제할 패키지의 통화가 이와 다르면 본 금액과 다른 돈이 나가므로 막는다 */
+  displayCurrencies?: Partial<Record<SubscriptionPlan, string>>;
 }
+
+// 화면 금액과 결제 통화가 다를 때의 계측 사유와 안내 문구 — 오퍼링이 덜 반영됐을 때라 잠시 뒤 다시 받으면 풀린다
+const CURRENCY_MISMATCH = {
+  reason: 'currency_mismatch',
+  message: '지금은 결제할 수 없어요. 잠시 후 다시 시도해 주세요',
+} as const;
 
 // 이용권을 살 수 없을 때의 계측 사유와 안내 문구
 const PASS_BLOCKED: Record<
@@ -86,6 +95,7 @@ export const usePurchase = ({
   onUnlocked,
   promo,
   checkPassAvailability,
+  displayCurrencies = {},
 }: UsePurchaseOptions) => {
   // 결제 이벤트마다 같은 꼬리를 붙인다 — 정가 결제와 할인 결제를 나눠 보려면 전 구간에 있어야 한다
   const promoTag = promo ? { promo: true } : {};
@@ -140,6 +150,22 @@ export const usePurchase = ({
         ...promoTag,
       });
       showToast(unsupported.message);
+      return;
+    }
+    const pkg = packages[plan];
+    const shownCurrency = displayCurrencies[plan];
+    if (pkg && shownCurrency && pkg.currency !== shownCurrency) {
+      track(EVENTS.PURCHASE_FAILED, {
+        plan,
+        reason: CURRENCY_MISMATCH.reason,
+        ...promoTag,
+      });
+      showToast(CURRENCY_MISMATCH.message);
+      reportWarning('화면 금액과 결제 패키지의 통화가 다르다', {
+        plan,
+        shownCurrency,
+        packageCurrency: pkg.currency,
+      });
       return;
     }
 

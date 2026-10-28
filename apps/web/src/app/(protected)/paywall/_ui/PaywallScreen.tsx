@@ -15,7 +15,10 @@ import { useRouter } from 'next/navigation';
 import { refreshRewardAfterPurchase } from '@/features/reward/model/refresh-reward';
 import { usePaywallDismiss } from '@/features/subscription/model/exit-promo/usePaywallDismiss';
 import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
-import { toKrwPrices } from '@/features/subscription/model/product/offering';
+import {
+  toKrwPrices,
+  toRegularPrices,
+} from '@/features/subscription/model/product/offering';
 import {
   buildPaywallPlans,
   DEFAULT_PLAN_ID,
@@ -82,9 +85,10 @@ export const PaywallScreen = ({
   const packages = offering.regular;
   // 서버에 알리는 동안 닫기를 잠근다 — 연타하면 요청이 쌓이고 화면은 그대로다
   const [closing, setClosing] = useState(false);
-  const prices = toKrwPrices(packages);
-  const plans = buildPaywallPlans(prices);
-  const rewardPlan = buildRewardPlan(prices.pass);
+  // 월간·연간은 스토어 통화(원·엔)대로, 이용권은 환급 산식이 원화를 전제하므로 원화만
+  const { currency, prices } = toRegularPrices(packages);
+  const plans = buildPaywallPlans(prices, currency);
+  const rewardPlan = buildRewardPlan(toKrwPrices(packages).pass);
   const regularPlan = plans[selectedId === 'monthly' ? 'monthly' : 'yearly'];
   // CTA 밑 결제·해지 안내 두 줄
   const notices = [getBillingNotice(regularPlan), getCancelNotice(regularPlan)];
@@ -129,6 +133,8 @@ export const PaywallScreen = ({
     packages,
     onUnlocked: unlock,
     checkPassAvailability,
+    // 이용권은 스토어 통화대로 결제해도 된다고 정해 비교하지 않는다
+    displayCurrencies: { monthly: currency, yearly: currency },
   });
 
   const selectPlan = (id: SubscriptionPlan) => {

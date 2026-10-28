@@ -357,7 +357,9 @@ export type PurchaseFailureReason =
   // 이용권을 살 수 있는지 확인하지 못했다 — 조회 실패·시간 초과
   | 'pass_check_failed'
   // 결제 회신을 받기 전에 페이월을 떠났다 — 결과를 알 수 없어 시작만 남지 않게 닫아 둔다
-  | 'left_screen';
+  | 'left_screen'
+  // 화면에 그린 금액의 통화와 결제할 패키지의 통화가 달라 결제 전에 막았다
+  | 'currency_mismatch';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete' | 'alarm_delete';
 export type RetryScreen =

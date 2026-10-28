@@ -3,7 +3,7 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 
-import { formatWon } from '@/features/subscription/lib/won';
+import { formatPrice } from '@/features/subscription/lib/store-price';
 import { type PaywallPlan } from '@/features/subscription/model/product/plans';
 import { GOLD_GRADIENT } from '@/features/subscription/ui/premium-brand';
 import { SPRING_SELECT } from '@/shared/motion';
@@ -65,12 +65,12 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
         className={`text-12 leading-[1.3] text-muted-foreground ${plan.listPrice ? 'line-through' : ''}`}
       >
         {plan.listPrice
-          ? `${plan.period} ${formatWon(plan.listPrice)}`
+          ? `${plan.period} ${formatPrice(plan.listPrice, plan.currency)}`
           : '\u00a0'}
       </span>
       {/* 가격은 글자 크기 배율을 받지 않는다 — 크게 단계에서 "14,900 / 원"으로 끊기지 않게 */}
       <span className="text-22 leading-[1.2] font-bold whitespace-nowrap text-foreground [--font-scale:1]">
-        {plan.period} {formatWon(plan.price)}
+        {plan.period} {formatPrice(plan.price, plan.currency)}
       </span>
       <span
         className={`text-11 leading-[1.3] transition-colors ${selected ? 'text-[#c4601f]' : 'text-muted-foreground'}`}

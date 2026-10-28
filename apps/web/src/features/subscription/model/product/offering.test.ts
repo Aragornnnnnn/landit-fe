@@ -7,6 +7,7 @@ import {
   toKrwPrices,
   toOffering,
   toPlanPackages,
+  toRegularPrices,
   unclassifiablePackages,
 } from './offering';
 
@@ -240,6 +241,45 @@ describe('toKrwPrices', () => {
       quarterly: 39900,
       halfyear: 59900,
     });
+  });
+});
+
+describe('toRegularPrices', () => {
+  const yen = (pkg: typeof monthly | typeof yearly, price: number) => ({
+    ...pkg,
+    price,
+    currency: 'JPY',
+  });
+
+  it('원화면 원화 가격과 원화를 준다', () => {
+    expect(toRegularPrices(toPlanPackages([monthly, yearly]))).toEqual({
+      currency: 'KRW',
+      prices: { monthly: 9900, yearly: yearly.price },
+    });
+  });
+
+  it('월간·연간이 둘 다 엔화면 엔화 가격과 엔화를 준다', () => {
+    const packages = toPlanPackages([yen(monthly, 980), yen(yearly, 5_800)]);
+
+    expect(toRegularPrices(packages)).toEqual({
+      currency: 'JPY',
+      prices: { monthly: 980, yearly: 5_800 },
+    });
+  });
+
+  it('엔화가 한 플랜뿐이면 원화 등록값으로 돌아간다 — 엔화 숫자와 원화 등록값이 한 화면에 섞이지 않게', () => {
+    const packages = toPlanPackages([yen(monthly, 980)]);
+
+    expect(toRegularPrices(packages)).toEqual({ currency: 'KRW', prices: {} });
+  });
+
+  it('다루지 않는 통화면 원화 등록값으로 돌아간다', () => {
+    const packages = toPlanPackages([
+      { ...monthly, price: 9.99, currency: 'USD' },
+      { ...yearly, price: 59.99, currency: 'USD' },
+    ]);
+
+    expect(toRegularPrices(packages)).toEqual({ currency: 'KRW', prices: {} });
   });
 });
 
