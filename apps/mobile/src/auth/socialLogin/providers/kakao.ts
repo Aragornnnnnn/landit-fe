@@ -2,6 +2,7 @@
 import { initializeKakaoSDK } from '@react-native-kakao/core';
 import { login as kakaoLogin } from '@react-native-kakao/user';
 
+import { shellText } from '../../../i18n/shell-text';
 import {
   assertIdToken,
   hasErrorCode,
@@ -36,7 +37,7 @@ async function loginWithKakaoTalkOrAccount(nonce: string) {
 
 function throwIfCancelled(error: unknown): void {
   if (hasErrorCode(error, 'Cancelled')) {
-    throw new SocialLoginError('로그인이 취소됐어요.', true);
+    throw new SocialLoginError(shellText().login.cancelled, true);
   }
 }
 

@@ -7,6 +7,9 @@ import { getDeviceId } from './deviceId';
 import { getNativeContext } from './nativeContext';
 
 jest.mock('./deviceId', () => ({ getDeviceId: jest.fn() }));
+jest.mock('@/i18n/shell-locale', () => ({
+  deviceLanguageTags: () => ['en-US', 'ja-JP'],
+}));
 
 describe('getNativeContext', () => {
   it('브릿지 스키마를 만족하는 컨텍스트를 만든다', () => {
@@ -14,6 +17,10 @@ describe('getNativeContext', () => {
 
     // 셸이 만든 값을 웹 리더가 그대로 받아들여야 한다 (계약 일치)
     expect(readNativeContext(context)).toEqual(context);
+  });
+
+  it('기기 선호 언어 목록을 우선순위 그대로 채운다', () => {
+    expect(getNativeContext().languages).toEqual(['en-US', 'ja-JP']);
   });
 
   it('플랫폼·앱 버전을 채운다', () => {

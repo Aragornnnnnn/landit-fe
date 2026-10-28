@@ -1,6 +1,7 @@
 // iOS 위젯 동기화 — 아트를 App Group 공유 디렉터리에 복사하고 타임라인을 새로 예약한다
 import type { WidgetData } from '@landit/bridge';
 
+import { shellLocale } from '../../i18n/shell-locale';
 import { reportWarning } from '../../monitoring/report';
 import { buildTimelineEntries } from './props';
 
@@ -60,7 +61,12 @@ export const syncIosWidget = async (data: WidgetData): Promise<void> => {
     ).default;
     const artDir = await ensureWidgetArt();
     streakWidget.updateTimeline(
-      buildTimelineEntries({ data, now: new Date(), artDir }),
+      buildTimelineEntries({
+        locale: shellLocale(),
+        data,
+        now: new Date(),
+        artDir,
+      }),
     );
   } catch (error) {
     console.warn('[widget] iOS 타임라인 동기화 실패', error);

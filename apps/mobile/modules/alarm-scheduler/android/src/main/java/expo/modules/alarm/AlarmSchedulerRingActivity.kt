@@ -85,6 +85,11 @@ class AlarmSchedulerRingActivity : Activity() {
     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
   }
 
+  // landit: 날짜는 기기 언어가 아니라 알람을 건 순간의 앱 화면 언어로 — JS가 메모(metadata.locale)에 실어 둔다. 모르면 한국어
+  private fun ringDateLabel(locale: String?, now: Date): String =
+    if (locale == "ja") SimpleDateFormat("M月d日 EEEE", Locale.JAPANESE).format(now)
+    else SimpleDateFormat("M월 d일 EEEE", Locale.KOREAN).format(now)
+
   // landit: 피그마 밤 톤 화면(v2.1) — 날짜·시각·래디 램프·제목(램프 폭에 맞춘 한 줄), 버튼은 앱 디자인 시스템의 입체 버튼
   private fun buildContentView(title: String): View {
     val resolved = options
@@ -123,7 +128,7 @@ class AlarmSchedulerRingActivity : Activity() {
     val now = Date()
     column.addView(
       // 날짜·시각은 사용자 글자 크기 설정에 끌려가지 않게 dp로 — 커지면 아래 버튼을 밀어낸다
-      label(SimpleDateFormat("M월 d일 EEEE", Locale.KOREAN).format(now), 20f, "#E9E3EF", Typeface.DEFAULT_BOLD, TypedValue.COMPLEX_UNIT_DIP)
+      label(ringDateLabel(resolved?.metadata?.optString("locale"), now), 20f, "#E9E3EF", Typeface.DEFAULT_BOLD, TypedValue.COMPLEX_UNIT_DIP)
     )
     // 시각은 한눈에 보이게 굵게, 주인공인 제목보다는 한 발 물러난 크기로
     column.addView(

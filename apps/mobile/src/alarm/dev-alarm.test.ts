@@ -7,6 +7,11 @@ import {
 } from '../../modules/alarm-scheduler';
 import { cancelAlarm, listAlarms, scheduleTestAlarm } from './dev-alarm';
 
+jest.mock('@/i18n/shell-locale', () => ({
+  shellLocale: () => 'ko',
+  loadShellLocale: async () => 'ko',
+}));
+
 jest.mock('../../modules/alarm-scheduler', () => ({
   AlarmScheduler: {
     getPermissionsAsync: jest.fn(),
