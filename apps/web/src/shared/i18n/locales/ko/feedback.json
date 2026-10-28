@@ -47,7 +47,9 @@
     "reviewButton": "뭐가 잘 통했는지 볼게요",
     "growthEmptyTitle": "지난번엔 헷갈렸던 과거형",
     "growthEmptyBody": "아직 지난 기록이 없어요.",
+    "growthEmptyRetryBody": "지난번과 비교할 실수가 없었어요.",
     "reuseEmptyBody": "아직 배운 표현이 없어요.",
+    "reuseEmptyRetryBody": "이번 대화엔 활용한 표현이 없었어요.",
     "fallbackTitle": "오늘도 시나리오를 잘 마무리했어요"
   },
   "feedbackDetail": {

@@ -15,6 +15,7 @@ export const FeedbackContent = ({
   feedback,
   title,
   source,
+  premium,
   openDetail = false,
   refreshing = false,
   onExit,
@@ -24,6 +25,8 @@ export const FeedbackContent = ({
   title: string;
   /** 어디서 열었는지 — 대화 직후 흐름과 기록 열람을 계측에서 가른다 */
   source: FeedbackSource;
+  /** 유료 구독 중인가 — 구독 조회는 호출부가 들고 있다 */
+  premium: boolean;
   /** 총평을 건너뛰고 상세부터 — 결제하고 돌아온 길. 잠금이 풀린 응답이 오는 순간 한 번 연다 */
   openDetail?: boolean;
   /** 받아 둔 응답을 다시 받는 중 — 그동안 잠긴 CTA를 눌러도 페이월로 보내지 않는다 */
@@ -110,6 +113,7 @@ export const FeedbackContent = ({
       feedback={feedback}
       title={title}
       detailLocked={detailLocked}
+      premium={premium}
       refreshing={refreshing}
       // 총평만 보고 상세 없이 나감 — Feedback Completed와 배타적인 이탈 신호
       onBack={() => {

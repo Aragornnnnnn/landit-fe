@@ -20,6 +20,7 @@ export const FeedbackSummary = ({
   feedback,
   title,
   detailLocked,
+  premium,
   refreshing = false,
   onBack,
   onDetail,
@@ -28,6 +29,8 @@ export const FeedbackSummary = ({
   title: string;
   /** 서버가 상세를 잠근 세션 — 턴별 피드백이 비어 와서 성공률을 셀 수 없고, CTA는 페이월로 이어진다 */
   detailLocked: boolean;
+  /** 유료 구독 중인가 — 배운 표현 카드의 빈 문구를 고른다 */
+  premium: boolean;
   /** 잠긴 응답을 다시 받는 중 — CTA를 돌려 기다리게 한다 */
   refreshing?: boolean;
   onBack: () => void;
@@ -45,6 +48,7 @@ export const FeedbackSummary = ({
     (item) => item.feedbackType === 'GOOD',
   ).length;
   const total = feedback.messageFeedbacks.length;
+  const completedBefore = feedback.hasPreviousSameScenarioCompletion ?? false;
 
   return (
     <div className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
@@ -111,8 +115,15 @@ export const FeedbackSummary = ({
               />
             )}
 
-            <GrowthSection growth={feedback.growthFeedback} />
-            <ReuseSection reuse={feedback.expressionReuse} />
+            <GrowthSection
+              growth={feedback.growthFeedback}
+              completedBefore={completedBefore}
+            />
+            <ReuseSection
+              reuse={feedback.expressionReuse}
+              completedBefore={completedBefore}
+              premium={premium}
+            />
           </div>
         </div>
         {/* 버튼 위로 가려진 카드가 더 있으면 아래 가장자리를 흐린다 — 끝까지 내리면 걷힌다 */}
@@ -154,8 +165,10 @@ export const FeedbackSummary = ({
 // 지난번과의 비교 — 필드가 없는 구버전 응답(undefined)은 비교를 안 한 것이라 빈 문구도 띄우지 않는다
 const GrowthSection = ({
   growth,
+  completedBefore,
 }: {
   growth: SessionFeedbackResponse['growthFeedback'];
+  completedBefore: boolean;
 }) => {
   const t = useTranslations('feedback.feedbackSummary');
   if (growth === undefined) return null;
@@ -163,7 +176,9 @@ const GrowthSection = ({
   return (
     // 비교할 패턴이 없어도 시안 제목 그대로 둔다 (2026-09-30 확정)
     <SummaryCard title={t('growthEmptyTitle')}>
-      <EmptyText>{t('growthEmptyBody')}</EmptyText>
+      <EmptyText>
+        {completedBefore ? t('growthEmptyRetryBody') : t('growthEmptyBody')}
+      </EmptyText>
     </SummaryCard>
   );
 };
@@ -171,8 +186,12 @@ const GrowthSection = ({
 // 배운 표현 재사용 — 구버전 응답이거나 분석 중(pending)이면 거둔다. 총평은 POST로 한 번 만들어 다시 물을 수 없다
 const ReuseSection = ({
   reuse,
+  completedBefore,
+  premium,
 }: {
   reuse: SessionFeedbackResponse['expressionReuse'];
+  completedBefore: boolean;
+  premium: boolean;
 }) => {
   const t = useTranslations('feedback.feedbackSummary');
   const reuseT = useTranslations('feedback.reusedExpressionsCard');
@@ -180,8 +199,13 @@ const ReuseSection = ({
   if (reuse.items.length > 0)
     return <ReusedExpressionsCard items={reuse.items} />;
   return (
+    // 무료 유저는 재도전이어도 처음 문구를 그대로 쓴다 (2026-10-28 확정)
     <SummaryCard title={reuseT('title')}>
-      <EmptyText>{t('reuseEmptyBody')}</EmptyText>
+      <EmptyText>
+        {completedBefore && premium
+          ? t('reuseEmptyRetryBody')
+          : t('reuseEmptyBody')}
+      </EmptyText>
     </SummaryCard>
   );
 };

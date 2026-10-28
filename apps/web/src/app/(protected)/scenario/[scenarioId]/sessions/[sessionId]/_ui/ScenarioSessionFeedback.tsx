@@ -103,6 +103,7 @@ export const ScenarioSessionFeedback = ({
       feedback={feedback}
       title={title}
       source="history"
+      premium={subscription?.premium ?? false}
       openDetail={openDetail}
       refreshing={isRefreshing}
       onExit={backToList}

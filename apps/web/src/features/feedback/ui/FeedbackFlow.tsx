@@ -11,6 +11,8 @@ import { FeedbackSkeleton } from './flow/FeedbackSkeleton';
 interface FeedbackFlowProps {
   sessionId: number | null;
   title: string;
+  /** 유료 구독 중인가 — 구독 조회는 호출부가 들고 있다 */
+  premium: boolean;
   /** 총평을 건너뛰고 상세부터 — 결제하고 돌아온 길 */
   openDetail?: boolean;
   onExit: () => void;
@@ -33,6 +35,7 @@ const FeedbackUnavailable = ({ onExit }: { onExit: () => void }) => {
 export const FeedbackFlow = ({
   sessionId,
   title,
+  premium,
   openDetail = false,
   onExit,
   onDetailLocked,
@@ -48,6 +51,7 @@ export const FeedbackFlow = ({
       feedback={feedback}
       title={title}
       source="post_conversation"
+      premium={premium}
       openDetail={openDetail}
       refreshing={isRefreshing}
       onExit={onExit}
