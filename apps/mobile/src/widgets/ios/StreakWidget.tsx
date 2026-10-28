@@ -26,6 +26,8 @@ export interface StreakWidgetProps {
   // 주간 스트립 — 오늘(서울)로 끝나는 7칸의 요일 라벨과 완료 여부 (Large 전용)
   weekLabels?: string[];
   weekDone?: boolean[];
+  // 아트 언어 접두어 — 일본어면 'ja-'. 옛 타임라인엔 없어 한국어 아트로 그린다
+  artPrefix?: string;
 }
 
 const StreakWidgetView = (
@@ -79,6 +81,13 @@ const StreakWidgetView = (
       weight: 'bold',
       size: family === 'small' ? 14 : 16,
     });
+    // 앱이 아직 언어를 넘기지 못한 때라 기기 언어(Intl)로 고른다 — 위젯 런타임(JSContext)은 앱과 달라 Intl이 없으면 한국어
+    const japanese =
+      typeof Intl !== 'undefined' &&
+      Intl.DateTimeFormat().resolvedOptions().locale.startsWith('ja');
+    const [guideTop, guideBottom] = japanese
+      ? ['Landitで会話して', '連続記録を始めましょう！']
+      : ['랜딧과 대화하고', '스트릭을 시작해보세요!'];
     return (
       <ZStack
         modifiers={[
@@ -88,10 +97,10 @@ const StreakWidgetView = (
       >
         <VStack spacing={2} modifiers={[padding({ horizontal: 12 })]}>
           <Text modifiers={[guideFont, foregroundStyle('#0E3A5C')]}>
-            랜딧과 대화하고
+            {guideTop}
           </Text>
           <Text modifiers={[guideFont, foregroundStyle('#0E3A5C')]}>
-            스트릭을 시작해보세요!
+            {guideBottom}
           </Text>
         </VStack>
       </ZStack>
@@ -116,7 +125,10 @@ const StreakWidgetView = (
     (props.kind === 'milestone' && props.milestone != null
       ? `milestone-${props.milestone}`
       : props.kind) + `-${family}`;
-  const artUri = props.artDir == null ? null : `${props.artDir}${artKey}.webp`;
+  const artUri =
+    props.artDir == null
+      ? null
+      : `${props.artDir}${props.artPrefix ?? ''}${artKey}.webp`;
   // 마일스톤 M·L 아트는 달성 문구가 그림에 포함돼 있어 오버레이하지 않는다.
   // Small은 다른 상태와 같은 자리에 열매+숫자를 그린다 — 크기별로 형태가 달라 보이지 않게
   const showNumber = props.kind !== 'milestone' || family === 'small';

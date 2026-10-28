@@ -9,8 +9,9 @@ import {
   TextWidget,
 } from 'react-native-android-widget';
 
-import { WIDGET_ART } from '../art/widget-art';
+import type { ShellLocale } from '../../i18n/shell-locale';
 import { artKeyOf, type WidgetFamily } from '../art/widget-art-key';
+import { widgetArtFor } from '../art/widget-art-locale';
 import {
   MILESTONE_INKS,
   WEEK_STRIP_COLORS,
@@ -26,6 +27,8 @@ interface StreakAndroidWidgetProps {
   state: WidgetState;
   week: ReturnType<typeof buildWeekStrip>;
   family: WidgetFamily;
+  // 아트의 언어 — 셸 언어(웹 화면 언어)
+  locale: ShellLocale;
   // 위젯 실제 크기(dp) — 아트를 꽉 채우는 데 쓴다
   width: number;
   height: number;
@@ -35,6 +38,7 @@ export const StreakAndroidWidget = ({
   state,
   week,
   family,
+  locale,
   width,
   height,
 }: StreakAndroidWidgetProps) => {
@@ -55,8 +59,9 @@ export const StreakAndroidWidget = ({
   const sy = card.height / designHeight;
   const px = (value: number) => Math.round(value * sx);
   const py = (value: number) => Math.round(value * sy);
-  const art = WIDGET_ART[artKeyOf(state, family)] as number | undefined;
-  const fruit = WIDGET_ART.fruit as number | undefined;
+  const artSet = widgetArtFor(locale);
+  const art = artSet[artKeyOf(state, family)] as number | undefined;
+  const fruit = artSet.fruit as number | undefined;
   // 마일스톤 M·L 아트는 달성 문구가 그림에 포함돼 있어 오버레이하지 않는다.
   // Small은 다른 상태와 같은 자리에 열매+숫자를 그린다 — 크기별로 형태가 달라 보이지 않게
   const showNumber = state.kind !== 'milestone' || family === 'small';

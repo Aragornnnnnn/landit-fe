@@ -2,6 +2,7 @@
 import type { WidgetData } from '@landit/bridge';
 
 import type { ShellLocale } from '../../i18n/shell-locale';
+import { artFilePrefixOf } from '../art/widget-art-locale';
 import { buildWeekStrip } from '../model/week-strip';
 import { buildWidgetTimeline } from './timeline';
 
@@ -16,7 +17,7 @@ export const buildTimelineEntries = ({
   now,
   artDir,
 }: {
-  // 요일 이름의 언어 — 셸 언어(웹 화면 언어)
+  // 요일 이름·아트의 언어 — 셸 언어(웹 화면 언어)
   locale: ShellLocale;
   data: WidgetData;
   now: Date;
@@ -38,6 +39,7 @@ export const buildTimelineEntries = ({
         displayStreak: state.displayStreak,
         weekLabels: week.labels,
         weekDone: week.done,
+        artPrefix: artFilePrefixOf(locale),
         ...(state.milestone !== null && { milestone: state.milestone }),
         ...(artDir !== null && { artDir }),
       },

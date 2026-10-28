@@ -161,8 +161,8 @@
           "widgets": [
             {
               "name": "StreakSmall",
-              "label": "랜딧",
-              "description": "래디와 함께 매일 대화 스트릭을 지켜요",
+              "label": "@string/landit_widget_label",
+              "description": "@string/landit_widget_description",
               "minWidth": "110dp",
               "minHeight": "110dp",
               "targetCellWidth": 2,
@@ -173,8 +173,8 @@
             },
             {
               "name": "StreakMedium",
-              "label": "랜딧",
-              "description": "래디와 함께 매일 대화 스트릭을 지켜요",
+              "label": "@string/landit_widget_label",
+              "description": "@string/landit_widget_description",
               "minWidth": "250dp",
               "minHeight": "110dp",
               "targetCellWidth": 4,
@@ -185,8 +185,8 @@
             },
             {
               "name": "StreakLarge",
-              "label": "랜딧",
-              "description": "래디와 함께 매일 대화 스트릭과 주간 기록을 지켜요",
+              "label": "@string/landit_widget_label",
+              "description": "@string/landit_widget_description_large",
               "minWidth": "250dp",
               "minHeight": "250dp",
               "targetCellWidth": 4,
@@ -198,6 +198,7 @@
           ]
         }
       ],
+      "./plugins/withWidgetLocales.js",
       [
         "expo-widgets",
         {

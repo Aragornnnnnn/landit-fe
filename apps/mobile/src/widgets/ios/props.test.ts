@@ -82,4 +82,22 @@ describe('buildTimelineEntries', () => {
 
     expect(ja.props.weekLabels).toContain('木');
   });
+
+  it('일본어면 일본어 아트 파일을 가리키는 접두어를 싣는다 — 두 언어 아트가 같은 폴더에 있다', () => {
+    const [ko] = buildTimelineEntries({
+      locale: 'ko',
+      data: dataOf(),
+      now,
+      artDir: 'file:///art/',
+    });
+    const [ja] = buildTimelineEntries({
+      locale: 'ja',
+      data: dataOf(),
+      now,
+      artDir: 'file:///art/',
+    });
+
+    expect(ko.props.artPrefix).toBe('');
+    expect(ja.props.artPrefix).toBe('ja-');
+  });
 });
