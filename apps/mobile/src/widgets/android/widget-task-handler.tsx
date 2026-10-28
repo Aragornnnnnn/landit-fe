@@ -32,6 +32,7 @@ export const renderStreakWidget = async (
         now,
       })}
       family={familyForWidget(widgetInfo.widgetName)}
+      locale={locale}
       width={widgetInfo.width}
       height={widgetInfo.height}
     />
