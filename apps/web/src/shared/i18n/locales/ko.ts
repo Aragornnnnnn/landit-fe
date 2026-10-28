@@ -14,6 +14,7 @@ import onboarding from './ko/onboarding.json';
 import paywall from './ko/paywall.json';
 import review from './ko/review.json';
 import scenario from './ko/scenario.json';
+import smallTalk from './ko/smallTalk.json';
 import streak from './ko/streak.json';
 import subscription from './ko/subscription.json';
 import widget from './ko/widget.json';
@@ -34,6 +35,7 @@ const ko = {
   paywall,
   review,
   scenario,
+  smallTalk,
   streak,
   subscription,
   widget,

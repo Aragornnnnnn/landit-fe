@@ -1,7 +1,7 @@
 // 지난번과 비교 — 연회색(지난번) 위에 주황(오늘) 막대 세 줄(말한 시간·주고받은 말·가장 길게 말한 턴).
 // 첫 스몰톡이면 지난번은 0으로 그려 다음부터 채워질 자리를 보여준다. 오늘 말한 시간이 0초면 그 줄은 빠진다
 import type { CSSProperties } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import type { SmallTalkSummaryComparison } from '@/features/small-talk/api/small-talk';
 
@@ -13,18 +13,17 @@ export const ComparisonCard = ({
   comparison: SmallTalkSummaryComparison;
 }) => {
   const locale = useLocale();
+  const t = useTranslations('smallTalk.comparison');
   return (
     <section className="rounded-2xl bg-card px-5 py-4 shadow-sm">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-17 font-extrabold text-foreground">
-          지난번과 비교
-        </h2>
+        <h2 className="text-17 font-extrabold text-foreground">{t('title')}</h2>
         <p className="text-12 text-muted-foreground">
-          {toPeriodLabel(comparison, locale)}
+          {toPeriodLabel(comparison, t, locale)}
         </p>
       </div>
       <dl className="mt-3 flex flex-col gap-4">
-        {toComparisonRows(comparison, locale).map((row, index) => (
+        {toComparisonRows(comparison, t, locale).map((row, index) => (
           <div key={row.label}>
             <dt className="text-12 text-muted-foreground">{row.label}</dt>
             <dd className="mt-1.5 flex flex-col gap-1.5">

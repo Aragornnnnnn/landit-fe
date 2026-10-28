@@ -3,6 +3,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
 import { RefreshIcon } from '@/shared/ui/Icons';
@@ -35,21 +36,24 @@ export const TopicPickerModal = ({
   onRefresh,
   onSelect,
   onClose,
-}: TopicPickerModalProps) => (
-  <Modal
-    open={open}
-    onClose={onClose}
-    label={`${partnerName}와 어떤 주제로 대화할까요?`}
-  >
-    <TopicPicker
-      partnerName={partnerName}
-      topics={topics}
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-      onSelect={onSelect}
-    />
-  </Modal>
-);
+}: TopicPickerModalProps) => {
+  const t = useTranslations('smallTalk.topicPicker');
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      label={t('title', { name: partnerName })}
+    >
+      <TopicPicker
+        partnerName={partnerName}
+        topics={topics}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        onSelect={onSelect}
+      />
+    </Modal>
+  );
+};
 
 // 모달 안쪽 — 닫히면 Modal이 이 안을 통째로 걷어낸다. 회전·잠금 같은 한 번의 연출 상태를
 // 여기 두어야 다음에 열 때 따라오지 않는다 (바깥은 닫혀도 계속 마운트돼 있다)
@@ -62,6 +66,7 @@ const TopicPicker = ({
 }: Omit<TopicPickerModalProps, 'open' | 'onClose'>) => {
   // 누른 횟수 — 아이콘을 새로 마운트해 한 바퀴 애니메이션을 다시 태운다.
   // 응답이 빨라도 늦어도 "눌렀다"는 것은 똑같이 한 바퀴로 보인다
+  const t = useTranslations('smallTalk.topicPicker');
   const [spins, setSpins] = useState(0);
   // 한 바퀴가 끝나기 전에는 다시 못 누른다 — 연달아 누르면 주제가 읽기도 전에 갈리고,
   // 줄 수가 바뀌며 모달 높이가 튀어 방금 누른 버튼이 손 밑에서 움직인다
@@ -91,7 +96,7 @@ const TopicPicker = ({
       {/* 왼쪽 제목 ↔ 오른쪽 닫기로 한 줄을 잡는다. 오른쪽 여백은 X 자리를 비켜 준다.
           색은 검정 — 눌러야 할 건 칩이라 주황은 그쪽에 양보한다 */}
       <h2 className="pr-8 text-17 font-bold text-foreground">
-        {partnerName}와 어떤 주제로 대화할까요?
+        {t('title', { name: partnerName })}
       </h2>
       {/* 칩 길이가 제각각이라 줄바꿈에 맡기고 가운데로 모은다.
           받아오는 동안에도 칩을 비우지 않는다 — 비우면 모달 높이가 접혔다 펴진다.
@@ -134,7 +139,7 @@ const TopicPicker = ({
             style={{ '--spin-ms': `${SPIN_MS}ms` } as React.CSSProperties}
             className={spins > 0 ? 'animate-spin-turn' : undefined}
           />
-          다른 주제 보기
+          {t('refreshButton')}
         </button>
       </div>
     </>

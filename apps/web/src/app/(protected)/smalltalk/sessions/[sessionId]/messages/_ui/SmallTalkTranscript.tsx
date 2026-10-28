@@ -5,7 +5,7 @@
 // 대화 중엔 교정을 보여주지 않는 대신, 여기서 내 말풍선 아래에 더 자연스러운 말과 배운 표현 재사용을 붙인다
 import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
@@ -54,6 +54,7 @@ export const SmallTalkTranscript = ({
 }: SmallTalkTranscriptProps) => {
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations('smallTalk');
   // 교정은 대화가 끝난 뒤 따로 만들어진다 — 이 화면이 그걸 그리므로 준비될 때까지 기다린다
   const { session, error, isLoading, waitExpired } = useSmallTalkSessionQuery(
     sessionId,
@@ -90,7 +91,7 @@ export const SmallTalkTranscript = ({
       <PageHeader
         title={
           session
-            ? toSessionTitle(session.title, session.completedAt, locale)
+            ? toSessionTitle(session.title, session.completedAt, t, locale)
             : ''
         }
         onBack={() => router.replace(smallTalkHistoryPath(sessionId))}
@@ -98,7 +99,7 @@ export const SmallTalkTranscript = ({
 
       {error ? (
         <p className="flex flex-1 items-center justify-center px-6 text-center text-sm text-muted-foreground">
-          {error.message || '대화를 불러오지 못했어요.'}
+          {error.message || t('transcript.loadError')}
         </p>
       ) : isLoading ? (
         <SmallTalkTranscriptSkeleton />
@@ -139,7 +140,7 @@ export const SmallTalkTranscript = ({
               onClick={jumpNext}
               className={`animate-fade-up absolute right-5 ${continueToLearning ? 'bottom-4' : 'bottom-[max(var(--safe-area-inset-bottom),16px)]'} flex items-center gap-1 rounded-full bg-foreground px-3.5 py-2 text-13 font-semibold text-background shadow-md active:opacity-80`}
             >
-              다음 자연스러운 말
+              {t('transcript.nextCorrectionButton')}
               <ChevronDownIcon size={14} strokeWidth={2.5} />
             </button>
           )}
@@ -156,7 +157,7 @@ export const SmallTalkTranscript = ({
               )
             }
           >
-            표현 배우러 가기
+            {t('transcript.learnButton')}
             <ArrowRightIcon size={16} />
           </Button>
         </footer>
@@ -194,35 +195,36 @@ const MyMessage = ({
   waitExpired: boolean;
   // 이 말풍선의 교정이 폴링으로 뒤늦게 왔는가 — 그때만 카드를 떠오르게 한다
   lateCorrection: boolean;
-}) => (
-  <div className="flex flex-col items-end gap-1.5">
-    <div className="max-w-[78%] rounded-2xl bg-primary px-4 py-3 text-white">
-      <p className="text-15 leading-6 font-medium">
-        <HighlightedContent
-          content={message.content}
-          matchedText={message.reusedExpression?.matchedText}
+}) => {
+  const t = useTranslations('smallTalk.transcript');
+  return (
+    <div className="flex flex-col items-end gap-1.5">
+      <div className="max-w-[78%] rounded-2xl bg-primary px-4 py-3 text-white">
+        <p className="text-15 leading-6 font-medium">
+          <HighlightedContent
+            content={message.content}
+            matchedText={message.reusedExpression?.matchedText}
+          />
+        </p>
+      </div>
+      {message.reusedExpression && (
+        <ReusedExpressionTag expression={message.reusedExpression} />
+      )}
+      {message.correctionStatus === 'PREPARING' && !waitExpired && (
+        <p className="text-12 text-muted-foreground">{t('preparingCaption')}</p>
+      )}
+      {message.correction ? (
+        <CorrectionCard
+          correction={message.correction}
+          className={lateCorrection ? 'animate-fade-up' : ''}
         />
-      </p>
+      ) : (
+        // 실패(FAILED)나 준비 중(PREPARING)도 교정이 없다 — 다 만들고 고칠 게 없었을 때만 칭찬한다
+        message.correctionStatus === 'COMPLETED' && <GoodJobTag />
+      )}
     </div>
-    {message.reusedExpression && (
-      <ReusedExpressionTag expression={message.reusedExpression} />
-    )}
-    {message.correctionStatus === 'PREPARING' && !waitExpired && (
-      <p className="text-12 text-muted-foreground">
-        더 자연스러운 말을 찾는 중…
-      </p>
-    )}
-    {message.correction ? (
-      <CorrectionCard
-        correction={message.correction}
-        className={lateCorrection ? 'animate-fade-up' : ''}
-      />
-    ) : (
-      // 실패(FAILED)나 준비 중(PREPARING)도 교정이 없다 — 다 만들고 고칠 게 없었을 때만 칭찬한다
-      message.correctionStatus === 'COMPLETED' && <GoodJobTag />
-    )}
-  </div>
-);
+  );
+};
 
 // 배운 표현을 쓴 구절만 밑줄 — 구절을 못 찾으면 원문 그대로
 const HighlightedContent = ({
@@ -249,20 +251,26 @@ const ReusedExpressionTag = ({
   expression,
 }: {
   expression: SmallTalkReusedExpression;
-}) => (
-  <p className="flex items-center gap-1 rounded-full bg-success/10 px-3 py-1.5 text-12 font-semibold text-success">
-    <CheckIcon size={12} strokeWidth={3} />
-    배운 표현 「{expression.text}」을 썼어요
-  </p>
-);
+}) => {
+  const t = useTranslations('smallTalk.transcript');
+  return (
+    <p className="flex items-center gap-1 rounded-full bg-success/10 px-3 py-1.5 text-12 font-semibold text-success">
+      <CheckIcon size={12} strokeWidth={3} />
+      {t('reusedExpressionBadge', { expression: expression.text })}
+    </p>
+  );
+};
 
 // 고칠 게 없던 말 — 배운 표현 태그와 같은 알약, 색만 파랑(잘한 것을 파랑으로 쓰는 피드백 상세와 같은 토큰)
-const GoodJobTag = () => (
-  <p className="flex items-center gap-1 rounded-full bg-good/10 px-3 py-1.5 text-12 font-semibold text-good">
-    <CheckIcon size={12} strokeWidth={3} />
-    잘했어요!
-  </p>
-);
+const GoodJobTag = () => {
+  const t = useTranslations('smallTalk.transcript');
+  return (
+    <p className="flex items-center gap-1 rounded-full bg-good/10 px-3 py-1.5 text-12 font-semibold text-good">
+      <CheckIcon size={12} strokeWidth={3} />
+      {t('goodJobBadge')}
+    </p>
+  );
+};
 
 // 더 자연스러운 말 — 고친 문장은 초록 굵게, 이유는 회색.
 // 말풍선 가족과 같은 모양을 쓴다(같은 둥글기·여백, 테두리 없이 채움만) — 테두리를 두면 이 카드만 따로 논다.
@@ -274,24 +282,27 @@ const CorrectionCard = ({
 }: {
   correction: SmallTalkCorrection;
   className?: string;
-}) => (
-  <section
-    className={`max-w-[88%] rounded-2xl bg-success/10 px-4 py-3 ${className}`}
-  >
-    <p className="flex items-center gap-1 text-12 font-semibold text-success">
-      <SparkleIcon size={13} />
-      이렇게 말하면 더 자연스러워요
-    </p>
-    <p className="mt-1.5 text-15 leading-6 font-bold text-success">
-      {correction.betterSentence}
-    </p>
-    <p className="mt-1.5 text-13 leading-5 text-muted-foreground">
-      {correction.reason}
-    </p>
-    {correction.memoryTag && (
-      <p className="mt-2 inline-block rounded-full bg-card px-2.5 py-1 text-12 text-muted-foreground">
-        <Emoji>🗓️</Emoji> {correction.memoryTag}
+}) => {
+  const t = useTranslations('smallTalk.transcript');
+  return (
+    <section
+      className={`max-w-[88%] rounded-2xl bg-success/10 px-4 py-3 ${className}`}
+    >
+      <p className="flex items-center gap-1 text-12 font-semibold text-success">
+        <SparkleIcon size={13} />
+        {t('correctionTitle')}
       </p>
-    )}
-  </section>
-);
+      <p className="mt-1.5 text-15 leading-6 font-bold text-success">
+        {correction.betterSentence}
+      </p>
+      <p className="mt-1.5 text-13 leading-5 text-muted-foreground">
+        {correction.reason}
+      </p>
+      {correction.memoryTag && (
+        <p className="mt-2 inline-block rounded-full bg-card px-2.5 py-1 text-12 text-muted-foreground">
+          <Emoji>🗓️</Emoji> {correction.memoryTag}
+        </p>
+      )}
+    </section>
+  );
+};

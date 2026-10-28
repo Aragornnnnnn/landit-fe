@@ -7,6 +7,7 @@ import type {
   SmallTalkSessionDetailResponse,
 } from '@/features/small-talk/api/small-talk';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
+import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { SmallTalkHistoryDetail } from './SmallTalkHistoryDetail';
 
@@ -108,6 +109,17 @@ describe('SmallTalkHistoryDetail 더 자연스러운 말 뱃지', () => {
       screen.getByRole('button', { name: '대화 다시 보기' }),
     ).toBeInTheDocument();
     expect(screen.queryByText('0')).not.toBeInTheDocument();
+  });
+
+  it('일본어 화면은 대화한 날과 주고받은 말을 일본어 표기로 적는다', () => {
+    setTestLocale('ja');
+    renderWithCorrections(0);
+
+    expect(screen.getByText('9月10日')).toBeInTheDocument();
+    expect(screen.getByText('1回')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '会話を見返す' }),
+    ).toBeInTheDocument();
   });
 });
 

@@ -14,6 +14,7 @@ import onboarding from './ja/onboarding.json';
 import paywall from './ja/paywall.json';
 import review from './ja/review.json';
 import scenario from './ja/scenario.json';
+import smallTalk from './ja/smallTalk.json';
 import streak from './ja/streak.json';
 import subscription from './ja/subscription.json';
 import widget from './ja/widget.json';
@@ -34,6 +35,7 @@ const ja = {
   paywall,
   review,
   scenario,
+  smallTalk,
   streak,
   subscription,
   widget,
