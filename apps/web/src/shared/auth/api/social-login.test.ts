@@ -8,6 +8,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   document.documentElement.lang = '';
+  delete window.__LANDIT_NATIVE__;
 });
 
 const okFetch = () => {
@@ -56,5 +57,23 @@ describe('socialLogin', () => {
 
     const [, init] = fetchMock.mock.calls[0];
     expect(init.headers['Accept-Language']).toBe('ko-KR,en;q=0.9');
+  });
+
+  it('셸이 기기 언어 목록을 넘겼으면 navigator.languages 대신 그 목록을 싣는다', async () => {
+    const fetchMock = okFetch();
+    vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['en-US']);
+    window.__LANDIT_NATIVE__ = {
+      platform: 'ios',
+      appVersion: '1.6.0',
+      buildNumber: '30',
+      bridgeVersion: 14,
+      languages: ['en-US', 'ja-JP'],
+    };
+    document.documentElement.lang = 'ko';
+
+    await socialLogin('google', 'id-token', 'nonce');
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(init.headers['Accept-Language']).toBe('en-US,ja-JP;q=0.9');
   });
 });

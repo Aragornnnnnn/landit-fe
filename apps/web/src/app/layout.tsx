@@ -1,7 +1,7 @@
 // 앱 전체 공통 레이아웃 (루트). 폰트는 globals.css에서 자체 호스팅하는 Pretendard 하나뿐이다
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 
 import { AlarmPropertiesSync } from '@/features/alarm/ui/AlarmPropertiesSync';
 import { AlarmSync } from '@/features/alarm/ui/AlarmSync';
@@ -29,6 +29,7 @@ import {
   MessagesProvider,
   RootMessagesProvider,
 } from '@/shared/i18n/MessagesProvider';
+import { NativeLocaleSync } from '@/shared/i18n/NativeLocaleSync';
 import { MonitoringBootstrap } from '@/shared/monitoring/MonitoringBootstrap';
 import { Toaster } from '@/shared/ui/toast';
 
@@ -56,6 +57,7 @@ export default async function RootLayout({
 }>) {
   // 저장 언어 쿠키(없으면 Accept-Language)로 정한 화면 언어 — API 요청도 html lang을 읽어 같은 언어를 보낸다
   const locale = await getLocale();
+  const tAlarm = await getTranslations('alarm');
 
   return (
     <html lang={locale} className="antialiased" suppressHydrationWarning>
@@ -81,10 +83,11 @@ export default async function RootLayout({
             </MessagesProvider>
             <PushDeviceSync />
             <LocaleGate />
+            <NativeLocaleSync />
             <WidgetDataSync />
             <WidgetChangeSync />
             <TrackingStatusSync />
-            <AlarmSync />
+            <AlarmSync title={tAlarm('lockScreen.title')} />
             <IdentifySync />
             <SubscriptionPropertiesSync />
             <ProfilePropertiesSync />

@@ -95,7 +95,7 @@ describe('AlarmSync', () => {
   it('유료면 서버 설정 시각으로 매일 알람을 건다', () => {
     arrange();
 
-    render(<AlarmSync />);
+    render(<AlarmSync title="오늘의 시나리오 할 시간!" />);
 
     expect(postToNativeMock).toHaveBeenCalledWith({
       type: 'SET_ALARM',
@@ -110,7 +110,7 @@ describe('AlarmSync', () => {
       status: shell({ scheduled: true }),
     });
 
-    render(<AlarmSync />);
+    render(<AlarmSync title="오늘의 시나리오 할 시간!" />);
 
     expect(postToNativeMock).toHaveBeenCalledWith({
       type: 'SET_ALARM',
@@ -122,7 +122,7 @@ describe('AlarmSync', () => {
   it('ADMIN은 결제하지 않아도 알람을 건다 — 개발자가 결제 없이 실제 흐름을 시험할 수 있게', () => {
     arrange({ premium: false, role: 'ADMIN' });
 
-    render(<AlarmSync />);
+    render(<AlarmSync title="오늘의 시나리오 할 시간!" />);
 
     expect(postToNativeMock).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'SET_ALARM', alarm: expect.anything() }),
@@ -140,7 +140,7 @@ describe('AlarmSync', () => {
         status: shell({ scheduled: true }),
       });
 
-      render(<AlarmSync />);
+      render(<AlarmSync title="오늘의 시나리오 할 시간!" />);
 
       expect(postToNativeMock).not.toHaveBeenCalled();
     },
@@ -152,7 +152,7 @@ describe('AlarmSync', () => {
       status: shell({ scheduled: true }),
     });
 
-    render(<AlarmSync />);
+    render(<AlarmSync title="오늘의 시나리오 할 시간!" />);
 
     expect(postToNativeMock).toHaveBeenCalledWith({
       type: 'SKIP_ALARM_TODAY',
@@ -166,7 +166,7 @@ describe('AlarmSync', () => {
       status: shell({ scheduled: true }),
     });
 
-    render(<AlarmSync />);
+    render(<AlarmSync title="오늘의 시나리오 할 시간!" />);
 
     expect(postToNativeMock).not.toHaveBeenCalled();
   });
@@ -174,7 +174,7 @@ describe('AlarmSync', () => {
   it('오늘 시나리오를 아직 모르면 걸지 않고 기다린다 — 끝낸 날인지 알고 나서 건다', () => {
     arrange({ scenarioLoading: true });
 
-    render(<AlarmSync />);
+    render(<AlarmSync title="오늘의 시나리오 할 시간!" />);
 
     expect(postToNativeMock).not.toHaveBeenCalled();
   });
@@ -182,7 +182,7 @@ describe('AlarmSync', () => {
   it('오늘 시나리오를 끝낸 날 처음 걸 때는 오늘 회차를 빼고 건다', () => {
     arrange({ scenarioDone: true });
 
-    render(<AlarmSync />);
+    render(<AlarmSync title="오늘의 시나리오 할 시간!" />);
 
     expect(postToNativeMock).toHaveBeenCalledWith({
       type: 'SET_ALARM',
@@ -194,7 +194,7 @@ describe('AlarmSync', () => {
   it('알람을 걸 사람이 아니면 오늘의 시나리오를 조회하지 않는다 — 모든 화면에서 느린 조회가 나가지 않게', () => {
     arrange({ premium: false });
 
-    render(<AlarmSync />);
+    render(<AlarmSync title="오늘의 시나리오 할 시간!" />);
 
     expect(useDailyScenarioQuery).toHaveBeenCalledWith(undefined, {
       enabled: false,

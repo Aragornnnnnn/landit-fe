@@ -16,7 +16,7 @@ vi.mock('next-intl', async (importOriginal) => ({
 
 const renderPicker = () => render(<LanguagePicker />);
 
-const deviceLanguages = (languages: string[]) =>
+const navigatorLanguages = (languages: string[]) =>
   vi.spyOn(navigator, 'languages', 'get').mockReturnValue(languages);
 
 beforeEach(() => {
@@ -25,6 +25,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  delete window.__LANDIT_NATIVE__;
   cleanup();
   vi.clearAllMocks();
   vi.restoreAllMocks();
@@ -32,7 +33,22 @@ afterEach(() => {
 
 describe('LanguagePicker', () => {
   it('기기에 한국어나 일본어가 있으면 보이지 않는다', () => {
-    deviceLanguages(['en-US', 'ja-JP']);
+    navigatorLanguages(['en-US', 'ja-JP']);
+
+    const { container } = renderPicker();
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('셸이 넘긴 기기 언어 목록에 일본어가 있으면 navigator가 영어만 줘도 보이지 않는다', () => {
+    navigatorLanguages(['en-US']);
+    window.__LANDIT_NATIVE__ = {
+      platform: 'ios',
+      appVersion: '1.6.0',
+      buildNumber: '30',
+      bridgeVersion: 14,
+      languages: ['en-US', 'ja-JP'],
+    };
 
     const { container } = renderPicker();
 
@@ -40,7 +56,7 @@ describe('LanguagePicker', () => {
   });
 
   it('둘 다 없는 기기에선 지금 화면 언어를 적은 버튼이 보이고, 누르면 두 언어가 펼쳐진다', () => {
-    deviceLanguages(['en-US']);
+    navigatorLanguages(['en-US']);
     renderPicker();
 
     fireEvent.click(screen.getByRole('button', { name: /Language/ }));
@@ -56,7 +72,7 @@ describe('LanguagePicker', () => {
   });
 
   it('다른 언어를 고르면 쿠키에 담고 그 언어로 다시 그린다', () => {
-    deviceLanguages(['en-US']);
+    navigatorLanguages(['en-US']);
     renderPicker();
 
     fireEvent.click(screen.getByRole('button', { name: /Language/ }));
@@ -68,7 +84,7 @@ describe('LanguagePicker', () => {
   });
 
   it('지금 언어를 다시 고르면 다시 그리지 않고 닫기만 한다', () => {
-    deviceLanguages(['en-US']);
+    navigatorLanguages(['en-US']);
     renderPicker();
 
     fireEvent.click(screen.getByRole('button', { name: /Language/ }));
@@ -79,7 +95,7 @@ describe('LanguagePicker', () => {
   });
 
   it('바깥을 누르면 닫힌다', () => {
-    deviceLanguages(['en-US']);
+    navigatorLanguages(['en-US']);
     renderPicker();
 
     fireEvent.click(screen.getByRole('button', { name: /Language/ }));
@@ -89,7 +105,7 @@ describe('LanguagePicker', () => {
   });
 
   it('Escape를 누르면 닫히고 포커스가 언어 버튼으로 돌아간다', () => {
-    deviceLanguages(['en-US']);
+    navigatorLanguages(['en-US']);
     renderPicker();
     const toggle = screen.getByRole('button', { name: /Language/ });
 
@@ -102,7 +118,7 @@ describe('LanguagePicker', () => {
 
   it('지금 화면이 일본어면 버튼에 日本語가 적히고 日本語가 골라져 있다', () => {
     screenLocale.value = 'ja';
-    deviceLanguages(['en-US']);
+    navigatorLanguages(['en-US']);
     renderPicker();
 
     const toggle = screen.getByRole('button', { name: /Language/ });

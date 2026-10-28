@@ -1,5 +1,6 @@
 // 소셜 로그인 idToken을 백엔드에 넘겨 자체 access/refresh 토큰을 발급받는다
 import { parseApiResponse } from '@/shared/api/parse';
+import { deviceLanguages } from '@/shared/i18n/device-languages';
 import {
   acceptLanguageOf,
   localeFromDocument,
@@ -38,7 +39,7 @@ export async function socialLogin(
 ): Promise<SocialLoginResponse> {
   // 신규 가입이면 백엔드가 이 목록에서 서비스 언어를 고른다 — 기기 선호 목록을 보내되, 한국어·일본어가 없으면 보던 화면 언어를 앞에 둔다
   const acceptLanguage = acceptLanguageOf(
-    signupLanguages(navigator.languages ?? [], localeFromDocument()),
+    signupLanguages(deviceLanguages(), localeFromDocument()),
   );
   const response = await fetch(SOCIAL_LOGIN_PATH, {
     method: 'POST',

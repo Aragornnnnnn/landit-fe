@@ -106,6 +106,26 @@ describe('usePurchase — 결제', () => {
     );
   });
 
+  it('화면 언어로 문구를 주는 셸(브릿지 14 이상)이면 일본어 화면에서도 셸이 준 실패 사유를 그대로 띄운다', async () => {
+    setTestLocale('ja');
+    mocks.getNativeContext.mockReturnValue({
+      ...readyShell,
+      bridgeVersion: 14,
+    });
+    mocks.purchaseViaBridge.mockResolvedValue({
+      type: 'PURCHASE_RESULT',
+      status: 'error',
+      message: 'サブスクリプション中です。「購入を復元」をタップしてください',
+    });
+    const { result } = renderPurchase();
+
+    await act(() => result.current.purchase('yearly'));
+
+    expect(mocks.showToast).toHaveBeenCalledWith(
+      'サブスクリプション中です。「購入を復元」をタップしてください',
+    );
+  });
+
   it('일본어 화면에서는 안내도 일본어로 한다', async () => {
     setTestLocale('ja');
     mocks.getNativeContext.mockReturnValue(null);

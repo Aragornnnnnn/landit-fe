@@ -170,6 +170,8 @@ export const repeatingAlarmStateSchema = z.object({
   path: alarmPathSchema,
   // 오늘 회차를 건너뛴 날 — 건너뛴 적 없거나 날이 지나 되돌렸으면 null
   skipDate: localDateSchema.nullable(),
+  // 걸린 알람의 제목 — 웹이 화면 언어로 만든 제목과 다르면 다시 건다. 브릿지 13 이하 셸은 보내지 않는다
+  title: z.string().optional(),
 });
 
 // 셸이 띄울 수 있는 알람 설정 화면 — Android 14+에서 사용자가 직접 켜야 하는 두 권한
@@ -242,6 +244,11 @@ export const webToNativeMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('REQUEST_WIDGET_CHANGES') }),
   // iOS 광고 추적(ATT) 권한 상태를 달라 — 권한창이 떠 있으면 답할 때까지 기다렸다 회신한다. 응답은 TRACKING_STATUS (Android는 무응답)
   z.object({ type: z.literal('REQUEST_TRACKING_STATUS') }),
+  // 지금 화면 언어를 알린다 — 셸은 저장해 두고 알람 버튼·위젯·오류 화면 같은 셸 문구를 이 언어로 그린다 (단방향)
+  z.object({
+    type: z.literal('SET_LOCALE'),
+    locale: z.enum(['ko', 'ja']),
+  }),
   // 로그인한 사용자를 RevenueCat에 알린다(Purchases.logIn). null이면 로그아웃(logOut). 단방향
   z.object({
     type: z.literal('IDENTIFY'),

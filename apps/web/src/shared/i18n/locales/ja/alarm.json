@@ -49,7 +49,8 @@
     "openButton": "設定を開く"
   },
   "lockScreen": {
-    "imageLabel": "ロック画面に表示された今日のシナリオのアラーム"
+    "imageLabel": "ロック画面に表示された今日のシナリオのアラーム",
+    "title": "今日のシナリオの時間です！"
   },
   "save": {
     "saveFailedToast": "アラームを保存できませんでした。もう一度お試しください",
