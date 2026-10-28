@@ -4,7 +4,7 @@
 // 갱신되는 구독(체험·구독 중)에만 열린다. 해지 예약·프로모션 부여·유료 아님은 구독 관리로 돌려보낸다
 import { useEffect, useState } from 'react';
 import { EVENTS, type CancelStayDestination } from '@landit/analytics';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { LEVEL_NAME_KEYS } from '@/features/feedback/model/level-assessment';
@@ -57,14 +57,16 @@ interface FlowProps {
 
 const Flow = ({ summary, paidStore }: FlowProps) => {
   const levelName = useTranslations('feedback.levelNames');
+  const t = useTranslations('subscription');
+  const locale = useLocale();
   const router = useRouter();
   const [step, setStep] = useState<CancelStep>({ kind: 'reason' });
   const [draft, setDraft] = useState<CancelDraft>(EMPTY_DRAFT);
 
   const store = STORE[useStorePlatform(paidStore)];
-  const nickname = useAuthStore(
-    (state) => state.member?.nickname?.trim() || '게스트',
-  );
+  const nickname =
+    useAuthStore((state) => state.member?.nickname?.trim() || null) ??
+    t('cancelFlow.guestLabel');
   // 실력 안 늚 화면의 카드 — 누적 학습일은 스트릭 달력에서, 레벨은 학습 수준에서
   const { calendar } = useStreakCalendarQuery({ enabled: true });
   const { data: profile } = useLearningLevelQuery();
@@ -72,7 +74,8 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
   // 가격 부담 화면이 환급을 쌓는 중인 사람에게 다른 답을 한다 — 스위치가 꺼져 있으면 묻지 않는다
   const rewardLive = useRewardChallengeLive();
   const { reward } = useRewardQuery({ enabled: rewardLive });
-  const stake = refundStakeOf(reward);
+  // 꺼진 쿼리도 캐시에 남은 답을 돌려준다 — 한국어에서 받아 둔 환급이 일본어 화면에 새지 않게 스위치로 한 번 더 막는다
+  const stake = rewardLive ? refundStakeOf(reward) : null;
 
   const leaveToManage = () => backOrReplace(router, SUBSCRIPTION_MANAGE_PATH);
 
@@ -133,7 +136,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
         })
       }
     >
-      그래도 해지하러 가기
+      {t('cancelFlow.leaveLink')}
     </a>
   );
 
@@ -160,12 +163,17 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
         );
       case 'retention': {
         const content = retentionContent(step.reason, {
+          t,
+          locale,
           summary,
           stake,
           nickname,
           totalActiveDays: calendar?.totalActiveDays ?? null,
           levelLabel: level
-            ? `${levelName(LEVEL_NAME_KEYS[level])} Lv.${level}`
+            ? t('cancelFlow.levelLabel', {
+                level: levelName(LEVEL_NAME_KEYS[level]),
+                number: level,
+              })
             : null,
           otherText: draft.otherText,
         });
@@ -178,7 +186,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
         );
       }
       case 'method_retention': {
-        const content = methodRetentionContent(step.method);
+        const content = methodRetentionContent(step.method, t);
         return (
           <RetentionStep
             content={content}
@@ -192,7 +200,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
 
   return (
     <main className="flex h-dvh flex-col bg-background">
-      <BackHeader title="구독 해지" onBack={back} />
+      <BackHeader title={t('cancelFlow.title')} onBack={back} />
       {body()}
     </main>
   );
@@ -200,6 +208,7 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
 
 export const CancelFlowScreen = () => {
   const router = useRouter();
+  const t = useTranslations('subscription.cancelFlow');
   const { subscription, isPending, isError } = useSubscriptionQuery();
   const summary = summarizeSubscription(subscription);
   const eligible = canCancelAtStore(summary);
@@ -213,7 +222,7 @@ export const CancelFlowScreen = () => {
     return (
       <main className="flex h-dvh flex-col bg-background">
         <BackHeader
-          title="구독 해지"
+          title={t('title')}
           onBack={() => backOrReplace(router, SUBSCRIPTION_MANAGE_PATH)}
         />
       </main>

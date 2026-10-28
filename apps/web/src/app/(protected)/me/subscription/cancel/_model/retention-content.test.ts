@@ -1,4 +1,5 @@
 // 사유별 화면 문구·카드 — 플랜·체험·기록 유무로 갈리는 자리만 본다
+import { createTranslator } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -6,6 +7,8 @@ import {
   rewardView,
 } from '@/features/reward/model/reward.fixture';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
+import ja from '@/shared/i18n/locales/ja';
+import ko from '@/shared/i18n/locales/ko';
 
 import {
   dailyWon,
@@ -14,6 +17,17 @@ import {
   retentionContent,
   type RefundStake,
 } from './retention-content';
+
+const t = createTranslator({
+  locale: 'ko',
+  messages: ko,
+  namespace: 'subscription',
+});
+const tJa = createTranslator({
+  locale: 'ja',
+  messages: ja,
+  namespace: 'subscription',
+});
 
 const active = (
   overrides: Partial<PaidSubscriptionSummary> = {},
@@ -30,6 +44,8 @@ const context = (
   summary: PaidSubscriptionSummary,
   stake: RefundStake | null = null,
 ) => ({
+  t,
+  locale: 'ko' as const,
   summary,
   stake,
   nickname: '준서',
@@ -184,11 +200,11 @@ describe('retentionContent — 편지함으로 가는 사유', () => {
 describe('methodRetentionContent', () => {
   it('방법마다 제목이 다르고 카드는 없다', () => {
     const titles = (['academy', 'other_app', 'youtube', 'abroad'] as const).map(
-      (method) => methodRetentionContent(method).title,
+      (method) => methodRetentionContent(method, t).title,
     );
 
     expect(new Set(titles).size).toBe(4);
-    expect(methodRetentionContent('academy').cards).toEqual([]);
+    expect(methodRetentionContent('academy', t).cards).toEqual([]);
   });
 });
 
@@ -217,5 +233,35 @@ describe('환급을 쌓는 중인 사람', () => {
       { kind: 'row', label: '지금까지 쌓인 환급액', value: '2,015원' },
       { kind: 'row', label: '최대 환급액', value: '59,900원' },
     ]);
+  });
+});
+
+describe('일본어 화면', () => {
+  it('사유별 화면 문구를 일본어로 적는다', () => {
+    const content = retentionContent('time', {
+      ...context(active()),
+      t: tJa,
+      locale: 'ja',
+    });
+
+    expect(content.title).toBe('時間がなかったんですね');
+    expect(content.primary.label).toBe('もう少し使ってみます');
+    expect(methodRetentionContent('youtube', tJa).title).toBe(
+      '見たフレーズを話す番です',
+    );
+  });
+
+  it('실력·체험 가격 화면의 이름과 날짜를 일본어 표기로 끼워 넣는다', () => {
+    const ja = { t: tJa, locale: 'ja' as const };
+
+    expect(
+      retentionContent('progress', { ...context(active()), ...ja }).body[0],
+    ).toBe('会話ごとに준서さんのレベルに合わせています。');
+    expect(
+      retentionContent('price', {
+        ...context(active({ kind: 'trial', plan: 'yearly', price: 58_500 })),
+        ...ja,
+      }).cards[1],
+    ).toEqual({ kind: 'row', label: '初回の請求日', value: '2026年10月4日' });
   });
 });
