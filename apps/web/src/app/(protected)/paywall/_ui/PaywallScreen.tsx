@@ -1,7 +1,7 @@
 'use client';
 
 // 프리미엄 페이월 화면 — 길게 내려 보는 한 장(머리 → 프리미엄 시리즈 → 그림 학습 → 리뷰 → 비교표 → 플랜)과 아래 고정 CTA.
-// 환급 챌린지 스위치가 켜지면 혜택 화면 → 결제 금액 안내 두 단계(RewardPaywall)로 바뀐다. 결제·복원은 usePurchase, 닫기는 usePaywallDismiss가 지휘하고,
+// 환급 챌린지 스위치가 켜지면 혜택 화면 → 결제 금액 안내 두 단계(StepPaywall, 100일 이용권)로 바뀐다. 일본어 화면도 같은 두 단계로 월간·연간 구독을 판다. 결제·복원은 usePurchase, 닫기는 usePaywallDismiss가 지휘하고,
 // 여기서는 어느 플랜을 골랐는지와 버튼 상태만 안다
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -10,6 +10,7 @@ import {
   type SubscriptionPlan,
 } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { refreshRewardAfterPurchase } from '@/features/reward/model/refresh-reward';
@@ -29,6 +30,7 @@ import {
   type UnlockReason,
 } from '@/features/subscription/model/purchase/usePurchase';
 import { sendAdEvent, track } from '@/shared/analytics';
+import { sellsKoreaOnlyOffers } from '@/shared/i18n/locale';
 import { homePath } from '@/shared/lib/last-tab';
 import { premiumOnboardingPath, type PaywallStep } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
@@ -37,11 +39,7 @@ import { CloseIcon } from '@/shared/ui/Icons';
 import { needsScrollToPlans } from '../_lib/plans-below-fold';
 import { checkPassAvailability } from '../_model/pass-availability';
 import { buildRewardPlan, REWARD_PLAN_ID } from '../_model/paywall-content';
-import {
-  getBillingNotice,
-  getCancelNotice,
-  getCtaLabel,
-} from '../_model/paywall-copy';
+import { getCtaLabel } from '../_model/paywall-copy';
 import { usePaywallExit } from '../_model/usePaywallExit';
 import { CompareSection } from './CompareSection';
 import { DataSection } from './DataSection';
@@ -49,8 +47,9 @@ import { PaywallHeader } from './PaywallHeader';
 import { PaywallHero } from './PaywallHero';
 import { PlanSection } from './PlanSection';
 import { PremiumOnlySection } from './PremiumOnlySection';
+import { PurchaseNotices } from './PurchaseNotices';
 import { ReviewSection } from './ReviewSection';
-import { RewardPaywall } from './RewardPaywall';
+import { StepPaywall } from './StepPaywall';
 
 interface PaywallScreenProps {
   /** 결제·복원이 끝난 뒤 돌아갈 내부 경로. 학습 진입에서 막혀 왔을 때만 있고, 없으면 홈으로 간다 */
@@ -70,8 +69,13 @@ export const PaywallScreen = ({
   source,
 }: PaywallScreenProps) => {
   const router = useRouter();
+  const t = useTranslations('paywall');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
   const rewardLive = useRewardChallengeLive();
   const rewardChallenge = forcedRewardChallenge ?? rewardLive;
+  // 환급이 없는 일본어 화면도 단계형으로 보여 준다 — 결제 단계에서 이용권 대신 월간·연간을 고른다
+  const stepped = rewardChallenge || !sellsKoreaOnlyOffers(locale);
   // 월간·연간 가운데 고른다(처음엔 연간). 환급 챌린지는 100일 이용권 하나라 고를 것이 없다
   const [selectedId, setSelectedId] =
     useState<SubscriptionPlan>(DEFAULT_PLAN_ID);
@@ -90,8 +94,6 @@ export const PaywallScreen = ({
   const plans = buildPaywallPlans(prices, currency);
   const rewardPlan = buildRewardPlan(toKrwPrices(packages).pass);
   const regularPlan = plans[selectedId === 'monthly' ? 'monthly' : 'yearly'];
-  // CTA 밑 결제·해지 안내 두 줄
-  const notices = [getBillingNotice(regularPlan), getCancelNotice(regularPlan)];
 
   // 페이월을 봤다고 메타에 알린다 — 결제 기준 광고 최적화로 넘어갈 때 쓸 중간 단계
   useEffect(() => {
@@ -99,11 +101,11 @@ export const PaywallScreen = ({
   }, []);
 
   const goHome = () => router.replace(homePath());
-  // 결제·복원 없이 떠나는 순간 — 환급 페이월은 단계를 RewardPaywall이 알려 준다
+  // 결제·복원 없이 떠나는 순간 — 단계형 페이월은 단계를 StepPaywall이 알려 준다
   const exit = usePaywallExit({
     variant: rewardChallenge ? 'reward' : 'regular',
     source,
-    startStep: rewardChallenge ? (startStep ?? 'benefits') : 'single',
+    startStep: stepped ? (startStep ?? 'benefits') : 'single',
   });
   const dismiss = usePaywallDismiss(offering);
   // 닫으면 서버에 알린 뒤 홈으로 — 할인을 받았으면 시트는 홈에서 뜬다.
@@ -170,11 +172,21 @@ export const PaywallScreen = ({
     void restore();
   };
 
-  // 환급 챌린지는 혜택 화면 → 결제 금액 안내 두 단계다. 고를 플랜이 없어 이용권으로 바로 결제한다
-  if (rewardChallenge) {
+  // 혜택 화면 → 결제 금액 안내 두 단계. 환급 챌린지는 고를 것 없는 이용권을, 일본어 화면은 환급 없이 월간·연간을 판다
+  if (stepped) {
+    const stepPlanId = rewardChallenge ? REWARD_PLAN_ID : regularPlan.id;
     return (
-      <RewardPaywall
-        plan={rewardPlan}
+      <StepPaywall
+        offer={
+          rewardChallenge
+            ? { kind: 'pass', plan: rewardPlan }
+            : {
+                kind: 'subscription',
+                plans,
+                selectedId: regularPlan.id,
+                onSelect: selectPlan,
+              }
+        }
         startStep={startStep}
         busy={busy}
         source={source}
@@ -183,8 +195,8 @@ export const PaywallScreen = ({
         onClose={() => void close()}
         onRestore={startRestore}
         onPurchase={() => {
-          track(EVENTS.PURCHASE_STARTED, { plan: REWARD_PLAN_ID });
-          void purchase(REWARD_PLAN_ID);
+          track(EVENTS.PURCHASE_STARTED, { plan: stepPlanId });
+          void purchase(stepPlanId);
         }}
       />
     );
@@ -228,7 +240,7 @@ export const PaywallScreen = ({
         <button
           type="button"
           onClick={() => void close()}
-          aria-label="닫기"
+          aria-label={tCommon('closeLabel')}
           className="absolute top-[max(var(--safe-area-inset-top),8px)] left-3 z-30 flex size-9 items-center justify-center rounded-full bg-card/90 text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.12)] backdrop-blur transition-transform active:scale-90"
         >
           <CloseIcon size={20} />
@@ -239,16 +251,9 @@ export const PaywallScreen = ({
           결제 안내는 버튼 바로 밑에 둔다 — 청구액·갱신·해지는 스토어 심사(3.1.2)가 결제 버튼 곁에서 확인한다 */}
       <footer className="absolute inset-x-0 bottom-0 z-20 bg-[linear-gradient(to_bottom,transparent,var(--color-background)_28px)] px-5 pt-9 pb-[max(var(--safe-area-inset-bottom),12px)]">
         <Button onClick={startPurchase} loading={busy}>
-          {getCtaLabel(regularPlan)}
+          {getCtaLabel(regularPlan, t)}
         </Button>
-        {notices.map((notice, index) => (
-          <p
-            key={notice}
-            className={`${index === 0 ? 'mt-3' : 'mt-1'} text-center text-11 leading-[1.35] text-muted-foreground`}
-          >
-            {notice}
-          </p>
-        ))}
+        <PurchaseNotices plan={regularPlan} />
       </footer>
     </main>
   );

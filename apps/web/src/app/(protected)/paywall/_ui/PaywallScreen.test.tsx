@@ -2,6 +2,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setTestLocale } from '@/shared/i18n/test-locale';
+
 import { PaywallScreen } from './PaywallScreen';
 
 const mocks = vi.hoisted(() => ({
@@ -208,10 +210,37 @@ describe('PaywallScreen', () => {
     render(<PaywallScreen />);
 
     expect(screen.getByText('연 58,500원')).toBeInTheDocument();
+    expect(screen.getByText('월간보다 67% 저렴')).toBeInTheDocument();
     expect(
       screen.getByText('월 4,900원꼴 · 7일 무료 체험'),
     ).toBeInTheDocument();
     expect(screen.queryByText('월 4,900원')).not.toBeInTheDocument();
+  });
+
+  it('일본어 화면은 환급 없이 혜택 → 결제 두 단계로 월간·연간 구독을 판다', () => {
+    // 단계를 넘기면 맨 위로 올리는데 jsdom 요소엔 scrollTo가 없다
+    Element.prototype.scrollTo = vi.fn();
+    setTestLocale('ja');
+    mocks.packages = {
+      yearly: { packageId: '$rc_annual', price: 9_800, currency: 'JPY' },
+      monthly: { packageId: '$rc_monthly', price: 1_500, currency: 'JPY' },
+    };
+    render(<PaywallScreen />);
+
+    expect(screen.getByText('プレミアムだけの特典3つ')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '次へ' }));
+
+    expect(screen.getByRole('button', { name: '年間プラン' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByText('年額9,800円')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '月間プラン' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: '月額1,500円で始める' }),
+    );
+
+    expect(mocks.purchase).toHaveBeenCalledWith('monthly');
   });
 
   it('플랜 칸이 화면에 다 보이지 않으면 CTA는 결제 대신 맨 아래로 내려 준다', () => {

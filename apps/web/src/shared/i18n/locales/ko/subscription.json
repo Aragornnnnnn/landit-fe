@@ -1,0 +1,16 @@
+{
+  "benefits": {
+    "dailyScenarioLabel": "매일 새로운 시나리오 대화",
+    "detailFeedbackLabel": "문장마다 상세 피드백",
+    "phraseLabel": "수준별 원어민 표현 추천",
+    "pronunciationLabel": "원어민에 가까운 발음 교정",
+    "smallTalkLabel": "무제한 프리톡",
+    "accentLabel": "미국, 영국, 호주식 영어 공부"
+  },
+  "benefitComparison": {
+    "freeLabel": "무료",
+    "freeIncludedLabel": "무료 포함",
+    "freeExcludedLabel": "무료 미포함",
+    "premiumIncludedLabel": "프리미엄 포함"
+  }
+}

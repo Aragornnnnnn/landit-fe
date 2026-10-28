@@ -1,9 +1,11 @@
 // 롱 페이월의 고정 문구와 그림 — 학습 단계 카드, 대화 카드, 데이터 수치, 리뷰. 아래쪽에 환급 챌린지 값도 있다(하루 몫과 최대 환급액 산식은 features/reward의 refund-offer). 피그마 「페이월 v2」(2640:8041) 기준
 import type { SubscriptionPlan } from '@landit/analytics';
+import type { Messages } from 'next-intl';
 
 import { rewardOfferOf } from '@/features/reward/model/refund-offer';
 import { formatWon } from '@/features/subscription/lib/won';
 import { PASS_FALLBACK_PRICE } from '@/features/subscription/model/product/offering';
+import type { Locale } from '@/shared/i18n/locale';
 import type { PreloadableImage } from '@/shared/lib/preload-next-images';
 
 const IMAGE_DIR = '/images/paywall';
@@ -23,34 +25,33 @@ export const SCENE_IMAGES = {
 
 /**
  * 04 카드 「이렇게도 써요」 — 실제 표현 give it a shot의 추가 예문 넷(landit-be V44 문장 + V56 그림).
- * 한 표현이 상황마다 어떻게 쓰이는지 카드가 옆으로 넘어가며 보여준다
+ * 한 표현이 상황마다 어떻게 쓰이는지 카드가 옆으로 넘어가며 보여준다. 뜻과 해석은 paywall.usageDemo 문구다
  */
 export const USAGE_EXPRESSION = {
   text: 'give it a shot',
-  meaning: '한번 해보다, 시도해 보다',
   examples: [
     {
       question: 'Do you think I should try it?',
       sentence: ['Why not ', 'give it a shot', '? You might like it.'],
-      translation: '한번 해보지 그래? 마음에 들지도 몰라.',
+      translationKey: 'tryItTranslationBody',
       image: `${IMAGE_DIR}/give-it-a-shot/ex-1.webp`,
     },
     {
       question: 'How did she discover she liked baking?',
       sentence: ['She ', 'gave baking a shot', ' and loved it.'],
-      translation: '걔 베이킹 한번 해봤는데 완전 빠졌어.',
+      translationKey: 'bakingTranslationBody',
       image: `${IMAGE_DIR}/give-it-a-shot/ex-2.webp`,
     },
     {
       question: 'Is it worth trying?',
       sentence: ["It's worth ", 'giving it a shot', '.'],
-      translation: '한번 해볼 만한 가치는 있어.',
+      translationKey: 'worthItTranslationBody',
       image: `${IMAGE_DIR}/give-it-a-shot/ex-3.webp`,
     },
     {
       question: "I'm afraid I'll fail.",
       sentence: ['', 'Give it a go', " — what's the worst that can happen?"],
-      translation: '해봐. 잘못돼 봤자 뭐 얼마나 잘못되겠어?',
+      translationKey: 'giveItAGoTranslationBody',
       image: `${IMAGE_DIR}/give-it-a-shot/ex-4.webp`,
     },
   ],
@@ -124,65 +125,71 @@ export const EXAMPLE_LANDING_GLOSS = {
   meaning: '열심히 공부하다',
 };
 
+/** 시나리오 카드 제목 — paywall.scenarios 아래 문구 키 */
+export type ScenarioTitleKey = keyof Messages['paywall']['scenarios'];
+
 /** 시나리오 데모에서 넘어가는 실제 시나리오 카드(제목·썸네일). 끝에서 두 번째 장(첫 만남)에 멈춘다. 그림은 CDN 원본을 216px로 줄여 담았다 */
-export const SCENARIOS: { title: string; image: string }[] = [
+export const SCENARIOS: { titleKey: ScenarioTitleKey; image: string }[] = [
   {
-    title: '카페에서 주문하기',
+    titleKey: 'cafeOrderTitle',
     image: `${IMAGE_DIR}/scenarios/s-17.webp`,
   },
   {
-    title: '호텔 체크인 하기',
+    titleKey: 'hotelCheckInTitle',
     image: `${IMAGE_DIR}/scenarios/s-15.webp`,
   },
   {
-    title: '비행기 옆자리 승객과의 대화',
+    titleKey: 'flightSeatmateTitle',
     image: `${IMAGE_DIR}/scenarios/s-13.webp`,
   },
   {
-    title: '약국에서 증상 설명하고 약 사기',
+    titleKey: 'pharmacyTitle',
     image: `${IMAGE_DIR}/scenarios/s-18.webp`,
   },
   {
-    title: '토론 수업 — 돈과 행복',
+    titleKey: 'debateClassTitle',
     image: `${IMAGE_DIR}/scenarios/s-12.webp`,
   },
   {
-    title: '일정에 맞는 기차표 구매하기',
+    titleKey: 'trainTicketTitle',
     image: `${IMAGE_DIR}/scenarios/s-26.webp`,
   },
   {
-    title: '불량 상품 교환 또는 환불 요청하기',
+    titleKey: 'refundRequestTitle',
     image: `${IMAGE_DIR}/scenarios/s-39.webp`,
   },
   {
-    title: '인터내셔널 파티 — 처음 만난 Chloe',
+    titleKey: 'partyChloeTitle',
     image: `${IMAGE_DIR}/scenarios/s-06.webp`,
   },
   {
-    title: '공항에서 더 편한 좌석으로 변경하기',
+    titleKey: 'seatChangeTitle',
     image: `${IMAGE_DIR}/scenarios/s-30.webp`,
   },
   {
-    title: '친구와 여행 수다 떨기',
+    titleKey: 'travelChatTitle',
     image: `${IMAGE_DIR}/scenarios/s-20.webp`,
   },
   {
-    title: '조별 발표 준비하기',
+    titleKey: 'groupPresentationTitle',
     image: `${IMAGE_DIR}/scenarios/s-09.webp`,
   },
   {
-    title: '기능과 가격을 비교해 헤드폰 고르기',
+    titleKey: 'headphonesTitle',
     image: `${IMAGE_DIR}/scenarios/s-37.webp`,
   },
   {
-    title: '입주 첫날, 룸메이트 Marco와 첫 만남',
+    titleKey: 'roommateMarcoTitle',
     image: `${IMAGE_DIR}/scenarios/s-01.webp`,
   },
   {
-    title: '수하물 파손 — 카운터에 항의하기',
+    titleKey: 'baggageClaimTitle',
     image: `${IMAGE_DIR}/scenarios/s-14.webp`,
   },
 ];
+
+/** 평점·리뷰는 한국 스토어에 달린 한국어 글이라 한국어 화면에서만 보인다 — 일본 스토어엔 아직 평점이 없다 */
+export const showsStoreReviews = (locale: Locale) => locale === 'ko';
 
 export const STORE_RATING = 4.8;
 /** 평점을 확인한 날 — 숫자 옆에 "○○ 기준"으로 붙는다 */

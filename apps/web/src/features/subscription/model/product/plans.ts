@@ -2,28 +2,24 @@
 // 기본값은 스토어 등록값(원화)이고, 셸이 준 가격(원·엔)이 있으면 buildPaywallPlans가 그 값으로 전부 다시 계산한다
 import type { SubscriptionPlan } from '@landit/analytics';
 
-import { formatPrice, type PricedCurrency } from '../../lib/store-price';
+import { type PricedCurrency } from '../../lib/store-price';
 
 /** 지금 플랜 — 월간·연간. 환급 챌린지의 100일 이용권은 페이월이 따로 그린다 */
 export type RegularPlan = Extract<SubscriptionPlan, 'monthly' | 'yearly'>;
 
-/** 카드 한 장에 그릴 값 전부. 큰 숫자는 실제 청구액이다 — 월 환산가가 더 눈에 띄면 스토어 심사 3.1.2(c)에서 반려된다 */
+/** 카드 한 장에 그릴 값 전부. 문구는 화면이 언어대로 붙인다. 큰 숫자는 실제 청구액이다 — 월 환산가가 더 눈에 띄면 스토어 심사 3.1.2(c)에서 반려된다 */
 export interface PaywallPlan {
   id: RegularPlan;
-  title: string;
   /** 금액들의 통화 — 스토어가 준 통화이고, 못 받았으면 원화 등록값이다 */
   currency: PricedCurrency;
-  /** 청구 주기 — 큰 숫자 앞에 붙는다 */
-  period: '월' | '연';
   /** 취소선으로 보여줄 비교가. 청구액과 같은 주기다. 비교 기준이 없는 카드(월간)는 비워 둔다 */
   listPrice?: number;
   /** 월 기준 금액. 연간은 연 결제액을 달로 나눈 환산값으로, 배지와 부제에만 쓴다 */
   monthlyPrice: number;
   /** 큰 숫자 — 실제 청구액. 스토어 등록값과 같아야 한다 (월간은 달마다, 연간은 해마다) */
   price: number;
-  /** 카드 위 테두리에 걸치는 배지 문구. 할인을 강조하는 카드에만 단다 */
-  badge?: string;
-  subtitle: string;
+  /** 카드 위 테두리 배지의 할인율(%). 할인을 강조하는 카드에만 있다 */
+  discountRate?: number;
 }
 
 /** 카드가 놓이는 순서 — 왼쪽 월간, 오른쪽 연간 */
@@ -68,7 +64,7 @@ export const calculateMonthlyEquivalent = (
 export type PlanPrices = Partial<Record<SubscriptionPlan, number>>;
 
 /**
- * 실제 청구액 두 개로 카드 표시값 전부를 만든다 — 할인율·월 환산·부제가 한 산식에서 나와 서로 어긋나지 않는다.
+ * 실제 청구액 두 개로 카드 표시값 전부를 만든다 — 할인율·월 환산이 한 산식에서 나와 서로 어긋나지 않는다.
  *
  * @param prices 셸이 준 가격. 없는 플랜은 스토어 등록값(원화)
  * @param currency prices의 통화. 원화가 아니면 두 플랜 가격이 다 있어야 한다 — 등록값과 섞이면 안 된다 (toRegularPrices가 보장)
@@ -84,24 +80,18 @@ export const buildPaywallPlans = (
   return {
     monthly: {
       id: 'monthly',
-      title: PLAN_TITLE.monthly,
       currency,
-      period: '월',
       monthlyPrice,
       price: monthlyPrice,
-      subtitle: '매달 결제 · 언제든 해지',
     },
     yearly: {
       id: 'yearly',
-      title: PLAN_TITLE.yearly,
       currency,
-      period: '연',
       // 연간의 비교 기준은 스토어에 없는 정가가 아니라 월간으로 1년 낼 때의 실제 금액이다
       listPrice: monthlyPrice * 12,
       monthlyPrice: yearlyMonthly,
       price: yearlyPrice,
-      badge: `월간보다 ${calculateDiscountRate(monthlyPrice, yearlyMonthly)}% 저렴`,
-      subtitle: `월 ${formatPrice(yearlyMonthly, currency)}꼴 · 7일 무료 체험`,
+      discountRate: calculateDiscountRate(monthlyPrice, yearlyMonthly),
     },
   };
 };

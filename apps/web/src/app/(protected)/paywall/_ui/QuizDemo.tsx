@@ -2,6 +2,7 @@
 
 // 첫 퀴즈 데모 — 클로이가 질문하고(입이 움직인다), 단어 칩이 하나씩 답 줄로 옮겨 가고, 정답 시트가 올라오며 클로이가 웃는다
 import type { CSSProperties } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { PartnerCharacter } from '@/features/conversation/ui/character/PartnerCharacter';
 import { QUIZ_VIEWBOX } from '@/features/expression/model/quiz-partner';
@@ -40,13 +41,14 @@ const CHIP =
   'rounded-2xl border-[1.5px] border-[#e5e5e0] bg-card px-4 py-2.5 text-19 font-semibold text-foreground shadow-[0_3px_0_#e5e5e0]';
 
 export const QuizDemo = ({ step, width }: DemoProps) => {
+  const t = useTranslations('paywall.quizDemo');
   const building = step >= QUIZ_SCENE.build;
   const correct = step === QUIZ_SCENE.correct;
 
   return (
     <DemoScreen width={width}>
       <p className="px-5 pt-7 text-22 font-bold text-foreground">
-        질문에 대한 대답을 완성하세요
+        {t('title')}
       </p>
 
       <div className="mt-5 flex items-center gap-3 px-5">
@@ -66,12 +68,12 @@ export const QuizDemo = ({ step, width }: DemoProps) => {
             Are you more of a go-explore person or a stay-in person?
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            넌 도시 탐험파야, 집콕파야?
+            {t('questionCaption')}
           </p>
         </div>
       </div>
       <p className="mt-4 mr-5 ml-auto w-fit max-w-[290px] rounded-3xl rounded-tr-md bg-primary px-5 py-3.5 text-17 font-bold text-primary-foreground">
-        솔직히 난 도시 탐험이라면 언제든 콜이야.
+        {t('answerBody')}
       </p>
 
       {/* 답 줄 — 칩이 왼쪽부터 차례로 들어앉는다 */}
@@ -129,14 +131,16 @@ export const QuizDemo = ({ step, width }: DemoProps) => {
           >
             ✓
           </span>
-          정답이에요!
+          {t('correctTitle')}
         </p>
-        <p className="mt-4 text-sm font-bold text-[#2e7d4f]">정답</p>
+        <p className="mt-4 text-sm font-bold text-[#2e7d4f]">
+          {t('correctLabel')}
+        </p>
         <p className="mt-1 text-19 font-bold text-foreground">
           Honestly, I&apos;m always up for exploring the city.
         </p>
         <p className="mt-5 rounded-2xl bg-[#2e7d4f] py-4 text-center text-base font-bold text-white shadow-[0_4px_0_#1f5c39]">
-          표현 배우러 갈게요
+          {t('nextButton')}
         </p>
       </div>
     </DemoScreen>

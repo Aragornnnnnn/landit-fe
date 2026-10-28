@@ -1,0 +1,129 @@
+{
+  "restoreButton": "購入を復元",
+  "trialStartButton": "7日間の無料体験を始める",
+  "monthlyStartButton": "月額{price}で始める",
+  "yearlyBillingCaption": "7日間の無料体験後は年額{price}で自動更新。いつでも解約できます",
+  "monthlyBillingCaption": "毎月{price}で自動更新。いつでも解約できます",
+  "yearlyCancelCaption": "体験終了の24時間前までに解約すれば請求されません",
+  "monthlyCancelCaption": "更新日の24時間前までに解約すれば翌月分は請求されません",
+  "benefitsStep": {
+    "title": "毎日届くシナリオを<br></br><premium>プレミアム</premium>で学びましょう",
+    "benefitsTitle": "プレミアムだけの特典{count}つ",
+    "feedbackLabel": "一文ごとの詳しいフィードバック",
+    "goodTurnTitle": "良かった文はその理由まで",
+    "betterTurnTitle": "不自然な文はこう直す",
+    "summaryTitle": "会話全体をひと目で",
+    "growthTitle": "前回より良くなった点",
+    "reuseTitle": "学んだフレーズを使えたか",
+    "expressionLabel": "自分の会話から作るフレーズ学習",
+    "expressionImageTitle": "絵と例文でニュアンスまで",
+    "expressionPronunciationTitle": "ネイティブのような発音に",
+    "expressionUsageTitle": "たくさんの例文で自分のものに",
+    "expressionQuizTitle": "身についたかクイズで確認",
+    "smallTalkLabel": "キャラクターとスモールトーク",
+    "smallTalkPartnerTitle": "相手もアクセントも選べる",
+    "smallTalkFreeTitle": "テーマなしで自由に会話"
+  },
+  "stepPaywall": {
+    "nextButton": "次へ"
+  },
+  "checkoutStep": {
+    "backLabel": "戻る",
+    "termsLink": "利用規約",
+    "privacyLink": "プライバシーポリシー"
+  },
+  "feedbackDemo": {
+    "detailTitle": "詳しい分析",
+    "goodUserBody": "Hi Marco! I'm Yuki. I'm from Japan and I study computer science.",
+    "goodContextBody": "えっ、君がルームメイト？スペインから来た交換留学生のマルコだよ。君のこと教えて！",
+    "goodAnalogyBody": "「やあマルコ！ユウキだよ。日本から来て、情報工学を専攻してるんだ。」くらいに聞こえます。",
+    "goodDetailBody": "名前・出身・専攻を一度に伝えたので、相手が次の質問をしやすくなりました。",
+    "goodBenchmarkBody": "I'm from Japan and I study ~ のように2つをandでつなげて、ネイティブのように自然でした。",
+    "betterContextBody": "いいね！じゃあ趣味は何？どうやって始めたの？",
+    "betterAnalogyBody": "「ギターを弾くのが好き。楽しい。」くらいに聞こえます。",
+    "betterReasonBody": "理由も一文足すと会話が続きます。be intoは「ハマっている」感じです。",
+    "betterPositiveBody": "好きなことをすぐに言えて、質問にまっすぐ答えられました。",
+    "summaryHeadlineTitle": "新しいルームメイトとも自然にあいさつできます！",
+    "summaryOverallBody": "自己紹介で名前・出身・専攻を一度に伝えられて良かったです。趣味を話すときは理由を一文足してみましょう。",
+    "summaryImprovementBody": "趣味を話すとき理由を一文足すと、会話がもっと長く続きます。",
+    "growthPatternLabel": "過去形",
+    "growthPreviousBody": "I go to Okinawa last summer.",
+    "beIntoMeaningLabel": "～にハマっている",
+    "getIntoMeaningLabel": "～を始める",
+    "usedToMeaningLabel": "以前は～していた",
+    "scenarioSourceLabel": "10月7日のシナリオ",
+    "expressionSourceLabel": "10月5日のフレーズ学習"
+  },
+  "planCard": {
+    "monthlyTitle": "月間プラン",
+    "yearlyTitle": "年間プラン",
+    "selectLabel": "{title}",
+    "monthlyPriceLabel": "月額{price}",
+    "yearlyPriceLabel": "年額{price}",
+    "monthlySubtitle": "毎月払い・いつでも解約",
+    "yearlySubtitle": "月{price}相当・7日間無料",
+    "yearlyBadge": "月間より{rate}%お得"
+  },
+  "exampleDemo": {
+    "meaningLabel": "～する気がある、乗り気だ",
+    "translationBody": "正直、街の探検ならいつでも大歓迎。",
+    "nuanceLabel": "こんなニュアンスです",
+    "nuanceBody": "「いいね！」と乗り気で答えるときに"
+  },
+  "quizDemo": {
+    "title": "質問への答えを完成させましょう",
+    "questionCaption": "街を探検する派？おうち派？",
+    "answerBody": "正直、街の探検ならいつでも大歓迎。",
+    "correctTitle": "正解です！",
+    "correctLabel": "正解",
+    "nextButton": "フレーズを学びに行く"
+  },
+  "pronunciationDemo": {
+    "title": "ラディの発音フィードバック",
+    "listeningLabel": "聞いています",
+    "nativeLabel": "お手本",
+    "mineLabel": "自分"
+  },
+  "usageDemo": {
+    "title": "こんな使い方も",
+    "meaningLabel": "試しにやってみる",
+    "tryItTranslationBody": "やってみたら？気に入るかもよ。",
+    "bakingTranslationBody": "彼女、お菓子作りを試したらすっかりハマったよ。",
+    "worthItTranslationBody": "やってみる価値はあるよ。",
+    "giveItAGoTranslationBody": "やってみなよ。失敗しても大したことないって。"
+  },
+  "scenarioDemo": {
+    "dailyLabel": "今日のシナリオ",
+    "startButton": "会話を始める"
+  },
+  "scenarioWall": {
+    "dailyLabel": "今日のシナリオ"
+  },
+  "smallTalkDemo": {
+    "title": "今日は誰と<br></br>話しますか？",
+    "chloeLabel": "クロエ",
+    "marcoLabel": "マルコ",
+    "teddyLabel": "テディ",
+    "startButton": "テディと話す",
+    "talkTitle": "テディと会話",
+    "americanLabel": "米国英語",
+    "australianLabel": "豪州英語",
+    "britishLabel": "英国英語"
+  },
+  "scenarios": {
+    "cafeOrderTitle": "カフェで注文する",
+    "hotelCheckInTitle": "ホテルでチェックイン",
+    "flightSeatmateTitle": "機内で隣の乗客と会話",
+    "pharmacyTitle": "薬局で症状を伝えて薬を買う",
+    "debateClassTitle": "討論の授業 — お金と幸せ",
+    "trainTicketTitle": "予定に合う電車の切符を買う",
+    "refundRequestTitle": "不良品の交換・返金を頼む",
+    "partyChloeTitle": "パーティーでChloeと初対面",
+    "seatChangeTitle": "空港でもっと楽な席に変更する",
+    "travelChatTitle": "友だちと旅行の話で盛り上がる",
+    "groupPresentationTitle": "グループ発表の準備",
+    "headphonesTitle": "機能と価格を比べてヘッドホンを選ぶ",
+    "roommateMarcoTitle": "入居初日、Marcoと初対面",
+    "baggageClaimTitle": "荷物の破損 — カウンターで抗議する"
+  }
+}

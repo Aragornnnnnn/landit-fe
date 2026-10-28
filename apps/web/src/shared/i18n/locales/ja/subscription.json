@@ -1,0 +1,16 @@
+{
+  "benefits": {
+    "dailyScenarioLabel": "毎日新しいシナリオ",
+    "detailFeedbackLabel": "詳しいフィードバック",
+    "phraseLabel": "レベル別のフレーズ",
+    "pronunciationLabel": "ネイティブ並みの発音",
+    "smallTalkLabel": "スモールトーク無制限",
+    "accentLabel": "米・英・豪の英語"
+  },
+  "benefitComparison": {
+    "freeLabel": "無料",
+    "freeIncludedLabel": "無料で利用可",
+    "freeExcludedLabel": "無料では利用不可",
+    "premiumIncludedLabel": "プレミアムで利用可"
+  }
+}

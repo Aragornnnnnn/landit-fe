@@ -2,6 +2,8 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import ko from '@/shared/i18n/locales/ko';
+
 import { BENEFITS } from '../../model/product/benefits';
 import { BenefitComparison } from './BenefitComparison';
 
@@ -44,7 +46,7 @@ describe('BenefitComparison', () => {
     // 열 머리글만 있고 줄 머리글이 없으면 "프리미엄 포함"이 어느 줄 것인지 알 수 없다
     const rowHeaders = screen.getAllByRole('rowheader');
     expect(rowHeaders.map((cell) => cell.textContent)).toEqual(
-      BENEFITS.map((benefit) => benefit.text),
+      BENEFITS.map((benefit) => ko.subscription.benefits[benefit.labelKey]),
     );
   });
 });
