@@ -3,6 +3,7 @@
 // 알람 소개 — 잠금화면에 이렇게 뜬다는 폰 그림과 "알람 시간 정하기". 폰은 띠용 튀어 오르며 바로 알람처럼 떨리고, 이따금 다시 떨린다.
 // 마이페이지는 뒤로 가기로, 결제 직후는 「다음에 할게요」로 빠져나간다
 import { motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { Button } from '@/shared/ui/Button';
@@ -26,6 +27,7 @@ export const AlarmIntro = ({
   onSkip?: () => void;
 }) => {
   const reduced = useReducedMotion();
+  const t = useTranslations('alarm.intro');
   const copy = useAlarmCopy();
   const { ratio, buttonTop } = useLockScreenPreview();
 
@@ -67,7 +69,8 @@ export const AlarmIntro = ({
             style={{ bottom: `calc(${(1 - buttonTop) * 100}% + 7px)` }}
           >
             <p className="relative flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-2.5 text-13 font-bold whitespace-nowrap text-foreground shadow-md">
-              <Emoji>👇</Emoji>누르면 바로 오늘의 시나리오 시작!
+              <Emoji>👇</Emoji>
+              {t('tooltipCaption')}
             </p>
             <span
               aria-hidden
@@ -78,14 +81,14 @@ export const AlarmIntro = ({
       </div>
 
       <div className="px-6 pt-2 pb-[max(var(--safe-area-inset-bottom),24px)]">
-        <Button onClick={onNext}>알람 시간 정하기</Button>
+        <Button onClick={onNext}>{t('nextButton')}</Button>
         {onSkip && (
           <button
             type="button"
             onClick={onSkip}
             className="mt-4 w-full text-center text-13 font-bold text-muted-foreground"
           >
-            다음에 할게요
+            {t('skipButton')}
           </button>
         )}
       </div>

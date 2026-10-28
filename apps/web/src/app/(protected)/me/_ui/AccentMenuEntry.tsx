@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import { EVENTS, type AccentLocale } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 
 import { useAccentQuery } from '@/features/onboarding/model/useAccentQuery';
 import { useSaveAccentMutation } from '@/features/onboarding/model/useSaveAccentMutation';
@@ -14,6 +15,7 @@ import { Emoji } from '@/shared/ui/emoji';
 import { MenuButton } from './Menu';
 
 export const AccentMenuEntry = () => {
+  const t = useTranslations('me.accentMenu');
   const [open, setOpen] = useState(false);
   const { data } = useAccentQuery();
   const saveAccent = useSaveAccentMutation();
@@ -27,7 +29,7 @@ export const AccentMenuEntry = () => {
   return (
     <>
       <MenuButton
-        title="배울 억양"
+        title={t('title')}
         icon={<Emoji>🌍</Emoji>}
         onClick={() => setOpen(true)}
       />
@@ -38,10 +40,10 @@ export const AccentMenuEntry = () => {
             className="text-17 font-bold"
             style={{ color: '#111' }}
           >
-            어떤 영어로 배우고 싶으세요?
+            {t('sheetTitle')}
           </BottomSheet.Title>
           <p className="mt-1 mb-5 text-14 leading-6" style={{ color: '#666' }}>
-            추천 표현과 피드백이 달라져요
+            {t('sheetSubtitle')}
           </p>
           {/* 지금 값을 모르면 아무것도 안 골라진 채로 연다 — 기본값(미국 영어)으로 열면
               다른 나라를 고른 사람이 그대로 확인을 눌러 원래 값을 덮어쓴다.

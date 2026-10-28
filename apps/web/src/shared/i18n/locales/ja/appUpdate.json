@@ -1,0 +1,15 @@
+{
+  "forceUpdate": {
+    "title": "Landitの新バージョン登場！",
+    "defaultReasonBody": "新しい機能を使うにはアップデートが必要です",
+    "mascotLabel": "ラディ",
+    "updateButton": "アップデートする"
+  },
+  "softUpdate": {
+    "title": "Landitの新バージョン登場！",
+    "defaultReasonBody": "新しくなった機能をお試しください",
+    "mascotLabel": "ラディ",
+    "updateButton": "アップデートする",
+    "laterButton": "あとで"
+  }
+}

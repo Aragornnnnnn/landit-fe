@@ -1,0 +1,88 @@
+{
+  "intro": {
+    "title": "매일 알람으로<br></br>영어 습관 만들어 드릴게요",
+    "tooltipCaption": "누르면 바로 오늘의 시나리오 시작!",
+    "nextButton": "알람 시간 정하기",
+    "skipButton": "다음에 할게요"
+  },
+  "pledge": {
+    "sentenceTitle": "저는 매일 <time></time>에",
+    "closingTitle": "영어 공부를 하겠습니다!",
+    "holdLabel": "3초간 눌러 다짐하기",
+    "holdCaption": "3초간 눌러 다짐하기",
+    "doneCaption": "다짐했어요!"
+  },
+  "registered": {
+    "sentenceTitle": "<subject>저는</subject> <daily>매일</daily> <at><time></time>에</at>",
+    "doneTitle": "알려드릴게요!",
+    "confirmedCaption": "등록이 완료되었어요",
+    "almostTitle": "거의 다 됐어요!",
+    "almostDescription": "권한만 켜면 매일 {time}에 알려드릴게요",
+    "unblockButton": "지금 켜기",
+    "laterButton": "나중에 할게요"
+  },
+  "timeWheel": {
+    "meridiemLabel": "오전 오후",
+    "hourLabel": "시",
+    "minuteLabel": "분"
+  },
+  "permissionBanner": {
+    "body": "알람을 계속 쓰려면 권한이 필요해요",
+    "unblockButton": "지금 켜기"
+  },
+  "androidSettings": {
+    "title": "두 가지만 켜 주세요",
+    "exactAlarmLabel": "정확한 시간에 울리기",
+    "exactAlarmButton": "알람 및 리마인더 켜기",
+    "fullScreenLabel": "잠금화면에 크게 띄우기",
+    "fullScreenButton": "전체 화면 알림 켜기",
+    "onLabel": "켜짐",
+    "offLabel": "꺼짐",
+    "doneButton": "다 켰어요"
+  },
+  "iosSettings": {
+    "title": "설정에서 이것 하나만 켜 주세요",
+    "openStepLabel": "아래 「설정 열기」를 눌러요",
+    "toggleStepLabel": "''{setting}''를 켜요",
+    "settingLabel": "알람 및 타이머",
+    "appLabel": "랜딧",
+    "openButton": "설정 열기"
+  },
+  "lockScreen": {
+    "imageLabel": "잠금화면 위에 뜬 오늘의 시나리오 알람"
+  },
+  "save": {
+    "saveFailedToast": "알람을 저장하지 못했어요. 다시 시도해 주세요",
+    "deleteFailedToast": "알람을 삭제하지 못했어요. 다시 시도해 주세요"
+  },
+  "screen": {
+    "title": "알람",
+    "description": "매일 약속한 시간에 알려드릴게요",
+    "loadError": "알람 설정을 불러오지 못했어요",
+    "cardTitle": "시나리오 알람",
+    "repeatCaption": "매일"
+  },
+  "editScreen": {
+    "title": "알람 수정",
+    "methodLabel": "알려주는 방식",
+    "previewCaption": "소리가 울리고 잠금화면 위에 알람 화면이 떠요",
+    "scheduleLabel": "약속 시간",
+    "repeatLabel": "반복",
+    "dailyLabel": "매일",
+    "timeLabel": "시각",
+    "deleteButton": "알람 삭제",
+    "saveButton": "저장하기",
+    "pickerTitle": "시각",
+    "confirmButton": "확인",
+    "deleteTitle": "알람을 삭제할까요?",
+    "deleteDescription": "다시 만들려면 약속을 새로 해야 해요",
+    "cancelButton": "취소",
+    "confirmDeleteButton": "삭제",
+    "loadError": "알람 설정을 불러오지 못했어요"
+  },
+  "summary": {
+    "noneLabel": "없음",
+    "blockedLabel": "권한 필요",
+    "dailyLabel": "매일 {time}"
+  }
+}

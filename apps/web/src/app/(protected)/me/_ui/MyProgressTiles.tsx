@@ -1,6 +1,7 @@
 'use client';
 
 // 내 정보 맨 위 타일에 실제 값을 채운다 — 연속 학습은 스트릭에서, 환급은 환급에서 따로 받아 나란히 놓는다
+// 환급이 열린 화면에만 그려져 한국어 화면에만 있어 옮기지 않는다
 import {
   rewardBadgeOf,
   type RewardBadge,
