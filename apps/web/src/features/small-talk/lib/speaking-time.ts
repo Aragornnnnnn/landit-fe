@@ -30,6 +30,9 @@ export const toSpeakingTimeLabel = (ms: number, locale: Locale): string => {
     : `${minutes}${minute}${gap}${seconds}${second}`;
 };
 
+// 말한 시간이 있는가 — 전부 타이핑한 대화는 0이 온다. 표기가 "0초"인 값(1초 미만)은 기록으로 뜻이 없어 그 칸을 뺀다
+export const hasSpokenTime = (ms: number): boolean => ms >= SECOND_MS;
+
 // 대화 중 줄어드는 시간 표기 — 초 단위로 깎이는 값이라 문장("41초") 대신 시계(0:41)로 읽힌다
 export const toCountdownLabel = (ms: number): string => {
   const { minutes, seconds } = toMinutesSeconds(ms);

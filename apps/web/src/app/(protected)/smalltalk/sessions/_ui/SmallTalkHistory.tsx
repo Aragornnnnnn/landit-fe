@@ -12,7 +12,10 @@ import {
 import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
 import type { SmallTalkSessionSummary } from '@/features/small-talk/api/small-talk';
 import { toSessionTitle } from '@/features/small-talk/lib/session-summary';
-import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
+import {
+  hasSpokenTime,
+  toSpeakingTimeLabel,
+} from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkSessionsQuery } from '@/features/small-talk/model/useSmallTalkSessionsQuery';
 import { lineBreak } from '@/shared/i18n/rich';
 import { toDayLabel } from '@/shared/lib/day-label';
@@ -94,7 +97,12 @@ const SessionRow = ({
     <HistoryRow
       onClick={onSelect}
       title={toSessionTitle(session.title, session.completedAt, t, locale)}
-      meta={`${toDayLabel(session.completedAt, locale)} · ${toSpeakingTimeLabel(session.userSpeakingDurationMs, locale)}`}
+      // 전부 타이핑한 대화는 말한 시간이 0초라 날짜만 남긴다
+      meta={
+        hasSpokenTime(session.userSpeakingDurationMs)
+          ? `${toDayLabel(session.completedAt, locale)} · ${toSpeakingTimeLabel(session.userSpeakingDurationMs, locale)}`
+          : toDayLabel(session.completedAt, locale)
+      }
       trailing={
         <ExpressionProgress
           done={session.completedExpressionCount}

@@ -31,6 +31,7 @@ import {
   hasCompletedScenarioBefore,
   notifyFirstScenarioCompleted,
 } from './first-scenario-ad-event';
+import { scenarioKeyterms } from './scenario-keyterms';
 import { toTalkGauge } from './talk-gauge';
 import { useScenarioTalkSession } from './useScenarioTalkSession';
 
@@ -133,6 +134,12 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
     openingAudioSrc: preview?.questionAudioUrl ?? null,
     sessionId: session.sessionId,
     ensureSession: session.ensure,
+    keytermsFor: (turnIndex) =>
+      scenarioKeyterms({
+        scenarioId: scenario.scenarioId,
+        firstSpeaker: scenario.firstSpeaker,
+        turnIndex,
+      }),
     submit: async ({ sessionId, content, inputType, turnIndex }) => {
       const { clientMessageId, guideViewed } = submissionFor(turnIndex);
       const completedBefore = hasCompletedScenarioBefore(queryClient);
