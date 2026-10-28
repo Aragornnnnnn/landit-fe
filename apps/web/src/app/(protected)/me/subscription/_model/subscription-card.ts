@@ -1,17 +1,21 @@
-// 구독 관리 골드 카드의 문구 규칙 — 상태·플랜으로 제목을, 상태로 날짜 행을, 플랜으로 결제 금액 행을 만든다
+// 구독 관리 골드 카드의 문구 규칙 — 상태·플랜으로 제목을, 상태로 날짜 행을, 플랜으로 결제 금액 행을 만든다. 문구는 화면 언어로 붙인다
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
 import { formatWon } from '@/features/subscription/lib/won';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
 import {
-  PLAN_TITLE,
+  PLAN_LABEL_KEYS,
   YEARLY_LIST_PRICE,
 } from '@/features/subscription/model/product/plans';
+import type { Locale } from '@/shared/i18n/locale';
+import type { Translator } from '@/shared/i18n/translator';
 
-const STATUS_TITLE: Record<PaidSubscriptionSummary['kind'], string> = {
-  trial: '무료 체험 중이에요',
-  active: '프리미엄을 쓰고 있어요',
-  canceled: '해지가 예약됐어요',
-};
+type SubscriptionTranslator = Translator<'subscription'>;
+
+const STATUS_TITLE_KEYS = {
+  trial: 'trialTitle',
+  active: 'activeTitle',
+  canceled: 'canceledTitle',
+} as const satisfies Record<PaidSubscriptionSummary['kind'], string>;
 
 export interface CardRow {
   label: string;
@@ -24,29 +28,43 @@ export interface CardRow {
 const isGranted = (summary: PaidSubscriptionSummary) =>
   summary.kind === 'active' && !summary.renews && summary.plan !== 'pass';
 
-const PASS_TITLE = `${PLAN_TITLE.pass}을 쓰고 있어요`;
-
 // 구독 중이고 플랜을 알면 "월간 프리미엄"처럼 플랜을 앞에 붙인다. 받은 기간은 체험과 같은 말로 부른다
-export const toCardTitle = (summary: PaidSubscriptionSummary) => {
+export const toCardTitle = (
+  summary: PaidSubscriptionSummary,
+  t: SubscriptionTranslator,
+) => {
   // 이용권은 이름이 곧 상품이라 "프리미엄"을 덧붙이지 않는다
-  if (summary.plan === 'pass') return PASS_TITLE;
-  if (isGranted(summary)) return STATUS_TITLE.trial;
+  if (summary.plan === 'pass') return t('subscriptionCard.passTitle');
+  if (isGranted(summary)) return t('subscriptionCard.trialTitle');
   return summary.kind === 'active' && summary.plan
-    ? `${PLAN_TITLE[summary.plan]} ${STATUS_TITLE.active}`
-    : STATUS_TITLE[summary.kind];
+    ? t('subscriptionCard.planActiveTitle', {
+        plan: t(`plans.${PLAN_LABEL_KEYS[summary.plan]}`),
+      })
+    : t(`subscriptionCard.${STATUS_TITLE_KEYS[summary.kind]}`);
 };
 
 // 무엇의 날짜인지가 상태마다 다르다. 체험은 첫 결제, 구독은 다음 결제, 그날로 끝나면 만료
-export const toDateRow = (summary: PaidSubscriptionSummary): CardRow | null => {
+export const toDateRow = (
+  summary: PaidSubscriptionSummary,
+  t: SubscriptionTranslator,
+  locale: Locale,
+): CardRow | null => {
   const date = summary.expiresAt
-    ? formatSubscriptionDate(summary.expiresAt)
+    ? formatSubscriptionDate(summary.expiresAt, locale)
     : null;
   if (!date) return null;
-  if (summary.kind === 'trial') return { label: '첫 결제일', value: date };
-  if (summary.renews) return { label: '다음 결제일', value: date };
+  if (summary.kind === 'trial')
+    return { label: t('subscriptionCard.firstChargeLabel'), value: date };
+  if (summary.renews)
+    return { label: t('subscriptionCard.nextChargeLabel'), value: date };
   // 갱신을 껐다고 말할 수 있는 건 해지 예약뿐이다. 프로모션으로 받은 기간은 갱신이 있던 적이 없다
-  const suffix = summary.kind === 'canceled' ? ' · 자동 갱신 꺼짐' : '';
-  return { label: '이용 만료일', value: `${date}${suffix}` };
+  return {
+    label: t('subscriptionCard.expiryLabel'),
+    value:
+      summary.kind === 'canceled'
+        ? t('subscriptionCard.autoRenewOffLabel', { date })
+        : date,
+  };
 };
 
 // 갱신되는 구독이고 실제 결제액을 알 때만. 무료 체험 중이면 결제 이력이 없어 이 행이 없다 —
@@ -54,11 +72,16 @@ export const toDateRow = (summary: PaidSubscriptionSummary): CardRow | null => {
 // 연간의 비교 기준은 내 결제액이 아니라 월간 12개월치라, 실제 금액이 와도 취소선 숫자는 그대로다
 export const toAmountRow = (
   summary: PaidSubscriptionSummary,
+  t: SubscriptionTranslator,
 ): CardRow | null => {
   const { plan, price } = summary;
   if (!plan || !summary.renews || price === null) return null;
   return {
-    label: summary.kind === 'trial' ? '첫 결제 금액' : '다음 결제 금액',
+    label: t(
+      summary.kind === 'trial'
+        ? 'subscriptionCard.firstAmountLabel'
+        : 'subscriptionCard.nextAmountLabel',
+    ),
     value: formatWon(price),
     listPrice: plan === 'yearly' ? formatWon(YEARLY_LIST_PRICE) : undefined,
   };

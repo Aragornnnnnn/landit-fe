@@ -116,7 +116,7 @@ describe('PremiumHeaderEntry', () => {
     render(<PremiumHeaderEntry />);
 
     expect(document.body.textContent).not.toContain('02:45');
-    expect(screen.getByText('시작하기')).toBeInTheDocument();
+    expect(screen.getByText('始める')).toBeInTheDocument();
   });
 
   it('유료 사용자에게는 로고를 그린다 — 팔 것이 없다', () => {

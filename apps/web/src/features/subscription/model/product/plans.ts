@@ -27,14 +27,14 @@ export const PLAN_ORDER: readonly RegularPlan[] = ['monthly', 'yearly'];
 
 export const DEFAULT_PLAN_ID: RegularPlan = 'yearly';
 
-/** 플랜 이름 — 페이월 카드 제목과 구독 관리·결제 내역·해지 화면의 플랜 표기가 같이 쓴다 */
-export const PLAN_TITLE: Record<SubscriptionPlan, string> = {
-  monthly: '월간',
-  yearly: '연간',
-  quarterly: '3개월',
-  halfyear: '6개월',
-  pass: '100일 이용권',
-};
+/** 플랜 이름 문구 키 — subscription.plans 아래. 구독 관리·결제 내역이 화면 언어로 그린다 */
+export const PLAN_LABEL_KEYS = {
+  monthly: 'monthlyLabel',
+  yearly: 'yearlyLabel',
+  quarterly: 'quarterlyLabel',
+  halfyear: 'halfyearLabel',
+  pass: 'passLabel',
+} as const satisfies Record<SubscriptionPlan, string>;
 
 // 스토어 등록값 — 오퍼링을 못 받았을 때 페이월이 쓰는 폴백. 월간은 할인 없는 기본가라 비교선도 배지도 없다.
 // 할인 연간(58,500)은 여기 없다 — 오퍼링으로만 오고, 못 받으면 시트를 띄우지 않으므로 폴백이 필요 없다

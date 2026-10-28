@@ -12,5 +12,81 @@
     "freeIncludedLabel": "무료 포함",
     "freeExcludedLabel": "무료 미포함",
     "premiumIncludedLabel": "프리미엄 포함"
+  },
+  "purchase": {
+    "currencyMismatchToast": "지금은 결제할 수 없어요. 잠시 후 다시 시도해 주세요",
+    "passUnavailableToast": "진행 중이거나 확인 중인 이용권이 있어 지금은 결제할 수 없어요",
+    "passCheckFailedToast": "구매할 수 있는지 확인하지 못했어요. 잠시 후 다시 시도해 주세요",
+    "browserToast": "결제는 랜딧 앱에서 할 수 있어요",
+    "outdatedShellToast": "앱을 최신 버전으로 업데이트하면 결제할 수 있어요",
+    "noResponseToast": "결제 응답이 없어요. 잠시 후 다시 시도해 주세요",
+    "failedToast": "결제에 실패했어요. 잠시 후 다시 시도해 주세요",
+    "pendingToast": "결제가 확인되는 중이에요. 잠시 후 다시 열어 주세요",
+    "restoreFailedToast": "구매 복원에 실패했어요. 잠시 후 다시 시도해 주세요",
+    "restoreEmptyToast": "복원할 구매 내역이 없어요"
+  },
+  "premiumHeaderEntry": {
+    "homeLabel": "홈으로",
+    "discountLabel": "할인",
+    "startLabel": "시작하기"
+  },
+  "premiumWelcome": {
+    "namedTitle": "환영해요, {nickname}님!<br></br>이제 랜딧을 마음껏 즐겨요",
+    "title": "환영해요!<br></br>이제 랜딧을 마음껏 즐겨요",
+    "nextButton": "다음"
+  },
+  "plans": {
+    "monthlyLabel": "월간",
+    "yearlyLabel": "연간",
+    "quarterlyLabel": "3개월",
+    "halfyearLabel": "6개월",
+    "passLabel": "100일 이용권"
+  },
+  "subscriptionEvents": {
+    "trialStartLabel": "무료 체험 시작",
+    "firstPurchaseLabel": "첫 결제",
+    "refundLabel": "환불",
+    "cancelLabel": "해지 예약",
+    "renewalLabel": "갱신 결제",
+    "uncancelLabel": "해지 취소",
+    "expirationLabel": "만료",
+    "billingIssueLabel": "결제 실패",
+    "productChangeLabel": "플랜 변경",
+    "grantLabel": "무료 이용 시작",
+    "transferLabel": "구독 이전",
+    "otherLabel": "구독 상태 변경",
+    "planLabel": "{plan} 플랜"
+  },
+  "subscriptionHistory": {
+    "title": "결제 내역",
+    "loadError": "결제 내역을 불러오지 못했어요",
+    "emptyBody": "아직 결제 내역이 없어요",
+    "sandboxBadge": "테스트"
+  },
+  "subscriptionCard": {
+    "trialTitle": "무료 체험 중이에요",
+    "activeTitle": "프리미엄을 쓰고 있어요",
+    "planActiveTitle": "{plan} 프리미엄을 쓰고 있어요",
+    "canceledTitle": "해지가 예약됐어요",
+    "passTitle": "100일 이용권을 쓰고 있어요",
+    "firstChargeLabel": "첫 결제일",
+    "nextChargeLabel": "다음 결제일",
+    "expiryLabel": "이용 만료일",
+    "autoRenewOffLabel": "{date} · 자동 갱신 꺼짐",
+    "firstAmountLabel": "첫 결제 금액",
+    "nextAmountLabel": "다음 결제 금액"
+  },
+  "subscriptionManage": {
+    "title": "구독 관리",
+    "passTitle": "이용권 관리",
+    "benefitsTitle": "이용 중인 혜택",
+    "historyLink": "결제 내역",
+    "passSectionTitle": "이용권",
+    "subscriptionSectionTitle": "구독",
+    "cancelSubscriptionLink": "구독 해지하기",
+    "cancelTrialLink": "체험 해지하기",
+    "resubscribeLink": "해지 취소하기",
+    "listPriceLabel": "정가",
+    "noSubscriptionLink": "구독 중이 아니에요 · 프리미엄 구독하기"
   }
 }

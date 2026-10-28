@@ -12,5 +12,81 @@
     "freeIncludedLabel": "無料で利用可",
     "freeExcludedLabel": "無料では利用不可",
     "premiumIncludedLabel": "プレミアムで利用可"
+  },
+  "purchase": {
+    "currencyMismatchToast": "ただいま購入できません。しばらくしてからもう一度お試しください",
+    "passUnavailableToast": "利用中または確認中のパスがあるため、今は購入できません",
+    "passCheckFailedToast": "購入できるか確認できませんでした。しばらくしてからもう一度お試しください",
+    "browserToast": "購入はLanditアプリからできます",
+    "outdatedShellToast": "アプリを最新バージョンにアップデートすると購入できます",
+    "noResponseToast": "購入の応答がありません。しばらくしてからもう一度お試しください",
+    "failedToast": "購入できませんでした。しばらくしてからもう一度お試しください",
+    "pendingToast": "購入を確認しています。しばらくしてからもう一度開いてください",
+    "restoreFailedToast": "購入を復元できませんでした。しばらくしてからもう一度お試しください",
+    "restoreEmptyToast": "復元できる購入履歴がありません"
+  },
+  "premiumHeaderEntry": {
+    "homeLabel": "ホームへ",
+    "discountLabel": "割引",
+    "startLabel": "始める"
+  },
+  "premiumWelcome": {
+    "namedTitle": "ようこそ、{nickname}さん！<br></br>思いきり楽しみましょう",
+    "title": "ようこそ！<br></br>思いきり楽しみましょう",
+    "nextButton": "次へ"
+  },
+  "plans": {
+    "monthlyLabel": "月間",
+    "yearlyLabel": "年間",
+    "quarterlyLabel": "3か月",
+    "halfyearLabel": "6か月",
+    "passLabel": "100日パス"
+  },
+  "subscriptionEvents": {
+    "trialStartLabel": "無料体験開始",
+    "firstPurchaseLabel": "初回購入",
+    "refundLabel": "返金",
+    "cancelLabel": "解約予約",
+    "renewalLabel": "自動更新",
+    "uncancelLabel": "解約の取り消し",
+    "expirationLabel": "期限切れ",
+    "billingIssueLabel": "支払いエラー",
+    "productChangeLabel": "プラン変更",
+    "grantLabel": "無料利用開始",
+    "transferLabel": "サブスクリプションの移行",
+    "otherLabel": "サブスクリプションの状態変更",
+    "planLabel": "{plan}プラン"
+  },
+  "subscriptionHistory": {
+    "title": "購入履歴",
+    "loadError": "購入履歴を読み込めませんでした",
+    "emptyBody": "まだ購入履歴がありません",
+    "sandboxBadge": "テスト"
+  },
+  "subscriptionCard": {
+    "trialTitle": "無料体験中です",
+    "activeTitle": "プレミアムを利用中です",
+    "planActiveTitle": "{plan}プレミアムを利用中です",
+    "canceledTitle": "解約を予約しました",
+    "passTitle": "100日パスを利用中です",
+    "firstChargeLabel": "初回の請求日",
+    "nextChargeLabel": "次回の請求日",
+    "expiryLabel": "利用期限",
+    "autoRenewOffLabel": "{date}・自動更新オフ",
+    "firstAmountLabel": "初回の請求額",
+    "nextAmountLabel": "次回の請求額"
+  },
+  "subscriptionManage": {
+    "title": "サブスクリプション",
+    "passTitle": "パスの管理",
+    "benefitsTitle": "利用中の特典",
+    "historyLink": "購入履歴",
+    "passSectionTitle": "パス",
+    "subscriptionSectionTitle": "サブスクリプション",
+    "cancelSubscriptionLink": "サブスクリプションを解約する",
+    "cancelTrialLink": "無料体験を解約する",
+    "resubscribeLink": "解約を取り消す",
+    "listPriceLabel": "通常価格",
+    "noSubscriptionLink": "未登録です・プレミアムに登録する"
   }
 }

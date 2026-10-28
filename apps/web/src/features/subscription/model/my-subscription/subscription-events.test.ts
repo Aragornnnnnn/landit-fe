@@ -1,8 +1,24 @@
 // summarizeSubscriptionEvent — 이벤트 타입·사유·금액·통화를 화면 문구로 접는 규칙
+import { createTranslator } from 'next-intl';
 import { describe, expect, it } from 'vitest';
+
+import ja from '@/shared/i18n/locales/ja';
+import ko from '@/shared/i18n/locales/ko';
 
 import type { SubscriptionEvent } from '../../api/subscription';
 import { summarizeSubscriptionEvent } from './subscription-events';
+
+const tKo = createTranslator({
+  locale: 'ko',
+  messages: ko,
+  namespace: 'subscription',
+});
+const tJa = createTranslator({
+  locale: 'ja',
+  messages: ja,
+  namespace: 'subscription',
+});
+const summarize = (e: SubscriptionEvent) => summarizeSubscriptionEvent(e, tKo);
 
 const event = (
   overrides: Partial<SubscriptionEvent> = {},
@@ -23,7 +39,7 @@ const event = (
 
 describe('summarizeSubscriptionEvent', () => {
   it('갱신 결제는 플랜과 원화 금액을 붙인다', () => {
-    expect(summarizeSubscriptionEvent(event())).toEqual({
+    expect(summarize(event())).toEqual({
       title: '갱신 결제',
       plan: '연간 플랜',
       amount: '58,500원',
@@ -33,7 +49,7 @@ describe('summarizeSubscriptionEvent', () => {
 
   it('6개월 상품 결제는 6개월 플랜이라고 말한다', () => {
     expect(
-      summarizeSubscriptionEvent(
+      summarize(
         event({ productId: 'com.saynow.app.premium.halfyear', price: 59900 }),
       ).plan,
     ).toBe('6개월 플랜');
@@ -41,12 +57,12 @@ describe('summarizeSubscriptionEvent', () => {
 
   it('첫 결제는 체험이면 "무료 체험 시작", 금액 0이면 금액이 없다', () => {
     expect(
-      summarizeSubscriptionEvent(
+      summarize(
         event({ type: 'INITIAL_PURCHASE', periodType: 'TRIAL', price: 0 }),
       ),
     ).toMatchObject({ title: '무료 체험 시작', amount: null });
     expect(
-      summarizeSubscriptionEvent(
+      summarize(
         event({
           type: 'INITIAL_PURCHASE',
           periodType: 'NORMAL',
@@ -63,12 +79,12 @@ describe('summarizeSubscriptionEvent', () => {
 
   it('해지는 사유가 고객 지원이면 환불, 아니면 해지 예약이다', () => {
     expect(
-      summarizeSubscriptionEvent(
+      summarize(
         event({ type: 'CANCELLATION', price: 0, cancelReason: 'UNSUBSCRIBE' }),
       ).title,
     ).toBe('해지 예약');
     expect(
-      summarizeSubscriptionEvent(
+      summarize(
         event({
           type: 'CANCELLATION',
           price: 0,
@@ -80,7 +96,7 @@ describe('summarizeSubscriptionEvent', () => {
 
   it('대시보드에서 부여한 무료 이용과 계정 이전도 무슨 일이었는지 말한다', () => {
     expect(
-      summarizeSubscriptionEvent(
+      summarize(
         event({
           type: 'NON_RENEWING_PURCHASE',
           productId: 'rc_promo_premium_monthly',
@@ -89,15 +105,14 @@ describe('summarizeSubscriptionEvent', () => {
         }),
       ),
     ).toMatchObject({ title: '무료 이용 시작', plan: null, amount: null });
-    expect(
-      summarizeSubscriptionEvent(event({ type: 'TRANSFER', price: null }))
-        .title,
-    ).toBe('구독 이전');
+    expect(summarize(event({ type: 'TRANSFER', price: null })).title).toBe(
+      '구독 이전',
+    );
   });
 
   it('모르는 종류가 와도 제목이 빈 줄이 되지 않는다', () => {
     expect(
-      summarizeSubscriptionEvent(
+      summarize(
         event({ type: 'SUBSCRIPTION_PAUSED' as SubscriptionEvent['type'] }),
       ).title,
     ).toBe('구독 상태 변경');
@@ -105,7 +120,7 @@ describe('summarizeSubscriptionEvent', () => {
 
   it('원화가 아니면 통화 코드를 붙이고, 모르는 상품은 플랜이 없고, 샌드박스는 표시한다', () => {
     expect(
-      summarizeSubscriptionEvent(
+      summarize(
         event({
           price: 5.99,
           currency: 'USD',
@@ -117,9 +132,19 @@ describe('summarizeSubscriptionEvent', () => {
   });
 
   it('엔화는 엔 표기로 적는다', () => {
+    expect(summarize(event({ price: 1_500, currency: 'JPY' })).amount).toBe(
+      '1,500円',
+    );
+  });
+
+  it('일본어 화면은 제목과 플랜을 일본어로 적는다', () => {
     expect(
-      summarizeSubscriptionEvent(event({ price: 1_500, currency: 'JPY' }))
-        .amount,
-    ).toBe('1,500円');
+      summarizeSubscriptionEvent(event({ price: 9_800, currency: 'JPY' }), tJa),
+    ).toEqual({
+      title: '自動更新',
+      plan: '年間プラン',
+      amount: '9,800円',
+      sandbox: false,
+    });
   });
 });
