@@ -17,6 +17,8 @@ const mocks = vi.hoisted(() => ({
   packages: {} as Record<string, unknown>,
   promo: {} as Record<string, unknown>,
   offeringPending: false,
+  offeringSettled: false,
+  retryOffering: vi.fn(),
   dismiss: vi.fn(),
   checkPassAvailability: vi.fn(),
   purchaseOptions: null as {
@@ -65,6 +67,8 @@ vi.mock('@/features/subscription/model/product/useOffering', () => ({
     regular: mocks.packages,
     promo: mocks.promo,
     pending: mocks.offeringPending,
+    settled: mocks.offeringSettled,
+    retry: mocks.retryOffering,
   }),
 }));
 // next/link는 next 밑의 다른 react 복사본을 잡아 훅이 깨진다 — 순수 a 태그로 치환한다
@@ -124,6 +128,9 @@ beforeEach(() => {
   };
   mocks.promo = {};
   mocks.offeringPending = false;
+  mocks.offeringSettled = false;
+  mocks.retryOffering = vi.fn();
+  mocks.purchase.mockClear();
 });
 afterEach(() => cleanup());
 
@@ -259,6 +266,53 @@ describe('PaywallScreen', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /무료 체험/ }));
 
+    expect(mocks.purchase).not.toHaveBeenCalled();
+  });
+
+  it('셸 답에 스토어 가격이 없으면 결제 대신 가격을 다시 불러온다 — 등록값을 보고 결제하지 않게', () => {
+    mocks.offeringSettled = true;
+    mocks.packages = {};
+    render(<PaywallScreen />);
+
+    fireEvent.click(screen.getByRole('button', { name: '가격 다시 불러오기' }));
+
+    expect(mocks.retryOffering).toHaveBeenCalledTimes(1);
+    expect(mocks.purchase).not.toHaveBeenCalled();
+  });
+
+  it('원화·엔화가 아닌 스토어 가격을 받아도 가격을 다시 불러온다 — 화면 통화와 결제 통화가 어긋난다', () => {
+    mocks.offeringSettled = true;
+    mocks.packages = {
+      yearly: { packageId: '$rc_annual', price: 69.99, currency: 'USD' },
+      monthly: { packageId: '$rc_monthly', price: 9.99, currency: 'USD' },
+    };
+    render(<PaywallScreen />);
+
+    expect(
+      screen.getByRole('button', { name: '가격 다시 불러오기' }),
+    ).toBeInTheDocument();
+  });
+
+  it('셸에 묻지 않는 환경은 등록값으로 결제 버튼을 그대로 둔다 — 브라우저는 결제가 따로 막힌다', () => {
+    mocks.packages = {};
+    render(<PaywallScreen />);
+
+    expect(
+      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+    ).toBeInTheDocument();
+  });
+
+  it('일본어 결제 단계도 스토어 가격이 없으면 가격을 다시 불러온다', () => {
+    Element.prototype.scrollTo = vi.fn();
+    setTestLocale('ja');
+    mocks.offeringSettled = true;
+    mocks.packages = {};
+    render(<PaywallScreen />);
+
+    fireEvent.click(screen.getByRole('button', { name: '次へ' }));
+    fireEvent.click(screen.getByRole('button', { name: '価格を再読み込み' }));
+
+    expect(mocks.retryOffering).toHaveBeenCalledTimes(1);
     expect(mocks.purchase).not.toHaveBeenCalled();
   });
 

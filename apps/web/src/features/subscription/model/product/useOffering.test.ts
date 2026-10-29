@@ -47,11 +47,39 @@ describe('useOffering', () => {
     expect(result.current.regular).toEqual({});
   });
 
-  it('결제할 수 없는 환경이면 묻지 않으므로 대기하지 않는다', () => {
+  it('셸이 답을 마쳐야 settled가 된다 — 묻는 동안은 아직 아니다', async () => {
+    const { result } = renderHook(() => useOffering());
+
+    expect(result.current.settled).toBe(false);
+    await act(async () => mocks.resolve(null));
+
+    expect(result.current.settled).toBe(true);
+  });
+
+  it('다시 물으면 셸에 한 번 더 묻고, 그동안 다시 대기한다', async () => {
+    const { result } = renderHook(() => useOffering());
+    await act(async () => mocks.resolve(null));
+
+    act(() => result.current.retry());
+
+    expect(result.current.pending).toBe(true);
+    expect(result.current.settled).toBe(false);
+    await act(async () =>
+      mocks.resolve({
+        packages: [
+          { id: '$rc_annual', plan: 'yearly', price: 10_000, currency: 'JPY' },
+        ],
+      }),
+    );
+    expect(result.current.regular.yearly?.price).toBe(10_000);
+  });
+
+  it('결제할 수 없는 환경이면 묻지 않으므로 대기하지 않고 settled도 아니다', () => {
     mocks.support = 'unsupported';
     const { result } = renderHook(() => useOffering());
 
     expect(result.current.pending).toBe(false);
+    expect(result.current.settled).toBe(false);
   });
 
   it('꺼 두면 묻지 않으므로 대기하지 않는다', () => {

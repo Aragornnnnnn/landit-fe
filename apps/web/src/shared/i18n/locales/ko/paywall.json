@@ -1,6 +1,7 @@
 {
   "restoreButton": "구매 복원",
   "trialStartButton": "7일 무료 체험 시작하기",
+  "priceRetryButton": "가격 다시 불러오기",
   "monthlyStartButton": "월 {price}으로 시작하기",
   "yearlyBillingCaption": "7일 무료 체험 후 연 {price} 정기 결제 · 언제든 해지 가능",
   "monthlyBillingCaption": "매월 {price} 정기 결제 · 언제든 해지 가능",

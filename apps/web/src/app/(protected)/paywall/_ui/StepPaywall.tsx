@@ -31,6 +31,7 @@ export const StepPaywall = ({
   offer,
   startStep = 'benefits',
   busy,
+  priceRetry,
   onClose,
   onRestore,
   onPurchase,
@@ -45,6 +46,8 @@ export const StepPaywall = ({
   startStep?: Step;
   /** 결제·복원이 진행 중이면 버튼을 잠근다 */
   busy: boolean;
+  /** 스토어 가격을 못 받았을 때 결제 버튼 대신 거는 다시 불러오기. 없으면 결제 버튼이다 */
+  priceRetry?: { label: string; onRetry: () => void };
   onClose: () => void;
   onRestore: () => void;
   onPurchase: () => void;
@@ -172,6 +175,10 @@ export const StepPaywall = ({
         {step === 'benefits' ? (
           <Button onClick={() => goTo('checkout')}>
             {t('paywall.stepPaywall.nextButton')}
+          </Button>
+        ) : priceRetry ? (
+          <Button onClick={priceRetry.onRetry} loading={busy}>
+            {priceRetry.label}
           </Button>
         ) : (
           <>

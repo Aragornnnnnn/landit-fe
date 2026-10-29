@@ -35,13 +35,21 @@ const reportUnclassifiable = (packages: OfferingPackage[]) => {
  *
  * @param enabled 꺼 두면 묻지 않는다 — 가격을 쓸 사람에게만 왕복을 건다
  * @returns 정가·할인으로 가른 오퍼링. 브라우저·구버전 셸이거나 아직 못 받았으면 둘 다 빈 객체.
- *   `pending`은 셸에 묻고 답을 기다리는 동안만 참이다 — 그동안 결제하면 표준 패키지(정가)로 나간다
+ *   `pending`은 셸에 묻고 답을 기다리는 동안만 참이다 — 그동안 결제하면 표준 패키지(정가)로 나간다.
+ *   `settled`는 셸이 답을 마쳤을 때만 참이다 — 그때 가격이 비어 있으면 셸이 스토어 가격을 못 준 것이다.
+ *   `retry`는 셸에 다시 묻는다
  */
 export const useOffering = ({
   enabled = true,
-}: { enabled?: boolean } = {}): Offering & { pending: boolean } => {
+}: { enabled?: boolean } = {}): Offering & {
+  pending: boolean;
+  settled: boolean;
+  retry: () => void;
+} => {
   const [offering, setOffering] = useState<Offering>(EMPTY);
   const [answered, setAnswered] = useState(false);
+  // 다시 묻기를 누를 때마다 올라 왕복을 새로 건다
+  const [attempt, setAttempt] = useState(0);
   const asking =
     useSyncExternalStore(subscribeNothing, canAskShell, cannotAskOnServer) &&
     enabled;
@@ -59,7 +67,17 @@ export const useOffering = ({
     });
     // 화면이 사라지면 끊는다 — 끊긴 왕복은 null로 끝나 setState가 일어나지 않는다
     return () => controller.abort();
-  }, [asking]);
+  }, [asking, attempt]);
 
-  return { ...offering, pending: asking && !answered };
+  const retry = () => {
+    setAnswered(false);
+    setAttempt((count) => count + 1);
+  };
+
+  return {
+    ...offering,
+    pending: asking && !answered,
+    settled: asking && answered,
+    retry,
+  };
 };
