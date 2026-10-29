@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   busy: false,
   packages: {} as Record<string, unknown>,
   promo: {} as Record<string, unknown>,
+  offeringPending: false,
   dismiss: vi.fn(),
   checkPassAvailability: vi.fn(),
   purchaseOptions: null as {
@@ -60,7 +61,11 @@ vi.mock('@/features/subscription/model/purchase/usePurchase', () => ({
   },
 }));
 vi.mock('@/features/subscription/model/product/useOffering', () => ({
-  useOffering: () => ({ regular: mocks.packages, promo: mocks.promo }),
+  useOffering: () => ({
+    regular: mocks.packages,
+    promo: mocks.promo,
+    pending: mocks.offeringPending,
+  }),
 }));
 // next/link는 next 밑의 다른 react 복사본을 잡아 훅이 깨진다 — 순수 a 태그로 치환한다
 vi.mock('next/link', () => ({
@@ -118,6 +123,7 @@ beforeEach(() => {
     monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
   };
   mocks.promo = {};
+  mocks.offeringPending = false;
 });
 afterEach(() => cleanup());
 
@@ -245,6 +251,15 @@ describe('PaywallScreen', () => {
       yearly: { packageId: '$rc_annual', price: 94_500, currency: 'KRW' },
       monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
     });
+  });
+
+  it('오퍼링을 받는 동안은 CTA가 잠긴다 — 할인 패키지가 오기 전에 정가 상품으로 결제되지 않게', () => {
+    mocks.offeringPending = true;
+    render(<PaywallScreen />);
+
+    fireEvent.click(screen.getByRole('button', { name: /무료 체험/ }));
+
+    expect(mocks.purchase).not.toHaveBeenCalled();
   });
 
   it('할인을 이미 보여 준 페이월은 닫아도 이탈 할인을 요청하지 않는다 — 같은 상품을 다시 권하게 된다', async () => {

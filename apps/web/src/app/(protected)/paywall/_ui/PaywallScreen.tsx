@@ -134,13 +134,19 @@ export const PaywallScreen = ({
       reason === 'purchase' ? premiumOnboardingPath(destination) : destination,
     );
   };
-  const { busy, purchase, restore } = usePurchase({
+  const {
+    busy: purchasing,
+    purchase,
+    restore,
+  } = usePurchase({
     packages,
     onUnlocked: unlock,
     checkPassAvailability,
     // 이용권은 스토어 통화대로 결제해도 된다고 정해 비교하지 않는다
     displayCurrencies: { monthly: currency, yearly: currency },
   });
+  // 오퍼링을 받는 동안도 잠근다 — 할인 패키지가 오기 전에 누르면 표준 패키지(정가)로 결제된다
+  const busy = purchasing || offering.pending;
 
   const selectPlan = (id: SubscriptionPlan) => {
     if (id === selectedId) return;
