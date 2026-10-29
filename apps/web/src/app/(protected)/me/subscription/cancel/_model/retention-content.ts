@@ -8,7 +8,7 @@ import type {
 
 import type { RewardView } from '@/features/reward/api/reward';
 import {
-  formatPrice,
+  formatStorePrice,
   type StorePrice,
 } from '@/features/subscription/lib/store-price';
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
@@ -102,9 +102,6 @@ export const dailyPrice = (price: StorePrice, days: number): StorePrice => {
     currency: price.currency,
   };
 };
-
-const formatStorePrice = ({ amount, currency }: StorePrice) =>
-  formatPrice(amount, currency);
 
 // 환급을 쌓는 중이면 하루 요금보다 돌려받는 금액이 가격 이야기의 답이다.
 // 환급은 한국어 화면에만 있어 문구를 옮기지 않는다

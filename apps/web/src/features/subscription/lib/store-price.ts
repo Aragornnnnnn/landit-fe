@@ -23,3 +23,7 @@ export const formatPrice = (amount: number, currency: PricedCurrency) =>
   currency === 'JPY'
     ? `${amount.toLocaleString('ja-JP')}円`
     : formatWon(amount);
+
+/** 금액과 통화가 함께 있는 결제액을 적는다 */
+export const formatStorePrice = ({ amount, currency }: StorePrice) =>
+  formatPrice(amount, currency);
