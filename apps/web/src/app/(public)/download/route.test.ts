@@ -119,6 +119,29 @@ describe('GET /download 링크 미리보기', () => {
     },
   );
 
+  it('일본어 화면에서 공유한 링크(lang=ja)면 일본어 미리보기를 준다', async () => {
+    const res = await GET(downloadRequest(KAKAO_SCRAP_UA, '?lang=ja'));
+    const html = await res.text();
+
+    expect(html).toContain('<html lang="ja">');
+    expect(html).toContain(
+      '<meta property="og:title" content="Landit: 英会話・スピーキング・フレーズ・リスニングアプリ"',
+    );
+    expect(html).toContain(
+      '<meta property="og:image" content="http://localhost/og/share-ja.jpg"',
+    );
+  });
+
+  it('언어 표시가 없거나 모르는 값이면 한국어 미리보기를 준다', async () => {
+    const res = await GET(downloadRequest(KAKAO_SCRAP_UA, '?lang=en'));
+    const html = await res.text();
+
+    expect(html).toContain('<html lang="ko">');
+    expect(html).toContain(
+      '<meta property="og:image" content="http://localhost/og/share.jpg"',
+    );
+  });
+
   it.each([
     ['카카오톡', `${IPHONE_UA} KAKAOTALK 10.8.0`],
     ['라인', `${IPHONE_UA} Safari Line/13.20.0`],
