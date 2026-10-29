@@ -3,6 +3,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setTestLocale } from '@/shared/i18n/test-locale';
 import type { SttResultMeta } from '@/shared/stt/deepgram-stt';
 import { MicPermissionDeniedError, SttError } from '@/shared/stt/errors';
 import type { SttErrorMeta } from '@/shared/stt/useStt';
@@ -18,6 +19,8 @@ vi.mock('@/shared/monitoring/report', () => monitoringMock);
 
 const trackMock = vi.hoisted(() => vi.fn());
 vi.mock('@/shared/analytics', () => ({ track: trackMock }));
+const toastMock = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/ui/toast', () => ({ showToast: toastMock }));
 
 const FINAL_META: SttResultMeta = {
   engine: 'deepgram',
@@ -742,6 +745,18 @@ describe('useConversationInput', () => {
       act(() => sttMock.callbacks.onInterim?.(`${LONG} more`, true));
 
       expect(sttMock.stop).toHaveBeenCalledTimes(1);
+    });
+
+    it('말하는 중 글자 수 한도에 닿으면 화면 언어로 알린다', () => {
+      setTestLocale('ja');
+      const { result } = renderInput();
+      act(() => result.current.pressMic());
+
+      act(() => sttMock.callbacks.onInterim?.(LONG, true));
+
+      expect(toastMock).toHaveBeenCalledWith(
+        '回答が長いため、ここまで受け取りました',
+      );
     });
 
     it('한도 아래로 말하는 동안은 녹음을 멈추지 않는다', () => {

@@ -16,11 +16,7 @@ import { withdraw } from '@/shared/auth/api/withdraw';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { clearSession } from '@/shared/auth/clear-session';
 import { homePath } from '@/shared/lib/last-tab';
-import {
-  LOGIN_PATH,
-  MAILBOX_COMPOSE_PATH,
-  SURVEY_PATH,
-} from '@/shared/lib/routes';
+import { LOGIN_PATH, MAILBOX_COMPOSE_PATH } from '@/shared/lib/routes';
 import { useScrollShadow } from '@/shared/lib/useScrollShadow';
 import { reportWarning } from '@/shared/monitoring/report';
 import { BackHeader } from '@/shared/ui/BackHeader';
@@ -41,6 +37,7 @@ import { PremiumEntry } from './_ui/PremiumEntry';
 import { ProfileHeader } from './_ui/ProfileHeader';
 import { ShareMenuFallback } from './_ui/ShareMenuFallback';
 import { SpeechRateMenuEntry } from './_ui/SpeechRateMenuEntry';
+import { SurveyMenuEntry } from './_ui/SurveyMenuEntry';
 import { TalkDisplayMenuEntry } from './_ui/TalkDisplayMenuEntry';
 import { WidgetMenuEntry } from './_ui/WidgetMenuEntry';
 import { WithdrawSheet } from './_ui/WithdrawSheet';
@@ -158,11 +155,7 @@ export default function MyPage() {
               icon={<Emoji>💬</Emoji>}
               title={t('feedbackTitle')}
             />
-            <MenuLink
-              href={SURVEY_PATH}
-              icon={<Emoji>📝</Emoji>}
-              title={t('surveyTitle')}
-            />
+            <SurveyMenuEntry />
           </MenuSection>
 
           <MenuSection title={t('accountTitle')}>

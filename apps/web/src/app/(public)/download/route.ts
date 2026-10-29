@@ -2,6 +2,7 @@
 import { EVENTS, type EventProps } from '@landit/analytics';
 import { NextResponse } from 'next/server';
 
+import { DEFAULT_LOCALE, isLocale } from '@/shared/i18n/locale';
 import { APP_STORE_URL, PLAY_STORE_URL } from '@/shared/lib/store-listing';
 
 import { buildLinkPreviewHtml, isLinkPreviewBot } from './_lib/link-preview';
@@ -40,9 +41,12 @@ export async function GET(request: Request): Promise<NextResponse> {
   const userAgent = request.headers.get('user-agent') ?? '';
   const url = new URL(request.url);
 
-  // 미리보기 봇을 스토어로 보내면 스토어 페이지 카드가 뜬다 — 랜딧 카드를 주고, 방문으로 세지 않는다
+  // 미리보기 봇을 스토어로 보내면 스토어 페이지 카드가 뜬다 — 랜딧 카드를 주고, 방문으로 세지 않는다.
+  // 봇은 보내는 사람을 모르니 공유 링크에 실린 언어(lang)로 카드를 그린다
   if (isLinkPreviewBot(userAgent)) {
-    return new NextResponse(buildLinkPreviewHtml(url.origin), {
+    const lang = url.searchParams.get('lang') ?? '';
+    const locale = isLocale(lang) ? lang : DEFAULT_LOCALE;
+    return new NextResponse(buildLinkPreviewHtml(url.origin, locale), {
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
     });
   }

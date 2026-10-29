@@ -53,7 +53,8 @@
   "lampSummon": {
     "exitLabel": "閉じる",
     "acceptButton": "はい！",
-    "askTitle": "今日の会話を始めますか？"
+    "askTitle": "今日の会話を始めますか？",
+    "nameLabel": "ラディ"
   },
   "emptyDay": {
     "todayTitle": "今日のカードは準備中です",

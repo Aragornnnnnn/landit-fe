@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAuthStore } from '@/shared/auth/auth-store';
+import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import type { Offering } from '../../model/product/offering';
 import { LetterOfferCta } from './LetterOfferCta';
@@ -76,6 +77,14 @@ afterEach(() => {
 describe('LetterOfferCta', () => {
   it('지정한 편지가 아니면 버튼을 그리지 않는다', () => {
     render(<LetterOfferCta letterId={8} />);
+
+    expect(screen.queryByRole('button', { name: ctaName })).toBeNull();
+  });
+
+  it('일본어 화면이면 지정한 편지여도 버튼을 그리지 않는다 — 혜택가가 원화 한국 판매가다', () => {
+    setTestLocale('ja');
+
+    render(<LetterOfferCta letterId={7} />);
 
     expect(screen.queryByRole('button', { name: ctaName })).toBeNull();
   });

@@ -9,7 +9,7 @@ export const DEFAULT_LOCALE: Locale = 'ko';
 /** 한국에서만 파는 혜택(환급·친구 초대·이탈 할인)을 보여 줄 화면인가 — 일본어 화면은 구독만 판다 */
 export const sellsKoreaOnlyOffers = (locale: Locale) => locale === 'ko';
 
-const isLocale = (value: string): value is Locale =>
+export const isLocale = (value: string): value is Locale =>
   (LOCALES as readonly string[]).includes(value);
 
 // q는 0~1, 소수 셋째 자리까지만 유효하다(RFC 9110) — Infinity·1.5 같은 값은 0으로 보고 그 언어를 고르지 않는다
@@ -105,6 +105,25 @@ export const acceptLanguageOf = (languages: readonly string[]) => {
       index === 0 ? tag : `${tag};q=${((10 - index) / 10).toFixed(1)}`,
     )
     .join(',');
+};
+
+/**
+ * 서버가 정한 언어(html lang)를 믿을 수 없을 때 브라우저가 직접 정한다 — 루트 레이아웃까지 죽은 오류 화면용.
+ * 서버와 같은 순서로 저장 언어 쿠키를 먼저 보고, 없으면 기기 언어 목록에서 고른다.
+ *
+ * @param cookieHeader `document.cookie`
+ * @param languages 기기 선호 언어 목록(`deviceLanguages()`)
+ */
+export const localeFromBrowser = (
+  cookieHeader: string,
+  languages: readonly string[],
+): Locale => {
+  const saved =
+    cookieHeader
+      .split('; ')
+      .find((pair) => pair.startsWith(`${LOCALE_COOKIE}=`))
+      ?.slice(LOCALE_COOKIE.length + 1) ?? null;
+  return resolveRequestLocale(saved, acceptLanguageOf(languages));
 };
 
 /**
