@@ -74,19 +74,3 @@ export const datesOfMonth = (date: string) => {
     dates.push(toDateString(day));
   return dates;
 };
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-// 머리말에 쓸 기간 — 서버 머리말 규칙과 같게 기준 날짜의 달에서 1일이 든 주(일요일 시작)를 1주차로 센다. 문구는 화면 언어로 붙인다
-export const periodOf = (date: string, type: ScenarioCalendarType) => {
-  const year = Number(date.slice(0, 4));
-  const month = Number(date.slice(5, 7));
-  if (type === 'MONTH') return { year, month, week: null };
-  const firstWeek = parseDateString(
-    firstDayOfWindow(`${date.slice(0, 8)}01`, 'WEEK'),
-  );
-  const thisWeek = parseDateString(firstDayOfWindow(date, 'WEEK'));
-  const week =
-    Math.round((thisWeek.getTime() - firstWeek.getTime()) / (7 * DAY_MS)) + 1;
-  return { year, month, week };
-};

@@ -3,11 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ExpressionLearning } from '../api/learning';
 import type { WritingSentence } from '../api/practice';
-import {
-  fromLearning,
-  fromWritingSentence,
-  reviewQuizzesOf,
-} from './sentence-quiz';
+import { fromLearning, fromWritingSentence } from './sentence-quiz';
 
 const baseLearning: ExpressionLearning = {
   expressionId: 101,
@@ -150,34 +146,5 @@ describe('fromWritingSentence', () => {
     expect(
       fromWritingSentence(legacy as WritingSentence).acceptedAnswers,
     ).toEqual([['The', 'special', 'effects', 'blew', 'my', 'mind']]);
-  });
-});
-
-describe('reviewQuizzesOf', () => {
-  const sentence = (quizLanguage: WritingSentence['quizLanguage']) =>
-    ({
-      quizLanguage,
-      writingSentenceText: `${quizLanguage} text`,
-      writingSentenceTranslation: `${quizLanguage} 해석`,
-      writingQuestion: '',
-      writingQuestionTranslation: '',
-      writingSentenceWords: [],
-      writingSentenceWordChoices: [],
-      writingSentenceAcceptedAnswers: [],
-    }) satisfies WritingSentence;
-
-  it('한국어 화면이면 영어·한국어 문제를 받은 순서대로 낸다', () => {
-    const quizzes = reviewQuizzesOf([sentence('KR'), sentence('EN')], 'ko');
-
-    expect(quizzes.map((quiz) => quiz.answerText)).toEqual([
-      'KR 해석',
-      'EN text',
-    ]);
-  });
-
-  it('일본어 화면이면 한국어 해석을 조립하는 문제는 빼고 영어 문제만 낸다', () => {
-    const quizzes = reviewQuizzesOf([sentence('KR'), sentence('EN')], 'ja');
-
-    expect(quizzes.map((quiz) => quiz.answerText)).toEqual(['EN text']);
   });
 });

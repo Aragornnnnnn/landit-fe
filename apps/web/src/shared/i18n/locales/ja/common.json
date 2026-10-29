@@ -13,8 +13,7 @@
   },
   "api": {
     "serverError": "サーバーエラーが発生しました。({status})",
-    "sessionExpiredError": "セッションが切れました。もう一度ログインしてください。",
-    "requestError": "リクエストを処理できませんでした。({status})"
+    "sessionExpiredError": "セッションが切れました。もう一度ログインしてください。"
   },
   "bridgeListener": {
     "exitToast": "もう一度押すとアプリを終了します"

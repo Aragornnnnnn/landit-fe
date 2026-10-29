@@ -1,6 +1,4 @@
 // 대표 예문(learning-start)·영작 문제(practice)를 단어 선택 퀴즈가 쓰는 형태로 변환한다
-import type { Locale } from '@/shared/i18n/locale';
-
 import type { ExpressionLearning } from '../api/learning';
 import type { WritingSentence } from '../api/practice';
 
@@ -52,12 +50,3 @@ export const fromWritingSentence = (writing: WritingSentence): SentenceQuiz => {
       : [writing.writingSentenceWords],
   };
 };
-
-// 복습에 낼 문제 — 한국어(KR) 문제는 한국어 해석을 조립하는 문제라 한국어 화면에서만 낸다. 순서는 BE 셔플 그대로
-export const reviewQuizzesOf = (
-  writings: WritingSentence[],
-  locale: Locale,
-): SentenceQuiz[] =>
-  writings
-    .filter((writing) => locale === 'ko' || writing.quizLanguage === 'EN')
-    .map(fromWritingSentence);

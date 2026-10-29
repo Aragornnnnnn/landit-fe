@@ -3,7 +3,7 @@
 // 표현학습 플로우 — 단어 선택 퀴즈(D안 ①') → 표현 설명(D안 ④) → [발음 자산 있으면: 발음 평가] → 추가 예문 → 복습 영작 2문제(D안 ⑤) → 완료 처리 후 리스트로.
 import { useEffect, useState } from 'react';
 import { EVENTS, type ExpressionStep } from '@landit/analytics';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
 
@@ -18,7 +18,7 @@ import type { ExpressionLearning } from '../api/learning';
 import type { ExpressionPractice } from '../api/practice';
 import { collectPreloadImageUrls } from '../lib/preload-images';
 import { pickRandomPartner } from '../model/quiz-partner';
-import { fromLearning, reviewQuizzesOf } from '../model/sentence-quiz';
+import { fromLearning, fromWritingSentence } from '../model/sentence-quiz';
 import { useExpressionIntroStepAudio } from '../model/useExpressionIntroStepAudio';
 import { useExpressionLearningQuery } from '../model/useExpressionLearningQuery';
 import { useExpressionPracticeQuery } from '../model/useExpressionPracticeQuery';
@@ -138,7 +138,6 @@ const LoadedExpressionFlow = ({
   onFinished,
 }: LoadedExpressionFlowProps) => {
   const t = useTranslations('expression.flow');
-  const locale = useLocale();
   const router = useRouter();
   // 계측에 싣는 출처 — 시나리오면 시나리오 id, 스몰톡이면 세션 id
   const originProps =
@@ -251,14 +250,13 @@ const LoadedExpressionFlow = ({
     />
   );
 
-  // 복습 영작 — practice가 주는 작문 문제 2건(영어·한국어)을 QUIZ와 같은 단어 칩 방식으로 차례로 푼다. 한국어 화면이 아니면 영어 문제만.
+  // 복습 영작 — practice가 주는 작문 문제 2건(영어·한국어)을 QUIZ와 같은 단어 칩 방식으로 차례로 푼다.
   // 아직 로딩 중이면 잠깐 스켈레톤을 유지한다 — 폴백 문제를 먼저 보여줬다가 도착 후 바꿔치기하면
   // 고른 칩과 단어 수가 어긋난다. 실패(404 등) 시에만 대표 예문 1문제로 폴백해 플로우를 막지 않는다.
   // 옛 응답(객체)이나 빈 값도 폴백으로 흘러 프론트가 먼저 배포돼도 깨지지 않는다
-  const writingQuizzes = Array.isArray(practice?.writingSentence)
-    ? reviewQuizzesOf(practice.writingSentence, locale)
-    : [];
-  const reviewQuizzes = writingQuizzes.length ? writingQuizzes : [quiz];
+  const reviewQuizzes = practice?.writingSentence?.length
+    ? practice.writingSentence.map(fromWritingSentence)
+    : [quiz];
 
   const finishFlow = () =>
     finish.mutate(undefined, {
