@@ -12,8 +12,18 @@ export const isPricedCurrency = (
     currency,
   );
 
+/** 화면이 적을 수 있는 스토어 결제액 — 금액과 통화를 함께 다닌다 */
+export interface StorePrice {
+  amount: number;
+  currency: PricedCurrency;
+}
+
 /** 천 단위 쉼표에 통화 글자 — 14900 KRW → 14,900원, 1500 JPY → 1,500円 */
 export const formatPrice = (amount: number, currency: PricedCurrency) =>
   currency === 'JPY'
     ? `${amount.toLocaleString('ja-JP')}円`
     : formatWon(amount);
+
+/** 금액과 통화가 함께 있는 결제액을 적는다 */
+export const formatStorePrice = ({ amount, currency }: StorePrice) =>
+  formatPrice(amount, currency);

@@ -61,7 +61,7 @@ describe('summarizeSubscription', () => {
         expiresAt: '2026-10-04T12:00:00',
         renews: false,
         plan: 'pass',
-        price: 50_000,
+        price: { amount: 50_000, currency: 'KRW' },
       });
     },
   );
@@ -121,10 +121,16 @@ describe('summarizeSubscription', () => {
 });
 
 describe('결제 금액', () => {
-  it('실제로 낸 원화 금액을 싣는다 — 상품 id로 금액을 추측하지 않는다', () => {
+  it('실제로 낸 금액을 통화와 함께 싣는다 — 상품 id로 금액을 추측하지 않는다', () => {
     expect(
       summarizeSubscription(premium({ price: 47000, currency: 'KRW' })),
-    ).toMatchObject({ price: 47000 });
+    ).toMatchObject({ price: { amount: 47000, currency: 'KRW' } });
+  });
+
+  it('엔화로 낸 금액도 싣는다 — 일본 스토어 구독자', () => {
+    expect(
+      summarizeSubscription(premium({ price: 1500, currency: 'JPY' })),
+    ).toMatchObject({ price: { amount: 1500, currency: 'JPY' } });
   });
 
   it('금액이 없으면 null이다 — 무료 체험이라 결제 이력이 없거나 웹훅이 늦을 때', () => {
@@ -133,7 +139,7 @@ describe('결제 금액', () => {
 
   it('통화가 안 와도 원화로 본다', () => {
     expect(summarizeSubscription(premium({ price: 47000 }))).toMatchObject({
-      price: 47000,
+      price: { amount: 47000, currency: 'KRW' },
     });
   });
 
@@ -143,7 +149,7 @@ describe('결제 금액', () => {
     ).toMatchObject({ price: null });
   });
 
-  it('외화는 null이다 — 하루 환산·비교가 산식이 원화 기준이라 등록값을 쓴다', () => {
+  it('원·엔 밖의 통화는 null이다 — 화면이 그 통화를 적을 줄 모른다', () => {
     expect(
       summarizeSubscription(premium({ price: 59.99, currency: 'USD' })),
     ).toMatchObject({ price: null });
