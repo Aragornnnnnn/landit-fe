@@ -39,7 +39,8 @@ describe('ShareMenuEntry', () => {
     expect(mocks.showToast).not.toHaveBeenCalled();
   });
 
-  it('보내는 사람의 화면 언어를 링크에 붙인다 — 받는 쪽 미리보기 카드가 그 언어로 뜬다', async () => {
+  // 받는 쪽 미리보기 카드가 보내는 사람 언어로 뜨게 한다
+  it('일본어 화면에서 공유하면 링크에 lang=ja를 붙인다', async () => {
     setTestLocale('ja');
     mocks.shareText.mockResolvedValue('native_sheet');
     render(<ShareMenuEntry />);

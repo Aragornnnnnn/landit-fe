@@ -15,8 +15,8 @@ const DOCUMENTS: Record<Locale, LegalDocument> = {
   ja: termsDocumentJa,
 };
 
-const Page = async () => (
+const TermsPage = async () => (
   <LegalDocumentPage document={DOCUMENTS[await getLocale()]} />
 );
 
-export default Page;
+export default TermsPage;

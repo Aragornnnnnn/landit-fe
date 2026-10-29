@@ -15,7 +15,7 @@ const CARD: Record<
   ja: {
     siteName: 'Landit',
     title: 'Landit: 英会話・スピーキング・フレーズ・リスニングアプリ',
-    description: 'ネイティブと話して、自分の英語がどう聞こえるか確かめよう',
+    description: 'ネイティブと話して、自分の英語がどう聞こえるか確かめましょう',
     imagePath: '/og/share-ja.jpg',
   },
 };

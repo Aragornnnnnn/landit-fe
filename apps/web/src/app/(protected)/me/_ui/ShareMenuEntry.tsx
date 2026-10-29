@@ -13,7 +13,7 @@ import { showToast } from '@/shared/ui/toast';
 import { MenuButton } from './Menu';
 
 // 받는 사람 기기에 맞는 스토어로 보내는 /download에 친구 공유 유입 딱지를 붙인다 (docs/analytics-utm.md).
-// 도메인은 고정한다 — 개발 서버에서 눌러도 친구에게는 실제 주소가 가야 한다. 받는 쪽 미리보기 카드가 보내는 사람 언어로 뜨게 화면 언어(lang)를 붙인다
+// 도메인은 고정한다 — 개발 서버에서 눌러도 친구에게는 실제 주소가 가야 한다
 const SHARE_URL =
   'https://landit.im/download?utm_source=share&utm_medium=referral&utm_campaign=friend_invite';
 
@@ -22,7 +22,9 @@ export const ShareMenuEntry = () => {
   // 셸 공유 시트는 SHARE를 보내자마자 풀리므로 연타는 셸이 막는다(apps/mobile bridge/share.ts)
   const isSharingRef = useRef(false);
   const t = useTranslations('me.shareMenu');
-  const shareUrl = `${SHARE_URL}&lang=${useLocale()}`;
+  const locale = useLocale();
+  // 받는 쪽 미리보기 카드가 보내는 사람 언어로 뜨게 화면 언어(lang)를 붙인다
+  const shareUrl = `${SHARE_URL}&lang=${locale}`;
 
   const share = async () => {
     if (isSharingRef.current) return;
