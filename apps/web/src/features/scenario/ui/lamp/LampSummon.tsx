@@ -304,13 +304,21 @@ const SpeechBubble = ({
           : popIn(BUBBLE_MS))}
     >
       <Image
-        src="/images/character/speech-bubble.webp"
+        src="/images/character/speech-bubble-blank.webp"
         alt=""
         width={450}
         height={225}
         sizes="300px"
         className="w-full"
       />
+
+      {/* 이름표 그림은 비어 있고 이름은 화면 언어로 얹는다. 자리·크기는 그림(450×225)의 이름표 중심과 원래 글자 크기를 그림 폭 비율로 옮긴 값 */}
+      <span
+        className="absolute top-[16.4%] left-[27.9%] -translate-x-1/2 -translate-y-1/2 leading-none font-extrabold whitespace-nowrap text-primary-foreground"
+        style={{ fontSize: BUBBLE_AT.width * lampWidth * 0.051 }}
+      >
+        {t('nameLabel')}
+      </span>
 
       {/* 자리는 시안 텍스트 박스(본문 240x90 안에서 x56 y24)를 이 그림 크기로 환산한 값.
         글자도 램프 폭에 비례한다 — 고정 px면 작은 폰에서 말풍선을 뚫고 나온다 (기준 20px/램프 226px) */}

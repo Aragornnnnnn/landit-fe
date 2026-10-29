@@ -10,6 +10,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
+import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { LampStage } from './LampStage';
 
@@ -184,5 +185,21 @@ describe('LampStage 자동 소환 판정 알림', () => {
     );
 
     expect(onAutoSummonDecided).not.toHaveBeenCalled();
+  });
+});
+
+describe('LampStage 말풍선', () => {
+  it('말풍선 이름표에 래디 이름을 글자로 얹는다 — 그림에는 이름이 없다', async () => {
+    render(<LampStage onStart={vi.fn()} today="2026-08-07" />);
+
+    expect(await screen.findByText('래디')).toBeTruthy();
+  });
+
+  it('일본어 화면이면 이름표도 일본어로 적는다', async () => {
+    setTestLocale('ja');
+
+    render(<LampStage onStart={vi.fn()} today="2026-08-07" />);
+
+    expect(await screen.findByText('ラディ')).toBeTruthy();
   });
 });

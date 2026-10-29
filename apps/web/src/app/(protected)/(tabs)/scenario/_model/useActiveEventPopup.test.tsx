@@ -12,6 +12,7 @@ import {
   getMySubscription,
   type MySubscription,
 } from '@/features/subscription/api/subscription';
+import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { useActiveEventPopup } from './useActiveEventPopup';
 
@@ -146,6 +147,17 @@ describe('useActiveEventPopup', () => {
     getActivePopupMock.mockResolvedValue(POPUP);
 
     const { result } = renderWithCache(null, { skip: true });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(result.current).toEqual({ popup: null, loading: false });
+    expect(getActivePopupMock).not.toHaveBeenCalled();
+  });
+
+  it('일본어 화면이면 공지를 묻지도 기다리지도 않는다', async () => {
+    setTestLocale('ja');
+    getActivePopupMock.mockResolvedValue(POPUP);
+
+    const { result } = renderWithCache(null);
 
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(result.current).toEqual({ popup: null, loading: false });

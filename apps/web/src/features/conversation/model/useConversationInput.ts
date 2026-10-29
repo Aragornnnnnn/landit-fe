@@ -168,7 +168,7 @@ export const useConversationInput = ({
       // 한도에 닿으면 대신 멈춰 확인으로 넘긴다 — 더 말해도 보낼 수 없다. 멈추는 사이에 또 와도 한 번만
       if (text.length < ANSWER_MAX_LENGTH || limitStoppedRef.current) return;
       limitStoppedRef.current = true;
-      showToast('답변이 길어서 여기까지 받았어요');
+      showToast(t('limitReachedToast'));
       finishListening();
     },
     onFinal: submitVoice,

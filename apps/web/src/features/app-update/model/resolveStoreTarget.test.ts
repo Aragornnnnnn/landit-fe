@@ -14,7 +14,7 @@ describe('resolveStoreTarget', () => {
 
   it('iOS면 itms-apps 스킴으로 앱스토어 앱을 연다', () => {
     expect(resolveStoreTarget('ios')).toEqual({
-      url: 'itms-apps://apps.apple.com/kr/app/id6787414201',
+      url: 'itms-apps://apps.apple.com/app/id6787414201',
       store: 'app_store',
     });
   });

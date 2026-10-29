@@ -6,6 +6,7 @@ import {
   acceptLanguageOf,
   hasSupportedLanguage,
   localeFromAcceptLanguage,
+  localeFromBrowser,
   localeFromDocument,
   resolveRequestLocale,
   sellsKoreaOnlyOffers,
@@ -112,6 +113,20 @@ describe('localeFromAcceptLanguage', () => {
 
   it('헤더가 없으면 한국어로 둔다', () => {
     expect(localeFromAcceptLanguage(null)).toBe('ko');
+  });
+});
+
+describe('localeFromBrowser', () => {
+  it('서버 렌더 없이도 저장 언어 쿠키를 먼저 따른다', () => {
+    expect(localeFromBrowser('a=1; landit-locale=ja', ['ko-KR'])).toBe('ja');
+  });
+
+  it('쿠키가 없으면 기기 언어 목록에서 고른다', () => {
+    expect(localeFromBrowser('a=1', ['en-US', 'ja-JP'])).toBe('ja');
+  });
+
+  it('둘 다 없으면 한국어로 둔다', () => {
+    expect(localeFromBrowser('', [])).toBe('ko');
   });
 });
 

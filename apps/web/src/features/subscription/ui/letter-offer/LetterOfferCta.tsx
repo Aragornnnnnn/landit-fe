@@ -1,10 +1,12 @@
 'use client';
 
-// 편지 본문 아래 혜택가 버튼 — 지정한 편지에서, 혜택가를 팔 수 있는 무료 사용자에게만 그리고 누르면 시트를 연다.
+// 편지 본문 아래 혜택가 버튼 — 지정한 편지에서, 혜택가를 팔 수 있는 무료 사용자에게만 그리고 누르면 시트를 연다. 원화 한국 판매가라 한국어 화면에서만 그린다.
 // 어느 편지인지도 여기서 판단해 편지함 쪽엔 이 컴포넌트 한 줄만 남긴다
 import { useState } from 'react';
+import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
+import { sellsKoreaOnlyOffers } from '@/shared/i18n/locale';
 import { homePath } from '@/shared/lib/last-tab';
 import { premiumOnboardingPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
@@ -20,7 +22,8 @@ import { useOffering } from '../../model/product/useOffering';
 import { LetterOfferSheet } from './LetterOfferSheet';
 
 export const LetterOfferCta = ({ letterId }: { letterId: number }) => {
-  const target = isOfferLetter(letterId);
+  const locale = useLocale();
+  const target = isOfferLetter(letterId) && sellsKoreaOnlyOffers(locale);
   // 다른 편지에서는 셸 왕복도 구독 조회도 걸지 않는다
   const offer = buildLetterOffer(useOffering({ enabled: target }));
   const { subscription } = useSubscriptionQuery({ enabled: target });
