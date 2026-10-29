@@ -1,4 +1,5 @@
 // 서버 알람 설정과 이 폰에 걸린 매일 알람을 견준다 — 내 정보의 개발자 묶음과 알람 점검 화면이 같이 쓴다
+// 개발자 묶음에서만 보이는 글이라 한국어 화면에만 있어 옮기지 않는다
 import type { AlarmStatus } from '@landit/bridge';
 
 import type { UserAlarmResponse } from '@/features/alarm/api/alarm';
@@ -20,11 +21,11 @@ export const compareWithServer = (
     (alarm) => alarm.alarmType === ALARM_TYPE,
   );
   const phoneTime = scenario?.schedules[0] ?? null;
-  const phone = phoneTime ? `매일 ${formatClock(phoneTime)}` : '없음';
+  const phone = phoneTime ? `매일 ${formatClock(phoneTime, 'ko')}` : '없음';
   if (!setting) return { server: '불러오는 중', phone, differs: false };
 
   const serverTime = setting.enabled ? parseAlarmTime(setting.time) : null;
-  const server = serverTime ? `매일 ${formatClock(serverTime)}` : '꺼짐';
+  const server = serverTime ? `매일 ${formatClock(serverTime, 'ko')}` : '꺼짐';
   const sameTime =
     serverTime?.hour === phoneTime?.hour &&
     serverTime?.minute === phoneTime?.minute;

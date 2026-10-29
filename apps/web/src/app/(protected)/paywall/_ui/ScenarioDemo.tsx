@@ -2,6 +2,7 @@
 
 // 오늘의 시나리오 데모 — 화면을 꽉 채운 시나리오 카드 99장 중 한 장이 뽑혀 빛나고, 그 자리에서 커지며 오늘의 시나리오로 놓인 뒤 대화가 시작된다(마르코가 말을 건다)
 import type { CSSProperties } from 'react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import { PartnerCharacter } from '@/features/conversation/ui/character/PartnerCharacter';
@@ -36,6 +37,8 @@ const CHAT = [
 ];
 
 export const ScenarioDemo = ({ step, width }: DemoProps) => {
+  const t = useTranslations('paywall');
+  const pickedTitle = t(`scenarios.${PICKED.titleKey}`);
   const picking = step >= SCENARIO_SCENE.pick;
   const picked = step === SCENARIO_SCENE.picked;
 
@@ -43,7 +46,7 @@ export const ScenarioDemo = ({ step, width }: DemoProps) => {
     <DemoScreen width={width}>
       <DemoSlide shown={step !== SCENARIO_SCENE.talk}>
         <p className="px-6 pt-6 text-22 font-bold text-foreground">
-          오늘의 시나리오
+          {t('scenarioDemo.dailyLabel')}
         </p>
         <div className="relative mt-5 h-[490px] overflow-hidden">
           {/* 카드 더미 — 움직이지 않는다. 뽑히면 나머지가 흐려지고, 뽑힌 한 장이 커지면 다 같이 물러난다 */}
@@ -98,7 +101,7 @@ export const ScenarioDemo = ({ step, width }: DemoProps) => {
             />
             <div className="absolute inset-x-0 bottom-0 bg-[linear-gradient(transparent,rgba(0,0,0,0.7))] px-4 pt-10 pb-4">
               <p className="text-2xl leading-snug font-bold text-white">
-                {PICKED.title}
+                {pickedTitle}
               </p>
             </div>
           </div>
@@ -106,14 +109,14 @@ export const ScenarioDemo = ({ step, width }: DemoProps) => {
         <p
           className={`mx-6 mt-2 rounded-2xl bg-primary py-4 text-center text-lg font-bold text-primary-foreground transition-opacity duration-300 ${picked ? 'opacity-100' : 'opacity-0'}`}
         >
-          대화 시작
+          {t('scenarioDemo.startButton')}
         </p>
       </DemoSlide>
 
       {/* 뽑힌 시나리오 대화 — 마르코가 말을 걸고(입이 움직인다) 내가 답한다 */}
       <DemoSlide shown={step === SCENARIO_SCENE.talk}>
         <p className="px-6 pt-6 text-lg font-bold text-foreground">
-          {PICKED.title}
+          {pickedTitle}
         </p>
         <div className="mx-6 mt-4 flex h-[270px] justify-center overflow-hidden rounded-[28px] bg-[linear-gradient(180deg,#fdf1e8,#f7e4d2)] pt-3">
           <PartnerCharacter

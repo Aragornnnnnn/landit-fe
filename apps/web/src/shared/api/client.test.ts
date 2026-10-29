@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { REFRESH_PATH } from '@/shared/auth/api/refresh';
 import { useAuthStore } from '@/shared/auth/auth-store';
+import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { api } from './client';
 
@@ -112,6 +113,23 @@ describe('앱을 켠 직후 (메모리에 accessToken 없음)', () => {
     expect(refreshCalls).toHaveLength(1);
   });
 
+  it('일본어 화면은 세션 만료 안내를 일본어로 던진다', async () => {
+    setTestLocale('ja');
+    useAuthStore.setState({
+      accessToken: null,
+      refreshToken: 'expired-refresh',
+      member,
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve(new Response(null, { status: 401 }))),
+    );
+
+    await expect(api.get('/api/v1/test')).rejects.toThrow(
+      'セッションが切れました',
+    );
+  });
+
   it('선발급이 실패하면 401에서 재발급을 다시 보내지 않고 세션을 끝낸다', async () => {
     useAuthStore.setState({
       accessToken: null,
@@ -198,5 +216,22 @@ describe('api.getBlob', () => {
       status: 404,
       code: 'NOT_FOUND',
     });
+  });
+});
+
+describe('Accept-Language', () => {
+  afterEach(() => {
+    document.documentElement.lang = '';
+  });
+
+  it('화면 언어(html lang)를 Accept-Language로 실어 보낸다', async () => {
+    document.documentElement.lang = 'ja';
+    const fetchMock = vi.fn().mockResolvedValue(okResponse());
+    vi.stubGlobal('fetch', fetchMock);
+
+    await api.get('/api/v1/test');
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(new Headers(init.headers).get('Accept-Language')).toBe('ja');
   });
 });

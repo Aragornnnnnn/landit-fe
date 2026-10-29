@@ -1,7 +1,9 @@
 // iOS 위젯 동기화 — 아트를 App Group 공유 디렉터리에 복사하고 타임라인을 새로 예약한다
 import type { WidgetData } from '@landit/bridge';
 
+import { shellLocale } from '../../i18n/shell-locale';
 import { reportWarning } from '../../monitoring/report';
+import { artFilePrefixOf } from '../art/widget-art-locale';
 import { buildTimelineEntries } from './props';
 
 let artDirPromise: Promise<string | null> | null = null;
@@ -26,7 +28,7 @@ const copyArtToSharedDirectory = async (): Promise<string | null> => {
   const { widgetsDirectory } = require('expo-widgets') as {
     widgetsDirectory: string | null;
   };
-  const { WIDGET_ART, WIDGET_ART_VERSION } =
+  const { WIDGET_ART, WIDGET_ART_JA, WIDGET_ART_VERSION } =
     require('../art/widget-art') as typeof import('../art/widget-art');
   if (widgetsDirectory === null) return null;
 
@@ -37,7 +39,15 @@ const copyArtToSharedDirectory = async (): Promise<string | null> => {
   const marker = `${dir}art-v${WIDGET_ART_VERSION}`;
   if ((await FileSystem.getInfoAsync(marker)).exists) return dir;
 
-  for (const [key, moduleId] of Object.entries(WIDGET_ART)) {
+  // 두 언어 아트를 같이 복사한다 — 웹 화면 언어가 바뀌어도 다시 복사하지 않고 타임라인 접두어만 바꾼다
+  const files = [
+    ...Object.entries(WIDGET_ART),
+    ...Object.entries(WIDGET_ART_JA).map(
+      ([key, moduleId]) =>
+        [`${artFilePrefixOf('ja')}${key}`, moduleId] as const,
+    ),
+  ];
+  for (const [key, moduleId] of files) {
     // dev에서는 에셋이 디스크가 아닌 Metro 서버에 있다 — downloadAsync가 두 모드 모두 로컬 파일 경로를 보장한다
     const asset = Asset.fromModule(moduleId);
     await asset.downloadAsync();
@@ -60,7 +70,12 @@ export const syncIosWidget = async (data: WidgetData): Promise<void> => {
     ).default;
     const artDir = await ensureWidgetArt();
     streakWidget.updateTimeline(
-      buildTimelineEntries({ data, now: new Date(), artDir }),
+      buildTimelineEntries({
+        locale: shellLocale(),
+        data,
+        now: new Date(),
+        artDir,
+      }),
     );
   } catch (error) {
     console.warn('[widget] iOS 타임라인 동기화 실패', error);

@@ -1,7 +1,11 @@
 // 로그인 화면 본체 — /login과 소셜 로그인 콜백이 같은 화면을 그린다. 콜백은 돌아온 자리에서 버튼 로딩 상태로 이어받는다
+import { useTranslations } from 'next-intl';
+
+import { lineBreak } from '@/shared/i18n/rich';
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
 import type { SocialProvider } from '../_model/useSocialLogin';
+import { LanguagePicker } from './LanguagePicker';
 import styles from './login-motion.module.css';
 import { SocialLoginButtons } from './SocialLoginButtons';
 
@@ -25,29 +29,32 @@ export const LoginScreen = ({
   pending?: SocialProvider | null;
   error?: string | null;
   children?: React.ReactNode;
-}) => (
-  <main className="relative mx-auto h-dvh max-w-[430px] overflow-x-hidden overflow-y-auto bg-background">
-    <script dangerouslySetInnerHTML={{ __html: splashSkip }} />
-    {children}
+}) => {
+  const t = useTranslations('auth.loginScreen');
+  return (
+    <main className="relative mx-auto h-dvh max-w-[430px] overflow-x-hidden overflow-y-auto bg-background">
+      <script dangerouslySetInnerHTML={{ __html: splashSkip }} />
+      {children}
+      {/* 웹 로그인 콜백에서 토큰을 교환하는 동안엔 숨긴다 — 가입 헤더는 이미 그 언어로 나갔다 */}
+      {!pending && <LanguagePicker />}
 
-    <div className={styles.logoWrap}>
-      <LanditLogo className={`${styles.logo} h-12 text-foreground`} />
-    </div>
+      <div className={styles.logoWrap}>
+        <LanditLogo className={`${styles.logo} h-12 text-foreground`} />
+      </div>
 
-    <div
-      className={`${styles.content} flex flex-col px-6 pt-[calc(var(--safe-area-inset-top)+258px)] pb-[max(var(--safe-area-inset-bottom),24px)]`}
-    >
-      <p
-        className={`${styles.tagline} text-center text-17 leading-relaxed font-semibold text-muted-foreground`}
+      <div
+        className={`${styles.content} flex flex-col px-6 pt-[calc(var(--safe-area-inset-top)+258px)] pb-[max(var(--safe-area-inset-bottom),24px)]`}
       >
-        방금 그 영어, 진짜 통했을까?
-        <br />
-        외국인 속마음을 들려드려요
-      </p>
+        <p
+          className={`${styles.tagline} text-center text-17 leading-relaxed font-semibold text-muted-foreground`}
+        >
+          {t.rich('title', lineBreak)}
+        </p>
 
-      <div className="flex-1" />
+        <div className="flex-1" />
 
-      <SocialLoginButtons pending={pending} error={error} />
-    </div>
-  </main>
-);
+        <SocialLoginButtons pending={pending} error={error} />
+      </div>
+    </main>
+  );
+};

@@ -1,0 +1,182 @@
+{
+  "benefits": {
+    "dailyScenarioLabel": "毎日新しいシナリオ",
+    "detailFeedbackLabel": "詳しいフィードバック",
+    "phraseLabel": "レベル別のフレーズ",
+    "pronunciationLabel": "ネイティブ並みの発音",
+    "smallTalkLabel": "スモールトーク無制限",
+    "accentLabel": "米・英・豪の英語"
+  },
+  "benefitComparison": {
+    "freeLabel": "無料",
+    "freeIncludedLabel": "無料で利用可",
+    "freeExcludedLabel": "無料では利用不可",
+    "premiumIncludedLabel": "プレミアムで利用可"
+  },
+  "purchase": {
+    "currencyMismatchToast": "ただいま購入できません。しばらくしてからもう一度お試しください",
+    "passUnavailableToast": "利用中または確認中のパスがあるため、今は購入できません",
+    "passCheckFailedToast": "購入できるか確認できませんでした。しばらくしてからもう一度お試しください",
+    "browserToast": "購入はLanditアプリからできます",
+    "outdatedShellToast": "アプリを最新バージョンにアップデートすると購入できます",
+    "noResponseToast": "購入の応答がありません。しばらくしてからもう一度お試しください",
+    "failedToast": "購入できませんでした。しばらくしてからもう一度お試しください",
+    "pendingToast": "購入を確認しています。しばらくしてからもう一度開いてください",
+    "restoreFailedToast": "購入を復元できませんでした。しばらくしてからもう一度お試しください",
+    "restoreEmptyToast": "復元できる購入履歴がありません"
+  },
+  "premiumHeaderEntry": {
+    "homeLabel": "ホームへ",
+    "discountLabel": "割引",
+    "startLabel": "始める"
+  },
+  "premiumWelcome": {
+    "namedTitle": "ようこそ、{nickname}さん！<br></br>思いきり楽しみましょう",
+    "title": "ようこそ！<br></br>思いきり楽しみましょう",
+    "nextButton": "次へ"
+  },
+  "plans": {
+    "monthlyLabel": "月間",
+    "yearlyLabel": "年間",
+    "quarterlyLabel": "3か月",
+    "halfyearLabel": "6か月",
+    "passLabel": "100日パス"
+  },
+  "subscriptionEvents": {
+    "trialStartLabel": "無料体験開始",
+    "firstPurchaseLabel": "初回購入",
+    "refundLabel": "返金",
+    "cancelLabel": "解約予約",
+    "renewalLabel": "自動更新",
+    "uncancelLabel": "解約の取り消し",
+    "expirationLabel": "期限切れ",
+    "billingIssueLabel": "支払いエラー",
+    "productChangeLabel": "プラン変更",
+    "grantLabel": "無料利用開始",
+    "transferLabel": "サブスクリプションの移行",
+    "otherLabel": "サブスクリプションの状態変更",
+    "planLabel": "{plan}プラン"
+  },
+  "subscriptionHistory": {
+    "title": "購入履歴",
+    "loadError": "購入履歴を読み込めませんでした",
+    "emptyBody": "まだ購入履歴がありません",
+    "sandboxBadge": "テスト"
+  },
+  "subscriptionCard": {
+    "trialTitle": "無料体験中です",
+    "activeTitle": "プレミアムを利用中です",
+    "planActiveTitle": "{plan}プレミアムを利用中です",
+    "canceledTitle": "解約を予約しました",
+    "passTitle": "100日パスを利用中です",
+    "firstChargeLabel": "初回の請求日",
+    "nextChargeLabel": "次回の請求日",
+    "expiryLabel": "利用期限",
+    "autoRenewOffLabel": "{date}・自動更新オフ",
+    "firstAmountLabel": "初回の請求額",
+    "nextAmountLabel": "次回の請求額"
+  },
+  "subscriptionManage": {
+    "title": "サブスクリプション",
+    "passTitle": "パスの管理",
+    "benefitsTitle": "利用中の特典",
+    "historyLink": "購入履歴",
+    "passSectionTitle": "パス",
+    "subscriptionSectionTitle": "サブスクリプション",
+    "cancelSubscriptionLink": "サブスクリプションを解約する",
+    "cancelTrialLink": "無料体験を解約する",
+    "resubscribeLink": "解約を取り消す",
+    "listPriceLabel": "通常価格",
+    "noSubscriptionLink": "未登録です・プレミアムに登録する"
+  },
+  "cancelFlow": {
+    "title": "解約手続き",
+    "leaveLink": "それでも解約する",
+    "guestLabel": "ゲスト",
+    "levelLabel": "{level} Lv.{number}",
+    "quoteBody": "「{text}」"
+  },
+  "reasonStep": {
+    "title": "解約する前に<br></br>理由を教えてください",
+    "otherLabel": "理由を書いてください（必須）",
+    "otherPlaceholder": "例：発音の判定が厳しすぎる気がします",
+    "nextButton": "次へ",
+    "stayButton": "引き続き使います"
+  },
+  "methodStep": {
+    "title": "どんな方法で<br></br>勉強する予定ですか？",
+    "nextButton": "次へ"
+  },
+  "cancelReasons": {
+    "priceLabel": "料金が負担です",
+    "timeLabel": "使う時間がありません",
+    "progressLabel": "上達している気がしません",
+    "contentLabel": "ほしいコンテンツが足りません",
+    "bugLabel": "使いにくい・不具合があります",
+    "otherMethodLabel": "ほかの方法で勉強します",
+    "otherLabel": "その他"
+  },
+  "studyMethods": {
+    "academyLabel": "英会話教室・家庭教師",
+    "otherAppLabel": "ほかのアプリ",
+    "youtubeLabel": "YouTube・独学",
+    "abroadLabel": "語学留学・海外"
+  },
+  "retention": {
+    "stayButton": "もう少し使ってみます",
+    "priceTitle": "料金が負担だったんですね",
+    "priceUnknownBody": "もう少し使ってから決めても遅くありません。",
+    "dailyPriceLabel": "1日{price}",
+    "monthlyDailyBody": "今の料金は{daily}です。",
+    "planDailyBody": "{plan}の料金は{daily}です。",
+    "gumTreatBody": "毎日ガム1個分の料金で英会話を練習しています。",
+    "twoCandiesTreatBody": "毎日アメ2個分の料金で英会話を練習しています。",
+    "candyTreatBody": "毎日アメ1個分の料金で英会話を練習しています。",
+    "currentPlanLabel": "現在・{plan}",
+    "quarterlyPriceLabel": "3か月{price}",
+    "halfyearPriceLabel": "6か月{price}",
+    "yearlyPriceLabel": "年額{price}",
+    "passPriceLabel": "100日{price}",
+    "progressTitle": "上達していないと感じたんですね",
+    "progressBody": "会話ごとに{nickname}さんのレベルに合わせています。",
+    "progressTogetherBody": "ここまで一緒に続けてきました。",
+    "activeDaysValueLabel": "{days}日",
+    "activeDaysLabel": "学習した日",
+    "levelStatLabel": "学習レベル",
+    "timeTitle": "時間がなかったんですね",
+    "timeMinutesBody": "1日{minutes}分あれば",
+    "timeCoverBody": "会話からフレーズ学習までできます。",
+    "timeReminderBody": "忘れないよう通知もお送りします。",
+    "averageTimeLabel": "会話からフレーズ学習までの平均時間",
+    "minutesValueLabel": "{minutes}分",
+    "reminderLabel": "毎日の学習通知",
+    "reminderTimeLabel": "毎日21:00",
+    "contentTitle": "ほしい場面がなかったんですね",
+    "readAndReplyBody": "すべて読んで必ず返信します。",
+    "contentScenarioBody": "作れるものはすぐシナリオにします。",
+    "mailboxLabel": "メールボックス",
+    "contentMailboxLabel": "必ず読んで返信します",
+    "contentButton": "ほしい場面を伝える",
+    "bugTitle": "ご不便をおかけしました",
+    "bugFixBody": "不具合は分かりしだいすぐ直しています。",
+    "bugMailboxLabel": "直したらお知らせします",
+    "bugButton": "困ったことを伝える",
+    "otherTitle": "ご意見ありがとうございます",
+    "otherReadBody": "いただいた内容はすべて読んで必ず返信します。",
+    "otherReplyBody": "返信はメールボックスに届きます。",
+    "otherQuoteLabel": "いただいた内容",
+    "otherButton": "メールボックスで返信を受け取る"
+  },
+  "methodRetention": {
+    "academyTitle": "授業の復習は声に出して",
+    "academyBody": "授業で習ったフレーズをLanditで話してみましょう。",
+    "otherAppTitle": "覚えたフレーズを話してみましょう",
+    "otherAppBody": "ほかで覚えたフレーズもここで話してみましょう。",
+    "youtubeTitle": "見たフレーズを話す番です",
+    "youtubeBody": "動画で見たフレーズを声に出してみましょう。",
+    "abroadTitle": "出発前に話す練習を",
+    "abroadBody": "出発前にここで話す練習をしておきましょう。",
+    "spokenStaysBody": "口に出したフレーズは長く残ります。",
+    "abroadStaysBody": "帰ってきてからもずっと続きます。"
+  }
+}

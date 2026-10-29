@@ -4,7 +4,7 @@
 import { useRouter } from 'next/navigation';
 
 import { buildRewardPlan } from '@/app/(protected)/paywall/_model/paywall-content';
-import { RewardPaywall } from '@/app/(protected)/paywall/_ui/RewardPaywall';
+import { StepPaywall } from '@/app/(protected)/paywall/_ui/StepPaywall';
 import { useIsAdmin } from '@/shared/auth/current-member';
 import { backToMyPage } from '@/shared/lib/routes';
 import { BackHeader } from '@/shared/ui/BackHeader';
@@ -28,8 +28,8 @@ export const RewardPaywallCheckScreen = () => {
   }
 
   return (
-    <RewardPaywall
-      plan={buildRewardPlan()}
+    <StepPaywall
+      offer={{ kind: 'pass', plan: buildRewardPlan() }}
       busy={false}
       onClose={() => backToMyPage(router)}
       onRestore={() => {}}

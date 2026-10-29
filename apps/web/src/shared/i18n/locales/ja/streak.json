@@ -1,0 +1,47 @@
+{
+  "streakFlow": {
+    "title": "連続記録"
+  },
+  "headerStreak": {
+    "pendingLabel": "連続記録を見る",
+    "openLabel": "{days}日連続、連続記録を見る"
+  },
+  "hero": {
+    "emptyTitle": "まだ実がありません",
+    "emptyDescription": "今日の会話で実を集めましょう",
+    "daysTitle": "{days}日連続",
+    "restartDescription": "今日会話すればまた1日目です",
+    "weekMilestoneDescription": "1週間やり切りました！",
+    "monthMilestoneDescription": "1か月やり切りました！",
+    "hundredMilestoneDescription": "100日続いています",
+    "tomorrowDescription": "明日も続ければ{days}日になります",
+    "todayDescription": "今日の会話を終えると{days}日になります"
+  },
+  "celebration": {
+    "weekReachedDescription": "1週間連続！この調子ならネイティブ並みも時間の問題です",
+    "monthReachedDescription": "1か月達成！コツコツ続ける姿が素敵です",
+    "hundredReachedDescription": "100日間1日も休みませんでした！本当に素敵です",
+    "weekLeftDescription": "1週間連続まであと{days}日です",
+    "continuingDescription": "{days}日続いています",
+    "recordBreakingDescription": "最高記録を更新中です",
+    "recordLeftDescription": "最高記録まであと{days}日です",
+    "filledEarlierTitle": "今日の実はもう付きました",
+    "filledEarlierDescription": "今日の実はもう付きました",
+    "firstTitle": "初めての実です！",
+    "stampedTitle": "今日の実が付きました",
+    "firstWeekDescription": "明日も続けて1週間にしましょう",
+    "daysTitle": "{days}日連続"
+  },
+  "streakStats": {
+    "recordDescription": "最長<strong>{longest}日</strong>続けて、これまで<strong>{total}日</strong>学習しました"
+  },
+  "streakCalendar": {
+    "previousLabel": "前の月",
+    "nextLabel": "次の月"
+  },
+  "streakDay": {
+    "doneLabel": "{date}、学習済み",
+    "todayLabel": "{date}、今日、未学習",
+    "missedLabel": "{date}、学習なし"
+  }
+}

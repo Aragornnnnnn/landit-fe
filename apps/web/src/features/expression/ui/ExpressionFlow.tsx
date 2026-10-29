@@ -3,6 +3,7 @@
 // 표현학습 플로우 — 단어 선택 퀴즈(D안 ①') → 표현 설명(D안 ④) → [발음 자산 있으면: 발음 평가] → 추가 예문 → 복습 영작 2문제(D안 ⑤) → 완료 처리 후 리스트로.
 import { useEffect, useState } from 'react';
 import { EVENTS, type ExpressionStep } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
 
@@ -78,6 +79,7 @@ export const ExpressionFlow = ({
   expressionId,
   onFinished,
 }: ExpressionFlowProps) => {
+  const t = useTranslations('expression.flow');
   const router = useRouter();
   // 플로우 전체(퀴즈·설명·복습)는 대표 예문(learning-start)만으로 굴러간다.
   // 추가 예문(practice)은 설명 스텝의 "이렇게도 써요"에만 쓰는 보강 데이터라, 없거나 실패해도 플로우를 막지 않는다.
@@ -110,11 +112,9 @@ export const ExpressionFlow = ({
   // 알림으로 들어온 남의 표현·없는 표현은 뒤로 갈 히스토리도 없다 — 목록으로 돌아갈 길을 준다
   return (
     <FlowStatus>
-      <p role="alert">
-        {learningError?.message ?? '표현을 불러오지 못했어요.'}
-      </p>
+      <p role="alert">{learningError?.message ?? t('loadError')}</p>
       <Button onClick={() => router.replace(listPathOf(origin))}>
-        돌아갈게요
+        {t('backButton')}
       </Button>
     </FlowStatus>
   );
@@ -137,6 +137,7 @@ const LoadedExpressionFlow = ({
   practiceLoading,
   onFinished,
 }: LoadedExpressionFlowProps) => {
+  const t = useTranslations('expression.flow');
   const router = useRouter();
   // 계측에 싣는 출처 — 시나리오면 시나리오 id, 스몰톡이면 세션 id
   const originProps =
@@ -357,7 +358,7 @@ const LoadedExpressionFlow = ({
           onBack={openExitSheet}
           // "다음"은 발음 결과가 있으면 그 화면으로 복귀, 발음을 안 거치는 경우엔 예문으로
           onNext={() => setStep(bypassPronunciation ? 'EXAMPLES' : 'PRONOUNCE')}
-          nextLabel={speakNext ? undefined : '다음'}
+          nextLabel={speakNext ? undefined : t('nextButton')}
           // 마이크를 쓸 수 없는 상황(장소 등)을 위한 발음 건너뛰기 — 기획 확정 동선
           onSkip={
             speakNext

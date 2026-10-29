@@ -1,0 +1,18 @@
+{
+  "documentPage": {
+    "backLabel": "돌아가기",
+    "effectiveDateLabel": "시행일",
+    "versionLabel": "문서 버전"
+  },
+  "businessInfo": {
+    "toggleButton": "사업자 정보",
+    "nameLabel": "상호",
+    "representativeLabel": "대표자",
+    "registrationNumberLabel": "사업자등록번호",
+    "mailOrderNumberLabel": "통신판매업 신고번호",
+    "addressLabel": "주소",
+    "phoneLabel": "전화번호",
+    "emailLabel": "이메일",
+    "hostingLabel": "호스팅 서비스"
+  }
+}

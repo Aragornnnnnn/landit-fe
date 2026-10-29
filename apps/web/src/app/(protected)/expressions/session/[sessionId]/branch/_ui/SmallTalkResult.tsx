@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -17,6 +18,7 @@ import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTa
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
+import { lineBreak } from '@/shared/i18n/rich';
 import {
   sessionExpressionBranchPath,
   sessionExpressionPath,
@@ -39,6 +41,8 @@ export const SmallTalkResult = ({
   sessionId,
   celebrating: celebrateOnArrival,
 }: SmallTalkResultProps) => {
+  const t = useTranslations('expression.smallTalkResult');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const gate = usePaywallGate();
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
@@ -107,7 +111,7 @@ export const SmallTalkResult = ({
         <button
           onClick={close}
           className="flex size-10 items-center justify-center text-muted-foreground"
-          aria-label="닫기"
+          aria-label={tCommon('closeLabel')}
         >
           <CloseIcon size={22} />
         </button>
@@ -121,17 +125,15 @@ export const SmallTalkResult = ({
             // 조회가 막히면 만드는 중 화면에 갇힌다 — 표현이 없는 이유를 말하고 내보낸다
             <ClosingStage
               key="error"
-              title={'표현을 불러오지 못했어요'}
-              description={'잠시 후 기록에서 다시 열어볼 수 있어요.'}
+              title={t('errorTitle')}
+              description={t('errorDescription')}
               onClose={goHome}
             />
           ) : generationStuck || nothingToLearn ? (
             <ClosingStage
               key="stuck"
-              title={'표현은 조금 뒤에\n만들어 둘게요'}
-              description={
-                '지금은 만들기가 오래 걸리고 있어요.\n다 되면 기록에서 볼 수 있어요.'
-              }
+              title={t.rich('pendingTitle', lineBreak)}
+              description={t.rich('pendingDescription', lineBreak)}
               onClose={goHome}
             />
           ) : !expressions ? (
@@ -140,7 +142,7 @@ export const SmallTalkResult = ({
             <RevealStage
               key="reveal"
               count={expressions.length}
-              name={nickname ?? '회원'}
+              nickname={nickname}
               expressions={expressions}
               onSelect={goLearn}
               onLearn={() => goLearn(expressions[0].expressionId)}
@@ -158,19 +160,22 @@ const ClosingStage = ({
   description,
   onClose,
 }: {
-  title: string;
-  description: string;
+  title: React.ReactNode;
+  description: React.ReactNode;
   onClose: () => void;
-}) => (
-  <div className="flex min-h-0 flex-1 flex-col">
-    <h1 className="pt-1 text-3xl leading-[1.22] font-black whitespace-pre-line text-foreground">
-      {title}
-    </h1>
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
-      <p className="text-center text-sm leading-6 break-keep whitespace-pre-line text-muted-foreground">
-        {description}
-      </p>
+}) => {
+  const t = useTranslations('expression.smallTalkResult');
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <h1 className="pt-1 text-3xl leading-[1.22] font-black whitespace-pre-line text-foreground">
+        {title}
+      </h1>
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
+        <p className="text-center text-sm leading-6 break-keep whitespace-pre-line text-muted-foreground">
+          {description}
+        </p>
+      </div>
+      <Button onClick={onClose}>{t('backButton')}</Button>
     </div>
-    <Button onClick={onClose}>돌아가기</Button>
-  </div>
-);
+  );
+};

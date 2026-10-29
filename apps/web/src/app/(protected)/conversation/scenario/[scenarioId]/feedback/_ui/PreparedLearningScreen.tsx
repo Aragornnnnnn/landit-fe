@@ -6,6 +6,7 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import type { Partner } from '@/features/conversation/model/character-look';
@@ -31,13 +32,14 @@ interface PreparedLearningViewProps {
   onContinue: () => void;
 }
 
-// 흐린 자리에 넣는 글 — 실제 표현은 보여주지 않는다. 길이와 리듬만 카드처럼 보이면 된다. 개수가 더 많으면 돌려 쓴다
+// 흐린 자리에 넣는 글 — 실제 표현은 보여주지 않는다. 길이와 리듬만 카드처럼 보이면 된다. 개수가 더 많으면 돌려 쓴다.
+// 뜻은 화면 언어 문구(conversation.preparedLearningScreen)에서 읽는다
 const PLACEHOLDER_ROWS = [
-  ['커피 한잔 하러 갈래?', 'grab a coffee'],
-  ['나도 완전 콜이야', "I'm down for it"],
-  ['잠깐 들를게', 'stop by'],
-  ['내가 늘 찾는 메뉴야', 'my go-to'],
-];
+  ['coffeeMeaningLabel', 'grab a coffee'],
+  ['agreeMeaningLabel', "I'm down for it"],
+  ['dropByMeaningLabel', 'stop by'],
+  ['goToMeaningLabel', 'my go-to'],
+] as const;
 // 목록이 아직 안 왔을 때 쓰는 개수 — 흐름 첫 화면에서 미리 받아 두므로 거의 안 쓰인다
 const FALLBACK_COUNT = PLACEHOLDER_ROWS.length;
 const SLIDE_IMAGE_SIZE = 150;
@@ -48,10 +50,19 @@ const toPlaceholderRows = (count: number) =>
     (_, index) => PLACEHOLDER_ROWS[index % PLACEHOLDER_ROWS.length],
   );
 
-// 말풍선은 한 장면(SLIDE_MS)만 떠 있다 — 한 줄로 끝나는 짧은 문장에, 핵심 단어 하나만 색으로 띄운다
+// 말풍선은 한 장면(SLIDE_MS)만 떠 있다 — 한 줄로 끝나는 짧은 문장에, 핵심 단어 하나만 문구 안 <emphasis>로 띄운다
+type CaptionKey =
+  | 'levelCaption'
+  | 'namedLevelCaption'
+  | 'pickedCaption'
+  | 'practiceCaption'
+  | 'pronunciationCaption'
+  | 'reviewCaption'
+  | 'freeTalkCaption';
+
 interface Caption {
-  text: string;
-  highlight: string;
+  key: CaptionKey;
+  values?: { nickname?: string; count?: number };
 }
 
 // 프리톡 장면의 얼굴은 여기 없다 — 바퀴마다 PARTNER_ROTATION에서 고른다
@@ -65,65 +76,39 @@ const toSlides = (nickname: string | null, count: number): Slide[] => [
   {
     kind: 'landy',
     image: '/images/character/landy-point.webp',
-    caption: {
-      text: nickname
-        ? `${nickname}님 레벨에 딱 맞춰 드려요`
-        : '내 레벨에 딱 맞춰 드려요',
-      highlight: '레벨',
-    },
+    caption: nickname
+      ? { key: 'namedLevelCaption', values: { nickname } }
+      : { key: 'levelCaption' },
   },
   {
     kind: 'landy',
     // 학습지를 들고 내미는 래디 — 2026-09-08 받은 전용 이미지
     image: '/images/character/landy-worksheet.webp',
-    caption: {
-      text: `방금 대화에서 바로 뽑은 표현 ${count}개예요`,
-      highlight: `표현 ${count}개`,
-    },
+    caption: { key: 'pickedCaption', values: { count } },
   },
   {
     kind: 'landy',
     // 이미지·말풍선·퀴즈 카드를 떠올리는 래디 — 2026-09-11 받은 전용 이미지
     image: '/images/character/landy-learn-expression.webp',
-    caption: {
-      text: '이미지·예문·퀴즈로 익혀요',
-      highlight: '이미지·예문·퀴즈',
-    },
+    caption: { key: 'practiceCaption' },
   },
   {
     kind: 'landy',
     image: '/images/character/landy-loading-01-listening.webp',
-    caption: {
-      text: '발음 평가로 원어민에 가까워져요',
-      highlight: '발음 평가',
-    },
+    caption: { key: 'pronunciationCaption' },
   },
   {
     kind: 'landy',
     image: '/images/character/landy-perfect.webp',
-    caption: {
-      text: '복습 퀴즈로 완전히 체화해요',
-      highlight: '복습 퀴즈',
-    },
+    caption: { key: 'reviewCaption' },
   },
-  {
-    kind: 'partner',
-    caption: { text: '무제한 프리톡에서 활용해요', highlight: '무제한 프리톡' },
-  },
+  { kind: 'partner', caption: { key: 'freeTalkCaption' } },
 ];
 
-// 강조 단어를 앞뒤 글과 나눠 색을 입힌다
-const renderCaption = ({ text, highlight }: Caption) => {
-  const at = text.indexOf(highlight);
-  if (at < 0) return text;
-  return (
-    <>
-      {text.slice(0, at)}
-      <span className="text-primary">{highlight}</span>
-      {text.slice(at + highlight.length)}
-    </>
-  );
-};
+// 강조 단어에 색을 입힌다 — 언어마다 강조할 낱말의 자리가 달라 문구가 <emphasis>로 가리킨다
+const emphasis = (chunks: React.ReactNode) => (
+  <span className="text-primary">{chunks}</span>
+);
 
 /** 장면에 쓰는 래디 그림 — 분석 중 화면이 미리 받아 두어 장면이 넘어갈 때 비지 않는다 */
 export const SLIDE_IMAGES = toSlides(null, 0).flatMap((slide) =>
@@ -142,6 +127,7 @@ export const PreparedLearningView = ({
   count,
   onContinue,
 }: PreparedLearningViewProps) => {
+  const t = useTranslations('conversation.preparedLearningScreen');
   const reduced = useReducedMotion() ?? false;
   const slides = toSlides(nickname, count);
   // 몇 번째 장면인지 누적으로 센다 — 바퀴 수로 프리톡 얼굴을 고른다
@@ -183,11 +169,14 @@ export const PreparedLearningView = ({
     >
       {/* 줄은 강제로 끊지 않는다 — 22px에서 첫 문장이 한 줄에 안 들어가 "있도록"만 남는 줄이 생겼다 */}
       <h1 className="text-22 leading-[1.35] font-black break-keep">
-        방금 대화를 더 원어민처럼 하도록 맞춤형 학습{' '}
-        <span className="text-[30px] leading-none font-black text-primary">
-          {count}개
-        </span>
-        를 준비했어요
+        {t.rich('title', {
+          count,
+          emphasis: (chunks) => (
+            <span className="text-[30px] leading-none font-black text-primary">
+              {chunks}
+            </span>
+          ),
+        })}
       </h1>
 
       {/* 흐린 학습지 위에서 장면이 바뀐다 — 말풍선과 얼굴이 함께 넘어가고, 자물쇠 줄은 고정 */}
@@ -198,7 +187,7 @@ export const PreparedLearningView = ({
           className="flex flex-col gap-2.5 blur-[5px] select-none"
           aria-hidden="true"
         >
-          {toPlaceholderRows(count).map(([meaning, expression], index) => (
+          {toPlaceholderRows(count).map(([meaningKey, expression], index) => (
             <li
               key={index}
               className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5"
@@ -207,7 +196,7 @@ export const PreparedLearningView = ({
                 {index + 1}
               </span>
               <span className="flex flex-col">
-                <span className="text-15 font-bold">{meaning}</span>
+                <span className="text-15 font-bold">{t(meaningKey)}</span>
                 <span className="text-12 text-muted-foreground">
                   {expression}
                 </span>
@@ -215,9 +204,7 @@ export const PreparedLearningView = ({
             </li>
           ))}
         </ul>
-        <p className="sr-only">
-          {`잠긴 학습 ${count}개. 레벨에 맞춰 준비한 학습을 이미지·예문·퀴즈, 발음 평가, 복습 퀴즈, 프리톡으로 이어 가요`}
-        </p>
+        <p className="sr-only">{t('lockedLabel', { count })}</p>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
           <AnimatePresence mode="wait" initial={false}>
@@ -236,7 +223,10 @@ export const PreparedLearningView = ({
                 aria-hidden="true"
                 className="relative rounded-2xl bg-foreground px-5 py-3 text-17 font-bold whitespace-nowrap text-background shadow-lg after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-[6px] after:border-transparent after:border-t-foreground"
               >
-                {renderCaption(slide.caption)}
+                {t.rich(slide.caption.key, {
+                  ...slide.caption.values,
+                  emphasis,
+                })}
               </p>
               <div className="flex h-[150px] items-end justify-center">
                 {slide.kind === 'partner' ? (
@@ -262,7 +252,7 @@ export const PreparedLearningView = ({
 
       <div className="flex-1" />
       <div className="pt-4 pb-[max(var(--safe-area-inset-bottom),24px)]">
-        <Button onClick={proceed}>학습 시작하기</Button>
+        <Button onClick={proceed}>{t('startButton')}</Button>
       </div>
     </main>
   );

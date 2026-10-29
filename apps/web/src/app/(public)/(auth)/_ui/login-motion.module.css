@@ -35,6 +35,11 @@
   z-index: 2;
 }
 
+/* 언어 버튼 — 스플래시(로고 z 5) 아래, 문구 층(z 2) 위. 문구와 함께 스플래시가 걷힌 뒤 나타난다 */
+.picker {
+  z-index: 4;
+}
+
 /* 버튼 스태거 지연 — animation-name이 없는(모션 꺼진) 상태에선 delay만 있어도 무해 */
 .buttons > *:nth-child(1) {
   animation-delay: 2.62s;
@@ -47,7 +52,7 @@
 }
 
 /* 모션 재생 조건 — 재방문(splash-played)도 아니고 reduced-motion도 아닐 때만.
-   대상 6개 선택자를 이 블록 안에 한 번만 나열해, "재방문 스킵"과 "reduced-motion"
+   대상 선택자를 이 블록 안에 한 번만 나열해, "재방문 스킵"과 "reduced-motion"
    두 조건에 각각 따로 목록을 중복하지 않는다 (하나만 갱신하고 잊는 드리프트 방지) */
 @media (prefers-reduced-motion: no-preference) {
   html:not(:global(.splash-played)) {
@@ -63,7 +68,8 @@
     .logoWrap :global(.logo-dot-splash) {
       animation: dotSplashFade 1.4s linear 0.5s both;
     }
-    .tagline {
+    .tagline,
+    .picker {
       animation: fadeUp 0.4s ease-out 2.45s both;
     }
     .buttons > * {

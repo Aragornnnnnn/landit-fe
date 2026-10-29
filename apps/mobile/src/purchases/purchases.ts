@@ -13,6 +13,7 @@ import Purchases, {
   type PurchasesOfferings,
 } from 'react-native-purchases';
 
+import { shellText } from '../i18n/shell-text';
 import { reportError, reportWarning } from '../monitoring/report';
 
 /** 셸이 웹에 회신하는 결과 — 실패(error)일 때만 사용자에게 보여줄 문구가 붙는다 */
@@ -49,8 +50,6 @@ let identifying: Promise<unknown> = Promise.resolve();
 // 메타 광고 식별자를 붙였는지와 그 익명 ID — 로그인으로 사용자가 바뀌면 새 사용자에게 다시 붙인다
 let metaAttached = false;
 let metaAnonymousId: string | null = null;
-
-const NOT_CONFIGURED_MESSAGE = '결제를 사용할 수 없는 빌드예요.';
 
 /**
  * 앱 시작 시 한 번 SDK를 켠다.
@@ -154,32 +153,31 @@ export const fetchOfferingPackages = async (): Promise<OfferingPackage[]> => {
 };
 
 // 사용자가 할 수 있는 일이 다른 오류만 코드로 가른다. 원문은 영문이라 화면에 내지 않고 Sentry 보고에만 남긴다.
-// 웹 토스트는 한 줄·2초라 문구는 20자 안팎, 할 일 하나만 담는다
-const NETWORK_MESSAGE = '네트워크 연결을 확인해 주세요';
-const ERROR_MESSAGES: Partial<Record<PURCHASES_ERROR_CODE, string>> = {
-  [PURCHASES_ERROR_CODE.PRODUCT_ALREADY_PURCHASED_ERROR]:
-    '이미 구독 중이에요. 구매 복원을 눌러 주세요',
-  // Keep with original 설정이라 다른 랜딧 계정이 가진 영수증은 결제·복원 모두 거절된다
-  [PURCHASES_ERROR_CODE.RECEIPT_ALREADY_IN_USE_ERROR]:
-    '구독 중인 다른 계정으로 로그인해 주세요',
-  [PURCHASES_ERROR_CODE.PRODUCT_NOT_AVAILABLE_FOR_PURCHASE_ERROR]:
-    '지금은 살 수 없는 상품이에요',
-  [PURCHASES_ERROR_CODE.PURCHASE_NOT_ALLOWED_ERROR]:
-    '이 기기에서는 결제할 수 없어요',
-  [PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR]:
-    '승인 대기 중이에요. 승인되면 바로 열려요',
-  [PURCHASES_ERROR_CODE.NETWORK_ERROR]: NETWORK_MESSAGE,
-  [PURCHASES_ERROR_CODE.OFFLINE_CONNECTION_ERROR]: NETWORK_MESSAGE,
+// 문구는 셸 언어(웹 화면 언어)로 — 웹이 그대로 토스트에 띄운다
+const errorMessageOf = (code: PURCHASES_ERROR_CODE) => {
+  const { purchase } = shellText();
+  const messages: Partial<Record<PURCHASES_ERROR_CODE, string>> = {
+    [PURCHASES_ERROR_CODE.PRODUCT_ALREADY_PURCHASED_ERROR]:
+      purchase.alreadySubscribed,
+    // Keep with original 설정이라 다른 랜딧 계정이 가진 영수증은 결제·복원 모두 거절된다
+    [PURCHASES_ERROR_CODE.RECEIPT_ALREADY_IN_USE_ERROR]: purchase.otherAccount,
+    [PURCHASES_ERROR_CODE.PRODUCT_NOT_AVAILABLE_FOR_PURCHASE_ERROR]:
+      purchase.notAvailable,
+    [PURCHASES_ERROR_CODE.PURCHASE_NOT_ALLOWED_ERROR]: purchase.notAllowed,
+    [PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR]: purchase.pending,
+    [PURCHASES_ERROR_CODE.NETWORK_ERROR]: purchase.network,
+    [PURCHASES_ERROR_CODE.OFFLINE_CONNECTION_ERROR]: purchase.network,
+  };
+  return messages[code];
 };
-const DEFAULT_ERROR_MESSAGE = '문제가 생겼어요. 잠시 후 다시 시도해 주세요';
 
 // RevenueCat 오류는 Error일 수도, code만 있는 객체일 수도 있다 — 아는 코드면 그 문구, 아니면 공통 문구
 const toErrorMessage = (error: unknown) => {
   const code = (error as { code?: unknown } | null)?.code;
   return (
     (typeof code === 'string' &&
-      ERROR_MESSAGES[code as PURCHASES_ERROR_CODE]) ||
-    DEFAULT_ERROR_MESSAGE
+      errorMessageOf(code as PURCHASES_ERROR_CODE)) ||
+    shellText().purchase.failed
   );
 };
 
@@ -196,7 +194,8 @@ const isUserCancelled = (error: unknown) =>
 export const purchasePackage = async (
   packageId: string,
 ): Promise<PurchaseOutcome> => {
-  if (!configured) return { status: 'error', message: NOT_CONFIGURED_MESSAGE };
+  if (!configured)
+    return { status: 'error', message: shellText().purchase.notConfigured };
   await afterIdentify();
   try {
     const offerings = await Purchases.getOfferings();
@@ -206,7 +205,7 @@ export const purchasePackage = async (
     if (!pkg) {
       // 웹이 내민 패키지가 스토어 오퍼링에 없다 — 등록값과 오퍼링이 어긋난 설정 결함
       reportError(new Error('오퍼링에 없는 패키지'), { packageId });
-      return { status: 'error', message: '지금은 살 수 없는 상품이에요.' };
+      return { status: 'error', message: shellText().purchase.packageMissing };
     }
     await Purchases.purchasePackage(pkg);
     return { status: 'success' };
@@ -219,7 +218,8 @@ export const purchasePackage = async (
 
 /** 이전 구매를 복원한다. 복원할 게 없어도 success다 — 유료 여부는 BE가 판단한다 */
 export const restorePurchases = async (): Promise<RestoreOutcome> => {
-  if (!configured) return { status: 'error', message: NOT_CONFIGURED_MESSAGE };
+  if (!configured)
+    return { status: 'error', message: shellText().purchase.notConfigured };
   await afterIdentify();
   try {
     await Purchases.restorePurchases();

@@ -9,7 +9,7 @@ import type {
 import type { UserAlarmResponse } from '../api/alarm';
 import { canUseAlarm } from './alarm-access';
 import { parseAlarmTime } from './alarm-time';
-import { ALARM_PATH, ALARM_TITLE, ALARM_TYPE } from './shell-alarm';
+import { ALARM_PATH, ALARM_TYPE } from './shell-alarm';
 
 const EVERY_DAY = [1, 2, 3, 4, 5, 6, 7];
 
@@ -31,16 +31,19 @@ export interface AlarmInputs {
   scenarioLoading: boolean;
   // 기기의 오늘 (YYYY-MM-DD) — 셸이 기기 날짜로 오늘 회차를 빼서, 끝낸 날도 기기 날짜와 비교한다
   today: string;
+  // 잠금 화면 알람 제목 — 화면 언어 문구
+  title: string;
 }
 
 // 서버 설정으로 걸려 있어야 할 알람 — 꺼져 있으면 null. 지금은 매일 같은 시각 하나다
 export const desiredAlarm = (
   setting: UserAlarmResponse,
+  title: string,
 ): DesiredAlarm | null => {
   if (!setting.enabled) return null;
   const { hour, minute } = parseAlarmTime(setting.time);
   return {
-    title: ALARM_TITLE,
+    title,
     schedules: [{ hour, minute, weekdays: EVERY_DAY }],
     path: ALARM_PATH,
   };
@@ -74,6 +77,7 @@ export const alarmTarget = (
     daily,
     scenarioLoading,
     today,
+    title,
   } = inputs;
   if (userId === null) return { desired: null, doneOn: null };
   if (!setting || !subscription || subscriptionFailed) return 'wait';
@@ -82,7 +86,7 @@ export const alarmTarget = (
   // 걸 사람이 아니면 오늘 시나리오를 조회하지 않아 계속 '조회 중'으로 보인다 — 그때는 기다리지 않는다
   if (wanted && scenarioLoading) return 'wait';
 
-  const desired = wanted ? desiredAlarm(setting) : null;
+  const desired = wanted ? desiredAlarm(setting, title) : null;
   const doneOn =
     daily?.scenario?.completed && daily.date === today ? daily.date : null;
   return { desired, doneOn };
@@ -106,11 +110,13 @@ const scheduleKey = (schedules: AlarmSchedule[]) =>
       .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
   );
 
+// 제목은 알려 주는 셸(브릿지 14)에서만 본다 — 화면 언어가 바뀌면 제목이 달라져 그 언어로 다시 건다
 const isAlreadyScheduled = (
   desired: DesiredAlarm,
   scheduled: RepeatingAlarmState,
 ) =>
   desired.path === scheduled.path &&
+  (scheduled.title === undefined || desired.title === scheduled.title) &&
   scheduleKey(desired.schedules) === scheduleKey(scheduled.schedules);
 
 // 셸 상태가 올 때마다 다시 걸지, 오늘 회차를 건너뛸지 정하는 함수를 만든다 — 보낸 요청을 기억해 같은 걸 또 보내지 않는다

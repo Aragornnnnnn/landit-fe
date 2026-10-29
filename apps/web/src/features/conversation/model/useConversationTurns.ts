@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
@@ -90,6 +91,7 @@ export const useConversationTurns = ({
   keytermsFor,
   submit,
 }: ConversationTurnsOptions) => {
+  const t = useTranslations('conversation.conversationTurns');
   const [state, setState] = useState(() =>
     initialConversationState(firstSpeaker),
   );
@@ -221,7 +223,7 @@ export const useConversationTurns = ({
         console.warn('[conversation] 세션이 없어 제출할 수 없어요');
         haptic('error');
         send('AI_RESPONSE_FAILED');
-        showToast('연결에 문제가 생겼어요. 잠시 후 다시 시도해 주세요');
+        showToast(t('connectionToast'));
         track(EVENTS.TURN_FAILED, {
           turn_index: state.turnIndex,
           reason: 'api_error',

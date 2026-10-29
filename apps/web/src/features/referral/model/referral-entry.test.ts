@@ -35,25 +35,29 @@ const summary = (
 
 describe('canEnterReferralStep', () => {
   it('등록할 수 있고 가입 보상이 켜져 있으면 연다', () => {
-    expect(canEnterReferralStep(summary('PENDING', on))).toBe(true);
+    expect(canEnterReferralStep(summary('PENDING', on), 'ko')).toBe(true);
   });
 
   it('가입 보상은 꺼져 있어도 결제 보상이 켜져 있으면 연다', () => {
-    expect(canEnterReferralStep(summary('PENDING', off, on))).toBe(true);
+    expect(canEnterReferralStep(summary('PENDING', off, on), 'ko')).toBe(true);
   });
 
   it('보상이 모두 꺼져 있으면 열지 않는다 — 코드를 넣어도 거절돼 건너뛰기만 남고, 건너뛰면 나중에 켜져도 못 넣는다', () => {
-    expect(canEnterReferralStep(summary('PENDING', off))).toBe(false);
+    expect(canEnterReferralStep(summary('PENDING', off), 'ko')).toBe(false);
   });
 
   it.each(['REGISTERED', 'SKIPPED', 'UNAVAILABLE', undefined] as const)(
     '등록 상태가 %s면 열지 않는다',
     (status) => {
-      expect(canEnterReferralStep(summary(status, on))).toBe(false);
+      expect(canEnterReferralStep(summary(status, on), 'ko')).toBe(false);
     },
   );
 
   it('요약을 아직 못 받았으면 열지 않는다', () => {
-    expect(canEnterReferralStep(undefined)).toBe(false);
+    expect(canEnterReferralStep(undefined, 'ko')).toBe(false);
+  });
+
+  it('일본어 화면에는 열지 않는다 — 초대 적립금은 환급에 더해지는 한국 전용 혜택이다', () => {
+    expect(canEnterReferralStep(summary('PENDING', on), 'ja')).toBe(false);
   });
 });

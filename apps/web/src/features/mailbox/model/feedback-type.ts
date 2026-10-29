@@ -1,51 +1,56 @@
-// 피드백 유형이 화면에 나오는 모든 모습 — 이름·이모지·주소 조각, 그리고 작성 화면의 말투
+// 피드백 유형이 화면에 나오는 모든 모습 — 이름·이모지·주소 조각, 그리고 작성 화면의 말투(문구 키)
 // 유형이 하나 늘면 여기만 고치면 선택·작성·보낸 편지 제목이 함께 따라온다
 import { MAILBOX_COMPOSE_PATH } from '@/shared/lib/routes';
 
 import type { FeedbackType } from '../api/mailbox';
 
+// 문구 키는 mailbox.feedbackType 아래
 interface FeedbackTypeFace {
   emoji: string;
-  // 선택 화면의 줄 이름. 보낸 편지의 제목은 서버가 유형 이름으로 내려준다
-  label: string;
+  // 선택 화면의 줄 이름. 보낸 편지의 제목도 이 이름이다
+  labelKey: 'bugLabel' | 'featureLabel' | 'questionLabel' | 'cheerLabel';
   // 주소에 실리는 조각 — 대문자 enum을 그대로 노출하지 않는다
   slug: string;
   // 작성 화면의 제목 — 유저는 이것만 읽는다고 보고, 무엇을 쓰면 되는지가 여기 다 있게 한다.
   // 두 줄로 끊되 아랫줄이 더 길게 — 윗줄이 길면 홀로 남은 꼬리처럼 보인다
-  question: string;
+  titleKey: 'bugTitle' | 'featureTitle' | 'questionTitle' | 'cheerTitle';
   // 입력창 안 한 줄. 제목이 "뭘"을 말하니 여기는 "그걸 여기에"만 — 힌트를 더 얹으면 문턱이 생겨 덜 보내온다.
   // 작은 폰(320px)에서도 한 줄이어야 한다 — 15px 기준 240px 안쪽
-  placeholder: string;
+  placeholderKey:
+    | 'bugPlaceholder'
+    | 'featurePlaceholder'
+    | 'questionPlaceholder'
+    | 'cheerPlaceholder';
 }
 
 export const FEEDBACK_TYPE_FACES: Record<FeedbackType, FeedbackTypeFace> = {
   BUG_REPORT: {
     emoji: '🐛',
-    label: '문제 신고하기',
+    labelKey: 'bugLabel',
     slug: 'bug',
-    question: '겪으신 문제를\n자세히 알려주세요',
-    placeholder: '이곳에 문제 상황을 적어주세요',
+    titleKey: 'bugTitle',
+    placeholderKey: 'bugPlaceholder',
   },
   FEATURE_REQUEST: {
     emoji: '💡',
-    label: '신규 기능 요청하기',
+    labelKey: 'featureLabel',
     slug: 'feature',
-    question: '있었으면 하는\n기능을 알려주세요',
-    placeholder: '이곳에 원하는 기능을 적어주세요',
+    titleKey: 'featureTitle',
+    placeholderKey: 'featurePlaceholder',
   },
   QUESTION: {
     emoji: '🙋',
-    label: '궁금한 점 문의하기',
+    labelKey: 'questionLabel',
     slug: 'question',
-    question: '궁금한 점이 있다면\n무엇이든 물어봐주세요',
-    placeholder: '이곳에 궁금한 점을 적어주세요',
+    titleKey: 'questionTitle',
+    placeholderKey: 'questionPlaceholder',
   },
   CHEER: {
     emoji: '🙌',
-    label: '개발자 응원하기',
+    labelKey: 'cheerLabel',
     slug: 'cheer',
-    question: '응원하고 싶은\n내용을 남겨주세요',
-    placeholder: '이곳에 응원 한마디를 적어주세요',
+    titleKey: 'cheerTitle',
+    placeholderKey: 'cheerPlaceholder',
   },
 };
 

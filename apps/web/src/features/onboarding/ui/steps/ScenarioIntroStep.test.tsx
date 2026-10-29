@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { DailyScenario } from '@/features/scenario/api/daily';
+import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { ScenarioIntroStep } from './ScenarioIntroStep';
 
@@ -93,5 +94,24 @@ describe('ScenarioIntroStep', () => {
 
     expect(screen.queryByText(scenario.scenarioTitle)).not.toBeInTheDocument();
     expect(onStart).toHaveBeenCalledOnce();
+  });
+
+  it('일본어 화면에서는 버튼이 상대 이름을 일본어 문장으로 부른다', () => {
+    // Given 일본어 화면
+    setTestLocale('ja');
+
+    // When 첫 시나리오 소개를 그리면
+    render(
+      <ScenarioIntroStep
+        scenario={scenario}
+        loading={false}
+        onStart={vi.fn()}
+      />,
+    );
+
+    // Then 이름 뒤 조사까지 일본어로 붙는다
+    expect(
+      screen.getByRole('button', { name: 'Marcoと会話を始めます！' }),
+    ).toBeInTheDocument();
   });
 });

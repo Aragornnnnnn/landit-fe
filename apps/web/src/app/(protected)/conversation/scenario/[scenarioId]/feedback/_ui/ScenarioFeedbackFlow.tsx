@@ -218,6 +218,7 @@ export const ScenarioFeedbackFlow = ({
     <FeedbackFlow
       sessionId={sessionId}
       title={title}
+      premium={subscription?.premium ?? false}
       openDetail={openDetail}
       onExit={() => void goAfterFeedback()}
       onDetailLocked={() => void goForLockedDetail()}

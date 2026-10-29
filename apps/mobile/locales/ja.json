@@ -1,0 +1,8 @@
+{
+  "ios": {
+    "NSMicrophoneUsageDescription": "音声認識（スピーキング）機能でマイクを使用します。",
+    "NSPhotoLibraryUsageDescription": "フィードバックに添付する写真を選ぶため、写真ライブラリを使用します。",
+    "NSUserTrackingUsageDescription": "広告の成果を測定し、サービスを改善するために端末のアクティビティ情報を使用します。",
+    "NSAlarmKitUsageDescription": "選んだ時刻に今日のシナリオを忘れないよう、アラームでお知らせします。"
+  }
+}

@@ -3,10 +3,14 @@ import { Suspense } from 'react';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { track } from '@/shared/analytics';
+
 import { readLastLoginProvider } from '../../../_model/last-login-provider';
 import SocialLoginCallbackPage from './page';
 
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
+// 언어 버튼은 이 테스트의 관심 밖이다
+vi.mock('../../../_ui/LanguagePicker', () => ({ LanguagePicker: () => null }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace, push: vi.fn() }),
 }));
@@ -81,10 +85,14 @@ describe('SocialLoginCallbackPage', () => {
       json: async () => ({ error: '토큰 교환에 실패했어요.' }),
     }));
 
-    // then — 별도 실패 화면으로 빠지지 않고 로그인 화면 위에서 재시도한다
+    // then — 별도 실패 화면으로 빠지지 않고 로그인 화면 위에서 재시도한다. 문구는 예외 경로와 같아 사유로 가른다
     expect(
-      await screen.findByText('토큰 교환에 실패했어요.'),
+      await screen.findByText('로그인에 실패했어요. 다시 시도해 주세요.'),
     ).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith(
+      'Login Failed',
+      expect.objectContaining({ reason: 'token_exchange_failed' }),
+    );
     expect(
       screen.getByRole('button', { name: /카카오로 로그인하기/ }),
     ).toBeEnabled();
@@ -118,7 +126,7 @@ describe('SocialLoginCallbackPage', () => {
       ok: false,
       json: async () => ({ error: '토큰 교환에 실패했어요.' }),
     }));
-    await screen.findByText('토큰 교환에 실패했어요.');
+    await screen.findByText('로그인에 실패했어요. 다시 시도해 주세요.');
 
     // then
     expect(readLastLoginProvider()).toBeNull();

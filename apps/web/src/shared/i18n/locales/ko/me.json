@@ -1,0 +1,106 @@
+{
+  "page": {
+    "title": "내 정보",
+    "learningTitle": "학습",
+    "settingsTitle": "설정",
+    "supportTitle": "지원",
+    "accountTitle": "계정",
+    "feedbackTitle": "피드백 남기기",
+    "surveyTitle": "설문조사 참여하기",
+    "termsTitle": "서비스 이용약관",
+    "privacyTitle": "개인정보 처리방침",
+    "logoutTitle": "로그아웃",
+    "loggingOutTitle": "로그아웃 중...",
+    "withdrawTitle": "회원탈퇴",
+    "withdrawError": "회원탈퇴에 실패했습니다."
+  },
+  "profileHeader": {
+    "guestLabel": "게스트",
+    "editNicknameLabel": "닉네임 바꾸기"
+  },
+  "nicknameSheet": {
+    "title": "뭐라고 불러드릴까요?",
+    "subtitle": "언제든 다시 바꿀 수 있어요",
+    "inputLabel": "닉네임",
+    "inputPlaceholder": "이름을 입력해 주세요",
+    "tooLongError": "{max}자까지 쓸 수 있어요",
+    "invalidCharError": "한글·영문·숫자와 띄어쓰기만 쓸 수 있어요",
+    "saveFailedError": "저장하지 못했어요. 다시 시도해 주세요",
+    "saveButton": "이 이름으로 할게요",
+    "savedToast": "이제 {nickname}님으로 불러드릴게요"
+  },
+  "premiumEntry": {
+    "subscribeLabel": "구독하기",
+    "trialLabel": "체험 중",
+    "activeLabel": "이용 중",
+    "canceledLabel": "해지 예정"
+  },
+  "accentMenu": {
+    "title": "배울 억양",
+    "sheetTitle": "어떤 영어로 배우고 싶으세요?",
+    "sheetSubtitle": "추천 표현과 피드백이 달라져요"
+  },
+  "alarmMenu": {
+    "title": "알람"
+  },
+  "talkDisplayMenu": {
+    "title": "대화",
+    "description": "대화에서 상대가 한 말을 어떻게 보여줄지 정해요",
+    "showTextLabel": "상대 영어 문장 항상 보기",
+    "showTranslationLabel": "해석 항상 보기"
+  },
+  "speechRateMenu": {
+    "title": "음성",
+    "description": "영어 음성이 들리는 속도예요",
+    "playButton": "들어보기",
+    "stopButton": "멈추기",
+    "rateGroupLabel": "말하기 속도",
+    "rateLabel": "{rate}배",
+    "slowLabel": "느리게",
+    "fastLabel": "빠르게"
+  },
+  "fontScaleMenu": {
+    "title": "글자 크기",
+    "smallSampleLabel": "가",
+    "largeSampleLabel": "가",
+    "smallestLabel": "가장 작게",
+    "smallLabel": "작게",
+    "normalLabel": "보통",
+    "largeLabel": "크게",
+    "largestLabel": "가장 크게"
+  },
+  "notificationMenu": {
+    "title": "알림"
+  },
+  "hapticMenu": {
+    "title": "진동",
+    "description": "버튼을 누를 때 살짝 울리는 진동이에요",
+    "toggleLabel": "버튼 진동"
+  },
+  "widgetMenu": {
+    "title": "홈 화면 위젯"
+  },
+  "shareMenu": {
+    "title": "친구에게 랜딧 공유하기",
+    "messageBody": "랜딧에서 영어 공부 같이 해요 🙌\n{url}",
+    "copiedToast": "링크를 복사했어요",
+    "copyFailedToast": "링크를 복사하지 못했어요"
+  },
+  "settingSheet": {
+    "closeButton": "닫기"
+  },
+  "withdrawSheet": {
+    "title": "회원탈퇴",
+    "blockedDescription": "구독 중에는 탈퇴할 수 없어요.<br></br>탈퇴해도 스토어 결제는 계속돼요.<br></br>구독 관리에서 먼저 해지해 주세요.",
+    "blockedCloseButton": "닫기",
+    "manageButton": "구독 관리로 가기",
+    "description": "계정과 이용 기록이 삭제됩니다. 계속 진행할까요?",
+    "closeButton": "닫기",
+    "deletingButton": "처리 중",
+    "confirmButton": "탈퇴할게요"
+  },
+  "appVersion": {
+    "caption": "앱 버전 {version}",
+    "buildCaption": "앱 버전 {version} ({build})"
+  }
+}

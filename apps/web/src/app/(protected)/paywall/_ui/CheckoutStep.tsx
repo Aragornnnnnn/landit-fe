@@ -1,6 +1,7 @@
-// 환급 페이월 2단계 — 결제 금액 안내. 예전 한 페이지 페이월처럼 로고와 캐릭터, 무료 vs 프리미엄 표, 고를 것 없는 100일 이용권 카드 한 장을
-// 한 화면에 담는다. 혜택 설명은 앞 화면에서 했으니 여기선 무엇을 얼마에 사는지만 또렷하게. 피그마 「결제 금액 안내 v4」(3563:322)
+// 단계형 페이월 2단계 — 결제 금액 안내. 예전 한 페이지 페이월처럼 로고와 캐릭터, 무료 vs 프리미엄 표, 그리고 파는 것을
+// 한 화면에 담는다. 환급 챌린지는 고를 것 없는 100일 이용권 카드 한 장, 일본어 화면은 월간·연간 플랜 카드 두 장이다. 혜택 설명은 앞 화면에서 했으니 여기선 무엇을 얼마에 사는지만 또렷하게. 피그마 「결제 금액 안내 v4」(3563:322)
 import type { CSSProperties } from 'react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -10,21 +11,30 @@ import {
   discountPercentOf,
   listPriceOf,
 } from '@/features/subscription/model/product/pass-price';
+import { PLAN_ORDER } from '@/features/subscription/model/product/plans';
 import { PAYWALL_HERO } from '@/features/subscription/ui/paywall-hero-image';
 import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
 import { BenefitComparison } from '@/features/subscription/ui/product/BenefitComparison';
 import { ChevronLeftIcon, CloseIcon } from '@/shared/ui/Icons';
 
 import { rewardBenefitsOf, type RewardPlan } from '../_model/paywall-content';
+import type { StepOffer } from '../_model/step-offer';
+import { PlanCard } from './PlanCard';
+import { NOTICES_HEIGHT_PX } from './PurchaseNotices';
 
 /** 캐릭터 그림 높이 — 기본(그림 너비 257px)과, 긴 화면에서 키울 수 있는 끝 */
 const HERO_MIN_PX = 131;
 const HERO_MAX_PX = 180;
 /** 그림 밖 내용 높이 — 위아래 안전 영역 기본값(8px·12px)을 뺀 나머지 전부(헤더·로고·표·이용권 카드·약관·버튼 자리) */
 const HERO_REST_PX = 614;
+/** 플랜 카드 두 장이 이용권 카드 한 장보다 높은 만큼 */
+const PLAN_CARDS_EXTRA_PX = 22;
+/** 구독은 플랜 카드가 높고 버튼 밑에 결제 안내 두 줄이 붙어, 그만큼 그림을 줄인다 */
+const SUBSCRIPTION_EXTRA_PX = PLAN_CARDS_EXTRA_PX + NOTICES_HEIGHT_PX;
 /** 계산이 조금 어긋나도 스크롤이 생기지 않게 남기는 여유 */
 const HERO_SPARE_PX = 16;
 
+// 이용권은 환급 챌린지(한국어 화면)에만 있어 문구를 옮기지 않는다
 const PassCard = ({ plan }: { plan: RewardPlan }) => {
   const listPrice = listPriceOf(plan.price);
 
@@ -60,84 +70,113 @@ const PassCard = ({ plan }: { plan: RewardPlan }) => {
 };
 
 export const CheckoutStep = ({
-  plan,
+  offer,
   exit,
   onExit,
   onRestore,
   restoreDisabled,
 }: {
-  plan: RewardPlan;
+  offer: StepOffer;
   // 왼쪽 위 버튼 — 혜택 화면에서 넘어왔으면 뒤로, 여기서부터 열었으면 닫기
   exit: 'back' | 'close';
   onExit: () => void;
   onRestore: () => void;
   restoreDisabled: boolean;
-}) => (
-  <div data-inview="true">
-    <section className="bg-[linear-gradient(180deg,#fdf1e8,var(--color-background))] pt-[max(var(--safe-area-inset-top),8px)]">
-      <div className="flex h-10 items-center justify-between pr-5 pl-2">
-        <button
-          type="button"
-          onClick={onExit}
-          aria-label={exit === 'back' ? '뒤로' : '닫기'}
-          className="flex size-9 items-center justify-center rounded-full text-foreground active:bg-black/5"
-        >
-          {exit === 'back' ? (
-            <ChevronLeftIcon size={26} />
-          ) : (
-            <CloseIcon size={24} />
-          )}
-        </button>
-        {/* 스토어 심사가 요구하는 구매 복원 진입점 — 결제가 일어나는 화면에도 둔다 */}
-        <button
-          type="button"
-          onClick={onRestore}
-          disabled={restoreDisabled}
-          className="text-13 leading-none text-muted-foreground disabled:opacity-50"
-        >
-          구매 복원
-        </button>
-      </div>
-      {/* 앞 화면과 같은 크기의 로고 — 화면이 넘어가도 같은 페이월 안이라는 게 이어 보이게 */}
-      {/* 낮은 화면에선 로고를 80%로 줄인다 — 레이아웃 자리까지 같이 줄도록 transform이 아니라 zoom */}
-      <div className="flex justify-center pt-1.5 short:[zoom:0.8]">
-        <PremiumBadge />
-      </div>
-      {/* 캐릭터 단체샷 — 자르지 않고 줄여서, 팔을 기댄 선이 아래 표 카드 윗선에 오게 한다. 낮은 화면은 같은 비율로 80%.
+}) => {
+  const t = useTranslations();
+  const rest =
+    HERO_REST_PX +
+    HERO_SPARE_PX +
+    (offer.kind === 'subscription' ? SUBSCRIPTION_EXTRA_PX : 0);
+  return (
+    <div data-inview="true">
+      <section className="bg-[linear-gradient(180deg,#fdf1e8,var(--color-background))] pt-[max(var(--safe-area-inset-top),8px)]">
+        <div className="flex h-10 items-center justify-between pr-5 pl-2">
+          <button
+            type="button"
+            onClick={onExit}
+            aria-label={
+              exit === 'back'
+                ? t('paywall.checkoutStep.backLabel')
+                : t('common.closeLabel')
+            }
+            className="flex size-9 items-center justify-center rounded-full text-foreground active:bg-black/5"
+          >
+            {exit === 'back' ? (
+              <ChevronLeftIcon size={26} />
+            ) : (
+              <CloseIcon size={24} />
+            )}
+          </button>
+          {/* 스토어 심사가 요구하는 구매 복원 진입점 — 결제가 일어나는 화면에도 둔다 */}
+          <button
+            type="button"
+            onClick={onRestore}
+            disabled={restoreDisabled}
+            className="text-13 leading-none text-muted-foreground disabled:opacity-50"
+          >
+            {t('paywall.restoreButton')}
+          </button>
+        </div>
+        {/* 앞 화면과 같은 크기의 로고 — 화면이 넘어가도 같은 페이월 안이라는 게 이어 보이게 */}
+        {/* 낮은 화면에선 로고를 80%로 줄인다 — 레이아웃 자리까지 같이 줄도록 transform이 아니라 zoom */}
+        <div className="flex justify-center pt-1.5 short:[zoom:0.8]">
+          <PremiumBadge />
+        </div>
+        {/* 캐릭터 단체샷 — 자르지 않고 줄여서, 팔을 기댄 선이 아래 표 카드 윗선에 오게 한다. 낮은 화면은 같은 비율로 80%.
           긴 화면은 남는 높이만큼 키운다 — 그림 밖 내용이 HERO_REST_PX라 그만큼 빼고, 스크롤이 생기지 않게 16px 여유를 둔다.
           너비가 화면을 넘지 않게 180px에서 멈춘다(그때 너비 353px) */}
-      <div
-        className="relative mt-3 h-(--hero-h) overflow-hidden short:mt-2 short:h-[104px]"
-        style={
-          {
-            '--hero-h': `clamp(${HERO_MIN_PX}px, calc(100dvh - ${HERO_REST_PX + HERO_SPARE_PX}px - max(var(--safe-area-inset-top), 8px) - max(var(--safe-area-inset-bottom), 12px)), ${HERO_MAX_PX}px)`,
-          } as CSSProperties
-        }
-      >
-        <Image
-          {...PAYWALL_HERO}
-          alt=""
-          priority
-          className="absolute top-0 left-1/2 w-[calc(var(--hero-h)*257/131)] max-w-none -translate-x-1/2 short:w-[204px]"
-        />
-      </div>
-    </section>
+        <div
+          className="relative mt-3 h-(--hero-h) overflow-hidden short:mt-2 short:h-[104px]"
+          style={
+            {
+              '--hero-h': `clamp(${HERO_MIN_PX}px, calc(100dvh - ${rest}px - max(var(--safe-area-inset-top), 8px) - max(var(--safe-area-inset-bottom), 12px)), ${HERO_MAX_PX}px)`,
+            } as CSSProperties
+          }
+        >
+          <Image
+            {...PAYWALL_HERO}
+            alt=""
+            priority
+            className="absolute top-0 left-1/2 w-[calc(var(--hero-h)*257/131)] max-w-none -translate-x-1/2 short:w-[204px]"
+          />
+        </div>
+      </section>
 
-    <div className="px-5">
-      <div className="rounded-3xl border border-[#e9e7e2] bg-card pt-1 pb-3 shadow-[0_2px_5px_rgba(51,38,26,0.05)]">
-        <BenefitComparison
-          benefits={rewardBenefitsOf(plan.dailyRefund)}
-          pillar={false}
-        />
+      <div className="px-5">
+        <div className="rounded-3xl border border-[#e9e7e2] bg-card pt-1 pb-3 shadow-[0_2px_5px_rgba(51,38,26,0.05)]">
+          <BenefitComparison
+            benefits={
+              offer.kind === 'pass'
+                ? rewardBenefitsOf(offer.plan.dailyRefund)
+                : undefined
+            }
+            pillar={false}
+          />
+        </div>
+        {offer.kind === 'pass' ? (
+          <div className="mt-3.5">
+            <PassCard plan={offer.plan} />
+          </div>
+        ) : (
+          // 배지가 카드 위 테두리에 걸치니 그만큼 위를 띄운다
+          <div className="mt-3.5 flex gap-2.5 pt-2.5">
+            {PLAN_ORDER.map((id) => (
+              <PlanCard
+                key={id}
+                plan={offer.plans[id]}
+                selected={id === offer.selectedId}
+                onSelect={(plan) => offer.onSelect(plan.id)}
+              />
+            ))}
+          </div>
+        )}
       </div>
-      <div className="mt-3.5">
-        <PassCard plan={plan} />
-      </div>
+      {/* 약관은 버튼 밑이 아니라 페이지 맨 아래에 — 결제 버튼 둘레를 가볍게 두고, 내려 보면 찾을 수 있게 */}
+      <nav className="mt-6 flex justify-center gap-3 text-11 leading-[1.3] font-medium text-muted-foreground underline">
+        <Link href="/terms">{t('paywall.checkoutStep.termsLink')}</Link>
+        <Link href="/privacy">{t('paywall.checkoutStep.privacyLink')}</Link>
+      </nav>
     </div>
-    {/* 약관은 버튼 밑이 아니라 페이지 맨 아래에 — 결제 버튼 둘레를 가볍게 두고, 내려 보면 찾을 수 있게 */}
-    <nav className="mt-6 flex justify-center gap-3 text-11 leading-[1.3] font-medium text-muted-foreground underline">
-      <Link href="/terms">이용약관</Link>
-      <Link href="/privacy">개인정보 처리방침</Link>
-    </nav>
-  </div>
-);
+  );
+};

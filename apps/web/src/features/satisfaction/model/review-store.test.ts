@@ -6,7 +6,7 @@ import { resolveReviewStore } from './review-store';
 describe('resolveReviewStore', () => {
   it('iOS 앱이면 앱스토어 앱의 리뷰 작성 화면을 연다', () => {
     expect(resolveReviewStore('ios', '')).toEqual({
-      url: 'itms-apps://apps.apple.com/kr/app/id6787414201?action=write-review',
+      url: 'itms-apps://apps.apple.com/app/id6787414201?action=write-review',
       store: 'app_store',
     });
   });
@@ -29,7 +29,7 @@ describe('resolveReviewStore', () => {
 
   it('브라우저에서 Android가 아니면 앱스토어 웹의 리뷰 작성 화면', () => {
     expect(resolveReviewStore(null, 'Mozilla/5.0 (iPhone) Safari')).toEqual({
-      url: 'https://apps.apple.com/kr/app/id6787414201?action=write-review',
+      url: 'https://apps.apple.com/app/id6787414201?action=write-review',
       store: 'app_store',
     });
   });

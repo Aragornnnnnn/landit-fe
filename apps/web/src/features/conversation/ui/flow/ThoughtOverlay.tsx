@@ -2,6 +2,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import { createPortal } from 'react-dom';
 
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
@@ -17,6 +18,7 @@ export const ThoughtOverlay = ({
   thought: FloatingThought | null;
   loading?: boolean;
 }) => {
+  const t = useTranslations('conversation.thoughtOverlay');
   const mounted = useClientOnlyValue(() => true, false);
   if (!mounted) return null;
 
@@ -29,7 +31,7 @@ export const ThoughtOverlay = ({
         <motion.div
           role="dialog"
           aria-modal="true"
-          aria-label="상대방 속마음"
+          aria-label={t('dialogLabel')}
           className="fixed inset-0 z-50 bg-black/55"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

@@ -4,6 +4,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 
 import type { Partner } from '@/features/conversation/model/character-look';
 import { track } from '@/shared/analytics';
@@ -17,6 +18,7 @@ interface TopicPickerOptions {
 }
 
 export const useTopicPicker = ({ partner, refresh }: TopicPickerOptions) => {
+  const t = useTranslations('smallTalk.topicPicker');
   const [isOpen, setIsOpen] = useState(false);
   // 이 모달이 시킨 조회만 센다 — 홈 조회는 대화 후 갱신·앱 복귀로도 도는데,
   // 그때까지 새로고침이 도는 것처럼 보이면 누르지 않은 일이 화면에 나타난다
@@ -35,7 +37,7 @@ export const useTopicPicker = ({ partner, refresh }: TopicPickerOptions) => {
     setRefreshing(true);
     const { isError } = await refresh();
     setRefreshing(false);
-    if (isError && isOpenRef.current) showToast('주제를 받아오지 못했어요');
+    if (isError && isOpenRef.current) showToast(t('loadFailedToast'));
   };
 
   return {

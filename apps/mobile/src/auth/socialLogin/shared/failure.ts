@@ -1,6 +1,7 @@
 // 소셜 로그인 실패를 웹 회신 모양으로 바꾸고, 사용자 취소가 아니면 보고한다
 import type { NativeToWebMessage } from '@landit/bridge';
 
+import { shellText } from '../../../i18n/shell-text';
 import { reportError } from '../../../monitoring/report';
 import type { SocialProvider } from '../index';
 import { SocialLoginError } from './errors';
@@ -25,7 +26,7 @@ export const toSocialLoginFailure = (
     message:
       error instanceof SocialLoginError
         ? error.message
-        : '로그인 중 문제가 생겼어요.',
+        : shellText().login.failed,
     cancelled,
   };
 };

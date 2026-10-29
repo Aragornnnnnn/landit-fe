@@ -2,5 +2,6 @@
 export { sendAdEvent, sendAdEventOnce } from './ad-event';
 export { setUserProperties, track } from './amplitude';
 export { AnalyticsBootstrap } from './AnalyticsBootstrap';
+export { LanguagePropertySync } from './LanguagePropertySync';
 export { PageViewTracker } from './PageViewTracker';
 export { TrackingStatusSync } from './TrackingStatusSync';

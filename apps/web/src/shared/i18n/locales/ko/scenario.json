@@ -1,0 +1,90 @@
+{
+  "calendarStrip": {
+    "closeLabel": "달력 닫기",
+    "monthLoadingLabel": "달력 불러오는 중",
+    "weekLoadingLabel": "주 불러오는 중",
+    "previousLabel": "이전",
+    "nextLabel": "다음",
+    "weekLabel": "주",
+    "monthLabel": "월",
+    "periodSkeletonLabel": "0000년 00월 0주차"
+  },
+  "calendarDay": {
+    "completedLabel": "{date} 완료",
+    "todayLabel": "{date} 오늘"
+  },
+  "scenarioCard": {
+    "historyLabel": "대화 기록",
+    "historyButton": "기록",
+    "lockedLabel": "잠겨있어요",
+    "replayButton": "다시 대화하기",
+    "startButton": "대화 시작하기"
+  },
+  "cardSkeleton": {
+    "loadingLabel": "카드 불러오는 중",
+    "titleSkeletonLabel": "카페에서 커피 주문하기",
+    "briefingSkeletonLabel": "단골 카페에서 처음 보는 직원에게 마실 것을 주문해 보는 대화예요"
+  },
+  "expressionProgress": {
+    "sectionLabel": "원어민 표현",
+    "countLabel": "{done}/{total} 완료",
+    "progressLabel": "원어민 표현 학습 진행도",
+    "learnButton": "표현 배우기",
+    "continueButton": "이어서 표현 배우기",
+    "reviewButton": "표현 복습하기"
+  },
+  "cardBack": {
+    "title": "원어민은 이렇게 말해요",
+    "frontLabel": "카드 앞면으로"
+  },
+  "freeExpressionSpotlight": {
+    "introLabel": "맞춤 표현 학습 소개",
+    "introBody": "방금 대화로 만든<br></br><em>나만의 맞춤 표현 학습</em>이에요",
+    "introNamedBody": "방금 대화로 만든<br></br><em>{nickname}님 맞춤 표현 학습</em>이에요",
+    "freeLabel": "첫 표현 무료로 배우기",
+    "freeBody": "첫 표현은 <em>무료</em>로 열어 드렸어요<br></br>눌러서 바로 배워 봐요"
+  },
+  "lampWaiting": {
+    "retryTitle": "어제 마치지 못한 대화가 남아 있어요",
+    "waitingTitle": "래디가 램프에서 기다리고 있어요",
+    "deadlineDescription": "밤 12시가 지나면 오늘의 대화가 사라져요",
+    "summonButton": "램프 문질러 대화 시작하기"
+  },
+  "lampSummon": {
+    "exitLabel": "나가기",
+    "acceptButton": "네!",
+    "askTitle": "오늘의 대화를 시작할까요?",
+    "nameLabel": "래디"
+  },
+  "emptyDay": {
+    "todayTitle": "오늘 카드는 준비 중이에요",
+    "pastTitle": "이 날은 카드가 없어요",
+    "todayDescription": "조금 뒤에 다시 들러주세요<br></br>곧 새 카드를 가져올게요",
+    "pastDescription": "그날은 대화를 남기지 않았어요<br></br>지나간 카드는 다시 열 수 없어요"
+  },
+  "previewIntro": {
+    "dialogLabel": "프리미엄 소개",
+    "nextLabel": "다음 문장",
+    "characterLabel": "래디",
+    "dailyScenarioBody": "매일 이렇게<br></br><em>시나리오를 하나씩</em><br></br>제공해 드려요",
+    "freeExpressionBody": "프리미엄의 또 다른 혜택!<br></br>방금 대화로 만든 첫 <em>맞춤 표현</em>을<br></br>무료로 열어 드릴게요",
+    "learnButton": "맞춤 표현 학습하기",
+    "continueCaption": "화면을 누르면 계속 ›"
+  },
+  "sessionList": {
+    "fallbackTitle": "지난 대화",
+    "loadError": "지난 대화를 불러오지 못했어요.",
+    "loadingLabel": "지난 대화를 불러오는 중",
+    "emptyDescription": "아직 마친 대화가 없어요.<br></br>대화를 마치면 여기 쌓여요.",
+    "guideDescription": "대화를 누르면 그때 받은 피드백을 다시 볼 수 있어요.",
+    "sessionTitle": "{ordinal}번째 대화",
+    "scoredMetaCaption": "{date} · 원어민 이해도 {score}%",
+    "noFeedbackBadge": "피드백 없음"
+  },
+  "sessionFeedback": {
+    "loadError": "기록을 불러오지 못했어요.",
+    "noFeedbackError": "이 대화는 저장된 피드백이 없어요.",
+    "notFoundError": "이 대화를 찾지 못했어요.",
+    "backButton": "기록으로"
+  }
+}

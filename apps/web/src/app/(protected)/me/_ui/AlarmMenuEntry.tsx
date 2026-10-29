@@ -3,6 +3,7 @@
 // 마이페이지 "알람" 행 — 등록한 시각, 등록 전이면 "없음", 권한이 꺼져 안 울리면 빨간 "권한 필요"를 오른쪽에 보여 준다.
 // 결제 유저 전용이고, 알람을 못 쓰는 환경(브라우저·구 셸·iOS 25 이하)에서는 행 자체가 없다
 import { useEffect } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { canUseAlarm } from '@/features/alarm/model/alarm-access';
 import { alarmBlocker } from '@/features/alarm/model/alarm-permission';
@@ -23,6 +24,9 @@ export const AlarmMenuEntry = () => {
   const { data: setting, isPending, isError } = useAlarmSettingQuery();
   const { subscription } = useSubscriptionQuery();
   const isAdmin = useIsAdmin();
+  const locale = useLocale();
+  const t = useTranslations('me.alarmMenu');
+  const tAlarm = useTranslations('alarm');
   const shown =
     status?.supported === true && canUseAlarm({ subscription, isAdmin });
   const needsSetup = !isPending && !isError && setting?.enabled !== true;
@@ -39,17 +43,21 @@ export const AlarmMenuEntry = () => {
   const value =
     isPending || isError
       ? null
-      : alarmSummary({
-          registered: setting?.enabled === true,
-          blocked: alarmBlocker(status, platform) !== null,
-          time: setting?.time ?? null,
-        });
+      : alarmSummary(
+          {
+            registered: setting?.enabled === true,
+            blocked: alarmBlocker(status, platform) !== null,
+            time: setting?.time ?? null,
+          },
+          tAlarm,
+          locale,
+        );
 
   return (
     <MenuLink
       href={ALARM_SETTINGS_PATH}
       icon={<Emoji>⏰</Emoji>}
-      title="알람"
+      title={t('title')}
       value={
         value && (
           <span

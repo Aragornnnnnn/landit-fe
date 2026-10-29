@@ -5,6 +5,7 @@ import type {
   WidgetTaskHandler,
 } from 'react-native-android-widget';
 
+import { loadShellLocale } from '../../i18n/shell-locale';
 import { buildWeekStrip } from '../model/week-strip';
 import { recordWidgetChange } from '../model/widget-changes';
 import { decideWidgetState } from '../model/widget-state';
@@ -18,16 +19,20 @@ export const renderStreakWidget = async (
   widgetData?: WidgetData,
 ) => {
   const data = widgetData ?? (await loadWidgetData()) ?? EMPTY_WIDGET_DATA;
+  // 위젯 갱신은 앱이 꺼진 채로도 돈다 — 저장해 둔 셸 언어를 직접 읽는다
+  const locale = await loadShellLocale();
   const now = new Date();
   return (
     <StreakAndroidWidget
       state={decideWidgetState({ data, now })}
       week={buildWeekStrip({
+        locale,
         weeklyDone: data.weeklyDone,
         capturedOn: data.capturedOn,
         now,
       })}
       family={familyForWidget(widgetInfo.widgetName)}
+      locale={locale}
       width={widgetInfo.width}
       height={widgetInfo.height}
     />

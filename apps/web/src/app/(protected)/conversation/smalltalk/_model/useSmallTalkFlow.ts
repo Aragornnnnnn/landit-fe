@@ -7,6 +7,7 @@
 import { useRef, useState } from 'react';
 import { EVENTS, type EventProps } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { preload } from 'react-dom';
 
 import type { Partner } from '@/features/conversation/model/character-look';
@@ -33,10 +34,6 @@ import { showToast } from '@/shared/ui/toast';
 
 import { useSpeakingBudget } from './useSpeakingBudget';
 
-// 내가 먼저 걸 때 카드에 뜨는 안내 — 시나리오와 달리 읽을 상황이 없어서 주제부터 열어 준다
-const USER_OPENING_INSTRUCTION =
-  '오늘 있었던 일이든 요즘 관심사든, 먼저 말을 걸어보세요';
-
 interface SmallTalkFlowOptions {
   session: SmallTalkSessionStartResponse;
   // 홈에서 고른 상대 — 계측·화면 표시용. 목소리는 세션 응답 ttsVoice가 정본이다
@@ -59,6 +56,7 @@ export const useSmallTalkFlow = ({
   goHome,
   showSummary,
 }: SmallTalkFlowOptions) => {
+  const t = useTranslations('conversation.smallTalkFlow');
   const queryClient = useQueryClient();
   const userId = useCurrentUserId();
   // 마지막 제출이 알려준 진행 상태 — 종료 화면의 "얘기한 시간"이 여기서 나온다
@@ -109,7 +107,7 @@ export const useSmallTalkFlow = ({
       if (talkClosed()) return null; // 이미 손을 뗀 대화 — 이 실패는 볼 일이 없다
       console.warn('[smalltalk] 종료 확인 전송 실패', cause);
       reportError(cause);
-      showToast('연결에 문제가 생겨 대화를 이어가지 못했어요');
+      showToast(t('connectionToast'));
       leave();
       goHome();
       return null;
@@ -125,7 +123,8 @@ export const useSmallTalkFlow = ({
       translatedContent: session.currentMessage.translatedContent,
     },
     openingInstruction:
-      session.startMode === 'USER_FIRST' ? USER_OPENING_INSTRUCTION : null,
+      // 내가 먼저 걸 때 카드에 뜨는 안내 — 시나리오와 달리 읽을 상황이 없어서 주제부터 열어 준다
+      session.startMode === 'USER_FIRST' ? t('openingHint') : null,
     // 스몰톡은 매번 다른 첫 마디라 미리 녹음해 둘 게 없다 — 오프닝도 합성으로 말한다
     openingAudioSrc: null,
     sessionId: session.sessionId,
@@ -291,7 +290,7 @@ export const useSmallTalkFlow = ({
     } catch (cause) {
       console.warn('[smalltalk] 직접 완료 전송 실패', cause);
       reportError(cause);
-      showToast('연결에 문제가 생겨 대화를 마무리하지 못했어요');
+      showToast(t('completeFailedToast'));
       leave();
       goHome();
       return;

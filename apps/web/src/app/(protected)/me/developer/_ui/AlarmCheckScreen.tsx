@@ -3,14 +3,11 @@
 // 알람 점검 화면(ADMIN) — 서버 설정과 이 폰에 걸린 알람을 나란히 보고, 실제로 울릴 시각을 고른 테스트 알람으로 울림을 확인한다
 import { useEffect, useState } from 'react';
 import type { ScheduledAlarm } from '@landit/bridge';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { formatClock, parseAlarmTime } from '@/features/alarm/model/alarm-time';
-import {
-  ALARM_TITLE,
-  ALARM_TYPE,
-  alarmPlatform,
-} from '@/features/alarm/model/shell-alarm';
+import { ALARM_TYPE, alarmPlatform } from '@/features/alarm/model/shell-alarm';
 import { useAlarmSettingQuery } from '@/features/alarm/model/useAlarmSettingQuery';
 import { useAlarmStatus } from '@/features/alarm/model/useAlarmStatus';
 import { useSaveAlarmMutation } from '@/features/alarm/model/useSaveAlarmMutation';
@@ -38,7 +35,7 @@ const PERMISSION_LABEL = {
 } as const;
 
 const clock = (date: Date) =>
-  formatClock({ hour: date.getHours(), minute: date.getMinutes() });
+  formatClock({ hour: date.getHours(), minute: date.getMinutes() }, 'ko');
 
 // 1초마다 지금 시각 — 테스트 알람 선택지와 남은 시간이 늘 "지금 누르면"을 보여 주게
 const useNow = () => {
@@ -84,6 +81,7 @@ const AlarmCheck = () => {
   const { subscription } = useSubscriptionQuery();
   const { mutate: saveAlarm, isPending: saving } = useSaveAlarmMutation();
 
+  const tAlarm = useTranslations('alarm');
   const isAndroid = alarmPlatform() === 'android';
   // 아직 안 울린 테스트 알람 — 먼저 울릴 것부터
   const pendingTests = (alarms ?? [])
@@ -96,7 +94,11 @@ const AlarmCheck = () => {
 
   // 실제 알람과 같은 문구로 울린다 — 사용자가 보게 될 화면 그대로 확인하려고
   const scheduleTest = (delaySeconds: number) =>
-    postToNative({ type: 'TEST_ALARM', delaySeconds, title: ALARM_TITLE });
+    postToNative({
+      type: 'TEST_ALARM',
+      delaySeconds,
+      title: tAlarm('lockScreen.title'),
+    });
 
   // 매일 알람을 곧 울릴 시각으로 저장한다 — 실제 사용자 흐름(서버 저장 → 동기화 → 셸 예약) 그대로 걸린다
   const dailySoon = new Date(now.getTime() + 60_000);
@@ -112,7 +114,7 @@ const AlarmCheck = () => {
       { time: next, enabled: true },
       {
         onSuccess: () =>
-          showToast(`매일 ${formatClock(next)}에 울리게 저장했어요`),
+          showToast(`매일 ${formatClock(next, 'ko')}에 울리게 저장했어요`),
       },
     );
   };
@@ -159,7 +161,7 @@ const AlarmCheck = () => {
             pendingTests.map((alarm) => (
               <StatusItem
                 key={alarm.id}
-                label={`${formatClock(alarm)}에 울려요`}
+                label={`${formatClock(alarm, 'ko')}에 울려요`}
                 tone="good"
                 value={
                   <>

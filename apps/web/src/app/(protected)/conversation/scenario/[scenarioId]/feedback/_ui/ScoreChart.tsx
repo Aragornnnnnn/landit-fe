@@ -3,6 +3,7 @@
 // 영역별 점수 레이더 — 오각형 하나로 다섯 영역의 균형을 보여준다. 한 색 채움, 꼭짓점마다 짧은 라벨과 숫자.
 // 2026-09-08 막대 후보·강점/보완 표시·후광을 다 비교해 본 뒤 기본형으로 확정했다 (강점·보완은 그래프에 안 적는다)
 import { motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import type { DomainRow } from '@/features/feedback/model/level-assessment';
 import { DURATION, EASE_STANDARD } from '@/shared/motion';
@@ -14,14 +15,26 @@ const LABEL_MARGIN = 62;
 const LABEL_RADIUS_RATIO = 1.24;
 const GRID_RINGS = [0.25, 0.5, 0.75, 1];
 
-const toScoreDescription = (rows: DomainRow[]) =>
-  `영역별 점수. ${rows.map((row) => `${row.label} ${row.score}점`).join(', ')}`;
+// 표를 한 줄로 읽어 주는 이름 — 영역 이름과 점수를 화면 언어의 구분 기호(쉼표·読点)로 잇는다
+const useScoreDescription = (rows: DomainRow[]) => {
+  const t = useTranslations('conversation.scoreChart');
+  const domain = useTranslations('feedback.domains');
+  const scores = rows.map((row) =>
+    t('domainScoreLabel', {
+      domain: domain(`${row.key}Label`),
+      score: row.score,
+    }),
+  );
+  return t('summaryLabel', { scores: scores.join(t('separatorLabel')) });
+};
 
 // 꼭짓점이 셋보다 적으면 도형이 안 된다 — 점수를 줄로 적는다. 하나도 없으면 아무것도 그리지 않는다
-const ScoreList = ({ rows }: { rows: DomainRow[] }) =>
-  rows.length === 0 ? null : (
+const ScoreList = ({ rows }: { rows: DomainRow[] }) => {
+  const description = useScoreDescription(rows);
+  const domain = useTranslations('feedback.domains');
+  return rows.length === 0 ? null : (
     <ul
-      aria-label={toScoreDescription(rows)}
+      aria-label={description}
       className="rounded-2xl border border-border bg-card px-5 py-2"
     >
       {rows.map((row) => (
@@ -29,16 +42,21 @@ const ScoreList = ({ rows }: { rows: DomainRow[] }) =>
           key={row.key}
           className="flex items-center justify-between py-2.5 text-15"
         >
-          <span className="text-muted-foreground">{row.label}</span>
+          <span className="text-muted-foreground">
+            {domain(`${row.key}Label`)}
+          </span>
           <span className="text-17 font-black">{row.score}</span>
         </li>
       ))}
     </ul>
   );
+};
 
 /** 관찰된 영역만 꼭짓점으로 그린다 — 다섯 개가 아니어도 도형은 닫힌다. 셋보다 적으면 목록으로 대신한다 */
 export const ScoreChart = ({ rows }: { rows: DomainRow[] }) => {
   const reduced = useReducedMotion() ?? false;
+  const description = useScoreDescription(rows);
+  const domain = useTranslations('feedback.domains');
   if (rows.length < 3) return <ScoreList rows={rows} />;
   const vertexCount = rows.length;
   const size = (RADAR_RADIUS + LABEL_MARGIN) * 2;
@@ -59,7 +77,7 @@ export const ScoreChart = ({ rows }: { rows: DomainRow[] }) => {
   return (
     <div
       role="img"
-      aria-label={toScoreDescription(rows)}
+      aria-label={description}
       className="flex h-full max-h-[358px] justify-center rounded-2xl border border-border bg-card py-2"
     >
       {/* 크기는 부모 높이를 따른다 — 큰 폰은 340px(카드 358 = 340 + 안여백 16 + 테두리 2)에서 멈추고, 작은 폰은 CTA 위 남은 높이만큼 줄어든다 */}
@@ -142,7 +160,7 @@ export const ScoreChart = ({ rows }: { rows: DomainRow[] }) => {
               fontWeight={700}
             >
               <tspan x={x} dy="-0.2em">
-                {row.shortLabel}
+                {domain(`${row.key}ShortLabel`)}
               </tspan>
               <tspan
                 x={x}

@@ -45,7 +45,7 @@ export interface LetterOffer {
  * 시트에 그릴 값을 만든다.
  *
  * @returns null이면 버튼을 그리지 않는다 — 할인 패키지를 못 받았거나 원화가 아닐 때다.
- *   이때 결제하면 `packageIdFor`가 정가 패키지로 떨어진다
+ *   이때 결제하면 `packageIdFor`가 표준 패키지(연간은 할인 패키지 `annual_discount`)로 떨어진다
  */
 export const buildLetterOffer = ({
   regular,

@@ -4,6 +4,7 @@
 // 숫자·바·캐릭터를 하나의 모션 값으로 굴려 이동 속도와 카운트업을 완전히 동기화한다.
 import { useEffect, useState } from 'react';
 import { animate, motion, useMotionValue, useTransform } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import { TRACK_CHARACTER_SRC } from '../../lib/track-character';
 
@@ -12,6 +13,7 @@ const DURATION = 1.6;
 const EASE = [0.25, 0.46, 0.45, 0.94] as const;
 
 export const ScoreTrack = ({ score }: { score: number }) => {
+  const t = useTranslations('feedback.scoreTrack');
   const progress = useMotionValue(0);
   const width = useTransform(progress, (value) => `${value}%`);
   const [display, setDisplay] = useState(0);
@@ -29,7 +31,7 @@ export const ScoreTrack = ({ score }: { score: number }) => {
   return (
     <div>
       <p className="text-xl font-medium text-muted-foreground tabular-nums">
-        원어민 이해도 {display}%
+        {t('scoreLabel', { score: display })}
       </p>
 
       {/* 캐릭터가 위로 올라탈 공간(64px) + 트랙 바 */}
@@ -64,7 +66,7 @@ export const ScoreTrack = ({ score }: { score: number }) => {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={TRACK_CHARACTER_SRC}
-              alt="날아가는 래디"
+              alt={t('mascotLabel')}
               className="object-contain"
               style={{ width: 52, height: 47 }}
             />

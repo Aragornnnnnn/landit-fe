@@ -4,6 +4,7 @@
 // 팔 것이 없거나 아직 모를 때는 로고를 그려, 이 자리가 비거나 깜빡이지 않게 한다
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -16,11 +17,11 @@ import {
 import { LanditLogo } from '@/shared/ui/LanditLogo';
 
 import type { PaywallPromo } from '../api/subscription';
-import { PROMO_ENABLED } from '../model/exit-promo/promo-flag';
 import {
   clearPromoHandoff,
   useHandedPromo,
 } from '../model/exit-promo/promo-handoff';
+import { usePromoLive } from '../model/exit-promo/usePromoLive';
 import {
   resolvePromoDisplay,
   usePromoOffer,
@@ -38,11 +39,14 @@ import { PromoSheet } from './exit-promo/PromoSheet';
 export const PREMIUM_ENTRY_PILL_CLASS =
   'flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-13 leading-[1.2] font-bold text-[#4a2f00]';
 
-const HomeLogo = () => (
-  <Link href={SCENARIO_PATH} aria-label="홈으로">
-    <LanditLogo className="h-5 w-auto text-foreground [&_.logo-dot-splash]:hidden" />
-  </Link>
-);
+const HomeLogo = () => {
+  const t = useTranslations('subscription.premiumHeaderEntry');
+  return (
+    <Link href={SCENARIO_PATH} aria-label={t('homeLabel')}>
+      <LanditLogo className="h-5 w-auto text-foreground [&_.logo-dot-splash]:hidden" />
+    </Link>
+  );
+};
 
 interface PremiumHeaderEntryProps {
   // 무료 사용자의 진입을 페이월 대신 다른 곳으로 돌린다 — 환급 소개처럼, 구독이 모르는 화면을 라우트가 끼운다. 할인 중에는 할인 배지가 먼저다
@@ -60,13 +64,13 @@ export const PremiumHeaderEntry = ({
   invite,
   holding = false,
 }: PremiumHeaderEntryProps) => {
+  const t = useTranslations('subscription.premiumHeaderEntry');
   const paymentLive = usePaymentLive();
   const { subscription, isPending, isError } = useSubscriptionQuery({
     enabled: paymentLive,
   });
-  const live = usePromoOffer(
-    PROMO_ENABLED ? (subscription?.promo ?? null) : null,
-  );
+  const promoLive = usePromoLive();
+  const live = usePromoOffer(promoLive ? (subscription?.promo ?? null) : null);
   // 배지를 눌러 연 할인과 페이월에서 넘어온 할인. 둘 다 열 때의 값을 복사해 들고 있는다 —
   // 구독 쿼리가 다시 조회돼 promo가 비어도 열려 있던 시트가 닫히면 안 된다
   const [tappedPromo, setTappedPromo] = useState<PaywallPromo | null>(null);
@@ -130,7 +134,7 @@ export const PremiumHeaderEntry = ({
         >
           <span className="tracking-[0.1em]">PREMIUM</span>
           {/* 숫자만 줄어들면 무엇이 끝나는지 알 수 없다. 눌러서 열리는 시트와 같은 말로 부른다 */}
-          <span>할인</span>
+          <span>{t('discountLabel')}</span>
           <PromoClock seconds={live.remainingSeconds} />
         </button>
       ) : (
@@ -147,7 +151,7 @@ export const PremiumHeaderEntry = ({
           {invite?.label ?? (
             <>
               <span className="tracking-[0.1em]">PREMIUM</span>
-              <span>시작하기</span>
+              <span>{t('startLabel')}</span>
             </>
           )}
         </Link>

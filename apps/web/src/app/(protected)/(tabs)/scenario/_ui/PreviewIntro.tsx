@@ -5,6 +5,7 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 // 가로 import 사유: 칸이 넘어가는 진동 세기를 알람 시각 바퀴와 같은 기준(플랫폼)으로 고른다
 import { alarmPlatform } from '@/features/alarm/model/shell-alarm';
@@ -13,6 +14,7 @@ import { haptic } from '@/shared/haptics';
 import { formatWon } from '@/shared/lib/won';
 import { Button } from '@/shared/ui/Button';
 
+import { partsOf, type Part } from '../_model/tutorial-sentence';
 import {
   INITIAL_TYPING,
   revealTyping,
@@ -34,35 +36,39 @@ const tickDelayOf = (phase: 'typing' | 'erasing', skip: boolean) => {
   return ERASE_MS;
 };
 
-// 문장 조각 — 두 번째 값이 참이면 금색으로 강조한다
-type Part = readonly [text: string, highlight?: boolean];
+type Sentence = { image: string; parts: Part[] };
 
-const sentencesOf = (dailyWon: number) =>
-  [
-    {
-      image: '/images/character/landy-good.webp',
-      parts: [
-        ['프리미엄 유저라면\n방금처럼 대화를 끝낼 때마다\n'],
-        [formatWon(dailyWon), true],
-        ['을 받을 수 있어요'],
-      ],
-    },
-    {
-      image: '/images/character/landy-genie.webp',
-      parts: [
-        ['프리미엄 이용이 끝나면\n그동안 모은 돈이\n'],
-        ['내 계좌로 들어와요', true],
-      ],
-    },
-    {
-      image: '/images/character/landy-point.webp',
-      parts: [
-        ['프리미엄의 또 다른 혜택!\n방금 대화로 만든 첫 '],
-        ['맞춤 표현', true],
-        ['을\n무료로 열어 드릴게요'],
-      ],
-    },
-  ] satisfies { image: string; parts: Part[] }[];
+// 맞춤 표현을 열어 주는 마지막 문장 — 환급을 팔든 안 팔든 튜토리얼은 이 문장으로 끝나 무료 표현으로 이어진다
+const freeExpressionSentenceOf = (raw: string): Sentence => ({
+  image: '/images/character/landy-point.webp',
+  parts: partsOf(raw),
+});
+
+// 환급을 팔지 않는 화면(일본어)은 적립 대신 매일 받는 시나리오를 소개한다
+const plainSentencesOf = (dailyRaw: string, freeRaw: string): Sentence[] => [
+  { image: '/images/character/landy-good.webp', parts: partsOf(dailyRaw) },
+  freeExpressionSentenceOf(freeRaw),
+];
+
+// 한국어 화면에만 있어 옮기지 않는다 — 환급을 파는 화면의 적립 소개
+const rewardSentencesOf = (dailyWon: number, freeRaw: string): Sentence[] => [
+  {
+    image: '/images/character/landy-good.webp',
+    parts: [
+      ['프리미엄 유저라면\n방금처럼 대화를 끝낼 때마다\n'],
+      [formatWon(dailyWon), true],
+      ['을 받을 수 있어요'],
+    ],
+  },
+  {
+    image: '/images/character/landy-genie.webp',
+    parts: [
+      ['프리미엄 이용이 끝나면\n그동안 모은 돈이\n'],
+      ['내 계좌로 들어와요', true],
+    ],
+  },
+  freeExpressionSentenceOf(freeRaw),
+];
 
 const plainTextOf = (parts: readonly Part[]) =>
   parts.map(([text]) => text).join('');
@@ -85,13 +91,20 @@ export const PreviewIntro = ({
   dailyWon,
   onDone,
 }: {
-  dailyWon: number;
+  /** 대화 한 번에 쌓이는 환급액. 환급을 팔지 않으면 null이고 적립 문장을 빼고 소개한다 */
+  dailyWon: number | null;
   onDone: () => void;
 }) => {
+  const t = useTranslations('scenario.previewIntro');
   const reduced = useReducedMotion();
   // 금액은 처음 뜬 값으로 고정한다 — 쓰는 도중 가격이 도착해 글자 수가 바뀌면 문장이 잘린다
   const [won] = useState(dailyWon);
-  const sentences = sentencesOf(won);
+  // 한 자씩 쓰려면 태그가 남은 원문이 필요하다 — 조각은 partsOf가 만든다
+  const freeRaw: string = t.raw('freeExpressionBody');
+  const sentences =
+    won === null
+      ? plainSentencesOf(t.raw('dailyScenarioBody'), freeRaw)
+      : rewardSentencesOf(won, freeRaw);
   const lengths = sentences.map(({ parts }) => lengthOf(parts));
   const [typing, setTyping] = useState(INITIAL_TYPING);
 
@@ -135,7 +148,7 @@ export const PreviewIntro = ({
       className="fixed inset-0 z-50 flex flex-col items-center px-6 pt-[max(var(--safe-area-inset-top),10px)] pb-[max(var(--safe-area-inset-bottom),24px)]"
       role="dialog"
       aria-modal="true"
-      aria-label="프리미엄 소개"
+      aria-label={t('dialogLabel')}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -147,7 +160,7 @@ export const PreviewIntro = ({
           // 뜨자마자 포커스를 받는다 — 키보드로 바로 넘길 수 있고 뒤에 깔린 헤더가 먼저 잡히지 않게
           ref={(button) => button?.focus()}
           type="button"
-          aria-label="다음 문장"
+          aria-label={t('nextLabel')}
           className="absolute inset-0"
           onClick={tapNext}
         />
@@ -160,7 +173,7 @@ export const PreviewIntro = ({
             <motion.img
               key={sentence.image}
               src={sentence.image}
-              alt="래디"
+              alt={t('characterLabel')}
               className="absolute inset-0 size-full object-contain"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -198,12 +211,12 @@ export const PreviewIntro = ({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <Button onClick={finish}>맞춤 표현 학습하기</Button>
+            <Button onClick={finish}>{t('learnButton')}</Button>
           </motion.div>
         ) : (
           typing.phase === 'shown' && (
             <p className="pt-3 text-center text-lg font-bold text-white/85">
-              화면을 누르면 계속 ›
+              {t('continueCaption')}
             </p>
           )
         )}

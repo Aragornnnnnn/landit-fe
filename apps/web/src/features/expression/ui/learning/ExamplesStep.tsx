@@ -3,6 +3,7 @@
 // 추가 예문 스텝 — "이렇게도 써요" 예문 카드 캐러셀(이미지 + Q/A). 복습 퀴즈 직전에 표현 쓰임새를 눈으로 익힌다
 import { useEffect } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 
 import { track } from '@/shared/analytics';
 import { useSnapIndex } from '@/shared/lib/useSnapIndex';
@@ -34,6 +35,7 @@ export const ExamplesStep = ({
   leftAction,
   onNext,
 }: ExamplesStepProps) => {
+  const t = useTranslations('expression.examplesStep');
   // 중앙에 가장 가까운 카드가 활성 dot — snap-center와 정확히 일치한다 (홈 리스트와 같은 공용 훅)
   const { scrollRef, activeIndex: active, onScroll } = useSnapIndex('x');
 
@@ -53,14 +55,14 @@ export const ExamplesStep = ({
       leftAction={leftAction}
       footer={
         <Button size="md" onClick={onNext}>
-          복습 퀴즈 풀게요
+          {t('nextButton')}
         </Button>
       }
     >
       <div className="pt-2 pb-6">
         {/* 스와이프 힌트 문구는 뺐다 — 도트와 빼꼼 보이는 다음 카드가 넘김을 이미 말해준다 */}
         <p className="mb-3 text-lg font-extrabold text-foreground">
-          이렇게도 써요
+          {t('sectionTitle')}
         </p>
 
         <div
@@ -95,7 +97,7 @@ export const ExamplesStep = ({
             className="w-16 flex-none object-contain"
           />
           <div className="rounded-2xl rounded-bl-sm bg-secondary px-3.5 py-2.5 text-sm leading-snug font-semibold break-keep text-foreground">
-            한 표현으로 이렇게 다양한 상황을 말할 수 있어요
+            {t('coachCaption')}
           </div>
         </div>
       </div>

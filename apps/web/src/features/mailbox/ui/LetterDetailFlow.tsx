@@ -3,6 +3,7 @@
 // 편지 한 통을 펼쳐 보는 화면 — 받은 편지와 보낸 피드백이 리소스가 달라 화면도 둘로 갈린다.
 // 겉모습(헤더·제목·칩·시각)은 같아서 그 골격만 여기서 공유하고, 본문은 ui/detail이 그린다
 import type { ReactNode } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 // 친구 초대 안내 편지 — features 간 가로 import. 편지함은 어느 편지인지만 넘기고 이동은 referral 슬라이스가 한다
@@ -40,11 +41,12 @@ export const ReceivedLetterFlow = ({
   canInvite: boolean;
 }) => {
   const { letter, isPending, error, retry } = useReceivedLetterQuery(letterId);
+  const t = useTranslations('mailbox');
 
   return (
     <LetterShell
       fallbackHref={mailboxPath('received')}
-      head={letter && toReceivedHead(letter)}
+      head={letter && toReceivedHead(letter, t)}
       isPending={isPending}
       error={error}
       onRetry={retry}
@@ -59,11 +61,12 @@ export const ReceivedLetterFlow = ({
 
 export const SentFeedbackFlow = ({ feedbackId }: { feedbackId: number }) => {
   const { letter, isPending, error, retry } = useSentFeedbackQuery(feedbackId);
+  const t = useTranslations('mailbox');
 
   return (
     <LetterShell
       fallbackHref={mailboxPath('sent')}
-      head={letter && toSentHead(letter)}
+      head={letter && toSentHead(letter, t)}
       isPending={isPending}
       error={error}
       onRetry={retry}
@@ -114,6 +117,8 @@ const LetterContent = ({
   onRetry,
   children,
 }: Omit<LetterShellProps, 'fallbackHref'>) => {
+  const locale = useLocale();
+
   if (head) {
     return (
       <article>
@@ -123,7 +128,7 @@ const LetterContent = ({
         <div className="mt-3 flex items-center gap-2">
           <LetterBadge label={head.badge.label} tone={head.badge.tone} />
           <time className="text-13 text-muted-foreground">
-            {formatLetterDateTime(head.sentAt)}
+            {formatLetterDateTime(head.sentAt, locale)}
           </time>
         </div>
         <div className="mt-6">{children}</div>

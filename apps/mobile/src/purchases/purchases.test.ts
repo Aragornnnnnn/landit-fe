@@ -46,6 +46,11 @@ jest.mock('../monitoring/report', () => ({
   reportError: jest.fn(),
   reportWarning: jest.fn(),
 }));
+const shell = { locale: 'ko' as 'ko' | 'ja' };
+jest.mock('@/i18n/shell-locale', () => ({ shellLocale: () => shell.locale }));
+afterEach(() => {
+  shell.locale = 'ko';
+});
 
 const mockPurchases = Purchases as jest.Mocked<typeof Purchases>;
 
@@ -367,6 +372,19 @@ describe('purchasePackage', () => {
     const result = await purchasePackage('$rc_annual');
 
     expect(result.message).toBe('문제가 생겼어요. 잠시 후 다시 시도해 주세요');
+  });
+
+  it('일본어 화면이면 오류 문구도 일본어다', async () => {
+    shell.locale = 'ja';
+    mockPurchases.purchasePackage.mockRejectedValueOnce({
+      code: PURCHASES_ERROR_CODE.PRODUCT_ALREADY_PURCHASED_ERROR,
+    });
+
+    const result = await purchasePackage('$rc_annual');
+
+    expect(result.message).toBe(
+      'サブスクリプション中です。「購入を復元」をタップしてください',
+    );
   });
 
   it('오퍼링에 없는 패키지 id면 스토어를 부르지 않고 실패로 끝내며 설정 결함으로 보고한다', async () => {

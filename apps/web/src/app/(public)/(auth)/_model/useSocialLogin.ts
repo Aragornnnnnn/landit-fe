@@ -3,6 +3,7 @@
 // 로그인 버튼 → (네이티브면) 브릿지로 idToken 수신 후 /social-login, (브라우저면) 웹 OAuth로 폴백
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
@@ -29,6 +30,7 @@ const isAppleLoginPaused = () =>
  *   `error`(마지막 실패 메시지, dev 모드에서는 원인 상세가 덧붙는다)
  */
 export function useSocialLogin() {
+  const t = useTranslations('auth.socialLogin');
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
   const [pending, setPending] = useState<SocialProvider | null>(null);
@@ -43,7 +45,11 @@ export function useSocialLogin() {
           if (message.cancelled) {
             track(EVENTS.LOGIN_CANCELED, {});
           } else {
-            setError(message.message);
+            // 셸이 준 사유는 한국어 개발 문구라 개발 모드에서만 덧붙인다
+            const isDev = process.env.NODE_ENV === 'development';
+            const detail =
+              isDev && message.message ? ` (${message.message})` : '';
+            setError(`${t('failedError')}${detail}`);
             track(EVENTS.LOGIN_FAILED, {
               method: 'native',
               reason: 'provider_error',
@@ -82,19 +88,17 @@ export function useSocialLogin() {
           const isDev = process.env.NODE_ENV === 'development';
           const detail =
             isDev && error instanceof Error ? ` (${error.message})` : '';
-          setError(`로그인에 실패했어요. 다시 시도해 주세요.${detail}`);
+          setError(`${t('failedError')}${detail}`);
           setPending(null);
         }
       }),
-    [router, setAuth],
+    [router, setAuth, t],
   );
 
   const login = async (provider: SocialProvider) => {
     setError(null);
     if (provider === 'apple' && isAppleLoginPaused()) {
-      setError(
-        '애플 로그인을 잠시 점검하고 있어요. 잠시 후 다시 시도해 주세요.',
-      );
+      setError(t('appleMaintenanceError'));
       return;
     }
     // 네이티브 셸(WebView) 안이면 네이티브 SDK로, 밖(일반 브라우저)이면 웹 OAuth로 진행한다
@@ -111,7 +115,7 @@ export function useSocialLogin() {
         method: 'web',
         reason: 'apple_web_unsupported',
       });
-      setError('애플 로그인은 앱에서만 가능해요.');
+      setError(t('appleAppOnlyError'));
       return;
     }
 
@@ -129,7 +133,7 @@ export function useSocialLogin() {
       });
       const isDev = process.env.NODE_ENV === 'development';
       const detail = isDev && err instanceof Error ? ` (${err.message})` : '';
-      setError(`로그인을 시작하지 못했어요.${detail}`);
+      setError(`${t('startFailedError')}${detail}`);
     }
   };
 

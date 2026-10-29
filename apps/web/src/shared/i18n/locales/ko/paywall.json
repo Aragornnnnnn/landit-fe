@@ -1,0 +1,130 @@
+{
+  "restoreButton": "구매 복원",
+  "trialStartButton": "7일 무료 체험 시작하기",
+  "priceRetryButton": "가격 다시 불러오기",
+  "monthlyStartButton": "월 {price}으로 시작하기",
+  "yearlyBillingCaption": "7일 무료 체험 후 연 {price} 정기 결제 · 언제든 해지 가능",
+  "monthlyBillingCaption": "매월 {price} 정기 결제 · 언제든 해지 가능",
+  "yearlyCancelCaption": "체험 종료 24시간 전까지 해지하면 청구되지 않아요",
+  "monthlyCancelCaption": "결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요",
+  "benefitsStep": {
+    "title": "매일 도착하는 시나리오<br></br><premium>프리미엄</premium>으로 제대로 공부해요",
+    "benefitsTitle": "프리미엄만 누리는 혜택 {count}가지",
+    "feedbackLabel": "문장마다 꼼꼼한 상세 피드백",
+    "goodTurnTitle": "잘한 문장은 왜 좋은지",
+    "betterTurnTitle": "어색한 문장은 이렇게",
+    "summaryTitle": "대화 전체를 한눈에",
+    "growthTitle": "지난번보다 나아진 점",
+    "reuseTitle": "배운 표현을 실제로 썼는지",
+    "expressionLabel": "내 대화로 만든 맞춤 표현 학습",
+    "expressionImageTitle": "그림과 예문으로 실제 뉘앙스까지",
+    "expressionPronunciationTitle": "원어민처럼 발음하게 만들어드려요",
+    "expressionUsageTitle": "여러 예문으로 확실히 내 표현으로",
+    "expressionQuizTitle": "퀴즈로 내 것이 됐는지 확인해요",
+    "smallTalkLabel": "캐릭터와 자유롭게 프리톡",
+    "smallTalkPartnerTitle": "원하는 친구와 억양까지 골라서",
+    "smallTalkFreeTitle": "주제 없이 자유롭게 대화해요"
+  },
+  "stepPaywall": {
+    "nextButton": "다음"
+  },
+  "checkoutStep": {
+    "backLabel": "뒤로",
+    "termsLink": "이용약관",
+    "privacyLink": "개인정보 처리방침"
+  },
+  "feedbackDemo": {
+    "detailTitle": "상세 분석",
+    "goodUserBody": "Hi Marco! I'm Junseo. I'm from Korea and I study computer science.",
+    "goodContextBody": "잠깐, 네가 내 룸메이트야? 난 스페인에서 온 교환학생 마르코야. 너에 대해 알려 줘!",
+    "goodAnalogyBody": "“안녕 마르코! 난 준서야. 한국에서 왔고 컴퓨터공학 전공해.” 정도로 들려요.",
+    "goodDetailBody": "이름, 출신, 전공을 한 번에 말해서 상대가 다음 질문을 이어 가기 쉬웠어요.",
+    "goodBenchmarkBody": "I'm from Korea and I study ~ 처럼 두 가지를 and로 이어 말해 원어민처럼 자연스러웠어요.",
+    "betterContextBody": "좋다! 그럼 넌 재미로 뭐 해? 어떻게 시작하게 됐어?",
+    "betterAnalogyBody": "“기타 치는 거 좋아해. 그거 재밌어.” 정도로 들려요.",
+    "betterReasonBody": "어떻게 시작했는지도 물었으니 이유를 한 문장 붙이면 대화가 이어져요. be into는 ‘푹 빠져 있다’는 느낌이에요.",
+    "betterPositiveBody": "좋아하는 걸 바로 말해서 질문에 곧장 답했어요.",
+    "summaryHeadlineTitle": "이제 새 룸메이트와 어색하지 않게 인사할 수 있어요!",
+    "summaryOverallBody": "자기소개는 이름·출신·전공을 한 번에 전해 좋았어요. 취미를 말할 때는 이유를 한 문장 덧붙여 보세요.",
+    "summaryImprovementBody": "취미를 말할 때 이유를 한 문장 덧붙이면 대화가 더 길게 이어져요.",
+    "growthPatternLabel": "과거형",
+    "growthPreviousBody": "I go to Busan last summer.",
+    "beIntoMeaningLabel": "~에 푹 빠져 있다",
+    "getIntoMeaningLabel": "~을 시작하게 되다",
+    "usedToMeaningLabel": "예전엔 ~하곤 했다",
+    "scenarioSourceLabel": "10월 7일 시나리오",
+    "expressionSourceLabel": "10월 5일 표현 학습"
+  },
+  "planCard": {
+    "monthlyTitle": "월간",
+    "yearlyTitle": "연간",
+    "selectLabel": "{title} 플랜",
+    "monthlyPriceLabel": "월 {price}",
+    "yearlyPriceLabel": "연 {price}",
+    "monthlySubtitle": "매달 결제 · 언제든 해지",
+    "yearlySubtitle": "월 {price}꼴 · 7일 무료 체험",
+    "yearlyBadge": "월간보다 {rate}% 저렴"
+  },
+  "exampleDemo": {
+    "meaningLabel": "~할 마음이 있다, 콜이다",
+    "translationBody": "솔직히 난 도시 탐험이라면 언제든 콜이야.",
+    "nuanceLabel": "이런 느낌이에요",
+    "nuanceBody": "'콜!'처럼 반갑게 답할 때 써요"
+  },
+  "quizDemo": {
+    "title": "질문에 대한 대답을 완성하세요",
+    "questionCaption": "넌 도시 탐험파야, 집콕파야?",
+    "answerBody": "솔직히 난 도시 탐험이라면 언제든 콜이야.",
+    "correctTitle": "정답이에요!",
+    "correctLabel": "정답",
+    "nextButton": "표현 배우러 갈게요"
+  },
+  "pronunciationDemo": {
+    "title": "래디의 발음 피드백",
+    "listeningLabel": "듣고 있어요",
+    "nativeLabel": "원어민",
+    "mineLabel": "나"
+  },
+  "usageDemo": {
+    "title": "이렇게도 써요",
+    "meaningLabel": "한번 해보다, 시도해 보다",
+    "tryItTranslationBody": "한번 해보지 그래? 마음에 들지도 몰라.",
+    "bakingTranslationBody": "걔 베이킹 한번 해봤는데 완전 빠졌어.",
+    "worthItTranslationBody": "한번 해볼 만한 가치는 있어.",
+    "giveItAGoTranslationBody": "해봐. 잘못돼 봤자 뭐 얼마나 잘못되겠어?"
+  },
+  "scenarioDemo": {
+    "dailyLabel": "오늘의 시나리오",
+    "startButton": "대화 시작"
+  },
+  "scenarioWall": {
+    "dailyLabel": "오늘의 시나리오"
+  },
+  "smallTalkDemo": {
+    "title": "오늘은 누구랑<br></br>이야기할까요?",
+    "chloeLabel": "클로이",
+    "marcoLabel": "마르코",
+    "teddyLabel": "테디",
+    "startButton": "테디와 대화 시작",
+    "talkTitle": "테디와 스몰톡",
+    "americanLabel": "미국 영어",
+    "australianLabel": "호주 영어",
+    "britishLabel": "영국 영어"
+  },
+  "scenarios": {
+    "cafeOrderTitle": "카페에서 주문하기",
+    "hotelCheckInTitle": "호텔 체크인 하기",
+    "flightSeatmateTitle": "비행기 옆자리 승객과의 대화",
+    "pharmacyTitle": "약국에서 증상 설명하고 약 사기",
+    "debateClassTitle": "토론 수업 — 돈과 행복",
+    "trainTicketTitle": "일정에 맞는 기차표 구매하기",
+    "refundRequestTitle": "불량 상품 교환 또는 환불 요청하기",
+    "partyChloeTitle": "인터내셔널 파티 — 처음 만난 Chloe",
+    "seatChangeTitle": "공항에서 더 편한 좌석으로 변경하기",
+    "travelChatTitle": "친구와 여행 수다 떨기",
+    "groupPresentationTitle": "조별 발표 준비하기",
+    "headphonesTitle": "기능과 가격을 비교해 헤드폰 고르기",
+    "roommateMarcoTitle": "입주 첫날, 룸메이트 Marco와 첫 만남",
+    "baggageClaimTitle": "수하물 파손 — 카운터에 항의하기"
+  }
+}

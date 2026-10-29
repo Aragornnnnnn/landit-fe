@@ -3,12 +3,10 @@
 // 시나리오 기록의 한 회차 — 그때 받은 총평·상세를 다시 보고, 대화 직후 흐름 없이 기록 목록으로 돌아간다
 import { useEffect, useRef } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
-import {
-  FEEDBACK_FALLBACK_TITLE,
-  isStaleLockedFeedback,
-} from '@/features/feedback/model/feedback-view';
+import { isStaleLockedFeedback } from '@/features/feedback/model/feedback-view';
 import { FeedbackContent } from '@/features/feedback/ui/flow/FeedbackContent';
 import { FeedbackNotice } from '@/features/feedback/ui/flow/FeedbackNotice';
 import { FeedbackSkeleton } from '@/features/feedback/ui/flow/FeedbackSkeleton';
@@ -40,7 +38,9 @@ export const ScenarioSessionFeedback = ({
   openDetail,
 }: ScenarioSessionFeedbackProps) => {
   const router = useRouter();
-  const title = useScenarioTitle(scenarioId, date, FEEDBACK_FALLBACK_TITLE);
+  const t = useTranslations('feedback.feedbackView');
+  const tSession = useTranslations('scenario.sessionFeedback');
+  const title = useScenarioTitle(scenarioId, date, t('fallbackTitle'));
   const { sessions, error, retry, isRefreshing } =
     useScenarioHistoryQuery(scenarioId);
   const session = sessions?.find((item) => item.sessionId === sessionId);
@@ -78,7 +78,7 @@ export const ScenarioSessionFeedback = ({
       <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
         <RetryNotice
           screen="scenario_history"
-          message={error.message || '기록을 불러오지 못했어요.'}
+          message={error.message || tSession('loadError')}
           onRetry={retry}
         />
       </main>
@@ -89,11 +89,9 @@ export const ScenarioSessionFeedback = ({
     return (
       <FeedbackNotice
         message={
-          session
-            ? '이 대화는 저장된 피드백이 없어요.'
-            : '이 대화를 찾지 못했어요.'
+          session ? tSession('noFeedbackError') : tSession('notFoundError')
         }
-        actionLabel="기록으로"
+        actionLabel={tSession('backButton')}
         onAction={backToList}
       />
     );
@@ -104,6 +102,7 @@ export const ScenarioSessionFeedback = ({
       feedback={feedback}
       title={title}
       source="history"
+      premium={subscription?.premium ?? false}
       openDetail={openDetail}
       refreshing={isRefreshing}
       onExit={backToList}

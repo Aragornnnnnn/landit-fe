@@ -5,6 +5,7 @@
 
 import { useEffect, useId, useRef } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import type { AnswerGuide } from '@/features/scenario/api/daily';
 import { DURATION, EASE_STANDARD } from '@/shared/motion';
@@ -78,6 +79,7 @@ export const AnswerGuideChip = ({
   // 카드를 접은 뒤 포커스를 돌려받을 자리
   ref?: React.Ref<HTMLButtonElement>;
 }) => {
+  const t = useTranslations('conversation.answerGuideChip');
   const reduced = useReducedMotion() ?? false;
   const hintId = `guide-hint-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   return (
@@ -105,7 +107,7 @@ export const AnswerGuideChip = ({
           transition={{ duration: 0.15, delay: reduced ? 0 : MORPH_SETTLE_S }}
         >
           <GradientSparkle size={12} />
-          예시 볼래요
+          {t('openButton')}
         </motion.span>
       </motion.button>
       <AnimatePresence>
@@ -129,7 +131,7 @@ export const AnswerGuideChip = ({
                 ease: 'easeInOut',
               }}
             >
-              말이 안 떠오르면 눌러 봐요
+              {t('hint')}
               {/* 위쪽 칩 가운데를 가리키는 꼬리 — 칩 폭(약 92px)의 절반쯤에 둔다 */}
               <span className="absolute right-10 bottom-full border-x-[6px] border-b-[7px] border-x-transparent border-b-foreground" />
             </motion.span>
@@ -173,6 +175,7 @@ const AnswerGuideCard = ({
   guide: AnswerGuide;
   onClose: () => void;
 }) => {
+  const t = useTranslations('conversation.answerGuideCard');
   const reduced = useReducedMotion() ?? false;
   // 칩이 카드 크기로 커진 뒤에 안쪽이 차례로 올라온다
   const settle = reduced ? 0 : MORPH_SETTLE_S;
@@ -207,7 +210,7 @@ const AnswerGuideCard = ({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 0.12 } }}
       role="region"
-      aria-label="답변 예시"
+      aria-label={t('regionLabel')}
       className="absolute inset-x-0 bottom-0 z-10 flex min-h-28 flex-col border-[1.5px] px-5 py-3 shadow-lg shadow-black/5"
       style={{ ...gradientBorder, borderRadius: 16 }}
     >
@@ -222,15 +225,13 @@ const AnswerGuideCard = ({
         >
           <GradientSparkle size={14} />
         </motion.span>
-        <p className="flex-1 text-xs font-bold text-foreground">
-          막막하면 이렇게 말해 봐요
-        </p>
+        <p className="flex-1 text-xs font-bold text-foreground">{t('title')}</p>
         <button
           ref={closeRef}
           onClick={onClose}
           className="-my-1 -mr-1 flex items-center gap-0.5 px-1 py-1 text-xs font-medium text-muted-foreground active:opacity-70"
         >
-          접기
+          {t('closeButton')}
           <ChevronDownIcon size={12} strokeWidth={2.5} className="rotate-180" />
         </button>
       </motion.div>

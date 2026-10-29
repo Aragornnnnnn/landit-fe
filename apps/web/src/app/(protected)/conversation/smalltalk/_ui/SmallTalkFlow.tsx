@@ -3,6 +3,7 @@
 'use client';
 
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import type { Partner } from '@/features/conversation/model/character-look';
@@ -27,6 +28,7 @@ export const SmallTalkFlow = ({
   topicId,
   partner,
 }: SmallTalkFlowProps) => {
+  const t = useTranslations('conversation.smallTalkStart');
   const router = useRouter();
   const { session, error, end } = useSmallTalkSession({
     startMode,
@@ -42,9 +44,7 @@ export const SmallTalkFlow = ({
   if (error || mainError) {
     return (
       <main className="mx-auto flex h-dvh max-w-[430px] flex-col items-center justify-center gap-4 bg-background px-6 text-center">
-        <p className="break-keep text-muted-foreground">
-          대화를 시작하지 못했어요. 잠시 후 다시 시도해 주세요
-        </p>
+        <p className="break-keep text-muted-foreground">{t('startError')}</p>
         <Button
           variant="secondary"
           size="sm"
@@ -55,7 +55,7 @@ export const SmallTalkFlow = ({
             router.replace(SMALLTALK_PATH);
           }}
         >
-          돌아가기
+          {t('backButton')}
         </Button>
       </main>
     );

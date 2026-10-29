@@ -1,19 +1,23 @@
 'use client';
 
-// 환급 챌린지 페이월 — 혜택 화면에서 「다음」을 누르면 결제 금액 안내로 넘어가고, 거기서 결제한다.
+// 단계형 페이월 — 혜택 화면에서 「다음」을 누르면 결제 금액 안내로 넘어가고, 거기서 결제한다. 환급 챌린지(이용권)와 일본어 화면(월간·연간 구독)이 쓴다.
 // 결제·복원·닫기는 PaywallScreen이 지휘하고 여기서는 어느 단계인지와 버튼만 안다
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { EVENTS, type PaywallSource } from '@landit/analytics';
 import { useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import { track } from '@/shared/analytics';
 import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
 
-import { REWARD_PLAN_ID, type RewardPlan } from '../_model/paywall-content';
+import { REWARD_PLAN_ID } from '../_model/paywall-content';
+import { getCtaLabel } from '../_model/paywall-copy';
+import type { StepOffer } from '../_model/step-offer';
 import { BenefitsStep } from './BenefitsStep';
 import { CheckoutStep } from './CheckoutStep';
 import { PaywallHeader } from './PaywallHeader';
+import { PurchaseCta, type PriceRetry } from './PurchaseCta';
 
 type Step = 'benefits' | 'checkout';
 
@@ -23,10 +27,11 @@ const SCROLL_HINT_DELAY_MS = 300;
 const SCROLL_HINT_PX = 72;
 const SCROLL_HINT_RETURN_MS = 500;
 
-export const RewardPaywall = ({
-  plan,
+export const StepPaywall = ({
+  offer,
   startStep = 'benefits',
   busy,
+  priceRetry,
   onClose,
   onRestore,
   onPurchase,
@@ -35,11 +40,14 @@ export const RewardPaywall = ({
   onStepChange,
   onScroll,
 }: {
-  plan: RewardPlan;
+  /** 결제 단계에서 파는 것 — 이용권 한 장이거나 월간·연간 구독 */
+  offer: StepOffer;
   /** 처음 보여 줄 단계 — 혜택을 이미 본 환급 화면에서 오면 결제 금액 안내부터 */
   startStep?: Step;
   /** 결제·복원이 진행 중이면 버튼을 잠근다 */
   busy: boolean;
+  /** 스토어 가격을 못 받았을 때 결제 버튼 대신 거는 다시 불러오기. 없으면 결제 버튼이다 */
+  priceRetry?: PriceRetry;
   onClose: () => void;
   onRestore: () => void;
   onPurchase: () => void;
@@ -52,7 +60,13 @@ export const RewardPaywall = ({
   /** 스크롤했다 — 떠남 계측이 얼마나 내려 봤는지 잰다 */
   onScroll?: (root: HTMLElement) => void;
 }) => {
+  const t = useTranslations();
+  const tPaywall = useTranslations('paywall');
   const [step, setStep] = useState<Step>(startStep);
+  // 구독을 파는 결제 단계면 고른 플랜의 결제·해지 안내를 버튼 밑에 둔다
+  const subscriptionPlan =
+    offer.kind === 'subscription' ? offer.plans[offer.selectedId] : null;
+  const showsNotices = subscriptionPlan !== null && step === 'checkout';
   const [scrolled, setScrolled] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -66,7 +80,7 @@ export const RewardPaywall = ({
       return;
     }
     track(EVENTS.PAYWALL_CHECKOUT_VIEWED, {
-      plan: REWARD_PLAN_ID,
+      plan: offer.kind === 'pass' ? REWARD_PLAN_ID : offer.selectedId,
       entry_step: startStep,
       ...sourceTag,
     });
@@ -120,7 +134,7 @@ export const RewardPaywall = ({
           setScrolled(event.currentTarget.scrollTop > 48);
           onScroll?.(event.currentTarget);
         }}
-        className={`relative h-full overflow-y-auto pb-[calc(max(var(--safe-area-inset-bottom),12px)+100px)] ${step === 'benefits' ? 'bg-card' : ''}`}
+        className={`relative h-full overflow-y-auto ${showsNotices ? 'pb-[calc(max(var(--safe-area-inset-bottom),12px)+142px)]' : 'pb-[calc(max(var(--safe-area-inset-bottom),12px)+100px)]'} ${step === 'benefits' ? 'bg-card' : ''}`}
       >
         {step === 'benefits' ? (
           <>
@@ -129,11 +143,11 @@ export const RewardPaywall = ({
               onRestore={onRestore}
               restoreDisabled={busy}
             />
-            <BenefitsStep plan={plan} />
+            <BenefitsStep reward={offer.kind === 'pass' ? offer.plan : null} />
           </>
         ) : (
           <CheckoutStep
-            plan={plan}
+            offer={offer}
             // 혜택 화면을 거치지 않고 열었으면 되돌아갈 곳이 없다 — 바로 닫는다
             exit={startStep === 'checkout' ? 'close' : 'back'}
             onExit={startStep === 'checkout' ? onClose : () => goTo('benefits')}
@@ -148,7 +162,7 @@ export const RewardPaywall = ({
         <button
           type="button"
           onClick={onClose}
-          aria-label="닫기"
+          aria-label={t('common.closeLabel')}
           className="absolute top-[max(var(--safe-area-inset-top),8px)] left-3 z-30 flex size-9 items-center justify-center rounded-full bg-card/90 text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.12)] backdrop-blur transition-transform active:scale-90"
         >
           <CloseIcon size={20} />
@@ -159,11 +173,22 @@ export const RewardPaywall = ({
         className={`absolute inset-x-0 bottom-0 z-20 px-5 pt-9 pb-[max(var(--safe-area-inset-bottom),12px)] ${step === 'benefits' ? 'bg-[linear-gradient(to_bottom,transparent,var(--color-card)_28px)]' : 'bg-[linear-gradient(to_bottom,transparent,var(--color-background)_28px)]'}`}
       >
         {step === 'benefits' ? (
-          <Button onClick={() => goTo('checkout')}>다음</Button>
-        ) : (
-          <Button onClick={onPurchase} loading={busy}>
-            프리미엄 시작하기
+          <Button onClick={() => goTo('checkout')}>
+            {t('paywall.stepPaywall.nextButton')}
           </Button>
+        ) : (
+          <PurchaseCta
+            // 이용권은 환급 챌린지(한국어 화면)에만 있어 문구를 옮기지 않는다
+            label={
+              subscriptionPlan
+                ? getCtaLabel(subscriptionPlan, tPaywall)
+                : '프리미엄 시작하기'
+            }
+            plan={subscriptionPlan ?? undefined}
+            busy={busy}
+            onPurchase={onPurchase}
+            priceRetry={priceRetry}
+          />
         )}
       </footer>
     </main>

@@ -1,0 +1,60 @@
+{
+  "introStep": {
+    "greetingTitle": "안녕하세요 <wave></wave><br></br>원어민으로 만들어드릴게요",
+    "namedGreetingTitle": "안녕하세요, {nickname}님 <wave></wave><br></br>원어민으로 만들어드릴게요",
+    "body": "매일 대화 하나를 준비해드려요<br></br>꾸준히 하다 보면 입이 트여요",
+    "mascotLabel": "래디",
+    "nextButton": "좋아요!"
+  },
+  "soundStep": {
+    "title": "제가 이렇게 말을 걸게요<br></br>소리가 잘 들리나요?",
+    "nextButton": "잘 들려요!"
+  },
+  "micStep": {
+    "title": "마이크를 켜서<br></br>제가 들을 수 있게 해주세요",
+    "nextButton": "계속할게요"
+  },
+  "permissionPreview": {
+    "iosTitle": "‘Landit’이(가)<br></br>마이크에 접근하려고 합니다.",
+    "iosBody": "음성 답변을 듣고 대화를 이어가기 위해 필요합니다.",
+    "iosDenyLabel": "허용 안 함",
+    "iosAllowLabel": "허용",
+    "androidTitle": "Landit에서 오디오를 녹음하도록 허용하시겠습니까?",
+    "androidWhileUsingLabel": "앱 사용 중에만 허용",
+    "androidOnceLabel": "이번만 허용",
+    "androidDenyLabel": "허용 안함"
+  },
+  "thoughtStep": {
+    "title": "말할 때마다 나와서<br></br>상대 속마음을 알려줄게요",
+    "goodBody": "오, 이유까지 말해주네. 대화 잘 통한다!",
+    "normalBody": "무슨 말인지 알겠어. 잘 전해졌어.",
+    "badBody": "살짝 갸웃했어. 다음엔 천천히 말해줘!",
+    "nextButton": "이해했어요!"
+  },
+  "notificationStep": {
+    "title": "꾸준한 학습을 위해<br></br>알림으로 도와드릴게요",
+    "subtitle": "오늘의 대화를 잊고 있다면 알려드려요",
+    "nextButton": "알림 받을게요!"
+  },
+  "accentStep": {
+    "title": "어떤 영어로<br></br>배우고 싶으세요?",
+    "subtitle": "추천 표현과 피드백이 달라져요",
+    "hint": "배울 억양은 언제든 변경할 수 있어요"
+  },
+  "accentForm": {
+    "confirmButton": "선택했어요!"
+  },
+  "accentOptions": {
+    "americanLabel": "미국 영어",
+    "britishLabel": "영국 영어",
+    "australianLabel": "호주 영어"
+  },
+  "scenarioIntroStep": {
+    "title": "첫 대화로 내 레벨을 찾고<br></br>딱 맞게 배워요",
+    "startButton": "첫 대화 시작할게요!",
+    "partnerStartButton": "{name}와 대화 시작할게요!"
+  },
+  "profileGate": {
+    "dialogLabel": "시작하기 전에 몇 가지만 알려주세요"
+  }
+}

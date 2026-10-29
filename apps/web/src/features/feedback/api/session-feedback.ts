@@ -22,6 +22,8 @@ export interface SessionFeedbackResponse {
   growthFeedback?: ScenarioGrowthCard | null;
   // 배운 표현 재사용. 결과가 없으면 items가 빈 배열
   expressionReuse?: ScenarioExpressionReuseSummary | null;
+  // 이 세션 시작 전에 같은 시나리오를 끝낸 적이 있는가 — 빈 카드 문구를 첫 완료와 재도전으로 나눈다 (landit-be#334부터, 없으면 첫 완료로 본다)
+  hasPreviousSameScenarioCompletion?: boolean;
 }
 
 export interface ScenarioGrowthCard {

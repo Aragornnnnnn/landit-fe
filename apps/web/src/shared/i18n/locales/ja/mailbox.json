@@ -1,0 +1,105 @@
+{
+  "mailboxButton": {
+    "label": "メールボックス",
+    "unreadLabel": "メールボックス、未読のお手紙あり"
+  },
+  "mailboxPage": {
+    "title": "メールボックス"
+  },
+  "mailboxTabs": {
+    "groupLabel": "メールボックス",
+    "receivedLabel": "届いたお手紙",
+    "sentLabel": "送ったお手紙"
+  },
+  "mailboxFlow": {
+    "loadMoreFailedToast": "続きのお手紙を読み込めませんでした。"
+  },
+  "mailboxEmpty": {
+    "receivedTitle": "まだお手紙は届いていません",
+    "receivedDescription": "お知らせや返信が届くと、ここで確認できます",
+    "sentTitle": "まだ送ったお手紙はありません",
+    "sentDescription": "気になることやご意見があれば、いつでも気軽に送ってください"
+  },
+  "composeFab": {
+    "button": "フィードバックを送る"
+  },
+  "letterListItem": {
+    "unreadLabel": "(未読)"
+  },
+  "letterBadge": {
+    "noticeBadge": "お知らせ",
+    "updateBadge": "アップデート",
+    "replyBadge": "返信",
+    "directBadge": "お手紙",
+    "pendingBadge": "対応中",
+    "completedBadge": "対応済み",
+    "answeredBadge": "返信あり"
+  },
+  "feedbackType": {
+    "bugLabel": "不具合を報告する",
+    "bugTitle": "起きた問題を<br></br>詳しく教えてください",
+    "bugPlaceholder": "起きた状況を書いてください",
+    "featureLabel": "新機能をリクエストする",
+    "featureTitle": "あったらいいなと思う<br></br>機能を教えてください",
+    "featurePlaceholder": "ほしい機能を書いてください",
+    "questionLabel": "気になることを質問する",
+    "questionTitle": "気になることがあれば<br></br>何でも聞いてください",
+    "questionPlaceholder": "気になることを書いてください",
+    "cheerLabel": "開発者を応援する",
+    "cheerTitle": "応援したいことを<br></br>自由に書いてください",
+    "cheerPlaceholder": "応援のひとことを書いてください"
+  },
+  "feedbackTypeFlow": {
+    "title": "どんなフィードバックを<br></br>開発者に送りますか？"
+  },
+  "feedbackComposeFlow": {
+    "sentToast": "貴重なご意見ありがとうございます！"
+  },
+  "attachment": {
+    "retryLaterError": "送れませんでした。しばらくしてからもう一度お試しください。",
+    "tooLargeError": "写真の容量が大きすぎます。1枚外してもう一度送ってください。",
+    "invalidPhotoError": "送れない写真があります。別の写真に変えてください。",
+    "limitToast": "写真は{max}枚まで送れます",
+    "partialFailedToast": "読み込めない写真を除いて追加しました",
+    "loadFailedToast": "写真を読み込めませんでした"
+  },
+  "submitBar": {
+    "button": "送る"
+  },
+  "attachPhotoButton": {
+    "label": "写真を追加"
+  },
+  "attachmentThumbnails": {
+    "photoLabel": "添付写真{order}",
+    "removeLabel": "添付写真{order}を外す"
+  },
+  "attachmentGallery": {
+    "photoLabel": "添付写真{order}",
+    "loadingLabel": "添付写真{order}を読み込み中",
+    "retryLabel": "添付写真{order}をもう一度読み込む",
+    "retryButton": "再読み込み",
+    "zoomLabel": "添付写真{order}を拡大して見る"
+  },
+  "zoomableImage": {
+    "altZoomLabel": "{alt}を拡大して見る",
+    "zoomLabel": "写真を拡大して見る"
+  },
+  "imageViewer": {
+    "dialogLabel": "写真を拡大して見る",
+    "loadFailedError": "写真を読み込めませんでした",
+    "previousButton": "前の写真",
+    "nextButton": "次の写真",
+    "zoomInLabel": "拡大",
+    "zoomOutLabel": "縮小"
+  },
+  "sentBody": {
+    "replyCaption": "Landitチームからの返信 · {date}"
+  },
+  "waitingNotice": {
+    "title": "Landitチームが読んでいます",
+    "description": "しっかり読んで返信します"
+  },
+  "quotedLetter": {
+    "label": "自分が送った内容"
+  }
+}

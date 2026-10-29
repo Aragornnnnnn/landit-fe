@@ -12,7 +12,7 @@ import type { AlarmStatus, AlarmTime } from '@landit/bridge';
 
 import { track } from '@/shared/analytics';
 
-import { alarmCopy, AlarmCopyContext } from '../model/alarm-copy';
+import { AlarmRewardContext } from '../model/alarm-copy';
 import { toBlockerKind } from '../model/alarm-permission';
 import { toServerTime } from '../model/alarm-time';
 import { useAlarmUnblock } from '../model/useAlarmUnblock';
@@ -107,7 +107,6 @@ export const AlarmSetupFlow = ({
     );
   };
 
-  const copy = alarmCopy(rewardParticipant);
   // 「다음에 할게요」 — 프리미엄 온보딩에만 있다
   const skip =
     onSkip &&
@@ -118,18 +117,18 @@ export const AlarmSetupFlow = ({
 
   if (step === 'intro') {
     return (
-      <AlarmCopyContext value={copy}>
+      <AlarmRewardContext value={rewardParticipant}>
         <AlarmIntro
           onNext={() => setStep('pledge')}
           onBack={onBack}
           onSkip={skip}
         />
-      </AlarmCopyContext>
+      </AlarmRewardContext>
     );
   }
 
   return (
-    <AlarmCopyContext value={copy}>
+    <AlarmRewardContext value={rewardParticipant}>
       {step === 'registered' ? (
         <AlarmRegistered
           time={time}
@@ -161,6 +160,6 @@ export const AlarmSetupFlow = ({
           if (closed === 'android-settings') setStep('registered');
         }}
       />
-    </AlarmCopyContext>
+    </AlarmRewardContext>
   );
 };

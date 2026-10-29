@@ -1,6 +1,7 @@
 'use client';
 
 // 내 정보 맨 위의 타일 — 환급(쌓인 금액 또는 소개)과 연속 학습 기록을 나란히 놓는다
+// 환급이 열린 화면에만 그려져(MyProgressTiles) 한국어 화면에만 있어 옮기지 않는다
 import { EVENTS } from '@landit/analytics';
 import Link from 'next/link';
 

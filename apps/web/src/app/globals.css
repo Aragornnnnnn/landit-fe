@@ -1108,3 +1108,21 @@
     }
   }
 }
+
+/* 일본어는 낱말 사이를 띄우지 않아 keep-all(body 기본값·break-keep)이면 줄이 엉뚱한 데서 바뀌고 「、」「。」가 줄 앞에 온다 —
+   일본어 화면은 낱말 경계(auto-phrase)에서 바꾸고, 이를 모르는 브라우저(iOS Safari)는 글자 단위로 바꾸되 금칙만 지킨다 */
+@layer base {
+  body:lang(ja) {
+    word-break: normal;
+    word-break: auto-phrase;
+    line-break: strict;
+  }
+}
+
+@layer utilities {
+  :lang(ja) .break-keep {
+    word-break: normal;
+    word-break: auto-phrase;
+    line-break: strict;
+  }
+}

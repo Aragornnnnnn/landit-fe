@@ -1,5 +1,6 @@
 // 마이페이지 설정 시트 한 벌 — 제목·한 줄 설명·내용·닫기. 진동·음성·대화 설정이 같은 모양으로 열린다
 import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { BottomSheet } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
@@ -21,33 +22,36 @@ export const SettingSheet = ({
   description,
   trailing,
   children,
-}: SettingSheetProps) => (
-  <BottomSheet open={open} onClose={onClose}>
-    <div className="flex items-center justify-between">
-      <BottomSheet.Title
-        className="text-17 font-bold"
-        style={{ color: '#111' }}
-      >
-        {title}
-      </BottomSheet.Title>
-      {trailing}
-    </div>
-    {description && (
-      <p className="mt-1 mb-4 text-14 leading-6" style={{ color: '#666' }}>
-        {description}
-      </p>
-    )}
-    {children}
-    <div className="mt-5">
-      <Button
-        type="button"
-        variant="ghost"
-        size="md"
-        className="w-full"
-        onClick={onClose}
-      >
-        닫기
-      </Button>
-    </div>
-  </BottomSheet>
-);
+}: SettingSheetProps) => {
+  const t = useTranslations('me.settingSheet');
+  return (
+    <BottomSheet open={open} onClose={onClose}>
+      <div className="flex items-center justify-between">
+        <BottomSheet.Title
+          className="text-17 font-bold"
+          style={{ color: '#111' }}
+        >
+          {title}
+        </BottomSheet.Title>
+        {trailing}
+      </div>
+      {description && (
+        <p className="mt-1 mb-4 text-14 leading-6" style={{ color: '#666' }}>
+          {description}
+        </p>
+      )}
+      {children}
+      <div className="mt-5">
+        <Button
+          type="button"
+          variant="ghost"
+          size="md"
+          className="w-full"
+          onClick={onClose}
+        >
+          {t('closeButton')}
+        </Button>
+      </div>
+    </BottomSheet>
+  );
+};

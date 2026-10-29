@@ -15,6 +15,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { haptic } from '@/shared/haptics';
 import { ArrowUpIcon, CloseIcon } from '@/shared/ui/Icons';
@@ -57,6 +58,7 @@ export const UserTranscript = ({
   unsent = false,
   onEdit,
 }: UserTranscriptProps) => {
+  const t = useTranslations('conversation.userTranscript');
   const reviewing = onEdit != null;
   // 고치기 입력창을 닫고 확인 칸으로 돌아왔는가 — 이때는 칸이 다시 출렁이지 않고 안내만 살며시 돌아온다.
   // 확인이 끝나면(보내기·다시 말하기) 접어 둬야 다음 턴의 확인이 다시 출렁인다
@@ -123,7 +125,7 @@ export const UserTranscript = ({
         role: 'button',
         tabIndex: 0,
         // 버튼 안 글은 이름에 묻힌다 — 확인할 문장을 이름에 함께 실어 스크린 리더도 듣게 한다
-        'aria-label': `답변 고치기: ${text}`,
+        'aria-label': t('editLabel', { text }),
         'aria-describedby': editHintVisible ? editHintId : undefined,
         onClick: onEdit,
         onKeyDown: (event: React.KeyboardEvent) => {
@@ -134,11 +136,13 @@ export const UserTranscript = ({
       })}
     >
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-muted-foreground">내 답변</p>
+        <p className="text-xs font-semibold text-muted-foreground">
+          {t('headerLabel')}
+        </p>
         {/* 서버가 받았는지는 모른다 — 아는 건 대답이 오지 않았다는 것뿐이라 연결 상태로만 말한다 */}
         {unsent && (
           <p role="status" className="text-xs font-semibold text-destructive">
-            연결이 불안정해요
+            {t('unsentError')}
           </p>
         )}
         {/* 커서만으로는 누르면 고쳐진다는 걸 모른다 — 버튼 모양 「수정」으로 알린다.
@@ -149,7 +153,7 @@ export const UserTranscript = ({
               aria-hidden
               className={`block rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground/70 ${backFromEditing ? 'animate-hint-in' : ''}`}
             >
-              수정
+              {t('editBadge')}
             </span>
             {editHintVisible && (
               // 칸 위로 떠서 「수정」을 가리킨다 — 답변 가이드 유도 힌트와 같은 말풍선 모양
@@ -157,7 +161,7 @@ export const UserTranscript = ({
                 id={editHintId}
                 className="animate-fade-up pointer-events-none absolute right-0 bottom-full z-10 mb-2.5 rounded-xl bg-foreground px-3 py-2 text-[13px] font-bold whitespace-nowrap text-background shadow-lg shadow-black/15"
               >
-                말한 내용과 다르면 눌러서 고칠 수 있어요
+                {t('editHint')}
                 <span className="absolute top-full right-4 border-x-[6px] border-t-[7px] border-x-transparent border-t-foreground" />
               </span>
             )}
@@ -190,7 +194,6 @@ export const UserTranscript = ({
 
 // 글자 수를 보이기 시작하는 지점 — 한도의 90%
 const COUNTER_FROM = ANSWER_MAX_LENGTH * 0.9;
-const LIMIT_NOTICE = `${ANSWER_MAX_LENGTH.toLocaleString()}자까지 입력할 수 있어요`;
 
 // 키보드 입력 모드의 입력창 — 답변은 영어로만 받아서 그 밖의 글자를 걸러 낸다
 const TranscriptEditor = ({
@@ -202,6 +205,10 @@ const TranscriptEditor = ({
   UserTranscriptProps,
   'text' | 'onChange' | 'onSubmit' | 'onCancel'
 >) => {
+  const t = useTranslations('conversation.transcriptEditor');
+  const limitNotice = t('limitToast', {
+    max: ANSWER_MAX_LENGTH.toLocaleString(),
+  });
   // 조합 중에 글자를 지우면 입력기가 꼬여 글자가 깨진다 — 조합이 끝난 뒤에 거른다
   const composingRef = useRef(false);
   // 막은 한글을 키보드는 아직 있다고 믿는다 — 그 글자 수. iOS 한글 키보드는 조합을 "지우고 다시 넣기"로 해서,
@@ -238,7 +245,7 @@ const TranscriptEditor = ({
     setShaking(true);
     haptic('error');
     // 이어 치는 동안 계속 띄워도 토스트는 그대로 떠 있고 시간만 늘어난다
-    showToast('영어로만 입력할 수 있어요');
+    showToast(t('englishOnlyToast'));
   };
 
   // 조합 없이 바로 넣는 키보드의 한글은 들어가기 전에 막는다 — 넣은 뒤 지우면 키보드가 기억하는 글과 어긋난다.
@@ -290,7 +297,7 @@ const TranscriptEditor = ({
       onChange?.(before + after);
       setShaking(true);
       haptic('error');
-      showToast(LIMIT_NOTICE);
+      showToast(limitNotice);
       return;
     }
     onChange?.(english);
@@ -313,7 +320,9 @@ const TranscriptEditor = ({
       }}
     >
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-muted-foreground">내 답변</p>
+        <p className="text-xs font-semibold text-muted-foreground">
+          {t('headerLabel')}
+        </p>
         {/* 한도에 가까워졌을 때만 글자 수를 보인다 — 늘 띄우면 짧은 답에도 숫자를 신경 쓰게 된다 */}
         {text.length >= COUNTER_FROM && (
           <p
@@ -325,7 +334,7 @@ const TranscriptEditor = ({
         )}
         <button
           onClick={onCancel}
-          aria-label="입력 취소"
+          aria-label={t('cancelButton')}
           // 라벨 줄 높이를 늘리지 않게 위아래를 덜어 낸다 — 늘면 아래 글이 그만큼 밀려 내려간다.
           // 열리는 순간 제자리에서 톡 솟는다 — 칸은 그대로고 새로 생긴 버튼만 움직여 같은 칸이 열린 것으로 읽힌다
           className="animate-control-in -my-1.5 flex size-7 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-95"
@@ -335,7 +344,7 @@ const TranscriptEditor = ({
       </div>
       {/* 토스트는 화면 읽기에 닿지 않는다 — 한도에 닿은 걸 따로 읽어 준다 */}
       <p role="status" className="sr-only">
-        {text.length >= ANSWER_MAX_LENGTH ? LIMIT_NOTICE : ''}
+        {text.length >= ANSWER_MAX_LENGTH ? limitNotice : ''}
       </p>
       <textarea
         ref={inputRef}
@@ -374,7 +383,7 @@ const TranscriptEditor = ({
             if (text.trim()) onSubmit?.();
           }
         }}
-        placeholder="답변을 입력하세요"
+        placeholder={t('placeholder')}
         rows={2}
         onScroll={(event) => setClipped(event.currentTarget.scrollTop > 0)}
         // 글은 칸 너비를 다 쓴다. 높이는 글만큼이고, 칸이 줄면 두 줄까지만 같이 줄어 안에서 스크롤된다
@@ -388,7 +397,7 @@ const TranscriptEditor = ({
         <button
           onClick={onSubmit}
           disabled={!text.trim()}
-          aria-label="답변 전송"
+          aria-label={t('sendButton')}
           // X보다 한 박자 늦게 — 위에서 아래로 차례로 열린다
           style={{ '--delay': '50ms' } as React.CSSProperties}
           className="animate-control-in flex size-10 flex-none items-center justify-center rounded-full bg-primary text-white transition-opacity active:scale-95 disabled:opacity-30"

@@ -3,8 +3,6 @@ import type { Partner } from '@/features/conversation/model/character-look';
 // 상대 이름의 정본은 스몰톡 상대 목록이라 가로 import한다 (카드 제목과 같은 영문 표기)
 import { PARTNERS } from '@/features/small-talk/model/partner';
 
-// 세 상대 이름이 모두 모음으로 끝나 조사는 "와"로 고정한다
-export const startLabelOf = (partner: Partner | null) => {
-  const name = PARTNERS.find((profile) => profile.id === partner)?.name;
-  return name ? `${name}와 대화 시작할게요!` : '첫 대화 시작할게요!';
-};
+/** 시작 버튼이 부를 상대 이름 — 모르는 상대면 null이고 버튼은 이름 없이 첫 대화를 시작한다고 쓴다 */
+export const partnerNameOf = (partner: Partner | null) =>
+  PARTNERS.find((profile) => profile.id === partner)?.name ?? null;

@@ -23,6 +23,21 @@ describe('isPaymentLive', () => {
 });
 
 describe('isRewardChallengeLive', () => {
+  it('일본어 화면에는 열지 않는다 — 환급은 한국에서만 판다', () => {
+    expect(
+      isRewardChallengeLive({
+        rewardEnabled: true,
+        locale: 'ja',
+        context: {
+          platform: 'ios',
+          appVersion: '1.4.0',
+          buildNumber: '18',
+          bridgeVersion: 8,
+        },
+      }),
+    ).toBe(false);
+  });
+
   const shell = (platform: 'ios' | 'android', appVersion: string) => ({
     platform,
     appVersion,
@@ -36,6 +51,7 @@ describe('isRewardChallengeLive', () => {
       expect(
         isRewardChallengeLive({
           rewardEnabled: true,
+          locale: 'ko',
           context: shell(platform, '1.4.0'),
         }),
       ).toBe(true);
@@ -48,6 +64,7 @@ describe('isRewardChallengeLive', () => {
       expect(
         isRewardChallengeLive({
           rewardEnabled: true,
+          locale: 'ko',
           context: shell(platform, '1.3.3'),
         }),
       ).toBe(false);
@@ -55,15 +72,20 @@ describe('isRewardChallengeLive', () => {
   );
 
   it('브라우저에는 열지 않는다', () => {
-    expect(isRewardChallengeLive({ rewardEnabled: true, context: null })).toBe(
-      false,
-    );
+    expect(
+      isRewardChallengeLive({
+        rewardEnabled: true,
+        locale: 'ko',
+        context: null,
+      }),
+    ).toBe(false);
   });
 
   it('스위치가 꺼져 있으면 어느 앱에도 열지 않는다', () => {
     expect(
       isRewardChallengeLive({
         rewardEnabled: false,
+        locale: 'ko',
         context: shell('ios', '1.4.0'),
       }),
     ).toBe(false);

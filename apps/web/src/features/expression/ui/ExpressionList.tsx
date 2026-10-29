@@ -2,6 +2,7 @@
 
 // 표현 리스트(433) — 진행도 바 + 표현 항목들
 import { motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import type { Expression } from '../api/list';
 import { ExpressionListItem } from './list/ExpressionListItem';
@@ -33,6 +34,7 @@ export const ExpressionList = ({
   premiumLocked = false,
   freeTrialExpressionId,
 }: ExpressionListProps) => {
+  const t = useTranslations('expression.list');
   const total = expressions.length;
   const done = expressions.filter((expression) => expression.completed).length;
   const ratio = total === 0 ? 0 : (done / total) * 100;
@@ -50,7 +52,7 @@ export const ExpressionList = ({
             <p
               className={`text-sm font-bold ${complete ? 'text-success' : 'text-primary'}`}
             >
-              {done}/{total} 완료
+              {t('progressLabel', { done, total })}
             </p>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">

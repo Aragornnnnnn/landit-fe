@@ -3,6 +3,7 @@
 // 스몰톡 탭 — 대화 상대를 고르고, 내가 먼저 걸거나 상대가 주제로 먼저 걸게 한다. 정답도 점수도 없는 대화다
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence } from 'motion/react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { useForceUpdateFirst } from '@/features/app-update/model/useForceUpdateFirst';
@@ -37,6 +38,8 @@ import { TopicPickerModal } from './_ui/TopicPickerModal';
 
 export default function SmallTalkPage() {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('smallTalk');
   const { main, fatalError, isLoading, refresh } = useSmallTalkMainQuery();
   // 오늘 예산을 다 썼는지는 서버(canStart)가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
   const exhausted = main !== null && !main.canStart;
@@ -45,6 +48,7 @@ export default function SmallTalkPage() {
   // 결제가 열리면 하루 한도가 없다 — 알약에 잔량 대신 무제한을 쓴다
   const { unlimited } = useSpeakingLimit();
   const { partner, look, speech, greet, selectPartner } = usePartnerGreeting();
+  const partnerName = t(partner.nameKey);
   // 주제는 서버가 매번 무작위로 뽑아 준다 — 열 때마다, 새로고침할 때마다 다시 받는다
   const picker = useTopicPicker({ partner: partner.id, refresh });
   // 강제 업데이트가 1순위다 — 그거거나 그럴지 모르는 동안엔 안내·시트가 나서지 않는다
@@ -118,7 +122,7 @@ export default function SmallTalkPage() {
           onClick={() => router.push(SMALLTALK_HISTORY_PATH)}
           className="absolute top-1 right-5 flex items-center gap-0.5 py-1 text-13 font-semibold text-muted-foreground active:opacity-60"
         >
-          기록
+          {t('tabPage.historyButton')}
           <ChevronRightIcon size={14} />
         </button>
         <PartnerPicker selected={partner.id} onSelect={selectPartner} />
@@ -132,7 +136,7 @@ export default function SmallTalkPage() {
         type="button"
         onClick={tapGreeting}
         onKeyDown={trapFocus}
-        aria-label={`${partner.koreanName} 인사 듣기`}
+        aria-label={t('tabPage.greetingLabel', { name: partnerName })}
         className={[
           'relative flex max-h-[190px] min-h-0 flex-1 justify-center transition-transform active:scale-[0.97]',
           coaching && 'z-50',
@@ -161,10 +165,10 @@ export default function SmallTalkPage() {
       {exhausted ? (
         <div className="mt-8 flex flex-col items-center gap-1.5 px-5 cq-tiny:mt-4">
           <p className="text-lg font-extrabold break-keep text-foreground cq-tiny:text-base">
-            오늘의 1분 스몰톡을 다 했어요
+            {t('tabPage.doneTitle')}
           </p>
           <p className="text-sm font-medium break-keep text-muted-foreground">
-            내일 또 같이 이야기해요
+            {t('tabPage.doneCaption')}
           </p>
         </div>
       ) : (
@@ -179,11 +183,14 @@ export default function SmallTalkPage() {
             <div className="mt-3 flex h-8 justify-center cq-tiny:hidden">
               {main && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
-                  오늘 남은 말하기
+                  {t('tabPage.remainingLabel')}
                   <span className="text-sm font-bold text-primary">
                     {unlimited
-                      ? '무제한'
-                      : toSpeakingTimeLabel(main.remainingSpeakingTimeMs)}
+                      ? t('tabPage.unlimitedLabel')
+                      : toSpeakingTimeLabel(
+                          main.remainingSpeakingTimeMs,
+                          locale,
+                        )}
                   </span>
                 </span>
               )}
@@ -198,7 +205,7 @@ export default function SmallTalkPage() {
                 disabled={isLoading}
                 onClick={startWithMe}
               >
-                내가 먼저 말 걸기
+                {t('tabPage.userFirstButton')}
                 <ArrowRightIcon size={16} />
               </Button>
               {/* 고를 주제가 없으면 이 길은 없는 것이다 — 조회 중엔 자리를 지킨다.
@@ -211,7 +218,7 @@ export default function SmallTalkPage() {
                   disabled={isLoading}
                   onClick={() => void picker.openPicker()}
                 >
-                  {partner.koreanName}가 먼저 말 걸기
+                  {t('tabPage.partnerFirstButton', { name: partnerName })}
                   <ArrowRightIcon size={16} />
                 </Button>
               )}
@@ -232,7 +239,7 @@ export default function SmallTalkPage() {
 
       <TopicPickerModal
         open={picker.isOpen}
-        partnerName={partner.koreanName}
+        partnerName={partnerName}
         topics={main?.topics ?? []}
         refreshing={picker.refreshing}
         onRefresh={() => void picker.refreshTopics()}

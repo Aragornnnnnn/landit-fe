@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS, type ExpressionReviewStep } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 // 가로 import 사유: 복습이 푸는 문제는 표현학습의 단어 칩 퀴즈 그대로다 — 화면·문제 변환·재도전 규칙의 정본이 expression에 있다
@@ -39,14 +40,15 @@ import {
 import { LANDY_QUIZ, ReviewIntro } from './ReviewIntro';
 import { ReviewNotice } from './ReviewNotice';
 
-// 오답 시트의 CTA — 같은 문제를 다시 만나는 경우에만 "다시 풀어볼게요"다.
+// 오답 시트의 CTA 문구 키(review.flow) — 같은 문제를 다시 만나는 경우에만 "다시 풀어볼게요"다.
 // 기회가 끝났으면(lastAttempt) 이 문제는 놓친 것으로 넘어가므로 남은 문제 유무로 갈린다
 const wrongLabelOf = (last: boolean, lastAttempt: boolean) => {
-  if (!last) return '다음 문제';
-  return lastAttempt ? '결과 볼게요' : '다시 풀어볼게요';
+  if (!last) return 'wrongNextButton';
+  return lastAttempt ? 'wrongResultButton' : 'retryButton';
 };
 
 export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
+  const t = useTranslations('review.flow');
   const router = useRouter();
   const queryClient = useQueryClient();
   const {
@@ -109,7 +111,7 @@ export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
     if (isLoading) return <ReviewLoading />;
     return (
       <ReviewNotice
-        message={error?.message ?? '복습을 불러오지 못했어요.'}
+        message={error?.message ?? t('loadError')}
         onHome={goHome}
         onRetry={
           error && isRetriableFailure(error) ? () => void refetch() : undefined
@@ -152,12 +154,7 @@ export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
   const question = currentQuestionOf(review);
   // 서버가 이미 놓친 문제를 가리키는 경우는 남은 문제가 없을 때뿐이라 위에서 걸러진다
   if (review.status === 'EXPIRED' || !question) {
-    return (
-      <ReviewNotice
-        message="복습할 수 있는 기간이 지났어요. 다음 알림에서 다시 만나요."
-        onHome={goHome}
-      />
-    );
+    return <ReviewNotice message={t('expiredError')} onHome={goHome} />;
   }
 
   // 결과 그림은 문제를 푸는 동안 받아 둔다 — 시작 안내 그림과 대역폭을 나누지 않고,
@@ -221,8 +218,8 @@ export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
         graded.current = null;
         setRound((current) => current + 1);
       }}
-      nextLabel={last ? '결과 볼게요' : '다음 문제'}
-      wrongLabel={wrongLabelOf(last, lastAttempt)}
+      nextLabel={last ? t('resultButton') : t('nextButton')}
+      wrongLabel={t(wrongLabelOf(last, lastAttempt))}
       progressRange={progressRangeOf(review)}
     />
   );

@@ -19,7 +19,6 @@ import type {
   ScenarioGrowthCard,
   SessionFeedbackResponse,
 } from '../../api/session-feedback';
-import { LOCKED_DETAIL_CTA_LABEL } from '../../model/feedback-view';
 import { FeedbackSummary } from './FeedbackSummary';
 
 const mocks = vi.hoisted(() => ({ getLevelAssessment: vi.fn() }));
@@ -91,7 +90,7 @@ const feedback = (
 
 const renderSummary = (
   value: SessionFeedbackResponse,
-  { detailLocked = false, onDetail = vi.fn() } = {},
+  { detailLocked = false, premium = false, onDetail = vi.fn() } = {},
 ) =>
   render(
     <QueryClientProvider client={new QueryClient()}>
@@ -99,6 +98,7 @@ const renderSummary = (
         feedback={value}
         title="카페"
         detailLocked={detailLocked}
+        premium={premium}
         onBack={vi.fn()}
         onDetail={onDetail}
       />
@@ -147,7 +147,7 @@ describe('FeedbackSummary', () => {
     expect(screen.queryByText(/걸음/)).not.toBeInTheDocument();
 
     // When 그 CTA를 누르면 호출부가 페이월로 보낼 수 있게 그대로 알린다
-    fireEvent.click(screen.getByText(LOCKED_DETAIL_CTA_LABEL));
+    fireEvent.click(screen.getByText('상세 피드백 볼게요'));
     expect(onDetail).toHaveBeenCalledTimes(1);
   });
 
@@ -290,6 +290,51 @@ describe('FeedbackSummary', () => {
   it('다시 쓴 배운 표현이 없으면 빈 문구를 보인다', () => {
     renderSummary(feedback({ expressionReuse: { pending: false, items: [] } }));
 
+    expect(screen.getByText('아직 배운 표현이 없어요.')).toBeInTheDocument();
+  });
+
+  it('같은 시나리오를 전에 끝낸 유료 유저의 재도전이면 빈 카드에 "아직" 대신 이번 대화 기준 문구를 보인다', () => {
+    renderSummary(
+      feedback({
+        hasPreviousSameScenarioCompletion: true,
+        growthFeedback: null,
+        expressionReuse: { pending: false, items: [] },
+      }),
+      { premium: true },
+    );
+
+    expect(
+      screen.getByText('지난번과 비교할 실수가 없었어요.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('이번 대화엔 활용한 표현이 없었어요.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('아직 지난 기록이 없어요.'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('무료 유저는 재도전이어도 배운 표현 카드에 처음 문구를 그대로 보인다', () => {
+    renderSummary(
+      feedback({
+        hasPreviousSameScenarioCompletion: true,
+        expressionReuse: { pending: false, items: [] },
+      }),
+      { premium: false },
+    );
+
+    expect(screen.getByText('아직 배운 표현이 없어요.')).toBeInTheDocument();
+  });
+
+  it('재도전 여부가 없는 구버전 응답은 첫 완료 문구를 그대로 쓴다', () => {
+    renderSummary(
+      feedback({
+        growthFeedback: null,
+        expressionReuse: { pending: false, items: [] },
+      }),
+    );
+
+    expect(screen.getByText('아직 지난 기록이 없어요.')).toBeInTheDocument();
     expect(screen.getByText('아직 배운 표현이 없어요.')).toBeInTheDocument();
   });
 

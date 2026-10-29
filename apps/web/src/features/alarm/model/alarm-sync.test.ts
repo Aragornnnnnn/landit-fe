@@ -6,18 +6,19 @@ import { alarmTarget, createAlarmDecider, desiredAlarm } from './alarm-sync';
 
 const EVERY_DAY = [1, 2, 3, 4, 5, 6, 7];
 const TODAY = '2026-10-07';
+const TITLE = '오늘의 시나리오 할 시간!';
 
 describe('desiredAlarm', () => {
   it('켜져 있으면 매일 그 시각에 울리고, 알람 유입 딱지를 단 시나리오 홈으로 가는 알람을 만든다', () => {
-    expect(desiredAlarm({ time: '07:30', enabled: true })).toEqual({
-      title: '오늘의 시나리오 할 시간!',
+    expect(desiredAlarm({ time: '07:30', enabled: true }, TITLE)).toEqual({
+      title: TITLE,
       schedules: [{ hour: 7, minute: 30, weekdays: EVERY_DAY }],
       path: '/scenario?utm_source=alarm&utm_medium=alarm&utm_campaign=scenario_alarm',
     });
   });
 
   it('꺼져 있으면 알람이 없다', () => {
-    expect(desiredAlarm({ time: '07:30', enabled: false })).toBeNull();
+    expect(desiredAlarm({ time: '07:30', enabled: false }, TITLE)).toBeNull();
   });
 });
 
@@ -31,11 +32,12 @@ describe('alarmTarget', () => {
     daily: { date: TODAY, scenario: { completed: false } },
     scenarioLoading: false,
     today: TODAY,
+    title: TITLE,
   };
 
   it('유료면 서버 설정대로 걸 알람을 정한다', () => {
     expect(alarmTarget(base)).toEqual({
-      desired: desiredAlarm(base.setting),
+      desired: desiredAlarm(base.setting, TITLE),
       doneOn: null,
     });
   });
@@ -68,7 +70,7 @@ describe('alarmTarget', () => {
   it('ADMIN은 결제하지 않아도 건다 — 결제 없이 실제 흐름을 시험할 수 있게', () => {
     expect(
       alarmTarget({ ...base, subscription: { premium: false }, isAdmin: true }),
-    ).toMatchObject({ desired: desiredAlarm(base.setting) });
+    ).toMatchObject({ desired: desiredAlarm(base.setting, TITLE) });
   });
 
   it('로그아웃이면 다른 값을 기다리지 않고 끈다 — 다음 사람이 앞 계정의 알람을 받지 않게', () => {
@@ -102,8 +104,8 @@ describe('alarmTarget', () => {
 });
 
 describe('createAlarmDecider', () => {
-  const alarm = desiredAlarm({ time: '07:30', enabled: true });
-  const later = desiredAlarm({ time: '21:00', enabled: true });
+  const alarm = desiredAlarm({ time: '07:30', enabled: true }, TITLE);
+  const later = desiredAlarm({ time: '21:00', enabled: true }, TITLE);
 
   // 셸 상태 — 시나리오 알람이 걸려 있으면 그 스케줄·갈 화면·건너뛴 날
   const status = (
@@ -123,6 +125,7 @@ describe('createAlarmDecider', () => {
             schedules: scheduled.schedules,
             path: scheduled.path,
             skipDate,
+            title: scheduled.title,
           },
         ]
       : [],
@@ -160,6 +163,27 @@ describe('createAlarmDecider', () => {
     const old = status({ ...alarm!, path: '/old' });
 
     expect(decide(alarm, old, null)).toMatchObject({ kind: 'set', alarm });
+  });
+
+  it('제목이 다르면 다시 건다 — 화면 언어가 바뀌면 알람도 그 언어로 다시 걸린다', () => {
+    const decide = createAlarmDecider();
+    const korean = status(alarm);
+    const japanese = { ...alarm!, title: '今日のシナリオの時間です！' };
+
+    expect(decide(japanese, korean, null)).toMatchObject({
+      kind: 'set',
+      alarm: japanese,
+    });
+  });
+
+  it('제목을 알려 주지 않는 옛 셸이면 제목으로는 다시 걸지 않는다', () => {
+    const decide = createAlarmDecider();
+    const old = status(alarm);
+    delete old.repeatingAlarms[0].title;
+
+    expect(
+      decide({ ...alarm!, title: '今日のシナリオの時間です！' }, old, null),
+    ).toBeNull();
   });
 
   it('꺼야 하는데 걸려 있으면 끄라고 보낸다', () => {

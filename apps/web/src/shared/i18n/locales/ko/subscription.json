@@ -1,0 +1,182 @@
+{
+  "benefits": {
+    "dailyScenarioLabel": "매일 새로운 시나리오 대화",
+    "detailFeedbackLabel": "문장마다 상세 피드백",
+    "phraseLabel": "수준별 원어민 표현 추천",
+    "pronunciationLabel": "원어민에 가까운 발음 교정",
+    "smallTalkLabel": "무제한 프리톡",
+    "accentLabel": "미국, 영국, 호주식 영어 공부"
+  },
+  "benefitComparison": {
+    "freeLabel": "무료",
+    "freeIncludedLabel": "무료 포함",
+    "freeExcludedLabel": "무료 미포함",
+    "premiumIncludedLabel": "프리미엄 포함"
+  },
+  "purchase": {
+    "currencyMismatchToast": "지금은 결제할 수 없어요. 잠시 후 다시 시도해 주세요",
+    "passUnavailableToast": "진행 중이거나 확인 중인 이용권이 있어 지금은 결제할 수 없어요",
+    "passCheckFailedToast": "구매할 수 있는지 확인하지 못했어요. 잠시 후 다시 시도해 주세요",
+    "browserToast": "결제는 랜딧 앱에서 할 수 있어요",
+    "outdatedShellToast": "앱을 최신 버전으로 업데이트하면 결제할 수 있어요",
+    "noResponseToast": "결제 응답이 없어요. 잠시 후 다시 시도해 주세요",
+    "failedToast": "결제에 실패했어요. 잠시 후 다시 시도해 주세요",
+    "pendingToast": "결제가 확인되는 중이에요. 잠시 후 다시 열어 주세요",
+    "restoreFailedToast": "구매 복원에 실패했어요. 잠시 후 다시 시도해 주세요",
+    "restoreEmptyToast": "복원할 구매 내역이 없어요"
+  },
+  "premiumHeaderEntry": {
+    "homeLabel": "홈으로",
+    "discountLabel": "할인",
+    "startLabel": "시작하기"
+  },
+  "premiumWelcome": {
+    "namedTitle": "환영해요, {nickname}님!<br></br>이제 랜딧을 마음껏 즐겨요",
+    "title": "환영해요!<br></br>이제 랜딧을 마음껏 즐겨요",
+    "nextButton": "다음"
+  },
+  "plans": {
+    "monthlyLabel": "월간",
+    "yearlyLabel": "연간",
+    "quarterlyLabel": "3개월",
+    "halfyearLabel": "6개월",
+    "passLabel": "100일 이용권"
+  },
+  "subscriptionEvents": {
+    "trialStartLabel": "무료 체험 시작",
+    "firstPurchaseLabel": "첫 결제",
+    "refundLabel": "환불",
+    "cancelLabel": "해지 예약",
+    "renewalLabel": "갱신 결제",
+    "uncancelLabel": "해지 취소",
+    "expirationLabel": "만료",
+    "billingIssueLabel": "결제 실패",
+    "productChangeLabel": "플랜 변경",
+    "grantLabel": "무료 이용 시작",
+    "transferLabel": "구독 이전",
+    "otherLabel": "구독 상태 변경",
+    "planLabel": "{plan} 플랜"
+  },
+  "subscriptionHistory": {
+    "title": "결제 내역",
+    "loadError": "결제 내역을 불러오지 못했어요",
+    "emptyBody": "아직 결제 내역이 없어요",
+    "sandboxBadge": "테스트"
+  },
+  "subscriptionCard": {
+    "trialTitle": "무료 체험 중이에요",
+    "activeTitle": "프리미엄을 쓰고 있어요",
+    "planActiveTitle": "{plan} 프리미엄을 쓰고 있어요",
+    "canceledTitle": "해지가 예약됐어요",
+    "passTitle": "100일 이용권을 쓰고 있어요",
+    "firstChargeLabel": "첫 결제일",
+    "nextChargeLabel": "다음 결제일",
+    "expiryLabel": "이용 만료일",
+    "autoRenewOffLabel": "{date} · 자동 갱신 꺼짐",
+    "firstAmountLabel": "첫 결제 금액",
+    "nextAmountLabel": "다음 결제 금액"
+  },
+  "subscriptionManage": {
+    "title": "구독 관리",
+    "passTitle": "이용권 관리",
+    "benefitsTitle": "이용 중인 혜택",
+    "historyLink": "결제 내역",
+    "passSectionTitle": "이용권",
+    "subscriptionSectionTitle": "구독",
+    "cancelSubscriptionLink": "구독 해지하기",
+    "cancelTrialLink": "체험 해지하기",
+    "resubscribeLink": "해지 취소하기",
+    "listPriceLabel": "정가",
+    "noSubscriptionLink": "구독 중이 아니에요 · 프리미엄 구독하기"
+  },
+  "cancelFlow": {
+    "title": "구독 해지",
+    "leaveLink": "그래도 해지하러 가기",
+    "guestLabel": "게스트",
+    "levelLabel": "{level} Lv.{number}",
+    "quoteBody": "“{text}”"
+  },
+  "reasonStep": {
+    "title": "해지하기 전에<br></br>이유를 알려주세요",
+    "otherLabel": "어떤 이유인지 적어주세요 (필수)",
+    "otherPlaceholder": "예: 발음 평가가 너무 엄격한 것 같아요",
+    "nextButton": "다음",
+    "stayButton": "계속 이용할게요"
+  },
+  "methodStep": {
+    "title": "어떤 방법으로<br></br>공부하실 예정이에요?",
+    "nextButton": "다음"
+  },
+  "cancelReasons": {
+    "priceLabel": "가격이 부담돼요",
+    "timeLabel": "쓸 시간이 없어요",
+    "progressLabel": "실력이 느는 것 같지 않아요",
+    "contentLabel": "원하는 콘텐츠가 부족해요",
+    "bugLabel": "앱이 불편하거나 오류가 있어요",
+    "otherMethodLabel": "다른 방법으로 공부하려고요",
+    "otherLabel": "기타"
+  },
+  "studyMethods": {
+    "academyLabel": "학원 · 과외",
+    "otherAppLabel": "다른 앱",
+    "youtubeLabel": "유튜브 · 독학",
+    "abroadLabel": "어학연수 · 해외"
+  },
+  "retention": {
+    "stayButton": "조금 더 써볼게요",
+    "priceTitle": "가격이 부담되셨군요",
+    "priceUnknownBody": "조금 더 써 보고 결정해도 늦지 않아요.",
+    "dailyPriceLabel": "하루 {price}",
+    "monthlyDailyBody": "지금 요금은 {daily}이에요.",
+    "planDailyBody": "{plan} 요금은 {daily}이에요.",
+    "gumTreatBody": "매일 껌 한 통 값으로 영어 회화를 연습하고 있어요.",
+    "twoCandiesTreatBody": "매일 사탕 두 개 값으로 영어 회화를 연습하고 있어요.",
+    "candyTreatBody": "매일 사탕 하나 값으로 영어 회화를 연습하고 있어요.",
+    "currentPlanLabel": "지금 · {plan}",
+    "quarterlyPriceLabel": "3개월 {price}",
+    "halfyearPriceLabel": "6개월 {price}",
+    "yearlyPriceLabel": "연 {price}",
+    "passPriceLabel": "100일 {price}",
+    "progressTitle": "실력이 안 느는 것 같으셨군요",
+    "progressBody": "매 대화를 분석해서 {nickname}님 수준에 맞춰 가고 있어요.",
+    "progressTogetherBody": "지금까지 이만큼 함께했어요.",
+    "activeDaysValueLabel": "{days}일",
+    "activeDaysLabel": "학습한 날",
+    "levelStatLabel": "내 학습 레벨",
+    "timeTitle": "시간이 없으셨군요",
+    "timeMinutesBody": "하루 {minutes}분만 투자하면",
+    "timeCoverBody": "대화부터 표현 학습까지 할 수 있어요.",
+    "timeReminderBody": "잊지 않게 알림도 보내드릴게요.",
+    "averageTimeLabel": "대화부터 표현 학습까지 평균 소요 시간",
+    "minutesValueLabel": "{minutes}분",
+    "reminderLabel": "매일 학습 알림",
+    "reminderTimeLabel": "매일 오후 9:00",
+    "contentTitle": "원하는 상황이 없으셨군요",
+    "readAndReplyBody": "빠짐없이 읽고 꼭 답장 드려요.",
+    "contentScenarioBody": "만들 수 있는 건 바로 시나리오로 만들어 드릴게요.",
+    "mailboxLabel": "편지함",
+    "contentMailboxLabel": "빠짐없이 읽고 꼭 답장해요",
+    "contentButton": "원하는 상황 알려주기",
+    "bugTitle": "불편을 드려 죄송해요",
+    "bugFixBody": "버그는 파악하는 즉시 바로 고치고 있어요.",
+    "bugMailboxLabel": "고치면 편지 답장으로 알려드려요",
+    "bugButton": "불편한 점 알려주기",
+    "otherTitle": "말씀 감사해요",
+    "otherReadBody": "적어주신 내용은 빠짐없이 읽고 꼭 답장 드려요.",
+    "otherReplyBody": "답장은 편지함으로 갈게요.",
+    "otherQuoteLabel": "적어주신 내용",
+    "otherButton": "편지함으로 답장 받기"
+  },
+  "methodRetention": {
+    "academyTitle": "수업 뒤 복습은 말하기로",
+    "academyBody": "수업에서 배운 표현을 랜딧에서 말해 보세요.",
+    "otherAppTitle": "익힌 표현, 여기서 말해 보세요",
+    "otherAppBody": "다른 데서 익힌 표현도 여기서 말해 보세요.",
+    "youtubeTitle": "본 표현을 말해 볼 차례예요",
+    "youtubeBody": "영상으로 본 표현을 입으로 꺼내 보세요.",
+    "abroadTitle": "떠나기 전에 말문을 트세요",
+    "abroadBody": "떠나기 전 여기서 말문을 트고 가세요.",
+    "spokenStaysBody": "말해 본 표현은 정말 오래 남을 거예요.",
+    "abroadStaysBody": "다녀와서도 정말 오래 이어질 거예요."
+  }
+}

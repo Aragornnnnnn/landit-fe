@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { SmallTalkTopic } from '@/features/small-talk/api/small-talk';
+import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { TopicPickerModal } from './TopicPickerModal';
 
@@ -31,6 +32,15 @@ const renderModal = (
   );
 
 describe('TopicPickerModal', () => {
+  it('일본어 화면은 조사를 문구 안에 둔 일본어 문장으로 상대에게 주제를 묻는다', () => {
+    setTestLocale('ja');
+    renderModal({ partnerName: 'クロエ' });
+
+    expect(
+      screen.getByRole('heading', { name: 'クロエと何について話しますか？' }),
+    ).toBeInTheDocument();
+  });
+
   it('새로고침을 누르면 주제를 다시 받아오라고 알린다', async () => {
     const onRefresh = vi.fn();
     renderModal({ onRefresh });

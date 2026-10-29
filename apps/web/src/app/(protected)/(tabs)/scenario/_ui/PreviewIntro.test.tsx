@@ -9,6 +9,7 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
+import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { PreviewIntro } from './PreviewIntro';
 
@@ -113,5 +114,38 @@ describe('PreviewIntro', () => {
     // Then 마쳤다고 남기고 프리뷰를 넘긴다
     expect(track).toHaveBeenCalledWith('Premium Preview Intro Completed');
     expect(onDone).toHaveBeenCalledTimes(1);
+  });
+
+  it('환급을 팔지 않으면 적립 대신 매일 시나리오와 맞춤 표현을 소개한다', () => {
+    // Given 환급 금액 없이 연 튜토리얼
+    vi.useFakeTimers();
+    render(<PreviewIntro dailyWon={null} onDone={vi.fn()} />);
+
+    // When 첫 문장을 다 쓰면
+    runClock();
+
+    // Then 매일 시나리오를 준다고 말하고, 적립 이야기는 없다
+    expect(
+      screen.getByText(/매일 이렇게\s*시나리오를 하나씩\s*제공해 드려요/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/받을 수 있어요/)).not.toBeInTheDocument();
+  });
+
+  it('일본어 화면에서는 문장을 일본어로 쓰고 강조 자리도 일본어 어순을 따른다', () => {
+    // Given 일본어 화면에서 환급 금액 없이 연 튜토리얼
+    setTestLocale('ja');
+    vi.useFakeTimers();
+    render(<PreviewIntro dailyWon={null} onDone={vi.fn()} />);
+
+    // When 첫 문장을 다 쓰면
+    runClock();
+
+    // Then 매일 시나리오 문장을 일본어로 읽어 주고, 강조는 「シナリオをひとつずつ」에 걸린다
+    expect(
+      screen.getByText(/毎日こうして\s*シナリオをひとつずつ\s*お届けします/),
+    ).toBeInTheDocument();
+    expect(screen.getByText('シナリオをひとつずつ')).toHaveClass(
+      'text-[#ffd25e]',
+    );
   });
 });

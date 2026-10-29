@@ -1,6 +1,8 @@
 // 셸이 준 오퍼링(패키지 목록)을 플랜별 패키지로 묶는다 — 화면은 원화 숫자로 표시값을 덮어쓰고, 결제 요청에는 packageId를 쓴다
 import type { OfferingPackage, SubscriptionPlan } from '@landit/bridge';
 
+import { isPricedCurrency, type PricedCurrency } from '../../lib/store-price';
+
 /** 플랜 하나에 대응하는 스토어 패키지 — 결제에 쓸 id와 스토어가 정한 가격 */
 export interface PlanPackage {
   packageId: string;
@@ -82,7 +84,7 @@ export const unclassifiablePackages = (packages: OfferingPackage[]) =>
     (pkg) => !reservedPlan(pkg) && !passPlan(pkg) && !periodPlan(pkg),
   );
 
-/** 현재 오퍼링을 정가·할인으로 가른 것 — 페이월은 정가를, 이탈 할인 시트는 할인을 쓴다 */
+/** 현재 오퍼링을 정가·할인으로 가른 것 — 페이월은 연간만 할인을, 이탈 할인 시트는 할인을 쓴다 */
 export interface Offering {
   regular: PlanPackages;
   promo: PlanPackages;
@@ -108,7 +110,7 @@ const isDiscount = (pkg: OfferingPackage) => pkg.id.endsWith(DISCOUNT_SUFFIX);
 /**
  * 원화 패키지만 남긴다. 셸 가격은 통화가 늘 오므로 KRW일 때만 원화다.
  *
- * 화면 숫자가 「원」 표기와 100원 단위 환산을 전제로 짜여 있어, 다른 통화는 그대로 그리면 "월 100원" 같은 값이 나온다 (해외 스토어프런트는 다음 이슈).
+ * 이탈 할인 시트·편지 할인 오퍼가 쓴다 — 할인은 한국에서만 팔아서, 엔화 스토어면 패키지가 비어 오퍼가 뜨지 않는다.
  */
 export const krwPackage = (pkg?: PlanPackage) =>
   pkg?.currency === 'KRW' ? pkg : undefined;
@@ -116,7 +118,8 @@ export const krwPackage = (pkg?: PlanPackage) =>
 /**
  * 스토어 가격 중 원화만 숫자로 뽑는다.
  *
- * 다른 통화는 월 환산·할인율 산식이 맞지 않아 비워 두고, 화면은 등록값을 쓴다 (해외 스토어프런트는 다음 이슈).
+ * 100일 이용권이 쓴다 — 환급 금액이 이용권 가격에서 나오고 환급은 늘 원화라, 다른 통화면 비워 두고 등록값을 쓴다.
+ * 월간·연간 카드는 엔화도 그리는 toRegularPrices를 쓴다.
  */
 export const toKrwPrices = (
   packages: PlanPackages,
@@ -128,11 +131,40 @@ export const toKrwPrices = (
   pass: krwPackage(packages.pass)?.price,
 });
 
-/** 오퍼링을 못 받았을 때 결제에 쓸 RevenueCat 표준 패키지 identifier — 셸이 identifier로 패키지를 찾는다.
- * 옛 3·6개월 플랜은 예약 식별자, 이용권은 커스텀 이름이다 */
+/**
+ * 페이월 카드(월간·연간)에 그릴 스토어 가격과 그 통화 — 엔화는 두 플랜이 다 엔화일 때만 쓰고, 아니면 원화로 돌아간다.
+ * 한쪽만 엔화면 빈칸에 원화 등록값이 들어가 한 화면에 통화가 섞인다.
+ */
+export const toRegularPrices = (
+  packages: PlanPackages,
+): {
+  currency: PricedCurrency;
+  prices: Partial<Record<SubscriptionPlan, number>>;
+} => {
+  const { monthly, yearly } = packages;
+  const bothSameForeign =
+    monthly &&
+    yearly &&
+    monthly.currency !== 'KRW' &&
+    monthly.currency === yearly.currency;
+  if (bothSameForeign && isPricedCurrency(monthly.currency)) {
+    return {
+      currency: monthly.currency,
+      prices: { monthly: monthly.price, yearly: yearly.price },
+    };
+  }
+  const krw = toKrwPrices(packages);
+  return {
+    currency: 'KRW',
+    prices: { monthly: krw.monthly, yearly: krw.yearly },
+  };
+};
+
+/** 오퍼링을 못 받았을 때 결제에 쓸 RevenueCat 패키지 identifier — 셸이 identifier로 패키지를 찾는다.
+ * 옛 3·6개월 플랜은 예약 식별자, 연간은 할인 패키지(정가 `$rc_annual`은 더는 팔지 않는다), 이용권은 커스텀 이름이다 */
 export const DEFAULT_PACKAGE_IDS: Record<SubscriptionPlan, string> = {
   monthly: '$rc_monthly',
-  yearly: '$rc_annual',
+  yearly: 'annual_discount',
   quarterly: '$rc_three_month',
   halfyear: '$rc_six_month',
   // 대시보드에서 이용권 패키지에 붙이는 이름. 가격을 이름에 넣지 않아, 가격이 다른 상품으로 바꿔 끼워도 이름은 그대로다

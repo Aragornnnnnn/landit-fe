@@ -34,6 +34,15 @@ describe('weekdayLabelOf', () => {
     { date: '2026-08-06', expected: '목' },
     { date: '2026-08-09', expected: '일' },
   ])('$date 는 $expected요일이다', ({ date, expected }) => {
-    expect(weekdayLabelOf(date)).toBe(expected);
+    expect(weekdayLabelOf(date, 'ko')).toBe(expected);
+  });
+});
+
+describe('weekdayLabelOf 일본어', () => {
+  it.each([
+    { date: '2026-08-06', expected: '木' },
+    { date: '2026-08-09', expected: '日' },
+  ])('$date 는 $expected曜日이다', ({ date, expected }) => {
+    expect(weekdayLabelOf(date, 'ja')).toBe(expected);
   });
 });

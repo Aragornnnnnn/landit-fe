@@ -3,6 +3,8 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { setTestLocale } from '@/shared/i18n/test-locale';
+
 import { ShareMenuEntry } from './ShareMenuEntry';
 
 const mocks = vi.hoisted(() => ({
@@ -35,6 +37,21 @@ describe('ShareMenuEntry', () => {
       }),
     );
     expect(mocks.showToast).not.toHaveBeenCalled();
+  });
+
+  // 받는 쪽 미리보기 카드가 보내는 사람 언어로 뜨게 한다
+  it('일본어 화면에서 공유하면 링크에 lang=ja를 붙인다', async () => {
+    setTestLocale('ja');
+    mocks.shareText.mockResolvedValue('native_sheet');
+    render(<ShareMenuEntry />);
+
+    await userEvent.click(screen.getByRole('button'));
+
+    await waitFor(() =>
+      expect(mocks.shareText).toHaveBeenCalledWith(
+        expect.stringContaining('&lang=ja'),
+      ),
+    );
   });
 
   it('링크 복사로 끝나면 복사했다고 알린다', async () => {

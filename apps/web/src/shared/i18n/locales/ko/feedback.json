@@ -1,0 +1,93 @@
+{
+  "levelNames": {
+    "babyLabel": "애기 마법사",
+    "noviceLabel": "입문 마법사",
+    "apprenticeLabel": "견습 마법사",
+    "beginnerLabel": "초급 마법사",
+    "intermediateLabel": "중급 마법사"
+  },
+  "domains": {
+    "situationPerformanceLabel": "상황 수행 능력",
+    "situationPerformanceShortLabel": "상황 수행",
+    "grammarLabel": "문법",
+    "grammarShortLabel": "문법",
+    "vocabularyLabel": "어휘",
+    "vocabularyShortLabel": "어휘",
+    "discourseLabel": "대화 구성",
+    "discourseShortLabel": "대화 구성",
+    "interactionPragmaticsLabel": "상호 작용 및 활용",
+    "interactionPragmaticsShortLabel": "상호 작용"
+  },
+  "summaryDomains": {
+    "situationPerformanceLabel": "상황 대처 능력",
+    "situationPerformanceDescription": "상황에 맞게 해야 할 말을 해냈는지 봐요",
+    "vocabularyLabel": "어휘력",
+    "vocabularyDescription": "상황에 어울리는 단어를 골라 썼는지 봐요",
+    "grammarLabel": "문법",
+    "grammarDescription": "시제·어순 같은 문법을 맞게 썼는지 봐요",
+    "discourseLabel": "문장 완성도",
+    "discourseDescription": "생각을 끝까지 이어 완결된 문장으로 말했는지 봐요",
+    "interactionPragmaticsLabel": "대화 매너",
+    "interactionPragmaticsDescription": "상대 말에 반응하며 자연스럽게 주고받았는지 봐요"
+  },
+  "feedbackView": {
+    "fallbackTitle": "대화 피드백"
+  },
+  "feedbackFlow": {
+    "unavailableError": "피드백을 불러오지 못했어요.",
+    "nextButton": "다음으로"
+  },
+  "feedbackSummary": {
+    "closeButton": "닫기",
+    "successBody": "{total}번 중 <emphasis>{good}번</emphasis> 원어민처럼 말했어요",
+    "overallTitle": "총평",
+    "lockedDetailLabel": "상세 피드백 보기. 결제 화면으로 갑니다",
+    "lockedDetailButton": "상세 피드백 볼게요",
+    "improveButton": "원어민까지 {count}걸음, 고쳐볼게요",
+    "reviewButton": "뭐가 잘 통했는지 볼게요",
+    "growthEmptyTitle": "지난번엔 헷갈렸던 과거형",
+    "growthEmptyBody": "아직 지난 기록이 없어요.",
+    "growthEmptyRetryBody": "지난번과 비교할 실수가 없었어요.",
+    "reuseEmptyBody": "아직 배운 표현이 없어요.",
+    "reuseEmptyRetryBody": "이번 대화엔 활용한 표현이 없었어요.",
+    "fallbackTitle": "오늘도 시나리오를 잘 마무리했어요"
+  },
+  "feedbackDetail": {
+    "backButton": "이전",
+    "title": "상세 분석",
+    "finishButton": "분석 다 봤어요",
+    "nextButton": "다음 분석 볼게요",
+    "goodTitle": "잘 통했어요",
+    "improveTitle": "한 단계 더 업그레이드해봐요",
+    "questionLabel": "질문",
+    "situationLabel": "상황",
+    "answerLabel": "내 답변",
+    "analogyTitle": "한국어로 치면",
+    "goodReasonTitle": "잘한 이유",
+    "goodDetailTitle": "이 디테일이 통했어요",
+    "correctionTitle": "이렇게 하면 더 통해요",
+    "positiveTitle": "이 부분은 좋았어요"
+  },
+  "growthCard": {
+    "succeededTitle": "지난번엔 헷갈렸던 {pattern}",
+    "stillTitle": "아직 헷갈리는 {pattern}",
+    "todayLabel": "오늘",
+    "succeededBody": "지난번엔 헷갈렸는데, 오늘은 맞았어요.",
+    "stillBody": "지난번에 이어 오늘도 헷갈렸어요. 상세 피드백에서 다시 볼 수 있어요."
+  },
+  "reusedExpressionsCard": {
+    "title": "랜딧에서 배운 표현을 실제로 사용했어요",
+    "moreButton": "+{count}개 더 보기"
+  },
+  "scoreTrack": {
+    "scoreLabel": "원어민 이해도 {score}%",
+    "mascotLabel": "날아가는 래디"
+  },
+  "summaryLevelCard": {
+    "title": "이번 대화에서",
+    "scoreLabel": "{score}점",
+    "loadingLabel": "이번 대화 점수를 분석하고 있어요",
+    "infoBody": "이번 대화 한 번을 영역별로 살펴본 점수예요. 100점에 가까울수록 원어민처럼 자연스럽게 말했어요.",
+    "infoButton": "점수 설명"
+  }
+}

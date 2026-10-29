@@ -1,12 +1,14 @@
-// API 호출 진입점 — api.get/post/... 로 부르면 토큰 부착·선발급·401 재발급을 request가 알아서 처리한다
+// API 호출 진입점 — api.get/post/... 로 부르면 토큰 부착·선발급·401 재발급·화면 언어 헤더를 request가 알아서 처리한다
 import { parseApiResponse } from '@/shared/api/parse';
 import { REFRESH_PATH, refreshAccessToken } from '@/shared/auth/api/refresh';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { clearSession } from '@/shared/auth/clear-session';
+import { commonTranslator } from '@/shared/i18n/common-translator';
+import { localeFromDocument } from '@/shared/i18n/locale';
 import { LOGIN_PATH } from '@/shared/lib/routes';
 
 /**
- * API 호출 진입점. 로그인 토큰 부착, 토큰이 없을 때 선발급, 401 재발급·1회 재시도를 알아서 처리한다.
+ * API 호출 진입점. 로그인 토큰 부착, 토큰이 없을 때 선발급, 401 재발급·1회 재시도, 화면 언어(Accept-Language) 부착을 알아서 처리한다.
  *
  * @typeParam T 성공 응답 `data`의 타입 — 백엔드 응답을 가공 없이 그대로 반환한다
  * @throws ApiError 백엔드가 실패 응답을 주면 (endpoint·status·code 포함 — reportError가 태그로 승격)
@@ -41,6 +43,8 @@ async function request<T>(
   const headers = new Headers(
     body instanceof FormData ? {} : { 'Content-Type': 'application/json' },
   );
+  // 백엔드가 화면과 같은 언어로 응답하게 한다
+  headers.set('Accept-Language', localeFromDocument());
   if (tokenToSend) {
     headers.set('Authorization', `Bearer ${tokenToSend}`);
   }
@@ -65,7 +69,7 @@ async function request<T>(
     // refresh까지 실패 = 세션 끝. 정리하고 로그인 화면으로 보낸다
     clearSession();
     window.location.href = LOGIN_PATH;
-    throw new Error('세션이 만료됐어요. 다시 로그인해 주세요.');
+    throw new Error(commonTranslator()('api.sessionExpiredError'));
   }
 
   return read(response);

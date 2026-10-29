@@ -11,7 +11,7 @@ describe('toReceivedBadge', () => {
     const badge = toReceivedBadge('DIRECT');
 
     // Then 공지·업데이트·답장과 다른 칩이 된다
-    expect(badge).toEqual({ label: '편지', tone: 'direct' });
+    expect(badge).toEqual({ labelKey: 'directBadge', tone: 'direct' });
   });
 
   it('모르는 종류가 오면 개인 편지와 같은 「편지」 칩으로 물러선다', () => {

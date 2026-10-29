@@ -3,6 +3,7 @@
 // 마이페이지 "음성" 행 — 눌러 들어간 시트에서 영어 음성이 들리는 속도를 고른다. 값은 이 기기의 localStorage에만 산다
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 
 import { soundAudioSrc } from '@/features/onboarding/model/sound-check';
 import { track } from '@/shared/analytics';
@@ -27,6 +28,7 @@ const rateLabel = (rate: SpeechRate) => `${rate}x`;
 const PREVIEW_SRC = soundAudioSrc(0);
 
 export const SpeechRateMenuEntry = () => {
+  const t = useTranslations('me.speechRateMenu');
   const [open, setOpen] = useState(false);
   // 서버 렌더에서는 기본 배속으로 두고, 클라이언트에서 저장값을 읽는다
   const rate = useSyncExternalStore(
@@ -87,7 +89,7 @@ export const SpeechRateMenuEntry = () => {
   return (
     <>
       <MenuButton
-        title="음성"
+        title={t('title')}
         icon={<Emoji>🔊</Emoji>}
         onClick={() => setOpen(true)}
       />
@@ -95,8 +97,8 @@ export const SpeechRateMenuEntry = () => {
       <SettingSheet
         open={open}
         onClose={close}
-        title="음성"
-        description="영어 음성이 들리는 속도예요"
+        title={t('title')}
+        description={t('description')}
         // 들어보기는 제목 오른쪽 보조 동작 — 본문 세로 흐름(세그먼트·축 라벨·닫기)에 버튼을 하나 더 쌓지 않는다
         trailing={
           <button
@@ -109,13 +111,13 @@ export const SpeechRateMenuEntry = () => {
             <span className="text-9" aria-hidden>
               {playing ? '■' : '▶'}
             </span>
-            {playing ? '멈추기' : '들어보기'}
+            {playing ? t('stopButton') : t('playButton')}
           </button>
         }
       >
         <div
           role="radiogroup"
-          aria-label="말하기 속도"
+          aria-label={t('rateGroupLabel')}
           className="mt-5 flex gap-0 rounded-[10px] p-1"
           style={{ background: '#F2F2F7' }}
         >
@@ -127,7 +129,7 @@ export const SpeechRateMenuEntry = () => {
                 type="button"
                 role="radio"
                 aria-checked={selected}
-                aria-label={`${option}배`}
+                aria-label={t('rateLabel', { rate: option })}
                 onClick={() => choose(option)}
                 className={`flex-1 rounded-lg py-[9px] text-13 transition-colors ${
                   selected ? 'bg-white font-bold shadow-sm' : 'font-medium'
@@ -146,10 +148,10 @@ export const SpeechRateMenuEntry = () => {
           style={{ color: '#9CA3AF' }}
         >
           <span>
-            <Emoji>🐢</Emoji> 느리게
+            <Emoji>🐢</Emoji> {t('slowLabel')}
           </span>
           <span>
-            빠르게 <Emoji>🐇</Emoji>
+            {t('fastLabel')} <Emoji>🐇</Emoji>
           </span>
         </div>
       </SettingSheet>

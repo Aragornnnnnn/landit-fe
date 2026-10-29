@@ -1,0 +1,155 @@
+{
+  "thoughtReveal": {
+    "mascotLabel": "랜디",
+    "frameCaption": "대신 알려주는 속마음",
+    "waitingLabel": "상대가 생각하고 있어요"
+  },
+  "thoughtOverlay": {
+    "dialogLabel": "상대방 속마음"
+  },
+  "micControl": {
+    "retryButton": "다시 말하기",
+    "sendButton": "보내기",
+    "cancelButton": "답변 중단",
+    "doneButton": "답변 완료",
+    "resendButton": "다시 보내기",
+    "resendHint": "눌러서 다시 보내기",
+    "keyboardButton": "키보드로 입력",
+    "speakButton": "말하기"
+  },
+  "questionCard": {
+    "lastQuestionBadge": "마지막 질문이에요",
+    "instructionCaption": "내가 먼저 말해보는 상황",
+    "replayButton": "다시 듣기",
+    "stopReplayButton": "다시 듣기 멈추기",
+    "showTranslationButton": "해석 보기",
+    "hideTranslationButton": "해석 접기",
+    "showTextButton": "영어 문장 보기",
+    "hideTextButton": "영어 문장 가리기"
+  },
+  "userTranscript": {
+    "editLabel": "답변 고치기: {text}",
+    "headerLabel": "내 답변",
+    "unsentError": "연결이 불안정해요",
+    "editBadge": "수정",
+    "editHint": "말한 내용과 다르면 눌러서 고칠 수 있어요"
+  },
+  "transcriptEditor": {
+    "headerLabel": "내 답변",
+    "cancelButton": "입력 취소",
+    "placeholder": "답변을 입력하세요",
+    "sendButton": "답변 전송",
+    "englishOnlyToast": "영어로만 입력할 수 있어요",
+    "limitToast": "{max}자까지 입력할 수 있어요"
+  },
+  "listeningDots": {
+    "listeningLabel": "듣는 중"
+  },
+  "micPermissionSheet": {
+    "title": "마이크를 켜야 대화할 수 있어요",
+    "browserBody": "브라우저 설정에서 이 사이트의 마이크 권한을 허용한 뒤 다시 시도해 주세요.",
+    "closeButton": "닫기",
+    "settingsButton": "설정 열기",
+    "openSettingsBody": "아래 '설정 열기'를 눌러요.",
+    "findMicBody": "권한 → 마이크로 이동해요.",
+    "allowBody": "허용을 켜고 돌아와요."
+  },
+  "exitConfirmSheet": {
+    "title": "대화를 종료할까요?",
+    "description": "지금 나가면 진행 중인 대화가 저장되지 않아요.",
+    "confirmButton": "나가기",
+    "continueButton": "계속하기"
+  },
+  "conversationTurns": {
+    "connectionToast": "연결에 문제가 생겼어요. 잠시 후 다시 시도해 주세요"
+  },
+  "conversationInput": {
+    "notRecognizedToast": "말이 인식되지 않았어요. 다시 말해볼까요?",
+    "sttErrorToast": "음성 인식에 문제가 생겼어요. 다시 시도해 주세요",
+    "limitReachedToast": "답변이 길어서 여기까지 받았어요"
+  },
+  "smallTalkFlow": {
+    "openingHint": "오늘 있었던 일이든 요즘 관심사든, 먼저 말을 걸어보세요",
+    "connectionToast": "연결에 문제가 생겨 대화를 이어가지 못했어요",
+    "completeFailedToast": "연결에 문제가 생겨 대화를 마무리하지 못했어요"
+  },
+  "smallTalkConversation": {
+    "userFirstHint": "편하게 인사부터 건네 보세요!",
+    "exitButton": "대화 나가기",
+    "feedbackButton": "피드백 보러가기",
+    "remainingTimeLabel": "남은 말하기 시간 <emphasis>{time}</emphasis>"
+  },
+  "talkSummary": {
+    "speakingTimeLabel": "말한 시간",
+    "exchangeLabel": "주고받은 말",
+    "exchangeCountLabel": "{count}개"
+  },
+  "smallTalkExitSheet": {
+    "title": "이대로 끝내려고요?",
+    "description": "대화를 잘 마무리하는 것까지가 영어 실력!",
+    "goodbyeCaption": "직접 끝내볼래요",
+    "closeButton": "직접 대화 마무리하기",
+    "completeButton": "대화 종료하기"
+  },
+  "scenarioTalkPage": {
+    "notFoundError": "시나리오를 찾을 수 없어요.",
+    "retryButton": "다시 시도",
+    "homeButton": "홈으로"
+  },
+  "answerGuideChip": {
+    "openButton": "예시 볼래요",
+    "hint": "말이 안 떠오르면 눌러 봐요"
+  },
+  "answerGuideCard": {
+    "regionLabel": "답변 예시",
+    "title": "막막하면 이렇게 말해 봐요",
+    "closeButton": "접기"
+  },
+  "scenarioTalkFlow": {
+    "userFirstHint": "상황을 잘 읽고 먼저 말을 걸어보세요!",
+    "progressLabel": "대화 진행도",
+    "exitButton": "대화 나가기",
+    "feedbackButton": "상세 분석 보러갈래요"
+  },
+  "smallTalkStart": {
+    "startError": "대화를 시작하지 못했어요. 잠시 후 다시 시도해 주세요",
+    "backButton": "돌아가기"
+  },
+  "analyzingScreen": {
+    "title": "방금 대화를 바탕으로<br></br>레벨을 분석하고 있어요",
+    "listeningCaption": "방금 대화를 다시 듣고 있어요",
+    "comparingCaption": "원어민 표현과 비교하고 있어요",
+    "reviewingCaption": "영역별로 꼼꼼히 살펴보고 있어요",
+    "finalizingCaption": "레벨과 학습지를 정리하고 있어요"
+  },
+  "levelResultScreen": {
+    "worksheetButton": "나에게 맞는 학습지 받기",
+    "namedLevelCaption": "{nickname}님의 레벨은",
+    "levelCaption": "지금 레벨은",
+    "scoresTitle": "영역별 점수"
+  },
+  "postConversationFlow": {
+    "previewStartButton": "랜딧으로 영어 공부 시작하기"
+  },
+  "scoreChart": {
+    "summaryLabel": "영역별 점수. {scores}",
+    "domainScoreLabel": "{domain} {score}점",
+    "separatorLabel": ", "
+  },
+  "preparedLearningScreen": {
+    "title": "방금 대화를 더 원어민처럼 하도록 맞춤형 학습 <emphasis>{count}개</emphasis>를 준비했어요",
+    "levelCaption": "내 <emphasis>레벨</emphasis>에 딱 맞춰 드려요",
+    "namedLevelCaption": "{nickname}님 <emphasis>레벨</emphasis>에 딱 맞춰 드려요",
+    "pickedCaption": "방금 대화에서 바로 뽑은 <emphasis>표현 {count}개</emphasis>예요",
+    "practiceCaption": "<emphasis>이미지·예문·퀴즈</emphasis>로 익혀요",
+    "pronunciationCaption": "<emphasis>발음 평가</emphasis>로 원어민에 가까워져요",
+    "reviewCaption": "<emphasis>복습 퀴즈</emphasis>로 완전히 체화해요",
+    "freeTalkCaption": "<emphasis>무제한 프리톡</emphasis>에서 활용해요",
+    "lockedLabel": "잠긴 학습 {count}개. 레벨에 맞춰 준비한 학습을 이미지·예문·퀴즈, 발음 평가, 복습 퀴즈, 프리톡으로 이어 가요",
+    "coffeeMeaningLabel": "커피 한잔 하러 갈래?",
+    "agreeMeaningLabel": "나도 완전 콜이야",
+    "dropByMeaningLabel": "잠깐 들를게",
+    "goToMeaningLabel": "내가 늘 찾는 메뉴야",
+    "startButton": "학습 시작하기"
+  }
+}

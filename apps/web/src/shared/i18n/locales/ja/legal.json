@@ -1,0 +1,18 @@
+{
+  "documentPage": {
+    "backLabel": "戻る",
+    "effectiveDateLabel": "施行日",
+    "versionLabel": "バージョン"
+  },
+  "businessInfo": {
+    "toggleButton": "事業者情報",
+    "nameLabel": "商号",
+    "representativeLabel": "代表者",
+    "registrationNumberLabel": "事業者登録番号",
+    "mailOrderNumberLabel": "通信販売業申告番号",
+    "addressLabel": "所在地",
+    "phoneLabel": "電話番号",
+    "emailLabel": "メールアドレス",
+    "hostingLabel": "ホスティングサービス"
+  }
+}

@@ -5,6 +5,7 @@
 // 음성은 ■ 뒤 바로 보내지 않고 인식된 문장을 확인 단계에 올린다 — 보내기·다시 말하기·고치기 중 하나로 마무리한다.
 import { useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 
 import { track } from '@/shared/analytics';
 import { haptic } from '@/shared/haptics';
@@ -39,6 +40,7 @@ export const useConversationInput = ({
   onInputCancel,
   onContent,
 }: ConversationInputOptions) => {
+  const t = useTranslations('conversation.conversationInput');
   const [transcript, setTranscript] = useState('');
   // 확정 전 말이 남아 있는가 — 답변 칸이 듣는 중 표시(점 물결)를 켜고 끄는 기준
   const [speechPending, setSpeechPending] = useState(false);
@@ -104,7 +106,7 @@ export const useConversationInput = ({
     });
     if (!content) {
       haptic('error');
-      showToast('말이 인식되지 않았어요. 다시 말해볼까요?');
+      showToast(t('notRecognizedToast'));
       track(EVENTS.TURN_FAILED, {
         session_id: sessionId ?? undefined,
         turn_index: turnIndex,
@@ -142,7 +144,7 @@ export const useConversationInput = ({
         });
       }
     } else {
-      showToast('음성 인식에 문제가 생겼어요. 다시 시도해 주세요');
+      showToast(t('sttErrorToast'));
       track(EVENTS.SPEECH_RECOGNITION_FAILED, {
         engine: meta.engine,
         reason: failReason,
@@ -166,7 +168,7 @@ export const useConversationInput = ({
       // 한도에 닿으면 대신 멈춰 확인으로 넘긴다 — 더 말해도 보낼 수 없다. 멈추는 사이에 또 와도 한 번만
       if (text.length < ANSWER_MAX_LENGTH || limitStoppedRef.current) return;
       limitStoppedRef.current = true;
-      showToast('답변이 길어서 여기까지 받았어요');
+      showToast(t('limitReachedToast'));
       finishListening();
     },
     onFinal: submitVoice,

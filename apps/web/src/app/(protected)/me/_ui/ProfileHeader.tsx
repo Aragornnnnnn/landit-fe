@@ -2,11 +2,12 @@
 
 // 마이페이지 상단 — 이름(눌러서 바꾸기)과 로그인 계정, 오른쪽에 학습 수준의 마법사 래디와 레벨 이름. 수준을 아직 모르면 기본 래디만 선다.
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import {
   LEVEL_IMAGES,
-  LEVEL_NAMES,
+  LEVEL_NAME_KEYS,
 } from '@/features/feedback/model/level-assessment';
 import { toEnglishLevel } from '@/features/onboarding/model/english-level';
 import { useLearningLevelQuery } from '@/features/onboarding/model/useLearningLevelQuery';
@@ -52,6 +53,8 @@ const NAME_SIZE_CLASS: Record<NicknameDisplaySize, string> = {
 };
 
 export const ProfileHeader = () => {
+  const levelName = useTranslations('feedback.levelNames');
+  const t = useTranslations('me.profileHeader');
   const member = useAuthStore((state) => state.member);
   const { data, isPending } = useLearningLevelQuery();
   const level = toEnglishLevel(data?.learningLevel ?? null);
@@ -72,14 +75,14 @@ export const ProfileHeader = () => {
           type="button"
           onClick={() => setNicknameSheetOpen(true)}
           className="-mx-1 rounded-lg px-1 text-left transition-transform active:scale-[0.97]"
-          aria-label="닉네임 바꾸기"
+          aria-label={t('editNicknameLabel')}
         >
           {/* 긴 이름은 자르지 않는다 — 크기를 줄이고도 넘치면 줄을 넘긴다 */}
           <span
             className={`${NAME_SIZE_CLASS[nicknameDisplaySize(nickname)]} leading-tight font-bold break-words`}
             style={{ color: '#111' }}
           >
-            {nickname || '게스트'}
+            {nickname || t('guestLabel')}
           </span>
           {/* 연필만 다음 줄로 떨어지지 않게 마지막 글자에 붙인다 — 단어 결합자(U+2060)가 그 사이 줄바꿈을 막는다 */}
           <span className="whitespace-nowrap" aria-hidden="true">
@@ -124,7 +127,7 @@ export const ProfileHeader = () => {
         )}
         {level && (
           <p className="mt-0.5 text-13 font-bold" style={{ color: '#111' }}>
-            {LEVEL_NAMES[level]} Lv.{level}
+            {levelName(LEVEL_NAME_KEYS[level])} Lv.{level}
           </p>
         )}
       </div>

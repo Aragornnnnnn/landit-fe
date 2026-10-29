@@ -9,6 +9,7 @@ export {
   type EnglishLevel,
   type PreviewEndReason,
   type AccentLocale,
+  type AppLanguage,
   type GateQuestion,
   type ExpressionStep,
   type TurnInputType,

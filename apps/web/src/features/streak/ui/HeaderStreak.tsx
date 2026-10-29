@@ -2,6 +2,7 @@
 'use client';
 
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 
 import { track } from '@/shared/analytics';
 import { STREAK_PATH } from '@/shared/lib/routes';
@@ -16,6 +17,7 @@ import { StreakFruit } from './common/StreakFruit';
 const HEADER_FRUIT_SIZE = 16;
 
 export const HeaderStreak = () => {
+  const t = useTranslations('streak.headerStreak');
   const { streak, isPending } = useStreakQuery();
 
   // 조회에 실패해도 자리를 지키고 0일로 친다 — 홈은 스트릭 없이도 멀쩡히 돌아야 한다.
@@ -30,8 +32,8 @@ export const HeaderStreak = () => {
       href={STREAK_PATH}
       label={
         isPending
-          ? '연속 기록 보기'
-          : `연속 학습 ${currentStreakDays}일, 연속 기록 보기`
+          ? t('pendingLabel')
+          : t('openLabel', { days: currentStreakDays })
       }
       onClick={() =>
         track(EVENTS.STREAK_OPENED, {

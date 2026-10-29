@@ -217,9 +217,9 @@ export const EVENTS = {
   PAYWALL_PLAN_SELECTED: 'Paywall Plan Selected',
   PURCHASE_STARTED: 'Purchase Started',
   PURCHASE_RESTORE_TAPPED: 'Purchase Restore Tapped',
-  // 환급 페이월 2단계(결제 금액 안내)가 떴다 — 혜택 화면 → 금액 안내 → 결제 시작의 단계별 이탈을 본다
+  // 단계형 페이월(환급·일본어) 2단계(결제 금액 안내)가 떴다 — 혜택 화면 → 금액 안내 → 결제 시작의 단계별 이탈을 본다
   PAYWALL_CHECKOUT_VIEWED: 'Paywall Checkout Viewed',
-  // 환급 페이월 1단계(혜택 화면)가 떴다 — 처음 열렸을 때와 결제 금액 안내에서 되돌아왔을 때
+  // 단계형 페이월(환급·일본어) 1단계(혜택 화면)가 떴다 — 처음 열렸을 때와 결제 금액 안내에서 되돌아왔을 때
   PAYWALL_BENEFITS_VIEWED: 'Paywall Benefits Viewed',
   // 결제·복원 없이 페이월을 떠났다 — 어느 단계에서, 닫기로인지 다른 길로인지, 얼마나 머물고 얼마나 내려 봤는지
   PAYWALL_EXITED: 'Paywall Exited',
@@ -279,6 +279,8 @@ export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
 export type PreviewEndReason = 'no_target' | 'no_free_expression';
 // 배울 영어 — BE 발음 에셋(accentLocale)과 같은 enum 값을 쓴다. 지표와 서버 데이터가 같은 말을 쓴다
 export type AccentLocale = 'EN_US' | 'EN_GB' | 'EN_AU';
+// 화면 언어 — 웹 next-intl 언어(shared/i18n/locale)와 같은 값이다
+export type AppLanguage = 'ko' | 'ja';
 // 기존 유저 게이트가 묻는 질문 — 온보딩 스텝과 같은 말을 쓴다. 영어 수준은 첫 대화로 BE가 매겨 더 이상 묻지 않는다
 export type GateQuestion = Extract<OnboardingStep, 'accent'>;
 // pronounce = 발음 평가 (발음 자산이 있는 표현에만), examples = 추가 예문 화면(한 장씩 두 장)
@@ -320,11 +322,11 @@ export type PaywallEntrySource = 'me' | 'header' | 'reward';
 // 페이월에 어디서 왔는가 — 게이트에 막혀 왔으면 막힌 자리, 스스로 들어왔으면 마이페이지.
 // 노출(Page Viewed)에 실어 진입 경로별 전환율을 가른다
 export type PaywallSource = PaywallGateSource | PaywallEntrySource;
-// 페이월 단계 — 환급 페이월은 혜택(benefits)·결제 금액 안내(checkout) 두 단계, 일반 페이월은 한 장(single)
+// 페이월 단계 — 단계형 페이월(환급 챌린지·일본어 화면)은 혜택(benefits)·결제 금액 안내(checkout) 두 단계, 한 장 페이월은 single
 export type PaywallStepName = 'benefits' | 'checkout' | 'single';
 // 페이월을 어떻게 떠났나 — close는 닫기 버튼, navigate는 뒤로가기처럼 다른 길로 화면을 벗어남
 export type PaywallExitTrigger = 'close' | 'navigate';
-// 어느 페이월이었나 — 환급 챌린지 두 단계(reward) / 월간·연간 한 장(regular)
+// 어느 페이월이었나 — 환급 챌린지 이용권(reward) / 월간·연간 구독(regular, 한국어는 한 장·일본어는 두 단계)
 export type PaywallVariant = 'reward' | 'regular';
 // 구독 관리에서 스토어로 나간 이유 — 해지 / 해지 취소. 둘 다 같은 스토어 화면이 열리지만 의도를 남긴다
 export type StoreSubscriptionAction = 'cancel' | 'resubscribe';
@@ -357,7 +359,9 @@ export type PurchaseFailureReason =
   // 이용권을 살 수 있는지 확인하지 못했다 — 조회 실패·시간 초과
   | 'pass_check_failed'
   // 결제 회신을 받기 전에 페이월을 떠났다 — 결과를 알 수 없어 시작만 남지 않게 닫아 둔다
-  | 'left_screen';
+  | 'left_screen'
+  // 화면에 그린 금액의 통화와 결제할 패키지의 통화가 달라 결제 전에 막았다
+  | 'currency_mismatch';
 export type ConfirmSheetKind =
   'conversation_exit' | 'expression_exit' | 'account_delete' | 'alarm_delete';
 export type RetryScreen =
@@ -1033,6 +1037,7 @@ export interface UserProperties {
   reward_state: RewardProfileState;
   has_alarm: boolean;
   att_status: TrackingPermissionStatus;
+  app_language: AppLanguage;
 }
 
 // 한 번에 갱신할 속성들 — null은 "이 사람에게는 값이 없다"라는 뜻으로 프로필에서 그 속성을 지운다
@@ -1058,7 +1063,8 @@ type _UserPropKeysAreSnakeCase = AssertNever<
 >;
 // 컴파일 타임 검증 ④ 모든 이벤트에 붙는 전역 속성과 같은 키를 쓰지 않는다 — 겹치면 그 이벤트만 전역 값이 덮인다.
 // platform은 뜻이 같은 기존 이벤트가 있어 여기서 막지 않는다
-type GlobalPropKey = 'surface' | 'app_version' | 'build_number';
+type GlobalPropKey =
+  'surface' | 'app_version' | 'build_number' | 'app_language';
 type KeysShadowingGlobals = {
   [E in keyof EventProps]: EventProps[E] extends undefined
     ? never

@@ -3,13 +3,15 @@
 
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import type { DailyScenario } from '@/features/scenario/api/daily';
+import { lineBreak } from '@/shared/i18n/rich';
 import { Button } from '@/shared/ui/Button';
 
 import lampPeekImage from '../../assets/landy-lamp-peek.webp';
-import { startLabelOf } from '../../model/scenario-intro';
+import { partnerNameOf } from '../../model/scenario-intro';
 
 interface ScenarioIntroStepProps {
   // 오늘 받을 첫 시나리오. 못 받았으면 null — 카드 없이도 시작은 할 수 있어야 한다
@@ -22,22 +24,27 @@ export const ScenarioIntroStep = ({
   scenario,
   loading,
   onStart,
-}: ScenarioIntroStepProps) => (
-  <>
-    <div className="flex min-h-0 flex-1 flex-col pt-7 pb-6">
-      <h1 className="text-3xl leading-[1.18] font-black tracking-normal">
-        첫 대화로 내 레벨을 찾고
-        <br />딱 맞게 배워요
-      </h1>
+}: ScenarioIntroStepProps) => {
+  const t = useTranslations('onboarding.scenarioIntroStep');
+  const name = partnerNameOf(
+    scenario?.openingPreview?.character.characterId ?? null,
+  );
+  return (
+    <>
+      <div className="flex min-h-0 flex-1 flex-col pt-7 pb-6">
+        <h1 className="text-3xl leading-[1.18] font-black tracking-normal">
+          {t.rich('title', lineBreak)}
+        </h1>
 
-      <IntroVisual scenario={scenario} loading={loading} />
-    </div>
+        <IntroVisual scenario={scenario} loading={loading} />
+      </div>
 
-    <Button onClick={onStart}>
-      {startLabelOf(scenario?.openingPreview?.character.characterId ?? null)}
-    </Button>
-  </>
-);
+      <Button onClick={onStart}>
+        {name ? t('partnerStartButton', { name }) : t('startButton')}
+      </Button>
+    </>
+  );
+};
 
 const IntroVisual = ({
   scenario,

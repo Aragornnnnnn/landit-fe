@@ -8,6 +8,7 @@ import {
   type PointerEvent,
   type KeyboardEvent as ReactKeyboardEvent,
 } from 'react';
+import { useTranslations } from 'next-intl';
 import { createPortal } from 'react-dom';
 
 import { CloseIcon, MinusIcon, PlusIcon } from '@/shared/ui/Icons';
@@ -62,6 +63,8 @@ export const ImageViewer = ({
   startIndex,
   onClose,
 }: ImageViewerProps) => {
+  const t = useTranslations('mailbox.imageViewer');
+  const tCommon = useTranslations('common');
   const [index, setIndex] = useState(startIndex);
   const [scale, setScale] = useState(MIN_SCALE);
   const [pan, setPan] = useState<Point>(ORIGIN);
@@ -234,7 +237,7 @@ export const ImageViewer = ({
       ref={panelRef}
       role="dialog"
       aria-modal="true"
-      aria-label="사진 크게 보기"
+      aria-label={t('dialogLabel')}
       tabIndex={-1}
       onKeyDown={goByKey}
       className="fixed inset-0 z-50 flex flex-col outline-none"
@@ -250,7 +253,7 @@ export const ImageViewer = ({
       >
         {failed ? (
           <div className="flex size-full items-center justify-center text-sm text-white/70">
-            사진을 불러오지 못했어요
+            {t('loadFailedError')}
           </div>
         ) : (
           // eslint-disable-next-line @next/next/no-img-element -- 인증 사진은 blob 주소, 편지 이미지는 도메인 미정이라 next/image를 못 쓴다
@@ -283,7 +286,7 @@ export const ImageViewer = ({
         <button
           type="button"
           onClick={onClose}
-          aria-label="닫기"
+          aria-label={tCommon('closeLabel')}
           className="absolute left-4 flex size-11 items-center justify-center rounded-full bg-black/50 text-white active:scale-90"
           style={{ top: 'max(var(--safe-area-inset-top), 16px)' }}
         >
@@ -297,14 +300,14 @@ export const ImageViewer = ({
               onClick={() => goTo(index - 1)}
               disabled={index === 0}
             >
-              이전 사진
+              {t('previousButton')}
             </button>
             <button
               type="button"
               onClick={() => goTo(index + 1)}
               disabled={index === images.length - 1}
             >
-              다음 사진
+              {t('nextButton')}
             </button>
           </div>
         )}
@@ -323,7 +326,7 @@ export const ImageViewer = ({
           type="button"
           onClick={() => zoomTo(stepScale(scale, 1))}
           disabled={scale >= MAX_SCALE}
-          aria-label="확대"
+          aria-label={t('zoomInLabel')}
           className="flex size-11 items-center justify-center disabled:opacity-30"
         >
           <PlusIcon size={24} />
@@ -333,7 +336,7 @@ export const ImageViewer = ({
           type="button"
           onClick={() => zoomTo(stepScale(scale, -1))}
           disabled={scale <= MIN_SCALE}
-          aria-label="축소"
+          aria-label={t('zoomOutLabel')}
           className="flex size-11 items-center justify-center disabled:opacity-30"
         >
           <MinusIcon size={24} />

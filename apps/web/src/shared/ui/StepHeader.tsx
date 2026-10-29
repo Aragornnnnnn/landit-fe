@@ -2,6 +2,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { ChevronLeftIcon } from './Icons';
 
@@ -17,21 +18,25 @@ export const StepHeader = ({
   onBack,
   backDisabled = false,
   children,
-}: StepHeaderProps) => (
-  <header
-    className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5"
-    style={{ paddingTop: 'max(var(--safe-area-inset-top), 18px)' }}
-  >
-    <button
-      type="button"
-      onClick={onBack}
-      aria-label="이전"
-      disabled={backDisabled}
-      className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-opacity active:bg-black/5 disabled:opacity-0"
-    >
-      <ChevronLeftIcon size={28} strokeWidth={2.8} />
-    </button>
+}: StepHeaderProps) => {
+  const t = useTranslations('common.stepHeader');
 
-    {children}
-  </header>
-);
+  return (
+    <header
+      className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5"
+      style={{ paddingTop: 'max(var(--safe-area-inset-top), 18px)' }}
+    >
+      <button
+        type="button"
+        onClick={onBack}
+        aria-label={t('backLabel')}
+        disabled={backDisabled}
+        className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-opacity active:bg-black/5 disabled:opacity-0"
+      >
+        <ChevronLeftIcon size={28} strokeWidth={2.8} />
+      </button>
+
+      {children}
+    </header>
+  );
+};

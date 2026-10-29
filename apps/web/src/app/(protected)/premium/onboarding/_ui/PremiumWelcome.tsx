@@ -8,6 +8,7 @@ import {
   useReducedMotion,
   type TargetAndTransition,
 } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import {
@@ -17,6 +18,7 @@ import {
 import { PremiumPill } from '@/features/subscription/ui/premium-brand';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { haptic } from '@/shared/haptics';
+import { lineBreak } from '@/shared/i18n/rich';
 import { burstConfetti } from '@/shared/motion/confetti';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
@@ -114,6 +116,8 @@ export const PremiumWelcome = ({
   // 다음 화면을 정하느라 기다리는 중 — 버튼이 돌아가며 다시 눌리지 않는다
   pending?: boolean;
 }) => {
+  const t = useTranslations('subscription.premiumWelcome');
+  const tBenefit = useTranslations('subscription.benefits');
   const reduced = useReducedMotion();
   const nickname = useAuthStore((state) => state.member?.nickname ?? null);
   const [phase, setPhase] = useState<Phase>(reduced ? 'open' : 'locked');
@@ -160,23 +164,23 @@ export const PremiumWelcome = ({
           <PremiumPill />
         </div>
         <h1 className="mt-3 text-center text-24 leading-snug font-black text-balance text-foreground short:text-21">
-          {nickname ? `환영해요, ${nickname}님!` : '환영해요!'}
-          <br />
-          이제 랜딧을 마음껏 즐겨요
+          {nickname
+            ? t.rich('namedTitle', { nickname, ...lineBreak })
+            : t.rich('title', lineBreak)}
         </h1>
 
         <div className="relative mt-7 w-full overflow-hidden rounded-[22px] border border-border bg-card short:mt-4">
           <ul className="flex flex-col px-4">
             {PREMIUM_BENEFITS.map((benefit, index) => (
               <li
-                key={benefit.text}
+                key={benefit.labelKey}
                 className="flex items-center gap-3 border-b border-border/60 py-3.5 last:border-b-0 short:py-2.5"
               >
                 <Emoji className="size-6 shrink-0">
                   {BENEFIT_EMOJI[benefit.icon]}
                 </Emoji>
                 <span className="min-w-0 flex-1 text-15 font-bold text-foreground">
-                  {benefit.text}
+                  {tBenefit(benefit.labelKey)}
                 </span>
                 <motion.span
                   initial={false}
@@ -225,7 +229,7 @@ export const PremiumWelcome = ({
         className={`pt-4 ${phase === 'open' ? '' : 'pointer-events-none'}`}
       >
         <Button onClick={onNext} loading={pending}>
-          다음
+          {t('nextButton')}
         </Button>
       </motion.div>
     </main>

@@ -1,0 +1,22 @@
+{
+  "satisfactionSheet": {
+    "characterLabel": "ラディ",
+    "reviewTitle": "ご利用ありがとうございます！",
+    "reviewDescription": "ストアでの応援のひとことが<br></br>Landitの大きな力になります",
+    "reviewButton": "レビューを書く",
+    "alreadyDoneButton": "もう書きました",
+    "thanksTitle": "ラディもうれしいです！",
+    "thanksExpressionDescription": "これからも毎日Landitで続けましょう",
+    "thanksDescription": "残りのフレーズも続けて学びましょう",
+    "letterTitle": "残念だったんですね…",
+    "letterDescription": "どこが残念だったか教えてください。<br></br>送っていただければ必ず読んで返信します",
+    "letterButton": "フィードバックを送る",
+    "smalltalkAskTitle": "初スモールトークはどうでしたか？",
+    "expressionAskTitle": "会話とフレーズ学習はどうでしたか？",
+    "earlierAskTitle": "さっきの会話はどうでしたか？",
+    "askTitle": "今の会話はどうでしたか？",
+    "askDescription": "ラディはとても気になっています！<br></br>正直に選んでください",
+    "badButton": "いまいちでした",
+    "goodButton": "よかったです"
+  }
+}

@@ -1,15 +1,20 @@
-// 환급 페이월 1단계 — 혜택 화면. 매일 오는 시나리오(카드 벽) 위에 프리미엄만 누리는 혜택 넷을 쌓고, 맨 아래 리뷰를 옆으로 넘겨 보게 둔다.
+// 단계형 페이월 1단계 — 혜택 화면. 매일 오는 시나리오(카드 벽) 위에 프리미엄만 누리는 혜택을 쌓고, 맨 아래 리뷰를 옆으로 넘겨 보게 둔다.
+// 환급 챌린지면 맨 앞에 적립 혜택이 붙고(넷), 아니면 셋이다. 리뷰는 한국 스토어 글이라 한국어 화면에만 있다.
 // 시나리오는 무료로도 하니 혜택이 아니라 무대로만 쓴다. 결제는 다음 단계(결제 금액 안내)에서 한다. 피그마 「페이월 v4 · 전체 스크롤」(3514:322)
+import { useLocale, useTranslations } from 'next-intl';
+
 import { rewardOfferOf } from '@/features/reward/model/refund-offer';
 import { CoinStackCard } from '@/features/reward/ui/CoinStackCard';
 import { formatWon } from '@/features/subscription/lib/won';
 import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
+import { lineBreak } from '@/shared/i18n/rich';
 import { useSnapIndex } from '@/shared/lib/useSnapIndex';
 
 import {
   maskName,
   ratingAsOfLabel,
   REVIEWS,
+  showsStoreReviews,
   STORE_RATING,
   STORE_RATING_AS_OF,
   type RewardPlan,
@@ -31,126 +36,145 @@ import { UsageDemo } from './UsageDemo';
 
 const width = SERIES_SCREEN_WIDTH;
 
-/** 「프리미엄」 금색 글자 — 빛이 한 번씩 훑고 지나간다 */
-const PremiumWord = () => (
+/** 「프리미엄」 금색 글자 — 빛이 한 번씩 훑고 지나간다. 문구의 `<premium>` 자리에 그린다 */
+const premiumWord = (chunks: React.ReactNode) => (
   <span className="animate-text-shine bg-[linear-gradient(110deg,#d98f2a_40%,#fff1c2_50%,#d98f2a_60%)] bg-[length:250%_100%] bg-clip-text text-transparent">
-    프리미엄
+    {chunks}
   </span>
 );
 
-export const BenefitsStep = ({ plan }: { plan: RewardPlan }) => (
-  <>
-    {/* 위 여백 40px은 겹쳐 떠 있는 PaywallHeader의 줄 높이(h-10)다 */}
-    <section
-      data-inview="true"
-      className="bg-[#fbf6ef] pt-[calc(max(var(--safe-area-inset-top),8px)+40px)] text-center"
-    >
-      {/* 낮은 화면에선 로고를 80%로 줄인다 — 레이아웃 자리까지 같이 줄도록 transform이 아니라 zoom */}
-      <div className="flex justify-center pt-1.5 short:[zoom:0.8]">
-        <PremiumBadge />
-      </div>
-      <h2 className="mt-4 px-6 text-26 leading-[calc(36/26)] font-black tracking-[-0.025em] whitespace-pre-line text-foreground short:mt-3 short:text-22 short:leading-[calc(30/22)]">
-        {'매일 도착하는 시나리오\n'}
-        <PremiumWord />
-        으로 제대로 공부해요
-      </h2>
-      <ScenarioWall />
-    </section>
+/** 적립 혜택 밖의 시리즈 수 — 상세 피드백·표현 학습·스몰톡. 아래 SeriesCarousel 개수와 짝이다 */
+const SERIES_COUNT = 3;
 
-    {/* 혜택 판 — 맨 위 머리글이 아래 넷을 프리미엄 전용으로 묶는다 */}
-    <div className="rounded-t-[28px] bg-card pt-8 pb-10 shadow-[0_-6px_18px_rgba(51,31,13,0.06)] short:pt-6">
-      <div className="px-6">
-        <span className="inline-block rounded-full bg-[#f6c54a] px-2.5 py-1 text-xs font-black tracking-wide text-[#3a2a00]">
-          PREMIUM ONLY
-        </span>
-        <p className="mt-3 text-2xl font-black tracking-[-0.02em] text-foreground short:mt-2 short:text-xl">
-          프리미엄만 누리는 혜택 4가지
-        </p>
-      </div>
+/** 혜택 번호 — 01·02… */
+const numberOf = (index: number) => String(index + 1).padStart(2, '0');
 
-      <div className="mt-8 flex flex-col gap-11">
-        <section className="px-6">
-          <p className="text-15 font-black text-primary">01</p>
-          <p className="mt-1 text-21 font-extrabold tracking-[-0.02em] text-foreground">
-            시나리오 끝낼 때마다 {formatWon(plan.dailyRefund)} 적립
+export const BenefitsStep = ({
+  reward,
+}: {
+  /** 환급 챌린지 값 — 있으면 맨 앞에 적립 혜택을 둔다 */
+  reward: RewardPlan | null;
+}) => {
+  const t = useTranslations('paywall.benefitsStep');
+  const locale = useLocale();
+  // 적립 혜택이 앞에 붙으면 뒤 시리즈 번호가 하나씩 밀린다
+  const offset = reward ? 1 : 0;
+
+  return (
+    <>
+      {/* 위 여백 40px은 겹쳐 떠 있는 PaywallHeader의 줄 높이(h-10)다 */}
+      <section
+        data-inview="true"
+        className="bg-[#fbf6ef] pt-[calc(max(var(--safe-area-inset-top),8px)+40px)] text-center"
+      >
+        {/* 낮은 화면에선 로고를 80%로 줄인다 — 레이아웃 자리까지 같이 줄도록 transform이 아니라 zoom */}
+        <div className="flex justify-center pt-1.5 short:[zoom:0.8]">
+          <PremiumBadge />
+        </div>
+        <h2 className="mt-4 px-6 text-26 leading-[calc(36/26)] font-black tracking-[-0.025em] whitespace-pre-line text-foreground short:mt-3 short:text-22 short:leading-[calc(30/22)]">
+          {t.rich('title', { ...lineBreak, premium: premiumWord })}
+        </h2>
+        <ScenarioWall />
+      </section>
+
+      {/* 혜택 판 — 맨 위 머리글이 아래 혜택(환급이면 넷, 아니면 셋)을 프리미엄 전용으로 묶는다 */}
+      <div className="rounded-t-[28px] bg-card pt-8 pb-10 shadow-[0_-6px_18px_rgba(51,31,13,0.06)] short:pt-6">
+        <div className="px-6">
+          <span className="inline-block rounded-full bg-[#f6c54a] px-2.5 py-1 text-xs font-black tracking-wide text-[#3a2a00]">
+            PREMIUM ONLY
+          </span>
+          <p className="mt-3 text-2xl font-black tracking-[-0.02em] text-foreground short:mt-2 short:text-xl">
+            {t('benefitsTitle', { count: offset + SERIES_COUNT })}
           </p>
-          <div className="mt-4">
-            <CoinStackCard offer={rewardOfferOf(plan.price)} />
-          </div>
-        </section>
+        </div>
 
-        <SeriesCarousel
-          number="02"
-          label="문장마다 꼼꼼한 상세 피드백"
-          items={[
-            {
-              title: '잘한 문장은 왜 좋은지',
-              screen: <GoodTurnDemo step={0} width={width} />,
-            },
-            {
-              title: '어색한 문장은 이렇게',
-              screen: <BetterTurnDemo step={0} width={width} />,
-            },
-            {
-              title: '대화 전체를 한눈에',
-              screen: <SummaryDemo step={0} width={width} />,
-            },
-            {
-              title: '지난번보다 나아진 점',
-              screen: <GrowthDemo step={0} width={width} />,
-            },
-            {
-              title: '배운 표현을 실제로 썼는지',
-              screen: <ReuseDemo step={0} width={width} />,
-            },
-          ]}
-        />
+        <div className="mt-8 flex flex-col gap-11">
+          {/* 환급은 한국어 화면에만 있어 문구를 옮기지 않는다 */}
+          {reward && (
+            <section className="px-6">
+              <p className="text-15 font-black text-primary">{numberOf(0)}</p>
+              <p className="mt-1 text-21 font-extrabold tracking-[-0.02em] text-foreground">
+                시나리오 끝낼 때마다 {formatWon(reward.dailyRefund)} 적립
+              </p>
+              <div className="mt-4">
+                <CoinStackCard offer={rewardOfferOf(reward.price)} />
+              </div>
+            </section>
+          )}
 
-        <SeriesCarousel
-          number="03"
-          label="내 대화로 만든 맞춤 표현 학습"
-          items={[
-            {
-              title: '그림과 예문으로 실제 뉘앙스까지',
-              screen: <ExampleDemo step={2} width={width} />,
-            },
-            {
-              title: '원어민처럼 발음하게 만들어드려요',
-              screen: <PronunciationDemo step={3} width={width} />,
-            },
-            {
-              title: '여러 예문으로 확실히 내 표현으로',
-              screen: <UsageDemo step={0} width={width} />,
-            },
-            {
-              title: '퀴즈로 내 것이 됐는지 확인해요',
-              screen: <QuizDemo step={2} width={width} />,
-            },
-          ]}
-        />
+          <SeriesCarousel
+            number={numberOf(offset)}
+            label={t('feedbackLabel')}
+            items={[
+              {
+                title: t('goodTurnTitle'),
+                screen: <GoodTurnDemo step={0} width={width} />,
+              },
+              {
+                title: t('betterTurnTitle'),
+                screen: <BetterTurnDemo step={0} width={width} />,
+              },
+              {
+                title: t('summaryTitle'),
+                screen: <SummaryDemo step={0} width={width} />,
+              },
+              {
+                title: t('growthTitle'),
+                screen: <GrowthDemo step={0} width={width} />,
+              },
+              {
+                title: t('reuseTitle'),
+                screen: <ReuseDemo step={0} width={width} />,
+              },
+            ]}
+          />
 
-        <SeriesCarousel
-          number="04"
-          label="캐릭터와 자유롭게 프리톡"
-          items={[
-            {
-              title: '원하는 친구와 억양까지 골라서',
-              screen: <SmallTalkDemo step={2} width={width} />,
-            },
-            {
-              title: '주제 없이 자유롭게 대화해요',
-              screen: <SmallTalkDemo step={3} width={width} />,
-            },
-          ]}
-        />
+          <SeriesCarousel
+            number={numberOf(offset + 1)}
+            label={t('expressionLabel')}
+            items={[
+              {
+                title: t('expressionImageTitle'),
+                screen: <ExampleDemo step={2} width={width} />,
+              },
+              {
+                title: t('expressionPronunciationTitle'),
+                screen: <PronunciationDemo step={3} width={width} />,
+              },
+              {
+                title: t('expressionUsageTitle'),
+                screen: <UsageDemo step={0} width={width} />,
+              },
+              {
+                title: t('expressionQuizTitle'),
+                screen: <QuizDemo step={2} width={width} />,
+              },
+            ]}
+          />
+
+          <SeriesCarousel
+            number={numberOf(offset + 2)}
+            label={t('smallTalkLabel')}
+            items={[
+              {
+                title: t('smallTalkPartnerTitle'),
+                screen: <SmallTalkDemo step={2} width={width} />,
+              },
+              {
+                title: t('smallTalkFreeTitle'),
+                screen: <SmallTalkDemo step={3} width={width} />,
+              },
+            ]}
+          />
+        </div>
+
+        {showsStoreReviews(locale) && <StoreReviews />}
       </div>
+    </>
+  );
+};
 
-      <StoreReviews />
-    </div>
-  </>
-);
-
-// 리뷰 — 스토어에 실제로 달린 글 그대로, 옆으로 넘겨 본다. 아래 점이 몇 장 중 몇 번째인지 알려 준다
+// 리뷰 — 스토어에 실제로 달린 글 그대로, 옆으로 넘겨 본다. 아래 점이 몇 장 중 몇 번째인지 알려 준다. 한국어 화면에만 있어 문구를 옮기지 않는다
 const StoreReviews = () => {
   const { scrollRef, activeIndex, onScroll } =
     useSnapIndex<HTMLUListElement>('x');

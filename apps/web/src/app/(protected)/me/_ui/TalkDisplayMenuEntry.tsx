@@ -3,6 +3,7 @@
 // 마이페이지 "대화" 행 — 눌러 들어간 시트에서 대화를 시작할 때 상대 말을 글자·해석으로 어떻게 보일지 고른다. 값은 이 기기의 localStorage에만 산다
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 
 import {
   setDisplaySetting,
@@ -25,6 +26,7 @@ const SETTING_NAME: Record<
 };
 
 export const TalkDisplayMenuEntry = () => {
+  const t = useTranslations('me.talkDisplayMenu');
   const [open, setOpen] = useState(false);
   const alwaysShowText = useDisplaySetting('alwaysShowText');
   const alwaysShowTranslation = useDisplaySetting('alwaysShowTranslation');
@@ -40,7 +42,7 @@ export const TalkDisplayMenuEntry = () => {
   return (
     <>
       <MenuButton
-        title="대화"
+        title={t('title')}
         icon={<Emoji>👀</Emoji>}
         onClick={() => setOpen(true)}
       />
@@ -48,17 +50,17 @@ export const TalkDisplayMenuEntry = () => {
       <SettingSheet
         open={open}
         onClose={() => setOpen(false)}
-        title="대화"
-        description="대화에서 상대가 한 말을 어떻게 보여줄지 정해요"
+        title={t('title')}
+        description={t('description')}
       >
         <MenuGroup>
           <MenuToggle
-            title="상대 영어 문장 항상 보기"
+            title={t('showTextLabel')}
             checked={alwaysShowText}
             onChange={(next) => change('alwaysShowText', next)}
           />
           <MenuToggle
-            title="해석 항상 보기"
+            title={t('showTranslationLabel')}
             checked={alwaysShowTranslation}
             onChange={(next) => change('alwaysShowTranslation', next)}
           />

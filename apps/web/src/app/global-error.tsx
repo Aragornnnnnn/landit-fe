@@ -1,9 +1,18 @@
 'use client';
 
-// 루트 레이아웃까지 죽었을 때의 최후 방어선 — 스타일 시트 없이도 그려지도록 인라인 스타일만 쓴다
-import { useEffect } from 'react';
+// 루트 레이아웃까지 죽었을 때의 최후 방어선 — 스타일 시트 없이도 그려지도록 인라인 스타일만 쓴다.
+// 문구 묶음(Provider)도 죽은 뒤라 common 문구를 직접 꺼내고, 언어는 브라우저가 쿠키·기기 언어로 정한다
+import { useEffect, useSyncExternalStore } from 'react';
 
+import { commonTranslator } from '@/shared/i18n/common-translator';
+import { deviceLanguages } from '@/shared/i18n/device-languages';
+import { DEFAULT_LOCALE, localeFromBrowser } from '@/shared/i18n/locale';
 import { reportError } from '@/shared/monitoring/report';
+
+// 언어는 바뀌지 않으니 구독할 것이 없다. 서버 렌더는 기본 언어로 그리고 브라우저에서 맞춘다
+const noSubscribe = () => () => {};
+const browserLocale = () =>
+  localeFromBrowser(document.cookie, deviceLanguages());
 
 export default function GlobalError({
   error,
@@ -15,9 +24,15 @@ export default function GlobalError({
   useEffect(() => {
     reportError(error);
   }, [error]);
+  const locale = useSyncExternalStore(
+    noSubscribe,
+    browserLocale,
+    () => DEFAULT_LOCALE,
+  );
+  const t = commonTranslator(locale);
 
   return (
-    <html lang="ko">
+    <html lang={locale}>
       <body
         style={{
           margin: '0 auto',
@@ -57,7 +72,7 @@ export default function GlobalError({
                 color: '#1a1a1a',
               }}
             >
-              문제가 생겼어요
+              {t('errorScreen.title')}
             </h1>
             <p
               style={{
@@ -67,7 +82,7 @@ export default function GlobalError({
                 color: '#8a8a86',
               }}
             >
-              잠시 후 다시 시도해 주세요
+              {t('errorScreen.description')}
             </p>
           </div>
         </div>
@@ -90,7 +105,7 @@ export default function GlobalError({
               fontWeight: 700,
             }}
           >
-            다시 시도할게요
+            {t('errorScreen.retryButton')}
           </button>
         </div>
       </body>

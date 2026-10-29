@@ -4,6 +4,7 @@
 // 뒤집기는 페이월 문이 아니다 — 무료 사용자도 뒷면을 보고, 막는 건 뒷면의 표현이다. 프리미엄 프리뷰 중에는 카드가 스스로 뒤집힌다
 import { useEffect, useEffectEvent, useState } from 'react';
 import { EVENTS, type PreviewEndReason } from '@landit/analytics';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
 import { track } from '@/shared/analytics';
@@ -57,6 +58,7 @@ export const ScenarioCard = ({
   expressions,
   premiumPreview,
 }: ScenarioCardProps) => {
+  const t = useTranslations('scenario.scenarioCard');
   // 잠금·완료 판정은 전부 백엔드 몫(직전 시나리오를 깨야 다음이 열린다). 카드는 두 플래그를 그리기만 한다.
   // locked   → 흑백 썸네일 + 회색 제목 + "잠겨있어요"
   // completed → 썸네일 우상단 별점 배지 + 표현 학습(뒤집기) / 다시 해볼게요
@@ -174,10 +176,10 @@ export const ScenarioCard = ({
             {completed && !flipped && (
               <Link
                 href={scenarioSessionsPath(scenario.scenarioId, date)}
-                aria-label="대화 기록"
+                aria-label={t('historyLabel')}
                 className="absolute top-[15px] right-3 flex h-[34px] items-center gap-0.5 rounded-full bg-white/90 pr-2.5 pl-3 text-13 font-semibold text-foreground shadow-sm backdrop-blur-sm active:opacity-70"
               >
-                기록
+                {t('historyButton')}
                 <ChevronRightIcon size={14} />
               </Link>
             )}
@@ -213,7 +215,7 @@ export const ScenarioCard = ({
                 className={`flex h-14 w-full items-center justify-center gap-1.5 rounded-xl bg-secondary text-base font-bold text-muted-foreground ${cardInClass}`}
                 style={{ '--i': 2 } as React.CSSProperties}
               >
-                잠겨있어요 <LockIcon size={16} />
+                {t('lockedLabel')} <LockIcon size={16} />
               </div>
             ) : completed ? (
               // 완료 카드 — 메인은 표현 학습(뒤집기), 다시 해보기는 아래 고스트로.
@@ -232,13 +234,13 @@ export const ScenarioCard = ({
                   onClick={() => onStart(scenario)}
                   className="flex h-12 w-full items-center justify-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors active:text-foreground"
                 >
-                  다시 대화하기
+                  {t('replayButton')}
                   <ReplayIcon size={15} />
                 </button>
               </div>
             ) : (
               <Button onClick={() => onStart(scenario)} variant="primary">
-                대화 시작하기
+                {t('startButton')}
                 <ArrowRightIcon size={16} />
               </Button>
             )}

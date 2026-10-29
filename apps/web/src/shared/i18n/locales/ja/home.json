@@ -1,0 +1,10 @@
+{
+  "appHeader": {
+    "myPageLabel": "マイページ"
+  },
+  "tabBar": {
+    "navLabel": "タブ",
+    "scenarioLabel": "シナリオ",
+    "smalltalkLabel": "スモールトーク"
+  }
+}

@@ -1,7 +1,6 @@
 // 페이월 플랜 표시값 계약 — 화면에 박히는 할인율·환산가가 실제 가격 산식과 어긋나지 않게 지킨다
 import { describe, expect, it } from 'vitest';
 
-import { formatWon } from '../../lib/won';
 import {
   buildPaywallPlans,
   calculateDiscountRate,
@@ -33,6 +32,10 @@ describe('calculateMonthlyEquivalent', () => {
   it('실제보다 낮게 보이지 않게 올린다 — 59,900원이면 월 4,990원이 아니라 5,000원', () => {
     expect(calculateMonthlyEquivalent(59_900)).toBe(5_000);
   });
+
+  it('엔화는 10엔 단위로 올린다 — 5,800円은 483円이라 월 490円', () => {
+    expect(calculateMonthlyEquivalent(5_800, 'JPY')).toBe(490);
+  });
 });
 
 describe('buildPaywallPlans — 등록값', () => {
@@ -44,17 +47,15 @@ describe('buildPaywallPlans — 등록값', () => {
   });
 
   it('월간 카드는 할인 강조가 없다 — 배지도 비교 취소선도 두지 않는다', () => {
-    expect(monthly.badge).toBeUndefined();
+    expect(monthly.discountRate).toBeUndefined();
     expect(monthly.listPrice).toBeUndefined();
   });
 
   it('월간 카드는 달마다 청구액을 그대로 큰 숫자로 쓴다', () => {
-    expect(monthly.period).toBe('월');
     expect(monthly.monthlyPrice).toBe(monthly.price);
   });
 
   it('연간 카드의 큰 숫자는 실제 청구되는 연 결제액이고, 취소선은 월간으로 1년 낼 때의 금액이다', () => {
-    expect(yearly.period).toBe('연');
     expect(yearly.monthlyPrice).toBe(calculateMonthlyEquivalent(yearly.price));
     expect(yearly.listPrice).toBe(monthly.price * 12);
   });
@@ -62,29 +63,36 @@ describe('buildPaywallPlans — 등록값', () => {
   it('연간 배지의 퍼센트는 월간 판매가 대비 월 환산가 산식과 같다', () => {
     const rate = calculateDiscountRate(monthly.price, yearly.monthlyPrice);
 
-    expect(yearly.badge).toBe(`월간보다 ${rate}% 저렴`);
-  });
-
-  it('연간 부제에는 월 환산가가 작게 들어간다 — 청구액보다 눈에 띄면 스토어 심사(3.1.2)에서 반려된다', () => {
-    expect(yearly.subtitle).toBe(
-      `월 ${formatWon(yearly.monthlyPrice)}꼴 · 7일 무료 체험`,
-    );
+    expect(yearly.discountRate).toBe(rate);
   });
 });
 
 describe('buildPaywallPlans — 스토어 가격', () => {
-  it('스토어 가격을 주면 큰 숫자·취소선·배지·부제가 전부 그 값에서 다시 계산된다', () => {
+  it('스토어 가격을 주면 큰 숫자·취소선·할인율·월 환산가가 전부 그 값에서 다시 계산된다', () => {
     const { monthly, yearly } = buildPaywallPlans({
       monthly: 11_000,
       yearly: 66_000,
     });
 
     expect(monthly.price).toBe(11_000);
-    expect(monthly.badge).toBeUndefined();
+    expect(monthly.discountRate).toBeUndefined();
     expect(yearly.listPrice).toBe(132_000);
     expect(yearly.monthlyPrice).toBe(5_500);
-    expect(yearly.badge).toBe('월간보다 50% 저렴');
-    expect(yearly.subtitle).toBe('월 5,500원꼴 · 7일 무료 체험');
+    expect(yearly.discountRate).toBe(50);
+  });
+
+  it('엔화 가격이면 월 환산가를 엔화 단위(10엔)로 올린다', () => {
+    const { monthly, yearly } = buildPaywallPlans(
+      { monthly: 980, yearly: 5_800 },
+      'JPY',
+    );
+
+    expect(monthly.currency).toBe('JPY');
+    expect(yearly.monthlyPrice).toBe(490);
+  });
+
+  it('통화를 안 주면 원화다', () => {
+    expect(buildPaywallPlans().yearly.currency).toBe('KRW');
   });
 
   it('한 플랜만 주면 나머지는 등록값을 쓴다', () => {

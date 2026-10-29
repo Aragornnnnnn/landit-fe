@@ -1,4 +1,5 @@
 // 사유별 화면 문구·카드 — 플랜·체험·기록 유무로 갈리는 자리만 본다
+import { createTranslator } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -6,14 +7,30 @@ import {
   rewardView,
 } from '@/features/reward/model/reward.fixture';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
+import ja from '@/shared/i18n/locales/ja';
+import ko from '@/shared/i18n/locales/ko';
 
 import {
-  dailyWon,
+  dailyPrice,
   methodRetentionContent,
   refundStakeOf,
   retentionContent,
   type RefundStake,
 } from './retention-content';
+
+const t = createTranslator({
+  locale: 'ko',
+  messages: ko,
+  namespace: 'subscription',
+});
+const tJa = createTranslator({
+  locale: 'ja',
+  messages: ja,
+  namespace: 'subscription',
+});
+
+const won = (amount: number) => ({ amount, currency: 'KRW' as const });
+const yen = (amount: number) => ({ amount, currency: 'JPY' as const });
 
 const active = (
   overrides: Partial<PaidSubscriptionSummary> = {},
@@ -22,7 +39,7 @@ const active = (
   expiresAt: '2026-10-04T12:00:00',
   renews: true,
   plan: 'monthly',
-  price: 14_900,
+  price: won(14_900),
   ...overrides,
 });
 
@@ -30,6 +47,8 @@ const context = (
   summary: PaidSubscriptionSummary,
   stake: RefundStake | null = null,
 ) => ({
+  t,
+  locale: 'ko' as const,
   summary,
   stake,
   nickname: '준서',
@@ -38,10 +57,15 @@ const context = (
   otherText: '',
 });
 
-describe('dailyWon', () => {
-  it('하루 요금을 10원 단위로 반올림한다', () => {
-    expect(dailyWon(14900, 30)).toBe(500);
-    expect(dailyWon(58500, 365)).toBe(160);
+describe('dailyPrice', () => {
+  it('원화 하루 요금은 10원 단위로 반올림한다', () => {
+    expect(dailyPrice(won(14900), 30)).toEqual(won(500));
+    expect(dailyPrice(won(58500), 365)).toEqual(won(160));
+  });
+
+  it('엔화 하루 요금은 1엔 단위로 반올림한다', () => {
+    expect(dailyPrice(yen(1500), 30)).toEqual(yen(50));
+    expect(dailyPrice(yen(9800), 365)).toEqual(yen(27));
   });
 });
 
@@ -60,10 +84,22 @@ describe('retentionContent — 가격 부담', () => {
     ]);
   });
 
+  it('엔화 구독이면 하루 요금과 연 요금을 엔화로 적는다', () => {
+    const content = retentionContent(
+      'price',
+      context(active({ plan: 'yearly', price: yen(9_800) })),
+    );
+
+    expect(content.cards[0]).toMatchObject({
+      sublabel: '연 9,800円',
+      value: '하루 27円',
+    });
+  });
+
   it('연간이면 사탕 하나 값 문구와 연 요금 보조 문구가 붙는다', () => {
     const content = retentionContent(
       'price',
-      context(active({ plan: 'yearly', price: 58_500 })),
+      context(active({ plan: 'yearly', price: won(58_500) })),
     );
 
     expect(content.body[1]).toContain('사탕 하나 값');
@@ -77,7 +113,7 @@ describe('retentionContent — 가격 부담', () => {
   it('6개월이면 180일로 나눈 하루 요금과 6개월 요금 보조 문구가 붙는다', () => {
     const content = retentionContent(
       'price',
-      context(active({ plan: 'halfyear', price: 59_900 })),
+      context(active({ plan: 'halfyear', price: won(59_900) })),
     );
 
     expect(content.body[0]).toBe('6개월 요금은 하루 330원이에요.');
@@ -91,7 +127,7 @@ describe('retentionContent — 가격 부담', () => {
   it('3개월이면 90일로 나눈 하루 요금과 3개월 요금 보조 문구가 붙는다', () => {
     const content = retentionContent(
       'price',
-      context(active({ plan: 'quarterly', price: 39_900 })),
+      context(active({ plan: 'quarterly', price: won(39_900) })),
     );
 
     expect(content.body[0]).toBe('3개월 요금은 하루 440원이에요.');
@@ -106,7 +142,7 @@ describe('retentionContent — 가격 부담', () => {
     const content = retentionContent(
       'price',
       // 서버 결제액은 등록값 폴백(YEARLY_PRICE)과 다른 값이어야 폴백을 쓰는 회귀가 잡힌다
-      context(active({ plan: 'yearly', price: 99_000 })),
+      context(active({ plan: 'yearly', price: won(99_000) })),
     );
 
     expect(content.cards[0]).toMatchObject({
@@ -184,11 +220,11 @@ describe('retentionContent — 편지함으로 가는 사유', () => {
 describe('methodRetentionContent', () => {
   it('방법마다 제목이 다르고 카드는 없다', () => {
     const titles = (['academy', 'other_app', 'youtube', 'abroad'] as const).map(
-      (method) => methodRetentionContent(method).title,
+      (method) => methodRetentionContent(method, t).title,
     );
 
     expect(new Set(titles).size).toBe(4);
-    expect(methodRetentionContent('academy').cards).toEqual([]);
+    expect(methodRetentionContent('academy', t).cards).toEqual([]);
   });
 });
 
@@ -209,7 +245,7 @@ describe('환급을 쌓는 중인 사람', () => {
   it('가격 부담에는 하루 요금 대신 돌려받는 금액으로 답한다', () => {
     const content = retentionContent(
       'price',
-      context(active({ plan: 'halfyear', price: 59_900 }), stake),
+      context(active({ plan: 'halfyear', price: won(59_900) }), stake),
     );
 
     expect(content.body[0]).toBe('최대 59,900원까지 돌려받는 플랜이에요.');
@@ -217,5 +253,37 @@ describe('환급을 쌓는 중인 사람', () => {
       { kind: 'row', label: '지금까지 쌓인 환급액', value: '2,015원' },
       { kind: 'row', label: '최대 환급액', value: '59,900원' },
     ]);
+  });
+});
+
+describe('일본어 화면', () => {
+  it('사유별 화면 문구를 일본어로 적는다', () => {
+    const content = retentionContent('time', {
+      ...context(active()),
+      t: tJa,
+      locale: 'ja',
+    });
+
+    expect(content.title).toBe('時間がなかったんですね');
+    expect(content.primary.label).toBe('もう少し使ってみます');
+    expect(methodRetentionContent('youtube', tJa).title).toBe(
+      '見たフレーズを話す番です',
+    );
+  });
+
+  it('실력·체험 가격 화면의 이름과 날짜를 일본어 표기로 끼워 넣는다', () => {
+    const ja = { t: tJa, locale: 'ja' as const };
+
+    expect(
+      retentionContent('progress', { ...context(active()), ...ja }).body[0],
+    ).toBe('会話ごとに준서さんのレベルに合わせています。');
+    expect(
+      retentionContent('price', {
+        ...context(
+          active({ kind: 'trial', plan: 'yearly', price: won(58_500) }),
+        ),
+        ...ja,
+      }).cards[1],
+    ).toEqual({ kind: 'row', label: '初回の請求日', value: '2026年10月4日' });
   });
 });

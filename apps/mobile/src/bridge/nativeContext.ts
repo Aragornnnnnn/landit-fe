@@ -8,6 +8,8 @@ import {
 import { nativeBuildVersion } from 'expo-application';
 import Constants from 'expo-constants';
 
+import { deviceLanguageTags } from '@/i18n/shell-locale';
+
 import { getDeviceId } from './deviceId';
 
 export function getNativeContext(): NativeContext {
@@ -22,6 +24,8 @@ export function getNativeContext(): NativeContext {
     fontScale: PixelRatio.getFontScale(),
     // 웹은 아직 서버로 보내지 않는다 — 친구 초대 같은 기기 판정을 백엔드가 받기로 하면 쓴다
     deviceId: getDeviceId(),
+    // 기기 선호 언어 목록 — iOS WebView의 navigator.languages는 첫 언어만 줄 수 있다
+    languages: deviceLanguageTags(),
   };
 }
 

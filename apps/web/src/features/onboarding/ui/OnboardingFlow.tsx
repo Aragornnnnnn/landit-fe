@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { preload } from 'react-dom';
 
@@ -51,7 +52,8 @@ export const OnboardingFlow = () => {
   const canAskNotification = useNotificationPermission() === 'undetermined';
   // 서버가 코드를 받을 수 있다고 한 신규 가입자이고 보상이 켜져 있을 때만 초대 코드 단계를 본다 — 조회가 실패하거나 늦으면 단계 없이 지나간다
   const referral = useReferralSummaryQuery().data;
-  const canEnterReferral = canEnterReferralStep(referral);
+  const locale = useLocale();
+  const canEnterReferral = canEnterReferralStep(referral, locale);
   // 마지막 스텝에 보여줄 첫 시나리오 — 온보딩을 시작할 때 받아 두면 도착할 땐 이미 떠 있다.
   // 홈과 같은 오늘 조회라 홈에 도착하면 이 캐시로 카드가 바로 뜬다
   const { daily, isLoading: scenarioLoading } = useDailyScenarioQuery();

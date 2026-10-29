@@ -2,10 +2,10 @@
 const PLAY_PACKAGE_NAME = 'com.saynow.app';
 const APP_STORE_ID = 'id6787414201';
 
-// 웹 링크 — 브라우저에서 여는 스토어 페이지
+// 웹 링크 — 브라우저에서 여는 스토어 페이지. App Store는 나라를 넣지 않아 여는 사람의 나라 스토어(한국·일본)로 간다
 export const PLAY_STORE_URL = `https://play.google.com/store/apps/details?id=${PLAY_PACKAGE_NAME}`;
-export const APP_STORE_URL = `https://apps.apple.com/kr/app/${APP_STORE_ID}`;
+export const APP_STORE_URL = `https://apps.apple.com/app/${APP_STORE_ID}`;
 
 // 스토어 앱 스킴 — 웹뷰는 http(s) 밖 스킴을 OS로 넘기므로, 웹뷰 안이 아니라 스토어 앱이 열린다
 export const PLAY_STORE_APP_URL = `market://details?id=${PLAY_PACKAGE_NAME}`;
-export const APP_STORE_APP_URL = `itms-apps://apps.apple.com/kr/app/${APP_STORE_ID}`;
+export const APP_STORE_APP_URL = `itms-apps://apps.apple.com/app/${APP_STORE_ID}`;

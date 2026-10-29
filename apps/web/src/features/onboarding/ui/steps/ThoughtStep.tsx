@@ -3,19 +3,24 @@
 
 import { useEffect, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
+import { useTranslations } from 'next-intl';
 
 import type { FloatingThought } from '@/features/conversation/model/thought'; // 온보딩 속마음 미리보기가 대화 엔진의 속마음 UI를 재사용한다
 import { ThoughtReveal } from '@/features/conversation/ui/ThoughtReveal';
+import { lineBreak } from '@/shared/i18n/rich';
 import { Button } from '@/shared/ui/Button';
 
-const DEMOS: FloatingThought[] = [
-  { type: 'GOOD', text: '오, 이유까지 말해주네. 대화 잘 통한다!' },
-  { type: 'NORMAL', text: '무슨 말인지 알겠어. 잘 전해졌어.' },
-  { type: 'BAD', text: '살짝 갸웃했어. 다음엔 천천히 말해줘!' },
-];
+// 시연할 표정 순서와 그 표정의 예시 문장 키
+const DEMOS = [
+  { type: 'GOOD', textKey: 'goodBody' },
+  { type: 'NORMAL', textKey: 'normalBody' },
+  { type: 'BAD', textKey: 'badBody' },
+] as const satisfies { type: FloatingThought['type']; textKey: string }[];
 
 export const ThoughtStep = ({ onNext }: { onNext: () => void }) => {
+  const t = useTranslations('onboarding.thoughtStep');
   const [index, setIndex] = useState(0);
+  const demo = DEMOS[index];
 
   // 표정·예시가 하나씩 바뀌며 반복 시연
   useEffect(() => {
@@ -30,9 +35,7 @@ export const ThoughtStep = ({ onNext }: { onNext: () => void }) => {
     <>
       <div className="flex flex-1 flex-col pt-7">
         <h1 className="text-3xl leading-[1.18] font-black tracking-normal">
-          말할 때마다 나와서
-          <br />
-          상대 속마음을 알려줄게요
+          {t.rich('title', lineBreak)}
         </h1>
 
         {/* 박스가 실제로 받은 높이를 재는 컨테이너 — 낮은 화면에서 버튼이 밀려나지 않게 박스와 시연이 함께 줄어든다 */}
@@ -42,14 +45,17 @@ export const ThoughtStep = ({ onNext }: { onNext: () => void }) => {
             {/* 시연(래디 180px + 말풍선, 약 310px)이 박스보다 커지지 않게 구간별로 줄인다. 구간끼리는 겹치지 않는다 */}
             <div className="[@container(272px<=height<340px)]:[zoom:0.8] [@container(height<272px)]:[zoom:0.6]">
               <AnimatePresence mode="wait">
-                <ThoughtReveal key={index} thought={DEMOS[index]} />
+                <ThoughtReveal
+                  key={index}
+                  thought={{ type: demo.type, text: t(demo.textKey) }}
+                />
               </AnimatePresence>
             </div>
           </div>
         </div>
       </div>
 
-      <Button onClick={onNext}>이해했어요!</Button>
+      <Button onClick={onNext}>{t('nextButton')}</Button>
     </>
   );
 };

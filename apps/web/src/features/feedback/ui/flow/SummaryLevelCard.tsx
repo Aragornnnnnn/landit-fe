@@ -2,6 +2,7 @@
 
 // 총평의 「이번 대화에서」 카드 — 영역 다섯 개를 100점 막대로 세우고 개선할 점을 붙인다. (i)는 점수가 무엇인지 알려 준다
 import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { InfoIcon } from '@/shared/ui/Icons';
 
@@ -21,80 +22,93 @@ export const SummaryLevelCard = ({
 }: {
   rows: SummaryDomainRow[];
   improvement: string | null;
-}) => (
-  <section className="rounded-2xl bg-card px-5 py-4 shadow-sm">
-    <div className="flex items-center justify-between">
-      <h2 className="text-14 font-extrabold text-primary">이번 대화에서</h2>
-      <ScoreInfo />
-    </div>
-    <dl className="mt-3 flex flex-col gap-3">
-      {rows.map((row, index) => (
-        <div key={row.key} className="flex flex-col gap-1.5">
-          <dt className="text-14 text-muted-foreground">{row.label}</dt>
-          <dd className="flex items-center gap-2.5">
-            <span
-              className="animate-bar-fill h-3 shrink-0 rounded-full bg-primary"
-              style={
-                {
-                  '--bar-width': `max(${MIN_BAR}, calc((100% - ${SCORE_LABEL_SPACE}) * ${row.score / 100}))`,
-                  '--i': index,
-                } as CSSProperties
-              }
-            />
-            <span className="text-16 font-extrabold text-primary tabular-nums">
-              {row.score}점
-            </span>
-          </dd>
-        </div>
-      ))}
-    </dl>
-    {improvement && (
-      <p className="mt-4 text-14 leading-[1.6] text-muted-foreground">
-        {improvement}
-      </p>
-    )}
-  </section>
-);
+}) => {
+  const t = useTranslations('feedback.summaryLevelCard');
+  const domain = useTranslations('feedback.summaryDomains');
+  return (
+    <section className="rounded-2xl bg-card px-5 py-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <h2 className="text-14 font-extrabold text-primary">{t('title')}</h2>
+        <ScoreInfo />
+      </div>
+      <dl className="mt-3 flex flex-col gap-3">
+        {rows.map((row, index) => (
+          <div key={row.key} className="flex flex-col gap-1.5">
+            <dt className="text-14 text-muted-foreground">
+              {domain(`${row.key}Label`)}
+            </dt>
+            <dd className="flex items-center gap-2.5">
+              <span
+                className="animate-bar-fill h-3 shrink-0 rounded-full bg-primary"
+                style={
+                  {
+                    '--bar-width': `max(${MIN_BAR}, calc((100% - ${SCORE_LABEL_SPACE}) * ${row.score / 100}))`,
+                    '--i': index,
+                  } as CSSProperties
+                }
+              />
+              <span className="text-16 font-extrabold text-primary tabular-nums">
+                {t('scoreLabel', { score: row.score })}
+              </span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {improvement && (
+        <p className="mt-4 text-14 leading-[1.6] text-muted-foreground">
+          {improvement}
+        </p>
+      )}
+    </section>
+  );
+};
 
 /** 분석이 끝나기를 기다리는 동안 카드 자리를 잡아 둔다 */
-export const SummaryLevelCardSkeleton = () => (
-  <div
-    role="status"
-    aria-label="이번 대화 점수를 분석하고 있어요"
-    className="animate-pulse rounded-2xl bg-card px-5 py-4 shadow-sm"
-  >
-    <div className="h-4 w-24 rounded bg-secondary" />
-    <div className="mt-4 flex flex-col gap-4">
-      {[0, 1, 2, 3, 4].map((row) => (
-        <div key={row} className="flex flex-col gap-2">
-          <div className="h-3 w-16 rounded bg-secondary" />
-          <div className="h-3 w-full rounded-full bg-secondary" />
-        </div>
-      ))}
+export const SummaryLevelCardSkeleton = () => {
+  const t = useTranslations('feedback.summaryLevelCard');
+  return (
+    <div
+      role="status"
+      aria-label={t('loadingLabel')}
+      className="animate-pulse rounded-2xl bg-card px-5 py-4 shadow-sm"
+    >
+      <div className="h-4 w-24 rounded bg-secondary" />
+      <div className="mt-4 flex flex-col gap-4">
+        {[0, 1, 2, 3, 4].map((row) => (
+          <div key={row} className="flex flex-col gap-2">
+            <div className="h-3 w-16 rounded bg-secondary" />
+            <div className="h-3 w-full rounded-full bg-secondary" />
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-);
-
-const SCORE_INFO_TEXT =
-  '이번 대화 한 번을 영역별로 살펴본 점수예요. 100점에 가까울수록 원어민처럼 자연스럽게 말했어요.';
+  );
+};
 
 // 툴팁 본문 — 점수가 무엇인지 한 줄, 그 아래 영역마다 무엇을 봤는지
-const ScoreGuide = () => (
-  <>
-    <p>{SCORE_INFO_TEXT}</p>
-    <dl className="mt-2 flex flex-col gap-1.5 border-t border-background/20 pt-2">
-      {SUMMARY_DOMAINS.map(({ key, label, description }) => (
-        <div key={key}>
-          <dt className="font-bold">{label}</dt>
-          <dd className="text-background/80">{description}</dd>
-        </div>
-      ))}
-    </dl>
-  </>
-);
+const ScoreGuide = () => {
+  const t = useTranslations('feedback.summaryLevelCard');
+  const domain = useTranslations('feedback.summaryDomains');
+  return (
+    <>
+      <p>{t('infoBody')}</p>
+      <dl className="mt-2 flex flex-col gap-1.5 border-t border-background/20 pt-2">
+        {SUMMARY_DOMAINS.map((key) => (
+          <div key={key}>
+            <dt className="font-bold">{domain(`${key}Label`)}</dt>
+            <dd className="text-background/80">
+              {domain(`${key}Description`)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </>
+  );
+};
 
 // (i) — 누르면 설명이 뜨고, 다시 누르거나 바깥을 누르면 닫힌다
 const ScoreInfo = () => {
+  const t = useTranslations('feedback.summaryLevelCard');
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const tooltipId = useId();
@@ -113,7 +127,7 @@ const ScoreInfo = () => {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        aria-label="점수 설명"
+        aria-label={t('infoButton')}
         aria-expanded={open}
         aria-describedby={open ? tooltipId : undefined}
         className="flex size-7 items-center justify-center text-muted-foreground active:opacity-60"

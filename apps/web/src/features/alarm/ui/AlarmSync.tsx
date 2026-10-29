@@ -20,7 +20,12 @@ import { ALARM_TYPE } from '../model/shell-alarm';
 import { useAlarmSettingQuery } from '../model/useAlarmSettingQuery';
 import { useAlarmStatus } from '../model/useAlarmStatus';
 
-export const AlarmSync = () => {
+export const AlarmSync = ({
+  title,
+}: {
+  // 잠금 화면 알람 제목 — 루트 레이아웃이 서버에서 화면 언어로 만들어 넘긴다(브라우저로 알람 문구 묶음을 보내지 않게)
+  title: string;
+}) => {
   const status = useAlarmStatus();
   const { data: setting } = useAlarmSettingQuery();
   const { subscription, isError: subscriptionFailed } = useSubscriptionQuery();
@@ -46,6 +51,7 @@ export const AlarmSync = () => {
       daily,
       scenarioLoading: isLoading,
       today: getDeviceToday(),
+      title,
     });
     if (target === 'wait') return;
     const command = decide(target.desired, status, target.doneOn);
@@ -72,6 +78,7 @@ export const AlarmSync = () => {
     daily,
     isLoading,
     decide,
+    title,
   ]);
 
   return null;

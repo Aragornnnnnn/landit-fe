@@ -834,3 +834,47 @@ describe('parseWebToNativeMessage — 광고 이벤트', () => {
     ).toBeNull();
   });
 });
+
+describe('화면 언어 알림 메시지', () => {
+  it('웹이 지금 화면 언어를 셸에 알린다 (round-trip)', () => {
+    const message = { type: 'SET_LOCALE', locale: 'ja' } as const;
+
+    expect(parseWebToNativeMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+
+  it('지원하지 않는 언어는 버린다', () => {
+    expect(
+      parseWebToNativeMessage(
+        JSON.stringify({ type: 'SET_LOCALE', locale: 'en' }),
+      ),
+    ).toBeNull();
+  });
+});
+
+describe('알람 상태의 제목', () => {
+  it('걸린 알람의 제목을 함께 되돌린다 — 웹이 화면 언어가 바뀐 걸 알아보고 다시 건다', () => {
+    const message: Extract<NativeToWebMessage, { type: 'ALARM_STATUS' }> = {
+      type: 'ALARM_STATUS',
+      supported: true,
+      permission: 'granted',
+      exactAlarm: true,
+      fullScreen: true,
+      notifications: true,
+      repeatingAlarms: [
+        {
+          alarmType: 'scenario',
+          schedules: [{ hour: 7, minute: 30, weekdays: [1, 2, 3, 4, 5, 6, 7] }],
+          path: '/scenario',
+          skipDate: null,
+          title: '今日のシナリオの時間です！',
+        },
+      ],
+    };
+
+    expect(parseNativeToWebMessage(serializeBridgeMessage(message))).toEqual(
+      message,
+    );
+  });
+});
