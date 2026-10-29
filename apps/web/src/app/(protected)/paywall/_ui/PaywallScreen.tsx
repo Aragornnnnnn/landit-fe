@@ -84,9 +84,11 @@ export const PaywallScreen = ({
   const plansRef = useRef<HTMLDivElement>(null);
 
   // 셸이 스토어 가격을 주면 카드 숫자를 그 값으로 다시 만든다 — 못 받으면 등록값 그대로.
-  // 본 화면은 늘 정가다. 할인은 닫을 때 뜨는 시트에만 있다
+  // 연간은 할인 상품으로 판다 — 할인 패키지를 못 받았을 때만 정가 연간으로 그리고 결제한다
   const offering = useOffering();
-  const packages = offering.regular;
+  const packages = offering.promo.yearly
+    ? { ...offering.regular, yearly: offering.promo.yearly }
+    : offering.regular;
   // 서버에 알리는 동안 닫기를 잠근다 — 연타하면 요청이 쌓이고 화면은 그대로다
   const [closing, setClosing] = useState(false);
   // 월간·연간은 스토어 통화(원·엔)대로, 이용권은 환급 산식이 원화를 전제하므로 원화만

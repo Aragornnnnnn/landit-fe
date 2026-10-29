@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   refreshRewardAfterPurchase: vi.fn(),
   busy: false,
   packages: {} as Record<string, unknown>,
+  promo: {} as Record<string, unknown>,
   dismiss: vi.fn(),
   checkPassAvailability: vi.fn(),
   purchaseOptions: null as {
@@ -59,7 +60,7 @@ vi.mock('@/features/subscription/model/purchase/usePurchase', () => ({
   },
 }));
 vi.mock('@/features/subscription/model/product/useOffering', () => ({
-  useOffering: () => ({ regular: mocks.packages, promo: {} }),
+  useOffering: () => ({ regular: mocks.packages, promo: mocks.promo }),
 }));
 // next/link는 next 밑의 다른 react 복사본을 잡아 훅이 깨진다 — 순수 a 태그로 치환한다
 vi.mock('next/link', () => ({
@@ -116,6 +117,7 @@ beforeEach(() => {
     yearly: { packageId: '$rc_annual', price: 94_500, currency: 'KRW' },
     monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
   };
+  mocks.promo = {};
 });
 afterEach(() => cleanup());
 
@@ -215,6 +217,31 @@ describe('PaywallScreen', () => {
       screen.getByText('월 4,900원꼴 · 7일 무료 체험'),
     ).toBeInTheDocument();
     expect(screen.queryByText('월 4,900원')).not.toBeInTheDocument();
+  });
+
+  it('연간은 할인 패키지로 그리고 결제한다 — 정가 연간은 페이월에 나오지 않는다', () => {
+    mocks.promo = {
+      yearly: {
+        packageId: 'annual_discount',
+        price: 58_500,
+        currency: 'KRW',
+      },
+    };
+    render(<PaywallScreen />);
+
+    expect(screen.getByText('연 58,500원')).toBeInTheDocument();
+    expect(screen.queryByText('연 94,500원')).not.toBeInTheDocument();
+    expect(mocks.purchaseOptions?.packages).toEqual({
+      ...mocks.packages,
+      yearly: mocks.promo.yearly,
+    });
+  });
+
+  it('할인 패키지를 못 받으면 정가 연간으로 그리고 결제한다 — 보인 금액과 결제 상품이 어긋나지 않게', () => {
+    render(<PaywallScreen />);
+
+    expect(screen.getByText('연 94,500원')).toBeInTheDocument();
+    expect(mocks.purchaseOptions?.packages).toEqual(mocks.packages);
   });
 
   it('일본어 화면은 환급 없이 혜택 → 결제 두 단계로 월간·연간 구독을 판다', () => {
