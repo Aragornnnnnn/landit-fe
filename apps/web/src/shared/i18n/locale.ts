@@ -108,6 +108,25 @@ export const acceptLanguageOf = (languages: readonly string[]) => {
 };
 
 /**
+ * 서버가 정한 언어(html lang)를 믿을 수 없을 때 브라우저가 직접 정한다 — 루트 레이아웃까지 죽은 오류 화면용.
+ * 서버와 같은 순서로 저장 언어 쿠키를 먼저 보고, 없으면 기기 언어 목록에서 고른다.
+ *
+ * @param cookieHeader `document.cookie`
+ * @param languages 기기 선호 언어 목록(`deviceLanguages()`)
+ */
+export const localeFromBrowser = (
+  cookieHeader: string,
+  languages: readonly string[],
+): Locale => {
+  const saved =
+    cookieHeader
+      .split('; ')
+      .find((pair) => pair.startsWith(`${LOCALE_COOKIE}=`))
+      ?.slice(LOCALE_COOKIE.length + 1) ?? null;
+  return resolveRequestLocale(saved, acceptLanguageOf(languages));
+};
+
+/**
  * 서버가 정해 html lang에 박은 언어를 읽는다. 브라우저에서 보내는 요청이 화면과 같은 언어를 쓰게 하는 단일 출처.
  * 서버에서 불리면(문서가 없으면) 기본 언어를 준다.
  */
