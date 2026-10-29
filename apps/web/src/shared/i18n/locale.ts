@@ -9,7 +9,7 @@ export const DEFAULT_LOCALE: Locale = 'ko';
 /** 한국에서만 파는 혜택(환급·친구 초대·이탈 할인)을 보여 줄 화면인가 — 일본어 화면은 구독만 판다 */
 export const sellsKoreaOnlyOffers = (locale: Locale) => locale === 'ko';
 
-const isLocale = (value: string): value is Locale =>
+export const isLocale = (value: string): value is Locale =>
   (LOCALES as readonly string[]).includes(value);
 
 // q는 0~1, 소수 셋째 자리까지만 유효하다(RFC 9110) — Infinity·1.5 같은 값은 0으로 보고 그 언어를 고르지 않는다
