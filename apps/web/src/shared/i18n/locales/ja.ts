@@ -8,6 +8,7 @@ import eventPopup from './ja/eventPopup.json';
 import expression from './ja/expression.json';
 import feedback from './ja/feedback.json';
 import home from './ja/home.json';
+import legal from './ja/legal.json';
 import mailbox from './ja/mailbox.json';
 import me from './ja/me.json';
 import notification from './ja/notification.json';
@@ -31,6 +32,7 @@ const ja = {
   expression,
   feedback,
   home,
+  legal,
   mailbox,
   me,
   notification,

@@ -2,6 +2,9 @@
 
 // 전자상거래법 10조가 요구하는 사업자 정보 표시 — 약관·처리방침 페이지 하단에 접힌 채 붙고, 누르면 펼쳐진다 (모바일 순차 표시 예외)
 import { useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+
+import type { Locale } from '@/shared/i18n/locale';
 
 export type BusinessInfo = {
   name: string;
@@ -24,6 +27,20 @@ export const BUSINESS_INFO: BusinessInfo = {
   hosting: 'Vercel Inc.',
   phone: '0507-1396-7809',
   mailOrderNumber: null,
+};
+
+// 일본어 화면용 — 상호·대표자·주소만 일본어 화면에서 읽히는 표기로 바꾸고 나머지는 같다
+const BUSINESS_INFO_JA: BusinessInfo = {
+  ...BUSINESS_INFO,
+  name: 'Landit',
+  representative: 'Son Yewon',
+  address:
+    '1F S25, 6 Munongjeong-ro, Sangdang-gu, Cheongju-si, Chungcheongbuk-do, Republic of Korea',
+};
+
+const BUSINESS_INFO_BY_LOCALE: Record<Locale, BusinessInfo> = {
+  ko: BUSINESS_INFO,
+  ja: BUSINESS_INFO_JA,
 };
 
 interface BusinessInfoFooterProps {
@@ -49,20 +66,21 @@ const ChevronDownIcon = ({ open }: { open: boolean }) => (
   </svg>
 );
 
-export const BusinessInfoFooter = ({
-  info = BUSINESS_INFO,
-}: BusinessInfoFooterProps) => {
+export const BusinessInfoFooter = ({ info }: BusinessInfoFooterProps) => {
+  const t = useTranslations('legal.businessInfo');
+  const locale = useLocale();
+  const shown = info ?? BUSINESS_INFO_BY_LOCALE[locale];
   const [open, setOpen] = useState(false);
 
   const rows: Array<[string, string | null]> = [
-    ['상호', info.name],
-    ['대표자', info.representative],
-    ['사업자등록번호', info.registrationNumber],
-    ['통신판매업 신고번호', info.mailOrderNumber],
-    ['주소', info.address],
-    ['전화번호', info.phone],
-    ['이메일', info.email],
-    ['호스팅 서비스', info.hosting],
+    [t('nameLabel'), shown.name],
+    [t('representativeLabel'), shown.representative],
+    [t('registrationNumberLabel'), shown.registrationNumber],
+    [t('mailOrderNumberLabel'), shown.mailOrderNumber],
+    [t('addressLabel'), shown.address],
+    [t('phoneLabel'), shown.phone],
+    [t('emailLabel'), shown.email],
+    [t('hostingLabel'), shown.hosting],
   ];
 
   return (
@@ -73,7 +91,7 @@ export const BusinessInfoFooter = ({
         aria-expanded={open}
         className="flex items-center gap-1 py-1 text-xs font-semibold text-muted-foreground"
       >
-        사업자 정보
+        {t('toggleButton')}
         <ChevronDownIcon open={open} />
       </button>
       {open && (
