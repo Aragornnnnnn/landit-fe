@@ -160,11 +160,11 @@ export const toRegularPrices = (
   };
 };
 
-/** 오퍼링을 못 받았을 때 결제에 쓸 RevenueCat 표준 패키지 identifier — 셸이 identifier로 패키지를 찾는다.
- * 옛 3·6개월 플랜은 예약 식별자, 이용권은 커스텀 이름이다 */
+/** 오퍼링을 못 받았을 때 결제에 쓸 RevenueCat 패키지 identifier — 셸이 identifier로 패키지를 찾는다.
+ * 옛 3·6개월 플랜은 예약 식별자, 연간은 할인 패키지(정가 `$rc_annual`은 더는 팔지 않는다), 이용권은 커스텀 이름이다 */
 export const DEFAULT_PACKAGE_IDS: Record<SubscriptionPlan, string> = {
   monthly: '$rc_monthly',
-  yearly: '$rc_annual',
+  yearly: 'annual_discount',
   quarterly: '$rc_three_month',
   halfyear: '$rc_six_month',
   // 대시보드에서 이용권 패키지에 붙이는 이름. 가격을 이름에 넣지 않아, 가격이 다른 상품으로 바꿔 끼워도 이름은 그대로다

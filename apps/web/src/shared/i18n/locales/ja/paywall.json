@@ -1,6 +1,7 @@
 {
   "restoreButton": "購入を復元",
   "trialStartButton": "7日間の無料体験を始める",
+  "priceRetryButton": "価格を再読み込み",
   "monthlyStartButton": "月額{price}で始める",
   "yearlyBillingCaption": "7日間の無料体験後は年額{price}で自動更新。いつでも解約できます",
   "monthlyBillingCaption": "毎月{price}で自動更新。いつでも解約できます",

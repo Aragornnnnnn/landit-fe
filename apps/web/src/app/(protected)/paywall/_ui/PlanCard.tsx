@@ -21,15 +21,19 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
   const reduced = useReducedMotion() ?? false;
   const yearly = plan.id === 'yearly';
   const title = t(yearly ? 'yearlyTitle' : 'monthlyTitle');
+  // 스토어 가격을 못 받은 카드는 금액 자리에 줄표만 둔다 — 등록값(원화)이 다른 통화 화면에 보이지 않게
   const priceLabel = (amount: number) =>
-    t(yearly ? 'yearlyPriceLabel' : 'monthlyPriceLabel', {
-      price: formatPrice(amount, plan.currency),
-    });
-  const subtitle = yearly
+    plan.unpriced
+      ? '–'
+      : t(yearly ? 'yearlyPriceLabel' : 'monthlyPriceLabel', {
+          price: formatPrice(amount, plan.currency),
+        });
+  const pricedSubtitle = yearly
     ? t('yearlySubtitle', {
         price: formatPrice(plan.monthlyPrice, plan.currency),
       })
     : t('monthlySubtitle');
+  const subtitle = plan.unpriced ? '\u00a0' : pricedSubtitle;
 
   return (
     <button
@@ -55,7 +59,7 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
 
       {/* 배지는 할인을 강조하는 카드만 위 테두리에 걸친다. 고른 카드에서는 골드로 켜져 선택이 배지까지 따라온다.
           회색 배경은 항상 깔고 골드는 그 위에 이미지로만 얹는다 — 색 전환 중 배지가 비쳐 뒤의 테두리 선이 보이지 않게 */}
-      {plan.discountRate !== undefined && (
+      {plan.discountRate !== undefined && !plan.unpriced && (
         <span
           className={`absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-[#f0f0ee] px-3 py-[3px] text-11 leading-[1.3] font-bold whitespace-nowrap transition-colors ${
             selected
@@ -75,9 +79,11 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
       </span>
       {/* 비교 기준이 없는 카드는 그 줄을 비워 두 카드의 큰 숫자 높이를 맞춘다 — 빈칸에 취소선이 그어지지 않게 클래스도 뗀다 */}
       <span
-        className={`text-12 leading-[1.3] text-muted-foreground ${plan.listPrice ? 'line-through' : ''}`}
+        className={`text-12 leading-[1.3] text-muted-foreground ${plan.listPrice && !plan.unpriced ? 'line-through' : ''}`}
       >
-        {plan.listPrice ? priceLabel(plan.listPrice) : '\u00a0'}
+        {plan.listPrice && !plan.unpriced
+          ? priceLabel(plan.listPrice)
+          : '\u00a0'}
       </span>
       {/* 가격은 글자 크기 배율을 받지 않는다 — 크게 단계에서 "14,900 / 원"으로 끊기지 않게 */}
       <span className="text-22 leading-[1.2] font-bold whitespace-nowrap text-foreground [--font-scale:1]">
