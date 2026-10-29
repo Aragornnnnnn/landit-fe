@@ -2,6 +2,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setTestLocale } from '@/shared/i18n/test-locale';
+
 import { LegalDocumentPage } from './LegalDocumentPage';
 
 const mocks = vi.hoisted(() => ({ replace: vi.fn(), back: vi.fn() }));
@@ -39,5 +41,17 @@ describe('LegalDocumentPage 뒤로가기', () => {
 
     expect(mocks.replace).toHaveBeenCalledWith('/');
     expect(mocks.back).not.toHaveBeenCalled();
+  });
+});
+
+describe('LegalDocumentPage 화면 문구', () => {
+  it('일본어 화면이면 시행일·버전·뒤로가기 이름표를 일본어로 적는다', () => {
+    setTestLocale('ja');
+
+    render(<LegalDocumentPage document={legalDocument} />);
+
+    expect(screen.getByText('施行日')).toBeInTheDocument();
+    expect(screen.getByText('バージョン')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '戻る' })).toBeInTheDocument();
   });
 });

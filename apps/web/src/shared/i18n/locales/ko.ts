@@ -8,6 +8,7 @@ import eventPopup from './ko/eventPopup.json';
 import expression from './ko/expression.json';
 import feedback from './ko/feedback.json';
 import home from './ko/home.json';
+import legal from './ko/legal.json';
 import mailbox from './ko/mailbox.json';
 import me from './ko/me.json';
 import notification from './ko/notification.json';
@@ -31,6 +32,7 @@ const ko = {
   expression,
   feedback,
   home,
+  legal,
   mailbox,
   me,
   notification,

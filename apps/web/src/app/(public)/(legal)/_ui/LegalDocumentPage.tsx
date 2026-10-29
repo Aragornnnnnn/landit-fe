@@ -2,6 +2,7 @@
 
 // 개인정보 처리방침·서비스 이용약관 공통 레이아웃 — 문서 데이터를 받아 카드형으로 렌더한다.
 // 뒤로가기는 온 곳(페이월·마이페이지)으로 한 칸. 직접 진입(스토어 링크·새로고침)이면 로그인 여부를 모르니 첫 화면으로
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { backOrReplace } from '@/shared/lib/routes';
@@ -39,6 +40,7 @@ const ChevronLeftIcon = () => (
 );
 
 export const LegalDocumentPage = ({ document }: LegalDocumentPageProps) => {
+  const t = useTranslations('legal.documentPage');
   const router = useRouter();
 
   return (
@@ -48,7 +50,7 @@ export const LegalDocumentPage = ({ document }: LegalDocumentPageProps) => {
           type="button"
           onClick={() => backOrReplace(router, '/')}
           className="-ml-1 flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-all active:scale-90 active:bg-border"
-          aria-label="돌아가기"
+          aria-label={t('backLabel')}
         >
           <ChevronLeftIcon />
         </button>
@@ -62,13 +64,17 @@ export const LegalDocumentPage = ({ document }: LegalDocumentPageProps) => {
           {/* 시행일·버전 메타 정보 */}
           <div className="mt-4 mb-6 overflow-hidden rounded-xl bg-card">
             <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
-              <span className="text-sm text-muted-foreground">시행일</span>
+              <span className="text-sm text-muted-foreground">
+                {t('effectiveDateLabel')}
+              </span>
               <span className="text-sm font-medium text-foreground">
                 {document.effectiveDate}
               </span>
             </div>
             <div className="flex items-center justify-between px-4 py-3.5">
-              <span className="text-sm text-muted-foreground">문서 버전</span>
+              <span className="text-sm text-muted-foreground">
+                {t('versionLabel')}
+              </span>
               <span className="text-sm font-medium text-foreground">
                 {document.version}
               </span>

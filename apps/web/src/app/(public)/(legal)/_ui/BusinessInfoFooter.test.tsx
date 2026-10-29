@@ -2,6 +2,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { setTestLocale } from '@/shared/i18n/test-locale';
+
 import { BUSINESS_INFO, BusinessInfoFooter } from './BusinessInfoFooter';
 
 afterEach(cleanup);
@@ -48,5 +50,19 @@ describe('BusinessInfoFooter', () => {
     // then
     expect(screen.getByText('010-0000-0000')).toBeInTheDocument();
     expect(screen.getByText('제2026-충북청주-0000호')).toBeInTheDocument();
+  });
+});
+
+describe('BusinessInfoFooter 일본어 화면', () => {
+  it('이름표와 상호·주소를 일본어 화면용으로 적는다', () => {
+    setTestLocale('ja');
+    render(<BusinessInfoFooter />);
+
+    fireEvent.click(screen.getByRole('button', { name: '事業者情報' }));
+
+    expect(screen.getByText('商号')).toBeInTheDocument();
+    expect(screen.getByText('Landit')).toBeInTheDocument();
+    expect(screen.getByText(/Cheongju-si/)).toBeInTheDocument();
+    expect(screen.getByText('284-24-02238')).toBeInTheDocument();
   });
 });
