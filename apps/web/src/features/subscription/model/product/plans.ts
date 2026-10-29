@@ -36,10 +36,10 @@ export const PLAN_LABEL_KEYS = {
   pass: 'passLabel',
 } as const satisfies Record<SubscriptionPlan, string>;
 
-// 스토어 등록값 — 오퍼링을 못 받았을 때 페이월이 쓰는 폴백. 월간은 할인 없는 기본가라 비교선도 배지도 없다.
-// 할인 연간(58,500)은 여기 없다 — 오퍼링으로만 오고, 못 받으면 시트를 띄우지 않으므로 폴백이 필요 없다
+// 스토어 등록값 — 오퍼링을 받기 전이나 셸이 없을 때 페이월이 쓰는 폴백. 월간은 할인 없는 기본가라 비교선도 배지도 없다.
+// 연간은 지금 파는 할인 연간(58,500)이다 — 정가 연간(94,500)은 더는 팔지 않는다
 const MONTHLY_PRICE = 14_900;
-const YEARLY_PRICE = 94_500;
+const YEARLY_PRICE = 58_500;
 
 /** 비교가 대비 판매가의 할인율. 정수 퍼센트로 반올림한다 */
 export const calculateDiscountRate = (listPrice: number, price: number) =>

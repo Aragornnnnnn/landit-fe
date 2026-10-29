@@ -205,8 +205,8 @@ describe('PaywallScreen', () => {
   });
 
   it('셸이 준 플랜별 패키지는 표시에 쓰고 결제 훅에도 그대로 넘긴다', () => {
-    mocks.packages = {
-      yearly: { packageId: '$rc_annual_kr', price: 49_900, currency: 'KRW' },
+    mocks.promo = {
+      yearly: { packageId: 'annual_discount', price: 49_900, currency: 'KRW' },
     };
     render(<PaywallScreen />);
 
@@ -215,12 +215,15 @@ describe('PaywallScreen', () => {
         '7일 무료 체험 후 연 49,900원 정기 결제 · 언제든 해지 가능',
       ),
     ).toBeInTheDocument();
-    expect(mocks.purchaseOptions?.packages).toBe(mocks.packages);
+    expect(mocks.purchaseOptions?.packages).toEqual({
+      monthly: mocks.packages.monthly,
+      yearly: mocks.promo.yearly,
+    });
   });
 
   it('카드의 큰 숫자는 실제 청구액이고 월 환산가는 부제로만 쓴다 — 스토어 심사 3.1.2(c)', () => {
-    mocks.packages = {
-      yearly: { packageId: '$rc_annual_kr', price: 58_500, currency: 'KRW' },
+    mocks.promo = {
+      yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
     };
     render(<PaywallScreen />);
 
@@ -250,14 +253,25 @@ describe('PaywallScreen', () => {
     });
   });
 
-  it('할인 패키지를 못 받으면 정가 연간으로 그리고 결제한다 — 보인 금액과 결제 상품이 어긋나지 않게', () => {
+  it('할인 패키지를 못 받아도 정가 연간은 그리지도 결제하지도 않는다 — 더는 팔지 않는 상품이다', () => {
+    mocks.offeringSettled = true;
     render(<PaywallScreen />);
 
-    expect(screen.getByText('연 94,500원')).toBeInTheDocument();
+    expect(screen.queryByText('연 94,500원')).not.toBeInTheDocument();
     expect(mocks.purchaseOptions?.packages).toEqual({
-      yearly: { packageId: '$rc_annual', price: 94_500, currency: 'KRW' },
       monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
     });
+    expect(
+      screen.getByRole('button', { name: '가격 다시 불러오기' }),
+    ).toBeInTheDocument();
+  });
+
+  it('셸에 묻기 전이나 묻지 않는 환경의 연간 등록값은 할인가다', () => {
+    mocks.packages = {};
+    render(<PaywallScreen />);
+
+    expect(screen.getByText('연 58,500원')).toBeInTheDocument();
+    expect(screen.queryByText('연 94,500원')).not.toBeInTheDocument();
   });
 
   it('오퍼링을 받는 동안은 CTA가 잠긴다 — 할인 패키지가 오기 전에 정가 상품으로 결제되지 않게', () => {
@@ -335,8 +349,10 @@ describe('PaywallScreen', () => {
     Element.prototype.scrollTo = vi.fn();
     setTestLocale('ja');
     mocks.packages = {
-      yearly: { packageId: '$rc_annual', price: 9_800, currency: 'JPY' },
       monthly: { packageId: '$rc_monthly', price: 1_500, currency: 'JPY' },
+    };
+    mocks.promo = {
+      yearly: { packageId: 'annual_discount', price: 9_800, currency: 'JPY' },
     };
     render(<PaywallScreen />);
 
