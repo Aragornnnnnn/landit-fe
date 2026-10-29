@@ -35,7 +35,7 @@ const reportUnclassifiable = (packages: OfferingPackage[]) => {
  *
  * @param enabled 꺼 두면 묻지 않는다 — 가격을 쓸 사람에게만 왕복을 건다
  * @returns 정가·할인으로 가른 오퍼링. 브라우저·구버전 셸이거나 아직 못 받았으면 둘 다 빈 객체.
- *   `pending`은 셸에 묻고 답을 기다리는 동안만 참이다 — 그동안 결제하면 표준 패키지(정가)로 나간다.
+ *   `pending`은 셸에 묻고 답을 기다리는 동안만 참이다 — 그동안 결제하면 할인 패키지가 오기 전의 표준 패키지(`DEFAULT_PACKAGE_IDS`)로 나간다.
  *   `settled`는 셸이 답을 마쳤을 때만 참이다 — 그때 가격이 비어 있으면 셸이 스토어 가격을 못 준 것이다.
  *   `retry`는 셸에 다시 묻는다
  */

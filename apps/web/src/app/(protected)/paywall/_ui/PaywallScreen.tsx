@@ -33,7 +33,7 @@ import { sendAdEvent, track } from '@/shared/analytics';
 import { sellsKoreaOnlyOffers } from '@/shared/i18n/locale';
 import { homePath } from '@/shared/lib/last-tab';
 import { premiumOnboardingPath, type PaywallStep } from '@/shared/lib/routes';
-import { Button } from '@/shared/ui/Button';
+import { reportWarning } from '@/shared/monitoring/report';
 import { CloseIcon } from '@/shared/ui/Icons';
 
 import { needsScrollToPlans } from '../_lib/plans-below-fold';
@@ -47,7 +47,7 @@ import { PaywallHeader } from './PaywallHeader';
 import { PaywallHero } from './PaywallHero';
 import { PlanSection } from './PlanSection';
 import { PremiumOnlySection } from './PremiumOnlySection';
-import { PurchaseNotices } from './PurchaseNotices';
+import { PurchaseCta } from './PurchaseCta';
 import { ReviewSection } from './ReviewSection';
 import { StepPaywall } from './StepPaywall';
 
@@ -91,15 +91,33 @@ export const PaywallScreen = ({
   const [closing, setClosing] = useState(false);
   // 월간·연간은 스토어 통화(원·엔)대로, 이용권은 환급 산식이 원화를 전제하므로 원화만
   const { currency, prices } = toRegularPrices(packages);
-  const plans = buildPaywallPlans(prices, currency);
+  const storePlans = buildPaywallPlans(prices, currency);
   const rewardPlan = buildRewardPlan(toKrwPrices(packages).pass);
-  const regularPlan = plans[selectedId === 'monthly' ? 'monthly' : 'yearly'];
-  // 셸이 답했는데 월간·연간 스토어 가격이 없으면(못 받음, 원화·엔화가 아닌 통화) 등록값으로 결제하지 않고 다시 묻게 한다.
+  // 셸이 답했는데 월간·연간 패키지가 오지 않았으면 등록값으로 결제하지 않고 다시 묻게 한다. 카드에도 등록값을 그리지 않는다.
+  // 받았는데 원화·엔화가 아닌 통화(USD 등)는 다시 물어도 같아서 여기서 다루지 않는다 — 결제 지휘의 통화 확인이 막고 알린다.
   // 환급 페이월은 이용권만 팔고 통화를 비교하지 않아 그대로 둔다
+  const hasMonthly = packages.monthly !== undefined;
+  const hasYearly = packages.yearly !== undefined;
   const pricesMissing =
-    !rewardChallenge &&
-    offering.settled &&
-    (prices.monthly === undefined || prices.yearly === undefined);
+    !rewardChallenge && offering.settled && !(hasMonthly && hasYearly);
+  const plans = pricesMissing
+    ? {
+        monthly: { ...storePlans.monthly, unpriced: true },
+        yearly: { ...storePlans.yearly, unpriced: true },
+      }
+    : storePlans;
+  const regularPlan = plans[selectedId === 'monthly' ? 'monthly' : 'yearly'];
+  const priceRetry = pricesMissing
+    ? { label: t('priceRetryButton'), onRetry: offering.retry }
+    : undefined;
+  // 다시 물어도 비는지 뒤쫓을 수 있게, 비어서 답이 끝날 때마다 남긴다
+  useEffect(() => {
+    if (!pricesMissing) return;
+    reportWarning('셸이 답했는데 페이월 스토어 가격이 없다', {
+      monthly: hasMonthly,
+      yearly: hasYearly,
+    });
+  }, [pricesMissing, hasMonthly, hasYearly]);
 
   // 페이월을 봤다고 메타에 알린다 — 결제 기준 광고 최적화로 넘어갈 때 쓸 중간 단계
   useEffect(() => {
@@ -202,11 +220,7 @@ export const PaywallScreen = ({
         }
         startStep={startStep}
         busy={busy}
-        priceRetry={
-          pricesMissing
-            ? { label: t('priceRetryButton'), onRetry: offering.retry }
-            : undefined
-        }
+        priceRetry={priceRetry}
         source={source}
         onStepChange={exit.noteStep}
         onScroll={exit.noteScroll}
@@ -268,18 +282,13 @@ export const PaywallScreen = ({
       {/* 위쪽은 투명에서 바탕색으로 번져, 스크롤되는 내용이 버튼 뒤로 자연스럽게 사라진다.
           결제 안내는 버튼 바로 밑에 둔다 — 청구액·갱신·해지는 스토어 심사(3.1.2)가 결제 버튼 곁에서 확인한다 */}
       <footer className="absolute inset-x-0 bottom-0 z-20 bg-[linear-gradient(to_bottom,transparent,var(--color-background)_28px)] px-5 pt-9 pb-[max(var(--safe-area-inset-bottom),12px)]">
-        {pricesMissing ? (
-          <Button onClick={offering.retry} loading={busy}>
-            {t('priceRetryButton')}
-          </Button>
-        ) : (
-          <>
-            <Button onClick={startPurchase} loading={busy}>
-              {getCtaLabel(regularPlan, t)}
-            </Button>
-            <PurchaseNotices plan={regularPlan} />
-          </>
-        )}
+        <PurchaseCta
+          label={getCtaLabel(regularPlan, t)}
+          plan={regularPlan}
+          busy={busy}
+          onPurchase={startPurchase}
+          priceRetry={priceRetry}
+        />
       </footer>
     </main>
   );

@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   offeringPending: false,
   offeringSettled: false,
   retryOffering: vi.fn(),
+  reportWarning: vi.fn(),
   dismiss: vi.fn(),
   checkPassAvailability: vi.fn(),
   purchaseOptions: null as {
@@ -70,6 +71,9 @@ vi.mock('@/features/subscription/model/product/useOffering', () => ({
     settled: mocks.offeringSettled,
     retry: mocks.retryOffering,
   }),
+}));
+vi.mock('@/shared/monitoring/report', () => ({
+  reportWarning: (...args: unknown[]) => mocks.reportWarning(...args),
 }));
 // next/link는 next 밑의 다른 react 복사본을 잡아 훅이 깨진다 — 순수 a 태그로 치환한다
 vi.mock('next/link', () => ({
@@ -130,6 +134,7 @@ beforeEach(() => {
   mocks.offeringPending = false;
   mocks.offeringSettled = false;
   mocks.retryOffering = vi.fn();
+  mocks.reportWarning = vi.fn();
   mocks.purchase.mockClear();
 });
 afterEach(() => cleanup());
@@ -294,13 +299,74 @@ describe('PaywallScreen', () => {
     expect(mocks.purchase).not.toHaveBeenCalled();
   });
 
-  it('원화·엔화가 아닌 스토어 가격을 받아도 가격을 다시 불러온다 — 화면 통화와 결제 통화가 어긋난다', () => {
+  it('원화·엔화가 아닌 스토어 가격(USD 등)은 다시 불러오지 않고 결제 버튼을 둔다 — 다시 물어도 같은 통화라 결제 지휘가 막고 알린다', () => {
     mocks.offeringSettled = true;
     mocks.packages = {
-      yearly: { packageId: '$rc_annual', price: 69.99, currency: 'USD' },
       monthly: { packageId: '$rc_monthly', price: 9.99, currency: 'USD' },
     };
+    mocks.promo = {
+      yearly: { packageId: 'annual_discount', price: 39.99, currency: 'USD' },
+    };
     render(<PaywallScreen />);
+
+    expect(
+      screen.queryByRole('button', { name: '가격 다시 불러오기' }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+    );
+    expect(mocks.purchase).toHaveBeenCalledWith('yearly');
+  });
+
+  it('스토어 가격이 없으면 카드에 등록값을 그리지 않는다 — 다른 통화의 금액이 보이지 않게', () => {
+    mocks.offeringSettled = true;
+    mocks.packages = {};
+    render(<PaywallScreen />);
+
+    expect(screen.queryByText('연 58,500원')).not.toBeInTheDocument();
+    expect(screen.queryByText('월 14,900원')).not.toBeInTheDocument();
+  });
+
+  it('스토어 가격이 없으면 어느 플랜이 비었는지 모니터링에 남긴다', () => {
+    mocks.offeringSettled = true;
+    mocks.packages = {
+      monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
+    };
+    render(<PaywallScreen />);
+
+    expect(mocks.reportWarning).toHaveBeenCalledTimes(1);
+    expect(mocks.reportWarning).toHaveBeenCalledWith(
+      '셸이 답했는데 페이월 스토어 가격이 없다',
+      { monthly: true, yearly: false },
+    );
+  });
+
+  it('다시 불러와 가격이 오면 결제 버튼으로 돌아온다', () => {
+    mocks.offeringSettled = true;
+    mocks.packages = {};
+    const { rerender } = render(<PaywallScreen />);
+    fireEvent.click(screen.getByRole('button', { name: '가격 다시 불러오기' }));
+
+    mocks.packages = {
+      monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
+    };
+    mocks.promo = {
+      yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
+    };
+    rerender(<PaywallScreen />);
+
+    expect(
+      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('연 58,500원')).toBeInTheDocument();
+  });
+
+  it('스토어 가격이 없으면 월간을 골라도 가격을 다시 불러온다', () => {
+    mocks.offeringSettled = true;
+    mocks.packages = {};
+    render(<PaywallScreen />);
+
+    fireEvent.click(screen.getByRole('button', { name: /월간 플랜/ }));
 
     expect(
       screen.getByRole('button', { name: '가격 다시 불러오기' }),

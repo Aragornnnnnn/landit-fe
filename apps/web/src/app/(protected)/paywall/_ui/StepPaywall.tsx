@@ -17,7 +17,7 @@ import type { StepOffer } from '../_model/step-offer';
 import { BenefitsStep } from './BenefitsStep';
 import { CheckoutStep } from './CheckoutStep';
 import { PaywallHeader } from './PaywallHeader';
-import { PurchaseNotices } from './PurchaseNotices';
+import { PurchaseCta, type PriceRetry } from './PurchaseCta';
 
 type Step = 'benefits' | 'checkout';
 
@@ -47,7 +47,7 @@ export const StepPaywall = ({
   /** 결제·복원이 진행 중이면 버튼을 잠근다 */
   busy: boolean;
   /** 스토어 가격을 못 받았을 때 결제 버튼 대신 거는 다시 불러오기. 없으면 결제 버튼이다 */
-  priceRetry?: { label: string; onRetry: () => void };
+  priceRetry?: PriceRetry;
   onClose: () => void;
   onRestore: () => void;
   onPurchase: () => void;
@@ -176,20 +176,19 @@ export const StepPaywall = ({
           <Button onClick={() => goTo('checkout')}>
             {t('paywall.stepPaywall.nextButton')}
           </Button>
-        ) : priceRetry ? (
-          <Button onClick={priceRetry.onRetry} loading={busy}>
-            {priceRetry.label}
-          </Button>
         ) : (
-          <>
-            <Button onClick={onPurchase} loading={busy}>
-              {/* 이용권은 환급 챌린지(한국어 화면)에만 있어 문구를 옮기지 않는다 */}
-              {subscriptionPlan
+          <PurchaseCta
+            // 이용권은 환급 챌린지(한국어 화면)에만 있어 문구를 옮기지 않는다
+            label={
+              subscriptionPlan
                 ? getCtaLabel(subscriptionPlan, tPaywall)
-                : '프리미엄 시작하기'}
-            </Button>
-            {subscriptionPlan && <PurchaseNotices plan={subscriptionPlan} />}
-          </>
+                : '프리미엄 시작하기'
+            }
+            plan={subscriptionPlan ?? undefined}
+            busy={busy}
+            onPurchase={onPurchase}
+            priceRetry={priceRetry}
+          />
         )}
       </footer>
     </main>

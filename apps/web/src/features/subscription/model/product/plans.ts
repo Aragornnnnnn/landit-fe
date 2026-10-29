@@ -20,6 +20,8 @@ export interface PaywallPlan {
   price: number;
   /** 카드 위 테두리 배지의 할인율(%). 할인을 강조하는 카드에만 있다 */
   discountRate?: number;
+  /** 스토어 가격을 못 받아 금액을 그리지 않는 카드. 이때 숫자들은 등록값이라 화면에 내지 않는다 */
+  unpriced?: boolean;
 }
 
 /** 카드가 놓이는 순서 — 왼쪽 월간, 오른쪽 연간 */
