@@ -117,7 +117,8 @@ export const PaywallScreen = ({
     if (closing) return;
     exit.markClose();
     setClosing(true);
-    if (!rewardChallenge) await dismiss();
+    // 할인을 이미 보여 줬으면 알리지 않는다 — 이탈 할인 시트가 같은 할인 상품을 다시 권하게 된다
+    if (!rewardChallenge && !offering.promo.yearly) await dismiss();
     setClosing(false);
     goHome();
   };

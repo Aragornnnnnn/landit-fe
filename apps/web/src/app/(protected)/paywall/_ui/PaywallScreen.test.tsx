@@ -247,6 +247,20 @@ describe('PaywallScreen', () => {
     });
   });
 
+  it('할인을 이미 보여 준 페이월은 닫아도 이탈 할인을 요청하지 않는다 — 같은 상품을 다시 권하게 된다', async () => {
+    mocks.promo = {
+      yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
+    };
+    render(<PaywallScreen />);
+
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+
+    await vi.waitFor(() =>
+      expect(mocks.replace).toHaveBeenCalledWith('/scenario'),
+    );
+    expect(mocks.dismiss).not.toHaveBeenCalled();
+  });
+
   it('일본어 화면은 환급 없이 혜택 → 결제 두 단계로 월간·연간 구독을 판다', () => {
     // 단계를 넘기면 맨 위로 올리는데 jsdom 요소엔 scrollTo가 없다
     Element.prototype.scrollTo = vi.fn();
