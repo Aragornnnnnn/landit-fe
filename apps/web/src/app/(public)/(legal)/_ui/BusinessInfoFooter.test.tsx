@@ -54,7 +54,7 @@ describe('BusinessInfoFooter', () => {
 });
 
 describe('BusinessInfoFooter 일본어 화면', () => {
-  it('이름표와 상호·주소를 일본어 화면용으로 적는다', () => {
+  it('이름표와 상호·대표자·주소를 일본어 화면용으로 적는다', () => {
     setTestLocale('ja');
     render(<BusinessInfoFooter />);
 
@@ -62,6 +62,7 @@ describe('BusinessInfoFooter 일본어 화면', () => {
 
     expect(screen.getByText('商号')).toBeInTheDocument();
     expect(screen.getByText('Landit')).toBeInTheDocument();
+    expect(screen.getByText('Son Yewon')).toBeInTheDocument();
     expect(screen.getByText(/Cheongju-si/)).toBeInTheDocument();
     expect(screen.getByText('284-24-02238')).toBeInTheDocument();
   });

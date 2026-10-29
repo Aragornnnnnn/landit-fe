@@ -29,10 +29,11 @@ export const BUSINESS_INFO: BusinessInfo = {
   mailOrderNumber: null,
 };
 
-// 일본어 화면용 — 상호와 주소만 일본어 화면에서 읽히는 표기로 바꾸고 나머지는 같다
+// 일본어 화면용 — 상호·대표자·주소만 일본어 화면에서 읽히는 표기로 바꾸고 나머지는 같다
 const BUSINESS_INFO_JA: BusinessInfo = {
   ...BUSINESS_INFO,
   name: 'Landit',
+  representative: 'Son Yewon',
   address:
     '1F S25, 6 Munongjeong-ro, Sangdang-gu, Cheongju-si, Chungcheongbuk-do, Republic of Korea',
 };
