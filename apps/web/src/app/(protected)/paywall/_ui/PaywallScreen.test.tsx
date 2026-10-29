@@ -232,8 +232,8 @@ describe('PaywallScreen', () => {
     expect(screen.getByText('연 58,500원')).toBeInTheDocument();
     expect(screen.queryByText('연 94,500원')).not.toBeInTheDocument();
     expect(mocks.purchaseOptions?.packages).toEqual({
-      ...mocks.packages,
-      yearly: mocks.promo.yearly,
+      yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
+      monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
     });
   });
 
@@ -241,7 +241,10 @@ describe('PaywallScreen', () => {
     render(<PaywallScreen />);
 
     expect(screen.getByText('연 94,500원')).toBeInTheDocument();
-    expect(mocks.purchaseOptions?.packages).toEqual(mocks.packages);
+    expect(mocks.purchaseOptions?.packages).toEqual({
+      yearly: { packageId: '$rc_annual', price: 94_500, currency: 'KRW' },
+      monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
+    });
   });
 
   it('일본어 화면은 환급 없이 혜택 → 결제 두 단계로 월간·연간 구독을 판다', () => {
