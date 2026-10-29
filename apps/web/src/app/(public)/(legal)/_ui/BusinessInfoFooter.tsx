@@ -69,18 +69,18 @@ const ChevronDownIcon = ({ open }: { open: boolean }) => (
 export const BusinessInfoFooter = ({ info }: BusinessInfoFooterProps) => {
   const t = useTranslations('legal.businessInfo');
   const locale = useLocale();
-  const shown = info ?? BUSINESS_INFO_BY_LOCALE[locale];
+  const businessInfo = info ?? BUSINESS_INFO_BY_LOCALE[locale];
   const [open, setOpen] = useState(false);
 
   const rows: Array<[string, string | null]> = [
-    [t('nameLabel'), shown.name],
-    [t('representativeLabel'), shown.representative],
-    [t('registrationNumberLabel'), shown.registrationNumber],
-    [t('mailOrderNumberLabel'), shown.mailOrderNumber],
-    [t('addressLabel'), shown.address],
-    [t('phoneLabel'), shown.phone],
-    [t('emailLabel'), shown.email],
-    [t('hostingLabel'), shown.hosting],
+    [t('nameLabel'), businessInfo.name],
+    [t('representativeLabel'), businessInfo.representative],
+    [t('registrationNumberLabel'), businessInfo.registrationNumber],
+    [t('mailOrderNumberLabel'), businessInfo.mailOrderNumber],
+    [t('addressLabel'), businessInfo.address],
+    [t('phoneLabel'), businessInfo.phone],
+    [t('emailLabel'), businessInfo.email],
+    [t('hostingLabel'), businessInfo.hosting],
   ];
 
   return (

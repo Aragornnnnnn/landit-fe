@@ -15,8 +15,8 @@ const DOCUMENTS: Record<Locale, LegalDocument> = {
   ja: privacyDocumentJa,
 };
 
-const Page = async () => (
+const PrivacyPage = async () => (
   <LegalDocumentPage document={DOCUMENTS[await getLocale()]} />
 );
 
-export default Page;
+export default PrivacyPage;
