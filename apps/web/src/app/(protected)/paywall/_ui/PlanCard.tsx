@@ -28,13 +28,12 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
       : t(yearly ? 'yearlyPriceLabel' : 'monthlyPriceLabel', {
           price: formatPrice(amount, plan.currency),
         });
-  const subtitle = plan.unpriced
-    ? '\u00a0'
-    : yearly
-      ? t('yearlySubtitle', {
-          price: formatPrice(plan.monthlyPrice, plan.currency),
-        })
-      : t('monthlySubtitle');
+  const pricedSubtitle = yearly
+    ? t('yearlySubtitle', {
+        price: formatPrice(plan.monthlyPrice, plan.currency),
+      })
+    : t('monthlySubtitle');
+  const subtitle = plan.unpriced ? '\u00a0' : pricedSubtitle;
 
   return (
     <button
