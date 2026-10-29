@@ -279,6 +279,8 @@ export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
 export type PreviewEndReason = 'no_target' | 'no_free_expression';
 // 배울 영어 — BE 발음 에셋(accentLocale)과 같은 enum 값을 쓴다. 지표와 서버 데이터가 같은 말을 쓴다
 export type AccentLocale = 'EN_US' | 'EN_GB' | 'EN_AU';
+// 화면 언어 — 웹 next-intl 언어(shared/i18n/locale)와 같은 값이다
+export type AppLanguage = 'ko' | 'ja';
 // 기존 유저 게이트가 묻는 질문 — 온보딩 스텝과 같은 말을 쓴다. 영어 수준은 첫 대화로 BE가 매겨 더 이상 묻지 않는다
 export type GateQuestion = Extract<OnboardingStep, 'accent'>;
 // pronounce = 발음 평가 (발음 자산이 있는 표현에만), examples = 추가 예문 화면(한 장씩 두 장)
@@ -1035,6 +1037,7 @@ export interface UserProperties {
   reward_state: RewardProfileState;
   has_alarm: boolean;
   att_status: TrackingPermissionStatus;
+  app_language: AppLanguage;
 }
 
 // 한 번에 갱신할 속성들 — null은 "이 사람에게는 값이 없다"라는 뜻으로 프로필에서 그 속성을 지운다
