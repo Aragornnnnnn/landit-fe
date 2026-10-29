@@ -7,7 +7,9 @@
     "nextLabel": "次へ",
     "weekLabel": "週",
     "monthLabel": "月",
-    "periodSkeletonLabel": "0000年00月 第0週"
+    "periodSkeletonLabel": "0000年00月 第0週",
+    "periodWeekLabel": "{year}年{month}月 第{week}週",
+    "periodMonthLabel": "{year}年{month}月"
   },
   "calendarDay": {
     "completedLabel": "{date} 完了",

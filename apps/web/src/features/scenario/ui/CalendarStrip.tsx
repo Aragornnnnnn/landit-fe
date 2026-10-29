@@ -7,6 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { track } from '@/shared/analytics';
+import type { Locale } from '@/shared/i18n/locale';
 import { WEEKDAY_LABELS } from '@/shared/lib/date-string';
 import { DURATION, EASE_STANDARD } from '@/shared/motion';
 import { registerOpenSheet } from '@/shared/ui/bottom-sheet-back';
@@ -17,6 +18,7 @@ import {
   canGoBack,
   canGoForward,
   datesOfMonth,
+  periodOf,
   shiftWindow,
   weekdayIndexOf,
 } from '../lib/calendar-window';
@@ -26,6 +28,12 @@ import { CalendarDay } from './calendar/CalendarDay';
 
 // 그 달 1일이 몇 번째 칸에서 시작하는지
 const leadingBlanks = (firstDate: string) => weekdayIndexOf(firstDate);
+
+// 머리말의 연도 — 한국어는 서버 머리말처럼 두 자리로 줄이고, 일본어는 줄이지 않는다
+const YEAR_TEXT: Record<Locale, (year: number) => string> = {
+  ko: (year) => String(year % 100).padStart(2, '0'),
+  ja: (year) => String(year),
+};
 
 interface CalendarStripProps {
   // URL의 date가 가리키는 보고 있는 날. 창도 이 날을 따른다. 없으면 오늘이다
@@ -98,6 +106,21 @@ export const CalendarStrip = ({
   // 이름표도 지금 보는 단위의 응답이 와야 정해진다 — 달을 펼쳤는데 주 이름표가 남아 있으면 엉뚱하다
   const loadingLabel = expanded ? !month : loadingWeek;
   const { today, startedAt } = shown;
+  // 서버 머리말(label)은 한국어로만 와서, 같은 규칙으로 기간을 세어 화면 언어로 적는다. 서버가 언어별 label을 주면 label로 돌아가고 periodOf·YEAR_TEXT를 지운다
+  const {
+    year,
+    month: monthOfYear,
+    week: weekOfMonth,
+  } = periodOf(shown.date, shown.type);
+  const yearText = YEAR_TEXT[locale](year);
+  const periodLabel =
+    weekOfMonth === null
+      ? t('periodMonthLabel', { year: yearText, month: monthOfYear })
+      : t('periodWeekLabel', {
+          year: yearText,
+          month: monthOfYear,
+          week: weekOfMonth,
+        });
   const type: ScenarioCalendarType = expanded ? 'MONTH' : 'WEEK';
   const anchor = windowDate ?? today;
   // 선택은 응답이 아니라 URL의 date를 따른다 — 누르자마자 옮겨져야 눌린 줄 안다
@@ -145,7 +168,7 @@ export const CalendarStrip = ({
             onClick={() => move(-1)}
           />
           <span className="text-base font-extrabold text-foreground">
-            {loadingLabel ? <LabelSkeleton /> : shown.label}
+            {loadingLabel ? <LabelSkeleton /> : periodLabel}
           </span>
           <ArrowButton
             direction={1}

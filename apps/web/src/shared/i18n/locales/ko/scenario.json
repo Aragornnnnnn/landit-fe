@@ -7,7 +7,9 @@
     "nextLabel": "다음",
     "weekLabel": "주",
     "monthLabel": "월",
-    "periodSkeletonLabel": "0000년 00월 0주차"
+    "periodSkeletonLabel": "0000년 00월 0주차",
+    "periodWeekLabel": "{year}년 {month}월 {week}주차",
+    "periodMonthLabel": "{year}년 {month}월"
   },
   "calendarDay": {
     "completedLabel": "{date} 완료",

@@ -6,6 +6,7 @@ import {
   canGoForward,
   datesOfMonth,
   firstDayOfWindow,
+  periodOf,
   shiftWindow,
 } from './calendar-window';
 
@@ -76,5 +77,40 @@ describe('datesOfMonth', () => {
 
   it('31일까지 있는 달은 31일을 돌려준다', () => {
     expect(datesOfMonth('2026-08-01')).toHaveLength(31);
+  });
+});
+
+describe('periodOf', () => {
+  // 서버 머리말 규칙(ScenarioCalendarService.label)과 같은 사례
+  it('주 창은 기준 날짜의 달에서 1일이 든 주(일요일 시작)를 1주차로 센다', () => {
+    expect(periodOf('2026-07-31', 'WEEK')).toEqual({
+      year: 2026,
+      month: 7,
+      week: 5,
+    });
+  });
+
+  it('같은 창이라도 기준 날짜가 다음 달이면 그 달의 1주차다', () => {
+    expect(periodOf('2026-08-01', 'WEEK')).toEqual({
+      year: 2026,
+      month: 8,
+      week: 1,
+    });
+  });
+
+  it('1일이 일요일인 달은 그 주가 1주차다', () => {
+    expect(periodOf('2026-11-08', 'WEEK')).toEqual({
+      year: 2026,
+      month: 11,
+      week: 2,
+    });
+  });
+
+  it('달 창은 주차 없이 연·월만 준다', () => {
+    expect(periodOf('2026-10-29', 'MONTH')).toEqual({
+      year: 2026,
+      month: 10,
+      week: null,
+    });
   });
 });

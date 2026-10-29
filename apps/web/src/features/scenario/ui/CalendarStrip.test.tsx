@@ -37,7 +37,7 @@ const day = (date: string) => ({
 const WEEK: ScenarioCalendarResponse = {
   type: 'WEEK',
   date: '2026-08-02',
-  label: '2026년 8월 1주차',
+  label: '26년 8월 2주차',
   today: '2026-08-06',
   startedAt: '2026-08-01',
   days: [
@@ -112,7 +112,7 @@ describe('CalendarStrip 월 패널', () => {
     fireEvent.click(screen.getByRole('button', { name: '월' }));
 
     // Then 주 이름표가 보이지 않는다
-    expect(screen.queryByText('2026년 8월 1주차')).toBeNull();
+    expect(screen.queryByText('26년 8월 2주차')).toBeNull();
   });
 
   it('월 응답이 오면 그 달 전체를 그린다', () => {
@@ -361,7 +361,7 @@ describe('CalendarStrip 주 로딩', () => {
     // Then 이전 주의 날짜와 이름표 대신 불러오는 중임을 보인다
     expect(screen.getByRole('status', { name: '주 불러오는 중' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: '8월 5일' })).toBeNull();
-    expect(screen.queryByText('2026년 8월 1주차')).toBeNull();
+    expect(screen.queryByText('26년 8월 2주차')).toBeNull();
   });
 
   it('처음 들어와 주 응답이 없을 때도 빈 자리 대신 스켈레톤을 그린다', () => {
@@ -378,6 +378,15 @@ describe('CalendarStrip 주 로딩', () => {
     expect(screen.getByRole('status', { name: '주 불러오는 중' })).toBeTruthy();
   });
 
+  it('일본어 화면이면 머리말을 일본어로 그린다 — 서버 머리말은 한국어뿐이다', () => {
+    setTestLocale('ja');
+    givenCalendars(MONTH);
+
+    render(<CalendarStrip onSelect={vi.fn()} />);
+
+    expect(screen.getByText('2026年8月 第2週')).toBeTruthy();
+  });
+
   it('새 주 응답이 오면 그 주의 날짜를 그린다', () => {
     // Given 주 조회가 응답을 받았으면
     givenCalendars(MONTH);
@@ -387,7 +396,7 @@ describe('CalendarStrip 주 로딩', () => {
 
     // Then 스켈레톤 없이 날짜와 이름표를 그린다
     expect(screen.queryByRole('status', { name: '주 불러오는 중' })).toBeNull();
-    expect(screen.getByText('2026년 8월 1주차')).toBeTruthy();
+    expect(screen.getByText('26년 8월 2주차')).toBeTruthy();
   });
 });
 
