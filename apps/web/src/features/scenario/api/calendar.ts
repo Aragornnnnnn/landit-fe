@@ -7,7 +7,7 @@ export interface ScenarioCalendarResponse {
   type: ScenarioCalendarType;
   // 창의 기준 날짜. 요청에서 생략하면 오늘이 담겨 온다
   date: string;
-  // 헤더 문구를 서버가 만들어 준다 — WEEK은 "2026년 7월 5주차", MONTH은 "2026년 7월"
+  // 헤더 문구를 서버가 만들어 준다 — WEEK은 "26년 7월 5주차", MONTH은 "26년 7월"(연도 두 자리). 한국어뿐이라 화면은 같은 규칙으로 직접 그린다(CalendarStrip)
   label: string;
   // 서버(Asia/Seoul) 기준 오늘. 기기 타임존과 어긋나지 않게 이 값을 기준으로 판단한다
   today: string;
