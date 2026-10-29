@@ -84,9 +84,11 @@ export const PaywallScreen = ({
   const plansRef = useRef<HTMLDivElement>(null);
 
   // 셸이 스토어 가격을 주면 카드 숫자를 그 값으로 다시 만든다 — 못 받으면 등록값 그대로.
-  // 본 화면은 늘 정가다. 할인은 닫을 때 뜨는 시트에만 있다
+  // 연간은 할인 상품으로 판다 — 할인 패키지를 못 받았을 때만 정가 연간으로 그리고 결제한다
   const offering = useOffering();
-  const packages = offering.regular;
+  const packages = offering.promo.yearly
+    ? { ...offering.regular, yearly: offering.promo.yearly }
+    : offering.regular;
   // 서버에 알리는 동안 닫기를 잠근다 — 연타하면 요청이 쌓이고 화면은 그대로다
   const [closing, setClosing] = useState(false);
   // 월간·연간은 스토어 통화(원·엔)대로, 이용권은 환급 산식이 원화를 전제하므로 원화만
@@ -115,7 +117,8 @@ export const PaywallScreen = ({
     if (closing) return;
     exit.markClose();
     setClosing(true);
-    if (!rewardChallenge) await dismiss();
+    // 할인을 이미 보여 줬으면 알리지 않는다 — 이탈 할인 시트가 같은 할인 상품을 다시 권하게 된다
+    if (!rewardChallenge && !offering.promo.yearly) await dismiss();
     setClosing(false);
     goHome();
   };
@@ -131,13 +134,19 @@ export const PaywallScreen = ({
       reason === 'purchase' ? premiumOnboardingPath(destination) : destination,
     );
   };
-  const { busy, purchase, restore } = usePurchase({
+  const {
+    busy: purchasing,
+    purchase,
+    restore,
+  } = usePurchase({
     packages,
     onUnlocked: unlock,
     checkPassAvailability,
     // 이용권은 스토어 통화대로 결제해도 된다고 정해 비교하지 않는다
     displayCurrencies: { monthly: currency, yearly: currency },
   });
+  // 오퍼링을 받는 동안도 잠근다 — 할인 패키지가 오기 전에 누르면 표준 패키지(정가)로 결제된다
+  const busy = purchasing || offering.pending;
 
   const selectPlan = (id: SubscriptionPlan) => {
     if (id === selectedId) return;

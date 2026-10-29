@@ -84,7 +84,7 @@ export const unclassifiablePackages = (packages: OfferingPackage[]) =>
     (pkg) => !reservedPlan(pkg) && !passPlan(pkg) && !periodPlan(pkg),
   );
 
-/** 현재 오퍼링을 정가·할인으로 가른 것 — 페이월은 정가를, 이탈 할인 시트는 할인을 쓴다 */
+/** 현재 오퍼링을 정가·할인으로 가른 것 — 페이월은 연간만 할인을, 이탈 할인 시트는 할인을 쓴다 */
 export interface Offering {
   regular: PlanPackages;
   promo: PlanPackages;
