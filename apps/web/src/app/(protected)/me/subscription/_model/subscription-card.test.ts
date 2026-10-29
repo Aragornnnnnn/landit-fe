@@ -26,6 +26,9 @@ const dateRowKo = (summary: PaidSubscriptionSummary) =>
 const amountRowKo = (summary: PaidSubscriptionSummary) =>
   toAmountRow(summary, t);
 
+const won = (amount: number) => ({ amount, currency: 'KRW' as const });
+const yen = (amount: number) => ({ amount, currency: 'JPY' as const });
+
 const active = (
   overrides: Partial<PaidSubscriptionSummary> = {},
 ): PaidSubscriptionSummary => ({
@@ -98,20 +101,37 @@ describe('toDateRow', () => {
 
 describe('toAmountRow', () => {
   it('연간은 월간 1년치를 비교가로, 월간은 금액만', () => {
-    expect(amountRowKo(active({ plan: 'yearly', price: 58_500 }))).toEqual({
-      label: '다음 결제 금액',
-      value: '58,500원',
-      listPrice: '178,800원',
-    });
-    expect(amountRowKo(active({ plan: 'monthly', price: 14_900 }))).toEqual({
+    expect(amountRowKo(active({ plan: 'yearly', price: won(58_500) }))).toEqual(
+      {
+        label: '다음 결제 금액',
+        value: '58,500원',
+        listPrice: '178,800원',
+      },
+    );
+    expect(
+      amountRowKo(active({ plan: 'monthly', price: won(14_900) })),
+    ).toEqual({
       label: '다음 결제 금액',
       value: '14,900원',
       listPrice: undefined,
     });
   });
 
+  it('엔화 구독은 엔화로 적고, 원화 기준인 연간 비교가는 뺀다', () => {
+    expect(amountRowKo(active({ plan: 'yearly', price: yen(9_800) }))).toEqual({
+      label: '다음 결제 금액',
+      value: '9,800円',
+      listPrice: undefined,
+    });
+    expect(amountRowKo(active({ plan: 'monthly', price: yen(1_500) }))).toEqual(
+      { label: '다음 결제 금액', value: '1,500円', listPrice: undefined },
+    );
+  });
+
   it('3·6개월은 비교가 없이 다음 결제 금액만 보여 준다', () => {
-    expect(amountRowKo(active({ plan: 'halfyear', price: 59_900 }))).toEqual({
+    expect(
+      amountRowKo(active({ plan: 'halfyear', price: won(59_900) })),
+    ).toEqual({
       label: '다음 결제 금액',
       value: '59,900원',
       listPrice: undefined,
@@ -119,7 +139,7 @@ describe('toAmountRow', () => {
   });
 
   it('적용되는 금액이 있으면 그 금액을 보여주고, 비교가는 월간 12개월치 그대로다', () => {
-    expect(amountRowKo(active({ plan: 'yearly', price: 47000 }))).toEqual({
+    expect(amountRowKo(active({ plan: 'yearly', price: won(47000) }))).toEqual({
       label: '다음 결제 금액',
       value: '47,000원',
       listPrice: '178,800원',
@@ -132,7 +152,7 @@ describe('toAmountRow', () => {
 
   it('체험은 첫 결제 금액이고, 플랜을 모르거나 갱신이 안 되면 행이 없다', () => {
     expect(
-      amountRowKo(active({ kind: 'trial', plan: 'yearly', price: 58_500 }))
+      amountRowKo(active({ kind: 'trial', plan: 'yearly', price: won(58_500) }))
         ?.label,
     ).toBe('첫 결제 금액');
     expect(amountRowKo(active())).toBeNull();

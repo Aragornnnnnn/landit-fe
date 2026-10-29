@@ -5,6 +5,7 @@ import type {
   MySubscription,
   SubscriptionPeriodType,
 } from '../../api/subscription';
+import { isPricedCurrency, type StorePrice } from '../../lib/store-price';
 import { isWonCurrency } from '../../lib/won';
 import { planFromProductId } from '../product/plans';
 
@@ -19,10 +20,10 @@ export type SubscriptionSummary =
       /** 월간·연간·3개월·6개월. BE가 상품 식별자를 안 주거나 모르는 상품이면 null */
       plan: SubscriptionPlan | null;
       /**
-       * 실제로 낸 원화 금액. 결제 이력이 없거나(무료 체험) 외화면 null.
+       * 실제로 낸 금액과 통화(원·엔). 결제 이력이 없거나(무료 체험) 원·엔 밖의 통화면 null.
        * null이면 화면은 금액을 말하지 않는다 — 등록값으로 추측하면 할인·가격 인상 때 남의 금액을 보여준다
        */
-      price: number | null;
+      price: StorePrice | null;
     };
 
 /** 유료인 경우만 — 상태와 날짜가 있다 */
@@ -32,14 +33,20 @@ export type PaidSubscriptionSummary = Extract<
 >;
 
 /**
- * 화면에 그릴 수 있는 원화 결제액만 남긴다.
+ * 화면에 그릴 수 있는 결제액만 남긴다.
  *
- * 0은 청구가 없다는 뜻이고(프로모션 부여·선결제), 외화는 하루 환산과 「원」 표기가 맞지 않아 버린다.
+ * 0은 청구가 없다는 뜻이고(프로모션 부여·선결제), 원·엔 밖의 통화는 화면이 적을 줄 몰라 버린다. 통화가 안 오면 원화로 본다.
  *
- * @returns 원화 결제액. 그릴 수 없으면 null
+ * @returns 금액과 통화. 그릴 수 없으면 null
  */
-const toKrwPrice = ({ price, currency }: MySubscription) =>
-  price && price > 0 && isWonCurrency(currency) ? price : null;
+const toStorePrice = ({
+  price,
+  currency,
+}: MySubscription): StorePrice | null => {
+  if (!price || price <= 0) return null;
+  if (isWonCurrency(currency)) return { amount: price, currency: 'KRW' };
+  return isPricedCurrency(currency) ? { amount: price, currency } : null;
+};
 
 // 만료일에 스토어가 다시 결제하는 기간 종류 — 무료 체험도 끝나면 첫 결제가 된다
 const RENEWING_PERIODS = new Set<SubscriptionPeriodType>([
@@ -59,7 +66,7 @@ export const summarizeSubscription = (
 
   const { subscriptionStatus, periodType, expiresAt } = subscription;
   const plan = planFromProductId(subscription.productId);
-  const price = toKrwPrice(subscription);
+  const price = toStorePrice(subscription);
   // 100일 이용권은 한 번 결제하는 상품이라 상태·기간 종류가 무엇으로 오든 그날로 끝나는 이용 중이다 — 예약할 해지도 다음 결제도 없다
   if (plan === 'pass') {
     return { kind: 'active', expiresAt, renews: false, plan, price };

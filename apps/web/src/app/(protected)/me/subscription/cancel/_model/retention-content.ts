@@ -7,6 +7,10 @@ import type {
 } from '@landit/analytics';
 
 import type { RewardView } from '@/features/reward/api/reward';
+import {
+  formatPrice,
+  type StorePrice,
+} from '@/features/subscription/lib/store-price';
 import { formatSubscriptionDate } from '@/features/subscription/lib/subscription-date';
 import { formatWon } from '@/features/subscription/lib/won';
 import type { PaidSubscriptionSummary } from '@/features/subscription/model/my-subscription/subscription-summary';
@@ -90,9 +94,17 @@ interface RetentionContext {
   otherText: string;
 }
 
-/** 하루 환산 요금 — 10원 단위로 반올림한다 (월 14,900 → 500, 연 58,500 → 160) */
-export const dailyWon = (price: number, days: number) =>
-  Math.round(price / days / 10) * 10;
+/** 하루 환산 요금 — 원화는 10원 단위(월 14,900 → 500, 연 58,500 → 160), 엔화는 1엔 단위로 반올림한다 */
+export const dailyPrice = (price: StorePrice, days: number): StorePrice => {
+  const unit = price.currency === 'KRW' ? 10 : 1;
+  return {
+    amount: Math.round(price.amount / days / unit) * unit,
+    currency: price.currency,
+  };
+};
+
+const formatStorePrice = ({ amount, currency }: StorePrice) =>
+  formatPrice(amount, currency);
 
 // 환급을 쌓는 중이면 하루 요금보다 돌려받는 금액이 가격 이야기의 답이다.
 // 환급은 한국어 화면에만 있어 문구를 옮기지 않는다
@@ -162,9 +174,8 @@ const priceContent = ({
     };
   }
   const title = t(`plans.${PLAN_LABEL_KEYS[plan]}`);
-  // 결제액은 원화만 온다(summary.price) — 원화 표기 그대로
   const daily = t('retention.dailyPriceLabel', {
-    price: formatWon(dailyWon(price, PLAN_DAYS[plan])),
+    price: formatStorePrice(dailyPrice(price, PLAN_DAYS[plan])),
   });
   const priceKey = PLAN_PRICE_KEYS[plan];
   const firstCharge = firstChargeRow(summary, t, locale);
@@ -182,7 +193,7 @@ const priceContent = ({
         kind: 'row',
         label: t('retention.currentPlanLabel', { plan: title }),
         sublabel: priceKey
-          ? t(`retention.${priceKey}`, { price: formatWon(price) })
+          ? t(`retention.${priceKey}`, { price: formatStorePrice(price) })
           : undefined,
         value: daily,
       },
