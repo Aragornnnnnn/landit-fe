@@ -8,10 +8,15 @@ import { LanguagePropertySync } from './LanguagePropertySync';
 
 const setUserProperties = vi.hoisted(() => vi.fn());
 vi.mock('./amplitude', () => ({ setUserProperties }));
+const currentUser = vi.hoisted(() => ({ id: 1 as number | null }));
+vi.mock('@/shared/auth/current-member', () => ({
+  useCurrentUserId: () => currentUser.id,
+}));
 
 afterEach(() => {
   cleanup();
   setUserProperties.mockClear();
+  currentUser.id = 1;
 });
 
 describe('LanguagePropertySync', () => {
@@ -24,5 +29,15 @@ describe('LanguagePropertySync', () => {
     render(<LanguagePropertySync />);
 
     expect(setUserProperties).toHaveBeenCalledWith({ app_language: locale });
+  });
+
+  it('언어가 같아도 로그인한 사람이 바뀌면 새 프로필에 다시 올린다', () => {
+    const { rerender } = render(<LanguagePropertySync />);
+    setUserProperties.mockClear();
+
+    currentUser.id = 2;
+    rerender(<LanguagePropertySync />);
+
+    expect(setUserProperties).toHaveBeenCalledWith({ app_language: 'ko' });
   });
 });
