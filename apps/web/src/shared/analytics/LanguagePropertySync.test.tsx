@@ -31,6 +31,15 @@ describe('LanguagePropertySync', () => {
     expect(setUserProperties).toHaveBeenCalledWith({ app_language: locale });
   });
 
+  it('실행 중에 화면 언어가 바뀌면 바뀐 언어로 다시 올린다', () => {
+    const { rerender } = render(<LanguagePropertySync />);
+
+    setTestLocale('ja');
+    rerender(<LanguagePropertySync />);
+
+    expect(setUserProperties).toHaveBeenLastCalledWith({ app_language: 'ja' });
+  });
+
   it('언어가 같아도 로그인한 사람이 바뀌면 새 프로필에 다시 올린다', () => {
     const { rerender } = render(<LanguagePropertySync />);
     setUserProperties.mockClear();
