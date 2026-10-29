@@ -65,7 +65,8 @@
   },
   "conversationInput": {
     "notRecognizedToast": "うまく聞き取れませんでした。もう一度話してみましょうか？",
-    "sttErrorToast": "音声認識に問題が発生しました。もう一度お試しください"
+    "sttErrorToast": "音声認識に問題が発生しました。もう一度お試しください",
+    "limitReachedToast": "回答が長いため、ここまで受け取りました"
   },
   "smallTalkFlow": {
     "openingHint": "今日あったことでも最近気になることでも、自分から話しかけてみましょう",
