@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
+import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { SurveyLetterCta } from './SurveyLetterCta';
 
@@ -25,6 +26,14 @@ afterEach(() => {
 describe('SurveyLetterCta', () => {
   it('설문 안내 편지가 아니면 아무것도 그리지 않는다', () => {
     render(<SurveyLetterCta letterId={4} />);
+
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('일본어 화면이면 설문 안내 편지여도 그리지 않는다', () => {
+    setTestLocale('ja');
+
+    render(<SurveyLetterCta letterId={5} />);
 
     expect(screen.queryByRole('button')).toBeNull();
   });
