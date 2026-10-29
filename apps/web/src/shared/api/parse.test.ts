@@ -57,6 +57,45 @@ describe('parseApiResponse', () => {
     );
   });
 
+  it('일본어 화면에서 서버 메시지가 한국어면 화면 언어의 기본 문구로 던진다', async () => {
+    // Given 서버가 아직 한국어로만 메시지를 주는 실패 응답
+    setTestLocale('ja');
+    const response = fakeResponse(
+      { success: false, error: { code: 'X', message: '잘못된 요청입니다' } },
+      400,
+    );
+
+    // When 해석하면
+    // Then 한국어를 그대로 보이지 않고, 4xx라 요청 오류 문구로 바꾼다
+    await expect(parseApiResponse(response)).rejects.toThrow(
+      'リクエストを処理できませんでした。(400)',
+    );
+  });
+
+  it('일본어 화면에서 5xx 한국어 메시지는 서버 오류 문구로 바꾼다', async () => {
+    setTestLocale('ja');
+    const response = fakeResponse(
+      { success: false, error: { code: 'X', message: '서버 내부 오류' } },
+      500,
+    );
+
+    await expect(parseApiResponse(response)).rejects.toThrow(
+      'サーバーエラーが発生しました。(500)',
+    );
+  });
+
+  it('일본어 화면에서 서버 메시지가 일본어면 그대로 던진다', async () => {
+    setTestLocale('ja');
+    const response = fakeResponse(
+      { success: false, error: { code: 'X', message: '不正なリクエストです' } },
+      400,
+    );
+
+    await expect(parseApiResponse(response)).rejects.toThrow(
+      '不正なリクエストです',
+    );
+  });
+
   it('래퍼 없는 에러(스프링 기본 500 등)면 상태코드를 붙여 던진다', async () => {
     const response = {
       status: 500,
