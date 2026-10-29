@@ -35,7 +35,7 @@ describe('GET /download', () => {
 
     expect(res.status).toBe(307);
     expect(res.headers.get('location')).toBe(
-      'https://apps.apple.com/kr/app/id6787414201',
+      'https://apps.apple.com/app/id6787414201',
     );
   });
 
@@ -44,7 +44,7 @@ describe('GET /download', () => {
 
     expect(res.status).toBe(307);
     expect(res.headers.get('location')).toBe(
-      'https://apps.apple.com/kr/app/id6787414201',
+      'https://apps.apple.com/app/id6787414201',
     );
   });
 
@@ -53,7 +53,7 @@ describe('GET /download', () => {
 
     expect(res.status).toBe(307);
     expect(res.headers.get('location')).toBe(
-      'https://apps.apple.com/kr/app/id6787414201',
+      'https://apps.apple.com/app/id6787414201',
     );
   });
 
@@ -71,7 +71,7 @@ describe('GET /download', () => {
 
     expect(res.status).toBe(307);
     expect(res.headers.get('location')).toBe(
-      'https://apps.apple.com/kr/app/id6787414201',
+      'https://apps.apple.com/app/id6787414201',
     );
   });
 
@@ -80,7 +80,7 @@ describe('GET /download', () => {
 
     expect(res.status).toBe(307);
     expect(res.headers.get('location')).toBe(
-      'https://apps.apple.com/kr/app/id6787414201',
+      'https://apps.apple.com/app/id6787414201',
     );
   });
 });
