@@ -15,6 +15,7 @@ import { WidgetChangeSync } from '@/features/widget/ui/WidgetChangeSync';
 import { WidgetDataSync } from '@/features/widget/ui/WidgetDataSync';
 import {
   AnalyticsBootstrap,
+  LanguagePropertySync,
   PageViewTracker,
   TrackingStatusSync,
 } from '@/shared/analytics';
@@ -87,6 +88,7 @@ export default async function RootLayout({
             <WidgetDataSync />
             <WidgetChangeSync />
             <TrackingStatusSync />
+            <LanguagePropertySync />
             <AlarmSync title={tAlarm('lockScreen.title')} />
             <IdentifySync />
             <SubscriptionPropertiesSync />

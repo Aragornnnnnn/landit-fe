@@ -409,7 +409,7 @@ OS 권한 팝업의 답 자체는 따로 찍지 않는다 — 위 두 step의 �
 | ----------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------- |
 | provider                                        | kakao \| google \| apple                       | 로그인 식별 시                                                 |
 | surface / platform / app_version / build_number | 네이티브 컨텍스트                              | 초기화 시                                                      |
-| app_language                                    | ko \| ja (화면 언어)                           | 초기화 시                                                      |
+| app_language                                    | ko \| ja (화면 언어)                           | 초기화 시·화면 언어가 바뀔 때 (`LanguagePropertySync`)         |
 | is_premium                                      | 참·거짓 (모르는 동안은 지움)                   | 구독 조회 결과가 바뀔 때                                       |
 | subscription_state                              | unknown \| none \| trial \| active \| canceled | 구독 조회 결과가 바뀔 때                                       |
 | plan                                            | monthly \| yearly \| pass (유료가 아니면 지움) | 구독 조회 결과가 바뀔 때                                       |
