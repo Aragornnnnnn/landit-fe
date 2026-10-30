@@ -60,7 +60,8 @@ export const SmallTalkConversation = ({
     GOODBYE_PHRASES[0],
   );
   const display = useTalkDisplay();
-  // 결제가 열리면 하루 한도가 없다 — 남은 시간과 타이머 링을 그리지 않는다 (잔량 계산은 뒤에서 그대로 돈다)
+  // 한도가 없는 사람(구독)은 남은 시간과 타이머 링을 그리지 않는다 (잔량 계산은 뒤에서 그대로 돈다).
+  // 한도가 있는 무료 사용자에겐 키보드도 없다 — 타이핑은 말한 시간 0으로 보내 한도를 안 깎아, 무료 5분이 말하기 시간이라는 뜻을 비껴간다
   const { unlimited } = useSpeakingLimit();
   // 내가 먼저 거는 대화의 진입 안내 — 랜디가 먼저 말을 걸어보라고 알려주고 잠시 후 사라진다
   const [introDismissed, setIntroDismissed] = useState(false);
@@ -265,7 +266,7 @@ export const SmallTalkConversation = ({
             <MicControl
               phase={phase}
               onPress={pressMic}
-              onKeyboard={pressKeyboard}
+              onKeyboard={unlimited ? pressKeyboard : undefined}
               onCancel={cancelInput}
               onDone={finishListening}
               remainingRatio={unlimited ? undefined : speakingRatio}
