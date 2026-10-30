@@ -8,7 +8,7 @@ export const PAID_QUESTIONS: readonly Question[] = [
     id: 'premium_reason',
     kind: 'text',
     title: '어떤 이유로 프리미엄을\n결제하시게 되었나요?',
-    hint: '무엇이 마음을 움직였는지, 망설인 점은 없었는지',
+    hint: '마음을 움직인 점, 망설인 점을 알려주세요',
     placeholder: '편하게 적어주세요',
     required: true,
   },
