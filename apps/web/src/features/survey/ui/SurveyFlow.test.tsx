@@ -311,7 +311,6 @@ describe('SurveyFlow', () => {
       routeReply(200, { success: true, data: { result: 'saved' } }),
     );
     render(<SurveyFlow kind="paid" />);
-    await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
     for (const question of PAID_QUESTIONS) {
       if (question.kind !== 'text') {
         await answerCurrent(question);
@@ -342,7 +341,6 @@ describe('SurveyFlow', () => {
 
   it('필수 주관식은 비워 두면 건너뛸 수 없고, 쓰면 넘어간다', async () => {
     render(<SurveyFlow kind="paid" />);
-    await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
     const firstText = PAID_QUESTIONS.findIndex((q) => q.kind === 'text');
     for (const question of PAID_QUESTIONS.slice(0, firstText)) {
       await answerCurrent(question);
@@ -370,13 +368,21 @@ describe('SurveyFlow', () => {
     );
   });
 
-  it('설문마다 자기 안내 문구로 시작한다', () => {
+  it('결제자 설문은 안내 없이 첫 문항부터 열고, 열자마자 시작을 계측한다', async () => {
     render(<SurveyFlow kind="paid" />);
-    expect(screen.getByText(/한마디를 들려주세요/)).toBeTruthy();
-    expect(screen.queryByText(/2분만 내주시면/)).toBeNull();
-    cleanup();
 
+    expect(await screen.findByText(titleOf(PAID_QUESTIONS[0]))).toBeTruthy();
+    expect(screen.queryByRole('button', { name: '시작하기' })).toBeNull();
+    expect(
+      vi
+        .mocked(track)
+        .mock.calls.filter(([name]) => name === EVENTS.SURVEY_STARTED),
+    ).toEqual([[EVENTS.SURVEY_STARTED, { survey: 'paid' }]]);
+  });
+
+  it('일반 설문은 안내 화면부터 시작한다', () => {
     render(<SurveyFlow kind="general" />);
+
     expect(screen.getByText(/2분만 내주시면/)).toBeTruthy();
   });
 });

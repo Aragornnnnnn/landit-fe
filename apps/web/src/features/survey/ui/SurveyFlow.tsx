@@ -32,12 +32,12 @@ type Step = 'intro' | 'done' | number;
 
 export const SurveyFlow = ({ kind }: { kind: SurveyKind }) => {
   const router = useRouter();
-  const allQuestions = SURVEYS[kind].questions;
+  const { questions: allQuestions, intro } = SURVEYS[kind];
   // 이메일은 응답을 볼 때 참고값일 뿐이라 없어도 낸다 — 누구인지는 서버가 토큰으로 정한다
   const email = useAuthStore((state) => state.member?.email ?? null);
   const keyboardInset = useKeyboardSafeLayout();
 
-  const [step, setStep] = useState<Step>('intro');
+  const [step, setStep] = useState<Step>(intro ? 'intro' : 0);
   const [direction, setDirection] = useState(1);
   const [answers, setAnswers] = useState<Answers>({});
   const [submitting, setSubmitting] = useState(false);
@@ -60,6 +60,11 @@ export const SurveyFlow = ({ kind }: { kind: SurveyKind }) => {
     });
   }, [kind, step, questionId]);
 
+  // 안내가 없는 설문은 열린 순간이 시작이다 — 안내가 있으면 시작하기 버튼에서 찍는다
+  useEffect(() => {
+    if (!intro) track(EVENTS.SURVEY_STARTED, { survey: kind });
+  }, [intro, kind]);
+
   const goTo = (next: Step, dir: number) => {
     setDirection(dir);
     setStep(next);
@@ -70,8 +75,10 @@ export const SurveyFlow = ({ kind }: { kind: SurveyKind }) => {
 
   const stepBack = () => {
     if (step === 'intro') leave();
-    else if (step === 0) goTo('intro', -1);
-    else if (typeof step === 'number') goTo(step - 1, -1);
+    else if (step === 0) {
+      if (intro) goTo('intro', -1);
+      else leave();
+    } else if (typeof step === 'number') goTo(step - 1, -1);
   };
 
   const start = () => {
@@ -135,8 +142,8 @@ export const SurveyFlow = ({ kind }: { kind: SurveyKind }) => {
             keyboardInset > 0 ? 20 : 'max(var(--safe-area-inset-bottom), 20px)',
         }}
       >
-        {step === 'intro' && (
-          <SurveyIntro copy={SURVEYS[kind].intro} onStart={start} />
+        {step === 'intro' && intro && (
+          <SurveyIntro copy={intro} onStart={start} />
         )}
         {typeof step === 'number' && (
           <QuestionStep

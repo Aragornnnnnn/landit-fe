@@ -19,11 +19,9 @@ export const SurveyIntro = ({
         {copy.title}
       </h1>
       {/* 제목이 이유를 말했으니 여기선 무엇을 물을지만 — 두 줄을 넘기면 안 읽고 넘긴다 */}
-      {copy.subtitle && (
-        <p className="mt-4 text-xl leading-snug font-bold whitespace-pre-line text-muted-foreground">
-          {copy.subtitle}
-        </p>
-      )}
+      <p className="mt-4 text-xl leading-snug font-bold whitespace-pre-line text-muted-foreground">
+        {copy.subtitle}
+      </p>
 
       <div className="flex flex-1 items-center justify-center">
         <SpeechBubble />
