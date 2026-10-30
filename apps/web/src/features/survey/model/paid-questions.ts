@@ -1,7 +1,7 @@
 // 결제자 설문 문항 — 프리미엄을 결제한 사람에게 편지로 묻는다. 형식은 questions.ts와 같다
 import { CHANNEL_QUESTION, type Question } from './questions';
 
-// 결제 이유를 맨 앞에 둬서 중간에 그만둬도 그 답은 남게 하고, 아쉬운 점은 다 써 본 기분으로 맨 끝에 묻는다
+// 결제 이유를 맨 앞에 둬서 중간에 그만둬도 그 답은 남게 하고, 한 번 누르면 끝나는 유입 경로로 가볍게 마무리한다
 export const PAID_QUESTIONS: readonly Question[] = [
   {
     // 결제자가 아직 적어서 보기의 비율보다 자기 말로 쓴 이유가 더 많이 알려 준다 — 결제할 때의 마음까지 받으려고 주관식으로 묻는다
@@ -35,7 +35,6 @@ export const PAID_QUESTIONS: readonly Question[] = [
     hint: '떠오르는 대로 적어주세요',
     placeholder: '편하게 적어주세요',
   },
-  CHANNEL_QUESTION,
   {
     id: 'disappointment',
     kind: 'text',
@@ -44,4 +43,5 @@ export const PAID_QUESTIONS: readonly Question[] = [
     placeholder: '편하게 적어주세요',
     required: true,
   },
+  CHANNEL_QUESTION,
 ];
