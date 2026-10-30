@@ -1,10 +1,12 @@
 // 설문 응답을 받아 슈퍼베이스에 넣는 서버 라우트 — Secret 키를 서버에만 두고, 누구의 응답인지는 토큰으로 정한다.
-// 테이블: survey_responses(id bigint 기본키, user_id bigint, email text, answers jsonb, created_at timestamptz default now())
+// 테이블: survey_responses(id bigint 기본키, survey text not null default 'general', user_id bigint, email text, answers jsonb, created_at timestamptz default now())
+// survey 칸은 결제자 설문을 붙이며 더했다 — alter table survey_responses add column survey text not null default 'general';
 // 같은 사람이 또 내면 새 행으로 쌓인다 — 생각이 바뀐 것도 응답이라 덮어쓰지 않는다.
 // 응답 봉투는 백엔드와 같은 { success, data, error } — 클라이언트의 api 클라이언트가 그대로 읽는다
 import { NextResponse } from 'next/server';
 
 import { isAnswers } from '@/features/survey/model/answer-shape';
+import { isSurveyKind } from '@/features/survey/model/surveys';
 import { reportError } from '@/shared/monitoring/report';
 
 import { readUserId } from './_model/access-token';
@@ -53,6 +55,9 @@ export async function POST(request: Request) {
   if (!isRecord(body) || !isAnswers(body.answers)) {
     return fail(400, 'answers 모양이 맞지 않아요');
   }
+  // 종류를 안 실은 건 결제자 설문 전에 열어 둔 화면이 보낸 일반 설문이다
+  const survey = body.survey ?? 'general';
+  if (!isSurveyKind(survey)) return fail(400, '모르는 설문이에요');
 
   // 클라이언트가 토큰을 위조해 남의 id로 넣지 못하게 — 서명 키가 없으니 백엔드가 받아주는지로 판단한다
   const verified = await fetchUpstream(`${apiBaseUrl}${VERIFY_PATH}`, {
@@ -78,6 +83,8 @@ export async function POST(request: Request) {
       Prefer: 'return=minimal',
     },
     body: JSON.stringify({
+      // 일반 설문은 칸의 기본값(general)에 맡긴다 — survey 칸을 더하는 SQL보다 배포가 먼저여도 기존 설문 저장이 깨지지 않게
+      ...(survey !== 'general' && { survey }),
       user_id: userId,
       // 이메일은 응답을 볼 때 누군지 바로 보려는 참고값 — 신원은 user_id가 정한다
       email: typeof body.email === 'string' ? body.email : null,

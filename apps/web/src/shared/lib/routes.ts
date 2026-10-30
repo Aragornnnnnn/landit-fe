@@ -288,6 +288,8 @@ export const backOrReplace = (
 };
 // 설문 — 마이페이지 "지원" 묶음의 진입점
 export const SURVEY_PATH = '/survey';
+// LAN-428 결제자 설문(임시) — 마이페이지엔 없고 안내 편지로만 연다
+export const PAID_SURVEY_PATH = '/survey/paid';
 // 내부 절대 경로만 믿는다 — '//host'처럼 브라우저가 외부로 해석하는 값은 버린다
 const INTERNAL_PATH_PATTERN = /^\/(?![/\\])/;
 

@@ -8,5 +8,5 @@ import { MY_PAGE_PATH } from '@/shared/lib/routes';
 
 export default async function SurveyPage() {
   if (!opensSurvey(await getLocale())) redirect(MY_PAGE_PATH);
-  return <SurveyFlow />;
+  return <SurveyFlow kind="general" />;
 }

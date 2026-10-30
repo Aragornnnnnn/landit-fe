@@ -87,11 +87,43 @@ describe('POST /api/survey', () => {
       'https://example.supabase.co/rest/v1/survey_responses',
     );
     expect(insertInit.headers.apikey).toBe('secret');
+    // 일반 설문은 종류를 싣지 않는다 — survey 칸을 더하는 SQL보다 배포가 먼저여도 저장이 깨지지 않게(기본값 general)
     expect(JSON.parse(insertInit.body)).toEqual({
       user_id: 7,
       email: 'a@b.c',
       answers: { satisfaction: 4 },
     });
+  });
+
+  it('결제자 설문이면 어느 설문인지 함께 저장한다', async () => {
+    backendThenSupabase(200, 201);
+
+    await POST(
+      surveyRequest(
+        {
+          survey: 'paid',
+          answers: {
+            channel: '지인 추천',
+            disappointment: '느려요',
+            wish: '친구 기능',
+          },
+        },
+        `Bearer ${token}`,
+      ),
+    );
+
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toMatchObject({
+      survey: 'paid',
+    });
+  });
+
+  it('모르는 설문 종류면 400을 돌려주고 백엔드에 묻지 않는다', async () => {
+    const res = await POST(
+      surveyRequest({ survey: 'unknown', answers: {} }, `Bearer ${token}`),
+    );
+
+    expect(res.status).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('저장소가 겹친다며 거절하면(409) 502로 알린다', async () => {

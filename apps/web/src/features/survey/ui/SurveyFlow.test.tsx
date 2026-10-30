@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
 
+import { PAID_QUESTIONS } from '../model/paid-questions';
 import { OTHER_LABEL, QUESTIONS, type Question } from '../model/questions';
 import { SurveyFlow } from './SurveyFlow';
 
@@ -88,7 +89,7 @@ afterEach(() => {
 
 describe('SurveyFlow', () => {
   it('단일 선택은 고르는 즉시 다음 문항으로 넘어간다', async () => {
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
 
     await userEvent.click(
@@ -99,7 +100,7 @@ describe('SurveyFlow', () => {
   });
 
   it('기타를 고르면 바로 넘어가지 않고 쓸 칸과 다음 버튼이 열린다', async () => {
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
 
     await userEvent.click(screen.getByRole('radio', { name: OTHER_LABEL }));
@@ -110,7 +111,7 @@ describe('SurveyFlow', () => {
   });
 
   it('다른 선택지를 누른 직후 기타를 누르면 넘어가지 않고 기타 입력에 머문다', async () => {
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
 
     await userEvent.click(
@@ -125,7 +126,7 @@ describe('SurveyFlow', () => {
   });
 
   it('추천 의향이 3점 미만이면 소개 여부 문항을 건너뛴다', async () => {
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
     const before = QUESTIONS.slice(
       0,
@@ -143,7 +144,7 @@ describe('SurveyFlow', () => {
   });
 
   it('유학 준비를 고르면 준비 방법 문항이 끼어든다', async () => {
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
     await answerCurrent(byId('channel'));
     await screen.findByText(titleOf(byId('study_purpose')));
@@ -156,7 +157,7 @@ describe('SurveyFlow', () => {
   });
 
   it('복수 선택은 하나도 안 고르면 다음으로 못 넘어간다', async () => {
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
     await answerCurrent(byId('channel'));
     await answerCurrent(byId('study_purpose'));
@@ -176,7 +177,7 @@ describe('SurveyFlow', () => {
     fetchMock.mockResolvedValue(
       routeReply(200, { success: true, data: { result: 'saved' } }),
     );
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await answerUntilLast();
 
     await userEvent.click(
@@ -188,6 +189,7 @@ describe('SurveyFlow', () => {
     expect(url).toBe('/api/survey');
     expect(init.headers.get('Authorization')).toBe('Bearer token');
     const body = JSON.parse(init.body);
+    expect(body.survey).toBe('general');
     expect(body.email).toBe('a@b.c');
     expect(body.answers.satisfaction).toBe(3);
     expect(body.answers).not.toHaveProperty('wish');
@@ -197,7 +199,7 @@ describe('SurveyFlow', () => {
     fetchMock.mockResolvedValue(
       routeReply(502, { success: false, error: { message: '실패' } }),
     );
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await answerUntilLast();
 
     await userEvent.click(
@@ -214,8 +216,12 @@ describe('SurveyFlow', () => {
     fetchMock.mockResolvedValue(
       routeReply(200, { success: true, data: { result: 'saved' } }),
     );
-    render(<SurveyFlow />);
-    expect(track).not.toHaveBeenCalledWith(EVENTS.SURVEY_STARTED);
+    render(<SurveyFlow kind="general" />);
+    expect(
+      vi
+        .mocked(track)
+        .mock.calls.filter(([name]) => name === EVENTS.SURVEY_STARTED),
+    ).toHaveLength(0);
 
     await answerUntilLast();
     await userEvent.click(
@@ -223,17 +229,22 @@ describe('SurveyFlow', () => {
     );
     await screen.findByText('소중한 의견 고마워요!');
 
-    expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_STARTED);
+    expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_STARTED, {
+      survey: 'general',
+    });
     expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_QUESTION_VIEWED, {
+      survey: 'general',
       question_id: 'channel',
       question_index: 0,
     });
     // 유학 준비 조건 문항이 빠져 열 문항 — index는 보인 순서라 wish가 9번이다
     expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_QUESTION_VIEWED, {
+      survey: 'general',
       question_id: 'wish',
       question_index: 9,
     });
     expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_SUBMITTED, {
+      survey: 'general',
       question_count: 10,
     });
     expect(
@@ -250,7 +261,7 @@ describe('SurveyFlow', () => {
     fetchMock.mockResolvedValue(
       routeReply(502, { success: false, error: { message: '실패' } }),
     );
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await answerUntilLast();
 
     await userEvent.click(
@@ -266,7 +277,7 @@ describe('SurveyFlow', () => {
   });
 
   it('뒤로 갔다 다시 보면 같은 문항 노출이 한 번 더 찍힌다', async () => {
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
     await answerCurrent(QUESTIONS[0]);
     await screen.findByText(titleOf(QUESTIONS[1]));
@@ -289,9 +300,43 @@ describe('SurveyFlow', () => {
     // 옛 버전이 남긴 완료 표시 — 이제 재참여를 막지 않는다
     localStorage.setItem('landit-survey-done', '1');
 
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
 
     expect(screen.getByRole('button', { name: '시작하기' })).toBeTruthy();
     expect(screen.queryByText('소중한 의견 고마워요!')).toBeNull();
+  });
+
+  it('결제자 설문은 결제자 문항을 묻고 결제자 설문으로 저장·계측한다', async () => {
+    fetchMock.mockResolvedValue(
+      routeReply(200, { success: true, data: { result: 'saved' } }),
+    );
+    render(<SurveyFlow kind="paid" />);
+    await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+    for (const question of PAID_QUESTIONS) {
+      if (question.kind !== 'text') {
+        await answerCurrent(question);
+        continue;
+      }
+      await userEvent.type(
+        await screen.findByRole('textbox', { name: question.title }),
+        '좋아요',
+      );
+      await userEvent.click(
+        screen.getByRole('button', {
+          name: question === PAID_QUESTIONS.at(-1) ? '제출하기' : '다음',
+        }),
+      );
+    }
+
+    expect(await screen.findByText('소중한 의견 고마워요!')).toBeTruthy();
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.survey).toBe('paid');
+    expect(Object.keys(body.answers)).toEqual(
+      PAID_QUESTIONS.map((question) => question.id),
+    );
+    expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_SUBMITTED, {
+      survey: 'paid',
+      question_count: PAID_QUESTIONS.length,
+    });
   });
 });

@@ -2,7 +2,7 @@
 
 // 설문 플로우 — 안내 → 문항 하나씩 → 완료. 온보딩처럼 한 화면에 한 문항, 옆으로 넘긴다
 import { useEffect, useRef, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type SurveyKind } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
@@ -20,7 +20,8 @@ import {
   type Answer,
   type Answers,
 } from '../model/answers';
-import { otherKey, QUESTIONS } from '../model/questions';
+import { otherKey } from '../model/questions';
+import { SURVEYS } from '../model/surveys';
 import { QuestionStep } from './QuestionStep';
 import { SurveyDone } from './SurveyDone';
 import { SurveyHeader } from './SurveyHeader';
@@ -29,8 +30,9 @@ import { SurveyIntro } from './SurveyIntro';
 // 숫자는 몇 번째 문항인지
 type Step = 'intro' | 'done' | number;
 
-export const SurveyFlow = () => {
+export const SurveyFlow = ({ kind }: { kind: SurveyKind }) => {
   const router = useRouter();
+  const allQuestions = SURVEYS[kind].questions;
   // 이메일은 응답을 볼 때 참고값일 뿐이라 없어도 낸다 — 누구인지는 서버가 토큰으로 정한다
   const email = useAuthStore((state) => state.member?.email ?? null);
   const keyboardInset = useKeyboardSafeLayout();
@@ -45,17 +47,18 @@ export const SurveyFlow = () => {
     stepRef.current = step;
   }, [step]);
   // 조건 문항이 끼고 빠지므로 스텝 번호는 이 목록 기준이다
-  const questions = visibleQuestions(QUESTIONS, answers);
+  const questions = visibleQuestions(allQuestions, answers);
   // 문항이 보일 때마다 노출을 남긴다 — 뒤로 갔다 다시 봐도 찍혀서 어디서 머뭇거리는지 본다.
   // 어느 문항인지는 id가 정하므로, 답으로 목록이 바뀌어도(같은 스텝에 다른 문항) 새 노출로 잡힌다
   const questionId = typeof step === 'number' ? questions[step]?.id : undefined;
   useEffect(() => {
     if (typeof step !== 'number' || !questionId) return;
     track(EVENTS.SURVEY_QUESTION_VIEWED, {
+      survey: kind,
       question_id: questionId,
       question_index: step,
     });
-  }, [step, questionId]);
+  }, [kind, step, questionId]);
 
   const goTo = (next: Step, dir: number) => {
     setDirection(dir);
@@ -72,7 +75,7 @@ export const SurveyFlow = () => {
   };
 
   const start = () => {
-    track(EVENTS.SURVEY_STARTED);
+    track(EVENTS.SURVEY_STARTED, { survey: kind });
     goTo(0, 1);
   };
 
@@ -83,8 +86,11 @@ export const SurveyFlow = () => {
     if (submitting) return;
     setSubmitting(true);
     try {
-      await submitSurvey(email, toSubmission(QUESTIONS, answers));
-      track(EVENTS.SURVEY_SUBMITTED, { question_count: questions.length });
+      await submitSurvey(kind, email, toSubmission(allQuestions, answers));
+      track(EVENTS.SURVEY_SUBMITTED, {
+        survey: kind,
+        question_count: questions.length,
+      });
       goTo('done', 1);
     } catch {
       showToast('저장하지 못했어요. 잠시 후 다시 시도해 주세요.');

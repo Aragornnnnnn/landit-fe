@@ -9,6 +9,7 @@ import {
   ALARM_CHECK_PATH,
   ALARM_EDIT_PATH,
   ALARM_SETTINGS_PATH,
+  PAID_SURVEY_PATH,
   PAYWALL_PATH,
   PREMIUM_ONBOARDING_CHECK_PATH,
   PREMIUM_ONBOARDING_PATH,
@@ -63,6 +64,8 @@ const NESTED_PAGES: Record<string, string> = {
   [REWARD_CHECK_PATH]: 'reward_check',
   [REWARD_PAYWALL_CHECK_PATH]: 'reward_paywall_check',
   [PREVIEW_CHECK_PATH]: 'preview_check',
+  // LAN-428 설문(임시) — 설문이 끝나면 지운다
+  [PAID_SURVEY_PATH]: 'survey_paid',
 };
 
 // 페이월로 보낸 문 — 주소에 실려 온 값만 받는다. 문이 늘었는데 여기를 빠뜨리면 빌드가 깨진다
