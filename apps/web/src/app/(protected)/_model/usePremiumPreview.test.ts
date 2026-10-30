@@ -5,12 +5,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setTestLocale } from '@/shared/i18n/test-locale';
 
-import { freeExpressionFinished } from './smalltalk-free-nudge';
 import { usePremiumPreview } from './usePremiumPreview';
 
 const mocks = vi.hoisted(() => ({
   rewardLive: true,
   step: 'STARTED' as string,
+  saveStep: vi.fn(),
 }));
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
@@ -22,7 +22,7 @@ vi.mock(
   () => ({ useRewardChallengeLive: () => mocks.rewardLive }),
 );
 vi.mock('@/features/premium-preview/model/usePreviewStep', () => ({
-  usePreviewStep: () => ({ step: mocks.step, saveStep: vi.fn() }),
+  usePreviewStep: () => ({ step: mocks.step, saveStep: mocks.saveStep }),
 }));
 vi.mock('@/features/premium-preview/model/preview-replay', () => ({
   isPreviewReplay: () => false,
@@ -31,7 +31,7 @@ vi.mock('@/features/premium-preview/model/preview-replay', () => ({
 beforeEach(() => {
   mocks.rewardLive = true;
   mocks.step = 'STARTED';
-  localStorage.clear();
+  mocks.saveStep.mockClear();
 });
 
 describe('usePremiumPreview', () => {
@@ -60,7 +60,7 @@ describe('usePremiumPreview', () => {
     expect(result.current.introducesReward).toBe(false);
   });
 
-  it('무료 표현을 마치면 마친 것을 남긴다 — 홈에 돌아오면 스몰톡 칩이 무료 5분을 권한다', () => {
+  it('무료 표현을 마치면 넘긴 것과 다른 단계로 남긴다 — 홈에 돌아오면 스몰톡 칩이 무료 5분을 권한다', () => {
     // Given 카드를 뒤집어 무료 표현 차례인 사용자
     mocks.step = 'CARD_FLIPPED';
     const { result } = renderHook(() => usePremiumPreview());
@@ -68,7 +68,7 @@ describe('usePremiumPreview', () => {
     // When 무료 표현을 끝까지 마치면
     result.current.onFreeExpressionFinished?.();
 
-    // Then 마친 것으로 남는다
-    expect(freeExpressionFinished.has()).toBe(true);
+    // Then 마친 단계로 남는다
+    expect(mocks.saveStep).toHaveBeenCalledWith('FREE_FINISHED');
   });
 });

@@ -8,7 +8,9 @@ export const TOUR_STEPS = [
   'CARD_FLIPPED',
   // 비춘 무료 표현을 열었다 — 끝까지 안 하고 나와도 다시 비추지 않는다. 그 표현을 마치면 그때 페이월로 간다
   'FREE_OPENED',
-  // 무료 표현을 마치고 페이월로 갔거나, 프리뷰를 넘겼다 — 다시 뜨지 않는다
+  // 무료 표현을 끝까지 마치고 페이월로 갔다 — 다시 뜨지 않는다. 홈의 스몰톡 칩 말풍선(무료 5분)은 이 사람에게만 뜬다
+  'FREE_FINISHED',
+  // 프리뷰를 넘겼다(비출 표현이 없거나 건너뜀) — 다시 뜨지 않는다
   'COMPLETED',
 ] as const;
 export type PreviewStep = (typeof TOUR_STEPS)[number];
@@ -30,6 +32,10 @@ export const previewScreenOf = (step: PreviewStep | null): PreviewScreen => {
       return 'none';
   }
 };
+
+/** 프리뷰가 끝났는가 — 마쳤든 넘겼든 더 보여 줄 게 없다 */
+export const isPreviewOver = (step: PreviewStep | null) =>
+  step === 'FREE_FINISHED' || step === 'COMPLETED';
 
 /** 무료 표현을 마치면 프리뷰를 끝내고 페이월로 보낼 단계인가 — 무료 표현 차례이거나, 열어 둔 채 나왔다 */
 export const awaitsFreeExpressionFinish = (step: PreviewStep | null) =>

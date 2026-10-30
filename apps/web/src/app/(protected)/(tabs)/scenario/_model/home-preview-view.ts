@@ -1,7 +1,8 @@
 // 홈에서 프리미엄 프리뷰가 지금 무엇을 보여 줄지 정한다 — 앱을 새로 열어도 안내 없이 마지막 단계 다음부터 이어 간다
-import type {
-  PreviewScreen,
-  PreviewStep,
+import {
+  isPreviewOver,
+  type PreviewScreen,
+  type PreviewStep,
 } from '@/features/premium-preview/model/preview-step';
 
 type HomePreviewView = 'none' | 'tutorial' | 'card';
@@ -46,7 +47,7 @@ export const previewHoldsSatisfaction = ({
 }) =>
   deciding ||
   step === 'STARTED' ||
-  (actedThisVisit && step !== null && step !== 'COMPLETED');
+  (actedThisVisit && step !== null && !isPreviewOver(step));
 
 /** 프리뷰를 시작했지만 끝내지 않았다 — 튜토리얼 뒤에서 멈췄다 */
 export const previewUnfinished = (step: PreviewStep | null) =>
