@@ -1,23 +1,30 @@
 // 결제자 설문 문항 — 프리미엄을 결제한 사람에게 편지로 묻는다. 형식은 questions.ts와 같다
 import { CHANNEL_QUESTION, type Question } from './questions';
 
+// 순서는 알고 싶은 순서 — 결제 이유를 맨 앞에 둬서 중간에 그만둬도 그 답은 남게 하고, 유입 경로는 가볍게 맨 뒤에
 export const PAID_QUESTIONS: readonly Question[] = [
-  CHANNEL_QUESTION,
   {
     id: 'premium_reason',
-    kind: 'multi',
-    title: '프리미엄을 시작한\n이유가 무엇인가요?',
-    // 랜딧 기능(페이월 비교표의 줄)을 하나씩 보기로 둔다 — 어느 혜택이 결제를 이끌었는지 본다
+    kind: 'single',
+    title: '프리미엄을 시작한\n가장 큰 이유가 뭔가요?',
+    // 결제를 결심하게 만든 상황·마음을 묻는다 — 기능 때문인지는 보기 하나로 보고, 어떤 기능이 좋았는지는 뒤 문항이 묻는다
     options: [
-      '조건을 채우면 환급받을 수 있어서',
-      '꾸준히 할 동기가 필요해서',
-      '매일 새로운 상황을 체험해볼 수 있어서',
-      '문장마다 자세히 피드백해줘서',
-      '나에게 맞는 원어민 표현을 알려줘서',
-      '원어민에 가까운 발음으로 교정해줘서',
-      '스몰톡을 제한 없이 할 수 있어서',
+      '환급받을 수 있어서',
+      '혼자서는 꾸준히 하기 어려워서',
+      '무료로 써 보니 실력에 도움이 돼서',
+      '써 보고 싶은 프리미엄 기능이 있어서',
+      '영어가 필요한 일이 곧 생겨서',
+      '가격이 부담 없어서',
     ],
     other: true,
+  },
+  {
+    // 보기만으로는 같은 답 안의 사정이 안 갈린다 — 한두 문장이라도 받으면 진짜 이유가 보인다
+    id: 'premium_reason_detail',
+    kind: 'text',
+    title: '그 이유를 조금 더\n들려주세요',
+    hint: '결제를 결심한 순간을 떠올려 주셔도 좋아요',
+    placeholder: '편하게 적어주세요',
   },
   {
     id: 'liked_features',
@@ -38,7 +45,7 @@ export const PAID_QUESTIONS: readonly Question[] = [
     id: 'disappointment',
     kind: 'text',
     title: '아쉬웠던 점을\n알려주세요',
-    hint: '작은 불편도 괜찮아요',
+    hint: '고쳤으면 하는 점도 좋아요',
     placeholder: '편하게 적어주세요',
     required: true,
   },
@@ -50,4 +57,5 @@ export const PAID_QUESTIONS: readonly Question[] = [
     placeholder: '편하게 적어주세요',
     required: true,
   },
+  CHANNEL_QUESTION,
 ];

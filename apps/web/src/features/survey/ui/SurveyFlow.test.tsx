@@ -341,7 +341,9 @@ describe('SurveyFlow', () => {
 
   it('필수 주관식은 비워 두면 건너뛸 수 없고, 쓰면 넘어간다', async () => {
     render(<SurveyFlow kind="paid" />);
-    const firstText = PAID_QUESTIONS.findIndex((q) => q.kind === 'text');
+    const firstText = PAID_QUESTIONS.findIndex(
+      (q) => q.kind === 'text' && q.required,
+    );
     for (const question of PAID_QUESTIONS.slice(0, firstText)) {
       await answerCurrent(question);
     }
