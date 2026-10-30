@@ -135,7 +135,9 @@ export const SurveyFlow = ({ kind }: { kind: SurveyKind }) => {
             keyboardInset > 0 ? 20 : 'max(var(--safe-area-inset-bottom), 20px)',
         }}
       >
-        {step === 'intro' && <SurveyIntro onStart={start} />}
+        {step === 'intro' && (
+          <SurveyIntro copy={SURVEYS[kind].intro} onStart={start} />
+        )}
         {typeof step === 'number' && (
           <QuestionStep
             question={questions[step]}

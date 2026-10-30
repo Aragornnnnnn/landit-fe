@@ -7,12 +7,32 @@ import type { Answer } from './answers';
 import { PAID_QUESTIONS } from './paid-questions';
 import { QUESTIONS, type Question } from './questions';
 
+// 안내 화면 문구 — 줄바꿈은 \n으로 적는다
+export interface SurveyIntroCopy {
+  title: string;
+  subtitle: string;
+}
+
 export const SURVEYS: Record<
   SurveyKind,
-  { path: string; questions: readonly Question[] }
+  { path: string; questions: readonly Question[]; intro: SurveyIntroCopy }
 > = {
-  general: { path: SURVEY_PATH, questions: QUESTIONS },
-  paid: { path: PAID_SURVEY_PATH, questions: PAID_QUESTIONS },
+  general: {
+    path: SURVEY_PATH,
+    questions: QUESTIONS,
+    intro: {
+      title: '2분만 내주시면\n랜딧이 더 좋아져요',
+      subtitle: '쓰면서 느낀 점을\n솔직하게 들려주세요',
+    },
+  },
+  paid: {
+    path: PAID_SURVEY_PATH,
+    questions: PAID_QUESTIONS,
+    intro: {
+      title: '프리미엄 유저분들의\n소중한 한마디를\n들려주세요',
+      subtitle: '쓰면서 느낀 점을\n솔직하게 알려주세요',
+    },
+  },
 };
 
 export const isSurveyKind = (value: unknown): value is SurveyKind =>

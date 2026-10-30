@@ -369,4 +369,14 @@ describe('SurveyFlow', () => {
       false,
     );
   });
+
+  it('설문마다 자기 안내 문구로 시작한다', () => {
+    render(<SurveyFlow kind="paid" />);
+    expect(screen.getByText(/소중한 한마디를/)).toBeTruthy();
+    expect(screen.queryByText(/2분만 내주시면/)).toBeNull();
+    cleanup();
+
+    render(<SurveyFlow kind="general" />);
+    expect(screen.getByText(/2분만 내주시면/)).toBeTruthy();
+  });
 });
