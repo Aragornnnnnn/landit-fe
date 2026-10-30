@@ -117,6 +117,21 @@ describe('POST /api/survey', () => {
     });
   });
 
+  it('결제자 설문에서 필수 주관식이 비어 있으면 400을 돌려주고 백엔드에 묻지 않는다', async () => {
+    const res = await POST(
+      surveyRequest(
+        {
+          survey: 'paid',
+          answers: { channel: '지인 추천', disappointment: '느려요' },
+        },
+        `Bearer ${token}`,
+      ),
+    );
+
+    expect(res.status).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('모르는 설문 종류면 400을 돌려주고 백엔드에 묻지 않는다', async () => {
     const res = await POST(
       surveyRequest({ survey: 'unknown', answers: {} }, `Bearer ${token}`),

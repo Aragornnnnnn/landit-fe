@@ -6,7 +6,7 @@
 import { NextResponse } from 'next/server';
 
 import { isAnswers } from '@/features/survey/model/answer-shape';
-import { isSurveyKind } from '@/features/survey/model/surveys';
+import { fillsRequired, isSurveyKind } from '@/features/survey/model/surveys';
 import { reportError } from '@/shared/monitoring/report';
 
 import { readUserId } from './_model/access-token';
@@ -58,6 +58,9 @@ export async function POST(request: Request) {
   // 종류를 안 실은 건 결제자 설문 전에 열어 둔 화면이 보낸 일반 설문이다
   const survey = body.survey ?? 'general';
   if (!isSurveyKind(survey)) return fail(400, '모르는 설문이에요');
+  if (!fillsRequired(survey, body.answers)) {
+    return fail(400, '필수 문항에 답하지 않았어요');
+  }
 
   // 클라이언트가 토큰을 위조해 남의 id로 넣지 못하게 — 서명 키가 없으니 백엔드가 받아주는지로 판단한다
   const verified = await fetchUpstream(`${apiBaseUrl}${VERIFY_PATH}`, {

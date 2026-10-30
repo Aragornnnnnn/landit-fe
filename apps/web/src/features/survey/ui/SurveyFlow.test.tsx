@@ -339,4 +339,34 @@ describe('SurveyFlow', () => {
       question_count: PAID_QUESTIONS.length,
     });
   });
+
+  it('필수 주관식은 비워 두면 건너뛸 수 없고, 쓰면 넘어간다', async () => {
+    render(<SurveyFlow kind="paid" />);
+    await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+    const firstText = PAID_QUESTIONS.findIndex((q) => q.kind === 'text');
+    for (const question of PAID_QUESTIONS.slice(0, firstText)) {
+      await answerCurrent(question);
+    }
+    const textbox = await screen.findByRole('textbox', {
+      name: PAID_QUESTIONS[firstText].title,
+    });
+
+    expect(screen.queryByRole('button', { name: '건너뛰기' })).toBeNull();
+    expect(screen.getByRole('button', { name: '다음' })).toHaveProperty(
+      'disabled',
+      true,
+    );
+
+    await userEvent.type(textbox, '   ');
+    expect(screen.getByRole('button', { name: '다음' })).toHaveProperty(
+      'disabled',
+      true,
+    );
+
+    await userEvent.type(textbox, '느려요');
+    expect(screen.getByRole('button', { name: '다음' })).toHaveProperty(
+      'disabled',
+      false,
+    );
+  });
 });

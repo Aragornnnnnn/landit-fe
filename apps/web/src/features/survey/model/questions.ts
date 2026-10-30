@@ -31,6 +31,8 @@ export type ScaleQuestion = QuestionBase & {
 export type TextQuestion = QuestionBase & {
   kind: 'text';
   placeholder: string;
+  // 비워 두면 못 넘어간다 — 없으면 건너뛸 수 있다
+  required?: true;
 };
 export type Question =
   SingleQuestion | MultiQuestion | ScaleQuestion | TextQuestion;

@@ -35,6 +35,7 @@ export const PAID_QUESTIONS: readonly Question[] = [
     title: '아쉬웠던 점을\n알려주세요',
     hint: '작은 불편도 괜찮아요',
     placeholder: '편하게 적어주세요',
+    required: true,
   },
   {
     id: 'wish',
@@ -42,5 +43,6 @@ export const PAID_QUESTIONS: readonly Question[] = [
     title: '더 있었으면 하는\n기능이 있나요?',
     hint: '떠오르는 대로 적어주세요',
     placeholder: '편하게 적어주세요',
+    required: true,
   },
 ];
