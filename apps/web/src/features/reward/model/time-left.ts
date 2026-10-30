@@ -20,3 +20,8 @@ export const clockLabel = (ms: number) => {
   const pad = (value: number) => String(value).padStart(2, '0');
   return `${pad(Math.floor(total / 3600))}:${pad(Math.floor((total % 3600) / 60))}:${pad(total % 60)}`;
 };
+
+// 기기 시간대가 한국 시각과 다른지 — getTimezoneOffset은 UTC에서 기기 시각을 뺀 분이라 한국이면 -540이다
+export const isOutsideKoreaTime = (
+  clock: Pick<Date, 'getTimezoneOffset'> = new Date(),
+) => clock.getTimezoneOffset() !== -KST_OFFSET_MS / 60_000;

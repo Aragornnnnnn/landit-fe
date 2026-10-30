@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   clockLabel,
+  isOutsideKoreaTime,
   isUrgent,
   msUntilKstMidnight,
   msUntilUrgentChange,
@@ -58,5 +59,20 @@ describe('clockLabel', () => {
 
   it('지났으면 0에서 멈춘다', () => {
     expect(clockLabel(-5000)).toBe('00:00:00');
+  });
+});
+
+describe('isOutsideKoreaTime', () => {
+  const clockAt = (offsetMinutes: number) => ({
+    getTimezoneOffset: () => offsetMinutes,
+  });
+
+  it('UTC+9면 한국 시각과 같다고 본다 — 일본도 시차가 같아 안내가 필요 없다', () => {
+    expect(isOutsideKoreaTime(clockAt(-540))).toBe(false);
+  });
+
+  it('UTC+9가 아니면 한국 시각과 다르다고 본다', () => {
+    expect(isOutsideKoreaTime(clockAt(0))).toBe(true);
+    expect(isOutsideKoreaTime(clockAt(420))).toBe(true);
   });
 });
