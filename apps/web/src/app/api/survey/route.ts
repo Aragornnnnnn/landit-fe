@@ -2,8 +2,10 @@
 // 테이블: survey_responses(id bigint 기본키, survey text not null default 'general', user_id bigint, email text, answers jsonb, created_at timestamptz default now())
 // 결제자 설문을 붙이며 칸 셋을 더했다 —
 //   alter table survey_responses add column survey text not null default 'general',
-//     add column response_id uuid unique, add column completed boolean not null default true;
+//     add column response_id uuid unique, add column completed boolean not null default true,
+//     add constraint survey_responses_user_response_key unique (user_id, response_id);
 // 화면은 문항을 넘길 때마다 같은 응답 번호(response_id)로 지금까지의 답을 덮어쓰고, 제출할 때 completed=true로 마친다.
+// 덮어쓰기는 내 계정(user_id)의 같은 번호에만 걸린다 — 남의 번호를 넣으면 response_id unique에 막혀 저장이 실패한다.
 // 중간에 그만둬도 거기까지 쓴 답은 남는다. 응답 번호가 다르면(다시 참여) 새 행으로 쌓인다.
 // 응답 봉투는 백엔드와 같은 { success, data, error } — 클라이언트의 api 클라이언트가 그대로 읽는다
 import { NextResponse } from 'next/server';
@@ -92,9 +94,9 @@ export async function POST(request: Request) {
     return fail(502, '로그인 확인에 실패했어요');
   }
 
-  // 응답 번호가 있으면 같은 번호의 행을 덮어쓴다(upsert)
+  // 응답 번호가 있으면 내 계정의 같은 번호 행을 덮어쓴다(upsert)
   const target = responseId
-    ? `${supabaseUrl}/rest/v1/${TABLE}?on_conflict=response_id`
+    ? `${supabaseUrl}/rest/v1/${TABLE}?on_conflict=user_id,response_id`
     : `${supabaseUrl}/rest/v1/${TABLE}`;
   const inserted = await fetchUpstream(target, {
     method: 'POST',

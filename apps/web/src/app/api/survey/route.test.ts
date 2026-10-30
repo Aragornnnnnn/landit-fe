@@ -133,7 +133,7 @@ describe('POST /api/survey', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('응답 번호가 있으면 그 번호의 응답을 덮어써 저장한다', async () => {
+  it('응답 번호가 있으면 내 계정의 같은 번호 응답만 덮어써 저장한다', async () => {
     backendThenSupabase(200, 201);
 
     await POST(
@@ -150,7 +150,7 @@ describe('POST /api/survey', () => {
 
     const [insertUrl, insertInit] = fetchMock.mock.calls[1];
     expect(insertUrl).toBe(
-      'https://example.supabase.co/rest/v1/survey_responses?on_conflict=response_id',
+      'https://example.supabase.co/rest/v1/survey_responses?on_conflict=user_id,response_id',
     );
     expect(insertInit.headers.Prefer).toContain('resolution=merge-duplicates');
     expect(JSON.parse(insertInit.body)).toMatchObject({
