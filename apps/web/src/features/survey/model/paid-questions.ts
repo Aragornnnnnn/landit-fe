@@ -1,16 +1,17 @@
-// 결제자 설문 문항 — 환급 챌린지를 결제한 사람에게 편지로 묻는다. 형식은 questions.ts와 같다
+// 결제자 설문 문항 — 프리미엄을 결제한 사람에게 편지로 묻는다. 형식은 questions.ts와 같다
 import { CHANNEL_QUESTION, type Question } from './questions';
 
 export const PAID_QUESTIONS: readonly Question[] = [
   CHANNEL_QUESTION,
   {
-    id: 'challenge_reason',
+    id: 'premium_reason',
     kind: 'multi',
-    title: '챌린지를 시작한\n이유가 무엇인가요?',
-    // 돈 내고 여는 혜택(페이월 비교표의 프리미엄 줄)을 하나씩 보기로 둔다 — 어느 혜택이 결제를 이끌었는지 본다
+    title: '프리미엄을 시작한\n이유가 무엇인가요?',
+    // 랜딧 기능(페이월 비교표의 줄)을 하나씩 보기로 둔다 — 어느 혜택이 결제를 이끌었는지 본다
     options: [
       '조건을 채우면 환급받을 수 있어서',
       '꾸준히 할 동기가 필요해서',
+      '다양한 상황을 미리 체험해 볼 수 있어서',
       '문장마다 상세 피드백을 받고 싶어서',
       '원어민 표현을 더 배우고 싶어서',
       '발음을 교정받고 싶어서',
