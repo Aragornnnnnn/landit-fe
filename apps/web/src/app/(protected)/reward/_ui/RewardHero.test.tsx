@@ -26,9 +26,15 @@ vi.mock('@/features/reward/model/useMidnightUrgent', () => ({
   useMidnightUrgent: (enabled: boolean) => enabled && clock.urgent,
 }));
 
+const zone = vi.hoisted(() => ({ outside: false }));
+vi.mock('@/features/reward/model/useOutsideKoreaTime', () => ({
+  useOutsideKoreaTime: () => zone.outside,
+}));
+
 afterEach(() => {
   cleanup();
   clock.urgent = false;
+  zone.outside = false;
 });
 
 describe('RewardHero 계측', () => {
@@ -60,6 +66,23 @@ describe('RewardHero 계측', () => {
 });
 
 describe('RewardHero 자정 시계', () => {
+  it('기기가 한국 시각이 아니면 시계 아래에 한국 시각 자정 마감을 알린다', () => {
+    clock.urgent = true;
+    zone.outside = true;
+    render(<RewardHero reward={rewardView({ todayMaximumWon: 500 })} />);
+
+    expect(
+      screen.getByText('하루는 한국 시간 자정에 마감돼요'),
+    ).toBeInTheDocument();
+  });
+
+  it('기기가 한국 시각이면 마감 안내가 없다', () => {
+    clock.urgent = true;
+    render(<RewardHero reward={rewardView({ todayMaximumWon: 500 })} />);
+
+    expect(screen.queryByText(/한국 시간/)).not.toBeInTheDocument();
+  });
+
   it('자정이 가까운데 오늘의 시나리오가 아직이면 오늘 몫을 놓치기까지의 시계를 띄운다', () => {
     clock.urgent = true;
     render(<RewardHero reward={rewardView({ todayMaximumWon: 500 })} />);
