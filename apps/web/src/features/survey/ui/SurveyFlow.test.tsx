@@ -31,7 +31,7 @@ vi.mock('@/shared/auth/auth-store', () => {
 });
 
 const fetchMock = vi.fn();
-// 서버 라우트는 백엔드와 같은 봉투로 답한다
+// 서버 라우트는 백엔드와 같은 봉투로 답한다. 넘길 때마다 저장 요청이 가서 응답은 요청마다 새로 만든다(본문은 한 번만 읽힌다)
 const routeReply = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status });
 
@@ -174,7 +174,7 @@ describe('SurveyFlow', () => {
   });
 
   it('마지막 주관식을 비운 채 제출하면 그 답 없이 서버 라우트로 보내고 완료 화면을 보여준다', async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(async () =>
       routeReply(200, { success: true, data: { result: 'saved' } }),
     );
     render(<SurveyFlow kind="general" />);
@@ -185,7 +185,7 @@ describe('SurveyFlow', () => {
     );
 
     expect(await screen.findByText('소중한 의견 고마워요!')).toBeTruthy();
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchMock.mock.calls.at(-1)!;
     expect(url).toBe('/api/survey');
     expect(init.headers.get('Authorization')).toBe('Bearer token');
     const body = JSON.parse(init.body);
@@ -196,7 +196,7 @@ describe('SurveyFlow', () => {
   });
 
   it('저장에 실패하면 문항에 머문다', async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(async () =>
       routeReply(502, { success: false, error: { message: '실패' } }),
     );
     render(<SurveyFlow kind="general" />);
@@ -213,7 +213,7 @@ describe('SurveyFlow', () => {
   });
 
   it('시작·문항 노출·제출 성공을 계측한다 — 답 내용은 싣지 않는다', async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(async () =>
       routeReply(200, { success: true, data: { result: 'saved' } }),
     );
     render(<SurveyFlow kind="general" />);
@@ -258,7 +258,7 @@ describe('SurveyFlow', () => {
   });
 
   it('저장에 실패하면 제출을 계측하지 않는다', async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(async () =>
       routeReply(502, { success: false, error: { message: '실패' } }),
     );
     render(<SurveyFlow kind="general" />);
@@ -307,7 +307,7 @@ describe('SurveyFlow', () => {
   });
 
   it('결제자 설문은 결제자 문항을 묻고 결제자 설문으로 저장·계측한다', async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(async () =>
       routeReply(200, { success: true, data: { result: 'saved' } }),
     );
     render(<SurveyFlow kind="paid" />);
@@ -328,7 +328,7 @@ describe('SurveyFlow', () => {
     }
 
     expect(await screen.findByText('소중한 의견 고마워요!')).toBeTruthy();
-    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    const body = JSON.parse(fetchMock.mock.calls.at(-1)![1].body);
     expect(body.survey).toBe('paid');
     expect(Object.keys(body.answers)).toEqual(
       PAID_QUESTIONS.map((question) => question.id),
@@ -386,5 +386,51 @@ describe('SurveyFlow', () => {
     render(<SurveyFlow kind="general" />);
 
     expect(screen.getByText(/2분만 내주시면/)).toBeTruthy();
+  });
+
+  it('다음으로 넘길 때마다 같은 응답 번호로 지금까지의 답을 저장하고, 제출은 완료로 저장한다', async () => {
+    fetchMock.mockImplementation(async () =>
+      routeReply(200, { success: true, data: { result: 'saved' } }),
+    );
+    render(<SurveyFlow kind="paid" />);
+    const bodies = () =>
+      fetchMock.mock.calls.map(([, init]) => JSON.parse(init.body));
+
+    await userEvent.type(
+      await screen.findByRole('textbox', { name: PAID_QUESTIONS[0].title }),
+      '환급받을 수 있어서',
+    );
+    await userEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const [first] = bodies();
+    expect(first).toMatchObject({
+      survey: 'paid',
+      completed: false,
+      answers: { premium_reason: '환급받을 수 있어서' },
+    });
+    expect(first.responseId).toEqual(expect.any(String));
+
+    for (const question of PAID_QUESTIONS.slice(1)) {
+      if (question.kind !== 'text') {
+        await answerCurrent(question);
+        continue;
+      }
+      await userEvent.type(
+        await screen.findByRole('textbox', { name: question.title }),
+        '좋아요',
+      );
+      await userEvent.click(screen.getByRole('button', { name: '다음' }));
+    }
+
+    await screen.findByText('소중한 의견 고마워요!');
+    const all = bodies();
+    expect(new Set(all.map((body) => body.responseId))).toEqual(
+      new Set([first.responseId]),
+    );
+    expect(all.at(-1).completed).toBe(true);
+    expect(all.slice(0, -1).every((body) => body.completed === false)).toBe(
+      true,
+    );
   });
 });

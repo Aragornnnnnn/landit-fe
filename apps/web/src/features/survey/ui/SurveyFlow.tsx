@@ -46,6 +46,24 @@ export const SurveyFlow = ({ kind }: { kind: SurveyKind }) => {
   useEffect(() => {
     stepRef.current = step;
   }, [step]);
+  // 지연 콜백이 최신 답을 읽기 위한 ref — stepRef와 같은 이유
+  const answersRef = useRef(answers);
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+  // 이 참여의 응답 번호 — 넘길 때마다 같은 번호로 덮어써서 중간에 그만둬도 거기까지 쓴 답이 남는다
+  const [responseId] = useState(() => crypto.randomUUID());
+  // 저장은 차례대로 보낸다 — 늦게 도착한 중간 저장이 완료된 응답을 덮어쓰지 않게
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  const save = (completed: boolean) => {
+    const answersNow = toSubmission(allQuestions, answersRef.current);
+    const next = saveQueue.current.then(() =>
+      submitSurvey(kind, email, answersNow, { responseId, completed }),
+    );
+    // 중간 저장이 실패해도 다음 저장은 이어서 간다 — 다음 저장이 그때까지의 답을 다시 싣는다
+    saveQueue.current = next.catch(() => {});
+    return next;
+  };
   // 조건 문항이 끼고 빠지므로 스텝 번호는 이 목록 기준이다
   const questions = visibleQuestions(allQuestions, answers);
   // 문항이 보일 때마다 노출을 남긴다 — 뒤로 갔다 다시 봐도 찍혀서 어디서 머뭇거리는지 본다.
@@ -93,7 +111,7 @@ export const SurveyFlow = ({ kind }: { kind: SurveyKind }) => {
     if (submitting) return;
     setSubmitting(true);
     try {
-      await submitSurvey(kind, email, toSubmission(allQuestions, answers));
+      await save(true);
       track(EVENTS.SURVEY_SUBMITTED, {
         survey: kind,
         question_count: questions.length,
@@ -110,8 +128,12 @@ export const SurveyFlow = ({ kind }: { kind: SurveyKind }) => {
   // 나가는 화면은 전환이 끝날 때까지 남아 있어 타이머가 그 뒤에도 울린다 — 그래서 state가 아니라 ref를 본다
   const advanceFrom = (index: number) => {
     if (stepRef.current !== index) return;
-    if (index === questions.length - 1) void submit();
-    else goTo(index + 1, 1);
+    if (index === questions.length - 1) {
+      void submit();
+      return;
+    }
+    void save(false).catch(() => {});
+    goTo(index + 1, 1);
   };
 
   // 'intro' · '0'~'11' · 'done' — 서로 겹치지 않으니 그대로 전환 키로 쓴다
