@@ -18,6 +18,8 @@ import { track } from '@/shared/analytics';
 import { sellsKoreaOnlyOffers } from '@/shared/i18n/locale';
 import { paywallPath } from '@/shared/lib/routes';
 
+import { freeExpressionFinished } from './smalltalk-free-nudge';
+
 export const usePremiumPreview = () => {
   const router = useRouter();
   const gate = usePaywallGate();
@@ -43,6 +45,8 @@ export const usePremiumPreview = () => {
       eligible && awaitsFreeExpressionFinish(step)
         ? () => {
             saveStep('COMPLETED');
+            // 페이월을 닫고 홈에 돌아오면 스몰톡 칩이 무료 5분을 권한다
+            freeExpressionFinished.mark();
             track(EVENTS.PAYWALL_GATE_LOCKED, {
               source: 'premium_preview',
             });
