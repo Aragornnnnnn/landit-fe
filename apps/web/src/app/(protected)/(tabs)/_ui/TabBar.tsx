@@ -1,7 +1,7 @@
 'use client';
 
 // 탭 칩 — 고를 게 둘 이상일 때만 그린다. 탭이 하나면 선택이라는 행위 자체가 없다
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
@@ -20,6 +20,9 @@ import { TAB_CHIP_ROW, tabChipClass } from '@/shared/ui/tab-chip';
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import {
   freeExpressionFinished,
+  markNudgeShownToday,
+  nudgeShownToday,
+  setFreeNudgeFirst,
   smalltalkNudgeSeen,
 } from '../../_model/smalltalk-free-nudge';
 import { introGuideSeen } from '../smalltalk/_model/intro-guide-seen';
@@ -38,18 +41,34 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
   const onSmalltalk = tabs.some(
     (tab) => tab.id === 'smalltalk' && tab.href === pathname,
   );
-  const nudgeDue = locked && finished && !nudgeSeen;
+  // 하루 한 번만 — 그날 첫 홈 방문에 띄우고, 이 셸이 떠 있는 동안은 계속 둔다(탭을 오가도 셸은 그대로다).
+  // 서버 렌더엔 저장소가 없어 보여 준 것으로 두고, 하이드레이션 뒤 첫 상태 계산에서 기록이 반영된다
+  const [dueToday, setDueToday] = useState(
+    () => typeof window !== 'undefined' && !nudgeShownToday(),
+  );
+  const nudgeDue = locked && finished && !nudgeSeen && dueToday;
   // 칩을 눌렀든 마지막 탭으로 들어왔든, 스몰톡 화면을 봤으면 할 말을 한 것이다
   useEffect(() => {
     if (nudgeDue && onSmalltalk) smalltalkNudgeSeen.mark();
   }, [nudgeDue, onSmalltalk]);
   // 한도는 서버 값이다 — 받기 전엔 숫자 없는 말풍선을 띄우지 않고 기다린다
   const { main } = useSmallTalkMainQuery({ enabled: nudgeDue });
-  // 페이월을 닫고 돌아온 직후엔 할인 시트나 환급 동전 연출이 먼저다 — 그 위에 말풍선이 같이 뜨면 둘이 겹친다. 끝나면 그때 뜬다
+  // 말풍선이 1순위다 — 차례인 동안(한도를 받는 중 포함) 홈의 이벤트 공지·소감·알림 동의가 기다린다.
+  // 할인 시트와 환급 동전 연출만 앞에 둔다 — 방금 한 행동(페이월·대화 완료)의 응답이라 그 순간에 붙어 있어야 한다
+  const nudgeFirst = nudgeDue && !onSmalltalk;
+  useEffect(() => {
+    setFreeNudgeFirst(nudgeFirst);
+    return () => setFreeNudgeFirst(false);
+  }, [nudgeFirst]);
   const promoOpen = usePromoSheetOpen();
   const showerHold = useEarnShowerHold();
-  const showsNudge =
-    nudgeDue && !onSmalltalk && main !== null && !promoOpen && !showerHold;
+  const showsNudge = nudgeFirst && main !== null && !promoOpen && !showerHold;
+  // 실제로 떴을 때 오늘 보여 준 것으로 남긴다 — 띄우기 전에 남기면 한도 조회가 늦은 날은 보여 주지도 않고 하루를 쓴다
+  useEffect(() => {
+    if (showsNudge) markNudgeShownToday();
+  }, [showsNudge]);
+  // 칩을 누르면 남은 날에도 다시 안 뜬다 — 탭을 봤다는 기록이 우선이다
+  if (nudgeSeen && dueToday) setDueToday(false);
 
   if (tabs.length < 2) return null;
 

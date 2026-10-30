@@ -1,5 +1,11 @@
 // TabBar — 고를 게 있을 때만 칩을 그리고, 현재 탭을 활성으로 표시하는지 검증
-import { act, cleanup, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  render,
+  renderHook,
+  screen,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -8,6 +14,7 @@ import { track } from '@/shared/analytics';
 import {
   freeExpressionFinished,
   smalltalkNudgeSeen,
+  useFreeNudgeFirst,
 } from '../../_model/smalltalk-free-nudge';
 import { introGuideSeen } from '../smalltalk/_model/intro-guide-seen';
 import { TabBar } from './TabBar';
@@ -222,6 +229,52 @@ describe('TabBar', () => {
 
       // Then 한도가 없으니 말풍선도 없다
       expect(freeNudge()).not.toBeInTheDocument();
+    });
+
+    it('하루 한 번만 띄운다 — 오늘 이미 보여 줬으면 다음 홈 방문엔 뜨지 않고 시트도 막지 않는다', () => {
+      // Given 오늘 먼저 한 번 떠서 보여 준 뒤(칩은 안 누름)
+      mocks.locked = true;
+      freeExpressionFinished.mark();
+      const first = render(<TabBar tabs={[scenario, smalltalk]} />);
+      expect(freeNudge()).toBeInTheDocument();
+      first.unmount();
+
+      // When 같은 날 홈에 다시 오면
+      render(<TabBar tabs={[scenario, smalltalk]} />);
+
+      // Then 말풍선은 쉬고, 홈의 시트들도 기다리지 않는다
+      expect(freeNudge()).not.toBeInTheDocument();
+      expect(renderHook(() => useFreeNudgeFirst()).result.current).toBe(false);
+    });
+
+    it('다음 날엔 다시 띄운다', () => {
+      // Given 어제 보여 준 기록이 있을 때
+      mocks.locked = true;
+      freeExpressionFinished.mark();
+      localStorage.setItem('landit-smalltalk-free-nudge-shown-on', '2000-1-1');
+
+      // When 오늘 홈에 오면
+      render(<TabBar tabs={[scenario, smalltalk]} />);
+
+      // Then 다시 뜬다
+      expect(freeNudge()).toBeInTheDocument();
+    });
+
+    it('말풍선 차례면 홈 화면에 알린다 — 이벤트 공지·소감·알림 동의가 기다리게', () => {
+      // Given 무료 표현을 마친 무료 사용자가 시나리오 탭에 돌아왔을 때
+      mocks.locked = true;
+      freeExpressionFinished.mark();
+
+      // When 셸이 탭 칩을 그리면
+      const { unmount } = render(<TabBar tabs={[scenario, smalltalk]} />);
+
+      // Then 말풍선 차례라고 알린다
+      const { result } = renderHook(() => useFreeNudgeFirst());
+      expect(result.current).toBe(true);
+
+      // When 셸이 내려가면 알림도 거둔다
+      unmount();
+      expect(renderHook(() => useFreeNudgeFirst()).result.current).toBe(false);
     });
 
     it('할인 시트나 환급 동전 연출이 떠 있는 동안은 띄우지 않는다 — 겹치지 않게', () => {

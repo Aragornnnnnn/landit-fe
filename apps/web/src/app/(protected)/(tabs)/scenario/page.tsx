@@ -27,6 +27,7 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
+import { useFreeNudgeFirst } from '../../_model/smalltalk-free-nudge';
 import { eventPopupOrder, isLampSettled } from './_model/event-popup-order';
 import { useActiveEventPopup } from './_model/useActiveEventPopup';
 import { useEventPopupSkip } from './_model/useEventPopupSkip';
@@ -65,6 +66,8 @@ function ScenarioContent() {
   const showerHold = useEarnShowerHold();
   // 강제 업데이트가 1순위다 — 그거거나 그럴지 모르는 동안엔 공지·램프·시트 모두 나서지 않는다
   const updateFirst = useForceUpdateFirst();
+  // 스몰톡 칩 말풍선(무료 5분)이 떠 있거나 뜰지 정하는 중이면 공지·소감·알림 동의가 기다린다 — 말풍선이 먼저다
+  const nudgeFirst = useFreeNudgeFirst();
   // 대화 시작을 눌렀다 — 바로 이동하지 않고 브리핑 카드를 잠깐 보여준 뒤 대화로 들어간다
   const [briefingScenario, setBriefingScenario] = useState<Scenario | null>(
     null,
@@ -108,12 +111,14 @@ function ScenarioContent() {
       updateFirst,
       promoOpen,
       showerHold,
+      nudgeFirst,
     });
   const sheetsHeld =
     updateFirst ||
     eventPopupPending ||
     promoOpen ||
     showerHold ||
+    nudgeFirst ||
     premiumPreview.active;
   // 소감·리뷰는 프리뷰를 끝낼 때까지 더 미룬다 — 그사이 이 방문엔 알림 동의도 안 뜬다(소감 차례가 남아 있어서)
   const satisfactionHeld = sheetsHeld || premiumPreview.holdsSatisfaction;

@@ -37,6 +37,7 @@ describe('eventPopupOrder', () => {
     updateFirst: false,
     promoOpen: false,
     showerHold: false,
+    nudgeFirst: false,
   };
 
   it.each([
@@ -55,6 +56,7 @@ describe('eventPopupOrder', () => {
     ['프리뷰 대상인지 아직 모르면', { previewDeciding: true }],
     ['할인 시트가 떠 있으면', { promoOpen: true }],
     ['동전 연출이 도는 중이면', { showerHold: true }],
+    ['스몰톡 칩 말풍선 차례면', { nudgeFirst: true }],
   ])('%s 공지는 차례를 기다린다', (_, given) => {
     expect(eventPopupOrder({ ...base, ...given }).ready).toBe(false);
   });

@@ -1,6 +1,7 @@
 // 홈에서 이벤트 공지의 차례 — 공지는 아무것도 나서지 않는 방문에만 띄우고, 램프가 묻는 날엔 램프를 끈 뒤에 띄운다.
 // 온보딩 직후·프리미엄 프리뷰·소감 시트가 나설 방문은 그 흐름이 먼저라 공지를 건너뛴다(기록을 안 남겨 다음 방문에 뜬다).
-// 강제 업데이트(묻는 중 포함)·할인 시트·동전 연출은 공지보다 먼저다 — 앞의 것은 1순위, 뒤의 둘은 방금 한 행동의 응답이다
+// 강제 업데이트(묻는 중 포함)·할인 시트·동전 연출·스몰톡 칩 말풍선은 공지보다 먼저다 — 앞의 것은 1순위, 할인·동전은 방금 한 행동의 응답,
+// 말풍선은 무료 5분을 받았다는 첫 안내라 공지 뒤로 밀리면 묻힌다
 
 /** 이번 방문에 공지를 건너뛸까 — 이미 정해진 흐름이 홈을 차지하는 방문이다 */
 export const skipsEventPopup = ({
@@ -54,6 +55,8 @@ interface EventPopupOrderInput {
   updateFirst: boolean;
   promoOpen: boolean;
   showerHold: boolean;
+  /** 스몰톡 칩 말풍선 차례다(띄울지 정하는 중 포함) — 꺼질 때까지 공지가 기다린다 */
+  nudgeFirst: boolean;
 }
 
 export const eventPopupOrder = ({
@@ -65,6 +68,7 @@ export const eventPopupOrder = ({
   updateFirst,
   promoOpen,
   showerHold,
+  nudgeFirst,
 }: EventPopupOrderInput) => ({
   /** 공지가 뜰지 아직 모르거나, 떠서 아직 안 닫혔다 — 그동안 소감·알림 동의 같은 시트가 기다린다 */
   pending: loading || previewDeciding || (hasPopup && !closed),
@@ -74,5 +78,6 @@ export const eventPopupOrder = ({
     !previewDeciding &&
     lampSettled &&
     !promoOpen &&
-    !showerHold,
+    !showerHold &&
+    !nudgeFirst,
 });
