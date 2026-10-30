@@ -16,7 +16,6 @@ export const PAID_QUESTIONS: readonly Question[] = [
       '나에게 맞는 원어민 표현을 알려줘서',
       '원어민에 가까운 발음으로 교정해줘서',
       '스몰톡을 제한 없이 할 수 있어서',
-      '미국·영국·호주식 영어를 고를 수 있어서',
     ],
     other: true,
   },
