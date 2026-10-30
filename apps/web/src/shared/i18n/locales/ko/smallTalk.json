@@ -10,20 +10,26 @@
   "tabPage": {
     "historyButton": "기록",
     "greetingLabel": "{name} 인사 듣기",
-    "doneTitle": "오늘의 1분 스몰톡을 다 했어요",
-    "doneCaption": "내일 또 같이 이야기해요",
-    "remainingLabel": "오늘 남은 말하기",
+    "doneTitle": "무료 {limit} 스몰톡을 다 했어요",
+    "doneCaption": "프리미엄이면 계속 이야기할 수 있어요",
+    "premiumButton": "프리미엄 알아보기",
+    "remainingLabel": "남은 무료 시간",
     "unlimitedLabel": "무제한",
     "userFirstButton": "내가 먼저 말 걸기",
     "partnerFirstButton": "{name}가 먼저 말 걸기"
   },
   "introGuide": {
+    "dialogLabel": "스몰톡 안내",
+    "nextLabel": "다음",
     "mascotLabel": "래디",
-    "title": "자유롭게 대화할 수 있는 시간이에요",
-    "description": "세 명의 캐릭터 중 마음에 드는 친구와 얘기해봐요.<br></br><phrase>“Bye!”</phrase>, <phrase>“Talk to you later”</phrase> 같은 마무리 인사를 하면 대화가 끝나요.",
+    "freeTalkBody": "스몰톡에서는 세 친구와<br></br><em>영어로 자유롭게</em> 대화해요",
+    "endingBody": "<em>“Bye!”</em>, <em>“Talk to you later”</em><br></br>같은 마무리 인사를 하면<br></br>대화가 자동으로 끝나요",
+    "limitCaption": "무료로 <em>{limit}</em>을 드렸어요<br></br>지금 바로 써 보세요",
+    "startCaption": "둘 중 하나를 눌러<br></br>첫 대화를 시작해 보세요",
+    "continueCaption": "화면을 누르면 계속 ›",
     "confirmButton": "이해했어요"
   },
-  "greetingCoach": {
+  "greetingHint": {
     "bubbleCaption": "누르면 인사해요"
   },
   "topicPicker": {

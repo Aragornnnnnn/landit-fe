@@ -1,8 +1,8 @@
 'use client';
 
 // 스몰톡 탭 — 대화 상대를 고르고, 내가 먼저 걸거나 상대가 주제로 먼저 걸게 한다. 정답도 점수도 없는 대화다
+import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
-import { AnimatePresence } from 'motion/react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
@@ -16,25 +16,38 @@ import { useSpeakingLimit } from '@/features/small-talk/model/useSpeakingLimit';
 import { usePromoSheetOpen } from '@/features/subscription/model/exit-promo/promo-handoff';
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
+import { lineBreak } from '@/shared/i18n/rich';
 import {
   SMALLTALK_HISTORY_PATH,
   SMALLTALK_PATH,
   smallTalkPath,
 } from '@/shared/lib/routes';
+import { useSeenFlag } from '@/shared/lib/useSeenFlag';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, ChevronRightIcon } from '@/shared/ui/Icons';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
+import { tapGreetingSeen } from '../_model/tap-greeting-seen';
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
-import { useGreetingCoach } from './_model/useGreetingCoach';
+import {
+  introSentencesOf,
+  introSpotlightsOf,
+  type IntroSpotlight,
+} from './_model/intro-sentences';
+import { useIntroGuide } from './_model/useIntroGuide';
 import { usePartnerGreeting } from './_model/usePartnerGreeting';
 import { useTopicPicker } from './_model/useTopicPicker';
-import { CoachBubble, CoachDim } from './_ui/GreetingCoach';
+import { GuideSpotlight } from './_ui/GuideSpotlight';
 import { IntroGuide } from './_ui/IntroGuide';
 import { PartnerIntroCard } from './_ui/PartnerIntroCard';
 import { PartnerPicker } from './_ui/PartnerPicker';
 import { TopicPickerModal } from './_ui/TopicPickerModal';
+
+// 말풍선 문구 속 <em>을 주황 글자로 — 표현 프리뷰 말풍선과 같다
+const emphasis = (chunks: React.ReactNode) => (
+  <span className="text-primary">{chunks}</span>
+);
 
 export default function SmallTalkPage() {
   const router = useRouter();
@@ -43,7 +56,7 @@ export default function SmallTalkPage() {
   const { main, fatalError, isLoading, refresh } = useSmallTalkMainQuery();
   // 오늘 예산을 다 썼는지는 서버(canStart)가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
   const exhausted = main !== null && !main.canStart;
-  // 무료 구간을 다 쓴 무료 사용자는 스몰톡 시작 대신 페이월로 보낸다
+  // 무료 사용자도 5분까지는 바로 시작한다 — 다 쓰면 마무리 인사 아래에서 페이월로 보낸다
   const gate = usePaywallGate();
   // 결제가 열리면 하루 한도가 없다 — 알약에 잔량 대신 무제한을 쓴다
   const { unlimited } = useSpeakingLimit();
@@ -53,9 +66,27 @@ export default function SmallTalkPage() {
   const picker = useTopicPicker({ partner: partner.id, refresh });
   // 강제 업데이트가 1순위다 — 그거거나 그럴지 모르는 동안엔 안내·시트가 나서지 않는다
   const updateFirst = useForceUpdateFirst();
-  // 처음 들어온 사람에겐 래디 안내부터, 닫으면 캐릭터를 눌러 보라는 코치마크 — 둘 다 기기당 한 번이다
-  const { guideOpen, coaching, closeGuide, tapPartner, partnerRef, trapFocus } =
-    useGreetingCoach({ onTap: greet, held: updateFirst });
+  // 처음 들어온 사람에겐 래디 안내를 한 번 — 무료 한도를 말해야 해서 잔량을 받은 뒤에 띄우고, 주제를 고르는 동안엔 비킨다
+  const { guideOpen, closeGuide, tapPartner } = useIntroGuide({
+    onTap: greet,
+    held: updateFirst || main === null || picker.isOpen,
+  });
+  // 아직 캐릭터를 눌러 본 적 없는 기기엔 머리 옆에 한마디 — 막지 않고, 한 번 누르면 사라진다 (탭 셸의 칩 점과 같은 기록)
+  const greetingSeen = useSeenFlag(tapGreetingSeen);
+  const greetingHint = !guideOpen && !greetingSeen;
+  // 안내가 래디의 말 뒤에 차례로 비추는 자리 — 그 자리를 어둠 위로 올려 말풍선을 붙인다
+  const guideSpotlights = introSpotlightsOf({ free: !unlimited, exhausted });
+  const [guideStep, setGuideStep] = useState<number | null>(null);
+  const spotlight: IntroSpotlight | null =
+    guideOpen && guideStep !== null
+      ? (guideSpotlights[guideStep] ?? null)
+      : null;
+  const nextGuideStep = () =>
+    setGuideStep((step) => (step === null ? 0 : step + 1));
+  const guideSentences = introSentencesOf({
+    freeTalkBody: t.raw('introGuide.freeTalkBody'),
+    endingBody: t.raw('introGuide.endingBody'),
+  });
   // 이번 방문에 띄울 시트 하나 — 첫 스몰톡 소감 → 리뷰 요청
   const satisfactionSheet = useSatisfactionSheet('smalltalk');
   // 할인 시트가 떠 있으면 소감은 미룬다 — 할인은 5분뿐이고 소감은 다음에 또 물을 수 있다
@@ -64,22 +95,18 @@ export default function SmallTalkPage() {
   const showerHold = useEarnShowerHold();
   const sheetsHeld = updateFirst || promoOpen || showerHold;
 
-  // 캐릭터 탭 인사 — 코치마크가 켜진 채로 눌렀는지도 함께 남긴다 (코치마크가 시킨 첫 탭인지)
+  // 캐릭터 탭 인사 — 안내는 캐릭터를 비추지 않으니 안내가 시킨 탭(coached)은 이제 없다
   const tapGreeting = () => {
     track(EVENTS.SMALL_TALK_GREETING_TAPPED, {
       partner: partner.id,
-      coached: coaching,
+      coached: false,
     });
     tapPartner();
   };
 
   // 대화 시작 계측은 세션이 실제로 열리는 대화 화면에서 한다 — 여기서 쏘면 들어가다 만 것도 시작으로 잡힌다
   const startWithMe = () =>
-    gate.guard(
-      () =>
-        router.push(smallTalkPath({ partner: partner.id, mode: 'user_first' })),
-      { source: 'smalltalk', returnTo: SMALLTALK_PATH },
-    );
+    router.push(smallTalkPath({ partner: partner.id, mode: 'user_first' }));
 
   const startWithTopic = (topic: SmallTalkTopic) => {
     track(EVENTS.SMALL_TALK_TOPIC_SELECTED, {
@@ -87,18 +114,17 @@ export default function SmallTalkPage() {
       topic_id: topic.topicId,
     });
     picker.closePicker();
-    gate.guard(
-      () =>
-        router.push(
-          smallTalkPath({
-            partner: partner.id,
-            mode: 'ai_first',
-            topicId: topic.topicId,
-          }),
-        ),
-      { source: 'smalltalk', returnTo: SMALLTALK_PATH },
+    router.push(
+      smallTalkPath({
+        partner: partner.id,
+        mode: 'ai_first',
+        topicId: topic.topicId,
+      }),
     );
   };
+
+  const openPaywall = () =>
+    gate.guard(() => {}, { source: 'smalltalk', returnTo: SMALLTALK_PATH });
 
   if (fatalError) {
     return (
@@ -129,22 +155,23 @@ export default function SmallTalkPage() {
       </div>
 
       {/* 남는 자리는 캐릭터가 먹는다 — 위로는 한계를 두고, 아래로는 작은 폰에서 버튼이 밀려나지 않게 끝까지 줄어든다 */}
-      {/* 캐릭터는 눌리는 것이다 — 누르면 자기소개를 한다. 코치마크가 켜진 동안은 딤(z-40) 위 z-50으로 올라와
-          화면에서 유일하게 눌리는 것이 되고, 말풍선 한마디가 붙는다. 눌린 느낌은 살짝 눌리는 크기로 준다 */}
+      {/* 캐릭터는 눌리는 것이다 — 누르면 자기소개를 한다. 눌린 느낌은 살짝 눌리는 크기로 준다 */}
       <button
-        ref={partnerRef}
         type="button"
         onClick={tapGreeting}
-        onKeyDown={trapFocus}
         aria-label={t('tabPage.greetingLabel', { name: partnerName })}
-        className={[
-          'relative flex max-h-[190px] min-h-0 flex-1 justify-center transition-transform active:scale-[0.97]',
-          coaching && 'z-50',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+        className="relative flex max-h-[190px] min-h-0 flex-1 justify-center transition-transform active:scale-[0.97]"
       >
-        <AnimatePresence>{coaching && <CoachBubble />}</AnimatePresence>
+        {greetingHint && (
+          // 말풍선은 읽어 주지 않는다 — 버튼 이름이 같은 말을 한다. 살짝 떠서 살아 있음만 준다 (rAF가 멎는 웹뷰라 CSS)
+          <span
+            aria-hidden
+            data-testid="greeting-hint"
+            className="pointer-events-none absolute top-2 left-[calc(50%+42px)] flex h-9 items-center rounded-2xl rounded-bl-md bg-card px-3.5 text-13 font-semibold whitespace-nowrap text-foreground shadow-md shadow-black/10 motion-safe:animate-[nudge-bob_2.2s_ease-in-out_infinite]"
+          >
+            {t('greetingHint.bubbleCaption')}
+          </span>
+        )}
         <PartnerCharacter
           partner={partner.id}
           look={look}
@@ -159,17 +186,24 @@ export default function SmallTalkPage() {
         <PartnerIntroCard partner={partner} />
       </div>
 
-      {/* 다 쓴 날은 잠긴 버튼 대신 마무리 인사가 그 자리를 대신한다 — 눌리지 않는 버튼을 남겨 두면
-          왜 안 되는지부터 묻게 된다. "다 썼다"는 소진이지만 실은 오늘 몫을 완주한 것이라 채웠다고 말한다
-          (1분은 안내 문구와 같은 하드코딩 — 사람마다 달라지면 둘 다 서버 값으로 바꾼다) */}
-      {exhausted ? (
+      {/* 무료 5분을 다 쓰면 잠긴 버튼 대신 마무리 인사가 그 자리를 대신한다 — 눌리지 않는 버튼을 남겨 두면
+          왜 안 되는지부터 묻게 된다. "다 썼다"는 소진이지만 실은 무료 몫을 완주한 것이라 채웠다고 말하고, 이어 갈 길(페이월)을 둔다
+          (한도는 서버 값 그대로 적는다 — 칩 말풍선도 같은 값을 쓴다) */}
+      {exhausted && main ? (
         <div className="mt-8 flex flex-col items-center gap-1.5 px-5 cq-tiny:mt-4">
           <p className="text-lg font-extrabold break-keep text-foreground cq-tiny:text-base">
-            {t('tabPage.doneTitle')}
+            {t('tabPage.doneTitle', {
+              limit: toSpeakingTimeLabel(main.dailySpeakingTimeLimitMs, locale),
+            })}
           </p>
           <p className="text-sm font-medium break-keep text-muted-foreground">
             {t('tabPage.doneCaption')}
           </p>
+          {gate.locked && (
+            <Button size="md" className="mt-4 w-full" onClick={openPaywall}>
+              {t('tabPage.premiumButton')}
+            </Button>
+          )}
         </div>
       ) : (
         <>
@@ -182,17 +216,30 @@ export default function SmallTalkPage() {
           <div className="mt-auto">
             <div className="mt-3 flex h-8 justify-center cq-tiny:hidden">
               {main && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
-                  {t('tabPage.remainingLabel')}
-                  <span className="text-sm font-bold text-primary">
-                    {unlimited
-                      ? t('tabPage.unlimitedLabel')
-                      : toSpeakingTimeLabel(
-                          main.remainingSpeakingTimeMs,
-                          locale,
-                        )}
+                <GuideSpotlight
+                  active={spotlight === 'limit'}
+                  rounded="rounded-full"
+                  message={t.rich('introGuide.limitCaption', {
+                    ...lineBreak,
+                    em: emphasis,
+                    limit: toSpeakingTimeLabel(
+                      main.dailySpeakingTimeLimitMs,
+                      locale,
+                    ),
+                  })}
+                >
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
+                    {t('tabPage.remainingLabel')}
+                    <span className="text-sm font-bold text-primary">
+                      {unlimited
+                        ? t('tabPage.unlimitedLabel')
+                        : toSpeakingTimeLabel(
+                            main.remainingSpeakingTimeMs,
+                            locale,
+                          )}
+                    </span>
                   </span>
-                </span>
+                </GuideSpotlight>
               )}
             </div>
 
@@ -227,8 +274,15 @@ export default function SmallTalkPage() {
         </>
       )}
 
-      {guideOpen && <IntroGuide onClose={closeGuide} />}
-      <AnimatePresence>{coaching && <CoachDim />}</AnimatePresence>
+      {guideOpen && (
+        <IntroGuide
+          sentences={guideSentences}
+          spotlights={guideSpotlights}
+          spot={guideStep}
+          onNext={nextGuideStep}
+          onClose={closeGuide}
+        />
+      )}
       {/* 스몰톡을 마치고 돌아온 사람에게 한 번 — 안내·코치마크는 첫 진입 때 이미 끝난 뒤라 겹치지 않는다 */}
       {!sheetsHeld && satisfactionSheet === 'talk' && (
         <SatisfactionGate moment="smalltalk" />
