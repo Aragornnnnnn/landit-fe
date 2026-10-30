@@ -25,8 +25,8 @@ export const MidnightCountdown = ({ amountWon }: { amountWon: number }) => {
       </p>
       {/* 해외에서는 기기 자정과 마감이 어긋난다 — 한국 시각 기기에는 군더더기라 뺀다 */}
       {outsideKoreaTime && (
-        <p className="mt-1.5 text-12 font-medium text-muted-foreground">
-          하루는 한국 시간 자정에 마감돼요
+        <p className="mt-2 text-14 font-semibold text-foreground">
+          오늘의 시나리오는 한국 시간 자정에 바뀌어요
         </p>
       )}
     </>

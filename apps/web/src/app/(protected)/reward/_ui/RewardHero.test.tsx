@@ -66,13 +66,13 @@ describe('RewardHero 계측', () => {
 });
 
 describe('RewardHero 자정 시계', () => {
-  it('기기가 한국 시각이 아니면 시계 아래에 한국 시각 자정 마감을 알린다', () => {
+  it('기기가 한국 시각이 아니면 시계 아래에 오늘의 시나리오가 한국 시각 자정에 바뀐다고 알린다', () => {
     clock.urgent = true;
     zone.outside = true;
     render(<RewardHero reward={rewardView({ todayMaximumWon: 500 })} />);
 
     expect(
-      screen.getByText('하루는 한국 시간 자정에 마감돼요'),
+      screen.getByText('오늘의 시나리오는 한국 시간 자정에 바뀌어요'),
     ).toBeInTheDocument();
   });
 
