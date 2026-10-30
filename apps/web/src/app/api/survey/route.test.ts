@@ -103,9 +103,9 @@ describe('POST /api/survey', () => {
         {
           survey: 'paid',
           answers: {
-            channel: '지인 추천',
+            premium_reason: '환급받을 수 있어서',
             disappointment: '느려요',
-            wish: '친구 기능',
+            channel: '지인 추천',
           },
         },
         `Bearer ${token}`,

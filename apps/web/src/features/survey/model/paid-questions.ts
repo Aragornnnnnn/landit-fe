@@ -4,29 +4,16 @@ import { CHANNEL_QUESTION, type Question } from './questions';
 // 순서는 알고 싶은 순서 — 결제 이유를 맨 앞에 둬서 중간에 그만둬도 그 답은 남게 하고, 유입 경로는 가볍게 맨 뒤에
 export const PAID_QUESTIONS: readonly Question[] = [
   {
+    // 결제자가 아직 적어서 보기의 비율보다 자기 말로 쓴 이유가 더 많이 알려 준다 — 결제할 때의 마음까지 받으려고 주관식으로 묻는다
     id: 'premium_reason',
-    kind: 'multi',
-    title: '프리미엄을 시작한\n이유가 무엇인가요?',
-    // 페이월이 파는 것(환급·프리미엄 전용 기능)을 그대로 보기로 둔다 — 가장 많이 고른 것이 페이월에서 앞세울 것이 된다.
-    // 시나리오는 무료라 결제 이유가 될 수 없어 뺐다. 써 보고 좋았던 기능은 뒤 문항이 따로 묻는다
-    options: [
-      '결제 금액 그대로 환급받을 수 있어서',
-      '문장마다 자세히 피드백해줘서',
-      '나에게 맞는 원어민 표현을 알려줘서',
-      '원어민에 가까운 발음으로 교정해줘서',
-      '스몰톡을 제한 없이 할 수 있어서',
-    ],
-    other: true,
-  },
-  {
-    // 보기만으로는 같은 답 안의 사정이 안 갈린다 — 한두 문장이라도 받으면 진짜 이유가 보인다
-    id: 'premium_reason_detail',
     kind: 'text',
-    title: '그 이유를 조금 더\n들려주세요',
+    title: '어떤 이유로 프리미엄을\n결제하시게 되었나요?',
     hint: '결제를 결심한 순간을 떠올려 주셔도 좋아요',
     placeholder: '편하게 적어주세요',
+    required: true,
   },
   {
+    // 결제 전에 기대한 것(위 문항)과 갈리게 써 본 경험을 묻는다
     id: 'liked_features',
     kind: 'multi',
     title: '써 보니 어떤 기능이\n가장 만족스러우세요?',
@@ -55,7 +42,6 @@ export const PAID_QUESTIONS: readonly Question[] = [
     title: '더 있었으면 하는\n기능이 있나요?',
     hint: '떠오르는 대로 적어주세요',
     placeholder: '편하게 적어주세요',
-    required: true,
   },
   CHANNEL_QUESTION,
 ];
