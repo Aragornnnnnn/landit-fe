@@ -14,13 +14,13 @@ import { haptic } from '@/shared/haptics';
 import { formatWon } from '@/shared/lib/won';
 import { Button } from '@/shared/ui/Button';
 
-import { partsOf, type Part } from '../_model/tutorial-sentence';
+import { partsOf, type Part } from '../../_model/tutorial-sentence';
 import {
   INITIAL_TYPING,
   revealTyping,
   tapTyping,
   tickTyping,
-} from '../_model/tutorial-typing';
+} from '../../_model/tutorial-typing';
 
 // 한 자 쓰는 간격과 한 자 지우는 간격(ms) — 지우기는 빨라야 기다림으로 안 느껴진다
 const TYPE_MS = 55;

@@ -67,18 +67,24 @@ export default function SmallTalkPage() {
   // 강제 업데이트가 1순위다 — 그거거나 그럴지 모르는 동안엔 안내·시트가 나서지 않는다
   const updateFirst = useForceUpdateFirst();
   // 처음 들어온 사람에겐 래디 안내를 한 번 — 무료 한도를 말해야 해서 잔량을 받은 뒤에 띄우고, 주제를 고르는 동안엔 비킨다
+  // 구독 판정 중에도 미룬다 — 무료 한도를 비출지가 그 답에 달렸다
   const { guideOpen, closeGuide, tapPartner } = useIntroGuide({
     onTap: greet,
-    held: updateFirst || main === null || picker.isOpen,
+    held: updateFirst || main === null || gate.deciding || picker.isOpen,
   });
   // 아직 캐릭터를 눌러 본 적 없는 기기엔 머리 옆에 한마디 — 막지 않고, 한 번 누르면 사라진다 (탭 셸의 칩 점과 같은 기록)
   const greetingSeen = useSeenFlag(tapGreetingSeen);
   const greetingHint = !guideOpen && !greetingSeen;
-  // 안내가 래디의 말 뒤에 차례로 비추는 자리 — 그 자리를 어둠 위로 올려 말풍선을 붙인다
-  const guideSpotlights = introSpotlightsOf({ free: !unlimited, exhausted });
+  // 안내가 래디의 말 뒤에 차례로 비추는 자리 — 안내가 뜨는 순간 정해 두고 바꾸지 않는다.
+  // 도중에 구독이 와서 자리가 줄면 비추던 자리가 사라져 안내가 어둠만 남긴 채 멈춘다
+  const [guideSpotlights, setGuideSpotlights] = useState<
+    IntroSpotlight[] | null
+  >(null);
+  if (guideOpen && guideSpotlights === null)
+    setGuideSpotlights(introSpotlightsOf({ free: !unlimited, exhausted }));
   const [guideStep, setGuideStep] = useState<number | null>(null);
   const spotlight: IntroSpotlight | null =
-    guideOpen && guideStep !== null
+    guideOpen && guideStep !== null && guideSpotlights !== null
       ? (guideSpotlights[guideStep] ?? null)
       : null;
   const nextGuideStep = () =>
@@ -95,11 +101,11 @@ export default function SmallTalkPage() {
   const showerHold = useEarnShowerHold();
   const sheetsHeld = updateFirst || promoOpen || showerHold;
 
-  // 캐릭터 탭 인사 — 안내는 캐릭터를 비추지 않으니 안내가 시킨 탭(coached)은 이제 없다
+  // 캐릭터 탭 인사 — 머리 옆 힌트 말풍선이 떠 있을 때 눌렀는지도 남긴다 (힌트가 시킨 탭인지)
   const tapGreeting = () => {
     track(EVENTS.SMALL_TALK_GREETING_TAPPED, {
       partner: partner.id,
-      coached: false,
+      coached: greetingHint,
     });
     tapPartner();
   };
@@ -277,7 +283,7 @@ export default function SmallTalkPage() {
       {guideOpen && (
         <IntroGuide
           sentences={guideSentences}
-          spotlights={guideSpotlights}
+          spotlights={guideSpotlights ?? []}
           spot={guideStep}
           onNext={nextGuideStep}
           onClose={closeGuide}

@@ -668,7 +668,7 @@ export type EventProps = {
   // 보여준 주제가 마음에 안 들어 다른 주제를 받았다 (열 때 자동으로 받는 것은 세지 않는다)
   'Small Talk Topics Refreshed': { partner: TalkPartner };
   'Small Talk Intro Guide Closed': undefined;
-  // coached = 코치마크가 켜진 채로 눌렀는지 (코치마크가 시킨 첫 탭)
+  // coached = 캐릭터 옆 "누르면 인사해요" 힌트가 떠 있을 때 눌렀는지 (힌트가 시킨 첫 탭)
   'Small Talk Greeting Tapped': { partner: TalkPartner; coached: boolean };
   'Small Talk Started': {
     session_id: number;

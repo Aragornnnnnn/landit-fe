@@ -7,8 +7,11 @@ import { EVENTS } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
 
+import {
+  clearOldIntroGuideSeen,
+  introGuideSeen,
+} from '../../_model/intro-guide-seen';
 import { tapGreetingSeen } from '../../_model/tap-greeting-seen';
-import { clearOldIntroGuideSeen, introGuideSeen } from './intro-guide-seen';
 
 /**
  * onTap — 캐릭터를 눌렀을 때 할 일(인사 시작)

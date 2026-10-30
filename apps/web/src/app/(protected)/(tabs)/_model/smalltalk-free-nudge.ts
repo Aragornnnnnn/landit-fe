@@ -1,16 +1,12 @@
 'use client';
 
-// 무료 표현을 마친 무료 사용자에게 스몰톡 칩 말풍선으로 「무료 5분」을 알린다 — 마친 것과 스몰톡에 들어가 본 것을 이 기기에 남기고,
-// 말풍선은 하루 한 번(그날 첫 홈 방문)만 띄우며, 그동안은 홈의 시트들(이벤트 공지·소감·알림 동의)이 기다리도록 알린다.
-// 하루 한 번이라야 영영 안 누르는 사람에게도 공지·소감이 막히지 않는다
+// 홈 스몰톡 칩 말풍선(무료 5분)의 기록과 차례 알림 — 말풍선은 하루 한 번(그날 첫 홈 방문)만 띄우고,
+// 그동안은 홈의 시트들(이벤트 공지·소감·알림 동의)이 기다리도록 알린다. 하루 한 번이라야 영영 안 누르는 사람에게도 공지·소감이 막히지 않는다.
+// 누구에게 띄울지(무료 표현을 마쳤는가)는 프리미엄 프리뷰 단계(FREE_FINISHED)가 정한다 — 같은 사실을 두 곳에 두지 않는다
 import { useSyncExternalStore } from 'react';
 
 import { seenFlag } from '@/shared/lib/seen-flag';
 
-// 프리미엄 프리뷰의 무료 표현을 끝까지 마쳤다 — 넘기거나 중간에 나온 사람에겐 말풍선을 띄우지 않는다
-export const freeExpressionFinished = seenFlag(
-  'landit-free-expression-finished',
-);
 // 말풍선을 보고 스몰톡 탭에 들어가 봤다 — 그 뒤로는 다시 띄우지 않는다
 export const smalltalkNudgeSeen = seenFlag('landit-smalltalk-free-nudge-seen');
 
@@ -47,7 +43,7 @@ const subscribe = (listener: () => void) => {
   return () => void listeners.delete(listener);
 };
 
-/** 탭 셸이 말풍선 차례인지 알린다 — 띄울지 정하는 중(한도 조회)도 차례로 본다 */
+/** 탭 셸이 말풍선 차례인지 알린다 — 띄울지 정하는 중(구독·한도 조회)도 차례로 본다 */
 export const setFreeNudgeFirst = (first: boolean) => {
   if (nudgeFirst === first) return;
   nudgeFirst = first;

@@ -25,9 +25,9 @@ import {
 } from '@/shared/lib/routes';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
+import { useFreeNudgeFirst } from '../_model/smalltalk-free-nudge';
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
-import { useFreeNudgeFirst } from '../../_model/smalltalk-free-nudge';
 import { eventPopupOrder, isLampSettled } from './_model/event-popup-order';
 import { useActiveEventPopup } from './_model/useActiveEventPopup';
 import { useEventPopupSkip } from './_model/useEventPopupSkip';

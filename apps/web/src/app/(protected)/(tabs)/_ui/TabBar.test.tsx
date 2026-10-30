@@ -11,18 +11,20 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
 
+import { introGuideSeen } from '../_model/intro-guide-seen';
 import {
-  freeExpressionFinished,
   smalltalkNudgeSeen,
   useFreeNudgeFirst,
-} from '../../_model/smalltalk-free-nudge';
-import { introGuideSeen } from '../smalltalk/_model/intro-guide-seen';
+} from '../_model/smalltalk-free-nudge';
 import { TabBar } from './TabBar';
 import type { Tab } from './tabs';
 
 const mocks = vi.hoisted(() => ({
   pathname: '/scenario',
   locked: false,
+  deciding: false,
+  // 프리뷰 단계 — 무료 표현을 마친 사람은 FREE_FINISHED
+  step: null as string | null,
   limitMs: 300_000 as number | null,
   promoOpen: false,
   showerHold: false,
@@ -47,7 +49,10 @@ vi.mock('../_model/useEarnShowerHold', () => ({
   useEarnShowerHold: () => mocks.showerHold,
 }));
 vi.mock('@/features/subscription/model/paywall-gate/usePaywallGate', () => ({
-  usePaywallGate: () => ({ locked: mocks.locked }),
+  usePaywallGate: () => ({ locked: mocks.locked, deciding: mocks.deciding }),
+}));
+vi.mock('@/features/premium-preview/model/usePreviewStep', () => ({
+  usePreviewStep: () => ({ step: mocks.step, saveStep: vi.fn() }),
 }));
 
 // next/link는 next 밑의 react 복사본을 잡아 훅 dispatcher가 null이 된다(vitest.config의 별칭은 소스용).
@@ -90,6 +95,8 @@ afterEach(() => {
   localStorage.clear();
   mocks.pathname = '/scenario';
   mocks.locked = false;
+  mocks.deciding = false;
+  mocks.step = null;
   mocks.limitMs = 300_000;
   mocks.promoOpen = false;
   mocks.showerHold = false;
@@ -198,7 +205,7 @@ describe('TabBar', () => {
     it('무료 표현을 마친 무료 사용자에게 스몰톡 칩 아래 말풍선을 띄운다', () => {
       // Given 무료 표현을 끝까지 마친 무료 사용자가 시나리오 탭에 돌아왔을 때
       mocks.locked = true;
-      freeExpressionFinished.mark();
+      mocks.step = 'FREE_FINISHED';
 
       // When 셸이 탭 칩을 그리면
       render(<TabBar tabs={[scenario, smalltalk]} />);
@@ -222,7 +229,7 @@ describe('TabBar', () => {
     it('구독 중이면 띄우지 않는다', () => {
       // Given 무료 표현을 마친 뒤 구독한 사용자
       mocks.locked = false;
-      freeExpressionFinished.mark();
+      mocks.step = 'FREE_FINISHED';
 
       // When 셸이 탭 칩을 그리면
       render(<TabBar tabs={[scenario, smalltalk]} />);
@@ -234,7 +241,7 @@ describe('TabBar', () => {
     it('하루 한 번만 띄운다 — 오늘 이미 보여 줬으면 다음 홈 방문엔 뜨지 않고 시트도 막지 않는다', () => {
       // Given 오늘 먼저 한 번 떠서 보여 준 뒤(칩은 안 누름)
       mocks.locked = true;
-      freeExpressionFinished.mark();
+      mocks.step = 'FREE_FINISHED';
       const first = render(<TabBar tabs={[scenario, smalltalk]} />);
       expect(freeNudge()).toBeInTheDocument();
       first.unmount();
@@ -250,7 +257,7 @@ describe('TabBar', () => {
     it('다음 날엔 다시 띄운다', () => {
       // Given 어제 보여 준 기록이 있을 때
       mocks.locked = true;
-      freeExpressionFinished.mark();
+      mocks.step = 'FREE_FINISHED';
       localStorage.setItem('landit-smalltalk-free-nudge-shown-on', '2000-1-1');
 
       // When 오늘 홈에 오면
@@ -260,10 +267,40 @@ describe('TabBar', () => {
       expect(freeNudge()).toBeInTheDocument();
     });
 
+    it('말풍선이 안 뜬 날이라도 스몰톡 탭에 들어가면 영영 꺼진다', () => {
+      // Given 오늘 이미 말풍선을 본 뒤(칩은 안 누름) 마지막 탭 기억으로 스몰톡에 들어온 사용자
+      mocks.locked = true;
+      mocks.step = 'FREE_FINISHED';
+      localStorage.setItem(
+        'landit-smalltalk-free-nudge-shown-on',
+        `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`,
+      );
+      mocks.pathname = '/smalltalk';
+
+      // When 셸이 탭 칩을 그리면
+      render(<TabBar tabs={[scenario, smalltalk]} />);
+
+      // Then 스몰톡을 봤다고 남아 다음 날에도 뜨지 않는다
+      expect(smalltalkNudgeSeen.has()).toBe(true);
+    });
+
+    it('구독을 아직 못 받아 판정 중이면 말풍선 차례로 알려 공지가 기다린다 — 뜨진 않는다', () => {
+      // Given 무료 표현을 마쳤고 구독 응답이 아직인 사용자
+      mocks.deciding = true;
+      mocks.step = 'FREE_FINISHED';
+
+      // When 셸이 탭 칩을 그리면
+      render(<TabBar tabs={[scenario, smalltalk]} />);
+
+      // Then 차례라고 알리되, 무료인지 확정 전이라 말풍선은 아직 없다
+      expect(renderHook(() => useFreeNudgeFirst()).result.current).toBe(true);
+      expect(freeNudge()).not.toBeInTheDocument();
+    });
+
     it('말풍선 차례면 홈 화면에 알린다 — 이벤트 공지·소감·알림 동의가 기다리게', () => {
       // Given 무료 표현을 마친 무료 사용자가 시나리오 탭에 돌아왔을 때
       mocks.locked = true;
-      freeExpressionFinished.mark();
+      mocks.step = 'FREE_FINISHED';
 
       // When 셸이 탭 칩을 그리면
       const { unmount } = render(<TabBar tabs={[scenario, smalltalk]} />);
@@ -281,7 +318,7 @@ describe('TabBar', () => {
       // Given 말풍선 대상인 무료 사용자가 페이월을 닫고 돌아와 할인 시트가 떠 있을 때
       mocks.locked = true;
       mocks.promoOpen = true;
-      freeExpressionFinished.mark();
+      mocks.step = 'FREE_FINISHED';
 
       // When 셸이 탭 칩을 그리면
       render(<TabBar tabs={[scenario, smalltalk]} />);
@@ -294,7 +331,7 @@ describe('TabBar', () => {
       // Given 말풍선 대상이지만 한도 조회가 끝나지 않았을 때
       mocks.locked = true;
       mocks.limitMs = null;
-      freeExpressionFinished.mark();
+      mocks.step = 'FREE_FINISHED';
 
       // When 셸이 탭 칩을 그리면
       render(<TabBar tabs={[scenario, smalltalk]} />);
@@ -306,7 +343,7 @@ describe('TabBar', () => {
     it('스몰톡 칩을 누르면 바로 꺼진다', async () => {
       // Given 말풍선이 떠 있을 때
       mocks.locked = true;
-      freeExpressionFinished.mark();
+      mocks.step = 'FREE_FINISHED';
       const user = userEvent.setup();
       render(<TabBar tabs={[scenario, smalltalk]} />);
 
@@ -321,7 +358,7 @@ describe('TabBar', () => {
     it('스몰톡 탭에 들어가면 사라지고 다시 뜨지 않는다', () => {
       // Given 말풍선 대상인 무료 사용자가 스몰톡 탭에 들어왔을 때
       mocks.locked = true;
-      freeExpressionFinished.mark();
+      mocks.step = 'FREE_FINISHED';
       mocks.pathname = '/smalltalk';
 
       // When 셸이 탭 칩을 그리면

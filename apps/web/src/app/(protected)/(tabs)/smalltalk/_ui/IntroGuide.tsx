@@ -13,13 +13,13 @@ import { PARTNERS } from '@/features/small-talk/model/partner';
 import { Button } from '@/shared/ui/Button';
 
 import type { IntroSentence, IntroSpotlight } from '../_model/intro-sentences';
-// 가로 import 사유: 시나리오 탭 튜토리얼과 같은 타이핑 규칙(쓰고, 누르면 지우고, 다음 문장)을 쓴다
+// 시나리오 탭 튜토리얼과 같은 타이핑 규칙(쓰고, 누르면 지우고, 다음 문장)을 쓴다
 import {
   INITIAL_TYPING,
   revealTyping,
   tapTyping,
   tickTyping,
-} from '../../scenario/_model/tutorial-typing';
+} from '../../_model/tutorial-typing';
 
 // 한 자 쓰는 간격과 한 자 지우는 간격(ms) — 튜토리얼과 같다
 const TYPE_MS = 55;
