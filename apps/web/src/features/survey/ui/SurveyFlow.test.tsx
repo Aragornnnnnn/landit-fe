@@ -433,4 +433,12 @@ describe('SurveyFlow', () => {
       true,
     );
   });
+
+  it('주관식 입력칸은 리플레이에서 글자가 보이게 표시한다', async () => {
+    render(<SurveyFlow kind="paid" />);
+
+    expect(
+      (await screen.findByRole('textbox')).classList.contains('amp-unmask'),
+    ).toBe(true);
+  });
 });

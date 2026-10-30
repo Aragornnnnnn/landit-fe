@@ -19,6 +19,7 @@ export const OtherInput = ({
     aria-label="기타 내용"
     // 기타를 고른 직후라 바로 쓸 수 있게 초점을 준다
     autoFocus
-    className="w-full shrink-0 rounded-2xl border border-border bg-card px-4 py-3.5 text-15 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+    // 리플레이는 입력 글자를 기본으로 가린다 — 설문 답은 읽으려고 받는 것이라 보이게 둔다
+    className="amp-unmask w-full shrink-0 rounded-2xl border border-border bg-card px-4 py-3.5 text-15 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
   />
 );
