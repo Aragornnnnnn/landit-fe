@@ -12,12 +12,14 @@ describe('skipsEventPopup', () => {
     onboarded: false,
     previewTurn: false,
     satisfactionTurn: false,
+    nudgeShown: false,
   };
 
   it.each([
     ['온보딩을 막 마치고 왔으면', { onboarded: true }],
     ['프리미엄 프리뷰(튜토리얼·무료 표현) 차례면', { previewTurn: true }],
     ['소감·리뷰 시트가 나설 방문이면', { satisfactionTurn: true }],
+    ['스몰톡 칩 말풍선이 뜬 방문이면', { nudgeShown: true }],
   ])('%s 이번 방문엔 공지를 건너뛴다', (_, given) => {
     expect(skipsEventPopup({ ...quiet, ...given })).toBe(true);
   });

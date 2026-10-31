@@ -35,47 +35,39 @@ export const markNudgeShownToday = () => {
   }
 };
 
-// 말풍선 차례인가 — 탭 셸이 정하고 홈 화면이 본다. 라우팅을 건너는 값이라 메모리에 둔다
-let nudgeFirst = false;
-const listeners = new Set<() => void>();
-const subscribe = (listener: () => void) => {
-  listeners.add(listener);
-  return () => void listeners.delete(listener);
-};
-
-/** 탭 셸이 말풍선 차례인지 알린다 — 띄울지 정하는 중(구독·한도 조회)도 차례로 본다 */
-export const setFreeNudgeFirst = (first: boolean) => {
-  if (nudgeFirst === first) return;
-  nudgeFirst = first;
-  listeners.forEach((listener) => listener());
-};
-
-/** 지금 말풍선 차례인가 — 홈의 이벤트 공지·소감·알림 동의 시트가 이 값을 보고 자신을 미룬다 */
-export const useFreeNudgeFirst = () =>
-  useSyncExternalStore(
-    subscribe,
-    () => nudgeFirst,
-    () => false,
-  );
-
-// 시나리오 탭의 램프가 홈을 덮고 있는가 — 그 아래에 말풍선을 깔아 둔 채 하루 몫을 쓰지 않게 탭 셸이 본다
-let lampOpen = false;
-const lampListeners = new Set<() => void>();
-
-/** 시나리오 탭이 램프를 띄우거나(띄울지 정하는 중 포함) 닫았다고 알린다 */
-export const setLampSummonOpen = (open: boolean) => {
-  if (lampOpen === open) return;
-  lampOpen = open;
-  lampListeners.forEach((listener) => listener());
-};
-
-/** 지금 램프가 홈을 덮고 있는가 */
-export const useLampSummonOpen = () =>
-  useSyncExternalStore(
-    (listener) => {
-      lampListeners.add(listener);
-      return () => void lampListeners.delete(listener);
+// 탭 셸과 홈 화면이 주고받는 메모리 값 — 라우팅을 건너는 값이라 메모리에 두고, 바뀌면 지켜보는 화면을 다시 그린다
+const memorySignal = <T>(initial: T) => {
+  let value = initial;
+  const listeners = new Set<() => void>();
+  return {
+    set: (next: T) => {
+      if (value === next) return;
+      value = next;
+      listeners.forEach((listener) => listener());
     },
-    () => lampOpen,
-    () => false,
-  );
+    use: () =>
+      useSyncExternalStore(
+        (listener) => {
+          listeners.add(listener);
+          return () => void listeners.delete(listener);
+        },
+        () => value,
+        () => initial,
+      ),
+  };
+};
+
+// 말풍선 차례인가(띄울지 정하는 중 포함) — 홈의 이벤트 공지·알림 동의가 이 값을 보고 자신을 미룬다
+const nudgeFirst = memorySignal(false);
+export const setFreeNudgeFirst = nudgeFirst.set;
+export const useFreeNudgeFirst = nudgeFirst.use;
+
+// 이번 방문(탭 셸이 떠 있는 동안)에 말풍선이 떴는가 — 홈은 이 방문의 이벤트 공지·알림 동의를 다음 방문으로 미룬다
+const nudgeShown = memorySignal(false);
+export const setFreeNudgeShown = nudgeShown.set;
+export const useFreeNudgeShown = nudgeShown.use;
+
+// 홈(램프 소환·소감 시트)이 화면을 덮고 있는가 — null은 홈이 아직 알리지 않은 순간이라 덮인 것으로 본다(알리기 전 한 프레임에 말풍선이 하루 몫을 쓰지 않게)
+const homeCovered = memorySignal<boolean | null>(null);
+export const setHomeCovered = homeCovered.set;
+export const useHomeCovered = () => homeCovered.use() !== false;

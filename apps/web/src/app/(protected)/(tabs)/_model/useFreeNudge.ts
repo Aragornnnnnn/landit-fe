@@ -2,7 +2,7 @@
 
 // 홈 스몰톡 칩 말풍선(무료 5분)을 띄울지 정한다 — 탭 셸은 이 답을 그리기만 한다.
 // 대상: 시나리오 대화의 피드백을 본 무료 사용자. 표현을 마쳤든 중간에 나갔든 프리뷰를 건너뛰었든 같다. 스몰톡 탭을 한 번 보면 영영 끝.
-// 홈을 덮는 것(강제 업데이트·배울 영어 묻기·램프·프리뷰·할인 시트·동전 연출)이 있는 동안은 기다린다 — 가려진 채 하루 몫을 쓰지 않는다.
+// 홈을 덮는 것(강제 업데이트·배울 영어 묻기·램프·소감 시트·프리뷰·할인 시트·동전 연출)이 있는 동안은 기다린다 — 가려진 채 하루 몫을 쓰지 않는다.
 // 하루 한 번(그날 첫 홈 방문)만 띄우고, 뜬 뒤 잠깐만 홈의 다른 시트(공지·소감·알림 동의)를 앞에서 막는다.
 // 칩을 안 누르고 머물러도, 판정이 끝나지 않아 못 떠도 그 방문의 시트들은 곧 나선다
 import { useEffect, useState } from 'react';
@@ -24,8 +24,9 @@ import {
   markNudgeShownToday,
   nudgeShownToday,
   setFreeNudgeFirst,
+  setFreeNudgeShown,
   smalltalkNudgeSeen,
-  useLampSummonOpen,
+  useHomeCovered,
 } from './smalltalk-free-nudge';
 import { useEarnShowerHold } from './useEarnShowerHold';
 
@@ -68,11 +69,11 @@ export const useFreeNudge = ({ onSmalltalk }: { onSmalltalk: boolean }) => {
   // 홈을 덮는 것 — 그 아래 깔린 말풍선은 보이지 않으니 띄우지도, 하루 몫을 쓰지도 않는다
   const updateFirst = useForceUpdateFirst();
   const askingAccent = useAskingAccent();
-  const lampOpen = useLampSummonOpen();
+  const homeCovered = useHomeCovered();
   const promoOpen = usePromoSheetOpen();
   const showerHold = useEarnShowerHold();
   const covered =
-    updateFirst || askingAccent || lampOpen || promoOpen || showerHold;
+    updateFirst || askingAccent || homeCovered || promoOpen || showerHold;
 
   // 한도는 서버 값이다 — 받기 전엔 숫자 없는 말풍선을 띄우지 않고 기다린다.
   // 서버가 무료 5분 정책을 아직 안 켰다고 확인됐으면 줄 5분이 없다 — 띄우지도, 차례를 잡지도 않고 켜질 때를 기다린다.
@@ -100,14 +101,18 @@ export const useFreeNudge = ({ onSmalltalk }: { onSmalltalk: boolean }) => {
     return () => clearTimeout(timer);
   }, [candidate, covered, released, showsNudge]);
 
-  // 말풍선 차례 — 이 동안 홈의 공지·소감·알림 동의가 기다린다
+  // 말풍선 차례 — 이 동안 홈의 공지·알림 동의가 기다린다
   const nudgeFirst = candidate && released === null && !trialKnownOff;
   useEffect(() => {
     setFreeNudgeFirst(nudgeFirst);
     return () => setFreeNudgeFirst(false);
   }, [nudgeFirst]);
-  // 실제로 떴을 때 오늘 보여 준 것으로 남긴다 — 띄우기 전에 남기면 한도 조회가 늦은 날은 보여 주지도 않고 하루를 쓴다
-  // 노출도 하루 한 번만 센다 — 같은 방문에 덮개가 걷혀 다시 떠도 두 번 세지 않는다
+  // 이번 방문에 말풍선이 떴다고 알린다 — 홈이 공지·알림 동의를 다음 방문으로 미루고, 셸이 내려가면(방문이 끝나면) 거둔다
+  useEffect(() => {
+    if (showsNudge) setFreeNudgeShown(true);
+  }, [showsNudge]);
+  useEffect(() => () => setFreeNudgeShown(false), []);
+  // 실제로 떴을 때만 오늘 보여 준 것으로 남기고 노출을 센다 — 같은 방문에 덮개가 걷혀 다시 떠도 한 번이다
   useEffect(() => {
     if (!showsNudge || nudgeShownToday()) return;
     markNudgeShownToday();

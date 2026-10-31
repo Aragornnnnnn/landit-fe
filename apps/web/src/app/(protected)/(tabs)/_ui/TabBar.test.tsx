@@ -7,15 +7,16 @@ import {
   screen,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
 
 import { introGuideSeen } from '../_model/intro-guide-seen';
 import {
-  setLampSummonOpen,
+  setHomeCovered,
   smalltalkNudgeSeen,
   useFreeNudgeFirst,
+  useFreeNudgeShown,
 } from '../_model/smalltalk-free-nudge';
 import { NUDGE_LEAD_MS, NUDGE_WAIT_MS } from '../_model/useFreeNudge';
 import { scenarioFeedbackSeen } from '../../_model/scenario-feedback-seen';
@@ -110,6 +111,9 @@ const smalltalk: Tab = {
   ready: true,
 };
 
+// 홈 화면이 덮개 상태를 알린 뒤로 시작한다 — 실제로는 시나리오 탭이 마운트되며 알린다
+beforeEach(() => setHomeCovered(false));
+
 afterEach(() => {
   cleanup();
   localStorage.clear();
@@ -123,7 +127,6 @@ afterEach(() => {
   mocks.showerHold = false;
   mocks.updateFirst = false;
   mocks.accentLocale = 'EN_US';
-  setLampSummonOpen(false);
   vi.useRealTimers();
 });
 
@@ -433,7 +436,7 @@ describe('TabBar', () => {
     it.each([
       ['강제 업데이트', () => (mocks.updateFirst = true)],
       ['배울 영어 묻기', () => (mocks.accentLocale = null)],
-      ['램프 소환', () => setLampSummonOpen(true)],
+      ['홈의 램프·소감 시트', () => setHomeCovered(true)],
     ])(
       '%s가 화면을 덮는 동안엔 뜨지 않고 오늘 보여 준 것으로도 남기지 않는다',
       (_, cover) => {
@@ -453,6 +456,27 @@ describe('TabBar', () => {
       },
     );
 
+    it('홈 화면이 아직 덮개 상태를 알리지 않았으면 띄우지 않는다 — 막 들어와 소감·램프가 뜨기 직전에 하루 몫을 쓰지 않게', () => {
+      // Given 말풍선 대상인데 홈 화면이 막 마운트되는 중이다
+      mocks.locked = true;
+      scenarioFeedbackSeen.mark();
+      setHomeCovered(null);
+      const { rerender } = render(<TabBar tabs={[scenario, smalltalk]} />);
+
+      // Then 띄우지도 오늘 몫을 쓰지도 않는다
+      expect(freeNudge()).not.toBeInTheDocument();
+      expect(
+        localStorage.getItem('landit-smalltalk-free-nudge-shown-on'),
+      ).toBeNull();
+
+      // When 홈이 덮을 것이 없다고 알리면(소감을 닫았거나 소감이 없는 방문)
+      act(() => setHomeCovered(false));
+      rerender(<TabBar tabs={[scenario, smalltalk]} />);
+
+      // Then 그때 뜬다
+      expect(freeNudge()).toBeInTheDocument();
+    });
+
     it('말풍선 차례면 홈 화면에 알린다 — 이벤트 공지·소감·알림 동의가 기다리게', () => {
       // Given 무료 표현을 마친 무료 사용자가 시나리오 탭에 돌아왔을 때
       mocks.locked = true;
@@ -468,6 +492,34 @@ describe('TabBar', () => {
       // When 셸이 내려가면 알림도 거둔다
       unmount();
       expect(renderHook(() => useFreeNudgeFirst()).result.current).toBe(false);
+    });
+
+    it('말풍선이 뜬 방문이면 홈 화면에 알린다 — 이벤트 공지·알림 동의는 다음 방문으로 미룬다', () => {
+      // Given 말풍선 대상인 무료 사용자
+      mocks.locked = true;
+      scenarioFeedbackSeen.mark();
+
+      // When 말풍선이 뜨면
+      const { unmount } = render(<TabBar tabs={[scenario, smalltalk]} />);
+
+      // Then 이번 방문엔 말풍선이 떴다고 알린다
+      expect(freeNudge()).toBeInTheDocument();
+      expect(renderHook(() => useFreeNudgeShown()).result.current).toBe(true);
+
+      // When 셸이 내려가면(방문이 끝나면) 알림도 거둔다
+      unmount();
+      expect(renderHook(() => useFreeNudgeShown()).result.current).toBe(false);
+    });
+
+    it('말풍선이 안 뜬 방문이면 떴다고 알리지 않는다 — 공지가 그대로 나선다', () => {
+      // Given 구독 중인 사용자
+      scenarioFeedbackSeen.mark();
+
+      // When 셸이 탭 칩을 그리면
+      render(<TabBar tabs={[scenario, smalltalk]} />);
+
+      // Then 떴다고 알리지 않는다
+      expect(renderHook(() => useFreeNudgeShown()).result.current).toBe(false);
     });
 
     it('할인 시트나 환급 동전 연출이 떠 있는 동안은 띄우지 않는다 — 겹치지 않게', () => {
