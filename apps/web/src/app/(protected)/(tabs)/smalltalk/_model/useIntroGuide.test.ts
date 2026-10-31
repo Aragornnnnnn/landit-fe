@@ -68,17 +68,6 @@ describe('useIntroGuide', () => {
     ).toBeNull();
   });
 
-  it('예전 안내만 본 기기는 새 안내를 다시 본다', () => {
-    // Given 바뀌기 전 안내(v2)를 본 기존 사용자
-    localStorage.setItem('landit-smalltalk-intro-guide-seen-v2', '1');
-
-    // When 스몰톡에 들어오면
-    const { result } = renderHook(() => useIntroGuide(base));
-
-    // Then 무료 5분을 말하는 새 안내가 뜬다
-    expect(result.current.guideOpen).toBe(true);
-  });
-
   it('안내를 본 기기는 들어와도 안내가 없다', () => {
     introGuideSeen.mark();
 

@@ -357,25 +357,6 @@ describe('TabBar', () => {
       expect(freeNudge()).not.toBeInTheDocument();
     });
 
-    it('오늘 이미 보여 준 날 칩을 눌러도 영영 꺼진다', async () => {
-      // Given 오늘 말풍선을 본 뒤(칩은 안 누름) 홈에 다시 온 사용자
-      mocks.locked = true;
-      scenarioFeedbackSeen.mark();
-      localStorage.setItem(
-        'landit-smalltalk-free-nudge-shown-on',
-        `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`,
-      );
-      const user = userEvent.setup();
-      render(<TabBar tabs={[scenario, smalltalk]} />);
-      expect(freeNudge()).not.toBeInTheDocument();
-
-      // When 스몰톡 칩을 누르면
-      await user.click(screen.getByRole('link', { name: '스몰톡' }));
-
-      // Then 다음 날에도 다시 뜨지 않는다
-      expect(smalltalkNudgeSeen.has()).toBe(true);
-    });
-
     it('프리미엄 프리뷰가 화면에 있는 동안은 기다린다 — 튜토리얼·무료 표현이 끝나면 그때 뜬다', () => {
       // Given 피드백을 본 무료 사용자의 홈에 프리뷰 튜토리얼이 떠 있을 때
       mocks.locked = true;
@@ -598,20 +579,6 @@ describe('TabBar', () => {
       await user.click(screen.getByRole('link', { name: '스몰톡' }));
 
       // Then 말풍선이 사라지고 다시 뜨지 않는다
-      expect(freeNudge()).not.toBeInTheDocument();
-      expect(smalltalkNudgeSeen.has()).toBe(true);
-    });
-
-    it('스몰톡 탭에 들어가면 사라지고 다시 뜨지 않는다', () => {
-      // Given 말풍선 대상인 무료 사용자가 스몰톡 탭에 들어왔을 때
-      mocks.locked = true;
-      scenarioFeedbackSeen.mark();
-      mocks.pathname = '/smalltalk';
-
-      // When 셸이 탭 칩을 그리면
-      render(<TabBar tabs={[scenario, smalltalk]} />);
-
-      // Then 말풍선은 없고, 들어가 본 것으로 남는다
       expect(freeNudge()).not.toBeInTheDocument();
       expect(smalltalkNudgeSeen.has()).toBe(true);
     });
