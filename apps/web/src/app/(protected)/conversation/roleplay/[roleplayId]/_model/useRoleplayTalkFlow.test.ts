@@ -287,6 +287,20 @@ describe('useRoleplayTalkFlow — X 누르기', () => {
     expect(completeRoleplaySession).not.toHaveBeenCalled();
   });
 
+  it('첫 마디를 보내고 응답을 기다리는 중이어도 끝내기 시트로 물어본다 — 서버는 이미 그 말을 받았다', async () => {
+    submitRoleplayMessage.mockReturnValueOnce(new Promise(() => {}));
+    const { result } = await renderFlow();
+    await sayOnce(result);
+
+    let confirm: boolean | undefined;
+    act(() => {
+      confirm = result.current.pressClose();
+    });
+
+    expect(confirm).toBe(true);
+    expect(goHome).not.toHaveBeenCalled();
+  });
+
   it('주고받은 말이 있으면 끝내기 시트로 물어본다', async () => {
     submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
     const { result } = await renderFlow();

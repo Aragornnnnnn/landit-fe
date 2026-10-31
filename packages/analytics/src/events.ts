@@ -769,13 +769,14 @@ export type EventProps = {
     char_count: number;
     utterance_duration_ms: number;
   };
-  // 롤플레이는 작별 인사로 끝나지 않는다 — X로 끝내거나(direct_end) 오늘 시간이 다 된다(time_limit)
+  // 롤플레이는 작별 인사로 끝나지 않는다 — X로 끝내거나(direct_end), 오늘 시간을 다 써 끝내거나(time_limit),
+  // 다른 기기·탭에서 먼저 끝낸 대화를 이 화면이 알게 된다(ended_elsewhere)
   'Roleplay Completed': {
     session_id: number;
     partner: TalkPartner;
     turn_count: number;
     speaking_duration_ms: number;
-    end_reason: 'time_limit' | 'direct_end';
+    end_reason: 'time_limit' | 'direct_end' | 'ended_elsewhere';
   };
   'Roleplay Abandoned': {
     session_id: number;

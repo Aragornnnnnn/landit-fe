@@ -100,7 +100,7 @@ export const smallTalkHistoryPath = (sessionId: number) =>
 // 롤플레이 — 시나리오를 만드는 흐름은 탭 주소 아래에 둔다
 export const ROLEPLAY_NEW_PATH = `${ROLEPLAY_PATH}/new`;
 
-// 상대를 고른 뒤의 입력 단계 — 주소에 남겨 셸 뒤로가기가 상대 고르기로 한 단계만 되돌아가게 한다
+// 상대를 고른 뒤의 입력 단계 — 고른 상대를 주소에 남겨 새로고침해도 유지한다
 export const roleplayNewFormPath = (partner: string) =>
   `${ROLEPLAY_NEW_PATH}?${new URLSearchParams({ partner })}`;
 

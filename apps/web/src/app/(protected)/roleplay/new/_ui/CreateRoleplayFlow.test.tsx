@@ -14,10 +14,11 @@ import { CreateRoleplayFlow } from './CreateRoleplayFlow';
 
 // 주소는 경계다 — 이동하면 다음 렌더가 읽을 쿼리만 바꾼다
 let search = new URLSearchParams();
-const replace = vi.fn();
-const push = vi.fn((href: string) => {
+const moveTo = (href: string) => {
   search = new URLSearchParams(href.split('?')[1] ?? '');
-});
+};
+const replace = vi.fn(moveTo);
+const push = vi.fn(moveTo);
 const back = vi.fn(() => {
   search = new URLSearchParams();
 });
@@ -205,6 +206,13 @@ describe('CreateRoleplayFlow', () => {
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
 
     expect(screen.getByLabelText('상황과 주제')).toHaveValue('주문하기');
+  });
+
+  it('상대 고르기에서 입력으로 넘어갈 때 히스토리를 쌓지 않는다 — 만든 뒤 대화에서 셸 뒤로가기가 빈 만들기 화면으로 가지 않게', async () => {
+    await goToForm();
+
+    expect(push).not.toHaveBeenCalled();
+    expect(replace).toHaveBeenCalledWith('/roleplay/new?partner=chloe');
   });
 
   it('입력에서 뒤로 가면 상대 고르기로 돌아가고, 다시 들어오면 적던 글이 남아 있다', async () => {

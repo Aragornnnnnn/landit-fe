@@ -47,13 +47,14 @@ export const useRoleplayTalkFlow = ({
   goHome,
   showSummary,
 }: RoleplayTalkFlowOptions) => {
-  const t = useTranslations('conversation.smallTalkFlow');
-  const tRoleplay = useTranslations('conversation.roleplayFlow');
+  const t = useTranslations('conversation.roleplayFlow');
   const queryClient = useQueryClient();
   const userId = useCurrentUserId();
   const [progress, setProgress] = useState<RoleplayProgress | null>(null);
   // 서버가 받아 준 내 발화 수 — 0이면 남길 대화가 없어 끝내기 대신 그냥 나간다
   const [answeredTurns, setAnsweredTurns] = useState(0);
+  // 발화를 보냈는가 — 응답 전이라도 서버는 이미 받아 저장했으니, 그 뒤의 X는 그냥 나가지 않고 끝내기로 묻는다
+  const sentRef = useRef(false);
   // 주고받은 말의 수 — 서버가 매기는 메시지 순번이 곧 그 수다. 상대가 먼저 한 마디 하고 시작한다
   const [exchangeCount, setExchangeCount] = useState(1);
   // 턴마다 하나씩 붙이는 발화 식별자 — 실패 후 다시 보낼 때 같은 값을 써야 서버가 재전송으로 알아본다
@@ -95,6 +96,7 @@ export const useRoleplayTalkFlow = ({
     submit: async ({ content, inputType, turnIndex, utteranceDurationMs }) => {
       if (talkClosed()) return null;
       let result;
+      sentRef.current = true;
       try {
         result = await submitRoleplayMessage(session.sessionId, {
           clientMessageId: clientMessageIdFor(turnIndex),
@@ -106,7 +108,7 @@ export const useRoleplayTalkFlow = ({
         if (talkClosed()) return null; // 이미 손을 뗀 대화 — 이 실패는 볼 일이 없다
         // 오늘 말할 시간을 다 썼다 — 다시 보내도 같은 거절이라, 알리고 지금까지로 끝낸다
         if (isSpeakingLimitExceeded(cause)) {
-          showToast(tRoleplay('limitReachedToast'));
+          showToast(t('limitReachedToast'));
           void finishTalk('time_limit');
           return null;
         }
@@ -138,7 +140,7 @@ export const useRoleplayTalkFlow = ({
         settleCompletion({
           turnCount: turnIndex + 1,
           speakingDurationMs: result.progress.accumulatedSpeakingDurationMs,
-          endReason: 'direct_end',
+          endReason: 'ended_elsewhere',
         });
         showSummary();
         return null;
@@ -215,7 +217,7 @@ export const useRoleplayTalkFlow = ({
       showSummary();
       return false;
     }
-    if (answeredTurns === 0) {
+    if (answeredTurns === 0 && !sentRef.current) {
       // 하던 말은 버린다 — 나간 뒤 인식 결과가 도착해 홈 위에 토스트를 띄우지 않게
       if (engine.phase === 'USER_SPEAKING') engine.input.abandonInput();
       leave();

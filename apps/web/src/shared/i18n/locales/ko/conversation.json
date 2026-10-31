@@ -98,7 +98,10 @@
     "continueButton": "대화 계속할게요"
   },
   "roleplayFlow": {
-    "limitReachedToast": "오늘 말할 수 있는 시간을 다 썼어요. 여기까지로 피드백을 만들어 드릴게요"
+    "limitReachedToast": "오늘 말할 수 있는 시간을 다 썼어요. 여기까지로 피드백을 만들어 드릴게요",
+    "completeFailedToast": "연결에 문제가 생겨 대화를 마무리하지 못했어요",
+    "startError": "대화를 시작하지 못했어요. 잠시 후 다시 시도해 주세요",
+    "backButton": "돌아가기"
   },
   "scenarioTalkPage": {
     "notFoundError": "시나리오를 찾을 수 없어요.",

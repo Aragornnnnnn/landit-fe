@@ -1,5 +1,6 @@
 // 시나리오 만들기 흐름 — 상대 고르기 → 세 칸 적기 → 생성 중.
-// 고른 상대는 주소(?partner=)에 남긴다 — 셸 뒤로가기도 입력에서 상대 고르기로 한 단계만 되돌아가고, 적던 글은 화면에 남는다
+// 고른 상대는 주소(?partner=)에 남겨 새로고침해도 유지한다. 단계는 히스토리를 쌓지 않고 바꾼다 —
+// 만든 뒤 대화로 넘어가면 만들기 흐름이 통째로 히스토리에서 빠져, 대화에서 뒤로 가면 탭으로 간다
 'use client';
 
 import { useRef, useState } from 'react';
@@ -115,10 +116,10 @@ export const useCreateRoleplayFlow = () => {
     );
   };
 
-  // 입력에서는 상대 고르기로, 상대 고르기에서는 탭으로 — 만드는 중엔 헤더가 없다
+  // 입력에서는 상대 고르기로, 상대 고르기에서는 탭으로 — 만드는 중엔 헤더가 없다.
+  // 입력 단계는 상대 고르기 자리를 바꿔 들어온 것이라 히스토리에 상대 고르기가 없다
   const goBack = () => {
-    // 주소로 바로 들어왔으면 되돌아갈 상대 고르기가 히스토리에 없다
-    if (step === 'form') backOrReplace(router, ROLEPLAY_NEW_PATH);
+    if (step === 'form') router.replace(ROLEPLAY_NEW_PATH);
     else backOrReplace(router, ROLEPLAY_PATH);
   };
 
@@ -130,7 +131,7 @@ export const useCreateRoleplayFlow = () => {
     canStart,
     ideaPending: idea.isPending,
     showPartner,
-    confirmPartner: () => router.push(roleplayNewFormPath(partner)),
+    confirmPartner: () => router.replace(roleplayNewFormPath(partner)),
     editField,
     requestIdea,
     startCreate,

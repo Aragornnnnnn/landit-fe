@@ -14,8 +14,7 @@ import { useRoleplaySession } from '../_model/useRoleplaySession';
 import { RoleplayConversation } from './RoleplayConversation';
 
 export const RoleplayFlow = ({ roleplayId }: { roleplayId: number }) => {
-  // 시작 실패 안내는 스몰톡과 같은 말이다
-  const t = useTranslations('conversation.smallTalkStart');
+  const t = useTranslations('conversation.roleplayFlow');
   const router = useRouter();
   const { session, error } = useRoleplaySession(roleplayId);
 
