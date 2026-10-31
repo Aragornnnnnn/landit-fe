@@ -39,5 +39,19 @@
     "roleStepLabel": "역할 정하기",
     "situationStepLabel": "상황 그리는 중…",
     "openingStepLabel": "{name} 첫 마디 준비"
+  },
+  "summary": {
+    "title": "오늘의 롤플레이",
+    "celebrateTitle": "롤플레이 하나를<br></br>잘 완료했어요!",
+    "loadingLabel": "오늘의 롤플레이를 불러오는 중",
+    "unavailableError": "오늘의 롤플레이를 정리하지 못했어요.",
+    "reusedLoadingLabel": "배운 표현 재사용을 찾는 중",
+    "detailButton": "상세 피드백 보러갈게요",
+    "retryButton": "다시 시도",
+    "homeButton": "홈으로 돌아갈게요"
+  },
+  "transcript": {
+    "loadError": "대화를 불러오지 못했어요.",
+    "homeButton": "홈으로 돌아갈게요"
   }
 }

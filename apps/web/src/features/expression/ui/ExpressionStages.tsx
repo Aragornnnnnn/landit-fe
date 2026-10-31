@@ -20,14 +20,20 @@ import { ExpressionList } from './ExpressionList';
 export const TITLE_CLASS =
   'pt-1 text-3xl leading-[1.22] font-black tracking-normal whitespace-pre-line text-foreground';
 
+// 축하가 머무는 시간 — 열매가 찍히고 숫자가 선 뒤에도 잠깐 남는다. 축하를 띄우는 화면이 이 값을 같이 쓴다
+export const CELEBRATE_MS = 2600;
+
 // 대화 완료 축하 — 만드는 중 화면과 같은 골격(좌상단 타이틀 + 가운데)으로 그려 전환이 매끄럽다.
 // 가운데는 오늘 열매가 찍히는 순간이 채운다 — 완료를 매번 같은 폭죽으로 갚으면 며칠째든 감흥이 없다.
 // 이번 완료로 환급액을 받은 사람에게는 열매 대신 받은 금액을 보여 준다
 export const CelebrateStage = ({
   earns = false,
+  title,
 }: {
   // 방금 끝낸 것이 환급이 쌓이는 대화인가 — 시나리오뿐이다
   earns?: boolean;
+  // 대화 이름이 들어간 제목을 쓰는 화면(롤플레이)이 넘긴다. 없으면 「대화 하나를 잘 완료했어요!」
+  title?: React.ReactNode;
 }) => {
   const t = useTranslations('expression.stages');
   const { earn } = useCompletionEarn({ enabled: earns });
@@ -40,7 +46,9 @@ export const CelebrateStage = ({
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.25 }}
     >
-      <h1 className={TITLE_CLASS}>{t.rich('celebrateTitle', lineBreak)}</h1>
+      <h1 className={TITLE_CLASS}>
+        {title ?? t.rich('celebrateTitle', lineBreak)}
+      </h1>
       {earn ? <EarnedStamp earn={earn} /> : <StreakStamp />}
     </motion.div>
   );
