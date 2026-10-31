@@ -129,7 +129,7 @@ export const IntroGuide = ({
             {/* 래디 한 장과 세 친구 얼굴이 같은 높이 칸을 쓴다 — 바뀔 때 문장이 출렁이지 않게 */}
             <div className="relative h-36 w-full cq-tiny:h-24">
               <AnimatePresence initial={false}>
-                {sentence.image === 'partners' ? (
+                {'partners' in sentence ? (
                   <motion.div
                     key="partners"
                     className="absolute inset-0 flex items-center justify-center gap-3"

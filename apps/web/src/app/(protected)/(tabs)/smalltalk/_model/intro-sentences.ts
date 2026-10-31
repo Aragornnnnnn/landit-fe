@@ -2,11 +2,10 @@
 // 시나리오 탭 튜토리얼과 같은 문장 조각 규칙(<em>은 금색)을 쓴다
 import { partsOf, type Part } from '../../_model/tutorial-sentence';
 
-export interface IntroSentence {
-  // 문장 위 그림 — 래디 한 장이거나, 세 친구의 웃는 얼굴 셋
-  image: string | 'partners';
-  parts: Part[];
-}
+// 문장 위 그림 — 래디 한 장이거나, 세 친구의 웃는 얼굴 셋
+export type IntroSentence = { parts: Part[] } & (
+  { image: string } | { partners: true }
+);
 
 // 비추는 자리 — 받은 무료 시간 알약 하나. 캐릭터 목소리·시작 버튼은 비추지 않는다 —
 // 목소리를 셋 다 들어 본 사람도 대화 시작률은 같았고(24% vs 25%), 짧을수록 좋다
@@ -18,7 +17,7 @@ export const introSentencesOf = (copy: {
   endingBody: string;
 }): IntroSentence[] => [
   // 세 친구와 대화한다는 말에 맞춰 래디 자리에 그 셋의 얼굴을 나란히 띄운다
-  { image: 'partners', parts: partsOf(copy.freeTalkBody) },
+  { partners: true, parts: partsOf(copy.freeTalkBody) },
   {
     image: '/images/character/landy-wave.webp',
     parts: partsOf(copy.endingBody),

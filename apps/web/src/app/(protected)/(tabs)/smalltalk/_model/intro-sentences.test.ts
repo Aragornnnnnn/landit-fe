@@ -24,8 +24,8 @@ describe('introSentencesOf', () => {
     ]);
     expect(sentences[0].parts).toContainEqual(['자유롭게 대화', true]);
     // 첫 문장 위엔 래디 대신 세 친구 얼굴이 선다
-    expect(sentences[0].image).toBe('partners');
-    expect(sentences[1].image).not.toBe('partners');
+    expect(sentences[0]).toMatchObject({ partners: true });
+    expect('image' in sentences[1]).toBe(true);
   });
 });
 

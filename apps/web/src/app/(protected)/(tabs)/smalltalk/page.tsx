@@ -1,7 +1,6 @@
 'use client';
 
 // 스몰톡 탭 — 대화 상대를 고르고, 내가 먼저 걸거나 상대가 주제로 먼저 걸게 한다. 정답도 점수도 없는 대화다
-import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -30,11 +29,6 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 import { tapGreetingSeen } from '../_model/tap-greeting-seen';
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
-import {
-  introSentencesOf,
-  introSpotlightsOf,
-  type IntroSpotlight,
-} from './_model/intro-sentences';
 import { useIntroGuide } from './_model/useIntroGuide';
 import { usePartnerGreeting } from './_model/usePartnerGreeting';
 import { useTopicPicker } from './_model/useTopicPicker';
@@ -66,33 +60,20 @@ export default function SmallTalkPage() {
   const picker = useTopicPicker({ partner: partner.id, refresh });
   // 강제 업데이트가 1순위다 — 그거거나 그럴지 모르는 동안엔 안내·시트가 나서지 않는다
   const updateFirst = useForceUpdateFirst();
-  // 처음 들어온 사람에겐 래디 안내를 한 번 — 무료 한도를 말해야 해서 잔량을 받은 뒤에 띄우고, 주제를 고르는 동안엔 비킨다
-  // 구독 판정 중에도 미룬다 — 무료 한도를 비출지가 그 답에 달렸다
-  const { guideOpen, closeGuide, tapPartner } = useIntroGuide({
+  // 처음 들어온 사람에겐 래디 안내를 한 번 — 무료 한도를 말해야 해서 잔량·구독 판정을 받은 뒤에 띄우고, 주제를 고르는 동안엔 비킨다
+  const guide = useIntroGuide({
     onTap: greet,
     held: updateFirst || main === null || gate.deciding || picker.isOpen,
+    copy: {
+      freeTalkBody: t.raw('introGuide.freeTalkBody'),
+      endingBody: t.raw('introGuide.endingBody'),
+    },
+    free: !unlimited,
+    exhausted,
   });
-  // 아직 캐릭터를 눌러 본 적 없는 기기엔 머리 옆에 한마디 — 막지 않고, 한 번 누르면 사라진다 (탭 셸의 칩 점과 같은 기록)
+  // 안내를 본 뒤, 아직 캐릭터를 눌러 본 적 없는 기기엔 머리 옆에 한마디 — 막지 않고, 한 번 누르면 사라진다
   const greetingSeen = useSeenFlag(tapGreetingSeen);
-  const greetingHint = !guideOpen && !greetingSeen;
-  // 안내가 래디의 말 뒤에 차례로 비추는 자리 — 안내가 뜨는 순간 정해 두고 바꾸지 않는다.
-  // 도중에 구독이 와서 자리가 줄면 비추던 자리가 사라져 안내가 어둠만 남긴 채 멈춘다
-  const [guideSpotlights, setGuideSpotlights] = useState<
-    IntroSpotlight[] | null
-  >(null);
-  if (guideOpen && guideSpotlights === null)
-    setGuideSpotlights(introSpotlightsOf({ free: !unlimited, exhausted }));
-  const [guideStep, setGuideStep] = useState<number | null>(null);
-  const spotlight: IntroSpotlight | null =
-    guideOpen && guideStep !== null && guideSpotlights !== null
-      ? (guideSpotlights[guideStep] ?? null)
-      : null;
-  const nextGuideStep = () =>
-    setGuideStep((step) => (step === null ? 0 : step + 1));
-  const guideSentences = introSentencesOf({
-    freeTalkBody: t.raw('introGuide.freeTalkBody'),
-    endingBody: t.raw('introGuide.endingBody'),
-  });
+  const greetingHint = guide.guideSeen && !greetingSeen;
   // 이번 방문에 띄울 시트 하나 — 첫 스몰톡 소감 → 리뷰 요청
   const satisfactionSheet = useSatisfactionSheet('smalltalk');
   // 할인 시트가 떠 있으면 소감은 미룬다 — 할인은 5분뿐이고 소감은 다음에 또 물을 수 있다
@@ -107,7 +88,7 @@ export default function SmallTalkPage() {
       partner: partner.id,
       coached: greetingHint,
     });
-    tapPartner();
+    guide.tapPartner();
   };
 
   // 대화 시작 계측은 세션이 실제로 열리는 대화 화면에서 한다 — 여기서 쏘면 들어가다 만 것도 시작으로 잡힌다
@@ -223,7 +204,7 @@ export default function SmallTalkPage() {
             <div className="mt-3 flex h-8 justify-center cq-tiny:hidden">
               {main && (
                 <GuideSpotlight
-                  active={spotlight === 'limit'}
+                  active={guide.spotlight === 'limit'}
                   rounded="rounded-full"
                   message={t.rich('introGuide.limitCaption', {
                     ...lineBreak,
@@ -280,13 +261,13 @@ export default function SmallTalkPage() {
         </>
       )}
 
-      {guideOpen && (
+      {guide.guideOpen && (
         <IntroGuide
-          sentences={guideSentences}
-          spotlights={guideSpotlights ?? []}
-          spot={guideStep}
-          onNext={nextGuideStep}
-          onClose={closeGuide}
+          sentences={guide.sentences}
+          spotlights={guide.spotlights}
+          spot={guide.spot}
+          onNext={guide.next}
+          onClose={guide.close}
         />
       )}
       {/* 스몰톡을 마치고 돌아온 사람에게 한 번 — 안내·코치마크는 첫 진입 때 이미 끝난 뒤라 겹치지 않는다 */}
