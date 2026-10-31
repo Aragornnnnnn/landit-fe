@@ -11,20 +11,14 @@ import { useTranslations } from 'next-intl';
 import { track } from '@/shared/analytics';
 import { useFocusTrap } from '@/shared/lib/useFocusTrap';
 
-import { shouldAskAccent } from '../model/profile-gate';
-import { useAccentQuery } from '../model/useAccentQuery';
+import { useAskingAccent } from '../model/useAskingAccent';
 import { useSaveAccentMutation } from '../model/useSaveAccentMutation';
 import { AccentStep } from './steps/AccentStep';
 
 export const ProfileGate = () => {
   const t = useTranslations('onboarding.profileGate');
-  const accentQuery = useAccentQuery();
   const saveAccent = useSaveAccentMutation();
-
-  // 조회를 못 받았으면 undefined로 두어 묻지 않는다. 답하면 캐시에 심기는 즉시 닫힌다
-  const asking = shouldAskAccent(
-    accentQuery.isSuccess ? accentQuery.data.accentLocale : undefined,
-  );
+  const asking = useAskingAccent();
 
   // 화면을 덮기만 하면 키보드·스크린 리더는 뒤의 탭바와 콘텐츠에 그대로 닿는다 — 건너뛸 길이 생기는 셈이다
   const panelRef = useRef<HTMLElement>(null);
