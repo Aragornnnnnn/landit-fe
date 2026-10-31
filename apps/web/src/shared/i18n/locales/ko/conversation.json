@@ -91,6 +91,15 @@
     "closeButton": "직접 대화 마무리하기",
     "completeButton": "대화 종료하기"
   },
+  "roleplayExitSheet": {
+    "title": "여기까지 대화할까요?",
+    "description": "지금까지 나눈 대화로<br></br>피드백을 만들어 드려요",
+    "completeButton": "끝내고 피드백 볼게요",
+    "continueButton": "대화 계속할게요"
+  },
+  "roleplayFlow": {
+    "limitReachedToast": "오늘 말할 수 있는 시간을 다 썼어요. 여기까지로 피드백을 만들어 드릴게요"
+  },
   "scenarioTalkPage": {
     "notFoundError": "시나리오를 찾을 수 없어요.",
     "retryButton": "다시 시도",
