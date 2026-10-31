@@ -34,7 +34,10 @@ export const CreateRoleplayFlow = () => {
       ) : (
         <>
           <PageHeader title={t('headerTitle')} onBack={flow.goBack} />
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-4">
+          {/* 입력 단계는 아바타가 머리 바로 아래에 붙는다 — 상대 고르기보다 위 여백이 좁다(시안 좌표) */}
+          <div
+            className={`min-h-0 flex-1 overflow-y-auto px-5 pb-4 ${flow.step === 'partner' ? 'pt-3' : 'pt-1'}`}
+          >
             {flow.step === 'partner' ? (
               <>
                 <h2 className="text-center text-22 font-bold text-foreground">

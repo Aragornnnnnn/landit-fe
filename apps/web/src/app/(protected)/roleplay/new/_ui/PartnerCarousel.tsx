@@ -16,8 +16,9 @@ interface PartnerCarouselProps {
 // 이만큼 끌어야 다음 사람으로 넘어간다 — 세로 스크롤하려다 살짝 밀린 건 무시한다
 const SWIPE_PX = 50;
 
+// 화살표는 무대 가운데가 아니라 상반신 몸통 높이에 선다(시안 좌표)
 const ARROW_CLASS =
-  'absolute top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-[0_4px_10px_rgba(0,0,0,0.06)] active:scale-95 disabled:opacity-30';
+  'absolute top-[200px] flex size-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-[0_4px_10px_rgba(0,0,0,0.06)] active:scale-95 disabled:opacity-30';
 
 export const PartnerCarousel = ({ index, onShow }: PartnerCarouselProps) => {
   const t = useTranslations('roleplay');
@@ -48,7 +49,7 @@ export const PartnerCarousel = ({ index, onShow }: PartnerCarouselProps) => {
             {/* 좁은 폰(320px)에선 양옆 화살표(44px) 자리를 비워 둔다 */}
             <PartnerBust
               partner={partner.id}
-              className="w-[min(250px,calc(100%-104px))]"
+              className="w-[min(250px,calc(100%-100px))]"
             />
           </motion.div>
         </AnimatePresence>
