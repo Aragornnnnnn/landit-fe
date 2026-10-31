@@ -227,6 +227,18 @@ describe('TabBar', () => {
     expect(greetingDot()).toBeInTheDocument();
   });
 
+  it('정책이 아직 꺼진 것으로 확인된 무료 사용자에겐 점을 붙이지 않는다 — 들어가도 안내가 정책을 기다린다', () => {
+    // Given 정책 적용 시각 전의 무료 사용자
+    mocks.locked = true;
+    mocks.trialEnabled = false;
+
+    // When 셸이 탭 칩을 그리면
+    render(<TabBar tabs={[scenario, smalltalk]} />);
+
+    // Then 점이 없다
+    expect(greetingDot()).not.toBeInTheDocument();
+  });
+
   it('첫 안내를 본 기기면 점을 붙이지 않는다', () => {
     // Given 스몰톡 첫 안내를 본 기기에서
     introGuideSeen.mark();

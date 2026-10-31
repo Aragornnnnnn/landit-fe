@@ -11,10 +11,8 @@ import { useLocale } from 'next-intl';
 
 import { useForceUpdateFirst } from '@/features/app-update/model/useForceUpdateFirst';
 import { useAskingAccent } from '@/features/onboarding/model/useAskingAccent';
-// 가로 import 사유: 말풍선이 말하는 무료 한도는 스몰톡 서버 값 그대로다
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
-// 가로 import 사유: 말풍선은 무료 사용자에게만 뜬다 — 같은 게이트 판정을 쓴다
 import { usePromoSheetOpen } from '@/features/subscription/model/exit-promo/promo-handoff';
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
@@ -55,11 +53,9 @@ export const useFreeNudge = ({ onSmalltalk }: { onSmalltalk: boolean }) => {
 
   // 하루 한 번만 — 그날 첫 홈 방문에 띄우고, 이 셸이 떠 있는 동안은 계속 둔다(탭을 오가도 셸은 그대로다).
   // 서버 렌더엔 저장소가 없어 보여 준 것으로 두고, 하이드레이션 뒤 첫 상태 계산에서 기록이 반영된다
-  const [dueToday, setDueToday] = useState(
+  const [dueToday] = useState(
     () => typeof window !== 'undefined' && !nudgeShownToday(),
   );
-  // 칩을 누르면 남은 날에도 다시 안 뜬다 — 탭을 봤다는 기록이 우선이다
-  if (nudgeSeen && dueToday) setDueToday(false);
 
   // 말풍선 후보 — 오늘 띄울 사람이고 프리뷰가 비켰다. 구독을 아직 못 받아 무료인지 모르는 동안도 후보로 둔다
   const candidate =

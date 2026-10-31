@@ -1,7 +1,6 @@
-// 스몰톡 홈의 첫 안내 — 처음 온 기기에 한 번 띄우고, 문장·비출 자리·진행 단계를 든다. 화면은 이 답을 그리기만 한다.
-// 캐릭터를 누르면 언제든 인사하고, 들어 본 것으로 기기에 남긴다 (탭 셸의 스몰톡 칩 점이 이 기록을 본다)
 'use client';
 
+// 스몰톡 홈의 첫 안내 — 처음 온 기기에 한 번 띄우고 문장·비출 자리·진행 단계를 든다(화면은 그리기만 한다)
 import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
@@ -9,9 +8,9 @@ import { track } from '@/shared/analytics';
 
 import {
   clearOldIntroGuideSeen,
-  introGuideDue,
   introGuideSeen,
   sawOldIntroGuide,
+  skipsIntroForPremium,
 } from '../../_model/intro-guide-seen';
 import { tapGreetingSeen } from '../../_model/tap-greeting-seen';
 import {
@@ -26,6 +25,7 @@ import {
  * copy — 래디 문장의 원문(t.raw). 한 자씩 쓰려면 태그가 남은 글자가 필요하다
  * free·exhausted — 받은 무료 시간 알약을 비출지. 안내가 뜨는 순간 정해 두고 바꾸지 않는다
  * premium — 학습 문이 열린 사람(구독 중). 예전 안내를 봤으면 새로 알릴 무료 5분이 없어 새 안내를 건너뛴다
+ * trialOn — 서버가 무료 5분 정책을 켰는가. 무료 사용자는 켜질 때까지 안내를 미룬다(5분 단계 없이 안내를 써 버리지 않게)
  */
 export const useIntroGuide = ({
   onTap,
@@ -33,6 +33,7 @@ export const useIntroGuide = ({
   copy,
   free,
   premium,
+  trialOn,
   exhausted,
 }: {
   onTap: () => void;
@@ -40,6 +41,7 @@ export const useIntroGuide = ({
   copy: { freeTalkBody: string; endingBody: string };
   free: boolean;
   premium: boolean;
+  trialOn: boolean;
   exhausted: boolean;
 }) => {
   // 서버 렌더엔 localStorage가 없어 안 본 것으로 두고, 하이드레이션 뒤 첫 상태 계산에서 본 기록이 반영된다
@@ -48,8 +50,10 @@ export const useIntroGuide = ({
   const skipsForPremium =
     !held &&
     guideUnseen &&
-    !introGuideDue({ seen: false, sawOld: sawOldIntroGuide(), premium });
-  const guideOpen = !held && guideUnseen && !skipsForPremium;
+    skipsIntroForPremium({ sawOld: sawOldIntroGuide(), premium });
+  // 무료 사용자는 정책이 켜질 때까지 기다린다 — 켜지기 전에 보면 무료 5분 단계를 영영 못 본다
+  const waitsForTrial = !premium && !trialOn;
+  const guideOpen = !held && !waitsForTrial && guideUnseen && !skipsForPremium;
   // 건너뛴 것도 본 것으로 남긴다 — 탭 칩 점이 사라지고 다음 방문에 다시 정하지 않는다. 닫기 계측은 남기지 않는다
   useEffect(() => {
     if (skipsForPremium) introGuideSeen.mark();

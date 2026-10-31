@@ -79,18 +79,15 @@ export const IntroGuide = ({
 
   const lastSentence = typing.index === shown.sentences.length - 1;
   const talkDone = lastSentence && typing.phase === 'shown';
-  // 다음으로 — 래디 문장이면 다음 문장, 마지막 문장이면 첫 자리, 그 뒤로는 다음 자리, 마지막 자리 뒤엔 닫는다
+  // 다음으로 — 래디 문장 중이면 다음 문장, 말이 끝났으면 훅에 넘긴다(다음 자리를 비출지 닫을지는 훅이 정한다)
   const next = () => {
     if (spot === null && !talkDone) {
       setTyping((state) => tapTyping(state, lengths));
       return;
     }
-    if (spot === null) {
-      if (spotlights.length > 0) onNext();
-      return;
-    }
-    if (spot >= spotlights.length - 1) onClose();
-    else onNext();
+    // 비출 자리 없이 말이 끝났으면 확인 버튼으로만 닫는다
+    if (spot === null && spotlights.length === 0) return;
+    onNext();
   };
   // 비출 자리 없이 말이 끝났다 — 확인 버튼으로 닫는다
   const confirmDue = talkDone && spotlights.length === 0;

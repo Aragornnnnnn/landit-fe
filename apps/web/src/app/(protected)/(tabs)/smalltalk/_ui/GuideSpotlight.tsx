@@ -15,22 +15,20 @@ export const GuideSpotlight = ({
   active,
   message,
   rounded,
-  className = '',
   children,
 }: {
   active: boolean;
   message: React.ReactNode;
   // 테두리 모서리 — 감싼 것의 모양을 따른다
   rounded: string;
-  className?: string;
   children: React.ReactNode;
 }) => (
   <div
-    className={`${className} ${
+    className={
       active
         ? `relative z-[60] outline-3 outline-offset-[6px] outline-[#ffd25e] ${rounded}`
-        : ''
-    }`}
+        : undefined
+    }
   >
     {active && <GuideBubble>{message}</GuideBubble>}
     {children}

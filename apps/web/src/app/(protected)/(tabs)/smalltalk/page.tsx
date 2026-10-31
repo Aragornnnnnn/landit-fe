@@ -29,6 +29,7 @@ import { RetryNotice } from '@/shared/ui/RetryNotice';
 import { tapGreetingSeen } from '../_model/tap-greeting-seen';
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
+import { isTalkExhausted } from './_model/talk-exhausted';
 import { useIntroGuide } from './_model/useIntroGuide';
 import { usePartnerGreeting } from './_model/usePartnerGreeting';
 import { useSmallTalkStart } from './_model/useSmallTalkStart';
@@ -49,14 +50,24 @@ export default function SmallTalkPage() {
   const locale = useLocale();
   const t = useTranslations('smallTalk');
   const { main, fatalError, isLoading, refresh } = useSmallTalkMainQuery();
-  // 오늘 예산을 다 썼는지는 서버(canStart)가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
-  const exhausted = main !== null && !main.canStart;
   // 무료 사용자도 5분까지는 바로 시작한다 — 다 쓰면 마무리 인사 아래에서 페이월로 보낸다.
   // 서버가 그 정책을 아직 안 켰으면 시작이 예전처럼 페이월 게이트를 거친다
   const gate = usePaywallGate();
-  const start = useSmallTalkStart(main?.freeTrialEnabled === true);
-  // 결제가 열리면 하루 한도가 없다 — 알약에 잔량 대신 무제한을 쓴다
-  const { unlimited } = useSpeakingLimit();
+  // 구독 중이면 한도가 없다 — 알약에 잔량 대신 무제한을 쓴다
+  const { unlimited, trialOn } = useSpeakingLimit();
+  const start = useSmallTalkStart(trialOn);
+  // 다 썼는지는 서버(canStart)가 판정한다 — 결제하고 막 돌아와 받아 둔 응답이 결제 전 것이어도 갇히지 않게 학습 문을 같이 본다
+  const exhausted =
+    main !== null &&
+    isTalkExhausted({
+      canStart: main.canStart,
+      trialOn,
+      open: !gate.locked && !gate.deciding,
+    });
+  // 무료 한도("5분") — 다 쓴 문구와 첫 안내 말풍선이 같이 쓴다
+  const limitLabel = main
+    ? toSpeakingTimeLabel(main.dailySpeakingTimeLimitMs, locale)
+    : '';
   const { partner, look, speech, greet, selectPartner } = usePartnerGreeting();
   const partnerName = t(partner.nameKey);
   // 주제는 서버가 매번 무작위로 뽑아 준다 — 열 때마다, 새로고침할 때마다 다시 받는다
@@ -73,6 +84,7 @@ export default function SmallTalkPage() {
     },
     free: !unlimited,
     premium: !gate.locked && !gate.deciding,
+    trialOn,
     exhausted,
   });
   // 안내를 본 뒤, 아직 캐릭터를 눌러 본 적 없는 기기엔 머리 옆에 한마디 — 막지 않고, 한 번 누르면 사라진다
@@ -188,7 +200,7 @@ export default function SmallTalkPage() {
         <div className="mt-8 flex flex-col items-center gap-1.5 px-5 cq-tiny:mt-4">
           <p className="text-lg font-extrabold break-keep text-foreground cq-tiny:text-base">
             {t('tabPage.doneTitle', {
-              limit: toSpeakingTimeLabel(main.dailySpeakingTimeLimitMs, locale),
+              limit: limitLabel,
             })}
           </p>
           <p className="text-sm font-medium break-keep text-muted-foreground">
@@ -217,14 +229,16 @@ export default function SmallTalkPage() {
                   message={t.rich('introGuide.limitCaption', {
                     ...lineBreak,
                     em: emphasis,
-                    limit: toSpeakingTimeLabel(
-                      main.dailySpeakingTimeLimitMs,
-                      locale,
-                    ),
+                    limit: limitLabel,
                   })}
                 >
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
-                    {t('tabPage.remainingLabel')}
+                    {/* 구독자에겐 무료 시간이 아니다 — 무제한일 땐 "무료"를 뺀 이름을 쓴다 */}
+                    {t(
+                      unlimited
+                        ? 'tabPage.unlimitedRemainingLabel'
+                        : 'tabPage.remainingLabel',
+                    )}
                     <span className="text-sm font-bold text-primary">
                       {unlimited
                         ? t('tabPage.unlimitedLabel')

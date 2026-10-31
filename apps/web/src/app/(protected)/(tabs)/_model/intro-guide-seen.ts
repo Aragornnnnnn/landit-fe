@@ -22,18 +22,16 @@ export const useSawOldIntroGuide = () => {
 };
 
 /**
- * 새 안내를 아직 띄워야 하는가 — 본 적 없고, 예전 안내를 본 구독자도 아니다
+ * 예전 안내를 본 구독자라 새 안내를 건너뛰는가 — 구독자에겐 새로 알릴 무료 5분이 없다
  * @param premium 학습 문이 열린 사람(구독 중). 구독 판정 중이면 false
  */
-export const introGuideDue = ({
-  seen,
+export const skipsIntroForPremium = ({
   sawOld,
   premium,
 }: {
-  seen: boolean;
   sawOld: boolean;
   premium: boolean;
-}) => !seen && !(premium && sawOld);
+}) => premium && sawOld;
 
 /** 바뀌기 전 안내의 기록을 지운다 — 새 안내를 보고 나면 읽을 곳이 없어 기기에 남겨 둘 이유가 없다 */
 export const clearOldIntroGuideSeen = () => {

@@ -6,14 +6,15 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { useSeenFlag } from '@/shared/lib/useSeenFlag';
 import { TAB_CHIP_ROW, tabChipClass } from '@/shared/ui/tab-chip';
 
 import {
-  introGuideDue,
   introGuideSeen,
+  skipsIntroForPremium,
   useSawOldIntroGuide,
 } from '../_model/intro-guide-seen';
 import { useFreeNudge } from '../_model/useFreeNudge';
@@ -25,11 +26,16 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
   // 스몰톡 첫 안내(무료 5분)를 아직 안 본 사람에게만 점 하나로 눈짓한다 — 안내를 닫으면 사라진다
   // 예전 안내를 본 구독자는 새 안내를 건너뛰므로 점도 붙이지 않는다
   const { locked, deciding } = usePaywallGate();
-  const introDue = introGuideDue({
-    seen: useSeenFlag(introGuideSeen),
+  const introSeen = useSeenFlag(introGuideSeen);
+  const skipsIntro = skipsIntroForPremium({
     sawOld: useSawOldIntroGuide(),
     premium: !locked && !deciding,
   });
+  // 정책이 아직 꺼진 것으로 확인된 무료 사용자 — 들어가도 안내가 정책을 기다리니 점으로 부르지 않는다(받아 둔 응답만 본다)
+  const { main } = useSmallTalkMainQuery({ enabled: false });
+  const waitsForTrial =
+    locked && main !== null && main.freeTrialEnabled !== true;
+  const introDue = !introSeen && !skipsIntro && !waitsForTrial;
   const onSmalltalk = tabs.some(
     (tab) => tab.id === 'smalltalk' && tab.href === pathname,
   );

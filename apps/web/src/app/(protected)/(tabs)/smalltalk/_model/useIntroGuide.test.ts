@@ -19,6 +19,7 @@ const base = {
   },
   free: true,
   premium: false,
+  trialOn: true,
   exhausted: false,
 };
 
@@ -179,6 +180,34 @@ describe('useIntroGuide', () => {
     // When 스몰톡 탭에 들어오면
     const { result } = renderHook(() =>
       useIntroGuide({ ...base, free: false, premium: true }),
+    );
+
+    // Then 안내가 뜬다
+    expect(result.current.guideOpen).toBe(true);
+  });
+
+  it('무료 사용자에겐 서버가 무료 5분 정책을 켤 때까지 안내를 미룬다 — 5분 단계 없이 안내를 써 버리지 않게', () => {
+    // Given 정책 적용 시각 전의 무료 사용자
+    // When 스몰톡 탭에 들어오면
+    const { result, rerender } = renderHook(
+      ({ trialOn }) => useIntroGuide({ ...base, free: false, trialOn }),
+      { initialProps: { trialOn: false } },
+    );
+
+    // Then 안내를 띄우지도 본 것으로 남기지도 않는다
+    expect(result.current.guideOpen).toBe(false);
+    expect(introGuideSeen.has()).toBe(false);
+
+    // When 정책이 켜지면 / Then 그때 안내가 뜬다
+    rerender({ trialOn: true });
+    expect(result.current.guideOpen).toBe(true);
+  });
+
+  it('구독자는 정책이 켜지기 전에도 안내를 본다 — 알릴 5분이 없어 기다릴 것이 없다', () => {
+    // Given 정책 적용 시각 전의 처음 온 구독자
+    // When 스몰톡 탭에 들어오면
+    const { result } = renderHook(() =>
+      useIntroGuide({ ...base, free: false, premium: true, trialOn: false }),
     );
 
     // Then 안내가 뜬다
