@@ -1,12 +1,12 @@
 'use client';
 
 // 홈 스몰톡 칩 말풍선(무료 5분)을 띄울지 정한다 — 탭 셸은 이 답을 그리기만 한다.
-// 대상: 프리미엄 프리뷰의 무료 표현을 끝까지 마친 무료 사용자. 스몰톡 탭을 한 번 보면 영영 끝.
-// 하루 한 번(그날 첫 홈 방문)만 띄우고, 그 차례엔 홈의 다른 시트가 기다린다. 할인 시트·환급 동전 연출만 앞이다
+// 대상: 시나리오 대화의 피드백을 본 무료 사용자. 표현을 마쳤든 중간에 나갔든 프리뷰를 건너뛰었든 같다. 스몰톡 탭을 한 번 보면 영영 끝.
+// 프리미엄 프리뷰(튜토리얼·카드 뒤집기·무료 표현)가 화면에 있는 동안은 기다린다. 하루 한 번(그날 첫 홈 방문)만 띄우고,
+// 그 차례엔 홈의 다른 시트가 기다린다. 할인 시트·환급 동전 연출만 앞이다
 import { useEffect, useState } from 'react';
 import { useLocale } from 'next-intl';
 
-import { usePreviewStep } from '@/features/premium-preview/model/usePreviewStep';
 // 가로 import 사유: 말풍선이 말하는 무료 한도는 스몰톡 서버 값 그대로다
 import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
@@ -15,6 +15,8 @@ import { usePromoSheetOpen } from '@/features/subscription/model/exit-promo/prom
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { useSeenFlag } from '@/shared/lib/useSeenFlag';
 
+import { scenarioFeedbackSeen } from '../../_model/scenario-feedback-seen';
+import { usePremiumPreview } from '../../_model/usePremiumPreview';
 import {
   markNudgeShownToday,
   nudgeShownToday,
@@ -28,11 +30,12 @@ import { useEarnShowerHold } from './useEarnShowerHold';
  */
 export const useFreeNudge = ({ onSmalltalk }: { onSmalltalk: boolean }) => {
   const { locked, deciding } = usePaywallGate();
-  const { step } = usePreviewStep();
-  const finished = step === 'FREE_FINISHED';
+  const feedbackSeen = useSeenFlag(scenarioFeedbackSeen);
   const nudgeSeen = useSeenFlag(smalltalkNudgeSeen);
-  // 아직 말풍선을 볼 수 있는 사람인가 — 마쳤고, 스몰톡을 아직 안 봤다. 무료인지는 아래서 따로 본다
-  const pending = finished && !nudgeSeen;
+  // 프리뷰가 홈을 차지하고 있다 — 튜토리얼·카드 뒤집기·무료 표현 차례. 끝나거나 중간에 나가면(FREE_OPENED) 그때 뜬다
+  const previewOnScreen = usePremiumPreview().screen !== 'none';
+  // 아직 말풍선을 볼 수 있는 사람인가 — 피드백을 봤고, 스몰톡을 아직 안 봤다. 무료인지는 아래서 따로 본다
+  const pending = feedbackSeen && !nudgeSeen;
 
   // 스몰톡 화면을 봤으면 끝이다 — 그날 말풍선이 떴든 아니든. 칩을 눌렀든 마지막 탭으로 들어왔든 같다
   useEffect(() => {
@@ -49,7 +52,11 @@ export const useFreeNudge = ({ onSmalltalk }: { onSmalltalk: boolean }) => {
 
   // 말풍선 차례 — 구독을 아직 못 받아 무료인지 모르는 동안도 차례로 둔다. 그사이 공지가 먼저 뜨면 말풍선이 그 아래에서 뒤늦게 뜬다
   const nudgeFirst =
-    pending && dueToday && !onSmalltalk && (locked || deciding);
+    pending &&
+    dueToday &&
+    !onSmalltalk &&
+    !previewOnScreen &&
+    (locked || deciding);
   useEffect(() => {
     setFreeNudgeFirst(nudgeFirst);
     return () => setFreeNudgeFirst(false);
@@ -68,11 +75,15 @@ export const useFreeNudge = ({ onSmalltalk }: { onSmalltalk: boolean }) => {
 
   const locale = useLocale();
   return {
-    showsNudge,
-    // 말풍선에 적을 한도("5분") — 뜨지 않을 땐 null
-    limitLabel:
+    // 띄울 말풍선 — 적을 한도("5분")를 담는다. 뜨지 않을 땐 null
+    nudge:
       showsNudge && main
-        ? toSpeakingTimeLabel(main.dailySpeakingTimeLimitMs, locale)
+        ? {
+            limitLabel: toSpeakingTimeLabel(
+              main.dailySpeakingTimeLimitMs,
+              locale,
+            ),
+          }
         : null,
     // 칩을 눌렀다 — 누른 순간 끈다. 화면이 바뀌길 기다리면 전환 동안 말풍선이 남는다
     dismiss: () => {

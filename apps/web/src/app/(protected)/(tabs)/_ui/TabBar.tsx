@@ -23,7 +23,7 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
     (tab) => tab.id === 'smalltalk' && tab.href === pathname,
   );
   // 무료 표현을 마친 무료 사용자에겐 스몰톡 칩 아래 말풍선으로 무료 5분을 권한다 — 띄울지는 훅이 정한다
-  const nudge = useFreeNudge({ onSmalltalk });
+  const { nudge, dismiss } = useFreeNudge({ onSmalltalk });
 
   if (tabs.length < 2) return null;
 
@@ -41,11 +41,11 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
             // 보고 있는 탭을 다시 누르는 건 전환이 아니다
             onClick={() => {
               if (!isActive) track(EVENTS.HOME_TAB_SWITCHED, { tab: tab.id });
-              if (tab.id === 'smalltalk') nudge.dismiss();
+              if (tab.id === 'smalltalk') dismiss();
             }}
           >
             {t(tab.labelKey)}
-            {tab.id === 'smalltalk' && nudge.limitLabel !== null && (
+            {tab.id === 'smalltalk' && nudge !== null && (
               // 칩 안에 둬서 말풍선을 눌러도 스몰톡으로 간다. 칩 이름은 그대로 읽히게 접근성 이름에서는 뺀다.
               // 다른 안내 말풍선(헤더 환급·표현 프리뷰)과 같은 흰 카드에 숫자만 주황으로 — 위아래로 살짝 떠서 눈길을 끈다.
               // 아래 본문 위로 떠야 해서 z를 올리되, 시트·딤(z-40)보다는 아래에 둔다
@@ -65,7 +65,7 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
                 </span>
               </span>
             )}
-            {tab.id === 'smalltalk' && !introSeen && !nudge.showsNudge && (
+            {tab.id === 'smalltalk' && !introSeen && nudge === null && (
               // 점은 읽어 주지 않는다 — 탭에 들어가면 첫 안내가 같은 말을 접근성까지 갖춰 다시 한다.
               // 알약 오른쪽 위 모서리에 걸쳐 둔다 — 흐름에서 빠져 있어 점이 붙고 빠져도 칩 너비가 그대로다
               <span

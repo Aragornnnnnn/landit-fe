@@ -2,7 +2,7 @@
 
 // 홈 스몰톡 칩 말풍선(무료 5분)의 기록과 차례 알림 — 말풍선은 하루 한 번(그날 첫 홈 방문)만 띄우고,
 // 그동안은 홈의 시트들(이벤트 공지·소감·알림 동의)이 기다리도록 알린다. 하루 한 번이라야 영영 안 누르는 사람에게도 공지·소감이 막히지 않는다.
-// 누구에게 띄울지(무료 표현을 마쳤는가)는 프리미엄 프리뷰 단계(FREE_FINISHED)가 정한다 — 같은 사실을 두 곳에 두지 않는다
+// 누구에게 띄울지(대화 피드백을 봤는가)는 scenario-feedback-seen이 정한다
 import { useSyncExternalStore } from 'react';
 
 import { seenFlag } from '@/shared/lib/seen-flag';

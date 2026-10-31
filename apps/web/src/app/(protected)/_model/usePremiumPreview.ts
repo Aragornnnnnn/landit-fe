@@ -42,8 +42,7 @@ export const usePremiumPreview = () => {
     onFreeExpressionFinished:
       eligible && awaitsFreeExpressionFinish(step)
         ? () => {
-            // 마친 것과 넘긴 것(COMPLETED)을 가른다 — 페이월을 닫고 홈에 돌아오면 마친 사람에게만 스몰톡 칩이 무료 5분을 권한다
-            saveStep('FREE_FINISHED');
+            saveStep('COMPLETED');
             track(EVENTS.PAYWALL_GATE_LOCKED, {
               source: 'premium_preview',
             });
