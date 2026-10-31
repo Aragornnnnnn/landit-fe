@@ -14,22 +14,7 @@
     "createButton": "나만의 시나리오 만들기",
     "todayLabel": "오늘",
     "daysAgoLabel": "{days}일 전",
-    "moreLabel": "{title} 더보기",
     "loadError": "시나리오를 불러오지 못했어요"
-  },
-  "more": {
-    "historyButton": "지난 대화 보기",
-    "deleteButton": "삭제하기",
-    "closeButton": "닫기"
-  },
-  "delete": {
-    "title": "이 시나리오를 지울까요?",
-    "description": "지난 대화 {count}번과 피드백도 함께 사라져요.<br></br>되돌릴 수 없어요.",
-    "emptyDescription": "되돌릴 수 없어요.",
-    "keepButton": "그냥 둘게요",
-    "confirmButton": "지울게요",
-    "doneToast": "시나리오를 지웠어요",
-    "failToast": "지우지 못했어요. 다시 시도해 주세요"
   },
   "create": {
     "headerTitle": "나만의 시나리오 만들기",
@@ -55,13 +40,17 @@
     "situationStepLabel": "상황 그리는 중…",
     "openingStepLabel": "{name} 첫 마디 준비"
   },
-  "sessions": {
-    "countTitle": "지난 대화 {count}번",
-    "todayLabel": "오늘 · {time}",
-    "metaCaption": "{turns}번 주고받음 · 교정 {corrections}개",
-    "goodMetaCaption": "{turns}번 주고받음 · 잘했어요 {good}개",
-    "emptyDescription": "아직 이 시나리오로 한 대화가 없어요",
-    "loadError": "지난 대화를 불러오지 못했어요",
-    "loadingLabel": "지난 대화를 불러오는 중"
+  "summary": {
+    "title": "오늘의 롤플레이",
+    "loadingLabel": "오늘의 롤플레이를 불러오는 중",
+    "unavailableError": "오늘의 롤플레이를 정리하지 못했어요.",
+    "reusedLoadingLabel": "배운 표현 재사용을 찾는 중",
+    "detailButton": "상세 피드백 보러갈게요",
+    "retryButton": "다시 시도",
+    "homeButton": "홈으로 돌아갈게요"
+  },
+  "transcript": {
+    "loadError": "대화를 불러오지 못했어요.",
+    "homeButton": "홈으로 돌아갈게요"
   }
 }
