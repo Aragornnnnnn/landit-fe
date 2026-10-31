@@ -217,11 +217,13 @@ export default function SmallTalkPage() {
           {/* 남은 시간은 시작을 누르기 직전에 알아야 하는 값이라, 잔글씨 대신 알약으로 세워 둔다.
               테두리를 두면 입력칸처럼 보여서, 흰 바탕에 옅은 그림자만으로 배경에서 띄운다.
               높이(h-8)는 알약 크기로 미리 잡아 둔다 — 값이 늦게 와서 그때 나타나면 아래 버튼이 밀린다.
-              아주 낮은 화면에서는 알약을 빼서 그 자리를 캐릭터에 준다 */}
+              아주 낮은 화면에서는 무제한 알약만 빼서 그 자리를 캐릭터에 준다 — 무료 사용자의 남은 시간은 첫 안내가 비추는 자리라 남긴다 */}
           {/* 잔량과 시작 버튼은 한 덩이다 — 주제가 없어 아래 버튼이 빠지는 날에도
               둘이 함께 바닥 쪽에 서서 손이 기억하는 자리가 안 바뀐다 */}
           <div className="mt-auto">
-            <div className="mt-3 flex h-8 justify-center cq-tiny:hidden">
+            <div
+              className={`mt-3 flex h-8 justify-center cq-tiny:mt-2 ${unlimited ? 'cq-tiny:hidden' : ''}`}
+            >
               {main && (
                 <GuideSpotlight
                   active={guide.spotlight === 'limit'}
