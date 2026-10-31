@@ -15,6 +15,7 @@ import notification from './ko/notification.json';
 import onboarding from './ko/onboarding.json';
 import paywall from './ko/paywall.json';
 import review from './ko/review.json';
+import roleplay from './ko/roleplay.json';
 import satisfaction from './ko/satisfaction.json';
 import scenario from './ko/scenario.json';
 import smallTalk from './ko/smallTalk.json';
@@ -39,6 +40,7 @@ const ko = {
   onboarding,
   paywall,
   review,
+  roleplay,
   satisfaction,
   scenario,
   smallTalk,
