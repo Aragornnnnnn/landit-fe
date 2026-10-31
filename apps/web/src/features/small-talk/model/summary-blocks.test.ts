@@ -177,4 +177,12 @@ describe('toSummaryBlocks — 다음 스몰톡에서', () => {
       kind: 'hidden',
     });
   });
+
+  it('다음 대화 질문이 없는 요약(롤플레이)이면 숨긴다', () => {
+    const { followUp: _omitted, ...withoutFollowUp } = summaryOf({});
+
+    expect(toSummaryBlocks(withoutFollowUp, false).followUp).toEqual({
+      kind: 'hidden',
+    });
+  });
 });

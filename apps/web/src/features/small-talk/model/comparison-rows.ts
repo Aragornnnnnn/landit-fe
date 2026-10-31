@@ -1,5 +1,4 @@
 // 지난번과 비교 카드의 줄 — 세 지표를 라벨·값·막대 길이로 바꾼다. 막대는 둘 중 큰 값을 가득으로 친다
-import type { SmallTalkSummaryComparison } from '@/features/small-talk/api/small-talk';
 import {
   hasSpokenTime,
   toSpeakingTimeLabel,
@@ -7,6 +6,8 @@ import {
 import type { Locale } from '@/shared/i18n/locale';
 import type { Translator } from '@/shared/i18n/translator';
 import { toDayLabel } from '@/shared/lib/day-label';
+
+import type { SmallTalkSummaryComparison } from '../api/small-talk';
 
 interface Bar {
   value: string;
