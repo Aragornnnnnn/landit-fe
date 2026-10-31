@@ -5,6 +5,7 @@
   "tabBar": {
     "navLabel": "탭",
     "scenarioLabel": "시나리오",
-    "smalltalkLabel": "스몰톡"
+    "smalltalkLabel": "스몰톡",
+    "roleplayLabel": "롤플레이"
   }
 }

@@ -15,6 +15,7 @@ import notification from './ja/notification.json';
 import onboarding from './ja/onboarding.json';
 import paywall from './ja/paywall.json';
 import review from './ja/review.json';
+import roleplay from './ja/roleplay.json';
 import satisfaction from './ja/satisfaction.json';
 import scenario from './ja/scenario.json';
 import smallTalk from './ja/smallTalk.json';
@@ -39,6 +40,7 @@ const ja = {
   onboarding,
   paywall,
   review,
+  roleplay,
   satisfaction,
   scenario,
   smallTalk,
