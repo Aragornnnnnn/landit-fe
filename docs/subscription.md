@@ -107,7 +107,7 @@ Google Play도 같은 세 제품 ID로 등록돼 있다. 할인 연간은 기존
 
 피드백을 마친 뒤 갈 곳은 `decidePostFeedbackView`가 정한다. 재대화는 홈. 잠기지 않는 사람(유료·브라우저·플래그 꺼짐)은 표현 분기로 바로. 무료 사용자는 서버가 상세를 열어 준 세션(첫 시나리오)에서만 `PostConversationFlow`가 띄우는 화면을 지난다 — 분석 중(`AnalyzingScreen`, `GET /api/v1/sessions/{id}/level-assessment`를 준비 중이면 2초마다, 예약 전이면 세 번만 다시 묻고 20초 상한) → 레벨 결과(`LevelResultScreen`, 근거가 충분하고 수준이 매겨진 평가만) → 학습 준비(`PreparedLearningScreen`, 흐린 학습 자리와 슬라이드만 보인다. 개수는 레벨마다 달라 BE 표현 목록(`GET /api/v1/expressions/{scenarioId}`) 길이를 쓰고, 숫자가 바뀌어 보이지 않게 `PostConversationFlow`가 분석 중에 미리 받아 둔다. 내용은 결제 뒤 표현 분기에서만 보여준다). 학습 준비의 "학습 시작하기"가 guard(entry `conversation_finished`)를 타 페이월로 간다. 결제하면 그 대화의 표현 분기로 돌아온다. 두 번째 시나리오부터는 총평이 끝이고 홈으로 간다 — 대화를 끝낼 때마다 레벨 화면이 또 뜨지 않는다. 온보딩은 영어 수준을 더 묻지 않는다 — 첫 시나리오가 공통 진단 4문항이라 BE가 매긴다(landit-be #169). 기존 유저 프로필 게이트도 배울 영어만 묻는다.
 
-학습 문의 게이트는 진입 지점에 건다. `usePaywallGate().guard(이동, { source, returnTo, replace })`가 무료 5분을 다 쓴 스몰톡 탭의 프리미엄 버튼, 표현 학습 진입(대화 직후 분기·카드 뒷면·스몰톡 결과·스몰톡 기록)과 학습 준비의 끝을 감싼다. 시나리오 대화 시작은 감싸지 않는다. 판정은 `decidePaywallGate` 순수 함수 하나다 — 잠글 수 있는 환경(플래그 ON·앱 1.3.0 이상)에서 `premium=false`면 잠근다. 잠기면 `/paywall?from=돌아갈곳`으로 보내고 `Paywall Gate Locked{source}`를 남긴다. 구독 조회 실패·판단 재료 미도착(unknown)은 잠그지 않는다 — 잘못 막는 쪽이 더 나쁘다. `(protected)/layout.tsx`로 화면 전체를 막지 않는다. 무료 체험 중(`periodType=TRIAL`)과 해지 예약(`CANCELED`, 만료 전)은 `premium=true`라 게이트에 걸리지 않는다. `/api/v1/me/subscription`의 `conversationCompletedSinceLaunch`는 더 이상 잠금에 쓰지 않는다.
+학습 문의 게이트는 진입 지점에 건다. `usePaywallGate().guard(이동, { source, returnTo, replace })`가 무료 5분을 다 쓴 사람이 누른 스몰톡 시작 버튼, 표현 학습 진입(대화 직후 분기·카드 뒷면·스몰톡 결과·스몰톡 기록)과 학습 준비의 끝을 감싼다. 시나리오 대화 시작은 감싸지 않는다. 판정은 `decidePaywallGate` 순수 함수 하나다 — 잠글 수 있는 환경(플래그 ON·앱 1.3.0 이상)에서 `premium=false`면 잠근다. 잠기면 `/paywall?from=돌아갈곳`으로 보내고 `Paywall Gate Locked{source}`를 남긴다. 구독 조회 실패·판단 재료 미도착(unknown)은 잠그지 않는다 — 잘못 막는 쪽이 더 나쁘다. `(protected)/layout.tsx`로 화면 전체를 막지 않는다. 무료 체험 중(`periodType=TRIAL`)과 해지 예약(`CANCELED`, 만료 전)은 `premium=true`라 게이트에 걸리지 않는다. `/api/v1/me/subscription`의 `conversationCompletedSinceLaunch`는 더 이상 잠금에 쓰지 않는다.
 
 레벨 결과 화면은 캐릭터(마법사 5단계, 피그마 2136:2437)를 위에 크게 두고 "OO님의 레벨은 / 견습 마법사 Lv.3" 아래에 영역별 점수를 레이더(오각형, 주황→골드 그라데이션 한 면)로 그린다. 숫자는 BE 1~5 척도를 `score / 5 × 100`으로 반올림한 값이다(2026-09-09 확정). 종합 점수와 강점·보완 표시는 화면에 두지 않는다 — 막대·범례·후광 후보를 비교한 뒤 기본형으로 확정했다(2026-09-08). 모델(`level-assessment.ts`)도 화면이 쓰는 값만 계산한다. FAILED·FALLBACK·근거 부족·20초 초과면 레벨 화면을 건너뛰고 학습 준비로 간다 — 기본값 3을 레벨로 보여주지 않는다.
 
@@ -140,7 +140,7 @@ Google Play도 같은 세 제품 ID로 등록돼 있다. 할인 연간은 기존
 
 ## 스몰톡 말하기 한도
 
-무료 사용자는 스몰톡을 총 5분 써 볼 수 있다 (2026-10-30). 시작 버튼은 게이트로 감싸지 않고, 남은 시간은 서버의 `remainingSpeakingTimeMs`·`canStart`가 정한다. 다 쓰면(`canStart` false) 시작 버튼 자리에 "무료 5분 스몰톡을 다 했어요"와 프리미엄 버튼(페이월, `source=smalltalk`)이 선다.
+무료 사용자는 스몰톡을 총 5분 써 볼 수 있다 (2026-10-30). 시작 버튼은 게이트로 감싸지 않고, 남은 시간은 서버의 `remainingSpeakingTimeMs`·`canStart`가 정한다. 다 쓰면(`canStart` false) 화면은 그대로 두고 남은 시간 알약을 "0분"으로 적는다. 시작 버튼 둘도 그대로 두되, 누르면 대화 대신 페이월(`source=smalltalk`)이 열린다(2026-11-01, `useSmallTalkStart`) — 따로 소진 문구와 프리미엄 버튼을 세우던 것은 걷어냈다.
 
 판정은 `useSpeakingLimit`(`features/small-talk/model`) 한 곳이고, 서버 값만 본다. 정책이 켜졌으면 메인의 `unlimited`가 false인 사람이 한도를 보고 — 홈 알약 "남은 무료 시간", 대화 화면의 마이크 위 카운트다운과 완료 버튼 둘레의 타이머 링 — `unlimited`가 true인 사람(구독 중)은 알약에 "남은 시간 무제한"을 쓰고 둘 다 그리지 않는다. 정책이 꺼졌거나 메인을 아직 못 받았으면 누구에게나 무제한 표시다. 구독 판정 중이나 결제가 없는 환경에서도 서버 값을 따르므로 실제 차감과 표시가 맞는다. 한도가 있는 사람에겐 대화 화면의 키보드 버튼도 없다 — 타이핑 제출은 말한 시간을 0으로 보내 한도가 안 깎이므로, 두면 무료 5분을 타이핑으로 영영 비껴간다. 타이핑은 구독 혜택이다 (2026-10-30).
 

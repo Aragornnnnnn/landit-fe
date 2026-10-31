@@ -17,11 +17,7 @@ import { useSubscriptionQuery } from '@/features/subscription/model/my-subscript
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { lineBreak } from '@/shared/i18n/rich';
-import {
-  SMALLTALK_HISTORY_PATH,
-  SMALLTALK_PATH,
-  smallTalkPath,
-} from '@/shared/lib/routes';
+import { SMALLTALK_HISTORY_PATH, smallTalkPath } from '@/shared/lib/routes';
 import { useSeenFlag } from '@/shared/lib/useSeenFlag';
 import { Button } from '@/shared/ui/Button';
 import { ArrowRightIcon, ChevronRightIcon } from '@/shared/ui/Icons';
@@ -56,7 +52,6 @@ export default function SmallTalkPage() {
   const gate = usePaywallGate();
   // 구독 중이면 한도가 없다 — 알약에 잔량 대신 무제한을 쓴다
   const { unlimited, trialOn } = useSpeakingLimit();
-  const start = useSmallTalkStart(trialOn);
   // 결제하고 막 돌아왔을 때 받아 둔 응답이 결제 전 것이어도 갇히지 않게 구독 확인 여부를 같이 본다(게이트의 열림은 조회 실패에도 열려 쓰지 않는다)
   const { subscription } = useSubscriptionQuery();
   // 다 썼는지는 서버(canStart)가 판정한다
@@ -67,6 +62,8 @@ export default function SmallTalkPage() {
       trialOn,
       premium: main.unlimited === true || subscription?.premium === true,
     });
+  // 다 썼어도 시작 버튼은 그대로다 — 누르면 대화 대신 페이월이 열린다
+  const start = useSmallTalkStart({ trialOn, exhausted });
   // 무료 한도("5분") — 다 쓴 문구와 첫 안내 말풍선이 같이 쓴다
   const limitLabel = main
     ? toSpeakingTimeLabel(main.dailySpeakingTimeLimitMs, locale)
@@ -133,9 +130,6 @@ export default function SmallTalkPage() {
     );
   };
 
-  const openPaywall = () =>
-    gate.guard(() => {}, { source: 'smalltalk', returnTo: SMALLTALK_PATH });
-
   if (fatalError) {
     return (
       <RetryNotice
@@ -196,97 +190,78 @@ export default function SmallTalkPage() {
         <PartnerIntroCard partner={partner} />
       </div>
 
-      {/* 무료 5분을 다 쓰면 잠긴 버튼 대신 마무리 인사가 그 자리를 대신한다 — 눌리지 않는 버튼을 남겨 두면
-          왜 안 되는지부터 묻게 된다. "다 썼다"는 소진이지만 실은 무료 몫을 완주한 것이라 채웠다고 말하고, 이어 갈 길(페이월)을 둔다
-          (한도는 서버 값 그대로 적는다 — 칩 말풍선도 같은 값을 쓴다) */}
-      {exhausted && main ? (
-        <div className="mt-8 flex flex-col items-center gap-1.5 px-5 cq-tiny:mt-4">
-          <p className="text-lg font-extrabold break-keep text-foreground cq-tiny:text-base">
-            {t('tabPage.doneTitle', {
-              limit: limitLabel,
-            })}
-          </p>
-          <p className="text-sm font-medium break-keep text-muted-foreground">
-            {t('tabPage.doneCaption')}
-          </p>
-          {gate.locked && (
-            <Button size="md" className="mt-4 w-full" onClick={openPaywall}>
-              {t('tabPage.premiumButton')}
-            </Button>
-          )}
-        </div>
-      ) : (
-        <>
-          {/* 남은 시간은 시작을 누르기 직전에 알아야 하는 값이라, 잔글씨 대신 알약으로 세워 둔다.
+      <>
+        {/* 남은 시간은 시작을 누르기 직전에 알아야 하는 값이라, 잔글씨 대신 알약으로 세워 둔다.
               테두리를 두면 입력칸처럼 보여서, 흰 바탕에 옅은 그림자만으로 배경에서 띄운다.
               높이(h-8)는 알약 크기로 미리 잡아 둔다 — 값이 늦게 와서 그때 나타나면 아래 버튼이 밀린다.
               아주 낮은 화면에서는 무제한 알약만 빼서 그 자리를 캐릭터에 준다 — 무료 사용자의 남은 시간은 첫 안내가 비추는 자리라 남긴다 */}
-          {/* 잔량과 시작 버튼은 한 덩이다 — 주제가 없어 아래 버튼이 빠지는 날에도
+        {/* 잔량과 시작 버튼은 한 덩이다 — 주제가 없어 아래 버튼이 빠지는 날에도
               둘이 함께 바닥 쪽에 서서 손이 기억하는 자리가 안 바뀐다 */}
-          <div className="mt-auto">
-            <div
-              className={`mt-3 flex h-8 justify-center cq-tiny:mt-2 ${unlimited ? 'cq-tiny:hidden' : ''}`}
-            >
-              {main && (
-                <GuideSpotlight
-                  active={guide.spotlight === 'limit'}
-                  rounded="rounded-full"
-                  message={t.rich('introGuide.limitCaption', {
-                    ...lineBreak,
-                    em: emphasis,
-                    limit: limitLabel,
-                  })}
-                >
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
-                    {/* 구독자에겐 무료 시간이 아니다 — 무제한일 땐 "무료"를 뺀 이름을 쓴다 */}
-                    {t(
-                      unlimited
-                        ? 'tabPage.unlimitedRemainingLabel'
-                        : 'tabPage.remainingLabel',
-                    )}
-                    <span className="text-sm font-bold text-primary">
-                      {unlimited
-                        ? t('tabPage.unlimitedLabel')
+        <div className="mt-auto">
+          <div
+            className={`mt-3 flex h-8 justify-center cq-tiny:mt-2 ${unlimited ? 'cq-tiny:hidden' : ''}`}
+          >
+            {main && (
+              <GuideSpotlight
+                active={guide.spotlight === 'limit'}
+                rounded="rounded-full"
+                message={t.rich('introGuide.limitCaption', {
+                  ...lineBreak,
+                  em: emphasis,
+                  limit: limitLabel,
+                })}
+              >
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
+                  {/* 구독자에겐 무료 시간이 아니다 — 무제한일 땐 "무료"를 뺀 이름을 쓴다 */}
+                  {t(
+                    unlimited
+                      ? 'tabPage.unlimitedRemainingLabel'
+                      : 'tabPage.remainingLabel',
+                  )}
+                  <span className="text-sm font-bold text-primary">
+                    {unlimited
+                      ? t('tabPage.unlimitedLabel')
+                      : exhausted
+                        ? t('tabPage.noTimeLeftLabel')
                         : toSpeakingTimeLabel(
                             main.remainingSpeakingTimeMs,
                             locale,
                           )}
-                    </span>
                   </span>
-                </GuideSpotlight>
-              )}
-            </div>
+                </span>
+              </GuideSpotlight>
+            )}
+          </div>
 
-            {/* 하고 싶은 말이 있으면 바로, 아니면 상대가 주제로 열어 준다 — 주 행동이 위다.
+          {/* 하고 싶은 말이 있으면 바로, 아니면 상대가 주제로 열어 준다 — 주 행동이 위다.
               주제가 없어 아래 버튼이 빠지는 날에도 시작 버튼이 같은 자리에 서도록 바닥에 붙인다 */}
-            <div className="mt-4 flex flex-col gap-3 px-5 cq-tiny:mt-3 cq-tiny:gap-2">
+          <div className="mt-4 flex flex-col gap-3 px-5 cq-tiny:mt-3 cq-tiny:gap-2">
+            <Button
+              size="md"
+              className="cq-tiny:h-11"
+              disabled={isLoading}
+              onClick={startWithMe}
+            >
+              {t('tabPage.userFirstButton')}
+              <ArrowRightIcon size={16} />
+            </Button>
+            {/* 고를 주제가 없으면 이 길은 없는 것이다 — 조회 중엔 자리를 지킨다.
+                배경이 muted라 secondary(같은 회색)는 묻힌다 — 흰 바탕에 테두리를 둔 ghost가 떠 보인다 */}
+            {(!main || main.topics.length > 0) && (
               <Button
+                variant="ghost"
                 size="md"
                 className="cq-tiny:h-11"
                 disabled={isLoading}
-                onClick={startWithMe}
+                onClick={() => start(() => void picker.openPicker())}
               >
-                {t('tabPage.userFirstButton')}
+                {t('tabPage.partnerFirstButton', { name: partnerName })}
                 <ArrowRightIcon size={16} />
               </Button>
-              {/* 고를 주제가 없으면 이 길은 없는 것이다 — 조회 중엔 자리를 지킨다.
-                배경이 muted라 secondary(같은 회색)는 묻힌다 — 흰 바탕에 테두리를 둔 ghost가 떠 보인다 */}
-              {(!main || main.topics.length > 0) && (
-                <Button
-                  variant="ghost"
-                  size="md"
-                  className="cq-tiny:h-11"
-                  disabled={isLoading}
-                  onClick={() => void picker.openPicker()}
-                >
-                  {t('tabPage.partnerFirstButton', { name: partnerName })}
-                  <ArrowRightIcon size={16} />
-                </Button>
-              )}
-            </div>
+            )}
           </div>
-        </>
-      )}
+        </div>
+      </>
 
       {guide.guideOpen && (
         <IntroGuide
