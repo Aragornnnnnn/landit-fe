@@ -263,6 +263,13 @@ describe('toPageView', () => {
     });
   });
 
+  it('결제자 설문은 page_name survey_paid로 남는다', () => {
+    expect(pv('/survey/paid')).toEqual({
+      page_name: 'survey_paid',
+      path: '/survey/paid',
+    });
+  });
+
   it('스몰톡 대화는 id 없이 page_name conversation_smalltalk으로 남는다', () => {
     // 주소의 상대·시작 방식(mode/partner)은 여기 싣지 않는다 — Conversation Started가 이미 남긴다
     expect(

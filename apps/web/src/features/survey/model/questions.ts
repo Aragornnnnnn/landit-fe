@@ -31,6 +31,8 @@ export type ScaleQuestion = QuestionBase & {
 export type TextQuestion = QuestionBase & {
   kind: 'text';
   placeholder: string;
+  // 비워 두면 못 넘어간다 — 없으면 건너뛸 수 있다
+  required?: true;
 };
 export type Question =
   SingleQuestion | MultiQuestion | ScaleQuestion | TextQuestion;
@@ -46,20 +48,23 @@ export const choiceOptions = (question: SingleQuestion | MultiQuestion) =>
 export const optionLabel = (option: string) =>
   option === OTHER_OPTION ? OTHER_LABEL : option;
 
+// 유입 경로 — 결제자 설문도 같은 문항을 써서 두 설문의 답을 나란히 비교한다
+export const CHANNEL_QUESTION: SingleQuestion = {
+  id: 'channel',
+  kind: 'single',
+  title: '랜딧을 어떻게\n알게 되셨나요?',
+  // 광고와 랜딧 계정은 둘 다 인스타그램이라 붙여 두면 헷갈려 사이를 띄운다
+  options: [
+    '앱스토어 · 플레이스토어 검색',
+    '인스타그램 광고',
+    '지인 추천',
+    '랜딧 인스타그램 계정',
+  ],
+  other: true,
+};
+
 export const QUESTIONS: readonly Question[] = [
-  {
-    id: 'channel',
-    kind: 'single',
-    title: '랜딧을 어떻게\n알게 되셨나요?',
-    // 광고와 랜딧 계정은 둘 다 인스타그램이라 붙여 두면 헷갈려 사이를 띄운다
-    options: [
-      '앱스토어 · 플레이스토어 검색',
-      '인스타그램 광고',
-      '지인 추천',
-      '랜딧 인스타그램 계정',
-    ],
-    other: true,
-  },
+  CHANNEL_QUESTION,
   {
     id: 'study_purpose',
     kind: 'single',

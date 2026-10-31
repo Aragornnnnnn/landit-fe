@@ -1,4 +1,4 @@
-// SurveyLetterCta — 설문 안내 편지에서만 그리고, 누르면 설문으로 가며 탭을 계측한다
+// SurveyLetterCta — 설문 안내 편지에서만 그리고, 누르면 그 편지의 설문으로 가며 탭을 계측한다
 import { EVENTS } from '@landit/analytics';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -16,6 +16,7 @@ vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 beforeEach(() => {
   vi.clearAllMocks();
   vi.stubEnv('NEXT_PUBLIC_SURVEY_LETTER_ID', '5');
+  vi.stubEnv('NEXT_PUBLIC_PAID_SURVEY_LETTER_ID', '6');
 });
 
 afterEach(() => {
@@ -47,7 +48,22 @@ describe('SurveyLetterCta', () => {
 
     expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_INVITE_TAPPED, {
       letter_id: 5,
+      survey: 'general',
     });
     expect(push).toHaveBeenCalledWith('/survey');
+  });
+
+  it('결제자 설문 편지에서 누르면 결제자 설문으로 간다', async () => {
+    render(<SurveyLetterCta letterId={6} />);
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /설문 참여하기/ }),
+    );
+
+    expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_INVITE_TAPPED, {
+      letter_id: 6,
+      survey: 'paid',
+    });
+    expect(push).toHaveBeenCalledWith('/survey/paid');
   });
 });
