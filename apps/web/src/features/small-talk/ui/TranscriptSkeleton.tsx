@@ -13,7 +13,7 @@ const BUBBLES: { mine: boolean; width: string; lines: number }[] = [
 const LINE = 24;
 const SUB_LINE = 20;
 
-export const SmallTalkTranscriptSkeleton = () => {
+export const TranscriptSkeleton = () => {
   const t = useTranslations('smallTalk.transcriptSkeleton');
   return (
     <div

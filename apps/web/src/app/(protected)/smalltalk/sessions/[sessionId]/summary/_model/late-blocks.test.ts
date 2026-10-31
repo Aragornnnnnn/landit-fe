@@ -1,8 +1,9 @@
 // 스켈레톤을 거쳐 뒤늦게 선 블록만 등장 애니메이션을 단다 — 처음부터 있던 블록은 그냥 그린다
 import { describe, expect, it } from 'vitest';
 
+import type { SummaryBlocks } from '@/features/small-talk/model/summary-blocks';
+
 import { FRESH_ARRIVALS, trackArrivals } from './late-blocks';
-import type { SummaryBlocks } from './summary-blocks';
 
 type Kind = SummaryBlocks[keyof SummaryBlocks]['kind'];
 
