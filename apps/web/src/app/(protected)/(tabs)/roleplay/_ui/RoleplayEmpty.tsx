@@ -26,7 +26,7 @@ export const RoleplayEmpty = () => {
   const t = useTranslations('roleplay.home');
 
   return (
-    <div className="flex flex-col items-center pt-4">
+    <div className="flex flex-col items-center pt-8">
       {/* 카드 뒤 색 번짐은 장식이다 — 무대 밖으로 번져도 잘리지 않게 overflow를 열어 둔다 */}
       <div className="relative h-[340px] w-full max-w-[390px]" aria-hidden>
         <div className="absolute top-[200px] left-[28%] h-[200px] w-[240px] rounded-full bg-[#a9cdff] opacity-80 blur-[55px]" />
