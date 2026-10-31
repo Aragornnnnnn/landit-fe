@@ -5,19 +5,20 @@ import { lineBreak } from '@/shared/i18n/rich';
 import { Emoji } from '@/shared/ui/emoji';
 import { GradientSparkle } from '@/shared/ui/GradientSparkle';
 
-// 그림과 글이 짝이다 — 카드 각도는 왼쪽이 오른쪽으로, 오른쪽이 왼쪽으로 기울어 가운데로 모인다
+// 그림과 글이 짝이다 — 위치와 각도는 시안 좌표 그대로다(390px 무대 기준, 왼쪽 위 모서리를 축으로 돌린다).
+// 축을 가운데로 두면 돌아간 모서리가 무대 밖으로 나가 좁은 폰에서 잘린다
 const IDEA_CARDS = [
   {
     key: 'presidentIdeaLabel',
     emoji: '🇺🇸',
     src: '/images/roleplay/idea-president.webp',
-    className: 'left-[1%] top-[52px] rotate-[8deg]',
+    className: 'left-[0.77%] top-[52px] -rotate-[8deg]',
   },
   {
     key: 'alienIdeaLabel',
     emoji: '👽',
     src: '/images/roleplay/idea-alien.webp',
-    className: 'right-[1%] top-[36px] -rotate-[8deg]',
+    className: 'left-[55.64%] top-[36px] rotate-[8deg]',
   },
 ] as const;
 
@@ -35,7 +36,7 @@ export const RoleplayEmpty = () => {
         {IDEA_CARDS.map((card) => (
           <div
             key={card.key}
-            className={`absolute aspect-[172/258] w-[44%] max-w-[172px] overflow-hidden rounded-[20px] shadow-[0_12px_24px_rgba(0,0,0,0.18)] ${card.className}`}
+            className={`absolute aspect-[172/258] w-[44.1%] max-w-[172px] origin-top-left overflow-hidden rounded-[20px] shadow-[0_12px_24px_rgba(0,0,0,0.18)] ${card.className}`}
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- 216px 장식 그림이라 이미지 최적화가 할 일이 없다 */}
             <img
