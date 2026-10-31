@@ -19,7 +19,7 @@ vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 // 축하의 열매 도장은 스트릭 조회에 기대는 연출이다 — 여기선 축하가 먼저 서는지만 본다
 vi.mock('@/features/expression/ui/ExpressionStages', () => ({
   CELEBRATE_MS: 2600,
-  CelebrateStage: () => <h1>대화 축하</h1>,
+  CelebrateStage: ({ title }: { title: React.ReactNode }) => <h1>{title}</h1>,
 }));
 
 const summaryOf = (
@@ -71,7 +71,9 @@ describe('RoleplaySummary', () => {
     vi.useFakeTimers();
     renderSummary(summaryOf(), { celebrate: true });
 
-    expect(screen.getByText('대화 축하')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      '롤플레이 하나를잘 완료했어요!',
+    );
     expect(screen.queryByText('오늘의 롤플레이')).not.toBeInTheDocument();
 
     act(() => vi.advanceTimersByTime(2_600));
@@ -85,7 +87,7 @@ describe('RoleplaySummary', () => {
   it('다시 들어온 길이면 축하 없이 바로 요약이다', () => {
     renderSummary(summaryOf());
 
-    expect(screen.queryByText('대화 축하')).not.toBeInTheDocument();
+    expect(screen.queryByText(/롤플레이 하나를/)).not.toBeInTheDocument();
     expect(screen.getByText('10월 28일 → 오늘')).toBeInTheDocument();
   });
 

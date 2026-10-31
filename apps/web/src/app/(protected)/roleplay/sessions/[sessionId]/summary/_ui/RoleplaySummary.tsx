@@ -23,6 +23,7 @@ import { ComparisonCard } from '@/features/small-talk/ui/ComparisonCard';
 import { SummaryHeadline } from '@/features/small-talk/ui/SummaryHeadline';
 import { SummarySkeleton } from '@/features/small-talk/ui/SummarySkeleton';
 import { track } from '@/shared/analytics';
+import { lineBreak } from '@/shared/i18n/rich';
 import { ROLEPLAY_PATH, roleplayTranscriptPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
@@ -80,7 +81,10 @@ export const RoleplaySummary = ({
         </header>
         <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(var(--safe-area-inset-bottom),24px)]">
           <AnimatePresence mode="wait">
-            <CelebrateStage key="celebrate" />
+            <CelebrateStage
+              key="celebrate"
+              title={t.rich('celebrateTitle', lineBreak)}
+            />
           </AnimatePresence>
         </div>
       </main>

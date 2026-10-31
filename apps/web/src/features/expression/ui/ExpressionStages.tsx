@@ -28,9 +28,12 @@ export const CELEBRATE_MS = 2600;
 // 이번 완료로 환급액을 받은 사람에게는 열매 대신 받은 금액을 보여 준다
 export const CelebrateStage = ({
   earns = false,
+  title,
 }: {
   // 방금 끝낸 것이 환급이 쌓이는 대화인가 — 시나리오뿐이다
   earns?: boolean;
+  // 대화 이름이 들어간 제목을 쓰는 화면(롤플레이)이 넘긴다. 없으면 「대화 하나를 잘 완료했어요!」
+  title?: React.ReactNode;
 }) => {
   const t = useTranslations('expression.stages');
   const { earn } = useCompletionEarn({ enabled: earns });
@@ -43,7 +46,9 @@ export const CelebrateStage = ({
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.25 }}
     >
-      <h1 className={TITLE_CLASS}>{t.rich('celebrateTitle', lineBreak)}</h1>
+      <h1 className={TITLE_CLASS}>
+        {title ?? t.rich('celebrateTitle', lineBreak)}
+      </h1>
       {earn ? <EarnedStamp earn={earn} /> : <StreakStamp />}
     </motion.div>
   );

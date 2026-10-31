@@ -42,6 +42,7 @@
   },
   "summary": {
     "title": "오늘의 롤플레이",
+    "celebrateTitle": "롤플레이 하나를<br></br>잘 완료했어요!",
     "loadingLabel": "오늘의 롤플레이를 불러오는 중",
     "unavailableError": "오늘의 롤플레이를 정리하지 못했어요.",
     "reusedLoadingLabel": "배운 표현 재사용을 찾는 중",
