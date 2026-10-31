@@ -6,11 +6,16 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { useSeenFlag } from '@/shared/lib/useSeenFlag';
 import { TAB_CHIP_ROW, tabChipClass } from '@/shared/ui/tab-chip';
 
-import { introGuideSeen } from '../_model/intro-guide-seen';
+import {
+  introGuideDue,
+  introGuideSeen,
+  useSawOldIntroGuide,
+} from '../_model/intro-guide-seen';
 import { useFreeNudge } from '../_model/useFreeNudge';
 import type { Tab } from './tabs';
 
@@ -18,7 +23,13 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
   const t = useTranslations('home.tabBar');
   const pathname = usePathname();
   // 스몰톡 첫 안내(무료 5분)를 아직 안 본 사람에게만 점 하나로 눈짓한다 — 안내를 닫으면 사라진다
-  const introSeen = useSeenFlag(introGuideSeen);
+  // 예전 안내를 본 구독자는 새 안내를 건너뛰므로 점도 붙이지 않는다
+  const { locked, deciding } = usePaywallGate();
+  const introDue = introGuideDue({
+    seen: useSeenFlag(introGuideSeen),
+    sawOld: useSawOldIntroGuide(),
+    premium: !locked && !deciding,
+  });
   const onSmalltalk = tabs.some(
     (tab) => tab.id === 'smalltalk' && tab.href === pathname,
   );
@@ -65,7 +76,7 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
                 </span>
               </span>
             )}
-            {tab.id === 'smalltalk' && !introSeen && nudge === null && (
+            {tab.id === 'smalltalk' && introDue && nudge === null && (
               // 점은 읽어 주지 않는다 — 탭에 들어가면 첫 안내가 같은 말을 접근성까지 갖춰 다시 한다.
               // 알약 오른쪽 위 모서리에 걸쳐 둔다 — 흐름에서 빠져 있어 점이 붙고 빠져도 칩 너비가 그대로다
               <span

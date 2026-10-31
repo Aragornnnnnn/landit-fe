@@ -18,6 +18,7 @@ const base = {
     endingBody: '인사하면 끝나요',
   },
   free: true,
+  premium: false,
   exhausted: false,
 };
 
@@ -143,5 +144,44 @@ describe('useIntroGuide', () => {
     act(() => result.current.next());
 
     expect(result.current.guideOpen).toBe(false);
+  });
+
+  it('예전 안내를 본 구독자에겐 새 안내를 띄우지 않고 본 것으로 남긴다', () => {
+    // Given 예전 안내를 본 구독자
+    vi.mocked(track).mockClear();
+    localStorage.setItem('landit-smalltalk-intro-guide-seen-v2', '1');
+
+    // When 스몰톡 탭에 들어오면
+    const { result } = renderHook(() =>
+      useIntroGuide({ ...base, free: false, premium: true }),
+    );
+
+    // Then 안내 없이 본 것으로 치고, 닫은 것으로 세지는 않는다
+    expect(result.current.guideOpen).toBe(false);
+    expect(result.current.guideSeen).toBe(true);
+    expect(introGuideSeen.has()).toBe(true);
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('예전 안내를 본 무료 사용자에겐 새 안내를 띄운다', () => {
+    // Given 예전 안내를 본 무료 사용자
+    localStorage.setItem('landit-smalltalk-intro-guide-seen-v2', '1');
+
+    // When 스몰톡 탭에 들어오면
+    const { result } = renderHook(() => useIntroGuide(base));
+
+    // Then 무료 5분을 알리는 새 안내가 뜬다
+    expect(result.current.guideOpen).toBe(true);
+  });
+
+  it('처음 온 구독자에겐 안내를 띄운다 — 건너뛰는 건 예전 안내를 본 사람뿐이다', () => {
+    // Given 아무 안내도 본 적 없는 구독자
+    // When 스몰톡 탭에 들어오면
+    const { result } = renderHook(() =>
+      useIntroGuide({ ...base, free: false, premium: true }),
+    );
+
+    // Then 안내가 뜬다
+    expect(result.current.guideOpen).toBe(true);
   });
 });

@@ -72,6 +72,7 @@ export default function SmallTalkPage() {
       endingBody: t.raw('introGuide.endingBody'),
     },
     free: !unlimited,
+    premium: !gate.locked && !gate.deciding,
     exhausted,
   });
   // 안내를 본 뒤, 아직 캐릭터를 눌러 본 적 없는 기기엔 머리 옆에 한마디 — 막지 않고, 한 번 누르면 사라진다

@@ -2,14 +2,16 @@
 // 캐릭터를 누르면 언제든 인사하고, 들어 본 것으로 기기에 남긴다 (탭 셸의 스몰톡 칩 점이 이 기록을 본다)
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
 
 import {
   clearOldIntroGuideSeen,
+  introGuideDue,
   introGuideSeen,
+  sawOldIntroGuide,
 } from '../../_model/intro-guide-seen';
 import { tapGreetingSeen } from '../../_model/tap-greeting-seen';
 import {
@@ -23,23 +25,35 @@ import {
  * held — 화면 위에 더 급한 것(강제 업데이트·조회 중·구독 판정 중·주제 고르기)이 있다. 풀릴 때까지 안내를 띄우지 않는다
  * copy — 래디 문장의 원문(t.raw). 한 자씩 쓰려면 태그가 남은 글자가 필요하다
  * free·exhausted — 받은 무료 시간 알약을 비출지. 안내가 뜨는 순간 정해 두고 바꾸지 않는다
+ * premium — 학습 문이 열린 사람(구독 중). 예전 안내를 봤으면 새로 알릴 무료 5분이 없어 새 안내를 건너뛴다
  */
 export const useIntroGuide = ({
   onTap,
   held = false,
   copy,
   free,
+  premium,
   exhausted,
 }: {
   onTap: () => void;
   held?: boolean;
   copy: { freeTalkBody: string; endingBody: string };
   free: boolean;
+  premium: boolean;
   exhausted: boolean;
 }) => {
   // 서버 렌더엔 localStorage가 없어 안 본 것으로 두고, 하이드레이션 뒤 첫 상태 계산에서 본 기록이 반영된다
   const [guideUnseen, setGuideUnseen] = useState(() => !introGuideSeen.has());
-  const guideOpen = !held && guideUnseen;
+  // 예전 안내를 본 구독자는 건너뛴다 — 구독 판정이 끝난 뒤(붙잡힘이 풀린 뒤)에 정한다
+  const skipsForPremium =
+    !held &&
+    guideUnseen &&
+    !introGuideDue({ seen: false, sawOld: sawOldIntroGuide(), premium });
+  const guideOpen = !held && guideUnseen && !skipsForPremium;
+  // 건너뛴 것도 본 것으로 남긴다 — 탭 칩 점이 사라지고 다음 방문에 다시 정하지 않는다. 닫기 계측은 남기지 않는다
+  useEffect(() => {
+    if (skipsForPremium) introGuideSeen.mark();
+  }, [skipsForPremium]);
 
   // 비출 자리는 안내가 뜨는 순간 고정한다 — 도중에 구독이 와서 자리가 줄면 비추던 자리가 사라져 어둠만 남긴 채 멈춘다
   const [spotlights, setSpotlights] = useState<IntroSpotlight[] | null>(null);
@@ -74,7 +88,7 @@ export const useIntroGuide = ({
   return {
     guideOpen,
     // 안내를 이미 본 기기인가 — 캐릭터 옆 힌트는 안내를 본 뒤에만 띄운다. 안내가 뜨기 전에 먼저 번쩍이면 안 된다
-    guideSeen: !guideUnseen,
+    guideSeen: !guideUnseen || skipsForPremium,
     sentences: introSentencesOf(copy),
     spotlights: spotlights ?? [],
     spot,

@@ -180,6 +180,29 @@ describe('TabBar', () => {
     expect(greetingDot()).toBeInTheDocument();
   });
 
+  it('예전 안내를 본 구독자는 새 안내 점을 붙이지 않는다 — 구독자에겐 새로 알릴 무료 5분이 없다', () => {
+    // Given 예전 안내를 본 구독자
+    localStorage.setItem('landit-smalltalk-intro-guide-seen-v2', '1');
+
+    // When 셸이 탭 칩을 그리면
+    render(<TabBar tabs={[scenario, smalltalk]} />);
+
+    // Then 점이 없다
+    expect(greetingDot()).not.toBeInTheDocument();
+  });
+
+  it('예전 안내를 본 무료 사용자는 새 안내 점을 붙인다 — 무료 5분을 알려야 한다', () => {
+    // Given 예전 안내를 본 무료 사용자
+    localStorage.setItem('landit-smalltalk-intro-guide-seen-v2', '1');
+    mocks.locked = true;
+
+    // When 셸이 탭 칩을 그리면
+    render(<TabBar tabs={[scenario, smalltalk]} />);
+
+    // Then 점이 붙는다
+    expect(greetingDot()).toBeInTheDocument();
+  });
+
   it('첫 안내를 본 기기면 점을 붙이지 않는다', () => {
     // Given 스몰톡 첫 안내를 본 기기에서
     introGuideSeen.mark();
