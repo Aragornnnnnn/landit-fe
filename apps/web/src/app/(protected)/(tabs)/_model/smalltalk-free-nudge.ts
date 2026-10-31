@@ -57,3 +57,25 @@ export const useFreeNudgeFirst = () =>
     () => nudgeFirst,
     () => false,
   );
+
+// 시나리오 탭의 램프가 홈을 덮고 있는가 — 그 아래에 말풍선을 깔아 둔 채 하루 몫을 쓰지 않게 탭 셸이 본다
+let lampOpen = false;
+const lampListeners = new Set<() => void>();
+
+/** 시나리오 탭이 램프를 띄우거나(띄울지 정하는 중 포함) 닫았다고 알린다 */
+export const setLampSummonOpen = (open: boolean) => {
+  if (lampOpen === open) return;
+  lampOpen = open;
+  lampListeners.forEach((listener) => listener());
+};
+
+/** 지금 램프가 홈을 덮고 있는가 */
+export const useLampSummonOpen = () =>
+  useSyncExternalStore(
+    (listener) => {
+      lampListeners.add(listener);
+      return () => void lampListeners.delete(listener);
+    },
+    () => lampOpen,
+    () => false,
+  );

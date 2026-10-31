@@ -1,7 +1,7 @@
 'use client';
 
 // 시나리오 탭 — 그날 배정된 카드 한 장을 받는다. 날짜는 ?date=로 넘기고 없으면 오늘
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -25,7 +25,10 @@ import {
 } from '@/shared/lib/routes';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
-import { useFreeNudgeFirst } from '../_model/smalltalk-free-nudge';
+import {
+  setLampSummonOpen,
+  useFreeNudgeFirst,
+} from '../_model/smalltalk-free-nudge';
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
 import { eventPopupOrder, isLampSettled } from './_model/event-popup-order';
@@ -100,6 +103,11 @@ function ScenarioContent() {
     lampSummons,
     summonClosed,
   });
+  // 램프가 묻는 중이거나 물을지 정하는 중이면 홈이 덮여 있다 — 칩 말풍선이 그 아래에 깔린 채 하루 몫을 쓰지 않게 알린다
+  useEffect(() => {
+    setLampSummonOpen(!lampSettled);
+    return () => setLampSummonOpen(false);
+  }, [lampSettled]);
   const { pending: eventPopupPending, ready: eventPopupReady } =
     eventPopupOrder({
       loading: eventPopupLoading,

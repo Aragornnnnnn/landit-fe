@@ -13,9 +13,11 @@ import { track } from '@/shared/analytics';
 
 import { introGuideSeen } from '../_model/intro-guide-seen';
 import {
+  setLampSummonOpen,
   smalltalkNudgeSeen,
   useFreeNudgeFirst,
 } from '../_model/smalltalk-free-nudge';
+import { NUDGE_LEAD_MS, NUDGE_WAIT_MS } from '../_model/useFreeNudge';
 import { scenarioFeedbackSeen } from '../../_model/scenario-feedback-seen';
 import { TabBar } from './TabBar';
 import type { Tab } from './tabs';
@@ -27,8 +29,13 @@ const mocks = vi.hoisted(() => ({
   // 프리미엄 프리뷰가 홈에 띄운 화면 — 'none'이면 프리뷰가 화면에 없다
   previewScreen: 'none',
   limitMs: 300_000 as number | null,
+  // 서버의 무료 5분 정책 적용 여부
+  trialEnabled: true,
   promoOpen: false,
   showerHold: false,
+  updateFirst: false,
+  // 서버의 배울 영어 — null이면 아직 안 답해 ProfileGate가 덮는다
+  accentLocale: 'EN_US' as string | null,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -40,11 +47,23 @@ vi.mock('@/features/small-talk/model/useSmallTalkMainQuery', () => ({
     main:
       mocks.limitMs === null
         ? null
-        : { dailySpeakingTimeLimitMs: mocks.limitMs },
+        : {
+            dailySpeakingTimeLimitMs: mocks.limitMs,
+            freeTrialEnabled: mocks.trialEnabled,
+          },
   }),
 }));
 vi.mock('@/features/subscription/model/exit-promo/promo-handoff', () => ({
   usePromoSheetOpen: () => mocks.promoOpen,
+}));
+vi.mock('@/features/app-update/model/useForceUpdateFirst', () => ({
+  useForceUpdateFirst: () => mocks.updateFirst,
+}));
+vi.mock('@/features/onboarding/model/useAccentQuery', () => ({
+  useAccentQuery: () => ({
+    isSuccess: true,
+    data: { accentLocale: mocks.accentLocale },
+  }),
 }));
 vi.mock('../_model/useEarnShowerHold', () => ({
   useEarnShowerHold: () => mocks.showerHold,
@@ -99,8 +118,13 @@ afterEach(() => {
   mocks.deciding = false;
   mocks.previewScreen = 'none';
   mocks.limitMs = 300_000;
+  mocks.trialEnabled = true;
   mocks.promoOpen = false;
   mocks.showerHold = false;
+  mocks.updateFirst = false;
+  mocks.accentLocale = 'EN_US';
+  setLampSummonOpen(false);
+  vi.useRealTimers();
 });
 
 const greetingDot = () => screen.queryByTestId('smalltalk-greeting-dot');
@@ -361,6 +385,81 @@ describe('TabBar', () => {
       expect(freeNudge()).toBeInTheDocument();
     });
 
+    it('말풍선이 뜨고 잠깐 뒤엔 차례를 내려놓는다 — 칩을 안 눌러도 공지·소감이 그 방문에 나선다', () => {
+      // Given 말풍선이 떠 있는 무료 유저
+      vi.useFakeTimers();
+      mocks.locked = true;
+      scenarioFeedbackSeen.mark();
+      render(<TabBar tabs={[scenario, smalltalk]} />);
+      expect(freeNudge()).toBeInTheDocument();
+      expect(renderHook(() => useFreeNudgeFirst()).result.current).toBe(true);
+
+      // When 앞에 서는 시간이 지나면
+      act(() => vi.advanceTimersByTime(NUDGE_LEAD_MS));
+
+      // Then 말풍선은 그대로 두고 차례만 내려놓는다
+      expect(freeNudge()).toBeInTheDocument();
+      expect(renderHook(() => useFreeNudgeFirst()).result.current).toBe(false);
+    });
+
+    it('판정이 끝나지 않아 못 뜨면 잠깐 기다리다 그 방문엔 차례를 내려놓는다', () => {
+      // Given 구독 판정이 끝나지 않는 피드백 본 유저
+      vi.useFakeTimers();
+      mocks.deciding = true;
+      scenarioFeedbackSeen.mark();
+      render(<TabBar tabs={[scenario, smalltalk]} />);
+      expect(renderHook(() => useFreeNudgeFirst()).result.current).toBe(true);
+
+      // When 기다리는 시간이 지나면
+      act(() => vi.advanceTimersByTime(NUDGE_WAIT_MS));
+
+      // Then 공지·소감을 더 막지 않는다
+      expect(renderHook(() => useFreeNudgeFirst()).result.current).toBe(false);
+    });
+
+    it('못 뜬 채 차례를 내려놓은 방문엔 판정이 늦게 끝나도 띄우지 않는다 — 이어 뜬 공지·소감과 겹치지 않게', () => {
+      // Given 구독 판정이 늦어 기다리다 차례를 내려놓은 피드백 본 유저
+      vi.useFakeTimers();
+      mocks.deciding = true;
+      scenarioFeedbackSeen.mark();
+      const { rerender } = render(<TabBar tabs={[scenario, smalltalk]} />);
+      act(() => vi.advanceTimersByTime(NUDGE_WAIT_MS));
+
+      // When 그 뒤에야 무료 사용자로 판정되면
+      mocks.deciding = false;
+      mocks.locked = true;
+      rerender(<TabBar tabs={[scenario, smalltalk]} />);
+
+      // Then 이번 방문엔 띄우지 않고 오늘 몫도 남겨 둔다
+      expect(freeNudge()).not.toBeInTheDocument();
+      expect(
+        localStorage.getItem('landit-smalltalk-free-nudge-shown-on'),
+      ).toBeNull();
+    });
+
+    it.each([
+      ['강제 업데이트', () => (mocks.updateFirst = true)],
+      ['배울 영어 묻기', () => (mocks.accentLocale = null)],
+      ['램프 소환', () => setLampSummonOpen(true)],
+    ])(
+      '%s가 화면을 덮는 동안엔 뜨지 않고 오늘 보여 준 것으로도 남기지 않는다',
+      (_, cover) => {
+        // Given 말풍선 대상인데 화면이 덮여 있을 때
+        mocks.locked = true;
+        scenarioFeedbackSeen.mark();
+        cover();
+
+        // When 셸이 탭 칩을 그리면
+        render(<TabBar tabs={[scenario, smalltalk]} />);
+
+        // Then 가려진 채 하루 몫을 쓰지 않는다
+        expect(freeNudge()).not.toBeInTheDocument();
+        expect(
+          localStorage.getItem('landit-smalltalk-free-nudge-shown-on'),
+        ).toBeNull();
+      },
+    );
+
     it('말풍선 차례면 홈 화면에 알린다 — 이벤트 공지·소감·알림 동의가 기다리게', () => {
       // Given 무료 표현을 마친 무료 사용자가 시나리오 탭에 돌아왔을 때
       mocks.locked = true;
@@ -389,6 +488,25 @@ describe('TabBar', () => {
 
       // Then 말풍선을 미룬다
       expect(freeNudge()).not.toBeInTheDocument();
+    });
+
+    it('서버가 무료 5분 정책을 아직 안 켰으면 띄우지 않고 차례도 잡지 않는다 — 켜지면 그때 뜬다', () => {
+      // Given 말풍선 대상인 무료 사용자인데 정책 적용 시각 전일 때
+      mocks.locked = true;
+      mocks.trialEnabled = false;
+      scenarioFeedbackSeen.mark();
+
+      // When 셸이 탭 칩을 그리면
+      render(<TabBar tabs={[scenario, smalltalk]} />);
+
+      // Then 없는 5분을 알리지 않고, 다른 시트도 막지 않으며, 오늘 몫도 쓰지 않는다
+      expect(freeNudge()).not.toBeInTheDocument();
+      expect(renderHook(() => useFreeNudgeFirst()).result.current).toBe(false);
+      expect(
+        localStorage.getItem('landit-smalltalk-free-nudge-shown-on'),
+      ).toBeNull();
+      // 정책이 켜진 뒤 띄울 수 있게 끝난 것으로 남기지 않는다
+      expect(smalltalkNudgeSeen.has()).toBe(false);
     });
 
     it('한도를 아직 못 받았으면 숫자 없이 띄우지 않는다', () => {
