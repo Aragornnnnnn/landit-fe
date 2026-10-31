@@ -31,6 +31,7 @@ import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
 import { useIntroGuide } from './_model/useIntroGuide';
 import { usePartnerGreeting } from './_model/usePartnerGreeting';
+import { useSmallTalkStart } from './_model/useSmallTalkStart';
 import { useTopicPicker } from './_model/useTopicPicker';
 import { GuideSpotlight } from './_ui/GuideSpotlight';
 import { IntroGuide } from './_ui/IntroGuide';
@@ -50,8 +51,10 @@ export default function SmallTalkPage() {
   const { main, fatalError, isLoading, refresh } = useSmallTalkMainQuery();
   // 오늘 예산을 다 썼는지는 서버(canStart)가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
   const exhausted = main !== null && !main.canStart;
-  // 무료 사용자도 5분까지는 바로 시작한다 — 다 쓰면 마무리 인사 아래에서 페이월로 보낸다
+  // 무료 사용자도 5분까지는 바로 시작한다 — 다 쓰면 마무리 인사 아래에서 페이월로 보낸다.
+  // 서버가 그 정책을 아직 안 켰으면 시작이 예전처럼 페이월 게이트를 거친다
   const gate = usePaywallGate();
+  const start = useSmallTalkStart(main?.freeTrialEnabled === true);
   // 결제가 열리면 하루 한도가 없다 — 알약에 잔량 대신 무제한을 쓴다
   const { unlimited } = useSpeakingLimit();
   const { partner, look, speech, greet, selectPartner } = usePartnerGreeting();
@@ -93,7 +96,9 @@ export default function SmallTalkPage() {
 
   // 대화 시작 계측은 세션이 실제로 열리는 대화 화면에서 한다 — 여기서 쏘면 들어가다 만 것도 시작으로 잡힌다
   const startWithMe = () =>
-    router.push(smallTalkPath({ partner: partner.id, mode: 'user_first' }));
+    start(() =>
+      router.push(smallTalkPath({ partner: partner.id, mode: 'user_first' })),
+    );
 
   const startWithTopic = (topic: SmallTalkTopic) => {
     track(EVENTS.SMALL_TALK_TOPIC_SELECTED, {
@@ -101,12 +106,14 @@ export default function SmallTalkPage() {
       topic_id: topic.topicId,
     });
     picker.closePicker();
-    router.push(
-      smallTalkPath({
-        partner: partner.id,
-        mode: 'ai_first',
-        topicId: topic.topicId,
-      }),
+    start(() =>
+      router.push(
+        smallTalkPath({
+          partner: partner.id,
+          mode: 'ai_first',
+          topicId: topic.topicId,
+        }),
+      ),
     );
   };
 
