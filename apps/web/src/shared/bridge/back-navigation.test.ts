@@ -14,6 +14,7 @@ describe('decideBack', () => {
     // 스몰톡 탭에서 뒤로가기가 이전 화면으로 튀면 탭 사이를 되감게 된다
     expect(decideBack('/smalltalk', true)).toBe('confirm-exit');
     expect(decideBack('/smalltalk', false)).toBe('confirm-exit');
+    expect(decideBack('/roleplay', true)).toBe('confirm-exit');
   });
 
   it('탭이 아닌 화면에서 뒤로 갈 곳이 있으면 히스토리를 되돌린다', () => {

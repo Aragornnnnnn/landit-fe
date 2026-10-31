@@ -18,6 +18,7 @@ import {
   REWARD_CHECK_PATH,
   REWARD_PATH,
   REWARD_PAYWALL_CHECK_PATH,
+  ROLEPLAY_NEW_PATH,
   SCENARIO_PATH,
   SUBSCRIPTION_CANCEL_PATH,
   SUBSCRIPTION_HISTORY_PATH,
@@ -63,6 +64,7 @@ const NESTED_PAGES: Record<string, string> = {
   [REWARD_CHECK_PATH]: 'reward_check',
   [REWARD_PAYWALL_CHECK_PATH]: 'reward_paywall_check',
   [PREVIEW_CHECK_PATH]: 'preview_check',
+  [ROLEPLAY_NEW_PATH]: 'roleplay_new',
 };
 
 // 페이월로 보낸 문 — 주소에 실려 온 값만 받는다. 문이 늘었는데 여기를 빠뜨리면 빌드가 깨진다
@@ -75,6 +77,7 @@ const PAYWALL_SOURCES: Record<PaywallSource, true> = {
   me: true,
   header: true,
   reward: true,
+  roleplay: true,
 };
 
 export const readPaywallSource = (
@@ -89,6 +92,7 @@ const STATIC_PAGES = new Set([
   'privacy',
   'terms',
   'smalltalk',
+  'roleplay',
   'streak',
   'mailbox',
   // LAN-428 설문(임시) — 설문이 끝나면 지운다
@@ -172,6 +176,11 @@ const resolvePage = (
       scenario_id: toId(seg[1]),
       session_id: toId(seg[3]),
     };
+  }
+
+  // 롤플레이 시나리오 하나로 한 지난 대화 — 시나리오 id는 롤플레이 API가 붙을 때 싣는다
+  if (seg[0] === 'roleplay' && seg[1] && seg[2] === 'sessions' && !seg[3]) {
+    return { page_name: 'roleplay_history', path: pathname };
   }
 
   // 대화 화면은 /conversation 아래에 종류별로 있다 — 시나리오는 어느 카드인지 id가 붙는다

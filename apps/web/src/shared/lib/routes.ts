@@ -4,6 +4,7 @@ import type { PaywallSource } from '@landit/analytics';
 
 export const SCENARIO_PATH = '/scenario';
 export const SMALLTALK_PATH = '/smalltalk';
+export const ROLEPLAY_PATH = '/roleplay';
 export const STREAK_PATH = '/streak';
 export const LOGIN_PATH = '/login';
 export const ONBOARDING_PATH = '/onboarding';
@@ -95,6 +96,24 @@ export const SMALLTALK_HISTORY_PATH = `${SMALLTALK_PATH}/sessions`;
 
 export const smallTalkHistoryPath = (sessionId: number) =>
   `${SMALLTALK_HISTORY_PATH}/${sessionId}`;
+
+// 롤플레이 — 시나리오를 만드는 흐름과, 만든 시나리오 하나로 한 지난 대화 목록은 탭 주소 아래에 둔다
+export const ROLEPLAY_NEW_PATH = `${ROLEPLAY_PATH}/new`;
+
+// 상대를 고른 뒤의 입력 단계 — 주소에 남겨 셸 뒤로가기가 상대 고르기로 한 단계만 되돌아가게 한다
+export const roleplayNewFormPath = (partner: string) =>
+  `${ROLEPLAY_NEW_PATH}?${new URLSearchParams({ partner })}`;
+
+export const roleplaySessionsPath = (scenarioId: number) =>
+  `${ROLEPLAY_PATH}/${scenarioId}/sessions`;
+
+// 지난 대화 한 건(대화 기록·교정 카드) — 화면은 대화 API와 함께 붙인다
+export const roleplaySessionPath = (scenarioId: number, sessionId: number) =>
+  `${roleplaySessionsPath(scenarioId)}/${sessionId}`;
+
+// 롤플레이 대화 — 스몰톡 대화처럼 대화 라우트 아래에 선다 (화면은 대화 API와 함께 붙인다)
+export const roleplayTalkPath = (scenarioId: number) =>
+  `/conversation/roleplay/${scenarioId}`;
 
 // 오늘의 스몰톡 — 대화를 끝낸 직후 보는 요약. 세션이 주인이라 기록 주소 아래에 산다
 export const smallTalkSummaryPath = (sessionId: number) =>

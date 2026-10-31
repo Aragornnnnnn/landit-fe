@@ -347,7 +347,9 @@ export type PaywallGateSource =
   // 총평에서 상세 피드백 보기를 눌렀는데 서버가 잠근 세션 — 두 번째 시나리오부터 페이월이 처음 뜨는 곳
   | 'feedback_detail'
   // 프리미엄 프리뷰 끝 — 무료로 열어 준 표현 하나를 마친 자리
-  | 'premium_preview';
+  | 'premium_preview'
+  // 롤플레이 탭 — 시나리오 만들기와 만든 시나리오로 다시 대화하기 둘 다. 롤플레이는 프리미엄 전용이다
+  | 'roleplay';
 // 결제가 실패한 갈래 — 환경 문제 셋, 셸이 회신한 실패, 이용권을 결제 전에 막은 둘. 셸의 문구는 message에 따로 싣는다
 export type PurchaseFailureReason =
   | 'browser'
@@ -372,6 +374,8 @@ export type RetryScreen =
   | 'scenario_history'
   | 'smalltalk'
   | 'smalltalk_summary'
+  | 'roleplay'
+  | 'roleplay_history'
   | 'conversation'
   | 'card_back'
   | 'expression_list'
@@ -434,7 +438,7 @@ export type ReviewTrigger = 'talk' | 'expression';
 export type ReviewCardStatus =
   'shown' | 'not_shown' | 'unavailable' | 'timeout';
 export type CalendarView = 'week' | 'month';
-export type HomeTab = 'scenario' | 'smalltalk';
+export type HomeTab = 'scenario' | 'smalltalk' | 'roleplay';
 // 위젯 설치 유도에서 고른 답 — 닫기·나중에는 dismiss로 묶는다
 export type WidgetInstallAnswer = 'install' | 'dismiss';
 // 위젯 설치 안내를 연 자리 — 온보딩 스텝인지 마이페이지에서 다시 연 것인지. 온보딩 전환율 분모가 섞이지 않게 한다
