@@ -37,10 +37,10 @@
 
 | 이벤트                  | 속성                                                                                                                                                                                                    | 시점                                                                                                                  |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Page Viewed             | page_name, path, return_reason?, scenario_id?, session_id?, expression_id?, completed_date?, letter_id?, feedback_id?, feedback_type?, paywall_source?, entry_campaign?, entry_content?                 | 라우트 변경                                                                                                           |
+| Page Viewed             | page_name, path, return_reason?, scenario_id?, session_id?, expression_id?, completed_date?, letter_id?, feedback_id?, feedback_type?, paywall_source?, roleplay_id?, entry_campaign?, entry_content?   | 라우트 변경                                                                                                           |
 | Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete\|alarm_delete)                                                                                                                                 | 이탈·탈퇴·알람 삭제 확인 시트 열림                                                                                    |
 | Confirm Sheet Dismissed | sheet                                                                                                                                                                                                   | 확인 시트에서 계속하기/닫기                                                                                           |
-| Error Retried           | screen(reward\|reward_history\|scenario\|scenario_history\|smalltalk\|smalltalk_summary\|roleplay\|roleplay_history\|conversation\|card_back\|expression_list\|streak\|mailbox\|alarm\|referral_invite) | 에러 화면 "다시 시도"                                                                                                 |
+| Error Retried           | screen(reward\|reward_history\|scenario\|scenario_history\|smalltalk\|smalltalk_summary\|roleplay\|roleplay_summary\|conversation\|card_back\|expression_list\|streak\|mailbox\|alarm\|referral_invite) | 에러 화면 "다시 시도"                                                                                                 |
 | App Exited              | trigger(back_button)                                                                                                                                                                                    | 네이티브 뒤로가기로 앱 종료 (셸에서만)                                                                                |
 | Download Link Visited   | store(play_store\|app_store), utm_source?, utm_medium?, utm_campaign?                                                                                                                                   | /download 스토어 리다이렉트 진입 (서버 발화, 익명). utm_*은 링크에 딱지가 있을 때만. 메신저 미리보기 봇은 세지 않는다 |
 | App Update Store Opened | store(play_store\|app_store)                                                                                                                                                                            | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화)                                                         |
@@ -228,6 +228,18 @@
 탭의 네 이벤트는 대화 시작 전 갈림길이다. 기본 상대로 그냥 시작하면 `Partner Selected`는 안 찍히고 `Started`의 `partner`로 본다. 주제 모달 열림은 안 찍는다 — `Started`의 `topic_id` 유무로 "주제로 시작" 비율이 나온다.
 
 단, 마이크·STT처럼 **대화 엔진이 쏘는 것은 두 대화가 함께 쓴다** (Recording Started/Stopped/Canceled, Input Mode Switched, Turn Failed, Inner Thought Viewed, Translation Toggled, Speech Replayed, Speech Recognition Completed/Failed, Speech Playback Failed). 입력 기계의 사건이라 어느 대화인지와 무관하고, 대화 엔진(features/conversation)은 대화 종류를 모른다.
+
+### 롤플레이
+
+| 이벤트                  | 속성                                                                                        | 시점                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Roleplay Created        | roleplay_id, partner, used_idea                                                             | 만들기에서 시작하기 → 보관함 저장 성공 |
+| Roleplay Started        | session_id, roleplay_id, partner                                                            | 세션 시작 성공                         |
+| Roleplay Turn Completed | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms | 발화 제출 성공                         |
+| Roleplay Completed      | session_id, partner, turn_count, speaking_duration_ms, end_reason(time_limit\|direct_end)   | X로 끝냄 또는 오늘 시간 소진           |
+| Roleplay Abandoned      | session_id, partner, turn_index                                                             | 한 마디도 하지 않고 나감               |
+
+`roleplay_id`는 내 보관함의 시나리오 id다. 같은 시나리오로 다시 대화하면 `Started`만 새 `session_id`로 쌓인다. 작별 인사로 끝나는 길이 없어 `end_reason`은 둘뿐이다. 요약·대화 기록은 `Page Viewed`(roleplay_summary·roleplay_transcript)로 본다.
 
 ### 분석 피드백
 

@@ -266,13 +266,24 @@ describe('toPageView', () => {
   it.each([
     ['/roleplay', 'roleplay'],
     ['/roleplay/new', 'roleplay_new'],
-    ['/roleplay/3/sessions', 'roleplay_history'],
-  ])(
-    '롤플레이 %s는 %s로 남는다 — 시나리오 id는 롤플레이 API가 붙을 때 정한다',
-    (path, pageName) => {
-      expect(pv(path)).toEqual({ page_name: pageName, path });
-    },
-  );
+  ])('롤플레이 %s는 %s로 남는다', (path, pageName) => {
+    expect(pv(path)).toEqual({ page_name: pageName, path });
+  });
+
+  it.each([
+    ['/roleplay/sessions/7/summary', 'roleplay_summary'],
+    ['/roleplay/sessions/7/messages', 'roleplay_transcript'],
+  ])('끝난 롤플레이 %s는 %s로 세션 id와 함께 남는다', (path, pageName) => {
+    expect(pv(path)).toEqual({ page_name: pageName, path, session_id: 7 });
+  });
+
+  it('롤플레이 대화는 어느 시나리오로 연 대화인지 남는다', () => {
+    expect(pv('/conversation/roleplay/3')).toEqual({
+      page_name: 'conversation_roleplay',
+      path: '/conversation/roleplay/3',
+      roleplay_id: 3,
+    });
+  });
 
   it('스몰톡 대화는 id 없이 page_name conversation_smalltalk으로 남는다', () => {
     // 주소의 상대·시작 방식(mode/partner)은 여기 싣지 않는다 — Conversation Started가 이미 남긴다

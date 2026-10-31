@@ -67,6 +67,12 @@ const NESTED_PAGES: Record<string, string> = {
   [ROLEPLAY_NEW_PATH]: 'roleplay_new',
 };
 
+// 끝난 롤플레이 대화 한 건 아래의 화면 — /roleplay/sessions/{id}/{여기}
+const ROLEPLAY_SESSION_PAGES: Record<string, string> = {
+  summary: 'roleplay_summary',
+  messages: 'roleplay_transcript',
+};
+
 // 페이월로 보낸 문 — 주소에 실려 온 값만 받는다. 문이 늘었는데 여기를 빠뜨리면 빌드가 깨진다
 const PAYWALL_SOURCES: Record<PaywallSource, true> = {
   expression: true,
@@ -178,9 +184,21 @@ const resolvePage = (
     };
   }
 
-  // 롤플레이 시나리오 하나로 한 지난 대화 — 시나리오 id는 롤플레이 API가 붙을 때 싣는다
-  if (seg[0] === 'roleplay' && seg[1] && seg[2] === 'sessions' && !seg[3]) {
-    return { page_name: 'roleplay_history', path: pathname };
+  // 끝난 롤플레이 대화 한 건 — 요약과 대화 기록. 어느 세션인지 id로 남긴다
+  if (seg[0] === 'roleplay' && seg[1] === 'sessions' && seg[2]) {
+    const pageName = ROLEPLAY_SESSION_PAGES[seg[3]];
+    if (pageName) {
+      return { page_name: pageName, path: pathname, session_id: toId(seg[2]) };
+    }
+  }
+
+  // 롤플레이 대화 — 어느 시나리오(보관함 id)로 연 대화인지 남긴다
+  if (seg[0] === 'conversation' && seg[1] === 'roleplay' && seg[2]) {
+    return {
+      page_name: 'conversation_roleplay',
+      path: pathname,
+      roleplay_id: toId(seg[2]),
+    };
   }
 
   // 대화 화면은 /conversation 아래에 종류별로 있다 — 시나리오는 어느 카드인지 id가 붙는다

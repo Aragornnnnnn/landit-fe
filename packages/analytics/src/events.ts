@@ -101,6 +101,14 @@ export const EVENTS = {
   SMALL_TALK_FEEDBACK_SKIPPED: 'Small Talk Feedback Skipped',
   SMALL_TALK_FEEDBACK_VIEWED: 'Small Talk Feedback Viewed',
 
+  // 롤플레이 — 사용자가 역할·상황을 적어 만든 시나리오로 하는 대화. 대화 엔진 이벤트는 스몰톡처럼 함께 쓴다.
+  // 요약·대화 기록은 Page Viewed(roleplay_summary·roleplay_transcript)로 본다
+  ROLEPLAY_CREATED: 'Roleplay Created',
+  ROLEPLAY_STARTED: 'Roleplay Started',
+  ROLEPLAY_TURN_COMPLETED: 'Roleplay Turn Completed',
+  ROLEPLAY_COMPLETED: 'Roleplay Completed',
+  ROLEPLAY_ABANDONED: 'Roleplay Abandoned',
+
   // 분석 피드백
   FEEDBACK_VIEWED: 'Feedback Viewed',
   FEEDBACK_SKIPPED: 'Feedback Skipped',
@@ -375,7 +383,7 @@ export type RetryScreen =
   | 'smalltalk'
   | 'smalltalk_summary'
   | 'roleplay'
-  | 'roleplay_history'
+  | 'roleplay_summary'
   | 'conversation'
   | 'card_back'
   | 'expression_list'
@@ -478,6 +486,8 @@ export type EventProps = {
     feedback_type?: FeedbackType;
     // 페이월일 때만 — 어느 문으로 들어왔는가 (게이트에 막혀 왔으면 그 문, 마이페이지에서 들어왔으면 me)
     paywall_source?: PaywallSource;
+    // 롤플레이 대화일 때만 — 어느 시나리오(보관함 id)로 연 대화인가
+    roleplay_id?: number;
   };
   // 파괴적 행동(이탈·탈퇴) 전 확인 시트 — 열림/취소로 고민율을 본다. 확정은 각 Abandoned/Deleted 이벤트
   'Confirm Sheet Opened': { sheet: ConfirmSheetKind };
@@ -737,6 +747,40 @@ export type EventProps = {
     session_id: number;
     source: 'summary' | 'history';
     correction_count: number;
+  };
+
+  // 롤플레이 — roleplay_id는 내 보관함의 시나리오 id다. 같은 시나리오로 여러 번 대화하면 session_id만 늘어난다
+  'Roleplay Created': {
+    roleplay_id: number;
+    partner: TalkPartner;
+    // 아이디어 추천받기를 한 번이라도 눌렀는가 (받은 뒤 고쳤어도 true)
+    used_idea: boolean;
+  };
+  'Roleplay Started': {
+    session_id: number;
+    roleplay_id: number;
+    partner: TalkPartner;
+  };
+  'Roleplay Turn Completed': {
+    session_id: number;
+    partner: TalkPartner;
+    turn_index: number;
+    input_type: TurnInputType;
+    char_count: number;
+    utterance_duration_ms: number;
+  };
+  // 롤플레이는 작별 인사로 끝나지 않는다 — X로 끝내거나(direct_end) 오늘 시간이 다 된다(time_limit)
+  'Roleplay Completed': {
+    session_id: number;
+    partner: TalkPartner;
+    turn_count: number;
+    speaking_duration_ms: number;
+    end_reason: 'time_limit' | 'direct_end';
+  };
+  'Roleplay Abandoned': {
+    session_id: number;
+    partner: TalkPartner;
+    turn_index: number;
   };
 
   // 피드백 응답에는 scenario_id가 없다 — session_id로 서버에서 조인한다
