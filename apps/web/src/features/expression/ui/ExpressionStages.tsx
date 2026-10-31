@@ -20,6 +20,9 @@ import { ExpressionList } from './ExpressionList';
 export const TITLE_CLASS =
   'pt-1 text-3xl leading-[1.22] font-black tracking-normal whitespace-pre-line text-foreground';
 
+// 축하가 머무는 시간 — 열매가 찍히고 숫자가 선 뒤에도 잠깐 남는다. 축하를 띄우는 화면이 이 값을 같이 쓴다
+export const CELEBRATE_MS = 2600;
+
 // 대화 완료 축하 — 만드는 중 화면과 같은 골격(좌상단 타이틀 + 가운데)으로 그려 전환이 매끄럽다.
 // 가운데는 오늘 열매가 찍히는 순간이 채운다 — 완료를 매번 같은 폭죽으로 갚으면 며칠째든 감흥이 없다.
 // 이번 완료로 환급액을 받은 사람에게는 열매 대신 받은 금액을 보여 준다

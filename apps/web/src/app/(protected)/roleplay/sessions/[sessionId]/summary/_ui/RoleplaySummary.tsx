@@ -10,7 +10,10 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
-import { CelebrateStage } from '@/features/expression/ui/ExpressionStages';
+import {
+  CELEBRATE_MS,
+  CelebrateStage,
+} from '@/features/expression/ui/ExpressionStages';
 import { GrowthCard } from '@/features/feedback/ui/GrowthCard';
 import { ReusedExpressionsCard } from '@/features/feedback/ui/ReusedExpressionsCard';
 import { useRoleplaySummaryQuery } from '@/features/roleplay/model/useRoleplaySummaryQuery';
@@ -23,9 +26,6 @@ import { track } from '@/shared/analytics';
 import { ROLEPLAY_PATH, roleplayTranscriptPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { CloseIcon } from '@/shared/ui/Icons';
-
-// 축하가 머무는 시간 — 스몰톡·시나리오 축하와 같은 값
-const CELEBRATE_MS = 2600;
 
 interface RoleplaySummaryProps {
   sessionId: number;

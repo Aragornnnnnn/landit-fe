@@ -18,6 +18,7 @@ vi.mock('@/features/roleplay/model/useRoleplaySummaryQuery', () => ({
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 // 축하의 열매 도장은 스트릭 조회에 기대는 연출이다 — 여기선 축하가 먼저 서는지만 본다
 vi.mock('@/features/expression/ui/ExpressionStages', () => ({
+  CELEBRATE_MS: 2600,
   CelebrateStage: () => <h1>대화 축하</h1>,
 }));
 

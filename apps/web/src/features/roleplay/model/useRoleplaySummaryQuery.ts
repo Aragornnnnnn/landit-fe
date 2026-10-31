@@ -8,6 +8,8 @@ import {
   type QueryClient,
 } from '@tanstack/react-query';
 
+// 가로 import 사유: 기다림 상한은 스몰톡 요약과 같은 서버 정책(교정 대기)을 따른다
+import { SUMMARY_WAIT_LIMIT_MS } from '@/features/small-talk/model/useSmallTalkSummaryQuery';
 import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import {
@@ -18,8 +20,6 @@ import { roleplayKeys } from './keys';
 
 // 다시 묻는 간격
 const POLL_MS = 1_000;
-// 기다림의 상한 — 스몰톡 요약과 같은 값. 이만큼 기다려도 안 오면 그 블록은 비운 채로 둔다
-export const ROLEPLAY_SUMMARY_WAIT_LIMIT_MS = 60_000;
 
 // 아직 만드는 중인 것이 있는가 — 총평은 교정이 끝나길, 배운 표현 재사용은 종료 후 잡을 기다린다
 const isStillPreparing = (summary: RoleplaySummaryResponse | undefined) =>
@@ -54,7 +54,7 @@ export const useRoleplaySummaryQuery = (sessionId: number) => {
     if (!preparing) return;
     const limit = setTimeout(
       () => setWaitedTooLong(true),
-      ROLEPLAY_SUMMARY_WAIT_LIMIT_MS,
+      SUMMARY_WAIT_LIMIT_MS,
     );
     return () => clearTimeout(limit);
   }, [preparing]);

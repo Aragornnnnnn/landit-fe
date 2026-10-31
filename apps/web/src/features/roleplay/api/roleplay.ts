@@ -90,7 +90,7 @@ export interface RoleplaySessionStartResponse {
   currentMessage: SmallTalkCurrentMessage;
 }
 
-// 롤플레이는 종료 확인 단계가 없다 — 이어가거나(CONTINUE), 시간이 다 돼 끝난다(COMPLETED)
+// 롤플레이는 종료 확인 단계가 없다 — 이어가거나(CONTINUE), 다른 곳에서 먼저 끝낸 대화면 COMPLETED(다음 발화 없음)다
 export type RoleplayTurnStatus = 'CONTINUE' | 'COMPLETED';
 
 export interface RoleplayProgress {

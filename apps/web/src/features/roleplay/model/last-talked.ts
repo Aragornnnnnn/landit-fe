@@ -1,4 +1,5 @@
-// 시나리오 카드의 「마지막으로 대화한 때」 — 오늘 / N일 전 / 날짜. 만든 날이 아니라 마지막 대화 기준이다
+// 시나리오 카드의 「마지막으로 대화한 때」 — 오늘 / N일 전 / 날짜.
+// 백엔드가 마지막 대화 시각을 주기 전까지는 카드가 만든 때(createdAt)를 넣는다
 import { parseDateString } from '@/shared/lib/date-string';
 
 export type LastTalked =
