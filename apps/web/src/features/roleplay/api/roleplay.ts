@@ -1,155 +1,212 @@
-// 롤플레이 API — 백엔드(LAN-803)가 나오기 전까지 메모리 안의 가짜 저장소로 답한다.
-// 함수 이름과 응답 모양은 화면이 기대는 계약이다. 스펙이 오면 이 파일만 실제 요청으로 바꾸고 응답 타입을 백엔드에 맞춘다
+// 롤플레이 API — 백엔드(LAN-803) /api/v1/roleplays 응답을 그대로 받는다. 가공은 쓰는 자리에서 한다.
+// 대화 부품(첫 발화·다음 발화·교정·요약 블록)은 스몰톡과 같은 계약이라 스몰톡 타입을 그대로 쓴다
+// 가로 import 사유: 롤플레이는 백엔드에서도 스몰톡(free-talk)의 변형이라 대화 부품 계약을 공유한다
+import type {
+  ConversationCharacter,
+  InputType,
+} from '@/features/conversation/api/session';
 import type { Partner } from '@/features/conversation/model/character-look';
+import type {
+  SmallTalkCorrection,
+  SmallTalkCurrentMessage,
+  SmallTalkNextMessage,
+  SmallTalkReusedExpression,
+  SmallTalkSummaryComparison,
+  SmallTalkSummaryGrowth,
+  SmallTalkSummaryHeadline,
+  SmallTalkSummaryReusedExpressions,
+} from '@/features/small-talk/api/small-talk';
+import { api } from '@/shared/api/client';
 
-export interface RoleplayScenario {
-  scenarioId: number;
-  partner: Partner;
-  myRole: string;
-  partnerRole: string;
+// 저장(보관함)과 대화 시작이 같은 입력을 받는다 — 제목은 받지 않고 서버가 지어 준다
+export interface RoleplaySettingsRequest {
+  characterId: Partner;
+  userRole: string;
+  aiRole: string;
   situation: string;
-  // 백엔드가 역할·상황으로 지어 주는 제목
+}
+
+// 내 보관함의 롤플레이 하나
+export interface RoleplaySettings {
+  id: number;
+  // 백엔드 문자열 그대로 — 화면에서 상대로 좁힌다
+  characterId: string;
+  // 서버가 역할·상황으로 지은 제목
   title: string;
-  // 마지막으로 대화한 때 (LocalDateTime) — 목록 정렬 기준
-  lastTalkedAt: string;
-  // 이 시나리오로 한 대화 수 — 0이면 지난 대화 보기가 흐려진다
-  sessionCount: number;
+  userRole: string;
+  aiRole: string;
+  situation: string;
+  // 저장한 시각 (LocalDateTime). 목록은 이 값의 최신순으로 온다
+  createdAt: string;
 }
 
+export interface RoleplaySettingsListResponse {
+  items: RoleplaySettings[];
+  page: number;
+  size: number;
+  hasNext: boolean;
+}
+
+// 아이디어는 세 칸을 한 조합으로 준다 — 상대(캐릭터)는 바꾸지 않는다
 export interface RoleplayIdea {
-  myRole: string;
-  partnerRole: string;
+  id: number;
+  title: string;
+  userRole: string;
+  aiRole: string;
   situation: string;
 }
 
-export interface CreateRoleplayScenarioBody {
-  partner: Partner;
-  myRole: string;
-  partnerRole: string;
+export interface RoleplayIdeaResponse {
+  // 고를 예시가 하나도 없으면 null
+  idea: RoleplayIdea | null;
+}
+
+// 대화 시작 때 고정된 역할 설정
+export interface RoleplayScene {
+  userRole: string;
+  aiRole: string;
   situation: string;
 }
 
-export interface RoleplaySessionSummary {
+// 오늘 쓴 발화 시간과 남은 시간
+export interface RoleplayDailyUsage {
+  // yyyy-MM-dd
+  usageDate: string;
+  usedSpeakingDurationMs: number;
+  remainingMs: number;
+}
+
+export interface RoleplaySessionStartResponse {
   sessionId: number;
-  talkedAt: string;
-  turnCount: number;
-  correctionCount: number;
-  // 교정 없이 넘어간 턴 수 — 교정이 하나도 없을 때 「잘했어요 N개」로 보여 준다
-  goodCount: number;
+  sessionType: string;
+  character: ConversationCharacter;
+  title: string;
+  targetLocale: string;
+  baseLocale: string;
+  // 하루 총량(잔량이 아니다) — 잔량은 usage에 있다
+  speakingTimeLimitMs: number;
+  usage: RoleplayDailyUsage;
+  // 상대가 늘 먼저 말을 건다 — 첫 발화가 항상 온다
+  currentMessage: SmallTalkCurrentMessage;
 }
 
-// 진짜 요청처럼 잠깐 기다린다 — 로딩 화면과 연타 잠금이 실제로 보이게
-const FAKE_LATENCY_MS = 600;
-// 시나리오 생성은 백엔드가 상황과 첫 마디를 만드는 시간(2~4초)을 흉내 낸다
-const FAKE_CREATE_LATENCY_MS = 2800;
+// 롤플레이는 종료 확인 단계가 없다 — 이어가거나(CONTINUE), 시간이 다 돼 끝난다(COMPLETED)
+export type RoleplayTurnStatus = 'CONTINUE' | 'COMPLETED';
 
-const wait = (ms: number) =>
-  new Promise<void>((resolve) => setTimeout(resolve, ms));
+export interface RoleplayProgress {
+  sessionStatus: string;
+  accumulatedSpeakingDurationMs: number;
+  speakingTimeLimitMs: number;
+  usedSpeakingTimeMs: number;
+  remainingSpeakingTimeMs: number;
+}
 
-const pad = (value: number) => String(value).padStart(2, '0');
+// 속마음이 없는 대화라 제출한 발화의 식별자만 온다
+export interface RoleplaySubmittedMessage {
+  messageId: number;
+  turnNumber: number;
+  messageSequence: number;
+  role: string;
+}
 
-// 서버가 주는 LocalDateTime과 같은 모양(2026-10-31T15:00:00)
-const toLocalDateTime = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+export interface RoleplayMessageSubmitResponse {
+  sessionId: number;
+  title: string;
+  turnStatus: RoleplayTurnStatus;
+  submittedMessage: RoleplaySubmittedMessage;
+  nextMessage: SmallTalkNextMessage | null;
+  progress: RoleplayProgress;
+}
 
-const daysAgo = (days: number) =>
-  toLocalDateTime(new Date(Date.now() - days * 24 * 60 * 60 * 1000));
+export interface RoleplayMessageSubmitRequest {
+  // 재전송 판별용 UUID — 같은 값으로 다시 보내면 서버가 이전 결과를 그대로 돌려준다
+  clientMessageId: string;
+  content: string;
+  inputType: InputType;
+  utteranceDurationMs: number;
+}
 
-// 화면을 바로 볼 수 있게 시안의 두 장을 깔아 둔다
-let scenarios: RoleplayScenario[] = [
-  {
-    scenarioId: 1,
-    partner: 'chloe',
-    myRole: '커피를 주문하는 손님',
-    partnerRole: '단골 카페 바리스타',
-    situation: '새로 나온 메뉴를 추천받고, 덜 달게 바꿔 달라고 하기',
-    title: '단골 카페에서 새 메뉴 주문하기',
-    lastTalkedAt: daysAgo(0),
-    sessionCount: 3,
-  },
-  {
-    scenarioId: 2,
-    partner: 'marco',
-    myRole: '짐을 찾는 여행객',
-    partnerRole: '공항 수하물 직원',
-    situation: '망가진 캐리어를 보여 주고 보상을 요구하기',
-    title: '공항에서 망가진 캐리어 항의하기',
-    lastTalkedAt: daysAgo(3),
-    sessionCount: 0,
-  },
-];
-let nextId = 3;
+// 지난 롤플레이 대화 한 건 — 당시 역할 설정과 주고받은 말
+export interface RoleplayHistoryMessage {
+  messageId: number;
+  turnNumber: number;
+  messageSequence: number;
+  role: string;
+  content: string;
+  translatedContent: string | null;
+  emotion: string | null;
+  // 고칠 게 없었거나 만들다 실패했으면 null — 두 경우를 가르는 상태 값은 오지 않는다
+  correction: SmallTalkCorrection | null;
+  reusedExpression: SmallTalkReusedExpression | null;
+}
 
-const IDEAS: RoleplayIdea[] = [
-  {
-    myRole: '커피를 주문하는 손님',
-    partnerRole: '단골 카페 바리스타',
-    situation: '새로 나온 메뉴를 추천받고, 덜 달게 바꿔 달라고 하기',
-  },
-  {
-    myRole: '면접을 보는 지원자',
-    partnerRole: '스타트업 면접관',
-    situation: '자기소개를 하고 지원한 이유를 설명하기',
-  },
-  {
-    myRole: '체크인하는 여행객',
-    partnerRole: '호텔 프런트 직원',
-    situation: '바다가 보이는 방으로 바꿔 달라고 부탁하기',
-  },
-  {
-    myRole: '지구를 처음 소개하는 사람',
-    partnerRole: '지구에 막 도착한 외계인',
-    situation: '지구에서 꼭 먹어 봐야 할 음식을 추천하기',
-  },
-];
+export interface RoleplayHistoryDetail {
+  sessionId: number;
+  title: string;
+  characterId: string;
+  targetLocale: string;
+  baseLocale: string;
+  roleplay: RoleplayScene;
+  messages: RoleplayHistoryMessage[];
+}
 
-const byLastTalked = (a: RoleplayScenario, b: RoleplayScenario) =>
-  b.lastTalkedAt.localeCompare(a.lastTalkedAt);
+// 오늘의 롤플레이 — 스몰톡 요약에서 다음 대화 질문(followUp)만 뺀 모양
+export interface RoleplaySummaryResponse {
+  sessionId: number;
+  title: string;
+  // 총평을 아직 계산하지 않았으면 true — 그동안 아래 넷과 correctionCount는 null이다
+  pending: boolean;
+  firstSession: boolean | null;
+  headline: SmallTalkSummaryHeadline | null;
+  comparison: SmallTalkSummaryComparison | null;
+  growth: SmallTalkSummaryGrowth | null;
+  // 늘 온다 — 아직 만드는 중이면 pending이다
+  reusedExpressions: SmallTalkSummaryReusedExpressions;
+  correctionCount: number | null;
+}
 
-export const getRoleplayScenarios = async (): Promise<RoleplayScenario[]> => {
-  await wait(FAKE_LATENCY_MS);
-  return [...scenarios].sort(byLastTalked);
-};
+const ROLEPLAYS = '/api/v1/roleplays';
 
-export const createRoleplayScenario = async (
-  body: CreateRoleplayScenarioBody,
-): Promise<RoleplayScenario> => {
-  await wait(FAKE_CREATE_LATENCY_MS);
-  // 만들자마자 대화가 시작되니, 마지막 대화는 지금이다
-  const scenario: RoleplayScenario = {
-    ...body,
-    scenarioId: nextId++,
-    title: body.situation.trim(),
-    lastTalkedAt: toLocalDateTime(new Date()),
-    sessionCount: 0,
-  };
-  scenarios = [scenario, ...scenarios];
-  return scenario;
-};
+// 보관함에 저장 — 서버가 제목을 지어 오므로 응답이 느리다
+export const saveRoleplay = (body: RoleplaySettingsRequest) =>
+  api.post<RoleplaySettings>(ROLEPLAYS, body);
 
-export const deleteRoleplayScenario = async (scenarioId: number) => {
-  await wait(FAKE_LATENCY_MS);
-  scenarios = scenarios.filter(
-    (scenario) => scenario.scenarioId !== scenarioId,
+// 내 보관함 — 최신 저장순. 한 페이지 최대 50개
+export const getRoleplays = (page = 0, size = 50) =>
+  api.get<RoleplaySettingsListResponse>(
+    `${ROLEPLAYS}?page=${page}&size=${size}`,
   );
-};
 
-// 상대에 맞춘 아이디어가 필요한지는 백엔드 스펙이 오면 정한다 — 지금은 상대를 받지 않는다
-export const getRoleplayIdea = async (): Promise<RoleplayIdea> => {
-  await wait(FAKE_LATENCY_MS);
-  return IDEAS[Math.floor(Math.random() * IDEAS.length)];
-};
+// 아이디어 하나 — 직전에 받은 것을 빼 달라고 하면 연속으로 같은 게 오지 않는다
+export const getRoleplayIdea = (excludeId?: number) =>
+  api.get<RoleplayIdeaResponse>(
+    excludeId === undefined
+      ? `${ROLEPLAYS}/ideas/random`
+      : `${ROLEPLAYS}/ideas/random?excludeId=${excludeId}`,
+  );
 
-export const getRoleplaySessions = async (
-  scenarioId: number,
-): Promise<RoleplaySessionSummary[]> => {
-  await wait(FAKE_LATENCY_MS);
-  const scenario = scenarios.find((item) => item.scenarioId === scenarioId);
-  return Array.from({ length: scenario?.sessionCount ?? 0 }, (_, index) => ({
-    sessionId: scenarioId * 100 + index,
-    talkedAt: daysAgo(index),
-    turnCount: 7 - index,
-    correctionCount: 2 - Math.min(index, 2),
-    goodCount: 5 - index + Math.min(index, 2),
-  }));
-};
+// 저장한 롤플레이로 대화 시작 — 상대의 첫 발화까지 만들어 오므로 응답이 느리다
+export const startSavedRoleplaySession = (roleplayId: number) =>
+  api.post<RoleplaySessionStartResponse>(`${ROLEPLAYS}/${roleplayId}/sessions`);
+
+export const submitRoleplayMessage = (
+  sessionId: number,
+  body: RoleplayMessageSubmitRequest,
+) =>
+  api.post<RoleplayMessageSubmitResponse>(
+    `${ROLEPLAYS}/sessions/${sessionId}/messages`,
+    body,
+  );
+
+// X로 끝내기 — 마무리 발화 없이 지금 완료하고, 교정·요약은 뒤에서 만든다
+export const completeRoleplaySession = (sessionId: number) =>
+  api.post<void>(`${ROLEPLAYS}/sessions/${sessionId}/complete`);
+
+// 완료한 대화만 준다(진행 중이면 오류)
+export const getRoleplaySession = (sessionId: number) =>
+  api.get<RoleplayHistoryDetail>(`${ROLEPLAYS}/sessions/${sessionId}`);
+
+export const getRoleplaySummary = (sessionId: number) =>
+  api.get<RoleplaySummaryResponse>(
+    `${ROLEPLAYS}/sessions/${sessionId}/summary`,
+  );

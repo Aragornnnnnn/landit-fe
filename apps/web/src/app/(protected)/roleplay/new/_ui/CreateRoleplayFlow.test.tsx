@@ -3,7 +3,10 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { RoleplayScenario } from '@/features/roleplay/api/roleplay';
+import type {
+  RoleplayIdeaResponse,
+  RoleplaySettings,
+} from '@/features/roleplay/api/roleplay';
 import { useCreateRoleplayScenarioMutation } from '@/features/roleplay/model/useCreateRoleplayScenarioMutation';
 import { useRoleplayIdeaMutation } from '@/features/roleplay/model/useRoleplayIdeaMutation';
 
@@ -32,24 +35,31 @@ vi.mock('@/features/roleplay/model/useCreateRoleplayScenarioMutation', () => ({
 type Callbacks<T> = { onSuccess?: (value: T) => void; onError?: () => void };
 
 const IDEA = {
-  myRole: '여행객',
-  partnerRole: '호텔 직원',
+  id: 4,
+  title: '호텔 방 바꾸기',
+  userRole: '여행객',
+  aiRole: '호텔 직원',
   situation: '방 바꿔 달라고 하기',
 };
 
 // 뮤테이션은 경계다 — 부르면 바로 성공·실패 콜백을 돌려준다
-const answerIdea = () =>
+const answerIdea = (response: RoleplayIdeaResponse = { idea: IDEA }) => {
+  const mutate = vi.fn(
+    (_excludeId: unknown, callbacks: Callbacks<RoleplayIdeaResponse>) =>
+      callbacks.onSuccess?.(response),
+  );
   vi.mocked(useRoleplayIdeaMutation).mockReturnValue({
-    mutate: (_: unknown, callbacks: Callbacks<typeof IDEA>) =>
-      callbacks.onSuccess?.(IDEA),
+    mutate,
     isPending: false,
   } as unknown as ReturnType<typeof useRoleplayIdeaMutation>);
+  return mutate;
+};
 
 const answerCreate = (result: 'success' | 'error' | 'pending') => {
   const mutate = vi.fn(
-    (_body: unknown, callbacks: Callbacks<RoleplayScenario>) => {
+    (_body: unknown, callbacks: Callbacks<RoleplaySettings>) => {
       if (result === 'success') {
-        callbacks.onSuccess?.({ scenarioId: 9 } as RoleplayScenario);
+        callbacks.onSuccess?.({ id: 9 } as RoleplaySettings);
       }
       if (result === 'error') callbacks.onError?.();
     },
@@ -129,6 +139,34 @@ describe('CreateRoleplayFlow', () => {
     expect(screen.getByRole('button', { name: '시작하기' })).toBeEnabled();
   });
 
+  it('아이디어를 다시 받으면 직전에 받은 것은 빼 달라고 한다', async () => {
+    const mutate = answerIdea();
+    await goToForm();
+    const ideaButton = screen.getByRole('button', {
+      name: '아이디어 추천받기',
+    });
+
+    await userEvent.click(ideaButton);
+    await userEvent.click(ideaButton);
+
+    expect(mutate.mock.calls.map(([excludeId]) => excludeId)).toEqual([
+      undefined,
+      IDEA.id,
+    ]);
+  });
+
+  it('고를 아이디어가 없으면 칸을 건드리지 않는다', async () => {
+    answerIdea({ idea: null });
+    await goToForm();
+    await userEvent.type(screen.getByLabelText('나의 역할'), '손님');
+
+    await userEvent.click(
+      screen.getByRole('button', { name: '아이디어 추천받기' }),
+    );
+
+    expect(screen.getByLabelText('나의 역할')).toHaveValue('손님');
+  });
+
   it('시작하면 앞뒤 공백을 걷어 만들기를 요청하고 카드 섞기 화면을 띄운다', async () => {
     const mutate = answerCreate('pending');
     await goToForm();
@@ -139,9 +177,9 @@ describe('CreateRoleplayFlow', () => {
 
     expect(mutate).toHaveBeenCalledWith(
       {
-        partner: 'chloe',
-        myRole: '손님',
-        partnerRole: '바리스타',
+        characterId: 'chloe',
+        userRole: '손님',
+        aiRole: '바리스타',
         situation: '주문하기',
       },
       expect.anything(),

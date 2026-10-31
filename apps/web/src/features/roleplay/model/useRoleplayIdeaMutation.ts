@@ -6,4 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { getRoleplayIdea } from '../api/roleplay';
 
 export const useRoleplayIdeaMutation = () =>
-  useMutation({ mutationFn: () => getRoleplayIdea() });
+  useMutation({
+    // 직전에 받은 아이디어는 빼 달라고 한다 — 연달아 눌러도 같은 조합이 다시 오지 않는다
+    mutationFn: (excludeId?: number) => getRoleplayIdea(excludeId),
+  });

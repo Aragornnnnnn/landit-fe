@@ -2,7 +2,8 @@
 // 고른 상대는 주소(?partner=)에 남긴다 — 셸 뒤로가기도 입력에서 상대 고르기로 한 단계만 되돌아가고, 적던 글은 화면에 남는다
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -15,6 +16,7 @@ import {
 import { useCreateRoleplayScenarioMutation } from '@/features/roleplay/model/useCreateRoleplayScenarioMutation';
 import { useRoleplayIdeaMutation } from '@/features/roleplay/model/useRoleplayIdeaMutation';
 import { PARTNERS, toPartnerId } from '@/features/small-talk/model/partner';
+import { track } from '@/shared/analytics';
 import {
   backOrReplace,
   ROLEPLAY_NEW_PATH,
@@ -44,6 +46,10 @@ export const useCreateRoleplayFlow = () => {
   const [partnerIndex, setPartnerIndex] = useState(0);
   const [draft, setDraft] = useState<RoleplayDraft>(EMPTY_DRAFT);
   const idea = useRoleplayIdeaMutation();
+  // 마지막으로 받은 아이디어 — 다시 누르면 이것만 빼고 고르게 한다
+  const lastIdeaIdRef = useRef<number | undefined>(undefined);
+  // 아이디어로 채워 본 적이 있는가 — 받은 뒤 고쳐 썼어도 계측에선 아이디어를 쓴 것으로 본다
+  const usedIdeaRef = useRef(false);
   const create = useCreateRoleplayScenarioMutation();
   const step = toStep(generating, partnerParam);
   // 입력 단계에선 주소의 상대가 정본이다 — 새로고침해도 고른 상대가 남는다
@@ -61,14 +67,22 @@ export const useCreateRoleplayFlow = () => {
     setDraft((current) => ({ ...current, [field]: value }));
 
   // 아이디어는 세 칸을 한 조합으로 덮는다 — 받는 동안엔 시작하기와 다시 받기가 잠긴다
+  // 고를 아이디어가 하나도 없으면(idea가 null) 받지 못한 것과 같게 알린다
   const requestIdea = () =>
-    idea.mutate(undefined, {
-      onSuccess: (received) =>
+    idea.mutate(lastIdeaIdRef.current, {
+      onSuccess: ({ idea: received }) => {
+        if (!received) {
+          showToast(t('ideaFailToast'));
+          return;
+        }
+        lastIdeaIdRef.current = received.id;
+        usedIdeaRef.current = true;
         setDraft({
-          myRole: received.myRole,
-          partnerRole: received.partnerRole,
+          myRole: received.userRole,
+          partnerRole: received.aiRole,
           situation: received.situation,
-        }),
+        });
+      },
       onError: () => showToast(t('ideaFailToast')),
     });
 
@@ -77,15 +91,21 @@ export const useCreateRoleplayFlow = () => {
     setGenerating(true);
     create.mutate(
       {
-        partner,
-        myRole: draft.myRole.trim(),
-        partnerRole: draft.partnerRole.trim(),
+        characterId: partner,
+        userRole: draft.myRole.trim(),
+        aiRole: draft.partnerRole.trim(),
         situation: draft.situation.trim(),
       },
       {
         // 만든 화면으로 돌아오지 않는다 — 대화에서 뒤로 가면 탭으로 간다
-        onSuccess: (scenario) =>
-          router.replace(roleplayTalkPath(scenario.scenarioId)),
+        onSuccess: (saved) => {
+          track(EVENTS.ROLEPLAY_CREATED, {
+            roleplay_id: saved.id,
+            partner,
+            used_idea: usedIdeaRef.current,
+          });
+          router.replace(roleplayTalkPath(saved.id));
+        },
         // 적은 글은 그대로 두고 입력으로 돌려보낸다
         onError: () => {
           setGenerating(false);
