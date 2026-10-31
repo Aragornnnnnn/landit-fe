@@ -74,8 +74,12 @@ export async function POST(request: Request) {
   ) {
     return fail(400, 'responseId 모양이 맞지 않아요');
   }
+  // 완료 여부가 없으면 중간 저장 전 화면이 한 번에 낸 응답이라 완료로 본다
+  if (body.completed !== undefined && typeof body.completed !== 'boolean') {
+    return fail(400, 'completed 모양이 맞지 않아요');
+  }
+  const completed = body.completed ?? true;
   // 필수 답은 다 낼 때만 본다 — 중간 저장은 아직 안 쓴 문항이 있는 게 정상이다
-  const completed = body.completed !== false;
   if (completed && !fillsRequired(survey, body.answers)) {
     return fail(400, '필수 문항에 답하지 않았어요');
   }

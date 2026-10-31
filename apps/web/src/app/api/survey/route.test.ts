@@ -189,6 +189,18 @@ describe('POST /api/survey', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('완료 여부가 참·거짓이 아니면 400을 돌려주고 백엔드에 묻지 않는다', async () => {
+    const res = await POST(
+      surveyRequest(
+        { responseId: RESPONSE_ID, completed: 'false', answers: {} },
+        `Bearer ${token}`,
+      ),
+    );
+
+    expect(res.status).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('모르는 설문 종류면 400을 돌려주고 백엔드에 묻지 않는다', async () => {
     const res = await POST(
       surveyRequest({ survey: 'unknown', answers: {} }, `Bearer ${token}`),
