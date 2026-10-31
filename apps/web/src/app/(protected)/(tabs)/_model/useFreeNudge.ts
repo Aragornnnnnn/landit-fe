@@ -6,6 +6,7 @@
 // 하루 한 번(그날 첫 홈 방문)만 띄우고, 뜬 뒤 잠깐만 홈의 다른 시트(공지·소감·알림 동의)를 앞에서 막는다.
 // 칩을 안 누르고 머물러도, 판정이 끝나지 않아 못 떠도 그 방문의 시트들은 곧 나선다
 import { useEffect, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useLocale } from 'next-intl';
 
 import { useForceUpdateFirst } from '@/features/app-update/model/useForceUpdateFirst';
@@ -16,6 +17,7 @@ import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkM
 // 가로 import 사유: 말풍선은 무료 사용자에게만 뜬다 — 같은 게이트 판정을 쓴다
 import { usePromoSheetOpen } from '@/features/subscription/model/exit-promo/promo-handoff';
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
+import { track } from '@/shared/analytics';
 import { useSeenFlag } from '@/shared/lib/useSeenFlag';
 
 import { scenarioFeedbackSeen } from '../../_model/scenario-feedback-seen';
@@ -109,8 +111,11 @@ export const useFreeNudge = ({ onSmalltalk }: { onSmalltalk: boolean }) => {
     return () => setFreeNudgeFirst(false);
   }, [nudgeFirst]);
   // 실제로 떴을 때 오늘 보여 준 것으로 남긴다 — 띄우기 전에 남기면 한도 조회가 늦은 날은 보여 주지도 않고 하루를 쓴다
+  // 노출도 하루 한 번만 센다 — 같은 방문에 덮개가 걷혀 다시 떠도 두 번 세지 않는다
   useEffect(() => {
-    if (showsNudge) markNudgeShownToday();
+    if (!showsNudge || nudgeShownToday()) return;
+    markNudgeShownToday();
+    track(EVENTS.SMALL_TALK_FREE_NUDGE_VIEWED);
   }, [showsNudge]);
 
   const locale = useLocale();
@@ -127,6 +132,7 @@ export const useFreeNudge = ({ onSmalltalk }: { onSmalltalk: boolean }) => {
         : null,
     // 칩을 눌렀다 — 누른 순간 끈다. 화면이 바뀌길 기다리면 전환 동안 말풍선이 남는다
     dismiss: () => {
+      if (showsNudge) track(EVENTS.SMALL_TALK_FREE_NUDGE_TAPPED);
       if (pending) smalltalkNudgeSeen.mark();
     },
   };

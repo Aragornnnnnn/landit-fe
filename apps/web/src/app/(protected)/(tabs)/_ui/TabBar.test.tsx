@@ -522,6 +522,59 @@ describe('TabBar', () => {
       expect(freeNudge()).not.toBeInTheDocument();
     });
 
+    it('말풍선이 뜨면 노출을 하루 한 번 남긴다 — 같은 방문에 덮개가 걷혀 다시 떠도 한 번', () => {
+      // Given 말풍선 대상인 무료 사용자
+      vi.mocked(track).mockClear();
+      mocks.locked = true;
+      scenarioFeedbackSeen.mark();
+
+      // When 말풍선이 뜨고, 할인 시트에 잠깐 가렸다가 다시 뜨면
+      const { rerender } = render(<TabBar tabs={[scenario, smalltalk]} />);
+      mocks.promoOpen = true;
+      rerender(<TabBar tabs={[scenario, smalltalk]} />);
+      mocks.promoOpen = false;
+      rerender(<TabBar tabs={[scenario, smalltalk]} />);
+
+      // Then 노출은 한 번만 남는다
+      expect(freeNudge()).toBeInTheDocument();
+      expect(
+        vi
+          .mocked(track)
+          .mock.calls.filter(
+            ([name]) => name === 'Small Talk Free Nudge Viewed',
+          ),
+      ).toHaveLength(1);
+    });
+
+    it('말풍선이 떠 있을 때 칩을 누르면 탭을 남긴다', async () => {
+      // Given 말풍선이 떠 있을 때
+      vi.mocked(track).mockClear();
+      mocks.locked = true;
+      scenarioFeedbackSeen.mark();
+      const user = userEvent.setup();
+      render(<TabBar tabs={[scenario, smalltalk]} />);
+
+      // When 스몰톡 칩을 누르면
+      await user.click(screen.getByRole('link', { name: '스몰톡' }));
+
+      // Then 말풍선을 보고 누른 것으로 남긴다
+      expect(track).toHaveBeenCalledWith('Small Talk Free Nudge Tapped');
+    });
+
+    it('말풍선이 없을 때 칩을 누르면 말풍선 탭으로 남기지 않는다', async () => {
+      // Given 말풍선 대상이 아닌 사용자(피드백을 안 봤다)
+      vi.mocked(track).mockClear();
+      mocks.locked = true;
+      const user = userEvent.setup();
+      render(<TabBar tabs={[scenario, smalltalk]} />);
+
+      // When 스몰톡 칩을 누르면
+      await user.click(screen.getByRole('link', { name: '스몰톡' }));
+
+      // Then 말풍선 탭은 남지 않는다
+      expect(track).not.toHaveBeenCalledWith('Small Talk Free Nudge Tapped');
+    });
+
     it('스몰톡 칩을 누르면 바로 꺼진다', async () => {
       // Given 말풍선이 떠 있을 때
       mocks.locked = true;

@@ -210,6 +210,8 @@
 | Small Talk Topic Selected     | partner, topic_id                                                                                   | 주제 모달에서 주제 선택                                 |
 | Small Talk Intro Guide Closed | —                                                                                                   | 첫 진입 안내 닫음 (기기당 한 번)                        |
 | Small Talk Greeting Tapped    | partner, coached                                                                                    | 캐릭터를 눌러 인사 들음 (coached=코치마크 켜진 채 누름) |
+| Small Talk Free Nudge Viewed  | —                                                                                                   | 홈 스몰톡 칩 말풍선(무료 5분)이 뜸 (하루 한 번)         |
+| Small Talk Free Nudge Tapped  | —                                                                                                   | 말풍선이 떠 있을 때 스몰톡 칩을 누름                    |
 | Small Talk Started            | session_id, partner, first_speaker, topic_id?                                                       | 세션 시작 성공                                          |
 | Small Talk Turn Completed     | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms         | 발화 제출 성공                                          |
 | Small Talk Completed          | session_id, partner, turn_count, speaking_duration_ms, end_reason(user_ended\|time_limit)           | 서버가 완료 판정                                        |
