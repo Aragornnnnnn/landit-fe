@@ -13,6 +13,7 @@ import { toSpeakingTimeLabel } from '@/features/small-talk/lib/speaking-time';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
 import { useSpeakingLimit } from '@/features/small-talk/model/useSpeakingLimit';
 import { usePromoSheetOpen } from '@/features/subscription/model/exit-promo/promo-handoff';
+import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { lineBreak } from '@/shared/i18n/rich';
@@ -56,13 +57,15 @@ export default function SmallTalkPage() {
   // 구독 중이면 한도가 없다 — 알약에 잔량 대신 무제한을 쓴다
   const { unlimited, trialOn } = useSpeakingLimit();
   const start = useSmallTalkStart(trialOn);
-  // 다 썼는지는 서버(canStart)가 판정한다 — 결제하고 막 돌아와 받아 둔 응답이 결제 전 것이어도 갇히지 않게 학습 문을 같이 본다
+  // 결제하고 막 돌아왔을 때 받아 둔 응답이 결제 전 것이어도 갇히지 않게 구독 확인 여부를 같이 본다(게이트의 열림은 조회 실패에도 열려 쓰지 않는다)
+  const { subscription } = useSubscriptionQuery();
+  // 다 썼는지는 서버(canStart)가 판정한다
   const exhausted =
     main !== null &&
     isTalkExhausted({
       canStart: main.canStart,
       trialOn,
-      open: !gate.locked && !gate.deciding,
+      premium: main.unlimited === true || subscription?.premium === true,
     });
   // 무료 한도("5분") — 다 쓴 문구와 첫 안내 말풍선이 같이 쓴다
   const limitLabel = main
