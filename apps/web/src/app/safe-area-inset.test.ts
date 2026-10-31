@@ -109,6 +109,7 @@ const SCROLL_EXCEPTIONS = new Set([
   'features/survey/ui/steps/TextStep.tsx',
   'features/onboarding/ui/common/AccentForm.tsx',
   'features/conversation/ui/flow/QuestionCard.tsx',
+  'app/(protected)/(tabs)/roleplay/_ui/RoleplayHome.tsx',
   // 바깥 스크롤 상자 — 안쪽 내용이 safe-area 여백을 맡는다
   'app/(protected)/me/page.tsx',
   'app/(public)/(legal)/_ui/LegalDocumentPage.tsx',

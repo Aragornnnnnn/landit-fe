@@ -1,0 +1,67 @@
+{
+  "partner": {
+    "chloeIntroDescription": "LA 출신 · 수다쟁이, 미국 영어",
+    "marcoIntroDescription": "시드니 출신 · 느긋한 호주 영어",
+    "teddyIntroDescription": "런던 출신 · 차분한 영국 영어"
+  },
+  "home": {
+    "emptyTitle": "머릿속에만 있던 상황을<br></br>대화로 만들어 봐요",
+    "emptyDescription": "역할과 상황만 적으면<br></br>나만의 영어 시나리오가 바로 생겨요",
+    "presidentIdeaLabel": "미국 대통령과<br></br>토론",
+    "alienIdeaLabel": "외계인에게<br></br>지구 소개하기",
+    "listTitle": "내 시나리오",
+    "countLabel": "{count}개",
+    "createButton": "나만의 시나리오 만들기",
+    "todayLabel": "오늘",
+    "daysAgoLabel": "{days}일 전",
+    "moreLabel": "{title} 더보기",
+    "loadError": "시나리오를 불러오지 못했어요"
+  },
+  "more": {
+    "historyButton": "지난 대화 보기",
+    "deleteButton": "삭제하기",
+    "closeButton": "닫기"
+  },
+  "delete": {
+    "title": "이 시나리오를 지울까요?",
+    "description": "지난 대화 {count}번과 피드백도 함께 사라져요.<br></br>되돌릴 수 없어요.",
+    "emptyDescription": "되돌릴 수 없어요.",
+    "keepButton": "그냥 둘게요",
+    "confirmButton": "지울게요",
+    "doneToast": "시나리오를 지웠어요",
+    "failToast": "지우지 못했어요. 다시 시도해 주세요"
+  },
+  "create": {
+    "headerTitle": "나만의 시나리오 만들기",
+    "partnerTitle": "대화 상대 고르기",
+    "previousLabel": "이전 상대",
+    "nextLabel": "다음 상대",
+    "continueButton": "계속하기",
+    "myRoleLabel": "나의 역할",
+    "myRolePlaceholder": "예: 커피를 주문하는 손님",
+    "partnerRoleLabel": "{name}의 역할",
+    "partnerRolePlaceholder": "예: 바리스타",
+    "situationLabel": "상황과 주제",
+    "situationPlaceholder": "예: 새로 나온 메뉴를 추천해 달라고 하기",
+    "ideaButton": "아이디어 추천받기",
+    "ideaLoadingButton": "아이디어 받는 중…",
+    "ideaFailToast": "아이디어를 받지 못했어요. 다시 눌러 주세요",
+    "startButton": "시작하기",
+    "failToast": "시나리오를 만들지 못했어요. 다시 시도해 주세요"
+  },
+  "generating": {
+    "title": "시나리오 카드를 섞고 있어요",
+    "roleStepLabel": "역할 정하기",
+    "situationStepLabel": "상황 그리는 중…",
+    "openingStepLabel": "{name} 첫 마디 준비"
+  },
+  "sessions": {
+    "countTitle": "지난 대화 {count}번",
+    "todayLabel": "오늘 · {time}",
+    "metaCaption": "{turns}번 주고받음 · 교정 {corrections}개",
+    "goodMetaCaption": "{turns}번 주고받음 · 잘했어요 {good}개",
+    "emptyDescription": "아직 이 시나리오로 한 대화가 없어요",
+    "loadError": "지난 대화를 불러오지 못했어요",
+    "loadingLabel": "지난 대화를 불러오는 중"
+  }
+}
