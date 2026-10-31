@@ -1,7 +1,7 @@
 'use client';
 
 // 시나리오 탭 — 그날 배정된 카드 한 장을 받는다. 날짜는 ?date=로 넘기고 없으면 오늘
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -25,6 +25,11 @@ import {
 } from '@/shared/lib/routes';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
+import {
+  setHomeCovered,
+  useFreeNudgeFirst,
+  useFreeNudgeShown,
+} from '../_model/smalltalk-free-nudge';
 import { useEarnShowerHold } from '../_model/useEarnShowerHold';
 import { useSatisfactionSheet } from '../_model/useSatisfactionSheet';
 import { eventPopupOrder, isLampSettled } from './_model/event-popup-order';
@@ -59,12 +64,17 @@ function ScenarioContent() {
   const [summonClosed, setSummonClosed] = useState(false);
   // 이번 방문에 띄울 시트 하나 — 소감·리뷰가 없을 때만 알림 동의를 청한다
   const satisfactionSheet = useSatisfactionSheet('scenario');
+  const [satisfactionClosed, setSatisfactionClosed] = useState(false);
   // 할인 시트가 떠 있으면 소감은 미룬다 — 할인은 5분뿐이고 소감은 다음에 또 물을 수 있다
   const promoOpen = usePromoSheetOpen();
   // 돌아온 순간의 환급 동전 연출이 끝날 때까지도 미룬다 — 어둠 아래에서 시트가 같이 올라오면 둘이 겹친다
   const showerHold = useEarnShowerHold();
   // 강제 업데이트가 1순위다 — 그거거나 그럴지 모르는 동안엔 공지·램프·시트 모두 나서지 않는다
   const updateFirst = useForceUpdateFirst();
+  // 스몰톡 칩 말풍선(무료 5분)이 떠 있거나 뜰지 정하는 중이면 공지·알림 동의가 기다린다 — 말풍선이 먼저다
+  const nudgeFirst = useFreeNudgeFirst();
+  // 이번 방문에 말풍선이 떴으면 공지·알림 동의는 다음 방문으로 — 말풍선 뒤에 시트가 연달아 올라와 덮지 않게(소감은 그날만 물을 수 있어 그대로 뒤따른다)
+  const nudgeShown = useFreeNudgeShown();
   // 대화 시작을 눌렀다 — 바로 이동하지 않고 브리핑 카드를 잠깐 보여준 뒤 대화로 들어간다
   const [briefingScenario, setBriefingScenario] = useState<Scenario | null>(
     null,
@@ -77,11 +87,12 @@ function ScenarioContent() {
     cleared: cleared && date === undefined,
     held: updateFirst || showerHold,
   });
-  // 이벤트 공지는 아무것도 나서지 않는 방문에만 — 온보딩 직후·프리뷰·소감 차례면 건너뛰고 다음 방문에 띄운다
+  // 이벤트 공지는 아무것도 나서지 않는 방문에만 — 온보딩 직후·프리뷰·소감·칩 말풍선 차례면 건너뛰고 다음 방문에 띄운다
   const eventPopupSkipped = useEventPopupSkip({
     onboarded: searchParams.has(ONBOARDED_PARAM),
     previewTurn: premiumPreview.turn,
     satisfactionTurn: satisfactionSheet !== null,
+    nudgeShown,
   });
   const { popup: eventPopup, loading: eventPopupLoading } = useActiveEventPopup(
     { skip: eventPopupSkipped },
@@ -97,6 +108,16 @@ function ScenarioContent() {
     lampSummons,
     summonClosed,
   });
+  // 오늘 카드에 대한 판단이 끝났는가(대화를 끝냈거나 램프를 껐다) — 소감·알림 동의는 이 뒤에만 나선다
+  const settled = date === undefined && (cleared || summonClosed);
+  // 이번 방문에 소감·리뷰 시트가 나설 차례인가 — 시트를 그리는 조건과 말풍선을 막는 조건이 이 값 하나를 본다
+  const satisfactionTurn = settled && satisfactionSheet !== null;
+  // 홈이 덮여 있는가(램프가 묻는 중이거나 소감 시트가 아직 안 닫힘) — 떠나면 "아직 모름"으로 되돌려 다음 홈이 다시 알린다
+  const satisfactionPending = satisfactionTurn && !satisfactionClosed;
+  useEffect(() => {
+    setHomeCovered(!lampSettled || satisfactionPending);
+    return () => setHomeCovered(null);
+  }, [lampSettled, satisfactionPending]);
   const { pending: eventPopupPending, ready: eventPopupReady } =
     eventPopupOrder({
       loading: eventPopupLoading,
@@ -108,15 +129,19 @@ function ScenarioContent() {
       updateFirst,
       promoOpen,
       showerHold,
+      nudgeFirst,
     });
-  const sheetsHeld =
+  // 소감과 알림 동의가 함께 기다리는 것들
+  const sheetsBlocked =
     updateFirst ||
     eventPopupPending ||
     promoOpen ||
     showerHold ||
     premiumPreview.active;
-  // 소감·리뷰는 프리뷰를 끝낼 때까지 더 미룬다 — 그사이 이 방문엔 알림 동의도 안 뜬다(소감 차례가 남아 있어서)
-  const satisfactionHeld = sheetsHeld || premiumPreview.holdsSatisfaction;
+  // 알림 동의는 칩 말풍선 차례에도 기다린다
+  const sheetsHeld = sheetsBlocked || nudgeFirst;
+  // 소감·리뷰는 칩 말풍선보다 먼저 묻고(닫으면 말풍선이 뜬다), 프리뷰를 끝낼 때까지만 더 미룬다
+  const satisfactionHeld = sheetsBlocked || premiumPreview.holdsSatisfaction;
   // 대화는 페이월 문이 아니다 — 오늘 카드든 지난 카드든, 재대화든 구독과 관계없이 시작한다.
   // 무료 사용자가 막히는 건 그 뒤의 상세 피드백과 표현 학습이다 (docs/subscription.md 「무료 구간과 페이월 게이트」)
   const start = (scenario: Scenario) => {
@@ -128,11 +153,10 @@ function ScenarioContent() {
     // 브리핑을 읽는 동안 대화 라우트를 미리 받아 둔다 — 이 화면은 링크로 오갈 수 없어 자동 프리페치가 안 걸린다
     router.prefetch(scenarioTalkPath(scenario.scenarioId, date));
   };
-  const settled = date === undefined && (cleared || summonClosed);
   // 시트류(소감 다음 순번)가 나설 차례 — 카드 판단이 끝났고 소감 시트가 안 뜰 때.
   // 이번 방문에 공지를 띄웠으면 알림 동의는 다음 방문으로 넘긴다 — 들어오자마자 시트가 연달아 뜨지 않게
   const promptTurn =
-    settled && satisfactionSheet === null && eventPopup === null;
+    settled && satisfactionSheet === null && eventPopup === null && !nudgeShown;
 
   // 날짜 이동은 replace다 — push면 히스토리가 쌓여 뒤로가기가 날짜 되감기가 된다.
   // 오늘은 날짜 없는 주소가 정본이다 — 붙여 두면 자정을 넘겨도 어제에 머문다
@@ -178,15 +202,23 @@ function ScenarioContent() {
         />
       )}
 
-      {settled && !satisfactionHeld && satisfactionSheet === 'talk' && (
-        <SatisfactionGate
-          moment="scenario"
-          earlier={premiumPreview.unfinished}
-        />
-      )}
-      {settled && !satisfactionHeld && satisfactionSheet === 'review' && (
-        <SatisfactionGate moment="review" />
-      )}
+      {satisfactionTurn &&
+        !satisfactionHeld &&
+        satisfactionSheet === 'talk' && (
+          <SatisfactionGate
+            moment="scenario"
+            earlier={premiumPreview.unfinished}
+            onClosed={() => setSatisfactionClosed(true)}
+          />
+        )}
+      {satisfactionTurn &&
+        !satisfactionHeld &&
+        satisfactionSheet === 'review' && (
+          <SatisfactionGate
+            moment="review"
+            onClosed={() => setSatisfactionClosed(true)}
+          />
+        )}
       {eventPopup && eventPopupReady && (
         <EventPopupGate
           popup={eventPopup}

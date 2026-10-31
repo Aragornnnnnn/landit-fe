@@ -5,7 +5,12 @@ import { describe, expect, it } from 'vitest';
 
 import { useEventPopupSkip } from './useEventPopupSkip';
 
-const quiet = { onboarded: false, previewTurn: false, satisfactionTurn: false };
+const quiet = {
+  onboarded: false,
+  previewTurn: false,
+  satisfactionTurn: false,
+  nudgeShown: false,
+};
 
 describe('useEventPopupSkip', () => {
   it('아무것도 나서지 않는 방문이면 건너뛰지 않는다', () => {

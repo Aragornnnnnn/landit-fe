@@ -10,21 +10,26 @@
   "tabPage": {
     "historyButton": "記録",
     "greetingLabel": "{name}のあいさつを聞く",
-    "doneTitle": "今日の1分スモールトークは完了です",
-    "doneCaption": "また明日お話ししましょう",
-    "remainingLabel": "今日話せる残り",
+    "remainingLabel": "無料の残り時間",
+    "unlimitedRemainingLabel": "残り時間",
+    "noTimeLeftLabel": "0分",
     "unlimitedLabel": "無制限",
     "userFirstButton": "自分から話しかける",
     "partnerFirstButton": "{name}から話しかけてもらう"
   },
   "introGuide": {
+    "dialogLabel": "スモールトークの案内",
+    "nextLabel": "次へ",
     "mascotLabel": "ラディ",
-    "title": "自由に会話できる時間です",
-    "description": "好きな相手を選んで話してみましょう。<br></br><phrase>“Bye!”</phrase>や<phrase>“Talk to you later”</phrase>などと言えば会話が終わります。",
+    "freeTalkBody": "スモールトークでは<br></br>3人の友だちと<br></br><em>英語で自由に</em>話せます",
+    "endingBody": "<em>“Bye!”</em>や<em>“Talk to you later”</em><br></br>などのあいさつで<br></br>会話が自動で終わります",
+    "limitCaption": "無料で<em>{limit}</em>プレゼントしました<br></br>さっそく使ってみましょう",
+    "startCaption": "どちらかを押して<br></br>最初の会話を始めましょう",
+    "continueCaption": "画面をタップして続ける ›",
     "confirmButton": "わかりました"
   },
-  "greetingCoach": {
-    "bubbleCaption": "タップであいさつ"
+  "greetingHint": {
+    "bubbleCaption": "タップするとあいさつします"
   },
   "topicPicker": {
     "title": "{name}と何について話しますか？",

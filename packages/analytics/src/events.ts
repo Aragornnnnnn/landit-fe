@@ -91,6 +91,8 @@ export const EVENTS = {
   SMALL_TALK_TOPICS_REFRESHED: 'Small Talk Topics Refreshed',
   SMALL_TALK_INTRO_GUIDE_CLOSED: 'Small Talk Intro Guide Closed',
   SMALL_TALK_GREETING_TAPPED: 'Small Talk Greeting Tapped',
+  SMALL_TALK_FREE_NUDGE_VIEWED: 'Small Talk Free Nudge Viewed',
+  SMALL_TALK_FREE_NUDGE_TAPPED: 'Small Talk Free Nudge Tapped',
   SMALL_TALK_STARTED: 'Small Talk Started',
   SMALL_TALK_TURN_COMPLETED: 'Small Talk Turn Completed',
   SMALL_TALK_COMPLETED: 'Small Talk Completed',
@@ -668,8 +670,10 @@ export type EventProps = {
   // 보여준 주제가 마음에 안 들어 다른 주제를 받았다 (열 때 자동으로 받는 것은 세지 않는다)
   'Small Talk Topics Refreshed': { partner: TalkPartner };
   'Small Talk Intro Guide Closed': undefined;
-  // coached = 코치마크가 켜진 채로 눌렀는지 (코치마크가 시킨 첫 탭)
+  // coached = 캐릭터 옆 "누르면 인사해요" 힌트가 떠 있을 때 눌렀는지 (힌트가 시킨 첫 탭)
   'Small Talk Greeting Tapped': { partner: TalkPartner; coached: boolean };
+  'Small Talk Free Nudge Viewed': undefined;
+  'Small Talk Free Nudge Tapped': undefined;
   'Small Talk Started': {
     session_id: number;
     partner: TalkPartner;
