@@ -14,6 +14,7 @@ import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkM
 import { useSpeakingLimit } from '@/features/small-talk/model/useSpeakingLimit';
 import { usePromoSheetOpen } from '@/features/subscription/model/exit-promo/promo-handoff';
 import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
+import { usePaymentLive } from '@/features/subscription/model/paywall-gate/usePaymentLive';
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { lineBreak } from '@/shared/i18n/rich';
@@ -52,16 +53,14 @@ export default function SmallTalkPage() {
   const gate = usePaywallGate();
   // 구독 중이면 한도가 없다 — 알약에 잔량 대신 무제한을 쓴다
   const { unlimited, trialOn } = useSpeakingLimit();
-  // 결제하고 막 돌아왔을 때 받아 둔 응답이 결제 전 것이어도 갇히지 않게 구독 확인 여부를 같이 본다(게이트의 열림은 조회 실패에도 열려 쓰지 않는다)
-  const { subscription } = useSubscriptionQuery();
+  // 결제하고 막 돌아왔을 때 받아 둔 응답이 결제 전 것이어도 갇히지 않게 구독 확인 여부를 같이 본다(게이트의 열림은 조회 실패에도 열려 쓰지 않는다).
+  // 잠글 수 없는 환경에서는 게이트처럼 조회하지 않는다
+  const { subscription } = useSubscriptionQuery({ enabled: usePaymentLive() });
+  const premium = main?.unlimited === true || subscription?.premium === true;
   // 다 썼는지는 서버(canStart)가 판정한다
   const exhausted =
     main !== null &&
-    isTalkExhausted({
-      canStart: main.canStart,
-      trialOn,
-      premium: main.unlimited === true || subscription?.premium === true,
-    });
+    isTalkExhausted({ canStart: main.canStart, trialOn, premium });
   // 다 썼어도 시작 버튼은 그대로다 — 누르면 대화 대신 페이월이 열린다
   const start = useSmallTalkStart({ trialOn, exhausted });
   // 무료 한도("5분") — 다 쓴 문구와 첫 안내 말풍선이 같이 쓴다
@@ -83,7 +82,7 @@ export default function SmallTalkPage() {
       endingBody: t.raw('introGuide.endingBody'),
     },
     free: !unlimited,
-    premium: !gate.locked && !gate.deciding,
+    premium,
     trialOn,
     exhausted,
   });
