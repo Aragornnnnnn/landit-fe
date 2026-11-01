@@ -142,6 +142,9 @@ function ScenarioContent() {
   const sheetsHeld = sheetsBlocked || nudgeFirst;
   // 소감·리뷰는 칩 말풍선보다 먼저 묻고(닫으면 말풍선이 뜬다), 프리뷰를 끝낼 때까지만 더 미룬다
   const satisfactionHeld = sheetsBlocked || premiumPreview.holdsSatisfaction;
+  // 닫은 시트는 그 뒤로 미룰 것이 켜져도 내리지 않는다 — 내렸다 다시 그리면 열린 채로 새로 뜬다
+  const satisfactionShown =
+    satisfactionTurn && (satisfactionClosed || !satisfactionHeld);
   // 대화는 페이월 문이 아니다 — 오늘 카드든 지난 카드든, 재대화든 구독과 관계없이 시작한다.
   // 무료 사용자가 막히는 건 그 뒤의 상세 피드백과 표현 학습이다 (docs/subscription.md 「무료 구간과 페이월 게이트」)
   const start = (scenario: Scenario) => {
@@ -202,23 +205,19 @@ function ScenarioContent() {
         />
       )}
 
-      {satisfactionTurn &&
-        !satisfactionHeld &&
-        satisfactionSheet === 'talk' && (
-          <SatisfactionGate
-            moment="scenario"
-            earlier={premiumPreview.unfinished}
-            onClosed={() => setSatisfactionClosed(true)}
-          />
-        )}
-      {satisfactionTurn &&
-        !satisfactionHeld &&
-        satisfactionSheet === 'review' && (
-          <SatisfactionGate
-            moment="review"
-            onClosed={() => setSatisfactionClosed(true)}
-          />
-        )}
+      {satisfactionShown && satisfactionSheet === 'talk' && (
+        <SatisfactionGate
+          moment="scenario"
+          earlier={premiumPreview.unfinished}
+          onClosed={() => setSatisfactionClosed(true)}
+        />
+      )}
+      {satisfactionShown && satisfactionSheet === 'review' && (
+        <SatisfactionGate
+          moment="review"
+          onClosed={() => setSatisfactionClosed(true)}
+        />
+      )}
       {eventPopup && eventPopupReady && (
         <EventPopupGate
           popup={eventPopup}
