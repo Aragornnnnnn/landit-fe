@@ -35,7 +35,7 @@ describe('useSmallTalkStart', () => {
     expect(mocks.guard).not.toHaveBeenCalled();
   });
 
-  it('무료 5분을 다 썼으면 대화로 가지 않고 페이월을 연다 — 시작 버튼은 그대로 두고 누르면 구독을 권한다', () => {
+  it('무료 5분을 다 썼으면 페이월 게이트에 맡긴다 — 잠겼으면 페이월이 열리고, 결제가 꺼진 환경이면 버튼이 먹통이 되지 않게 그대로 들인다', () => {
     // Given 무료 5분을 다 쓴 무료 사용자
     const go = vi.fn();
     const { result } = renderHook(() =>
@@ -45,13 +45,9 @@ describe('useSmallTalkStart', () => {
     // When 시작하면
     result.current(go);
 
-    // Then 대화로 가지 않고 페이월 게이트에 맡긴다
+    // Then 바로 들어가지 않고 게이트에 맡긴다
     expect(go).not.toHaveBeenCalled();
-    expect(mocks.guard).toHaveBeenCalledWith(
-      expect.any(Function),
-      paywallOptions,
-    );
-    expect(mocks.guard.mock.calls[0][0]).not.toBe(go);
+    expect(mocks.guard).toHaveBeenCalledWith(go, paywallOptions);
   });
 
   it('정책이 꺼져 있으면 페이월 게이트를 거친다 — 서버가 무료 사용자의 스몰톡을 막는 동안', () => {

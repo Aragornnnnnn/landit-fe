@@ -11,7 +11,7 @@ const PAYWALL_OPTIONS = {
 
 /**
  * @param trialOn 서버가 무료 5분 정책을 켰는가(스몰톡 메인의 freeTrialEnabled). 메인을 아직 못 받았으면 false
- * @param exhausted 무료 5분을 다 썼는가 — 시작 버튼은 그대로 두고, 누르면 대화 대신 페이월을 연다
+ * @param exhausted 무료 5분을 다 썼는가 — 시작 버튼은 그대로 두고 게이트에 맡긴다. 잠겼으면 페이월, 열렸으면(결제가 꺼진 환경·구독 조회 실패) 먹통이 되지 않게 들이고 판정은 서버에 맡긴다
  */
 export const useSmallTalkStart = ({
   trialOn,
@@ -22,8 +22,7 @@ export const useSmallTalkStart = ({
 }) => {
   const { guard } = usePaywallGate();
   return (go: () => void) => {
-    if (exhausted) guard(() => {}, PAYWALL_OPTIONS);
-    else if (trialOn) go();
+    if (trialOn && !exhausted) go();
     else guard(go, PAYWALL_OPTIONS);
   };
 };
