@@ -252,7 +252,7 @@ export default function SmallTalkPage() {
                 size="md"
                 className="cq-tiny:h-11"
                 disabled={isLoading}
-                onClick={() => start(() => void picker.openPicker())}
+                onClick={() => void picker.openPicker()}
               >
                 {t('tabPage.partnerFirstButton', { name: partnerName })}
                 <ArrowRightIcon size={16} />
