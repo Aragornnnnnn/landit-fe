@@ -384,6 +384,7 @@ export type RetryScreen =
   | 'smalltalk_summary'
   | 'roleplay'
   | 'roleplay_summary'
+  | 'roleplay_history'
   | 'conversation'
   | 'card_back'
   | 'expression_list'

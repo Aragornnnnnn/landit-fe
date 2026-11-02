@@ -1,4 +1,4 @@
-// 지난 기록 목록의 한 줄 — 제목·한 줄 설명·오른쪽 요약·화살표. 스몰톡과 시나리오 기록 두 화면이 함께 써서 (protected) 그룹 루트에 둔다
+// 지난 기록 목록의 한 줄 — 제목·한 줄 설명(없을 수 있다)·오른쪽 요약·화살표. 스몰톡과 시나리오 기록 두 화면이 함께 써서 (protected) 그룹 루트에 둔다
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 
@@ -9,7 +9,7 @@ const ROW_CLASS =
 
 type HistoryRowProps = {
   title: ReactNode;
-  meta: ReactNode;
+  meta?: ReactNode;
   trailing?: ReactNode;
   // 화면 코드를 미리 받게 할 곳은 링크로, 이동 전에 할 일이 있으면 버튼으로 쓴다
 } & ({ href: string } | { onClick: () => void });
@@ -24,9 +24,11 @@ export const HistoryRow = ({
     <>
       <div className="min-w-0 flex-1">
         <p className="truncate text-base font-bold text-foreground">{title}</p>
-        <p className="mt-1.5 text-13 font-medium text-muted-foreground">
-          {meta}
-        </p>
+        {meta && (
+          <p className="mt-1.5 text-13 font-medium text-muted-foreground">
+            {meta}
+          </p>
+        )}
       </div>
       {trailing}
       <ChevronRightIcon size={16} className="text-muted-foreground/60" />

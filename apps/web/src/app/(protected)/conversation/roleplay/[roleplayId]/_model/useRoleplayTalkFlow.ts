@@ -21,6 +21,7 @@ import {
   type RoleplayProgress,
   type RoleplaySessionStartResponse,
 } from '@/features/roleplay/api/roleplay';
+import { roleplayKeys } from '@/features/roleplay/model/keys';
 import { prefetchRoleplaySummary } from '@/features/roleplay/model/useRoleplaySummaryQuery';
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
 import { SUMMARY_IMAGE_SOURCES } from '@/features/small-talk/model/randi-pose';
@@ -191,6 +192,13 @@ export const useRoleplayTalkFlow = ({
       end_reason: endReason,
     });
     refreshSmallTalkHome();
+    // 카드의 마지막 대화 시각·순서와 지난 대화 목록이 바뀌었다
+    void queryClient.invalidateQueries({
+      queryKey: roleplayKeys.scenarios(userId),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: roleplayKeys.histories(userId),
+    });
     // 축하 화면이 열자마자 새 숫자를 그리도록 미리 받아 둔다
     refreshStreakAfterCompletion(queryClient);
     // 다음 화면(오늘의 롤플레이)이 준비되게 — 요약과 래디 그림을 미리 받는다

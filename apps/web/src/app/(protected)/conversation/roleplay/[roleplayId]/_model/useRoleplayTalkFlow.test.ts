@@ -348,6 +348,22 @@ describe('useRoleplayTalkFlow — 끝내고 피드백 보기', () => {
     expect(refreshStreak).toHaveBeenCalled();
   });
 
+  it('완료하면 카드의 마지막 대화 시각과 지난 대화 목록을 다시 받게 한다', async () => {
+    submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
+    completeRoleplaySession.mockResolvedValueOnce(COMPLETED);
+    const { result } = await renderFlow();
+    await sayOnce(result);
+
+    await act(async () => result.current.completeTalk());
+
+    expect(queryClientMock.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: roleplayKeys.scenarios(39),
+    });
+    expect(queryClientMock.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: roleplayKeys.histories(39),
+    });
+  });
+
   it('서버가 남길 대화가 없어 버렸으면(DISCARDED) 요약 대신 홈으로 간다', async () => {
     submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
     completeRoleplaySession.mockResolvedValueOnce(DISCARDED);

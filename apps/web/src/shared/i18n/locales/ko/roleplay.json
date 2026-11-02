@@ -50,6 +50,13 @@
     "retryButton": "다시 시도",
     "homeButton": "홈으로 돌아갈게요"
   },
+  "sessions": {
+    "countTitle": "지난 대화 {count}번",
+    "todayLabel": "오늘 · {time}",
+    "emptyDescription": "아직 이 시나리오로 한 대화가 없어요",
+    "loadError": "지난 대화를 불러오지 못했어요",
+    "loadingLabel": "지난 대화를 불러오는 중"
+  },
   "transcript": {
     "loadError": "대화를 불러오지 못했어요.",
     "memoryTag": "{month}/{day} 스몰톡에서 말한 {label}",

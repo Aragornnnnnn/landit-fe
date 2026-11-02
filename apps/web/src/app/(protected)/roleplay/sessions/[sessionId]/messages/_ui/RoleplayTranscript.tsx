@@ -1,7 +1,7 @@
 'use client';
 
 // 롤플레이 대화 기록 — 스몰톡 대화 기록과 같은 말풍선·교정 카드로 그 대화를 다시 보여 준다.
-// 요약을 거쳐 오므로 교정은 이미 다 만들어져 있어 기다리지 않는다. 마지막 버튼은 표현 학습이 아니라 홈이다
+// 요약이나 지난 대화 목록에서 오므로 교정은 기다리지 않는다. 마지막 버튼은 표현 학습이 아니라 홈이다
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
@@ -17,11 +17,23 @@ import {
   PartnerMessage,
 } from '@/features/small-talk/ui/TranscriptMessages';
 import { TranscriptSkeleton } from '@/features/small-talk/ui/TranscriptSkeleton';
-import { ROLEPLAY_PATH, roleplaySummaryPath } from '@/shared/lib/routes';
+import {
+  backOrReplace,
+  ROLEPLAY_PATH,
+  roleplaySessionsPath,
+  roleplaySummaryPath,
+} from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { ChevronDownIcon } from '@/shared/ui/Icons';
 
-export const RoleplayTranscript = ({ sessionId }: { sessionId: number }) => {
+export const RoleplayTranscript = ({
+  sessionId,
+  fromRoleplayId,
+}: {
+  sessionId: number;
+  // 지난 대화 목록에서 왔으면 그 시나리오
+  fromRoleplayId?: number;
+}) => {
   const router = useRouter();
   const t = useTranslations('roleplay.transcript');
   const tSmallTalk = useTranslations('smallTalk.transcript');
@@ -44,7 +56,11 @@ export const RoleplayTranscript = ({ sessionId }: { sessionId: number }) => {
     >
       <PageHeader
         title={session?.title ?? ''}
-        onBack={() => router.replace(roleplaySummaryPath(sessionId))}
+        onBack={() =>
+          fromRoleplayId === undefined
+            ? router.replace(roleplaySummaryPath(sessionId))
+            : backOrReplace(router, roleplaySessionsPath(fromRoleplayId))
+        }
       />
 
       {error ? (

@@ -10,7 +10,7 @@ import { RoleplayTranscript } from './RoleplayTranscript';
 
 const replace = vi.hoisted(() => vi.fn());
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace, push: vi.fn() }),
+  useRouter: () => ({ replace, push: vi.fn(), back: vi.fn() }),
 }));
 vi.mock('@/features/roleplay/model/useRoleplaySessionQuery', () => ({
   useRoleplaySessionQuery: vi.fn(),
@@ -173,5 +173,18 @@ describe('RoleplayTranscript', () => {
     await userEvent.click(screen.getByRole('button', { name: '뒤로' }));
 
     expect(replace).toHaveBeenCalledWith('/roleplay/sessions/7/summary');
+  });
+
+  it('지난 대화 목록에서 왔으면 뒤로 가기가 그 목록으로 간다', async () => {
+    vi.mocked(useRoleplaySessionQuery).mockReturnValue({
+      session: detail,
+      error: null,
+      retry: vi.fn(),
+    });
+    render(<RoleplayTranscript sessionId={7} fromRoleplayId={5} />);
+
+    await userEvent.click(screen.getByRole('button', { name: '뒤로' }));
+
+    expect(replace).toHaveBeenCalledWith('/roleplay/5/sessions');
   });
 });

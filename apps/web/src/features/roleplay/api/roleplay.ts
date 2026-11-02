@@ -189,6 +189,23 @@ export interface RoleplayCompletionResponse {
   roleplayId: number | null;
 }
 
+// 이 시나리오로 완료한 대화 한 건
+export interface RoleplayHistorySummary {
+  sessionId: number;
+  title: string;
+  characterId: string;
+  startedAt: string;
+  completedAt: string;
+  userSpeakingDurationMs: number;
+}
+
+export interface RoleplaySessionListResponse {
+  items: RoleplayHistorySummary[];
+  page: number;
+  size: number;
+  hasNext: boolean;
+}
+
 const ROLEPLAYS = '/api/v1/roleplays';
 
 // 보관함에 저장 — 서버가 제목을 지어 오므로 응답이 느리다
@@ -226,6 +243,12 @@ export const submitRoleplayMessage = (
 export const completeRoleplaySession = (sessionId: number) =>
   api.post<RoleplayCompletionResponse>(
     `${ROLEPLAYS}/sessions/${sessionId}/complete`,
+  );
+
+// 이 시나리오로 완료한 대화 — 최근에 끝낸 순. 한 페이지 최대 50개
+export const getRoleplaySessions = (roleplayId: number, page = 0, size = 50) =>
+  api.get<RoleplaySessionListResponse>(
+    `${ROLEPLAYS}/${roleplayId}/sessions?page=${page}&size=${size}`,
   );
 
 // 완료한 대화만 준다(진행 중이면 오류)

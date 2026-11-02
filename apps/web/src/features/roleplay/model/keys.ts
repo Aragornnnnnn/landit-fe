@@ -5,6 +5,11 @@ export const roleplayKeys = {
   // 내 시나리오 목록 — 만들면 다시 받는다
   scenarios: (userId: number | null) =>
     [...roleplayKeys.all, userId, 'scenarios'] as const,
+  // 시나리오별 지난 대화 전체 — 대화를 끝내면 통째로 다시 받는다
+  histories: (userId: number | null) =>
+    [...roleplayKeys.all, userId, 'histories'] as const,
+  history: (userId: number | null, roleplayId: number) =>
+    [...roleplayKeys.histories(userId), roleplayId] as const,
   // 끝난 대화 한 건(대화 기록·교정)
   session: (userId: number | null, sessionId: number) =>
     [...roleplayKeys.all, userId, 'session', sessionId] as const,
