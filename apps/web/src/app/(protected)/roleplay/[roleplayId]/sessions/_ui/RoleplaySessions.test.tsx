@@ -1,4 +1,4 @@
-// 지난 대화 목록 — 총횟수와 날짜를 보여 주고, 행은 그 대화의 기록으로 보낸다. 대화가 없으면 빈 안내가 선다
+// 지난 대화 목록 — 시나리오 기록과 같은 틀로 회차와 날짜를 보여 주고, 행은 그 대화의 기록으로 보낸다
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -51,12 +51,24 @@ const session = (sessionId: number): RoleplayHistorySummary => ({
 afterEach(cleanup);
 
 describe('RoleplaySessions', () => {
-  it('지난 대화 횟수를 제목으로 보여 준다', () => {
-    showSessions([session(1), session(2), session(3)]);
+  it('최신 대화가 가장 큰 회차로 위에 선다 — 서버가 최신순으로 준다', () => {
+    showSessions([session(3), session(2), session(1)]);
 
     render(<RoleplaySessions roleplayId={5} />);
 
-    expect(screen.getByText('지난 대화 3번')).toBeInTheDocument();
+    expect(screen.getAllByRole('link').map((row) => row.textContent)).toEqual([
+      expect.stringContaining('3번째 대화'),
+      expect.stringContaining('2번째 대화'),
+      expect.stringContaining('1번째 대화'),
+    ]);
+  });
+
+  it('아랫줄에 그 대화를 끝낸 날짜를 보여 준다', () => {
+    showSessions([session(1)]);
+
+    render(<RoleplaySessions roleplayId={5} />);
+
+    expect(screen.getByText('10월 28일')).toBeInTheDocument();
   });
 
   it('행을 누르면 목록으로 돌아올 수 있게 그 대화의 기록으로 간다', () => {

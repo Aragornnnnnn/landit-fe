@@ -14,42 +14,31 @@ import { useRoleplayScenariosQuery } from '@/features/roleplay/model/useRoleplay
 import { useRoleplaySessionsQuery } from '@/features/roleplay/model/useRoleplaySessionsQuery';
 import type { Locale } from '@/shared/i18n/locale';
 import { toDayLabel } from '@/shared/lib/day-label';
-import { getDeviceToday } from '@/shared/lib/device-today';
 import {
   backOrReplace,
   ROLEPLAY_PATH,
   roleplayTranscriptPath,
 } from '@/shared/lib/routes';
-import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
+// 한 줄에 담기는 건 둘 — 몇 번째 대화였는지, 언제였는지
 const SessionRow = ({
   roleplayId,
   session,
-  today,
+  ordinal,
 }: {
   roleplayId: number;
   session: RoleplayHistorySummary;
-  // 기기의 오늘(yyyy-MM-dd) — 행마다 시계를 읽지 않게 목록이 한 번 읽어 내려준다
-  today: string;
+  ordinal: number;
 }) => {
   const t = useTranslations('roleplay.sessions');
   const locale = useLocale() as Locale;
-  // 오늘 한 대화는 하루에 여럿일 수 있어 시각까지 붙인다
-  const title =
-    session.completedAt.slice(0, 10) === today
-      ? t('todayLabel', {
-          time: new Intl.DateTimeFormat(locale, {
-            hour: 'numeric',
-            minute: '2-digit',
-          }).format(new Date(session.completedAt)),
-        })
-      : toDayLabel(session.completedAt, locale);
 
   return (
     <HistoryRow
       href={roleplayTranscriptPath(session.sessionId, roleplayId)}
-      title={title}
+      title={t('sessionTitle', { ordinal })}
+      meta={toDayLabel(session.completedAt, locale)}
     />
   );
 };
@@ -59,8 +48,6 @@ export const RoleplaySessions = ({ roleplayId }: { roleplayId: number }) => {
   const t = useTranslations('roleplay.sessions');
   const { scenarios } = useRoleplayScenariosQuery();
   const { sessions, error, retry } = useRoleplaySessionsQuery(roleplayId);
-  // 서버 렌더엔 기기 시계가 없다 — 하이드레이션 뒤에 읽는다 (그 전엔 목록도 아직 없다)
-  const today = useClientOnlyValue(getDeviceToday, '');
   // 제목은 탭에서 이미 받은 목록에서 꺼낸다 — 이 화면만을 위한 조회를 늘리지 않는다
   const title =
     scenarios?.find((scenario) => scenario.id === roleplayId)?.title ?? '';
@@ -90,16 +77,17 @@ export const RoleplaySessions = ({ roleplayId }: { roleplayId: number }) => {
         </p>
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-[max(var(--safe-area-inset-bottom),24px)]">
-          <h2 className="pt-2 pb-3 text-lg font-bold text-foreground">
-            {t('countTitle', { count: sessions.length })}
-          </h2>
+          <p className="pt-2 pb-4 text-sm text-muted-foreground">
+            {t('guideDescription')}
+          </p>
           <ul className="flex flex-col gap-2">
-            {sessions.map((session) => (
+            {sessions.map((session, index) => (
               <li key={session.sessionId}>
                 <SessionRow
                   roleplayId={roleplayId}
                   session={session}
-                  today={today}
+                  // 서버가 최신순으로 주니 가장 먼저 마친 대화가 1번째다
+                  ordinal={sessions.length - index}
                 />
               </li>
             ))}
