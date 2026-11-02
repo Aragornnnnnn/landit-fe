@@ -1,7 +1,6 @@
 // 롤플레이 기록 메시지를 스몰톡과 같이 쓰는 말풍선이 읽는 모양으로 바꾼다
+import type { RoleplayHistoryMessage } from '@/features/roleplay/api/roleplay';
 import type { TranscriptMessage } from '@/features/small-talk/ui/TranscriptMessages';
-
-import type { RoleplayHistoryMessage } from '../api/roleplay';
 
 /**
  * @param message 백엔드가 준 기록 메시지
@@ -9,13 +8,20 @@ import type { RoleplayHistoryMessage } from '../api/roleplay';
  */
 export const toTranscriptMessage = (
   message: RoleplayHistoryMessage,
-  toMemoryTag: (month: number, day: number, label: string | null) => string,
-): TranscriptMessage => {
+  toMemoryTag: (memory: {
+    month: number;
+    day: number;
+    label: string | null;
+  }) => string,
+): TranscriptMessage & Pick<RoleplayHistoryMessage, 'role'> => {
   const sentence = message.correction?.sentence;
-  const observedOn = sentence?.memoryObservedOn;
+  const [, month, day] = (sentence?.memoryObservedOn ?? '')
+    .split('-')
+    .map(Number);
 
   return {
     messageId: message.messageId,
+    role: message.role,
     content: message.content,
     translatedContent: message.translatedContent,
     reusedExpression: message.reusedExpression,
@@ -26,12 +32,8 @@ export const toTranscriptMessage = (
           betterSentence: sentence.betterSentence,
           reason: sentence.reason,
           mistakePattern: sentence.mistakePattern,
-          memoryTag: observedOn
-            ? toMemoryTag(
-                Number(observedOn.slice(5, 7)),
-                Number(observedOn.slice(8, 10)),
-                sentence.memoryLabel,
-              )
+          memoryTag: sentence.memoryObservedOn
+            ? toMemoryTag({ month, day, label: sentence.memoryLabel })
             : null,
         }
       : null,

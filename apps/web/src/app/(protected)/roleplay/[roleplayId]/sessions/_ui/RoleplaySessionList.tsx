@@ -10,8 +10,8 @@ import {
 } from '@/app/(protected)/_ui/HistoryRow';
 import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
 import type { RoleplayHistorySummary } from '@/features/roleplay/api/roleplay';
+import { useRoleplayHistoryQuery } from '@/features/roleplay/model/useRoleplayHistoryQuery';
 import { useRoleplayScenariosQuery } from '@/features/roleplay/model/useRoleplayScenariosQuery';
-import { useRoleplaySessionsQuery } from '@/features/roleplay/model/useRoleplaySessionsQuery';
 import type { Locale } from '@/shared/i18n/locale';
 import { toDayLabel } from '@/shared/lib/day-label';
 import {
@@ -43,11 +43,11 @@ const SessionRow = ({
   );
 };
 
-export const RoleplaySessions = ({ roleplayId }: { roleplayId: number }) => {
+export const RoleplaySessionList = ({ roleplayId }: { roleplayId: number }) => {
   const router = useRouter();
   const t = useTranslations('roleplay.sessions');
   const { scenarios } = useRoleplayScenariosQuery();
-  const { sessions, error, retry } = useRoleplaySessionsQuery(roleplayId);
+  const { sessions, error, retry } = useRoleplayHistoryQuery(roleplayId);
   // 제목은 탭에서 이미 받은 목록에서 꺼낸다 — 이 화면만을 위한 조회를 늘리지 않는다
   const title =
     scenarios?.find((scenario) => scenario.id === roleplayId)?.title ?? '';
@@ -76,10 +76,7 @@ export const RoleplaySessions = ({ roleplayId }: { roleplayId: number }) => {
           {t('emptyDescription')}
         </p>
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-[max(var(--safe-area-inset-bottom),24px)]">
-          <p className="pt-2 pb-4 text-sm text-muted-foreground">
-            {t('guideDescription')}
-          </p>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-2 pb-[max(var(--safe-area-inset-bottom),24px)]">
           <ul className="flex flex-col gap-2">
             {sessions.map((session, index) => (
               <li key={session.sessionId}>

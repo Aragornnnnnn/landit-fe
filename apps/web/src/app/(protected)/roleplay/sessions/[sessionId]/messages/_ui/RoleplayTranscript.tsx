@@ -1,12 +1,11 @@
 'use client';
 
 // 롤플레이 대화 기록 — 스몰톡 대화 기록과 같은 말풍선·교정 카드로 그 대화를 다시 보여 준다.
-// 요약이나 지난 대화 목록에서 오므로 교정은 기다리지 않는다. 마지막 버튼은 표현 학습이 아니라 홈이다
+// 요약이나 지난 대화 목록에서 온다. 교정을 아직 만드는 중이면 찾는 중으로 보여 준다. 마지막 버튼은 표현 학습이 아니라 홈이다
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
-import { toTranscriptMessage } from '@/features/roleplay/model/transcript-message';
 import { useRoleplaySessionQuery } from '@/features/roleplay/model/useRoleplaySessionQuery';
 import {
   messageAnchorId,
@@ -26,6 +25,8 @@ import {
 import { Button } from '@/shared/ui/Button';
 import { ChevronDownIcon } from '@/shared/ui/Icons';
 
+import { toTranscriptMessage } from '../_model/transcript-message';
+
 export const RoleplayTranscript = ({
   sessionId,
   fromRoleplayId,
@@ -37,21 +38,18 @@ export const RoleplayTranscript = ({
   const router = useRouter();
   const t = useTranslations('roleplay.transcript');
   const tSmallTalk = useTranslations('smallTalk.transcript');
-  const { session, error } = useRoleplaySessionQuery(sessionId);
-  const messages = (session?.messages ?? []).map((message) => ({
-    role: message.role,
-    view: toTranscriptMessage(message, (month, day, label) =>
+  const { session, error, waitExpired } = useRoleplaySessionQuery(sessionId);
+  const messages = (session?.messages ?? []).map((message) =>
+    toTranscriptMessage(message, ({ month, day, label }) =>
       t('memoryTagLabel', {
         month,
         day,
         label: label ?? t('memoryDefaultLabel'),
       }),
     ),
-  }));
-  // 들어오면 첫 교정으로, 칩을 누르면 다음 교정으로
-  const { hasNext, jumpNext } = useCorrectionJump(
-    messages.map(({ view }) => view),
   );
+  // 들어오면 첫 교정으로, 칩을 누르면 다음 교정으로
+  const { hasNext, jumpNext } = useCorrectionJump(messages);
 
   return (
     <main
@@ -76,16 +74,19 @@ export const RoleplayTranscript = ({
       ) : (
         <div className="relative flex min-h-0 flex-1 flex-col">
           <ul className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 pt-2 pb-8">
-            {messages.map(({ role, view }) => (
-              <li key={view.messageId} id={messageAnchorId(view.messageId)}>
-                {role === 'USER' ? (
+            {messages.map((message) => (
+              <li
+                key={message.messageId}
+                id={messageAnchorId(message.messageId)}
+              >
+                {message.role === 'USER' ? (
                   <MyMessage
-                    message={view}
-                    waitExpired
+                    message={message}
+                    waitExpired={waitExpired}
                     lateCorrection={false}
                   />
                 ) : (
-                  <PartnerMessage message={view} />
+                  <PartnerMessage message={message} />
                 )}
               </li>
             ))}

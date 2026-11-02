@@ -2,7 +2,7 @@
 import { use } from 'react';
 import { notFound } from 'next/navigation';
 
-import { RoleplaySessions } from './_ui/RoleplaySessions';
+import { RoleplaySessionList } from './_ui/RoleplaySessionList';
 
 export default function RoleplaySessionsPage({
   params,
@@ -14,5 +14,5 @@ export default function RoleplaySessionsPage({
   // 손으로 고친 주소가 그대로 조회로 흘러가지 않게
   if (!Number.isSafeInteger(id) || id <= 0) notFound();
 
-  return <RoleplaySessions roleplayId={id} />;
+  return <RoleplaySessionList roleplayId={id} />;
 }

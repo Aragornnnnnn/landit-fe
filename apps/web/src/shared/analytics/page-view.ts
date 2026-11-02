@@ -192,7 +192,7 @@ const resolvePage = (
     }
   }
 
-  // 롤플레이 대화 — 어느 시나리오(보관함 id)로 연 대화인지 남긴다
+  // 시나리오 하나의 지난 대화 목록 — 어느 시나리오인지 id로 남긴다
   if (seg[0] === 'roleplay' && seg[1] && seg[2] === 'sessions') {
     return {
       page_name: 'roleplay_history',
@@ -200,6 +200,8 @@ const resolvePage = (
       roleplay_id: toId(seg[1]),
     };
   }
+
+  // 롤플레이 대화 — 어느 시나리오(보관함 id)로 연 대화인지 남긴다
   if (seg[0] === 'conversation' && seg[1] === 'roleplay' && seg[2]) {
     return {
       page_name: 'conversation_roleplay',

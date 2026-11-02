@@ -66,7 +66,6 @@
     "homeButton": "홈으로 돌아갈게요"
   },
   "sessions": {
-    "guideDescription": "대화를 누르면 그때 받은 피드백을 다시 볼 수 있어요.",
     "sessionTitle": "{ordinal}번째 대화",
     "emptyDescription": "아직 이 시나리오로 한 대화가 없어요",
     "loadError": "지난 대화를 불러오지 못했어요",
