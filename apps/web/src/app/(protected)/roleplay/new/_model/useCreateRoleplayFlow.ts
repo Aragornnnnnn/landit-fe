@@ -46,7 +46,12 @@ export const useCreateRoleplayFlow = () => {
   // 만드는 중은 주소에 두지 않는다 — 요청이 떠난 뒤엔 되돌아올 단계가 아니다
   const [generating, setGenerating] = useState(false);
   // 보이는 캐릭터가 곧 선택이다 — 따로 고르는 동작이 없다
-  const [partnerIndex, setPartnerIndex] = useState(0);
+  // 새로고침한 입력에서 뒤로 와도 주소에 있던 상대에서 시작한다
+  const [partnerIndex, setPartnerIndex] = useState(() =>
+    partnerParam
+      ? PARTNERS.findIndex((item) => item.id === toPartnerId(partnerParam))
+      : 0,
+  );
   const [draft, setDraft] = useState<RoleplayDraft>(EMPTY_DRAFT);
   const idea = useRoleplayIdeaMutation();
   // 마지막으로 받은 아이디어 — 다시 누르면 이것만 빼고 고르게 한다
