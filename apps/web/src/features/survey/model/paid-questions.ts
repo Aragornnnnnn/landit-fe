@@ -13,10 +13,18 @@ export const PAID_QUESTIONS: readonly Question[] = [
     required: true,
   },
   {
-    // 결제 전에 기대한 것(위 문항)과 갈리게 써 본 경험을 묻는다
+    // 이유는 뭉뚱그려지기 쉬워서 그때의 장면을 따로 묻는다 — 주관식이 이어지니 이 문항은 건너뛸 수 있게 둔다
+    id: 'decision_moment',
+    kind: 'text',
+    title: '결제를 결심한 순간은\n언제였나요?',
+    hint: '기억나는 대로 적어주세요',
+    placeholder: '편하게 적어주세요',
+  },
+  {
+    // 결제 전의 마음(위 두 문항)과 갈리게 써 본 경험을 묻는다
     id: 'liked_features',
     kind: 'multi',
-    title: '써 보니 어떤 기능이\n가장 만족스러우세요?',
+    title: '써 보니 어떤 기능이\n만족스러우세요?',
     options: [
       '시나리오 대화',
       '대화 중간중간 나오는 상대의 속마음',
@@ -29,17 +37,10 @@ export const PAID_QUESTIONS: readonly Question[] = [
     other: true,
   },
   {
-    id: 'wish',
-    kind: 'text',
-    title: '더 있었으면 하는\n기능이 있나요?',
-    hint: '떠오르는 대로 적어주세요',
-    placeholder: '편하게 적어주세요',
-  },
-  {
     id: 'disappointment',
     kind: 'text',
     title: '써 보니 아쉬운 점은\n없으셨나요?',
-    hint: '고쳤으면 하는 점도 좋아요',
+    hint: '고쳤으면 하는 점, 있었으면 하는 기능도 좋아요',
     placeholder: '편하게 적어주세요',
     required: true,
   },
