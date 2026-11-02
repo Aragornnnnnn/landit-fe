@@ -52,6 +52,8 @@
   },
   "transcript": {
     "loadError": "대화를 불러오지 못했어요.",
+    "memoryTag": "{month}/{day} 스몰톡에서 말한 {label}",
+    "memoryDefaultLabel": "내용",
     "homeButton": "홈으로 돌아갈게요"
   }
 }

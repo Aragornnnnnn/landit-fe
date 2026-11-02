@@ -16,6 +16,8 @@ vi.mock('@/features/roleplay/model/useRoleplaySessionQuery', () => ({
   useRoleplaySessionQuery: vi.fn(),
 }));
 
+const GOOD_JOB = '잘했어요!';
+
 const detail: RoleplayHistoryDetail = {
   sessionId: 7,
   title: '카페에서 커피 주문하기',
@@ -44,11 +46,15 @@ const detail: RoleplayHistoryDetail = {
       translatedContent: null,
       emotion: null,
       correction: {
-        originalSentence: 'Yes, can you recommend me new menu?',
-        betterSentence: 'Could you recommend something new?',
-        reason: "'recommend me'는 어색해요.",
-        mistakePattern: 'WORD_CHOICE',
-        memoryTag: null,
+        status: 'COMPLETED',
+        sentence: {
+          originalSentence: 'Yes, can you recommend me new menu?',
+          betterSentence: 'Could you recommend something new?',
+          reason: "'recommend me'는 어색해요.",
+          mistakePattern: 'WORD_CHOICE',
+          memoryObservedOn: null,
+          memoryLabel: null,
+        },
       },
       reusedExpression: null,
     },
@@ -82,6 +88,63 @@ describe('RoleplayTranscript', () => {
     expect(
       screen.getByText('Could you recommend something new?'),
     ).toBeInTheDocument();
+  });
+
+  it('장기기억을 근거로 고쳤으면 그 날짜와 내용을 태그로 보여 준다', () => {
+    const [partner, mine] = detail.messages;
+    vi.mocked(useRoleplaySessionQuery).mockReturnValue({
+      session: {
+        ...detail,
+        messages: [
+          partner,
+          {
+            ...mine,
+            correction: {
+              status: 'COMPLETED',
+              sentence: {
+                ...mine.correction!.sentence!,
+                memoryObservedOn: '2026-09-03',
+                memoryLabel: '헬스장',
+              },
+            },
+          },
+        ],
+      },
+      error: null,
+      retry: vi.fn(),
+    });
+
+    render(<RoleplayTranscript sessionId={7} />);
+
+    expect(screen.getByText(/9\/3 스몰톡에서 말한 헬스장/)).toBeInTheDocument();
+  });
+
+  const showWithoutSentence = (status: 'COMPLETED' | 'FAILED') => {
+    const [partner, mine] = detail.messages;
+    vi.mocked(useRoleplaySessionQuery).mockReturnValue({
+      session: {
+        ...detail,
+        messages: [
+          partner,
+          { ...mine, correction: { status, sentence: null } },
+        ],
+      },
+      error: null,
+      retry: vi.fn(),
+    });
+    render(<RoleplayTranscript sessionId={7} />);
+  };
+
+  it('다 살펴보고 고칠 게 없었던 말엔 칭찬을 붙인다', () => {
+    showWithoutSentence('COMPLETED');
+
+    expect(screen.getByText(GOOD_JOB)).toBeInTheDocument();
+  });
+
+  it('교정을 만들다 실패한 말은 칭찬하지 않는다', () => {
+    showWithoutSentence('FAILED');
+
+    expect(screen.queryByText(GOOD_JOB)).not.toBeInTheDocument();
   });
 
   it('홈으로 돌아가기를 누르면 롤플레이 탭으로 간다', async () => {

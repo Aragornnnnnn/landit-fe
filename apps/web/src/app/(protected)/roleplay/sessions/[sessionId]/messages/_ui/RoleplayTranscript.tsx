@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
+import { toTranscriptMessage } from '@/features/roleplay/model/transcript-message';
 import { useRoleplaySessionQuery } from '@/features/roleplay/model/useRoleplaySessionQuery';
 import {
   messageAnchorId,
@@ -25,8 +26,16 @@ export const RoleplayTranscript = ({ sessionId }: { sessionId: number }) => {
   const t = useTranslations('roleplay.transcript');
   const tSmallTalk = useTranslations('smallTalk.transcript');
   const { session, error } = useRoleplaySessionQuery(sessionId);
+  const messages = (session?.messages ?? []).map((message) => ({
+    role: message.role,
+    view: toTranscriptMessage(message, (month, day, label) =>
+      t('memoryTag', { month, day, label: label ?? t('memoryDefaultLabel') }),
+    ),
+  }));
   // 들어오면 첫 교정으로, 칩을 누르면 다음 교정으로
-  const { hasNext, jumpNext } = useCorrectionJump(session?.messages ?? []);
+  const { hasNext, jumpNext } = useCorrectionJump(
+    messages.map(({ view }) => view),
+  );
 
   return (
     <main
@@ -47,20 +56,16 @@ export const RoleplayTranscript = ({ sessionId }: { sessionId: number }) => {
       ) : (
         <div className="relative flex min-h-0 flex-1 flex-col">
           <ul className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 pt-2 pb-8">
-            {session.messages.map((message) => (
-              <li
-                key={message.messageId}
-                id={messageAnchorId(message.messageId)}
-              >
-                {message.role === 'USER' ? (
-                  // 교정 상태 값이 오지 않아 찾는 중·잘했어요 표시는 서지 않는다 — 고친 말이 있으면 카드만 붙는다
+            {messages.map(({ role, view }) => (
+              <li key={view.messageId} id={messageAnchorId(view.messageId)}>
+                {role === 'USER' ? (
                   <MyMessage
-                    message={message}
+                    message={view}
                     waitExpired
                     lateCorrection={false}
                   />
                 ) : (
-                  <PartnerMessage message={message} />
+                  <PartnerMessage message={view} />
                 )}
               </li>
             ))}
