@@ -1,5 +1,5 @@
-// 내 시나리오 카드 — 캐릭터 상반신이 카드 전면에 서고, 아래 어둠 위에 제목과 시각만 둔다. 카드를 누르면 다시 대화한다.
-// 시안의 시각은 마지막으로 대화한 때지만, 백엔드가 아직 만든 때(createdAt)만 줘서 그 값을 쓴다
+// 내 시나리오 카드 — 캐릭터 상반신이 카드 전면에 서고, 아래 어둠 위에 제목과 마지막 대화 시각만 둔다.
+// 카드를 누르면 다시 대화하고, 모서리 ⋯는 지난 대화·삭제를 연다
 import { useLocale, useTranslations } from 'next-intl';
 
 import type { RoleplaySettings } from '@/features/roleplay/api/roleplay';
@@ -9,31 +9,35 @@ import { PartnerBust } from '@/features/roleplay/ui/PartnerBust';
 import { toPartnerId } from '@/features/small-talk/model/partner';
 import type { Locale } from '@/shared/i18n/locale';
 import { toDayLabel } from '@/shared/lib/day-label';
+import { MoreHorizontalIcon } from '@/shared/ui/Icons';
 
 interface ScenarioCardProps {
   scenario: RoleplaySettings;
   // 기기의 오늘(yyyy-MM-dd) — 카드마다 시계를 읽지 않게 목록이 한 번 읽어 내려준다
   today: string;
   onOpen: () => void;
+  onMore: () => void;
 }
 
 export const ScenarioCard = ({
   scenario,
   today,
   onOpen,
+  onMore,
 }: ScenarioCardProps) => {
   const t = useTranslations('roleplay.home');
   const locale = useLocale() as Locale;
   const partner = toPartnerId(scenario.characterId);
+  const talkedAt = scenario.lastPlayedAt ?? scenario.createdAt;
   const timeLabel = () => {
-    const lastTalked = toLastTalked(scenario.createdAt, today);
+    const lastTalked = toLastTalked(talkedAt, today);
     switch (lastTalked.kind) {
       case 'today':
         return t('todayLabel');
       case 'daysAgo':
         return t('daysAgoLabel', { days: lastTalked.days });
       case 'date':
-        return toDayLabel(scenario.createdAt, locale);
+        return toDayLabel(talkedAt, locale);
     }
   };
 
@@ -58,6 +62,15 @@ export const ScenarioCard = ({
           </span>
           <span className="text-xs text-white/75">{timeLabel()}</span>
         </span>
+      </button>
+      {/* 눈에 띄면 카드보다 먼저 읽힌다 — 바탕 없는 흰 점 셋으로 연하게 둔다 */}
+      <button
+        type="button"
+        onClick={onMore}
+        aria-label={t('moreLabel', { title: scenario.title })}
+        className="absolute top-2 right-2 flex size-8 items-center justify-center text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)] active:opacity-60"
+      >
+        <MoreHorizontalIcon size={20} />
       </button>
     </div>
   );

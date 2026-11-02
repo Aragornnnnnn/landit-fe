@@ -12,20 +12,25 @@ import { getDeviceToday } from '@/shared/lib/device-today';
 import {
   ROLEPLAY_NEW_PATH,
   ROLEPLAY_PATH,
+  roleplaySessionsPath,
   roleplayTalkPath,
 } from '@/shared/lib/routes';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 import { Button } from '@/shared/ui/Button';
 import { RetryNotice } from '@/shared/ui/RetryNotice';
 
+import { useScenarioMenu } from '../_model/useScenarioMenu';
+import { DeleteScenarioSheet } from './DeleteScenarioSheet';
 import { RoleplayEmpty } from './RoleplayEmpty';
 import { ScenarioCard } from './ScenarioCard';
+import { ScenarioMoreSheet } from './ScenarioMoreSheet';
 
 export const RoleplayHome = () => {
   const router = useRouter();
   const t = useTranslations('roleplay.home');
   const { scenarios, error, retry } = useRoleplayScenariosQuery();
   const gate = usePaywallGate();
+  const menu = useScenarioMenu();
   // 서버 렌더엔 기기 시계가 없다 — 하이드레이션 뒤에 읽는다 (그 전엔 목록도 아직 없다)
   const today = useClientOnlyValue(getDeviceToday, '');
 
@@ -41,6 +46,11 @@ export const RoleplayHome = () => {
       source: 'roleplay',
       returnTo: ROLEPLAY_PATH,
     });
+
+  const openHistory = () => {
+    if (menu.moreTarget === null) return;
+    router.push(roleplaySessionsPath(menu.moreTarget.id));
+  };
 
   if (error) {
     return (
@@ -77,6 +87,7 @@ export const RoleplayHome = () => {
                       scenario={scenario}
                       today={today}
                       onOpen={() => startTalk(scenario)}
+                      onMore={() => menu.openMore(scenario)}
                     />
                   </li>
                 ))}
@@ -88,6 +99,19 @@ export const RoleplayHome = () => {
       <div className="px-5 pt-3">
         <Button onClick={startCreate}>{t('createButton')}</Button>
       </div>
+
+      <ScenarioMoreSheet
+        scenario={menu.moreTarget}
+        onHistory={openHistory}
+        onDelete={menu.askDelete}
+        onClose={menu.closeMore}
+      />
+      <DeleteScenarioSheet
+        scenario={menu.deleteTarget}
+        deleting={menu.deleting}
+        onConfirm={menu.confirmDelete}
+        onClose={menu.closeDelete}
+      />
     </div>
   );
 };
