@@ -248,4 +248,14 @@ describe('CreateRoleplayFlow', () => {
 
     expect(screen.getByLabelText('테디의 역할')).toBeInTheDocument();
   });
+
+  it('새로고침한 입력에서 뒤로 가도 주소에 있던 상대가 선택돼 있다', async () => {
+    search = new URLSearchParams('partner=teddy');
+    const { rerender } = render(<CreateRoleplayFlow />);
+
+    await clickAndRerender('뒤로', rerender);
+    await clickAndRerender('계속하기', rerender);
+
+    expect(screen.getByLabelText('테디의 역할')).toBeInTheDocument();
+  });
 });
