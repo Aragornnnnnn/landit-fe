@@ -29,7 +29,11 @@ export const RoleplayTranscript = ({ sessionId }: { sessionId: number }) => {
   const messages = (session?.messages ?? []).map((message) => ({
     role: message.role,
     view: toTranscriptMessage(message, (month, day, label) =>
-      t('memoryTag', { month, day, label: label ?? t('memoryDefaultLabel') }),
+      t('memoryTagLabel', {
+        month,
+        day,
+        label: label ?? t('memoryDefaultLabel'),
+      }),
     ),
   }));
   // 들어오면 첫 교정으로, 칩을 누르면 다음 교정으로
