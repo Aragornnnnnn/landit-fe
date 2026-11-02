@@ -377,6 +377,22 @@ describe('useRoleplayTalkFlow — 끝내고 피드백 보기', () => {
     expect(refreshStreak).not.toHaveBeenCalled();
   });
 
+  it('완료 응답을 못 받아도 목록을 다시 받게 한다 — 서버엔 이미 끝났을 수 있다', async () => {
+    submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
+    completeRoleplaySession.mockRejectedValueOnce(new Error('network'));
+    const { result } = await renderFlow();
+    await sayOnce(result);
+
+    await act(async () => result.current.completeTalk());
+
+    expect(queryClientMock.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: roleplayKeys.scenarios(39),
+    });
+    expect(queryClientMock.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: roleplayKeys.histories(39),
+    });
+  });
+
   it('완료 요청이 실패하면 알리고 홈으로 간다', async () => {
     submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
     completeRoleplaySession.mockRejectedValueOnce(new Error('500'));

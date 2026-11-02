@@ -65,6 +65,15 @@ export const useRoleplayTalkFlow = ({
     void queryClient.invalidateQueries({
       queryKey: smallTalkKeys.main(userId),
     });
+  // 카드의 마지막 대화 시각·순서와 지난 대화 목록이 바뀌었다
+  const refreshScenarioLists = () => {
+    void queryClient.invalidateQueries({
+      queryKey: roleplayKeys.scenarios(userId),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: roleplayKeys.histories(userId),
+    });
+  };
   // 끝내기가 완료를 맡았는가 — 켜지면 이후 발화는 보내지 않고, 늦게 온 응답·실패도 버린다
   const directEndStartedRef = useRef(false);
   // 완료 후속을 이미 했는가 — 시간 소진으로 끝난 뒤 끝내기가 와도 두 번 하지 않는다
@@ -192,13 +201,7 @@ export const useRoleplayTalkFlow = ({
       end_reason: endReason,
     });
     refreshSmallTalkHome();
-    // 카드의 마지막 대화 시각·순서와 지난 대화 목록이 바뀌었다
-    void queryClient.invalidateQueries({
-      queryKey: roleplayKeys.scenarios(userId),
-    });
-    void queryClient.invalidateQueries({
-      queryKey: roleplayKeys.histories(userId),
-    });
+    refreshScenarioLists();
     // 축하 화면이 열자마자 새 숫자를 그리도록 미리 받아 둔다
     refreshStreakAfterCompletion(queryClient);
     // 다음 화면(오늘의 롤플레이)이 준비되게 — 요약과 래디 그림을 미리 받는다
@@ -250,19 +253,18 @@ export const useRoleplayTalkFlow = ({
     setCompleting(true);
     if (engine.phase === 'USER_SPEAKING') engine.input.abandonInput();
     engine.abandon();
-    let completion;
-    try {
-      completion = await completeRoleplaySession(session.sessionId);
-    } catch (cause) {
-      console.warn('[roleplay] 끝내기 전송 실패', cause);
-      reportError(cause);
-      showToast(t('completeFailedToast'));
-      leave();
-      goHome();
-      return;
-    }
-    // 보낸 말이 서버에 닿지 못했다 — 피드백을 만들 대화가 없으니 요약 대신 홈으로 간다
-    if (completion.status === 'DISCARDED') {
+    const completion = await completeRoleplaySession(session.sessionId).catch(
+      (cause) => {
+        console.warn('[roleplay] 끝내기 전송 실패', cause);
+        reportError(cause);
+        showToast(t('completeFailedToast'));
+        // 서버엔 끝났는데 응답만 놓쳤을 수 있다
+        refreshScenarioLists();
+        return null;
+      },
+    );
+    // 실패했거나, 보낸 말이 서버에 닿지 못해 피드백을 만들 대화가 없다 — 요약 대신 홈으로 간다
+    if (completion?.status !== 'COMPLETED') {
       leave();
       goHome();
       return;

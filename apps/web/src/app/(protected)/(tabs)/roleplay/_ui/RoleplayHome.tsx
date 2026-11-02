@@ -30,7 +30,7 @@ export const RoleplayHome = () => {
   const t = useTranslations('roleplay.home');
   const { scenarios, error, retry } = useRoleplayScenariosQuery();
   const gate = usePaywallGate();
-  const menu = useScenarioMenu();
+  const menu = useScenarioMenu(scenarios);
   // 서버 렌더엔 기기 시계가 없다 — 하이드레이션 뒤에 읽는다 (그 전엔 목록도 아직 없다)
   const today = useClientOnlyValue(getDeviceToday, '');
 

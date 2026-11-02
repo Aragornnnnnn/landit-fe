@@ -4,16 +4,22 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
+import { useQueryClient } from '@tanstack/react-query';
 
 import {
   startSavedRoleplaySession,
   type RoleplaySessionStartResponse,
 } from '@/features/roleplay/api/roleplay';
+import { roleplayKeys } from '@/features/roleplay/model/keys';
 import { toPartnerId } from '@/features/small-talk/model/partner';
 import { track } from '@/shared/analytics';
+import { ApiError } from '@/shared/api/api-error';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 import { reportError } from '@/shared/monitoring/report';
 
 export const useRoleplaySession = (roleplayId: number) => {
+  const queryClient = useQueryClient();
+  const userId = useCurrentUserId();
   const [session, setSession] = useState<RoleplaySessionStartResponse | null>(
     null,
   );
@@ -37,8 +43,14 @@ export const useRoleplaySession = (roleplayId: number) => {
         console.warn('[roleplay] 세션 시작 실패', cause);
         reportError(cause);
         setError(cause);
+        // 다른 기기에서 지운 시나리오다 — 돌아간 홈에 옛 카드가 남지 않게 한다
+        if (cause instanceof ApiError && cause.status === 404) {
+          void queryClient.invalidateQueries({
+            queryKey: roleplayKeys.scenarios(userId),
+          });
+        }
       });
-  }, [roleplayId]);
+  }, [roleplayId, queryClient, userId]);
 
   // 중도 종료는 없다 — 백엔드가 롤플레이 세션의 중도 종료를 받지 않아, 완료는 끝내기(complete)만 맡는다
   return { session, error };

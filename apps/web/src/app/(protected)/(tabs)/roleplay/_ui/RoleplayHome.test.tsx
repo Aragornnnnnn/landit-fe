@@ -196,4 +196,25 @@ describe('RoleplayHome', () => {
 
     expect(screen.getByText('이 시나리오를 지울까요?')).toBeInTheDocument();
   });
+
+  it('시트를 연 뒤 목록이 새로 오면 새 값으로 그린다 — 첫 대화 직후 옛 목록에서 열어도 지난 대화를 볼 수 있다', async () => {
+    showScenarios([
+      scenario({ id: 7, title: '카페 주문', lastPlayedAt: null }),
+    ]);
+    const { rerender } = render(<RoleplayHome />);
+    await openMore('카페 주문');
+
+    showScenarios([
+      scenario({
+        id: 7,
+        title: '카페 주문',
+        lastPlayedAt: '2026-11-01T10:00:00',
+      }),
+    ]);
+    rerender(<RoleplayHome />);
+
+    expect(
+      screen.getByRole('button', { name: '지난 대화 보기' }),
+    ).toBeEnabled();
+  });
 });
