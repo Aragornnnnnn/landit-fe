@@ -7,7 +7,7 @@ export const PAID_QUESTIONS: readonly Question[] = [
     // 결제자가 아직 적어서 보기의 비율보다 자기 말로 쓴 이유가 더 많이 알려 준다 — 결제할 때의 마음까지 받으려고 주관식으로 묻는다
     id: 'premium_reason',
     kind: 'text',
-    title: '어떤 이유로 프리미엄을\n결제하시게 되었나요?',
+    title: '어떤 이유로 프리미엄을\n시작하시게 되었나요?',
     hint: '마음을 움직인 점, 망설인 점을 알려주세요',
     placeholder: '편하게 적어주세요',
     required: true,
