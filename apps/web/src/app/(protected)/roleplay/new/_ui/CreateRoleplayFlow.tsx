@@ -45,7 +45,7 @@ export const CreateRoleplayFlow = () => {
                 </h2>
                 <PartnerCarousel
                   index={flow.partnerIndex}
-                  onShow={flow.showPartner}
+                  onMove={flow.movePartner}
                 />
               </>
             ) : (
