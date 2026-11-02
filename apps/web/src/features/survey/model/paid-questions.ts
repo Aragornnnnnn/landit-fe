@@ -38,7 +38,7 @@ export const PAID_QUESTIONS: readonly Question[] = [
   {
     id: 'disappointment',
     kind: 'text',
-    title: '아쉬웠던 점을\n알려주세요',
+    title: '써 보니 아쉬운 점은\n없으셨나요?',
     hint: '고쳤으면 하는 점도 좋아요',
     placeholder: '편하게 적어주세요',
     required: true,

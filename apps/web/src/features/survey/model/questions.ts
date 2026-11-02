@@ -120,7 +120,7 @@ export const QUESTIONS: readonly Question[] = [
   {
     id: 'satisfaction_reason',
     kind: 'text',
-    title: '그렇게 느끼신 이유를\n알려주세요',
+    title: '그렇게 느끼신 이유가\n무엇인가요?',
     hint: '좋았던 점, 아쉬웠던 점 모두 환영이에요',
     placeholder: '편하게 적어주세요',
   },
@@ -147,7 +147,7 @@ export const QUESTIONS: readonly Question[] = [
   {
     id: 'wish',
     kind: 'text',
-    title: '마지막으로 랜딧에\n바라는 점을 남겨주세요',
+    title: '마지막으로 랜딧에\n바라는 점이 있나요?',
     hint: '있었으면 하는 기능, 불편했던 점 무엇이든 좋아요',
     placeholder: '편하게 적어주세요',
   },
