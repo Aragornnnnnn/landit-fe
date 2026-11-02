@@ -103,10 +103,25 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('CreateRoleplayFlow', () => {
-  it('첫 상대에선 이전으로 넘길 수 없다 — 끝에서 멈춘다', () => {
-    render(<CreateRoleplayFlow />);
+  it('첫 상대에서 이전으로 넘기면 마지막 상대로 간다 — 끝이 없다', async () => {
+    const { rerender } = render(<CreateRoleplayFlow />);
 
-    expect(screen.getByRole('button', { name: '이전 상대' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: '이전 상대' }));
+    await clickAndRerender('계속하기', rerender);
+
+    expect(screen.getByLabelText('테디의 역할')).toBeInTheDocument();
+  });
+
+  it('마지막 상대에서 다음으로 넘기면 첫 상대로 돌아온다', async () => {
+    const { rerender } = render(<CreateRoleplayFlow />);
+    const next = screen.getByRole('button', { name: '다음 상대' });
+
+    await userEvent.click(next);
+    await userEvent.click(next);
+    await userEvent.click(next);
+    await clickAndRerender('계속하기', rerender);
+
+    expect(screen.getByLabelText('클로이의 역할')).toBeInTheDocument();
   });
 
   it('넘긴 상대가 곧 선택이라 입력 칸에 그 상대 이름이 붙는다', async () => {

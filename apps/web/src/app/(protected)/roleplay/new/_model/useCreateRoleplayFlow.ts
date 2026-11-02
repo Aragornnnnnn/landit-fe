@@ -27,6 +27,8 @@ import {
 } from '@/shared/lib/routes';
 import { showToast } from '@/shared/ui/toast';
 
+import { wrapCarouselIndex } from './partner-carousel';
+
 export type CreateStep = 'partner' | 'form' | 'generating';
 
 const toStep = (
@@ -60,9 +62,11 @@ export const useCreateRoleplayFlow = () => {
   // 세 칸이 찼고 아이디어를 받는 중이 아닐 때만 — 버튼과 실행이 같은 값을 본다
   const canStart = isDraftReady(draft) && !idea.isPending;
 
-  // 세 명이 끝이다 — 끝에서 더 넘기면 멈춘다(순환 없음)
-  const showPartner = (index: number) =>
-    setPartnerIndex(Math.min(Math.max(index, 0), PARTNERS.length - 1));
+  // 끝이 없다 — 마지막 다음은 처음, 처음 이전은 마지막이다
+  const movePartner = (step: -1 | 1) =>
+    setPartnerIndex((current) =>
+      wrapCarouselIndex(current + step, PARTNERS.length),
+    );
 
   const editField = (field: keyof RoleplayDraft, value: string) =>
     setDraft((current) => ({ ...current, [field]: value }));
@@ -130,7 +134,7 @@ export const useCreateRoleplayFlow = () => {
     draft,
     canStart,
     ideaPending: idea.isPending,
-    showPartner,
+    movePartner,
     confirmPartner: () => router.replace(roleplayNewFormPath(partner)),
     editField,
     requestIdea,
