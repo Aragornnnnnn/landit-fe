@@ -277,6 +277,14 @@ describe('toPageView', () => {
     expect(pv(path)).toEqual({ page_name: pageName, path, session_id: 7 });
   });
 
+  it('시나리오의 지난 대화 목록은 시나리오 id를 싣는다', () => {
+    expect(pv('/roleplay/5/sessions')).toEqual({
+      page_name: 'roleplay_history',
+      path: '/roleplay/5/sessions',
+      roleplay_id: 5,
+    });
+  });
+
   it('롤플레이 대화는 어느 시나리오로 연 대화인지 남는다', () => {
     expect(pv('/conversation/roleplay/3')).toEqual({
       page_name: 'conversation_roleplay',
