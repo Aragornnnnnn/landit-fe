@@ -165,6 +165,13 @@ export interface RoleplaySummaryResponse {
   correctionCount: number | null;
 }
 
+// COMPLETED면 피드백을 볼 수 있고, 내 발화가 하나도 없어 버려졌으면 DISCARDED다
+export interface RoleplayCompletionResponse {
+  status: 'COMPLETED' | 'DISCARDED';
+  // 대화가 남은 시나리오. DISCARDED면 null
+  roleplayId: number | null;
+}
+
 const ROLEPLAYS = '/api/v1/roleplays';
 
 // 보관함에 저장 — 서버가 제목을 지어 오므로 응답이 느리다
@@ -200,7 +207,9 @@ export const submitRoleplayMessage = (
 
 // X로 끝내기 — 마무리 발화 없이 지금 완료하고, 교정·요약은 뒤에서 만든다
 export const completeRoleplaySession = (sessionId: number) =>
-  api.post<void>(`${ROLEPLAYS}/sessions/${sessionId}/complete`);
+  api.post<RoleplayCompletionResponse>(
+    `${ROLEPLAYS}/sessions/${sessionId}/complete`,
+  );
 
 // 완료한 대화만 준다(진행 중이면 오류)
 export const getRoleplaySession = (sessionId: number) =>

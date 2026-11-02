@@ -156,6 +156,9 @@ const submitResponse = (
   ...over,
 });
 
+const COMPLETED = { status: 'COMPLETED', roleplayId: 3 } as const;
+const DISCARDED = { status: 'DISCARDED', roleplayId: null } as const;
+
 const goHome = vi.fn();
 const showSummary = vi.fn();
 
@@ -190,6 +193,7 @@ const sayOnce = async (result: Flow, text = 'A latte, please.') => {
 beforeEach(() => {
   localStorage.clear();
   vi.useFakeTimers();
+  completeRoleplaySession.mockResolvedValue(DISCARDED);
 });
 
 afterEach(() => {
@@ -250,7 +254,7 @@ describe('useRoleplayTalkFlow — 발화 제출', () => {
         'FREE_TALK_DAILY_SPEAKING_LIMIT_EXCEEDED',
       ),
     );
-    completeRoleplaySession.mockResolvedValueOnce(undefined);
+    completeRoleplaySession.mockResolvedValueOnce(COMPLETED);
     const { result } = await renderFlow();
 
     await sayOnce(result);
@@ -273,7 +277,7 @@ describe('useRoleplayTalkFlow — 발화 제출', () => {
 });
 
 describe('useRoleplayTalkFlow — X 누르기', () => {
-  it('아직 한 마디도 안 했으면 묻지 않고 한 번만 나간다 — 서버엔 아무것도 보내지 않는다', async () => {
+  it('아직 한 마디도 안 했으면 묻지 않고 한 번만 나가며, 서버가 그 대화를 버리게 한다', async () => {
     const { result } = await renderFlow();
 
     let confirm: boolean | undefined;
@@ -284,7 +288,22 @@ describe('useRoleplayTalkFlow — X 누르기', () => {
 
     expect(confirm).toBe(false);
     expect(goHome).toHaveBeenCalledTimes(1);
-    expect(completeRoleplaySession).not.toHaveBeenCalled();
+    expect(completeRoleplaySession).toHaveBeenCalledTimes(1);
+    expect(completeRoleplaySession).toHaveBeenCalledWith(7);
+    expect(showSummary).not.toHaveBeenCalled();
+  });
+
+  it('한 마디도 안 한 대화를 버리는 요청이 실패해도 알리지 않고 나간다 — 남길 대화가 없다', async () => {
+    completeRoleplaySession.mockRejectedValueOnce(new Error('500'));
+    const { result } = await renderFlow();
+
+    await act(async () => {
+      result.current.pressClose();
+    });
+
+    expect(goHome).toHaveBeenCalledTimes(1);
+    expect(toastMock).not.toHaveBeenCalled();
+    expect(monitoringMock.reportError).toHaveBeenCalled();
   });
 
   it('첫 마디를 보내고 응답을 기다리는 중이어도 끝내기 시트로 물어본다 — 서버는 이미 그 말을 받았다', async () => {
@@ -318,7 +337,7 @@ describe('useRoleplayTalkFlow — X 누르기', () => {
 describe('useRoleplayTalkFlow — 끝내고 피드백 보기', () => {
   it('완료를 요청하고 요약으로 보낸다', async () => {
     submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
-    completeRoleplaySession.mockResolvedValueOnce(undefined);
+    completeRoleplaySession.mockResolvedValueOnce(COMPLETED);
     const { result } = await renderFlow();
     await sayOnce(result);
 
@@ -327,6 +346,19 @@ describe('useRoleplayTalkFlow — 끝내고 피드백 보기', () => {
     expect(completeRoleplaySession).toHaveBeenCalledWith(7);
     expect(showSummary).toHaveBeenCalled();
     expect(refreshStreak).toHaveBeenCalled();
+  });
+
+  it('서버가 남길 대화가 없어 버렸으면(DISCARDED) 요약 대신 홈으로 간다', async () => {
+    submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
+    completeRoleplaySession.mockResolvedValueOnce(DISCARDED);
+    const { result } = await renderFlow();
+    await sayOnce(result);
+
+    await act(async () => result.current.completeTalk());
+
+    expect(goHome).toHaveBeenCalled();
+    expect(showSummary).not.toHaveBeenCalled();
+    expect(refreshStreak).not.toHaveBeenCalled();
   });
 
   it('완료 요청이 실패하면 알리고 홈으로 간다', async () => {
@@ -344,7 +376,7 @@ describe('useRoleplayTalkFlow — 끝내고 피드백 보기', () => {
   });
 
   it('완료한 뒤 늦게 도착한 발화 결과로 대화를 잇지 않는다', async () => {
-    completeRoleplaySession.mockResolvedValueOnce(undefined);
+    completeRoleplaySession.mockResolvedValueOnce(COMPLETED);
     submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
     const { result } = await renderFlow();
     await sayOnce(result);

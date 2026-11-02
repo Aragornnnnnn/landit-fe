@@ -3,7 +3,7 @@
 // (2) 작별 인사로도, 시간 소진으로도 서버가 끝내지 않는다 — 완료는 X(끝내기 시트)뿐이다.
 //     오늘 시간을 다 써 다음 발화가 거절되면 더 말할 수 없으니 그 자리에서 끝낸다
 // (3) 끝나면 축하(열매)가 붙은 오늘의 롤플레이로 간다.
-// 중도 종료 API는 롤플레이 세션을 받지 않는다(404) — 한 마디도 안 하고 나가면 서버엔 아무것도 보내지 않는다
+// 한 마디도 안 하고 나가도 완료 API를 부른다 — 서버가 남길 게 없는 대화를 버린다(DISCARDED)
 'use client';
 
 import { useRef, useState } from 'react';
@@ -198,7 +198,7 @@ export const useRoleplayTalkFlow = ({
     for (const src of SUMMARY_IMAGE_SOURCES) preload(src, { as: 'image' });
   };
 
-  // 나간다 — 한 마디도 안 한 대화나 끝내기 실패. 서버에 보낼 중도 종료가 없어 화면만 손을 뗀다
+  // 나간다 — 한 마디도 안 한 대화, 끝내기 실패, 서버가 버린 대화
   const leave = () => {
     if (leftRef.current) return;
     leftRef.current = true;
@@ -221,6 +221,8 @@ export const useRoleplayTalkFlow = ({
       // 하던 말은 버린다 — 나간 뒤 인식 결과가 도착해 홈 위에 토스트를 띄우지 않게
       if (engine.phase === 'USER_SPEAKING') engine.input.abandonInput();
       leave();
+      // 응답을 기다리지 않는다 — 남길 대화가 없어 실패해도 사용자가 할 일이 없다
+      completeRoleplaySession(session.sessionId).catch(reportError);
       goHome();
       return false;
     }
@@ -240,12 +242,19 @@ export const useRoleplayTalkFlow = ({
     setCompleting(true);
     if (engine.phase === 'USER_SPEAKING') engine.input.abandonInput();
     engine.abandon();
+    let completion;
     try {
-      await completeRoleplaySession(session.sessionId);
+      completion = await completeRoleplaySession(session.sessionId);
     } catch (cause) {
       console.warn('[roleplay] 끝내기 전송 실패', cause);
       reportError(cause);
       showToast(t('completeFailedToast'));
+      leave();
+      goHome();
+      return;
+    }
+    // 보낸 말이 서버에 닿지 못했다 — 피드백을 만들 대화가 없으니 요약 대신 홈으로 간다
+    if (completion.status === 'DISCARDED') {
       leave();
       goHome();
       return;
