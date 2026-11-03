@@ -108,6 +108,9 @@ export const EVENTS = {
   ROLEPLAY_TURN_COMPLETED: 'Roleplay Turn Completed',
   ROLEPLAY_COMPLETED: 'Roleplay Completed',
   ROLEPLAY_ABANDONED: 'Roleplay Abandoned',
+  ROLEPLAY_DELETED: 'Roleplay Deleted',
+  ROLEPLAY_CREATE_FAILED: 'Roleplay Create Failed',
+  ROLEPLAY_CREATE_ABANDONED: 'Roleplay Create Abandoned',
 
   // 분석 피드백
   FEEDBACK_VIEWED: 'Feedback Viewed',
@@ -783,6 +786,20 @@ export type EventProps = {
     session_id: number;
     partner: TalkPartner;
     turn_index: number;
+  };
+  'Roleplay Deleted': {
+    roleplay_id: number;
+    // 끝낸 대화가 있던 시나리오인가
+    has_history: boolean;
+  };
+  // 저장이 거절되거나 실패했다 — 페이월로 간 건 premium_required
+  'Roleplay Create Failed': {
+    partner: TalkPartner;
+    reason: 'premium_required' | 'error';
+  };
+  // 오래 걸려 돌아가기를 눌렀다
+  'Roleplay Create Abandoned': {
+    partner: TalkPartner;
   };
 
   // 피드백 응답에는 scenario_id가 없다 — session_id로 서버에서 조인한다

@@ -23,6 +23,8 @@ const push = vi.fn(moveTo);
 const back = vi.fn(() => {
   search = new URLSearchParams();
 });
+const track = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/analytics', () => ({ track }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push, replace, back }),
   useSearchParams: () => search,
@@ -293,6 +295,9 @@ describe('CreateRoleplayFlow', () => {
     await userEvent.click(screen.getByRole('button', { name: '돌아가기' }));
 
     expect(back).toHaveBeenCalled();
+    expect(track).toHaveBeenCalledWith('Roleplay Create Abandoned', {
+      partner: 'chloe',
+    });
   });
 
   it('프리미엄이 없다고 거절되면 페이월로 보낸다', async () => {
@@ -308,6 +313,10 @@ describe('CreateRoleplayFlow', () => {
     await waitFor(() =>
       expect(push).toHaveBeenCalledWith(expect.stringContaining('/paywall')),
     );
+    expect(track).toHaveBeenCalledWith('Roleplay Create Failed', {
+      partner: 'chloe',
+      reason: 'premium_required',
+    });
   });
 
   it('만들기에 실패하면 적은 글을 그대로 둔 채 입력으로 돌아온다', async () => {

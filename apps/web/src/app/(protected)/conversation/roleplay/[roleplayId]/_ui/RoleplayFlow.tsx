@@ -24,6 +24,7 @@ export const RoleplayFlow = ({ roleplayId }: { roleplayId: number }) => {
   // 구독이 끝난 사용자가 입구 판단을 지나쳐 온 경우 — 오류 대신 페이월로 보낸다
   useEffect(() => {
     if (premiumRequired) {
+      track(EVENTS.PAYWALL_GATE_LOCKED, { source: 'roleplay' });
       router.replace(paywallPath({ source: 'roleplay', from: ROLEPLAY_PATH }));
     }
   }, [premiumRequired, router]);

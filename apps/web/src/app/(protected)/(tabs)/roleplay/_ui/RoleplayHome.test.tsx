@@ -28,6 +28,8 @@ vi.mock('@/features/roleplay/model/useRoleplayScenariosQuery', () => ({
   useRoleplayScenariosQuery: vi.fn(),
 }));
 
+const track = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/analytics', () => ({ track }));
 vi.mock('@/features/roleplay/model/useDeleteRoleplayScenarioMutation', () => ({
   useDeleteRoleplayScenarioMutation: vi.fn(),
 }));
@@ -165,6 +167,10 @@ describe('RoleplayHome', () => {
     await userEvent.click(screen.getByRole('button', { name: '지울게요' }));
 
     expect(mutate).toHaveBeenCalledWith(7, expect.anything());
+    expect(track).toHaveBeenCalledWith('Roleplay Deleted', {
+      roleplay_id: 7,
+      has_history: false,
+    });
   });
 
   it('대화한 적 있는 시나리오를 지울 땐 지난 대화도 사라진다고 알린다', async () => {

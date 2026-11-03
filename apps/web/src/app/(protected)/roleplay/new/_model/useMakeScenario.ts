@@ -58,14 +58,25 @@ export const useMakeScenario = () => {
     return () => clearTimeout(timer);
   }, [madeId, router]);
 
+  const [partner, setPartner] = useState<
+    RoleplaySettingsRequest['characterId'] | null
+  >(null);
+
   const start = async (body: RoleplaySettingsRequest, usedIdea: boolean) => {
     setGenerating(true);
+    setPartner(body.characterId);
     let saved;
     try {
       saved = await create.mutateAsync(body);
     } catch (cause) {
+      const premiumRequired = isPremiumRequired(cause);
+      track(EVENTS.ROLEPLAY_CREATE_FAILED, {
+        partner: body.characterId,
+        reason: premiumRequired ? 'premium_required' : 'error',
+      });
       if (leftRef.current) return;
-      if (isPremiumRequired(cause)) {
+      if (premiumRequired) {
+        track(EVENTS.PAYWALL_GATE_LOCKED, { source: 'roleplay' });
         // 페이월로 가는 동안 입력 화면이 다시 보이지 않게 그대로 둔다
         router.push(
           paywallPath({
@@ -105,6 +116,7 @@ export const useMakeScenario = () => {
     // 오래 걸려 나간다 — 저장은 뒤에서 끝날 수 있어, 끝나면 탭에 카드가 선다
     leave: () => {
       leftRef.current = true;
+      if (partner) track(EVENTS.ROLEPLAY_CREATE_ABANDONED, { partner });
       backOrReplace(router, ROLEPLAY_PATH);
     },
   };

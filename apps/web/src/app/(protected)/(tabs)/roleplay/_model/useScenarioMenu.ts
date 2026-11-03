@@ -2,10 +2,12 @@
 'use client';
 
 import { useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useTranslations } from 'next-intl';
 
 import type { RoleplaySettings } from '@/features/roleplay/api/roleplay';
 import { useDeleteRoleplayScenarioMutation } from '@/features/roleplay/model/useDeleteRoleplayScenarioMutation';
+import { track } from '@/shared/analytics';
 import { showToast } from '@/shared/ui/toast';
 
 export const useScenarioMenu = (scenarios: RoleplaySettings[] | null) => {
@@ -29,6 +31,10 @@ export const useScenarioMenu = (scenarios: RoleplaySettings[] | null) => {
     if (deleteId === null) return;
     mutate(deleteId, {
       onSuccess: () => {
+        track(EVENTS.ROLEPLAY_DELETED, {
+          roleplay_id: deleteId,
+          has_history: deleteTarget?.lastPlayedAt != null,
+        });
         setDeleteId(null);
         showToast(t('doneToast'));
       },
