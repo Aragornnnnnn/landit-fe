@@ -6,7 +6,7 @@ import type { RoleplaySettings } from '@/features/roleplay/api/roleplay';
 import { toLastTalked } from '@/features/roleplay/model/last-talked';
 import {
   CARD_SHADE_CLASS,
-  PARTNER_TINT,
+  toScenarioTint,
 } from '@/features/roleplay/ui/partner-tint';
 import { PartnerBust } from '@/features/roleplay/ui/PartnerBust';
 import { toPartnerId } from '@/features/small-talk/model/partner';
@@ -47,7 +47,7 @@ export const ScenarioCard = ({
   return (
     <div
       className="relative aspect-[169/232] overflow-clip rounded-[20px] shadow-[0_6px_18px_rgba(0,0,0,0.08)]"
-      style={{ background: PARTNER_TINT[partner] }}
+      style={{ background: toScenarioTint(scenario.id) }}
     >
       <button
         type="button"
