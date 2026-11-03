@@ -268,19 +268,12 @@ describe('SmallTalkSummary 분석을 기다리는 동안', () => {
     expect(screen.getByText('말한 시간')).toBeInTheDocument();
   });
 
-  it('일부 문장을 분석하지 못했으면 결과와 함께 알린다', () => {
+  it('일부 문장을 분석하지 못한 결과도 따로 알리지 않고 그대로 보인다', () => {
     renderSummary({ ...summaryOf(), analysisStatus: 'PARTIAL' });
 
+    expect(screen.getByText('말한 시간')).toBeInTheDocument();
     expect(
-      screen.getByText('일부 문장은 분석하지 못해 완료된 분석만 반영했어요'),
-    ).toBeInTheDocument();
-  });
-
-  it('모두 분석했으면 안내가 없다', () => {
-    renderSummary({ ...summaryOf(), analysisStatus: 'COMPLETE' });
-
-    expect(
-      screen.queryByText('일부 문장은 분석하지 못해 완료된 분석만 반영했어요'),
+      screen.queryByText('말한 내용을 분석하고 있어요'),
     ).not.toBeInTheDocument();
   });
 });

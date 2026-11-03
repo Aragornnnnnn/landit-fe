@@ -88,8 +88,7 @@
   "summaryAnalysis": {
     "waitingDescription": "말한 내용을 분석하고 있어요",
     "expiredDescription": "분석이 조금 오래 걸리고 있어요",
-    "retryButton": "다시 확인",
-    "partialDescription": "일부 문장은 분석하지 못해 완료된 분석만 반영했어요"
+    "retryButton": "다시 확인"
   },
   "summarySkeleton": {
     "loadingLabel": "오늘의 스몰톡을 불러오는 중"

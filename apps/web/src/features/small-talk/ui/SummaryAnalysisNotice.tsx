@@ -14,12 +14,6 @@ export const SummaryAnalysisNotice = ({
   const t = useTranslations('smallTalk.summaryAnalysis');
 
   if (analysis === 'ready') return null;
-  if (analysis === 'partial')
-    return (
-      <p className="-mt-1 text-right text-xs leading-5 break-keep text-muted-foreground">
-        {t('partialDescription')}
-      </p>
-    );
 
   return (
     <div className="flex items-center gap-3">

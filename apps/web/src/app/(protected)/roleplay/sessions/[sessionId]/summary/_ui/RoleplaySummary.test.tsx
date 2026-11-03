@@ -140,14 +140,6 @@ describe('RoleplaySummary', () => {
     expect(screen.getByText('말한 내용을 분석하고 있어요')).toBeInTheDocument();
   });
 
-  it('일부 문장을 분석하지 못했으면 결과와 함께 알린다', () => {
-    renderSummary(summaryOf({ analysisStatus: 'PARTIAL' }));
-
-    expect(
-      screen.getByText('일부 문장은 분석하지 못해 완료된 분석만 반영했어요'),
-    ).toBeInTheDocument();
-  });
-
   it('닫으면 표현 학습이 아니라 롤플레이 탭으로 간다', async () => {
     renderSummary(summaryOf());
 

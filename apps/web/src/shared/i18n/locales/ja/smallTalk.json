@@ -88,8 +88,7 @@
   "summaryAnalysis": {
     "waitingDescription": "話した内容を分析しています",
     "expiredDescription": "分析に少し時間がかかっています",
-    "retryButton": "もう一度確認",
-    "partialDescription": "一部の文は分析できなかったため、完了した分析だけを反映しました"
+    "retryButton": "もう一度確認"
   },
   "summarySkeleton": {
     "loadingLabel": "今日のスモールトークを読み込み中"
