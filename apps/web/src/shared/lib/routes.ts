@@ -105,8 +105,11 @@ export const roleplayNewFormPath = (partner: string) =>
   `${ROLEPLAY_NEW_PATH}?${new URLSearchParams({ partner })}`;
 
 // 롤플레이 대화 — 만든 시나리오(보관함 id)로 연다. 스몰톡 대화처럼 대화 라우트 아래에 선다
-export const roleplayTalkPath = (roleplayId: number) =>
-  `/conversation/roleplay/${roleplayId}`;
+export const roleplayTalkPath = (
+  roleplayId: number,
+  // 방금 만든 시나리오로 여는가 — 계측이 첫 대화와 다시 대화를 가른다
+  { justCreated = false } = {},
+) => `/conversation/roleplay/${roleplayId}${justCreated ? '?from=create' : ''}`;
 
 // 끝난 롤플레이 대화 한 건 — 요약과 대화 기록은 세션이 주인이라 그 아래에 산다 (스몰톡과 같은 모양)
 const roleplaySessionPath = (sessionId: number) =>

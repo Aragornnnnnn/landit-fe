@@ -34,7 +34,7 @@ const setup = () => {
   });
 };
 
-const options = { source: 'roleplay' as const, returnTo: '/roleplay' };
+const options = { source: 'roleplay_talk' as const, returnTo: '/roleplay' };
 
 beforeEach(() => {
   paywall.locked = true;

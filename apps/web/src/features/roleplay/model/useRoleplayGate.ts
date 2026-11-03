@@ -39,6 +39,8 @@ export const useRoleplayGate = () => {
     locked,
     // 무료 사용자인가 — 서버가 시작을 받아 줬다면 무료 기회로 들어간 것이다. 계측이 쓴다
     freeUser: paywall.locked,
+    // 구독을 아직 못 받아 무료 사용자인지 모른다 — 계측은 판단이 선 뒤에 찍는다
+    deciding: paywall.deciding,
     // 기회를 쓰거나 서버가 거절했으면 가진 값이 낡은 것이다 — 다음 입구가 바로 페이월로 가게 한다
     refresh: () =>
       void queryClient.invalidateQueries({

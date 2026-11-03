@@ -39,7 +39,7 @@ export const RoleplayHome = () => {
   // 무료 기회가 남았으면 들여보내고, 다 썼으면 페이월로 간다 — 구독이 끝난 뒤에도 같다
   const startTalk = (scenario: RoleplaySettings) =>
     gate.guard(() => router.push(roleplayTalkPath(scenario.id)), {
-      source: 'roleplay',
+      source: 'roleplay_talk',
       returnTo: ROLEPLAY_PATH,
     });
 
