@@ -2,6 +2,8 @@
 
 // 롤플레이 대화 기록 — 스몰톡 대화 기록과 같은 말풍선·교정 카드로 그 대화를 다시 보여 준다.
 // 요약이나 지난 대화 목록에서 온다. 교정을 아직 만드는 중이면 찾는 중으로 보여 준다. 마지막 버튼은 표현 학습이 아니라 홈이다
+import { useEffect, useEffectEvent, useRef } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
@@ -16,6 +18,7 @@ import {
   PartnerMessage,
 } from '@/features/small-talk/ui/TranscriptMessages';
 import { TranscriptSkeleton } from '@/features/small-talk/ui/TranscriptSkeleton';
+import { track } from '@/shared/analytics';
 import {
   backOrReplace,
   ROLEPLAY_PATH,
@@ -50,6 +53,26 @@ export const RoleplayTranscript = ({
   );
   // 들어오면 첫 교정으로, 칩을 누르면 다음 교정으로
   const { hasNext, jumpNext } = useCorrectionJump(messages);
+
+  // 대화가 실제로 그려진 순간을 노출로 기록한다 — 어느 길로 왔고 고친 말이 몇 개인지가 실린다.
+  // 이벤트로 감싸 폴링으로 응답이 갱신돼도 다시 찍지 않는다. 만드는 중인 교정은 세지 않는다
+  const shown = session !== null;
+  const trackViewed = useEffectEvent(() => {
+    if (!session) return;
+    track(EVENTS.ROLEPLAY_FEEDBACK_VIEWED, {
+      session_id: sessionId,
+      source: fromRoleplayId === undefined ? 'summary' : 'history',
+      correction_count: session.messages.filter(
+        (message) => message.correction?.sentence,
+      ).length,
+    });
+  });
+  const viewedRef = useRef(false);
+  useEffect(() => {
+    if (!shown || viewedRef.current) return; // StrictMode에도 노출은 한 번이다
+    viewedRef.current = true;
+    trackViewed();
+  }, [shown, sessionId]);
 
   return (
     <main
