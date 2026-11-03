@@ -23,7 +23,12 @@
     "expressionQuizTitle": "身についたかクイズで確認",
     "smallTalkLabel": "キャラクターとスモールトーク",
     "smallTalkPartnerTitle": "相手もアクセントも選べる",
-    "smallTalkFreeTitle": "テーマなしで自由に会話"
+    "smallTalkFreeTitle": "テーマなしで自由に会話",
+    "roleplayLabel": "自分で作った場面でロールプレイ",
+    "roleplayDeckTitle": "想像した場面を会話に",
+    "roleplayCreateTitle": "役割と場面を書くだけ",
+    "roleplayZombieTitle": "ゾンビに菜食をすすめて",
+    "roleplayAlienTitle": "宇宙人に地球を紹介"
   },
   "stepPaywall": {
     "nextButton": "次へ"
@@ -99,6 +104,26 @@
   },
   "scenarioWall": {
     "dailyLabel": "今日のシナリオ"
+  },
+  "roleplayDemo": {
+    "deckTitle": "頭の中の場面を<br></br>会話にしましょう",
+    "deckCaption": "何を書いてもすぐシナリオに",
+    "presidentIdeaLabel": "米大統領と<br></br>討論",
+    "alienIdeaLabel": "宇宙人に<br></br>地球を紹介",
+    "zombieIdeaLabel": "ゾンビに<br></br>菜食を提案",
+    "myRoleLabel": "自分の役割",
+    "partnerRoleLabel": "{name}の役割",
+    "situationLabel": "場面とテーマ",
+    "ideaButton": "アイデアをもらう",
+    "zombieMyRoleCaption": "菜食をすすめる人",
+    "zombiePartnerRoleCaption": "お腹をすかせたゾンビ",
+    "zombieSituationCaption": "ゾンビにお肉より野菜を食べようと説得する",
+    "alienMyRoleCaption": "地球の観光ガイド",
+    "alienPartnerRoleCaption": "地球に初めて来た宇宙人",
+    "alienSituationCaption": "宇宙人に地球の良さを紹介する",
+    "presidentMyRoleCaption": "討論の相手",
+    "presidentPartnerRoleCaption": "アメリカ大統領",
+    "presidentSituationCaption": "大統領と昼ごはんのメニューを討論する"
   },
   "smallTalkDemo": {
     "title": "今日は誰と<br></br>話しますか？",

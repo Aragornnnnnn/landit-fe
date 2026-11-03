@@ -17,9 +17,10 @@ import {
 import { smallTalkKeys } from './keys';
 
 // 다시 묻는 간격
-const POLL_MS = 1_000;
+const POLL_MS = 2_000;
 // 기다림의 상한. 이만큼 기다려도 안 오면 그 블록은 비운 채로 둔다 — 다시 들어오면 처음부터 묻는다
-export const SUMMARY_WAIT_LIMIT_MS = 60_000;
+// 서버가 끝난 뒤 5분에 분석을 마감하므로 그보다 조금 길게 잡아 최종 결과를 받는다
+export const SUMMARY_WAIT_LIMIT_MS = 310_000;
 
 // 아직 만드는 중인 것이 있는가 — 총평은 교정이 끝나길, 나머지 둘은 종료 후 잡을 기다린다
 const isStillPreparing = (summary: SmallTalkSummaryResponse | undefined) =>
@@ -45,7 +46,10 @@ export const useSmallTalkSummaryQuery = (sessionId: number) => {
   const userId = useCurrentUserId();
 
   // 기다린 지 오래됐는가 — 상한을 넘기면 그만 묻는다
-  const [waitedTooLong, setWaitedTooLong] = useState(false);
+  // 누구의 어느 세션을 기다렸는지 함께 저장한다 — 바뀌면 기다림을 처음부터 다시 잰다
+  const waitKey = `${userId}:${sessionId}`;
+  const [expiredKey, setExpiredKey] = useState<string | null>(null);
+  const waitedTooLong = expiredKey === waitKey;
 
   const { data, error, isFetching, refetch } = useQuery({
     ...summaryQuery(userId, sessionId),
@@ -55,13 +59,13 @@ export const useSmallTalkSummaryQuery = (sessionId: number) => {
 
   const preparing = isStillPreparing(data);
   useEffect(() => {
-    if (!preparing) return;
+    if (!preparing || waitedTooLong) return;
     const limit = setTimeout(
-      () => setWaitedTooLong(true),
+      () => setExpiredKey(waitKey),
       SUMMARY_WAIT_LIMIT_MS,
     );
     return () => clearTimeout(limit);
-  }, [preparing]);
+  }, [preparing, waitedTooLong, waitKey]);
 
   // 이미 받아 둔 요약이 있으면 실패를 화면에 올리지 않는다 — 폴링 한 번 끊겼다고 보던 것이 사라지면 안 된다.
   // 받아 둔 게 없어도 다시 받아오는 중이면 기다리는 화면을 보여준다 (미리 받아 두기가 실패한 뒤 도착한 경우)
@@ -73,6 +77,9 @@ export const useSmallTalkSummaryQuery = (sessionId: number) => {
     isLoading: !data && settledError === null,
     // 상한까지 기다려 그만 묻는 상태 — 아직 pending인 블록은 스켈레톤 대신 비운다
     waitExpired: waitedTooLong,
-    retry: () => void refetch(),
+    retry: () => {
+      setExpiredKey(null);
+      void refetch();
+    },
   };
 };

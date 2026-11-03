@@ -107,8 +107,9 @@ describe('useSmallTalkSummaryQuery', () => {
     const { result } = renderSummary();
     await waitFor(() => expect(result.current.summary).not.toBeNull());
 
-    await waitFor(() =>
-      expect(getSmallTalkSummary.mock.calls.length).toBeGreaterThan(1),
+    await waitFor(
+      () => expect(getSmallTalkSummary.mock.calls.length).toBeGreaterThan(1),
+      { timeout: 3_000 },
     );
 
     // Then 보고 있던 요약은 그대로 있고 실패는 화면에 올라가지 않는다
@@ -164,5 +165,24 @@ describe('useSmallTalkSummaryQuery', () => {
     await act(() => vi.advanceTimersByTimeAsync(3_000));
     expect(getSmallTalkSummary).toHaveBeenCalledTimes(callsAtLimit);
     expect(result.current.waitExpired).toBe(true);
+  });
+
+  it('상한 뒤 다시 시도하면 기다림을 처음부터 다시 잰다', async () => {
+    // Given 상한을 넘겨 그만 물은 상태에서
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    getSmallTalkSummary.mockResolvedValue(summaryOf({ summaryPending: true }));
+    const { result } = renderSummary();
+    await waitFor(() => expect(result.current.summary).not.toBeNull());
+    await act(() => vi.advanceTimersByTimeAsync(SUMMARY_WAIT_LIMIT_MS + 1_000));
+    expect(result.current.waitExpired).toBe(true);
+
+    // When 다시 시도하면
+    act(() => result.current.retry());
+    const callsAtRetry = getSmallTalkSummary.mock.calls.length;
+
+    // Then 기다림이 풀리고 다시 묻기 시작한다
+    expect(result.current.waitExpired).toBe(false);
+    await act(() => vi.advanceTimersByTimeAsync(5_000));
+    expect(getSmallTalkSummary.mock.calls.length).toBeGreaterThan(callsAtRetry);
   });
 });

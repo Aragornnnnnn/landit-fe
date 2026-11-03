@@ -7,6 +7,7 @@ import {
   ListChecksIcon,
   MessageSquareIcon,
   MicIcon,
+  PencilIcon,
   SparklesIcon,
 } from '@/shared/ui/Icons';
 
@@ -22,11 +23,12 @@ const ICONS: Record<BenefitIcon, typeof CalendarIcon> = {
   sparkles: SparklesIcon,
   mic: MicIcon,
   chat: MessageSquareIcon,
+  pencil: PencilIcon,
 };
 
 /**
  * 라인 아이콘 + 한 줄 문구로 {@link PREMIUM_BENEFITS}를 그린다. 구독 관리의 "이용 중인 혜택"이 쓴다
- * (페이월은 비교표를 쓴다). 다섯 줄이라 큰 폰에서는 조금 키우고 작은 폰에서는 한 단계 줄인다.
+ * (페이월은 비교표를 쓴다). 여섯 줄이라 큰 폰에서는 조금 키우고 작은 폰에서는 한 단계 줄인다.
  */
 export const BenefitList = () => {
   const t = useTranslations('subscription.benefits');

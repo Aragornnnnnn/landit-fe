@@ -18,6 +18,7 @@ import {
   toExpressionListItems,
 } from '@/features/small-talk/model/session-expressions';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
+import { useFilledEarlier } from '@/features/streak/model/useFilledEarlier';
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
@@ -53,12 +54,15 @@ export const SmallTalkResult = ({
     useSmallTalkSessionQuery(sessionId);
 
   // 축하는 시간이 정하고, 그 뒤는 표현이 준비됐는지가 정한다
-  const [celebrating, setCelebrating] = useState(celebrateOnArrival);
+  const filledEarlier = useFilledEarlier();
+  // 오늘 열매를 이미 채운 날엔 새로 찍히는 게 없어 건너뛴다
+  const showsCelebration = celebrateOnArrival && !filledEarlier;
+  const [celebrating, setCelebrating] = useState(showsCelebration);
   useEffect(() => {
-    if (!celebrateOnArrival) return;
+    if (!showsCelebration) return;
     const timer = setTimeout(() => setCelebrating(false), CELEBRATE_MS);
     return () => clearTimeout(timer);
-  }, [celebrateOnArrival]);
+  }, [showsCelebration]);
 
   // 준비가 끝났는데 표현이 하나도 없을 수 있다 — 리스트를 펴 봐야 보여줄 것도 배울 것도 없다
   const ready = session?.expressionGenerationStatus === 'READY';

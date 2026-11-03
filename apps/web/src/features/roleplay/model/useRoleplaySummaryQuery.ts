@@ -19,7 +19,7 @@ import {
 import { roleplayKeys } from './keys';
 
 // 다시 묻는 간격
-const POLL_MS = 1_000;
+const POLL_MS = 2_000;
 
 // 아직 만드는 중인 것이 있는가 — 총평은 교정이 끝나길, 배운 표현 재사용은 종료 후 잡을 기다린다
 const isStillPreparing = (summary: RoleplaySummaryResponse | undefined) =>
@@ -41,7 +41,10 @@ export const prefetchRoleplaySummary = (
 
 export const useRoleplaySummaryQuery = (sessionId: number) => {
   const userId = useCurrentUserId();
-  const [waitedTooLong, setWaitedTooLong] = useState(false);
+  // 누구의 어느 세션을 기다렸는지 함께 저장한다 — 바뀌면 기다림을 처음부터 다시 잰다
+  const waitKey = `${userId}:${sessionId}`;
+  const [expiredKey, setExpiredKey] = useState<string | null>(null);
+  const waitedTooLong = expiredKey === waitKey;
 
   const { data, error, isFetching, refetch } = useQuery({
     ...summaryQuery(userId, sessionId),
@@ -51,13 +54,13 @@ export const useRoleplaySummaryQuery = (sessionId: number) => {
 
   const preparing = isStillPreparing(data);
   useEffect(() => {
-    if (!preparing) return;
+    if (!preparing || waitedTooLong) return;
     const limit = setTimeout(
-      () => setWaitedTooLong(true),
+      () => setExpiredKey(waitKey),
       SUMMARY_WAIT_LIMIT_MS,
     );
     return () => clearTimeout(limit);
-  }, [preparing]);
+  }, [preparing, waitedTooLong, waitKey]);
 
   // 받아 둔 요약이 있으면 폴링 한 번의 실패를 화면에 올리지 않는다
   const settledError = data || isFetching ? null : error;
@@ -67,6 +70,9 @@ export const useRoleplaySummaryQuery = (sessionId: number) => {
     error: settledError,
     isLoading: !data && settledError === null,
     waitExpired: waitedTooLong,
-    retry: () => void refetch(),
+    retry: () => {
+      setExpiredKey(null);
+      void refetch();
+    },
   };
 };
