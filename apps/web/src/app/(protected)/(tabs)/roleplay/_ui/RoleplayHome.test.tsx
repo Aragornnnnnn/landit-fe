@@ -173,7 +173,7 @@ describe('RoleplayHome', () => {
     });
   });
 
-  it('대화한 적 있는 시나리오를 지울 땐 지난 대화도 사라진다고 알린다', async () => {
+  it('대화한 적 있는 시나리오를 지울 땐 지난 대화도 더 볼 수 없다고 알린다', async () => {
     showScenarios([
       scenario({
         id: 7,
@@ -187,7 +187,7 @@ describe('RoleplayHome', () => {
     await userEvent.click(screen.getByRole('button', { name: '삭제하기' }));
 
     expect(
-      screen.getByText(/지난 대화와 피드백도 함께 사라져요/),
+      screen.getByText(/지난 대화와 피드백도 더 볼 수 없어요/),
     ).toBeInTheDocument();
   });
 

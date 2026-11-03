@@ -25,7 +25,7 @@
   },
   "delete": {
     "title": "이 시나리오를 지울까요?",
-    "description": "지난 대화와 피드백도 함께 사라져요.<br></br>되돌릴 수 없어요.",
+    "description": "지난 대화와 피드백도 더 볼 수 없어요.<br></br>되돌릴 수 없어요.",
     "emptyDescription": "되돌릴 수 없어요.",
     "keepButton": "그냥 둘게요",
     "confirmButton": "지울게요",
