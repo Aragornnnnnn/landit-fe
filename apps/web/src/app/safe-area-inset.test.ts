@@ -91,6 +91,8 @@ describe('safe-area inset 변수', () => {
 const SCROLL_EXCEPTIONS = new Set([
   // 아래에 늘 있는 푸터가 safe-area를 맡는다
   'app/(protected)/smalltalk/sessions/[sessionId]/summary/_ui/SmallTalkSummary.tsx',
+  'app/(protected)/roleplay/sessions/[sessionId]/summary/_ui/RoleplaySummary.tsx',
+  'app/(protected)/roleplay/sessions/[sessionId]/messages/_ui/RoleplayTranscript.tsx',
   'app/(protected)/me/subscription/cancel/_ui/ReasonStep.tsx',
   'app/(protected)/me/invite/_ui/InviteScreen.tsx',
   'app/(protected)/me/subscription/cancel/_ui/MethodStep.tsx',

@@ -7,7 +7,7 @@ import type {
 } from '@/features/conversation/api/session';
 import type { Partner } from '@/features/conversation/model/character-look';
 import type {
-  SmallTalkCorrection,
+  CorrectionStatus,
   SmallTalkCurrentMessage,
   SmallTalkNextMessage,
   SmallTalkReusedExpression,
@@ -126,6 +126,23 @@ export interface RoleplayMessageSubmitRequest {
   utteranceDurationMs: number;
 }
 
+// 고친 문장 하나 — 스몰톡 교정과 달리 근거 문구를 날짜와 내용으로 나눠 준다
+export interface RoleplayCorrectionSentence {
+  originalSentence: string;
+  betterSentence: string;
+  reason: string;
+  mistakePattern: string;
+  // 장기기억을 근거로 고친 경우의 날짜(yyyy-MM-dd). 아니면 null
+  memoryObservedOn: string | null;
+  memoryLabel: string | null;
+}
+
+export interface RoleplayMessageCorrection {
+  status: CorrectionStatus;
+  // 고칠 게 없거나 만드는 중·실패면 null
+  sentence: RoleplayCorrectionSentence | null;
+}
+
 // 지난 롤플레이 대화 한 건 — 당시 역할 설정과 주고받은 말
 export interface RoleplayHistoryMessage {
   messageId: number;
@@ -135,8 +152,8 @@ export interface RoleplayHistoryMessage {
   content: string;
   translatedContent: string | null;
   emotion: string | null;
-  // 고칠 게 없었거나 만들다 실패했으면 null — 두 경우를 가르는 상태 값은 오지 않는다
-  correction: SmallTalkCorrection | null;
+  // 상대 말이거나 교정을 시작하지 않은 말이면 null
+  correction: RoleplayMessageCorrection | null;
   reusedExpression: SmallTalkReusedExpression | null;
 }
 
