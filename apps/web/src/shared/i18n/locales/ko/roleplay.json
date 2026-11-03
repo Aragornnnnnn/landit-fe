@@ -15,5 +15,29 @@
     "todayLabel": "오늘",
     "daysAgoLabel": "{days}일 전",
     "loadError": "시나리오를 불러오지 못했어요"
+  },
+  "create": {
+    "headerTitle": "나만의 시나리오 만들기",
+    "partnerTitle": "대화 상대 고르기",
+    "previousLabel": "이전 상대",
+    "nextLabel": "다음 상대",
+    "continueButton": "계속하기",
+    "myRoleLabel": "나의 역할",
+    "myRolePlaceholder": "예: 커피를 주문하는 손님",
+    "partnerRoleLabel": "{name}의 역할",
+    "partnerRolePlaceholder": "예: 바리스타",
+    "situationLabel": "상황과 주제",
+    "situationPlaceholder": "예: 새로 나온 메뉴를 추천해 달라고 하기",
+    "ideaButton": "아이디어 추천받기",
+    "ideaLoadingButton": "아이디어 받는 중…",
+    "ideaFailToast": "아이디어를 받지 못했어요. 다시 눌러 주세요",
+    "startButton": "시작하기",
+    "failToast": "시나리오를 만들지 못했어요. 다시 시도해 주세요"
+  },
+  "generating": {
+    "title": "시나리오 카드를 섞고 있어요",
+    "roleStepLabel": "역할 정하기",
+    "situationStepLabel": "상황 그리는 중…",
+    "openingStepLabel": "{name} 첫 마디 준비"
   }
 }
