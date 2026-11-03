@@ -5,9 +5,9 @@
     "teddyIntroDescription": "ロンドン出身・落ち着いたイギリス英語"
   },
   "home": {
-    "emptyTitle": "頭の中のシーンを<br></br>会話にしましょう",
-    "emptyDescription": "役割と場面を書くだけで<br></br>自分だけの英会話シナリオが完成",
-    "presidentIdeaLabel": "米大統領と<br></br>討論する",
+    "emptyTitle": "頭の中の場面を<br></br>会話にしましょう",
+    "emptyDescription": "役割と場面を書くだけで<br></br>自分だけの英会話シナリオができます",
+    "presidentIdeaLabel": "米大統領と<br></br>討論",
     "alienIdeaLabel": "宇宙人に<br></br>地球を紹介",
     "zombieIdeaLabel": "ゾンビに<br></br>菜食を提案",
     "listTitle": "マイシナリオ",
@@ -62,7 +62,7 @@
     "celebrateTitle": "ロールプレイを<br></br>1つ完了しました！",
     "loadingLabel": "今日のロールプレイを読み込み中",
     "unavailableError": "今日のロールプレイをまとめられませんでした。",
-    "reusedLoadingLabel": "学んだ表現の活用を探しています",
+    "reusedLoadingLabel": "学んだフレーズの再利用を探しています",
     "detailButton": "詳しいフィードバックを見る",
     "retryButton": "もう一度試す",
     "homeButton": "ホームに戻る"

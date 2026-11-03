@@ -327,6 +327,10 @@ describe('CreateRoleplayFlow', () => {
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
 
     expect(screen.getByLabelText('상황과 주제')).toHaveValue('주문하기');
+    expect(track).toHaveBeenCalledWith('Roleplay Create Failed', {
+      partner: 'chloe',
+      reason: 'error',
+    });
   });
 
   it('상대 고르기에서 입력으로 넘어갈 때 히스토리를 쌓지 않는다 — 만든 뒤 대화에서 셸 뒤로가기가 빈 만들기 화면으로 가지 않게', async () => {

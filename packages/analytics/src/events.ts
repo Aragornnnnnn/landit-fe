@@ -792,7 +792,7 @@ export type EventProps = {
     // 끝낸 대화가 있던 시나리오인가
     has_history: boolean;
   };
-  // 저장이 거절되거나 실패했다 — 페이월로 간 건 premium_required
+  // 저장이 거절되거나 실패했다 — premium_required는 서버가 프리미엄 없음으로 거절한 것
   'Roleplay Create Failed': {
     partner: TalkPartner;
     reason: 'premium_required' | 'error';
