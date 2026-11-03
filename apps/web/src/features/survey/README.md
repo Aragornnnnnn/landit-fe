@@ -13,3 +13,7 @@
 5. 슈퍼베이스 `survey_responses` 테이블은 응답을 다 뽑은 뒤 삭제
 
 `shared/lib/useKeyboardInset.ts`의 수정은 설문과 무관한 버그 수정이라 남긴다.
+
+## 결제자 설문의 롤플레이 보기
+
+만족 기능 문항의 롤플레이 보기는 기본으로 꺼져 있다. Vercel 환경변수 `NEXT_PUBLIC_PAID_SURVEY_ROLEPLAY`를 `true`로 두고 다시 배포하면 스몰톡 뒤에 나타난다.
