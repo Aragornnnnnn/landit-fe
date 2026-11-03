@@ -10,6 +10,7 @@ import { track } from '@/shared/analytics';
 import { useSeenFlag } from '@/shared/lib/useSeenFlag';
 import { TAB_CHIP_ROW, tabChipClass } from '@/shared/ui/tab-chip';
 
+import { roleplayTabSeen } from '../_model/roleplay-tab-seen';
 import { tapGreetingSeen } from '../_model/tap-greeting-seen';
 import type { Tab } from './tabs';
 
@@ -18,6 +19,7 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
   const pathname = usePathname();
   // 스몰톡은 캐릭터를 눌러야 인사가 시작된다 — 아직 안 들어 본 사람에게만 점 하나로 눈짓한다
   const greetingSeen = useSeenFlag(tapGreetingSeen);
+  const roleplaySeen = useSeenFlag(roleplayTabSeen);
 
   if (tabs.length < 2) return null;
 
@@ -34,6 +36,7 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
             className={`relative inline-flex items-center ${tabChipClass(isActive)}`}
             // 보고 있는 탭을 다시 누르는 건 전환이 아니다
             onClick={() => {
+              if (tab.id === 'roleplay') roleplayTabSeen.mark();
               if (!isActive) track(EVENTS.HOME_TAB_SWITCHED, { tab: tab.id });
             }}
           >
@@ -46,6 +49,11 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
                 data-testid="smalltalk-greeting-dot"
                 className="absolute top-0.5 right-0.5 size-1.5 rounded-full bg-primary"
               />
+            )}
+            {tab.id === 'roleplay' && !roleplaySeen && !isActive && (
+              <span className="ml-1.5 text-[10px] font-bold text-primary">
+                {t('newLabel')}
+              </span>
             )}
           </Link>
         );

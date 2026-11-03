@@ -56,6 +56,13 @@ afterEach(() => {
   localStorage.clear();
 });
 
+const roleplay: Tab = {
+  id: 'roleplay',
+  href: '/roleplay',
+  labelKey: 'roleplayLabel',
+  ready: true,
+};
+
 const greetingDot = () => screen.queryByTestId('smalltalk-greeting-dot');
 
 describe('TabBar', () => {
@@ -152,5 +159,22 @@ describe('TabBar', () => {
 
     // Then 셸이 리마운트되지 않아도 점이 사라진다
     expect(greetingDot()).not.toBeInTheDocument();
+  });
+
+  it('롤플레이 탭을 아직 안 눌러 본 기기면 칩에 NEW를 붙인다', () => {
+    render(<TabBar tabs={[scenario, roleplay]} />);
+
+    expect(screen.getByText('NEW')).toBeInTheDocument();
+  });
+
+  it('롤플레이 칩을 누르면 NEW가 사라지고 다시 나오지 않는다', async () => {
+    const { unmount } = render(<TabBar tabs={[scenario, roleplay]} />);
+
+    await userEvent.click(screen.getByRole('link', { name: /롤플레이/ }));
+    expect(screen.queryByText('NEW')).not.toBeInTheDocument();
+
+    unmount();
+    render(<TabBar tabs={[scenario, roleplay]} />);
+    expect(screen.queryByText('NEW')).not.toBeInTheDocument();
   });
 });

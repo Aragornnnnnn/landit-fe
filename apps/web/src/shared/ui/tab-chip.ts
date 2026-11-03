@@ -3,9 +3,9 @@
 // 컴포넌트가 아니라 클래스만 나눈다. 한쪽은 주소를 옮기는 Link(aria-current)고 한쪽은 상태를
 // 바꾸는 button(aria-pressed)이라, 하나로 묶으면 둘 중 하나는 거짓말하는 접근성 표시를 달게 된다
 
-// 칩들이 앉는 줄. 아래 여백은 칩과 본문 사이 간격이라 줄이 정한다
+// 칩들이 앉는 줄 — 일본어처럼 글자가 길면 옆으로 밀린다. 아래 여백은 칩과 본문 사이 간격이라 줄이 정한다
 export const TAB_CHIP_ROW =
-  'flex shrink-0 gap-2 bg-background px-5 pt-1 pb-2.5';
+  'flex shrink-0 gap-2 overflow-x-auto bg-background px-5 pt-1 pb-2.5';
 
 export const tabChipClass = (isActive: boolean) =>
   `shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${

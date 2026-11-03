@@ -30,12 +30,11 @@ export const TABS: Tab[] = [
     labelKey: 'smalltalkLabel',
     ready: true,
   },
-  // 백엔드가 롤플레이를 켤 때까지 숨긴다 — 화면은 주소로 들어가 볼 수 있다
   {
     id: 'roleplay',
     href: ROLEPLAY_PATH,
     labelKey: 'roleplayLabel',
-    ready: false,
+    ready: true,
   },
 ];
 
