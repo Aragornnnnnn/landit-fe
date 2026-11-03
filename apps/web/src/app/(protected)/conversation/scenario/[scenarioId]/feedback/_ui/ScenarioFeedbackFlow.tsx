@@ -38,6 +38,7 @@ import {
   type PostFeedbackView,
 } from '../_model/post-feedback-view';
 import { previewEntryOf } from '../_model/preview-entry';
+import { scenarioFeedbackSeen } from '../../../../../_model/scenario-feedback-seen';
 import { usePremiumPreview } from '../../../../../_model/usePremiumPreview';
 import { PostConversationFlow } from './PostConversationFlow';
 
@@ -149,6 +150,8 @@ export const ScenarioFeedbackFlow = ({
   const goAfterFeedback = async () => {
     if (leaving.current) return;
     leaving.current = true;
+    // 피드백을 다 봤다 — 홈에 돌아오면 스몰톡 칩이 무료 5분을 권한다 (무료 사용자에게만, 판정은 탭 셸이)
+    scenarioFeedbackSeen.mark();
     const next = postFeedbackView();
     const entry = previewEntryFor(next);
     // 프리뷰를 시작할 사람일 때만 무료 표현을 확인한다 — 그 밖의 사람은 기다리지 않는다
@@ -165,6 +168,7 @@ export const ScenarioFeedbackFlow = ({
   const goForLockedDetail = async () => {
     if (leaving.current) return;
     leaving.current = true;
+    scenarioFeedbackSeen.mark();
     if (
       previewEntryFor(postFeedbackView()) === 'home' &&
       (await hasFreeExpression())

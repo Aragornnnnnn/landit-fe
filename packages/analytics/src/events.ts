@@ -91,6 +91,8 @@ export const EVENTS = {
   SMALL_TALK_TOPICS_REFRESHED: 'Small Talk Topics Refreshed',
   SMALL_TALK_INTRO_GUIDE_CLOSED: 'Small Talk Intro Guide Closed',
   SMALL_TALK_GREETING_TAPPED: 'Small Talk Greeting Tapped',
+  SMALL_TALK_FREE_NUDGE_VIEWED: 'Small Talk Free Nudge Viewed',
+  SMALL_TALK_FREE_NUDGE_TAPPED: 'Small Talk Free Nudge Tapped',
   SMALL_TALK_STARTED: 'Small Talk Started',
   SMALL_TALK_TURN_COMPLETED: 'Small Talk Turn Completed',
   SMALL_TALK_COMPLETED: 'Small Talk Completed',
@@ -216,7 +218,7 @@ export const EVENTS = {
   WIDGET_INSTALLED: 'Widget Installed',
   WIDGET_REMOVED: 'Widget Removed',
 
-  // LAN-428 결제 전 설문(임시) — 편지 CTA → 시작 → 문항 → 제출의 퍼널. 설문이 끝나면 설문 코드와 함께 지운다
+  // LAN-428 설문(임시) — 편지 CTA → 시작 → 문항 → 제출의 퍼널. 설문이 끝나면 설문 코드와 함께 지운다
   SURVEY_INVITE_TAPPED: 'Survey Invite Tapped',
   SURVEY_STARTED: 'Survey Started',
   SURVEY_QUESTION_VIEWED: 'Survey Question Viewed',
@@ -302,6 +304,8 @@ export type QuizStepKind = 'quiz' | 'review' | 'expression_review';
 // 알림 복습에서 나간 자리 — 시작 전 안내(intro)인지 문제 푸는 중(quiz)인지
 export type ExpressionReviewStep = 'intro' | 'quiz';
 export type HintSource = QuizStepKind;
+// LAN-428 설문 종류(임시) — 마이페이지·안내 편지로 여는 일반 설문과, 결제자에게 편지로만 여는 결제자 설문
+export type SurveyKind = 'general' | 'paid';
 // 홈 복귀 신호 — 앱 안에서 돌아온 이유. 밖에서 들어온 유입(알림·위젯)은 entry_campaign이 맡는다
 export type HomeReturnReason = 'just' | 'flip' | 'card';
 // 시나리오 피드백을 어디서 열었는지 — 대화 직후 흐름과 시나리오 기록에서 다시 연 것을 가른다
@@ -682,8 +686,10 @@ export type EventProps = {
   // 보여준 주제가 마음에 안 들어 다른 주제를 받았다 (열 때 자동으로 받는 것은 세지 않는다)
   'Small Talk Topics Refreshed': { partner: TalkPartner };
   'Small Talk Intro Guide Closed': undefined;
-  // coached = 코치마크가 켜진 채로 눌렀는지 (코치마크가 시킨 첫 탭)
+  // coached = 캐릭터 옆 "누르면 인사해요" 힌트가 떠 있을 때 눌렀는지 (힌트가 시킨 첫 탭)
   'Small Talk Greeting Tapped': { partner: TalkPartner; coached: boolean };
+  'Small Talk Free Nudge Viewed': undefined;
+  'Small Talk Free Nudge Tapped': undefined;
   'Small Talk Started': {
     session_id: number;
     partner: TalkPartner;
@@ -1066,12 +1072,16 @@ export type EventProps = {
   'Widget Removed': { family: WidgetFamily };
 
   // LAN-428 설문(임시) — 답 내용은 싣지 않는다(PII). 문항 id는 설문 정의(questions.ts)의 id 그대로
-  'Survey Invite Tapped': { letter_id: number };
-  'Survey Started': undefined;
+  'Survey Invite Tapped': { letter_id: number; survey: SurveyKind };
+  'Survey Started': { survey: SurveyKind };
   // 조건 문항이 끼고 빠지므로 index는 그 사람에게 보인 순서다 — 어느 문항인지는 question_id로 본다
-  'Survey Question Viewed': { question_id: string; question_index: number };
+  'Survey Question Viewed': {
+    survey: SurveyKind;
+    question_id: string;
+    question_index: number;
+  };
   // 저장 성공 뒤에만 — 보인 문항 수를 남긴다
-  'Survey Submitted': { question_count: number };
+  'Survey Submitted': { survey: SurveyKind; question_count: number };
 };
 
 // 사람에 붙는 속성 — 이벤트가 아니라 프로필에 쌓이고, 설정한 뒤에 찍힌 이벤트부터 따라붙는다.
