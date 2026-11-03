@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
 
+import { PAID_QUESTIONS } from '../model/paid-questions';
 import { OTHER_LABEL, QUESTIONS, type Question } from '../model/questions';
 import { SurveyFlow } from './SurveyFlow';
 
@@ -30,7 +31,7 @@ vi.mock('@/shared/auth/auth-store', () => {
 });
 
 const fetchMock = vi.fn();
-// 서버 라우트는 백엔드와 같은 봉투로 답한다
+// 서버 라우트는 백엔드와 같은 봉투로 답한다. 넘길 때마다 저장 요청이 가서 응답은 요청마다 새로 만든다(본문은 한 번만 읽힌다)
 const routeReply = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status });
 
@@ -88,7 +89,7 @@ afterEach(() => {
 
 describe('SurveyFlow', () => {
   it('단일 선택은 고르는 즉시 다음 문항으로 넘어간다', async () => {
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
 
     await userEvent.click(
@@ -99,7 +100,7 @@ describe('SurveyFlow', () => {
   });
 
   it('기타를 고르면 바로 넘어가지 않고 쓸 칸과 다음 버튼이 열린다', async () => {
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
 
     await userEvent.click(screen.getByRole('radio', { name: OTHER_LABEL }));
@@ -110,7 +111,7 @@ describe('SurveyFlow', () => {
   });
 
   it('다른 선택지를 누른 직후 기타를 누르면 넘어가지 않고 기타 입력에 머문다', async () => {
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
 
     await userEvent.click(
@@ -125,7 +126,7 @@ describe('SurveyFlow', () => {
   });
 
   it('추천 의향이 3점 미만이면 소개 여부 문항을 건너뛴다', async () => {
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
     const before = QUESTIONS.slice(
       0,
@@ -143,7 +144,7 @@ describe('SurveyFlow', () => {
   });
 
   it('유학 준비를 고르면 준비 방법 문항이 끼어든다', async () => {
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
     await answerCurrent(byId('channel'));
     await screen.findByText(titleOf(byId('study_purpose')));
@@ -156,7 +157,7 @@ describe('SurveyFlow', () => {
   });
 
   it('복수 선택은 하나도 안 고르면 다음으로 못 넘어간다', async () => {
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
     await answerCurrent(byId('channel'));
     await answerCurrent(byId('study_purpose'));
@@ -173,10 +174,10 @@ describe('SurveyFlow', () => {
   });
 
   it('마지막 주관식을 비운 채 제출하면 그 답 없이 서버 라우트로 보내고 완료 화면을 보여준다', async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(async () =>
       routeReply(200, { success: true, data: { result: 'saved' } }),
     );
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await answerUntilLast();
 
     await userEvent.click(
@@ -184,20 +185,21 @@ describe('SurveyFlow', () => {
     );
 
     expect(await screen.findByText('소중한 의견 고마워요!')).toBeTruthy();
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchMock.mock.calls.at(-1)!;
     expect(url).toBe('/api/survey');
     expect(init.headers.get('Authorization')).toBe('Bearer token');
     const body = JSON.parse(init.body);
+    expect(body.survey).toBe('general');
     expect(body.email).toBe('a@b.c');
     expect(body.answers.satisfaction).toBe(3);
     expect(body.answers).not.toHaveProperty('wish');
   });
 
   it('저장에 실패하면 문항에 머문다', async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(async () =>
       routeReply(502, { success: false, error: { message: '실패' } }),
     );
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await answerUntilLast();
 
     await userEvent.click(
@@ -211,11 +213,15 @@ describe('SurveyFlow', () => {
   });
 
   it('시작·문항 노출·제출 성공을 계측한다 — 답 내용은 싣지 않는다', async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(async () =>
       routeReply(200, { success: true, data: { result: 'saved' } }),
     );
-    render(<SurveyFlow />);
-    expect(track).not.toHaveBeenCalledWith(EVENTS.SURVEY_STARTED);
+    render(<SurveyFlow kind="general" />);
+    expect(
+      vi
+        .mocked(track)
+        .mock.calls.filter(([name]) => name === EVENTS.SURVEY_STARTED),
+    ).toHaveLength(0);
 
     await answerUntilLast();
     await userEvent.click(
@@ -223,17 +229,22 @@ describe('SurveyFlow', () => {
     );
     await screen.findByText('소중한 의견 고마워요!');
 
-    expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_STARTED);
+    expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_STARTED, {
+      survey: 'general',
+    });
     expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_QUESTION_VIEWED, {
+      survey: 'general',
       question_id: 'channel',
       question_index: 0,
     });
     // 유학 준비 조건 문항이 빠져 열 문항 — index는 보인 순서라 wish가 9번이다
     expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_QUESTION_VIEWED, {
+      survey: 'general',
       question_id: 'wish',
       question_index: 9,
     });
     expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_SUBMITTED, {
+      survey: 'general',
       question_count: 10,
     });
     expect(
@@ -247,10 +258,10 @@ describe('SurveyFlow', () => {
   });
 
   it('저장에 실패하면 제출을 계측하지 않는다', async () => {
-    fetchMock.mockResolvedValue(
+    fetchMock.mockImplementation(async () =>
       routeReply(502, { success: false, error: { message: '실패' } }),
     );
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await answerUntilLast();
 
     await userEvent.click(
@@ -266,7 +277,7 @@ describe('SurveyFlow', () => {
   });
 
   it('뒤로 갔다 다시 보면 같은 문항 노출이 한 번 더 찍힌다', async () => {
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
     await answerCurrent(QUESTIONS[0]);
     await screen.findByText(titleOf(QUESTIONS[1]));
@@ -289,9 +300,145 @@ describe('SurveyFlow', () => {
     // 옛 버전이 남긴 완료 표시 — 이제 재참여를 막지 않는다
     localStorage.setItem('landit-survey-done', '1');
 
-    render(<SurveyFlow />);
+    render(<SurveyFlow kind="general" />);
 
     expect(screen.getByRole('button', { name: '시작하기' })).toBeTruthy();
     expect(screen.queryByText('소중한 의견 고마워요!')).toBeNull();
+  });
+
+  it('결제자 설문은 결제자 문항을 묻고 결제자 설문으로 저장·계측한다', async () => {
+    fetchMock.mockImplementation(async () =>
+      routeReply(200, { success: true, data: { result: 'saved' } }),
+    );
+    render(<SurveyFlow kind="paid" />);
+    for (const question of PAID_QUESTIONS) {
+      if (question.kind !== 'text') {
+        await answerCurrent(question);
+        continue;
+      }
+      await userEvent.type(
+        await screen.findByRole('textbox', { name: question.title }),
+        '좋아요',
+      );
+      await userEvent.click(
+        screen.getByRole('button', {
+          name: question === PAID_QUESTIONS.at(-1) ? '제출하기' : '다음',
+        }),
+      );
+    }
+
+    expect(await screen.findByText('소중한 의견 고마워요!')).toBeTruthy();
+    const body = JSON.parse(fetchMock.mock.calls.at(-1)![1].body);
+    expect(body.survey).toBe('paid');
+    expect(Object.keys(body.answers)).toEqual(
+      PAID_QUESTIONS.map((question) => question.id),
+    );
+    expect(track).toHaveBeenCalledWith(EVENTS.SURVEY_SUBMITTED, {
+      survey: 'paid',
+      question_count: PAID_QUESTIONS.length,
+    });
+  });
+
+  it('필수 주관식은 비워 두면 건너뛸 수 없고, 쓰면 넘어간다', async () => {
+    render(<SurveyFlow kind="paid" />);
+    const firstText = PAID_QUESTIONS.findIndex(
+      (q) => q.kind === 'text' && q.required,
+    );
+    for (const question of PAID_QUESTIONS.slice(0, firstText)) {
+      await answerCurrent(question);
+    }
+    const textbox = await screen.findByRole('textbox', {
+      name: PAID_QUESTIONS[firstText].title,
+    });
+
+    expect(screen.queryByRole('button', { name: '건너뛰기' })).toBeNull();
+    expect(screen.getByRole('button', { name: '다음' })).toHaveProperty(
+      'disabled',
+      true,
+    );
+
+    await userEvent.type(textbox, '   ');
+    expect(screen.getByRole('button', { name: '다음' })).toHaveProperty(
+      'disabled',
+      true,
+    );
+
+    await userEvent.type(textbox, '느려요');
+    expect(screen.getByRole('button', { name: '다음' })).toHaveProperty(
+      'disabled',
+      false,
+    );
+  });
+
+  it('결제자 설문은 안내 없이 첫 문항부터 열고, 열자마자 시작을 계측한다', async () => {
+    render(<SurveyFlow kind="paid" />);
+
+    expect(await screen.findByText(titleOf(PAID_QUESTIONS[0]))).toBeTruthy();
+    expect(screen.queryByRole('button', { name: '시작하기' })).toBeNull();
+    expect(
+      vi
+        .mocked(track)
+        .mock.calls.filter(([name]) => name === EVENTS.SURVEY_STARTED),
+    ).toEqual([[EVENTS.SURVEY_STARTED, { survey: 'paid' }]]);
+  });
+
+  it('일반 설문은 안내 화면부터 시작한다', () => {
+    render(<SurveyFlow kind="general" />);
+
+    expect(screen.getByText(/2분만 내주시면/)).toBeTruthy();
+  });
+
+  it('다음으로 넘길 때마다 같은 응답 번호로 지금까지의 답을 저장하고, 제출은 완료로 저장한다', async () => {
+    fetchMock.mockImplementation(async () =>
+      routeReply(200, { success: true, data: { result: 'saved' } }),
+    );
+    render(<SurveyFlow kind="paid" />);
+    const bodies = () =>
+      fetchMock.mock.calls.map(([, init]) => JSON.parse(init.body));
+
+    await userEvent.type(
+      await screen.findByRole('textbox', { name: PAID_QUESTIONS[0].title }),
+      '환급받을 수 있어서',
+    );
+    await userEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const [first] = bodies();
+    expect(first).toMatchObject({
+      survey: 'paid',
+      completed: false,
+      answers: { premium_reason: '환급받을 수 있어서' },
+    });
+    expect(first.responseId).toEqual(expect.any(String));
+
+    for (const question of PAID_QUESTIONS.slice(1)) {
+      if (question.kind !== 'text') {
+        await answerCurrent(question);
+        continue;
+      }
+      await userEvent.type(
+        await screen.findByRole('textbox', { name: question.title }),
+        '좋아요',
+      );
+      await userEvent.click(screen.getByRole('button', { name: '다음' }));
+    }
+
+    await screen.findByText('소중한 의견 고마워요!');
+    const all = bodies();
+    expect(new Set(all.map((body) => body.responseId))).toEqual(
+      new Set([first.responseId]),
+    );
+    expect(all.at(-1).completed).toBe(true);
+    expect(all.slice(0, -1).every((body) => body.completed === false)).toBe(
+      true,
+    );
+  });
+
+  it('주관식 입력칸은 리플레이에서 글자가 보이게 표시한다', async () => {
+    render(<SurveyFlow kind="paid" />);
+
+    expect(
+      (await screen.findByRole('textbox')).classList.contains('amp-unmask'),
+    ).toBe(true);
   });
 });

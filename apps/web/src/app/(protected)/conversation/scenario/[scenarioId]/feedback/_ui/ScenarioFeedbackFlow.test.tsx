@@ -9,6 +9,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { scenarioFeedbackSeen } from '../../../../../_model/scenario-feedback-seen';
 import { ScenarioFeedbackFlow } from './ScenarioFeedbackFlow';
 
 const mocks = vi.hoisted(() => ({
@@ -127,9 +128,24 @@ beforeEach(() => {
   mocks.premiumPreview = { eligible: false, step: null };
   mocks.freeTrial = true;
 });
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  localStorage.clear();
+});
 
 describe('ScenarioFeedbackFlow', () => {
+  it('피드백을 마치면 피드백을 본 것으로 남긴다 — 홈의 스몰톡 칩 말풍선이 이 기록을 본다', () => {
+    // Given 무료 사용자가 피드백을 보고 있을 때
+    mocks.locked = true;
+    renderFlow();
+
+    // When 피드백을 마치면
+    fireEvent.click(screen.getByText('카페에서 주문하기 피드백 마침'));
+
+    // Then 본 것으로 남는다
+    expect(scenarioFeedbackSeen.has()).toBe(true);
+  });
+
   it('재대화면 피드백을 마치고 온 날 카드로 돌아간다', () => {
     // Given 지난 날 카드에서 다시 대화하고 피드백까지 봤을 때
     renderFlow({ replay: true, date: '2026-07-29' });

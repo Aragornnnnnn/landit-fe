@@ -13,7 +13,10 @@ import {
   hasSpokenTime,
   toSpeakingTimeLabel,
 } from '@/features/small-talk/lib/speaking-time';
-import { toExpressionListItems } from '@/features/small-talk/model/session-expressions';
+import {
+  isFreeTrialExpression,
+  toExpressionListItems,
+} from '@/features/small-talk/model/session-expressions';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
@@ -56,10 +59,15 @@ export const SmallTalkHistoryDetail = ({
       session_id: sessionId,
       source: 'history',
     });
-    gate.guard(
-      () => router.push(sessionExpressionPath(sessionId, expressionId)),
-      { source: 'expression', returnTo: smallTalkHistoryPath(sessionId) },
-    );
+    const learn = () =>
+      router.push(sessionExpressionPath(sessionId, expressionId));
+    // 무료 대화에서 나온 표현은 서버가 구독 없이 열어 준다 — 페이월을 거치지 않는다
+    if (isFreeTrialExpression(session?.expressions ?? [], expressionId))
+      return learn();
+    gate.guard(learn, {
+      source: 'expression',
+      returnTo: smallTalkHistoryPath(sessionId),
+    });
   };
 
   return (
