@@ -448,6 +448,20 @@ describe('SatisfactionGate — 리뷰 요청(review)', () => {
     });
   });
 
+  it('시트가 닫히면 부른 쪽에 알린다 — 홈이 소감 뒤 다음 안내(스몰톡 말풍선)를 띄울 수 있게', () => {
+    // Given 소감 시트가 떠 있다
+    markTalkCompleted('scenario');
+    const onClosed = vi.fn();
+    render(<SatisfactionGate moment="scenario" onClosed={onClosed} />);
+    expect(onClosed).not.toHaveBeenCalled();
+
+    // When 딤을 눌러 닫으면
+    fireEvent.click(screen.getByTestId('bottom-sheet-dim'));
+
+    // Then 닫혔다고 알린다
+    expect(onClosed).toHaveBeenCalledOnce();
+  });
+
   it('처음 뜰 때는 「이미 남겼어요」가 없다 — 아직 남겼을 리 없다', () => {
     render(<SatisfactionGate moment="review" />);
 

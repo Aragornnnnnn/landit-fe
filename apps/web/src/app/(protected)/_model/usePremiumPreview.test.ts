@@ -7,7 +7,7 @@ import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { usePremiumPreview } from './usePremiumPreview';
 
-const mocks = vi.hoisted(() => ({ rewardLive: true }));
+const mocks = vi.hoisted(() => ({ rewardLive: true, step: 'STARTED' }));
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 vi.mock('@/features/subscription/model/paywall-gate/usePaywallGate', () => ({
@@ -18,7 +18,7 @@ vi.mock(
   () => ({ useRewardChallengeLive: () => mocks.rewardLive }),
 );
 vi.mock('@/features/premium-preview/model/usePreviewStep', () => ({
-  usePreviewStep: () => ({ step: 'STARTED', saveStep: vi.fn() }),
+  usePreviewStep: () => ({ step: mocks.step, saveStep: vi.fn() }),
 }));
 vi.mock('@/features/premium-preview/model/preview-replay', () => ({
   isPreviewReplay: () => false,
@@ -26,6 +26,7 @@ vi.mock('@/features/premium-preview/model/preview-replay', () => ({
 
 beforeEach(() => {
   mocks.rewardLive = true;
+  mocks.step = 'STARTED';
 });
 
 describe('usePremiumPreview', () => {

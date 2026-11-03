@@ -82,6 +82,7 @@ export const TalkScreen = ({
   const router = useRouter();
   const display = useTalkDisplay();
   // 결제가 열리면 하루 한도가 없다 — 남은 시간과 타이머 링을 그리지 않는다 (잔량 계산은 뒤에서 그대로 돈다)
+  // 한도가 있는 무료 사용자에겐 키보드도 없다 — 타이핑은 말한 시간 0으로 보내 한도를 안 깎아, 무료 시간이 무한이 된다
   const { unlimited } = useSpeakingLimit();
   const [introDismissed, setIntroDismissed] = useState(false);
   const {
@@ -277,7 +278,7 @@ export const TalkScreen = ({
             <MicControl
               phase={phase}
               onPress={pressMic}
-              onKeyboard={pressKeyboard}
+              onKeyboard={unlimited ? pressKeyboard : undefined}
               onCancel={cancelInput}
               onDone={finishListening}
               remainingRatio={unlimited ? undefined : speakingRatio}
