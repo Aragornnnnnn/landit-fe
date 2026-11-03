@@ -9,6 +9,7 @@
     "emptyDescription": "역할과 상황만 적으면<br></br>나만의 영어 시나리오가 바로 생겨요",
     "presidentIdeaLabel": "미국 대통령과<br></br>토론",
     "alienIdeaLabel": "외계인에게<br></br>지구 소개하기",
+    "zombieIdeaLabel": "좀비에게<br></br>채식 권하기",
     "listTitle": "내 시나리오",
     "countLabel": "{count}개",
     "moreLabel": "{title} 더보기",
@@ -44,16 +45,17 @@
     "situationLabel": "상황과 주제",
     "situationPlaceholder": "예: 새로 나온 메뉴를 추천해 달라고 하기",
     "ideaButton": "아이디어 추천받기",
-    "ideaLoadingButton": "아이디어 받는 중…",
     "ideaFailToast": "아이디어를 받지 못했어요. 다시 눌러 주세요",
     "startButton": "시작하기",
     "failToast": "시나리오를 만들지 못했어요. 다시 시도해 주세요"
   },
   "generating": {
-    "title": "시나리오 카드를 섞고 있어요",
-    "roleStepLabel": "역할 정하기",
-    "situationStepLabel": "상황 그리는 중…",
-    "openingStepLabel": "{name} 첫 마디 준비"
+    "title": "맞춤 대화를 만들고 있어요",
+    "doneTitle": "다 됐어요!",
+    "slowTitle": "생각보다 오래 걸리고 있어요",
+    "backButton": "돌아가기",
+    "myRoleLabel": "나",
+    "situationLabel": "상황"
   },
   "summary": {
     "title": "오늘의 롤플레이",

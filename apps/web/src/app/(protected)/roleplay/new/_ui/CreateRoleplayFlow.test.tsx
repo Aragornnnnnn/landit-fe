@@ -1,5 +1,5 @@
 // 시나리오 만들기 — 상대 고르기 → 세 칸 적기 → 생성. 단계 이동, 시작 조건, 아이디어 채우기, 생성 실패 복귀
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -9,6 +9,7 @@ import type {
 } from '@/features/roleplay/api/roleplay';
 import { useCreateRoleplayScenarioMutation } from '@/features/roleplay/model/useCreateRoleplayScenarioMutation';
 import { useRoleplayIdeaMutation } from '@/features/roleplay/model/useRoleplayIdeaMutation';
+import { ApiError } from '@/shared/api/api-error';
 
 import { CreateRoleplayFlow } from './CreateRoleplayFlow';
 
@@ -32,8 +33,15 @@ vi.mock('@/features/roleplay/model/useRoleplayIdeaMutation', () => ({
 vi.mock('@/features/roleplay/model/useCreateRoleplayScenarioMutation', () => ({
   useCreateRoleplayScenarioMutation: vi.fn(),
 }));
+const prepareSession = vi.hoisted(() => vi.fn());
+vi.mock('@/features/roleplay/model/useRoleplaySessionHandoff', () => ({
+  useRoleplaySessionHandoff: () => ({ prepare: prepareSession }),
+}));
 
-type Callbacks<T> = { onSuccess?: (value: T) => void; onError?: () => void };
+type Callbacks<T> = {
+  onSuccess?: (value: T) => void;
+  onError?: (cause: unknown) => void;
+};
 
 const IDEA = {
   id: 4,
@@ -56,19 +64,24 @@ const answerIdea = (response: RoleplayIdeaResponse = { idea: IDEA }) => {
   return mutate;
 };
 
-const answerCreate = (result: 'success' | 'error' | 'pending') => {
-  const mutate = vi.fn(
-    (_body: unknown, callbacks: Callbacks<RoleplaySettings>) => {
-      if (result === 'success') {
-        callbacks.onSuccess?.({ id: 9 } as RoleplaySettings);
-      }
-      if (result === 'error') callbacks.onError?.();
-    },
-  );
+const answerCreate = (
+  result: 'success' | 'error' | 'pending',
+  error: unknown = new Error('실패'),
+) => {
+  const mutateAsync = vi.fn(() => {
+    if (result === 'success') {
+      return Promise.resolve({
+        id: 9,
+        title: '카페에서 주문하기',
+      } as RoleplaySettings);
+    }
+    if (result === 'error') return Promise.reject(error);
+    return new Promise<RoleplaySettings>(() => {});
+  });
   vi.mocked(useCreateRoleplayScenarioMutation).mockReturnValue({
-    mutate,
+    mutateAsync,
   } as unknown as ReturnType<typeof useCreateRoleplayScenarioMutation>);
-  return mutate;
+  return mutateAsync;
 };
 
 // 이동이 주소만 바꾸므로 다시 그려 다음 단계를 띄운다
@@ -98,9 +111,16 @@ beforeEach(() => {
   window.history.pushState(null, '', '/roleplay/new');
   answerIdea();
   answerCreate('pending');
+  prepareSession.mockReset();
+  prepareSession.mockResolvedValue(undefined);
+  replace.mockClear();
+  push.mockClear();
 });
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 describe('CreateRoleplayFlow', () => {
   it('첫 상대에서 이전으로 넘기면 마지막 상대로 간다 — 끝이 없다', async () => {
@@ -208,26 +228,86 @@ describe('CreateRoleplayFlow', () => {
 
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
 
-    expect(mutate).toHaveBeenCalledWith(
-      {
-        characterId: 'chloe',
-        userRole: '손님',
-        aiRole: '바리스타',
-        situation: '주문하기',
-      },
-      expect.anything(),
-    );
-    expect(screen.getByText('시나리오 카드를 섞고 있어요')).toBeInTheDocument();
+    expect(mutate).toHaveBeenCalledWith({
+      characterId: 'chloe',
+      userRole: '손님',
+      aiRole: '바리스타',
+      situation: '주문하기',
+    });
+    expect(screen.getByText('맞춤 대화를 만들고 있어요')).toBeInTheDocument();
   });
 
-  it('만들어지면 그 시나리오의 대화로 넘어간다', async () => {
+  it('첫 발화까지 준비되면 제목과 완성 문구를 보여 주고 대화로 넘어간다', async () => {
     answerCreate('success');
     await goToForm();
     await fillAll();
 
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
 
-    expect(replace).toHaveBeenCalledWith('/conversation/roleplay/9');
+    expect(prepareSession).toHaveBeenCalledWith(9, expect.any(Function));
+    expect(await screen.findByText('카페에서 주문하기')).toBeInTheDocument();
+    expect(screen.getByText('다 됐어요!')).toBeInTheDocument();
+    await waitFor(
+      () => expect(replace).toHaveBeenCalledWith('/conversation/roleplay/9'),
+      { timeout: 1_500 },
+    );
+  });
+
+  it('첫 발화가 끝나기 전엔 완성했다고 하지 않는다', async () => {
+    answerCreate('success');
+    prepareSession.mockReturnValue(new Promise(() => {}));
+    await goToForm();
+    await fillAll();
+
+    await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+
+    expect(screen.getByText('맞춤 대화를 만들고 있어요')).toBeInTheDocument();
+    expect(screen.queryByText('다 됐어요!')).not.toBeInTheDocument();
+  });
+
+  it('세션을 못 열면 완성했다고 하지 않고 대화 화면으로 넘긴다 — 거기서 다시 열어 본다', async () => {
+    answerCreate('success');
+    prepareSession.mockRejectedValue(new Error('실패'));
+    await goToForm();
+    await fillAll();
+
+    await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith('/conversation/roleplay/9'),
+    );
+    expect(screen.queryByText('다 됐어요!')).not.toBeInTheDocument();
+  });
+
+  it('응답이 너무 오래 없으면 돌아갈 길을 보여 준다', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    answerCreate('pending');
+    await goToForm();
+    await fillAll();
+    await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+    expect(screen.queryByRole('button', { name: '돌아가기' })).toBeNull();
+
+    act(() => {
+      vi.advanceTimersByTime(20_000);
+    });
+    await userEvent.click(screen.getByRole('button', { name: '돌아가기' }));
+
+    expect(back).toHaveBeenCalled();
+  });
+
+  it('프리미엄이 없다고 거절되면 페이월로 보낸다', async () => {
+    answerCreate(
+      'error',
+      new ApiError('막힘', 403, '/api/v1/roleplays', 'PREMIUM_REQUIRED'),
+    );
+    await goToForm();
+    await fillAll();
+
+    await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith(expect.stringContaining('/paywall')),
+    );
   });
 
   it('만들기에 실패하면 적은 글을 그대로 둔 채 입력으로 돌아온다', async () => {

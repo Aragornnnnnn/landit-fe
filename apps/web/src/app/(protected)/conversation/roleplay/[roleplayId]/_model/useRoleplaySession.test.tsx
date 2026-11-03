@@ -3,7 +3,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { startSavedRoleplaySession } from '@/features/roleplay/api/roleplay';
+import {
+  startSavedRoleplaySession,
+  type RoleplaySessionStartResponse,
+} from '@/features/roleplay/api/roleplay';
 import { roleplayKeys } from '@/features/roleplay/model/keys';
 import { ApiError } from '@/shared/api/api-error';
 
@@ -52,5 +55,21 @@ describe('useRoleplaySession', () => {
     await waitFor(() => expect(result.current.error).not.toBeNull());
 
     expect(invalidate).not.toHaveBeenCalled();
+  });
+
+  it('만들기 화면이 미리 연 세션이 있으면 다시 열지 않고 쓴다', () => {
+    const client = new QueryClient();
+    const started = { sessionId: 3 } as RoleplaySessionStartResponse;
+    client.setQueryData(roleplayKeys.handoff(39, 7), started);
+
+    const { result } = renderHook(() => useRoleplaySession(7), {
+      wrapper: ({ children }) => (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      ),
+    });
+
+    expect(result.current.session).toBe(started);
+    expect(startSavedRoleplaySession).not.toHaveBeenCalled();
+    expect(client.getQueryData(roleplayKeys.handoff(39, 7))).toBeUndefined();
   });
 });
