@@ -32,9 +32,12 @@ describe('RoleplayTalkDemo', () => {
     const bubble = screen.getByText('How about broccoli instead?');
 
     expect(bubble).not.toHaveClass('animate-reveal-up');
+    // 연출의 시작 모습으로 기다린다 — 다 보였다가 흐려지면 깜빡임으로 보인다
+    expect(bubble).toHaveClass('opacity-20');
 
     act(() => notify([{ isIntersecting: true }]));
 
     expect(bubble).toHaveClass('animate-reveal-up');
+    expect(bubble).not.toHaveClass('opacity-20');
   });
 });

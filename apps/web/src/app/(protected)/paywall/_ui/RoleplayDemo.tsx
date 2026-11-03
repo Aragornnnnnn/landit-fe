@@ -253,7 +253,7 @@ export const RoleplayTalkDemo = ({
                 line.mine
                   ? 'self-end rounded-tr-md bg-primary text-primary-foreground'
                   : 'self-start rounded-tl-md bg-white/14 text-white'
-              } ${inView ? 'animate-reveal-up' : ''}`}
+              } ${inView ? 'animate-reveal-up' : 'translate-y-[18px] opacity-20'}`}
               style={{ '--i': 2 + index * 9 } as CSSProperties}
             >
               {line.text}
