@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
 
+import { roleplayTabSeen } from '../_model/roleplay-tab-seen';
 import { tapGreetingSeen } from '../_model/tap-greeting-seen';
 import { TabBar } from './TabBar';
 import type { Tab } from './tabs';
@@ -161,20 +162,28 @@ describe('TabBar', () => {
     expect(greetingDot()).not.toBeInTheDocument();
   });
 
-  it('롤플레이 탭을 아직 안 눌러 본 기기면 칩에 NEW를 붙인다', () => {
+  it('롤플레이 탭을 아직 안 본 기기면 칩에 NEW를 붙인다', () => {
+    mocks.pathname = '/scenario';
+
     render(<TabBar tabs={[scenario, roleplay]} />);
 
     expect(screen.getByText('NEW')).toBeInTheDocument();
   });
 
-  it('롤플레이 칩을 누르면 NEW가 사라지고 다시 나오지 않는다', async () => {
-    const { unmount } = render(<TabBar tabs={[scenario, roleplay]} />);
+  it('롤플레이 탭을 보면 NEW가 사라진다', () => {
+    mocks.pathname = '/roleplay';
 
-    await userEvent.click(screen.getByRole('link', { name: /롤플레이/ }));
-    expect(screen.queryByText('NEW')).not.toBeInTheDocument();
-
-    unmount();
     render(<TabBar tabs={[scenario, roleplay]} />);
+
+    expect(screen.queryByText('NEW')).not.toBeInTheDocument();
+  });
+
+  it('한 번 본 기기는 다른 탭에 있어도 NEW가 다시 나오지 않는다', () => {
+    roleplayTabSeen.mark();
+    mocks.pathname = '/scenario';
+
+    render(<TabBar tabs={[scenario, roleplay]} />);
+
     expect(screen.queryByText('NEW')).not.toBeInTheDocument();
   });
 });

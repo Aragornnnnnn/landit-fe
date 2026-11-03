@@ -1,12 +1,14 @@
 'use client';
 
 // 탭 칩 — 고를 게 둘 이상일 때만 그린다. 탭이 하나면 선택이라는 행위 자체가 없다
+import { useEffect } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
+import { ROLEPLAY_PATH } from '@/shared/lib/routes';
 import { useSeenFlag } from '@/shared/lib/useSeenFlag';
 import { TAB_CHIP_ROW, tabChipClass } from '@/shared/ui/tab-chip';
 
@@ -20,6 +22,11 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
   // 스몰톡은 캐릭터를 눌러야 인사가 시작된다 — 아직 안 들어 본 사람에게만 점 하나로 눈짓한다
   const greetingSeen = useSeenFlag(tapGreetingSeen);
   const roleplaySeen = useSeenFlag(roleplayTabSeen);
+
+  // 칩을 눌렀든 링크로 왔든 탭을 봤으면 끝이다. 출시 2주쯤 뒤 다음 릴리즈에서 NEW를 코드째 지운다
+  useEffect(() => {
+    if (pathname === ROLEPLAY_PATH) roleplayTabSeen.mark();
+  }, [pathname]);
 
   if (tabs.length < 2) return null;
 
@@ -36,7 +43,6 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
             className={`relative inline-flex items-center ${tabChipClass(isActive)}`}
             // 보고 있는 탭을 다시 누르는 건 전환이 아니다
             onClick={() => {
-              if (tab.id === 'roleplay') roleplayTabSeen.mark();
               if (!isActive) track(EVENTS.HOME_TAB_SWITCHED, { tab: tab.id });
             }}
           >
@@ -50,8 +56,8 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
                 className="absolute top-0.5 right-0.5 size-1.5 rounded-full bg-primary"
               />
             )}
-            {tab.id === 'roleplay' && !roleplaySeen && !isActive && (
-              <span className="ml-1.5 text-[10px] font-bold text-primary">
+            {tab.id === 'roleplay' && !roleplaySeen && (
+              <span className="ml-1.5 text-10 font-bold text-primary">
                 {t('newLabel')}
               </span>
             )}
