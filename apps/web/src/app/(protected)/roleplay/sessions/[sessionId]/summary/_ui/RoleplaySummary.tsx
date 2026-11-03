@@ -17,9 +17,11 @@ import {
 import { GrowthCard } from '@/features/feedback/ui/GrowthCard';
 import { ReusedExpressionsCard } from '@/features/feedback/ui/ReusedExpressionsCard';
 import { useRoleplaySummaryQuery } from '@/features/roleplay/model/useRoleplaySummaryQuery';
+import { toSummaryAnalysis } from '@/features/small-talk/model/summary-analysis';
 import { toSummaryBlocks } from '@/features/small-talk/model/summary-blocks';
 import { BlockSkeleton } from '@/features/small-talk/ui/BlockSkeleton';
 import { ComparisonCard } from '@/features/small-talk/ui/ComparisonCard';
+import { SummaryAnalysisNotice } from '@/features/small-talk/ui/SummaryAnalysisNotice';
 import { SummaryHeadline } from '@/features/small-talk/ui/SummaryHeadline';
 import { SummarySkeleton } from '@/features/small-talk/ui/SummarySkeleton';
 import { useFilledEarlier } from '@/features/streak/model/useFilledEarlier';
@@ -55,9 +57,13 @@ export const RoleplaySummary = ({
   }, [showsCelebration]);
 
   // 총평은 이 세션의 교정이 다 끝나야 계산된다 — 상한까지 안 오면 붙잡아 두지 않는다
-  const summaryStuck = summary !== null && summary.pending && waitExpired;
+  // 통계를 먼저 받은 응답이면 붙잡을 게 없다 — 분석 자리에서만 기다린다
+  const summaryStuck =
+    summary !== null && summary.pending && !summary.comparison && waitExpired;
   const blocks =
-    summary && !summary.pending ? toSummaryBlocks(summary, waitExpired) : null;
+    summary && (!summary.pending || summary.comparison)
+      ? toSummaryBlocks(summary, waitExpired)
+      : null;
 
   // 떠나는 길은 한 번만 간다 — 다음 화면이 뜨기 전에 또 누르면 두 번 이동한다
   const [leaving, setLeaving] = useState(false);
@@ -133,12 +139,18 @@ export const RoleplaySummary = ({
             {t('homeButton')}
           </button>
         </div>
-      ) : isLoading || !summary || !summary.headline || !summary.comparison ? (
+      ) : isLoading || !summary || !summary.comparison ? (
         <SummarySkeleton label={t('loadingLabel')} />
       ) : (
         <>
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pt-1 pb-6">
-            <SummaryHeadline headline={summary.headline} />
+            {summary.headline && (
+              <SummaryHeadline headline={summary.headline} />
+            )}
+            <SummaryAnalysisNotice
+              analysis={toSummaryAnalysis(summary, waitExpired)}
+              onRetry={retry}
+            />
             <ComparisonCard comparison={summary.comparison} />
             {blocks?.growth.kind === 'ready' && (
               <GrowthCard growth={blocks.growth.data} />

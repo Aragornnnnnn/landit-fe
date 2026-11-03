@@ -119,6 +119,27 @@ describe('RoleplaySummary', () => {
     expect(replace).toHaveBeenCalledWith('/roleplay/sessions/7/messages');
   });
 
+  it('분석을 기다리는 동안에도 통계와 대화 보기를 먼저 보인다', () => {
+    renderSummary(
+      summaryOf({
+        pending: true,
+        analysisStatus: 'PROCESSING',
+        headline: null,
+        growth: null,
+        correctionCount: null,
+      }),
+    );
+
+    expect(
+      screen.queryByRole('status', { name: '오늘의 롤플레이를 불러오는 중' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('말한 시간')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '상세 피드백 보러갈게요' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('말한 내용을 분석하고 있어요')).toBeInTheDocument();
+  });
+
   it('닫으면 표현 학습이 아니라 롤플레이 탭으로 간다', async () => {
     renderSummary(summaryOf());
 

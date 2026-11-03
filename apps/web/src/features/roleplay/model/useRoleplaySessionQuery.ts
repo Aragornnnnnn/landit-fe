@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
-import { WAIT_LIMIT_MS } from '@/features/small-talk/model/useSmallTalkSessionQuery';
+import { CORRECTION_WAIT_LIMIT_MS } from '@/features/small-talk/model/useSmallTalkSessionQuery';
 import { useCurrentUserId } from '@/shared/auth/current-member';
 
 import {
@@ -34,7 +34,10 @@ export const useRoleplaySessionQuery = (sessionId: number) => {
   const preparing = hasPendingCorrection(data);
   useEffect(() => {
     if (!preparing) return;
-    const limit = setTimeout(() => setWaitExpired(true), WAIT_LIMIT_MS);
+    const limit = setTimeout(
+      () => setWaitExpired(true),
+      CORRECTION_WAIT_LIMIT_MS,
+    );
     return () => clearTimeout(limit);
   }, [preparing]);
 
