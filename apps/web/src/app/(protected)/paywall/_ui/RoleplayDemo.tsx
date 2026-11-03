@@ -225,6 +225,7 @@ export const RoleplayTalkDemo = ({
 }) => {
   const t = useTranslations('paywall.roleplayDemo');
   const { src, roleKey, lines } = TALKS[talk];
+  const { ref, inView } = useInView<HTMLSpanElement>();
 
   return (
     <DemoScreen width={width}>
@@ -242,15 +243,17 @@ export const RoleplayTalkDemo = ({
             {t(roleKey)}
           </p>
         </div>
-        <div className="flex flex-col gap-2.5 px-6 pt-3">
+        <div className="relative flex flex-col gap-2.5 px-6 pt-3">
+          {/* 가운데 한 줄만 관찰한다 — 옆 카드에서 가장자리만 비칠 때 연출이 먼저 끝나지 않게 */}
+          <span ref={ref} className="absolute inset-y-0 left-1/2 w-px" />
           {lines.map((line, index) => (
             <p
               key={line.text}
-              className={`animate-reveal-up max-w-[320px] rounded-3xl px-5 py-3 text-17 font-bold ${
+              className={`max-w-[320px] rounded-3xl px-5 py-3 text-17 font-bold ${
                 line.mine
                   ? 'self-end rounded-tr-md bg-primary text-primary-foreground'
                   : 'self-start rounded-tl-md bg-white/14 text-white'
-              }`}
+              } ${inView ? 'animate-reveal-up' : ''}`}
               style={{ '--i': 2 + index * 9 } as CSSProperties}
             >
               {line.text}
