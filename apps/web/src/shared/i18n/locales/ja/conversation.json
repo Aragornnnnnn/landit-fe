@@ -4,6 +4,9 @@
     "frameCaption": "こっそり教える本音",
     "waitingLabel": "相手が考えています"
   },
+  "thinkingBubble": {
+    "thinkingLabel": "考えています"
+  },
   "thoughtOverlay": {
     "dialogLabel": "相手の本音"
   },

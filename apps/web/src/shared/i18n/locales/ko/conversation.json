@@ -4,6 +4,9 @@
     "frameCaption": "대신 알려주는 속마음",
     "waitingLabel": "상대가 생각하고 있어요"
   },
+  "thinkingBubble": {
+    "thinkingLabel": "답을 생각하는 중"
+  },
   "thoughtOverlay": {
     "dialogLabel": "상대방 속마음"
   },

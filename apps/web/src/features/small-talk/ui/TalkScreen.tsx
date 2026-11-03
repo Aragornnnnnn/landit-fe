@@ -21,6 +21,7 @@ import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
 import { QuestionCard } from '@/features/conversation/ui/flow/QuestionCard';
+import { ThinkingBubble } from '@/features/conversation/ui/flow/ThinkingBubble';
 import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
 import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
 import { track } from '@/shared/analytics';
@@ -65,6 +66,8 @@ interface TalkScreenProps {
   onExitRequested: () => void;
   // 내가 먼저 거는 대화의 진입 안내 — 랜디가 먼저 말을 걸어보라고 알려주고 잠시 후 사라진다
   userFirstHint?: string;
+  // 속마음이 없는 대화(롤플레이)는 답을 기다릴 때 화면을 덮지 않고 말풍선 자리에 점 세 개를 띄운다
+  hasInnerThought?: boolean;
   children?: React.ReactNode;
 }
 
@@ -76,6 +79,7 @@ export const TalkScreen = ({
   onShowSummary,
   onExitRequested,
   userFirstHint,
+  hasInnerThought = true,
   children,
 }: TalkScreenProps) => {
   const t = useTranslations('conversation.smallTalkConversation');
@@ -119,6 +123,7 @@ export const TalkScreen = ({
   } = input;
 
   const ended = phase === 'DONE';
+  const thinking = phase === 'AI_THINKING';
   // 타이핑 중(키보드로 쓰거나 말한 뒤 고치는 중) — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
   const typing = keyboardMode && phase === 'USER_SPEAKING';
   const keyboardInset = useKeyboardInset();
@@ -198,29 +203,33 @@ export const TalkScreen = ({
           <div
             className={`flex min-h-0 flex-col pt-2 ${ended ? '' : 'flex-1'}`}
           >
-            <QuestionCard
-              question={turn.aiMessage}
-              translation={turn.aiTranslation}
-              speaking={phase === 'AI_SPEAKING'}
-              instruction={turn.isUserOpening}
-              onTranslationToggled={(opened) =>
-                track(EVENTS.TRANSLATION_TOGGLED, {
-                  session_id: sessionId,
-                  turn_index: turnIndex,
-                  opened,
-                })
-              }
-              replay={replay}
-              textHidden={display.textHidden}
-              onTextToggled={(visible) =>
-                track(EVENTS.ENGLISH_TEXT_TOGGLED, {
-                  session_id: sessionId,
-                  turn_index: turnIndex,
-                  hidden: !visible,
-                })
-              }
-              translationDefaultOpen={display.translationDefaultOpen}
-            />
+            {thinking && !hasInnerThought ? (
+              <ThinkingBubble />
+            ) : (
+              <QuestionCard
+                question={turn.aiMessage}
+                translation={turn.aiTranslation}
+                speaking={phase === 'AI_SPEAKING'}
+                instruction={turn.isUserOpening}
+                onTranslationToggled={(opened) =>
+                  track(EVENTS.TRANSLATION_TOGGLED, {
+                    session_id: sessionId,
+                    turn_index: turnIndex,
+                    opened,
+                  })
+                }
+                replay={replay}
+                textHidden={display.textHidden}
+                onTextToggled={(visible) =>
+                  track(EVENTS.ENGLISH_TEXT_TOGGLED, {
+                    session_id: sessionId,
+                    turn_index: turnIndex,
+                    hidden: !visible,
+                  })
+                }
+                translationDefaultOpen={display.translationDefaultOpen}
+              />
+            )}
           </div>
           {ended && (
             <>
@@ -295,7 +304,7 @@ export const TalkScreen = ({
 
       {/* 속마음 — 제출 대기(AI_THINKING)부터 랜디가 떠 있다가 속마음을 전한다 */}
       <ThoughtOverlay
-        loading={phase === 'AI_THINKING'}
+        loading={thinking && hasInnerThought}
         thought={overlayThought}
       />
 
