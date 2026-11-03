@@ -16,6 +16,10 @@ vi.mock('@/features/roleplay/model/useRoleplaySummaryQuery', () => ({
   useRoleplaySummaryQuery: vi.fn(),
 }));
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
+const filledEarlier = vi.hoisted(() => vi.fn(() => false));
+vi.mock('@/features/streak/model/useFilledEarlier', () => ({
+  useFilledEarlier: filledEarlier,
+}));
 // 축하의 열매 도장은 스트릭 조회에 기대는 연출이다 — 여기선 축하가 먼저 서는지만 본다
 vi.mock('@/features/expression/ui/ExpressionStages', () => ({
   CELEBRATE_MS: 2600,
@@ -67,6 +71,20 @@ afterEach(() => {
 });
 
 describe('RoleplaySummary', () => {
+  it('오늘 열매를 이미 채웠으면 축하 없이 바로 요약을 보인다', () => {
+    // Given 오늘을 이미 채우고 들어온 대화에서
+    filledEarlier.mockReturnValueOnce(true);
+
+    // When 막 끝내고 오면
+    renderSummary(summaryOf(), { celebrate: true });
+
+    // Then 축하 없이 요약이 보인다
+    expect(screen.queryByText(/완료했어요/)).not.toBeInTheDocument();
+    expect(
+      screen.getByText('지난번보다 15초 더 말했어요.'),
+    ).toBeInTheDocument();
+  });
+
   it('막 끝내고 왔으면 축하를 먼저 보이고, 잠시 뒤 요약으로 넘어간다', () => {
     vi.useFakeTimers();
     renderSummary(summaryOf(), { celebrate: true });

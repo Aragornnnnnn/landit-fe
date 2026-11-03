@@ -9,6 +9,8 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 // 가로 import 사유: 학습 진입 문마다 같은 페이월 게이트를 걸어야 한다 (docs/subscription.md)
+import { useCompletionEarn } from '@/features/reward/model/useCompletionEarn';
+import { useFilledEarlier } from '@/features/streak/model/useFilledEarlier';
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
@@ -54,17 +56,21 @@ export const ExpressionBranch = ({
 
   // 진입 연출 2단계 — 축하(스트릭 도장) → 분석(랜디) 문구를 읽을 만큼만 → 리빌.
   // 타자기 없이 고정 문구라, 분석은 글을 다 읽을 정도의 시간만 잡아둔다.
+  // 오늘 열매를 이미 채웠고 받은 금액도 없으면 새로 보여 줄 게 없어 축하를 건너뛴다.
+  const { earn } = useCompletionEarn({ enabled: true });
+  const filledEarlier = useFilledEarlier();
+  const celebrateMs = filledEarlier && !earn ? 0 : CELEBRATE_MS;
   const [step, setStep] = useState<'celebrate' | 'analyze' | 'done'>(
-    'celebrate',
+    celebrateMs === 0 ? 'analyze' : 'celebrate',
   );
   useEffect(() => {
-    const toAnalyze = setTimeout(() => setStep('analyze'), CELEBRATE_MS);
-    const toDone = setTimeout(() => setStep('done'), CELEBRATE_MS + ANALYZE_MS);
+    const toAnalyze = setTimeout(() => setStep('analyze'), celebrateMs);
+    const toDone = setTimeout(() => setStep('done'), celebrateMs + ANALYZE_MS);
     return () => {
       clearTimeout(toAnalyze);
       clearTimeout(toDone);
     };
-  }, []);
+  }, [celebrateMs]);
 
   const celebrating = step === 'celebrate';
   // 연출이 끝나고 데이터도 준비돼야 리빌 — ready를 함께 봐야 결과가 먼저 깜빡이지 않는다
