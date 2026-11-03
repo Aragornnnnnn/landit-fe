@@ -1,6 +1,7 @@
 'use client';
 
 // 탭 칩 — 고를 게 둘 이상일 때만 그린다. 탭이 하나면 선택이라는 행위 자체가 없다
+import { useEffect } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
@@ -9,6 +10,7 @@ import { usePathname } from 'next/navigation';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
+import { ROLEPLAY_PATH } from '@/shared/lib/routes';
 import { useSeenFlag } from '@/shared/lib/useSeenFlag';
 import { TAB_CHIP_ROW, tabChipClass } from '@/shared/ui/tab-chip';
 
@@ -17,6 +19,7 @@ import {
   skipsIntroForPremium,
   useSawOldIntroGuide,
 } from '../_model/intro-guide-seen';
+import { roleplayTabSeen } from '../_model/roleplay-tab-seen';
 import { useFreeNudge } from '../_model/useFreeNudge';
 import type { Tab } from './tabs';
 
@@ -41,11 +44,20 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
   );
   // 무료 표현을 마친 무료 사용자에겐 스몰톡 칩 아래 말풍선으로 무료 5분을 권한다 — 띄울지는 훅이 정한다
   const { nudge, dismiss } = useFreeNudge({ onSmalltalk });
+  const roleplaySeen = useSeenFlag(roleplayTabSeen);
+  // 칩을 눌렀든 링크로 왔든 탭을 봤으면 끝이다. 출시 2주쯤 뒤 다음 릴리즈에서 NEW를 코드째 지운다
+  useEffect(() => {
+    if (pathname === ROLEPLAY_PATH) roleplayTabSeen.mark();
+  }, [pathname]);
 
   if (tabs.length < 2) return null;
 
   return (
-    <nav aria-label={t('navLabel')} className={TAB_CHIP_ROW}>
+    // 일본어처럼 칩이 길면 옆으로 밀린다. 말풍선이 떠 있을 땐 스크롤을 꺼야 칩 아래로 잘리지 않는다
+    <nav
+      aria-label={t('navLabel')}
+      className={`${TAB_CHIP_ROW} ${nudge === null ? 'overflow-x-auto' : ''}`}
+    >
       {tabs.map((tab) => {
         const isActive = pathname === tab.href;
 
@@ -62,6 +74,11 @@ export const TabBar = ({ tabs }: { tabs: Tab[] }) => {
             }}
           >
             {t(tab.labelKey)}
+            {tab.id === 'roleplay' && !roleplaySeen && (
+              <span className="ml-1.5 text-10 font-bold text-primary">
+                {t('newLabel')}
+              </span>
+            )}
             {tab.id === 'smalltalk' && nudge !== null && (
               // 칩 안에 둬서 말풍선을 눌러도 스몰톡으로 간다. 칩 이름은 그대로 읽히게 접근성 이름에서는 뺀다.
               // 다른 안내 말풍선(헤더 환급·표현 프리뷰)과 같은 흰 카드에 숫자만 주황으로 — 위아래로 살짝 떠서 눈길을 끈다.

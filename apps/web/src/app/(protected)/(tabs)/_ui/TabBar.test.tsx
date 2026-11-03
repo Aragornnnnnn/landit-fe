@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { track } from '@/shared/analytics';
 
 import { introGuideSeen } from '../_model/intro-guide-seen';
+import { roleplayTabSeen } from '../_model/roleplay-tab-seen';
 import {
   setHomeCovered,
   smalltalkNudgeSeen,
@@ -129,6 +130,13 @@ afterEach(() => {
   mocks.accentLocale = 'EN_US';
   vi.useRealTimers();
 });
+
+const roleplay: Tab = {
+  id: 'roleplay',
+  href: '/roleplay',
+  labelKey: 'roleplayLabel',
+  ready: true,
+};
 
 const greetingDot = () => screen.queryByTestId('smalltalk-greeting-dot');
 const freeNudge = () => screen.queryByTestId('smalltalk-free-nudge');
@@ -634,5 +642,27 @@ describe('TabBar', () => {
       expect(freeNudge()).not.toBeInTheDocument();
       expect(smalltalkNudgeSeen.has()).toBe(true);
     });
+  });
+
+  it('롤플레이 탭을 아직 안 본 기기면 칩에 NEW를 붙인다', () => {
+    render(<TabBar tabs={[scenario, roleplay]} />);
+
+    expect(screen.getByText('NEW')).toBeInTheDocument();
+  });
+
+  it('롤플레이 탭을 보면 NEW가 사라진다', () => {
+    mocks.pathname = '/roleplay';
+
+    render(<TabBar tabs={[scenario, roleplay]} />);
+
+    expect(screen.queryByText('NEW')).not.toBeInTheDocument();
+  });
+
+  it('한 번 본 기기는 다른 탭에 있어도 NEW가 다시 나오지 않는다', () => {
+    roleplayTabSeen.mark();
+
+    render(<TabBar tabs={[scenario, roleplay]} />);
+
+    expect(screen.queryByText('NEW')).not.toBeInTheDocument();
   });
 });
