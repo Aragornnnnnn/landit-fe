@@ -4,10 +4,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { EVENTS } from '@landit/analytics';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import type { Partner } from '@/features/conversation/model/character-look';
+import type { RoleplayIdea } from '@/features/roleplay/api/roleplay';
 import {
   EMPTY_DRAFT,
   isDraftReady,
@@ -21,6 +23,7 @@ import {
 import { useRoleplayGate } from '@/features/roleplay/model/useRoleplayGate';
 import { useRoleplayIdeaMutation } from '@/features/roleplay/model/useRoleplayIdeaMutation';
 import { PARTNERS, toPartnerId } from '@/features/small-talk/model/partner';
+import { track } from '@/shared/analytics';
 import {
   backOrReplace,
   ROLEPLAY_NEW_PATH,
@@ -63,8 +66,9 @@ export const useCreateRoleplayFlow = () => {
     () => readRoleplayDraft() ?? EMPTY_DRAFT,
   );
   const idea = useRoleplayIdeaMutation();
-  // 마지막으로 받은 아이디어 — 다시 누르면 이것만 빼고 고르게 한다
-  const lastIdeaIdRef = useRef<number | undefined>(undefined);
+  // 마지막으로 받은 아이디어 — 다시 누르면 이것만 빼고 고르게 하고, 고쳐 썼는지도 이것과 견준다
+  const lastIdeaRef = useRef<RoleplayIdea | null>(null);
+  const ideaRequestCountRef = useRef(0);
   // 아이디어로 채워 본 적이 있는가 — 받은 뒤 고쳐 썼어도 계측에선 아이디어를 쓴 것으로 본다
   const usedIdeaRef = useRef(false);
   // 아이디어로 칸을 채운 횟수 — 칸마다 빛이 한 번 지나가는 신호다
@@ -91,14 +95,21 @@ export const useCreateRoleplayFlow = () => {
 
   // 아이디어는 세 칸을 한 조합으로 덮는다 — 받는 동안엔 시작하기와 다시 받기가 잠긴다
   // 고를 아이디어가 하나도 없으면(idea가 null) 받지 못한 것과 같게 알린다
-  const requestIdea = () =>
-    idea.mutate(lastIdeaIdRef.current, {
+  const requestIdea = () => {
+    ideaRequestCountRef.current += 1;
+    track(EVENTS.ROLEPLAY_IDEA_REQUESTED, {
+      partner,
+      request_count: ideaRequestCountRef.current,
+    });
+    idea.mutate(lastIdeaRef.current?.id, {
       onSuccess: ({ idea: received }) => {
         if (!received) {
+          track(EVENTS.ROLEPLAY_IDEA_FAILED, { partner, reason: 'empty' });
           showToast(t('ideaFailToast'));
           return;
         }
-        lastIdeaIdRef.current = received.id;
+        track(EVENTS.ROLEPLAY_IDEA_APPLIED, { partner, idea_id: received.id });
+        lastIdeaRef.current = received;
         usedIdeaRef.current = true;
         setIdeaFillCount((count) => count + 1);
         setDraft({
@@ -107,8 +118,30 @@ export const useCreateRoleplayFlow = () => {
           situation: received.situation,
         });
       },
-      onError: () => showToast(t('ideaFailToast')),
+      onError: () => {
+        track(EVENTS.ROLEPLAY_IDEA_FAILED, { partner, reason: 'error' });
+        showToast(t('ideaFailToast'));
+      },
     });
+  };
+
+  const toIdeaUsage = () => {
+    const lastIdea = lastIdeaRef.current;
+    if (!lastIdea) return { used_idea: usedIdeaRef.current };
+    return {
+      used_idea: usedIdeaRef.current,
+      idea_id: lastIdea.id,
+      idea_edited:
+        draft.myRole !== lastIdea.userRole ||
+        draft.partnerRole !== lastIdea.aiRole ||
+        draft.situation !== lastIdea.situation,
+    };
+  };
+
+  const confirmPartner = () => {
+    track(EVENTS.ROLEPLAY_PARTNER_SELECTED, { partner });
+    router.replace(roleplayNewFormPath(partner));
+  };
 
   // 무료 기회를 쓴 사용자는 페이월로 간다 — 돌아와도 적던 글이 남는다. 아이디어는 비용이 없어 막지 않는다
   const startCreate = () => {
@@ -123,10 +156,10 @@ export const useCreateRoleplayFlow = () => {
             aiRole: draft.partnerRole.trim(),
             situation: draft.situation.trim(),
           },
-          usedIdeaRef.current,
+          toIdeaUsage(),
         );
       },
-      { source: 'roleplay', returnTo: roleplayNewFormPath(partner) },
+      { source: 'roleplay_create', returnTo: roleplayNewFormPath(partner) },
     );
   };
 
@@ -145,7 +178,7 @@ export const useCreateRoleplayFlow = () => {
     canStart,
     ideaPending: idea.isPending,
     movePartner,
-    confirmPartner: () => router.replace(roleplayNewFormPath(partner)),
+    confirmPartner,
     editField,
     requestIdea,
     startCreate,

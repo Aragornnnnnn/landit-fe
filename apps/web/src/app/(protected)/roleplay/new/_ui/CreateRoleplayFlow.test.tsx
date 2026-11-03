@@ -268,7 +268,10 @@ describe('CreateRoleplayFlow', () => {
     expect(await screen.findByText('카페에서 주문하기')).toBeInTheDocument();
     expect(screen.getByText('다 됐어요!')).toBeInTheDocument();
     await waitFor(
-      () => expect(replace).toHaveBeenCalledWith('/conversation/roleplay/9'),
+      () =>
+        expect(replace).toHaveBeenCalledWith(
+          '/conversation/roleplay/9?from=create',
+        ),
       { timeout: 1_500 },
     );
   });
@@ -294,9 +297,15 @@ describe('CreateRoleplayFlow', () => {
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
 
     await waitFor(() =>
-      expect(replace).toHaveBeenCalledWith('/conversation/roleplay/9'),
+      expect(replace).toHaveBeenCalledWith(
+        '/conversation/roleplay/9?from=create',
+      ),
     );
     expect(screen.queryByText('다 됐어요!')).not.toBeInTheDocument();
+    expect(track).not.toHaveBeenCalledWith(
+      'Roleplay Start Failed',
+      expect.anything(),
+    );
   });
 
   it('응답이 너무 오래 없으면 돌아갈 길을 보여 준다', async () => {
@@ -335,6 +344,111 @@ describe('CreateRoleplayFlow', () => {
     expect(track).toHaveBeenCalledWith('Roleplay Create Failed', {
       partner: 'chloe',
       reason: 'premium_required',
+    });
+  });
+
+  describe('계측', () => {
+    it('상대를 고르면 고른 상대를 남긴다', async () => {
+      await goToForm();
+
+      expect(track).toHaveBeenCalledWith('Roleplay Partner Selected', {
+        partner: 'chloe',
+      });
+    });
+
+    it('아이디어를 받으면 요청 횟수와 채운 아이디어를 남긴다', async () => {
+      await goToForm();
+
+      await userEvent.click(
+        screen.getByRole('button', { name: '아이디어 추천받기' }),
+      );
+
+      expect(track).toHaveBeenCalledWith('Roleplay Idea Requested', {
+        partner: 'chloe',
+        request_count: 1,
+      });
+      expect(track).toHaveBeenCalledWith('Roleplay Idea Applied', {
+        partner: 'chloe',
+        idea_id: 4,
+      });
+    });
+
+    it('고를 아이디어가 없으면 empty로 남긴다', async () => {
+      answerIdea({ idea: null });
+      await goToForm();
+
+      await userEvent.click(
+        screen.getByRole('button', { name: '아이디어 추천받기' }),
+      );
+
+      expect(track).toHaveBeenCalledWith('Roleplay Idea Failed', {
+        partner: 'chloe',
+        reason: 'empty',
+      });
+    });
+
+    it('아이디어 요청이 실패하면 error로 남긴다', async () => {
+      vi.mocked(useRoleplayIdeaMutation).mockReturnValue({
+        mutate: (_id: unknown, callbacks: Callbacks<RoleplayIdeaResponse>) =>
+          callbacks.onError?.(new Error('실패')),
+        isPending: false,
+      } as unknown as ReturnType<typeof useRoleplayIdeaMutation>);
+      await goToForm();
+
+      await userEvent.click(
+        screen.getByRole('button', { name: '아이디어 추천받기' }),
+      );
+
+      expect(track).toHaveBeenCalledWith('Roleplay Idea Failed', {
+        partner: 'chloe',
+        reason: 'error',
+      });
+    });
+
+    it('아이디어를 고쳐 쓰고 시작하면 어느 아이디어를 고쳤는지 남긴다', async () => {
+      answerIdea();
+      answerCreate('success');
+      await goToForm();
+      await userEvent.click(
+        screen.getByRole('button', { name: '아이디어 추천받기' }),
+      );
+      await userEvent.type(screen.getByLabelText('나의 역할'), '님');
+
+      await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+
+      expect(track).toHaveBeenCalledWith('Roleplay Create Started', {
+        partner: 'chloe',
+        used_idea: true,
+        free_trial: false,
+      });
+      await waitFor(() =>
+        expect(track).toHaveBeenCalledWith(
+          'Roleplay Created',
+          expect.objectContaining({
+            used_idea: true,
+            idea_id: 4,
+            idea_edited: true,
+          }),
+        ),
+      );
+    });
+
+    it('아이디어를 그대로 쓰면 고치지 않은 것으로 남긴다', async () => {
+      answerIdea();
+      answerCreate('success');
+      await goToForm();
+      await userEvent.click(
+        screen.getByRole('button', { name: '아이디어 추천받기' }),
+      );
+
+      await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+
+      await waitFor(() =>
+        expect(track).toHaveBeenCalledWith(
+          'Roleplay Created',
+          expect.objectContaining({ idea_id: 4, idea_edited: false }),
+        ),
+      );
     });
   });
 

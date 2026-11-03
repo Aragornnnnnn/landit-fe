@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type EventProps } from '@landit/analytics';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
@@ -24,6 +24,12 @@ import {
 import { showToast } from '@/shared/ui/toast';
 
 import { useDelayedFlag } from './useDelayedFlag';
+
+// 시나리오를 아이디어로 채웠는지 — 만들기 시작과 완료 계측이 같이 쓴다
+type IdeaUsage = Pick<
+  EventProps['Roleplay Created'],
+  'used_idea' | 'idea_id' | 'idea_edited'
+>;
 
 // 완성 순간을 보여 주는 시간 — 이 뒤에 바로 대화로 넘어간다
 const REVEAL_MS = 700;
@@ -62,13 +68,18 @@ export const useMakeScenario = ({
     if (madeId === undefined) return;
     haptic('success');
     const timer = setTimeout(
-      () => router.replace(roleplayTalkPath(madeId)),
+      () => router.replace(roleplayTalkPath(madeId, { justCreated: true })),
       REVEAL_MS,
     );
     return () => clearTimeout(timer);
   }, [madeId, router]);
 
-  const start = async (body: RoleplaySettingsRequest, usedIdea: boolean) => {
+  const start = async (body: RoleplaySettingsRequest, idea: IdeaUsage) => {
+    track(EVENTS.ROLEPLAY_CREATE_STARTED, {
+      partner: body.characterId,
+      used_idea: idea.used_idea,
+      free_trial: freeUser,
+    });
     setGenerating(true);
     let saved;
     try {
@@ -82,7 +93,7 @@ export const useMakeScenario = ({
       if (premiumRequired) onAccessChanged();
       if (leftRef.current) return;
       if (premiumRequired) {
-        track(EVENTS.PAYWALL_GATE_LOCKED, { source: 'roleplay' });
+        track(EVENTS.PAYWALL_GATE_LOCKED, { source: 'roleplay_create' });
         saveRoleplayDraft({
           myRole: body.userRole,
           partnerRole: body.aiRole,
@@ -91,7 +102,7 @@ export const useMakeScenario = ({
         // 페이월로 가는 동안 입력 화면이 다시 보이지 않게 그대로 둔다
         router.push(
           paywallPath({
-            source: 'roleplay',
+            source: 'roleplay_create',
             from: roleplayNewFormPath(body.characterId),
           }),
         );
@@ -106,7 +117,7 @@ export const useMakeScenario = ({
     track(EVENTS.ROLEPLAY_CREATED, {
       roleplay_id: saved.id,
       partner: body.characterId,
-      used_idea: usedIdea,
+      ...idea,
       free_trial: freeUser,
     });
     if (leftRef.current) return;
@@ -116,7 +127,8 @@ export const useMakeScenario = ({
       onAccessChanged();
     } catch {
       // 완성했다고 하지 않고 대화 화면으로 넘긴다 — 거기서 다시 열어 보고 오류를 보여 준다
-      if (!leftRef.current) router.replace(roleplayTalkPath(saved.id));
+      if (!leftRef.current)
+        router.replace(roleplayTalkPath(saved.id, { justCreated: true }));
       return;
     }
     if (!leftRef.current) setMade(saved);
