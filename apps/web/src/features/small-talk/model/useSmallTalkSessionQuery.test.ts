@@ -11,6 +11,7 @@ import type {
 } from '../api/small-talk';
 import * as smallTalkApi from '../api/small-talk';
 import {
+  CORRECTION_WAIT_LIMIT_MS,
   useSmallTalkSessionQuery,
   WAIT_LIMIT_MS,
 } from './useSmallTalkSessionQuery';
@@ -139,13 +140,31 @@ describe('useSmallTalkSessionQuery', () => {
       expect(getSmallTalkSession).toHaveBeenCalledTimes(callsAfterFirstLoad);
     });
 
+    it('교정을 기다리는 화면은 표현 상한을 넘겨도 분석 마감까지 계속 묻는다', async () => {
+      // Given 서버가 분석을 5분까지 기다리는 교정이 남아 있을 때
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      getSmallTalkSession.mockResolvedValue(readyButCorrecting());
+      const { result } = renderAwaitingCorrections();
+      await waitFor(() => expect(result.current.session).not.toBeNull());
+
+      // When 표현 상한을 넘겨도
+      await act(() => vi.advanceTimersByTimeAsync(WAIT_LIMIT_MS + 1_000));
+
+      // Then 계속 묻는다
+      const calls = getSmallTalkSession.mock.calls.length;
+      await act(() => vi.advanceTimersByTimeAsync(3_000));
+      expect(getSmallTalkSession.mock.calls.length).toBeGreaterThan(calls);
+    });
+
     it('교정만 늦어 상한을 넘겨도 표현이 준비됐으면 소용없다고 하지 않는다', async () => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
       getSmallTalkSession.mockResolvedValue(readyButCorrecting());
       const { result } = renderAwaitingCorrections();
       await waitFor(() => expect(result.current.session).not.toBeNull());
 
-      await act(() => vi.advanceTimersByTimeAsync(WAIT_LIMIT_MS + 1_000));
+      await act(() =>
+        vi.advanceTimersByTimeAsync(CORRECTION_WAIT_LIMIT_MS + 1_000),
+      );
 
       // 상한이 실제로 걸렸다 — 폴링은 멈추되, 표현은 준비됐으니 소용없다고 하지 않는다
       const callsAtLimit = getSmallTalkSession.mock.calls.length;

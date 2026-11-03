@@ -21,6 +21,8 @@ import { hasPendingCorrection } from './message-feedback';
 const POLL_MS = 1_000;
 // 기다림의 상한. 이만큼 기다려도 안 끝나면 기다리는 화면에 가두지 않고 다시 만들기를 권한다
 export const WAIT_LIMIT_MS = 60_000;
+// 교정은 서버가 대화가 끝난 뒤 5분까지 기다려 마감한다 — 그보다 조금 길게 물어야 늦은 교정도 받는다
+export const CORRECTION_WAIT_LIMIT_MS = 310_000;
 
 interface SessionQueryOptions {
   // 교정이 다 만들어질 때까지도 기다릴 것인가 — 교정을 그리는 화면(대화 보기)만 켠다.
@@ -68,9 +70,12 @@ export const useSmallTalkSessionQuery = (
   if (!preparing && waitedTooLong) setWaitedTooLong(false);
   useEffect(() => {
     if (!preparing) return;
-    const limit = setTimeout(() => setWaitedTooLong(true), WAIT_LIMIT_MS);
+    const limit = setTimeout(
+      () => setWaitedTooLong(true),
+      awaitCorrections ? CORRECTION_WAIT_LIMIT_MS : WAIT_LIMIT_MS,
+    );
     return () => clearTimeout(limit);
-  }, [preparing]);
+  }, [preparing, awaitCorrections]);
 
   // 생성이 실패하면 한 번은 조용히 다시 걸어 본다 — 사용자에게 버튼을 떠넘기기 전에 해볼 수 있는 일이다.
   // 다시 걸어도 실패하면 그때 포기한다
