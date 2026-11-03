@@ -3,7 +3,7 @@
 // 만든 뒤 대화로 넘어가면 만들기 흐름이 통째로 히스토리에서 빠져, 대화에서 뒤로 가면 탭으로 간다
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -13,8 +13,15 @@ import {
   isDraftReady,
   type RoleplayDraft,
 } from '@/features/roleplay/model/roleplay-draft';
+import {
+  clearRoleplayDraft,
+  readRoleplayDraft,
+  saveRoleplayDraft,
+} from '@/features/roleplay/model/roleplay-draft-store';
+import { useRoleplayGate } from '@/features/roleplay/model/useRoleplayGate';
 import { useRoleplayIdeaMutation } from '@/features/roleplay/model/useRoleplayIdeaMutation';
 import { PARTNERS, toPartnerId } from '@/features/small-talk/model/partner';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 import {
   backOrReplace,
   ROLEPLAY_NEW_PATH,
@@ -40,7 +47,12 @@ export const useCreateRoleplayFlow = () => {
   const router = useRouter();
   const t = useTranslations('roleplay.create');
   const partnerParam = useSearchParams().get('partner');
-  const maker = useMakeScenario();
+  const userId = useCurrentUserId();
+  const gate = useRoleplayGate();
+  const maker = useMakeScenario({
+    freeUser: gate.freeUser,
+    onAccessChanged: gate.refresh,
+  });
   // 보이는 캐릭터가 곧 선택이다 — 따로 고르는 동작이 없다
   // 새로고침한 입력에서 뒤로 와도 주소에 있던 상대에서 시작한다
   const [partnerIndex, setPartnerIndex] = useState(() =>
@@ -48,7 +60,10 @@ export const useCreateRoleplayFlow = () => {
       ? PARTNERS.findIndex((item) => item.id === toPartnerId(partnerParam))
       : 0,
   );
-  const [draft, setDraft] = useState<RoleplayDraft>(EMPTY_DRAFT);
+  // 페이월에서 돌아왔으면 적던 글로 시작한다
+  const [draft, setDraft] = useState<RoleplayDraft>(
+    () => readRoleplayDraft(userId) ?? EMPTY_DRAFT,
+  );
   const idea = useRoleplayIdeaMutation();
   // 마지막으로 받은 아이디어 — 다시 누르면 이것만 빼고 고르게 한다
   const lastIdeaIdRef = useRef<number | undefined>(undefined);
@@ -64,6 +79,8 @@ export const useCreateRoleplayFlow = () => {
     : PARTNERS[partnerIndex].id;
   // 세 칸이 찼고 아이디어를 받는 중이 아닐 때만 — 버튼과 실행이 같은 값을 본다
   const canStart = isDraftReady(draft) && !idea.isPending;
+
+  useEffect(() => clearRoleplayDraft(), []);
 
   // 끝이 없다 — 마지막 다음은 처음, 처음 이전은 마지막이다
   const movePartner = (step: -1 | 1) =>
@@ -95,16 +112,23 @@ export const useCreateRoleplayFlow = () => {
       onError: () => showToast(t('ideaFailToast')),
     });
 
+  // 무료 기회를 쓴 사용자는 페이월로 간다 — 돌아와도 적던 글이 남는다. 아이디어는 비용이 없어 막지 않는다
   const startCreate = () => {
     if (!canStart) return;
-    void maker.start(
-      {
-        characterId: partner,
-        userRole: draft.myRole.trim(),
-        aiRole: draft.partnerRole.trim(),
-        situation: draft.situation.trim(),
+    if (gate.locked) saveRoleplayDraft(draft, userId);
+    gate.guard(
+      () => {
+        void maker.start(
+          {
+            characterId: partner,
+            userRole: draft.myRole.trim(),
+            aiRole: draft.partnerRole.trim(),
+            situation: draft.situation.trim(),
+          },
+          usedIdeaRef.current,
+        );
       },
-      usedIdeaRef.current,
+      { source: 'roleplay', returnTo: roleplayNewFormPath(partner) },
     );
   };
 

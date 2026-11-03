@@ -29,6 +29,21 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push, replace, back }),
   useSearchParams: () => search,
 }));
+// 구독은 경계다 — 기본은 열려 있고, 잠긴 사용자는 페이월로 간다
+const refreshAccess = vi.hoisted(() => vi.fn());
+const gate = vi.hoisted(() => ({
+  locked: false,
+  freeTrialAvailable: false,
+}));
+vi.mock('@/features/roleplay/model/useRoleplayGate', () => ({
+  useRoleplayGate: () => ({
+    locked: gate.locked && !gate.freeTrialAvailable,
+    freeUser: gate.locked,
+    refresh: refreshAccess,
+    guard: (go: () => void) =>
+      gate.locked && !gate.freeTrialAvailable ? push('/paywall') : go(),
+  }),
+}));
 vi.mock('@/features/roleplay/model/useRoleplayIdeaMutation', () => ({
   useRoleplayIdeaMutation: vi.fn(),
 }));
@@ -109,6 +124,9 @@ const fillAll = async () => {
 
 beforeEach(() => {
   search = new URLSearchParams();
+  gate.locked = false;
+  gate.freeTrialAvailable = false;
+  sessionStorage.clear();
   // 히스토리가 있어 뒤로가기가 back으로 간다
   window.history.pushState(null, '', '/roleplay/new');
   answerIdea();
@@ -297,6 +315,7 @@ describe('CreateRoleplayFlow', () => {
     expect(back).toHaveBeenCalled();
     expect(track).toHaveBeenCalledWith('Roleplay Create Abandoned', {
       partner: 'chloe',
+      free_trial: false,
     });
   });
 
@@ -316,6 +335,131 @@ describe('CreateRoleplayFlow', () => {
     expect(track).toHaveBeenCalledWith('Roleplay Create Failed', {
       partner: 'chloe',
       reason: 'premium_required',
+    });
+  });
+
+  describe('무료 사용자', () => {
+    // 페이월은 입력 주소(상대가 붙은)로 돌려보낸다
+    const returnFromPaywall = () => {
+      cleanup();
+      search = new URLSearchParams('partner=chloe');
+      render(<CreateRoleplayFlow />);
+    };
+
+    beforeEach(() => {
+      gate.locked = true;
+    });
+
+    it('무료 한 번을 쓰기 전이면 아이디어를 받고 시나리오를 만들 수 있다', async () => {
+      gate.freeTrialAvailable = true;
+      const createScenario = answerCreate('pending');
+      await goToForm();
+
+      await userEvent.click(
+        screen.getByRole('button', { name: '아이디어 추천받기' }),
+      );
+      await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+
+      expect(push).not.toHaveBeenCalled();
+      expect(createScenario).toHaveBeenCalled();
+    });
+
+    it('무료 기회로 만들어도 시작하기에서 세션을 미리 열어 로딩 한 번으로 대화한다', async () => {
+      // Given 무료 기회가 남은 사용자가
+      gate.freeTrialAvailable = true;
+      answerCreate('success');
+      await goToForm();
+      await fillAll();
+
+      // When 시작하면
+      await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+
+      // Then 세션을 미리 열고, 무료 체험으로 기록하고, 권한을 다시 받는다
+      expect(prepareSession).toHaveBeenCalledWith(9, expect.any(Function));
+      expect(await screen.findByText('다 됐어요!')).toBeInTheDocument();
+      expect(track).toHaveBeenCalledWith('Roleplay Created', {
+        roleplay_id: 9,
+        partner: 'chloe',
+        used_idea: false,
+        free_trial: true,
+      });
+      expect(refreshAccess).toHaveBeenCalled();
+    });
+
+    it('서버가 거절하면 무료 기회를 다시 받아 다음 입구가 바로 페이월로 가게 한다', async () => {
+      gate.freeTrialAvailable = true;
+      answerCreate(
+        'error',
+        new ApiError('막힘', 403, '/api/v1/roleplays', 'PREMIUM_REQUIRED'),
+      );
+      await goToForm();
+      await fillAll();
+
+      await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+
+      await waitFor(() => expect(refreshAccess).toHaveBeenCalled());
+    });
+
+    it('무료 한 번을 쓴 뒤에도 아이디어는 페이월 없이 받는다', async () => {
+      // Given 무료 한 번을 쓴 무료 사용자가
+      const requestIdea = answerIdea();
+      await goToForm();
+
+      // When 아이디어를 누르면
+      await userEvent.click(
+        screen.getByRole('button', { name: '아이디어 추천받기' }),
+      );
+
+      // Then 비용이 드는 시작과 달리 그대로 받는다
+      expect(push).not.toHaveBeenCalled();
+      expect(requestIdea).toHaveBeenCalled();
+    });
+
+    it('무료 한 번을 쓴 뒤엔 시작하기를 누르면 만들지 않고 페이월로 간다', async () => {
+      const createScenario = answerCreate('pending');
+      await goToForm();
+      await fillAll();
+
+      await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+
+      expect(push).toHaveBeenCalledWith('/paywall');
+      expect(createScenario).not.toHaveBeenCalled();
+    });
+
+    it('페이월에 갔다 돌아오면 적던 글이 남아 있다', async () => {
+      await goToForm();
+      await fillAll();
+      await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+      returnFromPaywall();
+
+      expect(screen.getByLabelText('나의 역할')).toHaveValue('손님');
+      expect(screen.getByLabelText('상황과 주제')).toHaveValue('주문하기');
+    });
+
+    it('서버가 프리미엄을 요구해 페이월에 가도 적던 글이 남아 있다', async () => {
+      gate.freeTrialAvailable = true;
+      answerCreate(
+        'error',
+        new ApiError('막힘', 403, '/api/v1/roleplays', 'PREMIUM_REQUIRED'),
+      );
+      await goToForm();
+      await fillAll();
+      await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+      await waitFor(() => expect(push).toHaveBeenCalled());
+      returnFromPaywall();
+
+      expect(screen.getByLabelText('나의 역할')).toHaveValue('손님');
+    });
+
+    it('돌아와서 한 번 복원한 글은 다음에 새로 열 땐 남지 않는다', async () => {
+      await goToForm();
+      await fillAll();
+      await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+      returnFromPaywall();
+
+      returnFromPaywall();
+
+      expect(screen.getByLabelText('나의 역할')).toHaveValue('');
     });
   });
 

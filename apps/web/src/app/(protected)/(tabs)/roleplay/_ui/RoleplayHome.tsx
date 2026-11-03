@@ -1,13 +1,13 @@
 'use client';
 
 // 롤플레이 탭 화면 — 만든 시나리오가 없으면 상황 카드로 무엇을 하는 곳인지 보여 주고, 있으면 두 열 카드로 쌓는다.
-// 만들기 버튼은 어느 쪽이든 바닥 같은 자리에 선다. 롤플레이는 프리미엄 전용이라 무료 사용자는 페이월로 간다
+// 만들기 버튼은 어느 쪽이든 바닥 같은 자리에 선다. 무료 사용자도 만들기 화면에는 들어가고(한 번은 무료, 그 뒤엔 그 안에서 페이월), 만든 시나리오로 다시 하려면 페이월로 간다
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import type { RoleplaySettings } from '@/features/roleplay/api/roleplay';
+import { useRoleplayGate } from '@/features/roleplay/model/useRoleplayGate';
 import { useRoleplayScenariosQuery } from '@/features/roleplay/model/useRoleplayScenariosQuery';
-import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { getDeviceToday } from '@/shared/lib/device-today';
 import {
   ROLEPLAY_NEW_PATH,
@@ -29,18 +29,14 @@ export const RoleplayHome = () => {
   const router = useRouter();
   const t = useTranslations('roleplay.home');
   const { scenarios, error, retry } = useRoleplayScenariosQuery();
-  const gate = usePaywallGate();
+  const gate = useRoleplayGate();
   const menu = useScenarioMenu(scenarios);
   // 서버 렌더엔 기기 시계가 없다 — 하이드레이션 뒤에 읽는다 (그 전엔 목록도 아직 없다)
   const today = useClientOnlyValue(getDeviceToday, '');
 
-  const startCreate = () =>
-    gate.guard(() => router.push(ROLEPLAY_NEW_PATH), {
-      source: 'roleplay',
-      returnTo: ROLEPLAY_PATH,
-    });
+  const startCreate = () => router.push(ROLEPLAY_NEW_PATH);
 
-  // 만든 시나리오로 다시 대화하는 것도 프리미엄이다 — 구독이 끝난 뒤 카드를 눌러도 막힌다
+  // 무료 기회가 남았으면 들여보내고, 다 썼으면 페이월로 간다 — 구독이 끝난 뒤에도 같다
   const startTalk = (scenario: RoleplaySettings) =>
     gate.guard(() => router.push(roleplayTalkPath(scenario.id)), {
       source: 'roleplay',

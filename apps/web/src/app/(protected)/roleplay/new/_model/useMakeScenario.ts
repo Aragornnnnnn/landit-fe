@@ -9,9 +9,11 @@ import { useRouter } from 'next/navigation';
 import type { Partner } from '@/features/conversation/model/character-look';
 import type { RoleplaySettingsRequest } from '@/features/roleplay/api/roleplay';
 import { isPremiumRequired } from '@/features/roleplay/model/premium-required';
+import { saveRoleplayDraft } from '@/features/roleplay/model/roleplay-draft-store';
 import { useCreateRoleplayScenarioMutation } from '@/features/roleplay/model/useCreateRoleplayScenarioMutation';
 import { useRoleplaySessionHandoff } from '@/features/roleplay/model/useRoleplaySessionHandoff';
 import { track } from '@/shared/analytics';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 import { haptic } from '@/shared/haptics/haptics';
 import {
   backOrReplace,
@@ -29,8 +31,17 @@ const REVEAL_MS = 700;
 // 이만큼 기다려도 응답이 없으면 돌아갈 길을 연다 — 요청에 시간 제한이 없어 그대로 두면 이 화면에 갇힌다
 const SLOW_MS = 20_000;
 
-export const useMakeScenario = () => {
+export const useMakeScenario = ({
+  freeUser,
+  onAccessChanged,
+}: {
+  // 무료 사용자인가 — 계측이 무료 체험을 구분한다
+  freeUser: boolean;
+  // 무료 기회를 썼거나 서버가 거절했을 때 — 입구가 권한을 다시 받는다
+  onAccessChanged: () => void;
+}) => {
   const router = useRouter();
+  const userId = useCurrentUserId();
   const t = useTranslations('roleplay.create');
   const create = useCreateRoleplayScenarioMutation();
   const handoff = useRoleplaySessionHandoff();
@@ -70,9 +81,18 @@ export const useMakeScenario = () => {
         partner: body.characterId,
         reason: premiumRequired ? 'premium_required' : 'error',
       });
+      if (premiumRequired) onAccessChanged();
       if (leftRef.current) return;
       if (premiumRequired) {
         track(EVENTS.PAYWALL_GATE_LOCKED, { source: 'roleplay' });
+        saveRoleplayDraft(
+          {
+            myRole: body.userRole,
+            partnerRole: body.aiRole,
+            situation: body.situation,
+          },
+          userId,
+        );
         // 페이월로 가는 동안 입력 화면이 다시 보이지 않게 그대로 둔다
         router.push(
           paywallPath({
@@ -92,10 +112,13 @@ export const useMakeScenario = () => {
       roleplay_id: saved.id,
       partner: body.characterId,
       used_idea: usedIdea,
+      free_trial: freeUser,
     });
     if (leftRef.current) return;
     try {
       await handoff.prepare(saved.id, () => !leftRef.current);
+      // 첫 발화까지 받으면 무료 기회를 쓴 것이다 — 여기서 나가도 입구가 알게 한다
+      onAccessChanged();
     } catch {
       // 완성했다고 하지 않고 대화 화면으로 넘긴다 — 거기서 다시 열어 보고 오류를 보여 준다
       if (!leftRef.current) router.replace(roleplayTalkPath(saved.id));
@@ -112,7 +135,10 @@ export const useMakeScenario = () => {
     // 오래 걸려 나간다 — 저장은 뒤에서 끝날 수 있어, 끝나면 탭에 카드가 선다
     leave: (partner: Partner) => {
       leftRef.current = true;
-      track(EVENTS.ROLEPLAY_CREATE_ABANDONED, { partner });
+      track(EVENTS.ROLEPLAY_CREATE_ABANDONED, {
+        partner,
+        free_trial: freeUser,
+      });
       backOrReplace(router, ROLEPLAY_PATH);
     },
   };
