@@ -38,7 +38,7 @@ const toFlow = (phase: ConversationPhase) =>
     summary: { speakingDurationMs: 0, exchangeCount: 0 },
   }) as unknown as TalkScreenFlow;
 
-const dots = () => screen.queryByRole('img', { name: '답을 생각하는 중' });
+const dots = () => screen.queryByText('답을 생각하는 중');
 
 const renderTalk = (phase: ConversationPhase, hasInnerThought?: boolean) =>
   render(

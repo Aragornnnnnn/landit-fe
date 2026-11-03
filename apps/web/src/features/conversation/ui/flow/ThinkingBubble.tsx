@@ -4,12 +4,9 @@ import { useTranslations } from 'next-intl';
 export const ThinkingBubble = () => {
   const t = useTranslations('conversation.thinkingBubble');
   return (
-    <div className="min-h-30 w-full rounded-[28px] rounded-tl-md bg-card px-5 py-5 shadow-lg shadow-black/5">
-      <span
-        role="img"
-        aria-label={t('thinkingLabel')}
-        className="flex h-7 items-center gap-1.5"
-      >
+    <div className="max-h-full min-h-30 w-full rounded-[28px] rounded-tl-md bg-card px-5 py-5 shadow-lg shadow-black/5">
+      <span role="status" className="flex h-7 items-center gap-1.5">
+        <span className="sr-only">{t('thinkingLabel')}</span>
         {[0, 1, 2].map((i) => (
           <span
             key={i}
