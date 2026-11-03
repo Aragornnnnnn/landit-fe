@@ -108,7 +108,7 @@ describe('rewardBenefitsOf', () => {
 
   it('맨 아래 줄은 프리미엄 전용 롤플레이다', () => {
     expect(rewardBenefitsOf(500).at(-1)).toEqual({
-      text: '나만의 롤플레이 만들기',
+      text: '나만의 시나리오 만들기',
       free: false,
     });
   });
