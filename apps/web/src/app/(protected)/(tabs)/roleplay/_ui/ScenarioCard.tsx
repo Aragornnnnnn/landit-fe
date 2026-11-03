@@ -73,9 +73,9 @@ export const ScenarioCard = ({
         type="button"
         onClick={onMore}
         aria-label={t('moreLabel', { title: scenario.title })}
-        className="absolute top-2 right-2 flex size-8 items-center justify-center text-foreground/70"
+        className="absolute top-1 right-1 flex size-11 items-center justify-center text-foreground/70"
       >
-        <MoreHorizontalIcon size={20} />
+        <MoreHorizontalIcon size={24} />
       </button>
     </div>
   );
