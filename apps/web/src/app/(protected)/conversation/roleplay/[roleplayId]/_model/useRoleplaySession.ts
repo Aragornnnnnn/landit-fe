@@ -34,12 +34,17 @@ export const useRoleplaySession = (roleplayId: number) => {
     if (startedRef.current) return; // StrictMode 이중 실행에도 세션은 하나만 만든다
     startedRef.current = true;
 
-    const trackStarted = (started: RoleplaySessionStartResponse) =>
+    const trackStarted = (started: RoleplaySessionStartResponse) => {
       track(EVENTS.ROLEPLAY_STARTED, {
         session_id: started.sessionId,
         roleplay_id: roleplayId,
         partner: toPartnerId(started.character?.characterId ?? null),
       });
+      // 첫 발화까지 받으면 무료 기회를 쓴 것이다 — 돌아간 입구가 다시 묻게 한다
+      void queryClient.invalidateQueries({
+        queryKey: roleplayKeys.access(userId),
+      });
+    };
 
     if (session) {
       handoff.clear(roleplayId);

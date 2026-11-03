@@ -32,14 +32,14 @@ vi.mock('next/navigation', () => ({
 // 구독은 경계다 — 기본은 열려 있고, 잠긴 사용자는 페이월로 간다
 const gate = vi.hoisted(() => ({
   locked: false,
-  freeRoleplayAvailable: false,
+  freeTrialAvailable: false,
 }));
-vi.mock('@/features/subscription/model/paywall-gate/usePaywallGate', () => ({
-  usePaywallGate: () => ({
-    locked: gate.locked,
+vi.mock('@/features/roleplay/model/useRoleplayGate', () => ({
+  useRoleplayGate: () => ({
+    locked: gate.locked && !gate.freeTrialAvailable,
     deciding: false,
-    subscription: { freeRoleplayAvailable: gate.freeRoleplayAvailable },
-    guard: (go: () => void) => (gate.locked ? push('/paywall') : go()),
+    guard: (go: () => void) =>
+      gate.locked && !gate.freeTrialAvailable ? push('/paywall') : go(),
   }),
 }));
 vi.mock('@/features/roleplay/model/useRoleplayIdeaMutation', () => ({
@@ -123,7 +123,7 @@ const fillAll = async () => {
 beforeEach(() => {
   search = new URLSearchParams();
   gate.locked = false;
-  gate.freeRoleplayAvailable = false;
+  gate.freeTrialAvailable = false;
   sessionStorage.clear();
   // 히스토리가 있어 뒤로가기가 back으로 간다
   window.history.pushState(null, '', '/roleplay/new');
@@ -348,7 +348,7 @@ describe('CreateRoleplayFlow', () => {
     });
 
     it('무료 한 번을 쓰기 전이면 아이디어를 받고 시나리오를 만들 수 있다', async () => {
-      gate.freeRoleplayAvailable = true;
+      gate.freeTrialAvailable = true;
       const createScenario = answerCreate('pending');
       await goToForm();
 
@@ -395,7 +395,7 @@ describe('CreateRoleplayFlow', () => {
     });
 
     it('서버가 프리미엄을 요구해 페이월에 가도 적던 글이 남아 있다', async () => {
-      gate.freeRoleplayAvailable = true;
+      gate.freeTrialAvailable = true;
       answerCreate(
         'error',
         new ApiError('막힘', 403, '/api/v1/roleplays', 'PREMIUM_REQUIRED'),

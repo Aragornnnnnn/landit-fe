@@ -19,6 +19,16 @@ import type {
 } from '@/features/small-talk/api/small-talk';
 import { api } from '@/shared/api/client';
 
+// 롤플레이 입구의 권한 정보 — 실제 시작할 때 서버가 다시 검사한다
+export interface RoleplayAccessResponse {
+  enabled: boolean;
+  premium: boolean;
+  // 계정당 1회 무료 기회가 남았는가
+  freeTrialAvailable: boolean;
+  // 지금 새로 시작할 수 있는가. 발화·요청 한도는 시작할 때 따로 검사한다
+  canStart: boolean;
+}
+
 // 저장(보관함)과 대화 시작이 같은 입력을 받는다 — 제목은 받지 않고 서버가 지어 준다
 export interface RoleplaySettingsRequest {
   characterId: Partner;
@@ -212,6 +222,9 @@ export interface RoleplaySessionListResponse {
 }
 
 const ROLEPLAYS = '/api/v1/roleplays';
+
+export const getRoleplayAccess = () =>
+  api.get<RoleplayAccessResponse>(`${ROLEPLAYS}/access`);
 
 // 보관함에 저장 — 서버가 제목을 지어 오므로 응답이 느리다
 export const saveRoleplay = (body: RoleplaySettingsRequest) =>

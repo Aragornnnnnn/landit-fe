@@ -18,8 +18,8 @@ vi.mock('next/navigation', () => ({
 }));
 // 잠기면 페이월로 가는 게이트 — 기본은 열려 있다
 const gate = vi.hoisted(() => ({ locked: false }));
-vi.mock('@/features/subscription/model/paywall-gate/usePaywallGate', () => ({
-  usePaywallGate: () => ({
+vi.mock('@/features/roleplay/model/useRoleplayGate', () => ({
+  useRoleplayGate: () => ({
     locked: gate.locked,
     deciding: false,
     guard: (go: () => void) => (gate.locked ? push('/paywall') : go()),
@@ -125,7 +125,7 @@ describe('RoleplayHome', () => {
     expect(push).toHaveBeenCalledWith('/roleplay/new');
   });
 
-  it('무료 사용자가 만든 시나리오를 다시 하려고 카드를 누르면 페이월로 간다', async () => {
+  it('무료 기회를 다 쓴 사용자가 카드를 누르면 페이월로 간다', async () => {
     gate.locked = true;
     showScenarios([scenario({ id: 7, title: '카페 주문' })]);
     render(<RoleplayHome />);

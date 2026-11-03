@@ -18,9 +18,9 @@ import {
   readRoleplayDraft,
   saveRoleplayDraft,
 } from '@/features/roleplay/model/roleplay-draft-store';
+import { useRoleplayGate } from '@/features/roleplay/model/useRoleplayGate';
 import { useRoleplayIdeaMutation } from '@/features/roleplay/model/useRoleplayIdeaMutation';
 import { PARTNERS, toPartnerId } from '@/features/small-talk/model/partner';
-import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import {
   backOrReplace,
   ROLEPLAY_NEW_PATH,
@@ -47,7 +47,7 @@ export const useCreateRoleplayFlow = () => {
   const t = useTranslations('roleplay.create');
   const partnerParam = useSearchParams().get('partner');
   const maker = useMakeScenario();
-  const gate = usePaywallGate();
+  const gate = useRoleplayGate();
   // 보이는 캐릭터가 곧 선택이다 — 따로 고르는 동작이 없다
   // 새로고침한 입력에서 뒤로 와도 주소에 있던 상대에서 시작한다
   const [partnerIndex, setPartnerIndex] = useState(() =>
@@ -79,10 +79,6 @@ export const useCreateRoleplayFlow = () => {
 
   // 무료 한 번을 쓴 무료 사용자는 아이디어와 시작에서 페이월로 간다 — 돌아와서 이어 쓰게 글을 맡겨 둔다
   const guardCreate = (go: () => void) => {
-    if (gate.subscription?.freeRoleplayAvailable) {
-      go();
-      return;
-    }
     if (gate.locked) saveRoleplayDraft(draft);
     gate.guard(go, {
       source: 'roleplay',
