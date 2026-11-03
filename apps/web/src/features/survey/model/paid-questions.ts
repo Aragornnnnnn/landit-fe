@@ -1,6 +1,20 @@
 // 결제자 설문 문항 — 프리미엄을 결제한 사람에게 편지로 묻는다. 형식은 questions.ts와 같다
 import { CHANNEL_QUESTION, type Question } from './questions';
 
+// 롤플레이는 아직 써 본 사람이 적어 보기에서 뺀다 — env를 'true'로 두고 배포하면 보인다
+export const likedFeatureOptions = (
+  roleplayEnabled = process.env.NEXT_PUBLIC_PAID_SURVEY_ROLEPLAY === 'true',
+) => [
+  '시나리오 대화',
+  '스몰톡',
+  ...(roleplayEnabled ? ['롤플레이'] : []),
+  '대화 속의 상대방 속마음',
+  '대화 후 교정 피드백',
+  '표현 학습과 복습',
+  '발음 평가',
+  '100일 채우면 환급',
+];
+
 // 결제 이유를 맨 앞에 둬서 중간에 그만둬도 그 답은 남게 하고, 한 번 누르면 끝나는 유입 경로로 가볍게 마무리한다
 export const PAID_QUESTIONS: readonly Question[] = [
   {
@@ -17,15 +31,7 @@ export const PAID_QUESTIONS: readonly Question[] = [
     id: 'liked_features',
     kind: 'multi',
     title: '써 보니 어떤 기능이\n가장 만족스러우세요?',
-    options: [
-      '시나리오 대화',
-      '대화 중간중간 나오는 상대의 속마음',
-      '스몰톡',
-      '대화 후 교정 피드백',
-      '발음 평가',
-      '표현 학습 · 복습',
-      '100일 채우면 결제 금액 환급',
-    ],
+    options: likedFeatureOptions(),
     other: true,
   },
   {
