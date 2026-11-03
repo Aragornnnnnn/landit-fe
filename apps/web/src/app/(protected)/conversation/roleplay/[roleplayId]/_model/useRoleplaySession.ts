@@ -2,8 +2,8 @@
 // 상대의 첫 마디를 서버가 그때 만든다(스몰톡과 같다)
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import { EVENTS, type EventProps, type RoleplayEntry } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 
 import {
@@ -18,9 +18,21 @@ import { toPartnerId } from '@/features/small-talk/model/partner';
 import { track } from '@/shared/analytics';
 import { ApiError } from '@/shared/api/api-error';
 import { useCurrentUserId } from '@/shared/auth/current-member';
+import { roleplayTalkPath } from '@/shared/lib/routes';
 import { reportError } from '@/shared/monitoring/report';
 
-export const useRoleplaySession = (roleplayId: number) => {
+const toStartFailReason = (
+  cause: unknown,
+): EventProps['Roleplay Start Failed']['reason'] => {
+  if (isPremiumRequired(cause)) return 'premium_required';
+  if (cause instanceof ApiError && cause.status === 404) return 'not_found';
+  return 'error';
+};
+
+export const useRoleplaySession = (
+  roleplayId: number,
+  entry: RoleplayEntry,
+) => {
   const queryClient = useQueryClient();
   const userId = useCurrentUserId();
   const handoff = useRoleplaySessionHandoff();
@@ -31,6 +43,16 @@ export const useRoleplaySession = (roleplayId: number) => {
   );
   const [error, setError] = useState<unknown>(null);
   const startedRef = useRef(false);
+  const trackedRef = useRef(false);
+
+  const trackStartFailed = useEffectEvent((cause: unknown) =>
+    track(EVENTS.ROLEPLAY_START_FAILED, {
+      roleplay_id: roleplayId,
+      entry,
+      reason: toStartFailReason(cause),
+      free_trial: freeUser,
+    }),
+  );
 
   useEffect(() => {
     if (startedRef.current) return; // StrictMode 이중 실행에도 세션은 하나만 만든다
@@ -44,6 +66,7 @@ export const useRoleplaySession = (roleplayId: number) => {
     startSavedRoleplaySession(roleplayId)
       .then(setSession)
       .catch((cause) => {
+        trackStartFailed(cause);
         // 프리미엄 거절은 오류가 아니다 — 화면이 페이월로 보낸다. 가진 무료 기회 값은 낡은 것이다
         if (isPremiumRequired(cause)) {
           void queryClient.invalidateQueries({
@@ -63,8 +86,16 @@ export const useRoleplaySession = (roleplayId: number) => {
       });
   }, [roleplayId, queryClient, userId, handoff, session]);
 
-  // 시작 기록은 구독을 안 뒤에 한 번 남긴다 — 세션은 기다리지 않고, 기록만 무료 체험 여부를 맞춘다
-  const trackedRef = useRef(false);
+  // 첫 발화까지 받으면 무료 기회를 쓴 것이다 — 돌아간 입구가 다시 묻게 한다
+  const sessionOpened = session !== null;
+  useEffect(() => {
+    if (!sessionOpened) return;
+    void queryClient.invalidateQueries({
+      queryKey: roleplayKeys.access(userId),
+    });
+  }, [sessionOpened, queryClient, userId]);
+
+  // 구독을 받기 전엔 무료 사용자인지 몰라, free_trial이 false로 잘못 찍히지 않게 판단이 선 뒤에 찍는다
   useEffect(() => {
     if (!session || deciding || trackedRef.current) return;
     trackedRef.current = true;
@@ -73,12 +104,13 @@ export const useRoleplaySession = (roleplayId: number) => {
       roleplay_id: roleplayId,
       partner: toPartnerId(session.character?.characterId ?? null),
       free_trial: freeUser,
+      entry,
     });
-    // 첫 발화까지 받으면 무료 기회를 쓴 것이다 — 돌아간 입구가 다시 묻게 한다
-    void queryClient.invalidateQueries({
-      queryKey: roleplayKeys.access(userId),
-    });
-  }, [session, deciding, freeUser, roleplayId, queryClient, userId]);
+    // 새로고침으로 다시 열면 만든 직후가 아니다 — 주소에서 표시를 지운다
+    if (entry === 'created') {
+      window.history.replaceState(null, '', roleplayTalkPath(roleplayId));
+    }
+  }, [session, deciding, freeUser, entry, roleplayId]);
 
   // 중도 종료는 없다 — 백엔드가 롤플레이 세션의 중도 종료를 받지 않아, 완료는 끝내기(complete)만 맡는다
   return { session, error };

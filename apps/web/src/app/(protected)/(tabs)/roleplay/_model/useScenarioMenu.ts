@@ -23,6 +23,7 @@ export const useScenarioMenu = (scenarios: RoleplaySettings[] | null) => {
   const { mutate, isPending } = useDeleteRoleplayScenarioMutation();
 
   const askDelete = () => {
+    track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'roleplay_delete' });
     setDeleteId(moreId);
     setMoreId(null);
   };
@@ -39,7 +40,10 @@ export const useScenarioMenu = (scenarios: RoleplaySettings[] | null) => {
         showToast(t('doneToast'));
       },
       // 실패하면 시트를 그대로 둔다 — 다시 누를 수 있게
-      onError: () => showToast(t('failToast')),
+      onError: () => {
+        track(EVENTS.ROLEPLAY_DELETE_FAILED, { roleplay_id: deleteId });
+        showToast(t('failToast'));
+      },
     });
   };
 
@@ -47,12 +51,17 @@ export const useScenarioMenu = (scenarios: RoleplaySettings[] | null) => {
     moreTarget,
     deleteTarget,
     deleting: isPending,
-    openMore: (scenario: RoleplaySettings) => setMoreId(scenario.id),
+    openMore: (scenario: RoleplaySettings) => {
+      track(EVENTS.ROLEPLAY_MENU_OPENED, { roleplay_id: scenario.id });
+      setMoreId(scenario.id);
+    },
     closeMore: () => setMoreId(null),
     askDelete,
     // 지우는 중엔 닫히지 않는다 — 닫힌 뒤에 결과 토스트만 뜨면 무엇이 지워졌는지 모른다
     closeDelete: () => {
-      if (!isPending) setDeleteId(null);
+      if (isPending) return;
+      track(EVENTS.CONFIRM_SHEET_DISMISSED, { sheet: 'roleplay_delete' });
+      setDeleteId(null);
     },
     confirmDelete,
   };

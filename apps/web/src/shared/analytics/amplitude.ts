@@ -116,6 +116,20 @@ export const identifyUser = (
  *
  * @param properties 값이 null인 속성은 프로필에서 지운다. 지난 세션의 값이 남아 "아직 모름"과 섞이지 않게
  */
+/**
+ * 페이지가 닫히는 순간 남은 이벤트를 내보낸다 — 일반 요청은 닫히며 끊기므로 beacon으로 보낸다.
+ * 앱을 강제로 끄면 이 시점조차 오지 않을 수 있다
+ */
+export const flushBeforePageClose = () => {
+  if (typeof window === 'undefined' || !getApiKey()) return;
+  amplitude.setTransport('beacon');
+  amplitude.flush();
+  // 캐시에서 페이지가 복원되면 응답을 확인하는 기본 전송으로 돌아간다
+  window.addEventListener('pageshow', () => amplitude.setTransport('fetch'), {
+    once: true,
+  });
+};
+
 export const setUserProperties = (properties: UserPropertyPatch) => {
   if (typeof window === 'undefined') return;
   if (!logAndShouldSend('user properties', properties)) return;

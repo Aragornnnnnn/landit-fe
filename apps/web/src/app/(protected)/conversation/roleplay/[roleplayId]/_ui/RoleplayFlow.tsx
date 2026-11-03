@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type RoleplayEntry } from '@landit/analytics';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
@@ -15,17 +15,25 @@ import { Button } from '@/shared/ui/Button';
 import { useRoleplaySession } from '../_model/useRoleplaySession';
 import { RoleplayConversation } from './RoleplayConversation';
 
-export const RoleplayFlow = ({ roleplayId }: { roleplayId: number }) => {
+export const RoleplayFlow = ({
+  roleplayId,
+  entry,
+}: {
+  roleplayId: number;
+  entry: RoleplayEntry;
+}) => {
   const t = useTranslations('conversation.roleplayFlow');
   const router = useRouter();
-  const { session, error } = useRoleplaySession(roleplayId);
+  const { session, error } = useRoleplaySession(roleplayId, entry);
   const premiumRequired = isPremiumRequired(error);
 
   // 구독이 끝난 사용자가 입구 판단을 지나쳐 온 경우 — 오류 대신 페이월로 보낸다
   useEffect(() => {
     if (premiumRequired) {
-      track(EVENTS.PAYWALL_GATE_LOCKED, { source: 'roleplay' });
-      router.replace(paywallPath({ source: 'roleplay', from: ROLEPLAY_PATH }));
+      track(EVENTS.PAYWALL_GATE_LOCKED, { source: 'roleplay_talk' });
+      router.replace(
+        paywallPath({ source: 'roleplay_talk', from: ROLEPLAY_PATH }),
+      );
     }
   }, [premiumRequired, router]);
 
@@ -40,7 +48,7 @@ export const RoleplayFlow = ({ roleplayId }: { roleplayId: number }) => {
           size="sm"
           className="w-auto px-6"
           onClick={() => {
-            track(EVENTS.ERROR_RETRIED, { screen: 'conversation' });
+            track(EVENTS.ERROR_RETRIED, { screen: 'roleplay_talk' });
             router.replace(ROLEPLAY_PATH);
           }}
         >

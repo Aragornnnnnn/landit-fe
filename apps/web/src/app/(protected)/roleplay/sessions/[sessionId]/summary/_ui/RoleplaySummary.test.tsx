@@ -15,7 +15,8 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/features/roleplay/model/useRoleplaySummaryQuery', () => ({
   useRoleplaySummaryQuery: vi.fn(),
 }));
-vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
+const track = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/analytics', () => ({ track }));
 const filledEarlier = vi.hoisted(() => vi.fn(() => false));
 vi.mock('@/features/streak/model/useFilledEarlier', () => ({
   useFilledEarlier: filledEarlier,
@@ -67,6 +68,7 @@ const renderSummary = (
 afterEach(() => {
   cleanup();
   replace.mockClear();
+  track.mockClear();
   vi.useRealTimers();
 });
 
@@ -168,5 +170,78 @@ describe('RoleplaySummary', () => {
       screen.getByRole('button', { name: '홈으로 돌아갈게요' }),
     );
     expect(replace).toHaveBeenCalledWith('/roleplay');
+  });
+
+  describe('계측', () => {
+    it('요약이 서면 한 번 남긴다', () => {
+      renderSummary(summaryOf());
+
+      expect(track).toHaveBeenCalledWith('Roleplay Summary Viewed', {
+        session_id: 7,
+        just_finished: false,
+        first_session: false,
+        has_growth: false,
+        reused_expression_count: 0,
+        reused_expressions_pending: false,
+        correction_count: 1,
+      });
+    });
+
+    it('축하를 보는 동안엔 요약 노출로 세지 않는다', () => {
+      renderSummary(summaryOf(), { celebrate: true });
+
+      expect(track).not.toHaveBeenCalledWith(
+        'Roleplay Summary Viewed',
+        expect.anything(),
+      );
+    });
+
+    it('요약을 못 받으면 실패로 남긴다', () => {
+      renderSummary(null, { error: new Error('실패') });
+
+      expect(track).toHaveBeenCalledWith('Roleplay Summary Failed', {
+        session_id: 7,
+        reason: 'error',
+      });
+    });
+
+    it('상세 피드백으로 가면 교정 수와 함께 남긴다', async () => {
+      renderSummary(summaryOf());
+
+      await userEvent.click(
+        screen.getByRole('button', { name: '상세 피드백 보러갈게요' }),
+      );
+
+      expect(track).toHaveBeenCalledWith('Roleplay Feedback Opened', {
+        session_id: 7,
+        correction_count: 1,
+      });
+    });
+
+    it('닫으면 상세 피드백을 건너뛴 것으로 남긴다', async () => {
+      renderSummary(summaryOf());
+
+      await userEvent.click(screen.getByRole('button', { name: '닫기' }));
+
+      expect(track).toHaveBeenCalledWith('Roleplay Feedback Skipped', {
+        session_id: 7,
+        trigger: 'close',
+        correction_count: 1,
+      });
+    });
+
+    it('요약을 못 받은 채 나가면 unavailable로 남긴다', async () => {
+      renderSummary(null, { error: new Error('실패') });
+
+      await userEvent.click(
+        screen.getByRole('button', { name: '홈으로 돌아갈게요' }),
+      );
+
+      expect(track).toHaveBeenCalledWith('Roleplay Feedback Skipped', {
+        session_id: 7,
+        trigger: 'unavailable',
+        correction_count: null,
+      });
+    });
   });
 });

@@ -28,7 +28,7 @@ describe('RoleplayFlow', () => {
   it('프리미엄이 없다고 거절되면 오류 없이 페이월로 보낸다', async () => {
     failWith(new ApiError('막힘', 403, '/x', 'PREMIUM_REQUIRED'));
 
-    render(<RoleplayFlow roleplayId={7} />);
+    render(<RoleplayFlow roleplayId={7} entry="card" />);
 
     await waitFor(() =>
       expect(replace).toHaveBeenCalledWith(expect.stringContaining('/paywall')),
@@ -39,7 +39,7 @@ describe('RoleplayFlow', () => {
   it('그 밖의 실패는 오류 화면을 보여 준다', () => {
     failWith(new ApiError('오류', 500, '/x'));
 
-    render(<RoleplayFlow roleplayId={7} />);
+    render(<RoleplayFlow roleplayId={7} entry="card" />);
 
     expect(replace).not.toHaveBeenCalled();
     expect(screen.getByRole('button')).toBeInTheDocument();

@@ -67,7 +67,6 @@ const NESTED_PAGES: Record<string, string> = {
   [PREVIEW_CHECK_PATH]: 'preview_check',
   // LAN-428 설문(임시) — 설문이 끝나면 지운다
   [PAID_SURVEY_PATH]: 'survey_paid',
-  [ROLEPLAY_NEW_PATH]: 'roleplay_new',
 };
 
 // 끝난 롤플레이 대화 한 건 아래의 화면 — /roleplay/sessions/{id}/{여기}
@@ -86,7 +85,8 @@ const PAYWALL_SOURCES: Record<PaywallSource, true> = {
   me: true,
   header: true,
   reward: true,
-  roleplay: true,
+  roleplay_create: true,
+  roleplay_talk: true,
 };
 
 export const readPaywallSource = (
@@ -319,6 +319,16 @@ const resolvePage = (
   // 이름은 BE의 알림 종류·유입 캠페인과 같은 말(expression_review)을 쓴다
   if (seg[0] === 'reviews' && seg[1]) {
     return { page_name: 'expression_review', path: pathname };
+  }
+
+  // 만들기는 상대 고르기와 입력이 한 주소다 — 입력 단계는 고른 상대가 주소에 붙는다
+  if (pathname === ROLEPLAY_NEW_PATH) {
+    return {
+      page_name: searchParams.has('partner')
+        ? 'roleplay_new_form'
+        : 'roleplay_new',
+      path: pathname,
+    };
   }
 
   const nested = NESTED_PAGES[pathname];

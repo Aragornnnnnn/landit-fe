@@ -16,6 +16,9 @@ vi.mock('@/features/roleplay/model/useRoleplaySessionQuery', () => ({
   useRoleplaySessionQuery: vi.fn(),
 }));
 
+const track = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/analytics', () => ({ track }));
+
 const PREPARING = '더 자연스러운 말을 찾는 중…';
 const GOOD_JOB = '잘했어요!';
 
@@ -222,5 +225,40 @@ describe('RoleplayTranscript', () => {
     await userEvent.click(screen.getByRole('button', { name: '뒤로' }));
 
     expect(replace).toHaveBeenCalledWith('/roleplay/5/sessions');
+  });
+
+  describe('계측', () => {
+    const showDetail = () =>
+      vi.mocked(useRoleplaySessionQuery).mockReturnValue({
+        session: detail,
+        error: null,
+        waitExpired: false,
+        retry: vi.fn(),
+      });
+
+    it('요약에서 왔으면 source를 summary로, 보여 줄 교정 수와 함께 남긴다', () => {
+      track.mockClear();
+      showDetail();
+
+      render(<RoleplayTranscript sessionId={7} />);
+
+      expect(track).toHaveBeenCalledWith('Roleplay Feedback Viewed', {
+        session_id: 7,
+        source: 'summary',
+        correction_count: 1,
+      });
+    });
+
+    it('지난 대화 목록에서 왔으면 source를 history로 남긴다', () => {
+      track.mockClear();
+      showDetail();
+
+      render(<RoleplayTranscript sessionId={7} fromRoleplayId={5} />);
+
+      expect(track).toHaveBeenCalledWith(
+        'Roleplay Feedback Viewed',
+        expect.objectContaining({ source: 'history' }),
+      );
+    });
   });
 });

@@ -216,6 +216,7 @@ describe('useConversationInput', () => {
     );
 
     expect(trackMock).toHaveBeenCalledWith('Speech Recognition Failed', {
+      session_id: 1,
       engine: 'deepgram',
       reason: 'connect_failed',
     });

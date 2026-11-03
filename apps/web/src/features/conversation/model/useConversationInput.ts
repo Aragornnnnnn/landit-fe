@@ -146,6 +146,7 @@ export const useConversationInput = ({
     } else {
       showToast(t('sttErrorToast'));
       track(EVENTS.SPEECH_RECOGNITION_FAILED, {
+        session_id: trackContext().sessionId ?? undefined,
         engine: meta.engine,
         reason: failReason,
       });

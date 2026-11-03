@@ -32,7 +32,7 @@ const startWith = (status: number) => {
   );
   const client = new QueryClient();
   const invalidate = vi.spyOn(client, 'invalidateQueries');
-  const { result } = renderHook(() => useRoleplaySession(7), {
+  const { result } = renderHook(() => useRoleplaySession(7, 'card'), {
     wrapper: ({ children }) => (
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
     ),
@@ -42,6 +42,7 @@ const startWith = (status: number) => {
 
 beforeEach(() => {
   vi.mocked(startSavedRoleplaySession).mockReset();
+  track.mockClear();
 });
 
 describe('useRoleplaySession', () => {
@@ -54,11 +55,14 @@ describe('useRoleplaySession', () => {
       character: { characterId: 'teddy' },
     } as unknown as RoleplaySessionStartResponse);
     const client = new QueryClient();
-    const { result, rerender } = renderHook(() => useRoleplaySession(7), {
-      wrapper: ({ children }) => (
-        <QueryClientProvider client={client}>{children}</QueryClientProvider>
-      ),
-    });
+    const { result, rerender } = renderHook(
+      () => useRoleplaySession(7, 'card'),
+      {
+        wrapper: ({ children }) => (
+          <QueryClientProvider client={client}>{children}</QueryClientProvider>
+        ),
+      },
+    );
 
     // Then 세션은 먼저 열리지만 기록은 아직 없다
     await waitFor(() => expect(result.current.session).not.toBeNull());
@@ -89,7 +93,7 @@ describe('useRoleplaySession', () => {
     const invalidate = vi.spyOn(client, 'invalidateQueries');
 
     // When 대화 화면이 세션을 열면
-    renderHook(() => useRoleplaySession(7), {
+    renderHook(() => useRoleplaySession(7, 'card'), {
       wrapper: ({ children }) => (
         <QueryClientProvider client={client}>{children}</QueryClientProvider>
       ),
@@ -131,7 +135,7 @@ describe('useRoleplaySession', () => {
     const started = { sessionId: 3 } as RoleplaySessionStartResponse;
     client.setQueryData(roleplayKeys.handoff(39, 7), started);
 
-    const { result } = renderHook(() => useRoleplaySession(7), {
+    const { result } = renderHook(() => useRoleplaySession(7, 'card'), {
       wrapper: ({ children }) => (
         <QueryClientProvider client={client}>{children}</QueryClientProvider>
       ),
@@ -140,5 +144,97 @@ describe('useRoleplaySession', () => {
     expect(result.current.session).toBe(started);
     expect(startSavedRoleplaySession).not.toHaveBeenCalled();
     expect(client.getQueryData(roleplayKeys.handoff(39, 7))).toBeUndefined();
+  });
+
+  it('시작에 실패하면 이유를 남긴다', async () => {
+    const { result } = startWith(404);
+
+    await waitFor(() => expect(result.current.error).not.toBeNull());
+
+    expect(track).toHaveBeenCalledWith('Roleplay Start Failed', {
+      roleplay_id: 7,
+      entry: 'card',
+      reason: 'not_found',
+      free_trial: false,
+    });
+  });
+
+  it('구독 응답을 기다리는 동안엔 시작을 찍지 않고, 판단이 서면 그 값으로 찍는다', async () => {
+    // Given 구독을 아직 못 받았을 때 세션이 열리면
+    gate.deciding = true;
+    vi.mocked(startSavedRoleplaySession).mockResolvedValue({
+      sessionId: 1,
+      character: { characterId: 'teddy' },
+    } as unknown as RoleplaySessionStartResponse);
+    const client = new QueryClient();
+    const { result, rerender } = renderHook(
+      () => useRoleplaySession(7, 'card'),
+      {
+        wrapper: ({ children }) => (
+          <QueryClientProvider client={client}>{children}</QueryClientProvider>
+        ),
+      },
+    );
+    await waitFor(() => expect(result.current.session).not.toBeNull());
+    expect(track).not.toHaveBeenCalled();
+
+    // When 무료 사용자로 판단이 서면
+    gate.deciding = false;
+    gate.freeUser = true;
+    rerender();
+
+    // Then 한 번만, 무료 체험으로 찍는다
+    await waitFor(() =>
+      expect(track).toHaveBeenCalledWith('Roleplay Started', {
+        session_id: 1,
+        roleplay_id: 7,
+        partner: 'teddy',
+        free_trial: true,
+        entry: 'card',
+      }),
+    );
+    expect(track).toHaveBeenCalledTimes(1);
+    gate.freeUser = false;
+  });
+
+  it('만든 직후로 연 대화는 시작을 찍고 주소에서 표시를 지운다 — 새로고침은 첫 대화가 아니다', () => {
+    window.history.pushState(null, '', '/conversation/roleplay/7?from=create');
+    const client = new QueryClient();
+    client.setQueryData(roleplayKeys.handoff(39, 7), {
+      sessionId: 3,
+    } as RoleplaySessionStartResponse);
+
+    renderHook(() => useRoleplaySession(7, 'created'), {
+      wrapper: ({ children }) => (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      ),
+    });
+
+    expect(track).toHaveBeenCalledWith(
+      'Roleplay Started',
+      expect.objectContaining({ entry: 'created' }),
+    );
+    expect(window.location.search).toBe('');
+  });
+
+  it('구독 판단 전이어도 세션이 열리면 무료 기회 값을 다시 받게 한다', async () => {
+    gate.deciding = true;
+    vi.mocked(startSavedRoleplaySession).mockResolvedValue({
+      sessionId: 1,
+    } as unknown as RoleplaySessionStartResponse);
+    const client = new QueryClient();
+    const invalidate = vi.spyOn(client, 'invalidateQueries');
+
+    const { result } = renderHook(() => useRoleplaySession(7, 'card'), {
+      wrapper: ({ children }) => (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      ),
+    });
+    await waitFor(() => expect(result.current.session).not.toBeNull());
+
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: roleplayKeys.access(39),
+    });
+    gate.deciding = false;
   });
 });
