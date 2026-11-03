@@ -9,19 +9,23 @@ export const PARTNER_TINT: Record<Partner, string> = {
 };
 
 // 내 시나리오 카드 바탕 — 증명사진 스튜디오처럼 은은한 단색 파스텔이다. 인물 뒤가 조금 밝아 캐릭터가 또렷하다
-const toStudioBackdrop = (center: string, edge: string) =>
-  `radial-gradient(circle at 50% 38%, ${center}, ${edge} 78%)`;
+const toStudioBackdrop = (
+  hue: number,
+  [center, edge]: readonly [string, string],
+) =>
+  `radial-gradient(circle at 50% 38%, hsl(${hue} ${center}), hsl(${hue} ${edge}) 78%)`;
 
-export const SCENARIO_TINTS = [
-  toStudioBackdrop('#d5ecfb', '#bfe0f7'),
-  toStudioBackdrop('#fde0e6', '#f9cfd9'),
-  toStudioBackdrop('#d8f3e6', '#c1ead6'),
-  toStudioBackdrop('#e8e0fb', '#d9cdf7'),
-  toStudioBackdrop('#fff1cf', '#fde8b4'),
-  toStudioBackdrop('#fde4d3', '#fad3b9'),
-  toStudioBackdrop('#d4f1f1', '#bce7e8'),
-  toStudioBackdrop('#eceef2', '#dde0e7'),
-];
+// 같은 색상도 진하기가 다르면 다른 바탕으로 읽힌다 — 채도·밝기를 인물 뒤와 가장자리 짝으로 둔다
+const BACKDROP_TONES = [
+  ['70% 92%', '60% 85%'],
+  ['50% 91%', '42% 84%'],
+  ['75% 88%', '65% 81%'],
+] as const;
+
+// 20색상 × 3진하기 — 둘의 수가 서로소라 60칸이 겹치지 않고, 7칸씩 건너뛰어 연달아 만든 시나리오도 색이 멀다
+export const SCENARIO_TINTS = Array.from({ length: 60 }, (_, index) =>
+  toStudioBackdrop(((index * 7) % 20) * 18, BACKDROP_TONES[index % 3]),
+);
 
 // 서버에 저장하지 않으니 id로 고른다 — 다시 받거나 다른 기기에서 봐도 색이 바뀌지 않는다
 export const toScenarioTint = (scenarioId: number) =>
