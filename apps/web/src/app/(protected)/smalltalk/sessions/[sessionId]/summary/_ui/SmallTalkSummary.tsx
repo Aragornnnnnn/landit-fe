@@ -13,6 +13,7 @@ import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
 import { GrowthCard } from '@/features/feedback/ui/GrowthCard';
 import { ReusedExpressionsCard } from '@/features/feedback/ui/ReusedExpressionsCard';
 import type { SmallTalkSummaryResponse } from '@/features/small-talk/api/small-talk';
+import { toSummaryAnalysis } from '@/features/small-talk/model/summary-analysis';
 import {
   toSummaryBlocks,
   type SummaryBlocks,
@@ -20,6 +21,7 @@ import {
 import { useSmallTalkSummaryQuery } from '@/features/small-talk/model/useSmallTalkSummaryQuery';
 import { BlockSkeleton } from '@/features/small-talk/ui/BlockSkeleton';
 import { ComparisonCard } from '@/features/small-talk/ui/ComparisonCard';
+import { SummaryAnalysisNotice } from '@/features/small-talk/ui/SummaryAnalysisNotice';
 import { SummaryHeadline } from '@/features/small-talk/ui/SummaryHeadline';
 import { SummarySkeleton } from '@/features/small-talk/ui/SummarySkeleton';
 import { track } from '@/shared/analytics';
@@ -43,11 +45,15 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
   const { summary, error, isLoading, waitExpired, retry } =
     useSmallTalkSummaryQuery(sessionId);
   // 총평은 이 세션의 교정이 다 끝나야 계산된다 — 보통 수 초지만, 상한까지 안 오면 붙잡아 두지 않는다
-  const summaryStuck = summary !== null && summary.pending && waitExpired;
+  // 통계를 먼저 받은 응답이면 붙잡을 게 없다 — 분석 자리에서만 기다린다
+  const summaryStuck =
+    summary !== null && summary.pending && !summary.comparison && waitExpired;
 
   // 화면이 실제로 선 뒤에만 블록의 도착을 센다 — 총평을 기다리는 동안은 전체가 스켈레톤이라 셀 것이 없다
   const blocks =
-    summary && !summary.pending ? toSummaryBlocks(summary, waitExpired) : null;
+    summary && (!summary.pending || summary.comparison)
+      ? toSummaryBlocks(summary, waitExpired)
+      : null;
   const [arrivals, setArrivals] = useState<Arrivals>(FRESH_ARRIVALS);
   const seenArrivals = blocks ? trackArrivals(arrivals, blocks) : arrivals;
   if (seenArrivals !== arrivals) setArrivals(seenArrivals);
@@ -127,12 +133,18 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
           onRetry={retry}
           onSkip={() => skipDetail('unavailable')}
         />
-      ) : isLoading || !summary || !summary.headline || !summary.comparison ? (
+      ) : isLoading || !summary || !summary.comparison ? (
         <SummarySkeleton label={tSkeleton('loadingLabel')} />
       ) : (
         <>
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pt-1 pb-6">
-            <SummaryHeadline headline={summary.headline} />
+            {summary.headline && (
+              <SummaryHeadline headline={summary.headline} />
+            )}
+            <SummaryAnalysisNotice
+              analysis={toSummaryAnalysis(summary, waitExpired)}
+              onRetry={retry}
+            />
             <ComparisonCard comparison={summary.comparison} />
             {blocks && (
               <ConditionalBlocks blocks={blocks} arrivals={seenArrivals} />

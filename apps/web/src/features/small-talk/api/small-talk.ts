@@ -256,6 +256,9 @@ export const completeSmallTalkSession = (sessionId: number) =>
 
 // 오늘의 스몰톡 — 끝난 대화의 요약. 점수·별점 없이 지난번과의 비교와 기억·재사용의 순간을 돌려준다.
 // growth만 없을 수 있고(null), reusedExpressions·followUp은 늘 오되 아직 만드는 중이면 pending이다
+// 총평 분석 상태 — 진행 중, 모두 분석, 일부만 분석
+export type SummaryAnalysisStatus = 'PROCESSING' | 'COMPLETE' | 'PARTIAL';
+
 export interface SmallTalkSummaryResponse {
   sessionId: number;
   // 제목이 없는 세션이면 null
@@ -271,6 +274,8 @@ export interface SmallTalkSummaryResponse {
   growth: SmallTalkSummaryGrowth | null;
   reusedExpressions: SmallTalkSummaryReusedExpressions;
   followUp: SmallTalkSummaryFollowUp;
+  // 구 서버는 없고, 예전에 저장한 총평은 null이다
+  analysisStatus?: SummaryAnalysisStatus | null;
   // 교정이 붙은 사용자 메시지 수 (세션 상세의 correctionCount와 같은 값)
   correctionCount: number | null;
 }
@@ -357,5 +362,5 @@ export interface SmallTalkSummaryFollowUp {
 // 오늘의 스몰톡 요약 — 완료(COMPLETED)된 세션만 준다. 진행 중이거나 종료 확인 대기면 409
 export const getSmallTalkSummary = (sessionId: number) =>
   api.get<SmallTalkSummaryResponse>(
-    `/api/v1/free-talk/sessions/${sessionId}/summary`,
+    `/api/v1/free-talk/sessions/${sessionId}/summary?progressive=true`,
   );

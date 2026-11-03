@@ -15,6 +15,7 @@ import type {
   SmallTalkSummaryGrowth,
   SmallTalkSummaryHeadline,
   SmallTalkSummaryReusedExpressions,
+  SummaryAnalysisStatus,
 } from '@/features/small-talk/api/small-talk';
 import { api } from '@/shared/api/client';
 
@@ -173,7 +174,7 @@ export interface RoleplayHistoryDetail {
 export interface RoleplaySummaryResponse {
   sessionId: number;
   title: string;
-  // 총평을 아직 계산하지 않았으면 true — 그동안 아래 넷과 correctionCount는 null이다
+  // 총평을 아직 계산하지 않았으면 true — 통계(firstSession·comparison)는 먼저 올 수 있고, 나머지와 correctionCount는 null이다
   pending: boolean;
   firstSession: boolean | null;
   headline: SmallTalkSummaryHeadline | null;
@@ -181,6 +182,8 @@ export interface RoleplaySummaryResponse {
   growth: SmallTalkSummaryGrowth | null;
   // 늘 온다 — 아직 만드는 중이면 pending이다
   reusedExpressions: SmallTalkSummaryReusedExpressions;
+  // 구 서버는 없고, 예전에 저장한 총평은 null이다
+  analysisStatus?: SummaryAnalysisStatus | null;
   correctionCount: number | null;
 }
 
@@ -263,5 +266,5 @@ export const getRoleplaySession = (sessionId: number) =>
 
 export const getRoleplaySummary = (sessionId: number) =>
   api.get<RoleplaySummaryResponse>(
-    `${ROLEPLAYS}/sessions/${sessionId}/summary`,
+    `${ROLEPLAYS}/sessions/${sessionId}/summary?progressive=true`,
   );

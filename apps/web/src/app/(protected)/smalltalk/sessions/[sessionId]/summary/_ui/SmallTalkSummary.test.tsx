@@ -48,6 +48,8 @@ const summaryOf = (): SmallTalkSummaryResponse => ({
   correctionCount: 3,
 });
 
+const retry = vi.fn();
+
 const renderSummary = (
   summary: SmallTalkSummaryResponse | null,
   { error = null as Error | null, isLoading = false, waitExpired = false } = {},
@@ -57,7 +59,7 @@ const renderSummary = (
     error,
     isLoading,
     waitExpired,
-    retry: vi.fn(),
+    retry,
   });
   render(<SmallTalkSummary sessionId={7} />);
 };
@@ -227,6 +229,60 @@ const reusedItem = (expressionId: number, text: string) => ({
   messageId: 55000 + expressionId,
   quotedSentence: `I said ${text.toUpperCase()} today.`,
   matchedText: text.toUpperCase(),
+});
+
+describe('SmallTalkSummary 분석을 기다리는 동안', () => {
+  const analyzing = () => ({
+    ...summaryOf(),
+    pending: true,
+    analysisStatus: 'PROCESSING' as const,
+    headline: null,
+    growth: null,
+    correctionCount: null,
+  });
+
+  it('통계와 대화 보기를 먼저 보이고, 분석 자리에 대기 안내를 둔다', () => {
+    // When 통계만 먼저 온 응답을 받으면
+    renderSummary(analyzing());
+
+    // Then 전체 로딩 없이 통계와 대화 보기가 보이고 분석 자리만 기다린다
+    expect(
+      screen.queryByRole('status', { name: '오늘의 스몰톡을 불러오는 중' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('말한 시간')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '상세 피드백 보러갈게요' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('말한 내용을 분석하고 있어요')).toBeInTheDocument();
+  });
+
+  it('상한까지 기다려도 분석이 안 오면 통계는 두고 분석 자리에서 다시 묻게 한다', async () => {
+    // Given 상한을 넘긴 상태에서
+    renderSummary(analyzing(), { waitExpired: true });
+
+    // When 다시 확인을 누르면
+    await userEvent.click(screen.getByRole('button', { name: '다시 확인' }));
+
+    // Then 통계를 둔 채 다시 조회한다
+    expect(retry).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('말한 시간')).toBeInTheDocument();
+  });
+
+  it('일부 문장을 분석하지 못했으면 결과와 함께 알린다', () => {
+    renderSummary({ ...summaryOf(), analysisStatus: 'PARTIAL' });
+
+    expect(
+      screen.getByText('일부 문장은 분석하지 못해 완료된 분석만 반영했어요'),
+    ).toBeInTheDocument();
+  });
+
+  it('모두 분석했으면 안내가 없다', () => {
+    renderSummary({ ...summaryOf(), analysisStatus: 'COMPLETE' });
+
+    expect(
+      screen.queryByText('일부 문장은 분석하지 못해 완료된 분석만 반영했어요'),
+    ).not.toBeInTheDocument();
+  });
 });
 
 describe('SmallTalkSummary 실수 기억 카드', () => {
