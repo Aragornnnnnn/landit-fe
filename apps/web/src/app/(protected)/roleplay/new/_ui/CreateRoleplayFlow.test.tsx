@@ -38,7 +38,7 @@ const gate = vi.hoisted(() => ({
 vi.mock('@/features/roleplay/model/useRoleplayGate', () => ({
   useRoleplayGate: () => ({
     locked: gate.locked && !gate.freeTrialAvailable,
-    usesFreeTrial: gate.locked && gate.freeTrialAvailable,
+    freeUser: gate.locked,
     refresh: refreshAccess,
     guard: (go: () => void) =>
       gate.locked && !gate.freeTrialAvailable ? push('/paywall') : go(),
@@ -315,6 +315,7 @@ describe('CreateRoleplayFlow', () => {
     expect(back).toHaveBeenCalled();
     expect(track).toHaveBeenCalledWith('Roleplay Create Abandoned', {
       partner: 'chloe',
+      free_trial: false,
     });
   });
 
@@ -363,7 +364,7 @@ describe('CreateRoleplayFlow', () => {
       expect(createScenario).toHaveBeenCalled();
     });
 
-    it('무료 기회로 만들면 세션을 미리 열지 않고 대화 화면으로 넘어간다', async () => {
+    it('무료 기회로 만들어도 시작하기에서 세션을 미리 열어 로딩 한 번으로 대화한다', async () => {
       // Given 무료 기회가 남은 사용자가
       gate.freeTrialAvailable = true;
       answerCreate('success');
@@ -373,13 +374,16 @@ describe('CreateRoleplayFlow', () => {
       // When 시작하면
       await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
 
-      // Then 첫 발화로 기회를 쓰는 건 대화 화면에 들어간 뒤다
+      // Then 세션을 미리 열고, 무료 체험으로 기록하고, 권한을 다시 받는다
+      expect(prepareSession).toHaveBeenCalledWith(9, expect.any(Function));
       expect(await screen.findByText('다 됐어요!')).toBeInTheDocument();
-      expect(prepareSession).not.toHaveBeenCalled();
-      await waitFor(
-        () => expect(replace).toHaveBeenCalledWith('/conversation/roleplay/9'),
-        { timeout: 1_500 },
-      );
+      expect(track).toHaveBeenCalledWith('Roleplay Created', {
+        roleplay_id: 9,
+        partner: 'chloe',
+        used_idea: false,
+        free_trial: true,
+      });
+      expect(refreshAccess).toHaveBeenCalled();
     });
 
     it('서버가 거절하면 무료 기회를 다시 받아 다음 입구가 바로 페이월로 가게 한다', async () => {

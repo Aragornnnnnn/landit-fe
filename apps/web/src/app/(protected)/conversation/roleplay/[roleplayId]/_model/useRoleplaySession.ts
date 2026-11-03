@@ -12,6 +12,7 @@ import {
 } from '@/features/roleplay/api/roleplay';
 import { roleplayKeys } from '@/features/roleplay/model/keys';
 import { isPremiumRequired } from '@/features/roleplay/model/premium-required';
+import { useRoleplayGate } from '@/features/roleplay/model/useRoleplayGate';
 import { useRoleplaySessionHandoff } from '@/features/roleplay/model/useRoleplaySessionHandoff';
 import { toPartnerId } from '@/features/small-talk/model/partner';
 import { track } from '@/shared/analytics';
@@ -23,6 +24,7 @@ export const useRoleplaySession = (roleplayId: number) => {
   const queryClient = useQueryClient();
   const userId = useCurrentUserId();
   const handoff = useRoleplaySessionHandoff();
+  const { freeUser } = useRoleplayGate();
   // 만들기 화면이 미리 열어 뒀으면 기다림 없이 바로 대화한다
   const [session, setSession] = useState<RoleplaySessionStartResponse | null>(
     () => handoff.peek(roleplayId),
@@ -39,6 +41,7 @@ export const useRoleplaySession = (roleplayId: number) => {
         session_id: started.sessionId,
         roleplay_id: roleplayId,
         partner: toPartnerId(started.character?.characterId ?? null),
+        free_trial: freeUser,
       });
       // 첫 발화까지 받으면 무료 기회를 쓴 것이다 — 돌아간 입구가 다시 묻게 한다
       void queryClient.invalidateQueries({
@@ -75,7 +78,7 @@ export const useRoleplaySession = (roleplayId: number) => {
           });
         }
       });
-  }, [roleplayId, queryClient, userId, handoff, session]);
+  }, [roleplayId, queryClient, userId, handoff, session, freeUser]);
 
   // 중도 종료는 없다 — 백엔드가 롤플레이 세션의 중도 종료를 받지 않아, 완료는 끝내기(complete)만 맡는다
   return { session, error };

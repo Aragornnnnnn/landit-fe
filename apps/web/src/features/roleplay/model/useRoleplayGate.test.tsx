@@ -50,7 +50,8 @@ describe('useRoleplayGate', () => {
     vi.mocked(getRoleplayAccess).mockResolvedValue(access(true));
     const { result } = setup();
     await waitFor(() => expect(getRoleplayAccess).toHaveBeenCalled());
-    await waitFor(() => expect(result.current.usesFreeTrial).toBe(true));
+    await waitFor(() => expect(getRoleplayAccess).toHaveResolved());
+    await waitFor(() => expect(result.current.locked).toBe(false));
     const go = vi.fn();
 
     // When 시작하면
@@ -70,7 +71,7 @@ describe('useRoleplayGate', () => {
 
     result.current.guard(go, options);
 
-    expect(result.current.usesFreeTrial).toBe(false);
+    expect(result.current.freeUser).toBe(true);
     expect(go).not.toHaveBeenCalled();
     expect(paywall.guard).toHaveBeenCalledWith(go, options);
   });

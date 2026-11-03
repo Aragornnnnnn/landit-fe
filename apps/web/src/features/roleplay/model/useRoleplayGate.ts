@@ -37,9 +37,9 @@ export const useRoleplayGate = () => {
 
   return {
     locked,
-    // 이번 시작이 무료 기회를 쓰는가 — 세션을 미리 열면 대화 전에 기회가 사라진다
-    usesFreeTrial: paywall.locked && canStart,
-    // 서버가 거절했으면 가진 값이 낡은 것이다 — 다음 입구가 바로 페이월로 가게 한다
+    // 무료 사용자인가 — 서버가 시작을 받아 줬다면 무료 기회로 들어간 것이다. 계측이 쓴다
+    freeUser: paywall.locked,
+    // 기회를 쓰거나 서버가 거절했으면 가진 값이 낡은 것이다 — 다음 입구가 바로 페이월로 가게 한다
     refresh: () =>
       void queryClient.invalidateQueries({
         queryKey: roleplayKeys.access(userId),

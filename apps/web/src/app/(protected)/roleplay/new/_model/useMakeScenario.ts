@@ -31,12 +31,13 @@ const REVEAL_MS = 700;
 const SLOW_MS = 20_000;
 
 export const useMakeScenario = ({
-  usesFreeTrial,
-  onPremiumRejected,
+  freeUser,
+  onAccessChanged,
 }: {
-  // 무료 기회로 만드는가 — 첫 발화가 생기면 기회를 쓰므로 세션을 미리 열지 않는다
-  usesFreeTrial: boolean;
-  onPremiumRejected: () => void;
+  // 무료 사용자인가 — 계측이 무료 체험을 구분한다
+  freeUser: boolean;
+  // 무료 기회를 썼거나 서버가 거절했을 때 — 입구가 권한을 다시 받는다
+  onAccessChanged: () => void;
 }) => {
   const router = useRouter();
   const t = useTranslations('roleplay.create');
@@ -78,7 +79,7 @@ export const useMakeScenario = ({
         partner: body.characterId,
         reason: premiumRequired ? 'premium_required' : 'error',
       });
-      if (premiumRequired) onPremiumRejected();
+      if (premiumRequired) onAccessChanged();
       if (leftRef.current) return;
       if (premiumRequired) {
         track(EVENTS.PAYWALL_GATE_LOCKED, { source: 'roleplay' });
@@ -106,14 +107,13 @@ export const useMakeScenario = ({
       roleplay_id: saved.id,
       partner: body.characterId,
       used_idea: usedIdea,
+      free_trial: freeUser,
     });
     if (leftRef.current) return;
-    if (usesFreeTrial) {
-      setMade(saved);
-      return;
-    }
     try {
       await handoff.prepare(saved.id, () => !leftRef.current);
+      // 첫 발화까지 받으면 무료 기회를 쓴 것이다 — 여기서 나가도 입구가 알게 한다
+      onAccessChanged();
     } catch {
       // 완성했다고 하지 않고 대화 화면으로 넘긴다 — 거기서 다시 열어 보고 오류를 보여 준다
       if (!leftRef.current) router.replace(roleplayTalkPath(saved.id));
@@ -130,7 +130,10 @@ export const useMakeScenario = ({
     // 오래 걸려 나간다 — 저장은 뒤에서 끝날 수 있어, 끝나면 탭에 카드가 선다
     leave: (partner: Partner) => {
       leftRef.current = true;
-      track(EVENTS.ROLEPLAY_CREATE_ABANDONED, { partner });
+      track(EVENTS.ROLEPLAY_CREATE_ABANDONED, {
+        partner,
+        free_trial: freeUser,
+      });
       backOrReplace(router, ROLEPLAY_PATH);
     },
   };

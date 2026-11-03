@@ -19,6 +19,12 @@ vi.mock('@/shared/auth/current-member', () => ({
   useCurrentUserId: () => 39,
 }));
 vi.mock('@/shared/monitoring/report', () => ({ reportError: vi.fn() }));
+const track = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/analytics', () => ({ track }));
+const gate = vi.hoisted(() => ({ freeUser: false }));
+vi.mock('@/features/roleplay/model/useRoleplayGate', () => ({
+  useRoleplayGate: () => gate,
+}));
 
 const startWith = (status: number) => {
   vi.mocked(startSavedRoleplaySession).mockRejectedValue(
@@ -39,6 +45,36 @@ beforeEach(() => {
 });
 
 describe('useRoleplaySession', () => {
+  it('무료 사용자의 시작은 무료 체험으로 기록하고 권한을 다시 받는다', async () => {
+    // Given 무료 사용자의 시작을 서버가 받아 줄 때
+    gate.freeUser = true;
+    vi.mocked(startSavedRoleplaySession).mockResolvedValue({
+      sessionId: 1,
+      character: { characterId: 'teddy' },
+    } as unknown as RoleplaySessionStartResponse);
+    const client = new QueryClient();
+    const invalidate = vi.spyOn(client, 'invalidateQueries');
+
+    // When 대화 화면이 세션을 열면
+    renderHook(() => useRoleplaySession(7), {
+      wrapper: ({ children }) => (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      ),
+    });
+
+    // Then 체험으로 남기고 입구 권한을 낡은 값으로 표시한다
+    await waitFor(() =>
+      expect(track).toHaveBeenCalledWith(
+        'Roleplay Started',
+        expect.objectContaining({ free_trial: true }),
+      ),
+    );
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: roleplayKeys.access(39),
+    });
+    gate.freeUser = false;
+  });
+
   it('시나리오가 이미 지워졌으면(404) 목록을 다시 받게 한다', async () => {
     const { invalidate, result } = startWith(404);
 

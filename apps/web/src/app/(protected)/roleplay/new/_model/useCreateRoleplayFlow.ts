@@ -48,8 +48,8 @@ export const useCreateRoleplayFlow = () => {
   const partnerParam = useSearchParams().get('partner');
   const gate = useRoleplayGate();
   const maker = useMakeScenario({
-    usesFreeTrial: gate.usesFreeTrial,
-    onPremiumRejected: gate.refresh,
+    freeUser: gate.freeUser,
+    onAccessChanged: gate.refresh,
   });
   // 보이는 캐릭터가 곧 선택이다 — 따로 고르는 동작이 없다
   // 새로고침한 입력에서 뒤로 와도 주소에 있던 상대에서 시작한다

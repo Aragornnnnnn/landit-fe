@@ -765,11 +765,14 @@ export type EventProps = {
     partner: TalkPartner;
     // 아이디어 추천받기를 한 번이라도 눌렀는가 (받은 뒤 고쳤어도 true)
     used_idea: boolean;
+    // 무료 사용자의 체험인가 (유료·결제 도입 전 이용은 false)
+    free_trial: boolean;
   };
   'Roleplay Started': {
     session_id: number;
     roleplay_id: number;
     partner: TalkPartner;
+    free_trial: boolean;
   };
   'Roleplay Turn Completed': {
     session_id: number;
@@ -806,6 +809,7 @@ export type EventProps = {
   // 오래 걸려 돌아가기를 눌렀다
   'Roleplay Create Abandoned': {
     partner: TalkPartner;
+    free_trial: boolean;
   };
 
   // 피드백 응답에는 scenario_id가 없다 — session_id로 서버에서 조인한다
