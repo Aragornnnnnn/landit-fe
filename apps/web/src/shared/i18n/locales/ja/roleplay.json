@@ -25,7 +25,7 @@
   },
   "delete": {
     "title": "このシナリオを削除しますか？",
-    "description": "過去の会話とフィードバックも消えます。<br></br>元に戻せません。",
+    "description": "過去の会話とフィードバックも見られません。<br></br>元に戻せません。",
     "emptyDescription": "元に戻せません。",
     "keepButton": "やめておく",
     "confirmButton": "削除する",
