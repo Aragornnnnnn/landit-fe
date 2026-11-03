@@ -1,5 +1,5 @@
 // 단계형 페이월 1단계 — 혜택 화면. 매일 오는 시나리오(카드 벽) 위에 프리미엄만 누리는 혜택을 쌓고, 맨 아래 리뷰를 옆으로 넘겨 보게 둔다.
-// 환급 챌린지면 맨 앞에 적립 혜택이 붙고(넷), 아니면 셋이다. 리뷰는 한국 스토어 글이라 한국어 화면에만 있다.
+// 환급 챌린지면 맨 앞에 적립 혜택이 붙고(다섯), 아니면 넷이다. 리뷰는 한국 스토어 글이라 한국어 화면에만 있다.
 // 시나리오는 무료로도 하니 혜택이 아니라 무대로만 쓴다. 결제는 다음 단계(결제 금액 안내)에서 한다. 피그마 「페이월 v4 · 전체 스크롤」(3514:322)
 import { useLocale, useTranslations } from 'next-intl';
 
@@ -29,6 +29,11 @@ import {
   ReuseDemo,
   SummaryDemo,
 } from './RewardFeedbackDemo';
+import {
+  RoleplayDeckDemo,
+  RoleplayFormDemo,
+  RoleplayTalkDemo,
+} from './RoleplayDemo';
 import { ScenarioWall } from './ScenarioWall';
 import { SERIES_SCREEN_WIDTH, SeriesCarousel } from './SeriesCarousel';
 import { SmallTalkDemo } from './SmallTalkDemo';
@@ -43,8 +48,8 @@ const premiumWord = (chunks: React.ReactNode) => (
   </span>
 );
 
-/** 적립 혜택 밖의 시리즈 수 — 상세 피드백·표현 학습·스몰톡. 아래 SeriesCarousel 개수와 짝이다 */
-const SERIES_COUNT = 3;
+/** 적립 혜택 밖의 시리즈 수 — 상세 피드백·표현 학습·스몰톡·롤플레이. 아래 SeriesCarousel 개수와 짝이다 */
+const SERIES_COUNT = 4;
 
 /** 혜택 번호 — 01·02… */
 const numberOf = (index: number) => String(index + 1).padStart(2, '0');
@@ -77,7 +82,7 @@ export const BenefitsStep = ({
         <ScenarioWall />
       </section>
 
-      {/* 혜택 판 — 맨 위 머리글이 아래 혜택(환급이면 넷, 아니면 셋)을 프리미엄 전용으로 묶는다 */}
+      {/* 혜택 판 — 맨 위 머리글이 아래 혜택(환급이면 다섯, 아니면 넷)을 프리미엄 전용으로 묶는다 */}
       <div className="rounded-t-[28px] bg-card pt-8 pb-10 shadow-[0_-6px_18px_rgba(51,31,13,0.06)] short:pt-6">
         <div className="px-6">
           <span className="inline-block rounded-full bg-[#f6c54a] px-2.5 py-1 text-xs font-black tracking-wide text-[#3a2a00]">
@@ -163,6 +168,29 @@ export const BenefitsStep = ({
               {
                 title: t('smallTalkFreeTitle'),
                 screen: <SmallTalkDemo step={3} width={width} />,
+              },
+            ]}
+          />
+
+          <SeriesCarousel
+            number={numberOf(offset + 3)}
+            label={t('roleplayLabel')}
+            items={[
+              {
+                title: t('roleplayDeckTitle'),
+                screen: <RoleplayDeckDemo width={width} />,
+              },
+              {
+                title: t('roleplayCreateTitle'),
+                screen: <RoleplayFormDemo width={width} />,
+              },
+              {
+                title: t('roleplayZombieTitle'),
+                screen: <RoleplayTalkDemo talk="zombie" width={width} />,
+              },
+              {
+                title: t('roleplayAlienTitle'),
+                screen: <RoleplayTalkDemo talk="alien" width={width} />,
               },
             ]}
           />

@@ -31,6 +31,7 @@ const BENEFIT_EMOJI: Record<BenefitIcon, string> = {
   mic: '🎤',
   chat: '💬',
   globe: '🌍',
+  pencil: '🎭',
 };
 
 // 연출 시각(ms) — 자물쇠가 풀리고, 막이 걷히기 시작하고, 다 열린다

@@ -195,10 +195,10 @@ describe('StepPaywall — 일본어 구독', () => {
     );
   };
 
-  it('혜택은 적립 없이 셋이고 한국 스토어 리뷰를 보여 주지 않는다', () => {
+  it('혜택은 적립 없이 넷이고 한국 스토어 리뷰를 보여 주지 않는다', () => {
     renderSubscription();
 
-    expect(screen.getByText('プレミアムだけの特典3つ')).toBeInTheDocument();
+    expect(screen.getByText('プレミアムだけの特典4つ')).toBeInTheDocument();
     expect(screen.queryByText(/적립/)).not.toBeInTheDocument();
     expect(screen.queryByText(REVIEWS[0].body)).not.toBeInTheDocument();
   });
