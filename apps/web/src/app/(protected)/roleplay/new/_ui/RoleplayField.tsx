@@ -8,6 +8,7 @@ interface RoleplayFieldProps {
   value: string;
   // 비어 있을 때의 크기 — 상황 칸만 처음부터 여러 줄 크기다
   size: 'line' | 'block';
+  maxLength: number;
   // 아이디어를 받는 중 — 고칠 수 없게 잠근다
   loading: boolean;
   autoFocus?: boolean;
@@ -25,6 +26,7 @@ export const RoleplayField = ({
   placeholder,
   value,
   size,
+  maxLength,
   loading,
   autoFocus,
   onChange,
@@ -49,6 +51,7 @@ export const RoleplayField = ({
           // 기본 두 줄 높이가 거울보다 커지지 않게 한 줄로 두고, 높이는 거울이 정한다
           rows={1}
           value={value}
+          maxLength={maxLength}
           // 받는 동안 빈 칸엔 회색 막대가 서므로 예시 글을 겹쳐 두지 않는다
           placeholder={loading ? '' : placeholder}
           readOnly={loading}

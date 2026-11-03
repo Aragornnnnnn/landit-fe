@@ -3,7 +3,11 @@ import { useTranslations } from 'next-intl';
 
 import type { Partner } from '@/features/conversation/model/character-look';
 import { PartnerAvatar } from '@/features/conversation/ui/character/PartnerAvatar';
-import type { RoleplayDraft } from '@/features/roleplay/model/roleplay-draft';
+import {
+  ROLE_MAX_LENGTH,
+  SITUATION_MAX_LENGTH,
+  type RoleplayDraft,
+} from '@/features/roleplay/model/roleplay-draft';
 import { findPartner } from '@/features/small-talk/model/partner';
 import { GradientSparkle } from '@/shared/ui/GradientSparkle';
 
@@ -47,6 +51,7 @@ export const RoleplayForm = ({
         placeholder={t('create.myRolePlaceholder')}
         value={draft.myRole}
         size="line"
+        maxLength={ROLE_MAX_LENGTH}
         loading={ideaPending}
         autoFocus={empty}
         onChange={(value) => onEdit('myRole', value)}
@@ -56,6 +61,7 @@ export const RoleplayForm = ({
         placeholder={t('create.partnerRolePlaceholder')}
         value={draft.partnerRole}
         size="line"
+        maxLength={ROLE_MAX_LENGTH}
         loading={ideaPending}
         onChange={(value) => onEdit('partnerRole', value)}
       />
@@ -64,6 +70,7 @@ export const RoleplayForm = ({
         placeholder={t('create.situationPlaceholder')}
         value={draft.situation}
         size="block"
+        maxLength={SITUATION_MAX_LENGTH}
         loading={ideaPending}
         onChange={(value) => onEdit('situation', value)}
       />

@@ -27,7 +27,7 @@ export const ScenarioMoreSheet = ({
 
   return (
     <BottomSheet open={scenario !== null} onClose={onClose}>
-      <BottomSheet.Title className="truncate text-center text-15 font-bold text-muted-foreground">
+      <BottomSheet.Title className="text-center text-15 font-bold break-keep text-muted-foreground">
         {scenario?.title}
       </BottomSheet.Title>
       <div className="mt-3 flex flex-col">

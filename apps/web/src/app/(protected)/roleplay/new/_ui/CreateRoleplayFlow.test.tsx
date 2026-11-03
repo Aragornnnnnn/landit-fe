@@ -141,6 +141,23 @@ describe('CreateRoleplayFlow', () => {
     expect(screen.getByRole('button', { name: '시작하기' })).toBeDisabled();
   });
 
+  it('서버 제한보다 길게 적을 수 없다 — 역할 200자, 상황 2000자', async () => {
+    await goToForm();
+
+    expect(screen.getByLabelText('나의 역할')).toHaveAttribute(
+      'maxlength',
+      '200',
+    );
+    expect(screen.getByLabelText('클로이의 역할')).toHaveAttribute(
+      'maxlength',
+      '200',
+    );
+    expect(screen.getByLabelText('상황과 주제')).toHaveAttribute(
+      'maxlength',
+      '2000',
+    );
+  });
+
   it('아이디어를 받으면 세 칸이 한 조합으로 채워져 바로 시작할 수 있다', async () => {
     await goToForm();
 
