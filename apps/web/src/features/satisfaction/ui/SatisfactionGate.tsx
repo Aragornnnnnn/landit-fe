@@ -5,7 +5,7 @@
 // 카드가 없거나 안 떴으면 스토어 리뷰 화면으로 보낸다. 닫으면 간격을 두고 다시 뜨고,
 // 「이미 남겼어요」면 끝이다. 스토어로 간 것만으로는 끝이 아니다 (규칙은 prompt-record).
 // 띄울지 말지는 부르는 쪽(홈 탭의 useSatisfactionSheet)이 정하고, 여기서는 띄운 뒤의 흐름만 맡는다
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import {
   EVENTS,
   type SatisfactionAnswer,
@@ -38,13 +38,21 @@ export const THANKS_MS = 2000;
 export const SatisfactionGate = ({
   moment,
   earlier = false,
+  onClosed,
 }: {
   moment: SatisfactionMoment;
   /** 프리뷰 중간에 멈췄다 돌아왔다 — 방금이 아니라 좀 전 대화로 묻는다 */
   earlier?: boolean;
+  /** 시트가 닫혔다 — 홈이 소감 뒤 다음 안내를 띄울 수 있게 알린다 */
+  onClosed?: () => void;
 }) => {
   const router = useRouter();
   const [open, setOpen] = useState(true);
+  // 어느 길로 닫혔든(답·딤·X·감사 뒤 자동) 한 번 알린다
+  const notifyClosed = useEffectEvent(() => onClosed?.());
+  useEffect(() => {
+    if (!open) notifyClosed();
+  }, [open]);
   // 카드 회신을 기다리는 동안 버튼을 잠근다 — 연타로 요청이 겹치지 않게
   const [requestingCard, setRequestingCard] = useState(false);
   // 리뷰 요청은 물을 게 없어 별점판으로 바로 연다
