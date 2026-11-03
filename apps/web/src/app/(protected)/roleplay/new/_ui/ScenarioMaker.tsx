@@ -39,7 +39,7 @@ export const ScenarioMaker = ({
   ];
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center overflow-hidden pb-10">
+    <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden pb-10">
       <div className="relative h-[336px] w-[240px]">
         <div
           aria-hidden
@@ -96,8 +96,8 @@ export const ScenarioMaker = ({
       </ul>
 
       {slow && !done && (
-        <div className="mt-6 w-full px-5">
-          <Button variant="secondary" size="md" onClick={onLeave}>
+        <div className="absolute inset-x-0 bottom-0 px-5 pb-[max(var(--safe-area-inset-bottom),24px)]">
+          <Button variant="ghost" onClick={onLeave}>
             {t('backButton')}
           </Button>
         </div>
