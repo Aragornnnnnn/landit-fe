@@ -4,7 +4,10 @@ import { useLocale, useTranslations } from 'next-intl';
 
 import type { RoleplaySettings } from '@/features/roleplay/api/roleplay';
 import { toLastTalked } from '@/features/roleplay/model/last-talked';
-import { PARTNER_TINT } from '@/features/roleplay/ui/partner-tint';
+import {
+  CARD_SHADE_CLASS,
+  PARTNER_TINT,
+} from '@/features/roleplay/ui/partner-tint';
 import { PartnerBust } from '@/features/roleplay/ui/PartnerBust';
 import { toPartnerId } from '@/features/small-talk/model/partner';
 import type { Locale } from '@/shared/i18n/locale';
@@ -55,7 +58,9 @@ export const ScenarioCard = ({
           partner={partner}
           className="absolute -bottom-[1%] left-1/2 w-[89%] -translate-x-1/2"
         />
-        <span className="absolute inset-x-0 bottom-0 h-[56%] bg-linear-to-b from-[#1a0f08]/0 via-[#1a0f08]/55 to-[#1a0f08]/85" />
+        <span
+          className={`absolute inset-x-0 bottom-0 h-[56%] ${CARD_SHADE_CLASS}`}
+        />
         <span className="absolute inset-x-3 bottom-3.5 flex flex-col gap-1">
           <span className="line-clamp-2 text-sm leading-[1.35] font-bold break-keep text-white">
             {scenario.title}
