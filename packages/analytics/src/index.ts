@@ -15,6 +15,8 @@ export {
   type TurnInputType,
   type SurveyKind,
   type TalkPartner,
+  type RoleplayEntry,
+  type RoleplayAbandonReason,
   type QuizStepKind,
   type ExpressionReviewStep,
   type HintSource,

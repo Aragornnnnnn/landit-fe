@@ -277,6 +277,13 @@ describe('toPageView', () => {
     expect(pv(path)).toEqual({ page_name: pageName, path, session_id: 7 });
   });
 
+  it('상대를 고른 뒤의 입력 단계는 따로 남는다', () => {
+    expect(pv('/roleplay/new', 'partner=chloe')).toEqual({
+      page_name: 'roleplay_new_form',
+      path: '/roleplay/new',
+    });
+  });
+
   it('시나리오의 지난 대화 목록은 시나리오 id를 싣는다', () => {
     expect(pv('/roleplay/5/sessions')).toEqual({
       page_name: 'roleplay_history',
