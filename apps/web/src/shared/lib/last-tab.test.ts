@@ -2,12 +2,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { resolveHomePath, toRememberedTab } from './last-tab';
-import { SCENARIO_PATH, SMALLTALK_PATH } from './routes';
+import { ROLEPLAY_PATH, SCENARIO_PATH, SMALLTALK_PATH } from './routes';
 
 describe('toRememberedTab', () => {
   it('탭 최상위 주소면 그대로 기억한다', () => {
     expect(toRememberedTab(SMALLTALK_PATH)).toBe(SMALLTALK_PATH);
     expect(toRememberedTab(SCENARIO_PATH)).toBe(SCENARIO_PATH);
+    expect(toRememberedTab(ROLEPLAY_PATH)).toBe(ROLEPLAY_PATH);
   });
 
   it('탭이 아닌 주소는 기억하지 않는다 — 스트릭이나 편지함이 "돌아갈 곳"이 되면 안 된다', () => {

@@ -1,0 +1,19 @@
+{
+  "partner": {
+    "chloeIntroDescription": "LA 출신 · 수다쟁이, 미국 영어",
+    "marcoIntroDescription": "시드니 출신 · 느긋한 호주 영어",
+    "teddyIntroDescription": "런던 출신 · 차분한 영국 영어"
+  },
+  "home": {
+    "emptyTitle": "머릿속에만 있던 상황을<br></br>대화로 만들어 봐요",
+    "emptyDescription": "역할과 상황만 적으면<br></br>나만의 영어 시나리오가 바로 생겨요",
+    "presidentIdeaLabel": "미국 대통령과<br></br>토론",
+    "alienIdeaLabel": "외계인에게<br></br>지구 소개하기",
+    "listTitle": "내 시나리오",
+    "countLabel": "{count}개",
+    "createButton": "나만의 시나리오 만들기",
+    "todayLabel": "오늘",
+    "daysAgoLabel": "{days}일 전",
+    "loadError": "시나리오를 불러오지 못했어요"
+  }
+}

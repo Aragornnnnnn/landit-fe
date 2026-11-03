@@ -263,6 +263,28 @@ describe('toPageView', () => {
     });
   });
 
+  it.each([
+    ['/roleplay', 'roleplay'],
+    ['/roleplay/new', 'roleplay_new'],
+  ])('롤플레이 %s는 %s로 남는다', (path, pageName) => {
+    expect(pv(path)).toEqual({ page_name: pageName, path });
+  });
+
+  it.each([
+    ['/roleplay/sessions/7/summary', 'roleplay_summary'],
+    ['/roleplay/sessions/7/messages', 'roleplay_transcript'],
+  ])('끝난 롤플레이 %s는 %s로 세션 id와 함께 남는다', (path, pageName) => {
+    expect(pv(path)).toEqual({ page_name: pageName, path, session_id: 7 });
+  });
+
+  it('롤플레이 대화는 어느 시나리오로 연 대화인지 남는다', () => {
+    expect(pv('/conversation/roleplay/3')).toEqual({
+      page_name: 'conversation_roleplay',
+      path: '/conversation/roleplay/3',
+      roleplay_id: 3,
+    });
+  });
+
   it('결제자 설문은 page_name survey_paid로 남는다', () => {
     expect(pv('/survey/paid')).toEqual({
       page_name: 'survey_paid',
