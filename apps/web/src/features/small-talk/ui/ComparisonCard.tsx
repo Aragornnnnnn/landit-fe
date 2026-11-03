@@ -1,11 +1,10 @@
-// 지난번과 비교 — 연회색(지난번) 위에 주황(오늘) 막대 세 줄(말한 시간·주고받은 말·가장 길게 말한 턴).
+// 지난번과 비교 — 오늘의 스몰톡과 오늘의 롤플레이가 같이 쓴다. 연회색(지난번) 위에 주황(오늘) 막대 세 줄(말한 시간·주고받은 말·가장 길게 말한 턴).
 // 첫 스몰톡이면 지난번은 0으로 그려 다음부터 채워질 자리를 보여준다. 오늘 말한 시간이 0초면 그 줄은 빠진다
 import type { CSSProperties } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 
-import type { SmallTalkSummaryComparison } from '@/features/small-talk/api/small-talk';
-
-import { toComparisonRows, toPeriodLabel } from '../_model/comparison-rows';
+import type { SmallTalkSummaryComparison } from '../api/small-talk';
+import { toComparisonRows, toPeriodLabel } from '../model/comparison-rows';
 
 export const ComparisonCard = ({
   comparison,

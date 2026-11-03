@@ -26,13 +26,12 @@ import {
 import { smallTalkKeys } from '@/features/small-talk/model/keys';
 import { SUMMARY_IMAGE_SOURCES } from '@/features/small-talk/model/randi-pose';
 import { prefetchSmallTalkSummary } from '@/features/small-talk/model/useSmallTalkSummaryQuery';
+import { useSpeakingBudget } from '@/features/small-talk/model/useSpeakingBudget';
 import { refreshStreakAfterCompletion } from '@/features/streak/model/refresh-streak';
 import { track } from '@/shared/analytics';
 import { useCurrentUserId } from '@/shared/auth/current-member';
 import { reportError } from '@/shared/monitoring/report';
 import { showToast } from '@/shared/ui/toast';
-
-import { useSpeakingBudget } from './useSpeakingBudget';
 
 interface SmallTalkFlowOptions {
   session: SmallTalkSessionStartResponse;

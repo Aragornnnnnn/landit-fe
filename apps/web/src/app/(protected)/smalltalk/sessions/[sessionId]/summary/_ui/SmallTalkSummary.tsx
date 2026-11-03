@@ -12,12 +12,16 @@ import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/app/(protected)/_ui/PageHeader';
 import { GrowthCard } from '@/features/feedback/ui/GrowthCard';
 import { ReusedExpressionsCard } from '@/features/feedback/ui/ReusedExpressionsCard';
-import type {
-  SmallTalkSummaryHeadline,
-  SmallTalkSummaryResponse,
-} from '@/features/small-talk/api/small-talk';
-import { toPoseImage } from '@/features/small-talk/model/randi-pose';
+import type { SmallTalkSummaryResponse } from '@/features/small-talk/api/small-talk';
+import {
+  toSummaryBlocks,
+  type SummaryBlocks,
+} from '@/features/small-talk/model/summary-blocks';
 import { useSmallTalkSummaryQuery } from '@/features/small-talk/model/useSmallTalkSummaryQuery';
+import { BlockSkeleton } from '@/features/small-talk/ui/BlockSkeleton';
+import { ComparisonCard } from '@/features/small-talk/ui/ComparisonCard';
+import { SummaryHeadline } from '@/features/small-talk/ui/SummaryHeadline';
+import { SummarySkeleton } from '@/features/small-talk/ui/SummarySkeleton';
 import { track } from '@/shared/analytics';
 import {
   sessionExpressionBranchPath,
@@ -30,15 +34,12 @@ import {
   trackArrivals,
   type Arrivals,
 } from '../_model/late-blocks';
-import { toSummaryBlocks, type SummaryBlocks } from '../_model/summary-blocks';
-import { BlockSkeleton } from './BlockSkeleton';
-import { ComparisonCard } from './ComparisonCard';
 import { FollowUpBlock } from './FollowUpBlock';
-import { SmallTalkSummarySkeleton } from './SmallTalkSummarySkeleton';
 
 export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
   const router = useRouter();
   const t = useTranslations('smallTalk.summary');
+  const tSkeleton = useTranslations('smallTalk.summarySkeleton');
   const { summary, error, isLoading, waitExpired, retry } =
     useSmallTalkSummaryQuery(sessionId);
   // 총평은 이 세션의 교정이 다 끝나야 계산된다 — 보통 수 초지만, 상한까지 안 오면 붙잡아 두지 않는다
@@ -127,11 +128,11 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
           onSkip={() => skipDetail('unavailable')}
         />
       ) : isLoading || !summary || !summary.headline || !summary.comparison ? (
-        <SmallTalkSummarySkeleton />
+        <SummarySkeleton label={tSkeleton('loadingLabel')} />
       ) : (
         <>
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pt-1 pb-6">
-            <Headline headline={summary.headline} />
+            <SummaryHeadline headline={summary.headline} />
             <ComparisonCard comparison={summary.comparison} />
             {blocks && (
               <ConditionalBlocks blocks={blocks} arrivals={seenArrivals} />
@@ -150,27 +151,6 @@ export const SmallTalkSummary = ({ sessionId }: { sessionId: number }) => {
     </main>
   );
 };
-
-// 래디와 회색 말풍선 두 줄 — 지난번 대비 가장 좋아진 것 하나를 사실(숫자)과 의미로 말한다
-const Headline = ({ headline }: { headline: SmallTalkSummaryHeadline }) => (
-  <div className="flex items-center gap-3">
-    {/* eslint-disable-next-line @next/next/no-img-element */}
-    <img
-      src={toPoseImage(headline.pose)}
-      alt=""
-      className="size-20 shrink-0 object-contain"
-    />
-    {/* 첫 문장엔 닉네임이 들어갈 수 있고 길이 제한이 없다 — 띄어쓰기 없는 긴 이름도 풍선 안에서 끊는다 */}
-    <div className="min-w-0 flex-1 rounded-2xl rounded-bl-sm bg-secondary px-4 py-3 [overflow-wrap:anywhere]">
-      <p className="text-15 leading-6 font-bold break-keep text-foreground">
-        {headline.text}
-      </p>
-      <p className="text-15 leading-6 font-bold break-keep text-foreground">
-        {headline.subline}
-      </p>
-    </div>
-  </div>
-);
 
 // 조건 블록 셋 — 상태별로 카드·스켈레톤·없음. 순서는 실수 기억 → 배운 표현 → 다음 스몰톡
 // 스켈레톤을 거쳐 온 블록만 떠오르게 한다 — 처음부터 서 있던 블록은 그냥 그린다

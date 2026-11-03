@@ -1,11 +1,12 @@
 // 조건 블록(실수 기억·배운 표현 재사용·다음 스몰톡에서)의 상태를 한 곳에서 판정한다.
+// 오늘의 롤플레이도 같은 판정을 쓴다 — 롤플레이 요약엔 다음 대화 질문(followUp)이 없어 그 블록은 늘 숨는다.
 // 화면은 결과만 받아 그린다 — "만드는 중이면 스켈레톤, 상한을 넘겼거나 내용이 없으면 숨김"을 블록마다 다시 쓰지 않는다
 import type {
   SmallTalkSummaryFollowUp,
   SmallTalkSummaryGrowth,
   SmallTalkSummaryResponse,
   SmallTalkSummaryReusedExpression,
-} from '@/features/small-talk/api/small-talk';
+} from '../api/small-talk';
 
 export type BlockState<T> =
   | { kind: 'ready'; data: T }
@@ -29,8 +30,15 @@ const awaiting = <T>(
   return waitExpired ? { kind: 'hidden' } : { kind: 'loading' };
 };
 
+// 블록 판정이 읽는 칸 — 다음 대화 질문은 스몰톡 요약에만 있다
+type BlockSource = Pick<
+  SmallTalkSummaryResponse,
+  'growth' | 'reusedExpressions'
+> &
+  Partial<Pick<SmallTalkSummaryResponse, 'followUp'>>;
+
 export const toSummaryBlocks = (
-  summary: SmallTalkSummaryResponse,
+  summary: BlockSource,
   waitExpired: boolean,
 ): SummaryBlocks => ({
   // 실수 기억은 잡 없이 응답에 바로 실린다 — 없으면 null
@@ -46,12 +54,20 @@ export const toSummaryBlocks = (
         : { kind: 'hidden' },
   ),
   // 작업이 끝났는데도 물어볼 기억이 없었으면 질문이 null로 온다 — 그때는 블록을 그리지 않는다
-  followUp: awaiting<SmallTalkSummaryFollowUp>(
-    summary.followUp.pending,
+  followUp: toFollowUpBlock(summary.followUp, waitExpired),
+});
+
+const toFollowUpBlock = (
+  followUp: SmallTalkSummaryFollowUp | undefined,
+  waitExpired: boolean,
+): BlockState<SmallTalkSummaryFollowUp> => {
+  if (!followUp) return { kind: 'hidden' };
+  return awaiting<SmallTalkSummaryFollowUp>(
+    followUp.pending,
     waitExpired,
     () =>
-      summary.followUp.question
-        ? { kind: 'ready', data: summary.followUp }
+      followUp.question
+        ? { kind: 'ready', data: followUp }
         : { kind: 'hidden' },
-  ),
-});
+  );
+};

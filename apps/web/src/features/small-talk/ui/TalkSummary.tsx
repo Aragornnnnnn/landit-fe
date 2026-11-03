@@ -1,10 +1,7 @@
 // 대화가 끝난 자리 — 점수도 총평도 없는 대화라 남길 건 얼마나 얘기했는지뿐이다. 전부 타이핑했으면 말한 시간 칸은 뺀다
 import { useLocale, useTranslations } from 'next-intl';
 
-import {
-  hasSpokenTime,
-  toSpeakingTimeLabel,
-} from '@/features/small-talk/lib/speaking-time';
+import { hasSpokenTime, toSpeakingTimeLabel } from '../lib/speaking-time';
 
 interface TalkSummaryProps {
   speakingDurationMs: number;
