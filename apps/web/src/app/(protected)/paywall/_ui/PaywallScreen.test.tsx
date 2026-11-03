@@ -410,6 +410,24 @@ describe('PaywallScreen', () => {
     expect(mocks.dismiss).not.toHaveBeenCalled();
   });
 
+  it('한 장짜리 페이월도 스몰톡 아래에 롤플레이 시리즈를 보여 준다', () => {
+    mocks.packages = {
+      monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
+      yearly: { packageId: '$rc_annual', price: 58_500, currency: 'KRW' },
+    };
+    render(<PaywallScreen rewardChallenge={false} />);
+
+    const smallTalk = screen.getByText('스몰톡');
+    const roleplay = screen.getByText('내가 만든 상황으로 롤플레이');
+    expect(
+      smallTalk.compareDocumentPosition(roleplay) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('heading', { name: '좀비에게 채식을 권하고' }),
+    ).toBeInTheDocument();
+  });
+
   it('일본어 화면은 환급 없이 혜택 → 결제 두 단계로 월간·연간 구독을 판다', () => {
     // 단계를 넘기면 맨 위로 올리는데 jsdom 요소엔 scrollTo가 없다
     Element.prototype.scrollTo = vi.fn();
