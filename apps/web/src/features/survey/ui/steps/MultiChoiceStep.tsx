@@ -11,6 +11,7 @@ import {
   type MultiQuestion,
 } from '../../model/questions';
 import { ChoiceCard } from '../ChoiceCard';
+import { ChoiceList } from '../ChoiceList';
 import type { ChoiceStepProps } from './ChoiceStepProps';
 import { OtherInput } from './OtherInput';
 
@@ -34,11 +35,7 @@ export const MultiChoiceStep = ({
 
   return (
     <>
-      <div
-        role="group"
-        aria-labelledby={titleId}
-        className="mt-6 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-1"
-      >
+      <ChoiceList role="group" titleId={titleId} className="mt-6">
         {options.map((option) => (
           <ChoiceCard
             key={option}
@@ -51,7 +48,7 @@ export const MultiChoiceStep = ({
         {chosen.includes(OTHER_OPTION) && (
           <OtherInput value={otherText} onChange={onOtherText} />
         )}
-      </div>
+      </ChoiceList>
       <Button
         className="mt-4"
         disabled={chosen.length === 0}

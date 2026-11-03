@@ -20,7 +20,7 @@ export const ChoiceCard = ({
     role={role}
     aria-checked={checked}
     onClick={onSelect}
-    className={`flex w-full items-center justify-between gap-3 rounded-2xl px-5 py-4 text-left transition-[translate,box-shadow,background-color] duration-75 ${
+    className={`flex w-full items-center justify-between gap-3 rounded-2xl px-5 py-3.5 text-left transition-[translate,box-shadow,background-color] duration-75 ${
       checked
         ? 'translate-y-[3px] bg-selected shadow-none'
         : 'bg-card shadow-[0_3px_0_var(--border)] active:translate-y-[3px] active:shadow-none'
