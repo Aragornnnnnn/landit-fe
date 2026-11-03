@@ -1,5 +1,5 @@
 // 단계형 페이월 1단계 — 혜택 화면. 매일 오는 시나리오(카드 벽) 위에 프리미엄만 누리는 혜택을 쌓고, 맨 아래 리뷰를 옆으로 넘겨 보게 둔다.
-// 환급 챌린지면 맨 앞에 적립 혜택이 붙고(다섯), 아니면 넷이다. 리뷰는 한국 스토어 글이라 한국어 화면에만 있다.
+// 혜택은 다섯이다. 환급 챌린지면 맨 앞에 적립이 붙고, 아니면(일본어) 표현 학습의 발음을 따로 세운다. 리뷰는 한국 스토어 글이라 한국어 화면에만 있다.
 // 시나리오는 무료로도 하니 혜택이 아니라 무대로만 쓴다. 결제는 다음 단계(결제 금액 안내)에서 한다. 피그마 「페이월 v4 · 전체 스크롤」(3514:322)
 import { useLocale, useTranslations } from 'next-intl';
 
@@ -48,8 +48,8 @@ const premiumWord = (chunks: React.ReactNode) => (
   </span>
 );
 
-/** 적립 혜택 밖의 시리즈 수 — 상세 피드백·표현 학습·스몰톡·롤플레이. 아래 SeriesCarousel 개수와 짝이다 */
-const SERIES_COUNT = 4;
+/** 혜택 수 — 상세 피드백·표현 학습·스몰톡·롤플레이에 적립이나 발음 하나가 더 붙는다. 아래 시리즈 개수와 짝이다 */
+const BENEFIT_COUNT = 5;
 
 /** 혜택 번호 — 01·02… */
 const numberOf = (index: number) => String(index + 1).padStart(2, '0');
@@ -64,6 +64,9 @@ export const BenefitsStep = ({
   const locale = useLocale();
   // 적립 혜택이 앞에 붙으면 뒤 시리즈 번호가 하나씩 밀린다
   const offset = reward ? 1 : 0;
+  // 발음을 따로 세우면 그 뒤 번호가 하나씩 밀린다 — 적립과 둘 중 하나만 있어 합은 늘 같다
+  const separatePronunciation = !reward;
+  const afterExpression = offset + (separatePronunciation ? 3 : 2);
 
   return (
     <>
@@ -82,14 +85,14 @@ export const BenefitsStep = ({
         <ScenarioWall />
       </section>
 
-      {/* 혜택 판 — 맨 위 머리글이 아래 혜택(환급이면 다섯, 아니면 넷)을 프리미엄 전용으로 묶는다 */}
+      {/* 혜택 판 — 맨 위 머리글이 아래 혜택(다섯)을 프리미엄 전용으로 묶는다 */}
       <div className="rounded-t-[28px] bg-card pt-8 pb-10 shadow-[0_-6px_18px_rgba(51,31,13,0.06)] short:pt-6">
         <div className="px-6">
           <span className="inline-block rounded-full bg-[#f6c54a] px-2.5 py-1 text-xs font-black tracking-wide text-[#3a2a00]">
             PREMIUM ONLY
           </span>
           <p className="mt-3 text-2xl font-black tracking-[-0.02em] text-foreground short:mt-2 short:text-xl">
-            {t('benefitsTitle', { count: offset + SERIES_COUNT })}
+            {t('benefitsTitle', { count: BENEFIT_COUNT })}
           </p>
         </div>
 
@@ -142,10 +145,14 @@ export const BenefitsStep = ({
                 title: t('expressionImageTitle'),
                 screen: <ExampleDemo step={2} width={width} />,
               },
-              {
-                title: t('expressionPronunciationTitle'),
-                screen: <PronunciationDemo step={3} width={width} />,
-              },
+              ...(separatePronunciation
+                ? []
+                : [
+                    {
+                      title: t('expressionPronunciationTitle'),
+                      screen: <PronunciationDemo step={3} width={width} />,
+                    },
+                  ]),
               {
                 title: t('expressionUsageTitle'),
                 screen: <UsageDemo step={0} width={width} />,
@@ -157,8 +164,21 @@ export const BenefitsStep = ({
             ]}
           />
 
+          {separatePronunciation && (
+            <SeriesCarousel
+              number={numberOf(offset + 2)}
+              label={t('pronunciationLabel')}
+              items={[
+                {
+                  title: t('expressionPronunciationTitle'),
+                  screen: <PronunciationDemo step={3} width={width} />,
+                },
+              ]}
+            />
+          )}
+
           <SeriesCarousel
-            number={numberOf(offset + 2)}
+            number={numberOf(afterExpression)}
             label={t('smallTalkLabel')}
             items={[
               {
@@ -173,7 +193,7 @@ export const BenefitsStep = ({
           />
 
           <SeriesCarousel
-            number={numberOf(offset + 3)}
+            number={numberOf(afterExpression + 1)}
             label={t('roleplayLabel')}
             items={[
               {

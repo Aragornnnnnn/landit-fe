@@ -440,7 +440,7 @@ describe('PaywallScreen', () => {
     };
     render(<PaywallScreen />);
 
-    expect(screen.getByText('プレミアムだけの特典4つ')).toBeInTheDocument();
+    expect(screen.getByText('プレミアムだけの特典5つ')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '次へ' }));
 
     expect(screen.getByRole('button', { name: '年間プラン' })).toHaveAttribute(
@@ -454,6 +454,17 @@ describe('PaywallScreen', () => {
     );
 
     expect(mocks.purchase).toHaveBeenCalledWith('monthly');
+  });
+
+  it('일본어 혜택은 발음을 따로 세워 다섯이고 마지막은 롤플레이다', () => {
+    setTestLocale('ja');
+    render(<PaywallScreen />);
+
+    const pronunciation = screen.getByText('ネイティブのような発音');
+    expect(pronunciation.previousElementSibling).toHaveTextContent('03');
+    expect(
+      screen.getByText('自分で作った場面でロールプレイ').previousElementSibling,
+    ).toHaveTextContent('05');
   });
 
   it('플랜 칸이 화면에 다 보이지 않으면 CTA는 결제 대신 맨 아래로 내려 준다', () => {
