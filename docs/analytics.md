@@ -210,6 +210,8 @@
 | Small Talk Topic Selected     | partner, topic_id                                                                                   | 주제 모달에서 주제 선택                                 |
 | Small Talk Intro Guide Closed | —                                                                                                   | 첫 진입 안내 닫음 (기기당 한 번)                        |
 | Small Talk Greeting Tapped    | partner, coached                                                                                    | 캐릭터를 눌러 인사 들음 (coached=코치마크 켜진 채 누름) |
+| Small Talk Free Nudge Viewed  | —                                                                                                   | 홈 스몰톡 칩 말풍선(무료 5분)이 뜸 (하루 한 번)         |
+| Small Talk Free Nudge Tapped  | —                                                                                                   | 말풍선이 떠 있을 때 스몰톡 칩을 누름                    |
 | Small Talk Started            | session_id, partner, first_speaker, topic_id?                                                       | 세션 시작 성공                                          |
 | Small Talk Turn Completed     | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms         | 발화 제출 성공                                          |
 | Small Talk Completed          | session_id, partner, turn_count, speaking_duration_ms, end_reason(user_ended\|time_limit)           | 서버가 완료 판정                                        |
@@ -409,14 +411,14 @@ OS 권한 팝업의 답 자체는 따로 찍지 않는다 — 위 두 step의 �
 
 설문이 끝나면 설문 코드(`features/survey`)와 함께 지운다. 완료 응답 자체는 슈퍼베이스에 있으니 여기서는 퍼널(편지 → 진입 → 문항별 이탈 → 제출)만 본다.
 
-| 이벤트                 | 속성                        | 시점                                                         |
-| ---------------------- | --------------------------- | ------------------------------------------------------------ |
-| Survey Invite Tapped   | letter_id                   | 설문 안내 편지의 "설문하고 이용권 받기"                      |
-| Survey Started         | —                           | 인트로에서 시작하기                                          |
-| Survey Question Viewed | question_id, question_index | 문항 노출 (뒤로 갔다 다시 봐도 찍힌다)                       |
-| Survey Submitted       | question_count              | 저장 성공 (이미 참여한 사람의 재제출도 서버가 성공으로 답함) |
+| 이벤트                 | 속성                                | 시점                                   |
+| ---------------------- | ----------------------------------- | -------------------------------------- |
+| Survey Invite Tapped   | survey, letter_id                   | 설문 안내 편지의 "설문 참여하기"       |
+| Survey Started         | survey                              | 인트로에서 시작하기                    |
+| Survey Question Viewed | survey, question_id, question_index | 문항 노출 (뒤로 갔다 다시 봐도 찍힌다) |
+| Survey Submitted       | survey, question_count              | 저장 성공                              |
 
-답 내용은 싣지 않는다. `question_id`는 설문 정의(`questions.ts`)의 id 그대로이고, `question_index`는 조건 문항이 끼고 빠진 뒤 그 사람에게 보인 순서다. 설문 화면 진입은 `Page Viewed(survey)`가 찍는다.
+`survey`는 어느 설문인지다 — `general`(마이페이지·안내 편지로 여는 일반 설문), `paid`(결제자에게 편지로만 여는 결제자 설문, 주소 `/survey/paid`). 답 내용은 싣지 않는다. `question_id`는 설문 정의(`questions.ts`)의 id 그대로이고, `question_index`는 조건 문항이 끼고 빠진 뒤 그 사람에게 보인 순서다. 설문 화면 진입은 `Page Viewed(survey)`, 결제자 설문은 `Page Viewed(survey_paid)`가 찍는다.
 
 ### 유저 속성
 

@@ -13,6 +13,7 @@ export {
   type GateQuestion,
   type ExpressionStep,
   type TurnInputType,
+  type SurveyKind,
   type TalkPartner,
   type QuizStepKind,
   type ExpressionReviewStep,
