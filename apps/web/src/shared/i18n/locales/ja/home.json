@@ -5,6 +5,7 @@
   "tabBar": {
     "navLabel": "タブ",
     "scenarioLabel": "シナリオ",
-    "smalltalkLabel": "スモールトーク"
+    "smalltalkLabel": "スモールトーク",
+    "roleplayLabel": "ロールプレイ"
   }
 }
