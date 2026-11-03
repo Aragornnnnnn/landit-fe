@@ -5,21 +5,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   ExpressionGenerationStatus,
   SmallTalkSessionDetailResponse,
+  SmallTalkSessionExpression,
 } from '@/features/small-talk/api/small-talk';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
 
 import { SmallTalkResult } from './SmallTalkResult';
 
 const replace = vi.hoisted(() => vi.fn());
-// 페이월 게이트는 구독·스트릭 조회를 끌고 온다 — 이 화면 테스트에선 항상 열린 문으로 치환한다
+const push = vi.hoisted(() => vi.fn());
+// 페이월 게이트는 구독·스트릭 조회를 끌고 온다 — 이 화면 테스트에선 문 상태만 흉내 낸다 (잠겼으면 페이월로 간 것을 남긴다)
+const gate = vi.hoisted(() => ({ locked: false, paywalled: vi.fn() }));
 vi.mock('@/features/subscription/model/paywall-gate/usePaywallGate', () => ({
   usePaywallGate: () => ({
-    decision: 'open',
-    guard: (go: () => void) => go(),
+    guard: (go: () => void) => (gate.locked ? gate.paywalled() : go()),
   }),
 }));
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace, push: vi.fn() }),
+  useRouter: () => ({ replace, push }),
 }));
 vi.mock('@/shared/auth/auth-store', () => ({
   useAuthStore: (selector: (state: unknown) => unknown) =>
@@ -30,19 +32,32 @@ vi.mock('@/features/small-talk/model/useSmallTalkSessionQuery', () => ({
 }));
 
 // 장면 연출은 이 테스트 관심사가 아니다 — 어느 장면이 섰는지와 리스트에 무엇이 넘어갔는지만 본다
-const revealed = vi.hoisted(() => ({ expressions: [] as unknown[] }));
+const revealed = vi.hoisted(() => ({
+  expressions: [] as unknown[],
+  select: (() => {}) as (expressionId: number) => void,
+}));
 vi.mock('@/features/expression/ui/ExpressionStages', () => ({
   CelebrateStage: () => <div>축하</div>,
   AnalyzeStage: () => <div>만드는 중</div>,
-  RevealStage: ({ expressions }: { expressions: unknown[] }) => {
+  RevealStage: ({
+    expressions,
+    onSelect,
+  }: {
+    expressions: unknown[];
+    onSelect: (expressionId: number) => void;
+  }) => {
     revealed.expressions = expressions;
+    revealed.select = onSelect;
     return <div>표현 리스트</div>;
   },
 }));
 
 const sessionQuery = vi.mocked(useSmallTalkSessionQuery);
 
-const expressionOf = (expressionId: number, completed: boolean) => ({
+const expressionOf = (
+  expressionId: number,
+  completed: boolean,
+): SmallTalkSessionExpression => ({
   expressionId,
   displayOrder: expressionId,
   targetExpressionText: 'grab a coffee',
@@ -80,6 +95,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  gate.locked = false;
   vi.useRealTimers();
   vi.clearAllMocks();
 });
@@ -146,6 +162,34 @@ describe('SmallTalkResult', () => {
       expect.objectContaining({ expressionId: 2, locked: false }),
       expect.objectContaining({ expressionId: 3, locked: true }),
     ]);
+  });
+
+  it('무료 사용자도 무료 대화로 열린 표현은 페이월 없이 배우러 간다', () => {
+    // Given 무료 스몰톡을 마친 무료 사용자 — 서버가 그 대화의 표현에 무료 표시를 붙였다
+    gate.locked = true;
+    setup({ expressions: [{ ...expressionOf(1, false), freeTrial: true }] });
+    skipCelebration();
+
+    // When 그 표현을 누르면
+    act(() => revealed.select(1));
+
+    // Then 페이월을 거치지 않고 표현 학습으로 간다
+    expect(gate.paywalled).not.toHaveBeenCalled();
+    expect(push).toHaveBeenCalledOnce();
+  });
+
+  it('무료 표시가 없는 표현은 잠긴 사용자를 페이월로 보낸다', () => {
+    // Given 무료 표시가 없는 표현을 받은 잠긴 사용자
+    gate.locked = true;
+    setup({ expressions: [expressionOf(1, false)] });
+    skipCelebration();
+
+    // When 그 표현을 누르면
+    act(() => revealed.select(1));
+
+    // Then 페이월로 간다
+    expect(gate.paywalled).toHaveBeenCalledOnce();
+    expect(push).not.toHaveBeenCalled();
   });
 
   it('조회가 막혀도 만드는 중에 갇히지 않는다', () => {

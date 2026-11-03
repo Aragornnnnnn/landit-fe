@@ -2,7 +2,7 @@
 
 // 설문 플로우 — 안내 → 문항 하나씩 → 완료. 온보딩처럼 한 화면에 한 문항, 옆으로 넘긴다
 import { useEffect, useRef, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type SurveyKind } from '@landit/analytics';
 import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
@@ -20,7 +20,8 @@ import {
   type Answer,
   type Answers,
 } from '../model/answers';
-import { otherKey, QUESTIONS } from '../model/questions';
+import { otherKey } from '../model/questions';
+import { SURVEYS } from '../model/surveys';
 import { QuestionStep } from './QuestionStep';
 import { SurveyDone } from './SurveyDone';
 import { SurveyHeader } from './SurveyHeader';
@@ -29,13 +30,14 @@ import { SurveyIntro } from './SurveyIntro';
 // 숫자는 몇 번째 문항인지
 type Step = 'intro' | 'done' | number;
 
-export const SurveyFlow = () => {
+export const SurveyFlow = ({ kind }: { kind: SurveyKind }) => {
   const router = useRouter();
+  const { questions: allQuestions, intro } = SURVEYS[kind];
   // 이메일은 응답을 볼 때 참고값일 뿐이라 없어도 낸다 — 누구인지는 서버가 토큰으로 정한다
   const email = useAuthStore((state) => state.member?.email ?? null);
   const keyboardInset = useKeyboardSafeLayout();
 
-  const [step, setStep] = useState<Step>('intro');
+  const [step, setStep] = useState<Step>(intro ? 'intro' : 0);
   const [direction, setDirection] = useState(1);
   const [answers, setAnswers] = useState<Answers>({});
   const [submitting, setSubmitting] = useState(false);
@@ -44,18 +46,42 @@ export const SurveyFlow = () => {
   useEffect(() => {
     stepRef.current = step;
   }, [step]);
+  // 지연 콜백이 최신 답을 읽기 위한 ref — stepRef와 같은 이유
+  const answersRef = useRef(answers);
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+  // 이 참여의 응답 번호 — 넘길 때마다 같은 번호로 덮어써서 중간에 그만둬도 거기까지 쓴 답이 남는다
+  const [responseId] = useState(() => crypto.randomUUID());
+  // 저장은 차례대로 보낸다 — 늦게 도착한 중간 저장이 완료된 응답을 덮어쓰지 않게
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  const save = (completed: boolean) => {
+    const answersNow = toSubmission(allQuestions, answersRef.current);
+    const next = saveQueue.current.then(() =>
+      submitSurvey(kind, email, answersNow, { responseId, completed }),
+    );
+    // 중간 저장이 실패해도 다음 저장은 이어서 간다 — 다음 저장이 그때까지의 답을 다시 싣는다
+    saveQueue.current = next.catch(() => {});
+    return next;
+  };
   // 조건 문항이 끼고 빠지므로 스텝 번호는 이 목록 기준이다
-  const questions = visibleQuestions(QUESTIONS, answers);
+  const questions = visibleQuestions(allQuestions, answers);
   // 문항이 보일 때마다 노출을 남긴다 — 뒤로 갔다 다시 봐도 찍혀서 어디서 머뭇거리는지 본다.
   // 어느 문항인지는 id가 정하므로, 답으로 목록이 바뀌어도(같은 스텝에 다른 문항) 새 노출로 잡힌다
   const questionId = typeof step === 'number' ? questions[step]?.id : undefined;
   useEffect(() => {
     if (typeof step !== 'number' || !questionId) return;
     track(EVENTS.SURVEY_QUESTION_VIEWED, {
+      survey: kind,
       question_id: questionId,
       question_index: step,
     });
-  }, [step, questionId]);
+  }, [kind, step, questionId]);
+
+  // 안내가 없는 설문은 열린 순간이 시작이다 — 안내가 있으면 시작하기 버튼에서 찍는다
+  useEffect(() => {
+    if (!intro) track(EVENTS.SURVEY_STARTED, { survey: kind });
+  }, [intro, kind]);
 
   const goTo = (next: Step, dir: number) => {
     setDirection(dir);
@@ -67,12 +93,14 @@ export const SurveyFlow = () => {
 
   const stepBack = () => {
     if (step === 'intro') leave();
-    else if (step === 0) goTo('intro', -1);
-    else if (typeof step === 'number') goTo(step - 1, -1);
+    else if (step === 0) {
+      if (intro) goTo('intro', -1);
+      else leave();
+    } else if (typeof step === 'number') goTo(step - 1, -1);
   };
 
   const start = () => {
-    track(EVENTS.SURVEY_STARTED);
+    track(EVENTS.SURVEY_STARTED, { survey: kind });
     goTo(0, 1);
   };
 
@@ -83,8 +111,11 @@ export const SurveyFlow = () => {
     if (submitting) return;
     setSubmitting(true);
     try {
-      await submitSurvey(email, toSubmission(QUESTIONS, answers));
-      track(EVENTS.SURVEY_SUBMITTED, { question_count: questions.length });
+      await save(true);
+      track(EVENTS.SURVEY_SUBMITTED, {
+        survey: kind,
+        question_count: questions.length,
+      });
       goTo('done', 1);
     } catch {
       showToast('저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
@@ -97,8 +128,12 @@ export const SurveyFlow = () => {
   // 나가는 화면은 전환이 끝날 때까지 남아 있어 타이머가 그 뒤에도 울린다 — 그래서 state가 아니라 ref를 본다
   const advanceFrom = (index: number) => {
     if (stepRef.current !== index) return;
-    if (index === questions.length - 1) void submit();
-    else goTo(index + 1, 1);
+    if (index === questions.length - 1) {
+      void submit();
+      return;
+    }
+    void save(false).catch(() => {});
+    goTo(index + 1, 1);
   };
 
   // 'intro' · '0'~'11' · 'done' — 서로 겹치지 않으니 그대로 전환 키로 쓴다
@@ -129,7 +164,9 @@ export const SurveyFlow = () => {
             keyboardInset > 0 ? 20 : 'max(var(--safe-area-inset-bottom), 20px)',
         }}
       >
-        {step === 'intro' && <SurveyIntro onStart={start} />}
+        {step === 'intro' && intro && (
+          <SurveyIntro copy={intro} onStart={start} />
+        )}
         {typeof step === 'number' && (
           <QuestionStep
             question={questions[step]}
