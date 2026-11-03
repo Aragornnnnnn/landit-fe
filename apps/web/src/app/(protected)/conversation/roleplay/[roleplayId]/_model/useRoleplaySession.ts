@@ -24,7 +24,7 @@ export const useRoleplaySession = (roleplayId: number) => {
   const queryClient = useQueryClient();
   const userId = useCurrentUserId();
   const handoff = useRoleplaySessionHandoff();
-  const { freeUser } = useRoleplayGate();
+  const { freeUser, deciding } = useRoleplayGate();
   // 만들기 화면이 미리 열어 뒀으면 기다림 없이 바로 대화한다
   const [session, setSession] = useState<RoleplaySessionStartResponse | null>(
     () => handoff.peek(roleplayId),
@@ -36,30 +36,13 @@ export const useRoleplaySession = (roleplayId: number) => {
     if (startedRef.current) return; // StrictMode 이중 실행에도 세션은 하나만 만든다
     startedRef.current = true;
 
-    const trackStarted = (started: RoleplaySessionStartResponse) => {
-      track(EVENTS.ROLEPLAY_STARTED, {
-        session_id: started.sessionId,
-        roleplay_id: roleplayId,
-        partner: toPartnerId(started.character?.characterId ?? null),
-        free_trial: freeUser,
-      });
-      // 첫 발화까지 받으면 무료 기회를 쓴 것이다 — 돌아간 입구가 다시 묻게 한다
-      void queryClient.invalidateQueries({
-        queryKey: roleplayKeys.access(userId),
-      });
-    };
-
     if (session) {
       handoff.clear(roleplayId);
-      trackStarted(session);
       return;
     }
 
     startSavedRoleplaySession(roleplayId)
-      .then((started) => {
-        setSession(started);
-        trackStarted(started);
-      })
+      .then(setSession)
       .catch((cause) => {
         // 프리미엄 거절은 오류가 아니다 — 화면이 페이월로 보낸다. 가진 무료 기회 값은 낡은 것이다
         if (isPremiumRequired(cause)) {
@@ -78,7 +61,24 @@ export const useRoleplaySession = (roleplayId: number) => {
           });
         }
       });
-  }, [roleplayId, queryClient, userId, handoff, session, freeUser]);
+  }, [roleplayId, queryClient, userId, handoff, session]);
+
+  // 시작 기록은 구독을 안 뒤에 한 번 남긴다 — 세션은 기다리지 않고, 기록만 무료 체험 여부를 맞춘다
+  const trackedRef = useRef(false);
+  useEffect(() => {
+    if (!session || deciding || trackedRef.current) return;
+    trackedRef.current = true;
+    track(EVENTS.ROLEPLAY_STARTED, {
+      session_id: session.sessionId,
+      roleplay_id: roleplayId,
+      partner: toPartnerId(session.character?.characterId ?? null),
+      free_trial: freeUser,
+    });
+    // 첫 발화까지 받으면 무료 기회를 쓴 것이다 — 돌아간 입구가 다시 묻게 한다
+    void queryClient.invalidateQueries({
+      queryKey: roleplayKeys.access(userId),
+    });
+  }, [session, deciding, freeUser, roleplayId, queryClient, userId]);
 
   // 중도 종료는 없다 — 백엔드가 롤플레이 세션의 중도 종료를 받지 않아, 완료는 끝내기(complete)만 맡는다
   return { session, error };

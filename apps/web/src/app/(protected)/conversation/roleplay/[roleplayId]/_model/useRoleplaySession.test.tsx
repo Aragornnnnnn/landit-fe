@@ -21,7 +21,7 @@ vi.mock('@/shared/auth/current-member', () => ({
 vi.mock('@/shared/monitoring/report', () => ({ reportError: vi.fn() }));
 const track = vi.hoisted(() => vi.fn());
 vi.mock('@/shared/analytics', () => ({ track }));
-const gate = vi.hoisted(() => ({ freeUser: false }));
+const gate = vi.hoisted(() => ({ freeUser: false, deciding: false }));
 vi.mock('@/features/roleplay/model/useRoleplayGate', () => ({
   useRoleplayGate: () => gate,
 }));
@@ -45,6 +45,39 @@ beforeEach(() => {
 });
 
 describe('useRoleplaySession', () => {
+  it('구독을 아직 모르면 세션은 열되, 알게 된 뒤에 시작을 기록한다', async () => {
+    // Given 구독 응답을 기다리는 동안
+    gate.deciding = true;
+    track.mockClear();
+    vi.mocked(startSavedRoleplaySession).mockResolvedValue({
+      sessionId: 1,
+      character: { characterId: 'teddy' },
+    } as unknown as RoleplaySessionStartResponse);
+    const client = new QueryClient();
+    const { result, rerender } = renderHook(() => useRoleplaySession(7), {
+      wrapper: ({ children }) => (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      ),
+    });
+
+    // Then 세션은 먼저 열리지만 기록은 아직 없다
+    await waitFor(() => expect(result.current.session).not.toBeNull());
+    expect(track).not.toHaveBeenCalled();
+
+    // When 무료 사용자로 판정되면
+    gate.deciding = false;
+    gate.freeUser = true;
+    rerender();
+
+    // Then 무료 체험으로 한 번 기록한다
+    await waitFor(() => expect(track).toHaveBeenCalledTimes(1));
+    expect(track).toHaveBeenCalledWith(
+      'Roleplay Started',
+      expect.objectContaining({ free_trial: true }),
+    );
+    gate.freeUser = false;
+  });
+
   it('무료 사용자의 시작은 무료 체험으로 기록하고 권한을 다시 받는다', async () => {
     // Given 무료 사용자의 시작을 서버가 받아 줄 때
     gate.freeUser = true;
