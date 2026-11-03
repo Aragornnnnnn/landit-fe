@@ -68,12 +68,12 @@ export const ScenarioCard = ({
           <span className="text-xs text-white/75">{timeLabel()}</span>
         </span>
       </button>
-      {/* 눈에 띄면 카드보다 먼저 읽힌다 — 바탕 없는 흰 점 셋으로 연하게 둔다 */}
+      {/* 눈에 띄면 카드보다 먼저 읽힌다 — 바탕은 없이, 옅은 파스텔 위에서도 읽히는 어두운 점 셋으로 둔다 */}
       <button
         type="button"
         onClick={onMore}
         aria-label={t('moreLabel', { title: scenario.title })}
-        className="absolute top-2 right-2 flex size-8 items-center justify-center text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)] active:opacity-60"
+        className="absolute top-2 right-2 flex size-8 items-center justify-center text-foreground/70"
       >
         <MoreHorizontalIcon size={20} />
       </button>
