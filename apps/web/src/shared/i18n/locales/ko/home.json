@@ -7,6 +7,7 @@
     "scenarioLabel": "시나리오",
     "smalltalkLabel": "스몰톡",
     "roleplayLabel": "롤플레이",
-    "newLabel": "NEW"
+    "newLabel": "NEW",
+    "smalltalkFreeNudgeCaption": "스몰톡 <em>{limit}</em>을 무료로 드렸어요"
   }
 }
