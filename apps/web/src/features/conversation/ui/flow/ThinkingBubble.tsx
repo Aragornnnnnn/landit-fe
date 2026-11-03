@@ -1,13 +1,23 @@
-// 상대가 답을 생각하는 동안 말풍선 자리에 띄우는 점 세 개 — 메신저의 "입력 중"과 같은 모습으로 다음 말이 올 자리를 알린다
+// 상대가 답을 생각하는 동안 띄우는 빈 말 칸 — 글자가 시작될 자리에 점 세 개가 물결처럼 떠올라 다음 말이 곧 온다는 걸 알린다
 import { useTranslations } from 'next-intl';
-
-import { ListeningDots } from './ListeningDots';
 
 export const ThinkingBubble = () => {
   const t = useTranslations('conversation.thinkingBubble');
   return (
-    <div className="w-fit rounded-[28px] rounded-tl-md bg-card px-5 py-4 shadow-lg shadow-black/5">
-      <ListeningDots spaced={false} label={t('thinkingLabel')} />
+    <div className="min-h-30 w-full rounded-[28px] rounded-tl-md bg-card px-5 py-5 shadow-lg shadow-black/5">
+      <span
+        role="img"
+        aria-label={t('thinkingLabel')}
+        className="flex h-7 items-center gap-1.5"
+      >
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className="animate-listening-wave size-2 rounded-full bg-muted-foreground"
+            style={{ '--i': i } as React.CSSProperties}
+          />
+        ))}
+      </span>
     </div>
   );
 };
