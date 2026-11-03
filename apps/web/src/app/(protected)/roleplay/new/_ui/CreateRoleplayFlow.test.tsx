@@ -30,6 +30,7 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => search,
 }));
 // 구독은 경계다 — 기본은 열려 있고, 잠긴 사용자는 페이월로 간다
+const refreshAccess = vi.hoisted(() => vi.fn());
 const gate = vi.hoisted(() => ({
   locked: false,
   freeTrialAvailable: false,
@@ -37,7 +38,8 @@ const gate = vi.hoisted(() => ({
 vi.mock('@/features/roleplay/model/useRoleplayGate', () => ({
   useRoleplayGate: () => ({
     locked: gate.locked && !gate.freeTrialAvailable,
-    deciding: false,
+    usesFreeTrial: gate.locked && gate.freeTrialAvailable,
+    refresh: refreshAccess,
     guard: (go: () => void) =>
       gate.locked && !gate.freeTrialAvailable ? push('/paywall') : go(),
   }),
@@ -359,6 +361,39 @@ describe('CreateRoleplayFlow', () => {
 
       expect(push).not.toHaveBeenCalled();
       expect(createScenario).toHaveBeenCalled();
+    });
+
+    it('무료 기회로 만들면 세션을 미리 열지 않고 대화 화면으로 넘어간다', async () => {
+      // Given 무료 기회가 남은 사용자가
+      gate.freeTrialAvailable = true;
+      answerCreate('success');
+      await goToForm();
+      await fillAll();
+
+      // When 시작하면
+      await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+
+      // Then 첫 발화로 기회를 쓰는 건 대화 화면에 들어간 뒤다
+      expect(await screen.findByText('다 됐어요!')).toBeInTheDocument();
+      expect(prepareSession).not.toHaveBeenCalled();
+      await waitFor(
+        () => expect(replace).toHaveBeenCalledWith('/conversation/roleplay/9'),
+        { timeout: 1_500 },
+      );
+    });
+
+    it('서버가 거절하면 무료 기회를 다시 받아 다음 입구가 바로 페이월로 가게 한다', async () => {
+      gate.freeTrialAvailable = true;
+      answerCreate(
+        'error',
+        new ApiError('막힘', 403, '/api/v1/roleplays', 'PREMIUM_REQUIRED'),
+      );
+      await goToForm();
+      await fillAll();
+
+      await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+
+      await waitFor(() => expect(refreshAccess).toHaveBeenCalled());
     });
 
     it('무료 한 번을 쓴 뒤에도 아이디어는 페이월 없이 받는다', async () => {

@@ -3,7 +3,7 @@
 'use client';
 
 import type { PaywallGateSource } from '@landit/analytics';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { useCurrentUserId } from '@/shared/auth/current-member';
@@ -13,8 +13,9 @@ import { roleplayKeys } from './keys';
 
 export const useRoleplayGate = () => {
   const userId = useCurrentUserId();
+  const queryClient = useQueryClient();
   const paywall = usePaywallGate();
-  const { data, isError, isPending } = useQuery({
+  const { data, isError } = useQuery({
     queryKey: roleplayKeys.access(userId),
     queryFn: getRoleplayAccess,
     enabled: paywall.locked,
@@ -34,5 +35,15 @@ export const useRoleplayGate = () => {
     paywall.guard(go, options);
   };
 
-  return { locked, deciding: paywall.locked && isPending, guard };
+  return {
+    locked,
+    // 이번 시작이 무료 기회를 쓰는가 — 세션을 미리 열면 대화 전에 기회가 사라진다
+    usesFreeTrial: paywall.locked && canStart,
+    // 서버가 거절했으면 가진 값이 낡은 것이다 — 다음 입구가 바로 페이월로 가게 한다
+    refresh: () =>
+      void queryClient.invalidateQueries({
+        queryKey: roleplayKeys.access(userId),
+      }),
+    guard,
+  };
 };

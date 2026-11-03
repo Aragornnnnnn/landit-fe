@@ -58,8 +58,12 @@ export const useRoleplaySession = (roleplayId: number) => {
         trackStarted(started);
       })
       .catch((cause) => {
-        // 프리미엄 거절은 오류가 아니다 — 화면이 페이월로 보낸다
-        if (!isPremiumRequired(cause)) {
+        // 프리미엄 거절은 오류가 아니다 — 화면이 페이월로 보낸다. 가진 무료 기회 값은 낡은 것이다
+        if (isPremiumRequired(cause)) {
+          void queryClient.invalidateQueries({
+            queryKey: roleplayKeys.access(userId),
+          });
+        } else {
           console.warn('[roleplay] 세션 시작 실패', cause);
           reportError(cause);
         }

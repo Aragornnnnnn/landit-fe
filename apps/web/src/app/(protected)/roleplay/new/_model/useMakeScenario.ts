@@ -30,7 +30,14 @@ const REVEAL_MS = 700;
 // 이만큼 기다려도 응답이 없으면 돌아갈 길을 연다 — 요청에 시간 제한이 없어 그대로 두면 이 화면에 갇힌다
 const SLOW_MS = 20_000;
 
-export const useMakeScenario = () => {
+export const useMakeScenario = ({
+  usesFreeTrial,
+  onPremiumRejected,
+}: {
+  // 무료 기회로 만드는가 — 첫 발화가 생기면 기회를 쓰므로 세션을 미리 열지 않는다
+  usesFreeTrial: boolean;
+  onPremiumRejected: () => void;
+}) => {
   const router = useRouter();
   const t = useTranslations('roleplay.create');
   const create = useCreateRoleplayScenarioMutation();
@@ -71,6 +78,7 @@ export const useMakeScenario = () => {
         partner: body.characterId,
         reason: premiumRequired ? 'premium_required' : 'error',
       });
+      if (premiumRequired) onPremiumRejected();
       if (leftRef.current) return;
       if (premiumRequired) {
         track(EVENTS.PAYWALL_GATE_LOCKED, { source: 'roleplay' });
@@ -100,6 +108,10 @@ export const useMakeScenario = () => {
       used_idea: usedIdea,
     });
     if (leftRef.current) return;
+    if (usesFreeTrial) {
+      setMade(saved);
+      return;
+    }
     try {
       await handoff.prepare(saved.id, () => !leftRef.current);
     } catch {

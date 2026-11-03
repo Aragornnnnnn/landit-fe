@@ -50,7 +50,7 @@ describe('useRoleplayGate', () => {
     vi.mocked(getRoleplayAccess).mockResolvedValue(access(true));
     const { result } = setup();
     await waitFor(() => expect(getRoleplayAccess).toHaveBeenCalled());
-    await waitFor(() => expect(result.current.deciding).toBe(false));
+    await waitFor(() => expect(result.current.usesFreeTrial).toBe(true));
     const go = vi.fn();
 
     // When 시작하면
@@ -70,6 +70,7 @@ describe('useRoleplayGate', () => {
 
     result.current.guard(go, options);
 
+    expect(result.current.usesFreeTrial).toBe(false);
     expect(go).not.toHaveBeenCalled();
     expect(paywall.guard).toHaveBeenCalledWith(go, options);
   });
@@ -91,7 +92,6 @@ describe('useRoleplayGate', () => {
     result.current.guard(go, options);
 
     expect(go).toHaveBeenCalledTimes(1);
-    expect(result.current.deciding).toBe(true);
   });
 
   it('페이월이 열린 사용자는 무료 기회를 묻지 않는다', () => {

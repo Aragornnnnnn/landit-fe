@@ -46,8 +46,11 @@ export const useCreateRoleplayFlow = () => {
   const router = useRouter();
   const t = useTranslations('roleplay.create');
   const partnerParam = useSearchParams().get('partner');
-  const maker = useMakeScenario();
   const gate = useRoleplayGate();
+  const maker = useMakeScenario({
+    usesFreeTrial: gate.usesFreeTrial,
+    onPremiumRejected: gate.refresh,
+  });
   // 보이는 캐릭터가 곧 선택이다 — 따로 고르는 동작이 없다
   // 새로고침한 입력에서 뒤로 와도 주소에 있던 상대에서 시작한다
   const [partnerIndex, setPartnerIndex] = useState(() =>
@@ -76,15 +79,6 @@ export const useCreateRoleplayFlow = () => {
   const canStart = isDraftReady(draft) && !idea.isPending;
 
   useEffect(() => clearRoleplayDraft(), []);
-
-  // 무료 한 번을 쓴 무료 사용자는 시작에서 페이월로 간다 — 돌아와도 적던 글이 남는다. 아이디어는 비용이 없어 막지 않는다
-  const guardCreate = (go: () => void) => {
-    if (gate.locked) saveRoleplayDraft(draft);
-    gate.guard(go, {
-      source: 'roleplay',
-      returnTo: roleplayNewFormPath(partner),
-    });
-  };
 
   // 끝이 없다 — 마지막 다음은 처음, 처음 이전은 마지막이다
   const movePartner = (step: -1 | 1) =>
@@ -116,19 +110,24 @@ export const useCreateRoleplayFlow = () => {
       onError: () => showToast(t('ideaFailToast')),
     });
 
+  // 무료 기회를 쓴 사용자는 페이월로 간다 — 돌아와도 적던 글이 남는다. 아이디어는 비용이 없어 막지 않는다
   const startCreate = () => {
     if (!canStart) return;
-    guardCreate(() => {
-      void maker.start(
-        {
-          characterId: partner,
-          userRole: draft.myRole.trim(),
-          aiRole: draft.partnerRole.trim(),
-          situation: draft.situation.trim(),
-        },
-        usedIdeaRef.current,
-      );
-    });
+    if (gate.locked) saveRoleplayDraft(draft);
+    gate.guard(
+      () => {
+        void maker.start(
+          {
+            characterId: partner,
+            userRole: draft.myRole.trim(),
+            aiRole: draft.partnerRole.trim(),
+            situation: draft.situation.trim(),
+          },
+          usedIdeaRef.current,
+        );
+      },
+      { source: 'roleplay', returnTo: roleplayNewFormPath(partner) },
+    );
   };
 
   // 입력에서는 상대 고르기로, 상대 고르기에서는 탭으로 — 만드는 중엔 헤더가 없다.
