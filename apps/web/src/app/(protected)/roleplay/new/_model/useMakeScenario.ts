@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import type { Partner } from '@/features/conversation/model/character-look';
 import type { RoleplaySettingsRequest } from '@/features/roleplay/api/roleplay';
 import { isPremiumRequired } from '@/features/roleplay/model/premium-required';
+import { saveRoleplayDraft } from '@/features/roleplay/model/roleplay-draft-store';
 import { useCreateRoleplayScenarioMutation } from '@/features/roleplay/model/useCreateRoleplayScenarioMutation';
 import { useRoleplaySessionHandoff } from '@/features/roleplay/model/useRoleplaySessionHandoff';
 import { track } from '@/shared/analytics';
@@ -73,6 +74,11 @@ export const useMakeScenario = () => {
       if (leftRef.current) return;
       if (premiumRequired) {
         track(EVENTS.PAYWALL_GATE_LOCKED, { source: 'roleplay' });
+        saveRoleplayDraft({
+          myRole: body.userRole,
+          partnerRole: body.aiRole,
+          situation: body.situation,
+        });
         // 페이월로 가는 동안 입력 화면이 다시 보이지 않게 그대로 둔다
         router.push(
           paywallPath({

@@ -12,16 +12,17 @@ import { RoleplayHome } from './RoleplayHome';
 // 테스트 환경에선 next/image가 React를 두 벌 읽는다 — 그림은 동작과 무관해 빈 자리로 둔다
 vi.mock('next/image', () => ({ default: () => <span /> }));
 
-const push = vi.fn();
+const push = vi.hoisted(() => vi.fn());
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push, replace: vi.fn() }),
 }));
-// 구독은 열려 있다고 본다 — 게이트는 이동을 그대로 실행한다
+// 잠기면 페이월로 가는 게이트 — 기본은 열려 있다
+const gate = vi.hoisted(() => ({ locked: false }));
 vi.mock('@/features/subscription/model/paywall-gate/usePaywallGate', () => ({
   usePaywallGate: () => ({
-    locked: false,
+    locked: gate.locked,
     deciding: false,
-    guard: (go: () => void) => go(),
+    guard: (go: () => void) => (gate.locked ? push('/paywall') : go()),
   }),
 }));
 vi.mock('@/features/roleplay/model/useRoleplayScenariosQuery', () => ({
@@ -71,6 +72,7 @@ const showScenarios = (scenarios: RoleplaySettings[]) =>
 afterEach(() => {
   cleanup();
   push.mockClear();
+  gate.locked = false;
 });
 
 beforeEach(() => {
@@ -109,6 +111,30 @@ describe('RoleplayHome', () => {
     );
 
     expect(push).toHaveBeenCalledWith('/roleplay/new');
+  });
+
+  it('무료 사용자도 만들기 화면에는 들어간다 — 페이월은 아이디어나 시작을 누를 때 뜬다', async () => {
+    gate.locked = true;
+    showScenarios([]);
+    render(<RoleplayHome />);
+
+    await userEvent.click(
+      screen.getByRole('button', { name: '나만의 시나리오 만들기' }),
+    );
+
+    expect(push).toHaveBeenCalledWith('/roleplay/new');
+  });
+
+  it('무료 사용자가 만든 시나리오를 다시 하려고 카드를 누르면 페이월로 간다', async () => {
+    gate.locked = true;
+    showScenarios([scenario({ id: 7, title: '카페 주문' })]);
+    render(<RoleplayHome />);
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /카페 주문(?! 더보기)/ }),
+    );
+
+    expect(push).toHaveBeenCalledWith('/paywall');
   });
 
   it('카드를 누르면 그 시나리오로 다시 대화한다', async () => {

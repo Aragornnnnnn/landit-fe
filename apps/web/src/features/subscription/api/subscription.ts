@@ -45,6 +45,8 @@ export interface MySubscription {
   currency?: string | null;
   // 진행 중인 한시 할인. 없거나 끝났으면 null — 홈 배지와 할인 시트가 이걸 보고 그린다
   promo?: PaywallPromo | null;
+  // 무료 사용자가 나만의 시나리오를 아직 한 번 만들 수 있는가. 백엔드 추가 전(값 없음)엔 못 만드는 것으로 본다
+  freeRoleplayAvailable?: boolean;
   // 유료 구독 도입 시점(BE 환경변수 LANDIT_SUBSCRIPTION_LAUNCHED_AT) 이후 시나리오를 끝까지 완료한 적이 있는가.
   // 대화가 무제한이 되면서(landit-be#192) 잠금 판단에는 쓰지 않고, 첫 시나리오 완료 광고 이벤트에서 이미 끝내 본 사람을 거르는 데 쓴다
   conversationCompletedSinceLaunch?: boolean;

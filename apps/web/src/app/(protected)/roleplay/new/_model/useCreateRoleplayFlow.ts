@@ -3,7 +3,7 @@
 // 만든 뒤 대화로 넘어가면 만들기 흐름이 통째로 히스토리에서 빠져, 대화에서 뒤로 가면 탭으로 간다
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -13,8 +13,14 @@ import {
   isDraftReady,
   type RoleplayDraft,
 } from '@/features/roleplay/model/roleplay-draft';
+import {
+  clearRoleplayDraft,
+  readRoleplayDraft,
+  saveRoleplayDraft,
+} from '@/features/roleplay/model/roleplay-draft-store';
 import { useRoleplayIdeaMutation } from '@/features/roleplay/model/useRoleplayIdeaMutation';
 import { PARTNERS, toPartnerId } from '@/features/small-talk/model/partner';
+import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import {
   backOrReplace,
   ROLEPLAY_NEW_PATH,
@@ -41,6 +47,7 @@ export const useCreateRoleplayFlow = () => {
   const t = useTranslations('roleplay.create');
   const partnerParam = useSearchParams().get('partner');
   const maker = useMakeScenario();
+  const gate = usePaywallGate();
   // 보이는 캐릭터가 곧 선택이다 — 따로 고르는 동작이 없다
   // 새로고침한 입력에서 뒤로 와도 주소에 있던 상대에서 시작한다
   const [partnerIndex, setPartnerIndex] = useState(() =>
@@ -48,7 +55,10 @@ export const useCreateRoleplayFlow = () => {
       ? PARTNERS.findIndex((item) => item.id === toPartnerId(partnerParam))
       : 0,
   );
-  const [draft, setDraft] = useState<RoleplayDraft>(EMPTY_DRAFT);
+  // 페이월에서 돌아왔으면 적던 글로 시작한다
+  const [draft, setDraft] = useState<RoleplayDraft>(
+    () => readRoleplayDraft() ?? EMPTY_DRAFT,
+  );
   const idea = useRoleplayIdeaMutation();
   // 마지막으로 받은 아이디어 — 다시 누르면 이것만 빼고 고르게 한다
   const lastIdeaIdRef = useRef<number | undefined>(undefined);
@@ -65,6 +75,21 @@ export const useCreateRoleplayFlow = () => {
   // 세 칸이 찼고 아이디어를 받는 중이 아닐 때만 — 버튼과 실행이 같은 값을 본다
   const canStart = isDraftReady(draft) && !idea.isPending;
 
+  useEffect(() => clearRoleplayDraft(), []);
+
+  // 무료 한 번을 쓴 무료 사용자는 아이디어와 시작에서 페이월로 간다 — 돌아와서 이어 쓰게 글을 맡겨 둔다
+  const guardCreate = (go: () => void) => {
+    if (gate.subscription?.freeRoleplayAvailable) {
+      go();
+      return;
+    }
+    if (gate.locked) saveRoleplayDraft(draft);
+    gate.guard(go, {
+      source: 'roleplay',
+      returnTo: roleplayNewFormPath(partner),
+    });
+  };
+
   // 끝이 없다 — 마지막 다음은 처음, 처음 이전은 마지막이다
   const movePartner = (step: -1 | 1) =>
     setPartnerIndex((current) =>
@@ -77,35 +102,39 @@ export const useCreateRoleplayFlow = () => {
   // 아이디어는 세 칸을 한 조합으로 덮는다 — 받는 동안엔 시작하기와 다시 받기가 잠긴다
   // 고를 아이디어가 하나도 없으면(idea가 null) 받지 못한 것과 같게 알린다
   const requestIdea = () =>
-    idea.mutate(lastIdeaIdRef.current, {
-      onSuccess: ({ idea: received }) => {
-        if (!received) {
-          showToast(t('ideaFailToast'));
-          return;
-        }
-        lastIdeaIdRef.current = received.id;
-        usedIdeaRef.current = true;
-        setIdeaFillCount((count) => count + 1);
-        setDraft({
-          myRole: received.userRole,
-          partnerRole: received.aiRole,
-          situation: received.situation,
-        });
-      },
-      onError: () => showToast(t('ideaFailToast')),
-    });
+    guardCreate(() =>
+      idea.mutate(lastIdeaIdRef.current, {
+        onSuccess: ({ idea: received }) => {
+          if (!received) {
+            showToast(t('ideaFailToast'));
+            return;
+          }
+          lastIdeaIdRef.current = received.id;
+          usedIdeaRef.current = true;
+          setIdeaFillCount((count) => count + 1);
+          setDraft({
+            myRole: received.userRole,
+            partnerRole: received.aiRole,
+            situation: received.situation,
+          });
+        },
+        onError: () => showToast(t('ideaFailToast')),
+      }),
+    );
 
   const startCreate = () => {
     if (!canStart) return;
-    void maker.start(
-      {
-        characterId: partner,
-        userRole: draft.myRole.trim(),
-        aiRole: draft.partnerRole.trim(),
-        situation: draft.situation.trim(),
-      },
-      usedIdeaRef.current,
-    );
+    guardCreate(() => {
+      void maker.start(
+        {
+          characterId: partner,
+          userRole: draft.myRole.trim(),
+          aiRole: draft.partnerRole.trim(),
+          situation: draft.situation.trim(),
+        },
+        usedIdeaRef.current,
+      );
+    });
   };
 
   // 입력에서는 상대 고르기로, 상대 고르기에서는 탭으로 — 만드는 중엔 헤더가 없다.
