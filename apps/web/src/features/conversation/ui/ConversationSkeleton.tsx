@@ -23,10 +23,8 @@ export const ConversationSkeleton = () => (
           <div className={`mt-3 h-5 w-1/2 rounded-md ${PLACEHOLDER_CLASS}`} />
         </div>
       </section>
-      {/* 내 답변 칸 — 아직 쓸 말이 없어 머리글 자리만 둔다 */}
-      <div className="mt-3 h-28 w-full flex-none rounded-2xl border border-border/60 bg-muted/50 px-5 py-3">
-        <div className={`h-4 w-12 rounded-md ${PLACEHOLDER_CLASS}`} />
-      </div>
+      {/* 내 답변 칸 — 아직 쓸 말이 없어 빈 칸으로 둔다 */}
+      <div className="mt-3 h-28 w-full flex-none rounded-2xl border border-border/60 bg-muted/50" />
     </div>
 
     {/* 마이크 자리 — 아직 누를 수 없으니 드러나지 않게 둔다 */}
