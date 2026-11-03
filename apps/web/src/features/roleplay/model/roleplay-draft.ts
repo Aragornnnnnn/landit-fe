@@ -5,6 +5,10 @@ export interface RoleplayDraft {
   situation: string;
 }
 
+// 서버가 받는 최대 글자 수 — 넘으면 저장이 거절되니 입력에서 막는다
+export const ROLE_MAX_LENGTH = 200;
+export const SITUATION_MAX_LENGTH = 2000;
+
 export const EMPTY_DRAFT: RoleplayDraft = {
   myRole: '',
   partnerRole: '',

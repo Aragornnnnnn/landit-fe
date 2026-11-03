@@ -9,9 +9,9 @@ import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Button } from '@/shared/ui/Button';
 
 import { useCreateRoleplayFlow } from '../_model/useCreateRoleplayFlow';
-import { CardShuffle } from './CardShuffle';
 import { PartnerCarousel } from './PartnerCarousel';
 import { RoleplayForm } from './RoleplayForm';
+import { ScenarioMaker } from './ScenarioMaker';
 
 export const CreateRoleplayFlow = () => {
   const t = useTranslations('roleplay.create');
@@ -30,7 +30,14 @@ export const CreateRoleplayFlow = () => {
       }}
     >
       {flow.step === 'generating' ? (
-        <CardShuffle partner={flow.partner} partnerName={partnerName} />
+        <ScenarioMaker
+          partner={flow.partner}
+          partnerName={partnerName}
+          draft={flow.draft}
+          title={flow.madeTitle}
+          slow={flow.slow}
+          onLeave={flow.leaveMaking}
+        />
       ) : (
         <>
           <PageHeader title={t('headerTitle')} onBack={flow.goBack} />
@@ -54,6 +61,7 @@ export const CreateRoleplayFlow = () => {
                 partnerName={partnerName}
                 draft={flow.draft}
                 ideaPending={flow.ideaPending}
+                ideaFillCount={flow.ideaFillCount}
                 onEdit={flow.editField}
                 onRequestIdea={flow.requestIdea}
               />

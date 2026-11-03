@@ -348,6 +348,22 @@ describe('useRoleplayTalkFlow — 끝내고 피드백 보기', () => {
     expect(refreshStreak).toHaveBeenCalled();
   });
 
+  it('완료하면 카드의 마지막 대화 시각과 지난 대화 목록을 다시 받게 한다', async () => {
+    submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
+    completeRoleplaySession.mockResolvedValueOnce(COMPLETED);
+    const { result } = await renderFlow();
+    await sayOnce(result);
+
+    await act(async () => result.current.completeTalk());
+
+    expect(queryClientMock.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: roleplayKeys.scenarios(39),
+    });
+    expect(queryClientMock.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: roleplayKeys.histories(39),
+    });
+  });
+
   it('서버가 남길 대화가 없어 버렸으면(DISCARDED) 요약 대신 홈으로 간다', async () => {
     submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
     completeRoleplaySession.mockResolvedValueOnce(DISCARDED);
@@ -359,6 +375,22 @@ describe('useRoleplayTalkFlow — 끝내고 피드백 보기', () => {
     expect(goHome).toHaveBeenCalled();
     expect(showSummary).not.toHaveBeenCalled();
     expect(refreshStreak).not.toHaveBeenCalled();
+  });
+
+  it('완료 응답을 못 받아도 목록을 다시 받게 한다 — 서버엔 이미 끝났을 수 있다', async () => {
+    submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
+    completeRoleplaySession.mockRejectedValueOnce(new Error('network'));
+    const { result } = await renderFlow();
+    await sayOnce(result);
+
+    await act(async () => result.current.completeTalk());
+
+    expect(queryClientMock.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: roleplayKeys.scenarios(39),
+    });
+    expect(queryClientMock.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: roleplayKeys.histories(39),
+    });
   });
 
   it('완료 요청이 실패하면 알리고 홈으로 간다', async () => {

@@ -10,12 +10,13 @@ import { RoleplayTranscript } from './RoleplayTranscript';
 
 const replace = vi.hoisted(() => vi.fn());
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace, push: vi.fn() }),
+  useRouter: () => ({ replace, push: vi.fn(), back: vi.fn() }),
 }));
 vi.mock('@/features/roleplay/model/useRoleplaySessionQuery', () => ({
   useRoleplaySessionQuery: vi.fn(),
 }));
 
+const PREPARING = '더 자연스러운 말을 찾는 중…';
 const GOOD_JOB = '잘했어요!';
 
 const detail: RoleplayHistoryDetail = {
@@ -76,6 +77,7 @@ describe('RoleplayTranscript', () => {
     vi.mocked(useRoleplaySessionQuery).mockReturnValue({
       session: detail,
       error: null,
+      waitExpired: false,
       retry: vi.fn(),
     });
 
@@ -111,12 +113,42 @@ describe('RoleplayTranscript', () => {
         ],
       },
       error: null,
+      waitExpired: false,
       retry: vi.fn(),
     });
 
     render(<RoleplayTranscript sessionId={7} />);
 
     expect(screen.getByText(/9\/3 스몰톡에서 말한 헬스장/)).toBeInTheDocument();
+  });
+
+  const showPreparing = (waitExpired: boolean) => {
+    const [partner, mine] = detail.messages;
+    vi.mocked(useRoleplaySessionQuery).mockReturnValue({
+      session: {
+        ...detail,
+        messages: [
+          partner,
+          { ...mine, correction: { status: 'PREPARING', sentence: null } },
+        ],
+      },
+      error: null,
+      waitExpired,
+      retry: vi.fn(),
+    });
+    render(<RoleplayTranscript sessionId={7} />);
+  };
+
+  it('교정을 만드는 중이면 찾는 중이라고 알린다', () => {
+    showPreparing(false);
+
+    expect(screen.getByText(PREPARING)).toBeInTheDocument();
+  });
+
+  it('상한까지 기다렸으면 찾는 중 표시를 거둔다', () => {
+    showPreparing(true);
+
+    expect(screen.queryByText(PREPARING)).not.toBeInTheDocument();
   });
 
   const showWithoutSentence = (status: 'COMPLETED' | 'FAILED') => {
@@ -130,6 +162,7 @@ describe('RoleplayTranscript', () => {
         ],
       },
       error: null,
+      waitExpired: false,
       retry: vi.fn(),
     });
     render(<RoleplayTranscript sessionId={7} />);
@@ -151,6 +184,7 @@ describe('RoleplayTranscript', () => {
     vi.mocked(useRoleplaySessionQuery).mockReturnValue({
       session: detail,
       error: null,
+      waitExpired: false,
       retry: vi.fn(),
     });
     render(<RoleplayTranscript sessionId={7} />);
@@ -166,6 +200,7 @@ describe('RoleplayTranscript', () => {
     vi.mocked(useRoleplaySessionQuery).mockReturnValue({
       session: detail,
       error: null,
+      waitExpired: false,
       retry: vi.fn(),
     });
     render(<RoleplayTranscript sessionId={7} />);
@@ -173,5 +208,19 @@ describe('RoleplayTranscript', () => {
     await userEvent.click(screen.getByRole('button', { name: '뒤로' }));
 
     expect(replace).toHaveBeenCalledWith('/roleplay/sessions/7/summary');
+  });
+
+  it('지난 대화 목록에서 왔으면 뒤로 가기가 그 목록으로 간다', async () => {
+    vi.mocked(useRoleplaySessionQuery).mockReturnValue({
+      session: detail,
+      error: null,
+      waitExpired: false,
+      retry: vi.fn(),
+    });
+    render(<RoleplayTranscript sessionId={7} fromRoleplayId={5} />);
+
+    await userEvent.click(screen.getByRole('button', { name: '뒤로' }));
+
+    expect(replace).toHaveBeenCalledWith('/roleplay/5/sessions');
   });
 });

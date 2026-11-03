@@ -4,7 +4,6 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -14,20 +13,18 @@ import {
   isDraftReady,
   type RoleplayDraft,
 } from '@/features/roleplay/model/roleplay-draft';
-import { useCreateRoleplayScenarioMutation } from '@/features/roleplay/model/useCreateRoleplayScenarioMutation';
 import { useRoleplayIdeaMutation } from '@/features/roleplay/model/useRoleplayIdeaMutation';
 import { PARTNERS, toPartnerId } from '@/features/small-talk/model/partner';
-import { track } from '@/shared/analytics';
 import {
   backOrReplace,
   ROLEPLAY_NEW_PATH,
   ROLEPLAY_PATH,
   roleplayNewFormPath,
-  roleplayTalkPath,
 } from '@/shared/lib/routes';
 import { showToast } from '@/shared/ui/toast';
 
 import { wrapCarouselIndex } from './partner-carousel';
+import { useMakeScenario } from './useMakeScenario';
 
 export type CreateStep = 'partner' | 'form' | 'generating';
 
@@ -43,8 +40,7 @@ export const useCreateRoleplayFlow = () => {
   const router = useRouter();
   const t = useTranslations('roleplay.create');
   const partnerParam = useSearchParams().get('partner');
-  // 만드는 중은 주소에 두지 않는다 — 요청이 떠난 뒤엔 되돌아올 단계가 아니다
-  const [generating, setGenerating] = useState(false);
+  const maker = useMakeScenario();
   // 보이는 캐릭터가 곧 선택이다 — 따로 고르는 동작이 없다
   // 새로고침한 입력에서 뒤로 와도 주소에 있던 상대에서 시작한다
   const [partnerIndex, setPartnerIndex] = useState(() =>
@@ -58,8 +54,10 @@ export const useCreateRoleplayFlow = () => {
   const lastIdeaIdRef = useRef<number | undefined>(undefined);
   // 아이디어로 채워 본 적이 있는가 — 받은 뒤 고쳐 썼어도 계측에선 아이디어를 쓴 것으로 본다
   const usedIdeaRef = useRef(false);
-  const create = useCreateRoleplayScenarioMutation();
-  const step = toStep(generating, partnerParam);
+  // 아이디어로 칸을 채운 횟수 — 칸마다 빛이 한 번 지나가는 신호다
+  const [ideaFillCount, setIdeaFillCount] = useState(0);
+  // 만드는 중은 주소에 두지 않는다 — 요청이 떠난 뒤엔 되돌아올 단계가 아니다
+  const step = toStep(maker.generating, partnerParam);
   // 입력 단계에선 주소의 상대가 정본이다 — 새로고침해도 고른 상대가 남는다
   const partner: Partner = partnerParam
     ? toPartnerId(partnerParam)
@@ -87,6 +85,7 @@ export const useCreateRoleplayFlow = () => {
         }
         lastIdeaIdRef.current = received.id;
         usedIdeaRef.current = true;
+        setIdeaFillCount((count) => count + 1);
         setDraft({
           myRole: received.userRole,
           partnerRole: received.aiRole,
@@ -98,30 +97,14 @@ export const useCreateRoleplayFlow = () => {
 
   const startCreate = () => {
     if (!canStart) return;
-    setGenerating(true);
-    create.mutate(
+    void maker.start(
       {
         characterId: partner,
         userRole: draft.myRole.trim(),
         aiRole: draft.partnerRole.trim(),
         situation: draft.situation.trim(),
       },
-      {
-        // 만든 화면으로 돌아오지 않는다 — 대화에서 뒤로 가면 탭으로 간다
-        onSuccess: (saved) => {
-          track(EVENTS.ROLEPLAY_CREATED, {
-            roleplay_id: saved.id,
-            partner,
-            used_idea: usedIdeaRef.current,
-          });
-          router.replace(roleplayTalkPath(saved.id));
-        },
-        // 적은 글은 그대로 두고 입력으로 돌려보낸다
-        onError: () => {
-          setGenerating(false);
-          showToast(t('failToast'));
-        },
-      },
+      usedIdeaRef.current,
     );
   };
 
@@ -145,5 +128,9 @@ export const useCreateRoleplayFlow = () => {
     requestIdea,
     startCreate,
     goBack,
+    madeTitle: maker.madeTitle,
+    slow: maker.slow,
+    ideaFillCount,
+    leaveMaking: () => maker.leave(partner),
   };
 };

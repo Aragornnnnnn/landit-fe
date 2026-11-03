@@ -548,6 +548,58 @@
   }
 }
 
+/* 롤플레이 — 모두 rAF가 멈춰도 최종 모습으로 보이는 CSS 애니메이션이다(시작 상태만 keyframes에 둔다) */
+@keyframes roleplay-sweep {
+  from {
+    transform: translateX(0) skewX(-12deg);
+  }
+  to {
+    transform: translateX(var(--sweep-x)) skewX(-12deg);
+  }
+}
+
+@keyframes maker-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes maker-pop {
+  0% {
+    transform: scale(0.95);
+  }
+  55% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes soft-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes idea-deal {
+  from {
+    opacity: 0;
+    transform: translate(var(--deal-x), 56px) rotate(0deg) scale(0.8);
+  }
+}
+
+@keyframes idea-float {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes sparkle-twinkle {
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85) rotate(90deg);
+  }
+}
+
 /* 답변 가이드 — 카드가 펼쳐질 때 테두리를 따라 빛이 한 번 훑는다 */
 @keyframes guide-sweep {
   from {
@@ -582,6 +634,56 @@
 
   @media (prefers-reduced-motion: reduce) {
     .animate-guide-sweep {
+      animation: none;
+    }
+  }
+
+  .animate-maker-sweep {
+    --sweep-x: 260%;
+    animation: roleplay-sweep 1.8s ease-in-out infinite;
+  }
+
+  .animate-field-sweep {
+    --sweep-x: 320%;
+    animation: roleplay-sweep 0.6s ease-out both;
+  }
+
+  .animate-maker-rise {
+    animation: maker-rise 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  }
+
+  .animate-maker-pop {
+    animation: maker-pop 0.34s ease-out;
+  }
+
+  .animate-soft-in {
+    animation: soft-in 0.6s ease-out backwards;
+  }
+
+  /* 빈 홈 — 한 뭉치에서 펼쳐진 뒤 잠시 떠 있다가 멈춘다. 계속 돌면 화면이 쉬지 못해 배터리를 쓴다 */
+  .animate-idea-deal {
+    transform: rotate(var(--deal-rotate));
+    animation: idea-deal 0.7s cubic-bezier(0.34, 1.4, 0.64, 1) var(--deal-delay)
+      backwards;
+  }
+
+  .animate-idea-float {
+    animation: idea-float var(--float-duration) ease-in-out 1s 4;
+  }
+
+  .animate-sparkle-twinkle {
+    animation: sparkle-twinkle 3s ease-in-out 1s 5;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-maker-sweep,
+    .animate-field-sweep,
+    .animate-maker-rise,
+    .animate-maker-pop,
+    .animate-soft-in,
+    .animate-idea-deal,
+    .animate-idea-float,
+    .animate-sparkle-twinkle {
       animation: none;
     }
   }

@@ -233,15 +233,20 @@
 
 ### 롤플레이
 
-| 이벤트                  | 속성                                                                                                       | 시점                                   |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| Roleplay Created        | roleplay_id, partner, used_idea                                                                            | 만들기에서 시작하기 → 보관함 저장 성공 |
-| Roleplay Started        | session_id, roleplay_id, partner                                                                           | 세션 시작 성공                         |
-| Roleplay Turn Completed | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms                | 발화 제출 성공                         |
-| Roleplay Completed      | session_id, partner, turn_count, speaking_duration_ms, end_reason(time_limit\|direct_end\|ended_elsewhere) | X로 끝냄 또는 오늘 시간 소진           |
-| Roleplay Abandoned      | session_id, partner, turn_index                                                                            | 한 마디도 하지 않고 나감               |
+| 이벤트                    | 속성                                                                                                       | 시점                                    |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| Roleplay Created          | roleplay_id, partner, used_idea                                                                            | 만들기에서 시작하기 → 보관함 저장 성공  |
+| Roleplay Started          | session_id, roleplay_id, partner                                                                           | 세션 시작 성공                          |
+| Roleplay Turn Completed   | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms                | 발화 제출 성공                          |
+| Roleplay Completed        | session_id, partner, turn_count, speaking_duration_ms, end_reason(time_limit\|direct_end\|ended_elsewhere) | X로 끝냄 또는 오늘 시간 소진            |
+| Roleplay Abandoned        | session_id, partner, turn_index                                                                            | 한 마디도 하지 않고 나감                |
+| Roleplay Deleted          | roleplay_id, has_history                                                                                   | 지우기를 확인해 삭제가 끝났을 때        |
+| Roleplay Create Failed    | partner, reason(premium_required\|error)                                                                   | 저장이 거절되거나 실패했을 때           |
+| Roleplay Create Abandoned | partner                                                                                                    | 만들기가 오래 걸려 돌아가기를 눌렀을 때 |
 
 `roleplay_id`는 내 보관함의 시나리오 id다. 같은 시나리오로 다시 대화하면 `Started`만 새 `session_id`로 쌓인다. 작별 인사로 끝나는 길은 없다. `ended_elsewhere`는 다른 기기·탭에서 먼저 끝낸 대화를 이 화면이 알게 된 경우다. 요약·대화 기록은 `Page Viewed`(roleplay_summary·roleplay_transcript)로 본다.
+
+`Create Abandoned`와 `Create Failed`는 만들기 실패 수가 아니다. 세션을 기다리다 나가면 `Created`도 찍혀 있고, 나간 뒤 저장이 실패하면 `Create Failed`가 뒤따른다.
 
 ### 분석 피드백
 

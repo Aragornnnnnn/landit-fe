@@ -3,10 +3,15 @@ import { useTranslations } from 'next-intl';
 
 import type { Partner } from '@/features/conversation/model/character-look';
 import { PartnerAvatar } from '@/features/conversation/ui/character/PartnerAvatar';
-import type { RoleplayDraft } from '@/features/roleplay/model/roleplay-draft';
+import {
+  ROLE_MAX_LENGTH,
+  SITUATION_MAX_LENGTH,
+  type RoleplayDraft,
+} from '@/features/roleplay/model/roleplay-draft';
 import { findPartner } from '@/features/small-talk/model/partner';
 import { GradientSparkle } from '@/shared/ui/GradientSparkle';
 
+import { useDelayedFlag } from '../_model/useDelayedFlag';
 import { RoleplayField } from './RoleplayField';
 
 interface RoleplayFormProps {
@@ -14,19 +19,26 @@ interface RoleplayFormProps {
   partnerName: string;
   draft: RoleplayDraft;
   ideaPending: boolean;
+  // 아이디어로 칸을 채운 횟수 — 늘 때마다 칸에 빛이 한 번 지나간다
+  ideaFillCount: number;
   onEdit: (field: keyof RoleplayDraft, value: string) => void;
   onRequestIdea: () => void;
 }
+
+const IDEA_LOADING_DELAY_MS = 300;
 
 export const RoleplayForm = ({
   partner,
   partnerName: name,
   draft,
   ideaPending,
+  ideaFillCount,
   onEdit,
   onRequestIdea,
 }: RoleplayFormProps) => {
   const t = useTranslations('roleplay');
+  // 금방 끝나면 칸이 깜빡이지 않게, 오래 걸릴 때만 로딩을 보여 준다
+  const ideaSlow = useDelayedFlag(ideaPending, IDEA_LOADING_DELAY_MS);
   const empty = !draft.myRole && !draft.partnerRole && !draft.situation;
 
   return (
@@ -47,7 +59,10 @@ export const RoleplayForm = ({
         placeholder={t('create.myRolePlaceholder')}
         value={draft.myRole}
         size="line"
-        loading={ideaPending}
+        maxLength={ROLE_MAX_LENGTH}
+        locked={ideaPending}
+        loading={ideaSlow}
+        sweepCount={ideaFillCount}
         autoFocus={empty}
         onChange={(value) => onEdit('myRole', value)}
       />
@@ -56,7 +71,10 @@ export const RoleplayForm = ({
         placeholder={t('create.partnerRolePlaceholder')}
         value={draft.partnerRole}
         size="line"
-        loading={ideaPending}
+        maxLength={ROLE_MAX_LENGTH}
+        locked={ideaPending}
+        loading={ideaSlow}
+        sweepCount={ideaFillCount}
         onChange={(value) => onEdit('partnerRole', value)}
       />
       <RoleplayField
@@ -64,7 +82,10 @@ export const RoleplayForm = ({
         placeholder={t('create.situationPlaceholder')}
         value={draft.situation}
         size="block"
-        loading={ideaPending}
+        maxLength={SITUATION_MAX_LENGTH}
+        locked={ideaPending}
+        loading={ideaSlow}
+        sweepCount={ideaFillCount}
         onChange={(value) => onEdit('situation', value)}
       />
 
@@ -73,14 +94,11 @@ export const RoleplayForm = ({
         type="button"
         onClick={onRequestIdea}
         disabled={ideaPending}
+        aria-busy={ideaPending}
         className="flex h-12 items-center justify-center gap-1.5 rounded-lg border border-border bg-card text-15 font-bold text-foreground shadow-[0_4px_0_var(--border)] transition-[translate,box-shadow] duration-75 active:translate-y-1 active:shadow-none disabled:translate-y-1 disabled:shadow-none"
       >
-        {ideaPending ? (
-          <span className="size-4 animate-spin rounded-full border-2 border-primary/25 border-t-primary" />
-        ) : (
-          <GradientSparkle size={16} />
-        )}
-        {t(ideaPending ? 'create.ideaLoadingButton' : 'create.ideaButton')}
+        <GradientSparkle size={16} />
+        {t('create.ideaButton')}
       </button>
     </div>
   );

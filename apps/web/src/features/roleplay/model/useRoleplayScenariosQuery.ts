@@ -1,28 +1,19 @@
-// 내 시나리오 목록 — 최근에 만든 순서로 온다. 한 장이 최대 50개라 다음 장이 있으면 끝까지 받아 이어 붙인다
+// 내 시나리오 목록 — 마지막 대화 순으로 온다. 홈 그리드가 개수까지 보여 줘서 끝까지 받는다
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
 
 import { useCurrentUserId } from '@/shared/auth/current-member';
 
-import { getRoleplays, type RoleplaySettings } from '../api/roleplay';
+import { getRoleplays } from '../api/roleplay';
+import { fetchAllPages } from './fetch-all-pages';
 import { roleplayKeys } from './keys';
-
-// 홈 그리드는 개수까지 한 번에 보여 줘서 더 보기 없이 전부 받는다
-const getAllRoleplays = async () => {
-  const items: RoleplaySettings[] = [];
-  for (let page = 0; ; page++) {
-    const received = await getRoleplays(page);
-    items.push(...received.items);
-    if (!received.hasNext) return items;
-  }
-};
 
 export const useRoleplayScenariosQuery = () => {
   const userId = useCurrentUserId();
   const { data, error, refetch } = useQuery({
     queryKey: roleplayKeys.scenarios(userId),
-    queryFn: getAllRoleplays,
+    queryFn: () => fetchAllPages((page) => getRoleplays(page)),
     enabled: userId !== null,
   });
 

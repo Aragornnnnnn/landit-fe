@@ -36,8 +36,10 @@ export interface RoleplaySettings {
   userRole: string;
   aiRole: string;
   situation: string;
-  // 저장한 시각 (LocalDateTime). 목록은 이 값의 최신순으로 온다
+  // 저장한 시각 (LocalDateTime)
   createdAt: string;
+  // 마지막으로 대화를 끝낸 시각. 끝낸 대화가 없으면 null — 목록은 이 값의 최신순, 없으면 저장한 순으로 온다
+  lastPlayedAt: string | null;
 }
 
 export interface RoleplaySettingsListResponse {
@@ -189,17 +191,38 @@ export interface RoleplayCompletionResponse {
   roleplayId: number | null;
 }
 
+// 이 시나리오로 완료한 대화 한 건
+export interface RoleplayHistorySummary {
+  sessionId: number;
+  title: string;
+  characterId: string;
+  startedAt: string;
+  completedAt: string;
+  userSpeakingDurationMs: number;
+}
+
+export interface RoleplaySessionListResponse {
+  items: RoleplayHistorySummary[];
+  page: number;
+  size: number;
+  hasNext: boolean;
+}
+
 const ROLEPLAYS = '/api/v1/roleplays';
 
 // 보관함에 저장 — 서버가 제목을 지어 오므로 응답이 느리다
 export const saveRoleplay = (body: RoleplaySettingsRequest) =>
   api.post<RoleplaySettings>(ROLEPLAYS, body);
 
-// 내 보관함 — 최신 저장순. 한 페이지 최대 50개
+// 내 보관함 — 마지막 대화 순. 한 페이지 최대 50개
 export const getRoleplays = (page = 0, size = 50) =>
   api.get<RoleplaySettingsListResponse>(
     `${ROLEPLAYS}?page=${page}&size=${size}`,
   );
+
+// 시나리오 삭제 — 설정만 지운다. 지난 대화는 서버에 남지만 앱에는 들어갈 입구가 없다
+export const deleteRoleplay = (roleplayId: number) =>
+  api.delete<void>(`${ROLEPLAYS}/${roleplayId}`);
 
 // 아이디어 하나 — 직전에 받은 것을 빼 달라고 하면 연속으로 같은 게 오지 않는다
 export const getRoleplayIdea = (excludeId?: number) =>
@@ -226,6 +249,12 @@ export const submitRoleplayMessage = (
 export const completeRoleplaySession = (sessionId: number) =>
   api.post<RoleplayCompletionResponse>(
     `${ROLEPLAYS}/sessions/${sessionId}/complete`,
+  );
+
+// 이 시나리오로 완료한 대화 — 최근에 끝낸 순. 한 페이지 최대 50개
+export const getRoleplaySessions = (roleplayId: number, page = 0, size = 50) =>
+  api.get<RoleplaySessionListResponse>(
+    `${ROLEPLAYS}/${roleplayId}/sessions?page=${page}&size=${size}`,
   );
 
 // 완료한 대화만 준다(진행 중이면 오류)

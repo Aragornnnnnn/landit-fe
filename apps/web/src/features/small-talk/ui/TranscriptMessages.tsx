@@ -13,7 +13,7 @@ import type {
   SmallTalkReusedExpression,
 } from '../api/small-talk';
 
-// 말풍선이 읽는 칸만 — 롤플레이 기록은 교정 상태(correctionStatus)를 주지 않아 없을 수 있다
+// 말풍선이 읽는 칸만 — 상대 말이나 교정을 시작하지 않은 말엔 교정 상태가 없다
 export type TranscriptMessage = Pick<
   SmallTalkHistoryMessage,
   | 'messageId'

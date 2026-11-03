@@ -120,8 +120,16 @@ export const roleplaySummaryPath = (
   `${roleplaySessionPath(sessionId)}/summary${celebrate ? '?celebrate=1' : ''}`;
 
 // 그 대화에서 주고받은 말과 교정 — 요약 다음 화면
-export const roleplayTranscriptPath = (sessionId: number) =>
-  `${roleplaySessionPath(sessionId)}/messages`;
+export const roleplayTranscriptPath = (
+  sessionId: number,
+  // 지난 대화 목록에서 왔으면 그 시나리오 — 뒤로 가기가 요약 대신 목록으로 간다
+  fromRoleplayId?: number,
+) =>
+  `${roleplaySessionPath(sessionId)}/messages${fromRoleplayId === undefined ? '' : `?from=${fromRoleplayId}`}`;
+
+// 시나리오 하나의 지난 대화 목록
+export const roleplaySessionsPath = (roleplayId: number) =>
+  `${ROLEPLAY_PATH}/${roleplayId}/sessions`;
 
 // 오늘의 스몰톡 — 대화를 끝낸 직후 보는 요약. 세션이 주인이라 기록 주소 아래에 산다
 export const smallTalkSummaryPath = (sessionId: number) =>
