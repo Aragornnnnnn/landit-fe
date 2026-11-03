@@ -6,6 +6,7 @@ import { EVENTS } from '@landit/analytics';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
+import type { Partner } from '@/features/conversation/model/character-look';
 import type { RoleplaySettingsRequest } from '@/features/roleplay/api/roleplay';
 import { isPremiumRequired } from '@/features/roleplay/model/premium-required';
 import { useCreateRoleplayScenarioMutation } from '@/features/roleplay/model/useCreateRoleplayScenarioMutation';
@@ -58,13 +59,8 @@ export const useMakeScenario = () => {
     return () => clearTimeout(timer);
   }, [madeId, router]);
 
-  const [partner, setPartner] = useState<
-    RoleplaySettingsRequest['characterId'] | null
-  >(null);
-
   const start = async (body: RoleplaySettingsRequest, usedIdea: boolean) => {
     setGenerating(true);
-    setPartner(body.characterId);
     let saved;
     try {
       saved = await create.mutateAsync(body);
@@ -114,9 +110,9 @@ export const useMakeScenario = () => {
     slow,
     start,
     // 오래 걸려 나간다 — 저장은 뒤에서 끝날 수 있어, 끝나면 탭에 카드가 선다
-    leave: () => {
+    leave: (partner: Partner) => {
       leftRef.current = true;
-      if (partner) track(EVENTS.ROLEPLAY_CREATE_ABANDONED, { partner });
+      track(EVENTS.ROLEPLAY_CREATE_ABANDONED, { partner });
       backOrReplace(router, ROLEPLAY_PATH);
     },
   };

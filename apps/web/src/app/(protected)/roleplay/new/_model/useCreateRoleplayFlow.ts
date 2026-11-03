@@ -131,6 +131,6 @@ export const useCreateRoleplayFlow = () => {
     madeTitle: maker.madeTitle,
     slow: maker.slow,
     ideaFillCount,
-    leaveMaking: maker.leave,
+    leaveMaking: () => maker.leave(partner),
   };
 };
