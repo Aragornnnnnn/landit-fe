@@ -36,6 +36,10 @@ const revealed = vi.hoisted(() => ({
   expressions: [] as unknown[],
   select: (() => {}) as (expressionId: number) => void,
 }));
+const filledEarlier = vi.hoisted(() => vi.fn(() => false));
+vi.mock('@/features/streak/model/useFilledEarlier', () => ({
+  useFilledEarlier: filledEarlier,
+}));
 vi.mock('@/features/expression/ui/ExpressionStages', () => ({
   CelebrateStage: () => <div>축하</div>,
   AnalyzeStage: () => <div>만드는 중</div>,
@@ -108,6 +112,17 @@ describe('SmallTalkResult', () => {
     setup();
 
     expect(screen.getByText('축하')).toBeInTheDocument();
+  });
+
+  it('오늘 열매를 이미 채웠으면 축하 없이 바로 표현 준비로 넘어간다', () => {
+    // Given 오늘을 이미 채우고 들어온 대화에서
+    filledEarlier.mockReturnValueOnce(true);
+
+    // When 막 끝내고 오면
+    setup();
+
+    // Then 축하를 건너뛴다
+    expect(screen.queryByText('축하')).not.toBeInTheDocument();
   });
 
   it('표현 학습에서 돌아온 길이면 축하 없이 리스트만 편다', () => {

@@ -22,6 +22,7 @@ import { BlockSkeleton } from '@/features/small-talk/ui/BlockSkeleton';
 import { ComparisonCard } from '@/features/small-talk/ui/ComparisonCard';
 import { SummaryHeadline } from '@/features/small-talk/ui/SummaryHeadline';
 import { SummarySkeleton } from '@/features/small-talk/ui/SummarySkeleton';
+import { useFilledEarlier } from '@/features/streak/model/useFilledEarlier';
 import { track } from '@/shared/analytics';
 import { lineBreak } from '@/shared/i18n/rich';
 import { ROLEPLAY_PATH, roleplayTranscriptPath } from '@/shared/lib/routes';
@@ -43,12 +44,15 @@ export const RoleplaySummary = ({
   const tCommon = useTranslations('common');
   const { summary, error, isLoading, waitExpired, retry } =
     useRoleplaySummaryQuery(sessionId);
-  const [celebrating, setCelebrating] = useState(celebrate);
+  const filledEarlier = useFilledEarlier();
+  // 오늘 열매를 이미 채운 날엔 새로 찍히는 게 없어 바로 요약을 보인다
+  const showsCelebration = celebrate && !filledEarlier;
+  const [celebrating, setCelebrating] = useState(showsCelebration);
   useEffect(() => {
-    if (!celebrate) return;
+    if (!showsCelebration) return;
     const timer = setTimeout(() => setCelebrating(false), CELEBRATE_MS);
     return () => clearTimeout(timer);
-  }, [celebrate]);
+  }, [showsCelebration]);
 
   // 총평은 이 세션의 교정이 다 끝나야 계산된다 — 상한까지 안 오면 붙잡아 두지 않는다
   const summaryStuck = summary !== null && summary.pending && waitExpired;
