@@ -316,4 +316,5 @@ export const rewardBenefitsOf = (
   { text: '맞춤 원어민 표현', free: false },
   { text: '원어민 발음 비교', free: false },
   { text: '무제한 프리톡', free: false },
+  { text: '나만의 롤플레이 만들기', free: false },
 ];
