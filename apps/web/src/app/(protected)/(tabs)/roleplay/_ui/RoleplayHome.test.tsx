@@ -249,4 +249,64 @@ describe('RoleplayHome', () => {
       screen.getByRole('button', { name: '지난 대화 보기' }),
     ).toBeEnabled();
   });
+
+  describe('계측', () => {
+    afterEach(() => track.mockClear());
+
+    it('⋯를 누르면 어느 시나리오의 메뉴를 열었는지 남긴다', async () => {
+      showScenarios([scenario({ id: 7, title: '카페 주문' })]);
+      render(<RoleplayHome />);
+
+      await openMore('카페 주문');
+
+      expect(track).toHaveBeenCalledWith('Roleplay Menu Opened', {
+        roleplay_id: 7,
+      });
+    });
+
+    it('삭제 확인 시트를 열고 닫으면 남긴다', async () => {
+      showScenarios([scenario({ id: 7, title: '카페 주문' })]);
+      render(<RoleplayHome />);
+
+      await openMore('카페 주문');
+      await userEvent.click(screen.getByRole('button', { name: '삭제하기' }));
+      expect(track).toHaveBeenCalledWith('Confirm Sheet Opened', {
+        sheet: 'roleplay_delete',
+      });
+      await userEvent.click(
+        screen.getByRole('button', { name: '그냥 둘게요' }),
+      );
+
+      expect(track).toHaveBeenCalledWith('Confirm Sheet Dismissed', {
+        sheet: 'roleplay_delete',
+      });
+    });
+
+    it('삭제에 실패하면 남긴다', async () => {
+      answerDelete('error');
+      showScenarios([scenario({ id: 7, title: '카페 주문' })]);
+      render(<RoleplayHome />);
+
+      await openMore('카페 주문');
+      await userEvent.click(screen.getByRole('button', { name: '삭제하기' }));
+      await userEvent.click(screen.getByRole('button', { name: '지울게요' }));
+
+      expect(track).toHaveBeenCalledWith('Roleplay Delete Failed', {
+        roleplay_id: 7,
+      });
+    });
+
+    it('삭제를 마치면 취소로 세지 않는다', async () => {
+      showScenarios([scenario({ id: 7, title: '카페 주문' })]);
+      render(<RoleplayHome />);
+
+      await openMore('카페 주문');
+      await userEvent.click(screen.getByRole('button', { name: '삭제하기' }));
+      await userEvent.click(screen.getByRole('button', { name: '지울게요' }));
+
+      expect(track).not.toHaveBeenCalledWith('Confirm Sheet Dismissed', {
+        sheet: 'roleplay_delete',
+      });
+    });
+  });
 });
