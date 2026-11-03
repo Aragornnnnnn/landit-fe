@@ -43,6 +43,7 @@ export const RoleplayConversation = ({
       summaryPath={summaryPath}
       onShowSummary={showSummary}
       onExitRequested={() => setShowExitSheet(true)}
+      hasInnerThought={false}
     >
       <RoleplayExitSheet
         open={showExitSheet}
