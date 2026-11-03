@@ -21,6 +21,7 @@ import {
 import { useRoleplayGate } from '@/features/roleplay/model/useRoleplayGate';
 import { useRoleplayIdeaMutation } from '@/features/roleplay/model/useRoleplayIdeaMutation';
 import { PARTNERS, toPartnerId } from '@/features/small-talk/model/partner';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 import {
   backOrReplace,
   ROLEPLAY_NEW_PATH,
@@ -46,6 +47,7 @@ export const useCreateRoleplayFlow = () => {
   const router = useRouter();
   const t = useTranslations('roleplay.create');
   const partnerParam = useSearchParams().get('partner');
+  const userId = useCurrentUserId();
   const gate = useRoleplayGate();
   const maker = useMakeScenario({
     freeUser: gate.freeUser,
@@ -60,7 +62,7 @@ export const useCreateRoleplayFlow = () => {
   );
   // 페이월에서 돌아왔으면 적던 글로 시작한다
   const [draft, setDraft] = useState<RoleplayDraft>(
-    () => readRoleplayDraft() ?? EMPTY_DRAFT,
+    () => readRoleplayDraft(userId) ?? EMPTY_DRAFT,
   );
   const idea = useRoleplayIdeaMutation();
   // 마지막으로 받은 아이디어 — 다시 누르면 이것만 빼고 고르게 한다
@@ -113,7 +115,7 @@ export const useCreateRoleplayFlow = () => {
   // 무료 기회를 쓴 사용자는 페이월로 간다 — 돌아와도 적던 글이 남는다. 아이디어는 비용이 없어 막지 않는다
   const startCreate = () => {
     if (!canStart) return;
-    if (gate.locked) saveRoleplayDraft(draft);
+    if (gate.locked) saveRoleplayDraft(draft, userId);
     gate.guard(
       () => {
         void maker.start(

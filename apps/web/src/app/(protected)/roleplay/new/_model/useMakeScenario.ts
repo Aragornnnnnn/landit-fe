@@ -13,6 +13,7 @@ import { saveRoleplayDraft } from '@/features/roleplay/model/roleplay-draft-stor
 import { useCreateRoleplayScenarioMutation } from '@/features/roleplay/model/useCreateRoleplayScenarioMutation';
 import { useRoleplaySessionHandoff } from '@/features/roleplay/model/useRoleplaySessionHandoff';
 import { track } from '@/shared/analytics';
+import { useCurrentUserId } from '@/shared/auth/current-member';
 import { haptic } from '@/shared/haptics/haptics';
 import {
   backOrReplace,
@@ -40,6 +41,7 @@ export const useMakeScenario = ({
   onAccessChanged: () => void;
 }) => {
   const router = useRouter();
+  const userId = useCurrentUserId();
   const t = useTranslations('roleplay.create');
   const create = useCreateRoleplayScenarioMutation();
   const handoff = useRoleplaySessionHandoff();
@@ -83,11 +85,14 @@ export const useMakeScenario = ({
       if (leftRef.current) return;
       if (premiumRequired) {
         track(EVENTS.PAYWALL_GATE_LOCKED, { source: 'roleplay' });
-        saveRoleplayDraft({
-          myRole: body.userRole,
-          partnerRole: body.aiRole,
-          situation: body.situation,
-        });
+        saveRoleplayDraft(
+          {
+            myRole: body.userRole,
+            partnerRole: body.aiRole,
+            situation: body.situation,
+          },
+          userId,
+        );
         // 페이월로 가는 동안 입력 화면이 다시 보이지 않게 그대로 둔다
         router.push(
           paywallPath({

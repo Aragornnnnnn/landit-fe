@@ -3,18 +3,29 @@ import type { RoleplayDraft } from './roleplay-draft';
 
 const KEY = 'landit-roleplay-draft';
 
-export const saveRoleplayDraft = (draft: RoleplayDraft) => {
+// 탭을 닫기 전에 계정을 바꿀 수 있다 — 맡긴 계정에게만 돌려준다
+export const saveRoleplayDraft = (
+  draft: RoleplayDraft,
+  userId: number | null,
+) => {
   try {
-    sessionStorage.setItem(KEY, JSON.stringify(draft));
+    sessionStorage.setItem(KEY, JSON.stringify({ userId, draft }));
   } catch {
     // 못 맡기면 빈 칸으로 돌아올 뿐이다
   }
 };
 
-export const readRoleplayDraft = (): RoleplayDraft | null => {
+export const readRoleplayDraft = (
+  userId: number | null,
+): RoleplayDraft | null => {
   try {
     const saved = sessionStorage.getItem(KEY);
-    return saved ? (JSON.parse(saved) as RoleplayDraft) : null;
+    if (!saved) return null;
+    const parsed = JSON.parse(saved) as {
+      userId: number | null;
+      draft: RoleplayDraft;
+    };
+    return parsed.userId === userId ? parsed.draft : null;
   } catch {
     return null;
   }
