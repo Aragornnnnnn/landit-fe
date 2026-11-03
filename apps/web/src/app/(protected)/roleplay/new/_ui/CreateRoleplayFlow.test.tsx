@@ -361,16 +361,19 @@ describe('CreateRoleplayFlow', () => {
       expect(createScenario).toHaveBeenCalled();
     });
 
-    it('무료 한 번을 쓴 뒤엔 아이디어를 누르면 받지 않고 페이월로 간다', async () => {
+    it('무료 한 번을 쓴 뒤에도 아이디어는 페이월 없이 받는다', async () => {
+      // Given 무료 한 번을 쓴 무료 사용자가
       const requestIdea = answerIdea();
       await goToForm();
 
+      // When 아이디어를 누르면
       await userEvent.click(
         screen.getByRole('button', { name: '아이디어 추천받기' }),
       );
 
-      expect(push).toHaveBeenCalledWith('/paywall');
-      expect(requestIdea).not.toHaveBeenCalled();
+      // Then 비용이 드는 시작과 달리 그대로 받는다
+      expect(push).not.toHaveBeenCalled();
+      expect(requestIdea).toHaveBeenCalled();
     });
 
     it('무료 한 번을 쓴 뒤엔 시작하기를 누르면 만들지 않고 페이월로 간다', async () => {

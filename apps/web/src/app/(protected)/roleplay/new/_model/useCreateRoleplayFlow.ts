@@ -77,7 +77,7 @@ export const useCreateRoleplayFlow = () => {
 
   useEffect(() => clearRoleplayDraft(), []);
 
-  // 무료 한 번을 쓴 무료 사용자는 아이디어와 시작에서 페이월로 간다 — 돌아와서 이어 쓰게 글을 맡겨 둔다
+  // 무료 한 번을 쓴 무료 사용자는 시작에서 페이월로 간다 — 돌아와도 적던 글이 남는다. 아이디어는 비용이 없어 막지 않는다
   const guardCreate = (go: () => void) => {
     if (gate.locked) saveRoleplayDraft(draft);
     gate.guard(go, {
@@ -98,25 +98,23 @@ export const useCreateRoleplayFlow = () => {
   // 아이디어는 세 칸을 한 조합으로 덮는다 — 받는 동안엔 시작하기와 다시 받기가 잠긴다
   // 고를 아이디어가 하나도 없으면(idea가 null) 받지 못한 것과 같게 알린다
   const requestIdea = () =>
-    guardCreate(() =>
-      idea.mutate(lastIdeaIdRef.current, {
-        onSuccess: ({ idea: received }) => {
-          if (!received) {
-            showToast(t('ideaFailToast'));
-            return;
-          }
-          lastIdeaIdRef.current = received.id;
-          usedIdeaRef.current = true;
-          setIdeaFillCount((count) => count + 1);
-          setDraft({
-            myRole: received.userRole,
-            partnerRole: received.aiRole,
-            situation: received.situation,
-          });
-        },
-        onError: () => showToast(t('ideaFailToast')),
-      }),
-    );
+    idea.mutate(lastIdeaIdRef.current, {
+      onSuccess: ({ idea: received }) => {
+        if (!received) {
+          showToast(t('ideaFailToast'));
+          return;
+        }
+        lastIdeaIdRef.current = received.id;
+        usedIdeaRef.current = true;
+        setIdeaFillCount((count) => count + 1);
+        setDraft({
+          myRole: received.userRole,
+          partnerRole: received.aiRole,
+          situation: received.situation,
+        });
+      },
+      onError: () => showToast(t('ideaFailToast')),
+    });
 
   const startCreate = () => {
     if (!canStart) return;
