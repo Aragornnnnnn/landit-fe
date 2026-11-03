@@ -2,7 +2,7 @@
 // (1) 속마음 없이 다음 발화로 넘어간다 (2) 끝내는 길은 X와 시간 소진뿐이다 (3) 끝내면 축하가 붙은 요약으로 간다
 // (턴 전이·발화 예산 같은 공통 동작은 useScenarioTalkFlow·useSmallTalkFlow 테스트가 맡는다)
 // @vitest-environment jsdom
-import { act, renderHook } from '@testing-library/react';
+import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as sessionApi from '@/features/conversation/api/session';
@@ -23,6 +23,12 @@ const STT_META: SttResultMeta = {
   connectMs: 0,
   finalizeWaitMs: 0,
 };
+
+const analyticsMock = vi.hoisted(() => ({
+  track: vi.fn(),
+  flushBeforePageClose: vi.fn(),
+}));
+vi.mock('@/shared/analytics', () => analyticsMock);
 
 const monitoringMock = vi.hoisted(() => ({
   reportError: vi.fn(),
@@ -428,5 +434,174 @@ describe('useRoleplayTalkFlow — 끝내고 피드백 보기', () => {
 
     // 완료 후속은 직접 완료 한 번뿐이다
     expect(refreshStreak).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useRoleplayTalkFlow — 계측', () => {
+  const abandonedReasons = () =>
+    analyticsMock.track.mock.calls
+      .filter(([name]) => name === 'Roleplay Abandoned')
+      .map(([, props]) => props.reason);
+
+  it('말 없이 X로 나가면 이유를 no_speech로 남긴다', async () => {
+    const { result } = await renderFlow();
+
+    act(() => {
+      result.current.pressClose();
+    });
+
+    expect(abandonedReasons()).toEqual(['no_speech']);
+  });
+
+  it('서버가 대화를 버리면 이유를 discarded로 남긴다', async () => {
+    submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
+    completeRoleplaySession.mockResolvedValueOnce(DISCARDED);
+    const { result } = await renderFlow();
+    await sayOnce(result);
+
+    await act(async () => result.current.completeTalk());
+
+    expect(abandonedReasons()).toEqual(['discarded']);
+  });
+
+  it('끝내기 요청이 실패하면 이유를 complete_failed로 남긴다', async () => {
+    submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
+    completeRoleplaySession.mockRejectedValueOnce(new Error('500'));
+    const { result } = await renderFlow();
+    await sayOnce(result);
+
+    await act(async () => result.current.completeTalk());
+
+    expect(abandonedReasons()).toEqual(['complete_failed']);
+  });
+
+  it('대화 중에 화면을 벗어나면 이유를 navigated_away로 남긴다', async () => {
+    submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
+    const { result, unmount } = await renderFlow();
+    await sayOnce(result);
+
+    unmount();
+    act(() => vi.advanceTimersByTime(0));
+
+    expect(analyticsMock.track).toHaveBeenCalledWith(
+      'Roleplay Abandoned',
+      expect.objectContaining({ session_id: 7, reason: 'navigated_away' }),
+    );
+  });
+
+  it('끝낸 대화에서 화면을 벗어나면 이탈로 세지 않는다', async () => {
+    submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
+    completeRoleplaySession.mockResolvedValueOnce(COMPLETED);
+    const { result, unmount } = await renderFlow();
+    await sayOnce(result);
+    await act(async () => result.current.completeTalk());
+
+    unmount();
+    act(() => vi.advanceTimersByTime(0));
+
+    expect(abandonedReasons()).toEqual([]);
+  });
+
+  it('앱을 닫으면 page_closed로 남기고 남은 이벤트를 내보내며, 두 번 세지 않는다', async () => {
+    // 앞선 테스트의 화면까지 pagehide를 듣지 않게 치운다
+    cleanup();
+    act(() => vi.advanceTimersByTime(0));
+    analyticsMock.track.mockClear();
+    const { unmount } = await renderFlow();
+
+    act(() => {
+      window.dispatchEvent(new PageTransitionEvent('pagehide'));
+    });
+    unmount();
+    act(() => vi.advanceTimersByTime(0));
+
+    expect(abandonedReasons()).toEqual(['page_closed']);
+    expect(analyticsMock.flushBeforePageClose).toHaveBeenCalled();
+  });
+
+  it('응답을 기다리는 중에 끝내면 pending_turn을 남기고, 늦은 응답도 턴으로 센다', async () => {
+    let resolveLate!: (res: RoleplayMessageSubmitResponse) => void;
+    submitRoleplayMessage.mockReturnValueOnce(
+      new Promise((resolve) => (resolveLate = resolve)),
+    );
+    completeRoleplaySession.mockResolvedValueOnce(COMPLETED);
+    const { result } = await renderFlow();
+    await sayOnce(result);
+
+    await act(async () => result.current.completeTalk());
+
+    expect(analyticsMock.track).toHaveBeenCalledWith(
+      'Roleplay Completed',
+      expect.objectContaining({
+        turn_count: 0,
+        speaking_duration_ms: 0,
+        end_reason: 'direct_end',
+        pending_turn: true,
+      }),
+    );
+
+    await act(async () => resolveLate(submitResponse()));
+
+    expect(analyticsMock.track).toHaveBeenCalledWith(
+      'Roleplay Turn Completed',
+      expect.objectContaining({ session_id: 7, turn_index: 0 }),
+    );
+  });
+
+  it('응답을 받은 뒤 끝내면 턴 수와 말한 시간을 그대로 싣는다', async () => {
+    submitRoleplayMessage.mockResolvedValueOnce(submitResponse());
+    completeRoleplaySession.mockResolvedValueOnce(COMPLETED);
+    const { result } = await renderFlow();
+    await sayOnce(result);
+
+    await act(async () => result.current.completeTalk());
+
+    expect(analyticsMock.track).toHaveBeenCalledWith(
+      'Roleplay Completed',
+      expect.objectContaining({
+        turn_count: 1,
+        speaking_duration_ms: 3_000,
+        pending_turn: false,
+      }),
+    );
+  });
+
+  it('시간 소진으로 끝나면 거절된 말은 기다리는 턴으로 세지 않는다', async () => {
+    submitRoleplayMessage.mockRejectedValueOnce(
+      new ApiError(
+        'limit',
+        409,
+        '/api/v1/roleplays/sessions/7/messages',
+        'FREE_TALK_DAILY_SPEAKING_LIMIT_EXCEEDED',
+      ),
+    );
+    completeRoleplaySession.mockResolvedValueOnce(COMPLETED);
+    const { result } = await renderFlow();
+
+    await sayOnce(result);
+
+    expect(analyticsMock.track).toHaveBeenCalledWith(
+      'Roleplay Completed',
+      expect.objectContaining({
+        end_reason: 'time_limit',
+        pending_turn: false,
+      }),
+    );
+  });
+
+  it('캐시로 들어가는 pagehide는 이탈로 세지 않지만 남은 이벤트는 내보낸다', async () => {
+    cleanup();
+    act(() => vi.advanceTimersByTime(0));
+    analyticsMock.track.mockClear();
+    await renderFlow();
+
+    act(() => {
+      window.dispatchEvent(
+        new PageTransitionEvent('pagehide', { persisted: true }),
+      );
+    });
+
+    expect(abandonedReasons()).toEqual([]);
+    expect(analyticsMock.flushBeforePageClose).toHaveBeenCalled();
   });
 });
