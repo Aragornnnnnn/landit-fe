@@ -107,7 +107,9 @@
     "nativeRowLabel": "원어민",
     "mineRowLabel": "나",
     "nativeListenLabel": "원어민 발음 듣기",
-    "mineListenLabel": "나 발음 듣기"
+    "mineListenLabel": "나 발음 듣기",
+    "awkwardBadge": "조금 어색해요",
+    "needsPracticeBadge": "연습이 필요해요"
   },
   "listenButton": {
     "defaultLabel": "발음 듣기"

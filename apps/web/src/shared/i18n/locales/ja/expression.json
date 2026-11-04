@@ -107,7 +107,9 @@
     "nativeRowLabel": "お手本",
     "mineRowLabel": "自分",
     "nativeListenLabel": "お手本の発音を聞く",
-    "mineListenLabel": "自分の発音を聞く"
+    "mineListenLabel": "自分の発音を聞く",
+    "awkwardBadge": "少し不自然です",
+    "needsPracticeBadge": "練習が必要です"
   },
   "listenButton": {
     "defaultLabel": "発音を聞く"

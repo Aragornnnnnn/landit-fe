@@ -56,6 +56,50 @@ describe('splitDisplay', () => {
 });
 
 describe('toFeedbackCards', () => {
+  it('표기 자산이 없는 단어는 철자로 보여준다', () => {
+    const cards = toFeedbackCards([word({ score: 80, nativeDisplay: null })]);
+
+    expect(cards[0]).toMatchObject({
+      native: [{ text: 'nothing', error: false }],
+      user: 'nothing',
+    });
+  });
+
+  it('다른 단어로 들렸으면 내 행에 들린 단어를 담는다', () => {
+    const cards = toFeedbackCards([
+      word({ score: 40, nativeDisplay: 'chohz', heardAs: 'choose' }),
+    ]);
+
+    expect(cards[0]).toMatchObject({ user: 'choose' });
+  });
+
+  it('맞음 판정이어도 100점 미만이면 원어민 표기를 든 카드가 된다', () => {
+    const cards = toFeedbackCards([
+      word({ score: 80, nativeDisplay: 'sim·uh·ler' }),
+    ]);
+
+    expect(cards).toEqual([
+      {
+        kind: 'lowScore',
+        word: expect.objectContaining({ score: 80 }),
+        native: [{ text: 'sim·uh·ler', error: false }],
+        user: 'sim·uh·ler',
+      },
+    ]);
+  });
+
+  it('맞음 판정에 100점이면 카드를 만들지 않는다', () => {
+    expect(toFeedbackCards([word({ score: 100 })])).toEqual([]);
+  });
+
+  it('음절 데이터가 없는 강세 오류도 100점 미만이면 카드로 보여준다', () => {
+    const cards = toFeedbackCards([
+      word({ status: 'STRESS_ERROR', syllables: null, score: 50 }),
+    ]);
+
+    expect(cards.map((card) => card.kind)).toEqual(['lowScore']);
+  });
+
   it('정상 단어는 카드에서 빠지고 오류 단어만 order 순으로 남는다', () => {
     const words = [
       word({
@@ -131,7 +175,7 @@ describe('toFeedbackCards', () => {
     ]);
   });
 
-  it('강세 오류인데 음절 데이터가 없으면 카드를 만들지 않는다 — 그릴 재료가 없다', () => {
+  it('강세 오류에 음절 데이터와 점수가 모두 없으면 카드를 만들지 않는다 — 그릴 재료가 없다', () => {
     const cards = toFeedbackCards([
       word({ status: 'STRESS_ERROR', syllables: null }),
     ]);
