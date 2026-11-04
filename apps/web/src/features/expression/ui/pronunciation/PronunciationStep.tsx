@@ -20,7 +20,7 @@ import type {
 } from '../../api/pronunciation';
 import { isSilentRecording } from '../../lib/sentence-recording';
 import { toFeedbackCards } from '../../model/pronunciation-feedback';
-import { scoreView } from '../../model/pronunciation-score';
+import { isLowScoreWord, scoreView } from '../../model/pronunciation-score';
 import { useAudioPlayer } from '../../model/useAudioPlayer';
 import { usePronunciationAnalysisMutation } from '../../model/usePronunciationAnalysisMutation';
 import { useSentenceRecorder } from '../../model/useSentenceRecorder';
@@ -179,6 +179,7 @@ export const PronunciationStep = ({
           passed: result.passed,
           error_count: result.words.filter((word) => word.status !== 'CORRECT')
             .length,
+          low_score_count: result.words.filter(isLowScoreWord).length,
           attempt: attemptRef.current,
         });
         setAnalysis(result);
