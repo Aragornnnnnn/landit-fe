@@ -1,6 +1,6 @@
 // 조건 블록이 스켈레톤을 거쳐 왔는지 기억한다 — 뒤늦게 선 블록만 떠오르게 하고,
 // 미리 받아 둔 요약으로 처음부터 서 있던 블록은 그냥 그린다(화면이 뜨자마자 세 장이 한꺼번에 흔들리면 어지럽다)
-import type { SummaryBlocks } from './summary-blocks';
+import type { SummaryBlocks } from '@/features/small-talk/model/summary-blocks';
 
 // direct = 기다림 없이 바로 섰다, waiting = 만드는 중이다, late = 기다렸다가 섰다(떠오르게 한다)
 export type BlockArrival = 'direct' | 'waiting' | 'late';

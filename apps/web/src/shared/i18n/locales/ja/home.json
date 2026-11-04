@@ -5,6 +5,9 @@
   "tabBar": {
     "navLabel": "タブ",
     "scenarioLabel": "シナリオ",
-    "smalltalkLabel": "スモールトーク"
+    "smalltalkLabel": "スモールトーク",
+    "roleplayLabel": "ロールプレイ",
+    "newLabel": "NEW",
+    "smalltalkFreeNudgeCaption": "スモールトーク<em>{limit}</em>を無料でプレゼント"
   }
 }

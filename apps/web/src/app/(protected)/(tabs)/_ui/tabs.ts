@@ -2,14 +2,18 @@
 // ready가 false면 칩에 안 나온다. 라우트는 이미 있으니 콘텐츠가 준비되면 플래그만 뒤집으면 된다
 import type { HomeTab } from '@landit/analytics';
 
-import { SCENARIO_PATH, SMALLTALK_PATH } from '@/shared/lib/routes';
+import {
+  ROLEPLAY_PATH,
+  SCENARIO_PATH,
+  SMALLTALK_PATH,
+} from '@/shared/lib/routes';
 
 export interface Tab {
   // 계측에 싣는 탭 이름
   id: HomeTab;
   href: string;
   // 칩 글자 — home.tabBar 묶음의 키
-  labelKey: 'scenarioLabel' | 'smalltalkLabel';
+  labelKey: 'scenarioLabel' | 'smalltalkLabel' | 'roleplayLabel';
   ready: boolean;
 }
 
@@ -24,6 +28,12 @@ export const TABS: Tab[] = [
     id: 'smalltalk',
     href: SMALLTALK_PATH,
     labelKey: 'smalltalkLabel',
+    ready: true,
+  },
+  {
+    id: 'roleplay',
+    href: ROLEPLAY_PATH,
+    labelKey: 'roleplayLabel',
     ready: true,
   },
 ];

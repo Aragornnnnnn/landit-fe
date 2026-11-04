@@ -1,0 +1,25 @@
+// 롤플레이 도메인의 React Query 키 팩토리 — 키 문자열은 여기서만 만든다 (무효화 범위 제어용)
+// userId를 키에 넣어 계정이 바뀌면 다른 캐시를 보게 한다
+export const roleplayKeys = {
+  all: ['roleplay'] as const,
+  // 롤플레이 시작 권한(무료 기회) — 대화를 시작하면 다시 받는다
+  access: (userId: number | null) =>
+    [...roleplayKeys.all, userId, 'access'] as const,
+  // 내 시나리오 목록 — 만들거나 지우거나 대화를 끝내면 다시 받는다
+  scenarios: (userId: number | null) =>
+    [...roleplayKeys.all, userId, 'scenarios'] as const,
+  // 시나리오별 지난 대화 전체 — 대화를 끝내면 통째로 다시 받는다
+  histories: (userId: number | null) =>
+    [...roleplayKeys.all, userId, 'histories'] as const,
+  history: (userId: number | null, roleplayId: number) =>
+    [...roleplayKeys.histories(userId), roleplayId] as const,
+  // 만들기 화면이 미리 열어 대화 화면에 넘기는 세션
+  handoff: (userId: number | null, roleplayId: number) =>
+    [...roleplayKeys.all, userId, 'handoff', roleplayId] as const,
+  // 끝난 대화 한 건(대화 기록·교정)
+  session: (userId: number | null, sessionId: number) =>
+    [...roleplayKeys.all, userId, 'session', sessionId] as const,
+  // 끝난 대화 한 건의 요약(오늘의 롤플레이) — 기록과 응답이 달라 캐시도 따로 둔다
+  summary: (userId: number | null, sessionId: number) =>
+    [...roleplayKeys.all, userId, 'summary', sessionId] as const,
+};

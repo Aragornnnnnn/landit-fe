@@ -70,6 +70,7 @@ vi.mock('../_model/useSmallTalkFlow', () => ({
     input: {
       transcript: '',
       pressMic: vi.fn(),
+      pressKeyboard: vi.fn(),
       cancelInput: vi.fn(),
       finishListening: vi.fn(),
       micPermissionDenied: false,
@@ -130,6 +131,30 @@ describe('SmallTalkConversation — 남은 말하기 시간', () => {
     // 마이크 컨트롤 자체는 그대로다
     expect(
       screen.getByRole('button', { name: '답변 완료' }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe('SmallTalkConversation — 키보드 입력', () => {
+  // 키보드 아이콘은 말하기 대기(USER_READY)에만 그려진다
+  it('한도가 있는 무료 사용자에겐 키보드 버튼이 없다 — 타이핑은 시간을 안 깎아 무료 5분을 비껴간다', () => {
+    mocks.phase = 'USER_READY';
+
+    renderScreen();
+
+    expect(
+      screen.queryByRole('button', { name: '키보드로 입력' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('무제한이면 키보드 버튼이 있다', () => {
+    mocks.unlimited = true;
+    mocks.phase = 'USER_READY';
+
+    renderScreen();
+
+    expect(
+      screen.getByRole('button', { name: '키보드로 입력' }),
     ).toBeInTheDocument();
   });
 });

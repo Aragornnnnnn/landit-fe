@@ -11,6 +11,13 @@ describe('BENEFITS', () => {
     expect(firstPremium).toBeGreaterThan(0);
     expect(BENEFITS.slice(firstPremium).every((b) => !b.free)).toBe(true);
   });
+
+  it('맨 아래 줄은 프리미엄 전용 롤플레이다', () => {
+    expect(BENEFITS.at(-1)).toMatchObject({
+      labelKey: 'roleplayLabel',
+      free: false,
+    });
+  });
 });
 
 describe('PREMIUM_BENEFITS', () => {

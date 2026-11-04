@@ -16,3 +16,13 @@ export const toExpressionListItems = (
       !expression.completed && expression.expressionId !== next?.expressionId,
   }));
 };
+
+// 서버가 무료 대화로 열어 준 표현인가 — 그런 표현은 페이월 없이 학습으로 보낸다(서버도 같은 근거로 허용한다)
+export const isFreeTrialExpression = (
+  expressions: SmallTalkSessionExpression[],
+  expressionId: number,
+) =>
+  expressions.some(
+    (expression) =>
+      expression.expressionId === expressionId && expression.freeTrial === true,
+  );

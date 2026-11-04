@@ -136,6 +136,7 @@ export const useConversationTurns = ({
     openingSrc: openingAudioSrc,
     onSpeechEnd: () => send('AI_SPEAKING_DONE'),
     replayAllowed,
+    sessionId,
   });
 
   // 유저 입력 — 마이크/키보드 전환과 STT 배선은 훅 안에, 여기서는 상태 전이와 제출만 잇는다

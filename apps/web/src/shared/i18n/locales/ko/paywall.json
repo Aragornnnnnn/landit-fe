@@ -23,7 +23,12 @@
     "expressionQuizTitle": "퀴즈로 내 것이 됐는지 확인해요",
     "smallTalkLabel": "캐릭터와 자유롭게 프리톡",
     "smallTalkPartnerTitle": "원하는 친구와 억양까지 골라서",
-    "smallTalkFreeTitle": "주제 없이 자유롭게 대화해요"
+    "smallTalkFreeTitle": "주제 없이 자유롭게 대화해요",
+    "roleplayLabel": "내가 만든 상황으로 롤플레이",
+    "roleplayDeckTitle": "상상한 상황이 그대로 대화로",
+    "roleplayCreateTitle": "역할과 상황만 적으면 완성",
+    "roleplayZombieTitle": "좀비에게 채식을 권하고",
+    "roleplayAlienTitle": "외계인에게 지구도 소개해요"
   },
   "stepPaywall": {
     "nextButton": "다음"
@@ -99,6 +104,26 @@
   },
   "scenarioWall": {
     "dailyLabel": "오늘의 시나리오"
+  },
+  "roleplayDemo": {
+    "deckTitle": "머릿속에만 있던 상황을<br></br>대화로 만들어 봐요",
+    "deckCaption": "뭐든 적으면 바로 시나리오가 돼요",
+    "presidentIdeaLabel": "미국 대통령과<br></br>토론",
+    "alienIdeaLabel": "외계인에게<br></br>지구 소개하기",
+    "zombieIdeaLabel": "좀비에게<br></br>채식 권하기",
+    "myRoleLabel": "나의 역할",
+    "partnerRoleLabel": "{name}의 역할",
+    "situationLabel": "상황과 주제",
+    "ideaButton": "아이디어 추천받기",
+    "zombieMyRoleCaption": "채식을 권하는 사람",
+    "zombiePartnerRoleCaption": "배고픈 좀비",
+    "zombieSituationCaption": "좀비에게 고기 대신 채소를 먹자고 설득하기",
+    "alienMyRoleCaption": "지구 관광 가이드",
+    "alienPartnerRoleCaption": "지구에 처음 온 외계인",
+    "alienSituationCaption": "외계인에게 지구의 좋은 점을 소개하기",
+    "presidentMyRoleCaption": "토론 상대",
+    "presidentPartnerRoleCaption": "미국 대통령",
+    "presidentSituationCaption": "대통령과 점심 메뉴를 두고 토론하기"
   },
   "smallTalkDemo": {
     "title": "오늘은 누구랑<br></br>이야기할까요?",

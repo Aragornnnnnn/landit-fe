@@ -42,6 +42,9 @@
   --color-ring: var(--ring);
   --color-backdrop: var(--backdrop);
   --color-selected: var(--selected);
+  --color-awkward: var(--awkward);
+  --color-awkward-ink: var(--awkward-ink);
+  --color-awkward-bg: var(--awkward-bg);
   --color-good: var(--good);
   --color-good-bg: var(--good-bg);
   --color-good-border: var(--good-border);
@@ -125,6 +128,9 @@
   --green-500: #2f7d54;
   /* 별점 팔레트 (피그마 피드백 화면 스펙) */
   --amber-400: #fbbf24;
+  --amber-500: #e09a00;
+  --amber-600: #c98a0b;
+  --amber-75: #fff4db;
   --gray-300: #d4d8df;
   /* 의미색 — GOOD 상태=파랑, NEED IMPROVEMENT 상태=초록. 브랜드색(주황)과 분리 (피그마 피드백 상세 스펙) */
   --blue-100: #eef2fb;
@@ -178,6 +184,10 @@
   --star-empty: var(--gray-300);
   /* 스트릭 — 달력의 이어진 구간 띠 (피그마 스트릭 Flow 스펙) */
   --streak-band: var(--orange-50);
+  /* 발음 피드백의 노란 단어(51~80점) — 단어 글자, 칩 글자, 칩 바탕 */
+  --awkward: var(--amber-500);
+  --awkward-ink: var(--amber-600);
+  --awkward-bg: var(--amber-75);
   --good: var(--blue-700);
   --good-bg: var(--blue-100);
   --good-border: var(--blue-200);
@@ -492,6 +502,17 @@
   }
 }
 
+/* 스몰톡 칩 말풍선 — 칩을 가리키며 위아래로 살짝 떠서 눈길을 끈다. rAF가 멎는 웹뷰라 CSS로 (LAN-375) */
+@keyframes nudge-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
 /* 페이월 비교표 — 프리미엄 열의 체크가 위에서 아래로 하나씩 튀어나온다.
  * motion(rAF) 대신 CSS — rAF가 멎은 웹뷰에서도 끝까지 간다 (LAN-375 교훈). both로 딜레이 동안 숨겨 두고 끝난 상태를 유지한다.
  * 숨어 있는 건 체크뿐이다 — 기둥과 무료 열은 처음부터 떠 있어, 애니메이션 전에도 표가 표로 읽힌다 */
@@ -537,6 +558,58 @@
   }
 }
 
+/* 롤플레이 — 모두 rAF가 멈춰도 최종 모습으로 보이는 CSS 애니메이션이다(시작 상태만 keyframes에 둔다) */
+@keyframes roleplay-sweep {
+  from {
+    transform: translateX(0) skewX(-12deg);
+  }
+  to {
+    transform: translateX(var(--sweep-x)) skewX(-12deg);
+  }
+}
+
+@keyframes maker-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes maker-pop {
+  0% {
+    transform: scale(0.95);
+  }
+  55% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes soft-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes idea-deal {
+  from {
+    opacity: 0;
+    transform: translate(var(--deal-x), 56px) rotate(0deg) scale(0.8);
+  }
+}
+
+@keyframes idea-float {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes sparkle-twinkle {
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85) rotate(90deg);
+  }
+}
+
 /* 답변 가이드 — 카드가 펼쳐질 때 테두리를 따라 빛이 한 번 훑는다 */
 @keyframes guide-sweep {
   from {
@@ -571,6 +644,56 @@
 
   @media (prefers-reduced-motion: reduce) {
     .animate-guide-sweep {
+      animation: none;
+    }
+  }
+
+  .animate-maker-sweep {
+    --sweep-x: 260%;
+    animation: roleplay-sweep 1.8s ease-in-out infinite;
+  }
+
+  .animate-field-sweep {
+    --sweep-x: 320%;
+    animation: roleplay-sweep 0.6s ease-out both;
+  }
+
+  .animate-maker-rise {
+    animation: maker-rise 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  }
+
+  .animate-maker-pop {
+    animation: maker-pop 0.34s ease-out;
+  }
+
+  .animate-soft-in {
+    animation: soft-in 0.6s ease-out backwards;
+  }
+
+  /* 빈 홈 — 한 뭉치에서 펼쳐진 뒤 잠시 떠 있다가 멈춘다. 계속 돌면 화면이 쉬지 못해 배터리를 쓴다 */
+  .animate-idea-deal {
+    transform: rotate(var(--deal-rotate));
+    animation: idea-deal 0.7s cubic-bezier(0.34, 1.4, 0.64, 1) var(--deal-delay)
+      backwards;
+  }
+
+  .animate-idea-float {
+    animation: idea-float var(--float-duration) ease-in-out 1s 4;
+  }
+
+  .animate-sparkle-twinkle {
+    animation: sparkle-twinkle 3s ease-in-out 1s 5;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-maker-sweep,
+    .animate-field-sweep,
+    .animate-maker-rise,
+    .animate-maker-pop,
+    .animate-soft-in,
+    .animate-idea-deal,
+    .animate-idea-float,
+    .animate-sparkle-twinkle {
       animation: none;
     }
   }

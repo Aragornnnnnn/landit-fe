@@ -1,10 +1,14 @@
 // 마지막으로 보던 탭 — 홈에서 밀려 올라온 화면(스트릭·내 정보·편지함)이 뒤로 갈 때 돌아갈 곳.
 // 탭에 있는 동안 기억해 두고, 나갈 때 읽는다. 기억이 없으면(딥링크 진입·새로고침) 시나리오 탭이 정본이다.
 // 메모리에만 둔다 — 앱을 켜 둔 동안 "이번에 보던 탭"만 알면 되고, 껐다 켜면 처음부터가 맞다
-import { SCENARIO_PATH, SMALLTALK_PATH } from './routes';
+import { ROLEPLAY_PATH, SCENARIO_PATH, SMALLTALK_PATH } from './routes';
 
 // 돌아갈 수 있는 곳은 탭 최상위뿐이다. 탭이 늘면 여기에 더한다
-const TAB_PATHS: readonly string[] = [SCENARIO_PATH, SMALLTALK_PATH];
+const TAB_PATHS: readonly string[] = [
+  SCENARIO_PATH,
+  SMALLTALK_PATH,
+  ROLEPLAY_PATH,
+];
 
 let lastTab: string | null = null;
 

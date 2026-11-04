@@ -263,6 +263,50 @@ describe('toPageView', () => {
     });
   });
 
+  it.each([
+    ['/roleplay', 'roleplay'],
+    ['/roleplay/new', 'roleplay_new'],
+  ])('롤플레이 %s는 %s로 남는다', (path, pageName) => {
+    expect(pv(path)).toEqual({ page_name: pageName, path });
+  });
+
+  it.each([
+    ['/roleplay/sessions/7/summary', 'roleplay_summary'],
+    ['/roleplay/sessions/7/messages', 'roleplay_transcript'],
+  ])('끝난 롤플레이 %s는 %s로 세션 id와 함께 남는다', (path, pageName) => {
+    expect(pv(path)).toEqual({ page_name: pageName, path, session_id: 7 });
+  });
+
+  it('상대를 고른 뒤의 입력 단계는 따로 남는다', () => {
+    expect(pv('/roleplay/new', 'partner=chloe')).toEqual({
+      page_name: 'roleplay_new_form',
+      path: '/roleplay/new',
+    });
+  });
+
+  it('시나리오의 지난 대화 목록은 시나리오 id를 싣는다', () => {
+    expect(pv('/roleplay/5/sessions')).toEqual({
+      page_name: 'roleplay_history',
+      path: '/roleplay/5/sessions',
+      roleplay_id: 5,
+    });
+  });
+
+  it('롤플레이 대화는 어느 시나리오로 연 대화인지 남는다', () => {
+    expect(pv('/conversation/roleplay/3')).toEqual({
+      page_name: 'conversation_roleplay',
+      path: '/conversation/roleplay/3',
+      roleplay_id: 3,
+    });
+  });
+
+  it('결제자 설문은 page_name survey_paid로 남는다', () => {
+    expect(pv('/survey/paid')).toEqual({
+      page_name: 'survey_paid',
+      path: '/survey/paid',
+    });
+  });
+
   it('스몰톡 대화는 id 없이 page_name conversation_smalltalk으로 남는다', () => {
     // 주소의 상대·시작 방식(mode/partner)은 여기 싣지 않는다 — Conversation Started가 이미 남긴다
     expect(

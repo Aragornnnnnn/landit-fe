@@ -1,0 +1,82 @@
+{
+  "partner": {
+    "chloeIntroDescription": "LA出身・おしゃべり、アメリカ英語",
+    "marcoIntroDescription": "シドニー出身・のんびり、オーストラリア英語",
+    "teddyIntroDescription": "ロンドン出身・落ち着いたイギリス英語"
+  },
+  "home": {
+    "emptyTitle": "頭の中の場面を<br></br>会話にしましょう",
+    "emptyDescription": "役割と場面を書くだけで<br></br>自分だけの英会話シナリオができます",
+    "presidentIdeaLabel": "米大統領と<br></br>討論",
+    "alienIdeaLabel": "宇宙人に<br></br>地球を紹介",
+    "zombieIdeaLabel": "ゾンビに<br></br>菜食を提案",
+    "listTitle": "マイシナリオ",
+    "countLabel": "{count}個",
+    "moreLabel": "{title}のメニュー",
+    "createButton": "自分だけのシナリオを作る",
+    "todayLabel": "今日",
+    "daysAgoLabel": "{days}日前",
+    "loadError": "シナリオを読み込めませんでした"
+  },
+  "more": {
+    "historyButton": "過去の会話を見る",
+    "deleteButton": "削除する",
+    "closeButton": "閉じる"
+  },
+  "delete": {
+    "title": "このシナリオを削除しますか？",
+    "description": "過去の会話とフィードバックも見られません。<br></br>元に戻せません。",
+    "emptyDescription": "元に戻せません。",
+    "keepButton": "やめておく",
+    "confirmButton": "削除する",
+    "doneToast": "シナリオを削除しました",
+    "failToast": "削除できませんでした。もう一度お試しください"
+  },
+  "create": {
+    "headerTitle": "自分だけのシナリオを作る",
+    "partnerTitle": "会話の相手を選ぶ",
+    "previousLabel": "前の相手",
+    "nextLabel": "次の相手",
+    "continueButton": "続ける",
+    "myRoleLabel": "自分の役割",
+    "myRolePlaceholder": "例：コーヒーを注文するお客さん",
+    "partnerRoleLabel": "{name}の役割",
+    "partnerRolePlaceholder": "例：バリスタ",
+    "situationLabel": "場面とテーマ",
+    "situationPlaceholder": "例：新メニューのおすすめを聞く",
+    "ideaButton": "アイデアをもらう",
+    "ideaFailToast": "アイデアを取得できませんでした。もう一度タップしてください",
+    "startButton": "始める",
+    "failToast": "シナリオを作成できませんでした。もう一度お試しください"
+  },
+  "generating": {
+    "title": "あなただけの会話を作っています",
+    "doneTitle": "完成しました！",
+    "slowTitle": "思ったより時間がかかっています",
+    "backButton": "戻る",
+    "myRoleLabel": "自分",
+    "situationLabel": "場面"
+  },
+  "summary": {
+    "title": "今日のロールプレイ",
+    "celebrateTitle": "ロールプレイを<br></br>1つ完了しました！",
+    "loadingLabel": "今日のロールプレイを読み込み中",
+    "unavailableError": "今日のロールプレイをまとめられませんでした。",
+    "reusedLoadingLabel": "学んだフレーズの再利用を探しています",
+    "detailButton": "詳しいフィードバックを見る",
+    "retryButton": "もう一度試す",
+    "homeButton": "ホームに戻る"
+  },
+  "sessions": {
+    "sessionTitle": "{ordinal}回目の会話",
+    "emptyDescription": "このシナリオの会話はまだありません",
+    "loadError": "過去の会話を読み込めませんでした",
+    "loadingLabel": "過去の会話を読み込み中"
+  },
+  "transcript": {
+    "loadError": "会話を読み込めませんでした。",
+    "memoryTagLabel": "{month}/{day}のスモールトークで話した{label}",
+    "memoryDefaultLabel": "内容",
+    "homeButton": "ホームに戻る"
+  }
+}

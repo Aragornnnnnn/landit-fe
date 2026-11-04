@@ -91,6 +91,8 @@ describe('safe-area inset 변수', () => {
 const SCROLL_EXCEPTIONS = new Set([
   // 아래에 늘 있는 푸터가 safe-area를 맡는다
   'app/(protected)/smalltalk/sessions/[sessionId]/summary/_ui/SmallTalkSummary.tsx',
+  'app/(protected)/roleplay/sessions/[sessionId]/summary/_ui/RoleplaySummary.tsx',
+  'app/(protected)/roleplay/sessions/[sessionId]/messages/_ui/RoleplayTranscript.tsx',
   'app/(protected)/me/subscription/cancel/_ui/ReasonStep.tsx',
   'app/(protected)/me/invite/_ui/InviteScreen.tsx',
   'app/(protected)/me/subscription/cancel/_ui/MethodStep.tsx',
@@ -104,11 +106,12 @@ const SCROLL_EXCEPTIONS = new Set([
   'features/expression/ui/QuizStepSkeleton.tsx',
   'features/expression/ui/common/StepScaffold.tsx',
   'features/expression/ui/ExpressionStages.tsx',
-  'features/survey/ui/steps/MultiChoiceStep.tsx',
-  'features/survey/ui/steps/SingleChoiceStep.tsx',
+  'features/survey/ui/ChoiceList.tsx',
   'features/survey/ui/steps/TextStep.tsx',
   'features/onboarding/ui/common/AccentForm.tsx',
   'features/conversation/ui/flow/QuestionCard.tsx',
+  'app/(protected)/(tabs)/roleplay/_ui/RoleplayHome.tsx',
+  'app/(protected)/roleplay/new/_ui/CreateRoleplayFlow.tsx',
   // 바깥 스크롤 상자 — 안쪽 내용이 safe-area 여백을 맡는다
   'app/(protected)/me/page.tsx',
   'app/(public)/(legal)/_ui/LegalDocumentPage.tsx',

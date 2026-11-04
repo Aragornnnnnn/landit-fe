@@ -20,7 +20,7 @@ import type {
 } from '../../api/pronunciation';
 import { isSilentRecording } from '../../lib/sentence-recording';
 import { toFeedbackCards } from '../../model/pronunciation-feedback';
-import { scoreView } from '../../model/pronunciation-score';
+import { isLowScoreWord, scoreView } from '../../model/pronunciation-score';
 import { useAudioPlayer } from '../../model/useAudioPlayer';
 import { usePronunciationAnalysisMutation } from '../../model/usePronunciationAnalysisMutation';
 import { useSentenceRecorder } from '../../model/useSentenceRecorder';
@@ -51,7 +51,7 @@ interface PronunciationStepProps {
   sentenceAudioUrl: string;
   progress: number;
   onBack: () => void;
-  // 통과 화면의 X — 뒤로 갈 이유가 없어진 상태라 플로우 나가기(중단 확인)로 연결한다
+  // 100점 화면의 X — 뒤로 갈 이유가 없어진 상태라 플로우 나가기(중단 확인)로 연결한다
   onExit: () => void;
   // 다음(추가 예문)으로 — 통과·미통과 모두 이 버튼으로 나간다 (기획: 통과 못 해도 진행 가능)
   onNext: () => void;
@@ -179,6 +179,7 @@ export const PronunciationStep = ({
           passed: result.passed,
           error_count: result.words.filter((word) => word.status !== 'CORRECT')
             .length,
+          low_score_count: result.words.filter(isLowScoreWord).length,
           attempt: attemptRef.current,
         });
         setAnalysis(result);
@@ -263,9 +264,9 @@ export const PronunciationStep = ({
       <StepScaffold
         title={t('feedbackTitle')}
         progress={progress}
-        // 통과하면 되돌아갈 이유가 없다 — X(나가기 확인)로 바꾼다. 미통과는 ‹로 재도전 맥락 유지
-        leftAction={view.passed ? 'close' : 'back'}
-        onBack={view.passed ? onExit : onBack}
+        // 100점이면 되돌아갈 이유가 없다 — X(나가기 확인)로 바꾼다. 그 외는 ‹로 재도전 맥락 유지
+        leftAction={view.perfect ? 'close' : 'back'}
+        onBack={view.perfect ? onExit : onBack}
         footer={
           phase === 'recording' ? (
             // 녹음 모드 띠 — 경계선과 옅은 배경으로 피드백 열람과 구분한다.
@@ -289,12 +290,12 @@ export const PronunciationStep = ({
             <div className="flex flex-col items-center gap-2">
               <Button
                 size="md"
-                variant={view.passed ? 'success' : 'primary'}
+                variant={view.perfect ? 'success' : 'primary'}
                 onClick={onNext}
               >
                 {t('examplesButton')}
               </Button>
-              {!view.passed && (
+              {!view.perfect && (
                 <button
                   onClick={startRecording}
                   className="py-1 text-sm font-semibold text-muted-foreground active:opacity-70"
@@ -316,9 +317,9 @@ export const PronunciationStep = ({
           <ScoreGauge view={view} />
           <WordChips
             words={analysis.words}
-            // 오류 단어 칩을 누르면 해당 피드백 카드로 이동 (통과 화면엔 카드가 없다)
+            // 칩을 누르면 해당 피드백 카드로 이동 (100점 화면엔 카드가 없다)
             onSelectWord={
-              view.passed
+              view.perfect
                 ? undefined
                 : (order) =>
                     document
@@ -326,8 +327,8 @@ export const PronunciationStep = ({
                       ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
             }
           />
-          {view.passed ? (
-            // 100 팻말 든 축하 래디 — 통과의 보상 연출이라 큼직하게.
+          {view.perfect ? (
+            // 100 팻말 든 축하 래디 — 100점의 보상 연출이라 큼직하게.
             // 말풍선은 발음 화면의 약속("원어민처럼 말할 수 있게")을 받아 서사를 닫는다
             <div
               className="animate-fade-up flex flex-col items-center gap-1"

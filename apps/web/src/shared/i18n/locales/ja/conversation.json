@@ -4,6 +4,9 @@
     "frameCaption": "こっそり教える本音",
     "waitingLabel": "相手が考えています"
   },
+  "thinkingBubble": {
+    "thinkingLabel": "考えています"
+  },
   "thoughtOverlay": {
     "dialogLabel": "相手の本音"
   },
@@ -151,5 +154,17 @@
     "dropByMeaningLabel": "ちょっと寄るね",
     "goToMeaningLabel": "いつも頼むメニューなんだ",
     "startButton": "学習を始める"
+  },
+  "roleplayExitSheet": {
+    "title": "ここで会話を終えますか？",
+    "description": "ここまでの会話から<br></br>フィードバックを作ります",
+    "completeButton": "終えてフィードバックを見る",
+    "continueButton": "会話を続ける"
+  },
+  "roleplayFlow": {
+    "limitReachedToast": "今日話せる時間を使い切りました。ここまででフィードバックを作ります",
+    "completeFailedToast": "接続に問題があり、会話を終了できませんでした",
+    "startError": "会話を始められませんでした。しばらくしてからもう一度お試しください",
+    "backButton": "戻る"
   }
 }

@@ -37,6 +37,11 @@ export interface SmallTalkMainResponse {
   remainingSpeakingTimeMs: number;
   // 오늘 예산을 다 썼는지는 서버가 판정한다 — 남은 시간으로 프론트가 유추하지 않는다
   canStart: boolean;
+  // 무료 누적 5분 정책이 켜졌는가 — 적용 시각 전이면 false라 무료 사용자의 스몰톡을 서버가 막는다.
+  // 이 필드가 없는 서버(배포 전)도 꺼진 것으로 본다
+  freeTrialEnabled?: boolean;
+  // 구독 중이라 한도가 없는가 — true면 한도·잔량이 -1로 온다 (정책 적용 전 서버엔 없다)
+  unlimited?: boolean;
 }
 
 export const getSmallTalkTopics = () =>
@@ -193,6 +198,8 @@ export interface SmallTalkSessionExpression {
   completed: boolean;
   // 이전 스몰톡에서 같은 표현을 추천받았던 마지막 시각. 처음 만나는 표현이면 null
   lastRecommendedAt: string | null;
+  // 무료 스몰톡에서 나와 구독 없이도 배울 수 있는 표현인가 (배포 전 서버엔 없다)
+  freeTrial?: boolean;
 }
 
 // 지난 스몰톡 목록 — 완료한 대화만 최신순으로 온다
@@ -249,6 +256,9 @@ export const completeSmallTalkSession = (sessionId: number) =>
 
 // 오늘의 스몰톡 — 끝난 대화의 요약. 점수·별점 없이 지난번과의 비교와 기억·재사용의 순간을 돌려준다.
 // growth만 없을 수 있고(null), reusedExpressions·followUp은 늘 오되 아직 만드는 중이면 pending이다
+// 총평 분석 상태 — 진행 중, 모두 분석, 일부만 분석
+export type SummaryAnalysisStatus = 'PROCESSING' | 'COMPLETE' | 'PARTIAL';
+
 export interface SmallTalkSummaryResponse {
   sessionId: number;
   // 제목이 없는 세션이면 null
@@ -264,6 +274,8 @@ export interface SmallTalkSummaryResponse {
   growth: SmallTalkSummaryGrowth | null;
   reusedExpressions: SmallTalkSummaryReusedExpressions;
   followUp: SmallTalkSummaryFollowUp;
+  // 구 서버는 없고, 예전에 저장한 총평은 null이다
+  analysisStatus?: SummaryAnalysisStatus | null;
   // 교정이 붙은 사용자 메시지 수 (세션 상세의 correctionCount와 같은 값)
   correctionCount: number | null;
 }
@@ -350,5 +362,5 @@ export interface SmallTalkSummaryFollowUp {
 // 오늘의 스몰톡 요약 — 완료(COMPLETED)된 세션만 준다. 진행 중이거나 종료 확인 대기면 409
 export const getSmallTalkSummary = (sessionId: number) =>
   api.get<SmallTalkSummaryResponse>(
-    `/api/v1/free-talk/sessions/${sessionId}/summary`,
+    `/api/v1/free-talk/sessions/${sessionId}/summary?progressive=true`,
   );

@@ -91,6 +91,8 @@ export const EVENTS = {
   SMALL_TALK_TOPICS_REFRESHED: 'Small Talk Topics Refreshed',
   SMALL_TALK_INTRO_GUIDE_CLOSED: 'Small Talk Intro Guide Closed',
   SMALL_TALK_GREETING_TAPPED: 'Small Talk Greeting Tapped',
+  SMALL_TALK_FREE_NUDGE_VIEWED: 'Small Talk Free Nudge Viewed',
+  SMALL_TALK_FREE_NUDGE_TAPPED: 'Small Talk Free Nudge Tapped',
   SMALL_TALK_STARTED: 'Small Talk Started',
   SMALL_TALK_TURN_COMPLETED: 'Small Talk Turn Completed',
   SMALL_TALK_COMPLETED: 'Small Talk Completed',
@@ -100,6 +102,33 @@ export const EVENTS = {
   SMALL_TALK_FEEDBACK_OPENED: 'Small Talk Feedback Opened',
   SMALL_TALK_FEEDBACK_SKIPPED: 'Small Talk Feedback Skipped',
   SMALL_TALK_FEEDBACK_VIEWED: 'Small Talk Feedback Viewed',
+
+  // 롤플레이 — 사용자가 역할·상황을 적어 만든 시나리오로 하는 대화. 대화 엔진 이벤트는 스몰톡처럼 함께 쓴다.
+  ROLEPLAY_PARTNER_SELECTED: 'Roleplay Partner Selected',
+  // 아이디어 추천 — 누름 / 받은 조합을 칸에 채움 / 못 받음
+  ROLEPLAY_IDEA_REQUESTED: 'Roleplay Idea Requested',
+  ROLEPLAY_IDEA_APPLIED: 'Roleplay Idea Applied',
+  ROLEPLAY_IDEA_FAILED: 'Roleplay Idea Failed',
+  // 시작하기를 눌렀다 — 앱을 닫으면 결과 이벤트가 없어, 이게 만들기 결과의 분모다
+  ROLEPLAY_CREATE_STARTED: 'Roleplay Create Started',
+  ROLEPLAY_CREATED: 'Roleplay Created',
+  ROLEPLAY_STARTED: 'Roleplay Started',
+  ROLEPLAY_START_FAILED: 'Roleplay Start Failed',
+  ROLEPLAY_TURN_COMPLETED: 'Roleplay Turn Completed',
+  ROLEPLAY_COMPLETED: 'Roleplay Completed',
+  ROLEPLAY_ABANDONED: 'Roleplay Abandoned',
+  ROLEPLAY_DELETED: 'Roleplay Deleted',
+  ROLEPLAY_CREATE_FAILED: 'Roleplay Create Failed',
+  ROLEPLAY_CREATE_ABANDONED: 'Roleplay Create Abandoned',
+  // 카드 ⋯ — 삭제 확인 시트는 Confirm Sheet(roleplay_delete)가 잡는다
+  ROLEPLAY_MENU_OPENED: 'Roleplay Menu Opened',
+  ROLEPLAY_DELETE_FAILED: 'Roleplay Delete Failed',
+  // 종료 후 — 요약이 선 순간, 요약을 못 받음, 상세 피드백으로 가거나 건너뜀, 대화 기록이 선 순간
+  ROLEPLAY_SUMMARY_VIEWED: 'Roleplay Summary Viewed',
+  ROLEPLAY_SUMMARY_FAILED: 'Roleplay Summary Failed',
+  ROLEPLAY_FEEDBACK_OPENED: 'Roleplay Feedback Opened',
+  ROLEPLAY_FEEDBACK_SKIPPED: 'Roleplay Feedback Skipped',
+  ROLEPLAY_FEEDBACK_VIEWED: 'Roleplay Feedback Viewed',
 
   // 분석 피드백
   FEEDBACK_VIEWED: 'Feedback Viewed',
@@ -208,7 +237,7 @@ export const EVENTS = {
   WIDGET_INSTALLED: 'Widget Installed',
   WIDGET_REMOVED: 'Widget Removed',
 
-  // LAN-428 결제 전 설문(임시) — 편지 CTA → 시작 → 문항 → 제출의 퍼널. 설문이 끝나면 설문 코드와 함께 지운다
+  // LAN-428 설문(임시) — 편지 CTA → 시작 → 문항 → 제출의 퍼널. 설문이 끝나면 설문 코드와 함께 지운다
   SURVEY_INVITE_TAPPED: 'Survey Invite Tapped',
   SURVEY_STARTED: 'Survey Started',
   SURVEY_QUESTION_VIEWED: 'Survey Question Viewed',
@@ -287,6 +316,16 @@ export type GateQuestion = Extract<OnboardingStep, 'accent'>;
 export type ExpressionStep =
   'quiz' | 'explain' | 'pronounce' | 'examples' | 'review';
 export type TurnInputType = 'voice' | 'text';
+// 롤플레이 대화를 어디서 열었나 — 방금 만든 시나리오 / 보관함 카드(또는 그 밖의 진입)
+export type RoleplayEntry = 'created' | 'card';
+// 롤플레이를 끝내지 않고 나간 까닭 — no_speech는 말 없이 X, discarded는 서버가 남길 대화가 없다고 버림,
+// complete_failed는 끝내기 요청 실패(서버엔 끝났을 수 있음), navigated_away는 뒤로가기 등으로 화면을 벗어남, page_closed는 앱·탭을 닫음
+export type RoleplayAbandonReason =
+  | 'no_speech'
+  | 'discarded'
+  | 'complete_failed'
+  | 'navigated_away'
+  | 'page_closed';
 // 스몰톡 대화 상대 — 홈에서 고른 캐릭터. 시나리오엔 없는 축이라 스몰톡 이벤트에만 붙는다
 export type TalkPartner = 'chloe' | 'marco' | 'teddy';
 // 단어 퀴즈 화면은 퀴즈 스텝·학습 안의 복습·알림 복습이 같이 쓴다 — 제출·힌트 이벤트가 이 값으로 갈린다
@@ -294,6 +333,8 @@ export type QuizStepKind = 'quiz' | 'review' | 'expression_review';
 // 알림 복습에서 나간 자리 — 시작 전 안내(intro)인지 문제 푸는 중(quiz)인지
 export type ExpressionReviewStep = 'intro' | 'quiz';
 export type HintSource = QuizStepKind;
+// LAN-428 설문 종류(임시) — 마이페이지·안내 편지로 여는 일반 설문과, 결제자에게 편지로만 여는 결제자 설문
+export type SurveyKind = 'general' | 'paid';
 // 홈 복귀 신호 — 앱 안에서 돌아온 이유. 밖에서 들어온 유입(알림·위젯)은 entry_campaign이 맡는다
 export type HomeReturnReason = 'just' | 'flip' | 'card';
 // 시나리오 피드백을 어디서 열었는지 — 대화 직후 흐름과 시나리오 기록에서 다시 연 것을 가른다
@@ -347,7 +388,11 @@ export type PaywallGateSource =
   // 총평에서 상세 피드백 보기를 눌렀는데 서버가 잠근 세션 — 두 번째 시나리오부터 페이월이 처음 뜨는 곳
   | 'feedback_detail'
   // 프리미엄 프리뷰 끝 — 무료로 열어 준 표현 하나를 마친 자리
-  | 'premium_preview';
+  | 'premium_preview'
+  // 롤플레이 시나리오 만들기(시작하기) — 저장을 서버가 거절한 경우 포함
+  | 'roleplay_create'
+  // 만든 시나리오로 대화하기 — 세션 시작을 서버가 거절한 경우 포함
+  | 'roleplay_talk';
 // 결제가 실패한 갈래 — 환경 문제 셋, 셸이 회신한 실패, 이용권을 결제 전에 막은 둘. 셸의 문구는 message에 따로 싣는다
 export type PurchaseFailureReason =
   | 'browser'
@@ -363,7 +408,11 @@ export type PurchaseFailureReason =
   // 화면에 그린 금액의 통화와 결제할 패키지의 통화가 달라 결제 전에 막았다
   | 'currency_mismatch';
 export type ConfirmSheetKind =
-  'conversation_exit' | 'expression_exit' | 'account_delete' | 'alarm_delete';
+  | 'conversation_exit'
+  | 'expression_exit'
+  | 'account_delete'
+  | 'alarm_delete'
+  | 'roleplay_delete';
 export type RetryScreen =
   | 'reward'
   // 환급 화면은 떠 있고 내역 줄만 받지 못했다
@@ -372,6 +421,10 @@ export type RetryScreen =
   | 'scenario_history'
   | 'smalltalk'
   | 'smalltalk_summary'
+  | 'roleplay'
+  | 'roleplay_talk'
+  | 'roleplay_summary'
+  | 'roleplay_history'
   | 'conversation'
   | 'card_back'
   | 'expression_list'
@@ -434,7 +487,7 @@ export type ReviewTrigger = 'talk' | 'expression';
 export type ReviewCardStatus =
   'shown' | 'not_shown' | 'unavailable' | 'timeout';
 export type CalendarView = 'week' | 'month';
-export type HomeTab = 'scenario' | 'smalltalk';
+export type HomeTab = 'scenario' | 'smalltalk' | 'roleplay';
 // 위젯 설치 유도에서 고른 답 — 닫기·나중에는 dismiss로 묶는다
 export type WidgetInstallAnswer = 'install' | 'dismiss';
 // 위젯 설치 안내를 연 자리 — 온보딩 스텝인지 마이페이지에서 다시 연 것인지. 온보딩 전환율 분모가 섞이지 않게 한다
@@ -474,6 +527,8 @@ export type EventProps = {
     feedback_type?: FeedbackType;
     // 페이월일 때만 — 어느 문으로 들어왔는가 (게이트에 막혀 왔으면 그 문, 마이페이지에서 들어왔으면 me)
     paywall_source?: PaywallSource;
+    // 롤플레이 대화일 때만 — 어느 시나리오(보관함 id)로 연 대화인가
+    roleplay_id?: number;
   };
   // 파괴적 행동(이탈·탈퇴) 전 확인 시트 — 열림/취소로 고민율을 본다. 확정은 각 Abandoned/Deleted 이벤트
   'Confirm Sheet Opened': { sheet: ConfirmSheetKind };
@@ -640,6 +695,7 @@ export type EventProps = {
   };
   // reason은 connect_failed(연결 실패)·closed(도중 끊김), 그 밖엔 에러 이름
   'Speech Recognition Failed': {
+    session_id?: number;
     engine?: 'deepgram' | 'web_speech';
     reason?: string;
   };
@@ -647,6 +703,7 @@ export type EventProps = {
   // synth = 런타임 합성(분리 재생이면 질문 음원으로 폴백, 아니면 발화가 통째로 건너뛰어진다),
   // question_audio = 서버 음원(오프닝 첫 질문은 합성으로 폴백, 이어 재생 질문은 통째로 건너뛰어진다. 원인은 Sentry)
   'Speech Playback Failed': {
+    session_id?: number;
     source: 'synth' | 'question_audio';
   };
   'Hint Used': { source: HintSource; level: number };
@@ -668,8 +725,10 @@ export type EventProps = {
   // 보여준 주제가 마음에 안 들어 다른 주제를 받았다 (열 때 자동으로 받는 것은 세지 않는다)
   'Small Talk Topics Refreshed': { partner: TalkPartner };
   'Small Talk Intro Guide Closed': undefined;
-  // coached = 코치마크가 켜진 채로 눌렀는지 (코치마크가 시킨 첫 탭)
+  // coached = 캐릭터 옆 "누르면 인사해요" 힌트가 떠 있을 때 눌렀는지 (힌트가 시킨 첫 탭)
   'Small Talk Greeting Tapped': { partner: TalkPartner; coached: boolean };
+  'Small Talk Free Nudge Viewed': undefined;
+  'Small Talk Free Nudge Tapped': undefined;
   'Small Talk Started': {
     session_id: number;
     partner: TalkPartner;
@@ -735,6 +794,119 @@ export type EventProps = {
     correction_count: number;
   };
 
+  // 롤플레이 — roleplay_id는 내 보관함의 시나리오 id다. 같은 시나리오로 여러 번 대화하면 session_id만 늘어난다
+  'Roleplay Partner Selected': { partner: TalkPartner };
+  'Roleplay Idea Requested': {
+    partner: TalkPartner;
+    // 이 만들기에서 몇 번째 요청인가
+    request_count: number;
+  };
+  'Roleplay Idea Applied': { partner: TalkPartner; idea_id: number };
+  // empty는 고를 아이디어가 없다는 응답, error는 요청 실패다
+  'Roleplay Idea Failed': { partner: TalkPartner; reason: 'empty' | 'error' };
+  'Roleplay Create Started': {
+    partner: TalkPartner;
+    used_idea: boolean;
+    free_trial: boolean;
+  };
+  'Roleplay Created': {
+    roleplay_id: number;
+    partner: TalkPartner;
+    // 아이디어 추천받기를 한 번이라도 눌렀는가 (받은 뒤 고쳤어도 true)
+    used_idea: boolean;
+    // 마지막으로 채운 아이디어와, 그걸 고쳐 썼는가 — 아이디어를 안 썼으면 없다
+    idea_id?: number;
+    idea_edited?: boolean;
+    // 무료 사용자의 체험인가 (유료·결제 도입 전 이용은 false)
+    free_trial: boolean;
+  };
+  'Roleplay Started': {
+    session_id: number;
+    roleplay_id: number;
+    partner: TalkPartner;
+    free_trial: boolean;
+    entry: RoleplayEntry;
+  };
+  // premium_required는 서버의 프리미엄 거절, not_found는 다른 곳에서 지운 시나리오다
+  'Roleplay Start Failed': {
+    roleplay_id: number;
+    entry: RoleplayEntry;
+    reason: 'premium_required' | 'not_found' | 'error';
+    free_trial: boolean;
+  };
+  'Roleplay Turn Completed': {
+    session_id: number;
+    partner: TalkPartner;
+    turn_index: number;
+    input_type: TurnInputType;
+    char_count: number;
+    utterance_duration_ms: number;
+  };
+  // 롤플레이는 작별 인사로 끝나지 않는다 — X로 끝내거나(direct_end), 오늘 시간을 다 써 끝내거나(time_limit),
+  // 다른 기기·탭에서 먼저 끝낸 대화를 이 화면이 알게 된다(ended_elsewhere)
+  'Roleplay Completed': {
+    session_id: number;
+    partner: TalkPartner;
+    turn_count: number;
+    speaking_duration_ms: number;
+    end_reason: 'time_limit' | 'direct_end' | 'ended_elsewhere';
+    // 끝낼 때 응답을 못 받은 발화가 있었는가 — 있으면 turn_count·speaking_duration_ms에 그 턴이 빠져 있다
+    pending_turn: boolean;
+  };
+  'Roleplay Abandoned': {
+    session_id: number;
+    partner: TalkPartner;
+    turn_index: number;
+    reason: RoleplayAbandonReason;
+  };
+  'Roleplay Deleted': {
+    roleplay_id: number;
+    // 끝낸 대화가 있던 시나리오인가
+    has_history: boolean;
+  };
+  'Roleplay Menu Opened': { roleplay_id: number };
+  'Roleplay Delete Failed': { roleplay_id: number };
+  // 요약이 실제로 선 순간. 표현 재사용은 뒤늦게 올 수 있어 pending을 같이 싣는다
+  'Roleplay Summary Viewed': {
+    session_id: number;
+    // 대화를 막 끝내고 왔는가 — 대화 기록에서 돌아온 재방문이면 false다
+    just_finished: boolean;
+    first_session: boolean;
+    has_growth: boolean;
+    reused_expression_count: number;
+    reused_expressions_pending: boolean;
+    correction_count: number | null;
+  };
+  // error는 조회 실패, timeout은 기다림 상한까지 총평이 안 온 것이다
+  'Roleplay Summary Failed': {
+    session_id: number;
+    reason: 'error' | 'timeout';
+  };
+  'Roleplay Feedback Opened': {
+    session_id: number;
+    correction_count: number | null;
+  };
+  'Roleplay Feedback Skipped': {
+    session_id: number;
+    trigger: 'close' | 'unavailable';
+    correction_count: number | null;
+  };
+  'Roleplay Feedback Viewed': {
+    session_id: number;
+    source: 'summary' | 'history';
+    correction_count: number;
+  };
+  // 저장이 거절되거나 실패했다 — premium_required는 서버가 프리미엄 없음으로 거절한 것
+  'Roleplay Create Failed': {
+    partner: TalkPartner;
+    reason: 'premium_required' | 'error';
+  };
+  // 오래 걸려 돌아가기를 눌렀다
+  'Roleplay Create Abandoned': {
+    partner: TalkPartner;
+    free_trial: boolean;
+  };
+
   // 피드백 응답에는 scenario_id가 없다 — session_id로 서버에서 조인한다
   'Feedback Viewed': {
     session_id: number;
@@ -781,6 +953,8 @@ export type EventProps = {
     score: number;
     passed: boolean;
     error_count: number;
+    // 판정과 상관없이 100점 미만인 단어 수
+    low_score_count: number;
     // 재도전 포함 몇 번째 분석 결과인지 (1부터)
     attempt: number;
   };
@@ -1017,12 +1191,16 @@ export type EventProps = {
   'Widget Removed': { family: WidgetFamily };
 
   // LAN-428 설문(임시) — 답 내용은 싣지 않는다(PII). 문항 id는 설문 정의(questions.ts)의 id 그대로
-  'Survey Invite Tapped': { letter_id: number };
-  'Survey Started': undefined;
+  'Survey Invite Tapped': { letter_id: number; survey: SurveyKind };
+  'Survey Started': { survey: SurveyKind };
   // 조건 문항이 끼고 빠지므로 index는 그 사람에게 보인 순서다 — 어느 문항인지는 question_id로 본다
-  'Survey Question Viewed': { question_id: string; question_index: number };
+  'Survey Question Viewed': {
+    survey: SurveyKind;
+    question_id: string;
+    question_index: number;
+  };
   // 저장 성공 뒤에만 — 보인 문항 수를 남긴다
-  'Survey Submitted': { question_count: number };
+  'Survey Submitted': { survey: SurveyKind; question_count: number };
 };
 
 // 사람에 붙는 속성 — 이벤트가 아니라 프로필에 쌓이고, 설정한 뒤에 찍힌 이벤트부터 따라붙는다.

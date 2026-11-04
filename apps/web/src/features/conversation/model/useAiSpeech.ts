@@ -58,6 +58,8 @@ interface SpeechRunDeps {
   tts: ReturnType<typeof useTts>;
   setSpeech: (speech: PlayingSpeech | null) => void;
   onSpeechEnd: () => void;
+  // 계측용 세션 id — 세션이 없는 재생(스몰톡 탭 인사)은 null
+  sessionId: number | null;
 }
 
 // 상대의 발화 한 회차를 소리로 낸다 — 오프닝이면 첫 질문 음원을, 이후엔 맞장구 합성(+질문 음원 이어 재생)을 틀고
@@ -69,6 +71,7 @@ const runSpeech = ({
   tts,
   setSpeech,
   onSpeechEnd,
+  sessionId,
 }: SpeechRunDeps): (() => void) => {
   const { content } = source;
 
@@ -97,7 +100,10 @@ const runSpeech = ({
         onEnd: resolve,
         onError: () => {
           if (!ignore)
-            track(EVENTS.SPEECH_PLAYBACK_FAILED, { source: 'synth' });
+            track(EVENTS.SPEECH_PLAYBACK_FAILED, {
+              session_id: sessionId ?? undefined,
+              source: 'synth',
+            });
           resolve();
         },
       });
@@ -111,7 +117,10 @@ const runSpeech = ({
         onEnd: () => resolve(true),
         onError: () => {
           if (!ignore)
-            track(EVENTS.SPEECH_PLAYBACK_FAILED, { source: 'question_audio' });
+            track(EVENTS.SPEECH_PLAYBACK_FAILED, {
+              session_id: sessionId ?? undefined,
+              source: 'question_audio',
+            });
           setSpeech(null);
           resolve(false);
         },
@@ -173,6 +182,8 @@ interface AiSpeechOptions {
   onSpeechEnd: () => void;
   // 다시 듣기를 허용하는 구간인가 — 꺼지는 순간 돌던 다시 듣기도 함께 끊는다. 안 주면 다시 듣기가 없는 재생이다
   replayAllowed?: boolean;
+  // 계측용 세션 id — 재생 실패가 어느 대화에서 났는지 남긴다
+  sessionId?: number | null;
 }
 
 /**
@@ -189,6 +200,7 @@ export const useAiSpeech = ({
   openingSrc,
   onSpeechEnd,
   replayAllowed = false,
+  sessionId = null,
 }: AiSpeechOptions) => {
   const tts = useTts();
   // 첫 AI 발화(오프닝)인지 — 첫 질문 음원 재생 대상
@@ -222,6 +234,7 @@ export const useAiSpeech = ({
       tts,
       setSpeech,
       onSpeechEnd: onEnd,
+      sessionId,
     });
 
   // 발화가 바뀔 때마다 재생 한 회차를 시작한다 — 돌려받은 중단 함수가 그대로 cleanup이다

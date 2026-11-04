@@ -410,6 +410,24 @@ describe('PaywallScreen', () => {
     expect(mocks.dismiss).not.toHaveBeenCalled();
   });
 
+  it('한 장짜리 페이월도 스몰톡 아래에 롤플레이 시리즈를 보여 준다', () => {
+    mocks.packages = {
+      monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
+      yearly: { packageId: '$rc_annual', price: 58_500, currency: 'KRW' },
+    };
+    render(<PaywallScreen rewardChallenge={false} />);
+
+    const smallTalk = screen.getByText('스몰톡');
+    const roleplay = screen.getByText('내가 만든 상황으로 롤플레이');
+    expect(
+      smallTalk.compareDocumentPosition(roleplay) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('heading', { name: '좀비에게 채식을 권하고' }),
+    ).toBeInTheDocument();
+  });
+
   it('일본어 화면은 환급 없이 혜택 → 결제 두 단계로 월간·연간 구독을 판다', () => {
     // 단계를 넘기면 맨 위로 올리는데 jsdom 요소엔 scrollTo가 없다
     Element.prototype.scrollTo = vi.fn();
@@ -422,7 +440,7 @@ describe('PaywallScreen', () => {
     };
     render(<PaywallScreen />);
 
-    expect(screen.getByText('プレミアムだけの特典3つ')).toBeInTheDocument();
+    expect(screen.getByText('プレミアムだけの特典4つ')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '次へ' }));
 
     expect(screen.getByRole('button', { name: '年間プラン' })).toHaveAttribute(
@@ -652,14 +670,14 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
     mocks.packages = passPackages(50_000);
   });
 
-  it('처음엔 혜택 화면이다 — 매일 오는 시나리오에 프리미엄 혜택 4가지를 더해 보여 준다', () => {
+  it('처음엔 혜택 화면이다 — 매일 오는 시나리오에 프리미엄 혜택 5가지를 더해 보여 준다', () => {
     render(<PaywallScreen rewardChallenge />);
 
     expect(
       screen.getByRole('heading', { name: /매일 도착하는 시나리오/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('프리미엄만 누리는 혜택 4가지'),
+      screen.getByText('프리미엄만 누리는 혜택 5가지'),
     ).toBeInTheDocument();
   });
 
@@ -672,6 +690,21 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
       '대화 전체를 한눈에',
       '지난번보다 나아진 점',
       '배운 표현을 실제로 썼는지',
+    ]) {
+      expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
+    }
+  });
+
+  it('마지막 혜택은 롤플레이다 — 번호가 05이고 상황 더미·만들기·좀비·외계인 네 장으로 넘겨 본다', () => {
+    render(<PaywallScreen rewardChallenge />);
+
+    const label = screen.getByText('내가 만든 상황으로 롤플레이');
+    expect(label.previousElementSibling).toHaveTextContent('05');
+    for (const title of [
+      '상상한 상황이 그대로 대화로',
+      '역할과 상황만 적으면 완성',
+      '좀비에게 채식을 권하고',
+      '외계인에게 지구도 소개해요',
     ]) {
       expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
     }

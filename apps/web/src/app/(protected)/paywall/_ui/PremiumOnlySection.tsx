@@ -1,10 +1,15 @@
-// 「프리미엄으로 이렇게 배워요」의 본문 — 표현 학습·시나리오·스몰톡 세 시리즈. 헤드라인은 PaywallHero에 있다.
+// 「프리미엄으로 이렇게 배워요」의 본문 — 표현 학습·시나리오·스몰톡·롤플레이 네 시리즈. 헤드라인은 PaywallHero에 있다.
 // 시리즈마다 좌우로 넘기는 카드 한 줄이라 세로로는 짧고, 더 보고 싶은 사람만 옆으로 넘긴다(다음 카드가 오른쪽에 살짝 보여 넘길 수 있는 줄 안다).
 // 피드백은 시나리오·스몰톡 시리즈 마지막 장에 있다. 화면 번호는 데모마다 다 나온 뒤의 대표 장면이라 정지 화면으로 읽힌다. 시나리오 첫 카드만 「많았다가 하나로」를 되풀이한다
 import { ExampleDemo } from './ExampleDemo';
 import { AnalysisDemo, MistakeDemo } from './FeedbackDemo';
 import { PronunciationDemo } from './PronunciationDemo';
 import { QuizDemo } from './QuizDemo';
+import {
+  RoleplayDeckDemo,
+  RoleplayFormDemo,
+  RoleplayTalkDemo,
+} from './RoleplayDemo';
 import { ScenarioDemo } from './ScenarioDemo';
 import { ScenarioPickLive } from './ScenarioPickLive';
 import { SERIES_SCREEN_WIDTH, SeriesCarousel } from './SeriesCarousel';
@@ -76,6 +81,28 @@ export const PremiumOnlySection = () => (
         {
           title: '자주 하는 실수까지 잡아줘요',
           screen: <MistakeDemo step={1} width={width} />,
+        },
+      ]}
+    />
+
+    <SeriesCarousel
+      label="내가 만든 상황으로 롤플레이"
+      items={[
+        {
+          title: '상상한 상황이 그대로 대화로',
+          screen: <RoleplayDeckDemo width={width} />,
+        },
+        {
+          title: '역할과 상황만 적으면 완성',
+          screen: <RoleplayFormDemo width={width} />,
+        },
+        {
+          title: '좀비에게 채식을 권하고',
+          screen: <RoleplayTalkDemo talk="zombie" width={width} />,
+        },
+        {
+          title: '외계인에게 지구도 소개해요',
+          screen: <RoleplayTalkDemo talk="alien" width={width} />,
         },
       ]}
     />

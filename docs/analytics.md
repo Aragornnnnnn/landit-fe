@@ -35,16 +35,16 @@
 
 ### 공통
 
-| 이벤트                  | 속성                                                                                                                                                                                    | 시점                                                                                                                  |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Page Viewed             | page_name, path, return_reason?, scenario_id?, session_id?, expression_id?, completed_date?, letter_id?, feedback_id?, feedback_type?, paywall_source?, entry_campaign?, entry_content? | 라우트 변경                                                                                                           |
-| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete\|alarm_delete)                                                                                                                 | 이탈·탈퇴·알람 삭제 확인 시트 열림                                                                                    |
-| Confirm Sheet Dismissed | sheet                                                                                                                                                                                   | 확인 시트에서 계속하기/닫기                                                                                           |
-| Error Retried           | screen(reward\|reward_history\|scenario\|scenario_history\|smalltalk\|smalltalk_summary\|conversation\|card_back\|expression_list\|streak\|mailbox\|alarm\|referral_invite)             | 에러 화면 "다시 시도"                                                                                                 |
-| App Exited              | trigger(back_button)                                                                                                                                                                    | 네이티브 뒤로가기로 앱 종료 (셸에서만)                                                                                |
-| Download Link Visited   | store(play_store\|app_store), utm_source?, utm_medium?, utm_campaign?                                                                                                                   | /download 스토어 리다이렉트 진입 (서버 발화, 익명). utm_*은 링크에 딱지가 있을 때만. 메신저 미리보기 봇은 세지 않는다 |
-| App Update Store Opened | store(play_store\|app_store)                                                                                                                                                            | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화)                                                         |
-| App Share Tapped        | method(native_sheet\|web_share\|copy)                                                                                                                                                   | 마이페이지 친구에게 공유하기 — 공유 시트를 열었거나 링크를 복사함                                                     |
+| 이벤트                  | 속성                                                                                                                                                                                                                                     | 시점                                                                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Page Viewed             | page_name, path, return_reason?, scenario_id?, session_id?, expression_id?, completed_date?, letter_id?, feedback_id?, feedback_type?, paywall_source?, roleplay_id?, entry_campaign?, entry_content?                                    | 라우트 변경                                                                                                           |
+| Confirm Sheet Opened    | sheet(conversation_exit\|expression_exit\|account_delete\|alarm_delete\|roleplay_delete)                                                                                                                                                 | 이탈·탈퇴·알람 삭제 확인 시트 열림                                                                                    |
+| Confirm Sheet Dismissed | sheet                                                                                                                                                                                                                                    | 확인 시트에서 계속하기/닫기                                                                                           |
+| Error Retried           | screen(reward\|reward_history\|scenario\|scenario_history\|smalltalk\|smalltalk_summary\|roleplay\|roleplay_talk\|roleplay_summary\|roleplay_history\|conversation\|card_back\|expression_list\|streak\|mailbox\|alarm\|referral_invite) | 에러 화면 "다시 시도"                                                                                                 |
+| App Exited              | trigger(back_button)                                                                                                                                                                                                                     | 네이티브 뒤로가기로 앱 종료 (셸에서만)                                                                                |
+| Download Link Visited   | store(play_store\|app_store), utm_source?, utm_medium?, utm_campaign?                                                                                                                                                                    | /download 스토어 리다이렉트 진입 (서버 발화, 익명). utm_*은 링크에 딱지가 있을 때만. 메신저 미리보기 봇은 세지 않는다 |
+| App Update Store Opened | store(play_store\|app_store)                                                                                                                                                                                                             | 앱 업데이트 유도 UI에서 스토어 앱을 직접 염 (클라이언트 발화)                                                         |
+| App Share Tapped        | method(native_sheet\|web_share\|copy)                                                                                                                                                                                                    | 마이페이지 친구에게 공유하기 — 공유 시트를 열었거나 링크를 복사함                                                     |
 
 `return_reason`은 앱 안에서 홈으로 돌아온 이유(`flip` 표현 완료 복귀 / `card` 대화 이탈 복귀 / `just` 해금 직후). 확인 시트의 확정은 각각 `Conversation Abandoned` / `Expression Abandoned` / `Account Deleted`로 찍힌다.
 
@@ -66,7 +66,7 @@
 | Purchase Canceled           | plan                                                                                                                                               | 사용자가 스토어 결제 시트를 닫았을 때                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Purchase Failed             | plan?, reason, message?                                                                                                                            | 결제 실패, 또는 결제·복원을 시작할 수 없는 환경(browser / outdated_shell). reason은 browser / outdated_shell / no_response / shell_error / pass_unavailable(100일 이용권을 지금 살 수 없어 결제 전에 막음) / pass_check_failed(살 수 있는지 확인하지 못해 막음) / left_screen(회신을 받기 전에 페이월을 떠나 결과를 알 수 없음) / currency_mismatch(화면 금액과 결제 패키지의 통화가 달라 결제 전에 막음). shell_error면 셸이 준 문구가 message. 복원이 막힌 경우엔 plan이 없다. 복원 요청 자체의 실패는 Purchase Restored { succeeded: false }다 |
 | Purchase Restored           | succeeded(bool)                                                                                                                                    | 구매 복원 요청이 끝났을 때. 셸 오류·응답 없음·복원할 내역 없음은 모두 succeeded=false                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| Paywall Gate Locked         | source(expression\|smalltalk\|conversation_finished\|feedback_detail\|premium_preview)                                                             | 무료 사용자가 학습 진입, 첫 시나리오 피드백 끝, 또는 잠긴 상세 피드백 보기(feedback_detail, 둘째 시나리오부터)에서 페이월로 보내졌을 때. 대화 시작은 문이 아니다                                                                                                                                                                                                                                                                                                                                                                                  |
+| Paywall Gate Locked         | source(expression\|smalltalk\|conversation_finished\|feedback_detail\|premium_preview\|roleplay_create\|roleplay_talk)                             | 무료 사용자가 학습 진입, 첫 시나리오 피드백 끝, 또는 잠긴 상세 피드백 보기(feedback_detail, 둘째 시나리오부터)에서 페이월로 보내졌을 때. roleplay_create는 롤플레이 시나리오 만들기, roleplay_talk는 만든 시나리오로 대화하기다. 시나리오 대화 시작은 문이 아니다                                                                                                                                                                                                                                                                                 |
 | Subscription Manage Tapped  | status(trial\|active\|canceled)                                                                                                                    | 마이페이지 골드 카드에서 구독 관리로 들어감                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | Paywall Entry Tapped        | source(me\|header\|reward)                                                                                                                         | 게이트가 아닌 자리(마이페이지·헤더 알약·환급 화면)에서 페이월로 들어감                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | Haptics Toggled             | enabled                                                                                                                                            | 마이페이지 진동 시트에서 켜거나 껐을 때                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
@@ -142,7 +142,7 @@
 
 | 이벤트                | 속성                                                                                        | 시점                                                                                                             |
 | --------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Home Tab Switched     | tab(scenario\|smalltalk)                                                                    | 상단 탭 칩 눌러 이동 (보고 있는 탭 재탭 제외)                                                                    |
+| Home Tab Switched     | tab(scenario\|smalltalk\|roleplay)                                                          | 상단 탭 칩 눌러 이동 (보고 있는 탭 재탭 제외)                                                                    |
 | Scenario Card Flipped | scenario_id, direction(back\|front), trigger(button\|auto\|preview)                         | 원어민 표현 배우기 / 표현을 마치고 돌아와 자동 펴짐(auto) / 프리미엄 프리뷰가 스스로 뒤집음(preview) / 앞면 복귀 |
 | Expression Selected   | expression_id, 출처(scenario_id\|session_id), source(card_back\|post_conversation\|history) | 표현 항목 탭                                                                                                     |
 
@@ -195,8 +195,8 @@
 | Answer Guide Toggled         | session_id?, scenario_id, turn_index, opened, from_hint                  | 첫 시나리오 답변 가이드를 펼침(true)/접음(false). from_hint=true는 첫 질문의 유도 힌트가 떠 있을 때 연 것                                       |
 | Speech Replayed              | session_id?, turn_index                                                  | 상대 발화 다시 듣기 시작 (멈추려고 누른 건 안 찍음)                                                                                             |
 | Speech Recognition Completed | session_id?, turn_index, engine, end_reason, char_count                  | 음성 인식 결과(빈 결과 포함) — end_reason(finalize\|timeout\|utterance_end\|ended), connect_ms?·finalize_wait_ms?(대기 시간)                    |
-| Speech Recognition Failed    | engine?, reason?                                                         | STT 오류 (권한 거부 제외) — reason(connect_failed\|closed, 그 밖엔 에러 이름)                                                                   |
-| Speech Playback Failed       | source(synth\|question_audio)                                            | AI 발화 재생 실패 — 실패 비율용. question_audio는 서버 음원(오프닝 첫 질문·이어 재생 질문), 스몰톡 탭 인사도 포함 (synth 원인은 Sentry)         |
+| Speech Recognition Failed    | session_id?, engine?, reason?                                            | STT 오류 (권한 거부 제외) — reason(connect_failed\|closed, 그 밖엔 에러 이름)                                                                   |
+| Speech Playback Failed       | session_id?, source(synth\|question_audio)                               | AI 발화 재생 실패 — 실패 비율용. question_audio는 서버 음원(오프닝 첫 질문·이어 재생 질문), 스몰톡 탭 인사도 포함 (synth 원인은 Sentry)         |
 | Scenario Talk Completed      | session_id, scenario_id, turn_count                                      | 서버가 완료 판정                                                                                                                                |
 | Scenario Talk Abandoned      | session_id?, scenario_id, turn_index                                     | 중도 이탈 확정                                                                                                                                  |
 
@@ -210,6 +210,8 @@
 | Small Talk Topic Selected     | partner, topic_id                                                                                   | 주제 모달에서 주제 선택                                 |
 | Small Talk Intro Guide Closed | —                                                                                                   | 첫 진입 안내 닫음 (기기당 한 번)                        |
 | Small Talk Greeting Tapped    | partner, coached                                                                                    | 캐릭터를 눌러 인사 들음 (coached=코치마크 켜진 채 누름) |
+| Small Talk Free Nudge Viewed  | —                                                                                                   | 홈 스몰톡 칩 말풍선(무료 5분)이 뜸 (하루 한 번)         |
+| Small Talk Free Nudge Tapped  | —                                                                                                   | 말풍선이 떠 있을 때 스몰톡 칩을 누름                    |
 | Small Talk Started            | session_id, partner, first_speaker, topic_id?                                                       | 세션 시작 성공                                          |
 | Small Talk Turn Completed     | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms         | 발화 제출 성공                                          |
 | Small Talk Completed          | session_id, partner, turn_count, speaking_duration_ms, end_reason(user_ended\|time_limit)           | 서버가 완료 판정                                        |
@@ -228,6 +230,40 @@
 탭의 네 이벤트는 대화 시작 전 갈림길이다. 기본 상대로 그냥 시작하면 `Partner Selected`는 안 찍히고 `Started`의 `partner`로 본다. 주제 모달 열림은 안 찍는다 — `Started`의 `topic_id` 유무로 "주제로 시작" 비율이 나온다.
 
 단, 마이크·STT처럼 **대화 엔진이 쏘는 것은 두 대화가 함께 쓴다** (Recording Started/Stopped/Canceled, Input Mode Switched, Turn Failed, Inner Thought Viewed, Translation Toggled, Speech Replayed, Speech Recognition Completed/Failed, Speech Playback Failed). 입력 기계의 사건이라 어느 대화인지와 무관하고, 대화 엔진(features/conversation)은 대화 종류를 모른다.
+
+### 롤플레이
+
+| 이벤트                    | 속성                                                                                                                        | 시점                                        |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| Roleplay Partner Selected | partner                                                                                                                     | 상대 고르기에서 다음으로 넘어갈 때          |
+| Roleplay Idea Requested   | partner, request_count                                                                                                      | 아이디어 추천받기를 누를 때                 |
+| Roleplay Idea Applied     | partner, idea_id                                                                                                            | 받은 아이디어로 칸을 채울 때                |
+| Roleplay Idea Failed      | partner, reason(empty\|error)                                                                                               | 아이디어를 못 받았을 때                     |
+| Roleplay Create Started   | partner, used_idea, free_trial                                                                                              | 시작하기를 눌러 저장을 요청할 때            |
+| Roleplay Created          | roleplay_id, partner, used_idea, idea_id?, idea_edited?, free_trial                                                         | 만들기에서 시작하기 → 보관함 저장 성공      |
+| Roleplay Started          | session_id, roleplay_id, partner, free_trial, entry(created\|card)                                                          | 세션이 열리고 구독 판단이 선 뒤             |
+| Roleplay Start Failed     | roleplay_id, entry(created\|card), reason(premium_required\|not_found\|error), free_trial                                   | 세션 시작 실패                              |
+| Roleplay Turn Completed   | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms                                 | 발화 제출 성공 (끝낸 뒤 도착한 응답도 포함) |
+| Roleplay Completed        | session_id, partner, turn_count, speaking_duration_ms, end_reason(time_limit\|direct_end\|ended_elsewhere), pending_turn    | X로 끝냄 또는 오늘 시간 소진                |
+| Roleplay Abandoned        | session_id, partner, turn_index, reason(no_speech\|discarded\|complete_failed\|navigated_away\|page_closed)                 | 끝내지 않고 나갔을 때                       |
+| Roleplay Deleted          | roleplay_id, has_history                                                                                                    | 지우기를 확인해 삭제가 끝났을 때            |
+| Roleplay Delete Failed    | roleplay_id                                                                                                                 | 삭제 요청이 실패했을 때                     |
+| Roleplay Menu Opened      | roleplay_id                                                                                                                 | 카드 ⋯를 눌렀을 때                          |
+| Roleplay Create Failed    | partner, reason(premium_required\|error)                                                                                    | 저장이 거절되거나 실패했을 때               |
+| Roleplay Create Abandoned | partner, free_trial                                                                                                         | 만들기가 오래 걸려 돌아가기를 눌렀을 때     |
+| Roleplay Summary Viewed   | session_id, just_finished, first_session, has_growth, reused_expression_count, reused_expressions_pending, correction_count | 요약이 실제로 선 순간                       |
+| Roleplay Summary Failed   | session_id, reason(error\|timeout)                                                                                          | 요약을 못 받았을 때                         |
+| Roleplay Feedback Opened  | session_id, correction_count                                                                                                | 요약에서 상세 피드백으로 갈 때              |
+| Roleplay Feedback Skipped | session_id, trigger(close\|unavailable), correction_count                                                                   | 요약에서 상세 피드백 없이 나갈 때           |
+| Roleplay Feedback Viewed  | session_id, source(summary\|history), correction_count                                                                      | 대화 기록이 실제로 선 순간                  |
+
+`free_trial`은 무료 사용자의 계정당 1회 체험인지를 뜻한다. 앱을 닫은 이탈은 `Create Abandoned`에 잡히지 않아, `Create Started`와 `Created`·`Create Failed`·`Create Abandoned`의 차이로 본다.
+
+`roleplay_id`는 내 보관함의 시나리오 id다. 같은 시나리오로 다시 대화하면 `Started`만 새 `session_id`로 쌓인다. 작별 인사로 끝나는 길은 없다. `ended_elsewhere`는 다른 기기·탭에서 먼저 끝낸 대화를 이 화면이 알게 된 경우다.
+
+`Abandoned`의 `page_closed`는 페이지가 닫히는 신호를 받았을 때만 남는다. 앱을 강제로 끄면 이 신호가 오지 않을 수 있어, 그때는 `Started` 뒤에 `Completed`도 `Abandoned`도 없다. `pending_turn`이 true면 그 대화의 `turn_count`와 `speaking_duration_ms`에 끝낼 때 응답을 못 받은 턴이 빠져 있다. 페이월에 다녀와 적던 글을 복원한 시나리오는 아이디어를 썼어도 `used_idea`가 false로 남는다. 삭제 확인 시트는 `Confirm Sheet`(roleplay_delete)로 본다. 만들기의 입력 단계는 `Page Viewed`(roleplay_new_form)로 본다. `Speech Recognition Failed`와 `Speech Playback Failed`의 `session_id`로 어느 대화에서 난 실패인지 찾는다.
+
+`Create Abandoned`와 `Create Failed`는 만들기 실패 수가 아니다. 세션을 기다리다 나가면 `Created`도 찍혀 있고, 나간 뒤 저장이 실패하면 `Create Failed`가 뒤따른다.
 
 ### 분석 피드백
 
@@ -254,23 +290,23 @@ moment: scenario·smalltalk = 그 대화를 처음 마쳤을 때, app = 다른 �
 
 ### 표현 학습
 
-| 이벤트                      | 속성                                                              | 시점                                                           |
-| --------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------- |
-| Expression List Viewed      | 출처(scenario_id\|session_id), expression_count                   | 분기 화면 리스트 리빌                                          |
-| Expression Learning Skipped | 출처(scenario_id\|session_id), expression_count                   | 분기 화면을 X로 닫고 학습 없이 나감 (연출 중이면 count 0 가능) |
-| Expression Learning Started | expression_id, 출처(scenario_id\|session_id)                      | 학습 데이터 로드 완료                                          |
-| Expression Step Viewed      | expression_id, step(quiz\|explain\|pronounce\|examples\|review)   | 스텝 노출                                                      |
-| Quiz Word Picked            | expression_id, picked_count                                       | 단어 칩 선택                                                   |
-| Quiz Word Removed           | expression_id, picked_count                                       | 단어 칩 제거                                                   |
-| Quiz Answer Submitted       | expression_id, is_correct, hint_level                             | 퀴즈 확인                                                      |
-| Example Sentence Viewed     | expression_id, sentence_index                                     | 예문 캐러셀 스냅                                               |
-| Pronunciation Result Viewed | expression_id, score, passed, error_count, attempt                | 발음 분석 결과 도착 (재도전 포함, attempt=회차)                |
-| Pronunciation Skipped       | expression_id                                                     | 설명 화면에서 "지금은 말할 수 없어요"로 발음 건너뛰기          |
-| Pronunciation Audio Played  | expression_id, source(expression\|sentence\|native_word\|my_word) | 듣기 버튼 재생 (자동재생·토글 끄기 제외)                       |
-| Review Answer Submitted     | expression_id, is_correct, hint_level                             | 복습 영작 확인 (오답이어도 재시도 없이 완료로 이어진다)        |
-| Hint Used                   | source(quiz\|review), level                                       | 힌트 보기 (퀴즈·복습 모두 일회성, 누를 때마다 level 1)         |
-| Expression Completed        | expression_id, 출처(scenario_id\|session_id)                      | 학습 완료 처리 성공                                            |
-| Expression Abandoned        | expression_id, step                                               | 중단 확정                                                      |
+| 이벤트                      | 속성                                                                | 시점                                                           |
+| --------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Expression List Viewed      | 출처(scenario_id\|session_id), expression_count                     | 분기 화면 리스트 리빌                                          |
+| Expression Learning Skipped | 출처(scenario_id\|session_id), expression_count                     | 분기 화면을 X로 닫고 학습 없이 나감 (연출 중이면 count 0 가능) |
+| Expression Learning Started | expression_id, 출처(scenario_id\|session_id)                        | 학습 데이터 로드 완료                                          |
+| Expression Step Viewed      | expression_id, step(quiz\|explain\|pronounce\|examples\|review)     | 스텝 노출                                                      |
+| Quiz Word Picked            | expression_id, picked_count                                         | 단어 칩 선택                                                   |
+| Quiz Word Removed           | expression_id, picked_count                                         | 단어 칩 제거                                                   |
+| Quiz Answer Submitted       | expression_id, is_correct, hint_level                               | 퀴즈 확인                                                      |
+| Example Sentence Viewed     | expression_id, sentence_index                                       | 예문 캐러셀 스냅                                               |
+| Pronunciation Result Viewed | expression_id, score, passed, error_count, low_score_count, attempt | 발음 분석 결과 도착 (재도전 포함, attempt=회차)                |
+| Pronunciation Skipped       | expression_id                                                       | 설명 화면에서 "지금은 말할 수 없어요"로 발음 건너뛰기          |
+| Pronunciation Audio Played  | expression_id, source(expression\|sentence\|native_word\|my_word)   | 듣기 버튼 재생 (자동재생·토글 끄기 제외)                       |
+| Review Answer Submitted     | expression_id, is_correct, hint_level                               | 복습 영작 확인 (오답이어도 재시도 없이 완료로 이어진다)        |
+| Hint Used                   | source(quiz\|review), level                                         | 힌트 보기 (퀴즈·복습 모두 일회성, 누를 때마다 level 1)         |
+| Expression Completed        | expression_id, 출처(scenario_id\|session_id)                        | 학습 완료 처리 성공                                            |
+| Expression Abandoned        | expression_id, step                                                 | 중단 확정                                                      |
 
 표현 학습 화면은 시나리오 대화와 스몰톡이 같이 쓴다. 어디서 온 표현인지는 출처 속성으로 갈린다 — 시나리오 표현이면 `scenario_id`, 스몰톡 표현이면 `session_id`가 실린다.
 
@@ -392,14 +428,14 @@ OS 권한 팝업의 답 자체는 따로 찍지 않는다 — 위 두 step의 �
 
 설문이 끝나면 설문 코드(`features/survey`)와 함께 지운다. 완료 응답 자체는 슈퍼베이스에 있으니 여기서는 퍼널(편지 → 진입 → 문항별 이탈 → 제출)만 본다.
 
-| 이벤트                 | 속성                        | 시점                                                         |
-| ---------------------- | --------------------------- | ------------------------------------------------------------ |
-| Survey Invite Tapped   | letter_id                   | 설문 안내 편지의 "설문하고 이용권 받기"                      |
-| Survey Started         | —                           | 인트로에서 시작하기                                          |
-| Survey Question Viewed | question_id, question_index | 문항 노출 (뒤로 갔다 다시 봐도 찍힌다)                       |
-| Survey Submitted       | question_count              | 저장 성공 (이미 참여한 사람의 재제출도 서버가 성공으로 답함) |
+| 이벤트                 | 속성                                | 시점                                   |
+| ---------------------- | ----------------------------------- | -------------------------------------- |
+| Survey Invite Tapped   | survey, letter_id                   | 설문 안내 편지의 "설문 참여하기"       |
+| Survey Started         | survey                              | 인트로에서 시작하기                    |
+| Survey Question Viewed | survey, question_id, question_index | 문항 노출 (뒤로 갔다 다시 봐도 찍힌다) |
+| Survey Submitted       | survey, question_count              | 저장 성공                              |
 
-답 내용은 싣지 않는다. `question_id`는 설문 정의(`questions.ts`)의 id 그대로이고, `question_index`는 조건 문항이 끼고 빠진 뒤 그 사람에게 보인 순서다. 설문 화면 진입은 `Page Viewed(survey)`가 찍는다.
+`survey`는 어느 설문인지다 — `general`(마이페이지·안내 편지로 여는 일반 설문), `paid`(결제자에게 편지로만 여는 결제자 설문, 주소 `/survey/paid`). 답 내용은 싣지 않는다. `question_id`는 설문 정의(`questions.ts`)의 id 그대로이고, `question_index`는 조건 문항이 끼고 빠진 뒤 그 사람에게 보인 순서다. 설문 화면 진입은 `Page Viewed(survey)`, 결제자 설문은 `Page Viewed(survey_paid)`가 찍는다.
 
 ### 유저 속성
 

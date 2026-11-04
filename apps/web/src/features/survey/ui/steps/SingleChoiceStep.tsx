@@ -11,6 +11,7 @@ import {
   type SingleQuestion,
 } from '../../model/questions';
 import { ChoiceCard } from '../ChoiceCard';
+import { ChoiceList } from '../ChoiceList';
 import type { ChoiceStepProps } from './ChoiceStepProps';
 import { OtherInput } from './OtherInput';
 
@@ -35,11 +36,7 @@ export const SingleChoiceStep = ({
 
   return (
     <>
-      <div
-        role="radiogroup"
-        aria-labelledby={titleId}
-        className="mt-8 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-1"
-      >
+      <ChoiceList role="radiogroup" titleId={titleId} className="mt-8">
         {options.map((option) => (
           <ChoiceCard
             key={option}
@@ -60,7 +57,7 @@ export const SingleChoiceStep = ({
         {isOtherChosen && (
           <OtherInput value={otherText} onChange={onOtherText} />
         )}
-      </div>
+      </ChoiceList>
       {isOtherChosen && (
         <Button className="mt-4" loading={submitting} onClick={onNext}>
           {proceedLabel}

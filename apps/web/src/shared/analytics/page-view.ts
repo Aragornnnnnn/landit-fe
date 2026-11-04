@@ -9,6 +9,7 @@ import {
   ALARM_CHECK_PATH,
   ALARM_EDIT_PATH,
   ALARM_SETTINGS_PATH,
+  PAID_SURVEY_PATH,
   PAYWALL_PATH,
   PREMIUM_ONBOARDING_CHECK_PATH,
   PREMIUM_ONBOARDING_PATH,
@@ -18,6 +19,7 @@ import {
   REWARD_CHECK_PATH,
   REWARD_PATH,
   REWARD_PAYWALL_CHECK_PATH,
+  ROLEPLAY_NEW_PATH,
   SCENARIO_PATH,
   SUBSCRIPTION_CANCEL_PATH,
   SUBSCRIPTION_HISTORY_PATH,
@@ -63,6 +65,14 @@ const NESTED_PAGES: Record<string, string> = {
   [REWARD_CHECK_PATH]: 'reward_check',
   [REWARD_PAYWALL_CHECK_PATH]: 'reward_paywall_check',
   [PREVIEW_CHECK_PATH]: 'preview_check',
+  // LAN-428 설문(임시) — 설문이 끝나면 지운다
+  [PAID_SURVEY_PATH]: 'survey_paid',
+};
+
+// 끝난 롤플레이 대화 한 건 아래의 화면 — /roleplay/sessions/{id}/{여기}
+const ROLEPLAY_SESSION_PAGES: Record<string, string> = {
+  summary: 'roleplay_summary',
+  messages: 'roleplay_transcript',
 };
 
 // 페이월로 보낸 문 — 주소에 실려 온 값만 받는다. 문이 늘었는데 여기를 빠뜨리면 빌드가 깨진다
@@ -75,6 +85,8 @@ const PAYWALL_SOURCES: Record<PaywallSource, true> = {
   me: true,
   header: true,
   reward: true,
+  roleplay_create: true,
+  roleplay_talk: true,
 };
 
 export const readPaywallSource = (
@@ -89,6 +101,7 @@ const STATIC_PAGES = new Set([
   'privacy',
   'terms',
   'smalltalk',
+  'roleplay',
   'streak',
   'mailbox',
   // LAN-428 설문(임시) — 설문이 끝나면 지운다
@@ -171,6 +184,32 @@ const resolvePage = (
       path: pathname,
       scenario_id: toId(seg[1]),
       session_id: toId(seg[3]),
+    };
+  }
+
+  // 끝난 롤플레이 대화 한 건 — 요약과 대화 기록. 어느 세션인지 id로 남긴다
+  if (seg[0] === 'roleplay' && seg[1] === 'sessions' && seg[2]) {
+    const pageName = ROLEPLAY_SESSION_PAGES[seg[3]];
+    if (pageName) {
+      return { page_name: pageName, path: pathname, session_id: toId(seg[2]) };
+    }
+  }
+
+  // 시나리오 하나의 지난 대화 목록 — 어느 시나리오인지 id로 남긴다
+  if (seg[0] === 'roleplay' && seg[1] && seg[2] === 'sessions') {
+    return {
+      page_name: 'roleplay_history',
+      path: pathname,
+      roleplay_id: toId(seg[1]),
+    };
+  }
+
+  // 롤플레이 대화 — 어느 시나리오(보관함 id)로 연 대화인지 남긴다
+  if (seg[0] === 'conversation' && seg[1] === 'roleplay' && seg[2]) {
+    return {
+      page_name: 'conversation_roleplay',
+      path: pathname,
+      roleplay_id: toId(seg[2]),
     };
   }
 
@@ -280,6 +319,16 @@ const resolvePage = (
   // 이름은 BE의 알림 종류·유입 캠페인과 같은 말(expression_review)을 쓴다
   if (seg[0] === 'reviews' && seg[1]) {
     return { page_name: 'expression_review', path: pathname };
+  }
+
+  // 만들기는 상대 고르기와 입력이 한 주소다 — 입력 단계는 고른 상대가 주소에 붙는다
+  if (pathname === ROLEPLAY_NEW_PATH) {
+    return {
+      page_name: searchParams.has('partner')
+        ? 'roleplay_new_form'
+        : 'roleplay_new',
+      path: pathname,
+    };
   }
 
   const nested = NESTED_PAGES[pathname];

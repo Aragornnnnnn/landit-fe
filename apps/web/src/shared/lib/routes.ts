@@ -4,6 +4,7 @@ import type { PaywallSource } from '@landit/analytics';
 
 export const SCENARIO_PATH = '/scenario';
 export const SMALLTALK_PATH = '/smalltalk';
+export const ROLEPLAY_PATH = '/roleplay';
 export const STREAK_PATH = '/streak';
 export const LOGIN_PATH = '/login';
 export const ONBOARDING_PATH = '/onboarding';
@@ -95,6 +96,43 @@ export const SMALLTALK_HISTORY_PATH = `${SMALLTALK_PATH}/sessions`;
 
 export const smallTalkHistoryPath = (sessionId: number) =>
   `${SMALLTALK_HISTORY_PATH}/${sessionId}`;
+
+// 롤플레이 — 시나리오를 만드는 흐름은 탭 주소 아래에 둔다
+export const ROLEPLAY_NEW_PATH = `${ROLEPLAY_PATH}/new`;
+
+// 상대를 고른 뒤의 입력 단계 — 고른 상대를 주소에 남겨 새로고침해도 유지한다
+export const roleplayNewFormPath = (partner: string) =>
+  `${ROLEPLAY_NEW_PATH}?${new URLSearchParams({ partner })}`;
+
+// 롤플레이 대화 — 만든 시나리오(보관함 id)로 연다. 스몰톡 대화처럼 대화 라우트 아래에 선다
+export const roleplayTalkPath = (
+  roleplayId: number,
+  // 방금 만든 시나리오로 여는가 — 계측이 첫 대화와 다시 대화를 가른다
+  { justCreated = false } = {},
+) => `/conversation/roleplay/${roleplayId}${justCreated ? '?from=create' : ''}`;
+
+// 끝난 롤플레이 대화 한 건 — 요약과 대화 기록은 세션이 주인이라 그 아래에 산다 (스몰톡과 같은 모양)
+const roleplaySessionPath = (sessionId: number) =>
+  `${ROLEPLAY_PATH}/sessions/${sessionId}`;
+
+// 오늘의 롤플레이 — 대화를 끝낸 직후 보는 요약. 막 끝내고 왔을 때만 축하(열매)를 먼저 띄운다
+export const roleplaySummaryPath = (
+  sessionId: number,
+  { celebrate = false } = {},
+) =>
+  `${roleplaySessionPath(sessionId)}/summary${celebrate ? '?celebrate=1' : ''}`;
+
+// 그 대화에서 주고받은 말과 교정 — 요약 다음 화면
+export const roleplayTranscriptPath = (
+  sessionId: number,
+  // 지난 대화 목록에서 왔으면 그 시나리오 — 뒤로 가기가 요약 대신 목록으로 간다
+  fromRoleplayId?: number,
+) =>
+  `${roleplaySessionPath(sessionId)}/messages${fromRoleplayId === undefined ? '' : `?from=${fromRoleplayId}`}`;
+
+// 시나리오 하나의 지난 대화 목록
+export const roleplaySessionsPath = (roleplayId: number) =>
+  `${ROLEPLAY_PATH}/${roleplayId}/sessions`;
 
 // 오늘의 스몰톡 — 대화를 끝낸 직후 보는 요약. 세션이 주인이라 기록 주소 아래에 산다
 export const smallTalkSummaryPath = (sessionId: number) =>
@@ -288,6 +326,8 @@ export const backOrReplace = (
 };
 // 설문 — 마이페이지 "지원" 묶음의 진입점
 export const SURVEY_PATH = '/survey';
+// LAN-428 결제자 설문(임시) — 마이페이지엔 없고 안내 편지로만 연다
+export const PAID_SURVEY_PATH = '/survey/paid';
 // 내부 절대 경로만 믿는다 — '//host'처럼 브라우저가 외부로 해석하는 값은 버린다
 const INTERNAL_PATH_PATTERN = /^\/(?![/\\])/;
 
