@@ -42,6 +42,9 @@
   --color-ring: var(--ring);
   --color-backdrop: var(--backdrop);
   --color-selected: var(--selected);
+  --color-awkward: var(--awkward);
+  --color-awkward-ink: var(--awkward-ink);
+  --color-awkward-bg: var(--awkward-bg);
   --color-good: var(--good);
   --color-good-bg: var(--good-bg);
   --color-good-border: var(--good-border);
@@ -125,6 +128,9 @@
   --green-500: #2f7d54;
   /* 별점 팔레트 (피그마 피드백 화면 스펙) */
   --amber-400: #fbbf24;
+  --amber-500: #e09a00;
+  --amber-600: #c98a0b;
+  --amber-75: #fff4db;
   --gray-300: #d4d8df;
   /* 의미색 — GOOD 상태=파랑, NEED IMPROVEMENT 상태=초록. 브랜드색(주황)과 분리 (피그마 피드백 상세 스펙) */
   --blue-100: #eef2fb;
@@ -178,6 +184,10 @@
   --star-empty: var(--gray-300);
   /* 스트릭 — 달력의 이어진 구간 띠 (피그마 스트릭 Flow 스펙) */
   --streak-band: var(--orange-50);
+  /* 발음 피드백의 노란 단어(51~80점) — 단어 글자, 칩 글자, 칩 바탕 */
+  --awkward: var(--amber-500);
+  --awkward-ink: var(--amber-600);
+  --awkward-bg: var(--amber-75);
   --good: var(--blue-700);
   --good-bg: var(--blue-100);
   --good-border: var(--blue-200);

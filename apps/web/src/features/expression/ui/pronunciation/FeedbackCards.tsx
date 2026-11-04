@@ -1,6 +1,6 @@
 'use client';
 
-// 오류 단어 피드백 카드 목록 — 행마다 원어민/나 라벨로 구분하고 듣기는 공용 ListenButton
+// 교정 단어 피드백 카드 목록 — 행마다 원어민/나 라벨로 구분하고 듣기는 공용 ListenButton
 import { useTranslations } from 'next-intl';
 
 import type { PronunciationWord } from '../../api/pronunciation';
@@ -8,7 +8,9 @@ import type {
   DisplaySegment,
   FeedbackCard,
 } from '../../model/pronunciation-feedback';
+import { wordTone, type ScoreTone } from '../../model/pronunciation-score';
 import { ListenButton } from './ListenButton';
+import { WORD_TONE_TEXT } from './word-tone-text';
 
 interface FeedbackCardsProps {
   cards: FeedbackCard[];
@@ -28,6 +30,9 @@ export const nativeWordAudioId = (order: number) => `native-${order}`;
 export const myWordAudioId = (order: number) => `mine-${order}`;
 /** 단어 칩 → 교정 카드 스크롤 이동용 앵커 id */
 export const feedbackCardId = (order: number) => `pronunciation-word-${order}`;
+
+// 카드가 많아도 칩을 눌러 이동할 때 빈자리가 오래 보이지 않게 순차 등장은 여기까지만 늦춘다
+const MAX_STAGGERED_CARDS = 4;
 
 export const FeedbackCards = ({
   cards,
@@ -56,12 +61,17 @@ export const FeedbackCards = ({
             key={word.order}
             id={feedbackCardId(word.order)}
             className="animate-fade-up scroll-mt-16"
-            style={{ animationDelay: `${1100 + cardIndex * 120}ms` }}
+            style={{
+              animationDelay: `${1100 + Math.min(cardIndex, MAX_STAGGERED_CARDS) * 120}ms`,
+            }}
           >
             <div className="rounded-2xl border border-border bg-card px-4 py-4">
-              <p className="mb-3 text-lg font-extrabold text-foreground">
-                {word.word}
-              </p>
+              <div className="mb-3 flex items-center gap-2">
+                <p className="text-lg font-extrabold text-foreground">
+                  {word.word}
+                </p>
+                <ToneBadge tone={wordTone(word)} />
+              </div>
               {card.kind === 'stress' && (
                 <div className="mb-3 flex gap-3 text-11 font-medium text-muted-foreground">
                   <span className="flex items-center gap-1">
@@ -81,7 +91,7 @@ export const FeedbackCards = ({
                   disabled={disabled}
                   playing={playingId === nativeWordAudioId(word.order)}
                 >
-                  {card.kind === 'phoneme' ? (
+                  {card.kind !== 'stress' ? (
                     <Respelling segments={card.native} tone="native" />
                   ) : (
                     <SyllableWord
@@ -98,14 +108,22 @@ export const FeedbackCards = ({
                   disabled={disabled}
                   playing={playingId === myWordAudioId(word.order)}
                 >
-                  {card.kind === 'phoneme' ? (
+                  {card.kind === 'phoneme' && (
                     <Respelling segments={card.user} tone="mine" />
-                  ) : (
+                  )}
+                  {card.kind === 'stress' && (
                     <SyllableWord
                       syllables={card.syllables}
                       dotIndex={card.userStressIndex}
                       tone="mine"
                     />
+                  )}
+                  {card.kind === 'lowScore' && (
+                    <p
+                      className={`text-xl font-bold ${WORD_TONE_TEXT[wordTone(word)]}`}
+                    >
+                      {card.user}
+                    </p>
                   )}
                 </PronRow>
               </div>
@@ -120,6 +138,21 @@ export const FeedbackCards = ({
         );
       })}
     </div>
+  );
+};
+
+// 제목 옆 배지 — 노랑은 조금 어색함, 빨강은 연습 필요. 초록은 달지 않는다
+const ToneBadge = ({ tone }: { tone: ScoreTone }) => {
+  const t = useTranslations('expression.feedbackCards');
+  if (tone === 'green') return null;
+  return tone === 'yellow' ? (
+    <span className="rounded-lg bg-awkward-bg px-2 py-[3px] text-xs font-bold text-awkward-ink">
+      {t('awkwardBadge')}
+    </span>
+  ) : (
+    <span className="rounded-lg bg-destructive/10 px-2 py-[3px] text-xs font-bold text-destructive">
+      {t('needsPracticeBadge')}
+    </span>
   );
 };
 

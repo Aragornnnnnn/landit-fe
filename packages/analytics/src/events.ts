@@ -953,6 +953,8 @@ export type EventProps = {
     score: number;
     passed: boolean;
     error_count: number;
+    // 판정과 상관없이 100점 미만인 단어 수
+    low_score_count: number;
     // 재도전 포함 몇 번째 분석 결과인지 (1부터)
     attempt: number;
   };
