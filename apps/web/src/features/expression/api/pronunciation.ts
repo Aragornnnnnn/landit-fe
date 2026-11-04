@@ -11,10 +11,16 @@ export interface PronunciationWord {
   // 사용자 녹음에서 이 단어가 들린 구간(ms) — 내 발음 다시 듣기에 쓴다
   startTimeMs: number | null;
   endTimeMs: number | null;
-  // 아래는 오류 단어만 채워진다 — CORRECT는 전부 null
+  // 단어 점수 0~100. 판정(status)과 별개라 CORRECT도 100 미만일 수 있다.
+  // 단어 점수 없는 AI 버전이면 null이고, 새 서버 배포 전 응답엔 필드가 없다
+  score?: number | null;
+  // 다른 단어로 들렸을 때 그 단어. coachingText에 이미 들어 있다
+  heardAs?: string | null;
+  // 발음 오류 단어와 100점 미만 단어에 채워진다 (강세 오류는 100점이어도 음성·코칭만)
   nativeWordAudioUrl: string | null;
-  // respelling 비교(PHONEME_ERROR만) — span은 각 표기에서 빨강 처리할 부분
   nativeDisplay: string | null;
+  coachingText: string | null;
+  // respelling 비교(PHONEME_ERROR만) — span은 각 표기에서 빨강 처리할 부분
   userDisplay: string | null;
   errorTargetSpan: string | null;
   errorUserSpan: string | null;
@@ -22,13 +28,12 @@ export interface PronunciationWord {
   syllables: string[] | null;
   stressIndex: number | null;
   userStressIndex: number | null;
-  coachingText: string | null;
 }
 
 export interface PronunciationAnalysis {
-  // 0~100. 정상 단어 수 / 전체 단어 수 비율 반올림
+  // 0~100. 단어 점수 평균 (단어 점수 없는 AI 버전이면 정상 단어 비율)
   score: number;
-  // 오류 단어가 0개면 true
+  // 95점 이상이고 오류 단어가 0개면 true
   passed: boolean;
   // order 오름차순. 퀴즈 배열과 토큰화가 다를 수 있어 화면은 이 배열 기준으로 그린다
   words: PronunciationWord[];
