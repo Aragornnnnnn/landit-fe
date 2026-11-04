@@ -37,6 +37,19 @@ export interface RoleplaySettingsRequest {
   situation: string;
 }
 
+// 대화 시작 뒤 비동기로 준비되는 썸네일 — 준비 전·실패·취소는 기본 캐릭터 카드를 쓴다
+export interface RoleplayThumbnail {
+  status:
+    | 'NOT_REQUESTED'
+    | 'PENDING'
+    | 'GENERATING'
+    | 'READY'
+    | 'FAILED'
+    | 'CANCELLED';
+  // READY일 때만 온다
+  url: string | null;
+}
+
 // 내 보관함의 롤플레이 하나
 export interface RoleplaySettings {
   id: number;
@@ -51,6 +64,8 @@ export interface RoleplaySettings {
   createdAt: string;
   // 마지막으로 대화를 끝낸 시각. 끝낸 대화가 없으면 null — 목록은 이 값의 최신순, 없으면 저장한 순으로 온다
   lastPlayedAt: string | null;
+  // 썸네일을 내려주는 서버가 배포되기 전엔 없다
+  thumbnail?: RoleplayThumbnail;
 }
 
 export interface RoleplaySettingsListResponse {
@@ -178,6 +193,7 @@ export interface RoleplayHistoryDetail {
   baseLocale: string;
   roleplay: RoleplayScene;
   messages: RoleplayHistoryMessage[];
+  thumbnail?: RoleplayThumbnail;
 }
 
 // 오늘의 롤플레이 — 스몰톡 요약에서 다음 대화 질문(followUp)만 뺀 모양
@@ -212,6 +228,7 @@ export interface RoleplayHistorySummary {
   startedAt: string;
   completedAt: string;
   userSpeakingDurationMs: number;
+  thumbnail?: RoleplayThumbnail;
 }
 
 export interface RoleplaySessionListResponse {
