@@ -8,6 +8,7 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
 import { decideBack } from '@/shared/bridge/back-navigation';
+import { runBackPress } from '@/shared/bridge/back-press';
 import { postToNative, subscribeFromNative } from '@/shared/bridge/web-bridge';
 import { ONBOARDING_PATH } from '@/shared/lib/routes';
 import { closeTopSheet } from '@/shared/ui/bottom-sheet-back';
@@ -47,6 +48,12 @@ export const BridgeListener = () => {
         return;
       }
 
+      // 뒤로 버튼·X가 있는 화면은 그 동작을 그대로 한다 — 확인 시트·이탈 기록·단계 되돌리기를 건너뛰지 않게
+      if (runBackPress()) {
+        disarm();
+        return;
+      }
+
       const navigation = (window as { navigation?: { canGoBack?: boolean } })
         .navigation;
       const decision = decideBack(
@@ -65,7 +72,7 @@ export const BridgeListener = () => {
         return;
       }
 
-      // 탭 화면 — 토스트를 띄우고, 노출 시간 안에 한 번 더 누르면 종료한다
+      // 최상위 화면(탭·온보딩) — 토스트를 띄우고, 노출 시간 안에 한 번 더 누르면 종료한다
       if (exitArmedRef.current) {
         track(EVENTS.APP_EXITED, { trigger: 'back_button' });
         postToNative({ type: 'EXIT_APP' });
