@@ -19,7 +19,7 @@ export const introSentencesOf = (copy: {
   // 세 친구와 대화한다는 말에 맞춰 래디 자리에 그 셋의 얼굴을 나란히 띄운다
   { partners: true, parts: partsOf(copy.freeTalkBody) },
   {
-    image: '/images/character/landy-wave.webp',
+    image: '/images/paywall/randy-wand.webp',
     parts: partsOf(copy.endingBody),
   },
 ];
