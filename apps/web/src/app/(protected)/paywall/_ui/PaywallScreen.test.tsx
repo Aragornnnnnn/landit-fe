@@ -871,7 +871,7 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
 });
 
 describe('PaywallScreen — 안드로이드 뒤로가기', () => {
-  it('뒤로가기는 닫기처럼 서버에 알린 뒤 홈으로 간다 — 이탈 할인을 건너뛰지 않는다', async () => {
+  it('뒤로가기는 닫기와 같은 길로 나간다 — 닫기 처리를 부른 뒤 홈으로 간다', async () => {
     render(<PaywallScreen />);
 
     act(() => void runBackPress());
