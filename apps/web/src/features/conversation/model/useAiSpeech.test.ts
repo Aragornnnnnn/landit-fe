@@ -608,6 +608,28 @@ describe('문장 단위 재생', () => {
     ttsMock.prefetch.mockImplementation(() => Promise.resolve());
   });
 
+  it('재생을 정리하거나 합성을 포기하면 아직 시작 안 한 뒤 문장은 합성하지 않는다 — 안 틀 문장에 비용을 쓰지 않는다', async () => {
+    // Given 네 문장 중 앞의 셋이 합성 중이다
+    const FOURTH = 'I would love to try it someday, to be honest.';
+    const finishes: (() => void)[] = [];
+    ttsMock.prefetch.mockImplementation(
+      () => new Promise<void>((resolve) => finishes.push(resolve)),
+    );
+    const { unmount } = renderSpeech({
+      source: { content: `${LONG} ${FOURTH}` },
+      openingSrc: null,
+    });
+    await act(async () => {});
+
+    // When 재생을 정리한 뒤 앞 합성이 끝난다
+    unmount();
+    await act(async () => finishes[0]());
+
+    // Then
+    expect(ttsMock.prefetch).toHaveBeenCalledTimes(3);
+    ttsMock.prefetch.mockImplementation(() => Promise.resolve());
+  });
+
   it('재생을 시작하면 뒤 문장도 함께 합성해 둔다 — 앞 문장이 끝날 때 기다리지 않게', async () => {
     // Given / When
     renderSpeech({ source: { content: LONG }, openingSrc: null });

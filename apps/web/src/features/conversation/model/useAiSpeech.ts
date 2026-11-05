@@ -60,10 +60,12 @@ const prefetchChunks = (
   tts: ReturnType<typeof useTts>,
   chunks: string[],
   voice: TtsVoice,
+  isStopped: () => boolean = () => false,
 ) => {
   let next = 0;
   const work = async () => {
-    while (next < chunks.length) await tts.prefetch(chunks[next++], voice);
+    while (next < chunks.length && !isStopped())
+      await tts.prefetch(chunks[next++], voice);
   };
   for (let slot = 0; slot < SYNTH_CONCURRENCY; slot++) void work();
 };
@@ -101,6 +103,8 @@ const runSpeech = ({
   let ignore = false;
   // 합성 실패 계측은 발화당 한 번 — 문장 수만큼 쌓이면 실패율이 부풀어 보인다
   let synthFailureTracked = false;
+  // 응답이 끝내 안 왔다 — 남은 문장은 틀지 않으니 합성도 더 걸지 않는다
+  let gaveUp = false;
   // 타이머 폴백의 중단 손잡이 — 정리 시점에 오디오(tts.stop)와 함께 멈춘다
   let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -183,12 +187,15 @@ const runSpeech = ({
     // 3) 맞장구(분리 재생이 아니면 문장 전체)를 조각별로 합성해 말한다.
     // 뒤 조각도 지금 합성을 걸어 둔다 — 앞 조각이 끝날 때 기다리지 않고 바로 잇는다. 미리 받아 뒀으면 다시 합성하지 않는다
     const { synthChunks, question } = resolveSpeechPlan(source);
-    prefetchChunks(tts, synthChunks, voice);
+    prefetchChunks(tts, synthChunks, voice, () => ignore || gaveUp);
     for (const chunk of synthChunks) {
       const timedOut = await speakSynth(chunk, voice);
       if (ignore) return;
       // 응답이 끝내 안 왔다 — 남은 문장마다 다시 기다리면 대화가 오래 멈춰서 합성은 여기서 접는다
-      if (timedOut) break;
+      if (timedOut) {
+        gaveUp = true;
+        break;
+      }
     }
 
     // 4) 질문 음원이 있으면 이어 튼다 — 실패해도(대신 낼 소리가 없어) 발화는 여기서 끝난다
