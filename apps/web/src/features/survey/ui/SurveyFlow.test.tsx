@@ -1,10 +1,11 @@
 // SurveyFlow — 문항 종류별 진행 조건, 기타·조건 문항, 제출 결과에 따른 화면 분기
 import { EVENTS } from '@landit/analytics';
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
+import { runBackPress } from '@/shared/bridge/back-press';
 
 import { PAID_QUESTIONS } from '../model/paid-questions';
 import { OTHER_LABEL, QUESTIONS, type Question } from '../model/questions';
@@ -440,5 +441,18 @@ describe('SurveyFlow', () => {
     expect(
       (await screen.findByRole('textbox')).classList.contains('amp-unmask'),
     ).toBe(true);
+  });
+});
+
+describe('SurveyFlow 안드로이드 뒤로가기', () => {
+  it('문항에서 뒤로가기를 누르면 이전 문항으로 돌아간다', async () => {
+    render(<SurveyFlow kind="general" />);
+    await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+    await answerCurrent(QUESTIONS[0]);
+    await screen.findByText(titleOf(QUESTIONS[1]));
+
+    act(() => void runBackPress());
+
+    expect(await screen.findByText(titleOf(QUESTIONS[0]))).toBeInTheDocument();
   });
 });

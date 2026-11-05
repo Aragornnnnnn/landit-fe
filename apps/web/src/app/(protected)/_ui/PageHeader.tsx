@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import { ChevronLeftIcon, CloseIcon } from '@/shared/ui/Icons';
 
 interface PageHeaderProps {
@@ -23,6 +24,10 @@ export const PageHeader = ({
   trailing,
 }: PageHeaderProps) => {
   const t = useTranslations('common');
+  // 버튼이 잠긴 동안(나가는 중)은 뒤로가기도 아무 일을 하지 않는다 — 공통 처리로 넘기면 같은 화면에서 또 나가게 된다
+  useBackPress(() => {
+    if (!backDisabled) onBack();
+  });
   return (
     <header className="relative flex h-14 flex-none items-center justify-center">
       <button

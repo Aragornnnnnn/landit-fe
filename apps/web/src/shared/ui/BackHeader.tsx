@@ -3,6 +3,8 @@
 import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 
+import { useBackPress } from '@/shared/bridge/useBackPress';
+
 import { ChevronLeftIcon } from './Icons';
 
 interface BackHeaderProps {
@@ -23,6 +25,7 @@ export const BackHeader = ({
   transparent = false,
 }: BackHeaderProps) => {
   const t = useTranslations('common.backHeader');
+  useBackPress(onBack);
 
   return (
     <header

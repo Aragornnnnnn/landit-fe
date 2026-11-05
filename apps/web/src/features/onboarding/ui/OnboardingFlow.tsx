@@ -172,7 +172,7 @@ export const OnboardingFlow = () => {
         <>
           <StepHeader
             onBack={stepBack}
-            backDisabled={stepOrder.indexOf(step) === 0}
+            hideBack={stepOrder.indexOf(step) === 0}
           >
             <StepDots step={step} stepOrder={stepOrder} />
           </StepHeader>
