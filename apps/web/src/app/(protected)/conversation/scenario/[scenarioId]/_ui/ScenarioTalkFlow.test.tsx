@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   nativeListener: null as ((message: { type: string }) => void) | null,
   postToNative: vi.fn(),
   replace: vi.fn(),
+  phase: 'USER_READY',
 }));
 
 vi.mock('next/navigation', () => ({
@@ -38,7 +39,7 @@ vi.mock('@/features/conversation/ui/flow/CharacterStage', () => ({
 vi.mock('next/image', () => ({ default: () => null }));
 vi.mock('../_model/useScenarioTalkFlow', () => ({
   useScenarioTalkFlow: () => ({
-    phase: 'USER_READY',
+    phase: mocks.phase,
     turnIndex: 1,
     turn: {
       aiMessage: 'Hi',
@@ -73,6 +74,7 @@ const pressBack = () =>
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  mocks.phase = 'USER_READY';
 });
 
 const renderTalk = () =>
@@ -102,6 +104,20 @@ describe('ScenarioTalkFlow 뒤로가기', () => {
     expect(mocks.postToNative).not.toHaveBeenCalled();
     expect(mocks.replace).not.toHaveBeenCalled();
     back.mockRestore();
+  });
+
+  it('답을 기다리는 연출이 X를 가린 동안은 뒤로가기로 시트를 열지 않는다', () => {
+    // Given 답을 기다리는 중 — 연출이 화면 전체를 덮어 X를 누를 수 없다
+    mocks.phase = 'AI_THINKING';
+    renderTalk();
+
+    // When 뒤로가기를 누르면
+    pressBack();
+
+    // Then 나가기 시트를 열지 않는다
+    expect(track).not.toHaveBeenCalledWith('Confirm Sheet Opened', {
+      sheet: 'conversation_exit',
+    });
   });
 
   it('시트가 열린 뒤 뒤로가기는 시트만 닫아 대화가 이어진다', async () => {
