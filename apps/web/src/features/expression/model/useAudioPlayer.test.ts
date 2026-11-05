@@ -76,4 +76,121 @@ describe('useAudioPlayer', () => {
 
     expect(FakeAudio.instances[0]!.playbackRate).toBe(1.5);
   });
+
+  it('진단을 켜면 요청과 seek 완료 시점의 실제 위치를 분리해 기록한다', () => {
+    const capture = vi.fn();
+    const { result } = renderHook(() => useAudioPlayer());
+
+    act(() =>
+      result.current.play('blob:private-recording', {
+        segment: { startMs: 1200, endMs: 1800 },
+        onDiagnosticEvent: capture,
+      }),
+    );
+    const audio = FakeAudio.instances[0]!;
+    act(() => {
+      audio.loadMetadata();
+      audio.currentTime = 1.45;
+      audio.dispatchEvent(new Event('seeked'));
+    });
+
+    expect(capture).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'seek-requested', currentTimeMs: 0 }),
+    );
+    expect(capture).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'seeked', currentTimeMs: 1450 }),
+    );
+    expect(JSON.stringify(capture.mock.calls)).not.toContain(
+      'blob:private-recording',
+    );
+  });
+
+  it('재생을 바꾸거나 화면을 떠나면 이전 오디오의 진단 리스너를 정리한다', () => {
+    const capture = vi.fn();
+    const { result, unmount } = renderHook(() => useAudioPlayer());
+    act(() =>
+      result.current.play('blob:first', { onDiagnosticEvent: capture }),
+    );
+    const previous = FakeAudio.instances[0]!;
+
+    act(() =>
+      result.current.play('blob:second', { onDiagnosticEvent: capture }),
+    );
+    unmount();
+    const count = capture.mock.calls.length;
+    previous.dispatchEvent(new Event('seeked'));
+    FakeAudio.instances[1]!.dispatchEvent(new Event('playing'));
+
+    expect(capture.mock.calls).toHaveLength(count);
+    expect(capture).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'superseded' }),
+    );
+    expect(capture).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'unmount' }),
+    );
+  });
+
+  it('진단 콜백이 실패해도 오디오 재생과 종료를 방해하지 않는다', () => {
+    const capture = () => {
+      throw new Error('diagnostic failed');
+    };
+    const { result } = renderHook(() => useAudioPlayer());
+
+    act(() =>
+      result.current.play('blob:recording', { onDiagnosticEvent: capture }),
+    );
+    act(() => result.current.stop());
+
+    expect(FakeAudio.instances[0]!.play).toHaveBeenCalled();
+    expect(FakeAudio.instances[0]!.paused).toBe(true);
+  });
+
+  it('프레임 감시가 지연되면 종료 위치와 마지막 프레임 이후 경과 시간을 함께 남긴다', () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const capture = vi.fn();
+    const { result } = renderHook(() => useAudioPlayer());
+    act(() =>
+      result.current.play('blob:recording', {
+        segment: { startMs: 1200, endMs: 1500 },
+        onDiagnosticEvent: capture,
+      }),
+    );
+    const audio = FakeAudio.instances[0]!;
+    act(() => audio.loadMetadata());
+
+    now = 400;
+    audio.currentTime = 1.7;
+    act(() => result.current.stop());
+
+    expect(capture).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'finish-stopped',
+        currentTimeMs: 1700,
+        sinceLastFrameMs: 400,
+        paused: true,
+      }),
+    );
+  });
+
+  it('자동재생 거부는 정상 완료와 구별되는 진단 이벤트로 남긴다', async () => {
+    const capture = vi.fn();
+    const { result } = renderHook(() => useAudioPlayer());
+    // play는 인스턴스 필드이므로 Audio 생성 경계에서 거부 동작을 주입한다.
+    class RejectedAudio extends FakeAudio {
+      play = vi.fn(() =>
+        Promise.reject(new DOMException('private details', 'NotAllowedError')),
+      );
+    }
+    vi.stubGlobal('Audio', RejectedAudio);
+
+    await act(async () =>
+      result.current.play('blob:recording', { onDiagnosticEvent: capture }),
+    );
+
+    expect(capture).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'play-rejected' }),
+    );
+    expect(JSON.stringify(capture.mock.calls)).not.toContain('private details');
+  });
 });

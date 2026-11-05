@@ -4,6 +4,11 @@ import { useEffect, useRef, useState } from 'react';
 
 import { getSpeechRate } from '@/shared/lib/speech-rate';
 
+import {
+  observeAudioPlayback,
+  type AudioDiagnosticSink,
+} from '../lib/audio-playback-diagnostics';
+
 /**
  * 오디오 재생 훅 — 전체 또는 ms 구간 재생. 새 재생이 이전 재생을 멈추고 재생은 한 번에 하나다.
  *
@@ -13,6 +18,9 @@ import { getSpeechRate } from '@/shared/lib/speech-rate';
 export const useAudioPlayer = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressRafRef = useRef(0);
+  const diagnosticRef = useRef<ReturnType<typeof observeAudioPlayback> | null>(
+    null,
+  );
   // 토글 판정용 미러 — 이벤트 핸들러에서 렌더 시점 state 대신 항상 현재 값을 본다
   const playingIdRef = useRef<string | null>(null);
   const finishRef = useRef<((reason?: 'ended' | 'stopped') => void) | null>(
@@ -27,6 +35,7 @@ export const useAudioPlayer = () => {
   useEffect(
     () => () => {
       audioRef.current?.pause();
+      diagnosticRef.current?.dispose('unmount');
       cancelAnimationFrame(progressRafRef.current);
     },
     [],
@@ -37,15 +46,20 @@ export const useAudioPlayer = () => {
     options?: {
       id?: string;
       segment?: { startMs: number; endMs: number };
+      onDiagnosticEvent?: AudioDiagnosticSink;
       // 재생이 끝나면 부른다 — 순차 재생·듣기 게이트 해제용.
       // reason: ended=끝까지 재생(자동재생 차단 포함), stopped=사용자가 꺼서 중단 (이때 예약된 다음 재생은 잇지 않는다)
       onDone?: (reason: 'ended' | 'stopped') => void;
     },
   ) => {
     audioRef.current?.pause();
+    diagnosticRef.current?.dispose('superseded');
     cancelAnimationFrame(progressRafRef.current);
     const audio = new Audio(src);
     audio.playbackRate = getSpeechRate();
+    const diagnostic = observeAudioPlayback(audio, options?.onDiagnosticEvent);
+    diagnosticRef.current = diagnostic;
+    diagnostic.capture('play-requested');
     audioRef.current = audio;
     const id = options?.id ?? src;
 
@@ -53,6 +67,7 @@ export const useAudioPlayer = () => {
     const finish = (reason: 'ended' | 'stopped' = 'ended') => {
       if (finished) return;
       finished = true;
+      diagnostic.dispose(`finish-${reason}`);
       cancelAnimationFrame(progressRafRef.current);
       setProgress(0);
       if (playingIdRef.current === id) playingIdRef.current = null;
@@ -65,6 +80,7 @@ export const useAudioPlayer = () => {
     // 실제 오디오 진행률로 하이라이트를 굴린다 (온보딩 사운드 스텝과 같은 방식)
     const trackProgress = () => {
       if (finished) return;
+      diagnostic.sample();
       if (audio.duration > 0) {
         setProgress(Math.min(audio.currentTime / audio.duration, 1));
       }
@@ -78,7 +94,9 @@ export const useAudioPlayer = () => {
       audio.addEventListener(
         'loadedmetadata',
         () => {
+          diagnostic.capture('seek-requested');
           audio.currentTime = segment.startMs / 1000;
+          diagnostic.capture('seek-assigned');
         },
         { once: true },
       );
@@ -92,6 +110,7 @@ export const useAudioPlayer = () => {
       const watch = () => {
         if (finished || audio.paused) return;
         if (audio.currentTime >= stopAt) {
+          diagnostic.capture('segment-stop');
           audio.pause();
           finish();
           return;
@@ -112,11 +131,18 @@ export const useAudioPlayer = () => {
     progressRafRef.current = requestAnimationFrame(trackProgress);
     // 재생 실패(자동재생 차단 등)에도 finish를 부른다 — 듣기 게이트가 영영 잠기지 않게.
     // jsdom은 play()가 프라미스를 돌려주지 않아 옵셔널 체이닝으로 감싼다
-    void audio.play()?.catch(() => finish('ended'));
+    void audio.play()?.then(
+      () => diagnostic.capture('play-resolved'),
+      () => {
+        diagnostic.capture('play-rejected');
+        finish('ended');
+      },
+    );
   };
 
   // 지금 나오는 소리를 멈춘다 — 진행 상태를 정리하고, 예약된 다음 재생은 잇지 않는다(stopped)
   const stop = () => {
+    diagnosticRef.current?.capture('stop-requested');
     audioRef.current?.pause();
     finishRef.current?.('stopped');
   };
