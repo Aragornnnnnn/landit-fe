@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
 import { track } from '@/shared/analytics';
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import { haptic } from '@/shared/haptics';
 import { scenarioSessionsPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
@@ -132,6 +133,11 @@ export const ScenarioCard = ({
     });
     setFlipped(false);
   };
+  // 뒤집힌 카드에선 뒤로가기가 앞면으로 돌아온다. 프리뷰 안내가 뒷면을 비추는 동안은 X도 가려져 있어 받지 않는다
+  useBackPress(
+    closeExpressions,
+    flipped && premiumPreview?.screen !== 'free_expression',
+  );
 
   return (
     <div className="relative h-full w-full [perspective:1600px]">
