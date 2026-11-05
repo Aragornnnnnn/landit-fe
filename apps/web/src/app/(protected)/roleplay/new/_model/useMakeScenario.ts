@@ -146,6 +146,8 @@ export const useMakeScenario = ({
     start,
     // 오래 걸려 나간다 — 저장은 뒤에서 끝날 수 있어, 끝나면 탭에 카드가 선다
     leave: (partner: Partner) => {
+      // 다음 화면이 뜨기 전에 또 눌러도 이탈 기록과 이동이 두 번 나가지 않게 한다
+      if (leftRef.current) return;
       leftRef.current = true;
       track(EVENTS.ROLEPLAY_CREATE_ABANDONED, {
         partner,
