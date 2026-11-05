@@ -10,6 +10,7 @@
  * - rewrites: /api/* → 백엔드 프록시 (CORS 회피)
  * - withSentryConfig: 소스맵을 Sentry에만 올리고 배포 산출물에서는 삭제
  * - withNextIntl: 요청마다 화면 언어를 정하는 설정 파일(shared/i18n/request.ts)을 연결
+ * - experimental.turbopackFileSystemCacheForBuild: 직전 배포의 빌드 캐시를 다시 쓰지 않게 끈다
  *
  * 안 적었지만 기본값으로 적용 중인 것 (Next 16)
  * - Turbopack이 dev·build 기본 번들러, 프로덕션 minify(SWC)·주석 제거 기본 on
@@ -30,6 +31,10 @@ const nextConfig: NextConfig = {
   // TS 원본으로 배포되는 패키지들 — 여기 포함되면 compiler.* 변환도 같이 적용된다
   transpilePackages: ['@landit/analytics', '@landit/bridge'],
   reactCompiler: true,
+  experimental: {
+    // 켜 두면 직전 배포의 캐시를 다시 써서 globals.css 변경이 CSS에서 빠진 채 배포된다 (LAN-840)
+    turbopackFileSystemCacheForBuild: false,
+  },
   compiler: {
     // next dev에서는 끈다 — removeConsole은 NODE_ENV를 안 가려서, 켜두면 로컬 개발 중에도
     // console이 안 보인다 (실제 dev 서버 빌드로 확인함).
