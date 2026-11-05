@@ -248,9 +248,9 @@ export const PronunciationStep = ({
     trackAudioPlayed(MY_SENTENCE_AUDIO_ID, 'compare_mine');
     player.toggle(recordingUrlRef.current, {
       id: MY_SENTENCE_AUDIO_ID,
-      onDiagnosticEvent:
-        isAdmin && player.playingId !== MY_SENTENCE_AUDIO_ID
-          ? diagnostics?.startPlayback(null)
+      createDiagnosticSink:
+        isAdmin && diagnostics
+          ? () => diagnostics.startPlayback(null)
           : undefined,
     });
   };
@@ -273,9 +273,9 @@ export const PronunciationStep = ({
       player.toggle(recordingUrlRef.current, {
         id: myWordAudioId(word.order),
         segment,
-        onDiagnosticEvent:
-          isAdmin && player.playingId !== myWordAudioId(word.order)
-            ? diagnostics?.startPlayback(word.order, segment)
+        createDiagnosticSink:
+          isAdmin && diagnostics
+            ? () => diagnostics.startPlayback(word.order, segment)
             : undefined,
       });
     }

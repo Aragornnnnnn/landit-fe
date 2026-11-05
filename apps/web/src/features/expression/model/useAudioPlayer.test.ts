@@ -84,7 +84,7 @@ describe('useAudioPlayer', () => {
     act(() =>
       result.current.play('blob:private-recording', {
         segment: { startMs: 1200, endMs: 1800 },
-        onDiagnosticEvent: capture,
+        createDiagnosticSink: () => capture,
       }),
     );
     const audio = FakeAudio.instances[0]!;
@@ -105,16 +105,36 @@ describe('useAudioPlayer', () => {
     );
   });
 
+  it('렌더 전 같은 단어를 연속으로 토글해도 재생을 시작할 때만 진단을 만든다', () => {
+    const { result } = renderHook(() => useAudioPlayer());
+    const createDiagnosticSink = vi.fn(() => vi.fn());
+    const options = { id: 'my-word-1', createDiagnosticSink };
+
+    act(() => {
+      result.current.toggle('blob:recording', options);
+      result.current.toggle('blob:recording', options);
+      result.current.toggle('blob:recording', options);
+    });
+
+    expect(FakeAudio.instances).toHaveLength(2);
+    expect(createDiagnosticSink).toHaveBeenCalledTimes(2);
+    expect(result.current.playingId).toBe('my-word-1');
+  });
+
   it('재생을 바꾸거나 화면을 떠나면 이전 오디오의 진단 리스너를 정리한다', () => {
     const capture = vi.fn();
     const { result, unmount } = renderHook(() => useAudioPlayer());
     act(() =>
-      result.current.play('blob:first', { onDiagnosticEvent: capture }),
+      result.current.play('blob:first', {
+        createDiagnosticSink: () => capture,
+      }),
     );
     const previous = FakeAudio.instances[0]!;
 
     act(() =>
-      result.current.play('blob:second', { onDiagnosticEvent: capture }),
+      result.current.play('blob:second', {
+        createDiagnosticSink: () => capture,
+      }),
     );
     unmount();
     const count = capture.mock.calls.length;
@@ -137,7 +157,9 @@ describe('useAudioPlayer', () => {
     const { result } = renderHook(() => useAudioPlayer());
 
     act(() =>
-      result.current.play('blob:recording', { onDiagnosticEvent: capture }),
+      result.current.play('blob:recording', {
+        createDiagnosticSink: () => capture,
+      }),
     );
     act(() => result.current.stop());
 
@@ -153,7 +175,7 @@ describe('useAudioPlayer', () => {
     act(() =>
       result.current.play('blob:recording', {
         segment: { startMs: 1200, endMs: 1500 },
-        onDiagnosticEvent: capture,
+        createDiagnosticSink: () => capture,
       }),
     );
     const audio = FakeAudio.instances[0]!;
@@ -185,7 +207,9 @@ describe('useAudioPlayer', () => {
     vi.stubGlobal('Audio', RejectedAudio);
 
     await act(async () =>
-      result.current.play('blob:recording', { onDiagnosticEvent: capture }),
+      result.current.play('blob:recording', {
+        createDiagnosticSink: () => capture,
+      }),
     );
 
     expect(capture).toHaveBeenCalledWith(

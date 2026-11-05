@@ -46,7 +46,8 @@ export const useAudioPlayer = () => {
     options?: {
       id?: string;
       segment?: { startMs: number; endMs: number };
-      onDiagnosticEvent?: AudioDiagnosticSink;
+      // 토글로 끌 때는 만들지 않고, 실제 재생을 시작하는 분기에서만 기록을 연다.
+      createDiagnosticSink?: () => AudioDiagnosticSink;
       // 재생이 끝나면 부른다 — 순차 재생·듣기 게이트 해제용.
       // reason: ended=끝까지 재생(자동재생 차단 포함), stopped=사용자가 꺼서 중단 (이때 예약된 다음 재생은 잇지 않는다)
       onDone?: (reason: 'ended' | 'stopped') => void;
@@ -57,7 +58,10 @@ export const useAudioPlayer = () => {
     cancelAnimationFrame(progressRafRef.current);
     const audio = new Audio(src);
     audio.playbackRate = getSpeechRate();
-    const diagnostic = observeAudioPlayback(audio, options?.onDiagnosticEvent);
+    const diagnostic = observeAudioPlayback(
+      audio,
+      options?.createDiagnosticSink?.(),
+    );
     diagnosticRef.current = diagnostic;
     diagnostic.capture('play-requested');
     audioRef.current = audio;

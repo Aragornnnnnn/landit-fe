@@ -10,7 +10,7 @@ iPhone에서 `went`의 내 발음 재생이 `camping~with` 구간과 일치하�
 
 - 기존 ADMIN 계정만 평가 성공 시 메모리에 진단 회차를 만들고 결과 하단의 `발음 재생 진단`을 본다.
 - 서버 응답의 단어 순서·텍스트·시작/종료 시간을 즉시 복사해 보존한다.
-- 전체 내 발음과 단어 재생마다 요청 구간과 `loadedmetadata`, `seek-requested`, `seek-assigned`, `seeked`, `playing`, `timeupdate`, `segment-stop`, 완료/교체/화면 종료 이벤트를 기록한다.
+- 전체 내 발음과 단어의 재생이 시작될 때 기록을 열고, 요청 구간과 `loadedmetadata`, `seek-requested`, `seek-assigned`, `seeked`, `playing`, `timeupdate`, `segment-stop`, 완료/교체/화면 종료 이벤트를 남긴다. 중단 버튼을 눌렀을 때는 진행 중인 기록을 닫는다.
 - 위치·길이·배속·seek 가능 범위·재생 상태·문서 가시성·프레임 간격을 저장한다. 이벤트의 경과 시간과 재생 시작 UTC 시각을 함께 제공한다.
 - 최근 8회, 회차당 최대 160개 이벤트만 보존한다. 초과 시 시작 8개와 최근 이벤트를 유지하고 버린 개수를 표시한다.
 - 공유 버튼을 누른 순간 JSON을 생성한다. 기존 네이티브 SHARE / Web Share / 클립보드 경로를 사용하고, 실패 시 선택 가능한 텍스트로 남긴다.
@@ -35,7 +35,7 @@ iPhone에서 `went`의 내 발음 재생이 `camping~with` 구간과 일치하�
 
 - 응답 스냅샷 보존, 회차 격리, 기록 상한, seek 이벤트, 콜백 실패 격리, 자동재생 거부, 프레임 지연, 리스너 해제를 테스트한다.
 - 관리자 노출, 공유 시점의 최신 보고서, 공유 실패 시 수동 복사를 테스트한다.
-- 표현 학습 테스트: 25개 파일, 190개 테스트 통과.
+- 표현 학습 테스트: 25개 파일, 191개 테스트 통과. 같은 단어의 재생·중단·재시작이 한 렌더 사이에 일어나는 경우도 검증했다.
 - 웹 TypeScript, 변경 파일 ESLint·Prettier, `git diff --check` 통과.
 - 프로덕션 `next build` 통과. 샌드박스 내 compile 정체로 중단 후 제한을 해제해 재실행했다.
 - pnpm은 저장소 지정 버전 10.14.0을 사용했다. 로컬 Node 26의 전역 localStorage 충돌을 피하도록 테스트 실행 시 `NODE_OPTIONS=--no-experimental-webstorage`를 적용했다.
