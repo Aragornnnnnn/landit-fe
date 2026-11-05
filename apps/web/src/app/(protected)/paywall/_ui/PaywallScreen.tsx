@@ -88,7 +88,7 @@ export const PaywallScreen = ({
   const offering = useOffering();
   const packages = { ...offering.regular, yearly: offering.promo.yearly };
   // 서버에 알리는 동안 닫기를 잠근다 — 연타하면 요청이 쌓이고 화면은 그대로다
-  const [closing, setClosing] = useState(false);
+  const closingRef = useRef(false);
   // 월간·연간은 스토어 통화(원·엔)대로, 이용권은 환급 산식이 원화를 전제하므로 원화만
   const { currency, prices } = toRegularPrices(packages);
   const storePlans = buildPaywallPlans(prices, currency);
@@ -136,12 +136,12 @@ export const PaywallScreen = ({
   // 환급 페이월은 알리지 않는다 — 이탈 할인은 연간 상품용이라 환급 플랜 화면에서 권하지 않는다.
   // 학습 진입에서 밀려 올라온 화면이라 온 곳으로 되돌리면 다시 페이월에 걸린다 (docs/subscription.md)
   const close = async () => {
-    if (closing) return;
+    // 홈이 뜨기 전에 또 눌러도 서버에 두 번 알리지 않는다
+    if (closingRef.current) return;
+    closingRef.current = true;
     exit.markClose();
-    setClosing(true);
     // 할인을 이미 보여 줬으면 알리지 않는다 — 이탈 할인 시트가 같은 할인 상품을 다시 권하게 된다
     if (!rewardChallenge && !offering.promo.yearly) await dismiss();
-    setClosing(false);
     goHome();
   };
 

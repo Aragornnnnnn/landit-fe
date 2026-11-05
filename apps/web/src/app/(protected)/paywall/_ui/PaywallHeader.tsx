@@ -1,6 +1,7 @@
 // 페이월 맨 위 줄 — 닫기와 구매 복원. 맨 위에 떠 있고, 고정하지 않아 스크롤하면 함께 올라간다
 import { useTranslations } from 'next-intl';
 
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import { CloseIcon } from '@/shared/ui/Icons';
 
 interface PaywallHeaderProps {
@@ -16,6 +17,7 @@ export const PaywallHeader = ({
   restoreDisabled,
 }: PaywallHeaderProps) => {
   const t = useTranslations();
+  useBackPress(onClose);
   return (
     <header className="absolute inset-x-0 top-0 z-20 pt-[max(var(--safe-area-inset-top),8px)]">
       <div className="flex h-10 items-center justify-between pr-5 pl-4">
