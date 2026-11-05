@@ -5,6 +5,7 @@ import {
   closedMouth,
   loudnessAt,
   neutralLoudness,
+  toArticulationTrack,
   toLoudnessTrack,
   toVisemes,
   visemeAt,
@@ -197,5 +198,89 @@ describe('advanceMouth', () => {
     // then — 움직이긴 했지만 목표(sy 1 언저리)에는 못 미친다
     expect(next.sy).toBeGreaterThan(closedMouth.sy);
     expect(next.sy).toBeLessThan(0.8);
+  });
+});
+
+describe('toArticulationTrack', () => {
+  // 음량 표를 소리·쉼 구간으로 만든다 — 한 칸이 10ms다
+  const trackOf = (...spans: [loud: number, steps: number][]) =>
+    Float32Array.from(
+      spans.flatMap(([loud, steps]) => Array<number>(steps).fill(loud)),
+    );
+
+  it('쉬는 구간은 말하는 중이 아니라고 표시한다', () => {
+    // Given
+    const track = trackOf([0, 20], [0.2, 50], [0, 20]);
+
+    // When
+    const articulation = toArticulationTrack(track)!;
+
+    // Then
+    expect(Number.isNaN(articulation[0])).toBe(true);
+    expect(Number.isNaN(articulation[89])).toBe(true);
+    expect(Number.isNaN(articulation[40])).toBe(false);
+  });
+
+  it('글자 진행은 소리가 나는 시간만큼만 간다 — 쉬는 동안 글자가 앞서가지 않는다', () => {
+    // Given
+    const track = trackOf([0.2, 50], [0, 100], [0.2, 50]);
+
+    // When
+    const articulation = toArticulationTrack(track)!;
+
+    // Then — 전체 시간의 3/4 지점이지만 소리는 절반만 났다
+    expect(articulation[150]).toBeCloseTo(0.5, 1);
+    expect(articulation[199]).toBeCloseTo(1, 1);
+  });
+
+  it('자음 사이의 아주 짧은 끊김은 쉼으로 보지 않는다 — 입이 떨리면 안 된다', () => {
+    // Given
+    const track = trackOf([0.2, 50], [0, 4], [0.2, 50]);
+
+    // When
+    const articulation = toArticulationTrack(track)!;
+
+    // Then
+    expect(Number.isNaN(articulation[52])).toBe(false);
+  });
+
+  it('소리가 아예 없으면 표를 만들지 않아 글자 균등 배분으로 돌아간다', () => {
+    // Given / When / Then
+    expect(toArticulationTrack(trackOf([0, 50]))).toBeNull();
+  });
+});
+
+describe('advanceMouth — 소리 맞춤', () => {
+  const visemes = toVisemes('ah ee oo');
+  const track = Float32Array.from(Array<number>(100).fill(0.2));
+
+  const settle = (articulation: Float32Array, progress: number) => {
+    let mouth = closedMouth;
+    for (let frame = 0; frame < 60; frame++) {
+      mouth = advanceMouth(mouth, visemes, track, progress, articulation);
+    }
+    return mouth;
+  };
+
+  it('쉬는 구간에서는 입을 닫는다', () => {
+    // Given
+    const articulation = Float32Array.from(Array<number>(100).fill(NaN));
+
+    // When
+    const mouth = settle(articulation, 0.5);
+
+    // Then
+    expect(mouth.sy).toBeCloseTo(closedMouth.sy, 1);
+  });
+
+  it('소리 구간에서는 글자 진행 표가 가리키는 입모양을 따른다', () => {
+    // Given — 재생은 끝 무렵이어도 글자는 아직 첫 모양이다
+    const articulation = Float32Array.from(Array<number>(100).fill(0));
+
+    // When
+    const mouth = settle(articulation, 0.95);
+
+    // Then — ah는 크게 벌린 입이다
+    expect(mouth.sy).toBeGreaterThan(0.8);
   });
 });

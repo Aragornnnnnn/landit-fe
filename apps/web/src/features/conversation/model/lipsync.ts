@@ -1,5 +1,5 @@
 // 립싱크 규칙 — 입모양(무엇을)과 음량(얼마나)을 따로 만들어 재생 진행도로 함께 조회한다.
-// 입모양은 쓰는 TTS(OpenRouter)가 글자별 시각을 주지 않아 철자로 근사해 재생 길이에 균등 배분하고,
+// 입모양은 쓰는 TTS(OpenRouter)가 글자별 시각을 주지 않아 철자로 근사해 소리가 나는 구간에 배분하고,
 // 음량은 재생 전에 파형을 미리 요약해 둔다 — 재생 중 실시간 분석은 오디오를 WebAudio 그래프로
 // 통과시켜야 해서, 그 경로가 막히면 소리 자체가 안 난다.
 
@@ -67,6 +67,38 @@ export const loudnessAt = (
 const indexAt = (length: number, progress: number) =>
   Math.min(length - 1, Math.max(0, Math.floor(progress * length)));
 
+// 가장 큰 소리의 이 비율보다 작으면 쉬는 구간이다 — 목소리·음량마다 절대 크기가 달라 상대값으로 본다
+const silenceRatio = 0.08;
+// 이보다 짧은 끊김은 쉼이 아니다 — p·t 앞의 막힘까지 닫으면 입이 떨린다
+const minPauseMs = 80;
+const minPauseSteps = Math.ceil(minPauseMs / loudnessStepMs);
+
+/**
+ * 음량 표를 글자 진행 표로 바꾼다 — 글자는 소리가 나는 시간만큼만 나아가고, 쉬는 칸은 NaN이다.
+ * 글자를 재생 시간에 고르게 나누면 쉼을 지날 때마다 입이 소리보다 앞서간다. 소리가 없으면 null이다
+ */
+export const toArticulationTrack = (
+  track: Float32Array,
+): Float32Array | null => {
+  const peak = track.reduce((max, loud) => Math.max(max, loud), 0);
+  if (peak === 0) return null;
+
+  const silent = track.map((loud) => (loud < peak * silenceRatio ? 1 : 0));
+  const paused = new Uint8Array(track.length);
+  for (let start = 0; start < track.length; start++) {
+    if (!silent[start]) continue;
+    let end = start;
+    while (end < track.length && silent[end]) end++;
+    if (end - start >= minPauseSteps) paused.fill(1, start, end);
+    start = end;
+  }
+
+  const voicedSteps = paused.reduce((count, flag) => count + (1 - flag), 0);
+  if (voicedSteps === 0) return null;
+  let voiced = 0;
+  return track.map((_, step) => (paused[step] ? NaN : ++voiced / voicedSteps));
+};
+
 /**
  * 캐릭터가 transform으로 옮기기만 하면 되는 입 상태.
  * sx는 가로 너비, sy는 세로 벌림, dy는 벌어질수록 입이 아래로 내려가는 턱 성분(px)이다.
@@ -106,8 +138,15 @@ export const advanceMouth = (
   visemes: VisemeShape[],
   track: Float32Array | null,
   progress: number,
+  articulation: Float32Array | null = null,
 ): MouthState => {
-  const target = MOUTH_TARGETS[visemeAt(visemes, progress)];
+  // 표가 없으면(디코딩 전·실패) 글자를 재생 시간에 고르게 나눈다
+  const spoken = articulation?.length
+    ? articulation[indexAt(articulation.length, progress)]
+    : progress;
+  const target = Number.isNaN(spoken)
+    ? MOUTH_TARGETS.closed
+    : MOUTH_TARGETS[visemeAt(visemes, spoken)];
   // 음량을 벌림 배율로 옮긴다 — 조용해도 완전히 닫히진 않게 바닥을 깔아둔다
   const amp = Math.min(1.2, 0.35 + loudnessAt(track, progress) * 4.5);
   const open = target.sy * (1 - target.amp) + target.sy * amp * target.amp;
