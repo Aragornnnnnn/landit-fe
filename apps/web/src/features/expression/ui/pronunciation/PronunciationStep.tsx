@@ -10,6 +10,7 @@ import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
 import { track } from '@/shared/analytics';
 import { ApiError } from '@/shared/api/api-error';
+import { useIsAdmin } from '@/shared/auth/current-member';
 import { lineBreak } from '@/shared/i18n/rich';
 import { isMicPermissionDeniedError } from '@/shared/stt/errors';
 import { Button } from '@/shared/ui/Button';
@@ -20,6 +21,10 @@ import type {
 } from '../../api/pronunciation';
 import { isSilentRecording } from '../../lib/sentence-recording';
 import { toFeedbackCards } from '../../model/pronunciation-feedback';
+import {
+  createPronunciationDiagnostics,
+  type PronunciationDiagnostics,
+} from '../../model/pronunciation-playback-diagnostics';
 import { isLowScoreWord, scoreView } from '../../model/pronunciation-score';
 import { useAudioPlayer } from '../../model/useAudioPlayer';
 import { usePronunciationAnalysisMutation } from '../../model/usePronunciationAnalysisMutation';
@@ -33,6 +38,7 @@ import {
   myWordAudioId,
   nativeWordAudioId,
 } from './FeedbackCards';
+import { PronunciationDiagnosticsPanel } from './PronunciationDiagnosticsPanel';
 import { ScoreGauge } from './ScoreGauge';
 import { SentenceListenBlock } from './SentenceListenBlock';
 import { WordChips } from './WordChips';
@@ -88,6 +94,9 @@ export const PronunciationStep = ({
   onSettled,
 }: PronunciationStepProps) => {
   const t = useTranslations('expression.pronunciationStep');
+  const isAdmin = useIsAdmin();
+  const [diagnostics, setDiagnostics] =
+    useState<PronunciationDiagnostics | null>(null);
   const [phase, setPhase] = useState<Phase>('ready');
   const [analysis, setAnalysis] = useState<PronunciationAnalysis | null>(null);
   const [micSheetOpen, setMicSheetOpen] = useState(false);
@@ -162,6 +171,7 @@ export const PronunciationStep = ({
     }
 
     setPhase('analyzing');
+    const requestedAt = new Date().toISOString();
     analysisMutation.mutate(recording, {
       onSuccess: (result) => {
         // 재생용 음원은 결과가 온 다음에 갈아끼운다 — 분석이 실패해 이전 피드백으로
@@ -172,6 +182,16 @@ export const PronunciationStep = ({
           URL.revokeObjectURL(recordingUrlRef.current);
         }
         recordingUrlRef.current = URL.createObjectURL(recording.blob);
+        setDiagnostics(
+          isAdmin
+            ? createPronunciationDiagnostics({
+                expressionId,
+                requestedAt,
+                recording,
+                analysis: result,
+              })
+            : null,
+        );
         attemptRef.current += 1;
         track(EVENTS.PRONUNCIATION_RESULT_VIEWED, {
           expression_id: expressionId,
@@ -226,7 +246,13 @@ export const PronunciationStep = ({
   const playMySentence = () => {
     if (!recordingUrlRef.current) return;
     trackAudioPlayed(MY_SENTENCE_AUDIO_ID, 'compare_mine');
-    player.toggle(recordingUrlRef.current, { id: MY_SENTENCE_AUDIO_ID });
+    player.toggle(recordingUrlRef.current, {
+      id: MY_SENTENCE_AUDIO_ID,
+      onDiagnosticEvent:
+        isAdmin && player.playingId !== MY_SENTENCE_AUDIO_ID
+          ? diagnostics?.startPlayback(null)
+          : undefined,
+    });
   };
   const playNativeWord = (word: PronunciationWord) => {
     if (word.nativeWordAudioUrl) {
@@ -243,9 +269,14 @@ export const PronunciationStep = ({
       word.endTimeMs !== null
     ) {
       trackAudioPlayed(myWordAudioId(word.order), 'my_word');
+      const segment = { startMs: word.startTimeMs, endMs: word.endTimeMs };
       player.toggle(recordingUrlRef.current, {
         id: myWordAudioId(word.order),
-        segment: { startMs: word.startTimeMs, endMs: word.endTimeMs },
+        segment,
+        onDiagnosticEvent:
+          isAdmin && player.playingId !== myWordAudioId(word.order)
+            ? diagnostics?.startPlayback(word.order, segment)
+            : undefined,
       });
     }
   };
@@ -362,6 +393,12 @@ export const PronunciationStep = ({
                 onPlayMine={playMyWord}
               />
             </>
+          )}
+          {diagnostics && isAdmin && (
+            <PronunciationDiagnosticsPanel
+              key={diagnostics.id}
+              diagnostics={diagnostics}
+            />
           )}
           {notice && <Notice text={t(notice)} />}
         </div>
