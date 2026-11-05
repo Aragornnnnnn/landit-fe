@@ -9,6 +9,7 @@ import {
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { buildPaywallPlans } from '@/features/subscription/model/product/plans';
+import { runBackPress } from '@/shared/bridge/back-press';
 import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { buildRewardPlan, REVIEWS } from '../_model/paywall-content';
@@ -223,5 +224,36 @@ describe('StepPaywall — 일본어 구독', () => {
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '月間プラン' }));
     expect(onSelect).toHaveBeenCalledWith('monthly');
+  });
+});
+
+describe('StepPaywall 안드로이드 뒤로가기', () => {
+  it('혜택 화면에서는 닫는다', () => {
+    const onClose = vi.fn();
+    renderPaywall({ onClose });
+
+    act(() => void runBackPress());
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('혜택에서 넘어온 결제 금액 안내에서는 닫지 않고 혜택으로 돌아온다', () => {
+    const onClose = vi.fn();
+    renderPaywall({ onClose });
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    act(() => void runBackPress());
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: '다음' })).toBeInTheDocument();
+  });
+
+  it('결제 금액 안내부터 열었으면 돌아갈 곳이 없어 닫는다', () => {
+    const onClose = vi.fn();
+    renderPaywall({ onClose, startStep: 'checkout' });
+
+    act(() => void runBackPress());
+
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

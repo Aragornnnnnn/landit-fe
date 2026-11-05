@@ -1,11 +1,18 @@
 // CancelFlowScreen — 해지할 구독이 있을 때만 열리고, ①→②(→③)를 거치며 이벤트가 한 번씩 나간다
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { RewardView } from '@/features/reward/api/reward';
 import { rewardView } from '@/features/reward/model/reward.fixture';
 import type { MySubscription } from '@/features/subscription/api/subscription';
+import { runBackPress } from '@/shared/bridge/back-press';
 
 import { CancelFlowScreen } from './CancelFlowScreen';
 
@@ -333,5 +340,22 @@ describe('가격 화면 노출의 환급 여부', () => {
     expect(mocks.track).toHaveBeenCalledWith('Cancel Retention Viewed', {
       reason: 'time',
     });
+  });
+});
+
+describe('안드로이드 뒤로가기', () => {
+  it('③에서 뒤로가기를 누르면 화면을 떠나지 않고 앞 단계로 돌아간다', () => {
+    // Given 방법까지 골라 ③에 와 있다
+    renderScreen(premium());
+    chooseReason('다른 방법으로 공부하려고요');
+    fireEvent.click(screen.getByRole('radio', { name: '유튜브 · 독학' }));
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    // When 뒤로가기를 두 번 누르면
+    act(() => void runBackPress());
+    act(() => void runBackPress());
+
+    // Then 사유 선택까지 돌아와 다른 사유를 고를 수 있다
+    expect(screen.getByText('가격이 부담돼요')).toBeInTheDocument();
   });
 });

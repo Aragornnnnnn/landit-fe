@@ -17,6 +17,11 @@ describe('decideBack', () => {
     expect(decideBack('/roleplay', true)).toBe('confirm-exit');
   });
 
+  it('온보딩은 로그인으로 되돌아가지 않고 종료 흐름으로 보낸다', () => {
+    expect(decideBack('/onboarding', true)).toBe('confirm-exit');
+    expect(decideBack('/onboarding', false)).toBe('confirm-exit');
+  });
+
   it('탭이 아닌 화면에서 뒤로 갈 곳이 있으면 히스토리를 되돌린다', () => {
     expect(decideBack('/conversation/scenario/3', true)).toBe('history-back');
     expect(decideBack('/expressions/scenario/3/5', true)).toBe('history-back');

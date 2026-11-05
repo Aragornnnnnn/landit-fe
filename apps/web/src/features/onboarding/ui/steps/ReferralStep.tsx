@@ -14,6 +14,7 @@ import { useRegisterReferralCodeMutation } from '@/features/referral/model/useRe
 import { useSkipReferralMutation } from '@/features/referral/model/useSkipReferralMutation';
 import { ReferralCodeInput } from '@/features/referral/ui/ReferralCodeInput';
 import { track } from '@/shared/analytics';
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import { haptic } from '@/shared/haptics';
 import { formatWon } from '@/shared/lib/won';
 import { reportWarning } from '@/shared/monitoring/report';
@@ -129,6 +130,8 @@ const CodeEntry = ({
   const [attempt, setAttempt] = useState(0);
   // 건너뛰기를 고른 뒤에는 무엇도 보내지 않는다 — 화면이 빠지기 전 확인이 끝나도 등록이 따라 나가지 않게
   const [leaving, setLeaving] = useState(false);
+  // 등록을 보내는 동안과 적립 연출 중엔 뒤로가기를 삼킨다 — 덮개는 탭만 막아, 뒤로 가면 등록 결과와 다음 단계 이동을 놓친다
+  useBackPress(() => {}, register.isPending || credited !== null);
 
   const submitCode = (key: string, policyVersion: number, won: number) =>
     register.mutate(

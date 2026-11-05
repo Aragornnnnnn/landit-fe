@@ -14,6 +14,7 @@ import * as referralApi from '@/features/referral/api/referral';
 import type { ReferralPreview } from '@/features/referral/api/referral';
 import { track } from '@/shared/analytics';
 import { ApiError } from '@/shared/api/api-error';
+import { registerBackPress, runBackPress } from '@/shared/bridge/back-press';
 import { haptic } from '@/shared/haptics';
 import { showToast } from '@/shared/ui/toast';
 
@@ -489,5 +490,51 @@ describe('ReferralStep · 거절·재시도', () => {
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(registerReferralCode).not.toHaveBeenCalled();
     expect(skipReferralRegistration).toHaveBeenCalled();
+  });
+});
+
+describe('ReferralStep · 안드로이드 뒤로가기', () => {
+  it('등록을 보내는 동안 뒤로가기는 삼켜져 결과를 놓치지 않는다', async () => {
+    // Given 등록 응답을 기다리는 중 (아래 화면이 뒤로가기를 등록해 둔 온보딩)
+    registerReferralCode.mockReturnValue(new Promise(() => {}));
+    const stepBack = vi.fn();
+    const unregister = registerBackPress(stepBack);
+    const { input } = renderStep();
+    pasteMessage(input, 'K7QM3XPA');
+    await waitFor(() => expect(registerReferralCode).toHaveBeenCalled());
+
+    // When 뒤로가기를 누르면
+    runBackPress();
+
+    // Then 앞 단계로 돌아가지 않는다
+    expect(stepBack).not.toHaveBeenCalled();
+    unregister();
+  });
+
+  it('적립 연출 중에도 뒤로가기는 삼켜진다', async () => {
+    // Given 등록이 끝나 적립 금액을 보여 주는 중
+    const stepBack = vi.fn();
+    const unregister = registerBackPress(stepBack);
+    const { input } = renderStep();
+    pasteMessage(input, 'K7QM3XPA');
+    await screen.findByText('+3,000원');
+
+    // When 뒤로가기를 누르면
+    runBackPress();
+
+    // Then 앞 단계로 돌아가지 않는다
+    expect(stepBack).not.toHaveBeenCalled();
+    unregister();
+  });
+
+  it('입력만 하는 동안의 뒤로가기는 앞 단계로 돌아간다', () => {
+    const stepBack = vi.fn();
+    const unregister = registerBackPress(stepBack);
+    renderStep();
+
+    runBackPress();
+
+    expect(stepBack).toHaveBeenCalledTimes(1);
+    unregister();
   });
 });

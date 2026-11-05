@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { RoleplaySummaryResponse } from '@/features/roleplay/api/roleplay';
 import { useRoleplaySummaryQuery } from '@/features/roleplay/model/useRoleplaySummaryQuery';
+import { runBackPress } from '@/shared/bridge/back-press';
 
 import { RoleplaySummary } from './RoleplaySummary';
 
@@ -243,5 +244,29 @@ describe('RoleplaySummary', () => {
         correction_count: null,
       });
     });
+  });
+});
+
+describe('RoleplaySummary 안드로이드 뒤로가기', () => {
+  it('축하 중에 뒤로가기를 누르면 X처럼 건너뜀을 남기고 홈으로 간다', () => {
+    renderSummary(summaryOf(), { celebrate: true });
+
+    act(() => void runBackPress());
+
+    expect(replace).toHaveBeenCalledWith('/roleplay');
+    expect(track).toHaveBeenCalledWith(
+      'Roleplay Feedback Skipped',
+      expect.objectContaining({ session_id: 7, trigger: 'close' }),
+    );
+  });
+
+  it('요약에서 뒤로가기를 여러 번 눌러도 한 번만 나간다', () => {
+    renderSummary(summaryOf());
+
+    act(() => void runBackPress());
+    act(() => void runBackPress());
+
+    expect(replace).toHaveBeenCalledTimes(1);
+    expect(replace).toHaveBeenCalledWith('/roleplay');
   });
 });

@@ -20,6 +20,7 @@ import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
 import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import { scenarioFeedbackPath, scenarioReturnPath } from '@/shared/lib/routes';
 import { useDocumentScrollPin } from '@/shared/lib/useDocumentScrollPin';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
@@ -42,6 +43,10 @@ export const ScenarioTalkFlow = ({
   const t = useTranslations('conversation.scenarioTalkFlow');
   const router = useRouter();
   const [showExitModal, setShowExitModal] = useState(false);
+  const requestExit = () => {
+    track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'conversation_exit' });
+    setShowExitModal(true);
+  };
   const display = useTalkDisplay();
   // 진입 시점의 완료 여부(재대화 판별) — 세션이 끝나면 시나리오 리스트가 invalidate돼
   // scenario.completed가 뒤늦게 true로 바뀌므로, 첫 완료와 구분하려면 진입 값으로 고정해야 한다.
@@ -66,6 +71,10 @@ export const ScenarioTalkFlow = ({
     answerGuide,
     markGuideViewed,
   } = useScenarioTalkFlow(scenario);
+  useBackPress(() => {
+    // 답을 기다리는 연출이 X를 가린 동안은 뒤로가기도 받지 않는다
+    if (phase !== 'AI_THINKING') requestExit();
+  });
   const {
     transcript,
     speechPending,
@@ -181,10 +190,7 @@ export const ScenarioTalkFlow = ({
         style={{ paddingTop: 'max(var(--safe-area-inset-top), 8px)' }}
       >
         <button
-          onClick={() => {
-            track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'conversation_exit' });
-            setShowExitModal(true);
-          }}
+          onClick={requestExit}
           className="flex size-10 items-center justify-center text-foreground transition-transform active:scale-90"
           aria-label={t('exitButton')}
         >

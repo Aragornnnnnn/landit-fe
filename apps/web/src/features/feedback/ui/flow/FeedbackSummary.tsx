@@ -3,6 +3,7 @@
 // 피드백 총평 — 별점·헤드라인·점수 트랙·성공률 아래로 총평, 영역 점수, 지난번과의 비교, 배운 표현 카드를 쌓고 상세로 넘긴다
 import { useTranslations } from 'next-intl';
 
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import { Button } from '@/shared/ui/Button';
 import { ChevronLeftIcon, LockIcon } from '@/shared/ui/Icons';
 import { StarRating } from '@/shared/ui/StarRating';
@@ -49,6 +50,7 @@ export const FeedbackSummary = ({
   ).length;
   const total = feedback.messageFeedbacks.length;
   const completedBefore = feedback.hasPreviousSameScenarioCompletion ?? false;
+  useBackPress(onBack);
 
   return (
     <div className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background">

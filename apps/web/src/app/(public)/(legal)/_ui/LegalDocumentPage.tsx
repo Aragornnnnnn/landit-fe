@@ -5,6 +5,7 @@
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import { backOrReplace } from '@/shared/lib/routes';
 
 import { BusinessInfoFooter } from './BusinessInfoFooter';
@@ -42,13 +43,15 @@ const ChevronLeftIcon = () => (
 export const LegalDocumentPage = ({ document }: LegalDocumentPageProps) => {
   const t = useTranslations('legal.documentPage');
   const router = useRouter();
+  const goBack = () => backOrReplace(router, '/');
+  useBackPress(goBack);
 
   return (
     <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-muted">
       <header className="relative flex shrink-0 items-center border-b border-border bg-background px-4 pt-[max(var(--safe-area-inset-top),16px)] pb-2">
         <button
           type="button"
-          onClick={() => backOrReplace(router, '/')}
+          onClick={goBack}
           className="-ml-1 flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-all active:scale-90 active:bg-border"
           aria-label={t('backLabel')}
         >

@@ -15,6 +15,7 @@ import { PLAN_ORDER } from '@/features/subscription/model/product/plans';
 import { PAYWALL_HERO } from '@/features/subscription/ui/paywall-hero-image';
 import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
 import { BenefitComparison } from '@/features/subscription/ui/product/BenefitComparison';
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import { ChevronLeftIcon, CloseIcon } from '@/shared/ui/Icons';
 
 import { rewardBenefitsOf, type RewardPlan } from '../_model/paywall-content';
@@ -84,6 +85,7 @@ export const CheckoutStep = ({
   restoreDisabled: boolean;
 }) => {
   const t = useTranslations();
+  useBackPress(onExit);
   const rest =
     HERO_REST_PX +
     HERO_SPARE_PX +

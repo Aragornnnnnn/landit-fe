@@ -4,22 +4,26 @@
 import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 
+import { useBackPress } from '@/shared/bridge/useBackPress';
+
 import { ChevronLeftIcon } from './Icons';
 
 interface StepHeaderProps {
   onBack: () => void;
   // 첫 단계처럼 돌아갈 곳이 없으면 버튼을 감춘다 — 자리는 남겨 진행 표시가 흔들리지 않게
-  backDisabled?: boolean;
+  hideBack?: boolean;
   // 오른쪽 진행 표시
   children?: ReactNode;
 }
 
 export const StepHeader = ({
   onBack,
-  backDisabled = false,
+  hideBack = false,
   children,
 }: StepHeaderProps) => {
   const t = useTranslations('common.stepHeader');
+  // 돌아갈 곳이 없는 단계는 받지 않는다 — 앱 공통 처리로 넘긴다
+  useBackPress(onBack, !hideBack);
 
   return (
     <header
@@ -30,7 +34,7 @@ export const StepHeader = ({
         type="button"
         onClick={onBack}
         aria-label={t('backLabel')}
-        disabled={backDisabled}
+        disabled={hideBack}
         className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-opacity active:bg-black/5 disabled:opacity-0"
       >
         <ChevronLeftIcon size={28} strokeWidth={2.8} />

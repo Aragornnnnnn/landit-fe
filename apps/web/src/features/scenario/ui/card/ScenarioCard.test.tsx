@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
+import { runBackPress } from '@/shared/bridge/back-press';
 
 import type { Scenario } from '../../lib/to-scenario';
 import { ScenarioCard } from './ScenarioCard';
@@ -208,5 +209,64 @@ describe('ScenarioCard', () => {
       direction: 'back',
       trigger: 'preview',
     });
+  });
+});
+
+describe('ScenarioCard 안드로이드 뒤로가기', () => {
+  const flip = () =>
+    userEvent.click(screen.getByRole('button', { name: '표현 배우기' }));
+
+  it('앞면은 뒤로가기를 받지 않고 탭의 종료 안내로 넘긴다', () => {
+    renderCard();
+
+    expect(runBackPress()).toBe(false);
+  });
+
+  it('뒤집힌 카드에서 뒤로가기를 누르면 앞면으로 돌아온다', async () => {
+    // Given 뒤집힌 카드
+    renderCard();
+    await flip();
+
+    // When 뒤로가기를 누르면
+    let handled = false;
+    act(() => {
+      handled = runBackPress();
+    });
+
+    // Then 앞면으로 돌아온다
+    expect(handled).toBe(true);
+    expect(screen.getByTestId('star-rating')).toBeInTheDocument();
+  });
+
+  it('앞면으로 돌아온 뒤의 뒤로가기는 다시 넘긴다', async () => {
+    // Given 뒤집었다가 앞면으로 돌아왔다
+    renderCard();
+    await flip();
+    act(() => void runBackPress());
+
+    // When/Then 다음 뒤로가기는 받지 않는다
+    expect(runBackPress()).toBe(false);
+  });
+});
+
+describe('ScenarioCard 프리뷰 안내 중 뒤로가기', () => {
+  it('프리뷰 안내가 뒷면을 비추는 동안은 뒤로가기로 앞면에 돌아오지 않는다', () => {
+    // Given 무료 표현을 비추려고 뒤집힌 카드
+    render(
+      <ScenarioCard
+        scenario={completedScenario}
+        onStart={vi.fn()}
+        expressions={{ completed: 1, total: 3 }}
+        premiumPreview={{
+          screen: 'free_expression',
+          onFlipped: vi.fn(),
+          onFreeOpened: vi.fn(),
+          onPreviewEnd: vi.fn(),
+        }}
+      />,
+    );
+
+    // When/Then 뒤로가기를 받지 않아 안내가 어긋나지 않는다
+    expect(runBackPress()).toBe(false);
   });
 });

@@ -2,7 +2,7 @@
 
 // 피드백 본편 — 로딩 분기(Flow)가 끝난 뒤 총평 ↔ 상세 두 단계를 전환한다.
 // 서버가 상세를 잠근 세션이면 상세로 넘어가지 않고 호출부(페이월)에 맡긴다
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { EVENTS, type FeedbackSource } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
@@ -35,6 +35,7 @@ export const FeedbackContent = ({
   /** 잠긴 상세를 보려고 했다 — 호출부가 페이월로 보낸다 */
   onDetailLocked: () => void;
 }) => {
+  const skippedRef = useRef(false);
   const detailLocked = feedback.detailFeedbackLocked ?? false;
   // 상세는 서버가 열어 줬고 볼 턴이 있을 때만 들어간다 — 빈 상세 화면은 없다
   const detailAvailable = !detailLocked && feedback.messageFeedbacks.length > 0;
@@ -117,6 +118,9 @@ export const FeedbackContent = ({
       refreshing={refreshing}
       // 총평만 보고 상세 없이 나감 — Feedback Completed와 배타적인 이탈 신호
       onBack={() => {
+        // 다음 화면이 뜨기 전에 또 눌러도 지표가 두 번 쌓이지 않게 한다
+        if (skippedRef.current) return;
+        skippedRef.current = true;
         track(EVENTS.FEEDBACK_SKIPPED, {
           session_id: feedback.sessionId,
           source,
