@@ -524,3 +524,20 @@ describe('ReviewFlow', () => {
     ).toBeInTheDocument();
   });
 });
+
+describe('ReviewFlow 연타', () => {
+  it('다음 화면이 뜨기 전에 또 눌러도 이탈을 한 번만 남긴다', async () => {
+    const user = userEvent.setup();
+    wire({ fetched: review({}) });
+    show();
+
+    await user.dblClick(screen.getByRole('button', { name: '나가기' }));
+
+    expect(
+      vi
+        .mocked(track)
+        .mock.calls.filter(([name]) => name === 'Expression Review Abandoned'),
+    ).toHaveLength(1);
+    expect(replace).toHaveBeenCalledTimes(1);
+  });
+});

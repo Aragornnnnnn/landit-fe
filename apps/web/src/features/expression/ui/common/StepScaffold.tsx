@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import { ChevronLeftIcon, CloseIcon } from '@/shared/ui/Icons';
 import { ProgressBar, type ProgressTone } from '@/shared/ui/ProgressBar';
 
@@ -36,6 +37,7 @@ export const StepScaffold = ({
   headerOverlay = false,
 }: StepScaffoldProps) => {
   const t = useTranslations('expression.stepScaffold');
+  useBackPress(onBack);
   // 본문이 스크롤되면 헤더에 그림자를 드리워 콘텐츠가 아래로 지나감을 알린다 (오버레이 헤더 제외)
   const [scrolled, setScrolled] = useState(false);
 

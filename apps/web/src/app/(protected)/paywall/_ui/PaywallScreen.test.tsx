@@ -1,7 +1,14 @@
 // 페이월 화면 동작 — 플랜을 바꾸면 CTA·안내가 따라 바뀌고, 결제·복원·닫기가 제자리로 간다. 환급 챌린지 스위치를 켜면 환급 화면이 된다
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { runBackPress } from '@/shared/bridge/back-press';
 import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { PaywallScreen } from './PaywallScreen';
@@ -860,5 +867,46 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
       expect(mocks.replace).toHaveBeenCalledWith('/scenario'),
     );
     expect(mocks.dismiss).not.toHaveBeenCalled();
+  });
+});
+
+describe('PaywallScreen — 안드로이드 뒤로가기', () => {
+  it('뒤로가기는 닫기와 같은 길로 나간다 — 닫기 처리를 부른 뒤 홈으로 간다', async () => {
+    render(<PaywallScreen />);
+
+    act(() => void runBackPress());
+
+    expect(mocks.dismiss).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() =>
+      expect(mocks.replace).toHaveBeenCalledWith('/scenario'),
+    );
+  });
+
+  it('닫는 중에 또 눌러도 서버에 한 번만 알린다', async () => {
+    let finish = () => {};
+    mocks.dismiss = vi.fn(
+      () => new Promise<void>((resolve) => (finish = resolve)),
+    );
+    render(<PaywallScreen />);
+
+    act(() => void runBackPress());
+    act(() => void runBackPress());
+
+    expect(mocks.dismiss).toHaveBeenCalledTimes(1);
+    finish();
+    await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe('PaywallScreen — 닫은 뒤 홈이 뜨기 전', () => {
+  it('서버 응답 뒤 홈이 뜨기 전에 또 눌러도 다시 알리지 않는다', async () => {
+    render(<PaywallScreen />);
+    act(() => void runBackPress());
+    await vi.waitFor(() => expect(mocks.replace).toHaveBeenCalledTimes(1));
+
+    act(() => void runBackPress());
+
+    expect(mocks.dismiss).toHaveBeenCalledTimes(1);
+    expect(mocks.replace).toHaveBeenCalledTimes(1);
   });
 });

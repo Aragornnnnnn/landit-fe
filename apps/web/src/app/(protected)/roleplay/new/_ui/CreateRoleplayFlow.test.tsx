@@ -10,6 +10,7 @@ import type {
 import { useCreateRoleplayScenarioMutation } from '@/features/roleplay/model/useCreateRoleplayScenarioMutation';
 import { useRoleplayIdeaMutation } from '@/features/roleplay/model/useRoleplayIdeaMutation';
 import { ApiError } from '@/shared/api/api-error';
+import { runBackPress } from '@/shared/bridge/back-press';
 
 import { CreateRoleplayFlow } from './CreateRoleplayFlow';
 
@@ -326,6 +327,24 @@ describe('CreateRoleplayFlow', () => {
       partner: 'chloe',
       free_trial: false,
     });
+  });
+
+  it('만드는 중 뒤로가기를 연타해도 이탈과 이동은 한 번만 일어난다', async () => {
+    // Given 시나리오를 만드는 중
+    answerCreate('pending');
+    await goToForm();
+    await fillAll();
+    await userEvent.click(screen.getByRole('button', { name: '시작하기' }));
+
+    // When 다음 화면이 뜨기 전에 뒤로가기를 두 번 누르면
+    act(() => void runBackPress());
+    act(() => void runBackPress());
+
+    // Then 이탈 기록과 이동은 한 번뿐이다
+    expect(back).toHaveBeenCalledTimes(1);
+    expect(
+      track.mock.calls.filter(([name]) => name === 'Roleplay Create Abandoned'),
+    ).toHaveLength(1);
   });
 
   it('프리미엄이 없다고 거절되면 페이월로 보낸다', async () => {

@@ -2,6 +2,7 @@
 import { act, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { registerBackPress } from '@/shared/bridge/back-press';
 import { registerOpenSheet } from '@/shared/ui/bottom-sheet-back';
 
 import { BridgeListener } from './BridgeListener';
@@ -139,6 +140,43 @@ describe('BridgeListener', () => {
     pressBack();
     expect(mocks.postToNative).not.toHaveBeenCalled();
     expect(mocks.showToast).toHaveBeenCalledTimes(2);
+  });
+
+  it('화면이 등록한 뒤로가기가 있으면 앱 종료·히스토리 이동 대신 그것을 부른다', () => {
+    // Given 뒤로 버튼이 있는 화면
+    render(<BridgeListener />);
+    const back = vi.spyOn(window.history, 'back').mockImplementation(() => {});
+    const screenBack = vi.fn();
+    const unregister = registerBackPress(screenBack);
+
+    // When 뒤로가기를 누르면
+    pressBack();
+
+    // Then 화면의 동작만 돈다
+    expect(screenBack).toHaveBeenCalledTimes(1);
+    expect(back).not.toHaveBeenCalled();
+    expect(mocks.postToNative).not.toHaveBeenCalled();
+    expect(mocks.showToast).not.toHaveBeenCalled();
+    unregister();
+    back.mockRestore();
+  });
+
+  it('시트가 열려 있으면 화면의 뒤로가기보다 시트가 먼저 닫힌다', () => {
+    // Given 화면이 시트보다 나중에 등록됐어도
+    render(<BridgeListener />);
+    const close = vi.fn();
+    const unregisterSheet = registerOpenSheet(close);
+    const screenBack = vi.fn();
+    const unregisterScreen = registerBackPress(screenBack);
+
+    // When 뒤로가기를 누르면
+    pressBack();
+
+    // Then 시트만 닫힌다
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(screenBack).not.toHaveBeenCalled();
+    unregisterSheet();
+    unregisterScreen();
   });
 
   it('NAVIGATE 메시지를 받으면 그 경로로 이동한다', () => {

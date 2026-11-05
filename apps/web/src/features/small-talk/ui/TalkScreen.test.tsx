@@ -3,14 +3,19 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ConversationPhase } from '@/features/conversation/model/conversation-machine';
+import { runBackPress } from '@/shared/bridge/back-press';
 
 import { TalkScreen, type TalkScreenFlow } from './TalkScreen';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ prefetch: vi.fn() }),
 }));
+const characterStage = vi.hoisted(() => vi.fn());
 vi.mock('@/features/conversation/ui/flow/CharacterStage', () => ({
-  CharacterStage: () => null,
+  CharacterStage: (props: unknown) => {
+    characterStage(props);
+    return null;
+  },
 }));
 vi.mock('../model/useSpeakingLimit', () => ({
   useSpeakingLimit: () => ({ unlimited: true }),
@@ -18,9 +23,10 @@ vi.mock('../model/useSpeakingLimit', () => ({
 
 afterEach(() => cleanup());
 
-const toFlow = (phase: ConversationPhase) =>
+const toFlow = (phase: ConversationPhase, waitingForSound = false) =>
   ({
     phase,
+    waitingForSound,
     turnIndex: 1,
     turn: {
       aiMessage: 'How was your day?',
@@ -38,14 +44,21 @@ const toFlow = (phase: ConversationPhase) =>
     summary: { speakingDurationMs: 0, exchangeCount: 0 },
   }) as unknown as TalkScreenFlow;
 
+const lastLook = () =>
+  (characterStage.mock.lastCall?.[0] as { look?: { posture: string } })?.look;
+
 const dots = () => screen.queryByText('답을 생각하는 중');
 
-const renderTalk = (phase: ConversationPhase, hasInnerThought?: boolean) =>
+const renderTalk = (
+  phase: ConversationPhase,
+  hasInnerThought?: boolean,
+  waitingForSound?: boolean,
+) =>
   render(
     <TalkScreen
       sessionId={1}
       partner="teddy"
-      flow={toFlow(phase)}
+      flow={toFlow(phase, waitingForSound)}
       summaryPath="/summary"
       onShowSummary={vi.fn()}
       onExitRequested={vi.fn()}
@@ -80,5 +93,122 @@ describe('TalkScreen 답 대기', () => {
     // Then 상대 말이 보이고 점 세 개는 없다
     expect(screen.getByText('How was your day?')).toBeInTheDocument();
     expect(dots()).not.toBeInTheDocument();
+  });
+
+  it('속마음이 없는 대화는 소리가 시작될 때까지 점 세 개를 유지한다 — 소리 없이 글자부터 나오지 않게', () => {
+    // When 답은 왔지만 음성을 준비하는 동안
+    renderTalk('AI_SPEAKING', false, true);
+
+    // Then
+    expect(dots()).toBeTruthy();
+    expect(screen.queryByText('How was your day?')).toBeNull();
+    expect(lastLook()?.posture).toBe('idle');
+  });
+
+  it('소리가 시작되면 점이 사라지고 상대가 말하기 시작한다', () => {
+    // When
+    renderTalk('AI_SPEAKING', false, false);
+
+    // Then
+    expect(dots()).toBeNull();
+    expect(lastLook()?.posture).toBe('speaking');
+  });
+
+  it('속마음이 있는 대화의 말하기 화면은 그대로다', () => {
+    // When
+    renderTalk('AI_SPEAKING', true, true);
+
+    // Then
+    expect(dots()).toBeNull();
+  });
+});
+
+describe('TalkScreen 뒤로가기', () => {
+  const renderWithExit = (pressClose: () => boolean) => {
+    const onExitRequested = vi.fn();
+    const view = render(
+      <TalkScreen
+        sessionId={1}
+        partner="teddy"
+        flow={{ ...toFlow('USER_READY'), pressClose }}
+        summaryPath="/summary"
+        onShowSummary={vi.fn()}
+        onExitRequested={onExitRequested}
+      />,
+    );
+    return { ...view, onExitRequested };
+  };
+
+  it('대화 중 뒤로가기를 누르면 X처럼 종료 시트를 열고 화면을 떠나지 않는다', () => {
+    // Given 물어봐야 하는 대화
+    const { onExitRequested } = renderWithExit(() => true);
+
+    // When 뒤로가기를 누르면
+    const consumed = runBackPress();
+
+    // Then 뒤로가기는 여기서 끝나고 시트를 연다
+    expect(consumed).toBe(true);
+    expect(onExitRequested).toHaveBeenCalledTimes(1);
+  });
+
+  it('흐름 훅이 알아서 보낸 대화는 뒤로가기에도 시트를 열지 않는다', () => {
+    // Given X를 눌러도 물어보지 않는 대화 (끝났거나 나눈 말이 없다)
+    const pressClose = vi.fn(() => false);
+    const { onExitRequested } = renderWithExit(pressClose);
+
+    // When 뒤로가기를 누르면
+    runBackPress();
+
+    // Then 흐름 훅에 맡기고 시트는 열지 않는다
+    expect(pressClose).toHaveBeenCalledTimes(1);
+    expect(onExitRequested).not.toHaveBeenCalled();
+  });
+
+  it('대화 화면을 떠나면 뒤로가기를 가로채지 않는다', () => {
+    // Given 대화 화면을 떠났다
+    const { unmount, onExitRequested } = renderWithExit(() => true);
+    unmount();
+
+    // When 뒤로가기를 누르면
+    const consumed = runBackPress();
+
+    // Then 다음 화면의 뒤로가기 처리로 넘어간다
+    expect(consumed).toBe(false);
+    expect(onExitRequested).not.toHaveBeenCalled();
+  });
+});
+
+describe('TalkScreen 답 대기 중 뒤로가기', () => {
+  const renderAt = (hasInnerThought: boolean) => {
+    const pressClose = vi.fn(() => true);
+    render(
+      <TalkScreen
+        sessionId={1}
+        partner="teddy"
+        flow={{ ...toFlow('AI_THINKING'), pressClose }}
+        summaryPath="/summary"
+        onShowSummary={vi.fn()}
+        onExitRequested={vi.fn()}
+        hasInnerThought={hasInnerThought}
+      />,
+    );
+    return pressClose;
+  };
+
+  it('연출이 X를 가린 동안은 뒤로가기를 삼켜 보낸 답을 버리지 않는다', () => {
+    const pressClose = renderAt(true);
+
+    const handled = runBackPress();
+
+    expect(handled).toBe(true);
+    expect(pressClose).not.toHaveBeenCalled();
+  });
+
+  it('연출이 없는 대화는 답을 기다려도 X가 보이므로 뒤로가기를 받는다', () => {
+    const pressClose = renderAt(false);
+
+    runBackPress();
+
+    expect(pressClose).toHaveBeenCalledTimes(1);
   });
 });

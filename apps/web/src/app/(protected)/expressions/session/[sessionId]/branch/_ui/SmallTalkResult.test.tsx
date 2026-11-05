@@ -8,6 +8,7 @@ import type {
   SmallTalkSessionExpression,
 } from '@/features/small-talk/api/small-talk';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
+import { runBackPress } from '@/shared/bridge/back-press';
 
 import { SmallTalkResult } from './SmallTalkResult';
 
@@ -228,5 +229,26 @@ describe('SmallTalkResult', () => {
     expect(
       screen.getByRole('button', { name: '돌아가기' }),
     ).toBeInTheDocument();
+  });
+});
+
+describe('SmallTalkResult 안드로이드 뒤로가기', () => {
+  it('뒤로가기를 누르면 X처럼 스몰톡 탭으로 돌아간다', () => {
+    setup();
+
+    runBackPress();
+
+    expect(replace).toHaveBeenCalledWith('/smalltalk');
+  });
+});
+
+describe('SmallTalkResult 연타', () => {
+  it('다음 화면이 뜨기 전에 또 눌러도 한 번만 나간다', () => {
+    setup();
+
+    runBackPress();
+    runBackPress();
+
+    expect(replace).toHaveBeenCalledTimes(1);
   });
 });

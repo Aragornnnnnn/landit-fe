@@ -12,8 +12,17 @@ const mocks = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/shared/analytics', () => ({ track: mocks.track }));
 // 총평·상세 화면은 자기 몫이 따로 있다 — 여기선 단계가 어떻게 바뀌는지만 본다
 vi.mock('./FeedbackSummary', () => ({
-  FeedbackSummary: ({ onDetail }: { onDetail: () => void }) => (
-    <button onClick={onDetail}>상세 보기</button>
+  FeedbackSummary: ({
+    onDetail,
+    onBack,
+  }: {
+    onDetail: () => void;
+    onBack: () => void;
+  }) => (
+    <>
+      <button onClick={onDetail}>상세 보기</button>
+      <button onClick={onBack}>총평 나가기</button>
+    </>
   ),
 }));
 vi.mock('./FeedbackDetail', () => ({
@@ -277,5 +286,29 @@ describe('FeedbackContent', () => {
     fireEvent.click(screen.getByText('상세 보기'));
 
     expect(screen.getByText('상세 화면')).toBeInTheDocument();
+  });
+});
+
+describe('FeedbackContent 연타', () => {
+  it('총평에서 나가기를 두 번 눌러도 건너뜀과 이동은 한 번만 일어난다', () => {
+    const onExit = vi.fn();
+    render(
+      <FeedbackContent
+        feedback={feedback()}
+        title="카페"
+        source="post_conversation"
+        premium={false}
+        onExit={onExit}
+        onDetailLocked={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText('총평 나가기'));
+    fireEvent.click(screen.getByText('총평 나가기'));
+
+    expect(onExit).toHaveBeenCalledTimes(1);
+    expect(
+      mocks.track.mock.calls.filter(([name]) => name === 'Feedback Skipped'),
+    ).toHaveLength(1);
   });
 });

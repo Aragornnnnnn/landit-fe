@@ -10,6 +10,8 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { runBackPress } from '@/shared/bridge/back-press';
+
 import type {
   SessionLevelAssessment,
   SessionLevelAssessmentResponse,
@@ -90,7 +92,12 @@ const feedback = (
 
 const renderSummary = (
   value: SessionFeedbackResponse,
-  { detailLocked = false, premium = false, onDetail = vi.fn() } = {},
+  {
+    detailLocked = false,
+    premium = false,
+    onDetail = vi.fn(),
+    onBack = vi.fn(),
+  } = {},
 ) =>
   render(
     <QueryClientProvider client={new QueryClient()}>
@@ -99,7 +106,7 @@ const renderSummary = (
         title="카페"
         detailLocked={detailLocked}
         premium={premium}
-        onBack={vi.fn()}
+        onBack={onBack}
         onDetail={onDetail}
       />
     </QueryClientProvider>,
@@ -361,5 +368,19 @@ describe('FeedbackSummary', () => {
     expect(
       screen.queryByText('랜딧에서 배운 표현을 실제로 사용했어요'),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('FeedbackSummary 안드로이드 뒤로가기', () => {
+  it('뒤로가기를 누르면 뒤로 버튼처럼 총평을 벗어난다', () => {
+    const onBack = vi.fn();
+    mocks.getLevelAssessment.mockResolvedValue(
+      levelResponse('COMPLETED', assessment),
+    );
+    renderSummary(feedback(), { onBack });
+
+    runBackPress();
+
+    expect(onBack).toHaveBeenCalledTimes(1);
   });
 });

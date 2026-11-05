@@ -1,10 +1,17 @@
 // 스몰톡 대화 화면 — 남은 말하기 시간 표시는 한도가 있을 때만 그린다.
 // 무제한이면 마이크 위 카운트다운도, 마이크 둘레 타이머 링도 없다 (잔량 계산은 뒤에서 그대로 돈다)
 // X는 흐름 훅이 물어보라고 할 때만 종료 시트를 연다
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { SmallTalkSessionStartResponse } from '@/features/small-talk/api/small-talk';
+import { runBackPress } from '@/shared/bridge/back-press';
 
 import { GOODBYE_PHRASES } from '../_model/goodbye-phrase';
 import { SmallTalkConversation } from './SmallTalkConversation';
@@ -192,5 +199,28 @@ describe('SmallTalkConversation — 대화 나가기', () => {
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(mocks.prefetch).not.toHaveBeenCalled();
+  });
+});
+
+describe('SmallTalkConversation — 안드로이드 뒤로가기', () => {
+  it('뒤로가기를 누르면 X처럼 종료 시트를 연다', () => {
+    renderScreen();
+
+    act(() => void runBackPress());
+
+    expect(
+      screen.getByRole('dialog', { name: '종료 시트' }),
+    ).toBeInTheDocument();
+  });
+
+  it('흐름 훅이 알아서 보내면 뒤로가기에도 시트를 열지 않는다', () => {
+    mocks.confirmClose = false;
+    renderScreen();
+
+    act(() => void runBackPress());
+
+    expect(
+      screen.queryByRole('dialog', { name: '종료 시트' }),
+    ).not.toBeInTheDocument();
   });
 });

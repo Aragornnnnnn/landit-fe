@@ -95,7 +95,11 @@ export const ReviewFlow = ({ reviewId }: { reviewId: string }) => {
   });
 
   // 결과를 보기 전에 나간 경우 — 어느 자리에서 닫았는지 남기고 홈으로
+  const leftRef = useRef(false);
   const abandon = (step: ExpressionReviewStep) => {
+    // 다음 화면이 뜨기 전에 또 눌러도 지표가 두 번 쌓이지 않게 한다
+    if (leftRef.current) return;
+    leftRef.current = true;
     track(EVENTS.EXPRESSION_REVIEW_ABANDONED, {
       step,
       ...countsOf(applied ?? fetched),

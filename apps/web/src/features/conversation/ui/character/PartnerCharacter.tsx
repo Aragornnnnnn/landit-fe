@@ -13,6 +13,7 @@ import {
   advanceMouth,
   closedMouth,
   loadLoudnessTrack,
+  toArticulationTrack,
   toVisemes,
 } from '../../model/lipsync';
 import type { PlayingSpeech } from '../../model/useAiSpeech';
@@ -260,23 +261,42 @@ const keepMiming = (parts: CharacterParts, accents: Accents) => {
 /**
  * 재생 시각만 읽어 입모양과 벌림을 매 프레임 다시 그린다. 소리 경로는 건드리지 않는다.
  * 자세 transition을 끄는 이유 — 켜두면 0.4초 보간이 매 프레임을 서로 취소해 입이 굳는다.
- * 음량 표는 디코딩이 끝나야 생기고, 그 전까지는 보통 크기로 흘러간다.
+ * 음량 표는 디코딩이 끝나야 생기고, 그 전까지는 입을 닫아 둔다. 표가 늦거나 실패하면 글자를 고르게 나눠 움직인다.
  * 정리할 때 인라인 스타일을 지워 입을 자세 CSS에 돌려준다.
  */
+// 음량 표를 기다리며 입을 닫아 두는 한도 — 음성 앞머리 무음(약 0.4초)을 넘기면 소리가 나는데 입이 닫혀 있게 된다
+const LOUDNESS_WAIT_MS = 500;
+
 const driveMouth = (mouth: SVGGElement, { playback, text }: PlayingSpeech) => {
   const visemes = toVisemes(text);
   let track: Float32Array | null = null;
+  // 표를 읽기 전엔 입을 닫아 둔다 — 음성 앞머리는 무음이라, 글자대로 움직이면 소리 없이 입부터 열린다
+  let articulation: Float32Array | null = Float32Array.of(NaN);
   let driving = true;
   let frame = 0;
 
+  const waitTimer = window.setTimeout(() => {
+    articulation = null;
+  }, LOUDNESS_WAIT_MS);
+
   void loadLoudnessTrack(playback.source).then((loaded) => {
-    if (driving) track = loaded;
+    if (!driving) return;
+    window.clearTimeout(waitTimer);
+    track = loaded;
+    // 디코딩에 실패하면 글자를 고르게 나누는 방식으로 돌아간다 — 입은 계속 움직인다
+    articulation = loaded && toArticulationTrack(loaded);
   });
 
   mouth.style.transition = 'none';
   let state = closedMouth;
   const nextFrame = () => {
-    state = advanceMouth(state, visemes, track, playback.progress());
+    state = advanceMouth(
+      state,
+      visemes,
+      track,
+      playback.progress(),
+      articulation,
+    );
     const { sx, sy, dy } = state;
     mouth.style.transform = `translateY(${dy.toFixed(1)}px) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
     frame = requestAnimationFrame(nextFrame);
@@ -285,6 +305,7 @@ const driveMouth = (mouth: SVGGElement, { playback, text }: PlayingSpeech) => {
 
   return () => {
     driving = false;
+    window.clearTimeout(waitTimer);
     cancelAnimationFrame(frame);
     mouth.style.transform = '';
     mouth.style.transition = '';

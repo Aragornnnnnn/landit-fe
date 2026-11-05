@@ -26,6 +26,7 @@ import { SummaryHeadline } from '@/features/small-talk/ui/SummaryHeadline';
 import { SummarySkeleton } from '@/features/small-talk/ui/SummarySkeleton';
 import { useFilledEarlier } from '@/features/streak/model/useFilledEarlier';
 import { track } from '@/shared/analytics';
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import { lineBreak } from '@/shared/i18n/rich';
 import { ROLEPLAY_PATH, roleplayTranscriptPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
@@ -115,6 +116,8 @@ export const RoleplaySummary = ({
         correction_count: correctionCount,
       }),
     );
+  // 축하 화면엔 공통 머리가 없어 뒤로가기를 직접 받는다
+  useBackPress(() => goHome('close'), celebrating);
   const openDetail = () =>
     leaveTo(roleplayTranscriptPath(sessionId), () =>
       track(EVENTS.ROLEPLAY_FEEDBACK_OPENED, {

@@ -26,6 +26,44 @@ interface SpeakOptions {
   onError?: (error: Error) => void;
 }
 
+// 합성 응답을 기다리는 한도 — 망이 죽어 대화가 멈추는 것만 막는다. 느린 합성(실측 최대 21초)은 끊지 않는다
+const SYNTH_TIMEOUT_MS = 25_000;
+
+/** 합성 응답이 제한 시간 안에 오지 않았다 — 망이 죽었을 가능성이 커서 호출부는 더 기다리지 않는다 */
+export class TtsTimeoutError extends Error {
+  constructor() {
+    super('TTS 합성 응답이 오지 않아요.');
+  }
+}
+
+/** 다시 물어도 합성 요청이 한도에 걸렸다 — 몰린 상태라 호출부가 처음부터 다시 묻지 않는다 */
+export class TtsRateLimitError extends Error {
+  constructor() {
+    super('TTS 합성 요청이 한도에 걸렸어요.');
+  }
+}
+
+// 제공사 동시 요청 한도(429)에 걸렸을 때 다시 묻기 전 쉬는 시간 — 바로 다시 물으면 또 걸리기 쉽다
+const RATE_LIMIT_RETRY_DELAYS_MS = [500, 1500];
+
+// 쉬는 동안 재생이 멈추면 다시 묻지 않게 함께 끊긴다
+const waitBeforeRetry = (ms: number, signal?: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    // 같이 거절된 요청이 같은 순간에 다시 몰리지 않게 쉬는 시간을 흩는다
+    const timer = setTimeout(resolve, ms * (1 + Math.random()));
+    signal?.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        reject(new DOMException('Aborted', 'AbortError'));
+      },
+      { once: true },
+    );
+  });
+
+// 합성 음원을 남겨 두는 개수 — 다시 듣기와 미리 받은 다음 발화의 문장 조각이 넉넉히 들어가는 크기다
+const CACHE_LIMIT = 12;
+
 const toPlayback = (audio: HTMLAudioElement): TtsPlayback => ({
   progress: () => (audio.duration ? audio.currentTime / audio.duration : 0),
   source: audio.currentSrc,
@@ -37,6 +75,13 @@ const abortPreload = (audio: HTMLAudioElement) => {
   audio.load();
 };
 
+const trimCache = (cache: Map<string, Blob>) => {
+  for (const key of cache.keys()) {
+    if (cache.size <= CACHE_LIMIT) return;
+    cache.delete(key);
+  }
+};
+
 // 캐시 키 — 같은 문장도 목소리(모델·화자)가 다르면 다른 음원이다
 const cacheKey = (text: string, voice: TtsVoice) =>
   `${voice.model}/${voice.providerVoiceId}\n${text}`;
@@ -44,25 +89,58 @@ const cacheKey = (text: string, voice: TtsVoice) =>
 // 합성 요청을 한 곳에서 만든다 — 재생(speak)과 미리 담기(prefetch)가 공유한다.
 // 성공 시 오디오 Blob을, 실패 시 예외를 던진다. objectURL은 재생 직전에 새로 만든다
 // (iOS WebView는 미리 만들어 묵힌 blob URL 재생이 불안정해서다).
+async function requestSpeech(
+  text: string,
+  voice: TtsVoice,
+  signal?: AbortSignal,
+): Promise<Blob> {
+  const send = () =>
+    fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        input: text,
+        model: voice.model,
+        voice: voice.providerVoiceId,
+      }),
+      signal,
+    });
+  let response = await send();
+  for (const delay of RATE_LIMIT_RETRY_DELAYS_MS) {
+    if (response.status !== 429) break;
+    await waitBeforeRetry(delay, signal);
+    response = await send();
+  }
+  if (response.status === 429) throw new TtsRateLimitError();
+  if (!response.ok) {
+    throw new Error(`TTS 합성에 실패했어요. (${response.status})`);
+  }
+  return response.blob();
+}
+
+// 응답이 영영 안 오면 대화가 그 자리에서 멈춘다 — 제한 시간이 지나면 실패로 돌려 다음으로 넘어가게 한다
 async function synthesizeSpeech(
   text: string,
   voice: TtsVoice,
   signal?: AbortSignal,
 ): Promise<Blob> {
-  const response = await fetch('/api/tts', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      input: text,
-      model: voice.model,
-      voice: voice.providerVoiceId,
-    }),
-    signal,
-  });
-  if (!response.ok) {
-    throw new Error(`TTS 합성에 실패했어요. (${response.status})`);
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  if (signal?.aborted) abort();
+  signal?.addEventListener('abort', abort);
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    abort();
+  }, SYNTH_TIMEOUT_MS);
+  try {
+    return await requestSpeech(text, voice, controller.signal);
+  } catch (error) {
+    throw timedOut ? new TtsTimeoutError() : error;
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener('abort', abort);
   }
-  return response.blob();
 }
 
 /**
@@ -78,13 +156,13 @@ export function useTts() {
   const urlRef = useRef<string | null>(null);
   const onEndRef = useRef<(() => void) | undefined>(undefined);
 
-  // 합성 오디오 캐시(키→Blob) — 미리 받은 다음 발화와 방금 튼 발화만 담는다.
-  // 방금 튼 것을 남기는 이유는 다시 듣기 — 합성 왕복 없이 바로 튼다. 그 앞 발화는 다음 speak 때 비워 메모리가 늘지 않는다
+  // 합성 오디오 캐시(키→Blob) — 미리 받은 다음 발화와 최근에 튼 문장들을 담는다.
+  // 튼 것을 남기는 이유는 다시 듣기 — 합성 왕복 없이 바로 튼다. 오래된 것부터 비워 메모리가 늘지 않는다
   const cacheRef = useRef<Map<string, Blob>>(new Map());
   // prefetch 진행 중인 합성(키→Promise) — speak가 겹치면 새로 합성하지 말고 이 Promise를 기다린다
   const inflightRef = useRef<Map<string, Promise<Blob>>>(new Map());
-  // 방금 튼 발화의 캐시 키 — 다음 발화를 틀 때 이 항목을 비운다
-  const lastSpokenKeyRef = useRef<string | null>(null);
+  // 미리 받는 합성의 중단 손잡이 — 화면을 떠나면 아직 안 끝난 합성을 끊어 비용을 아낀다
+  const prefetchAbortRef = useRef<AbortController | null>(null);
   // 미리 열어둔 정적 오디오 한 슬롯 — 이어 재생 때 네트워크 대기 없이 바로 튼다. 필요한 건 늘 다음 발화 하나다
   const preloadedRef = useRef<{ src: string; audio: HTMLAudioElement } | null>(
     null,
@@ -112,11 +190,13 @@ export function useTts() {
   // 컴포넌트가 사라진 뒤라 상태는 건드리지 않고 refs만 정리한다
   useEffect(() => {
     mountedRef.current = true; // StrictMode의 mount→unmount→mount에서 두 번째 mount가 죽은 채 남지 않게
+    prefetchAbortRef.current = new AbortController();
     // 캐시 Map은 재할당되지 않으므로 진입 시 지역변수로 잡아 cleanup에서 그대로 정리한다
     const cache = cacheRef.current;
     return () => {
       mountedRef.current = false;
       abortRef.current?.abort();
+      prefetchAbortRef.current?.abort();
       audioRef.current?.pause();
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
       cache.clear(); // 캐시엔 Blob만 담으므로 정리할 objectURL이 없다
@@ -148,22 +228,26 @@ export function useTts() {
       const key = cacheKey(text, voice);
       let blob = cacheRef.current.get(key);
       if (!blob) {
-        // 진행 중인 prefetch가 있으면 재사용하고, 그 합성이 실패했을 때만 새로 합성한다.
+        // 진행 중인 prefetch가 있으면 재사용하고, 그 합성이 실패했을 때만 새로 합성한다 (시간 초과와 한도 초과는 다시 묻지 않는다).
         // (prefetch가 없으면 곧장 새로 합성 — 이 경우 stop() abort가 그대로 전파돼야 한다)
         const pending = inflightRef.current.get(key);
         blob = pending
-          ? await pending.catch(() =>
-              synthesizeSpeech(text, voice, controller.signal),
-            )
+          ? await pending.catch((error) => {
+              if (
+                error instanceof TtsTimeoutError ||
+                error instanceof TtsRateLimitError
+              )
+                throw error;
+              return synthesizeSpeech(text, voice, controller.signal);
+            })
           : await synthesizeSpeech(text, voice, controller.signal);
       }
       // 합성 도중 다른 speak/stop으로 밀려났으면 조용히 빠진다 (아직 URL을 안 만들었다)
       if (abortRef.current !== controller) return;
-      // 캐시엔 방금 튼 것만 남긴다 — 그 앞 발화는 더 안 튼다
-      if (lastSpokenKeyRef.current && lastSpokenKeyRef.current !== key)
-        cacheRef.current.delete(lastSpokenKeyRef.current);
+      // 방금 튼 것을 맨 뒤로 옮겨 가장 늦게 비워지게 한다
+      cacheRef.current.delete(key);
       cacheRef.current.set(key, blob);
-      lastSpokenKeyRef.current = key;
+      trimCache(cacheRef.current);
 
       // URL은 재생 직전에 새로 만든다 — 묵힌 blob URL 재생 불안정(iOS) 회피
       const url = URL.createObjectURL(blob);
@@ -210,6 +294,8 @@ export function useTts() {
         if (abortRef.current === null) setStatus('idle');
         return;
       }
+      // 이미 밀려난 재생의 뒤늦은 실패 — 지금 재생의 상태를 덮거나 오류로 보고하지 않는다
+      if (abortRef.current !== controller) return;
       setStatus('error');
       reportWarning(error);
       options?.onError?.(
@@ -283,12 +369,25 @@ export function useTts() {
   const prefetch = async (text: string, voice: TtsVoice | null) => {
     if (!voice || !text) return;
     const key = cacheKey(text, voice);
-    if (cacheRef.current.has(key) || inflightRef.current.has(key)) return;
+    if (cacheRef.current.has(key)) return;
+    // 이미 합성 중이면 끝날 때까지 기다린다 — 호출부가 동시 요청 수를 셀 수 있어야 한다
+    const running = inflightRef.current.get(key);
+    if (running) {
+      await running.catch(() => {});
+      return;
+    }
     // 합성 Promise를 inflight에 등록해 둔다 — 완료 전에 speak가 겹치면 이 Promise를 그대로 재사용한다
-    const pending = synthesizeSpeech(text, voice)
+    const pending = synthesizeSpeech(
+      text,
+      voice,
+      prefetchAbortRef.current?.signal,
+    )
       .then((blob) => {
         // 언마운트된 뒤 도착한 응답은 캐시에 담지 않는다 (Blob이라 정리할 것 없음)
-        if (mountedRef.current) cacheRef.current.set(key, blob);
+        if (mountedRef.current) {
+          cacheRef.current.set(key, blob);
+          trimCache(cacheRef.current);
+        }
         return blob;
       })
       .finally(() => {

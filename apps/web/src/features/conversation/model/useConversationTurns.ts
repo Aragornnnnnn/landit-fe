@@ -330,6 +330,8 @@ export const useConversationTurns = ({
     finishedThought,
     // 지금 소리 나는 발화 — 캐릭터가 입모양을 맞추는 데 쓴다 (음성이 없으면 null)
     speech: aiSpeech.speech,
+    // 상대 차례인데 소리가 아직 안 났다 — 음성을 준비하는 중이다
+    waitingForSound: aiSpeech.waitingForSound,
     replay,
     // 입력은 하위 훅 결과를 통째로 — 낱개 중계를 안 해야 input의 반환 형태에 flow가 결합하지 않는다
     input,

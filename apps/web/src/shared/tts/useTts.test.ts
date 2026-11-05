@@ -1,11 +1,11 @@
 // useTts — voice 없음 스킵, OpenRouter 프록시 요청 계약, 실패·중단 처리 검증
 // @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setSpeechRate } from '@/shared/lib/speech-rate';
 
-import { useTts } from './useTts';
+import { TtsTimeoutError, useTts } from './useTts';
 import type { TtsVoice } from './voice';
 
 const monitoringMock = vi.hoisted(() => ({ reportWarning: vi.fn() }));
@@ -301,7 +301,7 @@ describe('useTts', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it('다음 발화를 틀면 그 앞 발화의 음원은 캐시에서 비운다 — 대화가 길어져도 메모리가 늘지 않는다', async () => {
+  it('앞 문장을 틀어도 음원이 남아 있어 발화 전체를 합성 없이 다시 듣는다', async () => {
     const fetchMock = vi.fn(async () => fakeAudioResponse());
     vi.stubGlobal('fetch', fetchMock);
     const { result } = renderHook(() => useTts());
@@ -310,12 +310,24 @@ describe('useTts', () => {
     await act(() => result.current.speak('Two', harper));
     act(() => FakeAudio.instances[1]!.onended?.());
 
-    // One은 비워졌으니 다시 합성하고, Two는 방금 튼 것이라 그대로다
     await act(() => result.current.speak('One', harper));
-    expect(fetchMock).toHaveBeenCalledTimes(3);
-    act(() => FakeAudio.instances[2]!.onended?.());
-    await act(() => result.current.speak('Two', harper));
-    expect(fetchMock).toHaveBeenCalledTimes(4); // One을 틀며 Two가 비워졌다
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('음원 캐시는 오래된 것부터 비운다 — 대화가 길어져도 메모리가 늘지 않는다', async () => {
+    const fetchMock = vi.fn(async () => fakeAudioResponse());
+    vi.stubGlobal('fetch', fetchMock);
+    const { result } = renderHook(() => useTts());
+    for (let i = 0; i < 13; i++) {
+      await act(() => result.current.speak(`Line ${i}`, harper));
+      act(() => FakeAudio.instances.at(-1)!.onended?.());
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(13);
+
+    await act(() => result.current.speak('Line 0', harper));
+
+    expect(fetchMock).toHaveBeenCalledTimes(14);
   });
 
   it('prefetchSrc는 음원을 미리 열어두고, speakSrc가 그 엘리먼트로 바로 재생한다', () => {
@@ -530,5 +542,255 @@ describe('useTts', () => {
 
     expect(FakeAudio.instances).toHaveLength(1);
     expect(FakeAudio.instances[0].playbackRate).toBe(1.5);
+  });
+
+  describe('합성 응답이 오지 않을 때', () => {
+    // 실제 fetch처럼 응답 없이 멈춰 있다가 abort되면 AbortError로 거부되는 목
+    const hangingFetch = () =>
+      vi.fn(
+        (_url: string, init: RequestInit) =>
+          new Promise<Response>((_, reject) => {
+            init.signal?.addEventListener('abort', () =>
+              reject(new DOMException('Aborted', 'AbortError')),
+            );
+          }),
+      );
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('제한 시간이 지나면 요청을 끊고 실패로 알려 대화가 멈추지 않는다', async () => {
+      // Given
+      const fetchMock = hangingFetch();
+      vi.stubGlobal('fetch', fetchMock);
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+
+      // When
+      await act(async () => {
+        void result.current.speak('Hello', harper, { onError });
+        await vi.advanceTimersByTimeAsync(25_000);
+      });
+
+      // Then
+      expect(fetchMock.mock.calls[0]![1]!.signal?.aborted).toBe(true);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError.mock.calls[0][0]).toBeInstanceOf(TtsTimeoutError);
+      expect(result.current.status).toBe('error');
+    });
+
+    it('미리 받던 합성이 응답 없이 끝나면 다시 기다리지 않고 바로 실패로 알린다', async () => {
+      // Given
+      const fetchMock = hangingFetch();
+      vi.stubGlobal('fetch', fetchMock);
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+
+      // When
+      await act(async () => {
+        void result.current.prefetch('Hello', harper);
+        void result.current.speak('Hello', harper, { onError });
+        await vi.advanceTimersByTimeAsync(25_000);
+      });
+
+      // Then
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError.mock.calls[0][0]).toBeInstanceOf(TtsTimeoutError);
+    });
+
+    it('이미 멈춘 재생은 뒤늦은 시간 초과를 오류로 알리지 않는다', async () => {
+      // Given 미리 받는 합성을 기다리다가 재생을 멈췄다
+      vi.stubGlobal('fetch', hangingFetch());
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+      await act(async () => {
+        void result.current.prefetch('Hello', harper);
+        void result.current.speak('Hello', harper, { onError });
+        result.current.stop();
+      });
+
+      // When
+      await act(() => vi.advanceTimersByTimeAsync(25_000));
+
+      // Then
+      expect(onError).not.toHaveBeenCalled();
+      expect(result.current.status).toBe('idle');
+      expect(monitoringMock.reportWarning).not.toHaveBeenCalled();
+    });
+
+    it('화면을 떠나면 미리 받던 합성도 끊는다', async () => {
+      // Given
+      const fetchMock = hangingFetch();
+      vi.stubGlobal('fetch', fetchMock);
+      const { result, unmount } = renderHook(() => useTts());
+      void result.current.prefetch('Hello', harper);
+
+      // When
+      unmount();
+
+      // Then
+      expect(fetchMock.mock.calls[0]![1]!.signal?.aborted).toBe(true);
+    });
+
+    it('제때 도착한 합성은 제한 시간과 상관없이 재생한다', async () => {
+      // Given
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => fakeAudioResponse()),
+      );
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+
+      // When
+      await act(async () => {
+        await result.current.speak('Hello', harper, { onError });
+        await vi.advanceTimersByTimeAsync(60_000);
+      });
+
+      // Then
+      expect(onError).not.toHaveBeenCalled();
+      expect(FakeAudio.instances).toHaveLength(1);
+    });
+  });
+
+  describe('합성 요청이 한도에 걸릴 때 (429)', () => {
+    const rateLimited = () => new Response('{}', { status: 429 });
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('잠깐 기다렸다 다시 요청해 재생한다', async () => {
+      // Given
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(rateLimited())
+        .mockResolvedValueOnce(fakeAudioResponse());
+      vi.stubGlobal('fetch', fetchMock);
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+
+      // When
+      await act(async () => {
+        void result.current.speak('Hello', harper, { onError });
+        await vi.advanceTimersByTimeAsync(0);
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(2_000);
+      });
+
+      // Then
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(onError).not.toHaveBeenCalled();
+      expect(FakeAudio.instances).toHaveLength(1);
+    });
+
+    it('계속 한도에 걸리면 정해진 횟수만 다시 묻고 실패로 알린다', async () => {
+      // Given
+      const fetchMock = vi.fn(async () => rateLimited());
+      vi.stubGlobal('fetch', fetchMock);
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+
+      // When
+      await act(async () => {
+        void result.current.speak('Hello', harper, { onError });
+        await vi.advanceTimersByTimeAsync(10_000);
+      });
+
+      // Then
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(onError).toHaveBeenCalledTimes(1);
+    });
+
+    it('미리 받던 합성이 한도로 끝나면 재생이 처음부터 다시 묻지 않는다 — 몰릴수록 요청이 불어나면 안 된다', async () => {
+      // Given
+      const fetchMock = vi.fn(async () => rateLimited());
+      vi.stubGlobal('fetch', fetchMock);
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+
+      // When
+      await act(async () => {
+        void result.current.prefetch('Hello', harper);
+        void result.current.speak('Hello', harper, { onError });
+        await vi.advanceTimersByTimeAsync(10_000);
+      });
+
+      // Then
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(onError).toHaveBeenCalledTimes(1);
+    });
+
+    it('한도 외의 합성 실패는 기다리지 않고 바로 실패로 알린다', async () => {
+      // Given
+      const fetchMock = vi.fn(async () => new Response('{}', { status: 500 }));
+      vi.stubGlobal('fetch', fetchMock);
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+
+      // When
+      await act(async () => {
+        await result.current.speak('Hello', harper, { onError });
+      });
+
+      // Then
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledTimes(1);
+    });
+
+    it('기다리는 동안 재생을 멈추면 다시 요청하지 않는다', async () => {
+      // Given
+      const fetchMock = vi.fn(async () => rateLimited());
+      vi.stubGlobal('fetch', fetchMock);
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+      await act(async () => {
+        void result.current.speak('Hello', harper, { onError });
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      // When
+      act(() => result.current.stop());
+      await act(() => vi.advanceTimersByTimeAsync(10_000));
+
+      // Then
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(onError).not.toHaveBeenCalled();
+    });
+  });
+
+  it('진행 중인 합성을 또 미리 받으려 하면 새로 요청하지 않고 끝날 때까지 기다린다', async () => {
+    // Given
+    let finish: (response: Response) => void = () => {};
+    const fetchMock = vi.fn(
+      () =>
+        new Promise<Response>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const { result } = renderHook(() => useTts());
+    void result.current.prefetch('Hello', harper);
+    let secondDone = false;
+
+    // When
+    void result.current.prefetch('Hello', harper).then(() => {
+      secondDone = true;
+    });
+    await act(async () => {});
+
+    // Then
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(secondDone).toBe(false);
+    await act(async () => finish(fakeAudioResponse()));
+    expect(secondDone).toBe(true);
   });
 });

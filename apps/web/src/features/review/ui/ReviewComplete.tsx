@@ -7,6 +7,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import type { PreloadableImage } from '@/shared/lib/preload-next-images';
 import { EASE_STANDARD } from '@/shared/motion';
 import { burstConfetti } from '@/shared/motion/confetti';
@@ -64,6 +65,7 @@ export const ReviewComplete = ({
   onHome,
 }: ReviewCompleteProps) => {
   const t = useTranslations('review.complete');
+  useBackPress(onHome);
   const reduced = useReducedMotion() ?? false;
   // 끝난 문제 전부가 맞힘일 때만 만점이다 — 두 번 틀려 끝난 문제는 맞힘이 아니다
   const solved = questions.filter(isSolved).length;

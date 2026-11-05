@@ -2,7 +2,7 @@
 
 // 스몰톡 대화 직후 — 축하를 잠깐 보여준 뒤, 서버가 표현을 다 만들 때까지 기다렸다가 리스트를 편다.
 // 시나리오는 표현이 콘텐츠에 이미 있어 연출 시간만 채우면 되지만, 스몰톡 표현은 그 대화에서 그때 만들어진다
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { AnimatePresence } from 'motion/react';
 import { useTranslations } from 'next-intl';
@@ -22,6 +22,7 @@ import { useFilledEarlier } from '@/features/streak/model/useFilledEarlier';
 import { usePaywallGate } from '@/features/subscription/model/paywall-gate/usePaywallGate';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import { lineBreak } from '@/shared/i18n/rich';
 import {
   sessionExpressionBranchPath,
@@ -86,14 +87,19 @@ export const SmallTalkResult = ({
   // 오류·표현 없음으로 나갈 땐 곧장 홈으로
   const goHome = () => router.replace(SMALLTALK_PATH);
 
-  // X가 유일한 이탈 경로다 — 학습 없이 나가는 신호를 여기서 남긴다
+  // X와 뒤로가기가 이탈 경로다 — 학습 없이 나가는 신호를 여기서 남긴다
+  const leftRef = useRef(false);
   const close = () => {
+    // 다음 화면이 뜨기 전에 또 눌러도 지표가 두 번 쌓이지 않게 한다
+    if (leftRef.current) return;
+    leftRef.current = true;
     track(EVENTS.EXPRESSION_LEARNING_SKIPPED, {
       session_id: sessionId,
       expression_count: count,
     });
     router.replace(SMALLTALK_PATH);
   };
+  useBackPress(close);
   const goLearn = (expressionId: number) => {
     track(EVENTS.EXPRESSION_SELECTED, {
       expression_id: expressionId,
