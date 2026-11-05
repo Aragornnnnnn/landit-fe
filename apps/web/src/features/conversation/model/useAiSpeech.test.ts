@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { track } from '@/shared/analytics';
 import { setSpeechRate } from '@/shared/lib/speech-rate';
+import { TtsTimeoutError } from '@/shared/tts/useTts';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 import { speechEndPauseMs, speechTypingMs } from './pacing';
@@ -18,12 +19,12 @@ const ttsMock = vi.hoisted(() => {
   const state = {
     onStart: undefined as ((playback: FakePlayback) => void) | undefined,
     onEnd: undefined as (() => void) | undefined,
-    onError: undefined as (() => void) | undefined,
+    onError: undefined as ((error?: Error) => void) | undefined,
   };
   interface CapturedOptions {
     onStart?: (playback: FakePlayback) => void;
     onEnd?: () => void;
-    onError?: () => void;
+    onError?: (error?: Error) => void;
   }
   const capture = (opts?: CapturedOptions) => {
     state.onStart = opts?.onStart;
@@ -39,12 +40,15 @@ const ttsMock = vi.hoisted(() => {
     speakSrc: vi.fn((_src: string, opts?: CapturedOptions) => {
       capture(opts);
     }),
-    prefetch: vi.fn(() => Promise.resolve()),
+    prefetch: vi.fn<(text: string, voice: unknown) => Promise<void>>(() =>
+      Promise.resolve(),
+    ),
     prefetchSrc: vi.fn(),
     stop: vi.fn(),
   };
 });
 vi.mock('@/shared/tts/useTts', () => ({
+  TtsTimeoutError: class extends Error {},
   useTts: () => ({
     speak: ttsMock.speak,
     speakSrc: ttsMock.speakSrc,
@@ -536,5 +540,315 @@ describe('useAiSpeech 다시 듣기', () => {
       expect.anything(),
     );
     expect(ttsMock.prefetch).not.toHaveBeenCalled();
+  });
+});
+
+describe('문장 단위 재생', () => {
+  const FIRST = 'That sounds like a really fun trip, honestly.';
+  const SECOND = 'I have always wanted to go there myself.';
+  const THIRD = 'What was the best thing you ate while you were there?';
+  const LONG = `${FIRST} ${SECOND} ${THIRD}`;
+
+  beforeEach(() => {
+    clearTtsCalls();
+  });
+
+  const finishCurrent = () => act(() => ttsMock.state.onEnd?.());
+
+  it('긴 발화는 앞 문장부터 차례로 틀고, 마지막 문장이 끝나야 발화가 끝난다', async () => {
+    // Given
+    const { onSpeechEnd } = renderSpeech({
+      source: { content: LONG },
+      openingSrc: null,
+    });
+    await act(async () => {});
+    expect(ttsMock.speak.mock.calls.map(([text]) => text)).toEqual([FIRST]);
+
+    // When
+    finishCurrent();
+    await act(async () => {});
+
+    // Then
+    expect(ttsMock.speak.mock.calls.map(([text]) => text)).toEqual([
+      FIRST,
+      SECOND,
+    ]);
+    expect(onSpeechEnd).not.toHaveBeenCalled();
+
+    finishCurrent();
+    await act(async () => {});
+    finishCurrent();
+    await act(async () => {});
+    expect(onSpeechEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('한 발화의 합성은 동시에 세 개까지만 건다 — 제공사 동시 요청 한도를 아낀다', async () => {
+    // Given 합성이 끝나지 않고 있다
+    const FOURTH = 'I would love to try it someday, to be honest.';
+    const finishes: (() => void)[] = [];
+    ttsMock.prefetch.mockImplementation(
+      () => new Promise<void>((resolve) => finishes.push(resolve)),
+    );
+
+    // When
+    renderSpeech({
+      source: { content: `${LONG} ${FOURTH}` },
+      openingSrc: null,
+    });
+    await act(async () => {});
+
+    // Then 네 번째 문장은 앞 합성이 끝나야 시작한다
+    expect(ttsMock.prefetch.mock.calls.map(([text]) => text)).toEqual([
+      FIRST,
+      SECOND,
+      THIRD,
+    ]);
+    await act(async () => finishes[0]());
+    expect(ttsMock.prefetch.mock.calls.at(-1)?.[0]).toBe(FOURTH);
+    ttsMock.prefetch.mockImplementation(() => Promise.resolve());
+  });
+
+  it('재생을 정리하거나 합성을 포기하면 아직 시작 안 한 뒤 문장은 합성하지 않는다 — 안 틀 문장에 비용을 쓰지 않는다', async () => {
+    // Given 네 문장 중 앞의 셋이 합성 중이다
+    const FOURTH = 'I would love to try it someday, to be honest.';
+    const finishes: (() => void)[] = [];
+    ttsMock.prefetch.mockImplementation(
+      () => new Promise<void>((resolve) => finishes.push(resolve)),
+    );
+    const { unmount } = renderSpeech({
+      source: { content: `${LONG} ${FOURTH}` },
+      openingSrc: null,
+    });
+    await act(async () => {});
+
+    // When 재생을 정리한 뒤 앞 합성이 끝난다
+    unmount();
+    await act(async () => finishes[0]());
+
+    // Then
+    expect(ttsMock.prefetch).toHaveBeenCalledTimes(3);
+    ttsMock.prefetch.mockImplementation(() => Promise.resolve());
+  });
+
+  it('재생을 시작하면 뒤 문장도 함께 합성해 둔다 — 앞 문장이 끝날 때 기다리지 않게', async () => {
+    // Given / When
+    renderSpeech({ source: { content: LONG }, openingSrc: null });
+    await act(async () => {});
+
+    // Then
+    expect(ttsMock.prefetch).toHaveBeenCalledWith(SECOND, voice);
+    expect(ttsMock.prefetch).toHaveBeenCalledWith(THIRD, voice);
+  });
+
+  it('미리 준비도 문장 단위로 한다 — 재생과 같은 조각이어야 합성을 다시 하지 않는다', async () => {
+    // Given
+    const { result } = renderSpeech({ source: null, playing: false });
+
+    // When
+    await act(async () => result.current.prefetch({ content: LONG }));
+
+    // Then
+    expect(ttsMock.prefetch).toHaveBeenCalledTimes(3);
+    expect(ttsMock.prefetch).toHaveBeenCalledWith(FIRST, voice);
+    expect(ttsMock.prefetch).toHaveBeenCalledWith(SECOND, voice);
+    expect(ttsMock.prefetch).toHaveBeenCalledWith(THIRD, voice);
+  });
+
+  it('중간 문장 합성이 실패해도 다음 문장으로 넘어간다', async () => {
+    // Given
+    const { onSpeechEnd } = renderSpeech({
+      source: { content: LONG },
+      openingSrc: null,
+    });
+    await act(async () => {});
+    finishCurrent();
+    await act(async () => {});
+
+    // When
+    act(() => ttsMock.state.onError?.());
+    await act(async () => {});
+
+    // Then
+    expect(ttsMock.speak.mock.calls.at(-1)?.[0]).toBe(THIRD);
+    expect(onSpeechEnd).not.toHaveBeenCalled();
+  });
+
+  it('합성 응답이 끝내 안 와도 미리 만든 질문 음원은 튼다 — 합성과 무관하게 들을 수 있는 소리다', async () => {
+    // Given
+    const { onSpeechEnd } = renderSpeech({
+      source: {
+        content: `${FIRST} ${SECOND} Which one?`,
+        ttsText: `${FIRST} ${SECOND}`,
+        questionAudioUrl: 'https://cdn.example.com/q.mp3',
+      },
+      openingSrc: null,
+    });
+    await act(async () => {});
+
+    // When
+    act(() => ttsMock.state.onError?.(new TtsTimeoutError()));
+    await act(async () => {});
+
+    // Then
+    expect(ttsMock.speak).toHaveBeenCalledTimes(1);
+    expect(ttsMock.speakSrc).toHaveBeenCalledWith(
+      'https://cdn.example.com/q.mp3',
+      expect.anything(),
+    );
+    expect(onSpeechEnd).not.toHaveBeenCalled();
+  });
+
+  it('여러 문장이 실패해도 재생 실패 지표는 발화당 한 번만 남긴다', async () => {
+    // Given
+    vi.mocked(track).mockClear();
+    renderSpeech({ source: { content: LONG }, openingSrc: null });
+    await act(async () => {});
+
+    // When
+    act(() => ttsMock.state.onError?.());
+    await act(async () => {});
+    act(() => ttsMock.state.onError?.());
+    await act(async () => {});
+
+    // Then
+    expect(vi.mocked(track)).toHaveBeenCalledTimes(1);
+  });
+
+  it('합성 응답이 끝내 안 오면 남은 문장을 건너뛰고 발화를 끝낸다 — 문장마다 다시 기다리면 대화가 오래 멈춘다', async () => {
+    // Given
+    const { onSpeechEnd } = renderSpeech({
+      source: { content: LONG },
+      openingSrc: null,
+    });
+    await act(async () => {});
+
+    // When
+    act(() => ttsMock.state.onError?.(new TtsTimeoutError()));
+    await act(async () => {});
+
+    // Then
+    expect(ttsMock.speak).toHaveBeenCalledTimes(1);
+    expect(onSpeechEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('재생이 정리되면 늦게 끝난 문장이 다음 문장을 틀지 않는다', async () => {
+    // Given
+    const { unmount } = renderSpeech({
+      source: { content: LONG },
+      openingSrc: null,
+    });
+    await act(async () => {});
+    const finishFirst = ttsMock.state.onEnd;
+
+    // When
+    unmount();
+    await act(async () => finishFirst?.());
+
+    // Then
+    expect(ttsMock.speak).toHaveBeenCalledTimes(1);
+  });
+
+  it('입모양은 지금 나는 문장의 글자를 따른다', async () => {
+    // Given
+    const { result } = renderSpeech({
+      source: { content: LONG },
+      openingSrc: null,
+    });
+    await act(async () => {});
+    finishCurrent();
+    await act(async () => {});
+
+    // When
+    act(() => ttsMock.state.onStart?.({ progress: () => 0, source: 'b' }));
+
+    // Then
+    expect(result.current.speech?.text).toBe(SECOND);
+  });
+});
+
+describe('소리가 시작되기 전 대기', () => {
+  beforeEach(() => {
+    clearTtsCalls();
+  });
+
+  it('합성을 기다리는 동안은 대기 중이고, 소리가 시작되면 끝난다', async () => {
+    // Given
+    const { result } = renderSpeech({
+      source: { content: OPENING },
+      openingSrc: null,
+    });
+    await act(async () => {});
+    expect(result.current.waitingForSound).toBe(true);
+
+    // When
+    act(() => ttsMock.state.onStart?.({ progress: () => 0, source: 'b' }));
+
+    // Then
+    expect(result.current.waitingForSound).toBe(false);
+  });
+
+  it('목소리가 없으면 기다릴 소리가 없어 바로 대기가 끝난다', async () => {
+    // Given / When
+    const { result } = renderSpeech({
+      source: { content: OPENING },
+      openingSrc: null,
+      voice: null,
+    });
+    await act(async () => {});
+
+    // Then
+    expect(result.current.waitingForSound).toBe(false);
+  });
+
+  it('재생할 차례가 아니면 대기가 아니다', () => {
+    // Given / When
+    const { result } = renderSpeech({ playing: false, source: null });
+
+    // Then
+    expect(result.current.waitingForSound).toBe(false);
+  });
+
+  it('다시 듣기 뒤 상대가 같은 말을 또 해도 소리를 기다린다', async () => {
+    // Given 내 차례에 방금 들은 말을 다시 듣고 끝냈다
+    const { result, rerender, initialProps } = renderSpeech({
+      playing: false,
+      source: { content: OPENING },
+      openingSrc: null,
+      replayAllowed: true,
+    });
+    act(() => {
+      result.current.replay();
+    });
+    await act(async () => {});
+    act(() => ttsMock.state.onStart?.({ progress: () => 0, source: 'b' }));
+    act(() => ttsMock.state.onEnd?.());
+    await act(async () => {});
+
+    // When 상대가 같은 문장으로 다시 말할 차례가 됐다
+    rerender({
+      ...initialProps,
+      playing: true,
+      source: { content: OPENING },
+      openingSrc: null,
+    });
+
+    // Then
+    expect(result.current.waitingForSound).toBe(true);
+  });
+
+  it('다음 발화로 넘어가면 그 발화의 소리를 다시 기다린다', async () => {
+    // Given
+    const { result, rerender, initialProps } = renderSpeech({
+      source: { content: OPENING },
+      openingSrc: null,
+    });
+    await act(async () => {});
+    act(() => ttsMock.state.onStart?.({ progress: () => 0, source: 'b' }));
+
+    // When
+    rerender({ ...initialProps, source: { content: 'Next line please.' } });
+
+    // Then — 다음 발화의 글자가 소리보다 먼저 나오면 안 된다
+    expect(result.current.waitingForSound).toBe(true);
   });
 });

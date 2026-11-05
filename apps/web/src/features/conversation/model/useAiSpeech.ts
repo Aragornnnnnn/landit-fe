@@ -7,10 +7,11 @@ import { EVENTS } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
 import { getSpeechRate } from '@/shared/lib/speech-rate';
-import { useTts, type TtsPlayback } from '@/shared/tts/useTts';
+import { TtsTimeoutError, useTts, type TtsPlayback } from '@/shared/tts/useTts';
 import type { TtsVoice } from '@/shared/tts/voice';
 
 import { speechEndPauseMs, speechTypingMs } from './pacing';
+import { splitSpeechChunks } from './speech-chunks';
 
 /** 지금 소리 나고 있는 발화 — 캐릭터가 이 둘로 입모양을 맞춘다 */
 export interface PlayingSpeech {
@@ -29,14 +30,15 @@ export interface SpeechSource {
   questionAudioUrl?: string | null;
 }
 
-// 재생 계획 — 분리 소스가 다 있으면 합성은 맞장구만 맡고 고정 질문은 음원이 잇는다. 재생과 프리페치가 같은 판정을 쓴다
+// 재생 계획 — 분리 소스가 다 있으면 합성은 맞장구만 맡고 고정 질문은 음원이 잇는다. 재생과 프리페치가 같은 판정을 쓴다.
+// 합성은 문장 조각으로 나눠 맡긴다 — 합성 시간이 길이에 비례해, 앞 조각부터 틀면 소리가 빨리 시작된다
 const resolveSpeechPlan = (source: SpeechSource) => {
   const { content, ttsText, fixedQuestionText, questionAudioUrl } = source;
   if (!ttsText || !questionAudioUrl) {
-    return { synthText: content, question: null };
+    return { synthChunks: splitSpeechChunks(content), question: null };
   }
   return {
-    synthText: ttsText,
+    synthChunks: splitSpeechChunks(ttsText),
     question: {
       src: questionAudioUrl,
       // 질문 구간 입모양용 텍스트 — 질문 원문 필드를 쓰고, 없으면(구 응답) content에서 맞장구를 뗀 나머지다
@@ -49,6 +51,25 @@ const resolveSpeechPlan = (source: SpeechSource) => {
   };
 };
 
+// 한 발화가 동시에 거는 합성 수 — 제공사 동시 요청 한도를 아끼면서, 다음 문장이 앞 문장 재생이 끝나기 전에 준비될 만큼
+// TODO: 동시 대화가 80명을 넘거나 Sentry에 합성 429가 보이면 요금제 한도를 다시 재고 서버 쪽 대기열이나 스트리밍을 검토한다 (11/5 실측 한도 약 40개, 최고 동시 대화 1~2명 추정)
+const SYNTH_CONCURRENCY = 3;
+
+// 문장들을 앞에서부터 합성해 둔다. 하나가 끝나면 다음 문장을 건다
+const prefetchChunks = (
+  tts: ReturnType<typeof useTts>,
+  chunks: string[],
+  voice: TtsVoice,
+  isStopped: () => boolean = () => false,
+) => {
+  let next = 0;
+  const work = async () => {
+    while (next < chunks.length && !isStopped())
+      await tts.prefetch(chunks[next++], voice);
+  };
+  for (let slot = 0; slot < SYNTH_CONCURRENCY; slot++) void work();
+};
+
 // 재생 한 회차가 빌려 쓰는 것들 — 훅의 상태(setSpeech)와 재생 수단(tts)을 주입받아 회차 상태는 함수 안에 갇힌다
 interface SpeechRunDeps {
   source: SpeechSource;
@@ -57,6 +78,8 @@ interface SpeechRunDeps {
   openingSrc: string | null;
   tts: ReturnType<typeof useTts>;
   setSpeech: (speech: PlayingSpeech | null) => void;
+  // 이 발화의 소리가 시작됐거나, 낼 소리 없이 넘어갔다 — 화면이 글자를 내보내도 된다
+  onSoundStart: () => void;
   onSpeechEnd: () => void;
   // 계측용 세션 id — 세션이 없는 재생(스몰톡 탭 인사)은 null
   sessionId: number | null;
@@ -70,6 +93,7 @@ const runSpeech = ({
   openingSrc,
   tts,
   setSpeech,
+  onSoundStart,
   onSpeechEnd,
   sessionId,
 }: SpeechRunDeps): (() => void) => {
@@ -77,34 +101,43 @@ const runSpeech = ({
 
   // 이 회차가 이미 정리된 뒤 도착한 콜백은 무시한다 — 재생을 되살리거나 턴을 넘기면 안 된다 (React 공식 effect 관례)
   let ignore = false;
+  // 합성 실패 계측은 발화당 한 번 — 문장 수만큼 쌓이면 실패율이 부풀어 보인다
+  let synthFailureTracked = false;
+  // 응답이 끝내 안 왔다 — 남은 문장은 틀지 않으니 합성도 더 걸지 않는다
+  let gaveUp = false;
   // 타이머 폴백의 중단 손잡이 — 정리 시점에 오디오(tts.stop)와 함께 멈춘다
   let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
 
   // 소리가 끝나면 입도 멈춰야 한다 — 남겨두면 마지막 입모양에서 굳는다
   const finish = () => {
     if (ignore) return;
+    onSoundStart();
     setSpeech(null);
     onSpeechEnd();
   };
   // 입모양은 지금 나는 소리를 따른다 — 분리 재생에선 구간마다 텍스트가 다르다
-  const startLipSync = (playback: TtsPlayback, text: string) =>
+  const startLipSync = (playback: TtsPlayback, text: string) => {
+    if (!ignore) onSoundStart();
     setSpeech({ playback, text });
+  };
 
   // tts 콜백을 Promise로 감싼 구간 재생기 셋 — 실패해도 resolve해서 발화가 멈추지 않고 다음 구간으로 이어진다
 
-  // 합성해서 말한다. 실패는 계측만 남기고 그 구간을 건너뛴다
+  // 합성해서 말한다. 실패는 계측만 남기고 그 구간을 건너뛴다. 응답이 끝내 안 왔는지를 돌려줘 호출부가 더 기다릴지 정한다
   const speakSynth = (text: string, synthVoice: TtsVoice) =>
-    new Promise<void>((resolve) => {
+    new Promise<boolean>((resolve) => {
       void tts.speak(text, synthVoice, {
         onStart: (playback) => startLipSync(playback, text),
-        onEnd: resolve,
-        onError: () => {
-          if (!ignore)
+        onEnd: () => resolve(false),
+        onError: (error) => {
+          if (!ignore && !synthFailureTracked) {
+            synthFailureTracked = true;
             track(EVENTS.SPEECH_PLAYBACK_FAILED, {
               session_id: sessionId ?? undefined,
               source: 'synth',
             });
-          resolve();
+          }
+          resolve(error instanceof TtsTimeoutError);
         },
       });
     });
@@ -130,6 +163,7 @@ const runSpeech = ({
   // 소리 없이 말하는 시간만큼 기다린다 (음성 미설정이어도 대화가 멈추지 않게)
   const waitSpeechTime = (text: string) =>
     new Promise<void>((resolve) => {
+      onSoundStart();
       fallbackTimer = setTimeout(
         resolve,
         speechTypingMs(text, getSpeechRate()) + speechEndPauseMs,
@@ -150,10 +184,19 @@ const runSpeech = ({
       return finish();
     }
 
-    // 3) 맞장구(분리 재생이 아니면 문장 전체)를 합성해 말한다
-    const { synthText, question } = resolveSpeechPlan(source);
-    await speakSynth(synthText, voice);
-    if (ignore) return;
+    // 3) 맞장구(분리 재생이 아니면 문장 전체)를 조각별로 합성해 말한다.
+    // 뒤 조각도 지금 합성을 걸어 둔다 — 앞 조각이 끝날 때 기다리지 않고 바로 잇는다. 미리 받아 뒀으면 다시 합성하지 않는다
+    const { synthChunks, question } = resolveSpeechPlan(source);
+    prefetchChunks(tts, synthChunks, voice, () => ignore || gaveUp);
+    for (const chunk of synthChunks) {
+      const timedOut = await speakSynth(chunk, voice);
+      if (ignore) return;
+      // 응답이 끝내 안 왔다 — 남은 문장마다 다시 기다리면 대화가 오래 멈춰서 합성은 여기서 접는다
+      if (timedOut) {
+        gaveUp = true;
+        break;
+      }
+    }
 
     // 4) 질문 음원이 있으면 이어 튼다 — 실패해도(대신 낼 소리가 없어) 발화는 여기서 끝난다
     if (question) {
@@ -191,6 +234,7 @@ interface AiSpeechOptions {
  *
  * @returns `markOpeningPlayed`(오프닝을 지나갔다는 표시), `prefetch`(다음 발화 미리 준비),
  *   `speech`(지금 나는 소리 — 캐릭터 입모양용, 소리가 없으면 null),
+ *   `waitingForSound`(재생할 차례인데 소리가 아직 안 났다),
  *   `replay`·`replaying`(다시 듣기 — 대화 진행과 무관한 별도 재생, replayAllowed 구간에서만)
  */
 export const useAiSpeech = ({
@@ -210,12 +254,15 @@ export const useAiSpeech = ({
   // 다시 듣기 회차의 중단 손잡이 — 이 회차는 effect가 아니라 버튼이 시작하므로 정리도 직접 들고 있어야 한다
   const replayStopRef = useRef<(() => void) | null>(null);
   const [replaying, setReplaying] = useState(false);
+  // 소리가 시작된 발화 — 합성을 기다리는 동안 화면이 글자를 먼저 내보내지 않게 알려 준다
+  const [soundStartedFor, setSoundStartedFor] = useState<string | null>(null);
 
   /** 다시 듣기를 끊는다 — 소리와 입모양을 함께 멈춘다. 돌고 있지 않으면 아무 일도 없다 */
   const stopReplay = () => {
     replayStopRef.current?.();
     replayStopRef.current = null;
     setReplaying(false);
+    setSoundStartedFor(null);
   };
 
   // 다시 듣기는 허용 구간에서만 산다 — 허용이 꺼지는 순간(상대 발화·내 녹음·화면 이탈) 끊는다.
@@ -233,6 +280,7 @@ export const useAiSpeech = ({
       openingSrc: resolveOpeningSrc(),
       tts,
       setSpeech,
+      onSoundStart: () => setSoundStartedFor(speechSource.content),
       onSpeechEnd: onEnd,
       sessionId,
     });
@@ -240,7 +288,11 @@ export const useAiSpeech = ({
   // 발화가 바뀔 때마다 재생 한 회차를 시작한다 — 돌려받은 중단 함수가 그대로 cleanup이다
   useEffect(() => {
     if (!playing || source == null) return;
-    return startSpeech(source, onSpeechEnd);
+    const stop = startSpeech(source, onSpeechEnd);
+    return () => {
+      stop();
+      setSoundStartedFor(null);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, source?.content, source?.ttsText, source?.questionAudioUrl]);
 
@@ -248,8 +300,8 @@ export const useAiSpeech = ({
   // 음성이 없으면 재생 자체가 타이머 폴백이라 아무것도 준비하지 않는다
   const prefetch = (nextSource: SpeechSource) => {
     if (!voice) return;
-    const { synthText, question } = resolveSpeechPlan(nextSource);
-    void tts.prefetch(synthText, voice);
+    const { synthChunks, question } = resolveSpeechPlan(nextSource);
+    prefetchChunks(tts, synthChunks, voice);
     if (question) tts.prefetchSrc(question.src);
   };
 
@@ -277,5 +329,15 @@ export const useAiSpeech = ({
     isOpeningRef.current = false;
   };
 
-  return { markOpeningPlayed, prefetch, speech, replay, replaying };
+  const waitingForSound =
+    playing && source != null && soundStartedFor !== source.content;
+
+  return {
+    markOpeningPlayed,
+    prefetch,
+    speech,
+    waitingForSound,
+    replay,
+    replaying,
+  };
 };
