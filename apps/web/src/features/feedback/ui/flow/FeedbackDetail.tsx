@@ -6,6 +6,7 @@ import { EVENTS, type FeedbackSource } from '@landit/analytics';
 import { useTranslations } from 'next-intl';
 
 import { track } from '@/shared/analytics';
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
 import { ChevronLeftIcon } from '@/shared/ui/Icons';
@@ -44,6 +45,7 @@ export const FeedbackDetail = ({
   }, [index]);
 
   const goBack = () => (index > 0 ? setIndex(index - 1) : onBack());
+  useBackPress(goBack);
   const goNext = () => (isLast ? onDone() : setIndex(index + 1));
 
   return (

@@ -5,6 +5,7 @@
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import { lineBreak } from '@/shared/i18n/rich';
 import type { PreloadableImage } from '@/shared/lib/preload-next-images';
 import { Button } from '@/shared/ui/Button';
@@ -29,6 +30,7 @@ export const ReviewIntro = ({
   onClose,
 }: ReviewIntroProps) => {
   const t = useTranslations('review.intro');
+  useBackPress(onClose);
   return (
     <main
       className="mx-auto flex h-dvh max-w-[430px] flex-col bg-background px-6"

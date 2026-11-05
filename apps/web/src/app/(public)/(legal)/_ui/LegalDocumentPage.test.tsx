@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { runBackPress } from '@/shared/bridge/back-press';
 import { setTestLocale } from '@/shared/i18n/test-locale';
 
 import { LegalDocumentPage } from './LegalDocumentPage';
@@ -53,5 +54,16 @@ describe('LegalDocumentPage 화면 문구', () => {
     expect(screen.getByText('施行日')).toBeInTheDocument();
     expect(screen.getByText('バージョン')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '戻る' })).toBeInTheDocument();
+  });
+});
+
+describe('LegalDocumentPage 안드로이드 뒤로가기', () => {
+  it('뒤로가기는 돌아가기 버튼과 같다 — 온 곳으로 한 칸 돌아간다', () => {
+    vi.spyOn(window.history, 'length', 'get').mockReturnValue(2);
+    render(<LegalDocumentPage document={legalDocument} />);
+
+    runBackPress();
+
+    expect(mocks.back).toHaveBeenCalledTimes(1);
   });
 });

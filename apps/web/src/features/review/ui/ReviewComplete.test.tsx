@@ -2,6 +2,8 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { runBackPress } from '@/shared/bridge/back-press';
+
 import type { ReviewQuestion } from '../api/review';
 import { ReviewComplete } from './ReviewComplete';
 
@@ -75,5 +77,22 @@ describe('ReviewComplete', () => {
     expect(
       container.querySelector('[data-src]')?.getAttribute('data-src'),
     ).toContain('landy-review-study');
+  });
+});
+
+describe('ReviewComplete 안드로이드 뒤로가기', () => {
+  it('뒤로가기를 누르면 홈으로 버튼과 같이 홈으로 간다', () => {
+    const onHome = vi.fn();
+    render(
+      <ReviewComplete
+        questions={[question('q1', true)]}
+        justFinished
+        onHome={onHome}
+      />,
+    );
+
+    runBackPress();
+
+    expect(onHome).toHaveBeenCalledTimes(1);
   });
 });

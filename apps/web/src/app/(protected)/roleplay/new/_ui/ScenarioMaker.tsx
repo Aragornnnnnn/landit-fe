@@ -9,6 +9,7 @@ import {
   PARTNER_TINT,
 } from '@/features/roleplay/ui/partner-tint';
 import { PartnerBust } from '@/features/roleplay/ui/PartnerBust';
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import { Button } from '@/shared/ui/Button';
 
 interface ScenarioMakerProps {
@@ -32,6 +33,10 @@ export const ScenarioMaker = ({
 }: ScenarioMakerProps) => {
   const t = useTranslations('roleplay.generating');
   const done = title !== null;
+  // 뒤로가기는 버튼이 뜨기 전에도 받는다. 다 만들어 넘어가는 중엔 아무 일도 하지 않는다
+  useBackPress(() => {
+    if (!done) onLeave();
+  });
   const lines = [
     { label: t('myRoleLabel'), text: draft.myRole },
     { label: partnerName, text: draft.partnerRole },

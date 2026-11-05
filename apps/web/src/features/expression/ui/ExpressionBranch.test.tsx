@@ -2,6 +2,8 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { runBackPress } from '@/shared/bridge/back-press';
+
 import { ExpressionBranch } from './ExpressionBranch';
 
 const filledEarlier = vi.hoisted(() => vi.fn(() => false));
@@ -9,9 +11,12 @@ const completionEarn = vi.hoisted(() =>
   vi.fn<() => { earn: { earnedWon: number } | null }>(() => ({ earn: null })),
 );
 
+const replace = vi.hoisted(() => vi.fn());
+const track = vi.hoisted(() => vi.fn());
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  useRouter: () => ({ replace, push: vi.fn() }),
 }));
+vi.mock('@/shared/analytics', () => ({ track }));
 vi.mock('@/features/streak/model/useFilledEarlier', () => ({
   useFilledEarlier: filledEarlier,
 }));
@@ -39,6 +44,8 @@ vi.mock('./ExpressionStages', () => ({
 
 afterEach(() => {
   cleanup();
+  replace.mockClear();
+  track.mockClear();
   filledEarlier.mockReset().mockReturnValue(false);
   completionEarn.mockReset().mockReturnValue({ earn: null });
 });
@@ -67,5 +74,35 @@ describe('ExpressionBranch 축하', () => {
     render(<ExpressionBranch scenarioId={1} />);
 
     expect(screen.getByText('축하')).toBeInTheDocument();
+  });
+});
+
+describe('ExpressionBranch 안드로이드 뒤로가기', () => {
+  it('뒤로가기를 누르면 X처럼 학습 건너뜀을 남기고 시나리오로 돌아간다', () => {
+    render(<ExpressionBranch scenarioId={1} />);
+
+    runBackPress();
+
+    expect(track).toHaveBeenCalledWith(
+      'Expression Learning Skipped',
+      expect.objectContaining({ scenario_id: 1 }),
+    );
+    expect(replace).toHaveBeenCalledWith('/scenario');
+  });
+});
+
+describe('ExpressionBranch 연타', () => {
+  it('다음 화면이 뜨기 전에 또 눌러도 건너뜀을 한 번만 남긴다', () => {
+    render(<ExpressionBranch scenarioId={1} />);
+
+    runBackPress();
+    runBackPress();
+
+    expect(
+      track.mock.calls.filter(
+        ([name]) => name === 'Expression Learning Skipped',
+      ),
+    ).toHaveLength(1);
+    expect(replace).toHaveBeenCalledTimes(1);
   });
 });
