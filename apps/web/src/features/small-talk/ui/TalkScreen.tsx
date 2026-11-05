@@ -25,6 +25,7 @@ import { ThinkingBubble } from '@/features/conversation/ui/flow/ThinkingBubble';
 import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
 import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
 import { track } from '@/shared/analytics';
+import { useBackPress } from '@/shared/bridge/useBackPress';
 import { useDocumentScrollPin } from '@/shared/lib/useDocumentScrollPin';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Button } from '@/shared/ui/Button';
@@ -156,6 +157,20 @@ export const TalkScreen = ({
   const overlayThought = resolveOverlayThought();
   const characterLook = toCharacterLook(phase, finishedThought);
 
+  const requestExit = () => {
+    // 끝난 대화·나눈 대화 없음은 흐름 훅이 알아서 보낸다 — 물어볼 때만 시트를 연다
+    if (!pressClose()) return;
+    track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'conversation_exit' });
+    // 동적 페이지라 받는 건 라우트 뼈대뿐이지만, 완료 응답을 기다리는 동안 먼저 받아 둔다
+    router.prefetch(summaryPath);
+    onExitRequested();
+  };
+  useBackPress(() => {
+    // 답을 기다리는 연출이 X를 가린 동안은 뒤로가기도 받지 않는다 — 보낸 첫 답을 확인 없이 버리지 않게
+    if (thinking && hasInnerThought) return;
+    requestExit();
+  });
+
   return (
     <main
       className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
@@ -167,14 +182,7 @@ export const TalkScreen = ({
         style={{ paddingTop: 'max(var(--safe-area-inset-top), 8px)' }}
       >
         <button
-          onClick={() => {
-            // 끝난 대화·나눈 대화 없음은 흐름 훅이 알아서 보낸다 — 물어볼 때만 시트를 연다
-            if (!pressClose()) return;
-            track(EVENTS.CONFIRM_SHEET_OPENED, { sheet: 'conversation_exit' });
-            // 동적 페이지라 받는 건 라우트 뼈대뿐이지만, 완료 응답을 기다리는 동안 먼저 받아 둔다
-            router.prefetch(summaryPath);
-            onExitRequested();
-          }}
+          onClick={requestExit}
           className="flex size-10 items-center justify-center text-foreground transition-transform active:scale-90"
           aria-label={t('exitButton')}
         >
