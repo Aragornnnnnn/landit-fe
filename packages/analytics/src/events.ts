@@ -1094,7 +1094,7 @@ export type EventProps = {
     placement: LandingPlacement;
     store?: 'play_store' | 'app_store';
   };
-  // seconds — 페이지를 연 뒤 처음 화면을 벗어날 때(탭·앱 전환, 닫기)까지 머문 시간(초, 정수). 페이지당 한 번만 찍는다
+  // seconds — 페이지를 연 뒤 처음 화면을 벗어날 때(탭·앱 전환, 닫기, 랜딩 안 다른 화면으로 이동)까지 머문 시간(초, 정수). 페이지당 한 번만 찍는다
   'Landing Exited': {
     page: LandingPage;
     language: AppLanguage;

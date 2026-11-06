@@ -80,20 +80,25 @@ export const LandingAnalytics = () => {
       if (click) send(EVENTS.LANDING_DOWNLOAD_CLICKED, { ...where, ...click });
     };
 
-    // 처음 화면을 벗어날 때(탭 전환·앱 전환·닫기) 한 번만 머문 시간을 남긴다
+    // 처음 화면을 벗어날 때(탭 전환·앱 전환·닫기·랜딩 안 다른 화면으로 이동) 한 번만 머문 시간을 남긴다
     let exited = false;
-    const onHide = () => {
-      if (exited || document.visibilityState !== 'hidden') return;
+    const exit = () => {
+      if (exited) return;
       exited = true;
       send(EVENTS.LANDING_EXITED, {
         ...where,
         seconds: dwellSeconds(startedAt, Date.now()),
       });
     };
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') exit();
+    };
 
     document.addEventListener('click', onClick);
     document.addEventListener('visibilitychange', onHide);
     return () => {
+      // 랜딩 안에서 다른 화면(업데이트 기록·약관)으로 옮겨 갈 때도 앞 화면에 머문 시간을 남긴다
+      exit();
       window.removeEventListener('load', onLoad);
       document.removeEventListener('click', onClick);
       document.removeEventListener('visibilitychange', onHide);
