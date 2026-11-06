@@ -1,0 +1,24 @@
+/* 손으로 표시한 강조 — 화면에 들어오면 왼쪽부터 드러난다 */
+.mark {
+  animation: mark-reveal 0.7s 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+[data-inview='false'] .mark {
+  animation: none;
+  clip-path: inset(-20% 100% -20% -5%);
+}
+
+@keyframes mark-reveal {
+  from {
+    clip-path: inset(-20% 100% -20% -5%);
+  }
+  to {
+    clip-path: inset(-20% -5% -20% -5%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mark {
+    animation: none;
+  }
+}

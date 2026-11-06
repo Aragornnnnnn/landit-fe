@@ -8,10 +8,10 @@ import { CoinStackCard } from '@/features/reward/ui/CoinStackCard';
 import { formatWon } from '@/features/subscription/lib/won';
 import { PremiumBadge } from '@/features/subscription/ui/premium-brand';
 import { lineBreak } from '@/shared/i18n/rich';
+import { maskName } from '@/shared/lib/mask-name';
 import { useSnapIndex } from '@/shared/lib/useSnapIndex';
 
 import {
-  maskName,
   ratingAsOfLabel,
   REVIEWS,
   showsStoreReviews,

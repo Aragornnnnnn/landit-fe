@@ -2,14 +2,15 @@
 import type { CSSProperties } from 'react';
 import Image from 'next/image';
 
+import { maskName } from '@/shared/lib/mask-name';
+import { RevealSection } from '@/shared/ui/RevealSection';
+
 import {
-  maskName,
   RANDY,
   REVIEWS,
   STORE_RATING,
   STORE_RATING_AS_OF,
 } from '../_model/paywall-content';
-import { RevealSection } from './RevealSection';
 import { Highlight, SectionHeading } from './SectionHeading';
 
 const Stars = ({ className }: { className: string }) => (

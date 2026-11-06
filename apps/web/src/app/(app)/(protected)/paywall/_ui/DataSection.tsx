@@ -1,7 +1,8 @@
 // 「그림으로 배우면 더 오래 기억해요」 — 왜 그런지(근거) → 실제 예문 그림이 지나가 한 장에 멈추는 모습(ExampleDeck) 순서로 설득한다
+import { RevealSection } from '@/shared/ui/RevealSection';
+
 import { RANDY } from '../_model/paywall-content';
 import { ExampleDeck } from './ExampleDeck';
-import { RevealSection } from './RevealSection';
 import { Highlight, SectionHeading } from './SectionHeading';
 
 export const DataSection = () => (

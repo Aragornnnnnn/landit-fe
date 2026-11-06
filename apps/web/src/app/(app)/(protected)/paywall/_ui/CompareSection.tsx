@@ -2,9 +2,9 @@
 import Image from 'next/image';
 
 import { BenefitComparison } from '@/features/subscription/ui/product/BenefitComparison';
+import { RevealSection } from '@/shared/ui/RevealSection';
 
 import { RANDY } from '../_model/paywall-content';
-import { RevealSection } from './RevealSection';
 import { Highlight, SectionHeading } from './SectionHeading';
 
 export const CompareSection = () => (

@@ -2,7 +2,7 @@
 import type { Locale } from '@/shared/i18n/locale';
 
 // 한국어 설명은 App Store 부제와 같은 문장
-const CARD: Record<
+export const SHARE_CARD: Record<
   Locale,
   { siteName: string; title: string; description: string; imagePath: string }
 > = {
@@ -30,7 +30,7 @@ export const isLinkPreviewBot = (userAgent: string) =>
 
 // 봇은 메타만 읽는다. 사람에게는 보여 줄 일이 없어 본문은 비워 둔다
 export const buildLinkPreviewHtml = (origin: string, locale: Locale) => {
-  const card = CARD[locale];
+  const card = SHARE_CARD[locale];
   const image = `${origin}${card.imagePath}`;
   return `<!doctype html>
 <html lang="${locale}">

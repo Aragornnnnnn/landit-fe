@@ -1,7 +1,7 @@
 // 시리즈 카드 줄 — 카드마다 제목 한 줄과 아래로 잘린 폰 화면 한 장. 좌우로 넘겨 보고 싶은 사람만 본다.
 // 화면은 코드로 그린 데모를 대표 장면 하나에 멈춰 둔다(움직여야 하는 카드만 제 시계를 가진다) — 세로 길이는 카드 한 장 높이뿐이다
-import { PhoneFrame } from './PhoneFrame';
-import { RevealSection } from './RevealSection';
+import { PhoneFrame } from '@/shared/ui/PhoneFrame';
+import { RevealSection } from '@/shared/ui/RevealSection';
 
 /** 폰 화면 폭 — 다음 카드가 오른쪽에 살짝 보이도록 카드를 화면보다 좁게 둔다 */
 export const SERIES_SCREEN_WIDTH = 236;

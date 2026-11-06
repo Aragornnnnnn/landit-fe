@@ -8,9 +8,9 @@ import {
   type PaywallPlan,
   type RegularPlan,
 } from '@/features/subscription/model/product/plans';
+import { RevealSection } from '@/shared/ui/RevealSection';
 
 import { PlanCard } from './PlanCard';
-import { RevealSection } from './RevealSection';
 import { Highlight, SectionHeading } from './SectionHeading';
 
 interface PlanSectionProps {

@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "title": "랜딧 - 내 영어가 통했는지 알려주는 AI 영어 회화 앱",
+    "description": "매일 도착하는 시나리오로 AI 캐릭터와 영어로 대화하고, 내 말이 원어민에게 어떻게 들렸는지 속마음으로 확인하는 영어 회화 앱이에요.",
+    "appNameLabel": "랜딧"
+  },
+  "header": {
+    "homeLabel": "랜딧 홈",
+    "logoLabel": "랜딧",
+    "updatesLink": "업데이트 기록"
+  },
+  "hero": {
+    "brandLabel": "랜딧",
+    "title": "방금 그 영어,<br></br><mark>진짜 통했을까?</mark>",
+    "artLabel": "폰 화면에서 나온 랜딧 친구들 클로이, 마르코, 테디, 래디가 함께 웃고 있는 모습",
+    "thoughtLabel": "원어민 속마음",
+    "thoughtBody": "이 말 들으니까 기분 좋아졌어!"
+  },
+  "badges": {
+    "ratingLabel": "평점",
+    "usersLabel": "사용자",
+    "spokenLinesLabel": "영어로 건넨 말"
+  },
+  "storeButtons": {
+    "downloadButton": "앱 다운받기",
+    "appStoreLabel": "App Store에서 랜딧 받기",
+    "googlePlayLabel": "Google Play에서 랜딧 받기"
+  },
+  "wall": {
+    "title": "매일 하나,<mobileBreak></mobileBreak> <mark>오늘의 시나리오</mark>로 대화해요",
+    "body": "기숙사, 수업, 카페까지. 해외에서 실제로 마주칠 상황이 매일 도착해요.",
+    "todayLabel": "오늘의 시나리오"
+  },
+  "features": {
+    "title": "왜 랜딧일까요?",
+    "thoughtTitle": "그 말, 원어민은<br></br><mark>이렇게 들었어요</mark>",
+    "thoughtBody": "말할 때마다 상대의 속마음을 바로 보여 줘요.",
+    "thoughtScreenLabel": "머쓱해하는 상대의 속마음을 보여 주는 앱 화면",
+    "expressionTitle": "맞춤 표현부터 <mark>발음까지</mark>",
+    "expressionBody": "대화에 딱 맞는 표현을 바로 추천하고, 원어민과 발음을 비교해요.",
+    "expressionScreenLabel": "상황 그림과 뜻으로 표현을 배우는 앱 화면",
+    "expressionPronunciationScreenLabel": "문장의 발음 점수와 틀린 단어를 원어민 발음과 비교해 보여 주는 앱 화면",
+    "freeTalkTitle": "<mark>더 말하고 싶은 날엔</mark><br></br>롤플레이와 스몰톡",
+    "freeTalkSmallTalkScreenLabel": "클로이가 먼저 말을 거는 스몰톡 앱 화면",
+    "freeTalkBody": "원하는 상황을 직접 만들어 롤플레이하고, 친구처럼 스몰톡해요.",
+    "freeTalkScreenLabel": "스몰톡과 롤플레이 탭 아래 롤플레이 목록이 보이는 앱 화면"
+  },
+  "change": {
+    "title": "점수가 아니라<br></br><mark>상대의 반응으로</mark> 늘어요",
+    "reactionTitle": "채점 대신 반응",
+    "reactionBody": "틀렸다는 표시 대신 상대가 어떻게 받아들였는지 보여 줘요.",
+    "flowTitle": "끊기지 않는 대화",
+    "flowBody": "실수해도 대화는 이어지고, 교정은 끝난 뒤에 받아요.",
+    "nextStepTitle": "딱 한 단계 위 표현",
+    "nextStepBody": "어려운 문장 대신, 바로 따라 쓸 수 있는 문장을 알려 줘요.",
+    "satisfactionCaption": "써 본 사람 <em>10명 중 8명</em>이 만족했어요"
+  },
+  "closing": {
+    "mascotLabel": "손을 흔드는 래디",
+    "title": "진짜 통하는 영어,<br></br>오늘부터 시작해 볼까요?"
+  },
+  "faq": {
+    "title": "자주 묻는 질문",
+    "aboutTitle": "랜딧은 어떤 앱이에요?",
+    "aboutBody": "랜딧은 매일 도착하는 시나리오로 AI 캐릭터와 영어로 대화하는 영어 회화 앱이에요. 말할 때마다 내 영어가 원어민에게 어떻게 들렸는지 바로 알려 줘서, 대화할수록 '통하는 영어'가 늘어나요.",
+    "differenceTitle": "다른 영어 앱과 뭐가 달라요?",
+    "differenceBody": "대부분의 영어 앱은 문법이 맞았는지 알려 주지만, 랜딧은 내 말이 상대에게 어떻게 들렸는지까지 원어민 속마음으로 보여 줘요. 문법이 맞아도 무례하게 들릴 수 있고, 조금 틀려도 마음은 통할 수 있거든요. 문법과 발음은 대화가 끝난 뒤 꼼꼼히 챙겨 드려요.",
+    "thoughtTitle": "원어민 속마음이 뭐예요?",
+    "thoughtBody": "말할 때마다 상대가 내 말을 어떻게 받아들였는지 래디가 살짝 귀띔해 줘요. 실제 대화에서 표정을 읽듯 반응을 보고, 다음 말을 자신 있게 고를 수 있어요.",
+    "audienceTitle": "누구에게 잘 맞나요?",
+    "audienceBody": "교환학생이나 유학, 워킹홀리데이를 앞두고 있다면 딱이에요. 문법은 아는데 막상 말이 안 나오는 분, 시험 영어 말고 진짜 쓰는 영어가 필요한 분에게도 잘 맞아요.",
+    "situationTitle": "어떤 상황을 연습할 수 있나요?",
+    "situationBody": "룸메이트와의 첫 만남, 수업, 카페, 공항처럼 해외에서 꼭 마주칠 상황이 매일 새 시나리오로 도착해요. 미리 한 번 말해 보면, 실제로 마주쳤을 때 훨씬 덜 떨려요.",
+    "beginnerTitle": "영어를 잘 못해도 할 수 있나요?",
+    "beginnerBody": "물론이에요. 따로 레벨 테스트 없이 대화만 하면 랜딧이 내 수준을 알아서 파악하고, 딱 맞는 질문과 표현을 골라 드려요. 틀려도 대화는 끊기지 않으니 편하게 말해 보세요.",
+    "startTitle": "어떻게 시작하나요?",
+    "startBody": "App Store나 Google Play에서 랜딧을 받으면 바로 시작할 수 있어요. 오늘 도착한 시나리오로 첫 대화를 건네 보세요."
+  },
+  "qrCard": {
+    "downloadCaption": "랜딧 앱 다운받기",
+    "qrLabel": "휴대폰 카메라로 찍으면 랜딧 앱을 받을 수 있는 QR 코드"
+  },
+  "legal": {
+    "tocLabel": "목차"
+  },
+  "footer": {
+    "termsLabel": "약관",
+    "privacyLink": "개인정보 처리방침",
+    "termsLink": "서비스 이용약관",
+    "languageLabel": "언어 선택"
+  },
+  "structuredData": {
+    "scenarioLabel": "오늘의 시나리오 음성 대화",
+    "thoughtLabel": "원어민 속마음 피드백",
+    "correctionLabel": "문장별 상세 교정",
+    "expressionLabel": "대화 상황에 맞춘 표현 추천과 발음 비교",
+    "pronunciationLabel": "발음 평가",
+    "smallTalkLabel": "자유 대화 스몰톡",
+    "roleplayLabel": "직접 만드는 롤플레이",
+    "accentLabel": "미국·영국·호주 영어 선택"
+  }
+}
