@@ -34,6 +34,7 @@ import { getNativeInsetsScript } from '@/bridge/nativeInsets';
 import { openShareSheet } from '@/bridge/share';
 import { requestStoreReview } from '@/bridge/store-review';
 import { useNativeBridge } from '@/bridge/useNativeBridge';
+import { WEB_HOME_PATH } from '@/config/web-home';
 import { WEB_URL } from '@/config/webUrl';
 import {
   loadShellLocale,
@@ -374,9 +375,9 @@ const ShellScreen = () => {
     <WebView
       key={loadAttempt}
       ref={webviewRef}
-      // 진입점은 루트, 알림 콜드 스타트면 페이로드의 경로, 위젯 탭이면 위젯 진입 경로, 알람 버튼이면 그 알람이 갈 화면 — 로그인 여부는 웹의 인증 가드가 판단한다
+      // 진입점은 앱 홈(루트는 웹 랜딩이다), 알림 콜드 스타트면 페이로드의 경로, 위젯 탭이면 위젯 진입 경로, 알람 버튼이면 그 알람이 갈 화면 — 로그인 여부는 웹의 인증 가드가 판단한다
       source={{
-        uri: `${WEB_URL}${coldStart.path ?? widgetEntry.path ?? alarmEntry.path ?? '/'}`,
+        uri: `${WEB_URL}${coldStart.path ?? widgetEntry.path ?? alarmEntry.path ?? WEB_HOME_PATH}`,
       }}
       // 콘텐츠 로드 전 네이티브 컨텍스트(플랫폼·앱 버전)를 window에, Android면 시스템 바 inset을 CSS 변수에 주입한다
       injectedJavaScriptBeforeContentLoaded={beforeContentLoadedScript}

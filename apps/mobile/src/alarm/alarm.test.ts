@@ -501,12 +501,13 @@ describe('폰에 걸린 알람 읽기', () => {
     ).toEqual([1, 2, 4]);
   });
 
-  it('갈 화면 메모가 없거나 앱 밖 주소면 첫 화면(/)으로 알린다', async () => {
+  it('갈 화면 메모가 없거나 앱 밖 주소면 앱 홈(/scenario)으로 알린다', async () => {
+    // 루트(/)는 웹 랜딩이라 셸은 홈으로 바로 간다
     scheduler.getScheduledAlarmsAsync.mockResolvedValue([
       scenario('d', { memo: { path: 'https://example.com' } }),
     ]);
 
-    expect((await getAlarmStatus()).repeatingAlarms[0].path).toBe('/');
+    expect((await getAlarmStatus()).repeatingAlarms[0].path).toBe('/scenario');
   });
 });
 
