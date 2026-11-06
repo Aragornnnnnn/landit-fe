@@ -18,6 +18,7 @@ const ttsMock = vi.hoisted(() => ({
   }),
   speak: vi.fn(() => Promise.resolve()),
   prefetch: vi.fn(() => Promise.resolve()),
+  prefetchSrc: vi.fn(),
   stop: vi.fn(),
 }));
 vi.mock('@/shared/tts/useTts', () => ({
@@ -25,6 +26,7 @@ vi.mock('@/shared/tts/useTts', () => ({
     speak: ttsMock.speak,
     speakSrc: ttsMock.speakSrc,
     prefetch: ttsMock.prefetch,
+    prefetchSrc: ttsMock.prefetchSrc,
     stop: ttsMock.stop,
     status: 'idle',
   }),
@@ -42,6 +44,20 @@ describe('usePartnerGreeting', async () => {
     expect(result.current.partner.id).toBe(chloe.id);
     expect(result.current.look.posture).toBe('idle');
     expect(ttsMock.speakSrc).not.toHaveBeenCalled();
+  });
+
+  it('들어오면 누르기 전에 기본 상대의 자기소개 음원을 미리 받아 둔다', () => {
+    renderHook(() => usePartnerGreeting());
+
+    expect(ttsMock.prefetchSrc).toHaveBeenCalledWith(chloe.introAudioSrc);
+  });
+
+  it('상대를 바꾸면 새 상대의 자기소개 음원을 미리 받아 둔다', () => {
+    const { result } = renderHook(() => usePartnerGreeting());
+
+    act(() => result.current.selectPartner(teddy.id));
+
+    expect(ttsMock.prefetchSrc).toHaveBeenLastCalledWith(teddy.introAudioSrc);
   });
 
   it('캐릭터를 누르면 그 상대의 자기소개 음원이 재생되고 웃으며 말하는 자세가 된다', async () => {

@@ -398,6 +398,51 @@ describe('useAiSpeech 분리 재생', () => {
   });
 });
 
+// 오프닝 음원 미리 열기 — 누르는 순간 받기 시작하지 않게, 켠 호출부(스몰톡 탭 인사)만 재생 전에 열어 둔다
+describe('오프닝 음원 미리 열기', () => {
+  const OPENING_URL = 'https://cdn.example.com/questions/10.mp3';
+
+  it('켜 두면 재생 차례가 오기 전에 오프닝 음원을 미리 열어 둔다', () => {
+    renderSpeech({ playing: false, preloadOpening: true });
+
+    expect(ttsMock.prefetchSrc).toHaveBeenCalledWith(OPENING_URL);
+  });
+
+  it('켜지 않으면 미리 열지 않는다 — 대화 오프닝은 들어오자마자 틀거나(상대 선발화) 안 틀어서(내 선발화) 미리 받을 이득이 없다', () => {
+    renderSpeech({ playing: false });
+
+    expect(ttsMock.prefetchSrc).not.toHaveBeenCalled();
+  });
+
+  it('재생 중에는 미리 열지 않는다 — 지금 트는 음원과 겹친다', () => {
+    renderSpeech({ preloadOpening: true });
+
+    expect(ttsMock.prefetchSrc).not.toHaveBeenCalled();
+  });
+
+  it('오프닝 음원이 바뀌면 새 음원을 미리 연다', () => {
+    const { rerender, initialProps } = renderSpeech({
+      playing: false,
+      preloadOpening: true,
+    });
+    clearTtsCalls();
+
+    rerender({ ...initialProps, openingSrc: '/audio/b.mp3' });
+
+    expect(ttsMock.prefetchSrc).toHaveBeenCalledWith('/audio/b.mp3');
+  });
+
+  it('재생이 끝나면 같은 음원을 다시 열어 둔다 — 또 눌러도 바로 나온다', async () => {
+    const { rerender, initialProps } = renderSpeech({ preloadOpening: true });
+    await act(async () => ttsMock.state.onEnd?.());
+    clearTtsCalls();
+
+    rerender({ ...initialProps, playing: false });
+
+    expect(ttsMock.prefetchSrc).toHaveBeenCalledWith(OPENING_URL);
+  });
+});
+
 // 다시 듣기 — 같은 발화를 한 번 더 재생한다. 대화 진행은 건드리지 않는다
 describe('useAiSpeech 다시 듣기', () => {
   const LINE = 'What size would you like?';

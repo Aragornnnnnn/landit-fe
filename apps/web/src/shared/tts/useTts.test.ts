@@ -398,6 +398,35 @@ describe('useTts', () => {
     expect(FakeAudio.instances.length).toBe(opened);
   });
 
+  it('다른 음원으로 넘어간 뒤 앞 음원의 재생 거부가 늦게 도착해도 앞 음원을 다시 열거나 지금 재생을 끊지 않는다', async () => {
+    // Given 미리 열어 둔 클로이 인사를 틀자마자 테디 인사로 넘어갔고
+    const { result } = renderHook(() => useTts());
+    const onChloeError = vi.fn();
+    act(() => result.current.prefetchSrc('/audio/chloe.mp3'));
+    let rejectChloe: (error: unknown) => void = () => {};
+    FakeAudio.instances[0]!.play = vi.fn(
+      () => new Promise<void>((_, reject) => (rejectChloe = reject)),
+    );
+    act(() =>
+      result.current.speakSrc('/audio/chloe.mp3', { onError: onChloeError }),
+    );
+    act(() => result.current.speakSrc('/audio/teddy.mp3'));
+    const teddy = FakeAudio.instances[1]!;
+
+    // When 클로이 음원의 로드 실패가 재생 거부로 뒤늦게 도착하면
+    await act(async () =>
+      rejectChloe(new DOMException('load failed', 'NotSupportedError')),
+    );
+
+    // Then 클로이 음원을 다시 열지 않고, 테디 재생도 그대로 둔다
+    expect(FakeAudio.instances.map((audio) => audio.src)).toEqual([
+      '/audio/chloe.mp3',
+      '/audio/teddy.mp3',
+    ]);
+    expect(teddy.pause).not.toHaveBeenCalled();
+    expect(onChloeError).not.toHaveBeenCalled();
+  });
+
   it('프리로드 엘리먼트 재생이 실패하면 새 엘리먼트로 한 번 다시 연다', () => {
     const { result } = renderHook(() => useTts());
     const onError = vi.fn();
