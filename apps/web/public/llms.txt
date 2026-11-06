@@ -89,3 +89,20 @@
 - [プライバシーポリシー](https://www.landit.im/ja/privacy)
 - [App Store](https://apps.apple.com/jp/app/id6787414201)
 - [Google Play](https://play.google.com/store/apps/details?id=com.saynow.app)
+
+---
+
+# Landit (English summary)
+
+> Landit is an AI English conversation app for Korean and Japanese speakers. Each day a new real-life scenario arrives, you talk with AI characters by voice, and Landit shows how your words came across to a native speaker as the character's inner thoughts. Available on iOS and Android, with Korean and Japanese interfaces.
+
+Landit (landit.im) is not related to Lendit, a Korean P2P lending company, or to Landit (landit.com), a career coaching platform.
+
+- Daily scenarios: situations you will meet abroad, such as meeting a roommate, a class, a café, or an airport.
+- Inner thoughts: after each line, see how the other person took it; corrections come after the conversation, together with what you did well.
+- Expressions and pronunciation: phrases suggested for your conversation, and word-by-word comparison of sounds and stress against a native speaker.
+- Small talk and role-play: free conversation and custom scenes where you set both roles.
+- Free to download; today's scenario is free, and small talk and role-play can be tried. Premium unlocks unlimited use and personalized expressions.
+- Store rating 4.8 (59 reviews, App Store and Google Play combined, 2026-11-05); 4,000+ downloads.
+
+Links: [Korean](https://www.landit.im/ko) · [Japanese](https://www.landit.im/ja) · [App Store](https://apps.apple.com/app/id6787414201) · [Google Play](https://play.google.com/store/apps/details?id=com.saynow.app)
