@@ -12,6 +12,15 @@ export const sellsKoreaOnlyOffers = (locale: Locale) => locale === 'ko';
 export const isLocale = (value: string): value is Locale =>
   (LOCALES as readonly string[]).includes(value);
 
+/** 랜딩 주소의 언어(`/ko`, `/ja/updates`). 첫 칸이 지원 언어가 아니면 null — 앱 화면은 주소로 언어를 정하지 않는다 */
+export const localeFromPath = (pathname: string): Locale | null => {
+  const first = pathname.split('/')[1] ?? '';
+  return isLocale(first) ? first : null;
+};
+
+/** proxy가 랜딩 주소의 언어를 서버 렌더에 넘기는 요청 헤더 — 쿠키·기기 언어보다 먼저 본다 */
+export const PATH_LOCALE_HEADER = 'x-landit-locale';
+
 // q는 0~1, 소수 셋째 자리까지만 유효하다(RFC 9110) — Infinity·1.5 같은 값은 0으로 보고 그 언어를 고르지 않는다
 const VALID_QUALITY = /^(0(\.\d{0,3})?|1(\.0{0,3})?)$/;
 const qualityOf = (value: string) =>

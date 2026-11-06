@@ -8,6 +8,7 @@ import {
   localeFromAcceptLanguage,
   localeFromBrowser,
   localeFromDocument,
+  localeFromPath,
   resolveRequestLocale,
   sellsKoreaOnlyOffers,
   signupLanguages,
@@ -23,6 +24,21 @@ describe('resolveRequestLocale', () => {
     expect(resolveRequestLocale(null, 'ja-JP')).toBe('ja');
     expect(resolveRequestLocale('en', 'ja-JP')).toBe('ja');
     expect(resolveRequestLocale(null, null)).toBe('ko');
+  });
+});
+
+describe('localeFromPath', () => {
+  it('랜딩 주소의 첫 칸이 지원 언어면 그 언어다', () => {
+    expect(localeFromPath('/ko')).toBe('ko');
+    expect(localeFromPath('/ja')).toBe('ja');
+    expect(localeFromPath('/ko/updates')).toBe('ko');
+  });
+
+  it('첫 칸이 언어가 아니면 null이다 — 앱 화면과 루트는 주소로 언어를 정하지 않는다', () => {
+    expect(localeFromPath('/')).toBeNull();
+    expect(localeFromPath('/scenario')).toBeNull();
+    expect(localeFromPath('/jam')).toBeNull();
+    expect(localeFromPath('/en')).toBeNull();
   });
 });
 

@@ -403,6 +403,12 @@ describe('toPageView', () => {
     expect(pv('/')).toBeNull();
   });
 
+  it('언어별 랜딩(/ko·/ja)과 그 아래 화면은 앱 화면이 아니라 계측하지 않는다', () => {
+    expect(pv('/ko')).toBeNull();
+    expect(pv('/ja')).toBeNull();
+    expect(pv('/ko/updates')).toBeNull();
+  });
+
   it('알 수 없는 경로는 pathname을 page_name으로 쓰되 숫자 세그먼트는 :id로 치환한다', () => {
     expect(pv('/whatever')).toEqual({
       page_name: '/whatever',
