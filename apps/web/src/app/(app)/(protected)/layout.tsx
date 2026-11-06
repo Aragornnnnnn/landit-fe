@@ -1,7 +1,12 @@
 // 보호 그룹 레이아웃 — 로그인한 사람만 들인다. 보호가 필요한 페이지는 이 그룹에 넣는다
+import type { Metadata } from 'next';
+
 import { MessagesProvider } from '@/shared/i18n/MessagesProvider';
 
 import { AuthGate } from './_ui/AuthGate';
+
+// 앱 화면은 검색 결과에 올리지 않는다
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default function ProtectedLayout({
   children,
