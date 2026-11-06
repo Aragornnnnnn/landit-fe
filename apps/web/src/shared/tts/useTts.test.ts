@@ -519,16 +519,72 @@ describe('useTts', () => {
     // AbortError는 합성 폴백을 부르지 않는다 (정적 재생이 그대로 유지되도록)
     expect(onError).not.toHaveBeenCalled();
   });
-  it('말하기 속도를 느리게 골라두면 합성 음성이 그 배속으로 재생된다', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => fakeAudioResponse()),
-    );
+  describe('합성할 때 속도를 정할 수 있는 목소리(Deepgram)', () => {
+    const luna: TtsVoice = {
+      provider: 'OPENROUTER',
+      model: 'deepgram/aura-2',
+      providerVoiceId: 'aura-2-luna-en',
+      gender: 'FEMALE',
+    };
+    const requestedBody = (fetchMock: ReturnType<typeof vi.fn>, call = 0) =>
+      JSON.parse(
+        (fetchMock.mock.calls[call]![1] as RequestInit).body as string,
+      );
+
+    it('배속을 고르면 그 속도로 합성을 요청하고 재생은 늘리지 않는다', async () => {
+      // given
+      const fetchMock = vi.fn(async () => fakeAudioResponse());
+      vi.stubGlobal('fetch', fetchMock);
+      setSpeechRate(0.75);
+      const { result } = renderHook(() => useTts());
+
+      // when
+      await act(() => result.current.speak('Hello', luna));
+
+      // then
+      expect(requestedBody(fetchMock).speed).toBe(0.75);
+      expect(FakeAudio.instances[0].playbackRate).toBe(1);
+    });
+
+    it('1배면 속도 없이 지금처럼 합성을 요청한다', async () => {
+      const fetchMock = vi.fn(async () => fakeAudioResponse());
+      vi.stubGlobal('fetch', fetchMock);
+      const { result } = renderHook(() => useTts());
+
+      await act(() => result.current.speak('Hello', luna));
+
+      expect(requestedBody(fetchMock)).not.toHaveProperty('speed');
+    });
+
+    it('미리 합성한 뒤 배속을 바꾸면 그 음원을 쓰지 않고 새 속도로 다시 합성한다', async () => {
+      // given — 1배로 미리 받아 둔 문장
+      const fetchMock = vi.fn(async () => fakeAudioResponse());
+      vi.stubGlobal('fetch', fetchMock);
+      const { result } = renderHook(() => useTts());
+      await act(() => result.current.prefetch('Hello', luna));
+      setSpeechRate(1.5);
+
+      // when
+      await act(() => result.current.speak('Hello', luna));
+
+      // then
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(requestedBody(fetchMock, 1).speed).toBe(1.5);
+    });
+  });
+
+  it('합성 속도를 못 정하는 목소리는 속도 없이 합성하고 재생 배속으로 늘린다', async () => {
+    const fetchMock = vi.fn<
+      (url: string, init: RequestInit) => Promise<Response>
+    >(async () => fakeAudioResponse());
+    vi.stubGlobal('fetch', fetchMock);
     setSpeechRate(0.75);
     const { result } = renderHook(() => useTts());
 
     await act(() => result.current.speak('Hello', harper));
 
+    const body = JSON.parse(fetchMock.mock.calls[0]![1]!.body as string);
+    expect(body).not.toHaveProperty('speed');
     expect(FakeAudio.instances[0].playbackRate).toBe(0.75);
   });
 

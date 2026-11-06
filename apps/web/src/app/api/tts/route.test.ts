@@ -1,6 +1,8 @@
 // TTS 프록시 라우트 — 키 부재·입력 누락·업스트림 분기·업스트림 실패·성공 스트림 갈림길 검증
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { SPEECH_RATES } from '@/shared/lib/speech-rate';
+
 import { POST } from './route';
 
 const reportErrorMock = vi.hoisted(() => vi.fn());
@@ -87,6 +89,52 @@ describe('POST /api/tts', () => {
       Authorization: 'Token deepgram-tts-key',
     });
     expect(JSON.parse(init.body as string)).toEqual({ text: 'Hello' });
+  });
+
+  it('속도를 함께 보내면 Deepgram이 그 속도로 말하도록 합성을 요청한다', async () => {
+    // given
+    vi.stubEnv('DEEPGRAM_TTS_API_KEY', 'deepgram-tts-key');
+    const fetchMock = vi.fn<
+      (url: string, init: RequestInit) => Promise<Response>
+    >(async () => new Response('mp3-bytes', { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    // when
+    const res = await POST(ttsRequest({ ...deepgramBody, speed: 0.75 }));
+
+    // then
+    expect(res.status).toBe(200);
+    expect(fetchMock.mock.calls[0]![0]).toBe(
+      'https://api.deepgram.com/v1/speak?model=aura-2-orpheus-en&encoding=mp3&speed=0.75',
+    );
+  });
+
+  it('고를 수 있는 배속은 모두 Deepgram이 받는 속도다 — 배속 목록을 늘릴 때 범위를 벗어나면 여기서 걸린다', async () => {
+    vi.stubEnv('DEEPGRAM_TTS_API_KEY', 'deepgram-tts-key');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('mp3-bytes', { status: 200 })),
+    );
+
+    const statuses = await Promise.all(
+      SPEECH_RATES.map(async (speed) => {
+        const res = await POST(ttsRequest({ ...deepgramBody, speed }));
+        return res.status;
+      }),
+    );
+
+    expect(statuses).toEqual(SPEECH_RATES.map(() => 200));
+  });
+
+  it('Deepgram이 받지 않는 속도면 400을 돌려주고 합성을 부르지 않는다', async () => {
+    vi.stubEnv('DEEPGRAM_TTS_API_KEY', 'deepgram-tts-key');
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const res = await POST(ttsRequest({ ...deepgramBody, speed: 0.5 }));
+
+    expect(res.status).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('DEEPGRAM_TTS_API_KEY가 없으면 Deepgram 음성은 500을 돌려준다', async () => {
