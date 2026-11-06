@@ -36,4 +36,14 @@ describe('buildLegalMetadata', () => {
       languages: { ko: '/ko/terms', ja: '/ja/terms' },
     });
   });
+
+  it('공유 카드는 그 언어의 공유 그림을 쓴다', () => {
+    const metadata = buildLegalMetadata('ja', 'terms', document);
+
+    expect(metadata.openGraph?.images).toEqual({
+      url: '/og/share-ja.jpg',
+      width: 1200,
+      height: 630,
+    });
+  });
 });

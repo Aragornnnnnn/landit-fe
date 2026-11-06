@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
 import type { LegalDocument } from '@/app/(app)/(legal)/_ui/LegalDocumentPage';
+import { SHARE_CARD } from '@/app/(public)/download/_lib/link-preview';
 import type { Locale } from '@/shared/i18n/locale';
 
 import { LandingFooter } from './LandingFooter';
@@ -27,6 +28,19 @@ export const buildLegalMetadata = (
     languages: { ko: `/ko/${kind}`, ja: `/ja/${kind}` },
   },
   robots: { index: true, follow: true },
+  // 약관 링크를 공유해도 랜딩과 같은 카드가 뜨게 한다
+  openGraph: {
+    type: 'website',
+    url: `/${locale}/${kind}`,
+    siteName: SITE_NAME[locale],
+    title: `${document.title} | ${SITE_NAME[locale]}`,
+    description: document.introduction[0],
+    images: { url: SHARE_CARD[locale].imagePath, width: 1200, height: 630 },
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: SHARE_CARD[locale].imagePath,
+  },
 });
 
 export const WebLegalPage = async ({

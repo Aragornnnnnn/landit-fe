@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 
+import { SHARE_CARD } from '@/app/(public)/download/_lib/link-preview';
 import { isLocale, type Locale } from '@/shared/i18n/locale';
 
 import { buildUpdatesStructuredData } from '../_model/structured-data';
@@ -61,9 +62,12 @@ export const generateMetadata = async ({
       siteName,
       title,
       description,
-      images: { url: '/og/share.jpg', width: 1200, height: 630 },
+      images: { url: SHARE_CARD[locale].imagePath, width: 1200, height: 630 },
     },
-    twitter: { card: 'summary_large_image', images: '/og/share.jpg' },
+    twitter: {
+      card: 'summary_large_image',
+      images: SHARE_CARD[locale].imagePath,
+    },
   };
 };
 
