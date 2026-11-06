@@ -30,12 +30,6 @@ const SCREENS_VERSION = 3;
 export const screenPath = (locale: Locale, shot: string) =>
   `/images/landing/screens/${locale === 'ja' ? 'ja/' : ''}${shot}.webp?v=${SCREENS_VERSION}`;
 
-/** '2026. 11. 5.' → '2026-11-05' */
-export const toIsoDate = (date: string) => {
-  const [year, month, day] = date.match(/\d+/g) ?? [];
-  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-};
-
 /**
  * 그 언어 랜딩의 구조화 데이터. 평점은 두 언어 화면 첫 뱃지에 보이는 두 스토어 합산 값이다.
  *
@@ -100,19 +94,27 @@ export const buildStructuredData = (
   ];
 };
 
+const UPDATES_LIST_NAME: Record<Locale, string> = {
+  ko: '랜딧 업데이트 기록',
+  ja: 'Landit アップデート履歴',
+};
+
+/** 업데이트 기록 구조화 데이터 — 기록마다 제목과 날짜(YYYY-MM-DD)를 최신순으로 담는다 */
 export const buildUpdatesStructuredData = (
+  locale: Locale,
   updates: { date: string; title: string }[],
 ) => ({
   '@context': 'https://schema.org',
   '@type': 'ItemList',
-  name: '랜딧 업데이트 기록',
+  name: UPDATES_LIST_NAME[locale],
+  inLanguage: locale,
   itemListElement: updates.map(({ date, title }, index) => ({
     '@type': 'ListItem',
     position: index + 1,
     item: {
       '@type': 'Article',
       headline: title,
-      datePublished: toIsoDate(date),
+      datePublished: date,
     },
   })),
 });

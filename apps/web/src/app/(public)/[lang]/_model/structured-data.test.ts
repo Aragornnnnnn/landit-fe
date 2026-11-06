@@ -118,24 +118,26 @@ describe('buildStructuredData', () => {
 });
 
 describe('buildUpdatesStructuredData', () => {
-  it('업데이트를 최신순 목록으로 담고 날짜를 ISO 형식으로 바꾼다', () => {
+  it('업데이트를 최신순 목록으로 담고 그 언어의 목록 이름을 붙인다', () => {
     // Given
     const updates = [
-      { date: '2026. 11. 5.', title: '새 기능' },
-      { date: '2026. 6. 15.', title: '첫 출시' },
+      { date: '2026-11-05', title: '新機能' },
+      { date: '2026-06-15', title: '初リリース' },
     ];
 
     // When
-    const data = buildUpdatesStructuredData(updates);
+    const data = buildUpdatesStructuredData('ja', updates);
 
     // Then
+    expect(data.name).toBe('Landit アップデート履歴');
+    expect(data.inLanguage).toBe('ja');
     expect(data.itemListElement).toEqual([
       {
         '@type': 'ListItem',
         position: 1,
         item: {
           '@type': 'Article',
-          headline: '새 기능',
+          headline: '新機能',
           datePublished: '2026-11-05',
         },
       },
@@ -144,7 +146,7 @@ describe('buildUpdatesStructuredData', () => {
         position: 2,
         item: {
           '@type': 'Article',
-          headline: '첫 출시',
+          headline: '初リリース',
           datePublished: '2026-06-15',
         },
       },

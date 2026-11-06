@@ -22,5 +22,6 @@
 - [소개](https://www.landit.im/ko)
 - [日本語の紹介](https://www.landit.im/ja)
 - [업데이트 기록](https://www.landit.im/ko/updates)
+- [アップデート履歴](https://www.landit.im/ja/updates)
 - [App Store](https://apps.apple.com/kr/app/id6787414201)
 - [Google Play](https://play.google.com/store/apps/details?id=com.saynow.app)

@@ -1,4 +1,4 @@
-// 랜딩·업데이트 기록 공통 머리 — 넓은 화면에선 로고가 첫 화면 제목과 같은 선에서 시작한다. 왼쪽 로고는 그 언어의 랜딩으로, 오른쪽은 업데이트 기록으로 간다. 업데이트 기록은 한국어만 있다
+// 랜딩·업데이트 기록 공통 머리 — 넓은 화면에선 로고가 첫 화면 제목과 같은 선에서 시작한다. 왼쪽 로고는 그 언어의 랜딩으로, 오른쪽은 업데이트 기록으로 간다. 업데이트 기록은 그 언어 판으로 간다
 import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -19,14 +19,12 @@ export const LandingHeader = async ({ locale }: { locale: Locale }) => {
             priority
           />
         </Link>
-        {locale === 'ko' && (
-          <Link
-            href="/ko/updates"
-            className="text-[15px] font-semibold text-foreground hover:opacity-70"
-          >
-            {t('updatesLink')}
-          </Link>
-        )}
+        <Link
+          href={`/${locale}/updates`}
+          className="text-[15px] font-semibold text-foreground hover:opacity-70"
+        >
+          {t('updatesLink')}
+        </Link>
       </div>
     </header>
   );

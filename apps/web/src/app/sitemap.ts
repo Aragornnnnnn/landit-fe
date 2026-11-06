@@ -1,7 +1,7 @@
 // 사이트맵 — 검색에 노출할 공개 화면 목록. 랜딩은 언어별 주소를 서로 묶어 알리고, 수정일은 가장 최근 업데이트 날짜를 따른다
 import type { MetadataRoute } from 'next';
 
-import { SITE_URL, toIsoDate } from './(public)/[lang]/_model/structured-data';
+import { SITE_URL } from './(public)/[lang]/_model/structured-data';
 import { UPDATES } from './(public)/[lang]/updates/_ui/updates-content';
 
 const LANDING_LANGUAGES = {
@@ -11,7 +11,7 @@ const LANDING_LANGUAGES = {
 };
 
 const sitemap = (): MetadataRoute.Sitemap => {
-  const lastModified = toIsoDate(UPDATES[0].date);
+  const lastModified = UPDATES[0].date;
   const landing = (url: string) => ({
     url,
     lastModified,
@@ -22,12 +22,18 @@ const sitemap = (): MetadataRoute.Sitemap => {
   return [
     landing(LANDING_LANGUAGES.ko),
     landing(LANDING_LANGUAGES.ja),
-    {
-      url: `${SITE_URL}/ko/updates`,
+    ...(['ko', 'ja'] as const).map((locale) => ({
+      url: `${SITE_URL}/${locale}/updates`,
       lastModified,
-      changeFrequency: 'weekly',
+      changeFrequency: 'weekly' as const,
       priority: 0.6,
-    },
+      alternates: {
+        languages: {
+          ko: `${SITE_URL}/ko/updates`,
+          ja: `${SITE_URL}/ja/updates`,
+        },
+      },
+    })),
     ...(['terms', 'privacy'] as const).flatMap((kind) =>
       (['ko', 'ja'] as const).map((locale) => ({
         url: `${SITE_URL}/${locale}/${kind}`,
