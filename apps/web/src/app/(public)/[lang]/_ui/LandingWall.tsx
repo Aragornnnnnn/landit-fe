@@ -1,6 +1,6 @@
 'use client';
 
-// 시나리오 벽 — 비스듬히 깔린 카드 속에 오늘의 시나리오 한 장이 놓인다. 스크롤하면 줄이 엇갈려 움직이고, 벽이 화면 가운데로 오면 나머지가 어두워지며 오늘의 카드가 커지고 래디가 지팡이로 불러낸다. 오늘의 카드는 들어올 때마다 무작위로 뽑힌다
+// 시나리오 벽 — 비스듬히 깔린 카드 속에 오늘의 시나리오 한 장이 놓인다. 스크롤하면 줄이 엇갈려 움직이고, 벽이 화면 가운데로 오면 나머지가 어두워지며 오늘의 카드가 커진다. 오늘의 카드는 들어올 때마다 무작위로 뽑힌다
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { useLocale } from 'next-intl';
 import Image from 'next/image';
@@ -144,18 +144,6 @@ export const LandingWall = ({ todayLabel }: { todayLabel: string }) => {
             <span className="absolute -top-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[#dc7839] px-4 py-1.5 text-[19px] font-extrabold whitespace-nowrap text-white shadow-[0_6px_14px_rgba(224,122,58,0.4)]">
               {todayLabel}
             </span>
-            {/* 래디가 지팡이로 오늘의 카드를 불러낸다 — 벽이 어두워질 때 아래에서 올라온다. 휴대폰은 폭이 좁아 카드만 둔다 */}
-            <Image
-              src="/images/character/landy-point.webp"
-              alt=""
-              width={425}
-              height={480}
-              className="absolute -bottom-8 -left-[124px] z-20 hidden w-[150px] -rotate-7 sm:block"
-              style={{
-                opacity: 'var(--wall-focus)',
-                translate: '0 calc((1 - var(--wall-focus)) * 40px)',
-              }}
-            />
             <Card
               title={wall.today.title[locale] ?? ''}
               image={wall.today.image}
