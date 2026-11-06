@@ -11,13 +11,16 @@ import { WebLegalDocument } from './WebLegalDocument';
 
 type Kind = 'terms' | 'privacy';
 
+const SITE_NAME: Record<Locale, string> = { ko: '랜딧', ja: 'Landit' };
+
 /** 언어별 주소를 서로 알리는 약관 메타데이터 */
 export const buildLegalMetadata = (
   locale: Locale,
   kind: Kind,
   document: LegalDocument,
 ): Metadata => ({
-  title: document.title,
+  // 루트 제목 틀(%s | 랜딧)은 한국어라 언어별 사이트 이름을 직접 붙인다
+  title: { absolute: `${document.title} | ${SITE_NAME[locale]}` },
   description: document.introduction[0],
   alternates: {
     canonical: `/${locale}/${kind}`,
