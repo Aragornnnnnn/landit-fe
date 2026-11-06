@@ -36,11 +36,12 @@ export const LandingPage = async ({ locale }: { locale: Locale }) => {
                   alt=""
                   width={240}
                   height={240}
-                  className="size-12 rounded-[22.5%] shadow-[0_6px_16px_rgba(90,50,20,0.18)] sm:size-14"
+                  className="size-14 rounded-[22.5%] shadow-[0_6px_16px_rgba(90,50,20,0.18)]"
                 />
                 {t('hero.brandLabel')}
               </p>
-              <h1 className="text-[38px] leading-[1.35] font-extrabold break-keep sm:text-[52px] lg:text-[56px]">
+              {/* h1은 무엇을 하는 서비스인지 — 다른 점(통하는지 알려줌)과 검색어(AI 영어 회화 앱)를 함께 담는다 */}
+              <h1 className="text-[34px] leading-[1.35] font-extrabold break-keep sm:text-[48px] lg:text-[52px]">
                 {t.rich('hero.title', titleTags())}
               </h1>
               <div className="mt-7 sm:mt-9">
