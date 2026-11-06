@@ -58,12 +58,11 @@ const UpdatesPage = async ({
             alt=""
             width={112}
             height={112}
-            priority
             className="size-20 shrink-0 sm:size-28"
           />
         </div>
         <ol className="mt-10 sm:mt-14">
-          {UPDATES.map(({ date, title, body, image, tint }) => (
+          {UPDATES.map(({ date, title, body, image, tint }, index) => (
             <li
               key={title}
               className="grid gap-3 border-t border-border py-8 first:border-t-0 first:pt-0 sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-6 sm:py-10"
@@ -91,6 +90,8 @@ const UpdatesPage = async ({
                     width={1200}
                     height={900}
                     sizes="(min-width: 640px) 560px, 100vw"
+                    // 맨 위 기록 그림이 첫 화면의 가장 큰 그림이라 먼저 받는다 — 나머지는 스크롤할 때 받는다
+                    preload={index === 0}
                     className="size-full"
                   />
                 </div>

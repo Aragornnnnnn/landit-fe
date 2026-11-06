@@ -6,7 +6,7 @@ import Image from 'next/image';
 import type { Locale } from '@/shared/i18n/locale';
 import { RevealSection } from '@/shared/ui/RevealSection';
 
-import { screenPath } from '../_model/structured-data';
+import { SCREEN_IMAGE, screenPath } from '../_model/structured-data';
 import { ScreenSwap } from './ScreenSwap';
 import { titleTags } from './title-tags';
 import type { Mark } from './Underline';
@@ -96,13 +96,10 @@ export const LandingFeatures = async ({ locale }: { locale: Locale }) => {
                     }}
                   />
                 ) : (
-                  // 캡처는 이미 webp라 다시 압축하지 않는다 — 다시 줄이면 글자가 흐려진다
                   <Image
                     src={screenPath(locale, shot)}
                     alt={t(`${topic}ScreenLabel`)}
-                    width={780}
-                    height={1688}
-                    unoptimized
+                    {...SCREEN_IMAGE}
                     className="w-full"
                   />
                 )}
@@ -112,7 +109,8 @@ export const LandingFeatures = async ({ locale }: { locale: Locale }) => {
                 alt=""
                 width={1046}
                 height={1766}
-                unoptimized
+                sizes="(min-width: 640px) 366px, 322px"
+                quality={90}
                 className="pointer-events-none absolute inset-0 size-full"
               />
             </div>

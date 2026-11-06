@@ -2,7 +2,7 @@
 
 // 시나리오 벽 — 비스듬히 깔린 카드 속에 오늘의 시나리오 한 장이 놓인다. 스크롤하면 줄이 엇갈려 움직이고, 벽이 화면 가운데로 오면 나머지가 어두워지며 오늘의 카드가 커지고 래디가 지팡이로 불러낸다. 오늘의 카드는 들어올 때마다 무작위로 뽑힌다
 import { useEffect, useRef, useSyncExternalStore } from 'react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import Image from 'next/image';
 
 import { useInView } from '@/shared/lib/useInView';
@@ -64,9 +64,9 @@ const Card = ({
   </div>
 );
 
-export const LandingWall = () => {
+/** 오늘의 카드 딱지 문구는 서버가 넘긴다 — landing 문구 묶음 전체를 브라우저로 보내지 않기 위해서다 */
+export const LandingWall = ({ todayLabel }: { todayLabel: string }) => {
   const locale = useLocale();
-  const t = useTranslations('landing.wall');
   const stageRef = useRef<HTMLDivElement>(null);
   // 그림은 벽에 가까워질 때 받는다 — 첫 화면 표시가 그림 100장을 기다리지 않게 한다
   const { ref: nearRef, inView: near } = useInView<HTMLDivElement>(NEAR_MARGIN);
@@ -141,8 +141,8 @@ export const LandingWall = () => {
                 'translate(-50%, -50%) scale(calc(1 + var(--wall-focus) * 0.1))',
             }}
           >
-            <span className="absolute -top-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-primary px-4 py-2 text-[15px] font-extrabold whitespace-nowrap text-primary-foreground shadow-[0_6px_14px_rgba(224,122,58,0.4)]">
-              {t('todayLabel')}
+            <span className="absolute -top-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[#dc7839] px-4 py-1.5 text-[19px] font-extrabold whitespace-nowrap text-white shadow-[0_6px_14px_rgba(224,122,58,0.4)]">
+              {todayLabel}
             </span>
             {/* 래디가 지팡이로 오늘의 카드를 불러낸다 — 벽이 어두워질 때 아래에서 올라온다. 휴대폰은 폭이 좁아 카드만 둔다 */}
             <Image

@@ -116,3 +116,11 @@ export const buildUpdatesStructuredData = (
     },
   })),
 });
+
+/** 폰 화면 캡처를 화면에 그릴 때의 크기·화질 — 폰 폭(휴대폰 322px·그 이상 366px)의 화면 자리(90%)만큼만 받는다. 작은 글자가 흐려지지 않게 화질은 90 */
+export const SCREEN_IMAGE = {
+  width: 780,
+  height: 1688,
+  sizes: '(min-width: 640px) 330px, 290px',
+  quality: 90,
+} as const;

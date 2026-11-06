@@ -4,6 +4,7 @@
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 
+import { SCREEN_IMAGE } from '../_model/structured-data';
 import { swapProgress } from '../_model/swap-progress';
 
 type Screen = { src: string; alt: string };
@@ -41,13 +42,10 @@ export const ScreenSwap = ({
 
   return (
     <div ref={phoneRef} className="relative">
-      {/* 캡처는 이미 webp라 다시 압축하지 않는다 — 다시 줄이면 글자가 흐려진다 */}
       <Image
         src={first.src}
         alt={first.alt}
-        width={780}
-        height={1688}
-        unoptimized
+        {...SCREEN_IMAGE}
         className="w-full"
       />
       <div
@@ -58,9 +56,7 @@ export const ScreenSwap = ({
         <Image
           src={next.src}
           alt={next.alt}
-          width={780}
-          height={1688}
-          unoptimized
+          {...SCREEN_IMAGE}
           className="w-full"
         />
       </div>

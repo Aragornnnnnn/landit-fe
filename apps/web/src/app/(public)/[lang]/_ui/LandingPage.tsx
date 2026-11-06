@@ -36,7 +36,6 @@ export const LandingPage = async ({ locale }: { locale: Locale }) => {
                   alt=""
                   width={240}
                   height={240}
-                  priority
                   className="size-12 rounded-[22.5%] shadow-[0_6px_16px_rgba(90,50,20,0.18)] sm:size-14"
                 />
                 {t('hero.brandLabel')}
@@ -67,7 +66,7 @@ export const LandingPage = async ({ locale }: { locale: Locale }) => {
             {t('wall.body')}
           </p>
           <div className="mt-6">
-            <LandingWall />
+            <LandingWall todayLabel={t('wall.todayLabel')} />
           </div>
         </RevealSection>
         <LandingFeatures locale={locale} />

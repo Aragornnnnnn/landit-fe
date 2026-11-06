@@ -31,6 +31,15 @@ const nextConfig: NextConfig = {
   // TS 원본으로 배포되는 패키지들 — 여기 포함되면 compiler.* 변환도 같이 적용된다
   transpilePackages: ['@landit/analytics', '@landit/bridge'],
   reactCompiler: true,
+  images: {
+    // 90은 랜딩 폰 화면 캡처용 — 75로 줄이면 작은 글자가 흐려진다
+    qualities: [75, 90],
+    // 랜딩 폰 화면은 다시 찍을 때 ?v=를 올려 옛 그림을 피한다. 나머지는 쿼리 없는 주소만 받는다
+    localPatterns: [
+      { pathname: '/images/landing/screens/**' },
+      { pathname: '/**', search: '' },
+    ],
+  },
   experimental: {
     // 켜 두면 직전 배포의 캐시를 다시 써서 globals.css 변경이 CSS에서 빠진 채 배포된다 (LAN-840)
     turbopackFileSystemCacheForBuild: false,

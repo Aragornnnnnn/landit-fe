@@ -26,7 +26,7 @@ export const QrCard = async ({ locale }: { locale: Locale }) => {
           className="absolute top-1/2 left-1/2 size-5 -translate-x-1/2 -translate-y-1/2 rounded-[5px]"
         />
       </div>
-      <p className="mt-2 text-[13px] font-bold whitespace-nowrap text-accent">
+      <p className="mt-2 text-[13px] font-bold whitespace-nowrap text-[#a34a12]">
         {t('downloadCaption')}
       </p>
     </aside>

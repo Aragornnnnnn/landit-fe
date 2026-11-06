@@ -75,9 +75,10 @@ export const StoreButtons = async ({
   });
   return (
     <div className={className}>
+      {/* 흰 글자 대비 — 기본 주황(#e07a3a)은 2.99:1로 큰 글자 기준(3:1)에 못 미쳐, 눈으로 구분되지 않을 만큼(2%) 짙게 하고 19px 굵게 둔다 */}
       <a
         href={LANDING_DOWNLOAD_PATH}
-        className="mx-auto flex h-[54px] w-fit items-center gap-2 rounded-2xl bg-primary pr-7 pl-6 text-[17px] font-semibold tracking-[-0.01em] text-primary-foreground transition-transform active:scale-[0.97] sm:hidden"
+        className="mx-auto flex h-[54px] w-fit items-center gap-2 rounded-2xl bg-[#dc7839] pr-7 pl-6 text-[19px] font-bold tracking-[-0.01em] text-white transition-transform active:scale-[0.97] sm:hidden"
       >
         <DownloadIcon />
         {t('downloadButton')}
@@ -89,7 +90,6 @@ export const StoreButtons = async ({
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={t(labelKey)}
             className="flex h-[60px] items-center justify-center gap-3 rounded-2xl bg-black px-6 text-white transition-[translate,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.22)] active:translate-y-0"
           >
             <span className="size-[26px] shrink-0 [&>svg]:size-full">
@@ -103,6 +103,8 @@ export const StoreButtons = async ({
                 {name}
               </span>
             </span>
+            {/* 읽히는 이름에 보이는 글자(Download on the App Store)가 그대로 들어가야 음성 입력으로도 누를 수 있다 — 설명은 뒤에 덧붙인다 */}
+            <span className="sr-only">{t(labelKey)}</span>
           </a>
         ))}
       </div>

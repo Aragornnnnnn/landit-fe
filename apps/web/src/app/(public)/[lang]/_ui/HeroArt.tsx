@@ -1,14 +1,20 @@
 // 첫 화면 그림 — 폰 앞의 네 친구 위로, 폰 화면 안에 내가 한 말과 상대의 속마음을 띄운다. 속마음은 내 영어가 통했을 때의 기분 좋은 반응을 보여 준다. 주황은 다운로드 버튼에만 써서 시선을 모으고, 말풍선은 짙은 색·흰색으로 둔다. 휴대폰은 세로형(1080×1440), 태블릿 이상은 정사각형 그림을 쓴다 — 두 그림 모두 폰 화면이 투명해서 뒤에 흰 화면을 깔고, 그림 아래는 폰 아래 테두리 위(세로형 y 1245, 화면 모서리가 굽기 전, 정사각형은 인물 발끝 위)에서 카드 경계에 잘린다
 import { getTranslations } from 'next-intl/server';
 import { getImageProps } from 'next/image';
+import { preload } from 'react-dom';
 
 import type { Locale } from '@/shared/i18n/locale';
 
 export const HeroArt = async ({ locale }: { locale: Locale }) => {
   const t = await getTranslations({ locale, namespace: 'landing.hero' });
-  const common = { alt: t('artLabel'), priority: true };
+  // 첫 화면 가장 큰 그림(LCP)이라 먼저 받는다 — 화면 폭에 맞는 한 장만 미리 받도록 media를 나눠 preload한다
+  const common = {
+    alt: t('artLabel'),
+    loading: 'eager',
+    fetchPriority: 'high',
+  } as const;
   const {
-    props: { srcSet: mobileSrcSet },
+    props: { srcSet: mobileSrcSet, src: mobileSrc },
   } = getImageProps({
     ...common,
     src: '/images/landing/hero-cast-mobile.webp',
@@ -22,6 +28,20 @@ export const HeroArt = async ({ locale }: { locale: Locale }) => {
     width: 1200,
     height: 1200,
     sizes: '560px',
+  });
+  preload(mobileSrc, {
+    as: 'image',
+    imageSrcSet: mobileSrcSet,
+    imageSizes: '100vw',
+    media: '(max-width: 639px)',
+    fetchPriority: 'high',
+  });
+  preload(desktop.src, {
+    as: 'image',
+    imageSrcSet: desktop.srcSet,
+    imageSizes: '560px',
+    media: '(min-width: 640px)',
+    fetchPriority: 'high',
   });
   return (
     <div className="relative mx-auto mt-8 -mb-[18%] w-full max-w-[560px] self-end sm:-mb-[9.8%] lg:mt-6">

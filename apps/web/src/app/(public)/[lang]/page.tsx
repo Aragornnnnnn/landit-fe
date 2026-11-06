@@ -1,5 +1,5 @@
 // 언어별 랜딩(/ko·/ja) — 브라우저로 온 사람에게 앱 기능을 소개하고 스토어로 보낸다. 셸 안에서 열리면 그리기 전에 홈으로 넘긴다
-import type { Metadata, Viewport } from 'next';
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
@@ -81,13 +81,6 @@ export const generateMetadata = async ({
         : undefined,
     },
   };
-};
-
-// 앱 화면과 달리 랜딩은 확대를 막지 않는다
-export const viewport: Viewport = {
-  viewportFit: 'cover',
-  maximumScale: 5,
-  userScalable: true,
 };
 
 const LocaleLandingPage = async ({ params }: Props) => {
