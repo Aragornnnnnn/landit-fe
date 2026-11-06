@@ -5,6 +5,7 @@ import type {
   PaywallSource,
 } from '@landit/analytics';
 
+import { localeFromPath } from '@/shared/i18n/locale';
 import {
   ALARM_CHECK_PATH,
   ALARM_EDIT_PATH,
@@ -142,7 +143,8 @@ const resolvePage = (
   pathname: string,
   searchParams: URLSearchParams,
 ): PageViewProps | null => {
-  if (EXCLUDED.has(pathname)) return null;
+  // 언어별 랜딩(/ko·/ja)은 앱 밖 소개 화면이라 앱 계측을 싣지 않는다
+  if (EXCLUDED.has(pathname) || localeFromPath(pathname)) return null;
 
   const seg = pathname.split('/').filter(Boolean);
 

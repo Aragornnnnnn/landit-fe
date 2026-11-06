@@ -46,6 +46,6 @@ import 경로는 FSD 규칙을 따른다 — 같은 슬라이스(라우트 구�
 - 엔진은 어느 대화인지 모른다 — 그 안에 scenario·smalltalk·feedback·streak 같은 도메인 단어가 등장하면 경계 위반이다. 대화 유형마다 다른 것(세션 시작·발화 제출·완료 판정·완료 후속)은 엔진이 주입받는다 (`useConversationTurns`의 submit/ensureSession).
 - 미리 일반화하지 않는다 — 실제로 두 대화 유형이 다르다고 확인된 지점만 주입점으로 만들고, 나머지는 엔진에 그대로 둔다. 세 번째 유형이 생겨 실제로 다를 때 그때 뽑는다.
 
-대화 유형별 흐름(어댑터 훅·세션 API·화면)은 그 대화의 라우트 폴더에 둔다 — `app/(protected)/conversation/scenario/[scenarioId]/{_ui,_model,_api}`. 화면 하나에서만 쓰는 코드라 features로 올릴 이유가 없고, 라우트는 아래층을 자유롭게 참조할 수 있어 완료 후속(피드백·스트릭)도 여기서 엮는다.
+대화 유형별 흐름(어댑터 훅·세션 API·화면)은 그 대화의 라우트 폴더에 둔다 — `app/(app)/(protected)/conversation/scenario/[scenarioId]/{_ui,_model,_api}`. 화면 하나에서만 쓰는 코드라 features로 올릴 이유가 없고, 라우트는 아래층을 자유롭게 참조할 수 있어 완료 후속(피드백·스트릭)도 여기서 엮는다.
 
 <!-- END:nextjs-agent-rules -->

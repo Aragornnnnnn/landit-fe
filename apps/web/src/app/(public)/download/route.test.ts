@@ -75,6 +75,30 @@ describe('GET /download', () => {
     );
   });
 
+  it('컴퓨터에서 Google Play 배지를 눌러 store=play_store로 오면 Play 스토어로 보낸다', async () => {
+    const res = await GET(downloadRequest(DESKTOP_UA, '?store=play_store'));
+
+    expect(res.headers.get('location')).toBe(
+      'https://play.google.com/store/apps/details?id=com.saynow.app',
+    );
+  });
+
+  it('Android라도 App Store 배지를 눌러 store=app_store로 오면 App Store로 보낸다', async () => {
+    const res = await GET(downloadRequest(ANDROID_UA, '?store=app_store'));
+
+    expect(res.headers.get('location')).toBe(
+      'https://apps.apple.com/app/id6787414201',
+    );
+  });
+
+  it('모르는 store 값이면 기기로 스토어를 고른다', async () => {
+    const res = await GET(downloadRequest(ANDROID_UA, '?store=steam'));
+
+    expect(res.headers.get('location')).toBe(
+      'https://play.google.com/store/apps/details?id=com.saynow.app',
+    );
+  });
+
   it('User-Agent가 없으면 App Store로 보낸다', async () => {
     const res = await GET(downloadRequest());
 

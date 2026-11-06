@@ -11,6 +11,7 @@ import {
   type RepeatingAlarmState,
 } from '@landit/bridge';
 
+import { WEB_HOME_PATH } from '@/config/web-home';
 import { loadShellLocale, shellLocale } from '@/i18n/shell-locale';
 import { shellText } from '@/i18n/shell-text';
 import { reportWarning } from '@/monitoring/report';
@@ -209,10 +210,10 @@ const toMemo = ({
 const isWeekday = (day: number) =>
   Number.isInteger(day) && day >= 1 && day <= 7;
 
-// 갈 화면이 없거나 앱 밖 주소면 첫 화면(/)으로
+// 갈 화면이 없거나 앱 밖 주소면 앱 홈으로
 const pathOf = (memoPath: unknown) => {
   const path = repeatingAlarmSchema.shape.path.safeParse(memoPath);
-  return path.success ? path.data : '/';
+  return path.success ? path.data : WEB_HOME_PATH;
 };
 
 // 반복 알람의 메모를 읽는다. 반복 알람이 아니면 null, 요일 메모가 망가졌으면 실제 요일을 쓴다
@@ -260,7 +261,7 @@ const skipDateOf = (alarms: ScheduledAlarm[]) =>
 const toRequest = (alarms: ScheduledAlarm[]): RepeatingAlarm => ({
   title: alarms[0].title,
   schedules: alarms.map(scheduleOf),
-  path: readMemo(alarms[0])?.path ?? '/',
+  path: readMemo(alarms[0])?.path ?? WEB_HOME_PATH,
   silent: readMemo(alarms[0])?.silent ?? false,
 });
 
@@ -270,7 +271,7 @@ const toState = (
 ): RepeatingAlarmState => ({
   alarmType,
   schedules: alarms.map(scheduleOf),
-  path: readMemo(alarms[0])?.path ?? '/',
+  path: readMemo(alarms[0])?.path ?? WEB_HOME_PATH,
   skipDate: skipDateOf(alarms),
   title: alarms[0].title,
 });

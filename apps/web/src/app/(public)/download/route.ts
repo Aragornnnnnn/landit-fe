@@ -51,7 +51,11 @@ export async function GET(request: Request): Promise<NextResponse> {
     });
   }
 
-  const isAndroid = /android/i.test(userAgent);
+  // 태블릿·컴퓨터의 스토어 배지는 고른 스토어를 store로 실어 보낸다 — 없거나 모르는 값이면 기기로 고른다
+  const store = url.searchParams.get('store');
+  const isAndroid =
+    store === 'play_store' ||
+    (store !== 'app_store' && /android/i.test(userAgent));
 
   // 딱지 없는(빈 값 포함) 방문은 undefined라 전송 본문에서 빠지고 store만 남는다
   const query = url.searchParams;
