@@ -13,8 +13,10 @@ const collectRoutes = (dir: string, segments: string[] = []): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     if (entry.isDirectory()) {
       const isGroup = entry.name.startsWith('(');
+      // 언어 칸([lang])은 실제 언어로 채운다 — 숫자로 채우면 없는 주소가 된다
+      const value = entry.name === '[lang]' ? 'ko' : '7';
       const next = entry.name.startsWith('[')
-        ? [...segments, '7']
+        ? [...segments, value]
         : isGroup
           ? segments
           : [...segments, entry.name];

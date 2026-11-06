@@ -9,9 +9,10 @@
   }
 }
 
+/* 0이 아니라 0.01에서 시작한다 — opacity 0으로 처음 그려진 글자는 브라우저가 첫 화면 측정(LCP)에서 빼 버린다 */
 @keyframes page-fade-in {
   from {
-    opacity: 0;
+    opacity: 0.01;
   }
   to {
     opacity: 1;

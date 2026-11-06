@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "title": "Landit、ネイティブに通じるAI英会話アプリ",
+    "description": "毎日届くシナリオでAIキャラクターと英語で会話し、自分の言葉がネイティブにどう聞こえたかを本音で確かめられる英会話アプリです。",
+    "appNameLabel": "Landit"
+  },
+  "header": {
+    "homeLabel": "Landitホーム",
+    "logoLabel": "Landit",
+    "updatesLink": "アップデート履歴"
+  },
+  "hero": {
+    "brandLabel": "Landit",
+    "title": "ネイティブに通じる<br></br><mark>AI英会話</mark>アプリ",
+    "artLabel": "スマホの画面から飛び出したLanditの仲間、クロエ、マルコ、テディ、ラディが一緒に笑っている様子",
+    "thoughtLabel": "ネイティブの本音",
+    "thoughtBody": "その一言でうれしくなった！"
+  },
+  "badges": {
+    "ratingLabel": "評価",
+    "usersLabel": "ユーザー",
+    "spokenLinesLabel": "話した英文"
+  },
+  "storeButtons": {
+    "downloadButton": "アプリをダウンロード",
+    "appStoreLabel": "App StoreでLanditを入手",
+    "googlePlayLabel": "Google PlayでLanditを入手"
+  },
+  "wall": {
+    "title": "毎日ひとつ、<mobileBreak></mobileBreak><mark>今日のシナリオ</mark>で話そう",
+    "body": "寮、授業、カフェまで。海外で実際に出会う場面が毎日届きます。",
+    "todayLabel": "今日のシナリオ"
+  },
+  "features": {
+    "title": "なぜLandit？",
+    "thoughtTitle": "ネイティブには<br></br><mark>こう聞こえました</mark>",
+    "thoughtBody": "話すたびに、相手の本音がすぐわかります。",
+    "thoughtScreenLabel": "気まずそうな相手の本音を見せるアプリ画面",
+    "expressionTitle": "専用フレーズから<br></br><mark>発音の矯正まで</mark>",
+    "expressionBody": "会話にぴったりのフレーズをすぐ提案して、ネイティブと発音を比べます。",
+    "expressionScreenLabel": "場面の絵と意味でフレーズを学ぶアプリ画面",
+    "expressionPronunciationScreenLabel": "文の発音スコアと間違えた単語を、お手本の発音と比べて見せるアプリ画面",
+    "freeTalkTitle": "<mark>もっと話したい日は</mark><br></br>ロールプレイとスモールトーク",
+    "freeTalkSmallTalkScreenLabel": "クロエが話しかけるスモールトークのアプリ画面",
+    "freeTalkBody": "好きな場面のロールプレイも、スモールトークもできます。",
+    "freeTalkScreenLabel": "スモールトークとロールプレイのタブの下にロールプレイ一覧が見えるアプリ画面"
+  },
+  "change": {
+    "title": "点数ではなく<br></br><mark>相手の反応で</mark>上達",
+    "reactionTitle": "採点より反応",
+    "reactionBody": "間違いの印ではなく、相手がどう受け取ったかを見せます。",
+    "flowTitle": "止まらない会話",
+    "flowBody": "間違えても会話は続き、添削は終わってから受け取れます。",
+    "nextStepTitle": "ちょうど一段上の表現",
+    "nextStepBody": "難しい文ではなく、すぐまねできる文を教えます。",
+    "satisfactionCaption": "使った人の<em>10人中8人</em>が満足しています"
+  },
+  "closing": {
+    "mascotLabel": "手を振るラディ",
+    "title": "<mark>本当に通じる英語</mark><br></br>今日から始めよう！"
+  },
+  "faq": {
+    "title": "よくある質問",
+    "aboutTitle": "Landitはどんなアプリですか？",
+    "aboutBody": "Landitは、毎日届くシナリオでAIキャラクターと英語で会話する英会話アプリです。話すたびに自分の英語がネイティブにどう聞こえたかがすぐわかるので、会話するほど「通じる英語」が増えていきます。",
+    "differenceTitle": "ほかの英語アプリと何が違いますか？",
+    "differenceBody": "多くの英語アプリは文法が正しいかを教えてくれますが、Landitは自分の言葉が相手にどう聞こえたかまで、ネイティブの本音で見せます。文法が正しくても失礼に聞こえることがあり、少し間違えても気持ちは通じることがあるからです。文法と発音は、会話のあとにしっかりフォローします。",
+    "thoughtTitle": "ネイティブの本音とは何ですか？",
+    "thoughtBody": "話すたびに、相手があなたの言葉をどう受け取ったかをラディがこっそり教えてくれます。実際の会話で表情を読むように反応を見て、次の一言を自信を持って選べます。",
+    "audienceTitle": "どんな人に向いていますか？",
+    "audienceBody": "交換留学や留学、ワーキングホリデーを控えている人にぴったりです。文法はわかるのにいざとなると言葉が出ない人や、試験英語ではなく実際に使う英語が必要な人にも向いています。",
+    "situationTitle": "どんな場面を練習できますか？",
+    "situationBody": "ルームメイトとの初対面、授業、カフェ、空港など、海外で必ず出会う場面が毎日新しいシナリオで届きます。一度話しておけば、本番でずっと落ち着いて話せます。",
+    "beginnerTitle": "英語が苦手でも使えますか？",
+    "beginnerBody": "もちろんです。レベルテストなしで、会話するだけでLanditがレベルを把握し、ぴったりの質問とフレーズを用意します。間違えても会話は止まらないので、気軽に話してみてください。",
+    "startTitle": "どうやって始めますか？",
+    "startBody": "App StoreかGoogle PlayでLanditをダウンロードすれば、すぐに始められます。今日届いたシナリオで、最初の一言を話してみましょう。"
+  },
+  "qrCard": {
+    "downloadCaption": "アプリを入手",
+    "qrLabel": "スマホのカメラで読み取るとLanditアプリを入手できるQRコード"
+  },
+  "legal": {
+    "tocLabel": "目次"
+  },
+  "footer": {
+    "termsLabel": "規約",
+    "privacyLink": "プライバシーポリシー",
+    "termsLink": "利用規約",
+    "languageLabel": "言語を選択"
+  },
+  "structuredData": {
+    "scenarioLabel": "今日のシナリオで音声会話",
+    "thoughtLabel": "ネイティブの本音フィードバック",
+    "correctionLabel": "一文ごとの詳しい添削",
+    "expressionLabel": "会話に合わせたフレーズ提案と発音比較",
+    "pronunciationLabel": "発音評価",
+    "smallTalkLabel": "自由に話せるスモールトーク",
+    "roleplayLabel": "自分で作るロールプレイ",
+    "accentLabel": "アメリカ・イギリス・オーストラリア英語を選択"
+  }
+}

@@ -1,0 +1,108 @@
+# 랜딧 (Landit)
+
+> 랜딧(Landit)은 매일 도착하는 시나리오로 AI 캐릭터와 영어로 대화하고, 내 말이 원어민에게 어떻게 들렸는지 속마음으로 확인하는 영어 회화 앱입니다. iOS와 Android에서 쓸 수 있고, 화면은 한국어와 일본어를 지원합니다.
+
+랜딧(Landit)은 P2P 금융사 렌딧(Lendit)과 다른 서비스입니다. 이 문서는 2026-11-06 기준입니다.
+
+## 누구에게 맞나요
+
+- 교환학생, 유학, 워킹홀리데이를 앞두고 해외 생활 영어를 미리 말해 보고 싶은 사람
+- 문법은 알지만 막상 말이 안 나오는 사람
+- 시험 점수보다 실제로 통하는 말하기가 필요한 사람
+
+## 다른 영어 앱과 다른 점
+
+- 문법과 발음 교정에 더해, 내 말이 상대에게 어떻게 들렸는지를 원어민 속마음으로 보여 줍니다. 문법이 맞아도 무례하게 들릴 수 있고, 조금 틀려도 뜻은 통할 수 있기 때문입니다.
+- 대화 중에는 끊지 않고 상대의 반응만 보여 주고, 교정은 대화가 끝난 뒤 잘한 점과 함께 보여 줍니다.
+- 지금 내 말보다 딱 한 단계 더 자연스러운 표현을 제안합니다.
+
+## 주요 기능
+
+- 오늘의 시나리오: 룸메이트와의 첫 만남, 수업, 카페, 공항처럼 해외에서 실제로 마주칠 상황이 매일 하나씩 도착하고, 그 상황으로 음성 대화를 합니다.
+- 원어민 속마음: 말할 때마다 상대가 내 말을 어떻게 받아들였는지 보여 줍니다.
+- 대화 뒤 피드백: 문장마다 더 자연스러운 표현과 이유를 알려 줍니다.
+- 맞춤 표현: 내 대화 상황에 맞는 표현을 추천하고, 그림 예문과 퀴즈로 익힙니다.
+- 발음 평가: 단어마다 틀린 소리와 강세 위치를 원어민 발음과 나란히 비교하고, 원어민 문장과 내 문장을 이어 들을 수 있습니다.
+- 스몰톡: 캐릭터와 주제 제한 없이 자유롭게 대화하고, 끝나면 지난번과 비교한 정리와 문장별 교정을 받습니다.
+- 롤플레이: 나와 상대의 역할, 상황을 직접 정해 상황극을 합니다.
+- 자동 수준 맞춤: 별도 레벨 테스트 없이 대화 내용으로 실력을 파악해 난이도를 맞춥니다.
+- 배울 영어 선택: 미국, 영국, 호주 영어 중에서 고를 수 있습니다.
+- 학습 습관: 매일 같은 시각에 잠금화면 알람으로 오늘의 시나리오를 시작할 수 있고, 연속 학습 기록과 홈 화면 위젯을 제공합니다.
+
+## 가격
+
+- 앱은 무료로 받을 수 있고, 오늘의 시나리오 대화를 무료로 하며 스몰톡과 롤플레이도 체험해 볼 수 있습니다.
+- 프리미엄(유료)은 스몰톡·롤플레이를 포함한 무제한 이용과 맞춤 표현을 제공합니다. 금액은 앱 결제 화면 기준입니다.
+- 한국에서는 100일 프리미엄 이용권도 있습니다. 이용 기간 동안 오늘의 시나리오 대화를 끝낸 날마다 환급액이 쌓여, 기간이 끝나면 쌓은 만큼 돌려받습니다. 매일 빠짐없이 하면 결제 금액을 돌려받을 수 있습니다. 조건은 이용약관 9조를 따릅니다.
+
+## 숫자로 본 랜딧
+
+- 스토어 평점 4.8 (App Store 4.73·Google Play 5.0, 리뷰 59개 합산, 2026-11-05)
+- 다운로드 4,000건 이상 (2026-10-31)
+- 앱에서 영어로 건넨 말 29,000번 이상 (2026-11-05)
+
+## 출시
+
+- Google Play 출시 2026-06-15, App Store 출시 2026-07-16
+- 운영: 랜딧 (Landit)
+
+## 링크
+
+- [소개](https://www.landit.im/ko)
+- [업데이트 기록](https://www.landit.im/ko/updates)
+- [이용약관](https://www.landit.im/ko/terms)
+- [개인정보 처리방침](https://www.landit.im/ko/privacy)
+- [App Store](https://apps.apple.com/kr/app/id6787414201)
+- [Google Play](https://play.google.com/store/apps/details?id=com.saynow.app)
+
+---
+
+# Landit（日本語）
+
+> Landitは、毎日届くシナリオでAIキャラクターと英語で会話し、自分の言葉がネイティブにどう聞こえたかを「本音」で確かめられる英会話アプリです。iOSとAndroidに対応し、画面は日本語と韓国語で使えます。
+
+## 特長
+
+- 文法や発音の添削に加えて、自分の言葉が相手にどう伝わったかをネイティブの本音で見せます。
+- 会話中は止めずに相手の反応だけを見せ、添削は会話のあとに、よかった点と一緒にまとめます。
+- 今の自分より一段だけ自然な言い方を提案します。
+
+## 主な機能
+
+- 今日のシナリオ：ルームメイトとの初対面、授業、カフェ、空港など、海外で実際に出会う場面が毎日届き、音声で会話します。
+- 専用フレーズと発音チェック：会話に合うフレーズを提案し、単語ごとの間違った音とアクセントをお手本と並べて比べます。
+- スモールトーク：キャラクターと自由に話し、終わるとまとめと文ごとの添削が届きます。
+- ロールプレイ：自分と相手の役、場面を決めて会話します。
+- レベル自動調整：テストなしで、会話からレベルを見極めて難しさを合わせます。
+- アメリカ・イギリス・オーストラリア英語から選べます。
+
+## 料金
+
+- アプリは無料でダウンロードでき、今日のシナリオの会話は無料、スモールトークとロールプレイもお試しできます。
+- プレミアム（有料）では、スモールトークやロールプレイを含む無制限の利用と専用フレーズが使えます。金額はアプリの購入画面をご確認ください。
+
+## リンク
+
+- [紹介](https://www.landit.im/ja)
+- [アップデート履歴](https://www.landit.im/ja/updates)
+- [利用規約](https://www.landit.im/ja/terms)
+- [プライバシーポリシー](https://www.landit.im/ja/privacy)
+- [App Store](https://apps.apple.com/jp/app/id6787414201)
+- [Google Play](https://play.google.com/store/apps/details?id=com.saynow.app)
+
+---
+
+# Landit (English summary)
+
+> Landit is an AI English conversation app for Korean and Japanese speakers. Each day a new real-life scenario arrives, you talk with AI characters by voice, and Landit shows how your words came across to a native speaker as the character's inner thoughts. Available on iOS and Android, with Korean and Japanese interfaces.
+
+Landit (landit.im) is not related to Lendit, a Korean P2P lending company, or to Landit (landit.com), a career coaching platform.
+
+- Daily scenarios: situations you will meet abroad, such as meeting a roommate, a class, a café, or an airport.
+- Inner thoughts: after each line, see how the other person took it; corrections come after the conversation, together with what you did well.
+- Expressions and pronunciation: phrases suggested for your conversation, and word-by-word comparison of sounds and stress against a native speaker.
+- Small talk and role-play: free conversation and custom scenes where you set both roles.
+- Free to download; today's scenario is free, and small talk and role-play can be tried. Premium unlocks unlimited use and personalized expressions.
+- Store rating 4.8 (59 reviews, App Store and Google Play combined, 2026-11-05); 4,000+ downloads.
+
+Links: [Korean](https://www.landit.im/ko) · [Japanese](https://www.landit.im/ja) · [App Store](https://apps.apple.com/app/id6787414201) · [Google Play](https://play.google.com/store/apps/details?id=com.saynow.app)

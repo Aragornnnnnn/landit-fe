@@ -90,15 +90,15 @@ describe('safe-area inset 변수', () => {
 // 스크롤 영역이 바닥에 닿지 않는 파일 — 아래에 safe-area를 읽는 푸터가 늘 붙어 있거나, 화면 가운데·카드 안에 있다
 const SCROLL_EXCEPTIONS = new Set([
   // 아래에 늘 있는 푸터가 safe-area를 맡는다
-  'app/(protected)/smalltalk/sessions/[sessionId]/summary/_ui/SmallTalkSummary.tsx',
-  'app/(protected)/roleplay/sessions/[sessionId]/summary/_ui/RoleplaySummary.tsx',
-  'app/(protected)/roleplay/sessions/[sessionId]/messages/_ui/RoleplayTranscript.tsx',
-  'app/(protected)/me/subscription/cancel/_ui/ReasonStep.tsx',
-  'app/(protected)/me/invite/_ui/InviteScreen.tsx',
-  'app/(protected)/me/subscription/cancel/_ui/MethodStep.tsx',
-  'app/(protected)/me/subscription/cancel/_ui/RetentionStep.tsx',
-  'app/(protected)/premium/onboarding/_ui/RewardGuideStep.tsx',
-  'app/(protected)/conversation/scenario/[scenarioId]/feedback/_ui/LevelResultScreen.tsx',
+  'app/(app)/(protected)/smalltalk/sessions/[sessionId]/summary/_ui/SmallTalkSummary.tsx',
+  'app/(app)/(protected)/roleplay/sessions/[sessionId]/summary/_ui/RoleplaySummary.tsx',
+  'app/(app)/(protected)/roleplay/sessions/[sessionId]/messages/_ui/RoleplayTranscript.tsx',
+  'app/(app)/(protected)/me/subscription/cancel/_ui/ReasonStep.tsx',
+  'app/(app)/(protected)/me/invite/_ui/InviteScreen.tsx',
+  'app/(app)/(protected)/me/subscription/cancel/_ui/MethodStep.tsx',
+  'app/(app)/(protected)/me/subscription/cancel/_ui/RetentionStep.tsx',
+  'app/(app)/(protected)/premium/onboarding/_ui/RewardGuideStep.tsx',
+  'app/(app)/(protected)/conversation/scenario/[scenarioId]/feedback/_ui/LevelResultScreen.tsx',
   'features/mailbox/ui/FeedbackComposeFlow.tsx',
   'features/feedback/ui/flow/FeedbackSummary.tsx',
   'features/feedback/ui/flow/FeedbackDetail.tsx',
@@ -110,21 +110,21 @@ const SCROLL_EXCEPTIONS = new Set([
   'features/survey/ui/steps/TextStep.tsx',
   'features/onboarding/ui/common/AccentForm.tsx',
   'features/conversation/ui/flow/QuestionCard.tsx',
-  'app/(protected)/(tabs)/roleplay/_ui/RoleplayHome.tsx',
-  'app/(protected)/roleplay/new/_ui/CreateRoleplayFlow.tsx',
+  'app/(app)/(protected)/(tabs)/roleplay/_ui/RoleplayHome.tsx',
+  'app/(app)/(protected)/roleplay/new/_ui/CreateRoleplayFlow.tsx',
   // 바깥 스크롤 상자 — 안쪽 내용이 safe-area 여백을 맡는다
-  'app/(protected)/me/page.tsx',
-  'app/(public)/(legal)/_ui/LegalDocumentPage.tsx',
+  'app/(app)/(protected)/me/page.tsx',
+  'app/(app)/(legal)/_ui/LegalDocumentPage.tsx',
   'features/streak/ui/StreakFlow.tsx',
   'features/mailbox/ui/MailboxFlow.tsx',
   // 로그인은 화면 전체가 스크롤이고 안쪽 버튼 영역이 safe-area를 맡는다
-  'app/(public)/(auth)/_ui/LoginScreen.tsx',
+  'app/(app)/(auth)/_ui/LoginScreen.tsx',
   // 카드 뒷면 안쪽 스크롤 — 바닥에 닿지 않는다
   'features/scenario/ui/card/ScenarioCardBack.tsx',
   // 높이가 고정된 내 답변 칸 안쪽 스크롤 — 바닥에 닿지 않는다
   'features/conversation/ui/flow/UserTranscript.tsx',
   // 개발자 전용
-  'app/(protected)/me/developer/_ui/AlarmCheckScreen.tsx',
-  'app/(protected)/me/developer/reward/_ui/RewardCheckScreen.tsx',
-  'app/(protected)/me/developer/premium-onboarding/_ui/PremiumOnboardingCheckScreen.tsx',
+  'app/(app)/(protected)/me/developer/_ui/AlarmCheckScreen.tsx',
+  'app/(app)/(protected)/me/developer/reward/_ui/RewardCheckScreen.tsx',
+  'app/(app)/(protected)/me/developer/premium-onboarding/_ui/PremiumOnboardingCheckScreen.tsx',
 ]);
