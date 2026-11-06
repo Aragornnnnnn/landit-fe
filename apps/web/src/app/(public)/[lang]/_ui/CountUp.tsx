@@ -7,7 +7,8 @@ import { useInView } from '@/shared/lib/useInView';
 
 import { countUpFrame } from '../_model/count-up';
 
-const DURATION_MS = 1400;
+// 첫 화면에서 바로 읽히도록 짧게 — 0.8초 안에 실제 숫자에 닿는다
+const DURATION_MS = 800;
 
 export const CountUp = ({ value }: { value: string }) => {
   const { ref, inView } = useInView<HTMLSpanElement>();
