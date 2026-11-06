@@ -41,7 +41,7 @@ export const LandingPage = async ({ locale }: { locale: Locale }) => {
                 {t('hero.brandLabel')}
               </p>
               {/* h1은 무엇을 하는 서비스인지 — 다른 점(통하는지 알려줌)과 검색어(AI 영어 회화 앱)를 함께 담는다. 어느 폭에서도 두 줄이 되게 글자 크기를 폭마다 맞췄다(1024~1279는 글자 칸이 좁다) */}
-              <h1 className="text-[28px] leading-[1.35] font-extrabold break-keep min-[375px]:text-[30px] sm:text-[48px] lg:text-[32px] xl:text-[52px]">
+              <h1 className="text-[32px] leading-[1.35] font-extrabold break-keep min-[375px]:text-[34px] sm:text-[52px] lg:text-[36px] xl:text-[56px]">
                 {t.rich('hero.title', titleTags())}
               </h1>
               <div className="mt-7 sm:mt-9">
