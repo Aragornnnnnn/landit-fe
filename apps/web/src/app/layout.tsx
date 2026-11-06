@@ -1,46 +1,18 @@
-// 앱 전체 공통 레이아웃 (루트). 폰트는 globals.css에서 자체 호스팅하는 Pretendard 하나뿐이다
+// 전체 공통 레이아웃 (루트) — html과 언어, 첫 페인트 전 스크립트만 둔다. 앱 전용 기능은 (app)/layout.tsx에 있어 랜딩이 그 무게를 지지 않는다. 폰트는 globals.css에서 자체 호스팅하는 Pretendard 하나뿐이다
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
-import { getLocale, getTranslations } from 'next-intl/server';
+import { getLocale } from 'next-intl/server';
 
-import { AlarmPropertiesSync } from '@/features/alarm/ui/AlarmPropertiesSync';
-import { AlarmSync } from '@/features/alarm/ui/AlarmSync';
-import { AppUpdateGate } from '@/features/app-update/ui/AppUpdateGate';
-import { PushDeviceSync } from '@/features/notification/ui/PushDeviceSync';
-import { ProfilePropertiesSync } from '@/features/onboarding/ui/ProfilePropertiesSync';
-import { RewardPropertiesSync } from '@/features/reward/ui/RewardPropertiesSync';
-import { SubscriptionPropertiesSync } from '@/features/subscription/ui/my-subscription/SubscriptionPropertiesSync';
-import { IdentifySync } from '@/features/subscription/ui/purchase/IdentifySync';
-import { WidgetChangeSync } from '@/features/widget/ui/WidgetChangeSync';
-import { WidgetDataSync } from '@/features/widget/ui/WidgetDataSync';
-import {
-  AnalyticsBootstrap,
-  LanguagePropertySync,
-  PageViewTracker,
-  TrackingStatusSync,
-} from '@/shared/analytics';
-import { BridgeListener } from '@/shared/bridge/BridgeListener';
 import { platformMarkerScript } from '@/shared/bridge/platform-marker';
-import { PlatformMarkerSync } from '@/shared/bridge/PlatformMarkerSync';
 import { fontScaleScript } from '@/shared/font-scale/font-scale';
-import { FontScaleSync } from '@/shared/font-scale/FontScaleSync';
-import { GlobalHaptics } from '@/shared/haptics';
-import { LocaleGate } from '@/shared/i18n/LocaleGate';
-import {
-  MessagesProvider,
-  RootMessagesProvider,
-} from '@/shared/i18n/MessagesProvider';
-import { NativeLocaleSync } from '@/shared/i18n/NativeLocaleSync';
-import { MonitoringBootstrap } from '@/shared/monitoring/MonitoringBootstrap';
-import { Toaster } from '@/shared/ui/toast';
-
-import { Providers } from './providers';
+import { RootMessagesProvider } from '@/shared/i18n/MessagesProvider';
 
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'landit',
-  description: 'landit',
+  metadataBase: new URL('https://www.landit.im'),
+  title: { default: '랜딧', template: '%s | 랜딧' },
+  description: 'AI 캐릭터와 영어로 대화하며 연습하는 영어 회화 앱 랜딧',
 };
 
 // viewport-fit=cover가 있어야 노치 기기에서 env(safe-area-inset-*)가 실제 값으로 평가된다 (DESIGN.md safe-area 규칙의 전제)
@@ -58,7 +30,6 @@ export default async function RootLayout({
 }>) {
   // 저장 언어 쿠키(없으면 Accept-Language)로 정한 화면 언어 — API 요청도 html lang을 읽어 같은 언어를 보낸다
   const locale = await getLocale();
-  const tAlarm = await getTranslations('alarm');
 
   return (
     <html lang={locale} className="antialiased" suppressHydrationWarning>
@@ -69,34 +40,7 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: fontScaleScript }} />
         {/* 브라우저엔 어디서나 쓰는 common만 보낸다 — 화면 문구는 그 화면의 layout이 MessagesProvider로 자기 묶음을 더한다 */}
         <RootMessagesProvider>
-          <PlatformMarkerSync />
-          <FontScaleSync />
-          <AnalyticsBootstrap />
-          <MonitoringBootstrap />
-          <PageViewTracker />
-          <BridgeListener />
-          <GlobalHaptics />
-          <Providers>
-            {children}
-            {/* 앱 업데이트 안내는 어느 화면에서나 뜬다 — 그 묶음만 여기서 더한다 */}
-            <MessagesProvider namespaces={['appUpdate']}>
-              <AppUpdateGate />
-            </MessagesProvider>
-            <PushDeviceSync />
-            <LocaleGate />
-            <NativeLocaleSync />
-            <WidgetDataSync />
-            <WidgetChangeSync />
-            <TrackingStatusSync />
-            <LanguagePropertySync />
-            <AlarmSync title={tAlarm('lockScreen.title')} />
-            <IdentifySync />
-            <SubscriptionPropertiesSync />
-            <ProfilePropertiesSync />
-            <RewardPropertiesSync />
-            <AlarmPropertiesSync />
-          </Providers>
-          <Toaster />
+          {children}
           <SpeedInsights />
         </RootMessagesProvider>
       </body>
