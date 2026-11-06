@@ -11,7 +11,7 @@ export const LandingFooter = async ({ locale }: { locale: Locale }) => {
   return (
     <footer className="bg-card">
       {/* 휴대폰은 회사 표기·약관 아래에 언어 바꾸기를 쌓고, 컴퓨터에선 오른쪽 아래 QR 카드 자리를 비워 둔다 */}
-      <div className="mx-auto flex max-w-[1080px] flex-col items-start gap-5 px-6 pt-4 pb-12 sm:flex-row sm:items-start sm:justify-between sm:gap-6 lg:pr-44">
+      <div className="mx-auto flex max-w-[1080px] flex-col items-start gap-5 px-6 pt-4 pb-12 min-[1440px]:pr-44 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
         <div>
           <p className="text-[16px] font-medium text-[#666]">
             © Landit Inc. 2026
