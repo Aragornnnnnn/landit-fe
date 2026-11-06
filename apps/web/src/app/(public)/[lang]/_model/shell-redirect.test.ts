@@ -11,10 +11,11 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const spyReplace = () => {
+const spyReplace = (search = '') => {
   const replace = vi.fn();
   vi.spyOn(window, 'location', 'get').mockReturnValue({
     ...window.location,
+    search,
     replace,
   });
   return replace;
@@ -31,6 +32,20 @@ describe('redirectShellToHome', () => {
 
     // Then
     expect(replace).toHaveBeenCalledWith('/scenario');
+  });
+
+  it('셸이 쿼리를 붙여 열었으면 홈으로 그대로 넘긴다', () => {
+    // Given 유입 딱지가 붙은 루트로 셸이 켜졌다
+    window.ReactNativeWebView = { postMessage: () => {} };
+    const replace = spyReplace('?utm_source=landit&utm_medium=push');
+
+    // When
+    redirectShellToHome('/scenario');
+
+    // Then 딱지가 홈 주소에 남는다
+    expect(replace).toHaveBeenCalledWith(
+      '/scenario?utm_source=landit&utm_medium=push',
+    );
   });
 
   it('셸 안이면 이동 전까지 랜딩이 비치지 않게 화면을 숨긴다', () => {

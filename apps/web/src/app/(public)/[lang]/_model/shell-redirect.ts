@@ -10,7 +10,8 @@ export const redirectShellToHome = (homePath: string) => {
   };
   if (!w.ReactNativeWebView && !w.__LANDIT_NATIVE__) return;
   document.documentElement.style.visibility = 'hidden';
-  window.location.replace(homePath);
+  // 셸이 붙여 연 쿼리(유입 딱지 등)는 홈까지 그대로 넘긴다
+  window.location.replace(homePath + window.location.search);
 };
 
 export const shellRedirectScript = `(${redirectShellToHome.toString()})(${JSON.stringify(SCENARIO_PATH)})`;
