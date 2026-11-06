@@ -10,6 +10,8 @@ export {
   type PreviewEndReason,
   type AccentLocale,
   type AppLanguage,
+  type LandingPage,
+  type LandingPlacement,
   type GateQuestion,
   type ExpressionStep,
   type TurnInputType,

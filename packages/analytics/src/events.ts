@@ -220,6 +220,10 @@ export const EVENTS = {
 
   // 유입 — /download 스토어 리다이렉트가 서버에서 발화한다 (route 핸들러, LAN-237)
   DOWNLOAD_LINK_VISITED: 'Download Link Visited',
+  // 랜딩(/ko·/ja 웹 소개 페이지) — 방문, 다운로드 버튼 누름, 떠날 때 머문 시간
+  LANDING_VIEWED: 'Landing Viewed',
+  LANDING_DOWNLOAD_CLICKED: 'Landing Download Clicked',
+  LANDING_EXITED: 'Landing Exited',
 
   // 앱 업데이트 유도 UI에서 스토어 앱을 직접 연다
   APP_UPDATE_STORE_OPENED: 'App Update Store Opened',
@@ -310,6 +314,11 @@ export type PreviewEndReason = 'no_target' | 'no_free_expression';
 export type AccentLocale = 'EN_US' | 'EN_GB' | 'EN_AU';
 // 화면 언어 — 웹 next-intl 언어(shared/i18n/locale)와 같은 값이다
 export type AppLanguage = 'ko' | 'ja';
+
+// 랜딩 화면 — 소개(home)·업데이트 기록·웹 약관
+export type LandingPage = 'home' | 'updates' | 'terms' | 'privacy';
+// 랜딩 다운로드 버튼 자리 — 첫 화면, 맨 아래 마무리
+export type LandingPlacement = 'hero' | 'closing';
 // 기존 유저 게이트가 묻는 질문 — 온보딩 스텝과 같은 말을 쓴다. 영어 수준은 첫 대화로 BE가 매겨 더 이상 묻지 않는다
 export type GateQuestion = Extract<OnboardingStep, 'accent'>;
 // pronounce = 발음 평가 (발음 자산이 있는 표현에만), examples = 추가 예문 화면(한 장씩 두 장)
@@ -1073,6 +1082,23 @@ export type EventProps = {
     utm_source?: string;
     utm_medium?: string;
     utm_campaign?: string;
+  };
+
+  // 랜딩은 앱 계측과 따로 가벼운 SDK로 보낸다(공통 속성·리플레이 없음). 유입 경로·UTM은 SDK가 유저 속성(initial_referrer 등)으로 자동 수집한다
+  // language — 주소 언어(/ko·/ja)
+  'Landing Viewed': { page: LandingPage; language: AppLanguage };
+  // store — 태블릿 이상의 스토어 배지면 고른 스토어, 휴대폰 버튼(기기로 고름)이면 없음
+  'Landing Download Clicked': {
+    page: LandingPage;
+    language: AppLanguage;
+    placement: LandingPlacement;
+    store?: 'play_store' | 'app_store';
+  };
+  // seconds — 페이지를 연 뒤 처음 화면을 벗어날 때(탭·앱 전환, 닫기)까지 머문 시간(초, 정수). 페이지당 한 번만 찍는다
+  'Landing Exited': {
+    page: LandingPage;
+    language: AppLanguage;
+    seconds: number;
   };
 
   // /download를 거치지 않고 스토어 앱을 바로 연 경우만 (앱 업데이트 유도 UI)

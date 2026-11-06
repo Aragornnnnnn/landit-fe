@@ -1,4 +1,5 @@
 // 스토어 버튼 — 태블릿 이상은 애플·구글 플레이 실제 로고의 검은 배지 둘, 모바일은 기기에 맞춰 보내는 다운로드 버튼 하나. 배지 글자는 두 스토어의 영어 배지 표기 그대로다. 모두 /download를 거쳐 랜딩 유입으로 기록된다
+import type { LandingPlacement } from '@landit/analytics';
 import { getTranslations } from 'next-intl/server';
 
 import type { Locale } from '@/shared/i18n/locale';
@@ -64,9 +65,12 @@ const STORES = [
 
 export const StoreButtons = async ({
   locale,
+  placement,
   className = '',
 }: {
   locale: Locale;
+  /** 계측용 버튼 자리 — 랜딩 계측이 누른 버튼이 어디 있었는지 읽는다 */
+  placement: LandingPlacement;
   className?: string;
 }) => {
   const t = await getTranslations({
@@ -74,7 +78,7 @@ export const StoreButtons = async ({
     namespace: 'landing.storeButtons',
   });
   return (
-    <div className={className}>
+    <div className={className} data-placement={placement}>
       {/* 흰 글자 대비 — 기본 주황(#e07a3a)은 2.99:1로 큰 글자 기준(3:1)에 못 미쳐, 눈으로 구분되지 않을 만큼(2%) 짙게 하고 19px 굵게 둔다 */}
       <a
         href={LANDING_DOWNLOAD_PATH}

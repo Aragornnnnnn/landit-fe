@@ -50,6 +50,7 @@ export const LandingPage = async ({ locale }: { locale: Locale }) => {
               <div className="mt-6 sm:mt-8 lg:mt-auto lg:pt-10">
                 <StoreButtons
                   locale={locale}
+                  placement="hero"
                   className="sm:flex sm:justify-center lg:justify-start"
                 />
               </div>
@@ -93,6 +94,7 @@ export const LandingPage = async ({ locale }: { locale: Locale }) => {
           </h2>
           <StoreButtons
             locale={locale}
+            placement="closing"
             className="mx-auto mt-8 max-w-[440px] sm:flex sm:justify-center"
           />
         </RevealSection>
