@@ -34,7 +34,9 @@
 
 예: `/scenario?utm_source=push&utm_medium=notification&utm_campaign=daily_scenario_reminder`
 
-친구에게 공유하기 링크는 웹이 단다 — `/download?utm_source=share&utm_medium=referral&utm_campaign=friend_invite` (앱 공유 `apps/web/src/app/(protected)/me/_ui/ShareMenuEntry.tsx`, 친구 초대 `apps/web/src/features/referral/model/share-message.ts` — 초대 메시지는 링크와 함께 초대 코드를 한 줄 싣는다). `/download`는 스토어로 보내는 서버 리다이렉트라 오토캡처가 못 잡는다. 대신 `Download Link Visited`에 `utm_*`를 실어 클릭 수를 센다. 설치까지 이어졌는지는 모른다. 앱 공유 링크에는 보내는 사람의 화면 언어 `lang`(ko·ja)도 붙는다. 메신저 미리보기 봇은 보내는 사람을 모르니, `/download`가 이 값으로 미리보기 카드(제목·설명·그림)의 언어를 고른다. 유입 딱지가 아니라 계측에는 싣지 않는다.
+친구에게 공유하기 링크는 웹이 단다 — `/download?utm_source=share&utm_medium=referral&utm_campaign=friend_invite` (앱 공유 `apps/web/src/app/(app)/(protected)/me/_ui/ShareMenuEntry.tsx`, 친구 초대 `apps/web/src/features/referral/model/share-message.ts` — 초대 메시지는 링크와 함께 초대 코드를 한 줄 싣는다). `/download`는 스토어로 보내는 서버 리다이렉트라 오토캡처가 못 잡는다. 대신 `Download Link Visited`에 `utm_*`를 실어 클릭 수를 센다. 설치까지 이어졌는지는 모른다. 앱 공유 링크에는 보내는 사람의 화면 언어 `lang`(ko·ja)도 붙는다. 메신저 미리보기 봇은 보내는 사람을 모르니, `/download`가 이 값으로 미리보기 카드(제목·설명·그림)의 언어를 고른다. 유입 딱지가 아니라 계측에는 싣지 않는다.
+
+랜딩의 다운로드는 모두 `/download`를 거쳐 `Download Link Visited`로 기록된다. 모바일 버튼과 태블릿 이상의 스토어 배지는 `/download?utm_source=landing&utm_medium=web&utm_campaign=landing_cta`(배지는 고른 스토어를 `&store=app_store|play_store`로 덧붙인다), 컴퓨터 화면 오른쪽 아래 QR은 `https://landit.im/download?utm_source=landing&utm_medium=web&utm_campaign=landing_qr`을 담는다.
 
 홈 화면 위젯 탭은 셸이 단다 — `/scenario?utm_source=widget&utm_medium=widget&utm_campaign=streak_widget` (`apps/mobile/src/widgets/widget-link.ts`). 웹은 `Page Viewed { entry_campaign: 'streak_widget' }`로 파생한다. iOS·Android 위젯 모두 `landit://widget` 딥링크로 앱을 열고, 셸이 그 URL을 알아보고 이 경로로 웹을 띄운다(콜드 스타트는 초기 URI, 앱이 떠 있으면 NAVIGATE 브릿지).
 
