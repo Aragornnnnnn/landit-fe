@@ -91,7 +91,7 @@ export const LandingPage = async ({ locale }: { locale: Locale }) => {
             className="animate-float mx-auto h-[150px] w-auto sm:h-[180px]"
           />
           <h2 className="mt-4 text-[30px] leading-[1.4] font-extrabold break-keep sm:text-[40px]">
-            {t.rich('closing.title', titleTags())}
+            {t.rich('closing.title', titleTags('circle'))}
           </h2>
           <StoreButtons
             locale={locale}
