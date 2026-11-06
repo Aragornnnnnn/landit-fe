@@ -6,7 +6,7 @@ import Image from 'next/image';
 import type { Locale } from '@/shared/i18n/locale';
 import { RevealSection } from '@/shared/ui/RevealSection';
 
-import { SCREEN_IMAGE, screenPath } from '../_model/structured-data';
+import { SCREEN_IMAGE, screenPath } from '../_model/screen-image';
 import { ScreenSwap } from './ScreenSwap';
 import { titleTags } from './title-tags';
 import type { Mark } from './Underline';

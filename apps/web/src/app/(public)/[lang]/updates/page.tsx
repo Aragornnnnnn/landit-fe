@@ -10,7 +10,7 @@ import { JsonLd } from '../_ui/JsonLd';
 import { LandingFooter } from '../_ui/LandingFooter';
 import { LandingHeader } from '../_ui/LandingHeader';
 import { QrCard } from '../_ui/QrCard';
-import { updateEntries } from './_ui/updates-content';
+import { updateEntries } from './_model/updates-content';
 
 type Props = { params: Promise<{ lang: string }> };
 

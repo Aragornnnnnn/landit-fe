@@ -4,7 +4,7 @@
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 
-import { SCREEN_IMAGE } from '../_model/structured-data';
+import { SCREEN_IMAGE } from '../_model/screen-image';
 import { swapProgress } from '../_model/swap-progress';
 
 type Screen = { src: string; alt: string };

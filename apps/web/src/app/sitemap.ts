@@ -2,7 +2,7 @@
 import type { MetadataRoute } from 'next';
 
 import { SITE_URL } from './(public)/[lang]/_model/structured-data';
-import { UPDATES } from './(public)/[lang]/updates/_ui/updates-content';
+import { UPDATES } from './(public)/[lang]/updates/_model/updates-content';
 
 const LANDING_LANGUAGES = {
   ko: `${SITE_URL}/ko`,
