@@ -26,16 +26,17 @@ export const generateMetadata = async ({
 }: Props): Promise<Metadata> => {
   const locale = await localeOf(params);
   const t = await getTranslations({ locale, namespace: 'landing.meta' });
-  // 공유 카드는 앱의 친구 공유 링크와 같은 제목, 설명, 그림을 쓴다
+  // 공유 카드는 앱의 친구 공유 링크와 같은 설명·그림을 쓰고, 제목만 페이지 제목과 맞춘다 — 스토어 이름(키워드 나열)은 웹 제목으로 쓰지 않는다
   const card = SHARE_CARD[locale];
+  const title = t('title');
   const image = {
     url: card.imagePath,
     width: 1200,
     height: 630,
-    alt: card.title,
+    alt: title,
   };
   return {
-    title: { absolute: t('title') },
+    title: { absolute: title },
     description: t('description'),
     applicationName: t('appNameLabel'),
     category: 'education',
@@ -62,13 +63,13 @@ export const generateMetadata = async ({
       alternateLocale: Object.values(OG_LOCALE).filter(
         (value) => value !== OG_LOCALE[locale],
       ),
-      title: card.title,
+      title,
       description: card.description,
       images: image,
     },
     twitter: {
       card: 'summary_large_image',
-      title: card.title,
+      title,
       description: card.description,
       images: image.url,
     },
