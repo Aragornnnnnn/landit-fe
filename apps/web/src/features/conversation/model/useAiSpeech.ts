@@ -3,7 +3,7 @@
 // AI 발화 재생 훅 — 오프닝은 서버가 준 첫 질문 음원, 이후엔 TTS 합성, 음성이 없으면 글자 수 타이머로 폴백한다.
 // 발화가 맞장구(ttsText)와 고정 질문 음원(questionAudioUrl)으로 나뉘어 오면 맞장구만 합성하고 음원을 이어 튼다
 import { useEffect, useRef, useState } from 'react';
-import { EVENTS } from '@landit/analytics';
+import { EVENTS, type SpeechAudioSource } from '@landit/analytics';
 
 import { track } from '@/shared/analytics';
 import { getSpeechRate } from '@/shared/lib/speech-rate';
@@ -89,13 +89,17 @@ interface SpeechRunDeps {
   // 계측용 세션 id — 세션이 없는 재생(스몰톡 탭 인사)은 null
   sessionId: number | null;
   // 재생이 멈추면 소리는 둔 채 발화 종료를 먼저 알릴지 — 다시 듣기는 턴과 무관해 걸지 않는다
-  releaseOnStall: boolean;
+  passTurnOnStall: boolean;
+  // 턴을 넘긴 뒤 남은 소리가 다시 나오거나(playing) 또 멈추거나(stalled) 끝났다(ended)
+  onLingeringSound?: (state: LingeringSoundState) => void;
 }
 
-/** 재생 한 회차의 손잡이 — stop은 소리까지 끊고, released는 멈춤으로 종료를 먼저 알렸는지다 */
+type LingeringSoundState = 'playing' | 'stalled' | 'ended';
+
+/** 재생 한 회차의 손잡이 — stop은 소리까지 끊고, lingering은 턴을 넘긴 뒤 아직 소리가 남아 있는지다 */
 interface SpeechRun {
   stop: () => void;
-  released: () => boolean;
+  lingering: () => boolean;
 }
 
 // 상대의 발화 한 회차를 소리로 낸다 — 오프닝이면 첫 질문 음원을, 이후엔 맞장구 합성(+질문 음원 이어 재생)을 틀고
@@ -109,7 +113,8 @@ const runSpeech = ({
   onSoundStart,
   onSpeechEnd,
   sessionId,
-  releaseOnStall,
+  passTurnOnStall,
+  onLingeringSound,
 }: SpeechRunDeps): SpeechRun => {
   const { content } = source;
 
@@ -122,21 +127,33 @@ const runSpeech = ({
   // 타이머 폴백의 중단 손잡이 — 정리 시점에 오디오(tts.stop)와 함께 멈춘다
   let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
   // 재생이 멈춰 종료를 먼저 알렸다 — 소리는 이어지지만 종료는 두 번 알리지 않는다
-  let released = false;
+  let turnPassed = false;
+  // 회차가 끝까지 갔다 — 턴을 넘긴 뒤라면 더는 남은 소리가 없다
+  let ended = false;
+  // 지금 구간의 입모양 — 멈췄던 소리가 다시 나오면 이걸로 입을 다시 맞춘다
+  let lipSync: PlayingSpeech | null = null;
 
+  // 턴을 넘긴 뒤의 남은 소리 상태는 훅이 다시 듣기 버튼에 쓴다
+  const reportLingeringSound = (state: LingeringSoundState) => {
+    if (turnPassed && !ignore) onLingeringSound?.(state);
+  };
   // 소리가 끝나면 입도 멈춰야 한다 — 남겨두면 마지막 입모양에서 굳는다
   const finish = () => {
     if (ignore) return;
-    onSoundStart();
+    ended = true;
     setSpeech(null);
-    if (!released) onSpeechEnd();
+    if (turnPassed) return reportLingeringSound('ended');
+    onSoundStart();
+    onSpeechEnd();
   };
-  // 재생이 멈추면 소리는 둔 채 턴부터 넘긴다 — 글자는 화면에 있으니 읽고 말하면 되고, 소리가 다시 나면 끝까지 들린다
-  const releaseTurn =
-    (playbackSource: 'synth' | 'question_audio') =>
-    (snapshot: TtsStallSnapshot) => {
-      if (ignore || released) return;
-      released = true;
+  // 재생이 멈추면 소리는 둔 채 턴부터 넘긴다 — 글자는 화면에 있으니 읽고 말하면 되고, 소리가 다시 나면 끝까지 들린다.
+  // 입은 닫는다 — 멈춘 재생 위치에서 입이 벌린 채 굳지 않게
+  const passTurn =
+    (playbackSource: SpeechAudioSource) => (snapshot: TtsStallSnapshot) => {
+      if (ignore) return;
+      setSpeech(null);
+      if (turnPassed) return reportLingeringSound('stalled');
+      turnPassed = true;
       track(EVENTS.SPEECH_PLAYBACK_STALLED, {
         session_id: sessionId ?? undefined,
         source: playbackSource,
@@ -148,15 +165,25 @@ const runSpeech = ({
         last_media_event: snapshot.lastMediaEvent,
       });
       onSoundStart();
-      setSpeech(null);
       onSpeechEnd();
     };
-  const onStallOf = (playbackSource: 'synth' | 'question_audio') =>
-    releaseOnStall ? releaseTurn(playbackSource) : undefined;
+  // 멈췄던 소리가 다시 나오면 입도 다시 소리를 따른다
+  const resumeLipSync = () => {
+    if (ignore) return;
+    if (lipSync) setSpeech(lipSync);
+    reportLingeringSound('playing');
+  };
+  // 재생 모듈에 멈춤 감시를 신청한다 — 턴이 없는 재생(다시 듣기·인사)은 신청하지 않는다
+  const followStall = (playbackSource: SpeechAudioSource) =>
+    passTurnOnStall
+      ? { onStall: passTurn(playbackSource), onResume: resumeLipSync }
+      : {};
   // 입모양은 지금 나는 소리를 따른다 — 분리 재생에선 구간마다 텍스트가 다르다
   const startLipSync = (playback: TtsPlayback, text: string) => {
-    if (!ignore) onSoundStart();
-    setSpeech({ playback, text });
+    lipSync = { playback, text };
+    if (!ignore && !turnPassed) onSoundStart();
+    setSpeech(lipSync);
+    reportLingeringSound('playing');
   };
 
   // tts 콜백을 Promise로 감싼 구간 재생기 셋 — 실패해도 resolve해서 발화가 멈추지 않고 다음 구간으로 이어진다
@@ -164,16 +191,17 @@ const runSpeech = ({
   // 합성해서 말한다. 실패는 계측만 남기고 그 구간을 건너뛴다. 응답이 끝내 안 왔는지를 돌려줘 호출부가 더 기다릴지 정한다
   const speakSynth = (text: string, synthVoice: TtsVoice) =>
     new Promise<boolean>((resolve) => {
+      lipSync = null;
       void tts.speak(text, synthVoice, {
         onStart: (playback) => startLipSync(playback, text),
         onEnd: () => resolve(false),
-        onStall: onStallOf('synth'),
+        ...followStall('synthesized'),
         onError: (error) => {
           if (!ignore && !synthFailureTracked) {
             synthFailureTracked = true;
             track(EVENTS.SPEECH_PLAYBACK_FAILED, {
               session_id: sessionId ?? undefined,
-              source: 'synth',
+              source: 'synthesized',
             });
           }
           resolve(error instanceof TtsTimeoutError);
@@ -184,15 +212,16 @@ const runSpeech = ({
   // 미리 만든 음원을 튼다. 끝까지 재생했는지를 돌려줘 호출부가 폴백을 결정한다
   const playAudio = (src: string, lipSyncText: string) =>
     new Promise<boolean>((resolve) => {
+      lipSync = null;
       tts.speakSrc(src, {
         onStart: (playback) => startLipSync(playback, lipSyncText),
         onEnd: () => resolve(true),
-        onStall: onStallOf('question_audio'),
+        ...followStall('prerecorded'),
         onError: () => {
           if (!ignore)
             track(EVENTS.SPEECH_PLAYBACK_FAILED, {
               session_id: sessionId ?? undefined,
-              source: 'question_audio',
+              source: 'prerecorded',
             });
           setSpeech(null);
           resolve(false);
@@ -216,7 +245,7 @@ const runSpeech = ({
     if (openingSrc) {
       const played = await playAudio(openingSrc, content);
       if (ignore) return;
-      if (played || released) return finish();
+      if (played || turnPassed) return finish();
     }
 
     // 2) 목소리가 없으면 입을 맞출 오디오도 없다 — 캐릭터는 음절 흉내로 돌아간다
@@ -255,7 +284,7 @@ const runSpeech = ({
       clearTimeout(fallbackTimer);
       setSpeech(null);
     },
-    released: () => released,
+    lingering: () => turnPassed && !ended,
   };
 };
 
@@ -271,6 +300,8 @@ interface AiSpeechOptions {
   replayAllowed?: boolean;
   // 계측용 세션 id — 재생 실패가 어느 대화에서 났는지 남긴다
   sessionId?: number | null;
+  // 재생이 멈추면 소리는 둔 채 onSpeechEnd를 먼저 부를지 — 남은 소리는 replayAllowed가 꺼질 때 끊으니 턴이 있는 재생만 켠다
+  passTurnOnStall?: boolean;
 }
 
 /**
@@ -279,7 +310,8 @@ interface AiSpeechOptions {
  * @returns `markOpeningPlayed`(오프닝을 지나갔다는 표시), `prefetch`(다음 발화 미리 준비),
  *   `speech`(지금 나는 소리 — 캐릭터 입모양용, 소리가 없으면 null),
  *   `waitingForSound`(재생할 차례인데 소리가 아직 안 났다),
- *   `replay`·`replaying`(다시 듣기 — 대화 진행과 무관한 별도 재생, replayAllowed 구간에서만)
+ *   `replay`·`replaying`(다시 듣기 — 대화 진행과 무관한 별도 재생, replayAllowed 구간에서만.
+ *   턴을 넘긴 뒤 남겨 둔 소리가 들리는 동안에도 replaying이고, 그때 replay는 그 소리를 멈춘다)
  */
 export const useAiSpeech = ({
   playing,
@@ -289,6 +321,7 @@ export const useAiSpeech = ({
   onSpeechEnd,
   replayAllowed = false,
   sessionId = null,
+  passTurnOnStall = false,
 }: AiSpeechOptions) => {
   const tts = useTts();
   // 첫 AI 발화(오프닝)인지 — 첫 질문 음원 재생 대상
@@ -300,6 +333,8 @@ export const useAiSpeech = ({
   const [replaying, setReplaying] = useState(false);
   // 멈춤으로 턴을 먼저 넘긴 회차의 중단 손잡이 — 소리는 남겨 두고, 마이크를 켜거나 화면을 떠나거나 새로 틀 때 끊는다
   const lingeringStopRef = useRef<(() => void) | null>(null);
+  // 남겨 둔 소리가 지금 들리는가 — 들리는 동안은 다시 듣기가 재생 중으로 보이고, 누르면 멈춘다
+  const [lingeringPlaying, setLingeringPlaying] = useState(false);
   // 소리가 시작된 발화 — 합성을 기다리는 동안 화면이 글자를 먼저 내보내지 않게 알려 준다
   const [soundStartedFor, setSoundStartedFor] = useState<string | null>(null);
 
@@ -311,19 +346,26 @@ export const useAiSpeech = ({
     setSoundStartedFor(null);
   };
 
-  /** 멈춤으로 턴을 넘긴 뒤 남겨 둔 소리를 끊는다. 남은 게 없으면 아무 일도 없다 */
+  /** 멈춤으로 턴을 넘긴 뒤 남겨 둔 소리를 끊고 버튼 상태도 되돌린다. 남은 게 없으면 아무 일도 없다 */
   const stopLingering = () => {
     lingeringStopRef.current?.();
     lingeringStopRef.current = null;
+    setLingeringPlaying(false);
+  };
+  // 남은 소리가 다시 나오거나 멈추면 버튼 상태를 맞추고, 끝나면 손잡이를 내려놓는다 — 끝난 회차가 엉뚱한 소리를 끄지 않게
+  const followLingeringSound = (state: LingeringSoundState) => {
+    setLingeringPlaying(state === 'playing');
+    if (state === 'ended') lingeringStopRef.current = null;
   };
 
   // 다시 듣기는 허용 구간에서만 산다 — 허용이 꺼지는 순간(상대 발화·내 녹음·화면 이탈) 끊는다.
   // 정리 없이 새 발화가 소리를 뺏으면 다시 듣기 회차가 끝을 못 알리고, 내 녹음엔 상대 목소리가 섞인다
   useEffect(() => () => stopReplay(), [replayAllowed]);
 
-  // 남겨 둔 소리도 허용이 꺼지면(내 녹음·답 전송) 끊는다 — 꺼지는 순간에만 끊어, 턴을 막 넘겨받은 소리는 건드리지 않는다
+  // 남겨 둔 소리도 허용이 꺼지면(내 녹음·답 전송) 끊는다 — 허용 구간을 떠날 때의 정리라, 턴을 막 넘겨받은 소리는 건드리지 않는다
   useEffect(() => {
-    if (!replayAllowed) stopLingering();
+    if (!replayAllowed) return;
+    return () => stopLingering();
   }, [replayAllowed]);
 
   // 오프닝 구간이면 첫 질문 음원을 그대로 튼다 — 이후 발화는 동적 생성이라 음원이 없다
@@ -332,8 +374,7 @@ export const useAiSpeech = ({
   // 재생 한 회차 — 자동 재생과 다시 듣기가 같은 계획을 쓴다. 다른 건 끝났을 때 누구에게 알리느냐와 멈췄을 때 턴을 넘기느냐뿐이다
   const startSpeech = (
     speechSource: SpeechSource,
-    onEnd: () => void,
-    releaseOnStall: boolean,
+    options: { onEnd: () => void; passTurnOnStall: boolean },
   ) =>
     runSpeech({
       source: speechSource,
@@ -342,18 +383,18 @@ export const useAiSpeech = ({
       tts,
       setSpeech,
       onSoundStart: () => setSoundStartedFor(speechSource.content),
-      onSpeechEnd: onEnd,
+      onSpeechEnd: options.onEnd,
       sessionId,
-      releaseOnStall,
+      passTurnOnStall: options.passTurnOnStall,
+      onLingeringSound: followLingeringSound,
     });
 
   // 발화가 바뀔 때마다 재생 한 회차를 시작한다 — 멈춤으로 턴을 먼저 넘긴 회차만 소리를 남겨 두고, 나머지는 정리 때 끊는다
   useEffect(() => {
     if (!playing || source == null) return;
-    stopLingering();
-    const run = startSpeech(source, onSpeechEnd, true);
+    const run = startSpeech(source, { onEnd: onSpeechEnd, passTurnOnStall });
     return () => {
-      if (run.released()) lingeringStopRef.current = run.stop;
+      if (run.lingering()) lingeringStopRef.current = run.stop;
       else run.stop();
       setSoundStartedFor(null);
     };
@@ -378,8 +419,10 @@ export const useAiSpeech = ({
    * 그 발화가 끝을 못 알려 대화가 멈춘다. 새로 재생을 시작했는지를 돌려준다(계측용)
    */
   const replay = (): boolean => {
-    if (replaying) {
+    // 다시 듣기든 남겨 둔 소리든, 들리는 중에 누르면 멈춘다
+    if (replaying || lingeringPlaying) {
       stopReplay();
+      stopLingering();
       return false;
     }
     if (!replayAllowed || source == null) return false;
@@ -389,7 +432,10 @@ export const useAiSpeech = ({
     // 그 외엔 합성분은 방금 튼 게 캐시에 있어 요청이 안 나가고, 질문 음원만 미리 열려 맞장구 뒤 공백이 없어진다
     if (!resolveOpeningSrc()) prefetch(source);
     setReplaying(true);
-    replayStopRef.current = startSpeech(source, stopReplay, false).stop;
+    replayStopRef.current = startSpeech(source, {
+      onEnd: stopReplay,
+      passTurnOnStall: false,
+    }).stop;
     return true;
   };
 
@@ -407,6 +453,6 @@ export const useAiSpeech = ({
     speech,
     waitingForSound,
     replay,
-    replaying,
+    replaying: replaying || lingeringPlaying,
   };
 };

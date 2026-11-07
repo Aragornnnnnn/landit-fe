@@ -313,6 +313,9 @@ export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
 export type PreviewEndReason = 'no_target' | 'no_free_expression';
 // 배울 영어 — BE 발음 에셋(accentLocale)과 같은 enum 값을 쓴다. 지표와 서버 데이터가 같은 말을 쓴다
 export type AccentLocale = 'EN_US' | 'EN_GB' | 'EN_AU';
+
+/** AI 발화 소리를 어떻게 만들었나 — synthesized = 그 자리에서 합성, prerecorded = 미리 만들어 둔 음원 파일 */
+export type SpeechAudioSource = 'synthesized' | 'prerecorded';
 // 화면 언어 — 웹 next-intl 언어(shared/i18n/locale)와 같은 값이다
 export type AppLanguage = 'ko' | 'ja';
 
@@ -710,17 +713,18 @@ export type EventProps = {
     reason?: string;
   };
   // AI 발화 재생 실패 — 실패 비율을 본다. 스몰톡 탭의 캐릭터 인사도 같은 재생 훅이라 포함된다.
-  // synth = 런타임 합성(분리 재생이면 질문 음원으로 폴백, 아니면 발화가 통째로 건너뛰어진다),
-  // question_audio = 서버 음원(오프닝 첫 질문은 합성으로 폴백, 이어 재생 질문은 통째로 건너뛰어진다. 원인은 Sentry)
+  // synthesized = 합성(분리 재생이면 질문 음원으로 폴백, 아니면 발화가 통째로 건너뛰어진다),
+  // prerecorded = 서버 음원(오프닝 첫 질문은 합성으로 폴백, 이어 재생 질문은 통째로 건너뛰어진다. 원인은 Sentry)
   'Speech Playback Failed': {
     session_id?: number;
-    source: 'synth' | 'question_audio';
+    source: SpeechAudioSource;
   };
-  // AI 발화 재생 위치가 오래 그대로라 내 차례로 넘겼다(소리는 끄지 않는다). 오디오 상태는 왜 멈췄는지 좁히는 단서다.
+  // 대화 상대 발화의 재생 위치가 3초(받는 중이면 8초) 그대로라 내 차례로 넘겼다(소리는 끄지 않는다). 스몰톡 탭 인사는 턴이 없어 안 찍힌다.
+  // 오디오 상태는 왜 멈췄는지 좁히는 단서다
   // started = 재생 위치가 한 번이라도 움직였나, last_media_event = 멈추기 전 엘리먼트의 마지막 미디어 이벤트
   'Speech Playback Stalled': {
     session_id?: number;
-    source: 'synth' | 'question_audio';
+    source: SpeechAudioSource;
     started: boolean;
     position_ms: number;
     ready_state: number;

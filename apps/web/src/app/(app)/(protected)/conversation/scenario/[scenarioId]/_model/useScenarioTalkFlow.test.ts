@@ -53,22 +53,29 @@ vi.mock('../_api/scenario-session', () => ({
   submitScenarioTalkMessage: vi.fn(),
 }));
 
-// TTS는 경계(재생)라 목으로 둔다 — speak/speakSrc의 onEnd를 붙잡아 재생 종료를 흉내 낸다.
+// TTS는 경계(재생)라 목으로 둔다 — speak/speakSrc의 onEnd·onStall을 붙잡아 재생 종료·멈춤을 흉내 낸다.
 // 실패 폴백(onError)은 useAiSpeech 테스트가 맡는다.
 const ttsMock = vi.hoisted(() => {
+  interface CapturedOptions {
+    onEnd?: () => void;
+    onStall?: (snapshot: unknown) => void;
+  }
   const state = {
     onEnd: undefined as (() => void) | undefined,
+    onStall: undefined as ((snapshot: unknown) => void) | undefined,
+  };
+  const capture = (opts?: CapturedOptions) => {
+    state.onEnd = opts?.onEnd;
+    state.onStall = opts?.onStall;
   };
   return {
     state,
-    speak: vi.fn(
-      (_text: string, _voice: unknown, opts?: { onEnd?: () => void }) => {
-        state.onEnd = opts?.onEnd;
-        return Promise.resolve();
-      },
-    ),
-    speakSrc: vi.fn((_src: string, opts?: { onEnd?: () => void }) => {
-      state.onEnd = opts?.onEnd;
+    speak: vi.fn((_text: string, _voice: unknown, opts?: CapturedOptions) => {
+      capture(opts);
+      return Promise.resolve();
+    }),
+    speakSrc: vi.fn((_src: string, opts?: CapturedOptions) => {
+      capture(opts);
     }),
     prefetch: vi.fn(() => Promise.resolve()),
     prefetchSrc: vi.fn(),
@@ -330,6 +337,7 @@ beforeEach(() => {
   localStorage.clear();
   vi.useFakeTimers();
   ttsMock.state.onEnd = undefined;
+  ttsMock.state.onStall = undefined;
   sttMock.callbacks.onInterim = undefined;
   sttMock.callbacks.onFinal = undefined;
   sttMock.start.mockClear();
@@ -357,6 +365,33 @@ describe('useScenarioTalkFlow', async () => {
     expect(result.current.turn.aiMessage).toBe('Hello, welcome in.');
 
     await act(async () => {});
+  });
+
+  it('첫 질문 음원 재생이 멈추면 소리는 둔 채 내 차례가 되고, 마이크를 누르면 그 소리를 끈다', async () => {
+    // Given — 첫 질문을 말하던 중 재생이 멈췄다(끝 신호도 오류도 오지 않는다)
+    startScenarioTalkSession.mockResolvedValue(startResponse());
+    const { result } = renderHook(() => useScenarioTalkFlow(scenario));
+    await act(async () => {});
+    expect(result.current.phase).toBe('AI_SPEAKING');
+    ttsMock.stop.mockClear();
+
+    // When
+    await act(async () =>
+      ttsMock.state.onStall?.({
+        started: true,
+        positionMs: 1200,
+        readyState: 4,
+        networkState: 1,
+        paused: false,
+        lastMediaEvent: 'playing',
+      }),
+    );
+
+    // Then — 마이크를 켤 수 있고, 소리는 아직 끄지 않는다
+    expect(result.current.phase).toBe('USER_READY');
+    expect(ttsMock.stop).not.toHaveBeenCalled();
+    act(() => result.current.input.pressMic());
+    expect(ttsMock.stop).toHaveBeenCalled();
   });
 
   it('유저가 먼저 말하면 마이크 대기로 시작하고 오프닝 안내를 보여준다', async () => {
