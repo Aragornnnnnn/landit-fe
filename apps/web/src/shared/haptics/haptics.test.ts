@@ -61,7 +61,7 @@ describe('haptic', () => {
 
   it('스로틀 창 안이라도 다른 패턴은 서로 막지 않는다', () => {
     postToNativeMock.mockReturnValue(true);
-    // 버튼 누름: pointerdown의 light 틱 직후 결과 판정의 error가 같은 순간에 온다
+    // 버튼 누름: 탭(click)의 light 틱 직후 결과 판정의 error가 같은 순간에 온다
     vi.spyOn(performance, 'now').mockReturnValue(6_000_000);
 
     haptic('light');
