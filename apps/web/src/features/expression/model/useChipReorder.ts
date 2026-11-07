@@ -3,6 +3,8 @@
 // 답변 줄에 올린 단어 칩을 끌어 순서를 바꾸는 드래그 — 끄는 동안 다른 칩이 실시간으로 밀려나 자리를 내준다
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { haptic } from '@/shared/haptics';
+
 import {
   dropIndexAt,
   moveChip,
@@ -109,6 +111,8 @@ export const useChipReorder = (
         slotBefore.current = { id, box: boxOf(id) };
         live = moveChip(live, from, to);
         onReorder(live);
+        // 칩 자리가 바뀔 때마다 딸깍 — 끌면서 자리를 옮겼다는 걸 손으로 안다
+        haptic('tick');
       }
       setDrag({ id, ...offset });
     };
