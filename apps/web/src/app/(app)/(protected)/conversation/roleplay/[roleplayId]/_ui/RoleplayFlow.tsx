@@ -7,11 +7,13 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSkeleton';
+import { ConversationWaiting } from '@/features/conversation/ui/ConversationWaiting';
 import { isPremiumRequired } from '@/features/roleplay/model/premium-required';
 import { track } from '@/shared/analytics';
 import { paywallPath, ROLEPLAY_PATH } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 
+import { useCachedRoleplayPartner } from '../_model/useCachedRoleplayPartner';
 import { useRoleplaySession } from '../_model/useRoleplaySession';
 import { RoleplayConversation } from './RoleplayConversation';
 
@@ -25,6 +27,7 @@ export const RoleplayFlow = ({
   const t = useTranslations('conversation.roleplayFlow');
   const router = useRouter();
   const { session, error } = useRoleplaySession(roleplayId, entry);
+  const partner = useCachedRoleplayPartner(roleplayId);
   const premiumRequired = isPremiumRequired(error);
 
   // 구독이 끝난 사용자가 입구 판단을 지나쳐 온 경우 — 오류 대신 페이월로 보낸다
@@ -58,7 +61,13 @@ export const RoleplayFlow = ({
     );
   }
 
-  if (!session) return <ConversationSkeleton />;
+  // 롤플레이는 늘 상대가 먼저 말한다. 상대를 모르면(주소로 바로 들어옴) 빈 자리만 그린다
+  if (!session)
+    return partner ? (
+      <ConversationWaiting partner={partner} partnerSpeaksFirst />
+    ) : (
+      <ConversationSkeleton />
+    );
 
   return <RoleplayConversation session={session} />;
 };
