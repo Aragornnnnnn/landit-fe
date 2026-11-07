@@ -24,7 +24,7 @@ export const RoleplayFlow = ({
 }) => {
   const t = useTranslations('conversation.roleplayFlow');
   const router = useRouter();
-  const { session, error } = useRoleplaySession(roleplayId, entry);
+  const { session, error, partner } = useRoleplaySession(roleplayId, entry);
   const premiumRequired = isPremiumRequired(error);
 
   // 구독이 끝난 사용자가 입구 판단을 지나쳐 온 경우 — 오류 대신 페이월로 보낸다
@@ -58,7 +58,11 @@ export const RoleplayFlow = ({
     );
   }
 
-  if (!session) return <ConversationSkeleton />;
+  // 롤플레이는 늘 상대가 먼저 말한다. 상대를 모르면(주소로 바로 들어옴) 빈 자리만 그린다
+  if (!session)
+    return (
+      <ConversationSkeleton partner={partner ?? undefined} partnerSpeaksFirst />
+    );
 
   return <RoleplayConversation session={session} />;
 };
