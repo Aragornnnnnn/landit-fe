@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { postToNative } from '@/shared/bridge/web-bridge';
 
-import { haptic } from './haptics';
+import { haptic, muteHaptics } from './haptics';
 import { setHapticsEnabled } from './haptics-setting';
 
 vi.mock('@/shared/bridge/web-bridge', () => ({
@@ -121,5 +121,59 @@ describe('haptic 설정', () => {
     } finally {
       setHapticsEnabled(true);
     }
+  });
+});
+
+describe('muteHaptics — 녹음하는 동안 진동 막기', () => {
+  it('막아 둔 동안에는 어떤 진동도 보내지 않는다 — 진동 소리가 녹음에 섞이지 않게', () => {
+    advanceTime();
+    postToNativeMock.mockReturnValue(true);
+    const unmute = muteHaptics();
+
+    haptic('celebrate');
+    haptic('error');
+
+    expect(postToNativeMock).not.toHaveBeenCalled();
+    unmute();
+  });
+
+  it('풀면 다시 울린다', () => {
+    advanceTime();
+    postToNativeMock.mockReturnValue(true);
+    const unmute = muteHaptics();
+
+    unmute();
+    haptic('success');
+
+    expect(postToNativeMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('두 곳이 겹쳐 막으면 둘 다 풀려야 울린다', () => {
+    advanceTime();
+    postToNativeMock.mockReturnValue(true);
+    const unmuteA = muteHaptics();
+    const unmuteB = muteHaptics();
+
+    unmuteA();
+    haptic('success');
+    expect(postToNativeMock).not.toHaveBeenCalled();
+
+    unmuteB();
+    haptic('success');
+    expect(postToNativeMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('푸는 함수를 여러 번 불러도 한 번만 풀린다 — 남이 막아 둔 것까지 풀지 않는다', () => {
+    advanceTime();
+    postToNativeMock.mockReturnValue(true);
+    const unmuteA = muteHaptics();
+    const unmuteB = muteHaptics();
+
+    unmuteA();
+    unmuteA();
+    haptic('success');
+
+    expect(postToNativeMock).not.toHaveBeenCalled();
+    unmuteB();
   });
 });
