@@ -62,7 +62,14 @@ export const SmallTalkFlow = ({
   }
 
   // 잔량을 아직 못 받았으면 대화도 열지 않는다 — 남은 시간을 모른 채 말하기부터 시작할 수는 없다
-  if (!session || !main) return <ConversationSkeleton />;
+  // 상대는 홈에서 이미 골랐다 — 기다리는 동안에도 무대에 세운다
+  if (!session || !main)
+    return (
+      <ConversationSkeleton
+        partner={partner}
+        partnerSpeaksFirst={startMode === 'AI_FIRST'}
+      />
+    );
 
   return (
     <SmallTalkConversation

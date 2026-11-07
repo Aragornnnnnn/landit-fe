@@ -3,7 +3,10 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { SmallTalkMainResponse } from '@/features/small-talk/api/small-talk';
+import type {
+  SmallTalkMainResponse,
+  SmallTalkStartMode,
+} from '@/features/small-talk/api/small-talk';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
 
 import { useSmallTalkSession } from '../_model/useSmallTalkSession';
@@ -33,6 +36,7 @@ const setup = ({
     remainingSpeakingTimeMs: 40_000,
   } as Partial<SmallTalkMainResponse> | null,
   mainError = undefined as Error | undefined,
+  startMode = 'USER_FIRST' as SmallTalkStartMode,
 } = {}) => {
   sessionMock.mockReturnValue({
     session: session as never,
@@ -45,7 +49,7 @@ const setup = ({
     isLoading: false,
     refresh: vi.fn(),
   });
-  render(<SmallTalkFlow startMode="USER_FIRST" partner="chloe" />);
+  render(<SmallTalkFlow startMode={startMode} partner="chloe" />);
 };
 
 afterEach(() => {
@@ -58,6 +62,18 @@ describe('SmallTalkFlow', () => {
     setup();
 
     expect(screen.getByText('대화 본편')).toBeInTheDocument();
+  });
+
+  it('상대가 먼저 말하면 세션을 기다리는 동안 상대가 말을 준비하는 모습을 보여준다', () => {
+    setup({ session: null as never, startMode: 'AI_FIRST' });
+
+    expect(screen.getByRole('status')).toHaveTextContent('답을 생각하는 중');
+  });
+
+  it('내가 먼저 말하면 기다리는 동안 상대가 말을 준비하는 모습은 없다', () => {
+    setup({ session: null as never, startMode: 'USER_FIRST' });
+
+    expect(screen.queryByRole('status')).toBeNull();
   });
 
   it('잔량 조회가 실패하면 기다리는 화면 대신 안내를 보여준다', () => {
