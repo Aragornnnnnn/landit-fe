@@ -8,6 +8,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import { useLocale, useTranslations } from 'next-intl';
 import Image from 'next/image';
 
+import { haptic } from '@/shared/haptics';
 import { EASE_STANDARD } from '@/shared/motion';
 
 import { celebrationOf } from '../model/celebration';
@@ -94,7 +95,11 @@ export const StreakStamp = () => {
           </p>
         </motion.div>
 
-        <StreakRun cells={cells} animated={animated} />
+        <StreakRun
+          cells={cells}
+          animated={animated}
+          stamping={celebration.stamping}
+        />
       </motion.div>
     </StampStage>
   );
@@ -180,16 +185,24 @@ const FirstFruitMark = ({ animated }: { animated: boolean }) => (
 const StreakRun = ({
   cells,
   animated,
+  stamping,
 }: {
   cells: StreakRunCell[];
   animated: boolean;
+  // 오늘 처음 찍는 날인가 — 같은 날 두 번째 대화는 축하하지 않는다
+  stamping: boolean;
 }) => {
   const [stamped, setStamped] = useState(!animated);
   useEffect(() => {
-    if (!animated) return;
-    const timer = setTimeout(() => setStamped(true), FILL_DELAY * 1000);
+    if (!stamping) return;
+    // 오늘 칸이 차는 순간 축하 진동을 같이 준다 — 동작 줄이기로 연출이 없으면 기다리지 않고 바로 울린다
+    const fillAt = animated ? FILL_DELAY * 1000 : 0;
+    const timer = setTimeout(() => {
+      if (animated) setStamped(true);
+      haptic('celebrate');
+    }, fillAt);
     return () => clearTimeout(timer);
-  }, [animated]);
+  }, [animated, stamping]);
 
   return (
     <motion.div

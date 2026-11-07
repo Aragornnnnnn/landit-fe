@@ -6,6 +6,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ReviewSuccess } from './ReviewSuccess';
 
 vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
+const hapticMock = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/haptics', () => ({ haptic: hapticMock }));
 
 afterEach(() => cleanup());
 
@@ -29,5 +31,18 @@ describe('ReviewSuccess', () => {
     for (const [options] of calls) {
       expect(options?.disableForReducedMotion).toBe(true);
     }
+  });
+
+  it('표현을 획득한 순간 콘페티와 함께 celebrate를 울린다', () => {
+    render(
+      <ReviewSuccess
+        expression="break the ice"
+        meaning="어색함을 깨다"
+        onFinish={vi.fn()}
+        finishing={false}
+      />,
+    );
+
+    expect(hapticMock).toHaveBeenCalledWith('celebrate');
   });
 });
