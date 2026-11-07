@@ -79,6 +79,8 @@ export const EVENTS = {
   SPEECH_RECOGNITION_COMPLETED: 'Speech Recognition Completed',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
   SPEECH_PLAYBACK_FAILED: 'Speech Playback Failed',
+  SPEECH_PLAYBACK_STALLED: 'Speech Playback Stalled',
+  SPEECH_PLAYBACK_RESUMED: 'Speech Playback Resumed',
   HINT_USED: 'Hint Used',
   SCENARIO_TALK_COMPLETED: 'Scenario Talk Completed',
   SCENARIO_TALK_ABANDONED: 'Scenario Talk Abandoned',
@@ -312,6 +314,9 @@ export type EnglishLevel = 1 | 2 | 3 | 4 | 5;
 export type PreviewEndReason = 'no_target' | 'no_free_expression';
 // 배울 영어 — BE 발음 에셋(accentLocale)과 같은 enum 값을 쓴다. 지표와 서버 데이터가 같은 말을 쓴다
 export type AccentLocale = 'EN_US' | 'EN_GB' | 'EN_AU';
+
+/** AI 발화 소리를 어떻게 만들었나 — synthesized = 그 자리에서 합성, prerecorded = 미리 만들어 둔 음원 파일 */
+export type SpeechAudioSource = 'synthesized' | 'prerecorded';
 // 화면 언어 — 웹 next-intl 언어(shared/i18n/locale)와 같은 값이다
 export type AppLanguage = 'ko' | 'ja';
 
@@ -709,11 +714,33 @@ export type EventProps = {
     reason?: string;
   };
   // AI 발화 재생 실패 — 실패 비율을 본다. 스몰톡 탭의 캐릭터 인사도 같은 재생 훅이라 포함된다.
-  // synth = 런타임 합성(분리 재생이면 질문 음원으로 폴백, 아니면 발화가 통째로 건너뛰어진다),
-  // question_audio = 서버 음원(오프닝 첫 질문은 합성으로 폴백, 이어 재생 질문은 통째로 건너뛰어진다. 원인은 Sentry)
+  // synthesized = 합성(분리 재생이면 질문 음원으로 폴백, 아니면 발화가 통째로 건너뛰어진다),
+  // prerecorded = 서버 음원(오프닝 첫 질문은 합성으로 폴백, 이어 재생 질문은 통째로 건너뛰어진다. 원인은 Sentry)
   'Speech Playback Failed': {
     session_id?: number;
-    source: 'synth' | 'question_audio';
+    source: SpeechAudioSource;
+  };
+  // 대화 상대 발화의 재생 위치가 3초 그대로라 내 차례로 넘겼다(소리는 끄지 않는다). 스몰톡 탭 인사는 턴이 없어 안 찍힌다.
+  // 오디오 상태는 왜 멈췄는지 좁히는 단서다
+  // started = 재생 위치가 한 번이라도 움직였나, last_media_event = 멈추기 전 엘리먼트의 마지막 미디어 이벤트,
+  // backgrounded = 이 재생 중 앱이 내려간 적 있나(내려가면 멈췄다 돌아와 잇는다 — 다시 건 재생이 막힌 경우를 가른다)
+  'Speech Playback Stalled': {
+    session_id?: number;
+    source: SpeechAudioSource;
+    started: boolean;
+    position_ms: number;
+    ready_state: number;
+    network_state: number;
+    paused: boolean;
+    last_media_event: string | null;
+    backgrounded: boolean;
+  };
+  // 멈춰서 턴을 넘긴 뒤 소리가 다시 나왔다(발화당 한 번). stalled_ms = 재생 위치가 마지막으로 움직인 뒤 다시 움직이기까지 걸린 시간 —
+  // 멈춤 기준(3초)이 짧아 정상 재생을 잘못 넘긴 경우를 세어 기준을 조정하는 데 쓴다
+  'Speech Playback Resumed': {
+    session_id?: number;
+    source: SpeechAudioSource;
+    stalled_ms: number;
   };
   'Hint Used': { source: HintSource; level: number };
   'Scenario Talk Completed': {

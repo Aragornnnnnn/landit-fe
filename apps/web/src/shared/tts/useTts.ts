@@ -19,12 +19,177 @@ export interface TtsPlayback {
   source: string;
 }
 
-/** onStart는 재생이 실제로 시작된 뒤에만 부른다 — 그 전에는 읽을 시각이 없다 */
-interface SpeakOptions {
+/** 재생이 멈춘 순간의 오디오 상태 — 왜 멈췄는지(받다 멈춤·재생 중 정지·일시정지) 좁히는 단서다 */
+export interface TtsStallSnapshot {
+  // 재생 위치가 한 번이라도 움직였나 — 시작을 못 한 것과 도중에 멈춘 것을 가른다
+  started: boolean;
+  positionMs: number;
+  readyState: number;
+  networkState: number;
+  paused: boolean;
+  // 멈추기 전 엘리먼트가 마지막으로 낸 미디어 이벤트
+  lastMediaEvent: string | null;
+  // 이 재생 중 앱이 내려간 적 있나 — 돌아와 다시 건 재생이 또 막힌 것과 다른 원인을 가른다
+  backgrounded: boolean;
+}
+
+/** 재생 멈춤 감시를 신청하는 콜백 — 알리기만 하고 재생은 그대로 둔다 */
+interface StallCallbacks {
+  // 재생 위치가 오래 그대로가 됐다 — 다시 움직였다가 또 멈추면 또 부른다
+  onStall: (snapshot: TtsStallSnapshot) => void;
+  // 멈췄던 재생 위치가 다시 움직였다 — stalledMs는 마지막으로 움직인 뒤 다시 움직이기까지 걸린 시간이다
+  onResume?: (resume: { stalledMs: number }) => void;
+}
+
+/** onStart는 재생이 실제로 시작된 뒤에만 부른다 — 그 전에는 읽을 시각이 없다. onStall을 주면 멈춤 감시가 붙는다 */
+interface SpeakOptions extends Partial<StallCallbacks> {
   onStart?: (playback: TtsPlayback) => void;
   onEnd?: () => void;
   onError?: (error: Error) => void;
 }
+
+// 재생 위치가 이만큼 그대로면 멈춘 것으로 본다 — 정상 재생에선 걸리지 않는 가장 짧은 시간으로 잡았다.
+// 재생 중엔 위치가 쉬지 않고 나아가고, 받는 중이어도 질문 음원(70KB 이하)은 300kbps 망에서 2초 남짓이면 내려온다.
+// 멈춰도 소리는 끄지 않아 일찍 잡혀도 잃는 건 마이크가 조금 일찍 켜지는 것뿐이고, 실제 값은 다시 나온 기록(stalledMs)으로 조정한다
+const STALL_MS = 3_000;
+const STALL_CHECK_MS = 500;
+// 멈춘 이유를 좁히려고 마지막 신호만 기억해 두는 미디어 이벤트
+const STALL_MEDIA_EVENTS = [
+  'loadstart',
+  'loadedmetadata',
+  'canplay',
+  'playing',
+  'waiting',
+  'stalled',
+  'suspend',
+  'pause',
+  'emptied',
+] as const;
+
+/**
+ * 재생 위치를 지켜보며 멈추면 onStall, 다시 움직이면 onResume을 부르고, 감시를 끝내는 함수를 돌려준다. 소리는 건드리지 않는다.
+ * 화면이 숨겨진 동안은 세지 않고 돌아오면 처음부터 센다 — 숨겨지면 재생을 일부러 멈추는데(playWhileVisible) 그건 멈춤이 아니다
+ */
+const watchStall = (
+  audio: HTMLAudioElement,
+  { onStall, onResume }: StallCallbacks,
+): (() => void) => {
+  let lastPosition = audio.currentTime;
+  let stillMs = 0;
+  let started = false;
+  let stalled = false;
+  let lastMovedAt = Date.now();
+  let lastMediaEvent: string | null = null;
+  let backgrounded = document.visibilityState === 'hidden';
+
+  const rememberEvent = (event: Event) => {
+    lastMediaEvent = event.type;
+  };
+  const restartCount = () => {
+    lastPosition = audio.currentTime;
+    lastMovedAt = Date.now();
+    stillMs = 0;
+  };
+  const onVisibilityChange = () => {
+    if (document.visibilityState === 'hidden') backgrounded = true;
+    restartCount();
+  };
+  const check = () => {
+    if (document.visibilityState === 'hidden') return;
+    if (audio.currentTime !== lastPosition) {
+      const stalledMs = Date.now() - lastMovedAt;
+      started = true;
+      restartCount();
+      if (stalled) {
+        stalled = false;
+        onResume?.({ stalledMs });
+      }
+      return;
+    }
+    if (stalled) return;
+    stillMs += STALL_CHECK_MS;
+    if (stillMs < STALL_MS) return;
+    stalled = true;
+    onStall({
+      started,
+      positionMs: Math.round(audio.currentTime * 1000),
+      readyState: audio.readyState,
+      networkState: audio.networkState,
+      paused: audio.paused,
+      lastMediaEvent,
+      backgrounded,
+    });
+  };
+
+  const timer = setInterval(check, STALL_CHECK_MS);
+  const stop = () => {
+    clearInterval(timer);
+    for (const type of STALL_MEDIA_EVENTS)
+      audio.removeEventListener(type, rememberEvent);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+  };
+  for (const type of STALL_MEDIA_EVENTS)
+    audio.addEventListener(type, rememberEvent);
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  return stop;
+};
+
+/**
+ * 화면이 보일 때만 소리를 낸다 — 숨겨진 동안 건 재생은 돌아올 때까지 미루고, 재생 중에 숨겨지면 멈췄다가 돌아오면 잇는다.
+ * iOS 웹뷰는 앱이 내려가 있을 때 시작한 재생을 막고도 재생 중으로 남겨 끝 신호를 보내지 않는다.
+ * started는 처음 소리가 난 때 풀리고, 그 전에 stop하면 AbortError로 거부된다 — 직접 pause해 끊은 play()와 같은 모양이다
+ */
+const playWhileVisible = (
+  audio: HTMLAudioElement,
+): { started: Promise<void>; stop: () => void } => {
+  // 처음 소리가 나기 전까지만 쥐는 손잡이 — 한 번 풀리거나 거부되면 비운다
+  let firstPlay: {
+    resolve: () => void;
+    reject: (error: unknown) => void;
+  } | null = null;
+  const started = new Promise<void>((resolve, reject) => {
+    firstPlay = { resolve, reject };
+  });
+  const resolveFirstPlay = () => {
+    firstPlay?.resolve();
+    firstPlay = null;
+  };
+  const rejectFirstPlay = (error: unknown) => {
+    firstPlay?.reject(error);
+    firstPlay = null;
+  };
+  // 숨겨져서 멈춰 둔 재생 — 돌아오면 다시 건다
+  let held = false;
+
+  const play = () => {
+    audio.play().then(resolveFirstPlay, (error) => {
+      // 숨기며 pause해 끊긴 거부는 실패가 아니다. 소리가 난 뒤 다시 건 재생이 거부되면 멈춤 감시가 잡는다
+      if (!held) rejectFirstPlay(error);
+    });
+  };
+  const onVisibilityChange = () => {
+    if (document.visibilityState === 'hidden') {
+      if (audio.paused) return;
+      held = true;
+      audio.pause();
+      return;
+    }
+    if (!held) return;
+    held = false;
+    play();
+  };
+
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  if (document.visibilityState === 'hidden') held = true;
+  else play();
+  return {
+    started,
+    stop: () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      rejectFirstPlay(new DOMException('Aborted', 'AbortError'));
+    },
+  };
+};
 
 // 합성 응답을 기다리는 한도 — 망이 죽어 대화가 멈추는 것만 막는다. 느린 합성(실측 최대 21초)은 끊지 않는다
 const SYNTH_TIMEOUT_MS = 25_000;
@@ -168,10 +333,36 @@ export function useTts() {
     null,
   );
   const mountedRef = useRef(true);
+  // 지금 재생에 붙인 멈춤 감시와 화면 따라가기를 함께 끝내는 손잡이 — 늘 같이 켜고 같이 꺼서 하나로 쥔다.
+  // 끝난 재생이 감시를 남기면 뒤늦게 멈춤을 알리고, 돌아올 때 다시 틀어 버린다
+  const stopPlaybackRef = useRef<(() => void) | null>(null);
 
-  // 재생 리소스(오디오·objectURL·콜백)를 정리한다. stop과 onended가 공유하는 뒷정리.
+  const stopPlayback = () => {
+    stopPlaybackRef.current?.();
+    stopPlaybackRef.current = null;
+  };
+  // audio.play() 대신 쓴다 — 거는 순간부터 감시해 시작을 못 하고 멈춘 것도 잡고, 화면이 보일 때만 소리를 낸다.
+  // 돌려주는 Promise는 처음 소리가 난 때 풀린다. 감시를 먼저 붙여야 돌아올 때 시간을 다시 센 뒤 재생이 걸린다
+  const startPlayback = (
+    audio: HTMLAudioElement,
+    { onStall, onResume }: SpeakOptions = {},
+  ) => {
+    stopPlayback();
+    const stopStallWatch = onStall
+      ? watchStall(audio, { onStall, onResume })
+      : null;
+    const visible = playWhileVisible(audio);
+    stopPlaybackRef.current = () => {
+      stopStallWatch?.();
+      visible.stop();
+    };
+    return visible.started;
+  };
+
+  // 재생 리소스(오디오·objectURL·콜백·멈춤 감시·화면 따라가기)를 정리한다. stop과 onended가 공유하는 뒷정리.
   // 멈춘 엘리먼트의 늦은 이벤트(버퍼링 중 네트워크 끊김 등)는 떼어낸다 — 프리로드 폴백이 다시 열어 재생을 되살리면 안 된다
   const cleanup = () => {
+    stopPlayback();
     const audio = audioRef.current;
     if (audio) {
       audio.pause();
@@ -195,6 +386,7 @@ export function useTts() {
     const cache = cacheRef.current;
     return () => {
       mountedRef.current = false;
+      stopPlaybackRef.current?.();
       abortRef.current?.abort();
       prefetchAbortRef.current?.abort();
       audioRef.current?.pause();
@@ -277,11 +469,14 @@ export function useTts() {
       };
 
       try {
-        await audio.play();
+        await startPlayback(audio, options);
       } catch (error) {
         // onerror가 먼저 처리한 재생 실패면 여기서는 더 하지 않는다
         if (handled) return;
         handled = true;
+        // 실패는 실패로만 알린다 — 감시가 남으면 뒤늦게 멈춤까지 알리고, 돌아올 때 실패한 재생을 다시 건다.
+        // 다음 재생에 밀려났으면 손잡이가 이미 새 재생 것이라 건드리지 않는다(stop이 이 재생 것은 정리했다)
+        if (abortRef.current === controller) stopPlayback();
         throw error;
       }
       if (handled) return;
@@ -345,7 +540,7 @@ export function useTts() {
         options?.onError?.(new Error('오디오 재생에 실패했어요.'));
       };
       audio.onerror = fail;
-      audio.play().then(
+      startPlayback(audio, options).then(
         () => {
           if (!handled) {
             setStatus('active');
@@ -354,7 +549,7 @@ export function useTts() {
         },
         (error) => {
           // stop()으로 pause되어 play가 거부된 경우(AbortError)는 실패가 아니다 —
-          // 합성 폴백을 부르지 않는다. (StrictMode 재실행·전환에서 발생)
+          // 합성 폴백을 부르지 않는다. (StrictMode 재실행·전환, 소리 나기 전 stop에서 발생)
           if (error instanceof DOMException && error.name === 'AbortError')
             return;
           fail();
