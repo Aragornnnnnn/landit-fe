@@ -36,7 +36,7 @@ export const LandingPage = async ({ locale }: { locale: Locale }) => {
                   alt=""
                   width={240}
                   height={240}
-                  className="size-14 rounded-[22.5%] shadow-[0_6px_16px_rgba(90,50,20,0.18)]"
+                  className="size-14 rounded-[32%] shadow-[0_6px_16px_rgba(90,50,20,0.18)]"
                 />
                 {t('hero.brandLabel')}
               </p>
