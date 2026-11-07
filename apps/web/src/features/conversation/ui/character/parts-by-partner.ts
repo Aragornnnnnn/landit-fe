@@ -4,10 +4,10 @@
 import type { ComponentType, SVGProps } from 'react';
 
 import type { Partner } from '../../model/character-look';
-import { CHLOE_LIMBS, ChloeParts } from './ChloeParts';
-import { MARCO_LIMBS, MarcoParts } from './MarcoParts';
+import { CHLOE_LIMBS, CHLOE_VIEWBOX, ChloeParts } from './ChloeParts';
+import { MARCO_LIMBS, MARCO_VIEWBOX, MarcoParts } from './MarcoParts';
 import type { PartLayer } from './part-layer';
-import { TEDDY_LIMBS, TeddyParts } from './TeddyParts';
+import { TEDDY_LIMBS, TEDDY_VIEWBOX, TeddyParts } from './TeddyParts';
 
 export type { PartLayer };
 
@@ -29,4 +29,11 @@ export const LIMBS: Record<Partner, readonly PartLayer[]> = {
   marco: MARCO_LIMBS,
   chloe: CHLOE_LIMBS,
   teddy: TEDDY_LIMBS,
+};
+
+/** 캐릭터별 원래 그림 영역 — 소비처가 viewBox를 안 넘기면 이걸 쓴다 */
+export const VIEWBOX: Record<Partner, string> = {
+  marco: MARCO_VIEWBOX,
+  chloe: CHLOE_VIEWBOX,
+  teddy: TEDDY_VIEWBOX,
 };

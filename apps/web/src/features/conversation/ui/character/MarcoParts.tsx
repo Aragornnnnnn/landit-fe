@@ -3,6 +3,9 @@ import { type ReactElement, type SVGProps } from 'react';
 
 import type { PartLayer } from './part-layer';
 
+/** 원래 그림 영역 — 층 상자의 크기와 단위 환산의 기준이다 */
+export const MARCO_VIEWBOX = '292 40 440 610';
+
 /** 머리 다음에 얹히는 층 — 팔처럼 제 축으로 움직이는 조각이다 */
 export const MARCO_LIMBS: readonly PartLayer[] = ['arm-right', 'arm-left'];
 
@@ -643,7 +646,7 @@ export const MarcoParts = ({
 
   return (
     <svg
-      viewBox="292 40 440 610"
+      viewBox={MARCO_VIEWBOX}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...props}

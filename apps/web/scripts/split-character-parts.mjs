@@ -358,7 +358,7 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
     ...limbs.map((layer) => `{${varOf(layer)}}`),
   ].join('\n');
 
-  const openTag = `<svg viewBox="${cfg.viewBox}" fill="none" xmlns="http://www.w3.org/2000/svg"`;
+  const openTag = `<svg viewBox={${name.toUpperCase()}_VIEWBOX} fill="none" xmlns="http://www.w3.org/2000/svg"`;
   const limbsName = `${name.toUpperCase()}_LIMBS`;
 
   // 파츠를 움직여야 하므로 컴포넌트로 인라인한다. 마스크가 있으면 useId로 인스턴스마다 다른 id를 앞머리에 붙인다
@@ -367,6 +367,9 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
     toJsx(`import { ${masks.size ? 'useId, ' : ''}type ReactElement, type SVGProps } from 'react';
 
 import type { PartLayer } from './part-layer';
+
+/** 원래 그림 영역 — 층 상자의 크기와 단위 환산의 기준이다 */
+export const ${name.toUpperCase()}_VIEWBOX = '${cfg.viewBox}';
 
 /** 머리 다음에 얹히는 층 — 팔처럼 제 축으로 움직이는 조각이다 */
 export const ${limbsName}: readonly PartLayer[] = [${limbs.map((l) => `'${l}'`).join(', ')}];
