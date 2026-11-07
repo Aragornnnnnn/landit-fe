@@ -4,7 +4,6 @@ import type { Translator } from '@/shared/i18n/translator';
 import { APP_STORE_URL, PLAY_STORE_URL } from '@/shared/lib/store-listing';
 
 import { buildLandingFaq } from './landing-faq';
-import { LANDING_STATS } from './landing-stats';
 import { screenPath } from './screen-image';
 
 export const SITE_URL = 'https://www.landit.im';
@@ -69,12 +68,6 @@ export const buildStructuredData = (
       downloadUrl: [APP_STORE_URL, PLAY_STORE_URL],
       featureList: FEATURE_KEYS.map((key) => t(`structuredData.${key}`)),
       offers: { '@type': 'Offer', price: 0, priceCurrency: CURRENCY[locale] },
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: LANDING_STATS.rating.value,
-        ratingCount: LANDING_STATS.rating.count,
-        bestRating: 5,
-      },
     },
     {
       '@context': 'https://schema.org',
