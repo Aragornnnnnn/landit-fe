@@ -123,4 +123,22 @@ describe('파츠 층 나누기', () => {
       }
     },
   );
+
+  it.each(PARTNERS)(
+    '%s — 마스크 영역은 가리는 부위를 따라간다 — 고정된 큰 영역이면 층이 그만큼 커져 GPU 타일 메모리를 잡아먹는다',
+    (partner) => {
+      // Given
+      const Parts = PARTS[partner];
+
+      for (const layer of stackOf(partner)) {
+        // When
+        const { container } = render(<Parts layer={layer} />);
+
+        // Then
+        for (const mask of container.querySelectorAll('mask'))
+          expect(mask.getAttribute('maskUnits')).not.toBe('userSpaceOnUse');
+        cleanup();
+      }
+    },
+  );
 });

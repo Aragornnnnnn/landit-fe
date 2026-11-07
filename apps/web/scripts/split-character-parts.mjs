@@ -235,7 +235,7 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
           (h.slice === sliceName && h.at > j)),
     );
   // 마스크 id는 인스턴스마다 다르다(같은 화면에 아바타·초상화로 두 번 그려진다) — 컴포넌트가 useId로 앞머리를 붙인다.
-  // 마스크 영역은 넉넉히 잡는다 — 소비처가 viewBox를 더 넓게 덮어써도 마스크 밖이라고 잘려 나가면 안 된다.
+  // 마스크 영역은 기본값(가리는 부위 영역 +10%)에 맡긴다 — 소비처가 viewBox를 넓혀도 부위를 따라가니 잘리지 않고, 고정된 큰 영역을 주면 층이 그만큼 커져 GPU 타일 메모리를 잡아먹는다.
   // 구멍 경로의 id는 뗀다 — 같은 구멍이 여러 마스크에 들어가면 id가 겹친다
   const masks = new Map();
   // 층마다 따로 그려지므로 어느 층이 어느 마스크를 쓰는지 적어 둔다 — 층 SVG에는 제 마스크만 넣는다
@@ -253,7 +253,7 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
       );
       masks.set(
         key,
-        `    <mask id={\`\${uid}${key}\`} maskUnits="userSpaceOnUse" x="-10000" y="-10000" width="20000" height="20000">\n      <rect x="-10000" y="-10000" width="20000" height="20000" fill="white" />\n${black.join('\n')}\n    </mask>`,
+        `    <mask id={\`\${uid}${key}\`}>\n      <rect x="-10000" y="-10000" width="20000" height="20000" fill="white" />\n${black.join('\n')}\n    </mask>`,
       );
     }
     return ` mask={\`url(#\${uid}${key})\`}`;
