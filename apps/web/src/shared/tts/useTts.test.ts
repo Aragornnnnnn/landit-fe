@@ -1194,6 +1194,70 @@ describe('useTts', () => {
       expect(onStart).toHaveBeenCalledTimes(1);
     });
 
+    it('기다리던 재생을 다음 재생이 밀어내도, 밀려난 재생이 새 재생을 끝내지 않는다', async () => {
+      // Given — 내려가 있는 동안 건 합성 음성이 돌아오길 기다린다(음원은 이미 캐시에 있다)
+      setVisibility('hidden');
+      const first = vi.fn();
+      const second = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => {
+        void result.current.speak('Hello', harper, { onStart: first });
+      });
+      await act(async () => {});
+
+      // When — 같은 문장을 다시 건다(다시 듣기처럼 캐시라 기다림 없이 재생까지 건다)
+      act(() => {
+        void result.current.speak('Hello', harper, { onStart: second });
+      });
+      await act(async () => {});
+      await act(async () => setVisibility('visible'));
+
+      // Then
+      expect(first).not.toHaveBeenCalled();
+      expect(second).toHaveBeenCalledTimes(1);
+      expect(result.current.status).toBe('active');
+    });
+
+    it('기다리던 합성 음성을 정적 음원이 밀어내도, 돌아오면 정적 음원이 시작된다', async () => {
+      // Given
+      setVisibility('hidden');
+      const first = vi.fn();
+      const second = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => {
+        void result.current.speak('Hello', harper, { onStart: first });
+      });
+      await act(async () => {});
+
+      // When
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStart: second }));
+      await act(async () => {});
+      await act(async () => setVisibility('visible'));
+
+      // Then
+      expect(first).not.toHaveBeenCalled();
+      expect(second).toHaveBeenCalledTimes(1);
+      expect(result.current.status).toBe('active');
+    });
+
+    it('내려가 있는 동안 음원이 실패하면 실패로 알리고, 돌아와도 틀지 않는다', async () => {
+      // Given
+      setVisibility('hidden');
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/missing.mp3', { onError }));
+      const audio = FakeAudio.instances[0]!;
+
+      // When
+      act(() => audio.onerror?.());
+      await act(async () => setVisibility('visible'));
+
+      // Then
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(audio.play).not.toHaveBeenCalled();
+      expect(result.current.status).toBe('error');
+    });
+
     it('기다리는 동안 재생을 멈추면 돌아와도 틀지 않는다', async () => {
       // Given
       setVisibility('hidden');

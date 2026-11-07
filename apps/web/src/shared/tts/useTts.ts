@@ -333,42 +333,36 @@ export function useTts() {
     null,
   );
   const mountedRef = useRef(true);
-  // 지금 재생의 멈춤 감시를 끝내는 손잡이 — 재생이 끝나거나 바뀌면 함께 끝낸다
-  const stopStallWatchRef = useRef<(() => void) | null>(null);
-  // 지금 재생을 화면에 맞춰 멈추고 잇는 일을 끝내는 손잡이 — 끝난 재생을 돌아올 때 다시 틀면 안 된다
-  const stopPlayWhileVisibleRef = useRef<(() => void) | null>(null);
+  // 지금 재생에 붙인 멈춤 감시와 화면 따라가기를 함께 끝내는 손잡이 — 늘 같이 켜고 같이 꺼서 하나로 쥔다.
+  // 끝난 재생이 감시를 남기면 뒤늦게 멈춤을 알리고, 돌아올 때 다시 틀어 버린다
+  const stopPlaybackRef = useRef<(() => void) | null>(null);
 
-  const stopPlayWhileVisible = () => {
-    stopPlayWhileVisibleRef.current?.();
-    stopPlayWhileVisibleRef.current = null;
+  const stopPlayback = () => {
+    stopPlaybackRef.current?.();
+    stopPlaybackRef.current = null;
   };
-  // audio.play() 대신 쓴다 — 돌려주는 Promise는 처음 소리가 난 때 풀린다
-  const playWhenVisible = (audio: HTMLAudioElement) => {
-    stopPlayWhileVisible();
-    const { started, stop } = playWhileVisible(audio);
-    stopPlayWhileVisibleRef.current = stop;
-    return started;
-  };
-
-  const stopStallWatch = () => {
-    stopStallWatchRef.current?.();
-    stopStallWatchRef.current = null;
-  };
-  // 재생을 거는 순간부터 감시한다 — 시작을 못 하고 멈춘 것도 잡아야 한다
-  const startStallWatch = (
+  // audio.play() 대신 쓴다 — 거는 순간부터 감시해 시작을 못 하고 멈춘 것도 잡고, 화면이 보일 때만 소리를 낸다.
+  // 돌려주는 Promise는 처음 소리가 난 때 풀린다. 감시를 먼저 붙여야 돌아올 때 시간을 다시 센 뒤 재생이 걸린다
+  const startPlayback = (
     audio: HTMLAudioElement,
     { onStall, onResume }: SpeakOptions = {},
   ) => {
-    stopStallWatch();
-    if (onStall)
-      stopStallWatchRef.current = watchStall(audio, { onStall, onResume });
+    stopPlayback();
+    const stopStallWatch = onStall
+      ? watchStall(audio, { onStall, onResume })
+      : null;
+    const visible = playWhileVisible(audio);
+    stopPlaybackRef.current = () => {
+      stopStallWatch?.();
+      visible.stop();
+    };
+    return visible.started;
   };
 
-  // 재생 리소스(오디오·objectURL·콜백·멈춤 감시)를 정리한다. stop과 onended가 공유하는 뒷정리.
+  // 재생 리소스(오디오·objectURL·콜백·멈춤 감시·화면 따라가기)를 정리한다. stop과 onended가 공유하는 뒷정리.
   // 멈춘 엘리먼트의 늦은 이벤트(버퍼링 중 네트워크 끊김 등)는 떼어낸다 — 프리로드 폴백이 다시 열어 재생을 되살리면 안 된다
   const cleanup = () => {
-    stopPlayWhileVisible();
-    stopStallWatch();
+    stopPlayback();
     const audio = audioRef.current;
     if (audio) {
       audio.pause();
@@ -392,8 +386,7 @@ export function useTts() {
     const cache = cacheRef.current;
     return () => {
       mountedRef.current = false;
-      stopStallWatchRef.current?.();
-      stopPlayWhileVisibleRef.current?.();
+      stopPlaybackRef.current?.();
       abortRef.current?.abort();
       prefetchAbortRef.current?.abort();
       audioRef.current?.pause();
@@ -475,16 +468,15 @@ export function useTts() {
         options?.onError?.(playbackError);
       };
 
-      startStallWatch(audio, options);
       try {
-        await playWhenVisible(audio);
+        await startPlayback(audio, options);
       } catch (error) {
         // onerror가 먼저 처리한 재생 실패면 여기서는 더 하지 않는다
         if (handled) return;
         handled = true;
-        // 실패는 실패로만 알린다 — 감시가 남으면 뒤늦게 멈춤까지 알리고, 돌아올 때 실패한 재생을 다시 건다
-        stopStallWatch();
-        stopPlayWhileVisible();
+        // 실패는 실패로만 알린다 — 감시가 남으면 뒤늦게 멈춤까지 알리고, 돌아올 때 실패한 재생을 다시 건다.
+        // 다음 재생에 밀려났으면 손잡이가 이미 새 재생 것이라 건드리지 않는다(stop이 이 재생 것은 정리했다)
+        if (abortRef.current === controller) stopPlayback();
         throw error;
       }
       if (handled) return;
@@ -548,8 +540,7 @@ export function useTts() {
         options?.onError?.(new Error('오디오 재생에 실패했어요.'));
       };
       audio.onerror = fail;
-      startStallWatch(audio, options);
-      playWhenVisible(audio).then(
+      startPlayback(audio, options).then(
         () => {
           if (!handled) {
             setStatus('active');
