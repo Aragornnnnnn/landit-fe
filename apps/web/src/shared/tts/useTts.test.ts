@@ -854,7 +854,7 @@ describe('useTts', () => {
       );
     });
 
-    it('화면이 숨겨진 동안은 세지 않고, 돌아오면 처음부터 센다 — 앱을 내리면 iOS가 재생을 멈춘다', () => {
+    it('화면이 숨겨진 동안은 세지 않고, 돌아오면 처음부터 센다 — 숨겨지면 재생을 멈춰 두므로 멈춤이 아니다', () => {
       // Given
       const onStall = vi.fn();
       const { result } = renderHook(() => useTts());
@@ -1051,6 +1051,165 @@ describe('useTts', () => {
 
       for (const listeners of audio.listeners.values())
         expect(listeners.size).toBe(0);
+    });
+  });
+
+  // iOS 웹뷰는 앱이 내려가 있을 때 시작한 재생을 막고도 재생 중으로 남겨, 끝 신호가 오지 않는다
+  describe('앱이 내려가 있을 때', () => {
+    beforeEach(() => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => fakeAudioResponse()),
+      );
+      setVisibility('visible');
+    });
+
+    afterEach(() => {
+      Reflect.deleteProperty(document, 'visibilityState');
+    });
+
+    it('내려가 있는 동안 건 음원은 틀지 않고 기다렸다가, 돌아오면 튼다', async () => {
+      // Given
+      setVisibility('hidden');
+      const onStart = vi.fn();
+      const { result } = renderHook(() => useTts());
+
+      // When
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStart }));
+      await act(async () => {});
+
+      // Then
+      const audio = FakeAudio.instances[0]!;
+      expect(audio.play).not.toHaveBeenCalled();
+      expect(onStart).not.toHaveBeenCalled();
+      await act(async () => setVisibility('visible'));
+      expect(audio.play).toHaveBeenCalledTimes(1);
+      expect(onStart).toHaveBeenCalledTimes(1);
+      expect(result.current.status).toBe('active');
+    });
+
+    it('합성 음성도 내려가 있는 동안엔 기다렸다가, 돌아오면 튼다', async () => {
+      // Given
+      setVisibility('hidden');
+      const onStart = vi.fn();
+      const { result } = renderHook(() => useTts());
+
+      // When
+      let spoken = false;
+      act(() => {
+        void result.current
+          .speak('Hello', harper, { onStart })
+          .then(() => (spoken = true));
+      });
+      await act(async () => {});
+
+      // Then
+      const audio = FakeAudio.instances[0]!;
+      expect(audio.play).not.toHaveBeenCalled();
+      expect(spoken).toBe(false);
+      await act(async () => setVisibility('visible'));
+      expect(audio.play).toHaveBeenCalledTimes(1);
+      expect(onStart).toHaveBeenCalledTimes(1);
+      expect(spoken).toBe(true);
+    });
+
+    it('재생 중에 앱을 내리면 멈췄다가, 돌아오면 이어서 튼다', async () => {
+      // Given
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3'));
+      await act(async () => {});
+      const audio = FakeAudio.instances[0]!;
+
+      // When
+      act(() => setVisibility('hidden'));
+
+      // Then
+      expect(audio.pause).toHaveBeenCalledTimes(1);
+      act(() => setVisibility('visible'));
+      expect(audio.play).toHaveBeenCalledTimes(2);
+    });
+
+    it('재생이 시작되길 기다리는 중에 앱을 내려도 실패로 알리지 않고, 돌아오면 튼다', async () => {
+      // Given — 브라우저처럼 시작 전에 pause()가 들어오면 play()가 AbortError로 거부된다.
+      // 미리 열어 둔 엘리먼트라 play를 걸기 전에 그 동작을 심을 수 있다
+      const onStart = vi.fn();
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.prefetchSrc('/audio/q.mp3'));
+      const audio = FakeAudio.instances[0]!;
+      let interrupt: () => void = () => {};
+      audio.play.mockImplementationOnce(
+        () =>
+          new Promise((_, reject) => {
+            interrupt = () =>
+              reject(new DOMException('interrupted', 'AbortError'));
+          }),
+      );
+      audio.pause.mockImplementationOnce(() => interrupt());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStart, onError }));
+
+      // When
+      await act(async () => setVisibility('hidden'));
+
+      // Then — 실패도 아니고, 프리로드가 죽은 것으로 보고 새로 열지도 않는다
+      expect(onError).not.toHaveBeenCalled();
+      expect(FakeAudio.instances).toHaveLength(1);
+      await act(async () => setVisibility('visible'));
+      expect(audio.play).toHaveBeenCalledTimes(2);
+      expect(onStart).toHaveBeenCalledTimes(1);
+    });
+
+    it('기다리는 동안 재생을 멈추면 돌아와도 틀지 않는다', async () => {
+      // Given
+      setVisibility('hidden');
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onError }));
+
+      // When
+      act(() => result.current.stop());
+      await act(async () => setVisibility('visible'));
+
+      // Then
+      expect(FakeAudio.instances[0]!.play).not.toHaveBeenCalled();
+      expect(onError).not.toHaveBeenCalled();
+      expect(result.current.status).toBe('idle');
+    });
+
+    it('끝나기 직전에 내려 멈춰 둔 사이 끝 신호가 오면, 돌아와도 처음부터 다시 틀지 않는다', async () => {
+      // Given — 실기기에서 끝 0.03초 전에 내리자 멈춘 뒤에도 끝 신호가 왔다
+      const onEnd = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onEnd }));
+      await act(async () => {});
+      const audio = FakeAudio.instances[0]!;
+
+      // When
+      act(() => setVisibility('hidden'));
+      act(() => audio.onended?.());
+      act(() => setVisibility('visible'));
+
+      // Then
+      expect(audio.play).toHaveBeenCalledTimes(1);
+      expect(onEnd).toHaveBeenCalledTimes(1);
+    });
+
+    it('끝난 재생은 앱을 내렸다 올려도 다시 틀지 않는다', async () => {
+      // Given
+      const onEnd = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onEnd }));
+      await act(async () => {});
+      const audio = FakeAudio.instances[0]!;
+      act(() => audio.onended?.());
+
+      // When
+      act(() => setVisibility('hidden'));
+      act(() => setVisibility('visible'));
+
+      // Then
+      expect(audio.play).toHaveBeenCalledTimes(1);
+      expect(onEnd).toHaveBeenCalledTimes(1);
     });
   });
 
