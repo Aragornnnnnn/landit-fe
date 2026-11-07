@@ -249,7 +249,7 @@ describe('UserTranscript', () => {
       fireEvent.change(input, { target: { value: 'ㅎ' } });
 
       expect(input.closest('.animate-shake')).not.toBeNull();
-      expect(hapticMock).toHaveBeenCalledWith('error');
+      expect(hapticMock).toHaveBeenCalledWith('warning');
     });
 
     it('흔들림이 끝나면 다음 한글에 다시 흔들 수 있게 거둔다', () => {
@@ -422,7 +422,7 @@ describe('UserTranscript', () => {
       expect(press(input, 'insertText', 'ㅇ')).toBe(true);
 
       expect(input.closest('.animate-shake')).not.toBeNull();
-      expect(hapticMock).toHaveBeenCalledWith('error');
+      expect(hapticMock).toHaveBeenCalledWith('warning');
       expect(screen.getByText('영어로만 입력할 수 있어요')).toBeInTheDocument();
     });
 

@@ -2,7 +2,11 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { haptic } from '@/shared/haptics';
+
 import { ReferralCodeInput } from './ReferralCodeInput';
+
+vi.mock('@/shared/haptics', () => ({ haptic: vi.fn() }));
 
 const renderInput = () => {
   const onType = vi.fn();
@@ -91,5 +95,28 @@ describe('ReferralCodeInput', () => {
     const after = container.querySelector('.animate-shake');
     expect(before).not.toBeNull();
     expect(after).not.toBe(before);
+  });
+
+  it('거절돼 칸이 흔들릴 때 warning 진동을 같이 준다 — 다시 넣으면 되는 막힘이다', () => {
+    const props = { value: 'K7QM3XPA', onType: vi.fn(), onPaste: vi.fn() };
+    const { rerender } = render(
+      <ReferralCodeInput {...props} tone="checking" />,
+    );
+    expect(haptic).not.toHaveBeenCalled();
+
+    rerender(<ReferralCodeInput {...props} tone="error" />);
+
+    expect(haptic).toHaveBeenCalledWith('warning');
+  });
+
+  it('같은 코드가 또 거절돼 다시 흔들리면 진동도 다시 준다', () => {
+    const props = { value: 'K7QM3XPA', onType: vi.fn(), onPaste: vi.fn() };
+    const { rerender } = render(
+      <ReferralCodeInput {...props} tone="error" entryKey={1} />,
+    );
+
+    rerender(<ReferralCodeInput {...props} tone="error" entryKey={2} />);
+
+    expect(haptic).toHaveBeenCalledTimes(2);
   });
 });

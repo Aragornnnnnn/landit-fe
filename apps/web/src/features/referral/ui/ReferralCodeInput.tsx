@@ -4,6 +4,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { haptic } from '@/shared/haptics';
+
 import {
   cleanTypedReferralCode,
   findReferralCode,
@@ -33,6 +35,11 @@ export const ReferralCodeInput = ({
 }) => {
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // 거절돼 칸 묶음이 흔들릴 때 진동도 같이 준다 — 다시 넣으면 되는 막힘이라 warning. 같은 코드가 또 거절되면 entryKey가 바뀌어 다시 울린다
+  useEffect(() => {
+    if (tone === 'error') haptic('warning');
+  }, [tone, entryKey]);
 
   // 다 차면 키보드를 내린다 — 확인 결과와 그다음 연출이 키보드에 가리지 않게
   useEffect(() => {

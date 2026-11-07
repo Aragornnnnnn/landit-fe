@@ -243,7 +243,7 @@ const TranscriptEditor = ({
   // 글자가 걸러졌다는 걸 흔들림·진동·토스트로 바로 알린다
   const warnNonEnglish = () => {
     setShaking(true);
-    haptic('error');
+    haptic('warning');
     // 이어 치는 동안 계속 띄워도 토스트는 그대로 떠 있고 시간만 늘어난다
     showToast(t('englishOnlyToast'), 'warning');
   };
@@ -296,7 +296,7 @@ const TranscriptEditor = ({
       writeBack(before + after, before.length);
       onChange?.(before + after);
       setShaking(true);
-      haptic('error');
+      haptic('warning');
       showToast(limitNotice, 'warning');
       return;
     }
