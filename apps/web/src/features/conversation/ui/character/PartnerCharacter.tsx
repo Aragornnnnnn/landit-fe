@@ -397,11 +397,12 @@ export const PartnerCharacter = ({
   const stillness = useReducedMotion() ?? false;
   const frameBox = viewBox ?? VIEWBOX[partner];
 
-  // 첫 페인트 전에 기준점을 놓는다 — 늦으면 쉬는 입이 엉뚱한 축으로 눌린 채 한 번 그려진다
+  // 첫 페인트 전에 기준점을 놓는다 — 늦으면 쉬는 입이 엉뚱한 축으로 눌린 채 한 번 그려진다.
+  // 표정이 바뀔 때도 다시 잰다 — 찡그린 입 대신 숨은 입은 잴 수 없어, 찡그린 채 처음 그려지면 입 기준점이 비어 있다
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (root) placePivots(root, readViewBox(frameBox));
-  }, [partner, frameBox]);
+  }, [partner, frameBox, posture, expression]);
 
   // 숨긴 채 그려졌다가 보이게 되면(크기가 생기면) 그때 잰다
   useEffect(() => {

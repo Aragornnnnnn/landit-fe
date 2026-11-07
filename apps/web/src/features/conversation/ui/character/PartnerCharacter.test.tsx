@@ -264,4 +264,40 @@ describe('PartnerCharacter 층', () => {
     );
     expect(mouthLayer?.style.transformOrigin).toBe('55.000% 37.875%');
   });
+
+  it('입이 숨은 채 처음 그려져도 표정이 풀리면 입 기준점을 잡는다 — 찡그린 동안엔 입이 숨어 잴 수 없다', () => {
+    // Given — 찡그린 동안 숨은 입은 영역이 0이다
+    let mouthHidden = true;
+    plant(svgPrototype, 'getBBox', function (this: SVGElement) {
+      return this.id === 'mouth' && !mouthHidden
+        ? ({ x: 300, y: 500, width: 40, height: 20 } as DOMRect)
+        : ({ x: 0, y: 0, width: 0, height: 0 } as DOMRect);
+    });
+    const { container, rerender } = render(
+      <PartnerCharacter
+        partner="chloe"
+        look={{ posture: 'idle', expression: 'frown' }}
+        speech={null}
+        viewBox="100 200 400 800"
+      />,
+    );
+    const mouthLayer = container.querySelector<HTMLElement>(
+      '[data-layer="mouth"]',
+    );
+    expect(mouthLayer?.style.transformOrigin).toBe('');
+
+    // When
+    mouthHidden = false;
+    rerender(
+      <PartnerCharacter
+        partner="chloe"
+        look={{ posture: 'idle', expression: 'neutral' }}
+        speech={null}
+        viewBox="100 200 400 800"
+      />,
+    );
+
+    // Then
+    expect(mouthLayer?.style.transformOrigin).toBe('55.000% 37.875%');
+  });
 });
