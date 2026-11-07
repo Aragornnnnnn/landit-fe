@@ -80,6 +80,7 @@ export const EVENTS = {
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
   SPEECH_PLAYBACK_FAILED: 'Speech Playback Failed',
   SPEECH_PLAYBACK_STALLED: 'Speech Playback Stalled',
+  SPEECH_PLAYBACK_RESUMED: 'Speech Playback Resumed',
   HINT_USED: 'Hint Used',
   SCENARIO_TALK_COMPLETED: 'Scenario Talk Completed',
   SCENARIO_TALK_ABANDONED: 'Scenario Talk Abandoned',
@@ -719,7 +720,7 @@ export type EventProps = {
     session_id?: number;
     source: SpeechAudioSource;
   };
-  // 대화 상대 발화의 재생 위치가 3초(받는 중이면 8초) 그대로라 내 차례로 넘겼다(소리는 끄지 않는다). 스몰톡 탭 인사는 턴이 없어 안 찍힌다.
+  // 대화 상대 발화의 재생 위치가 3초 그대로라 내 차례로 넘겼다(소리는 끄지 않는다). 스몰톡 탭 인사는 턴이 없어 안 찍힌다.
   // 오디오 상태는 왜 멈췄는지 좁히는 단서다
   // started = 재생 위치가 한 번이라도 움직였나, last_media_event = 멈추기 전 엘리먼트의 마지막 미디어 이벤트
   'Speech Playback Stalled': {
@@ -731,6 +732,13 @@ export type EventProps = {
     network_state: number;
     paused: boolean;
     last_media_event: string | null;
+  };
+  // 멈춰서 턴을 넘긴 뒤 소리가 다시 나왔다(발화당 한 번). stalled_ms = 재생 위치가 마지막으로 움직인 뒤 다시 움직이기까지 걸린 시간 —
+  // 멈춤 기준(3초)이 짧아 정상 재생을 잘못 넘긴 경우를 세어 기준을 조정하는 데 쓴다
+  'Speech Playback Resumed': {
+    session_id?: number;
+    source: SpeechAudioSource;
+    stalled_ms: number;
   };
   'Hint Used': { source: HintSource; level: number };
   'Scenario Talk Completed': {

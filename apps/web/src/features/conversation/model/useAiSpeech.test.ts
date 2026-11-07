@@ -22,14 +22,15 @@ const ttsMock = vi.hoisted(() => {
     onEnd: undefined as (() => void) | undefined,
     onError: undefined as ((error?: Error) => void) | undefined,
     onStall: undefined as ((snapshot: unknown) => void) | undefined,
-    onResume: undefined as (() => void) | undefined,
+    onResume: undefined as
+      ((resume: { stalledMs: number }) => void) | undefined,
   };
   interface CapturedOptions {
     onStart?: (playback: FakePlayback) => void;
     onEnd?: () => void;
     onError?: (error?: Error) => void;
     onStall?: (snapshot: unknown) => void;
-    onResume?: () => void;
+    onResume?: (resume: { stalledMs: number }) => void;
   }
   const capture = (opts?: CapturedOptions) => {
     state.onStart = opts?.onStart;
@@ -1080,6 +1081,25 @@ describe('재생이 멈췄을 때', () => {
     expect(ttsMock.state.onStall).toBeUndefined();
   });
 
+  it('턴을 넘긴 뒤 소리가 다시 나오면 멈춰 있던 시간을 한 번만 기록한다 — 멈춤 기준을 조정하는 근거다', async () => {
+    // Given
+    await renderTurnPassed({ sessionId: 7 });
+    vi.mocked(track).mockClear();
+
+    // When — 다시 나왔다가 또 멈추고 다시 나온다
+    await act(async () => ttsMock.state.onResume?.({ stalledMs: 4_500 }));
+    await stall();
+    await act(async () => ttsMock.state.onResume?.({ stalledMs: 3_500 }));
+
+    // Then
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith(EVENTS.SPEECH_PLAYBACK_RESUMED, {
+      session_id: 7,
+      source: 'prerecorded',
+      stalled_ms: 4_500,
+    });
+  });
+
   it('멈췄던 소리가 다시 나오면 입모양도 다시 소리를 따른다', async () => {
     // Given — 입이 움직이다 멈춰 턴을 넘겼다
     const { result } = renderTurn();
@@ -1089,7 +1109,7 @@ describe('재생이 멈췄을 때', () => {
     expect(result.current.speech).toBeNull();
 
     // When
-    await act(async () => ttsMock.state.onResume?.());
+    await act(async () => ttsMock.state.onResume?.({ stalledMs: 4_500 }));
 
     // Then
     expect(result.current.speech).toEqual({ playback, text: OPENING });
@@ -1101,7 +1121,7 @@ describe('재생이 멈췄을 때', () => {
     await act(async () =>
       ttsMock.state.onStart?.({ progress: () => 0.3, source: 'q.mp3' }),
     );
-    await act(async () => ttsMock.state.onResume?.());
+    await act(async () => ttsMock.state.onResume?.({ stalledMs: 4_500 }));
     expect(result.current.replaying).toBe(true);
     clearTtsCalls();
 
@@ -1128,7 +1148,7 @@ describe('재생이 멈췄을 때', () => {
   it('남은 소리가 다시 멈추면 다시 듣기도 재생 중이 아니다', async () => {
     // Given
     const { result } = await renderTurnPassed();
-    await act(async () => ttsMock.state.onResume?.());
+    await act(async () => ttsMock.state.onResume?.({ stalledMs: 4_500 }));
     expect(result.current.replaying).toBe(true);
 
     // When
@@ -1141,7 +1161,7 @@ describe('재생이 멈췄을 때', () => {
   it('남은 소리가 끝나면 다시 듣기도 꺼지고, 그 뒤 마이크를 켜도 다른 소리를 끄지 않는다', async () => {
     // Given
     const rendered = await renderTurnPassed();
-    await act(async () => ttsMock.state.onResume?.());
+    await act(async () => ttsMock.state.onResume?.({ stalledMs: 4_500 }));
     await act(async () => ttsMock.state.onEnd?.());
     expect(rendered.result.current.replaying).toBe(false);
     clearTtsCalls();

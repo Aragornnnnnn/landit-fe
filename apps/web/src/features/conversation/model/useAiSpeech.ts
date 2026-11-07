@@ -132,6 +132,8 @@ const runSpeech = ({
   let ended = false;
   // 지금 구간의 입모양 — 멈췄던 소리가 다시 나오면 이걸로 입을 다시 맞춘다
   let lipSync: PlayingSpeech | null = null;
+  // 다시 나온 기록은 발화당 한 번 — 멈춤 기준이 정상 재생을 잘못 넘긴 횟수를 센다
+  let resumeTracked = false;
 
   // 턴을 넘긴 뒤의 남은 소리 상태는 훅이 다시 듣기 버튼에 쓴다
   const reportLingeringSound = (state: LingeringSoundState) => {
@@ -167,16 +169,29 @@ const runSpeech = ({
       onSoundStart();
       onSpeechEnd();
     };
-  // 멈췄던 소리가 다시 나오면 입도 다시 소리를 따른다
-  const resumeLipSync = () => {
-    if (ignore) return;
-    if (lipSync) setSpeech(lipSync);
-    reportLingeringSound('playing');
-  };
+  // 멈췄던 소리가 다시 나오면 입도 다시 소리를 따르고, 턴을 넘긴 뒤라면 얼마나 멈춰 있었는지 남긴다
+  const resumeLipSync =
+    (playbackSource: SpeechAudioSource) =>
+    ({ stalledMs }: { stalledMs: number }) => {
+      if (ignore) return;
+      if (lipSync) setSpeech(lipSync);
+      if (turnPassed && !resumeTracked) {
+        resumeTracked = true;
+        track(EVENTS.SPEECH_PLAYBACK_RESUMED, {
+          session_id: sessionId ?? undefined,
+          source: playbackSource,
+          stalled_ms: stalledMs,
+        });
+      }
+      reportLingeringSound('playing');
+    };
   // 재생 모듈에 멈춤 감시를 신청한다 — 턴이 없는 재생(다시 듣기·인사)은 신청하지 않는다
   const followStall = (playbackSource: SpeechAudioSource) =>
     passTurnOnStall
-      ? { onStall: passTurn(playbackSource), onResume: resumeLipSync }
+      ? {
+          onStall: passTurn(playbackSource),
+          onResume: resumeLipSync(playbackSource),
+        }
       : {};
   // 입모양은 지금 나는 소리를 따른다 — 분리 재생에선 구간마다 텍스트가 다르다
   const startLipSync = (playback: TtsPlayback, text: string) => {

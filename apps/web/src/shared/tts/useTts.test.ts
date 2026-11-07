@@ -977,7 +977,7 @@ describe('useTts', () => {
       // When
       act(() => audio.emit('waiting'));
       act(() => audio.emit('stalled'));
-      act(() => vi.advanceTimersByTime(8_000));
+      act(() => vi.advanceTimersByTime(3_000));
 
       // Then
       expect(onStall).toHaveBeenCalledWith({
@@ -990,7 +990,7 @@ describe('useTts', () => {
       });
     });
 
-    it('아직 받는 중이면(재생할 데이터가 없으면) 8초까지 기다린다 — 느린 망에서 첫 음원을 멈춤으로 잘못 보지 않게', () => {
+    it('받는 중이어도 같은 3초로 본다 — 질문 음원은 70KB 이하라 정상이면 3초 안에 내려온다', () => {
       // Given — 음원을 받는 중이라 재생할 데이터가 아직 없다
       const onStall = vi.fn();
       const { result } = renderHook(() => useTts());
@@ -998,31 +998,12 @@ describe('useTts', () => {
       FakeAudio.instances[0]!.readyState = 1;
 
       // When
-      act(() => vi.advanceTimersByTime(7_999));
-      expect(onStall).not.toHaveBeenCalled();
-      act(() => vi.advanceTimersByTime(1));
+      act(() => vi.advanceTimersByTime(3_000));
 
       // Then
-      expect(onStall).toHaveBeenCalledTimes(1);
-    });
-
-    it('데이터가 도착하면 그때부터 3초를 센다', () => {
-      // Given — 5초 동안 받다가 데이터가 왔다
-      const onStall = vi.fn();
-      const { result } = renderHook(() => useTts());
-      act(() => result.current.speakSrc('/audio/q.mp3', { onStall }));
-      const audio = FakeAudio.instances[0]!;
-      audio.readyState = 1;
-      act(() => vi.advanceTimersByTime(5_000));
-
-      // When — 데이터는 왔지만 재생 위치가 움직이지 않는다
-      audio.readyState = 4;
-
-      // Then — 받던 시간은 빼고 3초를 센다
-      act(() => vi.advanceTimersByTime(2_500));
-      expect(onStall).not.toHaveBeenCalled();
-      act(() => vi.advanceTimersByTime(500));
-      expect(onStall).toHaveBeenCalledTimes(1);
+      expect(onStall).toHaveBeenCalledWith(
+        expect.objectContaining({ readyState: 1 }),
+      );
     });
 
     it('멈춘 뒤 재생 위치가 다시 움직이면 다시 나온다고 알리고, 또 멈추면 다시 알린다', () => {
@@ -1039,8 +1020,9 @@ describe('useTts', () => {
       audio.currentTime = 0.5;
       act(() => vi.advanceTimersByTime(500));
 
-      // Then
+      // Then — 재생 위치가 마지막으로 움직인 뒤 다시 움직이기까지 걸린 시간을 함께 알린다
       expect(onResume).toHaveBeenCalledTimes(1);
+      expect(onResume).toHaveBeenCalledWith({ stalledMs: 3_500 });
       act(() => vi.advanceTimersByTime(3_000));
       expect(onStall).toHaveBeenCalledTimes(2);
       expect(onResume).toHaveBeenCalledTimes(1);

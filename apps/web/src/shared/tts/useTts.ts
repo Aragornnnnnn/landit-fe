@@ -35,8 +35,8 @@ export interface TtsStallSnapshot {
 interface StallCallbacks {
   // 재생 위치가 오래 그대로가 됐다 — 다시 움직였다가 또 멈추면 또 부른다
   onStall: (snapshot: TtsStallSnapshot) => void;
-  // 멈췄던 재생 위치가 다시 움직였다
-  onResume?: () => void;
+  // 멈췄던 재생 위치가 다시 움직였다 — stalledMs는 마지막으로 움직인 뒤 다시 움직이기까지 걸린 시간이다
+  onResume?: (resume: { stalledMs: number }) => void;
 }
 
 /** onStart는 재생이 실제로 시작된 뒤에만 부른다 — 그 전에는 읽을 시각이 없다. onStall을 주면 멈춤 감시가 붙는다 */
@@ -46,12 +46,10 @@ interface SpeakOptions extends Partial<StallCallbacks> {
   onError?: (error: Error) => void;
 }
 
-// 재생할 데이터가 있는 상태(HTMLMediaElement.HAVE_CURRENT_DATA) — 이보다 낮으면 아직 받는 중이다
-const HAVE_CURRENT_DATA = 2;
-// 데이터가 있는데 재생 위치가 이만큼 그대로면 멈춘 것으로 본다 — 재생 중엔 위치가 계속 나아간다
+// 재생 위치가 이만큼 그대로면 멈춘 것으로 본다 — 정상 재생에선 걸리지 않는 가장 짧은 시간으로 잡았다.
+// 재생 중엔 위치가 쉬지 않고 나아가고, 받는 중이어도 질문 음원(70KB 이하)은 300kbps 망에서 2초 남짓이면 내려온다.
+// 멈춰도 소리는 끄지 않아 일찍 잡혀도 잃는 건 마이크가 조금 일찍 켜지는 것뿐이고, 실제 값은 다시 나온 기록(stalledMs)으로 조정한다
 const STALL_MS = 3_000;
-// 받는 중엔 더 기다린다 — 질문 음원은 70KB 이하라 100kbps 망에서도 6초 안에 내려온다
-const STALL_LOADING_MS = 8_000;
 const STALL_CHECK_MS = 500;
 // 멈춘 이유를 좁히려고 마지막 신호만 기억해 두는 미디어 이벤트
 const STALL_MEDIA_EVENTS = [
@@ -78,7 +76,7 @@ const watchStall = (
   let stillMs = 0;
   let started = false;
   let stalled = false;
-  let hadData = audio.readyState >= HAVE_CURRENT_DATA;
+  let lastMovedAt = Date.now();
   let lastMediaEvent: string | null = null;
 
   const rememberEvent = (event: Event) => {
@@ -86,28 +84,24 @@ const watchStall = (
   };
   const restartCount = () => {
     lastPosition = audio.currentTime;
+    lastMovedAt = Date.now();
     stillMs = 0;
   };
   const check = () => {
     if (document.visibilityState === 'hidden') return;
     if (audio.currentTime !== lastPosition) {
+      const stalledMs = Date.now() - lastMovedAt;
       started = true;
       restartCount();
       if (stalled) {
         stalled = false;
-        onResume?.();
+        onResume?.({ stalledMs });
       }
       return;
     }
     if (stalled) return;
-    // 데이터가 막 도착했으면 받던 시간은 빼고 처음부터 센다
-    const hasData = audio.readyState >= HAVE_CURRENT_DATA;
-    if (hasData !== hadData) {
-      hadData = hasData;
-      stillMs = 0;
-    }
     stillMs += STALL_CHECK_MS;
-    if (stillMs < (hasData ? STALL_MS : STALL_LOADING_MS)) return;
+    if (stillMs < STALL_MS) return;
     stalled = true;
     onStall({
       started,
