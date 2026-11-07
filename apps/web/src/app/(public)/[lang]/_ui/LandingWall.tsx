@@ -141,7 +141,7 @@ export const LandingWall = ({ todayLabel }: { todayLabel: string }) => {
                 'translate(-50%, -50%) scale(calc(1 + var(--wall-focus) * 0.1))',
             }}
           >
-            <span className="absolute -top-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[#dc7839] px-4 py-1.5 text-[19px] font-extrabold whitespace-nowrap text-white shadow-[0_6px_14px_rgba(224,122,58,0.4)]">
+            <span className="absolute -top-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[#dc7839] px-4 py-1.5 text-[19px] font-bold whitespace-nowrap text-white shadow-[0_6px_14px_rgba(224,122,58,0.4)]">
               {todayLabel}
             </span>
             <Card

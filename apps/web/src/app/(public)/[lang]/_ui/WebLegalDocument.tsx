@@ -11,7 +11,7 @@ export const WebLegalDocument = ({
   labels: Labels;
 }) => (
   <article className="mx-auto max-w-[760px] px-6 pt-10 pb-16 sm:pt-16">
-    <h1 className="text-[32px] leading-[1.3] font-extrabold break-keep sm:text-[40px]">
+    <h1 className="text-[32px] leading-[1.3] font-bold break-keep sm:text-[40px]">
       {document.title}
     </h1>
     <dl className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-[15px] text-[#57524c]">

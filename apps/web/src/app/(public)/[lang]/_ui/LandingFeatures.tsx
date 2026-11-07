@@ -54,7 +54,7 @@ export const LandingFeatures = async ({ locale }: { locale: Locale }) => {
     <section className="mx-auto flex max-w-[1080px] flex-col gap-20 px-3 pt-24 sm:px-6 sm:pt-32 lg:gap-28">
       {/* else의 "Why Else?"처럼 기능 셋을 묶는 짧은 제목 — 바로 아래 기능 제목에 밑줄이 있어 여기엔 강조를 두지 않는다. 기능 제목은 그 아래 단계(h3)다 */}
       <RevealSection>
-        <h2 className="px-3 text-center text-[34px] leading-[1.35] font-extrabold break-keep sm:text-[48px]">
+        <h2 className="px-3 text-center text-[34px] leading-[1.35] font-bold break-keep sm:text-[48px]">
           {t('title')}
         </h2>
       </RevealSection>
@@ -66,7 +66,7 @@ export const LandingFeatures = async ({ locale }: { locale: Locale }) => {
           <div
             className={`px-3 text-center lg:px-6 lg:text-left ${index % 2 ? 'lg:order-2' : ''}`}
           >
-            <h3 className="reveal-up text-[30px] leading-[1.4] font-extrabold break-keep sm:text-[40px]">
+            <h3 className="reveal-up text-[30px] leading-[1.4] font-bold break-keep sm:text-[40px]">
               {t.rich(`${topic}Title`, titleTags(mark))}
             </h3>
             <p
