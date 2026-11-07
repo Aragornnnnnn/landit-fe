@@ -4,8 +4,12 @@
 // 1겹 상시 idle(호흡·체중이동)과 2겹 자세는 PartnerCharacter.module.css가 가진다.
 // 3겹은 주기가 일정하면 어색해지는 움직임이라 여기서 랜덤 타이밍으로 쏜다.
 //
+// 그림은 움직임이 다른 덩어리(몸·머리·입·팔)마다 SVG를 따로 그려 상자째 움직인다.
+// SVG 안쪽 그룹은 합성 레이어가 못 돼서, 숨쉬기·입 하나만 움직여도 매 프레임 캐릭터 전체를 다시 그리기 때문이다.
+// 상자는 CSS 픽셀 세계라 SVG 단위 길이는 상자 높이 대비 %로 바꿔 쓴다(상자 높이 = viewBox 높이).
+//
 // 값은 전부 아래 사양표(BLINKING·NODDING·MIMING)에 모아 두고, 함수는 "언제 쏘는가"만 말한다.
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, type CSSProperties } from 'react';
 import { useReducedMotion } from 'motion/react';
 
 import type { CharacterLook, Partner } from '../../model/character-look';
@@ -18,7 +22,7 @@ import {
 } from '../../model/lipsync';
 import type { PlayingSpeech } from '../../model/useAiSpeech';
 import styles from './PartnerCharacter.module.css';
-import { PARTS } from './parts-by-partner';
+import { LIMBS, PARTS, VIEWBOX, type PartLayer } from './parts-by-partner';
 
 /**
  * partner — 누구를 그릴지. 서버가 내려주는 characterId다.
@@ -52,7 +56,7 @@ const BLINKING = {
 
 /**
  * 듣는 자세의 맞장구. 끄덕임 하나에 가끔 한 번 더, 또는 눈썹 들기가 따라붙는다.
- * depth는 고개가 내려가는 정도(px)다 — 정면 2D라 회전을 쓰면 갸우뚱으로 보인다.
+ * depth는 고개가 내려가는 정도(SVG 단위)다 — 정면 2D라 회전을 쓰면 갸우뚱으로 보인다.
  */
 const NODDING = {
   gapMs: [2000, 3500],
@@ -77,7 +81,7 @@ const MIMING = {
   syllableMs: 300,
   strideMs: [240, 320],
   openness: [0.35, 0.65],
-  dropPx: [1, 3],
+  drop: [1, 3],
   durationMs: [200, 300],
   pauseMs: [350, 650],
   longPauseMs: [350, 1300],
@@ -93,6 +97,24 @@ const MIMING = {
  * 시작·끝에 자세가 튄다 (기울인 고개가 0으로 리셋됐다 돌아온다).
  */
 const ACCENT = { easing: 'ease-in-out', composite: 'add' } as const;
+
+/** SVG 단위 길이를 층 상자 높이 대비 %로 바꾸는 함수 */
+type ToBoxY = (length: number) => string;
+
+const toBoxY =
+  (viewBoxHeight: number): ToBoxY =>
+  (length) =>
+    `${((length / viewBoxHeight) * 100).toFixed(3)}%`;
+
+const readViewBox = (viewBox: string) => {
+  const [x, y, width, height] = viewBox
+    .trim()
+    .split(/[\s,]+/)
+    .map(Number);
+  return { x, y, width, height };
+};
+
+type ViewBox = ReturnType<typeof readViewBox>;
 
 /** 눈을 감았다 뜬다. 눈꺼풀을 그리지 않고 세로로 눌러 흉내낸다 */
 const blink = (eye: Element) =>
@@ -110,20 +132,20 @@ const blink = (eye: Element) =>
  * 정면 2D에서 회전은 좌우 기울임(갸우뚱)으로 보이므로, 하강과 세로 압축을 조합한
  * 원근 착시로 만든다. 살짝 위로 빼는 예비 동작이 있어야 동작에 무게가 생긴다.
  */
-const nod = (head: Element, depth: number, ms: number) =>
+const nod = (head: Element, depth: number, ms: number, y: ToBoxY) =>
   head.animate(
     [
-      { transform: 'translateY(0px) scaleY(1)' },
-      { transform: 'translateY(-1.5px) scaleY(1.006)', offset: 0.18 },
+      { transform: `translateY(${y(0)}) scaleY(1)` },
+      { transform: `translateY(${y(-1.5)}) scaleY(1.006)`, offset: 0.18 },
       {
-        transform: `translateY(${depth * 0.5}px) scaleY(${1 - depth * 0.005})`,
+        transform: `translateY(${y(depth * 0.5)}) scaleY(${1 - depth * 0.005})`,
         offset: 0.5,
       },
       {
-        transform: `translateY(${depth * 0.4}px) scaleY(${1 - depth * 0.004})`,
+        transform: `translateY(${y(depth * 0.4)}) scaleY(${1 - depth * 0.004})`,
         offset: 0.66,
       },
-      { transform: 'translateY(0px) scaleY(1)' },
+      { transform: `translateY(${y(0)}) scaleY(1)` },
     ],
     { duration: ms, ...ACCENT },
   );
@@ -145,11 +167,12 @@ const openMouth = (
   openness: number,
   drop: number,
   ms: number,
+  y: ToBoxY,
 ) =>
   mouth.animate(
     [
       { transform: 'scaleY(1)' },
-      { transform: `scaleY(${openness}) translateY(${drop}px)` },
+      { transform: `scaleY(${openness}) translateY(${y(drop)})` },
       { transform: 'scaleY(1)' },
     ],
     { duration: ms, ...ACCENT },
@@ -186,10 +209,13 @@ const createAccents = () => {
 
 type Accents = ReturnType<typeof createAccents>;
 
-/** 모션이 붙는 파츠 — 생성 스크립트가 붙인 그룹 id로 찾는다 */
+/**
+ * 모션이 붙는 파츠. 머리·입은 층 상자, 눈·눈썹은 SVG 안 그룹이다 — 깜빡임은 짧은 순간이라
+ * 그동안 머리 층만 다시 그리면 된다
+ */
 const readParts = (root: HTMLElement) => ({
-  head: root.querySelector('#head-inner'),
-  mouth: root.querySelector<SVGGElement>('#mouth'),
+  head: root.querySelector('[data-layer="head-pose"]'),
+  mouth: root.querySelector<HTMLElement>('[data-layer="mouth"]'),
   eyes: root.querySelectorAll('#eye-left, #eye-right'),
   brows: root.querySelectorAll('#brow-left, #brow-right'),
 });
@@ -209,25 +235,27 @@ const keepBlinking = (eyes: CharacterParts['eyes'], accents: Accents) => {
 };
 
 /** 듣는 동안 도는 맞장구 */
-const keepNodding = (parts: CharacterParts, accents: Accents) => {
+const keepNodding = (parts: CharacterParts, accents: Accents, y: ToBoxY) => {
   const { head, brows } = parts;
   if (!head) return;
 
   const nodAgain = () =>
-    accents.play(nod(head, pick(NODDING.twiceDepth), NODDING.twiceDurationMs));
+    accents.play(
+      nod(head, pick(NODDING.twiceDepth), NODDING.twiceDurationMs, y),
+    );
 
   accents.later(() => {
-    accents.play(nod(head, pick(NODDING.depth), pick(NODDING.durationMs)));
+    accents.play(nod(head, pick(NODDING.depth), pick(NODDING.durationMs), y));
     if (chance(NODDING.twiceChance))
       accents.later(nodAgain, NODDING.twiceDelayMs);
     if (chance(NODDING.browChance))
       brows.forEach((brow) => accents.play(raiseBrow(brow)));
-    keepNodding(parts, accents);
+    keepNodding(parts, accents, y);
   }, pick(NODDING.gapMs));
 };
 
 /** 맞출 소리가 없을 때 도는 입 흉내 */
-const keepMiming = (parts: CharacterParts, accents: Accents) => {
+const keepMiming = (parts: CharacterParts, accents: Accents, y: ToBoxY) => {
   const { head, mouth } = parts;
   if (!mouth) return;
 
@@ -239,21 +267,22 @@ const keepMiming = (parts: CharacterParts, accents: Accents) => {
           openMouth(
             mouth,
             pick(MIMING.openness),
-            pick(MIMING.dropPx),
+            pick(MIMING.drop),
             pick(MIMING.durationMs),
+            y,
           ),
         ),
       index * pick(MIMING.strideMs),
     );
   }
   if (head && chance(MIMING.nodChance))
-    accents.play(nod(head, MIMING.nodDepth, MIMING.nodDurationMs));
+    accents.play(nod(head, MIMING.nodDepth, MIMING.nodDurationMs, y));
 
   const pause = pick(
     chance(MIMING.longPauseChance) ? MIMING.longPauseMs : MIMING.pauseMs,
   );
   accents.later(
-    () => keepMiming(parts, accents),
+    () => keepMiming(parts, accents, y),
     syllables * MIMING.syllableMs + pause,
   );
 };
@@ -267,7 +296,11 @@ const keepMiming = (parts: CharacterParts, accents: Accents) => {
 // 음량 표를 기다리며 입을 닫아 두는 한도 — 음성 앞머리 무음(약 0.4초)을 넘기면 소리가 나는데 입이 닫혀 있게 된다
 const LOUDNESS_WAIT_MS = 500;
 
-const driveMouth = (mouth: SVGGElement, { playback, text }: PlayingSpeech) => {
+const driveMouth = (
+  mouth: HTMLElement,
+  { playback, text }: PlayingSpeech,
+  y: ToBoxY,
+) => {
   const visemes = toVisemes(text);
   let track: Float32Array | null = null;
   // 표를 읽기 전엔 입을 닫아 둔다 — 음성 앞머리는 무음이라, 글자대로 움직이면 소리 없이 입부터 열린다
@@ -298,7 +331,8 @@ const driveMouth = (mouth: SVGGElement, { playback, text }: PlayingSpeech) => {
       articulation,
     );
     const { sx, sy, dy } = state;
-    mouth.style.transform = `translateY(${dy.toFixed(1)}px) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
+    // 원래처럼 SVG 단위 0.1까지만 쓴다 — 더 잘게 쓰면 값이 매 프레임 달라 보여도 그림은 같다
+    mouth.style.transform = `translateY(${y(Number(dy.toFixed(1)))}) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
     frame = requestAnimationFrame(nextFrame);
   };
   nextFrame();
@@ -312,6 +346,46 @@ const driveMouth = (mouth: SVGGElement, { playback, text }: PlayingSpeech) => {
   };
 };
 
+/**
+ * 층 상자의 변형 기준점. 원래 SVG 안에서 각 그룹 자기 영역(fill-box)의 비율로 잡던 점을
+ * 같은 자리의 상자 기준 %로 옮긴다. 머리는 머리 층 그림 전체를 합친 영역이 기준이다.
+ * 숨긴 채 그려지면 영역이 0이라 잴 수 없어서, 보이게 될 때(크기가 생길 때) 다시 잰다
+ */
+const PIVOTS: Array<[layer: string, part: string, at: [number, number]]> = [
+  ['torso', '#torso', [0.5, 1]],
+  // 층 SVG 요소째 재면 엉뚱한 영역이 나온다 — 원래 #head-inner처럼 안의 그림을 합쳐 잰다
+  ['head-pose', 'svg > :not(mask)', [0.5, 0.96]],
+  ['mouth', '#mouth', [0.5, 0.15]],
+  ['arm-left', '#arm-left', [0.5, 0.04]],
+  ['arm-right', '#arm-right', [0.5, 0.04]],
+];
+
+const unionOf = (boxes: DOMRect[]) => {
+  const left = Math.min(...boxes.map((b) => b.x));
+  const top = Math.min(...boxes.map((b) => b.y));
+  const right = Math.max(...boxes.map((b) => b.x + b.width));
+  const bottom = Math.max(...boxes.map((b) => b.y + b.height));
+  return { x: left, y: top, width: right - left, height: bottom - top };
+};
+
+const placePivots = (root: HTMLElement, frame: ViewBox) => {
+  for (const [layer, part, [atX, atY]] of PIVOTS) {
+    const box = root.querySelector<HTMLElement>(`[data-layer="${layer}"]`);
+    const shapes = [...(box?.querySelectorAll<SVGGraphicsElement>(part) ?? [])];
+    if (!box || !shapes.length || !('getBBox' in shapes[0])) continue;
+    // 숨긴 조각(display:none)은 0,0 점으로 잡혀 영역을 늘린다 — 원래 기준(fill-box)처럼 뺀다
+    const drawn = shapes
+      .map((shape) => shape.getBBox())
+      .filter((area) => area.width || area.height);
+    if (!drawn.length) continue;
+    const area = unionOf(drawn);
+    if (!area.width || !area.height) continue;
+    const x = ((area.x + area.width * atX - frame.x) / frame.width) * 100;
+    const y = ((area.y + area.height * atY - frame.y) / frame.height) * 100;
+    box.style.transformOrigin = `${x.toFixed(3)}% ${y.toFixed(3)}%`;
+  }
+};
+
 export const PartnerCharacter = ({
   partner,
   look: { posture, expression },
@@ -321,6 +395,24 @@ export const PartnerCharacter = ({
   const rootRef = useRef<HTMLDivElement>(null);
   // 1겹은 CSS가 접지만 3겹은 여기서 판단해야 한다. 입모양은 소리를 따라가는 정보라 남긴다
   const stillness = useReducedMotion() ?? false;
+  const frameBox = viewBox ?? VIEWBOX[partner];
+
+  // 첫 페인트 전에 기준점을 놓는다 — 늦으면 쉬는 입이 엉뚱한 축으로 눌린 채 한 번 그려진다
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (root) placePivots(root, readViewBox(frameBox));
+  }, [partner, frameBox]);
+
+  // 숨긴 채 그려졌다가 보이게 되면(크기가 생기면) 그때 잰다
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || typeof ResizeObserver === 'undefined') return;
+
+    const frame = readViewBox(frameBox);
+    const observer = new ResizeObserver(() => placePivots(root, frame));
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [partner, frameBox]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -337,21 +429,33 @@ export const PartnerCharacter = ({
     if (!root || stillness) return;
 
     const parts = readParts(root);
+    const y = toBoxY(readViewBox(frameBox).height);
     const accents = createAccents();
-    if (posture === 'listening') keepNodding(parts, accents);
-    if (posture === 'speaking' && !speech) keepMiming(parts, accents);
+    if (posture === 'listening') keepNodding(parts, accents, y);
+    if (posture === 'speaking' && !speech) keepMiming(parts, accents, y);
 
     return () => accents.stopAll();
-  }, [partner, posture, speech, stillness]);
+  }, [partner, posture, speech, stillness, frameBox]);
 
   useEffect(() => {
-    const mouth = rootRef.current?.querySelector<SVGGElement>('#mouth');
+    const mouth = rootRef.current?.querySelector<HTMLElement>(
+      '[data-layer="mouth"]',
+    );
     if (!mouth || !speech) return;
 
-    return driveMouth(mouth, speech);
-  }, [speech]);
+    return driveMouth(mouth, speech, toBoxY(readViewBox(frameBox).height));
+  }, [speech, frameBox]);
 
   const Parts = PARTS[partner];
+  // 층 SVG는 모두 같은 영역을 같은 크기로 그린다 — 겹쳐 놓으면 원래 한 장과 같은 자리에 맞물린다
+  const draw = (layer: PartLayer) => (
+    <Parts
+      layer={layer}
+      viewBox={frameBox}
+      className={styles.art}
+      aria-hidden
+    />
+  );
 
   return (
     <div
@@ -359,13 +463,34 @@ export const PartnerCharacter = ({
       className={[styles.root, styles[posture], styles[expression]]
         .filter(Boolean)
         .join(' ')}
+      // 상자에 거는 CSS 길이도 SVG 단위를 % 로 바꿔야 해서 viewBox 높이를 넘긴다
+      style={
+        {
+          '--frame-height': readViewBox(frameBox).height,
+        } as CSSProperties
+      }
     >
-      {/* viewBox는 있을 때만 넘긴다 — undefined로 넘기면 파츠가 들고 있던 원본 viewBox를 지워 캐릭터가 사라진다 */}
-      <Parts
-        className={styles.parts}
-        {...(viewBox && { viewBox })}
-        aria-hidden
-      />
+      <div className={styles.sway}>
+        {/* 크기를 잡는 빈 그림 — 원래 SVG 한 장이 차지하던 자리를 그대로 차지해 바깥 배치가 달라지지 않는다 */}
+        <svg viewBox={frameBox} className={styles.sizer} aria-hidden />
+        <div data-layer="torso" className={styles.torso}>
+          {draw('torso')}
+        </div>
+        <div data-layer="head" className={styles.head}>
+          <div data-layer="head-pose" className={styles.headPose}>
+            {draw('head-back')}
+            <div data-layer="mouth" className={styles.mouth}>
+              {draw('mouth')}
+            </div>
+            {draw('head-front')}
+          </div>
+        </div>
+        {LIMBS[partner].map((limb) => (
+          <div key={limb} data-layer={limb} className={styles.limb}>
+            {draw(limb)}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
