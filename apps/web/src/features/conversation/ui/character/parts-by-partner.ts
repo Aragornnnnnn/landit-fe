@@ -4,16 +4,29 @@
 import type { ComponentType, SVGProps } from 'react';
 
 import type { Partner } from '../../model/character-look';
-import { ChloeParts } from './ChloeParts';
-import { MarcoParts } from './MarcoParts';
-import { TeddyParts } from './TeddyParts';
+import { CHLOE_LIMBS, ChloeParts } from './ChloeParts';
+import { MARCO_LIMBS, MarcoParts } from './MarcoParts';
+import type { PartLayer } from './part-layer';
+import { TEDDY_LIMBS, TeddyParts } from './TeddyParts';
+
+export type { PartLayer };
+
+/** layer를 주면 그 층만, 생략하면 한 장으로 그린다 */
+type PartsProps = SVGProps<SVGSVGElement> & { layer?: PartLayer };
 
 /**
  * 캐릭터별 파츠 — 생성 스크립트 산출물을 여기에 등록한다.
  * Record라 Partner에 캐릭터를 추가하면 여기 빠진 자리를 타입 검사가 잡아준다.
  */
-export const PARTS: Record<Partner, ComponentType<SVGProps<SVGSVGElement>>> = {
+export const PARTS: Record<Partner, ComponentType<PartsProps>> = {
   marco: MarcoParts,
   chloe: ChloeParts,
   teddy: TeddyParts,
+};
+
+/** 머리 다음에 얹히는 캐릭터별 층(팔) — 없으면 빈 목록이다 */
+export const LIMBS: Record<Partner, readonly PartLayer[]> = {
+  marco: MARCO_LIMBS,
+  chloe: CHLOE_LIMBS,
+  teddy: TEDDY_LIMBS,
 };
