@@ -7,3 +7,4 @@ export {
   setHapticsEnabled,
   subscribeHapticsSetting,
 } from './haptics-setting';
+export { useHapticsMute } from './useHapticsMute';
