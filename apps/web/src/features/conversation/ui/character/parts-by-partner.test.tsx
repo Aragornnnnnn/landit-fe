@@ -17,6 +17,11 @@ const stackOf = (partner: Partner): PartLayer[] => [
   ...LIMBS[partner],
 ];
 
+// 파트너마다 그 파트너의 층 전부 — 층 하나가 케이스 하나다
+const LAYER_CASES: [Partner, PartLayer][] = PARTNERS.flatMap((partner) =>
+  stackOf(partner).map((layer): [Partner, PartLayer] => [partner, layer]),
+);
+
 // 마스크 정의 안의 경로는 그림이 아니다 — 그려지는 경로만 문서 순서로 모은다
 const drawnPaths = (container: Element) =>
   [...container.querySelectorAll('path')]
@@ -103,42 +108,37 @@ describe('파츠 층 나누기', () => {
     },
   );
 
-  it.each(PARTNERS)(
-    '%s — 층이 쓰는 마스크는 그 층 SVG 안에 있다 — 다른 층의 마스크를 빌려 쓰면 그 층이 빠질 때 구멍이 사라진다',
-    (partner) => {
+  it.each(LAYER_CASES)(
+    '%s %s 층 — 층이 쓰는 마스크는 그 층 SVG 안에 있다 — 다른 층의 마스크를 빌려 쓰면 그 층이 빠질 때 구멍이 사라진다',
+    (partner, layer) => {
       // Given
       const Parts = PARTS[partner];
 
-      for (const layer of stackOf(partner)) {
-        // When
-        const { container } = render(<Parts layer={layer} />);
+      // When
+      const { container } = render(<Parts layer={layer} />);
 
-        // Then
-        const used = [...container.querySelectorAll('[mask]')].map(
-          (node) => node.getAttribute('mask')?.match(/url\(#(.+)\)/)?.[1],
-        );
-        for (const id of used)
-          expect(container.querySelector(`mask[id="${id}"]`)).not.toBeNull();
-        cleanup();
-      }
+      // Then
+      const used = [...container.querySelectorAll('[mask]')].map(
+        (node) => node.getAttribute('mask')?.match(/url\(#(.+)\)/)?.[1],
+      );
+      for (const id of used)
+        expect(container.querySelector(`mask[id="${id}"]`)).not.toBeNull();
     },
   );
 
-  it.each(PARTNERS)(
-    '%s — 마스크 영역은 가리는 부위를 따라간다 — 고정된 큰 영역이면 층이 그만큼 커져 GPU 타일 메모리를 잡아먹는다',
-    (partner) => {
+  it.each(LAYER_CASES)(
+    '%s %s 층 — 마스크 영역을 고정하지 않고 SVG 기본값(가리는 부위 +10%%)에 맡긴다 — 고정된 큰 영역이면 층이 그만큼 커져 GPU 타일 메모리를 잡아먹는다',
+    (partner, layer) => {
       // Given
       const Parts = PARTS[partner];
 
-      for (const layer of stackOf(partner)) {
-        // When
-        const { container } = render(<Parts layer={layer} />);
+      // When
+      const { container } = render(<Parts layer={layer} />);
 
-        // Then
-        for (const mask of container.querySelectorAll('mask'))
-          expect(mask.getAttribute('maskUnits')).not.toBe('userSpaceOnUse');
-        cleanup();
-      }
+      // Then
+      for (const mask of container.querySelectorAll('mask'))
+        for (const region of ['maskUnits', 'x', 'y', 'width', 'height'])
+          expect(mask.hasAttribute(region)).toBe(false);
     },
   );
 });

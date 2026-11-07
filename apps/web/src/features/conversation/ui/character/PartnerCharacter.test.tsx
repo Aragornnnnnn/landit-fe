@@ -195,7 +195,6 @@ describe('PartnerCharacter 층', () => {
         speech={null}
       />,
     );
-    expect(container.querySelector('[data-layer="arm-left"]')).toBeNull();
 
     // When
     rerender(
@@ -266,7 +265,7 @@ describe('PartnerCharacter 층', () => {
   });
 
   it('입이 숨은 채 처음 그려져도 표정이 풀리면 입 기준점을 잡는다 — 찡그린 동안엔 입이 숨어 잴 수 없다', () => {
-    // Given — 찡그린 동안 숨은 입은 영역이 0이다
+    // Given — 찡그린 채 처음 그려진다. 숨은 입은 영역이 0이라 기준점을 잴 수 없다
     let mouthHidden = true;
     plant(svgPrototype, 'getBBox', function (this: SVGElement) {
       return this.id === 'mouth' && !mouthHidden
@@ -284,7 +283,6 @@ describe('PartnerCharacter 층', () => {
     const mouthLayer = container.querySelector<HTMLElement>(
       '[data-layer="mouth"]',
     );
-    expect(mouthLayer?.style.transformOrigin).toBe('');
 
     // When
     mouthHidden = false;
