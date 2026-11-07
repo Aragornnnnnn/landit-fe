@@ -30,10 +30,10 @@ export const resolveTapPattern = (
   const override = el.getAttribute('data-haptic');
   if (override) {
     const parsed = hapticPatternSchema.safeParse(override);
-    return parsed.success ? parsed.data : 'selection';
+    return parsed.success ? parsed.data : 'light';
   }
 
-  return 'selection';
+  return 'light';
 };
 
 export const GlobalHaptics = () => {

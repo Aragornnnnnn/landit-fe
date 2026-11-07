@@ -9,9 +9,9 @@ const inDom = (html: string) => {
 };
 
 describe('resolveTapPattern', () => {
-  it('버튼 안을 누르면 selection 틱을 준다', () => {
+  it('버튼 안을 누르면 light 틱을 준다', () => {
     const root = inDom('<button><span id="t">확인</span></button>');
-    expect(resolveTapPattern(root.querySelector('#t'))).toBe('selection');
+    expect(resolveTapPattern(root.querySelector('#t'))).toBe('light');
   });
 
   it('탭 대상이 아니면 null', () => {
@@ -24,9 +24,9 @@ describe('resolveTapPattern', () => {
     expect(resolveTapPattern(root.querySelector('#t'))).toBe('medium');
   });
 
-  it('규격 밖 data-haptic 값은 selection으로 떨어진다', () => {
+  it('규격 밖 data-haptic 값은 light로 떨어진다', () => {
     const root = inDom('<button data-haptic="boom" id="t">x</button>');
-    expect(resolveTapPattern(root.querySelector('#t'))).toBe('selection');
+    expect(resolveTapPattern(root.querySelector('#t'))).toBe('light');
   });
 
   it('비활성 버튼은 진동을 주지 않는다', () => {
