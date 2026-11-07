@@ -873,6 +873,7 @@ describe('재생이 멈췄을 때', () => {
     networkState: 2,
     paused: false,
     lastMediaEvent: 'stalled',
+    backgrounded: true,
   };
   const stall = () => act(async () => ttsMock.state.onStall?.(snapshot));
   // 대화처럼 턴이 있는 재생 — 멈추면 턴을 넘기도록 켠다
@@ -946,6 +947,7 @@ describe('재생이 멈췄을 때', () => {
       network_state: 2,
       paused: false,
       last_media_event: 'stalled',
+      backgrounded: true,
     });
   });
 

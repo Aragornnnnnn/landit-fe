@@ -987,7 +987,42 @@ describe('useTts', () => {
         networkState: 2,
         paused: true,
         lastMediaEvent: 'stalled',
+        backgrounded: false,
       });
+    });
+
+    it('이 재생 중 앱이 내려간 적 있으면 함께 알린다 — 돌아와 다시 건 재생이 막힌 것과 다른 원인을 가른다', () => {
+      // Given
+      const onStall = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall }));
+
+      // When — 내렸다가 돌아왔는데 재생 위치가 그대로다
+      act(() => setVisibility('hidden'));
+      act(() => setVisibility('visible'));
+      act(() => vi.advanceTimersByTime(3_000));
+
+      // Then
+      expect(onStall).toHaveBeenCalledWith(
+        expect.objectContaining({ backgrounded: true }),
+      );
+    });
+
+    it('앱이 내려간 채 건 재생도 내려간 적 있는 것으로 본다', () => {
+      // Given
+      setVisibility('hidden');
+      const onStall = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall }));
+
+      // When
+      act(() => setVisibility('visible'));
+      act(() => vi.advanceTimersByTime(3_000));
+
+      // Then
+      expect(onStall).toHaveBeenCalledWith(
+        expect.objectContaining({ backgrounded: true }),
+      );
     });
 
     it('받는 중이어도 같은 3초로 본다 — 질문 음원은 70KB 이하라 정상이면 3초 안에 내려온다', () => {

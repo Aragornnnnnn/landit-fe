@@ -29,6 +29,8 @@ export interface TtsStallSnapshot {
   paused: boolean;
   // 멈추기 전 엘리먼트가 마지막으로 낸 미디어 이벤트
   lastMediaEvent: string | null;
+  // 이 재생 중 앱이 내려간 적 있나 — 돌아와 다시 건 재생이 또 막힌 것과 다른 원인을 가른다
+  backgrounded: boolean;
 }
 
 /** 재생 멈춤 감시를 신청하는 콜백 — 알리기만 하고 재생은 그대로 둔다 */
@@ -78,6 +80,7 @@ const watchStall = (
   let stalled = false;
   let lastMovedAt = Date.now();
   let lastMediaEvent: string | null = null;
+  let backgrounded = document.visibilityState === 'hidden';
 
   const rememberEvent = (event: Event) => {
     lastMediaEvent = event.type;
@@ -86,6 +89,10 @@ const watchStall = (
     lastPosition = audio.currentTime;
     lastMovedAt = Date.now();
     stillMs = 0;
+  };
+  const onVisibilityChange = () => {
+    if (document.visibilityState === 'hidden') backgrounded = true;
+    restartCount();
   };
   const check = () => {
     if (document.visibilityState === 'hidden') return;
@@ -110,6 +117,7 @@ const watchStall = (
       networkState: audio.networkState,
       paused: audio.paused,
       lastMediaEvent,
+      backgrounded,
     });
   };
 
@@ -118,11 +126,11 @@ const watchStall = (
     clearInterval(timer);
     for (const type of STALL_MEDIA_EVENTS)
       audio.removeEventListener(type, rememberEvent);
-    document.removeEventListener('visibilitychange', restartCount);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
   };
   for (const type of STALL_MEDIA_EVENTS)
     audio.addEventListener(type, rememberEvent);
-  document.addEventListener('visibilitychange', restartCount);
+  document.addEventListener('visibilitychange', onVisibilityChange);
   return stop;
 };
 
@@ -161,7 +169,7 @@ const playWhileVisible = (
   };
   const onVisibilityChange = () => {
     if (document.visibilityState === 'hidden') {
-      if (audio.paused || audio.ended) return;
+      if (audio.paused) return;
       held = true;
       audio.pause();
       return;
@@ -327,7 +335,7 @@ export function useTts() {
   const mountedRef = useRef(true);
   // 지금 재생의 멈춤 감시를 끝내는 손잡이 — 재생이 끝나거나 바뀌면 함께 끝낸다
   const stopStallWatchRef = useRef<(() => void) | null>(null);
-  // 지금 재생의 보임 따라가기를 끝내는 손잡이 — 끝난 재생을 돌아올 때 다시 틀면 안 된다
+  // 지금 재생을 화면에 맞춰 멈추고 잇는 일을 끝내는 손잡이 — 끝난 재생을 돌아올 때 다시 틀면 안 된다
   const stopPlayWhileVisibleRef = useRef<(() => void) | null>(null);
 
   const stopPlayWhileVisible = () => {
@@ -335,7 +343,7 @@ export function useTts() {
     stopPlayWhileVisibleRef.current = null;
   };
   // audio.play() 대신 쓴다 — 돌려주는 Promise는 처음 소리가 난 때 풀린다
-  const play = (audio: HTMLAudioElement) => {
+  const playWhenVisible = (audio: HTMLAudioElement) => {
     stopPlayWhileVisible();
     const { started, stop } = playWhileVisible(audio);
     stopPlayWhileVisibleRef.current = stop;
@@ -469,7 +477,7 @@ export function useTts() {
 
       startStallWatch(audio, options);
       try {
-        await play(audio);
+        await playWhenVisible(audio);
       } catch (error) {
         // onerror가 먼저 처리한 재생 실패면 여기서는 더 하지 않는다
         if (handled) return;
@@ -541,7 +549,7 @@ export function useTts() {
       };
       audio.onerror = fail;
       startStallWatch(audio, options);
-      play(audio).then(
+      playWhenVisible(audio).then(
         () => {
           if (!handled) {
             setStatus('active');

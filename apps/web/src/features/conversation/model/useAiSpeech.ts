@@ -165,6 +165,7 @@ const runSpeech = ({
         network_state: snapshot.networkState,
         paused: snapshot.paused,
         last_media_event: snapshot.lastMediaEvent,
+        backgrounded: snapshot.backgrounded,
       });
       onSoundStart();
       onSpeechEnd();
