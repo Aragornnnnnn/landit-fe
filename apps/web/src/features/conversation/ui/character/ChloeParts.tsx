@@ -11,7 +11,7 @@ export const ChloeParts = ({
   ...props
 }: SVGProps<SVGSVGElement> & { layer?: PartLayer }) => {
   const uid = useId().replace(/[^A-Za-z0-9_-]/g, '');
-  const holes544559 = (
+  const holes_544_559 = (
     <mask
       id={`${uid}holes-544-559`}
       maskUnits="userSpaceOnUse"
@@ -31,7 +31,7 @@ export const ChloeParts = ({
       />
     </mask>
   );
-  const holes559 = (
+  const holes_559 = (
     <mask
       id={`${uid}holes-559`}
       maskUnits="userSpaceOnUse"
@@ -769,20 +769,20 @@ export const ChloeParts = ({
     torso: <>{torso}</>,
     'head-back': (
       <>
-        {holes544559}
+        {holes_544_559}
         {headBack}
       </>
     ),
     mouth: (
       <>
-        {holes544559}
+        {holes_544_559}
         {mouth}
       </>
     ),
     'head-front': (
       <>
-        {holes544559}
-        {holes559}
+        {holes_544_559}
+        {holes_559}
         {headFront}
       </>
     ),
@@ -799,8 +799,8 @@ export const ChloeParts = ({
         byLayer[layer]
       ) : (
         <>
-          {holes544559}
-          {holes559}
+          {holes_544_559}
+          {holes_559}
           {torso}
           <g id="head">
             <g id="head-inner">

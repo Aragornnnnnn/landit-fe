@@ -288,6 +288,12 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
   // 머리보다 먼저 그려지는 몸은 torso, 머리는 입을 기준으로 뒤·입·앞 세 층(입 위에 볼터치·코·앞머리가 겹쳐 z순서를 지켜야 한다),
   // 머리 다음에 그려지는 조각(팔)은 제 축으로 움직이므로 저마다 한 층이다
   const mouthAt = cfg.headParts.indexOf('mouth');
+  // 층은 headParts 순서로 가르고 그림은 slices 순서로 쌓는다 — 둘이 어긋나면 z순서가 소리 없이 바뀐다
+  const headInSlices = cfg.slices
+    .map(([sliceName]) => sliceName)
+    .filter((sliceName) => cfg.headParts.includes(sliceName));
+  if (headInSlices.join() !== cfg.headParts.join())
+    throw new Error(`${name}: headParts 순서가 slices 순서와 다르다`);
   if (mouthAt < 0) throw new Error(`${name}: 머리 파츠에 mouth가 없다`);
   const layers = new Map();
   const pushTo = (layer, line) => {
@@ -320,7 +326,8 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
     (layer) => layer !== 'torso' && !HEAD.includes(layer),
   );
   const varOf = (key) => key.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());
-  const maskVar = (key) => varOf(key);
+  // 노드 번호 사이를 밑줄로 남긴다 — 그냥 이어 붙이면 {5445, 59}와 {544, 559}가 같은 이름이 된다
+  const maskVar = (key) => key.replaceAll('-', '_');
   const fragment = (lines) => `<>\n${lines.join('\n')}\n</>`;
 
   const decls = [
@@ -342,7 +349,12 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
   const whole = [
     ...[...masks.keys()].map((key) => `{${maskVar(key)}}`),
     '{torso}',
-    `<g id="head">\n<g id="head-inner">\n{headBack}\n{mouth}\n{headFront}\n</g>\n</g>`,
+    // 빈 층은 변수가 없다 — 있는 층만 잇는다(입이 머리 맨 앞이면 머리 뒤 층이 없다)
+    `<g id="head">\n<g id="head-inner">\n${HEAD.filter((layer) =>
+      layers.has(layer),
+    )
+      .map((layer) => `{${varOf(layer)}}`)
+      .join('\n')}\n</g>\n</g>`,
     ...limbs.map((layer) => `{${varOf(layer)}}`),
   ].join('\n');
 
