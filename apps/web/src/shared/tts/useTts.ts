@@ -19,12 +19,97 @@ export interface TtsPlayback {
   source: string;
 }
 
-/** onStart는 재생이 실제로 시작된 뒤에만 부른다 — 그 전에는 읽을 시각이 없다 */
+/** 재생이 멈춘 순간의 오디오 상태 — 왜 멈췄는지(받다 멈춤·재생 중 정지·일시정지) 좁히는 단서다 */
+export interface TtsStallSnapshot {
+  // 재생 위치가 한 번이라도 움직였나 — 시작을 못 한 것과 도중에 멈춘 것을 가른다
+  started: boolean;
+  positionMs: number;
+  readyState: number;
+  networkState: number;
+  paused: boolean;
+  // 멈추기 전 엘리먼트가 마지막으로 낸 미디어 이벤트
+  lastMediaEvent: string | null;
+}
+
+/**
+ * onStart는 재생이 실제로 시작된 뒤에만 부른다 — 그 전에는 읽을 시각이 없다.
+ * onStall은 재생 위치가 오래 그대로일 때 한 번 부른다 — 알리기만 하고 재생은 그대로 둔다
+ */
 interface SpeakOptions {
   onStart?: (playback: TtsPlayback) => void;
   onEnd?: () => void;
   onError?: (error: Error) => void;
+  onStall?: (snapshot: TtsStallSnapshot) => void;
 }
+
+// 화면이 보이는 동안 재생 위치가 이만큼 그대로면 멈춘 것으로 본다 — 음원은 1초 안에 내려오고 재생 중엔 위치가 계속 나아간다
+const STALL_MS = 3_000;
+const STALL_CHECK_MS = 500;
+// 멈춘 이유를 좁히려고 마지막 신호만 기억해 두는 미디어 이벤트
+const STALL_MEDIA_EVENTS = [
+  'loadstart',
+  'loadedmetadata',
+  'canplay',
+  'playing',
+  'waiting',
+  'stalled',
+  'suspend',
+  'pause',
+  'emptied',
+] as const;
+
+/**
+ * 재생 위치가 오래 그대로면 onStall을 한 번 부르고, 감시를 끝내는 함수를 돌려준다. 소리는 건드리지 않는다.
+ * 화면이 숨겨진 동안은 세지 않고 돌아오면 처음부터 센다 — 앱을 내리면 iOS가 재생을 멈추는데 그건 멈춤이 아니다
+ */
+const watchStall = (
+  audio: HTMLAudioElement,
+  onStall: (snapshot: TtsStallSnapshot) => void,
+): (() => void) => {
+  let lastPosition = audio.currentTime;
+  let stillMs = 0;
+  let started = false;
+  let lastMediaEvent: string | null = null;
+
+  const rememberEvent = (event: Event) => {
+    lastMediaEvent = event.type;
+  };
+  const restartCount = () => {
+    lastPosition = audio.currentTime;
+    stillMs = 0;
+  };
+  const check = () => {
+    if (document.visibilityState === 'hidden') return;
+    if (audio.currentTime !== lastPosition) {
+      started = true;
+      restartCount();
+      return;
+    }
+    stillMs += STALL_CHECK_MS;
+    if (stillMs < STALL_MS) return;
+    stop();
+    onStall({
+      started,
+      positionMs: Math.round(audio.currentTime * 1000),
+      readyState: audio.readyState,
+      networkState: audio.networkState,
+      paused: audio.paused,
+      lastMediaEvent,
+    });
+  };
+
+  const timer = setInterval(check, STALL_CHECK_MS);
+  const stop = () => {
+    clearInterval(timer);
+    for (const type of STALL_MEDIA_EVENTS)
+      audio.removeEventListener(type, rememberEvent);
+    document.removeEventListener('visibilitychange', restartCount);
+  };
+  for (const type of STALL_MEDIA_EVENTS)
+    audio.addEventListener(type, rememberEvent);
+  document.addEventListener('visibilitychange', restartCount);
+  return stop;
+};
 
 // 합성 응답을 기다리는 한도 — 망이 죽어 대화가 멈추는 것만 막는다. 느린 합성(실측 최대 21초)은 끊지 않는다
 const SYNTH_TIMEOUT_MS = 25_000;
@@ -168,10 +253,26 @@ export function useTts() {
     null,
   );
   const mountedRef = useRef(true);
+  // 지금 재생의 멈춤 감시를 끝내는 손잡이 — 재생이 끝나거나 바뀌면 함께 끝낸다
+  const stopStallWatchRef = useRef<(() => void) | null>(null);
 
-  // 재생 리소스(오디오·objectURL·콜백)를 정리한다. stop과 onended가 공유하는 뒷정리.
+  const stopStallWatch = () => {
+    stopStallWatchRef.current?.();
+    stopStallWatchRef.current = null;
+  };
+  // 재생을 거는 순간부터 감시한다 — 시작을 못 하고 멈춘 것도 잡아야 한다
+  const startStallWatch = (
+    audio: HTMLAudioElement,
+    onStall: SpeakOptions['onStall'],
+  ) => {
+    stopStallWatch();
+    if (onStall) stopStallWatchRef.current = watchStall(audio, onStall);
+  };
+
+  // 재생 리소스(오디오·objectURL·콜백·멈춤 감시)를 정리한다. stop과 onended가 공유하는 뒷정리.
   // 멈춘 엘리먼트의 늦은 이벤트(버퍼링 중 네트워크 끊김 등)는 떼어낸다 — 프리로드 폴백이 다시 열어 재생을 되살리면 안 된다
   const cleanup = () => {
+    stopStallWatch();
     const audio = audioRef.current;
     if (audio) {
       audio.pause();
@@ -195,6 +296,7 @@ export function useTts() {
     const cache = cacheRef.current;
     return () => {
       mountedRef.current = false;
+      stopStallWatchRef.current?.();
       abortRef.current?.abort();
       prefetchAbortRef.current?.abort();
       audioRef.current?.pause();
@@ -276,12 +378,15 @@ export function useTts() {
         options?.onError?.(playbackError);
       };
 
+      startStallWatch(audio, options?.onStall);
       try {
         await audio.play();
       } catch (error) {
         // onerror가 먼저 처리한 재생 실패면 여기서는 더 하지 않는다
         if (handled) return;
         handled = true;
+        // 실패는 실패로만 알린다 — 감시가 남으면 뒤늦게 멈춤까지 알린다
+        stopStallWatch();
         throw error;
       }
       if (handled) return;
@@ -345,6 +450,7 @@ export function useTts() {
         options?.onError?.(new Error('오디오 재생에 실패했어요.'));
       };
       audio.onerror = fail;
+      startStallWatch(audio, options?.onStall);
       audio.play().then(
         () => {
           if (!handled) {
