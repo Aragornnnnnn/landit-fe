@@ -133,7 +133,7 @@ export const PremiumWelcome = ({
       setTimeout(() => setPhase('revealing'), REVEAL_AT_MS),
       setTimeout(() => {
         setPhase('open');
-        haptic('success');
+        haptic('celebrate');
         burst();
       }, OPEN_AT_MS),
     ];

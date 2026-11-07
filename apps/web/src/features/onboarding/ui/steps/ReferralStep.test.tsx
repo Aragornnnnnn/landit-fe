@@ -173,7 +173,7 @@ describe('ReferralStep · 코드 입력', () => {
         '100일 프리미엄 이용권을 결제하면 환급 혜택에 바로 더해져요',
       ),
     ).toBeInTheDocument();
-    expect(haptic).toHaveBeenCalledWith('success');
+    expect(haptic).toHaveBeenCalledWith('celebrate');
     expect(onDone).not.toHaveBeenCalled();
     await waitFor(() => expect(onDone).toHaveBeenCalled(), { timeout: 5000 });
   });
