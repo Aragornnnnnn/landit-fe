@@ -3,7 +3,15 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { muteHaptics } from '@/shared/haptics/haptics';
+
 import { useStt } from './useStt';
+
+const unmute = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/haptics/haptics', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/shared/haptics/haptics')>()),
+  muteHaptics: vi.fn(() => unmute),
+}));
 
 class FakeRecognition {
   static instances: FakeRecognition[] = [];
@@ -340,5 +348,63 @@ describe('useStt', () => {
       '안녕하세요',
       expect.objectContaining({ engine: 'web_speech' }),
     );
+  });
+
+  describe('녹음하는 동안 진동 막기', () => {
+    const finish = (recognition: FakeRecognition) => {
+      recognition.onresult?.({
+        resultIndex: 0,
+        results: { length: 1, 0: { 0: { transcript: 'hi' }, isFinal: true } },
+      });
+      recognition.onend?.();
+    };
+
+    it('듣기 시작하면 진동을 막는다 — 진동 소리가 녹음에 섞이지 않게', async () => {
+      const { result } = renderHook(() => useStt());
+
+      await act(() => result.current.start());
+
+      expect(muteHaptics).toHaveBeenCalledTimes(1);
+      expect(unmute).not.toHaveBeenCalled();
+    });
+
+    it('말이 확정되면 확정 콜백보다 먼저 푼다 — 확정 순간의 진동은 울려야 한다', async () => {
+      const order: string[] = [];
+      unmute.mockImplementation(() => order.push('unmute'));
+      const onFinal = vi.fn(() => order.push('final'));
+      const { result } = renderHook(() => useStt({ onFinal }));
+      await act(() => result.current.start());
+
+      act(() => finish(FakeRecognition.instances.at(-1)!));
+
+      expect(order).toEqual(['unmute', 'final']);
+    });
+
+    it('취소하면 푼다', async () => {
+      const { result } = renderHook(() => useStt());
+      await act(() => result.current.start());
+
+      act(() => result.current.abort());
+
+      expect(unmute).toHaveBeenCalledTimes(1);
+    });
+
+    it('실패하면 푼다', async () => {
+      vi.stubGlobal('webkitSpeechRecognition', undefined);
+      const { result } = renderHook(() => useStt({ onError: vi.fn() }));
+
+      await act(() => result.current.start());
+
+      expect(unmute).toHaveBeenCalledTimes(1);
+    });
+
+    it('화면을 떠나면 푼다', async () => {
+      const { result, unmount } = renderHook(() => useStt());
+      await act(() => result.current.start());
+
+      unmount();
+
+      expect(unmute).toHaveBeenCalledTimes(1);
+    });
   });
 });
