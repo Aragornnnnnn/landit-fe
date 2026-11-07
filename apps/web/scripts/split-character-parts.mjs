@@ -240,12 +240,10 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
   const masks = new Map();
   // 층마다 따로 그려지므로 어느 층이 어느 마스크를 쓰는지 적어 둔다 — 층 SVG에는 제 마스크만 넣는다
   const masksOfLayer = new Map();
-  let currentLayer = null;
-  const maskFor = (hs) => {
+  const maskFor = (hs, layer) => {
     const key = `holes-${hs.map((h) => h.node).join('-')}`;
-    if (!masksOfLayer.has(currentLayer))
-      masksOfLayer.set(currentLayer, new Set());
-    masksOfLayer.get(currentLayer).add(key);
+    if (!masksOfLayer.has(layer)) masksOfLayer.set(layer, new Set());
+    masksOfLayer.get(layer).add(key);
     if (!masks.has(key)) {
       const black = hs.map(
         (hole) =>
@@ -260,7 +258,7 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
   };
 
   // 같은 구멍 집합에 가려지는 연속 경로를 한 <g mask>로 묶는다 — 슬라이스 그룹 자체는 그대로 둔다
-  const groupOf = (sliceName, indent) => {
+  const groupOf = (sliceName, indent, layer) => {
     const runs = [];
     buckets.get(sliceName).forEach((p, j) => {
       const hs = holesOver(sliceName, j);
@@ -272,7 +270,7 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
     const inner = runs
       .map((run) =>
         run.hs.length
-          ? `${indent}  <g${maskFor(run.hs)}>\n${run.paths.map((p) => `${indent}    ${p}`).join('\n')}\n${indent}  </g>`
+          ? `${indent}  <g${maskFor(run.hs, layer)}>\n${run.paths.map((p) => `${indent}    ${p}`).join('\n')}\n${indent}  </g>`
           : run.paths.map((p) => `${indent}  ${p}`).join('\n'),
       )
       .join('\n');
@@ -300,22 +298,19 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
     if (!layers.has(layer)) layers.set(layer, []);
     layers.get(layer).push(line);
   };
+  // 머리를 지난 뒤의 머리 밖 조각(팔)은 제 이름이 곧 층이다
+  const layerOf = (sliceName, afterHead) => {
+    const at = cfg.headParts.indexOf(sliceName);
+    if (at < 0) return afterHead ? sliceName : 'torso';
+    if (at < mouthAt) return 'head-back';
+    if (at === mouthAt) return 'mouth';
+    return 'head-front';
+  };
   let headSeen = false;
   for (const [sliceName] of cfg.slices) {
-    const at = cfg.headParts.indexOf(sliceName);
-    if (at >= 0) headSeen = true;
-    const layer =
-      at >= 0
-        ? at < mouthAt
-          ? 'head-back'
-          : at === mouthAt
-            ? 'mouth'
-            : 'head-front'
-        : headSeen
-          ? sliceName
-          : 'torso';
-    currentLayer = layer;
-    pushTo(layer, groupOf(sliceName, ''));
+    if (cfg.headParts.includes(sliceName)) headSeen = true;
+    const layer = layerOf(sliceName, headSeen);
+    pushTo(layer, groupOf(sliceName, '', layer));
     // 표정 교체용 벡터는 CSS가 숨겨준다는 전제로 넣는다 — 스타일이 없는 곳에서 이 SVG를 쓰면
     // 눈웃음 아크가 눈 위에 그대로 그려진다. 찡그린 입은 입 앞 층으로 보낸다 — 립싱크를 타면 안 된다
     for (const extra of cfg.extras?.[sliceName] ?? [])
