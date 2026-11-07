@@ -1,11 +1,17 @@
-// 웹 인터랙션에 햅틱 진동을 붙이는 진입점 — WebView면 네이티브 브릿지로, 일반 브라우저면 Vibration API로 폴백한다
+// 웹 인터랙션에 햅틱 진동을 붙이는 진입점 — 진동 이름을 플랫폼별 실제 진동으로 바꿔 WebView면 네이티브 브릿지로, 일반 브라우저면 Vibration API로 보낸다
 import type { HapticPattern } from '@landit/bridge';
 
+import { getNativeContextSnapshot } from '@/shared/bridge/native-context';
 import { postToNative } from '@/shared/bridge/web-bridge';
 
+import {
+  patternOf,
+  type HapticKind,
+  type HapticPlatform,
+} from './haptic-kinds';
 import { isHapticsEnabled } from './haptics-setting';
 
-// 일반 브라우저(주로 Android)용 폴백 진동 패턴(ms). iOS 브라우저는 vibrate 미지원이라 조용히 무시된다
+// 일반 브라우저(주로 Android)용 폴백 진동 길이(ms). iOS 브라우저는 vibrate 미지원이라 조용히 무시된다
 const VIBRATION_FALLBACK: Record<HapticPattern, number | number[]> = {
   selection: 8,
   light: 10,
@@ -16,22 +22,28 @@ const VIBRATION_FALLBACK: Record<HapticPattern, number | number[]> = {
   error: [26, 40, 26, 40, 26],
 };
 
-// 같은 패턴 연타로 진동이 뭉개지지 않게, 직전 발동으로부터 이 간격 안의 같은 패턴 요청은 버린다.
-// 패턴별로 따로 재는 이유 — 버튼 눌림의 selection 틱이 곧이어 오는 결과 진동(success/error 등)을 눌러버리면 안 되기 때문이다.
+// 같은 이름 연타로 진동이 뭉개지지 않게, 직전 발동으로부터 이 간격 안의 같은 이름 요청은 버린다.
+// 이름별로 따로 재는 이유 — 버튼 누름의 tap이 곧이어 오는 결과 진동(success·error 등)을 눌러버리면 안 되기 때문이다.
 const MIN_INTERVAL_MS = 30;
-const lastFiredAt: Partial<Record<HapticPattern, number>> = {};
+const lastFiredAt: Partial<Record<HapticKind, number>> = {};
 
 const now = () =>
   typeof performance !== 'undefined' ? performance.now() : Date.now();
 
-// 지정한 패턴으로 햅틱을 울린다. WebView 밖이면 Vibration API로 폴백하고, 그마저 없으면 아무 일도 안 한다
-export const haptic = (pattern: HapticPattern) => {
+// 셸 밖(브라우저)은 iOS 표를 쓴다 — 폴백 진동은 길이만 다를 뿐 차이가 작다. 진동마다 주입값을 다시 파싱하지 않게 스냅샷을 쓴다
+const currentPlatform = (): HapticPlatform =>
+  getNativeContextSnapshot()?.platform === 'android' ? 'android' : 'ios';
+
+// 진동 이름으로 햅틱을 울린다. 진동을 껐거나, WebView 밖인데 Vibration API도 없으면 아무 일도 안 한다
+export const haptic = (kind: HapticKind) => {
   // 마이페이지에서 진동을 끈 사람에겐 아무 것도 울리지 않는다
   if (!isHapticsEnabled()) return;
 
   const at = now();
-  if (at - (lastFiredAt[pattern] ?? -Infinity) < MIN_INTERVAL_MS) return;
-  lastFiredAt[pattern] = at;
+  if (at - (lastFiredAt[kind] ?? -Infinity) < MIN_INTERVAL_MS) return;
+  lastFiredAt[kind] = at;
+
+  const pattern = patternOf(kind, currentPlatform());
 
   // WebView 안이면 네이티브가 expo-haptics로 처리한다
   if (postToNative({ type: 'HAPTIC', pattern })) return;

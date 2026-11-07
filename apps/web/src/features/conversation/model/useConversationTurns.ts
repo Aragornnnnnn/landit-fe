@@ -275,7 +275,7 @@ export const useConversationTurns = ({
             turn_index: state.turnIndex,
             thought_type: resolved.type ?? undefined,
           });
-          haptic('light'); // 상대가 응답을 시작하는 순간 가벼운 틱
+          haptic('tick'); // 상대가 응답을 시작하는 순간
           send('AI_RESPONSE_READY'); // → AI_INNER_THOUGHT
         });
     } catch (error) {

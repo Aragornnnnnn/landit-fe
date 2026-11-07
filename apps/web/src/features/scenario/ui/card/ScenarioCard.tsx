@@ -98,7 +98,7 @@ export const ScenarioCard = ({
   }, []);
 
   const flipToBack = (trigger: 'button' | 'preview') => {
-    haptic('medium'); // 완료 카드를 뒤집는 성취 순간엔 좀 더 묵직한 진동
+    haptic('tap'); // 완료 카드를 뒤집는 순간
     track(EVENTS.SCENARIO_CARD_FLIPPED, {
       scenario_id: scenario.scenarioId,
       direction: 'back',

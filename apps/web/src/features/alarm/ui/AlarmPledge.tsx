@@ -87,11 +87,11 @@ export const AlarmPledge = ({
   const press = () => {
     if (phase !== 'idle') return;
     setPhase('holding');
-    haptic('light');
+    haptic('tap');
     // 1초마다 톡 — 누르고 있다는 걸 손으로 느끼게
     timers.current = [
-      setTimeout(() => haptic('light'), 1000),
-      setTimeout(() => haptic('light'), 2000),
+      setTimeout(() => haptic('tick'), 1000),
+      setTimeout(() => haptic('tick'), 2000),
       setTimeout(pledge, HOLD_MS),
     ];
   };

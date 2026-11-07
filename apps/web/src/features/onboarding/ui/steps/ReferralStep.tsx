@@ -190,7 +190,7 @@ const CodeEntry = ({
     ready && !askingSkip && !leaving ? `${previewKey}#${attempt}` : null;
   const submitReady = useEffectEvent(() => {
     if (!preview.data || !previewKey) return;
-    haptic('light');
+    haptic('tap');
     verifiedAt.current = performance.now();
     submitCode(
       previewKey,
