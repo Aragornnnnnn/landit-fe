@@ -201,6 +201,7 @@
 | Speech Recognition Completed | session_id?, turn_index, engine, end_reason, char_count                  | 음성 인식 결과(빈 결과 포함) — end_reason(finalize\|timeout\|utterance_end\|ended), connect_ms?·finalize_wait_ms?(대기 시간)                    |
 | Speech Recognition Failed    | session_id?, engine?, reason?                                            | STT 오류 (권한 거부 제외) — reason(connect_failed\|closed, 그 밖엔 에러 이름)                                                                   |
 | Speech Playback Failed       | session_id?, source(synth\|question_audio)                               | AI 발화 재생 실패 — 실패 비율용. question_audio는 서버 음원(오프닝 첫 질문·이어 재생 질문), 스몰톡 탭 인사도 포함 (synth 원인은 Sentry)         |
+| Speech Playback Stalled      | session_id?, source, started, 오디오 상태                                | 재생 위치가 3초 그대로라 턴을 넘김(소리는 계속). 오디오 상태(position_ms·ready_state·network_state·paused·last_media_event)는 원인 단서         |
 | Scenario Talk Completed      | session_id, scenario_id, turn_count                                      | 서버가 완료 판정                                                                                                                                |
 | Scenario Talk Abandoned      | session_id?, scenario_id, turn_index                                     | 중도 이탈 확정                                                                                                                                  |
 

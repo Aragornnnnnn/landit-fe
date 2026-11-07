@@ -79,6 +79,7 @@ export const EVENTS = {
   SPEECH_RECOGNITION_COMPLETED: 'Speech Recognition Completed',
   SPEECH_RECOGNITION_FAILED: 'Speech Recognition Failed',
   SPEECH_PLAYBACK_FAILED: 'Speech Playback Failed',
+  SPEECH_PLAYBACK_STALLED: 'Speech Playback Stalled',
   HINT_USED: 'Hint Used',
   SCENARIO_TALK_COMPLETED: 'Scenario Talk Completed',
   SCENARIO_TALK_ABANDONED: 'Scenario Talk Abandoned',
@@ -714,6 +715,18 @@ export type EventProps = {
   'Speech Playback Failed': {
     session_id?: number;
     source: 'synth' | 'question_audio';
+  };
+  // AI 발화 재생 위치가 오래 그대로라 내 차례로 넘겼다(소리는 끄지 않는다). 오디오 상태는 왜 멈췄는지 좁히는 단서다.
+  // started = 재생 위치가 한 번이라도 움직였나, last_media_event = 멈추기 전 엘리먼트의 마지막 미디어 이벤트
+  'Speech Playback Stalled': {
+    session_id?: number;
+    source: 'synth' | 'question_audio';
+    started: boolean;
+    position_ms: number;
+    ready_state: number;
+    network_state: number;
+    paused: boolean;
+    last_media_event: string | null;
   };
   'Hint Used': { source: HintSource; level: number };
   'Scenario Talk Completed': {
