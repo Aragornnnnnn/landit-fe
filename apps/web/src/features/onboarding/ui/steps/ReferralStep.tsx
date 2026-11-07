@@ -15,7 +15,6 @@ import { useSkipReferralMutation } from '@/features/referral/model/useSkipReferr
 import { ReferralCodeInput } from '@/features/referral/ui/ReferralCodeInput';
 import { track } from '@/shared/analytics';
 import { useBackPress } from '@/shared/bridge/useBackPress';
-import { haptic } from '@/shared/haptics';
 import { formatWon } from '@/shared/lib/won';
 import { reportWarning } from '@/shared/monitoring/report';
 import { ConfirmSheet } from '@/shared/ui/ConfirmSheet';
@@ -190,7 +189,6 @@ const CodeEntry = ({
     ready && !askingSkip && !leaving ? `${previewKey}#${attempt}` : null;
   const submitReady = useEffectEvent(() => {
     if (!preview.data || !previewKey) return;
-    haptic('tap');
     verifiedAt.current = performance.now();
     submitCode(
       previewKey,

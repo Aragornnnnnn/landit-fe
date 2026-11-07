@@ -9,7 +9,6 @@ import Link from 'next/link';
 
 import { track } from '@/shared/analytics';
 import { useBackPress } from '@/shared/bridge/useBackPress';
-import { haptic } from '@/shared/haptics';
 import { scenarioSessionsPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
@@ -98,7 +97,6 @@ export const ScenarioCard = ({
   }, []);
 
   const flipToBack = (trigger: 'button' | 'preview') => {
-    haptic('tap'); // 완료 카드를 뒤집는 순간
     track(EVENTS.SCENARIO_CARD_FLIPPED, {
       scenario_id: scenario.scenarioId,
       direction: 'back',
