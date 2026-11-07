@@ -36,6 +36,7 @@ export const PageHeader = ({
         disabled={backDisabled}
         className="absolute left-3 flex size-10 items-center justify-center text-foreground"
         aria-label={leading === 'close' ? t('closeLabel') : t('backLabel')}
+        data-no-haptic
       >
         {leading === 'close' ? (
           <CloseIcon size={24} />

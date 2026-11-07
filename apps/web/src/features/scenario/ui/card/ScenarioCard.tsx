@@ -181,6 +181,7 @@ export const ScenarioCard = ({
               <Link
                 href={scenarioSessionsPath(scenario.scenarioId, date)}
                 aria-label={t('historyLabel')}
+                data-no-haptic
                 className="absolute top-[15px] right-3 flex h-[34px] items-center gap-0.5 rounded-full bg-white/90 pr-2.5 pl-3 text-13 font-semibold text-foreground shadow-sm backdrop-blur-sm active:opacity-70"
               >
                 {t('historyButton')}

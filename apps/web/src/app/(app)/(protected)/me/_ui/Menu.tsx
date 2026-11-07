@@ -107,7 +107,13 @@ export function MenuLink({
   onClick?: () => void;
 }) {
   return (
-    <Link href={href} onClick={onClick} className={ROW_CLASS} style={ROW_STYLE}>
+    <Link
+      href={href}
+      onClick={onClick}
+      className={ROW_CLASS}
+      style={ROW_STYLE}
+      data-no-haptic
+    >
       <RowContent
         icon={icon}
         title={title}

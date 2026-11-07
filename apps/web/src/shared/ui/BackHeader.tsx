@@ -36,6 +36,7 @@ export const BackHeader = ({
         type="button"
         onClick={onBack}
         aria-label={t('backLabel')}
+        data-no-haptic
         className="-ml-1 flex size-9 items-center justify-center rounded-full text-muted-foreground transition-all active:scale-90 active:bg-secondary"
       >
         <ChevronLeftIcon size={24} />
