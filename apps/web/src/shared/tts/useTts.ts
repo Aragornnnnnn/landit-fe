@@ -31,19 +31,27 @@ export interface TtsStallSnapshot {
   lastMediaEvent: string | null;
 }
 
-/**
- * onStart는 재생이 실제로 시작된 뒤에만 부른다 — 그 전에는 읽을 시각이 없다.
- * onStall은 재생 위치가 오래 그대로일 때 한 번 부른다 — 알리기만 하고 재생은 그대로 둔다
- */
-interface SpeakOptions {
+/** 재생 멈춤 감시를 신청하는 콜백 — 알리기만 하고 재생은 그대로 둔다 */
+interface StallCallbacks {
+  // 재생 위치가 오래 그대로가 됐다 — 다시 움직였다가 또 멈추면 또 부른다
+  onStall: (snapshot: TtsStallSnapshot) => void;
+  // 멈췄던 재생 위치가 다시 움직였다
+  onResume?: () => void;
+}
+
+/** onStart는 재생이 실제로 시작된 뒤에만 부른다 — 그 전에는 읽을 시각이 없다. onStall을 주면 멈춤 감시가 붙는다 */
+interface SpeakOptions extends Partial<StallCallbacks> {
   onStart?: (playback: TtsPlayback) => void;
   onEnd?: () => void;
   onError?: (error: Error) => void;
-  onStall?: (snapshot: TtsStallSnapshot) => void;
 }
 
-// 화면이 보이는 동안 재생 위치가 이만큼 그대로면 멈춘 것으로 본다 — 음원은 1초 안에 내려오고 재생 중엔 위치가 계속 나아간다
+// 재생할 데이터가 있는 상태(HTMLMediaElement.HAVE_CURRENT_DATA) — 이보다 낮으면 아직 받는 중이다
+const HAVE_CURRENT_DATA = 2;
+// 데이터가 있는데 재생 위치가 이만큼 그대로면 멈춘 것으로 본다 — 재생 중엔 위치가 계속 나아간다
 const STALL_MS = 3_000;
+// 받는 중엔 더 기다린다 — 질문 음원은 70KB 이하라 100kbps 망에서도 6초 안에 내려온다
+const STALL_LOADING_MS = 8_000;
 const STALL_CHECK_MS = 500;
 // 멈춘 이유를 좁히려고 마지막 신호만 기억해 두는 미디어 이벤트
 const STALL_MEDIA_EVENTS = [
@@ -59,16 +67,18 @@ const STALL_MEDIA_EVENTS = [
 ] as const;
 
 /**
- * 재생 위치가 오래 그대로면 onStall을 한 번 부르고, 감시를 끝내는 함수를 돌려준다. 소리는 건드리지 않는다.
+ * 재생 위치를 지켜보며 멈추면 onStall, 다시 움직이면 onResume을 부르고, 감시를 끝내는 함수를 돌려준다. 소리는 건드리지 않는다.
  * 화면이 숨겨진 동안은 세지 않고 돌아오면 처음부터 센다 — 앱을 내리면 iOS가 재생을 멈추는데 그건 멈춤이 아니다
  */
 const watchStall = (
   audio: HTMLAudioElement,
-  onStall: (snapshot: TtsStallSnapshot) => void,
+  { onStall, onResume }: StallCallbacks,
 ): (() => void) => {
   let lastPosition = audio.currentTime;
   let stillMs = 0;
   let started = false;
+  let stalled = false;
+  let hadData = audio.readyState >= HAVE_CURRENT_DATA;
   let lastMediaEvent: string | null = null;
 
   const rememberEvent = (event: Event) => {
@@ -83,11 +93,22 @@ const watchStall = (
     if (audio.currentTime !== lastPosition) {
       started = true;
       restartCount();
+      if (stalled) {
+        stalled = false;
+        onResume?.();
+      }
       return;
     }
+    if (stalled) return;
+    // 데이터가 막 도착했으면 받던 시간은 빼고 처음부터 센다
+    const hasData = audio.readyState >= HAVE_CURRENT_DATA;
+    if (hasData !== hadData) {
+      hadData = hasData;
+      stillMs = 0;
+    }
     stillMs += STALL_CHECK_MS;
-    if (stillMs < STALL_MS) return;
-    stop();
+    if (stillMs < (hasData ? STALL_MS : STALL_LOADING_MS)) return;
+    stalled = true;
     onStall({
       started,
       positionMs: Math.round(audio.currentTime * 1000),
@@ -263,10 +284,11 @@ export function useTts() {
   // 재생을 거는 순간부터 감시한다 — 시작을 못 하고 멈춘 것도 잡아야 한다
   const startStallWatch = (
     audio: HTMLAudioElement,
-    onStall: SpeakOptions['onStall'],
+    { onStall, onResume }: SpeakOptions = {},
   ) => {
     stopStallWatch();
-    if (onStall) stopStallWatchRef.current = watchStall(audio, onStall);
+    if (onStall)
+      stopStallWatchRef.current = watchStall(audio, { onStall, onResume });
   };
 
   // 재생 리소스(오디오·objectURL·콜백·멈춤 감시)를 정리한다. stop과 onended가 공유하는 뒷정리.
@@ -378,7 +400,7 @@ export function useTts() {
         options?.onError?.(playbackError);
       };
 
-      startStallWatch(audio, options?.onStall);
+      startStallWatch(audio, options);
       try {
         await audio.play();
       } catch (error) {
@@ -450,7 +472,7 @@ export function useTts() {
         options?.onError?.(new Error('오디오 재생에 실패했어요.'));
       };
       audio.onerror = fail;
-      startStallWatch(audio, options?.onStall);
+      startStallWatch(audio, options);
       audio.play().then(
         () => {
           if (!handled) {

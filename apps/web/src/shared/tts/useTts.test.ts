@@ -37,7 +37,8 @@ class FakeAudio {
   playbackRate = 1;
   // 멈춤 감시가 읽는 재생 상태 — 테스트가 직접 바꿔 재생 진행을 흉내 낸다
   currentTime = 0;
-  readyState = 0;
+  // 기본은 재생할 데이터가 다 온 상태(HAVE_ENOUGH_DATA) — 받는 중인 경우는 테스트가 낮춘다
+  readyState = 4;
   networkState = 0;
   paused = false;
   listeners = new Map<string, Set<(event: Event) => void>>();
@@ -805,6 +806,8 @@ describe('useTts', () => {
 
     afterEach(() => {
       vi.useRealTimers();
+      // 덮어쓴 보임 상태를 걷어 jsdom 원래 값으로 돌린다
+      Reflect.deleteProperty(document, 'visibilityState');
     });
 
     it('재생 위치가 3초 동안 그대로면 멈춤을 한 번 알리고, 소리는 끄지 않는다', () => {
@@ -974,7 +977,7 @@ describe('useTts', () => {
       // When
       act(() => audio.emit('waiting'));
       act(() => audio.emit('stalled'));
-      act(() => vi.advanceTimersByTime(3_000));
+      act(() => vi.advanceTimersByTime(8_000));
 
       // Then
       expect(onStall).toHaveBeenCalledWith({
@@ -985,6 +988,76 @@ describe('useTts', () => {
         paused: true,
         lastMediaEvent: 'stalled',
       });
+    });
+
+    it('아직 받는 중이면(재생할 데이터가 없으면) 8초까지 기다린다 — 느린 망에서 첫 음원을 멈춤으로 잘못 보지 않게', () => {
+      // Given — 음원을 받는 중이라 재생할 데이터가 아직 없다
+      const onStall = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall }));
+      FakeAudio.instances[0]!.readyState = 1;
+
+      // When
+      act(() => vi.advanceTimersByTime(7_999));
+      expect(onStall).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(1));
+
+      // Then
+      expect(onStall).toHaveBeenCalledTimes(1);
+    });
+
+    it('데이터가 도착하면 그때부터 3초를 센다', () => {
+      // Given — 5초 동안 받다가 데이터가 왔다
+      const onStall = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall }));
+      const audio = FakeAudio.instances[0]!;
+      audio.readyState = 1;
+      act(() => vi.advanceTimersByTime(5_000));
+
+      // When — 데이터는 왔지만 재생 위치가 움직이지 않는다
+      audio.readyState = 4;
+
+      // Then — 받던 시간은 빼고 3초를 센다
+      act(() => vi.advanceTimersByTime(2_500));
+      expect(onStall).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(500));
+      expect(onStall).toHaveBeenCalledTimes(1);
+    });
+
+    it('멈춘 뒤 재생 위치가 다시 움직이면 다시 나온다고 알리고, 또 멈추면 다시 알린다', () => {
+      // Given — 멈춤을 이미 알렸다
+      const onStall = vi.fn();
+      const onResume = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall, onResume }));
+      const audio = FakeAudio.instances[0]!;
+      act(() => vi.advanceTimersByTime(3_000));
+      expect(onStall).toHaveBeenCalledTimes(1);
+
+      // When — 소리가 다시 나아간다
+      audio.currentTime = 0.5;
+      act(() => vi.advanceTimersByTime(500));
+
+      // Then
+      expect(onResume).toHaveBeenCalledTimes(1);
+      act(() => vi.advanceTimersByTime(3_000));
+      expect(onStall).toHaveBeenCalledTimes(2);
+      expect(onResume).toHaveBeenCalledTimes(1);
+    });
+
+    it('멈추기 전에는 움직여도 다시 나온다고 알리지 않는다', () => {
+      const onResume = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() =>
+        result.current.speakSrc('/audio/q.mp3', { onStall: vi.fn(), onResume }),
+      );
+      const audio = FakeAudio.instances[0]!;
+
+      audio.currentTime = 0.5;
+      act(() => vi.advanceTimersByTime(500));
+
+      expect(onResume).not.toHaveBeenCalled();
     });
 
     it('감시가 끝나면 엘리먼트에 붙인 귀를 뗀다', () => {
