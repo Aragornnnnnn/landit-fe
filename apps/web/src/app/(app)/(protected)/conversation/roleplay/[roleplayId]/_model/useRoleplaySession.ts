@@ -9,7 +9,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   startSavedRoleplaySession,
   type RoleplaySessionStartResponse,
-  type RoleplaySettings,
 } from '@/features/roleplay/api/roleplay';
 import { roleplayKeys } from '@/features/roleplay/model/keys';
 import { isPremiumRequired } from '@/features/roleplay/model/premium-required';
@@ -21,8 +20,6 @@ import { ApiError } from '@/shared/api/api-error';
 import { useCurrentUserId } from '@/shared/auth/current-member';
 import { roleplayTalkPath } from '@/shared/lib/routes';
 import { reportError } from '@/shared/monitoring/report';
-
-import { findCachedPartner } from './cached-partner';
 
 const toStartFailReason = (
   cause: unknown,
@@ -115,16 +112,6 @@ export const useRoleplaySession = (
     }
   }, [session, deciding, freeUser, entry, roleplayId]);
 
-  // 세션을 기다리는 동안 세울 상대 — 목록을 새로 받진 않고 홈이 받아 둔 것만 본다
-  const [partner] = useState(() =>
-    findCachedPartner(
-      queryClient.getQueryData<RoleplaySettings[]>(
-        roleplayKeys.scenarios(userId),
-      ),
-      roleplayId,
-    ),
-  );
-
   // 중도 종료는 없다 — 백엔드가 롤플레이 세션의 중도 종료를 받지 않아, 완료는 끝내기(complete)만 맡는다
-  return { session, error, partner };
+  return { session, error };
 };

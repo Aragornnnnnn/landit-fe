@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import type { Partner } from '@/features/conversation/model/character-look';
-import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSkeleton';
+import { ConversationWaiting } from '@/features/conversation/ui/ConversationWaiting';
 import type { SmallTalkStartMode } from '@/features/small-talk/api/small-talk';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
 import { track } from '@/shared/analytics';
@@ -65,7 +65,7 @@ export const SmallTalkFlow = ({
   // 상대는 홈에서 이미 골랐다 — 기다리는 동안에도 무대에 세운다
   if (!session || !main)
     return (
-      <ConversationSkeleton
+      <ConversationWaiting
         partner={partner}
         partnerSpeaksFirst={startMode === 'AI_FIRST'}
       />

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/shared/api/api-error';
 
+import { useCachedRoleplayPartner } from '../_model/useCachedRoleplayPartner';
 import { useRoleplaySession } from '../_model/useRoleplaySession';
 import { RoleplayFlow } from './RoleplayFlow';
 
@@ -14,21 +15,18 @@ vi.mock('next/navigation', () => ({
 vi.mock('../_model/useRoleplaySession', () => ({
   useRoleplaySession: vi.fn(),
 }));
+vi.mock('../_model/useCachedRoleplayPartner', () => ({
+  useCachedRoleplayPartner: vi.fn(() => null),
+}));
 vi.mock('./RoleplayConversation', () => ({ RoleplayConversation: () => null }));
 
 const failWith = (error: unknown) =>
-  vi.mocked(useRoleplaySession).mockReturnValue({
-    session: null,
-    error,
-    partner: null,
-  });
+  vi.mocked(useRoleplaySession).mockReturnValue({ session: null, error });
 
-const waitWith = (partner: 'marco' | null) =>
-  vi.mocked(useRoleplaySession).mockReturnValue({
-    session: null,
-    error: null,
-    partner,
-  });
+const waitWith = (partner: 'marco' | null) => {
+  vi.mocked(useRoleplaySession).mockReturnValue({ session: null, error: null });
+  vi.mocked(useCachedRoleplayPartner).mockReturnValue(partner);
+};
 
 afterEach(() => {
   cleanup();
