@@ -36,7 +36,7 @@ const FEATURES: {
     shot: 'thought-fine',
     next: {
       shot: 'thought-native',
-      origin: { ko: { x: 50, y: 41 }, ja: { x: 50, y: 41 } },
+      origin: { ko: { x: 50, y: 48 }, ja: { x: 50, y: 48 } },
       labelKey: 'thoughtGoodScreenLabel',
     },
   },
