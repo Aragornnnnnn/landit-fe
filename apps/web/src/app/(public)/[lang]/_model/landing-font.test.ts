@@ -48,7 +48,7 @@ describe('landingGlyphs', () => {
   });
 
   it('문구에 없어도 영문·숫자·기본 기호는 늘 담는다', () => {
-    // 숫자 연출(CountUp)이나 짧은 영어 문구가 바뀌어도 폰트를 다시 만들 필요가 없게
+    // 배지 숫자나 짧은 영어 문구가 바뀌어도 폰트를 다시 만들 필요가 없게
     const glyphs = landingGlyphs('ja', []);
 
     expect(glyphs).toContain('A');

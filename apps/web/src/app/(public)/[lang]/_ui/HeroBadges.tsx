@@ -1,10 +1,9 @@
-// 첫 화면 월계수 배지 — 값은 랜딩 숫자 단일 출처를 쓰고, 화면에 들어오면 0부터 올라간다. 월계수는 전용으로 그린 잎 모양이다
+// 첫 화면 월계수 배지 — 값은 랜딩 숫자 단일 출처를 쓰고, 서버가 실제 숫자를 그대로 그린다(검색엔진·스크립트 전에도 0이 아니라 실제 값). 월계수는 전용으로 그린 잎 모양이다
 import { getTranslations } from 'next-intl/server';
 
 import type { Locale } from '@/shared/i18n/locale';
 
 import { LANDING_STATS } from '../_model/landing-stats';
-import { CountUp } from './CountUp';
 import { StarIcon } from './StarIcon';
 
 const LEAF =
@@ -55,7 +54,7 @@ const Badge = ({
         {star && (
           <StarIcon className="size-[18px] min-[360px]:size-[21px] sm:size-8" />
         )}
-        <CountUp value={value} />
+        {value}
       </p>
       <p className="mt-1.5 text-[11px] font-medium whitespace-nowrap text-[#57524c] min-[360px]:text-[12px] sm:text-[15px]">
         {label}

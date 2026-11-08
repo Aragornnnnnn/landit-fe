@@ -7,7 +7,7 @@ const OTHER_SCRIPT: Record<Locale, RegExp> = {
   ja: /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7a3]/u,
 };
 
-// 숫자 연출·짧은 영어 문구는 자주 바뀌어서 출력 가능한 ASCII는 통째로 담는다
+// 배지 숫자·짧은 영어 문구는 자주 바뀌어서 출력 가능한 ASCII는 통째로 담는다
 const ASCII = Array.from({ length: 0x7f - 0x20 }, (_, i) =>
   String.fromCharCode(0x20 + i),
 ).join('');
