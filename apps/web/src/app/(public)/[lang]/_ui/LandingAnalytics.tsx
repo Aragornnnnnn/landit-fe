@@ -5,6 +5,8 @@ import { useEffect } from 'react';
 import { EVENTS, type EventProps } from '@landit/analytics';
 import { usePathname } from 'next/navigation';
 
+import { afterPageLoadIdle } from '@/shared/lib/page-idle';
+
 import {
   downloadClickOf,
   dwellSeconds,
@@ -58,16 +60,9 @@ export const LandingAnalytics = () => {
     const startedAt = Date.now();
 
     // 첫 화면 그림을 다 받은 뒤 쉬는 틈에 SDK를 받는다 — 첫 화면 속도를 깎지 않게
-    const view = () => send(EVENTS.LANDING_VIEWED, where);
-    // 사파리는 requestIdleCallback이 없어 다음 틈(setTimeout)으로 대신한다
-    const whenIdle = (callback: () => void) => {
-      if (typeof window.requestIdleCallback === 'function')
-        window.requestIdleCallback(callback);
-      else setTimeout(callback, 1);
-    };
-    const onLoad = () => whenIdle(view);
-    if (document.readyState === 'complete') onLoad();
-    else window.addEventListener('load', onLoad, { once: true });
+    const cancelView = afterPageLoadIdle(() =>
+      send(EVENTS.LANDING_VIEWED, where),
+    );
 
     const onClick = (event: MouseEvent) => {
       const link = (event.target as Element | null)?.closest?.('a[href]');
@@ -99,7 +94,7 @@ export const LandingAnalytics = () => {
     return () => {
       // 랜딩 안에서 다른 화면(업데이트 기록·약관)으로 옮겨 갈 때도 앞 화면에 머문 시간을 남긴다
       exit();
-      window.removeEventListener('load', onLoad);
+      cancelView();
       document.removeEventListener('click', onClick);
       document.removeEventListener('visibilitychange', onHide);
     };
