@@ -118,7 +118,7 @@ export const SurveyFlow = ({ kind }: { kind: SurveyKind }) => {
       });
       goTo('done', 1);
     } catch {
-      showToast('저장하지 못했어요. 잠시 후 다시 시도해 주세요.', 'error');
+      showToast('저장하지 못했어요. 잠시 후 다시 시도해 주세요', 'error');
     } finally {
       setSubmitting(false);
     }

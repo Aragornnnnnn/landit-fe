@@ -60,7 +60,7 @@ describe('sendFailureKey', () => {
 
   it('사진을 서버가 거부하면 다른 사진으로 바꾸라고 한다', () => {
     expect(sendFailureMessage(failure(400, 'VALIDATION_FAILED'), 1)).toBe(
-      '보낼 수 없는 사진이 있어요. 다른 사진으로 바꿔 주세요.',
+      '보낼 수 없는 사진이 있어요. 다른 사진으로 바꿔 주세요',
     );
   });
 
@@ -68,20 +68,20 @@ describe('sendFailureKey', () => {
     '사진이 있을 때 %s로 끊기면 용량을 줄이라고 한다',
     (status) => {
       expect(sendFailureMessage(failure(status), 2)).toBe(
-        '사진 용량이 너무 커요. 한 장을 빼고 다시 보내 주세요.',
+        '사진 용량이 너무 커요. 한 장을 빼고 다시 보내 주세요',
       );
     },
   );
 
   it('사진이 없으면 사진 탓을 하지 않는다', () => {
     expect(sendFailureMessage(failure(400, 'VALIDATION_FAILED'), 0)).toBe(
-      '보내지 못했어요. 잠시 후 다시 시도해 주세요.',
+      '보내지 못했어요. 잠시 후 다시 시도해 주세요',
     );
   });
 
   it('네트워크 오류처럼 서버 응답이 없으면 다시 시도하라고 한다', () => {
     expect(sendFailureMessage(new TypeError('Failed to fetch'), 2)).toBe(
-      '보내지 못했어요. 잠시 후 다시 시도해 주세요.',
+      '보내지 못했어요. 잠시 후 다시 시도해 주세요',
     );
   });
 });
