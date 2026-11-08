@@ -332,7 +332,8 @@ export function useTts() {
         options?.onEnd?.();
       };
       const fail = () => {
-        if (handled) return;
+        // 다른 재생으로 넘어간 뒤 늦게 온 실패(로드 실패의 play 거부)는 무시한다 — 앞 음원을 다시 열거나 지금 재생을 정리하면 안 된다
+        if (handled || audioRef.current !== audio) return;
         handled = true;
         // 프리로드해 둔 엘리먼트는 묵는 동안 로드가 죽었을 수 있다 — 새 엘리먼트로 한 번 다시 연다
         if (isPreloaded) {

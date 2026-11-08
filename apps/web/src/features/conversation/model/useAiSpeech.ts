@@ -227,6 +227,9 @@ interface AiSpeechOptions {
   replayAllowed?: boolean;
   // 계측용 세션 id — 재생 실패가 어느 대화에서 났는지 남긴다
   sessionId?: number | null;
+  // 오프닝 음원을 재생 전에 미리 열어 둘지 — 누를 때 트는 소리(스몰톡 탭 인사)만 켠다.
+  // 대화 오프닝은 들어오자마자 틀거나 안 틀어서 미리 받을 이득이 없고, 한 칸뿐인 슬롯을 다음 질문 음원과 다툰다
+  preloadOpening?: boolean;
 }
 
 /**
@@ -245,6 +248,7 @@ export const useAiSpeech = ({
   onSpeechEnd,
   replayAllowed = false,
   sessionId = null,
+  preloadOpening = false,
 }: AiSpeechOptions) => {
   const tts = useTts();
   // 첫 AI 발화(오프닝)인지 — 첫 질문 음원 재생 대상
@@ -295,6 +299,14 @@ export const useAiSpeech = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, source?.content, source?.ttsText, source?.questionAudioUrl]);
+
+  // 켜 두면 오프닝 음원을 재생 전에 미리 열어 둔다 — 누르는 순간 받기 시작하면 그만큼 소리가 늦다.
+  // 재생이 끝나면 열어 둔 것은 쓰였으니 다시 연다 — 또 누르면 같은 음원을 튼다
+  useEffect(() => {
+    if (!preloadOpening || playing || !openingSrc) return;
+    tts.prefetchSrc(openingSrc);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preloadOpening, playing, openingSrc]);
 
   // 다음 발화 재생을 미리 준비한다 — 합성분은 미리 합성하고, 질문 음원은 미리 열어 이어 재생 공백을 없앤다.
   // 음성이 없으면 재생 자체가 타이머 폴백이라 아무것도 준비하지 않는다
