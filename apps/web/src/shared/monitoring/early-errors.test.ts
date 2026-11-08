@@ -41,6 +41,10 @@ describe('bufferEarlyErrors', () => {
     const capture = vi.fn();
     flush(capture);
 
+    // 버퍼가 빠진 뒤라 이 에러를 받는 곳이 없다 — jsdom이 미처리 에러로 보고하지 않게 여기서 삼킨다
+    window.addEventListener('error', (event) => event.preventDefault(), {
+      once: true,
+    });
     window.dispatchEvent(
       new ErrorEvent('error', { error: new Error('later') }),
     );
