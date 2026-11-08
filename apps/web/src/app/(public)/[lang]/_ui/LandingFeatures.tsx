@@ -6,6 +6,7 @@ import Image from 'next/image';
 import type { Locale } from '@/shared/i18n/locale';
 import { RevealSection } from '@/shared/ui/RevealSection';
 
+import type { RevealOrigin } from '../_model/reveal-clip';
 import { SCREEN_IMAGE, screenPath } from '../_model/screen-image';
 import { ScreenSwap } from './ScreenSwap';
 import { titleTags } from './title-tags';
@@ -18,9 +19,10 @@ const FEATURES: {
   topic: Topic;
   mark: Mark;
   shot: string;
-  /** 스크롤하면 넘어가는 다음 화면과 그 설명 키 */
+  /** 스크롤하면 넘어가는 다음 화면과 그 설명 키, 다음 화면이 퍼지기 시작하는 자리(첫 화면 기준 %) — 탭 이름 길이가 달라 언어마다 잰다 */
   next?: {
     shot: string;
+    origin: Record<Locale, RevealOrigin>;
     labelKey:
       'expressionPronunciationScreenLabel' | 'freeTalkSmallTalkScreenLabel';
   };
@@ -33,6 +35,8 @@ const FEATURES: {
     shot: 'expression-explain',
     next: {
       shot: 'expression-pron',
+      // 아래 '소리 내서 말해볼게요' 버튼 자리
+      origin: { ko: { x: 50, y: 91 }, ja: { x: 50, y: 91 } },
       labelKey: 'expressionPronunciationScreenLabel',
     },
   },
@@ -43,6 +47,8 @@ const FEATURES: {
     shot: 'roleplay-list',
     next: {
       shot: 'smalltalk-friend',
+      // 머리글이 같아 스몰톡 탭 자리에서 퍼지면 탭을 누른 것처럼 보인다
+      origin: { ko: { x: 35, y: 14 }, ja: { x: 43, y: 14 } },
       labelKey: 'freeTalkSmallTalkScreenLabel',
     },
   },
@@ -94,6 +100,7 @@ export const LandingFeatures = async ({ locale }: { locale: Locale }) => {
                       src: screenPath(locale, next.shot),
                       alt: t(next.labelKey),
                     }}
+                    origin={next.origin[locale]}
                   />
                 ) : (
                   <Image
