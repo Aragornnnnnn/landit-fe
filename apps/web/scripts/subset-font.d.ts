@@ -3,7 +3,10 @@ declare module 'subset-font' {
   const subsetFont: (
     font: Buffer,
     text: string,
-    options?: { targetFormat?: 'sfnt' | 'woff' | 'woff2' },
+    options?: {
+      targetFormat?: 'sfnt' | 'woff' | 'woff2';
+      variationAxes?: Record<string, number | { min: number; max: number }>;
+    },
   ) => Promise<Buffer>;
   export default subsetFont;
 }

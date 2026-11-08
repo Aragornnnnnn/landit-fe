@@ -23,18 +23,18 @@
   }
 }
 
-/* 랜딩 전용 폰트 — 화면에 쓰는 글자만 담은 Pretendard 한 파일(pnpm --filter web landing-font로 만든다). 전역 Pretendard 조각 수십 개를 받지 않아 첫 화면 대역을 그림에 돌린다 */
+/* 랜딩 전용 폰트 — 화면에 쓰는 글자와 굵기(400~700, LANDING_FONT_WEIGHT)만 담은 Pretendard 한 파일(pnpm --filter web landing-font로 만든다). 전역 Pretendard 조각 수십 개를 받지 않아 첫 화면 대역을 그림에 돌린다 */
 @font-face {
   font-family: 'Pretendard Landing KO';
   src: url('./fonts/landing-ko.woff2') format('woff2');
-  font-weight: 45 920;
+  font-weight: 400 700;
   font-display: swap;
 }
 
 @font-face {
   font-family: 'Pretendard Landing JA';
   src: url('./fonts/landing-ja.woff2') format('woff2');
-  font-weight: 45 920;
+  font-weight: 400 700;
   font-display: swap;
 }
 

@@ -1,9 +1,14 @@
-// 랜딩 전용 폰트에 담을 글자 고르기 — 언어별로 담을 글자와 빼는 글자, 화면 문구가 바뀌어도 폰트가 따라오는지 검증
+// 랜딩 전용 폰트에 담을 글자·굵기 고르기 — 언어별로 담을 글자와 빼는 글자, 화면 문구·굵기가 바뀌어도 폰트가 따라오는지 검증
 import { describe, expect, it } from 'vitest';
 
 import LANDING_GLYPHS from '../_ui/fonts/landing-glyphs.json';
 import { readLandingTexts } from '../../../../../scripts/landing-font-sources.ts';
-import { landingGlyphs, stripComments } from './landing-font';
+import {
+  fontWeightsIn,
+  LANDING_FONT_WEIGHT,
+  landingGlyphs,
+  stripComments,
+} from './landing-font';
 
 describe('stripComments', () => {
   it('줄 주석과 블록 주석의 글은 지우고 코드 속 문자열은 남긴다', () => {
@@ -81,4 +86,31 @@ describe('랜딩 폰트 커버리지', () => {
       expect(missing).toBe('');
     },
   );
+});
+
+describe('fontWeightsIn', () => {
+  it('Tailwind 굵기 클래스와 임의 굵기를 숫자로 읽는다', () => {
+    const source =
+      '<p className="font-bold text-lg">a</p><b className="font-[650] font-light">';
+
+    expect(fontWeightsIn(source).sort()).toEqual([300, 650, 700]);
+  });
+
+  it('굵기와 상관없는 font- 클래스(font-sans 등)는 무시한다', () => {
+    expect(fontWeightsIn('<p className="font-sans font-mono">')).toEqual([]);
+  });
+});
+
+describe('랜딩 굵기 범위', () => {
+  it('랜딩 코드가 쓰는 굵기는 전부 랜딩 폰트의 굵기 범위 안이다', async () => {
+    // 폰트는 쓰는 굵기만 담아 작게 만든다 — 범위 밖 굵기를 쓰면 LANDING_FONT_WEIGHT와 landing.module.css를 함께 넓힌다
+    const used = (await readLandingTexts('ko')).flatMap(fontWeightsIn);
+    const outside = used.filter(
+      (weight) =>
+        weight < LANDING_FONT_WEIGHT.min || weight > LANDING_FONT_WEIGHT.max,
+    );
+
+    expect(used.length).toBeGreaterThan(0);
+    expect(outside).toEqual([]);
+  });
 });
