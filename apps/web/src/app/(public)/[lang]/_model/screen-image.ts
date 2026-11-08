@@ -2,7 +2,7 @@
 import type { Locale } from '@/shared/i18n/locale';
 
 /** 캡처를 다시 찍으면 올린다 — 같은 주소의 옛 그림이 브라우저에 하루 동안 남기 때문이다 */
-const SCREENS_VERSION = 3;
+const SCREENS_VERSION = 5;
 
 /** 폰 화면 캡처 경로 — 일본어 화면은 일본어로 다시 찍은 캡처를 쓴다 */
 export const screenPath = (locale: Locale, shot: string) =>
