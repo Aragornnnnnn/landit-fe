@@ -166,9 +166,10 @@ Layer 3  컴포넌트                                ← 오직 시맨틱 토큰
 
 ### Toast
 
-- 상단 표시(`top: safe-area + 64px`), 중앙 정렬, 2.5s 자동 소멸
-- `bg rgba(30,30,30,0.92)` + `backdrop-blur(8px)`, 흰 14px semibold, `rounded-2xl`
-- 등장: `opacity/y/scale` 0.2s easeOut
+- `showToast(문구, 종류)` — 하단 표시(`max(safe-area-inset-bottom, 24px)`, 키보드가 있으면 키보드 위), 중앙 정렬, 2s 자동 소멸, 한 번에 하나
+- `bg-toast/92`(#222) 알약, 흰 14px semibold, `rounded-[20px]` — 한 줄이면 알약, 두 줄이면 둥근 상자. 화면 양옆 16px 안에서 줄바꿈
+- 종류: 동작이 끝났으면 `success`(초록 원+체크), 사용자가 고쳐서 다시 하면 되면 `warning`(주황 원+느낌표), 시스템이 실패했으면 `error`(빨강 원+X), 그냥 알려주기만 하면 `default`(아이콘 없음)
+- 등장: 아래 8px에서 올라오며 페이드 0.2s, 아이콘은 원이 스프링으로 튀어나온 뒤 글리프가 그려진다(0.4s 안). 나갈 땐 페이드만. 동작 줄이기면 이동·아이콘 연출 없음
 
 ## 5. Layout Principles
 

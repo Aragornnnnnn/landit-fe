@@ -37,6 +37,10 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-toast: var(--toast);
+  --color-toast-success: var(--toast-success);
+  --color-toast-warning: var(--toast-warning);
+  --color-toast-error: var(--toast-error);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -151,6 +155,10 @@
   --red-400: #e3574a;
   --violet-100: #ece6fb;
   --violet-600: #6a4cc2;
+  --gray-850: #222222;
+  --green-450: #1f9d55;
+  --red-450: #ef4444;
+  --orange-450: #ff9f0a;
 
   /* ── Layer 2: Semantic — 역할 토큰. 다크모드 도입 시 이 블록만 재정의한다 ── */
   --background: var(--gray-50);
@@ -214,6 +222,11 @@
   --invite-ink: var(--amber-800);
   /* 안 읽은 편지 점. destructive(경고 빨강)보다 한 톤 죽인 색이라 따로 둔다 */
   --letter-unread: var(--red-400);
+  /* 토스트 — 검정 알약과 그 위 아이콘 원. success·destructive는 검정 위에서 가라앉아 한 톤 밝은 색을 따로 둔다. 경고 주황도 브랜드 primary와 섞이지 않게 따로 */
+  --toast: var(--gray-850);
+  --toast-success: var(--green-450);
+  --toast-warning: var(--orange-450);
+  --toast-error: var(--red-450);
   --radius: 0.75rem;
   /* 글자 크기 배율 — 기본 1. html 글자 크기는 16px로 두고 글자 토큰에만 곱한다(여백까지 커지지 않게) */
   --font-scale: 1;
