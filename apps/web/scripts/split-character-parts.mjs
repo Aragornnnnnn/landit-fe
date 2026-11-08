@@ -235,11 +235,15 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
           (h.slice === sliceName && h.at > j)),
     );
   // 마스크 id는 인스턴스마다 다르다(같은 화면에 아바타·초상화로 두 번 그려진다) — 컴포넌트가 useId로 앞머리를 붙인다.
-  // 마스크 영역은 넉넉히 잡는다 — 소비처가 viewBox를 더 넓게 덮어써도 마스크 밖이라고 잘려 나가면 안 된다.
+  // 마스크 영역은 기본값(가리는 부위 영역 +10%)에 맡긴다 — 소비처가 viewBox를 넓혀도 부위를 따라가니 잘리지 않고, 고정된 큰 영역을 주면 층이 그만큼 커져 GPU 타일 메모리를 잡아먹는다.
   // 구멍 경로의 id는 뗀다 — 같은 구멍이 여러 마스크에 들어가면 id가 겹친다
   const masks = new Map();
-  const maskFor = (hs) => {
+  // 층마다 따로 그려지므로 어느 층이 어느 마스크를 쓰는지 적어 둔다 — 층 SVG에는 제 마스크만 넣는다
+  const masksOfLayer = new Map();
+  const maskFor = (hs, layer) => {
     const key = `holes-${hs.map((h) => h.node).join('-')}`;
+    if (!masksOfLayer.has(layer)) masksOfLayer.set(layer, new Set());
+    masksOfLayer.get(layer).add(key);
     if (!masks.has(key)) {
       const black = hs.map(
         (hole) =>
@@ -247,14 +251,14 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
       );
       masks.set(
         key,
-        `    <mask id={\`\${uid}${key}\`} maskUnits="userSpaceOnUse" x="-10000" y="-10000" width="20000" height="20000">\n      <rect x="-10000" y="-10000" width="20000" height="20000" fill="white" />\n${black.join('\n')}\n    </mask>`,
+        `    <mask id={\`\${uid}${key}\`}>\n      <rect x="-10000" y="-10000" width="20000" height="20000" fill="white" />\n${black.join('\n')}\n    </mask>`,
       );
     }
     return ` mask={\`url(#\${uid}${key})\`}`;
   };
 
   // 같은 구멍 집합에 가려지는 연속 경로를 한 <g mask>로 묶는다 — 슬라이스 그룹 자체는 그대로 둔다
-  const groupOf = (sliceName, indent) => {
+  const groupOf = (sliceName, indent, layer) => {
     const runs = [];
     buckets.get(sliceName).forEach((p, j) => {
       const hs = holesOver(sliceName, j);
@@ -266,7 +270,7 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
     const inner = runs
       .map((run) =>
         run.hs.length
-          ? `${indent}  <g${maskFor(run.hs)}>\n${run.paths.map((p) => `${indent}    ${p}`).join('\n')}\n${indent}  </g>`
+          ? `${indent}  <g${maskFor(run.hs, layer)}>\n${run.paths.map((p) => `${indent}    ${p}`).join('\n')}\n${indent}  </g>`
           : run.paths.map((p) => `${indent}  ${p}`).join('\n'),
       )
       .join('\n');
@@ -277,63 +281,112 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
       : `${indent}<g id="${sliceName}">\n${inner}\n${indent}</g>`;
   };
 
-  // 표정 교체용 벡터는 CSS가 숨겨준다는 전제로 넣는다 — 스타일이 없는 곳에서 이 SVG를 쓰면
-  // 눈웃음 아크가 눈 위에 그대로 그려진다
-  const buildBody = () => {
-    const body = [];
-    let headOpen = false;
-    const pushExtras = (sliceName, indent) => {
-      for (const extra of cfg.extras?.[sliceName] ?? [])
-        body.push(`${indent}${extra}`);
-    };
-
-    for (const [sliceName] of cfg.slices) {
-      if (headSet.has(sliceName)) {
-        if (!headOpen) {
-          body.push('    <g id="head">\n      <g id="head-inner">');
-          headOpen = true;
-        }
-        body.push(groupOf(sliceName, '        '));
-        pushExtras(sliceName, '        ');
-        continue;
-      }
-      if (headOpen) {
-        body.push('      </g>\n    </g>');
-        headOpen = false;
-      }
-      body.push(groupOf(sliceName, '    '));
-      pushExtras(sliceName, '    ');
-    }
-    if (headOpen) body.push('      </g>\n    </g>');
-    // 마스크 정의는 본문을 만들며 모인다 — 앞에 둔다
-    return [...masks.values(), ...body].join('\n');
+  // 층 — 움직임이 다른 덩어리마다 SVG를 따로 그려 상자째 움직인다. SVG 안쪽 그룹은 합성 레이어가 못 돼서
+  // 숨쉬기·입 하나만 움직여도 매 프레임 캐릭터 전체를 다시 그리기 때문이다.
+  // 머리보다 먼저 그려지는 몸은 torso, 머리는 입을 기준으로 뒤·입·앞 세 층(입 위에 볼터치·코·앞머리가 겹쳐 z순서를 지켜야 한다),
+  // 머리 다음에 그려지는 조각(팔)은 제 축으로 움직이므로 저마다 한 층이다
+  const mouthAt = cfg.headParts.indexOf('mouth');
+  // 층은 headParts 순서로 가르고 그림은 slices 순서로 쌓는다 — 둘이 어긋나면 z순서가 소리 없이 바뀐다
+  const headInSlices = cfg.slices
+    .map(([sliceName]) => sliceName)
+    .filter((sliceName) => cfg.headParts.includes(sliceName));
+  if (headInSlices.join() !== cfg.headParts.join())
+    throw new Error(`${name}: headParts 순서가 slices 순서와 다르다`);
+  if (mouthAt < 0) throw new Error(`${name}: 머리 파츠에 mouth가 없다`);
+  const layers = new Map();
+  const pushTo = (layer, line) => {
+    if (!layers.has(layer)) layers.set(layer, []);
+    layers.get(layer).push(line);
   };
+  // 머리를 지난 뒤의 머리 밖 조각(팔)은 제 이름이 곧 층이다
+  const layerOf = (sliceName, afterHead) => {
+    const at = cfg.headParts.indexOf(sliceName);
+    if (at < 0) return afterHead ? sliceName : 'torso';
+    if (at < mouthAt) return 'head-back';
+    if (at === mouthAt) return 'mouth';
+    return 'head-front';
+  };
+  let headSeen = false;
+  for (const [sliceName] of cfg.slices) {
+    if (cfg.headParts.includes(sliceName)) headSeen = true;
+    const layer = layerOf(sliceName, headSeen);
+    pushTo(layer, groupOf(sliceName, '', layer));
+    // 표정 교체용 벡터는 CSS가 숨겨준다는 전제로 넣는다 — 스타일이 없는 곳에서 이 SVG를 쓰면
+    // 눈웃음 아크가 눈 위에 그대로 그려진다. 찡그린 입은 입 앞 층으로 보낸다 — 립싱크를 타면 안 된다
+    for (const extra of cfg.extras?.[sliceName] ?? [])
+      pushTo(sliceName === 'mouth' ? 'head-front' : layer, extra);
+  }
+  const HEAD = ['head-back', 'mouth', 'head-front'];
+  const limbs = [...layers.keys()].filter(
+    (layer) => layer !== 'torso' && !HEAD.includes(layer),
+  );
+  const varOf = (key) => key.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());
+  // 노드 번호 사이를 밑줄로 남긴다 — 그냥 이어 붙이면 {5445, 59}와 {544, 559}가 같은 이름이 된다
+  const maskVar = (key) => key.replaceAll('-', '_');
+  const fragment = (lines) => `<>\n${lines.join('\n')}\n</>`;
 
-  const openTag = `<svg viewBox="${cfg.viewBox}" fill="none" xmlns="http://www.w3.org/2000/svg"`;
-  const body = toJsx(buildBody());
+  const decls = [
+    ...[...masks].map(
+      ([key, def]) => `const ${maskVar(key)} = (\n${def.trim()}\n);`,
+    ),
+    ...[...layers].map(
+      ([layer, lines]) => `const ${varOf(layer)} = (\n${fragment(lines)}\n);`,
+    ),
+  ];
+  const withMasks = (layer) =>
+    [...(masksOfLayer.get(layer) ?? [])]
+      .map((key) => `{${maskVar(key)}}`)
+      .join('') + `{${varOf(layer)}}`;
+  const byLayer = [...layers.keys()]
+    .map((layer) => `    '${layer}': <>${withMasks(layer)}</>,`)
+    .join('\n');
+  // 층을 고르지 않으면 지금까지처럼 한 장으로 그린다 — 머리 래퍼(#head > #head-inner)도 그대로다
+  const whole = [
+    ...[...masks.keys()].map((key) => `{${maskVar(key)}}`),
+    '{torso}',
+    // 빈 층은 변수가 없다 — 있는 층만 잇는다(입이 머리 맨 앞이면 머리 뒤 층이 없다)
+    `<g id="head">\n<g id="head-inner">\n${HEAD.filter((layer) =>
+      layers.has(layer),
+    )
+      .map((layer) => `{${varOf(layer)}}`)
+      .join('\n')}\n</g>\n</g>`,
+    ...limbs.map((layer) => `{${varOf(layer)}}`),
+  ].join('\n');
+
+  const openTag = `<svg viewBox={${name.toUpperCase()}_VIEWBOX} fill="none" xmlns="http://www.w3.org/2000/svg"`;
+  const limbsName = `${name.toUpperCase()}_LIMBS`;
 
   // 파츠를 움직여야 하므로 컴포넌트로 인라인한다. 마스크가 있으면 useId로 인스턴스마다 다른 id를 앞머리에 붙인다
-  // (useId 값의 구두점은 뗀다 — url(#…) 안에서 안전하게, 고유성은 그대로다)
-  const component = masks.size
-    ? `import { useId, type SVGProps } from 'react';
+  // (useId 값의 구두점은 뗀다 — url(#…) 안에서 안전하게, 고유성은 그대로다). 층마다 따로 그려도 인스턴스가 달라 id가 겹치지 않는다
+  const component =
+    toJsx(`import { ${masks.size ? 'useId, ' : ''}type ReactElement, type SVGProps } from 'react';
 
-export const ${cfg.component} = (props: SVGProps<SVGSVGElement>) => {
-  const uid = useId().replace(/[^A-Za-z0-9_-]/g, '');
+import type { PartLayer } from './part-layer';
+
+/** 원래 그림 영역 — 층 상자의 크기와 단위 환산의 기준이다 */
+export const ${name.toUpperCase()}_VIEWBOX = '${cfg.viewBox}';
+
+/** 머리 다음에 얹히는 층 — 팔처럼 제 축으로 움직이는 조각이다 */
+export const ${limbsName}: readonly PartLayer[] = [${limbs.map((l) => `'${l}'`).join(', ')}];
+
+export const ${cfg.component} = ({
+  layer,
+  ...props
+}: SVGProps<SVGSVGElement> & { layer?: PartLayer }) => {
+${masks.size ? "  const uid = useId().replace(/[^A-Za-z0-9_-]/g, '');\n" : ''}${decls.join('\n')}
+  const byLayer: Partial<Record<PartLayer, ReactElement>> = {
+${byLayer}
+  };
+
   return (
     ${openTag} {...props}>
-${body.replace(/^/gm, '  ')}
+      {layer ? byLayer[layer] : (<>
+${whole}
+      </>)}
     </svg>
   );
 };
-`
-    : `import type { SVGProps } from 'react';
-
-export const ${cfg.component} = (props: SVGProps<SVGSVGElement>) => (
-  ${openTag} {...props}>
-${body}
-  </svg>
-);
-`;
+`);
   writeFileSync(
     new URL(
       `../src/features/conversation/ui/character/${cfg.out}`,
