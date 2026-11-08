@@ -19,24 +19,26 @@ const FEATURES: {
   topic: Topic;
   mark: Mark;
   shot: string;
-  /** 스크롤하면 넘어가는 다음 화면과 그 설명 키, 다음 화면이 퍼지기 시작하는 자리(첫 화면 기준 %) — 탭 이름 길이가 달라 언어마다 잰다 */
+  /** 스크롤하면 넘어가는 다음 화면과 그 설명 키, 넘어가는 모양 — 퍼지는 자리(첫 화면 기준 %)는 탭 이름 길이가 달라 언어마다 잰다 */
   next?: {
     shot: string;
-    origin: Record<Locale, RevealOrigin>;
+    transition:
+      | { type: 'spread'; origin: Record<Locale, RevealOrigin> }
+      | { type: 'slide' };
     labelKey:
       | 'thoughtGoodScreenLabel'
       | 'expressionPronunciationScreenLabel'
       | 'freeTalkSmallTalkScreenLabel';
   };
 }[] = [
-  // 같은 인사에 교과서 대답을 한 속마음을 보여 주다가 스크롤하면 현지인 같다는 속마음으로 넘어간다 — 말 한마디로 반응이 갈리는 걸 속마음 카드 자리에서 퍼지며 보여 준다
+  // 같은 인사에 교과서 대답을 한 속마음을 보여 주다가 스크롤하면 현지인 같다는 속마음으로 넘어간다 — 두 장면이 비슷해 카드를 넘기듯 좌우로 밀어 다른 장면으로 넘어간 게 보이게 한다
   {
     topic: 'thought',
     mark: 'brush',
     shot: 'thought-fine',
     next: {
       shot: 'thought-native',
-      origin: { ko: { x: 50, y: 48 }, ja: { x: 50, y: 48 } },
+      transition: { type: 'slide' },
       labelKey: 'thoughtGoodScreenLabel',
     },
   },
@@ -47,8 +49,11 @@ const FEATURES: {
     shot: 'expression-explain',
     next: {
       shot: 'expression-pron',
-      // 아래 '소리 내서 말해볼게요' 버튼 자리
-      origin: { ko: { x: 50, y: 91 }, ja: { x: 50, y: 91 } },
+      // 아래 '소리 내서 말해볼게요' 버튼 자리에서 퍼진다
+      transition: {
+        type: 'spread',
+        origin: { ko: { x: 50, y: 91 }, ja: { x: 50, y: 91 } },
+      },
       labelKey: 'expressionPronunciationScreenLabel',
     },
   },
@@ -60,7 +65,10 @@ const FEATURES: {
     next: {
       shot: 'smalltalk-friend',
       // 머리글이 같아 스몰톡 탭 자리에서 퍼지면 탭을 누른 것처럼 보인다
-      origin: { ko: { x: 35, y: 14 }, ja: { x: 43, y: 14 } },
+      transition: {
+        type: 'spread',
+        origin: { ko: { x: 35, y: 14 }, ja: { x: 43, y: 14 } },
+      },
       labelKey: 'freeTalkSmallTalkScreenLabel',
     },
   },
@@ -112,7 +120,14 @@ export const LandingFeatures = async ({ locale }: { locale: Locale }) => {
                       src: screenPath(locale, next.shot),
                       alt: t(next.labelKey),
                     }}
-                    origin={next.origin[locale]}
+                    transition={
+                      next.transition.type === 'slide'
+                        ? { type: 'slide' }
+                        : {
+                            type: 'spread',
+                            origin: next.transition.origin[locale],
+                          }
+                    }
                   />
                 ) : (
                   <Image
