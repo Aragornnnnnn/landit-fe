@@ -23,7 +23,28 @@
   }
 }
 
-/* 랜딩 전용 폰트 — 화면에 쓰는 글자와 굵기(400~700, LANDING_FONT_WEIGHT)만 담은 Pretendard 한 파일(pnpm --filter web landing-font로 만든다). 전역 Pretendard 조각 수십 개를 받지 않아 첫 화면 대역을 그림에 돌린다 */
+/* 첫 화면 캐릭터 등장 — 폰 아래에서 솟아올라 살짝 튕긴다. transform만 써서 그림은 처음부터 보인다(투명도를 쓰면 LCP가 늦어지고, 웹뷰에서 애니메이션이 멈추면 안 보인 채 남는다) */
+.castRise {
+  transform-origin: 50% 100%;
+  animation: cast-rise 0.9s 0.15s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+@keyframes cast-rise {
+  from {
+    transform: translateY(16%) scale(0.94);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .castRise {
+    animation: none;
+  }
+}
+
+/* 랜딩 전용 폰트 —화면에 쓰는 글자와 굵기(400~700, LANDING_FONT_WEIGHT)만 담은 Pretendard 한 파일(pnpm --filter web landing-font로 만든다). 전역 Pretendard 조각 수십 개를 받지 않아 첫 화면 대역을 그림에 돌린다 */
 @font-face {
   font-family: 'Pretendard Landing KO';
   src: url('./fonts/landing-ko.woff2') format('woff2');
