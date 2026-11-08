@@ -10,6 +10,7 @@ import {
 import { getNativeContext } from '@/shared/bridge/native-context';
 import { localeFromPath } from '@/shared/i18n/locale';
 
+import { flushPendingReports } from './report';
 import { sentryInitOptions } from './sentry-options';
 
 export { captureException, captureRouterTransitionStart };
@@ -22,6 +23,7 @@ export const startSentry = () => {
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 1.0,
   });
+  flushPendingReports();
 
   // 리플레이 녹화 모듈은 크다 — 앱 화면에서만 따로 받아 붙이고, 첫 화면 속도가 중요한 랜딩(/ko·/ja)에선 받지 않는다
   if (!localeFromPath(window.location.pathname)) {
