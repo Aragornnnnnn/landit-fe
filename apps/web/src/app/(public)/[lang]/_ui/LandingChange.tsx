@@ -13,7 +13,7 @@ export const LandingChange = async ({ locale }: { locale: Locale }) => {
   const t = await getTranslations({ locale, namespace: 'landing.change' });
   return (
     <RevealSection className="mx-auto max-w-[1040px] px-6 pt-24 sm:pt-32">
-      <h2 className="text-center text-[30px] leading-[1.4] font-bold break-keep sm:text-[40px]">
+      <h2 className="text-center text-[32px] leading-[1.4] font-bold break-keep sm:text-[44px]">
         {t.rich('title', titleTags('double'))}
       </h2>
       <ul className="mt-12 grid gap-4 sm:mt-16 sm:grid-cols-3">

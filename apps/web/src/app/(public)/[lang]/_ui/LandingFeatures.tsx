@@ -66,7 +66,7 @@ export const LandingFeatures = async ({ locale }: { locale: Locale }) => {
           <div
             className={`px-3 text-center lg:px-6 lg:text-left ${index % 2 ? 'lg:order-2' : ''}`}
           >
-            <h3 className="reveal-up text-[30px] leading-[1.4] font-bold break-keep sm:text-[40px]">
+            <h3 className="reveal-up text-[32px] leading-[1.4] font-bold break-keep sm:text-[44px]">
               {t.rich(`${topic}Title`, titleTags(mark))}
             </h3>
             <p

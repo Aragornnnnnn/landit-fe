@@ -61,7 +61,7 @@ export const LandingPage = async ({ locale }: { locale: Locale }) => {
         </section>
 
         <RevealSection className="mt-12 bg-[#f5f5f3] pt-14 text-center sm:mt-32 sm:pt-20">
-          <h2 className="px-6 text-[30px] leading-[1.35] font-bold break-keep sm:text-[40px]">
+          <h2 className="px-6 text-[32px] leading-[1.35] font-bold break-keep sm:text-[44px]">
             {t.rich('wall.title', titleTags('circle'))}
           </h2>
           <p className="mt-3 px-6 text-17 break-keep text-[#57524c]">
@@ -90,7 +90,7 @@ export const LandingPage = async ({ locale }: { locale: Locale }) => {
             height={601}
             className="animate-float mx-auto h-[150px] w-auto sm:h-[180px]"
           />
-          <h2 className="mt-4 text-[30px] leading-[1.4] font-bold break-keep sm:text-[40px]">
+          <h2 className="mt-4 text-[32px] leading-[1.4] font-bold break-keep sm:text-[44px]">
             {t.rich('closing.title', titleTags('circle'))}
           </h2>
           <StoreButtons
