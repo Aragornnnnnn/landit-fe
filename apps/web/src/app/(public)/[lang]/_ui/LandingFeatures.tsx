@@ -24,10 +24,22 @@ const FEATURES: {
     shot: string;
     origin: Record<Locale, RevealOrigin>;
     labelKey:
-      'expressionPronunciationScreenLabel' | 'freeTalkSmallTalkScreenLabel';
+      | 'thoughtGoodScreenLabel'
+      | 'expressionPronunciationScreenLabel'
+      | 'freeTalkSmallTalkScreenLabel';
   };
 }[] = [
-  { topic: 'thought', mark: 'brush', shot: 'thought-bad' },
+  // 같은 인사에 교과서 대답을 한 속마음을 보여 주다가 스크롤하면 현지인 같다는 속마음으로 넘어간다 — 말 한마디로 반응이 갈리는 걸 속마음 카드 자리에서 퍼지며 보여 준다
+  {
+    topic: 'thought',
+    mark: 'brush',
+    shot: 'thought-fine',
+    next: {
+      shot: 'thought-native',
+      origin: { ko: { x: 50, y: 41 }, ja: { x: 50, y: 41 } },
+      labelKey: 'thoughtGoodScreenLabel',
+    },
+  },
   // 표현 설명을 보여 주다가 스크롤하면 발음 결과로 넘어간다 — 제목의 "발음까지"를 화면으로 보여 준다
   {
     topic: 'expression',

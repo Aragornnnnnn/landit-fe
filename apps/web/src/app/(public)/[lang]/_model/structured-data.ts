@@ -63,7 +63,7 @@ export const buildStructuredData = (
       applicationCategory: 'EducationalApplication',
       operatingSystem: 'iOS, Android',
       image: `${SITE_URL}/brand/icon-512.png`,
-      screenshot: `${SITE_URL}${screenPath(locale, 'thought-bad')}`,
+      screenshot: `${SITE_URL}${screenPath(locale, 'thought-fine')}`,
       inLanguage: locale,
       downloadUrl: [APP_STORE_URL, PLAY_STORE_URL],
       featureList: FEATURE_KEYS.map((key) => t(`structuredData.${key}`)),
