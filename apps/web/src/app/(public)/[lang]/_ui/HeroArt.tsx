@@ -56,10 +56,10 @@ export const HeroArt = async ({ locale }: { locale: Locale }) => {
           className="relative aspect-[3/4] h-auto w-full sm:aspect-square"
         />
       </picture>
-      <p className="absolute top-[17.5%] right-[27.5%] rounded-[14px] rounded-br-sm bg-[#fde3cf] px-2.5 py-1 text-[12px] font-semibold whitespace-nowrap text-[#2b2522] sm:top-[17%] sm:right-[29.5%] sm:px-3 sm:py-1.5 sm:text-[14px]">
+      <p className="absolute top-[17.5%] right-[27.5%] rounded-2xl rounded-br-[5px] bg-[#fde3cf] px-2.5 py-1 text-[12px] font-semibold whitespace-nowrap text-[#2b2522] sm:top-[17%] sm:right-[29.5%] sm:px-3 sm:py-1.5 sm:text-[14px]">
         You made my day!
       </p>
-      <div className="absolute top-[24.8%] left-[27.5%] w-[40%] rounded-[14px] rounded-tl-sm bg-white px-2.5 py-1.5 shadow-[0_6px_16px_rgba(90,50,20,0.14)] sm:top-[25%] sm:left-[29%] sm:w-[35%] sm:px-3 sm:py-2.5">
+      <div className="absolute top-[24.8%] left-[27.5%] w-[40%] rounded-2xl rounded-bl-[5px] bg-white px-2.5 py-1.5 shadow-[0_6px_16px_rgba(90,50,20,0.14)] sm:top-[25%] sm:left-[29%] sm:w-[35%] sm:px-3 sm:py-2.5">
         <p className="text-[10px] font-bold text-[#a34a12] sm:text-[11px]">
           {t('thoughtLabel')}
         </p>
