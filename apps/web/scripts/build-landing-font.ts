@@ -10,13 +10,13 @@ import {
   LANDING_FONT_WEIGHT,
   landingGlyphs,
 } from '../src/app/(public)/[lang]/_model/landing-font.ts';
+import { LOCALES, type Locale } from '../src/shared/i18n/locale.ts';
 import { readLandingTexts } from './landing-font-sources.ts';
 
 const OUT_DIR = join(
   dirname(fileURLToPath(import.meta.url)),
   '../src/app/(public)/[lang]/_ui/fonts',
 );
-const LOCALES = ['ko', 'ja'] as const;
 
 // 숫자 폭 맞춤(tnum) 같은 글꼴 기능은 subset-font가 기본으로 그대로 둔다. 굵기 축은 랜딩이 쓰는 범위로 좁힌다
 const source = await readFile(
@@ -25,7 +25,7 @@ const source = await readFile(
   ),
 );
 
-const glyphs: Record<string, string> = {};
+const glyphs = {} as Record<Locale, string>;
 for (const locale of LOCALES) {
   glyphs[locale] = landingGlyphs(locale, await readLandingTexts(locale));
   const font = await subsetFont(source, glyphs[locale], {

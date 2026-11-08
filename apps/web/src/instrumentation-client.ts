@@ -1,4 +1,4 @@
-// Sentry 브라우저 초기화 — 앱 화면은 바로, 랜딩(/ko·/ja)은 첫 화면을 다 받은 뒤 SDK를 받는다(약 110KB가 첫 화면 그림과 대역을 다투지 않게). 받기 전 에러는 버퍼에 모았다가 넘긴다
+// Sentry 브라우저 초기화 — 앱 화면은 바로, 랜딩(/ko·/ja)은 첫 화면을 다 받은 뒤 SDK를 받는다(압축 약 50KB가 첫 화면 그림과 대역을 다투지 않게). 받기 전 에러는 버퍼에 모았다가 넘긴다
 import type { captureRouterTransitionStart } from '@sentry/nextjs';
 
 import { localeFromPath } from '@/shared/i18n/locale';

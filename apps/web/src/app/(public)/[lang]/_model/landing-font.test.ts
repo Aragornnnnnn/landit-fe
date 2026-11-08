@@ -1,4 +1,5 @@
 // 랜딩 전용 폰트에 담을 글자·굵기 고르기 — 언어별로 담을 글자와 빼는 글자, 화면 문구·굵기가 바뀌어도 폰트가 따라오는지 검증
+import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 
 import LANDING_GLYPHS from '../_ui/fonts/landing-glyphs.json';
@@ -112,5 +113,19 @@ describe('랜딩 굵기 범위', () => {
 
     expect(used.length).toBeGreaterThan(0);
     expect(outside).toEqual([]);
+  });
+
+  it('landing.module.css의 @font-face 굵기 범위가 폰트에 담은 범위와 같다', async () => {
+    // 폰트만 넓히고 CSS를 그대로 두면(또는 반대면) 브라우저가 굵기를 잘못 고른다 — 둘은 같이 바뀌어야 한다
+    const css = await readFile(
+      new URL('../_ui/landing.module.css', import.meta.url),
+      'utf-8',
+    );
+    const ranges = [...css.matchAll(/font-weight:\s*(\d+)\s+(\d+);/g)].map(
+      ([, min, max]) => ({ min: Number(min), max: Number(max) }),
+    );
+
+    expect(ranges.length).toBeGreaterThan(0);
+    for (const range of ranges) expect(range).toEqual(LANDING_FONT_WEIGHT);
   });
 });

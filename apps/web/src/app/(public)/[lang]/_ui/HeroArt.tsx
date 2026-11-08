@@ -13,7 +13,7 @@ const MOBILE_MEDIA = '(max-width: 639px)';
 const DESKTOP_MEDIA = '(min-width: 640px)';
 
 /** 한 장(폰 또는 캐릭터)의 휴대폰·태블릿 이상 그림을 만들고, 화면 폭에 맞는 것만 먼저 받도록 media를 나눠 preload한다 */
-const heroPart = (part: Part, alt: string) => {
+const preloadHeroPart = (part: Part, alt: string) => {
   // 첫 화면 가장 큰 그림(LCP)이라 먼저 받는다
   const common = { alt, loading: 'eager', fetchPriority: 'high' } as const;
   const { props: mobile } = getImageProps({
@@ -51,7 +51,7 @@ const HeroPicture = ({
   part,
   className,
 }: {
-  part: ReturnType<typeof heroPart>;
+  part: ReturnType<typeof preloadHeroPart>;
   className: string;
 }) => (
   <picture>
@@ -67,8 +67,8 @@ const HeroPicture = ({
 export const HeroArt = async ({ locale }: { locale: Locale }) => {
   const t = await getTranslations({ locale, namespace: 'landing.hero' });
   // 그림 설명은 캐릭터 한 장에만 단다 — 폰은 꾸밈이라 화면 낭독기가 두 번 읽지 않게
-  const phone = heroPart('phone', '');
-  const characters = heroPart('characters', t('artLabel'));
+  const phone = preloadHeroPart('phone', '');
+  const characters = preloadHeroPart('characters', t('artLabel'));
   return (
     <div className="relative mx-auto mt-8 -mb-[18%] w-full max-w-[560px] self-end sm:-mb-[9.8%] lg:mt-6">
       {/* 말풍선은 휴대폰에서 폰 화면 안쪽 가장자리로부터 화면 폭의 약 8%씩 띄운다 — 테두리에 붙어 보이지 않게 */}
