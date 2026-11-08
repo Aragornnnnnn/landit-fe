@@ -28,7 +28,7 @@ const FEATURES: {
     labelKey:
       | 'thoughtGoodScreenLabel'
       | 'expressionPronunciationScreenLabel'
-      | 'freeTalkSmallTalkScreenLabel';
+      | 'freeTalkRoleplayScreenLabel';
   };
 }[] = [
   // 같은 인사에 교과서 대답을 한 속마음을 보여 주다가 스크롤하면 현지인 같다는 속마음으로 넘어간다 — 두 장면이 비슷해 카드를 넘기듯 좌우로 밀어 다른 장면으로 넘어간 게 보이게 한다
@@ -57,19 +57,19 @@ const FEATURES: {
       labelKey: 'expressionPronunciationScreenLabel',
     },
   },
-  // 롤플레이 목록을 보여 주다가 스크롤하면 스몰톡 화면으로 넘어간다
+  // 스몰톡 화면을 보여 주다가 스크롤하면 롤플레이 목록으로 넘어간다 — 앱 탭 순서와 같다
   {
     topic: 'freeTalk',
     mark: 'circle',
-    shot: 'roleplay-list',
+    shot: 'smalltalk-friend',
     next: {
-      shot: 'smalltalk-friend',
-      // 머리글이 같아 스몰톡 탭 자리에서 퍼지면 탭을 누른 것처럼 보인다
+      shot: 'roleplay-list',
+      // 머리글이 같아 롤플레이 탭 자리에서 퍼지면 탭을 누른 것처럼 보인다
       transition: {
         type: 'spread',
-        origin: { ko: { x: 35, y: 14 }, ja: { x: 43, y: 14 } },
+        origin: { ko: { x: 55, y: 14 }, ja: { x: 74, y: 14 } },
       },
-      labelKey: 'freeTalkSmallTalkScreenLabel',
+      labelKey: 'freeTalkRoleplayScreenLabel',
     },
   },
 ];

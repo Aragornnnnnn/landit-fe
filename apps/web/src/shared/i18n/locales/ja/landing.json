@@ -41,10 +41,10 @@
     "expressionBody": "会話にぴったりのフレーズをすぐ提案して、ネイティブと発音を比べます。",
     "expressionScreenLabel": "場面の絵と意味でフレーズを学ぶアプリ画面",
     "expressionPronunciationScreenLabel": "文の発音スコアと間違えた単語を、お手本の発音と比べて見せるアプリ画面",
-    "freeTalkTitle": "<mark>もっと話したい日は</mark><br></br>ロールプレイとスモールトーク",
-    "freeTalkSmallTalkScreenLabel": "クロエが話しかけるスモールトークのアプリ画面",
-    "freeTalkBody": "好きな場面のロールプレイも、スモールトークもできます。",
-    "freeTalkScreenLabel": "スモールトークとロールプレイのタブの下にロールプレイ一覧が見えるアプリ画面"
+    "freeTalkTitle": "<mark>もっと話したい日は</mark><br></br>スモールトークとロールプレイ",
+    "freeTalkBody": "友だちのようにスモールトークも、好きな場面のロールプレイもできます。",
+    "freeTalkScreenLabel": "クロエが話しかけるスモールトークのアプリ画面",
+    "freeTalkRoleplayScreenLabel": "スモールトークとロールプレイのタブの下にロールプレイ一覧が見えるアプリ画面"
   },
   "change": {
     "title": "点数ではなく<br></br><mark>相手の反応で</mark>上達",
