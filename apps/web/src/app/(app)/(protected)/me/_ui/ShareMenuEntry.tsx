@@ -32,9 +32,9 @@ export const ShareMenuEntry = () => {
     try {
       const method = await shareText(t('messageBody', { url: shareUrl }));
       track(EVENTS.APP_SHARE_TAPPED, { method });
-      if (method === 'copy') showToast(t('copiedToast'));
+      if (method === 'copy') showToast(t('copiedToast'), 'success');
     } catch {
-      showToast(t('copyFailedToast'));
+      showToast(t('copyFailedToast'), 'error');
     } finally {
       isSharingRef.current = false;
     }

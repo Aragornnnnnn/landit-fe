@@ -102,7 +102,8 @@ describe('usePurchase — 결제', () => {
     await act(() => result.current.purchase('yearly'));
 
     expect(mocks.showToast).toHaveBeenCalledWith(
-      '購入できませんでした。しばらくしてからもう一度お試しください',
+      '購入できませんでした。時間をおいて再度お試しください',
+      'error',
     );
   });
 
@@ -123,6 +124,7 @@ describe('usePurchase — 결제', () => {
 
     expect(mocks.showToast).toHaveBeenCalledWith(
       'サブスクリプション中です。「購入を復元」をタップしてください',
+      'error',
     );
   });
 
@@ -220,6 +222,7 @@ describe('usePurchase — 결제', () => {
 
     expect(mocks.showToast).toHaveBeenCalledWith(
       '지금은 살 수 없는 상품이에요.',
+      'error',
     );
     expect(mocks.track).toHaveBeenCalledWith('Purchase Failed', {
       plan: 'yearly',
@@ -631,7 +634,7 @@ describe('usePurchase — 복원', () => {
 
     await act(() => result.current.restore());
 
-    expect(mocks.showToast).toHaveBeenCalledWith('network');
+    expect(mocks.showToast).toHaveBeenCalledWith('network', 'error');
     expect(mocks.track).toHaveBeenCalledWith('Purchase Restored', {
       succeeded: false,
     });

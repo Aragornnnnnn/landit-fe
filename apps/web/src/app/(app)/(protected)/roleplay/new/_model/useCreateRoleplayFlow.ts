@@ -107,7 +107,7 @@ export const useCreateRoleplayFlow = () => {
       onSuccess: ({ idea: received }) => {
         if (!received) {
           track(EVENTS.ROLEPLAY_IDEA_FAILED, { partner, reason: 'empty' });
-          showToast(t('ideaFailToast'));
+          showToast(t('ideaFailToast'), 'error');
           return;
         }
         track(EVENTS.ROLEPLAY_IDEA_APPLIED, { partner, idea_id: received.id });
@@ -122,7 +122,7 @@ export const useCreateRoleplayFlow = () => {
       },
       onError: () => {
         track(EVENTS.ROLEPLAY_IDEA_FAILED, { partner, reason: 'error' });
-        showToast(t('ideaFailToast'));
+        showToast(t('ideaFailToast'), 'error');
       },
     });
   };

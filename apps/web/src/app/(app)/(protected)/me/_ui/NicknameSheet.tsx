@@ -83,7 +83,7 @@ const NicknameForm = ({
     try {
       const { nickname } = await updateNickname(result.value);
       setNickname(nickname);
-      showToast(t('savedToast', { nickname }));
+      showToast(t('savedToast', { nickname }), 'success');
       onDone();
     } catch (error) {
       reportWarning(error);

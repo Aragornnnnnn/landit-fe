@@ -38,10 +38,10 @@ export const useInviteShare = () => {
         }),
       );
       track(EVENTS.REFERRAL_INVITE_SHARED, { method });
-      if (method === 'copy') showToast('초대 메시지를 복사했어요');
+      if (method === 'copy') showToast('초대 메시지를 복사했어요', 'success');
     } catch (error) {
       reportWarning(error);
-      showToast('초대 메시지를 보내지 못했어요');
+      showToast('초대 메시지를 보내지 못했어요', 'error');
     } finally {
       sharingRef.current = false;
     }

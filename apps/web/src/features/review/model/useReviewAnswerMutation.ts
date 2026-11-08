@@ -29,7 +29,7 @@ export const useReviewAnswerMutation = (reviewId: string) => {
     },
     onError: (error) => {
       reportError(error);
-      showToast(error.message);
+      showToast(error.message, 'error');
     },
   });
 };

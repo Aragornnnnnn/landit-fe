@@ -56,7 +56,7 @@
     "sentToast": "貴重なご意見ありがとうございます！"
   },
   "attachment": {
-    "retryLaterError": "送れませんでした。しばらくしてからもう一度お試しください。",
+    "retryLaterError": "送れませんでした。時間をおいて再度お試しください。",
     "tooLargeError": "写真の容量が大きすぎます。1枚外してもう一度送ってください。",
     "invalidPhotoError": "送れない写真があります。別の写真に変えてください。",
     "limitToast": "写真は{max}枚まで送れます",

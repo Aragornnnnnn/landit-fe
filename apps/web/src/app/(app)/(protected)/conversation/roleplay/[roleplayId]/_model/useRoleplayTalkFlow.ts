@@ -293,7 +293,7 @@ export const useRoleplayTalkFlow = ({
       (cause) => {
         console.warn('[roleplay] 끝내기 전송 실패', cause);
         reportError(cause);
-        showToast(t('completeFailedToast'));
+        showToast(t('completeFailedToast'), 'error');
         // 서버엔 끝났는데 응답만 놓쳤을 수 있다
         refreshScenarioLists();
         return null;
