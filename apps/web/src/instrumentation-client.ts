@@ -11,10 +11,15 @@ let sentry: SentryClient | null = null;
 const flushEarlyErrors = bufferEarlyErrors(window);
 
 const loadSentry = async () => {
-  const client = await import('@/shared/monitoring/sentry-client');
-  client.startSentry();
-  sentry = client;
-  flushEarlyErrors((error) => client.captureException(error));
+  try {
+    const client = await import('@/shared/monitoring/sentry-client');
+    client.startSentry();
+    sentry = client;
+    flushEarlyErrors((error) => client.captureException(error));
+  } catch {
+    // 오프라인·청크 받기 실패면 보낼 곳이 없으니 버퍼를 버리고 리스너를 뗀다 — 계속 쌓이지 않게
+    flushEarlyErrors(() => {});
+  }
 };
 
 if (localeFromPath(window.location.pathname)) afterPageLoadIdle(loadSentry);
