@@ -38,27 +38,27 @@
   }
 }
 
-/* 폰 화면 속 말풍선 — 내 말, 상대 속마음 순서로 꼬리 쪽에서 톡 튀어나온다. 캐릭터와 같은 이유로 투명도 없이 크기만 바꾼다 */
+/* 폰 화면 속 말풍선 — 캐릭터가 올라온 뒤 내 말, 상대 속마음 순서로 아래에서 살짝 떠오르며 나타난다. 말풍선은 LCP 요소가 아니라 투명도를 써도 첫 화면 속도에 영향이 없다 */
 .bubbleMine,
 .bubbleThought {
-  animation: bubble-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: bubble-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .bubbleMine {
-  transform-origin: 100% 100%;
-  animation-delay: 0.35s;
+  animation-delay: 0.5s;
 }
 
 .bubbleThought {
-  transform-origin: 0 100%;
-  animation-delay: 0.7s;
+  animation-delay: 0.95s;
 }
 
-@keyframes bubble-pop {
+@keyframes bubble-in {
   from {
-    transform: scale(0.5);
+    opacity: 0;
+    transform: translateY(10px);
   }
   to {
+    opacity: 1;
     transform: none;
   }
 }
@@ -71,7 +71,7 @@
   }
 }
 
-/* 랜딩 전용 폰트 —화면에 쓰는 글자와 굵기(400~700, LANDING_FONT_WEIGHT)만 담은 Pretendard 한 파일(pnpm --filter web landing-font로 만든다). 전역 Pretendard 조각 수십 개를 받지 않아 첫 화면 대역을 그림에 돌린다 */
+/* 랜딩 전용 폰트 — 화면에 쓰는 글자와 굵기(400~700, LANDING_FONT_WEIGHT)만 담은 Pretendard 한 파일(pnpm --filter web landing-font로 만든다). 전역 Pretendard 조각 수십 개를 받지 않아 첫 화면 대역을 그림에 돌린다 */
 @font-face {
   font-family: 'Pretendard Landing KO';
   src: url('./fonts/landing-ko.woff2') format('woff2');
