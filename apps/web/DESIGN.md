@@ -252,13 +252,13 @@ Layer 3  컴포넌트                                ← 오직 시맨틱 토큰
 
 부드러운 등장이 기본이고, 바텀시트만 spring을 쓴다.
 
-| 패턴      | 값                                             | Use                     |
-| --------- | ---------------------------------------------- | ----------------------- |
-| 기본 등장 | `opacity 0→1, y 10→0`, 0.25s easeOut           | 말풍선, 페이지, 카드    |
-| 스태거    | `delay: index * 0.08`, 0.38s `[0.22,1,0.36,1]` | 시나리오 카드 순차 등장 |
-| 바텀시트  | spring `damping 28, stiffness 300`             | BottomSheet 슬라이드업  |
-| 토스트    | `opacity/y/scale`, 0.2s easeOut                | Toast                   |
-| 버튼 누름 | `transition-transform duration-75`             | 3D 버튼                 |
+| 패턴      | 값                                                            | Use                     |
+| --------- | ------------------------------------------------------------- | ----------------------- |
+| 기본 등장 | `opacity 0→1, y 10→0`, 0.25s easeOut                          | 말풍선, 페이지, 카드    |
+| 스태거    | `delay: index * 0.08`, 0.38s `[0.22,1,0.36,1]`                | 시나리오 카드 순차 등장 |
+| 바텀시트  | spring `damping 28, stiffness 300`                            | BottomSheet 슬라이드업  |
+| 토스트    | `opacity/y`, 0.2s · 아이콘 spring `stiffness 500, damping 22` | Toast                   |
+| 버튼 누름 | `transition-transform duration-75`                            | 3D 버튼                 |
 
 ## 10. Voice & Tone
 
@@ -292,7 +292,7 @@ Layer 3  컴포넌트                                ← 오직 시맨틱 토큰
 | **Empty (잠금/준비중)** | 일러스트 대신 Tossface 이모지(☁️ ❓) + 한 줄 안내. 잠금 카드는 `grayscale`, `준비 중이에요`.                                    |
 | **Empty (전부 완료)**   | 축하 이모지(🎉) + 큰 메시지(26px extrabold) + 다음 기대 한 줄.                                                                  |
 | **Error (재시도)**      | muted 메시지 + `text-primary` 텍스트 버튼 `다시 시도`. 중앙 정렬 간결형.                                                        |
-| **Toast**               | 일시적 알림은 상단 토스트(§4), 2.5s 자동 소멸.                                                                                  |
+| **Toast**               | 일시적 알림은 하단 토스트(§4 Toast), 2s 자동 소멸. 결과에 맞는 종류(success·warning·error·default)를 고른다.                    |
 
 ---
 
