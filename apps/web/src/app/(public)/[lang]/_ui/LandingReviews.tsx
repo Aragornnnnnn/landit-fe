@@ -7,7 +7,7 @@ import { Underline } from './Underline';
 export const LandingReviews = () => (
   <RevealSection className="pt-24 pb-16 sm:py-32">
     <div className="mx-auto max-w-[1080px] px-4 sm:px-6">
-      <h2 className="text-center text-[30px] leading-[1.4] font-extrabold break-keep sm:text-[40px]">
+      <h2 className="text-center text-[30px] leading-[1.4] font-bold break-keep sm:text-[40px]">
         내 영어가 <Underline mark="brush">통한 순간들</Underline>이
         <br />
         쌓이고 있어요
