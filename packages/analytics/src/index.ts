@@ -9,6 +9,7 @@ export {
   type EnglishLevel,
   type PreviewEndReason,
   type AccentLocale,
+  type SpeechAudioSource,
   type AppLanguage,
   type LandingPage,
   type LandingPlacement,
