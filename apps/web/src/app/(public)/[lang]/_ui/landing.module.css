@@ -22,3 +22,35 @@
     animation: none;
   }
 }
+
+/* 랜딩 전용 폰트 — 화면에 쓰는 글자만 담은 Pretendard 한 파일(pnpm --filter web landing-font로 만든다). 전역 Pretendard 조각 수십 개를 받지 않아 첫 화면 대역을 그림에 돌린다 */
+@font-face {
+  font-family: 'Pretendard Landing KO';
+  src: url('./fonts/landing-ko.woff2') format('woff2');
+  font-weight: 45 920;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pretendard Landing JA';
+  src: url('./fonts/landing-ja.woff2') format('woff2');
+  font-weight: 45 920;
+  font-display: swap;
+}
+
+/* 폰트에 없는 글자(다른 언어 이름 등)는 전역 Pretendard가 아니라 시스템 글꼴로 그린다 — 전역 조각을 다시 받지 않게 */
+.ko {
+  font-family:
+    'Pretendard Landing KO',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+.ja {
+  font-family:
+    'Pretendard Landing JA',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}

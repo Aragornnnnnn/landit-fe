@@ -9,6 +9,7 @@ import { buildLandingFaq } from '../_model/landing-faq';
 import { FaqItem } from './FaqItem';
 import { HeroArt } from './HeroArt';
 import { HeroBadges } from './HeroBadges';
+import styles from './landing.module.css';
 import { LandingChange } from './LandingChange';
 import { LandingFeatures } from './LandingFeatures';
 import { LandingFooter } from './LandingFooter';
@@ -22,7 +23,7 @@ import { titleTags } from './title-tags';
 export const LandingPage = async ({ locale }: { locale: Locale }) => {
   const t = await getTranslations({ locale, namespace: 'landing' });
   return (
-    <div className="bg-card text-foreground">
+    <div className={`bg-card text-foreground ${styles[locale]}`}>
       <LandingHeader locale={locale} />
 
       <main>
