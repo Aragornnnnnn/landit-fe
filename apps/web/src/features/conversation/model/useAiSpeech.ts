@@ -318,6 +318,9 @@ interface AiSpeechOptions {
   sessionId?: number | null;
   // 재생이 멈추면 소리는 둔 채 onSpeechEnd를 먼저 부를지 — 남은 소리는 replayAllowed가 꺼질 때 끊으니 턴이 있는 재생만 켠다
   passTurnOnStall?: boolean;
+  // 오프닝 음원을 재생 전에 미리 열어 둘지 — 누를 때 트는 소리(스몰톡 탭 인사)만 켠다.
+  // 대화 오프닝은 들어오자마자 틀거나 안 틀어서 미리 받을 이득이 없고, 한 칸뿐인 슬롯을 다음 질문 음원과 다툰다
+  preloadOpening?: boolean;
 }
 
 /**
@@ -338,6 +341,7 @@ export const useAiSpeech = ({
   replayAllowed = false,
   sessionId = null,
   passTurnOnStall = false,
+  preloadOpening = false,
 }: AiSpeechOptions) => {
   const tts = useTts();
   // 첫 AI 발화(오프닝)인지 — 첫 질문 음원 재생 대상
@@ -419,6 +423,14 @@ export const useAiSpeech = ({
 
   // 화면을 떠나면 남겨 둔 소리도 끊는다 — 위 effect 뒤에 두어, 같은 순간에 넘겨받은 소리까지 끊는다
   useEffect(() => stopLingering, []);
+
+  // 켜 두면 오프닝 음원을 재생 전에 미리 열어 둔다 — 누르는 순간 받기 시작하면 그만큼 소리가 늦다.
+  // 재생이 끝나면 열어 둔 것은 쓰였으니 다시 연다 — 또 누르면 같은 음원을 튼다
+  useEffect(() => {
+    if (!preloadOpening || playing || !openingSrc) return;
+    tts.prefetchSrc(openingSrc);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preloadOpening, playing, openingSrc]);
 
   // 다음 발화 재생을 미리 준비한다 — 합성분은 미리 합성하고, 질문 음원은 미리 열어 이어 재생 공백을 없앤다.
   // 음성이 없으면 재생 자체가 타이머 폴백이라 아무것도 준비하지 않는다

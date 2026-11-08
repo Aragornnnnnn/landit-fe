@@ -39,17 +39,12 @@ describe('buildStructuredData', () => {
     ]);
   });
 
-  it('두 언어 모두 앱 정보에 두 스토어를 합친 평점과 평가 수를 담는다 — 화면 첫 뱃지에 같은 평점이 보인다', () => {
-    const rating = {
-      '@type': 'AggregateRating',
-      ratingValue: 4.8,
-      ratingCount: 59,
-      bestRating: 5,
-    };
-
-    expect(findByType('MobileApplication')?.aggregateRating).toEqual(rating);
-    expect(findByType('MobileApplication', 'ja')?.aggregateRating).toEqual(
-      rating,
+  it('두 언어 모두 앱 정보에 평점을 담지 않는다 — 검색 결과에 별점이 뜨지 않게', () => {
+    expect(findByType('MobileApplication')).not.toHaveProperty(
+      'aggregateRating',
+    );
+    expect(findByType('MobileApplication', 'ja')).not.toHaveProperty(
+      'aggregateRating',
     );
   });
 

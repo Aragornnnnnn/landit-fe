@@ -247,9 +247,16 @@ const trimCache = (cache: Map<string, Blob>) => {
   }
 };
 
-// 캐시 키 — 같은 문장도 목소리(모델·화자)가 다르면 다른 음원이다
-const cacheKey = (text: string, voice: TtsVoice) =>
-  `${voice.model}/${voice.providerVoiceId}\n${text}`;
+// 합성할 때 말하기 속도를 정할 수 있는 목소리인가 — 맞으면 배속을 합성에 맡겨 늘린 소리 대신 천천히 말하는 소리를 낸다.
+// 아니면 1배로 합성하고 재생 배속으로 늘린다
+const synthesizesSpeed = (voice: TtsVoice) => voice.model === 'deepgram/aura-2';
+
+const synthSpeedFor = (voice: TtsVoice) =>
+  synthesizesSpeed(voice) ? getSpeechRate() : 1;
+
+// 캐시 키 — 같은 문장도 목소리(모델·화자)나 합성 속도가 다르면 다른 음원이다
+const cacheKey = (text: string, voice: TtsVoice, speed: number) =>
+  `${voice.model}/${voice.providerVoiceId}@${speed}\n${text}`;
 
 // 합성 요청을 한 곳에서 만든다 — 재생(speak)과 미리 담기(prefetch)가 공유한다.
 // 성공 시 오디오 Blob을, 실패 시 예외를 던진다. objectURL은 재생 직전에 새로 만든다
@@ -257,6 +264,7 @@ const cacheKey = (text: string, voice: TtsVoice) =>
 async function requestSpeech(
   text: string,
   voice: TtsVoice,
+  speed: number,
   signal?: AbortSignal,
 ): Promise<Blob> {
   const send = () =>
@@ -267,6 +275,7 @@ async function requestSpeech(
         input: text,
         model: voice.model,
         voice: voice.providerVoiceId,
+        ...(speed !== 1 && { speed }),
       }),
       signal,
     });
@@ -287,6 +296,7 @@ async function requestSpeech(
 async function synthesizeSpeech(
   text: string,
   voice: TtsVoice,
+  speed: number,
   signal?: AbortSignal,
 ): Promise<Blob> {
   const controller = new AbortController();
@@ -299,7 +309,7 @@ async function synthesizeSpeech(
     abort();
   }, SYNTH_TIMEOUT_MS);
   try {
-    return await requestSpeech(text, voice, controller.signal);
+    return await requestSpeech(text, voice, speed, controller.signal);
   } catch (error) {
     throw timedOut ? new TtsTimeoutError() : error;
   } finally {
@@ -417,7 +427,8 @@ export function useTts() {
       //   2) prefetch가 아직 합성 중이면 그 Promise를 재사용 — 새로 합성하면 이미 진행한
       //      시간을 버려 2번째+ 발화가 매번 느려진다 (디바이스는 합성이 길어 특히 심함)
       //   3) 둘 다 없으면 새로 합성
-      const key = cacheKey(text, voice);
+      const speed = synthSpeedFor(voice);
+      const key = cacheKey(text, voice, speed);
       let blob = cacheRef.current.get(key);
       if (!blob) {
         // 진행 중인 prefetch가 있으면 재사용하고, 그 합성이 실패했을 때만 새로 합성한다 (시간 초과와 한도 초과는 다시 묻지 않는다).
@@ -430,9 +441,9 @@ export function useTts() {
                 error instanceof TtsRateLimitError
               )
                 throw error;
-              return synthesizeSpeech(text, voice, controller.signal);
+              return synthesizeSpeech(text, voice, speed, controller.signal);
             })
-          : await synthesizeSpeech(text, voice, controller.signal);
+          : await synthesizeSpeech(text, voice, speed, controller.signal);
       }
       // 합성 도중 다른 speak/stop으로 밀려났으면 조용히 빠진다 (아직 URL을 안 만들었다)
       if (abortRef.current !== controller) return;
@@ -447,7 +458,8 @@ export function useTts() {
       onEndRef.current = options?.onEnd;
 
       const audio = new Audio(url);
-      audio.playbackRate = getSpeechRate();
+      // 속도를 넣어 합성한 음원은 그대로 튼다 — 재생으로 또 늘리면 두 번 느려진다
+      audio.playbackRate = synthesizesSpeed(voice) ? 1 : getSpeechRate();
       audioRef.current = audio;
       // 재생 실패는 onerror와 play() 거부 양쪽으로 도착할 수 있다 — 실패 콜백은 한 번만 부른다
       let handled = false;
@@ -527,7 +539,8 @@ export function useTts() {
         options?.onEnd?.();
       };
       const fail = () => {
-        if (handled) return;
+        // 다른 재생으로 넘어간 뒤 늦게 온 실패(로드 실패의 play 거부)는 무시한다 — 앞 음원을 다시 열거나 지금 재생을 정리하면 안 된다
+        if (handled || audioRef.current !== audio) return;
         handled = true;
         // 프리로드해 둔 엘리먼트는 묵는 동안 로드가 죽었을 수 있다 — 새 엘리먼트로 한 번 다시 연다
         if (isPreloaded) {
@@ -563,7 +576,8 @@ export function useTts() {
   // 재생 중인 요청과 독립적으로 동작하고, 실패는 조용히 무시한다(speak가 다시 시도한다).
   const prefetch = async (text: string, voice: TtsVoice | null) => {
     if (!voice || !text) return;
-    const key = cacheKey(text, voice);
+    const speed = synthSpeedFor(voice);
+    const key = cacheKey(text, voice, speed);
     if (cacheRef.current.has(key)) return;
     // 이미 합성 중이면 끝날 때까지 기다린다 — 호출부가 동시 요청 수를 셀 수 있어야 한다
     const running = inflightRef.current.get(key);
@@ -575,6 +589,7 @@ export function useTts() {
     const pending = synthesizeSpeech(
       text,
       voice,
+      speed,
       prefetchAbortRef.current?.signal,
     )
       .then((blob) => {

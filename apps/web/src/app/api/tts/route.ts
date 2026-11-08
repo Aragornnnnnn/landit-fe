@@ -8,6 +8,9 @@ import { mergeConcatenatedMp3 } from './mp3';
 const OPENROUTER_SPEECH_URL = 'https://openrouter.ai/api/v1/audio/speech';
 const DEEPGRAM_SPEECH_URL = 'https://api.deepgram.com/v1/speak';
 const DEEPGRAM_MODEL = 'deepgram/aura-2';
+// Deepgram Aura-2가 받는 말하기 속도 범위
+const MIN_DEEPGRAM_SPEED = 0.7;
+const MAX_DEEPGRAM_SPEED = 1.5;
 
 // 비용 악용 방어 — 키가 서버에만 있어도 이 라우트는 공개라, 호출당 비용을 작은 고정값으로 묶는다.
 // 제대로 된 세션 인증은 런칭 전 별도 이슈(LAN-118 후속)로 다룬다
@@ -19,14 +22,24 @@ const ALLOWED_MODELS = [
   'hexgrad/kokoro-82m',
 ];
 
-// 업스트림별 합성 요청 — Deepgram은 음성 이름이 곧 모델이라 voice를 model 파라미터로 보낸다
+// 업스트림별 합성 요청 — Deepgram은 음성 이름이 곧 모델이라 voice를 model 파라미터로 보낸다.
+// 속도는 Deepgram에만 넘긴다 (1배면 붙이지 않아 지금 요청과 같다)
 const requestSpeech = (
   apiKey: string,
-  { model, input, voice }: { model: string; input: string; voice: string },
+  {
+    model,
+    input,
+    voice,
+    speed,
+  }: { model: string; input: string; voice: string; speed?: number },
 ) =>
   model === DEEPGRAM_MODEL
     ? fetch(
-        `${DEEPGRAM_SPEECH_URL}?${new URLSearchParams({ model: voice, encoding: 'mp3' })}`,
+        `${DEEPGRAM_SPEECH_URL}?${new URLSearchParams({
+          model: voice,
+          encoding: 'mp3',
+          ...(speed !== undefined && speed !== 1 && { speed: String(speed) }),
+        })}`,
         {
           method: 'POST',
           headers: {
@@ -46,10 +59,11 @@ const requestSpeech = (
       });
 
 export async function POST(request: Request) {
-  const { input, model, voice } = (await request.json()) as {
+  const { input, model, voice, speed } = (await request.json()) as {
     input?: string;
     model?: string;
     voice?: string;
+    speed?: number;
   };
   if (!input || !model || !voice) {
     return NextResponse.json(
@@ -78,6 +92,18 @@ export async function POST(request: Request) {
     );
   }
 
+  const isSupportedSpeed =
+    speed === undefined ||
+    (typeof speed === 'number' &&
+      speed >= MIN_DEEPGRAM_SPEED &&
+      speed <= MAX_DEEPGRAM_SPEED);
+  if (!isSupportedSpeed) {
+    return NextResponse.json(
+      { error: '허용되지 않은 speed입니다.' },
+      { status: 400 },
+    );
+  }
+
   const keyName =
     model === DEEPGRAM_MODEL ? 'DEEPGRAM_TTS_API_KEY' : 'OPENROUTER_API_KEY';
   const apiKey = process.env[keyName];
@@ -88,7 +114,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const res = await requestSpeech(apiKey, { model, input, voice });
+  const res = await requestSpeech(apiKey, { model, input, voice, speed });
 
   if (!res.ok) {
     const detail = await res.text();

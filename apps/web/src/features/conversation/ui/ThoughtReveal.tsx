@@ -3,8 +3,26 @@
 
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
+import { preload } from 'react-dom';
 
-import type { FloatingThought } from '../model/thought';
+import type { FloatingThought, ThoughtType } from '../model/thought';
+
+// 생성 중 = 구슬 든 래디, 도착 = 감정 표정 래디
+const ORB_SRC = '/images/character/landy-orb.webp';
+const FACE_SRC: Record<ThoughtType, string> = {
+  GOOD: '/images/character/landy-good.webp',
+  NORMAL: '/images/character/landy-normal.webp',
+  BAD: '/images/character/landy-bad.webp',
+};
+
+/**
+ * 속마음 연출의 래디 그림을 미리 받는다 — 뜨는 순간(구슬)과 바뀌는 순간(표정)에 그림을 받기 시작하면 그동안 래디 자리가 빈다.
+ * 표정은 도착해야 알 수 있어 셋 다 받는다. preload는 멱등이라 렌더 중 불러도 된다
+ */
+export const preloadThoughtImages = () => {
+  for (const src of [ORB_SRC, ...Object.values(FACE_SRC)])
+    preload(src, { as: 'image' });
+};
 
 // 오른쪽 아래에서 호를 그리며 날아들고, 밀려날 땐 왼쪽으로 빠진다.
 // AnimatePresence 자식(오버레이는 백드롭 경유, 온보딩은 직접)일 때 이 initial/exit가 재생된다.
@@ -16,11 +34,7 @@ export const ThoughtReveal = ({
 }) => {
   const t = useTranslations('conversation.thoughtReveal');
   const hasThought = Boolean(thought);
-  const landyType = (thought?.type ?? 'NORMAL').toLowerCase();
-  // 생성 중 = 구슬 든 랜디, 도착 = 감정 표정 랜디
-  const characterSrc = hasThought
-    ? `/images/character/landy-${landyType}.webp`
-    : '/images/character/landy-orb.webp';
+  const characterSrc = thought ? FACE_SRC[thought.type] : ORB_SRC;
 
   return (
     <motion.div

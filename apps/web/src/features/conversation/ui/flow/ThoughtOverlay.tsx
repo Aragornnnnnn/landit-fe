@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom';
 import { useClientOnlyValue } from '@/shared/lib/useClientOnlyValue';
 
 import type { FloatingThought } from '../../model/thought';
-import { ThoughtReveal } from '../ThoughtReveal';
+import { preloadThoughtImages, ThoughtReveal } from '../ThoughtReveal';
 
 export const ThoughtOverlay = ({
   thought,
@@ -20,6 +20,8 @@ export const ThoughtOverlay = ({
 }) => {
   const t = useTranslations('conversation.thoughtOverlay');
   const mounted = useClientOnlyValue(() => true, false);
+  // 대화 화면에 들어올 때부터 받아 둔다 — 첫 속마음부터 래디가 바로 보이고, 구슬이 표정으로 바뀔 때도 비지 않는다
+  preloadThoughtImages();
   if (!mounted) return null;
 
   // 대기부터 속마음까지 랜디는 한 번만 등장한다 — 생성 중엔 구슬을 들고 있다가, 도착하면 표정으로 짜자잔 바뀐다

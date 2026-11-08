@@ -425,6 +425,35 @@ describe('useTts', () => {
     expect(FakeAudio.instances.length).toBe(opened);
   });
 
+  it('다른 음원으로 넘어간 뒤 앞 음원의 재생 거부가 늦게 도착해도 앞 음원을 다시 열거나 지금 재생을 끊지 않는다', async () => {
+    // Given 미리 열어 둔 클로이 인사를 틀자마자 테디 인사로 넘어갔고
+    const { result } = renderHook(() => useTts());
+    const onChloeError = vi.fn();
+    act(() => result.current.prefetchSrc('/audio/chloe.mp3'));
+    let rejectChloe: (error: unknown) => void = () => {};
+    FakeAudio.instances[0]!.play = vi.fn(
+      () => new Promise<void>((_, reject) => (rejectChloe = reject)),
+    );
+    act(() =>
+      result.current.speakSrc('/audio/chloe.mp3', { onError: onChloeError }),
+    );
+    act(() => result.current.speakSrc('/audio/teddy.mp3'));
+    const teddy = FakeAudio.instances[1]!;
+
+    // When 클로이 음원의 로드 실패가 재생 거부로 뒤늦게 도착하면
+    await act(async () =>
+      rejectChloe(new DOMException('load failed', 'NotSupportedError')),
+    );
+
+    // Then 클로이 음원을 다시 열지 않고, 테디 재생도 그대로 둔다
+    expect(FakeAudio.instances.map((audio) => audio.src)).toEqual([
+      '/audio/chloe.mp3',
+      '/audio/teddy.mp3',
+    ]);
+    expect(teddy.pause).not.toHaveBeenCalled();
+    expect(onChloeError).not.toHaveBeenCalled();
+  });
+
   it('프리로드 엘리먼트 재생이 실패하면 새 엘리먼트로 한 번 다시 연다', () => {
     const { result } = renderHook(() => useTts());
     const onError = vi.fn();
@@ -546,16 +575,72 @@ describe('useTts', () => {
     // AbortError는 합성 폴백을 부르지 않는다 (정적 재생이 그대로 유지되도록)
     expect(onError).not.toHaveBeenCalled();
   });
-  it('말하기 속도를 느리게 골라두면 합성 음성이 그 배속으로 재생된다', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => fakeAudioResponse()),
-    );
+  describe('합성할 때 속도를 정할 수 있는 목소리(Deepgram)', () => {
+    const luna: TtsVoice = {
+      provider: 'OPENROUTER',
+      model: 'deepgram/aura-2',
+      providerVoiceId: 'aura-2-luna-en',
+      gender: 'FEMALE',
+    };
+    const requestedBody = (fetchMock: ReturnType<typeof vi.fn>, call = 0) =>
+      JSON.parse(
+        (fetchMock.mock.calls[call]![1] as RequestInit).body as string,
+      );
+
+    it('배속을 고르면 그 속도로 합성을 요청하고 재생은 늘리지 않는다', async () => {
+      // given
+      const fetchMock = vi.fn(async () => fakeAudioResponse());
+      vi.stubGlobal('fetch', fetchMock);
+      setSpeechRate(0.75);
+      const { result } = renderHook(() => useTts());
+
+      // when
+      await act(() => result.current.speak('Hello', luna));
+
+      // then
+      expect(requestedBody(fetchMock).speed).toBe(0.75);
+      expect(FakeAudio.instances[0].playbackRate).toBe(1);
+    });
+
+    it('1배면 속도 없이 지금처럼 합성을 요청한다', async () => {
+      const fetchMock = vi.fn(async () => fakeAudioResponse());
+      vi.stubGlobal('fetch', fetchMock);
+      const { result } = renderHook(() => useTts());
+
+      await act(() => result.current.speak('Hello', luna));
+
+      expect(requestedBody(fetchMock)).not.toHaveProperty('speed');
+    });
+
+    it('미리 합성한 뒤 배속을 바꾸면 그 음원을 쓰지 않고 새 속도로 다시 합성한다', async () => {
+      // given — 1배로 미리 받아 둔 문장
+      const fetchMock = vi.fn(async () => fakeAudioResponse());
+      vi.stubGlobal('fetch', fetchMock);
+      const { result } = renderHook(() => useTts());
+      await act(() => result.current.prefetch('Hello', luna));
+      setSpeechRate(1.5);
+
+      // when
+      await act(() => result.current.speak('Hello', luna));
+
+      // then
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(requestedBody(fetchMock, 1).speed).toBe(1.5);
+    });
+  });
+
+  it('합성 속도를 못 정하는 목소리는 속도 없이 합성하고 재생 배속으로 늘린다', async () => {
+    const fetchMock = vi.fn<
+      (url: string, init: RequestInit) => Promise<Response>
+    >(async () => fakeAudioResponse());
+    vi.stubGlobal('fetch', fetchMock);
     setSpeechRate(0.75);
     const { result } = renderHook(() => useTts());
 
     await act(() => result.current.speak('Hello', harper));
 
+    const body = JSON.parse(fetchMock.mock.calls[0]![1]!.body as string);
+    expect(body).not.toHaveProperty('speed');
     expect(FakeAudio.instances[0].playbackRate).toBe(0.75);
   });
 
