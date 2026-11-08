@@ -105,7 +105,7 @@ export const LandingFeatures = async ({ locale }: { locale: Locale }) => {
           {/* 폰 아래는 판에서 잘린다. 화면 캡처는 프레임 그림의 투명한 화면 자리에 맞춰 깔고, 프레임을 위에 얹는다 */}
           <div
             data-phone-stage
-            className="relative h-[480px] overflow-hidden rounded-[32px] bg-[#f5f5f3] sm:h-[560px] lg:rounded-[40px]"
+            className="relative h-[504px] overflow-hidden rounded-[32px] bg-[#f5f5f3] sm:h-[584px] lg:rounded-[40px]"
           >
             <div className="absolute top-10 left-1/2 aspect-[1046/1766] w-[322px] -translate-x-1/2 sm:top-12 sm:w-[366px]">
               {/* 화면 자리 — 1046×1766 프레임에서 x 52~994, y 45~1718, 모서리 반경 약 92px */}
