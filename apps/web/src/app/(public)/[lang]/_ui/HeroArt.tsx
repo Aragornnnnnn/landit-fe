@@ -1,4 +1,4 @@
-// 첫 화면 그림 — 폰 앞의 네 친구 위로, 폰 화면 안에 내가 한 말과 상대의 속마음을 띄운다. 속마음은 내 영어가 통했을 때의 기분 좋은 반응을 보여 준다. 주황은 다운로드 버튼에만 써서 시선을 모으고, 말풍선은 짙은 색·흰색으로 둔다. 휴대폰은 세로형(1080×1440), 태블릿 이상은 정사각형 그림을 쓴다 — 폰과 캐릭터는 같은 캔버스의 투명 그림 두 장이라 그대로 겹치고 캐릭터만 솟아오르게 한다. 폰 화면이 투명해서 뒤에 흰 화면을 깔고, 그림 아래는 폰 아래 테두리 위(세로형 y 1245, 화면 모서리가 굽기 전, 정사각형은 인물 발끝 위)에서 카드 경계에 잘린다
+// 첫 화면 그림 — 폰 앞의 네 친구 위로, 폰 화면 안에 내가 한 말과 상대의 속마음을 띄운다. 속마음은 내 영어가 통했을 때의 기분 좋은 반응을 보여 준다. 주황은 다운로드 버튼에만 써서 시선을 모으고, 말풍선은 짙은 색·흰색으로 둔다. 휴대폰은 세로형(1080×1440), 태블릿 이상은 정사각형 그림을 쓴다 — 폰과 캐릭터는 같은 캔버스의 투명 그림 두 장이라 그대로 겹치고, 캐릭터가 솟아오른 뒤 말풍선이 차례로 튀어나온다. 폰 화면이 투명해서 뒤에 흰 화면을 깔고, 그림 아래는 폰 아래 테두리 위(세로형 y 1245, 화면 모서리가 굽기 전, 정사각형은 인물 발끝 위)에서 카드 경계에 잘린다
 import { getTranslations } from 'next-intl/server';
 import { getImageProps } from 'next/image';
 import { preload } from 'react-dom';
@@ -79,10 +79,14 @@ export const HeroArt = async ({ locale }: { locale: Locale }) => {
         part={characters}
         className={`absolute inset-0 ${styles.castRise}`}
       />
-      <p className="absolute top-[17.5%] right-[27.5%] rounded-[10px] rounded-br-[4px] bg-[#fde3cf] px-2.5 py-1 text-[12px] font-semibold whitespace-nowrap text-[#2b2522] sm:top-[17%] sm:right-[29.5%] sm:px-3 sm:py-1.5 sm:text-[14px]">
+      <p
+        className={`absolute top-[17.5%] right-[27.5%] rounded-[10px] rounded-br-[4px] bg-[#fde3cf] px-2.5 py-1 text-[12px] font-semibold whitespace-nowrap text-[#2b2522] sm:top-[17%] sm:right-[29.5%] sm:px-3 sm:py-1.5 sm:text-[14px] ${styles.bubbleMine}`}
+      >
         You made my day!
       </p>
-      <div className="absolute top-[24.8%] left-[27.5%] w-[40%] rounded-[14px] rounded-bl-[4px] bg-white px-2.5 py-1.5 shadow-[0_6px_16px_rgba(90,50,20,0.14)] sm:top-[25%] sm:left-[29%] sm:w-[35%] sm:px-3 sm:py-2.5">
+      <div
+        className={`absolute top-[24.8%] left-[27.5%] w-[40%] rounded-[14px] rounded-bl-[4px] bg-white px-2.5 py-1.5 shadow-[0_6px_16px_rgba(90,50,20,0.14)] sm:top-[25%] sm:left-[29%] sm:w-[35%] sm:px-3 sm:py-2.5 ${styles.bubbleThought}`}
+      >
         <p className="text-[10px] font-bold text-[#a34a12] sm:text-[11px]">
           {t('thoughtLabel')}
         </p>
