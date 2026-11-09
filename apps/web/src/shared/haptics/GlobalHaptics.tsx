@@ -1,19 +1,19 @@
 'use client';
 
-// 버튼·링크를 누르면 스크롤·끌기와 상관없는 곳은 닿는 순간, 아니면 탭이 성립할 때 가벼운 햅틱 틱을 울리는 전역 리스너 (루트에 마운트)
+// 버튼·링크를 누르면 스크롤·끌기와 상관없는 곳은 닿는 순간, 아니면 탭이 성립할 때 tap 진동을 울리는 전역 리스너 (루트에 마운트)
 import { useEffect } from 'react';
-import { hapticPatternSchema, type HapticPattern } from '@landit/bridge';
 
+import { isHapticKind, type HapticKind } from './haptic-kinds';
 import { haptic } from './haptics';
 import { classifyPressArea, type PressArea } from './press-area';
 
-// 틱을 줄 탭 대상. data-haptic이 붙은 임의 요소도 포함해 개별 오버라이드를 허용한다
+// tap을 줄 탭 대상. data-haptic이 붙은 임의 요소도 포함해 개별로 진동 이름을 바꿀 수 있다
 const TAP_SELECTOR = 'button, a[href], [role="button"], summary, [data-haptic]';
 
-// 눌린 지점에서 가장 가까운 탭 대상을 찾아 어떤 패턴을 울릴지 정한다. 대상이 없거나 비활성이면 null
-export const resolveTapPattern = (
+// 눌린 지점에서 가장 가까운 탭 대상을 찾아 어떤 진동 이름을 울릴지 정한다. 대상이 없거나 비활성이면 null
+export const resolveTapKind = (
   target: EventTarget | null,
-): HapticPattern | null => {
+): HapticKind | null => {
   if (!(target instanceof Element)) return null;
 
   const el = target.closest(TAP_SELECTOR);
@@ -25,14 +25,9 @@ export const resolveTapPattern = (
   // 비활성 버튼은 눌러도 아무 동작이 없으니 진동도 주지 않는다 (비활성 버튼 안쪽 요소 포함)
   if (el.closest(':disabled, [aria-disabled="true"]')) return null;
 
-  // data-haptic으로 특정 요소만 더 센 패턴으로 오버라이드 (예: data-haptic="medium")
+  // data-haptic으로 특정 요소만 다른 진동 이름으로 바꾼다 (예: data-haptic="tick"). 진동 이름이 아니면 tap
   const override = el.getAttribute('data-haptic');
-  if (override) {
-    const parsed = hapticPatternSchema.safeParse(override);
-    return parsed.success ? parsed.data : 'light';
-  }
-
-  return 'light';
+  return override && isHapticKind(override) ? override : 'tap';
 };
 
 // 끌기 요소에서 누른 자리로부터 이만큼(px) 움직이면 탭이 아니라 끌기로 본다 (Framework7이 탭을 거르는 거리와 같다)
@@ -43,7 +38,7 @@ type PendingTap = {
   pointerId: number;
   x: number;
   y: number;
-  pattern: HapticPattern;
+  kind: HapticKind;
   area: Exclude<PressArea, 'still'>;
   // 손가락이 조금이라도 움직였나. 가만히 있는 동안의 스크롤은 코드가 한 것(채팅 자동 스크롤 등)이라 탭을 취소하지 않는다
   fingerMoved: boolean;
@@ -60,12 +55,12 @@ export const GlobalHaptics = () => {
       // 두 번째 손가락(핀치 등)과 마우스 오른쪽·가운데 버튼은 탭이 아니다
       if (!event.isPrimary || event.button !== 0) return;
       if (!(event.target instanceof Element)) return;
-      const pattern = resolveTapPattern(event.target);
+      const kind = resolveTapKind(event.target);
       const tapTarget = event.target.closest(TAP_SELECTOR);
-      if (!pattern || !tapTarget) return;
+      if (!kind || !tapTarget) return;
       const area = classifyPressArea(tapTarget);
       if (area === 'still') {
-        haptic(pattern);
+        haptic(kind);
         return;
       }
       pending = {
@@ -73,7 +68,7 @@ export const GlobalHaptics = () => {
         pointerId: event.pointerId,
         x: event.clientX,
         y: event.clientY,
-        pattern,
+        kind,
         area,
         fingerMoved: false,
       };
@@ -108,15 +103,15 @@ export const GlobalHaptics = () => {
       }
     };
 
-    // capture 단계라 React onClick 안의 결과 진동(success 등)보다 틱이 먼저 간다
+    // capture 단계라 React onClick 안의 결과 진동(success 등)보다 tap이 먼저 간다
     const fireTap = (event: MouseEvent) => {
       if (!pending) return;
-      const { tapTarget, pattern } = pending;
+      const { tapTarget, kind } = pending;
       pending = null;
       // 키보드·코드가 보낸 click(detail 0)과 누른 버튼 밖에서 뗀 click은 이 누름의 탭이 아니다
       if (event.detail === 0) return;
       if (event.target instanceof Node && tapTarget.contains(event.target)) {
-        haptic(pattern);
+        haptic(kind);
       }
     };
 

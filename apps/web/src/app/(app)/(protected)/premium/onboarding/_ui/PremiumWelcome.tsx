@@ -128,12 +128,12 @@ export const PremiumWelcome = ({
     const timers = [
       setTimeout(() => {
         setPhase('unlocked');
-        haptic('medium');
+        haptic('tick'); // 자물쇠가 딸깍 풀리는 순간
       }, UNLOCK_AT_MS),
       setTimeout(() => setPhase('revealing'), REVEAL_AT_MS),
       setTimeout(() => {
         setPhase('open');
-        haptic('success');
+        haptic('celebrate');
         burst();
       }, OPEN_AT_MS),
     ];

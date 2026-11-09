@@ -24,7 +24,6 @@ import {
   unlockWheelTick,
 } from '../lib/wheel-tick';
 import { MERIDIEM_LABELS } from '../model/alarm-time';
-import { alarmPlatform } from '../model/shell-alarm';
 import {
   fromWheel,
   meridiemAfter,
@@ -38,10 +37,6 @@ const ITEM_HEIGHT = 34;
 const RING_COUNT = 20;
 // 화살표 키로 굴린 오전/오후 칸이 다 돌았을 때쯤 — 라이브러리 키 이동이 0.45초다
 const MERIDIEM_SETTLE_MS = 500;
-
-// 칸이 넘어갈 때의 진동 — Android의 selection은 너무 약해 거의 안 느껴져서 한 단계 센 light를 쓴다
-const tickHaptic = () =>
-  alarmPlatform() === 'android' ? ('light' as const) : ('selection' as const);
 
 const HOURS: WheelPickerOption<number>[] = Array.from(
   { length: 12 },
@@ -217,7 +212,7 @@ export const TimeWheel = ({
 
   const tick = () => {
     playWheelTick();
-    haptic(tickHaptic());
+    haptic('tick');
   };
   const notify = () => onScrub?.(fromWheel(live.current));
 

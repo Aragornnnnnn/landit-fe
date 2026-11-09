@@ -9,7 +9,6 @@ import Link from 'next/link';
 
 import { track } from '@/shared/analytics';
 import { useBackPress } from '@/shared/bridge/useBackPress';
-import { haptic } from '@/shared/haptics';
 import { scenarioSessionsPath } from '@/shared/lib/routes';
 import { Button } from '@/shared/ui/Button';
 import { Emoji } from '@/shared/ui/emoji';
@@ -98,7 +97,6 @@ export const ScenarioCard = ({
   }, []);
 
   const flipToBack = (trigger: 'button' | 'preview') => {
-    haptic('medium'); // 완료 카드를 뒤집는 성취 순간엔 좀 더 묵직한 진동
     track(EVENTS.SCENARIO_CARD_FLIPPED, {
       scenario_id: scenario.scenarioId,
       direction: 'back',
@@ -183,6 +181,7 @@ export const ScenarioCard = ({
               <Link
                 href={scenarioSessionsPath(scenario.scenarioId, date)}
                 aria-label={t('historyLabel')}
+                data-no-haptic
                 className="absolute top-[15px] right-3 flex h-[34px] items-center gap-0.5 rounded-full bg-white/90 pr-2.5 pl-3 text-13 font-semibold text-foreground shadow-sm backdrop-blur-sm active:opacity-70"
               >
                 {t('historyButton')}

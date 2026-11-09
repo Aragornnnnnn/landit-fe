@@ -105,7 +105,8 @@ export const useConversationInput = ({
       char_count: content.length,
     });
     if (!content) {
-      haptic('error');
+      // 못 알아들은 건 실패가 아니라 다시 말하면 되는 막힘이다
+      haptic('warning');
       showToast(t('notRecognizedToast'), 'warning');
       track(EVENTS.TURN_FAILED, {
         session_id: sessionId ?? undefined,

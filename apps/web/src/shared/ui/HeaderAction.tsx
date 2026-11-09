@@ -23,11 +23,12 @@ export const HeaderAction = ({
   onClick,
 }: HeaderActionProps) => {
   if (href) {
-    // 이동하는 칸도 누른 순간을 계측할 수 있어야 해서 onClick을 함께 받는다
+    // 이동하는 칸도 누른 순간을 계측할 수 있어야 해서 onClick을 함께 받는다. 화면만 넘어가는 칸이라 누름 진동은 주지 않는다
     return (
       <Link
         href={href}
         onClick={onClick}
+        data-no-haptic
         aria-label={label}
         className={ITEM_STYLE}
       >

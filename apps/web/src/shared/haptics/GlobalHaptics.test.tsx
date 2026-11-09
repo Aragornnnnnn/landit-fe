@@ -1,10 +1,10 @@
-// resolveTapPattern의 탭 대상 판별과, 전역 리스너가 스크롤 영역 밖은 닿는 순간·안은 탭이 성립할 때만 울리는지 검증
+// resolveTapKind의 탭 대상 판별과, 전역 리스너가 스크롤 영역 밖은 닿는 순간·안은 탭이 성립할 때만 울리는지 검증
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { postToNative } from '@/shared/bridge/web-bridge';
 
-import { GlobalHaptics, resolveTapPattern } from './GlobalHaptics';
+import { GlobalHaptics, resolveTapKind } from './GlobalHaptics';
 import { haptic } from './haptics';
 
 vi.mock('@/shared/bridge/web-bridge', () => ({
@@ -16,44 +16,44 @@ const inDom = (html: string) => {
   return document.body;
 };
 
-describe('resolveTapPattern', () => {
-  it('버튼 안을 누르면 light 틱을 준다', () => {
+describe('resolveTapKind', () => {
+  it('버튼 안을 누르면 tap을 준다', () => {
     const root = inDom('<button><span id="t">확인</span></button>');
-    expect(resolveTapPattern(root.querySelector('#t'))).toBe('light');
+    expect(resolveTapKind(root.querySelector('#t'))).toBe('tap');
   });
 
   it('탭 대상이 아니면 null', () => {
     const root = inDom('<p id="t">그냥 텍스트</p>');
-    expect(resolveTapPattern(root.querySelector('#t'))).toBeNull();
+    expect(resolveTapKind(root.querySelector('#t'))).toBeNull();
   });
 
-  it('data-haptic으로 패턴을 오버라이드한다', () => {
-    const root = inDom('<button data-haptic="medium" id="t">뒤집기</button>');
-    expect(resolveTapPattern(root.querySelector('#t'))).toBe('medium');
+  it('data-haptic으로 진동 이름을 바꾼다', () => {
+    const root = inDom('<button data-haptic="tick" id="t">다음 칸</button>');
+    expect(resolveTapKind(root.querySelector('#t'))).toBe('tick');
   });
 
-  it('규격 밖 data-haptic 값은 light로 떨어진다', () => {
-    const root = inDom('<button data-haptic="boom" id="t">x</button>');
-    expect(resolveTapPattern(root.querySelector('#t'))).toBe('light');
+  it('진동 이름이 아닌 data-haptic 값(세기 이름 등)은 tap으로 떨어진다', () => {
+    const root = inDom('<button data-haptic="medium" id="t">x</button>');
+    expect(resolveTapKind(root.querySelector('#t'))).toBe('tap');
   });
 
   it('비활성 버튼은 진동을 주지 않는다', () => {
     const root = inDom('<button disabled id="t">확인</button>');
-    expect(resolveTapPattern(root.querySelector('#t'))).toBeNull();
+    expect(resolveTapKind(root.querySelector('#t'))).toBeNull();
   });
 
   it('비활성 버튼 안쪽의 data-haptic 요소도 진동을 주지 않는다', () => {
     const root = inDom(
       '<button disabled><span data-haptic="tick" id="t">x</span></button>',
     );
-    expect(resolveTapPattern(root.querySelector('#t'))).toBeNull();
+    expect(resolveTapKind(root.querySelector('#t'))).toBeNull();
   });
 
   it('data-no-haptic 영역 안은 제외한다', () => {
     const root = inDom(
       '<div data-no-haptic><button id="t">스크롤 핸들</button></div>',
     );
-    expect(resolveTapPattern(root.querySelector('#t'))).toBeNull();
+    expect(resolveTapKind(root.querySelector('#t'))).toBeNull();
   });
 });
 
@@ -491,16 +491,16 @@ describe('GlobalHaptics', () => {
     expect(sentPatterns()).toEqual([]);
   });
 
-  it('data-haptic으로 정한 패턴이 그대로 울린다', () => {
+  it('data-haptic으로 정한 진동 이름이 그 이름의 실제 진동으로 울린다', () => {
     render(
       <>
         <GlobalHaptics />
-        <button data-haptic="medium">뒤집기</button>
+        <button data-haptic="tick">다음 칸</button>
       </>,
     );
 
-    pointer('pointerdown', screen.getByRole('button', { name: '뒤집기' }));
+    pointer('pointerdown', screen.getByRole('button', { name: '다음 칸' }));
 
-    expect(sentPatterns()).toEqual(['medium']);
+    expect(sentPatterns()).toEqual(['selection']);
   });
 });

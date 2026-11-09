@@ -91,7 +91,7 @@ const LetterList = ({ rows }: { rows: LetterRow[] }) => (
   <ul className="divide-y divide-border px-5">
     {rows.map((row) => (
       <li key={row.id}>
-        <Link href={row.href} className="block">
+        <Link href={row.href} className="block" data-no-haptic>
           <LetterListItem row={row} />
         </Link>
       </li>
