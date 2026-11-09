@@ -10,6 +10,7 @@ import {
   ALARM_CHECK_PATH,
   ALARM_EDIT_PATH,
   ALARM_SETTINGS_PATH,
+  HAPTIC_CHECK_PATH,
   PAID_SURVEY_PATH,
   PAYWALL_PATH,
   PREMIUM_ONBOARDING_CHECK_PATH,
@@ -66,6 +67,7 @@ const NESTED_PAGES: Record<string, string> = {
   [REWARD_CHECK_PATH]: 'reward_check',
   [REWARD_PAYWALL_CHECK_PATH]: 'reward_paywall_check',
   [PREVIEW_CHECK_PATH]: 'preview_check',
+  [HAPTIC_CHECK_PATH]: 'haptic_check',
   // LAN-428 설문(임시) — 설문이 끝나면 지운다
   [PAID_SURVEY_PATH]: 'survey_paid',
 };
