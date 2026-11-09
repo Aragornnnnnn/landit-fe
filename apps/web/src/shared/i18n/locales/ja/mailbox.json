@@ -12,7 +12,7 @@
     "sentLabel": "送ったお手紙"
   },
   "mailboxFlow": {
-    "loadMoreFailedToast": "続きのお手紙を読み込めませんでした。"
+    "loadMoreFailedToast": "続きのお手紙を読み込めませんでした"
   },
   "mailboxEmpty": {
     "receivedTitle": "まだお手紙は届いていません",
@@ -56,9 +56,9 @@
     "sentToast": "貴重なご意見ありがとうございます！"
   },
   "attachment": {
-    "retryLaterError": "送れませんでした。時間をおいて再度お試しください。",
-    "tooLargeError": "写真の容量が大きすぎます。1枚外してもう一度送ってください。",
-    "invalidPhotoError": "送れない写真があります。別の写真に変えてください。",
+    "retryLaterToast": "送れませんでした。時間をおいて再度お試しください",
+    "tooLargeToast": "写真の容量が大きすぎます。1枚外してもう一度送ってください",
+    "invalidPhotoToast": "送れない写真があります。別の写真に変えてください",
     "limitToast": "写真は{max}枚まで送れます",
     "partialFailedToast": "読み込めない写真を除いて追加しました",
     "loadFailedToast": "写真を読み込めませんでした"
