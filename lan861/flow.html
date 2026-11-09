@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>상대 발화 끊기</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root { --bg:#fff; --ink:#191f28; --sub:#8b95a1; --line:#d1d6db; --tile:#f2f4f6; --icon:#4e5968; --accent:#e8743b; --accent-tile:#fdf0e8; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:Pretendard,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; }
+  .page { width:820px; padding:40px 44px 40px; }
+  h1 { font-size:24px; font-weight:700; margin:0 0 36px; letter-spacing:-0.03em; }
+  .lane + .lane { margin-top:36px; padding-top:32px; border-top:1px solid #f2f4f6; }
+  .lane-h { font-size:15px; font-weight:600; color:var(--sub); margin-bottom:20px; }
+  .row { display:grid; grid-template-columns:110px 1fr 110px 1fr 110px; align-items:start; }
+  .actor { display:flex; flex-direction:column; align-items:center; text-align:center; }
+  .logo { width:72px; height:72px; border-radius:22px; background:var(--tile); display:flex; align-items:center; justify-content:center; }
+  .logo svg { width:34px; height:34px; }
+  .stroke { stroke:var(--icon); fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+  .logo.on { background:var(--accent-tile); }
+  .logo.on .stroke { stroke:var(--accent); }
+  .name { font-size:15px; font-weight:700; margin-top:10px; letter-spacing:-0.02em; }
+  .link { height:72px; display:flex; flex-direction:column; justify-content:center; padding:0 12px; }
+  .link .what { font-size:13px; font-weight:600; text-align:center; margin-bottom:6px; display:flex; gap:4px; justify-content:center; align-items:center; }
+  .link .what svg { width:16px; height:16px; }
+  .link .line { position:relative; border-top:1.5px solid var(--line); }
+  .link .line::after { content:""; position:absolute; right:-1px; top:-5px; width:8px; height:8px; border-top:1.5px solid var(--line); border-right:1.5px solid var(--line); transform:rotate(45deg); }
+  .link.dash .line { border-top-style:dashed; }
+  .link.dash .what { color:var(--sub); font-weight:500; }
+  .link.on .line, .link.on .line::after { border-color:var(--accent); }
+  .link.on .what { color:var(--accent); }
+  .link.on .what .stroke { stroke:var(--accent); }
+  .wide { grid-column:2 / 5; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>말하는 중에도 바로 답해요</h1>
+
+  <div class="lane">
+    <div class="lane-h">지금까지</div>
+    <div class="row">
+      <div class="actor">
+        <div class="logo"><svg viewBox="0 0 24 24"><g class="stroke"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></g></svg></div>
+        <div class="name">상대 말하기</div>
+      </div>
+      <div class="link dash wide">
+        <div class="what">끝날 때까지 기다리기</div>
+        <div class="line"></div>
+      </div>
+      <div class="actor">
+        <div class="logo"><svg viewBox="0 0 24 24"><g class="stroke"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/></g></svg></div>
+        <div class="name">내 차례</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lane">
+    <div class="lane-h">이제</div>
+    <div class="row">
+      <div class="actor">
+        <div class="logo"><svg viewBox="0 0 24 24"><g class="stroke"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></g></svg></div>
+        <div class="name">상대 말하기</div>
+      </div>
+      <div class="link on">
+        <div class="what">
+          <svg viewBox="0 0 24 24"><g class="stroke"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/></g></svg>
+          <svg viewBox="0 0 24 24"><g class="stroke"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M7 15h10"/></g></svg>
+          누르면
+        </div>
+        <div class="line"></div>
+      </div>
+      <div class="actor">
+        <div class="logo on"><svg viewBox="0 0 24 24"><g class="stroke"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></g></svg></div>
+        <div class="name">바로 멈춤</div>
+      </div>
+      <div class="link on">
+        <div class="what">문장 전체 보기</div>
+        <div class="line"></div>
+      </div>
+      <div class="actor">
+        <div class="logo on"><svg viewBox="0 0 24 24"><g class="stroke"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/></g></svg></div>
+        <div class="name">내 차례</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
