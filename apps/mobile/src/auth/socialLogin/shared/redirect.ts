@@ -8,3 +8,8 @@ export function isOAuthRedirectUrl(url: string): boolean {
     .split(/[?#]/)[0];
   return path === REDIRECT_PATH;
 }
+
+// 카카오톡 앱 전환 로그인 복귀 주소(kakao{앱키}://oauth) — 네이티브 SDK가 처리하므로 라우터가 화면으로 열면 안 된다
+export function isKakaoTalkLoginUrl(url: string): boolean {
+  return /^kakao[0-9a-z]+:\/\/oauth(?:[/?#]|$)/i.test(url);
+}
