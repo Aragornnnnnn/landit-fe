@@ -1,7 +1,10 @@
 // 단어 오디오가 서버 구간 안의 PCM만 포함하는지 검증한다.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createWordClips } from './word-playback';
+import {
+  createWordClips,
+  normalizeRecordingForPlayback,
+} from './word-playback';
 
 const recording = new Blob(['recording'], { type: 'audio/mp4' });
 const segment = { order: 2, startTimeMs: 40, endTimeMs: 100 };
@@ -74,5 +77,49 @@ describe('createWordClips', () => {
     await expect(createWordClips(recording, [segment])).resolves.toEqual(
       new Map(),
     );
+  });
+});
+
+describe('normalizeRecordingForPlayback', () => {
+  it('AAC 녹음의 전체 샘플을 페이드 없이 분석용 WAV에 보존한다', async () => {
+    const samples = new Float32Array(9600).fill(0.5);
+    const decode = vi.fn().mockResolvedValue({
+      length: samples.length,
+      sampleRate: 48000,
+      numberOfChannels: 1,
+      getChannelData: () => samples,
+    });
+    mockDecoder(decode);
+
+    const result = await normalizeRecordingForPlayback({
+      filename: 'recording.m4a',
+      blob: recording,
+      peak: 0.5,
+    });
+    const wav = new DataView(await result.blob.arrayBuffer());
+
+    expect(result.filename).toBe('recording.wav');
+    expect(result.peak).toBe(0.5);
+    expect(wav.getUint32(24, true)).toBe(48000);
+    expect(wav.getUint32(40, true)).toBe(9600 * 2);
+    expect(wav.getInt16(wav.byteLength - 2, true)).toBe(16384);
+  });
+
+  it('WebM은 기존 압축 녹음을 유지한다', async () => {
+    const input = { filename: 'recording.webm', blob: recording, peak: 0.5 };
+    const decode = vi.fn();
+    mockDecoder(decode);
+
+    await expect(normalizeRecordingForPlayback(input)).resolves.toBe(input);
+    expect(decode).not.toHaveBeenCalled();
+  });
+
+  it('AAC 디코딩에 실패하면 기존 분석용 파일을 유지한다', async () => {
+    const input = { filename: 'recording.m4a', blob: recording, peak: null };
+    mockDecoder(async () => {
+      throw new Error('unsupported recording');
+    });
+
+    await expect(normalizeRecordingForPlayback(input)).resolves.toBe(input);
   });
 });
