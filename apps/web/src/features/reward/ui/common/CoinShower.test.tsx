@@ -91,6 +91,22 @@ describe('CoinShower', () => {
 });
 
 describe('CoinShower 계측', () => {
+  it('점검 미리보기면 노출도 건너뛰기도 찍지 않는다', () => {
+    render(
+      <CoinShower
+        pill={PILL}
+        fromWon={2015}
+        toWon={2347}
+        onEnd={vi.fn()}
+        preview
+      />,
+    );
+
+    fireEvent.click(skip());
+
+    expect(analytics.track).not.toHaveBeenCalled();
+  });
+
   it('뜨는 순간 받은 금액과 함께 노출을 한 번 찍는다', () => {
     renderShower();
 
