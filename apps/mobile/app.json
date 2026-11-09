@@ -123,7 +123,10 @@
           "android": {
             "extraMavenRepos": [
               "https://devrepo.kakao.com/nexus/content/groups/public/"
-            ]
+            ],
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "# 카카오 SDK — https://developers.kakao.com/docs/ko/android/getting-started (프로가드 규칙)\n-keep class com.kakao.sdk.**.model.* { <fields>; }\n\n# https://github.com/square/okhttp/pull/6792\n-dontwarn org.bouncycastle.jsse.**\n-dontwarn org.conscrypt.*\n-dontwarn org.openjsse.**\n\n# refrofit2 (with r8 full mode)\n-if interface * { @retrofit2.http.* <methods>; }\n-keep,allowobfuscation interface <1>\n-keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation\n-if interface * { @retrofit2.http.* public *** *(...); }\n-keep,allowoptimization,allowshrinking,allowobfuscation class <3>\n-keep,allowobfuscation,allowshrinking class retrofit2.Response"
           },
           "ios": {
             "enableSceneSupport": true
@@ -223,7 +226,16 @@
       "expo-image",
       "expo-status-bar",
       "expo-web-browser",
-      ["@sentry/react-native/expo", { "organization": "saynow" }],
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "saynow",
+          "experimental_android": {
+            "enableAndroidGradlePlugin": true,
+            "uploadNativeSymbols": false
+          }
+        }
+      ],
       [
         "expo-image-picker",
         {
