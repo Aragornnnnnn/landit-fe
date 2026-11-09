@@ -63,6 +63,7 @@ export const ScenarioTalkFlow = ({
     finishedThought,
     speech,
     replay,
+    interruptible,
     input,
     resend,
     leave,
@@ -301,6 +302,7 @@ export const ScenarioTalkFlow = ({
         ) : typing ? null : (
           <MicControl
             phase={phase}
+            interruptible={interruptible}
             onPress={() => {
               guide.dismissHint();
               pressMic();

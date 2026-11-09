@@ -45,6 +45,7 @@ export type TalkScreenFlow = Pick<
   | 'speech'
   | 'waitingForSound'
   | 'replay'
+  | 'interruptible'
   | 'input'
   | 'resend'
 > & {
@@ -99,6 +100,7 @@ export const TalkScreen = ({
     speech,
     waitingForSound,
     replay,
+    interruptible,
     input,
     resend,
     pressClose,
@@ -301,6 +303,7 @@ export const TalkScreen = ({
             )}
             <MicControl
               phase={phase}
+              interruptible={interruptible}
               onPress={pressMic}
               onKeyboard={unlimited ? pressKeyboard : undefined}
               onCancel={cancelInput}

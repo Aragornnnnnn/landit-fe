@@ -15,10 +15,12 @@ import { showToast } from '@/shared/ui/toast';
 
 import type { NextMessage, SubmittedMessage } from '../api/session';
 import {
+  canInterruptSpeech,
   initialConversationState,
   nextConversationState,
   type ConversationEvent,
 } from './conversation-machine';
+import { SPEECH_INTERRUPT_ENABLED } from './interrupt-flag';
 import { expressionHoldMs, thoughtHoldMs, toThoughtType } from './pacing';
 import { sendWithResend } from './resend';
 import type { FloatingThought, ThoughtType } from './thought';
@@ -107,6 +109,8 @@ export const useConversationTurns = ({
 
   // send 클로저가 최신 값을 읽도록 ref로 들고 있는다
   const completedRef = useRef(false); // 그 발화를 끝으로 대화가 종료되는가
+  // 위와 같은 값을 화면용으로 — 종료 인사 중엔 끊기 버튼을 열지 않는다
+  const [closing, setClosing] = useState(false);
   const nextMessageRef = useRef<TurnNextMessage | null>(null);
   const submittingRef = useRef(false); // 중복 제출 방지 (연출은 AI_THINKING phase가 맡는다)
   const abandonedRef = useRef(false); // 대화를 떠났는가 — 재전송을 멈추고 늦은 실패도 버린다
@@ -141,9 +145,20 @@ export const useConversationTurns = ({
     passTurnOnStall: true,
   });
 
+  // 상대가 말하는 중에 끊고 바로 답할 수 있는가 — 차례가 넘어가면 재생 훅이 소리를 끊고, 글자는 전문으로 바뀐다
+  const interruptible = canInterruptSpeech({
+    enabled: SPEECH_INTERRUPT_ENABLED,
+    phase: state.phase,
+    hasMessage: currentMessage != null,
+    // 소리가 나기 전(음성 준비 중)엔 끊지 않는다 — 한 마디도 못 듣고 넘어가게 된다
+    soundStarted: !aiSpeech.waitingForSound,
+    completed: closing,
+  });
+
   // 유저 입력 — 마이크/키보드 전환과 STT 배선은 훅 안에, 여기서는 상태 전이와 제출만 잇는다
   const input = useConversationInput({
     canStart: state.phase === 'USER_READY' && !unsent,
+    canInterrupt: interruptible,
     trackContext: () => ({
       sessionId,
       turnIndex: state.turnIndex,
@@ -252,6 +267,7 @@ export const useConversationTurns = ({
       // 종료 인사도 nextMessage로 오고, 그 인사를 끝으로 종료인지는 completed가 알려준다 (인사 재생 후 CTA)
       nextMessageRef.current = res.nextMessage;
       completedRef.current = res.completed;
+      setClosing(res.completed);
       // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 준비한다 — 합성분은 미리 합성하고,
       // 질문 음원은 미리 열어 다음 발화 재생 지연을 없앤다
       if (res.nextMessage) aiSpeech.prefetch(res.nextMessage);
@@ -335,6 +351,7 @@ export const useConversationTurns = ({
     // 상대 차례인데 소리가 아직 안 났다 — 음성을 준비하는 중이다
     waitingForSound: aiSpeech.waitingForSound,
     replay,
+    interruptible,
     // 입력은 하위 훅 결과를 통째로 — 낱개 중계를 안 해야 input의 반환 형태에 flow가 결합하지 않는다
     input,
     abandon,

@@ -121,3 +121,43 @@ describe('MicControl 말한 뒤 확인', () => {
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('MicControl 상대 발화 끊기', () => {
+  const renderSpeaking = (interruptible?: boolean) => {
+    const onPress = vi.fn();
+    render(
+      <MicControl
+        phase="AI_SPEAKING"
+        onPress={onPress}
+        onKeyboard={vi.fn()}
+        onCancel={vi.fn()}
+        onDone={vi.fn()}
+        interruptible={interruptible}
+      />,
+    );
+    return onPress;
+  };
+
+  it('끊기가 허용되면 상대가 말하는 중에도 마이크를 누를 수 있다', async () => {
+    // Given: 상대가 말하는 중이고 끊기가 허용된 상태
+    const onPress = renderSpeaking(true);
+
+    // When: 마이크를 누르면
+    await userEvent.click(screen.getByRole('button', { name: '말하기' }));
+
+    // Then: 누른 것이 전달된다
+    expect(onPress).toHaveBeenCalledOnce();
+  });
+
+  it('끊기가 허용되면 상대가 말하는 중에도 키보드를 누를 수 있다', () => {
+    renderSpeaking(true);
+
+    expect(screen.getByRole('button', { name: '키보드로 입력' })).toBeEnabled();
+  });
+
+  it('끊기가 허용되지 않으면 상대가 말하는 중엔 마이크가 잠긴다', () => {
+    renderSpeaking();
+
+    expect(screen.getByRole('button', { name: '말하기' })).toBeDisabled();
+  });
+});
