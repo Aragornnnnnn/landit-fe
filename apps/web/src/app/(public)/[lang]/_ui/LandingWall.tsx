@@ -1,25 +1,22 @@
 'use client';
 
-// 시나리오 벽 — 비스듬히 깔린 카드 속에 오늘의 시나리오 한 장이 놓인다. 스크롤하면 줄이 엇갈려 움직이고, 벽이 화면 가운데로 오면 나머지가 어두워지며 오늘의 카드가 커진다. 오늘의 카드는 들어올 때마다 무작위로 뽑힌다
+// 시나리오 벽 — 비스듬히 깔린 카드 속에 오늘의 시나리오 한 장이 놓인다. 스크롤하면 줄이 엇갈려 움직이고, 벽이 화면 가운데로 오면 나머지가 어두워지며 오늘의 카드가 커진다. 카드 배치는 들어올 때마다 섞이고, 오늘의 카드는 재밌는 주제 중에서 무작위로 뽑힌다
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { useLocale } from 'next-intl';
 import Image from 'next/image';
 
 import { useInView } from '@/shared/lib/useInView';
 
-import {
-  buildWallRows,
-  pickToday,
-  TODAY_SCENARIO,
-  wallFocus,
-} from '../_model/scenario-wall';
+import { buildWall, wallFocus } from '../_model/scenario-wall';
 
-const ROWS = buildWallRows(4, 24);
-/** 서버와 첫 화면은 같은 카드로 그린다 */
-const SERVER_WALL = { rows: ROWS, today: TODAY_SCENARIO };
-/** 브라우저에선 페이지를 열 때 오늘의 시나리오를 무작위로 한 번만 뽑는다 */
+const ROW_COUNT = 4;
+const PER_ROW = 24;
+/** 서버와 첫 화면은 같은 벽으로 그린다 — 고정 난수로 짠다 */
+const SERVER_WALL = buildWall(ROW_COUNT, PER_ROW, () => 0);
+/** 브라우저에선 페이지를 열 때 벽을 무작위로 한 번만 새로 짠다 — 그림은 벽에 가까워질 때 받으므로 바뀌는 게 보이지 않는다 */
 let randomWall: typeof SERVER_WALL | null = null;
-const getRandomWall = () => (randomWall ??= pickToday(ROWS, Math.random()));
+const getRandomWall = () =>
+  (randomWall ??= buildWall(ROW_COUNT, PER_ROW, Math.random));
 const subscribeNever = () => () => {};
 /** 화면을 다 지나는 동안 줄이 움직이는 거리(px) */
 const TRAVEL = 560;

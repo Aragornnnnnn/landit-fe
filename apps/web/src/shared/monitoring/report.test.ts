@@ -1,11 +1,18 @@
+// @vitest-environment jsdom
 // monitoring — 보고 통로가 레벨·API 태그를 붙여 Sentry로 넘기는지 검증
 import { describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/shared/api/api-error';
 
-import { reportError, reportWarning, setMonitoringUser } from './report';
+import {
+  flushPendingReports,
+  reportError,
+  reportWarning,
+  setMonitoringUser,
+} from './report';
 
 const sentryMock = vi.hoisted(() => ({
+  isInitialized: vi.fn(() => true),
   captureException: vi.fn(),
   captureMessage: vi.fn(),
   setUser: vi.fn(),
@@ -88,6 +95,33 @@ describe('monitoring', () => {
       '속마음 생성 폴백 (timeout)',
       { level: 'warning', extra: { sessionId: 1 } },
     );
+  });
+});
+
+describe('Sentry 시작 전 보고', () => {
+  it('시작 전에 들어온 보고는 모아 뒀다가 시작 직후 순서대로 보낸다 — 앱 화면은 Sentry를 따로 받아서 시작이 늦다', () => {
+    // Given Sentry가 아직 시작 전일 때 보고 둘이 들어오면
+    sentryMock.captureException.mockClear();
+    sentryMock.captureMessage.mockClear();
+    sentryMock.isInitialized.mockReturnValue(false);
+    const error = new Error('boom');
+    reportError(error);
+    reportWarning('폴백');
+    expect(sentryMock.captureException).not.toHaveBeenCalled();
+
+    // When 시작한 뒤 모은 보고를 넘기면
+    sentryMock.isInitialized.mockReturnValue(true);
+    flushPendingReports();
+
+    // Then 들어온 순서대로 보내고, 다시 넘겨도 또 보내지 않는다
+    expect(sentryMock.captureException).toHaveBeenCalledWith(error, {
+      tags: undefined,
+    });
+    expect(sentryMock.captureMessage).toHaveBeenCalledWith('폴백', {
+      level: 'warning',
+    });
+    flushPendingReports();
+    expect(sentryMock.captureException).toHaveBeenCalledTimes(1);
   });
 });
 
