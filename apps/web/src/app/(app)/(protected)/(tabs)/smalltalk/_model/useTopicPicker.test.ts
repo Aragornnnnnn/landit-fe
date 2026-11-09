@@ -62,7 +62,7 @@ describe('useTopicPicker', () => {
 
     await act(async () => result.current.refreshTopics());
 
-    expect(showToast).toHaveBeenCalledWith('주제를 받아오지 못했어요');
+    expect(showToast).toHaveBeenCalledWith('주제를 받아오지 못했어요', 'error');
   });
 
   it('닫은 뒤에 실패가 돌아오면 알리지 않는다 — 이미 다른 화면을 보고 있다', async () => {

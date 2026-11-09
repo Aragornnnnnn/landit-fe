@@ -225,7 +225,7 @@ export const usePurchase = ({
           reason: 'no_response',
           ...promoTag,
         });
-        showToast(t('noResponseToast'));
+        showToast(t('noResponseToast'), 'error');
         return;
       }
       if (result.status === 'cancelled') {
@@ -239,7 +239,7 @@ export const usePurchase = ({
           message: result.message,
           ...promoTag,
         });
-        showToast(shellMessage(result.message) ?? t('failedToast'));
+        showToast(shellMessage(result.message) ?? t('failedToast'), 'error');
         return;
       }
 
@@ -284,7 +284,10 @@ export const usePurchase = ({
 
       if (!result || result.status === 'error') {
         track(EVENTS.PURCHASE_RESTORED, { succeeded: false });
-        showToast(shellMessage(result?.message) ?? t('restoreFailedToast'));
+        showToast(
+          shellMessage(result?.message) ?? t('restoreFailedToast'),
+          'error',
+        );
         return;
       }
 

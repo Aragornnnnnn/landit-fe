@@ -18,7 +18,7 @@ export const useStartReviewMutation = (reviewId: string) => {
     // 시작하지 못한 이유(기한·권한)는 서버 문구가 가장 정확하다. 원인은 따로 남긴다
     onError: (error) => {
       reportError(error);
-      showToast(error.message);
+      showToast(error.message, 'error');
     },
   });
 };

@@ -106,7 +106,7 @@ export const useSmallTalkFlow = ({
       if (talkClosed()) return null; // 이미 손을 뗀 대화 — 이 실패는 볼 일이 없다
       console.warn('[smalltalk] 종료 확인 전송 실패', cause);
       reportError(cause);
-      showToast(t('connectionToast'));
+      showToast(t('connectionToast'), 'error');
       leave();
       goHome();
       return null;
@@ -289,7 +289,7 @@ export const useSmallTalkFlow = ({
     } catch (cause) {
       console.warn('[smalltalk] 직접 완료 전송 실패', cause);
       reportError(cause);
-      showToast(t('completeFailedToast'));
+      showToast(t('completeFailedToast'), 'error');
       leave();
       goHome();
       return;

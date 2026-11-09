@@ -106,7 +106,7 @@ export const useConversationInput = ({
     });
     if (!content) {
       haptic('error');
-      showToast(t('notRecognizedToast'));
+      showToast(t('notRecognizedToast'), 'warning');
       track(EVENTS.TURN_FAILED, {
         session_id: sessionId ?? undefined,
         turn_index: turnIndex,
@@ -144,7 +144,7 @@ export const useConversationInput = ({
         });
       }
     } else {
-      showToast(t('sttErrorToast'));
+      showToast(t('sttErrorToast'), 'error');
       track(EVENTS.SPEECH_RECOGNITION_FAILED, {
         session_id: trackContext().sessionId ?? undefined,
         engine: meta.engine,

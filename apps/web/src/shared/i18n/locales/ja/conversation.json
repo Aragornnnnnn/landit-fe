@@ -64,7 +64,7 @@
     "continueButton": "続ける"
   },
   "conversationTurns": {
-    "connectionToast": "接続に問題が発生しました。しばらくしてからもう一度お試しください"
+    "connectionToast": "接続に問題が発生しました。時間をおいて再度お試しください"
   },
   "conversationInput": {
     "notRecognizedToast": "うまく聞き取れませんでした。もう一度話してみましょうか？",

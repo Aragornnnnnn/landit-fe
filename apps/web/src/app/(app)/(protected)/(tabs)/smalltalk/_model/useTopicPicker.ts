@@ -37,7 +37,7 @@ export const useTopicPicker = ({ partner, refresh }: TopicPickerOptions) => {
     setRefreshing(true);
     const { isError } = await refresh();
     setRefreshing(false);
-    if (isError && isOpenRef.current) showToast(t('loadFailedToast'));
+    if (isError && isOpenRef.current) showToast(t('loadFailedToast'), 'error');
   };
 
   return {

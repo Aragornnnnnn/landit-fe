@@ -226,7 +226,7 @@ export const useConversationTurns = ({
         console.warn('[conversation] 세션이 없어 제출할 수 없어요');
         haptic('error');
         send('AI_RESPONSE_FAILED');
-        showToast(t('connectionToast'));
+        showToast(t('connectionToast'), 'error');
         track(EVENTS.TURN_FAILED, {
           turn_index: state.turnIndex,
           reason: 'api_error',

@@ -23,5 +23,10 @@
     "title": "問題が発生しました",
     "description": "しばらくしてからもう一度お試しください",
     "retryButton": "もう一度試す"
+  },
+  "toast": {
+    "successLabel": "成功",
+    "warningLabel": "注意",
+    "errorLabel": "エラー"
   }
 }
