@@ -6,6 +6,7 @@ import Image from 'next/image';
 
 import {
   revealMask,
+  SLIDE_HIDDEN,
   slideShift,
   type RevealOrigin,
 } from '../_model/reveal-clip';
@@ -45,7 +46,7 @@ export const ScreenSwap = ({
       const { top, height } = stage.getBoundingClientRect();
       const progress = swapProgress(top + height / 2, window.innerHeight);
       if (transition.type === 'slide') {
-        const shift = slideShift(progress);
+        const shift = slideShift(progress, phone.getBoundingClientRect().width);
         firstLayer.style.transform = shift.first;
         nextLayer.style.transform = shift.next;
         return;
@@ -83,7 +84,7 @@ export const ScreenSwap = ({
         className="absolute inset-0"
         style={
           transition.type === 'slide'
-            ? { transform: slideShift(0).next }
+            ? { transform: SLIDE_HIDDEN }
             : { maskImage: HIDDEN, WebkitMaskImage: HIDDEN }
         }
       >

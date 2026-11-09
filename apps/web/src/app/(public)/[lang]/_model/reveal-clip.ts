@@ -24,8 +24,22 @@ export const revealMask = (
   return `radial-gradient(circle at ${origin.x}% ${origin.y}%, #000 ${Math.max(0, radius - FEATHER)}px, transparent ${radius}px)`;
 };
 
-/** 좌우로 밀어 넘기기 — 첫 화면은 왼쪽으로 나가고 다음 화면이 오른쪽에서 들어온다. 비슷한 두 장면도 다른 장면으로 넘어간 게 바로 보인다 */
-export const slideShift = (progress: number) => ({
-  first: `translateX(${progress === 0 ? 0 : -Math.round(progress * 1000) / 10}%)`,
-  next: `translateX(${Math.round((1 - progress) * 1000) / 10}%)`,
-});
+/** 다음 화면을 오른쪽 밖에 두는 위치 — 크기를 재기 전 첫 그리기 때와 아직 밀기 전에 쓴다 */
+export const SLIDE_HIDDEN = 'translate3d(100%, 0, 0)';
+
+/**
+ * 좌우로 밀어 넘기기 — 첫 화면은 왼쪽으로 나가고 다음 화면이 오른쪽에서 들어온다. 비슷한 두 장면도 다른 장면으로 넘어간 게 바로 보인다
+ * @param width 폰 화면 폭(px) — 정수 픽셀로만 옮겨야 줄여 그린 캡처의 글자가 스크롤마다 다시 섞여 그려지며 흔들리지 않는다
+ */
+export const slideShift = (progress: number, width: number) => {
+  // 내림해 두 화면이 1px 아래로 살짝 겹치게 한다 — 올리면 그 사이로 틈이 비친다
+  const total = Math.floor(width);
+  const shift = Math.round(progress * total);
+  // 밀기 전엔 다음 화면을 폭 전체만큼 밖에 둔다 — 내림한 폭으로 두면 오른쪽 끝에 1px 아래 조각이 비친다
+  if (shift === 0)
+    return { first: 'translate3d(0px, 0, 0)', next: SLIDE_HIDDEN };
+  return {
+    first: `translate3d(${-shift}px, 0, 0)`,
+    next: `translate3d(${total - shift}px, 0, 0)`,
+  };
+};

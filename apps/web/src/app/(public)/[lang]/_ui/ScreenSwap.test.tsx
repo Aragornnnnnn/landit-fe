@@ -36,6 +36,9 @@ const scrollPhoneTo = (container: HTMLElement, ratio: number) => {
   const stage = container.firstElementChild as HTMLElement;
   stage.getBoundingClientRect = () =>
     ({ top: window.innerHeight * ratio - 300, height: 600 }) as DOMRect;
+  // 폰 화면 폭 — 좌우로 넘길 때 이 폭만큼 민다
+  const phone = stage.firstElementChild as HTMLElement;
+  phone.getBoundingClientRect = () => ({ width: 290, height: 600 }) as DOMRect;
   act(() => {
     window.dispatchEvent(new Event('scroll'));
   });
@@ -91,13 +94,13 @@ describe('ScreenSwap', () => {
     // Given
     const { container } = renderSwap({ type: 'slide' });
     scrollPhoneTo(container, 0.8);
-    expect(nextLayer().style.transform).toBe('translateX(100%)');
+    expect(nextLayer().style.transform).toBe('translate3d(100%, 0, 0)');
 
     // When
     scrollPhoneTo(container, 0.2);
 
     // Then
-    expect(firstLayer().style.transform).toBe('translateX(-100%)');
-    expect(nextLayer().style.transform).toBe('translateX(0%)');
+    expect(firstLayer().style.transform).toBe('translate3d(-290px, 0, 0)');
+    expect(nextLayer().style.transform).toBe('translate3d(0px, 0, 0)');
   });
 });

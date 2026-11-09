@@ -31,21 +31,35 @@ describe('revealMask', () => {
 });
 
 describe('slideShift', () => {
-  it('진행도 0이면 첫 화면은 제자리, 다음 화면은 오른쪽 밖에 있다', () => {
-    expect(slideShift(0)).toEqual({
-      first: 'translateX(0%)',
-      next: 'translateX(100%)',
-    });
+  it('밀기 전엔 첫 화면은 제자리, 다음 화면은 폭 전체만큼 오른쪽 밖에 있다 — 소수점 폭이어도 끝에 조각이 비치지 않는다', () => {
+    for (const progress of [0, 0.001]) {
+      expect(slideShift(progress, 290.7)).toEqual({
+        first: 'translate3d(0px, 0, 0)',
+        next: 'translate3d(100%, 0, 0)',
+      });
+    }
   });
 
   it('진행도만큼 첫 화면은 왼쪽으로 나가고 다음 화면이 오른쪽에서 들어온다', () => {
-    expect(slideShift(0.25)).toEqual({
-      first: 'translateX(-25%)',
-      next: 'translateX(75%)',
+    expect(slideShift(1, 290)).toEqual({
+      first: 'translate3d(-290px, 0, 0)',
+      next: 'translate3d(0px, 0, 0)',
     });
-    expect(slideShift(1)).toEqual({
-      first: 'translateX(-100%)',
-      next: 'translateX(0%)',
+  });
+
+  it('소수점 픽셀로 옮기지 않는다 — 글자가 스크롤마다 다시 섞여 그려져 흔들려 보인다', () => {
+    // 290px의 0.3 = 87px, 1px 아래 자투리가 나오는 폭(290.4px)에서도 정수로 맞춘다
+    expect(slideShift(0.3, 290.4)).toEqual({
+      first: 'translate3d(-87px, 0, 0)',
+      next: 'translate3d(203px, 0, 0)',
     });
+  });
+
+  it('두 화면 사이에 틈이 생기지 않는다 — 두 위치의 차이가 늘 내림한 화면 폭이라 살짝 겹친다', () => {
+    for (const progress of [0.13, 0.37, 0.5, 0.71, 0.99]) {
+      const { first, next } = slideShift(progress, 290.7);
+      const px = (value: string) => Number(value.match(/\((-?\d+)px/)?.[1]);
+      expect(px(next) - px(first)).toBe(290);
+    }
   });
 });
