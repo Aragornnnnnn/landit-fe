@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import { useBackPress } from '@/shared/bridge/useBackPress';
-import { haptic } from '@/shared/haptics';
+import { hapticRhythm } from '@/shared/haptics';
 import type { PreloadableImage } from '@/shared/lib/preload-next-images';
 import { EASE_STANDARD } from '@/shared/motion';
 import { burstConfetti } from '@/shared/motion/confetti';
@@ -79,12 +79,17 @@ export const ReviewComplete = ({
   useEffect(() => {
     if (!justFinished || !perfect) return;
 
-    const timer = setTimeout(() => {
-      burstConfetti({ withCenter: false });
-      haptic('celebrate');
-    }, paintedMs);
+    const timer = setTimeout(
+      () => burstConfetti({ withCenter: false }),
+      paintedMs,
+    );
+    // 폭죽이 터지는 순간 팡 리듬이 같이 시작한다
+    const stopRhythm = hapticRhythm('burst', { startAt: paintedMs });
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      stopRhythm();
+    };
   }, [justFinished, perfect, paintedMs]);
 
   return (

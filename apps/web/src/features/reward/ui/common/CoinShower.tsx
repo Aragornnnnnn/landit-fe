@@ -9,7 +9,7 @@ import { motion } from 'motion/react';
 import { createPortal } from 'react-dom';
 
 import { track } from '@/shared/analytics';
-import { haptic } from '@/shared/haptics';
+import { hapticRhythm } from '@/shared/haptics';
 import { formatWon } from '@/shared/lib/won';
 
 import { Coin } from './Coin';
@@ -25,6 +25,8 @@ import {
 const POP = 0.05;
 const FLY = 0.8;
 const LAND = FLY + 0.42;
+// 숫자 리듬은 동전 리듬의 마지막 성공(닿는 순간)이 끝난 뒤, 금액이 오르는 도중에 시작한다
+const COUNT_RHYTHM_AT = LAND + 0.15;
 // 숫자가 다 오르고(CountUpWon의 0.9초) 잠깐 머문 뒤 어둠이 걷히기까지
 const TOTAL = LAND + 1.5;
 // 잔동전 하나가 날아가는 시간과, 다음 동전이 따라 나서는 간격
@@ -93,12 +95,17 @@ export const CoinShower = ({
   );
   useEffect(() => {
     reportViewed();
-    // 동전이 알약에 닿는 순간 축하 진동 — 건너뛰어 닫히면 닿는 순간이 오지 않으니 울리지 않는다
-    const landTimer = setTimeout(() => haptic('celebrate'), LAND * 1000);
+    // 동전이 날아가는 동안 또각또각 울리다 알약에 닿는 순간 성공, 이어 금액이 오르는 동안 숫자 리듬.
+    // 건너뛰어 닫히면 남은 박자도 멈춘다
+    const stopCoins = hapticRhythm('coins', { endAt: LAND * 1000 });
+    const stopCount = hapticRhythm('countUp', {
+      startAt: COUNT_RHYTHM_AT * 1000,
+    });
     const endTimer = setTimeout(end, TOTAL * 1000);
     return () => {
-      clearTimeout(landTimer);
       clearTimeout(endTimer);
+      stopCoins();
+      stopCount();
     };
   }, []);
 

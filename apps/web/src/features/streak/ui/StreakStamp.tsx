@@ -8,7 +8,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import { useLocale, useTranslations } from 'next-intl';
 import Image from 'next/image';
 
-import { haptic } from '@/shared/haptics';
+import { hapticRhythm } from '@/shared/haptics';
 import { EASE_STANDARD } from '@/shared/motion';
 
 import { celebrationOf } from '../model/celebration';
@@ -195,13 +195,17 @@ const StreakRun = ({
   const [stamped, setStamped] = useState(!animated);
   useEffect(() => {
     if (!stamping) return;
-    // 오늘 칸이 차는 순간 축하 진동을 같이 준다 — 동작 줄이기로 연출이 없으면 기다리지 않고 바로 울린다
-    const fillAt = animated ? FILL_DELAY * 1000 : 0;
-    const timer = setTimeout(() => {
-      if (animated) setStamped(true);
-      haptic('celebrate');
-    }, fillAt);
-    return () => clearTimeout(timer);
+    // 차오름 리듬의 마지막 성공이 오늘 칸이 차는 순간에 온다 — 동작 줄이기로 연출이 없으면 기다리지 않고 바로 울린다
+    const stopRhythm = hapticRhythm('rise', {
+      endAt: animated ? FILL_DELAY * 1000 : 0,
+    });
+    const fillTimer = animated
+      ? setTimeout(() => setStamped(true), FILL_DELAY * 1000)
+      : undefined;
+    return () => {
+      clearTimeout(fillTimer);
+      stopRhythm();
+    };
   }, [animated, stamping]);
 
   return (
