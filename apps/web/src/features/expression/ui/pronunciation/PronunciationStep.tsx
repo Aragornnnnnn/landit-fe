@@ -20,6 +20,7 @@ import type {
   PronunciationWord,
 } from '../../api/pronunciation';
 import { isSilentRecording } from '../../lib/sentence-recording';
+import { createWordClips } from '../../lib/word-playback';
 import { toFeedbackCards } from '../../model/pronunciation-feedback';
 import { isLowScoreWord, scoreView } from '../../model/pronunciation-score';
 import { useAudioPlayer } from '../../model/useAudioPlayer';
@@ -65,6 +66,13 @@ interface PronunciationStepProps {
 
 type Phase = 'ready' | 'recording' | 'analyzing' | 'failed' | 'feedback';
 
+type RecordingPlayback = { sentenceUrl: string; wordUrls: Map<number, string> };
+
+const revokePlayback = ({ sentenceUrl, wordUrls }: RecordingPlayback) => {
+  URL.revokeObjectURL(sentenceUrl);
+  for (const url of wordUrls.values()) URL.revokeObjectURL(url);
+};
+
 // 녹음을 다시 유도하는 안내 문구 키(expression.pronunciationStep)
 type NoticeKey = 'micStartError' | 'silentError' | 'invalidAudioError';
 
@@ -90,12 +98,16 @@ export const PronunciationStep = ({
 }: PronunciationStepProps) => {
   const t = useTranslations('expression.pronunciationStep');
   const [phase, setPhase] = useState<Phase>('ready');
-  const [analysis, setAnalysis] = useState<PronunciationAnalysis | null>(null);
+  const [evaluation, setEvaluation] = useState<{
+    analysis: PronunciationAnalysis;
+    playback: RecordingPlayback;
+  } | null>(null);
+  const analysis = evaluation?.analysis ?? null;
   const [micSheetOpen, setMicSheetOpen] = useState(false);
   // 녹음이 잘못됐을 때(빈 녹음·INVALID_AUDIO) 다시 유도하는 안내 문구
   const [notice, setNotice] = useState<NoticeKey | null>(null);
   // 내 녹음 재생용 object URL — 새 녹음이 오면 이전 것을 해제한다
-  const recordingUrlRef = useRef<string | null>(null);
+  const playbackRef = useRef<RecordingPlayback | null>(null);
   // 분석 회차 — 재도전 포함 몇 번째 결과인지 계측에 싣는다
   const attemptRef = useRef(0);
   // 통과 리듬을 멈추는 함수 — 리듬이 끝나기 전에 다음 화면으로 넘어가면 남은 박자를 거기까지 끌고 가지 않는다
@@ -107,7 +119,8 @@ export const PronunciationStep = ({
 
   useEffect(
     () => () => {
-      if (recordingUrlRef.current) URL.revokeObjectURL(recordingUrlRef.current);
+      if (playbackRef.current) revokePlayback(playbackRef.current);
+      playbackRef.current = null;
       stopRhythmRef.current();
     },
     [],
@@ -172,15 +185,27 @@ export const PronunciationStep = ({
 
     setPhase('analyzing');
     analysisMutation.mutate(recording, {
-      onSuccess: (result) => {
+      onSuccess: ({ analysis: result, playback: analyzedRecording }) => {
         // 재생용 음원은 결과가 온 다음에 갈아끼운다 — 분석이 실패해 이전 피드백으로
         // 되돌아가면 화면의 단어 구간은 이전 녹음 기준이라, 음원만 새것이면 엉뚱한 데가 나온다
-        if (recordingUrlRef.current) {
-          // 재생 중이던 이전 녹음을 멈추고 해제 — 끊긴 URL로 재생 상태가 굳지 않게
+        if (playbackRef.current) {
           player.stop();
-          URL.revokeObjectURL(recordingUrlRef.current);
+          revokePlayback(playbackRef.current);
         }
-        recordingUrlRef.current = URL.createObjectURL(recording.blob);
+        const words = scoreView(result).perfect
+          ? []
+          : toFeedbackCards(result.words).map(({ word }) => word);
+        const clips = createWordClips(analyzedRecording.audio, words);
+        const playback: RecordingPlayback = {
+          sentenceUrl: URL.createObjectURL(analyzedRecording.blob),
+          wordUrls: new Map(
+            [...clips].map(([order, clip]) => [
+              order,
+              URL.createObjectURL(clip),
+            ]),
+          ),
+        };
+        playbackRef.current = playback;
         attemptRef.current += 1;
         track(EVENTS.PRONUNCIATION_RESULT_VIEWED, {
           expression_id: expressionId,
@@ -194,7 +219,7 @@ export const PronunciationStep = ({
         // 결과가 뜨는 순간 — 통과면 축하, 아니면 다시 해 보자는 막힘이지 실패가 아니다
         if (result.passed) stopRhythmRef.current = hapticRhythm('burst');
         else haptic('warning');
-        setAnalysis(result);
+        setEvaluation({ analysis: result, playback });
         setPhase('feedback');
         onSettled?.();
       },
@@ -238,9 +263,11 @@ export const PronunciationStep = ({
   };
   // 내 녹음 전체 재생 — 피드백 말풍선에서 원어민 전체 문장과 나란히 비교해 듣는다
   const playMySentence = () => {
-    if (!recordingUrlRef.current) return;
+    if (!evaluation) return;
     trackAudioPlayed(MY_SENTENCE_AUDIO_ID, 'compare_mine');
-    player.toggle(recordingUrlRef.current, { id: MY_SENTENCE_AUDIO_ID });
+    player.toggle(evaluation.playback.sentenceUrl, {
+      id: MY_SENTENCE_AUDIO_ID,
+    });
   };
   const playNativeWord = (word: PronunciationWord) => {
     if (word.nativeWordAudioUrl) {
@@ -251,17 +278,11 @@ export const PronunciationStep = ({
     }
   };
   const playMyWord = (word: PronunciationWord) => {
-    if (
-      recordingUrlRef.current &&
-      word.startTimeMs !== null &&
-      word.endTimeMs !== null
-    ) {
-      trackAudioPlayed(myWordAudioId(word.order), 'my_word');
-      player.toggle(recordingUrlRef.current, {
-        id: myWordAudioId(word.order),
-        segment: { startMs: word.startTimeMs, endMs: word.endTimeMs },
-      });
-    }
+    const url = evaluation?.playback.wordUrls.get(word.order);
+    if (!url) return;
+    const id = myWordAudioId(word.order);
+    trackAudioPlayed(id, 'my_word');
+    player.toggle(url, { id });
   };
 
   const nativeSentencePlaying = player.playingId === NATIVE_SENTENCE_AUDIO_ID;
@@ -373,6 +394,9 @@ export const PronunciationStep = ({
                 disabled={listenBlocked}
                 playingId={player.playingId}
                 onPlayNative={playNativeWord}
+                canPlayMine={(word) =>
+                  evaluation?.playback.wordUrls.has(word.order) ?? false
+                }
                 onPlayMine={playMyWord}
               />
             </>
