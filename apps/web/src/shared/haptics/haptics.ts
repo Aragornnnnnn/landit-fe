@@ -30,6 +30,21 @@ const lastFiredAt: Partial<Record<HapticKind, number>> = {};
 const now = () =>
   typeof performance !== 'undefined' ? performance.now() : Date.now();
 
+// 진동을 막아 둔 곳의 수 — 녹음처럼 여러 곳이 겹쳐 막을 수 있어 모두 풀려야 다시 울린다
+let muteCount = 0;
+
+// 녹음하는 동안 진동을 막는다 — 진동 모터 소리가 녹음에 섞이면 음성 인식·발음 평가에 잡음이 된다.
+// 돌려받은 함수로 푼다. 여러 번 불러도 한 번만 풀려 남이 막아 둔 것까지 풀지 않는다
+export const muteHaptics = () => {
+  muteCount += 1;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    muteCount -= 1;
+  };
+};
+
 // 셸 밖(브라우저)은 iOS 표를 쓴다 — 폴백 진동은 길이만 다를 뿐 차이가 작다. 진동마다 주입값을 다시 파싱하지 않게 스냅샷을 쓴다
 const currentPlatform = (): HapticPlatform =>
   getNativeContextSnapshot()?.platform === 'android' ? 'android' : 'ios';
@@ -38,6 +53,7 @@ const currentPlatform = (): HapticPlatform =>
 export const haptic = (kind: HapticKind) => {
   // 마이페이지에서 진동을 끈 사람에겐 아무 것도 울리지 않는다
   if (!isHapticsEnabled()) return;
+  if (muteCount > 0) return;
 
   const at = now();
   if (at - (lastFiredAt[kind] ?? -Infinity) < MIN_INTERVAL_MS) return;

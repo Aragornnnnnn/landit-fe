@@ -1,5 +1,11 @@
 // 동전 연출 검증 — 그림과 움직임은 보지 않고, 동전 개수 규칙과 끝내는 조작만 본다
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { coinCountOf, CoinShower } from './CoinShower';
@@ -7,6 +13,8 @@ import { coinCountOf, CoinShower } from './CoinShower';
 vi.mock('next/image', () => ({ default: () => <span /> }));
 const analytics = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/shared/analytics', () => ({ track: analytics.track }));
+const hapticMock = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/haptics', () => ({ haptic: hapticMock }));
 
 const PILL = { left: 20, top: 12, width: 96, height: 32 };
 const renderShower = (onEnd = vi.fn()) => {
@@ -32,6 +40,28 @@ describe('coinCountOf', () => {
 });
 
 describe('CoinShower', () => {
+  it('동전이 알약에 닿는 순간 celebrate를 한 번 울린다', () => {
+    vi.useFakeTimers();
+    renderShower();
+    expect(hapticMock).not.toHaveBeenCalled();
+
+    act(() => vi.advanceTimersByTime(10_000));
+
+    expect(hapticMock).toHaveBeenCalledTimes(1);
+    expect(hapticMock).toHaveBeenCalledWith('celebrate');
+  });
+
+  it('건너뛰면 닿는 순간이 오지 않으니 울리지 않는다', () => {
+    vi.useFakeTimers();
+    renderShower();
+
+    fireEvent.click(skip());
+    cleanup();
+    act(() => vi.advanceTimersByTime(10_000));
+
+    expect(hapticMock).not.toHaveBeenCalled();
+  });
+
   it('받은 금액을 크게 보여 준다', () => {
     renderShower();
 

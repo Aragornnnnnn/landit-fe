@@ -120,6 +120,8 @@ export const useConversationInput = ({
       return;
     }
     retryFromRef.current = null;
+    // 들었다는 표시 — 화면을 안 봐도 내 말이 들어간 걸 손으로 안다 (녹음이 끝난 뒤라 녹음에 섞이지 않는다)
+    haptic('tick');
     // 보내기 전에 한 번 보여 준다 — 발음 때문에 잘못 알아들은 문장이 그대로 가지 않게
     setTranscript(content);
     setSpeechPending(false);

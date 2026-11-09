@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import { useBackPress } from '@/shared/bridge/useBackPress';
+import { haptic } from '@/shared/haptics';
 import type { PreloadableImage } from '@/shared/lib/preload-next-images';
 import { EASE_STANDARD } from '@/shared/motion';
 import { burstConfetti } from '@/shared/motion/confetti';
@@ -78,10 +79,10 @@ export const ReviewComplete = ({
   useEffect(() => {
     if (!justFinished || !perfect) return;
 
-    const timer = setTimeout(
-      () => burstConfetti({ withCenter: false }),
-      paintedMs,
-    );
+    const timer = setTimeout(() => {
+      burstConfetti({ withCenter: false });
+      haptic('celebrate');
+    }, paintedMs);
 
     return () => clearTimeout(timer);
   }, [justFinished, perfect, paintedMs]);

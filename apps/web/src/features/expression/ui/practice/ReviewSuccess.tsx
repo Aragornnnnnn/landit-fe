@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
+import { haptic } from '@/shared/haptics';
 import { burstConfetti } from '@/shared/motion/confetti';
 import { Button } from '@/shared/ui/Button';
 import { CheckIcon } from '@/shared/ui/Icons';
@@ -24,9 +25,10 @@ export const ReviewSuccess = ({
   finishing,
 }: ReviewSuccessProps) => {
   const t = useTranslations('expression.reviewSuccess');
-  // 정답 순간 콘페티 — 브랜드 색으로 양쪽에서 터뜨린다
+  // 정답 순간 콘페티 — 브랜드 색으로 양쪽에서 터뜨리고, 표현을 얻은 성취라 축하 진동을 같이 준다
   useEffect(() => {
     burstConfetti();
+    haptic('celebrate');
   }, []);
 
   return (

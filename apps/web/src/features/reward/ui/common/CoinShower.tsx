@@ -9,6 +9,7 @@ import { motion } from 'motion/react';
 import { createPortal } from 'react-dom';
 
 import { track } from '@/shared/analytics';
+import { haptic } from '@/shared/haptics';
 import { formatWon } from '@/shared/lib/won';
 
 import { Coin } from './Coin';
@@ -92,8 +93,13 @@ export const CoinShower = ({
   );
   useEffect(() => {
     reportViewed();
-    const timer = setTimeout(end, TOTAL * 1000);
-    return () => clearTimeout(timer);
+    // 동전이 알약에 닿는 순간 축하 진동 — 건너뛰어 닫히면 닿는 순간이 오지 않으니 울리지 않는다
+    const landTimer = setTimeout(() => haptic('celebrate'), LAND * 1000);
+    const endTimer = setTimeout(end, TOTAL * 1000);
+    return () => {
+      clearTimeout(landTimer);
+      clearTimeout(endTimer);
+    };
   }, []);
 
   const from = { x: window.innerWidth / 2, y: window.innerHeight * 0.4 };

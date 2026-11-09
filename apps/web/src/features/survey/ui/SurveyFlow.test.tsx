@@ -15,6 +15,8 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: vi.fn(), back: vi.fn() }),
 }));
 vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
+const hapticMock = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/haptics', () => ({ haptic: hapticMock }));
 // 연출은 순수 DOM으로 치환한다 — 대역이 하는 일은 shared/motion/test-double 참고
 vi.mock('motion/react', () => import('@/shared/motion/test-double'));
 // 화면은 member만 읽고, api 클라이언트는 getState로 토큰을 읽는다
@@ -186,6 +188,7 @@ describe('SurveyFlow', () => {
     );
 
     expect(await screen.findByText('소중한 의견 고마워요!')).toBeTruthy();
+    expect(hapticMock).toHaveBeenCalledWith('success');
     const [url, init] = fetchMock.mock.calls.at(-1)!;
     expect(url).toBe('/api/survey');
     expect(init.headers.get('Authorization')).toBe('Bearer token');
@@ -211,6 +214,8 @@ describe('SurveyFlow', () => {
     expect(
       await screen.findByRole('button', { name: '건너뛰고 제출하기' }),
     ).toBeTruthy();
+    expect(hapticMock).toHaveBeenCalledWith('error');
+    expect(hapticMock).not.toHaveBeenCalledWith('success');
   });
 
   it('시작·문항 노출·제출 성공을 계측한다 — 답 내용은 싣지 않는다', async () => {

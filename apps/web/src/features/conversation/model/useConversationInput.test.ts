@@ -21,6 +21,8 @@ const trackMock = vi.hoisted(() => vi.fn());
 vi.mock('@/shared/analytics', () => ({ track: trackMock }));
 const toastMock = vi.hoisted(() => vi.fn());
 vi.mock('@/shared/ui/toast', () => ({ showToast: toastMock }));
+const hapticMock = vi.hoisted(() => vi.fn());
+vi.mock('@/shared/haptics', () => ({ haptic: hapticMock }));
 
 const FINAL_META: SttResultMeta = {
   engine: 'deepgram',
@@ -161,6 +163,25 @@ describe('useConversationInput', () => {
 
     expect(onContent).toHaveBeenCalledWith('Hello there.', 'VOICE', 3200);
     vi.useRealTimers();
+  });
+
+  it('말이 확정되면 들었다는 tick을 준다 — 화면을 안 봐도 내 말이 들어간 걸 손으로 안다', () => {
+    const { result } = renderInput();
+
+    act(() => result.current.pressMic());
+    act(() => sttMock.callbacks.onFinal?.('Hello there.', FINAL_META));
+
+    expect(hapticMock).toHaveBeenCalledWith('tick');
+  });
+
+  it('못 알아들었으면 tick 대신 다시 말해 보라는 warning을 준다', () => {
+    const { result } = renderInput();
+
+    act(() => result.current.pressMic());
+    act(() => sttMock.callbacks.onFinal?.('   ', FINAL_META));
+
+    expect(hapticMock).toHaveBeenCalledWith('warning');
+    expect(hapticMock).not.toHaveBeenCalledWith('tick');
   });
 
   it('최종 텍스트가 공백뿐이면 전달하지 않고 듣기 취소로 되돌린다', () => {
