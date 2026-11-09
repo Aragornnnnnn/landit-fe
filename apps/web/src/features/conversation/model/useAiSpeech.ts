@@ -421,6 +421,15 @@ export const useAiSpeech = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, source?.content, source?.ttsText, source?.questionAudioUrl]);
 
+  // 남겨 둔 소리는 발화 중이거나 다시 듣기 구간일 때만 산다 — 둘 다 아니게 되는 순간(끊고 곧장 녹음) 끊는다.
+  // 멈춤으로 턴을 넘긴 직후 내가 끊으면 다시 듣기 구간을 거치지 않아 위의 허용 구간 정리가 돌지 않는다.
+  // 위 재생 effect 뒤에 두어, 같은 순간 넘겨받은 소리까지 끊는다
+  const lingeringAllowed = playing || replayAllowed;
+  useEffect(() => {
+    if (!lingeringAllowed) return;
+    return () => stopLingering();
+  }, [lingeringAllowed]);
+
   // 화면을 떠나면 남겨 둔 소리도 끊는다 — 위 effect 뒤에 두어, 같은 순간에 넘겨받은 소리까지 끊는다
   useEffect(() => stopLingering, []);
 

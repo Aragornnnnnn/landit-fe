@@ -948,6 +948,19 @@ describe('재생이 멈췄을 때', () => {
     expect(onSpeechEnd).not.toHaveBeenCalled();
   });
 
+  it('멈춰 턴을 넘긴 순간 내가 말하기 시작했으면 남은 소리를 끊는다 — 끊기와 멈춤이 겹쳐도 녹음에 섞이지 않게', async () => {
+    // Given: 멈춰서 턴을 넘겼지만, 그 사이 내가 끊고 말하기 시작해 다시 듣기 허용 구간을 거치지 않았다
+    const { rerender, initialProps } = renderTurn({ replayAllowed: false });
+    await stall();
+    ttsMock.stop.mockClear();
+
+    // When: 발화 단계를 벗어나 곧장 내 녹음으로 간다
+    rerender({ ...initialProps, playing: false, replayAllowed: false });
+
+    // Then: 남겨 둘 이유가 없는 소리는 끊긴다
+    expect(ttsMock.stop).toHaveBeenCalled();
+  });
+
   it('멈추면 발화를 끝내 내 차례로 넘긴다', async () => {
     // Given
     const { onSpeechEnd } = renderTurn();
