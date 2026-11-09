@@ -115,7 +115,7 @@ export const useMakeScenario = ({
       }
       // 적은 글은 그대로 두고 입력으로 돌려보낸다
       setGenerating(false);
-      showToast(t('failToast'));
+      showToast(t('failToast'), 'error');
       return;
     }
     // 화면을 떠났어도 시나리오는 만들어졌으니 계측은 남긴다

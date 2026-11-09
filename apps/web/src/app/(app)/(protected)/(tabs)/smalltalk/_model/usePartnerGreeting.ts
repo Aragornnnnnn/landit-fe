@@ -45,6 +45,8 @@ export const usePartnerGreeting = () => {
     source: { content: partner.intro },
     voice: partner.voice,
     openingSrc: partner.introAudioSrc,
+    // 누르기 전에 받아 둔다 — 누른 순간 받기 시작하면 소리가 그만큼 늦게 난다
+    preloadOpening: true,
     onSpeechEnd: () => setGreeting(false),
   });
 

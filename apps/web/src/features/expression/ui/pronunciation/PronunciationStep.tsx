@@ -10,6 +10,7 @@ import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
 import { track } from '@/shared/analytics';
 import { ApiError } from '@/shared/api/api-error';
+import { haptic, hapticRhythm } from '@/shared/haptics';
 import { lineBreak } from '@/shared/i18n/rich';
 import { isMicPermissionDeniedError } from '@/shared/stt/errors';
 import { Button } from '@/shared/ui/Button';
@@ -97,6 +98,8 @@ export const PronunciationStep = ({
   const recordingUrlRef = useRef<string | null>(null);
   // 분석 회차 — 재도전 포함 몇 번째 결과인지 계측에 싣는다
   const attemptRef = useRef(0);
+  // 통과 리듬을 멈추는 함수 — 리듬이 끝나기 전에 다음 화면으로 넘어가면 남은 박자를 거기까지 끌고 가지 않는다
+  const stopRhythmRef = useRef(() => {});
 
   const recorder = useSentenceRecorder();
   const analysisMutation = usePronunciationAnalysisMutation(expressionId);
@@ -105,6 +108,7 @@ export const PronunciationStep = ({
   useEffect(
     () => () => {
       if (recordingUrlRef.current) URL.revokeObjectURL(recordingUrlRef.current);
+      stopRhythmRef.current();
     },
     [],
   );
@@ -138,7 +142,10 @@ export const PronunciationStep = ({
       setPhase('recording');
     } catch (error) {
       if (isMicPermissionDeniedError(error)) setMicSheetOpen(true);
-      else setNotice('micStartError');
+      else {
+        haptic('error');
+        setNotice('micStartError');
+      }
     }
   };
 
@@ -156,6 +163,8 @@ export const PronunciationStep = ({
       recording.blob.size === 0 ||
       isSilentRecording(recording)
     ) {
+      // 말소리가 안 담긴 건 다시 말하면 되는 막힘이다
+      haptic('warning');
       setNotice('silentError');
       setPhase(analysis ? 'feedback' : 'ready');
       return;
@@ -182,6 +191,9 @@ export const PronunciationStep = ({
           low_score_count: result.words.filter(isLowScoreWord).length,
           attempt: attemptRef.current,
         });
+        // 결과가 뜨는 순간 — 통과면 축하, 아니면 다시 해 보자는 막힘이지 실패가 아니다
+        if (result.passed) stopRhythmRef.current = hapticRhythm('burst');
+        else haptic('warning');
         setAnalysis(result);
         setPhase('feedback');
         onSettled?.();
@@ -194,11 +206,13 @@ export const PronunciationStep = ({
             return;
           }
           if (error.code === 'INVALID_AUDIO') {
+            haptic('warning');
             setNotice('invalidAudioError');
             setPhase(analysis ? 'feedback' : 'ready');
             return;
           }
         }
+        haptic('error');
         setPhase('failed');
         onSettled?.();
       },

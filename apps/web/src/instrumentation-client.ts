@@ -1,36 +1,31 @@
-// Sentry 브라우저 초기화 — 클라이언트 예외를 수집한다. DSN이 없으면(로컬 기본) 비활성
-import {
-  addIntegration,
-  captureRouterTransitionStart,
-  init,
-  setTags,
-} from '@sentry/nextjs';
+// Sentry 브라우저 초기화 — 앱 화면은 바로, 랜딩(/ko·/ja)은 첫 화면을 다 받은 뒤 SDK를 받는다(압축 약 50KB가 첫 화면 그림과 대역을 다투지 않게). 받기 전 에러는 버퍼에 모았다가 넘긴다
+import type { captureRouterTransitionStart } from '@sentry/nextjs';
 
-import { getNativeContext } from '@/shared/bridge/native-context';
 import { localeFromPath } from '@/shared/i18n/locale';
-import { sentryInitOptions } from '@/shared/monitoring/sentry-options';
+import { afterPageLoadIdle } from '@/shared/lib/page-idle';
+import { bufferEarlyErrors } from '@/shared/monitoring/early-errors';
 
-init({
-  ...sentryInitOptions,
-  // 리플레이는 에러 세션만 — 평소엔 버퍼에만 녹화하고 에러가 나면 직전 구간을 첨부한다
-  replaysSessionSampleRate: 0,
-  replaysOnErrorSampleRate: 1.0,
-});
+type SentryClient = typeof import('@/shared/monitoring/sentry-client');
 
-// 리플레이 녹화 모듈은 크다 — 앱 화면에서만 따로 받아 붙이고, 첫 화면 속도가 중요한 랜딩(/ko·/ja)에선 받지 않는다
-if (!localeFromPath(window.location.pathname)) {
-  void import('@sentry/nextjs').then(({ replayIntegration }) =>
-    addIntegration(replayIntegration()),
-  );
-}
+let sentry: SentryClient | null = null;
+const flushEarlyErrors = bufferEarlyErrors(window);
 
-// 이슈 필터링용 태그 — 앰플리튜드 공통 속성과 같은 어휘를 쓴다 (웹 배포 버전은 Sentry release가 대신한다)
-const native = getNativeContext();
-setTags({
-  surface: native ? 'app' : 'browser',
-  platform: native?.platform ?? 'web',
-  ...(native && { app_version: native.appVersion }),
-  ...(native?.buildNumber && { build_number: native.buildNumber }),
-});
+const loadSentry = async () => {
+  try {
+    const client = await import('@/shared/monitoring/sentry-client');
+    client.startSentry();
+    sentry = client;
+    flushEarlyErrors((error) => client.captureException(error));
+  } catch {
+    // 오프라인·청크 받기 실패면 보낼 곳이 없으니 버퍼를 버리고 리스너를 뗀다 — 계속 쌓이지 않게
+    flushEarlyErrors(() => {});
+  }
+};
 
-export const onRouterTransitionStart = captureRouterTransitionStart;
+if (localeFromPath(window.location.pathname)) afterPageLoadIdle(loadSentry);
+else void loadSentry();
+
+// SDK를 받기 전의 화면 이동은 건너뛴다
+export const onRouterTransitionStart: typeof captureRouterTransitionStart = (
+  ...args
+) => sentry?.captureRouterTransitionStart(...args);

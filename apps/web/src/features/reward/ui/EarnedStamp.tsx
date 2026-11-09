@@ -2,7 +2,10 @@
 
 // 시나리오 대화를 끝낸 순간 — 환급 참여자에게 방금 받은 금액을 보여 준다.
 // 순서가 곧 의미다. 동전이 떨어져 닿고, 금액이 올라간다
+import { useEffect } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
+
+import { haptic } from '@/shared/haptics';
 
 import type { CompletionEarn } from '../model/completion-earn';
 import { Coin } from './common/Coin';
@@ -11,9 +14,18 @@ import { CountUpWon } from './common/CountUpWon';
 // 동전이 닿은 뒤에 금액이 선다
 const DROP_DELAY = 0.15;
 const AMOUNT_DELAY = 0.5;
+// 떨어지기 시작해 바닥에 닿기까지 — 센 스프링이라 금방 닿는다
+const LAND_AFTER = 0.1;
 
 export const EarnedStamp = ({ earn }: { earn: CompletionEarn }) => {
   const animated = !useReducedMotion();
+
+  // 동전이 닿는 순간 손에도 닿게 한다 — 동작 줄이기로 떨어지는 연출이 없으면 기다리지 않고 바로 울린다
+  useEffect(() => {
+    const landAt = animated ? (DROP_DELAY + LAND_AFTER) * 1000 : 0;
+    const timer = setTimeout(() => haptic('celebrate'), landAt);
+    return () => clearTimeout(timer);
+  }, [animated]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center">

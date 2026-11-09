@@ -1,4 +1,4 @@
-// 전역 토스트 — 키보드가 올라와 있으면 가리지 않게 키보드 위로 올라가는지 검증한다
+// 전역 토스트 — 키보드 위로 올라가는지, 종류별로 아이콘이 붙는지 검증한다
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -70,5 +70,34 @@ describe('Toaster', () => {
     act(() => showToast('안내'));
 
     expect(toastFrame().style.bottom).toBe('');
+  });
+
+  it('종류를 고르지 않으면 아이콘 없이 띄운다', () => {
+    render(<Toaster />);
+
+    act(() => showToast('안내'));
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['success', '성공'],
+    ['error', '오류'],
+    ['warning', '주의'],
+  ] as const)('%s로 띄우면 %s 아이콘을 함께 띄운다', (tone, label) => {
+    render(<Toaster />);
+
+    act(() => showToast('안내', tone));
+
+    expect(screen.getByRole('img', { name: label })).toBeInTheDocument();
+  });
+
+  it('같은 문구라도 종류가 바뀌면 바뀐 종류로 다시 띄운다', () => {
+    render(<Toaster />);
+    act(() => showToast('안내'));
+
+    act(() => showToast('안내', 'error'));
+
+    expect(screen.getByRole('img', { name: '오류' })).toBeInTheDocument();
   });
 });

@@ -22,3 +22,83 @@
     animation: none;
   }
 }
+
+/* 첫 화면 캐릭터 등장 — 폰 아래에서 솟아올라 살짝 튕긴다. transform만 써서 그림은 처음부터 보인다(투명도를 쓰면 LCP가 늦어지고, 웹뷰에서 애니메이션이 멈추면 안 보인 채 남는다) */
+.castRise {
+  transform-origin: 50% 100%;
+  animation: cast-rise 0.9s 0.15s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+@keyframes cast-rise {
+  from {
+    transform: translateY(16%) scale(0.94);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* 폰 화면 속 말풍선 — 캐릭터가 올라온 뒤 내 말, 상대 속마음 순서로 아래에서 살짝 떠오르며 나타난다. 말풍선은 LCP 요소가 아니라 투명도를 써도 첫 화면 속도에 영향이 없다 */
+.bubbleMine,
+.bubbleThought {
+  animation: bubble-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.bubbleMine {
+  animation-delay: 0.5s;
+}
+
+.bubbleThought {
+  animation-delay: 0.95s;
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .castRise,
+  .bubbleMine,
+  .bubbleThought {
+    animation: none;
+  }
+}
+
+/* 랜딩 전용 폰트 — 화면에 쓰는 글자와 굵기(400~700, LANDING_FONT_WEIGHT)만 담은 Pretendard 한 파일(pnpm --filter web landing-font로 만든다). 전역 Pretendard 조각 수십 개를 받지 않아 첫 화면 대역을 그림에 돌린다 */
+@font-face {
+  font-family: 'Pretendard Landing KO';
+  src: url('./fonts/landing-ko.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pretendard Landing JA';
+  src: url('./fonts/landing-ja.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+/* 폰트에 없는 글자(다른 언어 이름 등)는 전역 Pretendard가 아니라 시스템 글꼴로 그린다 — 전역 조각을 다시 받지 않게 */
+.ko {
+  font-family:
+    'Pretendard Landing KO',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+.ja {
+  font-family:
+    'Pretendard Landing JA',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}

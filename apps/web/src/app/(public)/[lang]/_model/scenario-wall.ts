@@ -597,46 +597,74 @@ export const WALL_SCENARIOS: WallCard[] = [
   },
 ];
 
-/** 벽 가운데 놓이는 오늘의 시나리오 — 벽의 다른 칸에는 다시 나오지 않는다 */
-export const TODAY_SCENARIO = WALL_SCENARIOS[0];
+/** 가운데 크게 뜨는 오늘의 시나리오 후보 — 그림과 상황이 재밌는 주제만 고른다. 모두 일본어 제목이 있다 */
+export const FUN_TODAY_IMAGES = [
+  's-47', // Marco 몰래 생일 파티 준비하기
+  's-64', // Chloe의 코첼라 제안에 답하기
+  's-91', // Chloe와 방 탈출 게임 하기
+  's-63', // 펍 퀴즈에 합류하기
+  's-57', // 축구 경기 직관하기
+  's-87', // Marco의 강아지 맡아 주기
+  's-72', // Chloe와 오늘 밤 볼 넷플릭스 고르기
+  's-06', // 인터내셔널 파티 — 처음 만난 Chloe
+  's-66', // 국립공원에서 하이킹 코스 추천받기
+  's-53', // 티룸에서 애프터눈 티 즐기기
+  's-73', // 샌드위치 가게에서 내 맘대로 주문하기
+  's-62', // Marco와 잃어버린 휴대폰 찾기
+  's-54', // Chloe와 방학 여행 계획 짜기
+  's-95', // Chloe와 인생 영화 이야기하기
+  's-86', // 박물관 도슨트 투어 참여하기
+  's-16', // 마음에 안 드는 사람 정중히 거절하기
+  's-93', // 공항 입국 심사 받기
+  's-50', // 시험 망친 Chloe 위로하기
+].map((name) => `/images/landing/scenarios/${name}.webp`);
 
-/** 친구 이름이 나오는 시나리오를 벽 전체에 고르게 흩어 곰 그림이 한쪽에 몰리지 않게 한다 */
-const spreadEvenly = () => {
-  const rest = WALL_SCENARIOS.slice(1);
+/** 피셔–예이츠 섞기 — 난수를 받아 같은 난수면 같은 순서가 나온다 */
+const shuffle = <T>(list: readonly T[], random: () => number) => {
+  const result = [...list];
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+};
+
+/** 친구 이름이 나오는 시나리오를 벽 전체에 고르게 흩어 곰 그림이나 친구 그림이 한쪽에 몰리지 않게 한다 */
+const spreadEvenly = (cards: WallCard[]) => {
   const isFriend = ({ title }: WallCard) => /Chloe|Marco/.test(title.ko);
-  const ranked = (list: typeof rest) =>
+  const ranked = (list: WallCard[]) =>
     list.map((card, index) => ({ card, rank: (index + 0.5) / list.length }));
   return [
-    ...ranked(rest.filter(isFriend)),
-    ...ranked(rest.filter((card) => !isFriend(card))),
+    ...ranked(cards.filter(isFriend)),
+    ...ranked(cards.filter((card) => !isFriend(card))),
   ]
     .sort((a, b) => a.rank - b.rank)
     .map(({ card }) => card);
 };
 
-/** 모든 카드를 겹치지 않게 줄로 나눈다 */
-export const buildWallRows = (rowCount: number, perRow: number) => {
-  const cards = spreadEvenly();
-  return Array.from({ length: rowCount }, (_, row) =>
-    cards.slice(row * perRow, (row + 1) * perRow),
+/**
+ * 들어올 때마다 새로 짜는 벽 — 오늘의 시나리오는 재밌는 주제에서 뽑고, 나머지는 섞어 줄로 나눈다. 여러 번 들어오면 모든 카드가 골고루 화면 가운데에 온다
+ * @param random 0 이상 1 미만의 난수 — 서버와 첫 화면은 고정값을 넣어 같은 벽을 그린다
+ */
+export const buildWall = (
+  rowCount: number,
+  perRow: number,
+  random: () => number,
+) => {
+  const funCards = WALL_SCENARIOS.filter((card) =>
+    FUN_TODAY_IMAGES.includes(card.image),
   );
-};
-
-/** 벽의 한 칸을 오늘의 시나리오로 뽑고, 그 칸에는 지금의 오늘 카드를 넣는다 — 맞바꾸므로 그림이 겹치지 않는다 */
-export const pickToday = (rows: WallCard[][], random: number) => {
-  const cards = rows.flat();
-  const picked = Math.min(cards.length - 1, Math.floor(random * cards.length));
-  const perRow = rows[0].length;
-  const row = Math.floor(picked / perRow);
-  const column = picked % perRow;
+  const today = funCards[Math.floor(random() * funCards.length)];
+  const cards = spreadEvenly(
+    shuffle(
+      WALL_SCENARIOS.filter((card) => card !== today),
+      random,
+    ),
+  );
   return {
-    today: rows[row][column],
-    rows: rows.map((cells, rowIndex) =>
-      rowIndex === row
-        ? cells.map((cell, columnIndex) =>
-            columnIndex === column ? TODAY_SCENARIO : cell,
-          )
-        : cells,
+    today,
+    rows: Array.from({ length: rowCount }, (_, row) =>
+      cards.slice(row * perRow, (row + 1) * perRow),
     ),
   };
 };

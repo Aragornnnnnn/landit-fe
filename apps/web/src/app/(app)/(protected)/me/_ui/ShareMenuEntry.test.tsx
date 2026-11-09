@@ -61,7 +61,10 @@ describe('ShareMenuEntry', () => {
     await pressShare();
 
     await waitFor(() =>
-      expect(mocks.showToast).toHaveBeenCalledWith('링크를 복사했어요'),
+      expect(mocks.showToast).toHaveBeenCalledWith(
+        '링크를 복사했어요',
+        'success',
+      ),
     );
   });
 
@@ -83,7 +86,10 @@ describe('ShareMenuEntry', () => {
     await pressShare();
 
     await waitFor(() =>
-      expect(mocks.showToast).toHaveBeenCalledWith('링크를 복사하지 못했어요'),
+      expect(mocks.showToast).toHaveBeenCalledWith(
+        '링크를 복사하지 못했어요',
+        'error',
+      ),
     );
     expect(mocks.track).not.toHaveBeenCalled();
   });

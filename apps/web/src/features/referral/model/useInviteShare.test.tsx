@@ -117,7 +117,10 @@ describe('useInviteShare', () => {
 
     await act(() => result.current.share());
 
-    expect(showToast).toHaveBeenCalledWith('초대 메시지를 복사했어요');
+    expect(showToast).toHaveBeenCalledWith(
+      '초대 메시지를 복사했어요',
+      'success',
+    );
   });
 
   it('보내는 중에 또 눌러도 한 번만 보낸다', async () => {

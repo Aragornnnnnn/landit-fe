@@ -23,5 +23,10 @@
     "title": "문제가 생겼어요",
     "description": "잠시 후 다시 시도해 주세요",
     "retryButton": "다시 시도할게요"
+  },
+  "toast": {
+    "successLabel": "성공",
+    "warningLabel": "주의",
+    "errorLabel": "오류"
   }
 }

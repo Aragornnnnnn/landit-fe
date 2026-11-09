@@ -7,6 +7,11 @@ import { coinCountOf, CoinShower } from './CoinShower';
 vi.mock('next/image', () => ({ default: () => <span /> }));
 const analytics = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/shared/analytics', () => ({ track: analytics.track }));
+const stopRhythm = vi.hoisted(() => vi.fn());
+const rhythmMock = vi.hoisted(() => vi.fn(() => stopRhythm));
+vi.mock('@/shared/haptics', () => ({
+  hapticRhythm: rhythmMock,
+}));
 
 const PILL = { left: 20, top: 12, width: 96, height: 32 };
 const renderShower = (onEnd = vi.fn()) => {
@@ -17,6 +22,8 @@ const skip = () => screen.getByRole('button', { name: '건너뛰기 ›' });
 
 afterEach(() => {
   cleanup();
+  rhythmMock.mockClear();
+  stopRhythm.mockClear();
   vi.useRealTimers();
 });
 
@@ -32,6 +39,27 @@ describe('coinCountOf', () => {
 });
 
 describe('CoinShower', () => {
+  it('동전 리듬은 알약에 닿는 순간 끝나고, 숫자 리듬은 그 뒤에 시작한다', () => {
+    renderShower();
+
+    const calls = rhythmMock.mock.calls as unknown as [
+      string,
+      { startAt?: number; endAt?: number },
+    ][];
+    expect(calls.map(([name]) => name)).toEqual(['coins', 'countUp']);
+    const [[, coins], [, countUp]] = calls;
+    expect(countUp.startAt).toBeGreaterThan(coins.endAt ?? Infinity);
+  });
+
+  it('건너뛰어 닫히면 남은 박자를 멈춘다', () => {
+    renderShower();
+
+    fireEvent.click(skip());
+    cleanup();
+
+    expect(stopRhythm).toHaveBeenCalledTimes(2);
+  });
+
   it('받은 금액을 크게 보여 준다', () => {
     renderShower();
 
@@ -63,6 +91,22 @@ describe('CoinShower', () => {
 });
 
 describe('CoinShower 계측', () => {
+  it('점검 미리보기면 노출도 건너뛰기도 찍지 않는다', () => {
+    render(
+      <CoinShower
+        pill={PILL}
+        fromWon={2015}
+        toWon={2347}
+        onEnd={vi.fn()}
+        preview
+      />,
+    );
+
+    fireEvent.click(skip());
+
+    expect(analytics.track).not.toHaveBeenCalled();
+  });
+
   it('뜨는 순간 받은 금액과 함께 노출을 한 번 찍는다', () => {
     renderShower();
 

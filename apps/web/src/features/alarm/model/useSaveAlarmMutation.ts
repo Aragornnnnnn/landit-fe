@@ -33,6 +33,9 @@ export const useSaveAlarmMutation = () => {
     },
     // 실패는 여기서 알린다 — 저장 직후 화면을 떠나면 호출부 콜백은 불리지 않아 조용히 사라진다
     onError: (_, { enabled }) =>
-      showToast(enabled ? t('saveFailedToast') : t('deleteFailedToast')),
+      showToast(
+        enabled ? t('saveFailedToast') : t('deleteFailedToast'),
+        'error',
+      ),
   });
 };

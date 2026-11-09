@@ -243,9 +243,9 @@ const TranscriptEditor = ({
   // 글자가 걸러졌다는 걸 흔들림·진동·토스트로 바로 알린다
   const warnNonEnglish = () => {
     setShaking(true);
-    haptic('error');
+    haptic('warning');
     // 이어 치는 동안 계속 띄워도 토스트는 그대로 떠 있고 시간만 늘어난다
-    showToast(t('englishOnlyToast'));
+    showToast(t('englishOnlyToast'), 'warning');
   };
 
   // 조합 없이 바로 넣는 키보드의 한글은 들어가기 전에 막는다 — 넣은 뒤 지우면 키보드가 기억하는 글과 어긋난다.
@@ -296,8 +296,8 @@ const TranscriptEditor = ({
       writeBack(before + after, before.length);
       onChange?.(before + after);
       setShaking(true);
-      haptic('error');
-      showToast(limitNotice);
+      haptic('warning');
+      showToast(limitNotice, 'warning');
       return;
     }
     onChange?.(english);

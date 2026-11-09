@@ -46,8 +46,12 @@ export const LegalDocumentPage = ({ document }: LegalDocumentPageProps) => {
   const goBack = () => backOrReplace(router, '/');
   useBackPress(goBack);
 
+  // 약관 화면은 뒤로가기와 본문 글자 링크뿐이라 누름 진동을 통째로 뺀다
   return (
-    <main className="mx-auto flex h-dvh max-w-[430px] flex-col bg-muted">
+    <main
+      className="mx-auto flex h-dvh max-w-[430px] flex-col bg-muted"
+      data-no-haptic
+    >
       <header className="relative flex shrink-0 items-center border-b border-border bg-background px-4 pt-[max(var(--safe-area-inset-top),16px)] pb-2">
         <button
           type="button"

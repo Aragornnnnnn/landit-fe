@@ -3,7 +3,14 @@
    1겹 상시 idle(호흡·체중이동) → 2겹 자세·표정 → 3겹 불규칙 액센트(컴포넌트가 WAAPI로 쏜다)
 
    2겹은 자세(.idle·.listening·.speaking)와 표정(.happy·.frown) 두 축이 같은 엘리먼트에
-   겹쳐 붙는다. 중립 표정은 클래스를 붙이지 않는 것으로 나타내서 여기 규칙이 없다. */
+   겹쳐 붙는다. 중립 표정은 클래스를 붙이지 않는 것으로 나타내서 여기 규칙이 없다.
+
+   그림은 두 방식이다.
+   - .parts — 한 장짜리 SVG. 아바타(PartnerAvatar)가 쓴다. 움직임이 SVG 안쪽 그룹에 걸린다
+   - 층 상자 — 대화 캐릭터(PartnerCharacter)가 쓴다. 몸·머리·입·팔을 SVG 여러 장(.art)으로 나눠
+     상자째 움직인다. SVG 안쪽 그룹은 합성 레이어가 못 돼서 매 프레임 캐릭터 전체를 다시 그리기 때문이다.
+     상자는 CSS 픽셀 세계라 SVG 단위 길이는 --frame-height(viewBox 높이)로 나눠 %로 쓴다
+   눈·눈썹·표정 교체 조각은 두 방식 모두 SVG 안에서 움직인다 — 그 규칙은 :is(.parts, .art)로 함께 건다 */
 
 .root {
   height: 100%;
@@ -19,14 +26,52 @@
   will-change: transform;
 }
 
+/* 층 상자 — 흔들림 상자(.sway)가 원래 SVG 한 장 자리를 차지하고, 층은 그 위에 같은 크기로 겹친다.
+   기준점(transform-origin)은 컴포넌트가 그림 영역을 재서 인라인으로 놓는다 */
+.sway {
+  position: relative;
+  width: fit-content;
+  height: 100%;
+  /* 잘라내기는 여기서 한 번만 한다 — 원래 바깥 SVG 한 장이 하던 일이다. 층 SVG마다 자르면
+     프레임 밖까지 뻗은 몸통이 먼저 잘린 뒤 숨쉬기로 늘어나, 들숨마다 아래에 틈이 벌어진다 */
+  overflow: hidden;
+  transform-origin: 50% 100%;
+  will-change: transform;
+}
+
+.sizer {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+
+.torso,
+.head,
+.headPose,
+.mouth,
+.limb {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.art {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
 /* 변형 기준을 조각 자기 영역으로 바꾼다 — 기본값이면 퍼센트가 SVG 전체 기준이라 회전축이 발밑에 잡힌다 */
-.parts :global(g),
-.parts :global(path) {
+:is(.parts, .art) :global(g),
+:is(.parts, .art) :global(path) {
   transform-box: fill-box;
 }
 
 /* 생성 단계에서 구운 좌표 지정 회전(클로이 입 수평 보정)은 고전 좌표계라야 기준점이 맞는다 */
-.parts :global(g.baked) {
+:is(.parts, .art) :global(g.baked) {
   transform-box: view-box;
   transform-origin: 0 0;
 }
@@ -48,6 +93,24 @@
    모션을 줄이는 설정에서는 이 겹만 통째로 빠진다 — 취소 목록을 따로 유지하면 새 애니메이션을
    한쪽에만 넣고 잊는다 (login-motion.module.css와 같은 방식) */
 @media (prefers-reduced-motion: no-preference) {
+  .sway {
+    animation: weight-shift 7.6s ease-in-out infinite;
+  }
+
+  .torso {
+    animation: breathe 4.2s cubic-bezier(0.45, 0, 0.4, 1) infinite;
+  }
+
+  .head {
+    animation: head-float-box 4.2s cubic-bezier(0.45, 0, 0.4, 1) infinite;
+    animation-delay: 0.22s;
+  }
+
+  .limb {
+    animation: arm-breathe 4.2s cubic-bezier(0.45, 0, 0.4, 1) infinite;
+    animation-delay: 0.3s;
+  }
+
   .parts {
     animation: weight-shift 7.6s ease-in-out infinite;
   }
@@ -98,6 +161,17 @@
   }
 }
 
+/* head-float의 층 상자판 — 같은 3 SVG 단위를 상자 높이 대비 %로 */
+@keyframes head-float-box {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  55% {
+    transform: translateY(calc(-300% / var(--frame-height)));
+  }
+}
+
 /* 호흡 4.2초와 주기가 어긋나 같은 자세가 반복되지 않는다 */
 @keyframes weight-shift {
   0%,
@@ -110,46 +184,38 @@
 }
 
 /* 2겹 — 포즈.  살짝 지나쳤다 돌아오는 이징으로 뻣뻣함을 던다 */
-.parts :global(#head-inner),
-.parts :global(#mouth),
-.parts :global(#eye-left),
-.parts :global(#eye-right),
-.parts :global(#brow-left),
-.parts :global(#brow-right) {
+.headPose,
+.mouth,
+:is(.parts, .art) :global(#eye-left),
+:is(.parts, .art) :global(#eye-right),
+:is(.parts, .art) :global(#brow-left),
+:is(.parts, .art) :global(#brow-right) {
   transition: transform 0.4s cubic-bezier(0.3, 1.35, 0.5, 1);
 }
 
-.parts :global(#head-inner) {
-  transform-origin: 50% 96%;
-}
-
-.parts :global(#mouth) {
-  transform-origin: 50% 15%;
-}
-
-.parts :global(#eye-left),
-.parts :global(#eye-right),
-.parts :global(#brow-left),
-.parts :global(#brow-right) {
+:is(.parts, .art) :global(#eye-left),
+:is(.parts, .art) :global(#eye-right),
+:is(.parts, .art) :global(#brow-left),
+:is(.parts, .art) :global(#brow-right) {
   transform-origin: 50% 50%;
 }
 
 /* 표정 교체용 파츠는 기본 숨김 — 포즈 규칙과 특이도가 같아 반드시 위에 둔다 */
-.parts :global(#mouth-frown),
-.parts :global(#frown-brow-left),
-.parts :global(#frown-brow-right) {
+:is(.parts, .art) :global(#mouth-frown),
+:is(.parts, .art) :global(#frown-brow-left),
+:is(.parts, .art) :global(#frown-brow-right) {
   display: none;
 }
 
 /* 화난 눈썹(곰) — 찡그림 동안 눈 위에 얹힌다. 입과 달리 말하는 중에도 유지된다 */
-.frown .parts :global(#frown-brow-left),
-.frown .parts :global(#frown-brow-right) {
+.frown :is(.parts, .art) :global(#frown-brow-left),
+.frown :is(.parts, .art) :global(#frown-brow-right) {
   display: block;
 }
 
 /* 눈웃음은 display 대신 opacity·scale로 둬서 눈이 감기며 아크로 이어진다 */
-.parts :global(#eye-left-happy),
-.parts :global(#eye-right-happy) {
+:is(.parts, .art) :global(#eye-left-happy),
+:is(.parts, .art) :global(#eye-right-happy) {
   opacity: 0;
   transform: scaleY(0.25);
   transition:
@@ -159,51 +225,51 @@
 
 /* 쉬는 입 — 원본 입을 눌러 만든 다문 미소. 원본 아트가 활짝 웃는 입이라 쉬는 자세엔 과하다.
    기다릴 때나 들을 때나 같은 입이라 한 곳에서 정한다 (말할 땐 립싱크가 가져간다) */
-.idle .parts :global(#mouth),
-.listening .parts :global(#mouth) {
-  transform: scale(0.84, 0.4) translateY(3px);
+.idle .mouth,
+.listening .mouth {
+  transform: scale(0.84, 0.4) translateY(calc(300% / var(--frame-height)));
 }
 
 /* 듣기 — 살짝 기울여 귀 기울이고 눈썹을 든다 */
-.listening .parts :global(#head-inner) {
+.listening .headPose {
   transform: rotate(2deg);
 }
 
-.listening .parts :global(#brow-left),
-.listening .parts :global(#brow-right) {
+.listening :is(.parts, .art) :global(#brow-left),
+.listening :is(.parts, .art) :global(#brow-right) {
   transform: translateY(-2.5px);
 }
 
 /* 찡그림 — 눈썹을 미간으로 모아 내린다. 입 교체는 말하지 않을 때만 한다(아래) */
-.frown .parts :global(#head-inner) {
-  transform: rotate(-2deg) translateY(4px);
+.frown .headPose {
+  transform: rotate(-2deg) translateY(calc(400% / var(--frame-height)));
 }
 
-.frown .parts :global(#brow-left) {
+.frown :is(.parts, .art) :global(#brow-left) {
   transform: translate(4px, 10px) rotate(14deg);
 }
 
-.frown .parts :global(#brow-right) {
+.frown :is(.parts, .art) :global(#brow-right) {
   transform: translate(-4px, 10px) rotate(-14deg);
 }
 
-.frown .parts :global(#eye-left),
-.frown .parts :global(#eye-right) {
+.frown :is(.parts, .art) :global(#eye-left),
+.frown :is(.parts, .art) :global(#eye-right) {
   transform: scaleY(0.8) translateY(1px);
 }
 
 /* 말하는 중에는 입을 립싱크가 쥐고 있다 — 여기서 감추면 소리에 맞춰 움직이는 입이 사라진다 */
-.frown:not(.speaking) .parts :global(#mouth) {
+.frown:not(.speaking) :is(.parts, .art) :global(#mouth) {
   display: none;
 }
 
-.frown:not(.speaking) .parts :global(#mouth-frown) {
+.frown:not(.speaking) :is(.parts, .art) :global(#mouth-frown) {
   display: block;
 }
 
 /* 기쁨 — 원래 눈이 감기고 그 자리에서 눈웃음 아크가 펴지는 릴레이 */
-.happy .parts :global(#eye-left),
-.happy .parts :global(#eye-right) {
+.happy :is(.parts, .art) :global(#eye-left),
+.happy :is(.parts, .art) :global(#eye-right) {
   opacity: 0;
   transform: scaleY(0.08) translateY(2px);
   transition:
@@ -211,18 +277,18 @@
     opacity 0.1s ease 0.08s;
 }
 
-.happy .parts :global(#eye-left-happy),
-.happy .parts :global(#eye-right-happy) {
+.happy :is(.parts, .art) :global(#eye-left-happy),
+.happy :is(.parts, .art) :global(#eye-right-happy) {
   opacity: 1;
   transform: scaleY(1);
   transition-delay: 0.08s;
 }
 
-.happy .parts :global(#mouth) {
+.happy .mouth {
   transform: scaleY(1.12);
 }
 
-.happy .parts :global(#brow-left),
-.happy .parts :global(#brow-right) {
+.happy :is(.parts, .art) :global(#brow-left),
+.happy :is(.parts, .art) :global(#brow-right) {
   transform: translateY(-5px);
 }

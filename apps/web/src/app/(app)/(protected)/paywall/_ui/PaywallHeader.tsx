@@ -25,6 +25,7 @@ export const PaywallHeader = ({
           type="button"
           onClick={onClose}
           aria-label={t('common.closeLabel')}
+          data-no-haptic
           className="-ml-2 flex size-9 items-center justify-center rounded-full text-foreground transition-all active:scale-90 active:bg-black/5"
         >
           <CloseIcon size={24} />

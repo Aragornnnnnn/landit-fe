@@ -12,7 +12,7 @@
     "sentLabel": "보낸 편지"
   },
   "mailboxFlow": {
-    "loadMoreFailedToast": "편지를 더 불러오지 못했어요."
+    "loadMoreFailedToast": "편지를 더 불러오지 못했어요"
   },
   "mailboxEmpty": {
     "receivedTitle": "아직 도착한 편지가 없어요",
@@ -56,9 +56,9 @@
     "sentToast": "소중한 의견 고마워요!"
   },
   "attachment": {
-    "retryLaterError": "보내지 못했어요. 잠시 후 다시 시도해 주세요.",
-    "tooLargeError": "사진 용량이 너무 커요. 한 장을 빼고 다시 보내 주세요.",
-    "invalidPhotoError": "보낼 수 없는 사진이 있어요. 다른 사진으로 바꿔 주세요.",
+    "retryLaterToast": "보내지 못했어요. 잠시 후 다시 시도해 주세요",
+    "tooLargeToast": "사진 용량이 너무 커요. 한 장을 빼고 다시 보내 주세요",
+    "invalidPhotoToast": "보낼 수 없는 사진이 있어요. 다른 사진으로 바꿔 주세요",
     "limitToast": "사진은 {max}장까지 보낼 수 있어요",
     "partialFailedToast": "불러올 수 없는 사진은 빼고 담았어요",
     "loadFailedToast": "사진을 불러오지 못했어요"

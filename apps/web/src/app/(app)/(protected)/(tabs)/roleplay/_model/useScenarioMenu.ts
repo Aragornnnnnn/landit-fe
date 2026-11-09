@@ -37,12 +37,12 @@ export const useScenarioMenu = (scenarios: RoleplaySettings[] | null) => {
           has_history: deleteTarget?.lastPlayedAt != null,
         });
         setDeleteId(null);
-        showToast(t('doneToast'));
+        showToast(t('doneToast'), 'success');
       },
       // 실패하면 시트를 그대로 둔다 — 다시 누를 수 있게
       onError: () => {
         track(EVENTS.ROLEPLAY_DELETE_FAILED, { roleplay_id: deleteId });
-        showToast(t('failToast'));
+        showToast(t('failToast'), 'error');
       },
     });
   };

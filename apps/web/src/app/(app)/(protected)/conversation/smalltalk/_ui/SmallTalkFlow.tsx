@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import type { Partner } from '@/features/conversation/model/character-look';
-import { ConversationSkeleton } from '@/features/conversation/ui/ConversationSkeleton';
+import { ConversationWaiting } from '@/features/conversation/ui/ConversationWaiting';
 import type { SmallTalkStartMode } from '@/features/small-talk/api/small-talk';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
 import { track } from '@/shared/analytics';
@@ -62,7 +62,14 @@ export const SmallTalkFlow = ({
   }
 
   // 잔량을 아직 못 받았으면 대화도 열지 않는다 — 남은 시간을 모른 채 말하기부터 시작할 수는 없다
-  if (!session || !main) return <ConversationSkeleton />;
+  // 상대는 홈에서 이미 골랐다 — 기다리는 동안에도 무대에 세운다
+  if (!session || !main)
+    return (
+      <ConversationWaiting
+        partner={partner}
+        partnerSpeaksFirst={startMode === 'AI_FIRST'}
+      />
+    );
 
   return (
     <SmallTalkConversation

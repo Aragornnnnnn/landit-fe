@@ -30,7 +30,7 @@ export const ReferralRewardMoment = ({
   useEffect(() => {
     const showTimer = setTimeout(() => {
       setShown(true);
-      haptic('success');
+      haptic('celebrate');
     }, holdMs);
     const leaveTimer = setTimeout(() => leave(), holdMs + LEAVE_AFTER_MS);
     return () => {

@@ -306,6 +306,8 @@ export const REWARD_CHECK_PATH = '/me/developer/reward';
 export const REWARD_PAYWALL_CHECK_PATH = '/me/developer/reward-paywall';
 // ADMIN이 첫 대화 뒤 프리뷰를 단계별로 다시 보는 점검 화면
 export const PREVIEW_CHECK_PATH = '/me/developer/preview';
+// ADMIN이 진동 이름을 하나씩 울려 보고 실제 진동 자리를 확인하는 점검 화면
+export const HAPTIC_CHECK_PATH = '/me/developer/haptics';
 
 /**
  * 마이페이지 아래 화면에서 돌아가기. 마이페이지에서 밀고 들어왔으면 한 칸 뒤로 —

@@ -100,6 +100,14 @@ describe('문구 파일 계약', () => {
     }
   });
 
+  it('토스트 문구는 마침표로 끝나지 않는다 — 잠깐 뜨는 한두 문장이라 끝 마침표 없이 통일한다', () => {
+    const isToast = (path: string) =>
+      /(^toast|Toast)$/.test(path.split('.').at(-1)!);
+    for (const [path, message] of [...koEntries, ...jaEntries]) {
+      if (isToast(path)) expect(message, path).not.toMatch(/[.。]$/);
+    }
+  });
+
   it('빈 문구가 없다', () => {
     for (const [path, message] of [...koEntries, ...jaEntries]) {
       expect(message.trim(), path).not.toBe('');

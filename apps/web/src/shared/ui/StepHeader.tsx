@@ -34,6 +34,7 @@ export const StepHeader = ({
         type="button"
         onClick={onBack}
         aria-label={t('backLabel')}
+        data-no-haptic
         disabled={hideBack}
         className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-opacity active:bg-black/5 disabled:opacity-0"
       >

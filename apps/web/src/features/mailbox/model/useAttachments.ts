@@ -52,7 +52,8 @@ export const useAttachments = () => {
 
   const attach = async (picked: File[]) => {
     const { taken, overflowed } = takeAttachable(attachments.length, picked);
-    if (overflowed) showToast(t('limitToast', { max: MAX_ATTACHMENTS }));
+    if (overflowed)
+      showToast(t('limitToast', { max: MAX_ATTACHMENTS }), 'warning');
     if (taken.length === 0) return;
 
     setIsAttaching(true);
@@ -86,11 +87,11 @@ export const useAttachments = () => {
     if (!isMounted.current) return;
     // 토스트는 한 번에 하나만 보이니 가장 중요한 것 하나만 말한다 — 전부 실패 > 일부 실패 > 넘침
     if (reply?.status === 'error') {
-      showToast(t('loadFailedToast'));
+      showToast(t('loadFailedToast'), 'error');
     } else if (reply && reply.failedCount > 0) {
       showToast(t('partialFailedToast'));
     } else if (reply?.overflowed) {
-      showToast(t('limitToast', { max: MAX_ATTACHMENTS }));
+      showToast(t('limitToast', { max: MAX_ATTACHMENTS }), 'warning');
     }
     if (reply?.status === 'success') add(reply.photos.map(toPickedFile));
     setIsAttaching(false);

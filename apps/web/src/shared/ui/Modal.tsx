@@ -60,6 +60,7 @@ export function Modal({
                 type="button"
                 onClick={onClose}
                 aria-label={t('closeLabel')}
+                data-no-haptic
                 className="absolute top-5 right-5 flex size-8 items-center justify-center rounded-full text-muted-foreground transition-transform active:scale-90"
               >
                 <CloseIcon size={22} />

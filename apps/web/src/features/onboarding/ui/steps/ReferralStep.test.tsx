@@ -173,7 +173,9 @@ describe('ReferralStep · 코드 입력', () => {
         '100일 프리미엄 이용권을 결제하면 환급 혜택에 바로 더해져요',
       ),
     ).toBeInTheDocument();
-    expect(haptic).toHaveBeenCalledWith('success');
+    // 등록 요청이 성공해 적립이 뜬 순간에만 축하 진동을 준다 — 보내기 전에 성공을 울리면 실패할 때 엇갈린다
+    expect(haptic).toHaveBeenCalledWith('celebrate');
+    expect(haptic).not.toHaveBeenCalledWith('success');
     expect(onDone).not.toHaveBeenCalled();
     await waitFor(() => expect(onDone).toHaveBeenCalled(), { timeout: 5000 });
   });

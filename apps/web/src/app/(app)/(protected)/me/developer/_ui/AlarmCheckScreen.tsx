@@ -114,7 +114,10 @@ const AlarmCheck = () => {
       { time: next, enabled: true },
       {
         onSuccess: () =>
-          showToast(`매일 ${formatClock(next, 'ko')}에 울리게 저장했어요`),
+          showToast(
+            `매일 ${formatClock(next, 'ko')}에 울리게 저장했어요`,
+            'success',
+          ),
       },
     );
   };
@@ -140,9 +143,9 @@ const AlarmCheck = () => {
   const copyEnvironment = async () => {
     try {
       await navigator.clipboard.writeText(environment);
-      showToast('환경 정보를 복사했어요');
+      showToast('환경 정보를 복사했어요', 'success');
     } catch {
-      showToast('복사하지 못했어요');
+      showToast('복사하지 못했어요', 'error');
     }
   };
 

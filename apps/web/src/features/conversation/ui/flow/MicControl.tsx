@@ -29,6 +29,8 @@ interface MicControlProps {
   onResend?: () => void;
   // 말한 뒤 확인 중일 때만 준다 — 주면 X·■ 자리가 다시 말하기·보내기로 바뀐다
   review?: { onRetry: () => void; onSend: () => void };
+  // 상대가 말하는 중에도 눌러서 끊을 수 있는가 — 주면 발화 중에도 마이크·키보드를 잠그지 않는다
+  interruptible?: boolean;
 }
 
 // 완료 버튼(size-20=80px) 둘레를 도는 링 — 버튼 밖으로 6px씩 나가 92px
@@ -45,11 +47,12 @@ export const MicControl = ({
   remainingRatio,
   onResend,
   review,
+  interruptible = false,
 }: MicControlProps) => {
   const t = useTranslations('conversation.micControl');
   const listening = phase === 'USER_SPEAKING';
-  // 발화·속마음 중엔 누를 수 없게 잠근다 — 자리는 유지해 레이아웃이 튀지 않게
-  const disabled = phase !== 'USER_READY' && !listening;
+  // 발화·속마음 중엔 누를 수 없게 잠근다 — 자리는 유지해 레이아웃이 튀지 않게. 끊기가 허용된 발화 중만 예외다
+  const disabled = phase !== 'USER_READY' && !listening && !interruptible;
 
   return (
     <div className="flex h-24 flex-none flex-col items-center justify-center">

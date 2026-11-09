@@ -1,5 +1,6 @@
 // AI 발화 재생 훅 검증 — 오프닝 음원·합성 폴백·타이머 폴백과 다음 질문 프리페치
 // @vitest-environment jsdom
+import { EVENTS } from '@landit/analytics';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -20,16 +21,23 @@ const ttsMock = vi.hoisted(() => {
     onStart: undefined as ((playback: FakePlayback) => void) | undefined,
     onEnd: undefined as (() => void) | undefined,
     onError: undefined as ((error?: Error) => void) | undefined,
+    onStall: undefined as ((snapshot: unknown) => void) | undefined,
+    onResume: undefined as
+      ((resume: { stalledMs: number }) => void) | undefined,
   };
   interface CapturedOptions {
     onStart?: (playback: FakePlayback) => void;
     onEnd?: () => void;
     onError?: (error?: Error) => void;
+    onStall?: (snapshot: unknown) => void;
+    onResume?: (resume: { stalledMs: number }) => void;
   }
   const capture = (opts?: CapturedOptions) => {
     state.onStart = opts?.onStart;
     state.onEnd = opts?.onEnd;
     state.onError = opts?.onError;
+    state.onStall = opts?.onStall;
+    state.onResume = opts?.onResume;
   };
   return {
     state,
@@ -100,6 +108,8 @@ beforeEach(() => {
   ttsMock.state.onStart = undefined;
   ttsMock.state.onEnd = undefined;
   ttsMock.state.onError = undefined;
+  ttsMock.state.onStall = undefined;
+  ttsMock.state.onResume = undefined;
   clearTtsCalls();
 });
 
@@ -143,7 +153,7 @@ describe('useAiSpeech', () => {
     await act(async () => ttsMock.state.onError?.()); // 음원 못 받음(404·네트워크)
 
     expect(track).toHaveBeenCalledWith('Speech Playback Failed', {
-      source: 'question_audio',
+      source: 'prerecorded',
     });
     expect(ttsMock.speak).toHaveBeenCalledWith(
       OPENING,
@@ -246,13 +256,13 @@ describe('useAiSpeech', () => {
     expect(onSpeechEnd).not.toHaveBeenCalled();
   });
 
-  it('합성 재생이 실패하면 synth 출처로 실패 이벤트를 찍고 발화를 마친다', async () => {
+  it('합성 재생이 실패하면 synthesized 출처로 실패 이벤트를 찍고 발화를 마친다', async () => {
     const { onSpeechEnd } = renderSpeech({ openingSrc: null });
 
     await act(async () => ttsMock.state.onError?.());
 
     expect(track).toHaveBeenCalledWith('Speech Playback Failed', {
-      source: 'synth',
+      source: 'synthesized',
     });
     expect(onSpeechEnd).toHaveBeenCalledTimes(1);
   });
@@ -342,7 +352,7 @@ describe('useAiSpeech 분리 재생', () => {
     await act(async () => ttsMock.state.onError?.());
 
     expect(track).toHaveBeenCalledWith('Speech Playback Failed', {
-      source: 'synth',
+      source: 'synthesized',
     });
     expect(ttsMock.speakSrc).toHaveBeenCalledWith(
       QUESTION_URL,
@@ -360,7 +370,7 @@ describe('useAiSpeech 분리 재생', () => {
     await act(async () => ttsMock.state.onError?.()); // 질문 음원 실패
 
     expect(track).toHaveBeenCalledWith('Speech Playback Failed', {
-      source: 'question_audio',
+      source: 'prerecorded',
     });
     expect(onSpeechEnd).toHaveBeenCalledTimes(1); // 이 발화를 건너뛰고 다음으로
   });
@@ -395,6 +405,51 @@ describe('useAiSpeech 분리 재생', () => {
 
     expect(ttsMock.prefetch).toHaveBeenCalledWith(BACKCHANNEL, voice);
     expect(ttsMock.prefetchSrc).toHaveBeenCalledWith(QUESTION_URL);
+  });
+});
+
+// 오프닝 음원 미리 열기 — 누르는 순간 받기 시작하지 않게, 켠 호출부(스몰톡 탭 인사)만 재생 전에 열어 둔다
+describe('오프닝 음원 미리 열기', () => {
+  const OPENING_URL = 'https://cdn.example.com/questions/10.mp3';
+
+  it('켜 두면 재생 차례가 오기 전에 오프닝 음원을 미리 열어 둔다', () => {
+    renderSpeech({ playing: false, preloadOpening: true });
+
+    expect(ttsMock.prefetchSrc).toHaveBeenCalledWith(OPENING_URL);
+  });
+
+  it('켜지 않으면 미리 열지 않는다 — 대화 오프닝은 들어오자마자 틀거나(상대 선발화) 안 틀어서(내 선발화) 미리 받을 이득이 없다', () => {
+    renderSpeech({ playing: false });
+
+    expect(ttsMock.prefetchSrc).not.toHaveBeenCalled();
+  });
+
+  it('재생 중에는 미리 열지 않는다 — 지금 트는 음원과 겹친다', () => {
+    renderSpeech({ preloadOpening: true });
+
+    expect(ttsMock.prefetchSrc).not.toHaveBeenCalled();
+  });
+
+  it('오프닝 음원이 바뀌면 새 음원을 미리 연다', () => {
+    const { rerender, initialProps } = renderSpeech({
+      playing: false,
+      preloadOpening: true,
+    });
+    clearTtsCalls();
+
+    rerender({ ...initialProps, openingSrc: '/audio/b.mp3' });
+
+    expect(ttsMock.prefetchSrc).toHaveBeenCalledWith('/audio/b.mp3');
+  });
+
+  it('재생이 끝나면 같은 음원을 다시 열어 둔다 — 또 눌러도 바로 나온다', async () => {
+    const { rerender, initialProps } = renderSpeech({ preloadOpening: true });
+    await act(async () => ttsMock.state.onEnd?.());
+    clearTtsCalls();
+
+    rerender({ ...initialProps, playing: false });
+
+    expect(ttsMock.prefetchSrc).toHaveBeenCalledWith(OPENING_URL);
   });
 });
 
@@ -850,5 +905,350 @@ describe('소리가 시작되기 전 대기', () => {
 
     // Then — 다음 발화의 글자가 소리보다 먼저 나오면 안 된다
     expect(result.current.waitingForSound).toBe(true);
+  });
+});
+
+// 재생 위치가 오래 그대로면 재생 모듈이 멈춤을 알린다 — 실기기(iOS 27 웹뷰)에서 4초짜리 첫 질문 음원이 25초 동안 끝나지 않아
+// 마이크가 켜지지 않았다. 멈추면 턴은 넘기되 소리는 끄지 않는다 — 다시 나오면 끝까지 들리고, 마이크를 켜면 그때 끈다
+describe('재생이 멈췄을 때', () => {
+  const snapshot = {
+    started: false,
+    positionMs: 0,
+    readyState: 1,
+    networkState: 2,
+    paused: false,
+    lastMediaEvent: 'stalled',
+    backgrounded: true,
+  };
+  const stall = () => act(async () => ttsMock.state.onStall?.(snapshot));
+  // 대화처럼 턴이 있는 재생 — 멈추면 턴을 넘기도록 켠다
+  const renderTurn = (over: Partial<Parameters<typeof useAiSpeech>[0]> = {}) =>
+    renderSpeech({ passTurnOnStall: true, ...over });
+
+  // 오프닝 음원이 멈춰 턴을 넘기고, 유저 차례(playing=false, 다시 듣기 허용)로 넘어간 상태를 만든다
+  const renderTurnPassed = async (
+    over: Partial<Parameters<typeof useAiSpeech>[0]> = {},
+  ) => {
+    const rendered = renderTurn(over);
+    await stall();
+    rendered.rerender({
+      ...rendered.initialProps,
+      playing: false,
+      replayAllowed: true,
+    });
+    return rendered;
+  };
+
+  it('기본값은 멈춰도 턴을 넘기지 않는다 — 인사처럼 턴이 없는 재생은 소리를 끊어 줄 계기가 없다', async () => {
+    // Given
+    const { onSpeechEnd } = renderSpeech();
+
+    // Then
+    expect(ttsMock.state.onStall).toBeUndefined();
+    expect(onSpeechEnd).not.toHaveBeenCalled();
+  });
+
+  it('멈춰 턴을 넘긴 순간 내가 말하기 시작했으면 남은 소리를 끊는다 — 끊기와 멈춤이 겹쳐도 녹음에 섞이지 않게', async () => {
+    // Given: 멈춰서 턴을 넘겼지만, 그 사이 내가 끊고 말하기 시작해 다시 듣기 허용 구간을 거치지 않았다
+    const { rerender, initialProps } = renderTurn({ replayAllowed: false });
+    await stall();
+    ttsMock.stop.mockClear();
+
+    // When: 발화 단계를 벗어나 곧장 내 녹음으로 간다
+    rerender({ ...initialProps, playing: false, replayAllowed: false });
+
+    // Then: 남겨 둘 이유가 없는 소리는 끊긴다
+    expect(ttsMock.stop).toHaveBeenCalled();
+  });
+
+  it('멈추면 발화를 끝내 내 차례로 넘긴다', async () => {
+    // Given
+    const { onSpeechEnd } = renderTurn();
+
+    // When
+    await stall();
+
+    // Then
+    expect(onSpeechEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('턴을 넘기면 입모양을 멈춘다 — 멈춘 재생 위치에서 입이 벌린 채 굳지 않게', async () => {
+    // Given — 재생이 시작돼 입이 움직이던 중이다
+    const { result } = renderTurn();
+    await act(async () =>
+      ttsMock.state.onStart?.({ progress: () => 0.3, source: 'q.mp3' }),
+    );
+    expect(result.current.speech).not.toBeNull();
+
+    // When
+    await stall();
+
+    // Then
+    expect(result.current.speech).toBeNull();
+  });
+
+  it('멈춘 순간의 오디오 상태를 계측으로 남긴다 — 왜 멈췄는지 좁히는 단서다', async () => {
+    // Given
+    renderTurn({ sessionId: 7 });
+    vi.mocked(track).mockClear();
+
+    // When
+    await stall();
+
+    // Then
+    expect(track).toHaveBeenCalledWith(EVENTS.SPEECH_PLAYBACK_STALLED, {
+      session_id: 7,
+      source: 'prerecorded',
+      started: false,
+      position_ms: 0,
+      ready_state: 1,
+      network_state: 2,
+      paused: false,
+      last_media_event: 'stalled',
+      backgrounded: true,
+    });
+  });
+
+  it('턴을 넘겨도 소리는 끄지 않는다 — 다시 나오면 끝까지 들린다', async () => {
+    // Given
+    const rendered = renderTurn();
+    await stall();
+    clearTtsCalls();
+
+    // When — 내 차례로 넘어간다
+    rendered.rerender({
+      ...rendered.initialProps,
+      playing: false,
+      replayAllowed: true,
+    });
+
+    // Then
+    expect(ttsMock.stop).not.toHaveBeenCalled();
+  });
+
+  it('넘긴 뒤 소리가 끝까지 나도 종료를 다시 알리지 않는다', async () => {
+    // Given
+    const { onSpeechEnd, result } = await renderTurnPassed();
+    await act(async () =>
+      ttsMock.state.onStart?.({ progress: () => 0.5, source: 'q.mp3' }),
+    );
+    expect(result.current.speech).not.toBeNull();
+
+    // When
+    await act(async () => ttsMock.state.onEnd?.());
+
+    // Then — 턴은 이미 넘어갔고, 입은 소리와 함께 멈춘다
+    expect(onSpeechEnd).toHaveBeenCalledTimes(1);
+    expect(result.current.speech).toBeNull();
+  });
+
+  it('넘긴 뒤 마이크를 켜면(다시 듣기 허용이 끝나면) 남은 소리를 끈다 — 내 녹음에 섞이지 않게', async () => {
+    // Given
+    const rendered = await renderTurnPassed();
+    clearTtsCalls();
+
+    // When
+    rendered.rerender({
+      ...rendered.initialProps,
+      playing: false,
+      replayAllowed: false,
+    });
+
+    // Then
+    expect(ttsMock.stop).toHaveBeenCalled();
+  });
+
+  it('넘긴 뒤 화면을 떠나면 남은 소리를 끈다', async () => {
+    // Given
+    const rendered = await renderTurnPassed();
+    clearTtsCalls();
+
+    // When
+    rendered.unmount();
+
+    // Then
+    expect(ttsMock.stop).toHaveBeenCalled();
+  });
+
+  it('넘긴 뒤 다시 듣기를 누르면 남은 소리를 끊고 처음부터 다시 튼다', async () => {
+    // Given
+    const { result } = await renderTurnPassed();
+    clearTtsCalls();
+
+    // When
+    act(() => {
+      result.current.replay();
+    });
+
+    // Then
+    expect(ttsMock.stop).toHaveBeenCalled();
+    expect(ttsMock.speakSrc).toHaveBeenCalledTimes(1);
+    expect(result.current.replaying).toBe(true);
+  });
+
+  it('넘긴 뒤 오프닝 음원이 실패해도 합성으로 다시 틀지 않는다 — 이미 내 차례다', async () => {
+    // Given
+    await renderTurnPassed();
+    clearTtsCalls();
+
+    // When
+    await act(async () => ttsMock.state.onError?.());
+
+    // Then
+    expect(ttsMock.speak).not.toHaveBeenCalled();
+  });
+
+  it('맞장구 합성이 멈춰도 턴을 넘기고, 소리가 이어지면 질문 음원까지 튼다', async () => {
+    // Given
+    const { onSpeechEnd } = renderTurn({
+      openingSrc: null,
+      source: {
+        content: 'Nice! What size?',
+        ttsText: 'Nice!',
+        fixedQuestionText: 'What size?',
+        questionAudioUrl: 'https://cdn.example.com/q.mp3',
+      },
+    });
+
+    // When
+    await stall();
+    await act(async () => ttsMock.state.onEnd?.());
+
+    // Then
+    expect(onSpeechEnd).toHaveBeenCalledTimes(1);
+    expect(ttsMock.speakSrc).toHaveBeenCalledWith(
+      'https://cdn.example.com/q.mp3',
+      expect.anything(),
+    );
+  });
+
+  it('다시 듣기는 멈춰도 턴과 무관하다 — 멈춤 감시를 걸지 않는다', async () => {
+    // Given — 오프닝이 끝나 내 차례다
+    const rendered = renderTurn();
+    await act(async () => ttsMock.state.onEnd?.());
+    rendered.rerender({
+      ...rendered.initialProps,
+      playing: false,
+      replayAllowed: true,
+    });
+
+    // When
+    act(() => {
+      rendered.result.current.replay();
+    });
+
+    // Then
+    expect(ttsMock.state.onStall).toBeUndefined();
+  });
+
+  it('턴을 넘긴 뒤 소리가 다시 나오면 멈춰 있던 시간을 한 번만 기록한다 — 멈춤 기준을 조정하는 근거다', async () => {
+    // Given
+    await renderTurnPassed({ sessionId: 7 });
+    vi.mocked(track).mockClear();
+
+    // When — 다시 나왔다가 또 멈추고 다시 나온다
+    await act(async () => ttsMock.state.onResume?.({ stalledMs: 4_500 }));
+    await stall();
+    await act(async () => ttsMock.state.onResume?.({ stalledMs: 3_500 }));
+
+    // Then
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith(EVENTS.SPEECH_PLAYBACK_RESUMED, {
+      session_id: 7,
+      source: 'prerecorded',
+      stalled_ms: 4_500,
+    });
+  });
+
+  it('멈췄던 소리가 다시 나오면 입모양도 다시 소리를 따른다', async () => {
+    // Given — 입이 움직이다 멈춰 턴을 넘겼다
+    const { result } = renderTurn();
+    const playback = { progress: () => 0.3, source: 'q.mp3' };
+    await act(async () => ttsMock.state.onStart?.(playback));
+    await stall();
+    expect(result.current.speech).toBeNull();
+
+    // When
+    await act(async () => ttsMock.state.onResume?.({ stalledMs: 4_500 }));
+
+    // Then
+    expect(result.current.speech).toEqual({ playback, text: OPENING });
+  });
+
+  it('턴을 넘긴 뒤 소리가 다시 나오면 다시 듣기가 재생 중으로 보이고, 누르면 그 소리를 멈춘다', async () => {
+    // Given
+    const { result } = await renderTurnPassed();
+    await act(async () =>
+      ttsMock.state.onStart?.({ progress: () => 0.3, source: 'q.mp3' }),
+    );
+    await act(async () => ttsMock.state.onResume?.({ stalledMs: 4_500 }));
+    expect(result.current.replaying).toBe(true);
+    clearTtsCalls();
+
+    // When
+    let started = true;
+    act(() => {
+      started = result.current.replay();
+    });
+
+    // Then — 다시 틀지 않고 멈춘다(다시 듣기 계측도 남지 않는다)
+    expect(started).toBe(false);
+    expect(ttsMock.stop).toHaveBeenCalled();
+    expect(ttsMock.speakSrc).not.toHaveBeenCalled();
+    expect(result.current.replaying).toBe(false);
+    expect(result.current.speech).toBeNull();
+  });
+
+  it('턴을 넘긴 뒤 소리가 멈춰 있으면 다시 듣기는 재생 중이 아니다', async () => {
+    const { result } = await renderTurnPassed();
+
+    expect(result.current.replaying).toBe(false);
+  });
+
+  it('남은 소리가 다시 멈추면 다시 듣기도 재생 중이 아니다', async () => {
+    // Given
+    const { result } = await renderTurnPassed();
+    await act(async () => ttsMock.state.onResume?.({ stalledMs: 4_500 }));
+    expect(result.current.replaying).toBe(true);
+
+    // When
+    await stall();
+
+    // Then
+    expect(result.current.replaying).toBe(false);
+  });
+
+  it('남은 소리가 끝나면 다시 듣기도 꺼지고, 그 뒤 마이크를 켜도 다른 소리를 끄지 않는다', async () => {
+    // Given
+    const rendered = await renderTurnPassed();
+    await act(async () => ttsMock.state.onResume?.({ stalledMs: 4_500 }));
+    await act(async () => ttsMock.state.onEnd?.());
+    expect(rendered.result.current.replaying).toBe(false);
+    clearTtsCalls();
+
+    // When
+    rendered.rerender({
+      ...rendered.initialProps,
+      playing: false,
+      replayAllowed: false,
+    });
+
+    // Then — 끝난 회차의 중단 손잡이가 남아 있으면 엉뚱한 소리를 끈다
+    expect(ttsMock.stop).not.toHaveBeenCalled();
+  });
+
+  it('발화 단계를 벗어난 뒤 도착한 멈춤은 턴을 넘기지도, 계측하지도 않는다', async () => {
+    // Given
+    const rendered = renderTurn();
+    const lateStall = ttsMock.state.onStall;
+    rendered.rerender({ ...rendered.initialProps, playing: false });
+    vi.mocked(track).mockClear();
+
+    // When
+    await act(async () => lateStall?.(snapshot));
+
+    // Then
+    expect(rendered.onSpeechEnd).not.toHaveBeenCalled();
+    expect(track).not.toHaveBeenCalled();
   });
 });

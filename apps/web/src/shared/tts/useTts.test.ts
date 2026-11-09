@@ -35,12 +35,39 @@ class FakeAudio {
   removeAttribute = vi.fn();
   load = vi.fn();
   playbackRate = 1;
+  // 멈춤 감시가 읽는 재생 상태 — 테스트가 직접 바꿔 재생 진행을 흉내 낸다
+  currentTime = 0;
+  // 기본은 재생할 데이터가 다 온 상태(HAVE_ENOUGH_DATA) — 받는 중인 경우는 테스트가 낮춘다
+  readyState = 4;
+  networkState = 0;
+  paused = false;
+  listeners = new Map<string, Set<(event: Event) => void>>();
+  addEventListener = vi.fn((type: string, fn: (event: Event) => void) => {
+    if (!this.listeners.has(type)) this.listeners.set(type, new Set());
+    this.listeners.get(type)!.add(fn);
+  });
+  removeEventListener = vi.fn((type: string, fn: (event: Event) => void) => {
+    this.listeners.get(type)?.delete(fn);
+  });
 
   constructor(src: string) {
     this.src = src;
     FakeAudio.instances.push(this);
   }
+
+  emit(type: string) {
+    for (const fn of this.listeners.get(type) ?? []) fn(new Event(type));
+  }
 }
+
+// 화면 보임 상태를 바꾸고 브라우저처럼 알린다
+const setVisibility = (state: DocumentVisibilityState) => {
+  Object.defineProperty(document, 'visibilityState', {
+    configurable: true,
+    get: () => state,
+  });
+  document.dispatchEvent(new Event('visibilitychange'));
+};
 
 function fakeAudioResponse(): Response {
   return {
@@ -398,6 +425,35 @@ describe('useTts', () => {
     expect(FakeAudio.instances.length).toBe(opened);
   });
 
+  it('다른 음원으로 넘어간 뒤 앞 음원의 재생 거부가 늦게 도착해도 앞 음원을 다시 열거나 지금 재생을 끊지 않는다', async () => {
+    // Given 미리 열어 둔 클로이 인사를 틀자마자 테디 인사로 넘어갔고
+    const { result } = renderHook(() => useTts());
+    const onChloeError = vi.fn();
+    act(() => result.current.prefetchSrc('/audio/chloe.mp3'));
+    let rejectChloe: (error: unknown) => void = () => {};
+    FakeAudio.instances[0]!.play = vi.fn(
+      () => new Promise<void>((_, reject) => (rejectChloe = reject)),
+    );
+    act(() =>
+      result.current.speakSrc('/audio/chloe.mp3', { onError: onChloeError }),
+    );
+    act(() => result.current.speakSrc('/audio/teddy.mp3'));
+    const teddy = FakeAudio.instances[1]!;
+
+    // When 클로이 음원의 로드 실패가 재생 거부로 뒤늦게 도착하면
+    await act(async () =>
+      rejectChloe(new DOMException('load failed', 'NotSupportedError')),
+    );
+
+    // Then 클로이 음원을 다시 열지 않고, 테디 재생도 그대로 둔다
+    expect(FakeAudio.instances.map((audio) => audio.src)).toEqual([
+      '/audio/chloe.mp3',
+      '/audio/teddy.mp3',
+    ]);
+    expect(teddy.pause).not.toHaveBeenCalled();
+    expect(onChloeError).not.toHaveBeenCalled();
+  });
+
   it('프리로드 엘리먼트 재생이 실패하면 새 엘리먼트로 한 번 다시 연다', () => {
     const { result } = renderHook(() => useTts());
     const onError = vi.fn();
@@ -519,16 +575,72 @@ describe('useTts', () => {
     // AbortError는 합성 폴백을 부르지 않는다 (정적 재생이 그대로 유지되도록)
     expect(onError).not.toHaveBeenCalled();
   });
-  it('말하기 속도를 느리게 골라두면 합성 음성이 그 배속으로 재생된다', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => fakeAudioResponse()),
-    );
+  describe('합성할 때 속도를 정할 수 있는 목소리(Deepgram)', () => {
+    const luna: TtsVoice = {
+      provider: 'OPENROUTER',
+      model: 'deepgram/aura-2',
+      providerVoiceId: 'aura-2-luna-en',
+      gender: 'FEMALE',
+    };
+    const requestedBody = (fetchMock: ReturnType<typeof vi.fn>, call = 0) =>
+      JSON.parse(
+        (fetchMock.mock.calls[call]![1] as RequestInit).body as string,
+      );
+
+    it('배속을 고르면 그 속도로 합성을 요청하고 재생은 늘리지 않는다', async () => {
+      // given
+      const fetchMock = vi.fn(async () => fakeAudioResponse());
+      vi.stubGlobal('fetch', fetchMock);
+      setSpeechRate(0.75);
+      const { result } = renderHook(() => useTts());
+
+      // when
+      await act(() => result.current.speak('Hello', luna));
+
+      // then
+      expect(requestedBody(fetchMock).speed).toBe(0.75);
+      expect(FakeAudio.instances[0].playbackRate).toBe(1);
+    });
+
+    it('1배면 속도 없이 지금처럼 합성을 요청한다', async () => {
+      const fetchMock = vi.fn(async () => fakeAudioResponse());
+      vi.stubGlobal('fetch', fetchMock);
+      const { result } = renderHook(() => useTts());
+
+      await act(() => result.current.speak('Hello', luna));
+
+      expect(requestedBody(fetchMock)).not.toHaveProperty('speed');
+    });
+
+    it('미리 합성한 뒤 배속을 바꾸면 그 음원을 쓰지 않고 새 속도로 다시 합성한다', async () => {
+      // given — 1배로 미리 받아 둔 문장
+      const fetchMock = vi.fn(async () => fakeAudioResponse());
+      vi.stubGlobal('fetch', fetchMock);
+      const { result } = renderHook(() => useTts());
+      await act(() => result.current.prefetch('Hello', luna));
+      setSpeechRate(1.5);
+
+      // when
+      await act(() => result.current.speak('Hello', luna));
+
+      // then
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(requestedBody(fetchMock, 1).speed).toBe(1.5);
+    });
+  });
+
+  it('합성 속도를 못 정하는 목소리는 속도 없이 합성하고 재생 배속으로 늘린다', async () => {
+    const fetchMock = vi.fn<
+      (url: string, init: RequestInit) => Promise<Response>
+    >(async () => fakeAudioResponse());
+    vi.stubGlobal('fetch', fetchMock);
     setSpeechRate(0.75);
     const { result } = renderHook(() => useTts());
 
     await act(() => result.current.speak('Hello', harper));
 
+    const body = JSON.parse(fetchMock.mock.calls[0]![1]!.body as string);
+    expect(body).not.toHaveProperty('speed');
     expect(FakeAudio.instances[0].playbackRate).toBe(0.75);
   });
 
@@ -764,6 +876,524 @@ describe('useTts', () => {
       // Then
       expect(fetchMock).toHaveBeenCalledTimes(1);
       expect(onError).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('재생이 멈췄을 때', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => fakeAudioResponse()),
+      );
+      setVisibility('visible');
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      // 덮어쓴 보임 상태를 걷어 jsdom 원래 값으로 돌린다
+      Reflect.deleteProperty(document, 'visibilityState');
+    });
+
+    it('재생 위치가 3초 동안 그대로면 멈춤을 한 번 알리고, 소리는 끄지 않는다', () => {
+      // Given — 정적 음원 재생을 걸었지만 재생 위치가 0에서 움직이지 않는다
+      const onStall = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall }));
+      const audio = FakeAudio.instances[0]!;
+
+      // When
+      act(() => vi.advanceTimersByTime(2_999));
+      expect(onStall).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(1));
+
+      // Then — 알리기만 하고 재생은 그대로 둔다(다시 움직이면 끝까지 들린다)
+      expect(onStall).toHaveBeenCalledTimes(1);
+      expect(onStall).toHaveBeenCalledWith(
+        expect.objectContaining({ started: false, positionMs: 0 }),
+      );
+      expect(audio.pause).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(10_000));
+      expect(onStall).toHaveBeenCalledTimes(1);
+    });
+
+    it('재생 위치가 움직이면 처음부터 다시 센다', () => {
+      // Given
+      const onStall = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall }));
+      const audio = FakeAudio.instances[0]!;
+      act(() => vi.advanceTimersByTime(2_500));
+
+      // When — 망이 느려 늦게 시작했지만 결국 재생이 나아간다
+      audio.currentTime = 0.4;
+      act(() => vi.advanceTimersByTime(2_500));
+
+      // Then — 움직임을 확인한 때(3초 시점)부터 다시 3초가 차기 전엔 멈춤이 아니다
+      expect(onStall).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(999));
+      expect(onStall).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(1));
+      expect(onStall).toHaveBeenCalledWith(
+        expect.objectContaining({ started: true, positionMs: 400 }),
+      );
+    });
+
+    it('화면이 숨겨진 동안은 세지 않고, 돌아오면 처음부터 센다 — 숨겨지면 재생을 멈춰 두므로 멈춤이 아니다', () => {
+      // Given
+      const onStall = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall }));
+      act(() => vi.advanceTimersByTime(2_000));
+
+      // When — 앱을 내렸다가 한참 뒤 돌아온다
+      act(() => setVisibility('hidden'));
+      act(() => vi.advanceTimersByTime(60_000));
+      act(() => setVisibility('visible'));
+
+      // Then
+      expect(onStall).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(2_999));
+      expect(onStall).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(1));
+      expect(onStall).toHaveBeenCalledTimes(1);
+    });
+
+    it('끝까지 재생되면 감시도 끝난다', () => {
+      const onStall = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall }));
+
+      act(() => FakeAudio.instances[0]!.onended?.());
+      act(() => vi.advanceTimersByTime(10_000));
+
+      expect(onStall).not.toHaveBeenCalled();
+    });
+
+    it('재생을 멈추면 감시도 끝난다', () => {
+      const onStall = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall }));
+
+      act(() => result.current.stop());
+      act(() => vi.advanceTimersByTime(10_000));
+
+      expect(onStall).not.toHaveBeenCalled();
+    });
+
+    it('재생이 실패하면 감시도 끝난다 — 실패는 실패로만 알린다', () => {
+      const onStall = vi.fn();
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall, onError }));
+
+      act(() => FakeAudio.instances[0]!.onerror?.());
+      act(() => vi.advanceTimersByTime(10_000));
+
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onStall).not.toHaveBeenCalled();
+    });
+
+    it('합성 음성 재생이 거부되면 실패만 알리고 멈춤은 알리지 않는다', async () => {
+      FakeAudio.playRejection = new DOMException('blocked', 'NotAllowedError');
+      const onStall = vi.fn();
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+
+      await act(() =>
+        result.current.speak('Hello', harper, { onStall, onError }),
+      );
+      act(() => vi.advanceTimersByTime(10_000));
+
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onStall).not.toHaveBeenCalled();
+    });
+
+    it('다음 재생으로 넘어가면 앞 재생의 감시는 끝난다', () => {
+      const first = vi.fn();
+      const second = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/a.mp3', { onStall: first }));
+      act(() => vi.advanceTimersByTime(2_000));
+
+      act(() => result.current.speakSrc('/audio/b.mp3', { onStall: second }));
+      act(() => vi.advanceTimersByTime(3_000));
+
+      expect(first).not.toHaveBeenCalled();
+      expect(second).toHaveBeenCalledTimes(1);
+    });
+
+    it('미리 열어 둔 음원이 실패해 새로 열면 새 엘리먼트를 한 번만 감시한다', () => {
+      // Given
+      const onStall = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.prefetchSrc('/audio/q.mp3'));
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall }));
+
+      // When
+      act(() => FakeAudio.instances[0]!.onerror?.());
+      act(() => vi.advanceTimersByTime(3_000));
+
+      // Then
+      expect(FakeAudio.instances).toHaveLength(2);
+      expect(onStall).toHaveBeenCalledTimes(1);
+    });
+
+    it('합성 음성도 재생을 건 뒤부터 감시한다 — 합성을 기다리는 시간은 따로 제한한다', async () => {
+      const onStall = vi.fn();
+      const { result } = renderHook(() => useTts());
+
+      await act(() => result.current.speak('Hello', harper, { onStall }));
+      act(() => vi.advanceTimersByTime(3_000));
+
+      expect(onStall).toHaveBeenCalledTimes(1);
+    });
+
+    it('멈춘 순간의 오디오 상태를 함께 알린다 — 왜 멈췄는지 좁히는 단서다', () => {
+      // Given — 받다가 멈춘 상태
+      const onStall = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall }));
+      const audio = FakeAudio.instances[0]!;
+      audio.readyState = 1;
+      audio.networkState = 2;
+      audio.paused = true;
+
+      // When
+      act(() => audio.emit('waiting'));
+      act(() => audio.emit('stalled'));
+      act(() => vi.advanceTimersByTime(3_000));
+
+      // Then
+      expect(onStall).toHaveBeenCalledWith({
+        started: false,
+        positionMs: 0,
+        readyState: 1,
+        networkState: 2,
+        paused: true,
+        lastMediaEvent: 'stalled',
+        backgrounded: false,
+      });
+    });
+
+    it('이 재생 중 앱이 내려간 적 있으면 함께 알린다 — 돌아와 다시 건 재생이 막힌 것과 다른 원인을 가른다', () => {
+      // Given
+      const onStall = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall }));
+
+      // When — 내렸다가 돌아왔는데 재생 위치가 그대로다
+      act(() => setVisibility('hidden'));
+      act(() => setVisibility('visible'));
+      act(() => vi.advanceTimersByTime(3_000));
+
+      // Then
+      expect(onStall).toHaveBeenCalledWith(
+        expect.objectContaining({ backgrounded: true }),
+      );
+    });
+
+    it('앱이 내려간 채 건 재생도 내려간 적 있는 것으로 본다', () => {
+      // Given
+      setVisibility('hidden');
+      const onStall = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall }));
+
+      // When
+      act(() => setVisibility('visible'));
+      act(() => vi.advanceTimersByTime(3_000));
+
+      // Then
+      expect(onStall).toHaveBeenCalledWith(
+        expect.objectContaining({ backgrounded: true }),
+      );
+    });
+
+    it('받는 중이어도 같은 3초로 본다 — 질문 음원은 70KB 이하라 정상이면 3초 안에 내려온다', () => {
+      // Given — 음원을 받는 중이라 재생할 데이터가 아직 없다
+      const onStall = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall }));
+      FakeAudio.instances[0]!.readyState = 1;
+
+      // When
+      act(() => vi.advanceTimersByTime(3_000));
+
+      // Then
+      expect(onStall).toHaveBeenCalledWith(
+        expect.objectContaining({ readyState: 1 }),
+      );
+    });
+
+    it('멈춘 뒤 재생 위치가 다시 움직이면 다시 나온다고 알리고, 또 멈추면 다시 알린다', () => {
+      // Given — 멈춤을 이미 알렸다
+      const onStall = vi.fn();
+      const onResume = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall, onResume }));
+      const audio = FakeAudio.instances[0]!;
+      act(() => vi.advanceTimersByTime(3_000));
+      expect(onStall).toHaveBeenCalledTimes(1);
+
+      // When — 소리가 다시 나아간다
+      audio.currentTime = 0.5;
+      act(() => vi.advanceTimersByTime(500));
+
+      // Then — 재생 위치가 마지막으로 움직인 뒤 다시 움직이기까지 걸린 시간을 함께 알린다
+      expect(onResume).toHaveBeenCalledTimes(1);
+      expect(onResume).toHaveBeenCalledWith({ stalledMs: 3_500 });
+      act(() => vi.advanceTimersByTime(3_000));
+      expect(onStall).toHaveBeenCalledTimes(2);
+      expect(onResume).toHaveBeenCalledTimes(1);
+    });
+
+    it('멈추기 전에는 움직여도 다시 나온다고 알리지 않는다', () => {
+      const onResume = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() =>
+        result.current.speakSrc('/audio/q.mp3', { onStall: vi.fn(), onResume }),
+      );
+      const audio = FakeAudio.instances[0]!;
+
+      audio.currentTime = 0.5;
+      act(() => vi.advanceTimersByTime(500));
+
+      expect(onResume).not.toHaveBeenCalled();
+    });
+
+    it('감시가 끝나면 엘리먼트에 붙인 귀를 뗀다', () => {
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStall: vi.fn() }));
+      const audio = FakeAudio.instances[0]!;
+
+      act(() => audio.onended?.());
+
+      for (const listeners of audio.listeners.values())
+        expect(listeners.size).toBe(0);
+    });
+  });
+
+  // iOS 웹뷰는 앱이 내려가 있을 때 시작한 재생을 막고도 재생 중으로 남겨, 끝 신호가 오지 않는다
+  describe('앱이 내려가 있을 때', () => {
+    beforeEach(() => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => fakeAudioResponse()),
+      );
+      setVisibility('visible');
+    });
+
+    afterEach(() => {
+      Reflect.deleteProperty(document, 'visibilityState');
+    });
+
+    it('내려가 있는 동안 건 음원은 틀지 않고 기다렸다가, 돌아오면 튼다', async () => {
+      // Given
+      setVisibility('hidden');
+      const onStart = vi.fn();
+      const { result } = renderHook(() => useTts());
+
+      // When
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStart }));
+      await act(async () => {});
+
+      // Then
+      const audio = FakeAudio.instances[0]!;
+      expect(audio.play).not.toHaveBeenCalled();
+      expect(onStart).not.toHaveBeenCalled();
+      await act(async () => setVisibility('visible'));
+      expect(audio.play).toHaveBeenCalledTimes(1);
+      expect(onStart).toHaveBeenCalledTimes(1);
+      expect(result.current.status).toBe('active');
+    });
+
+    it('합성 음성도 내려가 있는 동안엔 기다렸다가, 돌아오면 튼다', async () => {
+      // Given
+      setVisibility('hidden');
+      const onStart = vi.fn();
+      const { result } = renderHook(() => useTts());
+
+      // When
+      let spoken = false;
+      act(() => {
+        void result.current
+          .speak('Hello', harper, { onStart })
+          .then(() => (spoken = true));
+      });
+      await act(async () => {});
+
+      // Then
+      const audio = FakeAudio.instances[0]!;
+      expect(audio.play).not.toHaveBeenCalled();
+      expect(spoken).toBe(false);
+      await act(async () => setVisibility('visible'));
+      expect(audio.play).toHaveBeenCalledTimes(1);
+      expect(onStart).toHaveBeenCalledTimes(1);
+      expect(spoken).toBe(true);
+    });
+
+    it('재생 중에 앱을 내리면 멈췄다가, 돌아오면 이어서 튼다', async () => {
+      // Given
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3'));
+      await act(async () => {});
+      const audio = FakeAudio.instances[0]!;
+
+      // When
+      act(() => setVisibility('hidden'));
+
+      // Then
+      expect(audio.pause).toHaveBeenCalledTimes(1);
+      act(() => setVisibility('visible'));
+      expect(audio.play).toHaveBeenCalledTimes(2);
+    });
+
+    it('재생이 시작되길 기다리는 중에 앱을 내려도 실패로 알리지 않고, 돌아오면 튼다', async () => {
+      // Given — 브라우저처럼 시작 전에 pause()가 들어오면 play()가 AbortError로 거부된다.
+      // 미리 열어 둔 엘리먼트라 play를 걸기 전에 그 동작을 심을 수 있다
+      const onStart = vi.fn();
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.prefetchSrc('/audio/q.mp3'));
+      const audio = FakeAudio.instances[0]!;
+      let interrupt: () => void = () => {};
+      audio.play.mockImplementationOnce(
+        () =>
+          new Promise((_, reject) => {
+            interrupt = () =>
+              reject(new DOMException('interrupted', 'AbortError'));
+          }),
+      );
+      audio.pause.mockImplementationOnce(() => interrupt());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStart, onError }));
+
+      // When
+      await act(async () => setVisibility('hidden'));
+
+      // Then — 실패도 아니고, 프리로드가 죽은 것으로 보고 새로 열지도 않는다
+      expect(onError).not.toHaveBeenCalled();
+      expect(FakeAudio.instances).toHaveLength(1);
+      await act(async () => setVisibility('visible'));
+      expect(audio.play).toHaveBeenCalledTimes(2);
+      expect(onStart).toHaveBeenCalledTimes(1);
+    });
+
+    it('기다리던 재생을 다음 재생이 밀어내도, 밀려난 재생이 새 재생을 끝내지 않는다', async () => {
+      // Given — 내려가 있는 동안 건 합성 음성이 돌아오길 기다린다(음원은 이미 캐시에 있다)
+      setVisibility('hidden');
+      const first = vi.fn();
+      const second = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => {
+        void result.current.speak('Hello', harper, { onStart: first });
+      });
+      await act(async () => {});
+
+      // When — 같은 문장을 다시 건다(다시 듣기처럼 캐시라 기다림 없이 재생까지 건다)
+      act(() => {
+        void result.current.speak('Hello', harper, { onStart: second });
+      });
+      await act(async () => {});
+      await act(async () => setVisibility('visible'));
+
+      // Then
+      expect(first).not.toHaveBeenCalled();
+      expect(second).toHaveBeenCalledTimes(1);
+      expect(result.current.status).toBe('active');
+    });
+
+    it('기다리던 합성 음성을 정적 음원이 밀어내도, 돌아오면 정적 음원이 시작된다', async () => {
+      // Given
+      setVisibility('hidden');
+      const first = vi.fn();
+      const second = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => {
+        void result.current.speak('Hello', harper, { onStart: first });
+      });
+      await act(async () => {});
+
+      // When
+      act(() => result.current.speakSrc('/audio/q.mp3', { onStart: second }));
+      await act(async () => {});
+      await act(async () => setVisibility('visible'));
+
+      // Then
+      expect(first).not.toHaveBeenCalled();
+      expect(second).toHaveBeenCalledTimes(1);
+      expect(result.current.status).toBe('active');
+    });
+
+    it('내려가 있는 동안 음원이 실패하면 실패로 알리고, 돌아와도 틀지 않는다', async () => {
+      // Given
+      setVisibility('hidden');
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/missing.mp3', { onError }));
+      const audio = FakeAudio.instances[0]!;
+
+      // When
+      act(() => audio.onerror?.());
+      await act(async () => setVisibility('visible'));
+
+      // Then
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(audio.play).not.toHaveBeenCalled();
+      expect(result.current.status).toBe('error');
+    });
+
+    it('기다리는 동안 재생을 멈추면 돌아와도 틀지 않는다', async () => {
+      // Given
+      setVisibility('hidden');
+      const onError = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onError }));
+
+      // When
+      act(() => result.current.stop());
+      await act(async () => setVisibility('visible'));
+
+      // Then
+      expect(FakeAudio.instances[0]!.play).not.toHaveBeenCalled();
+      expect(onError).not.toHaveBeenCalled();
+      expect(result.current.status).toBe('idle');
+    });
+
+    it('끝나기 직전에 내려 멈춰 둔 사이 끝 신호가 오면, 돌아와도 처음부터 다시 틀지 않는다', async () => {
+      // Given — 실기기에서 끝 0.03초 전에 내리자 멈춘 뒤에도 끝 신호가 왔다
+      const onEnd = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onEnd }));
+      await act(async () => {});
+      const audio = FakeAudio.instances[0]!;
+
+      // When
+      act(() => setVisibility('hidden'));
+      act(() => audio.onended?.());
+      act(() => setVisibility('visible'));
+
+      // Then
+      expect(audio.play).toHaveBeenCalledTimes(1);
+      expect(onEnd).toHaveBeenCalledTimes(1);
+    });
+
+    it('끝난 재생은 앱을 내렸다 올려도 다시 틀지 않는다', async () => {
+      // Given
+      const onEnd = vi.fn();
+      const { result } = renderHook(() => useTts());
+      act(() => result.current.speakSrc('/audio/q.mp3', { onEnd }));
+      await act(async () => {});
+      const audio = FakeAudio.instances[0]!;
+      act(() => audio.onended?.());
+
+      // When
+      act(() => setVisibility('hidden'));
+      act(() => setVisibility('visible'));
+
+      // Then
+      expect(audio.play).toHaveBeenCalledTimes(1);
+      expect(onEnd).toHaveBeenCalledTimes(1);
     });
   });
 

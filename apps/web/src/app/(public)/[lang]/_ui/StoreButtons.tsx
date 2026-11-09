@@ -79,10 +79,10 @@ export const StoreButtons = async ({
   });
   return (
     <div className={className} data-placement={placement}>
-      {/* 흰 글자 대비 — 기본 주황(#e07a3a)은 2.99:1로 큰 글자 기준(3:1)에 못 미쳐, 눈으로 구분되지 않을 만큼(2%) 짙게 하고 19px 굵게 둔다. 버튼 자체는 첫 화면 제목보다 눈에 덜 띄게 낮게(48px) 둔다 */}
+      {/* 흰 글자 대비 — 기본 주황(#e07a3a)은 2.99:1로 큰 글자 기준(3:1)에 못 미쳐, 눈으로 구분되지 않을 만큼(2%) 짙게 하고 큰 글자 기준선(굵게 18.7px)에 맞춘다. 버튼 자체는 첫 화면 제목보다 눈에 덜 띄게 낮게(44px) 둔다 */}
       <a
         href={LANDING_DOWNLOAD_PATH}
-        className="mx-auto flex h-12 w-fit items-center gap-1.5 rounded-[14px] bg-[#dc7839] pr-5 pl-4 text-[19px] font-bold tracking-[-0.01em] text-white transition-transform active:scale-[0.97] sm:hidden"
+        className="mx-auto flex h-11 w-fit items-center gap-1.5 rounded-[12px] bg-[#dc7839] pr-[18px] pl-3.5 text-[18.7px] font-bold tracking-[-0.01em] text-white transition-transform active:scale-[0.97] sm:hidden"
       >
         <DownloadIcon />
         {t('downloadButton')}

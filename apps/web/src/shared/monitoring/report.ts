@@ -17,6 +17,19 @@ const apiTags = (failure: unknown) =>
       }
     : undefined;
 
+// Sentry 시작 전에 들어온 보고 — 브라우저는 Sentry를 따로 받아 늦게 시작해서(instrumentation-client), 그 사이 보고가 버려지지 않게 모아 둔다. 서버는 요청 전에 시작하고, 시작 안 하는 런타임에서 쌓이기만 하지 않게 브라우저에서만 모은다
+const pending: Array<() => void> = [];
+
+const send = (capture: () => void) => {
+  if (typeof window === 'undefined' || Sentry.isInitialized()) capture();
+  else pending.push(capture);
+};
+
+/** Sentry를 시작한 직후 부른다 — 시작 전에 모아 둔 보고를 들어온 순서대로 보낸다 */
+export const flushPendingReports = () => {
+  for (const capture of pending.splice(0)) capture();
+};
+
 /**
  * 연산이 실패로 끝났음을 Sentry에 보고한다 — 유저 데이터 유실·진행 불가 수준(알림 대상).
  *
@@ -27,7 +40,7 @@ export const reportError = (
   error: unknown,
   extra?: Record<string, unknown>,
 ) => {
-  Sentry.captureException(error, { tags: apiTags(error), extra });
+  send(() => Sentry.captureException(error, { tags: apiTags(error), extra }));
 };
 
 /**
@@ -40,15 +53,17 @@ export const reportWarning = (
   failure: unknown,
   extra?: Record<string, unknown>,
 ) => {
-  if (typeof failure === 'string') {
-    Sentry.captureMessage(failure, { level: 'warning', extra });
-  } else {
-    Sentry.captureException(failure, {
-      level: 'warning',
-      extra,
-      tags: apiTags(failure),
-    });
-  }
+  send(() => {
+    if (typeof failure === 'string') {
+      Sentry.captureMessage(failure, { level: 'warning', extra });
+    } else {
+      Sentry.captureException(failure, {
+        level: 'warning',
+        extra,
+        tags: apiTags(failure),
+      });
+    }
+  });
 };
 
 /**

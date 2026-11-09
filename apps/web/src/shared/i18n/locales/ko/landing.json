@@ -35,15 +35,16 @@
     "title": "왜 랜딧일까요?",
     "thoughtTitle": "그 말, 원어민은<br></br><mark>이렇게 들었어요</mark>",
     "thoughtBody": "말할 때마다 상대의 속마음을 바로 보여 줘요.",
-    "thoughtScreenLabel": "머쓱해하는 상대의 속마음을 보여 주는 앱 화면",
+    "thoughtScreenLabel": "잘 지내냐는 인사에 교과서 같은 대답을 듣고 서운해하는 상대의 속마음을 보여 주는 앱 화면",
+    "thoughtGoodScreenLabel": "자연스러운 대답에 현지인 같다고 감탄하는 상대의 속마음을 보여 주는 앱 화면",
     "expressionTitle": "맞춤 표현부터<br></br><mark>발음 교정까지</mark>",
     "expressionBody": "대화에 딱 맞는 표현을 바로 추천하고, 원어민과 발음을 비교해요.",
     "expressionScreenLabel": "상황 그림과 뜻으로 표현을 배우는 앱 화면",
     "expressionPronunciationScreenLabel": "문장의 발음 점수와 틀린 단어를 원어민 발음과 비교해 보여 주는 앱 화면",
-    "freeTalkTitle": "<mark>더 말하고 싶은 날엔</mark><br></br>롤플레이와 스몰톡",
-    "freeTalkSmallTalkScreenLabel": "클로이가 먼저 말을 거는 스몰톡 앱 화면",
-    "freeTalkBody": "원하는 상황을 직접 만들어 롤플레이하고, 친구처럼 스몰톡해요.",
-    "freeTalkScreenLabel": "스몰톡과 롤플레이 탭 아래 롤플레이 목록이 보이는 앱 화면"
+    "freeTalkTitle": "<mark>더 말하고 싶은 날엔</mark><br></br>스몰톡과 롤플레이",
+    "freeTalkBody": "친구처럼 스몰톡하고, 원하는 상황을 직접 만들어 롤플레이해요.",
+    "freeTalkScreenLabel": "클로이가 먼저 말을 거는 스몰톡 앱 화면",
+    "freeTalkRoleplayScreenLabel": "스몰톡과 롤플레이 탭 아래 롤플레이 목록이 보이는 앱 화면"
   },
   "change": {
     "title": "점수가 아니라<br></br><mark>상대의 반응으로</mark> 늘어요",

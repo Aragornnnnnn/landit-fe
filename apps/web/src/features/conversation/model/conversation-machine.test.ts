@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  canInterruptSpeech,
   initialConversationState,
   nextConversationState,
   type ConversationState,
@@ -33,6 +34,22 @@ describe('nextConversationState', () => {
     expect(
       nextConversationState(state('AI_SPEAKING', 2), 'AI_SPEAKING_DONE', true),
     ).toEqual(state('DONE', 2));
+  });
+
+  it('상대가 말하는 중에 마이크를 누르면 끊고 듣기가 시작된다', () => {
+    expect(
+      nextConversationState(state('AI_SPEAKING', 1), 'USER_SPEAKING_STARTED'),
+    ).toEqual(state('USER_SPEAKING', 1));
+  });
+
+  it('종료 인사 중에는 마이크를 눌러도 끊기지 않는다', () => {
+    expect(
+      nextConversationState(
+        state('AI_SPEAKING', 2),
+        'USER_SPEAKING_STARTED',
+        true,
+      ),
+    ).toEqual(state('AI_SPEAKING', 2));
   });
 
   it('마이크를 누르면 듣기가 시작된다', () => {
@@ -85,11 +102,6 @@ describe('nextConversationState', () => {
 
   it.each([
     {
-      name: 'AI 발화 중 마이크 누름',
-      from: state('AI_SPEAKING'),
-      event: 'USER_SPEAKING_STARTED',
-    },
-    {
       name: '마이크 대기 중 발화 종료',
       from: state('USER_READY'),
       event: 'AI_SPEAKING_DONE',
@@ -101,5 +113,29 @@ describe('nextConversationState', () => {
     },
   ] as const)('$name — 단계와 무관한 이벤트는 무시한다', ({ from, event }) => {
     expect(nextConversationState(from, event)).toEqual(from);
+  });
+});
+
+describe('canInterruptSpeech', () => {
+  const base = {
+    enabled: true,
+    phase: 'AI_SPEAKING' as const,
+    hasMessage: true,
+    soundStarted: true,
+    completed: false,
+  };
+
+  it('스위치가 켜져 있고 상대가 말하는 중이면 끊을 수 있다', () => {
+    expect(canInterruptSpeech(base)).toBe(true);
+  });
+
+  it.each([
+    ['스위치가 꺼져 있으면', { enabled: false }],
+    ['상대가 말하는 중이 아니면', { phase: 'AI_INNER_THOUGHT' as const }],
+    ['아직 들을 발화가 없으면', { hasMessage: false }],
+    ['음성을 준비하느라 소리가 아직 안 났으면', { soundStarted: false }],
+    ['종료 인사 중이면', { completed: true }],
+  ])('%s 끊을 수 없다', (_, override) => {
+    expect(canInterruptSpeech({ ...base, ...override })).toBe(false);
   });
 });

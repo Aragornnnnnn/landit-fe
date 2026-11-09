@@ -20,6 +20,7 @@ import { removeNonEnglish } from './english-only';
 
 interface ConversationInputOptions {
   canStart: boolean; // 대기(USER_READY)에서만 시작 — 연타 이중 집계 방지
+  canInterrupt: boolean; // 상대 발화를 끊고 시작할 수 있는가 — 마이크·키보드 모두
   trackContext: () => { sessionId: number | null; turnIndex: number }; // 계측용 최신값 getter
   keyterms: readonly string[]; // 이번 턴 음성 인식이 잘 받아쓰게 할 고유명사
   onInputStart: () => void; // → USER_SPEAKING_STARTED
@@ -34,6 +35,7 @@ interface ConversationInputOptions {
 
 export const useConversationInput = ({
   canStart,
+  canInterrupt,
   trackContext,
   keyterms,
   onInputStart,
@@ -105,8 +107,9 @@ export const useConversationInput = ({
       char_count: content.length,
     });
     if (!content) {
-      haptic('error');
-      showToast(t('notRecognizedToast'));
+      // 못 알아들은 건 실패가 아니라 다시 말하면 되는 막힘이다
+      haptic('warning');
+      showToast(t('notRecognizedToast'), 'warning');
       track(EVENTS.TURN_FAILED, {
         session_id: sessionId ?? undefined,
         turn_index: turnIndex,
@@ -119,6 +122,8 @@ export const useConversationInput = ({
       return;
     }
     retryFromRef.current = null;
+    // 들었다는 표시 — 화면을 안 봐도 내 말이 들어간 걸 손으로 안다 (녹음이 끝난 뒤라 녹음에 섞이지 않는다)
+    haptic('tick');
     // 보내기 전에 한 번 보여 준다 — 발음 때문에 잘못 알아들은 문장이 그대로 가지 않게
     setTranscript(content);
     setSpeechPending(false);
@@ -144,7 +149,7 @@ export const useConversationInput = ({
         });
       }
     } else {
-      showToast(t('sttErrorToast'));
+      showToast(t('sttErrorToast'), 'error');
       track(EVENTS.SPEECH_RECOGNITION_FAILED, {
         session_id: trackContext().sessionId ?? undefined,
         engine: meta.engine,
@@ -217,7 +222,7 @@ export const useConversationInput = ({
 
   // 마이크로 말하기 — 듣기 시작을 알리고 STT를 켠다
   const pressMic = () => {
-    if (!canStart) return;
+    if (!canStart && !canInterrupt) return;
     if (keyboardMode) {
       track(EVENTS.INPUT_MODE_SWITCHED, {
         session_id: trackContext().sessionId ?? undefined,
@@ -267,7 +272,7 @@ export const useConversationInput = ({
 
   // 키보드로 입력 — 듣기를 시작하되 마이크는 켜지 않고 타이핑 입력창을 연다
   const pressKeyboard = () => {
-    if (!canStart) return;
+    if (!canStart && !canInterrupt) return;
     // 이미 타이핑 중이었다면(제출이 실패해 돌아왔다) 전환이 아니다
     if (!keyboardMode) {
       track(EVENTS.INPUT_MODE_SWITCHED, {

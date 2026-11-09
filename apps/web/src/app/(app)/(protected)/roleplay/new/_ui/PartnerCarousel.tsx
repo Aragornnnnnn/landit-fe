@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import { PartnerBust } from '@/features/roleplay/ui/PartnerBust';
 import { PARTNERS } from '@/features/small-talk/model/partner';
+import { haptic } from '@/shared/haptics';
 import { EASE_STANDARD } from '@/shared/motion';
 import { Emoji } from '@/shared/ui/emoji';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/Icons';
@@ -31,6 +32,10 @@ export const PartnerCarousel = ({ index, onMove }: PartnerCarouselProps) => {
   const t = useTranslations('roleplay');
   const reduced = useReducedMotion();
   const partner = PARTNERS[index];
+  const swipeTo = (step: -1 | 1) => {
+    haptic('tick');
+    onMove(step);
+  };
   // 왼쪽 끝과 오른쪽 끝을 오가는 사람은 무대를 가로지르지 않게 움직임 없이 옮긴다 — 직전 자리와 비교해 찾는다
   const [shown, setShown] = useState({ current: index, previous: index });
   if (shown.current !== index) {
@@ -46,8 +51,9 @@ export const PartnerCarousel = ({ index, onMove }: PartnerCarouselProps) => {
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.5}
           onDragEnd={(_, info) => {
-            if (info.offset.x < -SWIPE_PX) onMove(1);
-            else if (info.offset.x > SWIPE_PX) onMove(-1);
+            // 넘어갈 만큼 끌었을 때만 다음 사람으로 넘기며 딸깍 — 화살표 버튼은 누름 진동이 이미 울린다
+            if (info.offset.x < -SWIPE_PX) swipeTo(1);
+            else if (info.offset.x > SWIPE_PX) swipeTo(-1);
           }}
         >
           {PARTNERS.map((item, itemIndex) => {

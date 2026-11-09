@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
+import { haptic } from '@/shared/haptics';
 import { homePath } from '@/shared/lib/last-tab';
 import { backOrReplace, MAILBOX_PATH } from '@/shared/lib/routes';
 import { Transition } from '@/shared/motion';
@@ -116,9 +117,11 @@ export const SurveyFlow = ({ kind }: { kind: SurveyKind }) => {
         survey: kind,
         question_count: questions.length,
       });
+      haptic('success');
       goTo('done', 1);
     } catch {
-      showToast('저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
+      haptic('error');
+      showToast('저장하지 못했어요. 잠시 후 다시 시도해 주세요', 'error');
     } finally {
       setSubmitting(false);
     }

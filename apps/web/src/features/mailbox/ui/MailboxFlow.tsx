@@ -69,7 +69,8 @@ const LetterBox = ({ box }: { box: MailboxBox }) => {
             // 다음 장이 실패하면 목록은 그대로고 버튼만 돌아온다 — 첫 장 실패(RetryNotice)와 달리 알릴 자리가 없어 토스트로
             onClick={() =>
               void loadMore().then((result) => {
-                if (result.isError) showToast(t('loadMoreFailedToast'));
+                if (result.isError)
+                  showToast(t('loadMoreFailedToast'), 'error');
               })
             }
           />
@@ -90,7 +91,7 @@ const LetterList = ({ rows }: { rows: LetterRow[] }) => (
   <ul className="divide-y divide-border px-5">
     {rows.map((row) => (
       <li key={row.id}>
-        <Link href={row.href} className="block">
+        <Link href={row.href} className="block" data-no-haptic>
           <LetterListItem row={row} />
         </Link>
       </li>

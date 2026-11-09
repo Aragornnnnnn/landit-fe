@@ -34,7 +34,7 @@ export const HistoryRow = ({
   );
 
   return 'href' in target ? (
-    <Link href={target.href} className={ROW_CLASS}>
+    <Link href={target.href} className={ROW_CLASS} data-no-haptic>
       {content}
     </Link>
   ) : (

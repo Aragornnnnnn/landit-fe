@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "emoji": "node --experimental-strip-types scripts/build-emoji-assets.ts",
-    "characters": "node scripts/split-character-parts.mjs"
+    "characters": "node scripts/split-character-parts.mjs",
+    "landing-font": "node --experimental-strip-types scripts/build-landing-font.ts"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "2.45.1",
@@ -47,6 +48,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.1",
     "jsdom": "^29.1.1",
+    "subset-font": "2.9.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.10"

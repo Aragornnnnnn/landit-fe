@@ -4,6 +4,8 @@
 // 인식 텍스트·에러는 콜백으로만 흘린다 — 화면 상태는 소비자(대화 입력)가 갖는다.
 import { useEffect, useRef } from 'react';
 
+import { useHapticsMute } from '@/shared/haptics';
+
 import {
   startDeepgramStt,
   type SttHandlers,
@@ -59,9 +61,12 @@ export function useStt(options: UseSttOptions = {}) {
 
   // 지금 듣고 있는 엔진 — Deepgram으로 시작했다가 실패하면 폴백으로 바뀐다
   const engineRef = useRef<SttResultMeta['engine']>('deepgram');
+  // 듣는 동안 진동을 막는다 — 진동 모터 소리가 녹음에 섞이면 인식에 잡음이 된다 (화면을 떠나면 훅이 푼다)
+  const hapticsMute = useHapticsMute();
 
   const failWith = (err: Error) => {
     sessionRef.current = null;
+    hapticsMute.unmute();
     callbacksRef.current.onError?.(err, { engine: engineRef.current });
   };
 
@@ -70,6 +75,7 @@ export function useStt(options: UseSttOptions = {}) {
     const gen = ++generationRef.current;
     pendingStopRef.current = false;
     engineRef.current = 'deepgram';
+    hapticsMute.mute();
 
     // 파기된(구세대) 세션이 뒤늦게 내는 소리는 전부 무시한다
     const handlers: SttHandlers = {
@@ -80,6 +86,8 @@ export function useStt(options: UseSttOptions = {}) {
       onFinal: (text, meta) => {
         if (generationRef.current !== gen) return;
         sessionRef.current = null;
+        // 확정 순간의 진동(들었어요)은 울려야 해서 콜백보다 먼저 푼다
+        hapticsMute.unmute();
         callbacksRef.current.onFinal?.(text, meta);
       },
       onError: (err) => {
@@ -140,6 +148,7 @@ export function useStt(options: UseSttOptions = {}) {
     generationRef.current += 1; // 진행 중인 시작도 이 순간 무효가 된다
     sessionRef.current?.abort();
     sessionRef.current = null;
+    hapticsMute.unmute();
   };
 
   // 언마운트는 파기 — 떠난 화면의 인식 결과가 제출로 이어지면 안 된다

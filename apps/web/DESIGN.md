@@ -166,9 +166,10 @@ Layer 3  컴포넌트                                ← 오직 시맨틱 토큰
 
 ### Toast
 
-- 상단 표시(`top: safe-area + 64px`), 중앙 정렬, 2.5s 자동 소멸
-- `bg rgba(30,30,30,0.92)` + `backdrop-blur(8px)`, 흰 14px semibold, `rounded-2xl`
-- 등장: `opacity/y/scale` 0.2s easeOut
+- `showToast(문구, 종류)` — 하단 표시(`max(safe-area-inset-bottom, 24px)`, 키보드가 있으면 키보드 위), 중앙 정렬, 2s 자동 소멸, 한 번에 하나
+- `bg-toast/92`(#222) 알약, 흰 14px semibold, `rounded-[20px]` — 한 줄이면 알약, 두 줄이면 둥근 상자. 화면 양옆 16px 안에서 줄바꿈
+- 종류: 동작이 끝났으면 `success`(초록 원+체크), 사용자가 고쳐서 다시 하면 되면 `warning`(주황 원+느낌표), 시스템이 실패했으면 `error`(빨강 원+X), 그냥 알려주기만 하면 `default`(아이콘 없음)
+- 등장: 아래 8px에서 올라오며 페이드 0.2s, 아이콘은 원이 스프링으로 튀어나온 뒤 글리프가 그려진다(0.4s 안). 나갈 땐 페이드만. 동작 줄이기면 이동·아이콘 연출 없음
 
 ## 5. Layout Principles
 
@@ -251,13 +252,13 @@ Layer 3  컴포넌트                                ← 오직 시맨틱 토큰
 
 부드러운 등장이 기본이고, 바텀시트만 spring을 쓴다.
 
-| 패턴      | 값                                             | Use                     |
-| --------- | ---------------------------------------------- | ----------------------- |
-| 기본 등장 | `opacity 0→1, y 10→0`, 0.25s easeOut           | 말풍선, 페이지, 카드    |
-| 스태거    | `delay: index * 0.08`, 0.38s `[0.22,1,0.36,1]` | 시나리오 카드 순차 등장 |
-| 바텀시트  | spring `damping 28, stiffness 300`             | BottomSheet 슬라이드업  |
-| 토스트    | `opacity/y/scale`, 0.2s easeOut                | Toast                   |
-| 버튼 누름 | `transition-transform duration-75`             | 3D 버튼                 |
+| 패턴      | 값                                                            | Use                     |
+| --------- | ------------------------------------------------------------- | ----------------------- |
+| 기본 등장 | `opacity 0→1, y 10→0`, 0.25s easeOut                          | 말풍선, 페이지, 카드    |
+| 스태거    | `delay: index * 0.08`, 0.38s `[0.22,1,0.36,1]`                | 시나리오 카드 순차 등장 |
+| 바텀시트  | spring `damping 28, stiffness 300`                            | BottomSheet 슬라이드업  |
+| 토스트    | `opacity/y`, 0.2s · 아이콘 spring `stiffness 500, damping 22` | Toast                   |
+| 버튼 누름 | `transition-transform duration-75`                            | 3D 버튼                 |
 
 ## 10. Voice & Tone
 
@@ -291,7 +292,7 @@ Layer 3  컴포넌트                                ← 오직 시맨틱 토큰
 | **Empty (잠금/준비중)** | 일러스트 대신 Tossface 이모지(☁️ ❓) + 한 줄 안내. 잠금 카드는 `grayscale`, `준비 중이에요`.                                    |
 | **Empty (전부 완료)**   | 축하 이모지(🎉) + 큰 메시지(26px extrabold) + 다음 기대 한 줄.                                                                  |
 | **Error (재시도)**      | muted 메시지 + `text-primary` 텍스트 버튼 `다시 시도`. 중앙 정렬 간결형.                                                        |
-| **Toast**               | 일시적 알림은 상단 토스트(§4), 2.5s 자동 소멸.                                                                                  |
+| **Toast**               | 일시적 알림은 하단 토스트(§4 Toast), 2s 자동 소멸. 결과에 맞는 종류(success·warning·error·default)를 고른다.                    |
 
 ---
 

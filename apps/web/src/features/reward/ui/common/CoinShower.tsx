@@ -9,6 +9,7 @@ import { motion } from 'motion/react';
 import { createPortal } from 'react-dom';
 
 import { track } from '@/shared/analytics';
+import { hapticRhythm } from '@/shared/haptics';
 import { formatWon } from '@/shared/lib/won';
 
 import { Coin } from './Coin';
@@ -24,6 +25,8 @@ import {
 const POP = 0.05;
 const FLY = 0.8;
 const LAND = FLY + 0.42;
+// 숫자 리듬은 동전 리듬의 마지막 성공(닿는 순간)이 끝난 뒤, 금액이 오르는 도중에 시작한다
+const COUNT_RHYTHM_AT = LAND + 0.15;
 // 숫자가 다 오르고(CountUpWon의 0.9초) 잠깐 머문 뒤 어둠이 걷히기까지
 const TOTAL = LAND + 1.5;
 // 잔동전 하나가 날아가는 시간과, 다음 동전이 따라 나서는 간격
@@ -76,6 +79,7 @@ export const CoinShower = ({
   fromWon,
   toWon,
   onEnd,
+  preview = false,
 }: {
   // 헤더 알약의 화면 자리 — 어둠 위에 같은 알약을 그려 그것만 밝게 남긴다
   pill: Box;
@@ -83,17 +87,30 @@ export const CoinShower = ({
   toWon: number;
   // 다 돌았거나 건너뛰었다
   onEnd: () => void;
+  // 개발자 점검 화면의 미리보기 — 가짜 금액이 지표에 섞이지 않게 아무것도 찍지 않는다
+  preview?: boolean;
 }) => {
   // 부르는 쪽이 다시 그려져도 타이머를 다시 걸지 않는다 — 걷힌 어둠이 화면을 막은 채 남으면 안 된다
   const end = useEffectEvent(onEnd);
   const amountWon = toWon - fromWon;
-  const reportViewed = useEffectEvent(() =>
-    track(EVENTS.REWARD_COIN_SHOWER_VIEWED, { gain_won: amountWon }),
-  );
+  const reportViewed = useEffectEvent(() => {
+    if (!preview)
+      track(EVENTS.REWARD_COIN_SHOWER_VIEWED, { gain_won: amountWon });
+  });
   useEffect(() => {
     reportViewed();
-    const timer = setTimeout(end, TOTAL * 1000);
-    return () => clearTimeout(timer);
+    // 동전이 날아가는 동안 또각또각 울리다 알약에 닿는 순간 성공, 이어 금액이 오르는 동안 숫자 리듬.
+    // 건너뛰어 닫히면 남은 박자도 멈춘다
+    const stopCoins = hapticRhythm('coins', { endAt: LAND * 1000 });
+    const stopCount = hapticRhythm('countUp', {
+      startAt: COUNT_RHYTHM_AT * 1000,
+    });
+    const endTimer = setTimeout(end, TOTAL * 1000);
+    return () => {
+      clearTimeout(endTimer);
+      stopCoins();
+      stopCount();
+    };
   }, []);
 
   const from = { x: window.innerWidth / 2, y: window.innerHeight * 0.4 };
@@ -110,9 +127,10 @@ export const CoinShower = ({
       className="fixed inset-0 z-[70] overflow-hidden"
       // 다 돌기 전에 누른 것만 건너뛰기다 — 다 돌면 타이머가 끝낸다
       onClick={() => {
-        track(EVENTS.REWARD_COIN_SHOWER_SKIPPED, {
-          gain_won: amountWon,
-        });
+        if (!preview)
+          track(EVENTS.REWARD_COIN_SHOWER_SKIPPED, {
+            gain_won: amountWon,
+          });
         onEnd();
       }}
       initial={{ opacity: 0 }}

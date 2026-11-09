@@ -60,9 +60,9 @@ export const InviteScreen = () => {
     try {
       await navigator.clipboard.writeText(code);
       track(EVENTS.REFERRAL_CODE_COPIED);
-      showToast('초대 코드를 복사했어요');
+      showToast('초대 코드를 복사했어요', 'success');
     } catch {
-      showToast('초대 코드를 복사하지 못했어요');
+      showToast('초대 코드를 복사하지 못했어요', 'error');
     }
   };
 
