@@ -66,6 +66,17 @@ describe('DeveloperMenuSection', () => {
     );
   });
 
+  it('ADMIN이면 햅틱 점검으로 들어갈 수 있다', () => {
+    signIn('ADMIN');
+
+    render(<DeveloperMenuSection />);
+
+    expect(screen.getByText('햅틱 점검').closest('a')).toHaveAttribute(
+      'href',
+      '/me/developer/haptics',
+    );
+  });
+
   it.each([['USER' as const], [undefined]])(
     'role이 %s이면 보이지 않는다',
     (role) => {

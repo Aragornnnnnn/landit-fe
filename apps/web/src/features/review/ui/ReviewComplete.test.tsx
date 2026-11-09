@@ -1,5 +1,5 @@
 // 결과 화면 문구 분기 — 만점·일부 놓침·전부 놓침이 다른 말을 한다
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { runBackPress } from '@/shared/bridge/back-press';
@@ -9,14 +9,17 @@ import { ReviewComplete } from './ReviewComplete';
 
 vi.mock('motion/react', () => import('@/shared/motion/test-double'));
 vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
-const hapticMock = vi.hoisted(() => vi.fn());
-vi.mock('@/shared/haptics', () => ({ haptic: hapticMock }));
+const hapticMock = vi.hoisted(() => vi.fn(() => () => {}));
+vi.mock('@/shared/haptics', () => ({ hapticRhythm: hapticMock }));
 // next/image는 next 밑의 react 복사본을 잡아 훅 dispatcher가 null이 된다 — 어느 그림인지만 src로 남긴다
 vi.mock('next/image', () => ({
   default: ({ src }: { src: string }) => <span data-src={src} />,
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  hapticMock.mockClear();
+});
 
 // 문제는 정답 또는 두 번째 오답에서 끝난다 — 끝난 시각은 둘 다 있고, 맞혔는지는 오답 횟수가 가른다
 const question = (id: string, solved: boolean): ReviewQuestion =>
@@ -38,25 +41,18 @@ const show = (questions: ReviewQuestion[]) =>
   );
 
 describe('ReviewComplete', () => {
-  it('방금 전부 맞혔으면 폭죽이 터지는 순간 celebrate를 울린다', () => {
-    vi.useFakeTimers();
+  it('방금 전부 맞혔으면 카드가 다 칠해진 뒤 폭죽과 함께 팡 리듬을 울린다', () => {
     show([question('q1', true), question('q2', true)]);
-    expect(hapticMock).not.toHaveBeenCalled();
 
-    act(() => vi.advanceTimersByTime(10_000));
-
-    expect(hapticMock).toHaveBeenCalledWith('celebrate');
-    vi.useRealTimers();
+    expect(hapticMock).toHaveBeenCalledWith('burst', {
+      startAt: expect.any(Number),
+    });
   });
 
   it('하나라도 놓쳤으면 폭죽이 없으니 축하 진동도 없다', () => {
-    vi.useFakeTimers();
     show([question('q1', true), question('q2', false)]);
 
-    act(() => vi.advanceTimersByTime(10_000));
-
     expect(hapticMock).not.toHaveBeenCalled();
-    vi.useRealTimers();
   });
 
   it('전부 맞히면 완벽하다고 축하하고 대화에서 써 보라고 한다', () => {
