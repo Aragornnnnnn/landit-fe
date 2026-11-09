@@ -185,26 +185,27 @@ export const PronunciationStep = ({
 
     setPhase('analyzing');
     analysisMutation.mutate(recording, {
-      onSuccess: async ({ analysis: result, playback: analyzedRecording }) => {
+      onSuccess: ({ analysis: result, playback: analyzedRecording }) => {
         // 재생용 음원은 결과가 온 다음에 갈아끼운다 — 분석이 실패해 이전 피드백으로
         // 되돌아가면 화면의 단어 구간은 이전 녹음 기준이라, 음원만 새것이면 엉뚱한 데가 나온다
         if (playbackRef.current) {
           player.stop();
           revokePlayback(playbackRef.current);
         }
+        const words = scoreView(result).perfect
+          ? []
+          : toFeedbackCards(result.words).map(({ word }) => word);
+        const clips = createWordClips(analyzedRecording.audio, words);
         const playback: RecordingPlayback = {
           sentenceUrl: URL.createObjectURL(analyzedRecording.blob),
-          wordUrls: new Map(),
+          wordUrls: new Map(
+            [...clips].map(([order, clip]) => [
+              order,
+              URL.createObjectURL(clip),
+            ]),
+          ),
         };
         playbackRef.current = playback;
-        if (!scoreView(result).perfect) {
-          const words = toFeedbackCards(result.words).map(({ word }) => word);
-          const clips = await createWordClips(analyzedRecording.blob, words);
-          if (playbackRef.current !== playback) return;
-          for (const [order, clip] of clips) {
-            playback.wordUrls.set(order, URL.createObjectURL(clip));
-          }
-        }
         attemptRef.current += 1;
         track(EVENTS.PRONUNCIATION_RESULT_VIEWED, {
           expression_id: expressionId,

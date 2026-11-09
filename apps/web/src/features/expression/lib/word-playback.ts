@@ -4,10 +4,9 @@ import type { SentenceRecording } from './sentence-recording';
 
 type WordSpan = Pick<PronunciationWord, 'order' | 'startTimeMs' | 'endTimeMs'>;
 
-const CLIP_SAMPLE_RATE = 16_000;
-const RECORDING_SAMPLE_RATE = 48_000;
-// 백엔드의 업로드 크기와 AI의 녹음 길이 제한을 넘는 변환은 생략한다.
-const MAX_AUDIO_BYTES = 10 * 1024 * 1024;
+// 녹음 음질을 유지하는 샘플레이트 — 30초 모노 WAV가 약 2.9MB라 백엔드 업로드 제한(10MiB)에 닿지 않는다.
+const SAMPLE_RATE = 48_000;
+// AI의 녹음 길이 제한을 넘는 녹음은 변환하지 않는다.
 const MAX_AUDIO_SECONDS = 30;
 const FADE_OUT_MS = 20;
 const WAV_HEADER_BYTES = 44;
@@ -61,47 +60,46 @@ const encodeWav = (
   return new Blob([wav.buffer], { type: 'audio/wav' });
 };
 
-const decodeRecording = async (recording: Blob, sampleRate: number) => {
-  const decoder = new OfflineAudioContext(1, 1, sampleRate);
+const decodeRecording = async (recording: Blob) => {
+  const decoder = new OfflineAudioContext(1, 1, SAMPLE_RATE);
   return decoder.decodeAudioData(await recording.arrayBuffer());
 };
 
-export const normalizeRecordingForPlayback = async (
-  recording: SentenceRecording,
-) => {
-  if (recording.filename !== 'recording.m4a') return recording;
+// 분석에 올린 녹음과 그 PCM — PCM이 없으면 단어 음원을 만들지 않는다.
+export type AnalysisRecording = SentenceRecording & {
+  audio: AudioBuffer | null;
+};
 
+/**
+ * 분석과 단어 재생이 같은 시간축을 쓰도록 녹음을 한 번 디코딩해 WAV로 올린다.
+ * 압축 녹음(AAC·Opus)은 앞부분을 버리는 양이 디코더마다 달라 서버와 브라우저의 단어 위치가 어긋난다.
+ */
+export const toAnalysisRecording = async (
+  recording: SentenceRecording,
+): Promise<AnalysisRecording> => {
   try {
-    // AAC 앞부분을 버리는 양이 디코더마다 다르므로 분석과 재생에 동일한 PCM을 사용한다.
-    const audio = await decodeRecording(recording.blob, RECORDING_SAMPLE_RATE);
-    const bytes = WAV_HEADER_BYTES + audio.length * audio.numberOfChannels * 2;
-    if (
-      audio.length > audio.sampleRate * MAX_AUDIO_SECONDS ||
-      bytes > MAX_AUDIO_BYTES
-    ) {
-      return recording;
+    const audio = await decodeRecording(recording.blob);
+    if (audio.length > audio.sampleRate * MAX_AUDIO_SECONDS) {
+      return { ...recording, audio: null };
     }
     return {
       ...recording,
       blob: encodeWav(audio, 0, audio.length),
       filename: 'recording.wav',
+      audio,
     };
   } catch {
-    return recording;
+    // 디코딩이 실패해도 원본 녹음으로 분석하고 전체 듣기는 그대로 재생할 수 있다.
+    return { ...recording, audio: null };
   }
 };
 
-export const createWordClips = async (recording: Blob, words: WordSpan[]) => {
+export const createWordClips = (
+  audio: AudioBuffer | null,
+  words: WordSpan[],
+) => {
   const clips = new Map<number, Blob>();
-  if (words.length === 0) return clips;
-
-  let audio: AudioBuffer;
-  try {
-    audio = await decodeRecording(recording, CLIP_SAMPLE_RATE);
-  } catch {
-    // 디코딩이 실패해도 전체 녹음은 기존 방식으로 재생할 수 있다.
-    return clips;
-  }
+  if (!audio) return clips;
 
   const samplesPerMs = audio.sampleRate / 1000;
   for (const { order, startTimeMs, endTimeMs } of words) {
