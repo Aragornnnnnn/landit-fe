@@ -20,6 +20,7 @@ import { removeNonEnglish } from './english-only';
 
 interface ConversationInputOptions {
   canStart: boolean; // 대기(USER_READY)에서만 시작 — 연타 이중 집계 방지
+  canInterrupt: boolean; // 상대 발화를 끊고 시작할 수 있는가 — 마이크·키보드 모두
   trackContext: () => { sessionId: number | null; turnIndex: number }; // 계측용 최신값 getter
   keyterms: readonly string[]; // 이번 턴 음성 인식이 잘 받아쓰게 할 고유명사
   onInputStart: () => void; // → USER_SPEAKING_STARTED
@@ -34,6 +35,7 @@ interface ConversationInputOptions {
 
 export const useConversationInput = ({
   canStart,
+  canInterrupt,
   trackContext,
   keyterms,
   onInputStart,
@@ -220,7 +222,7 @@ export const useConversationInput = ({
 
   // 마이크로 말하기 — 듣기 시작을 알리고 STT를 켠다
   const pressMic = () => {
-    if (!canStart) return;
+    if (!canStart && !canInterrupt) return;
     if (keyboardMode) {
       track(EVENTS.INPUT_MODE_SWITCHED, {
         session_id: trackContext().sessionId ?? undefined,
@@ -270,7 +272,7 @@ export const useConversationInput = ({
 
   // 키보드로 입력 — 듣기를 시작하되 마이크는 켜지 않고 타이핑 입력창을 연다
   const pressKeyboard = () => {
-    if (!canStart) return;
+    if (!canStart && !canInterrupt) return;
     // 이미 타이핑 중이었다면(제출이 실패해 돌아왔다) 전환이 아니다
     if (!keyboardMode) {
       track(EVENTS.INPUT_MODE_SWITCHED, {

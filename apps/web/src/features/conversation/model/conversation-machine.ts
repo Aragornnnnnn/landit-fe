@@ -65,6 +65,10 @@ const finishAiSpeaking: Transition = (state, completed) => {
   return { ...state, phase: 'USER_READY' };
 };
 
+/** 상대가 말하는 중에 내가 말을 시작한 전이 — 종료 인사는 끊지 않는다. 끊으면 대화가 끝나지 못한다 */
+const interruptSpeech: Transition = (state, completed) =>
+  completed ? state : { ...state, phase: 'USER_SPEAKING' };
+
 /** 속마음까지 끝난 순간의 전이 — 다음 발화를 재생하는 새 턴을 시작한다. */
 const startNextTurn: Transition = (state) => ({
   phase: 'AI_SPEAKING',
@@ -81,6 +85,8 @@ const TRANSITIONS: Record<
 > = {
   AI_SPEAKING: {
     AI_SPEAKING_DONE: finishAiSpeaking,
+    // 끊기 스위치가 켜졌을 때만 들어온다 — 꺼져 있으면 입력 훅이 시작을 막는다
+    USER_SPEAKING_STARTED: interruptSpeech,
   },
   USER_READY: {
     USER_SPEAKING_STARTED: moveTo('USER_SPEAKING'),
@@ -109,3 +115,23 @@ export const nextConversationState = (
   completed = false,
 ): ConversationState =>
   TRANSITIONS[state.phase][event]?.(state, completed) ?? state;
+
+/** 지금 상대 발화를 끊고 내 차례를 시작할 수 있는가 — 스위치가 켜져 있고, 발화 소리가 나기 시작했고, 종료 인사가 아닐 때만 */
+export const canInterruptSpeech = ({
+  enabled,
+  phase,
+  hasMessage,
+  soundStarted,
+  completed,
+}: {
+  enabled: boolean;
+  phase: ConversationPhase;
+  hasMessage: boolean;
+  soundStarted: boolean;
+  completed: boolean;
+}): boolean =>
+  enabled &&
+  phase === 'AI_SPEAKING' &&
+  hasMessage &&
+  soundStarted &&
+  !completed;

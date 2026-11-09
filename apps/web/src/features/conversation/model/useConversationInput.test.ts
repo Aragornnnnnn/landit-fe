@@ -73,6 +73,7 @@ const renderInput = (
   const hook = renderHook(() =>
     useConversationInput({
       canStart: true,
+      canInterrupt: false,
       trackContext: () => ({ sessionId: 1, turnIndex: 0 }),
       keyterms: [],
       onInputStart,
@@ -95,6 +96,41 @@ beforeEach(() => {
 });
 
 describe('useConversationInput', () => {
+  it('상대 발화를 끊을 수 있으면 대기가 아니어도 마이크로 듣기를 시작한다', () => {
+    const { result, onInputStart } = renderInput({
+      canStart: false,
+      canInterrupt: true,
+    });
+
+    act(() => result.current.pressMic());
+
+    expect(onInputStart).toHaveBeenCalledOnce();
+    expect(sttMock.start).toHaveBeenCalledOnce();
+  });
+
+  it('상대 발화를 끊을 수 있으면 대기가 아니어도 키보드로 입력을 시작한다', () => {
+    const { result, onInputStart } = renderInput({
+      canStart: false,
+      canInterrupt: true,
+    });
+
+    act(() => result.current.pressKeyboard());
+
+    expect(onInputStart).toHaveBeenCalledOnce();
+    expect(result.current.keyboardMode).toBe(true);
+  });
+
+  it('대기도 아니고 끊을 수도 없으면 마이크를 눌러도 시작하지 않는다', () => {
+    const { result, onInputStart } = renderInput({
+      canStart: false,
+      canInterrupt: false,
+    });
+
+    act(() => result.current.pressMic());
+
+    expect(onInputStart).not.toHaveBeenCalled();
+  });
+
   it('말하기를 누르면 듣기 시작을 알리고 마이크(STT)를 켠다', () => {
     const { result, onInputStart } = renderInput();
 
