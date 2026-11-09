@@ -9,6 +9,11 @@ import {
   type HapticKind,
   type HapticPlatform,
 } from './haptic-kinds';
+import {
+  HAPTIC_RHYTHMS,
+  rhythmDurationOf,
+  type HapticRhythm,
+} from './haptic-rhythms';
 import { isHapticsEnabled } from './haptics-setting';
 
 // 일반 브라우저(주로 Android)용 폴백 진동 길이(ms). iOS 브라우저는 vibrate 미지원이라 조용히 무시된다
@@ -45,27 +50,58 @@ export const muteHaptics = () => {
   };
 };
 
+// WebView 안이면 네이티브가 expo-haptics로, 밖이면 브라우저 Vibration API로 최대한 흉내 낸다
+const sendPattern = (pattern: HapticPattern) => {
+  if (postToNative({ type: 'HAPTIC', pattern })) return;
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    navigator.vibrate(VIBRATION_FALLBACK[pattern]);
+  }
+};
+
 // 셸 밖(브라우저)은 iOS 표를 쓴다 — 폴백 진동은 길이만 다를 뿐 차이가 작다. 진동마다 주입값을 다시 파싱하지 않게 스냅샷을 쓴다
 const currentPlatform = (): HapticPlatform =>
   getNativeContextSnapshot()?.platform === 'android' ? 'android' : 'ios';
 
+// 진동을 껐거나 녹음 중이라 막아 둔 때 — 이름 진동과 리듬 박자가 같은 기준을 쓴다
+const isSilenced = () => !isHapticsEnabled() || muteCount > 0;
+
 // 진동 이름으로 햅틱을 울린다. 진동을 껐거나, WebView 밖인데 Vibration API도 없으면 아무 일도 안 한다
 export const haptic = (kind: HapticKind) => {
-  // 마이페이지에서 진동을 끈 사람에겐 아무 것도 울리지 않는다
-  if (!isHapticsEnabled()) return;
-  if (muteCount > 0) return;
+  if (isSilenced()) return;
 
   const at = now();
   if (at - (lastFiredAt[kind] ?? -Infinity) < MIN_INTERVAL_MS) return;
   lastFiredAt[kind] = at;
 
-  const pattern = patternOf(kind, currentPlatform());
+  sendPattern(patternOf(kind, currentPlatform()));
+};
 
-  // WebView 안이면 네이티브가 expo-haptics로 처리한다
-  if (postToNative({ type: 'HAPTIC', pattern })) return;
+// 리듬의 박자 하나 — 박자마다 다시 본다. 리듬 도중에 녹음이 시작될 수 있다
+const playBeat = (pattern: HapticPattern) => {
+  if (isSilenced()) return;
+  sendPattern(pattern);
+};
 
-  // 밖이면 브라우저 Vibration API로 최대한 흉내 낸다
-  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-    navigator.vibrate(VIBRATION_FALLBACK[pattern]);
+/** 리듬을 언제 울리나 — 시작 시각을 주거나, 마지막 박자가 올 시각을 준다(ms, 지금부터) */
+export type HapticRhythmTiming = { startAt: number } | { endAt: number };
+
+const startDelayOf = (name: HapticRhythm, timing?: HapticRhythmTiming) => {
+  if (!timing) return 0;
+  if ('startAt' in timing) return timing.startAt;
+  // 리듬이 연출보다 길면 기다리지 않는다 — 마지막 박자가 조금 늦게 올 뿐이다
+  return Math.max(0, timing.endAt - rhythmDurationOf(name));
+};
+
+// 리듬 진동을 울린다. 시각을 안 주면 첫 박자는 바로 울린다. 돌려받은 함수로 아직 안 온 박자를 모두 멈춘다 (화면을 떠날 때)
+export const hapticRhythm = (
+  name: HapticRhythm,
+  timing?: HapticRhythmTiming,
+) => {
+  const delay = startDelayOf(name, timing);
+  const timers: ReturnType<typeof setTimeout>[] = [];
+  for (const { at, pattern } of HAPTIC_RHYTHMS[name]) {
+    if (delay + at === 0) playBeat(pattern);
+    else timers.push(setTimeout(() => playBeat(pattern), delay + at));
   }
+  return () => timers.forEach(clearTimeout);
 };
