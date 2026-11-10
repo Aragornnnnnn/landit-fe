@@ -13,6 +13,19 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://www.landit.im'),
   title: { default: '랜딧', template: '%s | 랜딧' },
   description: 'AI 캐릭터와 영어로 대화하며 연습하는 영어 회화 앱 랜딧',
+  // 유튜브와 같은 구성 — favicon.ico(16·32, app 폴더 파일)에 더해 32·48·96·144 PNG. 구글은 48의 배수 정사각형을 파비콘으로 쓴다
+  icons: {
+    icon: [
+      { url: '/icons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/favicon-48x48.png', sizes: '48x48', type: 'image/png' },
+      { url: '/icons/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+      {
+        url: '/icons/favicon-144x144.png',
+        sizes: '144x144',
+        type: 'image/png',
+      },
+    ],
+  },
 };
 
 // viewport-fit=cover가 있어야 노치 기기에서 env(safe-area-inset-*)가 실제 값으로 평가된다 (DESIGN.md safe-area 규칙의 전제)
