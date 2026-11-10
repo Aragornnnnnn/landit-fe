@@ -15,6 +15,7 @@ import { useRoleplaySession } from '../_model/useRoleplaySession';
 import { RoleplayFlow } from './RoleplayFlow';
 
 const replace = vi.hoisted(() => vi.fn());
+const leave = vi.hoisted(() => vi.fn());
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace }),
 }));
@@ -27,10 +28,16 @@ vi.mock('../_model/useCachedRoleplayPartner', () => ({
 vi.mock('./RoleplayConversation', () => ({ RoleplayConversation: () => null }));
 
 const failWith = (error: unknown) =>
-  vi.mocked(useRoleplaySession).mockReturnValue({ session: null, error });
+  vi
+    .mocked(useRoleplaySession)
+    .mockReturnValue({ session: null, error, leave });
 
 const waitWith = (partner: 'marco' | null) => {
-  vi.mocked(useRoleplaySession).mockReturnValue({ session: null, error: null });
+  vi.mocked(useRoleplaySession).mockReturnValue({
+    session: null,
+    error: null,
+    leave,
+  });
   vi.mocked(useCachedRoleplayPartner).mockReturnValue(partner);
 };
 
@@ -85,6 +92,7 @@ describe('RoleplayFlow', () => {
     fireEvent.click(screen.getByRole('button', { name: '대화 나가기' }));
 
     // then
+    expect(leave).toHaveBeenCalledOnce();
     expect(replace).toHaveBeenCalledWith('/roleplay');
   });
 });

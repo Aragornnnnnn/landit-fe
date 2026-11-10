@@ -26,7 +26,7 @@ export const RoleplayFlow = ({
 }) => {
   const t = useTranslations('conversation.roleplayFlow');
   const router = useRouter();
-  const { session, error } = useRoleplaySession(roleplayId, entry);
+  const { session, error, leave } = useRoleplaySession(roleplayId, entry);
   const partner = useCachedRoleplayPartner(roleplayId);
   const premiumRequired = isPremiumRequired(error);
 
@@ -67,8 +67,10 @@ export const RoleplayFlow = ({
       <ConversationWaiting
         partner={partner}
         partnerSpeaksFirst
-        // 세션이 아직 안 열렸다 — 백엔드가 중도 종료를 받지 않아 정리할 것 없이 돌아간다
-        onExit={() => router.replace(ROLEPLAY_PATH)}
+        onExit={() => {
+          leave();
+          router.replace(ROLEPLAY_PATH);
+        }}
       />
     ) : (
       <ConversationSkeleton />
