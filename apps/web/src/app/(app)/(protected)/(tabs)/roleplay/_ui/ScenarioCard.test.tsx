@@ -1,5 +1,11 @@
 // 시나리오 카드 그림 검증 — 준비된 썸네일만 보여 주고 나머지는 캐릭터 카드로 둔다
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { RoleplaySettings } from '@/features/roleplay/api/roleplay';
@@ -119,5 +125,25 @@ describe('ScenarioCard', () => {
 
     // then
     expect(thumbnailImage()).toHaveAttribute('src', NEXT_URL);
+  });
+
+  it('그림이 너무 오래 안 오면 캐릭터를 세우고, 뒤늦게 오면 그림으로 바꾼다', () => {
+    // given
+    vi.useFakeTimers();
+    render(card(ready(THUMBNAIL_URL)));
+
+    // when 기다리다 지친다
+    act(() => vi.advanceTimersByTime(8_000));
+
+    // then
+    expect(screen.queryByTestId('thumbnail-skeleton')).not.toBeInTheDocument();
+    expect(screen.getByText('캐릭터')).toBeInTheDocument();
+
+    // when 그 뒤에 그림이 온다
+    fireEvent.load(thumbnailImage()!);
+
+    // then
+    expect(screen.queryByText('캐릭터')).not.toBeInTheDocument();
+    vi.useRealTimers();
   });
 });

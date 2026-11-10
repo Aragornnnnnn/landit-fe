@@ -1,6 +1,6 @@
 // 내 시나리오 카드 — 썸네일이 준비되면 그림을(오는 동안은 빈 자리), 없으면 캐릭터 상반신을 전면에 두고, 아래 어둠 위에 제목과 마지막 대화 시각만 둔다.
 // 카드를 누르면 다시 대화하고, 모서리 ⋯는 지난 대화·삭제를 연다
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import type { RoleplaySettings } from '@/features/roleplay/api/roleplay';
@@ -14,6 +14,9 @@ import { toPartnerId } from '@/features/small-talk/model/partner';
 import type { Locale } from '@/shared/i18n/locale';
 import { toDayLabel } from '@/shared/lib/day-label';
 import { MoreHorizontalIcon } from '@/shared/ui/Icons';
+
+// 그림이 이만큼 안 오면 빈 자리 대신 캐릭터를 세운다 — 그림은 계속 기다려 오면 바꾼다
+const THUMBNAIL_WAIT_MS = 8_000;
 
 interface ScenarioCardProps {
   scenario: RoleplaySettings;
@@ -35,11 +38,23 @@ export const ScenarioCard = ({
   // 주소별로 기억해 재조회로 새 주소가 오면 다시 시도한다
   const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const [gaveUpUrl, setGaveUpUrl] = useState<string | null>(null);
   const thumbnailUrl =
     scenario.thumbnail?.status === 'READY' ? scenario.thumbnail.url : null;
   const thumbnailPainted = thumbnailUrl !== null && thumbnailUrl === loadedUrl;
   const thumbnailLoading =
-    thumbnailUrl !== null && !thumbnailPainted && thumbnailUrl !== failedUrl;
+    thumbnailUrl !== null &&
+    !thumbnailPainted &&
+    thumbnailUrl !== failedUrl &&
+    thumbnailUrl !== gaveUpUrl;
+  useEffect(() => {
+    if (!thumbnailLoading) return;
+    const timer = setTimeout(
+      () => setGaveUpUrl(thumbnailUrl),
+      THUMBNAIL_WAIT_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [thumbnailLoading, thumbnailUrl]);
   const talkedAt = scenario.lastPlayedAt ?? scenario.createdAt;
   const timeLabel = () => {
     const lastTalked = toLastTalked(talkedAt, today);
