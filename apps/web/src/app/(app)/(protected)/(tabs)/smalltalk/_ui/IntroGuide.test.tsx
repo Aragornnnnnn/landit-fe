@@ -6,13 +6,14 @@ import { IntroGuide } from './IntroGuide';
 
 afterEach(() => cleanup());
 
-const guide = (spot: number | null, onClose = vi.fn()) => (
+const guide = (spot: number | null, onSkip = vi.fn()) => (
   <IntroGuide
     sentences={[{ image: '/randy.webp', parts: [['안녕하세요', false]] }]}
     spotlights={['limit']}
     spot={spot}
     onNext={vi.fn()}
-    onClose={onClose}
+    onClose={vi.fn()}
+    onSkip={onSkip}
   />
 );
 
@@ -20,15 +21,15 @@ describe('IntroGuide', () => {
   it.each([
     ['래디가 말하는 중', null],
     ['자리를 비추는 중', 0],
-  ] as const)('%s에도 닫기를 누르면 안내를 닫는다', (_, spot) => {
+  ] as const)('%s에도 닫기를 누르면 건너뜀으로 닫는다', (_, spot) => {
     // given
-    const onClose = vi.fn();
-    render(guide(spot, onClose));
+    const onSkip = vi.fn();
+    render(guide(spot, onSkip));
 
     // when
     fireEvent.click(screen.getByRole('button', { name: '안내 닫기' }));
 
     // then
-    expect(onClose).toHaveBeenCalledOnce();
+    expect(onSkip).toHaveBeenCalledOnce();
   });
 });

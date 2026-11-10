@@ -43,6 +43,7 @@ export const IntroGuide = ({
   spot,
   onNext,
   onClose,
+  onSkip,
 }: {
   sentences: IntroSentence[];
   // 래디의 말 뒤에 차례로 비출 자리. 비울 수도 있다(한도를 다 써 버튼이 없는 날)
@@ -52,6 +53,8 @@ export const IntroGuide = ({
   // 다음 자리로 — 래디의 말이 끝났거나 비춘 자리를 다 읽었다
   onNext: () => void;
   onClose: () => void;
+  // X로 건너뜀 — 끝까지 본 닫기(onClose)와 따로 센다
+  onSkip: () => void;
 }) => {
   const t = useTranslations('smallTalk.introGuide');
   const reduced = useReducedMotion();
@@ -124,7 +127,7 @@ export const IntroGuide = ({
       <button
         type="button"
         aria-label={t('closeLabel')}
-        onClick={onClose}
+        onClick={onSkip}
         className="absolute top-[max(var(--safe-area-inset-top),10px)] left-3 z-10 flex size-10 items-center justify-center text-white transition-transform active:scale-90"
       >
         <CloseIcon size={24} />
