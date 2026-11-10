@@ -210,22 +210,23 @@
 
 ### 스몰톡
 
-| 이벤트                        | 속성                                                                                                | 시점                                                    |
-| ----------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Small Talk Partner Selected   | partner                                                                                             | 탭에서 상대 칩 선택                                     |
-| Small Talk Topic Selected     | partner, topic_id                                                                                   | 주제 모달에서 주제 선택                                 |
-| Small Talk Intro Guide Closed | —                                                                                                   | 첫 진입 안내 닫음 (기기당 한 번)                        |
-| Small Talk Greeting Tapped    | partner, coached                                                                                    | 캐릭터를 눌러 인사 들음 (coached=코치마크 켜진 채 누름) |
-| Small Talk Free Nudge Viewed  | —                                                                                                   | 홈 스몰톡 칩 말풍선(무료 5분)이 뜸 (하루 한 번)         |
-| Small Talk Free Nudge Tapped  | —                                                                                                   | 말풍선이 떠 있을 때 스몰톡 칩을 누름                    |
-| Small Talk Started            | session_id, partner, first_speaker, topic_id?                                                       | 세션 시작 성공                                          |
-| Small Talk Turn Completed     | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms         | 발화 제출 성공                                          |
-| Small Talk Completed          | session_id, partner, turn_count, speaking_duration_ms, end_reason(user_ended\|time_limit)           | 서버가 완료 판정                                        |
-| Small Talk Abandoned          | session_id, partner, turn_index                                                                     | 중도 이탈 확정                                          |
-| Small Talk Summary Viewed     | session_id, first_session, has_growth, reused_expression_count, follow_up_trigger, correction_count | 오늘의 스몰톡(요약)에 총평이 그려짐                     |
-| Small Talk Feedback Opened    | session_id, correction_count                                                                        | 요약에서 「상세 피드백 보러가기」                       |
-| Small Talk Feedback Skipped   | session_id, trigger(close\|unavailable), correction_count?                                          | 요약에서 상세 피드백을 건너뛰고 표현 학습으로           |
-| Small Talk Feedback Viewed    | session_id, source(summary\|history), correction_count                                              | 대화 보기(교정 카드)가 그려짐                           |
+| 이벤트                         | 속성                                                                                                | 시점                                                    |
+| ------------------------------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Small Talk Partner Selected    | partner                                                                                             | 탭에서 상대 칩 선택                                     |
+| Small Talk Topic Selected      | partner, topic_id                                                                                   | 주제 모달에서 주제 선택                                 |
+| Small Talk Intro Guide Closed  | —                                                                                                   | 첫 진입 안내를 끝까지 보고 닫음 (기기당 한 번)          |
+| Small Talk Intro Guide Skipped | —                                                                                                   | 첫 진입 안내를 X로 건너뜀 (기기당 한 번)                |
+| Small Talk Greeting Tapped     | partner, coached                                                                                    | 캐릭터를 눌러 인사 들음 (coached=코치마크 켜진 채 누름) |
+| Small Talk Free Nudge Viewed   | —                                                                                                   | 홈 스몰톡 칩 말풍선(무료 5분)이 뜸 (하루 한 번)         |
+| Small Talk Free Nudge Tapped   | —                                                                                                   | 말풍선이 떠 있을 때 스몰톡 칩을 누름                    |
+| Small Talk Started             | session_id, partner, first_speaker, topic_id?                                                       | 세션 시작 성공                                          |
+| Small Talk Turn Completed      | session_id, partner, turn_index, input_type(voice\|text), char_count, utterance_duration_ms         | 발화 제출 성공                                          |
+| Small Talk Completed           | session_id, partner, turn_count, speaking_duration_ms, end_reason(user_ended\|time_limit)           | 서버가 완료 판정                                        |
+| Small Talk Abandoned           | session_id, partner, turn_index                                                                     | 중도 이탈 확정                                          |
+| Small Talk Summary Viewed      | session_id, first_session, has_growth, reused_expression_count, follow_up_trigger, correction_count | 오늘의 스몰톡(요약)에 총평이 그려짐                     |
+| Small Talk Feedback Opened     | session_id, correction_count                                                                        | 요약에서 「상세 피드백 보러가기」                       |
+| Small Talk Feedback Skipped    | session_id, trigger(close\|unavailable), correction_count?                                          | 요약에서 상세 피드백을 건너뛰고 표현 학습으로           |
+| Small Talk Feedback Viewed     | session_id, source(summary\|history), correction_count                                              | 대화 보기(교정 카드)가 그려짐                           |
 
 스몰톡은 탭도 목적도 달라 대화 이벤트를 따로 둔다 — 시나리오는 오늘의 과제를 끝냈는지, 스몰톡은 누구와 얼마나 얘기했는지를 본다. 상대(`partner`)는 시나리오에 없는 축이라 전 이벤트에 싣는다.
 

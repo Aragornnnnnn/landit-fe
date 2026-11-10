@@ -13,6 +13,7 @@ import type { FloatingThought } from '@/features/conversation/model/thought';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
 import { ExitConfirmSheet } from '@/features/conversation/ui/flow/ExitConfirmSheet';
+import { ExitHeader } from '@/features/conversation/ui/flow/ExitHeader';
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
 import { QuestionCard } from '@/features/conversation/ui/flow/QuestionCard';
@@ -25,7 +26,7 @@ import { scenarioFeedbackPath, scenarioReturnPath } from '@/shared/lib/routes';
 import { useDocumentScrollPin } from '@/shared/lib/useDocumentScrollPin';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Button } from '@/shared/ui/Button';
-import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
+import { ArrowRightIcon } from '@/shared/ui/Icons';
 import { ProgressBar } from '@/shared/ui/ProgressBar';
 
 import { useAnswerGuideToggle } from '../_model/useAnswerGuideToggle';
@@ -186,18 +187,7 @@ export const ScenarioTalkFlow = ({
       </div>
 
       {/* 무대가 상태바 밑까지 이어지고, X만 safe area 아래에 뜬다 — 플레인 아이콘(마이페이지와 통일) */}
-      <header
-        className="absolute inset-x-0 top-0 z-20 flex items-center px-3"
-        style={{ paddingTop: 'max(var(--safe-area-inset-top), 8px)' }}
-      >
-        <button
-          onClick={requestExit}
-          className="flex size-10 items-center justify-center text-foreground transition-transform active:scale-90"
-          aria-label={t('exitButton')}
-        >
-          <CloseIcon size={24} />
-        </button>
-      </header>
+      <ExitHeader label={t('exitButton')} onExit={requestExit} />
 
       <CharacterStage partner={partner} look={characterLook} speech={speech} />
 

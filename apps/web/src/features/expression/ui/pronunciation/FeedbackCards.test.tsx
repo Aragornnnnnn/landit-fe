@@ -43,6 +43,7 @@ const renderCards = () =>
       disabled={false}
       playingId={null}
       onPlayNative={vi.fn()}
+      canPlayMine={() => true}
       onPlayMine={vi.fn()}
     />,
   );
@@ -87,13 +88,14 @@ describe('FeedbackCards', () => {
       user,
     });
 
-    const renderCard = (card: FeedbackCard) =>
+    const renderCard = (card: FeedbackCard, hasClip = true) =>
       render(
         <FeedbackCards
           cards={[card]}
           disabled={false}
           playingId={null}
           onPlayNative={vi.fn()}
+          canPlayMine={() => hasClip}
           onPlayMine={vi.fn()}
         />,
       );
@@ -123,10 +125,8 @@ describe('FeedbackCards', () => {
       expect(screen.getByText('choose')).toBeInTheDocument();
     });
 
-    it('내 녹음 구간이 없으면 내 행의 듣기 버튼을 숨긴다', () => {
-      renderCard(
-        lowScoreCard({ score: 80, startTimeMs: null, endTimeMs: null }),
-      );
+    it('재생할 단어 음원이 없으면 내 행의 듣기 버튼을 숨긴다', () => {
+      renderCard(lowScoreCard({ score: 80 }), false);
 
       expect(
         screen.queryByRole('button', { name: '나 발음 듣기' }),

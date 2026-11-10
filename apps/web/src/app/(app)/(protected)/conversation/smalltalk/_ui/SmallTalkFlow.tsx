@@ -68,6 +68,11 @@ export const SmallTalkFlow = ({
       <ConversationWaiting
         partner={partner}
         partnerSpeaksFirst={startMode === 'AI_FIRST'}
+        // 잔량만 기다리는 중이면 세션은 이미 열려 있다 — 돌아가면서 정리한다
+        onExit={() => {
+          end();
+          router.replace(SMALLTALK_PATH);
+        }}
       />
     );
 

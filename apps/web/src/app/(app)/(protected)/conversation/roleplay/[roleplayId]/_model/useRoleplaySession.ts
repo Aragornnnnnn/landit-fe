@@ -44,6 +44,7 @@ export const useRoleplaySession = (
   const [error, setError] = useState<unknown>(null);
   const startedRef = useRef(false);
   const trackedRef = useRef(false);
+  const leftRef = useRef(false);
 
   const trackStartFailed = useEffectEvent((cause: unknown) =>
     track(EVENTS.ROLEPLAY_START_FAILED, {
@@ -64,7 +65,16 @@ export const useRoleplaySession = (
     }
 
     startSavedRoleplaySession(roleplayId)
-      .then(setSession)
+      .then((started) => {
+        // 기다리다 나갔다 — 서버는 이미 무료 기회를 썼으니 돌아간 입구가 다시 묻게만 한다
+        if (leftRef.current) {
+          void queryClient.invalidateQueries({
+            queryKey: roleplayKeys.access(userId),
+          });
+          return;
+        }
+        setSession(started);
+      })
       .catch((cause) => {
         trackStartFailed(cause);
         // 프리미엄 거절은 오류가 아니다 — 화면이 페이월로 보낸다. 가진 무료 기회 값은 낡은 것이다
@@ -112,6 +122,11 @@ export const useRoleplaySession = (
     }
   }, [session, deciding, freeUser, entry, roleplayId]);
 
-  // 중도 종료는 없다 — 백엔드가 롤플레이 세션의 중도 종료를 받지 않아, 완료는 끝내기(complete)만 맡는다
-  return { session, error };
+  // 중도 종료는 없다 — 백엔드가 롤플레이 세션의 중도 종료를 받지 않아, 완료는 끝내기(complete)만 맡는다.
+  // 그래서 기다리다 나가도 시작 요청은 취소할 수 없다 — 늦게 온 응답만 버린다
+  const leave = () => {
+    leftRef.current = true;
+  };
+
+  return { session, error, leave };
 };

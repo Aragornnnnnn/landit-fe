@@ -20,6 +20,7 @@
   "introGuide": {
     "dialogLabel": "스몰톡 안내",
     "nextLabel": "다음",
+    "closeLabel": "안내 닫기",
     "mascotLabel": "래디",
     "freeTalkBody": "스몰톡에서는 세 친구와<br></br><em>영어로 자유롭게</em> 대화해요",
     "endingBody": "<em>“Bye!”</em>, <em>“Talk to you later”</em><br></br>같은 마무리 인사를 하면<br></br>대화가 자동으로 끝나요",

@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 import { PartnerAvatar } from '@/features/conversation/ui/character/PartnerAvatar';
 import { PARTNERS } from '@/features/small-talk/model/partner';
 import { Button } from '@/shared/ui/Button';
+import { CloseIcon } from '@/shared/ui/Icons';
 
 import type { IntroSentence, IntroSpotlight } from '../_model/intro-sentences';
 // 시나리오 탭 튜토리얼과 같은 타이핑 규칙(쓰고, 누르면 지우고, 다음 문장)을 쓴다
@@ -42,6 +43,7 @@ export const IntroGuide = ({
   spot,
   onNext,
   onClose,
+  onSkip,
 }: {
   sentences: IntroSentence[];
   // 래디의 말 뒤에 차례로 비출 자리. 비울 수도 있다(한도를 다 써 버튼이 없는 날)
@@ -51,6 +53,8 @@ export const IntroGuide = ({
   // 다음 자리로 — 래디의 말이 끝났거나 비춘 자리를 다 읽었다
   onNext: () => void;
   onClose: () => void;
+  // X로 건너뜀 — 끝까지 본 닫기(onClose)와 따로 센다
+  onSkip: () => void;
 }) => {
   const t = useTranslations('smallTalk.introGuide');
   const reduced = useReducedMotion();
@@ -119,6 +123,15 @@ export const IntroGuide = ({
           onClick={next}
         />
       )}
+      {/* 끝까지 넘기지 않아도 언제든 닫는다 — 「다음」 버튼보다 위에 둬 이 자리만은 닫기로 눌린다 */}
+      <button
+        type="button"
+        aria-label={t('closeLabel')}
+        onClick={onSkip}
+        className="absolute top-[max(var(--safe-area-inset-top),10px)] left-3 z-10 flex size-10 items-center justify-center text-white transition-transform active:scale-90"
+      >
+        <CloseIcon size={24} />
+      </button>
 
       {spot === null && (
         <>

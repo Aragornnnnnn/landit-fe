@@ -23,6 +23,13 @@ interface SmallTalkSessionOptions {
   partner: Partner;
 }
 
+const closeSession = (sessionId: number) => {
+  endSession(sessionId).catch((cause) => {
+    console.warn('[smalltalk] 세션 종료 실패', cause);
+    reportWarning(cause);
+  });
+};
+
 export const useSmallTalkSession = ({
   startMode,
   topicId,
@@ -35,6 +42,8 @@ export const useSmallTalkSession = ({
   // 시작한 세션 id — 나갈 때 종료하려면 언마운트 시점에도 최신 값을 읽을 수 있어야 한다
   const sessionIdRef = useRef<number | null>(null);
   const startedRef = useRef(false);
+  // 응답이 오기 전에 나갔는가 — 뒤늦게 열린 세션은 아무도 쓰지 않으니 바로 닫는다
+  const exitedRef = useRef(false);
 
   useEffect(() => {
     if (startedRef.current) return; // StrictMode 이중 실행에도 세션은 하나만 만든다
@@ -43,6 +52,10 @@ export const useSmallTalkSession = ({
     startSmallTalkSession({ startMode, topicId, characterId: partner })
       .then((started) => {
         sessionIdRef.current = started.sessionId;
+        if (exitedRef.current) {
+          closeSession(started.sessionId);
+          return;
+        }
         setSession(started);
         track(EVENTS.SMALL_TALK_STARTED, {
           session_id: started.sessionId,
@@ -60,11 +73,9 @@ export const useSmallTalkSession = ({
 
   // 중도 종료 — 정상 완료는 서버가 판정하므로 부르지 않는다
   const end = () => {
+    exitedRef.current = true;
     if (sessionIdRef.current == null) return;
-    endSession(sessionIdRef.current).catch((cause) => {
-      console.warn('[smalltalk] 세션 종료 실패', cause);
-      reportWarning(cause);
-    });
+    closeSession(sessionIdRef.current);
   };
 
   return { session, error, end };

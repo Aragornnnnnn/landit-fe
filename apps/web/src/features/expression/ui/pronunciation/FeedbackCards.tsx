@@ -20,7 +20,8 @@ interface FeedbackCardsProps {
   playingId: string | null;
   // 원어민 단어 발음 재생 — CDN URL이 없으면 버튼을 숨긴다
   onPlayNative: (word: PronunciationWord) => void;
-  // 내 녹음에서 그 단어 구간 재생 — 구간 정보가 없으면 버튼을 숨긴다
+  // 단어 음원을 준비한 경우에만 내 발음 듣기 버튼을 표시한다
+  canPlayMine: (word: PronunciationWord) => boolean;
   onPlayMine: (word: PronunciationWord) => void;
 }
 
@@ -39,6 +40,7 @@ export const FeedbackCards = ({
   disabled,
   playingId,
   onPlayNative,
+  canPlayMine,
   onPlayMine,
 }: FeedbackCardsProps) => {
   const t = useTranslations('expression.feedbackCards');
@@ -49,10 +51,7 @@ export const FeedbackCards = ({
         const playNative = word.nativeWordAudioUrl
           ? () => onPlayNative(word)
           : undefined;
-        const playMine =
-          word.startTimeMs !== null && word.endTimeMs !== null
-            ? () => onPlayMine(word)
-            : undefined;
+        const playMine = canPlayMine(word) ? () => onPlayMine(word) : undefined;
 
         return (
           // scroll-mt로 앵커 이동 시 헤더에 가리지 않게 여유를 둔다 (단어 칩에서 이동해 온다).

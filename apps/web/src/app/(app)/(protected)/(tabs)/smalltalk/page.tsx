@@ -269,6 +269,7 @@ export default function SmallTalkPage() {
           spot={guide.spot}
           onNext={guide.next}
           onClose={guide.close}
+          onSkip={guide.skip}
         />
       )}
       {/* 스몰톡을 마치고 돌아온 사람에게 한 번 — 안내·코치마크는 첫 진입 때 이미 끝난 뒤라 겹치지 않는다 */}

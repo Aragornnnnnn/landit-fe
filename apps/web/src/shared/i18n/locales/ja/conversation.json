@@ -63,6 +63,9 @@
     "confirmButton": "やめる",
     "continueButton": "続ける"
   },
+  "conversationWaiting": {
+    "exitButton": "会話をやめる"
+  },
   "conversationTurns": {
     "connectionToast": "接続に問題が発生しました。時間をおいて再度お試しください"
   },
