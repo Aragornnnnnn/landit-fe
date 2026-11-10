@@ -66,15 +66,28 @@ describe('ScenarioCard', () => {
     expect(screen.queryByText('캐릭터')).not.toBeInTheDocument();
   });
 
-  it('그림이 그려지면 빈 자리를 치운다', () => {
+  it('그림은 투명하게 시작해 불러오면 서서히 나타난다', () => {
+    // given
+    render(card(ready(THUMBNAIL_URL)));
+    expect(thumbnailImage()).toHaveClass('opacity-0');
+
+    // when
+    fireEvent.load(thumbnailImage()!);
+
+    // then
+    expect(thumbnailImage()).toHaveClass('opacity-100');
+  });
+
+  it('그림이 나타나는 동안 스켈레톤은 뒤에 남아 카드 바탕색이 비치지 않게 한다', () => {
     // given
     render(card(ready(THUMBNAIL_URL)));
 
     // when
     fireEvent.load(thumbnailImage()!);
 
-    // then
-    expect(screen.queryByTestId('thumbnail-skeleton')).not.toBeInTheDocument();
+    // then 남아 있되 더는 흐르지 않는다
+    const skeleton = screen.getByTestId('thumbnail-skeleton');
+    expect(skeleton).not.toHaveClass('animate-skeleton-flow');
   });
 
   it.each([

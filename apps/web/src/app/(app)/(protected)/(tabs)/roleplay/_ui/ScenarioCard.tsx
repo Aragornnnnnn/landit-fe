@@ -18,6 +18,10 @@ import { MoreHorizontalIcon } from '@/shared/ui/Icons';
 // 그림이 이만큼 안 오면 빈 자리 대신 캐릭터를 세운다 — 그림은 계속 기다려 오면 바꾼다
 const THUMBNAIL_WAIT_MS = 8_000;
 
+// 그림·그림자·글자색이 같은 길이로 바뀐다 — 어긋나면 그림이 덜 보인 채 흰 글자가 먼저 나타난다
+const FADE_CLASS =
+  'transition-[opacity,color] duration-250 motion-reduce:transition-none';
+
 interface ScenarioCardProps {
   scenario: RoleplaySettings;
   // 기기의 오늘(yyyy-MM-dd) — 카드마다 시계를 읽지 않게 목록이 한 번 읽어 내려준다
@@ -42,11 +46,12 @@ export const ScenarioCard = ({
   const thumbnailUrl =
     scenario.thumbnail?.status === 'READY' ? scenario.thumbnail.url : null;
   const thumbnailPainted = thumbnailUrl !== null && thumbnailUrl === loadedUrl;
-  const thumbnailLoading =
+  const thumbnailPending =
     thumbnailUrl !== null &&
-    !thumbnailPainted &&
     thumbnailUrl !== failedUrl &&
     thumbnailUrl !== gaveUpUrl;
+  // 스켈레톤은 그림이 다 나타날 때까지 뒤에 남겨 둔다 — 지우면 페이드인 도중 카드의 파스텔색이 비친다
+  const thumbnailLoading = thumbnailPending && !thumbnailPainted;
   useEffect(() => {
     if (!thumbnailLoading) return;
     const timer = setTimeout(
@@ -78,11 +83,13 @@ export const ScenarioCard = ({
         onClick={onOpen}
         className="absolute inset-0 text-left transition-transform active:scale-[0.98]"
       >
-        {/* 그림이 오는 중이면 빈 자리로 기다린다 — 캐릭터를 세웠다 그림으로 바꾸면 다른 카드로 바뀐 것처럼 보인다 */}
-        {thumbnailLoading && (
+        {/* 그림이 오는 중이면 이미지 자리처럼 연한 회색 위로 반짝임을 흘려 기다린다 — 캐릭터 카드의 파스텔색을 비치면 캐릭터 카드로 읽힌다 */}
+        {thumbnailPending && (
           <span
             data-testid="thumbnail-skeleton"
-            className="animate-skeleton-flow absolute inset-0 rounded-[20px]"
+            className={`absolute inset-0 rounded-[20px] bg-secondary ${
+              thumbnailLoading ? 'animate-skeleton-flow' : ''
+            }`}
           />
         )}
         {/* 그림이 없다고 확인됐을 때(준비 전·실패)만 캐릭터를 세운다 */}
@@ -101,17 +108,32 @@ export const ScenarioCard = ({
             decoding="async"
             onLoad={() => setLoadedUrl(thumbnailUrl)}
             onError={() => setFailedUrl(thumbnailUrl)}
-            className="absolute inset-0 size-full rounded-[20px] object-cover"
+            className={`absolute inset-0 size-full rounded-[20px] object-cover ${FADE_CLASS} ${
+              thumbnailPainted ? 'opacity-100' : 'opacity-0'
+            }`}
           />
         )}
+        {/* 어두운 그림자는 그림 위에서 흰 글자를 읽히게 하는 것 — 회색 스켈레톤 위에선 탁해 보여 로딩 중엔 걷고 글자를 어둡게 둔다 */}
         <span
-          className={`absolute inset-x-0 bottom-0 h-[56%] ${CARD_SHADE_CLASS}`}
+          className={`absolute inset-x-0 bottom-0 h-[56%] ${CARD_SHADE_CLASS} ${FADE_CLASS} ${
+            thumbnailLoading ? 'opacity-0' : 'opacity-100'
+          }`}
         />
         <span className="absolute inset-x-3 bottom-3.5 flex flex-col gap-1">
-          <span className="line-clamp-2 text-sm leading-[1.35] font-bold break-keep text-white">
+          <span
+            className={`line-clamp-2 text-sm leading-[1.35] font-bold break-keep ${FADE_CLASS} ${
+              thumbnailLoading ? 'text-foreground' : 'text-white'
+            }`}
+          >
             {scenario.title}
           </span>
-          <span className="text-xs text-white/75">{timeLabel()}</span>
+          <span
+            className={`text-xs ${FADE_CLASS} ${
+              thumbnailLoading ? 'text-muted-foreground' : 'text-white/75'
+            }`}
+          >
+            {timeLabel()}
+          </span>
         </span>
       </button>
       {/* 눈에 띄면 카드보다 먼저 읽힌다 — 바탕은 없이, 파스텔 위엔 어두운 점, 그림 위엔 그림자 진 흰 점으로 둔다 */}
