@@ -9,6 +9,7 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { RoleplaySettings } from '@/features/roleplay/api/roleplay';
+import { paintedThumbnails } from '@/features/roleplay/model/painted-thumbnails';
 
 import { ScenarioCard } from './ScenarioCard';
 
@@ -16,7 +17,10 @@ vi.mock('@/features/roleplay/ui/PartnerBust', () => ({
   PartnerBust: () => <span>캐릭터</span>,
 }));
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  paintedThumbnails.clear();
+});
 
 const THUMBNAIL_URL = 'https://cdn.example/roleplay.webp';
 const NEXT_URL = 'https://cdn.example/next.webp';
@@ -158,5 +162,45 @@ describe('ScenarioCard', () => {
     // then
     expect(screen.queryByText('캐릭터')).not.toBeInTheDocument();
     vi.useRealTimers();
+  });
+
+  it('이미 그려 본 그림은 다시 만들어져도 스켈레톤과 페이드 없이 바로 보인다', () => {
+    // given 한 번 그려진 카드를 치운다 (탭을 오가면 카드가 다시 만들어진다)
+    const first = render(card(ready(THUMBNAIL_URL)));
+    fireEvent.load(thumbnailImage()!);
+    first.unmount();
+
+    // when
+    render(card(ready(THUMBNAIL_URL)));
+
+    // then
+    expect(thumbnailImage()).toHaveClass('opacity-100');
+    expect(screen.getByTestId('thumbnail-skeleton')).not.toHaveClass(
+      'animate-skeleton-flow',
+    );
+  });
+
+  it('그림을 기다리는 동안에도 더보기와 카드 열기가 눌린다', () => {
+    // given 스켈레톤이 떠 있다
+    const onOpen = vi.fn();
+    const onMore = vi.fn();
+    render(
+      <ScenarioCard
+        scenario={{ ...scenario, thumbnail: ready(THUMBNAIL_URL) }}
+        today="2026-11-04"
+        onOpen={onOpen}
+        onMore={onMore}
+      />,
+    );
+    expect(screen.getByTestId('thumbnail-skeleton')).toBeInTheDocument();
+
+    // when 카드 본체와 더보기 버튼을 각각 누른다
+    const [openButton, moreButton] = screen.getAllByRole('button');
+    fireEvent.click(openButton);
+    fireEvent.click(moreButton);
+
+    // then
+    expect(onOpen).toHaveBeenCalledOnce();
+    expect(onMore).toHaveBeenCalledOnce();
   });
 });

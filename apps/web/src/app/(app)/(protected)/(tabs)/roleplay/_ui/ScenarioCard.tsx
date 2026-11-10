@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 
 import type { RoleplaySettings } from '@/features/roleplay/api/roleplay';
 import { toLastTalked } from '@/features/roleplay/model/last-talked';
+import { paintedThumbnails } from '@/features/roleplay/model/painted-thumbnails';
 import {
   CARD_SHADE_CLASS,
   toScenarioTint,
@@ -39,12 +40,16 @@ export const ScenarioCard = ({
   const t = useTranslations('roleplay.home');
   const locale = useLocale() as Locale;
   const partner = toPartnerId(scenario.characterId);
-  // 주소별로 기억해 재조회로 새 주소가 오면 다시 시도한다
-  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
-  const [failedUrl, setFailedUrl] = useState<string | null>(null);
-  const [gaveUpUrl, setGaveUpUrl] = useState<string | null>(null);
   const thumbnailUrl =
     scenario.thumbnail?.status === 'READY' ? scenario.thumbnail.url : null;
+  // 주소별로 기억해 재조회로 새 주소가 오면 다시 시도한다 — 이미 그려 본 그림은 처음부터 그려진 것으로 친다
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(() =>
+    thumbnailUrl !== null && paintedThumbnails.has(thumbnailUrl)
+      ? thumbnailUrl
+      : null,
+  );
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const [gaveUpUrl, setGaveUpUrl] = useState<string | null>(null);
   const thumbnailPainted = thumbnailUrl !== null && thumbnailUrl === loadedUrl;
   const thumbnailPending =
     thumbnailUrl !== null &&
@@ -105,8 +110,11 @@ export const ScenarioCard = ({
             src={thumbnailUrl}
             loading="lazy"
             alt=""
-            decoding="async"
-            onLoad={() => setLoadedUrl(thumbnailUrl)}
+            decoding={paintedThumbnails.has(thumbnailUrl) ? 'sync' : 'async'}
+            onLoad={() => {
+              paintedThumbnails.add(thumbnailUrl);
+              setLoadedUrl(thumbnailUrl);
+            }}
             onError={() => setFailedUrl(thumbnailUrl)}
             className={`absolute inset-0 size-full rounded-[20px] object-cover ${FADE_CLASS} ${
               thumbnailPainted ? 'opacity-100' : 'opacity-0'
@@ -141,7 +149,7 @@ export const ScenarioCard = ({
         type="button"
         onClick={onMore}
         aria-label={t('moreLabel', { title: scenario.title })}
-        className={`absolute top-1 right-1 flex size-11 items-center justify-center ${
+        className={`absolute top-1 right-1 flex size-11 items-center justify-center transition-colors duration-250 motion-reduce:transition-none ${
           thumbnailPainted
             ? 'text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]'
             : 'text-foreground/70'
