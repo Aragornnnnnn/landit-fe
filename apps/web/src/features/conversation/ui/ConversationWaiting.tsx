@@ -1,13 +1,13 @@
 // 첫 말을 기다리는 대화 화면 — 상대를 이미 알 때 스켈레톤 대신 띄워, 기다리는 동안에도 누구와 얘기하러 왔는지 보이게 한다
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-
-import { CloseIcon } from '@/shared/ui/Icons';
 
 import { toCharacterLook, type Partner } from '../model/character-look';
 import type { ConversationPhase } from '../model/conversation-machine';
 import { CharacterStage } from './flow/CharacterStage';
+import { ExitHeader } from './flow/ExitHeader';
 import { MicControl } from './flow/MicControl';
 import { ThinkingBubble } from './flow/ThinkingBubble';
 
@@ -31,20 +31,15 @@ export const ConversationWaiting = ({
   onExit,
 }: ConversationWaitingProps) => {
   const t = useTranslations('conversation.conversationWaiting');
+  // 한 번 누르면 잠근다 — 연타로 정리 요청과 이동이 겹치지 않게
+  const [leaving, setLeaving] = useState(false);
+  const leave = () => {
+    setLeaving(true);
+    onExit();
+  };
   return (
     <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
-      <header
-        className="absolute inset-x-0 top-0 z-20 flex items-center px-3"
-        style={{ paddingTop: 'max(var(--safe-area-inset-top), 8px)' }}
-      >
-        <button
-          onClick={onExit}
-          className="flex size-10 items-center justify-center text-foreground transition-transform active:scale-90"
-          aria-label={t('exitButton')}
-        >
-          <CloseIcon size={24} />
-        </button>
-      </header>
+      <ExitHeader label={t('exitButton')} onExit={leave} disabled={leaving} />
 
       <CharacterStage
         partner={partner}

@@ -18,6 +18,7 @@ import type { FloatingThought } from '@/features/conversation/model/thought';
 import type { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
+import { ExitHeader } from '@/features/conversation/ui/flow/ExitHeader';
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
 import { QuestionCard } from '@/features/conversation/ui/flow/QuestionCard';
@@ -29,7 +30,7 @@ import { useBackPress } from '@/shared/bridge/useBackPress';
 import { useDocumentScrollPin } from '@/shared/lib/useDocumentScrollPin';
 import { useKeyboardInset } from '@/shared/lib/useKeyboardInset';
 import { Button } from '@/shared/ui/Button';
-import { ArrowRightIcon, CloseIcon } from '@/shared/ui/Icons';
+import { ArrowRightIcon } from '@/shared/ui/Icons';
 
 import { toCountdownLabel } from '../lib/speaking-time';
 import { useSpeakingLimit } from '../model/useSpeakingLimit';
@@ -186,18 +187,7 @@ export const TalkScreen = ({
       // iOS WKWebView는 키보드가 떠도 레이아웃이 안 줄어든다 — 가려진 높이만큼 올려 입력 박스를 보이게 한다
       style={keyboardLifted ? { paddingBottom: keyboardInset } : undefined}
     >
-      <header
-        className="absolute inset-x-0 top-0 z-20 flex items-center px-3"
-        style={{ paddingTop: 'max(var(--safe-area-inset-top), 8px)' }}
-      >
-        <button
-          onClick={requestExit}
-          className="flex size-10 items-center justify-center text-foreground transition-transform active:scale-90"
-          aria-label={t('exitButton')}
-        >
-          <CloseIcon size={24} />
-        </button>
-      </header>
+      <ExitHeader label={t('exitButton')} onExit={requestExit} />
 
       <CharacterStage partner={partner} look={characterLook} speech={speech} />
 

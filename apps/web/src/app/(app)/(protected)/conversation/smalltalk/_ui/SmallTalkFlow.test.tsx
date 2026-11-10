@@ -105,4 +105,18 @@ describe('SmallTalkFlow', () => {
     expect(end).toHaveBeenCalled();
     expect(replace).toHaveBeenCalledWith(SMALLTALK_PATH);
   });
+
+  it('나가기를 연타해도 정리는 한 번만 한다', () => {
+    // given
+    setup({ session: null as never });
+    const exit = screen.getByRole('button', { name: '대화 나가기' });
+
+    // when
+    fireEvent.click(exit);
+    fireEvent.click(exit);
+
+    // then
+    expect(end).toHaveBeenCalledOnce();
+    expect(replace).toHaveBeenCalledOnce();
+  });
 });
