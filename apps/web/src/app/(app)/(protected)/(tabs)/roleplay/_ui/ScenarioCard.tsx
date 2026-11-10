@@ -1,4 +1,4 @@
-// 내 시나리오 카드 — 썸네일이 준비되면 그림을, 아니면 캐릭터 상반신을 전면에 두고, 아래 어둠 위에 제목과 마지막 대화 시각만 둔다.
+// 내 시나리오 카드 — 썸네일이 준비되면 그림을(오는 동안은 빈 자리), 없으면 캐릭터 상반신을 전면에 두고, 아래 어둠 위에 제목과 마지막 대화 시각만 둔다.
 // 카드를 누르면 다시 대화하고, 모서리 ⋯는 지난 대화·삭제를 연다
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -38,6 +38,8 @@ export const ScenarioCard = ({
   const thumbnailUrl =
     scenario.thumbnail?.status === 'READY' ? scenario.thumbnail.url : null;
   const thumbnailPainted = thumbnailUrl !== null && thumbnailUrl === loadedUrl;
+  const thumbnailLoading =
+    thumbnailUrl !== null && !thumbnailPainted && thumbnailUrl !== failedUrl;
   const talkedAt = scenario.lastPlayedAt ?? scenario.createdAt;
   const timeLabel = () => {
     const lastTalked = toLastTalked(talkedAt, today);
@@ -61,8 +63,15 @@ export const ScenarioCard = ({
         onClick={onOpen}
         className="absolute inset-0 text-left transition-transform active:scale-[0.98]"
       >
-        {/* 그림이 그려질 때까지 빈 카드가 보이지 않게 캐릭터를 세워 둔다 */}
-        {!thumbnailPainted && (
+        {/* 그림이 오는 중이면 빈 자리로 기다린다 — 캐릭터를 세웠다 그림으로 바꾸면 다른 카드로 바뀐 것처럼 보인다 */}
+        {thumbnailLoading && (
+          <span
+            data-testid="thumbnail-skeleton"
+            className="animate-skeleton-flow absolute inset-0 rounded-[20px]"
+          />
+        )}
+        {/* 그림이 없다고 확인됐을 때(준비 전·실패)만 캐릭터를 세운다 */}
+        {!thumbnailPainted && !thumbnailLoading && (
           <PartnerBust
             partner={partner}
             className="absolute -bottom-[1%] left-1/2 w-[89%] -translate-x-1/2"

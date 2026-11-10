@@ -53,10 +53,22 @@ describe('ScenarioCard', () => {
     expect(screen.queryByText('캐릭터')).not.toBeInTheDocument();
   });
 
-  it('그림이 그려지기 전에는 캐릭터를 함께 둔다', () => {
+  it('그림을 불러오는 동안엔 캐릭터 대신 빈 자리를 둔다', () => {
     render(card(ready(THUMBNAIL_URL)));
 
-    expect(screen.getByText('캐릭터')).toBeInTheDocument();
+    expect(screen.getByTestId('thumbnail-skeleton')).toBeInTheDocument();
+    expect(screen.queryByText('캐릭터')).not.toBeInTheDocument();
+  });
+
+  it('그림이 그려지면 빈 자리를 치운다', () => {
+    // given
+    render(card(ready(THUMBNAIL_URL)));
+
+    // when
+    fireEvent.load(thumbnailImage()!);
+
+    // then
+    expect(screen.queryByTestId('thumbnail-skeleton')).not.toBeInTheDocument();
   });
 
   it.each([
