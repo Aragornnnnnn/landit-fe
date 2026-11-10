@@ -1,5 +1,11 @@
 // 롤플레이 대화 진입 — 프리미엄 거절은 오류 화면 대신 페이월로, 그 밖의 실패는 오류 화면으로 간다
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/shared/api/api-error';
@@ -68,5 +74,17 @@ describe('RoleplayFlow', () => {
     render(<RoleplayFlow roleplayId={7} entry="card" />);
 
     expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('첫 말을 기다리는 동안 나가기를 누르면 롤플레이 홈으로 돌아간다', () => {
+    // given
+    waitWith('marco');
+    render(<RoleplayFlow roleplayId={7} entry="card" />);
+
+    // when
+    fireEvent.click(screen.getByRole('button', { name: '대화 나가기' }));
+
+    // then
+    expect(replace).toHaveBeenCalledWith('/roleplay');
   });
 });

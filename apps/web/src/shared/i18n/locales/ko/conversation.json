@@ -63,6 +63,9 @@
     "confirmButton": "나가기",
     "continueButton": "계속하기"
   },
+  "conversationWaiting": {
+    "exitButton": "대화 나가기"
+  },
   "conversationTurns": {
     "connectionToast": "연결에 문제가 생겼어요. 잠시 후 다시 시도해 주세요"
   },

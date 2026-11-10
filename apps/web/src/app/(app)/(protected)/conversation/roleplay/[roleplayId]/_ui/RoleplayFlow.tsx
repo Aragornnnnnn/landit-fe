@@ -64,7 +64,12 @@ export const RoleplayFlow = ({
   // 롤플레이는 늘 상대가 먼저 말한다. 상대를 모르면(주소로 바로 들어옴) 빈 자리만 그린다
   if (!session)
     return partner ? (
-      <ConversationWaiting partner={partner} partnerSpeaksFirst />
+      <ConversationWaiting
+        partner={partner}
+        partnerSpeaksFirst
+        // 세션이 아직 안 열렸다 — 백엔드가 중도 종료를 받지 않아 정리할 것 없이 돌아간다
+        onExit={() => router.replace(ROLEPLAY_PATH)}
+      />
     ) : (
       <ConversationSkeleton />
     );

@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 import { PartnerAvatar } from '@/features/conversation/ui/character/PartnerAvatar';
 import { PARTNERS } from '@/features/small-talk/model/partner';
 import { Button } from '@/shared/ui/Button';
+import { CloseIcon } from '@/shared/ui/Icons';
 
 import type { IntroSentence, IntroSpotlight } from '../_model/intro-sentences';
 // 시나리오 탭 튜토리얼과 같은 타이핑 규칙(쓰고, 누르면 지우고, 다음 문장)을 쓴다
@@ -119,6 +120,15 @@ export const IntroGuide = ({
           onClick={next}
         />
       )}
+      {/* 끝까지 넘기지 않아도 언제든 닫는다 — 「다음」 버튼보다 위에 둬 이 자리만은 닫기로 눌린다 */}
+      <button
+        type="button"
+        aria-label={t('closeLabel')}
+        onClick={onClose}
+        className="absolute top-[max(var(--safe-area-inset-top),10px)] left-3 z-10 flex size-10 items-center justify-center text-white transition-transform active:scale-90"
+      >
+        <CloseIcon size={24} />
+      </button>
 
       {spot === null && (
         <>
