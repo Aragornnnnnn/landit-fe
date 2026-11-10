@@ -8,6 +8,7 @@ import type {
   SmallTalkStartMode,
 } from '@/features/small-talk/api/small-talk';
 import { useSmallTalkMainQuery } from '@/features/small-talk/model/useSmallTalkMainQuery';
+import { SMALLTALK_PATH } from '@/shared/lib/routes';
 
 import { useSmallTalkSession } from '../_model/useSmallTalkSession';
 import { SmallTalkFlow } from './SmallTalkFlow';
@@ -91,5 +92,31 @@ describe('SmallTalkFlow', () => {
 
     expect(end).toHaveBeenCalled();
     expect(replace).toHaveBeenCalled();
+  });
+
+  it('세션을 기다리는 동안 나가기를 누르면 세션을 정리하고 스몰톡 홈으로 돌아간다', () => {
+    // given
+    setup({ session: null as never });
+
+    // when
+    fireEvent.click(screen.getByRole('button', { name: '대화 나가기' }));
+
+    // then
+    expect(end).toHaveBeenCalled();
+    expect(replace).toHaveBeenCalledWith(SMALLTALK_PATH);
+  });
+
+  it('나가기를 연타해도 정리는 한 번만 한다', () => {
+    // given
+    setup({ session: null as never });
+    const exit = screen.getByRole('button', { name: '대화 나가기' });
+
+    // when
+    fireEvent.click(exit);
+    fireEvent.click(exit);
+
+    // then
+    expect(end).toHaveBeenCalledOnce();
+    expect(replace).toHaveBeenCalledOnce();
   });
 });

@@ -1,6 +1,6 @@
 // 롤플레이 세션 시작 — 지워진 시나리오로 시작하면 홈의 옛 카드를 걷어 내게 한다
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -236,5 +236,34 @@ describe('useRoleplaySession', () => {
       queryKey: roleplayKeys.access(39),
     });
     gate.deciding = false;
+  });
+
+  it('응답이 오기 전에 나갔다면 세션을 열지 않고 입구가 다시 묻게 한다', async () => {
+    // given
+    let respond!: (value: RoleplaySessionStartResponse) => void;
+    vi.mocked(startSavedRoleplaySession).mockReturnValue(
+      new Promise((resolve) => {
+        respond = resolve;
+      }),
+    );
+    const client = new QueryClient();
+    const invalidate = vi.spyOn(client, 'invalidateQueries');
+    const { result } = renderHook(() => useRoleplaySession(7, 'card'), {
+      wrapper: ({ children }) => (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      ),
+    });
+
+    // when 나간 뒤에 응답이 온다 — 서버는 무료 기회를 이미 썼다
+    act(() => result.current.leave());
+    await act(async () =>
+      respond({ sessionId: 1 } as unknown as RoleplaySessionStartResponse),
+    );
+
+    // then
+    expect(result.current.session).toBeNull();
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: roleplayKeys.access(39),
+    });
   });
 });

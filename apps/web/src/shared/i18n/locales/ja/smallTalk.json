@@ -20,6 +20,7 @@
   "introGuide": {
     "dialogLabel": "スモールトークの案内",
     "nextLabel": "次へ",
+    "closeLabel": "案内を閉じる",
     "mascotLabel": "ラディ",
     "freeTalkBody": "スモールトークでは<br></br>3人の友だちと<br></br><em>英語で自由に</em>話せます",
     "endingBody": "<em>“Bye!”</em>や<em>“Talk to you later”</em><br></br>などのあいさつで<br></br>会話が自動で終わります",

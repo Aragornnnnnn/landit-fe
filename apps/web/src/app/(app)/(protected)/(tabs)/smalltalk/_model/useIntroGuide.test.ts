@@ -1,5 +1,6 @@
 // useIntroGuide — 처음 온 기기에 첫 안내를 한 번 띄우고, 캐릭터를 누르면 언제든 인사하며 들은 것으로 남기는지 검증
 // @vitest-environment jsdom
+import { EVENTS } from '@landit/analytics';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -201,5 +202,21 @@ describe('useIntroGuide', () => {
 
     // Then 안내가 뜬다
     expect(result.current.guideOpen).toBe(true);
+  });
+
+  it('안내를 건너뛰면 건너뜀으로 기록하고 본 것으로 남긴다', () => {
+    // given
+    const { result } = renderHook(() => useIntroGuide(base));
+
+    // when
+    act(() => result.current.skip());
+
+    // then
+    expect(result.current.guideOpen).toBe(false);
+    expect(introGuideSeen.has()).toBe(true);
+    expect(track).toHaveBeenCalledWith(EVENTS.SMALL_TALK_INTRO_GUIDE_SKIPPED);
+    expect(track).not.toHaveBeenCalledWith(
+      EVENTS.SMALL_TALK_INTRO_GUIDE_CLOSED,
+    );
   });
 });

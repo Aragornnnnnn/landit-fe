@@ -26,7 +26,7 @@ export const RoleplayFlow = ({
 }) => {
   const t = useTranslations('conversation.roleplayFlow');
   const router = useRouter();
-  const { session, error } = useRoleplaySession(roleplayId, entry);
+  const { session, error, leave } = useRoleplaySession(roleplayId, entry);
   const partner = useCachedRoleplayPartner(roleplayId);
   const premiumRequired = isPremiumRequired(error);
 
@@ -64,7 +64,14 @@ export const RoleplayFlow = ({
   // 롤플레이는 늘 상대가 먼저 말한다. 상대를 모르면(주소로 바로 들어옴) 빈 자리만 그린다
   if (!session)
     return partner ? (
-      <ConversationWaiting partner={partner} partnerSpeaksFirst />
+      <ConversationWaiting
+        partner={partner}
+        partnerSpeaksFirst
+        onExit={() => {
+          leave();
+          router.replace(ROLEPLAY_PATH);
+        }}
+      />
     ) : (
       <ConversationSkeleton />
     );

@@ -70,12 +70,19 @@ export const useIntroGuide = ({
       ? (spotlights[spot] ?? null)
       : null;
 
-  const close = () => {
-    track(EVENTS.SMALL_TALK_INTRO_GUIDE_CLOSED);
+  const finish = (
+    event:
+      | typeof EVENTS.SMALL_TALK_INTRO_GUIDE_CLOSED
+      | typeof EVENTS.SMALL_TALK_INTRO_GUIDE_SKIPPED,
+  ) => {
+    track(event);
     introGuideSeen.mark();
     clearOldIntroGuideSeen();
     setGuideUnseen(false);
   };
+  const close = () => finish(EVENTS.SMALL_TALK_INTRO_GUIDE_CLOSED);
+  // X로 건너뜀 — 끝까지 본 것과 지표가 섞이지 않게 따로 센다
+  const skip = () => finish(EVENTS.SMALL_TALK_INTRO_GUIDE_SKIPPED);
 
   // 다음 자리로 — 래디의 말이 끝났거나 비춘 자리를 다 읽었다. 마지막 자리 뒤엔 닫는다
   const next = () => {
@@ -99,6 +106,7 @@ export const useIntroGuide = ({
     spotlight,
     next,
     close,
+    skip,
     tapPartner,
   };
 };
