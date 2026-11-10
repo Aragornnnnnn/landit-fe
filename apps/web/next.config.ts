@@ -84,6 +84,10 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // 예전 홈 주소로 온 알림을 서버에서 바로 넘긴다 — 404 상태로 응답하면 앱 셸이 로드 실패 화면을 띄운다
+  async redirects() {
+    return [{ source: '/home', destination: '/scenario', permanent: false }];
+  },
   // env가 없으면 프록시가 조용히 꺼진다 — 빌드는 성공하므로 누락은 런타임에야 드러난다
   async rewrites() {
     if (!apiBaseUrl) return [];
