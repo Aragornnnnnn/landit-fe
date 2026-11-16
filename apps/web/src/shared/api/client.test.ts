@@ -41,10 +41,42 @@ const authHeader = (init: RequestInit) =>
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
   useAuthStore.setState({
     accessToken: null,
     refreshToken: null,
     member: null,
+  });
+});
+
+describe('백엔드 주소', () => {
+  it('요청을 Vercel을 거치지 않고 백엔드 주소로 바로 보낸다', async () => {
+    vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', 'https://api.example.com');
+    const fetchMock = fakeFetch();
+    vi.stubGlobal('fetch', fetchMock);
+
+    await api.get('/api/v1/test');
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://api.example.com/api/v1/test',
+    );
+  });
+
+  it('토큰 재발급도 백엔드 주소로 바로 보낸다', async () => {
+    vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', 'https://api.example.com');
+    useAuthStore.setState({
+      accessToken: null,
+      refreshToken: 'stored-refresh',
+      member,
+    });
+    const fetchMock = fakeFetch();
+    vi.stubGlobal('fetch', fetchMock);
+
+    await api.get('/api/v1/test');
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      `https://api.example.com${REFRESH_PATH}`,
+    );
   });
 });
 
