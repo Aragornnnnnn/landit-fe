@@ -115,9 +115,13 @@ LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx expo run:ios --device <UDID> --configura
 cd ~/Developer/landit-fe-build/apps/mobile
 export JAVA_HOME=/opt/homebrew/opt/openjdk@17 ANDROID_HOME=$HOME/Library/Android/sdk
 export PATH=$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH
-export EAS_NO_VCS=1 SENTRY_DISABLE_AUTO_UPLOAD=true
+export EAS_NO_VCS=1
+export SENTRY_AUTH_TOKEN=$(cat ~/.landit-sentry-token)  # R8 mapping·소스맵 업로드용. 시크릿이라 로컬에 안 내려온다
 eas build -p android --profile production --local --output ~/Downloads/landit-<version>-vc<versionCode>-<develop|www>.aab
 ```
+
+- **Android에선 `SENTRY_DISABLE_AUTO_UPLOAD=true`를 쓰지 않는다.** 릴리즈는 R8로 난독화되고, 이 스위치는 R8 mapping 업로드까지 끈다. 빌드는 조용히 성공하고 그 버전 크래시는 Sentry에서 `a.b()`처럼 읽을 수 없게 남는다. 토큰 파일이 없으면 Sentry 설정의 Organization Auth Token을 만들어 `~/.landit-sentry-token`에 둔다.
+- 빌드 로그에 `uploadSentryProguardMappingsRelease`와 `Uploaded a total of N new mapping files`가 찍혔는지 본다. 코드가 같은 재빌드면 `0 new`가 정상이다(같은 mapping이 이미 있다).
 
 - `ANDROID_HOME`을 명시하지 않으면 "Could not receive a message from the daemon"이라는 엉뚱한 에러로 죽는다. 실제 원인은 "SDK location not found"다.
 - 서명은 EAS 서버의 업로드 키스토어로 자동. 로컬 키스토어 파일은 필요 없다(사본은 `~/Downloads/@oesnuj__saynow.jks`, 원본은 EAS).
