@@ -40,30 +40,28 @@ afterEach(() => {
 });
 
 describe('applyInitialFontScale', () => {
-  it('저장값이 없으면 기기 배율에 가장 가까운 단계를 정해 저장하고 적용한다', () => {
-    shell({ fontScale: 1.12 });
+  it.each([
+    [1.08, '1'],
+    [1.2, '1'],
+    [0.97, '1'],
+    [1.225, '1.15'],
+    [1.3, '1.15'],
+    [1.5, '1.3'],
+    [2, '1.3'],
+    [0.9, '0.92'],
+    [0.85, '0.85'],
+    [0.7, '0.85'],
+  ])(
+    '저장값이 없으면 기기 배율 %s에서 단계 %s로 시작하고 저장한다',
+    (device, expected) => {
+      shell({ fontScale: device });
 
-    applyInitialFontScale();
+      applyInitialFontScale();
 
-    expect(localStorage.getItem('landit-font-scale')).toBe('1.15');
-    expect(appliedScale()).toBe('1.15');
-  });
-
-  it('기기 배율이 가장 크게보다 크면 가장 크게로 정한다', () => {
-    shell({ fontScale: 2 });
-
-    applyInitialFontScale();
-
-    expect(appliedScale()).toBe('1.3');
-  });
-
-  it('기기 배율이 가장 작게보다 작으면 가장 작게로 정한다', () => {
-    shell({ fontScale: 0.7 });
-
-    applyInitialFontScale();
-
-    expect(appliedScale()).toBe('0.85');
-  });
+      expect(localStorage.getItem('landit-font-scale')).toBe(expected);
+      expect(appliedScale()).toBe(expected);
+    },
+  );
 
   it('저장값이 있으면 기기 배율이 달라도 저장값을 적용한다', () => {
     localStorage.setItem('landit-font-scale', '0.92');
@@ -136,7 +134,7 @@ describe('applyInitialFontScale', () => {
 describe('fontScaleScript', () => {
   // 인라인 스크립트는 모듈 밖에서 문자열로 실행된다 — 바깥 변수를 참조하면 거기서 터진다
   it('문자열만으로 실행돼 같은 단계를 적용한다', () => {
-    shell({ fontScale: 1.3 });
+    shell({ fontScale: 1.5 });
 
     new Function(fontScaleScript)();
 

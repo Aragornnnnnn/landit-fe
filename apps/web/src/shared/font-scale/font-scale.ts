@@ -15,12 +15,21 @@ export type FontScale = (typeof FONT_SCALES)[number];
 
 export const DEFAULT_FONT_SCALE: FontScale = 1;
 
+/** 첫 실행 단계 — 기기 배율이 min 이상인 첫 줄로 시작한다. 보통보다 큰 쪽은 문턱을 높여, 살짝 키운 기기는 보통에 남긴다 */
+const START_SCALE_BY_DEVICE = [
+  { min: 1.5, scale: 1.3 },
+  { min: 1.225, scale: 1.15 },
+  { min: 0.96, scale: 1 },
+  { min: 0.885, scale: 0.92 },
+] as const satisfies readonly { min: number; scale: FontScale }[];
+
 const isFontScale = (value: number): value is FontScale =>
   (FONT_SCALES as readonly number[]).includes(value);
 
 // 문자열로 바뀌어 모듈 밖에서 실행되므로 바깥 변수를 참조하지 않는다 (필요한 값은 인자로 받는다)
 const initFontScale = (
   scales: readonly number[],
+  startScaleByDevice: readonly { min: number; scale: number }[],
   key: string,
   minBridgeVersion: number,
   webviewMarker: string,
@@ -51,13 +60,14 @@ const initFontScale = (
       return;
     }
     // 셸 주입이 아직 없으면 정하지 않는다 — 늦게 온 기기 배율로 다음 실행에서 정한다
-    const device = native?.fontScale;
-    if (typeof device !== 'number') return;
-    const closest = scales.reduce((best, scale) =>
-      Math.abs(scale - device) < Math.abs(best - device) ? scale : best,
-    );
-    localStorage.setItem(key, String(closest));
-    apply(closest);
+    const deviceScale = native?.fontScale;
+    if (typeof deviceScale !== 'number') return;
+    // 어느 문턱에도 못 미치면 가장 작은 단계다
+    const startScale =
+      startScaleByDevice.find(({ min }) => deviceScale >= min)?.scale ??
+      scales[0];
+    localStorage.setItem(key, String(startScale));
+    apply(startScale);
   } catch {
     // 저장소를 못 쓰면 기본 크기로 둔다
   }
@@ -67,13 +77,14 @@ const initFontScale = (
 export const applyInitialFontScale = () =>
   initFontScale(
     FONT_SCALES,
+    START_SCALE_BY_DEVICE,
     STORAGE_KEY,
     FONT_SCALE_BRIDGE_VERSION,
     ANDROID_WEBVIEW_UA,
   );
 
 /** 첫 페인트 전에 실행할 인라인 스크립트 */
-export const fontScaleScript = `(${initFontScale.toString()})(${JSON.stringify(FONT_SCALES)}, ${JSON.stringify(STORAGE_KEY)}, ${FONT_SCALE_BRIDGE_VERSION}, ${JSON.stringify(ANDROID_WEBVIEW_UA)})`;
+export const fontScaleScript = `(${initFontScale.toString()})(${JSON.stringify(FONT_SCALES)}, ${JSON.stringify(START_SCALE_BY_DEVICE)}, ${JSON.stringify(STORAGE_KEY)}, ${FONT_SCALE_BRIDGE_VERSION}, ${JSON.stringify(ANDROID_WEBVIEW_UA)})`;
 
 /** 브릿지 10 이상 셸이거나 셸 밖 브라우저면 쓸 수 있다. 주입 없는 Android 웹뷰는 구 셸이라 쓸 수 없다 */
 export const isFontScaleAvailable = (
