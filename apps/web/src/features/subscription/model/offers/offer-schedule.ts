@@ -1,7 +1,7 @@
 // 판매 종료 시각 — 환급 판매와 친구 초대를 끝내는 시각 (docs/subscription.md 「판매 스위치」).
 // 시각은 코드에 적어 둔다 — 배포 설정을 건드리지 않아도 그 시각에 끝난다. 다시 팔 때만 배포 설정에 미래 시각을 넣어 덮어쓴다
 
-/** ISO 8601 시각(`2026-11-20T00:00:00+09:00`)을 epoch ms로. 비었거나 읽을 수 없으면 null */
+/** ISO 8601 시각(`2026-11-21T00:00:00+09:00`)을 epoch ms로. 비었거나 읽을 수 없으면 null */
 export const parseUntil = (value: string | undefined): number | null => {
   const time = Date.parse(value ?? '');
   return Number.isNaN(time) ? null : time;
@@ -14,9 +14,9 @@ export const parseUntil = (value: string | undefined): number | null => {
 export const resolveUntil = (override: string | undefined, written: string) =>
   parseUntil(override) ?? parseUntil(written);
 
-// 2026-11-20 00:00(KST)에 환급 이용권과 친구 초대 판매를 끝냈다 (LAN-867)
-const REWARD_SALE_ENDS_AT = '2026-11-20T00:00:00+09:00';
-const REFERRAL_ENDS_AT = '2026-11-20T00:00:00+09:00';
+// 환급 이용권과 친구 초대는 2026-11-20까지 팔고, 21일 00:00(KST)에 끝낸다 (LAN-867)
+const REWARD_SALE_ENDS_AT = '2026-11-21T00:00:00+09:00';
+const REFERRAL_ENDS_AT = '2026-11-21T00:00:00+09:00';
 
 // 잠금 스위치 — 종료 시각은 기기 시계로 판단해서, 기기 날짜를 되돌린 사람에게는 판매가 다시 보일 수 있다.
 // 종료한 뒤 true로 두면 시각과 상관없이 닫힌다. 다시 팔 때는 지우고 종료 시각을 미래로 넣는다
