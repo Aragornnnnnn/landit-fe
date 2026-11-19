@@ -21,6 +21,8 @@ const mocks = vi.hoisted(() => ({
   restore: vi.fn(),
   refreshRewardAfterPurchase: vi.fn(),
   busy: false,
+  previewFlow: false,
+  rewardSale: false,
   packages: {} as Record<string, unknown>,
   promo: {} as Record<string, unknown>,
   offeringPending: false,
@@ -94,14 +96,16 @@ vi.mock('next/link', () => ({
     </a>
   ),
 }));
-// 환급 챌린지는 기본 꺼짐 — 켠 화면은 rewardChallenge로 따로 확인한다
+// 환급 판매도 단계형 흐름도 기본 꺼짐(한 장짜리 페이월) — 환급은 rewardChallenge로, 단계형은 mocks.previewFlow로 따로 확인한다
 vi.mock('@/features/subscription/model/paywall-gate/payment-flag', () => ({
   PAYMENT_ENABLED: true,
 }));
-vi.mock(
-  '@/features/subscription/model/paywall-gate/useRewardChallengeLive',
-  () => ({ useRewardChallengeLive: () => false }),
-);
+vi.mock('@/features/subscription/model/offers/useOffers', () => ({
+  useOffers: () => ({
+    rewardSale: mocks.rewardSale,
+    previewFlow: mocks.previewFlow,
+  }),
+}));
 // 데모 속 캐릭터는 깜빡임·입모양을 WAAPI(element.animate)로 쏘는데 jsdom엔 없다 — 결제 흐름 테스트라 그림은 비운다
 vi.mock('@/features/conversation/ui/character/PartnerCharacter', () => ({
   PartnerCharacter: () => null,
@@ -129,6 +133,8 @@ const seriesOrder = () => {
 
 beforeEach(() => {
   mocks.busy = false;
+  mocks.previewFlow = false;
+  mocks.rewardSale = false;
   mocks.purchaseOptions = null;
   mocks.refreshRewardAfterPurchase.mockClear();
   mocks.sendAdEvent.mockClear();
@@ -290,7 +296,9 @@ describe('PaywallScreen', () => {
     mocks.offeringPending = true;
     render(<PaywallScreen />);
 
-    fireEvent.click(screen.getByRole('button', { name: /무료 체험/ }));
+    fireEvent.click(
+      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+    );
 
     expect(mocks.purchase).not.toHaveBeenCalled();
   });
@@ -392,6 +400,7 @@ describe('PaywallScreen', () => {
   it('일본어 결제 단계도 스토어 가격이 없으면 가격을 다시 불러온다', () => {
     Element.prototype.scrollTo = vi.fn();
     setTestLocale('ja');
+    mocks.previewFlow = true;
     mocks.offeringSettled = true;
     mocks.packages = {};
     render(<PaywallScreen />);
@@ -439,6 +448,7 @@ describe('PaywallScreen', () => {
     // 단계를 넘기면 맨 위로 올리는데 jsdom 요소엔 scrollTo가 없다
     Element.prototype.scrollTo = vi.fn();
     setTestLocale('ja');
+    mocks.previewFlow = true;
     mocks.packages = {
       monthly: { packageId: '$rc_monthly', price: 1_500, currency: 'JPY' },
     };
@@ -458,6 +468,29 @@ describe('PaywallScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: '月間プラン' }));
     fireEvent.click(
       screen.getByRole('button', { name: '月額1,500円で始める' }),
+    );
+
+    expect(mocks.purchase).toHaveBeenCalledWith('monthly');
+  });
+
+  it('환급을 팔지 않는 한국어 화면도 혜택 → 결제 두 단계로 월간·할인 연간을 판다', () => {
+    Element.prototype.scrollTo = vi.fn();
+    mocks.previewFlow = true;
+    mocks.promo = {
+      yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
+    };
+    render(<PaywallScreen />);
+
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    expect(screen.getByRole('button', { name: '연간 플랜' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByText('연 58,500원')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '월간 플랜' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: '월 14,900원으로 시작하기' }),
     );
 
     expect(mocks.purchase).toHaveBeenCalledWith('monthly');
@@ -675,6 +708,15 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
 
   beforeEach(() => {
     mocks.packages = passPackages(50_000);
+  });
+
+  it('환급을 파는 화면이면 따로 켜지 않아도 환급 페이월로 연다', () => {
+    mocks.rewardSale = true;
+    render(<PaywallScreen />);
+
+    expect(
+      screen.getByText('프리미엄만 누리는 혜택 5가지'),
+    ).toBeInTheDocument();
   });
 
   it('처음엔 혜택 화면이다 — 매일 오는 시나리오에 프리미엄 혜택 5가지를 더해 보여 준다', () => {

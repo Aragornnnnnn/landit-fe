@@ -3,7 +3,7 @@
 // 환급 상태를 앰플리튜드 유저 속성으로 올리는 무렌더 컴포넌트 — 루트 레이아웃에 마운트 (SubscriptionPropertiesSync와 같은 배선)
 import { useEffect } from 'react';
 
-import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
+import { useOffers } from '@/features/subscription/model/offers/useOffers';
 import { setUserProperties } from '@/shared/analytics';
 import { useCurrentUserId } from '@/shared/auth/current-member';
 
@@ -17,7 +17,7 @@ import { useRewardQuery } from '../model/useRewardQuery';
  * 환급이 열리지 않은 환경에서는 조회도 속성도 없다.
  */
 export const RewardPropertiesSync = () => {
-  const enabled = useRewardChallengeLive();
+  const enabled = useOffers().rewardView;
   const userId = useCurrentUserId();
   const { reward, loaded } = useRewardQuery({ enabled });
   // 국면이 바뀔 때만 올린다 — 재조회마다 금액이 바뀌어도 프로필은 그대로다

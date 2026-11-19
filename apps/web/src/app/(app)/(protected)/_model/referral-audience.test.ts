@@ -7,6 +7,7 @@ describe('referralAudienceOf', () => {
   it('환급을 권할 무료 유저에게는 보인다', () => {
     expect(
       referralAudienceOf({
+        live: true,
         invited: true,
         participant: false,
         settled: true,
@@ -18,6 +19,7 @@ describe('referralAudienceOf', () => {
   it('환급에 참여한 사람에게는 보인다 — 적립금이 그 환급에 더해진다', () => {
     expect(
       referralAudienceOf({
+        live: true,
         invited: false,
         participant: true,
         settled: true,
@@ -29,6 +31,7 @@ describe('referralAudienceOf', () => {
   it('환급과 상관없는 기존 월간·연간 구독자에게는 감춘다', () => {
     expect(
       referralAudienceOf({
+        live: true,
         invited: false,
         participant: false,
         settled: true,
@@ -40,6 +43,7 @@ describe('referralAudienceOf', () => {
   it('누구인지 아직 모르면 감춘 채 기다린다 — 보였다가 사라지지 않게', () => {
     expect(
       referralAudienceOf({
+        live: true,
         invited: false,
         participant: false,
         settled: false,
@@ -51,6 +55,7 @@ describe('referralAudienceOf', () => {
   it('참여자라는 답이 왔으면 구독 조회를 기다리지 않는다', () => {
     expect(
       referralAudienceOf({
+        live: true,
         invited: false,
         participant: true,
         settled: false,
@@ -62,11 +67,24 @@ describe('referralAudienceOf', () => {
   it('환급을 다시 받는 중이면 밖 사람으로 단정하지 않는다 — 방금 결제한 사람이 옛 답으로 튕기지 않게', () => {
     expect(
       referralAudienceOf({
+        live: true,
         invited: false,
         participant: false,
         settled: true,
         fetching: true,
       }),
     ).toEqual({ shown: false, settled: false });
+  });
+
+  it('친구 초대가 닫혀 있으면 환급 참여자에게도 감추고, 더 기다리지 않는다', () => {
+    expect(
+      referralAudienceOf({
+        live: false,
+        invited: true,
+        participant: true,
+        settled: false,
+        fetching: true,
+      }),
+    ).toEqual({ shown: false, settled: true });
   });
 });

@@ -5,8 +5,8 @@
 import { isPreviewReplay } from '@/features/premium-preview/model/preview-replay';
 import { useRewardQuery } from '@/features/reward/model/useRewardQuery';
 import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
+import { useOffers } from '@/features/subscription/model/offers/useOffers';
 import { usePaymentLive } from '@/features/subscription/model/paywall-gate/usePaymentLive';
-import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
 
 import { asPreviewReplay, rewardAudienceOf } from './reward-audience';
 
@@ -15,10 +15,12 @@ export const useMyReward = () => {
   const { subscription, isError: subscriptionFailed } = useSubscriptionQuery({
     enabled: paymentLive,
   });
-  const launched = useRewardChallengeLive();
+  // 환급 화면은 판매가 끝나도 이미 산 사람에게 열려 있다 — 조회는 화면 기준으로, 권유는 판매 기준으로 가른다
+  const { rewardView: launched, rewardSale: selling } = useOffers();
   const query = useRewardQuery({ enabled: launched });
   const audience = rewardAudienceOf({
     launched,
+    selling,
     paymentLive,
     premium: subscription?.premium,
     subscriptionFailed,
@@ -28,6 +30,7 @@ export const useMyReward = () => {
   });
 
   // 개발자 묶음의 프리뷰 다시 보기가 켜졌으면 이번 실행 동안 환급을 권할 무료 유저로 친다
-  if (isPreviewReplay()) return asPreviewReplay({ ...query, ...audience });
+  if (isPreviewReplay())
+    return asPreviewReplay({ ...query, ...audience }, selling);
   return { ...query, ...audience };
 };

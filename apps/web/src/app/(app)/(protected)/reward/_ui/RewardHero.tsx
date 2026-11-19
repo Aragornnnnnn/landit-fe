@@ -12,6 +12,7 @@ import {
 } from '@/features/reward/model/reward-status';
 import { useMidnightUrgent } from '@/features/reward/model/useMidnightUrgent';
 import { CountUpWon } from '@/features/reward/ui/common/CountUpWon';
+import { useOffers } from '@/features/subscription/model/offers/useOffers';
 import { track } from '@/shared/analytics';
 import { paywallPath, REWARD_PATH } from '@/shared/lib/routes';
 import { Emoji } from '@/shared/ui/emoji';
@@ -22,7 +23,11 @@ import { MidnightCountdown } from './MidnightCountdown';
 import { RewardPot } from './RewardPot';
 
 export const RewardHero = ({ reward }: { reward: RewardView }) => {
-  const { label, amountWon, title, guide } = rewardHeroOf(reward);
+  // 이용권을 더 팔지 않으면 다시 시작을 권하지 않는다 — 돌려받을 금액 안내는 그대로다
+  const { rewardSale } = useOffers();
+  const { label, amountWon, title, guide } = rewardHeroOf(reward, {
+    restartable: rewardSale,
+  });
   const earnedToday = earnedTodayWonOf(reward) > 0;
   const todayLeftWon = todayLeftWonOf(reward);
   const urgent = useMidnightUrgent(todayLeftWon > 0);
@@ -53,7 +58,7 @@ export const RewardHero = ({ reward }: { reward: RewardView }) => {
         {guide}
       </p>
 
-      {reward.state === 'ENDED' && reward.purchaseAvailable && (
+      {rewardSale && reward.state === 'ENDED' && reward.purchaseAvailable && (
         <Link
           // 결제하고 돌아오면 이 화면이 다시 열린다 — 기록에 같은 화면이 두 번 쌓이지 않게 갈아 끼운다
           replace

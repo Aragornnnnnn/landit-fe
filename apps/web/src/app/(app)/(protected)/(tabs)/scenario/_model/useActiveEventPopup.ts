@@ -1,7 +1,6 @@
 // 홈 진입 때 띄울 이벤트 공지 — 누구에게 띄울지는 서버(사용자·구독 유형 숨김)가 고르고, 여기서는 한국어 화면이 아닌 사람·이 기기가 이미 반응한 것·정기 구독자를 한 번 더 거른다.
 // 반응 기록은 마운트 때 한 번 읽어 고정한다 — 이번 방문에 닫아도 시트가 닫히는 연출 중에 사라지지 않게
 import { useState } from 'react';
-import { useLocale } from 'next-intl';
 
 import {
   readEventPopupDoneIds,
@@ -9,7 +8,7 @@ import {
 } from '@/features/event-popup/model/active-popup';
 import { useActivePopupQuery } from '@/features/event-popup/model/useActivePopupQuery';
 import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
-import { sellsKoreaOnlyOffers } from '@/shared/i18n/locale';
+import { useOffers } from '@/features/subscription/model/offers/useOffers';
 
 import { isEventPopupAudience } from './event-popup-audience';
 
@@ -18,8 +17,8 @@ export const useActiveEventPopup = ({ skip = false } = {}) => {
   const [doneIds] = useState(readEventPopupDoneIds);
   // 공지는 지금 한국어 그림의 한국 이벤트(초대·환급)뿐이라 한국 전용 혜택과 같은 판정을 쓴다 — 아니면 건너뛴 방문처럼 묻지 않는다.
   // 언어별 공지가 생기면 서버가 언어로 고르게 하고 이 판정을 뺀다
-  const locale = useLocale();
-  const hidden = skip || !sellsKoreaOnlyOffers(locale);
+  const { eventNotice } = useOffers();
+  const hidden = skip || !eventNotice;
   const { data, fetchStatus } = useActivePopupQuery({
     enabled: !hidden,
   });

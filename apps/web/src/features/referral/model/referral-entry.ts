@@ -1,6 +1,4 @@
-// 온보딩 초대 코드 단계를 열지 — 한국어 화면에서, 서버가 등록할 수 있다고 하고(PENDING), 지금 받을 초대 보상이 하나라도 켜져 있을 때만
-import { sellsKoreaOnlyOffers, type Locale } from '@/shared/i18n/locale';
-
+// 온보딩 초대 코드 단계를 열지 — 친구 초대가 열려 있고, 서버가 등록할 수 있다고 하고(PENDING), 지금 받을 초대 보상이 하나라도 켜져 있을 때만
 import type { ReferralSummary } from '../api/referral';
 
 // 보상이 모두 꺼져 있으면 미리보기가 REFERRAL_DISABLED로 거절해 건너뛰기만 남는다.
@@ -8,9 +6,10 @@ import type { ReferralSummary } from '../api/referral';
 export const canEnterReferralStep = (
   summary:
     Pick<ReferralSummary, 'registrationStatus' | 'currentOffer'> | undefined,
-  locale: Locale,
+  // 친구 초대가 열려 있는가 — 판매 규칙(useOffers)의 답
+  referralLive: boolean,
 ) =>
-  sellsKoreaOnlyOffers(locale) &&
+  referralLive &&
   summary?.registrationStatus === 'PENDING' &&
   (summary.currentOffer.signup.enabled ||
     summary.currentOffer.purchase.enabled);

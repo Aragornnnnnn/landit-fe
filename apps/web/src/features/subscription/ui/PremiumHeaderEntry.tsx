@@ -21,12 +21,12 @@ import {
   clearPromoHandoff,
   useHandedPromo,
 } from '../model/exit-promo/promo-handoff';
-import { usePromoLive } from '../model/exit-promo/usePromoLive';
 import {
   resolvePromoDisplay,
   usePromoOffer,
 } from '../model/exit-promo/usePromoOffer';
 import { useSubscriptionQuery } from '../model/my-subscription/useSubscriptionQuery';
+import { useOffers } from '../model/offers/useOffers';
 import { usePaymentLive } from '../model/paywall-gate/usePaymentLive';
 import type { UnlockReason } from '../model/purchase/usePurchase';
 import { PromoClock } from './exit-promo/PromoClock';
@@ -69,7 +69,7 @@ export const PremiumHeaderEntry = ({
   const { subscription, isPending, isError } = useSubscriptionQuery({
     enabled: paymentLive,
   });
-  const promoLive = usePromoLive();
+  const promoLive = useOffers().exitPromo;
   const live = usePromoOffer(promoLive ? (subscription?.promo ?? null) : null);
   // 배지를 눌러 연 할인과 페이월에서 넘어온 할인. 둘 다 열 때의 값을 복사해 들고 있는다 —
   // 구독 쿼리가 다시 조회돼 promo가 비어도 열려 있던 시트가 닫히면 안 된다
