@@ -122,7 +122,7 @@ export const PromoSheetContent = ({
           selected={isYearly}
           onSelect={() => selectPlan('yearly')}
           badge={`${yearly.discountRate}% 할인`}
-          trial="7일 무료 체험 포함"
+          cycle="매년 결제"
           price={formatWon(yearly.price)}
           unit="/년"
           listPrice={formatWon(monthly.yearlyEquivalent)}
@@ -133,7 +133,7 @@ export const PromoSheetContent = ({
           selected={!isYearly}
           onSelect={() => selectPlan('monthly')}
           badge={null}
-          trial={null}
+          cycle="매달 결제"
           price={formatWon(monthly.price)}
           unit="/월"
           listPrice={null}
@@ -166,8 +166,8 @@ interface PlanRowProps {
   onSelect: () => void;
   /** 카드 위 테두리에 걸치는 문구. 할인을 강조하는 카드만 */
   badge: string | null;
-  /** 무료 체험 포함 여부. 없는 플랜은 null이라 줄이 비지 않는다 */
-  trial: string | null;
+  /** 제목 아래 작은 줄 — 얼마마다 결제되는지 */
+  cycle: string;
   /** 큰 숫자 — 실제 청구액. 월 환산가가 더 눈에 띄면 스토어 심사 3.1.2(c)에서 반려된다 */
   price: string;
   /** 청구 주기 — 큰 숫자 뒤에 한 급 낮춰 붙는다 */
@@ -183,7 +183,7 @@ const PlanRow = ({
   selected,
   onSelect,
   badge,
-  trial,
+  cycle,
   price,
   unit,
   listPrice,
@@ -213,12 +213,8 @@ const PlanRow = ({
       <span className="text-17 leading-[1.3] font-bold text-foreground">
         {title}
       </span>
-      <span
-        className={`text-12 leading-[1.3] ${
-          trial ? 'text-primary' : 'text-muted-foreground'
-        }`}
-      >
-        {trial ?? '무료 체험 미포함'}
+      <span className="text-12 leading-[1.3] text-muted-foreground">
+        {cycle}
       </span>
     </span>
     <span className="flex shrink-0 flex-col items-end gap-0.5">

@@ -215,12 +215,10 @@ describe('StepPaywall — 일본어 구독', () => {
       entry_step: 'benefits',
     });
     expect(
-      screen.getByRole('button', { name: '7日間の無料体験を始める' }),
+      screen.getByRole('button', { name: '年額9,800円で始める' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
-        '7日間の無料体験後は年額9,800円で自動更新。いつでも解約できます',
-      ),
+      screen.getByText('毎年9,800円で自動更新。いつでも解約できます'),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '月間プラン' }));
     expect(onSelect).toHaveBeenCalledWith('monthly');

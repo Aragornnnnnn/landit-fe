@@ -87,8 +87,8 @@ export const LetterOfferSheet = ({
             <span className="text-17 leading-[1.3] font-bold text-foreground">
               연간 플랜
             </span>
-            <span className="text-12 leading-[1.3] text-primary">
-              7일 무료 체험 포함
+            <span className="text-12 leading-[1.3] text-muted-foreground">
+              매년 결제
             </span>
           </span>
           <span className="flex shrink-0 flex-col items-end gap-0.5">
@@ -123,8 +123,7 @@ export const LetterOfferSheet = ({
         </Button>
         {/* 청구액·갱신·해지는 스토어 심사(3.1.2)가 결제 버튼 곁에서 확인한다 — 페이월 연간과 같은 문구 */}
         <p className="mt-3 text-center text-11 leading-[1.35] text-muted-foreground">
-          7일 무료 체험 후 연 {formatWon(offer.price)} 정기 결제 · 언제든 해지
-          가능
+          매년 {formatWon(offer.price)} 정기 결제 · 언제든 해지 가능
         </p>
         <nav className="mt-2 flex justify-center gap-3 text-10 leading-[1.3] font-medium text-muted-foreground underline">
           <Link href="/terms">이용약관</Link>

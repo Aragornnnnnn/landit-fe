@@ -168,7 +168,7 @@ describe('PaywallScreen', () => {
     );
   });
 
-  it('처음엔 연간이 선택돼 있어 CTA가 무료 체험 문구다', () => {
+  it('처음엔 연간이 선택돼 있어 CTA가 연 결제액으로 시작한다고 말한다', () => {
     render(<PaywallScreen />);
 
     expect(screen.getByRole('button', { name: '연간 플랜' })).toHaveAttribute(
@@ -176,7 +176,7 @@ describe('PaywallScreen', () => {
       'true',
     );
     expect(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     ).toBeInTheDocument();
   });
 
@@ -213,7 +213,7 @@ describe('PaywallScreen', () => {
     render(<PaywallScreen />);
 
     fireEvent.click(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     );
 
     expect(mocks.track).toHaveBeenCalledWith('Purchase Started', {
@@ -229,9 +229,7 @@ describe('PaywallScreen', () => {
     render(<PaywallScreen />);
 
     expect(
-      screen.getByText(
-        '7일 무료 체험 후 연 49,900원 정기 결제 · 언제든 해지 가능',
-      ),
+      screen.getByText('매년 49,900원 정기 결제 · 언제든 해지 가능'),
     ).toBeInTheDocument();
     expect(mocks.purchaseOptions?.packages).toEqual({
       monthly: mocks.packages.monthly,
@@ -247,9 +245,7 @@ describe('PaywallScreen', () => {
 
     expect(screen.getByText('연 58,500원')).toBeInTheDocument();
     expect(screen.getByText('월간보다 67% 저렴')).toBeInTheDocument();
-    expect(
-      screen.getByText('월 4,900원꼴 · 7일 무료 체험'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('월 4,900원꼴 · 매년 결제')).toBeInTheDocument();
     expect(screen.queryByText('월 4,900원')).not.toBeInTheDocument();
   });
 
@@ -297,7 +293,7 @@ describe('PaywallScreen', () => {
     render(<PaywallScreen />);
 
     fireEvent.click(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     );
 
     expect(mocks.purchase).not.toHaveBeenCalled();
@@ -328,7 +324,7 @@ describe('PaywallScreen', () => {
       screen.queryByRole('button', { name: '가격 다시 불러오기' }),
     ).not.toBeInTheDocument();
     fireEvent.click(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     );
     expect(mocks.purchase).toHaveBeenCalledWith('yearly');
   });
@@ -371,7 +367,7 @@ describe('PaywallScreen', () => {
     rerender(<PaywallScreen />);
 
     expect(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     ).toBeInTheDocument();
     expect(screen.getByText('연 58,500원')).toBeInTheDocument();
   });
@@ -393,7 +389,7 @@ describe('PaywallScreen', () => {
     render(<PaywallScreen />);
 
     expect(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     ).toBeInTheDocument();
   });
 
@@ -516,7 +512,7 @@ describe('PaywallScreen', () => {
     );
 
     fireEvent.click(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     );
 
     expect(scrollTo).toHaveBeenCalled();
@@ -539,7 +535,7 @@ describe('PaywallScreen', () => {
     render(<PaywallScreen />);
 
     fireEvent.click(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     );
 
     expect(scrollTo).not.toHaveBeenCalled();
@@ -588,7 +584,7 @@ describe('PaywallScreen', () => {
 
     expect(screen.queryByText(/환급 챌린지/)).not.toBeInTheDocument();
     fireEvent.click(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     );
     expect(mocks.purchase).toHaveBeenCalledWith('yearly');
   });
