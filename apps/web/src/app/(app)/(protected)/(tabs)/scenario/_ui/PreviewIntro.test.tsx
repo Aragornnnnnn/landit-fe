@@ -131,6 +131,25 @@ describe('PreviewIntro', () => {
     expect(screen.queryByText(/받을 수 있어요/)).not.toBeInTheDocument();
   });
 
+  it('환급을 팔지 않으면 맞춤 표현을 「또 다른 혜택」이라고 부르지 않는다 — 앞 문장이 혜택 이야기가 아니다', () => {
+    // Given 환급 금액 없이 열어 첫 문장을 다 쓴 튜토리얼
+    vi.useFakeTimers();
+    render(<PreviewIntro dailyWon={null} onDone={vi.fn()} />);
+    runClock();
+
+    // When 다음 문장으로 넘겨 다 쓰면
+    nextSentence();
+    runClock();
+
+    // Then 방금 대화로 만든 표현을 무료로 연다고만 말한다
+    expect(
+      screen.getByText(
+        /방금 대화로 만든\s*첫 맞춤 표현을\s*무료로 열어 드릴게요/,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/또 다른 혜택/)).not.toBeInTheDocument();
+  });
+
   it('일본어 화면에서는 문장을 일본어로 쓰고 강조 자리도 일본어 어순을 따른다', () => {
     // Given 일본어 화면에서 환급 금액 없이 연 튜토리얼
     setTestLocale('ja');
