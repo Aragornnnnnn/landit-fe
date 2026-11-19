@@ -22,6 +22,8 @@ const environment = (
   rewardEnabled: true,
   rewardSaleUntil: UNTIL,
   referralUntil: UNTIL,
+  rewardSaleLocked: false,
+  referralLocked: false,
   promoEnabled: true,
   ...overrides,
 });
@@ -41,6 +43,13 @@ describe('decideOffers — 환급 판매', () => {
     ).toBe(false);
   });
 
+  it('잠금 스위치가 걸려 있으면 종료 시각 전이어도 팔지 않는다 — 기기 날짜를 되돌려도 열리지 않는다', () => {
+    expect(
+      decideOffers(environment({ now: BEFORE, rewardSaleLocked: true }))
+        .rewardSale,
+    ).toBe(false);
+  });
+
   it.each([
     ['일본어 화면', { locale: 'ja' as const }],
     ['환급 스위치가 꺼진 배포', { rewardEnabled: false }],
@@ -54,6 +63,12 @@ describe('decideOffers — 환급 판매', () => {
 describe('decideOffers — 환급 참여자 화면', () => {
   it('판매가 끝나도 이미 산 사람의 환급 화면은 그대로 보여 준다', () => {
     expect(decideOffers(environment({ now: UNTIL })).rewardView).toBe(true);
+  });
+
+  it('판매를 잠가도 이미 산 사람의 환급 화면은 보여 준다', () => {
+    expect(
+      decideOffers(environment({ rewardSaleLocked: true })).rewardView,
+    ).toBe(true);
   });
 
   it('종료 시각이 없어도 환급 화면은 보여 준다', () => {
@@ -87,6 +102,14 @@ describe('decideOffers — 프리뷰와 단계형 페이월', () => {
     ).toBe(true);
   });
 
+  it('판매를 잠근 한국어 화면에도 연다 — 종료 시각 전이어도 구독만 파는 흐름이다', () => {
+    const offers = decideOffers(
+      environment({ now: BEFORE, rewardSaleLocked: true }),
+    );
+
+    expect(offers.previewFlow).toBe(true);
+  });
+
   it('일본어 화면은 늘 연다', () => {
     expect(decideOffers(environment({ locale: 'ja' })).previewFlow).toBe(true);
   });
@@ -118,6 +141,19 @@ describe('decideOffers — 친구 초대', () => {
     expect(decideOffers(environment({ referralUntil: null })).referral).toBe(
       false,
     );
+  });
+
+  it('잠금 스위치가 걸려 있으면 종료 시각 전이어도 닫는다', () => {
+    expect(
+      decideOffers(environment({ now: BEFORE, referralLocked: true })).referral,
+    ).toBe(false);
+  });
+
+  it('환급 판매 잠금은 친구 초대를 닫지 않는다 — 스위치가 따로다', () => {
+    expect(
+      decideOffers(environment({ now: BEFORE, rewardSaleLocked: true }))
+        .referral,
+    ).toBe(true);
   });
 
   it('일본어 화면에는 열지 않는다', () => {

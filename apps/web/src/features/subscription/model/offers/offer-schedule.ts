@@ -18,6 +18,14 @@ export const resolveUntil = (override: string | undefined, written: string) =>
 const REWARD_SALE_ENDS_AT = '2026-11-20T00:00:00+09:00';
 const REFERRAL_ENDS_AT = '2026-11-20T00:00:00+09:00';
 
+// 잠금 스위치 — 종료 시각은 기기 시계로 판단해서, 기기 날짜를 되돌린 사람에게는 판매가 다시 보일 수 있다.
+// 종료한 뒤 true로 두면 시각과 상관없이 닫힌다. 다시 팔 때는 지우고 종료 시각을 미래로 넣는다
+export const REWARD_SALE_LOCKED =
+  process.env.NEXT_PUBLIC_REWARD_SALE_LOCKED === 'true';
+
+export const REFERRAL_LOCKED =
+  process.env.NEXT_PUBLIC_REFERRAL_LOCKED === 'true';
+
 // NEXT_PUBLIC_이라 빌드 시점에 박힌다. 바꾸면 재배포가 필요하다
 export const REWARD_SALE_UNTIL = resolveUntil(
   process.env.NEXT_PUBLIC_REWARD_SALE_UNTIL,

@@ -10,7 +10,12 @@ import { useNativeContext } from '@/shared/bridge/useNativeContext';
 import { PROMO_ENABLED } from '../exit-promo/promo-flag';
 import { REWARD_CHALLENGE_ENABLED } from '../paywall-gate/payment-flag';
 import { offerClock } from './offer-clock';
-import { REFERRAL_UNTIL, REWARD_SALE_UNTIL } from './offer-schedule';
+import {
+  REFERRAL_LOCKED,
+  REFERRAL_UNTIL,
+  REWARD_SALE_LOCKED,
+  REWARD_SALE_UNTIL,
+} from './offer-schedule';
 import { decideOffers, type Offers } from './offers';
 
 export const useOffers = (): Offers => {
@@ -28,6 +33,8 @@ export const useOffers = (): Offers => {
     rewardEnabled: REWARD_CHALLENGE_ENABLED,
     rewardSaleUntil: REWARD_SALE_UNTIL,
     referralUntil: REFERRAL_UNTIL,
+    rewardSaleLocked: REWARD_SALE_LOCKED,
+    referralLocked: REFERRAL_LOCKED,
     promoEnabled: PROMO_ENABLED,
   });
 };

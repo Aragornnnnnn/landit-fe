@@ -32,6 +32,10 @@ export interface OfferEnvironment {
   rewardSaleUntil: number | null;
   /** 친구 초대를 끝내는 시각(epoch ms). 없으면 열지 않는다 */
   referralUntil: number | null;
+  /** NEXT_PUBLIC_REWARD_SALE_LOCKED — 환급 판매 잠금. 걸리면 시각과 상관없이 팔지 않는다 */
+  rewardSaleLocked: boolean;
+  /** NEXT_PUBLIC_REFERRAL_LOCKED — 친구 초대 잠금. 걸리면 시각과 상관없이 열지 않는다 */
+  referralLocked: boolean;
   /** NEXT_PUBLIC_PROMO_ENABLED — 이탈 할인 스위치 */
   promoEnabled: boolean;
 }
@@ -64,20 +68,25 @@ export const decideOffers = ({
   rewardEnabled,
   rewardSaleUntil,
   referralUntil,
+  rewardSaleLocked,
+  referralLocked,
   promoEnabled,
 }: OfferEnvironment): Offers => {
   const korean = sellsKoreaOnlyOffers(locale);
   const rewardView = korean && rewardEnabled && carriesRewardPass(context);
   // 환급을 파는 기간인가 — 앱 버전은 보지 않는다. 기간 안인데 상품이 없는 버전이면 팔 수도, 구독만 파는 흐름으로 돌릴 수도 없다
   const rewardSeason =
-    korean && rewardEnabled && isBefore(rewardSaleUntil, now);
+    korean &&
+    rewardEnabled &&
+    !rewardSaleLocked &&
+    isBefore(rewardSaleUntil, now);
   const rewardSale = rewardView && rewardSeason;
 
   return {
     rewardView,
     rewardSale,
     previewFlow: rewardSale || !rewardSeason,
-    referral: korean && isBefore(referralUntil, now),
+    referral: korean && !referralLocked && isBefore(referralUntil, now),
     exitPromo: korean && promoEnabled,
     letterOffer: korean,
     eventNotice: korean,

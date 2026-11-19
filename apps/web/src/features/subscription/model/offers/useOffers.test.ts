@@ -28,6 +28,8 @@ vi.mock('../exit-promo/promo-flag', () => ({ PROMO_ENABLED: true }));
 vi.mock('./offer-schedule', () => ({
   REWARD_SALE_UNTIL: MIDNIGHT,
   REFERRAL_UNTIL: MIDNIGHT,
+  REWARD_SALE_LOCKED: false,
+  REFERRAL_LOCKED: false,
 }));
 
 beforeEach(() => {
