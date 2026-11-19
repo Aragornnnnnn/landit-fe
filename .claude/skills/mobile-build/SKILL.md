@@ -116,6 +116,7 @@ cd ~/Developer/landit-fe-build/apps/mobile
 export JAVA_HOME=/opt/homebrew/opt/openjdk@17 ANDROID_HOME=$HOME/Library/Android/sdk
 export PATH=$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH
 export EAS_NO_VCS=1
+unset SENTRY_DISABLE_AUTO_UPLOAD                          # 같은 셸에서 iOS를 먼저 빌드했으면 이 값이 남아 mapping 업로드가 꺼진다
 export SENTRY_AUTH_TOKEN=$(cat ~/.landit-sentry-token)  # R8 mapping·소스맵 업로드용. 시크릿이라 로컬에 안 내려온다
 eas build -p android --profile production --local --output ~/Downloads/landit-<version>-vc<versionCode>-<develop|www>.aab
 ```
