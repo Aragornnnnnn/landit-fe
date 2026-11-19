@@ -12,10 +12,10 @@ import {
   type PaywallPromo,
 } from '../../api/subscription';
 import { subscriptionKeys } from '../my-subscription/keys';
+import { useOffers } from '../offers/useOffers';
 import type { Offering } from '../product/offering';
 import { handOffPromo } from './promo-handoff';
 import { canShowPromo } from './promo-sheet';
-import { usePromoLive } from './usePromoLive';
 
 // 닫기가 서버 회신을 기다리는 상한 — 넘으면 할인을 포기하지 않고 늦게 받는다
 const DISMISS_TIMEOUT_MS = 3000;
@@ -31,7 +31,7 @@ const DISMISS_TIMEOUT_MS = 3000;
 export const usePaywallDismiss = (offering: Offering) => {
   const queryClient = useQueryClient();
   const userId = useCurrentUserId();
-  const promoLive = usePromoLive();
+  const promoLive = useOffers().exitPromo;
 
   // 헤더 배지와 시트는 구독 응답의 promo를 본다 — 캐시에 얹어야 홈에 닿자마자 뜬다.
   // 기다리는 사이 계정이 바뀌었으면(로그아웃 뒤 다른 로그인) 그 할인은 다른 사람 것이라 버린다

@@ -21,6 +21,7 @@ import { RewardInviteBubble } from '@/features/reward/ui/RewardInviteBubble';
 import { HeaderStreak } from '@/features/streak/ui/HeaderStreak';
 import {
   PREMIUM_ENTRY_PILL_CLASS,
+  PremiumEntryLabel,
   PremiumHeaderEntry,
 } from '@/features/subscription/ui/PremiumHeaderEntry';
 import { track } from '@/shared/analytics';
@@ -103,11 +104,8 @@ export const AppHeader = () => {
               className={`${PREMIUM_ENTRY_PILL_CLASS} animate-gold-flow whitespace-nowrap`}
             >
               {previewIntro ? (
-                <>
-                  <span className="tracking-[0.1em]">PREMIUM</span>
-                  {/* 한국어 화면에만 있어 옮기지 않는다 — 동전 연출은 환급을 권할 사람에게만 뜬다 */}
-                  <span>시작하기</span>
-                </>
+                // 아래 실제 알약과 같은 글자여야 자리가 맞는다
+                <PremiumEntryLabel />
               ) : (
                 <RewardInviteLabel
                   amountWon={landed ? landWon : null}

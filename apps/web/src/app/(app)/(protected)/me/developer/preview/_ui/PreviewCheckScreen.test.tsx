@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   startPreviewReplay: vi.fn(),
   markMissedEarn: vi.fn(),
+  pinOfferClock: vi.fn(),
   isAdmin: true,
 }));
 
@@ -36,6 +37,10 @@ vi.mock('@/shared/auth/auth-store', () => ({
 vi.mock('@/features/premium-preview/model/preview-replay', () => ({
   startPreviewReplay: mocks.startPreviewReplay,
 }));
+vi.mock('@/features/subscription/model/offers/offer-clock', () => ({
+  pinOfferClock: mocks.pinOfferClock,
+  readOfferClockPin: () => null,
+}));
 vi.mock('@/features/reward/model/missed-earn', () => ({
   markMissedEarn: mocks.markMissedEarn,
 }));
@@ -45,6 +50,7 @@ afterEach(() => {
   mocks.push.mockClear();
   mocks.startPreviewReplay.mockClear();
   mocks.markMissedEarn.mockClear();
+  mocks.pinOfferClock.mockClear();
   mocks.isAdmin = true;
 });
 
@@ -103,5 +109,28 @@ describe('PreviewCheckScreen', () => {
     expect(
       screen.getByText('ADMIN 계정에서만 볼 수 있어요'),
     ).toBeInTheDocument();
+  });
+
+  it('「판매 종료 뒤로 보기」를 켜면 판매 시점을 종료 뒤로 고정하고, 다시 끄면 실제 시각으로 돌린다', () => {
+    render(<PreviewCheckScreen />);
+    const toggle = screen.getByRole('switch', { name: '판매 종료 뒤로 보기' });
+
+    fireEvent.click(toggle);
+    fireEvent.click(toggle);
+
+    expect(mocks.pinOfferClock.mock.calls).toEqual([['ended'], [null]]);
+  });
+
+  it('「판매 중으로 보기」를 켜면 종료 뒤로 보기는 꺼진다 — 둘 중 하나만 고정된다', () => {
+    render(<PreviewCheckScreen />);
+    fireEvent.click(
+      screen.getByRole('switch', { name: '판매 종료 뒤로 보기' }),
+    );
+
+    fireEvent.click(screen.getByRole('switch', { name: '판매 중으로 보기' }));
+
+    expect(
+      screen.getByRole('switch', { name: '판매 종료 뒤로 보기' }),
+    ).toHaveAttribute('aria-checked', 'false');
   });
 });

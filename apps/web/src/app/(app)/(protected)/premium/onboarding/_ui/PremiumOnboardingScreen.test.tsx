@@ -40,10 +40,9 @@ vi.mock('@/features/reward/model/refresh-reward', () => ({
   refreshRewardAfterPurchase: mocks.refreshReward,
   fetchLatestReward: mocks.fetchLatest,
 }));
-vi.mock(
-  '@/features/subscription/model/paywall-gate/useRewardChallengeLive',
-  () => ({ useRewardChallengeLive: () => mocks.launched }),
-);
+vi.mock('@/features/subscription/model/offers/useOffers', () => ({
+  useOffers: () => ({ rewardView: mocks.launched }),
+}));
 // 규칙 화면의 돈통 그림 — 이미지 최적화 부품은 jsdom에서 돌지 않는다
 vi.mock('next/image', () => ({ default: () => <span /> }));
 const analytics = vi.hoisted(() => ({ track: vi.fn() }));

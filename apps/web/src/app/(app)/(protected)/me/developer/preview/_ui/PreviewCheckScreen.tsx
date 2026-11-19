@@ -1,7 +1,8 @@
 'use client';
 
 // 프리뷰 점검 화면(ADMIN) — 첫 대화 직후의 레벨 결과부터, 또는 홈 프리뷰(튜토리얼 → 카드 뒤집기 → 무료 표현)의 단계를 골라 이 계정으로 다시 본다.
-// 고르면 프리뷰 단계를 그 자리로 돌리고 이번 실행 동안 무료 판정을 넘기는 미리보기를 켠 뒤 홈으로 간다
+// 고르면 프리뷰 단계를 그 자리로 돌리고 이번 실행 동안 무료 판정을 넘기는 미리보기를 켠 뒤 홈으로 간다.
+// 판매 시점 스위치로 환급·친구 초대 판매 종료 전·후 화면을 날짜와 상관없이 본다
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -11,13 +12,23 @@ import type { UsableAssessment } from '@/features/feedback/model/level-assessmen
 import { startPreviewReplay } from '@/features/premium-preview/model/preview-replay';
 import type { PreviewStep } from '@/features/premium-preview/model/preview-step';
 import { markMissedEarn } from '@/features/reward/model/missed-earn';
+import {
+  pinOfferClock,
+  readOfferClockPin,
+  type OfferClockPin,
+} from '@/features/subscription/model/offers/offer-clock';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import { useIsAdmin } from '@/shared/auth/current-member';
 import { backToMyPage, SCENARIO_PATH } from '@/shared/lib/routes';
 import { BackHeader } from '@/shared/ui/BackHeader';
 import { Emoji } from '@/shared/ui/emoji';
 
-import { MenuButton, MenuLink, MenuSection } from '../../../_ui/Menu';
+import {
+  MenuButton,
+  MenuLink,
+  MenuSection,
+  MenuToggle,
+} from '../../../_ui/Menu';
 
 // 가짜 레벨 결과는 실제 시나리오에서 온 게 아니다 — 노출 이벤트의 시나리오 칸에 0을 넣는다
 const PREVIEW_SCENARIO_ID = 0;
@@ -77,6 +88,10 @@ const NOTES = [
   ],
   ['무료 표현을 끝내면', '실제처럼 페이월로 가요'],
   ['미리보기는 언제 꺼지나요', '앱을 다시 열면 꺼져요'],
+  [
+    '판매 시점을 고정하면',
+    '환급·친구 초대 판매 종료 시각을 지난 것(또는 지나지 않은 것)으로 쳐요. 종료 시각이 설정되지 않은 배포에서는 「판매 중」으로 고정해도 팔지 않아요',
+  ],
 ] as const;
 
 export const PreviewCheckScreen = () => {
@@ -84,6 +99,13 @@ export const PreviewCheckScreen = () => {
   const isAdmin = useIsAdmin();
   const userId = useAuthStore((state) => state.member?.userId ?? null);
   const [showLevel, setShowLevel] = useState(false);
+  const [clockPin, setClockPin] = useState(readOfferClockPin);
+  // 같은 스위치를 다시 누르면 실제 시각으로 돌아간다
+  const togglePin = (pin: OfferClockPin, on: boolean) => {
+    const next = on ? pin : null;
+    pinOfferClock(next);
+    setClockPin(next);
+  };
 
   const start = (lastDone: PreviewStep) => {
     if (userId === null) return;
@@ -133,6 +155,21 @@ export const PreviewCheckScreen = () => {
                     description={description}
                   />
                 ))}
+              </MenuSection>
+
+              <MenuSection title="판매 시점 — 환급·친구 초대">
+                <MenuToggle
+                  icon={<Emoji>🚪</Emoji>}
+                  title="판매 종료 뒤로 보기"
+                  checked={clockPin === 'ended'}
+                  onChange={(on) => togglePin('ended', on)}
+                />
+                <MenuToggle
+                  icon={<Emoji>🧾</Emoji>}
+                  title="판매 중으로 보기"
+                  checked={clockPin === 'selling'}
+                  onChange={(on) => togglePin('selling', on)}
+                />
               </MenuSection>
 
               <MenuSection title="참고">

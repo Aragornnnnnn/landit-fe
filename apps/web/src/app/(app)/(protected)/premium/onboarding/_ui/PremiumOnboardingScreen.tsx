@@ -20,7 +20,7 @@ import {
 import { rewardOfferOf } from '@/features/reward/model/refund-offer';
 import { preloadRewardGuide } from '@/features/reward/ui/RewardGuide';
 import { subscriptionKeys } from '@/features/subscription/model/my-subscription/keys';
-import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
+import { useOffers } from '@/features/subscription/model/offers/useOffers';
 import { PASS_FALLBACK_PRICE } from '@/features/subscription/model/product/offering';
 import { track } from '@/shared/analytics';
 import { useCurrentUserId, useIsAdmin } from '@/shared/auth/current-member';
@@ -91,7 +91,7 @@ export const PremiumOnboardingScreen = ({
   }, [queryClient, userId]);
 
   // 환급 상품을 샀으면 참여자가 된다 — 결제 전에 받아 둔 답으로 환급 안내를 건너뛰지 않게, 환영 연출이 도는 동안 환급과 안내의 그림을 미리 받는다
-  const rewardLive = useRewardChallengeLive();
+  const rewardLive = useOffers().rewardView;
   useEffect(() => {
     if (!rewardLive) return;
     refreshRewardAfterPurchase(queryClient);

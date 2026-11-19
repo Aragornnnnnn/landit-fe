@@ -31,8 +31,14 @@ vi.mock('@/features/reward/model/useOutsideKoreaTime', () => ({
   useOutsideKoreaTime: () => zone.outside,
 }));
 
+const sale = vi.hoisted(() => ({ open: true }));
+vi.mock('@/features/subscription/model/offers/useOffers', () => ({
+  useOffers: () => ({ rewardSale: sale.open }),
+}));
+
 afterEach(() => {
   cleanup();
+  sale.open = true;
   clock.urgent = false;
   zone.outside = false;
 });
@@ -46,6 +52,13 @@ describe('RewardHero 계측', () => {
     expect(analytics.track.mock.calls).toEqual([
       ['Paywall Entry Tapped', { source: 'reward' }],
     ]);
+  });
+
+  it('이용권 판매가 끝났으면 살 수 있는 사람에게도 다시 시작 카드를 내지 않는다', () => {
+    sale.open = false;
+    render(<RewardHero reward={endedRewardView(31_920)} />);
+
+    expect(screen.queryByRole('link', { name: /다시 시작하기/ })).toBeNull();
   });
 
   it('아직 새 챌린지를 살 수 없으면 다시 시작 카드를 내지 않는다', () => {

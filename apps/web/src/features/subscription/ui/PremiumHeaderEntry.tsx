@@ -21,12 +21,12 @@ import {
   clearPromoHandoff,
   useHandedPromo,
 } from '../model/exit-promo/promo-handoff';
-import { usePromoLive } from '../model/exit-promo/usePromoLive';
 import {
   resolvePromoDisplay,
   usePromoOffer,
 } from '../model/exit-promo/usePromoOffer';
 import { useSubscriptionQuery } from '../model/my-subscription/useSubscriptionQuery';
+import { useOffers } from '../model/offers/useOffers';
 import { usePaymentLive } from '../model/paywall-gate/usePaymentLive';
 import type { UnlockReason } from '../model/purchase/usePurchase';
 import { PromoClock } from './exit-promo/PromoClock';
@@ -38,6 +38,29 @@ import { PromoSheet } from './exit-promo/PromoSheet';
 // 진입 알약의 모양 — 헤더가 환급 동전 연출의 어둠 위에 같은 알약을 다시 그릴 때도 쓴다
 export const PREMIUM_ENTRY_PILL_CLASS =
   'flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-13 leading-[1.2] font-bold text-[#4a2f00]';
+
+/** 진입 알약의 글자 — 「프리미엄 시작하기」. 헤더가 동전 연출 위에 같은 알약을 다시 그릴 때도 써서 두 알약의 글자와 폭이 어긋나지 않는다 */
+export const PremiumEntryLabel = () => {
+  const t = useTranslations('subscription.premiumHeaderEntry');
+  return (
+    <>
+      <PremiumBrand />
+      <span>{t('startLabel')}</span>
+    </>
+  );
+};
+
+// 알약 앞머리 — 한국어는 「프리미엄」, 일본어는 「PREMIUM」. 자간은 영문 대문자에만 준다
+const PremiumBrand = () => {
+  const brand = useTranslations('subscription.premiumHeaderEntry')(
+    'brandLabel',
+  );
+  return (
+    <span className={/^[A-Z]+$/.test(brand) ? 'tracking-[0.1em]' : undefined}>
+      {brand}
+    </span>
+  );
+};
 
 const HomeLogo = () => {
   const t = useTranslations('subscription.premiumHeaderEntry');
@@ -69,7 +92,7 @@ export const PremiumHeaderEntry = ({
   const { subscription, isPending, isError } = useSubscriptionQuery({
     enabled: paymentLive,
   });
-  const promoLive = usePromoLive();
+  const promoLive = useOffers().exitPromo;
   const live = usePromoOffer(promoLive ? (subscription?.promo ?? null) : null);
   // 배지를 눌러 연 할인과 페이월에서 넘어온 할인. 둘 다 열 때의 값을 복사해 들고 있는다 —
   // 구독 쿼리가 다시 조회돼 promo가 비어도 열려 있던 시트가 닫히면 안 된다
@@ -132,7 +155,7 @@ export const PremiumHeaderEntry = ({
           onClick={openSheet}
           className={`${PREMIUM_ENTRY_PILL_CLASS} animate-gold-flow`}
         >
-          <span className="tracking-[0.1em]">PREMIUM</span>
+          <PremiumBrand />
           {/* 숫자만 줄어들면 무엇이 끝나는지 알 수 없다. 눌러서 열리는 시트와 같은 말로 부른다 */}
           <span>{t('discountLabel')}</span>
           <PromoClock seconds={live.remainingSeconds} />
@@ -148,12 +171,7 @@ export const PremiumHeaderEntry = ({
           }
           className={`${PREMIUM_ENTRY_PILL_CLASS} animate-gold-flow animate-gold-sheen`}
         >
-          {invite?.label ?? (
-            <>
-              <span className="tracking-[0.1em]">PREMIUM</span>
-              <span>{t('startLabel')}</span>
-            </>
-          )}
+          {invite?.label ?? <PremiumEntryLabel />}
         </Link>
       )}
 

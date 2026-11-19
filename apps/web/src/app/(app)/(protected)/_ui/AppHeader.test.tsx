@@ -51,6 +51,7 @@ vi.mock('@/features/subscription/ui/PremiumHeaderEntry', () => ({
     return <span data-testid="premium-entry">{props.invite?.label}</span>;
   },
   PREMIUM_ENTRY_PILL_CLASS: '',
+  PremiumEntryLabel: () => <span>프리미엄 시작하기</span>,
 }));
 vi.mock('@/features/reward/ui/HeaderReward', () => ({
   HeaderReward: ({ badge }: { badge: { label: string } }) => (
