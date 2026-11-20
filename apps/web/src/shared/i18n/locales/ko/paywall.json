@@ -66,7 +66,8 @@
     "selectLabel": "{title} 플랜",
     "monthlyPriceLabel": "월 {price}",
     "yearlyPriceLabel": "연 {price}",
-    "yearlySubtitle": "월 {price}꼴",
+    "monthlySubtitle": "매월 결제",
+    "yearlySubtitle": "매년 결제 · 월 {price}꼴",
     "yearlyBadge": "월간보다 {rate}% 저렴"
   },
   "exampleDemo": {

@@ -241,9 +241,10 @@ describe('PaywallScreen', () => {
 
     expect(screen.getByText('연 58,500원')).toBeInTheDocument();
     expect(screen.getByText('월간보다 67% 저렴')).toBeInTheDocument();
-    expect(screen.getByText('월 4,900원꼴')).toBeInTheDocument();
-    // 월간 카드에는 작은 글씨를 두지 않는다 — 결제 주기는 큰 숫자가 말하고, 해지 안내는 버튼 아래 한 줄로만 한다
-    expect(screen.queryByText(/매달 결제|언제든 해지/)).not.toBeInTheDocument();
+    // 두 카드 모두 결제 주기를 말하고, 연간만 월 환산가를 덧붙인다. 해지 안내는 버튼 아래 한 줄로만 한다
+    expect(screen.getByText('매월 결제')).toBeInTheDocument();
+    expect(screen.getByText('매년 결제 · 월 4,900원꼴')).toBeInTheDocument();
+    expect(screen.queryByText(/언제든 해지/)).not.toBeInTheDocument();
     expect(screen.queryByText('월 4,900원')).not.toBeInTheDocument();
   });
 

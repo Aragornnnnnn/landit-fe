@@ -66,7 +66,8 @@
     "selectLabel": "{title}",
     "monthlyPriceLabel": "月額{price}",
     "yearlyPriceLabel": "年額{price}",
-    "yearlySubtitle": "月{price}相当",
+    "monthlySubtitle": "毎月払い",
+    "yearlySubtitle": "年払い・月{price}相当",
     "yearlyBadge": "月間より{rate}%お得"
   },
   "exampleDemo": {

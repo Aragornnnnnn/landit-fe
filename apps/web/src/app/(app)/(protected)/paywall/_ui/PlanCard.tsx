@@ -28,13 +28,13 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
       : t(yearly ? 'yearlyPriceLabel' : 'monthlyPriceLabel', {
           price: formatPrice(amount, plan.currency),
         });
-  // 작은 글씨는 연간의 월 환산가뿐이다 — 결제 주기는 큰 숫자(월·연)가 이미 말한다. 월간은 빈 줄로 두 카드의 높이를 맞춘다
-  const subtitle =
-    yearly && !plan.unpriced
-      ? t('yearlySubtitle', {
-          price: formatPrice(plan.monthlyPrice, plan.currency),
-        })
-      : '\u00a0';
+  // 작은 글씨는 결제 주기 — 연간만 월 환산가를 덧붙인다. 해지 이야기는 버튼 아래 안내가 맡는다
+  const pricedSubtitle = yearly
+    ? t('yearlySubtitle', {
+        price: formatPrice(plan.monthlyPrice, plan.currency),
+      })
+    : t('monthlySubtitle');
+  const subtitle = plan.unpriced ? '\u00a0' : pricedSubtitle;
 
   return (
     <button
