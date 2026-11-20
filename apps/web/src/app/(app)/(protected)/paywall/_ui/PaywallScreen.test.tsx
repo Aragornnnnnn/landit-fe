@@ -21,6 +21,8 @@ const mocks = vi.hoisted(() => ({
   restore: vi.fn(),
   refreshRewardAfterPurchase: vi.fn(),
   busy: false,
+  previewFlow: false,
+  rewardSale: false,
   packages: {} as Record<string, unknown>,
   promo: {} as Record<string, unknown>,
   offeringPending: false,
@@ -94,14 +96,16 @@ vi.mock('next/link', () => ({
     </a>
   ),
 }));
-// 환급 챌린지는 기본 꺼짐 — 켠 화면은 rewardChallenge로 따로 확인한다
+// 환급 판매도 단계형 흐름도 기본 꺼짐(한 장짜리 페이월) — 환급은 rewardChallenge로, 단계형은 mocks.previewFlow로 따로 확인한다
 vi.mock('@/features/subscription/model/paywall-gate/payment-flag', () => ({
   PAYMENT_ENABLED: true,
 }));
-vi.mock(
-  '@/features/subscription/model/paywall-gate/useRewardChallengeLive',
-  () => ({ useRewardChallengeLive: () => false }),
-);
+vi.mock('@/features/subscription/model/offers/useOffers', () => ({
+  useOffers: () => ({
+    rewardSale: mocks.rewardSale,
+    previewFlow: mocks.previewFlow,
+  }),
+}));
 // 데모 속 캐릭터는 깜빡임·입모양을 WAAPI(element.animate)로 쏘는데 jsdom엔 없다 — 결제 흐름 테스트라 그림은 비운다
 vi.mock('@/features/conversation/ui/character/PartnerCharacter', () => ({
   PartnerCharacter: () => null,
@@ -129,6 +133,8 @@ const seriesOrder = () => {
 
 beforeEach(() => {
   mocks.busy = false;
+  mocks.previewFlow = false;
+  mocks.rewardSale = false;
   mocks.purchaseOptions = null;
   mocks.refreshRewardAfterPurchase.mockClear();
   mocks.sendAdEvent.mockClear();
@@ -162,7 +168,7 @@ describe('PaywallScreen', () => {
     );
   });
 
-  it('처음엔 연간이 선택돼 있어 CTA가 무료 체험 문구다', () => {
+  it('처음엔 연간이 선택돼 있어 CTA가 연 결제액으로 시작한다고 말한다', () => {
     render(<PaywallScreen />);
 
     expect(screen.getByRole('button', { name: '연간 플랜' })).toHaveAttribute(
@@ -170,11 +176,11 @@ describe('PaywallScreen', () => {
       'true',
     );
     expect(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     ).toBeInTheDocument();
   });
 
-  it('월간 카드를 누르면 CTA와 결제 안내가 월간용으로 바뀌고 선택 이벤트를 찍는다', () => {
+  it('월간 줄을 누르면 CTA가 월간용으로 바뀌고 선택 이벤트를 찍는다', () => {
     render(<PaywallScreen />);
 
     fireEvent.click(screen.getByRole('button', { name: '월간 플랜' }));
@@ -182,14 +188,9 @@ describe('PaywallScreen', () => {
     expect(
       screen.getByRole('button', { name: '월 14,900원으로 시작하기' }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText('매월 14,900원 정기 결제 · 언제든 해지 가능'),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        '결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요',
-      ),
-    ).toBeInTheDocument();
+    // 버튼 밑에는 결제·해지 안내를 두지 않는다 — 금액과 주기는 플랜 줄이 말한다
+    expect(screen.queryByText(/정기 결제/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/청구되지 않아요/)).not.toBeInTheDocument();
     expect(mocks.track).toHaveBeenCalledWith('Paywall Plan Selected', {
       plan: 'monthly',
     });
@@ -207,7 +208,7 @@ describe('PaywallScreen', () => {
     render(<PaywallScreen />);
 
     fireEvent.click(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     );
 
     expect(mocks.track).toHaveBeenCalledWith('Purchase Started', {
@@ -222,28 +223,34 @@ describe('PaywallScreen', () => {
     };
     render(<PaywallScreen />);
 
-    expect(
-      screen.getByText(
-        '7일 무료 체험 후 연 49,900원 정기 결제 · 언제든 해지 가능',
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText('49,900원')).toBeInTheDocument();
     expect(mocks.purchaseOptions?.packages).toEqual({
       monthly: mocks.packages.monthly,
       yearly: mocks.promo.yearly,
     });
   });
 
-  it('카드의 큰 숫자는 실제 청구액이고 월 환산가는 부제로만 쓴다 — 스토어 심사 3.1.2(c)', () => {
+  it('줄의 큰 숫자는 실제 청구액이고 월 환산가는 부제로만 쓴다 — 스토어 심사 3.1.2(c)', () => {
     mocks.promo = {
       yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
     };
     render(<PaywallScreen />);
 
-    expect(screen.getByText('연 58,500원')).toBeInTheDocument();
+    expect(screen.getByText('58,500원')).toBeInTheDocument();
     expect(screen.getByText('월간보다 67% 저렴')).toBeInTheDocument();
+    // 두 줄 모두 결제 주기를 말하고, 연간만 청구액 아래에 월 환산가를 작게 둔다. 취소선 비교가는 두지 않는다
+    expect(screen.queryByText(/178,800원/)).not.toBeInTheDocument();
+    // 화면을 읽어 주는 도구에도 결제 주기와 청구액이 플랜 이름 뒤에 이어 읽힌다
     expect(
-      screen.getByText('월 4,900원꼴 · 7일 무료 체험'),
-    ).toBeInTheDocument();
+      screen.getByRole('button', { name: '연간 플랜' }),
+    ).toHaveAccessibleDescription('매년 결제 58,500원/년 4,900원/월');
+    // 금액 옆 단위가 청구 주기를 말한다
+    expect(screen.getByText('/년')).toBeInTheDocument();
+    expect(screen.getByText('/월')).toBeInTheDocument();
+    expect(screen.getByText('매월 결제')).toBeInTheDocument();
+    expect(screen.getByText('매년 결제')).toBeInTheDocument();
+    expect(screen.getByText('4,900원/월')).toBeInTheDocument();
+    expect(screen.queryByText(/언제든 해지/)).not.toBeInTheDocument();
     expect(screen.queryByText('월 4,900원')).not.toBeInTheDocument();
   });
 
@@ -257,8 +264,8 @@ describe('PaywallScreen', () => {
     };
     render(<PaywallScreen />);
 
-    expect(screen.getByText('연 58,500원')).toBeInTheDocument();
-    expect(screen.queryByText('연 94,500원')).not.toBeInTheDocument();
+    expect(screen.getByText('58,500원')).toBeInTheDocument();
+    expect(screen.queryByText('94,500원')).not.toBeInTheDocument();
     expect(mocks.purchaseOptions?.packages).toEqual({
       yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
       monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
@@ -269,7 +276,7 @@ describe('PaywallScreen', () => {
     mocks.offeringSettled = true;
     render(<PaywallScreen />);
 
-    expect(screen.queryByText('연 94,500원')).not.toBeInTheDocument();
+    expect(screen.queryByText('94,500원')).not.toBeInTheDocument();
     expect(mocks.purchaseOptions?.packages).toEqual({
       monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
     });
@@ -282,15 +289,17 @@ describe('PaywallScreen', () => {
     mocks.packages = {};
     render(<PaywallScreen />);
 
-    expect(screen.getByText('연 58,500원')).toBeInTheDocument();
-    expect(screen.queryByText('연 94,500원')).not.toBeInTheDocument();
+    expect(screen.getByText('58,500원')).toBeInTheDocument();
+    expect(screen.queryByText('94,500원')).not.toBeInTheDocument();
   });
 
   it('오퍼링을 받는 동안은 CTA가 잠긴다 — 할인 패키지가 오기 전에 정가 상품으로 결제되지 않게', () => {
     mocks.offeringPending = true;
     render(<PaywallScreen />);
 
-    fireEvent.click(screen.getByRole('button', { name: /무료 체험/ }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
+    );
 
     expect(mocks.purchase).not.toHaveBeenCalled();
   });
@@ -320,18 +329,27 @@ describe('PaywallScreen', () => {
       screen.queryByRole('button', { name: '가격 다시 불러오기' }),
     ).not.toBeInTheDocument();
     fireEvent.click(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     );
     expect(mocks.purchase).toHaveBeenCalledWith('yearly');
   });
 
-  it('스토어 가격이 없으면 카드에 등록값을 그리지 않는다 — 다른 통화의 금액이 보이지 않게', () => {
+  it('스토어 가격이 없으면 플랜 줄에 등록값을 그리지 않는다 — 다른 통화의 금액이 보이지 않게', () => {
     mocks.offeringSettled = true;
     mocks.packages = {};
     render(<PaywallScreen />);
 
-    expect(screen.queryByText('연 58,500원')).not.toBeInTheDocument();
-    expect(screen.queryByText('월 14,900원')).not.toBeInTheDocument();
+    // 금액 자리는 줄표, 단위와 월 환산가·배지는 그리지 않고 결제 주기만 남는다
+    expect(screen.queryByText(/\d원/)).not.toBeInTheDocument();
+    expect(screen.getAllByText('–')).toHaveLength(2);
+    expect(screen.queryByText('/년')).not.toBeInTheDocument();
+    expect(screen.queryByText('/월')).not.toBeInTheDocument();
+    expect(screen.queryByText(/저렴/)).not.toBeInTheDocument();
+    expect(screen.getByText('매년 결제')).toBeInTheDocument();
+    expect(screen.getByText('매월 결제')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '연간 플랜' }),
+    ).toHaveAccessibleDescription('매년 결제');
   });
 
   it('스토어 가격이 없으면 어느 플랜이 비었는지 모니터링에 남긴다', () => {
@@ -363,9 +381,9 @@ describe('PaywallScreen', () => {
     rerender(<PaywallScreen />);
 
     expect(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     ).toBeInTheDocument();
-    expect(screen.getByText('연 58,500원')).toBeInTheDocument();
+    expect(screen.getByText('58,500원')).toBeInTheDocument();
   });
 
   it('스토어 가격이 없으면 월간을 골라도 가격을 다시 불러온다', () => {
@@ -385,13 +403,14 @@ describe('PaywallScreen', () => {
     render(<PaywallScreen />);
 
     expect(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     ).toBeInTheDocument();
   });
 
   it('일본어 결제 단계도 스토어 가격이 없으면 가격을 다시 불러온다', () => {
     Element.prototype.scrollTo = vi.fn();
     setTestLocale('ja');
+    mocks.previewFlow = true;
     mocks.offeringSettled = true;
     mocks.packages = {};
     render(<PaywallScreen />);
@@ -439,6 +458,7 @@ describe('PaywallScreen', () => {
     // 단계를 넘기면 맨 위로 올리는데 jsdom 요소엔 scrollTo가 없다
     Element.prototype.scrollTo = vi.fn();
     setTestLocale('ja');
+    mocks.previewFlow = true;
     mocks.packages = {
       monthly: { packageId: '$rc_monthly', price: 1_500, currency: 'JPY' },
     };
@@ -454,10 +474,33 @@ describe('PaywallScreen', () => {
       'aria-pressed',
       'true',
     );
-    expect(screen.getByText('年額9,800円')).toBeInTheDocument();
+    expect(screen.getByText('9,800円')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '月間プラン' }));
     fireEvent.click(
       screen.getByRole('button', { name: '月額1,500円で始める' }),
+    );
+
+    expect(mocks.purchase).toHaveBeenCalledWith('monthly');
+  });
+
+  it('환급을 팔지 않는 한국어 화면도 혜택 → 결제 두 단계로 월간·할인 연간을 판다', () => {
+    Element.prototype.scrollTo = vi.fn();
+    mocks.previewFlow = true;
+    mocks.promo = {
+      yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
+    };
+    render(<PaywallScreen />);
+
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    expect(screen.getByRole('button', { name: '연간 플랜' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByText('58,500원')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '월간 플랜' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: '월 14,900원으로 시작하기' }),
     );
 
     expect(mocks.purchase).toHaveBeenCalledWith('monthly');
@@ -483,7 +526,7 @@ describe('PaywallScreen', () => {
     );
 
     fireEvent.click(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     );
 
     expect(scrollTo).toHaveBeenCalled();
@@ -506,7 +549,7 @@ describe('PaywallScreen', () => {
     render(<PaywallScreen />);
 
     fireEvent.click(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     );
 
     expect(scrollTo).not.toHaveBeenCalled();
@@ -555,7 +598,7 @@ describe('PaywallScreen', () => {
 
     expect(screen.queryByText(/환급 챌린지/)).not.toBeInTheDocument();
     fireEvent.click(
-      screen.getByRole('button', { name: '7일 무료 체험 시작하기' }),
+      screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     );
     expect(mocks.purchase).toHaveBeenCalledWith('yearly');
   });
@@ -675,6 +718,15 @@ describe('PaywallScreen — 환급 챌린지가 켜졌을 때', () => {
 
   beforeEach(() => {
     mocks.packages = passPackages(50_000);
+  });
+
+  it('환급을 파는 화면이면 따로 켜지 않아도 환급 페이월로 연다', () => {
+    mocks.rewardSale = true;
+    render(<PaywallScreen />);
+
+    expect(
+      screen.getByText('프리미엄만 누리는 혜택 5가지'),
+    ).toBeInTheDocument();
   });
 
   it('처음엔 혜택 화면이다 — 매일 오는 시나리오에 프리미엄 혜택 5가지를 더해 보여 준다', () => {

@@ -1,7 +1,10 @@
-// OAuth 콜백·위젯·알람 딥링크가 라우터 화면 전환(Unmatched Route)으로 이어지지 않게 막는다
+// OAuth·카카오톡 로그인 복귀·위젯·알람 딥링크가 라우터 화면 전환(Unmatched Route)으로 이어지지 않게 막는다
 // null 반환 = 화면 전환 없음. expo-auth-session은 Linking 이벤트를 따로 받아 로그인은 정상 진행된다.
 import { isAlarmLink } from '../alarm/alarm-link';
-import { isOAuthRedirectUrl } from '../auth/socialLogin/shared/redirect';
+import {
+  isKakaoTalkLoginUrl,
+  isOAuthRedirectUrl,
+} from '../auth/socialLogin/shared/redirect';
 import { isWidgetEntryUrl } from '../widgets/widget-link';
 
 export function redirectSystemPath({
@@ -13,6 +16,7 @@ export function redirectSystemPath({
   // 이 함수에서 throw가 새어 나가면 앱이 죽을 수 있다 (expo-router 문서 권고로 방어)
   try {
     return isOAuthRedirectUrl(path) ||
+      isKakaoTalkLoginUrl(path) ||
       isWidgetEntryUrl(path) ||
       isAlarmLink(path)
       ? null

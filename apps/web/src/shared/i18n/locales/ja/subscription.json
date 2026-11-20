@@ -5,8 +5,7 @@
     "phraseLabel": "レベル別のフレーズ",
     "pronunciationLabel": "ネイティブ並みの発音",
     "smallTalkLabel": "スモールトーク無制限",
-    "accentLabel": "米・英・豪の英語",
-    "roleplayLabel": "マイシナリオ作成"
+    "roleplayLabel": "ロールプレイ無制限"
   },
   "benefitComparison": {
     "freeLabel": "無料",
@@ -28,6 +27,7 @@
   },
   "premiumHeaderEntry": {
     "homeLabel": "ホームへ",
+    "brandLabel": "PREMIUM",
     "discountLabel": "割引",
     "startLabel": "始める"
   },

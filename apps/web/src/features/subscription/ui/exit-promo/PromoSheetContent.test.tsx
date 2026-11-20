@@ -91,11 +91,12 @@ describe('PromoSheetContent', () => {
     expect(screen.getByText('178,800원')).toBeInTheDocument();
   });
 
-  it('체험 포함 여부를 카드마다 밝힌다 — 월간에는 체험이 없다', () => {
+  it('얼마마다 결제되는지 카드마다 밝히고, 무료 체험은 말하지 않는다', () => {
     open();
 
-    expect(screen.getByText('7일 무료 체험 포함')).toBeInTheDocument();
-    expect(screen.getByText('무료 체험 미포함')).toBeInTheDocument();
+    expect(screen.getByText('매년 결제')).toBeInTheDocument();
+    expect(screen.getByText('매달 결제')).toBeInTheDocument();
+    expect(screen.queryByText(/무료 체험/)).toBeNull();
   });
 
   it('그려질 때만 노출을 계측한다 — 열려다 못 그린 경우까지 세면 전환율 분모가 부푼다', () => {

@@ -1,4 +1,5 @@
 // API 호출 진입점 — api.get/post/... 로 부르면 토큰 부착·선발급·401 재발급·화면 언어 헤더를 request가 알아서 처리한다
+import { backendUrl } from '@/shared/api/backend-url';
 import { parseApiResponse } from '@/shared/api/parse';
 import { REFRESH_PATH, refreshAccessToken } from '@/shared/auth/api/refresh';
 import { useAuthStore } from '@/shared/auth/auth-store';
@@ -51,7 +52,7 @@ async function request<T>(
 
   // body가 undefined면 JSON.stringify도 undefined라 GET/DELETE에선 body가 안 실린다
   const send = () =>
-    fetch(path, {
+    fetch(backendUrl(path), {
       method,
       headers,
       body: body instanceof FormData ? body : JSON.stringify(body),

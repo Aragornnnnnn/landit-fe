@@ -14,10 +14,9 @@ const mocks = vi.hoisted(() => ({
   query: { reward: null as RewardView | null, loaded: false },
   live: true,
 }));
-vi.mock(
-  '@/features/subscription/model/paywall-gate/useRewardChallengeLive',
-  () => ({ useRewardChallengeLive: () => mocks.live }),
-);
+vi.mock('@/features/subscription/model/offers/useOffers', () => ({
+  useOffers: () => ({ rewardView: mocks.live }),
+}));
 vi.mock('@/shared/analytics', () => ({
   setUserProperties: mocks.setUserProperties,
 }));

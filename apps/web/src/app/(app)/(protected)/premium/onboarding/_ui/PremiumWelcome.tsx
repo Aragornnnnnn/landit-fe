@@ -30,7 +30,6 @@ const BENEFIT_EMOJI: Record<BenefitIcon, string> = {
   sparkles: '💡',
   mic: '🎤',
   chat: '💬',
-  globe: '🌍',
   pencil: '🎭',
 };
 

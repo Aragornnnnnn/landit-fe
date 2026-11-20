@@ -16,10 +16,9 @@ const mocks = vi.hoisted(() => ({
   streakAsked: 0,
 }));
 
-vi.mock(
-  '@/features/subscription/model/paywall-gate/useRewardChallengeLive',
-  () => ({ useRewardChallengeLive: () => mocks.launched }),
-);
+vi.mock('@/features/subscription/model/offers/useOffers', () => ({
+  useOffers: () => ({ rewardView: mocks.launched }),
+}));
 vi.mock('@/features/streak/model/useStreakQuery', () => ({
   useStreakQuery: () => {
     mocks.streakAsked += 1;

@@ -1,5 +1,5 @@
 // 단계형 페이월 2단계 — 결제 금액 안내. 예전 한 페이지 페이월처럼 로고와 캐릭터, 무료 vs 프리미엄 표, 그리고 파는 것을
-// 한 화면에 담는다. 환급 챌린지는 고를 것 없는 100일 이용권 카드 한 장, 일본어 화면은 월간·연간 플랜 카드 두 장이다. 혜택 설명은 앞 화면에서 했으니 여기선 무엇을 얼마에 사는지만 또렷하게. 피그마 「결제 금액 안내 v4」(3563:322)
+// 한 화면에 담는다. 환급 챌린지는 고를 것 없는 100일 이용권 카드 한 장, 구독은 연간·월간 플랜 두 줄이다. 혜택 설명은 앞 화면에서 했으니 여기선 무엇을 얼마에 사는지만 또렷하게. 피그마 「결제 금액 안내 v4」(3563:322)
 import type { CSSProperties } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
@@ -21,17 +21,14 @@ import { ChevronLeftIcon, CloseIcon } from '@/shared/ui/Icons';
 import { rewardBenefitsOf, type RewardPlan } from '../_model/paywall-content';
 import type { StepOffer } from '../_model/step-offer';
 import { PlanCard } from './PlanCard';
-import { NOTICES_HEIGHT_PX } from './PurchaseNotices';
 
-/** 캐릭터 그림 높이 — 기본(그림 너비 257px)과, 긴 화면에서 키울 수 있는 끝 */
-const HERO_MIN_PX = 131;
+/** 캐릭터 그림 높이 — 줄일 수 있는 끝(낮은 화면과 같은 크기, 그림 너비 204px)과 긴 화면에서 키울 수 있는 끝. 그 사이에서는 스크롤이 생기지 않는 만큼만 키운다 */
+const HERO_MIN_PX = 104;
 const HERO_MAX_PX = 180;
 /** 그림 밖 내용 높이 — 위아래 안전 영역 기본값(8px·12px)을 뺀 나머지 전부(헤더·로고·표·이용권 카드·약관·버튼 자리) */
 const HERO_REST_PX = 614;
-/** 플랜 카드 두 장이 이용권 카드 한 장보다 높은 만큼 */
-const PLAN_CARDS_EXTRA_PX = 22;
-/** 구독은 플랜 카드가 높고 버튼 밑에 결제 안내 두 줄이 붙어, 그만큼 그림을 줄인다 */
-const SUBSCRIPTION_EXTRA_PX = PLAN_CARDS_EXTRA_PX + NOTICES_HEIGHT_PX;
+/** 구독 화면이 이용권 화면보다 높은 만큼 — 세로로 쌓은 플랜 두 줄이 이용권 카드 한 장보다 높고, 비교표는 적립 줄이 없어 한 줄 짧다. 그만큼 그림을 줄인다 */
+const SUBSCRIPTION_EXTRA_PX = 33;
 /** 계산이 조금 어긋나도 스크롤이 생기지 않게 남기는 여유 */
 const HERO_SPARE_PX = 16;
 
@@ -40,7 +37,7 @@ const PassCard = ({ plan }: { plan: RewardPlan }) => {
   const listPrice = listPriceOf(plan.price);
 
   return (
-    // 고를 것이 이용권 하나뿐이라 처음부터 골라 둔 모양으로 그린다 — 플랜 카드의 선택 상태와 같은 테두리·바탕
+    // 고를 것이 이용권 하나뿐이라 처음부터 골라 둔 모양으로 그린다 — 주황 2px 테두리와 크림 바탕
     <div className="rounded-[20px] border-2 border-primary bg-[#fffcf8] px-4 py-3 shadow-[0_6px_16px_rgba(224,122,58,0.12)]">
       <p className="flex items-center gap-1.5">
         <span className="text-15 font-bold text-[#c4601f]">
@@ -161,8 +158,8 @@ export const CheckoutStep = ({
             <PassCard plan={offer.plan} />
           </div>
         ) : (
-          // 배지가 카드 위 테두리에 걸치니 그만큼 위를 띄운다
-          <div className="mt-3.5 flex gap-2.5 pt-2.5">
+          // 배지가 첫 줄 위 테두리에 걸치니 그만큼 위를 띄운다
+          <div className="mt-3.5 flex flex-col gap-2.5 pt-2.5">
             {PLAN_ORDER.map((id) => (
               <PlanCard
                 key={id}

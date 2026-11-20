@@ -1,11 +1,12 @@
 'use client';
 
 // 환급 화면의 친구 초대 띠 — 「친구 초대하고 최대 N원 추가 적립」 한 줄. 누르면 친구 초대 이벤트 화면으로 간다.
-// 환급을 보러 온 사람을 붙잡는 자리라 더 받을 수 있는 금액을 말하고, 아래 게이지로 얼마나 찼는지 보인다
+// 환급을 보러 온 사람을 붙잡는 자리라 더 받을 수 있는 금액을 말하고, 아래 게이지로 얼마나 찼는지 보인다. 친구 초대가 닫혔으면 그리지 않는다
 import Link from 'next/link';
 
 import { useInviteOffer } from '@/features/referral/model/useInviteOffer';
 import { Coin } from '@/features/reward/ui/common/Coin';
+import { useOffers } from '@/features/subscription/model/offers/useOffers';
 import { REFERRAL_INVITE_PATH } from '@/shared/lib/routes';
 import { ChevronRightIcon } from '@/shared/ui/Icons';
 
@@ -14,7 +15,8 @@ import { inviteBandOf } from '../_model/invite-band';
 // 숨을 때는 자리째 비운다 — 바깥 여백도 띠가 들고 있다
 export const InviteBand = ({ className = '' }: { className?: string }) => {
   const { offer } = useInviteOffer();
-  const band = offer ? inviteBandOf(offer) : null;
+  const { referral } = useOffers();
+  const band = referral && offer ? inviteBandOf(offer) : null;
   if (!band) return null;
 
   return (

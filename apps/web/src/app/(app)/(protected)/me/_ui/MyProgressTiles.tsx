@@ -7,7 +7,7 @@ import {
   type RewardBadge,
 } from '@/features/reward/model/reward-status';
 import { useStreakQuery } from '@/features/streak/model/useStreakQuery';
-import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
+import { useOffers } from '@/features/subscription/model/offers/useOffers';
 
 import { useMyReward } from '../../_model/useMyReward';
 import { INVITE_BADGE, ProgressTiles } from './ProgressTiles';
@@ -23,9 +23,9 @@ const inviteBadgeOf = (storedWon: number): RewardBadge =>
       }
     : INVITE_BADGE;
 
-// 환급이 열리기 전에는 이 자리가 없다 — 조회도 하지 않아 내 정보는 지금 그대로다
+// 환급 화면이 없는 환경(일본어·구버전 앱)에는 이 자리가 없다 — 조회도 하지 않는다. 판매가 끝난 뒤에는 이미 산 사람의 금액만 남고 권하는 타일은 사라진다
 export const MyProgressTiles = () =>
-  useRewardChallengeLive() ? <LiveProgressTiles /> : null;
+  useOffers().rewardView ? <LiveProgressTiles /> : null;
 
 const LiveProgressTiles = () => {
   const { streak, isPending } = useStreakQuery();

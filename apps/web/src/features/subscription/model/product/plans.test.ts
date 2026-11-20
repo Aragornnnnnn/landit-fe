@@ -41,23 +41,26 @@ describe('calculateMonthlyEquivalent', () => {
 describe('buildPaywallPlans — 등록값', () => {
   const { monthly, yearly } = buildPaywallPlans();
 
-  it('월간·연간 순서로 놓이고 기본 선택은 연간이다', () => {
-    expect(PLAN_ORDER).toEqual(['monthly', 'yearly']);
+  it('연간·월간 순서로 놓이고 기본 선택은 연간이다', () => {
+    expect(PLAN_ORDER).toEqual(['yearly', 'monthly']);
     expect(DEFAULT_PLAN_ID).toBe('yearly');
   });
 
-  it('월간 카드는 할인 강조가 없다 — 배지도 비교 취소선도 두지 않는다', () => {
+  it('월간 줄은 할인 강조가 없다 — 배지를 두지 않는다', () => {
     expect(monthly.discountRate).toBeUndefined();
-    expect(monthly.listPrice).toBeUndefined();
   });
 
-  it('월간 카드는 달마다 청구액을 그대로 큰 숫자로 쓴다', () => {
+  it('등록값 기준 연간은 월간보다 17% 싸다고 말한다', () => {
+    expect(yearly.discountRate).toBe(17);
+  });
+
+  it('월간 줄은 달마다 청구액을 그대로 큰 숫자로 쓴다', () => {
     expect(monthly.monthlyPrice).toBe(monthly.price);
   });
 
-  it('연간 카드의 큰 숫자는 실제 청구되는 연 결제액이고, 취소선은 월간으로 1년 낼 때의 금액이다', () => {
+  it('연간 줄의 큰 숫자는 실제 청구되는 연 결제액이고, 월 환산가는 거기서 계산한다', () => {
+    expect(yearly.price).toBe(58_500);
     expect(yearly.monthlyPrice).toBe(calculateMonthlyEquivalent(yearly.price));
-    expect(yearly.listPrice).toBe(monthly.price * 12);
   });
 
   it('연간 배지의 퍼센트는 월간 판매가 대비 월 환산가 산식과 같다', () => {
@@ -68,7 +71,7 @@ describe('buildPaywallPlans — 등록값', () => {
 });
 
 describe('buildPaywallPlans — 스토어 가격', () => {
-  it('스토어 가격을 주면 큰 숫자·취소선·할인율·월 환산가가 전부 그 값에서 다시 계산된다', () => {
+  it('스토어 가격을 주면 큰 숫자·할인율·월 환산가가 전부 그 값에서 다시 계산된다', () => {
     const { monthly, yearly } = buildPaywallPlans({
       monthly: 11_000,
       yearly: 66_000,
@@ -76,7 +79,6 @@ describe('buildPaywallPlans — 스토어 가격', () => {
 
     expect(monthly.price).toBe(11_000);
     expect(monthly.discountRate).toBeUndefined();
-    expect(yearly.listPrice).toBe(132_000);
     expect(yearly.monthlyPrice).toBe(5_500);
     expect(yearly.discountRate).toBe(50);
   });
@@ -98,7 +100,7 @@ describe('buildPaywallPlans — 스토어 가격', () => {
   it('한 플랜만 주면 나머지는 등록값을 쓴다', () => {
     const { monthly, yearly } = buildPaywallPlans({ yearly: 49_900 });
 
-    expect(monthly.price).toBe(14_900);
+    expect(monthly.price).toBe(5_900);
     expect(yearly.price).toBe(49_900);
   });
 });

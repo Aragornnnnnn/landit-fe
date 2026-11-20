@@ -1,12 +1,8 @@
 {
   "restoreButton": "購入を復元",
-  "trialStartButton": "7日間の無料体験を始める",
+  "yearlyStartButton": "年額{price}で始める",
   "priceRetryButton": "価格を再読み込み",
   "monthlyStartButton": "月額{price}で始める",
-  "yearlyBillingCaption": "7日間の無料体験後は年額{price}で自動更新。いつでも解約できます",
-  "monthlyBillingCaption": "毎月{price}で自動更新。いつでも解約できます",
-  "yearlyCancelCaption": "体験終了の24時間前までに解約すれば請求されません",
-  "monthlyCancelCaption": "更新日の24時間前までに解約すれば翌月分は請求されません",
   "benefitsStep": {
     "title": "毎日届くシナリオを<br></br><premium>プレミアム</premium>で学びましょう",
     "benefitsTitle": "プレミアムだけの特典{count}つ",
@@ -64,10 +60,11 @@
     "monthlyTitle": "月間プラン",
     "yearlyTitle": "年間プラン",
     "selectLabel": "{title}",
-    "monthlyPriceLabel": "月額{price}",
-    "yearlyPriceLabel": "年額{price}",
-    "monthlySubtitle": "毎月払い・いつでも解約",
-    "yearlySubtitle": "月{price}相当・7日間無料",
+    "monthlyUnitLabel": "/月",
+    "yearlyUnitLabel": "/年",
+    "monthlySubtitle": "毎月払い",
+    "yearlySubtitle": "年払い",
+    "yearlyMonthlyPriceLabel": "{price}/月",
     "yearlyBadge": "月間より{rate}%お得"
   },
   "exampleDemo": {

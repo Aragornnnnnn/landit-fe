@@ -1,4 +1,5 @@
 // 소셜 로그인 idToken을 백엔드에 넘겨 자체 access/refresh 토큰을 발급받는다
+import { backendUrl } from '@/shared/api/backend-url';
 import { parseApiResponse } from '@/shared/api/parse';
 import { deviceLanguages } from '@/shared/i18n/device-languages';
 import {
@@ -41,7 +42,7 @@ export async function socialLogin(
   const acceptLanguage = acceptLanguageOf(
     signupLanguages(deviceLanguages(), localeFromDocument()),
   );
-  const response = await fetch(SOCIAL_LOGIN_PATH, {
+  const response = await fetch(backendUrl(SOCIAL_LOGIN_PATH), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

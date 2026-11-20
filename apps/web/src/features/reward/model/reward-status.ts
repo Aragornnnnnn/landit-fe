@@ -78,7 +78,11 @@ const todayGuideOf = (view: RewardView) => {
     : invite;
 };
 
-export const rewardHeroOf = (view: RewardView): RewardHeroMessage => {
+/** @param restartable 이용권을 다시 살 수 있는가 — 판매가 끝났으면 다시 시작을 말하지 않는다 */
+export const rewardHeroOf = (
+  view: RewardView,
+  { restartable = true }: { restartable?: boolean } = {},
+): RewardHeroMessage => {
   const balance = balanceOf(view);
 
   if (view.state === 'ENDED')
@@ -89,7 +93,9 @@ export const rewardHeroOf = (view: RewardView): RewardHeroMessage => {
       guide:
         view.pendingRefundWon > 0
           ? '기간을 끝까지 마쳤어요\n곧 환급 신청할 수 있어요'
-          : '기간이 끝났어요\n다시 시작하면 처음부터 쌓을 수 있어요',
+          : restartable
+            ? '기간이 끝났어요\n다시 시작하면 처음부터 쌓을 수 있어요'
+            : '100일을 모두 마쳤어요',
     };
 
   if (view.state === 'PENDING')

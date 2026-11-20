@@ -118,6 +118,12 @@ describe('rewardHeroOf — 쌓는 중', () => {
 });
 
 describe('rewardHeroOf — 그 밖의 국면', () => {
+  it('이용권을 더 팔지 않으면 기간이 끝난 사람에게 다시 시작 대신 마쳤다고 말한다', () => {
+    const hero = rewardHeroOf(endedRewardView(0), { restartable: false });
+
+    expect(hero.guide).toBe('100일을 모두 마쳤어요');
+  });
+
   it('끝난 사람에게는 돌려받을 금액을 말한다', () => {
     expect(rewardHeroOf(endedRewardView(31920))).toMatchObject({
       label: '돌려받을 금액',

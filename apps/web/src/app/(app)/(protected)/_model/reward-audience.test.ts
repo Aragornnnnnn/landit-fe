@@ -6,6 +6,7 @@ import { asPreviewReplay, rewardAudienceOf } from './reward-audience';
 // 결제가 열린 환경에서 환급 응답까지 받은 무료 유저
 const base = {
   launched: true,
+  selling: true,
   paymentLive: true,
   premium: false as boolean | undefined,
   subscriptionFailed: false,
@@ -17,6 +18,13 @@ const base = {
 describe('rewardAudienceOf', () => {
   it('출시 스위치가 꺼져 있으면 권하지 않고, 더 기다릴 것도 없다', () => {
     expect(rewardAudienceOf({ ...base, launched: false })).toEqual({
+      invited: false,
+      settled: true,
+    });
+  });
+
+  it('환급 판매가 끝났으면 무료 유저에게도 권하지 않는다 — 환급 화면은 이미 산 사람에게만 남는다', () => {
+    expect(rewardAudienceOf({ ...base, selling: false })).toEqual({
       invited: false,
       settled: true,
     });
@@ -97,7 +105,7 @@ describe('asPreviewReplay', () => {
     };
 
     // When 프리뷰 다시 보기로 바꾸면
-    const shown = asPreviewReplay(query);
+    const shown = asPreviewReplay(query, true);
 
     // Then 참여 기록과 놓친 금액 없이, 권할 사람으로 이미 정해진 상태다
     expect(shown).toMatchObject({
@@ -105,6 +113,13 @@ describe('asPreviewReplay', () => {
       preview: null,
       loaded: true,
       invited: true,
+      settled: true,
+    });
+  });
+
+  it('환급을 팔지 않으면 프리뷰 다시 보기에서도 환급을 권하지 않는다', () => {
+    expect(asPreviewReplay({ loaded: false }, false)).toMatchObject({
+      invited: false,
       settled: true,
     });
   });

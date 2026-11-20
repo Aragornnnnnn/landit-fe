@@ -7,7 +7,6 @@
  * - compiler.removeConsole: 프로덕션 빌드(next build)에서만 console.* 전부 제거.
  *   NODE_ENV로 직접 분기 — 옵션 자체가 dev·build를 안 가려서, 걸어두면 `next dev`에서도 지워진다.
  *   유지해야 할 정보(예: API 라우트 실패)는 reportError/reportWarning으로 Sentry에 별도 보고한다
- * - rewrites: /api/* → 백엔드 프록시 (CORS 회피)
  * - withSentryConfig: 소스맵을 Sentry에만 올리고 배포 산출물에서는 삭제
  * - withNextIntl: 요청마다 화면 언어를 정하는 설정 파일(shared/i18n/request.ts)을 연결
  * - experimental.turbopackFileSystemCacheForBuild: 직전 배포의 빌드 캐시를 다시 쓰지 않게 끈다
@@ -23,9 +22,6 @@ import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./src/shared/i18n/request.ts');
-
-// 브라우저가 백엔드를 직접 호출하면 CORS가 걸리므로, 같은 오리진의 /api/*를 백엔드로 프록시한다
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const nextConfig: NextConfig = {
   // TS 원본으로 배포되는 패키지들 — 여기 포함되면 compiler.* 변환도 같이 적용된다
@@ -54,7 +50,7 @@ const nextConfig: NextConfig = {
   // 일부 기기(iOS WebView)에서 앱을 껐다 켜면 항상 흰 화면이 뜨고 재설치(=캐시 초기화)로만
   // 리셋되는 문제가 있다. 재현 패턴상 캐시된 HTML의 재사용 경로가 원인으로 추정되어,
   // 문서 응답은 캐시를 금지해 매번 전체를 새로 받게 한다.
-  // 파일 확장자가 있는 경로(public 에셋)·/_next(청크, 자체 immutable 정책)·/api(백엔드 프록시)는 제외
+  // 파일 확장자가 있는 경로(public 에셋)·/_next(청크, 자체 immutable 정책)·/api(웹 자체 API 라우트)는 제외
   async headers() {
     return [
       // 페이월 그림은 열 때마다 서버에 다시 묻지 않게 하루 동안 그대로 쓰고, 일주일까지는 쓰면서 뒤에서 새로 받는다.
@@ -87,17 +83,6 @@ const nextConfig: NextConfig = {
   // 예전 홈 주소로 온 알림을 서버에서 바로 넘긴다 — 404 상태로 응답하면 앱 셸이 로드 실패 화면을 띄운다
   async redirects() {
     return [{ source: '/home', destination: '/scenario', permanent: false }];
-  },
-  // env가 없으면 프록시가 조용히 꺼진다 — 빌드는 성공하므로 누락은 런타임에야 드러난다
-  async rewrites() {
-    if (!apiBaseUrl) return [];
-
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${apiBaseUrl}/api/:path*`,
-      },
-    ];
   },
 };
 

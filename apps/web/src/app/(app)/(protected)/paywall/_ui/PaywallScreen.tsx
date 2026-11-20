@@ -10,12 +10,12 @@ import {
   type SubscriptionPlan,
 } from '@landit/analytics';
 import { useQueryClient } from '@tanstack/react-query';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { refreshRewardAfterPurchase } from '@/features/reward/model/refresh-reward';
 import { usePaywallDismiss } from '@/features/subscription/model/exit-promo/usePaywallDismiss';
-import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
+import { useOffers } from '@/features/subscription/model/offers/useOffers';
 import {
   toKrwPrices,
   toRegularPrices,
@@ -30,7 +30,6 @@ import {
   type UnlockReason,
 } from '@/features/subscription/model/purchase/usePurchase';
 import { sendAdEvent, track } from '@/shared/analytics';
-import { sellsKoreaOnlyOffers } from '@/shared/i18n/locale';
 import { homePath } from '@/shared/lib/last-tab';
 import { premiumOnboardingPath, type PaywallStep } from '@/shared/lib/routes';
 import { reportWarning } from '@/shared/monitoring/report';
@@ -54,7 +53,7 @@ import { StepPaywall } from './StepPaywall';
 interface PaywallScreenProps {
   /** 결제·복원이 끝난 뒤 돌아갈 내부 경로. 학습 진입에서 막혀 왔을 때만 있고, 없으면 홈으로 간다 */
   returnTo?: string;
-  /** 환급 챌린지를 켤지 — 기본은 환급이 열린 환경인지(useRewardChallengeLive). 테스트와 미리보기만 넘긴다 */
+  /** 환급 챌린지를 켤지 — 기본은 환급을 지금 파는지(useOffers). 테스트와 미리보기만 넘긴다 */
   rewardChallenge?: boolean;
   /** 환급 페이월을 어느 단계에서 열지. 혜택을 이미 본 환급 화면에서 오면 결제 금액 안내부터 */
   startStep?: PaywallStep;
@@ -71,11 +70,10 @@ export const PaywallScreen = ({
   const router = useRouter();
   const t = useTranslations('paywall');
   const tCommon = useTranslations('common');
-  const locale = useLocale();
-  const rewardLive = useRewardChallengeLive();
-  const rewardChallenge = forcedRewardChallenge ?? rewardLive;
-  // 환급이 없는 일본어 화면도 단계형으로 보여 준다 — 결제 단계에서 이용권 대신 월간·연간을 고른다
-  const stepped = rewardChallenge || !sellsKoreaOnlyOffers(locale);
+  const offers = useOffers();
+  const rewardChallenge = forcedRewardChallenge ?? offers.rewardSale;
+  // 환급을 팔지 않아도 단계형으로 보여 준다 — 결제 단계에서 이용권 대신 월간·연간을 고른다
+  const stepped = rewardChallenge || offers.previewFlow;
   // 월간·연간 가운데 고른다(처음엔 연간). 환급 챌린지는 100일 이용권 하나라 고를 것이 없다
   const [selectedId, setSelectedId] =
     useState<SubscriptionPlan>(DEFAULT_PLAN_ID);
@@ -236,10 +234,10 @@ export const PaywallScreen = ({
 
   return (
     <main className="relative mx-auto h-dvh max-w-[430px] overflow-hidden bg-background">
-      {/* 아래 여백은 하단 고정 CTA(버튼+안내) 높이만큼 — 마지막 링크가 버튼 뒤에 깔리지 않게 */}
+      {/* 아래 여백은 하단 고정 CTA 높이만큼 — 마지막 링크가 버튼 뒤에 깔리지 않게 */}
       <div
         data-scroll-root
-        className="relative h-full overflow-y-auto pb-[calc(max(var(--safe-area-inset-bottom),12px)+142px)]"
+        className="relative h-full overflow-y-auto pb-[calc(max(var(--safe-area-inset-bottom),12px)+100px)]"
         onScroll={(event) => {
           setScrolled(event.currentTarget.scrollTop > 48);
           exit.noteScroll(event.currentTarget);
@@ -279,12 +277,10 @@ export const PaywallScreen = ({
         </button>
       )}
 
-      {/* 위쪽은 투명에서 바탕색으로 번져, 스크롤되는 내용이 버튼 뒤로 자연스럽게 사라진다.
-          결제 안내는 버튼 바로 밑에 둔다 — 청구액·갱신·해지는 스토어 심사(3.1.2)가 결제 버튼 곁에서 확인한다 */}
+      {/* 위쪽은 투명에서 바탕색으로 번져, 스크롤되는 내용이 버튼 뒤로 자연스럽게 사라진다 */}
       <footer className="absolute inset-x-0 bottom-0 z-20 bg-[linear-gradient(to_bottom,transparent,var(--color-background)_28px)] px-5 pt-9 pb-[max(var(--safe-area-inset-bottom),12px)]">
         <PurchaseCta
           label={getCtaLabel(regularPlan, t)}
-          plan={regularPlan}
           busy={busy}
           onPurchase={startPurchase}
           priceRetry={priceRetry}

@@ -1,4 +1,4 @@
-// 환급을 누구에게 권할지 정하는 규칙 — 출시 스위치, 결제 환경, 구독 여부, 환급 참여 여부를 한 곳에서 본다
+// 환급을 누구에게 권할지 정하는 규칙 — 환급 화면이 열렸는지, 지금 파는지, 결제 환경, 구독 여부, 환급 참여 여부를 한 곳에서 본다
 export interface RewardAudience {
   // 환급을 권할 사람 — 결제가 열린 환경에서, 환급에 참여한 적 없는 무료 유저
   invited: boolean;
@@ -8,6 +8,7 @@ export interface RewardAudience {
 
 export const rewardAudienceOf = ({
   launched,
+  selling,
   paymentLive,
   premium,
   subscriptionFailed,
@@ -15,8 +16,10 @@ export const rewardAudienceOf = ({
   rewardFailed,
   participant,
 }: {
-  // 환급 챌린지 출시 스위치
+  // 환급 화면이 열린 환경인가 — 판매가 끝나도 이미 산 사람에게는 열려 있다
   launched: boolean;
+  // 환급을 지금 파는가 — 팔지 않으면 아무에게도 권하지 않는다
+  selling: boolean;
   paymentLive: boolean;
   // 구독 여부. 아직 모르면 undefined
   premium: boolean | undefined;
@@ -34,7 +37,12 @@ export const rewardAudienceOf = ({
   const subscriptionSettled =
     !paymentLive || premium !== undefined || subscriptionFailed;
   return {
-    invited: rewardLoaded && !participant && paymentLive && premium === false,
+    invited:
+      selling &&
+      rewardLoaded &&
+      !participant &&
+      paymentLive &&
+      premium === false,
     settled: (rewardLoaded || rewardFailed) && subscriptionSettled,
   };
 };
@@ -43,13 +51,17 @@ export const rewardAudienceOf = ({
  * 프리뷰 다시 보기(개발자 묶음)에서는 환급을 권할 무료 유저로 친다 — 유료·참여자 계정도 홈에 돌아온 순간의 동전 연출과
  * 「0원 프리미엄 시작하기」 알약을 실제 첫 대화 뒤처럼 본다. 참여 기록과 놓친 금액은 지워 평소 진입 글자가 보이게 한다
  */
-export const asPreviewReplay = <Query extends object>(query: Query) => ({
+export const asPreviewReplay = <Query extends object>(
+  query: Query,
+  // 환급을 지금 파는가 — 팔지 않으면 다시 보기도 환급 없는 프리뷰다
+  selling: boolean,
+) => ({
   ...query,
   reward: null,
   preview: null,
   // 다시 보기는 처음 보는 무료 유저로 친다 — 보관 중인 돈도 없는 것으로
   storedWon: 0,
   loaded: true,
-  invited: true,
+  invited: selling,
   settled: true,
 });

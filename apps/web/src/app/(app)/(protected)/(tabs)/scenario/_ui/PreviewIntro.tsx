@@ -94,11 +94,14 @@ export const PreviewIntro = ({
   // 금액은 처음 뜬 값으로 고정한다 — 쓰는 도중 가격이 도착해 글자 수가 바뀌면 문장이 잘린다
   const [won] = useState(dailyWon);
   // 한 자씩 쓰려면 태그가 남은 원문이 필요하다 — 조각은 partsOf가 만든다
-  const freeRaw: string = t.raw('freeExpressionBody');
+  // 적립 문장 뒤에서는 맞춤 표현이 「또 다른 혜택」이지만, 적립 문장이 없으면 앞에 혜택 이야기가 없어 그 말을 뺀 문장을 쓴다
   const sentences =
     won === null
-      ? plainSentencesOf(t.raw('dailyScenarioBody'), freeRaw)
-      : rewardSentencesOf(won, freeRaw);
+      ? plainSentencesOf(
+          t.raw('dailyScenarioBody'),
+          t.raw('plainFreeExpressionBody'),
+        )
+      : rewardSentencesOf(won, t.raw('freeExpressionBody'));
   const lengths = sentences.map(({ parts }) => lengthOf(parts));
   const [typing, setTyping] = useState(INITIAL_TYPING);
 

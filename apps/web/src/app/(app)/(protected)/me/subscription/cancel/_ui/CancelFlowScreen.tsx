@@ -21,7 +21,7 @@ import {
 } from '@/features/subscription/model/my-subscription/subscription-summary';
 import { useStorePlatform } from '@/features/subscription/model/my-subscription/useStorePlatform';
 import { useSubscriptionQuery } from '@/features/subscription/model/my-subscription/useSubscriptionQuery';
-import { useRewardChallengeLive } from '@/features/subscription/model/paywall-gate/useRewardChallengeLive';
+import { useOffers } from '@/features/subscription/model/offers/useOffers';
 import { track } from '@/shared/analytics';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import {
@@ -72,7 +72,8 @@ const Flow = ({ summary, paidStore }: FlowProps) => {
   const { data: profile } = useLearningLevelQuery();
   const level = toEnglishLevel(profile?.learningLevel ?? null);
   // 가격 부담 화면이 환급을 쌓는 중인 사람에게 다른 답을 한다 — 스위치가 꺼져 있으면 묻지 않는다
-  const rewardLive = useRewardChallengeLive();
+  // 판매가 끝나도 이미 산 사람에게는 걸린 환급액을 말해 준다
+  const rewardLive = useOffers().rewardView;
   const { reward } = useRewardQuery({ enabled: rewardLive });
   // 꺼진 쿼리도 캐시에 남은 답을 돌려준다 — 한국어에서 받아 둔 환급이 일본어 화면에 새지 않게 스위치로 한 번 더 막는다
   const stake = rewardLive ? refundStakeOf(reward) : null;
