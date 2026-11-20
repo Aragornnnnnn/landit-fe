@@ -1,13 +1,11 @@
-// 플랜 한 줄 — 누르면 선택된다. 왼쪽에 이름과 결제 주기, 오른쪽에 실제 청구액. 선택 표시는 줄 사이를 스프링으로 옮겨 다니는 주황 프레임과 골드 배지, 체크 아이콘은 두지 않는다
+// 플랜 한 줄 — 누르면 선택된다. 왼쪽에 이름과 결제 주기, 오른쪽에 실제 청구액. 선택 표시는 고른 줄에서 켜지는 주황 프레임과 골드 배지, 체크 아이콘은 두지 않는다
 'use client';
 
-import { motion, useReducedMotion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
 import { formatPrice } from '@/features/subscription/lib/store-price';
 import { type PaywallPlan } from '@/features/subscription/model/product/plans';
 import { GOLD_GRADIENT } from '@/features/subscription/ui/premium-brand';
-import { SPRING_SELECT } from '@/shared/motion';
 
 interface PlanCardProps {
   plan: PaywallPlan;
@@ -18,7 +16,6 @@ interface PlanCardProps {
 // 골드 그라데이션 — PREMIUM 배지와 같은 색으로, 화면에서 '프리미엄'을 뜻하는 색은 이것 하나다
 export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
   const t = useTranslations('paywall.planCard');
-  const reduced = useReducedMotion() ?? false;
   const yearly = plan.id === 'yearly';
   const title = t('selectLabel', {
     title: t(yearly ? 'yearlyTitle' : 'monthlyTitle'),
@@ -39,19 +36,17 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
       aria-pressed={selected}
       onClick={() => onSelect(plan)}
       // isolate로 스택 문맥을 만들어, -z-10 프레임이 줄 배경 위·글자 아래에 깔리게 한다
-      className="relative isolate flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left"
+      className="relative isolate flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left transition-transform duration-150 active:scale-[0.985] motion-reduce:transition-none"
     >
-      {/* 선택 프레임은 하나뿐이고 layoutId로 이어져, 다른 줄을 고르면 그 자리로 미끄러져 간다.
+      {/* 선택 프레임은 줄마다 하나씩 깔려 있고 고른 줄만 떠오른다. 세로로 떨어진 두 줄 사이를 프레임이 미끄러지면
+          빈 틈을 지나가 어색해서, 떠나는 줄은 가라앉고 고른 줄은 살짝 커지며 켜지게 한다.
           2px 테두리는 줄 1px 테두리 바깥으로 1px 넘치게 깔아 크기 변화 없이 덮는다 */}
-      {selected && (
-        <motion.span
-          layoutId="plan-selection"
-          aria-hidden="true"
-          className="absolute -inset-px -z-10 border-2 border-primary bg-[#fffcf8]"
-          style={{ borderRadius: 16 }}
-          transition={reduced ? { duration: 0 } : SPRING_SELECT}
-        />
-      )}
+      <span
+        aria-hidden="true"
+        className={`absolute -inset-px -z-10 rounded-2xl border-2 border-primary bg-[#fffcf8] transition-[opacity,scale] duration-200 ease-out motion-reduce:transition-none ${
+          selected ? 'scale-100 opacity-100' : 'scale-[0.985] opacity-0'
+        }`}
+      />
 
       {/* 배지는 할인을 강조하는 줄만 위 테두리 오른쪽에 걸친다. 고른 줄에서는 골드로 켜져 선택이 배지까지 따라온다.
           회색 배경은 항상 깔고 골드는 그 위에 이미지로만 얹는다 — 색 전환 중 배지가 비쳐 뒤의 테두리 선이 보이지 않게 */}
