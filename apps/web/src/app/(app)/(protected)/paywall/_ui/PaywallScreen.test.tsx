@@ -188,9 +188,7 @@ describe('PaywallScreen', () => {
     expect(
       screen.getByRole('button', { name: '월 14,900원으로 시작하기' }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText('매월 14,900원 정기 결제 · 언제든 해지 가능'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('매월 14,900원 정기 결제')).toBeInTheDocument();
     expect(
       screen.getByText(
         '결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요',
@@ -228,9 +226,7 @@ describe('PaywallScreen', () => {
     };
     render(<PaywallScreen />);
 
-    expect(
-      screen.getByText('매년 49,900원 정기 결제 · 언제든 해지 가능'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('매년 49,900원 정기 결제')).toBeInTheDocument();
     expect(mocks.purchaseOptions?.packages).toEqual({
       monthly: mocks.packages.monthly,
       yearly: mocks.promo.yearly,
@@ -245,7 +241,9 @@ describe('PaywallScreen', () => {
 
     expect(screen.getByText('연 58,500원')).toBeInTheDocument();
     expect(screen.getByText('월간보다 67% 저렴')).toBeInTheDocument();
-    expect(screen.getByText('월 4,900원꼴 · 매년 결제')).toBeInTheDocument();
+    expect(screen.getByText('월 4,900원꼴')).toBeInTheDocument();
+    // 월간 카드에는 작은 글씨를 두지 않는다 — 결제 주기는 큰 숫자가 말하고, 해지 안내는 버튼 아래 한 줄로만 한다
+    expect(screen.queryByText(/매달 결제|언제든 해지/)).not.toBeInTheDocument();
     expect(screen.queryByText('월 4,900원')).not.toBeInTheDocument();
   });
 

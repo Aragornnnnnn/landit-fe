@@ -37,24 +37,18 @@ describe('getCtaLabel', () => {
 });
 
 describe('getBillingNotice', () => {
-  it('연간은 체험 뒤 청구될 연 결제액과 해지 가능을 알린다', () => {
-    expect(getBillingNotice(yearly, t)).toBe(
-      '매년 58,500원 정기 결제 · 언제든 해지 가능',
-    );
+  it('연간은 해마다 청구될 결제액을 알린다', () => {
+    expect(getBillingNotice(yearly, t)).toBe('매년 58,500원 정기 결제');
   });
 
-  it('월간은 매달 정기 결제되는 금액과 해지 가능을 알린다', () => {
-    expect(getBillingNotice(monthly, t)).toBe(
-      '매월 14,900원 정기 결제 · 언제든 해지 가능',
-    );
+  it('월간은 매달 정기 결제되는 금액을 알린다', () => {
+    expect(getBillingNotice(monthly, t)).toBe('매월 14,900원 정기 결제');
   });
 
   it('엔화 스토어면 금액을 엔화로 알린다', () => {
     const yen = buildPaywallPlans({ monthly: 980, yearly: 5_800 }, 'JPY');
 
-    expect(getBillingNotice(yen.yearly, t)).toBe(
-      '매년 5,800円 정기 결제 · 언제든 해지 가능',
-    );
+    expect(getBillingNotice(yen.yearly, t)).toBe('매년 5,800円 정기 결제');
     expect(getCtaLabel(yen.monthly, t)).toBe('월 980円으로 시작하기');
   });
 });
@@ -65,9 +59,7 @@ describe('일본어 화면', () => {
 
     expect(getCtaLabel(yen.yearly, tJa)).toBe('年額5,800円で始める');
     expect(getCtaLabel(yen.monthly, tJa)).toBe('月額980円で始める');
-    expect(getBillingNotice(yen.yearly, tJa)).toBe(
-      '毎年5,800円で自動更新。いつでも解約できます',
-    );
+    expect(getBillingNotice(yen.yearly, tJa)).toBe('毎年5,800円で自動更新');
   });
 });
 

@@ -13,7 +13,7 @@ export const getCtaLabel = (plan: PaywallPlan, t: CheckoutTranslator) =>
     price: priceOf(plan),
   });
 
-/** CTA 아래 결제 안내. 자동 갱신 금액과 해지 가능은 스토어 심사가 화면에서 확인하는 항목이라 항상 붙인다 */
+/** CTA 아래 결제 안내 첫 줄 — 자동 갱신 금액과 주기. 스토어 심사가 화면에서 확인하는 항목이라 항상 붙인다. 해지 안내는 둘째 줄(getCancelNotice)이 맡는다 */
 export const getBillingNotice = (plan: PaywallPlan, t: CheckoutTranslator) =>
   t(plan.id === 'yearly' ? 'yearlyBillingCaption' : 'monthlyBillingCaption', {
     price: priceOf(plan),

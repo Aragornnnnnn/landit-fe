@@ -3,8 +3,8 @@
   "yearlyStartButton": "年額{price}で始める",
   "priceRetryButton": "価格を再読み込み",
   "monthlyStartButton": "月額{price}で始める",
-  "yearlyBillingCaption": "毎年{price}で自動更新。いつでも解約できます",
-  "monthlyBillingCaption": "毎月{price}で自動更新。いつでも解約できます",
+  "yearlyBillingCaption": "毎年{price}で自動更新",
+  "monthlyBillingCaption": "毎月{price}で自動更新",
   "yearlyCancelCaption": "更新日の24時間前までに解約すれば翌年分は請求されません",
   "monthlyCancelCaption": "更新日の24時間前までに解約すれば翌月分は請求されません",
   "benefitsStep": {
@@ -66,8 +66,7 @@
     "selectLabel": "{title}",
     "monthlyPriceLabel": "月額{price}",
     "yearlyPriceLabel": "年額{price}",
-    "monthlySubtitle": "毎月払い・いつでも解約",
-    "yearlySubtitle": "月{price}相当・年払い",
+    "yearlySubtitle": "月{price}相当",
     "yearlyBadge": "月間より{rate}%お得"
   },
   "exampleDemo": {
