@@ -26,7 +26,7 @@ describe('getCtaLabel', () => {
   });
 
   it('월간을 고르면 체험 없이 월 결제액으로 시작한다고 말한다', () => {
-    expect(getCtaLabel(monthly, t)).toBe('월 14,900원으로 시작하기');
+    expect(getCtaLabel(monthly, t)).toBe('월 5,900원으로 시작하기');
   });
 
   it('스토어 가격이 다르면 그 금액으로 말한다', () => {
@@ -42,7 +42,7 @@ describe('getBillingNotice', () => {
   });
 
   it('월간은 매달 정기 결제되는 금액을 알린다', () => {
-    expect(getBillingNotice(monthly, t)).toBe('매월 14,900원 정기 결제');
+    expect(getBillingNotice(monthly, t)).toBe('매월 5,900원 정기 결제');
   });
 
   it('엔화 스토어면 금액을 엔화로 알린다', () => {

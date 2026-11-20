@@ -51,6 +51,11 @@ describe('buildPaywallPlans — 등록값', () => {
     expect(monthly.listPrice).toBeUndefined();
   });
 
+  it('등록값 기준 연간은 월간 1년치 70,800원을 비교가로, 월간보다 17% 싸다고 말한다', () => {
+    expect(yearly.listPrice).toBe(70_800);
+    expect(yearly.discountRate).toBe(17);
+  });
+
   it('월간 카드는 달마다 청구액을 그대로 큰 숫자로 쓴다', () => {
     expect(monthly.monthlyPrice).toBe(monthly.price);
   });
@@ -98,7 +103,7 @@ describe('buildPaywallPlans — 스토어 가격', () => {
   it('한 플랜만 주면 나머지는 등록값을 쓴다', () => {
     const { monthly, yearly } = buildPaywallPlans({ yearly: 49_900 });
 
-    expect(monthly.price).toBe(14_900);
+    expect(monthly.price).toBe(5_900);
     expect(yearly.price).toBe(49_900);
   });
 });

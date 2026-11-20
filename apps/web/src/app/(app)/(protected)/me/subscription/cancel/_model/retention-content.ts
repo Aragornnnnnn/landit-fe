@@ -94,7 +94,7 @@ interface RetentionContext {
   otherText: string;
 }
 
-/** 하루 환산 요금 — 원화는 10원 단위(월 14,900 → 500, 연 58,500 → 160), 엔화는 1엔 단위로 반올림한다 */
+/** 하루 환산 요금 — 원화는 10원 단위(월 5,900 → 200, 연 58,500 → 160), 엔화는 1엔 단위로 반올림한다 */
 export const dailyPrice = (price: StorePrice, days: number): StorePrice => {
   const unit = price.currency === 'KRW' ? 10 : 1;
   return {
