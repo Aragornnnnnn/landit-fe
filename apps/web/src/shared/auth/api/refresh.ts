@@ -1,4 +1,5 @@
 // refreshToken으로 accessToken을 새로 발급받는다
+import { backendUrl } from '@/shared/api/backend-url';
 import { parseApiResponse } from '@/shared/api/parse';
 import { useAuthStore } from '@/shared/auth/auth-store';
 
@@ -36,7 +37,7 @@ async function doRefresh(): Promise<string | null> {
   if (!refreshToken || !member) return null;
 
   try {
-    const response = await fetch(REFRESH_PATH, {
+    const response = await fetch(backendUrl(REFRESH_PATH), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),

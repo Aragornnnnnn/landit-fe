@@ -7,6 +7,7 @@ import { socialLogin } from './social-login';
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
   document.documentElement.lang = '';
   delete window.__LANDIT_NATIVE__;
 });
@@ -22,6 +23,17 @@ const okFetch = () => {
 };
 
 describe('socialLogin', () => {
+  it('백엔드 주소로 바로 보낸다', async () => {
+    vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', 'https://api.example.com');
+    const fetchMock = okFetch();
+
+    await socialLogin('google', 'id-token', 'nonce');
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://api.example.com/api/v1/auth/social-login',
+    );
+  });
+
   it('Accept-Language에 화면 언어가 아니라 기기 선호 언어 목록을 우선순위대로 싣는다', async () => {
     const fetchMock = okFetch();
     vi.spyOn(navigator, 'languages', 'get').mockReturnValue([
