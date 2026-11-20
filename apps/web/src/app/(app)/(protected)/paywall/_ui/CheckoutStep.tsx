@@ -37,7 +37,7 @@ const PassCard = ({ plan }: { plan: RewardPlan }) => {
   const listPrice = listPriceOf(plan.price);
 
   return (
-    // 고를 것이 이용권 하나뿐이라 처음부터 골라 둔 모양으로 그린다 — 플랜 카드의 선택 상태와 같은 테두리·바탕
+    // 고를 것이 이용권 하나뿐이라 처음부터 골라 둔 모양으로 그린다 — 주황 2px 테두리와 크림 바탕
     <div className="rounded-[20px] border-2 border-primary bg-[#fffcf8] px-4 py-3 shadow-[0_6px_16px_rgba(224,122,58,0.12)]">
       <p className="flex items-center gap-1.5">
         <span className="text-15 font-bold text-[#c4601f]">

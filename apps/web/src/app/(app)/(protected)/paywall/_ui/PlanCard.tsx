@@ -21,6 +21,7 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
   const yearly = plan.id === 'yearly';
   const cycleId = useId();
   const priceId = useId();
+  const monthlyPriceId = useId();
   const title = t('selectLabel', {
     title: t(yearly ? 'yearlyTitle' : 'monthlyTitle'),
   });
@@ -30,8 +31,14 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
       type="button"
       // 줄 안 글자가 많아 이름을 따로 준다 — 연간 배지의 "월간보다" 같은 문구와 섞이지 않게
       aria-label={title}
-      // 이름은 플랜 이름 하나로 두고, 결제 주기와 청구액은 설명으로 이어 읽힌다. 가격을 못 받은 줄은 줄표를 읽지 않게 주기만 잇는다
-      aria-describedby={plan.unpriced ? cycleId : `${cycleId} ${priceId}`}
+      // 이름은 플랜 이름 하나로 두고, 결제 주기·청구액·월 환산가는 설명으로 끊어 읽힌다. 가격을 못 받은 줄은 줄표를 읽지 않게 주기만 잇는다
+      aria-describedby={
+        plan.unpriced
+          ? cycleId
+          : [cycleId, priceId, yearly && monthlyPriceId]
+              .filter(Boolean)
+              .join(' ')
+      }
       aria-pressed={selected}
       onClick={() => onSelect(plan)}
       // isolate로 스택 문맥을 만들어, -z-10 프레임이 줄 배경 위·글자 아래에 깔리게 한다
@@ -67,7 +74,7 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
         <span
           aria-hidden="true"
           className={`flex size-5 shrink-0 items-center justify-center rounded-full transition-colors duration-200 motion-reduce:transition-none ${
-            selected ? 'bg-primary' : 'bg-[#e5e5e2]'
+            selected ? 'bg-primary' : 'bg-border'
           }`}
         >
           <CheckIcon size={12} strokeWidth={3.25} className="text-white" />
@@ -87,11 +94,8 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
       {/* 큰 숫자는 실제 청구액이다(심사 3.1.2(c)). 연간만 그 아래 작은 글씨로 월 환산가를 둬, 아래 줄의 월간 금액과 같은 자리에서 견준다.
           글자 크기 배율을 받지 않는다 — 크게 단계에서 금액이 끊기지 않게.
           스토어 가격을 못 받은 줄은 줄표만 둔다 — 등록값(원화)이 다른 통화 화면에 보이지 않게 */}
-      <span
-        id={priceId}
-        className="flex shrink-0 flex-col items-end whitespace-nowrap [--font-scale:1]"
-      >
-        <span className="flex items-baseline gap-0.5">
+      <span className="flex shrink-0 flex-col items-end whitespace-nowrap [--font-scale:1]">
+        <span id={priceId} className="flex items-baseline gap-0.5">
           <span className="text-20 leading-[1.1] font-bold text-foreground">
             {plan.unpriced ? '–' : formatPrice(plan.price, plan.currency)}
           </span>
@@ -102,7 +106,10 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
           )}
         </span>
         {yearly && !plan.unpriced && (
-          <span className="text-12 leading-[1.3] text-muted-foreground">
+          <span
+            id={monthlyPriceId}
+            className="text-12 leading-[1.3] text-muted-foreground"
+          >
             {t('yearlyMonthlyPriceLabel', {
               price: formatPrice(plan.monthlyPrice, plan.currency),
             })}

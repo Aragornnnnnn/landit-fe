@@ -243,7 +243,7 @@ describe('PaywallScreen', () => {
     // 화면을 읽어 주는 도구에도 결제 주기와 청구액이 플랜 이름 뒤에 이어 읽힌다
     expect(
       screen.getByRole('button', { name: '연간 플랜' }),
-    ).toHaveAccessibleDescription('매년 결제 58,500원/년4,900원/월');
+    ).toHaveAccessibleDescription('매년 결제 58,500원/년 4,900원/월');
     // 금액 옆 단위가 청구 주기를 말한다
     expect(screen.getByText('/년')).toBeInTheDocument();
     expect(screen.getByText('/월')).toBeInTheDocument();
