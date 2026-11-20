@@ -240,6 +240,10 @@ describe('PaywallScreen', () => {
     expect(screen.getByText('월간보다 67% 저렴')).toBeInTheDocument();
     // 두 줄 모두 결제 주기를 말하고, 연간만 청구액 아래에 월 환산가를 작게 둔다. 취소선 비교가는 두지 않는다
     expect(screen.queryByText(/178,800원/)).not.toBeInTheDocument();
+    // 화면을 읽어 주는 도구에도 결제 주기와 청구액이 플랜 이름 뒤에 이어 읽힌다
+    expect(
+      screen.getByRole('button', { name: '연간 플랜' }),
+    ).toHaveAccessibleDescription('매년 결제 58,500원/년4,900원/월');
     // 금액 옆 단위가 청구 주기를 말한다
     expect(screen.getByText('/년')).toBeInTheDocument();
     expect(screen.getByText('/월')).toBeInTheDocument();
@@ -343,6 +347,9 @@ describe('PaywallScreen', () => {
     expect(screen.queryByText(/저렴/)).not.toBeInTheDocument();
     expect(screen.getByText('매년 결제')).toBeInTheDocument();
     expect(screen.getByText('매월 결제')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '연간 플랜' }),
+    ).toHaveAccessibleDescription('매년 결제');
   });
 
   it('스토어 가격이 없으면 어느 플랜이 비었는지 모니터링에 남긴다', () => {

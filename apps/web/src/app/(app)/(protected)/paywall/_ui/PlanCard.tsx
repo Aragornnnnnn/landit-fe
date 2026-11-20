@@ -1,6 +1,7 @@
 // 플랜 한 줄 — 누르면 선택된다. 왼쪽에 체크와 이름·결제 주기, 오른쪽에 실제 청구액(연간은 그 아래 월 환산가). 선택 표시는 주황으로 차는 체크 동그라미와 고른 줄에서 켜지는 주황 테두리, 골드 배지
 'use client';
 
+import { useId } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { formatPrice } from '@/features/subscription/lib/store-price';
@@ -18,6 +19,8 @@ interface PlanCardProps {
 export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
   const t = useTranslations('paywall.planCard');
   const yearly = plan.id === 'yearly';
+  const cycleId = useId();
+  const priceId = useId();
   const title = t('selectLabel', {
     title: t(yearly ? 'yearlyTitle' : 'monthlyTitle'),
   });
@@ -27,6 +30,8 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
       type="button"
       // 줄 안 글자가 많아 이름을 따로 준다 — 연간 배지의 "월간보다" 같은 문구와 섞이지 않게
       aria-label={title}
+      // 이름은 플랜 이름 하나로 두고, 결제 주기와 청구액은 설명으로 이어 읽힌다. 가격을 못 받은 줄은 줄표를 읽지 않게 주기만 잇는다
+      aria-describedby={plan.unpriced ? cycleId : `${cycleId} ${priceId}`}
       aria-pressed={selected}
       onClick={() => onSelect(plan)}
       // isolate로 스택 문맥을 만들어, -z-10 프레임이 줄 배경 위·글자 아래에 깔리게 한다
@@ -71,7 +76,10 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
           <span className="text-16 leading-[1.3] font-bold text-foreground">
             {title}
           </span>
-          <span className="text-12 leading-[1.3] text-muted-foreground">
+          <span
+            id={cycleId}
+            className="text-12 leading-[1.3] text-muted-foreground"
+          >
             {t(yearly ? 'yearlySubtitle' : 'monthlySubtitle')}
           </span>
         </span>
@@ -79,7 +87,10 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
       {/* 큰 숫자는 실제 청구액이다(심사 3.1.2(c)). 연간만 그 아래 작은 글씨로 월 환산가를 둬, 아래 줄의 월간 금액과 같은 자리에서 견준다.
           글자 크기 배율을 받지 않는다 — 크게 단계에서 금액이 끊기지 않게.
           스토어 가격을 못 받은 줄은 줄표만 둔다 — 등록값(원화)이 다른 통화 화면에 보이지 않게 */}
-      <span className="flex shrink-0 flex-col items-end whitespace-nowrap [--font-scale:1]">
+      <span
+        id={priceId}
+        className="flex shrink-0 flex-col items-end whitespace-nowrap [--font-scale:1]"
+      >
         <span className="flex items-baseline gap-0.5">
           <span className="text-20 leading-[1.1] font-bold text-foreground">
             {plan.unpriced ? '–' : formatPrice(plan.price, plan.currency)}
