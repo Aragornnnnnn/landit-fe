@@ -1,4 +1,4 @@
-// 결제 칸 — 「플랜을 선택하세요」와 지금 플랜(월간·연간) 카드. 아래에 약관 링크·구매 복원. 결제·해지 안내는 하단 고정 CTA 밑에 있다.
+// 결제 칸 — 「플랜을 선택하세요」와 지금 플랜(연간·월간) 두 줄. 아래에 약관 링크·구매 복원.
 // 환급 챌린지의 결제 칸은 결제 금액 안내(CheckoutStep)에 있다
 import type { SubscriptionPlan } from '@landit/analytics';
 import Link from 'next/link';
@@ -38,8 +38,8 @@ export const PlanSection = ({
       }
     />
     {/* 결제가 걸린 조작부라 등장 연출을 걸지 않는다 — 연출이 멎어 흐린 채로 눌리면 안 된다 */}
-    {/* 배지가 카드 위 테두리에 걸치니 그만큼 위를 띄운다 */}
-    <div className="mt-5 flex gap-2.5 px-5 pt-2.5">
+    {/* 배지가 첫 줄 위 테두리에 걸치니 그만큼 위를 띄운다 */}
+    <div className="mt-5 flex flex-col gap-2.5 px-5 pt-2.5">
       {PLAN_ORDER.map((id) => (
         <PlanCard
           key={id}

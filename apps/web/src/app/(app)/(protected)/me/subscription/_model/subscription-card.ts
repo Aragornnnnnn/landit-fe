@@ -70,7 +70,8 @@ export const toDateRow = (
 
 // 갱신되는 구독이고 실제 결제액을 알 때만. 무료 체험 중이면 결제 이력이 없어 이 행이 없다 —
 // 등록값으로 추측하면 할인가나 옛 가격으로 묶인 사람에게 남의 금액을 보여준다.
-// 연간의 비교 기준은 내 결제액이 아니라 월간 12개월치라, 실제 금액이 와도 취소선 숫자는 그대로다
+// 연간의 비교 기준은 내 결제액이 아니라 월간 12개월치라, 실제 금액이 와도 취소선 숫자는 그대로다.
+// 다만 내 결제액이 그보다 싸지 않으면(옛 정가 연간) 비교가를 뺀다 — 취소선이 실제 금액보다 낮게 보이면 안 된다
 export const toAmountRow = (
   summary: PaidSubscriptionSummary,
   t: SubscriptionTranslator,
@@ -86,7 +87,9 @@ export const toAmountRow = (
     value: formatStorePrice(price),
     // 비교가(월간 1년치)는 원화 정가라 원화 구독에만 붙인다
     listPrice:
-      plan === 'yearly' && price.currency === 'KRW'
+      plan === 'yearly' &&
+      price.currency === 'KRW' &&
+      price.amount < YEARLY_LIST_PRICE
         ? formatWon(YEARLY_LIST_PRICE)
         : undefined,
   };

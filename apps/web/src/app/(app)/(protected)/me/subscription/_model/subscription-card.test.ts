@@ -105,7 +105,7 @@ describe('toAmountRow', () => {
       {
         label: '다음 결제 금액',
         value: '58,500원',
-        listPrice: '178,800원',
+        listPrice: '70,800원',
       },
     );
     expect(
@@ -142,8 +142,18 @@ describe('toAmountRow', () => {
     expect(amountRowKo(active({ plan: 'yearly', price: won(47000) }))).toEqual({
       label: '다음 결제 금액',
       value: '47,000원',
-      listPrice: '178,800원',
+      listPrice: '70,800원',
     });
+  });
+
+  it('결제액이 월간 12개월치보다 싸지 않으면 비교가를 빼고 금액만 보여 준다 — 취소선이 실제 금액보다 낮으면 안 된다', () => {
+    expect(amountRowKo(active({ plan: 'yearly', price: won(94_500) }))).toEqual(
+      {
+        label: '다음 결제 금액',
+        value: '94,500원',
+        listPrice: undefined,
+      },
+    );
   });
 
   it('실제 결제액을 모르면 금액 행이 없다 — 무료 체험 중엔 결제 이력이 없어 등록값으로 추측하지 않는다', () => {

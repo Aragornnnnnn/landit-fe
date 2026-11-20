@@ -3,7 +3,6 @@ import { useTranslations } from 'next-intl';
 
 import {
   CalendarIcon,
-  GlobeIcon,
   ListChecksIcon,
   MessageSquareIcon,
   MicIcon,
@@ -19,7 +18,6 @@ import {
 const ICONS: Record<BenefitIcon, typeof CalendarIcon> = {
   calendar: CalendarIcon,
   'list-checks': ListChecksIcon,
-  globe: GlobeIcon,
   sparkles: SparklesIcon,
   mic: MicIcon,
   chat: MessageSquareIcon,

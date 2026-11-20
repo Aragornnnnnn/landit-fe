@@ -204,7 +204,7 @@ describe('StepPaywall — 일본어 구독', () => {
     expect(screen.queryByText(REVIEWS[0].body)).not.toBeInTheDocument();
   });
 
-  it('결제 단계는 월간·연간 카드와 고른 플랜의 결제 안내를 보여 준다', () => {
+  it('결제 단계는 연간·월간 줄과 각 줄의 결제 주기를 보여 준다', () => {
     const onSelect = vi.fn();
     renderSubscription(onSelect);
 
@@ -217,9 +217,8 @@ describe('StepPaywall — 일본어 구독', () => {
     expect(
       screen.getByRole('button', { name: '年額9,800円で始める' }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText('毎年9,800円で自動更新。いつでも解約できます'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('年払い')).toBeInTheDocument();
+    expect(screen.getByText('820円/月')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '月間プラン' }));
     expect(onSelect).toHaveBeenCalledWith('monthly');
   });

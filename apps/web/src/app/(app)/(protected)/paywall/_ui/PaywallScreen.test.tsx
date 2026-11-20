@@ -180,7 +180,7 @@ describe('PaywallScreen', () => {
     ).toBeInTheDocument();
   });
 
-  it('월간 카드를 누르면 CTA와 결제 안내가 월간용으로 바뀌고 선택 이벤트를 찍는다', () => {
+  it('월간 줄을 누르면 CTA가 월간용으로 바뀌고 선택 이벤트를 찍는다', () => {
     render(<PaywallScreen />);
 
     fireEvent.click(screen.getByRole('button', { name: '월간 플랜' }));
@@ -188,14 +188,9 @@ describe('PaywallScreen', () => {
     expect(
       screen.getByRole('button', { name: '월 14,900원으로 시작하기' }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText('매월 14,900원 정기 결제 · 언제든 해지 가능'),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        '결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요',
-      ),
-    ).toBeInTheDocument();
+    // 버튼 밑에는 결제·해지 안내를 두지 않는다 — 금액과 주기는 플랜 줄이 말한다
+    expect(screen.queryByText(/정기 결제/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/청구되지 않아요/)).not.toBeInTheDocument();
     expect(mocks.track).toHaveBeenCalledWith('Paywall Plan Selected', {
       plan: 'monthly',
     });
@@ -228,24 +223,34 @@ describe('PaywallScreen', () => {
     };
     render(<PaywallScreen />);
 
-    expect(
-      screen.getByText('매년 49,900원 정기 결제 · 언제든 해지 가능'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('49,900원')).toBeInTheDocument();
     expect(mocks.purchaseOptions?.packages).toEqual({
       monthly: mocks.packages.monthly,
       yearly: mocks.promo.yearly,
     });
   });
 
-  it('카드의 큰 숫자는 실제 청구액이고 월 환산가는 부제로만 쓴다 — 스토어 심사 3.1.2(c)', () => {
+  it('줄의 큰 숫자는 실제 청구액이고 월 환산가는 부제로만 쓴다 — 스토어 심사 3.1.2(c)', () => {
     mocks.promo = {
       yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
     };
     render(<PaywallScreen />);
 
-    expect(screen.getByText('연 58,500원')).toBeInTheDocument();
+    expect(screen.getByText('58,500원')).toBeInTheDocument();
     expect(screen.getByText('월간보다 67% 저렴')).toBeInTheDocument();
-    expect(screen.getByText('월 4,900원꼴 · 매년 결제')).toBeInTheDocument();
+    // 두 줄 모두 결제 주기를 말하고, 연간만 청구액 아래에 월 환산가를 작게 둔다. 취소선 비교가는 두지 않는다
+    expect(screen.queryByText(/178,800원/)).not.toBeInTheDocument();
+    // 화면을 읽어 주는 도구에도 결제 주기와 청구액이 플랜 이름 뒤에 이어 읽힌다
+    expect(
+      screen.getByRole('button', { name: '연간 플랜' }),
+    ).toHaveAccessibleDescription('매년 결제 58,500원/년 4,900원/월');
+    // 금액 옆 단위가 청구 주기를 말한다
+    expect(screen.getByText('/년')).toBeInTheDocument();
+    expect(screen.getByText('/월')).toBeInTheDocument();
+    expect(screen.getByText('매월 결제')).toBeInTheDocument();
+    expect(screen.getByText('매년 결제')).toBeInTheDocument();
+    expect(screen.getByText('4,900원/월')).toBeInTheDocument();
+    expect(screen.queryByText(/언제든 해지/)).not.toBeInTheDocument();
     expect(screen.queryByText('월 4,900원')).not.toBeInTheDocument();
   });
 
@@ -259,8 +264,8 @@ describe('PaywallScreen', () => {
     };
     render(<PaywallScreen />);
 
-    expect(screen.getByText('연 58,500원')).toBeInTheDocument();
-    expect(screen.queryByText('연 94,500원')).not.toBeInTheDocument();
+    expect(screen.getByText('58,500원')).toBeInTheDocument();
+    expect(screen.queryByText('94,500원')).not.toBeInTheDocument();
     expect(mocks.purchaseOptions?.packages).toEqual({
       yearly: { packageId: 'annual_discount', price: 58_500, currency: 'KRW' },
       monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
@@ -271,7 +276,7 @@ describe('PaywallScreen', () => {
     mocks.offeringSettled = true;
     render(<PaywallScreen />);
 
-    expect(screen.queryByText('연 94,500원')).not.toBeInTheDocument();
+    expect(screen.queryByText('94,500원')).not.toBeInTheDocument();
     expect(mocks.purchaseOptions?.packages).toEqual({
       monthly: { packageId: '$rc_monthly', price: 14_900, currency: 'KRW' },
     });
@@ -284,8 +289,8 @@ describe('PaywallScreen', () => {
     mocks.packages = {};
     render(<PaywallScreen />);
 
-    expect(screen.getByText('연 58,500원')).toBeInTheDocument();
-    expect(screen.queryByText('연 94,500원')).not.toBeInTheDocument();
+    expect(screen.getByText('58,500원')).toBeInTheDocument();
+    expect(screen.queryByText('94,500원')).not.toBeInTheDocument();
   });
 
   it('오퍼링을 받는 동안은 CTA가 잠긴다 — 할인 패키지가 오기 전에 정가 상품으로 결제되지 않게', () => {
@@ -329,13 +334,22 @@ describe('PaywallScreen', () => {
     expect(mocks.purchase).toHaveBeenCalledWith('yearly');
   });
 
-  it('스토어 가격이 없으면 카드에 등록값을 그리지 않는다 — 다른 통화의 금액이 보이지 않게', () => {
+  it('스토어 가격이 없으면 플랜 줄에 등록값을 그리지 않는다 — 다른 통화의 금액이 보이지 않게', () => {
     mocks.offeringSettled = true;
     mocks.packages = {};
     render(<PaywallScreen />);
 
-    expect(screen.queryByText('연 58,500원')).not.toBeInTheDocument();
-    expect(screen.queryByText('월 14,900원')).not.toBeInTheDocument();
+    // 금액 자리는 줄표, 단위와 월 환산가·배지는 그리지 않고 결제 주기만 남는다
+    expect(screen.queryByText(/\d원/)).not.toBeInTheDocument();
+    expect(screen.getAllByText('–')).toHaveLength(2);
+    expect(screen.queryByText('/년')).not.toBeInTheDocument();
+    expect(screen.queryByText('/월')).not.toBeInTheDocument();
+    expect(screen.queryByText(/저렴/)).not.toBeInTheDocument();
+    expect(screen.getByText('매년 결제')).toBeInTheDocument();
+    expect(screen.getByText('매월 결제')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '연간 플랜' }),
+    ).toHaveAccessibleDescription('매년 결제');
   });
 
   it('스토어 가격이 없으면 어느 플랜이 비었는지 모니터링에 남긴다', () => {
@@ -369,7 +383,7 @@ describe('PaywallScreen', () => {
     expect(
       screen.getByRole('button', { name: /^연 .+으로 시작하기$/ }),
     ).toBeInTheDocument();
-    expect(screen.getByText('연 58,500원')).toBeInTheDocument();
+    expect(screen.getByText('58,500원')).toBeInTheDocument();
   });
 
   it('스토어 가격이 없으면 월간을 골라도 가격을 다시 불러온다', () => {
@@ -460,7 +474,7 @@ describe('PaywallScreen', () => {
       'aria-pressed',
       'true',
     );
-    expect(screen.getByText('年額9,800円')).toBeInTheDocument();
+    expect(screen.getByText('9,800円')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '月間プラン' }));
     fireEvent.click(
       screen.getByRole('button', { name: '月額1,500円で始める' }),
@@ -483,7 +497,7 @@ describe('PaywallScreen', () => {
       'aria-pressed',
       'true',
     );
-    expect(screen.getByText('연 58,500원')).toBeInTheDocument();
+    expect(screen.getByText('58,500원')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '월간 플랜' }));
     fireEvent.click(
       screen.getByRole('button', { name: '월 14,900원으로 시작하기' }),
