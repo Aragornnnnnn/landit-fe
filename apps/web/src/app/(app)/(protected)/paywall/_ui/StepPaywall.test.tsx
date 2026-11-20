@@ -217,7 +217,7 @@ describe('StepPaywall — 일본어 구독', () => {
     expect(
       screen.getByRole('button', { name: '年額9,800円で始める' }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/^年払い・月.+相当$/)).toBeInTheDocument();
+    expect(screen.getByText('年払い・月820円相当')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '月間プラン' }));
     expect(onSelect).toHaveBeenCalledWith('monthly');
   });

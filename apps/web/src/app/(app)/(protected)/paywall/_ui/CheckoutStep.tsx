@@ -1,5 +1,5 @@
 // 단계형 페이월 2단계 — 결제 금액 안내. 예전 한 페이지 페이월처럼 로고와 캐릭터, 무료 vs 프리미엄 표, 그리고 파는 것을
-// 한 화면에 담는다. 환급 챌린지는 고를 것 없는 100일 이용권 카드 한 장, 일본어 화면은 월간·연간 플랜 카드 두 장이다. 혜택 설명은 앞 화면에서 했으니 여기선 무엇을 얼마에 사는지만 또렷하게. 피그마 「결제 금액 안내 v4」(3563:322)
+// 한 화면에 담는다. 환급 챌린지는 고를 것 없는 100일 이용권 카드 한 장, 구독은 연간·월간 플랜 두 줄이다. 혜택 설명은 앞 화면에서 했으니 여기선 무엇을 얼마에 사는지만 또렷하게. 피그마 「결제 금액 안내 v4」(3563:322)
 import type { CSSProperties } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
@@ -22,13 +22,13 @@ import { rewardBenefitsOf, type RewardPlan } from '../_model/paywall-content';
 import type { StepOffer } from '../_model/step-offer';
 import { PlanCard } from './PlanCard';
 
-/** 캐릭터 그림 높이 — 기본(그림 너비 257px)과, 긴 화면에서 키울 수 있는 끝 */
-const HERO_MIN_PX = 131;
+/** 캐릭터 그림 높이 — 줄일 수 있는 끝(낮은 화면과 같은 크기, 그림 너비 204px)과 긴 화면에서 키울 수 있는 끝. 그 사이에서는 스크롤이 생기지 않는 만큼만 키운다 */
+const HERO_MIN_PX = 104;
 const HERO_MAX_PX = 180;
 /** 그림 밖 내용 높이 — 위아래 안전 영역 기본값(8px·12px)을 뺀 나머지 전부(헤더·로고·표·이용권 카드·약관·버튼 자리) */
 const HERO_REST_PX = 614;
-/** 세로로 쌓은 플랜 두 줄이 이용권 카드 한 장보다 높은 만큼 — 구독은 그만큼 그림을 줄인다 */
-const SUBSCRIPTION_EXTRA_PX = 64;
+/** 구독 화면이 이용권 화면보다 높은 만큼 — 세로로 쌓은 플랜 두 줄이 이용권 카드 한 장보다 높고, 비교표는 적립 줄이 없어 한 줄 짧다. 그만큼 그림을 줄인다 */
+const SUBSCRIPTION_EXTRA_PX = 33;
 /** 계산이 조금 어긋나도 스크롤이 생기지 않게 남기는 여유 */
 const HERO_SPARE_PX = 16;
 

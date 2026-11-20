@@ -240,6 +240,9 @@ describe('PaywallScreen', () => {
     expect(screen.getByText('월간보다 67% 저렴')).toBeInTheDocument();
     // 두 줄 모두 결제 주기를 말하고, 연간만 월 환산가를 덧붙인다. 취소선 비교가는 두지 않는다
     expect(screen.queryByText(/178,800원/)).not.toBeInTheDocument();
+    // 금액 옆 단위가 청구 주기를 말한다
+    expect(screen.getByText('/년')).toBeInTheDocument();
+    expect(screen.getByText('/월')).toBeInTheDocument();
     expect(screen.getByText('매월 결제')).toBeInTheDocument();
     expect(screen.getByText('매년 결제 · 월 4,900원꼴')).toBeInTheDocument();
     expect(screen.queryByText(/언제든 해지/)).not.toBeInTheDocument();
@@ -326,13 +329,19 @@ describe('PaywallScreen', () => {
     expect(mocks.purchase).toHaveBeenCalledWith('yearly');
   });
 
-  it('스토어 가격이 없으면 카드에 등록값을 그리지 않는다 — 다른 통화의 금액이 보이지 않게', () => {
+  it('스토어 가격이 없으면 플랜 줄에 등록값을 그리지 않는다 — 다른 통화의 금액이 보이지 않게', () => {
     mocks.offeringSettled = true;
     mocks.packages = {};
     render(<PaywallScreen />);
 
-    expect(screen.queryByText('58,500원')).not.toBeInTheDocument();
-    expect(screen.queryByText('월 14,900원')).not.toBeInTheDocument();
+    // 금액 자리는 줄표, 단위와 월 환산가·배지는 그리지 않고 결제 주기만 남는다
+    expect(screen.queryByText(/\d원/)).not.toBeInTheDocument();
+    expect(screen.getAllByText('–')).toHaveLength(2);
+    expect(screen.queryByText('/년')).not.toBeInTheDocument();
+    expect(screen.queryByText('/월')).not.toBeInTheDocument();
+    expect(screen.queryByText(/저렴/)).not.toBeInTheDocument();
+    expect(screen.getByText('매년 결제')).toBeInTheDocument();
+    expect(screen.getByText('매월 결제')).toBeInTheDocument();
   });
 
   it('스토어 가격이 없으면 어느 플랜이 비었는지 모니터링에 남긴다', () => {

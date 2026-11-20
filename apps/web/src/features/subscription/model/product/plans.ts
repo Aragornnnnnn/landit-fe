@@ -1,4 +1,4 @@
-// 지금 플랜(월간·연간)의 표시값 — 숫자는 여기 한 곳에만 둔다. 페이월 카드와 구독 관리의 결제 금액이 같이 쓴다 (docs/subscription.md 「상품과 가격」)
+// 지금 플랜(월간·연간)의 표시값 — 숫자는 여기 한 곳에만 둔다. 페이월 플랜 줄과 구독 관리의 결제 금액이 같이 쓴다 (docs/subscription.md 「상품과 가격」)
 // 기본값은 스토어 등록값(원화)이고, 셸이 준 가격(원·엔)이 있으면 buildPaywallPlans가 그 값으로 전부 다시 계산한다
 import type { SubscriptionPlan } from '@landit/analytics';
 
@@ -7,20 +7,18 @@ import { type PricedCurrency } from '../../lib/store-price';
 /** 지금 플랜 — 월간·연간. 환급 챌린지의 100일 이용권은 페이월이 따로 그린다 */
 export type RegularPlan = Extract<SubscriptionPlan, 'monthly' | 'yearly'>;
 
-/** 카드 한 장에 그릴 값 전부. 문구는 화면이 언어대로 붙인다. 큰 숫자는 실제 청구액이다 — 월 환산가가 더 눈에 띄면 스토어 심사 3.1.2(c)에서 반려된다 */
+/** 플랜 한 줄에 그릴 값 전부. 문구는 화면이 언어대로 붙인다. 큰 숫자는 실제 청구액이다 — 월 환산가가 더 눈에 띄면 스토어 심사 3.1.2(c)에서 반려된다 */
 export interface PaywallPlan {
   id: RegularPlan;
   /** 금액들의 통화 — 스토어가 준 통화이고, 못 받았으면 원화 등록값이다 */
   currency: PricedCurrency;
-  /** 취소선으로 보여줄 비교가. 청구액과 같은 주기다. 비교 기준이 없는 카드(월간)는 비워 둔다 */
-  listPrice?: number;
   /** 월 기준 금액. 연간은 연 결제액을 달로 나눈 환산값으로, 배지와 부제에만 쓴다 */
   monthlyPrice: number;
   /** 큰 숫자 — 실제 청구액. 스토어 등록값과 같아야 한다 (월간은 달마다, 연간은 해마다) */
   price: number;
-  /** 카드 위 테두리 배지의 할인율(%). 할인을 강조하는 카드에만 있다 */
+  /** 줄 위 테두리 배지의 할인율(%). 할인을 강조하는 줄에만 있다 */
   discountRate?: number;
-  /** 스토어 가격을 못 받아 금액을 그리지 않는 카드. 이때 숫자들은 등록값이라 화면에 내지 않는다 */
+  /** 스토어 가격을 못 받아 금액을 그리지 않는 줄. 이때 숫자들은 등록값이라 화면에 내지 않는다 */
   unpriced?: boolean;
 }
 
@@ -89,8 +87,6 @@ export const buildPaywallPlans = (
     yearly: {
       id: 'yearly',
       currency,
-      // 연간의 비교 기준은 스토어에 없는 정가가 아니라 월간으로 1년 낼 때의 실제 금액이다
-      listPrice: monthlyPrice * 12,
       monthlyPrice: yearlyMonthly,
       price: yearlyPrice,
       discountRate: calculateDiscountRate(monthlyPrice, yearlyMonthly),

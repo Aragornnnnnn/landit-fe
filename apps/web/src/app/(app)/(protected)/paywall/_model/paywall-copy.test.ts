@@ -1,4 +1,4 @@
-// 선택한 플랜에 따라 갈리는 CTA·결제 안내 문구 계약 — 금액은 플랜(스토어 가격 반영본)에서 읽는다
+// 선택한 플랜에 따라 갈리는 CTA 문구 계약 — 금액은 플랜(스토어 가격 반영본)에서 읽는다
 import { createTranslator } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 
