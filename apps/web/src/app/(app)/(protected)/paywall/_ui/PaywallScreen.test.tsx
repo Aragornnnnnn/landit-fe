@@ -238,13 +238,14 @@ describe('PaywallScreen', () => {
 
     expect(screen.getByText('58,500원')).toBeInTheDocument();
     expect(screen.getByText('월간보다 67% 저렴')).toBeInTheDocument();
-    // 두 줄 모두 결제 주기를 말하고, 연간만 월 환산가를 덧붙인다. 취소선 비교가는 두지 않는다
+    // 두 줄 모두 결제 주기를 말하고, 연간만 청구액 아래에 월 환산가를 작게 둔다. 취소선 비교가는 두지 않는다
     expect(screen.queryByText(/178,800원/)).not.toBeInTheDocument();
     // 금액 옆 단위가 청구 주기를 말한다
     expect(screen.getByText('/년')).toBeInTheDocument();
     expect(screen.getByText('/월')).toBeInTheDocument();
     expect(screen.getByText('매월 결제')).toBeInTheDocument();
-    expect(screen.getByText('매년 결제 · 월 4,900원꼴')).toBeInTheDocument();
+    expect(screen.getByText('매년 결제')).toBeInTheDocument();
+    expect(screen.getByText('4,900원/월')).toBeInTheDocument();
     expect(screen.queryByText(/언제든 해지/)).not.toBeInTheDocument();
     expect(screen.queryByText('월 4,900원')).not.toBeInTheDocument();
   });

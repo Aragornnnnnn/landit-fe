@@ -62,9 +62,9 @@
     "selectLabel": "{title}",
     "monthlyUnitLabel": "/月",
     "yearlyUnitLabel": "/年",
-    "yearlyCycleLabel": "年払い",
     "monthlySubtitle": "毎月払い",
-    "yearlySubtitle": "年払い・月{price}相当",
+    "yearlySubtitle": "年払い",
+    "yearlyMonthlyPriceLabel": "{price}/月",
     "yearlyBadge": "月間より{rate}%お得"
   },
   "exampleDemo": {

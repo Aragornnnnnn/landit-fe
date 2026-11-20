@@ -1,4 +1,4 @@
-// 플랜 한 줄 — 누르면 선택된다. 왼쪽에 이름과 결제 주기, 오른쪽에 실제 청구액. 선택 표시는 고른 줄에서 켜지는 주황 프레임과 골드 배지, 체크 아이콘은 두지 않는다
+// 플랜 한 줄 — 누르면 선택된다. 왼쪽에 체크와 이름·결제 주기, 오른쪽에 실제 청구액(연간은 그 아래 월 환산가). 선택 표시는 주황으로 차는 체크 동그라미와 고른 줄에서 켜지는 주황 테두리, 골드 배지
 'use client';
 
 import { useTranslations } from 'next-intl';
@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { formatPrice } from '@/features/subscription/lib/store-price';
 import { type PaywallPlan } from '@/features/subscription/model/product/plans';
 import { GOLD_GRADIENT } from '@/features/subscription/ui/premium-brand';
+import { CheckIcon } from '@/shared/ui/Icons';
 
 interface PlanCardProps {
   plan: PaywallPlan;
@@ -20,13 +21,6 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
   const title = t('selectLabel', {
     title: t(yearly ? 'yearlyTitle' : 'monthlyTitle'),
   });
-  // 작은 글씨는 결제 주기 — 연간만 월 환산가를 덧붙인다. 스토어 가격을 못 받았으면 환산가도 등록값이라 주기만 적는다
-  const subtitle =
-    yearly && !plan.unpriced
-      ? t('yearlySubtitle', {
-          price: formatPrice(plan.monthlyPrice, plan.currency),
-        })
-      : t(yearly ? 'yearlyCycleLabel' : 'monthlySubtitle');
 
   return (
     <button
@@ -38,12 +32,12 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
       // isolate로 스택 문맥을 만들어, -z-10 프레임이 줄 배경 위·글자 아래에 깔리게 한다
       className="relative isolate flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left transition-transform duration-150 active:scale-[0.985] motion-reduce:transition-none"
     >
-      {/* 선택 프레임은 줄마다 하나씩 깔려 있고 고른 줄만 떠오른다. 세로로 떨어진 두 줄 사이를 프레임이 미끄러지면
-          빈 틈을 지나가 어색해서, 떠나는 줄은 가라앉고 고른 줄은 살짝 커지며 켜지게 한다.
+      {/* 선택 테두리는 줄마다 하나씩 깔려 있고 고른 줄만 켜진다. 세로로 떨어진 두 줄 사이를 테두리가 미끄러지면
+          빈 틈을 지나가 어색해서, 떠나는 줄은 꺼지고 고른 줄은 살짝 커지며 켜지게 한다. 배경색은 바꾸지 않는다 — 체크와 테두리가 이미 선택을 말한다.
           2px 테두리는 줄 1px 테두리 바깥으로 1px 넘치게 깔아 크기 변화 없이 덮는다 */}
       <span
         aria-hidden="true"
-        className={`absolute -inset-px -z-10 rounded-2xl border-2 border-primary bg-[#fffcf8] transition-[opacity,scale] duration-200 ease-out motion-reduce:transition-none ${
+        className={`absolute -inset-px -z-10 rounded-2xl border-2 border-primary bg-card transition-[opacity,scale] duration-200 ease-out motion-reduce:transition-none ${
           selected ? 'scale-100 opacity-100' : 'scale-[0.985] opacity-0'
         }`}
       />
@@ -63,25 +57,44 @@ export const PlanCard = ({ plan, selected, onSelect }: PlanCardProps) => {
         </span>
       )}
 
-      <span className="flex min-w-0 flex-col gap-0.5">
+      <span className="flex min-w-0 items-center gap-3">
+        {/* 체크 동그라미가 선택을 색 말고 모양으로도 알린다 — 안 고른 줄은 연한 회색, 고른 줄은 주황으로 찬다 */}
         <span
-          className={`text-16 leading-[1.3] font-bold transition-colors ${selected ? 'text-[#c4601f]' : 'text-foreground'}`}
+          aria-hidden="true"
+          className={`flex size-5 shrink-0 items-center justify-center rounded-full transition-colors duration-200 motion-reduce:transition-none ${
+            selected ? 'bg-primary' : 'bg-[#e5e5e2]'
+          }`}
         >
-          {title}
+          <CheckIcon size={12} strokeWidth={3.25} className="text-white" />
         </span>
-        <span className="text-12 leading-[1.3] text-muted-foreground">
-          {subtitle}
+        <span className="flex min-w-0 flex-col gap-0.5">
+          <span className="text-16 leading-[1.3] font-bold text-foreground">
+            {title}
+          </span>
+          <span className="text-12 leading-[1.3] text-muted-foreground">
+            {t(yearly ? 'yearlySubtitle' : 'monthlySubtitle')}
+          </span>
         </span>
       </span>
-      {/* 큰 숫자는 실제 청구액이다(심사 3.1.2(c)). 글자 크기 배율을 받지 않는다 — 크게 단계에서 금액이 끊기지 않게.
+      {/* 큰 숫자는 실제 청구액이다(심사 3.1.2(c)). 연간만 그 아래 작은 글씨로 월 환산가를 둬, 아래 줄의 월간 금액과 같은 자리에서 견준다.
+          글자 크기 배율을 받지 않는다 — 크게 단계에서 금액이 끊기지 않게.
           스토어 가격을 못 받은 줄은 줄표만 둔다 — 등록값(원화)이 다른 통화 화면에 보이지 않게 */}
-      <span className="flex shrink-0 items-baseline gap-0.5 whitespace-nowrap [--font-scale:1]">
-        <span className="text-20 leading-[1.2] font-bold text-foreground">
-          {plan.unpriced ? '–' : formatPrice(plan.price, plan.currency)}
+      <span className="flex shrink-0 flex-col items-end whitespace-nowrap [--font-scale:1]">
+        <span className="flex items-baseline gap-0.5">
+          <span className="text-20 leading-[1.1] font-bold text-foreground">
+            {plan.unpriced ? '–' : formatPrice(plan.price, plan.currency)}
+          </span>
+          {!plan.unpriced && (
+            <span className="text-13 leading-[1.2] font-medium text-muted-foreground">
+              {t(yearly ? 'yearlyUnitLabel' : 'monthlyUnitLabel')}
+            </span>
+          )}
         </span>
-        {!plan.unpriced && (
-          <span className="text-13 leading-[1.2] font-medium text-muted-foreground">
-            {t(yearly ? 'yearlyUnitLabel' : 'monthlyUnitLabel')}
+        {yearly && !plan.unpriced && (
+          <span className="text-12 leading-[1.3] text-muted-foreground">
+            {t('yearlyMonthlyPriceLabel', {
+              price: formatPrice(plan.monthlyPrice, plan.currency),
+            })}
           </span>
         )}
       </span>
