@@ -3,10 +3,6 @@
   "yearlyStartButton": "年額{price}で始める",
   "priceRetryButton": "価格を再読み込み",
   "monthlyStartButton": "月額{price}で始める",
-  "yearlyBillingCaption": "毎年{price}で自動更新",
-  "monthlyBillingCaption": "毎月{price}で自動更新",
-  "yearlyCancelCaption": "更新日の24時間前までに解約すれば翌年分は請求されません",
-  "monthlyCancelCaption": "更新日の24時間前までに解約すれば翌月分は請求されません",
   "benefitsStep": {
     "title": "毎日届くシナリオを<br></br><premium>プレミアム</premium>で学びましょう",
     "benefitsTitle": "プレミアムだけの特典{count}つ",
@@ -64,8 +60,9 @@
     "monthlyTitle": "月間プラン",
     "yearlyTitle": "年間プラン",
     "selectLabel": "{title}",
-    "monthlyPriceLabel": "月額{price}",
-    "yearlyPriceLabel": "年額{price}",
+    "monthlyUnitLabel": "/月",
+    "yearlyUnitLabel": "/年",
+    "yearlyCycleLabel": "年払い",
     "monthlySubtitle": "毎月払い",
     "yearlySubtitle": "年払い・月{price}相当",
     "yearlyBadge": "月間より{rate}%お得"

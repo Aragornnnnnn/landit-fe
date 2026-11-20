@@ -21,17 +21,14 @@ import { ChevronLeftIcon, CloseIcon } from '@/shared/ui/Icons';
 import { rewardBenefitsOf, type RewardPlan } from '../_model/paywall-content';
 import type { StepOffer } from '../_model/step-offer';
 import { PlanCard } from './PlanCard';
-import { NOTICES_HEIGHT_PX } from './PurchaseNotices';
 
 /** 캐릭터 그림 높이 — 기본(그림 너비 257px)과, 긴 화면에서 키울 수 있는 끝 */
 const HERO_MIN_PX = 131;
 const HERO_MAX_PX = 180;
 /** 그림 밖 내용 높이 — 위아래 안전 영역 기본값(8px·12px)을 뺀 나머지 전부(헤더·로고·표·이용권 카드·약관·버튼 자리) */
 const HERO_REST_PX = 614;
-/** 플랜 카드 두 장이 이용권 카드 한 장보다 높은 만큼 */
-const PLAN_CARDS_EXTRA_PX = 22;
-/** 구독은 플랜 카드가 높고 버튼 밑에 결제 안내 두 줄이 붙어, 그만큼 그림을 줄인다 */
-const SUBSCRIPTION_EXTRA_PX = PLAN_CARDS_EXTRA_PX + NOTICES_HEIGHT_PX;
+/** 세로로 쌓은 플랜 두 줄이 이용권 카드 한 장보다 높은 만큼 — 구독은 그만큼 그림을 줄인다 */
+const SUBSCRIPTION_EXTRA_PX = 64;
 /** 계산이 조금 어긋나도 스크롤이 생기지 않게 남기는 여유 */
 const HERO_SPARE_PX = 16;
 
@@ -161,8 +158,8 @@ export const CheckoutStep = ({
             <PassCard plan={offer.plan} />
           </div>
         ) : (
-          // 배지가 카드 위 테두리에 걸치니 그만큼 위를 띄운다
-          <div className="mt-3.5 flex gap-2.5 pt-2.5">
+          // 배지가 첫 줄 위 테두리에 걸치니 그만큼 위를 띄운다
+          <div className="mt-3.5 flex flex-col gap-2.5 pt-2.5">
             {PLAN_ORDER.map((id) => (
               <PlanCard
                 key={id}

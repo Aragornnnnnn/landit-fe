@@ -41,8 +41,8 @@ describe('calculateMonthlyEquivalent', () => {
 describe('buildPaywallPlans — 등록값', () => {
   const { monthly, yearly } = buildPaywallPlans();
 
-  it('월간·연간 순서로 놓이고 기본 선택은 연간이다', () => {
-    expect(PLAN_ORDER).toEqual(['monthly', 'yearly']);
+  it('연간·월간 순서로 놓이고 기본 선택은 연간이다', () => {
+    expect(PLAN_ORDER).toEqual(['yearly', 'monthly']);
     expect(DEFAULT_PLAN_ID).toBe('yearly');
   });
 

@@ -63,10 +63,8 @@ export const StepPaywall = ({
   const t = useTranslations();
   const tPaywall = useTranslations('paywall');
   const [step, setStep] = useState<Step>(startStep);
-  // 구독을 파는 결제 단계면 고른 플랜의 결제·해지 안내를 버튼 밑에 둔다
   const subscriptionPlan =
     offer.kind === 'subscription' ? offer.plans[offer.selectedId] : null;
-  const showsNotices = subscriptionPlan !== null && step === 'checkout';
   const [scrolled, setScrolled] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -134,7 +132,7 @@ export const StepPaywall = ({
           setScrolled(event.currentTarget.scrollTop > 48);
           onScroll?.(event.currentTarget);
         }}
-        className={`relative h-full overflow-y-auto ${showsNotices ? 'pb-[calc(max(var(--safe-area-inset-bottom),12px)+142px)]' : 'pb-[calc(max(var(--safe-area-inset-bottom),12px)+100px)]'} ${step === 'benefits' ? 'bg-card' : ''}`}
+        className={`relative h-full overflow-y-auto pb-[calc(max(var(--safe-area-inset-bottom),12px)+100px)] ${step === 'benefits' ? 'bg-card' : ''}`}
       >
         {step === 'benefits' ? (
           <>
@@ -184,7 +182,6 @@ export const StepPaywall = ({
                 ? getCtaLabel(subscriptionPlan, tPaywall)
                 : '프리미엄 시작하기'
             }
-            plan={subscriptionPlan ?? undefined}
             busy={busy}
             onPurchase={onPurchase}
             priceRetry={priceRetry}

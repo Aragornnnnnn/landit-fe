@@ -6,7 +6,7 @@ import { buildPaywallPlans } from '@/features/subscription/model/product/plans';
 import ja from '@/shared/i18n/locales/ja';
 import ko from '@/shared/i18n/locales/ko';
 
-import { getBillingNotice, getCancelNotice, getCtaLabel } from './paywall-copy';
+import { getCtaLabel } from './paywall-copy';
 
 const { monthly, yearly } = buildPaywallPlans();
 const t = createTranslator({
@@ -36,40 +36,19 @@ describe('getCtaLabel', () => {
   });
 });
 
-describe('getBillingNotice', () => {
-  it('연간은 해마다 청구될 결제액을 알린다', () => {
-    expect(getBillingNotice(yearly, t)).toBe('매년 58,500원 정기 결제');
-  });
-
-  it('월간은 매달 정기 결제되는 금액을 알린다', () => {
-    expect(getBillingNotice(monthly, t)).toBe('매월 5,900원 정기 결제');
-  });
-
-  it('엔화 스토어면 금액을 엔화로 알린다', () => {
+describe('엔화 스토어', () => {
+  it('금액을 엔화로 적는다', () => {
     const yen = buildPaywallPlans({ monthly: 980, yearly: 5_800 }, 'JPY');
 
-    expect(getBillingNotice(yen.yearly, t)).toBe('매년 5,800円 정기 결제');
     expect(getCtaLabel(yen.monthly, t)).toBe('월 980円으로 시작하기');
   });
 });
 
 describe('일본어 화면', () => {
-  it('엔화 금액을 일본어 결제 안내로 적는다', () => {
+  it('엔화 금액을 일본어 CTA로 적는다', () => {
     const yen = buildPaywallPlans({ monthly: 980, yearly: 5_800 }, 'JPY');
 
     expect(getCtaLabel(yen.yearly, tJa)).toBe('年額5,800円で始める');
     expect(getCtaLabel(yen.monthly, tJa)).toBe('月額980円で始める');
-    expect(getBillingNotice(yen.yearly, tJa)).toBe('毎年5,800円で自動更新');
-  });
-});
-
-describe('getCancelNotice', () => {
-  it('연간과 월간 모두 결제일 24시간 전 해지를 안내한다', () => {
-    expect(getCancelNotice(yearly, t)).toBe(
-      '결제일 24시간 전까지 해지하면 다음 해는 청구되지 않아요',
-    );
-    expect(getCancelNotice(monthly, t)).toBe(
-      '결제일 24시간 전까지 해지하면 다음 달은 청구되지 않아요',
-    );
   });
 });

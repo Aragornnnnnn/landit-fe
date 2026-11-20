@@ -24,8 +24,8 @@ export interface PaywallPlan {
   unpriced?: boolean;
 }
 
-/** 카드가 놓이는 순서 — 왼쪽 월간, 오른쪽 연간 */
-export const PLAN_ORDER: readonly RegularPlan[] = ['monthly', 'yearly'];
+/** 플랜 줄이 놓이는 순서 — 위가 연간, 아래가 월간 */
+export const PLAN_ORDER: readonly RegularPlan[] = ['yearly', 'monthly'];
 
 export const DEFAULT_PLAN_ID: RegularPlan = 'yearly';
 

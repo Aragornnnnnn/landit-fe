@@ -234,10 +234,10 @@ export const PaywallScreen = ({
 
   return (
     <main className="relative mx-auto h-dvh max-w-[430px] overflow-hidden bg-background">
-      {/* 아래 여백은 하단 고정 CTA(버튼+안내) 높이만큼 — 마지막 링크가 버튼 뒤에 깔리지 않게 */}
+      {/* 아래 여백은 하단 고정 CTA 높이만큼 — 마지막 링크가 버튼 뒤에 깔리지 않게 */}
       <div
         data-scroll-root
-        className="relative h-full overflow-y-auto pb-[calc(max(var(--safe-area-inset-bottom),12px)+142px)]"
+        className="relative h-full overflow-y-auto pb-[calc(max(var(--safe-area-inset-bottom),12px)+100px)]"
         onScroll={(event) => {
           setScrolled(event.currentTarget.scrollTop > 48);
           exit.noteScroll(event.currentTarget);
@@ -277,12 +277,10 @@ export const PaywallScreen = ({
         </button>
       )}
 
-      {/* 위쪽은 투명에서 바탕색으로 번져, 스크롤되는 내용이 버튼 뒤로 자연스럽게 사라진다.
-          결제 안내는 버튼 바로 밑에 둔다 — 청구액·갱신·해지는 스토어 심사(3.1.2)가 결제 버튼 곁에서 확인한다 */}
+      {/* 위쪽은 투명에서 바탕색으로 번져, 스크롤되는 내용이 버튼 뒤로 자연스럽게 사라진다 */}
       <footer className="absolute inset-x-0 bottom-0 z-20 bg-[linear-gradient(to_bottom,transparent,var(--color-background)_28px)] px-5 pt-9 pb-[max(var(--safe-area-inset-bottom),12px)]">
         <PurchaseCta
           label={getCtaLabel(regularPlan, t)}
-          plan={regularPlan}
           busy={busy}
           onPurchase={startPurchase}
           priceRetry={priceRetry}
