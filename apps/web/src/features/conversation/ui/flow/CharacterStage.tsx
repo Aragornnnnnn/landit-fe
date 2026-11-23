@@ -1,6 +1,7 @@
 // 캐릭터 무대 — 대화 상대가 전신으로 서 있는 화면 전체 배경. 대화 칸은 턱 선(STAGE_CHIN_LINE) 아래에 놓인다
 'use client';
 
+import type { CSSProperties } from 'react';
 import { motion } from 'motion/react';
 
 import type { CharacterLook, Partner } from '../../model/character-look';
@@ -11,6 +12,7 @@ import {
   CHARACTER_BOX,
   STAGE_BACKGROUND_CLASS,
   STAGE_CHIN_LINE,
+  STAGE_SWAY_TURN,
 } from './stage-layout';
 
 /**
@@ -45,6 +47,8 @@ export const CharacterStage = ({
     <div
       aria-hidden
       className={`pointer-events-none absolute inset-x-0 top-0 -z-10 h-dvh overflow-hidden ${STAGE_BACKGROUND_CLASS}`}
+      // 전신이라 흔들림 각도를 줄인다(STAGE_SWAY_TURN 참고) — 캐릭터 상자까지 상속된다
+      style={{ '--sway-turn': STAGE_SWAY_TURN } as CSSProperties}
     >
       <motion.div
         initial={{ y: 24, opacity: 0 }}

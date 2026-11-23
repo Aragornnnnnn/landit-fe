@@ -177,14 +177,15 @@
   }
 }
 
-/* 호흡 4.2초와 주기가 어긋나 같은 자세가 반복되지 않는다 */
+/* 호흡 4.2초와 주기가 어긋나 같은 자세가 반복되지 않는다.
+   각도는 소비처가 --sway-turn으로 바꿀 수 있다 — 회전축(상자 바닥)에서 머리가 멀수록 같은 각도에도 머리가 크게 움직인다 */
 @keyframes weight-shift {
   0%,
   100% {
-    transform: rotate(0.25deg) translateX(1px);
+    transform: rotate(var(--sway-turn, 0.25deg)) translateX(1px);
   }
   50% {
-    transform: rotate(-0.25deg) translateX(-1px);
+    transform: rotate(calc(-1 * var(--sway-turn, 0.25deg))) translateX(-1px);
   }
 }
 

@@ -30,6 +30,13 @@ export const STAGE_CHIN_LINE = `calc(${HEAD_TOP} + ${FACES_ABOVE_CHIN} * ${STAGE
 export const STAGE_BACKGROUND_CLASS =
   'bg-[linear-gradient(to_bottom,var(--gray-100),var(--gray-200)_62%)]';
 
+/**
+ * 몸 흔들림 각도. 흔들림은 상자 바닥을 축으로 도는데, 전신 상자는 축에서 머리까지가 얼굴 11개로
+ * 상반신 상자(얼굴 3.2개)의 3.4배라 기본 각도(0.25deg)면 머리가 3배 넘게 움직인다.
+ * 상반신 때 머리 이동의 1.4배쯤이 되게 줄였다 — 몸이 다 보이니 조금은 더 움직여야 살아 있어 보인다
+ */
+export const STAGE_SWAY_TURN = '0.1deg';
+
 /** 캐릭터 상자(프레임 전체)의 위 끝·너비·높이 — 무대 안에서만 쓴다 */
 export const CHARACTER_BOX = {
   top: HEAD_TOP,
