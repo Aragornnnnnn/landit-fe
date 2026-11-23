@@ -285,6 +285,7 @@ export const useConversationTurns = ({
           setThought({
             text: resolved.text,
             type: toThoughtType(resolved.type),
+            emotion: resolved.emotion,
           });
           track(EVENTS.INNER_THOUGHT_VIEWED, {
             session_id: activeSessionId,
