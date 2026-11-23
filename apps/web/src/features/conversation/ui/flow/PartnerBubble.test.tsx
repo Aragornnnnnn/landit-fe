@@ -1,4 +1,4 @@
-// PartnerBubble — 지금 차례 상대 말풍선의 해석 펼쳐보기와 다시 듣기 버튼의 기본 접힘·토글·질문 전환 계약을 검증한다
+// PartnerBubble — 지금 차례 상대 말풍선의 속마음 줄, 해석 펼쳐보기와 다시 듣기 버튼의 기본 접힘·토글·질문 전환 계약을 검증한다
 import {
   cleanup,
   fireEvent,
@@ -452,5 +452,66 @@ describe('PartnerBubble', () => {
       top: 464,
       behavior: 'smooth',
     });
+  });
+});
+
+describe('PartnerBubble 속마음 줄', () => {
+  it('속마음이 오면 말풍선 맨 위에 그 글을 둔다', () => {
+    render(
+      <PartnerBubble
+        question="Oh, Seoul! Which part?"
+        translation={null}
+        speaking={false}
+        thought={{ status: 'shown', text: '서울 사는구나!', type: 'GOOD' }}
+      />,
+    );
+
+    expect(screen.getByText('서울 사는구나!')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('속마음을 기다리는 동안엔 그 자리를 뼈대로 잡아 둔다', () => {
+    render(
+      <PartnerBubble
+        question="Oh, Seoul! Which part?"
+        translation={null}
+        speaking
+        thought={{ status: 'pending' }}
+      />,
+    );
+
+    expect(
+      screen.getByRole('status', { name: '속마음을 떠올리는 중' }),
+    ).toBeInTheDocument();
+  });
+
+  it('속마음이 없으면 줄 자체를 두지 않는다', () => {
+    render(
+      <PartnerBubble
+        question="Oh, Seoul! Which part?"
+        translation={null}
+        speaking={false}
+        thought={null}
+      />,
+    );
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByRole('separator')).not.toBeInTheDocument();
+  });
+
+  it('영어 문장을 가려도 속마음은 그대로 읽힌다 — 가리기는 영어 듣기 연습용이다', () => {
+    render(
+      <PartnerBubble
+        question="Oh, Seoul! Which part?"
+        translation={null}
+        speaking={false}
+        textHidden
+        thought={{ status: 'shown', text: '서울 사는구나!', type: 'GOOD' }}
+      />,
+    );
+
+    expect(screen.getByText('서울 사는구나!')).not.toHaveAttribute(
+      'aria-hidden',
+    );
   });
 });
