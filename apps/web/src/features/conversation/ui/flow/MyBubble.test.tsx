@@ -103,6 +103,13 @@ describe('MyBubble', () => {
       expect(screen.queryByText(EDIT_HINT)).not.toBeInTheDocument();
     });
 
+    it('키보드로 쓴 글이면 말한 내용과 다르면 고치라는 안내를 띄우지 않는다', () => {
+      render(<MyBubble state="review" text="Hi" onEdit={vi.fn()} typed />);
+
+      expect(screen.queryByText(EDIT_HINT)).not.toBeInTheDocument();
+      expect(screen.getByText('수정')).toBeInTheDocument();
+    });
+
     it('말하는 중이 아니라 듣는 중 점을 띄우지 않는다', () => {
       render(
         <MyBubble state="review" text="Hi" speechPending onEdit={vi.fn()} />,
