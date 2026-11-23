@@ -211,7 +211,8 @@ export const ConversationLog = ({
               text={entry.text}
             />
           ))}
-          <div ref={latestRef} className="flex flex-col">
+          {/* 지금 차례의 말(상대 말풍선·상황 카드·예시·내 말풍선·점)도 지난 대화와 같은 간격으로 쌓는다 */}
+          <div ref={latestRef} className="flex flex-col gap-2.5">
             <ChatScrollContext value={scroll}>{children}</ChatScrollContext>
           </div>
         </div>
