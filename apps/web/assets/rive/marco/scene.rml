@@ -748,44 +748,44 @@
                             </Shape>
                         </Node>
                     </Node>
-                    <Node x="606" y="196" rotation="-0.28" opacity="0" scaleX="0.5" scaleY="0.5" name="anger-mark" id="2:170">
+                    <Node x="666" y="128" rotation="-0.28" opacity="0" scaleX="0.5" scaleY="0.5" name="anger-mark" id="2:170">
                         <Shape name="vein">
                             <PointsPath isClosed="false" name="Path">
-                                <CubicDetachedVertex x="-15.0" y="-4.2" inRotation="0" inDistance="0" outRotation="0" outDistance="5.25" />
-                                <CubicDetachedVertex x="-4.96" y="-3.44" inRotation="3.142" inDistance="3.0" outRotation="-1.571" outDistance="3.0" />
-                                <CubicDetachedVertex x="-4.2" y="-14.25" inRotation="1.571" inDistance="5.25" outRotation="0" outDistance="0" />
+                                <CubicDetachedVertex x="-21.0" y="-5.88" inRotation="0" inDistance="0" outRotation="0" outDistance="7.35" />
+                                <CubicDetachedVertex x="-6.94" y="-4.82" inRotation="3.142" inDistance="4.2" outRotation="-1.571" outDistance="4.2" />
+                                <CubicDetachedVertex x="-5.88" y="-19.95" inRotation="1.571" inDistance="7.35" outRotation="0" outDistance="0" />
                             </PointsPath>
-                            <Stroke thickness="5.59" cap="round" join="round" name="Stroke">
+                            <Stroke thickness="7.83" cap="round" join="round" name="Stroke">
                                 <SolidColor colorValue="FFE5484D" name="Color" />
                             </Stroke>
                         </Shape>
                         <Shape name="vein">
                             <PointsPath isClosed="false" name="Path">
-                                <CubicDetachedVertex x="12.3" y="-4.2" inRotation="0" inDistance="0" outRotation="3.142" outDistance="5.25" />
-                                <CubicDetachedVertex x="3.7" y="-4.7" inRotation="0" inDistance="3.0" outRotation="-1.571" outDistance="3.0" />
-                                <CubicDetachedVertex x="4.2" y="-16.5" inRotation="1.571" inDistance="5.25" outRotation="0" outDistance="0" />
+                                <CubicDetachedVertex x="17.22" y="-5.88" inRotation="0" inDistance="0" outRotation="3.142" outDistance="7.35" />
+                                <CubicDetachedVertex x="5.17" y="-6.59" inRotation="0" inDistance="4.2" outRotation="-1.571" outDistance="4.2" />
+                                <CubicDetachedVertex x="5.88" y="-23.1" inRotation="1.571" inDistance="7.35" outRotation="0" outDistance="0" />
                             </PointsPath>
-                            <Stroke thickness="5.35" cap="round" join="round" name="Stroke">
+                            <Stroke thickness="7.49" cap="round" join="round" name="Stroke">
                                 <SolidColor colorValue="FFE5484D" name="Color" />
                             </Stroke>
                         </Shape>
                         <Shape name="vein">
                             <PointsPath isClosed="false" name="Path">
-                                <CubicDetachedVertex x="-16.8" y="4.2" inRotation="0" inDistance="0" outRotation="0" outDistance="5.25" />
-                                <CubicDetachedVertex x="-3.36" y="5.04" inRotation="3.142" inDistance="3.0" outRotation="1.571" outDistance="3.0" />
-                                <CubicDetachedVertex x="-4.2" y="12.75" inRotation="-1.571" inDistance="5.25" outRotation="0" outDistance="0" />
+                                <CubicDetachedVertex x="-23.52" y="5.88" inRotation="0" inDistance="0" outRotation="0" outDistance="7.35" />
+                                <CubicDetachedVertex x="-4.7" y="7.06" inRotation="3.142" inDistance="4.2" outRotation="1.571" outDistance="4.2" />
+                                <CubicDetachedVertex x="-5.88" y="17.85" inRotation="-1.571" inDistance="7.35" outRotation="0" outDistance="0" />
                             </PointsPath>
-                            <Stroke thickness="5.75" cap="round" join="round" name="Stroke">
+                            <Stroke thickness="8.05" cap="round" join="round" name="Stroke">
                                 <SolidColor colorValue="FFE5484D" name="Color" />
                             </Stroke>
                         </Shape>
                         <Shape name="vein">
                             <PointsPath isClosed="false" name="Path">
-                                <CubicDetachedVertex x="13.5" y="4.2" inRotation="0" inDistance="0" outRotation="3.142" outDistance="5.25" />
-                                <CubicDetachedVertex x="4.83" y="3.57" inRotation="0" inDistance="3.0" outRotation="1.571" outDistance="3.0" />
-                                <CubicDetachedVertex x="4.2" y="15.0" inRotation="-1.571" inDistance="5.25" outRotation="0" outDistance="0" />
+                                <CubicDetachedVertex x="18.9" y="5.88" inRotation="0" inDistance="0" outRotation="3.142" outDistance="7.35" />
+                                <CubicDetachedVertex x="6.76" y="5.0" inRotation="0" inDistance="4.2" outRotation="1.571" outDistance="4.2" />
+                                <CubicDetachedVertex x="5.88" y="21.0" inRotation="-1.571" inDistance="7.35" outRotation="0" outDistance="0" />
                             </PointsPath>
-                            <Stroke thickness="5.46" cap="round" join="round" name="Stroke">
+                            <Stroke thickness="7.64" cap="round" join="round" name="Stroke">
                                 <SolidColor colorValue="FFE5484D" name="Color" />
                             </Stroke>
                         </Shape>
