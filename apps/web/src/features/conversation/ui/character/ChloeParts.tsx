@@ -2,9 +2,17 @@
 import { useId, type ReactElement, type SVGProps } from 'react';
 
 import type { PartLayer } from './part-layer';
+import type { FaceLandmarks } from './stage-frame';
 
-/** 원래 그림 영역 — 층 상자의 크기와 단위 환산의 기준이다 */
+/** 상반신 크롭 — viewBox를 따로 안 주는 소비처의 기본 영역이다 */
 export const CHLOE_VIEWBOX = '292 40 440 610';
+
+/** 얼굴 기준점(원본 좌표) — 대화 무대가 세 캐릭터의 얼굴 크기·턱 높이를 맞출 때 쓴다 */
+export const CHLOE_FACE: FaceLandmarks = {
+  eyeY: 257,
+  chinY: 360,
+  centerX: 500.5,
+};
 
 /** 머리 다음에 얹히는 층 — 팔처럼 제 축으로 움직이는 조각이다 */
 export const CHLOE_LIMBS: readonly PartLayer[] = [];

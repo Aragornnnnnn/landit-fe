@@ -10,9 +10,11 @@ const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 
 // slices 정의 순서가 곧 z순서(문서 순서)라 임의로 바꾸면 그림이 달라진다.
 // headParts는 head > head-inner 래퍼 안에 들어갈 슬라이스로, slices에서 연속이어야 한다.
-// viewBox는 대화 무대에 맞춘 상체 크롭이다 — 허리 위(y 650)에서 끊어 얼굴을 키운다.
+// viewBox는 상반신 크롭이다 — 아바타·초상화처럼 viewBox를 따로 안 주는 소비처의 기본 영역이다.
 // 두 캐릭터가 같은 크롭을 쓰는 이유는 머리 크기·위치가 거의 같아서다(마르코 81~446, 클로이 84~442).
-// 크롭 밖으로 나가는 하반신은 slices에서 아예 뺐다.
+// 그림은 전신을 다 담는다 — 대화 무대는 전신을 face 기준점으로 맞춰 그린다(stage-frame.ts).
+// face는 원본 좌표의 얼굴 기준점이다. 눈 두 개 중심 높이(eyeY)·턱 끝(chinY)·얼굴 가운데(centerX)를
+// 헤드리스 크롬 getBBox로 재고 턱은 그림을 눈으로 확인해 정했다. 테디는 턱이 없어 주둥이 아래 끝을 턱으로 본다
 const CHARACTERS = {
   marco: {
     src: 'male.svg',
@@ -21,9 +23,11 @@ const CHARACTERS = {
     label: '마르코',
     base: 124,
     viewBox: '292 40 440 610',
+    face: { eyeY: 292, chinY: 403, centerX: 500 },
     // 목(208)은 머리가 아니라 몸통에 붙인다 — 머리 회전 시 목이 따라가면 잘린 것처럼 보인다.
-    // 하반신(125~153)은 벨트부터 시작해 전부 크롭 밖이라 뺐다
+    // 하반신(125~153)은 문서 순서상 몸통보다 먼저라 몸통 층 맨 아래에 깔린다
     slices: [
+      ['legs', range(125, 153)],
       ['torso', [...range(154, 184), 208]],
       ['hair', range(185, 206)],
       ['face', range(207, 219).filter((n) => n !== 208 && n !== 214)],
@@ -71,6 +75,7 @@ const CHARACTERS = {
     // 머리를 따로 못 움직인다 — 얼굴 클러스터를 head-inner로 묶어 끄덕임을 얼굴 움직임으로 낸다
     byIndex: true,
     viewBox: '40 20 865 790',
+    face: { eyeY: 341, chinY: 537, centerX: 454.5 },
     slices: [
       ['torso', range(0, 8)],
       ['muzzle', [9]],
@@ -101,6 +106,7 @@ const CHARACTERS = {
     label: '클로이',
     base: 458,
     viewBox: '292 40 440 610',
+    face: { eyeY: 257, chinY: 360, centerX: 500.5 },
     // 몸통·팔·바지가 한 덩어리로 트레이스됐다. 목은 턱 음영이 깊게 겹쳐 head에 둬도 안전하다
     slices: [
       ['torso', range(459, 508)],
@@ -162,6 +168,8 @@ const toJsx = (tag) =>
     .replace(/\bclass=/g, 'className=');
 
 for (const [name, cfg] of Object.entries(CHARACTERS)) {
+  // 무대가 얼굴 기준점으로 캐릭터를 맞추므로 빠지면 생성하지 않는다
+  if (!cfg.face) throw new Error(`${name}: face 기준점이 없다`);
   const src = readFileSync(
     new URL(`../assets/character/${cfg.src}`, import.meta.url),
     'utf8',
@@ -362,9 +370,13 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
     toJsx(`import { ${masks.size ? 'useId, ' : ''}type ReactElement, type SVGProps } from 'react';
 
 import type { PartLayer } from './part-layer';
+import type { FaceLandmarks } from './stage-frame';
 
-/** 원래 그림 영역 — 층 상자의 크기와 단위 환산의 기준이다 */
+/** 상반신 크롭 — viewBox를 따로 안 주는 소비처의 기본 영역이다 */
 export const ${name.toUpperCase()}_VIEWBOX = '${cfg.viewBox}';
+
+/** 얼굴 기준점(원본 좌표) — 대화 무대가 세 캐릭터의 얼굴 크기·턱 높이를 맞출 때 쓴다 */
+export const ${name.toUpperCase()}_FACE: FaceLandmarks = { eyeY: ${cfg.face.eyeY}, chinY: ${cfg.face.chinY}, centerX: ${cfg.face.centerX} };
 
 /** 머리 다음에 얹히는 층 — 팔처럼 제 축으로 움직이는 조각이다 */
 export const ${limbsName}: readonly PartLayer[] = [${limbs.map((l) => `'${l}'`).join(', ')}];
