@@ -1270,3 +1270,9 @@
     line-break: strict;
   }
 }
+
+/* 캐릭터 무대 위에 겹치는 작은 글자(마이크 버튼 이름·남은 시간) — 옷 색이 무엇이든 읽히게 흰 글자에 옅은 그림자를 둔다 */
+@utility text-on-stage {
+  color: var(--white);
+  text-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+}

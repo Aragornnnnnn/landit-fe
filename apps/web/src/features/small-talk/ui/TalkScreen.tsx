@@ -272,12 +272,13 @@ export const TalkScreen = ({
                 0이 돼도 하던 말은 끊지 않고, 그 발화를 끝으로 상대가 대화를 마무리한다.
                 무제한이면 이 줄째 없다 — "무제한"이라 써 둘 것도 없다 */}
             {!unlimited && (
-              <p className="mt-3 text-center text-sm font-medium text-muted-foreground">
-                {/* 남은 시간만 강조색으로 — 언어마다 앞뒤 말 순서가 달라 문구 안에 자리를 둔다 */}
+              // 캐릭터 다리 위에 겹쳐도 읽히게 흰 글자에 그림자를 둔다
+              <p className="mt-3 text-center text-sm font-medium text-on-stage">
+                {/* 남은 시간만 굵게 — 언어마다 앞뒤 말 순서가 달라 문구 안에 자리를 둔다 */}
                 {t.rich('remainingTimeLabel', {
                   time: toCountdownLabel(remainingMs),
                   emphasis: (chunks) => (
-                    <span className="font-bold text-primary">{chunks}</span>
+                    <span className="font-bold">{chunks}</span>
                   ),
                 })}
               </p>
