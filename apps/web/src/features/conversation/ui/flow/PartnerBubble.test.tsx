@@ -1,4 +1,4 @@
-// PartnerBubble — 해석 펼쳐보기와 다시 듣기 버튼의 기본 접힘·토글·질문 전환 계약을 검증한다
+// PartnerBubble — 지금 차례 상대 말풍선의 해석 펼쳐보기와 다시 듣기 버튼의 기본 접힘·토글·질문 전환 계약을 검증한다
 import {
   cleanup,
   fireEvent,
@@ -8,6 +8,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { ConversationLog } from './ConversationLog';
 import { PartnerBubble } from './PartnerBubble';
 
 afterEach(() => cleanup());
@@ -383,35 +384,73 @@ describe('PartnerBubble', () => {
     expect(screen.getByText('뭘 드셨어요?')).toBeInTheDocument();
   });
 
-  it('발화 중에는 아직 나오지 않은 글자 끝이 아니라 지금 말하는 줄로 스크롤한다', async () => {
-    // Given 카드를 넘치는 긴 발화 — jsdom엔 레이아웃이 없어 카드·커서의 위치를 심어 준다.
-    // 카드 아래끝은 200, 커서는 그보다 80 아래, 안 나온 글자까지 합친 전체 높이는 1000이다
-    const scrollTo = vi.fn();
-    Element.prototype.scrollTo = scrollTo;
+  it('발화 중에는 안 나온 글자 끝이 아니라 지금 말하는 줄까지만 대화 칸이 따라 내려간다', async () => {
+    // Given 칸(높이 200)을 넘치는 긴 발화 — jsdom엔 레이아웃이 없어 위치를 심어 준다.
+    // 커서 줄은 260~280, 안 나온 글자까지 합친 전체 높이는 1000이다
+    Element.prototype.scrollTo = vi.fn();
     vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(
       1000,
     );
     vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(200);
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
       function (this: HTMLElement) {
-        const bottom = this.className.includes('animate-pulse') ? 280 : 200;
-        return { top: 0, bottom, height: bottom } as DOMRect;
+        // 커서는 260~280 줄에, 칸은 0~200에 있다
+        return (
+          this.className.includes('animate-pulse')
+            ? { top: 260, bottom: 280, height: 20 }
+            : { top: 0, bottom: 200, height: 200 }
+        ) as DOMRect;
       },
     );
 
     // When 발화가 시작돼 한 프레임이 흐르면
     render(
-      <PartnerBubble
-        question={'A long opening line. '.repeat(40)}
-        translation="아주 긴 발화"
-        speaking
-      />,
+      <ConversationLog entries={[]} latestKey={0}>
+        <PartnerBubble
+          question={'A long opening line. '.repeat(40)}
+          translation="아주 긴 발화"
+          speaking
+        />
+      </ConversationLog>,
     );
     await new Promise((resolve) => requestAnimationFrame(resolve));
 
-    // Then 커서가 카드 안으로 들어오는 만큼만 내려간다 — 스크롤 최대치(800)로 뛰지 않는다
-    const tops = scrollTo.mock.calls.map(([option]) => option.top);
-    expect(Math.max(...tops)).toBeGreaterThanOrEqual(80);
-    expect(Math.max(...tops)).toBeLessThan(800);
+    // Then 커서가 칸 안으로 들어오는 만큼(80)만 내려간다 — 스크롤 최대치(800)로 뛰지 않는다
+    expect(Element.prototype.scrollTo).toHaveBeenLastCalledWith({
+      top: 80,
+      behavior: 'instant',
+    });
+  });
+
+  it('발화가 끝나면 대화 칸이 그 말풍선 첫 줄로 돌아간다', () => {
+    // Given 칸(높이 300)보다 긴 말풍선이 위끝 500에서 시작한다
+    Element.prototype.scrollTo = vi.fn();
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(
+      1000,
+    );
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(300);
+    vi.spyOn(HTMLElement.prototype, 'offsetTop', 'get').mockReturnValue(500);
+    const bubble = (speaking: boolean) => (
+      <ConversationLog entries={[]} latestKey={0}>
+        <PartnerBubble
+          question="How was your day?"
+          translation={null}
+          speaking={speaking}
+        />
+      </ConversationLog>
+    );
+    const now = vi.spyOn(performance, 'now').mockReturnValue(0);
+    const { rerender } = render(bubble(true));
+    vi.mocked(Element.prototype.scrollTo).mockClear();
+
+    // When 몇 초 말한 뒤 발화가 끝나면
+    now.mockReturnValue(5000);
+    rerender(bubble(false));
+
+    // Then 첫 줄이 칸 위 흐림 띠(36) 바로 아래에 오게 올린다
+    expect(Element.prototype.scrollTo).toHaveBeenCalledWith({
+      top: 464,
+      behavior: 'smooth',
+    });
   });
 });

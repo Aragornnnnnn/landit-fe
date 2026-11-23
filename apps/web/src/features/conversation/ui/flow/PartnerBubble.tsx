@@ -1,9 +1,8 @@
-// 상대 말풍선 — 상대 발화가 말하는 속도에 맞춰 글자가 생성되듯 촤르륵 나타나고, 끝나면 해석을 펼쳐보거나 그 발화를 다시 들을 수 있다.
-// 말풍선은 발화 길이만큼만 차지한다 — 짧은 말에 큰 풍선이 붙으면 어색하고, 내 답변과의 사이는 비어도 괜찮다.
-// 크기는 발화가 시작될 때 한 번에 잡는다 — 글자가 나타나는 내내 커지면 화면이 계속 달라져 산만하다.
-// 남은 자리를 다 쓰는 긴 발화만 안쪽 글자가 스크롤된다.
-// 해석은 접어 두는 게 기본이다 — 늘 펼쳐 두면 카드가 그만큼 길어져 작은 화면에서 발화가 잘린다
-// 영어 문장을 가리면 흐리게 덮어 듣기만으로 연습하게 한다. 흐린 글자나 눈 버튼을 누르면 그 카드만 보인다
+// 지금 차례의 상대 말풍선 — 상대 발화가 말하는 속도에 맞춰 글자가 생성되듯 촤르륵 나타나고, 끝나면 해석을 펼쳐보거나 그 발화를 다시 들을 수 있다.
+// 말풍선 크기는 발화가 시작될 때 한 번에 잡는다 — 글자가 나타나는 내내 커지면 대화 칸이 계속 출렁여 산만하다.
+// 긴 발화도 안쪽에서 스크롤하지 않는다 — 대화 칸이 통째로 스크롤되며, 말하는 줄을 따라가는 일은 칸(scroll)에 맡긴다.
+// 해석은 접어 두는 게 기본이다 — 늘 펼쳐 두면 말풍선이 그만큼 길어져 작은 화면에서 지난 대화가 금방 밀려난다
+// 영어 문장을 가리면 흐리게 덮어 듣기만으로 연습하게 한다. 흐린 글자나 눈 버튼을 누르면 그 말풍선만 보인다
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -15,36 +14,35 @@ import { EyeIcon, SpeakerIcon, TranslateIcon } from '@/shared/ui/Icons';
 
 import { speechTypingMs } from '../../model/pacing';
 import type { ReplayControl } from '../../model/useConversationTurns';
+import { PartnerBubbleShell } from './ChatBubbles';
+import { useChatScroll } from './ConversationLog';
 import { TypingCursor } from './TypingCursor';
-
-// 카드 위·아래 흐림 폭(마스크 그라데이션의 1.5rem과 같은 값) — 말하는 줄이 흐림에 걸리지 않게 그만큼 띄운다
-const fadeEdgePx = 24;
 
 interface PartnerBubbleProps {
   question: string;
   translation: string | null;
   speaking: boolean;
-  // USER 선발화 안내 — 발화 카드가 아니라 '내가 먼저 말해보는 상황' 라벨 + 작은 설명 구조로 그린다
+  // USER 선발화 안내 — 발화가 아니라 '내가 먼저 말해보는 상황' 라벨 + 설명 구조로 그린다
   instruction?: boolean;
   // 해석을 펼치거나 접은 순간 — 계측은 세션·턴을 아는 화면이 맡는다
   onTranslationToggled?: (opened: boolean) => void;
   // 다시 듣기 — 주면 스피커 버튼이 붙는다
   replay?: ReplayControl;
-  // 마지막 질문 — 질문 위에 머리말을 붙여 끝이 보이게 한다
+  // 마지막 질문 — 대사 위에 머리말을 붙여 끝이 보이게 한다
   lastQuestion?: boolean;
   // 해석을 펼친 채로 시작할지 — 새 질문마다 이 값으로 돌아간다
   translationDefaultOpen?: boolean;
   // 영어 문장을 가린 채로 시작할지 — 새 질문마다 이 값으로 돌아간다
   textHidden?: boolean;
-  // 이 카드의 영어 문장을 보이거나 가린 순간 — 계측은 세션·턴을 아는 화면이 맡는다
+  // 이 말풍선의 영어 문장을 보이거나 가린 순간 — 계측은 세션·턴을 아는 화면이 맡는다
   onTextToggled?: (visible: boolean) => void;
 }
 
 /**
- * 카드 아래 동그란 아이콘 버튼 — 켜진 상태(재생 중·해석 펼침)는 색을 뒤집어 알린다.
+ * 말풍선 아래 동그란 아이콘 버튼 — 켜진 상태(재생 중·해석 펼침)는 색을 뒤집어 알린다.
  * 발음 화면의 듣기 버튼과 같은 문법이라 앱 전체에서 "누르면 뭔가 나온다"가 한 모양으로 읽힌다.
  */
-const CardIconButton = ({
+const BubbleIconButton = ({
   on,
   label,
   disabled = false,
@@ -82,10 +80,12 @@ export const PartnerBubble = ({
   onTextToggled,
 }: PartnerBubbleProps) => {
   const t = useTranslations('conversation.partnerBubble');
+  // 대화 칸 스크롤 — 말하는 줄과 펼친 해석을 보이게 하고, 다 말하면 첫 줄로 돌려 달라고 부탁한다
+  const scroll = useChatScroll();
   // 진행값이 어느 질문 것인지 함께 저장한다 — 질문이 바뀐 첫 프레임에 이전 값이 새어 나오지 않도록
   const [typed, setTyped] = useState({ question, count: 0 });
   const count = typed.question === question ? typed.count : 0;
-  // 펼침은 이 카드에서 직접 누른 값만 질문과 함께 저장한다 — 누르기 전엔 기본값을 따르므로,
+  // 펼침은 이 말풍선에서 직접 누른 값만 질문과 함께 저장한다 — 누르기 전엔 기본값을 따르므로,
   // 저장된 기본값이 첫 렌더 뒤에 들어와도 반영된다. 다음 질문은 다시 기본값으로 시작한다
   const [opened, setOpened] = useState<{
     question: string;
@@ -93,31 +93,13 @@ export const PartnerBubble = ({
   } | null>(null);
   const translationOpen =
     opened?.question === question ? opened.on : translationDefaultOpen;
-  // 글자 보임도 해석 펼침과 같은 규칙 — 이 카드에서 직접 바꾼 값만 저장하고, 다음 질문은 다시 기본값으로 시작한다
+  // 글자 보임도 해석 펼침과 같은 규칙 — 이 말풍선에서 직접 바꾼 값만 저장하고, 다음 질문은 다시 기본값으로 시작한다
   const [shown, setShown] = useState<{ question: string; on: boolean } | null>(
     null,
   );
   const blurred = !(shown?.question === question ? shown.on : !textHidden);
-  // 가려진 글이 위·아래에 있는지 — 있는 쪽 변을 흐려 "더 있다"를 알린다. 질문이 바뀌면 처음으로 돌아간다
-  const [edges, setEdges] = useState({ question, above: false, below: false });
-  const hasMoreAbove = edges.question === question && edges.above;
-  const hasMoreBelow = edges.question === question && edges.below;
-  const scrollRef = useRef<HTMLDivElement>(null);
   const translationRef = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<HTMLSpanElement>(null);
-
-  const syncEdges = () => {
-    const box = scrollRef.current;
-    if (!box) return;
-    const above = box.scrollTop > 1;
-    const below = box.scrollTop + box.clientHeight < box.scrollHeight - 1;
-    // 값이 그대로면 이전 state를 반환해 스크롤·타이핑 프레임마다의 불필요한 리렌더를 막는다
-    setEdges((prev) =>
-      prev.question === question && prev.above === above && prev.below === below
-        ? prev
-        : { question, above, below },
-    );
-  };
 
   const toggleText = () => {
     setShown({ question, on: blurred });
@@ -130,35 +112,10 @@ export const PartnerBubble = ({
     onTranslationToggled?.(next);
   };
 
-  // 해석이 펼쳐지는 매 프레임마다 해석 시작점을 위로 맞춘다 — 다 펼친 뒤에 따로 스크롤하면
-  // 펼침과 이동이 두 동작으로 끊겨 보인다. 같이 움직여야 한 동작으로 읽힌다.
-  // 말풍선이 자라는 짧은 발화에선 스크롤할 게 없어 아무 일도 일어나지 않는다
+  // 해석이 펼쳐지는 매 프레임 그 끝을 칸 안에 둔다 — 다 펼친 뒤에 따로 내리면 펼침과 이동이 두 동작으로 끊겨 보인다
   const followTranslation = () => {
-    const box = scrollRef.current;
-    const start = translationRef.current;
-    if (!translationOpen || !box || !start) return;
-    const offset =
-      start.getBoundingClientRect().top - box.getBoundingClientRect().top;
-    if (Math.abs(offset) > 0.5) box.scrollTop += offset;
-  };
-
-  // 말하는 속도를 따라간다 — 카드보다 긴 발화도 지금 말하는 줄이 늘 보이게.
-  // 아래끝이 아니라 커서를 기준으로 잡는다 — 안 나온 글자를 투명하게 깔아 둬서
-  // 아래끝으로 내리면 첫 줄부터 말하는 내내 빈 자리만 보이고, 위로 스크롤해도 매 프레임 되돌아간다
-  const followCursor = () => {
-    const box = scrollRef.current;
-    const cursor = cursorRef.current;
-    if (!box || !cursor) return;
-    const overflow =
-      cursor.getBoundingClientRect().bottom -
-      (box.getBoundingClientRect().bottom - fadeEdgePx);
-    if (overflow > 0)
-      box.scrollTo?.({ top: box.scrollTop + overflow, behavior: 'instant' });
-  };
-
-  const revealTranslation = () => {
-    followTranslation();
-    syncEdges();
+    if (translationOpen && translationRef.current)
+      scroll?.follow(translationRef.current);
   };
 
   useEffect(() => {
@@ -177,24 +134,22 @@ export const PartnerBubble = ({
           ? prev
           : { question, count },
       );
-      followCursor();
-      syncEdges();
+      // 말하는 줄이 칸 아래로 넘어가면 칸이 따라 내려간다 — 안 나온 글자 끝이 아니라 커서가 기준이다
+      if (cursorRef.current) scroll?.follow(cursorRef.current);
       if (t < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- syncEdges는 매 렌더 새로 만들어져 넣으면 타이핑이 재시작된다
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- scroll은 렌더마다 새 객체라 넣으면 타이핑이 재시작된다
   }, [speaking, question]);
 
-  // 발화가 끝나면 처음으로 되돌린다 — 읽기 시작할 땐 첫 줄부터 보여야 한다. 새 질문이 올 때도 같다
+  // 다 말하면 첫 줄로 돌아간다 — 읽기 시작할 땐 첫 줄부터 보여야 한다
   useEffect(() => {
-    if (speaking) return;
-    scrollRef.current?.scrollTo?.({ top: 0, behavior: 'instant' });
-    syncEdges();
+    if (!speaking) scroll?.settle();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 위와 같은 이유
-  }, [speaking, question]);
+  }, [speaking]);
 
-  // 발화 중이 아니면 무조건 전문 — 유저 선발화 안내 카드, 그리고 rAF가 끊긴 채(백그라운드 탭) 발화가 끝난 경우의 복구
+  // 발화 중이 아니면 무조건 전문 — 유저 선발화 안내, 그리고 rAF가 끊긴 채(백그라운드 탭) 발화가 끝난 경우의 복구
   const spokenCount = speaking ? count : question.length;
   // 버튼이 나오는 때는 가림과 상관없이 발화를 따른다
   const done = spokenCount >= question.length;
@@ -202,56 +157,29 @@ export const PartnerBubble = ({
   const visibleCount = blurred ? question.length : spokenCount;
   const typing = speaking && visibleCount < question.length;
 
-  // 가려진 쪽 변만 투명하게 시작·끝나는 그라데이션. 양쪽 다 보이면 마스크를 걸지 않는다
-  const fade =
-    hasMoreAbove || hasMoreBelow
-      ? `linear-gradient(to bottom, ${hasMoreAbove ? 'transparent' : '#000'}, #000 1.5rem, #000 calc(100% - 1.5rem), ${hasMoreBelow ? 'transparent' : '#000'})`
-      : undefined;
-
-  // 질문이 길수록 글자를 줄여 줄 수를 낮춘다 — 답변·마이크 공간 압박을 덜고, 스크롤과 함께 가독성을 지킨다
-  const questionSize =
-    question.length > 320
-      ? 'text-15'
-      : question.length > 240
-        ? 'text-16'
-        : question.length > 180
-          ? 'text-17'
-          : question.length > 100
-            ? 'text-19'
-            : 'text-20';
-
   return (
     <motion.div
       key={question}
       initial={{ opacity: 0, y: 16, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="flex max-h-full w-full flex-col rounded-[28px] rounded-tl-md bg-card px-5 py-5 shadow-lg shadow-black/5"
+      // 왼쪽 위 꼬리 쪽에서 커져 나온다 — 상대가 말을 꺼내는 쪽
+      style={{ transformOrigin: 'top left' }}
+      className="self-start"
     >
-      {/* 카드 맨 위에 붙박이 — 긴 질문이 안쪽에서 스크롤돼도 머리말은 늘 보인다 (아래 버튼 줄과 같은 규칙) */}
-      {lastQuestion && (
-        <p className="mb-1.5 flex-none text-xs font-bold text-primary">
-          {t('lastQuestionBadge')}
-        </p>
-      )}
-      <div
-        ref={scrollRef}
-        onScroll={syncEdges}
-        // 가려진 쪽만 흐린다 — 클래스로는 calc이 섞인 이 그라데이션을 조건부로 못 만든다
-        style={{ maskImage: fade, WebkitMaskImage: fade }}
-        // 카드 여백 쪽으로 넓히고 같은 만큼 안쪽을 비운다 — 글자 자리는 그대로, 가린 글자의 흐림이 경계에 잘려 네모나게 보이지 않는다.
-        // 가렸을 땐 흐림이 번지는 폭(약 20px)만큼 카드 끝까지 넓힌다. 위아래는 머리말·버튼 줄과 겹치므로 가렸을 때만 넓힌다 — 안 가린 긴 발화가 스크롤되며 그 위로 비치지 않게
-        className={`min-h-0 flex-1 overflow-y-auto overscroll-contain ${
-          blurred ? '-mx-5 -my-5 px-5 py-5' : '-mx-4 px-4'
-        }`}
-      >
+      <PartnerBubbleShell>
+        {lastQuestion && (
+          <p className="text-xs font-bold text-primary">
+            {t('lastQuestionBadge')}
+          </p>
+        )}
         {instruction ? (
-          // 선발화 안내 — 상대 발화처럼 크게 꽂지 않고, 라벨 + 차분한 크기의 상황 설명으로 정리한다
+          // 선발화 안내 — 상대 발화처럼 굵게 꽂지 않고, 라벨 + 차분한 상황 설명으로 정리한다
           <>
             <p className="text-sm font-bold text-primary">
               {t('instructionCaption')}
             </p>
-            <p className="mt-2 text-17 leading-relaxed font-semibold text-foreground">
+            <p className="text-16 leading-[1.35] font-semibold text-foreground">
               {question}
             </p>
           </>
@@ -262,16 +190,16 @@ export const PartnerBubble = ({
             aria-hidden={blurred || undefined}
             onClick={blurred ? toggleText : undefined}
             // 흐림은 filter가 아니라 글자 그림자로 만든다 — iOS는 filter를 그때그때 다른 경로로 그려 흐린 정도가 번쩍이고 경계가 네모로 잘린다
-            className={`${questionSize} leading-snug font-bold transition-[color,text-shadow] duration-200 ${
+            className={`text-16 leading-[1.35] font-bold break-words transition-[color,text-shadow] duration-200 ${
               blurred
-                ? 'cursor-pointer text-transparent select-none [text-shadow:0_0_14px_var(--color-foreground)]'
+                ? 'cursor-pointer text-transparent select-none [text-shadow:0_0_10px_var(--color-foreground)]'
                 : 'text-foreground'
             }`}
           >
             {question.slice(0, visibleCount)}
             {typing && <TypingCursor ref={cursorRef} />}
-            {/* 아직 안 나온 글자를 투명하게 깔아 첫 프레임부터 최종 높이를 잡는다 —
-                말풍선이 글자 따라 커지면 발화 내내 화면이 계속 달라진다 */}
+            {/* 아직 안 나온 글자를 투명하게 깔아 첫 프레임부터 최종 크기를 잡는다 —
+                말풍선이 글자 따라 커지면 발화 내내 대화 칸이 계속 달라진다 */}
             {typing && (
               <span className="text-transparent">
                 {question.slice(visibleCount)}
@@ -289,53 +217,54 @@ export const PartnerBubble = ({
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.22, ease: 'easeOut' }}
               onUpdate={followTranslation}
-              onAnimationComplete={revealTranslation}
+              onAnimationComplete={followTranslation}
               className="overflow-hidden"
             >
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              <p className="text-sm leading-relaxed text-muted-foreground">
                 {translation}
               </p>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-      {/* 카드 오른쪽 아래에 붙박이 — 글이 길어 안쪽이 스크롤돼도 이 버튼들은 늘 같은 자리에 있다 */}
-      {/* 눈 버튼은 가린 동안에도 늘 누를 수 있어야 해서 이 줄은 발화가 끝나길 기다리지 않는다 */}
-      {!instruction && (
-        <div className="-mr-1 -mb-2 flex flex-none justify-end gap-1.5 pt-2">
-          {done && replay && (
-            <CardIconButton
-              on={replay.playing}
-              disabled={!replay.enabled}
-              label={replay.playing ? t('stopReplayButton') : t('replayButton')}
-              onClick={replay.toggle}
+        {/* 눈 버튼은 가린 동안에도 늘 누를 수 있어야 해서 이 줄은 발화가 끝나길 기다리지 않는다 */}
+        {!instruction && (
+          <div className="-mr-1.5 flex justify-end gap-1.5">
+            {done && replay && (
+              <BubbleIconButton
+                on={replay.playing}
+                disabled={!replay.enabled}
+                label={
+                  replay.playing ? t('stopReplayButton') : t('replayButton')
+                }
+                onClick={replay.toggle}
+              >
+                <SpeakerIcon size={14} />
+              </BubbleIconButton>
+            )}
+            {done && translation && (
+              <BubbleIconButton
+                on={translationOpen}
+                label={
+                  translationOpen
+                    ? t('hideTranslationButton')
+                    : t('showTranslationButton')
+                }
+                onClick={toggleTranslation}
+              >
+                <TranslateIcon size={14} />
+              </BubbleIconButton>
+            )}
+            {/* 이 말풍선의 글자 보기 스위치 — 글자가 보이면 칠한다. 아이콘은 하나로 둔다 */}
+            <BubbleIconButton
+              on={!blurred}
+              label={blurred ? t('showTextButton') : t('hideTextButton')}
+              onClick={toggleText}
             >
-              <SpeakerIcon size={14} />
-            </CardIconButton>
-          )}
-          {done && translation && (
-            <CardIconButton
-              on={translationOpen}
-              label={
-                translationOpen
-                  ? t('hideTranslationButton')
-                  : t('showTranslationButton')
-              }
-              onClick={toggleTranslation}
-            >
-              <TranslateIcon size={14} />
-            </CardIconButton>
-          )}
-          {/* 이 카드의 글자 보기 스위치 — 글자가 보이면 칠한다. 아이콘은 하나로 둔다 */}
-          <CardIconButton
-            on={!blurred}
-            label={blurred ? t('showTextButton') : t('hideTextButton')}
-            onClick={toggleText}
-          >
-            <EyeIcon size={14} />
-          </CardIconButton>
-        </div>
-      )}
+              <EyeIcon size={14} />
+            </BubbleIconButton>
+          </div>
+        )}
+      </PartnerBubbleShell>
     </motion.div>
   );
 };
