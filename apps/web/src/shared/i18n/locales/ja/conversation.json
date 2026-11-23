@@ -36,8 +36,6 @@
     "newReplyLabel": "新しい返事があります"
   },
   "transcriptEditor": {
-    "headerLabel": "あなたの回答",
-    "cancelButton": "入力をキャンセル",
     "placeholder": "回答を入力してください",
     "sendButton": "回答を送信",
     "englishOnlyToast": "英語のみ入力できます",
